@@ -367,7 +367,7 @@ void FillSlowDL(unsigned short *RxFrame) {
     } else {
       lsb = slow_data[SlowDLInfo[i].mindex][SlowDLInfo[i].chnum];
       if (SlowDLInfo[i].wide)
-        lsb = slow_data[SlowDLInfo[i].mindex][SlowDLInfo[i].chnum + 1];
+        msb = slow_data[SlowDLInfo[i].mindex][SlowDLInfo[i].chnum + 1];
       else
         msb = 0;
       SlowDLInfo[i].value = (double)((msb << 16) | lsb);
