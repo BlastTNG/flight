@@ -226,6 +226,10 @@
     <DATUM format="%.2f" src="P_DEC" extrema="angle"/></NUMBER>
   <NUMBER caption="Radius" textstyle="evenrow">
     <DATUM format="%.2f" src="P_R" extrema="angle"/></NUMBER>
+  <NUMBER caption="Current Az" textstyle="evenrow">
+    <DATUM format="%.2f" src="AZ" extrema="angle"/></NUMBER>
+  <NUMBER caption="Current El" textstyle="evenrow">
+    <DATUM format="%.2f" src="EL" extrema="angle"/></NUMBER>
 
 </BOX>
 
