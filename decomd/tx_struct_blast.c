@@ -132,7 +132,7 @@ struct ChannelStruct SlowChannels[] = {
   {"i_apm_10v",    'r',  ACS2, 47,           -0.00625,           204.8, 'u'},
   {"status02",     'r',  ACS2, 56,                1.0,             0.0, 'u'},
 
-  {"v_p_batt",     'r',  ACS3,  1,                1.0,             0.0, 'u'},
+  {"v_p_batt",     'r',  ACS3,  1,           -6.28E-5,         2.86996, 'u'},
   {"v_s_batt",     'r',  ACS3,  3,                1.0,             0.0, 'u'},
   {"t_dpcu",       'r',  ACS3,  5,                1.0,             0.0, 'u'},
   {"t_apcu",       'r',  ACS3,  7,                1.0,             0.0, 'u'},
