@@ -116,6 +116,10 @@ struct CommandDataStruct {
   int disable_az;
   int disable_el;
 
+  int autogyro;
+  double gy2_offset;
+  double gy3_offset;
+
   double t_gybox_setpoint;
   double t_isc_setpoint;
 

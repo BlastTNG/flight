@@ -1,7 +1,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 75      /* total number of named single word cmds */
-#define N_MCOMMANDS 47         /* total number of multiword commands */
+#define N_SCOMMANDS 76      /* total number of named single word cmds */
+#define N_MCOMMANDS 48         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -42,25 +42,25 @@ const char *GroupNames[N_GROUPS] = {
 /* singleCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions below */
 enum singleCommand {
-  auto_focus,       az_off,           az_on,            balance_allow,
-  balance_veto,     bias_ac,          bias_dc,          cal_off,
-  cal_on,           cal_stop,         charcoal_off,     charcoal_on,
-  clock_ext,        clock_int,        coldplate_off,    coldplate_on,
-  discard_images,   el_off,           el_on,            elclin_allow,
-  elclin_veto,      elenc_allow,      elenc_veto,       fixed,
-  full_screen,      gps_allow,        gps_veto,         he_valve_close,
-  he_valve_on,      he_valve_off,     he_valve_open,    inner_cool_off,
-  inner_cool_on,    isc_abort,        isc_allow,        isc_pause,
-  isc_reconnect,    isc_run,          isc_shutdown,     isc_veto,
-  level_off,        level_on,         mag_allow,        mag_veto,
-  no_bright_star,   outer_cool_off,   outer_cool_on,    outer_spare_off,
-  outer_spare_on,   pin_in,           pin_in_override,  pin_out_override,
-  pot_valve_close,  pot_valve_off,    pot_valve_on,     pot_valve_open,
-  pump1_fwd,        pump1_off,        pump1_on,         pump1_rev, 
-  pump2_fwd,        pump2_off,        pump2_on,         pump2_rev,
-  ramp,             reset_trims,      save_images,      stop,
-  sun_veto,         sun_allow,        sync_adc,         trim_to_isc,
-  unlock,           use_limitswitch,  xyzzy
+  auto_focus,       auto_gyro,        az_off,           az_on,
+  balance_allow,    balance_veto,     bias_ac,          bias_dc,
+  cal_off,          cal_on,           cal_stop,         charcoal_off,
+  charcoal_on,      clock_ext,        clock_int,        coldplate_off,
+  coldplate_on,     discard_images,   el_off,           el_on,
+  elclin_allow,     elclin_veto,      elenc_allow,      elenc_veto,
+  fixed,            full_screen,      gps_allow,        gps_veto,
+  he_valve_close,   he_valve_on,      he_valve_off,     he_valve_open,
+  inner_cool_off,   inner_cool_on,    isc_abort,        isc_allow,
+  isc_pause,        isc_reconnect,    isc_run,          isc_shutdown,
+  isc_veto,         level_off,        level_on,         mag_allow,
+  mag_veto,         no_bright_star,   outer_cool_off,   outer_cool_on,
+  outer_spare_off,  outer_spare_on,   pin_in,           pin_in_override,
+  pin_out_override, pot_valve_close,  pot_valve_off,    pot_valve_on,
+  pot_valve_open,   pump1_fwd,        pump1_off,        pump1_on,
+  pump1_rev,        pump2_fwd,        pump2_off,        pump2_on,
+  pump2_rev,        ramp,             reset_trims,      save_images,
+  stop,             sun_veto,         sun_allow,        sync_adc,
+  trim_to_isc,      unlock,           use_limitswitch,  xyzzy
 };
 
 struct scom {
@@ -95,6 +95,7 @@ struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(reset_trims), "reset coarse pointing trims to zero", GR_TRIM},
   {COMMAND(trim_to_isc), "trim coarse sensors to isc", GR_TRIM},
+  {COMMAND(auto_gyro), "automatically calculate gyro offsets", GR_TRIM},
 
   {COMMAND(clock_int), "bias clock internal", GR_BIAS},
   {COMMAND(clock_ext), "bias clock external", GR_BIAS},
@@ -184,7 +185,7 @@ enum multiCommand {
   pixel_centre, ra_dec_goto,  ra_dec_set,       roll_gain,    set_aperture,
   set_focus,    setpoints,    slow_integration, spare_heat,   spare_pwm,
   t_gyrobox,    t_gyro_gain,  timeout,          tolerances,   vcap,
-  vbox,         xml_file
+  vbox,         xml_file,     gyro_override
 };
 
 struct par {
@@ -308,6 +309,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Azimuth (deg)", 0, 360, 'f', "AZ"},
       {"Elevation (deg)", 0, 90, 'f', "EL"}
+    }
+  },
+
+  {COMMAND(gyro_override), "manually set gyro offsets", GR_TRIM, 2,
+    {
+      {"Gyro 2 offset (deg/s)", -0.5, 0.5, 'f', "GY2_OFFSET"},
+      {"Gyro 3 offset (deg/s)", -0.5, 0.5, 'f', "GY3_OFFSET"}
     }
   },
 
@@ -554,7 +562,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(catalogue), "set catalogue retreival parameters", GR_ISC, 3,
     {
-      {"Magnitude Limit",            0, 12, 'f', "ISC_MAG"},
+      {"Magnitude Limit",            0, 12, 'f', "ISC_MAGLIMIT"},
       {"Normal Search Radius (deg)", 0, 50, 'f', "ISC_NRAD"},
       {"Lost Search Radius (deg)",   0, 50, 'f', "ISC_LRAD"}
     }

@@ -238,6 +238,9 @@ void SingleCommand (enum singleCommand command) {
     SetTrimToISC();
   else if (command == reset_trims)
     ClearTrim();
+  else if (command == auto_gyro)
+    CommandData.autogyro = 1;
+
   else if (command == az_off) /* disable az motors */
     CommandData.disable_az = 1;
   else if (command == az_on) /* enable az motors */
@@ -569,10 +572,14 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
 
     /***************************************/
     /********** Pointing Motor Trims *******/
-  } else if (command == az_el_trim) {
+  } else if (command == az_el_trim)
     AzElTrim(rvalues[0], rvalues[1]);
-  } else if (command == ra_dec_set) {
+  else if (command == ra_dec_set)
     SetRaDec(rvalues[0], rvalues[1]);
+  else if (command == gyro_override) {
+    CommandData.gy2_offset = rvalues[0];
+    CommandData.gy3_offset = rvalues[1];
+    CommandData.autogyro = 0;
 
     /***************************************/
     /********** Pointing Motor Gains *******/
@@ -1299,6 +1306,8 @@ void InitCommandData() {
   SIPData.MKScal.b_hi = 0;
   SIPData.MKScal.b_med = 0;
   SIPData.MKScal.b_lo = 0;
+
+  CommandData.autogyro = 1;
 
   CommandData.pumps.bal_on = 0.5 * 1648.;
   CommandData.pumps.bal_off = 0.2 * 1648.;
