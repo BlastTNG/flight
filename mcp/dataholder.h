@@ -28,7 +28,11 @@
 #define AML_LEN_LINE    512
 #define AML_LEN_ENTRY   32
 
-#include "tdrss.h"
+#ifdef __MCP__
+#  include "tdrss.h"
+#else
+#  include "big.h"
+#endif
 #include "channels.h"
 
 struct value_struct {
