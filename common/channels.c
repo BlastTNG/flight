@@ -126,11 +126,11 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
 #ifdef __DEFILE__
   /* Calculate slowsPerBi0Frame */
   for (i = 0; i < ccWideSlow; ++i) {
-    slowsPerBusFrame[WideSlowChannels[i].bus] += 2;
+    slowsPerBusFrame[(int)WideSlowChannels[i].bus] += 2;
   }
 
   for (i = 0; i < ccNarrowSlow; ++i)
-    slowsPerBusFrame[SlowChannels[i].bus]++;
+    slowsPerBusFrame[(int)SlowChannels[i].bus]++;
 
   for (bus = 0; bus < 2; ++bus) {
     slowsPerBusFrame[bus] = 1 + (slowsPerBusFrame[bus] - 1) / FAST_PER_SLOW;
@@ -737,7 +737,7 @@ void MakeAddressLookups(void)
     FastChList[BiPhaseAddr++] = FastChannels[i];
 #endif
 
-    addr[FastChannels[i].bus]++;
+    addr[(int)FastChannels[i].bus]++;
   }
 
   for (i = 0; i < ccWideFast; ++i) {
@@ -758,7 +758,7 @@ void MakeAddressLookups(void)
     FastChList[BiPhaseAddr++] = EmptyChannel;
 #endif
 
-    addr[WideFastChannels[i].bus] += 2;
+    addr[(int)WideFastChannels[i].bus] += 2;
   }
 
   for (i = 0; i < N_FAST_BOLOS; ++i) {
@@ -774,7 +774,7 @@ void MakeAddressLookups(void)
     FastChList[BiPhaseAddr++] = BoloChannels[i];
 #endif
 
-    addr[BoloChannels[i].bus]++;
+    addr[(int)BoloChannels[i].bus]++;
   }
 
 #ifndef __DEFILE__
