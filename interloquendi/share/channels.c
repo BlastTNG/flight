@@ -429,11 +429,21 @@ void DumpNiosFrame(void)
 
 /* Checks BBC Addresses to see if multiple fields are occupying the same
  * place */
-void BBCAddressCheck(char* fields[64][64], char* name, int node, int addr)
+void BBCAddressCheck(char** names, int nn, char* fields[64][64], char* name,
+    int node, int addr)
 {
+  int i;
+  
   if (fields[node][addr])
     mprintf(MCP_FATAL, "FATAL: Conflicting BBC address found for %s and %s"
         " (node %i channel %i)\n", fields[node][addr], name, node, addr);
+
+  if (nn != -1) {
+    for (i = 0; i < nn; ++i)
+      if (strcmp(names[i], name) == 0)
+        mprintf(MCP_FATAL, "FATAL: Duplicate channel name %s found\n", name);
+    names[nn] = name;
+  }
 
   fields[node][addr] = name;
 }
@@ -443,8 +453,9 @@ void BBCAddressCheck(char* fields[64][64], char* name, int node, int addr)
  * compute useful parameters */
 void DoSanityChecks(void)
 {
-  int i, j;
+  int i, j, nn = 0;
   char* fields[2][64][64];
+  char* names[64 * 64];
 
 #ifndef __BIG__
   mprintf(MCP_INFO, "Running Sanity Checks on Channel Lists.\n");
@@ -462,10 +473,10 @@ void DoSanityChecks(void)
           "    %s does not have a valid wide type (%c)\n",
           WideSlowChannels[i].field, WideSlowChannels[i].type);
 
-    BBCAddressCheck(fields[WideSlowChannels[i].rw == 'r'],
+    BBCAddressCheck(names, nn++, fields[WideSlowChannels[i].rw == 'r'],
         WideSlowChannels[i].field, WideSlowChannels[i].node,
         WideSlowChannels[i].addr);
-    BBCAddressCheck(fields[WideSlowChannels[i].rw == 'r'],
+    BBCAddressCheck(names, -1, fields[WideSlowChannels[i].rw == 'r'],
         WideSlowChannels[i].field, WideSlowChannels[i].node,
         WideSlowChannels[i].addr + 1);
   }
@@ -478,8 +489,8 @@ void DoSanityChecks(void)
           "    %s does not have a valid slow type (%c)\n",
           SlowChannels[i].field, SlowChannels[i].type);
 
-    BBCAddressCheck(fields[SlowChannels[i].rw == 'r'], SlowChannels[i].field,
-        SlowChannels[i].node, SlowChannels[i].addr);
+    BBCAddressCheck(names, nn++, fields[SlowChannels[i].rw == 'r'],
+        SlowChannels[i].field, SlowChannels[i].node, SlowChannels[i].addr);
   }
   ccNarrowSlow = i;
   ccSlow = ccNarrowSlow + ccWideSlow;
@@ -492,10 +503,10 @@ void DoSanityChecks(void)
           "    %s does not have a valid wide type (%c)\n",
           WideFastChannels[i].field, WideFastChannels[i].type);
 
-    BBCAddressCheck(fields[WideFastChannels[i].rw == 'r'],
+    BBCAddressCheck(names, nn++, fields[WideFastChannels[i].rw == 'r'],
         WideFastChannels[i].field, WideFastChannels[i].node,
         WideFastChannels[i].addr);
-    BBCAddressCheck(fields[WideFastChannels[i].rw == 'r'],
+    BBCAddressCheck(names, -1, fields[WideFastChannels[i].rw == 'r'],
         WideFastChannels[i].field, WideFastChannels[i].node,
         WideFastChannels[i].addr + 1);
   }
@@ -508,8 +519,8 @@ void DoSanityChecks(void)
           "    %s does not have a valid slow type (%c)\n",
           FastChannels[i].field, FastChannels[i].type);
 
-    BBCAddressCheck(fields[FastChannels[i].rw == 'r'], FastChannels[i].field,
-        FastChannels[i].node, FastChannels[i].addr);
+    BBCAddressCheck(names, nn++, fields[FastChannels[i].rw == 'r'],
+        FastChannels[i].field, FastChannels[i].node, FastChannels[i].addr);
   }
   ccNarrowFast = i;
   ccFast = ccWideFast + ccNarrowFast + N_FAST_BOLOS;
@@ -518,8 +529,8 @@ void DoSanityChecks(void)
 
   for (i = 0; i < N_FAST_BOLOS; ++i) {
     fastsPerBusFrame[BOLO_BUS]++;
-    BBCAddressCheck(fields[1], BoloChannels[i].field, BoloChannels[i].node,
-        BoloChannels[i].addr);
+    BBCAddressCheck(names, nn++, fields[1], BoloChannels[i].field,
+        BoloChannels[i].node, BoloChannels[i].addr);
   }
 
   /* Calculate slowsPerBi0Frame */
