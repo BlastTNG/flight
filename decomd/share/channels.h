@@ -55,4 +55,3 @@ void SlowChIndex(char*, int*, int*);
 #define DEG2I (65536.0/360.0)
 #define I2DEG (1.0/DEG2I)
 
-void FPrintDerived(FILE *fp);

@@ -9,6 +9,8 @@
 
 #include "tx_struct.h"
 
+void FPrintDerived(FILE *fp);
+
 char filedirname[200];
 
 #define MAXBUF 1200
