@@ -480,13 +480,13 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.point_mode.az_mode = POINT_VEL;
     CommandData.point_mode.az_vel = rvalues[0];
   } else if (command == MIndex("jfet_ht"))
-    CommandData.Cryo.JFETHeat = 2047 - rvalues[0] * 2047./5.;
+    CommandData.Cryo.JFETHeat = 2047 - rvalues[0] * 2047./100.;
   else if (command == MIndex("hs_heat"))
-    CommandData.Cryo.heatSwitch = 2047 - rvalues[0] * 2047./5.;
+    CommandData.Cryo.heatSwitch = 2047 - rvalues[0] * 2047./100.;
   else if (command == MIndex("he3_ht"))
-    CommandData.Cryo.heliumThree = 2047 - rvalues[0] * 2047./5.;
+    CommandData.Cryo.heliumThree = 2047 - rvalues[0] * 2047./100.;
   else if (command == MIndex("cryopwm"))
-    CommandData.Cryo.sparePwm = 2047 - rvalues[0] * 2047./5.;
+    CommandData.Cryo.sparePwm = 2047 - rvalues[0] * 2047./100.;
   else if (command == MIndex("b_levl1"))    /* Set bias 1 */
     CommandData.Bias.bias1 = ivalues[0];
   else if (command == MIndex("b_levl2"))    /* Set bias 1 */
@@ -1193,8 +1193,10 @@ void InitCommandData() {
   CommandData.pumps.pwm3 = 2047;
   CommandData.pumps.pwm4 = 2047;
 
+#ifndef BOLOTEST
   /** return if we succsesfully read the previous status **/
   if (n_read == sizeof(struct CommandDataStruct)) return;
+#endif
 
   /** put stuff that we want to keep from prev_status here **/
   CommandData.timeout = 60*60;
@@ -1262,10 +1264,10 @@ void InitCommandData() {
   CommandData.Cryo.heliumLevel = 0;
   CommandData.Cryo.charcoalHeater = 0;
   CommandData.Cryo.coldPlate = 0;
-  CommandData.Cryo.JFETHeat = 0;
-  CommandData.Cryo.heatSwitch = 0;
-  CommandData.Cryo.heliumThree = 0;
-  CommandData.Cryo.sparePwm = 0;
+  CommandData.Cryo.JFETHeat = 2047;
+  CommandData.Cryo.heatSwitch = 2047;
+  CommandData.Cryo.heliumThree = 2047;
+  CommandData.Cryo.sparePwm = 2047;
   CommandData.Cryo.calibrator = 0;
   CommandData.Cryo.lnvalve_on = 0;
   CommandData.Cryo.lnvalve_open = 0;
