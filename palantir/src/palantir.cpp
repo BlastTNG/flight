@@ -1461,7 +1461,7 @@ int main(int argc, char* argv[]) {
   char layoutfile[MAXPATHLENGTH];
 
   // Parse command line
-  if (argc > 2 || strcmp(argv[1], "--help") == 0)
+  if (argc > 2 || (argc == 2 && argv[1][0] == '-'))
     usage();
   else if (argc == 2)
     strncpy(layoutfile, argv[1], MAXPATHLENGTH);
