@@ -85,10 +85,10 @@ void ReadDecom (void)
               pushDiskFrame(AntiFrameBuf);
               fs_bad *= FS_FILTER;
             }
-      if (crc_ok)
-        dq_bad *= DQ_FILTER;
-      else
-        dq_bad = dq_bad * DQ_FILTER + (1.0 - DQ_FILTER);
+          if (crc_ok)
+            dq_bad *= DQ_FILTER;
+          else
+            dq_bad = dq_bad * DQ_FILTER + (1.0 - DQ_FILTER);
 
           i_word++;
         }
