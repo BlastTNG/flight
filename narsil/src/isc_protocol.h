@@ -1,6 +1,6 @@
 /*  isc_protocol.h: define data structures for communcation between the server (ISC) and clients (Sam,Frodo,...)
  *
- * This software is copyright (C) 2003-2004 Edward Chapin
+ * This software is copyright (C) 2003-2005 Edward Chapin
  *
  * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.

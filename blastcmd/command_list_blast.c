@@ -1,6 +1,6 @@
 /* command_list.c: BLAST command specification file
  *
- * This software is copyright (C) 2002-2004 University of Toronto
+ * This software is copyright (C) 2002-2005 University of Toronto
  * 
  * This file is part of the BLAST flight code licensed under the GNU 
  * General Public License.
@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.39 $";
+const char command_list_serial[] = "$Revision: 2.40 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
