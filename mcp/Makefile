@@ -13,9 +13,9 @@ ifeq ($(USE_FIFO_CMD), 1)
 	CFLAGS := $(CFLAGS) -DUSE_FIFO_CMD
 endif
 
-HEADERS = bbc_pci.h commands.h ephem_read.h ephem_types.h isc_protocol.h lut.h \
-					mcp.h pointing_struct.h sort.h sslutNA.h starpos.h tx.h tx_struct.h \
-					alice.h
+HEADERS = alice.h bbc_pci.h command_list.h ephem_read.h ephem_types.h \
+					isc_protocol.h lut.h mcp.h pointing_struct.h sort.h ss_struct.h \
+					sslutNA.h starpos.h tx.h tx_struct.h alice.h
 
 OBJS = mcp.o alice.o auxiliary.o channels.o command_list.o commands.o das.o \
        dgps.o framefile.o ephem_read.o geomag.o isc.o lut.o \

@@ -1,4 +1,4 @@
-#include "commands.h"
+#include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
 const char *GroupNames[N_GROUPS] = {

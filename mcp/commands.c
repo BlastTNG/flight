@@ -16,7 +16,7 @@
 #include "command_struct.h"
 #include "pointing_struct.h"
 
-#include "commands.h"
+#include "command_list.h"
 #include "mcp.h"
 
 #define REQ_POSITION    0x50
