@@ -62,6 +62,19 @@ struct ChannelStruct WideSlowChannels[] = {
   {"isc_mcpnum",   'w', LOOP2, 61,                1.0,             0.0, 'U'},
   {"osc_mcpnum",   'w', LOOP3, 58,                1.0,             0.0, 'U'},
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U'},
+/* Rox a la Jeff */
+  {"t_he3fridge",  'r',  CRYO,  6,    ROX_C2V,   ROX_OFFSET, 'U'}, 
+  {"t_m4",         'r',  CRYO,  8,    ROX_C2V,   ROX_OFFSET, 'U'}, 
+  {"t_m5",         'r',  CRYO, 10,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_horn_250",   'r',  CRYO, 12,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_m3",         'r',  CRYO, 14,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_horn_350",   'r',  CRYO, 38,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_300mk_strap",'r',  CRYO, 40,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_horn_500",   'r',  CRYO, 42,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_he4pot",     'r',  CRYO, 44,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_optbox_filt",'r',  CRYO, 46,    ROX_C2V,   ROX_OFFSET, 'U'},
+  
+  
   END_OF_CHANNELS
 };
 
@@ -162,11 +175,6 @@ struct ChannelStruct SlowChannels[] = {
   {"he4_lev",      'r',  CRYO,  1,  -2.87477e-09*65536,      12.3273561, 'u'},
   {"i_charcoal",   'r',  CRYO,  3,     -2.639826420E-6,     0.157988332, 'u'},
   {"i_coldplate",  'r',  CRYO,  5,      -2.32217573E-5,     1.390309833, 'u'},
-  {"t_he3fridge",  'r',  CRYO,  7,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'}, 
-  {"t_m4",         'r',  CRYO,  9,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'}, 
-  {"t_m5",         'r',  CRYO, 11,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'},
-  {"t_horn_250",   'r',  CRYO, 13,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'},
-  {"t_m3",         'r',  CRYO, 15,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'},
   {"t_lhe",        'r',  CRYO, 17,             T_LHE_M,         T_LHE_B, 'u'},
   {"t_lhe_filt",   'r',  CRYO, 19, -2.856350e-09*65536,    1.231143e+01, 'u'},
   {"t_he4pot_d",   'r',  CRYO, 21, -2.869274e-09*65536,    1.236054e+01, 'u'},
@@ -178,11 +186,6 @@ struct ChannelStruct SlowChannels[] = {
   {"t_jfet",       'r',  CRYO, 33,            T_JFET_M,        T_JFET_B, 'u'},
   {"t_vcs_fet",    'r',  CRYO, 35, -2.865493e-09*65536,    1.234227e+01, 'u'},
   {"t_opt_box_ext",'r',  CRYO, 37, -2.863415e-09*65536,    1.232882e+01, 'u'},
-  {"t_horn_350",   'r',  CRYO, 39,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'},
-  {"t_300mk_strap",'r',  CRYO, 41,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'},
-  {"t_horn_500",   'r',  CRYO, 43,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'},
-  {"t_he4pot",     'r',  CRYO, 45,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'},
-  {"t_optbox_filt",'r',  CRYO, 47,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'},
   {"cryoin",       'r',  CRYO, 60,                 1.0,             0.0, 'u'},
   {"status03",     'r',  CRYO, 57,                 1.0,             0.0, 'u'},
   {"cryoout2",     'w',  CRYO,  1,                 1.0,             0.0, 'u'},

@@ -49,6 +49,9 @@ extern "C" {
 #define LOCKIN_C2V (5.43736e-07)
 #define LOCKIN_OFFSET (-1.1403)
 
+#define ROX_C2V   (LOCKIN_C2V/256.0)
+#define ROX_OFFSET LOCKIN_OFFSET
+
 #define FIELD_LEN 20
 
   struct ChannelStruct {
