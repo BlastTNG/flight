@@ -13,16 +13,13 @@ ifeq ($(USE_FIFO_CMD), 1)
 	CFLAGS := $(CFLAGS) -DUSE_FIFO_CMD
 endif
 
-HEADERS = bbc_pci.h command_list.h ephem_read.h ephem_types.h isc_protocol.h \
-          lut.h mcp.h pointing_struct.h sort.h sslutNA.h starpos.h tx.h \
-		  tx_struct.h small_c.h
-
-# FIXME:  add these to header files when small devel. is done:  small.h
-# crc.h dataholder.h alice.h
+HEADERS = alice.h bbc_pci.h command_list.h crc.h dataholder.h ephem_read.h \
+		  ephem_types.h isc_protocol.h lut.h mcp.h pointing_struct.h slow_dl.h \
+		  small.h sort.h sslutNA.h starpos.h tx.h tx_struct.h small_c.h
 
 OBJS = mcp.o auxiliary.o channels.o command_list.o commands.o crc.o das.o \
 	   dataholder.o dgps.o fftsg_h.o framefile.o ephem_read.o geomag.o isc.o \
-	   lut.o motors.o pointing.o sched.o small.o sslutNA.o starpos.o \
+	   lut.o motors.o pointing.o sched.o slow_dl.o small.o sslutNA.o starpos.o \
 	   sunsensor.o tx.o tx_struct.o
 
 all::

@@ -16,15 +16,15 @@
 #include <sys/time.h>
 #include "bbc_pci.h"
 
+#include "command_struct.h"
+#include "crc.h"
+#include "mcp.h"
+#include "pointing_struct.h"
+#include "small_c.h"
+#include "slow_dl.h"
+#include "starpos.h"
 #include "tx_struct.h"
 #include "tx.h"
-#include "crc.h"
-
-#include "pointing_struct.h"
-#include "command_struct.h"
-#include "starpos.h"
-#include "mcp.h"
-#include "small_c.h"
 
 #define BBC_EOF      (0xffff)
 #define BBC_BAD_DATA (0xfffffff0)
@@ -54,7 +54,7 @@ short int SamIAm;
 
 unsigned short* slow_data[FAST_PER_SLOW];
 
-extern struct SlowDLStruct SlowDLInfo[N_SLOWDL];
+extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 
 extern pthread_mutex_t mutex;
 
@@ -345,68 +345,41 @@ void GetACS(unsigned short *RxFrame){
 
 }
 
-#if 0
 void FillSlowDL(unsigned short *RxFrame) {
   static char firsttime = 1;
-  int i, j, k;
-
-  pthread_mutex_lock(&mutex);
+  int i;
+  unsigned short msb, lsb;
+  struct NiosStruct *address;
 
   if (firsttime) {
     firsttime = 0;
-    for (i = 0; i < N_SLOWDL; i++) {
-      for (j = 0; j < N_FASTCHLIST; j++) {
-        if (strcmp(FastChList[j].field, SlowDLInfo[i].src) == 0) {
-          SlowDLInfo[i].m_c2e = FastChList[j].m_c2e;
-          SlowDLInfo[i].b_e2e = FastChList[j].b_e2e;
-          SlowDLInfo[i].ctype = FastChList[j].type;
-          SlowDLInfo[i].ind1 = j + FAST_OFFSET;
-        }
-      }
-
-      for (j = 0; j < N_SLOW; j++) {
-        for (k = 0; k < FAST_PER_SLOW; k++) {
-          if (strcmp(SlowChList[j][k].field, SlowDLInfo[i].src) == 0) {
-            SlowDLInfo[i].m_c2e = SlowChList[j][k].m_c2e;
-            SlowDLInfo[i].b_e2e = SlowChList[j][k].b_e2e;
-            SlowDLInfo[i].ctype = SlowChList[j][k].type;
-            SlowDLInfo[i].ind1 = j;
-            SlowDLInfo[i].ind2 = k;
-          }
-        }
-      }
+    for (i = 0; i < SLOWDL_NUM_DATA; i++) {
+      address = GetNiosAddr(SlowDLInfo[i].src);
+      SlowDLInfo[i].wide = address->wide;
+      SlowDLInfo[i].mindex = BiPhaseLookup[BI0_MAGIC(address->bbcAddr)].index;
+      SlowDLInfo[i].chnum = BiPhaseLookup[BI0_MAGIC(address->bbcAddr)].channel;
     }
   }
 
-  for (i = 0; i < N_SLOWDL; i++) {
-    if ((SlowDLInfo[i].ind2 >= 0 && RxFrame[3] == SlowDLInfo[i].ind2)
-        || SlowDLInfo[i].ind2 < 0) {
-      switch (SlowDLInfo[i].ctype) {
-        case 's':
-          SlowDLInfo[i].value =
-            (double)((signed short) RxFrame[SlowDLInfo[i].ind1 + 4]);
-          break;
-        case 'u':
-          SlowDLInfo[i].value = (double)(RxFrame[SlowDLInfo[i].ind1 + 4]);
-          break;
-        case 'i': case 'S':
-          SlowDLInfo[i].value =
-            (double)((signed int) ((RxFrame[SlowDLInfo[i].ind1 + 4] << 16) +
-                                   RxFrame[SlowDLInfo[i].ind1 + 5]));
-          break;
-        case 'U':
-          SlowDLInfo[i].value =
-            (double)((unsigned int) ((RxFrame[SlowDLInfo[i].ind1 + 4] << 16) +
-                                     RxFrame[SlowDLInfo[i].ind1 + 5]));
-          break;
-      }
-      SlowDLInfo[i].value = SlowDLInfo[i].value * SlowDLInfo[i].m_c2e
-        + SlowDLInfo[i].b_e2e;
+  for (i = 0, msb = 0; i < SLOWDL_NUM_DATA; i++) {
+    if (SlowDLInfo[i].mindex == NOT_MULTIPLEXED) {
+      lsb = RxFrame[SlowDLInfo[i].chnum];
+      if (SlowDLInfo[i].wide)
+        msb = RxFrame[SlowDLInfo[i].chnum + 1];
+      else
+        msb = 0;
+      SlowDLInfo[i].value = (double)((msb << 16) | lsb);
+    }
+    else {
+      lsb = slow_data[SlowDLInfo[i].mindex][SlowDLInfo[i].chnum];
+      if (SlowDLInfo[i].wide)
+        lsb = slow_data[SlowDLInfo[i].mindex][SlowDLInfo[i].chnum + 1];
+      else
+        msb = 0;
+      SlowDLInfo[i].value = (double)((msb << 16) | lsb);
     }
   }
-  pthread_mutex_unlock(&mutex);
 }
-#endif
 
 /* fill_Rx_frame: places one 32 bit word into the RxFrame. Returns true on
  * success */
@@ -764,9 +737,7 @@ int main(int argc, char *argv[]) {
 #ifndef BOLOTEST
         PushBi0Buffer(RxFrame);
 #endif
-#if 0
         FillSlowDL(RxFrame);
-#endif
         pushDiskFrame(RxFrame);
         zero(RxFrame);
       }

@@ -2,8 +2,6 @@
 #include "tx_struct.h"
 #include <time.h>
 
-#define N_SLOWDL   7
-
 #define AXIS_VEL      0
 #define AXIS_POSITION 1
 #define AXIS_LOCK     2
@@ -17,18 +15,6 @@
 #define P_BOX        7
 #define P_LOCK       8
 #define P_VBOX       9
-
-struct SlowDLStruct {
-  char src[20];
-  char type;
-  int numbits;
-  double value;
-  int ind1;
-  int ind2;
-  float m_c2e;
-  float b_e2e;
-  int ctype;
-};
 
 struct GainStruct {
   unsigned short int P;

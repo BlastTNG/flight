@@ -380,8 +380,8 @@ the format file for the decompressed frames (boromir:/usr/local/src/alice)
 2.11    Add a new field to the slow TDRSS downlink?
 --------------------------------------------------------------------------------
 
-* Open command_struct.h on frodo:/usr/local/src/mcp and increment the macro N_SLOWDL by
-  one.  Then open commands.c.
+* Open command_struct.h on frodo:/usr/local/src/mcp and increment the macro 
+  SLOWDL_NUM_DATA by one.  Then open commands.c.
 * Add an entry to struct SlowDL_glob SlowDLInfo
      -> src = name of field to take the datum from
      -> type = how to compress the datum

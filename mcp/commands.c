@@ -12,12 +12,12 @@
 #include <math.h>
 #include <pthread.h>
 
-#include "tx_struct.h"
-#include "command_struct.h"
-#include "pointing_struct.h"
-
 #include "command_list.h"
+#include "command_struct.h"
 #include "mcp.h"
+#include "pointing_struct.h"
+#include "slow_dl.h"
+#include "tx_struct.h"
 
 #define REQ_POSITION    0x50
 #define REQ_TIME        0x51
@@ -29,10 +29,6 @@
 /* #define ISC             1 */
 /* #define VSC             2 */
 /* #define MAG             3 */
-
-#define TAKEBIT    0
-#define FORCEINT   1
-#define U_MASK     2
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.
@@ -58,15 +54,7 @@ void AzElTrim(double az, double el);
 
 const char UnknownCommand[] = "Unknown Command";
 
-struct SlowDLStruct SlowDLInfo[N_SLOWDL] = {
-  {"t_dpm_3v", FORCEINT, 8, -1, -1, -1, -1, -1, -1},
-  {"cpu_time", U_MASK,   8, -1, -1, -1, -1, -1, -1},
-  {"t_gybox",  FORCEINT, 8, -1, -1, -1, -1, -1, -1},
-  {"gyro1",    FORCEINT, 8, -1, -1, -1, -1, -1, -1},
-  {"t_reac",   FORCEINT, 7, -1, -1, -1, -1, -1, -1},
-  {"g_p_el",   FORCEINT, 8, -1, -1, -1, -1, -1, -1},
-  {"i_el",     TAKEBIT,  3, -1, -1, -1, -1, -1, -1}
-};
+extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 
 pthread_mutex_t mutex;
 
@@ -888,18 +876,18 @@ void MKSAltitude (unsigned char *indata) {
 /* Send TDRSS Low Rate Packet */
 
 void SendDownData(char tty_fd) {
-  unsigned char buffer[50], data[37];
+  unsigned char buffer[SLOWDL_LEN], data[3 + SLOWDL_LEN + 1];
   int i, temp;
   int bitpos, bytepos, numbits;
-  static char firsttime = 1;
+  static char firsttime;
 
   bitpos = 0;
   bytepos = 0;
-  memset(data, 0, 37);
+  memset(data, 0, SLOWDL_LEN);
 
-  for (i = 0; i < N_SLOWDL; i++) {
+  for (i = 0; i < SLOWDL_NUM_DATA; i++) {
     switch (SlowDLInfo[i].type) {
-      case FORCEINT:
+      case SLOWDL_FORCE_INT:
         /* Round value to an integer and try to fit it in numbits */
         if ((int)SlowDLInfo[i].value > (1 << (SlowDLInfo[i].numbits - 1)) - 1)
           temp = 0;     /* Indicates value was too big */
@@ -911,14 +899,14 @@ void SendDownData(char tty_fd) {
         numbits = SlowDLInfo[i].numbits;
         break;
 
-      case U_MASK:
+      case SLOWDL_U_MASK:
         /* Simply take the bottom numbits from the unsigned number */
         temp = ((int)(SlowDLInfo[i].value)) & ((1 << SlowDLInfo[i].numbits) - 
             1);
         numbits = SlowDLInfo[i].numbits;
         break;
 
-      case TAKEBIT:
+      case SLOWDL_TAKE_BIT:
         /* Intended for bitfields:  get the value of bit number numbit */
         temp = (((int)(SlowDLInfo[i].value)) >> (SlowDLInfo[i].numbits - 1))
           & 0x01;
@@ -951,20 +939,26 @@ void SendDownData(char tty_fd) {
       bitpos = 0;
       bytepos++;
     }
+
+    if (bytepos >= SLOWDL_LEN) {
+      mprintf(MCP_WARNING, "Slow DL size is larger than maximum size of %d.  "
+              "Reduce length of SlowDLInfo structure.", SLOWDL_LEN);
+      break;
+    }
   }
 
   if (firsttime) {
-    mprintf(MCP_INFO, "Slow DL size = %d\n", bytepos);
+    mprintf(MCP_STARTUP, "Slow DL size = %d\n", bytepos);
     firsttime = 0;
   }
 
-  buffer[0] = 0x10;
-  buffer[1] = 0x53;
-  buffer[2] = 37;
-  memcpy(buffer + 3, data, 37);
-  buffer[40] = 0x03;
+  buffer[0] = SLOWDL_DLE;
+  buffer[1] = SLOWDL_SYNC;
+  buffer[2] = SLOWDL_LEN;
+  memcpy(buffer + 3, data, SLOWDL_LEN);
+  buffer[3 + SLOWDL_LEN] = SLOWDL_ETX;
 
-  write(tty_fd, buffer, 41);
+  write(tty_fd, buffer, 3 + SLOWDL_LEN + 1);
 }
 
 /* compute the size of the data queue for the given command */
