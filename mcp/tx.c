@@ -343,10 +343,6 @@ void StoreStarCameraData(int index, int which)
     YOffAddr[which] = GetSCNiosAddr("y_off", which);
     HoldIAddr[which] = GetSCNiosAddr("hold_i", which);
     SavePrdAddr[which] = GetSCNiosAddr("save_prd", which);
-    Temp1Addr[which] = GetSCNiosAddr("temp1", which);
-    Temp2Addr[which] = GetSCNiosAddr("temp2", which);
-    Temp3Addr[which] = GetSCNiosAddr("temp3", which);
-    Temp4Addr[which] = GetSCNiosAddr("temp4", which);
     PressureAddr[which] = GetSCNiosAddr("pressure1", which);
     GainAddr[which] = GetSCNiosAddr("gain", which);
     OffsetAddr[which] = GetSCNiosAddr("offset", which);
@@ -354,6 +350,15 @@ void StoreStarCameraData(int index, int which)
     TrigTypeAddr[which] = GetSCNiosAddr("trig_type", which);
     FieldrotAddr[which] = GetSCNiosAddr("fieldrot", which);
     RealTrigAddr[which] = GetSCNiosAddr("real_trig", which);
+
+    Temp1Addr[0] = GetNiosAddr("t_isc_flange");
+    Temp2Addr[0] = GetNiosAddr("t_isc_lens");
+    Temp3Addr[0] = GetNiosAddr("t_isc_heat");
+    Temp4Addr[0] = GetNiosAddr("t_isc_comp");
+    Temp1Addr[1] = GetNiosAddr("t_osc_flange");
+    Temp2Addr[1] = GetNiosAddr("t_osc_lens");
+    Temp3Addr[1] = GetNiosAddr("t_osc_heat");
+    Temp4Addr[1] = GetNiosAddr("t_osc_comp");
   }
 
   /** Increment isc index -- this only happens once per slow frame */

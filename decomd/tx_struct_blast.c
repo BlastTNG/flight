@@ -334,7 +334,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_gy1_set",    'w', LOOP2, 28,    (100.0/32768.0),             0.0, 'u'},
   {"g_p_gyheat1",  'w', LOOP2, 29,                1.0,             0.0, 'u'},
   {"isc_blob01_f", 'w', LOOP2, 30,               32.0,             0.0, 'u'},
-  {"osc_foc_off",  'w', LOOP3, 31,                1.0,             0.0, 's'},
+  {"osc_foc_off",  'w', LOOP2, 31,                1.0,             0.0, 's'},
   {"gy1_h_hist",   'w', LOOP2, 32,    (100.0/32768.0),             0.0, 'u'},
   {"isc_tol",      'w', LOOP2, 33,                1.0,             0.0, 'u'},
   {"ss_az",        'w', LOOP2, 35,              I2DEG,             0.0, 's'},

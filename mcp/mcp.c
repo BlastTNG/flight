@@ -224,7 +224,7 @@ void mputs(buos_t flag, const char* message) {
     fputs("!! Last error is FATAL.  Cannot continue.\n", stdout);
     fflush(stdout);
 
-    _exit(1);
+    exit(1);
   }
 
   if (flag == tfatal) {

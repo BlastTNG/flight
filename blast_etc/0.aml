@@ -5,7 +5,7 @@
 
 +SLOWDATA
 ++SINGLE    src         numbits     overbits    minval      maxval      perframe
---1         t_gybox     11          3           1024        60000       20
+--1         t_gybox1    11          3           1024        60000       20
 --2         mcp_frame   32          3           0           4294967295  20
 ++AVG       src         numbits     overbits    minval      maxval      perframe
 --1         t_pv        8           8           0           65535       1
