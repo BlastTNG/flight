@@ -35,6 +35,7 @@ moc_narsil.cpp: narsil.cpp narsil.h commands.h
 install:
 	install -D -m 755 narsil $(EXEC_DIR)/narsil
 	install -D -m 755 blastcmdatgaladriel $(EXEC_DIR)/blastcmdatgaladriel
+	install -D -m 755 dummycmd $(EXEC_DIR)/dummycmd
 
 clean:
 	rm narsil moc_narsil.cpp *.o *~ moc_narsil.cpp || true
