@@ -69,6 +69,7 @@
 #define DPS2GYU (66.7 * 65536.0/4000.0) /* deg per sec to "gyro units" */
 
 extern short int SamIAm;
+short int InCharge;
 
 extern unsigned short slow_data[N_SLOW][FAST_PER_SLOW];
 
@@ -328,6 +329,7 @@ void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int i_time = -1, j_time = -1;
   static int i_samiam = -1, j_samiam = -1;
   static int i_df = -1, j_df = -1;
+  static int incharge = -1;
   time_t t;
 
   if (i_fan == -1) {
@@ -339,6 +341,14 @@ void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   }
 
   t = time(NULL);
+
+  InCharge = !(SamIAm ^ slow_data[i_samiam][j_samiam]);
+  if (InCharge != incharge && InCharge)
+    fprintf(stderr, "I have gained control.\n");
+  else if (InCharge != incharge)
+    fprintf(stderr, "I have lost control.\n");
+
+  incharge = InCharge;
 
   WriteSlow(i_time, j_time, t >> 16);
   WriteSlow(i_time + 1, j_time, t);
@@ -604,7 +614,6 @@ void ControlGyroHeat(unsigned int *Txframe,  unsigned short *Rxframe,
     WriteFast(i_GY_HEAT, off);
     p_off--;
   }
-
 }
 
 /************************************************************************
@@ -1310,18 +1319,19 @@ void StoreData(int index, unsigned int* Txframe,
     blob_index = 0;
 
   /*** Camera Info ***/
-  WriteSlow(isc_framenumCh, isc_framenumInd, (unsigned int)ISCData[i_isc].framenum);
+  WriteSlow(isc_framenumCh, isc_framenumInd,
+      (unsigned int)ISCData[i_isc].framenum);
   WriteSlow(isc_errorCh, isc_errorInd, (unsigned int)ISCData[i_isc].error);
   WriteSlow(isc_exposeCh, isc_exposeInd, (unsigned int)ISCData[i_isc].exposure);
   WriteSlow(isc_rotCh, isc_rotInd, (unsigned int)(ISCData[i_isc].rot * RAD2I));
-  WriteSlow(isc_raCh, isc_raInd, (unsigned int)(ISCData[i_isc].ra * RAD2LI)
-      >> 16);
-  WriteSlow(isc_raCh + 1, isc_raInd, (unsigned int)(ISCData[i_isc].ra *
-        RAD2LI));
-  WriteSlow(isc_decCh, isc_decInd, (unsigned int)((ISCData[i_isc].dec + M_PI /
-          2) * 2. * RAD2LI) >> 16);
-  WriteSlow(isc_decCh + 1, isc_decInd, (unsigned int)((ISCData[i_isc].dec + M_PI
-          / 2) * 2.* RAD2LI));
+  WriteSlow(isc_raCh, isc_raInd,
+      (unsigned int)(ISCData[i_isc].ra * RAD2LI) >> 16);
+  WriteSlow(isc_raCh + 1, isc_raInd,
+      (unsigned int)(ISCData[i_isc].ra * RAD2LI));
+  WriteSlow(isc_decCh, isc_decInd,
+      (unsigned int)((ISCData[i_isc].dec + M_PI / 2) * 2. * RAD2LI) >> 16);
+  WriteSlow(isc_decCh + 1, isc_decInd,
+      (unsigned int)((ISCData[i_isc].dec + M_PI / 2) * 2.* RAD2LI));
   WriteSlow(isc_apertCh, isc_apertInd,
       (unsigned int)ISCData[i_isc].aperturePosition);
   WriteSlow(isc_pscaleCh, isc_pscaleInd,
@@ -1340,7 +1350,8 @@ void StoreData(int index, unsigned int* Txframe,
   WriteSlow(isc_threshCh, isc_threshInd,
       (unsigned int)(ISCData[i_isc].threshold * 10.));
   WriteSlow(isc_gridCh, isc_gridInd, (unsigned int)ISCData[i_isc].grid);
-  WriteSlow(isc_lstCh, isc_lstInd, (unsigned int)(ISCData[i_isc].lst * RAD2SEC));
+  WriteSlow(isc_lstCh, isc_lstInd,
+      (unsigned int)(ISCData[i_isc].lst * RAD2SEC));
 }
 
 

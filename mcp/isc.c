@@ -13,7 +13,8 @@
 #define ELBERETH "192.168.1.98"
 #define BASE_PORT 2000
 
-extern short int SamIAm;  /* mcp.c */
+extern short int SamIAm;   /* mcp.c */
+extern short int InCharge; /* tx.c */
 
 short int write_ISC_pointing = 0;
 
@@ -57,20 +58,22 @@ int ISCInit(client_frame* client_data)
 
   /* Ask for defaults and start free run */
   client_data->command = freerun;
-  n = send(sock, client_data, sizeof(client_frame), 0);
-  if (n == -1) {
-    perror("ISC send()");
-    if (sock != -1)
-      if (close(sock) < 0)
-        perror("ISC close()");
-    return -1;
-  } else if (n < sizeof(client_frame)) {
-    fprintf(stderr, "ISC: Expected %i bytes, but sent %i bytes.\n",
-        sizeof(client_frame), n);
-    if (sock != -1)
-      if (close(sock) < 0)
-        perror("ISC close()");
-    return -1;
+  if (InCharge) {
+    n = send(sock, client_data, sizeof(client_frame), 0);
+    if (n == -1) {
+      perror("ISC send()");
+      if (sock != -1)
+        if (close(sock) < 0)
+          perror("ISC close()");
+      return -1;
+    } else if (n < sizeof(client_frame)) {
+      fprintf(stderr, "ISC: Expected %i bytes, but sent %i bytes.\n",
+          sizeof(client_frame), n);
+      if (sock != -1)
+        if (close(sock) < 0)
+          perror("ISC close()");
+      return -1;
+    }
   }
 
   /* Read defaults */
@@ -230,16 +233,18 @@ void IntegratingStarCamera(void)
         client_data.lst = MyPointData.lst * SEC2RAD;
 
         /* Write to ISC */
-        n = send(sock, &client_data, sizeof(client_data), 0);
-        if (n == -1) {
-          perror("ISC recv()");
-          break;
-        } else if (n < sizeof(client_frame)) {
-          fprintf(stderr, "ISC: Expected %i but sent %i bytes.\n",
-              sizeof(client_frame), n);
-          break;
+        if (InCharge) {
+          n = send(sock, &client_data, sizeof(client_data), 0);
+          if (n == -1) {
+            perror("ISC send()");
+            break;
+          } else if (n < sizeof(client_frame)) {
+            fprintf(stderr, "ISC: Expected %i but sent %i bytes.\n",
+                sizeof(client_frame), n);
+            break;
+          }
+          //        fprintf(stderr, "ISC: Sent %i bytes.\n", n);
         }
-        //        fprintf(stderr, "ISC: Sent %i bytes.\n", n);
       }
     }
   }
