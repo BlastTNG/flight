@@ -540,6 +540,9 @@ void StoreData(int index)
   static struct NiosStruct* iscAzAddr;
   static struct NiosStruct* iscElAddr;
   static struct NiosStruct* iscSigmaAddr;
+  static struct NiosStruct* oscAzAddr;
+  static struct NiosStruct* oscElAddr;
+  static struct NiosStruct* oscSigmaAddr;
   static struct NiosStruct* encElAddr;
   static struct NiosStruct* encSigmaAddr;
   static struct NiosStruct* clinElAddr;
@@ -612,6 +615,9 @@ void StoreData(int index)
     iscAzAddr = GetNiosAddr("isc_az");
     iscElAddr = GetNiosAddr("isc_el");
     iscSigmaAddr = GetNiosAddr("isc_sigma");
+    oscAzAddr = GetNiosAddr("osc_az");
+    oscElAddr = GetNiosAddr("osc_el");
+    oscSigmaAddr = GetNiosAddr("osc_sigma");
     encElAddr = GetNiosAddr("enc_el");
     encSigmaAddr = GetNiosAddr("enc_sigma");
     clinElAddr = GetNiosAddr("clin_el");
@@ -720,6 +726,13 @@ void StoreData(int index)
       (unsigned int)(PointingData[i_point].isc_el * DEG2I), NIOS_QUEUE);
   WriteData(iscSigmaAddr,
       (unsigned int)(PointingData[i_point].isc_sigma * DEG2I), NIOS_QUEUE);
+
+  WriteData(oscAzAddr,
+      (unsigned int)(PointingData[i_point].osc_az * DEG2I), NIOS_QUEUE);
+  WriteData(oscElAddr,
+      (unsigned int)(PointingData[i_point].osc_el * DEG2I), NIOS_QUEUE);
+  WriteData(oscSigmaAddr,
+      (unsigned int)(PointingData[i_point].osc_sigma * DEG2I), NIOS_QUEUE);
 
   WriteData(encElAddr,
       (unsigned int)(PointingData[i_point].enc_el * DEG2I), NIOS_QUEUE);

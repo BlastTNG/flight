@@ -170,6 +170,9 @@ struct PointingDataStruct {
   double isc_az; // degrees
   double isc_el; // degrees
   double isc_sigma; // degrees
+  double osc_az; // degrees
+  double osc_el; // degrees
+  double osc_sigma; // degrees
   double enc_el;
   double enc_sigma;
   double clin_el;

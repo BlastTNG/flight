@@ -923,6 +923,11 @@ void Pointing(){
   PointingData[point_index].isc_az = ISCAz.angle;
   PointingData[point_index].isc_el = ISCEl.angle;
   PointingData[point_index].isc_sigma = sqrt(ISCEl.varience + ISCEl.sys_var);
+
+  PointingData[point_index].osc_az = OSCAz.angle;
+  PointingData[point_index].osc_el = OSCEl.angle;
+  PointingData[point_index].osc_sigma = sqrt(OSCEl.varience + OSCEl.sys_var);
+
   /************************/
   /* set roll damper gain */
   gy2 = RG.gy2;
