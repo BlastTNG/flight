@@ -419,7 +419,7 @@ int fill_Rx_frame(unsigned int in_data,
   if (BiPhaseData.index == NOT_MULTIPLEXED)
     RxFrame[BiPhaseData.channel] = BBC_DATA(in_data);
   else
-    slow_data[BiPhaseData.index][BiPhaseData.channel] = BBC_DATA(in_data);
+    slow_data[BiPhaseData.index][BiPhaseData.channel - FAST_OFFSET] = BBC_DATA(in_data);
 
   return(1);
 }
