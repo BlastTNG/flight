@@ -202,10 +202,18 @@ struct ChannelStruct SlowChannels[] = {
   {"cryoin",       'r',  CRYO, 60,                 1.0,             0.0, 'u'},
   {"status03",     'r',  CRYO, 57,                1.0,             0.0, 'u'},
   {"cryoout2",     'w',  CRYO,  1,                 1.0,             0.0, 'u'},
+  {"cryoout3",     'w',  CRYO,  2,             1.0,                 0.0, 'u'},
   {"he3pwm",       'w',  CRYO,  3,          100./2047.,              0., 'u'},
   {"hspwm",        'w',  CRYO,  4,          100./2047.,              0., 'u'},
-  {"cryopwm",      'w',  CRYO,  5,          100./2047.,              0., 'u'},
+  {"bdapwm",       'w',  CRYO,  5,          100./2047.,              0., 'u'},
   {"jfetpwm",      'w',  CRYO,  6,          100./2047.,              0., 'u'},
+  {"cryoctrl",     'w',  CRYO, 30,                 1.0,              0., 'u'},
+  {"cal_pulse",    'w',  CRYO, 31,                10.0,              0., 'u'},
+  {"set_bdaheat",  'w',  CRYO, 32,                 1.0,              0., 'u'},
+  {"g_fl_bdaheat", 'w',  CRYO, 33,                 1.0,              0., 'u'},
+  {"g_d_bdaheat",  'w',  CRYO, 34,                 1.0,              0., 'u'},
+  {"g_i_bdaheat",  'w',  CRYO, 35,                 1.0,              0., 'u'},
+  {"g_p_bdaheat",  'w',  CRYO, 36,                 1.0,              0., 'u'},
 
   {"t_rstrt_mid",  'r',  BIAS,  5,            -0.00625,          136.45, 'u'},
   {"t_lstrt_mid",  'r',  BIAS,  7,           -0.00625,          136.45, 'u'},
@@ -367,13 +375,13 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_brdec",    'w', LOOP2, 60,              I2DEG,             0.0, 'u'},
   {"isc_x_off",    'w', LOOP2, 63,              I2DEG,             0.0, 'u'},
 
-  {"pulse_len",    'w', LOOP3,  0,                10.,             0.0, 'u'},
+  {"osc_gain",     'w', LOOP3,  0,        100./65536.,             0.0, 'u'},
   {"isc_hold_i",   'w', LOOP3,  1,                1.0,             0.0, 'u'},
   {"isc_save_prd", 'w', LOOP3,  2,               0.01,             0.0, 'u'},
   {"isc_y_off",    'w', LOOP3,  3,              I2DEG,             0.0, 'u'},
   {"ra",           'w', LOOP3,  4,       24.0/65536.0,             0.0, 'u'},
   {"dec",          'w', LOOP3,  5,              I2DEG,             0.0, 's'},
-  {"cal_pulse",    'w', LOOP3,  6,                1.0,             0.0, 'u'},
+  {"osc_offset",   'w', LOOP3,  6,                1.0,             0.0, 's'},
   {"bbc_fifo_size",'w', LOOP3,  7,             1./624,             0.0, 'u'},
   {"cpu_temp2",    'w', LOOP3,  8,               0.01,             0.0, 'u'},
   {"cpu_temp3",    'w', LOOP3,  9,               0.01,             0.0, 'u'},
@@ -447,8 +455,6 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_pressure1",'w', LOOP4, 19,           1./2000.,             0.0, 'u'},
   {"isc_gain",     'w', LOOP4, 20,        100./65536.,             0.0, 'u'},
   {"isc_offset",   'w', LOOP4, 21,                1.0,             0.0, 's'},
-  {"osc_gain",     'w', LOOP4, 22,        100./65536.,             0.0, 'u'},
-  {"osc_offset",   'w', LOOP4, 23,                1.0,             0.0, 's'},
 
   END_OF_CHANNELS
 };
@@ -523,8 +529,8 @@ struct ChannelStruct FastChannels[] = {
   {"isc_trigger", 'w',  ACS3, 31,             1.0,                    0.0, 'u'},
   {"osc_trigger", 'w',  ACS3, 32,             1.0,                    0.0, 'u'},
 #if 0
-  {"isc_trigger", 'w',  ACS3, 31,             1.0,                    0.0, 'u'},
-  {"osc_trigger", 'w',  ACS3, 32,             1.0,                    0.0, 'u'},
+  {"isc_trigger", 'w',  ACS0, 31,             1.0,                    0.0, 'u'},
+  {"osc_trigger", 'w',  ACS0, 32,             1.0,                    0.0, 'u'},
 #endif
 
   /* read channels from ACS1 */
@@ -563,10 +569,6 @@ struct ChannelStruct FastChannels[] = {
   {"mcp_frame",   'w', LOOP2, 34,             1.0,                    0.0, 'u'},
 
 #endif
-
-  /* Write to DAS3 -- cryo controller */
-  {"cryoout3",    'w',  CRYO,  2,             1.0,                    0.0, 'u'},
-
   /* Read from DAS4 -- bias controller and DPM/inner frame monitoring */
   {"biasin",      'r',  BIAS, 50,             1.0,                    0.0, 'u'},
   END_OF_CHANNELS

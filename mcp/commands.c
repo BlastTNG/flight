@@ -194,7 +194,7 @@ void SendRequest (int req, char tty_fd) {
   write(tty_fd, buffer, 3);
 }
 
-enum singleCommand  SCommand(char *cmd) {
+enum singleCommand SCommand(char *cmd) {
   int i;
 
   for (i = 0; i < N_SCOMMANDS; i++) {
@@ -342,6 +342,8 @@ void SingleCommand (enum singleCommand command) {
     CommandData.Cryo.lhevalve_on = 1;
   else if (command == he_valve_off)
     CommandData.Cryo.lhevalve_on = 0;
+  else if (command == auto_bdaheat)
+    CommandData.Cryo.autoBDAHeat = 1;
 
   else if (command == balance_veto)
     CommandData.pumps.bal_veto = -1;
@@ -716,7 +718,7 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
   } else if (command == cal_repeat) {
     CommandData.Cryo.calibrator = repeat;
     CommandData.Cryo.calib_pulse = ivalues[0] / 10;
-    CommandData.Cryo.calib_repeat = ivalues[1];
+    CommandData.Cryo.calib_period = ivalues[1];
 
     /***************************************/
     /********* Cryo heat   *****************/
@@ -729,10 +731,13 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
   } else if (command == bda_heat) {
     CommandData.Cryo.BDAHeat = rvalues[0] * 2047./100.;
   } else if (command == bda_gain) {
-    CommandData.Cryo.bdaGain.P = ivalues[0];
-    CommandData.Cryo.bdaGain.I = ivalues[1];
-    CommandData.Cryo.bdaGain.D = ivalues[2];
-    CommandData.Cryo.bdaFiltLen = ivalues[3];
+    CommandData.Cryo.BDAGain.P = ivalues[0];
+    CommandData.Cryo.BDAGain.I = ivalues[1];
+    CommandData.Cryo.BDAGain.D = ivalues[2];
+    CommandData.Cryo.BDAFiltLen = ivalues[3];
+  } else if (command == bda_heat) {
+    CommandData.Cryo.BDAHeat = ivalues[0];
+    CommandData.Cryo.autoBDAHeat = 0;
 
 
     /***************************************/
@@ -1427,6 +1432,7 @@ void InitCommandData() {
   CommandData.Cryo.heatSwitch = 0;
   CommandData.Cryo.heliumThree = 0;
   CommandData.Cryo.BDAHeat = 0;
+  CommandData.Cryo.autoBDAHeat = 1;
   CommandData.Cryo.calibrator = off;
   CommandData.Cryo.potvalve_on = 0;
   CommandData.Cryo.potvalve_open = 0;

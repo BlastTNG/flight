@@ -108,10 +108,11 @@ struct CryoStruct {
   unsigned short charcoalHeater;
   unsigned short coldPlate;
   enum calmode calibrator;
-  unsigned short calib_pulse, calib_repeat;
+  unsigned short calib_pulse, calib_period;
+  unsigned short autoBDAHeat;
   unsigned short BDAHeat;
-  struct GainStruct bdaGain;
-  unsigned short bdaFiltLen;
+  struct GainStruct BDAGain;
+  unsigned short BDAFiltLen;
   unsigned short JFETHeat;
   unsigned short heatSwitch;
   unsigned short heliumThree;

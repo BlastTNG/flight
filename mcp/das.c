@@ -1,3 +1,25 @@
+/* mcp: the BLAST master control program
+ *
+ * This software is copyright (C) 2002-2004 University of Toronto
+ * 
+ * This file is part of mcp.
+ * 
+ * mcp is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * mcp is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with mcp; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
 #include <stdio.h>
 #include <time.h>
 
@@ -19,19 +41,22 @@
 #define CRYO_POTVALVE_ON      0x10 /* N3G2 - cryoout2 */
 #define CRYO_POTVALVE_OPEN    0x40 /* N3G2 Group two of the cryo card */
 #define CRYO_POTVALVE_CLOSE   0x80 /* N3G2 appears to have its nybbles */
-#define CRYO_LHeVALVE_ON     0x01 /* N3G2 backwards */
-#define CRYO_LHeVALVE_OPEN   0x04 /* N3G2 */
-#define CRYO_LHeVALVE_CLOSE  0x08 /* N3G2 */
+#define CRYO_LHeVALVE_ON      0x01 /* N3G2 backwards */
+#define CRYO_LHeVALVE_OPEN    0x04 /* N3G2 */
+#define CRYO_LHeVALVE_CLOSE   0x08 /* N3G2 */
+
+/* CryoControl bits */
+#define CRYOCTRL_CALON     0x0004
+#define CRYOCTRL_BDAHEATON 0x8000
 
 /* CryoState bitfield */
-#define CS_HELIUMLEVEL   0x0001
-#define CS_CHARCOAL      0x0002
-#define CS_COLDPLATE     0x0004
-#define CS_CALIBRATOR    0x0008
+#define CS_HELIUMLEVEL    0x0001
+#define CS_CHARCOAL       0x0002
+#define CS_COLDPLATE      0x0004
 #define CS_POTVALVE_ON    0x0010
 #define CS_POTVALVE_OPEN  0x0020
-#define CS_LHeVALVE_ON   0x0040
-#define CS_LHeVALVE_OPEN 0x0080
+#define CS_LHeVALVE_ON    0x0040
+#define CS_LHeVALVE_OPEN  0x0080
 
 /************************************************************************/
 /*                                                                      */
@@ -60,12 +85,12 @@ void PhaseControl(void)
 /***********************************************************************/
 /* CalLamp: Flash calibrator                                           */
 /***********************************************************************/
-int CalLamp (int* cryostate)
+int CalLamp (void)
 {
-  int calLamp;
   static struct NiosStruct* calPulseAddr;
-  static int pulse_left = 0;
-  static int repeat_left = 0;
+  static int update_counter = 0;
+  static unsigned int elapsed = 0;
+  static enum calmode last_mode = off;
 
   static int firsttime = 1;
   if (firsttime) {
@@ -73,43 +98,34 @@ int CalLamp (int* cryostate)
     calPulseAddr = GetNiosAddr("cal_pulse");
   }
 
-  if (CommandData.Cryo.calibrator == 1) {
-    calLamp = CRYO_CALIBRATOR_ON;
-    *cryostate |= CS_CALIBRATOR;
-  } else {
-    if (CommandData.Cryo.calib_repeat == -1) {  /* single pulse request */
-      pulse_left = CommandData.Cryo.calib_pulse + 1;
-      CommandData.Cryo.calib_repeat = 0;
-      repeat_left = 0;
+  if (CommandData.Cryo.calibrator == on) {
+    if (last_mode != on) {
+      update_counter = (update_counter + 1) % 4;
+      last_mode = on;
     }
-    
-    if (repeat_left == 0) {
-      if (CommandData.Cryo.calib_repeat > 0 && /* we're repeating and */
-          CommandData.Cryo.calib_pulse > 0) {  /* just got to the end */
-        repeat_left = CommandData.Cryo.calib_repeat * 100 - 1;
-        pulse_left = CommandData.Cryo.calib_pulse + 1;
-      }
-    } else {  /* we're repeat pulsing, and counting down to next pulse */
-      repeat_left--;  
-    }
-
-    if (pulse_left > 0) {  /* pulser on, turn on lamp */
-      calLamp = CRYO_CALIBRATOR_ON;
-      *cryostate |= CS_CALIBRATOR;
-      pulse_left--; 
-      WriteData(calPulseAddr, 1, NIOS_FLUSH);
-    } else {               /* pulser off, or we're not pulsing, turn off lamp */
-      calLamp = CRYO_CALIBRATOR_OFF;
-      *cryostate &= 0xFFFF - CS_CALIBRATOR;
-      WriteData(calPulseAddr, 0, NIOS_FLUSH);
-    }
+    return update_counter | CRYOCTRL_CALON;
+  } else if (CommandData.Cryo.calibrator == repeat) {
+    if (last_mode != repeat || elapsed >= CommandData.Cryo.calib_period) {
+      /* end of cycle -- send a new pulse */
+      elapsed = 0;
+      update_counter = (update_counter + 1) % 4;
+    } else
+      elapsed++;
+    last_mode = repeat;
+  } else { /* off or single pulse mode */
+    if (CommandData.Cryo.calibrator == pulse)
+      update_counter = (update_counter + 1) % 4;
+    last_mode = CommandData.Cryo.calibrator == off;
   }
 
-  return calLamp;
+  /* Send the current pulse length */
+  WriteData(calPulseAddr, CommandData.Cryo.calib_pulse, NIOS_QUEUE);
+
+  return update_counter;
 }
 
 /***********************************************************************/
-/* CryoControl: Set heaters to values contained within the CommandData */
+/* CryoControl: Control heaters and calibrator                         */
 /***********************************************************************/
 void CryoControl (void)
 {
@@ -119,33 +135,36 @@ void CryoControl (void)
   static struct NiosStruct* he3pwmAddr;
   static struct NiosStruct* jfetpwmAddr;
   static struct NiosStruct* hspwmAddr;
-  static struct NiosStruct* cryopwmAddr;
-  static struct NiosStruct* calRepeatAddr;
-  static struct NiosStruct* pulseLenAddr;
+  static struct NiosStruct* bdapwmAddr;
+  static struct NiosStruct* cryoctrlAddr;
+  static struct NiosStruct* gPBdaheatAddr;
+  static struct NiosStruct* gIBdaheatAddr;
+  static struct NiosStruct* gDBdaheatAddr;
+  static struct NiosStruct* gFlBdaheatAddr;
+  static struct NiosStruct* setBdaheatAddr;
 
   int cryoout3 = 0, cryoout2 = 0;
   static int cryostate = 0;
+  int cryoctrl;
 
   /************** Set indices first time around *************/
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    cryoout3Addr = GetNiosAddr("cryoout3");
-
+    bdapwmAddr = GetNiosAddr("bdapwm");
+    cryoctrlAddr = GetNiosAddr("cryoctrl");
     cryoout2Addr = GetNiosAddr("cryoout2");
+    cryoout3Addr = GetNiosAddr("cryoout3");
     cryostateAddr = GetNiosAddr("cryostate");
+    gPBdaheatAddr = GetNiosAddr("g_p_bdaheat");
+    gIBdaheatAddr = GetNiosAddr("g_i_bdaheat");
+    gDBdaheatAddr = GetNiosAddr("g_d_bdaheat");
+    gFlBdaheatAddr = GetNiosAddr("g_fl_bdaheat");
+    setBdaheatAddr = GetNiosAddr("set_bdaheat");
     he3pwmAddr = GetNiosAddr("he3pwm");
-    jfetpwmAddr = GetNiosAddr("jfetpwm");
     hspwmAddr = GetNiosAddr("hspwm");
-    cryopwmAddr = GetNiosAddr("cryopwm");
-
-    pulseLenAddr = GetNiosAddr("pulse_len");
-    calRepeatAddr = GetNiosAddr("cal_repeat");
+    jfetpwmAddr = GetNiosAddr("jfetpwm");
   }
-
-  /* We want to save these here since CalLamp might destroy calib_repeat */
-  WriteData(pulseLenAddr, CommandData.Cryo.calib_pulse, NIOS_QUEUE);
-  WriteData(calRepeatAddr, CommandData.Cryo.calib_repeat, NIOS_QUEUE);
 
   /********** Set Output Bits **********/
   if (CommandData.Cryo.heliumLevel == 0) {
@@ -169,10 +188,13 @@ void CryoControl (void)
     cryoout3 |= CRYO_COLDPLATE_ON;
     cryostate |= CS_COLDPLATE;
   }
-  cryoout3 |= CalLamp(&cryostate);
+
+  cryoctrl = CalLamp();
+  if (CommandData.Cryo.autoBDAHeat)
+    cryoctrl |= CRYOCTRL_BDAHEATON;
 
   cryoout2 = CRYO_POTVALVE_OPEN | CRYO_POTVALVE_CLOSE | 
-   CRYO_LHeVALVE_OPEN | CRYO_LHeVALVE_CLOSE;
+    CRYO_LHeVALVE_OPEN | CRYO_LHeVALVE_CLOSE;
 
   /* Control motorised valves -- latching relays */
   if (CommandData.Cryo.potvalve_open > 0) {
@@ -206,13 +228,18 @@ void CryoControl (void)
     cryostate &= 0xFFFF - CS_LHeVALVE_ON;
 
   WriteData(cryoout3Addr, cryoout3, NIOS_QUEUE);
-
   WriteData(cryoout2Addr, cryoout2, NIOS_QUEUE);
   WriteData(cryostateAddr, cryostate, NIOS_QUEUE);
   WriteData(he3pwmAddr, CommandData.Cryo.heliumThree, NIOS_QUEUE);
   WriteData(hspwmAddr, CommandData.Cryo.heatSwitch, NIOS_QUEUE);
   WriteData(jfetpwmAddr, CommandData.Cryo.JFETHeat, NIOS_QUEUE);
-  WriteData(cryopwmAddr, CommandData.Cryo.sparePwm, NIOS_FLUSH);
+  WriteData(setBdaheatAddr, CommandData.Cryo.BDAGain.SP, NIOS_QUEUE);
+  WriteData(gPBdaheatAddr, CommandData.Cryo.BDAGain.P, NIOS_QUEUE);
+  WriteData(gIBdaheatAddr, CommandData.Cryo.BDAGain.I, NIOS_QUEUE);
+  WriteData(gDBdaheatAddr, CommandData.Cryo.BDAGain.D, NIOS_QUEUE);
+  WriteData(gFlBdaheatAddr, CommandData.Cryo.BDAFiltLen, NIOS_QUEUE);
+  WriteData(bdapwmAddr, CommandData.Cryo.BDAHeat, NIOS_QUEUE);
+  WriteData(cryoctrlAddr, cryoctrl, NIOS_FLUSH);
 }
 
 /************************************************************************/
@@ -255,12 +282,12 @@ void BiasControl (unsigned short* RxFrame) {
   if (isBiasAC) { /*  Bias is currently AC */
     if (CommandData.Bias.biasAC == 0) { /* it should be DC */
       biasout1 |= 0x01;
-/*      fprintf(stderr, "to DC\n"); */
+      /*      fprintf(stderr, "to DC\n"); */
     }
   } else { /* Bias is currently DC */
     if (CommandData.Bias.biasAC == 1) { /* it should be AC */
       biasout1 |= 0x02;
-/*      fprintf(stderr, "to AC\n"); */
+      /*      fprintf(stderr, "to AC\n"); */
     }
   }
 
@@ -268,12 +295,12 @@ void BiasControl (unsigned short* RxFrame) {
   if (isBiasRamp) { /* Bias is currently external Ramp */
     if (CommandData.Bias.biasRamp == 0) { /* it should be internal/fixed */
       biasout1 |= 0x40;
-/*      fprintf(stderr, "to fixed\n"); */
+      /*      fprintf(stderr, "to fixed\n"); */
     }
   } else { /* Bias is currently internal (fixed) */
     if (CommandData.Bias.biasRamp == 1) { /* it should be external/Ramp */
       biasout1 |= 0x80;
-/*      fprintf(stderr, "to ramp\n"); */
+      /*      fprintf(stderr, "to ramp\n"); */
     }
   }
 
@@ -281,12 +308,12 @@ void BiasControl (unsigned short* RxFrame) {
   if (isBiasClockInternal) { /* Bias is currently internal */
     if (CommandData.Bias.clockInternal == 0) { /* it should be external */
       biasout1 |= 0x10;
-/*      fprintf(stderr, "to external\n"); */
+      /*      fprintf(stderr, "to external\n"); */
     }
   } else { /* Bias clock is currenly external */
     if (CommandData.Bias.clockInternal == 1) { /* it should be internal */
       biasout1 |= 0x20;
-/*      fprintf(stderr, "to internal\n"); */
+      /*      fprintf(stderr, "to internal\n"); */
     }
   }
 
@@ -294,7 +321,7 @@ void BiasControl (unsigned short* RxFrame) {
       CommandData.Bias.SetLevel3) {
     rb_hold = 400;
   }
-  
+
   /************* Set the Bias Levels *******/
   if (hold > FAST_PER_SLOW + 2) { /* hold data with write low */
     hold--;
@@ -332,19 +359,19 @@ void BiasControl (unsigned short* RxFrame) {
     ch = 0;
     mprintf(MCP_ERROR, "ch is an impossible value in bias control\n");
   }
-  
+
   /* Bias readback -- we wait a few seconds after finishing the write */
   if (rb_hold > 0) {
     rb_hold--;
   } else if (!CommandData.Bias.SetLevel3 && !CommandData.Bias.SetLevel3 &&
       !CommandData.Bias.SetLevel3) {
-/*     CommandData.Bias.bias1 = slow_data[Bias_lev1Ch][Bias_lev1Ind]; */
-/*     CommandData.Bias.bias2 = slow_data[Bias_lev2Ch][Bias_lev2Ind]; */
-/*     CommandData.Bias.bias3 = slow_data[Bias_lev3Ch][Bias_lev3Ind]; */
+    /*     CommandData.Bias.bias1 = slow_data[Bias_lev1Ch][Bias_lev1Ind]; */
+    /*     CommandData.Bias.bias2 = slow_data[Bias_lev2Ch][Bias_lev2Ind]; */
+    /*     CommandData.Bias.bias3 = slow_data[Bias_lev3Ch][Bias_lev3Ind]; */
   }
   /*  Add the two lsbs of the bias to biasout1  */
   biasout1 |= biaslsbs1;
-  
+
   /******************** set the outputs *********************/
   WriteData(biasout1Addr, biasout1 & 0xffff, NIOS_QUEUE);
   WriteData(biasout2Addr, (~biasout2) & 0xff, NIOS_QUEUE);
