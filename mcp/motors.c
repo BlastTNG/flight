@@ -756,7 +756,7 @@ void DoNewCapMode() {
       (CommandData.pointing_mode.Y != last_Y) ||
       (CommandData.pointing_mode.w != last_w)) {
     if ( (fabs(az - (caz)) < 0.1) &&
-	 (fabs(el - (bottom)) < 0.01)) {
+	 (fabs(el - (bottom)) < CommandData.pointing_mode.del/2)) {
       last_X = CommandData.pointing_mode.X;
       last_Y = CommandData.pointing_mode.Y;
       last_w = CommandData.pointing_mode.w;
@@ -932,7 +932,7 @@ void DoNewBoxMode() {
       (CommandData.pointing_mode.w != last_w) ||
       (CommandData.pointing_mode.h != last_h)) {
     if ( (fabs(az - left) < 0.1) &&
-	 (fabs(el - bottom) < 0.01)) {
+	 (fabs(el - bottom) < CommandData.pointing_mode.del)) {
       last_X = CommandData.pointing_mode.X;
       last_Y = CommandData.pointing_mode.Y;
       last_w = CommandData.pointing_mode.w;
@@ -1024,7 +1024,7 @@ void DoQuadMode() { // aka radbox
   
   static double last_ra[4] = {0,0,0,0}, last_dec[4] = {0,0,0,0};
   static double az_dir = 0, el_dir = 1, v_el = 0;
-  static double targ_el=45.0; // targ_el is in degrees from horizon
+  static double targ_el=0.0; // targ_el is in degrees from bottom
   
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
@@ -1087,7 +1087,7 @@ void DoQuadMode() { // aka radbox
 
   if (new) {
     if ( (fabs(az - c_az[i_bot]) < 0.1) &&
-	 (fabs(el - c_el[i_bot]) < 0.01)) {
+	 (fabs(el - c_el[i_bot]) < CommandData.pointing_mode.del)) {
       for (i=0; i<4; i++) {
 	last_ra[i] = CommandData.pointing_mode.ra[i];
 	last_dec[i] = CommandData.pointing_mode.dec[i];
@@ -1100,23 +1100,23 @@ void DoQuadMode() { // aka radbox
       axes_mode.el_dest = c_el[i_bot];
       axes_mode.el_vel = 0.0;
       v_el = 0.0;
-      targ_el = c_el[i_bot];
+      targ_el = 0.0;
       el_dir = 1;
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
   }
 
-  if (targ_el<bottom) {
-    bprintf(info, "bot: %g %g\n", targ_el, bottom);
-    targ_el = bottom;
+  if (targ_el<0) {
+    bprintf(info, "bot: %g\n", targ_el);
+    targ_el = 0;
   }
-  if (targ_el>top) {
-    bprintf(info, "top: %g %g\n", targ_el, top);
-    targ_el = top;
+  if (targ_el>top-bottom) {
+    bprintf(info, "top: %g %g\n", targ_el, top-bottom);
+    targ_el = top-bottom;
   }
 
-  radbox_endpoints(c_az, c_el, targ_el, &next_left,
+  radbox_endpoints(c_az, c_el, targ_el+bottom, &next_left,
 		   &next_right, &bottom, &top);
   
   if (next_right-next_left < MIN_SCAN) {
@@ -1150,14 +1150,14 @@ void DoQuadMode() { // aka radbox
     bprintf(info, "new step: %g %g %g %g %g ", bottom, top, del_dt,
 	    CommandData.pointing_mode.del, targ_el);
     // set v for this step
-    v_el = (targ_el - el)/t;
+    v_el = (targ_el+bottom - el)/t;
     // set targ_el for the next step
     targ_el += CommandData.pointing_mode.del*el_dir;
-    if (targ_el>top) {
-      targ_el = top;
+    if (targ_el>top-bottom) {
+      targ_el = top-bottom;
       el_dir=-1;
-    } else if (targ_el<bottom) {
-      targ_el = bottom;
+    } else if (targ_el<0) {
+      targ_el = 0;
       el_dir = 1;
     }
     bprintf(info, "%g\n", targ_el);
