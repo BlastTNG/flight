@@ -14,7 +14,7 @@ all: blastcmd
 blastcmd: $(OBJS)
 	$(CC) $(LIBS) $(OBJS) -o blastcmd
 
-blastcmd.o: blastcmd.c commands.h
+blastcmd.o: blastcmd.c commands.h isc_protocol.h
 	$(CC) $(FLAGS) -DLIB_DIR=\"$(DATA_DIR)\" -c blastcmd.c -o blastcmd.o
 
 Makefile.config:
