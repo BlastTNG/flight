@@ -349,12 +349,13 @@ int OpenField(int fast, int size, const char* filename)
     if (rc.gzip_output && (file = (int)gzdopen(creat(filename, 00644), "wb"))
         == 0) {
       snprintf(gpb, GPB_LEN, "cannot create file `%s'", filename);
-      gze = gzerror((gzFile)file, &gzerrno);
-      if (errno == Z_ERRNO)
+      if (errno)
         berror(fatal, gpb);
-      else 
+      else  {
+        gze = gzerror((gzFile)file, &gzerrno);
         bprintf(fatal, "%s: %s", gpb, gze);
-    } else if ((file = creat(filename, 00644)) == -1)
+      }
+    } else if (!rc.gzip_output && (file = creat(filename, 00644)) == -1)
       berror(fatal, "cannot create file `%s'", filename);
   }
 
