@@ -217,6 +217,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_dpm_10v",    'r',  BIAS, 43,           -0.00625,          136.45, 'u'},
   {"t_dpm_5v",     'r',  BIAS, 45,           -0.00625,          136.45, 'u'},
   {"t_das",        'r',  BIAS, 47,           -0.00625,          136.45, 'u'},
+  {"biasin",       'r',  BIAS, 50,                1.0,             0.0, 'u'},
   {"status04",     'r',  BIAS, 57,                1.0,             0.0, 'u'},
   {"biasout1",     'w',  BIAS,  0,                1.0,             0.0, 'u'},
   {"biasout2",     'w',  BIAS,  1,                1.0,             0.0, 'u'},
@@ -484,7 +485,6 @@ struct ChannelStruct WideFastChannels[] = {
   {"b_amp2",      'r',  BIAS,  0,             1.0,                    0.0, 'U'},
   {"b_amp1",      'r',  BIAS,  2,             1.0,                    0.0, 'U'},
   {"b_amp3",      'r',  BIAS, 38,             1.0,                    0.0, 'U'},
-  {"biasin",      'r',  BIAS, 50,             1.0,                    0.0, 'u'},
 
   /* Bolometer Bias References */
 
