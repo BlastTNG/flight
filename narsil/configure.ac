@@ -1,16 +1,15 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(narsil, 1.8.3, [dwiebe@physics.utoronto.ca])
-AM_INIT_AUTOMAKE(narsil, 1.8.3)
+AC_INIT(narsil, 1.8.4, [dwiebe@physics.utoronto.ca])
+AM_INIT_AUTOMAKE(narsil, 1.8.4)
 AM_CONFIG_HEADER(config.h)
 
-AC_ARG_WITH(data-etc,
-            [  --with-data-etc=DIR     put auxiliary data in DIR [[/data/etc]]],
+AC_ARG_WITH(data-etc, AS_HELP_STRING([--with-data-etc=DIR],
+            [put auxiliary data in DIR [[/data/etc]]]),
             DATA_ETC_DIR="${withval}", DATA_ETC_DIR="/data/etc")
 AC_SUBST(DATA_ETC_DIR)
-#
 
-AC_ARG_WITH(cur-dir,
-            [  --with-cur-dir=DIR      read curfiles from DIR [[/mtn/decom/etc]]],
+AC_ARG_WITH(cur-dir, AS_HELP_STRING([--with-cur-dir=DIR],
+            [read curfiles from DIR [[/mtn/decom/etc]]]),
             CUR_DIR="${withval}", CUR_DIR="/mnt/decom/etc")
 AC_SUBST(CUR_DIR)
 AC_DEFINE_UNQUOTED(CUR_DIR, "$CUR_DIR", [Define to the path to your curfiles ])
@@ -19,18 +18,17 @@ DATA_ETC_NARSIL_DIR="$DATA_ETC_DIR/narsil"
 AC_DEFINE_UNQUOTED(DATA_ETC_NARSIL_DIR, "$DATA_ETC_NARSIL_DIR",
                    [Define to the path to your narsil data directory])
 
-AC_ARG_WITH([qt-include-dir],
-            [  --with-qt-include-dir=DIR   Qt include directory],
-            QT_INCLUDE_DIR=$withval)
-AC_ARG_WITH([qt-lib-dir], [  --with-qt-lib-dir=DIR   Qt library directory],
-            QT_LIB_DIR=$withval)
-AC_ARG_WITH([qt-bin-dir], [  --with-qt-bin-dir=DIR   Qt binary directory],
-            QT_BIN_DIR=$withval)
-AC_ARG_WITH([blastcmd],
-            [  --with-blastcmd=NAME    use NAME as the BLASTcmd program (overrides autodetect)],
+AC_ARG_WITH([qt-include-dir], AS_HELP_STRING([--with-qt-include-dir=DIR],
+            [Qt include directory]), QT_INCLUDE_DIR=$withval)
+AC_ARG_WITH([qt-lib-dir], AS_HELP_STRING([--with-qt-lib-dir=DIR],
+            [Qt library directory]), QT_LIB_DIR=$withval)
+AC_ARG_WITH([qt-bin-dir], AS_HELP_STRING([--with-qt-bin-dir=DIR],
+            [Qt binary directory]), QT_BIN_DIR=$withval)
+AC_ARG_WITH([blastcmd], AS_HELP_STRING([--with-blastcmd=NAME],
+            [use NAME as the BLASTcmd program (overrides autodetect)]),
             FORCE_BLASTCMD=$withval)
-AC_ARG_ENABLE([command-list-test],
-              [ --disable-command-list-test don't check to see if blastcmd's command list revision matches the one for this package],
+AC_ARG_ENABLE([command-list-test], AS_HELP_STRING([--disable-command-list-test],
+              [don't check to see if blastcmd's command list revision matches the one for this package]),
               do_cmdlist_test="${enableval}",do_cmdlist_test="yes")
 
 dnl Programs
@@ -171,11 +169,16 @@ dnl Look for MOC
 AC_PATH_PROG(MOC, moc,,$PATH:$QT_BIN_DIR)
 
 dnl Look for ELOG
+AC_ARG_WITH(elog-host, AS_HELP_STRING([--with-elog-host=HOST],
+            [Send elog queries to the elog server running on HOST [[elog.blast]]]),
+            ELOG_HOST="${withval}", ELOG_HOST="elog.blast")
 AC_CHECK_PROG(ELOG, elog, "yes", "no")
 if test "x$ELOG" = "xno"; then
   result_elog="no"
 else
   result_elog="yes"
+  AC_DEFINE_UNQUOTED(ELOG_HOST, "$ELOG_HOST",
+                     [Define to the name of your elog server])
   AC_DEFINE(USE_ELOG, 1, [Define to 1 to enable elog support])
 fi
   

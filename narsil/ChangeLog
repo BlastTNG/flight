@@ -1,3 +1,7 @@
+2004-11-26 (1.8.4):
+	* narsil.cpp: fix elog host
+	* configure.ac: allow overriding elog host name; fix help formatting
+
 2004-11-18 (1.8.3):
 	* narsil.cpp (main): fix command list version check to work with
 	blastcmd-remote

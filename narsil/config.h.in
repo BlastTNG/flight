@@ -9,6 +9,9 @@
 /* Define to the path to your narsil data directory */
 #undef DATA_ETC_NARSIL_DIR
 
+/* Define to the name of your elog server */
+#undef ELOG_HOST
+
 /* Define to 1 if you have the `pthread' library (-lpthread). */
 #undef HAVE_LIBPTHREAD
 

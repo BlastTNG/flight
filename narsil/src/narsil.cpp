@@ -78,6 +78,10 @@
 #define BLASTCMDFILE BLAST_CMD
 #define DATA_DIR DATA_ETC_NARSIL_DIR
 
+#ifndef ELOG_HOST
+#define ELOG_HOST "elog.blast"
+#endif
+
 /* Defaults class holds the default parameter values */
 Defaults::Defaults()
 {
@@ -819,7 +823,7 @@ void MainForm::WriteLog(char *args[]) {
 
 #ifdef USE_ELOG
   QString elog_command = QString(
-    "elog -h blast.physics.utoronto.ca -p 8080 -l blast-narsil "
+    "elog -h " ELOG_HOST " -p 8080 -l blast-narsil "
     "-u narsil submmblast "
     "-a User=%1 -a Source=narsil -a Category=%2 -m %3")
                          .arg(QString((getpwuid(getuid()))->pw_name))
