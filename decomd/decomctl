@@ -23,7 +23,7 @@ use Socket;
 
 my $DECOMD_DIR = "/usr/local/sbin/";
 
-my $VERSION = "1.0.6";
+my $VERSION = "1.0.7";
 $ENV{'PATH'} = "/usr/sbin:/usr/local/sbin";
 delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
 
@@ -124,7 +124,7 @@ sub Status {
     print "Loss Rate    : ", (100 * $fs_bad), "\n";
     print "Data Quality : ", (100 - 100 * $dq_bad), "\n";
     printf "Disk Free    : %6.2f GB\n", ($disk_free / 1024 / 1024 / 1024);
-    print "Filenae      : $name\n";
+    print "Filename     : $name\n";
     close SOCK;
   } else {
     die "decomd doesn't appear to be running (/var/run/decomd.pid doesn't exist).\n";
