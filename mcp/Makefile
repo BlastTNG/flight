@@ -58,3 +58,4 @@ dgps.o: dgps.c pointing_struct.h
 
 install: mcp
 	install -m 755 mcp /usr/local/bin
+	install -m 755 doSensors /usr/local/bin
