@@ -38,7 +38,7 @@ extern "C" {
 #include "command_struct.h"
 }
 
-#define USE_SMALL_LOG
+//#define USE_SMALL_LOG
 #define SMALL_LOG_FILE  "/data/etc/small.log"
 int smalllogspaces;
 
@@ -880,9 +880,11 @@ void Alice::CompressionLoop() {
   int numread;
   int framepos = 0;
   int rawdatasize, filterdatasize, ts;
+#ifdef USE_SMALL_LOG
   char tmpstr[80];
   time_t t;
   struct tm now;
+#endif
 
   rawdata = (double *)malloc(1);
   rawdatasize = 1;
