@@ -147,21 +147,27 @@
     </EXTREMA>
     <EXTREMA name="bias1">
       <XLO value="-1"/>
-      <LO value="1"/>
-      <HI value="3"/>
-      <XHI value="16"/>
+      <LO value="9"/>
+      <HI value="50"/>
+      <XHI value="128"/>
     </EXTREMA>
     <EXTREMA name="bias2">
       <XLO value="-1"/>
-      <LO value="1"/>
-      <HI value="3"/>
-      <XHI value="16"/>
+      <LO value="9"/>
+      <HI value="50"/>
+      <XHI value="128"/>
     </EXTREMA>
     <EXTREMA name="bias3">
       <XLO value="-1"/>
-      <LO value="4"/>
-      <HI value="6"/>
-      <XHI value="16"/>
+      <LO value="9"/>
+      <HI value="50"/>
+      <XHI value="128"/>
+    </EXTREMA>
+    <EXTREMA name="phase">
+      <XLO value="-1"/>
+      <LO value="-0.1"/>
+      <HI value="2000"/>
+      <XHI value="2001"/>
     </EXTREMA>
     <CURFILE name="/data/etc/defile.cur"/>
     <DECOMD host="arwen.blast" port="11411"/>
@@ -213,37 +219,40 @@
       <DATUM format="%.0f" src="bias_lev3" extrema="bias3"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 5">
-      <DATUM format="%.0f" src="phase5" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase5" extrema="phase"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 6">
-      <DATUM format="%.0f" src="phase6" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase6" extrema="phase"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 7">
-      <DATUM format="%.0f" src="phase7" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase7" extrema="phase"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 8">
-      <DATUM format="%.0f" src="phase8" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase8" extrema="phase"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 9">
-      <DATUM format="%.0f" src="phase9" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase9" extrema="phase"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 10">
-      <DATUM format="%.0f" src="phase10" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase10" extrema="phase"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 11">
-      <DATUM format="%.0f" src="phase11" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase11" extrema="phase"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 12">
-      <DATUM format="%.0f" src="phase12" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase12" extrema="phase"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 13">
-      <DATUM format="%.0f" src="phase13" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase13" extrema="phase"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 14">
-      <DATUM format="%.0f" src="phase14" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase14" extrema="phase"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 15">
-      <DATUM format="%.0f" src="phase15" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase15" extrema="phase"/>
+    </NUMBER>
+    <NUMBER caption="DAS Phase 16">
+      <DATUM format="%.0f" src="phase16" extrema="phase"/>
     </NUMBER>
   </BOX>
   <BOX caption="State" colour="#777700" row="0" col="1" colspan="1">
@@ -386,8 +395,8 @@
     </NUMBER>
     <MULTI caption="300mK Auto Heat">
       <DATUM src="AUTO_CYCLE_ON">
-        <WORD value="1" caption="On" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+        <WORD value="1" caption="On" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="BDA Heat (%)">
