@@ -35,11 +35,11 @@ char *StringToUpper(char *s);
 
 extern unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
-/*********************************************************************/
-/*                                                                   */
-/*     Initialize dirfile                                            */
-/*                                                                   */
-/*********************************************************************/
+/********************************************************************* 
+ *                                                                   * 
+ *     Initialize dirfile                                            * 
+ *                                                                   * 
+ *********************************************************************/
 void InitializeDirfile(char type) {
   time_t t;
   FILE *fp;
@@ -56,8 +56,9 @@ void InitializeDirfile(char type) {
 
   fprintf(stderr, "Writing to dirfile %s\n", filedirname);
   
-  /***********************************/
-  /* create and fill the format file */
+  /*********************************** 
+   * create and fill the format file * 
+   ***********************************/
   sprintf(filename, "%s/format", filedirname);
   fp = fopen(filename, "w");
   fprintf(fp, "FASTSAMP         RAW    U 20\n");
@@ -236,7 +237,12 @@ void InitializeDirfile(char type) {
   
 }
 
-// called from main thread: puts rxframe into individual buffers
+/*************************************************************
+ *                                                           *
+ * pushDiskFrame: called from main thread: puts rxframe into *
+ *      individual buffers                                   *
+ *                                                           *
+ *************************************************************/
 void pushDiskFrame(unsigned short *Rxframe) {
   unsigned int i_slow, i_in;
   int i_card, i_ch;
@@ -277,8 +283,9 @@ void pushDiskFrame(unsigned short *Rxframe) {
     //    } 
   }
 
-  /********************/
-  /* normal fast data */
+  /******************** 
+   * normal fast data * 
+   ********************/
   for (i_ch = 0; i_ch < n_fast; i_ch++) {
     i_in = normal_fast[i_ch].i_in;
     if (normal_fast[i_ch].size == 2) {
@@ -296,9 +303,9 @@ void pushDiskFrame(unsigned short *Rxframe) {
     normal_fast[i_ch].i_in = i_in;
   };
 
-  /********************\
-    |* fast bolo data   *|
-    \********************/
+  /********************
+   * fast bolo data   *
+   ********************/
   for (i_card = 0; i_card<DAS_CARDS; i_card++) {
     for (i_ch = 0; i_ch<DAS_CHS; i_ch += 2) {
       B0 = (unsigned)Rxframe[boloIndex[i_card][i_ch][0]] +
@@ -320,7 +327,11 @@ void pushDiskFrame(unsigned short *Rxframe) {
   }
 }
 
-// separate thread: writes each field to disk
+/*************************************************************
+ *                                                           *
+ * DirFileWriter: separate thread: writes each field to disk * 
+ *                                                           *
+ *************************************************************/
 void DirFileWriter(void) {
   unsigned short buffer[MAXBUF];
   unsigned int ibuffer[MAXBUF];
