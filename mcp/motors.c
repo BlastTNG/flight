@@ -331,7 +331,7 @@ void SetAzScanMode(double az, double left, double right, double v, double D) {
 }
 
 void DoAzScanMode() {
-  static double last_az=0, last_w = 0;
+  static double last_x=0, last_w = 0;
   double az, left, right, v,w;
   int i_point;
 
@@ -350,7 +350,7 @@ void DoAzScanMode() {
 
   v = CommandData.pointing_mode.vaz;
 
-  if (last_az!=az || last_w != w) {
+  if (last_x!= CommandData.pointing_mode.X || last_w != w) {
     if (az < left) {
       axes_mode.az_mode = AXIS_POSITION;
       axes_mode.az_dest = left;
@@ -363,7 +363,7 @@ void DoAzScanMode() {
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
     } else {
       // once we are within the new az/w range, we can mark this as 'last'.
-      last_az = az;
+      last_x = CommandData.pointing_mode.X;
       last_w = w;
       SetAzScanMode(az, left, right, v, 0);
     }
