@@ -62,12 +62,13 @@ int GetNextChunk(void)
 
   /* if incrementing chunknum causes it to be more than rc.sufflen bytes,
    * we're out of space on our suffix -- no more chunks are possible */
-  if (chunknum + 1 >= (chunkindex_t)1 >> (4 * rc.sufflen))
+  if (chunknum + 1 >= (chunkindex_t)1 << (4 * rc.sufflen))
     return 0;
   
   /* generate new filename */
   snprintf(newchunk, FILENAME_LEN, "%s%0*llX", buffer, s,
       (unsigned long long)(chunknum + 1));
+  printf("\n\n.. %s\n", newchunk);
 
   /* stat it to see if it exists */
   if (stat(newchunk, &chunk_stat))
