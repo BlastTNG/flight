@@ -32,7 +32,7 @@
 
 typedef unsigned int chunkindex_t;
 
-unsigned long GetFrameFileSize(
+unsigned long long GetFrameFileSize(
     const char*,
     int
     );

@@ -27,9 +27,10 @@
 #include <pthread.h>
 #include "blast.h"
 
-void (*real_bputs)(blog_t, const char*) = NULL;
+int __buos_disable_exit = 0;
+void (*__buos_real_bputs)(buos_t, const char*) = NULL;
 
-void bputs_stdio(blog_t l, const char* s)
+void bputs_stdio(buos_t l, const char* s)
 {
   FILE* stream = stderr;
 
@@ -47,13 +48,15 @@ void bputs_stdio(blog_t l, const char* s)
         fputs("\n", stream);
   }
 
-  if (l == fatal)
-    exit(1);
-  else if (l == tfatal)
-    pthread_exit(NULL);
+  if (!__buos_disable_exit) {
+    if (l == fatal)
+      exit(1);
+    else if (l == tfatal)
+      pthread_exit(NULL);
+  }
 }
 
-void bputs_syslog(blog_t l, const char* s)
+void bputs_syslog(buos_t l, const char* s)
 {
   int level = LOG_INFO;
 
@@ -83,63 +86,75 @@ void bputs_syslog(blog_t l, const char* s)
 
   syslog(level, "%s", s);
 
-  if (l == fatal)
-    exit(1);
-  else if (l == tfatal)
-    pthread_exit(NULL);
+  if (!__buos_disable_exit) {
+    if (l == fatal)
+      exit(1);
+    else if (l == tfatal)
+      pthread_exit(NULL);
+  }
 }
 
-void bputs(blog_t l, const char* s)
+void bputs(buos_t l, const char* s)
 {
-  if (real_bputs)
-    (*real_bputs)(l, s);
+  if (__buos_real_bputs)
+    (*__buos_real_bputs)(l, s);
   else
     bputs_stdio(l, s);
 }
 
-void bprintf(blog_t l, const char* fmt, ...) {
-  char message[BLOG_MAX];
+void bprintf(buos_t l, const char* fmt, ...) {
+  char message[BUOS_MAX];
   va_list argptr;
 
   va_start(argptr, fmt);
-  vsnprintf(message, BLOG_MAX, fmt, argptr);
+  vsnprintf(message, BUOS_MAX, fmt, argptr);
   va_end(argptr);
 
   bputs(l, message);
 }
 
-void berror(blog_t l, const char* fmt, ...) {
-  char message[BLOG_MAX];
+void berror(buos_t l, const char* fmt, ...) {
+  char message[BUOS_MAX];
   va_list argptr;
   int error = errno;
 
   va_start(argptr, fmt);
-  vsnprintf(message, BLOG_MAX, fmt, argptr);
+  vsnprintf(message, BUOS_MAX, fmt, argptr);
   va_end(argptr);
 
   /* add a colon */
-  strncat(message, ": ", BLOG_MAX - strlen(message));
+  strncat(message, ": ", BUOS_MAX - strlen(message));
 
-  message[BLOG_MAX - 1] = '\0';
+  message[BUOS_MAX - 1] = '\0';
   /* copy error message into remainder of string -- Note: sterror is reentrant
    * despite what strerror(3) insinuates (and strerror_r is horribly b0rked) */
   strcat(message, strerror(error));
-  message[BLOG_MAX - 1] = '\0';
+  message[BUOS_MAX - 1] = '\0';
 
   bputs(l, message);
 }
 
-void blog_use_func(void (*puts_func)(blog_t, const char*))
+void buos_disable_exit(void)
 {
-  real_bputs = puts_func;
+  __buos_disable_exit = 1;
 }
 
-void blog_use_syslog(void)
+void buos_enable_exit(void)
 {
-  real_bputs = bputs_syslog;
+  __buos_disable_exit = 0;
 }
 
-void blog_use_stdio(void)
+void buos_use_func(void (*puts_func)(buos_t, const char*))
 {
-  real_bputs = bputs_stdio;
+  __buos_real_bputs = puts_func;
+}
+
+void buos_use_syslog(void)
+{
+  __buos_real_bputs = bputs_syslog;
+}
+
+void buos_use_stdio(void)
+{
+  __buos_real_bputs = bputs_stdio;
 }

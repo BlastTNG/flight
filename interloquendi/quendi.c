@@ -33,6 +33,7 @@
 #include <arpa/inet.h>
 
 #include "quendi.h"
+#include "frameread.h"
 
 /* internals */
 const char _quendi_version[] = "1.0";
@@ -317,4 +318,17 @@ void quendi_server_init(struct quendi_data* server_data)
 
 void quendi_server_shutdown(void)
 {
+}
+
+void quendi_stage_data(const char* file, unsigned long pos, int sufflen)
+{
+  char buffer[NAME_MAX + 60];
+  char source[NAME_MAX];
+
+  printf("quendi_stage_data(%s, %lu, %i)\n", file, pos, sufflen);
+
+  PathSplit_r(file, NULL, buffer);
+  StaticSourcePart(source, buffer, NULL, sufflen);
+  snprintf(buffer, NAME_MAX + 60, "%lu:%s Data Staged", pos, source);
+  quendi_respond(QUENDR_DATA_STAGED, buffer);
 }

@@ -83,6 +83,8 @@ char* GetCurFile(char *buffer, int buflen)
 {
   FILE* stream = NULL;
   char* ptr;
+
+  printf("GetCurFile(%s, %i)\n", buffer, buflen);
   
   if ((stream = fopen(options[CFG_CUR_FILE].value.as_string, "rt")) == NULL)
     syslog(LOG_ERR, "can't open curfile: %m");
@@ -137,7 +139,7 @@ void Connection(int csock)
   QuendiData.server_host = thishost ? thishost->h_name
     : inet_ntoa(addr.sin_addr);
   QuendiData.csock = csock;
-  QuendiData.access_level = 0;
+  QuendiData.access_level = 1;
   QuendiData.directory = (char*)options[CFG_DIRECTORY].value.as_string;
 
   quendi_server_init(&QuendiData);
@@ -183,11 +185,13 @@ void Connection(int csock)
           if (quendi_access_ok(1)) {
             if (GetCurFile(data.name, QUENDI_COMMAND_LENGTH) == NULL)
               quendi_respond(QUENDR_NO_CUR_DATA, NULL);
-            else
+            else {
               quendi_stage_data(data.name,
                   data.pos = GetFrameFileSize(data.name,
                     options[CFG_SUFFIX_LENGTH].value.as_int) /
-                  (data.frame_size = ReconstructChannelLists(data.name, NULL)));
+                  (data.frame_size = ReconstructChannelLists(data.name, NULL)),
+                  options[CFG_SUFFIX_LENGTH].value.as_int);
+            }
           }
           break;
         case QUENDC_QUIT:
@@ -238,7 +242,7 @@ int MakeSock(void)
     exit(1);
   }
 
-  syslog(LOG_INFO, "listening on port %i.", SOCK_PORT);
+  bprintf(info, "listening on port %i.", SOCK_PORT);
 
   return sock;
 }
@@ -328,7 +332,7 @@ int main(void)
 
   /* set up our outputs */
   openlog("interloquendi", LOG_PID, LOG_DAEMON);
-  blog_use_syslog();
+  buos_use_syslog();
 
   /* read config file */
   if ((stream = fopen(CONFIG_FILE, "rt")) != NULL) {

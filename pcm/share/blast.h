@@ -23,17 +23,17 @@
 
 #include <stdarg.h>
 
-#define BLOG_MAX 2048
+#define BUOS_MAX 2048
 /* logging definitions */
-typedef enum {info, warning, err, tfatal, fatal, startup, sched} blog_t;
+typedef enum {info, warning, err, tfatal, fatal, startup, sched} buos_t;
 
-void bputs_stdio(blog_t l, const char* s);
-void bputs_syslog(blog_t l, const char* s);
-void bprintf(blog_t, const char*, ...);
-void berror(blog_t, const char*, ...);
-void bputs(blog_t, const char*);
-void blog_use_func(void (*puts_func)(blog_t, const char*));
-void blog_use_stdio(void);
-void blog_use_syslog(void);
+void bputs_stdio(buos_t l, const char* s);
+void bputs_syslog(buos_t l, const char* s);
+void bprintf(buos_t, const char*, ...);
+void berror(buos_t, const char*, ...);
+void bputs(buos_t, const char*);
+void buos_use_func(void (*puts_func)(buos_t, const char*));
+void buos_use_stdio(void);
+void buos_use_syslog(void);
 
 #endif

@@ -61,15 +61,57 @@ struct quendi_data {
   int csock;
 };
 
-int   quendi_access_ok       ( int                                            );
-int   quendi_cmdnum          ( char*                                          );
-int   quendi_dp_connect      ( void                                           );
-int   quendi_get_cmd         ( char*                                          );
-int   quendi_get_next_param  ( char*               , int*        , char**     );
-char* quendi_make_response   ( char*               , int         , const char*);
-int   quendi_parse           ( char*               , int*        , char**     );
-int   quendi_respond         ( int                 , const char*              );
-void  quendi_server_init     ( struct quendi_data*                            );
-void  quendi_server_shutdown ( void                                           );
+int quendi_access_ok(
+    int
+    );
+
+int quendi_cmdnum(
+    char*
+    );
+
+int quendi_dp_connect(
+    void
+    );
+
+int quendi_get_cmd(
+    char*
+    );
+
+int quendi_get_next_param(
+    char*,
+    int*,
+    char**
+    );
+
+char* quendi_make_response(
+    char*,
+    int,
+    const char*
+    );
+
+int quendi_parse(
+    char*,
+    int*,
+    char**
+    );
+
+int quendi_respond(
+    int,
+    const char*
+    );
+
+void quendi_server_init(
+    struct quendi_data*
+    );
+
+void quendi_server_shutdown(
+    void
+    );
+
+void quendi_stage_data(
+    const char*,
+    unsigned long,
+    int
+    );
 
 #endif

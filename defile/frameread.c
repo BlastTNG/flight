@@ -100,13 +100,13 @@ int StaticSourcePart(char* output, const char* source, chunkindex_t* value,
     } else
       break;
 
-    if (value != NULL)
-      *value = number;
-    strcpy(output, buffer);
+  if (value != NULL)
+    *value = number;
+  strcpy(output, buffer);
 
-    free(buffer);
+  free(buffer);
 
-    return counter;
+  return counter;
 }
 
 /* Figures out the name of the channel specification file, and then tries to
@@ -117,6 +117,8 @@ int ReconstructChannelLists(const char* chunk, const char * spec_file)
   char buffer[200];
   char* ptr = buffer;
   FILE* stream;
+
+  printf("ReconstructChannelLists(%s, %s)\n", chunk, spec_file);
 
   /* if spec_file exists, the user has specified a spec file name, use it */
   if (spec_file != NULL) {
@@ -162,19 +164,21 @@ int ReconstructChannelLists(const char* chunk, const char * spec_file)
 }
 
 /* Returns the length of a framefile */
-unsigned long GetFrameFileSize(const char* file, int sufflen)
+unsigned long long GetFrameFileSize(const char* file, int sufflen)
 {
   char *chunk = strdup(file);
   struct stat chunk_stat;
-  unsigned long length = 0;
+  unsigned long long length = 0;
+
+  printf("GetFrameFileSize(%s, %i)\n", file, sufflen);
 
   /* stat it to see if it exists */
   if (stat(chunk, &chunk_stat) == 0) {
-    length = chunk_stat.st_size / DiskFrameSize;
+    length = chunk_stat.st_size;
 
     while (GetNextChunk(chunk, sufflen))
       if (stat(chunk, &chunk_stat) == 0)
-        length += chunk_stat.st_size / DiskFrameSize;
+        length += chunk_stat.st_size;
   }
 
   free(chunk);
@@ -191,6 +195,8 @@ int GetNextChunk(char* chunk, int sufflen)
   int s;
   chunkindex_t chunknum;
   struct stat chunk_stat;
+
+  printf("GetNextChunk(%s, %i)\n", chunk, sufflen);
 
   /* allocate our buffers */
   if ((buffer = (char*)malloc(FILENAME_LEN)) == NULL) 
