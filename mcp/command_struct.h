@@ -107,7 +107,6 @@ struct CommandDataStruct {
   double t_gybox_setpoint;
   double t_isc_setpoint;
 
-  unsigned char default_sensor;
   unsigned char use_sun;
   unsigned char use_isc;
   unsigned char use_vsc;

@@ -1,6 +1,6 @@
 #define N_SCOMMANDS 63         /* total number of single word commands */
 #define N_NM_SCOMMANDS 50      /* total number of named single word cmds */
-#define N_MCOMMANDS 30         /* total number of multiword commands */
+#define N_MCOMMANDS 32         /* total number of multiword commands */
 #define MAX_N_PARAMS 12
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -13,7 +13,7 @@
 
 #define SIZE_NAME 80
 #define SIZE_ABOUT 80
-#define SIZE_PARNAME 25
+#define SIZE_PARNAME 80
 
 #define N_GROUPS 12
 
@@ -130,27 +130,29 @@ struct mcom {
  * l :  parameter is 30 bit renormalised floating point
  */
 struct mcom mcommands[N_MCOMMANDS] = {
-  {"lock", "Lock Inner Frame", GR_LOCK, 1,
+
+  /***************************************/
+  /********** Pointing Mode **************/
+  {"ra_dec_raster", "raster scan a circle in RA/DEC", GR_POINT, 5,
+   {
+     {"RA of Center (h)", 0.0, 24.0, 'f', 4, "0.0"}, //FIXME: field
+     {"DEC of Center (deg)", -90.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
+     {"Radius (deg on sky)", 0.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
+     {"Azimuth Scan Speed (deg az/s)", 0.0, 2.0, 'f', 4, "0.1"},
+     {"El drift Speed (deg el/s)", 0.0, 2.0, 'f', 4, "0.005"}
+   }
+  },
+  {"az_scan", "scan in azimuth", GR_POINT, 3,
     {
-      {"Lock Elevation (deg)", 5, 90, 'f', 4, "ENC_ELEV"}
+      {"centre (deg)", -180.0, 360.0, 'f', 4, "AZ"}, //FIXME: field
+      {"peak to peak (deg azimuth)", 0.0, 360, 'f', 4, "1.0"}, //FIXME: field
+      {"scan speed (deg az/s", 0.01, 2, 'f', 4, "0.1"} //FIXME: field
     }
   },
 
-  {"goto_el", "goto elevation", GR_POINT, 1,
-    {
-      {"elevation (deg)", 10, 90, 'f', 4, "ENC_ELEV"}
-    }
-  },
-
-  {"goto_az", "goto azimuth", GR_POINT, 1,
+  {"az_goto", "goto azimuth", GR_POINT, 1,
     {
       {"azimuth (deg)", 0, 360, 'f', 4, "MAG_AZ"}
-    }
-  },
-
-  {"el_vel", "elevation velocity", GR_POINT, 1,
-    {
-      {"velocity (deg/s)", -2.0, 2.0, 'f', 1, "0.0"}
     }
   },
 
@@ -160,12 +162,93 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"timeout", "time until schedule mode", GR_MISC, 1,
+  {"el_goto", "goto elevation", GR_POINT, 1,
     {
-      {"timeout (s)", 15, 14400, 'i', 0, "ADD"}
+      {"elevation (deg)", 10, 90, 'f', 4, "ENC_ELEV"}
     }
   },
 
+  {"el_vel", "elevation velocity", GR_POINT, 1,
+    {
+      {"velocity (deg/s)", -2.0, 2.0, 'f', 1, "0.0"}
+    }
+  },
+
+  /***************************************/
+  /********** Pointing Motor Gains *******/
+  {"roll_gain", "roll reaction wheel gain", GR_GAIN, 1,
+    {
+      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_roll"}
+    }
+  },
+
+  {"el_gain", "elevation motor gains", GR_GAIN, 2,
+    {
+      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_el"},
+      {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_i_el"}
+    }
+  },
+
+  {"az_gain", "azimuth reaction wheel gains", GR_GAIN, 2,
+    {
+      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_az"},
+      {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_i_az"}
+    }
+  },
+
+  {"pivot_gain", "pivot gains", GR_GAIN, 2,
+    {
+      {"Set Point (rpm)", 0, MAX_15BIT, 'f', 0, "set_reac"},
+      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_pivot"}
+    }
+  },
+
+  /***************************************/
+  /********** Inner Frame Lock  **********/
+  {"lock", "Lock Inner Frame", GR_LOCK, 1,
+    {
+      {"Lock Elevation (deg)", 5, 90, 'f', 4, "ENC_ELEV"}
+    }
+  },
+
+  /***************************************/
+  /********** Balance System  ************/
+  {"setpoints", "balance system setpoints", GR_BAL, 3,
+    {
+      {"pump on point (A)", 0, 2, 'f', 5, "BAL_ON"},
+      {"pump off point (A)", 0, 2, 'f', 5, "BAL_OFF"},
+      {"target (A)", -2, 2, 'f', 5, "BAL_TARGET"}
+    }
+  },
+
+  {"pwm", "balance pump pwm level", GR_BAL, 1,
+    {
+      {"level", 0, 2047, 'i', 0, "ADD"}
+    }
+  },
+
+  /***************************************/
+  /********** Cooling System  ************/
+  {"spare_pump_pwm", "spare pump pwm level", GR_COOL, 1,
+    {
+      {"level", 0, 2047, 'i', 0, "ADD"}
+    }
+  },
+
+  {"inner_pwm", "inner frame cooling pump pwm level", GR_COOL, 1,
+    {
+      {"level", 0, 2047, 'i', 0, "ADD"}
+    }
+  },
+
+  {"outer_pwm", "outer frame cooling pump pwm level", GR_COOL, 1,
+    {
+      {"level", 0, 2047, 'i', 0, "ADD"}
+    }
+  },
+
+  /***************************************/
+  /******** Electronics Heaters  *********/
   {"t_gyrobox", "gyro box T", GR_EHEAT, 1,
     {
       {"deg C", 0, 60, 'f', 2, "t_gy_set"}
@@ -194,34 +277,22 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"roll_gain", "roll reaction wheel gain", GR_GAIN, 1,
+  /***************************************/
+  /*************** Misc  *****************/
+  {"timeout", "time until schedule mode", GR_MISC, 1,
     {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_roll"}
+      {"timeout (s)", 15, 14400, 'i', 0, "ADD"}
     }
   },
 
-  {"el_gain", "elevation motor gains", GR_GAIN, 2,
+  {"xml_file", "set XML file for compressed downlink", GR_MISC, 1,
     {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_el"},
-      {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_i_el"}
+      {"file#", 0, 15, 'i', 0, "ADD"}
     }
   },
 
-  {"az_gain", "azimuth reaction wheel gains", GR_GAIN, 2,
-    {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_az"},
-      {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_i_az"}
-    }
-  },
-
-  {"pivot_gain", "pivot gains", GR_GAIN, 2,
-    {
-      {"Set Point (rpm)", 0, MAX_15BIT, 'f', 0, "set_reac"},
-      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_pivot"}
-    }
-  },
-
-
+  /***************************************/
+  /*************** Bias  *****************/
   {"bias1_level", "bias 1 level", GR_BIAS, 1,
     {
       {"level", 0, 15, 'i', 0, "ADD"}
@@ -247,6 +318,23 @@ struct mcom mcommands[N_MCOMMANDS] = {
    }
   },
 
+  /***************************************/
+  /*********** Cal Lamp  *****************/
+  {"cal_pulse", "calibrator single pulse", GR_CALLAMP, 1,
+    {
+      {"pulse length (ms)", 0, 8000, 'i', 0, "ADD"}
+    }
+  },
+
+  {"cal_pulse_repeat", "pulse calibrator repeatedly", GR_CALLAMP, 2,
+    {
+      {"pulse length (ms)", 1, 8000, 'i', 0, "ADD"},
+      {"repeat delay (s)", 1, 86400, 'f', 0, "ADD"}
+    }
+  },
+
+  /***************************************/
+  /********* Cryo heat   *****************/
   {"jfet_heat", "JFET heater level", GR_CRYO_HEAT, 1,
     {
       {"level (%)", 0, 100, 'f', 2, "JFETPWM"}
@@ -268,57 +356,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {"spare_heat", "Spare cryo pwm level", GR_CRYO_HEAT, 1,
     {
       {"level (%)", 0, 100, 'f', 2, "CRYOPWM"}
-    }
-  },
-
-  {"cal_pulse", "calibrator single pulse", GR_CALLAMP, 1,
-    {
-      {"pulse length (ms)", 0, 8000, 'i', 0, "ADD"}
-    }
-  },
-
-  {"cal_pulse_repeat", "pulse calibrator repeatedly", GR_CALLAMP, 2,
-    {
-      {"pulse length (ms)", 1, 8000, 'i', 0, "ADD"},
-      {"repeat delay (s)", 1, 86400, 'f', 0, "ADD"}
-    }
-  },
-
-  {"xml_file", "set XML file for compressed downlink", GR_MISC, 1,
-    {
-      {"file#", 0, 15, 'i', 0, "ADD"}
-    }
-  },
-
-  {"setpoints", "balance system setpoints", GR_BAL, 3,
-    {
-      {"pump on point (A)", 0, 2, 'f', 5, "BAL_ON"},
-      {"pump off point (A)", 0, 2, 'f', 5, "BAL_OFF"},
-      {"target (A)", -2, 2, 'f', 5, "BAL_TARGET"}
-    }
-  },
-
-  {"pwm", "balance pump pwm level", GR_BAL, 1,
-    {
-      {"level", 0, 2047, 'i', 0, "ADD"}
-    }
-  },
-
-  {"spare_pump_pwm", "spare pump pwm level", GR_COOL, 1,
-    {
-      {"level", 0, 2047, 'i', 0, "ADD"}
-    }
-  },
-
-  {"inner_pwm", "inner frame cooling pump pwm level", GR_COOL, 1,
-    {
-      {"level", 0, 2047, 'i', 0, "ADD"}
-    }
-  },
-
-  {"outer_pwm", "outer frame cooling pump pwm level", GR_COOL, 1,
-    {
-      {"level", 0, 2047, 'i', 0, "ADD"}
     }
   }
 };

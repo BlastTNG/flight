@@ -26,15 +26,10 @@
 
 #define BAL_VETO_LENGTH 500
 
-#define ASCENT_MODE     0
-#define RASTER_MODE     1
-#define ALIGN_MODE      2
-#define POINT_MODE      3
-
-#define SUN             0
-#define ISC             1
-#define VSC             2
-#define MAG             3
+/* #define SUN             0 */
+/* #define ISC             1 */
+/* #define VSC             2 */
+/* #define MAG             3 */
 
 #define TAKEBIT    0
 #define FORCEINT   1
@@ -421,20 +416,53 @@ void MultiCommand (int command, unsigned short *dataq) {
    * If the parameter is type 'i'     set CommandData using ivalues[i]
    * If the parameter is type 'f'/'l' set CommandData using rvalues[i]
    */
-  if (command == MIndex("timeout"))         /* Set timeout */
-    CommandData.timeout = ivalues[0];
-  else if (command == MIndex("t_gyrobox"))  /* gyro heater setpoint */
-    CommandData.t_gybox_setpoint = rvalues[0];
-  else if (command == MIndex("t_iscbox"))  /* isc heater setpoint */
-    CommandData.t_isc_setpoint = rvalues[0];
-  else if (command == MIndex("xml_file")) {  /* change downlink XML file */
-    if ((fp = fopen("./alice/index.al", "w")) != NULL) {
-      fprintf(fp, "%d\n", ivalues[0]);
-      fclose(fp);
-    }
-  } else if (command == MIndex("roll_gain"))  /* roll Gains */
+  if (0) { // allow easy re-arranging
+
+  /***************************************/
+  /********** Pointing Mode **************/
+  } else if (command == MIndex("ra_dec_raster")) {  /* raster a circle */
+    CommandData.pointing_mode.az_mode = POINT_RASTER;
+    CommandData.pointing_mode.el_mode = POINT_RASTER;
+    CommandData.pointing_mode.ra = rvalues[0];	
+    CommandData.pointing_mode.dec = rvalues[1];
+    CommandData.pointing_mode.r = rvalues[2];
+    CommandData.pointing_mode.az_vel = rvalues[3];
+    CommandData.pointing_mode.el_vel = rvalues[4];
+  } else if (command == MIndex("az_scan")) {  /* scan in azimuth */
+    CommandData.pointing_mode.az_mode = POINT_SCAN;
+    CommandData.pointing_mode.az1 = rvalues[0]-rvalues[1]/2.0;
+    CommandData.pointing_mode.az2 = rvalues[0]+rvalues[1]/2.0;
+    CommandData.pointing_mode.az_vel = rvalues[2];
+  } else if (command == MIndex("az_goto")) {  /* point in azimuth */
+    CommandData.pointing_mode.az_mode = POINT_POINT;
+    CommandData.pointing_mode.az1 = rvalues[0];
+    CommandData.axes_mode.az_mode = AXIS_POSITION; // DELME
+    CommandData.axes_mode.az_dest = rvalues[0];    // DELME
+  } else if (command == MIndex("az_vel")) {  /* fixed azimuth velocity */
+    CommandData.pointing_mode.az_mode = POINT_VEL;
+    CommandData.pointing_mode.az_vel = rvalues[0];
+    CommandData.axes_mode.az_mode = AXIS_VEL;     // DELME
+    CommandData.axes_mode.az_vel = rvalues[0];    // DELME
+  } else if (command == MIndex("el_goto")) {  /* point in elevation */
+    if (CommandData.pumps.bal_veto >= 0)
+      CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
+    CommandData.pointing_mode.el_mode = POINT_POINT;
+    CommandData.pointing_mode.el1 = rvalues[0];
+    CommandData.axes_mode.el_mode = AXIS_POSITION; // DELME
+    CommandData.axes_mode.el_dest = rvalues[0];    // DELME
+  } else if (command == MIndex("el_vel")) {  /* fixed elevation velocity */
+    if (CommandData.pumps.bal_veto >= 0)
+      CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
+    CommandData.pointing_mode.el_mode = POINT_VEL;
+    CommandData.pointing_mode.el_vel = rvalues[0];
+    CommandData.axes_mode.el_mode = AXIS_VEL;     // DELME
+    CommandData.axes_mode.el_vel = rvalues[0];    // DELME
+
+  /***************************************/
+  /********** Pointing Motor Gains *******/
+  } else if (command == MIndex("roll_gain")) { /* roll Gains */
     CommandData.roll_gain.P = ivalues[0];
-  else if (command == MIndex("el_gain")) {  /* ele gains */
+  } else if (command == MIndex("el_gain")) {  /* ele gains */
     CommandData.ele_gain.P = ivalues[0];
     CommandData.ele_gain.I = ivalues[1];
   } else if (command == MIndex("az_gain")) {  /* az gains */
@@ -443,14 +471,9 @@ void MultiCommand (int command, unsigned short *dataq) {
   } else if (command == MIndex("pivot_gain")) {  /* pivot gains */
     CommandData.pivot_gain.SP = (rvalues[0] + 2.605) / 7.9498291016e-5;
     CommandData.pivot_gain.P = ivalues[1];
-  } else if (command == MIndex("t_gyrobox_gain")) {  /* gyro heater gains */
-    CommandData.gy_heat_gain.P = ivalues[0];
-    CommandData.gy_heat_gain.I = ivalues[1];
-    CommandData.gy_heat_gain.D = ivalues[2];
-  } else if (command == MIndex("t_iscbox_gain")) {  /* isc heater gains */
-    CommandData.isc_heat_gain.P = ivalues[0];
-    CommandData.isc_heat_gain.I = ivalues[1];
-    CommandData.isc_heat_gain.D = ivalues[2];
+        
+  /***************************************/
+  /********** Inner Frame Lock  **********/
   } else if (command == MIndex("lock")) {  /* Lock Inner Frame */
     if (CommandData.pumps.bal_veto >= 0)
       CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
@@ -460,66 +483,83 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.axes_mode.el_mode = AXIS_LOCK; // DELME
     CommandData.axes_mode.el_dest = LockPosition(rvalues[0]); // DELME
     fprintf(stderr, "Lock Mode: %g\n", CommandData.axes_mode.el_dest);
-  } else if (command == MIndex("goto_el")) {  /* point in elevation */
-    if (CommandData.pumps.bal_veto >= 0)
-      CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
-    CommandData.pointing_mode.el_mode = POINT_POINT;
-    CommandData.pointing_mode.el1 = rvalues[0];
-    CommandData.axes_mode.el_mode = AXIS_POSITION; // DELME
-    CommandData.axes_mode.el_dest = rvalues[0];    // DELME
-  } else if (command == MIndex("goto_az")) {  /* point in azimuth */
-    CommandData.pointing_mode.az_mode = POINT_POINT;
-    CommandData.pointing_mode.az1 = rvalues[0];
-    CommandData.axes_mode.az_mode = AXIS_POSITION; // DELME
-    CommandData.axes_mode.az_dest = rvalues[0];    // DELME
-  } else if (command == MIndex("el_vel")) {  /* fixed elevation velocity */
-    if (CommandData.pumps.bal_veto >= 0)
-      CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
-    CommandData.pointing_mode.el_mode = POINT_VEL;
-    CommandData.pointing_mode.el_vel = rvalues[0];
-    CommandData.axes_mode.el_mode = AXIS_VEL;     // DELME
-    CommandData.axes_mode.el_vel = rvalues[0];    // DELME
-  } else if (command == MIndex("az_vel")) {  /* fixed azimuth velocity */
-    CommandData.pointing_mode.az_mode = POINT_VEL;
-    CommandData.pointing_mode.az_vel = rvalues[0];
-    CommandData.axes_mode.az_mode = AXIS_VEL;     // DELME
-    CommandData.axes_mode.az_vel = rvalues[0];    // DELME
-  } else if (command == MIndex("jfet_heat"))
-    CommandData.Cryo.JFETHeat = rvalues[0] * 2047./100.;
-  else if (command == MIndex("heatswitch_heat"))
-    CommandData.Cryo.heatSwitch = rvalues[0] * 2047./100.;
-  else if (command == MIndex("he3_heat"))
-    CommandData.Cryo.heliumThree = rvalues[0] * 2047./100.;
-  else if (command == MIndex("spare_heat"))
-    CommandData.Cryo.sparePwm = rvalues[0] * 2047./100.;
-  else if (command == MIndex("cal_pulse")) {
+    
+  /***************************************/
+  /********** Balance System  ************/
+  } else if (command == MIndex("setpoints")) {
+    CommandData.pumps.bal_on = rvalues[0] * 1648.;
+    CommandData.pumps.bal_off = rvalues[1] * 1648.;
+    CommandData.pumps.bal_target = rvalues[2] * 1648.;
+  } else if (command == MIndex("pwm")) {
+    CommandData.pumps.pwm1 = ivalues[0];
+
+  /***************************************/
+  /********** Cooling System  ************/
+  } else if (command == MIndex("spare_pump_pwm")) {
+    CommandData.pumps.pwm2 = ivalues[0];
+  } else if (command == MIndex("inner_pwm")) {
+    CommandData.pumps.pwm3 = ivalues[0];
+  } else if (command == MIndex("outer_pwm")) {
+    CommandData.pumps.pwm4 = ivalues[0];
+
+  /***************************************/
+  /******** Electronics Heaters  *********/
+  } else if (command == MIndex("t_gyrobox")) {  /* gyro heater setpoint */
+    CommandData.t_gybox_setpoint = rvalues[0];
+  } else if (command == MIndex("t_iscbox"))  { /* isc heater setpoint */
+    CommandData.t_isc_setpoint = rvalues[0];    
+  } else if (command == MIndex("t_gyrobox_gain")) {  /* gyro heater gains */
+    CommandData.gy_heat_gain.P = ivalues[0];
+    CommandData.gy_heat_gain.I = ivalues[1];
+    CommandData.gy_heat_gain.D = ivalues[2];
+  } else if (command == MIndex("t_iscbox_gain")) {  /* isc heater gains */
+    CommandData.isc_heat_gain.P = ivalues[0];
+    CommandData.isc_heat_gain.I = ivalues[1];
+    CommandData.isc_heat_gain.D = ivalues[2];
+
+  /***************************************/
+  /*************** Misc  *****************/
+  } else if (command == MIndex("timeout")) {        /* Set timeout */
+    CommandData.timeout = ivalues[0];
+  } else if (command == MIndex("xml_file")) {  /* change downlink XML file */
+    if ((fp = fopen("./alice/index.al", "w")) != NULL) {
+      fprintf(fp, "%d\n", ivalues[0]);
+      fclose(fp);
+    }
+
+  /***************************************/
+  /*************** Bias  *****************/
+  } else if (command == MIndex("bias1_level")) {    /* Set bias 1 */
+    CommandData.Bias.bias1 = ivalues[0];
+  } else if (command == MIndex("bias2_level")) {   /* Set bias 2 */
+    CommandData.Bias.bias2 = ivalues[0];
+  } else if (command == MIndex("bias3_level")) {   /* Set bias 3 */
+    CommandData.Bias.bias3 = ivalues[0];
+  } else if (command == MIndex("phase")) {
+    if (ivalues[0] >= 5 && ivalues[0] <= 16) 
+      CommandData.Phase[ivalues[0] - 5] = ivalues[1];
+
+  /***************************************/
+  /*********** Cal Lamp  *****************/
+  } else if (command == MIndex("cal_pulse")) {
     CommandData.Cryo.calib_pulse = ivalues[0];
     CommandData.Cryo.calib_repeat = 0;
   } else if (command == MIndex("cal_pulse_repeat")) {
     CommandData.Cryo.calib_pulse = ivalues[0];
     CommandData.Cryo.calib_repeat = rvalues[1];
-  } else if (command == MIndex("bias1_level"))    /* Set bias 1 */
-    CommandData.Bias.bias1 = ivalues[0];
-  else if (command == MIndex("bias2_level"))    /* Set bias 2 */
-    CommandData.Bias.bias2 = ivalues[0];
-  else if (command == MIndex("bias3_level"))    /* Set bias 3 */
-    CommandData.Bias.bias3 = ivalues[0];
-  else if (command == MIndex("phase")) {
-    if (ivalues[0] >= 5 && ivalues[0] <= 16) 
-      CommandData.Phase[ivalues[0] - 5] = ivalues[1];
-  } else if (command == MIndex("setpoints")) {
-    CommandData.pumps.bal_on = rvalues[0] * 1648.;
-    CommandData.pumps.bal_off = rvalues[1] * 1648.;
-    CommandData.pumps.bal_target = rvalues[2] * 1648.;
-  } else if (command == MIndex("pwm"))
-    CommandData.pumps.pwm1 = ivalues[0];
-  else if (command == MIndex("spare_pump_pwm"))
-    CommandData.pumps.pwm2 = ivalues[0];
-  else if (command == MIndex("inner_pwm"))
-    CommandData.pumps.pwm3 = ivalues[0];
-  else if (command == MIndex("outer_pwm"))
-    CommandData.pumps.pwm4 = ivalues[0];
-
+    
+  /***************************************/
+  /********* Cryo heat   *****************/
+  } else if (command == MIndex("jfet_heat")) {
+    CommandData.Cryo.JFETHeat = rvalues[0] * 2047./100.;
+  } else if (command == MIndex("heatswitch_heat")) {
+    CommandData.Cryo.heatSwitch = rvalues[0] * 2047./100.;
+  } else if (command == MIndex("he3_heat")) {
+    CommandData.Cryo.heliumThree = rvalues[0] * 2047./100.;
+  } else if (command == MIndex("spare_heat")) {
+    CommandData.Cryo.sparePwm = rvalues[0] * 2047./100.;
+  }
+  
   WritePrevStatus();
 }
 
@@ -1230,7 +1270,6 @@ void InitCommandData() {
   CommandData.isc_heat_gain.I = 60;
   CommandData.isc_heat_gain.D = 50;
 
-  CommandData.default_sensor = ISC;
   CommandData.use_sun = 1;
   CommandData.use_isc = 1;
   CommandData.use_vsc = 0;
