@@ -569,14 +569,14 @@ int main(int argc, char *argv[]) {
 
   MakeTxFrame();
 
-  InitializeDirfile(argv[1][0]);
-  pthread_create(&disk_id, NULL, (void*)&DirFileWriter, NULL);
-
   bbc_fp = open("/dev/bbc", O_RDWR);
   if (bbc_fp < 0) {
     fprintf(stderr, "Error opening BBC\n");
     exit(0);
   }
+
+  InitializeDirfile(argv[1][0]);
+  pthread_create(&disk_id, NULL, (void*)&DirFileWriter, NULL);
 
   do_Tx_frame(bbc_fp, Txframe, slowTxFields, Rxframe, 0);
 
@@ -594,9 +594,7 @@ int main(int argc, char *argv[]) {
       close(bbc_fp);
       bbc_fp = open("/dev/bbc", O_RDWR);
       frame_num = frames_in;
-#ifndef BOLOTEST
       fprintf(stderr, "EMPTY %d %d %d\n", df, frames, frame_num);
-#endif
       last_frames = FRAME_MARGIN;
     }
 
