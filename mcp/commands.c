@@ -1457,9 +1457,9 @@ void InitCommandData() {
   CommandData.gyheat.setpoint = 30.0;
   CommandData.gyheat.step = 1.0;
   CommandData.gyheat.tc = 30000; /* = 5 minutes; in 100Hz frames */
-  CommandData.gyheat.gain.P = 10;
-  CommandData.gyheat.gain.I = 60;
-  CommandData.gyheat.gain.D = 50;
+  CommandData.gyheat.gain.P = 100;
+  CommandData.gyheat.gain.I = 20;
+  CommandData.gyheat.gain.D = 0;
 
   CommandData.disable_az = 0;
   CommandData.disable_el = 0;
