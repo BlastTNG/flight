@@ -34,8 +34,7 @@
 #define DERIV        3
 #define CURDIR       4
 
-// Update palantir every 1358 milliseconds
-//#define UPDATETIME 1358
+// Update palantir every 750 milliseconds
 #define UPDATETIME 750
 
 #ifndef LIB_DIR
@@ -49,6 +48,8 @@
 #ifndef LOGFILE
 #  define LOGFILE LIB_DIR "log.txt"
 #endif
+
+#define MAXPATHLENGTH 255
 
 #define PALANTIR_0_JPG LIB_DIR "palantir0.jpg"
 #define PALANTIR_1_JPG LIB_DIR "palantir1.jpg"

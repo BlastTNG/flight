@@ -1225,7 +1225,7 @@ void usage() {
 
 int main(int argc, char* argv[]) {
   QApplication app(argc, argv);
-  char layoutfile[25];
+  char layoutfile[MAXPATHLENGTH];
 
   // Parse out command line
   if (argc > 2) {
@@ -1237,10 +1237,10 @@ int main(int argc, char* argv[]) {
       usage();
       exit(1);
     } else {
-      strcpy(layoutfile, argv[1]);
+      strncpy(layoutfile, argv[1], MAXPATHLENGTH);
     }
   } else {
-    strcpy(layoutfile, DEF_LAYOUTFILE);
+    strncpy(layoutfile, DEF_LAYOUTFILE, MAXPATHLENGTH);
   }
   MainForm palantir(0, "palantir", true, 0, &layoutfile[0]);
 
