@@ -1588,7 +1588,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=palantir
- VERSION=1.2.2
+ VERSION=1.2.3
 
 
 cat >>confdefs.h <<_ACEOF
