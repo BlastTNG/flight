@@ -453,7 +453,10 @@ void InitialiseDirFile(int reset)
   }
 
   normal_fast[n_fast].i_in = normal_fast[n_fast].i_out = 0;
-  normal_fast[n_fast].b = malloc(MAXBUF * sizeof(int));
+  if ((normal_fast[n_fast].b = malloc(MAXBUF * sizeof(int))) == NULL) {
+    perror("malloc");
+    exit(1);
+  }
   n_fast++;
 
   /* slow chs */
@@ -507,7 +510,10 @@ void InitialiseDirFile(int reset)
         else
           slow_fields[j][i].nw = 0;
       }
-      slow_fields[j][i].b = malloc( 2 * MAXBUF);
+      if ((slow_fields[j][i].b = malloc( 2 * MAXBUF)) == NULL) {
+        perror("malloc");
+        exit(1);
+      }
       slow_fields[j][i].i0 = SLOW_OFFSET + i;
     }
   }
@@ -561,7 +567,11 @@ void InitialiseDirFile(int reset)
           normal_fast[n_fast].nw = 0;
       }
 
-      normal_fast[n_fast].b = malloc(MAXBUF * 2 * normal_fast[n_fast].size);
+      if ((normal_fast[n_fast].b
+            = malloc(MAXBUF * 2 * normal_fast[n_fast].size)) == NULL) {
+        perror("malloc");
+        exit(1);
+      }
       n_fast++;
       fprintf(fp, "%-16s RAW    %c %d\n",
           StringToLower(FastChList[i].field),
@@ -617,7 +627,10 @@ void InitialiseDirFile(int reset)
           bolo_fields[i][j].nw = 0;
       }
 
-      bolo_fields[i][j].b = malloc(MAXBUF * 4);
+      if ((bolo_fields[i][j].b = malloc(MAXBUF * 4)) == NULL) {
+        perror("malloc");
+        exit(1);
+      }
       bolo_fields[i][j].i0 = bolo_i0 + i * (DAS_CARDS * 3 / 2)
         + j;
       fprintf(fp, "%-16s RAW    U %d\n",
@@ -662,25 +675,37 @@ void InitialiseDirFile(int reset)
  * Close open file descriptors and free allocated memory */
 void CleanUp(void)
 {
-  int j, i; 
+  int j, i, is_bolo = 0; 
 
   for(i = 0; i < slowsPerBi0Frame; i++)
     for(j = 0; j < FAST_PER_SLOW; j++) {
       close(slow_fields[j][i].fp);
-      free(slow_fields[j][i].b);
+      if (slow_fields[j][i].b)
+        free(slow_fields[j][i].b);
+      slow_fields[j][i].b = NULL;
     }
 
   for(i = 0; i < ccFast; ++i) {
     if (strcmp(FastChList[i].field, "n5c0lo") == 0)
-      break;
-    close(normal_fast[i].fp);
-    free(normal_fast[i].b);
+      is_bolo = 1;
+    else if (ccDecom > 0 && strcmp(FastChList[i].field,
+          DecomChannels[0].field) == 0)
+      is_bolo = 0;
+
+    if (!is_bolo) {
+      close(normal_fast[i].fp);
+      if (normal_fast[i].b)
+        free(normal_fast[i].b);
+      normal_fast[i].b = NULL;
+    }
   }
 
   for (i = 0; i < DAS_CARDS; i++)
     for (j = 0; j < DAS_CHS; j++) {
       close(bolo_fields[i][j].fp);
-      free(bolo_fields[i][j].b);
+      if (bolo_fields[i][j].b)
+        free(bolo_fields[i][j].b);
+      bolo_fields[i][j].b = NULL;
     }
 }
 
