@@ -742,8 +742,7 @@ void MKSAltitude (unsigned char *indata) {
 
   /* Calculate pressure */
   z_hi = log(SIPData.MKScal.m_hi * hi + SIPData.MKScal.b_hi);  
-  z_med = log(SIPData.MKScal.m_med * med +
-      SIPData.MKScal.b_med);
+  z_med = log(SIPData.MKScal.m_med * med + SIPData.MKScal.b_med);
   z_lo = log(SIPData.MKScal.m_lo * lo + SIPData.MKScal.b_lo);
 
   /* Use the MKS algorithm to calculate altitude (ft) */
@@ -994,14 +993,19 @@ void WatchPort (void* parameter) {
       case 1: /* wating for packet type */
         if (buf == 0x13) { /* Send data request */
           readstage = 3;
+//          fprintf(stderr, "COMM%i: Data request\n", port + 1);
         } else if (buf == 0x14) { /* Command */
           readstage = 2;
+//          fprintf(stderr, "COMM%i: Command\n", port + 1);
         } else if (buf == 0x10) { /* GPS Position */
           readstage = 4;
-        } else if (buf == 0x11) { /* GPS Position */
+//          fprintf(stderr, "COMM%i: GPS Position\n", port + 1);
+        } else if (buf == 0x11) { /* GPS Time */
           readstage = 5;
-        } else if (buf == 0x12) { /* MKS Pressure */
+//          fprintf(stderr, "COMM%i: GPS Time\n", port + 1);
+        } else if (buf == 0x12) { /* MKS Altitude */
           readstage = 6;
+//          fprintf(stderr, "COMM%i: MKS Altitude\n", port + 1);
         } else {
           fprintf(stderr,
               "COMM%i: Bad packet received: Unrecognised Packet Type: %02X\n",

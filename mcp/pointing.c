@@ -579,7 +579,7 @@ void Pointing(){
 					  0.00004, // filter constant
 					  0, 0 // n_solutions, since_last
   };
-  static struct AzSolutionStruct NullAz = {95.0, // starting angle
+  static struct AzSolutionStruct NullAz = {90.0, // starting angle
 					  360.0*360.0, // varience
 					  1.0/M2DV(6), //sample weight
 					  M2DV(6000), // systemamatic varience
@@ -737,6 +737,7 @@ void Pointing(){
 		   ss_az, ss_ok);  
 
   /** add az solutions **/
+//  AddAzSolution(&AzAtt, &NullAz, 1);
   if (CommandData.use_mag) {
     AddAzSolution(&AzAtt, &MagAz, 1);
   }
