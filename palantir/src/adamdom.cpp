@@ -1,15 +1,32 @@
-// **********************************************************
-// *                                                        *
-// *  Programmed by Adam Hincks                             *
-// *                                                        *
-// **********************************************************
+/* palantir: BLAST status GUI
+ *
+ * This software is copyright (C) 2002-2004 University of Toronto
+ * 
+ * This file is part of palantir.
+ * 
+ * palantir is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * palantir is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with palantir; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
 
+// **********************************************************
+// *  Programmed by Adam Hincks et al.                      *
+// **********************************************************
 
 //***************************************************************************
-//**** 
 //****     CLASS AdamDom -- uses Qt's QDom class.  Can read in an XML file
 //****                      and return information from it
-//****    
 //****     GLOSSARY
 //****       DOM: document object model -- represents data in a type of
 //****            hierchical tree.
@@ -23,22 +40,15 @@
 //****            (<TAGNAME . . .>)
 //****       attribute: information inside a tag -- e.g.
 //****            <TAG attrib1="attrib">
-//****
 //***************************************************************************
-
 
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "adamdom.h"
-
-
 //-------------------------------------------------------------
-// 
 // AdamDom: constructor
-//
 //-------------------------------------------------------------
-
 AdamDom::AdamDom() {
   layout = new QDomDocument("layoutdoc");
 }
@@ -50,16 +60,11 @@ AdamDom::AdamDom(char *filename) {
 }
 
 //-------------------------------------------------------------
-// 
 // LoadXML: uses QDom to parse an XML file into a DOM object.
 //      "layout" is of class QDomDocument
-// 
 //   *filename: XML file
-//
 //   Returns: true if successful, false if unsuccessful
-//
 //-------------------------------------------------------------
-
 bool AdamDom::LoadXML(char *filename) {
   QFile f(filename);
   if (f.open(IO_ReadOnly)) {
@@ -79,11 +84,8 @@ bool AdamDom::LoadXML(char *filename) {
 
 
 //-------------------------------------------------------------
-//
 // StartNode (private)
-//
 //   Returns: the first node of a DOM element
-//
 //-------------------------------------------------------------
 
 QDomNode AdamDom::StartNode(QDomElement e) {
@@ -92,14 +94,10 @@ QDomNode AdamDom::StartNode(QDomElement e) {
 
 
 //-------------------------------------------------------------
-//
 // NextElement (private): looks for the next element among the
 //      siblings of *n
-// 
 //   n: pointer to a node from which to start the search
-//
 //   Returns: the first sibling of n which is an element
-//      
 //-------------------------------------------------------------
 
 
@@ -120,13 +118,9 @@ QDomElement AdamDom::NextElement(QDomNode *n) {
 
 
 //--------------------------------------------------------------
-//
 // GetAttribute (public): read an attribute from current element
-//
 //  *attrib: name of the attribute
-//
 //  Returns: the value of "attrib"
-//  
 //-------------------------------------------------------------
 
 QString AdamDom::GetAttribute(char *attrib) {
@@ -138,25 +132,19 @@ QString AdamDom::GetAttribute(char *attrib) {
 
 
 //--------------------------------------------------------------
-//
 // GetTagName (public)
-//
 //  Returns: the name of the current tag
-//  
 //--------------------------------------------------------------
 
 QString AdamDom::GetTagName() {
   return currElem.tagName();
 }
 
-
 //--------------------------------------------------------------
-//
 // RealCountEntries (private): counts the number of time
 //      specified elements appear as a sibling or child of the 
 //      given node.  The function is recursive, as it searches
 //      through all the children of the node
-//
 //   Node: the node from which to start the search
 //   entrylist: an array of the elements to search for.  The
 //      elements are specified with a QString which is a list
@@ -166,9 +154,7 @@ QString AdamDom::GetTagName() {
 //   parents: keeps track of the parents of the node being
 //      currently searched (remember the function is recursive).
 //      A QString like entrylist.
-//
 //   Returns: number of elements found
-//  
 //--------------------------------------------------------------
 
 
@@ -195,12 +181,10 @@ int AdamDom::RealCountEntries(QDomNode Node, QString *entrylist, int numentries,
 
 
 //-------------------------------------------------------------
-//
 // RealGotoEntry (private): finds entry number "num" among the
 //      siblings/children of the given node.  Works recursively
 //      as it polls all the children.  Sets member variable
 //      currElem to point to this entry.
-//
 //   Node: the node to begin the search at
 //   parents: a list ".ELEMENT1.ELEMENT2. etc." describing the
 //            parents of the current element
@@ -215,9 +199,7 @@ int AdamDom::RealCountEntries(QDomNode Node, QString *entrylist, int numentries,
 //   num: search for the "num"th occurence of anything in
 //      entrylist
 //   counter: current number of hits
-//
 //   Returns: current value of counter
-//
 //-------------------------------------------------------------
 
 
@@ -248,12 +230,10 @@ int AdamDom::RealGotoEntry(QDomNode Node, QString *entrylist, int numentries,
 
 
 //-------------------------------------------------------------
-//
 // RealGotoTag (private): recursive private function that 
 //      finds entry with tag name "entrylist" and attribute
 //      "attrib" with value "val". Sets currElem to point to
 //      this entry
-//
 //   Node: the node to begin the search at
 //   parents: a list ".ELEMENT1.ELEMENT2. etc." describing the
 //            parents of the current element
@@ -266,9 +246,7 @@ int AdamDom::RealGotoEntry(QDomNode Node, QString *entrylist, int numentries,
 //   parents: keeps track of the parents of the node being
 //      currently searched (remember the function is recursive).
 //      A QString like entrylist.
-//
 //   Returns: true if it is found, false if not
-//
 //-------------------------------------------------------------
 
 
@@ -296,15 +274,11 @@ bool AdamDom::RealGotoTag(QDomNode Node, QString entrylist, char *attrib,
 
 
 //-------------------------------------------------------------
-//
 // CountEntries (public): public wrapper for RealCountEntries
-//
 //   StartChild: if true, starts looking from currElem,
 //      otherwise, searches whole tree
 //   See RealCountEntries for info on entrylist etc.
-//
 //   Returns: number of entries found
-//
 //-------------------------------------------------------------
 
 
@@ -330,17 +304,13 @@ int AdamDom::CountEntries(QString *entrylist, int numentries,
 
 
 //-------------------------------------------------------------
-//
 // GotoEntry (public): public wrapper for RealGotoEntry.
 //      currElem is set to point to this entry
-//
 //   StartChild: if true, starts looking from currElem,
 //      otherwise, searches whole tree
 //   See RealGotoEntry for info on entrylist
 //   num: search for the "num"th occurence of entrylist
-//
 //   Returns: true if found, false if not found
-//
 //-------------------------------------------------------------
 
 
@@ -384,16 +354,12 @@ bool AdamDom::GotoEntry(QString *entrylist, int numentries, int num,
 }
 
 //-------------------------------------------------------------
-//
 // GotoEntry (public): public wrapper for RealGotoEntry.
 //      currElem is set to point to this entry
-//
 //   StartChild: if true, starts looking from currElem,
 //      otherwise, searches whole tree
 //   See RealGotoEntry for info on entrylist etc.
-//
 //   Returns: true if found, false if not found
-//
 //-------------------------------------------------------------
 
 
@@ -416,11 +382,8 @@ bool AdamDom::GotoTag(QString entrylist, char *attrib, char *val,
 
 
 //-------------------------------------------------------------
-//
 // AddBookMarks: make more bookmark slots
-//
 //   num: number to add
-//
 //-------------------------------------------------------------
 
 void AdamDom::AddBookMarks(int num) {
@@ -432,11 +395,8 @@ void AdamDom::AddBookMarks(int num) {
 
 
 //-------------------------------------------------------------
-//
 // SetBookMark: bookmark currElem
-//
 //   index: BookMark number
-//
 //-------------------------------------------------------------
 
 void AdamDom::SetBookMark(int index) {
@@ -450,11 +410,8 @@ void AdamDom::SetBookMark(int index) {
 
 
 //-------------------------------------------------------------
-//
 // GoBookMark: set currElem to specified bookmark
-//
 //   index: BookMark number (1 - 19)
-//
 //-------------------------------------------------------------
 
 void AdamDom::GoBookMark(int index) {
@@ -468,9 +425,7 @@ void AdamDom::GoBookMark(int index) {
 
 
 //-------------------------------------------------------------
-//
 // NextSib: go currElement's next sibling
-//
 //-------------------------------------------------------------
 
 void AdamDom::GotoNextSib() {
@@ -481,9 +436,7 @@ void AdamDom::GotoNextSib() {
 }
 
 //-------------------------------------------------------------
-//
 // FirstChild: go currElement's first child
-//
 //-------------------------------------------------------------
 
 void AdamDom::GotoFirstChild() {
@@ -493,13 +446,9 @@ void AdamDom::GotoFirstChild() {
 	currElem = NextElement(&n);	
 }
 
-
 //-------------------------------------------------------------
-//
 // NullEntry: checks currElem to see if it is NULL
-//
 //   Returns: true if NULL, false if not
-//
 //-------------------------------------------------------------
 
 bool AdamDom::NullEntry() {

@@ -1,5 +1,27 @@
+/* palantir: BLAST status GUI
+ *
+ * This software is copyright (C) 2002-2004 University of Toronto
+ * 
+ * This file is part of palantir.
+ * 
+ * palantir is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * palantir is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with palantir; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
 // ***************************************************
-// *  Programmed by Adam Hincks                      *
+// *  Programmed by Adam Hincks et al.               *
 // *                                                 *
 // *  Comments on classes & functions in .cpp file   *
 // ***************************************************
@@ -13,6 +35,7 @@
 #include <qlayout.h>
 #include <qvariant.h>
 #include <qtooltip.h>
+#include <qthread.h>
 #include <qwhatsthis.h>
 #include <qmessagebox.h>
 #include <qgroupbox.h>
@@ -21,12 +44,14 @@
 #include <qcolor.h>
 #include <qvariant.h>
 #include <qdialog.h>
+#include <qmainwindow.h>
 #include <qlist.h>
 #include <qpixmap.h>
 #include <qcombobox.h>
 #include <qframe.h>
 #include <qlistbox.h>
 #include <qmultilineedit.h>
+#include <qstatusbar.h>
 #include <unistd.h>
 
 #define NUMBER       0
@@ -36,7 +61,7 @@
 #define CURDIR       4
 
 // Update palantir every 750 milliseconds
-#define UPDATETIME 50
+#define UPDATETIME 500
 
 #ifndef LIB_DIR
 #  define LIB_DIR "/usr/local/lib/palantir/"
@@ -77,7 +102,7 @@ struct Extremum {
 };
 
 struct Extrema {
-	struct Extremum hi, lo, xhi, xlo;
+  struct Extremum hi, lo, xhi, xlo;
 };
 
 struct MultiVal {
@@ -88,34 +113,35 @@ struct MultiVal {
 };
 
 struct Box {
-	QString caption;
-	int row, col;
-	int rowspan, colspan;
-	struct TextStyle textstyle;
+  QString caption;
+  int row, col;
+  int rowspan, colspan;
+  int boxindex;
+  struct TextStyle textstyle;
 };
 
 struct Label {
-	QString caption;
-	char src[20];
-	int parentbox;
-	int labelindex;
-	char datumtype;
-	int index;
-	bool dialogup;
-	int laststyle;
-	struct TextStyle textstyle;
+  QString caption;
+  char src[20];
+  int parentbox;
+  int labelindex;
+  char datumtype;
+  int index;
+  bool dialogup;
+  int laststyle;
+  struct TextStyle textstyle;
 };
 
 struct Number {
- 	char format[25];
-	struct Extrema extrema;
-	struct TextStyle textstyle;
+  char format[25];
+  struct Extrema extrema;
+  struct TextStyle textstyle;
 };
 
 struct Deriv {
- 	char format[25];
-	struct Extrema extrema;
-	struct TextStyle textstyle;
+  char format[25];
+  struct Extrema extrema;
+  struct TextStyle textstyle;
   int length;
   unsigned long tfactor;
   int first;
@@ -124,24 +150,24 @@ struct Deriv {
 };
 
 struct Multi {
-	int numwords;
-	struct MultiVal words[MAX_MULTI_WORDS];
+  int numwords;
+  struct MultiVal words[MAX_MULTI_WORDS];
 };
 
 struct DateTime {
-	char format[50];
-	struct TextStyle textstyle;
+  char format[50];
+  struct TextStyle textstyle;
 };
 
 struct CurDir {
-        char format[50];
-        struct TextStyle textstyle;
+  char format[50];
+  struct TextStyle textstyle;
 };
 
 struct AlarmInfo {
-	Label *lab;
-	QString alarm;
-	float val;
+  Label *lab;
+  QString alarm;
+  float val;
 };
 
 class QVBoxLayout;
@@ -158,124 +184,150 @@ class QComboBox;
 class QFrame;
 class QListBox;
 class QMultiLineEdit;
+class QThread;
 
 class KstFile;
 class AdamDom;
 
 class PalImage
 {
-public:
-  PalImage();
-  void TurnOn(QLabel *label);
-  void TurnOff(QLabel *label);
+  public:
+    PalImage();
+    void TurnOn(QLabel *label);
+    void TurnOff(QLabel *label);
 
-  char framenum;
-  char numframes;
-  QPixmap *Images[4];
+    char framenum;
+    char numframes;
+    QPixmap *Images[4];
 };
 
-class MainForm : public QDialog
+class DecomData
+{
+  public:
+    DecomData();
+    void setData(char*);
+    int Status(void);
+    double FrameLoss(void);
+    double DataQuality(void);
+    double DiskFree(void);
+    char* DecomFile(void);
+
+  private:
+    unsigned long long int df;
+    int status;
+    int polarity;
+    int decomUnlocks;
+    double fs_bad;
+    double dq_bad;
+    char filename[256];
+};
+
+class DecomPoll : public QThread
+{
+  public:
+    virtual void run();
+};
+
+class MainForm : public QMainWindow
 {
   Q_OBJECT
 
-public:
-  MainForm(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
-           WFlags fl = 0, char *layoutfile = "layoutfile.pal");
-  ~MainForm();
+  public:
+    MainForm(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
+        WFlags fl = 0, char *layoutfile = "layoutfile.pal");
+    ~MainForm();
 
-  QList<QGroupBox> QtBoxes;
-  QList<QLabel> QtPlaceHolders;
-  QList<QLabel> QtLabels;
-  QList<QLabel> QtData;
+    QList<QGroupBox> QtBoxes;
+    QList<QLabel> QtLabels;
+    QList<QLabel> QtData;
+    QLabel *ShowPicture;
 
-  QFrame *InfoBox;
-  QComboBox *QtCurveFiles;
-  QLabel *CurveFilesCaption;
-  QLabel *InfoPlaceHolder;
-  QLabel *InfoPlaceHolder2;
-  QLabel *ShowPicture;
+  protected:
+    QGridLayout* InfoLayout;
+    QVBoxLayout* MainFormLayout;
+    QList<QGridLayout> BoxLayout;
+    QGridLayout* ContentLayout;
 
-protected:
-  QGridLayout* InfoLayout;
-  QVBoxLayout* MainFormLayout;
-  QList<QGridLayout> BoxLayout;
-  QGridLayout* ContentLayout;
-  QList<QSpacerItem> Spacer;
-  QSpacerItem *InfoSpacer;
-  QSpacerItem *MainFormSpacer;
+  private:
+    QLabel* DecomState;
+    QLabel* PalantirState;
+    QLabel* LockState;
+    QLabel* FrameLoss;
+    QLabel* DataQuality;
+    QLabel* DecomFile;
+    QLabel* DiskFree;
 
-private:
-  void WarningMessage(char title[], char txt[]);
-  void WarningMessage(char title[], QString txt);
-  float QStringToFloat(QString str);
-  int QStringToInt(QString str);
-  bool QStringToBool(QString str);
-	void GetXMLInfo(char *layoutfile);
-	QString FindAttribute(char *attrib, char *tagname);
-	void GetTextStyle(struct TextStyle *tstyle);
-	void SetTextStyle(struct TextStyle *tstyle, int typebm, int bookmark);
-	void GetExtrema(struct Extrema *ext, int bookmark);
-	void SetExtrema(struct Extrema *ext, int bookmark);
-	void GetWords(struct Multi *multi, int bookmark);
-	void SetWords(struct Multi *multi, int bookmark);
-  void GetStyle(QDomElement elem, struct TextStyle *tstyle);
-	void TStyleInit(struct TextStyle *tstyle);
-  void LabelInit(struct Label *lab);
-  QPalette Palette(struct TextStyle tstyle);
-  QFont Font(struct TextStyle tstyle);
+    void WarningMessage(char* title, char* txt);
+    void WarningMessage(char* title, QString txt);
+    float QStringToFloat(QString str);
+    int QStringToInt(QString str);
+    bool QStringToBool(QString str);
+    void GetXMLInfo(char *layoutfile);
+    QString FindAttribute(char *attrib, char *tagname);
+    void GetTextStyle(struct TextStyle *tstyle);
+    void SetTextStyle(struct TextStyle *tstyle, int typebm, int bookmark);
+    void GetExtrema(struct Extrema *ext, int bookmark);
+    void SetExtrema(struct Extrema *ext, int bookmark);
+    void GetWords(struct Multi *multi, int bookmark);
+    void SetWords(struct Multi *multi, int bookmark);
+    void GetStyle(QDomElement elem, struct TextStyle *tstyle);
+    void TStyleInit(struct TextStyle *tstyle);
+    void LabelInit(struct Label *lab);
+    QPalette Palette(struct TextStyle tstyle);
+    QFont Font(struct TextStyle tstyle);
 
-  void WriteLog(char *message, QMultiLineEdit *);
-  void ReadLog(QMultiLineEdit *);
-  double GetSlope(struct Deriv *);
+    double GetSlope(struct Deriv *);
 
-  QTimer *timer;
+    QTimer *timer;
 
-  QList<struct Box> BoxInfo;
-  QList<struct Label> LabelInfo;
-  QList<struct Number> NumberInfo;
-  QList<struct Multi> MultiInfo;
-	QList<struct DateTime> DateTimeInfo;
-  QList<struct Deriv> DerivInfo;
-  QList<struct CurDir> CurDirInfo;
+    QList<struct Box> BoxInfo;
+    QList<struct Label> LabelInfo;
+    QList<struct Number> NumberInfo;
+    QList<struct Multi> MultiInfo;
+    QList<struct DateTime> DateTimeInfo;
+    QList<struct Deriv> DerivInfo;
+    QList<struct CurDir> CurDirInfo;
 
-  QList<QString> CurveFiles;
+    QString *CurFile;
 
-  struct TextStyle ErrorStyle;
-  struct TextStyle InfoCaptionStyle;
-  struct TextStyle InfoComboStyle;
-  struct TextStyle InfoDataStyle;
-  struct TextStyle InfoButtonStyle;
+    struct TextStyle ErrorStyle;
+    struct TextStyle InfoCaptionStyle;
+    struct TextStyle InfoComboStyle;
+    struct TextStyle InfoDataStyle;
+    struct TextStyle InfoButtonStyle;
 
-	int firstpstyle;
-	int numpstyles;
-	char **pstyles;
-	int firstpext;
-	int numpexts;
-	char **pexts;
-  int firstpmulti;
-	int numpmultis;
-	char **pmultis;
-  int firstpderiv;
-	int numpderivs;
-	char **pderivs;
+    int firstpstyle;
+    int numpstyles;
+    char **pstyles;
+    int firstpext;
+    int numpexts;
+    char **pexts;
+    int firstpmulti;
+    int numpmultis;
+    char **pmultis;
+    int firstpderiv;
+    int numpderivs;
+    char **pderivs;
 
+    AdamDom *XMLInfo;
+    DecomPoll *DecomPoller;
 
-	AdamDom *XMLInfo;
+    bool startupDecomd;
 
-  PalImage *Picture;
-  QPixmap *Icon;
-  KstFile *DataSource;
+    PalImage *Picture;
+    QPixmap *Icon;
+    KstFile *DataSource;
 
-  QList<bool> DisabledIndex;
+    QList<bool> DisabledIndex;
 
-  char NoIncoming;
-  bool NoIncomingOn;
-  bool NoIncomingDialogUp;
-  bool DialogsUp;
-  int AlarmScroll;
+    char NoIncoming;
+    bool NoIncomingOn;
+    bool NoIncomingDialogUp;
+    bool DialogsUp;
+    int AlarmScroll;
 
-public slots:
-  void UpdateData();
+    public slots:
+      void UpdateData();
 };
 
 #endif

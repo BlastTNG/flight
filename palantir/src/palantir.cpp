@@ -1,28 +1,58 @@
+/* palantir: BLAST status GUI
+ *
+ * This software is copyright (C) 2002-2004 University of Toronto
+ * 
+ * This file is part of palantir.
+ * 
+ * palantir is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * palantir is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with palantir; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
 // ***************************************************
-// *                                                 *
 // *  Programmed by Adam Hincks                      *
 // *  Hacked by cbn and others                       *
 // *  The program is badly organised in some ways,   *
-// *  but it works fine.                             *
-// *                                                 *
+// *  but it works fine^H^H^H^H^H.                   *
 // ***************************************************
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#include <netdb.h>
+
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/select.h>
+
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
+
+#include <qtimer.h>
 
 #include "kstfile.h"
 #include "palantir.h"
 #include "adamdom.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <sys/stat.h>
-#include <qtimer.h>
-
 // Define bookmark numbers
-#define BM_RES_NUM     25
-#define BM_RESERVE     9
 #define BM_FIRST       0
 #define BM_SECOND      1
 #define BM_THIRD       2
+#define BM_RESERVE     9
 #define BM_DEF_BOX     10
 #define BM_DEF_LABEL   11
 #define BM_DEF_DATUM   12
@@ -31,24 +61,157 @@
 #define BM_DEF_LO      15
 #define BM_DEF_XHI     16
 #define BM_DEF_XLO     17
+#define BM_RES_NUM     25
 
 #define MAX_N_DIALOGS  3
 
+char decomdHost[MAXPATHLENGTH];
+int decomdPort;
+bool pollDecomd;
+int connectState = 0;
+class DecomData *theDecom;
 
+/* Decom Data */
+DecomData::DecomData()
+{
+  status = -1;
+  fs_bad = 0;
+  dq_bad = 0;
+  df = 0;
+  filename[0] = 0;
+}
+
+int DecomData::Status(void)
+{
+  return status;
+}
+
+double DecomData::FrameLoss(void)
+{
+  return fs_bad * 100.;
+}
+
+double DecomData::DataQuality(void)
+{
+  return 100. * (1. - dq_bad);
+}
+
+double DecomData::DiskFree(void)
+{
+  return (double)df / 1073741824.;
+}
+
+char* DecomData::DecomFile(void)
+{
+  return filename;
+}
+
+void DecomData::setData(char* buf) {
+  sscanf(buf, "%i %i %i %lf %lf %Lu %s", &status, &polarity, &decomUnlocks,
+      &fs_bad, &dq_bad, &df, filename);
+}
+
+/* Polls the decom */
+void DecomPoll::run()
+{
+  struct hostent* result;
+  struct hostent theHost;
+  char buf[256];
+  int i;
+  int sock;
+  struct sockaddr_in addr;
+  fd_set fdr;
+
+  connectState = 1;
+
+  gethostbyname_r(decomdHost, &theHost, buf, 256, &result, &i);
+
+  if (!result) {
+    fprintf(stderr, "gethostbyname failed: ");
+    if (i == HOST_NOT_FOUND)
+      fprintf(stderr, "host not found\n");
+    else if (i == NO_ADDRESS || i == NO_DATA)
+      fprintf(stderr, "host not bound to an IP address\n");
+    else if (i == NO_RECOVERY)
+      fprintf(stderr, "non-recoverable error in domain resolution\n");
+    else if (i ==  TRY_AGAIN)
+      fprintf(stderr, "temporary failure in domain resolution\n");
+    else
+      fprintf(stderr, "unspecified error in gethostbyname_r\n");
+
+    connectState = 3;
+    return;
+  }
+  connectState = 2;
+
+  for (;;) {
+    if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
+      connectState = 4;
+      return;
+    }
+
+    i = 1;
+    if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &i, sizeof(i)) != 0) {
+      connectState = 4;
+      return;
+    }
+
+    addr.sin_addr.s_addr=*((unsigned long*)theHost.h_addr);
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(decomdPort);
+
+    if (connect(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)) < 0) {
+      connectState = 4;
+      sleep(5);
+      continue;
+    }
+    connectState = 5;
+
+    for (;;) {
+      usleep(100000);
+
+      if (!pollDecomd) {
+        connectState = 0;
+        return;
+      }
+
+      FD_ZERO(&fdr);
+      FD_SET(sock, &fdr);
+
+      i = select(sock + 1, &fdr, NULL, NULL, NULL);
+
+      if (i == -1)
+        continue;
+
+      if (FD_ISSET(sock, &fdr)) {
+        do {
+          i = recv(sock, &buf, 256, MSG_DONTWAIT);
+          if (i == -1 && errno != EAGAIN)
+            break;
+          else if (i == 0) {
+            shutdown(sock, SHUT_RDWR);
+            connectState = 6;
+            close(sock);
+            break;
+          } else if (i > 0)
+            theDecom->setData(buf);
+        } while (i > 0);
+      }
+
+      if (connectState == 6)
+        break;
+    }
+    sleep(5);
+  }
+}
 
 //***************************************************************************
-//****
 //****     CLASS PalImage -- does the cool animation of the palantir
-//****
 //***************************************************************************
 
-
 //-------------------------------------------------------------
-//
 // PalImage: constructor
-//
 //-------------------------------------------------------------
-
 PalImage::PalImage() {
   Images[0] = new QPixmap(PALANTIR_0_JPG);
   Images[1] = new QPixmap(PALANTIR_1_JPG);
@@ -59,16 +222,11 @@ PalImage::PalImage() {
   numframes = 3;
 }
 
-
 //-------------------------------------------------------------
-//
 // TurnOn (public): Increment the frame number and show new
 //      frame
-//
 //   *label: destination of new frame
-//
 //-------------------------------------------------------------
-
 void PalImage::TurnOn(QLabel *label) {
   framenum++;
   if (framenum > numframes)
@@ -77,11 +235,8 @@ void PalImage::TurnOn(QLabel *label) {
 }
 
 //-------------------------------------------------------------
-//
 // TurnOff (public): Show the blank palantir
-//
 //   *label: destination of frame
-//
 //-------------------------------------------------------------
 
 void PalImage::TurnOff(QLabel *label) {
@@ -89,49 +244,31 @@ void PalImage::TurnOff(QLabel *label) {
   label->setPixmap(*Images[framenum]);
 }
 
-
-
-
 //***************************************************************************
-//****
 //****     CLASS MainForm: main control class
-//****
 //***************************************************************************
-
-
-
 
 //-------------------------------------------------------------
-//
 // WarningMessage (private):  Pop-up Window
-//
 //   title: window title
 //   txt: the warning message
-//
 //-------------------------------------------------------------
-
-void MainForm::WarningMessage(char title[], char txt[]) {
+void MainForm::WarningMessage(char* title, char* txt) {
   QMessageBox::information(this, title, txt, QMessageBox::Ok |
       QMessageBox::Default);
 }
 
-void MainForm::WarningMessage(char title[], QString txt) {
+void MainForm::WarningMessage(char* title, QString txt) {
   QMessageBox::information(this, title, txt, QMessageBox::Ok |
       QMessageBox::Default);
 }
 
-
 //-------------------------------------------------------------
-//
 // QStringToInt, QStringToFloat etc.: user-friendly atoX
-//
 //   str: QString to be converted
-//
 //   Returns: string converted to int, float, or bool if
 //      possible, otherwise returns 0 or false
-//
 //-------------------------------------------------------------
-
 int MainForm::QStringToInt(QString str) {
   if (str == "")
     return 0;
@@ -153,16 +290,11 @@ bool MainForm::QStringToBool(QString str) {
     return true;
 }
 
-
 //-------------------------------------------------------------
-//
 // TStyleInit (private): give default values to a textstyle,
 //      in case none whatsoever are specified in .pal file
-//
 //   *tstyle: textstyle to write to
-//
 //-------------------------------------------------------------
-
 void MainForm::TStyleInit(struct TextStyle *tstyle) {
   tstyle->colour = "#000000";
   tstyle->backcolour = "#dcdcdc";
@@ -174,12 +306,9 @@ void MainForm::TStyleInit(struct TextStyle *tstyle) {
 
 
 //-------------------------------------------------------------
-//
-// LabelInit (private): mainly to make sure that alarmenabled
-//      and dialog up start with the right values
-//
-//   *lab: lab to write to
-//
+// LabelInit (private): mainly to make sure that
+//      dialog up start with the right values
+//   *lab: label to write to
 //-------------------------------------------------------------
 
 void MainForm::LabelInit(struct Label *lab) {
@@ -192,17 +321,13 @@ void MainForm::LabelInit(struct Label *lab) {
 
 
 //-------------------------------------------------------------
-//
 // FindAttribute (private): asks the XMLInfo object for an
 //      attribute; displays a warning message if it is not
 //      found
-//
 //   *attrib: the attribute to look for
 //   *tagname: an string identifying the tag in case the
 //      warning message is needed
-//
 //   Returns: the value of the attribute or "" if not found
-//
 //-------------------------------------------------------------
 
 QString MainForm::FindAttribute(char *attrib, char *tagname) {
@@ -216,14 +341,10 @@ QString MainForm::FindAttribute(char *attrib, char *tagname) {
     return XMLInfo->GetAttribute(attrib);
 }
 
-
 //-------------------------------------------------------------
-//
 // GetTextStyle (private): gets any textstyle attributes from
 //      the current XML tag
-//
 //   *tstyle: the textstyle to write to
-//
 //-------------------------------------------------------------
 
 void MainForm::GetTextStyle(struct TextStyle *tstyle) {
@@ -241,18 +362,14 @@ void MainForm::GetTextStyle(struct TextStyle *tstyle) {
     tstyle->italic = QStringToBool(XMLInfo->GetAttribute("italic"));
 }
 
-
 //-------------------------------------------------------------
-//
 // SetTextStyle (private): initialises textstyle, looks for
 //      default and predefined textstyles before getting any
 //      textstyles from the current tag
-//
 //   *tstyle: the textstyle to write to
 //   typebm: bookmark of the default textstyle to use (if -1,
 //      use none)
 //   bookmark: bookmark of current tag
-//
 //-------------------------------------------------------------
 
 void MainForm::SetTextStyle(struct TextStyle *tstyle, int typebm,
@@ -280,16 +397,12 @@ void MainForm::SetTextStyle(struct TextStyle *tstyle, int typebm,
   GetTextStyle(tstyle);
 }
 
-
 //-------------------------------------------------------------
-//
 // GetExtrema (private): get any extrema attributes located in
 //      any extremum children (HI, LO, XHI, XLO) of the current
 //      tag
-//
 //   *ext: the extrema to write to
 //   bookmark: bookmark of current tag
-//
 //-------------------------------------------------------------
 
 void MainForm::GetExtrema(struct Extrema *ext, int bookmark) {
@@ -324,15 +437,11 @@ void MainForm::GetExtrema(struct Extrema *ext, int bookmark) {
   XMLInfo->GoBookMark(bookmark);
 }
 
-
 //-------------------------------------------------------------
-//
 // SetExtrema (private): looks for predefined extrema and then
 //      gets extrema from the current tag's children
-//
 //   *ext: the extrema to write to
 //   bookmark: bookmark of the current tag
-//
 //-------------------------------------------------------------
 
 void MainForm::SetExtrema(struct Extrema *ext, int bookmark) {
@@ -351,15 +460,11 @@ void MainForm::SetExtrema(struct Extrema *ext, int bookmark) {
   GetExtrema(ext, bookmark);
 }
 
-
 //-------------------------------------------------------------
-//
 // GetWords (private): gets any attributes from any word tags
 //      that are children of the current tag
-//
 //   *multi: the multi to write the words to
 //   bookmark: bookmark of the current tag
-//
 //-------------------------------------------------------------
 
 void MainForm::GetWords(struct Multi *multi, int bookmark) {
@@ -379,15 +484,11 @@ void MainForm::GetWords(struct Multi *multi, int bookmark) {
   XMLInfo->GoBookMark(bookmark);
 }
 
-
 //-------------------------------------------------------------
-//
 // SetWords (private): looks for predefined multis and then
 //      looks for any child word tags of the current word
-//
 //   *multi: the multi to write to
 //   bookmark: bookmark of the current tag
-//
 //-------------------------------------------------------------
 
 void MainForm::SetWords(struct Multi *multi, int bookmark) {
@@ -408,13 +509,10 @@ void MainForm::SetWords(struct Multi *multi, int bookmark) {
 }
 
 //-------------------------------------------------------------
-//
 // GetXMLInfo (private): parses out the information from the
 //      XML file.  Note that here as in functions above, the
 //      AdamDom class is used to read the XML file.
-//
 //   *layoutfile: file name of the XML file
-//
 //-------------------------------------------------------------
 
 void MainForm::GetXMLInfo(char *layoutfile) {
@@ -426,7 +524,6 @@ void MainForm::GetXMLInfo(char *layoutfile) {
   struct Deriv *currDeriv;
   struct DateTime *currDateTime;
   struct CurDir *currCurDir;
-  QString *currCurFile;
   char tmp[MAXPATHLENGTH];
 
   // Load XML file
@@ -672,26 +769,34 @@ void MainForm::GetXMLInfo(char *layoutfile) {
   }
 
   // Read in the .cur file names
-  for (XMLInfo->GotoEntry(".SETTINGS.CURVEFILE", 0, false);
-      !XMLInfo->NullEntry(); XMLInfo->GotoNextSib()) {
-    if (XMLInfo->GetTagName() == "CURVEFILE") {
-      CurveFiles.append(new QString);
-      currCurFile = CurveFiles.current();
-      *currCurFile = FindAttribute("name", "SETTINGS.CURVEFILE");
-    }
+  XMLInfo->GotoEntry(".SETTINGS.CURFILE", 0, false);
+  if (XMLInfo->GetTagName() == "CURFILE") {
+    CurFile = new QString;
+    *CurFile = FindAttribute("name", "SETTINGS.CURFILE");
+  } else {
+    fprintf(stderr, "no curfile defined.\n");
+    exit(1);
+  }
+
+  // Read decomd settings
+  XMLInfo->GotoEntry(".SETTINGS.DECOMD", 0, false);
+  if (XMLInfo->GetTagName() == "DECOMD") {
+    strncpy(decomdHost, FindAttribute("host", "SETTINGS.DECOMD"),
+        MAXPATHLENGTH);
+    decomdPort = atoi(FindAttribute("port", "SETTINGS.DECOMD"));
+    pollDecomd = true;
+    startupDecomd = true;
+  } else {
+    pollDecomd = false;
+    startupDecomd = false;
   }
 }
 
-
 //-------------------------------------------------------------
-//
 // Palette (private): prepare a QPalette, using the given
 //      style
-//
 //   tstyle: styles to use
-//
 //   Returns: the constructed QPalette
-//
 //-------------------------------------------------------------
 
 QPalette MainForm::Palette(struct TextStyle tstyle) {
@@ -719,15 +824,10 @@ QPalette MainForm::Palette(struct TextStyle tstyle) {
   return pal;
 }
 
-
 //-------------------------------------------------------------
-//
 // Font (private): prepare a QFont, using the given style
-//
 //   tstyle: styles to use
-//
 //   Returns: the constructed QFont
-//
 //-------------------------------------------------------------
 
 QFont MainForm::Font(struct TextStyle tstyle) {
@@ -742,12 +842,10 @@ QFont MainForm::Font(struct TextStyle tstyle) {
 }
 
 //-------------------------------------------------------------
-//
 // GetSlope: performs linear regression on the Deriv's buffer to
 //     obtain a slope.  Since we're only calculating the slope
 //     and not the intercept, and we have no sigmas, we can pare
 //     down the canonical linreg routine a fair bit...
-//
 //-------------------------------------------------------------
 
 double MainForm::GetSlope(struct Deriv *currDeriv) {
@@ -761,7 +859,7 @@ double MainForm::GetSlope(struct Deriv *currDeriv) {
 
   if (first == last) // fifo full, read all data
     j = length;
-  else // fifo partially full, read only up to last;
+  else // fifo partially full, read only up to last
     j = last;
 
   f = (j - 1) / 2.;  // = sum(i, i=0..j) / j (since the x's are equally spaced)
@@ -775,17 +873,15 @@ double MainForm::GetSlope(struct Deriv *currDeriv) {
   b /= v;
 
   // Calculated slope is wrt the UPDATETIME period (which is specified in
-  // milliseconds), so "first" divide by UPDATETIME to get wrt milliseconds and
+  // milliseconds), so divide by UPDATETIME to get wrt milliseconds and
   // then multiply by the user specified time factor
 
   return b * currDeriv->tfactor / UPDATETIME;
 }
 
 //-------------------------------------------------------------
-//
 // UpdateData (slot): use the KstFile class to read in new
 //      frames from disk.  Fired by timer.
-//
 //-------------------------------------------------------------
 
 void MainForm::UpdateData() {
@@ -793,24 +889,35 @@ void MainForm::UpdateData() {
   char displayer[80];
   char i, j;
   struct Label *currLabel;
+  struct Box *currBox;
   struct Number *currNumber;
   struct Multi *currMulti;
   struct Deriv *currDeriv;
   struct DateTime *currDateTime;
   struct CurDir *currCurDir;
   QLabel *currQtLabel;
+  QGroupBox *currQtBox;
   time_t timetmp;
   struct tm *currTime;
   char tmp[255];
   int updating;
   FILE *curf;
 
+  if (startupDecomd && pollDecomd) {
+    DecomPoller->start();
+    startupDecomd = false;
+  }
+
   if (DataSource->update()) {
     updating = 1;
     Picture->TurnOn(ShowPicture);
+    if (pollDecomd)
+      PalantirState->setText("PT: Running");
   } else {
     // Blank palantir
     Picture->TurnOff(ShowPicture);
+    if (pollDecomd)
+      PalantirState->setText("PT: Stopped");
     updating = 0;
     if (NoIncomingOn) {
       if (++NoIncoming == 3) {
@@ -819,11 +926,72 @@ void MainForm::UpdateData() {
     }
   }
 
+  if (pollDecomd) {
+    switch (connectState) {
+      case 0:
+        DecomState->setText("DD: Disconnected");
+        break;
+      case 1:
+        DecomState->setText("DD: Resolving host...");
+        break;
+      case 2:
+        DecomState->setText("DD: Connecting...");
+        break;
+      case 3:
+        DecomState->setText("DD: Host not found");
+        break;
+      case 4:
+        DecomState->setText("DD: Connexion error");
+        break;
+      case 5:
+        DecomState->setText("DD: Connected");
+        break;
+      case 6:
+        DecomState->setText("DD: Connection Dropped");
+        break;
+    }
+
+    if (connectState == 5) {
+      switch (theDecom->Status()) {
+        case 0:
+          LockState->setText("DL: Lost");
+          break;
+        case 1:
+          LockState->setText("DL: Searching");
+          break;
+        case 2:
+          LockState->setText("DL: Locked");
+          break;
+        case 3:
+          LockState->setText("DL: Paused");
+        default:
+          LockState->setText("DL: ???");
+          break;
+      }
+
+      sprintf(tmp, "FL: %5.1f%%", theDecom->FrameLoss());
+      FrameLoss->setText(tmp);
+      sprintf(tmp, "DQ: %5.1f%%", theDecom->DataQuality());
+      DataQuality->setText(tmp);
+      sprintf(tmp, "FN: %s%", theDecom->DecomFile());
+      DecomFile->setText(tmp);
+      sprintf(tmp, "DF: %5.2f GB", theDecom->DiskFree());
+      DiskFree->setText(tmp);
+    } else {
+      LockState->setText("DL: ???");
+      FrameLoss->setText("FL: ???");
+      DataQuality->setText("DQ: ???");
+      DiskFree->setText("DF: ???");
+      DecomFile->setText("FN: ???");
+    }
+  }
+
   int i_label = 0;
   // Loop through all the data fields we need to read
   for (currLabel = LabelInfo.first(); currLabel != NULL;
       currLabel = LabelInfo.next()) {
-    if (i_label%10==0) usleep(10000);
+    if (i_label % 10 == 0)
+      usleep(10000);
     i_label++;
     switch (currLabel->datumtype) {
       case NUMBER:
@@ -1056,45 +1224,51 @@ void MainForm::UpdateData() {
         break;
     }
   }
+  /*  for (currBox = BoxInfo.first(); currBox != NULL;
+      currBox = BoxInfo.next()) {
+      currQtBox = QtBoxes.at(currBox->boxindex);
+      currQtBox->resize(currQtBox->sizeHint());
+      }
+      adjustSize(); */
   fflush(stderr);
-
 }
 
 
 
 //-------------------------------------------------------------
-//
 // MainForm: constructor
-//
 //-------------------------------------------------------------
 
 MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
-    char *layoutfile) : QDialog(parent, name, modal, fl)
+    char *layoutfile) : QMainWindow(parent, name, fl)
 {
   char tmp[MAXPATHLENGTH];
   int row, i;
   int bytecount;
   int max_row=0, min_col = 10;
 
-  struct Box *currQtBox;
+  struct Box *currBox;
   struct Label *currLabel;
   struct Number *currNumber;
   struct Multi *currMulti;
   struct Deriv *currDeriv;
   struct Extrema *currExtrema;
   struct TextStyle *currStyle;
-  struct TextStyle tstyle = {"#000000", "#DCDCDC", "adobe-helvetica", false,
-    true, 8};
+  struct TextStyle tstyle = {
+    "#000000", "#DCDCDC", "adobe-helvetica", false, true, 8
+  };
 
   QGroupBox *currQtBoxes;
-  QLabel *currQtPlaceHolder;
   QLabel *currQtLabels;
   QLabel *currQtData;
   QGridLayout *currQtBoxLayout;
   QSpacerItem *currSpacer;
-  QString *currCurveFile;
+  QStatusBar *theStatusBar;
+  QWidget *centralWidget;
 
   QFont font;
+
+  DecomPoller = new DecomPoll;
 
   XMLInfo = new AdamDom();
   GetXMLInfo(layoutfile);
@@ -1114,18 +1288,19 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
   if (BoxInfo.isEmpty()) {
     WarningMessage("Error", "No boxes to display");
   } else {
-    for (currQtBox = BoxInfo.first(); currQtBox != NULL;
-        currQtBox = BoxInfo.next()) {
+    for (currBox = BoxInfo.first(); currBox != NULL;
+        currBox = BoxInfo.next()) {
 
       // Create box
       QtBoxes.append(new QGroupBox(this, "Box"));
       currQtBoxes = QtBoxes.current();
+      currBox->boxindex = QtBoxes.at();
 
-      currQtBoxes->setTitle(tr(currQtBox->caption));
+      currQtBoxes->setTitle(tr(currBox->caption));
       currQtBoxes->setColumnLayout(0, Qt::Vertical);
 
-      currQtBoxes->setPalette(Palette(currQtBox->textstyle));
-      currQtBoxes->setFont(Font(currQtBox->textstyle));
+      currQtBoxes->setPalette(Palette(currBox->textstyle));
+      currQtBoxes->setFont(Font(currBox->textstyle));
 
       BoxLayout.append(new QGridLayout(currQtBoxes->layout()));
       currQtBoxLayout = BoxLayout.current();
@@ -1137,7 +1312,7 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
           currLabel = LabelInfo.next()) {
         // Create datum line inside current box
         if (currLabel->parentbox == BoxInfo.at()) {
-          row ++;
+          row++;
           QtLabels.append(new QLabel(currQtBoxes, "Label"));
           currQtLabels = QtLabels.current();
 
@@ -1149,7 +1324,6 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
             QtData.append(new QLabel(currQtBoxes, "Label"));
             currQtData = QtData.current();
             currLabel->labelindex = QtData.at();
-            //currLabel->labelindex = currQtData;
             currQtData->setText(tr("..."));
             if (currLabel->datumtype == NUMBER)
               currNumber = NumberInfo.at(currLabel->index);
@@ -1165,14 +1339,16 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
         }
       }
 
-      ContentLayout->addMultiCellWidget(currQtBoxes, currQtBox->row,
-          currQtBox->row + currQtBox->rowspan,
-          currQtBox->col,
-          currQtBox->col + currQtBox->colspan);
-      if (currQtBox->row + currQtBox->rowspan > max_row) {
-        max_row = currQtBox->row + currQtBox->rowspan;
-      }
-      if (currQtBox->col < min_col) min_col = currQtBox->col;
+      ContentLayout->addMultiCellWidget(currQtBoxes, currBox->row,
+          currBox->row + currBox->rowspan,
+          currBox->col,
+          currBox->col + currBox->colspan);
+
+      if (currBox->row + currBox->rowspan > max_row)
+        max_row = currBox->row + currBox->rowspan;
+
+      if (currBox->col < min_col)
+        min_col = currBox->col;
     }
   }
 
@@ -1182,25 +1358,48 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
   ShowPicture->setAlignment(Qt::AlignCenter);
   ShowPicture->setPaletteBackgroundColor(QColor("black"));
   ContentLayout->addMultiCellWidget(ShowPicture,max_row,
-                                    max_row, min_col,min_col);
+      max_row, min_col,min_col);
 
-  if (CurveFiles.isEmpty())
-    WarningMessage("Error",
-        "You have specified NO .cur files in your layout file.");
-
-  MainFormSpacer = new QSpacerItem(5, 5, QSizePolicy::Fixed,
-      QSizePolicy::Fixed);
-
-  MainFormLayout = new QVBoxLayout(this);
+  centralWidget = new QWidget();
+  MainFormLayout = new QVBoxLayout(centralWidget);
   MainFormLayout->setSpacing(2);
   MainFormLayout->setMargin(2);
   MainFormLayout->addLayout(ContentLayout);
-  MainFormLayout->addItem(MainFormSpacer);
+
+  setCentralWidget(centralWidget);
 
   timer = new QTimer();
   NoIncoming = 0;
   NoIncomingOn = true;
   NoIncomingDialogUp = false;
+
+  if (pollDecomd) {
+    theStatusBar = statusBar();
+    theStatusBar->setSizeGripEnabled(false);
+
+    PalantirState = new QLabel(theStatusBar);
+    PalantirState->setText("PT: Running");
+    DecomState = new QLabel(theStatusBar);
+    DecomState->setText("DD: Not connected");
+    LockState = new QLabel(theStatusBar);
+    LockState->setText("DL: ???");
+    FrameLoss = new QLabel(theStatusBar);
+    FrameLoss->setText("FL: ???");
+    DataQuality = new QLabel(theStatusBar);
+    DataQuality->setText("DQ: ???");
+    DiskFree = new QLabel(theStatusBar);
+    DiskFree->setText("DF: ???");
+    DecomFile = new QLabel(theStatusBar);
+    DecomFile->setText("FN: ???");
+
+    theStatusBar->addWidget(PalantirState);
+    theStatusBar->addWidget(DecomState);
+    theStatusBar->addWidget(LockState);
+    theStatusBar->addWidget(FrameLoss);
+    theStatusBar->addWidget(DataQuality);
+    theStatusBar->addWidget(DiskFree);
+    theStatusBar->addWidget(DecomFile);
+  }
 
   // Slots
   connect(timer, SIGNAL(timeout()), this, SLOT(UpdateData()));
@@ -1210,11 +1409,7 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
   Picture = new PalImage();
   Picture->TurnOff(ShowPicture);
 
-  if (!CurveFiles.isEmpty()) {
-    currCurveFile = CurveFiles.first();
-    strncpy(tmp, *currCurveFile, MAXPATHLENGTH);
-  } else
-    strncpy(tmp, '\0', MAXPATHLENGTH);
+  strncpy(tmp, *CurFile, MAXPATHLENGTH);
 
   // Initialise KstFile object
   DataSource = new KstFile(tmp, UNKNOWN);
@@ -1227,9 +1422,7 @@ MainForm::~MainForm()
 
 
 //***************************************************************************
-//****
 //****     Main()
-//****
 //***************************************************************************
 
 
@@ -1237,32 +1430,27 @@ void usage() {
   printf("\npalantir [layout file]\n\n");
   printf("Default layout file: " DEF_LAYOUTFILE "\n");
   printf("  [layout file] -> specify layout file\n\n");
+  exit(1);
 }
 
 int main(int argc, char* argv[]) {
   QApplication app(argc, argv);
   char layoutfile[MAXPATHLENGTH];
 
-  // Parse out command line
-  if (argc > 2) {
+  // Parse command line
+  if (argc > 2)
     usage();
-    exit(1);
-  }
-  if (argc==2) {
-    if (argv[1][0] == '-') {
-      usage();
-      exit(1);
-    } else {
-      strncpy(layoutfile, argv[1], MAXPATHLENGTH);
-    }
-  } else {
+  else if (argc == 2)
+    strncpy(layoutfile, argv[1], MAXPATHLENGTH);
+  else
     strncpy(layoutfile, DEF_LAYOUTFILE, MAXPATHLENGTH);
-  }
+
   MainForm palantir(0, "palantir", true, 0, &layoutfile[0]);
+  theDecom = new DecomData;
 
-  // Hand over control to Qt
   app.setMainWidget(&palantir);
-  int ret = palantir.exec();
+  palantir.show();
+  app.exec();
 
-  return ret;
+  return 0;
 }
