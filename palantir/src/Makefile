@@ -8,7 +8,7 @@ EXTRA = moc_palantir.cpp -L$(QT_DIR)/lib -L../lib -lqt-mt -lRD -lncurses $(LIB_D
 all: palantir
 
 palantir: moc_palantir.cpp palantir.cpp getdata.o kstfile.o adamdom.o
-	$(CPP) kstfile.o palantir.cpp getdata.o adamdom.o $(EXTRA) -o palantir
+	$(CPP) $(PC_SPEAKER) kstfile.o palantir.cpp getdata.o adamdom.o $(EXTRA) -o palantir
 
 moc_palantir.cpp: palantir.cpp palantir.h
 	$(MOC) -o moc_palantir.cpp palantir.h
