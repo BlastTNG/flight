@@ -1,6 +1,12 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2004-11-02  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	Release defile-3.0.2
+
+	* channels.c (WriteFormatFile): Add real frame offset in format file rather
+	than just a comment.
+
 2004-11-01  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	Release defile-3.0.1
 

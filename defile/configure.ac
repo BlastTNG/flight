@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(defile, 3.0.1, [dwiebe@physics.utoronto.ca])
-AM_INIT_AUTOMAKE(defile, 3.0.1)
+AC_INIT(defile, 3.0.2, [dwiebe@physics.utoronto.ca])
+AM_INIT_AUTOMAKE(defile, 3.0.2)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH(data-etc,[  --with-data-etc=DIR     put auxiliary data in DIR [/data/etc]], DATA_ETC_DIR="${withval}", DATA_ETC_DIR="/data/etc")

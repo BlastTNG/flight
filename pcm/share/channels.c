@@ -1024,11 +1024,10 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
   char line[1024];
   int i, j;
 
-  /* Write the index offset if needed -- since this doesn't actually exist
-   * yet as a format file extension, we leave it as a comment;
-   * cf. http://bugs.kde.org/show_bug.cgi?id=92215 */
-  if (offset)
-    snprintf(line, 1024, "# OFFSET           %li\n", offset);
+  if (offset) {
+    snprintf(line, 1024, "FRAMEOFFSET      %li\n", offset);
+    write(fd, line, strlen(line));
+  }
 
   strcpy(line, "FASTSAMP         RAW    U 20\n\n## SLOW CHANNELS:\n");
   write(fd, line, strlen(line));
