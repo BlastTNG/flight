@@ -36,11 +36,11 @@
 
 /* This is the length of time to wait for a pointing solution from the star
  * camera before giving up */
-#define ISC_DATA_TIMEOUT   1000   /* in 100Hz frames */
+#define ISC_DATA_TIMEOUT   500   /* in 100Hz frames */
 
 /* This is the length of time to wait after receiving the ACK, bufore sending
  * the trigger */
-#define ISC_TRIGGER_DELAY   ((which == 1) ? 1 : 30)  /* in 100Hz frames */
+#define ISC_TRIGGER_DELAY   ((which == 1) ? 1 : 1)  /* in 100Hz frames */
 
 /* If mcp has decided the handshaking isn't working, this is the period of the
  * handshake-less triggers */
@@ -413,9 +413,8 @@ void CameraTrigger(int which)
               > isc_pulses[which].ack_timeout) {
 
             bprintf(warning,
-                "%s: timeout on ACK, flagging link as bad (wait = %i of %i).\n",
-                (which) ? "Osc" : "Isc", isc_pulses[which].ack_wait,
-                isc_pulses[which].ack_timeout);
+                "%s: timeout on ACK, flagging link as bad\n",
+                (which) ? "Osc" : "Isc");
             ISC_link_ok[which] = 0;
           }
 

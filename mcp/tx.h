@@ -3,6 +3,7 @@
 #define NIOS_QUEUE  0
 #define NIOS_FLUSH -1
 
+/* An ISC/OSC handshaking debugging macro should be set to 0 for flight */
 #define WHICH (0)
 
 #include "channels.h"
