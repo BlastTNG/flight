@@ -2,29 +2,29 @@
 
 <SETTINGS>
   <TEXTSTYLE name="xhiwarn" colour="#ff0000" backcolour="#00ffff"
-	           size="12" bold="true"/>
+	           size="10" bold="true"/>
   <TEXTSTYLE name="hiwarn" colour="#cc0000" font="adobe-helvetica" 
-	           size="12" bold="true"/>
+	           size="10" bold="true"/>
   <TEXTSTYLE name="lowarn" colour="#00cc00" font="adobe-helvetica"
-	           size="12" bold="true"/>
+	           size="10" bold="true"/>
   <TEXTSTYLE name="xlowarn" colour="#00ff00" backcolour="#ff00ff"
-	           font="adobe-helvetica" size="12" bold="true"/>
+	           font="adobe-helvetica" size="10" bold="true"/>
   <TEXTSTYLE name="increasing" colour="#FF0000" font="adobe-helvetica"
-	           size="12" bold="true"/>
+	           size="10" bold="true"/>
   <TEXTSTYLE name="decreasing" colour="#0000CC" font="adobe-helvetica"
-	           size="12" bold="true"/>
-  <TEXTSTYLE name="evenrow" colour="#000000" font="adobe-helvetica" size="12"/>
-  <TEXTSTYLE name="oddrow" colour="#000000" font="adobe-helvetica" size="12"/>
+	           size="10" bold="true"/>
+  <TEXTSTYLE name="evenrow" colour="#000000" font="adobe-helvetica" size="10"/>
+  <TEXTSTYLE name="oddrow" colour="#000000" font="adobe-helvetica" size="10"/>
   <TEXTSTYLE name="spacer" font="adobe-helvetica" size="6"/>
 
   <TEXTSTYLE name="OK_BIT" backcolour="#00ff00" 
-	     colour="#000055" font="adobe-helvetica" size="12"/>
+	     colour="#000055" font="adobe-helvetica" size="10"/>
   <TEXTSTYLE name="W_BIT" backcolour="#ffff00" 
-	     colour="#000055" font="adobe-helvetica" size="12"/>
+	     colour="#000055" font="adobe-helvetica" size="10"/>
   <TEXTSTYLE name="E_BIT" backcolour="#ff0000" 
-	     colour="#000055" font="adobe-helvetica" size="12"/>
+	     colour="#000055" font="adobe-helvetica" size="10"/>
   <TEXTSTYLE name="P_BIT" backcolour="#ffaaff" 
-	     colour="#000055" font="adobe-helvetica" size="12"/>
+	     colour="#000055" font="adobe-helvetica" size="10"/>
 
   <EXTREMA name="slope">
     <HI value="0" textstyle="increasing"/><LO value="0" textstyle="decreasing"/>
@@ -109,15 +109,15 @@
 
 
 
-  <CURFILE name="/mnt/decom/etc/decom.cur"/>
+  <CURFILE name="/data/etc/defile.cur"/>
 </SETTINGS>
 
 <DEFAULTS>
   <TEXTSTYLE>
-    <BOX colour="#0000cc" font="adobe-times" size="12" bold="true"/>
+    <BOX colour="#0000cc" font="adobe-times" size="10" bold="true"/>
     <LABEL colour="#000000" font="adobe-helvetica" size="10"/>
-    <DATUM colour="#000055" font="adobe-helvetica" size="12" bold="true">
-      <ERROR colour="#aa4444" size="12" font="adobe-helvetica" bold="true"/>
+    <DATUM colour="#000055" font="adobe-helvetica" size="10" bold="true">
+      <ERROR colour="#aa4444" size="10" font="adobe-helvetica" bold="true"/>
       <WORD textstyle="evenrow"/>
 			<HI textstyle="hiwarn"/>
 			<LO textstyle="lowarn"/>
@@ -273,7 +273,7 @@
   </DERIV>
 </BOX>
 
-<BOX caption="DAS Phases" row="2" col="1" rowspan="1">
+<BOX caption="DAS Phases" row="2" col="1">
   <NUMBER caption="DAS 5" textstyle="oddrow"><DATUM format="%.0f" src="phase5" extrema="unknown"/></NUMBER>
   <NUMBER caption="DAS 6" textstyle="oddrow"><DATUM format="%.0f" src="phase6" extrema="unknown"/></NUMBER>
   <NUMBER caption="DAS 7" textstyle="oddrow"><DATUM format="%.0f" src="phase7" extrema="unknown"/></NUMBER>

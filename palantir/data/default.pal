@@ -608,21 +608,39 @@
     <NUMBER caption="Bias Level 3">
       <DATUM format="%.0f" src="bias_lev3" extrema="bias3"/>
     </NUMBER>
+    <NUMBER caption="DAS Phase 5">
+      <DATUM format="%.0f" src="phase5" extrema="unknown"/>
+    </NUMBER>
     <NUMBER caption="DAS Phase 6">
       <DATUM format="%.0f" src="phase6" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 7">
       <DATUM format="%.0f" src="phase7" extrema="unknown"/>
     </NUMBER>
+    <NUMBER caption="DAS Phase 8">
+      <DATUM format="%.0f" src="phase8" extrema="unknown"/>
+    </NUMBER>
     <NUMBER caption="DAS Phase 9">
       <DATUM format="%.0f" src="phase9" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 10">
-      <DATUM format="%.0f" src="phase10" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="DAS Phase 15">
+       <DATUM format="%.0f" src="phase10" extrema="unknown"/>
+         </NUMBER>
+      <NUMBER caption="DAS Phase 11">
+          <DATUM format="%.0f" src="phase11" extrema="unknown"/>
+       </NUMBER>
+       <NUMBER caption="DAS Phase 12">
+          <DATUM format="%.0f" src="phase12" extrema="unknown"/>
+         </NUMBER>
+          <NUMBER caption="DAS Phase 13">
+    <DATUM format="%.0f" src="phase13" extrema="unknown"/>
+     </NUMBER>
+    <NUMBER caption="DAS Phase 14">
+    <DATUM format="%.0f" src="phase14" extrema="unknown"/>
+     </NUMBER>
+      <NUMBER caption="DAS Phase 15">
       <DATUM format="%.0f" src="phase15" extrema="unknown"/>
-    </NUMBER>
+   </NUMBER>
 
   </BOX>
   <BOX caption="State" colour="#777700" row="0" col="1" colspan="1" >
@@ -788,19 +806,22 @@
     <NUMBER caption="LHE Filter">
       <DATUM format="%.2f" src="T_lhe_filt" extrema="lhetemp"/>
     </NUMBER>
-    <NUMBER caption="ColdPlate">
-      <DATUM format="%.2f" src="T_cold_plate" extrema="lhetemp"/>
+    <NUMBER caption="LHe">
+      <DATUM format="%.2f" src="T_lhe" extrema="lhetemp"/>
     </NUMBER>
     <NUMBER caption="Charcoal">
       <DATUM format="%.2f" src="T_charcoal" extrema="chartemp"/>
     </NUMBER>
+    <NUMBER caption="Heatswitch">
+            <DATUM format="%.2f" src="T_heatswitch" extrema="unknown"/>
+          </NUMBER>
+   <NUMBER caption="VCS Fet">
+           <DATUM format="%.2f" src="T_vcs_fet" extrema="vcstemp"/>
+               </NUMBER>
   </BOX>
   <BOX caption="Cold Optics Temps" row="4" col="3">
-    <NUMBER caption="Opt.Box Win">
-      <DATUM format="%.2f" src="T_opt_box_w" extrema="pottemp-diode"/>
-    </NUMBER>
-    <NUMBER caption="Optics Box">
-      <DATUM format="%.2f" src="T_optics_box" extrema="pottemp-diode"/>
+    <NUMBER caption="Opt.Box Filter">
+      <DATUM format="%.2f" src="T_optbox_filt" extrema="pottemp-diode"/>
     </NUMBER>
     <NUMBER caption="4He Pot Diode">
       <DATUM format="%.2f" src="T_he4pot_d" extrema="pottemp-diode"/>
@@ -811,15 +832,30 @@
     <NUMBER caption="He3 Fridge">
       <DATUM format="%.3f" src="T_he3fridge" extrema="he3fridge"/>
     </NUMBER>
+    <NUMBER caption="300mK Strap">
+            <DATUM format="%.3f" src="T_300mk_strap" extrema="he3fridge"/>
+                </NUMBER>
+
     <NUMBER caption="500 um Horn">
       <DATUM format="%.3f" src="T_horn_500" extrema="he3fridge"/>
     </NUMBER>
-    <NUMBER caption="500 um Base">
-      <DATUM format="%.3f" src="T_base_500" extrema="pottemp"/>
+    <NUMBER caption="350 um Horn">
+      <DATUM format="%.3f" src="T_horn_350" extrema="he3fridge"/>
     </NUMBER>
-    <NUMBER caption="250 um Base">
-      <DATUM format="%.3f" src="T_base_250" extrema="pottemp"/>
+    <NUMBER caption="250 um Horn">
+      <DATUM format="%.3f" src="T_horn_250" extrema="he3fridge"/>
     </NUMBER>
+    <NUMBER caption="Mirror 3">
+            <DATUM format="%.3f" src="T_m3" extrema="pottemp"/>
+                </NUMBER>
+   <NUMBER caption="Mirror 4">
+           <DATUM format="%.3f" src="T_m4" extrema="pottemp"/>
+               </NUMBER>
+
+  <NUMBER caption="Mirror 5">
+          <DATUM format="%.3f" src="T_m5" extrema="pottemp"/>
+              </NUMBER>
+
   </BOX>
   <BOX caption="Cryo Heaters" row="4" col="4" >
     <MULTI caption="He Level">
@@ -849,8 +885,8 @@
     <NUMBER caption="I Cold Plate">
       <DATUM format="%.2f" src="I_COLDPLATE" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="He3 Heat (%)">
-      <DATUM format="%.2f" src="HE3PWM" extrema="unknown"/>
+    <NUMBER caption="BDA Heat (%)">
+      <DATUM format="%.2f" src="BDAPWM" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Switch (%)">
       <DATUM format="%.2f" src="HSPWM" extrema="unknown"/>
@@ -862,7 +898,7 @@
       <DATUM format="%.2f" src="CRYOPWM" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="Calibrator">
-      <DATUM src="CALIBRATOR">
+      <DATUM src="CALSTAT">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
@@ -889,16 +925,17 @@
         <WORD value="2" caption="Closed" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
+        <MULTI caption="Cryo Valve Dir">
+                <DATUM src="CRYO_DIREC">
+                          <WORD value="1" caption="Opening" textstyle="W_BIT"/>
+                                  <WORD value="0" caption="Closing" textstyle="OK_BIT"/>
+                                        </DATUM>
+                                            </MULTI>
+
     <MULTI caption="He">
       <DATUM src="LHE_VALVE">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
-      </DATUM>
-    </MULTI>
-    <MULTI caption="He Dir">
-      <DATUM src="LHE_DIREC">
-        <WORD value="1" caption="Opening" textstyle="W_BIT"/>
-        <WORD value="0" caption="Closing" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="He State">
@@ -906,6 +943,20 @@
         <WORD value="3" caption="Error" textstyle="E_BIT"/>
         <WORD value="0" caption="No Limit" textstyle="P_BIT"/>
         <WORD value="1" caption="Open" textstyle="W_BIT"/>
+        <WORD value="2" caption="Close" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="LN">
+    <DATUM src="LN_VALVE">
+      <WORD value="1" caption="On" textstyle="W_BIT"/>
+   <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+       </DATUM>
+     </MULTI>
+     <MULTI caption="LN State">
+       <DATUM src="LN_STATE">
+         <WORD value="3" caption="Error" textstyle="E_BIT"/>
+       <WORD value="0" caption="No Limit" textstyle="P_BIT"/>
+       <WORD value="1" caption="Open" textstyle="W_BIT"/>
         <WORD value="2" caption="Close" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
