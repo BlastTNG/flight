@@ -791,7 +791,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
     NGroups[i] = new QRadioButton(NGroupsBox, "QGroup");
     NGroups[i]->setText(tr(GroupNames[i]));
     tempsize = NGroups[i]->sizeHint();
-    NGroupsLayout->addWidget(NGroups[i], int(i/3), i - 3 * int(i/3));
+    NGroupsLayout->addWidget(NGroups[i], int(i/3), (i%3));
   }
 
   NGroups[0]->setChecked(true);
@@ -801,7 +801,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NTopFrame->setFrameShape(QFrame::Box);
   NTopFrame->setFrameShadow(QFrame::Sunken);
 
-  NCommandList = new QListBox(NTopFrame, "NCommandList");
+  NCommandList = new QListBox(this, "NCommandList");
   NCommandList->adjustSize();
   NCommandList->setGeometry(PADDING, PADDING, NCommandList->width() + 80, 0);
   tfont.setFamily("adobe-courier");
@@ -813,7 +813,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   tfont.setBold(false);
 
 
-  w1 = NCommandList->width();
+  w1 = 0;
 
   memset(tmp, 'H', LongestParam());
   tmp[LongestParam()] = '\0';
@@ -837,12 +837,11 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
     h2 = NParamLabels[i]->height();
     h3 = NParamFields[i]->height();
 
-    point.setX(w1 + 2 * PADDING + i * (w2 + w3 + PADDING + SPACING * 4) - 2 *
-        int(i/2) * (w2 + w3 + PADDING + SPACING * 4));
+    point.setX(w1 + 2 * PADDING + (i%2) * (w2 + w3 + PADDING + SPACING * 4));
     NParamLabels[i]->setGeometry(point.x(), 0, w2, h2);
 
-    point.setX(w1 + 3 * PADDING + i * (w2 + w3 + PADDING + SPACING * 4) + w2 -
-        2 * int(i/2) * (w2 + w3 + PADDING + SPACING * 4));
+    point.setX(w1 + 3 * PADDING +
+               (i%2) * (w2 + w3 + PADDING + SPACING * 4) + w2);
     NParamFields[i]->setGeometry(point.x(), 0, w3, h3);
   }
 
@@ -860,7 +859,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NAboutLabel->setAlignment(int(QLabel::WordBreak | QLabel::AlignLeft));
   NAboutLabel->setGeometry(0, 0, 2 * (w2 + w3 + PADDING) + SPACING * 4, 0);
   tempsize = NAboutLabel->sizeHint();
-  NAboutLabel->setGeometry(PADDING * 2 + NCommandList->width(), PADDING,
+  NAboutLabel->setGeometry(PADDING , PADDING,
       2 * (w2 + w3 + PADDING) + SPACING * 4,
       tempsize.height());
 
@@ -871,8 +870,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
     h2 = NParamLabels[i]->height();
     h3 = NParamFields[i]->height();
 
-    point.setX(w1 + 2 * PADDING + i * (w2 + w3 + PADDING + SPACING * 4) - 2 *
-        int(i/2) * (w2 + w3 + PADDING + SPACING * 4));
+    point.setX(w1 + 2 * PADDING + (i%2) * (w2 + w3 + PADDING + SPACING * 4));
     point.setY(h1 + 2 * PADDING + int(i/2) * (h3 + SPACING) + int((h3 - h2)/2));
     NParamLabels[i]->setGeometry(point.x(), point.y(), w2, h2);
 
@@ -900,31 +898,39 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NSettingsButton->setText(tr("Settings . . ."));
   NSettingsButton->adjustSize();
 
-  NCommandList->setGeometry(PADDING, PADDING, NCommandList->width(),
-      2 * PADDING + h1 + (int(MAX_N_PARAMS/2) + 0) *
-      (h3 + SPACING));
-
-  NSendButton->setGeometry(2 * PADDING + NAboutLabel->width() +
-      NCommandList->width() - NSendButton->width(),
-      PADDING + NCommandList->height() -
-      NSendButton->height(), NSendButton->width(),
-      NSendButton->height());
-  NSettingsButton->setGeometry(PADDING + NAboutLabel->width() +
-      NCommandList->width() - NSendButton->width() -
-      NSettingsButton->width(),
-      PADDING + NCommandList->height() -
-      NSettingsButton->height(),
-      NSettingsButton->width(),
-      NSettingsButton->height());
+  NSendButton->setGeometry(2 * PADDING + NAboutLabel->width()
+                           - NSendButton->width(), PADDING +
+                           2 * PADDING + h1 +
+                           (int(MAX_N_PARAMS/2)) *
+                           (h3 + SPACING) -
+                           NSettingsButton->height()
+                           , NSendButton->width(),
+                           NSendButton->height());
+  NSettingsButton->setGeometry(PADDING + NAboutLabel->width() -
+                               NSendButton->width() -
+                               NSettingsButton->width(),
+                               PADDING + 2 * PADDING + h1 +
+                               (int(MAX_N_PARAMS/2)) *
+                               (h3 + SPACING) -
+                               NSettingsButton->height(),
+                               NSettingsButton->width(),
+                               NSettingsButton->height());
 
   NTopFrame->adjustSize();
 
   NGroupsBox->adjustSize();
-  NGroupsBox->setGeometry(PADDING, PADDING, NTopFrame->width(),
-      NGroupsBox->height());
+  NGroupsBox->setGeometry(2*PADDING+NCommandList->width(), PADDING,
+                          NTopFrame->width(),
+                          NGroupsBox->height());
 
-  NTopFrame->setGeometry(PADDING, PADDING * 2 + NGroupsBox->height(),
-      NTopFrame->width(), NTopFrame->height());
+  NTopFrame->setGeometry(2*PADDING+NCommandList->width(),
+                         PADDING * 2 + NGroupsBox->height(),
+                         NTopFrame->width(), NTopFrame->height());
+
+  NCommandList->setGeometry(PADDING, PADDING, NCommandList->width(),
+                            PADDING * 2 + NGroupsBox->height() +
+                            NTopFrame->height());
+
 
   NBotFrame = new QFrame(this, "NBotFrame");
   NBotFrame->setFrameShape(QFrame::Box);
@@ -959,7 +965,8 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   ReadLog(NLog);
 
   NBotFrame->adjustSize();
-  NBotFrame->setGeometry(PADDING, PADDING * 3 + NGroupsBox->height() +
+  NBotFrame->setGeometry(2*PADDING+NCommandList->width(),
+                         PADDING * 3 + NGroupsBox->height() +
       NTopFrame->height(), NTopFrame->width(),
       NBotFrame->height());
 
