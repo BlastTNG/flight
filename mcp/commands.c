@@ -1362,10 +1362,10 @@ void InitCommandData() {
   CommandData.Cryo.heliumLevel = 0;
   CommandData.Cryo.charcoalHeater = 0;
   CommandData.Cryo.coldPlate = 0;
-  CommandData.Cryo.JFETHeat = 2047;
-  CommandData.Cryo.heatSwitch = 2047;
-  CommandData.Cryo.heliumThree = 2047;
-  CommandData.Cryo.sparePwm = 2047;
+  CommandData.Cryo.JFETHeat = 0;
+  CommandData.Cryo.heatSwitch = 0;
+  CommandData.Cryo.heliumThree = 0;
+  CommandData.Cryo.sparePwm = 0;
   CommandData.Cryo.calibrator = 0;
   CommandData.Cryo.lnvalve_on = 0;
   CommandData.Cryo.lnvalve_open = 0;
