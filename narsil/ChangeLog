@@ -1,3 +1,6 @@
+2004-10-27 (1.8.1):
+	* narsil.cpp (main): make error message more visible.  fix typo in comment
+
 2004-10-21 (1.8.0):
 	* configure.ac: add elog check; add configuration summary
 	* narsil.cpp (MainForm::WriteLog): make elog support conditional

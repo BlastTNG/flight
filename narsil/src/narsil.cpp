@@ -1337,7 +1337,7 @@ int main(int argc, char* argv[]) {
   close(pipefd[0]);
   if (WEXITSTATUS(i) == 12) {
     if (strncmp(command_list_serial, ptr, strlen(command_list_serial))) {
-      printf(
+      printf("\n                           **** ERROR ****\n\n"
           "Cowardly refusing to use a blastcmd with a different command list.\n"
           "command list revision for %s:\n  %s\n"
           "command list revision for narsil:\n  %s\n", BLASTCMDFILE, ptr,
@@ -1351,7 +1351,7 @@ int main(int argc, char* argv[]) {
         "command list used by narsil is identical to the one used by blastcmd\n"
         "before using this program.\n", BLASTCMDFILE);
   }
-  /* begin blastcmd command list revision check */ 
+  /* end blastcmd command list revision check */ 
 
   defaults = new Defaults();
 

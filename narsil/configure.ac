@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(narsil, 1.8.0, [dwiebe@physics.utoronto.ca])
-AM_INIT_AUTOMAKE(narsil, 1.8.0)
+AC_INIT(narsil, 1.8.1, [dwiebe@physics.utoronto.ca])
+AM_INIT_AUTOMAKE(narsil, 1.8.1)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH(data-etc,
