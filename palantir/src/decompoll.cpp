@@ -36,9 +36,6 @@
 
 #include "decompoll.h"
 
-bool pollDecomd;
-int connectState = 0;
-
 /* Decom Data */
 DecomData::DecomData()
 {
@@ -46,6 +43,7 @@ DecomData::DecomData()
   fs_bad = 0;
   dq_bad = 0;
   df = 0;
+  frame_counter = 0;
   filename[0] = 0;
 }
 
@@ -69,6 +67,11 @@ double DecomData::DiskFree(void)
   return (double)df / 1073741824.;
 }
 
+unsigned long DecomData::FrameCounter(void)
+{
+  return frame_counter;
+}
+
 char* DecomData::DecomFile(void)
 {
   return filename;
@@ -78,6 +81,10 @@ void DecomData::setData(char* buf)
 {
   sscanf(buf, "%i %i %i %lf %lf %Lu %s", &status, &polarity, &decomUnlocks,
       &fs_bad, &dq_bad, &df, filename);
+  frame_counter = (unsigned long)df;
+//  sscanf(buf, "%i %i %i %lf %lf %Lu %lu %s", &status, &polarity, &decomUnlocks,
+//      &fs_bad, &dq_bad, &df, &frame_counter, filename);
+  filename[12] = 0;
 }
 
 /* Polls the decom */

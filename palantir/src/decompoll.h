@@ -32,12 +32,14 @@ class DecomData
     void setData(char*);
     int Status(void);
     double FrameLoss(void);
+    unsigned long FrameCounter(void);
     double DataQuality(void);
     double DiskFree(void);
     char* DecomFile(void);
 
   private:
     unsigned long long int df;
+    unsigned long int frame_counter;
     int status;
     int polarity;
     int decomUnlocks;
