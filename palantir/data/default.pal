@@ -116,10 +116,10 @@
 
 <DEFAULTS>
   <TEXTSTYLE>
-    <BOX colour="#0000cc" font="adobe-times" size="12" bold="true"/>
+    <BOX colour="#0000cc" font="adobe-times" size="10" bold="true"/>
     <LABEL colour="#000000" font="adobe-helvetica" size="10"/>
-    <DATUM colour="#000055" font="adobe-helvetica" size="12" bold="true">
-      <ERROR colour="#aa4444" size="12" font="adobe-helvetica" bold="true"/>
+    <DATUM colour="#000055" font="adobe-helvetica" size="10" bold="true">
+      <ERROR colour="#aa4444" size="10" font="adobe-helvetica" bold="true"/>
       <WORD textstyle="evenrow"/>
 			<HI textstyle="hiwarn"/>
 			<LO textstyle="lowarn"/>
