@@ -16,17 +16,17 @@
 #define DECOM_IOC_COUNTER   _IO(BBCPCI_IOC_MAGIC, 2)
 #define DECOM_IOC_FRAMELEN  _IOR(BBCPCI_IOC_MAGIC, 3, unsigned int)
 
-#define SIZE_UINT           sizeof(unsigned int)
+#define DECOM_SIZE_UINT           sizeof(unsigned int)
 
-#define ADD_VERSION         0x00 * SIZE_UINT
-#define ADD_FRAME_LEN       0x01 * SIZE_UINT
-#define ADD_COUNTER         0x02 * SIZE_UINT
-#define ADD_COMREG          0x03 * SIZE_UINT
-#define ADD_READ_BUF        0x100
-#define ADD_READ_BUF_END    0x2ff0
-#define ADD_READ_BUF_WP     0x05 * SIZE_UINT
-#define ADD_READ_BUF_RP     0x06 * SIZE_UINT
+#define DECOM_ADD_VERSION         (0x00 * DECOM_SIZE_UINT)
+#define DECOM_ADD_FRAME_LEN       (0x01 * DECOM_SIZE_UINT)
+#define DECOM_ADD_COUNTER         (0x02 * DECOM_SIZE_UINT)
+#define DECOM_ADD_COMREG          0x03 * DECOM_SIZE_UINT)
+#define DECOM_ADD_READ_BUF        0x100
+#define DECOM_ADD_READ_BUF_END    0x2ff0
+#define DECOM_ADD_READ_BUF_WP     (0x05 * DECOM_SIZE_UINT)
+#define DECOM_ADD_READ_BUF_RP     (0x06 * DECOM_SIZE_UINT)
 
-#define COMREG_RESET        0x00000001
+#define DECOM_COMREG_RESET        0x00000001
 
-#define DECOM_SYNC          0xeb90
+#define DECOM_SYNC                0xeb90
