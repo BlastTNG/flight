@@ -9,3 +9,4 @@ else
   touch Makefile.config ;
   echo "Configuring flight version of mcp" ;
 fi;
+echo "ETC_DIR = /data/etc" >> Makefile.config ;

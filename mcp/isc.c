@@ -65,6 +65,7 @@ int ISCInit(void)
   }
 
   fprintf(stderr, "Connected to Elbereth\n");
+  CommandData.ISCState.shutdown = 0;
 
   return sock;
 }
@@ -148,7 +149,12 @@ void IntegratingStarCamera(void)
           CommandData.ISCState.autofocus = 0;
 
           /* Process results of autofocus */
-          CommandData.ISCState.focus_pos = CommandData.old_ISC_focus;
+          if (ISCSolution[iscdata_index].autoFocusPosition > 2000 &&
+              ISCSolution[iscdata_index].autoFocusPosition < 2550) {
+            CommandData.ISCState.focus_pos =
+              ISCSolution[iscdata_index].autoFocusPosition;
+          } else
+            CommandData.ISCState.focus_pos = CommandData.old_ISC_focus;
         }
 
         iscdata_index = INC_INDEX(iscdata_index);
@@ -206,7 +212,7 @@ void IntegratingStarCamera(void)
 
         /* Deassert abort after (perhaps) sending it */
         CommandData.ISCState.abort = 0;
-
+        CommandData.ISCState.shutdown = 0;
       }
     }
   }

@@ -948,17 +948,25 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
     iscBits = Balance(iscBits, slowTxFields);
   }
 
-  if (isc_trigger_count<CommandData.ISC_pulse_width) {
-    iscBits|=ISC_TRIGGER;
+  /* ISC Pulsing stuff */
+
+  if (isc_trigger_count < CommandData.ISC_pulse_width) {
+    iscBits |= ISC_TRIGGER;
   }
   isc_trigger_count++;
-  if (isc_trigger_count>=ISC_TRIG_PER) {
-    isc_trigger_count = 0;
+
+  /* We want to trigger sending the frame slightly after the pulse is sent
+   * to offset the 300 ms latency in the BLASTbus */
+  if (isc_trigger_count == 20)
     write_ISC_pointing = 1;	
-    if (isc_trigger_since_last<0)
+
+  if (isc_trigger_count >= ISC_TRIG_PER) {
+    isc_trigger_count = 0;
+    if (isc_trigger_since_last < 0)
       isc_trigger_since_last = 0;
   }
-  if (isc_trigger_since_last>=0) isc_trigger_since_last++;
+  if (isc_trigger_since_last >= 0)
+    isc_trigger_since_last++;
 
   WriteSlow(i_lockpin, j_lockpin, pin_is_in);
   WriteSlow(pumpBitsCh, pumpBitsInd, pumpBits);
@@ -981,17 +989,17 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
  * send the sync bit if they do.  Only one board can be synced   *
  * in each superframe.                                           *
  *****************************************************************/
+int ADC_sync_timeout = 0;
 void SyncADC (int TxIndex, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int syncCh = -1, syncInd, nextInd;
   static int statusInd[17];
   static int statusCh[17];
-  static int times_here = 0;
   char buffer[9];
 
   int k, l;
 
-  if (times_here>600) return;
-  times_here++;
+  if (ADC_sync_timeout++ >= 600)
+    return;
   
   /******** Obtain correct indexes the first time here ***********/
   if (syncCh == -1) {
@@ -1148,6 +1156,8 @@ void StoreData(int index, unsigned int* Txframe,
   static int blob0_snCh, blob0_snInd;
   static int blob1_snCh, blob1_snInd;
   static int blob2_snCh, blob2_snInd;
+  static int isc_errorCh, isc_errorInd;
+  static int isc_mapMeanCh, isc_mapMeanInd;
   static int isc_framenumCh, isc_framenumInd;
   static int isc_rd_sigmaCh, isc_rd_sigmaInd;
   static int isc_raCh, isc_raInd;
@@ -1264,6 +1274,8 @@ void StoreData(int index, unsigned int* Txframe,
     SlowChIndex("blob0_sn", &blob0_snCh, &blob0_snInd);
     SlowChIndex("blob1_sn", &blob1_snCh, &blob1_snInd);
     SlowChIndex("blob2_sn", &blob2_snCh, &blob2_snInd);
+    SlowChIndex("isc_error", &isc_errorCh, &isc_errorInd);
+    SlowChIndex("isc_mapmean", &isc_mapMeanCh, &isc_mapMeanInd);
     SlowChIndex("isc_rd_sigma", &isc_rd_sigmaCh, &isc_rd_sigmaInd);
     SlowChIndex("isc_framenum", &isc_framenumCh, &isc_framenumInd);
     SlowChIndex("isc_ra", &isc_raCh, &isc_raInd);
@@ -1488,6 +1500,10 @@ void StoreData(int index, unsigned int* Txframe,
       (unsigned int)ISCSolution[i_isc].MCPFrameNum);
   WriteSlow(isc_afocusCh, isc_afocusInd,
       (unsigned int)ISCSolution[i_isc].autoFocusPosition);
+  WriteSlow(isc_errorCh, isc_errorInd,
+      (unsigned int)ISCSolution[i_isc].cameraerr);
+  WriteSlow(isc_mapMeanCh, isc_mapMeanInd,
+      (unsigned int)ISCSolution[i_isc].mapMean);
 
   /*** State Info ***/
   WriteSlow(isc_stateCh, isc_stateInd,
@@ -1495,6 +1511,7 @@ void StoreData(int index, unsigned int* Txframe,
                      CommandData.ISCState.abort * 4 +
                      CommandData.ISCState.autofocus * 8 +
                      CommandData.ISCState.brightStarMode * 16 +
+                     CommandData.ISCState.shutdown * 32 +
                      CommandData.ISCState.save));
   WriteSlow(isc_focusCh, isc_focusInd,
       (unsigned int)CommandData.ISCState.focus_pos);

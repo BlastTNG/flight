@@ -1,6 +1,6 @@
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_NM_SCOMMANDS 71      /* total number of named single word cmds */
+#define N_NM_SCOMMANDS 72      /* total number of named single word cmds */
 #define N_SCOMMANDS N_NM_SCOMMANDS  /* total number of single word commands */
 #define N_MCOMMANDS 44         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
@@ -101,6 +101,8 @@ struct scom scommands[N_NM_SCOMMANDS] = {
   {"he_valve_open", "set helium valve direction open", GR_CRYO_CONTROL},
   {"he_valve_close", "set helium valve direction close", GR_CRYO_CONTROL},
 
+  {"sync_adc", "resync ADC Boards that require it", GR_MISC},
+
   {"balance_veto", "veto balance system", GR_BAL},
   {"balance_allow", "unveto balance system", GR_BAL},
   {"pump1_on", "balance pump 1 on", GR_BAL},
@@ -121,9 +123,12 @@ struct scom scommands[N_NM_SCOMMANDS] = {
 
   {"pin_in", "close lock pin without checking encoder (dangerous)", GR_LOCK},
   {"unlock", "unlock the lock", GR_LOCK},
-  {"use_limitswitch", "reset pin position overrides and use limit switches", GR_LOCK},
-  {"pin_in_override", "override limit switch readout and set state to pin in", GR_LOCK},
-  {"pin_out_override", "override limit switch readout and set state to pin out", GR_LOCK},
+  {"use_limitswitch", "reset pin position overrides and use limit switches",
+    GR_LOCK},
+  {"pin_in_override", "override limit switch readout and set state to pin in",
+    GR_LOCK},
+  {"pin_out_override", "override limit switch readout and set state to pin out",
+    GR_LOCK},
 
   {"isc_run", "start automatic image capture (normal mode)", GR_ISC},
   {"pause", "pause image capture", GR_ISC},

@@ -457,18 +457,18 @@ void MultiCommand (int command, unsigned short *dataq) {
     /********** Pointing Mode **************/
   } else if (command == MIndex("az_el_goto")) {
     CommandData.pointing_mode.mode = P_AZEL_GOTO;
-    CommandData.pointing_mode.X = rvalues[0];
-    CommandData.pointing_mode.Y = rvalues[1];
+    CommandData.pointing_mode.X = rvalues[0];  /* az */
+    CommandData.pointing_mode.Y = rvalues[1];  /* el */
     CommandData.pointing_mode.vaz = 0.0;
     CommandData.pointing_mode.del = 0.0;
     CommandData.pointing_mode.w = 0;
     CommandData.pointing_mode.h = 0;
   } else if (command == MIndex("az_scan")) {
     CommandData.pointing_mode.mode = P_AZ_SCAN;
-    CommandData.pointing_mode.X = rvalues[0];
-    CommandData.pointing_mode.Y = rvalues[1];
-    CommandData.pointing_mode.w = rvalues[2];
-    CommandData.pointing_mode.vaz = rvalues[3];
+    CommandData.pointing_mode.X = rvalues[0];  /* az */
+    CommandData.pointing_mode.Y = rvalues[1];  /* el */
+    CommandData.pointing_mode.w = rvalues[2];  /* width */
+    CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
     CommandData.pointing_mode.del = 0.0;
     CommandData.pointing_mode.h = 0;
   } else if (command == MIndex("drift")) {
@@ -476,41 +476,41 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pointing_mode.X = 0;
     CommandData.pointing_mode.Y = 0;
     CommandData.pointing_mode.w = 0;
-    CommandData.pointing_mode.vaz = rvalues[0];
-    CommandData.pointing_mode.del = rvalues[1];
+    CommandData.pointing_mode.vaz = rvalues[0]; /* az speed */
+    CommandData.pointing_mode.del = rvalues[1]; /* el speed */
     CommandData.pointing_mode.h = 0;
   } else if (command == MIndex("ra_dec_goto")) {
     CommandData.pointing_mode.mode = P_RADEC_GOTO;
-    CommandData.pointing_mode.X = rvalues[0];
-    CommandData.pointing_mode.Y = rvalues[1];
+    CommandData.pointing_mode.X = rvalues[0]; /* ra */
+    CommandData.pointing_mode.Y = rvalues[1]; /* dec */
     CommandData.pointing_mode.w = 0;
     CommandData.pointing_mode.vaz = 0;
     CommandData.pointing_mode.del = 0;
     CommandData.pointing_mode.h = 0;
   } else if (command == MIndex("vcap")) {
     CommandData.pointing_mode.mode = P_VCAP;
-    CommandData.pointing_mode.X = rvalues[0];
-    CommandData.pointing_mode.Y = rvalues[1];
-    CommandData.pointing_mode.w = rvalues[2];
-    CommandData.pointing_mode.vaz = rvalues[3];
-    CommandData.pointing_mode.del = rvalues[4];
+    CommandData.pointing_mode.X = rvalues[0]; /* ra */
+    CommandData.pointing_mode.Y = rvalues[1]; /* dec */
+    CommandData.pointing_mode.w = rvalues[2]; /* radius */
+    CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
+    CommandData.pointing_mode.del = rvalues[4]; /* el drift speed */
     CommandData.pointing_mode.h = 0;
   } else if (command == MIndex("cap")) {
     CommandData.pointing_mode.mode = P_CAP;
-    CommandData.pointing_mode.X = rvalues[0];
-    CommandData.pointing_mode.Y = rvalues[1];
-    CommandData.pointing_mode.w = rvalues[2];
-    CommandData.pointing_mode.vaz = rvalues[3];
-    CommandData.pointing_mode.del = rvalues[4];
+    CommandData.pointing_mode.X = rvalues[0]; /* ra */
+    CommandData.pointing_mode.Y = rvalues[1]; /* dec */
+    CommandData.pointing_mode.w = rvalues[2]; /* radius */
+    CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
+    CommandData.pointing_mode.del = rvalues[4]; /* el step size */
     CommandData.pointing_mode.h = 0;
   } else if (command == MIndex("box")) {
     CommandData.pointing_mode.mode = P_BOX;
-    CommandData.pointing_mode.X = rvalues[0];
-    CommandData.pointing_mode.Y = rvalues[1];
-    CommandData.pointing_mode.w = rvalues[2];
-    CommandData.pointing_mode.h = rvalues[3];
-    CommandData.pointing_mode.vaz = rvalues[4];
-    CommandData.pointing_mode.del = rvalues[5];
+    CommandData.pointing_mode.X = rvalues[0]; /* ra */
+    CommandData.pointing_mode.Y = rvalues[1]; /* dec */
+    CommandData.pointing_mode.w = rvalues[2]; /* width */
+    CommandData.pointing_mode.h = rvalues[3]; /* height */
+    CommandData.pointing_mode.vaz = rvalues[4]; /* az scan speed */
+    CommandData.pointing_mode.del = rvalues[5]; /* el step size */
   } else if (command == MIndex("ra_dec_set")) {
     SetRaDec(rvalues[0], rvalues[1]);
     
@@ -633,7 +633,7 @@ void MultiCommand (int command, unsigned short *dataq) {
   } else if (command == MIndex("blob_centre")) {
     CommandData.ISCState.blob_num = ivalues[0];
     CommandData.ISCState.display_mode = blob;
-  } else if (command == MIndex("bda_offsets")) {
+  } else if (command == MIndex("isc_offset")) {
     CommandData.ISCState.azBDA = rvalues[0] * DEG2RAD;
     CommandData.ISCState.elBDA = rvalues[1] * DEG2RAD;
   } else if (command == MIndex("bright_star")) {
@@ -1167,6 +1167,8 @@ void InitCommandData() {
   CommandData.Bias.SetLevel2 = 1;
   CommandData.Bias.SetLevel3 = 1;
 
+  CommandData.ISCState.shutdown = 0;
+
 #ifndef BOLOTEST
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
@@ -1245,9 +1247,6 @@ void InitCommandData() {
   CommandData.Bias.biasAC = 1;
   CommandData.Bias.biasRamp = 0;
 
-  CommandData.Bias.SetLevel1 = 1;
-  CommandData.Bias.SetLevel2 = 1;
-  CommandData.Bias.SetLevel3 = 1;
   CommandData.Bias.bias1 = 0x02;
   CommandData.Bias.bias2 = 0x02;
   CommandData.Bias.bias3 = 0x0f;

@@ -36,6 +36,7 @@ struct ISCStatusStruct {
   int focus_pos;		// stepper position for focus
   int ap_pos;			// stepper position for aperture
   int MCPFrameNum;		// current frame number of MCP
+  int shutdown;			// If set, command the ISC computer to shut down (before a power cycle)
 
   // Display mode parameters
   ISCDisplayModeType display_mode;
@@ -60,7 +61,7 @@ struct ISCStatusStruct {
   double sn_threshold;
   int grid;				// ask ed
   int cenbox;			// ask ed
-  int apbox;			// ask chaipin
+  int apbox;			// ask chapin
   int mult_dist;		// ed knows
 
   // Matching algorithm
@@ -75,6 +76,7 @@ struct ISCStatusStruct {
 };
 
 struct ISCSolutionStruct {
+  int cameraerr;		// 0 if everything is Kosher, otherwise problem...
   int framenum;			// ISC frame # (also file names for images)
   int MCPFrameNum;		// last MCP frame number received before image processing began
   int autoFocusPosition;// focus position determined from automatic procedure
