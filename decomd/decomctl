@@ -83,7 +83,7 @@ sub StartDecomd {
   if (GetPid) {
     die "decomd already appears to be running (/var/run/decomd.pid exists).\n";
   } else {
-    print "Starting decom daemon:    " . $DECOMD_DIR . " decom";
+    print "Starting decom daemon:    " . $DECOMD_DIR . "decomd\n";
     system($DECOMD_DIR . "decomd");
   }
 }
