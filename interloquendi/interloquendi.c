@@ -37,6 +37,7 @@
 
 #include <arpa/inet.h>
 
+#include "blast.h"
 #include "frameread.h"
 #include "quendi.h"
 
@@ -324,15 +325,16 @@ int main(void)
   int sock, addrlen, csock;
   struct sockaddr_in addr;
 
+  /* set up our outputs */
   openlog("interloquendi", LOG_PID, LOG_DAEMON);
+  blog_use_syslog();
 
   /* read config file */
   if ((stream = fopen(CONFIG_FILE, "rt")) != NULL) {
     ReadConfig(stream);
     fclose(stream);
-  } else {
+  } else
     syslog(LOG_WARNING, "unable to open config file `%s': %m", CONFIG_FILE);
-  }
 
   /* fill uninitialised options with default values */
   LoadDefaultConfig();
