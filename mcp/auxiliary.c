@@ -184,7 +184,7 @@ void ControlGyroHeat(unsigned short *RxFrame)
   D = CommandData.gyheat.gain.D * ( 1.0 / 1000.0);
 
   /********* if end of pulse, calculate next pulse *********/
-  if (p_off <= 0) {
+  if (p_off <= 0 && p_on <= 0) {
     error = set_point -
       ((unsigned int)(RxFrame[tGyboxAddr->channel + 1] << 16
                       | RxFrame[tGyboxAddr->channel]));
@@ -208,6 +208,9 @@ void ControlGyroHeat(unsigned short *RxFrame)
       p_on = 0;
 
     p_off = 60 - p_on;
+
+    history = p_on * 100. / CommandData.gyheat.tc + (1. - 60. /
+        CommandData.gyheat.tc) * history;
   }
 
   if (CommandData.gyheat.age <= CommandData.gyheat.tc * 2)
@@ -218,12 +221,9 @@ void ControlGyroHeat(unsigned short *RxFrame)
   /******** do the pulse *****/
   if (p_on > 0) {
     WriteData(gyHeatAddr, on, NIOS_FLUSH);
-    history = 100. / CommandData.gyheat.tc + (1. - 1. / CommandData.gyheat.tc)
-      * history;
     p_on--;
   } else if (p_off > 0) {
     WriteData(gyHeatAddr, off, NIOS_FLUSH);
-    history = (1. - 1. / CommandData.gyheat.tc) * history;
     p_off--;
   }
 }
