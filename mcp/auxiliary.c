@@ -40,7 +40,7 @@
 
 /* This is the length of time to wait after receiving the ACK, bufore sending
  * the trigger */
-#define ISC_TRIGGER_DELAY   ((which == 1) ? 1 : 1)  /* in 100Hz frames */
+#define ISC_TRIGGER_DELAY   ((which == 1) ? 1 : 30)  /* in 100Hz frames */
 
 /* If mcp has decided the handshaking isn't working, this is the period of the
  * handshake-less triggers */
@@ -191,7 +191,7 @@ void ControlGyroHeat(unsigned short *RxFrame)
       ((unsigned int)(RxFrame[tGyboxAddr->channel + 1] << 16
                       | RxFrame[tGyboxAddr->channel]));
 
-    integral = integral * 0.9975 + 0.0025 * error;
+    integral = integral * 0.999 + 0.001 * error;
     if (integral * I > 60) {
       integral = 60.0 / I;
     }
@@ -206,9 +206,7 @@ void ControlGyroHeat(unsigned short *RxFrame)
 
     if (p_on > 60)
       p_on = 60;
-    if (p_on < 0)
-      p_on = 0;
-    p_off = 60 - p_on;
+  
 
   }
 
