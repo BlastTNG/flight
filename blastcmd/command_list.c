@@ -22,15 +22,16 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.48 $";
+const char command_list_serial[] = "$Revision: 2.49 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
   "Pointing Sensor Trims", "Cooling System",    "Cal Lamp",
-  "Pointing Sensor Vetos", "Telemetry",         "Cryo Heat",
+  "Pointing Sensor Vetos", "Aux. Electronics",  "Cryo Heat",
   "Pointing Sensor Power", "Inner Frame Lock",  "Cryo Control",
-  "Pointing Motor Gains",  "ISC Parameters",    "ISC Housekeeping",
-  "Miscellaneous",         "OSC Parameters",    "OSC Housekeeping"
+  "Pointing Motor Gains",  "ISC Housekeeping",  "OSC Housekeeping",
+  "Telemetry",             "ISC Modes",         "OSC Modes",
+  "Miscellaneous",         "ISC Parameters",    "OSC Parameters"
 };
 
 #define COMMAND(x) x, #x
@@ -155,18 +156,20 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(lock_off), "turn off the lock motor", GR_LOCK},
 
   {COMMAND(isc_run), "start automatic image capture (normal mode)",
-    GR_ISC_HOUSE},
-  {COMMAND(isc_pause), "pause image capture", GR_ISC_HOUSE},
+    GR_ISC_MODE},
+  {COMMAND(isc_pause), "pause image capture", GR_ISC_MODE},
   {COMMAND(isc_reboot), "ask for software reboot of ISC computer",
-    GR_ISC_HOUSE | CONFIRM},
-  {COMMAND(isc_shutdown), "ask for shutdown of ISC computer", GR_ISC_HOUSE |
+    GR_ISC_MODE | CONFIRM},
+  {COMMAND(isc_shutdown), "ask for shutdown of ISC computer", GR_ISC_MODE |
     CONFIRM},
-  {COMMAND(isc_cam_cycle), "cycle star camera CCD power", GR_ISC_HOUSE},
-  {COMMAND(isc_abort), "abort current solution attempt", GR_ISC_HOUSE},
+  {COMMAND(isc_auto_focus), "autofocus camera", GR_ISC_MODE},
+  
+  {COMMAND(isc_cam_cycle), "cycle star camera CCD power", GR_ISC_MODE},
+  {COMMAND(isc_abort), "abort current solution attempt", GR_ISC_MODE},
+  {COMMAND(isc_save_images), "turn on saving of images", GR_ISC_MODE},
+  {COMMAND(isc_discard_images), "turn off saving of images", GR_ISC_MODE},
   {COMMAND(isc_reconnect),
     "tell mcp to try and establish a new connection with ISC", GR_ISC_HOUSE},
-  {COMMAND(isc_save_images), "turn on saving of images", GR_ISC_HOUSE},
-  {COMMAND(isc_discard_images), "turn off saving of images", GR_ISC_HOUSE},
   {COMMAND(isc_full_screen), "show full screen", GR_ISC_HOUSE},
   {COMMAND(isc_eye_on), "turn on ISC eViL eYe", GR_ISC_HOUSE},
   {COMMAND(isc_eye_off), "turn off ISC eViL eYe", GR_ISC_HOUSE},
@@ -176,21 +179,21 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(isc_trig_ext), "tell ISC to use external negative pulse triggers",
     GR_ISC_HOUSE},
 
-  {COMMAND(isc_auto_focus), "autofocus camera", GR_ISC_PARAM},
 
   {COMMAND(osc_run), "start automatic image capture (normal mode)",
-    GR_OSC_HOUSE},
-  {COMMAND(osc_pause), "pause image capture", GR_OSC_HOUSE},
+    GR_OSC_MODE},
+  {COMMAND(osc_pause), "pause image capture", GR_OSC_MODE},
   {COMMAND(osc_reboot), "ask for software reboot of OSC computer",
-    GR_OSC_HOUSE | CONFIRM},
-  {COMMAND(osc_shutdown), "ask for shutdown of OSC computer", GR_OSC_HOUSE |
+    GR_OSC_MODE | CONFIRM},
+  {COMMAND(osc_shutdown), "ask for shutdown of OSC computer", GR_OSC_MODE |
     CONFIRM},
-  {COMMAND(osc_cam_cycle), "cycle star camera CCD power", GR_OSC_HOUSE},
-  {COMMAND(osc_abort), "abort current solution attempt", GR_OSC_HOUSE},
+  {COMMAND(osc_auto_focus), "autofocus camera", GR_OSC_MODE},
+  {COMMAND(osc_cam_cycle), "cycle star camera CCD power", GR_OSC_MODE},
+  {COMMAND(osc_abort), "abort current solution attempt", GR_OSC_MODE},
+  {COMMAND(osc_save_images), "turn on saving of images", GR_OSC_MODE},
+  {COMMAND(osc_discard_images), "turn off saving of images", GR_OSC_MODE},
   {COMMAND(osc_reconnect),
     "tell mcp to try and establish a new connection with OSC", GR_OSC_HOUSE},
-  {COMMAND(osc_save_images), "turn on saving of images", GR_OSC_HOUSE},
-  {COMMAND(osc_discard_images), "turn off saving of images", GR_OSC_HOUSE},
   {COMMAND(osc_full_screen), "show full screen", GR_OSC_HOUSE},
   {COMMAND(osc_eye_on), "turn on OSC eViL eYe", GR_OSC_HOUSE},
   {COMMAND(osc_eye_off), "turn off OSC eViL eYe", GR_OSC_HOUSE},
@@ -199,8 +202,6 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_OSC_HOUSE},
   {COMMAND(osc_trig_ext), "tell OSC to use external negative pulse triggers",
     GR_OSC_HOUSE},
-
-  {COMMAND(osc_auto_focus), "autofocus camera", GR_OSC_PARAM}
 };
 
 /* parameter type:
@@ -413,26 +414,26 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /******** Electronics Heaters  *********/
-  {COMMAND(t_gyro1_set), "gyro box 1 temperature set point", GR_MISC, 1,
+  {COMMAND(t_gyro1_set), "gyro box 1 temperature set point", GR_ELECT, 1,
     {
       {"Set Point (deg C)", 0, 60, 'f', "T_GY_SET"}
     }
   },
 
-  {COMMAND(t_gyro2_set), "gyro box 2 temperature set point", GR_MISC, 1,
+  {COMMAND(t_gyro2_set), "gyro box 2 temperature set point", GR_ELECT, 1,
     {
       {"Set Point (deg C)", 0, 60, 'f', "T_GY_SET"}
     }
   },
 
-  {COMMAND(t_gyro1_gain), "gyro box 1 heater gains", GR_MISC, 3,
+  {COMMAND(t_gyro1_gain), "gyro box 1 heater gains", GR_ELECT, 3,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_gyheat"},
       {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_gyheat"},
       {"Derrivative Gain",  0, MAX_15BIT, 'i', "g_d_gyheat"}
     }
   },
-{COMMAND(t_gyro2_gain), "gyro box 2 heater gains", GR_MISC, 3,
+{COMMAND(t_gyro2_gain), "gyro box 2 heater gains", GR_ELECT, 3,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_gyheat"},
       {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_gyheat"},
@@ -457,13 +458,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /****************************************/
   /*************** Misc.  *****************/
-  {COMMAND(apcu_charge), "Set the ACS PCU battery charge level", GR_MISC, 1,
+  {COMMAND(apcu_charge), "Set the ACS PCU battery charge level", GR_ELECT, 1,
     {
       {"Level", 0, 100, 'i', "APCU_REG"}
     }
   },
 
-  {COMMAND(dpcu_charge), "Set the DAS PCU battery charge level", GR_MISC, 1,
+  {COMMAND(dpcu_charge), "Set the DAS PCU battery charge level", GR_ELECT, 1,
     {
       {"Level", 0, 100, 'i', "DPCU_REG"}
     }

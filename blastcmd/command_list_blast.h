@@ -25,7 +25,7 @@
 #define SIZE_ABOUT 80
 #define SIZE_PARNAME 80
 
-#define N_GROUPS 18
+#define N_GROUPS 21
 
 #define GR_POINT        0x00000001
 #define GR_BAL          0x00000002
@@ -34,17 +34,20 @@
 #define GR_COOL         0x00000010
 #define GR_CALLAMP      0x00000020
 #define GR_VETO         0x00000040
-#define GR_TELEM        0x00000080
+#define GR_ELECT        0x00000080
 #define GR_CRYO_HEAT    0x00000100
 #define GR_POWER        0x00000200
 #define GR_LOCK         0x00000400
 #define GR_CRYO_CONTROL 0x00000800
 #define GR_GAIN         0x00001000
-#define GR_ISC_PARAM    0x00002000
-#define GR_ISC_HOUSE    0x00004000
-#define GR_MISC         0x00008000
-#define GR_OSC_PARAM    0x00010000
-#define GR_OSC_HOUSE    0x00020000
+#define GR_ISC_HOUSE    0x00002000
+#define GR_OSC_HOUSE    0x00004000
+#define GR_TELEM        0x00008000
+#define GR_ISC_MODE     0x00010000
+#define GR_OSC_MODE     0x00020000
+#define GR_MISC         0x00040000
+#define GR_ISC_PARAM    0x00080000
+#define GR_OSC_PARAM    0x00100000
 
 #define CONFIRM         0x80000000
 
