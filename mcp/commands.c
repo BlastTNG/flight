@@ -418,7 +418,9 @@ void SingleCommand (enum singleCommand command) {
     CommandData.ISC_autofocus = 10;
     CommandData.old_ISC_focus = CommandData.ISCState.focus_pos;
     CommandData.ISCState.focus_pos = FOCUS_RANGE;
-  } else {
+  } else if (command == xyzzy)
+    ;
+  else {
     mputs(MCP_WARNING, "***Invalid Single Word Command***\n");
     return; /* invalid command - no write or update */
   }

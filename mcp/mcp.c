@@ -326,8 +326,9 @@ void GetACS(unsigned short *RxFrame){
   rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
       (RxFrame[2] & 0x0000ffff) << 16);
 
-  enc_elev = ((double)RxFrame[i_enc_elev] *
-      (-360.0 / 65536.0) + ENC_ELEV_OFFSET);
+  if ((enc_elev = ((double)RxFrame[i_enc_elev] * (-360.0 / 65536.0)
+          + ENC_ELEV_OFFSET)) > 360)
+    enc_elev -= 360;
 
   gyro1 = (double)(RxFrame[i_GYRO1]-GYRO1_OFFSET)*ADU1_TO_DPS;
   gyro2 = (double)(RxFrame[i_GYRO2]-GYRO2_OFFSET)*ADU2_TO_DPS;
