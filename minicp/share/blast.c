@@ -46,7 +46,7 @@ void bputs_stdio(buos_t l, const char* s)
     case fatal:
     case mem:
       fputs(s, stream);
-      if (strstr(s, "\n") == NULL)
+      if (s[strlen(s) - 1] != '\n')
         fputs("\n", stream);
   }
 
@@ -193,8 +193,8 @@ void *_reballoc(buos_t l, void* p, size_t s, const char* f, int w,
 
 void _bfree(buos_t l, void* p, const char* f, int w, const char* n)
 {
+  bprintf(mem, "freeing %p in %s", p, f);
   free(p);
-  bprintf(mem, "freed %p in %s", p, f);
 }
 
 char* _bstrdup(buos_t l, const char* s, const char* f, int w, const char* n)
