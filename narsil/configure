@@ -272,7 +272,7 @@ PACKAGE_STRING=
 PACKAGE_BUGREPORT=
 
 ac_unique_file="src/narsil.cpp"
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE am__leading_dot DATA_ETC_DIR CUR_DIR CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE FILE SED GREP CPP QT_CXXFLAGS QT_LDADD MOC BLAST_CMD LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE am__leading_dot DATA_ETC_DIR CUR_DIR CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE FILE SED GREP CPP QT_CXXFLAGS QT_LDADD MOC BLAST_CMD INSTALL_LOG_TXT_TRUE INSTALL_LOG_TXT_FALSE LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1557,7 +1557,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=narsil
- VERSION=1.7.2
+ VERSION=1.7.3
 
 
 cat >>confdefs.h <<_ACEOF
@@ -4456,6 +4456,26 @@ echo "$as_me: error: *** libpthread not installed -- please install first ***" >
 fi
 
 
+echo "$as_me:$LINENO: checking whether the narsil log file is already present" >&5
+echo $ECHO_N "checking whether the narsil log file is already present... $ECHO_C" >&6
+if test -f "$DATA_ETC_DIR/narsil/log.txt"; then
+  HAVE_LOG_TXT=yes;
+else
+  HAVE_LOG_TXT=no;
+fi
+echo "$as_me:$LINENO: result: $HAVE_LOG_TXT" >&5
+echo "${ECHO_T}$HAVE_LOG_TXT" >&6
+
+
+if test "$HAVE_LOG_TXT" = "no"; then
+  INSTALL_LOG_TXT_TRUE=
+  INSTALL_LOG_TXT_FALSE='#'
+else
+  INSTALL_LOG_TXT_TRUE='#'
+  INSTALL_LOG_TXT_FALSE=
+fi
+
+
                               ac_config_files="$ac_config_files data/Makefile src/Makefile Makefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -4566,6 +4586,13 @@ if test -z "${am__fastdepCXX_TRUE}" && test -z "${am__fastdepCXX_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"am__fastdepCXX\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"am__fastdepCXX\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${INSTALL_LOG_TXT_TRUE}" && test -z "${INSTALL_LOG_TXT_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"INSTALL_LOG_TXT\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"INSTALL_LOG_TXT\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -5154,6 +5181,8 @@ s,@QT_CXXFLAGS@,$QT_CXXFLAGS,;t t
 s,@QT_LDADD@,$QT_LDADD,;t t
 s,@MOC@,$MOC,;t t
 s,@BLAST_CMD@,$BLAST_CMD,;t t
+s,@INSTALL_LOG_TXT_TRUE@,$INSTALL_LOG_TXT_TRUE,;t t
+s,@INSTALL_LOG_TXT_FALSE@,$INSTALL_LOG_TXT_FALSE,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF

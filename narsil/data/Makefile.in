@@ -64,6 +64,8 @@ EXEEXT = @EXEEXT@
 FILE = @FILE@
 GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
+INSTALL_LOG_TXT_FALSE = @INSTALL_LOG_TXT_FALSE@
+INSTALL_LOG_TXT_TRUE = @INSTALL_LOG_TXT_TRUE@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
@@ -118,10 +120,13 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 dataetcnarsildir = @DATA_ETC_DIR@/narsil
-dataetcnarsil_DATA = log.txt prev_status sword0.jpg sword1.jpg sword2.jpg \
-											 sword3.jpg
+EXTRA_DIST = prev_status sword0.jpg sword1.jpg sword2.jpg sword3.jpg log.txt
 
-EXTRA_DIST = ${dataetcnarsil_DATA}
+@INSTALL_LOG_TXT_TRUE@NARSIL_LOG = log.txt
+
+dataetcnarsil_DATA = prev_status sword0.jpg sword1.jpg sword2.jpg sword3.jpg \
+										 ${NARSIL_LOG}
+
 subdir = data
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
