@@ -99,7 +99,6 @@ void EvolveSolution(struct SolutionStruct *s,
 void Pointing(){
   int new_index; 
   double roll, gy2, gy3, el_rad;
-  double w1, w2;
   static double gy_roll_amp = 0.0;
 
   static struct SolutionStruct EncEl = {0.0, 360.0*360.0,
@@ -107,8 +106,8 @@ void Pointing(){
   new_index = INC_INDEX(point_index);
 
   /** Set the official Lat and Long: for now use SIP COM1... **/
-  PointingData[new_index].lat = SIPData.GPSpos[0].lat;
-  PointingData[new_index].lon = SIPData.GPSpos[0].lon;
+  PointingData[new_index].lat = SIPData.GPSpos.lat;
+  PointingData[new_index].lon = SIPData.GPSpos.lon;
 
   /** set time related things **/
   PointingData[new_index].mcp_frame = ACSData.mcp_frame;

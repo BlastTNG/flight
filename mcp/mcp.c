@@ -162,8 +162,8 @@ double MagRead(unsigned short *Rxframe) {
     now = gmtime(&t);
     year = 1900 + now->tm_year + now->tm_yday / 365.25;
 
-    GetMagModel(SIPData.GPSpos[0].alt / 1000.0, SIPData.GPSpos[0].lat,
-        SIPData.GPSpos[0].lon, year, &dec, &dip, &ti, &gv);
+    GetMagModel(SIPData.GPSpos.alt / 1000.0, SIPData.GPSpos.lat,
+        SIPData.GPSpos.lon, year, &dec, &dip, &ti, &gv);
 
     dec *= M_PI / 180.0;
     dip *= M_PI / 180.0;

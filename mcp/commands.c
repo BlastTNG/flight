@@ -42,6 +42,11 @@
 
 #define LOCK_OFFSET (-0.22)
 
+ /* Seconds since 0TMG jan 1 1970 */
+#define SUN_JAN_6_1980 315964800L
+/* Seconds in a week */
+#define SEC_IN_WEEK  604800L
+
 struct SlowDLStruct SlowDLInfo[N_SLOWDL] = {
   {"t_dpm_3v", FORCEINT, 8, -1, -1, -1, -1, -1, -1},
   {"cpu_time", U_MASK,   8, -1, -1, -1, -1, -1, -1},
@@ -512,20 +517,20 @@ void MultiCommand (int command, unsigned short *dataq) {
   WritePrevStatus();
 }
 
-void GPSPosition (unsigned char *indata, int commnum) {
+void GPSPosition (unsigned char *indata) {
   /* Send new information to CommandData */
 
-  SIPData.GPSpos[commnum].lat = ParseGPS(indata);
-  SIPData.GPSpos[commnum].lon = ParseGPS(indata + 4);
-  SIPData.GPSpos[commnum].alt = ParseGPS(indata + 8);
-  SIPData.GPSstatus1[commnum] = *(indata + 12);
-  SIPData.GPSstatus2[commnum] = *(indata + 13);
+  SIPData.GPSpos.lat = ParseGPS(indata);
+  SIPData.GPSpos.lon = ParseGPS(indata + 4);
+  SIPData.GPSpos.alt = ParseGPS(indata + 8);
+  SIPData.GPSstatus1 = *(indata + 12);
+  SIPData.GPSstatus2 = *(indata + 13);
 
   WritePrevStatus();
 }
 
 
-void GPSTime (unsigned char *indata, int commnum) {
+void GPSTime (unsigned char *indata) {
   float GPStime, offset;
   int CPUtime, GPSweek;
 
@@ -536,13 +541,14 @@ void GPSTime (unsigned char *indata, int commnum) {
   offset = ParseGPS(indata + 6);
   CPUtime = ParseGPS(indata + 10);
 
-  SIPData.GPStime[commnum].UTC = (int)(604800 * GPSweek + GPStime - offset);
-  SIPData.GPStime[commnum].CPU = CPUtime;
+  SIPData.GPStime.UTC = (int)(SEC_IN_WEEK * (GPSweek+1024) + GPStime - offset) +
+				 SUN_JAN_6_1980;
+  SIPData.GPStime.CPU = CPUtime;
 
   WritePrevStatus();
 }
 
-void MKSAltitude (unsigned char *indata, int commnum) {
+void MKSAltitude (unsigned char *indata) {
   float hi, med, lo;
   float z_hi, z_med, z_lo;
 
@@ -554,23 +560,23 @@ void MKSAltitude (unsigned char *indata, int commnum) {
   lo = (*(indata + 5) << 8) + *(indata + 4);
 
   /* Calculate pressure */
-  z_hi = log(SIPData.MKScal[commnum].m_hi * hi + SIPData.MKScal[commnum].b_hi);  
-  z_med = log(SIPData.MKScal[commnum].m_med * med +
-      SIPData.MKScal[commnum].b_med);
-  z_lo = log(SIPData.MKScal[commnum].m_lo * lo + SIPData.MKScal[commnum].b_lo);
+  z_hi = log(SIPData.MKScal.m_hi * hi + SIPData.MKScal.b_hi);  
+  z_med = log(SIPData.MKScal.m_med * med +
+      SIPData.MKScal.b_med);
+  z_lo = log(SIPData.MKScal.m_lo * lo + SIPData.MKScal.b_lo);
 
   /* Use the MKS algorithm to calculate altitude (ft) */
-  SIPData.MKSalt[commnum].hi = 156776.89 - 25410.089 * z_hi
+  SIPData.MKSalt.hi = 156776.89 - 25410.089 * z_hi
     + 462.44626 * pow(z_hi, 2)
     + 130.61746 * pow(z_hi, 3)
     - 20.0116288 * pow(z_hi, 4);
 
-  SIPData.MKSalt[commnum].med = 156776.89 - 25410.089 * z_med
+  SIPData.MKSalt.med = 156776.89 - 25410.089 * z_med
     + 462.44626 * pow(z_med, 2)
     + 130.61746 * pow(z_med, 3)
     - 20.0116288 * pow(z_med, 4);
 
-  SIPData.MKSalt[commnum].lo = 156776.89 - 25410.089 * z_lo
+  SIPData.MKSalt.lo = 156776.89 - 25410.089 * z_lo
     + 462.44626 * pow(z_lo, 2)
     + 130.61746 * pow(z_lo, 3)
     - 20.0116288 * pow(z_lo, 4);
@@ -899,8 +905,7 @@ void WatchPortC1 () {
           bytecount = 0;
           readstage = 0;
           if (buf[0] == 0x03) {
-            GPSPosition((unsigned char *) indata, 0);
-            //printf(" @1 \n");
+            GPSPosition((unsigned char *) indata);
           } else {
             printf(" error in SIP GPS reading \n");
           }
@@ -916,8 +921,7 @@ void WatchPortC1 () {
           bytecount = 0;
           readstage = 0;
           if (buf[0] == 0x03) {
-            GPSTime((unsigned char *) indata, 0);
-            //printf(" @ \n");
+            GPSTime((unsigned char *) indata);
           } else {
             printf(" error in SIP TIME reading \n");
           }
@@ -932,7 +936,7 @@ void WatchPortC1 () {
           bytecount = 0;
           readstage = 0;
           if (buf[0] == 0x03) {
-            MKSAltitude((unsigned char *) indata, 0);
+            MKSAltitude((unsigned char *) indata);
             //printf(" @ \n");
           } else {
             printf(" error in MKS altitude reading\n");
@@ -1105,8 +1109,7 @@ void WatchPortC2 () {
           bytecount = 0;
           readstage = 0;
           if (buf[0] == 0x03) {
-            GPSPosition((unsigned char *) indata, 0);
-            //printf(" @1 \n");
+            GPSPosition((unsigned char *) indata);
           } else {
             printf(" error in SIP GPS reading \n");
           }
@@ -1122,8 +1125,7 @@ void WatchPortC2 () {
           bytecount = 0;
           readstage = 0;
           if (buf[0] == 0x03) {
-            GPSTime((unsigned char *) indata, 0);
-            //printf(" @ \n");
+            GPSTime((unsigned char *) indata);
           } else {
             printf(" error in SIP TIME reading \n");
           }
@@ -1138,8 +1140,7 @@ void WatchPortC2 () {
           bytecount = 0;
           readstage = 0;
           if (buf[0] == 0x03) {
-            MKSAltitude((unsigned char *) indata, 0);
-            //printf(" @ \n");
+            MKSAltitude((unsigned char *) indata);
           } else {
             printf(" error in MKS altitude reading\n");
           }
@@ -1232,19 +1233,19 @@ void InitCommandData() {
   CommandData.use_vsc = 0;
   CommandData.use_mag = 1;
 
-  SIPData.MKScal[0].m_hi = 0.01;
-  SIPData.MKScal[0].m_med = 0.1;
-  SIPData.MKScal[0].m_lo = 1;
-  SIPData.MKScal[0].b_hi = 0;
-  SIPData.MKScal[0].b_med = 0;
-  SIPData.MKScal[0].b_lo = 0;
+  SIPData.MKScal.m_hi = 0.01;
+  SIPData.MKScal.m_med = 0.1;
+  SIPData.MKScal.m_lo = 1;
+  SIPData.MKScal.b_hi = 0;
+  SIPData.MKScal.b_med = 0;
+  SIPData.MKScal.b_lo = 0;
 
-  SIPData.MKScal[1].m_hi = 0.01;
-  SIPData.MKScal[1].m_med = 0.1;
-  SIPData.MKScal[1].m_lo = 1;
-  SIPData.MKScal[1].b_hi = 0;
-  SIPData.MKScal[1].b_med = 0;
-  SIPData.MKScal[1].b_lo = 0;
+  SIPData.MKScal.m_hi = 0.01;
+  SIPData.MKScal.m_med = 0.1;
+  SIPData.MKScal.m_lo = 1;
+  SIPData.MKScal.b_hi = 0;
+  SIPData.MKScal.b_med = 0;
+  SIPData.MKScal.b_lo = 0;
 
   CommandData.point_mode.az_mode = POINT_VEL;
   CommandData.point_mode.el_mode = POINT_VEL;

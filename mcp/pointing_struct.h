@@ -71,7 +71,7 @@ struct SunSensorDataStruct {
 struct GPSposStruct {
   double lat;   // probably degrees
   double lon;   // probably degrees
-  int alt;
+  double alt;
 };
 
 struct MKSaltStruct {
@@ -91,12 +91,12 @@ struct MKScalStruct {
 };
 
 struct SIPDataStruct {
-  struct GPSposStruct GPSpos[2];
-  struct TimeStruct GPStime[2];
-  struct MKSaltStruct MKSalt[2];
-  char GPSstatus1[2];
-  char GPSstatus2[2];
-  struct MKScalStruct MKScal[2];
+  struct GPSposStruct GPSpos;
+  struct TimeStruct GPStime;
+  struct MKSaltStruct MKSalt;
+  char GPSstatus1;
+  char GPSstatus2;
+  struct MKScalStruct MKScal;
 };
 
 /**********************************************/

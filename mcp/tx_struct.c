@@ -220,9 +220,6 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
   {"gyro1",       'r',  1, 26,  0.00091506980885, -25794.0*0.00091506980, 'u'},
   {"raw_gy1",     'r',  1, 27,  0.00091506980885, -25800.0*0.00091506980, 'u'},
 
-  {"temp1",       'r',  1, 62,               1.0,                    0.0, 'u'},
-  {"temp2",       'r',  1, 63,               1.0,                    0.0, 'u'},
-
   {"piv_enc",     'r',  1, 59,      360.0/8192.0,                    0.0, 'u'},
   {"reac_enc",    'r',  1, 60,      360.0/4000.0,                    0.0, 'u'},
   {"pwm_el",      'r',  1, 51,               1.0,                -4000.0, 'u'},
@@ -244,6 +241,7 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
 #endif
 
   // Read Requests: for signalling the das to copy data to the BB memory
+  // Used for low/high word read synchronisation
   /* !!! WARNING!  MCP assumes these appear sequentially in the frame !!! */
   {"readd3",      'w',  3, 40,               1.0,                    0.0, 'u'},
   {"readd4",      'w',  4, 40,               1.0,                    0.0, 'u'},
@@ -259,9 +257,6 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
   {"readd14",     'w', 14, 40,               1.0,                    0.0, 'u'},
   {"readd15",     'w', 15, 40,               1.0,                    0.0, 'u'},
   {"readd16",     'w', 16, 40,               1.0,                    0.0, 'u'},
-
-  {"n13c40",      'r', 13, 40,               1.0,                    0.0, 'u'},
-  {"n13c41",      'r', 13, 41,               1.0,                    0.0, 'u'},
 
   /* Read from DAS4 -- bias controller and DPM/inner frame monitoring */
   {"biasin",      'r',  4, 50,               1.0,                    0.0, 'u'},
