@@ -30,13 +30,13 @@ int ISCInit(client_frame* client_data)
 
   sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (sock == -1) {
-    fprintf(stderr, "ISC: socket creation failed.\n");
+    perror("ISC socket()");
     return -1;
   }
 
   n = 1;
   if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &n, sizeof(n)) != 0) {
-    fprintf(stderr, "ISC: setsockopt failed.\n");
+    perror("ISC setsockopt()");
     return -1;
   }
 
@@ -47,14 +47,16 @@ int ISCInit(client_frame* client_data)
   if ((n = connect(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)))
       < 0) {
     perror("ISC connect()");
-
     return -1;
   }
 
   /* Ask for defaults and start free run */
   client_data->command = freerun;
   n = send(sock, client_data, sizeof(client_frame), 0);
-  if (n < sizeof(client_frame)) {
+  if (n == -1) {
+    perror("ISC send()");
+    return -1;
+  } else if (n < sizeof(client_frame)) {
     fprintf(stderr, "ISC: Expected %i bytes, but sent %i bytes.\n",
         sizeof(client_frame), n);
     return -1;
@@ -64,6 +66,7 @@ int ISCInit(client_frame* client_data)
   n = recv(sock, &ISCData[iscdata_index], sizeof(server_frame), 0);
   if (n == -1) {
     perror("ISC recv()");
+    return -1;
   } else if (n < sizeof(server_frame)) {
     fprintf(stderr, "ISC: Expected %i but received %i bytes.\n",
         sizeof(server_frame), n);
