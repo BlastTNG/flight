@@ -459,6 +459,8 @@ struct ChannelStruct SlowChannels[] = {
   {"t_gy2_set",    'w', LOOP4, 36,    (100.0/32768.0),             0.0, 'u'},
   {"gy2_h_age",    'w', LOOP4, 37,                1.0,             0.0, 'u'},
   {"gy2_h_hist",   'w', LOOP4, 38,    (100.0/32768.0),             0.0, 'u'},
+  {"incool_state", 'w', LOOP4, 39,                1.0,             0.0, 's'},
+  {"outcool_state",'w', LOOP4, 40,                1.0,             0.0, 's'},
 
   {"sync1",        'w', DLOOP, 56,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
