@@ -825,7 +825,7 @@ void MainForm::WriteLog(char *args[]) {
   QString elog_command = QString(
     "elog -h " ELOG_HOST " -p 8080 -l blast-narsil "
     "-u narsil submmblast "
-    "-a User=%1 -a Source=narsil -a Category=%2 -m %3")
+    "-a User=%1 -a Source=narsil -a Category=%2 -m %3 > /dev/null")
                          .arg(QString((getpwuid(getuid()))->pw_name))
                          .arg(Group)
                          .arg(logfilename);

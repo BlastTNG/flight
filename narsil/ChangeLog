@@ -1,3 +1,6 @@
+2004-02-12:
+	* narsil.cpp (MainForm::WriteLog): Stop elog from spamming the console
+
 2005-02-08 (1.8.6):
 	* narsil.cpp (MainForm::WriteErr): Add text for timeout error (13) from
 	blastcmd
