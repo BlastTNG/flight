@@ -536,7 +536,7 @@ void ChargeController(void) {
   if (CommandData.apcu_auto) {
     T = I2T_M*slow_data[tAcsBatAddr->index][tAcsBatAddr->channel] + I2T_B;
     if (T<-60) T = 50; // if disconnected, assume hot.
-    V = 30.18 - 0.0436*T - exp((T-35.0)*0.1) + CommandData.apcu_trim;
+    V = 30.18 - 0.0436*T - exp((T-29.0)*0.25) + CommandData.apcu_trim;
     apcu_control = (V - 28.0209)/0.02402664;
   } else {
     apcu_control = (CommandData.apcu_reg - 28.0209)/0.02402664;
@@ -545,7 +545,7 @@ void ChargeController(void) {
   if (CommandData.dpcu_auto) {
     T = I2T_M*slow_data[tDasBatAddr->index][tDasBatAddr->channel] + I2T_B;
     if (T<-60) T = 50; // if disconnected, assume hot.
-    V = 30.18 - 0.0436*T - exp((T-35.0)*0.1) + CommandData.dpcu_trim;
+    V = 30.18 - 0.0436*T - exp((T-29.0)*0.25) + CommandData.dpcu_trim;
     dpcu_control = (V - 28.0209)/0.02402664;
   } else {
     dpcu_control = (CommandData.dpcu_reg - 28.0209)/0.02402664;

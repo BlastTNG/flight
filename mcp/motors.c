@@ -710,7 +710,7 @@ void DoNewCapMode() {
   double next_left, next_right, az_distance;
   double az, az2, el, el1, el2;
   double daz_dt, del_dt;
-  double lst;
+  double lst, lat;
   double v_az, t=1;
   int i_point;
   int new_step = 0;
@@ -721,6 +721,7 @@ void DoNewCapMode() {
   
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
+  lat = PointingData[i_point].lat;
   az = PointingData[i_point].az;
   el = PointingData[i_point].el;
 
@@ -728,10 +729,10 @@ void DoNewCapMode() {
 
   /* get raster center and sky drift speed */
   radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
-      lst, PointingData[i_point].lat,
+      lst, lat,
       &caz, &cel);
   radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
-      lst + 1.0, PointingData[i_point].lat,
+      lst + 1.0, lat,
       &az2, &el2);
   daz_dt = drem(az2 - caz, 360.0);
   del_dt = el2 - cel;
@@ -870,6 +871,141 @@ void DoNewCapMode() {
 
 }
 
+
+void DoNewBoxMode() {
+  double caz, cel, w, h; 
+  double bottom, top, left, right;
+  double az, az2, el, el2;
+  double daz_dt, del_dt;
+  double lst, lat;
+  double v_az, t=1;
+  int i_point;
+  int new_step = 0;
+
+  static double last_X=0, last_Y=0, last_w=0, last_h = 0;
+  static double az_dir = 0, el_dir = 1, v_el = 0;
+  static double targ_el=0.0;
+  
+  i_point = GETREADINDEX(point_index);
+  lst = PointingData[i_point].lst;
+  lat = PointingData[i_point].lat;
+  az = PointingData[i_point].az;
+  el = PointingData[i_point].el;
+
+  v_az = fabs(CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0));
+
+  /* get raster center and sky drift speed */
+  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+      lst, lat,
+      &caz, &cel);
+  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+      lst + 1.0, lat,
+      &az2, &el2);
+  daz_dt = drem(az2 - caz, 360.0);
+  del_dt = el2 - cel;
+
+  SetSafeDAz(az, &caz); 
+
+  w = CommandData.pointing_mode.w;
+  h = CommandData.pointing_mode.h;
+  bottom = cel - h*0.5;
+  top = cel + h*0.5;
+  left = caz - w*0.5;
+  right = caz + w*0.5;
+  if (top > MAX_EL)
+    top = MAX_EL;
+  if (bottom < MIN_EL)
+    bottom = MIN_EL;
+
+  
+  // FIXME: reboot proofing...
+  
+  /* If a new command, reset to bottom row */
+  if ((CommandData.pointing_mode.X != last_X) ||
+      (CommandData.pointing_mode.Y != last_Y) ||
+      (CommandData.pointing_mode.w != last_w) ||
+      (CommandData.pointing_mode.h != last_h)) {
+    if ( (fabs(az - (caz)) < 0.1) &&
+	 (fabs(el - (bottom)) < 0.01)) {
+      last_X = CommandData.pointing_mode.X;
+      last_Y = CommandData.pointing_mode.Y;
+      last_w = CommandData.pointing_mode.w;
+      last_h = CommandData.pointing_mode.h;
+    } else {
+      axes_mode.az_mode = AXIS_POSITION;
+      axes_mode.az_dest = left;
+      axes_mode.az_vel = 0.0;
+      axes_mode.el_mode = AXIS_POSITION;
+      axes_mode.el_dest = bottom;
+      axes_mode.el_vel = 0.0;
+      v_el = 0.0;
+      targ_el = -h*0.5;
+      el_dir = 1;
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+      return;
+    }
+  }
+
+  /* set az v */
+  v_az = CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0);
+  SetAzScanMode(az, left, right, v_az, daz_dt);
+
+  /** set El V **/
+  new_step = 0;
+  if (az<left) {
+    if (az_dir < 0) {
+      t = w/v_az + 2.0*v_az/(AZ_ACCEL * 100.16);
+      new_step = 1;
+    }
+    az_dir = 1;
+  } else if (az>right) {
+    if (az_dir > 0) {
+      t = w/v_az + 2.0*v_az/(AZ_ACCEL * 100.16);
+      new_step = 1;
+    }
+    az_dir = -1;
+  }
+
+  if (new_step) {
+    // set v for this step
+    v_el = (targ_el - (el-cel))/t;
+    // set targ_el for the next step
+    targ_el += CommandData.pointing_mode.del*el_dir;
+    if (targ_el>=h*0.5) {
+      targ_el = h*0.5;
+      el_dir=-1;
+    } else if (targ_el<=-h*0.5) {
+      targ_el = -h*0.5;
+      el_dir = 1;
+    }
+  }
+  
+  /* check for out of range in el */
+  if (el > top + EL_BORDER) {
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = caz;
+    axes_mode.az_vel = 0.0;
+    axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_vel = 0.0;
+    axes_mode.el_dest = top;
+    el_dir = -1;
+    return;
+  } else if (el < bottom - EL_BORDER) {
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = caz;
+    axes_mode.az_vel = 0.0;
+    axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_vel = 0.0;
+    axes_mode.el_dest = bottom;
+    el_dir = 1;
+    return;
+  }
+
+  axes_mode.el_mode = AXIS_VEL;
+  axes_mode.el_vel = v_el + del_dt;
+
+}
+
 /****************************************************************** 
  *                                                                * 
  * Update Axis Modes: Set axes_mode based on                      * 
@@ -904,7 +1040,8 @@ void UpdateAxesMode() {
       DoVBoxMode();
       break;
     case P_BOX:
-      DoBoxMode();
+      //DoBoxMode();
+      DoNewBoxMode();
       break;
     case P_CAP:
       DoNewCapMode();
