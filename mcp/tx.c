@@ -671,21 +671,27 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
   } else if (hold > 0) {  /* hold data with write high */
     biasout2 |= 0x0f;
     hold--;
-  } else if (ch==0) {
-    biasout2 = ((CommandData.Bias.bias1 << 4) & 0xf0) | 0x03;
-    lastBias1 = CommandData.Bias.bias1;
-    hold = 2 * FAST_PER_SLOW + 4;
-    ch++;
-  } else if (ch==1) {
-    biasout2 = ((CommandData.Bias.bias2 << 4) & 0xf0) | 0x05;
-    lastBias2 = CommandData.Bias.bias2;
-    hold = 2 * FAST_PER_SLOW + 4;
-    ch++;
-  } else if (ch==2) {
-    biasout2 = ((CommandData.Bias.bias3 << 4) & 0xf0) | 0x06;
-    lastBias3 = CommandData.Bias.bias3;
-    hold = 2 * FAST_PER_SLOW + 4;
-    ch = 0;
+  } else if (ch == 0) {
+    if (lastBias1 != CommandData.Bias.bias1) {
+      biasout2 = ((CommandData.Bias.bias1 << 4) & 0xf0) | 0x03;
+      lastBias1 = CommandData.Bias.bias1;
+      hold = 2 * FAST_PER_SLOW + 4;
+      ch++;
+    }
+  } else if (ch == 1) {
+    if (lastBias2 != CommandData.Bias.bias2) {
+      biasout2 = ((CommandData.Bias.bias2 << 4) & 0xf0) | 0x05;
+      lastBias2 = CommandData.Bias.bias2;
+      hold = 2 * FAST_PER_SLOW + 4;
+      ch++;
+    }
+  } else if (ch == 2) {
+    if (lastBias3 != CommandData.Bias.bias3) {
+      biasout2 = ((CommandData.Bias.bias3 << 4) & 0xf0) | 0x06;
+      lastBias3 = CommandData.Bias.bias3;
+      hold = 2 * FAST_PER_SLOW + 4;
+      ch = 0;
+    }
   }
 
   /******************** set the outputs *********************/

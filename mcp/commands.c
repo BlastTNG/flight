@@ -485,13 +485,13 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.point_mode.az_mode = POINT_VEL;
     CommandData.point_mode.az_vel = rvalues[0];
   } else if (command == MIndex("jfet_ht"))
-    CommandData.Cryo.JFETHeat = 2047 - rvalues[0] * 2047./100.;
+    CommandData.Cryo.JFETHeat = rvalues[0] * 2047./100.;
   else if (command == MIndex("hs_heat"))
-    CommandData.Cryo.heatSwitch = 2047 - rvalues[0] * 2047./100.;
+    CommandData.Cryo.heatSwitch = rvalues[0] * 2047./100.;
   else if (command == MIndex("he3_ht"))
-    CommandData.Cryo.heliumThree = 2047 - rvalues[0] * 2047./100.;
+    CommandData.Cryo.heliumThree = rvalues[0] * 2047./100.;
   else if (command == MIndex("cryopwm"))
-    CommandData.Cryo.sparePwm = 2047 - rvalues[0] * 2047./100.;
+    CommandData.Cryo.sparePwm = rvalues[0] * 2047./100.;
   else if (command == MIndex("b_levl1"))    /* Set bias 1 */
     CommandData.Bias.bias1 = ivalues[0];
   else if (command == MIndex("b_levl2"))    /* Set bias 1 */
@@ -1189,10 +1189,10 @@ void InitCommandData() {
   CommandData.pumps.outframe_cool1_off = 0;
   CommandData.pumps.outframe_cool2_on = 0;
   CommandData.pumps.outframe_cool2_off = 0;
-  CommandData.pumps.pwm1 = 2047;
-  CommandData.pumps.pwm2 = 2047;
-  CommandData.pumps.pwm3 = 2047;
-  CommandData.pumps.pwm4 = 2047;
+  CommandData.pumps.pwm1 = 0;
+  CommandData.pumps.pwm2 = 0;
+  CommandData.pumps.pwm3 = 0;
+  CommandData.pumps.pwm4 = 0;
 
 #ifndef BOLOTEST
   /** return if we succsesfully read the previous status **/
