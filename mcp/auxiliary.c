@@ -76,6 +76,9 @@
 #define GY_TEMP_STEP 1 /* setpoint step - deg C */
 #define GY_HEAT_TC 30000 /* integral/age characteristic time in 100Hz Frames */
 
+/* zero point (in counts of i_el) */
+#define I_EL_ZERO 32638
+
 struct ISCPulseType isc_pulses[2] = {
   {-1, 0, 0, 0, 0, 0, 0, 0}, {-1, 0, 0, 0, 0, 0, 0, 0}
 };
@@ -353,6 +356,7 @@ int Balance(int ifpmBits) {
   int pumppwm;
   int error;
   static int pump_is_on = -1;
+  static double smoothed_i = I_EL_ZERO;
 
   static int firsttime = 1;
   if (firsttime) {
@@ -361,15 +365,23 @@ int Balance(int ifpmBits) {
     balPwm1Addr = GetNiosAddr("balpump_lev");
   }
 
-  if (CommandData.pumps.bal_veto == -1)
-    pump_is_on = -1;
-
   /* don't turn on pump if we're reading very small numbers */
   if (slow_data[iElAddr->index][iElAddr->channel] < 8000)
     error = 0;
-  else
-    error = slow_data[iElAddr->index][iElAddr->channel]
-      - 32758 - CommandData.pumps.bal_target;
+  else {
+    smoothed_i = slow_data[iElAddr->index][iElAddr->channel] / 500. +
+      smoothed_i * (499. / 500.);
+    bprintf(info, "smoothed i: %5.3f\n", smoothed_i);
+    error = smoothed_i - I_EL_ZERO - CommandData.pumps.bal_target;
+  }
+
+  /* Don't do anything else if we're vetoted */
+  if (CommandData.pumps.bal_veto) {
+    if (CommandData.pumps.bal_veto == -1)
+      pump_is_on = -1;
+
+    return ifpmBits;
+  }
 
   if (error > 0)
     ifpmBits &= (0xFF - BAL1_REV);  /* clear reverse bit */
@@ -780,14 +792,16 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   ofpmBits |=
     GetLockBits(slow_data[lockBitsAddr->index][lockBitsAddr->channel]);
 
+  /* Run Balance System, Maybe */
+  ifpmBits = Balance(ifpmBits);
+
   if (CommandData.pumps.bal_veto) {
     /* if we're in timeout mode, decrement the timer */
     if (CommandData.pumps.bal_veto != -1)
       CommandData.pumps.bal_veto--;
 
     WriteData(balpumpLevAddr, CommandData.pumps.pwm1 & 0x7ff, NIOS_QUEUE);
-  } else
-    ifpmBits = Balance(ifpmBits);
+  }
 
   WriteData(lokmotPinAddr, CommandData.pin_is_in, NIOS_QUEUE);
   WriteData(ofpmBitsAddr, ofpmBits, NIOS_QUEUE);

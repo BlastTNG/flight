@@ -658,7 +658,7 @@ void Pointing(){
   };
   static struct ElSolutionStruct ClinEl = {0.0, // starting angle
     360.0 * 360.0, // starting varience
-    1.0 / M2DV(6), //sample weight
+    1.0 / M2DV(60), //sample weight
     M2DV(60), // systemamatic varience
     0.0, // trim 
     0.0, // last input
