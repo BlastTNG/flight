@@ -566,7 +566,10 @@ int AmISam(void) {
 
 /* Signal handler called when we get a hup, int or term */
 void CloseBBC(int signo) {
-  bprintf(err, "Caught signal %i, closing BBC and Bi0", signo);
+  bprintf(err, "Caught signal %i; stopping NIOS", signo);
+  RawNiosWrite(0, BBC_ENDWORD, NIOS_FLUSH);
+  RawNiosWrite(BBCPCI_MAX_FRAME_SIZE, BBC_ENDWORD, NIOS_FLUSH);
+  bprintf(err, "Closing BBC and Bi0", signo);
   if (bi0_fp >= 0)
     close(bi0_fp);
   if (bbc_fp >= 0)
