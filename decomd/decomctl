@@ -121,12 +121,25 @@ sub Status {
     } else {
       print "UNKOWN ($status)\n";
     }
-    print "Polarity     : ", (($polarity) ? "Normal" : "Inverted"), "\n";
-    print "Decom Unlocks: $du\n";
-    print "Loss Rate    : ", (100 * $fs_bad), "\n";
-    print "Data Quality : ", (100 - 100 * $dq_bad), "\n";
-    printf "Disk Free    : %6.2f GB\n", ($disk_free / 1024 / 1024 / 1024);
-    print "Filename     : $name\n";
+    print "Polarity      : ", (($polarity) ? "Normal" : "Inverted"), "\n";
+    print "Decom Unlocks : $du\n";
+    print "Loss Rate     : ", (100 * $fs_bad), "\n";
+    print "Data Quality  : ", (100 - 100 * $dq_bad), "\n";
+    printf "Disk Free     : %6.2f GB\n", ($disk_free / 1024 / 1024 / 1024);
+    print "Filename      : $name\n";
+    my ($bof) = $name =~ /(^[0-9]*)\.y/;
+    my $delta = time() - $bof;
+    my $min = int($delta / 60);
+    $delta -= $min * 60;
+    my $hour = int($min / 60);
+    $min -= $hour * 60;
+    my $day = int($hour / 24);
+    $hour -= $hour * 24;
+    print "Time since BOF: ";
+    print $day, "d" if ($day > 0);
+    print $hour, "h" if ($day > 0 || $hour > 0);
+    print $min, "m" if ($day > 0 || $hour > 0 || $min > 0);
+    print $delta, "s\n";
     close SOCK;
   } else {
     die "decomd doesn't appear to be running (/var/run/decomd.pid doesn't exist).\n";
