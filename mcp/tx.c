@@ -550,12 +550,13 @@ void StoreData(int index)
 
   /********** Sun Sensor Data **********/
   WriteData(ssPrinAddr, SunSensorData[i_ss].prin);
-  WriteData(ssAzCenterAddr, SunSensorData[i_ss].az_center);
-  WriteData(ssElCenterAddr, SunSensorData[i_ss].el_center);
-  WriteData(ssAzSnrAddr, SunSensorData[i_ss].az_snr);
-  WriteData(ssElSnrAddr, SunSensorData[i_ss].el_snr);
-  WriteData(ssPcTempAddr, SunSensorData[i_ss].pc_temp);
-  WriteData(ssCpuTempAddr, SunSensorData[i_ss].cpu_temp);
+  WriteData(ssAzCenterAddr, SunSensorData[i_ss].az_center * 16);
+  printf("%f\n", SunSensorData[i_ss].az_center);
+  WriteData(ssElCenterAddr, SunSensorData[i_ss].el_center * 16);
+  WriteData(ssAzSnrAddr, SunSensorData[i_ss].az_snr * 1000);
+  WriteData(ssElSnrAddr, SunSensorData[i_ss].el_snr * 1000);
+  WriteData(ssPcTempAddr, SunSensorData[i_ss].pc_temp * 100);
+  WriteData(ssCpuTempAddr, SunSensorData[i_ss].cpu_temp * 100);
   /********** SIP GPS Data **********/
   WriteData(sipLatAddr, (int)(SIPData.GPSpos.lat*DEG2I));
   WriteData(sipLonAddr, (int)(SIPData.GPSpos.lon*DEG2I));

@@ -13,21 +13,10 @@
 #include "mcp.h"
 
 #define ARIEN "192.168.62.7"
-#define ARIEN_PORT 8645
+#define ARIEN_PORT 11235
 
 ss_packet_data SunSensorData[3];
 int ss_index = 0;
-
-extern int sigPipeRaised;
-
-/* The SIG is raised in the SunSensor thread, which doesn't have to do anything
- * else when it gets the signal but die (and tell someone that it did)... */
-void SigPipe(int signal) {
-  sigPipeRaised = 1;
-
-  /* exit so mcp can respawn the thread */
-  mputs(MCP_TFATAL, "SIGPIPE raised.\n");
-}
 
 void SunSensor(void) {
   int sock = -1, n;
@@ -42,10 +31,6 @@ void SunSensor(void) {
 
 
   mputs(MCP_STARTUP, "SunSensor startup\n");
-
-  /* we don't want mcp to die of a broken pipe, so catch the
-   * SIGPIPEs which are raised when the ssc drops the connection */
-  signal(SIGPIPE, SigPipe);
 
   while (1) {
     if (sock != -1)
@@ -73,7 +58,7 @@ void SunSensor(void) {
     };
 
     mputs(MCP_INFO, "Connected to Arien\n");
-    sigPipeRaised = n = 0;
+    n = 0;
 
     while (n != -1) {
       usleep(10000);
@@ -97,11 +82,15 @@ void SunSensor(void) {
 
       if (FD_ISSET(sock, &fdr)) {
         n = recv(sock, &Rx_Data, sizeof(Rx_Data), MSG_DONTWAIT);
+        printf("Rx: %f\n", Rx_Data.az_center);
         if (n == sizeof(Rx_Data)) {
           SunSensorData[ss_index] = Rx_Data;
           ss_index = INC_INDEX(ss_index);
         } else if (n == -1) {
           merror(MCP_ERROR, "SunSensor recv()");
+        } else if (n == 0) {
+          mprintf(MCP_ERROR, "Connection to Arien closed");
+          n = -1;
         } else {
           mputs(MCP_ERROR, "Didn't receive all data from Sun Sensor.\n");
         }

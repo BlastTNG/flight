@@ -42,7 +42,6 @@ int frames_in = 0;
 
 struct ACSDataStruct ACSData;
 
-int sigPipeRaised = 0;
 int RxFrameIndex;
 
 short int SamIAm;
@@ -742,12 +741,6 @@ int main(int argc, char *argv[]) {
 #endif
       pushDiskFrame(RxFrame);
       zero(RxFrame);
-    }
-
-    if (sigPipeRaised) {
-      mputs(MCP_ERROR, "SIGPIPE caught, recreating sunsensor thread.\n");
-      pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
-      sigPipeRaised = 0;
     }
   }
   return(0);
