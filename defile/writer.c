@@ -1,19 +1,19 @@
 /* defile: converts BLAST-type framefiles into dirfiles
  *
  * This software is copyright (C) 2004 University of Toronto
- * 
+ *
  * This file is part of defile.
- * 
+ *
  * defile is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * defile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with defile; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -62,6 +62,7 @@ struct FieldType* normal_fast;
 struct FieldType* slow_fields[FAST_PER_SLOW];
 struct FieldType bolo_fields[DAS_CARDS][DAS_CHS];
 
+unsigned short* fast_frame[FAST_PER_SLOW];
 unsigned short* slow_data[FAST_PER_SLOW];
 int buf_overflow;
 int n_fast, bolo_i0;
@@ -107,7 +108,7 @@ int YesNo(const char* message, int dflt)
   for (;;) {
     fputs(gpb, stdout);
 
-    switch (fgetc(stdin)) { 
+    switch (fgetc(stdin)) {
       case 'y':
       case 'Y':
         ri.tty = 0;
@@ -166,7 +167,7 @@ int CheckWriteAllow(int mkdir_err)
   strcpy(gpb, rc.dirfile);
   strcat(gpb, "/format");
   if (stat(gpb, &stat_buf)) {
-    /* can't find a format file -- if we're trying to resume, give up here 
+    /* can't find a format file -- if we're trying to resume, give up here
      * otherwise ask for confirmation to overwrite the directory */
     if (rc.write_mode == 2)
       bprintf(fatal, "destination `%s' does not appear to be a "
@@ -395,8 +396,11 @@ void InitialiseDirFile(int reset, unsigned long offset)
 
   bprintf(info, "\nWriting to dirfile `%s'\n", rc.dirfile);
 
-  /*********************************** 
-   * create and fill the format file * 
+  for (i = 0; i < FAST_PER_SLOW; ++i)
+    fast_frame[i] = balloc(fatal, DiskFrameSize * sizeof(unsigned short));
+
+  /***********************************
+   * create and fill the format file *
    ***********************************/
   sprintf(gpb, "%s/format", rc.dirfile);
 
@@ -412,7 +416,7 @@ void InitialiseDirFile(int reset, unsigned long offset)
 
   /* FASTSAMP */
   sprintf(gpb, "%s/FASTSAMP%s", rc.dirfile, ext);
-  normal_fast[0].size = 2; 
+  normal_fast[0].size = 2;
 
   normal_fast[0].fp = OpenField(1, 2, gpb);
   normal_fast[0].i0 = 1;
@@ -528,7 +532,10 @@ void InitialiseDirFile(int reset, unsigned long offset)
  * Close open file descriptors and free allocated memory */
 void CleanUp(void)
 {
-  int j, i, is_bolo = 0; 
+  int j, i, is_bolo = 0;
+
+  for (i = 0; i < FAST_PER_SLOW; ++i)
+    bfree(fatal, fast_frame[i]);
 
   for(i = 0; i < slowsPerBi0Frame; i++)
     for(j = 0; j < FAST_PER_SLOW; j++) {
@@ -569,8 +576,8 @@ void CleanUp(void)
 /* individual buffers                                   */
 void PushFrame(unsigned short* frame)
 {
-  unsigned int i_in;
-  int i, j;
+  unsigned int i_in, i_out;
+  int i, j, k;
   int write_ok;
   static int i_count = 0;
   unsigned B0, B1;
@@ -580,42 +587,47 @@ void PushFrame(unsigned short* frame)
   while (!ri.dirfile_init) {
     usleep(10000);
   }
+
+  /*************/
+  /* slow data */
+  j = frame[3];
+  if (j < FAST_PER_SLOW)
+    for (i = 0; i < slowsPerBi0Frame; i++)
+      slow_data[j][i] = frame[slow_fields[j][i].i0];
+
+  /* fast data */
+  memcpy(fast_frame[i_count], frame, sizeof(unsigned short) * DiskFrameSize);
+
   /* do while loop blocks until sufficient buffers empty */
   do {
     write_ok = 1;
-    /*************/
-    /* slow data */
-    j = frame[3];
-    if (j < FAST_PER_SLOW)
-      for (i = 0; i < slowsPerBi0Frame; i++)
-        slow_data[j][i] = frame[slow_fields[j][i].i0];
-
     /* ****************************************************************** */
     /* First make sure there is enough space in ALL the buffers           */
     /* We need to do it first and all at once to maintain synchronization */
     /* We discard the full frame id there is no space                     */
     /* ****************************************************************** */
 
-    /************************************/   
+    /************************************/
     /* Check buffer space in slow field */
     /************************************/
     for (i = 0; write_ok && i < slowsPerBi0Frame; i++)
       for (j = 0; write_ok && j < FAST_PER_SLOW; j++) {
-        i_in = slow_fields[j][i].i_in;
-        if(++i_in >= MAXBUF)
-          i_in = 0;
+        i_in = (slow_fields[j][i].i_in + 1) % MAXBUF;
         if(i_in == slow_fields[j][i].i_out)
           write_ok = 0;
       }
 
-    /****************************************** 
-     * Check buffer space in normal fast data * 
+    /******************************************
+     * Check buffer space in normal fast data *
      *****************************************/
     for (j = 0; write_ok && j < n_fast; j++) {
+      i_out = normal_fast[j].i_out;
       i_in = normal_fast[j].i_in;
-      if (++i_in >= MAXBUF)
-        i_in = 0;
-      if(i_in == normal_fast[j].i_out)
+
+      if (i_out <= i_in)
+        i_out += MAXBUF;
+
+      if(i_in + FAST_PER_SLOW >= i_out)
         write_ok = 0;
     }
 
@@ -624,10 +636,13 @@ void PushFrame(unsigned short* frame)
      *******************************************/
     for (i = 0; write_ok && i < DAS_CARDS; i++)
       for (j = 0; write_ok && j < DAS_CHS; j += 2) {
+        i_out = bolo_fields[i][j].i_out;
         i_in = bolo_fields[i][j].i_in;
-        if (++i_in >= MAXBUF)
-          i_in = 0;
-        if(i_in == bolo_fields[i][j].i_out)
+
+        if (i_out <= i_in)
+          i_out += MAXBUF;
+
+        if(i_in + FAST_PER_SLOW >= i_out)
           write_ok = 0;
       }
 
@@ -654,42 +669,46 @@ void PushFrame(unsigned short* frame)
     }
     n_frames++;
 
-    /********************/
-    /* normal fast data */
-    /********************/
+    for (k = 0; k < FAST_PER_SLOW; ++k) {
+      /********************/
+      /* normal fast data */
+      /********************/
 
-    for (j = 0; j < n_fast; j++) {
-      i_in = normal_fast[j].i_in;
-      if (normal_fast[j].size == 2) {
-        ((unsigned*)normal_fast[j].b)[i_in] =
-          *((unsigned*)(frame + normal_fast[j].i0));      
-      } else {
-        ((unsigned short*)normal_fast[j].b)[i_in] =
-          ((unsigned short*)frame)[normal_fast[j].i0];      
-      }
-
-      if (++i_in >= MAXBUF)
-        i_in = 0;
-      normal_fast[j].i_in = i_in;
-    };
-
-    /********************/
-    /* fast bolo data   */
-    /********************/
-    for (i = 0; i < DAS_CARDS; i++) {
-      for (j = 0; j < DAS_CHS; j += 2) {
-        B0 = (unsigned)frame[boloIndex[i][j][0] + BoloBaseIndex] +
-          (((unsigned)frame[boloIndex[i][j][1] + BoloBaseIndex] & 0xff00) << 8);
-        B1 = frame[boloIndex[i][j + 1][0] + BoloBaseIndex] +
-          ((frame[boloIndex[i][j + 1][1] + BoloBaseIndex] & 0x00ff) << 16);
-
-        i_in = bolo_fields[i][j].i_in;
-        ((unsigned*)bolo_fields[i][j].b)[i_in] = B0;
-        ((unsigned*)bolo_fields[i][j + 1].b)[i_in] = B1;
+      for (j = 0; j < n_fast; j++) {
+        i_in = normal_fast[j].i_in;
+        if (normal_fast[j].size == 2) {
+          ((unsigned*)normal_fast[j].b)[i_in] =
+            *((unsigned*)(fast_frame[k] + normal_fast[j].i0));
+        } else {
+          ((unsigned short*)normal_fast[j].b)[i_in] =
+            fast_frame[k][normal_fast[j].i0];
+        }
 
         if (++i_in >= MAXBUF)
           i_in = 0;
-        bolo_fields[i][j].i_in = bolo_fields[i][j + 1].i_in = i_in;
+        normal_fast[j].i_in = i_in;
+      };
+
+      /********************/
+      /* fast bolo data   */
+      /********************/
+      for (i = 0; i < DAS_CARDS; i++) {
+        for (j = 0; j < DAS_CHS; j += 2) {
+          B0 = (unsigned)fast_frame[k][boloIndex[i][j][0] + BoloBaseIndex] +
+            (((unsigned)fast_frame[k][boloIndex[i][j][1] + BoloBaseIndex] &
+              0xff00) << 8);
+          B1 = fast_frame[k][boloIndex[i][j + 1][0] + BoloBaseIndex] +
+            ((fast_frame[k][boloIndex[i][j + 1][1] + BoloBaseIndex] & 0x00ff)
+             << 16);
+
+          i_in = bolo_fields[i][j].i_in;
+          ((unsigned*)bolo_fields[i][j].b)[i_in] = B0;
+          ((unsigned*)bolo_fields[i][j + 1].b)[i_in] = B1;
+
+          if (++i_in >= MAXBUF)
+            i_in = 0;
+          bolo_fields[i][j].i_in = bolo_fields[i][j + 1].i_in = i_in;
+        }
       }
     }
   }
@@ -758,15 +777,15 @@ void DirFileWriter(void)
 
           if ((SlowChList[i][j].type == 'U') || (SlowChList[i][j].type == 'I'))
             WriteField(slow_fields[j][i].fp, i_buf * sizeof(unsigned), ibuffer);
-          else 
+          else
             WriteField(slow_fields[j][i].fp, i_buf * sizeof(unsigned short),
                 buffer);
         }
         slow_fields[j][i].i_out = slow_fields[j][i].i_in;
       }
 
-    /********************** 
-     ** normal fast data ** 
+    /**********************
+     ** normal fast data **
      **********************/
 
     /* j = 0 (FASTSAMP) must be writen last if getdata is to return the proper
