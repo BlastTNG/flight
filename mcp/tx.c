@@ -212,6 +212,7 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   static int i_g_Iel = -1, j_g_Iel = -1;
   static int i_g_Proll = -1, j_g_Proll = -1;
   static int i_g_Paz = -1, j_g_Paz = -1;
+  static int i_g_Iaz = -1, j_g_Iaz = -1;
   static int i_g_pivot = -1, j_g_pivot = -1;
   static int i_set_reac = -1, j_set_reac = -1;
   
@@ -234,6 +235,7 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
     SlowChIndex("g_i_el", &i_g_Iel, &j_g_Iel);
     SlowChIndex("g_p_roll", &i_g_Proll, &j_g_Proll);
     SlowChIndex("g_p_az", &i_g_Paz, &j_g_Paz);
+    SlowChIndex("g_i_az", &i_g_Iaz, &j_g_Iaz);
     SlowChIndex("g_p_pivot", &i_g_pivot, &j_g_pivot);
     SlowChIndex("set_reac", &i_set_reac, &j_set_reac);
   }
@@ -291,7 +293,7 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   /* p term for az motor */
   WriteSlow(i_g_Paz, j_g_Paz, azGainP);
   /* I term for az motor */
-  WriteSlow(i_g_Paz, j_g_Paz, azGainI);
+  WriteSlow(i_g_Iaz, j_g_Iaz, azGainI);
   /* p term for pivot motor */
   WriteSlow(i_g_pivot, j_g_pivot, pivGainP);
   /* setpoint for reaction wheel */
