@@ -223,7 +223,7 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   int v_elev, v_az, elGainP, elGainI, rollGainP;
   int azGainP, azGainI, pivGainP;
   int i_point;
-  
+
   /******** Obtain correct indexes the first time here ***********/
   if (i_g_Pel == -1) {
     FastChIndex("el_vreq", &i_elVreq);
