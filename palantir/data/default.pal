@@ -380,30 +380,28 @@
 </BOX>
 
 <BOX caption="Diodes" row="1" col="5" rowspan="1">
-  <NUMBER caption="LHE" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_lhe" extrema="lhetemp"/></NUMBER>
-  <NUMBER caption="LHE Filter" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_lhe_filt" extrema="lhetemp"/></NUMBER>
-  <NUMBER caption="LN2" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_ln2" extrema="lhetemp"/></NUMBER>
   <NUMBER caption="LN2 Filter" textstyle="oddrow">
     <DATUM format="%.2f" src="T_ln2_filt" extrema="lhetemp"/></NUMBER>
+  <NUMBER caption="LN2" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_ln2" extrema="lhetemp"/></NUMBER>
+  <NUMBER caption="VCS Filter" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_vcs_filt" extrema="pottemp"/></NUMBER>
+  <NUMBER caption="VCS" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_vcs" extrema="pottemp"/></NUMBER>
+  <NUMBER caption="LHE Filter" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_lhe_filt" extrema="lhetemp"/></NUMBER>
+  <NUMBER caption="ColdPlate" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_cold_plate" extrema="pottemp"/></NUMBER>
+  <NUMBER caption="4He pot" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_he4pot_d" extrema="pottemp"/></NUMBER>
+  <NUMBER caption="Opt.Box Win" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_opt_box_w" extrema="pottemp"/></NUMBER>
+  <NUMBER caption="Optics Box" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_optics_box" extrema="pottemp"/></NUMBER>
   <NUMBER caption="JFET" textstyle="oddrow">
     <DATUM format="%.2f" src="T_jfet" extrema="jfettemp"/></NUMBER>
   <NUMBER caption="Charcoal" textstyle="oddrow">
     <DATUM format="%.2f" src="T_charcoal" extrema="pottemp"/></NUMBER>
-  <NUMBER caption="Optics Box" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_optics_box" extrema="pottemp"/></NUMBER>
-  <NUMBER caption="VCS" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_vcs" extrema="pottemp"/></NUMBER>
-  <NUMBER caption="VCS Filter" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_vcs_filt" extrema="pottemp"/></NUMBER>
-  <NUMBER caption="VCS FET" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_vcs_fet" extrema="pottemp"/></NUMBER>
-  <NUMBER caption="Heat Switch" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_heatswitch" extrema="pottemp"/></NUMBER>
-  <NUMBER caption="Extra" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_xtherm_1" extrema="pottemp"/></NUMBER>
 </BOX>
 
 <BOX caption="ROXs" row="3" col="5">
