@@ -1,6 +1,6 @@
 #define N_SCOMMANDS 63         /* total number of single word commands */
-#define N_NM_SCOMMANDS 53      /* total number of named single word cmds */
-#define N_MCOMMANDS 28         /* total number of multiword commands */
+#define N_NM_SCOMMANDS 54      /* total number of named single word cmds */
+#define N_MCOMMANDS 30         /* total number of multiword commands */
 #define MAX_N_PARAMS 12
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -15,19 +15,21 @@
 #define SIZE_ABOUT 80
 #define SIZE_PARNAME 25
 
-#define N_GROUPS 11
+#define N_GROUPS 13
 
 #define GR_POINT 0
 #define GR_GAIN 1
 #define GR_BIAS 2
 #define GR_SENSOR 3
 #define GR_CRYO 4
-#define GR_BAL 5
-#define GR_COOL 6
-#define GR_LOCK 7
-#define GR_EHEAT 8
-#define GR_MISC 9
-#define GR_TEST 10
+#define GR_CRYO_VALV 5
+#define GR_CALIBRATOR 6
+#define GR_BAL 7
+#define GR_COOL 8
+#define GR_LOCK 9
+#define GR_EHEAT 10
+#define GR_MISC 11
+#define GR_TEST 12
 
 #ifdef INCLUDE_VARS
 
@@ -37,6 +39,7 @@ const char *GroupNames[N_GROUPS] = {
   "Bias and DAS",
   "Sensor Systems",
   "Cryo Control",
+  "Motorized Valves",
   "Balance System",
   "Cooling System",
   "Inner Frame Lock",
@@ -82,16 +85,19 @@ struct scom scommands[N_NM_SCOMMANDS] = {
   {"charc_0", "charcoal heater off", GR_CRYO},
   {"cplat_1", "cold plate heater on", GR_CRYO},
   {"cplat_0", "cold plate heater off", GR_CRYO},
-  {"calib_1", "calibrator on", GR_CRYO},
-  {"calib_0", "calibrator off", GR_CRYO},
-  {"lnv_on",  "LN valve on", GR_CRYO},
-  {"lnv_off", "LN valve off", GR_CRYO},
-  {"lnv_opn", "set LN valve direction open", GR_CRYO},
-  {"lnv_cls", "set LN valve direction close", GR_CRYO},
-  {"lhe_on",  "LHe valve on", GR_CRYO},
-  {"lhe_off", "LHe valve off", GR_CRYO},
-  {"lhe_opn", "set LHe valve direction open", GR_CRYO},
-  {"lhe_cls", "set LHe valve direction close", GR_CRYO},
+
+  {"lnv_on",  "LN valve on", GR_CRYO_VALV},
+  {"lnv_off", "LN valve off", GR_CRYO_VALV},
+  {"lnv_opn", "set LN valve direction open", GR_CRYO_VALV},
+  {"lnv_cls", "set LN valve direction close", GR_CRYO_VALV},
+  {"lhe_on",  "LHe valve on", GR_CRYO_VALV},
+  {"lhe_off", "LHe valve off", GR_CRYO_VALV},
+  {"lhe_opn", "set LHe valve direction open", GR_CRYO_VALV},
+  {"lhe_cls", "set LHe valve direction close", GR_CRYO_VALV},
+
+  {"calib_1", "calibrator on", GR_CALIBRATOR},
+  {"calib_0", "calibrator off", GR_CALIBRATOR},
+  {"cal_stp", "stop calibrator pulsing", GR_CALIBRATOR},
 
   {"bal_vet", "veto balance system", GR_BAL},
   {"bal_uvt", "unveto balance system", GR_BAL},
@@ -278,6 +284,19 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {"cryopwm", "Spare cryo pwm level", GR_CRYO, 1,
     {
       {"level (%)", 0, 100, 'f', 2, "CRYOPWM"}
+    }
+  },
+
+  {"cal_puls", "calibrator single pulse", GR_CALIBRATOR, 1,
+    {
+      {"pulse length (ms)", 0, 8000, 'i', 0, "ADD"}
+    }
+  },
+
+  {"cal_rept", "pulse calibrator repeatedly", GR_CALIBRATOR, 2,
+    {
+      {"pulse length (ms)", 0, 8000, 'i', 0, "ADD"},
+      {"delay between pulses (s)", 0, 86400, 'f', 0, "ADD"}
     }
   },
 
