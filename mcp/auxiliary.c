@@ -238,7 +238,7 @@ int GetLockBits(unsigned short lockBits) {
       is_searching--;
   } else if (is_searching == 1) {
     is_searching = 0;
-    is_closing = 1;
+    is_closing = PULSE_LENGTH;
   }
 
   /* check limit switches -- if both bits are set, the motor is running
