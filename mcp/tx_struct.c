@@ -247,7 +247,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"blob2_flux",   'w', LOOPBAK2, 18,          32.0,             0.0, 'u'},
     {"isc_focus",    'w', LOOPBAK2, 19,           1.0,             0.0, 'u'},
     {"isc_state",    'w', LOOPBAK2, 20,           1.0,             0.0, 'u'},
-    {"isc_lrad",     'w', LOOPBAK2, 21,         1./4.,             0.0, 'u'},
+    {"isc_lrad",     'w', LOOPBAK2, 21,         I2DEG,             0.0, 'u'},
     {"isc_thresh",   'w', LOOPBAK2, 22,        1./10.,             0.0, 'u'},
     {"isc_grid",     'w', LOOPBAK2, 23,           1.0,             0.0, 'u'},
     {"isc_cenbox",   'w', LOOPBAK2, 24,           1.0,             0.0, 'u'},
@@ -256,7 +256,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"isc_nblobs",   'w', LOOPBAK2, 27,           1.0,             0.0, 'u'}
   },
   {
-    {"time",         'w', LOOPBAK2, 28,           1.0,             0.0, 'U'},//XXX
+    {"time",         'w', LOOPBAK2, 28,           1.0,             0.0, 'U'},
     {"blob0_flux",   'w', LOOPBAK2, 29,          32.0,             0.0, 'u'},
     {"blob1_flux",   'w', LOOPBAK2, 30,          32.0,             0.0, 'u'},
     {"bal_min",      'w', LOOPBAK2, 31,           1.0,             0.0, 'u'},
@@ -282,7 +282,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"clin_el",      'w', LOOPBAK2, 54,         I2DEG,             0.0, 'u'},
     {"clin_sigma",   'w', LOOPBAK2, 55,         I2DEG,             0.0, 'u'},
     {"mag_az",       'w', LOOPBAK2, 56,         I2DEG,             0.0, 'u'},
-    {"spare24",      'w', SPARE, 24,              1.0,             0.0, 'u'},
+    {"isc_pulse",    'w', LOOPBAK2, 57,           1.0,             0.0, 'u'},
     {"spare25",      'w', SPARE, 25,              1.0,             0.0, 'u'},
     {"spare26",      'w', SPARE, 26,            I2DEG,             0.0, 'u'},
     {"spare27",      'w', SPARE, 27,      1.0/32768.0,             0.0, 'u'},

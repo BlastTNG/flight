@@ -1157,6 +1157,7 @@ void StoreData(int index, unsigned int* Txframe,
   static int isc_mtolCh, isc_mtolInd;
   static int isc_qtolCh, isc_qtolInd;
   static int isc_rtolCh, isc_rtolInd;
+  static int isc_pulseCh, isc_pulseInd;
 
   static int blob_index = 0;
 
@@ -1269,6 +1270,7 @@ void StoreData(int index, unsigned int* Txframe,
     SlowChIndex("isc_mtol", &isc_mtolCh, &isc_mtolInd);
     SlowChIndex("isc_qtol", &isc_qtolCh, &isc_qtolInd);
     SlowChIndex("isc_rtol", &isc_rtolCh, &isc_rtolInd);
+    SlowChIndex("isc_pulse", &isc_pulseCh, &isc_pulseInd);
   }
 
   i_point = GETREADINDEX(point_index);
@@ -1477,7 +1479,7 @@ void StoreData(int index, unsigned int* Txframe,
   WriteSlow(isc_mdistCh, isc_mdistInd,
       (unsigned int)CommandData.ISCState.mult_dist);
   WriteSlow(isc_maglimitCh, isc_maglimitInd,
-      (unsigned int)(CommandData.ISCState.mag_limit * 1000));
+      (unsigned int)(CommandData.ISCState.mag_limit * 1000.));
   WriteSlow(isc_nradCh, isc_nradInd,
       (unsigned int)(CommandData.ISCState.norm_radius * RAD2I));
   WriteSlow(isc_lradCh, isc_lradInd,
@@ -1490,6 +1492,8 @@ void StoreData(int index, unsigned int* Txframe,
       (unsigned int)(CommandData.ISCState.quit_tol * 65535.));
   WriteSlow(isc_rtolCh, isc_rtolInd,
       (unsigned int)(CommandData.ISCState.rot_tol * RAD2I));
+  WriteSlow(isc_pulseCh, isc_pulseInd,
+      (unsigned int)(CommandData.ISC_pulse_width));
 }
 
 
