@@ -198,7 +198,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"az_scan", "scan in azimuth", GR_POINT, 3,
+  {"az_scan", "scan in azimuth", GR_POINT, 4,
     {
       {"Az centre (deg)",       -180, 360, 'f', "NONE"},
       {"El centre (deg)",         15,  65, 'f', "NONE"},
