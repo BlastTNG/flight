@@ -995,13 +995,18 @@ void SetRaDec(double ra, double dec) {
   NewAzEl.fresh = 1;
 }
 
-void SetTrimToISC() {
+void SetTrimToSC(which) {
   int i_point;
 
   i_point = GETREADINDEX(point_index);
 
-  NewAzEl.az = PointingData[i_point].isc_az;
-  NewAzEl.el = PointingData[i_point].isc_el;
+  if (which == 1) {
+    NewAzEl.az = PointingData[i_point].isc_az;
+    NewAzEl.el = PointingData[i_point].isc_el;
+  } else {
+    NewAzEl.az = PointingData[i_point].osc_az;
+    NewAzEl.el = PointingData[i_point].osc_el;
+  }
 
   NewAzEl.fresh = 1;
 }

@@ -74,7 +74,7 @@
 #define ISC_TRIGGER_NEG  3
 
 void SetRaDec(double ra, double dec); /* defined in pointing.c */
-void SetTrimToISC();
+void SetTrimToSC(int);
 void ClearTrim();
 void AzElTrim(double az, double el);
 
@@ -249,7 +249,9 @@ void SingleCommand (enum singleCommand command) {
     system("/sbin/halt");
 
   } else if (command == trim_to_isc)
-    SetTrimToISC();
+    SetTrimToSC(0);
+  else if (command == trim_to_isc)
+    SetTrimToSC(1);
   else if (command == reset_trims)
     ClearTrim();
   else if (command == auto_gyro)

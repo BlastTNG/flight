@@ -61,10 +61,11 @@
 /* limits for the inner cooling stuff */
 #define MIN_TEMP ((-50 - I2T_B) / I2T_M)  /* -50 C */
 #define MAX_TEMP ((60 - I2T_B) / I2T_M)   /* +60 C */
-#define IF_COOL_GOAL 25   /* in deg C */
-#define IF_COOL_RANGE 25   /* At a temp of IF_COOL_GOAL + IF_COOL_RANGE,
+#define IF_COOL_GOAL 30   /* in deg C */
+#define IF_COOL_DELTA 10
+#define IF_COOL_RANGE 20   /* At a temp of IF_COOL_GOAL + IF_COOL_RANGE,
                               pump on full */
-#define PUMP_MAX 1433 /* 70% */
+#define PUMP_MAX 1228 /* 60% */
 #define PUMP_MIN 307  /* 15% */
 
 struct ISCPulseType isc_pulses[2] = {
@@ -139,10 +140,11 @@ int SetGyHeatSetpoint(double history, int age)
   return age;
 }
 
-void ControlInnerCool(unsigned short *RxFrame)
+int ControlInnerCool(void)
 {
   static struct BiPhaseStruct *tDasAddr, *tRecAddr;
   static int firsttime = 1;
+  static int pump_is_on = -1;
   unsigned int das, rec;
   int dg = 1, rg = 1; 
   double temp = 0;
@@ -155,8 +157,10 @@ void ControlInnerCool(unsigned short *RxFrame)
     tRecAddr = GetBiPhaseAddr("t_rec");
   }
 
-  if (CommandData.pumps.inframe_auto == 0)
-    return;
+  if (CommandData.pumps.inframe_auto == 0) {
+    pump_is_on = -1;
+    return CommandData.pumps.pwm3;
+  }
 
   das = slow_data[tDasAddr->index][tDasAddr->channel];
   rec = slow_data[tRecAddr->index][tRecAddr->channel];
@@ -174,10 +178,26 @@ void ControlInnerCool(unsigned short *RxFrame)
   else if (rg)
     temp = I2T_M * rec + I2T_B;
   else
-    return; /* both temps bad */
+    return CommandData.pumps.pwm3; /* both temps bad --
+                                      revert to manual settings */
 
-  if (temp < IF_COOL_GOAL - 1)
-    return; /* temperature below goal, nothing to do */
+  if (temp < IF_COOL_GOAL - IF_COOL_DELTA ||
+      (temp < IF_COOL_GOAL && pump_is_on == 0)) {
+    if (pump_is_on != 0) {
+      bprintf(info, "Inner Frame Cooling: Pump Off\n");
+      CommandData.pumps.inframe_cool_off = 40;
+      CommandData.pumps.inframe_cool_on = 0;
+      pump_is_on = 0;
+    }
+    return 2047; /* temperature below goal, nothing to do, turn off pump */
+  }
+
+  if (pump_is_on != 1) { 
+    bprintf(info, "Inner Frame Cooling: Pump On\n");
+    CommandData.pumps.inframe_cool_on = 40; /* turn on pump */
+    CommandData.pumps.inframe_cool_off = 0;
+    pump_is_on = 1;
+  }
 
   error = temp - IF_COOL_GOAL;
 
@@ -188,11 +208,7 @@ void ControlInnerCool(unsigned short *RxFrame)
   else if (pwm < PUMP_MIN)
     pwm = PUMP_MIN;
 
-  static int foo = 0;
-  if (foo++ == 100) {
-    foo = 0;
-    bprintf(info, "%f => %i\n", temp, pwm);
-  }
+  return 2047 - pwm;
 }
 
 /************************************************************************/
@@ -606,8 +622,8 @@ void CameraTrigger(int which)
       if (ISC_link_ok[which] && isc_pulses[which].start_wait >
           isc_pulses[which].start_timeout) {
         if (InCharge) {
-        bprintf(warning, "%s: Timeout while waiting for solution.\n",
-            (which) ? "Osc" : "Isc");
+          bprintf(warning, "%s: Timeout while waiting for solution.\n",
+              (which) ? "Osc" : "Isc");
         } else if (WHICH)
           bprintf(warning,
               "%iSC (t): Timeout while waiting for solution and NiC.\n",
@@ -656,6 +672,8 @@ void ControlAuxMotors(unsigned short *RxFrame) {
 
   int ifpmBits = 0;
   int ofpmBits = 0;
+
+  int inframe_pwm = ControlInnerCool();
 
   static int firsttime = 1;
   if (firsttime) {
@@ -732,7 +750,7 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   WriteData(lokmotPinAddr, CommandData.pin_is_in, NIOS_QUEUE);
   WriteData(ofpmBitsAddr, ofpmBits, NIOS_QUEUE);
   WriteData(sprpumpLevAddr, CommandData.pumps.pwm2 & 0x7ff, NIOS_QUEUE);
-  WriteData(inpumpLevAddr, CommandData.pumps.pwm3 & 0x7ff, NIOS_QUEUE);
+  WriteData(inpumpLevAddr, inframe_pwm & 0x7ff, NIOS_QUEUE);
   WriteData(outpumpLevAddr, CommandData.pumps.pwm4 & 0x7ff, NIOS_QUEUE);
   WriteData(balOnAddr, (int)CommandData.pumps.bal_on, NIOS_QUEUE);
   WriteData(balOffAddr, (int)CommandData.pumps.bal_off, NIOS_QUEUE);

@@ -125,6 +125,8 @@ extern "C" {
 
 #define END_OF_CHANNELS {"", 'x', EOC_MARKER, -1, 0, 0}
 
+#define H2LI (4294967296.0/24.0)
+#define LI2H (1.0/H2LI)
 #define DEG2LI (4294967296.0/360.0)
 #define LI2DEG (1.0/DEG2LI)
 #define RAD2LI (4294967296.0/2/M_PI)

@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.42 $";
+const char command_list_serial[] = "$Revision: 2.43 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -78,7 +78,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(gps_allow), "un-veto differential gps", GR_VETO},
 
   {COMMAND(reset_trims), "reset coarse pointing trims to zero", GR_TRIM},
-  {COMMAND(trim_to_isc), "trim coarse sensors to isc", GR_TRIM},
+  {COMMAND(trim_to_isc), "trim coarse sensors to ISC", GR_TRIM},
+  {COMMAND(trim_to_osc), "trim coarse sensors to OSC", GR_TRIM},
   {COMMAND(auto_gyro), "automatically calculate gyro offsets", GR_TRIM},
 
   {COMMAND(clock_int), "bias clock internal", GR_BIAS},
