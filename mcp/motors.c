@@ -5,6 +5,9 @@
 #include "pointing_struct.h"
 #include "command_struct.h"
 
+#define MIN_EL 20.0
+#define MAX_EL 65.0
+
 struct AxesModeStruct axes_mode; /* low level velocity mode */
 
 int pinIsIn(void);  /* auxcontrol.c */
@@ -40,6 +43,9 @@ double GetVElev() {
   
   /* correct offset and convert to Gyro Units */
   vel -= (PointingData[i_point].gy1_offset - PointingData[i_point].gy1_earth);
+
+  if (ACSData.enc_elev < MIN_EL) vel = 0.2; // go up
+  if (ACSData.enc_elev > MAX_EL) vel = -0.2; // go down
 
   vel *= DPS_TO_ADU1; 
 
@@ -288,8 +294,6 @@ void DoAzScanMode() {
   SetAzScanMode(az, left, right, v, 0);
 }
 
-#define MIN_EL 20.0
-#define MAX_EL 50.0
 #define EL_BORDER 0.15
 void DoVCapMode() {
   double caz, cel;
@@ -506,10 +510,11 @@ void DoBoxMode() {
   lst = PointingData[i_point].lst;
   az = PointingData[i_point].az;
   el = PointingData[i_point].el;
-  v = fabs(CommandData.pointing_mode.vaz);
   
   if (el>80) el = 80; /* very bad situation - dont know how this can happen */
   if (el<-10) el = -10; /* very bad situation - dont know how this can happen */
+  
+  v = fabs(CommandData.pointing_mode.vaz/cos(el * M_PI/180.0));
 
   /* get raster center and sky drift speed */
   radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
@@ -623,11 +628,13 @@ void DoCapMode() {
   lst = PointingData[i_point].lst;
   az = PointingData[i_point].az;
   el = PointingData[i_point].el;
-  v = fabs(CommandData.pointing_mode.vaz);
   
-  if (el>80) el = 80; /* very bad situation - dont know how this can happen */
-  if (el<-10) el = -10; /* very bad situation - dont know how this can happen */
+  
+  if (el>67.0) el = 67.0; /* very bad situation - dont know how this can happen */
+  if (el<22.0) el = 22.0; /* very bad situation - dont know how this can happen */
 
+  v = fabs(CommandData.pointing_mode.vaz/cos(el*M_PI/180.0));
+  
   /* get raster center and sky drift speed */
   radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
       lst, PointingData[i_point].lat,
