@@ -1,7 +1,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 76      /* total number of named single word cmds */
-#define N_MCOMMANDS 48         /* total number of multiword commands */
+#define N_MCOMMANDS 49         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -185,7 +185,7 @@ enum multiCommand {
   pixel_centre, ra_dec_goto,  ra_dec_set,       roll_gain,    set_aperture,
   set_focus,    setpoints,    slow_integration, spare_heat,   spare_level,
   t_gyrobox,    t_gyro_gain,  timeout,          tolerances,   vcap,
-  vbox,         alice_file,   gyro_override
+  vbox,         alice_file,   gyro_override,    hold_current
 };
 
 struct par {
@@ -575,6 +575,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Match Tolerance (%)",       0,  100, 'f', "ISC_MTOL"},
       {"Quit Tolerance (%)",        0,  100, 'f', "ISC_QTOL"},
       {"Rot. Tolerance (deg)",      0,   90, 'f', "ISC_RTOL"}
+    }
+  },
+  
+  {COMMAND(hold_current), "set ISC stepper motor hold current", GR_ISC, 1,
+    {
+      {"Level (%)", 0, 50, 'i', "ISC_HOLD_I"}
     }
   }
 };

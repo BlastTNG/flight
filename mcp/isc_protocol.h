@@ -37,14 +37,15 @@ struct ISCStatusStruct {
   int ap_pos;			// stepper position for aperture
   int MCPFrameNum;		// current frame number of MCP
   int shutdown;			// If set, command the ISC computer to shut down (before a power cycle)
+  int hold_current;	    // the hold "heater" current (0-50)
 
   // Display mode parameters
   ISCDisplayModeType display_mode;
   int roi_x;			// x pixel number for ROI
   int roi_y;			// y pixel number for ROI
   int blob_num;			// blob # for ROI
-  double azBDA;			// az offset from CCD centre for the BDA (radians)
-  double elBDA;			// el   "     "    "    "    "    "  "  
+  double azBDA;			// az tangent plane offset from BDA centre for the CCD (radians)
+  double elBDA;			// el   "      "     "    "    "    "    "  "  
 
   // telescope attitude
   double az;			// az in radians

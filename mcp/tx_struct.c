@@ -99,7 +99,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"hspwm",        'w',  3,  4,         100./2047.,              0., 'u'},
     {"cryopwm",      'w',  3,  5,         100./2047.,              0., 'u'},
     {"jfetpwm",      'w',  3,  6,         100./2047.,              0., 'u'},
-    {"spare25",      'w',  SPARE, 25,            1.0,             0.0, 'u'},
+    {"isc_hold_i",   'w',  LOOPBAK3, 0,          1.0,             0.0, 'u'},
     {"t_rstrt_mid",  'r',  4,  5,           -0.00625,          136.45, 'u'}
   },
   {
@@ -305,7 +305,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"t_lock_motor", 'r',  2, 29,            -0.00625,          136.45, 'u'},
     {"t_sun_sensor", 'r',  2, 31,            -0.00625,          136.45, 'u'},
     {"isc_x_off",    'w', LOOPBAK2, 63,         I2DEG,             0.0, 'u'},
-    {"isc_y_off",    'w', LOOPBAK3,  0,         I2DEG,             0.0, 'u'},
+    {"isc_y_off",    'w', LOOPBAK3,  4,         I2DEG,             0.0, 'u'},
     {"ra",           'w', LOOPBAK3,  2,  24.0/65536.0,             0.0, 'u'},
     {"dec",          'w', LOOPBAK3,  3,         I2DEG,             0.0, 's'},
     {"spare27",      'w', SPARE, 27,              1.0,             0.0, 'u'},
