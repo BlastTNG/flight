@@ -7,11 +7,11 @@
 
 #include "bbc_pci.h"
 
-#define  FRAMELEN   0x000f
+#define  FRAMELEN   0x0003
 
 int main(int argc, char *argv[]) {
   int fp, nr;
-  unsigned int i[0x100 * 2];
+  unsigned short i[FRAMELEN];
   unsigned int j, k, l, m, numerrs, mycounter; 
   unsigned int buf[4];
   
@@ -35,18 +35,17 @@ int main(int argc, char *argv[]) {
   printf("\n");
 
   /* Biphase. */ 
-  i[0] = (BBC_BI0_SYNC << 16) | 0xffff;
+  i[0] = BBC_BI0_SYNC;
+  for (k = 1; k < FRAMELEN; k++)
+    i[k] = 0xa000 | k;
   for (k = 0; k < FRAMELEN; k++)
-    i[k + 1] = ((k * 2) << 16) | (k * 2 + 1) | 0xa000a000;
-  for (k = 0; k <= FRAMELEN; k++)
-    printf("%3d %10u %8x\n", k, i[k], i[k]);
-  printf("Press enter.\n");
+    printf("%3d %8hx\n", k, i[k]);
+  printf("Press <ENTER>.\n");
   getchar();
   
   while (1) {
-    for (k = 0; k <= FRAMELEN; k++) {
-      write(fp, (void *)&(i[k]), sizeof(unsigned int));
-      printf("%3d %4x %4x\n", k, i[k] & 0x0000ffff, i[k] >> 16);
+    for (k = 0; k < FRAMELEN; k++) {
+      write(fp, (void *)&(i[k]), sizeof(unsigned short));
     }
   }
   

@@ -139,6 +139,7 @@ static void timer_callback(unsigned long x) {
 	           readl(bbcpci_membase + BBCPCI_ADD_BI0_RP)) &&
 	           (bi0_buffer.i_in != bi0_buffer.i_out)) {
         writel(bi0_buffer.data[bi0_buffer.i_out], bbcpci_membase + write_buf_p);
+        printk("--> %8x\n", bi0_buffer.data[bi0_buffer.i_out]);
         write_buf_p += BBCPCI_SIZE_UINT;
         if (write_buf_p >= BBCPCI_IR_BI0_BUF_END)
           write_buf_p = BBCPCI_IR_BI0_BUF;
@@ -213,12 +214,17 @@ static ssize_t write_bbc(struct file * filp, const char * buf,
                          size_t count, loff_t *dummy) {
   unsigned int add, datum;
   int minor;
-  int i, nw;
+  int i, i0, nw, rem;
+  unsigned short bi0datum;
+  static int lastrem = 0;
+  static unsigned short lastbi0datum = 0;
   minor = *((int *)(filp->private_data));
 
   if (minor == bbc_minor) {
-    if (count<8) return 0;
-    if (count>8) count = 8;
+    if (count < 8) 
+      return 0;
+    if (count > 8)
+      count = 8;
 
     copy_from_user((void *)(&add), buf, BBCPCI_SIZE_UINT);
     copy_from_user((void *)(&datum), buf + BBCPCI_SIZE_UINT, BBCPCI_SIZE_UINT);
@@ -226,24 +232,90 @@ static ssize_t write_bbc(struct file * filp, const char * buf,
     tx_buffer.add[tx_buffer.i_in] = add;
     tx_buffer.data[tx_buffer.i_in] = datum;
   
-    if (tx_buffer.i_in+1 >= TX_BUFFER_SIZE) tx_buffer.i_in = 0;
-    else tx_buffer.i_in++;
+    if (tx_buffer.i_in + 1 >= TX_BUFFER_SIZE)
+      tx_buffer.i_in = 0;
+    else
+      tx_buffer.i_in++;
     tx_buffer.n++;
-  } else if (minor == bi0_minor) {
-    nw = count/BBCPCI_SIZE_UINT;
-    for (i=0; i<nw; i++) {
+    
+    return count;
+  } 
+  else if (minor == bi0_minor) {
+    if (count < sizeof(unsigned short))
+      return 0;
+    
+    nw = count / sizeof(unsigned short);
+    rem = nw % 2;
+
+    /* The remainder variables (rem, lastrem) are to deal with the possibility
+     * that an odd frame size is given.  In this case, we must glue together
+     * consecutive frames properly. */
+    if (lastrem) {
+      copy_from_user((void *)(&bi0datum), buf, sizeof(unsigned short));
+      buf += sizeof(unsigned short);
+      bi0_buffer.data[bi0_buffer.i_in] = ((lastbi0datum << 16) & 0xffff0000);
+      bi0_buffer.data[bi0_buffer.i_in] |= (bi0datum & 0x0000ffff);
+
+      if (bi0_buffer.i_in + 1 >= BI0_BUFFER_SIZE)
+        bi0_buffer.i_in = 0;
+      else 
+        bi0_buffer.i_in++;
+      bi0_buffer.n++;
+      
+      if (rem)
+        rem = 0;
+      else
+        rem = 1;
+      
+      i0 = 1;
+    }
+    else
+      i0 = 0;
+    
+    for (i = i0; i < nw - rem; i++) {
+      // MSB
+      copy_from_user((void *)(&bi0datum), buf, sizeof(unsigned short));
+      buf += sizeof(unsigned short);
+      bi0_buffer.data[bi0_buffer.i_in] = ((bi0datum << 16) & 0xffff0000);
+      
+      // LSB
+      copy_from_user((void *)(&bi0datum), buf, sizeof(unsigned short));
+      buf += sizeof(unsigned short);
+      bi0_buffer.data[bi0_buffer.i_in] = (bi0datum & 0x0000ffff);
+      
+      if (bi0_buffer.i_in + 1 >= BI0_BUFFER_SIZE)
+        bi0_buffer.i_in = 0;
+      else 
+        bi0_buffer.i_in++;
+      bi0_buffer.n++;
+    }
+
+    if (rem) {
+      lastrem = 1;
+      copy_from_user((void *)(&lastbi0datum), buf, sizeof(unsigned short));
+    }
+    else
+      lastrem = 0;
+
+    return nw * sizeof(unsigned short);
+    
+/*    nw = count/BBCPCI_SIZE_UINT;
+    for (i = 0; i < nw; i++) {
       copy_from_user((void *)(&datum), buf, BBCPCI_SIZE_UINT);
       buf+=BBCPCI_SIZE_UINT;
 
       bi0_buffer.data[bi0_buffer.i_in] = datum;
-      if (bi0_buffer.i_in+1 >= BI0_BUFFER_SIZE) bi0_buffer.i_in = 0;
-      else bi0_buffer.i_in++;
+      if (bi0_buffer.i_in + 1 >= BI0_BUFFER_SIZE)
+        bi0_buffer.i_in = 0;
+      else 
+        bi0_buffer.i_in++;
       bi0_buffer.n++;
     }
-    return(nw*BBCPCI_SIZE_UINT);
+    return (nw * BBCPCI_SIZE_UINT);
+*/
   }
-  
-  return count;
+
+  return 0;
 }
 
 /*******************************************************************/
@@ -398,7 +470,8 @@ static int ioctl_bbc (struct inode *inode, struct file * filp,
       ret = cbcounter; 
       break;
     case BBCPCI_IOC_WRITEBUF:  /* How many words in the NIOS write buf? */
-      ret = readl(bbcpci_membase + BBCPCI_ADD_WRITE_BUF_P) - BBCPCI_ADD_IR_WRITE_BUF; 
+      ret = readl(bbcpci_membase + BBCPCI_ADD_WRITE_BUF_P) - 
+	          BBCPCI_ADD_IR_WRITE_BUF; 
       break;
     case BBCPCI_IOC_COMREG:  /* return the command register */
       /* COMREG_RESET tells if it is resetting */
