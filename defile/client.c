@@ -215,6 +215,12 @@ void InitClient(void)
       rc.chunk = bstrdup(fatal, ptr1);
       rc.resume_at = atoi(buffer);
       break;
+    case 450:  /* 450 is returned by the server if reading the curfile fails -
+                  It usually means that either the curfile doesn't exist or
+                  the dirfile it points to doesn't exist */
+      bprintf(fatal,
+          "Can't fetch data from server: no current data is available.\n");
+      break;
     default:
       bprintf(fatal, "Unexpected response from server: %i\n", n);
   }
