@@ -2,6 +2,10 @@
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
 2004-12-09  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	Release defile-3.0.7
+
+	* reader.c (FrameFileReader): Thinko.
+
 	Release defile-3.0.6
 
 	* writer.c (DirFileWriter): frame rate reset semaphore.
