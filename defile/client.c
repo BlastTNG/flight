@@ -336,6 +336,10 @@ void QuenyaClient(void)
         /* refetch SPEC file */
         InitClient(ptr1);
 
+        /* if the dirfile has changed, signal the writer to cycle */
+        if (rc.output_dirfile == NULL)
+          ri.dirfile_init = 0;
+
         /* restart data transmission */
         strcpy(buffer, "DATA\r\n");
 
