@@ -24,6 +24,7 @@
 
 #include <errno.h>
 #include <netdb.h>
+#include <signal.h>
 #include <string.h>
 #include <tcpd.h>
 #include <unistd.h>
@@ -40,7 +41,7 @@
 #include "frameread.h"
 #include "quendi.h"
 
-#define VERSION   "1.1.0"
+#define VERSION   "1.1.1"
 #define SOCK_PORT 44144
 #define PID_FILE "/var/run/interloquendi.pid"
 #define CONFIG_FILE "/etc/interloquendi.conf"
@@ -514,6 +515,10 @@ int main(void)
   freopen("/dev/null", "w", stderr);
   setsid();
 #endif
+
+  /* Autoreap children */
+  signal(SIGCHLD, SIG_IGN);
+
   /* initialise listener socket */
   sock = MakeSock();
 
