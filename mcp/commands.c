@@ -601,9 +601,9 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
 
     /***************************************/
     /********** Pointing Motor Gains *******/
-  } else if (command == roll_gain) { /* roll Gains */
+  } else if (command == roll_gain) /* roll Gains */
     CommandData.roll_gain.P = ivalues[0];
-  } else if (command == el_gain) {  /* ele gains */
+  else if (command == el_gain) {  /* ele gains */
     CommandData.ele_gain.P = ivalues[0];
     CommandData.ele_gain.I = ivalues[1];
   } else if (command == az_gain) {  /* az gains */
@@ -637,37 +637,39 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.pumps.bal_on = rvalues[0] * 1648.;
     CommandData.pumps.bal_off = rvalues[1] * 1648.;
     CommandData.pumps.bal_target = rvalues[2] * 1648.;
-  } else if (command == bal_level) {
+  } else if (command == bal_level)
     CommandData.pumps.pwm1 = 2047 - rvalues[0] * 2047. / 100;
-  } else if (command == bal_gain) {
+  else if (command == bal_gain) {
     CommandData.pumps.bal_gain = rvalues[0];
     CommandData.pumps.bal_max = 2047 - rvalues[1] * 2047. / 100;
     CommandData.pumps.bal_min = 2047 - rvalues[2] * 2047. / 100;
 
     /***************************************/
     /********** Cooling System  ************/
-  } else if (command == spare_level) {
+  } else if (command == spare_level)
     CommandData.pumps.pwm2 = 2047 - rvalues[0] * 2047. / 100;
-  } else if (command == inner_level) {
+  else if (command == inner_level)
     CommandData.pumps.pwm3 = 2047 - rvalues[0] * 2047. / 100;
-  } else if (command == outer_level) {
+  else if (command == outer_level)
     CommandData.pumps.pwm4 = 2047 - rvalues[0] * 2047. / 100;
 
     /***************************************/
     /******** Electronics Heaters  *********/
-  } else if (command == t_gyrobox) {  /* gyro heater setpoint */
+  else if (command == t_gyrobox)  /* gyro heater setpoint */
     CommandData.t_gybox_setpoint = rvalues[0];
-  } else if (command == t_gyro_gain) {  /* gyro heater gains */
+  else if (command == t_gyro_gain) {  /* gyro heater gains */
     CommandData.gy_heat_gain.P = ivalues[0];
     CommandData.gy_heat_gain.I = ivalues[1];
     CommandData.gy_heat_gain.D = ivalues[2];
 
     /***************************************/
     /*************** Misc  *****************/
-  } else if (command == timeout) {        /* Set timeout */
+  } else if (command == timeout)        /* Set timeout */
     CommandData.timeout = ivalues[0];
-  } else if (command == alice_file)  /* change downlink XML file */
-      CommandData.alice_file = ivalues[0];
+  else if (command == alice_file)  /* change downlink XML file */
+    CommandData.alice_file = ivalues[0];
+  else if (command == plugh) /* A hollow voice says "Plugh". */
+    CommandData.plover = ivalues[0];
 
     /***************************************/
     /*************** Bias  *****************/

@@ -607,5 +607,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Level (%)", 0, 50, 'i', "OSC_HOLD_I"}
     }
+  },
+
+  {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
+    {
+      {"Plover", 0, MAX_15BIT, 'i', "PLOVER"}
+    }
   }
 };

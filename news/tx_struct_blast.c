@@ -421,6 +421,7 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_maxblobs", 'w', LOOP4,  6,                1.0,             0.0, 'u'},
   {"osc_maxblobs", 'w', LOOP4,  7,                1.0,             0.0, 'u'},
   {"bi0_fifo_size",'w', LOOP4,  8,             1./624,             0.0, 'u'},
+  {"plover",       'w', LOOP4,  9,                1.0,             0.0, 'u'},
 
   END_OF_CHANNELS
 };

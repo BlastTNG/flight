@@ -145,6 +145,8 @@ struct CommandDataStruct {
   unsigned short temp1, temp2, temp3;
   unsigned short df;
 
+  unsigned short plover;
+
   unsigned short bi0FifoSize;
   unsigned short bbcFifoSize;
 

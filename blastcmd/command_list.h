@@ -1,7 +1,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 88         /* total number of named single word cmds */
-#define N_MCOMMANDS 63         /* total number of multiword commands */
+#define N_MCOMMANDS 64         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -92,7 +92,7 @@ enum multiCommand {
   isc_slow_int,      spare_heat,        spare_level,      t_gyrobox,
   t_gyro_gain,       timeout,           isc_tolerances,   vcap,
   vbox,              alice_file,        gyro_override,    isc_hold_current,
-  isc_save_period,   back_emf,          osc_offset
+  isc_save_period,   back_emf,          osc_offset,       plugh
 };
 
 struct par {
