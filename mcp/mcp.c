@@ -110,7 +110,7 @@ unsigned int tdrss_index = 0;
 ( \
   MPRINT_BUFFER_SIZE /* buffer length */ \
   - 3                /* start-of-line marker */ \
-  - 24               /* date "YYYY-MM-DD HH:MM:SS GMT " */ \
+  - 31               /* date "YYYY-MM-DD HH:MM:SS.mmmmmm GMT " */ \
   - 4                /* marker again plus NUL */ \
 )
 
