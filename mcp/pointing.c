@@ -104,6 +104,18 @@ void SunPos(double tt, double *ra, double *dec); // in starpos.c
 #define M2DV(x) ((x/60.0)*(x/60.0))
 
 #define MAG_ALIGNMENT (0.0)
+
+// limit to 0 to 360.0
+void NormalizeAngle(double *A) {
+  *A = fmod(*A, 360.0);
+  if (*A<0) *A += 360.0;
+}
+
+// adjust *A to be within +-180 of ref
+void UnwindDiff(double ref, double *A) {
+  *A = ref + drem(*A - ref, 360.0);
+}
+      
 /************************************************************************
 *                                                                      *
 *   MagRead:  use the world magnetic model, atan2 and a lookup table   *
@@ -112,13 +124,15 @@ void SunPos(double tt, double *ra, double *dec); // in starpos.c
  ************************************************************************/
 int MagConvert(double *mag_az) {
   float year;
-  static float dec, dip, ti, gv;
+  static float fdec, dip, ti, gv;
+  static double dec;
   static time_t t, oldt;
   struct tm now;
   int i_point_read;
   static int firsttime = 1;
   static struct LutType magLut = {"/data/etc/mag.lut",0,NULL,NULL,0};
   double raw_mag_az;
+  double ddec;
   
   i_point_read = GETREADINDEX(point_index);
 
@@ -151,8 +165,10 @@ int MagConvert(double *mag_az) {
     year = 1900 + now.tm_year + now.tm_yday / 365.25;
 
     GetMagModel(SIPData.GPSpos.alt / 1000.0, PointingData[i_point_read].lat,
-        PointingData[i_point_read].lon, year, &dec, &dip, &ti, &gv);
+        PointingData[i_point_read].lon, year, &fdec, &dip, &ti, &gv);
 
+    dec = fdec;
+    
     dec *= M_PI / 180.0;
     dip *= M_PI / 180.0;
   }
@@ -166,12 +182,18 @@ int MagConvert(double *mag_az) {
   /* subtract dec from az to get the true bearing. (Adam H.) */
 
   raw_mag_az = atan2(ACSData.mag_y, ACSData.mag_x);
+  
   *mag_az = -LutCal(&magLut, raw_mag_az);
   
   *mag_az += dec + MAG_ALIGNMENT + M_PI;
   *mag_az *= 180.0/M_PI;
+    
+  NormalizeAngle(mag_az);
 
-  PointingData[point_index].mag_model = dec*180.0/M_PI;
+  ddec=dec*180.0/M_PI;
+  NormalizeAngle(&ddec);
+  
+  PointingData[point_index].mag_model = ddec;
   
   return (1);
 }
@@ -184,10 +206,12 @@ int DGPSConvert(double *dgps_az) {
 
   if (i_dgpsatt != last_i_dgpsatt) {
     if (DGPSAtt[i_dgpsatt].att_ok==1) {
-      PointingData[point_index].dgps_az = DGPSAtt[i_dgpsatt].az;
+      *dgps_az = DGPSAtt[i_dgpsatt].az;
+      NormalizeAngle(dgps_az);
       return (1);
     }
   }
+  *dgps_az = 0;
   return(0);
 }
 
@@ -221,6 +245,7 @@ int SSConvert(double *ss_az) {
   radec2azel(sun_ra, sun_dec, PointingData[i_point].lst,
 	     PointingData[i_point].lat, &sun_az, &sun_el);
 
+  NormalizeAngle(&sun_az);
   PointingData[point_index].sun_az = sun_az;
 
   if (i_ss == last_i_ss) return (0); 
@@ -235,8 +260,7 @@ int SSConvert(double *ss_az) {
   if (eflag!=0) return (0);
   
   *ss_az = az*180.0/M_PI-sun_az;
-  
-  if (*ss_az<-180.0) *ss_az+=360.0;
+  NormalizeAngle(ss_az);
  
   return (1);
 }
@@ -321,18 +345,26 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
       // evolve el solution
       e->angle -= gy_el_delta; // rewind to when the frame was grabbed
       w1 = 1.0/(e->varience);
-      w2 = e->samp_weight;
-      e->angle = (w1*e->angle + new_el * w2)/(w1+w2);
+      w2 = ISCSolution[i_isc].sigma * (180.0/M_PI); //e->samp_weight;
+      if (w2>0) w2 = 1/(w2*w2);
+      else w2 = 0; // shouldn't happen
+      
+      UnwindDiff(e->angle, &new_el);
+      e->angle = (w1*e->angle + new_el * w2)/(w1+w2);      
       e->varience = 1.0/(w1+w2);
       e->angle += gy_el_delta; // add back to now
-
+      NormalizeAngle(&(e->angle));
+      
       // evolve az solution
       a->angle -= gy_az_delta; // rewind to when the frame was grabbed
       w1 = 1.0/(a->varience);
       w2 = a->samp_weight;
+
+      UnwindDiff(a->angle, &new_az);
       a->angle = (w1*a->angle + new_az * w2)/(w1+w2);
       a->varience = 1.0/(w1+w2);
       a->angle += gy_az_delta; // add back to now
+      NormalizeAngle(&(a->angle));
     }
     
     last_isc_framenum = ISCSolution[i_isc].framenum;
@@ -387,7 +419,8 @@ void EvolveElSolution(struct ElSolutionStruct *s,
 }
 
 // Weighted mean of ElAtt and ElSol
-void AddElSolution(struct ElAttStruct *ElAtt, struct ElSolutionStruct *ElSol) {
+void AddElSolution(struct ElAttStruct *ElAtt, struct ElSolutionStruct *ElSol,
+		   int add_offset) {
   double weight, var;
 
   var = ElSol->varience + ElSol->sys_var;
@@ -399,31 +432,41 @@ void AddElSolution(struct ElAttStruct *ElAtt, struct ElSolutionStruct *ElSol) {
 	       ElAtt->weight * ElAtt->el) /
 	      (weight + ElAtt->weight);
 
-  ElAtt->gy_offset = (weight * ElSol->gy_offset +
-		     ElAtt->weight * ElAtt->gy_offset) /
-		     (weight + ElAtt->weight);
+  if (add_offset) {
+    ElAtt->gy_offset = (weight * ElSol->gy_offset +
+			ElAtt->weight * ElAtt->gy_offset) /
+		       (weight + ElAtt->weight);
+  }
+  
   ElAtt->weight+=weight;
 }
 
 // Weighted mean of AzAtt and AzSol
-void AddAzSolution(struct AzAttStruct *AzAtt, struct AzSolutionStruct *AzSol) {
-  double weight, var;
-
+void AddAzSolution(struct AzAttStruct *AzAtt, struct AzSolutionStruct *AzSol,
+		   int add_offset) {
+  double weight, var, az;
+  
   var = AzSol->varience + AzSol->sys_var;
+  az = AzSol->angle + AzSol->trim;
 
   if (var>0) weight = 1.0/var;
   else weight = 1.0E30; // should be impossible
 
-  AzAtt->az = (weight * (AzSol->angle + AzSol->trim) +
+  UnwindDiff(AzAtt->az, &az);
+  AzAtt->az = (weight * (az) +
 	       AzAtt->weight * AzAtt->az) /
 	      (weight + AzAtt->weight);
-
-  AzAtt->gy2_offset = (weight * AzSol->gy2_offset +
-		     AzAtt->weight * AzAtt->gy2_offset) /
-		     (weight + AzAtt->weight);
-  AzAtt->gy3_offset = (weight * AzSol->gy3_offset +
-		     AzAtt->weight * AzAtt->gy3_offset) /
-		     (weight + AzAtt->weight);
+  NormalizeAngle(&(AzAtt->az));
+  
+  if (add_offset) {
+    AzAtt->gy2_offset = (weight * AzSol->gy2_offset +
+			 AzAtt->weight * AzAtt->gy2_offset) /
+			(weight + AzAtt->weight);
+    AzAtt->gy3_offset = (weight * AzSol->gy3_offset +
+			 AzAtt->weight * AzAtt->gy3_offset) /
+			(weight + AzAtt->weight);
+  }
+  
   AzAtt->weight+=weight;
 }
 
@@ -449,8 +492,10 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
     w1 = 1.0/(s->varience);
     w2 = s->samp_weight;
 
+    UnwindDiff(s->angle, &new_angle);
     s->angle = (w1*s->angle + new_angle * w2)/(w1+w2);
     s->varience = 1.0/(w1+w2);
+    NormalizeAngle(&(s->angle));
     
     if (s->n_solutions>10) { // only calculate if we have had at least 10
       if (s->n_solutions < 1000) {
@@ -459,7 +504,7 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
 	fs = s->FC;
       }
 
-      daz = new_angle - s->last_input;
+      daz = drem(new_angle - s->last_input, 360.0);
       
       /* Do Gyro2 */
       new_offset = -(daz*cos(el) + s->gy2_int)/(0.01*(double)s->since_last);
@@ -499,6 +544,7 @@ void Pointing(){
   static double gy_roll_amp = 0.0;
 
   struct ElAttStruct ElAtt = {0.0, 0.0, 0.0};
+  struct AzAttStruct AzAtt = {0.0, 0.0, 0.0, 0.0};
   
   static struct ElSolutionStruct EncEl = {0.0, // starting angle
 					  360.0*360.0, // varience
@@ -642,13 +688,17 @@ void Pointing(){
 		 ACSData.enc_elev, 1);
 
   if (CommandData.use_elenc) {
-    AddElSolution(&ElAtt, &EncEl);
+    AddElSolution(&ElAtt, &EncEl, 1);
   }
 
   if (CommandData.use_elclin) {
-    AddElSolution(&ElAtt, &ClinEl);
+    AddElSolution(&ElAtt, &ClinEl, 1);
   }
 
+  if (CommandData.use_isc) {
+    AddElSolution(&ElAtt, &ISCEl, 0);
+  }
+  
   PointingData[point_index].gy1_offset = ElAtt.gy_offset;
   PointingData[point_index].el = ElAtt.el;
 
@@ -686,33 +736,41 @@ void Pointing(){
 		   PointingData[point_index].el,
 		   ss_az, ss_ok);  
 
+  /** add az solutions **/
+  if (CommandData.use_mag) {
+    AddAzSolution(&AzAtt, &MagAz, 1);
+  }
+  if (CommandData.use_sun) {
+    AddAzSolution(&AzAtt, &SSAz, 1);
+  }
+  if (CommandData.use_gps) {
+    AddAzSolution(&AzAtt, &DGPSAz, 1);
+  }
+  if (CommandData.use_isc) {
+    AddAzSolution(&AzAtt, &ISCAz, 0);
+  }
+  
+  PointingData[point_index].az = AzAtt.az;
+  PointingData[point_index].gy2_offset = AzAtt.gy2_offset;
+  PointingData[point_index].gy3_offset = AzAtt.gy3_offset;
+  
   /** record solutions in pointing data **/
   PointingData[point_index].enc_el = EncEl.angle;
   PointingData[point_index].enc_sigma = sqrt(EncEl.varience + EncEl.sys_var);
   PointingData[point_index].clin_el = ClinEl.angle;
   PointingData[point_index].clin_sigma = sqrt(ClinEl.varience + ClinEl.sys_var);
   
-  PointingData[point_index].mag_az = MagAz.angle;
+  PointingData[point_index].mag_az = mag_az;
   PointingData[point_index].mag_sigma = sqrt(MagAz.varience + MagAz.sys_var);
-  PointingData[point_index].dgps_az = DGPSAz.angle;
+  PointingData[point_index].dgps_az = dgps_az;
   PointingData[point_index].dgps_sigma = sqrt(DGPSAz.varience + DGPSAz.sys_var);
-  PointingData[point_index].ss_az = SSAz.angle;
+  PointingData[point_index].ss_az = ss_az;
   PointingData[point_index].ss_sigma = sqrt(SSAz.varience + SSAz.sys_var);
 
   PointingData[point_index].isc_az = ISCAz.angle;
   PointingData[point_index].isc_el = ISCEl.angle;
   PointingData[point_index].isc_sigma = sqrt(ISCEl.varience + ISCEl.sys_var);
-  
-  if (CommandData.use_mag) {
-    PointingData[point_index].az = MagAz.angle + MagAz.trim;
-    PointingData[point_index].gy2_offset = MagAz.gy2_offset;
-    PointingData[point_index].gy3_offset = MagAz.gy3_offset;
-  } else {
-    PointingData[point_index].az = NullAz.angle + NullAz.trim;
-    PointingData[point_index].gy2_offset = NullAz.gy2_offset;
-    PointingData[point_index].gy3_offset = NullAz.gy3_offset;
-  }
-  
+    
   /************************/
   /* set roll damper gain */
   gy2 = ACSData.gyro2;

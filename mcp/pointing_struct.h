@@ -135,26 +135,25 @@ struct PointingDataStruct {
   double gy3_offset;
   double gy_roll_amp;
   double lat;       // degrees
-  double lon;       // degrees  
-  int mcp_frame;  
-  time_t t;  
-  time_t lst;  
-  double mag_az;   // degrees  
-  double mag_model; // degrees  
-  double mag_sigma; // degrees  
-  double dgps_az; // degrees  
-  double dgps_sigma; // degrees  
-  double ss_az; // degrees  
-  double ss_sigma; // degrees  
-  double sun_az; // degrees current calculated az of sun  
-  double isc_az; // degrees  
-  double isc_el; // degrees  
-  double isc_sigma; // degrees  
-  double enc_el;  
-  double enc_sigma;  
-  double clin_el;  
-  double clin_sigma;  
-
+  double lon;       // degrees
+  int mcp_frame;
+  time_t t;
+  time_t lst;
+  double mag_az;   // degrees
+  double mag_model; // degrees
+  double mag_sigma; // degrees
+  double dgps_az; // degrees
+  double dgps_sigma; // degrees
+  double ss_az; // degrees
+  double ss_sigma; // degrees
+  double sun_az; // degrees current calculated az of sun
+  double isc_az; // degrees
+  double isc_el; // degrees
+  double isc_sigma; // degrees
+  double enc_el;
+  double enc_sigma;
+  double clin_el;
+  double clin_sigma;
 };
 
 extern struct PointingDataStruct PointingData[3];

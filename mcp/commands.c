@@ -487,6 +487,11 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pointing_mode.el1 = 0.0;
     CommandData.pointing_mode.el2 = 0.0;    
   } else if (command == MIndex("ra_dec_set")) {
+    CommandData.pointing_mode.el_mode = POINT_VEL;
+    CommandData.pointing_mode.az_mode = POINT_VEL;
+    CommandData.pointing_mode.az_vel = 0.0;
+    CommandData.pointing_mode.el_vel = 0.0;
+    ClearPointingModeExtraFields();
     SetRaDec(rvalues[0], rvalues[1]);
   } else if (command == MIndex("az_scan")) {  /* scan in azimuth */
     CommandData.pointing_mode.az_mode = POINT_SCAN;

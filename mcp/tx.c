@@ -100,6 +100,8 @@ double getlst(time_t t, double lon);
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
                 double *el);
 
+void UnwindDiff(double ref, double *A); // in pointing.c
+
 void DoSched();
 
 /****************************************************************
@@ -173,15 +175,10 @@ int GetVAz() {
   if (axes_mode.az_mode == AXIS_VEL) {
     vel = axes_mode.az_vel;
   } else if (axes_mode.az_mode == AXIS_POSITION) {
-    vel = -(PointingData[i_point].az - axes_mode.az_dest)
+    vel = -drem(PointingData[i_point].az - axes_mode.az_dest, 360.0)
 	  * 0.36;
   }
-
-  //printf("%d %g\n", axes_mode.az_mode, axes_mode.az_vel);
   
-  //-[V5-GYRO2]*cos([el_rad-sv]) - [V6-GYRO3]*sin([el_rad-sv])
-  //vel_offset = -GY2_TMP_OFFSET*cos(PointingData[i_point].el) -
-  //       GY3_TMP_OFFSET*sin(PointingData[i_point].el);
   vel_offset =
     -PointingData[i_point].gy2_offset*cos(PointingData[i_point].el*M_PI/180.0) -
     PointingData[i_point].gy3_offset*sin(PointingData[i_point].el*M_PI/180.0);
@@ -1508,10 +1505,10 @@ void DoAzScanMode() {
 
   p1 = CommandData.pointing_mode.az1;
   p2 = CommandData.pointing_mode.az2;
+  UnwindDiff(p1, &p2);
+  UnwindDiff(p1, &az);
+  
   v = CommandData.pointing_mode.az_vel;
-
-  while (az-p2>180.0) az-=360.0;
-  while (p1-az>180.0) az+=360.0;
 
   if (axes_mode.az_vel < -v) axes_mode.az_vel = -v;
   if (axes_mode.az_vel > v) axes_mode.az_vel = v;
@@ -1554,8 +1551,7 @@ void DoRasterMode() {
   lst = PointingData[i_point].lst;
   az = PointingData[i_point].az;
   el = PointingData[i_point].el;
-  while (el> 180.0) el-=360.0;
-  while (el<-180.0) el += 360.0;
+
   if (el>80) el = 80; // very bad situation - don't know how this can happen
   if (el<-10) el = -10; // very bad situation - don't know how this can happen
 
@@ -1566,7 +1562,7 @@ void DoRasterMode() {
   radec2azel(CommandData.pointing_mode.ra, CommandData.pointing_mode.dec,
       lst+1.0, PointingData[i_point].lat,
       &az2, &el2);
-  daz_dt = az2 - caz;
+  daz_dt = drem(az2 - caz, 360.0);
   del_dt = el2 - cel;
 
   /* get elevation limits */
@@ -1610,10 +1606,8 @@ void DoRasterMode() {
   axes_mode.el_mode = AXIS_VEL;
   axes_mode.el_vel = CommandData.pointing_mode.el_vel + del_dt;
 
-  /** Get x (ie, az*cos_el-caz) **/
-  x = az - caz;
-  while (x>180.0) x-=360.0;
-  while (x<-180.0) x+=360.0;
+  /** Get x (ie, (az-caz)*cos_el) **/
+  x = drem(az - caz, 360.0);
   x*=cos(el * M_PI/180.0);
 
   /** Get x limits **/

@@ -319,7 +319,7 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
   {"mag_y",       'r', 21, 47,               1.0,                    0.0, 'u'},
   {"acs0bits",    'r', 21, 59,               1.0,                    0.0, 'u'},
 
-  {"az",          'w', LOOPBAK2, 51,       I2DEG,                    0.0, 's'},
+  {"az",          'w', LOOPBAK2, 51,       I2DEG,                    0.0, 'u'},
   {"el",          'w', LOOPBAK2, 52,       I2DEG,                    0.0, 'u'},
 
   {"mcp_frame",   'w', LOOPBAK2, 34,         1.0,                    0.0, 'u'},
