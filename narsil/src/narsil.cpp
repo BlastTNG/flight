@@ -77,16 +77,34 @@
 
 #define BLASTCMDFILE BLAST_CMD
 
-double defaults[N_MCOMMANDS][MAX_N_PARAMS];
+/* Defaults class holds the default parameter values */
+Defaults::Defaults()
+{
+  int i, j;
+  int fp;
+  int n_read = 0;
+
+  /* Read in previous default values */
+  if ((fp = open(DATA_DIR "/prev_status", O_RDONLY)) >= 0) {
+    n_read = read(fp, &rdefaults, sizeof(double) * N_MCOMMANDS * MAX_N_PARAMS);
+    n_read += read(fp, &idefaults, sizeof(int) * N_MCOMMANDS * MAX_N_PARAMS);
+    close(fp);
+  }
+
+  if (n_read != sizeof(rdefaults) + sizeof(idefaults))
+    for (i = 0; i < N_MCOMMANDS; i++)
+      for (j = 0; j < MAX_N_PARAMS; j++)
+        rdefaults[i][j] = idefaults[i][j] = 0;
+}
 
 //-------------------------------------------------------------
 //
-// SetDefaults: Narsil remembers any values entered for the
+// Defaults::Save: Narsil remembers any values entered for the
 //      next time it starts up
 //
 //-------------------------------------------------------------
 
-void SetDefaults() {
+void Defaults::Save() {
   int fp;
 
   /* Write file with defaults */
@@ -94,10 +112,20 @@ void SetDefaults() {
   if (fp < 0)
     printf("Warning: could not open prev_status file\n");
   else {
-    write(fp, &defaults, sizeof(defaults));
+    write(fp, &rdefaults, sizeof(rdefaults));
+    write(fp, &idefaults, sizeof(idefaults));
     close(fp);
   }
 }
+
+void Defaults::Set(int i, int j, QString text)
+{
+  idefaults[i][j] = text.toInt();
+  rdefaults[i][j] = text.toDouble();
+}
+
+int Defaults::asInt(int i, int j) { return idefaults[i][j]; }
+double Defaults::asDouble(int i, int j) { return rdefaults[i][j]; }
 
 //|||***************************************************************************
 //|||****
@@ -110,31 +138,25 @@ void SetDefaults() {
 
 
 //-------------------------------------------------------------
-//
 // GetGroup (private): checks the radio group of buttons to see
 //      which group is checked
 //
 //   Returns: index of the selected group
-//
 //-------------------------------------------------------------
 
 int MainForm::GetGroup() {
   int i;
 
-  for (i = 0; i < N_GROUPS; i++) {
+  for (i = 0; i < N_GROUPS; i++)
     if (NGroups[i]->isChecked())
       return i;
-  }
 }
 
-
 //-------------------------------------------------------------
-//
 // ChangeCommandList (slot): when a new group is selected,
 //      the list of commands must be cleared and the new
 //      group's commands added.  Triggered when a group button
 //      is selected.
-//
 //-------------------------------------------------------------
 
 void MainForm::ChangeCommandList() {
@@ -157,13 +179,10 @@ void MainForm::ChangeCommandList() {
   ChooseCommand();
 }
 
-
 //-------------------------------------------------------------
-//
 // ChooseCommand (slot): triggered when a command is selected
 //      from the list. Changes labels and shows spin-boxes
 //      as appropiate for the command.
-//
 //-------------------------------------------------------------
 
 void MainForm::ChooseCommand() {
@@ -175,7 +194,7 @@ void MainForm::ChooseCommand() {
     for (i = 0; i < mcommands[lastmcmd].numparams; i++)
       NParamFields[i]->RecordDefaults();
 
-    SetDefaults();
+    defaults->Save();
   }
 
   // It can happen that this function be called with nothing selected
@@ -223,16 +242,17 @@ void MainForm::ChooseCommand() {
           NParamLabels[i]->show();
           NParamFields[i]->show();
           NParamFields[i]->SetParentField(index, i);
+          NParamFields[i]->SetType(mcommands[index].params[i].type);
           if (IsData) {
             if (DataSource->readField(&indata,
                                       mcommands[index].params[i].field,
                                       DataSource->numFrames() - 2, -1) == 0) {
-              NParamFields[i]->SetDoubleValue(defaults[index][i]);
+              NParamFields[i]->SetDefaultValue(index, i);
             } else {
-              NParamFields[i]->SetDoubleValue(indata);
+              NParamFields[i]->SetValue(indata);
             }
           } else {
-            NParamFields[i]->SetDoubleValue(defaults[index][i]);
+            NParamFields[i]->SetDefaultValue(index, i);
           }
         } else {
           NParamLabels[i]->hide();
@@ -381,7 +401,7 @@ void MainForm::Quit() {
     for (i = 0; i < mcommands[lastmcmd].numparams; i++)
       NParamFields[i]->RecordDefaults();
 
-    SetDefaults();
+    defaults->Save();
   }
 
   // Release control of program; give it back to Main()
@@ -573,18 +593,19 @@ void MainForm::SendCommand() {
 
       for (j = 0; j < mcommands[index].numparams; j++) {
         NParamFields[j]->RecordDefaults();
-        if (defaults[index][j] < mcommands[index].params[j].min) {
+        if (defaults->asDouble(index, j) < mcommands[index].params[j].min) {
           sprintf(buffer, "Error: Parameter \"%s\" out of range: %f < %f",
-              mcommands[index].params[j].name, defaults[index][j],
+              mcommands[index].params[j].name, defaults->asDouble(index, j),
               mcommands[index].params[j].min);
           params[1] = buffer;
           params[2] = 0;
           WriteCmd(NLog, params);
           WriteErr(NLog, 9);
           return;
-        } else if (defaults[index][j] > mcommands[index].params[j].max) {
+        } else if (defaults->asDouble(index, j)
+            > mcommands[index].params[j].max) {
           sprintf(buffer, "Error: Parameter \"%s\" out of range: %f > %f",
-              mcommands[index].params[j].name, defaults[index][j],
+              mcommands[index].params[j].name, defaults->asDouble(index, j),
               mcommands[index].params[j].max);
           params[1] = buffer;
           params[2] = 0;
@@ -592,7 +613,10 @@ void MainForm::SendCommand() {
           WriteErr(NLog, 9);
           return;
         }
-        sprintf(args[i++], "%f ", defaults[index][j]);
+        if (mcommands[index].params[j].type == 'i')
+          sprintf(args[i++], "%i ", defaults->asInt(index, j));
+        else
+          sprintf(args[i++], "%f ", defaults->asDouble(index, j));
       }
     } else {
       index = SIndex(NCommandList->text(NCommandList->currentItem()));
@@ -687,7 +711,7 @@ void MainForm::WriteCmd(QMultiLineEdit *dest, char *args[]) {
   f = fopen(LOGFILE, "a");
 
   if (f == NULL) {
-    printf("Narsil: could not write log file %s.\n", LOGFILE);
+    fprintf(stderr, "Narsil: could not write log file %s.\n", LOGFILE);
     return;
   }
 
@@ -1248,10 +1272,8 @@ MainForm::~MainForm()
 //|||****_______________________________________________________________________
 //|||***************************************************************************
 
+Defaults *defaults;
 int main(int argc, char* argv[]) {
-  int i, j;
-  int fp;
-  int n_read = 0;
 
   if (argc > 1) {
     printf(
@@ -1269,18 +1291,7 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  /* Read in previous default values */
-  if ((fp = open(DATA_DIR "/prev_status", O_RDONLY)) >= 0) {
-    n_read = read(fp, &defaults, sizeof(double) * N_MCOMMANDS * MAX_N_PARAMS);
-    close(fp);
-  }
-
-  if (n_read != sizeof(defaults)) {
-    for (i = 0; i < N_MCOMMANDS; i++) {
-      for (j = 0; j < MAX_N_PARAMS; j++)
-        defaults[i][j] = 0;
-    }
-  }
+  defaults = new Defaults();
 
   QApplication app(argc, argv);
   MainForm narsil(DEF_CURFILE, 0, "narsil", true, 0);

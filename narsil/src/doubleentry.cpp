@@ -35,13 +35,8 @@
 #include "doubleentry.h"
 #include "narsil.h"
 
-extern double defaults[N_MCOMMANDS][MAX_N_PARAMS];
-
-
 //-------------------------------------------------------------
-//
 // DoubleEntry: constructor
-//
 //-------------------------------------------------------------
 
 DoubleEntry::DoubleEntry(QWidget *parent, const char *name) : QLineEdit(parent, name) {
@@ -57,8 +52,8 @@ DoubleEntry::DoubleEntry(QWidget *parent, const char *name) : QLineEdit(parent, 
 //-------------------------------------------------------------
 
 void DoubleEntry::RecordDefaults() {
-  defaults[command][param] = value();
-  setText(QString::number(value()));
+  QString v = value();
+  defaults->Set(command, param, v);
 }
 
 
@@ -72,14 +67,15 @@ void DoubleEntry::RecordDefaults() {
 //-------------------------------------------------------------
 
 void DoubleEntry::SetMinMax(double mi, double ma) {
-  Min = mi;
-  Max = ma;
+  rMin = mi;
+  rMax = ma;
+  iMin = (int)mi;
+  iMax = (int)ma;
 }
-
 
 //-------------------------------------------------------------
 //
-// SetDoubleValue (public): use this function instead of the
+// SetValue (public): use this function instead of the
 //     parent's setValue as it will do the double conversion
 //     for us
 //
@@ -87,12 +83,26 @@ void DoubleEntry::SetMinMax(double mi, double ma) {
 //
 //-------------------------------------------------------------
 
-void DoubleEntry::SetDoubleValue(double val) {
-  if (val<Min) val = Min;
-  if (val>Max) val = Max;
-  setText(QString::number(val));
+void DoubleEntry::SetValue(double val) {
+  if (type == 'i') {
+    if (val < iMin) val = iMin;
+    if (val > iMax) val = iMax;
+    setText(QString::number(val));
+  } else {
+    if (val < rMin) val = rMin;
+    if (val > rMax) val = rMax;
+    setText(QString::number(val));
+  }
 }
 
+void DoubleEntry::SetDefaultValue(int i, int j) {
+  if (type == 'i')
+    setText(QString::number(defaults->asInt(i, j)));
+  else
+    setText(QString::number(defaults->asDouble(i, j)));
+}
+
+void DoubleEntry::SetType(char t) { type = t; }
 
 //-------------------------------------------------------------
 //
@@ -109,9 +119,17 @@ void DoubleEntry::SetParentField(int com, int par) {
   param = par;
 }
 
-double DoubleEntry::value() {
-  double v = text().toDouble();
-  if (v<Min) v = Min;
-  if (v>Max) v = Max;
-  return(v);
+QString DoubleEntry::value() {
+  if (type == 'i') {
+    int v = (int)text().toDouble();
+    if (v < iMin) v = iMin;
+    if (v > iMax) v = iMax;
+    setText(QString::number(v));
+  } else {
+    double v = text().toDouble();
+    if (v < rMin) v = rMin;
+    if (v > rMax) v = rMax;
+    setText(QString::number(v));
+  }
+  return text();
 }

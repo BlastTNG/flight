@@ -33,6 +33,7 @@
 
 #include <qvariant.h>
 #include <qdialog.h>
+#include <qstring.h>
 #include <qspinbox.h>
 
 #include <sys/types.h>
@@ -40,7 +41,7 @@
 #define SMALL_POINT_SIZE 10
 #define LARGE_POINT_SIZE 12
 
-#define LOGFILEDIR "/data/log/"
+#define LOGFILEDIR "/data/etc/"
 
 class QVBoxLayout;
 class QHBoxLayout;
@@ -62,84 +63,96 @@ class QMultiLineEdit;
 class KstFile;
 class DoubleEntry;
 
-extern double defaults[N_MCOMMANDS][MAX_N_PARAMS];
+class Defaults
+{
+  public:
+    Defaults();
+    void Set(int, int, QString);
+    int asInt(int, int);
+    double asDouble(int, int);
+    void Save();
+
+  private:
+    double rdefaults[N_MCOMMANDS][MAX_N_PARAMS];
+    int idefaults[N_MCOMMANDS][MAX_N_PARAMS];
+};
 
 class MainForm : public QDialog
 {
   Q_OBJECT
 
-public:
-  MainForm(char *cf, QWidget* parent = 0, const char* name = 0,
-			     bool modal = FALSE, WFlags fl = 0);
-  ~MainForm();
+  public:
+    MainForm(char *cf, QWidget* parent = 0, const char* name = 0,
+        bool modal = FALSE, WFlags fl = 0);
+    ~MainForm();
 
-  QColorGroup *NColorGroup;
-  QColorGroup *NColorGroup2;
-  QFrame *NTopFrame;
-  QFrame *NBotFrame;
-  QLabel *NCurFileCaption;
-  QLineEdit *NCurFile;
-  QButtonGroup *NGroupsBox;
-  QRadioButton *NGroups[N_GROUPS];
-  QPushButton *NSendButton;
-  QPushButton *NSettingsButton;
-  QPushButton *NCurFileButton;
-  QPushButton *QuitButton;
-  QListBox *NCommandList;
-  QLabel *NAboutLabel;
-  QLabel *NParamLabels[MAX_N_PARAMS];
-  DoubleEntry *NParamFields[MAX_N_PARAMS];
-  QLabel *NWaitImage;
-  QCheckBox *NVerbose;
-  QComboBox *NSendMethod;
-  QComboBox *NSendRoute;
-  QDialog *NSettingsWindow;
-  QMultiLineEdit *NLog;
-  QPushButton *NCloseSettingsWindow;
+    QColorGroup *NColorGroup;
+    QColorGroup *NColorGroup2;
+    QFrame *NTopFrame;
+    QFrame *NBotFrame;
+    QLabel *NCurFileCaption;
+    QLineEdit *NCurFile;
+    QButtonGroup *NGroupsBox;
+    QRadioButton *NGroups[N_GROUPS];
+    QPushButton *NSendButton;
+    QPushButton *NSettingsButton;
+    QPushButton *NCurFileButton;
+    QPushButton *QuitButton;
+    QListBox *NCommandList;
+    QLabel *NAboutLabel;
+    QLabel *NParamLabels[MAX_N_PARAMS];
+    DoubleEntry *NParamFields[MAX_N_PARAMS];
+    QLabel *NWaitImage;
+    QCheckBox *NVerbose;
+    QComboBox *NSendMethod;
+    QComboBox *NSendRoute;
+    QDialog *NSettingsWindow;
+    QMultiLineEdit *NLog;
+    QPushButton *NCloseSettingsWindow;
 
-  void TurnOn(QTimer *t);
-  void TurnOff(QTimer *t);
-  QTimer *timer;
+    void TurnOn(QTimer *t);
+    void TurnOff(QTimer *t);
+    QTimer *timer;
 
-protected:
-  QGridLayout *NGroupsLayout;
-  QVBoxLayout *NSettingsLayout;
-  QHBoxLayout *NTSettingsLayout;
-  QHBoxLayout *NMSettingsLayout;
-  QHBoxLayout *NBSettingsLayout;
+  protected:
+    QGridLayout *NGroupsLayout;
+    QVBoxLayout *NSettingsLayout;
+    QHBoxLayout *NTSettingsLayout;
+    QHBoxLayout *NMSettingsLayout;
+    QHBoxLayout *NBSettingsLayout;
 
-private:
-  int GroupSIndexes(int group, int *indexes);
-  int GroupMIndexes(int group, int *indexes);
-  int GetGroup();
-  int SIndex(QString cmd);
-  int MIndex(QString cmd);
-  char *LongestParam();
-  void ReadLog(QMultiLineEdit *dest);
-  void WriteCmd(QMultiLineEdit *dest, char *args[]);
-  void WriteErr(QMultiLineEdit *dest, int retstatus);
-  void WriteLog(char *args[]);
+  private:
+    int GroupSIndexes(int group, int *indexes);
+    int GroupMIndexes(int group, int *indexes);
+    int GetGroup();
+    int SIndex(QString cmd);
+    int MIndex(QString cmd);
+    char *LongestParam();
+    void ReadLog(QMultiLineEdit *dest);
+    void WriteCmd(QMultiLineEdit *dest, char *args[]);
+    void WriteErr(QMultiLineEdit *dest, int retstatus);
+    void WriteLog(char *args[]);
 
-  int lastmcmd;
-  QString curfile;
-  KstFile *DataSource;
-  int fid;
-  bool sending;
-  pid_t sendingpid;
+    int lastmcmd;
+    QString curfile;
+    KstFile *DataSource;
+    int fid;
+    bool sending;
+    pid_t sendingpid;
 
-  char framenum;
-  char numframes;
-  char dir;
-  QPixmap *Images[4];
+    char framenum;
+    char numframes;
+    char dir;
+    QPixmap *Images[4];
 
-public slots:
-  void ChangeCommandList();
-  void ChooseCommand();
-  void Quit();
-  void SendCommand();
-  void ChangeImage();
-  void ChangeCurFile();
-  void ShowSettings();
+    public slots:
+      void ChangeCommandList();
+    void ChooseCommand();
+    void Quit();
+    void SendCommand();
+    void ChangeImage();
+    void ChangeCurFile();
+    void ShowSettings();
 };
-
+extern Defaults *defaults;
 #endif

@@ -30,13 +30,17 @@ class DoubleEntry : public QLineEdit {
 public:
   DoubleEntry(QWidget *parent, const char *name);
   void SetMinMax(double mi, double ma);
-  void SetDoubleValue(double val);
+  void SetValue(double val);
+  void SetType(char);
+  void SetDefaultValue(int, int);
   void SetParentField(int com, int par);
-  double value();
+  QString value();
   void RecordDefaults();
 private:
   int command, param;
-  double Min, Max;
+  double rMin, rMax;
+  int iMin, iMax;
+  char type;
 };
 
 #endif

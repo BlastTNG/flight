@@ -455,7 +455,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
    
-  {COMMAND(bda_gain), "set bda heater gains", GR_CRYO_HEAT, 5,
+  {COMMAND(bda_gain), "set bda heater gains", GR_CRYO_HEAT, 4,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "G_P_BDAHEAT"},
       {"Integral Gain", 0, MAX_15BIT, 'i', "G_I_BDAHEAT"},
