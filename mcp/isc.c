@@ -126,6 +126,16 @@ void IntegratingStarCamera(void)
               sizeof(struct ISCSolutionStruct), n);
           break;
         }
+        if (isc_log != NULL) {
+          t = time(NULL);
+          fprintf(isc_log, "%s: %i %i - %.4lf %.4lf %.4lf\n", ctime(&t),
+              ISCSolution[iscdata_index].framenum,
+              ISCSolution[iscdata_index].n_blobs,
+              ISCSolution[iscdata_index].ra,
+              ISCSolution[iscdata_index].dec,
+              ISCSolution[iscdata_index].sigma);
+          fflush(isc_log);
+        }
 
         t2 = t1;
         gettimeofday(&t1, NULL);
@@ -164,27 +174,21 @@ void IntegratingStarCamera(void)
             fprintf(isc_log, "%s: %i %i %i %i - %i %i %i %i - %.4lf %.4lf %.4lf %.4lf\n"
                 "%.1lf %i %i %i %i - %.1f %.6f %.4f - %.4f %.4f %.4f %.4f\n\n",
                 ctime(&t),
-
                 CommandData.ISCState.pause, CommandData.ISCState.save,
                 CommandData.ISCState.focus_pos, CommandData.ISCState.ap_pos,
-
                 CommandData.ISCState.display_mode, CommandData.ISCState.roi_x,
                 CommandData.ISCState.roi_y, CommandData.ISCState.blob_num,
-
                 CommandData.ISCState.az, CommandData.ISCState.el,
                 CommandData.ISCState.lst, CommandData.ISCState.lat,
-
                 CommandData.ISCState.sn_threshold,
                 CommandData.ISCState.grid, CommandData.ISCState.cenbox,
                 CommandData.ISCState.apbox, CommandData.ISCState.mult_dist,
-
                 CommandData.ISCState.mag_limit,
                 CommandData.ISCState.norm_radius,
                 CommandData.ISCState.lost_radius,
-
                 CommandData.ISCState.tolerance, CommandData.ISCState.match_tol,
                 CommandData.ISCState.quit_tol, CommandData.ISCState.rot_tol);
-                fflush(isc_log);
+            fflush(isc_log);
           }
         }
       }

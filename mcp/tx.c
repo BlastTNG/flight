@@ -1374,7 +1374,7 @@ void StoreData(int index, unsigned int* Txframe,
   WriteSlow(isc_decCh + 1, isc_decInd,
       (unsigned int)((ISCSolution[i_isc].dec + M_PI / 2) * 2.* RAD2LI));
   WriteSlow(isc_sigmaCh, isc_sigmaInd,
-      (unsigned int)(ISCSolution[i_isc].sigma * DEG2I));
+      (unsigned int)(ISCSolution[i_isc].sigma * RAD2I));
   WriteSlow(isc_nblobsCh, isc_nblobsInd,
       (unsigned int)ISCSolution[i_isc].n_blobs);
 
