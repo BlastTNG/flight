@@ -6,7 +6,7 @@ echo
 echo -n "Executable destination [/usr/local/bin]: "
 read EXEC_DEST
 
-if [ -z ${EXEC_DIR} ]
+if [ -z "${EXEC_DIR}" ]
 then
   EXEC_DIR=/usr/local/bin ;
 fi
@@ -16,7 +16,7 @@ echo EXEC_DIR = ${EXEC_DIR} > Makefile.config
 echo -n "Data directory [/data/etc/palantir]: "
 read DATA_DIR
 
-if [ -z ${DATA_DIR} ]
+if [ -z "${DATA_DIR}" ]
 then
   DATA_DIR=/data/etc/palantir ;
 fi
@@ -26,7 +26,7 @@ echo DATA_DIR = ${DATA_DIR} >> Makefile.config
 echo -n "qt root directory [/usr/lib/qt3]: "
 read QT_DIR
 
-if [ -z ${QT_DIR} ]
+if [ -z "${QT_DIR}" ]
 then
   QT_DIR=/usr/lib/qt3 ;
 fi
@@ -36,7 +36,7 @@ echo QT_DIR = ${QT_DIR} >> Makefile.config
 echo -n "use sound card by default [yes]: "
 read SOUND_CARD
 
-if [ -z ${SOUND_CARD} -o ${SOUND_CARD} = "yes" ]
+if [ -z "${SOUND_CARD}" -o "${SOUND_CARD}" = "yes" ]
 then
   true ;
 else
