@@ -163,7 +163,7 @@
       <HI value="6"/>
       <XHI value="16"/>
     </EXTREMA>
-    <CURFILE name="/mnt/decom/etc/decom.cur"/>
+    <CURFILE name="/data/etc/defile.cur"/>
     <DECOMD host="galadriel.blast" port="11411"/>
   </SETTINGS>
   <DEFAULTS>
@@ -681,7 +681,7 @@
     <NUMBER caption="Speed (Knots)">
       <DATUM format="%.2f" src="DGPS_SPEED" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="Direction">
+    <NUMBER caption="Bearing">
       <DATUM format="%5.1f" src="DGPS_DIR" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Climb (m/s)">
