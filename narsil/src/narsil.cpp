@@ -53,7 +53,7 @@
 #define PADDING 3
 #define SPACING 3
 
-#define DEF_CURFILE CUR_DIR "/decom.cur"
+#define DEF_CURFILE CUR_DIR "/defile.cur"
 #define LOGFILE DATA_DIR "/log.txt"
 
 #define BLASTCMDFILE BLAST_CMD
