@@ -21,7 +21,7 @@
  *
  */
 
-#define DEBUG
+#undef DEBUG
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -103,8 +103,6 @@ void ReadDecom (void)
       read_data = 1;
       FrameBuf[i_word] = buf;
       AntiFrameBuf[i_word] = ~buf;
-      if (buf == FRAME_SYNC_WORD)
-        printf("i_word = %i\n", i_word);
       if (i_word % BI0_FRAME_SIZE == 0) { /* begining of frame */
         du = ioctl(decom, DECOM_IOC_NUM_UNLOCKED);
         if ((buf != FRAME_SYNC_WORD) && ((~buf & 0xffff) != FRAME_SYNC_WORD)) {
