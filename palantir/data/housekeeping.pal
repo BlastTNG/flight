@@ -31,6 +31,12 @@
       <XHI value="60"/>
       <XLO value="-40"/>
     </EXTREMA>
+    <EXTREMA name="ktemp">
+      <HI value="320"/>
+      <LO value="270"/>
+      <XHI value="340"/>
+      <XLO value="260"/>
+    </EXTREMA>
     <EXTREMA name="cputemp">
       <HI value="65"/>
       <LO value="30"/>
@@ -49,11 +55,11 @@
       <XHI value="55"/>
       <XLO value="-20"/>
     </EXTREMA>
-    <EXTREMA name="isctemp">
-      <HI value="35"/>
-      <LO value="0"/>
-      <XHI value="45"/>
-      <XLO value="-10"/>
+    <EXTREMA name="soltemp">
+      <HI value="65"/>
+      <LO value="20"/>
+      <XHI value="105"/>
+      <XLO value="-40"/>
     </EXTREMA>
     <EXTREMA name="angle">
       <HI value="360.01"/>
@@ -88,7 +94,7 @@
     <EXTREMA name="solarvolt">
       <HI value="32.5"/>
       <LO value="22"/>
-      <XHI value="40"/>
+      <XHI value="54"/>
       <XLO value="10"/>
     </EXTREMA>
     <EXTREMA name="battvolt">
@@ -304,28 +310,28 @@
       <DATUM format="%.2f" src="T_IN_HEATX" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="ISC Front Flange">
-      <DATUM format="%.2f" src="T_ISC_FLANGE" extrema="temp"/>
+      <DATUM format="%.2f" src="T_ISC_FLANGE" extrema="ktemp"/>
     </NUMBER>
     <NUMBER caption="ISC Heater Ring">
-      <DATUM format="%.2f" src="T_ISC_HEAT" extrema="temp"/>
+      <DATUM format="%.2f" src="T_ISC_HEAT" extrema="ktemp"/>
     </NUMBER>
     <NUMBER caption="ISC Lens">
-      <DATUM format="%.2f" src="T_ISC_LENS" extrema="temp"/>
+      <DATUM format="%.2f" src="T_ISC_LENS" extrema="ktemp"/>
     </NUMBER>
     <NUMBER caption="ISC PC">
-      <DATUM format="%.2f" src="T_ISC_COMP" extrema="temp"/>
+      <DATUM format="%.2f" src="T_ISC_COMP" extrema="ktemp"/>
     </NUMBER>
     <NUMBER caption="OSC Front Flange">
-      <DATUM format="%.2f" src="T_OSC_FLANGE" extrema="temp"/>
+      <DATUM format="%.2f" src="T_OSC_FLANGE" extrema="ktemp"/>
     </NUMBER>
     <NUMBER caption="OSC Heater Ring">
-      <DATUM format="%.2f" src="T_OSC_HEAT" extrema="temp"/>
+      <DATUM format="%.2f" src="T_OSC_HEAT" extrema="ktemp"/>
     </NUMBER>
     <NUMBER caption="OSC Lens">
-      <DATUM format="%.2f" src="T_OSC_LENS" extrema="temp"/>
+      <DATUM format="%.2f" src="T_OSC_LENS" extrema="ktemp"/>
     </NUMBER>
     <NUMBER caption="OSC PC">
-      <DATUM format="%.2f" src="T_OSC_COMP" extrema="temp"/>
+      <DATUM format="%.2f" src="T_OSC_COMP" extrema="ktemp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Mirror Temps" colour="#002222" row="2" col="5" rowspan="1">
@@ -404,10 +410,10 @@
       <DATUM format="%.2f" src="T_DPCU" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Solar Port">
-      <DATUM format="%.2f" src="T_SOL_PORT" extrema="temp"/>
+      <DATUM format="%.2f" src="T_SOL_PORT" extrema="soltemp"/>
     </NUMBER>
     <NUMBER caption="Solar Starboard">
-      <DATUM format="%.2f" src="T_SOL_STBD" extrema="temp"/>
+      <DATUM format="%.2f" src="T_SOL_STBD" extrema="soltemp"/>
     </NUMBER>
     <NUMBER caption="ACS Battery">
       <DATUM format="%.2f" src="T_BATT_ACS" extrema="temp"/>
