@@ -231,15 +231,17 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
   t_charcoal
     = (double)slow_data[t_charcoal_Addr->index][t_charcoal_Addr->channel];
   t_he3fridge
-    = (double)slow_data[t_he3fridge_Addr->index][t_he3fridge_Addr->channel];
+    = (double)(slow_data[t_he3fridge_Addr->index][t_he3fridge_Addr->channel] +
+		    (slow_data[t_he3fridge_Addr->index][t_he3fridge_Addr->channel + 1] << 16) );
   t_he4pot
-    = (double)slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel];
+    = (double)(slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel] +
+       		(slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel+1] << 16) );	
 
   t_lhe       = T_LHE_M*t_lhe + T_LHE_B;
   t_charcoal  = T_CHARCOAL_M*t_charcoal + T_CHARCOAL_B;
   t_he3fridge = (ROX_C2V)*t_he3fridge + ROX_OFFSET;
   t_he4pot    = (ROX_C2V)*t_he4pot    + ROX_OFFSET;
-
+  
   if (t_lhe < T_LHE_SET) {
     *cryoout |= CRYO_CHARCOAL_OFF;
     *cryostate &= ~CS_CHARCOAL;
