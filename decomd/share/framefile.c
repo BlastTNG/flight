@@ -51,6 +51,14 @@
      } while (0)
 #endif
 
+#ifdef __DECOMD__
+#  define CURFILE "/mnt/decom/etc/decom.cur"
+#  define RAWDIR  "/mnt/decom/rawdir"
+#else
+#  define CURFILE "/data/etc/datafile.cur"
+#  define RAWDIR  "/data/rawdir"
+#endif
+
 unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
 int shutdown_now = 0;
@@ -80,8 +88,8 @@ void OpenNextChunk(void) {
     if (close(framefile.fd) == -1)
       merror(MCP_ERROR, "Error closing chunk");
 
-  sprintf(framefile.name, "/data/rawdir/%lu.%c%03X", framefile.time,
-      framefile.type, ++framefile.chunk);
+  sprintf(framefile.name, RAWDIR "/%lu.%c%03X%c", framefile.time,
+      framefile.type, ++framefile.chunk, '\0');
 
   mprintf(MCP_INFO, "Writing to framefile %s\n", framefile.name);
 
@@ -101,13 +109,6 @@ void ShutdownFrameFile(void) {
 /*     Initialize framefile                                          */
 /*                                                                   */
 /*********************************************************************/
-#ifdef __DECOMD__
-#  define CURFILE "/mnt/decom/etc/decom.cur"
-#  define RAWDIR  "/mnt/decom/rawdir"
-#else
-#  define CURFILE "/data/etc/datafile.cur"
-#  define RAWDIR  "/data/rawdir"
-#endif
 void InitialiseFrameFile(char type) {
   FILE* fp;
   char buffer[200];

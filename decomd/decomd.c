@@ -351,8 +351,10 @@ int main(void) {
     else
       disk_free = (unsigned long long int)vfsbuf.f_bavail * vfsbuf.f_bsize;
 
-    sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu %s%c", status + system_idled
-        * 0x4, polarity, du, fs_bad, dq_bad, disk_free, framefile.name, '\0');
+    memset(buf, 0, 209);
+    sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu ", status + system_idled
+        * 0x4, polarity, du, fs_bad, dq_bad, disk_free);
+//    strcat(buf, framefile.name);
 
     if (n == -1 && errno == EINTR)
       continue;
@@ -378,7 +380,7 @@ int main(void) {
 
       if (FD_ISSET(n, &fdwrite))     /* connexion n is waiting for write */
         if (n != sock)               /* don't write to the listener */
-          if ((z = send(n, buf, 208, MSG_NOSIGNAL | MSG_DONTWAIT))
+          if ((z = send(n, buf, 1 + strlen(buf), MSG_NOSIGNAL | MSG_DONTWAIT))
               == -1) {
             if (errno == EPIPE) {  /* connexion dropped */
               syslog(LOG_INFO, "connexion dropped on socket %i\n", n);

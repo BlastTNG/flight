@@ -1,4 +1,4 @@
-.TH decomd 8 "9 September 2004" "" "BLAST UTILITIES"
+.TH decomd 8 "12 September 2004" "" "BLAST UTILITIES"
 .SH NAME
 decomd \(em BLAST decom daemon
 .SH SYNOPSIS
@@ -14,7 +14,7 @@ and the data is writen to a
 .BR mcp
 style framefile in
 .nh
-.BR /data/decom .
+.BR /mnt/decom/rawdir .
 .hy
 The framefile name consists of the seconds since the Epoch (see
 .BR time (2))
@@ -80,17 +80,24 @@ or a
 .I SIGTERM
 Signals the daemon to flush the output and terminate.
 .PP
-The results of sending other signals to the daemon are undefined.
+The results of sending other signals to the daemon are undefined.  A Perl
+utilitity,
+.BR decomctl (8)
+is provided to simplify controlling the decom daemon.
 
 .SH FILES
 .TP
 .I /var/run/decomd.pid
 The process-id file.
 .TP
-.I /data/etc/decom.cur
+.I /mnt/decom/etc/decom.cur
 The name of the current framefile.
+.TP
+.I /mnt/decom/rawdir
+The directory into which the framefiles are writen.
 
 .SH SEE ALSO
+.BR decomctl (8),
 .BR defile (1)
 
 .SH AUTHOR
