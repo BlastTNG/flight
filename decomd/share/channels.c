@@ -473,32 +473,33 @@ void DumpNiosFrame(void)
 }
 #endif
 
-int GetChannelByName(char** names, int nn, char* field)
+int GetChannelByName(char names[4096][FIELD_LEN], int nn, char* field)
 {
   int i;
 
-  for (i = 0; i < nn; ++i)
+  for (i = 0; i < nn; ++i) {
     if (strcmp(names[i], field) == 0)
       return i;
+  }
 
   return -1;
 }
 
 /* Checks BBC Addresses to see if multiple fields are occupying the same
  * place or namespace */
-void BBCAddressCheck(char** names, int nn, char* fields[64][64], char* name,
-    int node, int addr)
+void BBCAddressCheck(char names[4096][FIELD_LEN], int nn, char* fields[64][64],
+    char* name, int node, int addr)
 {
   if (fields[node][addr])
     bprintf(fatal, "FATAL: Conflicting BBC address found for %s and %s"
         " (node %i channel %i)\n", fields[node][addr], name, node, addr);
 
   if (nn != -1) {
-    if (GetChannelByName(names, nn, name))
+    if (GetChannelByName(names, nn, name) != -1)
       bprintf(fatal, "Namespace Collision: Duplicate channel name %s found\n",
           name);
-    names[nn] = name;
-    names[nn + 1] = FieldToUpper(name);
+    strcpy(names[nn], name);
+    strcpy(names[nn + 1], FieldToUpper(name));
   }
 
   fields[node][addr] = name;
@@ -511,7 +512,7 @@ void DoSanityChecks(void)
 {
   int i, j, nn = 0;
   char* fields[2][64][64];
-  char* names[64 * 64 * 3];
+  char names[4096][FIELD_LEN];
 
 #ifdef VERBOSE
   bprintf(info, "Running Sanity Checks on Channel Lists.\n");
@@ -629,35 +630,37 @@ void DoSanityChecks(void)
   for (i = 0; DerivedChannels[i].comment.type != DERIVED_EOC_MARKER; ++i)
     switch (DerivedChannels[i].comment.type) {
       case 'b': /* bitfield */
-        if (!GetChannelByName(names, nn, DerivedChannels[i].bitfield.source))
+        if (GetChannelByName(names, nn, DerivedChannels[i].bitfield.source)
+            == -1)
           bprintf(fatal, "Bitfield source %s not found.",
               DerivedChannels[i].bitfield.source);
 
         for (j = 0; j < 16; ++j) {
           if (DerivedChannels[i].bitfield.field[j][0] && GetChannelByName(names,
-                nn, DerivedChannels[i].bitfield.field[i]))
+                nn, DerivedChannels[i].bitfield.field[j]) != -1)
             bprintf(fatal, "Namespace Collision: Duplicate channel name %s "
                 "found in derived channels",
-                DerivedChannels[i].bitfield.field[i]);
-          names[nn++] = DerivedChannels[i].bitfield.field[i];
+                DerivedChannels[i].bitfield.field[j]);
+          strcpy(names[nn++], DerivedChannels[i].bitfield.field[j]);
         }
         break;
       case '2': /* lincom2 -- one extra check from lincom */
-        if (!GetChannelByName(names, nn, DerivedChannels[i].lincom2.source2))
+        if (GetChannelByName(names, nn, DerivedChannels[i].lincom2.source2)
+            == -1)
           bprintf(fatal, "Derived channel source %s not found.",
               DerivedChannels[i].lincom2.source2);
 
         /* FALLTHROUGH */
       case 't': /* linterp -- same checks as lincom */
       case 'c': /* lincom */
-        if (!GetChannelByName(names, nn, DerivedChannels[i].lincom.source))
+        if (GetChannelByName(names, nn, DerivedChannels[i].lincom.source) == -1)
           bprintf(fatal, "Derived channel source %s not found.",
               DerivedChannels[i].lincom.source);
 
-        if (GetChannelByName(names, nn, DerivedChannels[i].lincom.field))
+        if (GetChannelByName(names, nn, DerivedChannels[i].lincom.field) != -1)
           bprintf(fatal, "Namespace Collision: Duplicate channel name %s "
               "found in derived channels", DerivedChannels[i].lincom.field[i]);
-        names[nn++] = DerivedChannels[i].lincom.field;
+        strcpy(names[nn++], DerivedChannels[i].lincom.field);
 
         /* FALLTHROUGH */
       case '#': /* comment -- they always pass the check */

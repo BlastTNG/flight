@@ -38,9 +38,6 @@ union DerivedUnion DerivedChannels[] = {
       "ISC_BRIGHT_STAR",
       "ISC_SHUTDOWN"
       ),
-  BITFIELD("isc_bits",
-      "ISC_PULSE"
-      ),
 
   BITFIELD("osc_state",
       "OSC_SAVE_IMAGES",
@@ -49,9 +46,6 @@ union DerivedUnion DerivedChannels[] = {
       "OSC_AUTOFOCUS",
       "OSC_BRIGHT_STAR",
       "OSC_SHUTDOWN"
-      ),
-  BITFIELD("osc_bits",
-      "OSC_PULSE"
       ),
 
   /* BIAS */
