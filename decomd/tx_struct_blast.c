@@ -327,8 +327,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
 struct ChannelStruct FastChList[N_FASTCHLIST] = {
 #ifndef BOLOTEST
     /* read channels from ACS0 */
-  {"f_i_el",      'r',  1, 39, 1.0 / (0.01 * 10.0) * 4.096 / 65536.0,
-                        -32768.0 * 1.0 / (0.01 * 10.0) * 4.096 / 65536.0, 'u'},
+  {"fast_i_el",   'r',  1, 39, 1.0 / (0.01 * 10.0) * 4.096 / 65536.0, -32768.0 * 1.0 / (0.01 * 10.0) * 4.096 / 65536.0, 'u'},
 
   {"fspare",      'r', SPARE, 40,             1.0,                   0.0, 'u'},
   {"roll_clin_sip",'r', 21, 27,     4.0/5333.3333,              -4.*6.144, 'u'},
