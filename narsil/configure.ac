@@ -10,7 +10,7 @@ AC_SUBST(DATA_ETC_DIR)
 
 AC_ARG_WITH(cur-dir, AS_HELP_STRING([--with-cur-dir=DIR],
             [read curfiles from DIR [[/mtn/decom/etc]]]),
-            CUR_DIR="${withval}", CUR_DIR="/mnt/decom/etc")
+            CUR_DIR="${withval}", CUR_DIR="/data/etc")
 AC_SUBST(CUR_DIR)
 AC_DEFINE_UNQUOTED(CUR_DIR, "$CUR_DIR", [Define to the path to your curfiles ])
 
