@@ -259,25 +259,25 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {"jfet_ht", "JFET heater level", GR_CRYO, 1,
     {
-      {"level", 0, 100, 'i', 0, "ADD"}
+      {"level (V)", 0, 5, 'r', 3, "JFETPWM"}
     }
   },
 
   {"hs_heat", "Heat Switch heater level", GR_CRYO, 1,
     {
-      {"level", 0, 100, 'i', 0, "ADD"}
+      {"level (V)", 0, 5, 'r', 3, "HSPWM"}
     }
   },
 
   {"he3_ht", "Helium 3 heater level", GR_CRYO, 1,
     {
-      {"level", 0, 100, 'i', 0, "ADD"}
+      {"level (V)", 0, 5, 'r', 3, "HE3PWM"}
     }
   },
 
   {"cryopwm", "Spare cryo pwm level", GR_CRYO, 1,
     {
-      {"level", 0, 100, 'i', 0, "ADD"}
+      {"level (V)", 0, 5, 'r', 3, "CRYOPWM"}
     }
   },
 
@@ -301,7 +301,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"sprpwm", "spare pump pwm level", GR_COOL, 1,
+  {"pumppwm", "spare pump pwm level", GR_COOL, 1,
     {
       {"level", 0, 2047, 'i', 0, "ADD"}
     }

@@ -374,12 +374,13 @@ void MultiCommand (int command, unsigned short *dataq) {
   FILE *fp;
 
   int i, dataqind;
-  double min;
   double rvalues[MAX_N_PARAMS];
   unsigned short ivalues[MAX_N_PARAMS];
   char type;
 
 #ifndef BOLOTEST
+  double min;
+
   /* compute renormalised values */
   for (i = dataqind = 0; i < mcommands[command].numparams; ++i) {
     min = mcommands[command].params[i].min;
@@ -475,13 +476,13 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.point_mode.az_mode = POINT_VEL;
     CommandData.point_mode.az_vel = rvalues[0];
   } else if (command == MIndex("jfet_ht"))
-    CommandData.Cryo.JFETHeat = 2047 - ivalues[0] * 20.47;
+    CommandData.Cryo.JFETHeat = 2047 - rvalues[0] * 2047./5.;
   else if (command == MIndex("hs_heat"))
-    CommandData.Cryo.heatSwitch = 2047 - ivalues[0] * 20.47;
+    CommandData.Cryo.heatSwitch = 2047 - rvalues[0] * 2047./5.;
   else if (command == MIndex("he3_ht"))
-    CommandData.Cryo.heliumThree = 2047 - ivalues[0] * 20.47;
+    CommandData.Cryo.heliumThree = 2047 - rvalues[0] * 2047./5.;
   else if (command == MIndex("cryopwm"))
-    CommandData.Cryo.sparePwm = 2047 - ivalues[0] * 20.47;
+    CommandData.Cryo.sparePwm = 2047 - rvalues[0] * 2047./5.;
   else if (command == MIndex("b_levl1"))    /* Set bias 1 */
     CommandData.Bias.bias1 = ivalues[0];
   else if (command == MIndex("b_levl2"))    /* Set bias 1 */
@@ -496,7 +497,7 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pumps.bal_target = rvalues[2] * 1648.;
   } else if (command == MIndex("balpwm"))
     CommandData.pumps.pwm1 = ivalues[0];
-  else if (command == MIndex("sprpwm"))
+  else if (command == MIndex("pumppwm"))
     CommandData.pumps.pwm2 = ivalues[0];
   else if (command == MIndex("inpwm"))
     CommandData.pumps.pwm3 = ivalues[0];

@@ -507,14 +507,16 @@ int main(int argc, char *argv[]) {
   unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW];
   int n_reset=0;
 
-  pthread_t starfind_id;
-  
   pthread_t CommandDatacomm1;
+  pthread_t disk_id;
+  pthread_t sunsensor_id;
+
+#ifndef BOLOTEST
+  pthread_t starfind_id;
   pthread_t CommandDatacomm2;
   pthread_t bi0_id;
-  pthread_t disk_id;
   pthread_t sensors_id;
-  pthread_t sunsensor_id;
+#endif
 
   struct CommandDataStruct CommandData_loc;
   int nread = 0, last_nread = 0, last_read = 0, df = 0;

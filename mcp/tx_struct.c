@@ -159,9 +159,9 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"pch_clin_piv", 'r',  2,  7,      4.0/5333.3333,       -4.*6.144, 'u'},
     {"rll_clin_piv", 'r',  2,  9,      4.0/5333.3333,       -4.*6.144, 'u'},
     {"t_clin_piv",   'r',  2, 11,           -0.00625,          136.45, 'u'},
-    {"he3pwm",       'w',  3,  3,                1.0,            0.00, 'u'},//OK
-    {"jfetpwm",      'w',  3,  4,          -0.000625,           20.48, 'u'},//OK
-    {"hspwm",        'w',  3,  5,           -0.00625,          136.45, 'u'}
+    {"he3pwm",       'w',  3,  3,          -5./2047.,              5., 'u'},
+    {"jfetpwm",      'w',  3,  4,          -5./2047.,              5., 'u'},
+    {"hspwm",        'w',  3,  5,          -5./2047.,              5., 'u'}
   },
   {
     {"pch_clin_pyr", 'r', 21, 33,      4.0/5333.3333,       -4.*6.144, 'u'},
@@ -170,7 +170,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"bias_lev1",    'w', 17, 43,                1.0,             0.0, 'u'},
     {"bias_lev2",    'w', 17, 44,                1.0,             0.0, 'u'},
     {"bias_lev3",    'w', 17, 45,                1.0,             0.0, 'u'},
-    {"spare46",      'r', 18, 46,                1.0,             0.0, 'u'},
+    {"cryopwm",      'w',  3,  6,          -5./2047.,              5., 'u'},
     {"spare47",      'r', 18, 47,                1.0,             0.0, 'u'},
     {"phase5",       'w',  5, 10,                1.0,             0.0, 'u'},
     {"phase6",       'w',  6, 10,                1.0,             0.0, 'u'},
@@ -319,6 +319,8 @@ void MakeTxFrame(void) {
     printf("error: N_FASTCHLIST_INIT not correct\n");
     printf("%d field: %s\n", last_fastchlist,
         FastChList[last_fastchlist].field);
+    printf("%d field: %s\n", last_fastchlist - 1,
+        FastChList[last_fastchlist - 1].field);
     exit(1);
   }
 

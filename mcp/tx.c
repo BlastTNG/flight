@@ -307,7 +307,7 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
   static int he3pwmCh, he3pwmInd;
   static int jfetpwmCh, jfetpwmInd;
   static int hspwmCh, hspwmInd;
-  static int sparepwmCh, sparepwmInd;
+  static int cryopwmCh, cryopwmInd;
   int cryoout3 = 0, cryoout2 = 0, cryostate = 0;
 
   /************** Set indices first time around *************/
@@ -318,7 +318,7 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
     SlowChIndex("he3pwm", &he3pwmCh, &he3pwmInd);
     SlowChIndex("jfetpwm", &jfetpwmCh, &jfetpwmInd);
     SlowChIndex("hspwm", &hspwmCh, &hspwmInd);
-    SlowChIndex("sparepwm", &sparepwmCh, &sparepwmInd);
+    SlowChIndex("cryopwm", &cryopwmCh, &cryopwmInd);
   }
 
   /********** Set Output Bits **********/
@@ -353,7 +353,7 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
   WriteSlow(he3pwmCh, he3pwmInd, CommandData.Cryo.heliumThree);
   WriteSlow(hspwmCh, hspwmInd, CommandData.Cryo.heatSwitch);
   WriteSlow(jfetpwmCh, jfetpwmInd, CommandData.Cryo.JFETHeat);
-  WriteSlow(sparepwmCh, sparepwmInd, CommandData.Cryo.sparePwm);
+  WriteSlow(cryopwmCh, cryopwmInd, CommandData.Cryo.sparePwm);
 }
 
 /************************************************************************

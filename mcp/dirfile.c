@@ -318,7 +318,7 @@ void DirFileWriter(void) {
   int i_ch, i_slow, i_card;
   int i_in, i_out, i_buf;
   int k;
-  int d, d_field = 0;
+  int d_field = 0;
   static int max_d_field = 0;
   static int min_d_field = 10000;
 
