@@ -126,8 +126,8 @@ void ControlGyroHeat(unsigned short *RxFrame)
 {
   static struct BiPhaseStruct* tGyboxAddr;
   static struct NiosStruct *gyHeatAddr, *tGySetAddr, *pGyheatAddr, *iGyheatAddr;
-  static struct NiosStruct *dGyheatAddr, *tGyMinAddr, *tGyMaxAddr, *tGyHistAddr;
-  static struct NiosStruct *tGyAgeAddr, *gyHMinAddr, *gyHMaxAddr, *gyHTcAddr;
+  static struct NiosStruct *dGyheatAddr, *tGyMinAddr, *tGyMaxAddr, *gyHHistAddr;
+  static struct NiosStruct *gyHAgeAddr, *gyHMinAddr, *gyHMaxAddr, *gyHTcAddr;
   static struct NiosStruct *tGyStepAddr;
   static int firsttime = 1;
   static double history = 0;
@@ -151,12 +151,12 @@ void ControlGyroHeat(unsigned short *RxFrame)
     gyHMinAddr = GetNiosAddr("gy_h_min");
     gyHMaxAddr = GetNiosAddr("gy_h_max");
     gyHTcAddr = GetNiosAddr("gy_h_tc");
+    gyHHistAddr = GetNiosAddr("gy_h_hist");
+    gyHAgeAddr = GetNiosAddr("gy_h_age");
     tGyStepAddr = GetNiosAddr("t_gy_step");
     tGySetAddr = GetNiosAddr("t_gy_set");
     tGyMinAddr = GetNiosAddr("t_gy_min");
     tGyMaxAddr = GetNiosAddr("t_gy_max");
-    tGyHistAddr = GetNiosAddr("t_gy_hist");
-    tGyAgeAddr = GetNiosAddr("t_gy_age");
 
     pGyheatAddr = GetNiosAddr("g_p_gyheat");
     iGyheatAddr = GetNiosAddr("g_i_gyheat");
@@ -215,8 +215,8 @@ void ControlGyroHeat(unsigned short *RxFrame)
   /******** do the pulse *****/
   if (CommandData.gyheat.age <= CommandData.gyheat.tc * 2)
     ++CommandData.gyheat.age;
-  WriteData(tGyAgeAddr, CommandData.gyheat.age, NIOS_QUEUE);
-  WriteData(tGyHistAddr, (history * 32768. / 100.), NIOS_QUEUE);
+  WriteData(gyHAgeAddr, CommandData.gyheat.age, NIOS_QUEUE);
+  WriteData(gyHHistAddr, (history * 32768. / 100.), NIOS_QUEUE);
   if (p_on > 0) {
     WriteData(gyHeatAddr, on, NIOS_FLUSH);
     history = 100. / CommandData.gyheat.tc + (1. - 1. / CommandData.gyheat.tc)

@@ -453,9 +453,9 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_real_trig",'w', LOOP4, 36,                1.0,             0.0, 's'},
   {"t_gy_min",     'w', LOOP4, 37,    (100.0/32768.0),             0.0, 'u'},
   {"t_gy_max",     'w', LOOP4, 38,    (100.0/32768.0),             0.0, 'u'},
-  {"t_gy_hist",    'w', LOOP4, 39,    (100.0/32768.0),             0.0, 'u'},
-  {"t_gy_age",     'w', LOOP4, 40,                1.0,             0.0, 'u'},
-  {"t_gy_step",    'w', LOOP4, 41,      (10./32768.0),             0.0, 'u'},
+  {"t_gy_step",    'w', LOOP4, 39,      (10./32768.0),             0.0, 'u'},
+  {"gy_h_hist",    'w', LOOP4, 40,    (100.0/32768.0),             0.0, 'u'},
+  {"gy_h_age",     'w', LOOP4, 41,                1.0,             0.0, 'u'},
   {"gy_h_min",     'w', LOOP4, 42,    (100.0/32768.0),             0.0, 'u'},
   {"gy_h_max",     'w', LOOP4, 43,    (100.0/32768.0),             0.0, 'u'},
   {"gy_h_tc",      'w', LOOP4, 44,           1./6000.,             0.0, 'u'},
@@ -480,10 +480,11 @@ struct ChannelStruct WideFastChannels[] = {
                                       DGY32_OFFSET * DGY32_TO_DPS - 0.005, 'U'},
 #endif
 
-  /* BIAS Amplitude */
+  /* BIAS Stuff */
   {"b_amp2",      'r',  BIAS,  0,             1.0,                    0.0, 'U'},
   {"b_amp1",      'r',  BIAS,  2,             1.0,                    0.0, 'U'},
   {"b_amp3",      'r',  BIAS, 38,             1.0,                    0.0, 'U'},
+  {"biasin",      'r',  BIAS, 50,             1.0,                    0.0, 'u'},
 
   /* Bolometer Bias References */
 
@@ -570,8 +571,6 @@ struct ChannelStruct FastChannels[] = {
   /* Read from DAS3 -- cryo commanding */
   {"calstat",      'r',  CRYO, 61,                 1.0,             0.0, 'u'},
 
-  /* Read from DAS4 -- bias controller and DPM/inner frame monitoring */
-  {"biasin",      'r',  BIAS, 50,             1.0,                    0.0, 'u'},
   END_OF_CHANNELS
 };
 
