@@ -1,9 +1,12 @@
+2004-09-18:
+  * decomd.c, decomd.8, decomctl: add versioning
+
 2004-09-15 (1.0.6):
   * decomctl: Typo
 
 2004-09-12 (1.0.5):
   * decomctl: Add control
-  * decom: Move stuff to /mnt/decom
+  * decomd: Move stuff to /mnt/decom
 
 2004-09-09 (1.0.4):
   * framefile.c: Pause state, write to /mnt/decom
