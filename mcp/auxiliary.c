@@ -170,10 +170,6 @@ int Balance(int iscBits, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
     error = -error;
   }
 
-  printf("Balance: error = %i gain = %lf bal_min = %i bal_max = %i\n",
-      error, CommandData.pumps.bal_gain, CommandData.pumps.bal_min,
-      CommandData.pumps.bal_max);
-
   pumppwm = CommandData.pumps.bal_min - error * CommandData.pumps.bal_gain;
 
   if (pumppwm < CommandData.pumps.bal_max) {
