@@ -85,6 +85,7 @@ void IntegratingStarCamera(void)
   struct PointingDataStruct MyPointData;
 
   int sock = -1, ISCReadIndex;
+  static int come_down_to = -1;
 
 #ifdef USE_ISC_LOG
   time_t t;
@@ -168,94 +169,99 @@ void IntegratingStarCamera(void)
         
         if (CommandData.ISCState.autofocus) {
           CommandData.ISCState.autofocus = 0;
-
-          /* Process results of autofocus */
-          if (ISCSolution[iscdata_index].autoFocusPosition > 2000 &&
-              ISCSolution[iscdata_index].autoFocusPosition < 2550) {
-            CommandData.ISCState.focus_pos =
-              ISCSolution[iscdata_index].autoFocusPosition;
-          } else
-            CommandData.ISCState.focus_pos = CommandData.old_ISC_focus;
+          CommandData.ISCState.focus_pos = CommandData.old_ISC_focus;
         }
 
-        iscdata_index = INC_INDEX(iscdata_index);
+        /* Process results of autofocus */
+        if (come_down_to >= 0) {
+          CommandData.ISCState.focus_pos = come_down_to;
+          come_down_to = -1;
+        } else if (ISCSolution[iscdata_index].autoFocusPosition > 2000 &&
+            ISCSolution[iscdata_index].autoFocusPosition < FOCUS_RANGE &&
+            CommandData.ISCState.focus_pos !=
+            ISCSolution[iscdata_index].autoFocusPosition) {
+          come_down_to = ISCSolution[iscdata_index].autoFocusPosition;
+          CommandData.ISCState.focus_pos = FOCUS_RANGE;
       }
 
-      /* ------------ write ---------- */ 
+      iscdata_index = INC_INDEX(iscdata_index);
+    }
 
-      if (FD_ISSET(sock, &fdw) && (write_ISC_pointing)) {
-        /* Retreive the derived pointing information */
-        MyPointData = PointingData[GETREADINDEX(point_index)];
-        ISCReadIndex = GETREADINDEX(iscdata_index);
+    /* ------------ write ---------- */ 
 
-        if (CommandData.ISC_autofocus > 0) {
-          CommandData.ISCState.autofocus = 1;
-          CommandData.ISC_autofocus--;
-        } else
-          CommandData.ISCState.autofocus = 0;
-        CommandData.ISCState.lat = MyPointData.lat * DEG2RAD;
-        CommandData.ISCState.az = MyPointData.az * DEG2RAD;
-        CommandData.ISCState.el = MyPointData.el * DEG2RAD;
-        CommandData.ISCState.lst = MyPointData.lst * SEC2RAD;
-        CommandData.ISCState.MCPFrameNum = frame_num;
+    if (FD_ISSET(sock, &fdw) && (write_ISC_pointing)) {
+      /* Retreive the derived pointing information */
+      MyPointData = PointingData[GETREADINDEX(point_index)];
+      ISCReadIndex = GETREADINDEX(iscdata_index);
 
-        /* request for one automaticly saved image */
-        if (CommandData.ISC_auto_save) {
-          save_image_state = CommandData.ISCState.save;
-          CommandData.ISCState.save = 1;
+      if (CommandData.ISC_autofocus > 0) {
+        CommandData.ISCState.autofocus = 1;
+        CommandData.ISC_autofocus--;
+      } else
+        CommandData.ISCState.autofocus = 0;
+      CommandData.ISCState.lat = MyPointData.lat * DEG2RAD;
+      CommandData.ISCState.az = MyPointData.az * DEG2RAD;
+      CommandData.ISCState.el = MyPointData.el * DEG2RAD;
+      CommandData.ISCState.lst = MyPointData.lst * SEC2RAD;
+      CommandData.ISCState.MCPFrameNum = frame_num;
+
+      /* request for one automaticly saved image */
+      if (CommandData.ISC_auto_save) {
+        save_image_state = CommandData.ISCState.save;
+        CommandData.ISCState.save = 1;
+      }
+
+      /* Write to ISC */
+      if (InCharge) {
+        n = send(sock, &CommandData.ISCState, sizeof(CommandData.ISCState),
+            0);
+        if (n == -1) {
+          perror("ISC send()");
+          break;
+        } else if (n < sizeof(struct ISCStatusStruct)) {
+          fprintf(stderr, "ISC: Expected %i but sent %i bytes.\n",
+              sizeof(struct ISCStatusStruct), n);
+          break;
         }
-
-        /* Write to ISC */
-        if (InCharge) {
-          n = send(sock, &CommandData.ISCState, sizeof(CommandData.ISCState),
-              0);
-          if (n == -1) {
-            perror("ISC send()");
-            break;
-          } else if (n < sizeof(struct ISCStatusStruct)) {
-            fprintf(stderr, "ISC: Expected %i but sent %i bytes.\n",
-                sizeof(struct ISCStatusStruct), n);
-            break;
-          }
-          write_ISC_pointing = 0;
+        write_ISC_pointing = 0;
 #ifdef USE_ISC_LOG
-          if (isc_log != NULL) {
-            t = time(NULL);
-            fprintf(isc_log,
-                "%s: %i %i %i %i - %i %i %i %i - %.4lf %.4lf %.4lf %.4lf\n"
-                "%.1lf %i %i %i %i - %.1f %.6f %.4f - %.4f %.4f %.4f %.4f\n\n",
-                ctime(&t),
-                CommandData.ISCState.pause, CommandData.ISCState.save,
-                CommandData.ISCState.focus_pos, CommandData.ISCState.ap_pos,
-                CommandData.ISCState.display_mode, CommandData.ISCState.roi_x,
-                CommandData.ISCState.roi_y, CommandData.ISCState.blob_num,
-                CommandData.ISCState.az, CommandData.ISCState.el,
-                CommandData.ISCState.lst, CommandData.ISCState.lat,
-                CommandData.ISCState.sn_threshold,
-                CommandData.ISCState.grid, CommandData.ISCState.cenbox,
-                CommandData.ISCState.apbox, CommandData.ISCState.mult_dist,
-                CommandData.ISCState.mag_limit,
-                CommandData.ISCState.norm_radius,
-                CommandData.ISCState.lost_radius,
-                CommandData.ISCState.tolerance, CommandData.ISCState.match_tol,
-                CommandData.ISCState.quit_tol, CommandData.ISCState.rot_tol);
-            fflush(isc_log);
-          }
+        if (isc_log != NULL) {
+          t = time(NULL);
+          fprintf(isc_log,
+              "%s: %i %i %i %i - %i %i %i %i - %.4lf %.4lf %.4lf %.4lf\n"
+              "%.1lf %i %i %i %i - %.1f %.6f %.4f - %.4f %.4f %.4f %.4f\n\n",
+              ctime(&t),
+              CommandData.ISCState.pause, CommandData.ISCState.save,
+              CommandData.ISCState.focus_pos, CommandData.ISCState.ap_pos,
+              CommandData.ISCState.display_mode, CommandData.ISCState.roi_x,
+              CommandData.ISCState.roi_y, CommandData.ISCState.blob_num,
+              CommandData.ISCState.az, CommandData.ISCState.el,
+              CommandData.ISCState.lst, CommandData.ISCState.lat,
+              CommandData.ISCState.sn_threshold,
+              CommandData.ISCState.grid, CommandData.ISCState.cenbox,
+              CommandData.ISCState.apbox, CommandData.ISCState.mult_dist,
+              CommandData.ISCState.mag_limit,
+              CommandData.ISCState.norm_radius,
+              CommandData.ISCState.lost_radius,
+              CommandData.ISCState.tolerance, CommandData.ISCState.match_tol,
+              CommandData.ISCState.quit_tol, CommandData.ISCState.rot_tol);
+          fflush(isc_log);
+        }
 #endif
-        }
+      }
 
-        SentState = CommandData.ISCState;
+      SentState = CommandData.ISCState;
 
-        /* Deassert abort and shutdown after (perhaps) sending it */
-        CommandData.ISCState.abort = 0;
-        CommandData.ISCState.shutdown = 0;
+      /* Deassert abort and shutdown after (perhaps) sending it */
+      CommandData.ISCState.abort = 0;
+      CommandData.ISCState.shutdown = 0;
 
-        /* Return to default save_image state after autosaving image */
-        if (CommandData.ISC_auto_save) {
-          CommandData.ISCState.save = save_image_state;
-          CommandData.ISC_auto_save = 0;
-        }
+      /* Return to default save_image state after autosaving image */
+      if (CommandData.ISC_auto_save) {
+        CommandData.ISCState.save = save_image_state;
+        CommandData.ISC_auto_save = 0;
       }
     }
   }
+}
 }

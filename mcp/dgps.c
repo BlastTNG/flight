@@ -20,8 +20,8 @@ int dgpspos_index = 0;
 time_t DGPSTime;
 
 #define FLOAT_ALT 30480
-//#define FLOAT_ALT 1000
 #define FRAMES_TO_OK_ATFLOAT 100
+#define LEAP_SECONDS 27
 
 int setGpsPort9600() {
   int fd;
@@ -192,7 +192,7 @@ void WatchDGPS() {
       ts.tm_isdst = 0;
       ts.tm_mon--; /* Jan is 0 in struct tm.tm_mon, not 1 */
 
-      DGPSTime = mktime(&ts)-timezone;
+      DGPSTime = mktime(&ts)-timezone + LEAP_SECONDS;
     } else if (strncmp(instr, "$GPPAT",6)==0) { // position & attitude: Page 98
       inptr=instr+7;
 

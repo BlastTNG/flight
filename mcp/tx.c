@@ -71,6 +71,7 @@ void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int timeoutCh, timeoutInd;
   static int incharge = -1;
   time_t t;
+  int i_point;
 
   if (i_fan == -1) {
     SlowChIndex("cpu_fan", &i_fan, &j_fan);
@@ -101,8 +102,12 @@ void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   WriteSlow(i_samiam, j_samiam, SamIAm);
   WriteSlow(i_df, j_df, CommandData.df);
 
+  i_point = GETREADINDEX(point_index);
+
+  t = PointingData[i_point].t;
+
   WriteSlow(aliceFileCh, aliceFileInd, CommandData.alice_file);
-  WriteSlow(timeoutCh, timeoutInd, CommandData.pointing_mode.t);
+  WriteSlow(timeoutCh, timeoutInd, CommandData.pointing_mode.t - t);
 }
 
 /*****************************************************************/

@@ -230,6 +230,8 @@ void SingleCommand (enum singleCommand command) {
     CommandData.pointing_mode.w = 0;
     CommandData.pointing_mode.h = 0;
 
+  } else if (command == mcc_halt) {
+    system("/sbin/halt");
   } else if (command == sync_adc)
     ADC_sync_timeout = 0;
 
@@ -393,7 +395,7 @@ void SingleCommand (enum singleCommand command) {
   else if (command == isc_reboot)
     CommandData.ISCState.shutdown = 2;
   else if (command == cam_cycle)
-    CommandData.ISCState.shutdown = 2;
+    CommandData.ISCState.shutdown = 3;
   else if (command == isc_pause)
     CommandData.ISCState.pause = 1;
   else if (command == isc_abort)
@@ -653,8 +655,6 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
         perror("alice_index fclose()");
     } else
       perror("alice_index fopen()");
-  } else if (command == mcc_halt) {
-    system("/sbin/telinit 6");
 
     /***************************************/
     /*************** Bias  *****************/
@@ -735,10 +735,11 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.ISCState.rot_tol = rvalues[3] * DEG2RAD;
   } else if (command == hold_current)
     CommandData.ISCState.hold_current = ivalues[0];
-  else if (command == save_period)
+  else if (command == save_period) {
     CommandData.ISC_save_period = ivalues[0] * 100;
+    printf("Save period is: %i\n", CommandData.ISC_save_period);
 
-  else
+  } else
     return; /* invalid command - don't update */
 
   i_point = GETREADINDEX(point_index);
