@@ -862,6 +862,7 @@ void DoCapMode() {
 void DoNewCapMode() {
   double caz, cel, r, x2, y, xw; 
   double bottom, top, left, right;
+  double next_left, next_right, az_distance;
   double az, az2, el, el1, el2;
   double daz_dt, del_dt;
   double lst;
@@ -917,8 +918,22 @@ void DoNewCapMode() {
       return;
     }
   }
-  
-  /** Get x limits **/
+
+  /** Get x limits at the next elevation row **/
+  y = el - cel + CommandData.pointing_mode.del*el_dir;
+  x2 = r * r - y * y;
+  if (x2 < 0) {
+    xw = 0.0;
+  } else {
+    xw = sqrt(x2);
+  }
+  if (xw < MIN_SCAN)
+    xw = MIN_SCAN;
+  xw /= cos(el * M_PI / 180.0);
+  next_left = caz - xw;
+  next_right = caz + xw;
+
+  /** Get x limits at the current elevation **/
   y = el - cel;
   x2 = r * r - y * y;
   if (x2 < 0) {
@@ -939,13 +954,15 @@ void DoNewCapMode() {
   /** set El V **/
   if (az<left) {
     if (az_dir < 0) {
-      t = xw*2.0/v_az + v_az/(AZ_ACCEL * 100.16);
+      az_distance = next_right - left;
+      t = az_distance/v_az + v_az/(AZ_ACCEL * 100.16);
       speed_el = CommandData.pointing_mode.del/t;
     }
     az_dir = 1;
   } else if (az>right) {
     if (az_dir > 0) {
-      t = xw*2.0/v_az + v_az/(AZ_ACCEL * 100.16);
+      az_distance = right - next_left;
+      t = az_distance/v_az + v_az/(AZ_ACCEL * 100.16);
       speed_el = CommandData.pointing_mode.del/t;
     }
     az_dir = -1;
