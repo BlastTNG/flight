@@ -2,7 +2,7 @@
 
 #define N_SCOMMANDS 99         /* total number of single word commands */
 #define N_NM_SCOMMANDS 66      /* total number of named single word cmds */
-#define N_MCOMMANDS 45         /* total number of multiword commands */
+#define N_MCOMMANDS 44         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
