@@ -28,7 +28,7 @@
 
 /* offset of encoder.  Reset if encoder has been unmounted. */
 //#define ENC_ELEV_OFFSET 101.166
-#define ENC_ELEV_OFFSET -160.77
+#define ENC_ELEV_OFFSET 192.25
 
 /* Angle between magnetometer aligment and pointing alignment -- to be */
 /* calibrated. */

@@ -374,13 +374,13 @@ void SingleCommand (int command) {
   else if (command == SIndex("inner_cool_off"))
     CommandData.pumps.inframe_cool1_off = 40;
 
-  else if (command == SIndex("outer_cool1_on"))
+  else if (command == SIndex("outer_cool_on"))
     CommandData.pumps.outframe_cool1_on = 40;
-  else if (command == SIndex("outer_cool1_off"))
+  else if (command == SIndex("outer_cool_off"))
     CommandData.pumps.outframe_cool1_off = 40;
-  else if (command == SIndex("outer_cool2_on"))
+  else if (command == SIndex("outer_spare_on"))
     CommandData.pumps.outframe_cool2_on = 40;
-  else if (command == SIndex("outer_cool2_off"))
+  else if (command == SIndex("outer_spare_off"))
     CommandData.pumps.outframe_cool2_off = 40;
   else if (command == SIndex("pin_in"))
     CommandData.pumps.lock_in = 1;

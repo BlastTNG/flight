@@ -136,8 +136,8 @@ double GetVElev() {
   vel *= DPS2GYU; 
 
   /* Limit Maximim speed */
-  if (vel > 2000.0) vel = 2000.0;
-  if (vel < -2000.0) vel = -2000.0;
+  if (vel > DPS2GYU/2.0) vel = DPS2GYU/2.0;
+  if (vel < -DPS2GYU/2.0) vel = -DPS2GYU/2.0;
 
   /* limit Maximum acceleration */
   dvel = vel - last_vel;
