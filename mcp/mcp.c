@@ -81,8 +81,8 @@ struct {
   unsigned short *framelist[BI0_FRAME_BUFLEN];
 } bi0_buffer;
 
-unsigned short *smalldata[3];
-unsigned int small_index = 0;
+unsigned short *tdrss_data[3];
+unsigned int tdrss_index = 0;
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -589,7 +589,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifndef BOLOTEST
-  pthread_t small_id;
+  pthread_t tdrss_id;
   pthread_t bi0_id;
   pthread_t sensors_id;
   pthread_t dgps_id;
@@ -667,8 +667,8 @@ int main(int argc, char *argv[]) {
     merror(MCP_FATAL, "Unable to malloc RxFrame");
 
   for (i = 0; i < 3; ++i)
-    if ((smalldata[i] = (unsigned short *)malloc(BiPhaseFrameSize)) == NULL)
-      merror(MCP_FATAL, "Unable to malloc smalldata");
+    if ((tdrss_data[i] = (unsigned short *)malloc(BiPhaseFrameSize)) == NULL)
+      merror(MCP_FATAL, "Unable to malloc tdrss data buffer");
 
   for (i = 0; i < FAST_PER_SLOW; ++i)
     if ((slow_data[i] = malloc(slowsPerBi0Frame * sizeof(unsigned short)))
@@ -676,7 +676,7 @@ int main(int argc, char *argv[]) {
       merror(MCP_FATAL, "Unable to malloc slow data buffer");
 
 #ifndef BOLOTEST
-  pthread_create(&small_id, NULL, (void*)&smallinit, NULL);
+  pthread_create(&tdrss_id, NULL, (void*)&TDRSSWriter, NULL);
 #endif
 
   /* Find out whether I'm frodo or sam */
@@ -720,9 +720,9 @@ int main(int argc, char *argv[]) {
         GetACS(RxFrame);
         Pointing();
 
-        /* Copy data to small. */
-        memcpy(smalldata[small_index], RxFrame, BiPhaseFrameSize);
-        small_index = INC_INDEX(small_index);
+        /* Copy data to tdrss thread. */
+        memcpy(tdrss_data[tdrss_index], RxFrame, BiPhaseFrameSize);
+        tdrss_index = INC_INDEX(tdrss_index);
 #endif
 
         /* Frame sequencing check */
