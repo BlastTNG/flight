@@ -42,6 +42,23 @@ struct ChannelStruct WideSlowChannels[] = {
 };
 
 struct ChannelStruct SlowChannels[] = {
+  {"t_el_mc",      'r',  ACS3,  3,           -0.00625,          136.45, 'u'},
+  {"t_el_mot",     'r',  ACS3,  5,           -0.00625,          136.45, 'u'},
+  {"t_osc_heat",   'r',  ACS3,  7,                1.0,             0.0, 'u'},
+  {"t_osc_flange", 'r',  ACS3,  9,                1.0,             0.0, 'u'},
+  {"t_osc_comp",   'r',  ACS3, 11,                1.0,             0.0, 'u'},
+  {"t_osc_lens",   'r',  ACS3, 13,                1.0,             0.0, 'u'},
+  {"t_isc_heat",   'r',  ACS3, 15,                1.0,             0.0, 'u'},
+  {"t_isc_flange", 'r',  ACS3, 17,                1.0,             0.0, 'u'},
+  {"t_isc_comp",   'r',  ACS3, 19,                1.0,             0.0, 'u'},
+  {"i_starcam",    'r',  ACS3, 21,                1.0,             0.0, 'u'},
+  {"t_isc_lens",   'r',  ACS3, 25,           -0.00625,          136.45, 'u'},
+  {"roll_clin_pyr",'r',  ACS3, 33,     -4.0/5333.3333,        4.*6.144, 'u'},
+  {"pch_clin_pyr", 'r',  ACS3, 35,      4.0/5333.3333,       -4.*6.144, 'u'},
+  {"t_clin_pyr",   'r',  ACS3, 23,           -0.01875,           614.4, 'u'},
+  {"t_clin_sip",   'r',  ACS3, 31,           -0.01875,           614.4, 'u'},
+  {"t_clin_if",    'r',  ACS3, 41,           -0.01875,           614.4, 'u'},
+#if 0
   {"t_el_mc",      'r',  ACS0,  3,           -0.00625,          136.45, 'u'},
   {"t_el_mot",     'r',  ACS0,  5,           -0.00625,          136.45, 'u'},
   {"t_osc_heat",   'r',  ACS0,  7,                1.0,             0.0, 'u'},
@@ -58,6 +75,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_clin_pyr",   'r',  ACS0, 23,           -0.01875,           614.4, 'u'},
   {"t_clin_sip",   'r',  ACS0, 31,           -0.01875,           614.4, 'u'},
   {"t_clin_if",    'r',  ACS0, 41,           -0.01875,           614.4, 'u'},
+#endif
   {"status00",     'r',  ACS0, 56,                1.0,             0.0, 'u'},
 
   {"t_roll",       'r',  ACS1,  9,           -0.00625,          136.45, 'u'},
@@ -108,6 +126,7 @@ struct ChannelStruct SlowChannels[] = {
   {"i_apm_10v",    'r',  ACS2, 47,          -0.000625,           20.48, 'u'},
   {"status02",     'r',  ACS2, 56,                1.0,             0.0, 'u'},
 
+#if 0
   {"v_p_batt",     'r',  ACS3,  1,                1.0,             0.0, 'u'},
   {"v_s_batt",     'r',  ACS3,  3,                1.0,             0.0, 'u'},
   {"t_dpcu",       'r',  ACS3,  5,                1.0,             0.0, 'u'},
@@ -132,6 +151,7 @@ struct ChannelStruct SlowChannels[] = {
   {"v_s2",         'r',  ACS3, 43,                1.0,             0.0, 'u'},
   {"v_p1",         'r',  ACS3, 45,                1.0,             0.0, 'u'},
   {"v_s1",         'r',  ACS3, 47,                1.0,             0.0, 'u'},
+#endif
   {"lock_bits",    'r',  ACS3, 59,                1.0,             0.0, 'u'},
   {"ifpm_bits",    'w',  ACS3,  1,                1.0,             0.0, 'u'},
   {"ofpm_bits",    'w',  ACS3,  2,                1.0,             0.0, 'u'},
@@ -445,6 +465,18 @@ struct ChannelStruct WideFastChannels[] = {
 struct ChannelStruct FastChannels[] = {
 #ifndef BOLOTEST
   /* read channels from ACS0 */
+  {"pch_clin_sip",'r',  ACS3, 27,   4.0/5333.3333,              -4.*6.144, 'u'},
+  {"roll_clin_sip",'r', ACS3, 29,  -4.0/5333.3333,               4.*6.144, 'u'},
+
+  {"clin_elev",   'r',  ACS3, 37,      0.00546739,                -133.78, 'u'},
+  {"xel_clin_if", 'r',  ACS3, 39,      0.00546739,             -25.*6.144, 'u'},
+
+  {"mag_bias",    'r',  ACS3, 43,             1.0,                    0.0, 'u'},
+  {"mag_x",       'r',  ACS3, 45,             1.0,                    0.0, 'u'},
+  {"mag_y",       'r',  ACS3, 47,             1.0,                    0.0, 'u'},
+  {"isc_pulse",   'r',  ACS3, 53,             1.0,                    0.0, 'u'},
+  {"osc_pulse",   'r',  ACS3, 54,             1.0,                    0.0, 'u'},
+#if 0
   {"pch_clin_sip",'r',  ACS0, 27,   4.0/5333.3333,              -4.*6.144, 'u'},
   {"roll_clin_sip",'r', ACS0, 29,  -4.0/5333.3333,               4.*6.144, 'u'},
 
@@ -454,11 +486,18 @@ struct ChannelStruct FastChannels[] = {
   {"mag_bias",    'r',  ACS0, 43,             1.0,                    0.0, 'u'},
   {"mag_x",       'r',  ACS0, 45,             1.0,                    0.0, 'u'},
   {"mag_y",       'r',  ACS0, 47,             1.0,                    0.0, 'u'},
+  {"isc_pulse",   'r',  ACS0, 53,             1.0,                    0.0, 'u'},
+  {"osc_pulse",   'r',  ACS0, 54,             1.0,                    0.0, 'u'},
   {"piv_enc",     'r',  ACS0, 59,    360.0/8192.0,                    0.0, 'u'},
+#endif
 
   /* send data to ACS0 */
-  {"isc_trigger", 'w',  ACS0,  1,             1.0,                    0.0, 'u'},
-  {"osc_trigger", 'w',  ACS0,  2,             1.0,                    0.0, 'u'},
+  {"isc_trigger", 'w',  ACS3, 31,             1.0,                    0.0, 'u'},
+  {"osc_trigger", 'w',  ACS3, 32,             1.0,                    0.0, 'u'},
+#if 0
+  {"isc_trigger", 'w',  ACS3, 31,             1.0,                    0.0, 'u'},
+  {"osc_trigger", 'w',  ACS3, 32,             1.0,                    0.0, 'u'},
+#endif
 
   /* read channels from ACS1 */
   {"gyro4",       'r',  ACS1, 41,  1.0/1648,   -32768.0/1648, 'u'},

@@ -1283,7 +1283,7 @@ void InitCommandData() {
   CommandData.pointing_mode.t = time(NULL) + CommandData.timeout;
 
   /** initialize stuff that we don't want from prev_status here **/
-  CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
+  CommandData.pumps.bal_veto = -1; //BAL_VETO_LENGTH;
   CommandData.pumps.bal1_on = 0;
   CommandData.pumps.bal1_reverse = 0;
   CommandData.pumps.bal2_on = 0;
