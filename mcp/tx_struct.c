@@ -217,7 +217,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_secondary",  'r',  BIAS, 17,              I2T_M,           I2T_B, 'u'},
   {"t_primary_r",  'r',  BIAS, 19,              I2T_M,           I2T_B, 'u'},
   {"t_primary_c",  'r',  BIAS, 21,              I2T_M,           I2T_B, 'u'},
-  {"i_dpm_28v",    'r',  BIAS, 23,          -0.000625,           20.48, 'u'},
+  {"i_dpm_28v",    'r',  BIAS, 23,           0.000625,          -20.48, 'u'},
   {"i_dpm_3v",     'r',  BIAS, 25,          -0.000625,           20.48, 'u'},
   {"i_dpm_5v",     'r',  BIAS, 27,          -0.000625,           20.48, 'u'},
   {"i_dpm_10v",    'r',  BIAS, 29,          -0.000625,           20.48, 'u'},
