@@ -67,15 +67,7 @@ struct ChannelStruct WideSlowChannels[] = {
 struct ChannelStruct SlowChannels[] = {
   {"t_el_mc",      'r',  ACS0,  3,           -0.00625,          136.45, 'u'},
   {"t_el_mot",     'r',  ACS0,  5,           -0.00625,          136.45, 'u'},
-  {"t_osc_heat",   'r',  ACS0,  7,                1.0,             0.0, 'u'},
-  {"t_osc_flange", 'r',  ACS0,  9,                1.0,             0.0, 'u'},
-  {"t_osc_comp",   'r',  ACS0, 11,                1.0,             0.0, 'u'},
-  {"t_osc_lens",   'r',  ACS0, 13,                1.0,             0.0, 'u'},
-  {"t_isc_heat",   'r',  ACS0, 15,                1.0,             0.0, 'u'},
-  {"t_isc_flange", 'r',  ACS0, 17,                1.0,             0.0, 'u'},
-  {"t_isc_comp",   'r',  ACS0, 19,                1.0,             0.0, 'u'},
   {"i_starcam",    'r',  ACS0, 21,                1.0,             0.0, 'u'},
-  {"t_isc_lens",   'r',  ACS0, 25,           -0.00625,          136.45, 'u'},
   {"roll_clin_pyr",'r',  ACS0, 33,     -4.0/5333.3333,        4.*6.144, 'u'},
   {"pch_clin_pyr", 'r',  ACS0, 35,      4.0/5333.3333,       -4.*6.144, 'u'},
   {"t_clin_pyr",   'r',  ACS0, 23,           -0.01875,           614.4, 'u'},
@@ -110,7 +102,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_out_heatx",  'r',  ACS2,  3,           -0.00625,          136.45, 'u'},
   {"i_gybox",      'r',  ACS2,  5,          -0.000625,           20.48, 'u'},
   {"pch_clin_piv", 'r',  ACS2,  7,      4.0/5333.3333,       -4.*6.144, 'u'},
-  {"rll_clin_piv", 'r',  ACS2,  9,      4.0/5333.3333,       -4.*6.144, 'u'},
+  {"roll_clin_piv",'r',  ACS2,  9,      4.0/5333.3333,       -4.*6.144, 'u'},
   {"t_clin_piv",   'r',  ACS2, 11,            0.01875,          -614.4, 'u'},
   {"i_sun",        'r',  ACS2, 13,          -0.000625,           20.48, 'u'},
   {"p_pv",         'r',  ACS2, 15,                1.0,             0.0, 'u'},
@@ -510,8 +502,8 @@ struct ChannelStruct WideFastChannels[] = {
   {"n16ref",      'r', DAS16, 36,      1.19209e-7,                    0.0, 'U'},
 
 // cryo control debug
-  {"pwmout",	  'r',  CRYO, 51,             1.0,                    0.0, 'S'},
-  {"pwmint",	  'r',  CRYO, 58,             1.0,                    0.0, 'S'},
+//{"pwmout",	  'r',  CRYO, 51,             1.0,                    0.0, 'S'},
+//{"pwmint",	  'r',  CRYO, 58,             1.0,                    0.0, 'S'},
 // end cryo control debug
 
   END_OF_CHANNELS
@@ -571,9 +563,9 @@ struct ChannelStruct FastChannels[] = {
 
 #endif
 // cryo control debug
-  {"t_cur",	   'r',  CRYO, 53,                 1.0,             0.0, 's'},
-  {"t_set",	   'r',  CRYO, 54,                 1.0,             0.0, 's'},
-  {"pwm_err",	   'r',  CRYO, 55,                 1.0,             0.0, 's'},
+//{"t_cur",	   'r',  CRYO, 53,                 1.0,             0.0, 's'},
+//{"t_set",	   'r',  CRYO, 54,                 1.0,             0.0, 's'},
+//{"pwm_err",	   'r',  CRYO, 55,                 1.0,             0.0, 's'},
 // end debug
   /* Read from DAS3 -- cryo commanding */
   {"calstat",      'r',  CRYO, 61,                 1.0,             0.0, 'u'},
