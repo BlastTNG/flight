@@ -922,6 +922,7 @@ struct NiosStruct* GetNiosAddr(const char* field) {
 void FPrintDerived(FILE *fp) {
   fprintf(fp,
       "P_X_H         LINCOM 1 p_x_deg 0.0003662109375 0\n"
+
       "### Sensor Veto ###\n"
       "SUN_VETO         BIT sensor_veto 0\n"
       "ISC_VETO         BIT sensor_veto 1\n"
@@ -930,6 +931,7 @@ void FPrintDerived(FILE *fp) {
       "GPS_VETO         BIT sensor_veto 4\n"
       "ELCLIN_VETO      BIT sensor_veto 5\n"
       "IS_SCHED         BIT sensor_veto 6\n"
+
       "### ISC State Field ###\n"
       "ISC_SAVE_IMAGES  BIT isc_state 0\n"
       "ISC_PAUSE        BIT isc_state 1\n"
@@ -938,10 +940,12 @@ void FPrintDerived(FILE *fp) {
       "ISC_BRIGHT_STAR  BIT isc_state 4\n"
       "ISC_SHUTDOWN     BIT isc_state 5\n"
       "ISC_PULSE        BIT isc_bits  1\n"
+
       "### Bias Generator Bitfield ###\n"
-      "BIAS_IS_DC       BIT biasin 1\n"
-      "BIAS_CLK_IS_INT  BIT biasin 2\n"
-      "BIAS_IS_INT      BIT biasin 3\n"
+    "BIAS_IS_DC       BIT biasin 1\n"
+    "BIAS_CLK_IS_INT  BIT biasin 2\n"
+    "BIAS_IS_INT      BIT biasin 3\n"
+
     "### Cryo State Bitfield ###\n"
     "HE_LEV_SENS      BIT cryostate 0\n"
     "CHARC_HEATER     BIT cryostate 1\n"
@@ -951,6 +955,7 @@ void FPrintDerived(FILE *fp) {
     "LHE_VALVE        BIT cryostate 6\n"
     "LHE_DIREC        BIT cryostate 7\n"
     "AUTO_JFET_HEAT   BIT cryostate 9\n"
+
     "### Cryo Valve Limit Switches ###\n"
     "POT_IS_CLOSED    BIT cryoin 0\n"
     "POT_IS_OPEN      BIT cryoin 1\n"
@@ -958,6 +963,7 @@ void FPrintDerived(FILE *fp) {
     "LHE_IS_CLOSED    BIT cryoin 2\n"
     "LHE_IS_OPEN      BIT cryoin 3\n"
     "LHE_STATE        LINCOM 2 LHE_IS_CLOSED 1 0 LHE_IS_OPEN 1 0\n"
+
     "### Cryo Table Lookups ###\n"
     "# Diodes\n"
     "T_charcoal       LINTERP  T_CHARCOAL   /data/etc/dt600.txt\n"
@@ -970,34 +976,17 @@ void FPrintDerived(FILE *fp) {
     "T_lhe_filt       LINTERP  T_LHE_FILT   /data/etc/dt600.txt\n"
     "T_he4pot_d       LINTERP  T_HE4POT_D   /data/etc/dt600.txt\n"
     "T_vcs_fet        LINTERP  T_VCS_FET    /data/etc/dt600.txt\n"
+
     "# GRTs (ROX)\n"
     "#T_he3fridge	LINTERP	 T_HE3FRIDGE  /data/etc/rox102a.txt\n"
     "#T_he4pot        LINTERP  T_HE4POT     /data/etc/rox102a.txt\n"
     "#T_horn_500      LINTERP  T_HORN_500   /data/etc/rox102a.txt\n"
     "#T_base_500      LINTERP  T_BASE_500   /data/etc/rox102a.txt\n"
     "#T_base_250      LINTERP  T_BASE_250   /data/etc/rox102a.txt\n"
+
     "# Level Sensor\n"
     "HE4_LITRE        LINTERP  HE4_LEV      /data/etc/he4_litre.txt\n"
     "HE4_PERCENT      LINTERP  HE4_LEV      /data/etc/he4_percent.txt\n"
-    "# Control Bits\n"
-    "# To Be Filled In At A Later Date\n"
-    "# TEMPORARY GRT Calibration\n"
-    "#Res_He3	       LINCOM  1       N10C0   1.9416E04       -8.4574\n"
-    "#Res_horn_500   LINCOM  1       N10C1   1.9416E04       -8.4574\n"
-    "#Res_pot        LINCOM  1       N10C2   1.9416E04       -8.4574\n"
-    "#Res_base_500   LINCOM  1       N10C4   1.9416E04       -8.4574\n"
-    "#Res_ring_250   LINCOM  1       N10C7   1.9416E04       -8.4574\n"
-    "#T_he3fridge      LINTERP N7C3         /data/etc/rox102a3.txt\n"
-    "#T_he4pot         LINTERP N7C22        /data/etc/rox102a22.txt\n"
-    "#T_m3             LINTERP N7C7         /data/etc/rox102a7.txt\n"
-    "#T_m4             LINTERP N7C4         /data/etc/rox102a4.txt \n"
-    "#T_m5             LINTERP N7C5         /data/etc/rox102a5.txt\n"
-    "#T_optbox_filt    LINTERP N7C23        /data/etc/rox102a23.txt\n"
-    "#T_300mk_strap    LINTERP N7C20        /data/etc/rox102a20.txt\n"
-    "#T_horn_250       LINTERP N7C6         /data/etc/rox102a6.txt\n"
-    "#T_horn_350       LINTERP N7C19        /data/etc/rox102a19.txt\n"
-    "#T_horn_500       LINTERP N7C21        /data/etc/rox102a21.txt\n"
-
 
     "T_he3fridge      LINTERP T_HE3FRIDGE   /data/etc/rox102a3.txt\n"
     "T_he4pot         LINTERP T_HE4POT      /data/etc/rox102a22.txt\n"

@@ -397,6 +397,7 @@ int OpenField(int fast, int size, const char* filename)
 void InitialiseDirFile(int reset)
 {
   FILE* fp;
+  int fd;
   int j, i, is_bolo = 0;
   char field[FIELD_LEN];
   char gpb[GPB_LEN];
@@ -423,10 +424,14 @@ void InitialiseDirFile(int reset)
    ***********************************/
   sprintf(gpb, "%s/format", rc.dirfile);
 
-  if ((fp = fopen(gpb, "w")) == NULL)
+  if ((fd = creat(gpb, 0666)) < 0)
     berror(fatal, "cannot create format file `%s/format'", rc.dirfile);
 
-  fprintf(fp, "FASTSAMP         RAW    U 20\n");
+  WriteFormatFile(fd);
+
+  if (close(fd) < 0)
+    berror(fatal, "Error while closing format file");
+
   n_fast = 0;
   sprintf(gpb, "%s/FASTSAMP%s", rc.dirfile, ext);
   normal_fast[n_fast].size = 2; 
@@ -446,21 +451,9 @@ void InitialiseDirFile(int reset)
   n_fast++;
 
   /* slow chs */
-  fprintf(fp, "\n## SLOW CHANNELS:\n");
   for (i = 0; i < slowsPerBi0Frame; i++) {
     for (j = 0; j < FAST_PER_SLOW; j++) {
       if (strlen(SlowChList[i][j].field) > 0) {
-        fprintf(fp, "%-16s RAW    %c 1\n",
-            StringToLower(SlowChList[i][j].field),
-            SlowChList[i][j].type);
-        fprintf(fp, "%-16s LINCOM 1 %-16s %12g %12g\n",
-            StringToUpper(SlowChList[i][j].field),
-            StringToLower(SlowChList[i][j].field),
-            SlowChList[i][j].m_c2e,
-            SlowChList[i][j].b_e2e);
-        if (fflush(fp) < 0)
-          berror(fatal, "Error while flushing format file");
-
         slow_fields[j][i].size = FieldSize(SlowChList[i][j].type,
             SlowChList[i][j].field);
 
@@ -484,9 +477,6 @@ void InitialiseDirFile(int reset)
   }
 
   /* normal fast chs */
-  fprintf(fp, "\n## FAST CHANNELS:\n");
-  if (fflush(fp) < 0)
-    berror(fatal, "Error while flushing format file");
 
   for (i = 0; i < ccFast + ccWideFast; i++) {
     if (strcmp(FastChList[i].field, "n5c0lo") == 0) {
@@ -516,23 +506,10 @@ void InitialiseDirFile(int reset)
           normal_fast[n_fast].size);
 
       n_fast++;
-      fprintf(fp, "%-16s RAW    %c %d\n",
-          StringToLower(FastChList[i].field),
-          FastChList[i].type, FAST_PER_SLOW);
-      fprintf(fp, "%-16s LINCOM 1 %-16s %12g %12g\n",
-          StringToUpper(FastChList[i].field),
-          StringToLower(FastChList[i].field),
-          FastChList[i].m_c2e, FastChList[i].b_e2e);
-      if (fflush(fp) < 0)
-        berror(fatal, "Error while flushing format file");
     }
   }
 
   /* special (bolo) fast chs */
-  fprintf(fp, "\n## BOLOMETERS:\n");
-  if (fflush(fp) < 0)
-    berror(fatal, "Error while flushing format file");
-
   for (i = 0; i < DAS_CARDS; i++) {
     for (j = 0; j < DAS_CHS; j++) {
       bolo_fields[i][j].size = 2;
@@ -553,19 +530,8 @@ void InitialiseDirFile(int reset)
 
       bolo_fields[i][j].i0 = bolo_i0 + i * (DAS_CARDS * 3 / 2)
         + j;
-      fprintf(fp, "%-16s RAW    U %d\n",
-          StringToLower(field), FAST_PER_SLOW);
-      fprintf(fp, "%-16s LINCOM 1 %-16s %12g %12g\n",
-          StringToUpper(field), StringToLower(field),
-          LOCKIN_C2V, LOCKIN_OFFSET);
     }
   }
-
-  /* derived channels */
-  FPrintDerived(fp);
-
-  if (fclose(fp) < 0)
-    berror(fatal, "Error while closing format file");
 
   if (rc.write_curfile) {
     if ((fp = fopen(rc.output_curfile, "w")) == NULL)

@@ -333,3 +333,60 @@ int StreamToNextChunk(int keepalive, char* chunk, int sufflen, int *chunk_total,
   } else
     return (GetNextChunk(chunk, sufflen)) ? FR_NEW_CHUNK : FR_DONE;
 }
+
+void WriteFormatFile(int fd)
+{
+  char line[1024];
+
+  strcpy(line, "FASTSAMP         RAW    U 20\n\n## SLOW CHANNELS:\n");
+  write(fd, line, strlen(line));
+
+  for (i = 0; i < slowsPerBi0Frame; i++)
+    for (j = 0; j < FAST_PER_SLOW; j++)
+      if (SlowChList[i][j].field[0]) {
+        snprintf(line, 1024,
+            "%-16s RAW    %c 1\n%-16s LINCOM 1 %-16s %12g %12g\n",
+            StringToLower(SlowChList[i][j].field), SlowChList[i][j].type,
+            StringToUpper(SlowChList[i][j].field),
+            StringToLower(SlowChList[i][j].field), SlowChList[i][j].m_c2e,
+            SlowChList[i][j].b_e2e);
+        write(fd, line, strlen(line));
+      }
+
+  strcpy(line, "\n## FAST CHANNELS:\n");
+  write(fd, line, strlen(line));
+
+  for (i = 0; i < ccFast + ccWideFast; i++) {
+    if (strcmp(FastChList[i].field, "n5c0lo") == 0)
+      is_bolo = 1;
+    else if (ccDecom > 0 && strcmp(FastChList[i].field,
+          DecomChannels[0].field) == 0)
+      is_bolo = 0;
+
+    if (!is_bolo && FastChList[i].field[0] > 0) {
+      snprintf(line, 1024,
+          "%-16s RAW    %c %d\n%-16s LINCOM 1 %-16s %12g %12g\n",
+          StringToLower(FastChList[i].field), FastChList[i].type,
+          FAST_PER_SLOW, StringToUpper(FastChList[i].field),
+          StringToLower(FastChList[i].field), FastChList[i].m_c2e,
+          FastChList[i].b_e2e);
+      write(fd, line, strlen(line));
+    }
+  }
+
+  strcpy(line, "\n## BOLOMETER:\n");
+  write(fd, line, strlen(line));
+
+  for (i = 0; i < DAS_CARDS; i++)
+    for (j = 0; j < DAS_CHS; j++) {
+      sprintf(field, "n%dc%d", i + 5, j);
+      snprintf(line, 1024,
+          "%-16s RAW    U %d\n%-16s LINCOM 1 %-16s %12g %12g\n",
+          StringToLower(field), FAST_PER_SLOW, StringToUpper(field),
+          StringToLower(field), LOCKIN_C2V, LOCKIN_OFFSET);
+      write(fd, line, strlen(line));
+    }
+
+  /* derived channels */
+  FPrintDerived(fd);
+}
