@@ -353,7 +353,7 @@
       <WORD value="3" caption="Error" textstyle="E_BIT"/>
       <WORD value="0" caption="No Limit" textstyle="P_BIT"/>
       <WORD value="1" caption="Open" textstyle="W_BIT"/>
-      <WORD value="2" caption="Close" textstyle="OK_BIT"/>
+      <WORD value="2" caption="Closed" textstyle="OK_BIT"/>
     </DATUM>
   </MULTI>
   <MULTI caption="LHe Valve" textstyle="oddrow">
@@ -373,7 +373,7 @@
       <WORD value="3" caption="Error" textstyle="E_BIT"/>
       <WORD value="0" caption="No Limit" textstyle="P_BIT"/>
       <WORD value="1" caption="Open" textstyle="W_BIT"/>
-      <WORD value="2" caption="Close" textstyle="OK_BIT"/>
+      <WORD value="2" caption="Closed" textstyle="OK_BIT"/>
     </DATUM>
   </MULTI>
 </BOX>
