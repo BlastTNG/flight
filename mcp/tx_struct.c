@@ -405,7 +405,7 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
   {"pch_clin_sip",'r', ACS0, 27,   4.0/5333.3333,              -4.*6.144, 'u'},
   {"roll_clin_sip",'r',ACS0, 29,  -4.0/5333.3333,               4.*6.144, 'u'},
 
-  {"clin_elev",   'r',  ACS0, 37,      0.00546739,                 -135.5, 'u'},
+  {"clin_elev",   'r',  ACS0, 37,      0.00546739,                -133.78, 'u'},
   {"xel_clin_if", 'r',  ACS0, 39,      0.00546739,             -25.*6.144, 'u'},
   
   {"mag_bias",    'r',  ACS0, 43,             1.0,                    0.0, 'u'},
