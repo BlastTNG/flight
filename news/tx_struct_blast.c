@@ -190,7 +190,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_ln2_filt",   'r',  CRYO, 27, -2.873729e-09*65536,    1.238262e+01, 'u'},
   {"t_charcoal",   'r',  CRYO, 29, -2.865098e-09*65536,    1.235145e+01, 'u'},
   {"t_heatswitch", 'r',  CRYO, 31, -2.864185e-09*65536,    1.233900e+01, 'u'},
-  {"t_jfet",       'r',  CRYO, 33, -2.860308e-09*65536,    1.232735e+01, 'u'},
+  {"t_jfet",       'r',  CRYO, 33,            T_JFET_M,        T_JFET_B, 'u'},
   {"t_vcs_fet",    'r',  CRYO, 35, -2.865493e-09*65536,    1.234227e+01, 'u'},
   {"t_opt_box_ext",'r',  CRYO, 37, -2.863415e-09*65536,    1.232882e+01, 'u'},
   {"t_horn_350",   'r',  CRYO, 39,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'},
@@ -454,6 +454,8 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_temp4",    'w', LOOP4, 18,            1./200.,             0.0, 'u'},
   {"osc_pressure1",'w', LOOP4, 19,           1./2000.,             0.0, 'u'},
   {"isc_gain",     'w', LOOP4, 20,        100./65536.,             0.0, 'u'},
+  {"jfet_set_on",  'w', LOOP4, 21,             1/100.,             0.0, 'u'},
+  {"jfet_set_off", 'w', LOOP4, 22,             1/100.,             0.0, 'u'},
 
   END_OF_CHANNELS
 };

@@ -107,15 +107,21 @@ struct CryoStruct {
   unsigned short heliumLevel;
   unsigned short charcoalHeater;
   unsigned short coldPlate;
+  unsigned short heatSwitch;
+  unsigned short CryoSparePWM;
+
   enum calmode calibrator;
   unsigned short calib_pulse, calib_period;
+
   unsigned short autoBDAHeat;
   unsigned short BDAHeat;
   struct GainStruct BDAGain;
   unsigned short BDAFiltLen;
+
+  unsigned short autoJFETheat;
   unsigned short JFETHeat;
-  unsigned short heatSwitch;
-  unsigned short CryoSparePWM;
+  double JFETSetOn, JFETSetOff;
+
   unsigned short potvalve_open, potvalve_on, potvalve_close;
   unsigned short lhevalve_open, lhevalve_on, lhevalve_close;
 };

@@ -63,6 +63,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(charcoal_off), "charcoal heater off", GR_CRYO_HEAT},
   {COMMAND(coldplate_on), "cold plate heater on", GR_CRYO_HEAT},
   {COMMAND(coldplate_off), "cold plate heater off", GR_CRYO_HEAT},
+  {COMMAND(auto_jfetheat), "automatically reguate jfet heater level",
+    GR_CRYO_HEAT},
   {COMMAND(auto_bdaheat), "automatically reguate bda heater level",
     GR_CRYO_HEAT},
 
@@ -431,9 +433,16 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********* Cryo heat   *****************/
-  {COMMAND(jfet_heat), "jfet heater pwm", GR_CRYO_HEAT, 1,
+  {COMMAND(jfet_heat), "manually set jfet heater pwm", GR_CRYO_HEAT, 1,
     {
       {"Level (%)", 0, 100, 'f', "JFETPWM"}
+    }
+  },
+
+  {COMMAND(jfet_set), "jfet heater setpoints", GR_CRYO_HEAT, 2,
+    {
+      {"On Point (K)", 0, 400., 'f', "JFET_SET_ON"},
+      {"Off Point (K)", 0, 400., 'f', "JFET_SET_OFF"}
     }
   },
 

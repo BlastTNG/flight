@@ -25,6 +25,7 @@
 
 #include "mcp.h"
 #include "channels.h"
+#include "lut.h"
 #include "tx.h"
 #include "command_struct.h"
 
@@ -59,6 +60,7 @@
 #define CS_POTVALVE_OPEN  0x0020
 #define CS_LHeVALVE_ON    0x0040
 #define CS_LHeVALVE_OPEN  0x0080
+#define CS_AUTO_JFET      0x0200
 
 /************************************************************************/
 /*                                                                      */
@@ -128,6 +130,36 @@ int CalLamp (void)
       | CRYOCTRL_PULSE_LEN(CommandData.Cryo.calib_pulse));
 }
 
+/* Automatic conrol of JFET heater */
+int JFETthermostat(void)
+{
+  double jfet_temp;
+  static struct BiPhaseStruct* tJfetAddr;
+
+  struct LutType DiodeLut = {"/data/etc/dt600.txt", 0, NULL, NULL, 0};
+
+  static int firsttime = 1;
+  if (firsttime) {
+    firsttime = 0;
+    tJfetAddr = GetBiPhaseAddr("t_jfet");
+    LutInit(&DiodeLut);
+  }
+
+  jfet_temp = LutCal(&DiodeLut,
+      (double)slow_data[tJfetAddr->index][tJfetAddr->channel] * T_JFET_M
+      + T_JFET_B);
+
+  if (jfet_temp < 0 || jfet_temp > 400)
+    return CommandData.Cryo.JFETHeat;
+  else if (jfet_temp > CommandData.Cryo.JFETSetOff)
+    return 0;
+  else if (jfet_temp < CommandData.Cryo.JFETSetOn)
+    return 2047;
+  else
+    return 2047 * (CommandData.Cryo.JFETSetOn - jfet_temp) /
+      (CommandData.Cryo.JFETSetOn - CommandData.Cryo.JFETSetOff);
+}
+
 /***********************************************************************/
 /* CryoControl: Control heaters and calibrator (a slow control)        */
 /***********************************************************************/
@@ -146,10 +178,13 @@ void CryoControl (void)
   static struct NiosStruct* gDBdaheatAddr;
   static struct NiosStruct* gFlBdaheatAddr;
   static struct NiosStruct* setBdaheatAddr;
+  static struct NiosStruct* jfetSetOnAddr;
+  static struct NiosStruct* jfetSetOffAddr;
 
   int cryoout3 = 0, cryoout2 = 0;
   static int cryostate = 0;
   int cryoctrl;
+  int jfetHeat;
 
   /************** Set indices first time around *************/
   static int firsttime = 1;
@@ -168,6 +203,8 @@ void CryoControl (void)
     cryopwmAddr = GetNiosAddr("cryopwm");
     hspwmAddr = GetNiosAddr("hspwm");
     jfetpwmAddr = GetNiosAddr("jfetpwm");
+    jfetSetOnAddr = GetNiosAddr("jfet_set_on");
+    jfetSetOffAddr = GetNiosAddr("jfet_set_off");
   }
 
   /********** Set Output Bits **********/
@@ -231,18 +268,28 @@ void CryoControl (void)
   } else
     cryostate &= 0xFFFF - CS_LHeVALVE_ON;
 
+  if (CommandData.Cryo.autoJFETheat) {
+    jfetHeat = JFETthermostat();
+    cryostate |= CS_AUTO_JFET;
+  } else {
+    jfetHeat = CommandData.Cryo.JFETHeat;
+    cryostate &= 0xFFFF - CS_AUTO_JFET;
+  }
+
   WriteData(cryoout3Addr, cryoout3, NIOS_QUEUE);
   WriteData(cryoout2Addr, cryoout2, NIOS_QUEUE);
   WriteData(cryostateAddr, cryostate, NIOS_QUEUE);
   WriteData(cryopwmAddr, CommandData.Cryo.CryoSparePWM, NIOS_QUEUE);
   WriteData(hspwmAddr, CommandData.Cryo.heatSwitch, NIOS_QUEUE);
-  WriteData(jfetpwmAddr, CommandData.Cryo.JFETHeat, NIOS_QUEUE);
+  WriteData(jfetpwmAddr, jfetHeat, NIOS_QUEUE);
   WriteData(setBdaheatAddr, CommandData.Cryo.BDAGain.SP, NIOS_QUEUE);
   WriteData(gPBdaheatAddr, CommandData.Cryo.BDAGain.P, NIOS_QUEUE);
   WriteData(gIBdaheatAddr, CommandData.Cryo.BDAGain.I, NIOS_QUEUE);
   WriteData(gDBdaheatAddr, CommandData.Cryo.BDAGain.D, NIOS_QUEUE);
   WriteData(gFlBdaheatAddr, CommandData.Cryo.BDAFiltLen, NIOS_QUEUE);
   WriteData(bdapwmAddr, CommandData.Cryo.BDAHeat, NIOS_QUEUE);
+  WriteData(jfetSetOnAddr, CommandData.Cryo.JFETSetOn * 100, NIOS_QUEUE);
+  WriteData(jfetSetOffAddr, CommandData.Cryo.JFETSetOff * 100, NIOS_QUEUE);
   WriteData(cryoctrlAddr, cryoctrl, NIOS_FLUSH);
 }
 

@@ -13,8 +13,8 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 90         /* total number of named single word cmds */
-#define N_MCOMMANDS 66         /* total number of multiword commands */
+#define N_SCOMMANDS 91         /* total number of named single word cmds */
+#define N_MCOMMANDS 67         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -75,7 +75,7 @@ enum singleCommand {
   mcc_halt,         isc_reboot,         isc_cam_cycle,    osc_run,
   osc_shutdown,     osc_reboot,         osc_cam_cycle,    osc_pause,
   osc_abort,        osc_reconnect,      osc_save_images,  osc_discard_images,
-  osc_full_screen,  force_el_on
+  osc_full_screen,  force_el_on,        auto_jfetheat
 };
 
 struct scom {
@@ -106,7 +106,7 @@ enum multiCommand {
   t_gyro_gain,       timeout,           isc_tolerances,   vcap,
   vbox,              alice_file,        gyro_override,    isc_hold_current,
   isc_save_period,   back_emf,          osc_offset,       plugh,
-  bda_gain,          bda_set
+  bda_gain,          bda_set,           jfet_set
 };
 
 struct par {

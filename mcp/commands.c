@@ -344,6 +344,8 @@ void SingleCommand (enum singleCommand command) {
     CommandData.Cryo.lhevalve_on = 0;
   else if (command == auto_bdaheat)
     CommandData.Cryo.autoBDAHeat = 1;
+  else if (command == auto_jfetheat)
+    CommandData.Cryo.autoJFETheat = 1;
 
   else if (command == balance_veto)
     CommandData.pumps.bal_veto = -1;
@@ -724,6 +726,10 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     /********* Cryo heat   *****************/
   } else if (command == jfet_heat) {
     CommandData.Cryo.JFETHeat = rvalues[0] * 2047./100.;
+    CommandData.Cryo.autoJFETheat = 0;
+  } else if (command == jfet_set) {
+    CommandData.Cryo.JFETSetOn = rvalues[0];
+    CommandData.Cryo.JFETSetOff = rvalues[1];
   } else if (command == heatsw_heat) {
     CommandData.Cryo.heatSwitch = rvalues[0] * 2047./100.;
   } else if (command == cryo_heat) {
@@ -1428,11 +1434,8 @@ void InitCommandData() {
   CommandData.Cryo.heliumLevel = 0;
   CommandData.Cryo.charcoalHeater = 0;
   CommandData.Cryo.coldPlate = 0;
-  CommandData.Cryo.JFETHeat = 0;
   CommandData.Cryo.heatSwitch = 0;
   CommandData.Cryo.CryoSparePWM = 0;
-  CommandData.Cryo.BDAHeat = 0;
-  CommandData.Cryo.autoBDAHeat = 1;
   CommandData.Cryo.calibrator = off;
   CommandData.Cryo.potvalve_on = 0;
   CommandData.Cryo.potvalve_open = 0;
@@ -1440,6 +1443,19 @@ void InitCommandData() {
   CommandData.Cryo.lhevalve_on = 0;
   CommandData.Cryo.lhevalve_open = 0;
   CommandData.Cryo.lhevalve_close = 0;
+
+  CommandData.Cryo.JFETHeat = 0;
+  CommandData.Cryo.autoJFETheat = 1;
+  CommandData.Cryo.JFETSetOn = 120;
+  CommandData.Cryo.JFETSetOff = 135;
+
+  CommandData.Cryo.BDAHeat = 0;
+  CommandData.Cryo.autoBDAHeat = 1;
+  CommandData.Cryo.BDAGain.P = 600;
+  CommandData.Cryo.BDAGain.I = 1;
+  CommandData.Cryo.BDAGain.D = 20;
+  CommandData.Cryo.BDAGain.SP = 21750;
+  CommandData.Cryo.BDAFiltLen = 500;
 
   CommandData.ISCState[0].abort = 0;
   CommandData.ISCState[0].pause = 0;
