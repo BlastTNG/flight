@@ -1,6 +1,6 @@
 #define N_SCOMMANDS 63         /* total number of single word commands */
 #define N_NM_SCOMMANDS 52      /* total number of named single word cmds */
-#define N_MCOMMANDS 32         /* total number of multiword commands */
+#define N_MCOMMANDS 34         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -142,6 +142,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
      {"Radius (deg on sky)", 0.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
      {"Az Scan Speed (deg az/s)", 0.0, 2.0, 'f', 4, "0.1"},
      {"El drift Speed (deg el/s)", 0.0, 2.0, 'f', 4, "0.005"}
+   }
+  },
+  {"ra_dec_goto", "Track a location RA/DEC", GR_POINT, 2,
+   {
+     {"RA of Center (h)", 0.0, 24.0, 'f', 4, "0.0"}, //FIXME: field
+     {"DEC of Center (deg)", -90.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
+   }
+  },
+  {"ra_dec_set", "Define RA/DEC of current position", GR_POINT, 2,
+   {
+     {"Current RA (h)", 0.0, 24.0, 'f', 4, "0.0"}, //FIXME: field
+     {"Current DEC (deg)", -90.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
    }
   },
   {"az_scan", "scan in azimuth", GR_POINT, 3,

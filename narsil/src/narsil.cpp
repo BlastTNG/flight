@@ -35,6 +35,8 @@
 #include <signal.h>
 #include <time.h>
 
+#define FIXEDFONT "courier"
+
 #define INCLUDE_VARS
 #include "narsil.h"
 #include "kstfile.h"
@@ -725,6 +727,8 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   QRect rect;
   QPoint point;
   int w1, w2, w3, h1, h2, h3;
+  QString default_family = tfont.family();
+
 
   curvefile = cf;
   lastmcmd = -1;
@@ -804,7 +808,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NCommandList = new QListBox(this, "NCommandList");
   NCommandList->adjustSize();
   NCommandList->setGeometry(PADDING, PADDING, NCommandList->width() + 80, 0);
-  tfont.setFamily("adobe-courier");
+  tfont.setFamily(FIXEDFONT);
   tfont.setPointSize(LARGE_POINT_SIZE);
   tfont.setBold(true);
   NCommandList->setFont(tfont);
@@ -819,7 +823,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   tmp[LongestParam()] = '\0';
   for (i = 0; i < MAX_N_PARAMS; i++) {
     NParamLabels[i] = new QLabel(NTopFrame, "NParamLabel");
-    tfont.setFamily("adobe-courier");
+    tfont.setFamily(FIXEDFONT);
     tfont.setPointSize(SMALL_POINT_SIZE);
     NParamLabels[i]->setFont(tfont);
     NParamLabels[i]->setText(tr(tmp));
@@ -827,7 +831,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
 
     NParamFields[i] = new DoubleEntry(-100.0, 100.0, NTopFrame,
                                       "NParamLabels");
-    tfont.setFamily("adobe-courier");
+    tfont.setFamily(FIXEDFONT);
     tfont.setPointSize(SMALL_POINT_SIZE);
     NParamFields[i]->setFont(tfont);
     NParamFields[i]->adjustSize();
@@ -852,7 +856,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NAboutLabel = new QLabel(NTopFrame, "NAboutLabel");
   NAboutLabel->setFrameShape(QFrame::Box);
   NAboutLabel->setFrameShadow(QFrame::Plain);
-  tfont.setFamily("adobe-helvetica");
+  tfont.setFamily(default_family);
   tfont.setPointSize(LARGE_POINT_SIZE);
   NAboutLabel->setFont(tfont);
   NAboutLabel->setText(tr(tmp));
@@ -883,7 +887,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
     NParamLabels[i]->hide();
   }
 
-  tfont.setFamily("adobe-helvetica");
+  tfont.setFamily(default_family);
   tfont.setPointSize(LARGE_POINT_SIZE);
   tfont.setBold(true);
 
@@ -945,7 +949,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
 
   QuitButton = new QPushButton(NBotFrame, "QuitButton");
   tfont.setBold(true);
-  tfont.setFamily("adobe-helvetica");
+  tfont.setFamily(default_family);
   tfont.setPointSize(LARGE_POINT_SIZE);
   QuitButton->setFont(tfont);
   tfont.setBold(false);
@@ -957,7 +961,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
 
   NLog = new QMultiLineEdit(NBotFrame, "NLog");
   NLog->setReadOnly(true);
-  tfont.setFamily("adobe-courier");
+  tfont.setFamily(FIXEDFONT);
   tfont.setPointSize(SMALL_POINT_SIZE);
   NLog->setFont(tfont);
   NLog->setGeometry(PADDING, PADDING, NTopFrame->width() - NWaitImage->width() -                    3 * PADDING, PADDING + NWaitImage->height() +
@@ -976,27 +980,27 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   //  NSettingsWindow->setIcon(*Icon);
 
   NCurveFileCaption = new QLabel(NSettingsWindow, "NCurveFileCaption");
-  tfont.setFamily("adobe-helvetica");
+  tfont.setFamily(default_family);
   tfont.setPointSize(LARGE_POINT_SIZE);
   NCurveFileCaption->setFont(tfont);
   NCurveFileCaption->setText(tr("Curve File: "));
   NCurveFileCaption->adjustSize();
 
   NCurveFile = new QLineEdit(NSettingsWindow, "NCurveFile");
-  tfont.setFamily("adobe-courier");
+  tfont.setFamily(FIXEDFONT);
   tfont.setPointSize(LARGE_POINT_SIZE);
   NCurveFile->setFont(tfont);
   NCurveFile->setText(tr(curvefile));
   NCurveFile->adjustSize();
 
   NCurveFileButton = new QPushButton(NSettingsWindow, "QCurveCaption");
-  tfont.setFamily("adobe-helvetica");
+  tfont.setFamily(default_family);
   tfont.setPointSize(SMALL_POINT_SIZE);
   NCurveFileButton->setFont(tfont);
   NCurveFileButton->setText(tr("Change"));
   NCurveFileButton->adjustSize();
 
-  tfont.setFamily("adobe-helvetica");
+  tfont.setFamily(default_family);
   tfont.setPointSize(LARGE_POINT_SIZE);
 
   NVerbose = new QCheckBox(NSettingsWindow, "NVerbose");
@@ -1008,7 +1012,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
       NVerbose->width(), NVerbose->height());
 
   NSendMethod = new QComboBox(NSettingsWindow, "NSendMethod");
-  tfont.setFamily("adobe-courier");
+  tfont.setFamily(FIXEDFONT);
   tfont.setPointSize(LARGE_POINT_SIZE);
   NSendMethod->setFont(tfont);
   NSendMethod->insertItem(tr("TDRSS"));
@@ -1021,7 +1025,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
 
   NSendRoute = new QComboBox(NSettingsWindow, "NSendRoute");
   NSendRoute->setFont(tfont);
-  tfont.setFamily("adobe-courier");
+  tfont.setFamily(FIXEDFONT);
   tfont.setPointSize(LARGE_POINT_SIZE);
   NSendRoute->insertItem(tr("COMM 1"));
   NSendRoute->insertItem(tr("COMM 2"));
@@ -1034,7 +1038,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NCloseSettingsWindow = new QPushButton(NSettingsWindow,
       "NCloseSettingsWindow");
   tfont.setBold(true);
-  tfont.setFamily("adobe-helvetica");
+  tfont.setFamily(default_family);
   tfont.setPointSize(LARGE_POINT_SIZE);
   NCloseSettingsWindow->setFont(tfont);
   tfont.setBold(false);
