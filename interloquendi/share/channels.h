@@ -32,6 +32,7 @@ extern "C" {
 #define FAST_OFFSET (4 + N_SLOW)
 
   /* offset of encoder.  Reset if encoder has been unmounted. */
+  /* This is actually 360 - the real offset */
 #define ENC_ELEV_OFFSET (380.27)
 
 #define LOCKIN_C2V (5.43736e-07)
