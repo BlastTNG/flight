@@ -63,6 +63,8 @@
 #define CS_LHeVALVE_OPEN  0x0080
 #define CS_AUTO_JFET      0x0200
 
+void WritePrevStatus();
+
 /************************************************************************/
 /*                                                                      */
 /* PhaseControl: set phase shifts for DAS cards                         */
@@ -161,6 +163,35 @@ int JFETthermostat(void)
       (CommandData.Cryo.JFETSetOn - CommandData.Cryo.JFETSetOff);
 }
 
+void FridgeCycle(unsigned short *command, int *cryoout)
+{
+  static time_t start_time;
+  static int is_cycling = 0;
+  
+  if(*command == 0) {
+    is_cycling = 0;
+    return;
+  }
+  
+  if (is_cycling == 0) {
+    is_cycling = 1;
+    start_time = time(NULL);
+  }
+
+  if ( (time(NULL) - start_time) < (45*60) ) {
+    *cryoout |= CRYO_CHARCOAL_ON;
+    return; 
+  } 
+  
+  *command = 0;
+  WritePrevStatus();
+
+
+  is_cycling = 0; 
+  *cryoout |= CRYO_CHARCOAL_OFF;
+
+}
+
 /***********************************************************************/
 /* CryoControl: Control heaters and calibrator (a slow control)        */
 /***********************************************************************/
@@ -216,11 +247,11 @@ void CryoControl (void)
     cryoout3 |= CRYO_HELIUMLEVEL_ON;
     cryostate |= CS_HELIUMLEVEL;
   }
+    
+  FridgeCycle(&CommandData.Cryo.fridgeCycle, &cryoout3); 
   if (CommandData.Cryo.fridgeCycle) {
     cryostate |= CS_DOING_CYCLE;
-    printf("Cycling fridge %d\n", CommandData.Cryo.fridgeCycle); //cryoout3 |= something
   } else {
-    printf("stop cycling\n");
     cryostate &= 0xFFFF - CS_DOING_CYCLE;
     if (CommandData.Cryo.charcoalHeater == 0) {
       cryoout3 |= CRYO_CHARCOAL_OFF;
