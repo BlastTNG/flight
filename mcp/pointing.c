@@ -11,15 +11,11 @@
 #include <pthread.h>
 
 #include "pointing_struct.h"
-#include "gps_struct.h"
 
 double getlst(time_t t, double lon); // defined in starpos.c
 
 int point_index=0;
 struct PointingDataStruct PointingData[3];
-
-extern struct ACSDataStruct ACSData;
-extern struct SIPDataStruct SIPData;
 
 struct SolutionStruct {
   double angle;    // solution's current angle
@@ -102,9 +98,9 @@ void EvolveSolution(struct SolutionStruct *s,
 */
 /* Elevation encoder uncertainty: */
 void Pointing(){
-  int new_index; 
   double gy_az, gy_roll, gy2, gy3, el_rad;
-  static int no_dgps_pos = 0, dgps_pos_index = 0;
+  static int no_dgps_pos = 0, last_i_dgpspos = 0;
+  int i_dgpspos;
   
   static double gy_roll_amp = 0.0;
 
@@ -112,28 +108,28 @@ void Pointing(){
 					1.0/M2DV(6), M2DV(6)};
   static struct SolutionStruct NullAz = {0.0, 360.0*360.0,
 					 1.0/M2DV(6), M2DV(6)};
-  
-  new_index = INC_INDEX(point_index);
 
+  i_dgpspos = GETREADINDEX(dgpspos_index);
+  
   /** Set the official Lat and Long: for now use SIP COM1... **/
-  if (DGPSData.pos_index != dgps_pos_index) {
-    dgps_pos_index = DGPSData.pos_index;
-    PointingData[new_index].lat = DGPSData.lat;
-    PointingData[new_index].lon = DGPSData.lon;
+  if (i_dgpspos != last_i_dgpspos) {
+    i_dgpspos = last_i_dgpspos;
+    PointingData[point_index].lat = DGPSPos[i_dgpspos].lat;
+    PointingData[point_index].lon = DGPSPos[i_dgpspos].lon;
     no_dgps_pos = 0;
   } else {
     no_dgps_pos++;
     if (no_dgps_pos>3000) { // no dgps for 30 seconds - revert to sip
-      PointingData[new_index].lat = SIPData.GPSpos.lat;
-      PointingData[new_index].lon = SIPData.GPSpos.lon;
+      PointingData[point_index].lat = SIPData.GPSpos.lat;
+      PointingData[point_index].lon = SIPData.GPSpos.lon;
     }
   }
 
   /** set time related things **/
-  PointingData[new_index].mcp_frame = ACSData.mcp_frame;
-  PointingData[new_index].t = time(NULL); // for now use CPU time
-  PointingData[new_index].lst = getlst(PointingData[new_index].t,
-				       PointingData[new_index].lon);
+  PointingData[point_index].mcp_frame = ACSData.mcp_frame;
+  PointingData[point_index].t = time(NULL); // for now use CPU time
+  PointingData[point_index].lst = getlst(PointingData[point_index].t,
+				       PointingData[point_index].lon);
 	 
   /*************************************/
   /**      do elevation solution      **/
@@ -141,18 +137,18 @@ void Pointing(){
   //printf("%g %g %g\n", EncEl.angle, ACSData.enc_elev, ACSData.gyro1);
 
   /* for now, use enc_elev solution for elev */
-  PointingData[new_index].el = EncEl.angle;
+  PointingData[point_index].el = EncEl.angle;
 
-  GyroOffsets(new_index);
+  GyroOffsets(point_index);
 
   /*******************************/
   /**      do az solution      **/
   gy2 = ACSData.gyro2;
   gy3 = ACSData.gyro3;
-  el_rad = PointingData[new_index].el* M_PI/180.0;;
+  el_rad = PointingData[point_index].el* M_PI/180.0;;
   gy_az = -gy2 * cos(el_rad) + -gy3 * sin(el_rad);
   EvolveSolution(&NullAz, gy_az, 0.0, 0);
-  PointingData[new_index].az = NullAz.angle;
+  PointingData[point_index].az = NullAz.angle;
 
   /************************/
   /* set roll damper gain */
@@ -163,9 +159,9 @@ void Pointing(){
 
   if (gy_roll_amp > 1.0) gy_roll_amp *= 0.999; // probably a spike 
   
-  PointingData[new_index].gy_roll_amp = gy_roll_amp;
-  
-  point_index = new_index;
+  PointingData[point_index].gy_roll_amp = gy_roll_amp;
+
+  point_index = INC_INDEX(point_index);
 } 
 
 

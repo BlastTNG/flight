@@ -56,9 +56,6 @@
 #define ERRORBOX 0.0005 //error in radians (~1000 arcsec) used in GetStar(); find
                         //ra, dec within ERRORBOX
 
-extern struct PointingDataStruct PointingData[3];
-extern int point_index;
-
 struct PointingDataStruct localPointingData;
 
 //frame grabber variables

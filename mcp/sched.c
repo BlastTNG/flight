@@ -6,8 +6,6 @@
 #include "pointing_struct.h"
 
 extern struct CommandDataStruct CommandData;
-extern struct PointingDataStruct PointingData[3];
-extern int point_index;
 
 #define SCHEDULEFILE "/data/etc/schedule.mcp"
 

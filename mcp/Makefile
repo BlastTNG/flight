@@ -53,7 +53,7 @@ starfind.o: starfind.c pointing_struct.h starpos.h ephem_read.h
 pointing.o: pointing_struct.h pointing.c
 	  $(CC) -c pointing.c
 
-dgps.o: dgps.c gps_struct.h
+dgps.o: dgps.c pointing_struct.h
 	$(CC) -c dgps.c
 
 install: mcp

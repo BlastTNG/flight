@@ -15,6 +15,8 @@
     -index = INC_INDEX(index) can be used to increment the write index.
 */
 
+#include <time.h>
+
 // GETREADINDEX: converts circular buffer pointer to
 #define GETREADINDEX(i) ((i+2) % 3)
 #define INC_INDEX(i) ((i + 1) %3)
@@ -35,6 +37,10 @@ struct VSCDataStruct {
   time_t mcp_time; // time of ID'd star
 };
 
+extern struct VSCDataStruct VSCData[3];
+extern int vsc_index;
+
+
 /**********************************************/
 /*  ACSDataStruct                             */
 /*  Purpose: Store raw pointing info          */
@@ -51,6 +57,8 @@ struct ACSDataStruct {
   time_t t;
 };
 
+extern struct ACSDataStruct ACSData;
+
 /**********************************************/
 /*  SunSensorDataStruct                       */
 /*  Purpose: Store raw sun sensor data        */
@@ -62,6 +70,8 @@ struct SunSensorDataStruct {
   short int prin;
 };
 
+extern struct SunSensorDataStruct SunSensorData[3];
+extern int ss_index;
 
 /**********************************************/
 /*  SIPDataStruct                             */
@@ -99,6 +109,8 @@ struct SIPDataStruct {
   struct MKScalStruct MKScal;
 };
 
+extern struct SIPDataStruct SIPData;
+
 /**********************************************/
 /*  PointingDataStruct                        */
 /*  Purpose: Store derived pointing info      */
@@ -116,3 +128,40 @@ struct PointingDataStruct {
   time_t lst;
 };
 
+extern struct PointingDataStruct PointingData[3];
+extern int point_index;
+
+/**********************************************/
+/*  DGPS Attittude struct                     */
+/*  Purpose: Store dgps attitude info         */
+/*   Source: dgps thread: dgps.c              */
+/*     Used: Main thread;                     */
+struct DGPSAttStruct {
+  double az;
+  double pitch;
+  double roll;
+  int att_ok; //
+};
+
+/**********************************************/
+/*  DGPS Position  struct                     */
+/*  Purpose: Store dgps position info         */
+/*   Source: dgps thread: dgps.c              */
+/*     Used: Main thread;                     */
+struct DGPSPosStruct{
+  double lat; //
+  double lon; //
+  double alt; //
+  double speed; //
+  double direction; //
+  double climb; //
+  int n_sat;  //
+};
+
+extern struct DGPSPosStruct DGPSPos[3];
+extern int dgpspos_index;
+
+extern struct DGPSAttStruct DGPSAtt[3];
+extern int dgpsatt_index;
+
+extern time_t DGPSTime;

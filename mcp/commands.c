@@ -56,8 +56,6 @@ pthread_mutex_t mutex;
 
 struct SIPDataStruct SIPData;
 struct CommandDataStruct CommandData;
-extern struct PointingDataStruct PointingData[3];
-extern int point_index;
 
 char *SatStatus[14] = {
   "3 sat, 2D",

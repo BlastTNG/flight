@@ -9,7 +9,6 @@
 
 #include "tx_struct.h"
 #include "pointing_struct.h"
-#include "gps_struct.h"
 #include "tx.h"
 #include "command_struct.h"
 
@@ -76,19 +75,6 @@ extern unsigned short slow_data[N_SLOW][FAST_PER_SLOW];
 
 double round(double x);
 double LockPosition(double elevation);
-
-extern struct VSCDataStruct VSCData[3];
-extern int vsc_index;
-
-extern struct PointingDataStruct PointingData[3];
-extern int point_index;
-
-extern struct ACSDataStruct ACSData;
-
-extern struct SIPDataStruct SIPData;
-
-extern struct SunSensorDataStruct SunSensorData[3];
-extern int ss_index;
 
 int frame_num;
 int pin_is_in = 1;
@@ -1114,6 +1100,7 @@ void StoreData(unsigned int* Txframe,
   int i_vsc;
   int i_ss;
   int i_point;
+  int i_dgps;
   int sensor_veto;
 
   /******** Obtain correct indexes the first time here ***********/
@@ -1156,6 +1143,10 @@ void StoreData(unsigned int* Txframe,
     SlowChIndex("dgps_speed", &i_dgps_speed, &j_dgps_speed);
     SlowChIndex("dgps_dir", &i_dgps_dir, &j_dgps_dir);
     SlowChIndex("dgps_climb", &i_dgps_climb, &j_dgps_climb);
+    SlowChIndex("dgps_n_sat", &i_dgps_n_sat, &j_dgps_n_sat);
+    SlowChIndex("dgps_pos_index", &i_dgps_pos_index, &j_dgps_pos_index);
+    SlowChIndex("dgps_att_ok", &i_dgps_att_ok, &j_dgps_att_ok);
+    SlowChIndex("dgps_att_index", &i_dgps_att_index, &j_dgps_att_index);
   }
 
   /********** VSC Data **********/
@@ -1187,7 +1178,9 @@ void StoreData(unsigned int* Txframe,
   t = PointingData[i_point].lst;
   WriteSlow(i_LST, j_LST, t >> 16);
   WriteSlow(i_LST + 1, j_LST, t);
-
+  WriteSlow(i_LAT, j_LAT, (int)(PointingData[i_point].lat * DEG2I));
+  WriteSlow(i_LON, j_LON, (int)(PointingData[i_point].lon * DEG2I));
+  
   /************* Pointing mode fields *************/
   WriteSlow(i_AZ_MODE, j_AZ_MODE, (int)(CommandData.pointing_mode.az_mode));
   WriteSlow(i_EL_MODE, j_EL_MODE, (int)(CommandData.pointing_mode.el_mode));
@@ -1215,21 +1208,27 @@ void StoreData(unsigned int* Txframe,
   WriteSlow(i_SVETO, j_SVETO, sensor_veto);
 
   /************* dgps fields *************/
-  t = DGPSData.t;
+  t = DGPSTime;
   WriteSlow(i_dgps_time, j_dgps_time, t >> 16);
-  WriteSlow(i_dgps_time + 1, j_dgps_time + 1, t);
-
-  WriteSlow(i_dgps_lat, j_dgps_lat, (int)(DGPSData.lat * DEG2I));
-  WriteSlow(i_dgps_lon, j_dgps_lon, (int)(DGPSData.lon * DEG2I));
-  WriteSlow(i_dgps_alt, j_dgps_alt, (int)(DGPSData.alt));
-  WriteSlow(i_dgps_speed, j_dgps_speed, (int)(DGPSData.speed * DEG2I));
-  WriteSlow(i_dgps_dir, j_dgps_dir, (int)(DGPSData.direction * DEG2I));
-  WriteSlow(i_dgps_climb, j_dgps_climb, (int)(DGPSData.climb * DEG2I));
-  WriteSlow(i_dgps_att_ok, j_dgps_att_ok, DGPSData.att_ok);
-  WriteSlow(i_dgps_att_index, j_dgps_att_index, DGPSData.att_index);
-  WriteSlow(i_dgps_pos_index, j_dgps_pos_index, DGPSData.pos_index);
-  WriteSlow(i_dgps_n_sat, j_dgps_n_sat, DGPSData.n_sat);
+  WriteSlow(i_dgps_time + 1, j_dgps_time, t);
+  if (t<100) printf("t spike %lu\n", t);
   
+  /** Pos fields **/
+  i_dgps = GETREADINDEX(dgpspos_index);
+  WriteSlow(i_dgps_lat, j_dgps_lat, (int)(DGPSPos[i_dgps].lat * DEG2I));
+  WriteSlow(i_dgps_lon, j_dgps_lon, (int)(DGPSPos[i_dgps].lon * DEG2I));
+  WriteSlow(i_dgps_alt, j_dgps_alt, (int)(DGPSPos[i_dgps].alt));
+  WriteSlow(i_dgps_speed, j_dgps_speed, (int)(DGPSPos[i_dgps].speed * DEG2I));
+  WriteSlow(i_dgps_dir, j_dgps_dir, (int)(DGPSPos[i_dgps].direction * DEG2I));
+  WriteSlow(i_dgps_climb, j_dgps_climb, (int)(DGPSPos[i_dgps].climb * DEG2I));
+  WriteSlow(i_dgps_n_sat, j_dgps_n_sat, DGPSPos[i_dgps].n_sat);
+  WriteSlow(i_dgps_pos_index, j_dgps_pos_index, i_dgps);
+
+  /** Att fields **/
+  i_dgps = GETREADINDEX(dgpsatt_index);  
+  WriteSlow(i_dgps_att_ok, j_dgps_att_ok, DGPSAtt[i_dgps].att_ok);
+  WriteSlow(i_dgps_att_index, j_dgps_att_index, i_dgps);
+
 }
 
 

@@ -55,7 +55,6 @@ short int SamIAm;
 
 extern struct SlowDLStruct SlowDLInfo[N_SLOWDL];
 extern struct CommandDataStruct CommandData;
-extern struct SIPDataStruct SIPData;
 
 extern pthread_mutex_t mutex;
 
