@@ -227,8 +227,8 @@ void merror(int flag, char* fmt, ...) {
   /* ensure the string is null terminated */
   message[1023] = '\0';
 
-  /* copy error message into remainder of string -- Note: sterror is thread-safe despite
-   * what STRERROR(3) insinuates (and strerror_r is horribly b0rked) */
+  /* copy error message into remainder of string -- Note: sterror is reentrant
+   * despite what STRERROR(3) insinuates (and strerror_r is horribly b0rked) */
   strcat(message, strerror(error));
 
   mputs(flag, message);
