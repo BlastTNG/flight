@@ -522,21 +522,6 @@ void CameraTrigger(int which)
         isc_pulses[which].pulse_req =
           CommandData.ISCControl[which].fast_pulse_width;
       } else {  /* slow pulse */
-        /* wait until we're below the slow speed */
-        if (fabs(axes_mode.az_vel) >= MAX_ISC_SLOW_PULSE_SPEED) {
-          if (!waiting && WHICH)
-            bprintf(info,
-                "%iSC (t): Velocity wait starts (%.3f %.3f) <----- v\n", which,
-                fabs(axes_mode.az_vel), MAX_ISC_SLOW_PULSE_SPEED);
-          waiting = 1;
-          return;
-        }
-
-        if (WHICH)
-          bprintf(info, "%iSC (t): Velocity wait ends. -------> v\n", which);
-
-        waiting = 0;
-
         /* use slow (long) pulse length */
         isc_pulses[which].pulse_req = CommandData.ISCControl[which].pulse_width;
 
@@ -623,6 +608,22 @@ void CameraTrigger(int which)
           delay[which]--;
         else {
           delay[which] = 0;
+
+          /* wait until we're below the slow speed */
+          if (fabs(axes_mode.az_vel) >= MAX_ISC_SLOW_PULSE_SPEED) {
+            if (!waiting && WHICH)
+              bprintf(info,
+                  "%iSC (t): Velocity wait starts (%.3f %.3f) <----- v\n",
+                  which, fabs(axes_mode.az_vel), MAX_ISC_SLOW_PULSE_SPEED);
+            waiting = 1;
+            return;
+          }
+
+          if (WHICH)
+            bprintf(info, "%iSC (t): Velocity wait ends. -------> v\n", which);
+
+          waiting = 0;
+
           /* write the pulse */
           if (WHICH)
             bprintf(info, "%iSC (t): Writing trigger (%04x)\n", which,
