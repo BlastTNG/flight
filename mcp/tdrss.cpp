@@ -35,9 +35,10 @@
 #include "small.h"
 #include "fftsg_h.c"
 #include "bbc_pci.h"
-#include "crc.h"
+#include "alice.h"
 
 extern "C" {
+  #include "crc.h"
   #include "pointing_struct.h"
   #include "tx_struct.h"
   #include "mcp.h"
@@ -266,19 +267,22 @@ void Buffer::Start(char filenum, unsigned int framenum) {
   //   11111111 11111111 11111111 11111111
   //   1111 | XML file num
   //   next 3 bytes = framenum
+  //   next 2 bytes = length of frame
+  //   next 2 bytes = CRC
   //
   //   Four FF bytes in a row will (almost) never happen naturally
 
-  for (i = 0; i < 4; i++)
-    buf[i] |= 0xff;    // 11111111
+  for (i = BUF_POS_FRAME_SYNC; i < BUF_POS_FRAME_SYNC + BUF_LEN_FRAME_SYNC; i++)
+    buf[i] |= BUF_FRAME_SYNC;
 
-  buf[4] |= 0xf0 + filenum;
+  buf[BUF_POS_FILE_NUM] |= BUF_FILE_NUM_PADDER + filenum;
 
-  buf[5] = framenum & 0xff;
-  buf[6] = (framenum >> 8) & 0xff;
-  buf[7] = (framenum >> 16) & 0xff;
+  for (i = BUF_POS_FRAME_NUM; i < BUF_POS_FRAME_NUM + BUF_LEN_FRAME_NUM; i++)
+    buf[i] = (framenum >> (8 * (i - BUF_POS_FRAME_NUM))) & 0xff;
+
+  // Frame length & CRC are written in by Stop().
   
-  bytepos = 8;
+  bytepos = BUF_POS_DATA_START;
   bitpos = 0;
 }
 
@@ -299,7 +303,7 @@ void Buffer::Introduce() {
   CheckBytePosRange();
 
   // Section intro:  10101010 + 16 bits = num bytes in section
-  buf[bytepos++] = 0xaa;
+  buf[bytepos++] = BUF_SECTION_SYNC;
   bytepos += 2; // Reserve 2 bytes to write in num bytes afterwards
   CheckBytePosRange();
 
@@ -323,7 +327,7 @@ void Buffer::NoDataMarker() {
   CheckBytePosRange();
 
   // No data marker: 10011001 = 0x99
-  buf[bytepos++] = 0x99;
+  buf[bytepos++] = BUF_NO_DATA;
   CheckBytePosRange();
 
   bitpos = 0;
@@ -372,14 +376,15 @@ void Buffer::Stop() {
     bytepos++;
   CheckBytePosRange();
   
-  buf[bytepos++] = 0x55;
+  buf[bytepos++] = BUF_END_SYNC;
   CheckBytePosRange();
   bitpos = 0;
 
   ndata = CurrSize() - 6;
 
-//  *(unsigned short *)(buf + CRC) = UpdateCRCArc(0, buf + FILEC, CurrSize() - 8);
-//  *(unsigned short *)(buf + BLEN) = ndata;
+  *(unsigned short *)(buf + BUF_POS_FRAME_LEN) = CurrSize(); 
+  *(unsigned short *)(buf + BUF_POS_CRC) = CalculateCRC(CRC_INIT, buf, 
+                                                        CurrSize());
 
   // Send packets
   if (write(tty_fd, buf, CurrSize()) != CurrSize())
@@ -408,8 +413,8 @@ void Buffer::WriteChunk(char numbits, long long datum) {
   }
 
 	// Is the remaining datum larger than 8 bits?
-  while (datum > 0xFF) {
-    buf[bytepos++] |= datum & 0xFF;
+  while (datum > 0xff) {
+    buf[bytepos++] |= datum & 0xff;
     CheckBytePosRange();
     datum = datum >> 8;
     numbits -= 8;
@@ -509,11 +514,9 @@ void Buffer::WriteTo(long long datum, char numbits, char oversize,
 
 Alice::Alice() {
   XMLsrc = -1;
-//  DataSource = new AliceFile("/data/etc/datafile.cur", UNKNOWN);
   DataSource = new FrameBuffer(&small_index, smalldata, slow_data, 1);
   sendbuf = new Buffer();    // 10 bits per byte
   DataInfo = new DataHolder();
-//  mprintf(MCP_INFO, "SMALL (Alice): initialising.");
 }
 
 
@@ -547,6 +550,8 @@ bool Alice::GetCurrentXML() {
     if (DataInfo->LoadFromXML(tmp)) {
       XMLsrc = newxml;
       sendbuf->SetSize(DataInfo->MaxBitRate / 10 * DataInfo->LoopLength);
+      mprintf(MCP_INFO, "SMALL (Alice):  now using .aml file number %d.\n", 
+              XMLsrc);
       return true;
     }
   }
@@ -953,7 +958,7 @@ void Alice::CompressionLoop() {
       // compression chunks in memory at a time.
       DataSource->Resize(numtoread * 3);
 
-//      mprintf(MCP_INFO, "SMALL (Alice):  Filling padding buffer.");
+
       // Wait until there exists enough data for this padding
       framepos = DataSource->NumFrames();
       while (DataSource->NumFrames() < framepos + readleftpad + readrightpad) {
@@ -973,9 +978,6 @@ void Alice::CompressionLoop() {
     sendbuf->Start(XMLsrc, (unsigned int)(framepos - readrightpad));
     i = 0;
     earlysend = false;
-
-//    mprintf(MCP_INFO, "SMALL (Alice): Reading from %d to %d . . .", 
-//            framepos - readrightpad, framepos + numframes - readrightpad);
 
     // Go through each of the slow fields we want to compress.  Slow fields only
     // send down one value per frame.  They are treated like one big "fast"
@@ -1089,8 +1091,6 @@ void Alice::CompressionLoop() {
     }
     // Send down the compressed buffer
     sendbuf->Stop();
-//    mprintf(MCP_INFO, "SMALL (Alice): wrote a packet of %d bytes.", 
-//            sendbuf->CurrSize());
     framepos += numframes;
   }
 }
@@ -1144,14 +1144,6 @@ FrameBuffer::FrameBuffer(unsigned int *mcpindex_in,
 
   Resize(numframes_in);
   
-  int i, j;
-  testbuf = (unsigned short **)malloc(100 * sizeof(unsigned short *));
-  for (j = 0; j < 100; j++) {
-    testbuf[j] = (unsigned short *)malloc(BiPhaseFrameSize);
-    for (i = 0; (unsigned int)i < BiPhaseFrameSize / sizeof(unsigned short); i++)
-      testbuf[j][i] = j;
-  }
-  
   return;
 }
 
@@ -1166,8 +1158,9 @@ void FrameBuffer::Resize(int numframes_in) {
 
   if (memallocated) {
     exitupdatethread = true;
-    while (exitupdatethread)
+    while (exitupdatethread) {
       usleep(1000);
+    }
     
     for (i = 0; i < numframes; i++) {
       for (j = 0; j < FAST_PER_SLOW; j++) {
@@ -1206,8 +1199,8 @@ void FrameBuffer::Resize(int numframes_in) {
   }
 
   if (err)
-    merror(MCP_TFATAL, "SMALL (FrameBuffer): unable to malloc either fastbuf or "
-                      "slowbuf.");
+    merror(MCP_TFATAL, "SMALL (FrameBuffer): unable to malloc either fastbuf "
+                       "or slowbuf.");
 
   framenum = -1;
   memallocated = true;
@@ -1229,7 +1222,6 @@ void *FrameBuffer::UpdateThreadEntry(void *pthis) {
 
 void FrameBuffer::Update() {
   unsigned int i;
-  static int k = 0;
   int j;
 
   while (1 == 1) {
@@ -1246,10 +1238,15 @@ void FrameBuffer::Update() {
         continue;                             // multiplex index 0
       multiplexsynced = true;
 
-      if (multiplexindex < 0 || multiplexindex >= FAST_PER_SLOW)
-        printf("!!!!!!!!!!!!!!!!!!!!!!---------!!!!!!!!!!!!!!!!!!!!!\n");
-      if (i < 0 || i >= 3)
-        printf("----------------------!!!!!!!!!---------------------\n");
+      if (multiplexindex < 0 || multiplexindex >= FAST_PER_SLOW) {
+        mprintf(MCP_ERROR, "Multiplex index out of range (= %d)!\n",
+                multiplexindex);
+        continue;
+      }
+      if (i < 0 || i >= 3) {
+        mprintf(MCP_ERROR, "Biphase buffer index out of range (= %d)!\n", i);
+        continue;
+      }
 
       if (!multiplexindex) {
         if (++framenum >= numframes)
@@ -1261,9 +1258,6 @@ void FrameBuffer::Update() {
               sizeof(unsigned short));
       }
       memcpy(fastbuf[framenum][multiplexindex], fastdata[i], BiPhaseFrameSize);
-      //memcpy(fastbuf[framenum][multiplexindex], testbuf[k], BiPhaseFrameSize);
-      if (++k >= 100)
-        k = 0;
     }
   }
 
@@ -1359,7 +1353,7 @@ int startsmall() {
   Alice *drinkme;
 
   if ((tty_fd = OpenSerial()) < 0)
-    mprintf(MCP_TFATAL, "Couldn't open TDRSS serial port.");
+   mprintf(MCP_TFATAL, "Couldn't open TDRSS serial port.");
 
   drinkme = new Alice();
   drinkme->CompressionLoop();
@@ -1371,6 +1365,6 @@ int startsmall() {
 }
 
 extern "C" void smallinit(void) {
-  mputs(MCP_STARTUP, "Alice startup.\n");
+  mputs(MCP_STARTUP, "Alice start-up.\n");
   startsmall();
 }
