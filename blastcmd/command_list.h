@@ -1,7 +1,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 88         /* total number of named single word cmds */
-#define N_MCOMMANDS 64         /* total number of multiword commands */
+#define N_MCOMMANDS 62         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -80,16 +80,16 @@ enum multiCommand {
   az_el_goto,        az_gain,           az_scan,          bal_gain,
   bal_level,         osc_set_focus,     osc_set_aperture, osc_save_period,
   bias1_level,       bias2_level,       bias3_level,      isc_blob_centre,
-  box,               osc_pixel_centre,  osc_blob_centre,  osc_fast_int,
+  box,               osc_pixel_centre,  osc_blob_centre,
   cal_pulse,         cal_repeat,        cap,              isc_catalogue,
   az_el_trim,        isc_det_set,       drift,            el_gain,
-  isc_fast_int,      osc_slow_int,      osc_det_set,      osc_max_blobs,
+  isc_integrate,     osc_integrate,     osc_det_set,      osc_max_blobs,
   he3_heat,          heatsw_heat,       inner_level,      isc_offset,
   jfet_heat,         osc_catalogue,     osc_tolerances,   osc_hold_current,
   lock,              isc_max_blobs,     outer_level,      phase,
   pivot_gain,        isc_pixel_centre,  ra_dec_goto,      ra_dec_set,
   roll_gain,         isc_set_aperture,  isc_set_focus,    setpoints,
-  isc_slow_int,      spare_heat,        spare_level,      t_gyrobox,
+  spare_heat,        spare_level,      t_gyrobox,
   t_gyro_gain,       timeout,           isc_tolerances,   vcap,
   vbox,              alice_file,        gyro_override,    isc_hold_current,
   isc_save_period,   back_emf,          osc_offset,       plugh

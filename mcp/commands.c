@@ -723,10 +723,9 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
   } else if (command == isc_offset) {
     CommandData.ISCState[0].azBDA = rvalues[0] * DEG2RAD;
     CommandData.ISCState[0].elBDA = rvalues[1] * DEG2RAD;
-  } else if (command == isc_fast_int) {
+  } else if (command == isc_integrate) {
     CommandData.ISCControl[0].fast_pulse_width = (int)((4 + ivalues[0]) / 10);
-  } else if (command == isc_slow_int) {
-    CommandData.ISCControl[0].pulse_width = (int)((4 + ivalues[0]) / 10);
+    CommandData.ISCControl[0].pulse_width = (int)((4 + ivalues[1]) / 10);
   } else if (command == isc_det_set) {
     CommandData.ISCState[0].grid = ivalues[0];
     CommandData.ISCState[0].sn_threshold = rvalues[1];
@@ -766,10 +765,9 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
   } else if (command == osc_offset) {
     CommandData.ISCState[1].azBDA = rvalues[0] * DEG2RAD;
     CommandData.ISCState[1].elBDA = rvalues[1] * DEG2RAD;
-  } else if (command == osc_fast_int) {
+  } else if (command == osc_integrate) {
     CommandData.ISCControl[1].fast_pulse_width = rvalues[0] * 10.4166666666667;
-  } else if (command == osc_slow_int) {
-    CommandData.ISCControl[1].pulse_width = rvalues[0] * 10.4166666666667;
+    CommandData.ISCControl[1].pulse_width = rvalues[1] * 10.4166666666667;
   } else if (command == osc_det_set) {
     CommandData.ISCState[1].grid = ivalues[0];
     CommandData.ISCState[1].sn_threshold = rvalues[1];

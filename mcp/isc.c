@@ -14,6 +14,8 @@
 
 #define BASE_PORT 2000
 
+//#define USE_ISC_LOG
+
 struct {
   char who[4];
   char where[16];
@@ -35,7 +37,7 @@ struct ISCSolutionStruct ISCSolution[2][3];
 int iscdata_index[2] = {0, 0};
 
 #ifdef USE_ISC_LOG
-FILE* isc_log = NULL;
+FILE* isc_log[2] = {NULL, NULL};
 #endif
 
 int ISCInit(int which)
@@ -46,11 +48,16 @@ int ISCInit(int which)
   int n;
 
 #ifdef USE_ISC_LOG
-  if (isc_log == NULL) {
-    if ((isc_log = fopen("/tmp/mcp.isc.log", "a")) == NULL) {
-      merror(MCP_ERROR, "%s log fopen()", isc_which[which].who);
-    }
+  if (which) {
+    if (isc_log[which] == NULL)
+      if ((isc_log[which] = fopen("/tmp/isc.1.log", "a")) == NULL)
+        merror(MCP_ERROR, "%s log fopen()", isc_which[which].who);
+  } else {
+    if (isc_log[which] == NULL)
+      if ((isc_log[which] = fopen("/tmp/isc.0.log", "a")) == NULL)
+        merror(MCP_ERROR, "%s log fopen()", isc_which[which].who);
   }
+  fprintf(isc_log[which], "This is %s.\n", isc_which[which].who);
 #endif
 
   sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -159,15 +166,15 @@ void IntegratingStarCamera(void* parameter)
           break;
         }
 #ifdef USE_ISC_LOG
-        if (isc_log != NULL) {
+        if (isc_log[which] != NULL) {
           t = time(NULL);
-          fprintf(isc_log, "%s: %i %i - %.4lf %.4lf %.4lf\n", ctime(&t),
+          fprintf(isc_log[which], "%s: %i %i - %.4lf %.4lf %.4lf\n", ctime(&t),
               ISCSolution[which][iscdata_index[which]].framenum,
               ISCSolution[which][iscdata_index[which]].n_blobs,
               ISCSolution[which][iscdata_index[which]].ra * RAD2DEG,
               ISCSolution[which][iscdata_index[which]].dec * RAD2DEG,
               ISCSolution[which][iscdata_index[which]].sigma * RAD2DEG * 3600.);
-          fflush(isc_log);
+          fflush(isc_log[which]);
         }
 #endif
 
@@ -233,9 +240,9 @@ void IntegratingStarCamera(void* parameter)
           }
           write_ISC_pointing[which] = 0;
 #ifdef USE_ISC_LOG
-          if (isc_log != NULL) {
+          if (isc_log[which] != NULL) {
             t = time(NULL);
-            fprintf(isc_log,
+            fprintf(isc_log[which],
                 "%s: %i %i %i %i - %i %i %i %i - %.4lf %.4lf %.4lf %.4lf\n"
                 "%.1lf %i %i %i %i - %.1f %.6f %.4f - %.4f %.4f %.4f %.4f\n\n",
                 ctime(&t),
@@ -262,7 +269,7 @@ void IntegratingStarCamera(void* parameter)
                 CommandData.ISCState[which].match_tol,
                 CommandData.ISCState[which].quit_tol,
                 CommandData.ISCState[which].rot_tol);
-            fflush(isc_log);
+            fflush(isc_log[which]);
           }
 #endif
         }
