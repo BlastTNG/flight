@@ -345,6 +345,7 @@ int CheckWriteAllow(int mkdir_err)
     }
 
     printf("\nResuming dirfile `%s' at frame %li\n", rc.dirfile, min_wrote);
+    printf("ri.wrote = rc.resume_at\n");
     ri.wrote = rc.resume_at = min_wrote;
   }
 
@@ -958,7 +959,7 @@ void DirFileWriter(void)
     usleep(10000);
 
     /* if dirfile_init is lowered, the reader has noticed a change in the
-     * curfile prepare for cycling the writer. */
+     * curfile: prepare for cycling the writer. */
     if (ri.dirfile_init == 0) {
       /* perform one last pass to ensure we've written all the data (the reader
        * has certainly stopped by now, so we should be fine with a single
@@ -973,8 +974,10 @@ void DirFileWriter(void)
         ReconstructChannelLists();
 
         /* Re-initialise */
-        InitialiseDirFile(0);
         wrote_count = 0;
+        ri.read = ri.wrote = ri.old_total = 0;
+        InitialiseDirFile(1);
+        gettimeofday(&rc.start, &rc.tz);
         last_pass = 0;
       }
     }
