@@ -1,14 +1,9 @@
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_NM_SCOMMANDS 73      /* total number of named single word cmds */
-#define N_SCOMMANDS N_NM_SCOMMANDS  /* total number of single word commands */
-#define N_MCOMMANDS 44         /* total number of multiword commands */
+#define N_SCOMMANDS 74      /* total number of named single word cmds */
+#define N_MCOMMANDS 45         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
-
-#if N_SCOMMANDS < N_NM_SCOMMANDS
-#error N_SCOMMANDS < N_NM_SCOMMANDS
-#endif
 
 #define MAX_15BIT (32767.)
 #define MAX_30BIT (1073741823.)
@@ -44,102 +39,138 @@ const char *GroupNames[N_GROUPS] = {
   "Inner Frame Lock",      "ISC Commanding"
 };
 
+/* singleCommand enumeration.  The command list here does NOT have to be in
+ * order relative to the command definitions below */
+enum singleCommand {
+  stop, az_off, az_on, el_off, el_on, elclin_veto, elclin_allow,
+  elenc_veto, elenc_allow, sun_veto, sun_allow, isc_veto, isc_allow,
+  mag_veto, mag_allow, gps_veto, gps_allow, reset_trims, trim_to_isc, clock_int,
+  clock_ext, bias_ac, bias_dc, ramp, fixed, charcoal_on, charcoal_off,
+  coldplate_on, coldplate_off, cal_on, cal_off, cal_stop, level_on, level_off,
+  ln_valve_on, ln_valve_off, ln_valve_open, ln_valve_close, he_valve_on,
+  he_valve_off, he_valve_open, he_valve_close, sync_adc, balance_veto, 
+  balance_allow, pump1_on, pump1_off, pump1_fwd, pump1_rev, 
+  pump2_on, pump2_off, pump2_fwd, pump2_rev, inner_cool_on, inner_cool_off,
+  outer_cool_on, outer_cool_off, outer_spare_on, outer_spare_off, pin_in,
+  unlock, use_limitswitch, pin_in_override, pin_out_override, isc_run,
+  isc_shutdown, isc_pause, isc_abort, no_bright_star, save_images,
+  discard_images, full_screen, auto_focus, nop
+};
+
 struct scom {
+  enum singleCommand command;
   char name[SIZE_NAME];
   char about[SIZE_ABOUT];
   int group;
 };
 
-struct scom scommands[N_NM_SCOMMANDS] = {
-  {"stop", "servo off of gyros to zero speed now", GR_POINT},
+#define COMMAND(x) x, #x
 
-  {"az_off", "disable az motors", GR_GAIN},
-  {"az_on",  "enable az motors",  GR_GAIN},
-  {"el_off", "disable el motors", GR_GAIN},
-  {"el_on",  "enable el motors",  GR_GAIN},
+struct scom scommands[N_SCOMMANDS] = {
+  {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
 
-  {"elclin_veto", "veto elevation clinometer", GR_VETO},
-  {"elclin_allow", "un-veto elevation clinometer", GR_VETO},
-  {"elenc_veto", "veto elevation encoder", GR_VETO},
-  {"elenc_allow", "un-veto elevation encoder", GR_VETO},
-  {"sun_veto", "veto sun sensor", GR_VETO},
-  {"sun_allow", "un-veto sun sensor", GR_VETO},
-  {"isc_veto", "veto integrating star-cam", GR_VETO},
-  {"isc_allow", "un-veto integrating star-cam", GR_VETO},
-  {"mag_veto", "veto magnotometer", GR_VETO},
-  {"mag_allow", "un-veto magnetometer", GR_VETO},
-  {"gps_veto", "veto differntial gps", GR_VETO},
-  {"gps_allow", "un-veto differential gps", GR_VETO},
+  {COMMAND(az_off), "disable az motors", GR_GAIN},
+  {COMMAND(az_on),  "enable az motors",  GR_GAIN},
+  {COMMAND(el_off), "disable el motors", GR_GAIN},
+  {COMMAND(el_on),  "enable el motors",  GR_GAIN},
 
-  {"reset", "reset coarse pointing trims to zero", GR_TRIM},
-  {"trim_to_isc", "trim coarse sensors to isc", GR_TRIM},
+  {COMMAND(elclin_veto), "veto elevation clinometer", GR_VETO},
+  {COMMAND(elclin_allow), "un-veto elevation clinometer", GR_VETO},
+  {COMMAND(elenc_veto), "veto elevation encoder", GR_VETO},
+  {COMMAND(elenc_allow), "un-veto elevation encoder", GR_VETO},
+  {COMMAND(sun_veto), "veto sun sensor", GR_VETO},
+  {COMMAND(sun_allow), "un-veto sun sensor", GR_VETO},
+  {COMMAND(isc_veto), "veto integrating star-cam", GR_VETO},
+  {COMMAND(isc_allow), "un-veto integrating star-cam", GR_VETO},
+  {COMMAND(mag_veto), "veto magnotometer", GR_VETO},
+  {COMMAND(mag_allow), "un-veto magnetometer", GR_VETO},
+  {COMMAND(gps_veto), "veto differntial gps", GR_VETO},
+  {COMMAND(gps_allow), "un-veto differential gps", GR_VETO},
 
-  {"clock_int", "bias clock internal", GR_BIAS},
-  {"clock_ext", "bias clock external", GR_BIAS},
-  {"bias_ac", "bias AC", GR_BIAS},
-  {"bias_dc", "bias DC", GR_BIAS},
-  {"ramp", "bias: external, ramp", GR_BIAS},
-  {"fixed", "bias: internal, fixed", GR_BIAS},
+  {COMMAND(reset_trims), "reset coarse pointing trims to zero", GR_TRIM},
+  {COMMAND(trim_to_isc), "trim coarse sensors to isc", GR_TRIM},
 
-  {"charcoal_on", "charcoal heater on", GR_CRYO_HEAT},
-  {"charcoal_off", "charcoal heater off", GR_CRYO_HEAT},
-  {"coldplate_on", "cold plate heater on", GR_CRYO_HEAT},
-  {"coldplate_off", "cold plate heater off", GR_CRYO_HEAT},
+  {COMMAND(clock_int), "bias clock internal", GR_BIAS},
+  {COMMAND(clock_ext), "bias clock external", GR_BIAS},
+  {COMMAND(bias_ac), "bias AC", GR_BIAS},
+  {COMMAND(bias_dc), "bias DC", GR_BIAS},
+  {COMMAND(ramp), "bias: external, ramp", GR_BIAS},
+  {COMMAND(fixed), "bias: internal, fixed", GR_BIAS},
 
-  {"cal_on", "calibrator on", GR_CALLAMP},
-  {"cal_off", "calibrator off", GR_CALLAMP},
-  {"cal_stop", "stop calibrator pulses", GR_CALLAMP},
+  {COMMAND(charcoal_on), "charcoal heater on", GR_CRYO_HEAT},
+  {COMMAND(charcoal_off), "charcoal heater off", GR_CRYO_HEAT},
+  {COMMAND(coldplate_on), "cold plate heater on", GR_CRYO_HEAT},
+  {COMMAND(coldplate_off), "cold plate heater off", GR_CRYO_HEAT},
 
-  {"level_on", "helium level sensor on", GR_CRYO_CONTROL},
-  {"level_off", "helium level sensor off", GR_CRYO_CONTROL},
-  {"ln_valve_on",  "LN valve on", GR_CRYO_CONTROL},
-  {"ln_valve_off", "LN valve off", GR_CRYO_CONTROL},
-  {"ln_valve_open", "set LN valve direction open", GR_CRYO_CONTROL},
-  {"ln_valve_close", "set LN valve direction close", GR_CRYO_CONTROL},
-  {"he_valve_on",  "helium valve on", GR_CRYO_CONTROL},
-  {"he_valve_off", "helium valve off", GR_CRYO_CONTROL},
-  {"he_valve_open", "set helium valve direction open", GR_CRYO_CONTROL},
-  {"he_valve_close", "set helium valve direction close", GR_CRYO_CONTROL},
+  {COMMAND(cal_on), "calibrator on", GR_CALLAMP},
+  {COMMAND(cal_off), "calibrator off", GR_CALLAMP},
+  {COMMAND(cal_stop), "stop calibrator pulses", GR_CALLAMP},
 
-  {"sync_adc", "resync ADC Boards that require it", GR_MISC},
+  {COMMAND(level_on), "helium level sensor on", GR_CRYO_CONTROL},
+  {COMMAND(level_off), "helium level sensor off", GR_CRYO_CONTROL},
+  {COMMAND(ln_valve_on),  "LN valve on", GR_CRYO_CONTROL},
+  {COMMAND(ln_valve_off), "LN valve off", GR_CRYO_CONTROL},
+  {COMMAND(ln_valve_open), "set LN valve direction open", GR_CRYO_CONTROL},
+  {COMMAND(ln_valve_close), "set LN valve direction close", GR_CRYO_CONTROL},
+  {COMMAND(he_valve_on),  "helium valve on", GR_CRYO_CONTROL},
+  {COMMAND(he_valve_off), "helium valve off", GR_CRYO_CONTROL},
+  {COMMAND(he_valve_open), "set helium valve direction open", GR_CRYO_CONTROL},
+  {COMMAND(he_valve_close), "set helium valve direction close",
+    GR_CRYO_CONTROL},
 
-  {"balance_veto", "veto balance system", GR_BAL},
-  {"balance_allow", "unveto balance system", GR_BAL},
-  {"pump1_on", "balance pump 1 on", GR_BAL},
-  {"pump1_off", "balance pump 1 off", GR_BAL},
-  {"pump1_fwd", "balance pump 1 forward", GR_BAL},
-  {"pump1_rev", "balance pump 1 reverse", GR_BAL},
-  {"pump2_on", "balance pump 2 on", GR_BAL},
-  {"pump2_off", "balance pump 2 off", GR_BAL},
-  {"pump2_fwd", "balance pump 2 forward", GR_BAL},
-  {"pump2_rev", "balance pump 2 reverse", GR_BAL},
+  {COMMAND(nop), "no command", GR_MISC},
+  {COMMAND(sync_adc), "resync ADC Boards that require it", GR_MISC},
 
-  {"inner_cool_on", "inner frame cooling pump 1 on", GR_COOL},
-  {"inner_cool_off", "inner frame cooling pump 1 off", GR_COOL},
-  {"outer_cool_on", "outer frame colling pump 1 on", GR_COOL},
-  {"outer_cool_off", "outer frame colling pump 1 off", GR_COOL},
-  {"outer_spare_on", "outer frame colling pump 2 on", GR_COOL},
-  {"outer_spare_off", "outer frame colling pump 2 off", GR_COOL},
+  {COMMAND(balance_veto), "veto balance system", GR_BAL},
+  {COMMAND(balance_allow), "unveto balance system", GR_BAL},
+  {COMMAND(pump1_on), "balance pump 1 on", GR_BAL},
+  {COMMAND(pump1_off), "balance pump 1 off", GR_BAL},
+  {COMMAND(pump1_fwd), "balance pump 1 forward", GR_BAL},
+  {COMMAND(pump1_rev), "balance pump 1 reverse", GR_BAL},
+  {COMMAND(pump2_on), "balance pump 2 on", GR_BAL},
+  {COMMAND(pump2_off), "balance pump 2 off", GR_BAL},
+  {COMMAND(pump2_fwd), "balance pump 2 forward", GR_BAL},
+  {COMMAND(pump2_rev), "balance pump 2 reverse", GR_BAL},
 
-  {"pin_in", "close lock pin without checking encoder (dangerous)", GR_LOCK},
-  {"unlock", "unlock the lock", GR_LOCK},
-  {"use_limitswitch", "reset pin position overrides and use limit switches",
+  {COMMAND(inner_cool_on), "inner frame cooling pump 1 on", GR_COOL},
+  {COMMAND(inner_cool_off), "inner frame cooling pump 1 off", GR_COOL},
+  {COMMAND(outer_cool_on), "outer frame colling pump 1 on", GR_COOL},
+  {COMMAND(outer_cool_off), "outer frame colling pump 1 off", GR_COOL},
+  {COMMAND(outer_spare_on), "outer frame colling pump 2 on", GR_COOL},
+  {COMMAND(outer_spare_off), "outer frame colling pump 2 off", GR_COOL},
+
+  {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK},
-  {"pin_in_override", "override limit switch readout and set state to pin in",
-    GR_LOCK},
-  {"pin_out_override", "override limit switch readout and set state to pin out",
-    GR_LOCK},
+  {COMMAND(unlock), "unlock the lock", GR_LOCK},
+  {COMMAND(use_limitswitch),
+    "reset pin position overrides and use limit switches", GR_LOCK},
+  {COMMAND(pin_in_override),
+    "override limit switch readout and set state to pin in", GR_LOCK},
+  {COMMAND(pin_out_override),
+    "override limit switch readout and set state to pin out", GR_LOCK},
 
-  {"isc_run", "start automatic image capture (normal mode)", GR_ISC},
-  {"isc_shutdown", "shutdown ISC computer in prepratation for power cycle",
-    GR_ISC},
-  {"pause", "pause image capture", GR_ISC},
-  {"isc_abort", "abort current solution attempt", GR_ISC},
-  {"no_bright_star", "cancel bright star mode", GR_ISC},
-  {"save_images", "turn on saving of images", GR_ISC},
-  {"discard_images", "turn off saving of images", GR_ISC},
-  {"full_screen", "show full screen", GR_ISC},
-  {"auto_focus", "autofocus camera", GR_ISC}
+  {COMMAND(isc_run), "start automatic image capture (normal mode)", GR_ISC},
+  {COMMAND(isc_pause), "pause image capture", GR_ISC},
+  {COMMAND(isc_shutdown),
+    "shutdown ISC computer in prepratation for power cycle", GR_ISC},
+  {COMMAND(isc_abort), "abort current solution attempt", GR_ISC},
+  {COMMAND(no_bright_star), "cancel bright star mode", GR_ISC},
+  {COMMAND(save_images), "turn on saving of images", GR_ISC},
+  {COMMAND(discard_images), "turn off saving of images", GR_ISC},
+  {COMMAND(full_screen), "show full screen", GR_ISC},
+  {COMMAND(auto_focus), "autofocus camera", GR_ISC}
+};
+
+/* multiCommand enumeration.  The command list here does NOT have to be in
+ * order relative to the command definitions below */
+enum multiCommand {
+  vcap, cap, box, drift, az_scan, az_el_goto, ra_dec_goto, ra_dec_set,
+  isc_offset, roll_gain, el_gain, az_gain, pivot_gain, lock, setpoints,
+  bal_gain, bal_level, spare_pwm, inner_pwm, outer_pwm, t_gyrobox,
+  t_gyro_gain, timeout, xml_file, bias1_level, bias2_level, bias3_level,
+  phase, cal_pulse, cal_repeat, jfet_heat, heatsw_heat, he3_heat, spare_heat,
+  set_focus, set_aperture, pixel_centre, blob_centre, bright_star, integration,
+  det_set, max_blobs, catalogue, tolerances, az_el_trim
 };
 
 struct par {
@@ -151,6 +182,7 @@ struct par {
 };
 
 struct mcom {
+  enum multiCommand command;
   char name[SIZE_NAME];
   char about[SIZE_ABOUT];
   int group;
@@ -167,7 +199,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********** Pointing Mode **************/
-  {"vcap", "scan a circle centred on RA/Dec with el drift", GR_POINT, 5,
+  {COMMAND(vcap), "scan a circle centred on RA/Dec with el drift", GR_POINT, 5,
     {
       {"RA of Centre (h)",          0, 24, 'f', "NONE"},
       {"Dec of Centre (deg)",     -90, 90, 'f', "NONE"},
@@ -177,7 +209,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"cap", "scan a circle centred on RA/Dec with el steps", GR_POINT, 5,
+  {COMMAND(cap), "scan a circle centred on RA/Dec with el steps", GR_POINT, 5,
     {
       {"RA of Centre (h)",          0, 24, 'f', "NONE"},
       {"Dec of Centre (deg)",     -90, 90, 'f', "NONE"},
@@ -187,7 +219,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
       
-  {"box", "scan an az/el box centred on RA/Dec with el steps", GR_POINT, 6,
+  {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps", GR_POINT, 6,
     {
       {"RA of Centre (h)",          0, 24, 'f', "NONE"},
       {"Dec of Centre (deg)",     -90, 90, 'f', "NONE"},
@@ -198,14 +230,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
       
-  {"drift", "move at constant speed in az and el", GR_POINT, 2,
+  {COMMAND(drift), "move at constant speed in az and el", GR_POINT, 2,
     {
       {"Az Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"},
       {"El Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"}
     }
   },
 
-  {"az_scan", "scan in azimuth", GR_POINT, 4,
+  {COMMAND(az_scan), "scan in azimuth", GR_POINT, 4,
     {
       {"Az centre (deg)",       -180, 360, 'f', "NONE"},
       {"El centre (deg)",         15,  65, 'f', "NONE"},
@@ -214,21 +246,21 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"az_el_goto", "goto point in azimuth and elevation", GR_POINT, 2,
+  {COMMAND(az_el_goto), "goto point in azimuth and elevation", GR_POINT, 2,
     {
       {"Azimuth (deg)", -360, 360, 'f', "NONE"},
       {"Elevation (deg)", 15,  65, 'f', "NONE"}
     }
   },
 
-  {"ra_dec_goto", "track a location RA/Dec", GR_POINT, 2,
+  {COMMAND(ra_dec_goto), "track a location RA/Dec", GR_POINT, 2,
     {
       {"RA of Centre (h)",      0, 24, 'f', "NONE"},
       {"Dec of Centre (deg)", -90, 90, 'f', "NONE"}
     }
   },
 
-  {"ra_dec_set", "define RA/Dec of current position", GR_TRIM, 2,
+  {COMMAND(ra_dec_set), "define RA/Dec of current position", GR_TRIM, 2,
     {
       {"Current RA (h)",      0, 24, 'f', "NONE"},
       {"Current Dec (deg)", -90, 90, 'f', "NONE"}
@@ -237,36 +269,43 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********* Pointing Sensor Trims *******/
-  {"isc_offset", "set offset of star camera from primary beam", GR_TRIM | GR_ISC, 2,
+  {COMMAND(isc_offset), "set offset of star camera from primary beam", GR_TRIM | GR_ISC, 2,
     {
-      {"Offset Az (deg)", -5., 5, 'f', "ADD"},
-      {"Offset El (deg)", -5., 5, 'f', "ADD"}
+      {"Az Offset (deg)", -5., 5, 'f', "ADD"},
+      {"El Offset (deg)", -5., 5, 'f', "ADD"}
+    }
+  },
+
+  {COMMAND(az_el_trim), "trim sensors to azimuth and elevation", GR_TRIM, 2,
+    {
+      {"Azimuth (deg)", 0, 360, 'f', "AZ"},
+      {"Elevation (deg)", 0, 90, 'f', "EL"}
     }
   },
 
   /***************************************/
   /********** Pointing Motor Gains *******/
-  {"roll_gain", "roll reaction wheel gain", GR_GAIN, 1,
+  {COMMAND(roll_gain), "roll reaction wheel gain", GR_GAIN, 1,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_roll"}
     }
   },
 
-  {"el_gain", "elevation motor gains", GR_GAIN, 2,
+  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 2,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_el"},
       {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_el"}
     }
   },
 
-  {"az_gain", "az reaction wheel gains", GR_GAIN, 2,
+  {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 2,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_az"},
       {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_az"}
     }
   },
 
-  {"pivot_gain", "pivot gains", GR_GAIN, 2,
+  {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 2,
     {
       {"Set Point (rpm)",   0, MAX_15BIT, 'f', "set_reac"},
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_pivot"}
@@ -275,7 +314,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********** Inner Frame Lock  **********/
-  {"lock", "lock inner frame", GR_LOCK | GR_POINT, 1,
+  {COMMAND(lock), "lock inner frame", GR_LOCK | GR_POINT, 1,
     {
       {"Lock Elevation (deg)", 5, 90, 'f', "ENC_ELEV"}
     }
@@ -283,7 +322,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********** Balance System  ************/
-  {"setpoints", "balance system setpoints", GR_BAL, 3,
+  {COMMAND(setpoints), "balance system setpoints", GR_BAL, 3,
     {
       {"Pump On Point (A)",  0, 2, 'f', "BAL_ON"},
       {"Pump Off Point (A)", 0, 2, 'f', "BAL_OFF"},
@@ -291,7 +330,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   
-  {"bal_gain", "balance system gain and extrema", GR_BAL, 3,
+  {COMMAND(bal_gain), "balance system gain and extrema", GR_BAL, 3,
     {
       {"Gain",           0.01,   1, 'f', "BAL_GAIN"},
       {"Maximum Speed (%)", 0, 100, 'f', "BAL_MAX"},
@@ -299,7 +338,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"bal_level", "balance pump pwm level", GR_BAL, 1,
+  {COMMAND(bal_level), "balance pump pwm level", GR_BAL, 1,
     {
       {"Level (%)", 0, 100, 'f', "BALPUMP_LEV"}
     }
@@ -307,19 +346,19 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********** Cooling System  ************/
-  {"spare_pwm", "spare pump pwm level", GR_COOL | GR_BAL, 1,
+  {COMMAND(spare_pwm), "spare pump pwm level", GR_COOL | GR_BAL, 1,
     {
       {"Level", 0, 2047, 'i', "sprpump_lev"}
     }
   },
 
-  {"inner_pwm", "inner frame cooling pump speed", GR_COOL, 1,
+  {COMMAND(inner_pwm), "inner frame cooling pump speed", GR_COOL, 1,
     {
       {"Level", 0, 2047, 'i', "inpump_lev"}
     }
   },
 
-  {"outer_pwm", "outer frame cooling pump speed", GR_COOL, 1,
+  {COMMAND(outer_pwm), "outer frame cooling pump speed", GR_COOL, 1,
     {
       {"Level", 0, 2047, 'i', "outpump_lev"}
     }
@@ -327,13 +366,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /******** Electronics Heaters  *********/
-  {"t_gyrobox", "gyro box temperature set point", GR_EHEAT, 1,
+  {COMMAND(t_gyrobox), "gyro box temperature set point", GR_EHEAT, 1,
     {
       {"Set Point (deg C)", 0, 60, 'f', "t_gy_set"}
     }
   },
 
-  {"t_gyro_gain", "gyro box heater gains", GR_EHEAT, 3,
+  {COMMAND(t_gyro_gain), "gyro box heater gains", GR_EHEAT, 3,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_gyheat"},
       {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_gyheat"},
@@ -343,13 +382,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /*************** Misc  *****************/
-  {"timeout", "time until schedule mode", GR_MISC, 1,
+  {COMMAND(timeout), "time until schedule mode", GR_MISC, 1,
     {
       {"Timeout (s)", 15, 14400, 'i', "ADD"}
     }
   },
 
-  {"xml_file", "set XML file for compressed downlink", GR_MISC, 1,
+  {COMMAND(xml_file), "set XML file for compressed downlink", GR_MISC, 1,
     {
       {"File #", 0, 15, 'i', "ADD"}
     }
@@ -357,25 +396,25 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /*************** Bias  *****************/
-  {"bias1_level", "bias 1 level", GR_BIAS, 1,
+  {COMMAND(bias1_level), "bias 1 level", GR_BIAS, 1,
     {
       {"Level", 0, 15, 'i', "bias_lev1"}
     }
   },
 
-  {"bias2_level", "bias 2 level", GR_BIAS, 1,
+  {COMMAND(bias2_level), "bias 2 level", GR_BIAS, 1,
     {
       {"Level", 0, 15, 'i', "bias_lev2"}
     }
   },
 
-  {"bias3_level", "bias 3 level", GR_BIAS, 1,
+  {COMMAND(bias3_level), "bias 3 level", GR_BIAS, 1,
     {
       {"Level", 0, 15, 'i', "bias_lev3"}
     }
   },
 
-  {"phase", "set phase shift", GR_BIAS, 2,
+  {COMMAND(phase), "set phase shift", GR_BIAS, 2,
     {
       {"DAS Card", 5,   16, 'i', "ADD"},
       {"Phase",    0, 2000, 'i', "ADD"}
@@ -384,13 +423,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /*********** Cal Lamp  *****************/
-  {"cal_pulse", "calibrator single pulse", GR_CALLAMP, 1,
+  {COMMAND(cal_pulse), "calibrator single pulse", GR_CALLAMP, 1,
     {
       {"Pulse Length (ms)", 0, 8000, 'i', "ADD"}
     }
   },
 
-  {"cal_repeat", "pulse calibrator repeatedly", GR_CALLAMP, 2,
+  {COMMAND(cal_repeat), "pulse calibrator repeatedly", GR_CALLAMP, 2,
     {
       {"Pulse Length (ms)", 1,  8000, 'i', "ADD"},
       {"Repeat Delay (s)",  1, 86400, 'f', "ADD"}
@@ -399,25 +438,25 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********* Cryo heat   *****************/
-  {"jfet_heat", "jfet heater pwm", GR_CRYO_HEAT, 1,
+  {COMMAND(jfet_heat), "jfet heater pwm", GR_CRYO_HEAT, 1,
     {
       {"Level (%)", 0, 100, 'f', "JFETPWM"}
     }
   },
 
-  {"heatsw_heat", "heat switch pwm", GR_CRYO_HEAT, 1,
+  {COMMAND(heatsw_heat), "heat switch pwm", GR_CRYO_HEAT, 1,
     {
       {"Level (%)", 0, 100, 'f', "HSPWM"}
     }
   },
 
-  {"he3_heat", "helium 3 pwm", GR_CRYO_HEAT, 1,
+  {COMMAND(he3_heat), "helium 3 pwm", GR_CRYO_HEAT, 1,
     {
       {"Level (%)", 0, 100, 'f', "HE3PWM"}
     }
   },
 
-  {"spare_heat", "spare cryo pwm", GR_CRYO_HEAT, 1,
+  {COMMAND(spare_heat), "spare cryo pwm", GR_CRYO_HEAT, 1,
     {
       {"Level (%)", 0, 100, 'f', "CRYOPWM"}
     }
@@ -425,45 +464,45 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********* ISC Commanding **************/
-  {"set_focus", "set focus position", GR_ISC, 1,
+  {COMMAND(set_focus), "set focus position", GR_ISC, 1,
     {
       {"Focus Position", 0, FOCUS_RANGE, 'i', "ISC_FOCUS"}
     }
   },
 
-  {"set_aperture", "set the f-stop", GR_ISC, 1,
+  {COMMAND(set_aperture), "set the f-stop", GR_ISC, 1,
     {
       {"Aperture Position", 0, AP_RANGE, 'i', "ISC_APERT"}
     }
   },
 
-  {"pixel_centre", "centre display on pixel", GR_ISC, 2,
+  {COMMAND(pixel_centre), "centre display on pixel", GR_ISC, 2,
     {
       {"Pixel X", 0, CCD_X_PIXELS - 1, 'i', "ADD"},
       {"Pixel Y", 0, CCD_Y_PIXELS - 1, 'i', "ADD"}
     }
   },
 
-  {"blob_centre", "centre display on blob", GR_ISC, 1,
+  {COMMAND(blob_centre), "centre display on blob", GR_ISC, 1,
     {
       {"Blob #", 0, MAX_ISC_BLOBS, 'i', "ADD"}
     }
   },
 
-  {"bright_star", "set RA/Dec of bright source", GR_ISC, 2,
+  {COMMAND(bright_star), "set RA/Dec of bright source", GR_ISC, 2,
     {
       {"RA (deg)",     0, 360, 'f', "ISC_BRRA"},
       {"Dec (deg)", -180, 180, 'f', "ISC_BRDEC"}
     }
   },
 
-  {"integration", "set camera integration time", GR_ISC, 1,
+  {COMMAND(integration), "set camera integration time", GR_ISC, 1,
     {
       {"integration time (ms)", 0, 5000, 'f', "ISC_PULSE"}
     }
   },
 
-  {"det_set", "set detection parameters", GR_ISC, 5,
+  {COMMAND(det_set), "set detection parameters", GR_ISC, 5,
     {
       {"Search Grid (px/side)",     0, CCD_Y_PIXELS, 'i', "ISC_GRID"},
       {"S/N Threshold",           0.1,       3276.7, 'f', "ISC_THRESH"},
@@ -473,13 +512,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"max_blobs", "max number of blobs used in solution", GR_ISC, 1,
+  {COMMAND(max_blobs), "max number of blobs used in solution", GR_ISC, 1,
     {
       {"# of Blobs", 0, MAX_ISC_BLOBS, 'i', "ISC_MAXBLOBS"}
     }
   },
 
-  {"catalogue", "set catalogue retreival parameters", GR_ISC, 3,
+  {COMMAND(catalogue), "set catalogue retreival parameters", GR_ISC, 3,
     {
       {"Magnitude Limit",            0, 12, 'f', "ISC_MAG"},
       {"Normal Search Radius (deg)", 0, 50, 'f', "ISC_NRAD"},
@@ -487,7 +526,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"tolerances", "set pointing solution tolerances", GR_ISC, 4,
+  {COMMAND(tolerances), "set pointing solution tolerances", GR_ISC, 4,
     {
       {"Assoc. Tolerance (arcsec)", 0, 1000, 'f', "ISC_TOL"},
       {"Match Tolerance (%)",       0,  100, 'f', "ISC_MTOL"},

@@ -47,6 +47,9 @@ extern int ADC_sync_timeout;  /* tx.c */
 void SetRaDec(double ra, double dec); /* defined in pointing.c */
 void SetTrimToISC();
 void ClearTrim();
+void AzElTrim(double az, double el);
+
+const char UnknownCommand[] = "Unknown Command";
 
 struct SlowDLStruct SlowDLInfo[N_SLOWDL] = {
   {"t_dpm_3v", FORCEINT, 8, -1, -1, -1, -1, -1, -1},
@@ -185,11 +188,10 @@ void SendRequest (int req, char tty_fd) {
   write(tty_fd, buffer, 3);
 }
 
-
-int SIndex(char *cmd) {
+int SCommand(char *cmd) {
   int i;
 
-  for (i = 0; i < N_NM_SCOMMANDS; i++) {
+  for (i = 0; i < N_SCOMMANDS; i++) {
     if (strcmp(scommands[i].name, cmd) == 0)
       return i;
   }
@@ -197,14 +199,29 @@ int SIndex(char *cmd) {
   return -1;
 }
 
-void SingleCommand (int command) {
+int SIndex(enum singleCommand command) {
+  int i;
+
+  for (i = 0; i < N_SCOMMANDS; i++)
+    if (scommands[i].command == command)
+      return i;
+
+  return -1;
+}
+
+const char* SName(enum singleCommand command) {
+  int i = SIndex(command);
+  return (i == -1) ? UnknownCommand : scommands[i].name;
+}
+
+void SingleCommand (enum singleCommand command) {
   int i_point;
 
-  fprintf(stderr, "Single command %d: %s\n", command, scommands[command].name);
+  fprintf(stderr, "Single command %d: %s\n", command, SName(command));
 
   /* Update CommandData structure with new info */
 
-  if (command == SIndex("stop")) {      /* Pointing aborts */
+  if (command == stop) {      /* Pointing aborts */
     CommandData.pointing_mode.mode = P_DRIFT;
     CommandData.pointing_mode.X = 0;
     CommandData.pointing_mode.Y = 0;
@@ -214,138 +231,138 @@ void SingleCommand (int command) {
     CommandData.pointing_mode.h = 0;
   }
 
-  else if (command == SIndex("sync_adc"))
+  else if (command == sync_adc)
     ADC_sync_timeout = 0;
 
-  else if (command == SIndex("trim_to_isc"))
+  else if (command == trim_to_isc)
     SetTrimToISC();
-  else if (command == SIndex("reset"))
+  else if (command == reset_trims)
     ClearTrim();
-  else if (command == SIndex("az_off")) /* disable az motors */
+  else if (command == az_off) /* disable az motors */
     CommandData.disable_az = 1;
-  else if (command == SIndex("az_on")) /* enable az motors */
+  else if (command == az_on) /* enable az motors */
     CommandData.disable_az = 0;
-  else if (command == SIndex("el_off")) /* disable el motors */
+  else if (command == el_off) /* disable el motors */
     CommandData.disable_el = 1;
-  else if (command == SIndex("el_on")) /* enable el motors */
+  else if (command == el_on) /* enable el motors */
     CommandData.disable_el = 0;
 
-  else if (command == SIndex("sun_veto"))       /* Veto sensors */
+  else if (command == sun_veto)       /* Veto sensors */
     CommandData.use_sun = 0;
-  else if (command == SIndex("isc_veto"))
+  else if (command == isc_veto)
     CommandData.use_isc = 0;
-  else if (command == SIndex("mag_veto"))
+  else if (command == mag_veto)
     CommandData.use_mag = 0;
-  else if (command == SIndex("gps_veto"))
+  else if (command == gps_veto)
     CommandData.use_gps = 0;
-  else if (command == SIndex("elenc_veto"))
+  else if (command == elenc_veto)
     CommandData.use_elenc = 0;
-  else if (command == SIndex("elclin_veto"))
+  else if (command == elclin_veto)
     CommandData.use_elclin = 0;
 
-  else if (command == SIndex("sun_allow"))       /* Un-veto sensors */
+  else if (command == sun_allow)       /* Un-veto sensors */
     CommandData.use_sun = 1;
-  else if (command == SIndex("isc_allow"))
+  else if (command == isc_allow)
     CommandData.use_isc = 1;
-  else if (command == SIndex("mag_allow"))
+  else if (command == mag_allow)
     CommandData.use_mag = 1;
-  else if (command == SIndex("gps_allow"))
+  else if (command == gps_allow)
     CommandData.use_gps = 1;
-  else if (command == SIndex("elenc_allow"))
+  else if (command == elenc_allow)
     CommandData.use_elenc = 1;
-  else if (command == SIndex("elclin_allow"))
+  else if (command == elclin_allow)
     CommandData.use_elclin = 1;
 
-  else if (command == SIndex("clock_int"))    /* Bias settings */
+  else if (command == clock_int)    /* Bias settings */
     CommandData.Bias.clockInternal = 1;
-  else if (command == SIndex("clock_ext"))
+  else if (command == clock_ext)
     CommandData.Bias.clockInternal = 0;
-  else if (command == SIndex("bias_ac"))
+  else if (command == bias_ac)
     CommandData.Bias.biasAC = 1;
-  else if (command == SIndex("bias_dc"))
+  else if (command == bias_dc)
     CommandData.Bias.biasAC = 0;
-  else if (command == SIndex("ramp"))
+  else if (command == ramp)
     CommandData.Bias.biasRamp = 1;
-  else if (command == SIndex("fixed"))
+  else if (command == fixed)
     CommandData.Bias.biasRamp = 0;
 
-  else if (command == SIndex("level_on"))    /* Cryo commanding */
+  else if (command == level_on)    /* Cryo commanding */
     CommandData.Cryo.heliumLevel = 1;
-  else if (command == SIndex("level_off"))
+  else if (command == level_off)
     CommandData.Cryo.heliumLevel = 0;
-  else if (command == SIndex("charcoal_on"))
+  else if (command == charcoal_on)
     CommandData.Cryo.charcoalHeater = 1;
-  else if (command == SIndex("charcoal_off"))
+  else if (command == charcoal_off)
     CommandData.Cryo.charcoalHeater = 0;
-  else if (command == SIndex("coldplate_on"))
+  else if (command == coldplate_on)
     CommandData.Cryo.coldPlate = 1;
-  else if (command == SIndex("coldplate_off"))
+  else if (command == coldplate_off)
     CommandData.Cryo.coldPlate = 0;
-  else if (command == SIndex("cal_on"))
+  else if (command == cal_on)
     CommandData.Cryo.calibrator = 1;
-  else if (command == SIndex("cal_off"))
+  else if (command == cal_off)
     CommandData.Cryo.calibrator = 0;
-  else if (command == SIndex("cal_stop"))
+  else if (command == cal_stop)
     CommandData.Cryo.calib_pulse = 0;
-  else if (command == SIndex("ln_valve_open")) {
+  else if (command == ln_valve_open) {
     CommandData.Cryo.lnvalve_open = 40;
     CommandData.Cryo.lnvalve_close = 0;
-  } else if (command == SIndex("ln_valve_close")) {
+  } else if (command == ln_valve_close) {
     CommandData.Cryo.lnvalve_close = 40;
     CommandData.Cryo.lnvalve_open = 0;
-  } else if (command == SIndex("ln_valve_on"))
+  } else if (command == ln_valve_on)
     CommandData.Cryo.lnvalve_on = 1;
-  else if (command == SIndex("ln_valve_off"))
+  else if (command == ln_valve_off)
     CommandData.Cryo.lnvalve_on = 0;
-  else if (command == SIndex("he_valve_open")) {
+  else if (command == he_valve_open) {
     CommandData.Cryo.lhevalve_open = 40;
     CommandData.Cryo.lhevalve_close = 0;
-  } else if (command == SIndex("he_valve_close")) {
+  } else if (command == he_valve_close) {
     CommandData.Cryo.lhevalve_close = 40;
     CommandData.Cryo.lhevalve_open = 0;
-  } else if (command == SIndex("he_valve_on"))
+  } else if (command == he_valve_on)
     CommandData.Cryo.lhevalve_on = 1;
-  else if (command == SIndex("he_valve_off"))
+  else if (command == he_valve_off)
     CommandData.Cryo.lhevalve_on = 0;
 
-  else if (command == SIndex("balance_veto"))
+  else if (command == balance_veto)
     CommandData.pumps.bal_veto = -1;
-  else if (command == SIndex("balance_allow"))
+  else if (command == balance_allow)
     CommandData.pumps.bal_veto = 0;
 
-  else if (command == SIndex("pump1_on"))
+  else if (command == pump1_on)
     CommandData.pumps.bal1_on = 1;
-  else if (command == SIndex("pump1_off"))
+  else if (command == pump1_off)
     CommandData.pumps.bal1_on = 0;
-  else if (command == SIndex("pump1_fwd"))
+  else if (command == pump1_fwd)
     CommandData.pumps.bal1_reverse = 0;
-  else if (command == SIndex("pump1_rev"))
+  else if (command == pump1_rev)
     CommandData.pumps.bal1_reverse = 1;
-  else if (command == SIndex("pump2_on"))
+  else if (command == pump2_on)
     CommandData.pumps.bal2_on = 1;
-  else if (command == SIndex("pump2_off"))
+  else if (command == pump2_off)
     CommandData.pumps.bal2_on = 0;
-  else if (command == SIndex("pump2_fwd"))
+  else if (command == pump2_fwd)
     CommandData.pumps.bal2_reverse = 0;
-  else if (command == SIndex("pump2_rev"))
+  else if (command == pump2_rev)
     CommandData.pumps.bal2_reverse = 1;
 
-  else if (command == SIndex("inner_cool_on"))
+  else if (command == inner_cool_on)
     CommandData.pumps.inframe_cool1_on = 40;
-  else if (command == SIndex("inner_cool_off"))
+  else if (command == inner_cool_off)
     CommandData.pumps.inframe_cool1_off = 40;
 
-  else if (command == SIndex("outer_cool_on"))
+  else if (command == outer_cool_on)
     CommandData.pumps.outframe_cool1_on = 40;
-  else if (command == SIndex("outer_cool_off"))
+  else if (command == outer_cool_off)
     CommandData.pumps.outframe_cool1_off = 40;
-  else if (command == SIndex("outer_spare_on"))
+  else if (command == outer_spare_on)
     CommandData.pumps.outframe_cool2_on = 40;
-  else if (command == SIndex("outer_spare_off"))
+  else if (command == outer_spare_off)
     CommandData.pumps.outframe_cool2_off = 40;
-  else if (command == SIndex("pin_in"))
+  else if (command == pin_in)
     CommandData.pumps.lock_in = 1;
-  else if (command == SIndex("unlock")) {
+  else if (command == unlock) {
     CommandData.pumps.lock_out = 1;
     if (CommandData.pointing_mode.mode == P_LOCK) {
       CommandData.pointing_mode.mode = P_DRIFT;
@@ -359,23 +376,23 @@ void SingleCommand (int command) {
 
     /***************************************/
     /********* ISC Commanding  *************/
-  } else if (command == SIndex("isc_run")) {
+  } else if (command == isc_run) {
     CommandData.ISCState.pause = 0;
-  } else if (command == SIndex("isc_shutdown")) {
+  } else if (command == isc_shutdown) {
     CommandData.ISCState.shutdown = 1;
-  } else if (command == SIndex("pause")) {
+  } else if (command == isc_pause) {
     CommandData.ISCState.pause = 1;
-  } else if (command == SIndex("isc_abort")) {
+  } else if (command == isc_abort) {
     CommandData.ISCState.abort = 1;
-  } else if (command == SIndex("no_bright_star")) {
+  } else if (command == no_bright_star) {
     CommandData.ISCState.brightStarMode = 0;
-  } else if (command == SIndex("save_images")) {
+  } else if (command == save_images) {
     CommandData.ISCState.save = 1;
-  } else if (command == SIndex("discard_images")) {
+  } else if (command == discard_images) {
     CommandData.ISCState.save = 0;
-  } else if (command == SIndex("full_screen")) {
+  } else if (command == full_screen) {
     CommandData.ISCState.display_mode = full;
-  } else if (command == SIndex("auto_focus")) {
+  } else if (command == auto_focus) {
     CommandData.ISCState.abort = 1;
     CommandData.ISCState.autofocus = 1;
     CommandData.old_ISC_focus = CommandData.ISCState.focus_pos;
@@ -392,18 +409,33 @@ void SingleCommand (int command) {
   WritePrevStatus();
 }
 
-int MIndex(char *cmd) {
+enum multiCommand MCommand(char *cmd) {
   int i;
 
   for (i = 0; i < N_MCOMMANDS; i++) {
     if (strcmp(mcommands[i].name, cmd) == 0)
-      return i;
+      return mcommands[i].command;
   }
 
   return -1;
 }
 
-void MultiCommand (int command, unsigned short *dataq) {
+int MIndex(enum multiCommand command) {
+  int i;
+
+  for (i = 0; i < N_MCOMMANDS; i++)
+    if (mcommands[i].command == command)
+      return i;
+
+  return -1;
+}
+
+const char* MName(enum multiCommand command) {
+  int i = MIndex(command);
+  return (i == -1) ? UnknownCommand : mcommands[i].name;
+}
+
+void MultiCommand (enum multiCommand command, unsigned short *dataq) {
   FILE *fp;
 
   int i, dataqind;
@@ -411,26 +443,27 @@ void MultiCommand (int command, unsigned short *dataq) {
   unsigned short ivalues[MAX_N_PARAMS];
   char type;
   int i_point;
+  int index = MIndex(command);
 
 
 #ifndef BOLOTEST
   double min;
 
   /* compute renormalised values */
-  for (i = dataqind = 0; i < mcommands[command].numparams; ++i) {
-    min = mcommands[command].params[i].min;
-    type = mcommands[command].params[i].type;
+  for (i = dataqind = 0; i < mcommands[index].numparams; ++i) {
+    min = mcommands[index].params[i].min;
+    type = mcommands[index].params[i].type;
     if (type == 'i')  /* 15 bit unsigned integer */ {
       ivalues[i] = dataq[dataqind++];
       fprintf(stderr, "param%02i: integer: %i\n", i, ivalues[i]);
     } else if (type == 'f')  /* 15 bit floating point */ {
-      rvalues[i] = (float)dataq[dataqind++] * (mcommands[command].params[i].max
+      rvalues[i] = (float)dataq[dataqind++] * (mcommands[index].params[i].max
           - min) / MAX_15BIT + min;
       fprintf(stderr, "param%02i: 15 bits: %f\n", i, rvalues[i]);
     } else if (type == 'l') { /* 30 bit floating point */
       rvalues[i] = (float)((int)dataq[dataqind++] << 15); /* upper 15 bits */
       rvalues[i] += (float)dataq[dataqind++];             /* lower 15 bits */
-      rvalues[i] = rvalues[i] * (mcommands[command].params[i].max - min) /
+      rvalues[i] = rvalues[i] * (mcommands[index].params[i].max - min) /
         MAX_30BIT + min;
       fprintf(stderr, "param%02i: 30 bits: %f\n", i, rvalues[i]);
     }
@@ -438,8 +471,8 @@ void MultiCommand (int command, unsigned short *dataq) {
 #else
   char** dataqc = (char**) dataq;
   /* compute renormalised values - SIPSS FIFO version */
-  for (i = dataqind = 0; i < mcommands[command].numparams; ++i) {
-    type = mcommands[command].params[i].type;
+  for (i = dataqind = 0; i < mcommands[index].numparams; ++i) {
+    type = mcommands[index].params[i].type;
     if (type == 'i')  /* 15 bit unsigned integer */ {
       ivalues[i] = atoi(dataqc[dataqind++]);
       fprintf(stderr, "param%02i: integer: %i\n", i, ivalues[i]);
@@ -461,7 +494,7 @@ void MultiCommand (int command, unsigned short *dataq) {
 
     /***************************************/
     /********** Pointing Mode **************/
-  } else if (command == MIndex("az_el_goto")) {
+  } else if (command == az_el_goto) {
     CommandData.pointing_mode.mode = P_AZEL_GOTO;
     CommandData.pointing_mode.X = rvalues[0];  /* az */
     CommandData.pointing_mode.Y = rvalues[1];  /* el */
@@ -469,7 +502,7 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pointing_mode.del = 0.0;
     CommandData.pointing_mode.w = 0;
     CommandData.pointing_mode.h = 0;
-  } else if (command == MIndex("az_scan")) {
+  } else if (command == az_scan) {
     CommandData.pointing_mode.mode = P_AZ_SCAN;
     CommandData.pointing_mode.X = rvalues[0];  /* az */
     CommandData.pointing_mode.Y = rvalues[1];  /* el */
@@ -477,7 +510,7 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
     CommandData.pointing_mode.del = 0.0;
     CommandData.pointing_mode.h = 0;
-  } else if (command == MIndex("drift")) {
+  } else if (command == drift) {
     CommandData.pointing_mode.mode = P_DRIFT;
     CommandData.pointing_mode.X = 0;
     CommandData.pointing_mode.Y = 0;
@@ -485,7 +518,7 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pointing_mode.vaz = rvalues[0]; /* az speed */
     CommandData.pointing_mode.del = rvalues[1]; /* el speed */
     CommandData.pointing_mode.h = 0;
-  } else if (command == MIndex("ra_dec_goto")) {
+  } else if (command == ra_dec_goto) {
     CommandData.pointing_mode.mode = P_RADEC_GOTO;
     CommandData.pointing_mode.X = rvalues[0]; /* ra */
     CommandData.pointing_mode.Y = rvalues[1]; /* dec */
@@ -493,7 +526,7 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pointing_mode.vaz = 0;
     CommandData.pointing_mode.del = 0;
     CommandData.pointing_mode.h = 0;
-  } else if (command == MIndex("vcap")) {
+  } else if (command == vcap) {
     CommandData.pointing_mode.mode = P_VCAP;
     CommandData.pointing_mode.X = rvalues[0]; /* ra */
     CommandData.pointing_mode.Y = rvalues[1]; /* dec */
@@ -501,7 +534,7 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
     CommandData.pointing_mode.del = rvalues[4]; /* el drift speed */
     CommandData.pointing_mode.h = 0;
-  } else if (command == MIndex("cap")) {
+  } else if (command == cap) {
     CommandData.pointing_mode.mode = P_CAP;
     CommandData.pointing_mode.X = rvalues[0]; /* ra */
     CommandData.pointing_mode.Y = rvalues[1]; /* dec */
@@ -509,7 +542,7 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
     CommandData.pointing_mode.del = rvalues[4]; /* el step size */
     CommandData.pointing_mode.h = 0;
-  } else if (command == MIndex("box")) {
+  } else if (command == box) {
     CommandData.pointing_mode.mode = P_BOX;
     CommandData.pointing_mode.X = rvalues[0]; /* ra */
     CommandData.pointing_mode.Y = rvalues[1]; /* dec */
@@ -517,26 +550,31 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pointing_mode.h = rvalues[3]; /* height */
     CommandData.pointing_mode.vaz = rvalues[4]; /* az scan speed */
     CommandData.pointing_mode.del = rvalues[5]; /* el step size */
-  } else if (command == MIndex("ra_dec_set")) {
+
+    /***************************************/
+    /********** Pointing Motor Trims *******/
+  } else if (command == az_el_trim) {
+    AzElTrim(rvalues[0], rvalues[1]);
+  } else if (command == ra_dec_set) {
     SetRaDec(rvalues[0], rvalues[1]);
-    
+
     /***************************************/
     /********** Pointing Motor Gains *******/
-  } else if (command == MIndex("roll_gain")) { /* roll Gains */
+  } else if (command == roll_gain) { /* roll Gains */
     CommandData.roll_gain.P = ivalues[0];
-  } else if (command == MIndex("el_gain")) {  /* ele gains */
+  } else if (command == el_gain) {  /* ele gains */
     CommandData.ele_gain.P = ivalues[0];
     CommandData.ele_gain.I = ivalues[1];
-  } else if (command == MIndex("az_gain")) {  /* az gains */
+  } else if (command == az_gain) {  /* az gains */
     CommandData.azi_gain.P = ivalues[0];
     CommandData.azi_gain.I = ivalues[1];
-  } else if (command == MIndex("pivot_gain")) {  /* pivot gains */
+  } else if (command == pivot_gain) {  /* pivot gains */
     CommandData.pivot_gain.SP = (rvalues[0] + 2.605) / 7.9498291016e-5;
     CommandData.pivot_gain.P = ivalues[1];
 
     /***************************************/
     /********** Inner Frame Lock  **********/
-  } else if (command == MIndex("lock")) {  /* Lock Inner Frame */
+  } else if (command == lock) {  /* Lock Inner Frame */
     if (CommandData.pumps.bal_veto >= 0)
       CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
     CommandData.pumps.lock_point = 1;
@@ -551,40 +589,40 @@ void MultiCommand (int command, unsigned short *dataq) {
 
     /***************************************/
     /********** Balance System  ************/
-  } else if (command == MIndex("setpoints")) {
+  } else if (command == setpoints) {
     CommandData.pumps.bal_on = rvalues[0] * 1648.;
     CommandData.pumps.bal_off = rvalues[1] * 1648.;
     CommandData.pumps.bal_target = rvalues[2] * 1648.;
-  } else if (command == MIndex("bal_level")) {
+  } else if (command == bal_level) {
     CommandData.pumps.pwm1 = 2047 - rvalues[0] * 2047. / 100;
-  } else if (command == MIndex("bal_gain")) {
+  } else if (command == bal_gain) {
     CommandData.pumps.bal_gain = rvalues[0];
     CommandData.pumps.bal_min = 2047 - rvalues[0] * 2047. / 100;
     CommandData.pumps.bal_max = 2047 - rvalues[0] * 2047. / 100;
 
     /***************************************/
     /********** Cooling System  ************/
-  } else if (command == MIndex("spare_pwm")) {
+  } else if (command == spare_pwm) {
     CommandData.pumps.pwm2 = ivalues[0];
-  } else if (command == MIndex("inner_pwm")) {
+  } else if (command == inner_pwm) {
     CommandData.pumps.pwm3 = ivalues[0];
-  } else if (command == MIndex("outer_pwm")) {
+  } else if (command == outer_pwm) {
     CommandData.pumps.pwm4 = ivalues[0];
 
     /***************************************/
     /******** Electronics Heaters  *********/
-  } else if (command == MIndex("t_gyrobox")) {  /* gyro heater setpoint */
+  } else if (command == t_gyrobox) {  /* gyro heater setpoint */
     CommandData.t_gybox_setpoint = rvalues[0];
-  } else if (command == MIndex("t_gyro_gain")) {  /* gyro heater gains */
+  } else if (command == t_gyro_gain) {  /* gyro heater gains */
     CommandData.gy_heat_gain.P = ivalues[0];
     CommandData.gy_heat_gain.I = ivalues[1];
     CommandData.gy_heat_gain.D = ivalues[2];
 
     /***************************************/
     /*************** Misc  *****************/
-  } else if (command == MIndex("timeout")) {        /* Set timeout */
+  } else if (command == timeout) {        /* Set timeout */
     CommandData.timeout = ivalues[0];
-  } else if (command == MIndex("xml_file")) {  /* change downlink XML file */
+  } else if (command == xml_file) {  /* change downlink XML file */
     if ((fp = fopen("./alice/index.al", "w")) != NULL) {
       fprintf(fp, "%d\n", ivalues[0]);
       fclose(fp);
@@ -592,75 +630,75 @@ void MultiCommand (int command, unsigned short *dataq) {
 
     /***************************************/
     /*************** Bias  *****************/
-  } else if (command == MIndex("bias1_level")) {    /* Set bias 1 */
+  } else if (command == bias1_level) {    /* Set bias 1 */
     CommandData.Bias.SetLevel1 = 1;
     CommandData.Bias.bias1 = ivalues[0];
-  } else if (command == MIndex("bias2_level")) {   /* Set bias 2 */
+  } else if (command == bias2_level) {   /* Set bias 2 */
     CommandData.Bias.SetLevel2 = 1;
     CommandData.Bias.bias2 = ivalues[0];
-  } else if (command == MIndex("bias3_level")) {   /* Set bias 3 */
+  } else if (command == bias3_level) {   /* Set bias 3 */
     CommandData.Bias.SetLevel3 = 1;
     CommandData.Bias.bias3 = ivalues[0];
-  } else if (command == MIndex("phase")) {
+  } else if (command == phase) {
     if (ivalues[0] >= 5 && ivalues[0] <= 16) 
       CommandData.Phase[ivalues[0] - 5] = ivalues[1];
 
     /***************************************/
     /*********** Cal Lamp  *****************/
-  } else if (command == MIndex("cal_pulse")) {
+  } else if (command == cal_pulse) {
     CommandData.Cryo.calib_pulse = ivalues[0];
     CommandData.Cryo.calib_repeat = 0;
-  } else if (command == MIndex("cal_repeat")) {
+  } else if (command == cal_repeat) {
     CommandData.Cryo.calib_pulse = ivalues[0];
     CommandData.Cryo.calib_repeat = rvalues[1];
 
     /***************************************/
     /********* Cryo heat   *****************/
-  } else if (command == MIndex("jfet_heat")) {
+  } else if (command == jfet_heat) {
     CommandData.Cryo.JFETHeat = rvalues[0] * 2047./100.;
-  } else if (command == MIndex("heatsw_heat")) {
+  } else if (command == heatsw_heat) {
     CommandData.Cryo.heatSwitch = rvalues[0] * 2047./100.;
-  } else if (command == MIndex("he3_heat")) {
+  } else if (command == he3_heat) {
     CommandData.Cryo.heliumThree = rvalues[0] * 2047./100.;
-  } else if (command == MIndex("spare_heat")) {
+  } else if (command == spare_heat) {
     CommandData.Cryo.sparePwm = rvalues[0] * 2047./100.;
 
 
     /***************************************/
     /********* ISC Commanding  *************/
-  } else if (command == MIndex("set_focus")) {
+  } else if (command == set_focus) {
     CommandData.ISCState.focus_pos = ivalues[0];
-  } else if (command == MIndex("set_aperture")) {
+  } else if (command == set_aperture) {
     CommandData.ISCState.ap_pos = ivalues[0];
-  } else if (command == MIndex("pixel_centre")) {
+  } else if (command == pixel_centre) {
     CommandData.ISCState.roi_x = ivalues[0];
     CommandData.ISCState.roi_y = ivalues[1];
     CommandData.ISCState.display_mode = roi;
-  } else if (command == MIndex("blob_centre")) {
+  } else if (command == blob_centre) {
     CommandData.ISCState.blob_num = ivalues[0];
     CommandData.ISCState.display_mode = blob;
-  } else if (command == MIndex("isc_offset")) {
+  } else if (command == isc_offset) {
     CommandData.ISCState.azBDA = rvalues[0] * DEG2RAD;
     CommandData.ISCState.elBDA = rvalues[1] * DEG2RAD;
-  } else if (command == MIndex("bright_star")) {
+  } else if (command == bright_star) {
     CommandData.ISCState.brightRA = rvalues[0] * DEG2RAD;
     CommandData.ISCState.brightDEC = rvalues[1] * DEG2RAD;
     CommandData.ISCState.brightStarMode = 1;
-  } else if (command == MIndex("integration")) {
+  } else if (command == integration) {
     CommandData.ISC_pulse_width = (int)(rvalues[0] / 10.);
-  } else if (command == MIndex("det_set")) {
+  } else if (command == det_set) {
     CommandData.ISCState.grid = ivalues[0];
     CommandData.ISCState.sn_threshold = rvalues[1];
     CommandData.ISCState.cenbox = ivalues[2];
     CommandData.ISCState.apbox = ivalues[3];
     CommandData.ISCState.mult_dist = ivalues[4];
-  } else if (command == MIndex("max_blobs")) {
+  } else if (command == max_blobs) {
     CommandData.ISCState.maxBlobMatch = ivalues[0];
-  } else if (command == MIndex("catalogue")) {
+  } else if (command == catalogue) {
     CommandData.ISCState.mag_limit = rvalues[0];
     CommandData.ISCState.norm_radius = rvalues[1] * DEG2RAD;
     CommandData.ISCState.lost_radius = rvalues[2] * DEG2RAD;
-  } else if (command == MIndex("tolerances")) {
+  } else if (command == tolerances) {
     CommandData.ISCState.tolerance = rvalues[0] / 3600. * DEG2RAD;
     CommandData.ISCState.match_tol = rvalues[1] / 100;
     CommandData.ISCState.quit_tol = rvalues[2] / 100;
@@ -828,11 +866,11 @@ void SendDownData(char tty_fd) {
 }
 
 /* compute the size of the data queue for the given command */
-int DataQSize(int command) {
-  int i, size = mcommands[command].numparams;
+int DataQSize(int index) {
+  int i, size = mcommands[index].numparams;
 
-  for (i = 0; i < mcommands[command].numparams; ++i)
-    if (mcommands[command].params[i].type == 'l')
+  for (i = 0; i < mcommands[index].numparams; ++i)
+    if (mcommands[index].params[i].type == 'l')
       size++;
 
   return size;
@@ -894,11 +932,11 @@ void WatchFIFO () {
 
     /* Process data */
     if (mcommand_count == 0) {
-      mcommand = SIndex(command);
+      mcommand = SCommand(command);
       SingleCommand(mcommand);
       mcommand = -1;
     } else {
-      mcommand = MIndex(command);
+      mcommand = MCommand(command);
       fprintf(stderr, " Multi word command received\n");
       MultiCommand(mcommand, (unsigned short*) mcommand_data);
       mcommand = -1;
@@ -918,7 +956,7 @@ void WatchPort (void* parameter) {
   unsigned char indata[20];
   char readstage = 0;
   char tty_fd;
-  
+
   int port = (int)parameter;
 
   int mcommand = -1;
@@ -952,7 +990,7 @@ void WatchPort (void* parameter) {
       }
       usleep(10000); /* sleep for 10ms */
     }
-    
+
     /* Take control of memory */
     pthread_mutex_lock(&mutex);
 
@@ -973,19 +1011,19 @@ void WatchPort (void* parameter) {
       case 1: /* wating for packet type */
         if (buf == 0x13) { /* Send data request */
           readstage = 3;
-//          fprintf(stderr, "COMM%i: Data request\n", port + 1);
+          //          fprintf(stderr, "COMM%i: Data request\n", port + 1);
         } else if (buf == 0x14) { /* Command */
           readstage = 2;
-//          fprintf(stderr, "COMM%i: Command\n", port + 1);
+          //          fprintf(stderr, "COMM%i: Command\n", port + 1);
         } else if (buf == 0x10) { /* GPS Position */
           readstage = 4;
-//          fprintf(stderr, "COMM%i: GPS Position\n", port + 1);
+          //          fprintf(stderr, "COMM%i: GPS Position\n", port + 1);
         } else if (buf == 0x11) { /* GPS Time */
           readstage = 5;
-//          fprintf(stderr, "COMM%i: GPS Time\n", port + 1);
+          //          fprintf(stderr, "COMM%i: GPS Time\n", port + 1);
         } else if (buf == 0x12) { /* MKS Altitude */
           readstage = 6;
-//          fprintf(stderr, "COMM%i: MKS Altitude\n", port + 1);
+          //          fprintf(stderr, "COMM%i: MKS Altitude\n", port + 1);
         } else {
           fprintf(stderr,
               "COMM%i: Bad packet received: Unrecognised Packet Type: %02X\n",
@@ -1030,9 +1068,9 @@ void WatchPort (void* parameter) {
               /*Grab first five bits of second byte containing command number*/
               mcommand = indata[0];
               mcommand_count = 0;
-              dataqsize = DataQSize(mcommand);
+              dataqsize = DataQSize(MIndex(mcommand));
               fprintf(stderr, "COMM%i:  Multi word command %d (%s) started\n",
-                  port + 1, mcommand, mcommands[mcommand].name);
+                  port + 1, mcommand, MName(mcommand));
 
               /* The time of sending, a "unique" number shared by the first */
               /* and last packed of a multi-command */

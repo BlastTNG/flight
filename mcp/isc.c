@@ -107,6 +107,7 @@ void IntegratingStarCamera(void)
       FD_SET(sock, &fdw);
       FD_SET(sock, &fdr);
 
+      usleep(10000);
       /* select poll on fds; this is a blocking call */
       n = select(sock + 1, &fdr, &fdw, NULL, NULL);
 

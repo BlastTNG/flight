@@ -859,7 +859,13 @@ void SetTrimToISC() {
   NewAzEl.fresh = 1;
 }
 
-  
+void AzElTrim(double az, double el) {
+  NewAzEl.az = az;
+  NewAzEl.el = el;
+
+  NewAzEl.fresh = 1;
+}
+
 void ClearTrim() {
   NewAzEl.fresh = -1;
 }
