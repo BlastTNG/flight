@@ -109,12 +109,10 @@ int StaticSourcePart(char* output, const char* source, chunkindex_t* value,
 
 /* Figures out the name of the channel specification file, and then tries to
  * open and read it. */
-int ReconstructChannelLists(const char* chunk, const char * spec_file)
+char* GetSpecFile(char* buffer, const char* chunk, const char *spec_file)
 {
   struct stat stat_buf;
-  char buffer[200];
   char* ptr = buffer;
-  FILE* stream;
 
   /* if spec_file exists, the user has specified a spec file name, use it */
   if (spec_file != NULL) {
@@ -147,8 +145,17 @@ int ReconstructChannelLists(const char* chunk, const char * spec_file)
   if (!S_ISREG(stat_buf.st_mode))
     bprintf(fatal, "spec file `%s' is not a regular file\n", buffer);
 
+  return buffer;
+}
+
+/* Read spec file and make channel lists */
+int ReconstructChannelLists(const char* chunk, const char *spec_file)
+{
+  char buffer[200];
+  FILE* stream;
+
   /* attempt to open the file */
-  if ((stream = fopen(buffer, "r")) == NULL)
+  if ((stream = fopen(GetSpecFile(buffer, chunk, spec_file), "r")) == NULL)
     berror(fatal, "cannot open spec file `%s'", buffer);
 
   ReadSpecificationFile(stream);

@@ -70,6 +70,7 @@ struct {
 
 struct data_connection {
   int sock;
+  int staged;
   unsigned frame_size;
   unsigned long pos;
   char name[PATH_MAX];
@@ -85,9 +86,9 @@ char* GetCurFile(char *buffer, int buflen)
   char* ptr;
 
   if ((stream = fopen(options[CFG_CUR_FILE].value.as_string, "rt")) == NULL)
-    bprintf(err, "can't open curfile: %m");
+    berror(err, "can't open curfile");
   else if (fgets(buffer, buflen, stream) == NULL) {
-    bprintf(err, "read error on curfile: %m");
+    berror(err, "read error on curfile");
     fclose(stream);
   } else {
     if ((ptr = strchr(buffer, '\n')) != NULL)
@@ -152,13 +153,6 @@ void Connection(int csock)
         case -1:
           quendi_respond(QUENDR_SYNTAX_ERROR, "Unrecognised Command");
           break;
-        case QUENDC_FORM:
-          if (data.sock < 1)
-            quendi_respond(QUENDR_PORT_NOT_OPEN, NULL);
-          else {
-            quendi_respond(QUENDR_CMD_NOT_IMPL, NULL);
-          }
-          break;
         case QUENDC_IDEN:
           QuendiData.access_level = 1;
           quendi_respond(QUENDR_ACCESS_GRANTED, NULL);
@@ -184,7 +178,7 @@ void Connection(int csock)
             if (GetCurFile(data.name, QUENDI_COMMAND_LENGTH) == NULL)
               quendi_respond(QUENDR_NO_CUR_DATA, NULL);
             else {
-              quendi_stage_data(data.name,
+              data.staged = quendi_stage_data(data.name,
                   data.pos = GetFrameFileSize(data.name,
                     options[CFG_SUFFIX_LENGTH].value.as_int) /
                   (data.frame_size = ReconstructChannelLists(data.name, NULL)),
@@ -196,6 +190,14 @@ void Connection(int csock)
           quendi_respond(QUENDR_GOODBYE, NULL);
           close(csock);
           exit(0);
+        case QUENDC_SPEC:
+          if (data.sock < 1)
+            quendi_respond(QUENDR_PORT_NOT_OPEN, NULL);
+          else if (!data.staged)
+            quendi_respond(QUENDR_NO_DATA_STAGED, NULL);
+          else
+            quendi_send_spec(data.sock, data.name, data.pos);
+          break;
         case QUENDC_ASYN:
         default:
           quendi_respond(QUENDR_CMD_NOT_IMPL, NULL);
@@ -216,21 +218,21 @@ int MakeSock(void)
   struct sockaddr_in addr;
 
   if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1)
-    bprintf(fatal, "socket");
+    berror(fatal, "socket");
 
   n = 1;
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &n, sizeof(n)) != 0)
-    bprintf(fatal, "setsockopt");
+    berror(fatal, "setsockopt");
 
   addr.sin_family = AF_INET;
   addr.sin_port = htons(SOCK_PORT);
   addr.sin_addr.s_addr = INADDR_ANY;
 
   if (bind(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)) == -1)
-    bprintf(fatal, "bind");
+    berror(fatal, "bind");
 
   if (listen(sock, 10) == -1)
-    bprintf(fatal, "listen");
+    berror(fatal, "listen");
 
   bprintf(info, "listening on port %i.", SOCK_PORT);
 
@@ -330,7 +332,7 @@ int main(void)
     ReadConfig(stream);
     fclose(stream);
   } else
-    bprintf(warning, "unable to open config file `%s': %m", CONFIG_FILE);
+    berror(warning, "unable to open config file `%s'", CONFIG_FILE);
 
   /* fill uninitialised options with default values */
   LoadDefaultConfig();
@@ -339,10 +341,10 @@ int main(void)
   /* Fork to background */
   if ((pid = fork()) != 0) {
     if (pid == -1)
-      bprintf(fatal, "unable to fork to background: %m");
+      berror(fatal, "unable to fork to background");
 
     if ((stream = fopen(options[CFG_PID_FILE].value, "w")) == NULL)
-      bprintf(err, "unable to write PID to disk: %m");
+      berror(err, "unable to write PID to disk");
     else {
       fprintf(stream, "%i\n", pid);
       fflush(stream);
@@ -373,7 +375,7 @@ int main(void)
     if (csock == -1 && errno == EINTR)
       continue;
     else if (csock == -1)
-      bprintf(err, "accept: %m");
+      berror(err, "accept");
     else {
       /* fork child */
       if ((pid = fork()) == 0) {

@@ -24,6 +24,9 @@
 #include <string.h>
 #include <syslog.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
 #include <tcpd.h>
 
 #include <sys/socket.h>
@@ -32,6 +35,7 @@
 
 #include <arpa/inet.h>
 
+#include "blast.h"
 #include "quendi.h"
 #include "frameread.h"
 
@@ -61,12 +65,12 @@ int quendi_cmdnum(char* buffer)
 
   switch(htonl(*(int*)buffer)) {
     case 0x6173796e: return QUENDC_ASYN;
-    case 0x666f726d: return QUENDC_FORM;
     case 0x6964656e: return QUENDC_IDEN;
     case 0x6e6f6f70: return QUENDC_NOOP;
     case 0x6f70656e: return QUENDC_OPEN;
     case 0x716e6f77: return QUENDC_QNOW;
     case 0x71756974: return QUENDC_QUIT;
+    case 0x73706563: return QUENDC_SPEC;
     case 0x73796e63: return QUENDC_SYNC;
   }
 
@@ -144,16 +148,12 @@ int quendi_dp_open(void)
 
   addrlen = sizeof(addr);
   getsockname(_quendi_server_data->csock, (struct sockaddr*)&addr, &addrlen);
-  if ((dsock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
-    syslog(LOG_WARNING, "socket: %m");
-    return -1;
-  }
+  if ((dsock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1)
+    berror(warning, "socket");
 
   addr.sin_port = htons(0);
-  if (bind(dsock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)) == -1) {
-    syslog(LOG_WARNING, "bind: %m");
-    return -1;
-  }
+  if (bind(dsock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)) == -1)
+    berror(warning, "bind");
 
   return dsock;
 }
@@ -215,6 +215,10 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Listening on Data Port for Connection\r\n", response_num);
         break;
+      case QUENDR_SENDING_SPEC: /* 150 */
+        size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
+            "%i Sending Spec File\r\n", response_num);
+        break;
       case QUENDR_SERVICE_READY: /* 220 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i %s %s %s/%s Service Ready\r\n", response_num,
@@ -242,6 +246,10 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Data Staged\r\n", response_num);
         break; 
+      case QUENDR_TRANS_COMPLETE: /* 252 */
+        size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
+            "%i Data Transfer Complete\r\n", response_num);
+        break;
       case QUENDR_OPEN_ERROR: /* 420 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Error Opening Data Port\r\n", response_num);
@@ -274,6 +282,10 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Insufficient Privilege\r\n", response_num);
         break;
+      case QUENDR_NO_DATA_STAGED: /* 550 */
+        size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
+            "%i No Data Staged\r\n", response_num);
+        break;
       default:
         return NULL;
     } 
@@ -288,7 +300,7 @@ int quendi_parse(char *buffer, int *nparams, char **params)
 {
   int cmd = quendi_cmdnum(buffer);
 
-  *nparams = 0;
+  nparams = 0;
 
   if (cmd == QUENDC_IDEN) {
     if (quendi_get_next_param(buffer + 4, nparams, params))
@@ -310,6 +322,39 @@ int quendi_respond(int response_num, const char *message)
   return 0;
 }
 
+void quendi_send_spec(int dsock, const char* name, unsigned long pos)
+{
+  char spec_file[200];
+  char buffer[100];
+  unsigned length;
+  void *spec;
+  struct stat stat_buf;
+  int fd;
+
+  GetSpecFile(spec_file, name, NULL);
+
+  if (stat(spec_file, &stat_buf))
+    berror(fatal, "cannot stat spec file `%s'", spec_file);
+
+  length = stat_buf.st_size;
+
+  if ((fd = open(spec_file, O_RDONLY)) < 0)
+    berror(fatal, "cannot open spec file `%s'", spec_file);
+
+  snprintf(buffer, 100, "%i Sending Spec File", length);
+  quendi_respond(QUENDR_SENDING_SPEC, buffer);
+
+  spec = balloc(fatal, length);
+
+  read(fd, spec, length);
+  write(dsock, spec, length);
+
+  close(fd);
+  bfree(fatal, spec);
+
+  quendi_respond(QUENDR_TRANS_COMPLETE, NULL);
+}
+
 void quendi_server_init(struct quendi_data* server_data)
 {
   _quendi_server_data = server_data;
@@ -320,15 +365,14 @@ void quendi_server_shutdown(void)
 {
 }
 
-void quendi_stage_data(const char* file, unsigned long pos, int sufflen)
+int quendi_stage_data(const char* file, unsigned long pos, int sufflen)
 {
   char buffer[NAME_MAX + 60];
   char source[NAME_MAX];
-
-  printf("quendi_stage_data(%s, %lu, %i)\n", file, pos, sufflen);
 
   PathSplit_r(file, NULL, buffer);
   StaticSourcePart(source, buffer, NULL, sufflen);
   snprintf(buffer, NAME_MAX + 60, "%lu:%s Data Staged", pos, source);
   quendi_respond(QUENDR_DATA_STAGED, buffer);
+  return 1;
 }

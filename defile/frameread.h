@@ -42,6 +42,12 @@ int GetNextChunk(
     int
     );
 
+char* GetSpecFile(
+    char*,
+    const char*,
+    const char*
+    );
+
 void PathSplit_r(
     const char*,
     char*,
