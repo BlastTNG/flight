@@ -62,6 +62,7 @@
 
 union DerivedUnion DerivedChannels[] = {
   /* Pointing */
+#ifndef BOLOTEST
   COMMENT("Pointing Stuff"), 
   LINCOM("P_X_H", "p_x_deg", 0.0003662109375, 0),
   LINTERP("Clin_Elev", "clin_elev", "/data/etc/clin_elev.lut"),
@@ -94,6 +95,7 @@ union DerivedUnion DerivedChannels[] = {
       "OSC_BRIGHT_STAR",
       "OSC_SHUTDOWN"
       ),
+#endif
 
   /* BIAS */
   COMMENT("Bias Control"),
