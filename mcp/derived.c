@@ -179,10 +179,6 @@ union DerivedUnion DerivedChannels[] = {
       "BIAS_CLK_IS_INT",
       "BIAS_IS_INT"
       ),
-  COMMENT("Bias Amplitudes (rms square)"),
-  LINTERP("B_amp1", "b_amp1", "/data/etc/b_amp1.txt"),
-  LINTERP("B_amp2", "b_amp2", "/data/etc/b_amp2.txt"),
-  LINTERP("B_amp3", "b_amp3", "/data/etc/b_amp3.txt"),
 
   /* CRYO */
   COMMENT("Internal (to mcp) reference of the cryo stat"),
