@@ -166,13 +166,13 @@ void SetSafeDAz(double ref, double *A) {
 }
 
 void SetSafeDAzC(double ref, double *A, double *C) {
+  *C = 0;
   *A = ref + remainder(*A - ref, 360.0);
   if (sun_el < MAX_SUN_EL)
     return;
 
   sun_az = ref + remainder(sun_az - ref, 360.0);
 
-  *C = 0;
   if ((ref < sun_az) && (sun_az < *A)) {
     *A -= 360.0;
     *C = -360.0;
