@@ -119,7 +119,7 @@ unsigned int tdrss_index = 0;
   - 4                /* marker again plus NUL */ \
 )
 
-#define TEMPORAL_OFFSET 9023652
+#define TEMPORAL_OFFSET 0
 
 #if (TEMPORAL_OFFSET > 0)
 #warning TEMPORAL_OFFSET NON-ZERO; FIX FOR FLIGHT

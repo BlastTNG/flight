@@ -373,7 +373,6 @@ void DoSched(void) {
   if (S->n_sched < 1)
     return;
 
-  CommandData.pointing_mode.t = 0;
   t = PointingData[i_point].t;
   if (t < CommandData.pointing_mode.t) {
     last_is = -1;
