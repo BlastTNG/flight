@@ -26,7 +26,7 @@
 
 #define RAD2SEC (180. * 3600. / M_PI / 15.)  /* radians to seconds (of time) */
 #define SEC2RAD (1. / RAD2SEC)
-#define DEG2RAD (180. / M_PI)  /* degrees to radians */
+#define DEG2RAD (M_PI / 180.)  /* degrees to radians */
 
 /**********************************************/
 /*  VSCDataStruct                             */

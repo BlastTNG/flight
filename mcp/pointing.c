@@ -79,7 +79,7 @@ struct {
   double az;
   double el;
   int fresh;
-} NewAzEl = {0.0, 0.0, 0};
+} NewAzEl = {90.0, 0.0, 1};
 
 
 #define M2DV(x) ((x/60.0)*(x/60.0))
