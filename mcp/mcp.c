@@ -29,6 +29,8 @@
 #define BBC_EOF      (0xffff)
 #define BBC_BAD_DATA (0xfffffff0)
 
+#define STARTUP_VETO_LENGTH 250
+
 #ifdef BOLOTEST
 #  define FRAME_MARGIN (-12)
 #  define USE_FIFO_CMD
@@ -602,6 +604,7 @@ void SegV(int signo) {
 int main(int argc, char *argv[]) {
   unsigned int in_data, i;
   unsigned short* RxFrame;
+  int StartupVeto = STARTUP_VETO_LENGTH;
 
   pthread_t CommandDatacomm1;
   pthread_t disk_id;
@@ -731,36 +734,42 @@ int main(int argc, char *argv[]) {
       merror(MCP_ERROR, "Error on BBC read");
 
     if (!fill_Rx_frame(in_data, RxFrame))
-      ;//mputs(MCP_ERROR, "Unrecognised word received from BBC");
+      mputs(MCP_ERROR, "Unrecognised word received from BBC");
 
     if (IsNewFrame(in_data)) {
-      frames_in++;
-#ifndef BOLOTEST
-      GetACS(RxFrame);
-      Pointing();
 
-      /* Copy data to small. */
-      memcpy(smalldata[small_index], RxFrame, BiPhaseFrameSize);
-      small_index = INC_INDEX(small_index);
+      if (StartupVeto) {
+        if (!--StartupVeto)
+          mputs(MCP_ERROR, "Startup Veto Ends\n");
+      } else {
+        frames_in++;
+#ifndef BOLOTEST
+        GetACS(RxFrame);
+        Pointing();
+
+        /* Copy data to small. */
+        memcpy(smalldata[small_index], RxFrame, BiPhaseFrameSize);
+        small_index = INC_INDEX(small_index);
 #endif
 
-      /* Frame sequencing check */
-      if (RxFrame[3] != (RxFrameIndex + 1) % FAST_PER_SLOW && RxFrameIndex >= 0)
-        mprintf(MCP_ERROR,
-            "Frame sequencing error detected: wanted %i, got %i\n",
-            RxFrameIndex + 1, RxFrame[3]);
-      RxFrameIndex = RxFrame[3];
+        /* Frame sequencing check */
+        if (RxFrame[3] != (RxFrameIndex + 1) % FAST_PER_SLOW && RxFrameIndex >= 0)
+          mprintf(MCP_ERROR,
+              "Frame sequencing error detected: wanted %i, got %i\n",
+              RxFrameIndex + 1, RxFrame[3]);
+        RxFrameIndex = RxFrame[3];
 
-      UpdateBBCFrame(RxFrame);
+        UpdateBBCFrame(RxFrame);
 
 #ifndef BOLOTEST
-      PushBi0Buffer(RxFrame);
+        PushBi0Buffer(RxFrame);
 #endif
 #if 0
-      FillSlowDL(RxFrame);
+        FillSlowDL(RxFrame);
 #endif
-      pushDiskFrame(RxFrame);
-      zero(RxFrame);
+        pushDiskFrame(RxFrame);
+        zero(RxFrame);
+      }
     }
   }
   return(0);

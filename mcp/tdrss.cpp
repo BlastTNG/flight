@@ -535,7 +535,7 @@ Alice::Alice() {
   DataSource = new FrameBuffer(&small_index, smalldata, slow_data, 1);
   sendbuf = new Buffer();    // 10 bits per byte
   DataInfo = new DataHolder();
-  mprintf(MCP_INFO, "SMALL (Alice): initialising.");
+//  mprintf(MCP_INFO, "SMALL (Alice): initialising.");
 }
 
 
@@ -975,7 +975,7 @@ void Alice::CompressionLoop() {
       // compression chunks in memory at a time.
       DataSource->Resize(numtoread * 3);
 
-      mprintf(MCP_INFO, "SMALL (Alice):  Filling padding buffer.");
+//      mprintf(MCP_INFO, "SMALL (Alice):  Filling padding buffer.");
       // Wait until there exists enough data for this padding
       framepos = DataSource->NumFrames();
       while (DataSource->NumFrames() < framepos + readleftpad + readrightpad) {
@@ -996,8 +996,8 @@ void Alice::CompressionLoop() {
     i = 0;
     earlysend = false;
 
-    mprintf(MCP_INFO, "SMALL (Alice): Reading from %d to %d . . .", 
-            framepos - readrightpad, framepos + numframes - readrightpad);
+//    mprintf(MCP_INFO, "SMALL (Alice): Reading from %d to %d . . .", 
+//            framepos - readrightpad, framepos + numframes - readrightpad);
 
     // Go through each of the slow fields we want to compress.  Slow fields only
     // send down one value per frame.  They are treated like one big "fast"
@@ -1104,17 +1104,15 @@ void Alice::CompressionLoop() {
         // Check the overall size
         if (sendbuf->CurrSize() > sendbuf->MaxSize()) {
           sendbuf->EraseLastSection();
-          printf("WARNING: the last field was too large to fit in the "
-              "frame.  It was erased and a truncated frame was sent "
-              "down.\n\n");
+          mputs(MCP_WARNING, "TDRSS frame truncated.\n");
           earlysend = true;
         }
       }
     }
     // Send down the compressed buffer
     sendbuf->Stop();
-    mprintf(MCP_INFO, "SMALL (Alice): wrote a packet of %d bytes.", 
-            sendbuf->CurrSize());
+//    mprintf(MCP_INFO, "SMALL (Alice): wrote a packet of %d bytes.", 
+//            sendbuf->CurrSize());
     framepos += numframes;
   }
 }
@@ -1230,7 +1228,7 @@ void FrameBuffer::Resize(int numframes_in) {
   }
 
   if (err)
-    merror(MCP_FATAL, "SMALL (FrameBuffer): unable to malloc either fastbuf or "
+    merror(MCP_TFATAL, "SMALL (FrameBuffer): unable to malloc either fastbuf or "
                       "slowbuf.");
 
   framenum = -1;
@@ -1382,12 +1380,8 @@ FrameBuffer::~FrameBuffer() {
 int startsmall() {
   Alice *drinkme;
 
-  mprintf(MCP_INFO, "SMALL (Alice):  Opening serial port.");
-//  if (1 == 0) {
-  if ((tty_fd = OpenSerial()) < 0) {
-    mprintf(MCP_ERROR, "Couldn't open serial port!");
-    return 1;
-  }
+  if ((tty_fd = OpenSerial()) < 0)
+    mprintf(MCP_TFATAL, "Couldn't open TDRSS serial port.");
 
   drinkme = new Alice();
   drinkme->CompressionLoop();
