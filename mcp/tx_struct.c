@@ -509,8 +509,8 @@ struct ChannelStruct FastChannels[] = {
   {"piv_enc",     'r',  ACS0, 59,    360.0/8192.0,                    0.0, 'u'},
 
   /* send data to ACS0 */
-  {"isc_trigger", 'w',  ACS0, 31,             1.0,                    0.0, 'u'},
-  {"osc_trigger", 'w',  ACS0, 32,             1.0,                    0.0, 'u'},
+  {"isc_trigger", 'w',  ACS0,  1,             1.0,                    0.0, 'u'},
+  {"osc_trigger", 'w',  ACS0,  2,             1.0,                    0.0, 'u'},
 
   /* read channels from ACS1 */
   {"gyro2",       'r',  ACS1, 50,  GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
