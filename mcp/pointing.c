@@ -796,10 +796,23 @@ void Pointing(){
 
   /********************/
   /* Set Manual Trims */
+  if (NewAzEl.fresh == -1) {
+    ClinEl.trim = 0.0;
+    EncEl.trim = 0.0;
+    NullAz.trim = 0.0;
+    MagAz.trim = 0.0;
+    DGPSAz.trim = 0.0;
+    SSAz.trim = 0.0;
+    NewAzEl.fresh = 0;
+  }
+  
   if (NewAzEl.fresh) {
     ClinEl.trim = NewAzEl.el - ClinEl.angle;	
     EncEl.trim = NewAzEl.el - EncEl.angle;	
-    NullAz.trim = NewAzEl.az - NullAz.angle;	
+    NullAz.trim = NewAzEl.az - NullAz.angle;
+    MagAz.trim = NewAzEl.az - MagAz.angle;
+    DGPSAz.trim = NewAzEl.az - DGPSAz.angle;
+    SSAz.trim = NewAzEl.az - SSAz.trim;
     NewAzEl.fresh = 0;
   }
   
@@ -818,4 +831,18 @@ void SetRaDec(double ra, double dec) {
   NewAzEl.fresh = 1;
 }
 
+void SetTrimToISC() {
+  int i_point;
+  
+  i_point = GETREADINDEX(point_index);
 
+  NewAzEl.az = PointingData[i_point].isc_az;
+  NewAzEl.el = PointingData[i_point].isc_el;
+
+  NewAzEl.fresh = 1;
+}
+
+  
+void ClearTrim() {
+  NewAzEl.fresh = -1;
+}

@@ -35,7 +35,7 @@
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions */
-#define LOCK_OFFSET (2.6)
+#define LOCK_OFFSET (1.5)
 
 /* Seconds since 0TMG jan 1 1970 */
 #define SUN_JAN_6_1980 315964800L
@@ -43,6 +43,8 @@
 #define SEC_IN_WEEK  604800L
 
 void SetRaDec(double ra, double dec); // defined in pointing.c
+void SetTrimToISC();
+void ClearTrim();
 
 struct SlowDLStruct SlowDLInfo[N_SLOWDL] = {
   {"t_dpm_3v", FORCEINT, 8, -1, -1, -1, -1, -1, -1},
@@ -210,6 +212,10 @@ void SingleCommand (int command) {
     CommandData.pointing_mode.h = 0;
   }
 
+  else if (command == SIndex("trim_to_isc"))
+    SetTrimToISC();
+  else if (command == SIndex("reset"))
+    ClearTrim();
   else if (command == SIndex("az_off")) /* disable az motors */
     CommandData.disable_az = 1;
   else if (command == SIndex("az_on")) /* enable az motors */
@@ -505,6 +511,8 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pointing_mode.h = rvalues[3];
     CommandData.pointing_mode.vaz = rvalues[4];
     CommandData.pointing_mode.del = rvalues[5];
+  } else if (command == MIndex("ra_dec_set")) {
+    SetRaDec(rvalues[0], rvalues[1]);
     
     /***************************************/
     /********** Pointing Motor Gains *******/
