@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.52 $";
+const char command_list_serial[] = "$Revision: 2.53 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -254,6 +254,21 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Drift Speed (deg el/s)", 0,  2, 'f', "NONE"}
+    }
+  },
+  
+  {COMMAND(radbox), "scan a quadrilateral region in RA/Dec", GR_POINT, 10,
+    {
+      {"RA of Corner 1 (h)",        0, 24, 'f', "NONE"},
+      {"Dec of Corner 1 (deg)",   -90, 90, 'f', "NONE"},
+      {"RA of Corner 2 (h)",        0, 24, 'f', "NONE"},
+      {"Dec of Corner 2 (deg)",   -90, 90, 'f', "NONE"},
+      {"RA of Corner 2 (h)",        0, 24, 'f', "NONE"},
+      {"Dec of Corner 2 (deg)",   -90, 90, 'f', "NONE"},
+      {"RA of Corner 3 (h)",        0, 24, 'f', "NONE"},
+      {"Dec of Corner 3 (deg)",   -90, 90, 'f', "NONE"},
+      {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
+      {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"}
     }
   },
 

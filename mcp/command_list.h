@@ -17,7 +17,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 120        /* total number of single word cmds */
-#define N_MCOMMANDS 75         /* total number of multiword commands */
+#define N_MCOMMANDS 76         /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -122,7 +122,7 @@ enum multiCommand {
   isc_save_period,   back_emf,          osc_offset,       plugh,
   bda_gain,          bda_set,           jfet_set,         isc_foc_off,
   osc_foc_off,       t_gyro2_gain,      t_gyro2_set,      apcu_charge,
-  dpcu_charge,       auto_apcu,         auto_dpcu
+  dpcu_charge,       auto_apcu,         auto_dpcu,        radbox
 };
 
 struct par {
