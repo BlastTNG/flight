@@ -344,9 +344,13 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
       // evolve el solution
       e->angle -= gy_el_delta; // rewind to when the frame was grabbed
       w1 = 1.0/(e->varience);
-      w2 = 10.0*ISCSolution[i_isc].sigma * (180.0/M_PI); //e->samp_weight;
-      if (w2>0) w2 = 1/(w2*w2);
-      else w2 = 0; // shouldn't happen
+      if (ISCSolution[i_isc].sigma > M_PI) {
+	w2 = 0;
+      } else {
+	w2 = 10.0*ISCSolution[i_isc].sigma * (180.0/M_PI); //e->samp_weight;
+	if (w2>0) w2 = 1/(w2*w2);
+	else w2 = 0; // shouldn't happen
+      }
       
       UnwindDiff(e->angle, &new_el);
       e->angle = (w1*e->angle + new_el * w2)/(w1+w2);      

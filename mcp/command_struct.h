@@ -7,12 +7,14 @@
 #define AXIS_POSITION 1
 #define AXIS_LOCK 2
 
-#define POINT_VEL 1
-#define POINT_POINT 2
-#define POINT_LOCK 4
-#define POINT_SCAN 8
-#define POINT_RASTER 16
-#define POINT_RADEC_GOTO 32
+#define P_AZEL_GOTO  1
+#define P_AZ_SCAN    2
+#define P_DRIFT      3
+#define P_RADEC_GOTO 4
+#define P_VCAP       5
+#define P_CAP        6
+#define P_BOX        7
+#define P_LOCK       8
 
 struct SlowDLStruct {
   char src[20];
@@ -33,20 +35,24 @@ struct GainStruct {
   unsigned short int SP;
 };
 
+// mode        X     Y    vaz   del    w    h
+// LOCK              el
+// AZEL_GOTO   az    el
+// AZ_SCAN     az    el   vaz
+// DRIFT                  vaz   vel
+// RADEC_GOTO  ra    dec
+// VCAP        ra    dec  vaz   vel    r
+// CAP         ra    dec  vaz   elstep r
+// BOX         ra    dec  vaz   elstep w    h
 struct PointingModeStruct {
-  /* Used by:        VEL   POINT   LOCK   SCAN   RASTER   BOXRASTER */
-  int az_mode;
-  double az1;     /*         **            **      .       **  */
-  double az2;     /*                       **      .       .   */
-  double az_vel;  /*  **                   **      **      **  */
-  int el_mode;
-  double el1;     /*         **     **     **      .       **  */
-  double el2;     /*                       **      .       .   */
-  double el_vel;  /*  **                   **      **      **  */
-  double ra;      /*                               **      **  */
-  double dec;     /*                               **      **  */
-  double r;       /*                               **          */
-  time_t t_start_sched; /* after this time, use sched file */
+  int mode;
+  double X;
+  double Y;
+  double vaz;
+  double del;
+  double w;
+  double h;
+  time_t t_start_sched;
 };
 
 struct PumpStruct {

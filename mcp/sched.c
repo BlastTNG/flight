@@ -138,15 +138,14 @@ void DoSched(void) {
   if (i_sched!=last_is) {
     /************************************************/
     /** Copy scheduled scan mode into current mode **/
-    CommandData.pointing_mode.az_mode = POINT_RASTER;
-    CommandData.pointing_mode.el_mode = POINT_RASTER;
-    CommandData.pointing_mode.az1 = CommandData.pointing_mode.az2 = 0;
-    CommandData.pointing_mode.el1 = CommandData.pointing_mode.el2 = 0;
-    CommandData.pointing_mode.az_vel = S.e[i_sched].az_vel;
-    CommandData.pointing_mode.el_vel = S.e[i_sched].el_vel;
-    CommandData.pointing_mode.ra = S.e[i_sched].ra;
-    CommandData.pointing_mode.dec = S.e[i_sched].dec;
-    CommandData.pointing_mode.r = S.e[i_sched].r;
+    CommandData.pointing_mode.mode = P_VCAP;
+    CommandData.pointing_mode.mode = P_VCAP;
+    CommandData.pointing_mode.X = S.e[i_sched].ra;
+    CommandData.pointing_mode.Y = S.e[i_sched].dec;
+    CommandData.pointing_mode.w = S.e[i_sched].r;
+    CommandData.pointing_mode.vaz = S.e[i_sched].az_vel;
+    CommandData.pointing_mode.del = S.e[i_sched].el_vel;
+    CommandData.pointing_mode.h = 0;
   }
   last_is = i_sched;
 }

@@ -198,11 +198,11 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"sip_alt",      'w', LOOPBACK, 37,           4.0,             0.0, 'u'},
     {"lat",          'w', LOOPBACK, 38,         I2DEG,             0.0, 'u'},
     {"lon",          'w', LOOPBACK, 39,         I2DEG,             0.0, 'u'},
-    {"p_az_mode",    'w', LOOPBACK, 40,           1.0,             0.0, 'u'},
-    {"p_az1",        'w', LOOPBACK, 41,         I2DEG,             0.0, 'u'},
-    {"p_az2",        'w', LOOPBACK, 42,         I2DEG,             0.0, 'u'},
-    {"p_el1",        'w', LOOPBACK, 43,         I2DEG,             0.0, 'u'},
-    {"p_el2",        'w', LOOPBACK, 44,         I2DEG,             0.0, 'u'},
+    {"p_h",          'w', LOOPBACK, 40,         I2DEG,             0.0, 'u'},
+    {"lbspare1",     'w', LOOPBACK, 41,         I2DEG,             0.0, 'u'},
+    {"lbspare2",     'w', LOOPBACK, 42,         I2DEG,             0.0, 'u'},
+    {"lbspare3",     'w', LOOPBACK, 43,         I2DEG,             0.0, 'u'},
+    {"lbspare4",     'w', LOOPBACK, 44,         I2DEG,             0.0, 'u'},
     {"sip_lat",      'w', LOOPBACK, 45,         I2DEG,             0.0, 'u'},
     {"sip_lon",      'w', LOOPBACK, 46,         I2DEG,             0.0, 'u'},
     {"dgps_lat",     'w', LOOPBACK, 47,         I2DEG,             0.0, 'u'},
@@ -219,11 +219,11 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"sync",         'w', LOOPBACK, 56,           1.0,             0.0, 'u'},
     {"dgps_n_sat",   'w', LOOPBACK, 57,           1.0,             0.0, 'u'},
     {"disk_free",    'w', LOOPBACK, 58,       1./1024,             0.0, 'u'},
-    {"p_az_vel",     'w', LOOPBACK, 59,         I2VEL,             0.0, 's'},
-    {"p_el_vel",     'w', LOOPBACK, 60,         I2VEL,             0.0, 's'},
-    {"p_ra",         'w', LOOPBACK, 61,           I2H,             0.0, 'u'},
-    {"p_dec",        'w', LOOPBACK, 62,         I2DEG,             0.0, 'u'},
-    {"p_r",          'w', LOOPBACK, 63,         I2DEG,             0.0, 'u'},
+    {"p_mode",       'w', LOOPBACK, 59,             1,             0.0, 'u'},
+    {"p_x_deg",      'w', LOOPBACK, 60,         I2DEG,             0.0, 'u'},
+    {"p_y",          'w', LOOPBACK, 61,         I2DEG,             0.0, 'u'},
+    {"p_vaz",        'w', LOOPBACK, 62,         I2VEL,             0.0, 'u'},
+    {"p_del",        'w', LOOPBACK, 63,         I2VEL,             0.0, 'u'},
     {"isc_rd_sigma", 'w', LOOPBAK2,  0,         I2DEG,             0.0, 'u'},
     {"bal_gain",     'w', LOOPBAK2,  1,       1/1000.,             0.0, 'u'},
     {"blob0_sn",     'w', LOOPBAK2,  2,  1000./65536.,             0.0, 'u'},
@@ -234,7 +234,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"blob2_x",      'w', LOOPBAK2,  7,        1./40.,             0.0, 'u'}
   },
   {
-    {"p_el_mode",    'w', LOOPBAK2,  8,           1.0,             0.0, 'u'},
+    {"p_w",          'w', LOOPBAK2,  8,         I2DEG,             0.0, 'u'},
     {"isc_rtol",     'w', LOOPBAK2,  9,         I2DEG,             0.0, 'u'},
     {"blob0_y",      'w', LOOPBAK2, 10,        1./40.,             0.0, 'u'},
     {"blob1_y",      'w', LOOPBAK2, 11,        1./40.,             0.0, 'u'},
@@ -530,6 +530,7 @@ void SlowChIndex(char* field, int* channel, int* index) {
 
 void FPrintDerived(FILE *fp) {
     fprintf(fp,
+      "P_X_H         LINCOM 1 p_x_deg 0.0003662109375 0\n"
       "### Sensor Veto ###\n"
       "SUN_VETO         BIT sensor_veto 0\n"
       "ISC_VETO         BIT sensor_veto 1\n"

@@ -193,33 +193,6 @@ int SIndex(char *cmd) {
   return -1;
 }
 
-/*** set fields unused in current mode to zero ***/
-void ClearPointingModeExtraFields() {
-  if ((CommandData.pointing_mode.az_mode != POINT_RASTER) &&
-      (CommandData.pointing_mode.el_mode != POINT_RASTER) &&
-      (CommandData.pointing_mode.az_mode != POINT_RADEC_GOTO) &&
-      (CommandData.pointing_mode.el_mode != POINT_RADEC_GOTO)) {
-    CommandData.pointing_mode.ra = CommandData.pointing_mode.dec =
-      CommandData.pointing_mode.r = 0.0;
-  }
-
-  if (CommandData.pointing_mode.az_mode == POINT_VEL) {
-    CommandData.pointing_mode.az1 = CommandData.pointing_mode.az2 = 0.0;
-  }
-
-  if (CommandData.pointing_mode.az_mode == POINT_POINT) {
-    CommandData.pointing_mode.az2 = CommandData.pointing_mode.az_vel = 0.0;
-  }
-
-  if (CommandData.pointing_mode.el_mode == POINT_VEL) {
-    CommandData.pointing_mode.el1 = CommandData.pointing_mode.el2 = 0.0;
-  }
-
-  if (CommandData.pointing_mode.el_mode == POINT_POINT) {
-    CommandData.pointing_mode.el2 = CommandData.pointing_mode.el_vel = 0.0;
-  }
-}
-
 void SingleCommand (int command) {
   int i_point;
 
@@ -228,11 +201,13 @@ void SingleCommand (int command) {
   /* Update CommandData structure with new info */
 
   if (command == SIndex("stop")) {      /* Pointing aborts */
-    CommandData.pointing_mode.el_mode = POINT_VEL;
-    CommandData.pointing_mode.az_mode = POINT_VEL;
-    CommandData.pointing_mode.az_vel = 0.0;
-    CommandData.pointing_mode.el_vel = 0.0;
-    ClearPointingModeExtraFields();
+    CommandData.pointing_mode.mode = P_DRIFT;
+    CommandData.pointing_mode.X = 0;
+    CommandData.pointing_mode.Y = 0;
+    CommandData.pointing_mode.vaz = 0.0;
+    CommandData.pointing_mode.del = 0.0;
+    CommandData.pointing_mode.w = 0;
+    CommandData.pointing_mode.h = 0;
   }
 
   else if (command == SIndex("az_off")) /* disable az motors */
@@ -362,9 +337,14 @@ void SingleCommand (int command) {
     CommandData.pumps.lock_in = 1;
   else if (command == SIndex("unlock")) {
     CommandData.pumps.lock_out = 1;
-    if (CommandData.pointing_mode.el_mode == POINT_LOCK) {
-      CommandData.pointing_mode.el_mode = POINT_VEL;
-      CommandData.pointing_mode.el_vel = 0.0;
+    if (CommandData.pointing_mode.mode == P_LOCK) {
+      CommandData.pointing_mode.mode = P_DRIFT;
+      CommandData.pointing_mode.X = 0;
+      CommandData.pointing_mode.Y = 0;
+      CommandData.pointing_mode.vaz = 0.0;
+      CommandData.pointing_mode.del = 0.0;
+      CommandData.pointing_mode.w = 0;
+      CommandData.pointing_mode.h = 0;
     }
 
     /***************************************/
@@ -469,81 +449,63 @@ void MultiCommand (int command, unsigned short *dataq) {
 
     /***************************************/
     /********** Pointing Mode **************/
-  } else if (command == MIndex("ra_dec_raster")) {  /* raster a circle */
-    CommandData.pointing_mode.az_mode = POINT_RASTER;
-    CommandData.pointing_mode.el_mode = POINT_RASTER;
-    CommandData.pointing_mode.ra = rvalues[0];	
-    CommandData.pointing_mode.dec = rvalues[1];
-    CommandData.pointing_mode.r = rvalues[2];
-    CommandData.pointing_mode.az_vel = rvalues[3];
-    CommandData.pointing_mode.el_vel = rvalues[4];
-    CommandData.pointing_mode.az1 = 0.0;
-    CommandData.pointing_mode.az2 = 0.0;
-    CommandData.pointing_mode.el1 = 0.0;
-    CommandData.pointing_mode.el2 = 0.0;
-  } else if (command == MIndex("ra_dec_goto")) {  /* raster a circle */
-    CommandData.pointing_mode.az_mode = POINT_RADEC_GOTO;
-    CommandData.pointing_mode.el_mode = POINT_RADEC_GOTO;
-    CommandData.pointing_mode.ra = rvalues[0];	
-    CommandData.pointing_mode.dec = rvalues[1];
-    CommandData.pointing_mode.r = 0.0;
-    CommandData.pointing_mode.az_vel = 0.0;
-    CommandData.pointing_mode.el_vel = 0.0;
-    CommandData.pointing_mode.az1 = 0.0;
-    CommandData.pointing_mode.az2 = 0.0;
-    CommandData.pointing_mode.el1 = 0.0;
-    CommandData.pointing_mode.el2 = 0.0;    
-  } else if (command == MIndex("ra_dec_set")) {
-    CommandData.pointing_mode.el_mode = POINT_VEL;
-    CommandData.pointing_mode.az_mode = POINT_VEL;
-    CommandData.pointing_mode.az_vel = 0.0;
-    CommandData.pointing_mode.el_vel = 0.0;
-    ClearPointingModeExtraFields();
-    SetRaDec(rvalues[0], rvalues[1]);
-  } else if (command == MIndex("az_scan")) {  /* scan in azimuth */
-    CommandData.pointing_mode.az_mode = POINT_SCAN;
-    CommandData.pointing_mode.az1 = rvalues[0]-rvalues[1]/2.0;
-    CommandData.pointing_mode.az2 = rvalues[0]+rvalues[1]/2.0;
-    CommandData.pointing_mode.az_vel = rvalues[2];
-    CommandData.pointing_mode.ra = 0.0;
-    CommandData.pointing_mode.dec = 0.0;
-    CommandData.pointing_mode.r = 0.0;
-    if (CommandData.pointing_mode.el_mode & (POINT_RASTER|POINT_RADEC_GOTO)) {
-      CommandData.pointing_mode.el_mode = POINT_VEL;
-      CommandData.pointing_mode.el_vel = 0.0;
-    }
-  } else if (command == MIndex("az_goto")) {  /* point in azimuth */
-    CommandData.pointing_mode.az_mode = POINT_POINT;
-    CommandData.pointing_mode.az1 = rvalues[0];
-    if (CommandData.pointing_mode.el_mode & (POINT_RASTER|POINT_RADEC_GOTO)) {
-      CommandData.pointing_mode.el_mode = POINT_VEL;
-      CommandData.pointing_mode.el_vel = 0.0;
-    }
-  } else if (command == MIndex("az_vel")) {  /* fixed azimuth velocity */
-    CommandData.pointing_mode.az_mode = POINT_VEL;
-    CommandData.pointing_mode.az_vel = rvalues[0];
-    if (CommandData.pointing_mode.el_mode & (POINT_RASTER|POINT_RADEC_GOTO)) {
-      CommandData.pointing_mode.el_mode = POINT_VEL;
-      CommandData.pointing_mode.el_vel = 0.0;
-    }
-  } else if (command == MIndex("el_goto")) {  /* point in elevation */
-    if (CommandData.pumps.bal_veto >= 0)
-      CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
-    CommandData.pointing_mode.el_mode = POINT_POINT;
-    CommandData.pointing_mode.el1 = rvalues[0];
-    if (CommandData.pointing_mode.el_mode & (POINT_RASTER|POINT_RADEC_GOTO)) {
-      CommandData.pointing_mode.az_mode = POINT_VEL;
-      CommandData.pointing_mode.az_vel = 0.0;
-    }
-  } else if (command == MIndex("el_vel")) {  /* fixed elevation velocity */
-    if (CommandData.pumps.bal_veto >= 0)
-      CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
-    CommandData.pointing_mode.el_mode = POINT_VEL;
-    CommandData.pointing_mode.el_vel = rvalues[0];
-    if (CommandData.pointing_mode.el_mode & (POINT_RASTER|POINT_RADEC_GOTO)) {
-      CommandData.pointing_mode.az_mode = POINT_VEL;
-      CommandData.pointing_mode.az_vel = 0.0;
-    }
+  } else if (command == MIndex("az_el_goto")) {
+    CommandData.pointing_mode.mode = P_AZEL_GOTO;
+    CommandData.pointing_mode.X = rvalues[0];
+    CommandData.pointing_mode.Y = rvalues[1];
+    CommandData.pointing_mode.vaz = 0.0;
+    CommandData.pointing_mode.del = 0.0;
+    CommandData.pointing_mode.w = 0;
+    CommandData.pointing_mode.h = 0;
+  } else if (command == MIndex("az_scan")) {
+    CommandData.pointing_mode.mode = P_AZ_SCAN;
+    CommandData.pointing_mode.X = rvalues[0];
+    CommandData.pointing_mode.Y = rvalues[1];
+    CommandData.pointing_mode.w = rvalues[2];
+    CommandData.pointing_mode.vaz = rvalues[3];
+    CommandData.pointing_mode.del = 0.0;
+    CommandData.pointing_mode.h = 0;
+  } else if (command == MIndex("drift")) {
+    CommandData.pointing_mode.mode = P_DRIFT;
+    CommandData.pointing_mode.X = 0;
+    CommandData.pointing_mode.Y = 0;
+    CommandData.pointing_mode.w = 0;
+    CommandData.pointing_mode.vaz = rvalues[0];
+    CommandData.pointing_mode.del = rvalues[1];
+    CommandData.pointing_mode.h = 0;
+  } else if (command == MIndex("ra_dec_goto")) {
+    CommandData.pointing_mode.mode = P_RADEC_GOTO;
+    CommandData.pointing_mode.X = rvalues[0];
+    CommandData.pointing_mode.Y = rvalues[1];
+    CommandData.pointing_mode.w = 0;
+    CommandData.pointing_mode.vaz = 0;
+    CommandData.pointing_mode.del = 0;
+    CommandData.pointing_mode.h = 0;
+  } else if (command == MIndex("vcap")) {
+    CommandData.pointing_mode.mode = P_VCAP;
+    CommandData.pointing_mode.X = rvalues[0];
+    CommandData.pointing_mode.Y = rvalues[1];
+    CommandData.pointing_mode.w = rvalues[2];
+    CommandData.pointing_mode.vaz = rvalues[3];
+    CommandData.pointing_mode.del = rvalues[4];
+    CommandData.pointing_mode.h = 0;
+  } else if (command == MIndex("cap")) {
+    CommandData.pointing_mode.mode = P_CAP;
+    CommandData.pointing_mode.X = rvalues[0];
+    CommandData.pointing_mode.Y = rvalues[1];
+    CommandData.pointing_mode.w = rvalues[2];
+    CommandData.pointing_mode.vaz = rvalues[3];
+    CommandData.pointing_mode.del = rvalues[4];
+    CommandData.pointing_mode.h = 0;
+  } else if (command == MIndex("box")) {
+    CommandData.pointing_mode.mode = P_BOX;
+    CommandData.pointing_mode.X = rvalues[0];
+    CommandData.pointing_mode.Y = rvalues[1];
+    CommandData.pointing_mode.w = rvalues[2];
+    CommandData.pointing_mode.h = rvalues[3];
+    CommandData.pointing_mode.vaz = rvalues[4];
+    CommandData.pointing_mode.del = rvalues[5];
+    
     /***************************************/
     /********** Pointing Motor Gains *******/
   } else if (command == MIndex("roll_gain")) { /* roll Gains */
@@ -564,9 +526,14 @@ void MultiCommand (int command, unsigned short *dataq) {
     if (CommandData.pumps.bal_veto >= 0)
       CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
     CommandData.pumps.lock_point = 1;
-    CommandData.pointing_mode.el_mode = POINT_LOCK;
-    CommandData.pointing_mode.el1 = LockPosition(rvalues[0]);
-    fprintf(stderr, "Lock Mode: %g\n", CommandData.pointing_mode.el1);
+    CommandData.pointing_mode.mode = P_LOCK;
+    CommandData.pointing_mode.X = 0;
+    CommandData.pointing_mode.Y = LockPosition(rvalues[0]);
+    CommandData.pointing_mode.w = 0;
+    CommandData.pointing_mode.h = 0;
+    CommandData.pointing_mode.vaz = 0;
+    CommandData.pointing_mode.del = 0;
+    fprintf(stderr, "Lock Mode: %g\n", CommandData.pointing_mode.Y);
 
     /***************************************/
     /********** Balance System  ************/
@@ -693,8 +660,6 @@ void MultiCommand (int command, unsigned short *dataq) {
 
   CommandData.pointing_mode.t_start_sched =
     PointingData[i_point].t + CommandData.timeout;
-
-  ClearPointingModeExtraFields();
 
   WritePrevStatus();
 }
@@ -1210,10 +1175,13 @@ void InitCommandData() {
   CommandData.pointing_mode.t_start_sched = time(NULL) + CommandData.timeout;
 
   /** put stuff that we want to keep from prev_status here **/
-  CommandData.pointing_mode.az_mode = POINT_VEL;
-  CommandData.pointing_mode.az_vel = 0.0;
-  CommandData.pointing_mode.el_mode = POINT_VEL;
-  CommandData.pointing_mode.el_vel = 0.0;
+  CommandData.pointing_mode.mode = P_DRIFT;
+  CommandData.pointing_mode.X = 0;
+  CommandData.pointing_mode.Y = 0;
+  CommandData.pointing_mode.vaz = 0.0;
+  CommandData.pointing_mode.del = 0.0;
+  CommandData.pointing_mode.w = 0;
+  CommandData.pointing_mode.h = 0;
 
   CommandData.timeout = 60*60;
 
@@ -1257,11 +1225,6 @@ void InitCommandData() {
   SIPData.MKScal.b_hi = 0;
   SIPData.MKScal.b_med = 0;
   SIPData.MKScal.b_lo = 0;
-
-  CommandData.pointing_mode.az_mode = AXIS_VEL;
-  CommandData.pointing_mode.el_mode = AXIS_VEL;
-  CommandData.pointing_mode.az_vel = 0.0;
-  CommandData.pointing_mode.el_vel = 0.0;
 
   CommandData.pumps.bal_on = 0.5 * 1648.;
   CommandData.pumps.bal_off = 0.2 * 1648.;
