@@ -204,7 +204,7 @@ int Balance(int iscBits) {
 /*    Do Lock Logic: check status, determine if we are locked, etc      */
 /*                                                                      */
 /************************************************************************/
-#define PULSE_LENGTH 20   /* 200 msec */
+#define PULSE_LENGTH 40   /* 400 msec */
 #define SEARCH_COUNTS 500 /* 5 seconds */
 int GetLockBits(void) {
   static int is_closing = 0;
