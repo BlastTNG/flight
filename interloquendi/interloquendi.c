@@ -146,8 +146,9 @@ void Connection(int csock)
 
   /* Service Loop */
   for (;;) {
-    if ((n = quendi_get_cmd(buffer)) == 0)
-      switch(quendi_parse(buffer, &np, &params)) {
+    if ((n = quendi_get_cmd(buffer)) == 0) {
+      n = quendi_parse(buffer, &np, &params);
+      switch(n) {
         case -2:
           quendi_respond(QUENYA_RESPONSE_PARAM_ERROR, "Parameter Missing");
           break;
@@ -214,7 +215,7 @@ void Connection(int csock)
           quendi_respond(QUENYA_RESPONSE_CMD_NOT_IMPL, NULL);
           break;
       }
-    else if (n == -2) {
+    } else if (n == -2) {
       printf("connection dropped\n");
       shutdown(csock, SHUT_RDWR);
       close(csock);

@@ -309,8 +309,8 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
 int quendi_parse(char *buffer, int *nparams, char **params)
 {
   int cmd = quendi_cmdnum(buffer);
-
-  nparams = 0;
+  
+  *nparams = 0;
 
   if (cmd == QUENYA_COMMAND_IDEN) {
     if (quendi_get_next_param(buffer + 4, nparams, params))
