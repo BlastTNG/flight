@@ -84,12 +84,10 @@ char* GetCurFile(char *buffer, int buflen)
   FILE* stream = NULL;
   char* ptr;
 
-  printf("GetCurFile(%s, %i)\n", buffer, buflen);
-  
   if ((stream = fopen(options[CFG_CUR_FILE].value.as_string, "rt")) == NULL)
-    syslog(LOG_ERR, "can't open curfile: %m");
+    bprintf(err, "can't open curfile: %m");
   else if (fgets(buffer, buflen, stream) == NULL) {
-    syslog(LOG_ERR, "read error on curfile: %m");
+    bprintf(err, "read error on curfile: %m");
     fclose(stream);
   } else {
     if ((ptr = strchr(buffer, '\n')) != NULL)
@@ -130,7 +128,7 @@ void Connection(int csock)
   thishost = gethostbyaddr((const char*)&addr.sin_addr, sizeof(addr.sin_addr),
       AF_INET);
   if (thishost == NULL && h_errno) {
-    syslog(LOG_WARNING, "gethostbyaddr: %s", hstrerror(h_errno));
+    bprintf(warning, "gethostbyaddr: %s", hstrerror(h_errno));
     thishost = NULL;
   }
 
@@ -217,30 +215,22 @@ int MakeSock(void)
   int sock, n;
   struct sockaddr_in addr;
 
-  if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
-    syslog(LOG_CRIT, "socket: %m");
-    exit(1);
-  }
+  if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1)
+    bprintf(fatal, "socket");
 
   n = 1;
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &n, sizeof(n)) != 0) {
-    syslog(LOG_CRIT, "setsockopt: %m");
-    exit(1);
-  }
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &n, sizeof(n)) != 0)
+    bprintf(fatal, "setsockopt");
 
   addr.sin_family = AF_INET;
   addr.sin_port = htons(SOCK_PORT);
   addr.sin_addr.s_addr = INADDR_ANY;
 
-  if (bind(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)) == -1) {
-    syslog(LOG_CRIT, "bind: %m");
-    exit(1);
-  }
+  if (bind(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)) == -1)
+    bprintf(fatal, "bind");
 
-  if (listen(sock, 10) == -1) {
-    syslog(LOG_CRIT, "listen: %m");
-    exit(1);
-  }
+  if (listen(sock, 10) == -1)
+    bprintf(fatal, "listen");
 
   bprintf(info, "listening on port %i.", SOCK_PORT);
 
@@ -282,7 +272,7 @@ void ReadConfig(FILE* stream)
         found = 1;
         switch (options[i].type) {
           case 's':
-            options[i].value.as_string = strdup(value);
+            options[i].value.as_string = bstrdup(fatal, value);
             break;
           case 'i':
             options[i].value.as_int = atoi(value);
@@ -295,7 +285,7 @@ void ReadConfig(FILE* stream)
       }
 
     if (!found)
-      syslog(LOG_WARNING, "Unknown option `%s'", option);
+      bprintf(warning, "Unknown option `%s'", option);
   }
 }
 
@@ -307,18 +297,19 @@ void LoadDefaultConfig(void)
     if (options[i].value.as_string == NULL)
       switch (i) {
         case CFG_DIRECTORY:
-          options[i].value.as_string = strdup("/mnt/decom/rawdir");
+          options[i].value.as_string = bstrdup(fatal, "/mnt/decom/rawdir");
           break;
         case CFG_PID_FILE:
-          options[i].value.as_string = strdup(PID_FILE);
+          options[i].value.as_string = bstrdup(fatal, PID_FILE);
           break;
         case CFG_CUR_FILE:
-          options[i].value.as_string = strdup("/mnt/decom/etc/decom.cur");
+          options[i].value.as_string
+            = bstrdup(fatal, "/mnt/decom/etc/decom.cur");
           break;
         case CFG_SUFFIX_LENGTH:
           options[i].value.as_int = 3;
         default:
-          syslog(LOG_WARNING, "No default value for option `%s'",
+          bprintf(warning, "No default value for option `%s'",
               options[i].name);
       }
 }
@@ -339,7 +330,7 @@ int main(void)
     ReadConfig(stream);
     fclose(stream);
   } else
-    syslog(LOG_WARNING, "unable to open config file `%s': %m", CONFIG_FILE);
+    bprintf(warning, "unable to open config file `%s': %m", CONFIG_FILE);
 
   /* fill uninitialised options with default values */
   LoadDefaultConfig();
@@ -347,13 +338,11 @@ int main(void)
 #ifndef DEBUG
   /* Fork to background */
   if ((pid = fork()) != 0) {
-    if (pid == -1) {
-      syslog(LOG_CRIT, "unable to fork to background: %m");
-      exit(1);
-    }
+    if (pid == -1)
+      bprintf(fatal, "unable to fork to background: %m");
 
     if ((stream = fopen(options[CFG_PID_FILE].value, "w")) == NULL)
-      syslog(LOG_ERR, "unable to write PID to disk: %m");
+      bprintf(err, "unable to write PID to disk: %m");
     else {
       fprintf(stream, "%i\n", pid);
       fflush(stream);
@@ -384,7 +373,7 @@ int main(void)
     if (csock == -1 && errno == EINTR)
       continue;
     else if (csock == -1)
-      syslog(LOG_ERR, "accept: %m");
+      bprintf(err, "accept: %m");
     else {
       /* fork child */
       if ((pid = fork()) == 0) {
@@ -392,7 +381,7 @@ int main(void)
         Connection(csock);
       }
 
-      syslog(LOG_INFO, "spawned %i to handle connect from %s", pid,
+      bprintf(info, "spawned %i to handle connect from %s", pid,
           inet_ntoa(addr.sin_addr));
       close(csock);
     }
