@@ -79,8 +79,43 @@
 #define BBC_ADDRESS(x)  (((unsigned int)x & 0xffff0000) >> 16)
 #define BBC_DATA(x)     ((unsigned int)x & 0x0000ffff)
 
+#define BBC_NEXT_CHANNEL(x)   (x + 0x10000)
+#define BI0_MAGIC(x)          ((x >> 16) & 0x1fff)
+#define BI0_TABLE_SIZE        0x2000
+
 #define GET_CH(x)       ((x >> 16) & 0x3f)
 #define GET_NODE(x)     ((x >> 23) & 0x3f)
 #define GET_STORE(x)    ((x & BBC_WRITE) != 0)
 #define GET_READ(x)     ((x & BBC_READ) != 0)
 #define GET_SYNC(x)     ((x & BBC_ADC_SYNC) != 0)
+
+/* timings */
+#define BBC_MASTER_CLK         32000000       /* set by the oscilator */
+#define BBC_MCLKS_PER_BBC_CLK  8
+#define BBC_CLK                (BBC_MASTER_CLK / BBC_MCLKS_PER_BBC_CLK)
+
+#define BBC_ADC_MULTIPLIER     384            /* set by the ADC hardware */
+#define BBC_ADC_RATE           (BBC_CLK / BBC_ADC_MULTIPLIER)
+#define BBC_ADCS_PER_SAMPLE    104            /* this sets the frame size */
+#define BBC_FRAME_RATE         /* = (BBC_ADC_RATE / BBC_ADS_PER_SAMPLE) */ \
+                               (BBC_CLK / (BBC_ADC_MULTIPLIER \
+                                           * BBC_ADCS_PER_SAMPLE))
+
+#define BBC_WORD_SIZE          (32 * 2)       /* x2 because of tx/rx pair */
+#define BBC_WORD_RATE          (BBC_CLK / BBC_WORD_SIZE)
+#define BBC_MAX_FRAME_SIZE     /* = (BBC_WORD_RATE / BBC_FRAME_RATE) */ \
+                               ((BBC_ADC_MULTIPLIER * BBC_ADCS_PER_SAMPLE) \
+                                / BBC_WORD_SIZE)
+#define BBC_EFFICIENCY         520 / 624
+#define BBC_FRAME_SIZE         /* = (BBC_MAX_FRAME_SIZE * BBC_EFFICIENCY) */ \
+                               ((BBC_ADC_MULTIPLIER * BBC_ADCS_PER_SAMPLE \
+                                 * BBC_EFFICIENCY) / BBC_WORD_SIZE)
+
+#define BI0_MCLKS_PER_BI0_CLK  32
+#define BI0_CLK                (BBC_MASTER_CLK / BI0_MCLKS_PER_BI0_CLK)
+#define BI0_WORD_SIZE          16
+#define BI0_WORD_RATE          (BI0_CLK / BI0_WORD_SIZE)
+#define BI0_FRAME_SIZE         /* = (BBC_WORD_RATE / BI0_FRAME_RATE) */ \
+                               ((BBC_MCLKS_PER_BBC_CLK * BBC_ADC_MULTIPLIER \
+                                 * BBC_ADCS_PER_SAMPLE) \
+                                 / (BI0_MCLKS_PER_BI0_CLK * BI0_WORD_SIZE))
