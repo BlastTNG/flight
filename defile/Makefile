@@ -19,3 +19,4 @@ clean:
 
 install: defile
 	install -m 755 defile /usr/local/bin
+	install -m 644 defile.1 /usr/local/man/man1
