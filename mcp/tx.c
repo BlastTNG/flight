@@ -617,7 +617,6 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
   unsigned short bias_status, biasout1 = 0;
   static unsigned short biasout2 = 0x70;
   int isBiasAC, isBiasRamp, isBiasClockInternal;
-  static unsigned short lastBias1 = 0xff , lastBias2 = 0xff, lastBias3 = 0xff;
   static int hold = 0, ch = 0;
 
   /******** Obtain correct indexes the first time here ***********/
@@ -684,24 +683,24 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
     biasout2 |= 0x0f;
     hold--;
   } else if (ch == 0) {
-    if (lastBias1 != CommandData.Bias.bias1) {
+    if (CommandData.Bias.SetLevel1) {
       biasout2 = ((CommandData.Bias.bias1 << 4) & 0xf0) | 0x03;
-      lastBias1 = CommandData.Bias.bias1;
       hold = 2 * FAST_PER_SLOW + 4;
+      CommandData.Bias.SetLevel1 = 0;
     }
     ch++;
   } else if (ch == 1) {
-    if (lastBias2 != CommandData.Bias.bias2) {
+    if (CommandData.Bias.SetLevel2) {
       biasout2 = ((CommandData.Bias.bias2 << 4) & 0xf0) | 0x05;
-      lastBias2 = CommandData.Bias.bias2;
       hold = 2 * FAST_PER_SLOW + 4;
+      CommandData.Bias.SetLevel2 = 0;
     }
     ch++;
   } else if (ch == 2) {
-    if (lastBias3 != CommandData.Bias.bias3) {
+    if (CommandData.Bias.SetLevel3) {
       biasout2 = ((CommandData.Bias.bias3 << 4) & 0xf0) | 0x06;
-      lastBias3 = CommandData.Bias.bias3;
       hold = 2 * FAST_PER_SLOW + 4;
+      CommandData.Bias.SetLevel3 = 0;
     }
     ch = 0;
   }

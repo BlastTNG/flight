@@ -76,6 +76,7 @@ struct BiasStruct {
   int bias1;
   int bias2;
   int bias3;
+  int SetLevel1, SetLevel2, SetLevel3;
 };
 
 struct CryoStruct {

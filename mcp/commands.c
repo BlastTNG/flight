@@ -605,10 +605,13 @@ void MultiCommand (int command, unsigned short *dataq) {
   /***************************************/
   /*************** Bias  *****************/
   } else if (command == MIndex("bias1_level")) {    /* Set bias 1 */
+    CommandData.Bias.SetLevel1 = 1;
     CommandData.Bias.bias1 = ivalues[0];
   } else if (command == MIndex("bias2_level")) {   /* Set bias 2 */
+    CommandData.Bias.SetLevel2 = 1;
     CommandData.Bias.bias2 = ivalues[0];
   } else if (command == MIndex("bias3_level")) {   /* Set bias 3 */
+    CommandData.Bias.SetLevel3 = 1;
     CommandData.Bias.bias3 = ivalues[0];
   } else if (command == MIndex("phase")) {
     if (ivalues[0] >= 5 && ivalues[0] <= 16) 
@@ -1392,6 +1395,9 @@ void InitCommandData() {
   CommandData.Bias.biasAC = 1;
   CommandData.Bias.biasRamp = 0;
 
+  CommandData.Bias.SetLevel1 = 1;
+  CommandData.Bias.SetLevel2 = 1;
+  CommandData.Bias.SetLevel3 = 1;
   CommandData.Bias.bias1 = 0x04;
   CommandData.Bias.bias2 = 0x08;
   CommandData.Bias.bias3 = 0x0f;
@@ -1412,5 +1418,4 @@ void InitCommandData() {
   CommandData.Cryo.lhevalve_close = 0;
 
   WritePrevStatus();
-
 }
