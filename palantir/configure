@@ -23,16 +23,6 @@ fi
 
 echo DATA_DIR = ${DATA_DIR} >> Makefile.config
 
-echo -n "Location of libRD.a [/usr/local/lib]: "
-read RD_DIR
-
-if [ -z ${RD_DIR} ]
-then
-  RD_DIR=/usr/local/lib ;
-fi
-
-echo RD_DIR = ${RD_DIR} >> Makefile.config
-
 echo -n "qt root directory [/usr/lib/qt3]: "
 read QT_DIR
 

@@ -3,7 +3,7 @@ MOC = $(QT_DIR)/bin/moc
 CPP = g++ -I$(QT_DIR)/include
 CC = gcc
 LIB_DIR = -DLIB_DIR=\"$(DATA_DIR)/\"
-EXTRA = moc_palantir.cpp -L$(QT_DIR)/lib -L$(RD_DIR) -lqt-mt -lRD -lncurses $(LIB_DIR)
+EXTRA = moc_palantir.cpp -L$(QT_DIR)/lib -L../lib -lqt-mt -lRD -lncurses $(LIB_DIR)
 
 all: palantir
 
