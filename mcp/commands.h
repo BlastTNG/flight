@@ -18,31 +18,23 @@
 #define N_GROUPS 11
 
 #define GR_POINT 0
-#define GR_SENSOR 1
-#define GR_GAIN 2
-#define GR_LOCK 3
-#define GR_BAL 4
-#define GR_COOL 5
-#define GR_EHEAT 6
-#define GR_BIAS 7
-#define GR_CRYO_CONTROL 8
-#define GR_CRYO_HEAT 9
+#define GR_BAL 1
+#define GR_BIAS 2
+#define GR_SENSOR 3
+#define GR_COOL 4
+#define GR_CRYO_CONTROL 5
+#define GR_GAIN 6
+#define GR_EHEAT 7
+#define GR_CRYO_HEAT 8
+#define GR_LOCK 9
 #define GR_MISC 10
-
 #ifdef INCLUDE_VARS
 
 const char *GroupNames[N_GROUPS] = {
-  "Pointing Mode",
-  "Pointing Sensors",
-  "Pointing Motor Gains",
-  "Inner Frame Lock",
-  "Balance System",
-  "Cooling System",
-  "Electronics Heat",
-  "Bias",
-  "Cryo Control",
-  "Cryo Heat",
-  "Miscellaneous",
+  "Pointing Mode",        "Balance System",    "Bias",
+  "Pointing Sensors",     "Cooling System",    "Cryo Control",
+  "Pointing Motor Gains", "Electronics Heat",  "Cryo Heat",
+  "Inner Frame Lock",     "Miscellaneous",
 };
 
 struct scom {
