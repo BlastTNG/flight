@@ -74,7 +74,7 @@ extern short int SamIAm;
 extern unsigned short slow_data[N_SLOW][FAST_PER_SLOW];
 
 double round(double x);
-double LockPosition(double elevation);
+double LockPosition(double elevation); // defined in commands.c
 
 int frame_num;
 int pin_is_in = 1;
