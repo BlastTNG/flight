@@ -1,6 +1,6 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Define to 1 to enable debugging output */
+/* Debugging output level or undef for no debugging */
 #undef DEBUG
 
 /* Define to the directory contaning defile.conf */

@@ -98,13 +98,19 @@ void Remount(const char*, char*);
 extern sigset_t signals;
 
 #ifdef DEBUG
-#  define debugprintf printf
-#else
-#  define debugprintf(...)
+# define dtracevoid() printf("%s()\n", __FUNCTION__)
+# define dtrace(fmt, ...) printf("%s(" fmt ")\n", __FUNCTION__, __VA_ARGS__)
+# define dreturn(fmt, val) printf("%s = " fmt "\n", __FUNCTION__, val)
+#if DEBUG & 0x1
+# define DEBUG_FASTSAME
 #endif
-
-#define dtracevoid() debugprintf("%s()\n", __FUNCTION__)
-#define dtrace(fmt, ...) debugprintf("%s(" fmt ")\n", __FUNCTION__, __VA_ARGS__)
-#define dreturn(fmt, val) debugprintf("%s = " fmt "\n", __FUNCTION__, val)
+#if DEBUG & 0x2
+# define DEBUG_SEQUENCING
+#endif
+#else /* not debug */
+# define dtracevoid()
+# define dtrace(...)
+# define dreturn(...)
+#endif /* defined DEBUG */
 
 #endif

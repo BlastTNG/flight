@@ -1030,7 +1030,23 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
     write(fd, line, strlen(line));
   }
 
-  strcpy(line, "FASTSAMP         RAW    U 20\n\n## SLOW CHANNELS:\n");
+  sprintf(line, "FASTSAMP         RAW    U %i\n", FAST_PER_SLOW);
+  write(fd, line, strlen(line));
+
+
+#ifdef __DEFILE__
+  sprintf(line, "\n## DEFILE FRAME RECONSTRUCTION FLAGS:\n"
+      "DEFILE_FLAGS     RAW   u %i\n\n"
+      "# Defile removed one or more zeroed frames before this fast frame\n"
+      "DEFILE_ZEROED    BIT  DEFILE_FLAGS 0\n"
+      "# Defile corrected what looked like a mangled index in this fast frame\n"
+      "DEFILE_MANGLED   BIT  DEFILE_FLAGS 1\n"
+      "# Defile inserted this fast frame -- it's recycled old data\n"
+      "DEFILE_INSERTED  BIT  DEFILE_FLAGS 2\n", FAST_PER_SLOW);
+  write(fd, line, strlen(line));
+#endif
+  
+  strcpy(line, "\n## SLOW CHANNELS:\n");
   write(fd, line, strlen(line));
 
   for (i = 0; i < ccNarrowSlow; ++i) {

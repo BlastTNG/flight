@@ -34,16 +34,23 @@ AC_CHECK_SIZEOF(unsigned short)
 AC_CHECK_SIZEOF(unsigned)
 AC_CHECK_SIZEOF(unsigned long)
 
-AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],
-              [enable debugging output [[no]]]),
-              [enable_debug="${enableval}"], [enable_debug="no"])
+AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug=LEVEL],
+              [set debugging level.  --disable-debug is the same as --enable-debug=0 [[0]]]),
+              [
+               case ${enableval} in
+                 yes) enable_debug=1;;
+                 no) enable_debug=0;;
+                 *) enable_debug=${enableval};;
+               esac
+              ], [enable_debug="0"])
 
 AC_MSG_CHECKING(whether to enable debugging output)
-if test "x${enable_debug}" == "xyes"; then
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(DEBUG, [1], [Define to 1 to enable debugging output])
+if test "x${enable_debug}" == "x0"; then
+  AC_MSG_RESULT([no])
 else
-  AC_MSG_RESULT(no)
+  AC_MSG_RESULT([yes, at level ${enable_debug}])
+  AC_DEFINE_UNQUOTED(DEBUG, [${enable_debug}],
+                     [Debugging output level or undef for no debugging])
 fi
 
 dnl Data

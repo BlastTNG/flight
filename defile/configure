@@ -850,7 +850,8 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
-  --enable-debug          enable debugging output [no]
+  --enable-debug=LEVEL    set debugging level. --disable-debug is the same as
+                          --enable-debug=0 [0]
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -5128,24 +5129,30 @@ _ACEOF
 # Check whether --enable-debug or --disable-debug was given.
 if test "${enable_debug+set}" = set; then
   enableval="$enable_debug"
-  enable_debug="${enableval}"
+
+               case ${enableval} in
+                 yes) enable_debug=1;;
+                 no) enable_debug=0;;
+                 *) enable_debug=${enableval};;
+               esac
+
 else
-  enable_debug="no"
+  enable_debug="0"
 fi;
 
 echo "$as_me:$LINENO: checking whether to enable debugging output" >&5
 echo $ECHO_N "checking whether to enable debugging output... $ECHO_C" >&6
-if test "x${enable_debug}" == "xyes"; then
-  echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-
-cat >>confdefs.h <<\_ACEOF
-#define DEBUG 1
-_ACEOF
-
-else
+if test "x${enable_debug}" == "x0"; then
   echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
+else
+  echo "$as_me:$LINENO: result: yes, at level ${enable_debug}" >&5
+echo "${ECHO_T}yes, at level ${enable_debug}" >&6
+
+cat >>confdefs.h <<_ACEOF
+#define DEBUG ${enable_debug}
+_ACEOF
+
 fi
 
 

@@ -47,6 +47,14 @@ extern struct ChannelStruct* DecomChannels;
 
 #define MAXBUF 3000 /* This is a 30 second buffer */
 
+unsigned long long int fc = 0;
+unsigned short defile_flags;
+unsigned short defile_flag_buf[FAST_PER_SLOW];
+
+#define DEFILE_FLAG_ZEROED_FRAME   0x1
+#define DEFILE_FLAG_MANGLED_INDEX  0x2
+#define DEFILE_FLAG_INSERTED_FRAME 0x4
+
 struct FieldType
 {
   short i0;   /* start of field in rxframe, words */
@@ -61,6 +69,7 @@ struct FieldType
 struct FieldType* normal_fast;
 struct FieldType* slow_fields[FAST_PER_SLOW];
 struct FieldType bolo_fields[DAS_CARDS][DAS_CHS];
+struct FieldType defile_field;
 
 unsigned short* fast_frame[FAST_PER_SLOW];
 unsigned short* slow_data[FAST_PER_SLOW];
@@ -215,6 +224,12 @@ int CheckWriteAllow(int mkdir_err)
             min_wrote = n;
           n_fast++;
           found = 1;
+        } else if (strcmp(lamb->d_name, "DEFILE_FLAGS") == 0) {
+          if ((n = GetNumFrames(stat_buf.st_size, 'u', "DEFILE_FLAGS"))
+              < min_wrote)
+            min_wrote = n;
+          n_fast++;
+          found = 1;
         } else
           for (i = 0; i < ccWideFast; ++i)
             if (strcmp(lamb->d_name, WideFastChannels[i].field) == 0) {
@@ -318,6 +333,7 @@ int CheckWriteAllow(int mkdir_err)
   return 1;
 }
 
+unsigned short* pre_buffer[FAST_PER_SLOW + 10];
 void PreInitialiseDirFile(void)
 {
   dtracevoid();
@@ -334,7 +350,6 @@ void PreInitialiseDirFile(void)
 
 int OpenField(int fast, int size, const char* filename)
 {
-  dtrace("%i, %i, \"%s\"", fast, size, filename);
   char gpb[GPB_LEN];
   int file;
 #ifdef HAVE_LIBZ
@@ -388,6 +403,8 @@ void InitialiseDirFile(int reset, unsigned long offset)
   char gpb[GPB_LEN];
   char ext[4] = "";
 
+  fc = 0;
+
 #ifdef HAVE_LIBZ
   if (rc.gzip_output) {
     defileclose = &gzclose;
@@ -403,6 +420,11 @@ void InitialiseDirFile(int reset, unsigned long offset)
       berror(fatal, "cannot create dirfile `%s'", rc.dirfile);
 
   bprintf(info, "\nWriting to dirfile `%s'\n", rc.dirfile);
+
+  for (i = 0; i < FAST_PER_SLOW + 10; ++i) {
+    pre_buffer[i] = balloc(fatal, DiskFrameSize * sizeof(unsigned short));
+    pre_buffer[i][3] = i;
+  }
 
   for (i = 0; i < FAST_PER_SLOW; ++i)
     fast_frame[i] = balloc(fatal, DiskFrameSize * sizeof(unsigned short));
@@ -422,6 +444,20 @@ void InitialiseDirFile(int reset, unsigned long offset)
   if (close(fd) < 0)
     berror(fatal, "Error while closing format file");
 
+  /* DEFILE_FLAGS */
+  sprintf(gpb, "%s/DEFILE_FLAGS%s", rc.dirfile, ext);
+  defile_field.size = 1;
+  defile_field.fp = OpenField(1, 1, gpb);
+  defile_field.i0 = 1;
+  if (reset) {
+    if (rc.resume_at > 0)
+      defile_field.nw = rc.resume_at;
+    else
+      defile_field.nw = 0;
+  }
+  defile_field.i_in = defile_field.i_out = 0;
+  defile_field.b = balloc(fatal, MAXBUF * sizeof(unsigned short));
+
   /* FASTSAMP */
   sprintf(gpb, "%s/FASTSAMP%s", rc.dirfile, ext);
   normal_fast[0].size = 2;
@@ -436,7 +472,7 @@ void InitialiseDirFile(int reset, unsigned long offset)
   }
 
   normal_fast[0].i_in = normal_fast[0].i_out = 0;
-  normal_fast[0].b = balloc(fatal, MAXBUF * sizeof(int));
+  normal_fast[0].b = balloc(fatal, MAXBUF * sizeof(unsigned int));
 
   n_fast = 1;
 
@@ -543,6 +579,9 @@ void CleanUp(void)
   dtracevoid();
   int j, i, is_bolo = 0;
 
+  for (i = 0; i < FAST_PER_SLOW + 10; ++i)
+    bfree(fatal, pre_buffer[i]);
+
   for (i = 0; i < FAST_PER_SLOW; ++i)
     bfree(fatal, fast_frame[i]);
 
@@ -571,6 +610,12 @@ void CleanUp(void)
     }
   }
 
+  if (defile_field.fp != -1)
+    defileclose(defile_field.fp);
+  if (defile_field.b)
+    bfree(fatal, defile_field.b);
+  defile_field.b = NULL;
+
   for (i = 0; i < DAS_CARDS; i++)
     for (j = 0; j < DAS_CHS; j++) {
       if (bolo_fields[i][j].fp != -1)
@@ -581,144 +626,253 @@ void CleanUp(void)
     }
 }
 
-/* pushDiskFrame: called from reader: puts rxframe into */
-/* individual buffers                                   */
-void PushFrame(unsigned short* frame)
+/* looks for and tries to correct dropped/mangled frames */
+int PreBuffer(unsigned short *frame)
 {
-  unsigned int i_in, i_out;
-  int i, j, k;
-  int write_ok;
-  static int i_count = 0;
-  unsigned B0, B1;
-  static int n_frames = 0;
+  static int counter = 0;
+  static int start = 2;
+  int range;
+  unsigned int last, this, next;
+  int li, ti, ni;
 
-  /* Wait for dirfile initialisation */
-  while (!ri.dirfile_init) {
-    usleep(10000);
+  fc++; /* global frame counter */
+
+  counter++;
+  last = FAST_PER_SLOW + (counter + 0) % 3;
+  this = FAST_PER_SLOW + (counter + 1) % 3;
+  next = FAST_PER_SLOW + (counter + 2) % 3;
+
+  memcpy(pre_buffer[next], frame, DiskFrameSize * sizeof(unsigned short));
+
+  if (start > 0) {
+    start--;
+    return -1;
   }
 
-  debugprintf("Fastsamp push: %lu\n", *(unsigned long*)(&frame[1]));
+  li = pre_buffer[last][3];
+  ti = pre_buffer[this][3];
+  ni = pre_buffer[next][3];
 
-  /*************/
-  /* slow data */
-  j = frame[3];
-  if (j < FAST_PER_SLOW)
-    for (i = 0; i < slowsPerBi0Frame; i++)
-      slow_data[j][i] = frame[slow_fields[j][i].i0];
-
-  /* fast data */
-  memcpy(fast_frame[i_count], frame, sizeof(unsigned short) * DiskFrameSize);
-
-  /* do while loop blocks until sufficient buffers empty */
-  do {
-    write_ok = 1;
-    /* ****************************************************************** */
-    /* First make sure there is enough space in ALL the buffers           */
-    /* We need to do it first and all at once to maintain synchronization */
-    /* We discard the full frame id there is no space                     */
-    /* ****************************************************************** */
-
-    /************************************/
-    /* Check buffer space in slow field */
-    /************************************/
-    for (i = 0; write_ok && i < slowsPerBi0Frame; i++)
-      for (j = 0; write_ok && j < FAST_PER_SLOW; j++) {
-        i_in = (slow_fields[j][i].i_in + 1) % MAXBUF;
-        if(i_in == slow_fields[j][i].i_out)
-          write_ok = 0;
+  if ((li + 1) % FAST_PER_SLOW != ti) {
+    if ((li + 2) % FAST_PER_SLOW == ni) {
+      printf("Frame %lli: corrected mangled multiplex index: %i %i %i\n", fc,
+          li, ti, ni);
+      pre_buffer[this][3] = ti = (li + 1) % FAST_PER_SLOW;
+      defile_flags |= DEFILE_FLAG_MANGLED_INDEX;
+    } else if (li == 0 && ti == 0 && ni == 0) {
+      printf("Frame %lli: zeroed frame dectected, discarding\n", fc);
+      defile_flags |= DEFILE_FLAG_ZEROED_FRAME;
+      return 0;
+    } else {
+      if (ti >= FAST_PER_SLOW) {
+        printf("Frame %lli: index out of range: %i\n", fc, ti);
+        pre_buffer[this][3] = ti %= FAST_PER_SLOW;
       }
-
-    /******************************************
-     * Check buffer space in normal fast data *
-     *****************************************/
-    for (j = 0; write_ok && j < n_fast; j++) {
-      i_out = normal_fast[j].i_out;
-      i_in = normal_fast[j].i_in;
-
-      if (i_out <= i_in)
-        i_out += MAXBUF;
-
-      if(i_in + FAST_PER_SLOW >= i_out)
-        write_ok = 0;
     }
+  }
 
-    /*******************************************
-     * Check buffer space in  fast bolo data   *
-     *******************************************/
-    for (i = 0; write_ok && i < DAS_CARDS; i++)
-      for (j = 0; write_ok && j < DAS_CHS; j += 2) {
-        i_out = bolo_fields[i][j].i_out;
-        i_in = bolo_fields[i][j].i_in;
+  if ((range = ti - li) <= 0)
+    range += FAST_PER_SLOW;
+
+  if (range > 1)
+    printf("Frame %lli: inserted %i missing frame%s: %i -> %i\n", fc, range - 1,
+        (range == 2) ?  "" : "s", li, ti);
+
+  li = (li + 1) % FAST_PER_SLOW;
+
+  memcpy(pre_buffer[ti], pre_buffer[this], DiskFrameSize
+      * sizeof(unsigned short));
+
+  return (range << 8) + li;
+}
+
+/* pushFrame: called from reader: puts rxframe into */
+/* individual buffers                                   */
+void PushFrame(unsigned short* in_frame)
+{
+  static int discard_me = 1; /* we discard the first slow frame, since it's
+                                probably a partial */
+  unsigned int i_in, i_out;
+  int i, j, k, curr_index;
+  int write_ok;
+  unsigned B0, B1;
+  int range, first, c;
+  unsigned short *frame;
+
+  first = PreBuffer(in_frame);
+  if (first == -1)
+    return;
+
+  range = first >> 8;
+  first &= 0xff;
+
+  /* Wait for dirfile initialisation */
+  while (!ri.dirfile_init)
+    usleep(10000);
+
+  for (c = 0; c < range; ++c) {
+    if (c != range - 1)
+      defile_flags |= DEFILE_FLAG_INSERTED_FRAME;
+
+    frame = pre_buffer[(first + c) % FAST_PER_SLOW];
+
+#ifdef DEBUG_FASTSAMP
+    printf("Fastsamp push: %lu\n", *(unsigned long*)(&frame[1]));
+#endif
+
+    /* slow data */
+    curr_index = frame[3];
+#ifdef DEBUG_SEQUENCING
+    static int next_j = -1;
+    if (next_j > -1 && next_j != curr_index) {
+      printf("frame %lli sequencing error: expected %i but got %i\n", fc, next_j, curr_index);
+    }
+    next_j = (curr_index + 1) % FAST_PER_SLOW;
+#endif
+
+    if (curr_index < FAST_PER_SLOW)
+      for (i = 0; i < slowsPerBi0Frame; i++)
+        slow_data[curr_index][i] = frame[slow_fields[curr_index][i].i0];
+
+    /* defile flags */
+    defile_flag_buf[curr_index] = defile_flags;
+    defile_flags = 0;
+
+    /* fast data */
+    memcpy(fast_frame[curr_index], frame, sizeof(unsigned short)
+        * DiskFrameSize);
+
+    /* do while loop blocks until sufficient buffers empty */
+    do {
+      write_ok = 1;
+      /* ****************************************************************** */
+      /* First make sure there is enough space in ALL the buffers           */
+      /* We need to do it first and all at once to maintain synchronization */
+      /* We discard the full frame id there is no space                     */
+      /* ****************************************************************** */
+
+      /************************************/
+      /* Check buffer space in slow field */
+      /************************************/
+      for (i = 0; write_ok && i < slowsPerBi0Frame; i++)
+        for (j = 0; write_ok && j < FAST_PER_SLOW; j++) {
+          i_in = (slow_fields[j][i].i_in + 1) % MAXBUF;
+          if(i_in == slow_fields[j][i].i_out)
+            write_ok = 0;
+        }
+
+      /* Check buffer space in defile_field */
+      if (write_ok) {
+        i_out = defile_field.i_out;
+        i_in = defile_field.i_in;
 
         if (i_out <= i_in)
           i_out += MAXBUF;
 
-        if(i_in + FAST_PER_SLOW >= i_out)
+        if (i_in + FAST_PER_SLOW >= i_out)
           write_ok = 0;
       }
 
-    if (!write_ok)
-      usleep(10000);
-  } while (!write_ok);
+      /******************************************
+       * Check buffer space in normal fast data *
+       *****************************************/
+      if (write_ok)
+        for (j = 0; write_ok && j < n_fast; j++) {
+          i_out = normal_fast[j].i_out;
+          i_in = normal_fast[j].i_in;
 
-  /*************************/
-  /* PUSH RX FRAME TO DISK */
-  /*************************/
+          if (i_out <= i_in)
+            i_out += MAXBUF;
 
-  /* push if FAST_PER_SLOW fasts are done... */
-  if (++i_count == FAST_PER_SLOW) {
-    i_count = 0;
-    for (i = 0; i < slowsPerBi0Frame; i++) {
-      for (j = 0; j < FAST_PER_SLOW; j++) {
-        i_in = slow_fields[j][i].i_in;
-        ((unsigned short*)slow_fields[j][i].b)[i_in] = slow_data[j][i];
-
-        if (++i_in >= MAXBUF)
-          i_in = 0;
-        slow_fields[j][i].i_in = i_in;
-      }
-    }
-    n_frames++;
-
-    for (k = 0; k < FAST_PER_SLOW; ++k) {
-      /********************/
-      /* normal fast data */
-      /********************/
-
-      for (j = 0; j < n_fast; j++) {
-        i_in = normal_fast[j].i_in;
-        if (normal_fast[j].size == 2) {
-          ((unsigned*)normal_fast[j].b)[i_in] =
-            *((unsigned*)(fast_frame[k] + normal_fast[j].i0));
-        } else {
-          ((unsigned short*)normal_fast[j].b)[i_in] =
-            fast_frame[k][normal_fast[j].i0];
+          if(i_in + FAST_PER_SLOW >= i_out)
+            write_ok = 0;
         }
 
-        if (++i_in >= MAXBUF)
-          i_in = 0;
-        normal_fast[j].i_in = i_in;
-      };
+      /*******************************************
+       * Check buffer space in  fast bolo data   *
+       *******************************************/
+      if (write_ok)
+        for (i = 0; write_ok && i < DAS_CARDS; i++)
+          for (j = 0; write_ok && j < DAS_CHS; j += 2) {
+            i_out = bolo_fields[i][j].i_out;
+            i_in = bolo_fields[i][j].i_in;
 
-      /********************/
-      /* fast bolo data   */
-      /********************/
-      for (i = 0; i < DAS_CARDS; i++) {
-        for (j = 0; j < DAS_CHS; j += 2) {
-          B0 = (unsigned)fast_frame[k][boloIndex[i][j][0] + BoloBaseIndex] +
-            (((unsigned)fast_frame[k][boloIndex[i][j][1] + BoloBaseIndex] &
-              0xff00) << 8);
-          B1 = fast_frame[k][boloIndex[i][j + 1][0] + BoloBaseIndex] +
-            ((fast_frame[k][boloIndex[i][j + 1][1] + BoloBaseIndex] & 0x00ff)
-             << 16);
+            if (i_out <= i_in)
+              i_out += MAXBUF;
 
-          i_in = bolo_fields[i][j].i_in;
-          ((unsigned*)bolo_fields[i][j].b)[i_in] = B0;
-          ((unsigned*)bolo_fields[i][j + 1].b)[i_in] = B1;
+            if(i_in + FAST_PER_SLOW >= i_out)
+              write_ok = 0;
+          }
 
-          if (++i_in >= MAXBUF)
-            i_in = 0;
-          bolo_fields[i][j].i_in = bolo_fields[i][j + 1].i_in = i_in;
+      if (!write_ok)
+        usleep(10000);
+    } while (!write_ok);
+
+    /*************************/
+    /* PUSH RX FRAME TO DISK */
+    /*************************/
+
+    /* push if we're at the end of a frame... */
+    if (curr_index == FAST_PER_SLOW - 1) {
+      if (discard_me) /* discard the first frame */
+        discard_me = 0;
+      else {
+        /* Slow Data */
+        for (i = 0; i < slowsPerBi0Frame; i++) {
+          for (j = 0; j < FAST_PER_SLOW; j++) {
+            i_in = slow_fields[j][i].i_in;
+            ((unsigned short*)slow_fields[j][i].b)[i_in] = slow_data[j][i];
+
+            if (++i_in >= MAXBUF)
+              i_in = 0;
+            slow_fields[j][i].i_in = i_in;
+          }
+        }
+
+        for (k = 0; k < FAST_PER_SLOW; ++k) {
+          /* defile_field */
+          i_in = defile_field.i_in;
+          ((unsigned short*)defile_field.b)[i_in] =
+            defile_flag_buf[defile_field.i0];
+
+          defile_field.i_in = (i_in + 1) % MAXBUF;
+
+          /********************/
+          /* normal fast data */
+          /********************/
+
+          for (j = 0; j < n_fast; j++) {
+            i_in = normal_fast[j].i_in;
+            if (normal_fast[j].size == 2)
+              ((unsigned*)normal_fast[j].b)[i_in] =
+                *((unsigned*)(fast_frame[k] + normal_fast[j].i0));
+            else 
+              ((unsigned short*)normal_fast[j].b)[i_in] =
+                fast_frame[k][normal_fast[j].i0];
+
+            normal_fast[j].i_in = (i_in + 1) % MAXBUF;
+          }
+
+          /********************/
+          /* fast bolo data   */
+          /********************/
+          for (i = 0; i < DAS_CARDS; i++) {
+            for (j = 0; j < DAS_CHS; j += 2) {
+              B0 = (unsigned)fast_frame[k][boloIndex[i][j][0] + BoloBaseIndex] +
+                (((unsigned)fast_frame[k][boloIndex[i][j][1] + BoloBaseIndex] &
+                  0xff00) << 8);
+              B1 = fast_frame[k][boloIndex[i][j + 1][0] + BoloBaseIndex] +
+                ((fast_frame[k][boloIndex[i][j + 1][1] + BoloBaseIndex] &
+                  0x00ff) << 16);
+
+              i_in = bolo_fields[i][j].i_in;
+              ((unsigned*)bolo_fields[i][j].b)[i_in] = B0;
+              ((unsigned*)bolo_fields[i][j + 1].b)[i_in] = B1;
+
+              bolo_fields[i][j].i_in = bolo_fields[i][j + 1].i_in =
+                (i_in + 1) % MAXBUF;
+            }
+          }
         }
       }
     }
@@ -745,7 +899,7 @@ void WriteField(int file, int length, void *buffer)
 #endif
       berror(fatal, "Error on write");
 
-#ifdef DEBUG
+#ifdef DEBUG_FASTSAMP
   int i;
   int seq_err = 0;
   static unsigned long last_fastsamp = 4000000000U;
@@ -810,9 +964,29 @@ void DirFileWriter(void)
           else
             WriteField(slow_fields[j][i].fp, i_buf * sizeof(unsigned short),
                 buffer);
-        }
-        slow_fields[j][i].i_out = slow_fields[j][i].i_in;
+        slow_fields[j][i].i_out = i_out;
+        } else
+          slow_fields[j][i].i_out = slow_fields[j][i].i_in;
       }
+
+    /* defile flags */
+    i_in = defile_field.i_in;
+    i_out = defile_field.i_out;
+    i_buf = 0;
+
+    while (i_in != i_out) {
+      buffer[i_buf] = ((unsigned short*)defile_field.b)[i_out];
+
+      if (wrote_count < ++defile_field.nw)
+        wrote_count = defile_field.nw;
+
+      i_out++;
+      i_buf++;
+      if (i_out >= MAXBUF)
+        i_out = 0;
+    }
+    WriteField(defile_field.fp, i_buf * sizeof(unsigned short), buffer);
+    defile_field.i_out = i_out;
 
     /**********************
      ** normal fast data **

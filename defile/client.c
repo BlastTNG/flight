@@ -359,11 +359,13 @@ void QuenyaClient(void)
 
       bytes_read += n;
 
-      debugprintf("Read %i bytes for block %lli, giving %i\n", n, block_count, 
+#if DEBUG_FASTSAMP
+      printf("Read %i bytes for block %lli, giving %i\n", n, block_count,
           bytes_read);
+#endif
     }
 
-#ifdef DEBUG
+#if DEBUG_FASTSAMP
     for (i = 1; i < bytes_read / 2; ++i) {
       if (InputBuffer[0][i - 1] == 0xeb90 || InputBuffer[0][i - 1] == 0x146F) {
         printf("Candidate fastsamp at byte %i: %lu\n", i,
