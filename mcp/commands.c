@@ -578,7 +578,6 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
   int i_point;
   int index = MIndex(command);
 
-
 #ifndef USE_FIFO_CMD
   double min;
 
@@ -778,6 +777,10 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.alice_file = ivalues[0];
   else if (command == plugh) /* A hollow voice says "Plugh". */
     CommandData.plover = ivalues[0];
+  else if (command == apcu_charge)
+    CommandData.apcu_reg = ivalues[0];
+  else if (command == dpcu_charge)
+    CommandData.dpcu_reg = ivalues[1];
 
   /***************************************/
   /*************** Bias  *****************/
@@ -1471,6 +1474,8 @@ void InitCommandData() {
   CommandData.pointing_mode.h = 0;
 
   CommandData.timeout = 3600;
+  CommandData.apcu_reg = 0;
+  CommandData.dpcu_reg = 0;
 
   CommandData.roll_gain.P = 30000;
 

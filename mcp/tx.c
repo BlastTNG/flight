@@ -56,6 +56,7 @@ extern int bbc_fp;
 double round(double x);
 
 /* in auxiliary.c */
+void ChargeController(void);
 void ControlAuxMotors(unsigned short *RxFrame);
 void ControlGyroHeat(unsigned short *RxFrame, int);
 void CameraTrigger(int which);
@@ -957,6 +958,7 @@ void UpdateBBCFrame(unsigned short *RxFrame) {
     WriteAux();
     CryoControl();
     PhaseControl();
+    ChargeController();
   }
 
   if (!mcp_initial_controls)

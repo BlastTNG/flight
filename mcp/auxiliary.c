@@ -509,6 +509,21 @@ int Balance(int ifpmBits) {
   return ifpmBits;
 }
 
+void ChargeController(void) {
+  static struct NiosStruct *apcuRegAddr;
+  static struct NiosStruct *dpcuRegAddr;
+
+  static int firsttime = 1;
+  if (firsttime) {
+    firsttime = 0;
+    apcuRegAddr = GetNiosAddr("apcu_reg");
+    dpcuRegAddr = GetNiosAddr("dpcu_reg");
+  }
+
+  WriteData(apcuRegAddr, CommandData.apcu_reg, NIOS_QUEUE);
+  WriteData(dpcuRegAddr, CommandData.dpcu_reg, NIOS_FLUSH);
+}
+
 /************************************************************************/
 /*                                                                      */
 /*    Do Lock Logic: check status, determine if we are locked, etc      */
