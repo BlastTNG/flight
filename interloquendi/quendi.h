@@ -49,10 +49,11 @@ struct quendi_data_port_t {
   char chunk[PATH_MAX];
   int new_chunk;
   int sending_data;
-  FILE* stream;
+  int fd;
   int chunk_total;
   unsigned long frames_read;
   int block_length;
+  unsigned remainder;
 };
 
 int quendi_access_ok(
@@ -64,13 +65,14 @@ void quendi_add_data_port(
     );
 
 int quendi_advance_data(
-    FILE*,
     int,
     char*,
     int,
     int*,
     const char*,
-    char*
+    char*,
+    int,
+    unsigned
     );
 
 int quendi_cmdnum(
@@ -112,18 +114,19 @@ unsigned long quendi_reader_init(
     );
 
 void quendi_reader_shutdown(
-    FILE*,
+    int,
     int
     );
 
 int quendi_read_data(
     int,
-    FILE**,
+    int*,
     const char*,
     unsigned long,
     int*,
     unsigned,
-    unsigned long*
+    unsigned long*,
+    unsigned*
     );
 
 int quendi_respond(

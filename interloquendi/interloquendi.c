@@ -24,7 +24,6 @@
 
 #include <errno.h>
 #include <netdb.h>
-#include <stdio.h>
 #include <string.h>
 #include <tcpd.h>
 #include <unistd.h>
@@ -151,7 +150,7 @@ void Connection(int csock)
           if (!data.sending_data)
             quendi_respond(QUENYA_RESPONSE_PORT_INACTIVE, NULL);
           else {
-            quendi_reader_shutdown(data.stream, 1);
+            quendi_reader_shutdown(data.fd, 1);
             data.sending_data = 0;
           }
           break;
@@ -187,6 +186,7 @@ void Connection(int csock)
           data.chunk_total = 0;
           data.frames_read = 0;
           data.sending_data = 1;
+          data.remainder = 0;
 
           /* Fallthrough */
         case QUENYA_COMMAND_CONT:
@@ -198,14 +198,15 @@ void Connection(int csock)
           data.port_active = 1;
           do {
             if (n != QUENYA_COMMAND_DATA) {
-              n = quendi_advance_data(data.stream, data.persist, data.chunk,
+              n = quendi_advance_data(data.persist, data.chunk,
                   options[CFG_SUFFIX_LENGTH].value.as_int, &data.chunk_total,
-                  options[CFG_CUR_FILE].value.as_string, data.name);
+                  options[CFG_CUR_FILE].value.as_string, data.name,
+                  data.block_length, data.remainder);
 
               switch (n) {
                 case FR_DONE:
 //                  printf("FR_DONE\n");
-                  quendi_reader_shutdown(data.stream, 1);
+                  quendi_reader_shutdown(data.fd, 1);
                   data.sending_data = 0; 
                   data.staged = 0;
                   data.port_active = 0;
@@ -216,12 +217,12 @@ void Connection(int csock)
                   break;
                 case FR_NEW_CHUNK:
 //                  printf("FR_NEW_CHUNK\n");
-                  fclose(data.stream);
+                  close(data.fd);
                   data.new_chunk = 1;
                   break;
                 case FR_CURFILE_CHANGED:
 //                  printf("FR_CURFILE_CHANGED\n");
-                  quendi_reader_shutdown(data.stream, 0);
+                  quendi_reader_shutdown(data.fd, 0);
                   data.sending_data = 0; 
                   data.port_active = 0;
                   if (GetCurFile(data.name, QUENDI_COMMAND_LENGTH) == NULL)
@@ -242,8 +243,8 @@ void Connection(int csock)
             if (n == FR_NEW_CHUNK || n == FR_MORE_IN_FILE) {
               /* read a block */
               data.block_length = quendi_read_data(data.new_chunk,
-                  &data.stream, data.chunk, data.seek_to, &data.chunk_total,
-                  data.frame_size, &data.frames_read);
+                  &data.fd, data.chunk, data.seek_to, &data.chunk_total,
+                  data.frame_size, &data.frames_read, &data.remainder);
 
               data.seek_to = 0;
               data.new_chunk = 0;

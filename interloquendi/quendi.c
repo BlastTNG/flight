@@ -438,21 +438,21 @@ int quendi_respond(int response_num, const char *message)
   return 0;
 }
 
-int quendi_read_data(int new_chunk, FILE** stream, const char* chunk,
+int quendi_read_data(int new_chunk, int* fd, const char* chunk,
     unsigned long seek_to, int *chunk_total, unsigned frame_size,
-    unsigned long *frames_read)
+    unsigned long *frames_read, unsigned *remainder)
 {
-  int n, i;
+  int n, block_size;
   struct stat chunk_stat;
 
   if (new_chunk) {
     printf("New chunk ok\n");
-    if ((*stream = fopen(chunk, "r")) == NULL)
+    if ((*fd = open(chunk, O_RDONLY)) < 0)
       berror(fatal, "cannot open `%s'", chunk);
 
     printf("New chunk fopen ok\n");
     if (seek_to > 0) {
-      fseek(*stream, seek_to, SEEK_SET);
+      lseek(*fd, seek_to, SEEK_SET);
       seek_to = 0;
       printf("New chunk fseek ok\n");
     }
@@ -465,25 +465,26 @@ int quendi_read_data(int new_chunk, FILE** stream, const char* chunk,
 
   }
 
-  clearerr(*stream);
-  if ((n = fread(quendi_input_buffer[0], frame_size, INPUT_BUF_SIZE,
-          *stream)) < 1) {
-    if (feof(*stream))
+  if ((n = read(*fd, (void*)quendi_input_buffer[0] + *remainder, frame_size *
+          INPUT_BUF_SIZE - *remainder)) < 1) {
+    if (n == 0)
       return 0;
-    else if ((i = ferror(*stream))) {
-      berror(err, "error reading `%s' (%i)", chunk, i);
+    else {
+      berror(err, "error reading `%s'", chunk);
 
-      fclose(*stream);
-      if ((*stream = fopen(chunk, "r")) == NULL)
+      close(*fd);
+      if ((*fd = open(chunk, O_RDONLY)) < 0)
         berror(fatal, "cannot open `%s'", chunk);
 
-      fseek(*stream, *frames_read * frame_size, SEEK_SET);
+      lseek(*fd, *frames_read * frame_size, SEEK_SET);
       n = 0;
     }
   }
-  *frames_read += n;
+  block_size = n / frame_size;
+  *remainder = n % frame_size;
+  *frames_read += block_size;
 
-  return n;
+  return block_size;
 }
 
 void quendi_send_data(int dsock, unsigned frame_size, int block_size)
@@ -509,21 +510,23 @@ void quendi_send_data(int dsock, unsigned frame_size, int block_size)
   return;
 }
 
-int quendi_advance_data(FILE* stream, int persist, char* chunk, int sufflen,
-    int *chunk_total, const char* curfile_name, char* curfile_val)
+int quendi_advance_data(int persist, char* chunk, int sufflen, int *chunk_total,
+    const char* curfile_name, char* curfile_val, int block_size,
+    unsigned remainder)
 {
-  if (!feof(stream))
-    return FR_MORE_IN_FILE;
-
+  if (block_size > 0 && remainder > 0)
+    memcpy(quendi_input_buffer[0], quendi_input_buffer[block_size + 1],
+        remainder);
+  
   return StreamToNextChunk(persist, chunk, sufflen, chunk_total, curfile_name,
       curfile_val);
 }
 
-void quendi_reader_shutdown(FILE* stream, int flag)
+void quendi_reader_shutdown(int fd, int flag)
 {
   bfree(fatal, quendi_input_buffer[0]);
 
-  fclose(stream);
+  close(fd);
 
   if (flag)
     quendi_respond(QUENYA_RESPONSE_TRANS_COMPLETE, NULL);
