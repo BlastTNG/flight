@@ -185,7 +185,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   WriteData(elVreqAddr, 32768 + v_elev);
 
   /* zero motor gains if the pin is in */
-  if (pinIsIn() || CommandData.disable_el) {
+  if ((pinIsIn() && !CommandData.force_el) || CommandData.disable_el) {
     elGainP = elGainI = 0;
   } else {
     elGainP = CommandData.ele_gain.P;

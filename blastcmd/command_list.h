@@ -1,6 +1,6 @@
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 87         /* total number of named single word cmds */
+#define N_SCOMMANDS 88         /* total number of named single word cmds */
 #define N_MCOMMANDS 63         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -62,7 +62,7 @@ enum singleCommand {
   mcc_halt,         isc_reboot,         isc_cam_cycle,    osc_run,
   osc_shutdown,     osc_reboot,         osc_cam_cycle,    osc_pause,
   osc_abort,        osc_reconnect,      osc_save_images,  osc_discard_images,
-  osc_full_screen
+  osc_full_screen,  force_el_on
 };
 
 struct scom {

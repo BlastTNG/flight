@@ -19,6 +19,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(az_on),  "enable az motors",  GR_GAIN},
   {COMMAND(el_off), "disable el motors", GR_GAIN},
   {COMMAND(el_on),  "enable el motors",  GR_GAIN},
+  {COMMAND(force_el_on),  "force enabling of el motors while pin in",
+    CONFIRM | GR_GAIN},
 
   {COMMAND(elclin_veto), "veto elevation clinometer", GR_VETO},
   {COMMAND(elclin_allow), "un-veto elevation clinometer", GR_VETO},

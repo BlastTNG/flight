@@ -232,12 +232,17 @@ void SingleCommand (enum singleCommand command) {
     CommandData.disable_az = 1;
   else if (command == az_on) /* enable az motors */
     CommandData.disable_az = 0;
-  else if (command == el_off) /* disable el motors */
+  else if (command == el_off) { /* disable el motors */
     CommandData.disable_el = 1;
-  else if (command == el_on) /* enable el motors */
+    CommandData.force_el = 0;
+  } else if (command == el_on) { /* enable el motors */
     CommandData.disable_el = 0;
+    CommandData.force_el = 0;
+  } else if (command == force_el_on) { /* force enabling of el motors */
+    CommandData.disable_el = 0;
+    CommandData.force_el = 1;
 
-  else if (command == sun_veto)       /* Veto sensors */
+  } else if (command == sun_veto)       /* Veto sensors */
     CommandData.use_sun = 0;
   else if (command == isc_veto)
     CommandData.use_isc = 0;
@@ -1275,6 +1280,8 @@ void InitCommandData() {
   CommandData.pointing_mode.t = time(NULL) + CommandData.timeout;
 
   /** initialize stuff that we don't want from prev_status here **/
+  CommandData.force_el = 0;
+
   CommandData.pumps.bal_veto = -1; //BAL_VETO_LENGTH;
   CommandData.pumps.bal1_on = 0;
   CommandData.pumps.bal1_reverse = 0;

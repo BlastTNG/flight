@@ -115,8 +115,9 @@ struct CommandDataStruct {
   int emf_gain;     /* for reaction wheel  */
   int emf_offset;   /*   back-EMF tweaking */
 
-  int disable_az;
-  int disable_el;
+  unsigned short disable_az;
+  unsigned short disable_el;
+  unsigned short force_el;
 
   int autogyro;
   double gy2_offset;
