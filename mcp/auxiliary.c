@@ -586,7 +586,7 @@ void CameraTrigger(int which)
   static int firsttime = 1;
   static struct NiosStruct* TriggerAddr[2];
   static int delay[2] = {0, 0};
-  static int waiting = 0;
+  static int waiting[2] = {0, 0};
 #if SYNCHRONOUS_CAMERAS
   static int cameras_ready = 0;
 #endif
@@ -605,19 +605,19 @@ void CameraTrigger(int which)
 
   if (isc_pulses[which].start_wait == 0) { /* start of new pulse */
     if (!isc_pulses[which].ack_wait) { /* not waiting for ack: send new data */
-      if (WHICH && delay == 0)
-        bprintf(info, "%iSC (t): Start new pulse (%i)\n", which,
-            isc_pulses[which].pulse_index);
+      if (WHICH && delay[which] == 0)
+        bprintf(info, "%iSC (t): Start new pulse (%i/%i)\n", which,
+            isc_pulses[which].pulse_index, isc_pulses[which].is_fast);
 
       start_ISC_cycle[which] = 0;
-      if (WHICH && delay == 0)
+      if (WHICH && delay[which] == 0)
         bprintf(info, "%iSC (t): Lowering start_ISC_cycle\n", which);
 
       if (isc_pulses[which].is_fast) {  /* fast pulse */
-        if (waiting)
+        if (waiting[which])
           bprintf(warning, "%s: Velocity wait stated aborted.\n",
               (which) ? "Osc" : "Isc");
-        waiting = 0;
+        waiting[which] = 0;
         /* use fast (short) pulse length */
         isc_pulses[which].pulse_req =
           CommandData.ISCControl[which].fast_pulse_width;
@@ -689,7 +689,7 @@ void CameraTrigger(int which)
 
         /* don't bother doing the trigger wait if we're already in velocity
          * wait state */
-        if (waiting)
+        if (waiting[which])
           delay[which] = 1;
 
         if (delay[which] == 0) {
@@ -717,11 +717,11 @@ void CameraTrigger(int which)
           if (!isc_pulses[which].is_fast) {
             /* wait until we're below the slow speed */
             if (fabs(axes_mode.az_vel) >= MAX_ISC_SLOW_PULSE_SPEED) {
-              if (!waiting && WHICH)
+              if (!waiting[which] && WHICH)
                 bprintf(info,
                     "%iSC (t): Velocity wait starts (%.3f %.3f) <----- v\n",
                     which, fabs(axes_mode.az_vel), MAX_ISC_SLOW_PULSE_SPEED);
-              waiting = 1;
+              waiting[which] = 1;
               return;
             }
 
@@ -729,7 +729,7 @@ void CameraTrigger(int which)
               bprintf(info, "%iSC (t): Velocity wait ends. -------> v\n",
                   which);
 
-            waiting = 0;
+            waiting[which] = 0;
           }
 
           /* write the pulse */
