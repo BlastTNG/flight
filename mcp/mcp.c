@@ -44,7 +44,6 @@
 #include "crc.h"
 #include "mcp.h"
 #include "pointing_struct.h"
-#include "tdrss_c.h"
 #include "slow_dl.h"
 #include "starpos.h"
 #include "channels.h"
@@ -89,6 +88,7 @@ void WatchDGPS(void);
 void IntegratingStarCamera(void);
 void WatchFIFO(void);
 void FrameFileWriter(void);
+void TDRSSWriter(void);
 
 void InitialiseFrameFile(char);
 void dirFileWriteFrame(unsigned short *RxFrame);

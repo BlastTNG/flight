@@ -30,7 +30,11 @@
 #define TDRSS_H
 
 #include <pthread.h>
-#include "tdrss_c.h"
+extern "C" {
+#include "mcp.h"
+}
+
+#define ALICEFILE_DIR   "/data/etc/"
 
 #define BUFFER_SAFE_ALLOC       5
 

@@ -29,6 +29,9 @@
 extern unsigned short* slow_data[FAST_PER_SLOW];
 extern unsigned int RxFrameFastSamp;
 
+extern unsigned short* tdrss_data[3];
+extern unsigned int tdrss_index;
+
 #ifdef DEBUG
 #warning "Debugging set."
 #endif
