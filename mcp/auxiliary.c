@@ -45,7 +45,7 @@
 
 /* This is the length of time to wait after receiving the ACK, bufore sending
  * the trigger */
-#define ISC_TRIGGER_DELAY   ((which == 1) ? 10 : 30)  /* in 100Hz frames */
+#define ISC_TRIGGER_DELAY   ((which == 1) ? 1 : 30)  /* in 100Hz frames */
 
 /* If mcp has decided the handshaking isn't working, this is the period of the
  * handshake-less triggers */
