@@ -68,6 +68,8 @@ int bi0_fp = -2;
 unsigned int debug = 0;
 short int SamIAm;
 int StartupVeto = STARTUP_VETO_LENGTH + 1;
+int Death = -STARTUP_VETO_LENGTH;
+pthread_t watchdog_id;
 
 struct ACSDataStruct ACSData;
 
@@ -79,8 +81,6 @@ unsigned short* slow_data[FAST_PER_SLOW];
 extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 
 extern pthread_mutex_t mutex;
-
-int Death = 0;
 
 void Pointing();
 void WatchPort(void*);
@@ -516,14 +516,21 @@ void BiPhaseWriter(void) {
   while (1) {
     i_in = bi0_buffer.i_in;
     i_out = bi0_buffer.i_out;
-    if (StartupVeto == 0)
-      if (i_out == i_in)
-        Death++;
-    while (i_out != i_in) {
-      i_out = (i_out + 1) % BI0_FRAME_BUFLEN;
-      write_to_biphase(bi0_buffer.framelist[i_out]);
-      Death = 0;
-    }
+    if (i_out == i_in) {
+      /* Death meausres how long the BiPhaseWriter has gone without receiving
+       * any data -- an indication that we aren't receiving FSYNCs from the
+       * BLASTBus anymore */
+      if (++Death == 25) {
+        bprintf(err, "Death is reaping the watchdog tickle.");
+        pthread_cancel(watchdog_id);
+      }
+    } else
+      while (i_out != i_in) {
+        i_out = (i_out + 1) % BI0_FRAME_BUFLEN;
+        write_to_biphase(bi0_buffer.framelist[i_out]);
+        if (Death > 0)
+          Death = 0;
+      }
     bi0_buffer.i_out = i_out;
     usleep(10000);
   }
@@ -583,7 +590,6 @@ int main(int argc, char *argv[]) {
 
   pthread_t CommandDatacomm1;
   pthread_t disk_id;
-  pthread_t watchdog_id;
 
 #ifndef USE_FIFO_CMD
   pthread_t CommandDatacomm2;
@@ -700,14 +706,6 @@ int main(int argc, char *argv[]) {
 #endif
 
   while (1) {
-    /* Death meausres how long the BiPhaseWriter has gone without receiving
-     * any data -- an indication that we aren't receiving FSYNCs from the
-     * BLASTBus anymore */
-    if (Death > 25) {
-      berror(err, "Death is reaping the watchdog tickle.");
-      pthread_cancel(watchdog_id);
-    }
-
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0) 
       berror(err, "Error on BBC read");
 
@@ -729,7 +727,7 @@ int main(int argc, char *argv[]) {
     if (in_data == 0xdf80eb90)  {
       if( (mycounter != 12) || (mycounter2 != 12) ) {
         printf("++++++++++++++>>>>>> mycounter = %d mycounter2 = %d\n",
-        mycounter, mycounter2);
+            mycounter, mycounter2);
       }
       mycounter  = 0;
       mycounter2 = 0;
@@ -741,9 +739,9 @@ int main(int argc, char *argv[]) {
       bprintf(err, "Unrecognised word received from BBC (%08x)", in_data);
 
     if (IsNewFrame(in_data)) {
-      if (StartupVeto > 1)
+      if (StartupVeto > 1) {
         --StartupVeto;
-      else {
+      } else {
 #ifndef BOLOTEST
         GetACS(RxFrame);
         Pointing();
@@ -757,6 +755,7 @@ int main(int argc, char *argv[]) {
         if (StartupVeto) {
           bputs(info, "Startup Veto Ends\n");
           StartupVeto = 0;
+          Death = 0;
         } else if (RxFrame[3] != (RxFrameIndex + 1) % FAST_PER_SLOW
             && RxFrameIndex >= 0)
           bprintf(err, "Frame sequencing error detected: wanted %i, got %i\n",
