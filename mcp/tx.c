@@ -739,5 +739,5 @@ void do_Tx_frame(int bbc_fp, unsigned int *TxFrame,
   /*** write FSync ***/
   write(bbc_fp, (void*)&BBC_Fsync_Word, sizeof(unsigned int));
   /*** Write Frame ***/
-  write(bbc_fp, (void*)TxFrame, TxFrameSize());
+  write(bbc_fp, (void*)TxFrame, TX_FRAME_SIZE);
 }

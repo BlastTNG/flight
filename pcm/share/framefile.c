@@ -90,9 +90,9 @@ void InitialiseFrameFile(char type) {
   OpenNextChunk();
 
   /* malloc frame buffer */
-  if ((framefile.buffer = malloc(BUFFER_SIZE * RxFrameSize())) == NULL)
+  if ((framefile.buffer = malloc(BUFFER_SIZE * RX_FRAME_SIZE)) == NULL)
     mputs(MCP_TFATAL, "Unable to malloc framefile buffer\n");
-  framefile.buffer_end = framefile.buffer + BUFFER_SIZE * RxFrameSize();
+  framefile.buffer_end = framefile.buffer + BUFFER_SIZE * RX_FRAME_SIZE;
   framefile.b_write_to = framefile.b_read_from = framefile.buffer;
 
   fp = fopen("/data/etc/datafile.cur","w");
@@ -101,7 +101,8 @@ void InitialiseFrameFile(char type) {
     return;
   }
 
-  fprintf(fp,framefile.name);
+  /* defile likes the newline */
+  fprintf(fp, "%s\n", framefile.name);
 
   if (fclose(fp) < 0)
     merror(MCP_ERROR, "Error while closing curfile");
@@ -109,7 +110,7 @@ void InitialiseFrameFile(char type) {
 
 void* advance_in_buffer(void* ptr) {
   void* tmp;
-  tmp = ((char*)ptr + RxFrameSize());
+  tmp = ((char*)ptr + RX_FRAME_SIZE);
   return (tmp > framefile.buffer_end) ? framefile.buffer : (void*)tmp;
 }
 
@@ -144,7 +145,7 @@ void pushDiskFrame(unsigned short *RxFrame) {
   /*********************/
   /* SHIP OUT RX FRAME */
   /*********************/
-  memcpy(framefile.b_write_to, RxFrame, RxFrameSize());
+  memcpy(framefile.b_write_to, RxFrame, RX_FRAME_SIZE);
 
   /* advance write-to pointer */
   framefile.b_write_to = advance_in_buffer(framefile.b_write_to);
@@ -153,18 +154,15 @@ void pushDiskFrame(unsigned short *RxFrame) {
 /***************************************************************/
 /* FrameFileWriter: separate thread: writes each frame to disk */
 /***************************************************************/
-void FrameFileWriter(void* type) {
+void FrameFileWriter(void) {
   void* writeout_buffer;
   void* b_write_to;
   int write_len;
 
-  int pid = getpid();
-  mprintf(MCP_STARTUP, "FrameFileWriter startup on pid %i\n", pid);
+  mputs(MCP_STARTUP, "FrameFileWriter startup\n");
 
-  InitialiseFrameFile((char)(int)type);
-  
   /* malloc output_buffer */
-  if ((writeout_buffer = malloc(BUFFER_SIZE * RxFrameSize())) == NULL)
+  if ((writeout_buffer = malloc(BUFFER_SIZE * RX_FRAME_SIZE)) == NULL)
     mputs(MCP_TFATAL, "Unable to malloc write out buffer\n");
 
   while (1) {
@@ -172,9 +170,9 @@ void FrameFileWriter(void* type) {
     b_write_to = framefile.b_write_to;
 
     while (b_write_to != framefile.b_read_from) {
-      memcpy(writeout_buffer + write_len, framefile.b_read_from, RxFrameSize());
+      memcpy(writeout_buffer + write_len, framefile.b_read_from, RX_FRAME_SIZE);
       framefile.b_read_from = advance_in_buffer(framefile.b_read_from);
-      write_len += RxFrameSize();
+      write_len += RX_FRAME_SIZE;
 
       /* increment file frame counter and check to see if we're at the end
        * of a file.  If so, writeout what we've accumulated and reset everything

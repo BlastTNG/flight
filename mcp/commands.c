@@ -929,8 +929,7 @@ void WatchFIFO () {
 
   int index, pindex = 0;
 
-  int pid = getpid();
-  mprintf(MCP_STARTUP, "WatchFIFO startup on pid %i\n", pid);
+  mputs(MCP_STARTUP, "WatchFIFO startup\n");
 
   if ((fifo = open("/tmp/SIPSS.FIFO", O_RDONLY | O_NONBLOCK)) == -1)
     merror(MCP_TFATAL, "Unable to open FIFO");
@@ -1006,8 +1005,7 @@ void WatchPort (void* parameter) {
   int timer = 0;
   int bytecount = 0;
 
-  int pid = getpid();
-  mprintf(MCP_STARTUP, "WatchPort(%i) startup on pid %i\n", port, pid);
+  mprintf(MCP_STARTUP, "WatchPort(%i) startup\n", port);
 
   if((tty_fd = bc_setserial(COMM[port])) < 0) {
     exit(1);

@@ -98,8 +98,7 @@ void IntegratingStarCamera(void)
   //  struct timeval t1, t2;
   //  int delta;
 
-  int pid = getpid();
-  mprintf(MCP_STARTUP, "ISC startup on pid %i\n", pid);
+  mputs(MCP_STARTUP, "ISC startup\n");
 
   for (;;) {
     do {

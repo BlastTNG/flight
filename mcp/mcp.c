@@ -65,6 +65,7 @@ void IntegratingStarCamera(void);
 void WatchFIFO(void);
 void FrameFileWriter(void);
 
+void InitialiseFrameFile(char);
 void dirFileWriteFrame(unsigned short *RxFrame);
 void pushDiskFrame(unsigned short *RxFrame);
 
@@ -89,10 +90,11 @@ struct {
   - 4                /* marker again plus NUL */ \
 )
 
-void mputs(int flag, char* message) {
+void mputs(int flag, const char* message) {
   char buffer[MPRINT_BUFFER_SIZE];
   time_t t = time(NULL);
   struct tm now;
+  char local[1024];
   char *bufstart, *bufptr, *lastchr, *firstchr;
   int len, pid;
   char marker[4];
@@ -125,6 +127,10 @@ void mputs(int flag, char* message) {
   }
   strcpy(buffer, marker);
 
+  /* we need a writable copy of the string */
+  strncpy(local, message, 1023);
+  local[1023] = '\0';
+
   for(bufstart = buffer; *bufstart != '\0' && bufstart < buffer
       + 1024; ++bufstart);
 
@@ -132,10 +138,14 @@ void mputs(int flag, char* message) {
   strcat(buffer, marker);
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
+  
+  sprintf(bufstart, "[%i] ", getpid());
+  
+  for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
   /* output the formatted string line by line */
-  for (firstchr = bufptr = message; *bufptr != '\0' &&
-      bufptr < message + 1023; ++bufptr) {
+  for (firstchr = bufptr = local; *bufptr != '\0' &&
+      bufptr < local + 1023; ++bufptr) {
 
     /* writeout the string when we find a newline or the EOS */
     if (*bufptr == '\n' || *(bufptr + 1) == '\0') {
@@ -176,7 +186,8 @@ void mputs(int flag, char* message) {
   if (flag == MCP_TFATAL) {
     pid = getpid();
     if (logfile != NULL) {
-      fprintf(logfile, "$$ Last error is THREAD FATAL.  Thread [pid = %i] exits.\n",
+      fprintf(logfile,
+          "$$ Last error is THREAD FATAL.  Thread [pid = %i] exits.\n",
           pid);
       fflush(logfile);
     }
@@ -226,8 +237,7 @@ void SensorReader(void) {
 
   FILE *fp;
 
-  int pid = getpid();
-  mprintf(MCP_STARTUP, "SensorReader startup on pid %i\n", pid);
+  mputs(MCP_STARTUP, "SensorReader startup\n");
 
   while (1) {
     fp = fopen("/data/rawdir/sensors.dat", "r");
@@ -326,8 +336,7 @@ void SunSensor(void) {
   char buff[256];
   const char P[] = "P";
 
-  int pid = getpid();
-  mprintf(MCP_STARTUP, "SunSensor startup on pid %i\n", pid);
+  mputs(MCP_STARTUP, "SunSensor startup\n");
 
   /* we don't want mcp to die of a broken pipe, so catch the
    * SIGPIPEs which are raised when the ssc drops the connection */
@@ -521,7 +530,7 @@ int fill_Rx_frame(unsigned int in_data,
 
     i++;
 
-    if (i >= FrameWords()) i = 0;
+    if (i >= FRAME_WORDS) i = 0;
 
     if (i == start) {
       //if (n_not_found==0) {
@@ -565,9 +574,9 @@ void write_to_biphase(unsigned short *RxFrame) {
     /* Write the sync word */
     if (write(fp, &sync, 2) < 0)
       merror(MCP_ERROR, "bi-phase write (sync) failed");
-    if (write(fp, RxFrame + 1, 2 * (FrameWords() - 1)) < 0)
+    if (write(fp, RxFrame + 1, 2 * (FRAME_WORDS - 1)) < 0)
       merror(MCP_ERROR, "bi-phase write (RxFrame) failed");
-    if (write(fp, nothing+FrameWords(), 2 * (624 - FrameWords())) < 0)
+    if (write(fp, nothing + FRAME_WORDS, 2 * (624 - FRAME_WORDS)) < 0)
       merror(MCP_ERROR, "bi-phase write (padding) failed");
   }
 }
@@ -578,9 +587,9 @@ void InitBi0Buffer() {
   bi0_buffer.i_in = 10; /* preload the fifo */
   bi0_buffer.i_out = 0;
   for (i = 0; i<BI0_FRAME_BUFLEN; i++) {
-    if ((bi0_buffer.framelist[i] = malloc(FrameWords() *
+    if ((bi0_buffer.framelist[i] = malloc(FRAME_WORDS *
             sizeof(unsigned short))) == NULL)
-      merror(MCP_TFATAL, "Unable to malloc for bi-phase");
+      merror(MCP_FATAL, "Unable to malloc for bi-phase");
   }
 }
 
@@ -590,7 +599,7 @@ void PushBi0Buffer(unsigned short *RxFrame) {
   i_in = bi0_buffer.i_in + 1;
   if (i_in>=BI0_FRAME_BUFLEN) i_in = 0;
 
-  fw = FrameWords();
+  fw = FRAME_WORDS;
 
   for (i = 0; i<fw; i++) {
     bi0_buffer.framelist[i_in][i] = RxFrame[i];
@@ -601,7 +610,7 @@ void PushBi0Buffer(unsigned short *RxFrame) {
 void zero(unsigned short *RxFrame) {
   int i, fw;
 
-  fw = FAST_OFFSET; //FrameWords();
+  fw = FAST_OFFSET;
 
   for (i = 0; i<fw; i++) {
     RxFrame[i] = 0;
@@ -611,10 +620,7 @@ void zero(unsigned short *RxFrame) {
 void BiPhaseWriter(void) {
   int i_out, i_in;
 
-  int pid = getpid();
-  mprintf(MCP_STARTUP, "Biphase writer startup on pid %i\n", pid);
-
-  InitBi0Buffer();
+  mputs(MCP_STARTUP, "Biphase writer startup\n");
 
   while (1) {
     i_in = bi0_buffer.i_in;
@@ -638,6 +644,23 @@ int AmISam(void) {
   }
 
   return (buffer[0] == 's') ? 1 : 0;
+}
+
+/* Signal handler called when we get a hup, int or term */
+void CloseBBC(int signo) {
+  mprintf(MCP_ERROR, "Caught signal %i, closing BBC", signo);
+  close(bbc_fp);
+
+  /* restore default handler and raise the signal again */
+  signal(signo, SIG_DFL);
+  raise(signo);
+}
+
+char segvregs[100];
+int segvcnt = 0;
+void SegV(int signo) {
+  fprintf(stderr, "SEGV caught: %s\n", segvregs);
+  raise(SIGTERM);
 }
 
 int main(int argc, char *argv[]) {
@@ -664,8 +687,6 @@ int main(int argc, char *argv[]) {
   struct CommandDataStruct CommandData_loc;
   int nread = 0, last_nread = 0, last_read = 0, df = 0;
 
-  int pid = getpid();
-
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
         "p  pointing\n"
@@ -682,16 +703,19 @@ int main(int argc, char *argv[]) {
   else
     fputs("----- LOG RESTART -----\n", logfile);
 
-  mprintf(MCP_STARTUP, "MCP startup on pid %i", pid);
+  mputs(MCP_STARTUP, "MCP startup");
 
   //Initialize the Ephemeris
   ReductionInit();
 
   InitCommandData();
 
-  bbc_fp = open("/dev/bbc", O_RDWR);
-  if (bbc_fp < 0)
+  if ((bbc_fp = open("/dev/bbc", O_RDWR)) < 0)
     merror(MCP_FATAL, "Error opening BBC");
+
+  signal(SIGHUP, CloseBBC);
+  signal(SIGINT, CloseBBC);
+  signal(SIGTERM, CloseBBC);
 
   pthread_mutex_init(&mutex, NULL);
 
@@ -707,20 +731,24 @@ int main(int argc, char *argv[]) {
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
 
+  InitBi0Buffer();
+
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
 #endif
-  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, (void*)(int)argv[1][0]);
+  InitialiseFrameFile(argv[1][0]);
+
+  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
 
   memset(PointingData, 0, 3*sizeof(struct PointingDataStruct));
 
-  mprintf(MCP_INFO, "Tx Frame Bytes: %d.  Allowed: 2220\n", TxFrameSize());
-  if (TxFrameSize() > 2220)
+  mprintf(MCP_INFO, "Tx Frame Bytes: %d.  Allowed: 2220\n", TX_FRAME_SIZE);
+  if (TX_FRAME_SIZE > 2220)
     merror(MCP_FATAL, "TxFrame too big\n");
 
-  if ((TxFrame = malloc(TxFrameSize())) == NULL)
+  if ((TxFrame = malloc(TX_FRAME_SIZE)) == NULL)
     merror(MCP_FATAL, "Unable to malloc TxFrame");
 
-  if ((RxFrame = malloc(RxFrameSize())) == NULL)
+  if ((RxFrame = malloc(RX_FRAME_SIZE)) == NULL)
     merror(MCP_FATAL, "Unable to malloc RxFrame");
 
   /* Find out whether I'm frodo or sam */
@@ -766,14 +794,14 @@ int main(int argc, char *argv[]) {
     last_frames = frames;
 
     n_to_read = ioctl(bbc_fp, BBC_IOC_RX_SW_COUNT);
-    /*    printf("n to read: %i %i\n", n_to_read, frames); */
     for (i = 0; i < n_to_read; i++) {
       if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) < 0) {
         merror(MCP_ERROR, "Error on BBC read");
       }
 
       nread++;
-      if (nread == last_nread) last_read = in_data;
+      if (nread == last_nread)
+        last_read = in_data;
       if (!fill_Rx_frame(in_data, TxFrame, slowTxFields, RxFrame)) {
         close(bbc_fp);
         bbc_fp = open("/dev/bbc", O_RDWR);

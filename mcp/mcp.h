@@ -11,6 +11,6 @@
 
 void mprintf(int flag, char* fmt, ...);
 void merror(int flag, char* fmt, ...);
-void mputs(int flag, char* message);
+void mputs(int flag, const char* message);
 
 #endif

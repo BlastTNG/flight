@@ -78,8 +78,7 @@ void WatchDGPS() {
   int pos_ok;
   static int i_at_float = 0;
 
-  int pid = getpid();
-  mprintf(MCP_STARTUP, "WatchDGPS startup on pid %i\n", pid);
+  mputs(MCP_STARTUP, "WatchDGPS startup\n");
 
   DGPSAtt[0].az = 0;
   DGPSAtt[0].pitch = 0;
