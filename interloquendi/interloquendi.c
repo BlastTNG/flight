@@ -68,15 +68,6 @@ struct {
 #define CFG_CUR_FILE       2
 #define CFG_SUFFIX_LENGTH  3
 
-struct data_connection {
-  int sock;
-  int staged;
-  int persist;
-  unsigned frame_size;
-  unsigned long pos;
-  char name[PATH_MAX];
-};
-
 /* for libwrap */
 int allow_severity = LOG_INFO;
 int deny_severity = LOG_WARNING;
@@ -107,15 +98,16 @@ void Connection(int csock)
   int addrlen = sizeof(addr);
   struct hostent* thishost;
   struct request_info req;
-  struct quendi_data QuendiData;
+  struct quendi_server_data_t QuendiData;
 
   char buffer[QUENDI_COMMAND_LENGTH];
   int np;
   int n;
   char* params;
-  struct data_connection data;
+  struct quendi_data_port_t data;
 
   data.sock = -1;
+  data.port_active = 0;
 
   /* tcp wrapper check */
   request_init(&req, RQ_DAEMON, "interloquendi", RQ_FILE, csock, 0);
@@ -143,6 +135,7 @@ void Connection(int csock)
   QuendiData.directory = (char*)options[CFG_DIRECTORY].value.as_string;
 
   quendi_server_init(&QuendiData);
+  quendi_add_data_port(&data);
 
   /* Service Loop */
   for (;;) {
@@ -155,28 +148,47 @@ void Connection(int csock)
         case -1:
           quendi_respond(QUENYA_RESPONSE_SYNTAX_ERROR, "Unrecognised Command");
           break;
+        case QUENYA_COMMAND_CLOS:
+          if (data.sock < 0)
+            quendi_respond(QUENYA_RESPONSE_PORT_NOT_OPEN, NULL);
+          else {
+            shutdown(data.sock, SHUT_RDWR);
+            close(data.sock);
+            data.sock = -1;
+            quendi_respond(QUENYA_RESPONSE_OK, NULL);
+          }
+          break;
         case QUENYA_COMMAND_DATA:
-          if (data.sock < 1)
+          if (data.sock < 0)
             quendi_respond(QUENYA_RESPONSE_PORT_NOT_OPEN, NULL);
           else if (!data.staged)
             quendi_respond(QUENYA_RESPONSE_NO_DATA_STAGED, NULL);
-          else
+          else {
+            data.port_active = 1;
             quendi_send_data(data.sock, data.name, data.pos, data.frame_size,
                 options[CFG_SUFFIX_LENGTH].value.as_int, data.persist);
+            data.port_active = 0;
+          }
           break;
         case QUENYA_COMMAND_IDEN:
           QuendiData.access_level = 1;
           quendi_respond(QUENYA_RESPONSE_ACCESS_GRANTED, NULL);
           break;
-        case QUENYA_COMMAND_SYNC:
+        case QUENYA_COMMAND_ASYN:
         case QUENYA_COMMAND_NOOP:
           quendi_respond(QUENYA_RESPONSE_OK, NULL);
           break;
         case QUENYA_COMMAND_OPEN:
           if (quendi_access_ok(1)) {
-            if (data.sock < 1) {
+            if (data.sock < 0) {
               data.sock = quendi_dp_connect();
-              if (data.sock < 1)
+              if (data.sock == -2)
+                quendi_respond(QUENYA_RESPONSE_OPEN_ERROR,
+                    "Timeout Opening Data Port");
+              else if (data.sock == -3)
+                quendi_respond(QUENYA_RESPONSE_OPEN_ERROR,
+                    "Access from Unauthorised Client on Data Port");
+              else if (data.sock < 0)
                 quendi_respond(QUENYA_RESPONSE_OPEN_ERROR, NULL);
               else
                 quendi_respond(QUENYA_RESPONSE_PORT_OPENED, NULL);
@@ -203,14 +215,17 @@ void Connection(int csock)
           close(csock);
           exit(0);
         case QUENYA_COMMAND_SPEC:
-          if (data.sock < 1)
+          if (data.sock < 0)
             quendi_respond(QUENYA_RESPONSE_PORT_NOT_OPEN, NULL);
           else if (!data.staged)
             quendi_respond(QUENYA_RESPONSE_NO_DATA_STAGED, NULL);
-          else
+          else {
+            data.port_active = 1;
             quendi_send_spec(data.sock, data.name, data.pos);
+            data.port_active = 0;
+          }
           break;
-        case QUENYA_COMMAND_ASYN:
+        case QUENYA_COMMAND_SYNC:
         default:
           quendi_respond(QUENYA_RESPONSE_CMD_NOT_IMPL, NULL);
           break;
@@ -219,7 +234,27 @@ void Connection(int csock)
       printf("connection dropped\n");
       shutdown(csock, SHUT_RDWR);
       close(csock);
+      if (data.sock >= 0) {
+        printf("shutdown data port\n");
+        shutdown(data.sock, SHUT_RDWR);
+        close(data.sock);
+      }
       quendi_server_shutdown();
+      return;
+    } else if (n == -3) {
+      if (!data.port_active) {
+        quendi_respond(QUENYA_RESPONSE_TIMEOUT, NULL);
+        shutdown(csock, SHUT_RDWR);
+        close(csock);
+        quendi_server_shutdown();
+        return;
+      }
+    } else if (n == -4) {
+      quendi_respond(QUENYA_RESPONSE_PORT_CLOSE_ERR,
+          "Unexpected Close on Data Port");
+      shutdown(data.sock, SHUT_RDWR);
+      close(data.sock);
+      data.sock = -1;
     }
   }
 }
@@ -278,7 +313,6 @@ void ReadConfig(FILE* stream)
       *(value++) = '\0';
       value += strspn(value, " \t");
     }
-    printf("o: %s\nv: %s\n", option, value);
 
     found = 0;
     for (i = 0; options[i].type != '\0'; ++i)
@@ -394,6 +428,7 @@ int main(void)
       if ((pid = fork()) == 0) {
         close(sock);
         Connection(csock);
+        exit(0);
       }
 
       bprintf(info, "spawned %i to handle connect from %s", pid,

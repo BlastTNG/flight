@@ -24,6 +24,7 @@
 #include <string.h>
 #include <syslog.h>
 #include <unistd.h>
+#include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -44,20 +45,26 @@
                            * time, so we keep this small */
 
 /* internals */
-const char _quendi_version[] = "1.0";
-struct quendi_data *_quendi_server_data = NULL;
+const char quendi_version[] = "1.0";
+const struct quendi_server_data_t *quendi_server_data = NULL;
+const struct quendi_data_port_t *quendi_data_port = NULL;
 
 /* functions */
 int quendi_access_ok(int level) {
-  if (_quendi_server_data->access_level == 0) {
+  if (quendi_server_data->access_level == 0) {
     quendi_respond(QUENYA_RESPONSE_NOT_IDENTIFIED, NULL);
     return 0;
-  } else if (_quendi_server_data->access_level < level) {
+  } else if (quendi_server_data->access_level < level) {
     quendi_respond(QUENYA_RESPONSE_NO_ACCESS, NULL);
     return 0;
   }
 
   return 1;
+}
+
+void quendi_add_data_port(const struct quendi_data_port_t* data_port)
+{
+  quendi_data_port = data_port;
 }
 
 int quendi_cmdnum(char* buffer)
@@ -70,6 +77,7 @@ int quendi_cmdnum(char* buffer)
 
   switch(htonl(*(int*)buffer)) {
     case 0x6173796e: return QUENYA_COMMAND_ASYN;
+    case 0x636c6f73: return QUENYA_COMMAND_CLOS;
     case 0x64617461: return QUENYA_COMMAND_DATA; 
     case 0x6964656e: return QUENYA_COMMAND_IDEN;
     case 0x6e6f6f70: return QUENYA_COMMAND_NOOP;
@@ -89,40 +97,75 @@ int quendi_get_cmd(char* buffer)
   int overrun;
   int eolfound;
   int n, i;
+  fd_set sock_set;
+  struct timeval timeout;
+  int did_timeout;
 
-  for (overrun = eolfound = 0; !eolfound; ) {
+  timeout.tv_sec = 60;
+  timeout.tv_usec = 0;
 
-    n = read(_quendi_server_data->csock, buffer, QUENDI_COMMAND_LENGTH);
+  FD_ZERO(&sock_set);
+  FD_SET(quendi_server_data->csock, &sock_set);
+  if (quendi_data_port->sock >= 0)
+    FD_SET(quendi_data_port->sock, &sock_set);
 
-    if (n == 0)
-      return -2;
+  i = quendi_server_data->csock;
+  if (i < quendi_data_port->sock)
+    i = quendi_data_port->sock;
 
-    eolfound = 0;
-    /* check for buffer overrun */
-    for (i = 0; i < QUENDI_COMMAND_LENGTH; ++i)
-      if (buffer[i] == '\n') {
-        buffer[i] = '\0';
-        eolfound = 1;
-        break;
-      }
+  n = select(i + 1, &sock_set, NULL, NULL, &timeout);
 
-    if (!eolfound)
-      overrun = 1;
+  did_timeout = 1;
+  if (quendi_data_port->sock > 0 &&
+      FD_ISSET(quendi_data_port->sock, &sock_set)) {
+    did_timeout = 0;
+    n = read(quendi_data_port->sock, buffer, QUENDI_COMMAND_LENGTH);
+
+    if (n == 0) {
+      printf("data port close\n");
+      return -4;
+    }
   }
 
-  if (overrun)
-    quendi_respond(QUENYA_RESPONSE_SYNTAX_ERROR, "Command Line too Long");
-  else if (i <= 4 || buffer[i - 1] != '\r')
-    quendi_respond(QUENYA_RESPONSE_SYNTAX_ERROR, NULL);
-  else if (buffer[4] != ' ' && buffer[4] != '\r') {
-    printf("'%c' == %i\n", buffer[4], buffer[4]);
-    quendi_respond(QUENYA_RESPONSE_SYNTAX_ERROR, NULL);
-  } else {
-    buffer[i - 1] = '\0';
-    printf("Got: %s\n", buffer);
-    return 0;
+  if (FD_ISSET(quendi_server_data->csock, &sock_set)) {
+    did_timeout = 0;
+    for (overrun = eolfound = 0; !eolfound; ) {
+      n = read(quendi_server_data->csock, buffer, QUENDI_COMMAND_LENGTH);
+
+      if (n == 0)
+        return -2;
+
+      eolfound = 0;
+      /* check for buffer overrun */
+      for (i = 0; i < QUENDI_COMMAND_LENGTH; ++i)
+        if (buffer[i] == '\n') {
+          buffer[i] = '\0';
+          eolfound = 1;
+          break;
+        }
+
+      if (!eolfound)
+        overrun = 1;
+    }
+
+    if (overrun)
+      quendi_respond(QUENYA_RESPONSE_SYNTAX_ERROR, "Command Line too Long");
+    else if (i <= 4 || buffer[i - 1] != '\r')
+      quendi_respond(QUENYA_RESPONSE_SYNTAX_ERROR, NULL);
+    else if (buffer[4] != ' ' && buffer[4] != '\r') {
+      printf("'%c' == %i\n", buffer[4], buffer[4]);
+      quendi_respond(QUENYA_RESPONSE_SYNTAX_ERROR, NULL);
+    } else {
+      buffer[i - 1] = '\0';
+      printf("Got: %s\n", buffer);
+      return 0;
+    }
   }
-  return -1;
+
+  if (did_timeout)
+    return -3;
+  else 
+    return -1;
 }
 
 int quendi_get_next_param(char *buffer, int *nparams, char **params)
@@ -153,7 +196,7 @@ int quendi_dp_open(void)
   int dsock;
 
   addrlen = sizeof(addr);
-  getsockname(_quendi_server_data->csock, (struct sockaddr*)&addr, &addrlen);
+  getsockname(quendi_server_data->csock, (struct sockaddr*)&addr, &addrlen);
   if ((dsock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1)
     berror(warning, "socket");
 
@@ -172,6 +215,8 @@ int quendi_dp_connect(void)
   struct sockaddr_in addr;
   int addrlen;
   struct request_info req;
+  fd_set sock_set;
+  struct timeval timeout;
 
   dsock = quendi_dp_open();
   if (dsock < 1) {
@@ -191,20 +236,40 @@ int quendi_dp_connect(void)
     return 0;
   }
 
-  i = accept(dsock, (struct sockaddr*)&addr, &addrlen);
+  FD_ZERO(&sock_set);
+  FD_SET(dsock, &sock_set);
+
+  timeout.tv_sec = 60;
+  timeout.tv_usec = 0;
+
+  i = select(dsock + 1, &sock_set, NULL, NULL, &timeout);
   if (i == -1)
-    syslog(LOG_WARNING, "dp accept: %m");
+    syslog(LOG_WARNING, "dp select: %m");
+  else if (FD_ISSET(dsock, &sock_set)) {
+    i = accept(dsock, (struct sockaddr*)&addr, &addrlen);
+    if (i == -1)
+      syslog(LOG_WARNING, "dp accept: %m");
+  } else {
+    close(dsock);
+    return -2; /* timeout */
+  }
+
+  if (i == -1) {
+    close(dsock);
+    return -1; /* select or accept error */
+  }
 
   /* tcp wrapper check */
-  request_init(&req, RQ_DAEMON, _quendi_server_data->server_name, RQ_FILE,
-      _quendi_server_data->csock, 0);
+  request_init(&req, RQ_DAEMON, quendi_server_data->server_name, RQ_FILE,
+      quendi_server_data->csock, 0);
   fromhost(&req);
 
   if (!hosts_access(&req)) {
     close(dsock);
-    return -1;
+    return -3; /* host access error */
   }
 
+  close(dsock);
   return i;
 }
 
@@ -232,13 +297,13 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
       case QUENYA_RESPONSE_SERVICE_READY: /* 220 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i %s %s %s/%s Service Ready\r\n", response_num,
-            _quendi_server_data->server_host, _quendi_server_data->server_name,
-            _quendi_server_data->server_version, _quendi_version);
+            quendi_server_data->server_host, quendi_server_data->server_name,
+            quendi_server_data->server_version, quendi_version);
         break;
       case QUENYA_RESPONSE_GOODBYE: /* 221 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i %s Closing Connection\r\n", response_num,
-            _quendi_server_data->server_host);
+            quendi_server_data->server_host);
         break;
       case QUENYA_RESPONSE_PORT_OPENED: /* 222 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
@@ -284,6 +349,10 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Data Port Not Open\r\n", response_num);
         break;
+      case QUENYA_RESPONSE_TIMEOUT: /* 521 */
+        size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
+            "%i Timeout Waiting for Command\r\n", response_num);
+        break;
       case QUENYA_RESPONSE_NOT_IDENTIFIED: /* 530 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Client Not Identified\r\n", response_num);
@@ -295,6 +364,10 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
       case QUENYA_RESPONSE_NO_DATA_STAGED: /* 550 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i No Data Staged\r\n", response_num);
+        break;
+      case QUENYA_RESPONSE_PORT_CLOSE_ERR: /* 620 */
+        size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
+            "%i Data Port Closed\r\n", response_num);
         break;
       default:
         return NULL;
@@ -309,7 +382,7 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
 int quendi_parse(char *buffer, int *nparams, char **params)
 {
   int cmd = quendi_cmdnum(buffer);
-  
+
   *nparams = 0;
 
   if (cmd == QUENYA_COMMAND_IDEN) {
@@ -327,7 +400,7 @@ int quendi_respond(int response_num, const char *message)
   if (quendi_make_response(buffer, response_num, message) == NULL)
     return -1;
 
-  write(_quendi_server_data->csock, buffer, strlen(buffer));
+  write(quendi_server_data->csock, buffer, strlen(buffer));
 
   return 0;
 }
@@ -449,9 +522,9 @@ void quendi_send_spec(int dsock, const char* name, unsigned long pos)
   quendi_respond(QUENYA_RESPONSE_TRANS_COMPLETE, NULL);
 }
 
-void quendi_server_init(struct quendi_data* server_data)
+void quendi_server_init(const struct quendi_server_data_t* server_data)
 {
-  _quendi_server_data = server_data;
+  quendi_server_data = server_data;
   quendi_respond(QUENYA_RESPONSE_SERVICE_READY, NULL);
 }
 

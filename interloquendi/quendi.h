@@ -28,7 +28,7 @@
 #define QUENDI_COMMAND_LENGTH  1024
 #define QUENDI_RESPONSE_LENGTH 1024
 
-struct quendi_data {
+struct quendi_server_data_t {
   const char* server_version;
   const char* server_name;
   const char* server_host;
@@ -37,8 +37,22 @@ struct quendi_data {
   int csock;
 };
 
+struct quendi_data_port_t {
+  int sock;
+  int staged;
+  int persist;
+  int port_active;
+  unsigned frame_size;
+  unsigned long pos;
+  char name[PATH_MAX];
+};
+
 int quendi_access_ok(
     int
+    );
+
+void quendi_add_data_port(
+    const struct quendi_data_port_t*
     );
 
 int quendi_cmdnum(
@@ -92,7 +106,7 @@ void quendi_send_spec(
     );
 
 void quendi_server_init(
-    struct quendi_data*
+    const struct quendi_server_data_t*
     );
 
 void quendi_server_shutdown(
