@@ -35,7 +35,7 @@
 #ifdef BOLOTEST
 #  define FRAME_MARGIN (-12)
 #else
-#  define FRAME_MARGIN (-12)
+#  define FRAME_MARGIN (-2)
 #endif
 
 #define BI0_FRAME_BUFLEN (40)
@@ -713,10 +713,6 @@ int main(int argc, char *argv[]) {
   if ((bbc_fp = open("/dev/bbc", O_RDWR)) < 0)
     merror(MCP_FATAL, "Error opening BBC");
 
-  signal(SIGHUP, CloseBBC);
-  signal(SIGINT, CloseBBC);
-  signal(SIGTERM, CloseBBC);
-
   pthread_mutex_init(&mutex, NULL);
 
 #ifdef BOLOTEST
@@ -738,6 +734,10 @@ int main(int argc, char *argv[]) {
   InitialiseFrameFile(argv[1][0]);
 
   pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
+
+  signal(SIGHUP, CloseBBC);
+  signal(SIGINT, CloseBBC);
+  signal(SIGTERM, CloseBBC);
 
   memset(PointingData, 0, 3*sizeof(struct PointingDataStruct));
 

@@ -1,19 +1,41 @@
 include Makefile.config
+
 CC = gcc
 CFLAGS = -O3 -Wall -D__MCP__ $(BOLOTEST)
 LDFLAGS = -lpthread -lm
+ifeq ($(DEBUG), 1)
+	CFLAGS := $(CFLAGS) -g
+	LDFLAGS := $(LDFLAGS) -g
+endif
 
 OBJS = auxiliary.o commands.o das.o dgps.o framefile.o \
-      ephemeris/creader/Source/ephem_read.o geomag.o isc.o lut.o mcp.o \
-      motors.o pointing.o sched.o sslutNA.o starpos.o tx.o \
-      tx_struct.o
+			 ephemeris/creader/Source/ephem_read.o geomag.o isc.o lut.o mcp.o \
+			 motors.o pointing.o sched.o sslutNA.o starpos.o tx.o \
+			 tx_struct.o
 
-all: mcp
+all::
+ifeq ($(DEBUG), 1)
+		@echo "******************** WARNING ******************************"
+		@echo "Debugging sysmbols are being output to the binary"
+		@echo "Be sure to run \`make clean' before compiling flight version"
+		@echo "******************** WARNING ******************************"
+endif
+
+all:: mcp
+ifeq ($(DEBUG), 1)
+		@echo "******************** WARNING ********************"
+		@echo "Debugging sysmbols are being output to the binary"
+		@echo "******************** WARNING ********************"
+endif
+
+debug::
+	${MAKE} DEBUG=1 all
+
+debug:: all
 
 clean:
 	rm -f mcp || true;
 	rm -f *.o || true;
-	rm -f Makefile.config || true;
 	cd etc && $(MAKE) clean
 
 Makefile.config:
@@ -46,7 +68,7 @@ motors.o: motors.c pointing_struct.h isc_protocol.h command_struct.h tx.h \
 	tx_struct.h mcp.h
 
 pointing.o: pointing.c pointing_struct.h isc_protocol.h command_struct.h \
-		tx_struct.h lut.h sslutNA.h
+	tx_struct.h lut.h sslutNA.h
 
 sched.o: sched.c command_struct.h pointing_struct.h isc_protocol.h tx_struct.h \
 	mcp.h

@@ -23,29 +23,31 @@ int pinIsIn();
 /*        The line is placed   in *line.                                   */
 /*        Returns 1 if succesful, 0 if unsuccesful                         */
 /***************************************************************************/
-int GetLine(FILE *fp, char *line) {
+int GetLine(FILE *fp, char *line)
+{
   char *ret_val;
   int first_char;
 
   do {
-    ret_val=fgets(line, MAX_LINE_LENGTH, fp);
-    first_char=0;
-    while ((line[first_char]==' ') || (line[first_char]=='\t')) first_char++;
+    ret_val = fgets(line, MAX_LINE_LENGTH, fp);
+    first_char = 0;
+    while ((line[first_char] == ' ') || (line[first_char] == '\t'))
+      first_char++;
     line += first_char;
-  } while (((line[0] =='#') || (strlen(line)<2)) && (ret_val!=NULL));
+  } while (((line[0] == '#') || (strlen(line) < 2)) && (ret_val != NULL));
 
-  if (ret_val!=NULL) {
-    return (1); /* a line was read */
-  } else {
-    return(0);  /* there were no valid lines */
-  }
+  if (ret_val != NULL)
+    return 1; /* a line was read */
+  else
+    return 0;  /* there were no valid lines */
 }
 #define CHECK_LAT 34.49
 #define CHECK_LON 104.22
 /*********************************************************************/
 /*            Init Sched Structure                                   */
 /*********************************************************************/
-void InitSched(void) {
+void InitSched(void)
+{
   FILE *fp;
   char line_in[162];
   double hours;
@@ -63,55 +65,60 @@ void InitSched(void) {
 
   /*******************************************/
   /*** Count number of schedule file lines ***/
-  fp = fopen(SCHEDULEFILE,"r");
-  if (fp==NULL) {
+  if ((fp = fopen(SCHEDULEFILE,"r")) == NULL) {
     merror(MCP_ERROR, "sched: Unable to open schedule file");
     S.n_sched = 0;
     return;
   }
-  while (GetLine(fp, line_in)) {
+
+  while (GetLine(fp, line_in))
     S.n_sched++;
-  }
+
   S.n_sched--; /* don't count date line */
 
-  if (S.n_sched>MAX_NSCHED) S.n_sched = MAX_NSCHED;
-  S.p =
-    (struct PointingModeStruct *)
-    malloc(S.n_sched*sizeof(struct PointingModeStruct));
+  if (S.n_sched > MAX_NSCHED)
+    S.n_sched = MAX_NSCHED;
+
+  S.p = (struct PointingModeStruct*)malloc(S.n_sched *
+      sizeof(struct PointingModeStruct));
   if (S.p == NULL)
     merror(MCP_ERROR, "sched: Unable to malloc");
   
-  if (fclose(fp) == EOF) {
+  if (fclose(fp) == EOF)
     merror(MCP_ERROR, "sched: Error on close");
-  }
 
   /**************************/
   /*** Read Starting Time ***/
-  fp = fopen(SCHEDULEFILE,"r");
-  if (fp==NULL) {
-    S.n_sched=0;
+  if ((fp = fopen(SCHEDULEFILE,"r")) == NULL) {
+    merror(MCP_ERROR, "sched: Unable to open schedule file");
+    S.n_sched = 0;
     return;
   }
+
   GetLine(fp, line_in);
   sscanf(line_in,"%d/%d/%d %d:%d:%d", &(ts.tm_mon), &(ts.tm_mday),
 	 &(ts.tm_year),&(ts.tm_hour), &(ts.tm_min), &(ts.tm_sec));
-  if (ts.tm_year<50) ts.tm_year += 100;
-  else ts.tm_year-=1900;
+  if (ts.tm_year < 50)
+    ts.tm_year += 100;
+  else
+    ts.tm_year -= 1900;
   
   ts.tm_isdst = 0;
   ts.tm_mon--; /* Jan is 0 in struct tm.tm_mon, not 1 */
 
-  S.t0 = mktime(&ts)-timezone; 
+  S.t0 = mktime(&ts) - timezone; 
 
   /*************************************************************/
   /** find local comoving siderial date (in siderial seconds) **/
-  dt = (time(NULL)-S.t0)*1.002737909; /*Ref Siderial Time */
+  dt = (time(NULL) - S.t0) * 1.002737909; /*Ref Siderial Time */
   d_lon = CHECK_LON;
-  while (d_lon<0) d_lon+=360.0;
-  while (d_lon>=360.0) d_lon-=360.0;
-  dt -= ((d_lon) * 3600.00 * 24.00/360.0); /* add longitude correction */
+  while (d_lon < 0)
+    d_lon += 360.0;
+  while (d_lon >= 360.0)
+    d_lon -= 360.0;
+  dt -= (d_lon * 3600.00 * 24.00 / 360.0); /* add longitude correction */
 
-  dt/=3600.0;
+  dt /= 3600.0;
   
   mprintf(MCP_SCHED,
       "***********************************************************\n"
@@ -122,8 +129,8 @@ void InitSched(void) {
 
   /***********************/
   /*** Read the events ***/
-  for (i=j=0; i<S.n_sched; i++) {
-    entry_ok=1;
+  for (i = j = 0; i < S.n_sched; i++) {
+    entry_ok = 1;
     GetLine(fp, line_in);
     switch (line_in[0]) {
       case 'v':
@@ -134,7 +141,8 @@ void InitSched(void) {
             &(S.p[j].vaz), &(S.p[j].del));
         S.p[j].mode = P_VBOX;
         rh = S.p[j].h;
-        if (n_fields != 8) entry_ok = 0;
+        if (n_fields != 8)
+          entry_ok = 0;
         break;
       case 'b':
       case 'B':
@@ -144,7 +152,8 @@ void InitSched(void) {
             &(S.p[j].vaz), &(S.p[j].del));
         S.p[j].mode = P_BOX;
         rh = S.p[j].h;
-        if (n_fields != 8) entry_ok = 0;
+        if (n_fields != 8)
+          entry_ok = 0;
         break;
       case 'c':
       case 'C':
@@ -153,67 +162,71 @@ void InitSched(void) {
             &ra, &dec, &(S.p[j].w),
             &(S.p[j].vaz), &(S.p[j].del));
         S.p[j].mode = P_CAP;
-        if (n_fields != 7) entry_ok = 0;
+        if (n_fields != 7)
+          entry_ok = 0;
         break;
       default:
         entry_ok = 0;
         break;
     }
 
-    S.p[j].t = day*24l*3600l + hours*3600l;
+    S.p[j].t = day * 24l * 3600l + hours * 3600l;
 
-    /*     StarPos(GetJulian(S.t0), ra*(M_PI/180.0), dec*(M_PI/180.0), */
-    /*      	    0.0, 0.0, 0.0, 0.0, */
-    /* 	    &(S.p[j].X), &(S.p[j].Y)); */
+    /* StarPos(GetJulian(S.t0), ra * (M_PI / 180.0), dec * (M_PI / 180.0), */
+    /*  	    0.0, 0.0, 0.0, 0.0, */
+    /*  &(S.p[j].X), &(S.p[j].Y)); */
 
-    S.p[j].X = ra/15.0;
+    S.p[j].X = ra / 15.0;
     S.p[j].Y = dec;
 
-    if (!entry_ok) {
+    if (!entry_ok)
       mprintf(MCP_SCHED,
           "****** Warning Entry %d is Malformed: Skipping *****\n", j);
-    } 
-    if (entry_ok) j++;
+
+    if (entry_ok)
+      j++;
   }
-  if (fclose(fp) == EOF) {
+
+  if (fclose(fp) == EOF)
     merror(MCP_ERROR, "sched: Error on close");
-  }
 
-  for (i=0; i<S.n_sched; i++) {
+  for (i = 0; i < S.n_sched; i++) {
     radec2azel(S.p[i].X, S.p[i].Y, S.p[i].t, CHECK_LAT, &az1, &el1);
-    if (i==S.n_sched-1) {
+    if (i == S.n_sched - 1)
       radec2azel(S.p[i].X, S.p[i].Y, S.p[i].t, CHECK_LAT, &az2, &el2);
-    } else {
-      radec2azel(S.p[i].X, S.p[i].Y, S.p[i+1].t, CHECK_LAT, &az2, &el2);
-    }
+    else
+      radec2azel(S.p[i].X, S.p[i].Y, S.p[i + 1].t, CHECK_LAT, &az2, &el2);
 
-    if (S.p[i].mode == P_CAP) {
+    if (S.p[i].mode == P_CAP)
       rh = S.p[i].w;
-    } else {
+    else
       rh = S.p[i].h / 2.;
-    }
 
     el_range_warning = 0;
-    if (el1>el2) {
-      el1+= rh;
-      el2-= rh;
-      if (el1 > 60.0) el_range_warning = 1;
-      if (el2 < 25.0) el_range_warning = 1;
+    if (el1 > el2) {
+      el1 += rh;
+      el2 -= rh;
+      if (el1 > 60.0)
+        el_range_warning = 1;
+      if (el2 < 25.0)
+        el_range_warning = 1;
     } else {
-      el1-= rh;
-      el2+= rh;
-      if (el2 > 60.0) el_range_warning = 1;
-      if (el1 < 25.0) el_range_warning = 1;
+      el1 -= rh;
+      el2 += rh;
+      if (el2 > 60.0)
+        el_range_warning = 1;
+      if (el1 < 25.0)
+        el_range_warning = 1;
     }
     if (el_range_warning) {
       mputs(MCP_SCHED, "******************************************\n"
           "*** Warning: El Range\n");
       mprintf(MCP_SCHED, "*** LST: %7.4f Ra: %8.3f  Dec: %8.3f\n",
-          S.p[i].t/3600.0, S.p[i].X, S.p[i].Y);
+          S.p[i].t / 3600.0, S.p[i].X, S.p[i].Y);
     }
     mprintf(MCP_SCHED,
         "*** %2d LST: %7.4f Az: %8.3f - %8.3f El: %8.3f - %8.3f\n", i,
-        S.p[i].t/3600.0, az1, az2, el1, el2);
+        S.p[i].t / 3600.0, az1, az2, el1, el2);
   }
   mputs(MCP_SCHED,
       "***********************************************************\n");
@@ -223,9 +236,13 @@ void DoSched(void) {
   time_t t;
   double dt;
   double d_lon;
-  static int last_is=-1;
+  static int last_is = -1;
   int i_sched, i_point;
   int i_dgps;
+
+  /* no schedule file case */
+  if (S.n_sched < 1)
+    return;
 
   i_point = GETREADINDEX(point_index);
 
@@ -236,7 +253,7 @@ void DoSched(void) {
   }
 
   i_dgps = GETREADINDEX(dgpspos_index);
-  if (DGPSPos[i_dgps].at_float) {
+  if (DGPSPos[i_dgps].at_float)
     if (pinIsIn()) {
       mputs(MCP_INFO, "auto-unlocking pin\n");
       CommandData.pumps.lock_out = 1;
@@ -251,31 +268,35 @@ void DoSched(void) {
       CommandData.pointing_mode.h = 0;
       // start autofocus
       CommandData.ISCState.abort = 1;
-      CommandData.ISC_autofocus =300; 
+      CommandData.ISC_autofocus = 300; 
       CommandData.old_ISC_focus = CommandData.ISCState.focus_pos;
       CommandData.ISCState.focus_pos = FOCUS_RANGE;
       // out of sched mode for a while
       CommandData.pointing_mode.t = t + 600;
       return;
     }
-  }
 
   /*************************************************************/
   /** find local comoving siderial date (in siderial seconds) **/
-  dt = (PointingData[i_point].t-S.t0)*1.002737909; /*Ref Siderial Time */
+  dt = (PointingData[i_point].t - S.t0) * 1.002737909; /*Ref Siderial Time */
   d_lon = PointingData[i_point].lon;
-  while (d_lon<0) d_lon+=360.0;
-  while (d_lon>=360.0) d_lon-=360.0;
-  dt -= ((d_lon) * 3600.00 * 24.00/360.0); /* add longitude correction */
+  while (d_lon < 0)
+    d_lon += 360.0;
+  while (d_lon >= 360.0)
+    d_lon -= 360.0;
+  dt -= ((d_lon) * 3600.00 * 24.00 / 360.0); /* add longitude correction */
 
   /******************/
   /** find i_sched **/
   i_sched = last_is;
-  if (i_sched<0) i_sched=0;
-  while ((dt>S.p[i_sched].t) && (i_sched<S.n_sched-1)) i_sched++;
-  while ((dt<S.p[i_sched].t) && (i_sched>0)) i_sched--;
+  if (i_sched < 0)
+    i_sched = 0;
+  while ((i_sched < S.n_sched - 1) && (dt > S.p[i_sched].t))
+    i_sched++;
+  while ((i_sched > 0) && (dt < S.p[i_sched].t))
+    i_sched--;
 
-  if (i_sched!=last_is) {
+  if (i_sched != last_is) {
     /************************************************/
     /** Copy scheduled scan mode into current mode **/
     CommandData.pointing_mode.mode = S.p[i_sched].mode;
