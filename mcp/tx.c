@@ -1211,14 +1211,16 @@ void StoreData(unsigned int* Txframe,
   i_point = GETREADINDEX(point_index);
   WriteFast(i_az, (unsigned int)(PointingData[i_point].az * 65536.0/360.0));
   WriteFast(i_el, (unsigned int)(PointingData[i_point].el * 65536.0/360.0));
-  WriteFast(i_MAG_AZ, (unsigned int)(ACSData.mag_az * 65536.0/360.0));
+  WriteFast(i_MAG_AZ,
+	    (unsigned int)(PointingData[i_point].mag_az * 65536.0/360.0));
   t = PointingData[i_point].lst;
   WriteSlow(i_LST, j_LST, t >> 16);
   WriteSlow(i_LST + 1, j_LST, t);
   WriteSlow(i_LAT, j_LAT, (int)(PointingData[i_point].lat * DEG2I));
   WriteSlow(i_LON, j_LON, (int)(PointingData[i_point].lon * DEG2I));
 
-  WriteSlow(i_MAG_MODEL, j_MAG_MODEL, (int)(ACSData.mag_model *DEG2I));
+  WriteSlow(i_MAG_MODEL, j_MAG_MODEL,
+	    (int)(PointingData[i_point].mag_model *DEG2I));
   
   /************* Pointing mode fields *************/
   WriteSlow(i_AZ_MODE, j_AZ_MODE, (int)(CommandData.pointing_mode.az_mode));

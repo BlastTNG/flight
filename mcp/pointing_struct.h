@@ -50,8 +50,8 @@ extern int vsc_index;
 /*     Used: Main thread;                     */
 /*  Does not need to be a curcular buffer...  */
 struct ACSDataStruct {
-  double mag_az;   // degrees
-  double mag_model; // degrees
+  double mag_x; // counts; bias removed
+  double mag_y; // counts; bias removed
   double enc_elev; // degrees
   double clin_elev;// counts
   double gyro1;    // deg/s
@@ -132,6 +132,8 @@ struct PointingDataStruct {
   int mcp_frame;
   time_t t;
   time_t lst;
+  double mag_az;   // degrees
+  double mag_model; // degrees
 };
 
 extern struct PointingDataStruct PointingData[3];

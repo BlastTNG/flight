@@ -75,10 +75,6 @@ void pushDiskFrame(unsigned short *Rxframe);
 
 void MakeTxFrame(void);
 
-/* Functions in the file 'geomag.c' */
-void MagModelInit(int maxdeg);
-void GetMagModel(float alt, float glat, float glon, float time,
-    float *dec, float *dip, float *ti, float *gv);
 
 void InitSched();
 
@@ -123,91 +119,17 @@ void SigPipe(int signal) {
   pthread_exit(NULL);
 }
 
-/************************************************************************
-*                                                                      *
-*   MagRead:  readout magnetometer, subtracting bais from x and        *
-*             y and determine angle                                    *
-*                                                                      *
- ************************************************************************/
-void MagRead(unsigned short *Rxframe) {
-  static int i_mag_x = -1;
-  static int i_mag_y = -1;
-  static int i_mag_bias = -1;
-
-  double mag_az, x_comp, y_comp, bias;
-  float year;
-  static float dec, dip, ti, gv;
-  static time_t t, oldt;
-  struct tm now;
-  int i_point_read;
-  
-  i_point_read = GETREADINDEX(point_index);
-
-  /******** Obtain correct indexes the first time here ***********/
-  if (i_mag_x == -1) {
-    FastChIndex("mag_x", &i_mag_x);
-    FastChIndex("mag_y", &i_mag_y);
-    FastChIndex("mag_bias", &i_mag_bias);
-
-    /* Initialise magnetic model reader: I'm not sure what the '12' is, but */
-    /* I think it has something to do with the accuracy of the modelling -- */
-    /* probably shouldn't change this value.  (Adam H.) */
-    MagModelInit(12);
-    oldt = -1;
-  }
-
-  bias = (double)(Rxframe[i_mag_bias]);
-  x_comp = (double)(Rxframe[i_mag_x]) - bias;
-  y_comp = (double)(Rxframe[i_mag_y]) - bias;
-
-  /* Every 300 s = 5 min, get new data from the magnetic model. */
-  /* */
-  /* dec = magnetic declination (field direction in az) */
-  /* dip = magnetic inclination (field direction in ele) */
-  /* ti  = intensity of the field in nT */
-  /* gv  = modified form of dec used in polar reasons -- haven't researched */
-  /*       this one */
-  /* */
-  /* The year must be between 2000.0 and 2005.0 with current model data */
-  /* */
-  /* The functions called are in 'geomag.c' (Adam. H) */
-  if ((t = PointingData[i_point_read].t) > oldt + 300) {
-    oldt = t;
-    gmtime_r(&t, &now);
-    year = 1900 + now.tm_year + now.tm_yday / 365.25;
-
-    GetMagModel(SIPData.GPSpos.alt / 1000.0, PointingData[i_point_read].lat,
-        PointingData[i_point_read].lon, year, &dec, &dip, &ti, &gv);
-
-    dec *= M_PI / 180.0;
-    dip *= M_PI / 180.0;
-  }
-
-  /* The dec is the correction to the azimuth of the magnetic field. */
-  /* If negative is west and positive is east, then: */
-  /* */
-  /*   true bearing = magnetic bearing + dec */
-  /* */
-  /* Thus, depending on the sign convention, you have to either add or */
-  /* subtract dec from az to get the true bearing. (Adam H.) */
-
-  mag_az = atan2(y_comp, x_comp) + dec + MAG_ALIGNMENT + M_PI;
-  mag_az *= 180.0/M_PI;
-
-  ACSData.mag_az = mag_az;
-  ACSData.mag_model = dec*180.0/M_PI;
-
-  printf("%g\n", ACSData.mag_model);
-  
-}
-
 void GetACS(unsigned short *Rxframe){
   double enc_elev, gyro1, gyro2, gyro3;
+  double x_comp, y_comp, bias;
   static int i_GYRO1 = -1;
   static int i_GYRO2 = -1;
   static int i_GYRO3 = -1;
   static int i_enc_elev = -1;
   static int i_clin_elev = -1;
+  static int i_mag_x = -1;
+  static int i_mag_y = -1;
+  static int i_mag_bias = -1;
   unsigned int rx_frame_index = 0;
   int i_ss;
 
@@ -217,6 +139,9 @@ void GetACS(unsigned short *Rxframe){
     FastChIndex("gyro1", &i_GYRO1);
     FastChIndex("gyro2", &i_GYRO2);
     FastChIndex("gyro3", &i_GYRO3);
+    FastChIndex("mag_x", &i_mag_x);
+    FastChIndex("mag_y", &i_mag_y);
+    FastChIndex("mag_bias", &i_mag_bias);
   }
 
   rx_frame_index = ((Rxframe[1] & 0x0000ffff) |
@@ -229,15 +154,21 @@ void GetACS(unsigned short *Rxframe){
   gyro2 = (double)(Rxframe[i_GYRO2]-25535.0)*0.00091506980885;
   gyro3 = (double)(Rxframe[i_GYRO3]-25600.0)*0.00091506980885;
 
+  bias = (double)(Rxframe[i_mag_bias]);
+  x_comp = (double)(Rxframe[i_mag_x]) - bias;
+  y_comp = (double)(Rxframe[i_mag_y]) - bias;
+
   i_ss = ss_index;
 
   ACSData.t = time(NULL);
   ACSData.mcp_frame = rx_frame_index;
-  MagRead(Rxframe);
   ACSData.enc_elev = enc_elev;
   ACSData.gyro1 = gyro1;
   ACSData.gyro2 = gyro2;
   ACSData.gyro3 = gyro3;
+  ACSData.mag_x = x_comp;
+  ACSData.mag_y = y_comp;
+
   ACSData.clin_elev = (double)Rxframe[i_clin_elev];
 
 }

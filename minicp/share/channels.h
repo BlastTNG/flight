@@ -30,10 +30,6 @@
 //#define ENC_ELEV_OFFSET 101.166
 #define ENC_ELEV_OFFSET 192.25
 
-/* Angle between magnetometer aligment and pointing alignment -- to be */
-/* calibrated. */
-#define MAG_ALIGNMENT  0.0
-
 #define LOCKIN_C2V (5.43736e-07)
 #define LOCKIN_OFFSET (-1.1403)
 struct ChannelStruct {

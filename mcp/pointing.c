@@ -22,6 +22,11 @@ void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
                 double *el);
 double getlst(time_t t, double lon); // defined in starpos.c
 
+/* Functions in the file 'geomag.c' */
+void MagModelInit(int maxdeg);
+void GetMagModel(float alt, float glat, float glon, float time,
+    float *dec, float *dip, float *ti, float *gv);
+
 int point_index=0;
 struct PointingDataStruct PointingData[3];
 
@@ -71,6 +76,74 @@ struct {
 
 
 #define M2DV(x) ((x/60.0)*(x/60.0))
+
+#define MAG_ALIGNMENT (0.0)
+/************************************************************************
+*                                                                      *
+*   MagRead:  use the world magnetic model, atan2 and a lookup table   *
+*             to convert mag_x and mag_y to mag_az                     *
+*                                                                      *
+ ************************************************************************/
+void MagConvert() {
+  double mag_az;
+  float year;
+  static float dec, dip, ti, gv;
+  static time_t t, oldt;
+  struct tm now;
+  int i_point_read;
+  static int firsttime = 1;
+  
+  i_point_read = GETREADINDEX(point_index);
+
+  /******** Obtain correct indexes the first time here ***********/
+  if (firsttime) {
+    /* Initialise magnetic model reader: I'm not sure what the '12' is, but */
+    /* I think it has something to do with the accuracy of the modelling -- */
+    /* probably shouldn't change this value.  (Adam H.) */
+    MagModelInit(12);
+    oldt = -1;
+    firsttime = 0;
+  }
+
+  /* Every 300 s = 5 min, get new data from the magnetic model. */
+  /* */
+  /* dec = magnetic declination (field direction in az) */
+  /* dip = magnetic inclination (field direction in ele) */
+  /* ti  = intensity of the field in nT */
+  /* gv  = modified form of dec used in polar reasons -- haven't researched */
+  /*       this one */
+  /* */
+  /* The year must be between 2000.0 and 2005.0 with current model data */
+  /* */
+  /* The functions called are in 'geomag.c' (Adam. H) */
+  if ((t = PointingData[i_point_read].t) > oldt + 300) {
+    oldt = t;
+    gmtime_r(&t, &now);
+    year = 1900 + now.tm_year + now.tm_yday / 365.25;
+
+    GetMagModel(SIPData.GPSpos.alt / 1000.0, PointingData[i_point_read].lat,
+        PointingData[i_point_read].lon, year, &dec, &dip, &ti, &gv);
+
+    dec *= M_PI / 180.0;
+    dip *= M_PI / 180.0;
+  }
+
+  /* The dec is the correction to the azimuth of the magnetic field. */
+  /* If negative is west and positive is east, then: */
+  /* */
+  /*   true bearing = magnetic bearing + dec */
+  /* */
+  /* Thus, depending on the sign convention, you have to either add or */
+  /* subtract dec from az to get the true bearing. (Adam H.) */
+
+  mag_az = atan2(ACSData.mag_y, ACSData.mag_x) + dec + MAG_ALIGNMENT + M_PI;
+  mag_az *= 180.0/M_PI;
+
+  PointingData[point_index].mag_az = mag_az;
+  PointingData[point_index].mag_model = dec*180.0/M_PI;  
+}
+
+
 
 #define GY_HISTORY 300
 void RecordHistory(int index) {
@@ -270,6 +343,7 @@ void Pointing(){
 
   /*******************************/
   /**      do az solution      **/
+  MagConvert();
   EvolveAzSolution(&NullAz,
 		   ACSData.gyro2 + PointingData[i_point_read].gy2_offset,
 		   ACSData.gyro3 + PointingData[i_point_read].gy3_offset,
