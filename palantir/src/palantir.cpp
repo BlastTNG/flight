@@ -554,7 +554,7 @@ void MainForm::GetXMLInfo(char *layoutfile) {
 
     currBox->caption = FindAttribute("caption", "BOX");
     currBox->row = QStringToInt(FindAttribute("row", "BOX"));
-    currBox->col = QStringToInt(FindAttribute("col", "BOX"));
+    currBox->col = QStringToInt(FindAttribute("col", "BOX"))-1;
     currBox->rowspan = QStringToInt(XMLInfo->GetAttribute("rowspan"));
     currBox->colspan = QStringToInt(XMLInfo->GetAttribute("colspan"));
 
@@ -1013,7 +1013,7 @@ void MainForm::AddAlarmToList(QList<struct AlarmInfo> *AlarmList,
 
 
 //-------------------------------------------------------------
-// 
+//
 // GetSlope: performs linear regression on the Deriv's buffer to
 //     obtain a slope.  Since we're only calculating the slope
 //     and not the intercept, and we have no sigmas, we can pare
@@ -1038,7 +1038,7 @@ double MainForm::GetSlope(struct Deriv *currDeriv) {
   f = (j - 1) / 2.;  // = sum(i, i=0..j) / j (since the x's are equally spaced)
 
   for (i = 0; i < j; ++i) {
-    t = ((i + length - first) % length) - f;  // true fifo index 
+    t = ((i + length - first) % length) - f;  // true fifo index
     v += t * t;
     b += t * currDeriv->data[i];
   }
@@ -1048,7 +1048,7 @@ double MainForm::GetSlope(struct Deriv *currDeriv) {
   // Calculated slope is wrt the UPDATETIME period (which is specified in
   // milliseconds), so "first" divide by UPDATETIME to get wrt milliseconds and
   // then multiply by the user specified time factor
-  
+
   return b * currDeriv->tfactor / UPDATETIME;
 }
 
@@ -1096,11 +1096,11 @@ void MainForm::UpdateData() {
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in from disk
         if (DataSource->readField(indata, currLabel->src,
-              DataSource->numFrames() - 1, 1) == 0) {
+              DataSource->numFrames() - 2, 1) == 0) {
           if (currLabel->laststyle != 1) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
-            currQtLabel->setText(tr("Read Error"));
+            currQtLabel->setText(tr("Num Read Error"));
             currLabel->laststyle = 1;
           }
         } else {
@@ -1446,8 +1446,8 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
       font.setPointSize(2);
       currQtPlaceHolder->setFont(font);
 
-      Spacer.append(new QSpacerItem(5, 5, QSizePolicy::Expanding,
-            QSizePolicy::Minimum));
+      Spacer.append(new QSpacerItem(5, 5, QSizePolicy::Fixed,
+            QSizePolicy::Fixed));
       currSpacer = Spacer.current();
 
       currQtBoxLayout->addWidget(currQtPlaceHolder, 0, 1);
@@ -1521,7 +1521,7 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
   InfoPlaceHolder2->setFont(font);
 
   InfoSpacer = new QSpacerItem(5, 5, QSizePolicy::Expanding,
-      QSizePolicy::Minimum);
+      QSizePolicy::Fixed);
 
   QuitButton = new QPushButton(InfoBox, "Exit");
   QuitButton->setText(tr("Exit"));
@@ -1543,8 +1543,8 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
   InfoLayout->addItem(InfoSpacer, 1, 7);
   InfoLayout->addWidget(QuitButton, 2, 8);
 
-  MainFormSpacer = new QSpacerItem(5, 5, QSizePolicy::Minimum,
-      QSizePolicy::Expanding);
+  MainFormSpacer = new QSpacerItem(5, 5, QSizePolicy::Fixed,
+      QSizePolicy::Fixed);
 
   MainFormLayout = new QVBoxLayout(this);
   MainFormLayout->setSpacing(6);
