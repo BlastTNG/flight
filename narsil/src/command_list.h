@@ -1,7 +1,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 90         /* total number of named single word cmds */
-#define N_MCOMMANDS 62         /* total number of multiword commands */
+#define N_MCOMMANDS 64         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -80,7 +80,7 @@ enum multiCommand {
   az_el_goto,        az_gain,           az_scan,          bal_gain,
   bal_level,         osc_set_focus,     osc_set_aperture, osc_save_period,
   bias1_level,       bias2_level,       bias3_level,      isc_blob_centre,
-  box,               osc_pixel_centre,  osc_blob_centre,
+  box,               osc_pixel_centre,  osc_blob_centre,  isc_gain,
   cal_pulse,         cal_repeat,        cap,              isc_catalogue,
   az_el_trim,        isc_det_set,       drift,            el_gain,
   isc_integrate,     osc_integrate,     osc_det_set,      osc_max_blobs,
@@ -89,7 +89,7 @@ enum multiCommand {
   lock,              isc_max_blobs,     outer_level,      phase,
   pivot_gain,        isc_pixel_centre,  ra_dec_goto,      ra_dec_set,
   roll_gain,         isc_set_aperture,  isc_set_focus,    setpoints,
-  spare_heat,        spare_level,      t_gyrobox,
+  spare_heat,        spare_level,      t_gyrobox,         osc_gain,
   t_gyro_gain,       timeout,           isc_tolerances,   vcap,
   vbox,              alice_file,        gyro_override,    isc_hold_current,
   isc_save_period,   back_emf,          osc_offset,       plugh

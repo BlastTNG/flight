@@ -521,6 +521,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {COMMAND(isc_gain), "set CCD preamp gain and offset", GR_OSC_PARAM, 2,
+    {
+      {"Gain", 0.1, 100, 'f', "ISC_CCD_GAIN"},
+      {"Offset", -4096, 4096, 'i', "ISC_CCD_OFFSET"}
+    }
+  },
+
   /***************************************/
   /********* OSC Commanding **************/
   {COMMAND(osc_set_focus), "set focus position", GR_OSC_PARAM, 1,
@@ -598,6 +605,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(osc_hold_current), "set OSC stepper motor hold current", GR_OSC_HOUSE, 1,
     {
       {"Level (%)", 0, 50, 'i', "OSC_HOLD_I"}
+    }
+  },
+
+  {COMMAND(osc_gain), "set CCD preamp gain and offset", GR_OSC_PARAM, 2,
+    {
+      {"Gain", 0.1, 100, 'f', "OSC_CCD_GAIN"},
+      {"Offset", -4096, 4096, 'i', "OSC_CCD_OFFSET"}
     }
   },
 

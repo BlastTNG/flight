@@ -431,6 +431,10 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_temp3",    'w', LOOP4, 17,            1./200.,             0.0, 'u'},
   {"osc_temp4",    'w', LOOP4, 18,            1./200.,             0.0, 'u'},
   {"osc_pressure1",'w', LOOP4, 19,           1./2000.,             0.0, 'u'},
+  {"isc_gain",     'w', LOOP4, 20,        100./65536.,             0.0, 'u'},
+  {"isc_offset",   'w', LOOP4, 21,                1.0,             0.0, 's'},
+  {"osc_gain",     'w', LOOP4, 22,        100./65536.,             0.0, 'u'},
+  {"osc_offset",   'w', LOOP4, 23,                1.0,             0.0, 's'},
 
   END_OF_CHANNELS
 };

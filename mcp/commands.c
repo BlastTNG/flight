@@ -750,11 +750,14 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.ISCState[0].hold_current = ivalues[0];
   else if (command == isc_save_period)
     CommandData.ISCControl[0].save_period = ivalues[0] * 100;
+  else if (command == isc_gain) {
+    CommandData.ISCState[0].gain = rvalues[0];
+    CommandData.ISCState[0].offset = ivalues[1];
 
 
     /***************************************/
     /********* OSC Commanding  *************/
-  else if (command == osc_set_focus) {
+  } else if (command == osc_set_focus) {
     CommandData.ISCState[1].focus_pos = ivalues[0];
   } else if (command == osc_set_aperture) {
     CommandData.ISCState[1].ap_pos = ivalues[0];
@@ -792,8 +795,11 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.ISCState[1].hold_current = ivalues[0];
   else if (command == osc_save_period)
     CommandData.ISCControl[1].save_period = ivalues[0] * 100;
+  else if (command == osc_gain) {
+    CommandData.ISCState[1].gain = rvalues[0];
+    CommandData.ISCState[1].offset = ivalues[1];
 
-  else {
+  } else {
     mputs(MCP_WARNING, "Invalid Multi Word Command***\n");
     return; /* invalid command - don't update */
   }

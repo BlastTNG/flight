@@ -249,6 +249,8 @@ void StoreStarCameraData(int index, int which)
   static struct NiosStruct* Temp3Addr[2];
   static struct NiosStruct* Temp4Addr[2];
   static struct NiosStruct* PressureAddr[2];
+  static struct NiosStruct* GainAddr[2];
+  static struct NiosStruct* OffsetAddr[2];
 
   if (firsttime[which]) {
     firsttime[which] = 0;
@@ -301,6 +303,8 @@ void StoreStarCameraData(int index, int which)
     Temp3Addr[which] = GetSCNiosAddr("temp3", which);
     Temp4Addr[which] = GetSCNiosAddr("temp4", which);
     PressureAddr[which] = GetSCNiosAddr("pressure1", which);
+    GainAddr[which] = GetSCNiosAddr("gain", which);
+    OffsetAddr[which] = GetSCNiosAddr("offset", which);
   }
 
   /** ISC Fields **/
@@ -428,6 +432,9 @@ void StoreStarCameraData(int index, int which)
       (unsigned int)(ISCSolution[which][i_isc].temp4 * 200.), NIOS_QUEUE);
   WriteData(PressureAddr[which],
       (unsigned int)(ISCSolution[which][i_isc].pressure1 * 2000.), NIOS_QUEUE);
+  WriteData(GainAddr[which], (unsigned int)(ISCSentState[which].gain * 655.36),
+        NIOS_QUEUE);
+  WriteData(OffsetAddr[which], ISCSentState[which].offset, NIOS_QUEUE);
 
   WriteData(FpulseAddr[which],
       (unsigned int)(CommandData.ISCControl[which].fast_pulse_width),
