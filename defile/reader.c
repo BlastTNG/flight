@@ -270,7 +270,7 @@ void FrameFileReader(void)
                   new_chunk = 1;
                 } else
                   /* no changes wait and try again */
-                  usleep(5000000);
+                  usleep(100000);
               }
             }
         }
