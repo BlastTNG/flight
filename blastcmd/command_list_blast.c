@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.49 $";
+const char command_list_serial[] = "$Revision: 2.50 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -458,15 +458,15 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /****************************************/
   /*************** Misc.  *****************/
-  {COMMAND(apcu_charge), "Set the ACS PCU battery charge level", GR_ELECT, 1,
+  {COMMAND(apcu_charge), "Set the ACS PCU battery charge level (V)", GR_ELECT, 1,
     {
-      {"Level", 0, 100, 'i', "APCU_REG"}
+      {"Level", 27.99, 29.67, 'f', "APCU_REG"}
     }
   },
 
-  {COMMAND(dpcu_charge), "Set the DAS PCU battery charge level", GR_ELECT, 1,
+  {COMMAND(dpcu_charge), "Set the DAS PCU battery charge level (V)", GR_ELECT, 1,
     {
-      {"Level", 0, 100, 'i', "DPCU_REG"}
+      {"Level", 27.99, 29.67, 'f', "DPCU_REG"}
     }
   },
 

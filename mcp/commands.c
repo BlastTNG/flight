@@ -786,9 +786,16 @@ void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues)
   else if (command == plugh) /* A hollow voice says "Plugh". */
     CommandData.plover = ivalues[0];
   else if (command == apcu_charge)
-    CommandData.apcu_reg = ivalues[0];
-  else if (command == dpcu_charge)
-    CommandData.dpcu_reg = ivalues[0];
+    {
+    CommandData.apcu_reg = 100.0*(ivalues[0]-28.0209)/0.0163818; // v_topoff
+    if (CommandData.apcu_reg<0) CommandData.apcu_reg=0;
+    if (CommandData.apcu_reg>100) CommandData.apcu_reg=100;
+  }
+  else if (command == dpcu_charge) {
+    CommandData.dpcu_reg = 100.0*(ivalues[0]-28.0209)/0.0163818; // v_topoff
+    if (CommandData.dpcu_reg<0) CommandData.dpcu_reg=0;
+    if (CommandData.dpcu_reg>100) CommandData.dpcu_reg=100;
+  }
 
   /***************************************/
   /*************** Bias  *****************/
