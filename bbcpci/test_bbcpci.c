@@ -8,7 +8,7 @@
 
 #include "bbc_pci.h"
 
-#define FRAMELEN  0x110
+#define FRAMELEN  0x0
 
 int main(int argc, char *argv[]) {
   int fp;
@@ -39,21 +39,12 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "%08x %08x\n", i[j * 2], i[j * 2 + 1]);
   }
 
-  /* 
-  usleep(6000000); 
-  for (oldsecret = 0xabcdabcd, k = 0; k < 100000; k++) {
-    ioctl(fp, BBCPCI_IOC_SECRET, &secret);
-    if (oldsecret != secret[0])
-      printf("===> %08x %08x\n", secret[0], secret[1]);
-    oldsecret = secret[0];
-  }
-  */
   i[0] = BBCPCI_WFRAME1_ADD(0); 
   i[1] = BBC_FSYNC | 1;
   i[2] = BBCPCI_WFRAME1_ADD(1); 
-  i[3] = BBC_DATA((0xb000 | 1)) | BBC_NODE(9) | BBC_CH(0) | BBC_WRITE;
+  i[3] = BBC_DATA((0xb000 | 1)) | BBC_NODE(1) | BBC_CH(0) | BBC_WRITE;
   i[4] = BBCPCI_WFRAME1_ADD(2); 
-  i[5] = BBC_DATA((0xb000 | 2)) | BBC_NODE(9) | BBC_CH(1) | BBC_WRITE;
+  i[5] = BBC_DATA((0xb000 | 2)) | BBC_NODE(1) | BBC_CH(1) | BBC_WRITE;
   i[6] = BBCPCI_WFRAME1_ADD(3);
   i[7] = BBC_ENDWORD;
   for (k = 0; k < 4; k++) {
@@ -79,6 +70,7 @@ int main(int argc, char *argv[]) {
   while (1) {
     for (k = 0; read(fp, (void *)(&j), sizeof(unsigned int)) == 4; k++) {
       printf("%03x %08x\n", k, j);  
+      write(fp, (void *)&i[2], 2 * BBCPCI_SIZE_UINT);
     }
   }
   

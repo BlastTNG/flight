@@ -4,6 +4,7 @@
 #include <linux/init.h>
 #include <linux/ioport.h>
 #include <linux/pci.h>
+#include <linux/delay.h>
 #include <asm/io.h>
 #include <asm/uaccess.h>
 
@@ -51,6 +52,7 @@ MODULE_DEVICE_TABLE(pci, bbc_pci_tbl);
 #define TX_BUFFER_SIZE 0x4000
 #define BI0_BUFFER_SIZE (624*25)
 
+extern volatile unsigned long jiffies;
 
 static struct {
   unsigned long mem_base_raw;
@@ -69,6 +71,7 @@ static struct {
   volatile int i_out;
   unsigned data[BBC_WFIFO_SIZE];
   volatile int status;
+  volatile int n;
 } bbc_wfifo;
 
 #define BI0_WFIFO_SIZE (BI0_BUFFER_SIZE)
@@ -77,6 +80,7 @@ static struct {
   volatile int i_out;
   unsigned short data[BI0_WFIFO_SIZE];
   volatile int status;
+  volatile int n;
 } bi0_wfifo;
 
 
@@ -87,43 +91,48 @@ static void timer_callback(unsigned long dummy)
   static unsigned short out_data[2];
   static int idx = 0;
 
+/*   static int all = 0; */
+/*   static unsigned long old = 0; */
+
+/*   all++; */
+/*   if(all == 1000) {  */
+/*     printk(KERN_EMERG "Ciaooooo------------------------------ %d %ld %x\n", */
+/* 	   all, (jiffies- old), bbc_wfifo.n); */
+/*         old = jiffies; */
+/*     all = 0; */
+/*   } */
+
   if(readl(bbc_drv.mem_base + BBCPCI_ADD_COMREG)) {
     bbc_drv.timer.expires = jiffies + 1;
     add_timer(&bbc_drv.timer);
     return;
   }
-
+  
   if(bbc_wfifo.status & FIFO_ENABLED) {
     wp = readl(bbc_drv.mem_base + BBCPCI_ADD_WRITE_BUF_P);
     if(wp < BBCPCI_ADD_IR_WRITE_BUF) {
       nwritten = 0;
-      while( (nwritten < BBCPCI_IR_WRITE_BUF_SIZE) &&
-	     !(bbc_wfifo.status & FIFO_EMPTY) ) {
-	
+      while( (nwritten < BBCPCI_IR_WRITE_BUF_SIZE) && bbc_wfifo.n ) {
 	wp += 2*BBCPCI_SIZE_UINT;
 	writel(bbc_wfifo.data[bbc_wfifo.i_out+1], bbc_drv.mem_base + wp + BBCPCI_SIZE_UINT);
 	writel(bbc_wfifo.data[bbc_wfifo.i_out], bbc_drv.mem_base + wp);
-	
-      if(bbc_wfifo.i_out == (BBC_WFIFO_SIZE - 2)) {
-	bbc_wfifo.i_out = 0;
-      } else {
-	bbc_wfifo.i_out += 2;
-      }
-      
-      bbc_wfifo.status &= ~FIFO_FULL;
-      if(bbc_wfifo.i_in == bbc_wfifo.i_out) bbc_wfifo.status |= FIFO_EMPTY; 
-      
-      nwritten++;
+	if(bbc_wfifo.i_out == (BBC_WFIFO_SIZE - 2)) {
+	  bbc_wfifo.i_out = 0;
+	} else {
+	  bbc_wfifo.i_out += 2;
+	}
+	nwritten++;
+	bbc_wfifo.n -= 2;
       }
       if(nwritten) {
 	writel(wp, bbc_drv.mem_base + BBCPCI_ADD_WRITE_BUF_P);
       }
     }
   } 
-
+  
   if(bi0_wfifo.status & FIFO_ENABLED) {
     rp = readl(bbc_drv.mem_base + BBCPCI_ADD_BI0_RP);
-    while( !(bi0_wfifo.status & FIFO_EMPTY) ) {
+    while( bi0_wfifo.n ) {
       wp = readl(bbc_drv.mem_base + BBCPCI_ADD_BI0_WP);
       if(wp == rp) break;
       out_data[idx++] = bi0_wfifo.data[bi0_wfifo.i_out];
@@ -132,16 +141,15 @@ static void timer_callback(unsigned long dummy)
       } else {
 	bi0_wfifo.i_out++;
       }
-      bi0_wfifo.status &= ~FIFO_FULL;
-      if(bi0_wfifo.i_in == bi0_wfifo.i_out) bi0_wfifo.status |= FIFO_EMPTY;
       if(idx == 2) {
 	idx = 0;
-/* 	writel(*(unsigned *)out_data, bbc_drv.mem_base + wp); */
-/* 	writel(wp, bbc_drv.mem_base + BBCPCI_ADD_BI0_WP); */
+	writel(*(unsigned *)out_data, bbc_drv.mem_base + wp);
+	writel(wp, bbc_drv.mem_base + BBCPCI_ADD_BI0_WP);
       }
+      bi0_wfifo.n--;
     }
   }
-    
+
   bbc_drv.timer.expires = jiffies + 1;
   add_timer(&bbc_drv.timer);
 }
@@ -154,7 +162,7 @@ static ssize_t bbc_read(struct file *filp, char __user *buf,
   loff_t rp, wp;
   size_t i;
   size_t to_read;
-  unsigned int in_data;
+  unsigned in_data;
   void *out_buf = (void *)buf;
   
   minor = *(int *)filp->private_data;
@@ -174,6 +182,8 @@ static ssize_t bbc_read(struct file *filp, char __user *buf,
       
       in_data = readl(bbc_drv.mem_base + rp);
       copy_to_user(out_buf, &in_data, BBCPCI_SIZE_UINT);
+      out_buf += BBCPCI_SIZE_UINT;
+
       writel(rp, bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_RP);
     }
     return i*BBCPCI_SIZE_UINT;
@@ -194,36 +204,38 @@ static ssize_t bbc_write(struct file *filp, const char __user *buf,
   
   minor = *(int *)filp->private_data;
   if (minor == bbc_minor) {
+    if(count < 2*BBCPCI_SIZE_UINT) return 0;
     to_write = count / (2*BBCPCI_SIZE_UINT);
-    if(to_write == 0) return 0;
-    
     for(i = 0; i < to_write; i++) {
-      if(bbc_wfifo.status & FIFO_FULL) {
-	printk(KERN_WARNING "%s: bbc buffer overrun.\n", DRV_NAME);
+      if(bbc_wfifo.n == BBC_WFIFO_SIZE) {
+	printk(KERN_WARNING "%s: bbc buffer overrun. size = %x\n", 
+	       DRV_NAME, bbc_wfifo.n);
 	break;
       }
+	
       copy_from_user((void *)&bbc_wfifo.data[bbc_wfifo.i_in], 
 		     in_buf, 2*BBCPCI_SIZE_UINT);
-
+	     
       if( bbc_wfifo.i_in == (BBC_WFIFO_SIZE - 2) ) {
 	bbc_wfifo.i_in = 0;
       } else {
 	bbc_wfifo.i_in += 2;
       }
-      bbc_wfifo.status &= ~FIFO_EMPTY;    
-      if (bbc_wfifo.i_in == bbc_wfifo.i_out) bbc_wfifo.status |= FIFO_FULL;
       in_buf += 2*BBCPCI_SIZE_UINT;
+      bbc_wfifo.n += 2;
     }
 
     return (2*i*BBCPCI_SIZE_UINT);
 
   } else if (minor == bi0_minor) {
+    return count;
     to_write = count / sizeof(unsigned short);
     if(to_write == 0) return 0;
 
     for(i = 0; i < to_write; i++) {
-      if(bi0_wfifo.status & FIFO_FULL) {
-	printk(KERN_WARNING "%s: bi0 buffer overrun.\n", DRV_NAME);
+      if(bi0_wfifo.n == BI0_WFIFO_SIZE) {
+	printk(KERN_WARNING "%s: bi0 buffer overrun. size = %x\n", 
+	       DRV_NAME, bi0_wfifo.n);
 	break;
       }
       
@@ -238,6 +250,7 @@ static ssize_t bbc_write(struct file *filp, const char __user *buf,
       bi0_wfifo.status &= ~FIFO_EMPTY;
       if(bi0_wfifo.i_in == bi0_wfifo.i_out) bi0_wfifo.status |= FIFO_FULL;
       in_buf += sizeof(unsigned short);
+      bi0_wfifo.n++;
     }
     
     return i*sizeof(unsigned short);
@@ -295,9 +308,8 @@ static int bbc_open(struct inode *inode, struct file *filp)
     if(bbc_wfifo.status & FIFO_ENABLED) return -ENODEV;
     filp->private_data = &bbc_minor;
 
-    bbc_wfifo.i_in = bbc_wfifo.i_out = 0;
+    bbc_wfifo.i_in = bbc_wfifo.i_out = bbc_wfifo.n = 0;
     bbc_wfifo.status |= FIFO_ENABLED;
-    bbc_wfifo.status |= FIFO_EMPTY;
     
     bbc_drv.use_count++;
   }
@@ -306,9 +318,8 @@ static int bbc_open(struct inode *inode, struct file *filp)
     if(bi0_wfifo.status & FIFO_ENABLED) return -ENODEV;
     filp->private_data = &bi0_minor;
     
-    bi0_wfifo.i_in = bi0_wfifo.i_out = 0;
+    bi0_wfifo.i_in = bi0_wfifo.i_out = bi0_wfifo.n = 0;
     bi0_wfifo.status |= FIFO_ENABLED;
-    bi0_wfifo.status |= FIFO_EMPTY;
 
     bbc_drv.use_count++;
   }
@@ -431,14 +442,11 @@ static struct pci_driver bbc_driver = {
 
 static int __init bbc_pci_init(void)
 {
-  printk(KERN_NOTICE "%s: loading bbc pci driver\n", DRV_NAME);
   return pci_module_init(&bbc_driver);
 }
 
 static void __exit bbc_pci_cleanup(void)
 {
-  printk(KERN_NOTICE "%s: releasing bbc pci driver\n", DRV_NAME);
-
   pci_unregister_driver(&bbc_driver);
 }
 
