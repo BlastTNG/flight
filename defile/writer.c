@@ -452,7 +452,6 @@ int PreBuffer(unsigned short *frame)
       if (ti >= FAST_PER_SLOW) {
         bprintf(warning, "Frame %lli: index out of range: %i\n", fc, ti);
         pre_buffer[this][3] = ti %= FAST_PER_SLOW;
-        exit(1);
       }
     }
   }

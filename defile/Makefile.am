@@ -2,7 +2,7 @@ AUTOMAKE_OPTIONS = foreign
 SUBDIRS = etc
 bin_PROGRAMS = defile
 man_MANS = defile.1
-EXTRA_DIST = fixup.sh
+EXTRA_DIST = fixup.sh bootstrap.sh
 etcdir=@etcdir@
 if INSTALL_DEFILE_CONF
 etc_DATA = defile.conf
