@@ -51,6 +51,7 @@
 #endif
 
 #define MAXPATHLENGTH 255
+#define MAX_MULTI_WORDS 255
 
 #define PALANTIR_0_JPG LIB_DIR "palantir0.jpg"
 #define PALANTIR_1_JPG LIB_DIR "palantir1.jpg"
@@ -124,7 +125,7 @@ struct Deriv {
 
 struct Multi {
 	int numwords;
-	struct MultiVal words[20];
+	struct MultiVal words[MAX_MULTI_WORDS];
 };
 
 struct DateTime {

@@ -1194,7 +1194,6 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
   MainFormLayout->setMargin(2);
   MainFormLayout->addLayout(ContentLayout);
   MainFormLayout->addItem(MainFormSpacer);
-  //MainFormLayout->addWidget(ShowPicture);
 
   timer = new QTimer();
   NoIncoming = 0;
