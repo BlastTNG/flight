@@ -110,8 +110,7 @@ void SunPos(double tt, double *ra, double *dec); // in starpos.c
 *             to convert mag_x and mag_y to mag_az                     *
 *                                                                      *
  ************************************************************************/
-void MagConvert() {
-  double mag_az;
+int MagConvert(double *mag_az) {
   float year;
   static float dec, dip, ti, gv;
   static time_t t, oldt;
@@ -167,21 +166,40 @@ void MagConvert() {
   /* subtract dec from az to get the true bearing. (Adam H.) */
 
   raw_mag_az = atan2(ACSData.mag_y, ACSData.mag_x);
-  mag_az = -LutCal(&magLut, raw_mag_az);
+  *mag_az = -LutCal(&magLut, raw_mag_az);
   
-  mag_az += dec + MAG_ALIGNMENT + M_PI;
-  mag_az *= 180.0/M_PI;
+  *mag_az += dec + MAG_ALIGNMENT + M_PI;
+  *mag_az *= 180.0/M_PI;
 
-  PointingData[point_index].mag_az = mag_az;
-  PointingData[point_index].mag_model = dec*180.0/M_PI;  
+  PointingData[point_index].mag_model = dec*180.0/M_PI;
+  
+  return (1);
 }
 
-void SunConvert() {
+int DGPSConvert(double *dgps_az) {
+  static int last_i_dgpsatt = 0;
+  int i_dgpsatt;
+
+  i_dgpsatt = GETREADINDEX(dgpsatt_index);
+
+  if (i_dgpsatt != last_i_dgpsatt) {
+    if (DGPSAtt[i_dgpsatt].att_ok==1) {
+      PointingData[point_index].dgps_az = DGPSAtt[i_dgpsatt].az;
+      return (1);
+    }
+  }
+  return(0);
+}
+
+// return 1 if new sun, and 0 otherwise
+#define MIN_SS_PRIN 7
+int SSConvert(double *ss_az) {
   static SSLut_t SSLut;
   static int firsttime = 1;
   int i_point, i_ss, iter;
   double az, sun_az, sun_el;
   double sun_ra, sun_dec, jd;
+  static int last_i_ss = -1;
   
   int eflag;
   
@@ -193,6 +211,7 @@ void SunConvert() {
   i_ss = GETREADINDEX(ss_index);
   i_point = GETREADINDEX(point_index);
 
+  
   /* get current sun az, el */
   jd = GetJulian(PointingData[i_point].t);
   SunPos(jd, &sun_ra, &sun_dec);
@@ -202,13 +221,24 @@ void SunConvert() {
   radec2azel(sun_ra, sun_dec, PointingData[i_point].lst,
 	     PointingData[i_point].lat, &sun_az, &sun_el);
 
-  //printf("az: %g el: %g ra: %g dec: %g\n", sun_az, sun_el, sun_ra, sun_dec);
+  PointingData[point_index].sun_az = sun_az;
+
+  if (i_ss == last_i_ss) return (0); 
+  if (SunSensorData[i_ss].prin < MIN_SS_PRIN) return (0);
   
-  eflag = SSLut_find((double)SunSensorData[i_ss].raw_az, &az, sun_el,
+  if (sun_el<0) sun_el = 10.0;
+  
+  eflag = SSLut_find((double)SunSensorData[i_ss].raw_az, &az,
+		     sun_el*M_PI/180.0,
 		     &SSLut, &iter);
 
-  PointingData[point_index].ss_az = az;
-  PointingData[point_index].sun_az = sun_az;
+  if (eflag!=0) return (0);
+  
+  *ss_az = az*180.0/M_PI-sun_az;
+  
+  if (*ss_az<-180.0) *ss_az+=360.0;
+ 
+  return (1);
 }
 
 #define GY_HISTORY 300
@@ -455,11 +485,13 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
 */
 /* Elevation encoder uncertainty: */
 void Pointing(){
+  int ss_ok, mag_ok, dgps_ok;
+  double ss_az, dgps_az, mag_az;
+  
   double gy_roll, gy2, gy3, el_rad, clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0;
-  static int last_i_dgpsatt = 0;
   
-  int i_dgpspos, i_dgpsatt;
+  int i_dgpspos;
   int i_point_read;
 
   static struct LutType elClinLut = {"/data/etc/clin_elev.lut",0,NULL,NULL,0};
@@ -534,6 +566,17 @@ void Pointing(){
 					  0.0001, // filter constant
 					  0, 0 // n_solutions, since_last
   };
+  static struct AzSolutionStruct SSAz =  {0.0, // starting angle
+					  360.0*360.0, // varience
+					  1.0/M2DV(8), //sample weight
+					  M2DV(10), // systemamatic varience
+					  0.0, // trim 
+					  0.0, // last input
+					  0.0, 0.0, // gy integrals
+					  GY2_OFFSET, GY3_OFFSET, // gy offsets
+					  0.0001, // filter constant
+					  0, 0 // n_solutions, since_last
+  };
   static struct AzSolutionStruct ISCAz = {0.0, // starting angle
 					  360.0*360.0, // varience
 					  1.0/M2DV(0.3), //sample weight
@@ -549,7 +592,6 @@ void Pointing(){
   if (elClinLut.n==0) LutInit(&elClinLut);
   
   i_dgpspos = GETREADINDEX(dgpspos_index);
-  i_dgpsatt = GETREADINDEX(dgpsatt_index);
   i_point_read = GETREADINDEX(point_index);
 
 
@@ -612,34 +654,54 @@ void Pointing(){
 
   /*******************************/
   /**      do az solution      **/
+  /** Convert Sensors **/
+  mag_ok = MagConvert(&mag_az);
+  ss_ok = SSConvert(&ss_az);
+  dgps_ok = DGPSConvert(&dgps_az);
+
+  /** evolve solutions **/
   EvolveAzSolution(&NullAz,
 		   ACSData.gyro2, PointingData[i_point_read].gy2_offset,
 		   ACSData.gyro3, PointingData[i_point_read].gy3_offset,
 		   PointingData[point_index].el,
 		   0.0, 0);
   /** MAG Az **/
-  MagConvert();
   EvolveAzSolution(&MagAz,
 		   ACSData.gyro2, PointingData[i_point_read].gy2_offset,
 		   ACSData.gyro3, PointingData[i_point_read].gy3_offset,
 		   PointingData[point_index].el,
-		   PointingData[point_index].mag_az, 1);
+		   mag_az, mag_ok);
 
   /** DGPS Az **/
-  if (i_dgpsatt != last_i_dgpsatt) {
-    if (DGPSAtt[i_dgpsatt].att_ok==1) {
-      PointingData[point_index].dgps_az = DGPSAtt[i_dgpsatt].az;
-    }
-  }
   EvolveAzSolution(&DGPSAz,
 		   ACSData.gyro2, PointingData[i_point_read].gy2_offset,
 		   ACSData.gyro3, PointingData[i_point_read].gy3_offset,
 		   PointingData[point_index].el,
-		   PointingData[point_index].dgps_az,
-		   DGPSAtt[i_dgpsatt].att_ok);
+		   dgps_az, dgps_ok);
 
   /** Sun Sensor **/
-  SunConvert();
+  EvolveAzSolution(&SSAz,
+		   ACSData.gyro2, PointingData[i_point_read].gy2_offset,
+		   ACSData.gyro3, PointingData[i_point_read].gy3_offset,
+		   PointingData[point_index].el,
+		   ss_az, ss_ok);  
+
+  /** record solutions in pointing data **/
+  PointingData[point_index].enc_el = EncEl.angle;
+  PointingData[point_index].enc_sigma = sqrt(EncEl.varience + EncEl.sys_var);
+  PointingData[point_index].clin_el = ClinEl.angle;
+  PointingData[point_index].clin_sigma = sqrt(ClinEl.varience + ClinEl.sys_var);
+  
+  PointingData[point_index].mag_az = MagAz.angle;
+  PointingData[point_index].mag_sigma = sqrt(MagAz.varience + MagAz.sys_var);
+  PointingData[point_index].dgps_az = DGPSAz.angle;
+  PointingData[point_index].dgps_sigma = sqrt(DGPSAz.varience + DGPSAz.sys_var);
+  PointingData[point_index].ss_az = SSAz.angle;
+  PointingData[point_index].ss_sigma = sqrt(SSAz.varience + SSAz.sys_var);
+
+  PointingData[point_index].isc_az = ISCAz.angle;
+  PointingData[point_index].isc_el = ISCEl.angle;
+  PointingData[point_index].isc_sigma = sqrt(ISCEl.varience + ISCEl.sys_var);
   
   if (CommandData.use_mag) {
     PointingData[point_index].az = MagAz.angle + MagAz.trim;

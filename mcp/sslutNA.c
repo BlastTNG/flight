@@ -46,8 +46,9 @@ int SSLut_find(double ccd_x, double *azi, double ele,
   double dx;
   int k0;
   double aa;
+
   
-  if(ccd_x < 10.0 || ccd_x > NPIX - 10.) 
+  if((ccd_x < 10.0) || (ccd_x > (NPIX - 10.))) 
     return SS_OUTOFRANGE;
   ccd_x = (ccd_x - NPIX/2)/(D*PIXD);
   

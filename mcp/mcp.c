@@ -232,7 +232,7 @@ void SunSensor(void) {
     while (n != -1) {
       curIndex = RxframeIndex;
       if (curIndex < lastIndex) {
-        usleep(100000);
+        usleep(10000);
         if (send(sock, P, 2, 0) == -1) {
           perror("SunSensor send()");
         }
@@ -554,7 +554,7 @@ int main(int argc, char *argv[]) {
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPortC2, NULL);
 
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS,NULL);
-  pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, NULL);
+  //  pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, NULL);
 
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
