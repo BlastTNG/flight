@@ -377,9 +377,9 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
     rb_hold--;
   } else if (!CommandData.Bias.SetLevel3 && !CommandData.Bias.SetLevel3 &&
       !CommandData.Bias.SetLevel3) {
-    CommandData.Bias.bias1 = slow_data[Bias_lev1Ch][Bias_lev1Ind];
-    CommandData.Bias.bias2 = slow_data[Bias_lev2Ch][Bias_lev2Ind];
-    CommandData.Bias.bias3 = slow_data[Bias_lev3Ch][Bias_lev3Ind];
+/*     CommandData.Bias.bias1 = slow_data[Bias_lev1Ch][Bias_lev1Ind]; */
+/*     CommandData.Bias.bias2 = slow_data[Bias_lev2Ch][Bias_lev2Ind]; */
+/*     CommandData.Bias.bias3 = slow_data[Bias_lev3Ch][Bias_lev3Ind]; */
   }
 
   /******************** set the outputs *********************/
