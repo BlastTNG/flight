@@ -8,7 +8,8 @@
 	* Makefile.am, configure.ac: Generate defile.conf from defile.conf.in
 
 	* define.1.in.in: Update for defile 3.0.0
-	* Makefile.am, configure.ac: Put conf file in /etc
+	* Makefile.am, configure.ac: Put conf file in /etc; add --with-etc configure
+	option
 
 2004-10-29  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* client.c (QuenyaClient): Add block fetch and CRC checking routines.  Still

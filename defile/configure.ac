@@ -32,7 +32,9 @@ AC_CHECK_SIZEOF(unsigned)
 AC_CHECK_SIZEOF(unsigned long)
 
 dnl Data
-etcdir="/etc"
+AC_ARG_WITH(etc, [  --with-etc=DIR     put defile.conf in DIR [/etc]],
+            [etcdir="${withval}"],[etcdir="/etc"])
+
 AC_SUBST(etcdir)
 AC_MSG_CHECKING(whether a defile.conf is already present)
 if test -f "$etcdir/defile.conf"; then

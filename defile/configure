@@ -855,6 +855,7 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-data-etc=DIR     put auxiliary data in DIR /data/etc
+  --with-etc=DIR     put defile.conf in DIR /etc
 
 Some influential environment variables:
   CC          C compiler command
@@ -5122,7 +5123,15 @@ _ACEOF
 
 
 
-etcdir="/etc"
+
+# Check whether --with-etc or --without-etc was given.
+if test "${with_etc+set}" = set; then
+  withval="$with_etc"
+  etcdir="${withval}"
+else
+  etcdir="/etc"
+fi;
+
 
 echo "$as_me:$LINENO: checking whether a defile.conf is already present" >&5
 echo $ECHO_N "checking whether a defile.conf is already present... $ECHO_C" >&6
