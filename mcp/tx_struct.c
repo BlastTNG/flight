@@ -485,12 +485,6 @@ struct ChannelStruct WideFastChannels[] = {
 struct ChannelStruct FastChannels[] = {
 #ifndef BOLOTEST
   /* read channels from ACS0 */
-  {"pch_clin_sip",'r',  ACS3, 27,   4.0/5333.3333,              -4.*6.144, 'u'},
-  {"roll_clin_sip",'r', ACS3, 29,  -4.0/5333.3333,               4.*6.144, 'u'},
-
-  {"clin_elev",   'r',  ACS3, 37,      0.00546739,                -133.78, 'u'},
-  {"xel_clin_if", 'r',  ACS3, 39,      0.00546739,             -25.*6.144, 'u'},
-
   {"pch_clin_sip",'r',  ACS0, 27,   4.0/5333.3333,              -4.*6.144, 'u'},
   {"roll_clin_sip",'r', ACS0, 29,  -4.0/5333.3333,               4.*6.144, 'u'},
 
