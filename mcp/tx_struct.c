@@ -141,7 +141,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"i_apm_3v",     'r',  2,       43,     0.000625,          -20.48, 'u'},
     {"t_isc",        'r',  21,      25,     -0.00625,          136.45, 'u'},
     {"g_i_az",       'e',    1,     8,           1.0,             0.0, 'u'},
-    {"spare13",      'r', SPARE,    13,           1.0,             0.0, 'u'},
+    {"mag_model",    'w', LOOPBAK2, 28,        I2DEG,             0.0, 'u'},
     {"set_reac",     'w',  1, 16,    7.9498291016e-5,          -2.605, 'u'},
     {"pump_bits",    'w', 21,  2,                1.0,             0.0, 'u'},
     {"spare10",      'r', SPARE,    10,           1.0,             0.0, 'u'}
@@ -271,7 +271,7 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
   {"xel_clin_if", 'r', 21, 37,        0.00546739,             -25.*6.144, 'u'},
   {"clin_elev",  'r', 21, 39,        0.00546739,                 -135.5, 'u'},
   
-  {"mag_bias",    'r', 21, 41,               1.0,                    0.0, 'u'},
+  {"mag_bias",    'r', 21, 43,               1.0,                    0.0, 'u'},
   {"mag_x",       'r', 21, 45,               1.0,                    0.0, 'u'},
   {"mag_y",       'r', 21, 47,               1.0,                    0.0, 'u'},
   {"acs0bits",    'r', 21, 59,               1.0,                    0.0, 'u'},

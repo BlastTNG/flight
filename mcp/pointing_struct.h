@@ -51,6 +51,7 @@ extern int vsc_index;
 /*  Does not need to be a curcular buffer...  */
 struct ACSDataStruct {
   double mag_az;   // degrees
+  double mag_model; // degrees
   double enc_elev; // degrees
   double clin_elev;// counts
   double gyro1;    // deg/s

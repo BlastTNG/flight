@@ -129,7 +129,7 @@ void SigPipe(int signal) {
 *             y and determine angle                                    *
 *                                                                      *
  ************************************************************************/
-double MagRead(unsigned short *Rxframe) {
+void MagRead(unsigned short *Rxframe) {
   static int i_mag_x = -1;
   static int i_mag_y = -1;
   static int i_mag_bias = -1;
@@ -194,7 +194,11 @@ double MagRead(unsigned short *Rxframe) {
   mag_az = atan2(y_comp, x_comp) + dec + MAG_ALIGNMENT + M_PI;
   mag_az *= 180.0/M_PI;
 
-  return mag_az;
+  ACSData.mag_az = mag_az;
+  ACSData.mag_model = dec*180.0/M_PI;
+
+  printf("%g\n", ACSData.mag_model);
+  
 }
 
 void GetACS(unsigned short *Rxframe){
@@ -229,7 +233,7 @@ void GetACS(unsigned short *Rxframe){
 
   ACSData.t = time(NULL);
   ACSData.mcp_frame = rx_frame_index;
-  ACSData.mag_az = MagRead(Rxframe);
+  MagRead(Rxframe);
   ACSData.enc_elev = enc_elev;
   ACSData.gyro1 = gyro1;
   ACSData.gyro2 = gyro2;

@@ -1054,6 +1054,7 @@ void StoreData(unsigned int* Txframe,
   static int i_AZ_VEL, j_AZ_VEL, i_EL_VEL, j_EL_VEL;
   static int i_RA, j_RA, i_DEC, j_DEC, i_R, j_R;
   static int i_SVETO, j_SVETO;
+  static int i_MAG_MODEL, j_MAG_MODEL;
   
   /** dgps fields **/
   static int i_dgps_time, j_dgps_time;
@@ -1129,7 +1130,8 @@ void StoreData(unsigned int* Txframe,
     SlowChIndex("lst", &i_LST, &j_LST);
     SlowChIndex("lat", &i_LAT, &j_LAT);
     SlowChIndex("lon", &i_LON, &j_LON);
-
+    SlowChIndex("mag_model", i_MAG_MODEL, j_MAG_MODEL);
+    
     SlowChIndex("p_az_mode", &i_AZ_MODE, &j_AZ_MODE);
     SlowChIndex("p_el_mode", &i_EL_MODE, &j_EL_MODE);
     SlowChIndex("p_az1", &i_AZ1, &j_AZ1);
@@ -1215,6 +1217,8 @@ void StoreData(unsigned int* Txframe,
   WriteSlow(i_LST + 1, j_LST, t);
   WriteSlow(i_LAT, j_LAT, (int)(PointingData[i_point].lat * DEG2I));
   WriteSlow(i_LON, j_LON, (int)(PointingData[i_point].lon * DEG2I));
+
+  WriteSlow(i_MAG_MODEL, j_MAG_MODEL, (int)(ACSData.mag_model *DEG2I));
   
   /************* Pointing mode fields *************/
   WriteSlow(i_AZ_MODE, j_AZ_MODE, (int)(CommandData.pointing_mode.az_mode));
