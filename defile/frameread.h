@@ -48,7 +48,7 @@ void PathSplit_r(
     char*
     );
 
-void  ReconstructChannelLists(
+int  ReconstructChannelLists(
     const char*,
     const char*
     );

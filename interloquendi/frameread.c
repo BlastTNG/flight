@@ -111,7 +111,7 @@ int StaticSourcePart(char* output, const char* source, chunkindex_t* value,
 
 /* Figures out the name of the channel specification file, and then tries to
  * open and read it. */
-void ReconstructChannelLists(const char* chunk, const char * spec_file)
+int ReconstructChannelLists(const char* chunk, const char * spec_file)
 {
   struct stat stat_buf;
   char buffer[200];
@@ -158,7 +158,7 @@ void ReconstructChannelLists(const char* chunk, const char * spec_file)
   /* Make the Channel Struct */
   MakeAddressLookups();
 
-  bprintf(info, "Frame size: %i bytes\n", DiskFrameSize);
+  return DiskFrameSize;
 }
 
 /* Returns the length of a framefile */

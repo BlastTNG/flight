@@ -182,9 +182,6 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   DiskFrameWords = SLOW_OFFSET + ccFast + slowsPerBi0Frame + ccWideFast;
   DiskFrameSize = 2 * DiskFrameWords;
 
-  bprintf(info, "Slow Channels per BiPhase Frame: %i\n",
-      slowsPerBi0Frame);
-
 #elif defined VERBOSE
   bputs(info, "Wrote version " SPEC_VERSION " specification file.\n");
 #endif

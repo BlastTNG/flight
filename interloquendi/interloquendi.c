@@ -186,7 +186,8 @@ void Connection(int csock)
             else
               quendi_stage_data(data.name,
                   data.pos = GetFrameFileSize(data.name,
-                    options[CFG_SUFFIX_LENGTH].value.as_int) / data.frame_size);
+                    options[CFG_SUFFIX_LENGTH].value.as_int) /
+                  (data.frame_size = ReconstructChannelLists(data.name, NULL)));
           }
           break;
         case QUENDC_QUIT:
