@@ -175,10 +175,8 @@ int main(void) {
 
   MakeAddressLookups();
 
-  printf("Reseting board . . . \n");
   ioctl(decom, DECOM_IOC_RESET);
-  printf("Set frame length to %d.\n",
-      ioctl(decom, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE));
+  ioctl(decom, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE);
 
   lastsock = sock = MakeSock();
 
@@ -195,8 +193,8 @@ int main(void) {
     fdwrite = fdread = fdlist;
     FD_CLR(sock, &fdwrite);
     n = select(lastsock + 1, &fdread, &fdwrite, NULL, &no_time);
-    sprintf(buf, "%1i %1i %3i %4.2f %4.2f %-200s\r\n", status, polarity, du,
-        fs_bad, dq_bad, framefile.name);
+    sprintf(buf, "%1i %1i %3i %5.3f %5.3f %s%c", status, polarity, du,
+        fs_bad, dq_bad, framefile.name, '\0');
 
     if (n == -1 && errno == EINTR)
       continue;
@@ -253,7 +251,7 @@ int main(void) {
           if ((z = send(n, buf, 208, MSG_NOSIGNAL | MSG_DONTWAIT))
               == -1) {
             if (errno == EPIPE) {  /* connexion dropped */
-              printf("decomd: connextion dropped on socket %i\n", n);
+              printf("decomd: connexion dropped on socket %i\n", n);
               close(n);
               FD_CLR(n, &fdlist);
             } else if (errno != EAGAIN) {  /* ignore socket buffer overflows */

@@ -468,7 +468,9 @@ void DumpNiosFrame(void)
   }
 
   fclose(map);
+#ifdef VERBOSE
   mprintf(MCP_INFO, "Wrote /data/etc/Nios.map.\n");
+#endif
 }
 #endif
 
@@ -660,7 +662,9 @@ void MakeAddressLookups(void)
   DoSanityChecks();
 #endif
 
+#ifdef VERBOSE
   mprintf(MCP_INFO, "Generating Address Lookup Tables\n");
+#endif
 
   unsigned int BiPhaseAddr;
   unsigned int addr[2] = {

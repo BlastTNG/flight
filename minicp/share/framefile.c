@@ -67,7 +67,9 @@ void OpenNextChunk(void) {
   sprintf(framefile.name, "/data/rawdir/%lu.%c%03X", framefile.time,
       framefile.type, ++framefile.chunk);
 
+#ifdef __MCP__
   mprintf(MCP_INFO, "Writing to framefile %s\n", framefile.name);
+#endif
 
   if ((framefile.fd = creat(framefile.name, 0644)) == -1)
     merror(MCP_ERROR, "Error opening chunk");
