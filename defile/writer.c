@@ -39,6 +39,7 @@ extern struct ChannelStruct* WideSlowChannels;
 extern struct ChannelStruct* SlowChannels;
 extern struct ChannelStruct* WideFastChannels;
 extern struct ChannelStruct* FastChannels;
+extern struct ChannelStruct* DecomChannels;
 void FPrintDerived(FILE* fp);
 
 #define MAXBUF 3000 /* This is a 30 second buffer */
@@ -301,6 +302,16 @@ int CheckWriteAllow(int mkdir_err)
               found = 1;
               break;
             }
+        if (!found)
+          for (i = 0; i < ccDecom; ++i)
+            if (strcmp(lamb->d_name, DecomChannels[i].field) == 0) {
+              if ((n = GetNumFrames(stat_buf.st_size * FAST_PER_SLOW,
+                      DecomChannels[i].type, lamb->d_name)) < min_wrote)
+                min_wrote = n;
+              n_fast++;
+              found = 1;
+              break;
+            }
         if (!found) {
           fprintf(stderr, "defile: error reading `%s': field `%s' is not in "
               "the channel list.\ndefile: cannot resume\n", rc.dirfile,
@@ -319,7 +330,7 @@ int CheckWriteAllow(int mkdir_err)
 
   if (rc.write_mode == 2) {
     /* check to see if we've read all the channels */
-    if ((n_fast != ccWideFast + ccNarrowFast + 1) ||
+    if ((n_fast != ccWideFast + ccNarrowFast + 1 + ccDecom) ||
         (n_slow != ccNarrowSlow + ccWideSlow) ||
         (n_bolo != DAS_CARDS * DAS_CHS)) {
       fprintf(stderr, "defile: dirfile `%s' is missing field files\n"
@@ -355,8 +366,7 @@ void PreInitialiseDirFile(void)
 {
   int j;
 
-  if ((normal_fast = malloc(ccFast * sizeof(struct FieldType)))
-      == NULL) {
+  if ((normal_fast = malloc(ccFast * sizeof(struct FieldType))) == NULL) {
     perror("defile: cannot allocate heap");
     exit(1);
   }
@@ -378,7 +388,7 @@ void PreInitialiseDirFile(void)
 void InitialiseDirFile(int reset)
 {
   FILE* fp;
-  int j, i;
+  int j, i, is_bolo = 0;
   char field[FIELD_LEN];
   char gpb[GPB_LEN];
 
@@ -507,11 +517,17 @@ void InitialiseDirFile(int reset)
     perror("Error while flushing format file");
     exit(1);
   }
-  for (i = 0; i < ccFast; i++) {
+
+  for (i = 0; i < ccFast + ccWideFast; i++) {
     if (strcmp(FastChList[i].field, "n5c0lo") == 0) {
       bolo_i0 = i + SLOW_OFFSET + slowsPerBi0Frame;
-      break;
-    } else if (strlen(FastChList[i].field) > 0) {
+      is_bolo = 1;
+    } else if (ccDecom > 0 && strcmp(FastChList[i].field,
+          DecomChannels[0].field) == 0) {
+      is_bolo = 0;
+    }
+
+    if (!is_bolo && strlen(FastChList[i].field) > 0) {
       normal_fast[n_fast].size = FieldSize(FastChList[i].type,
           FastChList[i].field);
       sprintf(gpb, "%s/%s", rc.dirfile, FastChList[i].field);

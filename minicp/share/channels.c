@@ -149,11 +149,12 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
     perror("defile: unable to allocate heap");
     exit(1);
   }
-  if ((DecomChannels = realloc(DecomChannels,
-          ccDecom * sizeof(struct ChannelStruct))) == NULL) {
-    perror("defile: unable to allocate heap");
-    exit(1);
-  }
+  if (ccDecom > 0)
+    if ((DecomChannels = realloc(DecomChannels,
+            ccDecom * sizeof(struct ChannelStruct))) == NULL) {
+      perror("defile: unable to allocate heap");
+      exit(1);
+    }
   ccSlow = ccNarrowSlow + ccWideSlow;
   ccFast = ccNarrowFast + ccWideFast + N_FAST_BOLOS + ccDecom;
   ccNoBolos = ccSlow + ccWideFast + ccNarrowFast;
@@ -182,7 +183,7 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   }
 
   slowsPerBi0Frame = slowsPerBusFrame[0] + slowsPerBusFrame[1];
-  DiskFrameWords = SLOW_OFFSET + ccFast + slowsPerBi0Frame + 1;
+  DiskFrameWords = SLOW_OFFSET + ccFast + slowsPerBi0Frame + ccWideFast;
   DiskFrameSize = 2 * DiskFrameWords;
 
   mprintf(MCP_INFO, "Slow Channels per BiPhase Frame: %i\n", slowsPerBi0Frame);
@@ -477,7 +478,7 @@ void BBCAddressCheck(char** names, int nn, char* fields[64][64], char* name,
     int node, int addr)
 {
   int i;
-  
+
   if (fields[node][addr])
     mprintf(MCP_FATAL, "FATAL: Conflicting BBC address found for %s and %s"
         " (node %i channel %i)\n", fields[node][addr], name, node, addr);
@@ -672,7 +673,7 @@ void MakeAddressLookups(void)
     SLOW_OFFSET + slowsPerBusFrame[0],
     1 + slowsPerBusFrame[1]
 #else
-    slowsPerBusFrame[0],
+      slowsPerBusFrame[0],
     slowsPerBusFrame[1]
 #endif
   };

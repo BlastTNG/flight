@@ -72,6 +72,7 @@ extern "C" {
   extern unsigned short ccWideSlow;
   extern unsigned short ccNarrowSlow;
   extern unsigned short ccFast;
+  extern unsigned short ccDecom;
   extern unsigned short ccTotal;
 
   extern unsigned short BoloBaseIndex;
