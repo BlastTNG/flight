@@ -270,7 +270,7 @@ struct ChannelStruct SlowChannels[] = {
   {"bal_on",       'w', LOOP1, 29,           1./1648.,             0.0, 'u'},
   {"bal_off",      'w', LOOP1, 30,           1./1648.,             0.0, 'u'},
   {"bal_target",   'w', LOOP1, 31,           1./1648.,            -5.0, 'u'},
-  {"bal_veto",     'w', LOOP1, 32,                1.0,             0.0, 'u'},
+  {"bal_veto",     'w', LOOP1, 32,                1.0,             0.0, 's'},
   {"isc_framenum", 'w', LOOP1, 33,                1.0,             0.0, 'u'},
   {"bias_lev1",    'w', LOOP1, 34,                1.0,             0.0, 'u'},
   {"bias_lev2",    'w', LOOP1, 35,                1.0,             0.0, 'u'},
