@@ -2,7 +2,6 @@
 #include <asm/io.h>
 #include <unistd.h>
 
-//Enzo Test
 /* A watchdog program to run at boot time
  */
 
@@ -11,7 +10,7 @@ int main(int argc, char *argv[]) {
   
   /* Set up IO permissions: 16 words starting at 0x378 */
   if (ioperm(0x378,0x0F, 1)!=0) {
-    printf("Error setting permissionssss\n");
+    printf("Error setting permissionss\n");
     exit(1);
   }
   ioperm(0x80,1,1); /* used for timing */
