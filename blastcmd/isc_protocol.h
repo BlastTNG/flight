@@ -31,27 +31,29 @@
 #pragma pack(2)		// same packing as in Linux
 #endif
 
-//#define _ISC_CCD     // using the the original ISC
+#define _ISC_CCD     // using the the original ISC
 //#define _OSC_CCD     // using the "other" ISC
 
 #define MAX_ISC_BLOBS 20					// static # blobs to store in data frames
-#define FOCUS_RANGE 2550					// # steps range for focus stepper
-#define AP_RANGE 495						// # steps range for aperture stepper
 
-#define ISC_CCD_X_PIXELS 1312					// pixel dimenions of the CCD
-#define ISC_CCD_Y_PIXELS 1024					//   "        "     "   "   "
+#define ISC_CCD_X_PIXELS 1312				// pixel dimenions of the CCD
+#define ISC_CCD_Y_PIXELS 1024				//   "        "     "   "   "
 
-#define OSC_CCD_X_PIXELS 1360					// pixel dimenions of the CCD
-#define OSC_CCD_Y_PIXELS 1036					//   "        "     "   "   "
+#define OSC_CCD_X_PIXELS 1360				// pixel dimenions of the CCD
+#define OSC_CCD_Y_PIXELS 1036				//   "        "     "   "   "
 
 #ifdef _ISC_CCD
 #define CCD_X_PIXELS ISC_CCD_X_PIXELS
 #define CCD_Y_PIXELS ISC_CCD_Y_PIXELS
+#define FOCUS_RANGE 2550					// # steps range for focus stepper
+#define AP_RANGE 495						// # steps range for aperture stepper
 #endif
 
 #ifdef _OSC_CCD
 #define CCD_X_PIXELS OSC_CCD_X_PIXELS
 #define CCD_Y_PIXELS OSC_CCD_Y_PIXELS
+#define FOCUS_RANGE 2550					// # steps range for focus stepper
+#define AP_RANGE 495						// # steps range for aperture stepper
 #endif
 
 
@@ -60,7 +62,7 @@ typedef enum {full, roi, blob} ISCDisplayModeType;
 struct ISCStatusStruct {
   // General server state
   int abort;			// 1 abort current execution thread   
-  int pause;			// 1 is paused, 0 is pulse mode (doesn't apply to autofocus mode)
+  int pause;			// 1 is paused, 0 is continuous mode (doesn't apply to autofocus mode)
   int save;				// 1 save frames
   int autofocus;		// 1 auto focus on brightest blob in field
   int focus_pos;		// stepper position for focus
@@ -69,6 +71,7 @@ struct ISCStatusStruct {
   int shutdown;			// 0=nothing 1=shutdown 2=reboot computer 3=camera power cycle
   int hold_current;	    // the hold "heater" current (0-50)
   int exposure;			// *** new - exposure time in us REGARDLESS of self/hardware trigger ***
+  int focusOffset;      // when camera focus ordered "home", step this far 
 
   // Display mode parameters
   ISCDisplayModeType display_mode;
@@ -112,10 +115,11 @@ struct ISCStatusStruct {
 };
 
 struct ISCSolutionStruct {
+  int flag;             // 0=ready for pulse, 1=pointing solution
+
   int cameraerr;		// 0 if everything is Kosher, otherwise problem...
   int framenum;			// ISC frame # (also file names for images)
   int MCPFrameNum;		// last MCP frame number received before image processing began
-  int autoFocusPosition;// focus position determined from automatic procedure
   double mapMean;		// mean value of the map
   double ra;			// RA of CCD in radians (apparent)
   double dec;			// DEC   "        "        "
@@ -134,49 +138,6 @@ struct ISCSolutionStruct {
   double blob_sn[MAX_ISC_BLOBS];
 };
 
-// -----------------------------------------------------------------------------------------------
-// Stuff for INFOCUS flight
-// -----------------------------------------------------------------------------------------------
-
-/*
-typedef struct { uint16_t data[4]; } clientCmdType;
-
-typedef enum {NULLCMD    = 0,    // do nothing
-	
-	          ABORT      = 1, 
-              PAUSE      = 2,    // toggle
-
-              AZ         = 5,    // deg 
-			  EL         = 6,    // deg
-              LST        = 7,    // hr
-              LAT        = 8,    // deg
-              
-              FOCUS      = 10,    // relative steps (+ away) or -1 go home
-              AUTOFOCUS  = 11,   
-              FSTOP      = 12,    // relative steps 
-              DISPLAYMODE= 13,   // 0=full, 1=blob #
-              EXPOSURE   = 14,   // ms
-              SAVEDELAY  = 15,   // s
-              
-              SNTHRESH   = 20,   // floating point
-              GRID       = 21,   // uint
-              CENBOX     = 22,   // uint
-              APBOX      = 23,   // uint
-              MULTDIST   = 24,   // uint
-              
-              ROT_TOL    = 25,   // deg
-              MAG_LIM    = 26,   // floating point
-              RADIUS     = 27,   // deg - this sets both the normal and lost search radii for simplicity... maybe a bad idea
-              ASSOC_TOL  = 28,   // floating point
-              MATCH_TOL  = 29,   // floating point
-			  MAXBLOB    = 30,   // int
-
-			  REBOOT     = 48,
-			  SHUTDOWN   = 49,
-			  POWCYCLE   = 50
-
-             } cmdType;
-*/
 
 #ifdef _WINDOWS_	
 #pragma pack()		// go back to default packing

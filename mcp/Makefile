@@ -19,7 +19,7 @@ HEADERS = alice.h bbc_pci.h blast.h channels.h command_list.h command_struct.h \
 					ss_struct.h starpos.h tdrss.h tdrss_c.h tx.h
 
 OBJS = mcp.o auxiliary.o blast.o channels.o command_list.o commands.o crc.o \
-			 das.o derived.o dataholder.o dgps.o fftsg_h.o framefile.o ephem_read.o \
+			 das.o derived.o dataholder.o dgps.o ephem_read.o fftsg_h.o framefile.o \
 			 geomag.o isc.o lut.o motors.o pointing.o sched.o slow_dl.o sslutNA.o \
 			 starpos.o sunsensor.o tdrss.o tx.o tx_struct.o
 

@@ -124,7 +124,6 @@ void IntegratingStarCamera(void* parameter)
   int which = (int)parameter;
 
   int sock = -1, ISCReadIndex;
-  static int come_down_to = -1;
 
 #ifdef USE_ISC_LOG
   time_t t;
@@ -202,19 +201,6 @@ void IntegratingStarCamera(void* parameter)
           CommandData.ISCState[which].autofocus = 0;
           CommandData.ISCState[which].focus_pos
             = CommandData.ISCControl[which].old_focus;
-        }
-
-        /* Process results of autofocus */
-        if (come_down_to >= 0) {
-          CommandData.ISCState[which].focus_pos = come_down_to;
-          come_down_to = -1;
-        } else if (ISCSolution[which][iscdata_index[which]].autoFocusPosition
-            > 2000 && ISCSolution[which][iscdata_index[which]].autoFocusPosition
-            < FOCUS_RANGE && CommandData.ISCState[which].focus_pos !=
-            ISCSolution[which][iscdata_index[which]].autoFocusPosition) {
-          come_down_to
-            = ISCSolution[which][iscdata_index[which]].autoFocusPosition;
-          CommandData.ISCState[which].focus_pos = FOCUS_RANGE;
         }
 
         iscdata_index[which] = INC_INDEX(iscdata_index[which]);

@@ -241,7 +241,7 @@ void StoreStarCameraData(int index, int which)
   static struct NiosStruct* RdSigmaAddr[2];
   static struct NiosStruct* RaAddr[2];
   static struct NiosStruct* DecAddr[2];
-  static struct NiosStruct* AfocusAddr[2];
+  static struct NiosStruct* HxFlagAddr[2];
   static struct NiosStruct* McpnumAddr[2];
   static struct NiosStruct* ApertAddr[2];
   static struct NiosStruct* CenboxAddr[2];
@@ -295,7 +295,7 @@ void StoreStarCameraData(int index, int which)
     RaAddr[which] = GetSCNiosAddr("ra", which);
     DecAddr[which] = GetSCNiosAddr("dec", which);
     NblobsAddr[which] = GetSCNiosAddr("nblobs", which);
-    AfocusAddr[which] = GetSCNiosAddr("afocus", which);
+    HxFlagAddr[which] = GetSCNiosAddr("hx_flag", which);
     McpnumAddr[which] = GetSCNiosAddr("mcpnum", which);
 
     StateAddr[which] = GetSCNiosAddr("state", which);
@@ -396,12 +396,12 @@ void StoreStarCameraData(int index, int which)
 
   WriteData(McpnumAddr[which],
       (unsigned int)ISCSolution[which][i_isc].MCPFrameNum, NIOS_QUEUE);
-  WriteData(AfocusAddr[which],
-      (unsigned int)ISCSolution[which][i_isc].autoFocusPosition, NIOS_QUEUE);
-  WriteData(ErrorAddr[which],
-      (unsigned int)ISCSolution[which][i_isc].cameraerr, NIOS_QUEUE);
-  WriteData(MapmeanAddr[which],
-      (unsigned int)ISCSolution[which][i_isc].mapMean, NIOS_QUEUE);
+  WriteData(HxFlagAddr[which], (unsigned int)ISCSolution[which][i_isc].flag,
+      NIOS_QUEUE);
+  WriteData(ErrorAddr[which], (unsigned int)ISCSolution[which][i_isc].cameraerr,
+      NIOS_QUEUE);
+  WriteData(MapmeanAddr[which], (unsigned int)ISCSolution[which][i_isc].mapMean,
+      NIOS_QUEUE);
 
   /*** State Info ***/
   WriteData(StateAddr[which], (unsigned int)(ISCSentState[which].pause * 2
