@@ -358,8 +358,12 @@ void StoreStarCameraData(int index, int which)
 
   /** Increment isc index -- this only happens once per slow frame */
   if (index == 0)
-    if (((iscread_index[which] + 1) % 5) != iscwrite_index[which])
+    if (((iscread_index[which] + 1) % 5) != iscwrite_index[which]) {
       iscread_index[which] = (iscread_index[which] + 1) % 5;
+      /* reset blob multiplexing if this is a pointing packet */
+      if (ISCSolution[which][i_isc].flag == 1)
+        blob_index[which] = 0;
+    }
 
   i_isc = iscread_index[which];
 
@@ -431,13 +435,10 @@ void StoreStarCameraData(int index, int which)
   WriteData(HxFlagAddr[which], (unsigned int)ISCSolution[which][i_isc].flag,
       NIOS_QUEUE);
 
-  if (!ISCSolution[which][i_isc].flag)
-    return;
-
   /*** Blobs ***/
   /* Save current blob data if the current frame is a pointing solution;
    * we only do this once per slow frame */
-  if (index == 0)
+  if (index == 0 && ISCSolution[which][i_isc].flag)
     for (i = 0; i < 15; ++i) {
       blob_data[which][i][0] = (int)(ISCSolution[which][i_isc].blob_x[i] * 40);
       blob_data[which][i][1] = (int)(ISCSolution[which][i_isc].blob_y[i] * 40);
@@ -447,6 +448,8 @@ void StoreStarCameraData(int index, int which)
           * 65.536);
     }
 
+  /* When we're writing a handshake packet, these blobs are still from the
+   * previous pointing packet */
   WriteData(Blob0XAddr[which], blob_data[which][blob_index[which] * 3 + 0][0],
       NIOS_QUEUE);
   WriteData(Blob1XAddr[which], blob_data[which][blob_index[which] * 3 + 1][0],
@@ -478,6 +481,11 @@ void StoreStarCameraData(int index, int which)
   /* increment blob index once per slow frame */
   if (index == 0)
     blob_index[which] = (blob_index[which] + 1) % 5;
+
+  if (!ISCSolution[which][i_isc].flag)
+    return;
+
+  /* Everything after this happens only for pointing packets */
 
   /*** Solution Info ***/
   WriteData(FramenumAddr[which],
