@@ -52,11 +52,6 @@
 
 #define BLASTCMDFILE BLAST_CMD
 
-#define COMMAND 0
-#define READY 1
-#define SENDING 2
-#define CANCEL 3
-
 double defaults[N_MCOMMANDS][MAX_N_PARAMS];
 
 //-------------------------------------------------------------
@@ -225,7 +220,7 @@ int MainForm::GroupSIndexes(int group, int *indexes) {
   int i;
   int num = 0;
 
-  for (i = 0; i < N_NM_SCOMMANDS; i++) {
+  for (i = 0; i < N_SCOMMANDS; i++) {
     if (scommands[i].group & (1 << group))
       indexes[num++] = i;
   }
@@ -273,7 +268,7 @@ int MainForm::GroupMIndexes(int group, int *indexes) {
 int MainForm::SIndex(QString cmd) {
   int i;
 
-  for (i = 0; i < N_NM_SCOMMANDS; i++) {
+  for (i = 0; i < N_SCOMMANDS; i++) {
     if (strcmp(scommands[i].name, cmd) == 0)
       return i;
   }
