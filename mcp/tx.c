@@ -949,15 +949,16 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
 
   if (isc_trigger_count<ISC_TRIG_LEN) {
     iscBits|=ISC_TRIGGER;
-    write_ISC_pointing = 1;	
   }
   isc_trigger_count++;
   if (isc_trigger_count>=ISC_TRIG_PER) {
     isc_trigger_count = 0;
-    if (isc_trigger_since_last<0) isc_trigger_since_last = 0;
+    write_ISC_pointing = 1;	
+    if (isc_trigger_since_last<0)
+      isc_trigger_since_last = 0;
   }
   if (isc_trigger_since_last>=0) isc_trigger_since_last++;
-  
+
   WriteSlow(i_lockpin, j_lockpin, pin_is_in);
   WriteSlow(pumpBitsCh, pumpBitsInd, pumpBits);
   WriteSlow(pumpPwm2Ch, pumpPwm2Ind, CommandData.pumps.pwm2 & 0x7ff);
@@ -975,11 +976,11 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
 }
 
 /*****************************************************************
- *                                                               *
+*                                                               *
  * SyncADC: check to see if any boards need to be synced and     *
- *    send the sync bit if they do.  Only one board can be       *
- *    synced in each superframe.                                 *
- *                                                               *
+*    send the sync bit if they do.  Only one board can be       *
+*    synced in each superframe.                                 *
+*                                                               *
  *****************************************************************/
 void SyncADC (int TxIndex,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
@@ -1068,9 +1069,9 @@ char *StringToUpper(char *s) {
 }
 
 /************************************************************************
- *                                                                      *
- *    Store derived acs and pointing data in frame                      *
- *                                                                      *
+*                                                                      *
+*    Store derived acs and pointing data in frame                      *
+*                                                                      *
  ************************************************************************/
 void StoreData(int index, unsigned int* Txframe,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
@@ -1094,7 +1095,7 @@ void StoreData(int index, unsigned int* Txframe,
   static int i_RA, j_RA, i_DEC, j_DEC, i_R, j_R;
   static int i_SVETO, j_SVETO;
   static int i_MAG_MODEL, j_MAG_MODEL;
-  
+
   /** dgps fields **/
   static int i_dgps_time, j_dgps_time;
   static int i_dgps_lat, j_dgps_lat;  
@@ -1141,7 +1142,7 @@ void StoreData(int index, unsigned int* Txframe,
   static int isc_mtolCh, isc_mtolInd;
   static int isc_qtolCh, isc_qtolInd;
   static int isc_rtolCh, isc_rtolInd;
-  
+
   static int blob_index = 0;
 
   time_t t;
@@ -1175,7 +1176,7 @@ void StoreData(int index, unsigned int* Txframe,
     SlowChIndex("lat", &i_LAT, &j_LAT);
     SlowChIndex("lon", &i_LON, &j_LON);
     SlowChIndex("mag_model", &i_MAG_MODEL, &j_MAG_MODEL);
-    
+
     SlowChIndex("p_az_mode", &i_AZ_MODE, &j_AZ_MODE);
     SlowChIndex("p_el_mode", &i_EL_MODE, &j_EL_MODE);
     SlowChIndex("p_az1", &i_AZ1, &j_AZ1);
@@ -1200,7 +1201,7 @@ void StoreData(int index, unsigned int* Txframe,
     SlowChIndex("dgps_pos_index", &i_dgps_pos_index, &j_dgps_pos_index);
     SlowChIndex("dgps_att_ok", &i_dgps_att_ok, &j_dgps_att_ok);
     SlowChIndex("dgps_att_index", &i_dgps_att_index, &j_dgps_att_index);
-    
+
     SlowChIndex("blob0_x", &blob0_xCh, &blob0_xInd);
     SlowChIndex("blob1_x", &blob1_xCh, &blob1_xInd);
     SlowChIndex("blob2_x", &blob2_xCh, &blob2_xInd);
@@ -1263,7 +1264,7 @@ void StoreData(int index, unsigned int* Txframe,
   WriteFast(i_az, (unsigned int)(PointingData[i_point].az * 65536.0/360.0));
   WriteFast(i_el, (unsigned int)(PointingData[i_point].el * 65536.0/360.0));
   WriteFast(i_MAG_AZ,
-	    (unsigned int)(PointingData[i_point].mag_az * 65536.0/360.0));
+      (unsigned int)(PointingData[i_point].mag_az * 65536.0/360.0));
   t = PointingData[i_point].lst;
   WriteSlow(i_LST, j_LST, t >> 16);
   WriteSlow(i_LST + 1, j_LST, t);
@@ -1271,8 +1272,8 @@ void StoreData(int index, unsigned int* Txframe,
   WriteSlow(i_LON, j_LON, (int)(PointingData[i_point].lon * DEG2I));
 
   WriteSlow(i_MAG_MODEL, j_MAG_MODEL,
-	    (int)(PointingData[i_point].mag_model *DEG2I));
-  
+      (int)(PointingData[i_point].mag_model *DEG2I));
+
   /************* Pointing mode fields *************/
   WriteSlow(i_AZ_MODE, j_AZ_MODE, (int)(CommandData.pointing_mode.az_mode));
   WriteSlow(i_EL_MODE, j_EL_MODE, (int)(CommandData.pointing_mode.el_mode));
@@ -1281,23 +1282,23 @@ void StoreData(int index, unsigned int* Txframe,
   WriteSlow(i_EL1, j_EL1, (int)(CommandData.pointing_mode.el1 * DEG2I));
   WriteSlow(i_EL2, j_EL2, (int)(CommandData.pointing_mode.el2 * DEG2I));
   WriteSlow(i_AZ_VEL, j_AZ_VEL,
-	    (int)(CommandData.pointing_mode.az_vel * VEL2I));
+      (int)(CommandData.pointing_mode.az_vel * VEL2I));
   WriteSlow(i_EL_VEL, j_EL_VEL,
-	    (int)(CommandData.pointing_mode.el_vel * VEL2I));
+      (int)(CommandData.pointing_mode.el_vel * VEL2I));
   WriteSlow(i_RA, j_RA, (int)(CommandData.pointing_mode.ra * H2I));	
   WriteSlow(i_DEC, j_DEC, (int)(CommandData.pointing_mode.dec * DEG2I));
   WriteSlow(i_R, j_R, (int)(CommandData.pointing_mode.r * DEG2I));
 
   sensor_veto = (!CommandData.use_sun) | ((!CommandData.use_isc)<<1) |
-		((!CommandData.use_elenc)<<2) |		
-		((!CommandData.use_mag)<<3) |
-		((!CommandData.use_gps)<<4) |
-		((!CommandData.use_elclin)<<5);
+    ((!CommandData.use_elenc)<<2) |		
+    ((!CommandData.use_mag)<<3) |
+    ((!CommandData.use_gps)<<4) |
+    ((!CommandData.use_elclin)<<5);
 
   if (PointingData[i_point].t >= CommandData.pointing_mode.t_start_sched) {
     sensor_veto |= (1 << 6);
   }
-  
+
   WriteSlow(i_SVETO, j_SVETO, sensor_veto);
 
   /************* dgps fields *************/
@@ -1305,7 +1306,7 @@ void StoreData(int index, unsigned int* Txframe,
   WriteSlow(i_dgps_time, j_dgps_time, t >> 16);
   WriteSlow(i_dgps_time + 1, j_dgps_time, t);
   //if (t<100) printf("t spike %lu\n", t);
-  
+
   /** Pos fields **/
   i_dgps = GETREADINDEX(dgpspos_index);
   WriteSlow(i_dgps_lat, j_dgps_lat, (int)(DGPSPos[i_dgps].lat * DEG2I));

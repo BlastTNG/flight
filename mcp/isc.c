@@ -10,7 +10,7 @@
 #include "pointing_struct.h"
 #include "isc_protocol.h"
 
-#define ELBERETH "192.168.1.98"
+#define ELBERETH "192.168.1.142"
 #define BASE_PORT 2000
 
 extern short int SamIAm;   /* mcp.c */
@@ -142,6 +142,11 @@ void IntegratingStarCamera(void)
         MyPointData = PointingData[GETREADINDEX(point_index)];
         ISCReadIndex = GETREADINDEX(iscdata_index);
 
+        CommandData.ISCState.lat = MyPointData.lat * DEG2RAD;
+        CommandData.ISCState.az = MyPointData.az * DEG2RAD;
+        CommandData.ISCState.el = MyPointData.el * DEG2RAD;
+        CommandData.ISCState.lst = MyPointData.lst * SEC2RAD;
+
         /* Write to ISC */
         if (InCharge) {
           n = send(sock, &CommandData.ISCState, sizeof(CommandData.ISCState), 0);
@@ -153,6 +158,7 @@ void IntegratingStarCamera(void)
                 sizeof(struct ISCStatusStruct), n);
             break;
           }
+          write_ISC_pointing = 0;
           if (isc_log != NULL) {
             t = time(NULL);
             fprintf(isc_log, "%s: %i %i %i %i - %i %i %i %i - %.4lf %.4lf %.4lf %.4lf\n"
@@ -178,7 +184,7 @@ void IntegratingStarCamera(void)
 
                 CommandData.ISCState.tolerance, CommandData.ISCState.match_tol,
                 CommandData.ISCState.quit_tol, CommandData.ISCState.rot_tol);
-            fflush(isc_log);
+                fflush(isc_log);
           }
         }
       }

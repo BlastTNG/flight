@@ -371,7 +371,7 @@ void SingleCommand (int command) {
     /********* ISC Commanding  *************/
   } else if (command == SIndex("isc_run")) {
     CommandData.ISCState.pause = 0;
-  } else if (command == SIndex("expose")) {
+  } else if (command == SIndex("pause")) {
     CommandData.ISCState.pause = 1;
   } else if (command == SIndex("save_images")) {
     CommandData.ISCState.save = 1;
@@ -1475,7 +1475,7 @@ void InitCommandData() {
   CommandData.ISCState.focus_pos = 2300;
   CommandData.ISCState.ap_pos = 495;
   CommandData.ISCState.display_mode = full;
-  CommandData.ISCState.sn_threshold = 10;
+  CommandData.ISCState.sn_threshold = 20;
   CommandData.ISCState.grid = 38;
   CommandData.ISCState.cenbox = 20;
   CommandData.ISCState.apbox = 5;

@@ -19,7 +19,7 @@
 #pragma pack(2)		// same packing as in Linux
 #endif
 
-#define MAX_ISC_BLOBS 50					// static # blobs to store in data frames
+#define MAX_ISC_BLOBS 20					// static # blobs to store in data frames
 #define FOCUS_RANGE 2550					// # steps range for focus stepper
 #define AP_RANGE 495						// # steps range for aperture stepper
 #define CCD_X_PIXELS 1312					// pixel dimenions of the CCD
