@@ -216,47 +216,6 @@ void CryoControl (unsigned int* TxFrame,
   WriteSlow(cryopwmCh, cryopwmInd, CommandData.Cryo.sparePwm);
 }
 
-/***************************************************************************/
-/*                                                                         */
-/* PulseCalibrator: Set heaters to values contained within the CommandData */
-/*                                                                         */
-/***************************************************************************/
-void PulseCalibrator (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
-{
-  static int calpulsCh = -1, calpulsInd = -1;
-  static int pulsed = 0, waitfor = 0;
-  int cal_pulse = 0;
-
-  if (calpulsCh == -1) {
-    SlowChIndex("cal_puls", &calpulsCh, &calpulsInd);
-  }
-
-  if (CommandData.Cryo.calib_pulse > 0) {
-    if (waitfor > 0) {
-      waitfor--;
-    } else {
-      if (pulsed < CommandData.Cryo.calib_pulse) {
-        if (CommandData.Cryo.calib_pulse - pulsed <= 200) {
-          cal_pulse = CommandData.Cryo.calib_pulse - pulsed;
-        } else {
-          cal_pulse = 300;
-        }
-        pulsed += 200;
-      } else {
-        if (CommandData.Cryo.calib_repeat > 0) {
-          waitfor = CommandData.Cryo.calib_repeat * 5;
-          pulsed = 0;
-        } else
-          pulsed = waitfor = CommandData.Cryo.calib_pulse = 0;
-      }
-    }
-  } else {
-    cal_pulse = 0;
-  }
-
-  WriteSlow(calpulsCh, calpulsInd, (int)(cal_pulse * 10.41666667));
-}
-
 /************************************************************************/
 /*                                                                      */
 /*   BiasControl: Digital IO with the Bias Generator Card               */
