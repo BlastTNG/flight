@@ -289,6 +289,8 @@ void IntegratingStarCamera(void* parameter)
         CommandData.ISCState[which].lst = MyPointData.lst * SEC2RAD;
         CommandData.ISCState[which].MCPFrameNum = RxFrameFastSamp;
 
+        bprintf(info, "Wrote shutdown=%i to %i\n", CommandData.ISCState[which].shutdown, which);
+
         /* request for one automaticly saved image */
         if (CommandData.ISCControl[which].auto_save) {
           save_image_state = CommandData.ISCState[which].save;
