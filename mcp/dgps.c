@@ -102,7 +102,6 @@ void WatchDGPS() {
   int pos_ok;
   static int i_at_float = 0;
 
-  pthread_setspecific(identity, "dgps");
   bputs(startup, "WatchDGPS startup\n");
 
   DGPSAtt[0].az = 0;

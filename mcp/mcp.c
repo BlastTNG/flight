@@ -68,7 +68,6 @@ int bbc_fp = -1;
 int bi0_fp = -2;
 unsigned int debug = 0;
 short int SamIAm;
-pthread_key_t identity;
 
 struct ACSDataStruct ACSData;
 
@@ -167,7 +166,7 @@ void mputs(buos_t flag, const char* message) {
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
-  sprintf(bufstart, "[%s] ", (char*)pthread_getspecific(identity));
+  sprintf(bufstart, "[%5i] ", getpid());
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
@@ -216,12 +215,10 @@ void mputs(buos_t flag, const char* message) {
   if (flag == tfatal) {
     if (logfile != NULL) {
       fprintf(logfile,
-          "$$ Last error is THREAD FATAL.  Thread [%s] exits.\n",
-          (char*)pthread_getspecific(identity));
+          "$$ Last error is THREAD FATAL.  Thread [%5i] exits.\n", getpid());
       fflush(logfile);
     }
-    printf("$$ Last error is THREAD FATAL.  Thread [%s] exits.\n",
-        (char*)pthread_getspecific(identity));
+    printf("$$ Last error is THREAD FATAL.  Thread [%5i] exits.\n", getpid());
     fflush(stdout);
 
     pthread_exit(NULL);
@@ -235,7 +232,6 @@ void SensorReader(void) {
 
   FILE *stream;
 
-  pthread_setspecific(identity, "sens");
   bputs(startup, "SensorReader startup\n");
 
   while (1) {
@@ -420,7 +416,6 @@ int fill_Rx_frame(unsigned int in_data,
 }
 
 void WatchDog (void) {
-  pthread_setspecific(identity, "wdog");
   bputs(startup, "Watchdog startup\n");
 
   if (ioperm(0x378, 0x0F, 1) != 0)
@@ -498,7 +493,6 @@ void zero(unsigned short *RxFrame) {
 void BiPhaseWriter(void) {
   int i_out, i_in;
 
-  pthread_setspecific(identity, "bi0 ");
   bputs(startup, "Biphase writer startup\n");
 
   while (1) {
@@ -604,9 +598,6 @@ int main(int argc, char *argv[]) {
   }
 
   umask(0);  /* clear umask */
-
-  pthread_key_create(&identity, NULL);
-  pthread_setspecific(identity, "mcp ");
 
   if ((logfile = fopen("/data/etc/mcp.log", "a")) == NULL)
     berror(err, "Can't open log file");

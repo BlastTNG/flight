@@ -179,7 +179,6 @@ void FrameFileWriter(void) {
   int write_len;
 
 #ifdef __MCP__ 
-  pthread_setspecific(identity, "disk");
   bputs(startup, "FrameFileWriter startup\n");
 #endif
 

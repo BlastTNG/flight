@@ -323,8 +323,8 @@ int SSConvert(double *ss_az) {
   *ss_az = az * 180.0 / M_PI + 180.0 + sun_az;
 #endif
   /* Temporary High-Bay az lookup */
-  az = LutCal(&new_ssLut, (double)SunSensorData[i_ss].az_center);
-  ss_az = az;
+  az = LutCal(&new_ssLut, (double)SunSensorData[i_ss].az_center * 16);
+  *ss_az = az;
 
   NormalizeAngle(ss_az);
 

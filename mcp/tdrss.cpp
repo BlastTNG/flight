@@ -1262,10 +1262,12 @@ void FrameBuffer::Resize(int numframes_in) {
  ******************************************************************************/
 
 void *FrameBuffer::UpdateThreadEntry(void *pthis) {
-  pthread_setspecific(identity, "updt");
+  bputs(startup, "Update start-up.\n");
 
   FrameBuffer *mine = (FrameBuffer *)pthis;
   mine->Update();
+
+  bputs(info, "Update done.\n");
 
   return NULL;
 }
@@ -1487,7 +1489,6 @@ FrameBuffer::~FrameBuffer() {
 extern "C" void TDRSSWriter(void) {
   Alice *drinkme;
 
-  pthread_setspecific(identity, "tdrs");
   bputs(startup, "Alice start-up.\n");
 
   tty_fd = OpenSerial();
