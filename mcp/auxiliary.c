@@ -204,8 +204,8 @@ int Balance(int iscBits) {
 /*    Do Lock Logic: check status, determine if we are locked, etc      */
 /*                                                                      */
 /************************************************************************/
-#define MOVE_COUNTS 200
-#define SEARCH_COUNTS 500
+#define PULSE_LENGTH 20   /* 200 msec */
+#define SEARCH_COUNTS 500 /* 5 seconds */
 int GetLockBits(void) {
   static int is_closing = 0;
   static int is_opening = 0;
@@ -215,11 +215,11 @@ int GetLockBits(void) {
   if (CommandData.pumps.lock_in) {
     CommandData.pumps.lock_in = 0;
     is_opening = 0;
-    is_closing = 1;
+    is_closing = PULSE_LENGTH;
     is_searching = 0;
   } else if (CommandData.pumps.lock_out) {
     CommandData.pumps.lock_out = 0;
-    is_opening = 1;
+    is_opening = PULSE_LENGTH;
     is_closing = 0;
     is_searching = 0;
   } else if (CommandData.pumps.lock_point) {
@@ -249,8 +249,10 @@ int GetLockBits(void) {
 
   /* set lock bits */
   if (is_closing) {
+    is_closing--;
     return(LOKMOT_IN | LOKMOT_ON);
   } else if (is_opening) {
+    is_opening--;
     return(LOKMOT_OUT | LOKMOT_ON);
   }
 
