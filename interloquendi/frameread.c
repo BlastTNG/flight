@@ -25,8 +25,76 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+#ifdef __DEFILE__
+#  include "defile.h"
+#endif
+
 #include "frameread.h"
 #include "channels.h"
+
+void Croak(const char* string)
+{
+#ifdef __DEFILE__
+  dperror(1, string);
+#else
+  syslog(LOG_ERR, "%s: %m", string);
+  exit(1);
+#endif
+}
+
+void PathSplit(const char* path, const char** dname, const char** bname)
+{
+  static char static_base[NAME_MAX];
+  static char static_path[PATH_MAX];
+
+  PathSplit_r(path, static_path, static_base);
+
+  if (dname != NULL)
+    *dname = static_path;
+
+  if (bname != NULL)
+    *bname = static_base;
+}
+
+void PathSplit_r(const char* path, char* dname, char* bname)
+{
+  char the_base[NAME_MAX];
+  char the_path[PATH_MAX];
+  char* base = NULL, *ptr;
+  char* buffer;
+
+  if ((buffer = strdup(path)) == NULL)
+    Croak("strdup");
+
+  for (ptr = buffer; *ptr != '\0'; ++ptr)
+    if (*ptr == '/')
+      base = ptr + 1;
+
+  if (base == NULL) { /* this is "foo" */
+    strncpy(the_base, buffer, NAME_MAX);
+    strcpy(the_path, ".");
+  } else if (base == buffer + 1) {
+    if (base[0] == '\0') { /* this is "/" */
+      strncpy(the_path, buffer, NAME_MAX);
+      strcpy(the_base, ".");
+    } else { /* this is "/foo" */
+      strcpy(the_path, "/");
+      strncpy(the_base, base, NAME_MAX);
+    }
+  } else { /* this is "foo/bar" */
+    *(base - 1) = '\0';
+    strncpy(the_base, base, NAME_MAX);
+    strncpy(the_path, buffer, PATH_MAX);
+  }
+
+  if (dname != NULL)
+    strcpy(dname, the_path);
+
+  if (bname != NULL)
+    strcpy(bname, the_base);
+
+  free(buffer);
+}
 
 /* given a source filename, fills in the part of it which is static from chunk
  * to chunk, the value of the counter, returns the length of the non-static
@@ -39,14 +107,8 @@ int StaticSourcePart(char* output, const char* source, chunkindex_t* value,
   int counter = 0;
   long number = 0;
 
-  if ((buffer = strdup(source)) == NULL) {
-#ifdef __DEFILE__
-    perror("defile: cannot allocate heap");
-#else
-    syslog(LOG_ERR, "strdup: %m");
-#endif
-    exit(1);
-  }
+  if ((buffer = strdup(source)) == NULL)
+    Croak("strdup");
 
   /* walk backwards through source looking for first non-hex digit */
   for (ptr = buffer + strlen(buffer) - 1; counter < sufflen && ptr != buffer;
@@ -83,22 +145,11 @@ int GetNextChunk(char* chunk, int sufflen)
   struct stat chunk_stat;
 
   /* allocate our buffers */
-  if ((buffer = (char*)malloc(FILENAME_LEN)) == NULL) {
-#ifdef __DEFILE__
-    perror("defile: cannot allocate heap");
-#else
-    syslog(LOG_ERR, "malloc: %m");
-#endif
-    exit(1);
-  }
-  if ((newchunk = (char*)malloc(FILENAME_LEN)) == NULL) {
-#ifdef __DEFILE__
-    perror("defile: cannot allocate heap");
-#else
-    syslog(LOG_ERR, "malloc: %m");
-#endif
-    exit(1);
-  }
+  if ((buffer = (char*)malloc(FILENAME_LEN)) == NULL) 
+    Croak("malloc");
+
+  if ((newchunk = (char*)malloc(FILENAME_LEN)) == NULL)
+    Croak("malloc");
 
   /* get current chunk name */
   s = StaticSourcePart(buffer, chunk, &chunknum, sufflen);
@@ -118,7 +169,7 @@ int GetNextChunk(char* chunk, int sufflen)
     free(buffer);
     return 0;
   }
-  
+
   /* generate new filename */
   snprintf(newchunk, FILENAME_LEN, "%s%0*llX", buffer, s,
       (unsigned long long)(chunknum + 1));
@@ -146,19 +197,14 @@ long int SetStartChunk(long int framenum, char* chunk, int sufflen)
   int chunk_total;
   int new_chunk;
   struct stat chunk_stat;
+  char gpb[GPB_LEN];
 
   /* Loop until we get to the right chunk */
   for (;;) {
     /* Stat the current chunk file to get its size */
     if (stat(chunk, &chunk_stat)) {
-#ifdef __DEFILE__
-      char gpb[GPB_LEN];
-      snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", chunk);
-      perror(gpb);
-#else
-      syslog(LOG_ERR, "stat `%s': %m", chunk);
-#endif
-      exit(1);
+      snprintf(gpb, GPB_LEN, "stat `%s'", chunk);
+      Croak(gpb);
     }
 
     chunk_total = chunk_stat.st_size / DiskFrameSize;
@@ -168,17 +214,15 @@ long int SetStartChunk(long int framenum, char* chunk, int sufflen)
       return left_to_read;
 
     /* Otherwise, try to get a new chunk */
-    if ((new_chunk = GetNextChunk(chunk, sufflen)) == 0) {
+    if ((new_chunk = GetNextChunk(chunk, sufflen)) == 0)
 #ifdef __DEFILE__
       /* no new chunk -- complain and exit */
-      fprintf(stderr, "defile: source file is smaller than destination.\n"
-          "defile: cannot resume.\n");
-      exit(1);
+      dprintf(DF_TERM, "source file is smaller than destination.\n"
+          "cannot resume.\n");
 #else
       /* start at end of last chunk */
       return chunk_total;
 #endif
-    }
 
     /* there is another chunk, decrement the total needed and try again */
     left_to_read -= chunk_total;
@@ -197,16 +241,18 @@ int StreamToNextChunk(int keepalive, char* chunk, int sufflen, int *chunk_total,
     for (;;) {
       /* persistent: first check to see if we have more data in the file */
       if (stat(chunk, &chunk_stat)) {
-        snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", chunk);
-        perror(gpb);
-        exit(1);
+        snprintf(gpb, GPB_LEN, "stat `%s'", chunk);
+        Croak(gpb);
       }
 
       /* new frame total */
       n = chunk_stat.st_size / DiskFrameSize;
       if (n < *chunk_total)
-        fprintf(stderr, "defile: warning: chunk `%s' has shrunk.\n",
-            chunk);
+#ifdef __DEFILE__
+        dprintf(DF_WARN, "warning: chunk `%s' has shrunk.\n", chunk);
+#else
+        syslog(LOG_WARNING, "chunk `%s' has shrunk.", chunk);
+#endif
 
       if (n > *chunk_total) {
         *chunk_total = n;
@@ -221,9 +267,8 @@ int StreamToNextChunk(int keepalive, char* chunk, int sufflen, int *chunk_total,
        * we're using one */
       if (curfile_name != NULL) {
         if ((curfile = fopen(curfile_name, "r")) == NULL) {
-          snprintf(gpb, GPB_LEN, "defile: cannot open `%s'", curfile_name);
-          perror(gpb);
-          exit(1);
+          snprintf(gpb, GPB_LEN, "open `%s'", curfile_name);
+          Croak(gpb);
         }
 
         fgets(gpb, PATH_MAX, curfile);

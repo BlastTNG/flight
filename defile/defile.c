@@ -114,46 +114,6 @@ void dprintf(int severity, const char* format, ...)
   va_end(argptr);
 }
 
-void PathSplit(const char* path, const char** dname, const char** bname)
-{
-  static char static_base[NAME_MAX];
-  static char static_path[PATH_MAX];
-  char* base = NULL, *ptr;
-  char* buffer;
-
-  if ((buffer = strdup(path)) == NULL)
-    dperror(1, "cannot allocate heap");
-
-  for (ptr = buffer; *ptr != '\0'; ++ptr)
-    if (*ptr == '/')
-      base = ptr + 1;
-
-  if (base == NULL) { /* this is "foo" */
-    strncpy(static_base, buffer, NAME_MAX);
-    strcpy(static_path, ".");
-  } else if (base == buffer + 1) {
-    if (base[0] == '\0') { /* this is "/" */
-      strncpy(static_path, buffer, NAME_MAX);
-      strcpy(static_base, ".");
-    } else { /* this is "/foo" */
-      strcpy(static_path, "/");
-      strncpy(static_base, base, NAME_MAX);
-    }
-  } else { /* this is "foo/bar" */
-    *(base - 1) = '\0';
-    strncpy(static_base, base, NAME_MAX);
-    strncpy(static_path, buffer, PATH_MAX);
-  }
-
-  if (dname != NULL)
-    *dname = static_path;
-
-  if (bname != NULL)
-    *bname = static_base;
-
-  free(buffer);
-}
-
 char* ResolveOutputDirfile(char* dirfile, const char* parent)
 {
   const char* parent_part, *dirfile_part;

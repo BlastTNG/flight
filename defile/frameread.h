@@ -33,9 +33,17 @@
 typedef unsigned int chunkindex_t;
 
 int      GetNextChunk      ( char*       , int                                );
-long int SetStartChunk     ( long int    , char*       , int                  );
-int      StaticSourcePart  ( char*       , const char* , chunkindex_t* , int  );
-int      StreamToNextChunk ( int         , char*       , int           , int* ,
-                             const char* , char*                              );
+
+void     PathSplit         ( const char* , const char** , const char**        );
+
+void     PathSplit_r       ( const char* , char*        , char*               );
+
+long int SetStartChunk     ( long int    , char*        , int                 );
+
+int      StaticSourcePart  ( char*       , const char*  , chunkindex_t* ,
+                             int                                              );
+
+int      StreamToNextChunk ( int         , char*        , int           ,
+                             int*        , const char*  , char*               );
 
 #endif
