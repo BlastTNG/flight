@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(blastcmd, 1.1.8, [dwiebe@physics.utoronto.ca])
-AM_INIT_AUTOMAKE(blastcmd, 1.1.8)
+AC_INIT(blastcmd, 1.1.9, [dwiebe@physics.utoronto.ca])
+AM_INIT_AUTOMAKE(blastcmd, 1.1.9)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH([data-etc],
@@ -27,8 +27,8 @@ AC_ARG_ENABLE([dummycmd], AS_HELP_STRING([--enable-dummycmd],
           enable_dummycmd="${enableval}",enable_dummycmd="no")
 
 AC_ARG_WITH([remote-host], AS_HELP_STRING([--with-remote-host=HOST],
-            [use HOST as the remote host for blastcmd-remote [[galadriel]]]),
-            REMOTE_HOST="${withval}", REMOTE_HOST="galadriel")
+            [use HOST as the remote host for blastcmd-remote [[arwen]]]),
+            REMOTE_HOST="${withval}", REMOTE_HOST="arwen")
 
 AC_ARG_WITH([remote-user], AS_HELP_STRING([--with-remote-user=USER],
             [have blastcmd-remote log into the remote host as USER [[none]]]),

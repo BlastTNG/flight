@@ -1,3 +1,8 @@
+2004-12-17:
+	Release blastcmd-1.1.9
+
+	* configure.ac: Use arwen as default blastcmd server
+
 2004-11-15:
 	* configure.ac: Fix help formatting. Migrate to new-style AC_INIT
 
