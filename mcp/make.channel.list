@@ -38,6 +38,8 @@ open INPUT, "<tx_struct.c" or die "ERROR: Unable to open tx_struct.c";
 while (<INPUT>) {
   if (/#define LOOPBACK ([0-9]*)/) {
     $LOOPBACK = $1;
+  } elsif (/#define LOOPBAK2 ([0-9]*)/) {
+    $LOOPBAK2 = $1;
   } elsif (/#define SPARE ([0-9]*)/) {
     $SPARE = $1;
   } elsif ($slowlist) {
@@ -45,12 +47,13 @@ while (<INPUT>) {
         /^[^\/\*]*{"(.*)" *, *'(.)' *, *(.*) *, *(.*) *, *(.*) *, *(.*) *, *'(.)' *}/) {
       @record = ($slowch, $slowind, @record);
       $record[4] = $LOOPBACK if ($record[4] eq "LOOPBACK");
+      $record[4] = $LOOPBAK2 if ($record[4] eq "LOOPBAK2");
       $record[4] = $SPARE if ($record[4] eq "SPARE");
       if ($record[2] ne "") {
         $record[6] =~ s/I2DEG/$I2DEG/g;
         $record[6] = eval($record[6]);
         $record[7] = eval($record[7]);
-        printf "  %1i %2i  %-20s  %1s   %2i  %2i  %18g  %18g  %s\n", @record;
+        printf " %2i %2i  %-20s  %1s   %2i  %2i  %18g  %18g  %s\n", @record;
         push @recs, [ @record ];
       }
       $slowind++;
@@ -105,7 +108,7 @@ while (<INPUT>) {
           (undef, @record) = @$_;
           printf "  %3i   %-20s  %1s   %2i  %2i  %18g  %18g  %s\n", @record;
         } else {
-          printf "  %1i %2i  %-20s  %1s   %2i  %2i  %18g  %18g  %s\n", @$_;
+          printf " %2i %2i  %-20s  %1s   %2i  %2i  %18g  %18g  %s\n", @$_;
         }
       }
 
@@ -121,7 +124,7 @@ while (<INPUT>) {
           (undef, @record) = @$_;
           printf "  %3i   %-20s  %1s   %2i  %2i  %18g  %18g  %s\n", @record;
         } else {
-          printf "  %1i %2i  %-20s  %1s   %2i  %2i  %18g  %18g  %s\n", @$_;
+          printf " %2i %2i  %-20s  %1s   %2i  %2i  %18g  %18g  %s\n", @$_;
         }
       }
     }

@@ -31,10 +31,12 @@
 #define BBC_BAD_DATA (0xfffffff0)
 
 #ifdef BOLOTEST
-#define FRAME_MARGIN (-12)
+#  define FRAME_MARGIN (-12)
 #else
-  #define FRAME_MARGIN (-32)
+#  define FRAME_MARGIN (-32)
 #endif
+
+#define NOVSC
 
 #define BI0_FRAME_BUFLEN (40)
 /* Define global variables */
@@ -63,6 +65,7 @@ void Pointing();
 void WatchPortC1(void);
 void WatchPortC2(void);
 void WatchDGPS(void);
+void IntegratingStarCamera(void);
 void WatchFIFO(void);
 void DirFileWriter(void);
 
@@ -121,10 +124,10 @@ void SigPipe(int signal) {
 }
 
 /************************************************************************
- *                                                                      *
- *   MagRead:  readout magnetometer, subtracting bais from x and        *
- *             y and determine angle                                    *
- *                                                                      *
+*                                                                      *
+*   MagRead:  readout magnetometer, subtracting bais from x and        *
+*             y and determine angle                                    *
+*                                                                      *
  ************************************************************************/
 double MagRead(unsigned short *Rxframe) {
   static int i_mag_x = -1;
@@ -257,14 +260,14 @@ void SunSensor(void) {
     inet_aton(ARIEN, &addr.sin_addr);
     addr.sin_family = AF_INET;
     addr.sin_port = htons(ARIEN_PORT);
-//    fprintf(stderr, "Attempting to connect to Arien...\n");
+    //    fprintf(stderr, "Attempting to connect to Arien...\n");
     while ((n = connect(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)))
         < 0) {
-//      fprintf(stderr, "Connection attempt to Arien failed [%i].\n", n);
+      //      fprintf(stderr, "Connection attempt to Arien failed [%i].\n", n);
       sleep(1);
-//      fprintf(stderr, "Attempting to connect to Arien...\n");
+      //      fprintf(stderr, "Attempting to connect to Arien...\n");
     };
-//    fprintf(stderr, "Connect returned: %i\n", n);
+    //    fprintf(stderr, "Connect returned: %i\n", n);
 
     fprintf(stderr, "Connected to Arien\n");
     sigPipeRaised = n = 0;
@@ -273,7 +276,7 @@ void SunSensor(void) {
       curIndex = RxframeIndex;
       if (curIndex < lastIndex) {
         attempts = 0;
-//        fprintf(stderr, "P\n");
+        //        fprintf(stderr, "P\n");
         send(sock, P, 2, 0);
 
         do {
@@ -527,11 +530,14 @@ int main(int argc, char *argv[]) {
   pthread_t sunsensor_id;
 
 #ifndef BOLOTEST
+#  ifndef NOVSC
   pthread_t starfind_id;
+#  endif
   pthread_t CommandDatacomm2;
   pthread_t bi0_id;
   pthread_t sensors_id;
   pthread_t dgps_id;
+  pthread_t isc_id;
 #endif
 
   struct CommandDataStruct CommandData_loc;
@@ -540,7 +546,9 @@ int main(int argc, char *argv[]) {
   //Initialize the Ephemeris
   ReductionInit();
 
-  //  pthread_create(&starfind_id, NULL, (void*)&starfind, NULL);
+#ifndef NOVSC
+  pthread_create(&starfind_id, NULL, (void*)&starfind, NULL);
+#endif
 
   InitCommandData();
   pthread_mutex_init(&mutex, NULL);
@@ -552,6 +560,7 @@ int main(int argc, char *argv[]) {
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPortC2, NULL);
 
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS,NULL);
+  pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, NULL);
 
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);

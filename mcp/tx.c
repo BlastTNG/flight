@@ -1036,7 +1036,7 @@ void StoreData(unsigned int* Txframe,
   static int i_RA, j_RA, i_DEC, j_DEC, i_R, j_R;
   static int i_SVETO, j_SVETO;
 
-  /** dgps fields */
+  /** dgps fields **/
   static int i_dgps_time, j_dgps_time;
   static int i_dgps_lat, j_dgps_lat;  
   static int i_dgps_lon, j_dgps_lon;  
@@ -1049,6 +1049,36 @@ void StoreData(unsigned int* Txframe,
   static int i_dgps_pos_index, j_dgps_pos_index;
   static int i_dgps_n_sat, j_dgps_n_sat;
   
+  /** isc fields **/
+  static int blob0_xCh, blob0_xInd;
+  static int blob1_xCh, blob1_xInd;
+  static int blob2_xCh, blob2_xInd;
+  static int blob0_yCh, blob0_yInd;
+  static int blob1_yCh, blob1_yInd;
+  static int blob2_yCh, blob2_yInd;
+  static int blob0_fluxCh, blob0_fluxInd;
+  static int blob1_fluxCh, blob1_fluxInd;
+  static int blob2_fluxCh, blob2_fluxInd;
+  static int isc_errorCh, isc_errorInd;
+  static int isc_exposeCh, isc_exposeInd;
+  static int isc_rotCh, isc_rotInd;
+  static int isc_raCh, isc_raInd;
+  static int isc_decCh, isc_decInd;
+  static int isc_apertCh, isc_apertInd;
+  static int isc_pscaleCh, isc_pscaleInd;
+  static int isc_gainCh, isc_gainInd;
+  static int isc_cenboxCh, isc_cenboxInd;
+  static int isc_apboxCh, isc_apboxInd;
+  static int isc_mdistCh, isc_mdistInd;
+  static int isc_nblobsCh, isc_nblobsInd;
+  static int isc_focusCh, isc_focusInd;
+  static int isc_offsetCh, isc_offsetInd;
+  static int isc_mapmeanCh, isc_mapmeanInd;
+  static int isc_threshCh, isc_threshInd;
+  static int isc_gridCh, isc_gridInd;
+
+  static int blob_index = 0;
+
   time_t t;
 
   static int i_az = -1, i_el = -1;
@@ -1057,6 +1087,7 @@ void StoreData(unsigned int* Txframe,
   int i_point;
   int i_dgps;
   int sensor_veto;
+  int i_isc = GETREADINDEX(iscdata_index);
 
   /******** Obtain correct indexes the first time here ***********/
   if (i_V_COL == -1) {
@@ -1102,6 +1133,33 @@ void StoreData(unsigned int* Txframe,
     SlowChIndex("dgps_pos_index", &i_dgps_pos_index, &j_dgps_pos_index);
     SlowChIndex("dgps_att_ok", &i_dgps_att_ok, &j_dgps_att_ok);
     SlowChIndex("dgps_att_index", &i_dgps_att_index, &j_dgps_att_index);
+
+    SlowChIndex("blob0_x", &blob0_xCh, &blob0_xInd);
+    SlowChIndex("blob1_x", &blob1_xCh, &blob1_xInd);
+    SlowChIndex("blob2_x", &blob2_xCh, &blob2_xInd);
+    SlowChIndex("blob0_y", &blob0_yCh, &blob0_yInd);
+    SlowChIndex("blob1_y", &blob1_yCh, &blob1_yInd);
+    SlowChIndex("blob2_y", &blob2_yCh, &blob2_yInd);
+    SlowChIndex("blob0_flux", &blob0_fluxCh, &blob0_fluxInd);
+    SlowChIndex("blob1_flux", &blob1_fluxCh, &blob1_fluxInd);
+    SlowChIndex("blob2_flux", &blob2_fluxCh, &blob2_fluxInd);
+    SlowChIndex("isc_error", &isc_errorCh, &isc_errorInd);
+    SlowChIndex("isc_expose", &isc_exposeCh, &isc_exposeInd);
+    SlowChIndex("isc_rot", &isc_rotCh, &isc_rotInd);
+    SlowChIndex("isc_ra", &isc_raCh, &isc_raInd);
+    SlowChIndex("isc_dec", &isc_decCh, &isc_decInd);
+    SlowChIndex("isc_apert", &isc_apertCh, &isc_apertInd);
+    SlowChIndex("isc_pscale", &isc_pscaleCh, &isc_pscaleInd);
+    SlowChIndex("isc_gain", &isc_gainCh, &isc_gainInd);
+    SlowChIndex("isc_cenbox", &isc_cenboxCh, &isc_cenboxInd);
+    SlowChIndex("isc_apbox", &isc_apboxCh, &isc_apboxInd);
+    SlowChIndex("isc_mdist", &isc_mdistCh, &isc_mdistInd);
+    SlowChIndex("isc_nblobs", &isc_nblobsCh, &isc_nblobsInd);
+    SlowChIndex("isc_focus", &isc_focusCh, &isc_focusInd);
+    SlowChIndex("isc_offset", &isc_offsetCh, &isc_offsetInd);
+    SlowChIndex("isc_mapmean", &isc_mapmeanCh, &isc_mapmeanInd);
+    SlowChIndex("isc_thresh", &isc_threshCh, &isc_threshInd);
+    SlowChIndex("isc_grid", &isc_gridCh, &isc_gridInd);
   }
 
   /********** VSC Data **********/
@@ -1184,6 +1242,56 @@ void StoreData(unsigned int* Txframe,
   WriteSlow(i_dgps_att_ok, j_dgps_att_ok, DGPSAtt[i_dgps].att_ok);
   WriteSlow(i_dgps_att_index, j_dgps_att_index, i_dgps);
 
+  /** ISC Fields **/
+  if (blob_index == 0) {
+    i_isc = GETREADINDEX(iscdata_index); 
+  }
+
+  /*** Blobs ***/
+  WriteSlow(blob0_xCh, blob0_xInd,
+      (int)(ISCData[i_isc].az_blobs[blob_index * 3 + 0] * 40.));
+  WriteSlow(blob1_xCh, blob1_xInd,
+      (int)(ISCData[i_isc].az_blobs[blob_index * 3 + 1] * 40.));
+  WriteSlow(blob2_xCh, blob2_xInd,
+      (int)(ISCData[i_isc].az_blobs[blob_index * 3 + 2] * 40.));
+
+  WriteSlow(blob0_yCh, blob0_yInd,
+      (int)(ISCData[i_isc].el_blobs[blob_index * 3 + 0] * 40.));
+  WriteSlow(blob1_yCh, blob1_yInd,
+      (int)(ISCData[i_isc].el_blobs[blob_index * 3 + 1] * 40.));
+  WriteSlow(blob2_yCh, blob2_yInd,
+      (int)(ISCData[i_isc].el_blobs[blob_index * 3 + 2] * 40.));
+
+  WriteSlow(blob0_fluxCh, blob0_fluxInd,
+      (int)(ISCData[i_isc].flux_blobs[blob_index * 3 + 0] / 32.));
+  WriteSlow(blob1_fluxCh, blob1_fluxInd,
+      (int)(ISCData[i_isc].flux_blobs[blob_index * 3 + 1] / 32.));
+  WriteSlow(blob2_fluxCh, blob2_fluxInd,
+      (int)(ISCData[i_isc].flux_blobs[blob_index * 3 + 2] / 32.));
+
+  blob_index++;
+
+  /*** Camera Info ***/
+  WriteSlow(isc_errorCh, isc_errorInd, (int)ISCData[i_isc].error);
+  WriteSlow(isc_exposeCh, isc_exposeInd, (int)ISCData[i_isc].exposure);
+  WriteSlow(isc_rotCh, isc_rotInd, (int)(ISCData[i_isc].rot * DEG2I));
+  WriteSlow(isc_raCh, isc_raInd, (int)(ISCData[i_isc].ra * DEG2LI));
+  WriteSlow(isc_raCh + 1, isc_raInd, (int)(ISCData[i_isc].ra * DEG2LI) >> 16);
+  WriteSlow(isc_decCh, isc_decInd, (int)(ISCData[i_isc].dec * DEG2LI));
+  WriteSlow(isc_decCh + 1, isc_decInd, (int)(ISCData[i_isc].dec * DEG2LI) >>16);
+  WriteSlow(isc_apertCh, isc_apertInd, (int)ISCData[i_isc].aperturePosition);
+  WriteSlow(isc_pscaleCh, isc_pscaleInd,
+      (int)(ISCData[i_isc].platescale * 1000.));
+  WriteSlow(isc_gainCh, isc_gainInd, (int)ISCData[i_isc].gain);
+  WriteSlow(isc_cenboxCh, isc_cenboxInd, (int)ISCData[i_isc].cenbox);
+  WriteSlow(isc_apboxCh, isc_apboxInd, (int)ISCData[i_isc].apbox);
+  WriteSlow(isc_mdistCh, isc_mdistInd, (int)ISCData[i_isc].multiple_dist);
+  WriteSlow(isc_nblobsCh, isc_nblobsInd, (int)ISCData[i_isc].nblobs);
+  WriteSlow(isc_focusCh, isc_focusInd, (int)ISCData[i_isc].focusPosition);
+  WriteSlow(isc_offsetCh, isc_offsetInd, (int)ISCData[i_isc].offset);
+  WriteSlow(isc_mapmeanCh, isc_mapmeanInd, (int)(ISCData[i_isc].mapmean * 4.));
+  WriteSlow(isc_threshCh, isc_threshInd, (int)(ISCData[i_isc].threshold * 10.));
+  WriteSlow(isc_gridCh, isc_gridInd, (int)ISCData[i_isc].grid);
 }
 
 

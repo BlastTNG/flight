@@ -16,6 +16,8 @@
 */
 
 #include <time.h>
+#include "isc_protocol.h"   /* required for ISCData; get updates from
+                               Ed Chapin and/or the ISC computer */
 
 // GETREADINDEX: converts circular buffer pointer to
 #define GETREADINDEX(i) ((i+2) % 3)
@@ -168,4 +170,14 @@ extern int dgpsatt_index;
 
 extern time_t DGPSTime;
 
-
+/**********************************************/
+/* ISC Data struct                            */
+/* server_frame is a typedef'd struct in      */
+/* isc_protocol.h which is copied verbatim    */
+/* from the ISC computer.                     */
+/*                                            */
+/*  Purpose: Store isc pointing and blob data */
+/*   Source: isc thread: isc.c                */
+/*     Used: Main thread;                     */
+extern server_frame ISCData[3];
+extern int iscdata_index;
