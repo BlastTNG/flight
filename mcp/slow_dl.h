@@ -11,9 +11,9 @@
  *
  */
 
-#define SLOWDL_NUM_DATA     7
+#define SLOWDL_NUM_DATA     78
 
-#define SLOWDL_LEN          29
+#define SLOWDL_LEN          255
 
 #define SLOWDL_DLE          0x10
 #define SLOWDL_SYNC         0x53
@@ -27,6 +27,8 @@ struct SlowDLStruct {
   char src[20];
   char type;
   int numbits;
+  double calib_min;
+  double calib_max;
   double value;
   int wide;
   int mindex;

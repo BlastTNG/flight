@@ -89,6 +89,16 @@ union DerivedUnion DerivedChannels[] = {
       "OSC_VETO",
       "IS_SCHED"
       ),
+  BITFIELD("sensor_reset",
+      "",
+      "",
+      "",
+      "DGPS_RESET",
+      "ISC_RESET",
+      "GYRO_RESET",
+      "SS_RESET",
+      "OSC_RESET"
+      ),
 
   /* bits to acs 0 */
   COMMENT("Auxiliary heaters"),

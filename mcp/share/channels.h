@@ -73,6 +73,9 @@ extern "C" {
     unsigned char wide;
     unsigned char bus;
     const char* field;
+    /* for the slow dl */
+    float m;
+    float b;
   };
 
   struct BiPhaseStruct {

@@ -243,6 +243,8 @@ struct NiosStruct SetNiosData(const struct ChannelStruct *channel, int addr,
   NiosData.field = channel->field;
   NiosData.fast = fast;
   NiosData.wide = wide;
+  NiosData.m = channel->m_c2e;
+  NiosData.b = channel->b_e2e;
   NiosData.bus = channel->bus;
   NiosData.bbcAddr = (channel->rw =='r' ? BBC_READ : BBC_WRITE)
     | BBC_NODE(channel->node) | BBC_CH(channel->addr);

@@ -378,8 +378,10 @@ void FillSlowDL(unsigned short *RxFrame) {
     for (i = 0; i < SLOWDL_NUM_DATA; i++) {
       address = GetNiosAddr(SlowDLInfo[i].src);
       SlowDLInfo[i].wide = address->wide;
-      SlowDLInfo[i].mindex = BiPhaseLookup[BI0_MAGIC(address->bbcAddr)].index;
-      SlowDLInfo[i].chnum = BiPhaseLookup[BI0_MAGIC(address->bbcAddr)].channel;
+      SlowDLInfo[i].mindex = ExtractBiPhaseAddr(address)->index;
+      SlowDLInfo[i].chnum = ExtractBiPhaseAddr(address)->channel;
+      SlowDLInfo[i].max = (SlowDLInfo[i].calib_max - address->b) * address->m;
+      SlowDLInfo[i].min = (SlowDLInfo[i].calib_min - address->b) * address->m;
     }
   }
 
