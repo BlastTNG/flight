@@ -35,8 +35,14 @@ struct AxesModeStruct axes_mode; /* low level velocity mode */
 
 int pinIsIn(void);  /* auxcontrol.c */
 void SetSafeDAz(double ref, double *A); /* in pointing.c */
+void SetSafeDAzC(double ref, double *A, double *C); /* in pointing.c */
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
                 double *el);
+
+/* in radbox.c */
+void radbox_endpoints( double az[4], double el[4], double el_in, 
+                       double *az_left, double *az_right, double *min_el, 
+		       double *max_el );
 
 
 /************************************************************************/
@@ -917,7 +923,6 @@ void DoNewBoxMode() {
     top = MAX_EL;
   if (bottom < MIN_EL)
     bottom = MIN_EL;
-  bprintf(info, "cel: %g h: %g t: %g b: %g l: %g r: %g\n", cel, h, top, bottom, left, right);
   
   // FIXME: reboot proofing...
   
@@ -972,15 +977,14 @@ void DoNewBoxMode() {
     v_el = (targ_el - (el-cel))/t;
     // set targ_el for the next step
     targ_el += CommandData.pointing_mode.del*el_dir;
-    if (targ_el>=h*0.5) {
+    if (targ_el>h*0.5) {
       targ_el = h*0.5;
       el_dir=-1;
-    } else if (targ_el<=-h*0.5) {
+    } else if (targ_el<-h*0.5) {
       targ_el = -h*0.5;
       el_dir = 1;
     }
   }
-  bprintf(info, "targ_el: %g\n", targ_el);
   /* check for out of range in el */
   if (el > top + EL_BORDER) {
     axes_mode.az_mode = AXIS_POSITION;
@@ -1005,6 +1009,133 @@ void DoNewBoxMode() {
   axes_mode.el_mode = AXIS_VEL;
   axes_mode.el_vel = v_el + del_dt;
 
+}
+
+void DoQuadMode() { // aka radbox
+  double bottom, top, left, right, next_left, next_right, az_distance;
+  double az, az2, el, el2;
+  double daz_dt, del_dt;
+  double lst, lat;
+  double v_az, t=1;
+  int i, i_point;
+  int new_step = 0;
+  double c_az[4], c_el[4]; // corner az and corner el
+  int i_bot, new;
+  
+  static double last_ra[4] = {0,0,0,0}, last_dec[4] = {0,0,0,0};
+  static double az_dir = 0, el_dir = 1, v_el = 0;
+  static double targ_el=45.0; // targ_el is in degrees from horizon
+  
+  i_point = GETREADINDEX(point_index);
+  lst = PointingData[i_point].lst;
+  lat = PointingData[i_point].lat;
+  az = PointingData[i_point].az;
+  el = PointingData[i_point].el;
+
+  v_az = fabs(CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0));
+
+  /* convert ra/decs to az/el */
+  for (i=0; i<4; i++) {
+    radec2azel(CommandData.pointing_mode.ra[i],
+	       CommandData.pointing_mode.dec[i],
+	       lst, lat,
+	       c_az+i, c_el+i);
+  }
+  /* get sky drift speed */
+  radec2azel(CommandData.pointing_mode.ra[0],
+	     CommandData.pointing_mode.dec[0],
+	     lst+1.0, lat,
+	     &az2, &el2);
+  
+  daz_dt = drem(az2 - c_az[0], 360.0);
+  del_dt = el2 - c_el[0];
+
+  // make sure our path to the source doesn't cross the sun.
+  SetSafeDAzC(az, c_az, &az2);
+  for (i=1; i<4; i++) {
+    c_az[i] += az2;
+  }
+
+  i_bot = 0;
+  for (i=1; i<4; i++) {
+    if (c_el[i_bot]>c_el[i]) i_bot = i;
+  }
+  
+  radbox_endpoints(c_az, c_el, el, &left, &right, &bottom, &top);
+
+  new = 0;
+  for (i=0; i<4; i++) {
+    if (CommandData.pointing_mode.ra[i] != last_ra[i]) new = 1;
+    if (CommandData.pointing_mode.dec[i] != last_dec[i]) new = 1;
+  }
+
+  if (new) {
+    if ( (fabs(az - c_az[i_bot]) < 0.1) &&
+	 (fabs(el - c_el[i_bot]) < 0.01)) {
+      for (i=0; i<4; i++) {
+	last_ra[i] = CommandData.pointing_mode.ra[i];
+	last_dec[i] = CommandData.pointing_mode.dec[i];
+      }
+    } else {
+      axes_mode.az_mode = AXIS_POSITION;
+      axes_mode.az_dest = c_az[i_bot];
+      axes_mode.az_vel = 0.0;
+      axes_mode.el_mode = AXIS_POSITION;
+      axes_mode.el_dest = c_el[i_bot];
+      axes_mode.el_vel = 0.0;
+      v_el = 0.0;
+      targ_el = c_el[i_bot];
+      el_dir = 1;
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+      return;
+    }
+  }
+
+  if (targ_el<bottom) targ_el = bottom;
+  if (targ_el>top) targ_el = top;
+  
+  radbox_endpoints(c_az, c_el, targ_el, &next_left,
+		   &next_right, &bottom, &top);
+
+  /* set az v */
+  v_az = CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0);
+  SetAzScanMode(az, left, right, v_az, daz_dt);
+
+  /** set El V **/
+  new_step = 0;
+  if (az<left) {
+    if (az_dir < 0) {
+      az_distance = next_right - left;
+      t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * 100.16);
+      new_step = 1;
+    }
+    az_dir = 1;
+  } else if (az>right) {
+    if (az_dir > 0) {
+      az_distance = right - next_left;
+      t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * 100.16);
+      new_step = 1;
+    }
+    az_dir = -1;
+  }
+
+  if (new_step) {
+    // set v for this step
+    v_el = (targ_el - el)/t;
+    // set targ_el for the next step
+    targ_el += CommandData.pointing_mode.del*el_dir;
+    if (targ_el>top) {
+      targ_el = top;
+      el_dir=-1;
+    } else if (targ_el<bottom) {
+      targ_el = bottom;
+      el_dir = 1;
+    }
+  }
+  
+  axes_mode.el_mode = AXIS_VEL;
+  axes_mode.el_vel = v_el + del_dt;
+  
 }
 
 /****************************************************************** 

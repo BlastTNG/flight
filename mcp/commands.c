@@ -641,7 +641,7 @@ void SetParameters(enum multiCommand command, unsigned short *dataq,
 void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues,
     int scheduled)
 {
-  int i_point;
+  int i, i_point;
 
   /* Update CommandData struct with new info
    * If the parameter is type 'i'     set CommandData using ivalues[i]
@@ -711,7 +711,23 @@ void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues,
     CommandData.pointing_mode.h = rvalues[3]; /* height */
     CommandData.pointing_mode.vaz = rvalues[4]; /* az scan speed */
     CommandData.pointing_mode.del = rvalues[5]; /* el drift speed */
+  } else if (command == quad) {
+    CommandData.pointing_mode.mode = P_QUAD;
+    CommandData.pointing_mode.ra[0] = rvalues[0];
+    for (i=0; i<4; i++) {
+      CommandData.pointing_mode.ra[i] = rvalues[i*2];
+      CommandData.pointing_mode.dec[i] = rvalues[i*2+1];
+    }
+    CommandData.pointing_mode.vaz = rvalues[8]; /* az scan speed */
+    CommandData.pointing_mode.del = rvalues[9]; /* el step size */
 
+    // send down the 1st 2 points in existing fields for now
+    // we may want to add 3 & 4 fields 'soon'.
+    CommandData.pointing_mode.X = rvalues[0]; /* ra */
+    CommandData.pointing_mode.Y = rvalues[1]; /* dec */
+    CommandData.pointing_mode.w = rvalues[2]; /* width */
+    CommandData.pointing_mode.h = rvalues[3]; /* height */
+    
     /***************************************/
     /********** Pointing Motor Trims *******/
   } else if (command == az_el_trim)

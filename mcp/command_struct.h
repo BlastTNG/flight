@@ -38,6 +38,7 @@
 #define P_BOX        7
 #define P_LOCK       8
 #define P_VBOX       9
+#define P_QUAD      10
 
 struct GainStruct {
   unsigned short int P;
@@ -64,6 +65,8 @@ struct PointingModeStruct {
   double w;
   double h;
   time_t t;
+  double ra[4]; // the RAs for radbox (ie, quad)
+  double dec[4]; // the decs for radbox (ie, quad)
 };
 
 enum calmode { on, off, pulse, repeat };
