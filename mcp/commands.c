@@ -461,13 +461,12 @@ void SingleCommand (enum singleCommand command) {
     CommandData.ISCState[0].triggertype = ISC_TRIGGER_POS;
   else if (command == isc_trig_neg)
     CommandData.ISCState[0].triggertype = ISC_TRIGGER_NEG;
-  else if (command == isc_auto_focus) {
-    CommandData.ISCState[0].abort = 1;
+  else if (command == isc_auto_focus)
     CommandData.ISCControl[0].autofocus = 10;
 
     /***************************************/
     /********* OSC Commanding  *************/
-  } else if (command == osc_run)
+  else if (command == osc_run)
     CommandData.ISCState[1].pause = 0;
   else if (command == osc_shutdown)
     CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_HALT;
@@ -495,10 +494,9 @@ void SingleCommand (enum singleCommand command) {
     CommandData.ISCState[1].triggertype = ISC_TRIGGER_POS;
   else if (command == osc_trig_neg)
     CommandData.ISCState[1].triggertype = ISC_TRIGGER_NEG;
-  else if (command == osc_auto_focus) {
-    CommandData.ISCState[1].abort = 1;
+  else if (command == osc_auto_focus)
     CommandData.ISCControl[1].autofocus = 10;
-  } else if (command == xyzzy)
+  else if (command == xyzzy)
     ;
   else {
     bputs(warning, "***Invalid Single Word Command***\n");
