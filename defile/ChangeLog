@@ -2,6 +2,9 @@
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
 2005-01-19  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* writer.c (PreBuffer, PushFrame): fix range on memcpy
+	* writer.c (InitialiseDirFile): fix fast_frame/pre_buffer allocation
+
 	* writer.c (CheckZeroes): Add
 	* writer.c (PreBuffer): Add call to check zeroes to reduce the number of
 	warning messages when mcp restarts.

@@ -150,7 +150,6 @@ static inline long int GetNumFrames(size_t size, char type, const char* field)
 int CheckWriteAllow(int mkdir_err)
 {
   dtrace("%i", mkdir_err);
-
   DIR* dir;
   char* dirfile_end;
   char fullname[FILENAME_LEN];
@@ -387,8 +386,6 @@ int OpenField(int fast, int size, const char* filename)
       berror(fatal, "cannot create file `%s'", filename);
   }
 
-  dreturn("%i", file);
-
   return file;
 }
 
@@ -422,12 +419,12 @@ void InitialiseDirFile(int reset, unsigned long offset)
   bprintf(info, "\nWriting to dirfile `%s'\n", rc.dirfile);
 
   for (i = 0; i < FAST_PER_SLOW + 10; ++i) {
-    pre_buffer[i] = balloc(fatal, DiskFrameSize * sizeof(unsigned short));
+    pre_buffer[i] = balloc(fatal, DiskFrameSize);
     pre_buffer[i][3] = i;
   }
 
   for (i = 0; i < FAST_PER_SLOW; ++i)
-    fast_frame[i] = balloc(fatal, DiskFrameSize * sizeof(unsigned short));
+    fast_frame[i] = balloc(fatal, DiskFrameSize);
 
   /***********************************
    * create and fill the format file *
@@ -652,7 +649,7 @@ int PreBuffer(unsigned short *frame)
   this = FAST_PER_SLOW + (counter + 1) % 3;
   next = FAST_PER_SLOW + (counter + 2) % 3;
 
-  memcpy(pre_buffer[next], frame, DiskFrameSize * sizeof(unsigned short));
+  memcpy(pre_buffer[next], frame, DiskFrameSize);
 
   if (start > 0) {
     start--;
@@ -693,8 +690,7 @@ int PreBuffer(unsigned short *frame)
 
   li = (li + 1) % FAST_PER_SLOW;
 
-  memcpy(pre_buffer[ti], pre_buffer[this], DiskFrameSize
-      * sizeof(unsigned short));
+  memcpy(pre_buffer[ti], pre_buffer[this], DiskFrameSize);
 
   return (range << 8) + li;
 }
@@ -752,8 +748,7 @@ void PushFrame(unsigned short* in_frame)
     defile_flags = 0;
 
     /* fast data */
-    memcpy(fast_frame[curr_index], frame, sizeof(unsigned short)
-        * DiskFrameSize);
+    memcpy(fast_frame[curr_index], frame, DiskFrameSize);
 
     /* do while loop blocks until sufficient buffers empty */
     do {
