@@ -1063,6 +1063,9 @@ void DoQuadMode() { // aka radbox
     if (c_el[i_top]>c_el[i]) i_top = i;
   }
 
+  bottom = c_el[i_bot];
+  top = c_el[i_top];
+  
   if (el<=c_el[i_bot]) {
     left = right = c_az[i_bot];
   } else if (el>=c_el[i_top]) {
