@@ -37,6 +37,9 @@ int ISCInit(client_frame* client_data)
   n = 1;
   if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &n, sizeof(n)) != 0) {
     perror("ISC setsockopt()");
+    if (sock != -1)
+      if (close(sock) < 0)
+        perror("ISC close()");
     return -1;
   }
 
@@ -47,6 +50,9 @@ int ISCInit(client_frame* client_data)
   if ((n = connect(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)))
       < 0) {
     perror("ISC connect()");
+    if (sock != -1)
+      if (close(sock) < 0)
+        perror("ISC close()");
     return -1;
   }
 
@@ -55,10 +61,16 @@ int ISCInit(client_frame* client_data)
   n = send(sock, client_data, sizeof(client_frame), 0);
   if (n == -1) {
     perror("ISC send()");
+    if (sock != -1)
+      if (close(sock) < 0)
+        perror("ISC close()");
     return -1;
   } else if (n < sizeof(client_frame)) {
     fprintf(stderr, "ISC: Expected %i bytes, but sent %i bytes.\n",
         sizeof(client_frame), n);
+    if (sock != -1)
+      if (close(sock) < 0)
+        perror("ISC close()");
     return -1;
   }
 
@@ -66,10 +78,16 @@ int ISCInit(client_frame* client_data)
   n = recv(sock, &ISCData[iscdata_index], sizeof(server_frame), 0);
   if (n == -1) {
     perror("ISC recv()");
+    if (sock != -1)
+      if (close(sock) < 0)
+        perror("ISC close()");
     return -1;
   } else if (n < sizeof(server_frame)) {
     fprintf(stderr, "ISC: Expected %i but received %i bytes.\n",
         sizeof(server_frame), n);
+    if (sock != -1)
+      if (close(sock) < 0)
+        perror("ISC close()");
     return -1;
   }
 
@@ -105,20 +123,25 @@ void IntegratingStarCamera(void)
   client_frame client_data;
   fd_set fdr, fdw;
 
-  int sock, ISCReadIndex;
+  int sock = -1, ISCReadIndex;
 
   int n;
 
   struct timeval t1, t2;
   int delta;
 
-  fprintf(stderr, "ISC startup.\n");
+  int pid = getpid();
+  fprintf(stderr, ">> ISC startup on pid %i\n", pid);
 
   for (;;) {
     do {
+      if (sock != -1)
+        if (close(sock) < 0)
+          perror("ISC close()");
+
       sock = ISCInit(&client_data);
       if (sock == -1) {
-//        fprintf(stderr, "ISC: connect failed.\n");
+        //        fprintf(stderr, "ISC: connect failed.\n");
         sleep(10);
       }
     } while (sock == -1);
@@ -162,7 +185,7 @@ void IntegratingStarCamera(void)
         t2 = t1;
         gettimeofday(&t1, NULL);
         delta = (t1.tv_sec - t2.tv_sec) * 1000000 + (t1.tv_usec - t2.tv_usec);
-//        fprintf(stderr, "ISC: Received %i bytes after %f milliseconds.\n", n, (double)delta / 1000.);
+        //        fprintf(stderr, "ISC: Received %i bytes after %f milliseconds.\n", n, (double)delta / 1000.);
 
         ISCInput.gain = ISCData[iscdata_index].gain;
         ISCInput.exposure = ISCData[iscdata_index].exposure;
@@ -222,7 +245,7 @@ void IntegratingStarCamera(void)
               sizeof(client_frame), n);
           break;
         }
-//        fprintf(stderr, "ISC: Sent %i bytes.\n", n);
+        //        fprintf(stderr, "ISC: Sent %i bytes.\n", n);
       }
     }
   }
