@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,16 +33,41 @@ unsigned short slow_data[N_SLOW][FAST_PER_SLOW];
 int buf_overflow;
 int n_fast, bolo_i0;
 
-char *StringToLower(char *s);
-char *StringToUpper(char *s);
-
 extern unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
-/********************************************************************* 
-*                                                                   * 
-*     Initialize dirfile                                            * 
-*                                                                   * 
- *********************************************************************/
+char *StringToLower(char *s) {
+  int i, len;
+  static char ls[256];
+
+  len = strlen(s);
+  if (len > 255) len = 255;
+
+  for (i = 0; i < len; i++) {
+    ls[i] = tolower(s[i]);
+  }
+  ls[len] = '\0';
+  return(ls);
+}
+
+char *StringToUpper(char *s) {
+  int i, len;
+  static char us[256];
+
+  len = strlen(s);
+
+  for (i = 0; i < len; i++) {
+    us[i] = toupper(s[i]);
+  }
+
+  us[len] = '\0';
+  return(us);
+}
+
+/*********************************************************************/
+/*                                                                   */
+/*     Initialize dirfile                                            */
+/*                                                                   */
+/*********************************************************************/
 void InitializeDirfile(char type) {
   time_t t;
   FILE *fp;
@@ -197,10 +223,10 @@ void InitializeDirfile(char type) {
   }
 }
 
-/*************************************************************
- * pushDiskFrame: called from main thread: puts rxframe into *
- * individual buffers                                        *
- *************************************************************/
+/*************************************************************/
+/* pushDiskFrame: called from main thread: puts rxframe into */
+/* individual buffers                                        */
+/*************************************************************/
 void pushDiskFrame(unsigned short *Rxframe) {
   unsigned int i_slow, i_in;
   int i_card, i_ch;
@@ -325,9 +351,9 @@ void pushDiskFrame(unsigned short *Rxframe) {
   }
 }
 
-/*************************************************************
- * DirFileWriter: separate thread: writes each field to disk * 
- *************************************************************/
+/*************************************************************/
+/* DirFileWriter: separate thread: writes each field to disk */
+/*************************************************************/
 void DirFileWriter(void) {
   unsigned short buffer[MAXBUF];
   unsigned int ibuffer[MAXBUF];

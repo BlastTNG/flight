@@ -123,12 +123,12 @@ void UnwindDiff(double ref, double *A) {
   *A = ref + drem(*A - ref, 360.0);
 }
       
-/************************************************************************
-*                                                                      *
-*   MagRead:  use the world magnetic model, atan2 and a lookup table   *
-*             to convert mag_x and mag_y to mag_az                     *
-*                                                                      *
- ************************************************************************/
+/************************************************************************/
+/*                                                                      */
+/*   MagRead:  use the world magnetic model, atan2 and a lookup table   */
+/*             to convert mag_x and mag_y to mag_az                     */
+/*                                                                      */
+/************************************************************************/
 int MagConvert(double *mag_az) {
   float year;
   static float fdec, dip, ti, gv;

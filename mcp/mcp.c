@@ -73,7 +73,6 @@ void pushDiskFrame(unsigned short *Rxframe);
 
 void MakeTxFrame(void);
 
-
 void InitSched();
 
 struct {

@@ -273,6 +273,13 @@ void SingleCommand (enum singleCommand command) {
   else if (command == elclin_allow)
     CommandData.use_elclin = 1;
 
+  else if (command == use_limitswitch)
+    CommandData.lock_override = 0;
+  else if (command == pin_in_override)
+    CommandData.lock_override = 1;
+  else if (command == pin_out_override)
+    CommandData.lock_override = 2;
+
   else if (command == clock_int)    /* Bias settings */
     CommandData.Bias.clockInternal = 1;
   else if (command == clock_ext)
@@ -304,16 +311,16 @@ void SingleCommand (enum singleCommand command) {
     CommandData.Cryo.calibrator = 0;
   else if (command == cal_stop)
     CommandData.Cryo.calib_pulse = 0;
-  else if (command == ln_valve_open) {
-    CommandData.Cryo.lnvalve_open = 40;
-    CommandData.Cryo.lnvalve_close = 0;
-  } else if (command == ln_valve_close) {
-    CommandData.Cryo.lnvalve_close = 40;
-    CommandData.Cryo.lnvalve_open = 0;
-  } else if (command == ln_valve_on)
-    CommandData.Cryo.lnvalve_on = 1;
-  else if (command == ln_valve_off)
-    CommandData.Cryo.lnvalve_on = 0;
+  else if (command == pot_valve_open) {
+    CommandData.Cryo.potvalve_open = 40;
+    CommandData.Cryo.potvalve_close = 0;
+  } else if (command == pot_valve_close) {
+    CommandData.Cryo.potvalve_close = 40;
+    CommandData.Cryo.potvalve_open = 0;
+  } else if (command == pot_valve_on)
+    CommandData.Cryo.potvalve_on = 1;
+  else if (command == pot_valve_off)
+    CommandData.Cryo.potvalve_on = 0;
   else if (command == he_valve_open) {
     CommandData.Cryo.lhevalve_open = 40;
     CommandData.Cryo.lhevalve_close = 0;
@@ -376,30 +383,31 @@ void SingleCommand (enum singleCommand command) {
 
     /***************************************/
     /********* ISC Commanding  *************/
-  } else if (command == isc_run) {
+  } else if (command == isc_run)
     CommandData.ISCState.pause = 0;
-  } else if (command == isc_shutdown) {
+  else if (command == isc_shutdown)
     CommandData.ISCState.shutdown = 1;
-  } else if (command == isc_pause) {
+  else if (command == isc_pause)
     CommandData.ISCState.pause = 1;
-  } else if (command == isc_abort) {
+  else if (command == isc_abort)
     CommandData.ISCState.abort = 1;
-  } else if (command == no_bright_star) {
+  else if (command == isc_reconnect)
+    CommandData.ISC_reconnect = 1;
+  else if (command == no_bright_star)
     CommandData.ISCState.brightStarMode = 0;
-  } else if (command == save_images) {
+  else if (command == save_images)
     CommandData.ISCState.save = 1;
-  } else if (command == discard_images) {
+  else if (command == discard_images)
     CommandData.ISCState.save = 0;
-  } else if (command == full_screen) {
+  else if (command == full_screen)
     CommandData.ISCState.display_mode = full;
-  } else if (command == auto_focus) {
+  else if (command == auto_focus) {
     CommandData.ISCState.abort = 1;
     CommandData.ISCState.autofocus = 1;
     CommandData.old_ISC_focus = CommandData.ISCState.focus_pos;
     CommandData.ISCState.focus_pos = FOCUS_RANGE;
-  } else {
+  } else
     return; /* invalid command - no write or update */
-  }
 
   i_point = GETREADINDEX(point_index);
 
@@ -685,7 +693,7 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.ISCState.brightDEC = rvalues[1] * DEG2RAD;
     CommandData.ISCState.brightStarMode = 1;
   } else if (command == integration) {
-    CommandData.ISC_pulse_width = (int)(rvalues[0] / 10.);
+    CommandData.ISC_pulse_width = (int)((4 + ivalues[0]) / 10);
   } else if (command == det_set) {
     CommandData.ISCState.grid = ivalues[0];
     CommandData.ISCState.sn_threshold = rvalues[1];
@@ -1295,6 +1303,8 @@ void InitCommandData() {
   CommandData.Bias.bias2 = 0x02;
   CommandData.Bias.bias3 = 0x0f;
 
+  CommandData.lock_override = 0;
+
   CommandData.Cryo.heliumLevel = 0;
   CommandData.Cryo.charcoalHeater = 0;
   CommandData.Cryo.coldPlate = 0;
@@ -1303,9 +1313,9 @@ void InitCommandData() {
   CommandData.Cryo.heliumThree = 0;
   CommandData.Cryo.sparePwm = 0;
   CommandData.Cryo.calibrator = 0;
-  CommandData.Cryo.lnvalve_on = 0;
-  CommandData.Cryo.lnvalve_open = 0;
-  CommandData.Cryo.lnvalve_close = 0;
+  CommandData.Cryo.potvalve_on = 0;
+  CommandData.Cryo.potvalve_open = 0;
+  CommandData.Cryo.potvalve_close = 0;
   CommandData.Cryo.lhevalve_on = 0;
   CommandData.Cryo.lhevalve_open = 0;
   CommandData.Cryo.lhevalve_close = 0;

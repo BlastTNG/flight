@@ -99,7 +99,7 @@ struct CryoStruct {
   int JFETHeat;
   int heatSwitch;
   int heliumThree;
-  int lnvalve_open, lnvalve_on, lnvalve_close;
+  int potvalve_open, potvalve_on, potvalve_close;
   int lhevalve_open, lhevalve_on, lhevalve_close;
 };
 
@@ -126,6 +126,7 @@ struct CommandDataStruct {
   unsigned char use_gps;
 
   struct BiasStruct Bias;
+  int lock_override;
 
   struct CryoStruct Cryo;
   int Phase[DAS_CARDS];
@@ -143,6 +144,7 @@ struct CommandDataStruct {
   struct ISCStatusStruct ISCState;
   int ISC_pulse_width;
   int old_ISC_focus;
+  int ISC_reconnect;
 };
 
 struct EventType {

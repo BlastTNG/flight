@@ -1,5 +1,7 @@
-
 #define FILETYPE 0x0001
+
+#define DPS2GYU (66.7 * 65536.0/4000.0) /* deg per sec to "gyro units" */
+#define EXPOSURE2I (65536. / 5000000.)  /* ISC exposure time to int */
 
 extern int frame_num;
 

@@ -5,9 +5,10 @@ ifeq ($(DEBUG), 1)
   CC = gcc -O2 -DEBUG -Wall $(BOLOTEST)
 endif
 
-OBJS = commands.o dgps.o dirfile.o ephemeris/creader/Source/ephem_read.o \
-			 geomag.o isc.o lut.o mcp.o pointing.o sched.o \
-			starfind.o starpos.o tx.o tx_struct.o sslutNA.o
+OBJS = auxiliary.o commands.o das.o dgps.o dirfile.o \
+      ephemeris/creader/Source/ephem_read.o geomag.o isc.o lut.o mcp.o \
+      motors.o pointing.o sched.o sslutNA.o starfind.o starpos.o tx.o \
+      tx_struct.o
 
 all: mcp
 
@@ -24,7 +25,11 @@ mcp: $(OBJS)
 	$(CC) -L/usr/X11R6/lib -L. -o mcp $(OBJS) -lpthread -liticonfig_g \
 	$(FL_LIBS) -lm
 
+auxiliary.o: auxiliary.c tx_struct.h tx.h command_struct.h isc_protocol.h pointing_struct.h
+
 commands.o: commands.c command_struct.h commands.h pointing_struct.h tx_struct.h isc_protocol.h
+
+das.o: das.c tx_struct.h command_struct.h isc_protocol.h tx.h
 
 dgps.o: dgps.c pointing_struct.h isc_protocol.h
 
@@ -37,6 +42,8 @@ isc.o: isc.c pointing_struct.h isc_protocol.h command_struct.h tx_struct.h
 lut.o: lut.c lut.h
 
 mcp.o: mcp.c bbc.h tx_struct.h tx.h pointing_struct.h command_struct.h starpos.h isc_protocol.h
+
+motors.o: motors.c pointing_struct.h isc_protocol.h command_struct.h tx.h tx_struct.h
 
 pointing.o: pointing.c pointing_struct.h isc_protocol.h command_struct.h \
 		tx_struct.h lut.h sslutNA.h

@@ -9,6 +9,7 @@ unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 /* pseudoboards to use to talk from tx to rx.. */
 #define LOOPBACK 17
 #define LOOPBAK2 18
+#define LOOPBAK3 19
 #define SPARE 20
 
 /* read and write channel 56 on all boards reserved for ADC Sync */
@@ -303,8 +304,8 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"t_of08",       'r',  2, 27,            -0.00625,          136.45, 'u'},
     {"t_of09",       'r',  2, 29,            -0.00625,          136.45, 'u'},
     {"t_of10",       'r',  2, 31,            -0.00625,          136.45, 'u'},
-    {"spare23",      'w', SPARE, 23,              1.0,             0.0, 'u'},
-    {"spare24",      'w', SPARE, 24,              1.0,             0.0, 'u'},
+    {"isc_x_off",    'w', LOOPBAK2, 63,         I2DEG,             0.0, 'u'},
+    {"isc_y_off",    'w', LOOPBAK3,  0,         I2DEG,             0.0, 'u'},
     {"spare25",      'w', SPARE, 25,              1.0,             0.0, 'u'},
     {"spare26",      'w', SPARE, 26,              1.0,             0.0, 'u'},
     {"spare27",      'w', SPARE, 27,              1.0,             0.0, 'u'},
@@ -442,11 +443,11 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
   {"ENDMARKER",   'x',  0,  0,                 0,                    0.0, 'x'}
 };
 
-/************************************************************************
- *                                                                      *
- *    MakeTxFrame: insert bolometer channels into the Frame             *
- *                                                                      *
- ************************************************************************/
+/************************************************************************/
+/*                                                                      */
+/*    MakeTxFrame: insert bolometer channels into the Frame             */
+/*                                                                      */
+/************************************************************************/
 void MakeTxFrame(void) {
   int i, j, last_fastchlist = N_FASTCHLIST_INIT;
   struct ChannelStruct channel = {"", 'r', 3, 0, 1.19209e-7, -2097152.0, 'u'};
@@ -484,11 +485,11 @@ void MakeTxFrame(void) {
   }
 }
 
-/************************************************************************
- *                                                                      *
- *    FastChIndex                                                       *
- *                                                                      *
- ************************************************************************/
+/************************************************************************/
+/*                                                                      */
+/*    FastChIndex                                                       */
+/*                                                                      */
+/************************************************************************/
 void FastChIndex(char* field, int* index) {
   int i, t = -1;
 
@@ -504,11 +505,11 @@ void FastChIndex(char* field, int* index) {
   *index = t;
 }
 
-/************************************************************************
- *                                                                      *
- *    SlowChIndex                                                       *
- *                                                                      *
- ************************************************************************/
+/************************************************************************/
+/*                                                                      */
+/*    SlowChIndex                                                       */
+/*                                                                      */
+/************************************************************************/
 void SlowChIndex(char* field, int* channel, int* index) {
   int i, j, t = -1, c = -1;
 
@@ -553,9 +554,9 @@ void FPrintDerived(FILE *fp) {
       "LHE_VALVE        BIT cryostate 6\n"
       "LHE_DIREC        BIT cryostate 7\n"
       "### Cryo Valve Limit Switches ###\n"
-      "LN_IS_CLOSED     BIT cryoin 0\n"
-      "LN_IS_OPEN       BIT cryoin 1\n"
-      "LN_STATE         LINCOM 2 LN_IS_CLOSED 1 0 LN_IS_OPEN 1 0\n"
+      "POT_IS_CLOSED    BIT cryoin 0\n"
+      "POT_IS_OPEN      BIT cryoin 1\n"
+      "POT_STATE        LINCOM 2 POT_IS_CLOSED 1 0 POT_IS_OPEN 1 0\n"
       "LHE_IS_CLOSED    BIT cryoin 2\n"
       "LHE_IS_OPEN      BIT cryoin 3\n"
       "LHE_STATE        LINCOM 2 LHE_IS_CLOSED 1 0 LHE_IS_OPEN 1 0\n"

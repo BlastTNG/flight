@@ -1,6 +1,6 @@
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 74      /* total number of named single word cmds */
+#define N_SCOMMANDS 75      /* total number of named single word cmds */
 #define N_MCOMMANDS 45         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -42,19 +42,25 @@ const char *GroupNames[N_GROUPS] = {
 /* singleCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions below */
 enum singleCommand {
-  stop, az_off, az_on, el_off, el_on, elclin_veto, elclin_allow,
-  elenc_veto, elenc_allow, sun_veto, sun_allow, isc_veto, isc_allow,
-  mag_veto, mag_allow, gps_veto, gps_allow, reset_trims, trim_to_isc, clock_int,
-  clock_ext, bias_ac, bias_dc, ramp, fixed, charcoal_on, charcoal_off,
-  coldplate_on, coldplate_off, cal_on, cal_off, cal_stop, level_on, level_off,
-  ln_valve_on, ln_valve_off, ln_valve_open, ln_valve_close, he_valve_on,
-  he_valve_off, he_valve_open, he_valve_close, sync_adc, balance_veto, 
-  balance_allow, pump1_on, pump1_off, pump1_fwd, pump1_rev, 
-  pump2_on, pump2_off, pump2_fwd, pump2_rev, inner_cool_on, inner_cool_off,
-  outer_cool_on, outer_cool_off, outer_spare_on, outer_spare_off, pin_in,
-  unlock, use_limitswitch, pin_in_override, pin_out_override, isc_run,
-  isc_shutdown, isc_pause, isc_abort, no_bright_star, save_images,
-  discard_images, full_screen, auto_focus, xyzzy
+  auto_focus,       az_off,           az_on,            balance_allow,
+  balance_veto,     bias_ac,          bias_dc,          cal_off,
+  cal_on,           cal_stop,         charcoal_off,     charcoal_on,
+  clock_ext,        clock_int,        coldplate_off,    coldplate_on,
+  discard_images,   el_off,           el_on,            elclin_allow,
+  elclin_veto,      elenc_allow,      elenc_veto,       fixed,
+  full_screen,      gps_allow,        gps_veto,         he_valve_close,
+  he_valve_on,      he_valve_off,     he_valve_open,    inner_cool_off,
+  inner_cool_on,    isc_abort,        isc_allow,        isc_pause,
+  isc_reconnect,    isc_run,          isc_shutdown,     isc_veto,
+  level_off,        level_on,         mag_allow,        mag_veto,
+  no_bright_star,   outer_cool_off,   outer_cool_on,    outer_spare_off,
+  outer_spare_on,   pin_in,           pin_in_override,  pin_out_override,
+  pot_valve_close,  pot_valve_off,    pot_valve_on,     pot_valve_open,
+  pump1_fwd,        pump1_off,        pump1_on,         pump1_rev, 
+  pump2_fwd,        pump2_off,        pump2_on,         pump2_rev,
+  ramp,             reset_trims,      save_images,      stop,
+  sun_veto,         sun_allow,        sync_adc,         trim_to_isc,
+  unlock,           use_limitswitch,  xyzzy
 };
 
 struct scom {
@@ -108,14 +114,17 @@ struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(level_on), "helium level sensor on", GR_CRYO_CONTROL},
   {COMMAND(level_off), "helium level sensor off", GR_CRYO_CONTROL},
-  {COMMAND(ln_valve_on),  "LN valve on", GR_CRYO_CONTROL},
-  {COMMAND(ln_valve_off), "LN valve off", GR_CRYO_CONTROL},
-  {COMMAND(ln_valve_open), "set LN valve direction open", GR_CRYO_CONTROL},
-  {COMMAND(ln_valve_close), "set LN valve direction close", GR_CRYO_CONTROL},
-  {COMMAND(he_valve_on),  "helium valve on", GR_CRYO_CONTROL},
-  {COMMAND(he_valve_off), "helium valve off", GR_CRYO_CONTROL},
-  {COMMAND(he_valve_open), "set helium valve direction open", GR_CRYO_CONTROL},
-  {COMMAND(he_valve_close), "set helium valve direction close",
+  {COMMAND(pot_valve_on),  "He4 pot valve on", GR_CRYO_CONTROL},
+  {COMMAND(pot_valve_off), "He4 pot valve off", GR_CRYO_CONTROL},
+  {COMMAND(pot_valve_open), "set He4 pot valve direction open",
+    GR_CRYO_CONTROL},
+  {COMMAND(pot_valve_close), "set He4 pot valve direction close",
+    GR_CRYO_CONTROL},
+  {COMMAND(he_valve_on),  "he4 tank valve on", GR_CRYO_CONTROL},
+  {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO_CONTROL},
+  {COMMAND(he_valve_open), "set he4 tank valve direction open",
+    GR_CRYO_CONTROL},
+  {COMMAND(he_valve_close), "set he4 tank valve direction close",
     GR_CRYO_CONTROL},
 
   {COMMAND(xyzzy), "nothing happens here", GR_MISC},
@@ -154,9 +163,11 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(isc_shutdown),
     "shutdown ISC computer in prepratation for power cycle", GR_ISC},
   {COMMAND(isc_abort), "abort current solution attempt", GR_ISC},
-  {COMMAND(no_bright_star), "cancel bright star mode", GR_ISC},
+  {COMMAND(isc_reconnect),
+    "tell mcp to try and establish a new connection with ISC", GR_ISC},
   {COMMAND(save_images), "turn on saving of images", GR_ISC},
   {COMMAND(discard_images), "turn off saving of images", GR_ISC},
+  {COMMAND(no_bright_star), "cancel bright star mode", GR_ISC},
   {COMMAND(full_screen), "show full screen", GR_ISC},
   {COMMAND(auto_focus), "autofocus camera", GR_ISC}
 };
@@ -164,13 +175,15 @@ struct scom scommands[N_SCOMMANDS] = {
 /* multiCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions below */
 enum multiCommand {
-  vcap, cap, box, drift, az_scan, az_el_goto, ra_dec_goto, ra_dec_set,
-  isc_offset, roll_gain, el_gain, az_gain, pivot_gain, lock, setpoints,
-  bal_gain, bal_level, spare_pwm, inner_pwm, outer_pwm, t_gyrobox,
-  t_gyro_gain, timeout, xml_file, bias1_level, bias2_level, bias3_level,
-  phase, cal_pulse, cal_repeat, jfet_heat, heatsw_heat, he3_heat, spare_heat,
-  set_focus, set_aperture, pixel_centre, blob_centre, bright_star, integration,
-  det_set, max_blobs, catalogue, tolerances, az_el_trim
+  az_el_goto,   az_gain,      az_scan,      bal_gain,     bal_level,
+  bias1_level,  bias2_level,  bias3_level,  blob_centre,  box,
+  bright_star,  cal_pulse,    cal_repeat,   cap,          catalogue,
+  az_el_trim,   det_set,      drift,        el_gain,      he3_heat,
+  heatsw_heat,  inner_pwm,    integration,  isc_offset,   jfet_heat,
+  lock,         max_blobs,    outer_pwm,    phase,        pivot_gain,
+  pixel_centre, ra_dec_goto,  ra_dec_set,   roll_gain,    set_aperture,
+  set_focus,    setpoints,    spare_heat,   spare_pwm,    t_gyrobox,
+  t_gyro_gain,  timeout,      tolerances,   vcap,         xml_file
 };
 
 struct par {
@@ -219,7 +232,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
       
-  {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps", GR_POINT, 6,
+  {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps",
+    GR_POINT, 6,
     {
       {"RA of Centre (h)",          0, 24, 'f', "NONE"},
       {"Dec of Centre (deg)",     -90, 90, 'f', "NONE"},
@@ -269,10 +283,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********* Pointing Sensor Trims *******/
-  {COMMAND(isc_offset), "set offset of star camera from primary beam", GR_TRIM | GR_ISC, 2,
+  {COMMAND(isc_offset), "set offset of star camera from primary beam",
+    GR_TRIM | GR_ISC, 2,
     {
-      {"Az Offset (deg)", -5., 5, 'f', "ADD"},
-      {"El Offset (deg)", -5., 5, 'f', "ADD"}
+      {"X Offset (deg)", -5., 5, 'f', "ISC_X_OFF"},
+      {"Y Offset (deg)", -5., 5, 'f', "ISC_Y_OFF"}
     }
   },
 
@@ -498,7 +513,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(integration), "set camera integration time", GR_ISC, 1,
     {
-      {"integration time (ms)", 0, 5000, 'f', "ISC_PULSE"}
+      {"integration time (ms)", 0, 5000, 'i', "ISC_PULSE"}
     }
   },
 
