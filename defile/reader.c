@@ -68,7 +68,6 @@ int GetNextChunk(void)
   /* generate new filename */
   snprintf(newchunk, FILENAME_LEN, "%s%0*llX", buffer, s,
       (unsigned long long)(chunknum + 1));
-  printf("\n\n.. %s\n", newchunk);
 
   /* stat it to see if it exists */
   if (stat(newchunk, &chunk_stat))
