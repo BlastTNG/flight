@@ -40,17 +40,15 @@
 
 #define BI0_FRAME_BUFLEN (40)
 /* Define global variables */
-/* new comment */
-
 int bbc_fp = -1;
 int bi0_fp = -2;
+unsigned int debug = 0;
+short int SamIAm;
 pthread_key_t identity;
 
 struct ACSDataStruct ACSData;
 
 int RxFrameIndex;
-
-short int SamIAm;
 
 unsigned short* slow_data[FAST_PER_SLOW];
 
@@ -187,14 +185,14 @@ void mputs(int flag, const char* message) {
   }
 
   if (flag == MCP_TFATAL) {
-    pid = getpid();
     if (logfile != NULL) {
       fprintf(logfile,
-          "$$ Last error is THREAD FATAL.  Thread [pid = %i] exits.\n",
-          pid);
+          "$$ Last error is THREAD FATAL.  Thread [%s] exits.\n",
+          (char*)pthread_getspecific(identity));
       fflush(logfile);
     }
-    printf("$$ Last error is THREAD FATAL.  Thread [pid = %i] exits.\n", pid);
+    printf("$$ Last error is THREAD FATAL.  Thread [%s] exits.\n",
+          (char*)pthread_getspecific(identity));
     fflush(stdout);
 
     pthread_exit(NULL);
