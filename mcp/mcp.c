@@ -259,8 +259,8 @@ void SunSensor(void) {
             buff[n] = 0;
             if (sscanf(buff, "%lf %lf %i %i %i", &az_rel_sun, &el_rel_sun, &ars,
                   &ers, &prin) == 5) {
-              SunSensorData[ss_index].raw_el = (short int)(ars);
-              SunSensorData[ss_index].raw_az = (short int)(ers);
+              SunSensorData[ss_index].raw_el = (short int)(ers);
+              SunSensorData[ss_index].raw_az = (short int)(ars);
               SunSensorData[ss_index].prin = prin;
               ss_index = INC_INDEX(ss_index + 1);
 //              fprintf(stderr, "%lf %lf (%i %i) %i\n", az_rel_sun, el_rel_sun, ars, ers, prin);

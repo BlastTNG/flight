@@ -139,7 +139,9 @@ struct PointingDataStruct {
   time_t lst;
   double mag_az;   // degrees
   double mag_model; // degrees
-  double dgps_az;
+  double dgps_az; // degrees
+  double ss_az; // degrees
+  double sun_az; // degrees
 };
 
 extern struct PointingDataStruct PointingData[3];

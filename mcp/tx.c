@@ -1,4 +1,4 @@
-#include <stdlib.h>
+ #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
@@ -1079,7 +1079,7 @@ void StoreData(int index, unsigned int* Txframe,
   static int i_V_ROW = -1, j_V_ROW = -1;
   static int i_V_MAG = -1, j_V_MAG = -1;
   static int i_V_FRA = -1, j_V_FRA = -1;
-  static int i_AZ_REL_SUN = -1, j_AZ_REL_SUN, i_EL_REL_SUN, j_EL_REL_SUN;
+  static int i_AZ_SUN = -1, j_AZ_SUN, i_SS_AZ, i_SS_XCCD;
   static int i_SS_PRIN, j_SS_PRIN;
   static int i_SIP_LAT, i_SIP_LON, i_SIP_ALT, i_SIP_TIME;
   static int j_SIP_LAT, j_SIP_LON, j_SIP_ALT, j_SIP_TIME;
@@ -1160,13 +1160,14 @@ void StoreData(int index, unsigned int* Txframe,
     FastChIndex("az", &i_az);
     FastChIndex("el", &i_el);
     FastChIndex("mag_az", &i_MAG_AZ);
-
+    FastChIndex("ss_az", &i_SS_AZ);
+    FastChIndex("ss_x_ccd", &i_SS_XCCD);
+    
     SlowChIndex("vsc_col", &i_V_COL, &j_V_COL);
     SlowChIndex("vsc_row", &i_V_ROW, &j_V_ROW);
     SlowChIndex("vsc_mag", &i_V_MAG, &j_V_MAG);
     SlowChIndex("vsc_fra", &i_V_FRA, &j_V_FRA);
-    SlowChIndex("az_rel_sun", &i_AZ_REL_SUN, &j_AZ_REL_SUN);
-    SlowChIndex("el_rel_sun", &i_EL_REL_SUN, &j_EL_REL_SUN);
+    SlowChIndex("sun_az", &i_AZ_SUN, &j_AZ_SUN);
     SlowChIndex("ss_prin", &i_SS_PRIN, &j_SS_PRIN);
     SlowChIndex("sip_lat", &i_SIP_LAT, &j_SIP_LAT);
     SlowChIndex("sip_lon", &i_SIP_LON, &j_SIP_LON);
@@ -1237,19 +1238,23 @@ void StoreData(int index, unsigned int* Txframe,
     SlowChIndex("isc_rtol", &isc_rtolCh, &isc_rtolInd);
   }
 
-  /********** VSC Data **********/
+  i_point = GETREADINDEX(point_index);
   i_vsc = GETREADINDEX(vsc_index);
+  i_ss = GETREADINDEX(ss_index);
+
+  
+  /********** VSC Data **********/
   WriteSlow(i_V_COL, j_V_COL, (int)(VSCData[i_vsc].col * 100));
   WriteSlow(i_V_ROW, j_V_ROW, (int)(VSCData[i_vsc].row * 100));
   WriteSlow(i_V_MAG, j_V_MAG, (int)(VSCData[i_vsc].mag * 100));
   WriteSlow(i_V_FRA, j_V_FRA, VSCData[i_vsc].sf_frame);
 
   /********** Sun Sensor Data **********/
-  i_ss = GETREADINDEX(ss_index);
-  WriteSlow(i_AZ_REL_SUN, j_AZ_REL_SUN, SunSensorData[i_ss].raw_az);
-  WriteSlow(i_EL_REL_SUN, j_EL_REL_SUN, SunSensorData[i_ss].raw_el);
+  WriteSlow(i_AZ_SUN, j_AZ_SUN, (int)(PointingData[i_point].sun_az*DEG2I));
   WriteSlow(i_SS_PRIN, j_SS_PRIN, SunSensorData[i_ss].prin);
-
+  WriteFast(i_SS_AZ, (int)(PointingData[i_point].ss_az*DEG2I));
+  WriteFast(i_SS_XCCD, SunSensorData[i_ss].raw_az);
+  
   /********** SIP GPS Data **********/
   WriteSlow(i_SIP_LAT, j_SIP_LAT, (int)(SIPData.GPSpos.lat*DEG2I));
   WriteSlow(i_SIP_LON, j_SIP_LON, (int)(SIPData.GPSpos.lon*DEG2I));
@@ -1260,7 +1265,6 @@ void StoreData(int index, unsigned int* Txframe,
 
 
   /************* processed pointing data *************/
-  i_point = GETREADINDEX(point_index);
   WriteFast(i_az, (unsigned int)(PointingData[i_point].az * 65536.0/360.0));
   WriteFast(i_el, (unsigned int)(PointingData[i_point].el * 65536.0/360.0));
   WriteFast(i_MAG_AZ,

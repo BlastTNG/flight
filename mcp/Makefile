@@ -6,8 +6,8 @@ ifeq ($(DEBUG), 1)
 endif
 
 OBJS = commands.o dgps.o dirfile.o ephemeris/creader/Source/ephem_read.o \
-			 geomag.o isc.o lut.o mcp.o pointing.o sched.o starfind.o starpos.o \
-			 tx.o tx_struct.o
+			 geomag.o isc.o lut.o mcp.o pointing.o sched.o \
+			starfind.o starpos.o tx.o tx_struct.o sslutNA.o
 
 all: mcp
 
@@ -37,7 +37,8 @@ lut.o: lut.c lut.h
 
 mcp.o: mcp.c bbc.h tx_struct.h tx.h pointing_struct.h command_struct.h starpos.h isc_protocol.h
 
-pointing.o: pointing.c pointing_struct.h isc_protocol.h command_struct.h tx_struct.h lut.h
+pointing.o: pointing.c pointing_struct.h isc_protocol.h command_struct.h \
+		tx_struct.h lut.h sslutNA.h
 
 sched.o: sched.c command_struct.h pointing_struct.h isc_protocol.h tx_struct.h
 
@@ -51,6 +52,8 @@ starpos.o: starpos.c ephem_read.h ephem_types.h command_struct.h tx_struct.h isc
 tx.o: tx.c tx.h tx_struct.h command_struct.h pointing_struct.h isc_protocol.h
 
 tx_struct.o: tx_struct.c tx_struct.h
+
+sslutNA.o: sslutNA.h sslutNA.c
 
 install: mcp
 	install -m 755 mcp /usr/local/bin

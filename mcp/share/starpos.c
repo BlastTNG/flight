@@ -83,14 +83,17 @@ double DegToRad(int d, int m, float s) {
 //  
 //--------------------------------------------------------
 
-double GetJulian(struct tm *now) {
+double GetJulian(time_t t) {
   int y, m;
   double d;
   int t_a, t_b, t_c, t_d;
+  struct tm now;
 
-  y = now->tm_year + 1900;
-  m = now->tm_mon + 1;
-  d = now->tm_mday + (now->tm_hour + (now->tm_sec / 60.0 + now->tm_min) / 60.0)
+  gmtime_r(&t, &now);
+  
+  y = now.tm_year + 1900;
+  m = now.tm_mon + 1;
+  d = now.tm_mday + (now.tm_hour + (now.tm_sec / 60.0 + now.tm_min) / 60.0)
     / 24.0;
 
   if (m == 1 || m == 2) {

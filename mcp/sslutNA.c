@@ -41,8 +41,8 @@ int SSLut_GetLut(SSLut_t *SSLut, const char *filename)
   return SS_OK;
 }    
 
-int SSLut_find(double ccd_x, double *azi, double ele, SSLut_t *SSLut, int *iter)
-{
+int SSLut_find(double ccd_x, double *azi, double ele,
+	       SSLut_t *SSLut, int *iter) {
   double dx;
   int k0;
   double aa;

@@ -131,8 +131,8 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"vsc_row",      'w', LOOPBACK,  1,         0.01,             0.0, 'u'},
     {"vsc_mag",      'w', LOOPBACK,  2,          1.0,             0.0, 'u'},
     {"vsc_fra",      'w', LOOPBACK,  3,          1.0,             0.0, 'u'},
-    {"az_rel_sun",   'w', LOOPBACK,  4, (140./65536.),            0.0, 's'},
-    {"el_rel_sun",   'w', LOOPBACK,  5, (140./65536.),            0.0, 's'},
+    {"sun_az",       'w', LOOPBACK,  5,          1.0,             0.0, 's'},
+    {"spare06",     'w',  SPARE,     6,          1.0,             0.0, 'u'},
     {"ss_prin",      'w', LOOPBACK,  6,          1.0,             0.0, 'u'},
     {"sam_i_am",     'w', LOOPBACK,  7,          1.0,             0.0, 'u'},
     {"cryostate",    'w', LOOPBACK, 40,          1.0,             0.0, 'u'},
@@ -193,7 +193,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
   {
     {""/*siptime*/,  'w', LOOPBACK, 31,           1.0,             0.0, 'u'},
     {""/*lst*/,      'w', LOOPBACK, 49,           1.0,             0.0, 'u'},
-    {""/*dgps_time*/,'w', LOOPBACK, 51,           1.0,             0.0, 'u'},
+    {""/*dgps_time*/, 'w', LOOPBACK, 51,          1.0,             0.0, 'u'},
     {"bias_lev1",    'w', LOOPBACK, 41,           1.0,             0.0, 'u'},
     {"bias_lev2",    'w', LOOPBACK, 42,           1.0,             0.0, 'u'},
     {"bias_lev3",    'w', LOOPBACK, 43,           1.0,             0.0, 'u'},
@@ -222,8 +222,8 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"dgps_dir",     'w', LOOPBACK, 54,         I2DEG,             0.0, 'u'},
     {"dgps_climb",   'w', LOOPBACK, 55,         I2DEG,             0.0, 's'},
     {"dgps_att_ok",  'w', LOOPBACK, 57,           1.0,             0.0, 'u'},
-    {"dgps_att_index",'w',LOOPBACK,58,           1.0,             0.0, 'u'},
-    {"dgps_pos_index",'w',LOOPBACK,59,           1.0,             0.0, 'u'},
+    {"dgps_att_index", 'w' ,LOOPBACK, 58,         1.0,             0.0, 'u'},
+    {"dgps_pos_index", 'w' ,LOOPBACK, 59,         1.0,             0.0, 'u'},
     {"dgps_n_sat",   'w', LOOPBACK, 60,           1.0,             0.0, 'u'},
     {"blob0_y",      'w', LOOPBAK2, 10,        1./40.,             0.0, 'u'},
     {"blob1_y",      'w', LOOPBAK2, 11,        1./40.,             0.0, 'u'},
@@ -231,8 +231,8 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"isc_apert",    'w', LOOPBAK2, 13,           1.0,             0.0, 'u'},
     {"isc_maglimit", 'w', LOOPBAK2, 14,      1./1000.,             0.0, 'u'},
     {"isc_nrad",     'w', LOOPBAK2, 15,           1.0,             0.0, 'u'},
-    {"", /*isc_ra*/  'w', LOOPBAK2,  7,           1.0,             0.0, 'u'},
-    {"", /*isc_dec*/ 'w', LOOPBAK2,  9,           1.0,             0.0, 'u'}
+    {"",/*isc_ra*/   'w', LOOPBAK2,  7,           1.0,             0.0, 'u'},
+    {"",/*isc_dec*/  'w', LOOPBAK2,  9,           1.0,             0.0, 'u'}
   },
   {
     {"disk_free",    'w', LOOPBACK, 32,       1./1024,             0.0, 'u'},
@@ -302,6 +302,8 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
   {"el",          'w', LOOPBACK, 18,       I2DEG,                    0.0, 'u'},
 
   {"mag_az",      'w', LOOPBACK, 61,       I2DEG,                    0.0, 's'},
+  {"ss_az",       'w', LOOPBAK2, 36,       I2DEG,                    0.0, 's'},
+  {"ss_x_ccd",    'w', LOOPBACK,  4,         1.0,                    0.0, 's'},
   
   /* send data to ACS0 */
   {"isc_bits",    'w', 21,  1,               1.0,                    0.0, 'u'},
@@ -320,7 +322,8 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
   {"reac_enc",    'r',  1, 60,      360.0/4000.0,                    0.0, 'u'},
   {"pwm_el",      'r',  1, 51,               1.0,                -4000.0, 'u'},
   {"pwm_roll",    'r',  1, 52,               1.0,                -4000.0, 'u'},
-  {"r_dt",        'r',  1, 53,               1.0,                -4000.0, 'u'},
+  //{"r_dt", 'r',  1, 53,  1.0,     -4000.0, 'u'}, // see acs1.c
+  
   {"pwm_reac",    'r',  1, 54,               1.0,                -4000.0, 'u'},
   {"rps_reac",    'r',  1, 55,  7.9498291016e-05,                 -2.605, 'u'},
   {"pwm_piv",     'r',  1, 61,               1.0,                -4000.0, 'u'},
@@ -391,8 +394,8 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
   {"n16ref",      'r', 16, 36,        1.19209e-7,                    0.0, 'U'},
   {"",            'r', 16, 37,        1.19209e-7,                    0.0, 'u'},
 
-  {"testbolo",    'r',  5, 38,               1.0,                    0.0, 'U'},
-  {"",            'r',  5, 39,               1.0,                    0.0, 'u'},
+  //{"testbolo", 'r',  5, 38,   1.0,   0.0, 'U'}, // boh...
+  //{"",         'r',  5, 39,   1.0,   0.0, 'u'}, // boh...
 
   {"ENDMARKER",   'x',  0,  0,                 0,                    0.0, 'x'}
 };

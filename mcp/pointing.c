@@ -14,6 +14,7 @@
 #include "pointing_struct.h"
 #include "command_struct.h"
 #include "lut.h"
+#include "sslutNA.h"
 
 #define GY1_GAIN_ERROR 1.0407
 #define GY1_OFFSET (0.0075)
@@ -31,6 +32,7 @@ extern int iscdata_index; // isc.c
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
                 double *el);
 double getlst(time_t t, double lon); // defined in starpos.c
+double GetJulian(time_t t);
 
 /* Functions in the file 'geomag.c' */
 void MagModelInit(int maxdeg);
@@ -97,6 +99,7 @@ struct {
   int fresh;
 } NewAzEl = {0.0, 0.0, 0};
 
+void SunPos(double tt, double *ra, double *dec); // in starpos.c
 
 #define M2DV(x) ((x/60.0)*(x/60.0))
 
@@ -173,7 +176,40 @@ void MagConvert() {
   PointingData[point_index].mag_model = dec*180.0/M_PI;  
 }
 
+void SunConvert() {
+  static SSLut_t SSLut;
+  static int firsttime = 1;
+  int i_point, i_ss, iter;
+  double az, sun_az, sun_el;
+  double sun_ra, sun_dec, jd;
+  
+  int eflag;
+  
+  if (firsttime) {
+    SSLut_GetLut(&SSLut, "/data/etc/sslut.dat");
+    firsttime = 0;
+  }
+  
+  i_ss = GETREADINDEX(ss_index);
+  i_point = GETREADINDEX(point_index);
 
+  /* get current sun az, el */
+  jd = GetJulian(PointingData[i_point].t);
+  SunPos(jd, &sun_ra, &sun_dec);
+  sun_ra *= (12.0/M_PI);
+  sun_dec *= (180.0/M_PI);
+  
+  radec2azel(sun_ra, sun_dec, PointingData[i_point].lst,
+	     PointingData[i_point].lat, &sun_az, &sun_el);
+
+  //printf("az: %g el: %g ra: %g dec: %g\n", sun_az, sun_el, sun_ra, sun_dec);
+  
+  eflag = SSLut_find((double)SunSensorData[i_ss].raw_az, &az, sun_el,
+		     &SSLut, &iter);
+
+  PointingData[point_index].ss_az = az;
+  PointingData[point_index].sun_az = sun_az;
+}
 
 #define GY_HISTORY 300
 void RecordHistory(int index) {
@@ -602,6 +638,9 @@ void Pointing(){
 		   PointingData[point_index].dgps_az,
 		   DGPSAtt[i_dgpsatt].att_ok);
 
+  /** Sun Sensor **/
+  SunConvert();
+  
   if (CommandData.use_mag) {
     PointingData[point_index].az = MagAz.angle + MagAz.trim;
     PointingData[point_index].gy2_offset = MagAz.gy2_offset;
