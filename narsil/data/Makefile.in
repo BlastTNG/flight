@@ -325,9 +325,9 @@ uninstall-am: uninstall-dataetcnarsilDATA uninstall-info-am
 
 
 install-data-hook:
-	chmod 666 $(dataetcnarsildir)/prev_status $(dataetcnarsildir)/log.txt
-	[ -d $(dataetcnarsildir)/log ] || mkdir $(dataetcnarsildir)/log
-	chmod 777 $(dataetcnarsildir)/log
+	chmod 666 $(DESTDIR)$(dataetcnarsildir)/prev_status $(DESTDIR)$(dataetcnarsildir)/log.txt
+	[ -d $(DESTDIR)$(dataetcnarsildir)/log ] || mkdir $(DESTDIR)$(dataetcnarsildir)/log
+	chmod 777 $(DESTDIR)$(dataetcnarsildir)/log
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
