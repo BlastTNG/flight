@@ -32,7 +32,7 @@
 #ifdef BOLOTEST
   #define FRAME_MARGIN (-12)
 #else
-  #define FRAME_MARGIN (-30)
+  #define FRAME_MARGIN (-12)
 #endif
 
 #define BI0_FRAME_BUFLEN (40)
