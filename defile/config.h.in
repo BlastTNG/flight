@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Define to 1 to enable debugging output */
+#undef DEBUG
+
 /* Define to the directory contaning defile.conf */
 #undef ETC_DIR
 

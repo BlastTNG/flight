@@ -1,6 +1,6 @@
 /* defile: converts BLAST-type framefiles into dirfiles
  *
- * This software is copyright (C) 2004 D. V. Wiebe
+ * This software is copyright (C) 2004-2005 D. V. Wiebe
  * 
  * This file is part of defile.
  * 
@@ -96,5 +96,15 @@ void QuenyaClient(void);
 void Remount(const char*, char*);
 
 extern sigset_t signals;
+
+#ifdef DEBUG
+#  define debugprintf printf
+#else
+#  define debugprintf(...)
+#endif
+
+#define dtracevoid() debugprintf("%s()\n", __FUNCTION__)
+#define dtrace(fmt, ...) debugprintf("%s(" fmt ")\n", __FUNCTION__, __VA_ARGS__)
+#define dreturn(fmt, val) debugprintf("%s = " fmt "\n", __FUNCTION__, val)
 
 #endif

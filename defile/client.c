@@ -1,6 +1,6 @@
 /* defile: converts BLAST-type framefiles into dirfiles
  *
- * This software is copyright (C) 2004 D. V. Wiebe
+ * This software is copyright (C) 2004-2005 D. V. Wiebe
  * 
  * This file is part of defile.
  * 
@@ -20,9 +20,14 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdlib.h>       /* ANSI C std library (atoi) */
 #include <arpa/inet.h>    /* IP4 specification (inet_aton, inet_ntoa) */
 #include <netinet/tcp.h>  /* TCP specification (SOL_TCP, TCP_NODELAY) */
+#include <errno.h>        /* ANSI C library errors (errno) */
 #include <pthread.h>      /* POSIX threads (pthread_exit) */
 #include <signal.h>       /* ANSI C signals (SIG(FOO), sigemptyset, &c.) */
 #include <string.h>       /* ANSI C strings (strcat, strdup, &c.)  */
@@ -86,7 +91,7 @@ int GetServerResponse(char* buffer)
     if (n < 0)
       berror(fatal, "Read error");
 
-    if (n == 0)
+    if (n == 0 && errno != EAGAIN)
       bprintf(fatal, "Unexpected server disconnect.\n");
 
     response[1999] = 0;
@@ -353,7 +358,19 @@ void QuenyaClient(void)
           (block_size - bytes_read) * DiskFrameSize);
 
       bytes_read += n;
+
+      debugprintf("Read %i bytes for block %lli, giving %i\n", n, block_count, 
+          bytes_read);
     }
+
+#ifdef DEBUG
+    for (i = 1; i < bytes_read / 2; ++i) {
+      if (InputBuffer[0][i - 1] == 0xeb90 || InputBuffer[0][i - 1] == 0x146F) {
+        printf("Candidate fastsamp at byte %i: %lu\n", i,
+            *(unsigned long*)(&InputBuffer[0][i]));
+      }
+    }
+#endif
 
     /* Get the block footer */
     switch (n = GetServerResponse(buffer)) {

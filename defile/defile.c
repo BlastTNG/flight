@@ -1,6 +1,6 @@
 /* defile: converts BLAST-type framefiles into dirfiles
  *
- * This software is copyright (C) 2004 D. V. Wiebe
+ * This file is copyright (C) 2004-2005 D. V. Wiebe
  * 
  * This file is part of defile.
  * 
@@ -416,7 +416,7 @@ char* MakeDirFile(char* output, const char* source, const char* directory,
   strcat(output, buffer);
 
   if (start > 0) {
-    sprintf(buffer, "_%i", start);
+    sprintf(buffer, "_%i", start / FAST_PER_SLOW);
     strcat(output, buffer); 
   }
 
@@ -498,7 +498,7 @@ const char* ResolveHost(char* host, struct sockaddr_in* addr, int forced)
 
 void PrintVersion(void)
 {
-  printf("defile " VERSION "  (C) 2004 D. V. Wiebe\n"
+  printf("defile " VERSION "  (C) 2004-2005 D. V. Wiebe\n"
       "Compiled on " __DATE__ " at " __TIME__ ".\n\n"
       "This program comes with NO WARRANTY, "
       "not even for MERCHANTABILITY or FITNESS\n"
@@ -931,7 +931,7 @@ int main (int argc, char** argv)
     setsid();
   }
 
-  bprintf(info, "defile " VERSION " (C) 2004 D. V. Wiebe\n"
+  bprintf(info, "defile " VERSION " (C) 2004-2005 D. V. Wiebe\n"
       "Compiled on " __DATE__ " at " __TIME__ ".\n\n");
 
   if (!rc.force_quenya || rc.quenya) {
@@ -1008,6 +1008,7 @@ int main (int argc, char** argv)
           ri.frame_rate_reset = 0;
           fr = 0;
         }
+#ifndef DEBUG
         if (rc.quenya)
           printf("R:[%i] W:[%i] %.*f Hz\r", ri.read / 20, ri.wrote / 20, (fr
                 > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
@@ -1016,6 +1017,7 @@ int main (int argc, char** argv)
               + ri.chunk_total) / 20, ri.wrote / 20, (fr > 100) ? 1 : (fr > 10)
               ? 2 : 3, fr);
         fflush(stdout);
+#endif
       }
       usleep(500000);
     } while (!ri.writer_done);

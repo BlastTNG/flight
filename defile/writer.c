@@ -1,6 +1,6 @@
 /* defile: converts BLAST-type framefiles into dirfiles
  *
- * This software is copyright (C) 2004 University of Toronto
+ * This software is copyright (C) 2004-2005 University of Toronto
  *
  * This file is part of defile.
  *
@@ -140,6 +140,8 @@ static inline long int GetNumFrames(size_t size, char type, const char* field)
 /* Check to see if overwriting the directory is appropriate */
 int CheckWriteAllow(int mkdir_err)
 {
+  dtrace("%i", mkdir_err);
+
   DIR* dir;
   char* dirfile_end;
   char fullname[FILENAME_LEN];
@@ -318,6 +320,8 @@ int CheckWriteAllow(int mkdir_err)
 
 void PreInitialiseDirFile(void)
 {
+  dtracevoid();
+
   int j;
 
   normal_fast = balloc(fatal, ccFast * sizeof(struct FieldType));
@@ -330,6 +334,7 @@ void PreInitialiseDirFile(void)
 
 int OpenField(int fast, int size, const char* filename)
 {
+  dtrace("%i, %i, \"%s\"", fast, size, filename);
   char gpb[GPB_LEN];
   int file;
 #ifdef HAVE_LIBZ
@@ -367,12 +372,15 @@ int OpenField(int fast, int size, const char* filename)
       berror(fatal, "cannot create file `%s'", filename);
   }
 
+  dreturn("%i", file);
+
   return file;
 }
 
 /* Initialise dirfile */
 void InitialiseDirFile(int reset, unsigned long offset)
 {
+  dtrace("%i, %lu", reset, offset);
   FILE* fp;
   int fd;
   int j, i, is_bolo = 0;
@@ -409,7 +417,7 @@ void InitialiseDirFile(int reset, unsigned long offset)
 
   PathSplit_r(rc.dirfile, NULL, gpb);
 
-  WriteFormatFile(fd, atoi(gpb), offset);
+  WriteFormatFile(fd, atoi(gpb), offset / FAST_PER_SLOW);
 
   if (close(fd) < 0)
     berror(fatal, "Error while closing format file");
@@ -532,6 +540,7 @@ void InitialiseDirFile(int reset, unsigned long offset)
  * Close open file descriptors and free allocated memory */
 void CleanUp(void)
 {
+  dtracevoid();
   int j, i, is_bolo = 0;
 
   for (i = 0; i < FAST_PER_SLOW; ++i)
@@ -587,6 +596,8 @@ void PushFrame(unsigned short* frame)
   while (!ri.dirfile_init) {
     usleep(10000);
   }
+
+  debugprintf("Fastsamp push: %lu\n", *(unsigned long*)(&frame[1]));
 
   /*************/
   /* slow data */
@@ -733,11 +744,30 @@ void WriteField(int file, int length, void *buffer)
     if (write(file, buffer, length) < 0)
 #endif
       berror(fatal, "Error on write");
+
+#ifdef DEBUG
+  int i;
+  int seq_err = 0;
+  static unsigned long last_fastsamp = 4000000000U;
+
+  if (file == 5)
+    for (i = 0; i < length / 4; ++i) {
+      if (last_fastsamp < 4000000000U)
+        if (last_fastsamp + 1 != ((unsigned long*)buffer)[i])
+          seq_err = last_fastsamp + 1;
+      last_fastsamp = ((unsigned long*)buffer)[i];
+      printf("Fastsamp write: %lu\n", last_fastsamp);
+    }
+
+  if (seq_err)
+    bprintf(fatal, "sequencing error (%i) detected.\n", seq_err);
+#endif
 }
 
 /* DirFileWriter: separate thread: writes each field to disk */
 void DirFileWriter(void)
 {
+  dtracevoid();
   unsigned short buffer[MAXBUF];
   unsigned int ibuffer[MAXBUF];
   int j, i;

@@ -1,6 +1,21 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2005-01-10  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	Release defile-3.0.8
+
+	* writer.c (InitialiseDirFile): FRAMEOFFSET is in slow frames
+	* defile.c (MakeDirFile): filename suffix in slow frames
+
+	* client.c (GetServerResponse): check for no data on socket to try to
+	prevent spurious server disconnect detections
+
+	* writer.c: debugging
+	* defile.c (main): debugging
+	* client.c (QuenyaClient): debugging
+	* defile.h: debugging macros
+	* configure.ac: Add --enable-debug
+
 2004-12-09  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	Release defile-3.0.7
 
