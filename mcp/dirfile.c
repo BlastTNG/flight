@@ -189,6 +189,8 @@ void InitializeDirfile(char type) {
       "T_charcoal   LINTERP T_CHARCOAL    /data/etc/dt600.txt\n"
       "T_ln2_filt   LINTERP T_LN2_FILT    /data/etc/dt600.txt\n"
       "T_vcs_filt   LINTERP T_VCS_FILT    /data/etc/dt600.txt\n"
+      "T_vcs_fet   LINTERP T_VCS_FET    /data/etc/dt600.txt\n"
+      "T_xtherm_1   LINTERP T_XTHERM_1    /data/etc/dt600.txt\n"
       "T_lhe_filt   LINTERP T_LHE_FILT    /data/etc/dt600.txt\n"
       "# GRTs (ROX)\n"
       "#T_he3fridge	LINTERP	T_HE3FRIDGE	/data/etc/rox102a.txt\n"
