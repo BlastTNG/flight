@@ -483,7 +483,6 @@ int main(void)
   /* fill uninitialised options with default values */
   LoadDefaultConfig();
 
-#define DEBUG
 #ifndef DEBUG
   /* Fork to background */
   if ((pid = fork()) != 0) {
