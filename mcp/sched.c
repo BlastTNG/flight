@@ -186,7 +186,7 @@ void InitSched(void) {
     if (S.p[i].mode == P_CAP) {
       rh = S.p[i].w;
     } else {
-      rh = S.p[i].h;
+      rh = S.p[i].h / 2.;
     }
 
     el_range_warning = 0;
@@ -194,7 +194,7 @@ void InitSched(void) {
       el1+= rh;
       el2-= rh;
       if (el1 > 60.0) el_range_warning = 1;
-      if (el2 < 27.0) el_range_warning = 1;
+      if (el2 < 25.0) el_range_warning = 1;
     } else {
       el1-= rh;
       el2+= rh;
