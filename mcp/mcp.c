@@ -123,6 +123,8 @@ void SigPipe(int signal) {
   pthread_exit(NULL);
 }
 
+#define MAG_X_BIAS 20000
+#define MAG_Y_BIAS 20000
 /************************************************************************
 *                                                                      *
 *   MagRead:  readout magnetometer, subtracting bais from x and        *
@@ -156,11 +158,11 @@ double MagRead(unsigned short *Rxframe) {
 
   x_comp = (M_PI / 180.0) *
     ( ( (double)(Rxframe[i_mag_x]) )
-      * (-360.0 / 65536.0) );
+      * (-360.0 / 65536.0) ) - MAG_X_BIAS;
 
   y_comp = (M_PI / 180.0) *
     ( ( (double)(Rxframe[i_mag_y]) )
-      * (-360.0 / 65536.0) );
+      * (-360.0 / 65536.0) ) - MAG_Y_BIAS;
 
   /* Every 300 s = 5 min, get new data from the magnetic model. */
   /* */
