@@ -60,9 +60,12 @@ void InitSched(void) {
 
   if (S.n_sched>MAX_NSCHED) S.n_sched = MAX_NSCHED;
   S.e = (struct EventType *)malloc(S.n_sched*sizeof(struct EventType));
+  if (S.e == NULL)
+    perror("sched: Unable to malloc");
   
-  fclose(fp);
-
+  if (fclose(fp) == EOF) {
+    perror("sched: Error on close");
+  }
 
   /**************************/
   /*** Read Starting Time ***/
@@ -96,7 +99,9 @@ void InitSched(void) {
     S.e[j].t = day*24l*3600l + hr*3600l + min*60l + sec;
     if (entry_ok) j++;
   }
-  fclose(fp);
+  if (fclose(fp) == EOF) {
+    perror("sched: Error on close");
+  }
   
 }
 
