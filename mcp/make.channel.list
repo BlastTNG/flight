@@ -9,15 +9,22 @@ while (<INPUT>) {
     print "# fast samples per slow (FAST_PER_SLOW): ", $FAST_PER_SLOW, "\n";
   } elsif (!$ENC_ELEV_OFFSET and ($ENC_ELEV_OFFSET) = /#define ENC_ELEV_OFFSET [^0-9]*([0-9.]*)/) {
     print "# encoder elevation offset (ENC_ELEV_OFFSET): ", $ENC_ELEV_OFFSET, "\n";
-    last;
   } elsif (!$N_SLOW and ($N_SLOW) = /#define N_SLOW [^0-9]*([0-9]*)/) {
     print "# slow fields (N_SLOW): ", $N_SLOW, "\n";
   } elsif (!$DAS_CARDS and ($DAS_CARDS) = /#define DAS_CARDS [^0-9]*([0-9]*)/) {
     print "# DAS cards in frame (DAS_CARDS): ", $DAS_CARDS, "\n";
   } elsif (!$DAS_CHS and ($DAS_CHS) = /#define DAS_CHS [^0-9]*([0-9]*)/) {
     print "# channels in one DAS card (DAS_CHS): ", $DAS_CHS, "\n";
-  } elsif (!$N_FASTCHLIST_INIT and ($N_FASTCHLIST_INIT) = /#define N_FASTCHLIST_INIT [^0-9]*([0-9]*)/) {
-    print "# fields in the frame below the DAS bolometer fields (N_FASTCHLIST_INIT): ", $N_FASTCHLIST_INIT, "\n";
+  } elsif (!$N_FASTCHLIST_INIT_ACS and ($N_FASTCHLIST_INIT_ACS) = /#define N_FASTCHLIST_INIT_ACS [^0-9]*([0-9]*)/) {
+    print "# ACS fields in the frame below the DAS bolometer fields (N_FASTCHLIST_INIT_ACS): ", $N_FASTCHLIST_INIT_ACS, "\n";
+  } elsif (!$N_FASTCHLIST_INIT_DAS and ($N_FASTCHLIST_INIT_DAS) = /#define N_FASTCHLIST_INIT_DAS [^0-9]*([0-9]*)/) {
+    $N_FASTCHLIST_INIT = $N_FASTCHLIST_INIT_ACS + $N_FASTCHLIST_INIT_DAS;
+    print "# DAS fields in the frame below the DAS bolometer fields (N_FASTCHLIST_INIT_DAS): ", $N_FASTCHLIST_INIT_DAS, "\n";
+    print "# fields in the frame below the DAS bolometer fields (N_FASTCHLIST_INIT_DAS): ", $N_FASTCHLIST_INIT, "\n";
+  } elsif (($DEG2I) = /#define DEG2I (.*)/) {
+    $DEG2I = eval($DEG2I);
+    $I2DEG = 1/$DEG2I;
+    last;
   }
 }
 
@@ -29,11 +36,18 @@ print "# fast channel list offset (FAST_OFFSET): ", $FAST_OFFSET = 4 + $N_SLOW,
 open INPUT, "<tx_struct.c" or die "ERROR: Unable to open tx_struct.c";
 
 while (<INPUT>) {
-  if ($slowlist) {
+  if (/#define LOOPBACK ([0-9])/) {
+    $LOOPBACK = $1;
+  } elsif (/#define SPARE ([0-9])/) {
+    $SPARE = $1;
+  } elsif ($slowlist) {
     if (@record =
         /^[^\/\*]*{"(.*)" *, *'(.)' *, *(.*) *, *(.*) *, *(.*) *, *(.*) *, *'(.)' *}/) {
       @record = ($slowch, $slowind, @record);
+      $record[4] = $LOOPBACK if ($record[4] eq "LOOPBACK");
+      $record[4] = $SPARE if ($record[4] eq "SPARE");
       if ($record[2] ne "") {
+        $record[6] =~ s/I2DEG/$I2DEG/g;
         $record[6] = eval($record[6]);
         $record[7] = eval($record[7]);
         printf "  %1i %2i  %-20s  %1s   %2i  %2i  %18g  %18g  %s\n", @record;
@@ -50,7 +64,10 @@ while (<INPUT>) {
     if (@record =
         /^[^\/\*]*{"(.*)" *, *'(.)' *, *(.*) *, *(.*) *, *(.*) *, *(.*) *, *'(.)' *}/) {
       @record = (-1, $fastind, @record);
+      $record[4] = $LOOPBACK if ($record[4] eq "LOOPBACK");
+      $record[4] = $SPARE if ($record[4] eq "SPARE");
       if ($record[2] ne "" and $record[2] ne "ENDMARKER") {
+        $record[6] =~ s/I2DEG/$I2DEG/g;
         $record[6] =~ s/ENC_ELEV_OFFSET/$ENC_ELEV_OFFSET/g;
         $record[7] =~ s/ENC_ELEV_OFFSET/$ENC_ELEV_OFFSET/g;
         $record[6] = eval($record[6]);
