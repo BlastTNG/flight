@@ -1,6 +1,8 @@
 2004-12-17:
 	Release blastcmd-1.1.9
 
+	* blastcmd-remote.in: Pass ssh -tx to force tty allocation and disable x11
+	forwarding.  Convert to sh
 	* blastcmd.c: Fix LOGFILE define
 	* Makefile.am: Fix blastcmd.log permissions
 	* configure.ac: Use arwen as default blastcmd server
