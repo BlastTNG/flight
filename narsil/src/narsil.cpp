@@ -74,6 +74,7 @@
 
 #define DEF_CURFILE CUR_DIR "/defile.cur"
 #define LOGFILE DATA_DIR "/log.txt"
+#define LOGFILEDIR DATA_DIR "/log/"
 
 #define BLASTCMDFILE BLAST_CMD
 

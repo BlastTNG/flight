@@ -41,8 +41,6 @@
 #define SMALL_POINT_SIZE 10
 #define LARGE_POINT_SIZE 12
 
-#define LOGFILEDIR "/data/etc/"
-
 class QVBoxLayout;
 class QHBoxLayout;
 class QGridLayout;
