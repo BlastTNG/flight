@@ -207,8 +207,7 @@ struct ChannelStruct SlowChannels[] = {
   {"hspwm",        'w',  CRYO,  4,          100./2047.,              0., 'u'},
   {"bdapwm",       'w',  CRYO,  5,          100./2047.,              0., 'u'},
   {"jfetpwm",      'w',  CRYO,  6,          100./2047.,              0., 'u'},
-  {"cryoctrl",     'w',  CRYO, 30,                 1.0,              0., 'u'},
-  {"cal_pulse",    'w',  CRYO, 31,                10.0,              0., 'u'},
+  {"cryoctrl",     'w',  CRYO, 31,                 1.0,              0., 'u'},
   {"set_bdaheat",  'w',  CRYO, 32,                 1.0,              0., 'u'},
   {"g_fl_bdaheat", 'w',  CRYO, 33,                 1.0,              0., 'u'},
   {"g_d_bdaheat",  'w',  CRYO, 34,                 1.0,              0., 'u'},
@@ -364,6 +363,7 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_sigma",    'w', LOOP2, 46,              I2DEG,             0.0, 'u'},
   {"enc_el",       'w', LOOP2, 47,              I2DEG,             0.0, 'u'},
   {"enc_sigma",    'w', LOOP2, 48,              I2DEG,             0.0, 'u'},
+  {"cal_pulse",    'w', LOOP2, 49,               10.0,              0., 'u'},
   {"ss_el",        'w', LOOP2, 50,                1.0,             0.0, 'u'},
   {"isc_blob0_flx",'w', LOOP2, 53,               32.0,             0.0, 'u'},
   {"clin_el",      'w', LOOP2, 54,              I2DEG,             0.0, 'u'},
@@ -381,7 +381,7 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_y_off",    'w', LOOP3,  3,              I2DEG,             0.0, 'u'},
   {"ra",           'w', LOOP3,  4,       24.0/65536.0,             0.0, 'u'},
   {"dec",          'w', LOOP3,  5,              I2DEG,             0.0, 's'},
-  {"osc_offset",   'w', LOOP3,  6,                1.0,             0.0, 's'},
+  {"isc_offset",   'w', LOOP3,  6,                1.0,             0.0, 's'},
   {"bbc_fifo_size",'w', LOOP3,  7,             1./624,             0.0, 'u'},
   {"cpu_temp2",    'w', LOOP3,  8,               0.01,             0.0, 'u'},
   {"cpu_temp3",    'w', LOOP3,  9,               0.01,             0.0, 'u'},
@@ -413,6 +413,7 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_nrad",     'w', LOOP3, 39,              I2DEG,             0.0, 'u'},
   {"osc_mtol",     'w', LOOP3, 40,        100./65536.,             0.0, 'u'},
   {"osc_qtol",     'w', LOOP3, 41,        100./65536.,             0.0, 'u'},
+  {"osc_offset",   'w', LOOP3, 42,                1.0,             0.0, 's'},
   {"osc_focus",    'w', LOOP3, 43,                1.0,             0.0, 'u'},
   {"osc_state",    'w', LOOP3, 44,                1.0,             0.0, 'u'},
   {"osc_lrad",     'w', LOOP3, 45,              I2DEG,             0.0, 'u'},
@@ -454,7 +455,6 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_temp4",    'w', LOOP4, 18,            1./200.,             0.0, 'u'},
   {"osc_pressure1",'w', LOOP4, 19,           1./2000.,             0.0, 'u'},
   {"isc_gain",     'w', LOOP4, 20,        100./65536.,             0.0, 'u'},
-  {"isc_offset",   'w', LOOP4, 21,                1.0,             0.0, 's'},
 
   END_OF_CHANNELS
 };

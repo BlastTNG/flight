@@ -46,8 +46,10 @@
 #define CRYO_LHeVALVE_CLOSE   0x08 /* N3G2 */
 
 /* CryoControl bits */
-#define CRYOCTRL_CALON     0x0004
+#define CRYOCTRL_CALON     0x4000
 #define CRYOCTRL_BDAHEATON 0x8000
+#define CRYOCTRL_PULSE_INDEX(x) ((x & 0x3) << 12)
+#define CRYOCTRL_PULSE_LEN(x) (x & 0x00FF)
 
 /* CryoState bitfield */
 #define CS_HELIUMLEVEL    0x0001
@@ -98,7 +100,7 @@ int CalLamp (void)
     calPulseAddr = GetNiosAddr("cal_pulse");
   }
 
-  /* Send the current pulse length */
+  /* Save the current pulse length */
   WriteData(calPulseAddr, CommandData.Cryo.calib_pulse, NIOS_QUEUE);
 
   if (CommandData.Cryo.calibrator == on) {
@@ -106,7 +108,8 @@ int CalLamp (void)
       update_counter = (update_counter + 1) & 3;
       last_mode = on;
     }
-    return update_counter | CRYOCTRL_CALON;
+    return (CRYOCTRL_PULSE_INDEX(update_counter) | CRYOCTRL_CALON
+        | CRYOCTRL_PULSE_LEN(CommandData.Cryo.calib_pulse));
   } else if (CommandData.Cryo.calibrator == repeat) {
     if (last_mode != repeat || elapsed >= CommandData.Cryo.calib_period) {
       /* end of cycle -- send a new pulse */
@@ -121,7 +124,8 @@ int CalLamp (void)
     last_mode = CommandData.Cryo.calibrator = off;
   }
 
-  return update_counter & 0x3;
+  return (CRYOCTRL_PULSE_INDEX(update_counter)
+      | CRYOCTRL_PULSE_LEN(CommandData.Cryo.calib_pulse));
 }
 
 /***********************************************************************/
