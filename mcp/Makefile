@@ -52,3 +52,7 @@ starfind.o: starfind.c pointing_struct.h starpos.h
 pointing.o: pointing_struct.h pointing.c
 	  $(CC) -c pointing.c
 
+install: mcp-bin
+	sed -e "s/\.\//\/usr\/local\/bin\//" mcp > /usr/local/bin/mcp
+	chmod 755 /usr/local/bin/mcp
+	install -m 755 mcp-bin /usr/local/bin
