@@ -111,6 +111,7 @@ union DerivedUnion DerivedChannels[] = {
   LINTERP("B_amp3", "b_amp3", "/data/etc/b_amp3.txt"),
 
   /* CRYO */
+  COMMENT("Internal (to mcp) reference of the cryo stat"),
   BITFIELD("cryostate",
       "HE_LEV_SENS",
       "CHARC_HEATER",
@@ -119,8 +120,8 @@ union DerivedUnion DerivedChannels[] = {
       "POT_VALVE",
       "POT_DIREC",
       "LHE_VALVE",
-      "LHE_DIREC",
-      "",
+      "L_DIREC",
+      "LN_VALVE",
       "AUTO_JFET_HEAT"
       ),
 
@@ -130,7 +131,9 @@ union DerivedUnion DerivedChannels[] = {
       "POT_IS_CLOSED",
       "POT_IS_OPEN",
       "LHE_IS_CLOSED",
-      "LHE_IS_OPEN"
+      "LHE_IS_OPEN",
+      "LN_IS_CLOSED",
+      "LN_IS_OPEN"
       ),
 
   LINCOM2("POT_STATE", "POT_IS_CLOSED", 1, 0, "POT_IS_OPEN",  1, 0),

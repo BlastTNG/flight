@@ -40,11 +40,12 @@
 #define CRYO_CHARCOAL_OFF    0x08 /* N3G3 */
 
 #define CRYO_POTVALVE_ON      0x10 /* N3G2 - cryoout2 */
+#define CRYO_LNVALVE_ON       0x20 /* N3G2 */
 #define CRYO_POTVALVE_OPEN    0x40 /* N3G2 Group two of the cryo card */
 #define CRYO_POTVALVE_CLOSE   0x80 /* N3G2 appears to have its nybbles */
-#define CRYO_LHeVALVE_ON      0x01 /* N3G2 backwards */
-#define CRYO_LHeVALVE_OPEN    0x04 /* N3G2 */
-#define CRYO_LHeVALVE_CLOSE   0x08 /* N3G2 */
+#define CRYO_LHeVALVE_ON      0x01 /* N3G2 backwards! */
+#define CRYO_LVALVE_OPEN      0x04 /* N3G2 */
+#define CRYO_LVALVE_CLOSE     0x08 /* N3G2 */
 
 /* CryoControl bits */
 #define CRYOCTRL_CALON     0x4000
@@ -74,7 +75,8 @@
 #define CS_POTVALVE_ON    0x0010
 #define CS_POTVALVE_OPEN  0x0020
 #define CS_LHeVALVE_ON    0x0040
-#define CS_LHeVALVE_OPEN  0x0080
+#define CS_LVALVE_OPEN    0x0080
+#define CS_LNVALVE_ON     0x0100
 #define CS_AUTO_JFET      0x0200
 
 void WritePrevStatus();
@@ -374,7 +376,7 @@ void CryoControl (void)
     cryoctrl |= CRYOCTRL_BDAHEATON;
 
   cryoout2 = CRYO_POTVALVE_OPEN | CRYO_POTVALVE_CLOSE | 
-    CRYO_LHeVALVE_OPEN | CRYO_LHeVALVE_CLOSE;
+    CRYO_LVALVE_OPEN | CRYO_LVALVE_CLOSE;
 
   /* Control motorised valves -- latching relays */
   if (CommandData.Cryo.potvalve_open > 0) {
@@ -392,20 +394,25 @@ void CryoControl (void)
   } else
     cryostate &= 0xFFFF - CS_POTVALVE_ON;
 
-  if (CommandData.Cryo.lhevalve_open > 0) {
-    cryoout2 &= ~CRYO_LHeVALVE_OPEN;
-    cryostate |= CS_LHeVALVE_OPEN;
-    CommandData.Cryo.lhevalve_open--;
-  } else if (CommandData.Cryo.lhevalve_close > 0) {
-    cryoout2 &= ~CRYO_LHeVALVE_CLOSE;
-    cryostate &= 0xFFFF - CS_LHeVALVE_OPEN;
-    CommandData.Cryo.lhevalve_close--;
+  if (CommandData.Cryo.lvalve_open > 0) {
+    cryoout2 &= ~CRYO_LVALVE_OPEN;
+    cryostate |= CS_LVALVE_OPEN;
+    CommandData.Cryo.lvalve_open--;
+  } else if (CommandData.Cryo.lvalve_close > 0) {
+    cryoout2 &= ~CRYO_LVALVE_CLOSE;
+    cryostate &= 0xFFFF - CS_LVALVE_OPEN;
+    CommandData.Cryo.lvalve_close--;
   }
   if (CommandData.Cryo.lhevalve_on) {
     cryoout2 |= CRYO_LHeVALVE_ON;
     cryostate |= CS_LHeVALVE_ON;
   } else
     cryostate &= 0xFFFF - CS_LHeVALVE_ON;
+  if (CommandData.Cryo.lnvalve_on) {
+    cryoout2 |= CRYO_LNVALVE_ON;
+    cryostate |= CS_LNVALVE_ON;
+  } else
+    cryostate &= 0xFFFF - CS_LNVALVE_ON;
 
   if (CommandData.Cryo.autoJFETheat) {
     jfetHeat = JFETthermostat();

@@ -14,7 +14,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.32 $";
+const char command_list_serial[] = "$Revision: 2.33 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -101,10 +101,12 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_CRYO_CONTROL},
   {COMMAND(he_valve_on),  "he4 tank valve on", GR_CRYO_CONTROL},
   {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO_CONTROL},
-  {COMMAND(he_valve_open), "set he4 tank valve direction open",
+  {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open",
     GR_CRYO_CONTROL},
-  {COMMAND(he_valve_close), "set he4 tank valve direction close",
+  {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close",
     GR_CRYO_CONTROL},
+  {COMMAND(ln_valve_on), "ln tank valve on", GR_CRYO_CONTROL},
+  {COMMAND(ln_valve_off), "ln tank valve off", GR_CRYO_CONTROL},
 
   {COMMAND(xyzzy), "nothing happens here", GR_MISC},
   {COMMAND(sync_adc), "resync ADC Boards that require it", GR_MISC},

@@ -13,7 +13,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 106        /* total number of single word cmds */
+#define N_SCOMMANDS 108        /* total number of single word cmds */
 #define N_MCOMMANDS 71         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -61,7 +61,7 @@ enum singleCommand {
   coldplate_on,     isc_discard_images, el_off,           el_on,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
   fixed,            isc_full_screen,    gps_allow,        gps_veto,
-  he_valve_close,   he_valve_on,        he_valve_off,     he_valve_open,
+  l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,
   inner_cool_off,   inner_cool_on,      isc_abort,        isc_allow,
   isc_pause,        isc_reconnect,      isc_run,          isc_shutdown,
   isc_veto,         level_off,          level_on,         mag_allow,
@@ -80,7 +80,7 @@ enum singleCommand {
   analogue_gyros,   digital_gyros,      gps_off,          gps_on,
   gyro_off,         gyro_on,            isc_off,          isc_on,
   osc_off,          osc_on,             isc_trig_int,     isc_trig_ext,
-  osc_trig_int,     osc_trig_ext
+  osc_trig_int,     osc_trig_ext,       ln_valve_on,      ln_valve_off
 };
 
 struct scom {

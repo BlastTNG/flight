@@ -365,16 +365,20 @@ void SingleCommand (enum singleCommand command) {
     CommandData.Cryo.potvalve_on = 1;
   else if (command == pot_valve_off)
     CommandData.Cryo.potvalve_on = 0;
-  else if (command == he_valve_open) {
-    CommandData.Cryo.lhevalve_open = 40;
-    CommandData.Cryo.lhevalve_close = 0;
-  } else if (command == he_valve_close) {
-    CommandData.Cryo.lhevalve_close = 40;
-    CommandData.Cryo.lhevalve_open = 0;
+  else if (command == l_valve_open) {
+    CommandData.Cryo.lvalve_open = 40;
+    CommandData.Cryo.lvalve_close = 0;
+  } else if (command == l_valve_close) {
+    CommandData.Cryo.lvalve_close = 40;
+    CommandData.Cryo.lvalve_open = 0;
   } else if (command == he_valve_on)
     CommandData.Cryo.lhevalve_on = 1;
   else if (command == he_valve_off)
     CommandData.Cryo.lhevalve_on = 0;
+  else if (command == ln_valve_on)
+    CommandData.Cryo.lnvalve_on = 1;
+  else if (command == ln_valve_off)
+    CommandData.Cryo.lnvalve_on = 0;
   else if (command == auto_bdaheat)
     CommandData.Cryo.autoBDAHeat = 1;
   else if (command == auto_jfetheat)
@@ -1498,8 +1502,9 @@ void InitCommandData() {
   CommandData.Cryo.potvalve_open = 0;
   CommandData.Cryo.potvalve_close = 0;
   CommandData.Cryo.lhevalve_on = 0;
-  CommandData.Cryo.lhevalve_open = 0;
-  CommandData.Cryo.lhevalve_close = 0;
+  CommandData.Cryo.lvalve_open = 0;
+  CommandData.Cryo.lvalve_close = 0;
+  CommandData.Cryo.lnvalve_on = 0;
 
   CommandData.Cryo.JFETHeat = 0;
   CommandData.Cryo.autoJFETheat = 1;

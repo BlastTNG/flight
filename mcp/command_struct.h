@@ -148,7 +148,7 @@ struct CommandDataStruct {
     unsigned short fridgeCycle;
 
     unsigned short potvalve_open, potvalve_on, potvalve_close;
-    unsigned short lhevalve_open, lhevalve_on, lhevalve_close;
+    unsigned short lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
   } Cryo;
 
   int Phase[DAS_CARDS];
