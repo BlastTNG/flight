@@ -189,7 +189,7 @@
   <NUMBER caption="JFET" textstyle="oddrow">
     <DATUM format="%.2f" src="T_vcs_fet" extrema="jfettemp"/></NUMBER>
   <NUMBER caption="Charcoal" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_charcoal" extrema="temp"/></NUMBER>
+    <DATUM format="%.2f" src="T_charcoal" extrema="pottemp"/></NUMBER>
   <NUMBER caption="He4 Pot" textstyle="oddrow">
     <DATUM format="%.2f" src="T_he4pot" extrema="pottemp"/></NUMBER>
   <NUMBER caption="Optics Box" textstyle="oddrow">
@@ -322,7 +322,7 @@
   <MULTI caption="LN Valve State" textstyle="oddrow">
     <DATUM src="LN_STATE">
       <WORD value="2" caption="Error" textstyle="E_BIT"/>
-      <WORD value="0" caption="Neither" textstyle="E_BIT"/>
+      <WORD value="0" caption="No Limit" textstyle="E_BIT"/>
       <WORD value="2" caption="Open" textstyle="W_BIT"/>
       <WORD value="1" caption="Close" textstyle="OK_BIT"/>
     </DATUM>
@@ -342,7 +342,7 @@
   <MULTI caption="LHe Valve State" textstyle="oddrow">
     <DATUM src="LHE_STATE">
       <WORD value="3" caption="Error" textstyle="E_BIT"/>
-      <WORD value="0" caption="Neither" textstyle="E_BIT"/>
+      <WORD value="0" caption="No Limit" textstyle="E_BIT"/>
       <WORD value="2" caption="Open" textstyle="W_BIT"/>
       <WORD value="1" caption="Close" textstyle="OK_BIT"/>
     </DATUM>
