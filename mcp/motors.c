@@ -904,7 +904,7 @@ void DoNewCapMode() {
       (CommandData.pointing_mode.Y != last_Y) ||
       (CommandData.pointing_mode.w != last_w)) {
     if ( (fabs(az - (caz)) < 0.1) &&
-	 (fabs(el - (bottom)) < 0.05)) {
+	 (fabs(el - (bottom)) < 0.01)) {
       last_X = CommandData.pointing_mode.X;
       last_Y = CommandData.pointing_mode.Y;
       last_w = CommandData.pointing_mode.w;
