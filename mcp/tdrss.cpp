@@ -294,7 +294,8 @@ void Buffer::Start(char filenum, unsigned int framenum)
   //
   //   Four FF bytes in a row will (almost) never happen naturally
 
-  *(unsigned short *)(buf + BUF_POS_FRAME_SYNC) = BUF_FRAME_SYNC;
+  for (i = BUF_POS_FRAME_SYNC; i < BUF_POS_FRAME_SYNC + BUF_LEN_FRAME_SYNC; i++)
+    buf[i] |= BUF_FRAME_SYNC;
 
   buf[BUF_POS_FILE_NUM] |= BUF_FILE_NUM_PADDER + filenum;
 
@@ -420,7 +421,6 @@ void Buffer::Stop(void)
 
   if (CurrSize() - BUF_POS_DATA_START >= 0) {
     *(unsigned short *)(buf + BUF_POS_FRAME_LEN) = CurrSize();
-    bprintf(info, "TDRSS pos %d size %x", BUF_POS_FRAME_LEN, CurrSize());
     *(unsigned short *)(buf + BUF_POS_CRC) = 
       CalculateCRC(CRC_INIT, buf + BUF_POS_DATA_START, 
           CurrSize() - BUF_POS_DATA_START);
