@@ -59,6 +59,7 @@ struct ISCStatusStruct {
   int exposure;			// exposure time in us REGARDLESS of self/hardware trigger
   int triggertype;		// 0=software, 1=edge, 2=positive pulse, 3=negative pulse
   int focusOffset;      // when camera focus ordered "home", step this far
+  int eyeOn;            // if set update the window
 
   // Display mode parameters
   ISCDisplayModeType display_mode;
@@ -82,8 +83,6 @@ struct ISCStatusStruct {
   // blob algorithm stuff
   double sn_threshold;
   int grid;	// ask ed
-  int cenbox;	// ask ed
-  int apbox;	// ask chapin
   int mult_dist;	// ed knows
 
   // gain/offset

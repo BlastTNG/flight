@@ -265,8 +265,6 @@ void StoreStarCameraData(int index, int which)
   static struct NiosStruct* HxFlagAddr[2];
   static struct NiosStruct* McpnumAddr[2];
   static struct NiosStruct* ApertAddr[2];
-  static struct NiosStruct* CenboxAddr[2];
-  static struct NiosStruct* ApboxAddr[2];
   static struct NiosStruct* MdistAddr[2];
   static struct NiosStruct* NblobsAddr[2];
   static struct NiosStruct* FocusAddr[2];
@@ -330,8 +328,6 @@ void StoreStarCameraData(int index, int which)
     ApertAddr[which] = GetSCNiosAddr("apert", which);
     ThreshAddr[which] = GetSCNiosAddr("thresh", which);
     GridAddr[which] = GetSCNiosAddr("grid", which);
-    CenboxAddr[which] = GetSCNiosAddr("cenbox", which);
-    ApboxAddr[which] = GetSCNiosAddr("apbox", which);
     MdistAddr[which] = GetSCNiosAddr("mdist", which);
     MaxblobsAddr[which] = GetSCNiosAddr("maxblobs", which);
     MaglimitAddr[which] = GetSCNiosAddr("maglimit", which);
@@ -445,8 +441,8 @@ void StoreStarCameraData(int index, int which)
   /*** State Info ***/
   WriteData(StateAddr[which], (unsigned int)(ISCSentState[which].pause * 2
         + ISCSentState[which].abort * 4 + ISCSentState[which].autofocus * 8
-        + ISCSentState[which].shutdown * 32 + ISCSentState[which].save),
-      NIOS_QUEUE);
+        + ISCSentState[which].shutdown * 32 + ISCSentState[which].eyeOn * 64
+        + ISCSentState[which].save), NIOS_QUEUE);
   WriteData(FocusAddr[which], (unsigned int)ISCSentState[which].focus_pos,
       NIOS_QUEUE);
   WriteData(FocOffAddr[which], (unsigned int)ISCSentState[which].focusOffset,
@@ -456,10 +452,6 @@ void StoreStarCameraData(int index, int which)
   WriteData(ThreshAddr[which], (unsigned int)(ISCSentState[which].sn_threshold
         * 10.), NIOS_QUEUE);
   WriteData(GridAddr[which], (unsigned int)ISCSentState[which].grid,
-      NIOS_QUEUE);
-  WriteData(CenboxAddr[which], (unsigned int)ISCSentState[which].cenbox,
-      NIOS_QUEUE);
-  WriteData(ApboxAddr[which], (unsigned int)ISCSentState[which].apbox,
       NIOS_QUEUE);
   WriteData(MdistAddr[which], (unsigned int)ISCSentState[which].mult_dist,
       NIOS_QUEUE);

@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.38 $";
+const char command_list_serial[] = "$Revision: 2.39 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -159,6 +159,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(isc_save_images), "turn on saving of images", GR_ISC_HOUSE},
   {COMMAND(isc_discard_images), "turn off saving of images", GR_ISC_HOUSE},
   {COMMAND(isc_full_screen), "show full screen", GR_ISC_HOUSE},
+  {COMMAND(isc_eye_on), "turn on ISC eViL eYe", GR_ISC_HOUSE},
+  {COMMAND(isc_eye_off), "turn off ISC eViL eYe", GR_ISC_HOUSE},
 
   {COMMAND(isc_trig_int), "tell ISC to use internal (software) triggers",
     GR_ISC_HOUSE},
@@ -181,6 +183,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(osc_save_images), "turn on saving of images", GR_OSC_HOUSE},
   {COMMAND(osc_discard_images), "turn off saving of images", GR_OSC_HOUSE},
   {COMMAND(osc_full_screen), "show full screen", GR_OSC_HOUSE},
+  {COMMAND(osc_eye_on), "turn on OSC eViL eYe", GR_OSC_HOUSE},
+  {COMMAND(osc_eye_off), "turn off OSC eViL eYe", GR_OSC_HOUSE},
 
   {COMMAND(osc_trig_int), "tell OSC to use internal (software) triggers",
     GR_OSC_HOUSE},
@@ -585,12 +589,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(isc_det_set), "set detection parameters", GR_ISC_PARAM, 5,
+  {COMMAND(isc_det_set), "set detection parameters", GR_ISC_PARAM, 3,
     {
       {"Search Grid (px/side)",     0, ISC_CCD_Y_PIXELS, 'i', "ISC_GRID"},
       {"S/N Threshold",           0.1,       3276.7, 'f', "ISC_THRESH"},
-      {"Centroiding Box (px/side)", 0, ISC_CCD_Y_PIXELS, 'i', "ISC_CENBOX"},
-      {"Photometry Box (px/side)",  0, ISC_CCD_Y_PIXELS, 'i', "ISC_APBOX"},
       {"Exclusion Distance (px)",   0, ISC_CCD_Y_PIXELS, 'i', "ISC_MDIST"}
     }
   },
@@ -682,12 +684,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(osc_det_set), "set detection parameters", GR_OSC_PARAM, 5,
+  {COMMAND(osc_det_set), "set detection parameters", GR_OSC_PARAM, 3,
     {
       {"Search Grid (px/side)",     0, OSC_CCD_Y_PIXELS, 'i', "OSC_GRID"},
       {"S/N Threshold",           0.1,       3276.7, 'f', "OSC_THRESH"},
-      {"Centroiding Box (px/side)", 0, OSC_CCD_Y_PIXELS, 'i', "OSC_CENBOX"},
-      {"Photometry Box (px/side)",  0, OSC_CCD_Y_PIXELS, 'i', "OSC_APBOX"},
       {"Exclusion Distance (px)",   0, OSC_CCD_Y_PIXELS, 'i', "OSC_MDIST"}
     }
   },

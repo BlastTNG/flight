@@ -466,6 +466,10 @@ void SingleCommand (enum singleCommand command) {
     CommandData.ISCState[0].triggertype = ISC_TRIGGER_NEG;
   else if (command == isc_auto_focus)
     CommandData.ISCControl[0].autofocus = 10;
+  else if (command == isc_eye_on)
+    CommandData.ISCState[0].eyeOn = 1;
+  else if (command == isc_eye_off)
+    CommandData.ISCState[0].eyeOn = 0;
 
     /***************************************/
     /********* OSC Commanding  *************/
@@ -495,6 +499,11 @@ void SingleCommand (enum singleCommand command) {
     CommandData.ISCState[1].triggertype = ISC_TRIGGER_NEG;
   else if (command == osc_auto_focus)
     CommandData.ISCControl[1].autofocus = 10;
+  else if (command == isc_eye_on)
+    CommandData.ISCState[1].eyeOn = 1;
+  else if (command == isc_eye_off)
+    CommandData.ISCState[1].eyeOn = 0;
+
   else if (command == reap) {
     bprintf(err, "Reaping the watchdog tickle on command.");
     pthread_cancel(watchdog_id);
@@ -824,9 +833,7 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
   } else if (command == isc_det_set) {
     CommandData.ISCState[0].grid = ivalues[0];
     CommandData.ISCState[0].sn_threshold = rvalues[1];
-    CommandData.ISCState[0].cenbox = ivalues[2];
-    CommandData.ISCState[0].apbox = ivalues[3];
-    CommandData.ISCState[0].mult_dist = ivalues[4];
+    CommandData.ISCState[0].mult_dist = ivalues[2];
   } else if (command == isc_max_blobs) {
     CommandData.ISCState[0].maxBlobMatch = ivalues[0];
   } else if (command == isc_catalogue) {
@@ -871,9 +878,7 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
   } else if (command == osc_det_set) {
     CommandData.ISCState[1].grid = ivalues[0];
     CommandData.ISCState[1].sn_threshold = rvalues[1];
-    CommandData.ISCState[1].cenbox = ivalues[2];
-    CommandData.ISCState[1].apbox = ivalues[3];
-    CommandData.ISCState[1].mult_dist = ivalues[4];
+    CommandData.ISCState[1].mult_dist = ivalues[2];
   } else if (command == osc_max_blobs) {
     CommandData.ISCState[1].maxBlobMatch = ivalues[0];
   } else if (command == osc_catalogue) {
@@ -1530,6 +1535,7 @@ void InitCommandData() {
   CommandData.ISCState[0].abort = 0;
   CommandData.ISCState[0].pause = 0;
   CommandData.ISCState[0].save = 0;
+  CommandData.ISCState[0].eyeOn = 1;
   CommandData.ISCState[0].autofocus = 0;
   CommandData.ISCState[0].focus_pos = 0;
   CommandData.ISCState[0].ap_pos = 495;
@@ -1538,8 +1544,6 @@ void InitCommandData() {
   CommandData.ISCState[0].elBDA = 0;
   CommandData.ISCState[0].brightStarMode = 0;
   CommandData.ISCState[0].grid = 38;
-  CommandData.ISCState[0].cenbox = 20;
-  CommandData.ISCState[0].apbox = 5;
   CommandData.ISCState[0].maxBlobMatch = 5;
   CommandData.ISCState[0].sn_threshold = 3.5;
   CommandData.ISCState[0].mult_dist = 30;
@@ -1560,6 +1564,7 @@ void InitCommandData() {
   CommandData.ISCState[1].abort = 0;
   CommandData.ISCState[1].pause = 0;
   CommandData.ISCState[1].save = 0;
+  CommandData.ISCState[1].eyeOn = 1;
   CommandData.ISCState[1].autofocus = 0;
   CommandData.ISCState[1].focus_pos = 0;
   CommandData.ISCState[1].ap_pos = 495;
@@ -1568,8 +1573,6 @@ void InitCommandData() {
   CommandData.ISCState[1].elBDA = 0;
   CommandData.ISCState[1].brightStarMode = 0;
   CommandData.ISCState[1].grid = 38;
-  CommandData.ISCState[1].cenbox = 20;
-  CommandData.ISCState[1].apbox = 5;
   CommandData.ISCState[1].maxBlobMatch = 5;
   CommandData.ISCState[1].sn_threshold = 3.5;
   CommandData.ISCState[1].mult_dist = 30;
