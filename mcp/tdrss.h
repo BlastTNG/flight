@@ -27,7 +27,6 @@ public:
   void RecordNumBytes();
   void EraseLastSection();
   void WriteTo(long long datum, char numbits, char oversize, bool hassign);
-  short int Tester(int pos);
   int SectionSize();
   int CurrSize();
   int MaxSize();
@@ -67,7 +66,7 @@ class FrameBuffer
     static void *UpdateThreadEntry(void *);
     
     unsigned int *mcpindex, lastmcpindex;
-    unsigned short **fastdata, ***fastbuf, **testbuf;
+    unsigned short **fastdata, ***fastbuf;
     unsigned short **slowdata, ***slowbuf;
     int numframes;      // Number of frames in circular buffer.
     int framenum;       // Current frame in circ. buffer.
@@ -88,7 +87,7 @@ public:
 protected:
 
 private:
-  bool GetCurrentXML();
+  bool GetCurrentAML();
 
   double Differentiate(double *invals, int num, int divider);
   void Integrate(double *invals, int num);
@@ -109,7 +108,7 @@ private:
   DataHolder *DataInfo;
   Buffer *sendbuf;
 
-  int XMLsrc;
+  int AMLsrc;
 };
 
 #endif

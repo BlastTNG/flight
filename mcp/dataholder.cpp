@@ -1,8 +1,33 @@
+/*()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()*\
+|*()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()*|
+|*()                                                                        ()*|
+|*() DATAHOLDER.CPP                                                         ()*|
+|*()                                                                        ()*|
+|*() Information on channels being compressed/decompressed by big/small.    ()*|
+|*() Both big and small require this file to work in conjunction with each  ()*|
+|*() other.  This file includes als the class AMLParser which parses AML    ()*|
+|*() files containing channel information for big/small.                    ()*|
+|*()                                                                        ()*|
+|*() Adam Hincks, Summer 2004, Toronto                                      ()*|
+|*()                                                                        ()*|
+|*()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()*|
+\*()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()*/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "dataholder.h"
 #include "alice.h"
+
+
+/******************************************************************************\
+|*                                                                            *|
+|* trim: remove leading and trailing spaces and new line characters           *|
+|*                                                                            *|
+|* *buf     - buffer to trim                                                  *|
+|*                                                                            *|
+\******************************************************************************/
 
 void trim(char *buf) {
   int i;
@@ -254,7 +279,7 @@ void AMLParser::ParseFullName(int num, char *namebuf) {
 /******************************************************************************\
 |*                                                                            *|
 |* GetNumValues (private): counts the number of values on a line of an AML    *|
-|*   file.                                                                    *|
+|* file.                                                                      *|
 |*                                                                            *|
 |* *buf     - line of the file                                                *|
 |*                                                                            *|
@@ -485,7 +510,7 @@ bool AMLParser::NoDatum() {
 /******************************************************************************\
 |*                                                                            *|
 |* Value (public):  return the value of the current datum for the requested   *|
-|*   column                                                                   *|
+|* column                                                                     *|
 |*                                                                            *|
 |* *valuename   - the column name                                             *|
 |*                                                                            *|
@@ -747,7 +772,7 @@ struct DataStruct_glob *DataHolder::NextFast() {
 /******************************************************************************\
 |*                                                                            *|
 |* PopulateDataStruct (private): populate struct DataStruct_glob from AML     *|
-|*   file                                                                     *|
+|* file                                                                       *|
 |*                                                                            *|
 |* *s   - structure to populate                                               *|
 |* *a   - AML file object                                                     *|
