@@ -32,11 +32,16 @@
 
 /* This is the length of time to wait for an ACK from the star camera before
  * giving up */
-#define ISC_ACK_TIMEOUT    500   /* in 100Hz frames */
+#define ISC_ACK_TIMEOUT    100   /* in 100Hz frames */
 
 /* This is the length of time to wait for a pointing solution from the star
  * camera before giving up */
-#define ISC_DATA_TIMEOUT   500   /* in 100Hz frames */
+#define ISC_DATA_TIMEOUT   900   /* in 100Hz frames */
+
+/* ISC_ACK_TIMEOUT + ISC_DATA_TIMEOUT sets the maximum length of the cycle.
+ * ISC_ACK_TIMEOUT is purely responsible for the link-ok check and should be made
+ * as small as possible, since any excess time effectively ends up as data timeout
+ * time anyways. */
 
 /* This is the length of time to wait after receiving the ACK, bufore sending
  * the trigger */
@@ -444,7 +449,9 @@ void CameraTrigger(int which)
             (which) ? "Osc" : "Isc");
 
         if (WHICH)
-          bprintf(info, "%iSC (t): Lowered force_sync Semaphore ++++++++++++++++++\n", which);
+          bprintf(info,
+              "%iSC (t): Lowered force_sync Semaphore ++++++++++++++++++\n",
+              which);
       }
 
       /* Start waiting for ACK from star camera */
@@ -513,8 +520,15 @@ void CameraTrigger(int which)
     }
   } else { /* startwait state */
     if ((++isc_pulses[which].start_wait > isc_pulses[which].start_timeout)
-        || (start_ISC_cycle[which]))
+        || (start_ISC_cycle[which])) {
+
+      if (ISC_link_ok[which] && isc_pulses[which].start_wait >
+          isc_pulses[which].start_timeout)
+        bprintf(warning, "%s: Timeout while waiting for solution.\n",
+            (which) ? "Osc" : "Isc");
+
       isc_pulses[which].start_wait = 0;
+    }
 
     /* If the write_ISC_trigger semaphore goes high during startwait,
      * it means that the ISC thread just got a handshake packet from
@@ -527,7 +541,9 @@ void CameraTrigger(int which)
       isc_pulses[which].start_wait = 0;
 
       if (WHICH)
-        bprintf(info, "%iSC (t): Raised force_sync Semaphore +++++++++++++++++++\n", which);
+        bprintf(info,
+            "%iSC (t): Raised force_sync Semaphore +++++++++++++++++++\n",
+            which);
     }
   }
 }
