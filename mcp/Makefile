@@ -5,9 +5,9 @@ ifeq ($(DEBUG), 1)
   CC = gcc -O2 -DEBUG -Wall $(BOLOTEST)
 endif
 
-OBJS = mcp.o tx.o commands.o ephemeris/creader/Source/ephem_read.o starpos.o \
-			 starfind.o pointing.o tx_struct.o dirfile.o \
-			geomag.o sched.o dgps.o isc.o lut.o
+OBJS = commands.o dgps.o dirfile.o ephemeris/creader/Source/ephem_read.o \
+			 geomag.o isc.o lut.o mcp.o pointing.o sched.o starfind.o starpos.o \
+			 tx.o tx_struct.o
 
 all: mcp
 
@@ -23,46 +23,34 @@ mcp: $(OBJS)
 	$(CC) -L/usr/X11R6/lib -L. -o mcp $(OBJS) -lpthread -liticonfig_g \
 	$(FL_LIBS) -lm
 
-mcp.o: tx.h tx_struct.h command_struct.h pointing_struct.h ephem_read.h ephem_types.h mcp.c bbc.h starpos.h
-	$(CC) -c mcp.c
+commands.o: commands.c command_struct.h commands.h pointing_struct.h tx_struct.h isc_protocol.h
 
-tx.o: tx.h tx.c tx_struct.h command_struct.h bbc.h pointing_struct.h
-	$(CC) -c tx.c
+dgps.o: dgps.c pointing_struct.h isc_protocol.h
 
-tx_struct.o: tx.h tx_struct.c tx_struct.h
-	$(CC) -c tx_struct.c
-
-dirfile.o: tx.h tx_struct.h tx_struct.c dirfile.c
-	$(CC) -c dirfile.c
-
-commands.o: command_struct.h commands.c commands.h pointing_struct.h tx_struct.h
-	$(CC) -c commands.c
+dirfile.o: dirfile.c tx_struct.h
 
 geomag.o: geomag.c
-	$(CC) -c geomag.c
 
-sched.o: sched.c command_struct.h pointing_struct.h 
-	$(CC) -c sched.c
+isc.o: isc.c pointing_struct.h isc_protocol.h
 
-starpos.o: ephem_read.h ephem_types.h starpos.c command_struct.h 
-	$(CC) -c starpos.c
+lut.o: lut.c lut.h
 
-starfind.o: starfind.c pointing_struct.h starpos.h ephem_read.h
-	$(CC) -c starfind.c
+mcp.o: mcp.c bbc.h tx_struct.h tx.h pointing_struct.h command_struct.h starpos.h isc_protocol.h
+
+pointing.o: pointing.c pointing_struct.h isc_protocol.h command_struct.h tx_struct.h lut.h
+
+sched.o: sched.c command_struct.h pointing_struct.h isc_protocol.h tx_struct.h
+
+starfind.o: starfind.c itifgExt.h pointing_struct.h isc_protocol.h sort.h ephem_read.h starpos.h ephem_types.h 
 #	  $(CC) \
 #	  -c -L/usr/X11R6/lib -L. -o $@ $< \
 #	  -liticonfig_g $(FL_LIBS) -lm -lc  starpos.o ephem_read.o
 
-pointing.o: pointing_struct.h pointing.c lut.o
-	  $(CC) -c pointing.c
+starpos.o: starpos.c ephem_read.h ephem_types.h command_struct.h tx_struct.h
 
-dgps.o: dgps.c pointing_struct.h
-	$(CC) -c dgps.c
+tx.o: tx.c tx.h tx_struct.h command_struct.h pointing_struct.h isc_protocol.h
 
-isc.o: isc.c pointing_struct.h isc_protocol.h
-	$(CC) -c isc.c
-
-lut.o: lut.c lut.h
+tx_struct.o: tx_struct.c tx_struct.h
 
 install: mcp
 	install -m 755 mcp /usr/local/bin
