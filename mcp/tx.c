@@ -740,10 +740,10 @@ void WriteData(struct NiosStruct* addr, unsigned int data)
 
   if (addr->fast)
     for (i = 0; i < FAST_PER_SLOW; ++i) {
-      RawNiosWrite(addr->niosAddr + i * TxFrameSize[addr->bus],
+      RawNiosWrite(addr->niosAddr + i * TxFrameWords[addr->bus],
           addr->bbcAddr | (data & 0xffff));
       if (addr->wide)
-        RawNiosWrite(addr->niosAddr + 1 + i * TxFrameSize[addr->bus],
+        RawNiosWrite(addr->niosAddr + 1 + i * TxFrameWords[addr->bus],
             BBC_NEXT_CHANNEL(addr->bbcAddr) | (data >> 16));
     }
   else {
