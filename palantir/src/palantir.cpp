@@ -819,10 +819,12 @@ void MainForm::UpdateData() {
     }
   }
 
+  int i_label = 0;
   // Loop through all the data fields we need to read
   for (currLabel = LabelInfo.first(); currLabel != NULL;
       currLabel = LabelInfo.next()) {
-    usleep(10000);
+    //if (i_label%2==0) usleep(10000);
+    //i_label++;
     switch (currLabel->datumtype) {
       case NUMBER:
         currNumber = NumberInfo.at(currLabel->index);
