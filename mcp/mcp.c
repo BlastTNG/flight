@@ -13,6 +13,7 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <sys/io.h>
+#include <sys/statvfs.h>
 #include <stdarg.h>
 #include <errno.h>
 #include <signal.h>
@@ -236,7 +237,8 @@ void merror(int flag, char* fmt, ...) {
 
 void SensorReader(void) {
   int fan, T;
-  int nr, df;
+  int nr;
+  struct statvfs vfsbuf;
 
   FILE *fp;
 
@@ -252,12 +254,14 @@ void SensorReader(void) {
       }
       fclose(fp);
     }
-    if ((fp = fopen("/data/rawdir/df.dat", "r")) != NULL) {
-      nr = fscanf(fp, "%d\n", &df);
-      if (nr == 1) {
-        CommandData.df = df;
-      }
-      fclose(fp);
+
+    if (statvfs("/data", &vfsbuf))
+      merror(MCP_WARNING, "Cannot stat filesystem");
+    else {
+      /* vfsbuf.f_bavail is the # of blocks, the blocksize is vfsbuf.f_bsize
+       * which, in this case is 4096 bytes, so CommandData.df ends up in units
+       * of 4000kb */
+      CommandData.df = vfsbuf.f_bavail / 1000;
     }
     sleep(1);
   }

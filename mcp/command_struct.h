@@ -142,7 +142,7 @@ struct CommandDataStruct {
   /* sensors output: read in mcp:SensorReader() */
   short fan;
   short T;
-  int df;
+  unsigned int df;
 
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
 

@@ -250,7 +250,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"dgps_pos_index",'w',LOOP1, 55,                1.0,             0.0, 'u'},
     {"sync",         'w', LOOP1, 56,                1.0,             0.0, 'u'},
     {"dgps_n_sat",   'w', LOOP1, 57,                1.0,             0.0, 'u'},
-    {"disk_free",    'w', LOOP1, 58,            1./1024,             0.0, 'u'},
+    {"disk_free",    'w', LOOP1, 58,             1./250,             0.0, 'u'},
     {"p_mode",       'w', LOOP1, 59,                  1,             0.0, 'u'},
     {"p_x_deg",      'w', LOOP1, 60,              I2DEG,             0.0, 'u'},
     {"p_y",          'w', LOOP1, 61,              I2DEG,             0.0, 's'},
