@@ -192,8 +192,10 @@ void mputs(buos_t flag, const char* message) {
         fputs(buffer, logfile);
         fflush(logfile);
       }
-      fputs(buffer, stdout);
-      fflush(stdout);
+      if (logfile == NULL || flag != mem) {
+        fputs(buffer, stdout);
+        fflush(stdout);
+      }
 
       firstchr = bufptr + 1;
     }
@@ -242,7 +244,7 @@ void SensorReader(void) {
         CommandData.temp1 = data / 10;
       fclose(stream);
     } else
-      berror(warning, "Cannot read temp1 from I2C bus");
+          berror(warning, "Cannot read temp1 from I2C bus");
 
     if ((stream = fopen("/sys/bus/i2c/devices/0-0290/temp2_input", "r"))
         != NULL) {
@@ -250,7 +252,7 @@ void SensorReader(void) {
         CommandData.temp2 = data / 10;
       fclose(stream);
     } else
-      berror(warning, "Cannot read temp2 from I2C bus");
+          berror(warning, "Cannot read temp2 from I2C bus");
 
     if ((stream = fopen("/sys/bus/i2c/devices/0-0290/temp3_input", "r"))
         != NULL) {
@@ -258,7 +260,7 @@ void SensorReader(void) {
         CommandData.temp3 = data / 10;
       fclose(stream);
     } else
-      berror(warning, "Cannot read temp3 from I2C bus");
+          berror(warning, "Cannot read temp3 from I2C bus");
 
     if ((stream = fopen("/sys/bus/i2c/devices/0-0290/fan3_input", "r"))
         != NULL) {
@@ -266,7 +268,7 @@ void SensorReader(void) {
         CommandData.fan = data;
       fclose(stream);
     } else
-      berror(warning, "Cannot read fan3 from I2C bus");
+          berror(warning, "Cannot read fan3 from I2C bus");
 
     if (statvfs("/data", &vfsbuf))
       berror(warning, "Cannot stat filesystem");
@@ -616,7 +618,7 @@ int main(int argc, char *argv[]) {
   bputs(startup, "MCP startup");
 
   /* Watchdog */
-  pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
+    pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
 
   if ((bbc_fp = open("/dev/bbcpci", O_RDWR)) < 0)
     berror(fatal, "Error opening BBC");

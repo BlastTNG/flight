@@ -57,7 +57,7 @@ public:
   int overnum;
 private:
   void WriteChunk(char numbits, long long datum);
-  void CheckBytePosRange();
+  void CheckBytePosRange(int);
 
   unsigned char *buf;
   int size;

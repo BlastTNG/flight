@@ -5,8 +5,8 @@ CPP = g++
 CPPFLAGS = -O3 -Wall -D__MCP__ $(BOLOTEST)
 LDFLAGS = -lpthread -lm -lstdc++
 ifeq ($(DEBUG), 1)
-	CPPFLAGS := $(CPPFLAGS) -g
-	LDFLAGS := $(LDFLAGS) -g
+	CPPFLAGS := $(CPPFLAGS) -g -DDEBUG
+	LDFLAGS := $(LDFLAGS) -g -DDEBUG
 endif
 
 ifeq ($(USE_FIFO_CMD), 1)

@@ -31,4 +31,8 @@ extern unsigned short* slow_data[FAST_PER_SLOW];
 /* thread identity */
 extern pthread_key_t identity;
 
+#ifdef DEBUG
+#warning "Debugging set."
+#endif
+
 #endif

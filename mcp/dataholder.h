@@ -28,6 +28,7 @@
 #define AML_LEN_LINE    512
 #define AML_LEN_ENTRY   32
 
+#include "tdrss_c.h"
 #include "channels.h"
 
 struct DataStruct_glob {
@@ -51,9 +52,8 @@ struct DataStruct_glob {
 
 class AMLParser {
   public:
-    AMLParser(const char *filename);
     AMLParser();
-    bool LoadFile(const char *filename);
+    bool LoadFile(char *filename);
     int NumData(const char *fullentryname);
     bool FirstDatum(const char *fullentryname);
     bool NextDatum();
@@ -61,7 +61,6 @@ class AMLParser {
     const char *Value(const char *valuename);
 
   private:
-    void CommonConstructor();
     int GetNumValues(const char *buf);
     void GetEntryName(const char *buf, char *namebuf);
     void GetDataDefault(const char *buf, char *defaultbuf);
@@ -86,9 +85,8 @@ class AMLParser {
 
 class DataHolder {
   public:
-    DataHolder(const char *filename);
     DataHolder();
-    bool LoadFromAML(const char *filename);
+    bool LoadFromAML(char *filename);
     struct DataStruct_glob *FirstSlow();
     struct DataStruct_glob *NextSlow();
     struct DataStruct_glob *FirstFast();

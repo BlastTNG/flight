@@ -100,7 +100,7 @@ void Read_Coefficients( double Time )
   /*  Debug print (optional)                                                  */
   /*--------------------------------------------------------------------------*/
 
-#ifdef DEBUG
+#ifdef DEBUG_EPHEM
   printf("\n  In: Read_Coefficients \n");
   printf("\n      ARRAY_SIZE = %4d",ARRAY_SIZE);
   printf("\n      Offset  = %3d",Offset);
@@ -169,7 +169,7 @@ int Initialize_Ephemeris( char *fileName )
 
     /*..............................................Debug Print (optional) */
 
-#ifdef DEBUG
+#ifdef DEBUG_EPHEM
       printf("\n  In: Initialize_Ephemeris \n");
       printf("\n      ARRAY_SIZE = %4d",ARRAY_SIZE);
       printf("\n      headerID   = %3d",headerID);
@@ -250,7 +250,7 @@ void Interpolate_Libration( double Time , int Target , double Libration[3] )
 
   /*...................................................Debug print (optional) */
 
-#ifdef DEBUG
+#ifdef DEBUG_EPHEM
     printf("\n  In: Interpolate_Libration\n");
     printf("\n  Target = %2d",Target);
     printf("\n  C      = %4ld (before)",C);
@@ -298,7 +298,7 @@ void Interpolate_Libration( double Time , int Target , double Libration[3] )
 
   /*...................................................Debug print (optional) */
 
-#ifdef DEBUG
+#ifdef DEBUG_EPHEM
     printf("\n  C      = %4ld (after)",C);
     printf("\n  offset = %4ld",offset);
     printf("\n  Time   = %12.7f",Time);
@@ -395,7 +395,7 @@ void Interpolate_Nutation( double Time , int Target , double Nutation[2] )
 
   /*...................................................Debug print (optional) */
 
-#ifdef DEBUG
+#ifdef DEBUG_EPHEM
     printf("\n  In: Interpolate_Nutation\n");
     printf("\n  Target = %2d",Target);
     printf("\n  C      = %4ld (before)",C);
@@ -443,7 +443,7 @@ void Interpolate_Nutation( double Time , int Target , double Nutation[2] )
 
   /*...................................................Debug print (optional) */
 
-#ifdef DEBUG
+#ifdef DEBUG_EPHEM
     printf("\n  C      = %4ld (after)",C);
     printf("\n  offset = %4ld",offset);
     printf("\n  Time   = %12.7f",Time);
@@ -539,7 +539,7 @@ void Interpolate_Position( double Time , int Target , double Position[3] )
 
   /*...................................................Debug print (optional) */
 
-#ifdef DEBUG
+#ifdef DEBUG_EPHEM
     printf("\n  In: Interpolate_Position\n");
     printf("\n  Target = %2d",Target);
     printf("\n  C      = %4ld (before)",C);
@@ -587,7 +587,7 @@ void Interpolate_Position( double Time , int Target , double Position[3] )
 
   /*...................................................Debug print (optional) */
 
-#ifdef DEBUG
+#ifdef DEBUG_EPHEM
     printf("\n  C      = %4ld (after)",C);
     printf("\n  offset = %4ld",offset);
     printf("\n  Time   = %12.7f",Time);
@@ -685,7 +685,7 @@ void Interpolate_State(double Time , int Target, stateType *Planet)
 
   /*...................................................Debug print (optional) */
 
-#ifdef DEBUG
+#ifdef DEBUG_EPHEM
     printf("\n  In: Interpolate_State\n");
     printf("\n  Target = %2d",Target);
     printf("\n  C      = %4ld (before)",C);
@@ -733,7 +733,7 @@ void Interpolate_State(double Time , int Target, stateType *Planet)
 
   /*...................................................Debug print (optional) */
 
-#ifdef DEBUG
+#ifdef DEBUG_EPHEM
     printf("\n  C      = %4ld (after)",C);
     printf("\n  offset = %4ld",offset);
     printf("\n  Time   = %12.7f",Time);

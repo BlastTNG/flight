@@ -64,7 +64,6 @@ extern "C" {
 #define SMALL_LOG_FILE  "/data/etc/tdrss.log"
 int smalllogspaces;
 
-#define ALICEFILE_DIR   "/data/etc/"
 #define MULTIPLEX_WORD  3
 
 #define INPUT_TTY "/dev/ttyS5"
@@ -228,13 +227,13 @@ int Buffer::MaxSize() {
 }
 
 
-void Buffer::CheckBytePosRange() {
+void Buffer::CheckBytePosRange(int num) {
   if (bytepos >= safeallocsize) {
     bprintf(err,
-        "Alice: serious error!!  Class BUFFER was not properly allocated.  "
+        "Alice: serious error (%i)!!  Class BUFFER was not properly allocated.  "
         "Size was set to %d; tried to write to %d.  Make sure the size is "
         "being set correctly with the Buffer::SetSize function.  Resetting "
-        "bytepos to %d (compression will not work).", size, bytepos - 1,
+        "bytepos to %d (compression will not work).", num, size, bytepos - 1,
         size - 1);
     bytepos = size - 1;
   }
@@ -296,12 +295,12 @@ void Buffer::Start(char filenum, unsigned int framenum) {
   void Buffer::Introduce() {
     if (bitpos > 0)
       bytepos++;
-    CheckBytePosRange();
+    CheckBytePosRange(1);
 
     // Section intro:  10101010 + 16 bits = num bytes in section
     buf[bytepos++] = BUF_SECTION_SYNC;
     bytepos += 2; // Reserve 2 bytes to write in num bytes afterwards
-    CheckBytePosRange();
+    CheckBytePosRange(2);
 
     bitpos = 0;
     overnum = 0;
@@ -319,11 +318,11 @@ void Buffer::Start(char filenum, unsigned int framenum) {
   void Buffer::NoDataMarker() {
     if (bitpos > 0)
       bytepos++;
-    CheckBytePosRange();
+    CheckBytePosRange(3);
 
     // No data marker: 10011001 = 0x99
     buf[bytepos++] = BUF_NO_DATA;
-    CheckBytePosRange();
+    CheckBytePosRange(4);
 
     bitpos = 0;
     overnum = 0;
@@ -361,15 +360,16 @@ void Buffer::EraseLastSection() {
  *                                                                            *|
  ******************************************************************************/
 
-  void Buffer::Stop() {
-    if (bitpos > 0)
-      bytepos++;
-    CheckBytePosRange();
+void Buffer::Stop() {
+  if (bitpos > 0)
+    bytepos++;
+  CheckBytePosRange(5);
 
-    buf[bytepos++] = BUF_END_SYNC;
-    CheckBytePosRange();
-    bitpos = 0;
-
+  buf[bytepos++] = BUF_END_SYNC;
+  CheckBytePosRange(6);
+  bitpos = 0;
+  
+  if (CurrSize() - BUF_POS_DATA_START >= 0) {
     *(unsigned short *)(buf + BUF_POS_FRAME_LEN) = CurrSize();
     *(unsigned short *)(buf + BUF_POS_CRC) = 
       CalculateCRC(CRC_INIT, buf + BUF_POS_DATA_START, 
@@ -378,7 +378,9 @@ void Buffer::EraseLastSection() {
     // Send packets
     if (write(tty_fd, buf, CurrSize()) != CurrSize())
       bprintf(err, "Error sending through serial port.");
-  }
+  } else
+    bprintf(err, "CurSize is bogus in Buffer::Stop\n");
+}
 
 
 /******************************************************************************\
@@ -395,7 +397,7 @@ void Buffer::WriteChunk(char numbits, long long datum) {
   // Do we have room for the whole datum in this byte?
   if (numbits - 1 > 7 - bitpos) {
     buf[bytepos++] |= (datum & (((long long)1 << (8 - bitpos)) - 1)) << bitpos;
-    CheckBytePosRange();
+    CheckBytePosRange(7);
     datum = datum >> (8 - bitpos);
     numbits -= 8 - bitpos;
     bitpos = 0;
@@ -404,7 +406,7 @@ void Buffer::WriteChunk(char numbits, long long datum) {
   // Is the remaining datum larger than 8 bits?
   while (datum > 0xff) {
     buf[bytepos++] |= datum & 0xff;
-    CheckBytePosRange();
+    CheckBytePosRange(8);
     datum = datum >> 8;
     numbits -= 8;
   }
@@ -415,7 +417,7 @@ void Buffer::WriteChunk(char numbits, long long datum) {
   while(bitpos > 7) {
     bitpos -= 8;
     bytepos++;
-    CheckBytePosRange();
+    CheckBytePosRange(9);
   }
   //if (bitpos > 7) {
   //  bitpos = 0;
@@ -657,13 +659,13 @@ void Alice::SendDiff(double *data, int num, struct DataStruct_glob *currInfo,
 #ifdef USE_SMALL_LOG
   if (smalllog != NULL) {
     fprintf(smalllog, "DIFF (%d samples): offset = %lld, divider = %d\n", num,
-            offset, currInfo->divider);
+        offset, currInfo->divider);
     for (i = 0; i < smalllogspaces; i++)
       fprintf(smalllog, " ");
     fprintf(smalllog, "      compression = %0.2f%% (%d bytes), "
-            "spillover = %0.2f%%\n",
-            100 * float(sendbuf->SectionSize()) / float(num * sizeof(int)),
-            sendbuf->SectionSize(), 100 * float(sendbuf->overnum) / float(num));
+        "spillover = %0.2f%%\n",
+        100 * float(sendbuf->SectionSize()) / float(num * sizeof(int)),
+        sendbuf->SectionSize(), 100 * float(sendbuf->overnum) / float(num));
     fflush(smalllog);
   }
 #endif
@@ -719,13 +721,13 @@ void Alice::SendInt(double *data, int num, struct DataStruct_glob *currInfo,
 #ifdef USE_SMALL_LOG
   if (smalllog != NULL) {
     fprintf(smalllog, "DIFF (%d samples): offset = %lld, divider = %d\n", num,
-            (long long)data[0], currInfo->divider);
+        (long long)data[0], currInfo->divider);
     for (i = 0; i < smalllogspaces; i++)
       fprintf(smalllog, " ");
     fprintf(smalllog, "      compression = %0.2f%% (%d bytes), "
-            "spillover = %0.2f%%\n",
-            100 * float(sendbuf->SectionSize()) / float(num * sizeof(int)),
-            sendbuf->SectionSize(), 100 * float(sendbuf->overnum) / float(num));
+        "spillover = %0.2f%%\n",
+        100 * float(sendbuf->SectionSize()) / float(num * sizeof(int)),
+        sendbuf->SectionSize(), 100 * float(sendbuf->overnum) / float(num));
     fflush(smalllog);
   }
 #endif
@@ -754,7 +756,7 @@ void Alice::SendSingle(double *data, struct DataStruct_glob *currInfo) {
 #ifdef USE_SMALL_LOG
   if (smalllog != NULL) {
     fprintf(smalllog, "SINGLE: value = %lld, sendval = %lld, divider = %g\n",
-            (long long)data[0], (long long)sendval, divider);
+        (long long)data[0], (long long)sendval, divider);
     fflush(smalllog);
   }
 #endif
@@ -791,7 +793,7 @@ void Alice::SendAverage(double *data, int num,
 #ifdef USE_SMALL_LOG
   if (smalllog != NULL) {
     fprintf(smalllog, "AVG: value = %.12g, sendval = %lld, divider = %g\n",
-            Round(sum / num), (long long)sendval, divider);
+        Round(sum / num), (long long)sendval, divider);
     fflush(smalllog);
   }
 #endif
@@ -925,7 +927,7 @@ void Alice::CompressionLoop() {
 
       // Make sure our buffers for reading in data from disk are big enough.
       ts = sizeof(double) * DataInfo->samplerate * MaxFrameFreq() *
-           DataInfo->looplength;
+        DataInfo->looplength;
       if (ts > rawdatasize) {
         rawdatasize = ts;
         rawdata = (double *)reballoc(fatal, rawdata, ts);
@@ -983,7 +985,7 @@ void Alice::CompressionLoop() {
       t = time(NULL);
       strftime(tmpstr, 80, "%F %T GMT >> ", gmtime_r(&t, &now));
       fprintf(smalllog, "\n%sStarting new TDRSS frame.  AML file = %d.\n",
-              tmpstr, AMLsrc);
+          tmpstr, AMLsrc);
       fflush(smalllog);
     }
 #endif
@@ -1017,7 +1019,7 @@ void Alice::CompressionLoop() {
               rawdata[0] = 0;
               SendSingle(rawdata, currInfo);  // Send down a zero
             } else              
-              SendSingle(rawdata, currInfo);
+                      SendSingle(rawdata, currInfo);
             break;
 
           case COMP_AVERAGE:
@@ -1030,7 +1032,7 @@ void Alice::CompressionLoop() {
               rawdata[0] = 0;
               SendSingle(rawdata, currInfo);  // Send down a zero
             } else
-              SendAverage(rawdata, rawsize, currInfo);
+                  SendAverage(rawdata, rawsize, currInfo);
             break;
         }
       }
@@ -1053,10 +1055,10 @@ void Alice::CompressionLoop() {
           currInfo->framefreq) + 1;
 
 #ifdef USE_SMALL_LOG
-        if (smalllog != NULL) {
-          fprintf(smalllog, "  %s -> ", currInfo->src);
-          smalllogspaces = strlen(currInfo->src);
-        }
+      if (smalllog != NULL) {
+        fprintf(smalllog, "  %s -> ", currInfo->src);
+        smalllogspaces = strlen(currInfo->src);
+      }
 #endif
 
       // Read data from Frodo's disk
@@ -1117,7 +1119,7 @@ void Alice::CompressionLoop() {
 #ifdef USE_SMALL_LOG
     if (smalllog != NULL) {
       fprintf(smalllog, "End of TDRSS frame.  Total size = %d bytes.\n", 
-              sendbuf->CurrSize());
+          sendbuf->CurrSize());
       fflush(smalllog);
     }
 #endif
@@ -1218,22 +1220,22 @@ void FrameBuffer::Resize(int numframes_in) {
   numframes = numframes_in; 
 
   fastbuf = (unsigned short ***)balloc(fatal, numframes * 
-          sizeof(unsigned short **));
+      sizeof(unsigned short **));
 
   slowbuf = (unsigned short ***)balloc(fatal, numframes * 
-          sizeof(unsigned short **));
+      sizeof(unsigned short **));
 
   for (i = 0; i < numframes; i++) {
     fastbuf[i] = (unsigned short **)balloc(fatal, FAST_PER_SLOW *
-            sizeof(unsigned short *));
+        sizeof(unsigned short *));
 
     slowbuf[i] = (unsigned short **)balloc(fatal, FAST_PER_SLOW * 
-            sizeof(unsigned short *));
+        sizeof(unsigned short *));
 
     for (j = 0; j < FAST_PER_SLOW; j++) {
       fastbuf[i][j] = (unsigned short *)balloc(fatal, BiPhaseFrameSize);
       slowbuf[i][j] = (unsigned short *)balloc(fatal, slowsPerBi0Frame *
-              sizeof(unsigned short));
+          sizeof(unsigned short));
     }
   }
 

@@ -36,7 +36,7 @@ extern "C" {
 #include "blast.h"
 }
 
-
+#define DEFAULT_AML ALICEFILE_DIR "0.aml"
 
 /******************************************************************************\
 |*                                                                            *|
@@ -87,20 +87,7 @@ void trim(char *buf) {
 |*                                                                            *|
 \******************************************************************************/
 
-AMLParser::AMLParser(const char *filename) {
-  CommonConstructor();
-  LoadFile(filename);
-
-  return;
-}
-
 AMLParser::AMLParser() {
-  CommonConstructor();
-
-  return;
-}
-
-void AMLParser::CommonConstructor() {
   numentries = 0;
   maxvalues = 0;
   maxdata = 0;
@@ -121,22 +108,24 @@ void AMLParser::CommonConstructor() {
 |*                                                                            *|
 \******************************************************************************/
 
-bool AMLParser::LoadFile(const char *filename) {
-  FILE *f;
+bool AMLParser::LoadFile(char *filename) {
+  FILE *file;
   int i, j, k;
   int entrycount;
   char linebuf[AML_LEN_LINE], tmpstr[AML_LEN_LINE], tmpstr2[AML_LEN_LINE];
 
-  if ((f = fopen(filename, "r")) == NULL) {
-    bprintf(err,
-        "AMLParser: couldn't open %s for openning.  Returning.\n", filename);
-    return false;
+  if ((file = fopen(filename, "r")) == NULL) {
+    berror(warning, "AMLParser: couldn't open %s for reading", filename);
+    bprintf(warning, "AMLParser: trying %s instead.\n", DEFAULT_AML);
+    strcpy(filename, DEFAULT_AML);
+    if ((file = fopen(filename, "r")) == NULL)
+      berror(tfatal, "AMLParser: couldn't open %s for reading", filename);
   }
 
   // First time through, check for number of entries and maximum number of
   // values.
   i = 0;
-  while (fgets(linebuf, AML_LEN_LINE, f) != NULL) {
+  while (fgets(linebuf, AML_LEN_LINE, file) != NULL) {
     trim(linebuf);
     if (linebuf[0] == '+') {
       numentries++;
@@ -184,10 +173,10 @@ bool AMLParser::LoadFile(const char *filename) {
   }
 
   // Now fill the array entries from the file.
-  rewind(f);
+  rewind(file);
   j = 0;
   entrycount = -1;
-  for (i = 0; fgets(linebuf, AML_LEN_LINE, f) != NULL; i++) {
+  for (i = 0; fgets(linebuf, AML_LEN_LINE, file) != NULL; i++) {
     trim(linebuf);
 
     switch(linebuf[0]) {
@@ -261,6 +250,7 @@ bool AMLParser::LoadFile(const char *filename) {
         break; 
     }
   }
+  fclose(file);
 
   return true;
 }
@@ -613,14 +603,6 @@ DataHolder::DataHolder() {
   return;
 }
 
-DataHolder::DataHolder(const char *filename) {
-  allocated = false;
-  LoadFromAML(filename);
-
-  return;
-}
-
-
 /******************************************************************************\
 |*                                                                            *|
 |* LoadFromAML (public): read the channel data from an AML file               *|
@@ -631,7 +613,7 @@ DataHolder::DataHolder(const char *filename) {
 |*                                                                            *|
 \******************************************************************************/
 
-bool DataHolder::LoadFromAML(const char *filename) {
+bool DataHolder::LoadFromAML(char *filename) {
   AMLParser *aml;
 
   aml = new AMLParser();
@@ -640,8 +622,7 @@ bool DataHolder::LoadFromAML(const char *filename) {
     return false;
 
   if (!aml->FirstDatum("SETTINGS")) {
-    bprintf(err,
-        "Fatal (DataHolder): %s contains no data under the SETTINGS "
+    bprintf(err, "Fatal (DataHolder): %s contains no data under the SETTINGS "
         "entry.\n", filename);
     return false;
   }
@@ -649,20 +630,17 @@ bool DataHolder::LoadFromAML(const char *filename) {
   // Get settings.
   maxbitrate = atoi(aml->Value("maxbitrate"));
   if (!maxbitrate) {
-    bprintf(err,
-        "Fatal (DataHolder): %s has maxbitrate = 0.\n", filename);
+    bprintf(err, "Fatal (DataHolder): %s has maxbitrate = 0.\n", filename);
     return false;
   }
   looplength = atoi(aml->Value("looplength"));
   if (!looplength) {
-    bprintf(err,
-        "Fatal (DataHolder): %s has looplength = 0.\n", filename);
+    bprintf(err, "Fatal (DataHolder): %s has looplength = 0.\n", filename);
     return false;
   }
   samplerate = atoi(aml->Value("samplerate"));
   if (!samplerate) {
-    bprintf(err,
-        "Fatal (DataHolder): %s has samplerate = 0.\n", filename);
+    bprintf(err, "Fatal (DataHolder): %s has samplerate = 0.\n", filename);
     return false;
   }
   minover = atof(aml->Value("minover"));

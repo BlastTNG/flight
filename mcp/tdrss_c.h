@@ -28,6 +28,8 @@ extern "C" {
 
   void TDRSSWriter(void);
 
+#define ALICEFILE_DIR   "/data/etc/"
+
 #ifdef __cplusplus
 }
 #endif
