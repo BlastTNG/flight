@@ -602,9 +602,14 @@ double getlst(time_t t, double lon) {
 
   //t -= (mktime(&gmt) - timezone); 
 
-//  printf("%li %li %li %f\n", t, 1093312156, t - 1093312156, lon);
+  //  printf("%li %li %li %f\n", t, 1093312156, t - 1093312156, lon);
 
   // S.t0 is from first line in schedule file: see sched.c;
+
+  /* XXX This is a kludge, it should be:
+   * t -= S.t0
+   */
+#warning REMOVE THE LST KLUDGE FROM STARPOS.C BEFORE FLIGHT
   t -= 1093225963;//S.t0
 
   t *= 1.002737909; // gst in seconds
