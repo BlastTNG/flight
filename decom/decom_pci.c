@@ -5,7 +5,9 @@
 #include <linux/ioport.h>
 #include <linux/pci.h>
 #include <linux/delay.h>
+
 #include <asm/io.h>
+#include <asm/atomic.h>
 #include <asm/uaccess.h>
 
 #include "decom_pci.h"
@@ -65,7 +67,7 @@ static struct {
   volatile int i_out;
   unsigned short data[DECOM_WFIFO_SIZE];
   volatile int status;
-  volatile int n;
+  atomic_t n;
 } decom_wfifo;
 
 
@@ -89,7 +91,7 @@ static void timer_callback(unsigned long dummy)
   wp = readl(decom_drv.mem_base + DECOM_ADD_READ_BUF_WP); // Where NIOS is about to write.
   
   while(1) {
-    if(decom_wfifo.n == DECOM_WFIFO_SIZE) {
+    if(atomic_read(&decom_wfifo.n) == DECOM_WFIFO_SIZE) {
       printk(KERN_WARNING "%s: overrun on receiving buffer\n", DRV_NAME);
       break;
     }
@@ -111,7 +113,7 @@ static void timer_callback(unsigned long dummy)
       decom_wfifo.i_in++;
     }
 
-    decom_wfifo.n++; 
+    atomic_inc(&decom_wfifo.n); 
   }
 
 
@@ -130,15 +132,14 @@ static ssize_t decom_read(struct file *filp, char __user *buf,
   int i;
 
   to_read = count / sizeof(unsigned short);
-  available = decom_wfifo.n;
+  available = atomic_read(&decom_wfifo.n);
 
   if(to_read > available) to_read = available;
 
   if( to_read == 0 ) return 0;
-  
+ 
   bufs = (unsigned short *)buf;
   for(i = 0; i < to_read; i++) {
-    //    printk(KERN_WARNING "to_read = %d\n", to_read);
     out_data = decom_wfifo.data[decom_wfifo.i_out];
     if(put_user(out_data, bufs)) return -EFAULT;
     if( decom_wfifo.i_out == (DECOM_WFIFO_SIZE - 1) ) {
@@ -147,7 +148,7 @@ static ssize_t decom_read(struct file *filp, char __user *buf,
       decom_wfifo.i_out++;
     }
     bufs++;
-    decom_wfifo.n--;
+    atomic_dec(&decom_wfifo.n);
   }
 
   return i*sizeof(unsigned short);
@@ -209,8 +210,9 @@ static int decom_open(struct inode *inode, struct file *filp)
 
   if(decom_wfifo.status & FIFO_ENABLED) return -ENODEV;
   
-  decom_wfifo.i_in = decom_wfifo.i_out = decom_wfifo.n = 0;
-  decom_wfifo.status |= FIFO_ENABLED;
+  decom_wfifo.i_in = decom_wfifo.i_out = 0;
+  atomic_set(&decom_wfifo.n, 0);
+  decom_wfifo.status = FIFO_ENABLED;
   
   decom_drv.use_count++;
   
