@@ -165,7 +165,7 @@ void InitSched(void) {
     S.p[j].X*=12.0/M_PI;
     S.p[j].Y*=180.0/M_PI;
 
-    printf("-- %2d LST: %8.4f Ra: %8.5f %8.4f  Dec: %8.4f %8.4f\n", j
+    printf("-- %2d LST: %8.4f Ra: %8.5f %8.4f  Dec: %8.4f %8.4f\n", j,
 	   S.p[j].t*(1.0/3600.0), ra, S.p[j].X, dec, S.p[j].Y);
     if (!entry_ok) {
       printf("****** Warning Entry %d is Malformed: Skipping *****\n", j);
