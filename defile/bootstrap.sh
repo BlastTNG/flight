@@ -3,4 +3,4 @@
 aclocal
 automake --add-missing
 autoconf configure.ac > configure
-autoheader configure.ac
+autoheader configure.ac > config.h.in
