@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -22,6 +23,7 @@
 void InitialiseFrameFile(char type);
 void FrameFileWriter(void);
 void pushDiskFrame(unsigned short *RxFrame);
+int decom;
 
 extern struct file_info {
   int fd;            /* current file descriptor */
@@ -38,44 +40,44 @@ extern struct file_info {
 
 #define FRAME_SYNC_WORD 0xEB90
 
-unsigned short* slow_data[FAST_PER_SLOW];
 unsigned short FrameBuf[BI0_FRAME_SIZE];
 int status = 0;
 double f_bad = 0;
 
 
-void ReadDecom (int decom)
+void ReadDecom (void)
 {
   unsigned short buf;
-  static int i_word = 0;
+  int i_word = 0;
 
-  while ((read(decom, &buf, sizeof(unsigned short))) == 2) {
-    FrameBuf[i_word] = buf;
-    if (i_word % BI0_FRAME_SIZE == 0) { /* begining of frame */
-      if (buf != FRAME_SYNC_WORD) {
-        status = 0;
-        i_word = 0;
+  for (;;) {
+    while ((read(decom, &buf, sizeof(unsigned short))) > 0) {
+      FrameBuf[i_word] = buf;
+      if (i_word % BI0_FRAME_SIZE == 0) { /* begining of frame */
+        if ((buf != FRAME_SYNC_WORD) && ((~buf & 0xffff) != FRAME_SYNC_WORD)) {
+          status = 0;
+          i_word = 0;
+        } else {
+          if (status < 2)
+            status++;
+          else
+            pushDiskFrame(FrameBuf);
+
+          i_word++;
+        }
       } else {
-        if (status < 2)
-          status++;
-        else
-          pushDiskFrame(FrameBuf);
-
         i_word++;
+        if (i_word >= BI0_FRAME_SIZE)
+          i_word = 0;
       }
-    } else {
-      i_word++;
-      if (i_word >= BI0_FRAME_SIZE)
-        i_word = 0;
     }
+
+    if (status == 2)
+      f_bad *= FB_K;
+    else
+      f_bad = f_bad * FB_K + (1.0 - FB_K);
+
   }
-
-  printf("done %i\n", i_word);
-
-  if (status == 2)
-    f_bad *= FB_K;
-  else
-    f_bad = f_bad * FB_K + (1.0 - FB_K);
 }
 
 int MakeSock(void) {
@@ -118,32 +120,38 @@ int main(void) {
   struct sockaddr_in addr;
   int addrlen;
   char buf[209];
-  int decom;
   struct timeval no_time = {0, 0};
   pthread_t framefile_thread;
+  pthread_t decom_thread;
 
   if ((decom = open(DEV, O_RDONLY | O_NONBLOCK)) == -1) {
     perror("decomd: fatal error opening " DEV "\n");
     exit(1);
   }
 
+  MakeAddressLookups();
+
+  printf("Reseting board . . . \n");
+  ioctl(decom, DECOM_IOC_RESET);
+  printf("Set frame length to %d.\n",
+      ioctl(decom, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE));
+
   lastsock = sock = MakeSock();
 
   InitialiseFrameFile('d');
 
   pthread_create(&framefile_thread, NULL, (void*)&FrameFileWriter, NULL);
+  pthread_create(&decom_thread, NULL, (void*)&ReadDecom, NULL);
 
   FD_ZERO(&fdlist);
   FD_SET(sock, &fdlist);
 
   /* main loop */
   for (;;) {
-    ReadDecom(decom);
-    sprintf(buf, "%1i %4.2f %-200s\n", status, f_bad, framefile.name);
-
     fdwrite = fdread = fdlist;
     FD_CLR(sock, &fdwrite);
     n = select(lastsock + 1, &fdread, &fdwrite, NULL, &no_time);
+    sprintf(buf, "%1i %4.2f %-200s\n", status, f_bad, framefile.name);
 
     if (n == -1 && errno == EINTR)
       continue;
@@ -212,7 +220,7 @@ int main(void) {
       }
     }
 
-    usleep(20000);
+    usleep(100000);
   }
 
   return 1;
