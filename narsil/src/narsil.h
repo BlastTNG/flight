@@ -18,6 +18,8 @@
 #define SMALL_POINT_SIZE 10
 #define LARGE_POINT_SIZE 12
 
+#define LOGFILEDIR "/data/log/"
+
 class QVBoxLayout;
 class QHBoxLayout;
 class QGridLayout;
@@ -92,8 +94,9 @@ private:
   int MIndex(QString cmd);
   char *LongestParam();
   void ReadLog(QMultiLineEdit *dest);
-  void WriteLog(QMultiLineEdit *dest, char *args[]);
-  void WriteLog(QMultiLineEdit *dest, int retstatus);
+  void WriteCmd(QMultiLineEdit *dest, char *args[]);
+  void WriteErr(QMultiLineEdit *dest, int retstatus);
+  void WriteLog(char *args[]);
 
   int lastmcmd;
   QString curvefile;

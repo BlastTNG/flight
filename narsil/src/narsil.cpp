@@ -1,11 +1,13 @@
 // ***************************************************
 // *  Programmed by Adam Hincks                      *
-// *  (Later poked at a bit by D.V.Wiebe)            *
-// *  (and cbn)                                      *
+// *  Later poked at a bit by D.V.Wiebe              *
+// *  further desecrated by cbn                      *
 // ***************************************************
 
-
-#include <qapplication.h>
+#include <kcmdlineargs.h>
+#include <kaboutdata.h>
+#include <klocale.h>
+#include <kapplication.h>
 #include <qbuttongroup.h>
 #include <qframe.h>
 #include <qlabel.h>
@@ -25,6 +27,8 @@
 #include <qmessagebox.h>
 #include <qmultilineedit.h>
 #include <qtimer.h>
+#include <qfile.h>
+#include <qdatetime.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,6 +39,7 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <time.h>
+#include <pwd.h>
 
 #define FIXEDFONT "courier"
 
@@ -54,6 +59,9 @@
 #define BLASTCMDFILE BLAST_CMD
 
 double defaults[N_MCOMMANDS][MAX_N_PARAMS];
+
+static const char *description =
+        I18N_NOOP("Narsil: command program for BLAST");
 
 //-------------------------------------------------------------
 //
@@ -122,12 +130,12 @@ void MainForm::ChangeCommandList() {
   NCommandList->clear();
 
   for (i = 0; i < GroupSIndexes(GetGroup(), indexes); i++)
-    NCommandList->insertItem(tr(scommands[indexes[i]].name));
+    NCommandList->insertItem(scommands[indexes[i]].name);
   for (i = 0; i < GroupMIndexes(GetGroup(), indexes); i++)
-    NCommandList->insertItem(tr(mcommands[indexes[i]].name));
+    NCommandList->insertItem(mcommands[indexes[i]].name);
 
   if (strcmp(GroupNames[GetGroup()], "Miscellaneous") == 0) {
-    NCommandList->insertItem(tr("abort_failure"));
+    NCommandList->insertItem("abort_failure");
   }
 
   ChooseCommand();
@@ -195,7 +203,7 @@ void MainForm::ChooseCommand() {
 
       for (i = 0; i < MAX_N_PARAMS; i++) {
         if (i < mcommands[index].numparams) {
-          NParamLabels[i]->setText(tr(mcommands[index].params[i].name));
+          NParamLabels[i]->setText(mcommands[index].params[i].name);
           NParamLabels[i]->show();
           NParamFields[i]->show();
           NParamFields[i]->SetParentField(index, i);
@@ -397,7 +405,7 @@ void MainForm::ChangeImage() {
         returnstatus = -1;
       else
         returnstatus = WEXITSTATUS(returnstatus);
-      WriteLog(NLog, returnstatus);
+      WriteErr(NLog, returnstatus);
       TurnOff(timer);
     }
   }
@@ -519,12 +527,12 @@ void MainForm::SendCommand() {
     // Parameters
     if (strcmp(NCommandList->text(NCommandList->currentItem()), "abort_failure")
         == 0) {
-      sprintf(buffer, "Error: Unable to abort failure mode: %s", 
+      sprintf(buffer, "Error: Unable to abort failure mode: %s",
           NParamFields[0]->text().ascii());
       params[1] = buffer;
       params[2] = 0;
-      WriteLog(NLog, params);
-      WriteLog(NLog, 10);
+      WriteCmd(NLog, params);
+      WriteErr(NLog, 10);
       return;
     } else if ((index = MIndex(NCommandList->text(NCommandList->currentItem())))
         != -1) {
@@ -541,8 +549,8 @@ void MainForm::SendCommand() {
           strcpy(buffer, "Command not confirmed.");
           params[1] = buffer;
           params[2] = 0;
-          WriteLog(NLog, params);
-          WriteLog(NLog, 11);
+          WriteCmd(NLog, params);
+          WriteErr(NLog, 11);
           return;
         }
       }
@@ -555,8 +563,8 @@ void MainForm::SendCommand() {
               mcommands[index].params[j].min);
           params[1] = buffer;
           params[2] = 0;
-          WriteLog(NLog, params);
-          WriteLog(NLog, 9);
+          WriteCmd(NLog, params);
+          WriteErr(NLog, 9);
           return;
         } else if (defaults[index][j] > mcommands[index].params[j].max) {
           sprintf(buffer, "Error: Parameter \"%s\" out of range: %f > %f",
@@ -564,8 +572,8 @@ void MainForm::SendCommand() {
               mcommands[index].params[j].max);
           params[1] = buffer;
           params[2] = 0;
-          WriteLog(NLog, params);
-          WriteLog(NLog, 9);
+          WriteCmd(NLog, params);
+          WriteErr(NLog, 9);
           return;
         }
         sprintf(args[i++], "%f ", defaults[index][j]);
@@ -585,8 +593,8 @@ void MainForm::SendCommand() {
           strcpy(buffer, "Command not confirmed.");
           params[1] = buffer;
           params[2] = 0;
-          WriteLog(NLog, params);
-          WriteLog(NLog, 11);
+          WriteCmd(NLog, params);
+          WriteErr(NLog, 11);
           return;
         }
       }
@@ -599,7 +607,8 @@ void MainForm::SendCommand() {
       params[j] = args[j];
 
     // Update log file on disk
-    WriteLog(NLog, params);
+    WriteCmd(NLog, params);
+    WriteLog(params);
 
     sendingpid = fork();
     if (!sendingpid)
@@ -643,7 +652,7 @@ void MainForm::ShowSettings() {
 
 //-------------------------------------------------------------
 //
-// WriteLog (private): keeps a record of the commands sent
+// WriteCmd (private): keeps a record of the commands sent
 //      with Narsil; also records it in a textbox visible to
 //      the user
 //
@@ -652,7 +661,7 @@ void MainForm::ShowSettings() {
 //
 //-------------------------------------------------------------
 
-void MainForm::WriteLog(QMultiLineEdit *dest, char *args[]) {
+void MainForm::WriteCmd(QMultiLineEdit *dest, char *args[]) {
   FILE *f;
   time_t t;
   char txt[2048];
@@ -669,7 +678,7 @@ void MainForm::WriteLog(QMultiLineEdit *dest, char *args[]) {
   sprintf(txt, "%s", ctime(&t));
   fprintf(f, txt);
   txt[strlen(txt) - 1] = '\0';        // Get rid of the \n character
-  dest->insertLine(tr(txt));
+  dest->insertLine(txt);
   dest->setCursorPosition(dest->numLines() - 1, 0);
 
   i = 1;
@@ -682,15 +691,92 @@ void MainForm::WriteLog(QMultiLineEdit *dest, char *args[]) {
 
   fprintf(f, txt);
   txt[strlen(txt) - 1] = '\0';        // Get rid of the \n character
-  dest->insertLine(tr(txt));
+  dest->insertLine(txt);
   dest->setCursorPosition(dest->numLines() - 1, 0);
   fclose(f);
 }
 
+void MainForm::WriteLog(char *args[]) {
+  QDateTime qdt;
+  QString LogEntry, Group;
+
+  Group = GroupNames[GetGroup()];
+
+  qdt = QDateTime::currentDateTime();
+  LogEntry = QString(
+    "-- Time  : %1\n"
+    "-- Source: %2  Type: %3  Entry By: %4\n"
+    "-- Frame : %5  File: %6  \n")
+             .arg(qdt.toString())
+             .arg("narsil",-10)
+             .arg(Group, -10)
+             .arg((getpwuid(getuid()))->pw_name, -10)
+             .arg(DataSource->numFrames(),-10)
+             .arg(DataSource->fileName());
+
+  int i, j;
+  for (i=0; args[i] != '\0'; i++) {
+    LogEntry += args[i];
+    LogEntry += " ";
+  }
+  LogEntry += "\nDescription: ";
+
+  LogEntry += NAboutLabel->text();
+  LogEntry += "\n";
+
+  if ((j = MIndex(NCommandList->text(NCommandList->currentItem())))
+      != -1) {
+    for (i=0; i < mcommands[j].numparams; i++) {
+      LogEntry += QString("%1: %2").
+                  arg(mcommands[j].params[i].name, 30).
+                  arg(NParamFields[i]->text(), -8);
+      if (i%2==1) LogEntry+= "\n";
+    }
+      LogEntry += "\n";
+  }
+  LogEntry+="Transmit via ";
+  switch (NSendMethod->currentItem()) {
+      case 0:
+        LogEntry+="Line of Sight";
+        break;
+      case 1:
+        LogEntry+="TDRSS";
+        break;
+      case 2:
+        LogEntry+="HF radio";
+        break;
+  }
+  LogEntry+= " through SIP ";
+  switch (NSendRoute->currentItem()) {
+      case 0:
+        LogEntry+="COM 1";
+        break;
+      case 1:
+        LogEntry+="COM 2";
+        break;
+  }
+
+  LogEntry += "\n";
+
+  QString logfilename = LOGFILEDIR +
+                        qdt.toString("yyyy-MM-dd.hh:mm:ss") + "." +
+                        "narsil." +
+                        Group.replace(" ", "_")+ "." +
+                        QString((getpwuid(getuid()))->pw_name);
+
+  QFile logfile(logfilename);
+
+  if (logfile.open(IO_WriteOnly)) {
+    QTextStream stream(&logfile);
+    stream << LogEntry;
+    logfile.close();
+  }
+
+}
 
 //-------------------------------------------------------------
 //
-// WriteLog: for when the user cancels a command or blastcmd
+// WriteErr: for when the user cancels a command or blastcmd
 //      reports that it didn't go through
 //
 //   *dest: textbox to write into
@@ -698,71 +784,71 @@ void MainForm::WriteLog(QMultiLineEdit *dest, char *args[]) {
 //
 //-------------------------------------------------------------
 
-void MainForm::WriteLog(QMultiLineEdit *dest, int retstatus) {
-  FILE *f;
+void MainForm::WriteErr(QMultiLineEdit *dest, int retstatus) {
   time_t t;
-  char txt[255];
-
-  f = fopen(LOGFILE, "a");
-
-  if (f == NULL) {
-    printf("Narsil: could not write log file %s.\n", LOGFILE);
-    return;
-  }
+  QString txt;
 
   switch (retstatus) {
     case -1:
-      strcpy(txt, "  COMMAND NOT SENT:  Cancelled by user.\n\n");
+      txt = "  COMMAND NOT SENT:  Cancelled by user.\n";
       break;
     case 0:
-      strcpy(txt, "  Command successfully sent.\n\n");
+      txt = "  Command successfully sent.\n";
       break;
     case 1:
-      strcpy(txt, "  COMMAND NOT SENT:  Improper syntax. (Have you compiled "
-          "with an up-to-date verison of commands.h?)\n\n");
+      txt = "  COMMAND NOT SENT:  Improper syntax. (Have you compiled "
+            "with an up-to-date verison of commands.h?)\n\n";
       break;
     case 2:
-      strcpy(txt, "  COMMAND NOT SENT:  Unable to open serial port.\n\n");
+      txt = "  COMMAND NOT SENT:  Unable to open serial port.\n\n";
       break;
     case 3:
-      strcpy(txt, "  COMMAND NOT SENT:  Parameter out of range. (Have you "
-          "compiled with an up-to-date version of commands.h?)\n\n");
+      txt = "  COMMAND NOT SENT:  Parameter out of range. (Have you "
+            "compiled with an up-to-date version of commands.h?)\n";
       break;
     case 4:
-      strcpy(txt, "  COMMAND NOT SENT:  GSE operator disabled science from "
-          "sending commands.\n\n");
+      txt = "  COMMAND NOT SENT:  GSE operator disabled science from "
+            "sending commands.\n";
       break;
     case 5:
-      strcpy(txt, "  COMMAND NOT SENT:  Routing address does not match the "
-          "selected link.\n\n");
+      txt = "  COMMAND NOT SENT:  Routing address does not match the "
+            "selected link.\n";
       break;
     case 6:
-      strcpy(txt, "  COMMAND NOT SENT:  The link selected was not "
-          "enabled.\n\n");
+      txt = "  COMMAND NOT SENT:  The link selected was not "
+            "enabled.\n";
       break;
     case 7:
-      strcpy(txt, "  COMMAND NOT SENT:  Unknown error from ground support "
-          "computer (0x0d).\n\n");
+      txt = "  COMMAND NOT SENT:  Unknown error from ground support "
+            "computer (0x0d).\n";
       break;
     case 8:
-      strcpy(txt, "  COMMAND POSSIBLY NOT SENT:  Received a garbage "
-          "acknowledgement packet.\n\n");
+      txt = "  COMMAND POSSIBLY NOT SENT:  Received a garbage "
+            "acknowledgement packet.\n";
       break;
     case 9:
-      strcpy(txt, "  COMMAND NOT SENT: Narsil error: Parameter out of range.\n\n");
+      txt = "  COMMAND NOT SENT: Narsil error: Parameter out of range.\n";
       break;
     case 10:
-      strcpy(txt, "  COMMAND NOT SENT: Narsil error: Unable to abort failure mode.\n\n");
+      txt = "  COMMAND NOT SENT: Narsil error: Unable to abort failure mode.\n";
       break;
     case 11:
-      strcpy(txt, "  COMMAND NOT SENT: Command not confirmed by user.\n\n");
+      txt = "  COMMAND NOT SENT: Command not confirmed by user.\n";
       break;
   }
 
-  fprintf(f, txt);
-  dest->insertLine(tr(txt));
+  QFile f(LOGFILE);
+  if (f.open(IO_Append | IO_WriteOnly)) {
+    QTextStream stream( &f );
+    stream << txt;
+    f.close();
+  } else {
+    fprintf(stderr, "Narsil: could not write log file %s.\n", LOGFILE);
+    return;
+  }
+
+  dest->insertLine(txt);
   dest->setCursorPosition(dest->numLines() - 1, 0);
-  fclose(f);
 }
 
 
@@ -779,7 +865,7 @@ void MainForm::ReadLog(QMultiLineEdit *dest) {
   char txt[255];
 
   f = fopen(LOGFILE, "r");
-  dest->setText(tr(""));
+  dest->setText(" ");
 
   if (f == NULL) {
     printf("Narsil:  could not read log file %s.\n", LOGFILE);
@@ -840,18 +926,6 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   // no automatic spacers because with the dynamic properties of the program
   // (things popping in and out of existence as different commands are
   // chosen) things would mess up.  So the code ain't too pretty . . .
-  /*  NColorGroup = new QColorGroup(QColor("white"), QColor(0x3f, 0x3f, 0x3f),
-      QColor(0x5f, 0x5f, 0x5f), QColor(0x1f, 0x1f, 0x1f),
-      QColor(0x3f, 0x3f, 0x3f), QColor("white"),
-      QColor("red"), QColor("black"), QColor("black"));
-      NColorGroup->setColor(QColorGroup::Highlight, "lightGray");
-      NColorGroup->setColor(QColorGroup::HighlightedText, "black");
-      NColorGroup2 = new QColorGroup(QColor("gray"), QColor(0x1f, 0x1f, 0x1f),
-      QColor(0x2f, 0x2f, 0x2f), QColor(0x0f, 0x0f, 0x0f),
-      QColor(0x1f, 0x1f, 0x1f), QColor("gray"),
-      QColor("darkGreen"), QColor("black"), QColor("black"));
-      NColorGroup2->setColor(QColorGroup::Highlight, "darkGray");
-      NColorGroup2->setColor(QColorGroup::HighlightedText, "black"); */
   NColorGroup = new QColorGroup(QColor("black"), QColor("lightGray"),
       QColor("white"), QColor(0x3f, 0x3f, 0x3f),
       QColor("darkGray"), QColor("black"),
@@ -862,15 +936,9 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NColorGroup2->setColor(QColorGroup::ButtonText, "darkGray");
 
   NGroupsBox = new QButtonGroup(this, "NGroupsBox");
-  //tfont.setPointSize(LARGE_POINT_SIZE);
-  //tfont.setBold(true);
-  //NGroupsBox->setFont(tfont);
-  NGroupsBox->setTitle(tr(""));
   NGroupsBox->setColumnLayout(0, Qt::Vertical);
   NGroupsBox->layout()->setSpacing(0);
   NGroupsBox->layout()->setMargin(0);
-
-  //tfont.setBold(false);
 
   NGroupsLayout = new QGridLayout(NGroupsBox->layout());
   NGroupsLayout->setAlignment(Qt::AlignTop);
@@ -1150,6 +1218,11 @@ MainForm::~MainForm()
 //|||****_______________________________________________________________________
 //|||***************************************************************************
 
+static KCmdLineOptions options[] =
+{
+  { 0, 0, 0 }
+  // INSERT YOUR COMMANDLINE OPTIONS HERE
+};
 
 
 int main(int argc, char* argv[]) {
@@ -1176,12 +1249,21 @@ int main(int argc, char* argv[]) {
   }
 
   // Read in argv
-  if (argc >= 2)
-    strcpy(curfile, argv[1]);
-  else
-    strcpy(curfile, DEF_CURFILE);
+//   if (argc >= 2)
+//     strcpy(curfile, argv[1]);
+//   else
+  strcpy(curfile, DEF_CURFILE);
 
-  QApplication app(dummyc, dummyv);
+  KAboutData aboutData( "narsil", I18N_NOOP("Narsil"),
+                        "0.87", description, KAboutData::License_GPL,
+                        "(c) 2004, UofT", 0, 0, "");
+  aboutData.addAuthor("adam hincks",0, "");
+  aboutData.addAuthor("don wiebe",0, "");
+  aboutData.addAuthor("cbn",0, "");
+  KCmdLineArgs::init( argc, argv, &aboutData );
+  KCmdLineArgs::addCmdLineOptions( options ); // Add our own options.
+
+  KApplication app;
   MainForm narsil(curfile, 0, "narsil", true, 0);
 
   app.setMainWidget(&narsil);
