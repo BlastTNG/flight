@@ -13,7 +13,9 @@ struct ScheduleType S;
 void StarPos(double t, double ra0, double dec0, double mra, double mdec,
 	     double pi, double rvel, double *ra, double *dec);
 double GetJulian(time_t t);
-
+void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
+		double *el);
+int pinIsIn();
 
 /***************************************************************************/
 /*    GetLine: read non-comment line from file                             */
@@ -37,17 +39,23 @@ int GetLine(FILE *fp, char *line) {
     return(0);  /* there were no valid lines */
   }
 }
-
+#define CHECK_LAT 39.49
+#define CHECK_LON 104.22
 /*********************************************************************/
 /*            Init Sched Structure                                   */
 /*********************************************************************/
 void InitSched(void) {
   FILE *fp;
   char line_in[162];
-  long day, hr, min, sec;
+  double hours;
   struct tm ts;
   double ra,dec;
-
+  double dt;
+  double d_lon;
+  int day;
+  
+  double az1, az2, el1, el2, rh;
+  
   int i,j, entry_ok;
   int n_fields;
 
@@ -92,7 +100,21 @@ void InitSched(void) {
 
   S.t0 = mktime(&ts)-timezone; 
 
-  printf("JD: %.4f\n", GetJulian(S.t0));
+  /*************************************************************/
+  /** find local comoving siderial date (in siderial seconds) **/
+  dt = (time(NULL)-S.t0)*1.002737909; /*Ref Siderial Time */
+  d_lon = CHECK_LON;
+  while (d_lon<0) d_lon+=360.0;
+  while (d_lon>=360.0) d_lon-=360.0;
+  dt -= ((d_lon) * 3600.00 * 24.00/360.0); /* add longitude correction */
+
+  dt/=3600.0;
+  
+  printf("***********************************************************\n"
+	 "***       Schedule File:\n"
+	 "*** Current local siderial date (hours relative to epoch): %g\n"
+	 "*** Assuming LAT = %g , LON = %g for checks\n", dt,
+	 CHECK_LAT, CHECK_LON);
   
   /***********************/
   /*** Read the events ***/
@@ -103,51 +125,88 @@ void InitSched(void) {
     switch (line_in[0]) {
     case 'v':
     case 'V':
-      n_fields = sscanf(line_in, "%*s %ld %ld:%ld:%ld %lg %lg %lg %lg %lg",
-			&day, &hr, &min, &sec,
-			&ra, &dec, &(S.p[j].w),
+      n_fields = sscanf(line_in, "%*s %d %lg %lg %lg %lg %lg %lg %lg",
+			&day, &hours,
+			&ra, &dec, &(S.p[j].w), &(S.p[j].h),
 			&(S.p[j].vaz), &(S.p[j].del));
-      S.p[j].mode = P_VCAP;
-      if (n_fields != 9) entry_ok = 0;
+      S.p[j].mode = P_VBOX;
+      rh = S.p[j].h;
+      if (n_fields != 8) entry_ok = 0;
       break;
     case 'b':
     case 'B':
-      n_fields = sscanf(line_in, "%*s %ld %ld:%ld:%ld %lg %lg %lg %lg %lg %lg",
-			&day, &hr, &min, &sec,
+      n_fields = sscanf(line_in, "%*s %d %lg %lg %lg %lg %lg %lg %lg",
+			&day, &hours,
 			&ra, &dec, &(S.p[j].w), &(S.p[j].h),
 			&(S.p[j].vaz), &(S.p[j].del));
       S.p[j].mode = P_BOX;
-      if (n_fields != 10) entry_ok = 0;
+      rh = S.p[j].h;
+      if (n_fields != 8) entry_ok = 0;
       break;
     case 'c':
     case 'C':
-      n_fields = sscanf(line_in, "%*s %ld %ld:%ld:%ld %lg %lg %lg %lg %lg",
-			&day, &hr, &min, &sec,
+      n_fields = sscanf(line_in, "%*s %d %lg %lg %lg %lg %lg %lg",
+			&day, &hours,
 			&ra, &dec, &(S.p[j].w),
 			&(S.p[j].vaz), &(S.p[j].del));
       S.p[j].mode = P_CAP;
-      if (n_fields != 9) entry_ok = 0;
+      if (n_fields != 7) entry_ok = 0;
       break;
     default:
       break;
     }
     
-    S.p[j].t = day*24l*3600l + hr*3600l + min*60l + sec;
+    S.p[j].t = day*24l*3600l + hours*3600l;
     StarPos(GetJulian(S.t0), ra*(M_PI/12.0), dec*(M_PI/180.0),
 	    0.0, 0.0, 0.0, 0.0, // proper motion, etc
 	    &(S.p[j].X), &(S.p[j].Y));
 
     S.p[j].X*=12.0/M_PI;
     S.p[j].Y*=180.0/M_PI;
-    
-    printf("%d %d ra: %.4f %.4f  dec: %.4f %.4f\n", entry_ok, S.p[j].mode,
-	   ra, S.p[j].X, dec, S.p[j].Y);
+
+    if (!entry_ok) {
+      printf("****** Warning Entry %d is Malformed: Skipping *****\n", j);
+    } 
     if (entry_ok) j++;
   }
   if (fclose(fp) == EOF) {
     perror("sched: Error on close");
   }
   
+  for (i=0; i<S.n_sched; i++) {
+    radec2azel(S.p[i].X, S.p[i].Y, S.p[i].t, CHECK_LAT, &az1, &el1);
+    if (i==S.n_sched-1) {
+      radec2azel(S.p[i].X, S.p[i].Y, S.p[i].t, CHECK_LAT, &az2, &el2);
+    } else {
+      radec2azel(S.p[i].X, S.p[i].Y, S.p[i+1].t, CHECK_LAT, &az2, &el2);
+    }
+
+    if (S.p[i].mode == P_CAP) {
+      rh = S.p[i].w;
+    } else {
+      rh = S.p[i].h;
+    }
+
+    if (el1>el2) {
+      el1+= rh;
+      if (el1> 60.0) printf("******************************************\n"
+			    "*** Warning: El high\n");
+      el2-= rh;
+      if (el2 < 27.0) printf("******************************************\n"
+			     "*** Warning: El low\n");
+    } else {
+      el1-= rh;
+      el2+= rh;
+      if (el2> 60.0) printf("******************************************\n"
+			    "*** Warning: El high\n");
+      if (el1 < 27.0) printf("******************************************\n"
+			     "*** Warning: El low\n");
+    }
+    
+    printf("*** %2d Az: %8.3f - %8.3f El: %8.3f - %8.3f\n", i,
+	   az1, az2, el1, el2);
+  }
+  printf("***********************************************************\n");
 }
 
 void DoSched(void) {
@@ -156,6 +215,7 @@ void DoSched(void) {
   double d_lon;
   static int last_is=-1;
   int i_sched, i_point;
+  int i_dgps;
 
   i_point = GETREADINDEX(point_index);
 
@@ -163,6 +223,31 @@ void DoSched(void) {
   if (t < CommandData.pointing_mode.t) {
     last_is = -1;
     return;
+  }
+
+  i_dgps = GETREADINDEX(dgpspos_index);
+  if (DGPSPos[i_dgps].at_float) {
+    if (pinIsIn()) {
+      printf("unlocking pin\n");
+      CommandData.pumps.lock_out = 1;
+      CommandData.disable_az = 0;
+      // Point North
+      CommandData.pointing_mode.mode = P_RADEC_GOTO;
+      CommandData.pointing_mode.X = 2.6139; /* ra */
+      CommandData.pointing_mode.Y = 89.275; /* dec */
+      CommandData.pointing_mode.w = 0;
+      CommandData.pointing_mode.vaz = 0;
+      CommandData.pointing_mode.del = 0;
+      CommandData.pointing_mode.h = 0;
+      // start autofocus
+      CommandData.ISCState.abort = 1;
+      CommandData.ISC_autofocus =300; 
+      CommandData.old_ISC_focus = CommandData.ISCState.focus_pos;
+      CommandData.ISCState.focus_pos = FOCUS_RANGE;
+      // out of sched mode for a while
+      CommandData.pointing_mode.t = t + 600;
+      return;
+    }
   }
   
   /*************************************************************/

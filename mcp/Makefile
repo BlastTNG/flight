@@ -76,4 +76,5 @@ sslutNA.o: sslutNA.h sslutNA.c
 install: mcp
 	install -m 755 mcp /usr/local/bin
 	install -m 755 doSensors /usr/local/bin
+	install -m 755 doMcp /usr/local/bin
 	cd etc && $(MAKE) install

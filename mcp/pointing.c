@@ -105,6 +105,10 @@ struct {
   double gy3;
 } RG;
 
+#define MAX_SUN_EL 5.0
+
+double sun_az, sun_el; // set in SSConvert and used in UnwindDiff
+
 void SunPos(double tt, double *ra, double *dec); // in starpos.c
 
 #define M2DV(x) ((x/60.0)*(x/60.0))
@@ -117,11 +121,24 @@ void NormalizeAngle(double *A) {
   if (*A<0) *A += 360.0;
 }
 
-// adjust *A to be within +-180 of ref
 void UnwindDiff(double ref, double *A) {
   *A = ref + drem(*A - ref, 360.0);
 }
-      
+
+// adjust *A to be within +-180 of ref
+void SetSafeDAz(double ref, double *A) {
+  *A = ref + drem(*A - ref, 360.0);
+  if (sun_el < MAX_SUN_EL) return;
+
+  sun_az = ref + drem(sun_az - ref, 360.0);
+
+  if ((ref < sun_az) && (sun_az < *A)) {
+    *A-=360.0;
+  } else if ((ref > sun_az) && (sun_az > *A)) {
+    *A+=360.0;
+  }
+}
+
 /************************************************************************/
 /*                                                                      */
 /*   MagRead:  use the world magnetic model, atan2 and a lookup table   */
@@ -228,7 +245,7 @@ int SSConvert(double *ss_az) {
   static SSLut_t SSLut;
   static int firsttime = 1;
   int i_point, i_ss, iter;
-  double az, sun_az, sun_el;
+  double az;
   double sun_ra, sun_dec, jd;
   static int last_i_ss = -1;
   
@@ -254,6 +271,7 @@ int SSConvert(double *ss_az) {
 
   NormalizeAngle(&sun_az);
   PointingData[point_index].sun_az = sun_az;
+  PointingData[point_index].sun_el = sun_el;
 
   if (i_ss == last_i_ss) return (0); 
   if (SunSensorData[i_ss].prin < MIN_SS_PRIN) return (0);
@@ -820,7 +838,7 @@ void Pointing(){
   gy3 = RG.gy3;
   el_rad = PointingData[point_index].el * M_PI/180.0,
   gy_roll = fabs(-gy2 * sin(el_rad) + gy3 * cos(el_rad));
-  if (gy_roll>gy_roll_amp) gy_roll_amp = gy_roll;
+  if (gy_roll>gy_roll_amp) gy_roll_amp = 0.98*gy_roll_amp + 0.02*gy_roll;
   else gy_roll_amp*=0.9999;
   if (gy_roll_amp > 1.0) gy_roll_amp *= 0.999; // probably a spike 
   PointingData[point_index].gy_roll_amp = gy_roll_amp;

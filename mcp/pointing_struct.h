@@ -154,6 +154,7 @@ struct PointingDataStruct {
   double ss_az; // degrees
   double ss_sigma; // degrees
   double sun_az; // degrees current calculated az of sun
+  double sun_el; // degrees current calculated el of sun
   double isc_az; // degrees
   double isc_el; // degrees
   double isc_sigma; // degrees
@@ -191,6 +192,7 @@ struct DGPSPosStruct{
   double direction; //
   double climb; //
   int n_sat;  //
+  int at_float; //
 };
 
 struct ISCPulseType {

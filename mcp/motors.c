@@ -11,7 +11,7 @@
 struct AxesModeStruct axes_mode; /* low level velocity mode */
 
 int pinIsIn(void);  /* auxcontrol.c */
-void UnwindDiff(double ref, double *A); /* in pointing.c */
+void SetSafeDAz(double ref, double *A); /* in pointing.c */
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
                 double *el);
 
@@ -75,14 +75,17 @@ int GetVAz() {
   int max_dv = 20;
   int i_point;
   double vel_offset;
+  double az, az_dest;
   
   i_point = GETREADINDEX(point_index);
 
   if (axes_mode.az_mode == AXIS_VEL) {
     vel = axes_mode.az_vel;
   } else if (axes_mode.az_mode == AXIS_POSITION) {
-    vel = -drem(PointingData[i_point].az - axes_mode.az_dest, 360.0)
-	  * 0.36;
+    az = PointingData[i_point].az;
+    az_dest = axes_mode.az_dest;
+    SetSafeDAz(az, &az_dest);
+    vel = -(az - az_dest) * 0.36;
   }
   
   vel_offset =
@@ -215,7 +218,8 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   /***************************************************/
   /**                Roll Drive Motors              **/  
   if (PointingData[i_point].gy_roll_amp>0.003) { 
-    rollGainP = 1000.0/PointingData[i_point].gy_roll_amp;
+    rollGainP = 2200.0/PointingData[i_point].gy_roll_amp;
+    rollGainP *= (CommandData.roll_gain.P/32768.0);
   } else {
     rollGainP = CommandData.roll_gain.P;
   }
@@ -287,7 +291,7 @@ void DoAzScanMode() {
   w = CommandData.pointing_mode.w;
   right = CommandData.pointing_mode.X + w/2;
   left = CommandData.pointing_mode.X - w/2;
-  UnwindDiff(left, &az);
+  SetSafeDAz(left, &az);
 
   v = CommandData.pointing_mode.vaz;
 
@@ -323,6 +327,7 @@ void DoVCapMode() {
       &az2, &el2);
   daz_dt = drem(az2 - caz, 360.0);
   del_dt = el2 - cel;
+  SetSafeDAz(az, &caz); 
 
   /* get elevation limits */
   if (cel < MIN_EL) cel = MIN_EL;
@@ -362,10 +367,6 @@ void DoVCapMode() {
   /* we must be in range for elevation - go to el-vel mode */
   axes_mode.el_mode = AXIS_VEL;
   axes_mode.el_vel = v_el + del_dt;
-
-  /** Get x (ie, (az-caz)*cos_el) **/
-/*   x = drem(az - caz, 360.0); */
-/*   x*=cos(el * M_PI/180.0); */
 
   /** Get x limits **/
   y = el - cel;
@@ -413,6 +414,7 @@ void DoVBoxMode() {
       &az2, &el2);
   daz_dt = drem(az2 - caz, 360.0);
   del_dt = el2 - cel;
+  SetSafeDAz(az, &caz); 
 
   /* get elevation limits */
   if (cel < MIN_EL) cel = MIN_EL;
@@ -468,16 +470,19 @@ void DoVBoxMode() {
 
 void DoRaDecGotoMode() {
   double caz, cel;
-  double lst;
+  double lst, az;
   int i_point;
 
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
 
+  az = PointingData[i_point].az;
+
   radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
       lst, PointingData[i_point].lat,
       &caz, &cel);
-
+  SetSafeDAz(az, &caz);
+  
   axes_mode.az_mode = AXIS_POSITION;
   axes_mode.az_dest = caz;
   axes_mode.az_vel = 0.0;
@@ -525,7 +530,7 @@ void DoBoxMode() {
       &az2, &el2);
   daz_dt = drem(az2 - caz, 360.0);
 
-  UnwindDiff(az, &caz); 
+  SetSafeDAz(az, &caz); 
 
   h_2 = 0.5*CommandData.pointing_mode.h;
   bottom = cel - h_2;
@@ -644,7 +649,7 @@ void DoCapMode() {
       &az2, &el2);
   daz_dt = drem(az2 - caz, 360.0);
 
-  UnwindDiff(az, &caz); 
+  SetSafeDAz(az, &caz); 
 
   r = CommandData.pointing_mode.w;
   bottom = cel - r;
