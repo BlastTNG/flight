@@ -119,7 +119,7 @@ union DerivedUnion DerivedChannels[] = {
   BITFIELD("ifpm_bits",
       "",
       "",
-      "BAL_ON",
+      "BAL_ON_BIT",
       "BAL_REV",
       "IF_COOL1_OFF",
       "IF_COOL1_ON",

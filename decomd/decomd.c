@@ -399,7 +399,7 @@ int main(void) {
                 berror(err, "send");
             }
       }
-    usleep(1000000);
+    usleep(100000);
   }
 
   return 1;
