@@ -13,7 +13,7 @@ void FPrintDerived(FILE *fp);
 
 char filedirname[200];
 
-#define MAXBUF 1200
+#define MAXBUF 3000 // This is a 30 seconds buffer 
 
 struct FieldType {
   short i0;   // start of field in rxframe, words
@@ -29,7 +29,7 @@ struct FieldType slow_fields[N_SLOW][FAST_PER_SLOW];
 struct FieldType bolo_fields[DAS_CARDS][DAS_CHS];
 
 unsigned short slow_data[N_SLOW][FAST_PER_SLOW];
-
+int buf_overflow;
 int n_fast, bolo_i0;
 
 char *StringToLower(char *s);
@@ -265,9 +265,59 @@ void pushDiskFrame(unsigned short *Rxframe) {
     }
   }
 
-  /** push if FAST_PER_SLOW fasts are done... */
-  i_count++;
-  if (i_count>=FAST_PER_SLOW) {
+  /* ****************************************************************** */
+  /* First make shure there is enough space in ALL the buffers          */
+  /* We need to do it first and all at once to maintain synchronization */
+  /* We discard the full frame id there is no space                     */
+  /* ****************************************************************** */
+
+  /************************************/   
+  /* Check buffer space in slow field */
+  /************************************/
+  for (i_slow = 0; i_slow<N_SLOW; i_slow++) {
+    for (i_ch = 0; i_ch<FAST_PER_SLOW; i_ch++) {
+      i_in = slow_fields[i_slow][i_ch].i_in;
+      if(++i_in >= MAXBUF)  i_in = 0;
+      if(i_in == slow_fields[i_slow][i_ch].i_out) {
+	fprintf(stderr, "Slow Field buffer overflow %i\n", i_in);
+	return;
+      }	
+    }
+  }
+  
+  /****************************************** 
+   * Check buffer space in normal fast data * 
+   *****************************************/
+  for (i_ch = 0; i_ch < n_fast; i_ch++) {
+    i_in = normal_fast[i_ch].i_in;
+    if (++i_in>=MAXBUF) i_in = 0;
+    if(i_in == normal_fast[i_ch].i_out) {
+      fprintf(stderr, "Fast Data buffer overflow\n");        
+      return;
+    }
+  }
+
+  /*******************************************
+   * Check buffer space in  fast bolo data   *
+   *******************************************/
+  for (i_card = 0; i_card<DAS_CARDS; i_card++) {
+    for (i_ch = 0; i_ch<DAS_CHS; i_ch += 2) {
+      i_in = bolo_fields[i_card][i_ch].i_in;
+      if (++i_in>=MAXBUF) i_in = 0;
+      if(i_in == bolo_fields[i_card][i_ch].i_out) {
+	fprintf(stderr, "Bolo Field buffer overflow\n");        
+	return;
+      }
+    }
+  }
+
+  
+  /*************************/
+  /* PUSH RX FRAME TO DISK */
+  /*************************/
+
+  /* push if FAST_PER_SLOW fasts are done... */
+   if (++i_count==FAST_PER_SLOW) {
     i_count = 0;
     for (i_slow = 0; i_slow<N_SLOW; i_slow++) {
       for (i_ch = 0; i_ch<FAST_PER_SLOW; i_ch++) {
@@ -275,10 +325,7 @@ void pushDiskFrame(unsigned short *Rxframe) {
         ((unsigned short *)slow_fields[i_slow][i_ch].b)[i_in] = 
           slow_data[i_slow][i_ch];
 
-        if(++i_in == slow_fields[i_slow][i_ch].i_out) {
-          // Buffer overflow: do something
-        }
-        if (i_in>=MAXBUF) i_in = 0;
+        if (++i_in>=MAXBUF) i_in = 0;
         slow_fields[i_slow][i_ch].i_in = i_in;
       }
     }
@@ -301,11 +348,8 @@ void pushDiskFrame(unsigned short *Rxframe) {
       ((unsigned short*)normal_fast[i_ch].b)[i_in] =
         ((unsigned short*)Rxframe)[normal_fast[i_ch].i0];      
     }
-    if(++i_in == normal_fast[i_ch].i_out) {
-      // Buffer overflow: do something
-    }
 
-    if (i_in>=MAXBUF) i_in = 0;
+    if (++i_in>=MAXBUF) i_in = 0;
     normal_fast[i_ch].i_in = i_in;
   };
 
@@ -323,11 +367,7 @@ void pushDiskFrame(unsigned short *Rxframe) {
       ((unsigned *)bolo_fields[i_card][i_ch].b)[i_in] = B0;
       ((unsigned *)bolo_fields[i_card][i_ch + 1].b)[i_in] = B1;
 
-      if(++i_in == bolo_fields[i_card][i_ch].i_out) {
-        // Buffer overflow: do something
-      }	
-
-      if (i_in>=MAXBUF) i_in = 0;
+      if (++i_in>=MAXBUF) i_in = 0;
       bolo_fields[i_card][i_ch].i_in = bolo_fields[i_card][i_ch+1].i_in = i_in;
     }
   }
@@ -350,41 +390,39 @@ void DirFileWriter(void) {
 
   while (1) {
     d_field = 0;
-
-    /** slow data **/
+     /** slow data **/
     for (i_slow = 0; i_slow<N_SLOW; i_slow++) {
       for (i_ch = 0; i_ch<FAST_PER_SLOW; i_ch++) {
-
-        if (slow_fields[i_slow][i_ch].fp >= 0) {
-          i_in = slow_fields[i_slow][i_ch].i_in;
-          i_out = slow_fields[i_slow][i_ch].i_out;
-          i_buf = 0;
-          while (i_in != i_out) {
-            if ((SlowChList[i_slow][i_ch].type=='U') ||
-                (SlowChList[i_slow][i_ch].type=='I')) {
-              ibuffer[i_buf] =
-                (unsigned)
-                ((((unsigned short *)slow_fields[i_slow][i_ch].b)[i_out]) << 16)
-                | (unsigned)
-                (((unsigned short *)slow_fields[i_slow + 1][i_ch].b)[i_out]);
-            } else {
-              buffer[i_buf] =
-                ((unsigned short *)slow_fields[i_slow][i_ch].b)[i_out];
-            }
-            i_out++;
-            i_buf++;
-            if (i_out>=MAXBUF) i_out = 0;
-          }
-          if ((SlowChList[i_slow][i_ch].type=='U') ||
-              (SlowChList[i_slow][i_ch].type=='I')) {
-            if (i_buf > 0) write(slow_fields[i_slow][i_ch].fp,
-                ibuffer, i_buf*sizeof(unsigned));
-          } else {
-            if (i_buf > 0) write(slow_fields[i_slow][i_ch].fp,
-                buffer, i_buf*sizeof(unsigned short));
-          }
-          slow_fields[i_slow][i_ch].i_out = i_out;
-        }
+	i_in = slow_fields[i_slow][i_ch].i_in;
+	i_out = slow_fields[i_slow][i_ch].i_out;
+	i_buf = 0;
+	while (i_in != i_out) {
+	  if ((SlowChList[i_slow][i_ch].type=='U') ||
+	      (SlowChList[i_slow][i_ch].type=='I')) {
+	    ibuffer[i_buf] =
+	      (unsigned)
+	      ((((unsigned short *)slow_fields[i_slow][i_ch].b)[i_out]) << 16)
+	      | (unsigned)
+	      (((unsigned short *)slow_fields[i_slow + 1][i_ch].b)[i_out]);
+	  } else {
+	    buffer[i_buf] =
+	      ((unsigned short *)slow_fields[i_slow][i_ch].b)[i_out];
+	  }
+	  i_out++;
+	  i_buf++;
+	  if (i_out>=MAXBUF) i_out = 0;
+	}
+	if ((SlowChList[i_slow][i_ch].type=='U') ||
+	    (SlowChList[i_slow][i_ch].type=='I')) {
+	  if ( (i_buf > 0) && (slow_fields[i_slow][i_ch].fp >= 0) ) 
+	    write(slow_fields[i_slow][i_ch].fp,
+		  ibuffer, i_buf*sizeof(unsigned));
+	} else {
+	  if ( (i_buf > 0)  && (slow_fields[i_slow][i_ch].fp >= 0) ) 
+	    write(slow_fields[i_slow][i_ch].fp,
+		  buffer, i_buf*sizeof(unsigned short));
+	}
+	slow_fields[i_slow][i_ch].i_out = i_out;
       }
     }
 
@@ -409,19 +447,20 @@ void DirFileWriter(void) {
           i_buf++;
           if (i_out>=MAXBUF) i_out = 0;
         }
-        if (i_buf > 0) write(normal_fast[i_ch].fp,
-            buffer, i_buf*sizeof(unsigned short));
+        if ( (i_buf > 0) && (normal_fast[i_ch].fp >= 0) ) {
+	  write(normal_fast[i_ch].fp, buffer, i_buf*sizeof(unsigned short));
+	}
       }
       normal_fast[i_ch].i_out = i_out;
+
     }
 
     /** Bolometer data */
     for (i_card = 0; i_card<DAS_CARDS; i_card++) {
       for (i_ch = 0; i_ch<DAS_CHS; i_ch++) {
-
         i_in = bolo_fields[i_card][i_ch].i_in;
         i_out = bolo_fields[i_card][i_ch].i_out;
-
+	
         i_buf = 0;
         k = 0;
         while (i_in != i_out) {
@@ -431,9 +470,10 @@ void DirFileWriter(void) {
           i_buf++;
           if (i_out>=MAXBUF) i_out = 0;
         }
-        if (i_buf > 0)
-          write(bolo_fields[i_card][i_ch].fp,
-            ibuffer, i_buf*sizeof(unsigned int));
+        if ( (i_buf > 0) && (bolo_fields[i_card][i_ch].fp >= 0) ) {
+          write(bolo_fields[i_card][i_ch].fp, 
+		ibuffer, i_buf*sizeof(unsigned int));
+	}
         if (i_buf>d_field) d_field = i_buf;	
         if (max_d_field < d_field) max_d_field = d_field;
         if (min_d_field > d_field) min_d_field = d_field;
