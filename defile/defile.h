@@ -24,7 +24,6 @@
 #define DEFILE_H
 
 #include <sys/time.h>
-#include <linux/limits.h>
 
 #include "frameread.h"
 

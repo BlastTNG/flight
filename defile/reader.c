@@ -29,6 +29,7 @@
 
 #include "tx_struct.h"
 #include "defile.h"
+#include "frameread.h"
 
 #define INPUT_BUF_SIZE 50 /* Frames are big (~1 kb) and we take a big
                            * performance hit if we read more than 64k at a

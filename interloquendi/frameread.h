@@ -20,6 +20,8 @@
 #ifndef FRAMEREAD_H
 #define FRAMEREAD_H
 
+#include <linux/limits.h>
+
 #define GPB_LEN (PATH_MAX * 4)
 #define FILENAME_LEN (PATH_MAX + NAME_MAX + 1)
 
