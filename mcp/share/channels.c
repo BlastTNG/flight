@@ -664,7 +664,7 @@ void DoSanityChecks(void)
 
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom.field) != -1)
           bprintf(fatal, "Namespace Collision: Duplicate channel name %s "
-              "found in derived channels", DerivedChannels[i].lincom.field[i]);
+              "found in derived channels", DerivedChannels[i].lincom.field);
         strcpy(names[nn++], DerivedChannels[i].lincom.field);
 
         /* FALLTHROUGH */
