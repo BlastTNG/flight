@@ -111,6 +111,7 @@ struct ISCSolutionStruct {
   double ra;			// RA of CCD in radians (apparent)
   double dec;			// DEC   "        "        "
   double sigma;			// uncertainty of solution in radians (or 2PI on failure)
+  double rot;			// rotation of the CCD field in radians (parallactic angle + constant)
 
   double temp1;	        // temperature sensors
   double temp2;
