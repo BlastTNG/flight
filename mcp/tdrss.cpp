@@ -13,11 +13,6 @@
 // *                                                        *
 // **********************************************************
 
-#define DIFFERENTIAL    0
-#define INT_PRESERVING  1
-#define SINGLE          2
-#define AVERAGE         3
-
 #define ALICEFILE_DIR   "./"
 #define MULTIPLEX_WORD  3
 
@@ -370,8 +365,6 @@ void Buffer::EraseLastSection() {
 //-------------------------------------------------------------
 
 void Buffer::Stop() {
-  int ndata;
-
   if (bitpos > 0)
     bytepos++;
   CheckBytePosRange();
@@ -380,11 +373,10 @@ void Buffer::Stop() {
   CheckBytePosRange();
   bitpos = 0;
 
-  ndata = CurrSize() - 6;
-
-  *(unsigned short *)(buf + BUF_POS_FRAME_LEN) = CurrSize(); 
-  *(unsigned short *)(buf + BUF_POS_CRC) = CalculateCRC(CRC_INIT, buf, 
-                                                        CurrSize());
+  *(unsigned short *)(buf + BUF_POS_FRAME_LEN) = CurrSize();
+  *(unsigned short *)(buf + BUF_POS_CRC) = 
+    CalculateCRC(CRC_INIT, buf + BUF_POS_DATA_START, 
+                 CurrSize() - BUF_POS_DATA_START);
 
   // Send packets
   if (write(tty_fd, buf, CurrSize()) != CurrSize())
@@ -993,7 +985,7 @@ void Alice::CompressionLoop() {
         //printf("Reading from %s . . .\n", currInfo->src);
 
         switch (currInfo->type) {
-          case SINGLE:
+          case COMP_SINGLE:
             if ((numread = DataSource->ReadField(rawdata, currInfo->src,
                 framepos - readrightpad, 1)) != currInfo->framefreq) {
               printf("Error accessing correct number of data from frames "
@@ -1005,7 +997,7 @@ void Alice::CompressionLoop() {
               SendSingle(rawdata, currInfo);
             break;
 
-          case AVERAGE:
+          case COMP_AVERAGE:
             rawsize = numframes * currInfo->framefreq;
             if ((numread = DataSource->ReadField(rawdata, currInfo->src,
                     framepos - readrightpad, numframes))
@@ -1071,11 +1063,11 @@ void Alice::CompressionLoop() {
               sizeof(double) * rawsize);
 
         switch (currInfo->type) {
-          case DIFFERENTIAL:
+          case COMP_DIFFERENTIAL:
             SendDiff(rawdata, rawsize, currInfo, DataInfo->maxover,
                 DataInfo->minover);
             break;
-          case INT_PRESERVING:
+          case COMP_INT_PRESERVING:
             SendInt(rawdata, rawsize, currInfo, DataInfo->maxover,
                 DataInfo->minover);
             break;

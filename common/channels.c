@@ -445,7 +445,9 @@ void DoSanityChecks(void)
   int i, j;
   char* fields[2][64][64];
 
+#ifndef __BIG__
   mprintf(MCP_INFO, "Running Sanity Checks on Channel Lists.\n");
+#endif
 
   for (i = 0; i < 64; ++i)
     for (j = 0; j < 64; ++j)
@@ -528,7 +530,9 @@ void DoSanityChecks(void)
 
   slowsPerBi0Frame = slowsPerBusFrame[0] + slowsPerBusFrame[1];
 
+#ifndef __BIG__
   mprintf(MCP_INFO, "All Checks Passed.\n");
+#endif
   mprintf(MCP_INFO, "Slow Channels Per Biphase Frame: %i\n", slowsPerBi0Frame);
   mprintf(MCP_INFO, "Fast Channels Per Biphase Frame: %i\n", ccFast
       + FAST_OFFSET);
@@ -540,18 +544,22 @@ void DoSanityChecks(void)
   BiPhaseFrameWords = FAST_OFFSET + ccFast + slowsPerBi0Frame + 1;
   BiPhaseFrameSize = 2 * BiPhaseFrameWords;
   for (i = 0; i < 2; ++i) {
+#ifndef __BIG__
     mprintf(MCP_INFO,
         "BBC Bus %i: Frame Bytes: %4i  Allowed: %4i (%.2f%% full)\n", i,
         4 * TxFrameWords[i], 4 * BBC_FRAME_SIZE,
         100. * TxFrameWords[i] / BBC_FRAME_SIZE);
+#endif
     if (TxFrameWords[i] > BBC_FRAME_SIZE)
       mprintf(MCP_FATAL, "FATAL: BBC Bus %i frame too big.\n", i);
   }
 
+#ifndef __BIG__
   mprintf(MCP_INFO,
       " BiPhase : Frame Bytes: %4i  Allowed: %4i (%.2f%% full)\n",
       2 * BiPhaseFrameWords, 2 * BI0_FRAME_SIZE,
       100. * BiPhaseFrameWords / BI0_FRAME_SIZE);
+#endif
   if (BiPhaseFrameWords > BI0_FRAME_SIZE)
     mprintf(MCP_FATAL, "FATAL: Biphase frame too big.\n");
 }
