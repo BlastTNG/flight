@@ -1,4 +1,4 @@
-/* blast.h: the BLAST flight code common header
+/* blast.c: the BLAST flight code common functions
  *
  * This software is copyright (C) 2004 University of Toronto
  * 
