@@ -569,6 +569,9 @@ struct ChannelStruct FastChannels[] = {
   {"mcp_frame",   'w', LOOP2, 34,             1.0,                    0.0, 'u'},
 
 #endif
+  /* Read from DAS3 -- cryo commanding */
+  {"calstat",      'r',  CRYO, 61,                 1.0,             0.0, 'u'},
+
   /* Read from DAS4 -- bias controller and DPM/inner frame monitoring */
   {"biasin",      'r',  BIAS, 50,             1.0,                    0.0, 'u'},
   END_OF_CHANNELS
