@@ -1,0 +1,40 @@
+/* config.h.in.  Generated from configure.in by autoheader.  */
+
+/* Define to the version number of the blastcmd command list */
+#undef BLASTCMD_CMD_VERSION
+
+/* Define to the name of your blastcmd program */
+#undef BLAST_CMD
+
+/* Define to the path to your curfiles */
+#undef CUR_DIR
+
+/* Define to the path to your narsil data directory */
+#undef DATA_ETC_NARSIL_DIR
+
+/* Define to 1 if you have the `pthread' library (-lpthread). */
+#undef HAVE_LIBPTHREAD
+
+/* Name of package */
+#undef PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Version number of package */
+#undef VERSION
+
+/* Define to empty if `const' does not conform to ANSI C. */
+#undef const
