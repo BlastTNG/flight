@@ -14,16 +14,17 @@
 # ---
 
 # Set Daemonise if you want defile to daemonise on start up by default.
-# Setting this will also force Persistent and Quiet . Default: don't
+# Setting this will also force Persistent and Quiet. Default: don't
 # daemonise
 
 # Daemonise
 
 # ---
 
-# Set InputCurFileName to the default input filename.  Default: none.
+# Set InputSource to the default input filename or hostname[:port].  Default:
+# none.
 
-InputCurFileName /mnt/decom/etc/decom.cur
+InputSource arwen
 
 # ---
 
@@ -63,24 +64,18 @@ OutputCurFileName /data/etc/defile.cur
 
 # ---
 
-# Set QuendiHost to the domain name or IP address of the host running the Quendi
-# (blastd) server.  Default: none
-
-QuendiHost arwen.blast
-
-# ---
-
-# Set QuendiPort to the port on which the Quendi (blastd) server is listening.
-# Default: 44144
-
-# QuendiPort 44144
-
-# ---
-
 # Set Quiet to have defile supress normal console output.  Default: don't
 # be quiet.
 
 # Quiet
+
+# ---
+
+# Set RemoteInputSource if the InputSource directive defines a remote host,
+# instead of a local fine name.  Default: assume that InputSource is a local
+# filename.
+
+RemoteInputSource
 
 # ---
 

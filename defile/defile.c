@@ -26,23 +26,28 @@
 #endif
 
 #include <stdlib.h>
+#include <arpa/inet.h>
+#include <error.h>
 #include <limits.h>
 #include <libgen.h>
-#include <stdio.h>
-#include <syslog.h>
-#include <stdarg.h>
-#include <error.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <pthread.h>
 #include <signal.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
+#include <syslog.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <pthread.h>
 
 #include "defile.h"
 #include "blast.h"
 #include "channels.h"
+#include "quenya.h"
 
 #ifndef VERSION
 #  define VERSION_MAJOR    "3"
@@ -63,7 +68,7 @@
 /* options */
 enum {CFG_CompressedOutput, CFG_Daemonise, CFG_InputSource,
   CFG_OutputCurFileName, CFG_OutputDirectory, CFG_OutputDirFile, CFG_Persistent,
-  CFG_PidFile, CFG_QuendiHost, CFG_QuendiPort, CFG_Quiet, CFG_RemountPath,
+  CFG_PidFile, CFG_Quiet, CFG_RemoteInputSource, CFG_RemountPath,
   CFG_RemountedSource, CFG_ResumeMode, CFG_SpecFile, CFG_SuffixLength,
   CFG_WriteCurFile};
 
@@ -83,9 +88,8 @@ struct {
   {{NULL}, 's', "OutputDirFile"},
   {{NULL}, 'b', "Persistent"},
   {{NULL}, 's', "PidFile"},
-  {{NULL}, 's', "QuendiHost"},
-  {{NULL}, 'i', "QuendiPort"},
   {{NULL}, 'b', "Quiet"},
+  {{NULL}, 'b', "RemoteInputSource"},
   {{NULL}, 's', "RemountPath"},
   {{NULL}, 'b', "RemountedSource"},
   {{NULL}, 'b', "ResumeMode"},
@@ -177,13 +181,13 @@ void LoadDefaultConfig(void)
         case CFG_Daemonise:
         case CFG_Persistent:
         case CFG_Quiet:
+        case CFG_RemoteInputSource:
         case CFG_RemountedSource:
         case CFG_ResumeMode:
         case CFG_WriteCurFile:
           options[i].value.as_int = 0;
         case CFG_InputSource: /* these are null by default */
         case CFG_OutputDirFile:
-        case CFG_QuendiHost:
         case CFG_SpecFile:
           break;
         case CFG_OutputCurFileName:
@@ -194,9 +198,6 @@ void LoadDefaultConfig(void)
           break;
         case CFG_PidFile:
           options[i].value.as_string = bstrdup(fatal, PID_FILE);
-          break;
-        case CFG_QuendiPort:
-          options[i].value.as_int = QUENDI_PORT;
           break;
         case CFG_RemountPath:
           options[i].value.as_string = bstrdup(fatal, REMOUNT_PATH);
@@ -216,6 +217,7 @@ struct rc_struct InitRcStruct()
     .curfile_val       = NULL,
     .daemonise         = options[CFG_Daemonise].value.as_int,
     .dest_dir          = options[CFG_OutputDirectory].value.as_string,
+    .force_quenya      = 0,
     .force_stdio       = options[CFG_Daemonise].value.as_int,
     .framefile         = 0,
 #ifdef HAVE_LIBZ
@@ -227,6 +229,7 @@ struct rc_struct InitRcStruct()
     .output_dirfile    = options[CFG_OutputDirFile].value.as_string,
     .persist           = (options[CFG_Daemonise].value.as_int
         || options[CFG_Persistent].value.as_int),
+    .quenya            = options[CFG_RemoteInputSource].value.as_int,
     .remount           = options[CFG_RemountedSource].value.as_int,
     .remount_dir       = options[CFG_RemountPath].value.as_string,
     .resume_at         = 0,
@@ -314,7 +317,7 @@ void Remount(const char* source, char* buffer)
 }
 
 /* check SOURCE input parameter and dereference curfile if applicable */
-char* GetFileName(const char* source)
+char* GetFileName(const char* source, const char* herr)
 {
   FILE* stream;
   char* buffer;
@@ -326,8 +329,13 @@ char* GetFileName(const char* source)
   buffer = (char*)balloc(fatal, FILENAME_LEN);
 
   /* first attempt to stat SOURCE to see if it is indeed a regular file */
-  if (stat(source, &stat_buf))
-    berror(fatal, "cannot stat `%s'", source);
+  if (stat(source, &stat_buf)) {
+    if (rc.force_quenya)
+      berror(fatal, "cannot stat `%s'", source);
+    else
+      berror(fatal, "error resolving source `%s':\n  DNS lookup returned: %s\n"
+          "  local stat returned", source, herr);
+  }
 
   /* the stat worked.  Now is this a regular file? */
   if (!S_ISREG(stat_buf.st_mode))
@@ -398,7 +406,8 @@ char* GetFileName(const char* source)
 
 /* given a destination path and a source filename, makes a dirfile name and
  * returns it in output */
-char* MakeDirFile(char* output, const char* source, const char* directory)
+char* MakeDirFile(char* output, const char* source, const char* directory,
+    int start)
 {
   char bname[NAME_MAX];
   char* buffer;
@@ -414,14 +423,43 @@ char* MakeDirFile(char* output, const char* source, const char* directory)
     strcat(output, "/");
   strcat(output, buffer);
 
+  if (start > 0) {
+    sprintf(buffer, "_%i", start);
+    strcat(output, buffer); 
+  }
+
   bfree(fatal, buffer);
 
   return output;
 }
 
+int DetermineSourceType(const struct rc_struct* rc)
+{
+  char* x;
+
+  /* assume anything with a colon in it is a host:port pair */
+  if (strchr(rc->source, ':'))
+    return 1;
+
+  /* if the source ends in .cur, assume it's a local file -- this will create
+   * problems once we get the .cur gTLD... */
+  if (rc->source - strstr(rc->source, ".cur") + strlen(rc->source) == 4)
+    return 0;
+
+  /* if the source contains a character that isn't be allowed in a hostname,
+   * assume it's a local file; this takes care of anything with a / in it
+   * -- this doesn't work for the new internationalised domain name system */
+  for (x = rc->source; *x; ++x) 
+    if (*x != '-' && *x != '.' && (*x < '0' || *x > '9')
+        && (*x < 'a' || *x > 'z') && (*x < 'A' || *x > 'Z'))
+        return 0;
+
+  /* hmm... still can't tell.  Further study is required */
+  return -1;
+}
 /* generates a dirfile name given the source and destination passed on the
  * command line */
-void GetDirFile(char* buffer, const char* source, char* parent)
+void GetDirFile(char* buffer, const char* source, char* parent, int start)
 {
   struct stat stat_buf;
 
@@ -436,7 +474,34 @@ void GetDirFile(char* buffer, const char* source, char* parent)
     bprintf(fatal, "`%s' is not a directory", parent);
 
   /* parent is indeed a directory; make the dirfile name */
-  MakeDirFile(buffer, source, parent);
+  MakeDirFile(buffer, source, parent, start);
+}
+
+const char* ResolveHost(char* host, struct sockaddr_in* addr, int forced)
+{
+  struct hostent* the_host;
+  char* ptr;
+  
+  if ((ptr = strchr(host, ':')) != NULL) {
+    if ((addr->sin_port = htons(atoi(ptr + 1))) == htons(0))
+      addr->sin_port = htons(QUENDI_PORT);
+    *ptr = '\0';
+  } else
+    addr->sin_port = htons(QUENDI_PORT);
+
+  the_host = gethostbyname(host);
+
+  if (the_host == NULL) {
+    if (forced)
+      bprintf(fatal, "host lookup failed: %s\n", hstrerror(h_errno));
+
+    return hstrerror(h_errno);
+  }
+
+  addr->sin_family = AF_INET;
+  memcpy(&(addr->sin_addr.s_addr), the_host->h_addr, the_host->h_length);
+
+  return NULL;
 }
 
 void PrintVersion(void)
@@ -456,10 +521,12 @@ void PrintVersion(void)
 void PrintUsage(void)
 {
   printf("Usage: defile [OPTION]... SOURCE [DIRECTORY]"
-      "\nConvert the BLAST-type framefile SOURCE into dirfile under DIRECTORY"
+      "\nConverts BLAST-type framefile from SOURCE into dirfile under "
+      "DIRECTORY."
       "\n"
-      "\nSOURCE may be either a .cur file or a framefile to start with."
-      "\nDefault DIRECTORY to use if no DIRECTORY is given:"
+      "\nSOURCE may be a curfile, a framefile to start with, or a blastd host, "
+      "optionally"
+      "\nwith a port.  Default DIRECTORY to use if no DIRECTORY is given:"
       "\n\t" OUTPUT_DIR
       "\n"
       "\nArguments to long options are required for short arguments as well."
@@ -475,10 +542,16 @@ void PrintUsage(void)
       "\n  -S --spec-file=NAME   use NAME as the specification file."
       "\n  -c --curfile          write a curfile called `" CUR_FILE "'"
       "\n                          pointing to the output directory."
-      "\n  -d --daemonise        fork to background and daemonise on startup.  "
-      "Implies"
-      "\n                          `--persistent' and `--quiet'."
-      "\n  -f --force            overwrite destination dirfile."
+    "\n  -d --daemonise        fork to background and daemonise on startup.  "
+    "Implies"
+    "\n                          `--persistent' and `--quiet'."
+    "\n  -f --force            overwrite destination dirfile."
+    "\n  -l --local-source     assume the input source is a local file, "
+    "even when"
+    "\n                          it looks like a remote hostname."
+    "\n  -n --network-source   assume the input source is a remote host, "
+    "even when"
+    "\n                          it looks like a local filename."
     "\n     --no-clobber       don't resume or overwrite existing dirfiles. "
     "(default)"
     "\n     --no-curfile       don't write a curfile. (default)"
@@ -578,6 +651,11 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
         else if (!strcmp(argv[i], "--gzip"))
           rc->gzip_output = 1;
 #endif
+        else if (!strcmp(argv[i], "--local-source")) {
+          rc->force_quenya = 1;
+          rc->quenya = 0;
+        } else if (!strcmp(argv[i], "--network-source"))
+          rc->force_quenya = rc->quenya = 1;
         else if (!strcmp(argv[i], "--no-clobber"))
           rc->write_mode = 0;
         else if (!strcmp(argv[i], "--no-compress"))
@@ -649,6 +727,13 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
               break;
             case 'f':
               rc->write_mode = 1;
+              break;
+            case 'l':
+              rc->force_quenya = 1;
+              rc->quenya = 0;
+              break;
+            case 'n':
+              rc->force_quenya = rc->quenya = 1;
               break;
             case 'o':
               if (nshortargs < argc) {
@@ -753,10 +838,11 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
   /* first unused argument is SOURCE */
   for (j = 0; j < nargs && argument[j].used; ++j);
 
-  if (j <= nargs || nargs == 0) {
-    if (options[CFG_InputSource].value.as_string != NULL)
+  if (j > nargs || nargs == 0) {
+    if (options[CFG_InputSource].value.as_string != NULL) {
       rc->source = options[CFG_InputSource].value.as_string;
-    else
+      rc->force_quenya = 1;
+    } else
       bprintf(fatal, "too few arguments\n"
           "Try `defile --help' for more information.\n");
   } else {
@@ -767,13 +853,21 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
     for (j++; j < nargs && argument[j].used; ++j);
 
     /* DIRECTORY (if any) */
-    if (j < nargs || nargs <= 1) {
+    if (j < nargs && nargs > 1) {
       rc->dest_dir = argument[j].value;
       if (strlen(rc->dest_dir) > PATH_MAX)
         bprintf(fatal, "Destination path too long\n");
     } else
       rc->dest_dir = options[CFG_OutputDirectory].value.as_string;
   }
+
+  /* If the user hasn't told us what type source is, determine whether source
+   * is a filename or a hostname */
+  if (!rc->force_quenya)
+    rc->quenya = DetermineSourceType(rc);
+
+  /* are further checks required? */
+  rc->force_quenya = (rc->quenya == -1) ? 0 : 1;
 
   /* Fix up output_dirfile, if present */
   if (rc->output_dirfile != NULL)
@@ -789,6 +883,7 @@ int main (int argc, char** argv)
   long long int delta;
   float freq = 0;
   FILE* stream;
+  const char* herr = NULL;
 
   pthread_t read_thread;
   pthread_t write_thread;
@@ -846,29 +941,41 @@ int main (int argc, char** argv)
   bprintf(info, "defile " VERSION " (C) 2004 D. V. Wiebe\n"
       "Compiled on " __DATE__ " at " __TIME__ ".\n\n");
 
-  /* Get the name of the frame file. This function handles following the
-   * curfile. (This allocates rc.chunk for us.) */
-  rc.chunk = GetFileName(rc.source);
+  if (!rc.force_quenya || rc.quenya) {
+    /* Resolve the hostname */
+    if ((herr = ResolveHost(rc.source, &rc.addr, rc.force_quenya)) == NULL) {
+      rc.force_quenya = rc.quenya = 1;
+    }
+  }
+
+  if (!rc.force_quenya || !rc.quenya) {
+    /* Get the name of the framefile. This function handles following the
+     * curfile. (This allocates rc.chunk for us.) */
+    rc.chunk = GetFileName(rc.source, herr);
+    rc.quenya = 0;
+  }
 
   /* if rc.output_dirfile exists, we use that as the dirfile name, otherwise
    * we have to make one based on the input name */
   rc.dirfile = balloc(fatal, FILENAME_LEN);
 
-  if (rc.output_dirfile != NULL)
-    strncpy(rc.dirfile, rc.output_dirfile, FILENAME_LEN);
+  /* Initialise the reader or client */
+  if (rc.quenya)
+    InitClient();
   else
-    GetDirFile(rc.dirfile, rc.chunk, rc.dest_dir);
+    InitReader();
 
   /* check the length of the output path */
   if (strlen(rc.dirfile) > PATH_MAX - FIELD_MAX - 1)
     bprintf(fatal, "destination dirfile `%s' too long\n", rc.dirfile);
 
-  /* Attempt to open the Specification file and read the channel lists */
-  ReconstructChannelLists(rc.chunk, rc.spec_file);
-  bprintf(info, "Frame size: %i bytes\n", DiskFrameSize);
-
   /* Start */
-  bprintf(info, "Defiling `%s'\n    into `%s' ...\n\n", rc.chunk, rc.dirfile);
+  bprintf(info, "Defiling `%s'\n    into `%s'\n", rc.chunk, rc.dirfile);
+  if (rc.resume_at > 0)
+    bprintf(info, "    starting at frame %i\n", rc.resume_at);
+  bprintf(info, "\n");
+
+  exit(1);
 
   /* Initialise things */
   ri.read = ri.wrote = ri.old_total = 0;
@@ -887,8 +994,11 @@ int main (int argc, char** argv)
   /* block signals */
   pthread_sigmask(SIG_BLOCK, &signals, NULL);
 
-  /* Spawn reader and writer */
-  pthread_create(&read_thread, NULL, (void*)&FrameFileReader, NULL);
+  /* Spawn client/reader and writer */
+  if (rc.quenya)
+    pthread_create(&read_thread, NULL, (void*)&QuenyaClient, NULL);
+  else
+    pthread_create(&read_thread, NULL, (void*)&FrameFileReader, NULL);
   pthread_create(&write_thread, NULL, (void*)&DirFileWriter, NULL);
 
   /* Main status loop -- if we're in silent mode we skip this entirely and

@@ -1,6 +1,42 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2004-10-15  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* client.c (InitClient): Add client connect and spec file reception.
+	(MakeSock, GetServerResponse, OpenDataPort): Add
+	* defile.h: Add sockets and server address to rc struct
+	* quenya.h: Add to project
+	* Makefile.am: Update for quenya.h
+
+	* defile.c (GetDirFile, MakeDirFile): Add start parameter
+	All callers changed.
+
+	* blast.c (bputs_stdio): Fix newline bug
+	(_bfree): Log before free so that we can see what was the problem if free
+	segfaults
+
+	* defile.1.in.in: Update for new options and directive ; Add example config
+	files
+	* defile.conf.in: Update for new directive: RemoteInput Source ; Remove
+	deprecated directives: QuendiHost, QuendiPort ; Rename InputCurFileName to
+	InputSource
+	* defile.c (DetermineSourceType, ResolveHost): Add
+	(LoadDefaultConfig, InitRcStruct): Update for directive changes
+	(PrintUsage): Update for new options: -l -n
+	(ParseCommandLine): Add source type determination code
+	(main): Add source type determination code; Add calls to client.c functions
+	* client.c (InitClient, QuenyaClient): Add empty functions (New source file)
+	* Makefile.am: Update for client.c
+	* reader.c (InitReader): Move reader specific initialisation from main to
+	here
+
+	* defile.c (ParseCommandLine): fix bug in counting parameters to find source
+
+2004-10-07  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* channels.c (WriteFormatFile): Fix double precision printf bug
+
+	Change applied to defile-2.5.4 as defile-2.5.4-p1
+
 2004-10-05  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* configure.ac, Makefile.am: Fix paths in defile.1
 	* defile.1.in.in: Rename from defile.1.in
@@ -10,7 +46,8 @@
 
 	* defile.c (InitRcStruct, LoadDefaultConfig, ReadConfig): Add
 	(ParseCommandLine): Update for new options and for config
-	(PrintUsage): Update for new options
+	(PrintUsage): Update for new options: --no-clobber --no-curfile
+	--no-compress --no-daemonise --no-persist --no-remount --verbose
 	* defile.1.in: Update for config file directives
 	* configure.ac, Makefile.am: Add defile.conf as a target
 	* defile.conf.in: Add

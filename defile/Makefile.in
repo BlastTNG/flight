@@ -113,8 +113,8 @@ bin_PROGRAMS = defile
 man_MANS = defile.1
 EXTRA_DIST = fixup.sh
 @INSTALL_DEFILE_CONF_TRUE@sysconf_DATA = defile.conf
-defile_SOURCES = defile.c frameread.c reader.c channels.c writer.c blast.c blast.h defile.h channels.h frameread.h derived.h
-INCLUDES = -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\"
+defile_SOURCES = defile.c frameread.c reader.c channels.c writer.c blast.c client.c blast.h defile.h channels.h frameread.h derived.h quenya.h
+INCLUDES = -Wall -O3 -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\"
 DISTCHECK_CONFIGURE_FLAGS = --with-data-etc="$$dc_install_base/data"
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -126,7 +126,7 @@ PROGRAMS = $(bin_PROGRAMS)
 
 am_defile_OBJECTS = defile.$(OBJEXT) frameread.$(OBJEXT) \
 	reader.$(OBJEXT) channels.$(OBJEXT) writer.$(OBJEXT) \
-	blast.$(OBJEXT)
+	blast.$(OBJEXT) client.$(OBJEXT)
 defile_OBJECTS = $(am_defile_OBJECTS)
 defile_LDADD = $(LDADD)
 defile_DEPENDENCIES =
@@ -136,8 +136,9 @@ DEFAULT_INCLUDES =  -I. -I$(srcdir) -I.
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/blast.Po ./$(DEPDIR)/channels.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/defile.Po ./$(DEPDIR)/frameread.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/reader.Po ./$(DEPDIR)/writer.Po
+@AMDEP_TRUE@	./$(DEPDIR)/client.Po ./$(DEPDIR)/defile.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/frameread.Po ./$(DEPDIR)/reader.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/writer.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -239,6 +240,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/blast.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/channels.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/defile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/frameread.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reader.Po@am__quote@

@@ -1,59 +1,63 @@
 .\" @fixup_input@
 .\" @configure_input@
-.TH defile 1 "5 October 2004" "version @VERSION@" "BLAST UTILITIES"
+.TH defile 1 "15 October 2004" "version @VERSION@" "BLAST UTILITIES"
 .SH NAME
 defile \(em convert a MCP-style framefile into a dirfile
 .SH SYNOPSIS
 .nh
 .B defile 
 .RB [\~ \-C
-.IR "name " |
+.IR name \~|
 .BI \-\-curfile\-name= name
 |
-.BR "\-c " |
-.BR \-\-curfile\~ |
-.BR \-\-no\-curfile\~ ]
-.RB [\~ "\-F " |
-.BR \-\-framefile\~ ]
-.RB [\~ "\-R " |
-.BR "\-\-resume " |
-.BR "\-f " |
-.BR \-\-force\~ |
-.BR \-\-no\-clobber\~ ]
+.BR \-c \~|
+.BR \-\-curfile \~|
+.BR \-\-no\-curfile \~]
+.RB [\~ \-F \~|
+.BR \-\-framefile \~]
+.RB [\~ \-R \~|
+.BR \-\-resume \~|
+.BR \-f \~|
+.BR \-\-force \~|
+.BR \-\-no\-clobber \~]
 .RB [\~ \-S
-.IR "name " |
+.IR name \~|
 .BI \-\-spec\-file= name
 ]
-.RB [\~ "\-d " |
-.BR \-\-daemonise\~ |
-.BR \-\-no\-daemonise\~ ]
+.RB [\~ \-d \~|
+.BR \-\-daemonise \~|
+.BR \-\-no\-daemonise \~]
+.RB [\~ \-l \~|
+.BR \-\-local\-source \~|
+.BR \-n \~|
+.BR \-\-network\-source \~]
 .RB [\~ \-o
-.IR "dirfile " |
+.IR dirfile \~|
 .BI \-\-output\-dirfile= dirfile
 ]
-.RB [\~ "\-q " |
-.BR \-\-quiet\~ |
-.BR \-\-verbose\~ ]
-.RB [\~ "\-p " |
-.BR \-\-persistent\~ |
-.BR \-\-no\-persist\~ ]
-.RB [\~ "\-r " |
-.BR "\-\-remounted\-source " |
+.RB [\~ \-q \~|
+.BR \-\-quiet \~|
+.BR \-\-verbose \~]
+.RB [\~ \-p \~|
+.BR \-\-persistent \~|
+.BR \-\-no\-persist \~]
+.RB [\~ \-r \~|
+.BR \-\-remounted\-source \~|
 .BI \-\-remounted\-using= path
 |
-.BR \-\-no\-remount\~ ]
+.BR \-\-no\-remount \~]
 .RB [\~ \-s
-.IR "size " |
+.IR size \~|
 .BI \-\-suffix\-size= size
 ]
-.RB [\~ "\-z " |
-.BR \-\-gzip\~ |
-.BR \-\-no\-compress\~ ]
-.RB [\~ \-\-help\~ ]
-.RB [\~ \-\-version\~ ]
-.RB [\~ \-\-\~ ]
-.I "source"
-.RI [\~ directory\~ ]
+.RB [\~ \-z \~|
+.BR \-\-gzip \~|
+.BR \-\-no\-compress \~]
+.RB [\~ \-\-help \~]
+.RB [\~ \-\-version \~]
+.RB [\~ \-\- \~]
+.IR source \~|\~ host [: port ] 
+.RI [\~ directory \~]
 .hy
 
 .SH DESCRIPTION
@@ -63,6 +67,23 @@ converts a framefile created by
 or
 .BR decomd (8)
 into a readable dirfile.
+.B defile
+can either use a local
+.I source
+file as the data source, or else connect to a remote
+.I host
+running a quenya (blastd) server.  Usually, given either input source,
+.B defile
+can determine whether it is local or remote.  But in cases when it can't, the
+command line options
+.B \-l
+or
+.B \-n
+can be used to force
+.B defile
+to assume the source is either local or remote.
+.PP
+A local
 .I source
 is typically the name of the first chunk of the framefile to convert.
 However, if given the name of a curfile for
@@ -107,7 +128,7 @@ will use only the last option given on the command line.
 .PP
 Mandatory arguments to long options are mandatory for short options too.
 .PP
-.BI "\-C " name
+.BI \-C\~ name
 or
 .BI \-\-curfile\-name= name
 .RS
@@ -118,18 +139,18 @@ but use
 for the name of the curfile instead of the default.
 .RE
 .TP
-.BR "\-F " "or " \-\-framefile
+.BR \-F\~ or\~ \-\-framefile
 Assume
 .I source
 is a framefile, even when it looks like a curfile.  This is provided primarily
 for cases when defile gets confused by a framefile that happens to have a 
 number of ASCII characters at its start.
 .TP
-.BR "\-R " "or " \-\-resume
+.BR \-R\~ or\~ \-\-resume
 Resume an interrupted defiling.  Incompatible with
 .BR \-z .
 .PP
-.BI "\-S " name
+.BI \-S\~ name
 or
 .BI \-\-spec\-file= name
 .RS
@@ -138,7 +159,7 @@ Use
 as the channel specification file instead of the default.
 .RE
 .TP
-.BR "\-c " "or " \-\-curfile
+.BR \-c\~ or\~ \-\-curfile
 Write a curfile pointing to the output dirfile.  The curfile name is
 generally
 .IR @DATA_ETC_DIR@/defile.cur .
@@ -148,7 +169,7 @@ directive.  To use a different name for the curfile, see the
 .B \-C
 option.
 .TP
-.BR "\-d " "or " \-\-daemonise
+.BR \-d\~ or\~ \-\-daemonise
 Fork to background and daemonise on startup.  Implies both
 .B \-p
 and
@@ -161,7 +182,7 @@ unless overridden with the
 .I PidFile
 directive.  The PID is also reported on the controlling TTY.
 .TP
-.BR "\-f " "or " \-\-force
+.BR \-f\~ or\~ \-\-force
 Overwrite an existing dirfile.  Normally
 .B defile
 will complain and exit if it finds that the destination dirfile directory
@@ -198,7 +219,7 @@ allow overriding the
 .I Daemonise
 directive, if present.
 .PP
-.BI "\-o " dirfile
+.BI \-o\~ dirfile
 or
 .BI \-\-output\-dirfile= dirfile
 .RS
@@ -215,7 +236,7 @@ is given), or it can be an absolute path, in which case
 is ignored.
 .RE
 .TP
-.BR "\-p " "or " \-\-persistent
+.BR \-p\~ or\~ \-\-persistent
 Upon reaching the end of the framefile, don't exit but wait for more data to
 be added to the file.  For use when reading a framefile that is concurrently
 being written to by
@@ -226,12 +247,12 @@ See
 .B PERSISTENT MODE
 for more information.
 .TP
-.BR "\-q " "or " \-\-quiet
+.BR \-q\~ or\~ \-\-quiet
 Quiet mode:
 .B defile
 writes nothing to the TTY except error messages (if any).
 .TP
-.BR "\-r " "or " \-\-remounted\-source
+.BR \-r\~ or\~ \-\-remounted\-source
 If
 .I source
 is a curfile, assume that the file it refers to has been mounted in a different
@@ -261,7 +282,7 @@ may be either an absolute path or a path relative to the location of the
 .I source
 curfile.
 .PP
-.BI "\-s " size
+.BI \-s\~ size
 or
 .BI \-\-suffix\-size= size
 .RS
@@ -284,7 +305,7 @@ overriding the
 .I Quiet
 directive, if present.
 .TP
-.BR "\-z " "or " \-\-gzip
+.BR \-z\~ or\~ \-\-gzip
 Compress output dirfiles with gzip compression.  Output field files will have
 the suffix
 .I .gz
@@ -348,9 +369,17 @@ command line option.  Overrideable with the
 command line option.
 .TP
 .I InputSource
-A filename.  Name of the source to use if no
+A filename or host, optionally with a port number to use if no
 .I source
-is specified on the command line.
+or
+.IR host [: port ] 
+is specified on the command line.  Unlike sources specified on the command line,
+.B defile
+will not automatically determine whether the source specified with this
+directive is a local file or remote host.  It will be assumed that this is a
+local file unless the
+.I RemoteInputSource
+directive is also set.
 .TP
 .I OutputCurFileName
 A filename.  Name of the curfile to use if the 
@@ -381,14 +410,22 @@ is not running as a daemon (with the
 .B \-d
 command line option).
 .TP
-.I QuendiHost
-A hostname or IP address.
-.TP
 .I Quiet
 A boolean.  Supress normal output to the TTY.  Equivalent to the
 .B \-q
 command line option.  Overrideable with the
 .B \-\-verbose
+command line option.
+.TP
+.I RemoteInputSource
+A boolean.  Assume that the input source declared with the
+.I InputSource
+directive is a remote host and not a local
+filename.  Equivalent to the
+.B \-n
+command line option, except that this directive is never consulted when a source
+is provided on the command line.  Overrideable with the
+.B \-l
 command line option.
 .TP
 .I RemountPath
@@ -433,6 +470,31 @@ A boolean.  Write a curfile pointing to the output dirfile.  Equivalent to the
 command line option.  Overrideable with the
 .B \-\-no\-curfile
 command line option.
+.PP
+A simple configuration file might look like:
+.PP
+.nf
+       # Sample Configuration file
+       InputSource /mnt/decom/etc/decom.cur
+                                       # Source curfile
+       Persistent                      # Live data: keep alive
+       RemountedSource                 # /mnt/decom is a NFS mount
+       WriteCurFile                    # Write an ouput curfile
+.fi
+.PP
+A more complex case would be:
+.PP
+.nf
+       #an archiving defile daemon
+       InputSource arwen:44144
+       RemoteInputSource
+       Daemonise
+       WriteCurFile
+       OutputCurFile /data/etc/archive.cur
+       CompressedOutput
+       PidFile /var/run/decom.pid
+       OutputDirectory /data/archive
+.fi
 
 .SH FILES
 .TP

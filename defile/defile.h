@@ -23,7 +23,9 @@
 #ifndef DEFILE_H
 #define DEFILE_H
 
-#include <sys/time.h>
+#include <sys/time.h>  /* struct timeval, struct timezone */
+#include <netinet/in.h>
+#include <sys/socket.h> /* struct sockaddr_in */
 
 #include "frameread.h"
 
@@ -34,9 +36,13 @@
 #endif
 
 struct rc_struct {
-  int daemonise, force_stdio, framefile, gzip_output, persist, remount, silent;
-  int write_curfile;
+  int daemonise, force_quenya, force_stdio, framefile, gzip_output, persist;
+  int quenya, remount, silent, write_curfile;
   int write_mode; /* 0 = normal ; 1 = overwrite ; 2 = resume */
+
+  struct sockaddr_in addr;
+  int csock, dsock;
+
   int sufflen;
   long int resume_at;
   int source_is_curfile;
@@ -71,13 +77,16 @@ extern struct rc_struct rc;
 extern struct ri_struct ri;
 
 /* funxion prototypes */
-void  DirFileWriter(void);
-void  FrameFileReader(void);
-void  GetDirFile(char*, const char*, char*);
-void  PreInitialiseDirFile(void);
-void  InitialiseDirFile(int);
-void  PushFrame(unsigned short*);
-void  Remount(const char*, char*);
-void  CleanUp(void);
+void CleanUp(void);
+void DirFileWriter(void);
+void FrameFileReader(void);
+void GetDirFile(char*, const char*, char*, int);
+void InitClient(void);
+void InitReader(void);
+void InitialiseDirFile(int);
+void PreInitialiseDirFile(void);
+void PushFrame(unsigned short*);
+void QuenyaClient(void);
+void Remount(const char*, char*);
 
 #endif

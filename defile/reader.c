@@ -45,6 +45,19 @@ void ReaderDone(int signo) {
   pthread_exit(0);
 }
 
+void InitReader(void)
+{
+  if (rc.output_dirfile != NULL)
+    strncpy(rc.dirfile, rc.output_dirfile, FILENAME_LEN);
+  else
+    GetDirFile(rc.dirfile, rc.chunk, rc.dest_dir, 0);
+
+  /* Attempt to open the Specification file and read the channel lists */
+  ReconstructChannelLists(rc.chunk, rc.spec_file);
+  bprintf(info, "Frame size: %i bytes\n", DiskFrameSize);
+
+}
+
 void FrameFileReader(void)
 {
   FILE *stream = NULL;
@@ -158,7 +171,7 @@ void FrameFileReader(void)
 
       /* remake the destination dirfile (if necessary) */
       if (rc.output_dirfile == NULL) {
-        GetDirFile(rc.dirfile, rc.chunk, rc.dest_dir);
+        GetDirFile(rc.dirfile, rc.chunk, rc.dest_dir, 0);
 
         /* if the dirfile has changed, signal the writer to cycle */
         ri.dirfile_init = 0;
