@@ -1,4 +1,4 @@
-buildserial = @BUILDSERIAL@
+buildserial = @CMDVERSION@
 
 AUTOMAKE_OPTIONS = foreign
 blastcmd_SOURCES = blastcmd.c command_list.c command_list.h isc_protocol.h

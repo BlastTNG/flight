@@ -3,9 +3,6 @@ AC_INIT(blastcmd.c)
 AM_INIT_AUTOMAKE(blastcmd, 1.1.6)
 AM_CONFIG_HEADER(config.h)
 
-BUILDSERIAL=1
-AC_SUBST(BUILDSERIAL)
-
 AC_ARG_WITH( data-etc,
             [  --with-data-etc=DIR     put auxiliary data in DIR [/data/etc]],
             DATA_ETC_DIR="${withval}", DATA_ETC_DIR="/data/etc")
@@ -42,6 +39,11 @@ AC_PROG_CC
 AC_LANG_C
 AC_C_CONST
 AC_PROG_INSTALL
+
+AC_MSG_CHECKING(the revision number of the channel list)
+CMDVERSION=`grep command_list_serial ${srcdir}/command_list.c | gawk '{print $6}'`
+AC_MSG_RESULT([$CMDVERSION])
+AC_SUBST(CMDVERSION)
 
 dnl What are we installing?
 AC_MSG_CHECKING(whether we are installing blastcmd)
