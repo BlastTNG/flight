@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [ `hostname` = "ecosmo.physics.upenn.edu" ]
+then
+  echo "BOLOTEST = -DBOLOTEST" > Makefile.config ;
+else
+  touch Makefile.config ;
+fi;
