@@ -8,10 +8,10 @@
 
 #include "bbc_pci.h"
 
-#define F1LEN 10
-#define F2LEN 5
+#define F1LEN 0x110
+#define F2LEN 0
 
-#define WBUF write(fp, (void *)buf, 2*sizeof(unsigned int))
+#define WBUF {write(fp, (void *)buf, 2*sizeof(unsigned int)); usleep(1000);}
 
 int main(int argc, char *argv[]) {
   int fp;
@@ -37,8 +37,12 @@ int main(int argc, char *argv[]) {
   buf[1] = BBC_FSYNC;
   WBUF;
   
+  buf[0] = BBCPCI_WFRAME1_ADD(F1LEN);
+  buf[1] = BBC_ENDWORD;
+  WBUF;
+
   buf[0] = BBCPCI_WFRAME2_ADD(0);
-  buf[1] = BBC_FSYNC;
+  buf[1] = BBC_FSYNC| 2;
   WBUF;
   
   for (i=1; i<F1LEN; i++) {
@@ -48,7 +52,7 @@ int main(int argc, char *argv[]) {
   }
   buf[0] = BBCPCI_WFRAME1_ADD(i);
   buf[1] = BBC_ENDWORD;
-  WBUF;
+  //WBUF;
 
   for (i=1; i<F2LEN; i++) {
     buf[0] = BBCPCI_WFRAME2_ADD(i);
@@ -66,23 +70,24 @@ int main(int argc, char *argv[]) {
 /*   } */
   
   ioctl(fp, BBCPCI_IOC_SYNC);
-  //getchar();
+  getchar();
 
   while (1) {
     while (read(fp, inbuf, BBCPCI_SIZE_UINT)>0) {
       if (inbuf[0] == BBC_FSYNC) {
         buf[0] = BBCPCI_WFRAME1_ADD(1);
-        buf[1] = frame++;
+        buf[1] = 0x55550000 | frame++;
         WBUF;
-        //printf("."); fflush(stdout);
-        printf("------------------------------\n");
-      printf("%x %x %x %x %x\n", ioctl(fp, BBCPCI_IOC_READBUF_RP),
-	     ioctl(fp, BBCPCI_IOC_CBCOUNTER), ioctl(fp, BBCPCI_IOC_JIFFIES),
-	     ioctl(fp, BBCPCI_IOC_COUNTER), inbuf[0]);
+        printf("."); fflush(stdout);
+        //printf("------------------------------\n");
+       //printf("%x %x %x %x %x\n", ioctl(fp, BBCPCI_IOC_READBUF_RP),
+	     //ioctl(fp, BBCPCI_IOC_CBCOUNTER), ioctl(fp, BBCPCI_IOC_JIFFIES),
+	     //ioctl(fp, BBCPCI_IOC_COUNTER), inbuf[0]);
       }
-/*       printf("%x %x %x %x %x\n", ioctl(fp, BBCPCI_IOC_READBUF_RP), */
-/* 	     ioctl(fp, BBCPCI_IOC_CBCOUNTER), ioctl(fp, BBCPCI_IOC_JIFFIES), */
-/* 	     ioctl(fp, BBCPCI_IOC_COUNTER), inbuf[0]); */
+      if ((inbuf[0] & 0xffff0000) == 0x55550000) printf("%x\n", inbuf[0]);
+      //printf("%x %x %x %x %x\n", ioctl(fp, BBCPCI_IOC_READBUF_RP), 
+	    // ioctl(fp, BBCPCI_IOC_CBCOUNTER), ioctl(fp, BBCPCI_IOC_JIFFIES), 
+      //ioctl(fp, BBCPCI_IOC_COUNTER), inbuf[0]); 
     }
     //printf("%d %d\n", time(NULL), ioctl(fp, BBCPCI_IOC_COUNTER));
     usleep(10000);

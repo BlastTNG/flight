@@ -9,6 +9,7 @@
 #include <asm/io.h>
 #include <asm/uaccess.h>
 #include <linux/pci.h>
+#include <linux/delay.h>
 
 /* bbc.h includes ioctl definitions, etc - stuff needed to use the bbc device */
 #include "bbc_pci.h"
@@ -41,6 +42,7 @@
 #define TX_BUFFER_SIZE  16380 
 #define BI0_BUFFER_SIZE (624*25)
 
+#define WRITEL_S(x,y) {writel(x,y);udelay(2);}
 /********************************************************************/
 /* Define structures and locally global variables                   */
 /********************************************************************/
@@ -114,9 +116,9 @@ static void timer_callback(unsigned long x) {
     
         while ((n_written < BBCPCI_IR_WRITE_BUF_SIZE) &&
                (tx_buffer.i_in != tx_buffer.i_out)) {
-          writel(tx_buffer.add[tx_buffer.i_out], bbcpci_membase + write_buf_p);
+          WRITEL_S(tx_buffer.add[tx_buffer.i_out], bbcpci_membase + write_buf_p);
           write_buf_p += sizeof(unsigned int);
-          writel(tx_buffer.data[tx_buffer.i_out], bbcpci_membase + write_buf_p);
+          WRITEL_S(tx_buffer.data[tx_buffer.i_out], bbcpci_membase + write_buf_p);
           write_buf_p += sizeof(unsigned int);
       
           tx_buffer.i_out++;
@@ -128,7 +130,7 @@ static void timer_callback(unsigned long x) {
         }
     
         write_buf_p -= 2 * BBCPCI_SIZE_UINT;
-        writel((unsigned int)write_buf_p, bbcpci_membase +
+        WRITEL_S((unsigned int)write_buf_p, bbcpci_membase +
 	                                        BBCPCI_ADD_WRITE_BUF_P);
       }
     }
@@ -138,12 +140,11 @@ static void timer_callback(unsigned long x) {
       while (((write_buf_p = readl(bbcpci_membase + BBCPCI_ADD_BI0_WP)) !=
 	           readl(bbcpci_membase + BBCPCI_ADD_BI0_RP)) &&
 	           (bi0_buffer.i_in != bi0_buffer.i_out)) {
-        writel(bi0_buffer.data[bi0_buffer.i_out], bbcpci_membase + write_buf_p);
-        printk("--> %8x\n", bi0_buffer.data[bi0_buffer.i_out]);
+        WRITEL_S(bi0_buffer.data[bi0_buffer.i_out], bbcpci_membase + write_buf_p);
         write_buf_p += BBCPCI_SIZE_UINT;
         if (write_buf_p >= BBCPCI_IR_BI0_BUF_END)
           write_buf_p = BBCPCI_IR_BI0_BUF;
-        writel((unsigned int)write_buf_p, bbcpci_membase + BBCPCI_ADD_BI0_WP);
+        WRITEL_S((unsigned int)write_buf_p, bbcpci_membase + BBCPCI_ADD_BI0_WP);
         bi0_buffer.i_out++;
         if (bi0_buffer.i_out >= TX_BUFFER_SIZE)
           bi0_buffer.i_out = 0;
@@ -191,7 +192,7 @@ static ssize_t read_bbc(struct file * filp, char * buf, size_t count,
     else {
       b = readl(bbcpci_membase + rp);
       copy_to_user(buf, (void *)&b, BBCPCI_SIZE_UINT);
-      writel(rp, bbcpci_membase + BBCPCI_ADD_READ_BUF_RP); // update read pointer
+      WRITEL_S(rp, bbcpci_membase + BBCPCI_ADD_READ_BUF_RP); // update read pointer
       return BBCPCI_SIZE_UINT;
     }
   } else if (minor == bi0_minor) {
@@ -328,6 +329,11 @@ static int open_bbc(struct inode *inode, struct file * filp){
   int minor = MINOR(inode->i_rdev);
 
   if (minor == bbc_minor) {
+    if (bbc_allocated) {
+      printk("BBC device is busy\n");
+      return -EBUSY;
+    }
+		  
     filp->private_data = (void *) &bbc_minor;
     cbcounter = 0;
 
@@ -343,8 +349,11 @@ static int open_bbc(struct inode *inode, struct file * filp){
     }
   
     bbc_allocated = 1;
-  }
-  else if (minor == bi0_minor) {
+  } else if (minor == bi0_minor) {
+    if (bi0_allocated) {
+      printk("BI0 device is busy\n");
+      return -EBUSY;
+    }
     filp->private_data = (void *) &bi0_minor;
 
     /* Initialize bi0 buffer. */
@@ -376,7 +385,7 @@ static int open_bbc(struct inode *inode, struct file * filp){
     /* Reset the card. */
     bbcpci_membase = ioremap_nocache(bbcpci_membase_raw, BBCPCI_MEMSIZE);
     bitfield = BBCPCI_COMREG_RESET;
-    writel(bitfield, bbcpci_membase + BBCPCI_ADD_COMREG);
+    WRITEL_S(bitfield, bbcpci_membase + BBCPCI_ADD_COMREG);
 
     /* Start the call-back timer. */
     timer_on = 1;
@@ -401,8 +410,7 @@ static int release_bbc(struct inode *inode, struct file *filp) {
     kfree(tx_buffer.data);
     kfree(tx_buffer.add);
     bbc_allocated = 0;
-  } 
-  else {
+  } else {
     kfree(bi0_buffer.data);
     bi0_allocated = 0;
   }
@@ -445,11 +453,11 @@ static int ioctl_bbc (struct inode *inode, struct file * filp,
     switch(cmd) {
     case BBCPCI_IOC_RESET:    /* Reset the BBC board - clear fifo, registers */
       bitfield = BBCPCI_COMREG_RESET;
-      writel(bitfield, bbcpci_membase + BBCPCI_ADD_COMREG);
+      WRITEL_S(bitfield, bbcpci_membase + BBCPCI_ADD_COMREG);
       break;
     case BBCPCI_IOC_SYNC:     /* Clear read buffers and restart frame. */
       bitfield = BBCPCI_COMREG_SYNC;
-      writel(bitfield, bbcpci_membase + BBCPCI_ADD_COMREG);
+      WRITEL_S(bitfield, bbcpci_membase + BBCPCI_ADD_COMREG);
       break;
     case BBCPCI_IOC_VERSION:  /* Get the current version. */
       ret = readl(bbcpci_membase + BBCPCI_ADD_VERSION);
@@ -524,6 +532,11 @@ int init_bbc_pci(void) {
     return -EIO;
   }
   
+  printk("MESSAGE TO BARTH:\nThe biphase appears to work now.  You can "
+         "see for yourself by running test_biphase in this directory.  Data "
+         "can be read back by using test_decom on galadriel in "
+         "/home/hincks/code/decom. -AH\n");
+
   dev = pci_find_device(BBCPCI_VENDOR, BBCPCI_ID, dev);
   if (!dev) {
     printk("Unable to find BBC_PCI card.\n");
