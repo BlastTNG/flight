@@ -1073,12 +1073,15 @@ void MainForm::UpdateData() {
   time_t timetmp;
   struct tm *currTime;
   char tmp[255];
+  int updating;
 
-  if (DataSource->update())
+  if (DataSource->update()) {
+    updating = 1;
     Picture->TurnOn(ShowPicture);
-  else {
+  } else {
     // Blank palantir
     Picture->TurnOff(ShowPicture);
+    updating = 0;
     if (NoIncomingOn) {
       if (++NoIncoming == 3) {
         NoIncoming = 0;
@@ -1228,7 +1231,7 @@ void MainForm::UpdateData() {
             currQtLabel->setText(tr("NAN"));
             currLabel->laststyle = 1;
           }
-        } else {
+        } else if (updating) {
           // Push value onto the fifo
           int dlength = currDeriv->length;
           int emptyfifo = 0;
