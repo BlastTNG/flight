@@ -131,9 +131,9 @@ void IntegratingStarCamera(void)
           fprintf(isc_log, "%s: %i %i - %.4lf %.4lf %.4lf\n", ctime(&t),
               ISCSolution[iscdata_index].framenum,
               ISCSolution[iscdata_index].n_blobs,
-              ISCSolution[iscdata_index].ra,
-              ISCSolution[iscdata_index].dec,
-              ISCSolution[iscdata_index].sigma);
+              ISCSolution[iscdata_index].ra * RAD2DEG,
+              ISCSolution[iscdata_index].dec * RAD2DEG,
+              ISCSolution[iscdata_index].sigma * RAD2DEG * 3600.);
           fflush(isc_log);
         }
 

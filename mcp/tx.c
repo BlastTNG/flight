@@ -856,7 +856,6 @@ int GetLockBits(int acs0bits) {
 
 }
 
-#define ISC_TRIG_LEN 20
 #define ISC_TRIG_PER 100
 /*****************************************************************
  *                                                               *
@@ -947,7 +946,7 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
     iscBits = Balance(iscBits, slowTxFields);
   }
 
-  if (isc_trigger_count<ISC_TRIG_LEN) {
+  if (isc_trigger_count<CommandData.ISC_pulse_width) {
     iscBits|=ISC_TRIGGER;
   }
   isc_trigger_count++;
@@ -976,14 +975,11 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
 }
 
 /*****************************************************************
-*                                                               *
  * SyncADC: check to see if any boards need to be synced and     *
-*    send the sync bit if they do.  Only one board can be       *
-*    synced in each superframe.                                 *
-*                                                               *
+ * send the sync bit if they do.  Only one board can be synced   *
+ * in each superframe.                                           *
  *****************************************************************/
-void SyncADC (int TxIndex,
-    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
+void SyncADC (int TxIndex, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int syncCh = -1, syncInd, nextInd;
   static int statusInd[17];
   static int statusCh[17];
@@ -1377,10 +1373,14 @@ void StoreData(int index, unsigned int* Txframe,
       (unsigned int)((ISCSolution[i_isc].dec + M_PI / 2) * 2. * RAD2LI) >> 16);
   WriteSlow(isc_decCh + 1, isc_decInd,
       (unsigned int)((ISCSolution[i_isc].dec + M_PI / 2) * 2.* RAD2LI));
-  WriteSlow(isc_sigmaCh, isc_sigmaInd,
-      (unsigned int)(ISCSolution[i_isc].sigma * RAD2I));
   WriteSlow(isc_nblobsCh, isc_nblobsInd,
       (unsigned int)ISCSolution[i_isc].n_blobs);
+  if (ISCSolution[i_isc].sigma * RAD2ARCSEC > 65535) {
+    WriteSlow(isc_sigmaCh, isc_sigmaInd, 65536);
+  } else {
+    WriteSlow(isc_sigmaCh, isc_sigmaInd,
+        (unsigned int)(ISCSolution[i_isc].sigma * RAD2ARCSEC));
+  }
 
   WriteSlow(isc_stateCh, isc_stateInd,
       (unsigned int)(CommandData.ISCState.pause * 2 +
@@ -1399,19 +1399,19 @@ void StoreData(int index, unsigned int* Txframe,
   WriteSlow(isc_mdistCh, isc_mdistInd,
       (unsigned int)CommandData.ISCState.mult_dist);
   WriteSlow(isc_maglimitCh, isc_maglimitInd,
-      (unsigned int)CommandData.ISCState.mag_limit);
+      (unsigned int)(CommandData.ISCState.mag_limit * 1000));
   WriteSlow(isc_nradCh, isc_nradInd,
-      (unsigned int)CommandData.ISCState.norm_radius);
+      (unsigned int)(CommandData.ISCState.norm_radius * RAD2I));
   WriteSlow(isc_lradCh, isc_lradInd,
-      (unsigned int)CommandData.ISCState.lost_radius);
+      (unsigned int)(CommandData.ISCState.lost_radius * RAD2I));
   WriteSlow(isc_tolCh, isc_tolInd,
-      (unsigned int)CommandData.ISCState.tolerance);
+      (unsigned int)(CommandData.ISCState.tolerance * RAD2ARCSEC));
   WriteSlow(isc_mtolCh, isc_mtolInd,
-      (unsigned int)CommandData.ISCState.match_tol);
+      (unsigned int)(CommandData.ISCState.match_tol * 65535.));
   WriteSlow(isc_qtolCh, isc_qtolInd,
-      (unsigned int)CommandData.ISCState.quit_tol);
+      (unsigned int)(CommandData.ISCState.quit_tol * 65535.));
   WriteSlow(isc_rtolCh, isc_rtolInd,
-      (unsigned int)CommandData.ISCState.rot_tol);
+      (unsigned int)(CommandData.ISCState.rot_tol * RAD2I));
 }
 
 

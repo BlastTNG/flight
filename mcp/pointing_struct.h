@@ -27,6 +27,8 @@
 #define RAD2SEC (180. * 3600. / M_PI / 15.)  /* radians to seconds (of time) */
 #define SEC2RAD (1. / RAD2SEC)
 #define DEG2RAD (M_PI / 180.)  /* degrees to radians */
+#define RAD2DEG (180. / M_PI)  /* radians to degrees */
+#define RAD2ARCSEC (180. * 3600. / M_PI)  /* radians to arcseconds */
 
 /**********************************************/
 /*  VSCDataStruct                             */
@@ -128,30 +130,30 @@ extern struct SIPDataStruct SIPData;
 struct PointingDataStruct {
   double az;        // degrees
   double el;        // degrees
-  double gy1_offset;  w f
-  double gy2_offset;  w f
-  double gy3_offset;  w f
-  double gy_roll_amp;  w f
-  double lat;       // degrees  w f
-  double lon;       // degrees  w f
-  int mcp_frame;  w f
-  time_t t;  w f
-  time_t lst;  w f
-  double mag_az;   // degrees  w f
-  double mag_model; // degrees  w f
-  double mag_sigma; // degrees  w f
-  double dgps_az; // degrees  w f
-  double dgps_sigma; // degrees  w f
-  double ss_az; // degrees  w f
-  double ss_sigma; // degrees  w f
-  double sun_az; // degrees current calculated az of sun  w f
-  double isc_az; // degrees  w f
-  double isc_el; // degrees  w f
-  double isc_sigma; // degrees  w f
-  double enc_el;  w f
-  double enc_sigma;  w f
-  double clin_el;  w f
-  double clin_sigma;  w f
+  double gy1_offset;
+  double gy2_offset;
+  double gy3_offset;
+  double gy_roll_amp;
+  double lat;       // degrees
+  double lon;       // degrees  
+  int mcp_frame;  
+  time_t t;  
+  time_t lst;  
+  double mag_az;   // degrees  
+  double mag_model; // degrees  
+  double mag_sigma; // degrees  
+  double dgps_az; // degrees  
+  double dgps_sigma; // degrees  
+  double ss_az; // degrees  
+  double ss_sigma; // degrees  
+  double sun_az; // degrees current calculated az of sun  
+  double isc_az; // degrees  
+  double isc_el; // degrees  
+  double isc_sigma; // degrees  
+  double enc_el;  
+  double enc_sigma;  
+  double clin_el;  
+  double clin_sigma;  
 
 };
 
