@@ -7,8 +7,8 @@
 
 #include "bbc_pci.h"
 
-#define FRAMELEN    0x5555
-#define DIVIDER     0x0055
+#define FRAMELEN    0x555
+#define DIVIDER     0x002
 
 int main(int argc, char *argv[]) {
   int fp, nr;
@@ -24,16 +24,6 @@ int main(int argc, char *argv[]) {
   
   system("clear");
   printf("NIOS program version is %d.\n", ioctl(fp, BBCPCI_IOC_VERSION));
-  printf("Resetting card ");
-  fflush(stdout);
-  ioctl(fp, BBCPCI_IOC_RESET);
-  for (k = 0; ioctl(fp, BBCPCI_IOC_COMREG); k++) {
-    if (!(k % 10000)) {
-      printf(".");
-      fflush(stdout);
-    }
-  }
-  printf("\n");
 
   /* Biphase. */ 
   i[0] = BBC_BI0_SYNC;
@@ -44,11 +34,10 @@ int main(int argc, char *argv[]) {
   printf("Press <ENTER>.\n");
   getchar();
   
-  while (1) {
     write(fp, (void *)i, (FRAMELEN - DIVIDER) * sizeof(unsigned short));
     write(fp, (void *)(i + FRAMELEN - DIVIDER), DIVIDER * 
-                                                sizeof(unsigned short));
-  }
+	  sizeof(unsigned short));    
+    while(1);
   
   return 0;
 }

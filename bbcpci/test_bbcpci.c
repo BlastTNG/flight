@@ -2,95 +2,84 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h> 
-#include <time.h>
 
 #include "bbc_pci.h"
 
-#define F1LEN 0x110
-#define F2LEN 0
-
-#define WBUF {write(fp, (void *)buf, 2*sizeof(unsigned int)); usleep(1000);}
+#define FRAMELEN  0x110
 
 int main(int argc, char *argv[]) {
   int fp;
-  unsigned buf[2], inbuf[1];
-  int ret,i,frame = 0;
+  unsigned int i[0x1000 * 2];
+  unsigned int j, k, numerrs, secret[2], oldsecret; 
   
   fp = open("/dev/bbcpci", O_RDWR);
   if (fp < 0) {
-    printf("Error opening BBCPCI\n");
+    fprintf(stderr, "Error opening BBCPCI\n");
     exit(0);
   }
-
-  //reset nios
-  //ioctl(fp, BBCPCI_IOC_RESET);
-  while (ioctl(fp, BBCPCI_IOC_COMREG) !=0) {
-     printf("%x %d\n", ioctl(fp, BBCPCI_IOC_COMREG), ioctl(fp, BBCPCI_IOC_READBUF_WP)); 
+  system("clear");
+  fprintf(stderr, "NIOS program version %8x.\n", ioctl(fp, BBCPCI_IOC_VERSION));
+  
+  /* BBC 2. */
+  i[0] = BBCPCI_WFRAME2_ADD(0); 
+  i[1] = BBC_FSYNC | 2;
+  for(k = 1; k < FRAMELEN+1; k++) {
+      i[2*k] = BBCPCI_WFRAME2_ADD(k);
+      i[2*k+1] = BBC_DATA((0xa000 | k)) | BBC_NODE(8) | BBC_CH(0) | BBC_WRITE;
+  }
+  i[2*k] = BBCPCI_WFRAME2_ADD(FRAMELEN+1);
+  i[2*k+1] = BBC_ENDWORD;
+  k++;
+  
+  for (j = 0; j < k; j++)  {
+    fprintf(stderr, "1: %02x ", write(fp, (void *)(i + 2 * j), 2 * BBCPCI_SIZE_UINT));
+    fprintf(stderr, "%08x %08x\n", i[j * 2], i[j * 2 + 1]);
   }
 
-  printf("NIOS program version is %d.\n", ioctl(fp, BBCPCI_IOC_VERSION));
- 
-  /* fill frames */
-  buf[0] = BBCPCI_WFRAME1_ADD(0);
-  buf[1] = BBC_FSYNC;
-  WBUF;
-  
-  buf[0] = BBCPCI_WFRAME1_ADD(F1LEN);
-  buf[1] = BBC_ENDWORD;
-  WBUF;
-
-  buf[0] = BBCPCI_WFRAME2_ADD(0);
-  buf[1] = BBC_FSYNC| 2;
-  WBUF;
-  
-  for (i=1; i<F1LEN; i++) {
-    buf[0] = BBCPCI_WFRAME1_ADD(i);
-    buf[1] = i;
-    WBUF;
+  /* 
+  usleep(6000000); 
+  for (oldsecret = 0xabcdabcd, k = 0; k < 100000; k++) {
+    ioctl(fp, BBCPCI_IOC_SECRET, &secret);
+    if (oldsecret != secret[0])
+      printf("===> %08x %08x\n", secret[0], secret[1]);
+    oldsecret = secret[0];
   }
-  buf[0] = BBCPCI_WFRAME1_ADD(i);
-  buf[1] = BBC_ENDWORD;
-  //WBUF;
-
-  for (i=1; i<F2LEN; i++) {
-    buf[0] = BBCPCI_WFRAME2_ADD(i);
-    buf[1] = 0x2000 + i;
-    WBUF;
+  */
+  i[0] = BBCPCI_WFRAME1_ADD(0); 
+  i[1] = BBC_FSYNC | 1;
+  i[2] = BBCPCI_WFRAME1_ADD(1); 
+  i[3] = BBC_DATA((0xb000 | 1)) | BBC_NODE(9) | BBC_CH(0) | BBC_WRITE;
+  i[4] = BBCPCI_WFRAME1_ADD(2); 
+  i[5] = BBC_DATA((0xb000 | 2)) | BBC_NODE(9) | BBC_CH(1) | BBC_WRITE;
+  i[6] = BBCPCI_WFRAME1_ADD(3);
+  i[7] = BBC_ENDWORD;
+  for (k = 0; k < 4; k++) {
+    fprintf(stderr, "2: %02x  ", write(fp, (void *)(i + k * 2), 2 * BBCPCI_SIZE_UINT));
+    fprintf(stderr, "%08x %08x\n", i[k * 2], i[k * 2 + 1]);
   }
-  buf[0] = BBCPCI_WFRAME2_ADD(i);
-  buf[1] = BBC_ENDWORD;
-  WBUF;
-
-  /* for (i=0; i<1000; i++) { */
-/*     ret = ioctl(fp, BBCPCI_IOC_WRITEBUF_WP); */
-/*     printf("writebuf: %x %d %d \n", ret, ioctl(fp, BBCPCI_IOC_WRITEBUF), ioctl(fp, BBCPCI_IOC_CBCOUNTER)); */
-/*     usleep(1000); */
-/*   } */
   
-  ioctl(fp, BBCPCI_IOC_SYNC);
+  //usleep(6000000); 
+  //for (oldsecret = 0xabcdabcd, k = 0; k < 100000; k++) {
+  //  ioctl(fp, BBCPCI_IOC_SECRET, &secret);
+  //  if (oldsecret != secret[0])
+  //    printf("===> %08x %08x\n", secret[0], secret[1]);
+  //  oldsecret = secret[0];
+ // }
   getchar();
-
+  
+  usleep(100000);
+  ioctl(fp, BBCPCI_IOC_SYNC);
+  usleep(100000);
+  
+  numerrs = 0;
+  
   while (1) {
-    while (read(fp, inbuf, BBCPCI_SIZE_UINT)>0) {
-      if (inbuf[0] == BBC_FSYNC) {
-        buf[0] = BBCPCI_WFRAME1_ADD(1);
-        buf[1] = 0x55550000 | frame++;
-        WBUF;
-        printf("."); fflush(stdout);
-        //printf("------------------------------\n");
-       //printf("%x %x %x %x %x\n", ioctl(fp, BBCPCI_IOC_READBUF_RP),
-	     //ioctl(fp, BBCPCI_IOC_CBCOUNTER), ioctl(fp, BBCPCI_IOC_JIFFIES),
-	     //ioctl(fp, BBCPCI_IOC_COUNTER), inbuf[0]);
-      }
-      if ((inbuf[0] & 0xffff0000) == 0x55550000) printf("%x\n", inbuf[0]);
-      //printf("%x %x %x %x %x\n", ioctl(fp, BBCPCI_IOC_READBUF_RP), 
-	    // ioctl(fp, BBCPCI_IOC_CBCOUNTER), ioctl(fp, BBCPCI_IOC_JIFFIES), 
-      //ioctl(fp, BBCPCI_IOC_COUNTER), inbuf[0]); 
+    for (k = 0; read(fp, (void *)(&j), sizeof(unsigned int)) == 4; k++) {
+      printf("%03x %08x\n", k, j);  
     }
-    //printf("%d %d\n", time(NULL), ioctl(fp, BBCPCI_IOC_COUNTER));
-    usleep(10000);
   }
   
   return 0;
