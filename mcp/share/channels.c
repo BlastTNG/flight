@@ -187,7 +187,7 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
 
   mprintf(MCP_INFO, "Slow Channels per BiPhase Frame: %i\n", slowsPerBi0Frame);
 
-#elif VERBOSE
+#elif defined VERBOSE
   mputs(MCP_INFO, "Wrote version " SPEC_VERSION " specification file.\n");
 #endif
 }
