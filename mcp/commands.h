@@ -442,7 +442,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"max_blobs", "Set the max # of blobs used in solution", GR_ISC, 1,
+  {"max_blobs", "Max # of blobs used in solution", GR_ISC, 1,
     {
       {"# of blobs", 0, MAX_ISC_BLOBS, 'i', "ISC_MAXBLOBS"}
     }
