@@ -140,9 +140,9 @@ struct CommandDataStruct {
   struct PumpStruct pumps;
 
   /* sensors output: read in mcp:SensorReader() */
-  short fan;
-  short T;
-  unsigned int df;
+  unsigned short fan;
+  unsigned short temp1, temp2, temp3;
+  unsigned short df;
 
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
 

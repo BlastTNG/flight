@@ -86,5 +86,4 @@ sslutNA.o: sslutNA.h sslutNA.c mcp.h
 install: mcp
 	install -d -m 777 /data/rawdir
 	install -m 755 mcp /usr/local/bin
-	install -m 755 doSensors /usr/local/bin
 	cd etc && $(MAKE) install

@@ -236,24 +236,46 @@ void merror(int flag, char* fmt, ...) {
 }
 
 void SensorReader(void) {
-  int fan, T;
+  int data;
   int nr;
   struct statvfs vfsbuf;
 
-  FILE *fp;
+  FILE *stream;
 
   mputs(MCP_STARTUP, "SensorReader startup\n");
 
   while (1) {
-    fp = fopen("/data/rawdir/sensors.dat", "r");
-    if (fp !=NULL) {
-      nr = fscanf(fp, "%d %d\n", &fan, &T);
-      if (nr == 2) {
-        CommandData.T = T;
-        CommandData.fan = fan;
-      }
-      fclose(fp);
-    }
+    if ((stream = fopen("/sys/bus/i2c/devices/3-0290/temp1_input", "r"))
+        != NULL) {
+      if ((nr = fscanf(stream, "%i\n", &data)) == 1)
+        CommandData.temp1 = data / 10;
+      fclose(stream);
+    } else
+      merror(MCP_WARNING, "Cannot read temp1 from I2C bus");
+
+    if ((stream = fopen("/sys/bus/i2c/devices/3-0290/temp2_input", "r"))
+        != NULL) {
+      if ((nr = fscanf(stream, "%i\n", &data)) == 1)
+        CommandData.temp2 = data / 10;
+      fclose(stream);
+    } else
+      merror(MCP_WARNING, "Cannot read temp2 from I2C bus");
+
+    if ((stream = fopen("/sys/bus/i2c/devices/3-0290/temp3_input", "r"))
+        != NULL) {
+      if ((nr = fscanf(stream, "%i\n", &data)) == 1)
+        CommandData.temp3 = data / 10;
+      fclose(stream);
+    } else
+      merror(MCP_WARNING, "Cannot read temp3 from I2C bus");
+
+    if ((stream = fopen("/sys/bus/i2c/devices/3-0290/fan3_input", "r"))
+        != NULL) {
+      if ((nr = fscanf(stream, "%i\n", &data)) == 1)
+        CommandData.fan = data;
+      fclose(stream);
+    } else
+      merror(MCP_WARNING, "Cannot read fan3 from I2C bus");
 
     if (statvfs("/data", &vfsbuf))
       merror(MCP_WARNING, "Cannot stat filesystem");
