@@ -446,18 +446,23 @@ int quendi_read_data(int new_chunk, FILE** stream, const char* chunk,
   struct stat chunk_stat;
 
   if (new_chunk) {
+    printf("New chunk ok\n");
     if ((*stream = fopen(chunk, "r")) == NULL)
       berror(fatal, "cannot open `%s'", chunk);
 
+    printf("New chunk fopen ok\n");
     if (seek_to > 0) {
       fseek(*stream, seek_to, SEEK_SET);
       seek_to = 0;
+      printf("New chunk fseek ok\n");
     }
 
     if (stat(chunk, &chunk_stat))
       berror(fatal, "cannot stat `%s'", chunk);
 
     *chunk_total = chunk_stat.st_size / frame_size;
+    printf("New chunk stat ok (%i)\n", *chunk_total);
+
   }
 
   clearerr(*stream);
@@ -505,21 +510,23 @@ void quendi_send_data(int dsock, unsigned frame_size, int block_size)
 }
 
 int quendi_advance_data(FILE* stream, int persist, char* chunk, int sufflen,
-    int *chunk_total)
+    int *chunk_total, const char* curfile_name, char* curfile_val)
 {
   if (!feof(stream))
     return FR_MORE_IN_FILE;
 
-  return StreamToNextChunk(persist, chunk, sufflen, chunk_total, NULL, NULL);
+  return StreamToNextChunk(persist, chunk, sufflen, chunk_total, curfile_name,
+      curfile_val);
 }
 
-void quendi_reader_shutdown(FILE* stream)
+void quendi_reader_shutdown(FILE* stream, int flag)
 {
   bfree(fatal, quendi_input_buffer[0]);
 
   fclose(stream);
 
-  quendi_respond(QUENYA_RESPONSE_TRANS_COMPLETE, NULL);
+  if (flag)
+    quendi_respond(QUENYA_RESPONSE_TRANS_COMPLETE, NULL);
 }
 
 void quendi_send_spec(int dsock, const char* name)
@@ -576,7 +583,7 @@ int quendi_stage_data(const char* file, unsigned long pos, int sufflen,
   if (streamed_here) {
     snprintf(buffer, NAME_MAX + 60, "%lu:%s Data Continues: New Data Staged",
         pos, source);
-    quendi_respond(QUENYA_RESPONSE_DATA_STAGED, buffer);
+    quendi_respond(QUENYA_RESPONSE_STAGED_NEXT, buffer);
   } else {
     snprintf(buffer, NAME_MAX + 60, "%lu:%s Data Staged", pos, source);
     quendi_respond(QUENYA_RESPONSE_DATA_STAGED, buffer);

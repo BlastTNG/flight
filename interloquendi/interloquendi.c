@@ -151,7 +151,7 @@ void Connection(int csock)
           if (!data.sending_data)
             quendi_respond(QUENYA_RESPONSE_PORT_INACTIVE, NULL);
           else {
-            quendi_reader_shutdown(data.stream);
+            quendi_reader_shutdown(data.stream, 1);
             data.sending_data = 0;
           }
           break;
@@ -167,31 +167,61 @@ void Connection(int csock)
             quendi_respond(QUENYA_RESPONSE_OK, NULL);
           }
           break;
+        case QUENYA_COMMAND_DATA:
+          if (data.sock < 0) {
+            quendi_respond(QUENYA_RESPONSE_PORT_NOT_OPEN, NULL);
+            break;
+          } else if (!data.staged) {
+            quendi_respond(QUENYA_RESPONSE_NO_DATA_STAGED, NULL);
+            break;
+          } else if (data.sending_data) {
+            quendi_respond(QUENYA_RESPONSE_PORT_ACTIVE, NULL);
+            break;
+          }
+
+          data.seek_to = quendi_reader_init(data.frame_size, data.pos,
+              data.chunk, data.name, options[CFG_SUFFIX_LENGTH].value.as_int);
+
+          /* The first read from the file always involves a new chunk */
+          data.new_chunk = 1;
+          data.chunk_total = 0;
+          data.frames_read = 0;
+          data.sending_data = 1;
+
+          /* Fallthrough */
         case QUENYA_COMMAND_CONT:
-          if (!data.sending_data)
+          if (n == QUENYA_COMMAND_CONT && !data.sending_data) {
             quendi_respond(QUENYA_RESPONSE_PORT_INACTIVE, NULL);
-          else {
-            data.port_active = 1;
-            do {
+            break;
+          }
+
+          data.port_active = 1;
+          do {
+            if (n != QUENYA_COMMAND_DATA) {
               n = quendi_advance_data(data.stream, data.persist, data.chunk,
-                  options[CFG_SUFFIX_LENGTH].value.as_int, &data.chunk_total);
+                  options[CFG_SUFFIX_LENGTH].value.as_int, &data.chunk_total,
+                  options[CFG_CUR_FILE].value.as_string, data.name);
 
               switch (n) {
                 case FR_DONE:
-                  quendi_reader_shutdown(data.stream);
+//                  printf("FR_DONE\n");
+                  quendi_reader_shutdown(data.stream, 1);
                   data.sending_data = 0; 
                   data.staged = 0;
                   data.port_active = 0;
                   break;
                 case FR_MORE_IN_FILE:
+//                  printf("FR_MORE_IN_FILE\n");
                   data.new_chunk = 0;
                   break;
                 case FR_NEW_CHUNK:
+//                  printf("FR_NEW_CHUNK\n");
                   fclose(data.stream);
                   data.new_chunk = 1;
                   break;
                 case FR_CURFILE_CHANGED:
-                  quendi_reader_shutdown(data.stream);
+//                  printf("FR_CURFILE_CHANGED\n");
+                  quendi_reader_shutdown(data.stream, 0);
                   data.sending_data = 0; 
                   data.port_active = 0;
                   if (GetCurFile(data.name, QUENDI_COMMAND_LENGTH) == NULL)
@@ -202,48 +232,29 @@ void Connection(int csock)
                         options[CFG_SUFFIX_LENGTH].value.as_int, 1);
                   }
                   break;
+                default:
+                  printf("huh? (%i)\n", n);
+                  exit(1);
               }
+            } else
+              n = FR_NEW_CHUNK;
 
-              if (n == FR_NEW_CHUNK || n == FR_MORE_IN_FILE)
-                /* read a block */
-                data.block_length = quendi_read_data(data.new_chunk,
-                    &data.stream, data.chunk, data.seek_to, &data.chunk_total,
-                    data.frame_size, &data.frames_read);
-              else
-                break;
-            } while (data.block_length <= 0);
+            if (n == FR_NEW_CHUNK || n == FR_MORE_IN_FILE) {
+              /* read a block */
+              data.block_length = quendi_read_data(data.new_chunk,
+                  &data.stream, data.chunk, data.seek_to, &data.chunk_total,
+                  data.frame_size, &data.frames_read);
 
-            if (n == FR_NEW_CHUNK || n == FR_MORE_IN_FILE)
-              /* send the block */
-              quendi_send_data(data.sock, data.frame_size, data.block_length);
-          }
-          break;
-        case QUENYA_COMMAND_DATA:
-          if (data.sock < 0)
-            quendi_respond(QUENYA_RESPONSE_PORT_NOT_OPEN, NULL);
-          else if (!data.staged)
-            quendi_respond(QUENYA_RESPONSE_NO_DATA_STAGED, NULL);
-          else if (data.sending_data)
-            quendi_respond(QUENYA_RESPONSE_PORT_ACTIVE, NULL);
-          else {
-            data.seek_to = quendi_reader_init(data.frame_size, data.pos,
-                data.chunk, data.name, options[CFG_SUFFIX_LENGTH].value.as_int);
+              data.seek_to = 0;
+              data.new_chunk = 0;
+//              printf("block size = %i\n", data.block_length);
+            } else
+              break;
+          } while (data.block_length <= 0);
 
-            /* The first read from the file always involves a new chunk */
-            data.new_chunk = 1;
-            data.chunk_total = 0;
-            data.frames_read = 0;
-            data.sending_data = 1;
-            data.port_active = 1;
-
-            /* read a block */
-            data.block_length = quendi_read_data(data.new_chunk, &data.stream,
-                data.chunk, data.seek_to, &data.chunk_total, data.frame_size,
-                &data.frames_read);
-
+          if (n == FR_NEW_CHUNK || n == FR_MORE_IN_FILE)
             /* send the block */
             quendi_send_data(data.sock, data.frame_size, data.block_length);
-          }
           break;
         case QUENYA_COMMAND_IDEN:
           QuendiData.access_level = 1;
@@ -472,6 +483,7 @@ int main(void)
   /* fill uninitialised options with default values */
   LoadDefaultConfig();
 
+#define DEBUG
 #ifndef DEBUG
   /* Fork to background */
   if ((pid = fork()) != 0) {

@@ -68,7 +68,9 @@ int quendi_advance_data(
     int,
     char*,
     int,
-    int*
+    int*,
+    const char*,
+    char*
     );
 
 int quendi_cmdnum(
@@ -110,7 +112,8 @@ unsigned long quendi_reader_init(
     );
 
 void quendi_reader_shutdown(
-    FILE*
+    FILE*,
+    int
     );
 
 int quendi_read_data(
