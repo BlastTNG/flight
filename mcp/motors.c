@@ -227,7 +227,7 @@ void WriteMot(int TxIndex, unsigned int *TxFrame, unsigned short *RxFrame,
   /* p term for pivot motor */
   WriteSlow(i_g_pivot, j_g_pivot, pivGainP);
   /* setpoint for reaction wheel */
-  WriteSlow(i_set_reac, j_set_reac, CommandData.pivot_gain.SP + 32768);
+  WriteSlow(i_set_reac, j_set_reac, CommandData.pivot_gain.SP);
 
 
   /***************************************************/
