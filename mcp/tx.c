@@ -795,7 +795,7 @@ void InitTxFrame(unsigned short *RxFrame)
           if (bus)
             RawNiosWrite(niosAddr, BBC_FSYNC | BBC_WRITE | BBC_NODE(63)
                 | BBC_CH(4) | 0xB008, NIOS_QUEUE);
-          else
+          else if (m == 0)
             /* this is address 0 in the NiosFrame; what _should_ go here is the
              * Bus 0 framesync.  Instead we write BBC_ENDWORD which effectively
              * traps Nios here, preventing it from trying to send out our frame
@@ -803,6 +803,9 @@ void InitTxFrame(unsigned short *RxFrame)
              * we'll write the framesync here and Nios will start sending out
              * the frame -- we flush this so it takes effect immediately. */
             RawNiosWrite(niosAddr, BBC_ENDWORD, NIOS_FLUSH);
+          else 
+            RawNiosWrite(niosAddr, BBC_FSYNC | BBC_WRITE | BBC_NODE(63)
+                | BBC_CH(0) | 0xEB90, NIOS_QUEUE);
         } else if (i == 1 && bus == 0) /* fastsamp lsb */
           RawNiosWrite(niosAddr, BBC_WRITE | BBC_NODE(63) | BBC_CH(1),
               NIOS_QUEUE);
