@@ -706,20 +706,29 @@ void CameraTrigger(int which)
         else {
           delay[which] = 0;
 
-          /* wait until we're below the slow speed */
-          if (fabs(axes_mode.az_vel) >= MAX_ISC_SLOW_PULSE_SPEED) {
-            if (!waiting && WHICH)
-              bprintf(info,
-                  "%iSC (t): Velocity wait starts (%.3f %.3f) <----- v\n",
-                  which, fabs(axes_mode.az_vel), MAX_ISC_SLOW_PULSE_SPEED);
-            waiting = 1;
-            return;
+          if (isc_pulses[which].is_fast) {
+            if (waiting)
+              bprintf(warning,
+                  "%s: aborted waiting for velocity on slow pulse\n",
+                  (which) ? "Osc" : "Isc");
+            waiting = 0;
+          } else {
+            /* wait until we're below the slow speed */
+            if (fabs(axes_mode.az_vel) >= MAX_ISC_SLOW_PULSE_SPEED) {
+              if (!waiting && WHICH)
+                bprintf(info,
+                    "%iSC (t): Velocity wait starts (%.3f %.3f) <----- v\n",
+                    which, fabs(axes_mode.az_vel), MAX_ISC_SLOW_PULSE_SPEED);
+              waiting = 1;
+              return;
+            }
+
+            if (WHICH)
+              bprintf(info, "%iSC (t): Velocity wait ends. -------> v\n",
+                  which);
+
+            waiting = 0;
           }
-
-          if (WHICH)
-            bprintf(info, "%iSC (t): Velocity wait ends. -------> v\n", which);
-
-          waiting = 0;
 
           /* write the pulse */
           if (WHICH)
