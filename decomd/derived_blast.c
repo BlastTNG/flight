@@ -11,6 +11,14 @@
  *
  */
 
+/* !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
+ *
+ * IF YOU ADD, MODIFY, OR DELETE *ANY* CHANNELS IN THIS FILE YOU *MUST*
+ * RECOMPILE AND RESTART THE DECOM DAEMON (DECOMD) ON ARWEN!
+ * 
+ * !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
+ */
+
 #include "derived.h"
 
 /* Don's Handy Guide to adding derived channels:
