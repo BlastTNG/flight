@@ -13,7 +13,7 @@ interloquendi: $(OBJS)
 $(OBJS): $(HEADERS)
 
 install:
-	install -m 755 -o root -g root interloquendi /usr/local/bin
+	install -m 755 -o root -g root interloquendi /usr/local/sbin
 	install -m 644 -o root -g root interloquendi.conf /etc
 
 clean:
