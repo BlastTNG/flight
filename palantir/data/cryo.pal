@@ -80,10 +80,10 @@
       <XLO value="5000"/>
     </EXTREMA>
     <EXTREMA name="unknown">
-      <HI value="6440000"/>
-      <LO value="-6440000"/>
-      <XHI value="6440000"/>
-      <XLO value="-6440000"/>
+      <HI value="64400000"/>
+      <LO value="-64400000"/>
+      <XHI value="64400000"/>
+      <XLO value="-64400000"/>
     </EXTREMA>
     <EXTREMA name="balstatus">
       <HI value="1000"/>
