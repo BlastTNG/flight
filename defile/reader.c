@@ -81,8 +81,9 @@ void FrameFileReader(void)
     InputBuffer[i] = (void*)InputBuffer[0] + i * DiskFrameSize;
 
   if (rc.resume_at >= 0) {
-    ri.read = SetStartChunk(rc.resume_at, rc.chunk, rc.sufflen);
-    seek_to = ri.read * DiskFrameWords;
+    seek_to = SetStartChunk(rc.resume_at, rc.chunk, rc.sufflen)
+      * DiskFrameWords;
+    ri.read = rc.resume_at;
   }
 
   do {

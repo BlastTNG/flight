@@ -312,10 +312,9 @@ int CheckWriteAllow(int mkdir_err)
   if (closedir(dir))
     berror(fatal, "error closing directory `%s'", rc.dirfile);
 
-  if (rc.write_mode == 2) {
+  if (rc.write_mode == 2)
     /* We only allow resuming once per session */
     rc.write_mode = 0;
-  }
 
   return 1;
 }
@@ -837,10 +836,13 @@ void DirFileWriter(void)
     if (ri.wrote < wrote_count)
       ri.wrote = wrote_count;
 
-    if (ri.reader_done && ri.wrote == ri.read) {
-      ri.writer_done = 1;
-      CleanUp();
-      return;
+    if (ri.reader_done) {
+      if (ri.wrote == ri.read || last_pass) {
+        ri.writer_done = 1;
+        CleanUp();
+        return;
+      } else
+        last_pass = 1;
     }
 
     usleep(10000);
