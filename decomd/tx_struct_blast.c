@@ -46,7 +46,6 @@
 #define ACS3  21, 0
 #define DECOM 22, 0
 #define ACS0  23, 0
-#define DLOOP 24, 1
 
 /* read and write channel 56 on all boards reserved for ADC Sync */
 struct ChannelStruct WideSlowChannels[] = {
@@ -88,6 +87,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_clin_sip",   'r',  ACS0, 31,           -0.01875,           614.4, 'u'},
   {"t_clin_if",    'r',  ACS0, 41,           -0.01875,           614.4, 'u'},
   {"status00",     'r',  ACS0, 56,                1.0,             0.0, 'u'},
+  {"sync00",       'w',  ACS0, 56,                1.0,             0.0, 'u'},
 
   {"t_roll",       'r',  ACS1,  9,              I2T_M,           I2T_B, 'u'},
   {"i_roll",       'r',  ACS1, 11,      0.00048828125,          -16.09, 'u'},
@@ -112,6 +112,7 @@ struct ChannelStruct SlowChannels[] = {
   {"g_p_pivot",    'w',  ACS1, 15,                1.0,             0.0, 'u'},
   {"set_reac",     'w',  ACS1, 16,    7.9498291016e-5,          -2.605, 'u'}, 
   {"use_analogue", 'w',  ACS1, 20,                1.0,             0.0, 'u'},
+  {"sync01",       'w',  ACS1, 56,                1.0,             0.0, 'u'},
 
   {"t_battery",    'r',  ACS2,  1,              I2T_M,           I2T_B, 'u'},
   {"t_sun_sensor", 'r',  ACS2,  3,              I2T_M,           I2T_B, 'u'},
@@ -139,6 +140,7 @@ struct ChannelStruct SlowChannels[] = {
   {"i_apm_10v",    'r',  ACS2, 47,           -0.00625,           204.8, 'u'},
   {"status02",     'r',  ACS2, 56,                1.0,             0.0, 'u'},
   {"sensor_reset", 'w',  ACS2,  1,                1.0,             0.0, 'u'},
+  {"sync02",       'w',  ACS2, 56,                1.0,             0.0, 'u'},
 
   {"v_batt_acs",   'r',  ACS3,  1,          -5.313E-4,           34.87, 'u'},
   {"v_batt_das",   'r',  ACS3,  3,          -5.330E-4,           34.87, 'u'},
@@ -172,6 +174,7 @@ struct ChannelStruct SlowChannels[] = {
   {"sprpump_lev",  'w',  ACS3,  4,    -0.048851978505,           100.0, 'u'},
   {"inpump_lev",   'w',  ACS3,  5,    -0.048851978505,           100.0, 'u'},
   {"outpump_lev",  'w',  ACS3,  6,    -0.048851978505,           100.0, 'u'},
+  {"sync17",       'w',  ACS3, 56,                1.0,             0.0, 'u'},
 
   {"he4_lev",      'r',  CRYO,  1,  -2.87477e-09*65536,      12.3273561, 'u'},
   {"i_charcoal",   'r',  CRYO,  3,     -2.639826420E-6,     0.157988332, 'u'},
@@ -201,6 +204,7 @@ struct ChannelStruct SlowChannels[] = {
   {"g_d_bdaheat",  'w',  CRYO, 34,                 1.0,              0., 'u'},
   {"g_i_bdaheat",  'w',  CRYO, 35,                 1.0,              0., 'u'},
   {"g_p_bdaheat",  'w',  CRYO, 36,                 1.0,              0., 'u'},
+  {"sync03",       'w',  CRYO, 56,                 1.0,             0.0, 'u'},
 
   {"t_rstrt_mid",  'r',  BIAS,  5,              I2T_M,           I2T_B, 'u'},
   {"t_lstrt_mid",  'r',  BIAS,  7,              I2T_M,           I2T_B, 'u'},
@@ -226,6 +230,7 @@ struct ChannelStruct SlowChannels[] = {
   {"status04",     'r',  BIAS, 57,                1.0,             0.0, 'u'},
   {"biasout1",     'w',  BIAS,  0,                1.0,             0.0, 'u'},
   {"biasout2",     'w',  BIAS,  1,                1.0,             0.0, 'u'},
+  {"sync04",       'w',  BIAS, 56,                 1.0,             0.0, 'u'},
 
   {"status05",     'r',  DAS5, 57,                1.0,             0.0, 'u'},
   {"status06",     'r',  DAS6, 57,                1.0,             0.0, 'u'},
@@ -251,6 +256,18 @@ struct ChannelStruct SlowChannels[] = {
   {"phase14",      'w', DAS14, 10,                1.0,             0.0, 'u'},
   {"phase15",      'w', DAS15, 10,                1.0,             0.0, 'u'},
   {"phase16",      'w', DAS16, 10,                1.0,             0.0, 'u'},
+  {"sync05",       'w',  DAS5, 56,                1.0,             0.0, 'u'},
+  {"sync06",       'w',  DAS6, 56,                1.0,             0.0, 'u'},
+  {"sync07",       'w',  DAS7, 56,                1.0,             0.0, 'u'},
+  {"sync08",       'w',  DAS8, 56,                1.0,             0.0, 'u'},
+  {"sync09",       'w',  DAS9, 56,                1.0,             0.0, 'u'},
+  {"sync10",       'w', DAS10, 56,                1.0,             0.0, 'u'},
+  {"sync11",       'w', DAS11, 56,                1.0,             0.0, 'u'},
+  {"sync12",       'w', DAS12, 56,                1.0,             0.0, 'u'},
+  {"sync13",       'w', DAS13, 56,                1.0,             0.0, 'u'},
+  {"sync14",       'w', DAS14, 56,                1.0,             0.0, 'u'},
+  {"sync15",       'w', DAS15, 56,                1.0,             0.0, 'u'},
+  {"sync16",       'w', DAS16, 56,                1.0,             0.0, 'u'},
 
   {"g_i_gyheat1",  'w', LOOP1, 14,                1.0,             0.0, 'u'},
   {"g_d_gyheat1",  'w', LOOP1, 15,                1.0,             0.0, 'u'},
@@ -294,7 +311,7 @@ struct ChannelStruct SlowChannels[] = {
   {"dgps_att_ok",  'w', LOOP1, 53,                1.0,             0.0, 'u'},
   {"dgps_att_index",'w',LOOP1, 54,                1.0,             0.0, 'u'},
   {"dgps_pos_index",'w',LOOP1, 55,                1.0,             0.0, 'u'},
-  {"sync0",        'w', LOOP1, 56,                1.0,             0.0, 'u'},
+  {"outcool_state",'w', LOOP1, 56,                1.0,             0.0, 's'},
   {"dgps_n_sat",   'w', LOOP1, 57,                1.0,             0.0, 'u'},
   {"disk_free",    'w', LOOP1, 58,             1./250,             0.0, 'u'},
   {"p_mode",       'w', LOOP1, 59,                  1,             0.0, 'u'},
@@ -460,9 +477,6 @@ struct ChannelStruct SlowChannels[] = {
   {"gy2_h_age",    'w', LOOP4, 37,                1.0,             0.0, 'u'},
   {"gy2_h_hist",   'w', LOOP4, 38,    (100.0/32768.0),             0.0, 'u'},
   {"incool_state", 'w', LOOP4, 39,                1.0,             0.0, 's'},
-  {"outcool_state",'w', LOOP4, 40,                1.0,             0.0, 's'},
-
-  {"sync1",        'w', DLOOP, 56,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
