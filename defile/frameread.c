@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
+#include <unistd.h>
 #include <sys/stat.h>
 
 #include "frameread.h"
@@ -182,4 +183,67 @@ long int SetStartChunk(long int framenum, char* chunk, int sufflen)
     /* there is another chunk, decrement the total needed and try again */
     left_to_read -= chunk_total;
   }
+}
+
+int StreamToNextChunk(int keepalive, char* chunk, int sufflen, int *chunk_total,
+    const char* curfile_name, char* curfile_val)
+{
+  FILE *curfile = NULL;
+  struct stat chunk_stat;
+  char gpb[GPB_LEN];
+  int n, i;
+
+  if (keepalive) {
+    for (;;) {
+      /* persistent: first check to see if we have more data in the file */
+      if (stat(chunk, &chunk_stat)) {
+        snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", chunk);
+        perror(gpb);
+        exit(1);
+      }
+
+      /* new frame total */
+      n = chunk_stat.st_size / DiskFrameSize;
+      if (n < *chunk_total)
+        fprintf(stderr, "defile: warning: chunk `%s' has shrunk.\n",
+            chunk);
+
+      if (n > *chunk_total) {
+        *chunk_total = n;
+        return FR_MORE_IN_FILE;
+      }
+
+      /* nothing more in file, check to see if we have a new chunk */
+      if (GetNextChunk(chunk, sufflen))
+        return FR_NEW_CHUNK;
+
+      /* no new chunk either, check for a change in SOURCE curfile if
+       * we're using one */
+      if (curfile_name != NULL) {
+        if ((curfile = fopen(curfile_name, "r")) == NULL) {
+          snprintf(gpb, GPB_LEN, "defile: cannot open `%s'", curfile_name);
+          perror(gpb);
+          exit(1);
+        }
+
+        fgets(gpb, PATH_MAX, curfile);
+
+        fclose(curfile);
+
+        i = strlen(gpb) - 1;
+        if (gpb[i] == '\n') {
+          gpb[i] = '\0';
+          if (strcmp(gpb, curfile_val) != 0) {
+            /* curfile has changed, reinitialise source */
+            strcpy(curfile_val, gpb);
+            return FR_CURFILE_CHANGED;
+          }
+        }
+      }
+
+      /* no changes wait and try again */
+      usleep(10000);
+    }
+  } else
+    return (GetNextChunk(chunk, sufflen)) ? FR_NEW_CHUNK : FR_DONE;
 }

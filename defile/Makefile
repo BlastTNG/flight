@@ -11,15 +11,15 @@ debug:
 
 defile: defile.o frameread.o reader.o channels.o writer.o
 
-defile.o: defile.c defile.h tx_struct.h frameread.h
+defile.o: defile.c defile.h channels.h frameread.h
 
-frameread.o: frameread.c tx_struct.h frameread.h
+frameread.o: frameread.c channels.h frameread.h
 
-reader.o: reader.c tx_struct.h defile.h frameread.h
+reader.o: reader.c channels.h defile.h frameread.h
 
-channels.o: channels.c tx_struct.h
+channels.o: channels.c channels.h
 
-writer.o: writer.c tx_struct.h defile.h frameread.h
+writer.o: writer.c channels.h defile.h frameread.h
 
 clean:
 	rm -f *.o defile

@@ -22,13 +22,20 @@
 
 #include <linux/limits.h>
 
+#define FR_DONE            0
+#define FR_MORE_IN_FILE    1
+#define FR_NEW_CHUNK       2
+#define FR_CURFILE_CHANGED 3
+
 #define GPB_LEN (PATH_MAX * 4)
 #define FILENAME_LEN (PATH_MAX + NAME_MAX + 1)
 
 typedef unsigned int chunkindex_t;
 
-int      GetNextChunk     ( char*    , int                               );
-long int SetStartChunk    ( long int , char*       , int           );
-int      StaticSourcePart ( char*    , const char* , chunkindex_t* , int );
+int      GetNextChunk      ( char*       , int                                );
+long int SetStartChunk     ( long int    , char*       , int                  );
+int      StaticSourcePart  ( char*       , const char* , chunkindex_t* , int  );
+int      StreamToNextChunk ( int         , char*       , int           , int* ,
+                             const char* , char*                              );
 
 #endif

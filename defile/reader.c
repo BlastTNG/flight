@@ -26,7 +26,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-#include "tx_struct.h"
+#include "channels.h"
 #include "defile.h"
 #include "frameread.h"
 
@@ -37,12 +37,10 @@
 void FrameFileReader(void)
 {
   FILE *stream = NULL;
-  FILE *curfile = NULL;
   char gpb[GPB_LEN];
   int i, n;
   int frames_read = 0;
   int new_chunk = 1;
-  int more_in_file = 0;
   unsigned short* InputBuffer[INPUT_BUF_SIZE];
   struct stat chunk_stat;
   long int seek_to = 0;
@@ -53,11 +51,11 @@ void FrameFileReader(void)
     exit(1);
   }                 
 
-  for(i = 1; i < INPUT_BUF_SIZE; ++i)
+  for (i = 1; i < INPUT_BUF_SIZE; ++i)
     InputBuffer[i] = (void*)InputBuffer[0] + i * DiskFrameSize;
 
   if (rc.resume_at >= 0) {
-    ri.read = SetStartChunk(rc.resume_at);
+    ri.read = SetStartChunk(rc.resume_at, rc.chunk, rc.sufflen);
     seek_to = ri.read * DiskFrameWords;
   }
 
@@ -78,20 +76,18 @@ void FrameFileReader(void)
         fseek(stream, seek_to, SEEK_SET);
         seek_to = 0;
       }
+
+      /* stat file to find its size */
+      if (stat(rc.chunk, &chunk_stat)) {
+        snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", rc.chunk);
+        perror(gpb);
+        exit(1);
+      }
+
+      ri.chunk_total = chunk_stat.st_size / DiskFrameSize;
     }
 
     do {
-      if (!more_in_file) {
-        /* stat file to find its size */
-        if (stat(rc.chunk, &chunk_stat)) {
-          snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", rc.chunk);
-          perror(gpb);
-          exit(1);
-        }
-
-        ri.chunk_total = chunk_stat.st_size / DiskFrameSize;
-      }
-
       /* read some frames */
       clearerr(stream);
       if ((n = fread(InputBuffer[0], DiskFrameSize, INPUT_BUF_SIZE, stream))
@@ -127,85 +123,35 @@ void FrameFileReader(void)
       }
     } while (!feof(stream));
 
-    more_in_file = 0;
+    n = StreamToNextChunk(rc.persist, rc.chunk, rc.sufflen, &ri.chunk_total,
+            rc.source, rc.curfile_val);
 
-    if (rc.persist) {
-      do {
-        more_in_file = new_chunk = 0;
-        /* persistent: first check to see if we have more data in the file */
-        if (stat(rc.chunk, &chunk_stat)) {
-          snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", rc.chunk);
-          perror(gpb);
-          exit(1);
-        }
+    if (n == FR_NEW_CHUNK) {
+      fclose(stream);
+      ri.old_total += ri.chunk_total;
+      new_chunk = 1;
+    } else if (n == FR_CURFILE_CHANGED) {
+      /* fixup remounting */
+      if (rc.remount)
+        Remount(rc.source, gpb);
 
-        /* new frame total */
-        n = chunk_stat.st_size / DiskFrameSize;
-        if (n < ri.chunk_total)
-          fprintf(stderr, "defile: warning: chunk `%s' has shrunk.\n",
-              rc.chunk);
+      strcpy(rc.chunk, gpb);
 
-        if (n > ri.chunk_total) {
-          more_in_file = 1;
-          ri.chunk_total = n;
-        } else {
-          /* nothing more in file, check to see if we have a new chunk */
-          if ((new_chunk = GetNextChunk(rc.chunk, rc.sufflen))) {
-            fclose(stream);
-            ri.old_total += ri.chunk_total;
-          } else
-            /* no new chunk either, check for a change in SOURCE curfile if
-             * we're using one */
-            if (rc.source_is_curfile) {
-              if ((curfile = fopen(rc.source, "r")) == NULL) {
-                snprintf(gpb, GPB_LEN, "defile: cannot open `%s'", rc.source);
-                perror(gpb);
-                exit(1);
-              }
+      /* remake the destination dirfile (if necessary) */
+      if (rc.output_dirfile == NULL) {
+        GetDirFile(rc.dirfile, rc.chunk, rc.dest_dir);
 
-              fgets(gpb, PATH_MAX, curfile);
-
-              fclose(curfile);
-
-              i = strlen(gpb) - 1;
-              if (gpb[i] == '\n') {
-                gpb[i] = '\0';
-                if (strcmp(gpb, rc.curfile_val) != 0) {
-                  /* curfile has changed, reinitialise source */
-                  strcpy(rc.curfile_val, gpb);
-
-                  /* fixup remounting */
-                  if (rc.remount)
-                    Remount(rc.source, gpb);
-
-                  strcpy(rc.chunk, gpb);
-
-                  /* remake the destination dirfile (if necessary) */
-                  if (rc.output_dirfile == NULL) {
-                    strcpy(gpb, rc.dirfile);
-                    GetDirFile(rc.dirfile, rc.chunk, rc.dest_dir);
-
-                    /* if the dirfile has changed, signal the writer to cycle */
-                    ri.dirfile_init = 0;
-                    fclose(stream);
-                  }
-
-                  ri.old_total += ri.chunk_total;
-                  new_chunk = 1;
-                } else
-                  /* no changes wait and try again */
-                  usleep(10000);
-              }
-            }
-        }
-      } while (!more_in_file && !new_chunk);
-    } else {
-      if ((new_chunk = GetNextChunk(rc.chunk, rc.sufflen))) {
+        /* if the dirfile has changed, signal the writer to cycle */
+        ri.dirfile_init = 0;
         fclose(stream);
-        ri.old_total += ri.chunk_total;
       }
-    }
-  } while (more_in_file || new_chunk);
+
+      ri.old_total += ri.chunk_total;
+      new_chunk = 1;
+    } else 
+      new_chunk = 0;
+
+  } while (n != FR_DONE);
 
   ri.reader_done = 1;
 

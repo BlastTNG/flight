@@ -33,7 +33,7 @@
 #include <time.h>
 #include <zlib.h>
 
-#include "tx_struct.h"
+#include "channels.h"
 #include "defile.h"
 
 extern struct ChannelStruct* WideSlowChannels;

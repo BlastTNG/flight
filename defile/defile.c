@@ -34,7 +34,7 @@
 #include <pthread.h>
 
 #include "defile.h"
-#include "tx_struct.h"
+#include "channels.h"
 
 #define VERSION_MAJOR    "2"
 #define VERSION_MINOR    "3"
