@@ -635,8 +635,8 @@ void StoreData(int index)
   WriteData(ssPrinAddr, SunSensorData[i_ss].prin, NIOS_QUEUE);
   WriteData(ssAzCenterAddr, SunSensorData[i_ss].az_center * 16, NIOS_QUEUE);
   WriteData(ssElCenterAddr, SunSensorData[i_ss].el_center * 16, NIOS_QUEUE);
-  WriteData(ssAzSnrAddr, SunSensorData[i_ss].az_snr * 1000, NIOS_QUEUE);
-  WriteData(ssElSnrAddr, SunSensorData[i_ss].el_snr * 1000, NIOS_QUEUE);
+  WriteData(ssAzSnrAddr, SunSensorData[i_ss].az_snr * 500, NIOS_QUEUE);
+  WriteData(ssElSnrAddr, SunSensorData[i_ss].el_snr * 500, NIOS_QUEUE);
   WriteData(ssPcTempAddr, SunSensorData[i_ss].pc_temp * 100, NIOS_QUEUE);
   WriteData(ssCpuTempAddr, SunSensorData[i_ss].cpu_temp * 100, NIOS_QUEUE);
   WriteData(ssChipTempAddr, SunSensorData[i_ss].chipset_temp * 100, NIOS_QUEUE);
