@@ -444,7 +444,7 @@ void write_to_biphase(unsigned short *RxFrame) {
   int i;
   static unsigned short nothing[BI0_FRAME_SIZE];
   static unsigned short sync = 0xEB90;
-
+  
   if (bi0_fp == -2) {
     bi0_fp = open("/dev/bi0_pci", O_RDWR);
     if (bi0_fp == -1)
@@ -593,6 +593,12 @@ int main(int argc, char *argv[]) {
   pthread_t osc_id;
 #endif
 
+  /********** DEBUG TOOL ***************/
+  int mycounter = 0;
+  int mycounter2 = 0;
+  /********** DEBUG TOOL ***************/
+
+
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
         "p  pointing\n"
@@ -695,9 +701,29 @@ int main(int argc, char *argv[]) {
 #endif
 
   InitTxFrame();
+
+
   while (1) {
+    in_data = 0;
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) < 0)
       merror(MCP_ERROR, "Error on BBC read");
+
+    
+    // DEBUG TOOLS
+    if(GET_NODE(in_data) == 0x27) {
+      if(GET_STORE(in_data) ) {
+	mycounter++;
+      } else {
+	mycounter2++;
+      }
+    }
+    if (in_data == 0xdf80eb90)  {
+      if( (mycounter != 12) || (mycounter2 != 12) ) 
+	printf("++++++++++++++>>>>>> mycounter = %d mycounter2 = %d\n", mycounter, mycounter2);
+      mycounter  = 0;
+      mycounter2 = 0;
+    }
+    // END DEBUG TOOL
 
     if (!fill_Rx_frame(in_data, RxFrame))
       mputs(MCP_ERROR, "Unrecognised word received from BBC");

@@ -71,7 +71,6 @@ static struct {
   volatile int i_out;
   unsigned data[BBC_WFIFO_SIZE];
   volatile int status;
-  volatile int n;
 } bbc_wfifo;
 
 #define BI0_WFIFO_SIZE (BI0_BUFFER_SIZE)
@@ -119,7 +118,8 @@ static void timer_callback(unsigned long dummy)
     wp = readl(bbc_drv.mem_base + BBCPCI_ADD_WRITE_BUF_P);
     if(wp < BBCPCI_ADD_IR_WRITE_BUF) {
       nwritten = 0;
-      while( (nwritten < BBCPCI_IR_WRITE_BUF_SIZE) && bbc_wfifo.n ) {
+      while( (nwritten < BBCPCI_IR_WRITE_BUF_SIZE) && 
+	     (bbc_wfifo.i_in != bbc_wfifo.i_out) ) {
         wp += 2*BBCPCI_SIZE_UINT;
         writel(bbc_wfifo.data[bbc_wfifo.i_out+1], bbc_drv.mem_base + wp + BBCPCI_SIZE_UINT);
         writel(bbc_wfifo.data[bbc_wfifo.i_out], bbc_drv.mem_base + wp);
@@ -129,7 +129,6 @@ static void timer_callback(unsigned long dummy)
           bbc_wfifo.i_out += 2;
         }
         nwritten++;
-        bbc_wfifo.n -= 2;
       }
       if(nwritten) {
         writel(wp, bbc_drv.mem_base + BBCPCI_ADD_WRITE_BUF_P);
@@ -174,6 +173,7 @@ static ssize_t bbc_read(struct file *filp, char __user *buf,
 {
   int minor;
   loff_t rp, wp;
+  loff_t rp_old = -1;
   size_t i;
   size_t to_read;
   unsigned in_data;
@@ -194,7 +194,11 @@ static ssize_t bbc_read(struct file *filp, char __user *buf,
     wp = readl(bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_WP);
     for(i = 0; i < to_read; i++) {
       rp = readl(bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_RP);
-
+      if(rp == rp_old) {
+	printk(KERN_NOTICE "%s: (read) read pointer not updated\n", DRV_NAME);
+	break;
+      }
+      
       rp += BBCPCI_SIZE_UINT;
       if(rp >= BBCPCI_ADD_READ_BUF_END) rp = BBCPCI_ADD_READ_BUF;
       if(rp == wp) break;
@@ -203,8 +207,10 @@ static ssize_t bbc_read(struct file *filp, char __user *buf,
       __copy_to_user(out_buf, &in_data, BBCPCI_SIZE_UINT);
       out_buf += BBCPCI_SIZE_UINT;
 
+      rp_old = rp;
       writel(rp, bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_RP);
     }
+    
     return i*BBCPCI_SIZE_UINT;
   } else if (minor == bi0_minor) {
     return 0;
@@ -233,12 +239,7 @@ static ssize_t bbc_write(struct file *filp, const char __user *buf,
     to_write = count / (2*BBCPCI_SIZE_UINT);
     //printk(KERN_WARNING "-BBC %x %x %x\n", to_write, bbc_wfifo.n, bi0_wfifo.n);
     for(i = 0; i < to_write; i++) {
-      if(bbc_wfifo.n == BBC_WFIFO_SIZE) {
-        printk(KERN_WARNING "%s: bbc buffer overrun. size = %x\n", 
-            DRV_NAME, bbc_wfifo.n);
-        break;
-      }
-
+      
       __copy_from_user((void *)&bbc_wfifo.data[bbc_wfifo.i_in], 
           in_buf, 2*BBCPCI_SIZE_UINT);
 
@@ -248,7 +249,6 @@ static ssize_t bbc_write(struct file *filp, const char __user *buf,
         bbc_wfifo.i_in += 2;
       }
       in_buf += 2*BBCPCI_SIZE_UINT;
-      bbc_wfifo.n += 2;
     }
 
     return (2*i*BBCPCI_SIZE_UINT);
@@ -257,7 +257,10 @@ static ssize_t bbc_write(struct file *filp, const char __user *buf,
     to_write = count / sizeof(unsigned short);
     if(to_write == 0) return 0;
 
-    //printk(KERN_WARNING "-BI0 %x %x %x\n", to_write, bbc_wfifo.n, bi0_wfifo.n);
+    // Suspend timer callback
+    bbc_drv.timer_on = 0;
+    del_timer_sync(&bbc_drv.timer);
+
     for(i = 0; i < to_write; i++) {
 
       if(bi0_wfifo.n == BI0_WFIFO_SIZE) {
@@ -279,6 +282,11 @@ static ssize_t bbc_write(struct file *filp, const char __user *buf,
       in_buf += sizeof(unsigned short);
       bi0_wfifo.n++;
     }
+
+    // Resume timer callback
+    bbc_drv.timer_on = 1;
+    bbc_drv.timer.expires = jiffies + 1;
+    add_timer(&bbc_drv.timer);
 
     return i*sizeof(unsigned short);
 
@@ -321,9 +329,6 @@ static int bbc_ioctl(struct inode *inode, struct file *filp,
     case BBCPCI_IOC_BI0_FIONREAD:
       ret = bi0_wfifo.n;
       break;
-    case BBCPCI_IOC_BBC_FIONREAD:
-      ret = bbc_wfifo.n;
-      break;
     default:
       break;
   }
@@ -341,7 +346,7 @@ static int bbc_open(struct inode *inode, struct file *filp)
     if(bbc_wfifo.status & FIFO_ENABLED) return -ENODEV;
     filp->private_data = &bbc_minor;
 
-    bbc_wfifo.i_in = bbc_wfifo.i_out = bbc_wfifo.n = 0;
+    bbc_wfifo.i_in = bbc_wfifo.i_out = 0;
     bbc_wfifo.status |= FIFO_ENABLED;
 
     bbc_drv.use_count++;
