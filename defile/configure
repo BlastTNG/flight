@@ -1,0 +1,26 @@
+#!/bin/sh
+
+echo ----------------------------------------------
+echo "           Defile configuration"
+echo
+echo -n "Executable destination [/usr/local/bin]: "
+read EXEC_DEST
+
+if [ -z "${EXEC_DIR}" ]
+then
+  EXEC_DIR=/usr/local/bin ;
+fi
+
+echo EXEC_DIR = ${EXEC_DIR} > Makefile.config
+
+echo -n "Calibration files directory [/data/etc]: "
+read ETC_DIR
+
+if [ -z "${ETC_DIR}" ]
+then
+  ETC_DIR=/data/etc ;
+fi
+
+echo ETC_DIR = ${ETC_DIR} >> Makefile.config
+
+echo ----------------------------------------------
