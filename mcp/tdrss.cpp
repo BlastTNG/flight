@@ -230,7 +230,7 @@ int Buffer::MaxSize() {
 void Buffer::CheckBytePosRange(int num) {
   if (bytepos >= safeallocsize) {
     bprintf(err,
-        "Alice: serious error (%i)!!  Class BUFFER was not properly allocated.  "
+        "Alice: serious error (%i)!  Class BUFFER was not properly allocated.  "
         "Size was set to %d; tried to write to %d.  Make sure the size is "
         "being set correctly with the Buffer::SetSize function.  Resetting "
         "bytepos to %d (compression will not work).", num, size, bytepos - 1,
@@ -360,27 +360,27 @@ void Buffer::EraseLastSection() {
  *                                                                            *|
  ******************************************************************************/
 
-void Buffer::Stop() {
-  if (bitpos > 0)
-    bytepos++;
-  CheckBytePosRange(5);
+  void Buffer::Stop() {
+    if (bitpos > 0)
+      bytepos++;
+    CheckBytePosRange(5);
 
-  buf[bytepos++] = BUF_END_SYNC;
-  CheckBytePosRange(6);
-  bitpos = 0;
-  
-  if (CurrSize() - BUF_POS_DATA_START >= 0) {
-    *(unsigned short *)(buf + BUF_POS_FRAME_LEN) = CurrSize();
-    *(unsigned short *)(buf + BUF_POS_CRC) = 
-      CalculateCRC(CRC_INIT, buf + BUF_POS_DATA_START, 
-          CurrSize() - BUF_POS_DATA_START);
+    buf[bytepos++] = BUF_END_SYNC;
+    CheckBytePosRange(6);
+    bitpos = 0;
 
-    // Send packets
-    if (write(tty_fd, buf, CurrSize()) != CurrSize())
-      bprintf(err, "Error sending through serial port.");
-  } else
-    bprintf(err, "CurSize is bogus in Buffer::Stop\n");
-}
+    if (CurrSize() - BUF_POS_DATA_START >= 0) {
+      *(unsigned short *)(buf + BUF_POS_FRAME_LEN) = CurrSize();
+      *(unsigned short *)(buf + BUF_POS_CRC) = 
+        CalculateCRC(CRC_INIT, buf + BUF_POS_DATA_START, 
+            CurrSize() - BUF_POS_DATA_START);
+
+      // Send packets
+      if (write(tty_fd, buf, CurrSize()) != CurrSize())
+        bprintf(err, "Error sending through serial port.");
+    } else
+      bprintf(err, "CurSize is bogus in Buffer::Stop\n");
+  }
 
 
 /******************************************************************************\

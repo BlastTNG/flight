@@ -43,7 +43,8 @@ void *_reballoc(buos_t, void*, size_t, const char*, int, const char*);
 char *_bstrdup(buos_t, const char*, const char*, int, const char*);
 #define balloc(x,y) _balloc( x , y , __FUNCTION__ , __LINE__ , __FILE__ )
 #define bfree(x,y) _bfree( x , y , __FUNCTION__ , __LINE__ , __FILE__ )
-#define reballoc(x,y,z) _reballoc( x , y , z , __FUNCTION__ , __LINE__ , __FILE__)
+#define reballoc(x,y,z) \
+  _reballoc( x , y , z , __FUNCTION__ , __LINE__ , __FILE__)
 #define bstrdup(x,y) _bstrdup( x , y , __FUNCTION__ , __LINE__ , __FILE__)
 
 #endif

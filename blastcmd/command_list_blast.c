@@ -14,7 +14,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.24 $";
+const char command_list_serial[] = "$Revision: 2.25 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -173,7 +173,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"}
     }
   },
-      
+
   {COMMAND(vcap), "scan a circle centred on RA/Dec with el drift", GR_POINT, 5,
     {
       {"RA of Centre (h)",          0, 24, 'f', "NONE"},
@@ -195,7 +195,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"}
     }
   },
-      
+
   {COMMAND(vbox), "scan an az/el box centred on RA/Dec with el drift",
     GR_POINT, 6,
     {
@@ -207,7 +207,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Drift Speed (deg el/s)", 0,  2, 'f', "NONE"}
     }
   },
-      
+
   {COMMAND(drift), "move at constant speed in az and el", GR_POINT, 2,
     {
       {"Az Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"},
@@ -330,7 +330,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Target (A)",        -2, 2, 'f', "BAL_TARGET"}
     }
   },
-  
+
   {COMMAND(bal_gain), "balance system gain and extrema", GR_BAL, 3,
     {
       {"Gain",           0.01,   1, 'f', "BAL_GAIN"},
@@ -470,7 +470,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Level (%)", 0, 100, 'f', "BDAPWM"}
     }
   },
-   
+
   {COMMAND(bda_gain), "set bda heater gains", GR_CRYO_HEAT, 4,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "G_P_BDAHEAT"},
@@ -537,13 +537,15 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(isc_max_blobs), "max number of blobs used in solution", GR_ISC_PARAM, 1,
+  {COMMAND(isc_max_blobs), "max number of blobs used in solution",
+    GR_ISC_PARAM, 1,
     {
       {"# of Blobs", 0, MAX_ISC_BLOBS, 'i', "ISC_MAXBLOBS"}
     }
   },
 
-  {COMMAND(isc_catalogue), "set catalogue retreival parameters", GR_ISC_PARAM, 3,
+  {COMMAND(isc_catalogue), "set catalogue retreival parameters",
+    GR_ISC_PARAM, 3,
     {
       {"Magnitude Limit",            0, 12, 'f', "ISC_MAGLIMIT"},
       {"Normal Search Radius (deg)", 0, 50, 'f', "ISC_NRAD"},
@@ -559,8 +561,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Rot. Tolerance (deg)",      0,   90, 'f', "ISC_RTOL"}
     }
   },
-  
-  {COMMAND(isc_hold_current), "set ISC stepper motor hold current", GR_ISC_HOUSE, 1,
+
+  {COMMAND(isc_hold_current), "set ISC stepper motor hold current",
+    GR_ISC_HOUSE, 1,
     {
       {"Level (%)", 0, 50, 'i', "ISC_HOLD_I"}
     }
@@ -624,13 +627,15 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(osc_max_blobs), "max number of blobs used in solution", GR_OSC_PARAM, 1,
+  {COMMAND(osc_max_blobs), "max number of blobs used in solution",
+    GR_OSC_PARAM, 1,
     {
       {"# of Blobs", 0, MAX_ISC_BLOBS, 'i', "OSC_MAXBLOBS"}
     }
   },
 
-  {COMMAND(osc_catalogue), "set catalogue retreival parameters", GR_OSC_PARAM, 3,
+  {COMMAND(osc_catalogue), "set catalogue retreival parameters",
+    GR_OSC_PARAM, 3,
     {
       {"Magnitude Limit",            0, 12, 'f', "OSC_MAGLIMIT"},
       {"Normal Search Radius (deg)", 0, 50, 'f', "OSC_NRAD"},
@@ -646,8 +651,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Rot. Tolerance (deg)",      0,   90, 'f', "OSC_RTOL"}
     }
   },
-  
-  {COMMAND(osc_hold_current), "set OSC stepper motor hold current", GR_OSC_HOUSE, 1,
+
+  {COMMAND(osc_hold_current), "set OSC stepper motor hold current",
+    GR_OSC_HOUSE, 1,
     {
       {"Level (%)", 0, 50, 'i', "OSC_HOLD_I"}
     }

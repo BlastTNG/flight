@@ -169,7 +169,7 @@ void SyncADC (int TxIndex) {
     return;
 
   CommandData.ADC_sync_timeout++;
-  
+
   /******** Obtain correct indexes the first time here ***********/
   static int firsttime = 1;
   if (firsttime) {
@@ -476,7 +476,7 @@ void StoreStarCameraData(int index, int which)
 void StoreData(int index)
 {
   static int firsttime = 1;
-  
+
   static struct NiosStruct* ssAzCenterAddr;
   static struct NiosStruct* ssPrinAddr;
   static struct NiosStruct* ssElCenterAddr;
@@ -646,7 +646,7 @@ void StoreData(int index)
   WriteData(sipLonAddr, (int)(SIPData.GPSpos.lon*DEG2I), NIOS_QUEUE);
   WriteData(sipAltAddr, (int)(SIPData.GPSpos.alt*0.25), NIOS_QUEUE);
   WriteData(sipTimeAddr, SIPData.GPStime.UTC, NIOS_QUEUE);
-  
+
   /********** SIP MKS Altitude ************/
   WriteData(sipMksLoAddr, (int)(SIPData.MKSalt.lo * 0.25), NIOS_QUEUE);
   WriteData(sipMksMedAddr, (int)(SIPData.MKSalt.med * 0.25), NIOS_QUEUE);
@@ -662,7 +662,7 @@ void StoreData(int index)
       NIOS_QUEUE);
   WriteData(decAddr, (unsigned int)(PointingData[i_point].dec * 65536.0/360.0),
       NIOS_QUEUE);
-	    
+
   WriteData(gy1OffsetAddr,
       (signed int)(PointingData[i_point].gy1_offset * 32768.), NIOS_QUEUE);
   WriteData(gy2OffsetAddr,

@@ -78,9 +78,9 @@ void InitSched(void)
   double dt;
   double d_lon;
   int day;
-  
+
   double az1, az2, el1, el2, rh;
-  
+
   int i,j, entry_ok;
   int n_fields;
   int el_range_warning;
@@ -103,7 +103,7 @@ void InitSched(void)
 
   S.p = (struct PointingModeStruct*)balloc(fatal, S.n_sched *
       sizeof(struct PointingModeStruct));
-  
+
   if (fclose(fp) == EOF)
     berror(err, "sched: Error on close");
 
@@ -122,7 +122,7 @@ void InitSched(void)
     ts.tm_year += 100;
   else
     ts.tm_year -= 1900;
-  
+
   ts.tm_isdst = 0;
   ts.tm_mon--; /* Jan is 0 in struct tm.tm_mon, not 1 */
 
@@ -139,7 +139,7 @@ void InitSched(void)
   dt -= (d_lon * 3600.00 * 24.00 / 360.0); /* add longitude correction */
 
   dt /= 3600.0;
-  
+
   bprintf(sched,
       "***********************************************************\n"
       "***       Schedule File:\n"

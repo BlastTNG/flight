@@ -456,12 +456,18 @@ struct ChannelStruct WideFastChannels[] = {
 #ifndef BOLOTEST
   {"t_gybox2",    'r',  ACS1, 12, -9.5367431641e-08,               136.45, 'U'},
   {"t_gybox",     'r',  ACS1, 14, -9.5367431641e-08,               136.45, 'U'},
-  {"raw_gy1",     'r',  ACS1, 26,  -AGY32_TO_DPS, AGY32_OFFSET*AGY32_TO_DPS+0.1925, 'U'},
-  {"raw_gy2",     'r',  ACS1, 22,  AGY32_TO_DPS, -AGY32_OFFSET*AGY32_TO_DPS-0.138, 'U'},
-  {"raw_gy3",     'r',  ACS1, 24,  AGY32_TO_DPS, -AGY32_OFFSET*AGY32_TO_DPS-0.145, 'U'},
-  {"raw_gy4",     'r',  ACS1,  6,  DGY32_TO_DPS, -DGY32_OFFSET*DGY32_TO_DPS+0.004, 'U'},
-  {"raw_gy5",     'r',  ACS1,  2,  DGY32_TO_DPS, -DGY32_OFFSET*DGY32_TO_DPS+0.010, 'U'},
-  {"raw_gy6",     'r',  ACS1, 36,  -DGY32_TO_DPS, DGY32_OFFSET*DGY32_TO_DPS-0.005, 'U'},
+  {"raw_gy1",     'r',  ACS1, 26,     -AGY32_TO_DPS,
+                                     AGY32_OFFSET * AGY32_TO_DPS + 0.1925, 'U'},
+  {"raw_gy2",     'r',  ACS1, 22,      AGY32_TO_DPS,
+                                     -AGY32_OFFSET * AGY32_TO_DPS - 0.138, 'U'},
+  {"raw_gy3",     'r',  ACS1, 24,      AGY32_TO_DPS,
+                                     -AGY32_OFFSET * AGY32_TO_DPS - 0.145, 'U'},
+  {"raw_gy4",     'r',  ACS1,  6,      DGY32_TO_DPS,
+                                     -DGY32_OFFSET * DGY32_TO_DPS + 0.004, 'U'},
+  {"raw_gy5",     'r',  ACS1,  2,      DGY32_TO_DPS,
+                                     -DGY32_OFFSET * DGY32_TO_DPS + 0.010, 'U'},
+  {"raw_gy6",     'r',  ACS1, 36,     -DGY32_TO_DPS,
+                                      DGY32_OFFSET * DGY32_TO_DPS - 0.005, 'U'},
 #endif
 
   /* BIAS Amplitude */

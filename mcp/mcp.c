@@ -709,7 +709,8 @@ int main(int argc, char *argv[]) {
     }
     if (in_data == 0xdf80eb90)  {
       if( (mycounter != 12) || (mycounter2 != 12) ) {
-        //        printf("++++++++++++++>>>>>> mycounter = %d mycounter2 = %d\n", mycounter, mycounter2);
+        //printf("++++++++++++++>>>>>> mycounter = %d mycounter2 = %d\n",
+        //mycounter, mycounter2);
       }
       mycounter  = 0;
       mycounter2 = 0;

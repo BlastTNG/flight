@@ -104,7 +104,7 @@ int GetVAz() {
   double vel_offset;
   double az, az_dest;
   double max_dv = 20;
-  
+
   i_point = GETREADINDEX(point_index);
 
   if (axes_mode.az_mode == AXIS_VEL) {
@@ -115,16 +115,16 @@ int GetVAz() {
     SetSafeDAz(az, &az_dest);
     vel = -(az - az_dest) * 0.36;
   }
-  
+
   vel_offset =
     -(PointingData[i_point].gy2_offset- PointingData[i_point].gy2_earth)*
     cos(PointingData[i_point].el * M_PI / 180.0) -
     (PointingData[i_point].gy3_offset- PointingData[i_point].gy3_earth)*
     sin(PointingData[i_point].el * M_PI / 180.0);
-  
+
   vel -= vel_offset;
   vel *= DPS_TO_GY16; 
-  
+
   /* Limit Maximim speed */
   if (vel > 2000)
     vel = 2000;
@@ -195,7 +195,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
 
     useAnalogueAddr = GetNiosAddr("use_analogue");
   }
-  
+
   i_point = GETREADINDEX(point_index);
 
   /***************************************************/
@@ -220,7 +220,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   /* integral term for el_motor */
   WriteData(gIElAddr, elGainI, NIOS_QUEUE);
 
-  
+
   /***************************************************/
   /*** Send elevation angles to acs1 from acs2 ***/
   /* cos of el enc */
@@ -277,7 +277,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
 
   if (wait > 0)
     rollGainP = 0;
-  
+
   /* p term for roll motor */
   WriteData(gPRollAddr, rollGainP, NIOS_QUEUE);
 
@@ -372,7 +372,7 @@ void DoVCapMode() {
   double x2, xw;
   double left, right;
   static int dir = 1;
-  
+
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
   az = PointingData[i_point].az;
@@ -465,7 +465,7 @@ void DoVBoxMode() {
   double y, x, v;
   double left, right;
   static int dir = 1;
-  
+
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
   az = PointingData[i_point].az;
@@ -533,7 +533,7 @@ void DoVBoxMode() {
   /** Get x limits **/
   x = CommandData.pointing_mode.w / 2.0;
   x = x / cos(el * M_PI / 180.0);
-  
+
   left = caz - x;
   right = caz + x;
 
@@ -557,7 +557,7 @@ void DoRaDecGotoMode() {
       lst, PointingData[i_point].lat,
       &caz, &cel);
   SetSafeDAz(az, &caz);
-  
+
   axes_mode.az_mode = AXIS_POSITION;
   axes_mode.az_dest = caz;
   axes_mode.az_vel = 0.0;
@@ -578,7 +578,7 @@ void DoBoxMode() {
 
   static struct PointingModeStruct last_pm = {
     P_BOX, 0.0, 0.0, 0.0, 0.0, 0.0,0.0,0};
-  
+
   static struct {
     double el; /* el of current scan, relative to cel */
     int eldir; /* 1 = going up, -1 = going down */
@@ -590,12 +590,12 @@ void DoBoxMode() {
   lst = PointingData[i_point].lst;
   az = PointingData[i_point].az;
   el = PointingData[i_point].el;
-  
+
   if (el > 80)
     el = 80; /* very bad situation - dont know how this can happen */
   if (el < -10)
     el = -10; /* very bad situation - dont know how this can happen */
-  
+
   v = fabs(CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0));
 
   /* get raster center and sky drift speed */
@@ -612,11 +612,11 @@ void DoBoxMode() {
   h_2 = 0.5 * CommandData.pointing_mode.h;
   bottom = cel - h_2;
   top = cel + h_2;
-  
+
   sw_2 = 0.5 * CommandData.pointing_mode.w / cos(el * M_PI / 180.0);
   left = caz - sw_2;
   right = caz + sw_2;
-  
+
   /* If a new command, reset to bottom row */
   if ((CommandData.pointing_mode.X != last_pm.X) ||
       (CommandData.pointing_mode.Y != last_pm.Y)) {
@@ -717,7 +717,7 @@ void DoCapMode() {
 
   static struct PointingModeStruct last_pm = {
     P_BOX, 0.0, 0.0, 0.0, 0.0, 0.0,0.0,0};
-  
+
   static struct {
     double el; /* el of current scan, relative to cel */
     int eldir; /* 1 = going up, -1 = going down */
@@ -729,15 +729,14 @@ void DoCapMode() {
   lst = PointingData[i_point].lst;
   az = PointingData[i_point].az;
   el = PointingData[i_point].el;
-  
-  
+
   if (el > 67.0)
     el = 67.0; /* very bad situation - dont know how this can happen */
   if (el < 22.0)
     el = 22.0; /* very bad situation - dont know how this can happen */
 
   v = fabs(CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0));
-  
+
   /* get raster center and sky drift speed */
   radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
       lst, PointingData[i_point].lat,
@@ -752,7 +751,7 @@ void DoCapMode() {
   r = CommandData.pointing_mode.w;
   bottom = cel - r;
   top = cel + r;
-    
+
   /* If a new command, reset to bottom row */
   if ((CommandData.pointing_mode.X != last_pm.X) ||
       (CommandData.pointing_mode.Y != last_pm.Y)) {
@@ -789,7 +788,7 @@ void DoCapMode() {
   } else {
     xw = sqrt(x2);
   }
-  
+
   turn_around = v * 0.3; // FRAME_MARGIN * 10 ms - time delay
   turn_around += (v * v * 0.5 / (AZ_ACCEL * 100.0)) * 0.5;
   xw -= turn_around;

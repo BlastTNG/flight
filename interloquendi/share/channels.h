@@ -141,7 +141,7 @@ extern "C" {
 
 #define T_CHARCOAL_M (-2.865098e-09*65536.0)
 #define T_CHARCOAL_B (1.235145e+01)
-  
+
 // Conversion factors for the rotated/calibrated gyros
 // (GYRO1, GYRO2, GYRO3).  Any correction to this belongs
 // in ACS1, not here

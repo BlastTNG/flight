@@ -188,13 +188,13 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
   static struct BiPhaseStruct* cycle_start_R_Addr;
   static struct NiosStruct*    cycle_state_W_Addr;
   static struct BiPhaseStruct* cycle_state_R_Addr;
-    
+
   double t_lhe, t_he3fridge, t_charcoal, t_he4pot;
 
   time_t start_time;
   unsigned short cycle_state;
   static unsigned short iterator = 1;
-  
+
   if (firsttime) {
     firsttime = 0;
     t_lhe_Addr = GetBiPhaseAddr("t_lhe");
@@ -218,27 +218,33 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
   if(iterator++ % 10)  /* Run this loop at 0.5 Hz */
     return;
 
-  start_time  = slow_data[cycle_start_R_Addr->index][cycle_start_R_Addr->channel];
-  start_time  |= slow_data[cycle_start_R_Addr->index][cycle_start_R_Addr->channel+1] << 16;
-  cycle_state = slow_data[cycle_state_R_Addr->index][cycle_state_R_Addr->channel];
+  start_time
+    = slow_data[cycle_start_R_Addr->index][cycle_start_R_Addr->channel];
+  start_time |=
+    slow_data[cycle_start_R_Addr->index][cycle_start_R_Addr->channel+1] << 16;
+  cycle_state
+    = slow_data[cycle_state_R_Addr->index][cycle_state_R_Addr->channel];
 
-  t_lhe       = (double)slow_data[t_lhe_Addr->index][t_lhe_Addr->channel];
-  t_charcoal  = (double)slow_data[t_charcoal_Addr->index][t_charcoal_Addr->channel];
-  t_he3fridge = (double)slow_data[t_he3fridge_Addr->index][t_he3fridge_Addr->channel];
-  t_he4pot    = (double)slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel];
-  
+  t_lhe = (double)slow_data[t_lhe_Addr->index][t_lhe_Addr->channel];
+  t_charcoal
+    = (double)slow_data[t_charcoal_Addr->index][t_charcoal_Addr->channel];
+  t_he3fridge
+    = (double)slow_data[t_he3fridge_Addr->index][t_he3fridge_Addr->channel];
+  t_he4pot
+    = (double)slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel];
+
   t_lhe       = T_LHE_M*t_lhe + T_LHE_B;
   t_charcoal  = T_CHARCOAL_M*t_charcoal + T_CHARCOAL_B;
   t_he3fridge = (256.0*LOCKIN_C2V)*t_he3fridge + LOCKIN_OFFSET;
   t_he4pot    = (256.0*LOCKIN_C2V)*t_he4pot    + LOCKIN_OFFSET;
-  
+
   if (t_lhe < T_LHE_SET) {
     *cryoout |= CRYO_CHARCOAL_OFF;
     *cryostate &= ~CS_CHARCOAL;
     WriteData(cycle_state_W_Addr, CRYO_CYCLE_OUT_OF_HELIUM, NIOS_QUEUE);
     return;
   } 
-  
+
   if (cycle_state == CRYO_CYCLE_COLD) {
     if(t_he3fridge < T_HE3FRIDGE_TOO_HOT && t_he4pot > T_HE4POT_SET) {
       WriteData(cycle_state_W_Addr, CRYO_CYCLE_ON, NIOS_QUEUE);
@@ -263,7 +269,8 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
     *cryoout |= CRYO_CHARCOAL_ON;
     *cryostate |= CS_CHARCOAL;
   } else if ( cycle_state == CRYO_CYCLE_COOL) {
-    if( (t_he3fridge > T_HE3FRIDGE_COLD) || ((time(NULL) - start_time) > CRYO_CYCLE_COOL_TIMEOUT) ) {
+    if ((t_he3fridge > T_HE3FRIDGE_COLD)
+        || ((time(NULL) - start_time) > CRYO_CYCLE_COOL_TIMEOUT) ) {
       WriteData(cycle_state_W_Addr, CRYO_CYCLE_COLD, NIOS_QUEUE);
       *cryoout |= CRYO_CHARCOAL_OFF;
       *cryostate &= ~CS_CHARCOAL;
@@ -438,7 +445,8 @@ void BiasControl (unsigned short* RxFrame) {
   static struct NiosStruct* biasLev2Addr;
   static struct NiosStruct* biasLev3Addr;
   unsigned short bias_status, biasout1 = 0;
-  static unsigned short biasout2 = 0x70, biaslsbs1=0; /* biaslsbs1 holds 2 lsbs for bias */
+  static unsigned short biasout2 = 0x70,
+                        biaslsbs1=0; /* biaslsbs1 holds 2 lsbs for bias */
   int isBiasAC, isBiasRamp, isBiasClockInternal;
   static int hold = 0, ch = 0, rb_hold = 0;
 

@@ -27,7 +27,7 @@
 /**                                                                          **/
 /**    The name of the ephemeris must be defined by the user. At the time    **/
 /**    this software was created, the only  ephemerides available to the     **/
-/**    public were DE200 and DE405. The ephemeris name is used to size the   **/ 
+/**    public were DE200 and DE405. The ephemeris name is used to size the   **/
 /**    records in the binary data file. These records are sized to accom-    **/
 /**    odate a complete set of  interpolating coefficients in the form of    **/
 /**    an array of double precision numbers. The parameter ARRAY_SIZE gives  **/
@@ -114,7 +114,7 @@
        recOneType data;
        char pad[ARRAY_SIZE*sizeof(double) - sizeof(recOneType)];
      };
-  
+
    struct headerTwo {
        recTwoType data;
        char pad[ARRAY_SIZE*sizeof(double) - sizeof(recTwoType)];

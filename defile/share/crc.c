@@ -58,16 +58,16 @@ unsigned short CalculateCRC(unsigned int initword, void *buffer,
   unsigned int k;
   unsigned short crc;
   unsigned char *b;
- 
+
   if (buflen)
     crc = 0; 
   else 
     return 0;
-  
+
   b = (unsigned char *)buffer;
-  
+
   for (k = 0; k < buflen; k++)
    crc = ((crc >> 8) & 0x00ff) ^ crctab[(crc ^ b[k]) & 0x00ff];
-  
+
   return crc;
 }

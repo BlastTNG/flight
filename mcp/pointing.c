@@ -233,8 +233,7 @@ int MagConvert(double *mag_az) {
   // Enzo inserted these two lines
   mag_az_tmp = MagLutCal(&magLut, ACSData.mag_x, ACSData.mag_y, mag_az_tmp);
   *mag_az = mag_az_tmp;  
-  
-  
+
   *mag_az += dec + MAG_ALIGNMENT;
 
   NormalizeAngle(mag_az);
@@ -417,7 +416,8 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
       if (ISCSolution[which][i_isc].sigma > M_PI) {
         w2 = 0;
       } else {
-        w2 = 10.0 * ISCSolution[which][i_isc].sigma * (180.0 / M_PI); //e->samp_weight;
+        w2 = 10.0 * ISCSolution[which][i_isc].sigma
+          * (180.0 / M_PI); //e->samp_weight;
         if (w2 > 0)
           w2 = 1 / (w2 * w2);
         else

@@ -66,7 +66,7 @@ class AMLParser {
     void GetDataDefault(const char *buf, char *defaultbuf);
     bool GetValue(const char *buf, int num, char *valuebuf);
     void ParseFullName(int num, char *namebuf);
-    
+
     int numentries;
     int maxvalues;
     int maxdata;
@@ -100,7 +100,7 @@ class DataHolder {
 
   private:
     void PopulateDataStruct(struct DataStruct_glob *s, AMLParser *a);
-    
+
     int numslows;
     int numfasts;
     int currslow;

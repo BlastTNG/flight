@@ -15,7 +15,7 @@
 	Overview:
 
 	The server program (netisc on the ISC computer) will connect several clients, each on a separate port. 
-	
+
 	Any client may send ISCStatusStruct data frames. The server takes the appropriate action to achieve that status.
 	While the camera is busy changing the status, the server will continue accepting new frames but will ignore
 	them until the previous changes have been made and it is ready to make further changes.

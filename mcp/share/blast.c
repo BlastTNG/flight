@@ -169,7 +169,7 @@ void *_balloc(buos_t l, size_t s, const char* f, int w, const char* n)
 
   p = malloc(s);
   bprintf(mem, "malloced %u bytes in %s as %p", s, f, p);
-  
+
   if (p == NULL)
     berror(l, "unable to malloc %u bytes at %s:%i in %s", s, n, w, f);
 
@@ -183,7 +183,7 @@ void *_reballoc(buos_t l, void* p, size_t s, const char* f, int w,
 
   q = realloc(p, s);
   bprintf(mem, "realloced %u bytes from %p in %s as %p", s, p, f, q);
-  
+
   if (q == NULL)
     berror(l, "unable to realloc %u bytes from %p at %s:%i in %s", s, p, n, w,
         f);

@@ -113,7 +113,7 @@ double GetJulian(time_t t) {
   struct tm now;
 
   gmtime_r(&t, &now);
-  
+
   y = now.tm_year + 1900;
   m = now.tm_mon + 1;
   d = now.tm_mday + (now.tm_hour + (now.tm_sec / 60.0 + now.tm_min) / 60.0)
@@ -601,10 +601,11 @@ double getlst(time_t t, double lon) {
   //		   21, 06, 103, 0,0,0,0}; // day, month (0-11), year-1900
 
   //t -= (mktime(&gmt) - timezone); 
-  
+
 //  printf("%li %li %li %f\n", t, 1093312156, t - 1093312156, lon);
 
-  t -= 1093225963;//S.t0; // S.t0 is from first line in schedule file: see sched.c
+  // S.t0 is from first line in schedule file: see sched.c;
+  t -= 1093225963;//S.t0
 
   t *= 1.002737909; // gst in seconds
 
@@ -668,34 +669,34 @@ void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
 /************************************************************************/
 void azel2radec(double *ra_out, double *dec_out,
 		double az, double el, time_t lst, double lat) {
-  
+
   double sd, cosA, h1;
   double sin_lat, cos_lat, sin_el;
   double lst_h;
   double ra, dec;
-  
+
   // covert inputs to radians
   lat *= M_PI/180.0;
   az *= M_PI/180.0;
   el *= M_PI/180.0;
   lst_h = (double)lst*(2.0*M_PI/(24.0*3600.0));
-	
+
   sin_lat = sin(lat);
   cos_lat = cos(lat);
   sin_el = sin(el);
   sd = sin_el*sin_lat + cos(el)*cos_lat*cos(az);
-  
+
   dec = asin(sd);
-  
+
   cosA = ( sin_el - sin_lat*sd ) / ( cos_lat*cos(dec) );
   h1 = acos(cosA);
-  
+
   if (sin(az) > 0.0) {
     ra = lst_h + h1 - 2*M_PI;
   } else {
     ra = lst_h - h1;
   }
-  
+
   if (ra < 0.0)
     ra += 2*M_PI;
   else if (ra >= 2*M_PI)

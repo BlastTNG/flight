@@ -132,7 +132,7 @@ union DerivedUnion DerivedChannels[] = {
       "LHE_IS_CLOSED",
       "LHE_IS_OPEN"
       ),
-  
+
   LINCOM2("POT_STATE", "POT_IS_CLOSED", 1, 0, "POT_IS_OPEN",  1, 0),
   LINCOM2("LHE_STATE", "LHE_IS_CLOSED", 1, 0, "LHE_IS_OPEN",  1, 0),
 

@@ -77,7 +77,7 @@ double LutCal(struct LutType *L, double x) {
   double y;
 
   n = L->n;
-  
+
   if (n == 1)
     return(x); // no LUT, not cal
 
@@ -87,7 +87,7 @@ double LutCal(struct LutType *L, double x) {
     i++;
   while ((i > 0) && (x < L->x[i]))
     i--;
-  
+
   L->last_n = i;
 
   y = L->y[i] + (L->y[i + 1] - L->y[i]) / (L->x[i + 1] - L->x[i]) *
@@ -106,7 +106,7 @@ double MagLutCal(struct LutType *L, double mag_x, double mag_y, double x)
 
   if (L->n == 1)
     return(x); // no LUT, not cal
-  
+
   n = L->n >> 1;
 
   mag_x -= L->x[0];

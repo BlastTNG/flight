@@ -85,7 +85,7 @@ class FrameBuffer
   private:
     void Update();
     static void *UpdateThreadEntry(void *);
-    
+
     unsigned int *mcpindex, lastmcpindex;
     unsigned short **fastdata, ***fastbuf;
     unsigned short **slowdata, ***slowbuf;
