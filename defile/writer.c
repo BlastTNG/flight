@@ -586,6 +586,7 @@ void InitialiseDirFile(int reset)
     }
 
     fprintf(fp, rc.dirfile);
+    fprintf(fp, "\n");
 
     if (fclose(fp) < 0) {
       snprintf(gpb, GPB_LEN, "defile: cannot close curfile `%s'",

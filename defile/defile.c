@@ -37,7 +37,7 @@
 
 #define VERSION_MAJOR    "1"
 #define VERSION_MINOR    "0"
-#define VERSION_REVISION "7"
+#define VERSION_REVISION "8"
 #define VERSION VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION 
 
 #define DEFAULT_CURFILE "/data/etc/defile.cur"
