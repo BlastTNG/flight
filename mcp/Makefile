@@ -15,7 +15,7 @@ endif
 HEADERS = bbc_pci.h commands.h ephem_read.h ephem_types.h isc_protocol.h lut.h \
 					mcp.h pointing_struct.h sort.h sslutNA.h starpos.h tx.h tx_struct.h
 
-OBJS = auxiliary.o commands.o das.o dgps.o framefile.o \
+OBJS = auxiliary.o channels.o commands.o das.o dgps.o framefile.o \
 			 ephem_read.o geomag.o isc.o lut.o mcp.o \
 			 motors.o pointing.o sched.o sslutNA.o starpos.o tx.o \
 			 tx_struct.o

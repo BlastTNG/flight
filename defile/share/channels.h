@@ -1,13 +1,15 @@
 #ifndef TX_STRUCT_H
 #define TX_STRUCT_H
 
+#include <stdio.h>
+
 /* Fix things up so we can include this in C++ applications */
 #ifdef __cplusplus
 extern "C" {
 #endif
 
   /* FAST_PER_SLOW is the number of fast samples for each slow one */
-#define FAST_PER_SLOW 20
+#define FAST_PER_SLOW   20
 #define NOT_MULTIPLEXED (FAST_PER_SLOW)
 #define DISCARD_WORD    (FAST_PER_SLOW + 1)
 
@@ -73,7 +75,14 @@ extern "C" {
   void FPrintDerived(FILE*);
   struct NiosStruct* GetNiosAddr(const char*);
   inline struct BiPhaseStruct* GetBiPhaseAddr(const char*);
-  inline struct BiPhaseStruct* ExtractBiPhaseAddr(struct NiosStruct* niosAddr);
+  inline struct BiPhaseStruct* ExtractBiPhaseAddr(struct NiosStruct*);
+
+/* reserved node numbers */
+#define SPARE      62
+#define SPECIAL    63
+#define EOC_MARKER -1
+
+#define END_OF_CHANNELS {"", 'x', EOC_MARKER, -1, 0, 0}
 
 #define DEG2LI (4294967296.0/360.0)
 #define LI2DEG (1.0/DEG2LI)
