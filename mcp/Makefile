@@ -2,8 +2,8 @@ include Makefile.config
 
 CC = gcc
 CPP = g++
-CPPFLAGS = -O3 -Wall -D__MCP__ -I/usr/share/qt3/include $(BOLOTEST)
-LDFLAGS = -lpthread -lm -lstdc++ -lqt
+CPPFLAGS = -O3 -Wall -D__MCP__ -I/usr/lib/qt/include $(BOLOTEST)
+LDFLAGS = -L/usr/lib/qt/lib -lpthread -lm -lstdc++ -lqt
 ifeq ($(DEBUG), 1)
 	CFLAGS := $(CFLAGS) -g
 	LDFLAGS := $(LDFLAGS) -g
