@@ -5,7 +5,7 @@
 #define FAST_PER_SLOW 20
 
 /* N_SLOW is the number of slow fields */
-#define N_SLOW 12
+#define N_SLOW 13
 
 /* Number of DAS bolometer cards to include in the frame.  The maximum number
  * of cards is 11 */
@@ -14,7 +14,7 @@
 #define DAS_CHS 24
 
 /* Number of records in the frame below the DAS bolometer records */
-#define N_FASTCHLIST_INIT_ACS 35
+#define N_FASTCHLIST_INIT_ACS 34
 #define N_FASTCHLIST_INIT_DAS 49
 #ifdef BOLOTEST
   #define N_FASTCHLIST_INIT (N_FASTCHLIST_INIT_DAS)
