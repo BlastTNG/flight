@@ -87,5 +87,4 @@ install: mcp
 	install -d -m 777 /data/rawdir
 	install -m 755 mcp /usr/local/bin
 	install -m 755 doSensors /usr/local/bin
-	install -m 755 doMcp /usr/local/bin
 	cd etc && $(MAKE) install
