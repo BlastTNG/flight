@@ -138,7 +138,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"cryostate",    'w', LOOPBACK, 40,          1.0,             0.0, 'u'},
     {"cpu_fan",      'w', LOOPBACK, 13,          1.0,             0.0, 'u'},
     {"t_cpu",        'w', LOOPBACK, 14,          1.0,             0.0, 'u'},
-    {"i_apm_3v",     'r',  2,       43,    -0.000625,           20.48, 'u'},
+    {"i_apm_3v",     'r',  2,       43,     0.000625,          -20.48, 'u'},
     {"t_isc",        'r',  21,      25,     -0.00625,          136.45, 'u'},
     {"spare12",      'r', SPARE,    12,           1.0,            0.0, 'u'},
     {"spare13",      'r', SPARE,    13,           1.0,            0.0, 'u'},
