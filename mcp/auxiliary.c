@@ -184,7 +184,7 @@ void ControlGyroHeat(unsigned short *RxFrame)
   D = CommandData.gyheat.gain.D * ( 1.0 / 1000.0);
 
   /********* if end of pulse, calculate next pulse *********/
-  if (p_off < 0) {
+  if (p_off <= 0) {
     error = set_point -
       ((unsigned int)(RxFrame[tGyboxAddr->channel + 1] << 16
                       | RxFrame[tGyboxAddr->channel]));
