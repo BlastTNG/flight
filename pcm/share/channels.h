@@ -55,8 +55,10 @@ void SlowChIndex(char*, int*, int*);
 
 #define DEG2LI (4294967296.0/360.0)
 #define LI2DEG (1.0/DEG2LI)
+#define RAD2LI (4294967296.0/2/M_PI)
 #define DEG2I (65536.0/360.0)
 #define I2DEG (1.0/DEG2I)
+#define RAD2I (65536.0/2/M_PI)
 #define H2I (65536.0/24.0)
 #define I2H (1.0/H2I)
 #define VEL2I (65536.0/10.0)

@@ -182,10 +182,15 @@ void IntegratingStarCamera(void)
               sizeof(server_frame), n);
           break;
         }
+
+        fprintf(stderr, "ISC ra = %lf dec = %lf\n", ISCData[iscdata_index].ra,
+            ISCData[iscdata_index].dec);
+        fprintf(stderr, "ISC ra = %lf dec = %lf\n", ISCData[iscdata_index].ra * RAD2LI * LI2DEG,
+            ISCData[iscdata_index].dec * RAD2LI * LI2DEG);
         t2 = t1;
         gettimeofday(&t1, NULL);
         delta = (t1.tv_sec - t2.tv_sec) * 1000000 + (t1.tv_usec - t2.tv_usec);
-        //        fprintf(stderr, "ISC: Received %i bytes after %f milliseconds.\n", n, (double)delta / 1000.);
+        fprintf(stderr, "ISC: Received %i bytes after %f milliseconds.\n", n, (double)delta / 1000.);
 
         /* If we've received a command in the interrim, don't clobber it. */
         if (!CommandData.write_ISC_command) {

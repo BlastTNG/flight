@@ -210,7 +210,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"isc_expose",  'w', LOOPBAK2,  4,      1./1000.,             0.0, 'u'},
     {"isc_rot",     'w', LOOPBAK2,  5,         I2DEG,             0.0, 'u'},
     {"isc_ra",      'w', LOOPBAK2,  6,        LI2DEG,             0.0, 'U'},
-    {"isc_dec",     'w', LOOPBAK2,  8,        LI2DEG,             0.0, 'S'}
+    {"isc_dec",     'w', LOOPBAK2,  8,     LI2DEG/2.,            -90., 'U'}
   },
   {
     {"sip_lat",     'w', LOOPBACK, 20,         I2DEG,             0.0, 'u'},

@@ -1313,11 +1313,11 @@ void StoreData(int index, unsigned int* Txframe,
   WriteSlow(isc_framenumCh, isc_framenumInd, (int)ISCData[i_isc].framenum);
   WriteSlow(isc_errorCh, isc_errorInd, (int)ISCData[i_isc].error);
   WriteSlow(isc_exposeCh, isc_exposeInd, (int)ISCData[i_isc].exposure);
-  WriteSlow(isc_rotCh, isc_rotInd, (int)(ISCData[i_isc].rot * DEG2I));
-  WriteSlow(isc_raCh, isc_raInd, (int)(ISCData[i_isc].ra * DEG2LI));
-  WriteSlow(isc_raCh + 1, isc_raInd, (int)(ISCData[i_isc].ra * DEG2LI) >> 16);
-  WriteSlow(isc_decCh, isc_decInd, (int)(ISCData[i_isc].dec * DEG2LI));
-  WriteSlow(isc_decCh + 1, isc_decInd, (int)(ISCData[i_isc].dec * DEG2LI) >>16);
+  WriteSlow(isc_rotCh, isc_rotInd, (int)(ISCData[i_isc].rot * RAD2I));
+  WriteSlow(isc_raCh, isc_raInd, (int)(ISCData[i_isc].ra * RAD2LI) >> 16);
+  WriteSlow(isc_raCh + 1, isc_raInd, (int)(ISCData[i_isc].ra * RAD2LI));
+  WriteSlow(isc_decCh, isc_decInd, (int)((ISCData[i_isc].dec + M_PI / 2) * 2 * RAD2LI) >> 16);
+  WriteSlow(isc_decCh + 1, isc_decInd, (int)((ISCData[i_isc].dec + M_PI / 2) * 2* RAD2LI));
   WriteSlow(isc_apertCh, isc_apertInd, (int)ISCData[i_isc].aperturePosition);
   WriteSlow(isc_pscaleCh, isc_pscaleInd,
       (int)(ISCData[i_isc].platescale * 1000.));
