@@ -35,19 +35,19 @@ my $SIGTERM = 15;
 
 for (@ARGV) {
   if (/^stop$/) {
-    SendSig($SIGTERM);
+    SendSig($SIGTERM, 0);
   } elsif (/^start$/) {
     StartDecomd();
   } elsif (/^restart$/) {
-    SendSig($SIGTERM);
+    SendSig($SIGTERM, 1);
     sleep 5;
     StartDecomd();
   } elsif (/^cycle$/) {
-    SendSig($SIGHUP);
+    SendSig($SIGHUP, 0);
   } elsif (/^status$/) {
     Status();
   } elsif (/^pause$/) {
-    SendSig($SIGINT);
+    SendSig($SIGINT, 0);
   } else {
     PrintUsage();
   }
@@ -90,16 +90,25 @@ sub StartDecomd {
 
 sub SendSig {
   my $signo = shift;
+  my $nopidok = shift;
   if (my $pid = GetPid) {
     my ($untainted_pid) = $pid =~ /([0-9]*)/;
     if ($untainted_pid > 100) {
       kill $signo, $untainted_pid;
       print "sent signal $signo to PID $untainted_pid\n";
     } else {
-      die "the decomd pid appears to be wrong (PID = $untainted_pid)\n";
+      if ($nopidok) {
+        print "didn't send signal $signo: the pid appears to be wrong\n";
+      } else {
+        die "the decomd pid appears to be wrong (PID = $untainted_pid)\n";
+      }
     }
   } else {
-    die "decomd doesn't appear to be running (/var/run/decomd.pid doesn't exist).\n";
+    if ($nopidok) {
+      print "didn't send signal $signo: the decom doesn't appear to be running\n";
+    } else {
+      die "decomd doesn't appear to be running (/var/run/decomd.pid doesn't exist).\n";
+    }
   }
 }
 
