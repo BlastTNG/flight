@@ -770,11 +770,13 @@ void MainForm::GetXMLInfo(char *layoutfile) {
 
   // Read in the .cur file names
   XMLInfo->GotoEntry(".SETTINGS.CURFILE", 0, false);
+  CurFile = new QString;
   if (XMLInfo->GetTagName() == "CURFILE") {
-    CurFile = new QString;
     *CurFile = FindAttribute("name", "SETTINGS.CURFILE");
   } else {
-    fprintf(stderr, "no curfile defined.\n");
+    fprintf(stderr, "No curfile defined.\n"
+        "Is this an old palantir file?\n"
+        "Make sure CURVEFILE has been changed to CURFILE\n");
     exit(1);
   }
 
@@ -912,12 +914,12 @@ void MainForm::UpdateData() {
     updating = 1;
     Picture->TurnOn(ShowPicture);
     if (pollDecomd)
-      PalantirState->setText("PT: Running");
+      PalantirState->setText("PT: RUN");
   } else {
     // Blank palantir
     Picture->TurnOff(ShowPicture);
     if (pollDecomd)
-      PalantirState->setText("PT: Stopped");
+      PalantirState->setText("PT: STP");
     updating = 0;
     if (NoIncomingOn) {
       if (++NoIncoming == 3) {
@@ -929,41 +931,48 @@ void MainForm::UpdateData() {
   if (pollDecomd) {
     switch (connectState) {
       case 0:
-        DecomState->setText("DD: Disconnected");
+        DecomState->setText("DD: DIS");
         break;
       case 1:
-        DecomState->setText("DD: Resolving host...");
+        DecomState->setText("DD: RES");
         break;
       case 2:
-        DecomState->setText("DD: Connecting...");
+        DecomState->setText("DD: ...");
         break;
       case 3:
-        DecomState->setText("DD: Host not found");
+        DecomState->setText("DD: HST");
         break;
       case 4:
-        DecomState->setText("DD: Connexion error");
+        DecomState->setText("DD: ERR");
         break;
       case 5:
-        DecomState->setText("DD: Connected");
+        DecomState->setText("DD: CON");
         break;
       case 6:
-        DecomState->setText("DD: Connection Dropped");
+        DecomState->setText("DD: DRP");
         break;
     }
 
     if (connectState == 5) {
       switch (theDecom->Status()) {
         case 0:
-          LockState->setText("DL: Lost");
+          LockState->setText("DL: LST");
           break;
         case 1:
-          LockState->setText("DL: Searching");
+          LockState->setText("DL: SRC");
           break;
         case 2:
-          LockState->setText("DL: Locked");
+          LockState->setText("DL: LCK");
           break;
-        case 3:
-          LockState->setText("DL: Paused");
+        case 4:
+          LockState->setText("DL: LST/PAU");
+          break;
+        case 5:
+          LockState->setText("DL: SRC/PAU");
+          break;
+        case 6:
+          LockState->setText("DL: LCK/PAU");
+          break;
         default:
           LockState->setText("DL: ???");
           break;
@@ -1378,9 +1387,9 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
     theStatusBar->setSizeGripEnabled(false);
 
     PalantirState = new QLabel(theStatusBar);
-    PalantirState->setText("PT: Running");
+    PalantirState->setText("PT: RUN");
     DecomState = new QLabel(theStatusBar);
-    DecomState->setText("DD: Not connected");
+    DecomState->setText("DD: N/C");
     LockState = new QLabel(theStatusBar);
     LockState->setText("DL: ???");
     FrameLoss = new QLabel(theStatusBar);
