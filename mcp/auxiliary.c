@@ -388,6 +388,9 @@ void CameraTrigger(int which)
               which);
       } else {
         isc_pulses[which].force_sync = 0;
+        bprintf(warning,
+            "%s: out-of-sync condition detected, attempting to resync",
+            (which) ? "Osc" : "Isc");
 
         if (WHICH)
           bprintf(info, "%iSC (t): Lowered force_sync Semaphore ++++++++++++++++++\n", which);
