@@ -19,6 +19,13 @@ union DerivedUnion {
     char source[FIELD_LEN];     /* Source Channel Name */
     char field[16][FIELD_LEN];  /* Derived Channel Names */
   } bitfield;
+  struct {                      /* BITWORD */
+    char type;                  /* Should = 'w' for bitword */
+    char field[FIELD_LEN];      /* Derived Channel Name */
+    char source[FIELD_LEN];     /* Source Channel Name */
+    char offset;                /* Fisrt Bit */
+    char length;                /* Number of Bits */
+  } bitword;
   struct {                      /* LINTERP */
     char type;                  /* Should = 't' for linterp */
     char field[FIELD_LEN];      /* Derived Channel Name */
@@ -53,6 +60,7 @@ union DerivedUnion {
 #define LINCOM2(f,s1,m1,b1,s2,m2,b2) {.lincom2 = { '2' , f , s1 , m1 , b1 ,\
   s2 , m2 , b2 }}
 #define LINTERP(f,s,l) {.linterp = { 't' , f , s , l }}
+#define BITWORD(f,s,o,l) {.bitword = { 'w' , f , s , o, l }}
 #define BITFIELD(s, ...) {.bitfield = { 'b' , s , { __VA_ARGS__ }}}
 #define COMMENT(c) {.comment = { '#' , c }}
 #define END_OF_DERIVED_CHANNELS {.comment = { DERIVED_EOC_MARKER , "" }}

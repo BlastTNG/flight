@@ -15,7 +15,7 @@
 
 /* Don's Handy Guide to adding derived channels:
  *
- * There are five types of derived channels which can be added to the format
+ * There are six types of derived channels which can be added to the format
  * file.  Channel names are, of course, case sensitive.  On start-up, both
  * mcp and decomd run sanity checks on the channel lists, including the derived
  * channel list.  The checks will fail for the derived channel list if either
@@ -50,6 +50,11 @@
  *      NB: Bits for which no channel is defined should be given an empty string
  *      "" as a channel name.  Additionally, unused trailing high-bit channels
  *      can be omitted.
+ * o BITWORD: A multi-bit channel extracted from a larger source channel
+ *   1.  Derived Channel Name (string)
+ *   2.  Source Channel Name (string)
+ *   3.  First bit of the bitword, numbered from zero (integer)
+ *   4.  Length of the bitword (integer)
  * o COMMENT: A litteral comment to be inserted into the format file
  *   1.  Comment Text (string) -- there is no need to include the comment
  *       delimiter (#).
@@ -73,6 +78,7 @@ union DerivedUnion DerivedChannels[] = {
       "MAG_VETO",
       "GPS_VETO",
       "ELCLIN_VETO",
+      "OSC_VETO",
       "IS_SCHED"
       ),
 
@@ -86,6 +92,7 @@ union DerivedUnion DerivedChannels[] = {
       "ISC_BRIGHT_STAR",
       "ISC_SHUTDOWN"
       ),
+  BITWORD("ISC_SENT_TRIG", "isc_trigger", 0, 14),
 
   BITFIELD("osc_state",
       "OSC_SAVE_IMAGES",
@@ -95,6 +102,7 @@ union DerivedUnion DerivedChannels[] = {
       "OSC_BRIGHT_STAR",
       "OSC_SHUTDOWN"
       ),
+  BITWORD("OSC_SENT_TRIG", "osc_trigger", 0, 14),
 #endif
 
   /* BIAS */
@@ -120,7 +128,7 @@ union DerivedUnion DerivedChannels[] = {
       "POT_VALVE",
       "POT_DIREC",
       "LHE_VALVE",
-      "L_DIREC",
+      "CRYO_DIREC",
       "LN_VALVE",
       "AUTO_JFET_HEAT"
       ),

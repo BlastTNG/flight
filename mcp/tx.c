@@ -778,10 +778,11 @@ void StoreData(int index)
     ((!CommandData.use_elenc) << 2) |
     ((!CommandData.use_mag) << 3) |
     ((!CommandData.use_gps) << 4) |
-    ((!CommandData.use_elclin) << 5);
+    ((!CommandData.use_elclin) << 5) |
+    ((!CommandData.use_osc) << 6);
 
   if (PointingData[i_point].t >= CommandData.pointing_mode.t)
-    sensor_veto |= (1 << 6);
+    sensor_veto |= (1 << 7);
 
   WriteData(sensorVetoAddr, sensor_veto, NIOS_QUEUE);
 

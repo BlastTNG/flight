@@ -113,6 +113,7 @@ struct CommandDataStruct {
   unsigned char use_elclin;
   unsigned char use_sun;
   unsigned char use_isc;
+  unsigned char use_osc;
   unsigned char use_mag;
   unsigned char use_gps;
 

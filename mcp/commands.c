@@ -274,6 +274,8 @@ void SingleCommand (enum singleCommand command) {
     CommandData.use_sun = 0;
   else if (command == isc_veto)
     CommandData.use_isc = 0;
+  else if (command == osc_veto)
+    CommandData.use_osc = 0;
   else if (command == mag_veto)
     CommandData.use_mag = 0;
   else if (command == gps_veto)
@@ -287,6 +289,8 @@ void SingleCommand (enum singleCommand command) {
     CommandData.use_sun = 1;
   else if (command == isc_allow)
     CommandData.use_isc = 1;
+  else if (command == osc_allow)
+    CommandData.use_osc = 1;
   else if (command == mag_allow)
     CommandData.use_mag = 1;
   else if (command == gps_allow)

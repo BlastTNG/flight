@@ -14,7 +14,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.33 $";
+const char command_list_serial[] = "$Revision: 2.34 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -60,8 +60,10 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(elenc_allow), "un-veto elevation encoder", GR_VETO},
   {COMMAND(sun_veto), "veto sun sensor", GR_VETO},
   {COMMAND(sun_allow), "un-veto sun sensor", GR_VETO},
-  {COMMAND(isc_veto), "veto integrating star-cam", GR_VETO},
-  {COMMAND(isc_allow), "un-veto integrating star-cam", GR_VETO},
+  {COMMAND(isc_veto), "veto integrating star camera", GR_VETO},
+  {COMMAND(isc_allow), "un-veto integrating star camera", GR_VETO},
+  {COMMAND(osc_veto), "veto other star camera", GR_VETO},
+  {COMMAND(osc_allow), "un-veto other star-cam", GR_VETO},
   {COMMAND(mag_veto), "veto magnotometer", GR_VETO},
   {COMMAND(mag_allow), "un-veto magnetometer", GR_VETO},
   {COMMAND(gps_veto), "veto differntial gps", GR_VETO},

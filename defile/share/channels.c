@@ -656,6 +656,7 @@ void DoSanityChecks(void)
               DerivedChannels[i].lincom2.source2);
 
         /* FALLTHROUGH */
+      case 'w': /* bitword -- same checks as lincom */
       case 't': /* linterp -- same checks as lincom */
       case 'c': /* lincom */
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom.source) == -1)
@@ -1135,6 +1136,11 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
             DerivedChannels[i].linterp.field, DerivedChannels[i].linterp.source,
             DerivedChannels[i].linterp.lut);
         break;
+      case 'w': /* bitword */
+        snprintf(line, 1024, "%-16s BIT %-16s %i %i\n",
+            DerivedChannels[i].bitword.field, DerivedChannels[i].bitword.source,
+            DerivedChannels[i].bitword.offset,
+            DerivedChannels[i].bitword.length);
       case '#': /* comment */
         snprintf(line, 1024, "\n# %s\n", DerivedChannels[i].comment.text);
         break;
