@@ -504,7 +504,7 @@ struct ChannelStruct WideFastChannels[] = {
   {"n12ref",      'r', DAS12, 36,      1.19209e-7,                    0.0, 'U'},
   {"n13ref",      'r', DAS13, 36,      1.19209e-7,                    0.0, 'U'},
   {"n14ref",      'r', DAS14, 36,      1.19209e-7,                    0.0, 'U'},
-  {"n15ref",      'r', DAS15, 36,      1.23301e-7,                    0.0, 'U'},
+  {"n15ref",      'r', DAS15, 36,      1.19209e-7,                    0.0, 'U'},
   {"n16ref",      'r', DAS16, 36,      1.19209e-7,                    0.0, 'U'},
 
 // cryo control debug
