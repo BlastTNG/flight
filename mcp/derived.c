@@ -143,6 +143,26 @@ union DerivedUnion DerivedChannels[] = {
       "AUTO_JFET_HEAT"
       ),
 
+  COMMENT("More internal to mcp references of the cryostat"),
+  BITFIELD("cryoctrl",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "CAL_LAMP_ON_CMD",
+      "AUTO_CYCLE_ON"
+      ),
+
   COMMENT("Cryo Valve Limit Switches"),
 
   BITFIELD("cryoin",
