@@ -327,6 +327,7 @@
       <WORD value="6" caption="Cap" textstyle="OK_BIT"/>
       <WORD value="7" caption="Box" textstyle="OK_BIT"/>
       <WORD value="8" caption="Lock" textstyle="W_BIT"/>
+      <WORD value="9" caption="VBox" textstyle="OK_BIT"/>
     </DATUM>
   </MULTI>
   <NUMBER caption="X (deg)" textstyle="evenrow">
@@ -556,7 +557,7 @@
   </NUMBER>
   <MULTI caption="Ring Bearer" textstyle="oddrow">
     <DATUM src="SAM_I_AM">
-      <WORD value="1" caption="Sam" textstyle="OK_BIT"/>
+      <WORD value="1" caption="Sam" textstyle="W_BIT"/>
       <WORD value="0" caption="Frodo" textstyle="OK_BIT"/>
     </DATUM>
   </MULTI>
@@ -681,8 +682,8 @@
   </MULTI>
   <MULTI caption="Pot Dir" textstyle="oddrow">
     <DATUM src="POT_DIREC">
-      <WORD value="1" caption="Opening" textstyle="W_BIT"/>
-      <WORD value="0" caption="Closing" textstyle="OK_BIT"/>
+      <WORD value="1" caption="Opening" textstyle="OK_BIT"/>
+      <WORD value="0" caption="Closing" textstyle="W_BIT"/>
     </DATUM>
   </MULTI>
   <MULTI caption="Pot State" textstyle="oddrow">
