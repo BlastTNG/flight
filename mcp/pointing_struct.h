@@ -120,6 +120,8 @@ struct PointingDataStruct {
   double az;        // degrees
   double el;        // degrees
   double gy1_offset;
+  double gy2_offset;
+  double gy3_offset;
   double gy_roll_amp;
   double lat;       // degrees
   double lon;       // degrees
@@ -167,5 +169,3 @@ extern int dgpsatt_index;
 extern time_t DGPSTime;
 
 
-#define GY2_TMP_OFFSET (-0.01246)
-#define GY3_TMP_OFFSET (-0.01689)

@@ -28,6 +28,8 @@ struct SolutionStruct {
 
 #define GY_HISTORY 30000
 #define EL_GY_GAIN_ERROR 1.0407
+#define GY2_TMP_OFFSET (0.01246)
+#define GY3_TMP_OFFSET (0.01689)
 void GyroOffsets(int index) {
   static short *gyro1_history = NULL;
   static float *elev_history = NULL;
@@ -43,6 +45,10 @@ void GyroOffsets(int index) {
     elev_history = (float *)malloc(GY_HISTORY * sizeof(float));
   }
 
+  // FIXME: temporary offset calculation needs to go away!
+  PointingData[index].gy2_offset = GY2_TMP_OFFSET;
+  PointingData[index].gy3_offset = GY3_TMP_OFFSET;
+  
   if (wait>0) { // don't start accumulating right away...
     wait--;
     PointingData[index].gy1_offset = 0.0;
@@ -64,10 +70,12 @@ void GyroOffsets(int index) {
       ((e2-e1) - EL_GY_GAIN_ERROR*sum_gyro1*(0.00091506980885/100.0)) *
       (100.0/(float)GY_HISTORY);
     sum_gyro1-=gyro1_history[i_history];	
-  } else {
+  } else if (n_h>0) {
     PointingData[index].gy1_offset =
       ((e2-elev_history[0]) - EL_GY_GAIN_ERROR*sum_gyro1*(0.00091506980885/100.0) ) *
       (100.0/(float)n_h);
+    n_h++;
+  } else {
     n_h++;
   }
 }
@@ -103,11 +111,15 @@ void Pointing(){
   int i_dgpspos;
   
   static double gy_roll_amp = 0.0;
-
+  static double gy1_offset=0.0;
+  static double gy2_offset=0.0;
+  static double gy3_offset=0.0;
+  
   static struct SolutionStruct EncEl = {0.0, 360.0*360.0,
 					1.0/M2DV(6), M2DV(6)};
   static struct SolutionStruct NullAz = {0.0, 360.0*360.0,
 					 1.0/M2DV(6), M2DV(6)};
+  
 
   i_dgpspos = GETREADINDEX(dgpspos_index);
   
@@ -133,24 +145,28 @@ void Pointing(){
 	 
   /*************************************/
   /**      do elevation solution      **/
-  EvolveSolution(&EncEl, ACSData.gyro1
-		 + PointingData[GETREADINDEX(point_index)].gy1_offset,
+  EvolveSolution(&EncEl, ACSData.gyro1 + gy1_offset,
 		 ACSData.enc_elev, 1);
-  //printf("%g %g %g\n", EncEl.angle, ACSData.enc_elev, ACSData.gyro1);
 
   /* for now, use enc_elev solution for elev */
   PointingData[point_index].el = EncEl.angle;
-
-  GyroOffsets(point_index);
 
   /*******************************/
   /**      do az solution      **/
   gy2 = ACSData.gyro2;
   gy3 = ACSData.gyro3;
   el_rad = PointingData[point_index].el* M_PI/180.0;;
-  gy_az = -gy2 * cos(el_rad) + -gy3 * sin(el_rad);
+  gy_az = -(gy2 + gy2_offset) * cos(el_rad) +
+	  -(gy3 + gy3_offset) * sin(el_rad);
   EvolveSolution(&NullAz, gy_az, 0.0, 0);
   PointingData[point_index].az = NullAz.angle;
+
+  /***********************/
+  /** Find gyro offsets **/
+  GyroOffsets(point_index);
+  gy1_offset = PointingData[point_index].gy1_offset;
+  gy2_offset = PointingData[point_index].gy2_offset;
+  gy3_offset = PointingData[point_index].gy3_offset;
 
   /************************/
   /* set roll damper gain */

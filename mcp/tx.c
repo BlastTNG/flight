@@ -172,10 +172,13 @@ int GetVAz() {
 
   
   //-[V5-GYRO2]*cos([el_rad-sv]) - [V6-GYRO3]*sin([el_rad-sv])
-  vel_offset = -GY2_TMP_OFFSET*cos(PointingData[i_point].el) -
-	       GY3_TMP_OFFSET*sin(PointingData[i_point].el);
+  //vel_offset = -GY2_TMP_OFFSET*cos(PointingData[i_point].el) -
+  //       GY3_TMP_OFFSET*sin(PointingData[i_point].el);
+  vel_offset =
+    -PointingData[i_point].gy2_offset*cos(PointingData[i_point].el) -
+    PointingData[i_point].gy3_offset*sin(PointingData[i_point].el);
   
-  vel += vel_offset;
+  vel -= vel_offset;
   vel *= DPS2GYU; // convert to gyro units
   
   /* Limit Maximim speed */
@@ -1220,7 +1223,7 @@ void DoAzScanMode() {
 #define MAX_EL 50.0
 #define EL_BORDER 0.1
 
-void DoScanMode() {
+void DoRasterMode() {
   double caz, cel;
   double az, az2, el, el1, el2;
   double daz_dt, del_dt;
@@ -1329,6 +1332,33 @@ void DoScanMode() {
   }  
 }
 
+void DoRaDecGotoMode() {
+  double caz, cel;
+  double az, el;
+  double lst;
+  int i_point;
+  
+  i_point = GETREADINDEX(point_index);
+  lst = PointingData[i_point].lst;
+  az = PointingData[i_point].az;
+  el = PointingData[i_point].el;
+  while (el> 180.0) el-=360.0;
+  while (el<-180.0) el += 360.0;
+  if (el>80) el = 80; // very bad situation - don't know how this can happen
+  if (el<-10) el = -10; // very bad situation - don't know how this can happen
+
+  radec2azel(CommandData.pointing_mode.ra, CommandData.pointing_mode.dec,
+ 	     lst, PointingData[i_point].lat,
+ 	     &caz, &cel);
+
+  axes_mode.az_mode = AXIS_POSITION;
+  axes_mode.az_dest = caz;
+  axes_mode.az_vel = 0.0;
+  axes_mode.el_mode = AXIS_POSITION;
+  axes_mode.el_dest = cel;
+  axes_mode.el_vel = 0.0;
+}
+
 /******************************************************************
  *                                                                *
  * Update Axis Modes: Set axes_mode based on                      *
@@ -1347,7 +1377,10 @@ void UpdateAxesMode() {
     axes_mode.el_vel = 0.0;
     break;
   case POINT_RASTER:
-    DoScanMode();
+    DoRasterMode();
+    break;
+  case POINT_RADEC_GOTO:
+    DoRaDecGotoMode();
     break;
   case POINT_LOCK:
     axes_mode.el_mode = AXIS_LOCK;
@@ -1375,9 +1408,7 @@ void UpdateAxesMode() {
     axes_mode.az_vel = 0.0;
     break;
   case POINT_RASTER:
-    /*** FIXME: NEEDS TO BE WRITTEN ***/
-    //axes_mode.az_mode = AXIS_VEL;
-    //axes_mode.az_vel = 0.0;
+    // already done in el mode test....
     break;
   case POINT_SCAN:
     DoAzScanMode();

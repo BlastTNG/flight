@@ -11,6 +11,7 @@
 #define POINT_LOCK 4
 #define POINT_SCAN 8
 #define POINT_RASTER 16
+#define POINT_RADEC_GOTO 32
 
 struct SlowDLStruct {
   char src[20];
