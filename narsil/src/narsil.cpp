@@ -949,10 +949,6 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
                          PADDING * 2 + NGroupsBox->height(),
                          NTopFrame->width(), NTopFrame->height());
 
-  NCommandList->setGeometry(PADDING, PADDING, NCommandList->width(),
-                            PADDING * 2 + NGroupsBox->height() +
-                            NTopFrame->height());
-
 
   NBotFrame = new QFrame(this, "NBotFrame");
   NBotFrame->setFrameShape(QFrame::Box);
@@ -991,6 +987,10 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
                          PADDING * 3 + NGroupsBox->height() +
       NTopFrame->height(), NTopFrame->width(),
       NBotFrame->height());
+
+  NCommandList->setGeometry(PADDING, PADDING, NCommandList->width(),
+                            PADDING * 2 + NGroupsBox->height() +
+                            NTopFrame->height() + NBotFrame->height());
 
   NSettingsWindow = new QDialog(this, "NSettingsWindow", true, 0);
   NSettingsWindow->setName("SettingsWindow");
