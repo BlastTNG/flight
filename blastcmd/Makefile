@@ -17,9 +17,11 @@ blastcmd: $(OBJS)
 blastcmd.o: blastcmd.c commands.h
 	$(CC) $(FLAGS) -DLIB_DIR=\"$(DATA_DIR)\" -c blastcmd.c -o blastcmd.o
 
+install_fifocmd:
+	install -D -m 755 fifocmd $(EXEC_DIR)/fifocmd
+
 install:
 	install -D -m 755 blastcmd $(EXEC_DIR)/blastcmd
-	install -D -m 755 fifocmd $(EXEC_DIR)/fifocmd
 	[ -e $(DATA_DIR)/log.txt ] || install -D -m 666 log.txt $(DATA_DIR)/log.txt
 
 clean:
