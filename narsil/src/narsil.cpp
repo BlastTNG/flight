@@ -761,6 +761,7 @@ void MainForm::WriteLog(char *args[]) {
              .arg(DataSource->fileName());
 
   LogEntry+="--------------------------------------------------\n\n";
+
   QString logfilename = LOGFILEDIR +
                         qdt.toString("yyyy-MM-dd.hh:mm:ss") + "." +
                         "narsil." +
