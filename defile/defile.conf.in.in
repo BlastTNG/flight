@@ -1,3 +1,4 @@
+# @fixup_input@
 # @configure_input@
 #
 # Sample defile.conf for defile @VERSION@
@@ -42,8 +43,8 @@ InputSource arwen
 
 # ---
 
-# Set OutpuCurFileName to the default output curfile name.
-# Default: /data/etc/defile.cur
+# Set OutpuCurFileName to the default output curfile name.  Only used if
+# WriteCurFile is also specified. Default: @DATA_ETC_DIR@/defile.cur
 
 OutputCurFileName /data/etc/defile.cur
 
@@ -58,7 +59,7 @@ OutputCurFileName /data/etc/defile.cur
 
 # Set PidFile to the name of the file to write defile's pid to when in daemon
 # mode. This has no effect when not in daemon mode.
-# Default: /var/run/defile.pid
+# Default: @localstatedir@/run/defile.pid
 
 # PidFile /var/run/defile.pid
 

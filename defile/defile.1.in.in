@@ -1,6 +1,6 @@
 .\" @fixup_input@
 .\" @configure_input@
-.TH defile 1 "15 October 2004" "version @VERSION@" "BLAST UTILITIES"
+.TH defile 1 "1 November 2004" "version @VERSION@" "BLAST UTILITIES"
 .SH NAME
 defile \(em convert a MCP-style framefile into a dirfile
 .SH SYNOPSIS
@@ -513,7 +513,7 @@ The default process-id file.  Overrideable with the
 .I PidFile
 directive.
 .TP
-.I @sysconfdir@/defile.conf
+.I @etcdir@/defile.conf
 The defile configuration file.
 
 .SH SEE ALSO

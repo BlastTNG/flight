@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(defile, 3.0.0-devel, [dwiebe@physics.utoronto.ca])
-AM_INIT_AUTOMAKE(defile, 3.0.0-devel)
+AC_INIT(defile, 3.0.0, [dwiebe@physics.utoronto.ca])
+AM_INIT_AUTOMAKE(defile, 3.0.0)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH(data-etc,[  --with-data-etc=DIR     put auxiliary data in DIR [/data/etc]], DATA_ETC_DIR="${withval}", DATA_ETC_DIR="/data/etc")
@@ -32,8 +32,10 @@ AC_CHECK_SIZEOF(unsigned)
 AC_CHECK_SIZEOF(unsigned long)
 
 dnl Data
+etcdir="/etc"
+AC_SUBST(etcdir)
 AC_MSG_CHECKING(whether a defile.conf is already present)
-if test -f "$sysconfdir/defile.conf"; then
+if test -f "$etcdir/defile.conf"; then
   HAVE_DEFILE_CONF=yes;
 else
   HAVE_DEFILE_CONF=no;
@@ -41,4 +43,4 @@ fi
 AC_MSG_RESULT([$HAVE_DEFILE_CONF])
 AM_CONDITIONAL(INSTALL_DEFILE_CONF, test "$HAVE_DEFILE_CONF" = "no")
 
-AC_OUTPUT(Makefile defile.1.in defile.conf etc/Makefile)
+AC_OUTPUT(Makefile defile.1.in defile.conf.in etc/Makefile)

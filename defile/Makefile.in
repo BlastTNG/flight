@@ -41,7 +41,7 @@ bin_PROGRAMS = defile$(EXEEXT)
 subdir = .
 DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(srcdir)/defile.1.in.in $(srcdir)/defile.conf.in \
+	$(srcdir)/defile.1.in.in $(srcdir)/defile.conf.in.in \
 	$(top_srcdir)/configure COPYING ChangeLog depcomp install-sh \
 	missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -52,9 +52,9 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = defile.1.in defile.conf
+CONFIG_CLEAN_FILES = defile.1.in defile.conf.in
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" \
-	"$(DESTDIR)$(sysconfdir)"
+	"$(DESTDIR)$(etcdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_defile_OBJECTS = defile.$(OBJEXT) frameread.$(OBJEXT) \
@@ -86,8 +86,8 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-sysconfDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(sysconf_DATA)
+etcDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(etc_DATA)
 ETAGS = etags
 CTAGS = ctags
 DIST_SUBDIRS = $(SUBDIRS)
@@ -160,6 +160,7 @@ am__untar = @am__untar@
 bindir = @bindir@
 build_alias = @build_alias@
 datadir = @datadir@
+etcdir = @etcdir@
 exec_prefix = @exec_prefix@
 host_alias = @host_alias@
 includedir = @includedir@
@@ -181,7 +182,7 @@ AUTOMAKE_OPTIONS = foreign
 SUBDIRS = etc
 man_MANS = defile.1
 EXTRA_DIST = fixup.sh
-@INSTALL_DEFILE_CONF_TRUE@sysconf_DATA = defile.conf
+@INSTALL_DEFILE_CONF_TRUE@etc_DATA = defile.conf
 defile_SOURCES = defile.c frameread.c reader.c channels.c writer.c blast.c client.c blast.h defile.h channels.h frameread.h derived.h quenya.h crc.c crc.h
 INCLUDES = -Wall -O3 -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\"
 DISTCHECK_CONFIGURE_FLAGS = --with-data-etc="$$dc_install_base/data"
@@ -242,7 +243,7 @@ distclean-hdr:
 	-rm -f config.h stamp-h1
 defile.1.in: $(top_builddir)/config.status $(srcdir)/defile.1.in.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
-defile.conf: $(top_builddir)/config.status $(srcdir)/defile.conf.in
+defile.conf.in: $(top_builddir)/config.status $(srcdir)/defile.conf.in.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
@@ -345,22 +346,22 @@ uninstall-man1:
 	  echo " rm -f '$(DESTDIR)$(man1dir)/$$inst'"; \
 	  rm -f "$(DESTDIR)$(man1dir)/$$inst"; \
 	done
-install-sysconfDATA: $(sysconf_DATA)
+install-etcDATA: $(etc_DATA)
 	@$(NORMAL_INSTALL)
-	test -z "$(sysconfdir)" || $(mkdir_p) "$(DESTDIR)$(sysconfdir)"
-	@list='$(sysconf_DATA)'; for p in $$list; do \
+	test -z "$(etcdir)" || $(mkdir_p) "$(DESTDIR)$(etcdir)"
+	@list='$(etc_DATA)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f=$(am__strip_dir) \
-	  echo " $(sysconfDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(sysconfdir)/$$f'"; \
-	  $(sysconfDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(sysconfdir)/$$f"; \
+	  echo " $(etcDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(etcdir)/$$f'"; \
+	  $(etcDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(etcdir)/$$f"; \
 	done
 
-uninstall-sysconfDATA:
+uninstall-etcDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(sysconf_DATA)'; for p in $$list; do \
+	@list='$(etc_DATA)'; for p in $$list; do \
 	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(sysconfdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(sysconfdir)/$$f"; \
+	  echo " rm -f '$(DESTDIR)$(etcdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(etcdir)/$$f"; \
 	done
 
 # This directory's subdirectories are mostly independent; you can cd
@@ -630,7 +631,7 @@ check: check-recursive
 all-am: Makefile $(PROGRAMS) $(MANS) $(DATA) config.h
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(sysconfdir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(etcdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-recursive
@@ -678,9 +679,9 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-man
+install-data-am: install-etcDATA install-man
 
-install-exec-am: install-binPROGRAMS install-sysconfDATA
+install-exec-am: install-binPROGRAMS
 
 install-info: install-info-recursive
 
@@ -707,8 +708,8 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-info-am uninstall-man \
-	uninstall-sysconfDATA
+uninstall-am: uninstall-binPROGRAMS uninstall-etcDATA \
+	uninstall-info-am uninstall-man
 
 uninstall-info: uninstall-info-recursive
 
@@ -722,16 +723,20 @@ uninstall-man: uninstall-man1
 	distclean-local distclean-recursive distclean-tags \
 	distcleancheck distdir distuninstallcheck dvi dvi-am html \
 	html-am info info-am install install-am install-binPROGRAMS \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-man install-man1 \
-	install-strip install-sysconfDATA installcheck installcheck-am \
+	install-data install-data-am install-etcDATA install-exec \
+	install-exec-am install-info install-info-am install-man \
+	install-man1 install-strip installcheck installcheck-am \
 	installdirs installdirs-am maintainer-clean \
 	maintainer-clean-generic maintainer-clean-recursive \
 	mostlyclean mostlyclean-compile mostlyclean-generic \
 	mostlyclean-recursive pdf pdf-am ps ps-am tags tags-recursive \
-	uninstall uninstall-am uninstall-binPROGRAMS uninstall-info-am \
-	uninstall-man uninstall-man1 uninstall-sysconfDATA
+	uninstall uninstall-am uninstall-binPROGRAMS uninstall-etcDATA \
+	uninstall-info-am uninstall-man uninstall-man1
 
+
+defile.conf: Makefile $(top_builddir)/defile.conf.in $(top_srcdir)/fixup.sh
+	rm -f defile.conf defile.conf.tmp
+	sh $(top_srcdir)/fixup.sh "$(prefix)" "$(top_builddir)" defile.conf
 
 defile.1: Makefile $(top_builddir)/defile.1.in $(top_srcdir)/fixup.sh
 	rm -f defile.1 defile.1.tmp
