@@ -198,6 +198,8 @@ int ControlInnerCool(void)
   else {
     if (incool_state != -3) {
       bprintf(info, "Inner Frame Cooling: Auto-Vetoed\n");
+      CommandData.pumps.inframe_cool_on = 40; /* turn on pump */
+      CommandData.pumps.inframe_cool_off = 0;
       incool_state = -3;
     }
     return CommandData.pumps.pwm3; /* both temps bad --
@@ -261,6 +263,8 @@ int ControlOuterCool(void)
   if (temp < MAX_TEMP || temp > MIN_TEMP) {
     if (outcool_state != -3) {
       bprintf(info, "Outer Frame Cooling: Auto-Vetoed\n");
+      CommandData.pumps.outframe_cool1_on = 40; /* turn on pump */
+      CommandData.pumps.outframe_cool1_off = 0;
       outcool_state = -3;
     }
     return CommandData.pumps.pwm3; /* temp bad -- revert to manual settings */

@@ -485,9 +485,9 @@ struct ChannelStruct WideFastChannels[] = {
 #endif
 
   /* BIAS Stuff */
-  {"b_amp2",      'r',  BIAS,  0,     5.068218E-7,                -1088.4, 'U'},
-  {"b_amp1",      'r',  BIAS,  2,    -4.646408E-7,                  997.8, 'U'},
-  {"b_amp3",      'r',  BIAS, 38,    -5.145595E-7,                  1105., 'U'},
+  {"b_amp2",      'r',  BIAS,  0,        B_AMP2_M,               B_AMP2_B, 'U'},
+  {"b_amp1",      'r',  BIAS,  2,        B_AMP1_M,               B_AMP1_B, 'U'},
+  {"b_amp3",      'r',  BIAS, 38,        B_AMP3_M,               B_AMP3_B, 'U'},
 
   /* Bolometer Bias References */
 

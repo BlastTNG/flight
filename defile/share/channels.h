@@ -179,6 +179,14 @@ extern "C" {
 /* zero point (in counts) of i_el */
 #define I_EL_ZERO 32638
 
+/* B_AMP? conversion from counts to bias levels */
+#define B_AMP1_M -4.646408E-7
+#define B_AMP1_B 997.8
+#define B_AMP2_M 5.068218E-7
+#define B_AMP2_B -1088.4
+#define B_AMP3_M -5.145595E-7
+#define B_AMP3_B 1105.
+
 #ifdef __cplusplus
 }
 #endif

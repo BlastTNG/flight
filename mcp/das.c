@@ -79,6 +79,11 @@
 #define CS_LNVALVE_ON     0x0100
 #define CS_AUTO_JFET      0x0200
 
+/* The length of time to wait between successive auto-bias level sets */
+#define B_AMP_TIMEOUT    180000 /* = 30 minues in 100Hz Frames */
+/* The length of time to wait after starting up before auto-bias level check */
+#define B_AMP_STARTUP      3000 /* = 30 seconds in 100Hz Frames */
+
 void WritePrevStatus();
 
 /************************************************************************/
@@ -450,22 +455,30 @@ void CryoControl (void)
 /************************************************************************/
 void BiasControl (unsigned short* RxFrame) {
   static struct BiPhaseStruct* biasinAddr;
+  static struct BiPhaseStruct* bAmp1Addr, *bAmp2Addr, *bAmp3Addr;
   static struct NiosStruct* biasout1Addr;
   static struct NiosStruct* biasout2Addr;
   static struct NiosStruct* biasLev1Addr;
   static struct NiosStruct* biasLev2Addr;
   static struct NiosStruct* biasLev3Addr;
+  static int amp1_timeout = B_AMP_STARTUP;
+  static int amp2_timeout = B_AMP_STARTUP;
+  static int amp3_timeout = B_AMP_STARTUP;
   unsigned short bias_status, biasout1 = 0;
   static unsigned short biasout2 = 0x70,
                         biaslsbs1=0; /* biaslsbs1 holds 2 lsbs for bias */
   int isBiasAC, isBiasRamp, isBiasClockInternal;
   static int hold = 0, ch = 0, rb_hold = 0;
+  int amp1, amp2, amp3;
 
   /******** Obtain correct indexes the first time here ***********/
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
     biasinAddr = GetBiPhaseAddr("biasin");
+    bAmp1Addr = GetBiPhaseAddr("b_amp1");
+    bAmp2Addr = GetBiPhaseAddr("b_amp2");
+    bAmp3Addr = GetBiPhaseAddr("b_amp3");
     biasout1Addr = GetNiosAddr("biasout1");
     biasout2Addr = GetNiosAddr("biasout2");
     biasLev1Addr = GetNiosAddr("bias_lev1");
@@ -474,6 +487,13 @@ void BiasControl (unsigned short* RxFrame) {
   }
 
   bias_status = slow_data[biasinAddr->index][biasinAddr->channel];
+
+  amp1 = 0.5 + (double)((unsigned)RxFrame[bAmp1Addr->channel + 1] << 16
+      | RxFrame[bAmp1Addr->channel]) * B_AMP1_M + B_AMP1_B;
+  amp2 = 0.5 + (double)((unsigned)RxFrame[bAmp2Addr->channel + 1] << 16
+      | RxFrame[bAmp2Addr->channel]) * B_AMP2_M + B_AMP2_B;
+  amp3 = 0.5 + (double)((unsigned)RxFrame[bAmp3Addr->channel + 1] << 16
+      | RxFrame[bAmp3Addr->channel]) * B_AMP3_M + B_AMP3_B;
 
   isBiasAC =            !(bias_status & 0x02);
   isBiasRamp =          !(bias_status & 0x08);
@@ -524,6 +544,32 @@ void BiasControl (unsigned short* RxFrame) {
     rb_hold = 400;
   }
 
+  /************* Check Bias Level ReadBack *******/
+  //bprintf(info, "%i %i %i (%i %i %i)\n", amp1_timeout, amp2_timeout, amp3_timeout, amp1, amp2, amp3);
+  if (hold <= 0) { /* Don't check if we're already sending a level */
+    if (amp1_timeout > 0)
+      amp1_timeout--;
+    else if (amp1 != CommandData.Bias.bias1) {
+      bprintf(warning, "Bias Control: Auto Set Level #1 to %i (saw %i)\n",
+          CommandData.Bias.bias1, amp1);
+      CommandData.Bias.SetLevel1 = 1;
+    }
+    if (amp2_timeout > 0)
+      amp2_timeout--;
+    else if (amp2 != CommandData.Bias.bias2) {
+      bprintf(warning, "Bias Control: Auto Set Level #2 to %i (saw %i)\n",
+          CommandData.Bias.bias2, amp2);
+      CommandData.Bias.SetLevel2 = 1;
+    }
+    if (amp3_timeout > 0)
+      amp3_timeout--;
+    else if (amp3 != CommandData.Bias.bias3) {
+      bprintf(warning, "Bias Control: Auto Set Level #3 to %i (saw %i)\n",
+          CommandData.Bias.bias3, amp3);
+      CommandData.Bias.SetLevel3 = 1;
+    }
+  }
+
   /************* Set the Bias Levels *******/
   if (hold > FAST_PER_SLOW + 2) { /* hold data with write low */
     hold--;
@@ -537,6 +583,7 @@ void BiasControl (unsigned short* RxFrame) {
       hold = 2 * FAST_PER_SLOW + 4;
       rb_hold = 400;
       CommandData.Bias.SetLevel1 = 0;
+      amp1_timeout = B_AMP_TIMEOUT;
     }
     ch++;
   } else if (ch == 1) {
@@ -546,6 +593,7 @@ void BiasControl (unsigned short* RxFrame) {
       hold = 2 * FAST_PER_SLOW + 4;
       rb_hold = 400;
       CommandData.Bias.SetLevel2 = 0;
+      amp2_timeout = B_AMP_TIMEOUT;
     }
     ch++;
   } else if (ch == 2) {
@@ -555,6 +603,7 @@ void BiasControl (unsigned short* RxFrame) {
       hold = 2 * FAST_PER_SLOW + 4;
       rb_hold = 400;
       CommandData.Bias.SetLevel3 = 0;
+      amp3_timeout = B_AMP_TIMEOUT;
     }
     ch = 0;
   } else {

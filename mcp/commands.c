@@ -1409,9 +1409,12 @@ void InitCommandData() {
   CommandData.pumps.outframe_cool2_on = 0;
   CommandData.pumps.outframe_cool2_off = 0;
 
-  CommandData.Bias.SetLevel1 = 1;
-  CommandData.Bias.SetLevel2 = 1;
-  CommandData.Bias.SetLevel3 = 1;
+  CommandData.pumps.pwm3 = 1638; /* inner frame cooling default --  20% */
+  CommandData.pumps.pwm4 = 1638; /* outer frame cooling default --  20% */
+
+  CommandData.Bias.SetLevel1 = 0;
+  CommandData.Bias.SetLevel2 = 0;
+  CommandData.Bias.SetLevel3 = 0;
 
   CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_NONE;
   CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_NONE;
