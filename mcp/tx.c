@@ -66,6 +66,8 @@ void WriteAux(void) {
   static struct NiosStruct* cpuTemp2Addr;
   static struct NiosStruct* cpuTemp3Addr;
   static struct NiosStruct* samIAmAddr;
+  static struct NiosStruct* bi0FifoSizeAddr;
+  static struct NiosStruct* bbcFifoSizeAddr;
   static struct BiPhaseStruct* samIAmReadAddr;
   static int incharge = -1;
   time_t t;
@@ -85,6 +87,8 @@ void WriteAux(void) {
     diskFreeAddr = GetNiosAddr("disk_free");
     aliceFileAddr = GetNiosAddr("alice_file");
     timeoutAddr = GetNiosAddr("timeout");
+    bi0FifoSizeAddr = GetNiosAddr("bi0_fifo_size");
+    bbcFifoSizeAddr = GetNiosAddr("bbc_fifo_size");
   }
 
   t = time(NULL);
@@ -114,6 +118,8 @@ void WriteAux(void) {
 
   WriteData(aliceFileAddr, CommandData.alice_file);
   WriteData(timeoutAddr, CommandData.pointing_mode.t - t);
+  WriteData(bi0FifoSizeAddr, CommandData.bi0FifoSize);
+  WriteData(bbcFifoSizeAddr, CommandData.bbcFifoSize);
 }
 
 /*****************************************************************/

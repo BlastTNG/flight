@@ -444,7 +444,6 @@ void write_to_biphase(unsigned short *RxFrame) {
   int i;
   static unsigned short nothing[BI0_FRAME_SIZE];
   static unsigned short sync = 0xEB90;
-  static int blerg = 0;
 
   if (bi0_fp == -2) {
     bi0_fp = open("/dev/bi0_pci", O_RDWR);
@@ -465,8 +464,7 @@ void write_to_biphase(unsigned short *RxFrame) {
     if (write(bi0_fp, nothing,
           (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short)) < 0)
       merror(MCP_ERROR, "bi-phase write (padding) failed");
-    if (!(blerg++ % 1000))
-      mprintf(MCP_INFO, "BBC reports Bi0 fifo: %i\n", ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD));
+    CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
   }
 }
 
@@ -595,8 +593,6 @@ int main(int argc, char *argv[]) {
   pthread_t osc_id;
 #endif
 
-  struct CommandDataStruct CommandData_loc;
-
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
         "p  pointing\n"
@@ -700,10 +696,6 @@ int main(int argc, char *argv[]) {
 
   InitTxFrame();
   while (1) {
-    pthread_mutex_lock(&mutex);
-    CommandData_loc = CommandData;
-    pthread_mutex_unlock(&mutex);
-
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) < 0)
       merror(MCP_ERROR, "Error on BBC read");
 
@@ -714,7 +706,7 @@ int main(int argc, char *argv[]) {
 
       if (StartupVeto) {
         if (!--StartupVeto)
-          mputs(MCP_ERROR, "Startup Veto Ends\n");
+          mputs(MCP_INFO, "Startup Veto Ends\n");
       } else {
 #ifndef BOLOTEST
         GetACS(RxFrame);
@@ -733,6 +725,7 @@ int main(int argc, char *argv[]) {
         RxFrameIndex = RxFrame[3];
 
         UpdateBBCFrame(RxFrame);
+//        CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);
 
 #ifndef BOLOTEST
         PushBi0Buffer(RxFrame);

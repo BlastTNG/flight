@@ -1,4 +1,5 @@
 #include "tx_struct.h"
+#include "bbc_pci.h"
 
 /* card name to (node number, bus number) mapping */
 #define ACS0   0, 0
@@ -419,6 +420,8 @@ struct ChannelStruct SlowChannels[] = {
   {"ss_pc_temp",   'w', LOOP4,  5,                1.0,             0.0, 'u'},
   {"isc_maxblobs", 'w', LOOP4,  6,                1.0,             0.0, 'u'},
   {"osc_maxblobs", 'w', LOOP4,  7,                1.0,             0.0, 'u'},
+  {"bi0_fifo_size",'w', LOOP4,  8,             1./624,             0.0, 'u'},
+  {"bbc_fifo_size",'w', LOOP4,  9,             1./624,             0.0, 'u'},
 
   END_OF_CHANNELS
 };

@@ -145,6 +145,9 @@ struct CommandDataStruct {
   unsigned short temp1, temp2, temp3;
   unsigned short df;
 
+  unsigned short bi0FifoSize;
+  unsigned short bbcFifoSize;
+
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
 
   /* Integrating Star Camera Stuff */
