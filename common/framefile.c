@@ -22,7 +22,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "tx_struct.h"
+#include "channels.h"
 
 /* if compiling MCP load the real mputs function prototypes, otherwise, just
  * make up fake ones */

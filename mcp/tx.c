@@ -38,7 +38,7 @@
 #include <time.h>
 #include "bbc_pci.h"
 
-#include "tx_struct.h"
+#include "channels.h"
 #include "pointing_struct.h"
 #include "tx.h"
 #include "command_struct.h"

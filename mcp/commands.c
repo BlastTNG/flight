@@ -39,7 +39,7 @@
 #include "mcp.h"
 #include "pointing_struct.h"
 #include "slow_dl.h"
-#include "tx_struct.h"
+#include "channels.h"
 
 #define REQ_POSITION    0x50
 #define REQ_TIME        0x51

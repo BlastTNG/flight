@@ -21,7 +21,7 @@
  */
 
 #include "isc_protocol.h"
-#include "tx_struct.h"
+#include "channels.h"
 #include <time.h>
 
 #define AXIS_VEL      0

@@ -24,7 +24,7 @@
 #define MCP_H
 
 #include <pthread.h>
-#include "tx_struct.h"
+#include "channels.h"
 extern unsigned short* slow_data[FAST_PER_SLOW];
 
 /* thread identity */

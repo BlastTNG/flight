@@ -11,7 +11,7 @@
  *
  */
 
-#include "tx_struct.h"
+#include "channels.h"
 #include "bbc_pci.h"
 
 /* card name to (node number, bus number) mapping */

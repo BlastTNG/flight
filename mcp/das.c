@@ -24,7 +24,7 @@
 #include <time.h>
 
 #include "mcp.h"
-#include "tx_struct.h"
+#include "channels.h"
 #include "tx.h"
 #include "command_struct.h"
 

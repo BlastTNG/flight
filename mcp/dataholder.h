@@ -28,7 +28,7 @@
 #define AML_LEN_LINE    512
 #define AML_LEN_ENTRY   32
 
-#include "tx_struct.h"
+#include "channels.h"
 
 struct DataStruct_glob {
   char type;

@@ -40,7 +40,7 @@
 
 #include "decom_pci.h"
 #include "bbc_pci.h"
-#include "tx_struct.h"
+#include "channels.h"
 #include "crc.h"
 
 #define DEV "/dev/decom_pci"
@@ -354,44 +354,44 @@ int main(void) {
     memset(buf, 0, 209);
     sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu ", status + system_idled
         * 0x4, polarity, du, fs_bad, dq_bad, disk_free);
-//    strcat(buf, framefile.name);
+    strcat(buf, framefile.name);
 
     if (n == -1 && errno == EINTR)
       continue;
     else if (n == -1)
-      syserror(LOG_ERR, "decomd: error on select");
+      syserror(LOG_ERR, "error on select");
+    else
 
-    /* loop through all socket numbers, looking for ones that have been
-     * returned by select */
-    for (n = 0; n <= lastsock; ++n) {
-      if (FD_ISSET(n, &fdread))       /* connextion n is waiting for read */
-        if (n == sock) {              /* only read from the listener */
-          /* listener has a new connexion */
-          addrlen = sizeof(addr);
-          if ((csock  = accept(sock, (struct sockaddr*)&addr, &addrlen)) == -1)
-            syserror(LOG_ERR, "accept");
-
-          FD_SET(csock, &fdlist);
-          if (csock > lastsock)
-            lastsock = csock;
-          syslog(LOG_INFO, "connect from %s accepted on socket %i\n",
-              inet_ntoa(addr.sin_addr), csock);
-        }
-
-      if (FD_ISSET(n, &fdwrite))     /* connexion n is waiting for write */
-        if (n != sock)               /* don't write to the listener */
-          if ((z = send(n, buf, 1 + strlen(buf), MSG_NOSIGNAL | MSG_DONTWAIT))
-              == -1) {
-            if (errno == EPIPE) {  /* connexion dropped */
-              syslog(LOG_INFO, "connexion dropped on socket %i\n", n);
-              shutdown(n, SHUT_RDWR);
-              close(n);
-              FD_CLR(n, &fdlist);
-              reset_lastsock = 1;
-            } else if (errno != EAGAIN)  /* ignore socket buffer overflows */
-              syserror(LOG_ERR, "send");
+      /* loop through all socket numbers, looking for ones that have been
+       * returned by select */
+      for (n = 0; n <= lastsock; ++n) {
+        if (FD_ISSET(n, &fdread))       /* connextion n is waiting for read */
+          if (n == sock) {              /* only read from the listener */
+            /* listener has a new connexion */
+            addrlen = sizeof(addr);
+            if ((csock = accept(sock, (struct sockaddr*)&addr, &addrlen)) == -1)
+              syserror(LOG_ERR, "accept");
+            FD_SET(csock, &fdlist);
+            if (csock > lastsock)
+              lastsock = csock;
+            syslog(LOG_INFO, "connect from %s accepted on socket %i\n",
+                inet_ntoa(addr.sin_addr), csock);
           }
-    }
+
+        if (FD_ISSET(n, &fdwrite))     /* connexion n is waiting for write */
+          if (n != sock)               /* don't write to the listener */
+            if ((z = send(n, buf, 1 + strlen(buf), MSG_NOSIGNAL | MSG_DONTWAIT))
+                == -1) {
+              if (errno == EPIPE) {  /* connexion dropped */
+                syslog(LOG_INFO, "connexion dropped on socket %i\n", n);
+                shutdown(n, SHUT_RDWR);
+                close(n);
+                FD_CLR(n, &fdlist);
+                reset_lastsock = 1;
+              } else if (errno != EAGAIN)  /* ignore socket buffer overflows */
+                syserror(LOG_ERR, "send");
+            }
+      }
     usleep(1000000);
   }
 

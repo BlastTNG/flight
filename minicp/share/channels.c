@@ -15,7 +15,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include "tx_struct.h"
+#include "channels.h"
 
 #ifndef __DEFILE__
 #  include "bbc_pci.h"

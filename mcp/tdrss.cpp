@@ -55,7 +55,7 @@
 extern "C" {
 #include "crc.h"
 #include "pointing_struct.h"
-#include "tx_struct.h"
+#include "channels.h"
 #include "mcp.h"
 #include "command_struct.h"
 }

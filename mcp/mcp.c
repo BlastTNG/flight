@@ -45,7 +45,7 @@
 #include "small_c.h"
 #include "slow_dl.h"
 #include "starpos.h"
-#include "tx_struct.h"
+#include "channels.h"
 #include "tx.h"
 
 #define BBC_EOF      (0xffff)

@@ -15,7 +15,7 @@ endif
 
 HEADERS = alice.h bbc_pci.h command_list.h crc.h dataholder.h ephem_read.h \
 		  ephem_types.h isc_protocol.h lut.h mcp.h pointing_struct.h slow_dl.h \
-		  small.h sslutNA.h starpos.h tx.h tx_struct.h small_c.h command_struct.h \
+		  small.h sslutNA.h starpos.h tx.h channels.h small_c.h command_struct.h \
                   ss_struct.h 
 
 OBJS = mcp.o auxiliary.o channels.o command_list.o commands.o crc.o das.o \
