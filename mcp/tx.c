@@ -36,6 +36,35 @@
 #define LOKMOT_OUT   0x40  /* N0G3 */
 #define LOKMOT_IN    0x80  /* N0G3 */
 
+/* Cryostat digital signals (G2 and G3 outputs) */
+#define CRYO_COLDPLATE_ON    0x01 /* N3G3 - cryoout3 */
+#define CRYO_COLDPLATE_OFF   0x02 /* N3G3 */
+#define CRYO_CALIBRATOR_ON   0x04 /* N3G3 */
+#define CRYO_CALIBRATOR_OFF  0x08 /* N3G3 */
+#define CRYO_HELIUMLEVEL_ON  0x10 /* N3G3 */
+#define CRYO_HELIUMLEVEL_OFF 0x20 /* N3G3 */
+#define CRYO_CHARCOAL_ON     0x40 /* N3G3 */
+#define CRYO_CHARCOAL_OFF    0x80 /* N3G3 */
+
+#define CRYO_LNVALVE_ON      0x01 /* N3G2 - cryoout2 */
+#define CRYO_LNVALVE_OFF     0x02 /* N3G2 */
+#define CRYO_LNVALVE_OPEN    0x04 /* N3G2 */
+#define CRYO_LNVALVE_CLOSE   0x08 /* N3G2 */
+#define CRYO_LHeVALVE_ON     0x10 /* N3G2 */
+#define CRYO_LHeVALVE_OFF    0x20 /* N3G2 */
+#define CRYO_LHeVALVE_OPEN   0x40 /* N3G2 */
+#define CRYO_LHeVALVE_CLOSE  0x80 /* N3G2 */
+
+/* CryoState bitfield */
+#define CS_HELIUMLEVEL   0x0001
+#define CS_CHARCOAL      0x0002
+#define CS_COLDPLATE     0x0004
+#define CS_CALIBRATOR    0x0008
+#define CS_LNVALVE_ON    0x0010
+#define CS_LNVALVE_OPEN  0x0020
+#define CS_LHeVALVE_ON   0x0040
+#define CS_LHeVALVE_OPEN 0x0080
+
 #define BAL_OFF_VETO  1000            /* # of frames to veto balance system
                                          after turning off pump */
 
@@ -308,13 +337,15 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
   static int jfetpwmCh, jfetpwmInd;
   static int hspwmCh, hspwmInd;
   static int cryopwmCh, cryopwmInd;
-  int cryoout3 = 0, cryoout2 = 0, cryostate = 0;
+  int cryoout3 = 0, cryoout2 = 0;
+  static int cryostate = 0;
 
   /************** Set indices first time around *************/
   if (i_cryoout3 == -1) {
     SlowChIndex("cryoout1", &i_cryoout1, &j_cryoout1);
     SlowChIndex("cryoout2", &i_cryoout2, &j_cryoout2);
     SlowChIndex("cryoout3", &i_cryoout3, &j_cryoout3);
+    SlowChIndex("cryostate", &cryostateCh, &cryostateInd);
     SlowChIndex("he3pwm", &he3pwmCh, &he3pwmInd);
     SlowChIndex("jfetpwm", &jfetpwmCh, &jfetpwmInd);
     SlowChIndex("hspwm", &hspwmCh, &hspwmInd);
@@ -323,28 +354,71 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
 
   /********** Set Output Bits **********/
   if (CommandData.Cryo.heliumLevel == 0) {
-    cryoout3 |= 0x02;
+    cryoout3 |= CRYO_HELIUMLEVEL_OFF;
+    cryostate &= 0xFFFF - CS_HELIUMLEVEL;
   } else {
-    cryoout3 |= 0x01;
-    cryostate |= 0x01;
+    cryoout3 |= CRYO_HELIUMLEVEL_ON;
+    cryostate |= CS_HELIUMLEVEL;
   }
   if (CommandData.Cryo.charcoalHeater == 0) {
-    cryoout3 |= 0x08;
+    cryoout3 |= CRYO_CHARCOAL_OFF;
+    cryostate &= 0xFFFF - CS_CHARCOAL;
   } else {
-    cryoout3 |= 0x04;
-    cryostate |= 0x02;
+    cryoout3 |= CRYO_CHARCOAL_ON;
+    cryostate |= CS_CHARCOAL;
   }
   if (CommandData.Cryo.coldPlate == 0) {
-    cryoout3 |= 0x20;
+    cryoout3 |= CRYO_COLDPLATE_OFF;
+    cryostate &= 0xFFFF - CS_COLDPLATE;
   } else {
-    cryoout3 |= 0x10;
-    cryostate |= 0x04;
+    cryoout3 |= CRYO_COLDPLATE_ON;
+    cryostate |= CS_COLDPLATE;
   }
   if (CommandData.Cryo.calibrator == 0) {
-    cryoout3 |= 0x80;
+    cryoout3 |= CRYO_CALIBRATOR_OFF;
+    cryostate &= 0xFFFF - CS_CALIBRATOR;
   } else {
-    cryoout3 |= 0x40;
-    cryostate |= 0x08;
+    cryoout3 |= CRYO_CALIBRATOR_ON;
+    cryostate |= CS_CALIBRATOR;
+  }
+
+  /* Control valves -- latching relays */
+  if (CommandData.Cryo.lnvalve_open > 0) {
+    cryoout2 |= CRYO_LNVALVE_OPEN;
+    cryostate |= CS_LNVALVE_OPEN;
+    CommandData.Cryo.lnvalve_open--;
+  } else if (CommandData.Cryo.lnvalve_close > 0) {
+    cryoout2 |= CRYO_LNVALVE_CLOSE;
+    cryostate &= 0xFFFF - CS_LNVALVE_OPEN;
+    CommandData.Cryo.lnvalve_close--;
+  }
+  if (CommandData.Cryo.lnvalve_on > 0) {
+    cryoout2 |= CRYO_LNVALVE_ON;
+    cryostate |= CS_LNVALVE_ON;
+    CommandData.Cryo.lnvalve_on--;
+  } else if (CommandData.Cryo.lnvalve_off > 0) {
+    cryoout2 |= CRYO_LNVALVE_OFF;
+    cryostate &= 0xFFFF - CS_LNVALVE_ON;
+    CommandData.Cryo.lnvalve_off--;
+  }
+
+  if (CommandData.Cryo.lhevalve_open > 0) {
+    cryoout2 |= CRYO_LHeVALVE_OPEN;
+    cryostate |= CS_LHeVALVE_OPEN;
+    CommandData.Cryo.lhevalve_open--;
+  } else if (CommandData.Cryo.lhevalve_close > 0) {
+    cryoout2 |= CRYO_LHeVALVE_CLOSE;
+    cryostate &= 0xFFFF - CS_LHeVALVE_OPEN;
+    CommandData.Cryo.lhevalve_close--;
+  }
+  if (CommandData.Cryo.lhevalve_on > 0) {
+    cryoout2 |= CRYO_LHeVALVE_ON;
+    cryostate |= CS_LHeVALVE_ON;
+    CommandData.Cryo.lhevalve_on--;
+  } else if (CommandData.Cryo.lhevalve_off > 0) {
+    cryoout2 |= CRYO_LHeVALVE_OFF;
+    cryostate &= 0xFFFF - CS_LHeVALVE_ON;
+    CommandData.Cryo.lhevalve_off--;
   }
 
   WriteSlow(i_cryoout3, j_cryoout3, cryoout3);

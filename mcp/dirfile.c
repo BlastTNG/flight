@@ -156,14 +156,19 @@ void InitializeDirfile(char type) {
 
   /* derived channels */
   fprintf(fp,
+      "### Bias Generator Bitfield ###\n"
       "BIAS_IS_DC       BIT biasin 1\n"
       "BIAS_CLK_IS_INT  BIT biasin 2\n"
       "BIAS_IS_INT      BIT biasin 3\n"
-      "### Cryo State Lookups ###\n"
+      "### Cryo State Bitfield ###\n"
       "HE_LEV_SENS      BIT cryostate 0\n"
       "CHARC_HEATER     BIT cryostate 1\n"
       "COLDP_HEATER     BIT cryostate 2\n"
       "CALIBRATOR       BIT cryostate 3\n"
+      "LN_VALVE         BIT cryostate 4\n"
+      "LN_DIREC         BIT cryostate 5\n"
+      "LHE_VALVE        BIT cryostate 6\n"
+      "LHE_DIREC        BIT cryostate 7\n"
       "### Cryo Table Lookups ###\n"
       "# Diodes\n"
       "T_vcs1	LINTERP	T_VCS1	/data/etc/dt600.txt\n"

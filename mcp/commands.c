@@ -295,22 +295,31 @@ void SingleCommand (int command) {
     CommandData.Cryo.calibrator = 1;
   else if (command == SIndex("calib_0"))
     CommandData.Cryo.calibrator = 0;
-  else if (command == SIndex("lnv_opn"))
-    CommandData.Cryo.lndir = 1;
-  else if (command == SIndex("lnv_cls"))
-    CommandData.Cryo.lndir = 0;
-  else if (command == SIndex("ln_val1"))
-    CommandData.Cryo.lnvalve = 1;
-  else if (command == SIndex("ln_val0"))
-    CommandData.Cryo.lnvalve = 0;
-  else if (command == SIndex("lhe_opn"))
-    CommandData.Cryo.lhedir = 1;
-  else if (command == SIndex("lhe_cls"))
-    CommandData.Cryo.lhedir = 0;
-  else if (command == SIndex("lhe_vl1"))
-    CommandData.Cryo.lhevalve = 1;
-  else if (command == SIndex("lhe_vl0"))
-    CommandData.Cryo.lhevalve = 0;
+  else if (command == SIndex("lnv_opn")) {
+    CommandData.Cryo.lnvalve_open = 1;
+    CommandData.Cryo.lnvalve_close = 0;
+  } else if (command == SIndex("lnv_cls")) {
+    CommandData.Cryo.lnvalve_close = 1;
+    CommandData.Cryo.lnvalve_open = 0;
+  } else if (command == SIndex("lnv_on")) {
+    CommandData.Cryo.lnvalve_on = 1;
+    CommandData.Cryo.lnvalve_off = 0;
+  } else if (command == SIndex("lnv_off")) {
+    CommandData.Cryo.lnvalve_off = 1;
+    CommandData.Cryo.lnvalve_on = 0;
+  } else if (command == SIndex("lhe_opn")) {
+    CommandData.Cryo.lhevalve_open = 1;
+    CommandData.Cryo.lhevalve_close = 0;
+  } else if (command == SIndex("lhe_cls")) {
+    CommandData.Cryo.lhevalve_close = 1;
+    CommandData.Cryo.lhevalve_open = 0;
+  } else if (command == SIndex("lhe_on")) {
+    CommandData.Cryo.lhevalve_on = 1;
+    CommandData.Cryo.lhevalve_off = 0;
+  } else if (command == SIndex("lhe_off")) {
+    CommandData.Cryo.lhevalve_off = 1;
+    CommandData.Cryo.lhevalve_on = 0;
+  }
 
   else if (command == SIndex("bal_vet"))
     CommandData.pumps.bal_veto = -1;
@@ -1262,10 +1271,14 @@ void InitCommandData() {
   CommandData.Cryo.heliumThree = 0;
   CommandData.Cryo.sparePwm = 0;
   CommandData.Cryo.calibrator = 0;
-  CommandData.Cryo.lndir = 0;
-  CommandData.Cryo.lnvalve = 0;
-  CommandData.Cryo.lhedir = 0;
-  CommandData.Cryo.lhevalve = 0;
+  CommandData.Cryo.lnvalve_on = 0;
+  CommandData.Cryo.lnvalve_off = 0;
+  CommandData.Cryo.lnvalve_open = 0;
+  CommandData.Cryo.lnvalve_close = 0;
+  CommandData.Cryo.lhevalve_on = 0;
+  CommandData.Cryo.lhevalve_off = 0;
+  CommandData.Cryo.lhevalve_open = 0;
+  CommandData.Cryo.lhevalve_close = 0;
 
   WritePrevStatus();
 

@@ -84,14 +84,14 @@ struct scom scommands[N_NM_SCOMMANDS] = {
   {"cplat_0", "cold plate heater off", GR_CRYO},
   {"calib_1", "calibrator on", GR_CRYO},
   {"calib_0", "calibrator off", GR_CRYO},
+  {"lnv_on",  "LN valve on", GR_CRYO},
+  {"lnv_off", "LN valve off", GR_CRYO},
   {"lnv_opn", "set LN valve direction open", GR_CRYO},
   {"lnv_cls", "set LN valve direction close", GR_CRYO},
-  {"ln_val1", "LN valve on", GR_CRYO},
-  {"ln_val0", "LN valve off", GR_CRYO},
+  {"lhe_on",  "LHe valve on", GR_CRYO},
+  {"lhe_off", "LHe valve off", GR_CRYO},
   {"lhe_opn", "set LHe valve direction open", GR_CRYO},
   {"lhe_cls", "set LHe valve direction close", GR_CRYO},
-  {"lhe_vl1", "LHe valve on", GR_CRYO},
-  {"lhe_vl0", "LHe valve off", GR_CRYO},
 
   {"bal_vet", "veto balance system", GR_BAL},
   {"bal_uvt", "unveto balance system", GR_BAL},
@@ -211,7 +211,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {"gn_pivo", "pivot gains", GR_GAIN, 2,
     {
-      {"Set Point(rpm)", 0, MAX_15BIT, 'r', 0, "set_reac"},
+      {"Set Point(rpm)", 0, MAX_15BIT, 'f', 0, "set_reac"},
       {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_pivot"}
     }
   },
@@ -259,25 +259,25 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {"jfet_ht", "JFET heater level", GR_CRYO, 1,
     {
-      {"level (V)", 0, 5, 'r', 3, "JFETPWM"}
+      {"level (V)", 0, 5, 'f', 3, "JFETPWM"}
     }
   },
 
   {"hs_heat", "Heat Switch heater level", GR_CRYO, 1,
     {
-      {"level (V)", 0, 5, 'r', 3, "HSPWM"}
+      {"level (V)", 0, 5, 'f', 3, "HSPWM"}
     }
   },
 
   {"he3_ht", "Helium 3 heater level", GR_CRYO, 1,
     {
-      {"level (V)", 0, 5, 'r', 3, "HE3PWM"}
+      {"level (V)", 0, 5, 'f', 3, "HE3PWM"}
     }
   },
 
   {"cryopwm", "Spare cryo pwm level", GR_CRYO, 1,
     {
-      {"level (V)", 0, 5, 'r', 3, "CRYOPWM"}
+      {"level (V)", 0, 5, 'f', 3, "CRYOPWM"}
     }
   },
 
