@@ -264,7 +264,7 @@ void SingleCommand (enum singleCommand command) {
 
   } else if (command == trim_to_isc)
     SetTrimToSC(0);
-  else if (command == trim_to_isc)
+  else if (command == trim_to_osc)
     SetTrimToSC(1);
   else if (command == reset_trims)
     ClearTrim();
