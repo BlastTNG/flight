@@ -252,7 +252,7 @@
 --m5	    sam_i_am	1	    2		0	    1		1
 --m6	    cryostate	8	    4		0	    255		1
 --m7	    sensor_veto	8	    4		0	    255		1
---m8	    bal_veto	
+--m8	    bal_veto	3	    3	        -1          7           1
 --m9 	    lat		16	    4		0	    65536	1
 --m10@m9    lon		@	    @		@	    @		@
 --m11	    isc_error	5	    4		0	    31		1
