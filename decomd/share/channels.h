@@ -2,7 +2,7 @@
 #define FAST_PER_SLOW 20
 
 /* N_SLOW is the number of slow fields */
-#define N_SLOW 8
+#define N_SLOW 9
 
 /* Number of DAS bolometer cards to include in the frame.  The maximum number
  * of cards is 11 */
@@ -51,3 +51,6 @@ void MakeTxFrame(void);
 
 void FastChIndex(char*, int*);
 void SlowChIndex(char*, int*, int*);
+
+#define DEG2I (65536.0/360.0)
+#define I2DEG (1.0/DEG2I)

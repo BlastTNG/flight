@@ -5,10 +5,14 @@
 
 unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
+/* pseudoboard to use to talk from tx to rx.. */
+#define LOOPBACK 17
+#define SPARE 18
+
 /* read and write channel 56 on all boards reserved for ADC Sync */
 struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
   {
-    {"cpu_time",     'w', 17,  8,                1.0,             0.0, 'U'},//OK
+    {"cpu_time",     'w', LOOPBACK,  8,          1.0,             0.0, 'U'},//OK
     {"t_roll",       'r',  1,  9,           -0.00625,          136.45, 'u'},//OK
     {"i_roll",       'r',  1, 11,      0.00048828125,          -16.09, 'u'},
     {"t_race",       'r',  1, 13,           -0.00625,          136.45, 'u'},
@@ -30,7 +34,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"i_apm_5v",     'r',  2, 45,          -0.000625,           20.48, 'u'} //OK
   },
   {
-    {"",             'w', 17,  9,                1.0,             0.0, 'u'},//OK
+    {"",             'w', LOOPBACK,  9,          1.0,        0.0, 'u'},//cpu_time
     {"i_apm_10v",    'r',  2, 47,          -0.000625,           20.48, 'u'},//OK
     {"t_if1",        'r',  4,  5,           -0.00625,          136.45, 'u'},
     {"t_if2",        'r',  4,  7,           -0.00625,          136.45, 'u'},
@@ -90,12 +94,12 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"t_clin_if",    'r', 21, 41,           -0.00625,          136.45, 'u'},
     {"t_clin_sip",   'r', 21, 31,           -0.00625,          136.45, 'u'},
     {"t_gy_set",     'w', 31,  4,    (100.0/32768.0),             0.0, 'u'},
-    {"g_p_gyheat",   'w', 17, 10,                1.0,             0.0, 'u'},
-    {"g_i_gyheat",   'w', 17, 11,                1.0,             0.0, 'u'},
-    {"g_d_gyheat",   'w', 17, 12,                1.0,             0.0, 'u'},
+    {"g_p_gyheat",   'w', LOOPBACK, 10,          1.0,             0.0, 'u'},
+    {"g_i_gyheat",   'w', LOOPBACK, 11,          1.0,             0.0, 'u'},
+    {"g_d_gyheat",   'w', LOOPBACK, 12,          1.0,             0.0, 'u'},
     {"g_p_el",       'w',  1,  2,                1.0,             0.0, 'u'},
     {"g_i_el",       'w',  1,  3,                1.0,             0.0, 'u'},
-    {"lokmot_pin",   'w', 17, 22,                1.0,             0.0, 'u'}
+    {"lokmot_pin",   'w', LOOPBACK, 22,          1.0,             0.0, 'u'}
   },
   {
     {"biasout1",     'w',  4,  0,                1.0,             0.0, 'u'},
@@ -121,25 +125,25 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
   },
   {
     {"g_p_roll",     'w',  1,  5,                1.0,             0.0, 'u'},
-    {"sync",         'w', 17, 56,                1.0,             0.0, 'u'},
-    {"vsc_col",      'w', 17,  0,               0.01,             0.0, 'u'},
-    {"vsc_row",      'w', 17,  1,               0.01,             0.0, 'u'},
-    {"vsc_mag",      'w', 17,  2,                1.0,             0.0, 'u'},
-    {"vsc_fra",      'w', 17,  3,                1.0,             0.0, 'u'},
-    {"az_rel_sun",   'w', 17,  4,      (140./65536.),             0.0, 's'},
-    {"el_rel_sun",   'w', 17,  5,      (140./65536.),             0.0, 's'},
-    {"ss_prin",      'w', 17,  6,                1.0,             0.0, 'u'},
-    {"sam_i_am",     'w', 17,  7,                1.0,             0.0, 'u'},
-    {"cryostate",    'w', 17, 42,                1.0,             0.0, 'u'},
-    {"cpu_fan",      'w', 17, 13,                1.0,             0.0, 'u'},
-    {"t_cpu",        'w', 17, 14,                1.0,             0.0, 'u'},
+    {"sync",         'w', LOOPBACK, 56,          1.0,             0.0, 'u'},
+    {"vsc_col",      'w', LOOPBACK,  0,         0.01,             0.0, 'u'},
+    {"vsc_row",      'w', LOOPBACK,  1,         0.01,             0.0, 'u'},
+    {"vsc_mag",      'w', LOOPBACK,  2,          1.0,             0.0, 'u'},
+    {"vsc_fra",      'w', LOOPBACK,  3,          1.0,             0.0, 'u'},
+    {"az_rel_sun",   'w', LOOPBACK,  4, (140./65536.),            0.0, 's'},
+    {"el_rel_sun",   'w', LOOPBACK,  5, (140./65536.),            0.0, 's'},
+    {"ss_prin",      'w', LOOPBACK,  6,          1.0,             0.0, 'u'},
+    {"sam_i_am",     'w', LOOPBACK,  7,          1.0,             0.0, 'u'},
+    {"cryostate",    'w', LOOPBACK, 42,          1.0,             0.0, 'u'},
+    {"cpu_fan",      'w', LOOPBACK, 13,          1.0,             0.0, 'u'},
+    {"t_cpu",        'w', LOOPBACK, 14,          1.0,             0.0, 'u'},
     {"i_apm_3v",     'r',  2, 43,          -0.000625,           20.48, 'u'},//OK
     {"t_isc_set",    'w', 31,  5,    (100.0/32768.0),             0.0, 'u'},
-    {"g_p_ischeat",  'w', 17, 16,                1.0,             0.0, 'u'},
-    {"g_i_ischeat",  'w', 17, 17,                1.0,             0.0, 'u'},
+    {"g_p_ischeat",  'w', LOOPBACK, 16,          1.0,             0.0, 'u'},
+    {"g_i_ischeat",  'w', LOOPBACK, 17,          1.0,             0.0, 'u'},
     {"set_reac",     'w',  1, 16,    7.9498291016e-5,          -2.605, 'u'},
     {"pump_bits",    'w', 21,  2,                1.0,             0.0, 'u'},
-    {"g_d_ischeat",  'w', 17, 18,                1.0,             0.0, 'u'}
+    {"g_d_ischeat",  'w', LOOPBACK, 18,          1.0,             0.0, 'u'}
   },
   {
     {"balpump_lev",  'w', 21,  3,    -0.048851978505,           100.0, 'u'},
@@ -152,10 +156,10 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"pch_clin_pyr", 'r', 21, 33,      4.0/5333.3333,       -4.*6.144, 'u'},
     {"rll_clin_pyr", 'r', 21, 35,      4.0/5333.3333,       -4.*6.144, 'u'},
     {"t_clin_pyr",   'r', 21, 23,           -0.00625,          136.45, 'u'},
-    {"bal_on",       'w', 17, 27,           1./1648.,             0.0, 'u'},
-    {"bal_off",      'w', 17, 28,           1./1648.,             0.0, 'u'},
-    {"bal_target",   'w', 17, 29,           1./1648.,             0.0, 'u'},
-    {"bal_veto",     'w', 17, 30,                1.0,             0.0, 'u'},
+    {"bal_on",       'w', LOOPBACK, 27,     1./1648.,             0.0, 'u'},
+    {"bal_off",      'w', LOOPBACK, 28,     1./1648.,             0.0, 'u'},
+    {"bal_target",   'w', LOOPBACK, 29,     1./1648.,             0.0, 'u'},
+    {"bal_veto",     'w', LOOPBACK, 30,          1.0,             0.0, 'u'},
     {"pch_clin_piv", 'r',  2,  7,      4.0/5333.3333,       -4.*6.144, 'u'},
     {"rll_clin_piv", 'r',  2,  9,      4.0/5333.3333,       -4.*6.144, 'u'},
     {"t_clin_piv",   'r',  2, 11,           -0.00625,          136.45, 'u'},
@@ -164,14 +168,14 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"hspwm",        'w',  3,  4,        -100./2047.,            100., 'u'}
   },
   {
+    {"sip_time",    'r', LOOPBACK, 33,           1.0,             0.0, 'U'},
     {"pch_clin_pyr", 'r', 21, 33,      4.0/5333.3333,       -4.*6.144, 'u'},
     {"rll_clin_pyr", 'r', 21, 35,      4.0/5333.3333,       -4.*6.144, 'u'},
     {"t_clin_pyr",   'r', 21, 23,           -0.00625,          136.45, 'u'},
-    {"bias_lev1",    'w', 17, 43,                1.0,             0.0, 'u'},
-    {"bias_lev2",    'w', 17, 44,                1.0,             0.0, 'u'},
-    {"bias_lev3",    'w', 17, 45,                1.0,             0.0, 'u'},
+    {"bias_lev1",    'w', LOOPBACK, 43,          1.0,             0.0, 'u'},
+    {"bias_lev2",    'w', LOOPBACK, 44,          1.0,             0.0, 'u'},
+    {"bias_lev3",    'w', LOOPBACK, 45,          1.0,             0.0, 'u'},
     {"cryopwm",      'w',  3,  6,        -100./2047.,            100., 'u'},
-    {"spare47",      'r', 18, 47,                1.0,             0.0, 'u'},
     {"phase5",       'w',  5, 10,                1.0,             0.0, 'u'},
     {"phase6",       'w',  6, 10,                1.0,             0.0, 'u'},
     {"phase7",       'w',  7, 10,                1.0,             0.0, 'u'},
@@ -184,6 +188,28 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"phase14",      'w', 14, 10,                1.0,             0.0, 'u'},
     {"phase15",      'w', 15, 10,                1.0,             0.0, 'u'},
     {"phase16",      'w', 16, 10,                1.0,             0.0, 'u'}
+  },
+  {
+    {"",            'r', LOOPBACK, 34,           1.0,             0.0, 'u'}, // sip_time
+    {"sip_lat",     'r', LOOPBACK, 23,           I2DEG,           0.0, 'u'},
+    {"sip_lon",     'r', LOOPBACK, 24,           I2DEG,           0.0, 'u'},
+    {"sip_alt",     'r', LOOPBACK, 25,           4.0,             0.0, 'u'},
+    {"lat",         'r', LOOPBACK, 31,           I2DEG,           0.0, 'u'},
+    {"lon",         'r', LOOPBACK, 32,           I2DEG,           0.0, 'u'},
+    {"spare7",      'r', SPARE, 7,               1.0,             0.0, 'u'},
+    {"spare8",      'r', SPARE, 8,               1.0,             0.0, 'u'},
+    {"spare9",      'r', SPARE, 9,               1.0,             0.0, 'u'},
+    {"spare10",     'r', SPARE, 10,              1.0,             0.0, 'u'},
+    {"spare11",     'r', SPARE, 11,              1.0,             0.0, 'u'},
+    {"spare12",     'r', SPARE, 12,              1.0,             0.0, 'u'},
+    {"spare13",     'r', SPARE, 13,              1.0,             0.0, 'u'},
+    {"spare14",     'r', SPARE, 14,              1.0,             0.0, 'u'},
+    {"spare15",     'r', SPARE, 15,              1.0,             0.0, 'u'},
+    {"spare16",     'r', SPARE, 16,              1.0,             0.0, 'u'},
+    {"spare17",     'r', SPARE, 17,              1.0,             0.0, 'u'},
+    {"spare18",     'r', SPARE, 18,              1.0,             0.0, 'u'},
+    {"spare19",     'r', SPARE, 19,              1.0,             0.0, 'u'},
+    {"spare20",     'r', SPARE, 20,              1.0,             0.0, 'u'},
   }
 };
 
@@ -204,8 +230,8 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
   {"mag_y",       'r', 21, 47,               1.0,                    0.0, 'u'},
   {"acs0bits",    'r', 21, 59,               1.0,                    0.0, 'u'},
 
-  {"az",          'w', 17, 20,       0.005493164,                 -180.0, 'u'},
-  {"el",          'w', 17, 21,     360.0/65536.0,                    0.0, 'u'},
+  {"az",          'w', LOOPBACK, 20,       I2DEG,                 -180.0, 'u'},
+  {"el",          'w', LOOPBACK, 21,       I2DEG,                    0.0, 'u'},
 
   /* send data to ACS0 */
   {"isc_bits",    'w', 21,  1,               1.0,                    0.0, 'u'},

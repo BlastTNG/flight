@@ -84,6 +84,8 @@ extern int point_index;
 
 extern struct ACSDataStruct ACSData;
 
+extern struct SIPDataStruct SIPData;	
+
 extern struct SunSensorDataStruct SunSensorData[3];
 extern int ss_index;
 
@@ -1004,6 +1006,11 @@ void StoreData(unsigned int* Txframe,
   static int i_V_MAG = -1, j_V_MAG = -1;
   static int i_V_FRA = -1, j_V_FRA = -1;
   static int arsCh = -1, arsInd, ersCh, ersInd, prinCh, prinInd;
+  static int i_SIP_LAT, i_SIP_LON, i_SIP_ALT, i_SIP_TIME;
+  static int j_SIP_LAT, j_SIP_LON, j_SIP_ALT, j_SIP_TIME;
+  static int i_LAT, i_LON;
+  static int j_LAT, j_LON;
+  time_t t;
 
   static int i_az = -1, i_el = -1;
   int i_vsc;
@@ -1022,7 +1029,12 @@ void StoreData(unsigned int* Txframe,
     SlowChIndex("az_rel_sun", &arsCh, &arsInd);
     SlowChIndex("el_rel_sun", &ersCh, &ersInd);
     SlowChIndex("ss_prin", &prinCh, &prinInd);
-
+    SlowChIndex("sip_lat", &i_SIP_LAT, &j_SIP_LAT);
+    SlowChIndex("sip_lon", &i_SIP_LON, &j_SIP_LON);
+    SlowChIndex("sip_alt", &i_SIP_ALT, &j_SIP_ALT);
+    SlowChIndex("sip_time", &i_SIP_TIME, &j_SIP_TIME);
+    SlowChIndex("lat", &i_LAT, &j_LAT);
+    SlowChIndex("lon", &i_LON, &j_LON);
   }
 
   /********** VSC Data **********/
@@ -1037,6 +1049,14 @@ void StoreData(unsigned int* Txframe,
   WriteSlow(arsCh, arsInd, SunSensorData[i_ss].raw_az);
   WriteSlow(ersCh, ersInd, SunSensorData[i_ss].raw_el);
   WriteSlow(prinCh, prinInd, SunSensorData[i_ss].prin);
+
+  /********** SIP GPS Data **********/
+  WriteSlow(i_SIP_LAT, j_SIP_LAT, (int)(SIPData.GPSpos.lat*DEG2I));
+  WriteSlow(i_SIP_LON, j_SIP_LON, (int)(SIPData.GPSpos.lon*DEG2I));
+  WriteSlow(i_SIP_ALT, j_SIP_ALT, (int)(SIPData.GPSpos.lat*0.25));
+  t = SIPData.GPStime.UTC;
+  WriteSlow(i_SIP_TIME, j_SIP_TIME, t >> 16);
+  WriteSlow(i_SIP_TIME + 1, j_SIP_TIME, t);
 
   /************* processed pointing data *************/
   i_point = GETREADINDEX(point_index);
