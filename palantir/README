@@ -1,0 +1,22 @@
+----------------------------------------------------------------------------
+|
+| PALANTIR readme
+| 
+| Adam Hincks, 6 August 2002
+| D.V. Wiebe   16 September 2002
+|
+----------------------------------------------------------------------------
+
+Palantir is a numerical display program.  It reads data from the frames written
+to disk and displays them nicely in a window.
+
+To make palantir:
+
+./configure
+make
+make install
+
+Palantir requires a .pal file which specifies which fields be read and how they
+be displayed.  See example.pal for information on how to create these.
+
+Type palantir --help for information on the command line options.

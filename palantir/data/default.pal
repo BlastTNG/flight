@@ -1,0 +1,394 @@
+<DOCUMENT>
+
+<SETTINGS>
+  <TEXTSTYLE name="xhiwarn" colour="#ff0000" backcolour="#00ffff"
+	           size="8" bold="true"/>
+  <TEXTSTYLE name="hiwarn" colour="#cc0000" font="adobe-helvetica" 
+	           size="8" bold="true"/>
+  <TEXTSTYLE name="lowarn" colour="#00cc00" font="adobe-helvetica"
+	           size="8" bold="true"/>
+  <TEXTSTYLE name="xlowarn" colour="#00ff00" backcolour="#ff00ff"
+	           font="adobe-helvetica" size="8" bold="true"/>
+  <TEXTSTYLE name="off" colour="#cc0000" font="adobe-helvetica"
+	           size="8" bold="true"/>
+  <TEXTSTYLE name="on" colour="#000055" font="adobe-helvetica"
+	           size="8" bold="true"/>
+  <TEXTSTYLE name="evenrow" colour="#000000" font="adobe-helvetica" size="8"/>
+  <TEXTSTYLE name="oddrow" colour="#000000" font="adobe-helvetica" size="8"/>
+  <TEXTSTYLE name="spacer" font="adobe-helvetica" size="6"/>
+
+  <TEXTSTYLE name="OK_BIT" backcolour="#00ff00" 
+	     colour="#000055" font="adobe-helvetica" size="8"/>
+  <TEXTSTYLE name="W_BIT" backcolour="#ffff00" 
+	     colour="#000055" font="adobe-helvetica" size="8"/>
+
+  <EXTREMA name="gains">
+    <HI value="32768"/><LO value="0"/>
+    <XHI value="32768" alarm="doh.wav"/><XLO value="0" alarm="doh.wav"/>
+  </EXTREMA>
+  <EXTREMA name="temp">
+    <HI value="40"/><LO value="-20"/>
+    <XHI value="60" alarm="doh.wav"/><XLO value="-40" alarm="doh.wav"/>
+  </EXTREMA>
+  <EXTREMA name="current">
+    <HI value="35"/><LO value="0"/>
+    <XHI value="70" alarm="doh.wav"/><XLO value="-40" alarm="doh.wav"/>
+  </EXTREMA>
+  <EXTREMA name="cpufan">
+    <HI value="15000"/><LO value="6000"/>
+		<XHI value="20000" alarm="doh.wav"/><XLO value="5000" alarm="doh.wav"/>
+  </EXTREMA>
+  <EXTREMA name="unknown">
+    <HI value="64400"/><LO value="-64400"/>
+    <XHI value="64400" alarm="doh.wav"/><XLO value="-64400" alarm="doh.wav"/>
+  </EXTREMA>
+
+  <CURVEFILE name="/data/etc/decom.cur"/>
+  <CURVEFILE name="/data/etc/datafile.cur"/>
+  <CURVEFILE name="/data/etc/test3.cur"/>
+</SETTINGS>
+
+<DEFAULTS>
+  <TEXTSTYLE>
+    <BOX colour="#0000cc" font="adobe-times" size="12" bold="true"/>
+    <LABEL colour="#000000" font="adobe-helvetica" size="10"/>
+    <DATUM colour="#000055" font="adobe-helvetica" size="8" bold="true">
+      <ERROR colour="#aa4444" size="8" font="adobe-helvetica" bold="true"/>
+      <WORD textstyle="evenrow"/>
+			<HI textstyle="hiwarn"/>
+			<LO textstyle="lowarn"/>
+			<XHI textstyle="xhiwarn"/>
+			<XLO textstyle="xlowarn"/>
+    </DATUM>
+    <INFOCAPTION colour="#000000" font="adobe-helvetica" size="10" bold="true"/>
+    <INFODATA colour="#000000" font="adobe-courier" size="10" bold="false"/>
+    <INFOCOMBO colour="#000000" font="adobe-courier" size="10" bold="false"/>
+    <INFOBUTTON colour="#000000" font="adobe-helvetica" size="10" bold="true"/>
+  </TEXTSTYLE>
+</DEFAULTS>
+
+<BOX caption="Motors" row="1" col="1" rowspan="2">
+  <NUMBER caption="Roll T" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_ROLL" extrema="temp"/></NUMBER>
+  <NUMBER caption="Roll I" textstyle="oddrow">
+    <DATUM format="%.2f" src="I_ROLL" extrema="current"/></NUMBER>
+  <NUMBER caption="Roll P Gain" textstyle="oddrow">
+    <DATUM format="%.2f" src="G_P_ROLL" extrema="gains"/></NUMBER>
+  <NUMBER caption="Roll PWM" textstyle="oddrow">
+    <DATUM format="%.2f" src="PWM_ROLL" extrema="unknown"/></NUMBER>
+
+  <NUMBER caption="El. T" textstyle="evenrow">
+    <DATUM format="%.2f" src="T_EL_MOT" extrema="temp"/></NUMBER>
+  <NUMBER caption="El. MC T" textstyle="evenrow">
+    <DATUM format="%.2f" src="T_EL_MC" extrema="temp"/></NUMBER>
+  <NUMBER caption="El. I" textstyle="evenrow">
+    <DATUM format="%.2f" src="I_EL" extrema="current"/></NUMBER>
+  <NUMBER caption="El. P Gain" textstyle="evenrow">
+    <DATUM format="%.2f" src="G_P_EL" extrema="gains"/></NUMBER>
+  <NUMBER caption="El. I Gain" textstyle="evenrow">
+    <DATUM format="%.2f" src="G_I_EL" extrema="gains"/></NUMBER>
+  <NUMBER caption="El. PWM" textstyle="evenrow">
+    <DATUM format="%.2f" src="PWM_EL" extrema="unknown"/></NUMBER>
+  <NUMBER caption="El. V. Req." textstyle="evenrow">
+    <DATUM format="%.2f" src="EL_VREQ" extrema="unknown"/></NUMBER>
+
+  <NUMBER caption="Race T" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_RACE" extrema="temp"/></NUMBER>
+  <NUMBER caption="Race I" textstyle="oddrow">
+    <DATUM format="%.2f" src="I_RACE" extrema="current"/></NUMBER>
+
+  <NUMBER caption="Reac. T" textstyle="evenrow">
+    <DATUM format="%.2f" src="T_REAC" extrema="temp"/></NUMBER>
+  <NUMBER caption="Reac. MC T" textstyle="evenrow">
+    <DATUM format="%.2f" src="T_REAC_MC" extrema="temp"/></NUMBER>
+  <NUMBER caption="Reac. I" textstyle="evenrow">
+    <DATUM format="%.2f" src="I_REAC" extrema="current"/></NUMBER>
+  <NUMBER caption="Reac. Enc." textstyle="evenrow">
+    <DATUM format="%.2f" src="REAC_ENC" extrema="unknown"/></NUMBER>
+
+  <NUMBER caption="Piv. T" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_PIV" extrema="temp"/></NUMBER>
+  <NUMBER caption="Piv. MC T" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_PIV_MC" extrema="temp"/></NUMBER>
+  <NUMBER caption="Piv. I" textstyle="oddrow">
+    <DATUM format="%.2f" src="I_PIV" extrema="current"/></NUMBER>
+
+  <NUMBER caption="Fly RPS" textstyle="evenrow">
+    <DATUM format="%.2f" src="FLY_RPS" extrema="unknown"/></NUMBER>
+
+  <DERIV caption"Fly RPS Deriv" textsyle="evenrow">
+    <DATUM format="%.2f" src="FLY_RPS" extrema="unknown" length="1105" tunit="s"/></DERIV>
+</BOX>
+
+<BOX caption="Gyros" row="1" col="2">
+  <NUMBER caption="T Gyro 1" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_GYRO1" extrema="temp"/></NUMBER>
+  <NUMBER caption="T Gyro 2" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_GYRO2" extrema="temp"/></NUMBER>
+  <NUMBER caption="T Gyro 3" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_GYRO3" extrema="temp"/></NUMBER>
+  <NUMBER caption="T Gyro Box" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_GYBOX" extrema="temp"/></NUMBER>
+  <NUMBER caption="T Setpoint" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_GY_SET" extrema="temp"/></NUMBER>
+
+  <NUMBER caption="I Gyro Box" textstyle="evenrow">
+    <DATUM format="%.2f" src="I_GYBOX" extrema="current"/></NUMBER>
+
+  <NUMBER caption="Gyro Heat" textstyle="oddrow">
+    <DATUM format="%.2f" src="GY_HEAT" extrema="unknown"/></NUMBER>
+
+  <NUMBER caption="P Gain" textstyle="evenrow">
+    <DATUM format="%.2f" src="G_P_GYHEAT" extrema="gains"/></NUMBER>
+  <NUMBER caption="I Gain" textstyle="evenrow">
+    <DATUM format="%.2f" src="G_I_GYHEAT" extrema="gains"/></NUMBER>
+  <NUMBER caption="D Gain" textstyle="evenrow">
+    <DATUM format="%.2f" src="G_D_GYHEAT" extrema="gains"/></NUMBER>
+
+  <NUMBER caption="El. Cos." textstyle="oddrow">
+    <DATUM format="%.2f" src="COS_EL" extrema="unknown"/></NUMBER>
+  <NUMBER caption="El. Sin." textstyle="oddrow">
+    <DATUM format="%.2f" src="SIN_EL" extrema="unknown"/></NUMBER>
+
+  <NUMBER caption="Gyro 1" textstyle="evenrow">
+    <DATUM format="%.2f" src="GYRO1" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Gyro 2" textstyle="evenrow">
+    <DATUM format="%.2f" src="GYRO2" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Gyro 3" textstyle="evenrow">
+    <DATUM format="%.2f" src="GYRO3" extrema="unknown"/></NUMBER>
+</BOX>
+
+<BOX caption="ACS" row="2" col="2">
+  <NUMBER caption="T APM 3V" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_APM_3V" extrema="temp"/></NUMBER>
+  <NUMBER caption="T APM 5V" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_APM_5V" extrema="temp"/></NUMBER>
+  <NUMBER caption="T APM 10V" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_APM_10V" extrema="temp"/></NUMBER>
+
+  <NUMBER caption="I APM 3V" textstyle="evenrow">
+    <DATUM format="%.2f" src="I_APM_3V" extrema="current"/></NUMBER>
+  <NUMBER caption="I APM 5V" textstyle="evenrow">
+    <DATUM format="%.2f" src="I_APM_5V" extrema="current"/></NUMBER>
+  <NUMBER caption="I APM 10V" textstyle="evenrow">
+    <DATUM format="%.2f" src="I_APM_10V" extrema="current"/></NUMBER>
+</BOX>
+
+<BOX caption="Pointing Sensors" row="1" col="3">
+  <NUMBER caption="T ISC Box" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_ISCBOX" extrema="temp"/></NUMBER>
+  <NUMBER caption="T Setpoint" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_ISC_SET" extrema="temp"/></NUMBER>
+
+  <NUMBER caption="I ISC Box" textstyle="evenrow">
+    <DATUM format="%.2f" src="I_ISCBOX" extrema="current"/></NUMBER>
+
+  <NUMBER caption="ISC Heat" textstyle="oddrow">
+    <DATUM format="%.2f" src="ISC_HEAT" extrema="unknown"/></NUMBER>
+
+  <NUMBER caption="P Gain" textstyle="evenrow">
+    <DATUM format="%.2f" src="G_P_ISCHEAT" extrema="gains"/></NUMBER>
+  <NUMBER caption="I Gain" textstyle="evenrow">
+    <DATUM format="%.2f" src="G_I_ISCHEAT" extrema="gains"/></NUMBER>
+  <NUMBER caption="D Gain" textstyle="evenrow">
+    <DATUM format="%.2f" src="G_D_ISCHEAT" extrema="gains"/></NUMBER>
+
+					 
+  <NUMBER caption="Clin. 1 X" textstyle="oddrow">
+    <DATUM format="%.2f" src="CLIN1_X" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Clin. 1 Y" textstyle="oddrow">
+    <DATUM format="%.2f" src="CLIN1_Y" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Clin. 1 T" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_CLIN1" extrema="temp"/></NUMBER>
+
+  <NUMBER caption="Clin. 2 X" textstyle="evenrow">
+    <DATUM format="%.2f" src="CLIN2_X" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Clin. 2 Y" textstyle="evenrow">
+    <DATUM format="%.2f" src="CLIN2_Y" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Clin. 2 T" textstyle="evenrow">
+    <DATUM format="%.2f" src="T_CLIN2" extrema="temp"/></NUMBER>
+
+  <NUMBER caption="Clin. 3 X" textstyle="oddrow">
+    <DATUM format="%.2f" src="CLIN3_X" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Clin. 3 Y" textstyle="oddrow">
+    <DATUM format="%.2f" src="CLIN3_Y" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Clin. 3 T" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_CLIN3" extrema="temp"/></NUMBER>
+
+  <NUMBER caption="Mag. Az" textstyle="evenrow">
+    <DATUM format="%.2f" src="MAG_AZ" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Mag. X" textstyle="evenrow">
+    <DATUM format="%.2f" src="MAG_X" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Mag. Y" textstyle="evenrow">
+    <DATUM format="%.2f" src="MAG_Y" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Mag. Bias" textstyle="evenrow">
+    <DATUM format="%.2f" src="MAG_BIAS" extrema="unknown"/></NUMBER>
+</BOX>
+
+<BOX caption="DAS Power Module" row="2" col="4" colspan="3">
+  <NUMBER caption="I DPM 3V" textstyle="oddrow">
+    <DATUM format="%.2f" src="I_DPM_3V" extrema="current"/></NUMBER>
+  <NUMBER caption="I DPM 5V" textstyle="oddrow">
+    <DATUM format="%.2f" src="I_DPM_5V" extrema="current"/></NUMBER>
+  <NUMBER caption="I DPM 10V" textstyle="oddrow">
+    <DATUM format="%.2f" src="I_DPM_10V" extrema="current"/></NUMBER>
+  <NUMBER caption="I DPM 28V" textstyle="oddrow">
+    <DATUM format="%.2f" src="I_DPM_28V" extrema="current"/></NUMBER>
+  <NUMBER caption="I REC" textstyle="oddrow">
+    <DATUM format="%.2f" src="I_REC" extrema="current"/></NUMBER>
+
+  <NUMBER caption="T DPM 3V" textstyle="evenrow">
+    <DATUM format="%.2f" src="T_DPM_3V" extrema="temp"/></NUMBER>
+  <NUMBER caption="T DPM 5V" textstyle="evenrow">
+    <DATUM format="%.2f" src="T_DPM_5V" extrema="temp"/></NUMBER>
+  <NUMBER caption="T DPM 7.5V" textstyle="evenrow">
+    <DATUM format="%.2f" src="T_DPM_7.5V" extrema="temp"/></NUMBER>
+  <NUMBER caption="T DPM 10V" textstyle="evenrow">
+    <DATUM format="%.2f" src="T_DPM_10V" extrema="temp"/></NUMBER>
+</BOX>
+
+
+<BOX caption="Pressure Vessel" row="1" col="5">
+  <NUMBER caption="PV T" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_PV" extrema="temp"/></NUMBER>
+  <NUMBER caption="PV I" textstyle="oddrow">
+    <DATUM format="%.2f" src="I_PV" extrema="current"/></NUMBER>
+
+  <NUMBER caption="CPU T" textstyle="evenrow">
+    <DATUM format="%.2f" src="T_CPU" extrema="temp"/></NUMBER>
+  <NUMBER caption="CPU Fan" textstyle="evenrow">
+    <DATUM format="%.2f" src="CPU_FAN" extrema="cpufan"/></NUMBER>
+  <DATETIME caption="CPU Time" textstyle="evenrow">
+    <DATUM format="%d %b %y, %H:%M:%S" src="CPU_TIME"/></DATETIME>
+</BOX>
+
+<BOX caption="Bias Generator" row="1" col="7">
+  <NUMBER caption="Bias 1 Amp" textstyle="oddrow">
+    <DATUM format="%.2f" src="B_AMP1" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Bias 2 Amp" textstyle="oddrow">
+    <DATUM format="%.2f" src="B_AMP2" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Bias 3 Amp" textstyle="oddrow">
+    <DATUM format="%.2f" src="B_AMP3" extrema="unknown"/></NUMBER>
+
+  <NUMBER caption="Bias 1 Out" textstyle="evenrow">
+    <DATUM format="%.2f" src="BIASOUT1" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Bias 2 Out" textstyle="evenrow">
+    <DATUM format="%.2f" src="BIASOUT1" extrema="unknown"/></NUMBER>
+
+  <NUMBER caption="Bias In" textstyle="oddrow">
+    <DATUM format="%.2f" src="BIASIN" extrema="unknown"/></NUMBER>
+
+  <NUMBER caption="Bias 624" textstyle="evenrow">
+    <DATUM format="%.2f" src="B_624" extrema="unknown"/></NUMBER>
+
+  <NUMBER caption="Bias Ref" textstyle="oddrow">
+    <DATUM format="%.2f" src="BIAS_REF" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Lock Ref" textstyle="oddrow">
+    <DATUM format="%.2f" src="LCK_REF" extrema="unknown"/></NUMBER>
+  
+  <MULTI caption="Bias Type" textstyle="oddrow">
+    <DATUM src="BIAS_IS_DC">
+	   <WORD value="1" caption="DC" textstyle="W_BIT"/>
+	   <WORD value="0" caption="AC" textstyle="OK_BIT"/>
+    </DATUM>
+  </MULTI>
+	
+  <MULTI caption="Bias Clock" textstyle="oddrow">
+    <DATUM src="BIAS_CLK_IS_INT">
+	   <WORD value="1" caption="Internal" textstyle="OK_BIT"/>
+	   <WORD value="0" caption="External" textstyle="W_BIT"/>
+    </DATUM>
+  </MULTI>
+
+  <MULTI caption="Bias Source" textstyle="oddrow">
+    <DATUM src="BIAS_IS_INT">
+	   <WORD value="1" caption="Internal" textstyle="OK_BIT"/>
+	   <WORD value="0" caption="External" textstyle="W_BIT"/>
+    </DATUM>
+  </MULTI>
+
+</BOX>
+
+<BOX caption="Cryo" row="1" col="8" rowspan="2">
+  <NUMBER caption="Cryo 1 Out" textstyle="oddrow">
+    <DATUM format="%.2f" src="CRYOOUT1" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Cryo 2 Out" textstyle="oddrow">
+    <DATUM format="%.2f" src="CRYOOUT2" extrema="unknown"/></NUMBER>
+  <NUMBER caption="Cryo 3 Out" textstyle="oddrow">
+    <DATUM format="%.2f" src="CRYOOUT3" extrema="unknown"/></NUMBER>
+
+  <NUMBER caption="I Charcoal" textstyle="evenrow">
+    <DATUM format="%.2f" src="I_CHARCOAL" extrema="current"/></NUMBER>
+  <NUMBER caption="I He. Level" textstyle="evenrow">
+    <DATUM format="%.2f" src="I_HE_LEV" extrema="current"/></NUMBER>
+  <NUMBER caption="I JFET" textstyle="evenrow">
+    <DATUM format="%.2f" src="I_JFET" extrema="current"/></NUMBER>
+  <NUMBER caption="I Heat Switch" textstyle="evenrow">
+    <DATUM format="%.2f" src="I_HEATSWITCH" extrema="current"/></NUMBER>
+  <NUMBER caption="I He. 3" textstyle="evenrow">
+    <DATUM format="%.2f" src="I_HE3" extrema="current"/></NUMBER>
+
+  <NUMBER caption="T VCS 1" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_VCS1" extrema="temp"/></NUMBER>
+  <NUMBER caption="T VCS Fet." textstyle="oddrow">
+    <DATUM format="%.2f" src="T_VCS_FET" extrema="temp"/></NUMBER>
+  <NUMBER caption="T He. 4" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_HE4" extrema="temp"/></NUMBER>
+  <NUMBER caption="T Liq. N 2" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_LN2" extrema="temp"/></NUMBER>
+  <NUMBER caption="T JFET" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_JFET" extrema="temp"/></NUMBER>
+  <NUMBER caption="T Mirror 3" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_MIRROR3" extrema="temp"/></NUMBER>
+  <NUMBER caption="T Mirror 4" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_MIRROR4" extrema="temp"/></NUMBER>
+  <NUMBER caption="T Mirror 5" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_MIRROR5" extrema="temp"/></NUMBER>
+  <NUMBER caption="T Lyot Stim." textstyle="oddrow">
+    <DATUM format="%.2f" src="T_LYOT_STIM" extrema="temp"/></NUMBER>
+  <NUMBER caption="T Heat Switch" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_HEATSWITCH" extrema="temp"/></NUMBER>
+  <NUMBER caption="T Charcoal" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_CHARCOAL" extrema="temp"/></NUMBER>
+  <NUMBER caption="T He. 4 Pot" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_HE4POT" extrema="temp"/></NUMBER>
+  <NUMBER caption="T Liq. N Filt." textstyle="oddrow">
+    <DATUM format="%.2f" src="T_LN_FILT" extrema="temp"/></NUMBER>
+  <NUMBER caption="T Liq. N Filt. VCS" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_LN_FILT_VCS" extrema="temp"/></NUMBER>
+  <NUMBER caption="T He. Filt." textstyle="oddrow">
+    <DATUM format="%.2f" src="T_HE_FILT" extrema="temp"/></NUMBER>
+  <NUMBER caption="T He. 3" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_HE3" extrema="temp"/></NUMBER>
+  <NUMBER caption="T BDA 1" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_BDA1" extrema="temp"/></NUMBER>
+  <NUMBER caption="T BDA 2" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_BDA2" extrema="temp"/></NUMBER>
+  <NUMBER caption="T BDA 3" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_BDA3" extrema="temp"/></NUMBER>
+</BOX>
+
+<BOX caption="Frame Thermometry" row="2" col="3">
+  <NUMBER caption="T IF 1" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_IF1" extrema="temp"/></NUMBER>
+  <NUMBER caption="T IF 2" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_IF2" extrema="temp"/></NUMBER>
+  <NUMBER caption="T IF 3" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_IF3" extrema="temp"/></NUMBER>
+  <NUMBER caption="T IF 4" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_IF4" extrema="temp"/></NUMBER>
+  <NUMBER caption="T IF 5" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_IF5" extrema="temp"/></NUMBER>
+  <NUMBER caption="T IF 6" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_IF6" extrema="temp"/></NUMBER>
+  <NUMBER caption="T IF 7" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_IF7" extrema="temp"/></NUMBER>
+  <NUMBER caption="T IF 8" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_IF8" extrema="temp"/></NUMBER>
+  <NUMBER caption="T IF 9" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_IF9" extrema="temp"/></NUMBER>
+</BOX>
+
+
+
+</DOCUMENT>

@@ -1,0 +1,58 @@
+#!/bin/sh
+
+echo ----------------------------------------------
+echo "           Palantir configuration"
+echo
+echo -n "Executable destination [/usr/local/bin]: "
+read EXEC_DEST
+
+if [ -z ${EXEC_DIR} ]
+then
+  EXEC_DIR=/usr/local/bin ;
+fi
+
+echo EXEC_DIR = ${EXEC_DIR} > Makefile.config
+
+echo -n "Data directory [/data/etc/palantir]: "
+read DATA_DIR
+
+if [ -z ${DATA_DIR} ]
+then
+  DATA_DIR=/data/etc/palantir ;
+fi
+
+echo DATA_DIR = ${DATA_DIR} >> Makefile.config
+
+echo -n "Location of libRD.a [/usr/local/lib]: "
+read RD_DIR
+
+if [ -z ${RD_DIR} ]
+then
+  RD_DIR=/usr/local/lib ;
+fi
+
+echo RD_DIR = ${RD_DIR} >> Makefile.config
+
+echo -n "qt root directory [/usr/lib/qt3]: "
+read QT_DIR
+
+if [ -z ${QT_DIR} ]
+then
+  QT_DIR=/usr/lib/qt3 ;
+fi
+
+echo QT_DIR = ${QT_DIR} >> Makefile.config
+
+echo -n "use sound card by default [yes]: "
+read SOUND_CARD
+
+if [ -z ${SOUND_CARD} -o ${SOUND_CARD} = "yes" ]
+then
+  true ;
+else
+  echo PC_SPEAKER = -DDEFAULT_PC_SPEAKER >> Makefile.config ;
+fi
+
+echo QT_DIR = ${QT_DIR} >> Makefile.config
+
+echo ----------------------------------------------
