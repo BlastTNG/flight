@@ -41,7 +41,7 @@
 
 #define VERSION_MAJOR    "2"
 #define VERSION_MINOR    "4"
-#define VERSION_REVISION "1"
+#define VERSION_REVISION "2"
 #define VERSION VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION 
 
 #define DEFAULT_CURFILE "/data/etc/defile.cur"
@@ -54,6 +54,7 @@
 struct ri_struct ri;
 struct rc_struct rc = {
   0, /* daemonise */
+  0, /* force_stdio */
   0, /* framefile */
   0, /* gzip_output */
   0, /* persist */
@@ -75,11 +76,13 @@ struct rc_struct rc = {
 
 sigset_t signals;
 
-/* filters info messages out of syslog output */
+/* filters info messages out of output when appropriate */
 void dputs(blog_t level, const char* string)
 {
-  if (level != info) 
+  if (rc.daemonise && !rc.force_stdio && level != info)
     bputs_syslog(level, string);
+  else if (level != info || !rc.silent)
+    bputs_stdio(level, string);
 }
 
 char* ResolveOutputDirfile(char* dirfile, const char* parent)
@@ -281,59 +284,6 @@ void GetDirFile(char* buffer, const char* source, char* parent)
   MakeDirFile(buffer, source, parent);
 }
 
-/* Figures out the name of the channel specification file, and then tries to
- * open and read it. */
-void ReconstructChannelLists(void)
-{
-  struct stat stat_buf;
-  char buffer[200];
-  char* ptr = buffer;
-  FILE* stream;
-
-  /* if rc.spec_file exists, the user has specified a spec file name, use it */
-  if (rc.spec_file != NULL) {
-    /* check for buffer overrun */
-    if (strlen(rc.spec_file) >= 200)
-      bprintf(fatal, "specification file path too long\n");
-    strcpy(buffer, rc.spec_file);
-  } else {
-    /* if the chunk is 923488378.x000, the spec file will be 923488378.x.spec */
-    strcpy(buffer, rc.chunk);
-    while (*ptr != '.' && *ptr != '\0')
-      ++ptr;
-    if (*ptr != '\0') {
-      ++ptr;
-      if (*ptr != '\0')
-        ++ptr;
-    }
-
-    /* check for buffer overrun */
-    if (ptr - buffer > 190)
-      bprintf(fatal, "specification file path too long\n");
-    strcpy(ptr, ".spec");
-  }
-
-  /* first attempt to stat spec file to see if it is indeed a regular file */
-  if (stat(buffer, &stat_buf))
-    berror(fatal, "cannot stat spec file `%s'", buffer);
-
-  /* the stat worked.  Now is this a regular file? */
-  if (!S_ISREG(stat_buf.st_mode))
-    bprintf(fatal, "spec file `%s' is not a regular file\n", buffer);
-
-  /* attempt to open the file */
-  if ((stream = fopen(buffer, "r")) == NULL)
-    berror(fatal, "cannot open spec file `%s'", buffer);
-
-  ReadSpecificationFile(stream);
-
-  /* Make the Channel Struct */
-  MakeAddressLookups();
-
-  if (!rc.silent)
-    printf("Frame size: %i bytes\n", DiskFrameSize);
-}
-
 void PrintVersion(void)
 {
   printf("defile " VERSION "  (C) 2004 D. V. Wiebe\n"
@@ -459,7 +409,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           if ((rc->output_curfile = strdup(&argv[i][15])) == NULL)
             berror(fatal, "cannot allocate heap");
         } else if (!strcmp(argv[i], "--daemonise"))
-          rc->daemonise = rc->persist = rc->silent = 1;
+          rc->daemonise = rc->persist = rc->silent = rc->force_stdio = 1;
         else if (!strcmp(argv[i], "--force"))
           rc->write_mode = 1;
         else if (!strcmp(argv[i], "--framefile"))
@@ -532,7 +482,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
               }
               break;
             case 'd':
-              rc->daemonise = rc->persist = rc->silent = 1;
+              rc->daemonise = rc->persist = rc->silent = rc->force_stdio = 1;
               break;
             case 'f':
               rc->write_mode = 1;
@@ -675,7 +625,7 @@ int main (int argc, char** argv)
   pthread_t write_thread;
 
   /* set up our outputs */
-  blog_use_stdio();
+  blog_use_func(dputs);
 
   /* fill rc struct from command line */
   ParseCommandLine(argc, argv, &rc);
@@ -702,9 +652,7 @@ int main (int argc, char** argv)
       printf("PID = %i\n", pid);
       exit(0);
     }
-
-    /* switch output to syslog */
-    blog_use_func(dputs);
+    rc.force_stdio = 0;
 
     /* Daemonise */
     chdir("/");
@@ -737,7 +685,7 @@ int main (int argc, char** argv)
     bprintf(fatal, "destination dirfile `%s' too long\n", rc.dirfile);
 
   /* Attempt to Open the Specification file and read the channel lists */
-  ReconstructChannelLists();
+  ReconstructChannelLists(rc.chunk, rc.spec_file);
 
   /* Start */
   bprintf(info, "Defiling `%s'\n    into `%s' ...\n\n", rc.chunk, rc.dirfile);

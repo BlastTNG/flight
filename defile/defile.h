@@ -34,7 +34,7 @@
 #endif
 
 struct rc_struct {
-  int daemonise, framefile, gzip_output, persist, remount, silent;
+  int daemonise, force_stdio, framefile, gzip_output, persist, remount, silent;
   int write_curfile;
   int write_mode; /* 0 = normal ; 1 = overwrite ; 2 = resume */
   int sufflen;
@@ -76,7 +76,6 @@ void  FrameFileReader(void);
 void  GetDirFile(char*, const char*, char*);
 void  PreInitialiseDirFile(void);
 void  InitialiseDirFile(int);
-void  ReconstructChannelLists(void);
 void  PushFrame(unsigned short*);
 void  Remount(const char*, char*);
 void  CleanUp(void);

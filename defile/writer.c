@@ -914,7 +914,7 @@ void DirFileWriter(void)
         CleanUp();
 
         /* Read the new Spec file */
-        ReconstructChannelLists();
+        ReconstructChannelLists(rc.spec_file, rc.chunk);
 
         /* Re-initialise */
         wrote_count = 0;

@@ -48,6 +48,11 @@ void PathSplit_r(
     char*
     );
 
+void  ReconstructChannelLists(
+    const char*,
+    const char*
+    );
+
 long int SetStartChunk(
     long int,
     char*,

@@ -1,8 +1,13 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
-2004-09-20:
-  * defile: Migrate to blast.c and blast.h -- new unified ouput scheme
+2004-09-20 (2.4.2):
+  * defile.c, frameread.c: Move ReconstructChannelLists to frameread.c
+  * defile.c: Fix output suppression (-q) after breaking it with BUOS
+
+2004-09-20 (2.4.1):
+  * defile: Migrate to blast.c and blast.h -- blast unified ouput scheme
+     (BUOS)
 
 2004-09-17 (2.4.0):
   * ChangeLog: Create ChangeLog
@@ -99,13 +104,13 @@
   * reader.c: Fix next chunk bug
 
 2004-03-30 (1.0.1):
-  * -: Increment revision
+  * defile: Increment revision
 
 2004-02-10:
   * reader.c: resume fixed
 
 2004-02-09:
-  * -: Add -R (resume) option
+  * defile: Add -R (resume) option
 
 2004-01-22:
   * defile.c: Change -f to -F and add new -f (force)

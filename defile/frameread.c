@@ -109,6 +109,58 @@ int StaticSourcePart(char* output, const char* source, chunkindex_t* value,
     return counter;
 }
 
+/* Figures out the name of the channel specification file, and then tries to
+ * open and read it. */
+void ReconstructChannelLists(const char* chunk, const char * spec_file)
+{
+  struct stat stat_buf;
+  char buffer[200];
+  char* ptr = buffer;
+  FILE* stream;
+
+  /* if spec_file exists, the user has specified a spec file name, use it */
+  if (spec_file != NULL) {
+    /* check for buffer overrun */
+    if (strlen(spec_file) >= 200)
+      bprintf(fatal, "specification file path too long\n");
+    strcpy(buffer, spec_file);
+  } else {
+    /* if the chunk is 923488378.x000, the spec file will be 923488378.x.spec */
+    strcpy(buffer, chunk);
+    while (*ptr != '.' && *ptr != '\0')
+      ++ptr;
+    if (*ptr != '\0') {
+      ++ptr;
+      if (*ptr != '\0')
+        ++ptr;
+    }
+
+    /* check for buffer overrun */
+    if (ptr - buffer > 190)
+      bprintf(fatal, "specification file path too long\n");
+    strcpy(ptr, ".spec");
+  }
+
+  /* first attempt to stat spec file to see if it is indeed a regular file */
+  if (stat(buffer, &stat_buf))
+    berror(fatal, "cannot stat spec file `%s'", buffer);
+
+  /* the stat worked.  Now is this a regular file? */
+  if (!S_ISREG(stat_buf.st_mode))
+    bprintf(fatal, "spec file `%s' is not a regular file\n", buffer);
+
+  /* attempt to open the file */
+  if ((stream = fopen(buffer, "r")) == NULL)
+    berror(fatal, "cannot open spec file `%s'", buffer);
+
+  ReadSpecificationFile(stream);
+
+  /* Make the Channel Struct */
+  MakeAddressLookups();
+
+  bprintf(info, "Frame size: %i bytes\n", DiskFrameSize);
+}
+
 /* Returns the length of a framefile */
 unsigned long GetFrameFileSize(const char* file, int sufflen)
 {
