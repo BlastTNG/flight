@@ -43,7 +43,7 @@ for (@ARGV) {
     sleep 1;
     StartDecomd();
   } elsif (/^cycle$/) {
-    SendDig($SIGHUP);
+    SendSig($SIGHUP);
   } elsif (/^status$/) {
     Status();
   } elsif (/^pause$/) {
