@@ -35,6 +35,10 @@
 #include "tx_struct.h"
 #include "defile.h"
 
+extern struct ChannelStruct* WideSlowChannels;
+extern struct ChannelStruct* SlowChannels;
+extern struct ChannelStruct* WideFastChannels;
+extern struct ChannelStruct* FastChannels;
 void FPrintDerived(FILE* fp);
 
 #define MAXBUF 3000 /* This is a 30 second buffer */
@@ -241,17 +245,25 @@ int CheckWriteAllow(int mkdir_err)
         if (strcmp(lamb->d_name, "FASTSAMP") == 0) {
           if ((n = GetNumFrames(stat_buf.st_size, 'U', "FASTSAMP")) < min_wrote)
             min_wrote = n;
-          n_fast += 2;
+          n_fast++;
           found = 1;
         } else
-          for (i = 0; i < ccFast; ++i)
-            if (strcmp(lamb->d_name, FastChList[i].field) == 0) {
-              if ((n = GetNumFrames(stat_buf.st_size, FastChList[i].type,
+          for (i = 0; i < ccWideFast; ++i)
+            if (strcmp(lamb->d_name, WideFastChannels[i].field) == 0) {
+              if ((n = GetNumFrames(stat_buf.st_size, WideFastChannels[i].type,
                       lamb->d_name)) < min_wrote)
                 min_wrote = n;
               n_fast++;
-              if (FastChList[i].type != 'u' && FastChList[i].type != 's')
-                n_fast++;
+              found = 1;
+              break;
+            }
+        if (!found)
+          for (i = 0; i < ccNarrowFast; ++i)
+            if (strcmp(lamb->d_name, FastChannels[i].field) == 0) {
+              if ((n = GetNumFrames(stat_buf.st_size, FastChannels[i].type,
+                      lamb->d_name)) < min_wrote)
+                min_wrote = n;
+              n_fast++;
               found = 1;
               break;
             }
@@ -267,20 +279,28 @@ int CheckWriteAllow(int mkdir_err)
                 break;
               }
             }
+        if (!found) {
+          for (i = 0; i < ccNarrowSlow; ++i) {
+            if (strcmp(lamb->d_name, SlowChannels[i].field) == 0) {
+              if ((n = GetNumFrames(stat_buf.st_size * FAST_PER_SLOW,
+                      SlowChannels[i].type, lamb->d_name)) < min_wrote)
+                min_wrote = n;
+              n_slow++;
+              found = 1;
+              break;
+            }
+          }
+        }
         if (!found)
-          for (i = 0; i < slowsPerBi0Frame; ++i)
-            for (j = 0; j < FAST_PER_SLOW; ++j)
-              if (strcmp(lamb->d_name, SlowChList[i][j].field) == 0) {
-                if ((n = GetNumFrames(stat_buf.st_size * FAST_PER_SLOW,
-                        SlowChList[i][j].type, lamb->d_name)) < min_wrote)
-                  min_wrote = n;
-                n_slow++;
-                if (SlowChList[i][j].type != 'u' &&
-                    SlowChList[i][j].type != 's')
-                  n_slow++;
-                found = 1;
-                break;
-              }
+          for (i = 0; i < ccWideSlow; ++i)
+            if (strcmp(lamb->d_name, WideSlowChannels[i].field) == 0) {
+              if ((n = GetNumFrames(stat_buf.st_size * FAST_PER_SLOW,
+                      WideSlowChannels[i].type, lamb->d_name)) < min_wrote)
+                min_wrote = n;
+              n_slow++;
+              found = 1;
+              break;
+            }
         if (!found) {
           fprintf(stderr, "defile: error reading `%s': field `%s' is not in "
               "the channel list.\ndefile: cannot resume\n", rc.dirfile,
