@@ -146,7 +146,7 @@ void FrameFileReader(void)
     if (rc.persist) {
       do {
         more_in_file = new_chunk = 0;
-        /* persistant: first check to see if we have more data in the file */
+        /* persistent: first check to see if we have more data in the file */
         if (stat(rc.chunk, &chunk_stat)) {
           snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", rc.chunk);
           perror(gpb);
@@ -185,26 +185,28 @@ void FrameFileReader(void)
               if (gpb[i] == '\n') {
                 gpb[i] = '\0';
                 if (strcmp(gpb, rc.curfile_val) != 0) {
-                  /* curfile has changed, reinitialse source */
+                  /* curfile has changed, reinitialise source */
                   strcpy(rc.curfile_val, gpb);
 
+                  /* fixup remounting */
                   if (rc.remount)
                     Remount(rc.source, gpb);
 
                   strcpy(rc.chunk, gpb);
 
                   /* remake the destination dirfile (if necessary) */
-                  strcpy(gpb, rc.dirfile);
-                  free(rc.dirfile);
-                  rc.dirfile  = GetDirFile(rc.chunk, rc.dest);
+                  if (rc.output_dirfile == NULL) {
+                    strcpy(gpb, rc.dirfile);
+                    free(rc.dirfile);
+                    rc.dirfile  = GetDirFile(rc.chunk, rc.dest_dir);
 
-                  /* if the dirfile has changed, signal the writer to cycle */
-                  if (strcmp(gpb, rc.dirfile) != 0) {
+                    /* if the dirfile has changed, signal the writer to cycle */
                     ri.dirfile_init = 0;
                     fclose(stream);
-                    ri.old_total += ri.chunk_total;
-                    new_chunk = 1;
                   }
+
+                  ri.old_total += ri.chunk_total;
+                  new_chunk = 1;
                 } else
                   /* no changes wait and try again */
                   usleep(5000000);

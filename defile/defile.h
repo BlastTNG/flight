@@ -36,8 +36,9 @@ struct rc_struct {
   char* curfile_val;
   char* remount_dir;
   char* output_curfile;
+  char* output_dirfile;
   char* source;
-  char* dest;
+  char* dest_dir;
 
   struct timeval start;
   struct timezone tz;

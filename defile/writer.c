@@ -35,15 +35,15 @@
 
 void FPrintDerived(FILE* fp);
 
-#define MAXBUF 3000 // This is a 30 second buffer 
+#define MAXBUF 3000 /* This is a 30 second buffer */
 
 struct FieldType {
-  short i0;   // start of field in rxframe, words
-  short size; // size in words
-  int i_in;   // index in elements
-  int i_out;  // index in elements
+  short i0;   /* start of field in rxframe, words */
+  short size; /* size in words */
+  int i_in;   /* index in elements */
+  int i_out;  /* index in elements */
   int fp;
-  void* b;    // buffer
+  void* b;    /* buffer */
   long int nw;
 };
 
@@ -391,15 +391,12 @@ void PushFrame(unsigned short* frame)
       }
     }
     n_frames++;
-    //    if (n_frames % 5 == 0) { 
-    //      printf("file: %s frame: %d\r", filedirname, n_frames);
-    //      fflush(stdout);
-    //    } 
   }
 
-  /******************** 
-   * normal fast data * 
-   ********************/
+  /********************/
+  /* normal fast data */
+  /********************/
+
   for (j = 0; j < n_fast; j++) {
     i_in = normal_fast[j].i_in;
     if (normal_fast[j].size == 2) {
@@ -414,9 +411,9 @@ void PushFrame(unsigned short* frame)
     normal_fast[j].i_in = i_in;
   };
 
-  /********************
-   * fast bolo data   *
-   ********************/
+  /********************/
+  /* fast bolo data   */
+  /********************/
   for (i = 0; i<DAS_CARDS; i++) {
     for (j = 0; j<DAS_CHS; j += 2) {
       B0 = (unsigned)frame[boloIndex[i][j][0]] +
@@ -434,9 +431,7 @@ void PushFrame(unsigned short* frame)
   }
 }
 
-/*************************************************************/
 /* DirFileWriter: separate thread: writes each field to disk */
-/*************************************************************/
 void DirFileWriter(void)
 {
   unsigned short buffer[MAXBUF];
@@ -450,7 +445,7 @@ void DirFileWriter(void)
   InitialiseDirFile(1);
 
   while (1) {
-    /** slow data **/
+    /* slow data */
     for (i = 0; i<N_SLOW; i++) {
       for (j = 0; j<FAST_PER_SLOW; j++) {
         i_in = slow_fields[i][j].i_in;
@@ -497,7 +492,9 @@ void DirFileWriter(void)
       }
     }
 
-    /** normal fast data */
+    /********************** 
+     ** normal fast data ** 
+     **********************/
     for(j = 0; j<n_fast; j++) {
       i_in = normal_fast[j].i_in;
       i_out = normal_fast[j].i_out;
@@ -579,7 +576,7 @@ void DirFileWriter(void)
     /* if dirfile_init is lowered, the reader has noticed a change in the
      * curfile prepare for cycling the writer. */
     if (ri.dirfile_init == 0) {
-      /* perform one last pass to ensure we've writen all the data (the reader
+      /* perform one last pass to ensure we've written all the data (the reader
        * has certainly stopped by now, so we should be fine with a single
        * last pass */
       if (!last_pass)

@@ -56,8 +56,9 @@ struct rc_struct rc = {
   NULL, /* curfile_val */
   NULL, /* remount_dir */
   NULL, /* output_curfile */
+  NULL, /* output_dirfile */
   NULL, /* source */
-  NULL /* dest */
+  NULL /* dest_dir */
 };
 
 void PathSplit(const char* path, const char** dname, const char** bname)
@@ -76,10 +77,18 @@ void PathSplit(const char* path, const char** dname, const char** bname)
     if (*ptr == '/')
       base = ptr + 1;
 
-  if (base == NULL) {
+  if (base == NULL) { /* this is "foo" */
     strncpy(static_base, buffer, NAME_MAX);
     strcpy(static_path, ".");
-  } else {
+  } else if (base == buffer + 1) {
+    if (base[0] == '\0') { /* this is "/" */
+      strncpy(static_path, buffer, NAME_MAX);
+      strcpy(static_base, ".");
+    } else { /* this is "/foo" */
+      strcpy(static_path, "/");
+      strncpy(static_base, base, NAME_MAX);
+    }
+  } else { /* this is "foo/bar" */
     *(base - 1) = '\0';
     strncpy(static_base, base, NAME_MAX);
     strncpy(static_path, buffer, PATH_MAX);
@@ -94,13 +103,53 @@ void PathSplit(const char* path, const char** dname, const char** bname)
   free(buffer);
 }
 
+char* ResolveOutputDirfile(char* dirfile, const char* parent)
+{
+  const char* parent_part, *dirfile_part;
+  char path[PATH_MAX];
+  char gpb[GPB_LEN];
+
+  /* is dirfile a relative path if so, we don't have to do anything */
+  if (dirfile[0] != '/') {
+    /* check string sizes */
+    if (strlen(parent) + 1 + strlen(dirfile) >= PATH_MAX) {
+      fprintf(stderr, "defile: output dirfile path is too long\n");
+      exit(1);
+    }
+
+    strcpy(path, parent);
+    if (path[strlen(path) - 1] != '/')
+      strcat(path, "/");
+    strcat(path, dirfile);
+  } else
+    strcpy(path, dirfile);
+
+  /* realpath() will fail with a non-existant path, so strip off dirfile name */
+  PathSplit(path, &parent_part, &dirfile_part);
+
+  /* canonicalise the path */
+  if (realpath(parent_part, dirfile) == NULL) {
+    snprintf(gpb, GPB_LEN, "defile: cannot resolve output dirfile path `%s'",
+        parent_part);
+    perror(gpb);
+    exit(1);
+  }
+
+  /* add back dirfile name */
+  if (dirfile[strlen(dirfile) - 1] != '/')
+    strcat(dirfile, "/");
+  strcat(dirfile, dirfile_part);
+
+  return dirfile;
+}
+
 void Remount(const char* source, char* buffer)
 {
   const char* element;
   char real_path[PATH_MAX];
   char path[PATH_MAX];
   char gpb[GPB_LEN];
-  
+
   /* is the remount_dir an absolute path? */
   if (rc.remount_dir[0] == '/') {
     strcpy(path, rc.remount_dir);
@@ -115,7 +164,8 @@ void Remount(const char* source, char* buffer)
     }
 
     strcpy(path, element);
-    strcat(path, "/");
+    if (path[strlen(path) - 1] != '/')
+      strcat(path, "/");
     strcat(path, rc.remount_dir);
   }
 
@@ -130,7 +180,8 @@ void Remount(const char* source, char* buffer)
   PathSplit(buffer, NULL, &element);
 
   strcpy(buffer, real_path);
-  strcat(buffer, "/");
+  if (buffer[strlen(buffer) - 1] != '/')
+    strcat(buffer, "/");
   strcat(buffer, element);
 }
 
@@ -171,7 +222,7 @@ char* GetFileName(const char* source)
   }
 
   if (rc.framefile)
-    /* user has inidcated SOURCE is a framefile, nothing more to do */
+    /* user has indicated SOURCE is a framefile, nothing more to do */
     strcpy(buffer, source);
   else {
     /* attempt to determine if this is a curfile or not */
@@ -205,7 +256,7 @@ char* GetFileName(const char* source)
       /* no non-text characters found, assume we have a curfile */
       rc.source_is_curfile = 1;
 
-      /* if we're in persistant mode, we need to remember the contents of the
+      /* if we're in persistent mode, we need to remember the contents of the
        * curfile so we can check for changed */
       if (rc.persist)
         if ((rc.curfile_val = strdup(buffer)) == NULL) {
@@ -296,7 +347,8 @@ char* MakeDirFile(char* output, const char* source, const char* directory)
   StaticSourcePart(buffer, bname, NULL);
 
   strcpy(output, directory);
-  strcat(output, "/");
+  if (output[strlen(output) - 1] != '/')
+    strcat(output, "/");
   strcat(output, buffer);
 
   free(buffer);
@@ -306,10 +358,9 @@ char* MakeDirFile(char* output, const char* source, const char* directory)
 
 /* generates a dirfile name given the source and destination passed on the
  * command line */
-char* GetDirFile(const char* source, char* destination)
+char* GetDirFile(const char* source, char* parent)
 {
   char* buffer;
-  const char* dname;
   struct stat stat_buf;
   char gpb[GPB_LEN];
 
@@ -319,65 +370,23 @@ char* GetDirFile(const char* source, char* destination)
     exit(1);
   }
 
-  /* if we were given a destination, is it the parent dir or a dirfile
-   * itself? */
-  if (destination != NULL) {
+  /* Step 1: stat parent to make sure it exists */
+  if (stat(parent, &stat_buf)) {
+    /* stat failed -- parent doesn't exist; complain and exit */
+    snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", parent);
+    perror(gpb);
+    exit(1);
+  }
 
-    /* Step 1: stat destination.  If it exists and is a directory, assume
-     * that it is the name of the parent directory */
-    if (stat(destination, &stat_buf)) {
-      /* stat failed -- destination doesn't exist, does it's parent? If so
-       * assume that destination is the name of the parent dir */
-      PathSplit(destination, &dname, NULL);
+  /* parent exists.  Is it a directory? */
+  if (!S_ISDIR(stat_buf.st_mode)) {
+    /* not a directory, complain and exit */
+    fprintf(stderr, "defile: `%s' is not a directory", parent);
+    exit(1);
+  }
 
-      if (stat(dname, &stat_buf)) {
-        /* parent dir doesn't exist either, complain and exit */
-        snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", destination);
-        perror(gpb);
-        exit(1);
-      } else
-        /* parent dir exists, check to make sure it is a directory */
-        if (!S_ISDIR(stat_buf.st_mode)) {
-          /* not a directory, complain and exit */
-          snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", destination);
-          perror(gpb);
-          exit(1);
-        } else
-          /* parent dir exists and is a directory, assume that destination
-           * is meant to be the name of the dirfile */
-          strncpy(buffer, destination, FILENAME_LEN);
-    } else
-      /* destination exists.  Is it a directory? */
-      if (!S_ISDIR(stat_buf.st_mode)) {
-        /* not a directory, complain and exit */
-        fprintf(stderr, "defile: `%s' is not a directory", destination);
-        exit(1);
-      } else
-        /* a directory, assume it's the parent. We still need to make the
-         * dirfile name */
-        MakeDirFile(buffer, source, destination);
-  } else
-    /* We weren't given a destination, so use DEFAULT_DIR as a parent directory
-     * if it exists */
-
-    if (stat(DEFAULT_DIR, &stat_buf)) {
-      /* DEFAULT_DIR doesn't exist, complain and exit */
-      snprintf(gpb, GPB_LEN,
-          "defile: no destination given and cannot stat `%s'", DEFAULT_DIR);
-      perror(gpb);
-      exit(1);
-    } else
-      /* DEFAULT_DIR exists, is it a directory? */
-      if (!S_ISDIR(stat_buf.st_mode)) {
-        fprintf(stderr, "defile: no destination given and `%s' is not a "
-            "directory\n", DEFAULT_DIR);
-        exit(1);
-      } else
-        /* Everything is happy, DEFAULT_DIR exists and is indeed a directory,
-         * use it as the parent for the dirfile */
-        MakeDirFile(buffer, source, DEFAULT_DIR);
-
-      return buffer;
+  /* parent is indeed a directory; make the dirfile name */
+  return MakeDirFile(buffer, source, parent);
 }
 
 void PrintVersion(void)
@@ -389,7 +398,7 @@ void PrintVersion(void)
       "FOR A PARTICULAR PURPOSE. You may redistribute it under the terms of "
       "the GNU\n"
       "General Public License; see the file named COPYING for details.\n"
-      "Writen by D.V. Wiebe.\n"
+      "Written by D.V. Wiebe.\n"
       );
   exit(0);
 }
@@ -412,7 +421,7 @@ void PrintUsage(void)
       "  -f --force-framefile  always assume SOURCE is a framefile, even when "
       "it\n"
       "                          appears to be a curfile\n"
-      "  -p --persistant       do not exit upon reaching the end of the "
+      "  -p --persistent       do not exit upon reaching the end of the "
       "framefile.\n"
       "                          Instead, defile will monitor the file and "
       "wait until\n"
@@ -442,12 +451,12 @@ void PrintUsage(void)
     "  -s --suffix-size=SIZE assume the framefile suffix (the portion of "
     "the\n"
     "                          framefile which is incremented as a "
-    "hexidecimal\n"
+    "hexadecimal\n"
     "                          number) is no more than SIZE characters "
     "large.\n"
     "                          SIZE should be an integer between 0 and %i.\n"
     "  --help                display this help and exit\n"
-    "  --verion              display this version information and exit\n"
+    "  --version              display this version information and exit\n"
     "  --                    last option; all following parameters are "
     "arguments.\n\n"
     "Summary of defaults:"
@@ -503,7 +512,13 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           }
         } else if (!strcmp(argv[i], "--force-framefile"))
           rc->framefile = 1;
-        else if (!strcmp(argv[i], "--persistant"))
+        else if (!strncmp(argv[i], "--output-dirfile=", 17)) {
+          free(rc->remount_dir);
+          if ((rc->output_dirfile = strdup(&argv[i][17])) == NULL) {
+            perror("defile: cannot allocate heap");
+            exit(1);
+          }
+        } else if (!strcmp(argv[i], "--persistent"))
           rc->persist = 1;
         else if (!strcmp(argv[i], "--remounted-source")) {
           if (!rc->remount) {
@@ -538,6 +553,14 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
       } else { /* a short option */
         for (j = 1; argv[i][j] != '\0'; ++j) {
           switch (argv[i][j]) {
+            case 'C':
+              rc->write_curfile = 1;
+              if (nshortargs < argc)
+                shortarg[nshortargs++] = 'C';
+              break;
+            case 'R':
+              rc->resume = 1;
+              break;
             case 'c':
               if (!rc->write_curfile) {
                 rc->write_curfile = 1;
@@ -547,13 +570,12 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
                 }
               }
               break;
-            case 'C':
-              rc->write_curfile = 1;
-              if (nshortargs < argc)
-                shortarg[nshortargs++] = 'C';
-              break;
             case 'f':
               rc->framefile = 1;
+              break;
+            case 'o':
+              if (nshortargs < argc)
+                shortarg[nshortargs++] = 'o';
               break;
             case 'p':
               rc->persist = 1;
@@ -566,9 +588,6 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
                   exit(1);
                 }
               }
-              break;
-            case 'R':
-              rc->resume = 1;
               break;
             case 's':
               if (nshortargs < argc)
@@ -608,6 +627,20 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           exit(1);
         }
         break;
+      case 'o':
+        if (argument[i][0] != '\0') {
+          free(rc->output_dirfile);
+          if ((rc->output_dirfile = strdup(argument[i])) == NULL) {
+            perror("defile: cannot allocate heap");
+            exit(1);
+          }
+        } else {
+          fprintf(stderr,
+              "defile: output dirfile name `%s' is not a valid value\n"
+              "Try `defile --help' for more information.\n", argument[i]);
+          exit(1);
+        }
+        break;
       case 's':
         if (argument[i][0] >= '0' && argument[i][0] <= '9') {
           rc->sufflen = atoi(argument[i]);
@@ -618,7 +651,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
         }
         break;
       default:
-        fprintf(stderr, "defile: Uxexpected trap in ParseCommandLine().  "
+        fprintf(stderr, "defile: Unexpected trap in ParseCommandLine().  "
             "Bailing.\n");
         exit(1);
     }
@@ -635,11 +668,17 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
 
   /* DESTINATION (if any) */
   if (nargs > nshortargs + 1) {
-    rc->dest = argument[nshortargs + 1];
-    if (strlen(rc->dest) > PATH_MAX) {
+    rc->dest_dir = argument[nshortargs + 1];
+    if (strlen(rc->dest_dir) > PATH_MAX) {
       fprintf(stderr, "defile: Destination path too long\n");
       exit(1);
     }
+  } else
+    rc->dest_dir = strdup(DEFAULT_DIR);
+
+  /* Fix up output_dirfile, if present */
+  if (rc->output_dirfile != NULL) {
+    rc->output_dirfile = ResolveOutputDirfile(rc->output_dirfile, rc->dest_dir);
   }
 
   free(argument);
@@ -665,16 +704,18 @@ int main (int argc, char** argv)
    * to stat the file anyways (This allocated rc.chunk for us.) */
   rc.chunk = GetFileName(rc.source);
 
-
-  printf("Frame size: %i bytes\n", RX_FRAME_SIZE);
-
-  /* Before starting, we have to get the dirfile is called. This we get from
-   * guessing based on the filename we have now and the destination
-   * argument we were given (This allocates rc.dirfile for us.) */
-  rc.dirfile  = GetDirFile(rc.chunk, rc.dest);
+  /* if rc.output_dirfile exists, we use that as the dirfile name, otherwise
+   * we have to make one based on the input name */
+  if (rc.output_dirfile != NULL)
+    rc.dirfile = rc.output_dirfile;
+  else
+    /* this takes care of allocated rc.dirfile */
+    rc.dirfile  = GetDirFile(rc.chunk, rc.dest_dir);
 
   /* Make the Channel Struct */
   MakeTxFrame();
+
+  printf("Frame size: %i bytes\n", RX_FRAME_SIZE);
 
   /* Start */
   printf("Defiling `%s'\n    into `%s' ...\n\n", rc.chunk, rc.dirfile);
@@ -698,9 +739,9 @@ int main (int argc, char** argv)
     fflush(stdout);
     usleep(100000);
   } while (!ri.writer_done);
-  printf("Read [%i of %i] Wrote [%i] Frame Rate %.3f kHz         \n", ri.read,
-      ri.old_total + ri.chunk_total, ri.wrote, 1000. * ri.wrote / delta);
-  printf("Elapsed time: %.3f sec\n", delta / 1000000.);
+  printf("Read [%i of %i] Wrote [%i] Frame Rate %.3f kHz (%.3f sec)        \n",
+      ri.read, ri.old_total + ri.chunk_total, ri.wrote, 1000. * ri.wrote /
+      delta, delta / 1000000.);
 
   return 0;
 }

@@ -1,6 +1,6 @@
 .TH defile 1 "18 January 2004" "version 1.0" "BLAST UTILITIES"
 .SH NAME
-defile \(em convert a MCP writen framefile into a dirfile
+defile \(em convert a MCP written framefile into a dirfile
 .SH SYNOPSIS
 .B defile 
 .RB [\  \-c\  |
@@ -11,8 +11,12 @@ defile \(em convert a MCP writen framefile into a dirfile
 ]
 .RB [\  \-f\  |
 .BR \-\-force-framefile\  ]
+.RB [\  \-o
+.IR dirfile\  |
+.BI \-\-output-dirfile= dirfile
+]
 .RB [\  \-p\  |
-.BR \-\-persistant\  ]
+.BR \-\-persistent\  ]
 .RB [\  \-r\  |
 .BR \-\-remounted-source\  |
 .BI \-\-remounted-using= path
@@ -39,29 +43,24 @@ However, if given the name of a curfile for
 .B defile
 will use that as an indirect pointer to the framefile.
 .PP
-You have the option of specifing the name of the destination dirfile
-.I directory
-or, alternately, the name of the dirfile's parent
-.IR directory .
-See
-.B OUTPUT PATH
-below for a description on how
-.B defile
-determines whether
-.I directory
-is the destination dirfile or its parent directory, as well as information on
-how
-.B defile
-chooses what to call the output dirfile.
+Unless you override it with the
+.B -o
+option, the output dirfile will have the same name as the input framefile, and
+be placed in
+.IR directory ,
+if specified, or else in the default location, typically
+.BR /data/rawdir ,
+but see 
+.BR "COMPILE TIME DEFAULTS" .
 .PP
 .B defile
-can convert both finished framefiles and ones which are still being writen
+can convert both finished framefiles and ones which are still being written
 to by
 .BR mcp .
 For notes on running
 .B defile
-on framefiles which are still being writen to, see the
-.B PERSISTANT MODE
+on framefiles which are still being written to, see the
+.B PERSISTENT MODE
 section.
 
 .SH OPTIONS
@@ -91,14 +90,31 @@ option.
 Always assume
 .I source
 is a framefile, even when it looks like a curfile.
+.PP
+.BI \-o\  dirfile
+or
+.BI \-\-output-dirfile= dirfile
+.RS
+Call the output dirfile
+.I dirfile
+instead of naming it after the input framefile.
+.I dirfile
+can be a path relative to
+.I directory
+(or the default path if no
+.I directory
+is given), or it can be an absolute path, in which case
+.I directory
+is ignored.
+.RE
 .TP
-.BR \-p\  or\  \-\-persistant
+.BR \-p\  or\  \-\-persistent
 Upon reaching the end of the framefile, don't exit but wait for more data to
 be added to the file.  For use when reading a framefile that is concurrently
 being written to by
 .BR mcp .
 See
-.B PERSISTANT MODE
+.B PERSISTENT MODE
 for more information.
 .TP
 .BR \-r\  or\  \-\-remounted-source
@@ -135,10 +151,10 @@ or
 .BI \-\-suffix-size= size
 .RS
 Assume that the suffix of the framefile (the portion of the filename which is
-incremented as a hexidecimal number) is no larger than
+incremented as a hexadecimal number) is no larger than
 .I size
-characters.  This option only is useful if the character immediately preceeding
-the suffix is a hexidecimal digit and you expect the suffix will overflow.
+characters.  This option only is useful if the character immediately preceding
+the suffix is a hexadecimal digit and you expect the suffix will overflow.
 .RE
 .TP
 .B \-\-help
@@ -147,50 +163,26 @@ Show the usage summary and exit.
 .B \-\-version
 Show the version information and exit.
 .TP
-.BR \-F " or " \-\-preformat
-Format only - do not display.
-.TP
 .B \-\-
 Indicates that everything following the
 .B \-\-
 is an argument, even if it begins with a
 .BR \- .
 
-.SH "OUTPUT PATH"
-If
-.I directory
-does not exist,
-.B defile
-assumes that it should be used as the name of the output dirfile.
-.PP
-If
-.I directory
-does exist, it is used as the parent directory of the dirfile.  The dirfile
-created in this directory is given the same name as the source framefile
-(without the suffixed hexidecimal chunk counter).
-.PP
-If
-.I directory
-is omitted, the dirfile is named as above and made a subdirectory of a default
-location, typically
-.BR /data/rawdir ,
-but see
-.BR "COMPILE TIME DEFAULTS" .
-.PP
-See also
-.B "PERSISTANT MODE"
-for information on how that mode affects the output dirfile name.
-
-.SH "PERSISTANT MODE"
-When running in persistant mode (with the
+.SH "PERSISTENT MODE"
+When running in persistent mode (with the
 .B \-p
 switch),
 .B defile
 will periodically check for additional data in the framefile.  If the
 .I source
 was a curfile, it will also refer back to this to see if it has changed as well.
-If it has, and if the name for the output dirfile was not explitily given on
-the command line, it will start writing a new dirfile with the appropriate name.
+If the curfile has changed, it will start reading the new framefile it points
+to.  If the name for the output dirfile was not explicitly set using the
+.B -o
+option, 
+.B defile
+will also start writing a new dirfile with a corresponding name.
 
 .SH "COMPILE TIME DEFAULTS"
 The following defaults may be changed at compile time from their typical values:
