@@ -191,6 +191,17 @@ void Pointing(){
 					  0.00004, // filter constant
 					  0, 0 // n_solutions, since_last
   };
+  static struct ElSolutionStruct ClinEl = {0.0, // starting angle
+					  360.0*360.0, // varience
+					  1.0/M2DV(6), //sample weight
+					  M2DV(20), // systemamatic varience
+					  0.0, // trim 
+					  0.0, // last input
+					  0.0, // gy integral
+					  GY1_OFFSET, // gy offset
+					  0.00004, // filter constant
+					  0, 0 // n_solutions, since_last
+  };
   static struct AzSolutionStruct NullAz = {0.0, // starting angle
 					  360.0*360.0, // varience
 					  1.0/M2DV(6), //sample weight
@@ -237,16 +248,25 @@ void Pointing(){
 	 
   /*************************************/
   /**      do elevation solution      **/
+  clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
+  
+  EvolveElSolution(&ClinEl, ACSData.gyro1 +
+		 PointingData[i_point_read].gy1_offset,
+		 clin_elev, 1);
   EvolveElSolution(&EncEl, ACSData.gyro1 +
 		 PointingData[i_point_read].gy1_offset,
 		 ACSData.enc_elev, 1);
 
   /* for now, use enc_elev solution for elev */
-  PointingData[point_index].gy1_offset = EncEl.gy_offset;
+  //PointingData[point_index].gy1_offset = EncEl.gy_offset;
 
-  PointingData[point_index].el = EncEl.angle + EncEl.trim;
+  //PointingData[point_index].el = EncEl.angle + EncEl.trim;
+  /* for now, use clin_elev solution for elev */
+  PointingData[point_index].gy1_offset = ClinEl.gy_offset;
 
-  clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
+  PointingData[point_index].el = ClinEl.angle + ClinEl.trim;
+
+
 
   /*******************************/
   /**      do az solution      **/
@@ -274,6 +294,7 @@ void Pointing(){
   /********************/
   /* Set Manual Trims */
   if (NewAzEl.fresh) {
+    ClinEl.trim = NewAzEl.el - ClinEl.angle;	
     EncEl.trim = NewAzEl.el - EncEl.angle;	
     NullAz.trim = NewAzEl.az - NullAz.angle;	
     NewAzEl.fresh = 0;

@@ -236,7 +236,7 @@ void GetACS(unsigned short *Rxframe){
   ACSData.gyro1 = gyro1;
   ACSData.gyro2 = gyro2;
   ACSData.gyro3 = gyro3;
-  ACSData.clin_elev = (double)Rxframe[i_enc_elev];
+  ACSData.clin_elev = (double)Rxframe[i_clin_elev];
 
 }
 
