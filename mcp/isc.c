@@ -63,6 +63,8 @@ int ISCInit(void)
     return -1;
   }
 
+  fprintf(stderr, "Connected to Elbereth\n");
+
   return sock;
 }
 
