@@ -304,6 +304,10 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
   static int i_cryoout2 = -1, j_cryoout2 = -1;
   static int i_cryoout3 = -1, j_cryoout3 = -1;
   static int cryostateCh = -1, cryostateInd = -1;
+  static int he3pwmCh, he3pwmInd;
+  static int jfetpwmCh, jfetpwmInd;
+  static int hspwmCh, hspwmInd;
+  static int sparepwmCh, sparepwmInd;
   int cryoout3 = 0, cryoout2 = 0, cryostate = 0;
 
   /************** Set indices first time around *************/
@@ -311,7 +315,10 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
     SlowChIndex("cryoout1", &i_cryoout1, &j_cryoout1);
     SlowChIndex("cryoout2", &i_cryoout2, &j_cryoout2);
     SlowChIndex("cryoout3", &i_cryoout3, &j_cryoout3);
-    SlowChIndex("cryostate", &cryostateCh, &cryostateInd);
+    SlowChIndex("he3pwm", &he3pwmCh, &he3pwmInd);
+    SlowChIndex("jfetpwm", &jfetpwmCh, &jfetpwmInd);
+    SlowChIndex("hspwm", &hspwmCh, &hspwmInd);
+    SlowChIndex("sparepwm", &sparepwmCh, &sparepwmInd);
   }
 
   /********** Set Output Bits **********/
@@ -333,28 +340,20 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
     cryoout3 |= 0x10;
     cryostate |= 0x04;
   }
-  if (CommandData.Cryo.JFETHeat == 0) {
+  if (CommandData.Cryo.calibrator == 0) {
     cryoout3 |= 0x80;
   } else {
     cryoout3 |= 0x40;
     cryostate |= 0x08;
   }
-  if (CommandData.Cryo.heatSwitch == 0) {
-    cryoout2 |= 0x20;
-  } else {
-    cryoout2 |= 0x10;
-    cryostate |= 0x10;
-  }
-  if (CommandData.Cryo.heliumThree == 0) {
-    cryoout2 |= 0x80;
-  } else {
-    cryoout2 |= 0x40;
-    cryostate |= 0x20;
-  }
 
   WriteSlow(i_cryoout3, j_cryoout3, cryoout3);
   WriteSlow(i_cryoout2, j_cryoout2, cryoout2);
   WriteSlow(cryostateCh, cryostateInd, cryostate);
+  WriteSlow(he3pwmCh, he3pwmInd, CommandData.Cryo.heliumThree);
+  WriteSlow(hspwmCh, hspwmInd, CommandData.Cryo.heatSwitch);
+  WriteSlow(jfetpwmCh, jfetpwmInd, CommandData.Cryo.JFETHeat);
+  WriteSlow(sparepwmCh, sparepwmInd, CommandData.Cryo.sparePwm);
 }
 
 /************************************************************************
