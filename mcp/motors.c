@@ -871,7 +871,8 @@ void DoNewCapMode() {
 
   static double last_X=0, last_Y=0, last_w=0;
   static double az_dir = 0, el_dir = 1, speed_el = 0;
-
+  static double targ_el=0.0;
+  
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
   az = PointingData[i_point].az;
@@ -914,6 +915,7 @@ void DoNewCapMode() {
       axes_mode.el_dest = bottom;
       axes_mode.el_vel = 0.0;
       speed_el = 0.0;
+      targ_el = bottom;
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
@@ -957,6 +959,8 @@ void DoNewCapMode() {
       az_distance = next_right - left;
       t = az_distance/v_az + v_az/(AZ_ACCEL * 100.16);
       speed_el = CommandData.pointing_mode.del/t;
+      bprintf(info, "L: el: %g targ_el: %g\n", el, targ_el);
+      targ_el = el + CommandData.pointing_mode.del*el_dir;
     }
     az_dir = 1;
   } else if (az>right) {
@@ -964,6 +968,8 @@ void DoNewCapMode() {
       az_distance = right - next_left;
       t = az_distance/v_az + v_az/(AZ_ACCEL * 100.16);
       speed_el = CommandData.pointing_mode.del/t;
+      bprintf(info, "R: el: %g targ_el: %g\n", el, targ_el);
+      targ_el = el + CommandData.pointing_mode.del*el_dir;
     }
     az_dir = -1;
   }
