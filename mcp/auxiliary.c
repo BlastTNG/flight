@@ -254,9 +254,9 @@ int Balance(int ifpmBits) {
       - 32758 - CommandData.pumps.bal_target;
 
   if (error > 0) {
-    ifpmBits |= BAL1_REV;  /* set reverse bit */
-  } else {
     ifpmBits &= (0xFF - BAL1_REV);  /* clear reverse bit */
+  } else {
+    ifpmBits |= BAL1_REV;  /* set reverse bit */
     error = -error;
   }
 
