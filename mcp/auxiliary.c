@@ -32,7 +32,7 @@
 
 /* Define to 1 to send synchronous star camera triggers based on ISC 
  * handshaking */
-#define SYNCHRONOUS_CAMERAS 0
+#define SYNCHRONOUS_CAMERAS 1
 
 /* This is the length of time to wait for an ACK from the star camera before
  * giving up */
@@ -587,6 +587,9 @@ void CameraTrigger(int which)
   static struct NiosStruct* TriggerAddr[2];
   static int delay[2] = {0, 0};
   static int waiting = 0;
+#ifdef SYNCHRONOUS_CAMERAS
+  static int cameras_ready = 0;
+#endif
 
   if (firsttime) {
     firsttime = 0;
@@ -734,9 +737,18 @@ void CameraTrigger(int which)
             bprintf(info, "%iSC (t): Writing trigger (%04x)\n", which,
                 isc_pulses[which].pulse_req);
 #ifdef SYNCHRONOUS_CAMERAS
-          if (which == 0) {
+          if (which)
+            cameras_ready &= 2;
+          else
+            cameras_ready &= 1;
+
+          bprintf(info, "Cameras ready = %i\n", cameras_ready);
+
+          if (cameras_ready == 3) {
             WriteData(TriggerAddr[0], isc_pulses[0].pulse_req, NIOS_FLUSH);
             WriteData(TriggerAddr[1], isc_pulses[1].pulse_req, NIOS_FLUSH);
+            cameras_ready = 0;
+            bprintf(info, "Wrote triggers\n");
           }
 #else
           WriteData(TriggerAddr[which], isc_pulses[which].pulse_req,
