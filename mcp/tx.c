@@ -843,9 +843,7 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
     if (CommandData.pumps.bal_veto != -1)
       CommandData.pumps.bal_veto--;
 
-    slowTxFields[pumpPwm1Ch][pumpPwm1Ind] =
-      (slowTxFields[pumpPwm1Ch][pumpPwm1Ind] & 0xffff0000) |
-      (CommandData.pumps.pwm1 & 0x7ff);
+    WriteSlow(pumpPwm1Ch, pumpPwm1Ind, CommandData.pumps.pwm1 & 0x7ff);
   } else {
     iscBits = Balance(iscBits, slowTxFields);
   }
