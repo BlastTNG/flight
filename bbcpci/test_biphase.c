@@ -7,14 +7,25 @@
 
 #include "bbc_pci.h"
 
-#define FRAMELEN    0x7
-#define DIVIDER     0x002
+#define MAX_FRAME_LEN   0x1000
+#define WAITFRAMES      4
 
 int main(int argc, char *argv[]) {
-  int fp, nr;
-  unsigned short i[FRAMELEN];
-  unsigned int j, k, l, m, numerrs, mycounter; 
-  unsigned int buf[4];
+  int fp, framelen;
+  unsigned short i[MAX_FRAME_LEN];
+  unsigned int j, k; 
+  char waiter[4] = {'-', '\\', '|', '/'};
+
+  if (argc != 2) {
+    printf("USAGE: test_biphase <frame length>\n");
+    return 0;
+  }
+
+  framelen = atoi(argv[1]);
+  if (framelen <= 0 || framelen >= MAX_FRAME_LEN) {
+    printf("Frame length must be > 0 and <= %d.\n", MAX_FRAME_LEN);
+    return 0;
+  }
   
   fp = open("/dev/bi0_pci", O_RDWR);
   if (fp < 0) {
@@ -27,18 +38,24 @@ int main(int argc, char *argv[]) {
 
   /* Biphase. */ 
   i[0] = BBC_BI0_SYNC;
-  for (k = 1; k < FRAMELEN; k++)
+  for (k = 1; k < framelen; k++)
     i[k] = 0xa000 | k;
-  for (k = 0; k < FRAMELEN; k++)
+  for (k = 0; k < framelen; k++)
     printf("%3d %8hx\n", k, i[k]);
   printf("Press <ENTER>.\n");
   getchar();
   
-  while(1) {
-    write(fp, (void *)i, (FRAMELEN - DIVIDER) * sizeof(unsigned short));
-    write(fp, (void *)(i + FRAMELEN - DIVIDER), DIVIDER * 
-	  sizeof(unsigned short));    
+  for (j = 0, k = 0; ; k++) {
+    i[0] = ~i[0];
+    write(fp, (void *)i, framelen * sizeof(unsigned short));
+    if (k % 50 == 0) {
+      printf("%c\r", waiter[j++]);
+      if (j >= WAITFRAMES)
+        j = 0;
+      fflush(stdout);
+    }
+//    usleep(5);
   }
    
-  return 0;
+  return 1;
 }

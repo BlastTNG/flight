@@ -71,6 +71,7 @@ int main(int argc, char *argv[]) {
     for (k = 0; read(fp, (void *)(&j), sizeof(unsigned int)) == 4; k++) {
       printf("%03x %08x\n", k, j);  
       write(fp, (void *)&i[2], 2 * BBCPCI_SIZE_UINT);
+      usleep(100);
     }
   }
   
