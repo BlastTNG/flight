@@ -742,13 +742,10 @@ void CameraTrigger(int which)
           else
             cameras_ready |= 1;
 
-          bprintf(info, "Cameras ready = %i\n", cameras_ready);
-
           if (cameras_ready == 3) {
             WriteData(TriggerAddr[0], isc_pulses[0].pulse_req, NIOS_FLUSH);
             WriteData(TriggerAddr[1], isc_pulses[1].pulse_req, NIOS_FLUSH);
             cameras_ready = 0;
-            bprintf(info, "Wrote triggers\n");
           }
 #else
           WriteData(TriggerAddr[which], isc_pulses[which].pulse_req,
