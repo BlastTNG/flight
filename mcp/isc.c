@@ -76,8 +76,10 @@ short int start_ISC_cycle[2] = {0, 0};
 
 struct ISCStatusStruct ISCSentState[2];
 
-struct ISCSolutionStruct ISCSolution[2][3];
-int iscdata_index[2] = {0, 0};
+struct ISCSolutionStruct ISCSolution[2][5];
+int iscread_index[2] = {0, 0};
+int iscwrite_index[2] = {0, 0};
+int iscpoint_index[2] = {0, 0};
 
 #ifdef USE_ISC_LOG
 FILE* isc_log[2] = {NULL, NULL};
@@ -154,7 +156,7 @@ void IntegratingStarCamera(void* parameter)
   int which = (int)parameter;
   int waiting_for_ACK = 0;
 
-  int sock = -1, ISCReadIndex;
+  int sock = -1;
 
 #ifdef USE_ISC_LOG
   time_t t;
@@ -205,7 +207,7 @@ void IntegratingStarCamera(void* parameter)
       /* ------------ read ---------- */ 
 
       if (FD_ISSET(sock, &fdr)) {
-        n = recv(sock, &ISCSolution[which][iscdata_index[which]],
+        n = recv(sock, &ISCSolution[which][iscwrite_index[which]],
             sizeof(struct ISCSolutionStruct), 0);
         if (n == -1) {
           berror(err, "%s recv()", isc_which[which].who);
@@ -237,8 +239,8 @@ void IntegratingStarCamera(void* parameter)
         if (waiting_for_ACK) {
           if (WHICH)
             bprintf(info, "%iSC (i): Was waiting for ACK, flag was: %i\n",
-                which, ISCSolution[which][iscdata_index[which]].flag);
-          if (ISCSolution[which][iscdata_index[which]].flag == 0) {
+                which, ISCSolution[which][iscwrite_index[which]].flag);
+          if (ISCSolution[which][iscwrite_index[which]].flag == 0) {
             if (WHICH)
               bprintf(info, "%iSC (i): Raise write_ISC_trigger semaphore\n",
                   which);
@@ -250,7 +252,7 @@ void IntegratingStarCamera(void* parameter)
         } else {
           if (WHICH)
             bprintf(info, "%iSC (i): Wasn't waiting for ACK, flag was: %i\n", 
-                which, ISCSolution[which][iscdata_index[which]].flag);
+                which, ISCSolution[which][iscwrite_index[which]].flag);
           if (WHICH)
             bprintf(info, "%iSC (i): Raising start_ISC_cycle semaphore\n",
                 which);
@@ -260,7 +262,11 @@ void IntegratingStarCamera(void* parameter)
         if (CommandData.ISCState[which].autofocus)
           CommandData.ISCState[which].autofocus = 0;
 
-        iscdata_index[which] = INC_INDEX(iscdata_index[which]);
+        /* increment pointers -- tx.c is responsible for incrementing
+         * iscread_index, so we don't touch it here */
+        if (ISCSolution[which][iscwrite_index[which]].flag)
+          iscpoint_index[which] = iscwrite_index[which];
+        iscwrite_index[which] = (iscwrite_index[which] + 1) % 5;
       }
 
       /* ------------ write ---------- */ 
@@ -268,7 +274,6 @@ void IntegratingStarCamera(void* parameter)
       if (FD_ISSET(sock, &fdw) && (write_ISC_pointing[which])) {
         /* Retreive the derived pointing information */
         MyPointData = PointingData[GETREADINDEX(point_index)];
-        ISCReadIndex = GETREADINDEX(iscdata_index[which]);
 
         if (CommandData.ISCControl[which].autofocus > 0) {
           CommandData.ISCState[which].autofocus = 1;

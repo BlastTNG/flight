@@ -252,5 +252,14 @@ extern time_t DGPSTime;
 /*  Purpose: Store isc pointing and blob data */
 /*   Source: isc thread: isc.c                */
 /*     Used: Main thread;                     */
-extern struct ISCSolutionStruct ISCSolution[2][3]; /* isc.c */
-extern int iscdata_index[2];       /* isc.c */
+extern struct ISCSolutionStruct ISCSolution[2][5]; /* isc.c */
+
+/* Read and write indicies must be separate for the ISC, since the
+ * data essentially comes in bursts -- the average data rate is about
+ * 0.4 isc packets per slow frame, but the burst rate can be ~2 packets
+ * per slow frame.  There's also a separate index for the pointing solution
+ * which points to the last solution packet sent back from ISC (which can be
+ * different than the last packet sent back */
+extern int iscread_index[2];        /* isc.c */
+extern int iscwrite_index[2];       /* isc.c */
+extern int iscpoint_index[2];       /* isc.c */

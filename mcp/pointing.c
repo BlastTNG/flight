@@ -45,9 +45,6 @@
 
 #define MAX_ISC_AGE 200
 
-extern struct ISCSolutionStruct ISCSolution[2][3]; // isc.c
-extern int iscdata_index[2]; // isc.c
-
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
     double *el);
 void azel2radec(double *ra_out, double *dec_out,
@@ -386,8 +383,12 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
   a->angle += gy_az / 100.0;
   a->varience += GYRO_VAR;
 
-  i_isc = GETREADINDEX(iscdata_index[which]);
-  if (ISCSolution[which][i_isc].framenum != last_isc_framenum[which]) {
+  i_isc = iscpoint_index[which];
+  /* in theory, iscpoint_index points to the last ISCSolution with flag set.
+   * In cases where we've been having handshaking issues, so we check flag, just
+   * as a sanity check */
+  if (ISCSolution[which][i_isc].flag && ISCSolution[which][i_isc].framenum
+      != last_isc_framenum[which]) {
     // new solution
     if (isc_pulses[which].age < MAX_ISC_AGE) {
       // get az and el for new solution

@@ -223,9 +223,10 @@ struct NiosStruct* GetSCNiosAddr(char* field, int which)
 void StoreStarCameraData(int index, int which)
 {
   static int firsttime[2] = {1, 1};
-
   static int blob_index[2] = {0, 0};
-  int i_isc = GETREADINDEX(iscdata_index[which]);
+  static int blob_data[2][15][4];
+
+  int i, i_isc;
 
   /** isc fields **/
   static struct NiosStruct* Blob0XAddr[2];
@@ -234,12 +235,12 @@ void StoreStarCameraData(int index, int which)
   static struct NiosStruct* Blob0YAddr[2];
   static struct NiosStruct* Blob1YAddr[2];
   static struct NiosStruct* Blob2YAddr[2];
-  static struct NiosStruct* Blob0FluxAddr[2];
-  static struct NiosStruct* Blob1FluxAddr[2];
-  static struct NiosStruct* Blob2FluxAddr[2];
-  static struct NiosStruct* Blob0SnAddr[2];
-  static struct NiosStruct* Blob1SnAddr[2];
-  static struct NiosStruct* Blob2SnAddr[2];
+  static struct NiosStruct* Blob0FAddr[2];
+  static struct NiosStruct* Blob1FAddr[2];
+  static struct NiosStruct* Blob2FAddr[2];
+  static struct NiosStruct* Blob0SAddr[2];
+  static struct NiosStruct* Blob1SAddr[2];
+  static struct NiosStruct* Blob2SAddr[2];
   static struct NiosStruct* ErrorAddr[2];
   static struct NiosStruct* MapmeanAddr[2];
   static struct NiosStruct* FramenumAddr[2];
@@ -283,18 +284,18 @@ void StoreStarCameraData(int index, int which)
 
   if (firsttime[which]) {
     firsttime[which] = 0;
-    Blob0XAddr[which] = GetSCNiosAddr("blob0_x", which);
-    Blob1XAddr[which] = GetSCNiosAddr("blob1_x", which);
-    Blob2XAddr[which] = GetSCNiosAddr("blob2_x", which);
-    Blob0YAddr[which] = GetSCNiosAddr("blob0_y", which);
-    Blob1YAddr[which] = GetSCNiosAddr("blob1_y", which);
-    Blob2YAddr[which] = GetSCNiosAddr("blob2_y", which);
-    Blob0FluxAddr[which] = GetSCNiosAddr("blob0_flx", which);
-    Blob1FluxAddr[which] = GetSCNiosAddr("blob1_flx", which);
-    Blob2FluxAddr[which] = GetSCNiosAddr("blob2_flx", which);
-    Blob0SnAddr[which] = GetSCNiosAddr("blob0_sn", which);
-    Blob1SnAddr[which] = GetSCNiosAddr("blob1_sn", which);
-    Blob2SnAddr[which] = GetSCNiosAddr("blob2_sn", which);
+    Blob0XAddr[which] = GetSCNiosAddr("blob00_x", which);
+    Blob1XAddr[which] = GetSCNiosAddr("blob01_x", which);
+    Blob2XAddr[which] = GetSCNiosAddr("blob02_x", which);
+    Blob0YAddr[which] = GetSCNiosAddr("blob00_y", which);
+    Blob1YAddr[which] = GetSCNiosAddr("blob01_y", which);
+    Blob2YAddr[which] = GetSCNiosAddr("blob02_y", which);
+    Blob0FAddr[which] = GetSCNiosAddr("blob00_f", which);
+    Blob1FAddr[which] = GetSCNiosAddr("blob01_f", which);
+    Blob2FAddr[which] = GetSCNiosAddr("blob02_f", which);
+    Blob0SAddr[which] = GetSCNiosAddr("blob00_s", which);
+    Blob1SAddr[which] = GetSCNiosAddr("blob01_s", which);
+    Blob2SAddr[which] = GetSCNiosAddr("blob02_s", which);
     ErrorAddr[which] = GetSCNiosAddr("error", which);
     MapmeanAddr[which] = GetSCNiosAddr("mapmean", which);
     RdSigmaAddr[which] = GetSCNiosAddr("rd_sigma", which);
@@ -338,54 +339,57 @@ void StoreStarCameraData(int index, int which)
     TrigTypeAddr[which] = GetSCNiosAddr("trig_type", which);
   }
 
-  /** ISC Fields **/
+  /** Increment isc index -- this only happens once per slow frame */
   if (index == 0)
-    if (blob_index[which] == 0)
-      i_isc = GETREADINDEX(iscdata_index[which]); 
+    if (((iscread_index[which] + 1) % 5) != iscwrite_index[which])
+      iscread_index[which] = (iscread_index[which] + 1) % 5;
+
+  i_isc = iscread_index[which];
 
   /*** Blobs ***/
-  WriteData(Blob0XAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_x[blob_index[which] * 3 + 0] * 40.),
+  /* Save current blob data if the current frame is a pointing solution;
+   * we only do this once per slow frame */
+  if (index == 0 && ISCSolution[which][i_isc].flag)
+    for (i = 0; i < 15; ++i) {
+      blob_data[which][i][0] = (int)(ISCSolution[which][i_isc].blob_x[i] * 40);
+      blob_data[which][i][1] = (int)(ISCSolution[which][i_isc].blob_y[i] * 40);
+      blob_data[which][i][2] = (int)(ISCSolution[which][i_isc].blob_flux[i]
+          / 32);
+      blob_data[which][i][3] = (int)(ISCSolution[which][i_isc].blob_sn[i]
+          * 65.536);
+    }
+
+  WriteData(Blob0XAddr[which], blob_data[which][blob_index[which] * 3 + 0][0],
       NIOS_QUEUE);
-  WriteData(Blob1XAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_x[blob_index[which] * 3 + 1] * 40.),
+  WriteData(Blob1XAddr[which], blob_data[which][blob_index[which] * 3 + 1][0],
       NIOS_QUEUE);
-  WriteData(Blob2XAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_x[blob_index[which] * 3 + 2] * 40.),
+  WriteData(Blob2XAddr[which], blob_data[which][blob_index[which] * 3 + 2][0],
       NIOS_QUEUE);
 
-  WriteData(Blob0YAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_y[blob_index[which] * 3 + 0] * 40.),
+  WriteData(Blob0YAddr[which], blob_data[which][blob_index[which] * 3 + 0][1],
       NIOS_QUEUE);
-  WriteData(Blob1YAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_y[blob_index[which] * 3 + 1] * 40.),
+  WriteData(Blob1YAddr[which], blob_data[which][blob_index[which] * 3 + 1][1],
       NIOS_QUEUE);
-  WriteData(Blob2YAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_y[blob_index[which] * 3 + 2] * 40.),
+  WriteData(Blob2YAddr[which], blob_data[which][blob_index[which] * 3 + 2][1],
       NIOS_QUEUE);
 
-  WriteData(Blob0FluxAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_flux[blob_index[which] * 3 + 0]
-            / 32.), NIOS_QUEUE);
-  WriteData(Blob1FluxAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_flux[blob_index[which] * 3 + 1]
-            / 32.), NIOS_QUEUE);
-  WriteData(Blob2FluxAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_flux[blob_index[which] * 3 + 2]
-            / 32.), NIOS_QUEUE);
+  WriteData(Blob0FAddr[which], blob_data[which][blob_index[which] * 3 + 0][2],
+      NIOS_QUEUE);
+  WriteData(Blob1FAddr[which], blob_data[which][blob_index[which] * 3 + 1][2],
+      NIOS_QUEUE);
+  WriteData(Blob2FAddr[which], blob_data[which][blob_index[which] * 3 + 2][2],
+      NIOS_QUEUE);
 
-  WriteData(Blob0SnAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_sn[blob_index[which] * 3 + 0]
-            * 65.536), NIOS_QUEUE);
-  WriteData(Blob1SnAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_sn[blob_index[which] * 3 + 1]
-            * 65.536), NIOS_QUEUE);
-  WriteData(Blob2SnAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_sn[blob_index[which] * 3 + 2]
-            * 65.536), NIOS_QUEUE);
+  WriteData(Blob0SAddr[which], blob_data[which][blob_index[which] * 3 + 0][3],
+      NIOS_QUEUE);
+  WriteData(Blob1SAddr[which], blob_data[which][blob_index[which] * 3 + 1][3],
+      NIOS_QUEUE);
+  WriteData(Blob2SAddr[which], blob_data[which][blob_index[which] * 3 + 2][3],
+      NIOS_QUEUE);
 
-  if (++blob_index[which] >= 5)
-    blob_index[which] = 0;
+  /* increment blob index once per slow frame */
+  if (index == 0)
+    blob_index[which] = (blob_index[which] + 1) % 5;
 
   /*** Solution Info ***/
   WriteData(FramenumAddr[which],
@@ -464,7 +468,7 @@ void StoreStarCameraData(int index, int which)
   WriteData(PressureAddr[which],
       (unsigned int)(ISCSolution[which][i_isc].pressure1 * 2000.), NIOS_QUEUE);
   WriteData(GainAddr[which], (unsigned int)(ISCSentState[which].gain * 655.36),
-        NIOS_QUEUE);
+      NIOS_QUEUE);
   WriteData(OffsetAddr[which], ISCSentState[which].offset, NIOS_QUEUE);
   WriteData(ExposureAddr[which], ISCSentState[which].exposure / 100,
       NIOS_QUEUE);
