@@ -451,7 +451,7 @@
       <DATUM format="%.2f" src="I_SUN" extrema="current"/>
     </NUMBER>
   </BOX>
-  <BOX caption="PCUs" colour="#777700" row="5" col="2">
+  <BOX caption="PCUs" colour="#777700" row="3" col="2">
     <NUMBER caption="V ACS Battery">
       <DATUM format="%.2f" src="V_BATT_ACS" extrema="unknown"/>
     </NUMBER>
@@ -477,7 +477,7 @@
       <DATUM format="%.2f" src="I_SOL_DAS" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Solar Panels" colour="#777700" row="5" col="3">
+  <BOX caption="Solar Panels" colour="#777700" row="3" col="3">
     <NUMBER caption="V Solar ACS 1">
       <DATUM format="%.2f" src="V_SOL_ACS1" extrema="unknown"/>
     </NUMBER>
@@ -509,7 +509,7 @@
       <DATUM format="%.2f" src="V_SOL_DAS4" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Pressures" colour="#777700" row="5" col="4">
+  <BOX caption="Pressures" colour="#777700" row="3" col="4">
     <NUMBER caption="P ISC">
       <DATUM format="%.2f" src="ISC_PRESSURE1" extrema="unknown"/>
     </NUMBER>
@@ -520,7 +520,7 @@
       <DATUM format="%.2f" src="P_PV" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Cooling" colour="#777700" row="5" col="5">
+  <BOX caption="Cooling" colour="#777700" row="3" col="5">
     <MULTI caption="IF Cooling">
       <DATUM src="IF_COOL1_ON">
         <WORD value="1" caption="On" textstyle="OK_BIT"/>
