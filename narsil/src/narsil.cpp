@@ -480,7 +480,7 @@ void MainForm::TurnOff(QTimer *t) {
 void MainForm::SendCommand() {
   char tmp[12];
   int index, i, j;
-  char args[MAX_N_PARAMS + 7][15];
+  char args[MAX_N_PARAMS + 7][SIZE_NAME];
   char *params[MAX_N_PARAMS + 7];
   char errorbuffer[1024];
 
