@@ -11,6 +11,7 @@
  *
  */
 
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -918,6 +919,28 @@ struct NiosStruct* GetNiosAddr(const char* field) {
   return NULL;
 }
 #endif
+
+char* FieldToLower(char* s)
+{
+  int i;
+  static char ls[FIELD_LEN];
+
+  for (i = 0; i < FIELD_LEN; i++)
+    ls[i] = tolower(s[i]);
+
+  return(ls);
+}
+
+char* FieldToUpper(char* s)
+{
+  int i;
+  static char us[FIELD_LEN];
+
+  for (i = 0; i < FIELD_LEN; i++)
+    us[i] = toupper(s[i]);
+
+  return(us);
+}
 
 void FPrintDerived(FILE *fp) {
   fprintf(fp,

@@ -20,7 +20,6 @@
  *
  */
 
-#include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,6 +35,7 @@
 #include "blast.h"
 #include "channels.h"
 #include "defile.h"
+#include "frameread.h"
 
 extern struct ChannelStruct* WideSlowChannels;
 extern struct ChannelStruct* SlowChannels;
@@ -68,37 +68,6 @@ int n_fast, bolo_i0;
 int (*defileclose) ();
 
 extern unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
-
-char* StringToLower(char* s)
-{
-  int i, len;
-  static char ls[256];
-
-  len = strlen(s);
-  if (len > 255)
-    len = 255;
-
-  for (i = 0; i < len; i++) {
-    ls[i] = tolower(s[i]);
-  }
-  ls[len] = '\0';
-  return(ls);
-}
-
-char* StringToUpper(char* s)
-{
-  int i, len;
-  static char us[256];
-
-  len = strlen(s);
-
-  for (i = 0; i < len; i++) {
-    us[i] = toupper(s[i]);
-  }
-
-  us[len] = '\0';
-  return(us);
-}
 
 int FieldSize (char type, const char* field)
 {

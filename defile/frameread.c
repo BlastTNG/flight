@@ -30,6 +30,8 @@
 #include "frameread.h"
 #include "channels.h"
 
+extern struct ChannelStruct *DecomChannels;
+
 /* splits path into dname and bname */
 void PathSplit_r(const char* path, char* dname, char* bname)
 {
@@ -336,7 +338,9 @@ int StreamToNextChunk(int keepalive, char* chunk, int sufflen, int *chunk_total,
 
 void WriteFormatFile(int fd)
 {
+  char field[FIELD_LEN];
   char line[1024];
+  int i, j, is_bolo = 0;
 
   strcpy(line, "FASTSAMP         RAW    U 20\n\n## SLOW CHANNELS:\n");
   write(fd, line, strlen(line));
@@ -346,9 +350,9 @@ void WriteFormatFile(int fd)
       if (SlowChList[i][j].field[0]) {
         snprintf(line, 1024,
             "%-16s RAW    %c 1\n%-16s LINCOM 1 %-16s %12g %12g\n",
-            StringToLower(SlowChList[i][j].field), SlowChList[i][j].type,
-            StringToUpper(SlowChList[i][j].field),
-            StringToLower(SlowChList[i][j].field), SlowChList[i][j].m_c2e,
+            FieldToLower(SlowChList[i][j].field), SlowChList[i][j].type,
+            FieldToUpper(SlowChList[i][j].field),
+            FieldToLower(SlowChList[i][j].field), SlowChList[i][j].m_c2e,
             SlowChList[i][j].b_e2e);
         write(fd, line, strlen(line));
       }
@@ -366,9 +370,9 @@ void WriteFormatFile(int fd)
     if (!is_bolo && FastChList[i].field[0] > 0) {
       snprintf(line, 1024,
           "%-16s RAW    %c %d\n%-16s LINCOM 1 %-16s %12g %12g\n",
-          StringToLower(FastChList[i].field), FastChList[i].type,
-          FAST_PER_SLOW, StringToUpper(FastChList[i].field),
-          StringToLower(FastChList[i].field), FastChList[i].m_c2e,
+          FieldToLower(FastChList[i].field), FastChList[i].type,
+          FAST_PER_SLOW, FieldToUpper(FastChList[i].field),
+          FieldToLower(FastChList[i].field), FastChList[i].m_c2e,
           FastChList[i].b_e2e);
       write(fd, line, strlen(line));
     }
@@ -382,8 +386,8 @@ void WriteFormatFile(int fd)
       sprintf(field, "n%dc%d", i + 5, j);
       snprintf(line, 1024,
           "%-16s RAW    U %d\n%-16s LINCOM 1 %-16s %12g %12g\n",
-          StringToLower(field), FAST_PER_SLOW, StringToUpper(field),
-          StringToLower(field), LOCKIN_C2V, LOCKIN_OFFSET);
+          FieldToLower(field), FAST_PER_SLOW, FieldToUpper(field),
+          FieldToLower(field), LOCKIN_C2V, LOCKIN_OFFSET);
       write(fd, line, strlen(line));
     }
 

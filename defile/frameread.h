@@ -75,4 +75,8 @@ int StreamToNextChunk(
     char*
     );
 
+void WriteFormatFile(
+    int
+    );
+
 #endif
