@@ -51,7 +51,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"i_dpm_3v",     'r',  4, 25,          -0.000625,           20.48, 'u'},
     {"i_dpm_5v",     'r',  4, 27,          -0.000625,           20.48, 'u'},
     {"i_dpm_10v",    'r',  4, 29,          -0.000625,           20.48, 'u'},
-    {"i_rec",        'r',  4, 31,          -0.000625,           20.48, 'u'},
+    {"i_rec",        'r',  4, 31,           0.000625,          -20.48, 'u'},
     {"t_dpm_7.5v",   'r',  4, 41,           -0.00625,          136.45, 'u'},
     {"t_dpm_10v",    'r',  4, 43,           -0.00625,          136.45, 'u'},
     {"t_dpm_5v",     'r',  4, 45,           -0.00625,          136.45, 'u'},
@@ -487,10 +487,10 @@ void FPrintDerived(FILE *fp) {
       "### Cryo Valve Limit Switches ###\n"
       "LN_IS_CLOSED     BIT cryoin 0\n"
       "LN_IS_OPEN       BIT cryoin 1\n"
-      "LN_STATE         LINCOM 2 LN_IS_CLOSED 2 0 LN_IS_OPEN 1 0\n"
-      "LHE_IS_CLOSED    BIT cryoin 3\n"
-      "LHE_IS_OPEN      BIT cryoin 4\n"
-      "LHE_STATE        LINCOM 2 LHE_IS_CLOSED 2 0 LHE_IS_OPEN 1 0\n"
+      "LN_STATE         LINCOM 2 LN_IS_CLOSED 1 0 LN_IS_OPEN 1 0\n"
+      "LHE_IS_CLOSED    BIT cryoin 2\n"
+      "LHE_IS_OPEN      BIT cryoin 3\n"
+      "LHE_STATE        LINCOM 2 LHE_IS_CLOSED 1 0 LHE_IS_OPEN 1 0\n"
       "### Cryo Table Lookups ###\n"
       "# Diodes\n"
       "T_opt_box_w	LINTERP	T_OPT_BOX_W	/data/etc/dt600.txt\n"
