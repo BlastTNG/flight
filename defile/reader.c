@@ -143,11 +143,11 @@ void FrameFileReader(void)
       frames_read += n;
 
       for (i = 0; i < n; ++i) {
-        /* increment counter */
-        ri.read++;
-
         /* push frame */
         PushFrame(InputBuffer[i]);
+
+	/* increment counter */
+	ri.read++;
       }
     } while (!feof(stream));
 
