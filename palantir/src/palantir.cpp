@@ -1228,7 +1228,7 @@ int main(int argc, char* argv[]) {
   char layoutfile[25];
 
   // Parse out command line
-  if (argc >= 2) {
+  if (argc > 2) {
     usage();
     exit(1);
   }

@@ -43,16 +43,4 @@ fi
 
 echo QT_DIR = ${QT_DIR} >> Makefile.config
 
-echo -n "use sound card by default [yes]: "
-read SOUND_CARD
-
-if [ -z "${SOUND_CARD}" -o "${SOUND_CARD}" = "yes" ]
-then
-  true ;
-else
-  echo PC_SPEAKER = -DDEFAULT_PC_SPEAKER >> Makefile.config ;
-fi
-
-echo QT_DIR = ${QT_DIR} >> Makefile.config
-
 echo ----------------------------------------------
