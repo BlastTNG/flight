@@ -73,6 +73,7 @@ int StartupVeto = STARTUP_VETO_LENGTH + 1;
 struct ACSDataStruct ACSData;
 
 int RxFrameIndex;
+unsigned int RxFrameFastSamp;
 
 unsigned short* slow_data[FAST_PER_SLOW];
 
@@ -598,12 +599,6 @@ int main(int argc, char *argv[]) {
   pthread_t osc_id;
 #endif
 
-  /********** DEBUG TOOL ***************/
-  int mycounter = 0;
-  int mycounter2 = 0;
-  /********** DEBUG TOOL ***************/
-
-
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
         "p  pointing\n"
@@ -716,8 +711,12 @@ int main(int argc, char *argv[]) {
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0) 
       berror(err, "Error on BBC read");
 
-    //if(GET_NODE(in_data) == 6 && GET_CH(in_data) == 6 && GET_STORE(in_data))
-    //  printf("%08x\n", in_data);
+#if 0
+    static int mycounter = 0;
+    static int mycounter2 = 0;
+
+    if(GET_NODE(in_data) == 6 && GET_CH(in_data) == 6 && GET_STORE(in_data))
+      printf("%08x\n", in_data);
 
     // DEBUG TOOLS
     if(GET_NODE(in_data) == 0x27) {
@@ -729,13 +728,14 @@ int main(int argc, char *argv[]) {
     }
     if (in_data == 0xdf80eb90)  {
       if( (mycounter != 12) || (mycounter2 != 12) ) {
-        //printf("++++++++++++++>>>>>> mycounter = %d mycounter2 = %d\n",
-        //mycounter, mycounter2);
+        printf("++++++++++++++>>>>>> mycounter = %d mycounter2 = %d\n",
+        mycounter, mycounter2);
       }
       mycounter  = 0;
       mycounter2 = 0;
     }
     // END DEBUG TOOL
+#endif
 
     if (!fill_Rx_frame(in_data, RxFrame))
       bprintf(err, "Unrecognised word received from BBC (%08x)", in_data);
@@ -762,6 +762,9 @@ int main(int argc, char *argv[]) {
           bprintf(err, "Frame sequencing error detected: wanted %i, got %i\n",
               RxFrameIndex + 1, RxFrame[3]);
         RxFrameIndex = RxFrame[3];
+
+        /* Save current fastsamp */
+        RxFrameFastSamp = (RxFrame[1] + RxFrame[2] * 0x10000);
 
         UpdateBBCFrame(RxFrame);
         CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);

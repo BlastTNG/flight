@@ -8,7 +8,6 @@
 
 #include "channels.h"
 
-extern int frame_num;
 extern int mcp_initial_controls;
 
 void InitTxFrame(unsigned short*);

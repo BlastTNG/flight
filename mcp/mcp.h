@@ -27,9 +27,7 @@
 #include "channels.h"
 #include "blast.h"
 extern unsigned short* slow_data[FAST_PER_SLOW];
-
-/* thread identity */
-extern pthread_key_t identity;
+extern unsigned int RxFrameFastSamp;
 
 #ifdef DEBUG
 #warning "Debugging set."
