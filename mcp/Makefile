@@ -1,8 +1,10 @@
 include Makefile.config
 
 CC = gcc
+CPP = g++
+CPPFLAGS = -O3 -Wall -D__MCP__ $(BOLOTEST)
 CFLAGS = -O3 -Wall -D__MCP__ $(BOLOTEST)
-LDFLAGS = -lpthread -lm
+LDFLAGS = -lpthread -lm -lstdc++
 ifeq ($(DEBUG), 1)
 	CFLAGS := $(CFLAGS) -g
 	LDFLAGS := $(LDFLAGS) -g
@@ -13,10 +15,11 @@ ifeq ($(USE_FIFO_CMD), 1)
 endif
 
 HEADERS = bbc_pci.h commands.h ephem_read.h ephem_types.h isc_protocol.h lut.h \
-					mcp.h pointing_struct.h sort.h sslutNA.h starpos.h tx.h tx_struct.h
+					mcp.h pointing_struct.h sort.h sslutNA.h starpos.h tx.h tx_struct.h \
+					alice.h
 
-OBJS = mcp.o auxiliary.o channels.o command_list.o commands.o das.o dgps.o \
-       framefile.o ephem_read.o geomag.o isc.o lut.o \
+OBJS = mcp.o alice.o auxiliary.o channels.o command_list.o commands.o das.o \
+       dgps.o framefile.o ephem_read.o geomag.o isc.o lut.o \
 			 motors.o pointing.o sched.o sslutNA.o starpos.o sunsensor.o tx.o \
 			 tx_struct.o
 

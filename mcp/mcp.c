@@ -21,6 +21,7 @@
 #include "command_struct.h"
 #include "starpos.h"
 #include "mcp.h"
+#include "alice.h"
 
 #define BBC_EOF      (0xffff)
 #define BBC_BAD_DATA (0xfffffff0)
@@ -460,7 +461,7 @@ void WatchDog (void) {
 
 void write_to_biphase(unsigned short *RxFrame) {
   int i;
-  static unsigned int nothing[BI0_FRAME_SIZE];
+  static unsigned short nothing[BI0_FRAME_SIZE];
 
   if (bi0_fp == -2) {
     bi0_fp = open("/dev/bi0_pci", O_RDWR);
@@ -468,21 +469,17 @@ void write_to_biphase(unsigned short *RxFrame) {
       merror(MCP_TFATAL, "Error opening biphase device");
 
     for (i = 0; i < 1024; i++)
-      nothing[i] = 0xEEEEEEEE;
+      nothing[i] = 0xEEEE;
   }
 
+  int n;
   if (bi0_fp >= 0) {
-    /* In the new scheme, the biphase sync word is already in frame position
-     * one since it's transmitted in the framesync */
     RxFrame[0] = 0xEB90;
-    for (i = 0; i < BiPhaseFrameWords / 2; ++i) {
-      if (write(bi0_fp, (unsigned int *)RxFrame + i, sizeof(unsigned int)) < 0)
-        merror(MCP_ERROR, "bi-phase write (RxFrame) failed");
-    }
-    for (i = 0; i < 312 - BiPhaseFrameWords / 2; ++i) {
-      if (write(bi0_fp, nothing, sizeof(unsigned int)) < 0)
-        merror(MCP_ERROR, "bi-phase write (padding) failed");
-    }
+    if ((n = write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short))) < 0)
+      merror(MCP_ERROR, "bi-phase write (RxFrame) failed");
+    if ((n = write(bi0_fp, nothing,
+          (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short))) < 0)
+      merror(MCP_ERROR, "bi-phase write (padding) failed");
   }
 }
 
@@ -604,6 +601,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifndef BOLOTEST
+  pthread_t alice_id;
   pthread_t bi0_id;
   //  pthread_t sensors_id;
   pthread_t dgps_id;
@@ -679,6 +677,14 @@ int main(int argc, char *argv[]) {
   if ((RxFrame = malloc(BiPhaseFrameSize)) == NULL)
     merror(MCP_FATAL, "Unable to malloc RxFrame");
 
+  for (i = 0; i < 3; ++i)
+    if ((AliceData[i] = malloc(BiPhaseFrameSize)) == NULL)
+      merror(MCP_FATAL, "Unable to malloc AliceData");
+
+#ifndef BOLOTEST
+  pthread_create(&alice_id, NULL, (void*)&Alice, NULL);
+#endif
+
   for (i = 0; i < FAST_PER_SLOW; ++i)
     if ((slow_data[i] = malloc(slowsPerBi0Frame * sizeof(unsigned short)))
         == NULL)
@@ -722,6 +728,10 @@ int main(int argc, char *argv[]) {
 #ifndef BOLOTEST
       GetACS(RxFrame);
       Pointing();
+      
+      /* Copy data to alice */
+      memcpy(AliceData[alice_index], &RxFrame, BiPhaseFrameSize);
+      alice_index = INC_INDEX(alice_index);
 #endif
 
       /* Frame sequencing check */
