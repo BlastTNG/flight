@@ -73,7 +73,7 @@ int CalLamp (int* cryostate) {
     *cryostate |= CS_CALIBRATOR;
   } else {
     if (CommandData.Cryo.calib_repeat == -1) {  /* single pulse request */
-      pulse_left = CommandData.Cryo.calib_pulse;
+      pulse_left = CommandData.Cryo.calib_pulse + 1;
       CommandData.Cryo.calib_repeat = 0;
       repeat_left = 0;
     }
@@ -81,7 +81,7 @@ int CalLamp (int* cryostate) {
     if (repeat_left == 0) {
       if (CommandData.Cryo.calib_repeat > 0 && /* we're repeating and */
           CommandData.Cryo.calib_pulse > 0) {  /* just got to the end */
-        repeat_left = CommandData.Cryo.calib_repeat * 100;
+        repeat_left = (CommandData.Cryo.calib_repeat + 1) * 100;
         pulse_left = CommandData.Cryo.calib_pulse;
       }
     } else {  /* we're repeat pulsing, and counting down to next pulse */
