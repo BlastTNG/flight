@@ -63,8 +63,8 @@ int GetLine(FILE *fp, char *line)
   else
     return 0;  /* there were no valid lines */
 }
-#define CHECK_LAT 34.49
-#define CHECK_LON 104.22
+#define CHECK_LAT 67.49
+#define CHECK_LON -20.20
 /*********************************************************************/
 /*            Init Sched Structure                                   */
 /*********************************************************************/
@@ -81,13 +81,13 @@ void InitSched(void)
 
   double az1, az2, el1, el2, rh;
 
-  int i,j, entry_ok;
+  int i, j, entry_ok;
   int n_fields;
   int el_range_warning;
 
   /*******************************************/
   /*** Count number of schedule file lines ***/
-  if ((fp = fopen(SCHEDULEFILE,"r")) == NULL) {
+  if ((fp = fopen(SCHEDULEFILE, "r")) == NULL) {
     berror(err, "sched: Unable to open schedule file");
     S.n_sched = 0;
     return;
@@ -116,8 +116,9 @@ void InitSched(void)
   }
 
   GetLine(fp, line_in);
-  sscanf(line_in,"%d/%d/%d %d:%d:%d", &(ts.tm_mon), &(ts.tm_mday),
-	 &(ts.tm_year),&(ts.tm_hour), &(ts.tm_min), &(ts.tm_sec));
+  sscanf(line_in, "%d-%d-%d %d:%d:%d", &(ts.tm_year), &(ts.tm_mon),
+	 &(ts.tm_mday), &(ts.tm_hour), &(ts.tm_min), &(ts.tm_sec));
+
   if (ts.tm_year < 50)
     ts.tm_year += 100;
   else
@@ -130,7 +131,7 @@ void InitSched(void)
 
   /*************************************************************/
   /** find local comoving siderial date (in siderial seconds) **/
-  dt = (time(NULL) - S.t0) * 1.002737909; /*Ref Siderial Time */
+  dt = (time(NULL) - S.t0) * 1.002737909; /* Ref Siderial Time */
   d_lon = CHECK_LON;
   while (d_lon < 0)
     d_lon += 360.0;
@@ -191,12 +192,7 @@ void InitSched(void)
     }
 
     S.p[j].t = day * 24l * 3600l + hours * 3600l;
-
-    /* StarPos(GetJulian(S.t0), ra * (M_PI / 180.0), dec * (M_PI / 180.0), */
-    /*  	    0.0, 0.0, 0.0, 0.0, */
-    /*  &(S.p[j].X), &(S.p[j].Y)); */
-
-    S.p[j].X = ra / 15.0;
+    S.p[j].X = ra;
     S.p[j].Y = dec;
 
     if (!entry_ok)
