@@ -40,7 +40,7 @@ extern "C" {
 #define ALICEFILE_DIR   "./"
 #define MULTIPLEX_WORD  3
 
-#define INPUT_TTY "/dev/ttyS1"
+#define INPUT_TTY "/dev/ttyS5"
 
 int tty_fd;
 extern unsigned short* slow_data[FAST_PER_SLOW];

@@ -13,6 +13,6 @@
 ++DIFF      src         numbits     overbits    divider     forcediv    perframe    samplefreq
 --1         n7ref       4           2           4           false       20          1
 ++INT       src         numbits     overbits    divider     forcediv    perframe    samplefreq
---1         gyro1       13          1           2           false       20          1
+--1         gyro1       13          1           2           false       20          4
 --2         gyro2       7           1           2           false       20          1
 --3         gyro3       3           1           6           false       20          1 
