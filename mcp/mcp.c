@@ -788,8 +788,8 @@ int main(int argc, char *argv[]) {
         pushDiskFrame(RxFrame);
 #ifndef BOLOTEST
         PushBi0Buffer(RxFrame);
-#endif
         FillSlowDL(RxFrame);
+#endif
         zero(RxFrame);
       }
     }

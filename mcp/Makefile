@@ -55,7 +55,15 @@ mcp: $(OBJS)
 
 $(OBJS): $(HEADERS)
 
-install: mcp
+install:: mcp
 	install -d -m 777 /data/rawdir
 	install -m 755 mcp /usr/local/bin
 	cd etc && $(MAKE) install
+
+ifeq ($(USE_FIFO_CMD), 1)
+install:: fifo
+
+endif
+
+fifo:
+	mkfifo -m 0777 /tmp/SIPSS.FIFO
