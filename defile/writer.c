@@ -694,12 +694,13 @@ void WriteField(int file, int length, void *buffer)
   const char *gze;
 
   if (rc.gzip_output && gzwrite((gzFile)file, buffer, length) == 0) {
-    gze = gzerror((gzFile)file, &gzerrno);
-    if (errno == Z_ERRNO)
+    if (errno)
       berror(fatal, "Error on write");
-    else 
+    else {
+      gze = gzerror((gzFile)file, &gzerrno);
       bprintf(fatal, "Error on write: %s", gze);
-  } else if (write(file, buffer, length) < 0)
+    }
+  } else if (!rc.gzip_output && write(file, buffer, length) < 0)
     berror(fatal, "Error on write");
 }
 
