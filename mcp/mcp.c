@@ -197,7 +197,7 @@ void mputs(buos_t flag, const char* message) {
       strncpy(bufstart, firstchr, len);
       *(bufstart + len + 1) = '\0';
       strcat(bufstart, "\n");
-      if (logfile != NULL) {
+      if (logfile != NULL || flag != mem) {
         fputs(buffer, logfile);
         fflush(logfile);
       }
