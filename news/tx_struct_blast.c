@@ -216,7 +216,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"sip_lon",     'w', LOOPBACK, 24,           I2DEG,           0.0, 'u'},
     {"dgps_lat",    'w', LOOPBACK, 19,           I2DEG,           0.0, 'u'},
     {"dgps_lon",    'w', LOOPBACK, 26,           I2DEG,           0.0, 'u'},
-    {"dgps_alt",    'w', LOOPBACK, 54,             0.1,           0.0, 'u'},
+    {"dgps_alt",    'w', LOOPBACK, 54,           1.0,             0.0, 'u'},
     {"dgps_speed",  'w', LOOPBACK, 54,           I2DEG,           0.0, 'u'},
     {"dgps_dir",    'w', LOOPBACK, 55,           I2DEG,           0.0, 'u'},
     {"dgps_climb",  'w', LOOPBACK, 57,           I2DEG,           0.0, 'u'},
