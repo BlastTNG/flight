@@ -26,16 +26,13 @@
 #include <sys/time.h>
 #include <linux/limits.h>
 
-#define GPB_LEN (PATH_MAX * 4)
-#define FILENAME_LEN (PATH_MAX + NAME_MAX + 1)
+#include "frameread.h"
 
 #if FIELD_LEN < 6
 #  define FIELD_MAX 6
 #else
 #  define FIELD_MAX FIELD_LEN
 #endif
-
-typedef unsigned int chunkindex_t;
 
 struct rc_struct {
   int framefile, persist, remount, write_curfile, gzip_output;

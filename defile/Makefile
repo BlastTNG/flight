@@ -13,7 +13,7 @@ defile: defile.o reader.o channels.o writer.o
 
 defile.o: defile.c defile.h tx_struct.h
 
-reader.o: reader.c tx_struct.h defile.h
+reader.o: reader.c tx_struct.h defile.h frameread.h
 
 channels.o: channels.c tx_struct.h
 

@@ -34,7 +34,7 @@
                            * performance hit if we read more than 64k at a
                            * time, so we keep this small */
 
-int GetNextChunk(void)
+int GetNextChunk(char* chunk, int sufflen)
 {
   char* buffer;
   char* newchunk;
@@ -53,7 +53,7 @@ int GetNextChunk(void)
   }
 
   /* get current chunk name */
-  s = StaticSourcePart(buffer, rc.chunk, &chunknum);
+  s = StaticSourcePart(buffer, chunk, &chunknum);
 
   /* if incrementing chunknum causes it to wrap around, we're out of space
    * on our suffix -- no more chunks are possible */
@@ -63,9 +63,9 @@ int GetNextChunk(void)
     return 0;
   }
 
-  /* if incrementing chunknum causes it to be more than rc.sufflen bytes,
+  /* if incrementing chunknum causes it to be more than sufflen bytes,
    * we're out of space on our suffix -- no more chunks are possible */
-  if (chunknum + 1 >= (chunkindex_t)1 << (4 * rc.sufflen)) {
+  if (chunknum + 1 >= (chunkindex_t)1 << (4 * sufflen)) {
     free(newchunk);
     free(buffer);
     return 0;
@@ -83,7 +83,7 @@ int GetNextChunk(void)
   }
 
   /* stat worked, it's our new chunk */
-  strcpy(rc.chunk, newchunk);
+  strcpy(chunk, newchunk);
 
   free(newchunk);
   free(buffer);
@@ -92,9 +92,9 @@ int GetNextChunk(void)
 }
 
 /* find the filename and position of the place where we're supposed to start */
-long int SetResumeChunk(void)
+long int SetResumeChunk(long int resume_at, char* chunk, int sufflen)
 {
-  long int left_to_read = rc.resume_at;
+  long int left_to_read = resume_at;
   int chunk_total;
   int new_chunk;
   struct stat chunk_stat;
@@ -103,8 +103,8 @@ long int SetResumeChunk(void)
   /* Loop until we get to the right chunk */
   for (;;) {
     /* Stat the current chunk file to get its size */
-    if (stat(rc.chunk, &chunk_stat)) {
-      snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", rc.chunk);
+    if (stat(chunk, &chunk_stat)) {
+      snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", chunk);
       perror(gpb);
       exit(1);
     }
@@ -116,7 +116,7 @@ long int SetResumeChunk(void)
       return left_to_read;
 
     /* Otherwise, try to get a new chunk */
-    if ((new_chunk = GetNextChunk()) == 0) {
+    if ((new_chunk = GetNextChunk(chunk, sufflen)) == 0) {
       /* no new chunk -- complain and exit */
       fprintf(stderr, "defile: source file is smaller than destination.\n"
           "defile: cannot resume.\n");
@@ -151,7 +151,7 @@ void FrameFileReader(void)
     InputBuffer[i] = (void*)InputBuffer[0] + i * DiskFrameSize;
 
   if (rc.resume_at >= 0) {
-    ri.read = SetResumeChunk();
+    ri.read = SetResumeChunk(rc.resume_at, rc.chunk, rc.sufflen);
     seek_to = ri.read * DiskFrameWords;
   }
 
@@ -244,7 +244,7 @@ void FrameFileReader(void)
           ri.chunk_total = n;
         } else {
           /* nothing more in file, check to see if we have a new chunk */
-          if ((new_chunk = GetNextChunk())) {
+          if ((new_chunk = GetNextChunk(rc.chunk, rc.sufflen))) {
             fclose(stream);
             ri.old_total += ri.chunk_total;
           } else
@@ -294,7 +294,7 @@ void FrameFileReader(void)
         }
       } while (!more_in_file && !new_chunk);
     } else {
-      if ((new_chunk = GetNextChunk())) {
+      if ((new_chunk = GetNextChunk(rc.chunk, rc.sufflen))) {
         fclose(stream);
         ri.old_total += ri.chunk_total;
       }
