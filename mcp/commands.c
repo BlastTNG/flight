@@ -575,12 +575,10 @@ const char* MName(enum multiCommand command) {
   return (i == -1) ? UnknownCommand : mcommands[i].name;
 }
 
-void MultiCommand (enum multiCommand command, unsigned short *dataq) {
+void SetParameters(enum multiCommand command, unsigned short *dataq,
+    double* rvalues, int* ivalues) {
   int i, dataqind;
-  double rvalues[MAX_N_PARAMS];
-  int ivalues[MAX_N_PARAMS];
   char type;
-  int i_point;
   int index = MIndex(command);
 
 #ifndef USE_FIFO_CMD
@@ -624,6 +622,11 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
 
   bprintf(info, "Multiword Command: %d (%s)\n", command, MName(command));
 #endif
+}
+
+void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues)
+{
+  int i_point;
 
   /* Update CommandData struct with new info
    * If the parameter is type 'i'     set CommandData using ivalues[i]
@@ -1114,6 +1117,9 @@ void WatchFIFO () {
   int mcommand_count = 0;
   char *mcommand_data[DATA_Q_SIZE];
 
+  double rvalues[MAX_N_PARAMS];
+  int ivalues[MAX_N_PARAMS];
+
   int index, pindex = 0;
 
   bputs(startup, "WatchFIFO startup\n");
@@ -1161,7 +1167,8 @@ void WatchFIFO () {
     } else {
       mcommand = MCommand(command);
       bputs(info, " Multi word command received\n");
-      MultiCommand(mcommand, (unsigned short*) mcommand_data);
+      SetParameters(mcommand, (unsigned short*)mcommand_data, rvalues, ivalues);
+      MultiCommand(mcommand, rvalues, ivalues);
       mcommand = -1;
     }
 
@@ -1181,6 +1188,9 @@ void WatchPort (void* parameter) {
   char tty_fd;
 
   int port = (int)parameter;
+
+  double rvalues[MAX_N_PARAMS];
+  int ivalues[MAX_N_PARAMS];
 
   int mcommand = -1;
   int mcommand_count = 0;
@@ -1312,7 +1322,9 @@ void WatchPort (void* parameter) {
               /*** End of multi-command ***/
               bprintf(info, "COMM%i:  Multi word command ends \n",
                   port + 1);
-              MultiCommand(mcommand, (unsigned short *) mcommand_data);
+              SetParameters(mcommand, (unsigned short*)mcommand_data, rvalues,
+                  ivalues);
+              MultiCommand(mcommand, rvalues, ivalues);
               mcommand = -1;
               mcommand_count = 0;
               mcommand_time = 0;
@@ -1484,8 +1496,8 @@ void InitCommandData() {
 
   CommandData.roll_gain.P = 30000;
 
-  CommandData.ele_gain.I = 6000; /* was 8000 */
-  CommandData.ele_gain.P = 700; /* was 1200 */
+  CommandData.ele_gain.I = 10000; /* was 8000 */
+  CommandData.ele_gain.P = 10000; /* was 1200 */
 
   CommandData.azi_gain.P = 20000;
   CommandData.azi_gain.I = 5000; 
@@ -1497,7 +1509,7 @@ void InitCommandData() {
   CommandData.emf_offset = 0;
 
   CommandData.gyheat[0].setpoint = 30.0;
-  CommandData.gyheat[0].gain.P = 100;
+  CommandData.gyheat[0].gain.P = 60;
   CommandData.gyheat[0].gain.I = 20;
   CommandData.gyheat[0].gain.D = 0;
 
@@ -1518,6 +1530,7 @@ void InitCommandData() {
   CommandData.use_osc = 1;
   CommandData.use_mag = 1;
   CommandData.use_gps = 1;
+  CommandData.lat_range = 1;
   CommandData.sucks = 0;
 
   SIPData.MKScal.m_hi = 0.01;

@@ -71,7 +71,7 @@ struct CommandDataStruct {
   unsigned short int timeout;
   unsigned short int alice_file;
   unsigned short int sucks;
-  unsigned int foo;
+  unsigned short int lat_range; 
 
   unsigned short int apcu_reg;
   unsigned short int dpcu_reg;

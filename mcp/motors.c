@@ -976,7 +976,7 @@ void DoNewCapMode() {
   if (new_step) {
     // set v for this step
     v_el = (targ_el - (el-cel))/t;
-    bprintf(info, "qqq L: el: %g targ_el: %g\n", el - cel, targ_el);
+//    bprintf(info, "qqq L: el: %g targ_el: %g\n", el - cel, targ_el);
     // set targ_el for the next step
     targ_el += CommandData.pointing_mode.del*el_dir;
     if (targ_el>=r) {
