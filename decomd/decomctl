@@ -134,7 +134,7 @@ sub Status {
     my $hour = int($min / 60);
     $min -= $hour * 60;
     my $day = int($hour / 24);
-    $hour -= $hour * 24;
+    $hour -= $day * 24;
     print "Time since BOF: ";
     print $day, "d" if ($day > 0);
     print $hour, "h" if ($day > 0 || $hour > 0);
