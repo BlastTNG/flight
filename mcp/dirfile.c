@@ -159,6 +159,13 @@ void InitializeDirfile(char type) {
       "BIAS_IS_DC       BIT biasin 1\n"
       "BIAS_CLK_IS_INT  BIT biasin 2\n"
       "BIAS_IS_INT      BIT biasin 3\n"
+      "### Cryo State Lookups ###\n"
+      "HE_LEV_SENS      BIT cryostate 0\n"
+      "CHARC_HEATER     BIT cryostate 1\n"
+      "COLDP_HEATER     BIT cryostate 2\n"
+      "JFET_HEATER      BIT cryostate 3\n"
+      "HEAT_SWITCH      BIT cryostate 4\n"
+      "HELIUM_THREE     BIT cryostate 5\n"
       "### Cryo Table Lookups ###\n"
       "# Diodes\n"
       "T_vcs1	LINTERP	T_VCS1	/data/etc/dt600.txt\n"
@@ -203,7 +210,7 @@ void InitializeDirfile(char type) {
       "CPU_HOUR LINCOM 1       CPU_SEC 0.000277777 0\n"
       "CPU_DAY LINCOM  1       CPU_SEC 1.15741E-5  0\n"
       "CPU_WEEK LINCOM 1       CPU_SEC 1.65344E-6  0\n"
-      "CPU_MONTh LINCOM 1      CPU_SEC 3.85803E-7  0\n"
+      "CPU_MONTH LINCOM 1      CPU_SEC 3.85803E-7  0\n"
       "CPU_YEAR LINCOM 1       CPU_SEC 3.17099E-8  0\n", (unsigned)t
       );
   fclose(fp);

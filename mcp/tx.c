@@ -37,7 +37,7 @@
 #define LOKMOT_IN    0x80  /* N0G3 */
 
 #define BAL_OFF_VETO  1000            /* # of frames to veto balance system
-                                        after turning off pump */
+                                         after turning off pump */
 
 #define DPS2GYU (66.7 * 65536.0/4000.0)
 
@@ -94,12 +94,12 @@ double GetVElev() {
   }
 
   //fprintf(stderr, "%10f %10f %10f  ", PointingData[point_index].el, CommandData.point_mode.el_dest, vel);
-  
+
   vel += PointingData[point_index].gy1_offset;
 
   vel *= DPS2GYU; // convert to Gyro Units
   //fprintf(stderr, "%10f %10f\n", PointingData[point_index].gy1_offset, vel);
-  
+
   /* Limit Maximim speed */
   if (vel > 2000.0) vel = 2000.0;
   if (vel < -2000.0) vel = -2000.0;
@@ -109,22 +109,22 @@ double GetVElev() {
   if (dvel > max_dv) vel = last_vel + max_dv;
   if (dvel < -max_dv) vel = last_vel - max_dv;
   last_vel = vel;
-  
+
   return (vel);
 }
 
-/************************************************************************ 
- *                                                                      * 
- *   GetVAz: get the current az velocity, given current                 * 
- *   pointing mode, etc..                                               * 
- *                                                                      * 
+/************************************************************************
+ *                                                                      *
+ *   GetVAz: get the current az velocity, given current                 *
+ *   pointing mode, etc..                                               *
+ *                                                                      *
  ************************************************************************/
 int GetVAz() {
   double vel=0;
   static int last_vel=0;
   int dvel;
   int max_dv = 20;
-  
+
   if (CommandData.point_mode.az_mode == POINT_VEL) {
     vel = CommandData.point_mode.az_vel;
   } else if (CommandData.point_mode.az_mode == POINT_POSITION) {
@@ -132,7 +132,7 @@ int GetVAz() {
   }
 
   vel *= DPS2GYU; // convert to gyro units
-  
+
   /* Limit Maximim speed */
   if (vel > 2000) vel = 2000;
   if (vel < -2000) vel = -2000;
@@ -142,18 +142,18 @@ int GetVAz() {
   if (dvel > max_dv) vel = last_vel + max_dv;
   if (dvel < -max_dv) vel = last_vel - max_dv;
   last_vel = vel;
-  
+
   return (vel);
 }
 
 
-/************************************************************************\
-|*                                                                      *|
-|*    WriteMot: motors, and, for convenience, the inner frame lock      *|
-|*                                                                      *|
-\************************************************************************/
+/************************************************************************
+ *                                                                      *
+ *    WriteMot: motors, and, for convenience, the inner frame lock      *
+ *                                                                      *
+ ************************************************************************/
 void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
-	      unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
+    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int i_elVreq = -1;
   static int i_azVreq = -1;
   static int i_cos_el = -1;
@@ -172,7 +172,7 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   unsigned int usin_el;
 
   int v_elev, v_az, elGainP, elGainI, rollGainP;
-  
+
   /******** Obtain correct indexes the first time here ***********/
   if (i_g_Pel == -1) {
     FastChIndex("el_vreq", &i_elVreq);
@@ -190,14 +190,14 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   }
 
   v_elev = GetVElev() * 6.0; // the 6.0 is to improve dynamic range.
-                             // It is removed in the DSP/ACS1 code.
+  // It is removed in the DSP/ACS1 code.
   WriteFast(i_elVreq, 32768 + v_elev);
   v_az = GetVAz();
   WriteFast(i_azVreq, 32768 + v_az);
-  
+
   /*** Send elevation angles to acs1 from acs2 ***/
   /* cos of el enc */
-  el_rad = (M_PI / 180.0) * PointingData[point_index].el; // convert to radians 
+  el_rad = (M_PI / 180.0) * PointingData[point_index].el; // convert to radians
   ucos_el = (unsigned int)((cos(el_rad) + 1.0) * 32768.0);
   WriteFast(i_cos_el, ucos_el);
 
@@ -279,7 +279,7 @@ void PhaseControl(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
   static int j_c[DAS_CARDS];
   char field[20];
   int i;
-  
+
   if(first_time) {
     first_time = 0;
     for(i = 0; i < DAS_CARDS; i++) {
@@ -294,63 +294,75 @@ void PhaseControl(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
 }
 
 /***********************************************************************
-    CryoControl: Set heaters to values contained within the CommandData!
+ *                                                                     *
+ * CryoControl: Set heaters to values contained within the CommandData *
+ *                                                                     *
  ***********************************************************************/
-void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
+void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
+{
   static int i_cryoout1 = -1, j_cryoout1 = -1;
   static int i_cryoout2 = -1, j_cryoout2 = -1;
   static int i_cryoout3 = -1, j_cryoout3 = -1;
-  int cryoout3 = 0, cryoout2 = 0;
+  static int cryostateCh = -1, cryostateInd = -1;
+  int cryoout3 = 0, cryoout2 = 0, cryostate = 0;
 
   /************** Set indices first time around *************/
   if (i_cryoout3 == -1) {
     SlowChIndex("cryoout1", &i_cryoout1, &j_cryoout1);
     SlowChIndex("cryoout2", &i_cryoout2, &j_cryoout2);
     SlowChIndex("cryoout3", &i_cryoout3, &j_cryoout3);
+    SlowChIndex("cryostate", &cryostateCh, &cryostateInd);
   }
-  
+
   /********** Set Output Bits **********/
   if (CommandData.Cryo.heliumLevel == 0) {
     cryoout3 |= 0x02;
   } else {
     cryoout3 |= 0x01;
+    cryostate |= 0x01;
   }
   if (CommandData.Cryo.charcoalHeater == 0) {
     cryoout3 |= 0x08;
   } else {
     cryoout3 |= 0x04;
+    cryostate |= 0x02;
   }
   if (CommandData.Cryo.coldPlate == 0) {
     cryoout3 |= 0x20;
   } else {
     cryoout3 |= 0x10;
+    cryostate |= 0x04;
   }
   if (CommandData.Cryo.JFETHeat == 0) {
     cryoout3 |= 0x80;
   } else {
     cryoout3 |= 0x40;
+    cryostate |= 0x08;
   }
   if (CommandData.Cryo.heatSwitch == 0) {
     cryoout2 |= 0x20;
   } else {
     cryoout2 |= 0x10;
+    cryostate |= 0x10;
   }
   if (CommandData.Cryo.heliumThree == 0) {
     cryoout2 |= 0x80;
   } else {
     cryoout2 |= 0x40;
+    cryostate |= 0x20;
   }
 
   WriteSlow(i_cryoout3, j_cryoout3, cryoout3);
   WriteSlow(i_cryoout2, j_cryoout2, cryoout2);
+  WriteSlow(cryostateCh, cryostateInd, cryostate);
 }
 
-/************************************************************************\
-|*                                                                      *|
-|*    ControlGyroHeat:  Controls gyro box temp by turning heater bit in *|
-|*    ACS1 on and off.  Also calculates gyro offsets.                   *|
-|*                                                                      *|
-\************************************************************************/
+/************************************************************************
+ *                                                                      *
+ *    ControlGyroHeat:  Controls gyro box temp by turning heater bit in *
+ *    ACS1 on and off.  Also calculates gyro offsets.                   *
+ *                                                                      *
+ ************************************************************************/
 void ControlGyroHeat(unsigned int *Txframe,  unsigned short *Rxframe,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int i_T_GYBOX = -1;
@@ -431,12 +443,12 @@ void ControlGyroHeat(unsigned int *Txframe,  unsigned short *Rxframe,
 
 }
 
-/************************************************************************\
-|*                                                                      *|
-|*    ControlISCHeat:  Controls ISC box temp by turning heater bit in   *|
-|*    ACS0 on and off.                                                  *|
-|*                                                                      *|
-\************************************************************************/
+/************************************************************************
+ *                                                                      *
+ *    ControlISCHeat:  Controls ISC box temp by turning heater bit in   *
+ *    ACS0 on and off.                                                  *
+ *                                                                      *
+ ************************************************************************/
 int ControlISCHeat(unsigned int *Txframe,  unsigned short *Rxframe,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int i_T_ISC = -1;
@@ -512,11 +524,11 @@ int ControlISCHeat(unsigned int *Txframe,  unsigned short *Rxframe,
   }
 }
 
-/************************************************************************\
-|*                                                                      *|
-|*   BiasControl: Digital IO with the Bias Generator Card               *|
-|*                                                                      *|
-\************************************************************************/
+/************************************************************************
+ *                                                                      *
+ *   BiasControl: Digital IO with the Bias Generator Card               *
+ *                                                                      *
+ ************************************************************************/
 void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int i_BIASIN = -1;
@@ -553,7 +565,7 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
   if (isBiasAC) { /*  Bias is currently AC */
     if (CommandData.Bias.biasAC == 0) { /* it should be DC */
       biasout1 |= 0x01;
-      //fprintf(stderr, "to DC\n"); 
+      //fprintf(stderr, "to DC\n");
     }
   } else { /* Bias is currently DC */
     if (CommandData.Bias.biasAC == 1) { /* it should be AC */
@@ -619,11 +631,11 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
   WriteSlow(Bias_lev3Ch, Bias_lev3Ind, CommandData.Bias.bias3);
 }
 
-/******************************************************************\
-|*                                                                *|
-|* Balance: control balance system                                *|
-|*                                                                *|
-\******************************************************************/
+/******************************************************************
+ *                                                                *
+ * Balance: control balance system                                *
+ *                                                                *
+ ******************************************************************/
 int Balance(int iscBits, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int iElCh = -1, iElInd;
   static int balPwm1Ch, balPwm1Ind;
@@ -673,9 +685,9 @@ int Balance(int iscBits, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
 }
 
 /************************************************************************
-*                                                                      *
-*    Do Lock Logic: check status, determine if we are locked, etc      *
-*                                                                      *
+ *                                                                      *
+ *    Do Lock Logic: check status, determine if we are locked, etc      *
+ *                                                                      *
  ************************************************************************/
 #define MOVE_COUNTS 200
 #define SEARCH_COUNTS 500
@@ -683,7 +695,7 @@ int GetLockBits(int acs0bits) {
   static int closing = 0;
   static int opening = 0;
   static int searching = 0;
-  
+
   // check for commands from CommandData
   if (CommandData.pumps.lock_in) {
     CommandData.pumps.lock_in = 0;
@@ -699,15 +711,15 @@ int GetLockBits(int acs0bits) {
     searching = SEARCH_COUNTS;
   }
 
-  if (searching>1) { 	 
+  if (searching>1) {
     if (fabs(ACSData.enc_elev -
-	     LockPosition(ACSData.enc_elev)) > 0.2) {
+          LockPosition(ACSData.enc_elev)) > 0.2) {
       searching = SEARCH_COUNTS;
     } else {
       searching--;
     }
   }
-  
+
   if (closing > 0) {
     closing--;
     return(LOKMOT_IN | LOKMOT_ON);
@@ -730,9 +742,9 @@ int GetLockBits(int acs0bits) {
 }
 
 /*****************************************************************
-*                                                               *
-*   Control the pumps and the lock                              *
-*                                                               *
+ *                                                               *
+ *   Control the pumps and the lock                              *
+ *                                                               *
  *****************************************************************/
 void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
@@ -762,7 +774,7 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
     SlowChIndex("bal_target", &balTargetCh, &balTargetInd);
     SlowChIndex("bal_veto", &balVetoCh, &balVetoInd);
   }
-  
+
   /* inner frame box */
   /* two latching pumps 3/4 */
   /* two non latching: on/off, fwd/rev */
@@ -825,12 +837,12 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
 }
 
 /*****************************************************************
-*                                                               *
-* SyncADC: check to see if any boards need to be synced and     *
-*    send the sync bit if they do.  Only one board can be       *
-*    synced in each superframe.                                 *
-*                                                               *
-*****************************************************************/
+ *                                                               *
+ * SyncADC: check to see if any boards need to be synced and     *
+ *    send the sync bit if they do.  Only one board can be       *
+ *    synced in each superframe.                                 *
+ *                                                               *
+ *****************************************************************/
 void SyncADC (int TxIndex,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int syncCh = -1, syncInd, nextInd;
@@ -876,17 +888,17 @@ void SetReadBits(unsigned int* Txframe) {
   static int i_readd3 = -1;
   static unsigned int bit = 0;
   int i_card;
-  
+
   if (i_readd3 < 0) {
     FastChIndex("readd3", &i_readd3);
   }
 
   bit++;
-  
+
   for(i_card = 0; i_card < DAS_CARDS + 2; i_card++) {
     WriteFast(i_readd3 + i_card, bit);
   }
-  
+
 }
 
 char *StringToLower(char *s) {
@@ -918,11 +930,11 @@ char *StringToUpper(char *s) {
 }
 
 /************************************************************************
-*                                                                      *
-*    Store derived acs and pointing data in frame                      *
-*                                                                      *
+ *                                                                      *
+ *    Store derived acs and pointing data in frame                      *
+ *                                                                      *
  ************************************************************************/
-void StoreData(unsigned int* Txframe, 
+void StoreData(unsigned int* Txframe,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int i_V_COL = -1, j_V_COL = -1;
   static int i_V_ROW = -1, j_V_ROW = -1;
@@ -934,7 +946,7 @@ void StoreData(unsigned int* Txframe,
   int i_vsc;
   int i_ss;
   int i_point;
-  
+
   /******** Obtain correct indexes the first time here ***********/
   if (i_V_COL == -1) {
     FastChIndex("az", &i_az);
@@ -971,10 +983,10 @@ void StoreData(unsigned int* Txframe,
 
 
 /******************************************************************
-*                                                                *
+ *                                                                *
  * IsNewFrame: returns true if d is a begining of frame marker,   *
-*    unless this is the first beginning of frame.                *
-*                                                                *
+ *    unless this is the first beginning of frame.                *
+ *                                                                *
  ******************************************************************/
 int IsNewFrame(unsigned int d) {
   static int first_bof = 1;
