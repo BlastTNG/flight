@@ -94,18 +94,18 @@ int pinIsIn(void)
 }
 
 #define GY_HEAT_TC 30000.  /* in 100 Hz Frames */
-#define GY_HEAT_STEP 2.5
+#define GY_HEAT_STEP 1.0
 int SetGyHeatSetpoint(double history, int age)
 {
   double setpoint = CommandData.gyheat.setpoint;
 
-  if (age < GY_HEAT_TC)
+  if (age < GY_HEAT_TC * 2)
     return age;
 
   if (history < CommandData.gyheat.min_heat)
-    setpoint -= GY_HEAT_STEP;
-  else if (history > CommandData.gyheat.max_heat)
     setpoint += GY_HEAT_STEP;
+  else if (history > CommandData.gyheat.max_heat)
+    setpoint -= GY_HEAT_STEP;
 
   if (setpoint < CommandData.gyheat.min_set)
     setpoint = CommandData.gyheat.min_set;
@@ -210,7 +210,9 @@ void ControlGyroHeat(unsigned short *RxFrame)
   }
 
   /******** do the pulse *****/
-  WriteData(tGyAgeAddr, ++age, NIOS_QUEUE);
+  if (age <= GY_HEAT_TC * 2)
+    ++age;
+  WriteData(tGyAgeAddr, age, NIOS_QUEUE);
   WriteData(tGyHistAddr, (history * 32768. / 100.), NIOS_QUEUE);
   if (p_on > 0) {
     WriteData(gyHeatAddr, on, NIOS_FLUSH);
