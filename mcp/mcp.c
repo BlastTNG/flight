@@ -703,8 +703,8 @@ int main(int argc, char *argv[]) {
 #ifndef BOLOTEST
   if (CommandData.tdrssVeto)
     mputs(MCP_WARNING, "The TDRSS writer has been VETOed.");
-  else
-    pthread_create(&tdrss_id, NULL, (void*)&TDRSSWriter, NULL);
+//  else
+//`    pthread_create(&tdrss_id, NULL, (void*)&TDRSSWriter, NULL);
 #endif
 
   /* Find out whether I'm frodo or sam */

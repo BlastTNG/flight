@@ -97,7 +97,7 @@ enum multiCommand {
   cal_pulse,         cal_repeat,        cap,              isc_catalogue,
   az_el_trim,        isc_det_set,       drift,            el_gain,
   isc_integrate,     osc_integrate,     osc_det_set,      osc_max_blobs,
-  he3_heat,          heatsw_heat,       inner_level,      isc_offset,
+  cryo_heat,         heatsw_heat,       inner_level,      isc_offset,
   jfet_heat,         osc_catalogue,     osc_tolerances,   osc_hold_current,
   lock,              isc_max_blobs,     outer_level,      phase,
   pivot_gain,        isc_pixel_centre,  ra_dec_goto,      ra_dec_set,

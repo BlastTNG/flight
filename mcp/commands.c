@@ -726,8 +726,8 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.Cryo.JFETHeat = rvalues[0] * 2047./100.;
   } else if (command == heatsw_heat) {
     CommandData.Cryo.heatSwitch = rvalues[0] * 2047./100.;
-  } else if (command == he3_heat) {
-    CommandData.Cryo.heliumThree = rvalues[0] * 2047./100.;
+  } else if (command == cryo_heat) {
+    CommandData.Cryo.CryoSparePWM = rvalues[0] * 2047./100.;
   } else if (command == bda_heat) {
     CommandData.Cryo.BDAHeat = rvalues[0] * 2047./100.;
     CommandData.Cryo.autoBDAHeat = 0;
@@ -736,6 +736,8 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.Cryo.BDAGain.I = ivalues[1];
     CommandData.Cryo.BDAGain.D = ivalues[2];
     CommandData.Cryo.BDAFiltLen = ivalues[3];
+  } else if (command == bda_set) {
+    CommandData.Cryo.BDAGain.SP = ivalues[0];
 
 
     /***************************************/
@@ -1428,7 +1430,7 @@ void InitCommandData() {
   CommandData.Cryo.coldPlate = 0;
   CommandData.Cryo.JFETHeat = 0;
   CommandData.Cryo.heatSwitch = 0;
-  CommandData.Cryo.heliumThree = 0;
+  CommandData.Cryo.CryoSparePWM = 0;
   CommandData.Cryo.BDAHeat = 0;
   CommandData.Cryo.autoBDAHeat = 1;
   CommandData.Cryo.calibrator = off;

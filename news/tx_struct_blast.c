@@ -200,12 +200,17 @@ struct ChannelStruct SlowChannels[] = {
   {"t_he4pot",     'r',  CRYO, 45,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'},
   {"t_optbox_filt",'r',  CRYO, 47,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'},
   {"cryoin",       'r',  CRYO, 60,                 1.0,             0.0, 'u'},
-  {"status03",     'r',  CRYO, 57,                1.0,             0.0, 'u'},
+  {"status03",     'r',  CRYO, 57,                 1.0,             0.0, 'u'},
+// cryo control debug
+  {"t_cur",	   'r',  CRYO, 53,                 1.0,             0.0, 's'},
+  {"t_set",	   'r',  CRYO, 54,                 1.0,             0.0, 's'},
+  {"pwm_err",	   'r',  CRYO, 55,                 1.0,             0.0, 's'},
+// end debug
   {"cryoout2",     'w',  CRYO,  1,                 1.0,             0.0, 'u'},
   {"cryoout3",     'w',  CRYO,  2,             1.0,                 0.0, 'u'},
-  {"he3pwm",       'w',  CRYO,  3,          100./2047.,              0., 'u'},
+  {"bdapwm",       'w',  CRYO,  3,          100./2047.,              0., 'u'},
   {"hspwm",        'w',  CRYO,  4,          100./2047.,              0., 'u'},
-  {"bdapwm",       'w',  CRYO,  5,          100./2047.,              0., 'u'},
+  {"cryopwm",      'w',  CRYO,  5,          100./2047.,              0., 'u'},
   {"jfetpwm",      'w',  CRYO,  6,          100./2047.,              0., 'u'},
   {"cryoctrl",     'w',  CRYO, 31,                 1.0,              0., 'u'},
   {"set_bdaheat",  'w',  CRYO, 32,                 1.0,              0., 'u'},
@@ -472,6 +477,7 @@ struct ChannelStruct WideFastChannels[] = {
   {"int_gy4",     'r',  ACS27H,4,         60.0E-9,                    0.0, 'S'},
   {"int_gy5",     'r',  ACS27H,34,        60.0E-9,                    0.0, 'S'},
   {"int_gy6",     'r',  ACS27H,40,        60.0E-9,                    0.0, 'S'},
+  {"pwmout",	   'r',  CRYO, 51,                 1.0,             0.0, 'S'},
 #endif
 
   /* BIAS Amplitude */

@@ -136,7 +136,7 @@ void CryoControl (void)
   static struct NiosStruct* cryoout2Addr;
   static struct NiosStruct* cryoout3Addr;
   static struct NiosStruct* cryostateAddr;
-  static struct NiosStruct* he3pwmAddr;
+  static struct NiosStruct* cryopwmAddr;
   static struct NiosStruct* jfetpwmAddr;
   static struct NiosStruct* hspwmAddr;
   static struct NiosStruct* bdapwmAddr;
@@ -165,7 +165,7 @@ void CryoControl (void)
     gDBdaheatAddr = GetNiosAddr("g_d_bdaheat");
     gFlBdaheatAddr = GetNiosAddr("g_fl_bdaheat");
     setBdaheatAddr = GetNiosAddr("set_bdaheat");
-    he3pwmAddr = GetNiosAddr("he3pwm");
+    cryopwmAddr = GetNiosAddr("cryopwm");
     hspwmAddr = GetNiosAddr("hspwm");
     jfetpwmAddr = GetNiosAddr("jfetpwm");
   }
@@ -234,7 +234,7 @@ void CryoControl (void)
   WriteData(cryoout3Addr, cryoout3, NIOS_QUEUE);
   WriteData(cryoout2Addr, cryoout2, NIOS_QUEUE);
   WriteData(cryostateAddr, cryostate, NIOS_QUEUE);
-  WriteData(he3pwmAddr, CommandData.Cryo.heliumThree, NIOS_QUEUE);
+  WriteData(cryopwmAddr, CommandData.Cryo.CryoSparePWM, NIOS_QUEUE);
   WriteData(hspwmAddr, CommandData.Cryo.heatSwitch, NIOS_QUEUE);
   WriteData(jfetpwmAddr, CommandData.Cryo.JFETHeat, NIOS_QUEUE);
   WriteData(setBdaheatAddr, CommandData.Cryo.BDAGain.SP, NIOS_QUEUE);

@@ -443,9 +443,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(he3_heat), "helium 3 pwm", GR_CRYO_HEAT, 1,
+  {COMMAND(cryo_heat), "spare cryo pwm", GR_CRYO_HEAT, 1,
     {
-      {"Level (%)", 0, 100, 'f', "HE3PWM"}
+      {"Level (%)", 0, 100, 'f', "CRYOPWM"}
     }
   },
 

@@ -115,7 +115,7 @@ struct CryoStruct {
   unsigned short BDAFiltLen;
   unsigned short JFETHeat;
   unsigned short heatSwitch;
-  unsigned short heliumThree;
+  unsigned short CryoSparePWM;
   unsigned short potvalve_open, potvalve_on, potvalve_close;
   unsigned short lhevalve_open, lhevalve_on, lhevalve_close;
 };
