@@ -131,7 +131,7 @@ void InitSched(void)
 
   /*************************************************************/
   /** find local comoving siderial date (in siderial seconds) **/
-  dt = (time(NULL) - S.t0) * 1.002737909; /* Ref Siderial Time */
+  dt = (mcp_systime(NULL) - S.t0) * 1.002737909; /* Ref Siderial Time */
   d_lon = CHECK_LON;
   while (d_lon < 0)
     d_lon += 360.0;

@@ -27,7 +27,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
-#include <sys/time.h>
 
 #include "tx.h"
 #include "command_struct.h"
@@ -219,7 +218,7 @@ void IntegratingStarCamera(void* parameter)
         }
 #ifdef USE_ISC_LOG
         if (isc_log[which] != NULL) {
-          t = time(NULL);
+          t = mcp_systime(NULL);
           fprintf(isc_log[which], "%s: %i %i - %.4lf %.4lf %.4lf\n", ctime(&t),
               ISCSolution[which][iscdata_index[which]].framenum,
               ISCSolution[which][iscdata_index[which]].n_blobs,
@@ -314,7 +313,7 @@ void IntegratingStarCamera(void* parameter)
           write_ISC_pointing[which] = 0;
 #ifdef USE_ISC_LOG
           if (isc_log[which] != NULL) {
-            t = time(NULL);
+            t = mcp_systime(NULL);
             fprintf(isc_log[which],
                 "%s: %i %i %i %i - %i %i %i %i - %.4lf %.4lf %.4lf %.4lf\n"
                 "%.1lf %i %i %i %i - %.1f %.6f %.4f - %.4f %.4f %.4f %.4f\n\n",

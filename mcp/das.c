@@ -22,7 +22,6 @@
 
 #include <math.h>
 #include <stdio.h>
-#include <time.h>
 
 #include "mcp.h"
 #include "channels.h"
@@ -260,7 +259,7 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
   if (cycle_state == CRYO_CYCLE_COLD) {
     if(t_he3fridge < T_HE3FRIDGE_TOO_HOT && t_he4pot > T_HE4POT_SET) {
       WriteData(cycle_state_W_Addr, CRYO_CYCLE_ON, NIOS_QUEUE);
-      WriteData(cycle_start_W_Addr, time(NULL), NIOS_QUEUE);
+      WriteData(cycle_start_W_Addr, mcp_systime(NULL), NIOS_QUEUE);
       *cryoout |= CRYO_CHARCOAL_ON;
       *cryostate |= CS_CHARCOAL;
       bprintf(info, "Auto Cycle: Turning charcoal heat on.");
@@ -269,7 +268,7 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
     *cryoout |= CRYO_CHARCOAL_OFF;
     *cryostate &= ~CS_CHARCOAL;
   } else if (cycle_state == CRYO_CYCLE_ON) {
-    if (((time(NULL) - start_time) > CRYO_CYCLE_TIMEOUT) ||
+    if (((mcp_systime(NULL) - start_time) > CRYO_CYCLE_TIMEOUT) ||
         t_charcoal < T_CHARCOAL_SET ||
         t_he4pot < T_HE4POT_SET) {
       WriteData(cycle_state_W_Addr, CRYO_CYCLE_COOL, NIOS_QUEUE);
@@ -282,7 +281,7 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
     *cryostate |= CS_CHARCOAL;
   } else if ( cycle_state == CRYO_CYCLE_COOL) {
     if ((t_he3fridge > T_HE3FRIDGE_COLD)
-        || ((time(NULL) - start_time) > CRYO_CYCLE_COOL_TIMEOUT) ) {
+        || ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_COOL_TIMEOUT) ) {
       WriteData(cycle_state_W_Addr, CRYO_CYCLE_COLD, NIOS_QUEUE);
       *cryoout |= CRYO_CHARCOAL_OFF;
       *cryostate &= ~CS_CHARCOAL;

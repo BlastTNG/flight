@@ -30,7 +30,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <time.h>
 #include <math.h>
 #include <pthread.h>
 
@@ -1401,7 +1400,7 @@ void InitCommandData() {
       berror(err, "prev_status close()");
   }
 
-  CommandData.pointing_mode.t = time(NULL) + CommandData.timeout;
+  CommandData.pointing_mode.t = mcp_systime(NULL) + CommandData.timeout;
 
   /** this overrides prev_status **/
   CommandData.force_el = 0;
@@ -1460,7 +1459,7 @@ void InitCommandData() {
 
   bputs(warning, "Regenerating Command Data and prev_status\n");
 
-  CommandData.pointing_mode.t = time(NULL) + CommandData.timeout;
+  CommandData.pointing_mode.t = mcp_systime(NULL) + CommandData.timeout;
 
   /** prev_status overrides this stuff **/
   CommandData.pointing_mode.mode = P_DRIFT;

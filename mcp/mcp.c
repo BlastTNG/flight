@@ -119,6 +119,20 @@ unsigned int tdrss_index = 0;
   - 4                /* marker again plus NUL */ \
 )
 
+#define TEMPORAL_OFFSET 0
+
+#if (TEMPORAL_OFFSET > 0)
+#warning TEMPORAL_OFFSET NON-ZERO; FIX FOR FLIGHT
+#endif
+
+time_t mcp_systime(time_t *t) {
+  time_t the_time = time(NULL) + TEMPORAL_OFFSET;
+  if (t)
+    *t = the_time;
+
+  return the_time;
+}
+
 void mputs(buos_t flag, const char* message) {
   char buffer[MPRINT_BUFFER_SIZE];
   struct timeval t;
@@ -132,6 +146,7 @@ void mputs(buos_t flag, const char* message) {
 
   /* time */
   gettimeofday(&t, &tz);
+  t.tv_sec += TEMPORAL_OFFSET;
 
   switch(flag) {
     case err:
@@ -339,7 +354,7 @@ void GetACS(unsigned short *RxFrame){
 
   i_ss = ss_index;
 
-  ACSData.t = time(NULL);
+  ACSData.t = mcp_systime(NULL);
   ACSData.mcp_frame = rx_frame_index;
   ACSData.enc_elev = enc_elev;
   ACSData.gyro1 = gyro1;
@@ -631,6 +646,10 @@ int main(int argc, char *argv[]) {
 
   /* register the output function */
   buos_use_func(mputs);
+
+#if (TEMPORAL_OFFSET > 0)
+  bprintf(warning, "TEMPORAL OFFSET = %li\n", TEMPORAL_OFFSET);
+#endif
 
   bputs(startup, "MCP startup");
 

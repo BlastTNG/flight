@@ -29,6 +29,7 @@
 extern unsigned short* slow_data[FAST_PER_SLOW];
 extern unsigned int RxFrameFastSamp;
 
+extern time_t mcp_systime(time_t *t);
 extern unsigned short* tdrss_data[3];
 extern unsigned int tdrss_index;
 

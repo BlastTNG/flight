@@ -1082,7 +1082,7 @@ void Alice::CompressionLoop(void)
     // Start a new buffer for the downlink
 #ifdef USE_SMALL_LOG
     if (smalllog != NULL) {
-      t = time(NULL);
+      t = mcp_systime(NULL);
       strftime(tmpstr, 80, "%F %T GMT >> ", gmtime_r(&t, &now));
       fprintf(smalllog, "\n%sStarting new TDRSS frame.  AML file = %d.\n",
           tmpstr, AMLsrc);

@@ -798,7 +798,7 @@ void Pointing(){
   } else {
     no_dgps_pos++;
     if (no_dgps_pos > 179) {
-      PointingData[point_index].t = time(NULL); // for now use CPU time
+      PointingData[point_index].t = mcp_systime(NULL); // for now use CPU time
     }
     if (no_dgps_pos > 3000) { // no dgps for 30 seconds - revert to sip
       PointingData[point_index].lat = SIPData.GPSpos.lat;
@@ -813,7 +813,7 @@ void Pointing(){
   /*****************************/
   /** set time related things **/
   PointingData[point_index].mcp_frame = ACSData.mcp_frame;
-  PointingData[point_index].t = time(NULL); // for now use CPU time
+  PointingData[point_index].t = mcp_systime(NULL); // for now use CPU time
   PointingData[point_index].lst = getlst(PointingData[point_index].t,
       PointingData[point_index].lon);
 
