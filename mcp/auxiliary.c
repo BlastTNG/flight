@@ -517,6 +517,10 @@ void CameraTrigger(int which)
         isc_pulses[which].pulse_req =
           CommandData.ISCControl[which].fast_pulse_width;
       } else {  /* slow pulse */
+        /* wait until we're below the slow speed */
+        if (fabs(axes_mode.az_vel) >= MAX_ISC_SLOW_PULSE_SPEED)
+          return;
+
         /* use slow (long) pulse length */
         isc_pulses[which].pulse_req = CommandData.ISCControl[which].pulse_width;
 
