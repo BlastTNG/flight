@@ -29,6 +29,7 @@
 
 /* BUOS (BLAST Unified Output Scheme) */
 int __buos_disable_exit = 0;
+int __buos_allow_mem = 0;
 void (*__buos_real_bputs)(buos_t, const char*) = NULL;
 
 void bputs_stdio(buos_t l, const char* s)
@@ -40,11 +41,13 @@ void bputs_stdio(buos_t l, const char* s)
     case startup:
     case sched:
       stream = stdout;
+    case mem:
+      if (l == mem && !__buos_allow_mem)
+        break;
     case warning:
     case err:
     case tfatal:
     case fatal:
-    case mem:
       fputs(s, stream);
       if (s[strlen(s) - 1] != '\n')
         fputs("\n", stream);
@@ -87,7 +90,8 @@ void bputs_syslog(buos_t l, const char* s)
       break;
   }
 
-  syslog(level, "%s", s);
+  if (l != mem || __buos_allow_mem)
+    syslog(level, "%s", s);
 
   if (!__buos_disable_exit) {
     if (l == fatal)
@@ -135,6 +139,16 @@ void berror(buos_t l, const char* fmt, ...) {
   message[BUOS_MAX - 1] = '\0';
 
   bputs(l, message);
+}
+
+void buos_allow_mem(void)
+{
+  __buos_allow_mem = 1;
+}
+
+void buos_disallow_mem(void)
+{
+  __buos_allow_mem = 0;
 }
 
 void buos_disable_exit(void)
