@@ -780,7 +780,7 @@ void MainForm::UpdateData() {
     }
   }
 
-  if (0 || DecomPoller->pollDecomd) {
+  if (DecomPoller->pollDecomd) {
     switch (DecomPoller->connectState) {
       case 0:
         DecomState->setText("DD: DIS");
@@ -1288,7 +1288,7 @@ MainForm::~MainForm()
 
 
 void usage() {
-  printf("palantir " VERSION "  (C) 2002-2004 University of Toronto\n"
+  printf("palantir " VERSION "  (C) 2002-2005 University of Toronto\n"
       "Qt: " QT_VERSION_STR "\n\n"
       "Usage:\n"
       "  palantir [layout file]\n\n"

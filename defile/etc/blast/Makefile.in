@@ -137,6 +137,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
+AUTOMAKE_OPTIONS = foreign
 dataetcdir = @DATA_ETC_DIR@
 dataetc_DATA = WMM.COF clin_elev.lut dt600.txt ephem.2000 he4_litre.txt \
 							 he4_percent.txt mag.lut rox102a19.txt rox102a20.txt \
