@@ -738,9 +738,9 @@ void CameraTrigger(int which)
                 isc_pulses[which].pulse_req);
 #ifdef SYNCHRONOUS_CAMERAS
           if (which)
-            cameras_ready &= 2;
+            cameras_ready |= 2;
           else
-            cameras_ready &= 1;
+            cameras_ready |= 1;
 
           bprintf(info, "Cameras ready = %i\n", cameras_ready);
 
