@@ -1062,10 +1062,12 @@ void DoQuadMode() { // aka radbox
   }
   
   radbox_endpoints(c_az, c_el, el, &left, &right, &bottom, &top);
+  bprintf(info, "-> %g %g %g %g %g %g\n", left, right, bottom, top, targ_el, el);
   if (right-left < MIN_SCAN) {
     left = (left+right)/2.0 - MIN_SCAN/2.0;
     right = left + MIN_SCAN;
   }
+  bprintf(info, "=> %g %g %g %g %g %g\n", left, right, bottom, top, targ_el, el);
 
   new = 0;
   for (i=0; i<4; i++) {
@@ -1109,8 +1111,6 @@ void DoQuadMode() { // aka radbox
     next_right = next_left + MIN_SCAN;
   }
   
-  bprintf(info, "-> %g %g %g %g %g %g\n", left, right, bottom, top, targ_el, el);
-
   /* set az v */
   v_az = CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0);
   SetAzScanMode(az, left, right, v_az, daz_dt);
