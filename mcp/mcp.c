@@ -12,6 +12,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
+#include <sys/io.h>
 #include <stdarg.h>
 #include <errno.h>
 #include <signal.h>
@@ -556,6 +557,21 @@ int fill_Rx_frame(unsigned int in_data,
   return(1);
 }
 
+void WatchDog (void) {
+  mputs(MCP_STARTUP, "Watchdog startup\n");
+
+  if (ioperm(0x378, 0x0F, 1) != 0)
+    merror(MCP_TFATAL, "Error setting watchdog permissions");
+  ioperm(0x80, 1, 1);
+
+  for (;;) {
+    outb(0xAA, 0x378);
+    usleep(4000);
+    outb(0x55, 0x378);
+    usleep(4000);
+  }
+}
+
 void write_to_biphase(unsigned short *RxFrame) {
   static int fp = -2;
   static unsigned short sync = 0xeb90;
@@ -678,6 +694,7 @@ int main(int argc, char *argv[]) {
   pthread_t CommandDatacomm1;
   pthread_t disk_id;
   pthread_t sunsensor_id;
+  pthread_t watchdog_id;
 
 #ifndef BOLOTEST
   pthread_t CommandDatacomm2;
@@ -701,6 +718,9 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
+  if ((bbc_fp = open("/dev/bbc", O_RDWR)) < 0)
+    merror(MCP_FATAL, "Error opening BBC");
+
   if ((logfile = fopen("/data/etc/mcp.log", "a")) == NULL)
     merror(MCP_ERROR, "Can't open log file");
   else
@@ -713,10 +733,10 @@ int main(int argc, char *argv[]) {
 
   InitCommandData();
 
-  if ((bbc_fp = open("/dev/bbc", O_RDWR)) < 0)
-    merror(MCP_FATAL, "Error opening BBC");
-
   pthread_mutex_init(&mutex, NULL);
+
+  /* Watchdog */
+  pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
 
 #ifdef BOLOTEST
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, NULL);
