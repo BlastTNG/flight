@@ -114,6 +114,9 @@ struct CommandDataStruct {
   struct GainStruct pivot_gain;
   struct GainStruct gy_heat_gain;
 
+  int emf_gain;     /* for reaction wheel  */
+  int emf_offset;   /*   back-EMF tweaking */
+
   int disable_az;
   int disable_el;
 

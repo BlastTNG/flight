@@ -1,7 +1,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 79      /* total number of named single word cmds */
-#define N_MCOMMANDS 50         /* total number of multiword commands */
+#define N_SCOMMANDS 79         /* total number of named single word cmds */
+#define N_MCOMMANDS 51         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -194,7 +194,8 @@ enum multiCommand {
   pixel_centre, ra_dec_goto,  ra_dec_set,       roll_gain,    set_aperture,
   set_focus,    setpoints,    slow_integration, spare_heat,   spare_level,
   t_gyrobox,    t_gyro_gain,  timeout,          tolerances,   vcap,
-  vbox,         alice_file,   gyro_override,    hold_current, save_period
+  vbox,         alice_file,   gyro_override,    hold_current, save_period,
+  back_emf
 };
 
 struct par {
@@ -354,6 +355,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Set Point (rpm)",   0, 200.0, 'f', "set_reac"},
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_pivot"}
+    }
+  },
+
+  {COMMAND(back_emf), "tweak reaction wheel back-EMF compensation", GR_GAIN, 2,
+    {
+      {"Gain Correction", 0.1, 10, 'f', "emf_gain"},
+      {"Offset Correction", -100, 100, 'f', "emf_offset"}
     }
   },
 

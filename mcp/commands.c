@@ -605,6 +605,9 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
   } else if (command == pivot_gain) {  /* pivot gains */
     CommandData.pivot_gain.SP = (rvalues[0] / 60. + 2.605) / 7.9498291016e-5;
     CommandData.pivot_gain.P = ivalues[1];
+  } else if (command == back_emf) {
+    CommandData.emf_gain = rvalues[0] * 6500;
+    CommandData.emf_offset = rvalues[1] * 500;
 
     /***************************************/
     /********** Inner Frame Lock  **********/
@@ -1281,15 +1284,17 @@ void InitCommandData() {
 
   CommandData.roll_gain.P = 30000;
 
-  CommandData.ele_gain.I = 8000;
-  CommandData.ele_gain.P = 1200;
+  CommandData.ele_gain.I = 6000; /* was 8000 */
+  CommandData.ele_gain.P = 700; /* was 1200 */
 
   CommandData.azi_gain.P = 20000;
   CommandData.azi_gain.I = 5000; 
 
-  CommandData.pivot_gain.SP = 2000;
+  CommandData.pivot_gain.SP = 36960;
   CommandData.pivot_gain.P = 200;
-  CommandData.pivot_gain.D = 18;  /*unused */
+
+  CommandData.emf_gain = 1;
+  CommandData.emf_offset = 0;
 
   CommandData.t_gybox_setpoint = 30.0;
   CommandData.gy_heat_gain.P = 10;

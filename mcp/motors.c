@@ -140,6 +140,8 @@ void WriteMot(int TxIndex, unsigned int *TxFrame, unsigned short *RxFrame,
   static int i_g_Iaz = -1, j_g_Iaz = -1;
   static int i_g_pivot = -1, j_g_pivot = -1;
   static int i_set_reac = -1, j_set_reac = -1;
+  static int emfGainCh, emfGainInd;
+  static int emfOffsetCh, emfOffsetInd;
 
   static int wait = 100; /* wait 20 frames before controlling. */
   double el_rad;
@@ -164,6 +166,8 @@ void WriteMot(int TxIndex, unsigned int *TxFrame, unsigned short *RxFrame,
     SlowChIndex("g_i_az", &i_g_Iaz, &j_g_Iaz);
     SlowChIndex("g_p_pivot", &i_g_pivot, &j_g_pivot);
     SlowChIndex("set_reac", &i_set_reac, &j_set_reac);
+    SlowChIndex("emf_gain", emfGainCh, emfGainInd);
+    SlowChIndex("emf_offset", emfOffsetCh, emfOffsetInd);
   }
   
   i_point = GETREADINDEX(point_index);
@@ -229,6 +233,10 @@ void WriteMot(int TxIndex, unsigned int *TxFrame, unsigned short *RxFrame,
   /* setpoint for reaction wheel */
   WriteSlow(i_set_reac, j_set_reac, CommandData.pivot_gain.SP);
 
+  /* reaction wheel back-EMF gain correction */
+  WriteSlow(emfGainCh, emfGainInd, CommandData.emf_gain);
+  /* reaction wheel back-EMF offset correction */
+  WriteSlow(emfOffsetCh, emfOffsetInd, CommandData.emf_offset + 32767);
 
   /***************************************************/
   /**                Roll Drive Motors              **/  
