@@ -469,6 +469,7 @@ void write_to_biphase(unsigned short *RxFrame) {
   int i;
   static unsigned short nothing[BI0_FRAME_SIZE];
   static unsigned short sync = 0xEB90;
+  static int blerg = 0;
 
   if (bi0_fp == -2) {
     bi0_fp = open("/dev/bi0_pci", O_RDWR);
@@ -489,6 +490,8 @@ void write_to_biphase(unsigned short *RxFrame) {
     if (write(bi0_fp, nothing,
           (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short)) < 0)
       merror(MCP_ERROR, "bi-phase write (padding) failed");
+    if (!(blerg++ % 1000))
+      mprintf(MCP_INFO, "BBC reports Bi0 fifo: %i\n", ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD));
   }
 }
 
