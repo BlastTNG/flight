@@ -505,6 +505,9 @@ struct ChannelStruct WideFastChannels[] = {
   {"n15ref",      'r', DAS15, 36,      1.19209e-7,                    0.0, 'U'},
   {"n16ref",      'r', DAS16, 36,      1.19209e-7,                    0.0, 'U'},
 
+// cryo control debug
+{"tc_int",	   'r',  CRYO, 58,                 1.0,             0.0, 'S'},
+// end debug
   END_OF_CHANNELS
 };
 
@@ -562,9 +565,9 @@ struct ChannelStruct FastChannels[] = {
 
 #endif
 // cryo control debug
-//{"t_cur",	   'r',  CRYO, 53,                 1.0,             0.0, 's'},
-//{"t_set",	   'r',  CRYO, 54,                 1.0,             0.0, 's'},
-//{"pwm_err",	   'r',  CRYO, 55,                 1.0,             0.0, 's'},
+{"tc_pwm",	   'r',  CRYO, 51,                 1.0,             0.0, 's'},
+{"tc_to",	   'r',  CRYO, 54,          16777216.0,             0.0, 's'},
+{"tc_err",	   'r',  CRYO, 55,                 1.0,             0.0, 's'},
 // end debug
   /* Read from DAS3 -- cryo commanding */
   {"calstat",      'r',  CRYO, 61,                 1.0,             0.0, 'u'},
