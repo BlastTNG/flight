@@ -17,3 +17,9 @@ else
   automake --add-missing
   autoconf
 fi
+
+set +x
+
+echo ""
+echo "good, bootstrap finished.  Now try ./configure"
+echo ""
