@@ -493,7 +493,7 @@ void MainForm::GetXMLInfo(char *layoutfile) {
     if (XMLInfo->GetTagName() == "DERIV") {
       XMLInfo->SetBookMark(firstpmulti + k);
       pderivs[k] = (char *)malloc(35 * sizeof(char));
-      strcpy(pderivs[k], FindAttribute("name", "SETTINGS.MULTI"));
+      strcpy(pderivs[k], FindAttribute("name", "SETTINGS.DERIV"));
       k++;
     }
   }
@@ -639,6 +639,10 @@ void MainForm::GetXMLInfo(char *layoutfile) {
             else                             // default to second
               currDeriv->tfactor = 1000UL;
           }
+          strcpy(currDeriv->format, FindAttribute("format",
+                "BOX.NUMBER.DATUM"));
+          SetTextStyle(&(currDeriv->textstyle), BM_DEF_DATUM, BM_THIRD);
+          SetExtrema(&(currDeriv->extrema), BM_THIRD);
         }
       }
 
@@ -1260,50 +1264,50 @@ void MainForm::UpdateData() {
           *indata = GetSlope(currDeriv);
 
           // Check to see if value lies outside of any extremum
-          if (*indata >= currNumber->extrema.xhi.value) {
+          if (*indata >= currDeriv->extrema.xhi.value) {
             if (currLabel->laststyle != 2) {
               currQtLabel->setPalette(Palette(
-                    currNumber->extrema.xhi.textstyle));
-              currQtLabel->setFont(Font(currNumber->extrema.xhi.textstyle));
+                    currDeriv->extrema.xhi.textstyle));
+              currQtLabel->setFont(Font(currDeriv->extrema.xhi.textstyle));
               currLabel->laststyle = 2;
             }
             AddAlarmToList(&AlarmList, currLabel,
-                currNumber->extrema.xhi.alarm, *indata);
-          } else if (*indata >= currNumber->extrema.hi.value) {
+                currDeriv->extrema.xhi.alarm, *indata);
+          } else if (*indata >= currDeriv->extrema.hi.value) {
             if (currLabel->laststyle != 3) {
               currQtLabel->setPalette(Palette(
-                    currNumber->extrema.hi.textstyle));
-              currQtLabel->setFont(Font(currNumber->extrema.hi.textstyle));
+                    currDeriv->extrema.hi.textstyle));
+              currQtLabel->setFont(Font(currDeriv->extrema.hi.textstyle));
               currLabel->laststyle = 3;
             }
             AddAlarmToList(&AlarmList, currLabel,
-                currNumber->extrema.hi.alarm, *indata);
-          } else if (*indata <= currNumber->extrema.xlo.value) {
+                currDeriv->extrema.hi.alarm, *indata);
+          } else if (*indata <= currDeriv->extrema.xlo.value) {
             if (currLabel->laststyle != 4) {
               currQtLabel->setPalette(Palette(
-                    currNumber->extrema.xlo.textstyle));
-              currQtLabel->setFont(Font(currNumber->extrema.xlo.textstyle));
+                    currDeriv->extrema.xlo.textstyle));
+              currQtLabel->setFont(Font(currDeriv->extrema.xlo.textstyle));
               currLabel->laststyle = 4;
             }
             AddAlarmToList(&AlarmList, currLabel,
-                currNumber->extrema.xlo.alarm, *indata);
-          } else if (*indata <= currNumber->extrema.lo.value) {
+                currDeriv->extrema.xlo.alarm, *indata);
+          } else if (*indata <= currDeriv->extrema.lo.value) {
             if (currLabel->laststyle != 5) {
               currQtLabel->setPalette(Palette(
-                    currNumber->extrema.lo.textstyle));
-              currQtLabel->setFont(Font(currNumber->extrema.lo.textstyle));
+                    currDeriv->extrema.lo.textstyle));
+              currQtLabel->setFont(Font(currDeriv->extrema.lo.textstyle));
               currLabel->laststyle = 5;
             }
             AddAlarmToList(&AlarmList, currLabel,
-                currNumber->extrema.lo.alarm, *indata);
+                currDeriv->extrema.lo.alarm, *indata);
           } else {
             if (currLabel->laststyle != 0) {
-              currQtLabel->setPalette(Palette(currNumber->textstyle));
-              currQtLabel->setFont(Font(currNumber->textstyle));
+              currQtLabel->setPalette(Palette(currDeriv->textstyle));
+              currQtLabel->setFont(Font(currDeriv->textstyle));
               currLabel->laststyle = 0;
             }
           }
-          sprintf(displayer, currNumber->format, *indata);
+          sprintf(displayer, currDeriv->format, *indata);
           currQtLabel->setText(tr(displayer));
         }
         break;

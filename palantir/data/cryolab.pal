@@ -21,6 +21,8 @@
 	     colour="#000055" font="adobe-helvetica" size="12"/>
   <TEXTSTYLE name="W_BIT" backcolour="#ffff00" 
 	     colour="#000055" font="adobe-helvetica" size="12"/>
+  <TEXTSTYLE name="E_BIT" backcolour="#ff0000" 
+	     colour="#000055" font="adobe-helvetica" size="12"/>
 
   <EXTREMA name="slope">
     <HI value="0" textstyle="increasing"/><LO value="0" textstyle="decreasing"/>
@@ -172,12 +174,10 @@
     <DATUM format="%.0f" src="bias_lev3" extrema="unknown"/>
   </NUMBER>
 </BOX>
-<BOX caption="Time" row="1" col="1" colspan="1">
+<BOX caption="Time" row="1" col="1" colspan="3">
   <NUMBER caption="Hours" textstyle="oddrow">
     <DATUM format="%.2f" src="CPU_HOUR" extrema="hours"/>
   </NUMBER>
-</BOX>
-<BOX caption="Time" row="1" col="3" colspan="1">
   <DATETIME caption="CPU Time" textstyle="evenrow">
     <DATUM format="%d %b %y, %H:%M:%S" src="CPU_TIME"/>
   </DATETIME>
@@ -224,19 +224,19 @@
 
 <BOX caption="ROXs d/dt (K per hour)" row="2" col="3">
   <DERIV caption="He3 Fridge" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_He3" extrema="slope" length="44" tunit="h"/>
+    <DATUM format="%.2f" src="T_He3" extrema="slope" length="220" tunit="h"/>
   </DERIV>
   <DERIV caption="He4 Pot" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_pot" extrema="slope" length="44" tunit="h"/>
+    <DATUM format="%.2f" src="T_pot" extrema="slope" length="220" tunit="h"/>
   </DERIV>
   <DERIV caption="500 um Horn" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_horn_500" extrema="slope" length="44" tunit="h"/>
+    <DATUM format="%.2f" src="T_horn_500" extrema="slope" length="220" tunit="h"/>
   </DERIV>
   <DERIV caption="500 um Base" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_base_500" extrema="slope" length="44" tunit="h"/>
+    <DATUM format="%.2f" src="T_base_500" extrema="slope" length="220" tunit="h"/>
   </DERIV>
   <DERIV caption="250 um Ring" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_ring_250" extrema="slope" length="44" tunit="h"/>
+    <DATUM format="%.2f" src="T_ring_250" extrema="slope" length="220" tunit="h"/>
   </DERIV>
 </BOX>
 
@@ -313,10 +313,18 @@
       <WORD value="0" caption="Off" textstyle="OK_BIT"/>
     </DATUM>
   </MULTI>
-  <MULTI caption="LN Valve Dir" textstyle="oddrow">
+  <MULTI caption="LN Valve Direction" textstyle="oddrow">
     <DATUM src="LN_DIREC">
-      <WORD value="1" caption="Open" textstyle="W_BIT"/>
-      <WORD value="0" caption="Close" textstyle="OK_BIT"/>
+      <WORD value="1" caption="Opening" textstyle="W_BIT"/>
+      <WORD value="0" caption="Closing" textstyle="OK_BIT"/>
+    </DATUM>
+  </MULTI>
+  <MULTI caption="LN Valve State" textstyle="oddrow">
+    <DATUM src="LN_STATE">
+      <WORD value="2" caption="Error" textstyle="E_BIT"/>
+      <WORD value="0" caption="Neither" textstyle="E_BIT"/>
+      <WORD value="2" caption="Open" textstyle="W_BIT"/>
+      <WORD value="1" caption="Close" textstyle="OK_BIT"/>
     </DATUM>
   </MULTI>
   <MULTI caption="LHe Valve" textstyle="oddrow">
@@ -325,10 +333,18 @@
       <WORD value="0" caption="Off" textstyle="OK_BIT"/>
     </DATUM>
   </MULTI>
-  <MULTI caption="LHe Valve Dir" textstyle="oddrow">
+  <MULTI caption="LHe Valve Direction" textstyle="oddrow">
     <DATUM src="LHE_DIREC">
-      <WORD value="1" caption="Open" textstyle="W_BIT"/>
-      <WORD value="0" caption="Close" textstyle="OK_BIT"/>
+      <WORD value="1" caption="Opening" textstyle="W_BIT"/>
+      <WORD value="0" caption="Closing" textstyle="OK_BIT"/>
+    </DATUM>
+  </MULTI>
+  <MULTI caption="LHe Valve State" textstyle="oddrow">
+    <DATUM src="LHE_STATE">
+      <WORD value="3" caption="Error" textstyle="E_BIT"/>
+      <WORD value="0" caption="Neither" textstyle="E_BIT"/>
+      <WORD value="2" caption="Open" textstyle="W_BIT"/>
+      <WORD value="1" caption="Close" textstyle="OK_BIT"/>
     </DATUM>
   </MULTI>
 </BOX>
