@@ -930,8 +930,13 @@ void DirFileWriter(void)
       if (!last_pass)
         last_pass = 1;
       else {
-        /* Clean Up and Reinitialise */
+        /* Clean Up */
         CleanUp();
+
+        /* Read the new Spec file */
+        ReconstructChannelLists();
+
+        /* Re-initialise */
         InitialiseDirFile(0);
         wrote_count = 0;
         last_pass = 0;

@@ -36,8 +36,8 @@
 #include "tx_struct.h"
 
 #define VERSION_MAJOR    "2"
-#define VERSION_MINOR    "0"
-#define VERSION_REVISION "2"
+#define VERSION_MINOR    "1"
+#define VERSION_REVISION "0"
 #define VERSION VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION 
 
 #define DEFAULT_CURFILE "/data/etc/defile.cur"
@@ -444,6 +444,11 @@ void ReconstructChannelLists(void)
   }
 
   ReadSpecificationFile(stream);
+
+  /* Make the Channel Struct */
+  MakeAddressLookups();
+
+  printf("Frame size: %i bytes\n", BiPhaseFrameSize);
 }
 
 void PrintVersion(void)
@@ -841,11 +846,6 @@ int main (int argc, char** argv)
 
   /* Attempt to Open the Specification file and read the channel lists */
   ReconstructChannelLists();
-
-  /* Make the Channel Struct */
-  MakeAddressLookups();
-
-  printf("Frame size: %i bytes\n", BiPhaseFrameSize);
 
   /* Start */
   printf("Defiling `%s'\n    into `%s' ...\n\n", rc.chunk, rc.dirfile);

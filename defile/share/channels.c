@@ -91,24 +91,26 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
 #ifdef __DEFILE__
   int bus, i;
 
+  slowsPerBusFrame[0] = slowsPerBusFrame[1] = 0;
+
   /* Reallocate channel lists, if we're reading them */
-  if ((WideSlowChannels = malloc(ccWideSlow * sizeof(struct ChannelStruct)))
-      == NULL) {
+  if ((WideSlowChannels = realloc(WideSlowChannels,
+          ccWideSlow * sizeof(struct ChannelStruct))) == NULL) {
     perror("defile: unable to allocate heap");
     exit(1);
   }
-  if ((SlowChannels = malloc(ccNarrowSlow * sizeof(struct ChannelStruct)))
-      == NULL) {
+  if ((SlowChannels = realloc(SlowChannels,
+          ccNarrowSlow * sizeof(struct ChannelStruct))) == NULL) {
     perror("defile: unable to allocate heap");
     exit(1);
   }
-  if ((WideFastChannels = malloc(ccWideFast * sizeof(struct ChannelStruct)))
-      == NULL) {
+  if ((WideFastChannels = realloc(WideFastChannels,
+          ccWideFast * sizeof(struct ChannelStruct))) == NULL) {
     perror("defile: unable to allocate heap");
     exit(1);
   }
-  if ((FastChannels = malloc(ccNarrowFast * sizeof(struct ChannelStruct)))
-      == NULL) {
+  if ((FastChannels = realloc(FastChannels,
+          ccNarrowFast * sizeof(struct ChannelStruct))) == NULL) {
     perror("defile: unable to allocate heap");
     exit(1);
   }
@@ -125,9 +127,8 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
 
 #ifdef __DEFILE__
   /* Calculate slowsPerBi0Frame */
-  for (i = 0; i < ccWideSlow; ++i) {
+  for (i = 0; i < ccWideSlow; ++i)
     slowsPerBusFrame[(int)WideSlowChannels[i].bus] += 2;
-  }
 
   for (i = 0; i < ccNarrowSlow; ++i)
     slowsPerBusFrame[(int)SlowChannels[i].bus]++;
