@@ -7,7 +7,7 @@
 
 #define SCHEDULEFILE "/data/etc/schedule.mcp"
 
-#define MAX_LINE_LENGTH 120
+#define MAX_LINE_LENGTH 300
 #define MAX_NSCHED 8000
 struct ScheduleType S;
 void StarPos(double t, double ra0, double dec0, double mra, double mdec,
@@ -39,7 +39,7 @@ int GetLine(FILE *fp, char *line) {
     return(0);  /* there were no valid lines */
   }
 }
-#define CHECK_LAT 39.49
+#define CHECK_LAT 34.49
 #define CHECK_LON 104.22
 /*********************************************************************/
 /*            Init Sched Structure                                   */
@@ -122,7 +122,7 @@ void InitSched(void) {
   for (i=j=0; i<S.n_sched; i++) {
     entry_ok=1;
     GetLine(fp, line_in);
-
+    printf("%s\n", line_in);
     switch (line_in[0]) {
     case 'v':
     case 'V':
@@ -154,19 +154,21 @@ void InitSched(void) {
       if (n_fields != 7) entry_ok = 0;
       break;
     default:
+      entry_ok = 0;
       break;
     }
     
     S.p[j].t = day*24l*3600l + hours*3600l;
-    StarPos(GetJulian(S.t0), ra*(M_PI/12.0), dec*(M_PI/180.0),
-	    0.0, 0.0, 0.0, 0.0, // proper motion, etc
-	    &(S.p[j].X), &(S.p[j].Y));
-
-    S.p[j].X*=12.0/M_PI;
-    S.p[j].Y*=180.0/M_PI;
-
+    
+/*     StarPos(GetJulian(S.t0), ra*(M_PI/180.0), dec*(M_PI/180.0), */
+/*      	    0.0, 0.0, 0.0, 0.0, */
+/* 	    &(S.p[j].X), &(S.p[j].Y)); */
+    
+    S.p[j].X = ra/15.0;
+    S.p[j].Y = dec;
+    
     printf("-- %2d LST: %8.4f Ra: %8.5f %8.4f  Dec: %8.4f %8.4f\n", j,
-	   S.p[j].t*(1.0/3600.0), ra, S.p[j].X, dec, S.p[j].Y);
+	   S.p[j].t*(1.0/3600.0), ra, S.p[j].X*15.0, dec, S.p[j].Y);
     if (!entry_ok) {
       printf("****** Warning Entry %d is Malformed: Skipping *****\n", j);
     } 
@@ -212,6 +214,7 @@ void InitSched(void) {
 	   az1, az2, el1, el2);
   }
   printf("***********************************************************\n");
+  fflush(stdout);
 }
 
 void DoSched(void) {
