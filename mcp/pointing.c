@@ -39,9 +39,12 @@
 #include "lut.h"
 #include "sslutNA.h"
 
-#define GY1_OFFSET (-0.1365)
-#define GY2_OFFSET (0.008)
-#define GY3_OFFSET (0.140)
+/* #define GY1_OFFSET (-0.1365) */
+/* #define GY2_OFFSET (0.008) */
+/* #define GY3_OFFSET (0.140) */
+#define GY1_OFFSET (0)
+#define GY2_OFFSET (0)
+#define GY3_OFFSET (0)
 
 #define MAX_ISC_AGE 200
 
@@ -495,7 +498,10 @@ void EvolveElSolution(struct ElSolutionStruct *s,
       s->gy_offset = fs * new_offset + (1.0 - fs) * s->gy_offset;
     }
     s->since_last = 0;
-    s->n_solutions++;
+    if (s->n_solutions<10000) {
+      s->n_solutions++;
+    }
+    
     s->gy_int = 0.0;
     s->last_input = new_angle;      
   }
@@ -603,7 +609,9 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
 
     }
     s->since_last = 0;
-    s->n_solutions++;
+    if (s->n_solutions<10000) {
+      s->n_solutions++;
+    }
     s->gy2_int = 0.0;
     s->gy3_int = 0.0;
     s->last_input = new_angle;      
@@ -768,7 +776,6 @@ void Pointing(){
     (cos_e * sin_l - cos_l * sin_e * cos_a);
   PointingData[point_index].gy3_earth = R *
     (sin_e * sin_l + cos_l * cos_e * cos_a);
-
   RG.gy1 = ACSData.gyro1 - PointingData[point_index].gy1_earth;
   RG.gy2 = ACSData.gyro2 - PointingData[point_index].gy2_earth;
   RG.gy3 = ACSData.gyro3 - PointingData[point_index].gy3_earth;
@@ -790,6 +797,7 @@ void Pointing(){
     if (no_dgps_pos > 179) {
       PointingData[point_index].t = time(NULL); // for now use CPU time
     }
+#warning Set to use SIP only for lat and lon: fix for flight!!!
     if (no_dgps_pos > 3000 || 1) { // no dgps for 30 seconds - revert to sip
       PointingData[point_index].lat = SIPData.GPSpos.lat;
       PointingData[point_index].lon = -SIPData.GPSpos.lon;
@@ -824,9 +832,9 @@ void Pointing(){
   clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
 
   EvolveElSolution(&ClinEl, RG.gy1, PointingData[i_point_read].gy1_offset,
-      clin_elev, 1);
+		   clin_elev, 1);
   EvolveElSolution(&EncEl, RG.gy1, PointingData[i_point_read].gy1_offset,
-      ACSData.enc_elev, 1);
+		   ACSData.enc_elev, 1);
 
   if (CommandData.use_elenc) {
     AddElSolution(&ElAtt, &EncEl, 1);

@@ -294,7 +294,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
 /*                                                              */
 /****************************************************************/
 #define AZ_ACCEL (0.001)
-#define AZ_MARGIN 0.5
+#define AZ_MARGIN 1.0
 #define MIN_SCAN 0.2
 void SetAzScanMode(double az, double left, double right, double v, double D) {
   if (axes_mode.az_vel < -v + D)
@@ -361,7 +361,7 @@ void DoAzScanMode() {
   SetAzScanMode(az, left, right, v, 0);
 }
 
-#define EL_BORDER 0.15
+#define EL_BORDER 1.0
 void DoVCapMode() {
   double caz, cel;
   double az, az2, el, el1, el2;
