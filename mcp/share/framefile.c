@@ -102,9 +102,11 @@ void ShutdownFrameFile(void) {
 /*                                                                   */
 /*********************************************************************/
 #ifdef __DECOMD__
-#  define CURFILE "/data/etc/decom.cur"
+#  define CURFILE "/mnt/decom/etc/decom.cur"
+#  define RAWDIR  "/mnt/decom/rawdir"
 #else
 #  define CURFILE "/data/etc/datafile.cur"
+#  define RAWDIR  "/data/rawdir"
 #endif
 void InitialiseFrameFile(char type) {
   FILE* fp;
@@ -117,7 +119,7 @@ void InitialiseFrameFile(char type) {
   framefile.type = type;
   framefile.time = time(NULL);
   OpenNextChunk();
-  sprintf(buffer, "/data/rawdir/%lu.%c.spec", framefile.time, framefile.type);
+  sprintf(buffer, RAWDIR "/%lu.%c.spec", framefile.time, framefile.type);
 
   if ((fp = fopen(buffer,"w")) == NULL)
     merror(MCP_ERROR, "Unable to write spec file");

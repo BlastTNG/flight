@@ -14,3 +14,7 @@ $(OBJS): $(HEADERS)
 clean:
 	rm -f decomd
 	rm -f *.o
+
+install:
+	install -m 755 decomd /usr/local/sbin
+	install -m 644 defile.8 /usr/local/man/man8
