@@ -1,8 +1,8 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 99         /* total number of single word commands */
-#define N_NM_SCOMMANDS 64      /* total number of named single word cmds */
-#define N_MCOMMANDS 43         /* total number of multiword commands */
+#define N_NM_SCOMMANDS 66      /* total number of named single word cmds */
+#define N_MCOMMANDS 46         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -120,6 +120,8 @@ struct scom scommands[N_NM_SCOMMANDS] = {
 
   {"isc_run", "start automatic image capture (normal mode)", GR_ISC},
   {"pause", "pause image capture", GR_ISC},
+  {"isc_abort", "abort current solution attempt", GR_ISC},
+  {"no_bright_star", "cancel bright star mode", GR_ISC},
   {"save_images", "turn on saving of images", GR_ISC},
   {"discard_images", "turn off saving of images", GR_ISC},
   {"full_screen", "show full screen", GR_ISC},
@@ -410,6 +412,20 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {"bda_offsets", "Set BDA offsets for video downlink", GR_ISC, 2,
+    {
+      {"BDA az (deg)", -5., 5, 'f', "ADD"},
+      {"BDA el (deg)", -5., 5, 'f', "ADD"}
+    }
+  },
+
+  {"bright_star", "Set RA/DEC of Bright Source", GR_ISC, 2,
+    {
+      {"ra (deg)", 0, 360., 'f', "ISC_BRRA"},
+      {"dec (deg)", -180, 180, 'f', "ISC_BRDEC"}
+    }
+  },
+
   {"integration", "Set Integration Time", GR_ISC, 1,
     {
       {"integration time (ms)", 0, 5000, 'f', "ISC_PULSE"}
@@ -423,6 +439,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"centroiding box (px/side)", 0, CCD_Y_PIXELS, 'i', "ISC_CENBOX"},
       {"photometry box (px/side)", 0, CCD_Y_PIXELS, 'i', "ISC_APBOX"},
       {"exclusion distance (px)", 0, CCD_Y_PIXELS, 'i', "ISC_MDIST"}
+    }
+  },
+
+  {"max_blobs", "Set the max # of blobs used in solution", GR_ISC, 1,
+    {
+      {"# of blobs", 0, MAX_ISC_BLOBS, 'i', "ISC_MAXBLOBS"}
     }
   },
 
