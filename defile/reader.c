@@ -82,6 +82,43 @@ int GetNextChunk(void)
   return 1;
 }
 
+/* find the filename and position of the place where we're supposed to start */
+long int SetResumeChunk(void)
+{
+  long int left_to_read = rc.resume_at;
+  int chunk_total;
+  int new_chunk;
+  struct stat chunk_stat;
+  char gpb[GPB_LEN];
+
+  /* Loop until we get to the right chunk */
+  for (;;) {
+    /* Stat the current chunk file to get its size */
+    if (stat(rc.chunk, &chunk_stat)) {
+      snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", rc.chunk);
+      perror(gpb);
+      exit(1);
+    }
+
+    chunk_total = chunk_stat.st_size / RX_FRAME_SIZE;
+
+    /* if there's more than we need, we're done */
+    if (chunk_total > left_to_read)
+      return left_to_read;
+
+    /* Otherwise, try to get a new chunk */
+    if ((new_chunk = GetNextChunk()) == 0) {
+      /* no new chunk -- complain and exit */
+      fprintf(stderr, "defile: source file is smaller than destination.\n"
+          "defile: cannot resume.\n");
+      exit(1);
+    }
+
+    /* there is another chunk, decrement the total needed and try again */
+    left_to_read -= chunk_total;
+  }
+}
+
 void FrameFileReader(void)
 {
   FILE *stream = NULL;
@@ -93,11 +130,18 @@ void FrameFileReader(void)
   int more_in_file = 0;
   unsigned short InputBuffer[INPUT_BUF_SIZE][RX_FRAME_SIZE];
   struct stat chunk_stat;
+  long int seek_to = 0;
+  int is_first = 1;
+
+  if (rc.resume_at >= 0) {
+    ri.read = SetResumeChunk();
+    seek_to = ri.read * RX_FRAME_SIZE;
+  }
 
   do {
     if (new_chunk) {
       printf("\nDefiling chunk `%s'\n", rc.chunk);
-      
+
       frames_read = 0;
 
       /* open the chunk */
@@ -105,6 +149,12 @@ void FrameFileReader(void)
         snprintf(gpb, GPB_LEN, "defile: cannot open `%s'", rc.chunk);
         perror(gpb);
         exit(1);
+      }
+
+      if (seek_to > 0) {
+        fseek(stream, seek_to, SEEK_SET);
+        printf("post seek: %07lx (%07lx %li)\n", ftell(stream), seek_to, seek_to / RX_FRAME_SIZE);
+        seek_to = 0;
       }
     }
 
@@ -120,7 +170,7 @@ void FrameFileReader(void)
         ri.chunk_total = chunk_stat.st_size / RX_FRAME_SIZE;
       }
 
-      /* read a frame */
+      /* read some frames */
       clearerr(stream);
       if ((n = fread(InputBuffer, RX_FRAME_SIZE, INPUT_BUF_SIZE, stream)) < 1) {
         if (feof(stream))
@@ -129,7 +179,7 @@ void FrameFileReader(void)
           snprintf(gpb, GPB_LEN, "defile: error reading `%s' (%i)",
               rc.chunk, errno);
           perror(gpb);
-          
+
           /* reopen file and try again */
           fclose(stream);
           if ((stream = fopen(rc.chunk, "r")) == NULL) {
@@ -147,10 +197,16 @@ void FrameFileReader(void)
 
       for (i = 0; i < n; ++i) {
         /* increment counter */
+        if (is_first)
+          printf("%07x 0x%04x\n", 4 * ri.read, InputBuffer[i][1]);
+
         ri.read++;
+        is_first = 0;
 
         /* push frame */
         PushFrame(InputBuffer[i]);
+//        ri.reader_done = 1;
+//        return;
       }
     } while (!feof(stream));
 

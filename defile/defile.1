@@ -2,36 +2,40 @@
 .SH NAME
 defile \(em convert a MCP written framefile into a dirfile
 .SH SYNOPSIS
+.nh
 .B defile 
-.RB [\  \-C
-.IR name\  |
-.BI \-\-curfile-name= name
+.RB [\~ \-C
+.IR "name " |
+.BI \-\-curfile\-name= name
 |
-.BR \-c\  |
-.BR \-\-curfile\  ]
-.RB [\  \-F\  |
-.BR \-\-force-framefile\  ]
-.RB [\  \-f\  |
-.BR \-\-force\  ]
-.RB [\  \-o
-.IR dirfile\  |
-.BI \-\-output-dirfile= dirfile
+.BR "\-c " |
+.BR \-\-curfile\~ ]
+.RB [\~ "\-F " |
+.BR \-\-framefile\~ ]
+.RB [\~ "\-R " |
+.BR "\-\-resume " |
+.BR "\-f " |
+.BR \-\-force\~ ]
+.RB [\~ \-o
+.IR "dirfile " |
+.BI \-\-output\-dirfile= dirfile
 ]
-.RB [\  \-p\  |
-.BR \-\-persistent\  ]
-.RB [\  \-r\  |
-.BR \-\-remounted-source\  |
-.BI \-\-remounted-using= path
+.RB [\~ "\-p " |
+.BR \-\-persistent\~ ]
+.RB [\~ "\-r " |
+.BR "\-\-remounted\-source " |
+.BI \-\-remounted\-using= path
 ]
-.RB [\  \-s
-.IR size\  |
-.BI \-\-suffix-size= size
+.RB [\~ \-s
+.IR "size " |
+.BI \-\-suffix\-size= size
 ]
-.RB [\  \-\-help\  ]
-.RB [\  \-\-version\  ]
-.RB [\  \-\-\  ]
+.RB [\~ \-\-help\~ ]
+.RB [\~ \-\-version\~ ]
+.RB [\~ \-\-\~ ]
 .I "source"
-.RI [\  directory\  ]
+.RI [\~ directory\~ ]
+.hy
 
 .SH DESCRIPTION
 .B defile
@@ -67,9 +71,9 @@ section.
 
 .SH OPTIONS
 .PP
-.BI \-C\  name
+.BI "\-C " name
 or
-.BI \-\-curfile-name= name
+.BI \-\-curfile\-name= name
 .RS
 Same as (and implies)
 .BR \-c ,
@@ -78,12 +82,15 @@ but use
 for the name of the curfile instead of the default.
 .RE
 .TP
-.BR \-F\  or\  \-\-force-framefile
+.BR "\-F " "or " \-\-framefile
 Always assume
 .I source
 is a framefile, even when it looks like a curfile.
 .TP
-.BR \-c\  or\  \-\-curfile
+.BR "\-R " "or " \-\-resume
+Resume an interrupted defiling.
+.TP
+.BR "\-c " "or " \-\-curfile
 Write a curfile pointing to the output dirfile.  The default curfile name is
 generally
 .BR /data/etc/defile.cur ,
@@ -93,7 +100,7 @@ To use a different name for the curfile, see the
 .B \-C
 option.
 .TP
-.BR \-f\  or\  \-\-force
+.BR "\-f " "or " \-\-force
 Overwrite an existing dirfile.  Normally
 .B defile
 will complain and exit if it finds that the destination dirfile directory
@@ -101,9 +108,9 @@ already exists.  Be careful using this option:  before starting the write
 .B defile
 will delete the current contents of the destination directory.
 .PP
-.BI \-o\  dirfile
+.BI "\-o " dirfile
 or
-.BI \-\-output-dirfile= dirfile
+.BI \-\-output\-dirfile= dirfile
 .RS
 Call the output dirfile
 .I dirfile
@@ -118,7 +125,7 @@ is given), or it can be an absolute path, in which case
 is ignored.
 .RE
 .TP
-.BR \-p\  or\  \-\-persistent
+.BR "\-p " "or " \-\-persistent
 Upon reaching the end of the framefile, don't exit but wait for more data to
 be added to the file.  For use when reading a framefile that is concurrently
 being written to by
@@ -127,7 +134,7 @@ See
 .B PERSISTENT MODE
 for more information.
 .TP
-.BR \-r\  or\  \-\-remounted-source
+.BR "\-r " "or " \-\-remounted\-source
 If
 .I source
 is a curfile, assume that the file it refers to has been mounted in a different
@@ -140,12 +147,12 @@ relative to the location of the
 curfile, but see
 .BR "COMPILE TIME DEFAULTS" .
 If you want to specify a different remounted location for the framefile, see the
-.B \-\-remounted-using
+.B \-\-remounted\-using
 option.  This option does nothing if
 .I source
 is not a curfile.
 .TP
-.BI \-\-remounted-using= path
+.BI \-\-remounted\-using= path
 Same as (and implies)
 .BR \-r ,
 but use
@@ -156,9 +163,9 @@ may be either an absolute path or a path relative to the location of the
 .I source
 curfile.
 .PP
-.BI \-s\  size
+.BI "\-s " size
 or
-.BI \-\-suffix-size= size
+.BI \-\-suffix\-size= size
 .RS
 Assume that the suffix of the framefile (the portion of the filename which is
 incremented as a hexadecimal number) is no larger than

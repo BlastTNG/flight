@@ -51,10 +51,10 @@ struct rc_struct rc = {
   0, /* framefile */
   0, /* persist */
   0, /* remount */
-  0, /* resume */
   0, /* write_curfile */
-  0, /* force */
+  0, /* write_mode */
   SUFF_MAX, /* sufflen */
+  -1, /* resume_at */
   0, /* source_is_curfile */
   NULL, /* curfile_val */
   NULL, /* remount_dir */
@@ -418,6 +418,7 @@ void PrintUsage(void)
       "file\n"
       "                          instead of `" DEFAULT_CURFILE "'.\n"
       "  -F --framefile        assume SOURCE is a framefile.\n"
+      "  -R --resume           resume an interrupted defiling.\n"
       "  -c --curfile          write a curfile called `" DEFAULT_CURFILE "'.\n"
       "  -f --force            overwrite destination.\n"
       "  -o --output-dirfile=NAME use name as the name of the dirfile. Name "
@@ -427,8 +428,8 @@ void PrintUsage(void)
       "  -p --persistent       do not exit, but monitor SOURCE for changes and "
       "keep\n"
       "                          writing to dirfile.\n"
-    "  -r --remounted-source when SOURCE is a curfile, assume that the "
-    "framefile is\n"
+      "  -r --remounted-source when SOURCE is a curfile, assume that the "
+      "framefile is\n"
     "                          located in the directory `" REMOUNT_PATH"' "
     "relative\n"
     "                          to the curfile's location.  This option has "
@@ -437,7 +438,6 @@ void PrintUsage(void)
     "     --remounted-using=DIR same as `--remounted-source' except use DIR as the\n"
     "                          path instead of the default `" REMOUNT_PATH
     "'.\n"
-    //    "  -R --resume           resume an interrupted defiling.\n"
     "  -s --suffix-size=SIZE framefile suffix is no more than SIZE characters "
     "large.\n"
     "                          SIZE should be an integer between 0 and %i.\n"
@@ -508,7 +508,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
             exit(1);
           }
         } else if (!strcmp(argv[i], "--force"))
-          rc->force = 1;
+          rc->write_mode = 1;
         else if (!strcmp(argv[i], "--framefile"))
           rc->framefile = 1;
         else if (!strncmp(argv[i], "--output-dirfile=", 17)) {
@@ -535,7 +535,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
             exit(1);
           }
         } else if (!strcmp(argv[i], "--resume"))
-          rc->resume = 1;
+          rc->write_mode = 2;
         else if (!strncmp(argv[i], "--suffix-size=", 14)) {
           if (argv[i][14] >= '0' && argv[i][14] <= '9') {
             if ((rc->sufflen = atoi(&argv[i][14])) > SUFF_MAX) {
@@ -567,7 +567,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
               rc->framefile = 1;
               break;
             case 'R':
-              rc->resume = 1;
+              rc->write_mode = 2;
               break;
             case 'c':
               if (!rc->write_curfile) {
@@ -579,7 +579,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
               }
               break;
             case 'f':
-              rc->force = 1;
+              rc->write_mode = 1;
               break;
             case 'o':
               if (nshortargs < argc) {
@@ -668,11 +668,11 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
         break;
       case 's':
         if (argument[j].value[0] >= '0' && argument[j].value[0] <= '9') {
-            if ((rc->sufflen = atoi(argument[j].value)) > SUFF_MAX) {
-              fprintf(stderr, "defile: suffix size `%s' is not a valid value\n"
-                  "Try `defile --help' for more information.\n", &argv[i][14]);
-              exit(1);
-            }
+          if ((rc->sufflen = atoi(argument[j].value)) > SUFF_MAX) {
+            fprintf(stderr, "defile: suffix size `%s' is not a valid value\n"
+                "Try `defile --help' for more information.\n", &argv[i][14]);
+            exit(1);
+          }
         } else {
           fprintf(stderr, "defile: suffix size `%s' is not a valid value\n"
               "Try `defile --help' for more information.\n", argument[j].value);
@@ -767,6 +767,7 @@ int main (int argc, char** argv)
   ri.tty = 0;
   delta = 1;
   gettimeofday(&rc.start, &rc.tz);
+  InitialiseDirFile(1);
 
   /* Spawn reader and writer */
   pthread_create(&read_thread, NULL, (void*)&FrameFileReader, NULL);

@@ -38,9 +38,10 @@
 typedef unsigned int chunkindex_t;
 
 struct rc_struct {
-  int framefile, persist, remount, resume, write_curfile;
-  int force;
+  int framefile, persist, remount, write_curfile;
+  int write_mode; /* 0 = normal ; 1 = overwrite ; 2 = resume */
   int sufflen;
+  long int resume_at;
   int source_is_curfile;
   char* curfile_val;
   char* remount_dir;
@@ -75,6 +76,7 @@ extern struct ri_struct ri;
 void  DirFileWriter(void);
 void  FrameFileReader(void);
 char* GetDirFile(const char*, char*);
+void  InitialiseDirFile(int);
 void  PushFrame(unsigned short*);
 void  Remount(const char*, char*);
 int   StaticSourcePart(char*, const char*, chunkindex_t*);
