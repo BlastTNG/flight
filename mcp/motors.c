@@ -979,10 +979,11 @@ void DoNewCapMode() {
     bprintf(info, "qqq L: el: %g targ_el: %g\n", el - cel, targ_el);
     // set targ_el for the next step
     targ_el += CommandData.pointing_mode.del*el_dir;
-    if (targ_el>r) {
+    if (targ_el>=r) {
       targ_el = r;
       el_dir=-1;
-    } else if (targ_el<r) {
+    } else if (targ_el<=-r) {
+      targ_el = -r;
       el_dir = 1;
     }
   }
