@@ -43,7 +43,7 @@ struct ChannelStruct {
     int adr;        /* BlastBus address: 0 to 63 */
     float m_c2e;    /* Conversion from counts to enginering units is */
     float b_e2e;    /*   e = c * m_c2e + b_e2e */
-    char type;      /* 's' = short, signed 'u' = unsigned short 'i' = 'S' signed
+    char type;      /* 's' = short, signed o'u' = unsigned short 'i' = 'S' signed
                        32 bit int, 'U' = unsigned 32 bit int */
 };
 

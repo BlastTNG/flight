@@ -105,10 +105,10 @@ struct scom scommands[N_NM_SCOMMANDS] = {
   {"inner_cool_on", "inner frame cooling pump 1 on", GR_COOL},
   {"inner_cool_off", "inner frame cooling pump 1 off", GR_COOL},
 
-  {"outer_cool1_on", "outer frame colling pump 1 on", GR_COOL},
-  {"outer_cool1_off", "outer frame colling pump 1 off", GR_COOL},
-  {"outer_cool2_on", "outer frame colling pump 2 on", GR_COOL},
-  {"outer_cool2_off", "outer frame colling pump 2 off", GR_COOL},
+  {"outer_cool_on", "outer frame colling pump 1 on", GR_COOL},
+  {"outer_cool_off", "outer frame colling pump 1 off", GR_COOL},
+  {"outer_spare_on", "outer frame colling pump 2 on", GR_COOL},
+  {"outer_spare_off", "outer frame colling pump 2 off", GR_COOL},
 
   {"pin_in", "close lock pin without checking encoder (dangerous)", GR_LOCK},
   {"unlock", "unlock the lock", GR_LOCK}
