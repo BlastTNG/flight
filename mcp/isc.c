@@ -228,7 +228,7 @@ void IntegratingStarCamera(void* parameter)
           fflush(isc_log[which]);
         }
 #endif
-        /* Flag link as good if necesary */
+        /* Flag link as good, if necesary */
         if (!ISC_link_ok[which]) {
           bprintf(info, "%s: Network link OK.\n", isc_which[which].who);
           ISC_link_ok[which] = 1;
@@ -237,8 +237,9 @@ void IntegratingStarCamera(void* parameter)
         /* Wait for acknowledgement from camera before sening trigger */
         if (waiting_for_ACK) {
           if (WHICH)
-            bprintf(info, "%iSC (i): Was waiting for ACK, flag was: %i\n",
-                which, ISCSolution[which][iscwrite_index[which]].flag);
+            bprintf(info, "%iSC (i): Was waiting for ACK, flag was: %i (%i)\n",
+                which, ISCSolution[which][iscwrite_index[which]].flag,
+                ISCSolution[which][iscwrite_index[which]].framenum);
           if (ISCSolution[which][iscwrite_index[which]].flag == 0) {
             if (WHICH)
               bprintf(info, "%iSC (i): Raise write_ISC_trigger semaphore\n",
@@ -250,8 +251,10 @@ void IntegratingStarCamera(void* parameter)
           }
         } else {
           if (WHICH)
-            bprintf(info, "%iSC (i): Wasn't waiting for ACK, flag was: %i\n", 
-                which, ISCSolution[which][iscwrite_index[which]].flag);
+            bprintf(info,
+                "%iSC (i): Wasn't waiting for ACK, flag was: %i (%i)\n", 
+                which, ISCSolution[which][iscwrite_index[which]].flag,
+                ISCSolution[which][iscwrite_index[which]].framenum);
           if (WHICH)
             bprintf(info, "%iSC (i): Raising start_ISC_cycle semaphore\n",
                 which);
