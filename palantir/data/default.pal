@@ -374,10 +374,10 @@
     <DATUM format="%e %b %Y, %H:%M:%S" src="SIP_TIME"/>
   </DATETIME>
   <NUMBER caption="North Latitude" textstyle="oddrow">
-    <DATUM format="%.2f" src="SIP_LAT" extrema="unknown"/>
+    <DATUM format="%.2f" src="LAT" extrema="unknown"/>
   </NUMBER>
   <NUMBER caption="West Longitude" textstyle="oddrow">
-    <DATUM format="%.2f" src="SIP_LON" extrema="unknown"/>
+    <DATUM format="%.2f" src="LON" extrema="unknown"/>
   </NUMBER>
   <NUMBER caption="Gondola Siderial Time" textstyle="oddrow">
     <DATUM format="%.4f" src="LST" extrema="unknown"/>
