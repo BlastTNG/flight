@@ -65,7 +65,7 @@ AC_MSG_CHECKING([for Qt])
 if test "x$QT_INCLUDE_DIR" = "x" -o "x$QT_LIB_DIR" = x; then
   QT_LIBS="qt-mt.so qt.so qt-mt.a qt.a qte-mt.so qte.so qte-mt.a qte.a"
   QT_ROOT="/usr/share/ /usr/lib/ /usr/include/ /usr/bin/ /usr/local/ /usr/local/share/ /usr/local/lib/ /usr/local/include/ /usr/local/bin/" 
-  QT_NAME="qt3.3 qt33 qt3.2 qt32 qt3.1 qt31 qt3 qt"
+  QT_NAME="qt-3.3 qt3.3 qt33 qt3.2 qt32 qt3.1 qt31 qt3 qt"
   for q in $QT_ROOT; do
     for i in $QT_NAME; do
       if test -f $q$i/qglobal.h -a "x$QT_INCLUDE_DIR" = "x"; then
