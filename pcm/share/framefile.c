@@ -11,6 +11,8 @@
 #include "tx_struct.h"
 #include "mcp.h"
 
+void WriteSpecificationFile(FILE*); /* in tx_struct.c */
+
 struct file_info {
   int fd;            /* current file descriptor */
   int chunk;         /* current chunk number */
@@ -52,16 +54,25 @@ void OpenNextChunk(void) {
 /*********************************************************************/
 void InitialiseFrameFile(char type) {
   FILE* fp;
+  char buffer[200];
 
   /* filename */
   framefile.fd = framefile.chunk = -1;
   framefile.type = type;
   framefile.time = time(NULL);
   OpenNextChunk();
+  sprintf(buffer, "/data/rawdir/%lu.%c.spec", framefile.time, framefile.type);
+
+  if ((fp = fopen(buffer,"w")) == NULL)
+    merror(MCP_ERROR, "Unable to write spec file");
+  else {
+    WriteSpecificationFile(fp);
+    fclose(fp);
+  }
 
   /* malloc frame buffer */
   if ((framefile.buffer = malloc(BUFFER_SIZE * BiPhaseFrameSize)) == NULL)
-    mputs(MCP_TFATAL, "Unable to malloc framefile buffer\n");
+    merror(MCP_TFATAL, "Unable to malloc framefile buffer");
   framefile.buffer_end = framefile.buffer + BUFFER_SIZE * BiPhaseFrameSize;
   framefile.b_write_to = framefile.b_read_from = framefile.buffer;
 

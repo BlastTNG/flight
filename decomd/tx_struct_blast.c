@@ -508,6 +508,21 @@ struct ChannelStruct FastChannels[] = {
   END_OF_CHANNELS
 };
 
+void WriteSpecificationFile(FILE* fp)
+{
+  fwrite(&ccWideSlow, sizeof(unsigned short), 1, fp);
+  fwrite(&ccNarrowSlow, sizeof(unsigned short), 1, fp);
+  fwrite(&ccWideFast, sizeof(unsigned short), 1, fp);
+  fwrite(&ccNarrowFast, sizeof(unsigned short), 1, fp);
+
+  fwrite(WideSlowChannels, sizeof(struct ChannelStruct), ccWideSlow, fp);
+  fwrite(SlowChannels, sizeof(struct ChannelStruct), ccNarrowSlow, fp);
+  fwrite(WideFastChannels, sizeof(struct ChannelStruct), ccWideFast, fp);
+  fwrite(FastChannels, sizeof(struct ChannelStruct), ccNarrowFast, fp);
+
+  mputs(MCP_INFO, "Wrote specification file.\n");
+}
+
 /************************************************************************/
 /*                                                                      */
 /*    MakeBoloTable: create the bolometer channel table                 */
