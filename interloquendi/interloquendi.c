@@ -44,7 +44,7 @@
 #define VERSION   "0.9.0"
 #define SOCK_PORT 44144
 #define PID_FILE "/var/run/interloquendi.pid"
-#define CONFIG_FILE "/usr/home/dwiebe/cvs/interloquendi/interloquendi.conf"
+#define CONFIG_FILE "/home/dwiebe/cvs/interloquendi/interloquendi.conf"
 
 #define DEBUG
 
@@ -438,8 +438,7 @@ void LoadDefaultConfig(void)
           break;
         case CFG_CUR_FILE:
           options[i].value.as_string
-            //= bstrdup(fatal, "/mnt/decom/etc/decom.cur");
-            = bstrdup(fatal, "/mnt/decom/etc/temp.cur");
+            = bstrdup(fatal, "/mnt/decom/etc/decom.cur");
           break;
         case CFG_SUFFIX_LENGTH:
           options[i].value.as_int = 3;
