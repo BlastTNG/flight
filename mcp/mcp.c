@@ -580,7 +580,7 @@ void WatchDog (void) {
 
 void write_to_biphase(unsigned short *RxFrame) {
   int i;
-  static unsigned short nothing[BI0_FRAME_SIZE];
+  static unsigned int nothing[BI0_FRAME_SIZE];
 
   if (bi0_fp == -2) {
     bi0_fp = open("/dev/bi0_pci", O_RDWR);
@@ -588,19 +588,21 @@ void write_to_biphase(unsigned short *RxFrame) {
       merror(MCP_TFATAL, "Error opening biphase device");
 
     for (i = 0; i < 1024; i++)
-      nothing[i] = 0xEEEE;
+      nothing[i] = 0xEEEEEEEE;
   }
 
   if (bi0_fp >= 0) {
     /* In the new scheme, the biphase sync word is already in frame position
      * one since it's transmitted in the framesync */
-    RxFrame[1] = 0x64E3;
-    if (write(bi0_fp, RxFrame, 4) < 0)
-//    if (write(bi0_fp, RxFrame + 1, 2 * BiPhaseFrameWords) < 0)
-      merror(MCP_ERROR, "bi-phase write (RxFrame) failed");
-    if (write(bi0_fp, nothing + BiPhaseFrameWords, 2 * (BI0_FRAME_SIZE -
-            BiPhaseFrameWords)) < 0)
-      merror(MCP_ERROR, "bi-phase write (padding) failed");
+    RxFrame[0] = 0xEB90;
+    for (i = 0; i < BiPhaseFrameWords / 2; ++i) {
+      if (write(bi0_fp, (unsigned int *)RxFrame + i, sizeof(unsigned int)) < 0)
+        merror(MCP_ERROR, "bi-phase write (RxFrame) failed");
+    }
+    for (i = 0; i < 312 - BiPhaseFrameWords / 2; ++i) {
+      if (write(bi0_fp, nothing, sizeof(unsigned int)) < 0)
+        merror(MCP_ERROR, "bi-phase write (padding) failed");
+    }
   }
 }
 
@@ -723,7 +725,7 @@ int main(int argc, char *argv[]) {
 
 #ifndef BOLOTEST
   pthread_t bi0_id;
-//  pthread_t sensors_id;
+  //  pthread_t sensors_id;
   pthread_t dgps_id;
   pthread_t isc_id;
   pthread_t osc_id;
@@ -777,7 +779,7 @@ int main(int argc, char *argv[]) {
   pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
   pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
 
-//  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
+  //  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
 
   InitBi0Buffer();
@@ -848,7 +850,7 @@ int main(int argc, char *argv[]) {
             "Frame sequencing error detected: wanted %i, got %i\n",
             RxFrameIndex + 1, RxFrame[3]);
       RxFrameIndex = RxFrame[3];
-      
+
       UpdateBBCFrame(RxFrame);
 
 #ifndef BOLOTEST
