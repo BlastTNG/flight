@@ -20,6 +20,10 @@
 #include "dataholder.h"
 #include "alice.h"
 
+extern "C" {
+#include "mcp.h"
+}
+
 
 /******************************************************************************\
 |*                                                                            *|
@@ -89,7 +93,7 @@ void AMLParser::CommonConstructor() {
   maxdata = 0;
   currentry = -1;
   currdatum = -1;
-  
+
   return;
 }
 
@@ -111,7 +115,8 @@ bool AMLParser::LoadFile(const char *filename) {
   char linebuf[AML_LEN_LINE], tmpstr[AML_LEN_LINE], tmpstr2[AML_LEN_LINE];
 
   if ((f = fopen(filename, "r")) == NULL) {
-    printf("AMLParser: couldn't open %s for openning.  Returning.\n", filename);
+    mprintf(MCP_ERROR,
+        "AMLParser: couldn't open %s for openning.  Returning.\n", filename);
     return false;
   }
 
@@ -126,7 +131,7 @@ bool AMLParser::LoadFile(const char *filename) {
         maxvalues = GetNumValues(linebuf);
       i = 0;
     }
-    
+
     if (linebuf[0] == '-') {
       if (++i > maxdata)
         maxdata = i;
@@ -177,7 +182,7 @@ bool AMLParser::LoadFile(const char *filename) {
         entrycount++;
         for (j = 0; j < (signed int)strlen(linebuf) && linebuf[j] == '+'; j++);
         level[entrycount] = j;
-        
+
         for (k = entrycount; k >= 0; k--) {
           if (level[k] == j - 1) {
             parent[entrycount] = k;
@@ -195,8 +200,9 @@ bool AMLParser::LoadFile(const char *filename) {
         for (k = 0; k < entrycount; k++) {
           ParseFullName(k, tmpstr2);
           if (!strcmp(tmpstr, tmpstr2)) {
-            printf("AMLParser: found two instances of '%s' in the file '%s'.  "
-                   "Using the first.\n", tmpstr, filename);
+            mprintf(MCP_ERROR, 
+                "AMLParser: found two instances of '%s' in the file '%s'.  "
+                "Using the first.\n", tmpstr, filename);
             entrycount--;
           }
         }
@@ -208,26 +214,28 @@ bool AMLParser::LoadFile(const char *filename) {
         GetDataDefault(linebuf, datadefaults[entrycount][numdata[entrycount]]);
         for (i = 0; i < numdata[entrycount]; i++) {
           if (!strcmp(datanames[entrycount][numdata[entrycount]],
-                      datanames[entrycount][i])) {
+                datanames[entrycount][i])) {
             ParseFullName(entrycount, tmpstr);
-            printf("AMLParser: found two instances of '%s' in entry '%s' in "
-                   "the file '%s'.  Using the first.\n", 
-                   datanames[entrycount][i], tmpstr, filename);
+            mprintf(MCP_ERROR, 
+                "AMLParser: found two instances of '%s' in entry '%s' in "
+                "the file '%s'.  Using the first.\n", 
+                datanames[entrycount][i], tmpstr, filename);
             j = 0;
           }
         }
-        
+
         if (!j)
           break;
-        
+
         for (i = 0; i < numvalues[entrycount]; i++) {
           if (!GetValue(linebuf, i, 
-                        entries[entrycount][i][numdata[entrycount]])) {
+                entries[entrycount][i][numdata[entrycount]])) {
             ParseFullName(entrycount, tmpstr);
-            printf("AMLParser: couldn't get datum for '%s' in column '%s' in "
-                   "entry '%s' in the file '%s'.  Ignoring this line.\n",
-                   datanames[entrycount][numdata[entrycount]], 
-                   valuenames[entrycount][0], tmpstr, filename);
+            mprintf(MCP_ERROR, 
+                "AMLParser: couldn't get datum for '%s' in column '%s' in "
+                "entry '%s' in the file '%s'.  Ignoring this line.\n",
+                datanames[entrycount][numdata[entrycount]], 
+                valuenames[entrycount][0], tmpstr, filename);
             j = 0;
             break;
           }
@@ -236,11 +244,11 @@ bool AMLParser::LoadFile(const char *filename) {
         if (!j)
           break;
         numdata[entrycount]++;
-        
+
         break; 
     }
   }
-  
+
   return true;
 }
 
@@ -296,13 +304,13 @@ int AMLParser::GetNumValues(const char *buf) {
 
   lastval = '+';
   ret = 0;
-  
+
   for (i = 1; i < (signed int)strlen(buf); i++) {
     if (buf[i] == ' ' && lastval != ' ')
       ret++;
     lastval = buf[i];
   }
- 
+
   return ret;
 }
 
@@ -320,13 +328,13 @@ void AMLParser::GetEntryName(const char *buf, char *namebuf) {
   int i, j;
 
   for (i = 0; i < (signed int)strlen(buf) && (buf[i] == '+' || buf[i] == '-'); 
-       i++);
+      i++);
 
   for (j = i; j < (signed int)strlen(buf) && buf[j] != ' ' && buf[j] != '@'; 
-       j++)
+      j++)
     namebuf[j - i] = buf[j];
   namebuf[j - i] = '\0';
-  
+
   return;
 }
 
@@ -344,11 +352,11 @@ void AMLParser::GetDataDefault(const char *buf, char *defaultbuf) {
   int i, j;
 
   for (i = 0; i < (signed int)strlen(buf) && (buf[i] == '+' || buf[i] == '-'); 
-       i++);
+      i++);
 
   for (j = i; j < (signed int)strlen(buf) && buf[j] != ' ' && buf[j] != '@'; 
-       j++);
- 
+      j++);
+
   if (buf[j] != '@') {
     defaultbuf[0] = '\0'; 
     return;
@@ -358,10 +366,10 @@ void AMLParser::GetDataDefault(const char *buf, char *defaultbuf) {
   for (j = i; j < (signed int)strlen(buf) && buf[j] != ' '; j++)
     defaultbuf[j - i] = buf[j];
   defaultbuf[j - i] = '\0';
-  
+
   return;
 }
- 
+
 
 /******************************************************************************\
 |*                                                                            *|
@@ -381,10 +389,10 @@ bool AMLParser::GetValue(const char *buf, int num, char *valuebuf) {
 
   if (!(buf[0] == '+' || buf[0] == '-'))  // Must be a valid line.
     return false;
-  
+
   lastval = '+';
   count = -1;
-  
+
   for (i = 1; i < (signed int)strlen(buf); i++) {
     if (buf[i] == ' ' && lastval != ' ') {
       if (++count == num)
@@ -397,14 +405,14 @@ bool AMLParser::GetValue(const char *buf, int num, char *valuebuf) {
     return false;
 
   for (; i < (signed int)strlen(buf) && buf[i] == ' '; i++);
-  
+
   if (i == (signed int)strlen(buf))
     return false;
 
   for (j = i; j < (signed int)strlen(buf) && buf[j] != ' '; j++) 
     valuebuf[j - i] = buf[j];
   valuebuf[j - i] = '\0';
-  
+
   return true;
 }
 
@@ -477,18 +485,18 @@ int AMLParser::NumData(const char *fullentryname) {
 |*                                                                            *|
 \******************************************************************************/
 
-bool AMLParser::NextDatum() {
-  if (currentry < 0 || currdatum < 0)
-    return false;
+  bool AMLParser::NextDatum() {
+    if (currentry < 0 || currdatum < 0)
+      return false;
 
-  if (++currdatum >= numdata[currentry]) {
-    currentry = -1;
-    currdatum = -1;
-    return false;
+    if (++currdatum >= numdata[currentry]) {
+      currentry = -1;
+      currdatum = -1;
+      return false;
+    }
+
+    return true;
   }
-
-  return true;
-}
 
 
 /******************************************************************************\
@@ -499,12 +507,12 @@ bool AMLParser::NextDatum() {
 |*                                                                            *|
 \******************************************************************************/
 
-bool AMLParser::NoDatum() {
-  if (currentry < 0 || currdatum < 0)
-    return true;
-  else
-    return false;
-}
+  bool AMLParser::NoDatum() {
+    if (currentry < 0 || currdatum < 0)
+      return true;
+    else
+      return false;
+  }
 
 
 /******************************************************************************\
@@ -520,7 +528,7 @@ bool AMLParser::NoDatum() {
 
 const char *AMLParser::Value(const char *valuename) {
   int i, j, k, l;
-  
+
   if (currentry < 0 || currdatum < 0)
     return NULL;
 
@@ -542,7 +550,7 @@ const char *AMLParser::Value(const char *valuename) {
           for (l = 0; l < 50; l++) {
             for (k = 0; k < numdata[currentry]; k++) {
               if (!strcmp(datanames[currentry][k], 
-                          datadefaults[currentry][j]))
+                    datadefaults[currentry][j]))
                 if (!strcmp(entries[currentry][i][k], "@")) {
                   if (strlen(datadefaults[currentry][k]))
                     j = k;
@@ -562,7 +570,7 @@ const char *AMLParser::Value(const char *valuename) {
         return entries[currentry][i][currdatum];
     }
   }
-  
+
   return "";
 }
 
@@ -619,58 +627,63 @@ bool DataHolder::LoadFromAML(const char *filename) {
     return false;
 
   if (!aml->FirstDatum("SETTINGS")) {
-    printf("Fatal (DataHolder): %s contains no data under the SETTINGS "
-           "entry.\n", filename);
+    mprintf(MCP_ERROR,
+        "Fatal (DataHolder): %s contains no data under the SETTINGS "
+        "entry.\n", filename);
     return false;
   }
 
   // Get settings.
   maxbitrate = atoi(aml->Value("maxbitrate"));
   if (!maxbitrate) {
-    printf("Fatal (DataHolder): %s has maxbitrate = 0.\n", filename);
+    mprintf(MCP_ERROR,
+        "Fatal (DataHolder): %s has maxbitrate = 0.\n", filename);
     return false;
   }
   looplength = atoi(aml->Value("looplength"));
   if (!looplength) {
-    printf("Fatal (DataHolder): %s has looplength = 0.\n", filename);
+    mprintf(MCP_ERROR,
+        "Fatal (DataHolder): %s has looplength = 0.\n", filename);
     return false;
   }
   samplerate = atoi(aml->Value("samplerate"));
   if (!samplerate) {
-    printf("Fatal (DataHolder): %s has samplerate = 0.\n", filename);
+    mprintf(MCP_ERROR,
+        "Fatal (DataHolder): %s has samplerate = 0.\n", filename);
     return false;
   }
   minover = atof(aml->Value("minover"));
   if (!minover) {
-    printf("Fatal (DataHolder): %s has minover = 0.\n", filename);
+    mprintf(MCP_ERROR, "Fatal (DataHolder): %s has minover = 0.\n", filename);
     return false;
   }
   maxover = atof(aml->Value("maxover"));
   if (!maxover) {
-    printf("Fatal (DataHolder): %s has maxover = 0.\n", filename);
+    mprintf(MCP_ERROR, "Fatal (DataHolder): %s has maxover = 0.\n", filename);
     return false;
   }
-  
+
   // Allocate etc.
   numslows = aml->NumData("SLOWDATA.SINGLE") + aml->NumData("SLOWDATA.AVG");
   numfasts = aml->NumData("FASTDATA.DIFF") + aml->NumData("FASTDATA.INT");
   if (numslows == 0 && numfasts == 0)
-    printf("Warning (DataHolder):  %s contains no channels.\n", filename);
+    mprintf(MCP_WARNING,
+        "Warning (DataHolder):  %s contains no channels.\n", filename);
 
   if (allocated) {
     slows = (struct DataStruct_glob *)realloc(slows, numslows * 
-                                                     sizeof(DataStruct_glob));
+        sizeof(DataStruct_glob));
     fasts = (struct DataStruct_glob *)realloc(fasts, numfasts * 
-                                                     sizeof(DataStruct_glob));
+        sizeof(DataStruct_glob));
   }
   else {
     slows = (struct DataStruct_glob *)malloc(numslows * 
-                                             sizeof(DataStruct_glob));
+        sizeof(DataStruct_glob));
     fasts = (struct DataStruct_glob *)malloc(numfasts * 
-                                             sizeof(DataStruct_glob));
+        sizeof(DataStruct_glob));
     allocated = true;
   }
- 
+
   numslows = 0;
   for (aml->FirstDatum("SLOWDATA.SINGLE"); !aml->NoDatum(); aml->NextDatum()) {
     slows[numslows].type = COMP_SINGLE;
@@ -682,7 +695,7 @@ bool DataHolder::LoadFromAML(const char *filename) {
     PopulateDataStruct(slows + numslows, aml);
     numslows++;
   }
-  
+
   numfasts = 0;
   for (aml->FirstDatum("FASTDATA.DIFF"); !aml->NoDatum(); aml->NextDatum()) {
     fasts[numfasts].type = COMP_DIFFERENTIAL;
@@ -694,7 +707,7 @@ bool DataHolder::LoadFromAML(const char *filename) {
     PopulateDataStruct(fasts + numfasts, aml);
     numfasts++;
   }
-  
+
   return true;
 }
 
@@ -794,6 +807,6 @@ void DataHolder::PopulateDataStruct(struct DataStruct_glob *s, AMLParser *a) {
   s->samplefreq = atoi(a->Value("samplefreq"));
   s->minval = atoll(a->Value("minval"));
   s->maxval = atoll(a->Value("maxval"));
-  
+
   return;
 }

@@ -1,10 +1,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  extern unsigned short* smalldata[3];
-  extern unsigned int small_index;
+  extern unsigned short* tdrss_data[3];
+  extern unsigned int tdrss_index;
 
-  void smallinit(void);
+  void TDRSSWriter(void);
 
 #ifdef __cplusplus
 }
