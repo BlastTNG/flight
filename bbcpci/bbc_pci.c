@@ -451,11 +451,6 @@ int init_bbc_pci(void) {
     return -EIO;
   }
   
-  printk("MESSAGE TO BARTH:\nThe biphase appears to work now.  You can "
-         "see for yourself by running test_biphase in this directory.  Data "
-         "can be read back by using test_decom on galadriel in "
-         "/home/hincks/code/decom. -AH\n");
-
   dev = pci_find_device(BBCPCI_VENDOR, BBCPCI_ID, dev);
   if (!dev) {
     printk("Unable to find BBC_PCI card.\n");
