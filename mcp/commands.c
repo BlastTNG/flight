@@ -1275,15 +1275,21 @@ void InitCommandData() {
   CommandData.Cryo.lhevalve_open = 0;
   CommandData.Cryo.lhevalve_close = 0;
 
+  CommandData.ISCState.abort = 0;
   CommandData.ISCState.pause = 0;
   CommandData.ISCState.save = 0;
+  CommandData.ISCState.autofocus = 0;
   CommandData.ISCState.focus_pos = 2300;
   CommandData.ISCState.ap_pos = 495;
   CommandData.ISCState.display_mode = full;
+  CommandData.ISCState.azBDA = 0;
+  CommandData.ISCState.elBDA = 0;
+  CommandData.ISCState.brightStarMode = 0;
   CommandData.ISCState.sn_threshold = 20;
   CommandData.ISCState.grid = 38;
   CommandData.ISCState.cenbox = 20;
   CommandData.ISCState.apbox = 5;
+  CommandData.ISCState.maxBlobMatch = 5;
   CommandData.ISCState.mult_dist = 30;
   CommandData.ISCState.mag_limit = 8.5;
   CommandData.ISCState.norm_radius = 3. * DEG2RAD;

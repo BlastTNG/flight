@@ -1141,6 +1141,10 @@ void StoreData(int index, unsigned int* Txframe,
   static int isc_rd_sigmaCh, isc_rd_sigmaInd;
   static int isc_raCh, isc_raInd;
   static int isc_decCh, isc_decInd;
+  static int isc_afocusCh, isc_afocusInd;
+  static int isc_mcpnumCh, isc_mcpnumInd;
+  static int isc_brraCh, isc_brraInd;
+  static int isc_brdecCh, isc_brdecInd;
   static int isc_apertCh, isc_apertInd;
   static int isc_cenboxCh, isc_cenboxInd;
   static int isc_apboxCh, isc_apboxInd;
@@ -1150,6 +1154,7 @@ void StoreData(int index, unsigned int* Txframe,
   static int isc_threshCh, isc_threshInd;
   static int isc_gridCh, isc_gridInd;
   static int isc_stateCh, isc_stateInd;
+  static int isc_maxblobsCh, isc_maxblobsInd;
   static int isc_maglimitCh, isc_maglimitInd;
   static int isc_nradCh, isc_nradInd;
   static int isc_lradCh, isc_lradInd;
@@ -1254,15 +1259,20 @@ void StoreData(int index, unsigned int* Txframe,
     SlowChIndex("isc_ra", &isc_raCh, &isc_raInd);
     SlowChIndex("isc_dec", &isc_decCh, &isc_decInd);
     SlowChIndex("isc_nblobs", &isc_nblobsCh, &isc_nblobsInd);
+    SlowChIndex("isc_afocus", &isc_afocusCh, &isc_afocusInd);
+    SlowChIndex("isc_mcpnum", &isc_mcpnumCh, &isc_mcpnumInd);
 
     SlowChIndex("isc_state", &isc_stateCh, &isc_stateInd);
     SlowChIndex("isc_focus", &isc_focusCh, &isc_focusInd);
+    SlowChIndex("isc_brra", &isc_brraCh, &isc_brraInd);
+    SlowChIndex("isc_brdec", &isc_brdecCh, &isc_brdecInd);
     SlowChIndex("isc_apert", &isc_apertCh, &isc_apertInd);
     SlowChIndex("isc_thresh", &isc_threshCh, &isc_threshInd);
     SlowChIndex("isc_grid", &isc_gridCh, &isc_gridInd);
     SlowChIndex("isc_cenbox", &isc_cenboxCh, &isc_cenboxInd);
     SlowChIndex("isc_apbox", &isc_apboxCh, &isc_apboxInd);
     SlowChIndex("isc_mdist", &isc_mdistCh, &isc_mdistInd);
+    SlowChIndex("isc_maxblobs", &isc_maxblobsCh, &isc_maxblobsInd);
     SlowChIndex("isc_maglimit", &isc_maglimitCh, &isc_maglimitInd);
     SlowChIndex("isc_nrad", &isc_nradCh, &isc_nradInd);
     SlowChIndex("isc_lrad", &isc_lradCh, &isc_lradInd);
@@ -1370,7 +1380,7 @@ void StoreData(int index, unsigned int* Txframe,
   WriteSlow(i_R, j_R, (int)(CommandData.pointing_mode.r * DEG2I));
 
   sensor_veto = (!CommandData.use_sun) | ((!CommandData.use_isc)<<1) |
-    ((!CommandData.use_elenc)<<2) |		
+    ((!CommandData.use_elenc)<<2) |
     ((!CommandData.use_mag)<<3) |
     ((!CommandData.use_gps)<<4) |
     ((!CommandData.use_elclin)<<5);
@@ -1425,11 +1435,11 @@ void StoreData(int index, unsigned int* Txframe,
   WriteSlow(blob2_yCh, blob2_yInd,
       (int)(ISCSolution[i_isc].blob_y[blob_index * 3 + 2] * 40.));
 
-  WriteSlow(blob0_snCh, blob0_fluxInd,
+  WriteSlow(blob0_fluxCh, blob0_fluxInd,
       (int)(ISCSolution[i_isc].blob_flux[blob_index * 3 + 0] / 32.));
-  WriteSlow(blob1_snCh, blob1_fluxInd,
+  WriteSlow(blob1_fluxCh, blob1_fluxInd,
       (int)(ISCSolution[i_isc].blob_flux[blob_index * 3 + 1] / 32.));
-  WriteSlow(blob2_snCh, blob2_fluxInd,
+  WriteSlow(blob2_fluxCh, blob2_fluxInd,
       (int)(ISCSolution[i_isc].blob_flux[blob_index * 3 + 2] / 32.));
 
   WriteSlow(blob0_snCh, blob0_snInd,
@@ -1461,14 +1471,26 @@ void StoreData(int index, unsigned int* Txframe,
     WriteSlow(isc_rd_sigmaCh, isc_rd_sigmaInd,
         (unsigned int)(ISCSolution[i_isc].sigma * RAD2ARCSEC));
   }
+  WriteSlow(isc_mcpnumCh, isc_mcpnumInd,
+      (unsigned int)ISCSolution[i_isc].MCPFrameNum);
+  WriteSlow(isc_afocusCh, isc_afocusInd,
+      (unsigned int)ISCSolution[i_isc].autoFocusPosition);
 
+  /*** State Info ***/
   WriteSlow(isc_stateCh, isc_stateInd,
       (unsigned int)(CommandData.ISCState.pause * 2 +
+                     CommandData.ISCState.abort * 4 +
+                     CommandData.ISCState.autofocus * 8 +
+                     CommandData.ISCState.brightStarMode * 16 +
                      CommandData.ISCState.save));
   WriteSlow(isc_focusCh, isc_focusInd,
       (unsigned int)CommandData.ISCState.focus_pos);
   WriteSlow(isc_apertCh, isc_apertInd,
       (unsigned int)CommandData.ISCState.ap_pos);
+  WriteSlow(isc_brraCh, isc_brraInd,
+      (unsigned int)(CommandData.ISCState.brightRA * RAD2I));
+  WriteSlow(isc_brdecCh, isc_brdecInd,
+      (unsigned int)(CommandData.ISCState.brightDEC * RAD2I));
   WriteSlow(isc_threshCh, isc_threshInd,
       (unsigned int)(CommandData.ISCState.sn_threshold * 10.));
   WriteSlow(isc_gridCh, isc_gridInd, (unsigned int)CommandData.ISCState.grid);
@@ -1478,6 +1500,8 @@ void StoreData(int index, unsigned int* Txframe,
       (unsigned int)CommandData.ISCState.apbox);
   WriteSlow(isc_mdistCh, isc_mdistInd,
       (unsigned int)CommandData.ISCState.mult_dist);
+  WriteSlow(isc_maxblobsCh, isc_maxblobsInd,
+      (unsigned int)CommandData.ISCState.maxBlobMatch);
   WriteSlow(isc_maglimitCh, isc_maglimitInd,
       (unsigned int)(CommandData.ISCState.mag_limit * 1000.));
   WriteSlow(isc_nradCh, isc_nradInd,
