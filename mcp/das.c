@@ -121,7 +121,6 @@ int CalLamp (void)
     last_mode = CommandData.Cryo.calibrator = off;
   }
 
-  printf("update_counter = %i\r", update_counter);
   return update_counter & 0x3;
 }
 
