@@ -510,7 +510,6 @@ int AmISam(void) {
 int main(int argc, char *argv[]) {
   int i, j;
   unsigned int in_data, n_to_read = 0, status;
-  /* int bbc_fp; */
   unsigned short* Rxframe;
   unsigned int *Txframe;
   int last_frames = FRAME_MARGIN, frames;
@@ -611,7 +610,7 @@ int main(int argc, char *argv[]) {
 
   do_Tx_frame(bbc_fp, Txframe, slowTxFields, Rxframe, 0);
 
-  last_frames = FRAME_MARGIN + 1;
+  last_frames =  ioctl(bbc_fp, BBC_IOC_FRAMES) + FRAME_MARGIN + 1;
 
   while (1) {
     pthread_mutex_lock(&mutex);
@@ -641,6 +640,7 @@ int main(int argc, char *argv[]) {
     last_frames = frames;
 
     n_to_read = ioctl(bbc_fp, BBC_IOC_RX_SW_COUNT);
+/*    printf("n to read: %i %i\n", n_to_read, frames); */
     for (i = 0; i < n_to_read; i++) {
       if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) < 0) {
         perror("Error on BBC read");
