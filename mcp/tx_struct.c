@@ -610,6 +610,6 @@ void FPrintDerived(FILE *fp) {
       "CPU_DAY LINCOM  1       CPU_SEC 1.15741E-5  0\n"
       "CPU_WEEK LINCOM 1       CPU_SEC 1.65344E-6  0\n"
       "CPU_MONTH LINCOM 1      CPU_SEC 3.85803E-7  0\n"
-	    "CPU_YEAR LINCOM 1       CPU_SEC 3.17099E-8  0\n", time(NULL)
+      "CPU_YEAR LINCOM 1       CPU_SEC 3.17099E-8  0\n", time(NULL)
       );
 }

@@ -188,12 +188,12 @@ void SendRequest (int req, char tty_fd) {
   write(tty_fd, buffer, 3);
 }
 
-int SCommand(char *cmd) {
+enum singleCommand  SCommand(char *cmd) {
   int i;
 
   for (i = 0; i < N_SCOMMANDS; i++) {
     if (strcmp(scommands[i].name, cmd) == 0)
-      return i;
+      return scommands[i].command;
   }
 
   return -1;
@@ -217,7 +217,7 @@ const char* SName(enum singleCommand command) {
 void SingleCommand (enum singleCommand command) {
   int i_point;
 
-  fprintf(stderr, "Single command %d: %s\n", command, SName(command));
+  fprintf(stderr, "Actual single command executed: %d (%s)\n", command, SName(command));
 
   /* Update CommandData structure with new info */
 
@@ -415,8 +415,10 @@ void SingleCommand (enum singleCommand command) {
     CommandData.ISC_autofocus = 10;
     CommandData.old_ISC_focus = CommandData.ISCState.focus_pos;
     CommandData.ISCState.focus_pos = FOCUS_RANGE;
-  } else
+  } else {
+    fprintf(stderr, "***Invalid Single Word Command***\n");
     return; /* invalid command - no write or update */
+  }
 
   i_point = GETREADINDEX(point_index);
 
@@ -501,6 +503,8 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
       fprintf(stderr, "param%02i: 30 bits: %f\n", i, rvalues[i]);
     }
   }
+
+  fprintf(stderr, "Actual Multi Word Command Executed: %d (%s)\n", command, MName(command));
 #endif
 
   /* Update CommandData struct with new info
@@ -739,8 +743,10 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.ISC_save_period = ivalues[0] * 100;
     printf("Save period is: %i\n", CommandData.ISC_save_period);
 
-  } else
+  } else {
+    fprintf(stderr, "***Invalid Multi Word Command***\n");
     return; /* invalid command - don't update */
+  }
 
   i_point = GETREADINDEX(point_index);
 

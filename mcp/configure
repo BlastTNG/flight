@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ `hostname` = "ecosmo.blast" ]
+if [ `hostname` = "ecosmo.physics.upenn.edu" ]
 then
   echo "BOLOTEST = -DBOLOTEST" > Makefile.config ;
   echo "Configuring BOLOTEST version of mcp.  To compile flight version," ;

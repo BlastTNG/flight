@@ -31,7 +31,7 @@
 #define BBC_BAD_DATA (0xfffffff0)
 
 #ifdef BOLOTEST
-#  define FRAME_MARGIN (-12)
+#  define FRAME_MARGIN (-32)
 #else
 #  define FRAME_MARGIN (-32)
 #endif
