@@ -207,7 +207,6 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   static int i_g_Iel = -1, j_g_Iel = -1;
   static int i_g_Proll = -1, j_g_Proll = -1;
   static int i_g_Paz = -1, j_g_Paz = -1;
-  static int i_g_Iaz = -1, j_g_Iaz = -1;
   static int i_g_pivot = -1, j_g_pivot = -1;
   static int i_set_reac = -1, j_set_reac = -1;
 
@@ -228,7 +227,6 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
     SlowChIndex("g_i_el", &i_g_Iel, &j_g_Iel);
     SlowChIndex("g_p_roll", &i_g_Proll, &j_g_Proll);
     SlowChIndex("g_p_az", &i_g_Paz, &j_g_Paz);
-    SlowChIndex("g_i_az", &i_g_Iaz, &j_g_Iaz);
     SlowChIndex("g_p_pivot", &i_g_pivot, &j_g_pivot);
     SlowChIndex("set_reac", &i_set_reac, &j_set_reac);
   }
@@ -1084,6 +1082,7 @@ void StoreData(unsigned int* Txframe,
   static int i_EL1, j_EL1, i_EL2, j_EL2;
   static int i_AZ_VEL, j_AZ_VEL, i_EL_VEL, j_EL_VEL;
   static int i_RA, j_RA, i_DEC, j_DEC, i_R, j_R;
+  static int i_SVETO, j_SVETO;
   
   time_t t;
 
@@ -1091,6 +1090,7 @@ void StoreData(unsigned int* Txframe,
   int i_vsc;
   int i_ss;
   int i_point;
+  int sensor_veto;
 
   /******** Obtain correct indexes the first time here ***********/
   if (i_V_COL == -1) {
@@ -1123,6 +1123,7 @@ void StoreData(unsigned int* Txframe,
     SlowChIndex("p_ra", &i_RA, &j_RA);
     SlowChIndex("p_dec", &i_DEC, &j_DEC);
     SlowChIndex("p_r", &i_R, &j_R);
+    SlowChIndex("sensor_veto", &i_SVETO, &j_SVETO);  
   }
 
   /********** VSC Data **********/
@@ -1169,6 +1170,13 @@ void StoreData(unsigned int* Txframe,
   WriteSlow(i_RA, j_RA, (int)(CommandData.pointing_mode.ra * H2I));	
   WriteSlow(i_DEC, j_DEC, (int)(CommandData.pointing_mode.dec * DEG2I));
   WriteSlow(i_R, j_R, (int)(CommandData.pointing_mode.r * DEG2I));
+
+  sensor_veto = (!CommandData.use_sun) | ((!CommandData.use_isc)<<1) |
+		((!CommandData.use_vsc)<<2) |
+		((!CommandData.use_mag)<<3) |
+		((!CommandData.use_gps)<<4);
+
+  WriteSlow(i_SVETO, j_SVETO, sensor_veto);
 }
 
 
@@ -1233,7 +1241,7 @@ void DoScanMode() {
   while (el> 180.0) el-=360.0;
   while (el<-180.0) el += 360.0;
   if (el>80) el = 80; // very bad situation - don't know how this can happen
-  if (el-10) el = -10; // very bad situation - don't know how this can happen
+  if (el<-10) el = -10; // very bad situation - don't know how this can happen
 
   /* get raster center and sky drift speed */
   radec2azel(CommandData.pointing_mode.ra, CommandData.pointing_mode.dec,
@@ -1256,7 +1264,8 @@ void DoScanMode() {
 
   CommandData.pointing_mode.az1 = caz;
   CommandData.pointing_mode.az2 = caz;
-
+  printf("el: %g el1: %g el2: %g\n", el, el1, el2);
+  
   // check for out of range in el
   if (el > el1+EL_BORDER) {
     axes_mode.az_mode = AXIS_POSITION;
@@ -1265,7 +1274,7 @@ void DoScanMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el1;
-    CommandData.pointing_mode.el_vel = -fabs(CommandData.pointing_mode.el_vel);
+    CommandData.pointing_mode.el_vel = fabs(CommandData.pointing_mode.el_vel);
     return;
   } else if (el < el2-EL_BORDER) {
     axes_mode.az_mode = AXIS_POSITION;
@@ -1276,7 +1285,11 @@ void DoScanMode() {
     axes_mode.el_dest = el2;
     CommandData.pointing_mode.el_vel = -fabs(CommandData.pointing_mode.el_vel);
     return;
-  }
+  } else if (el> el1) { // turn around
+    CommandData.pointing_mode.el_vel = fabs(CommandData.pointing_mode.el_vel);
+  } else if (el < el2) { // turn around
+    CommandData.pointing_mode.el_vel = -fabs(CommandData.pointing_mode.el_vel);
+  }    
 
   // we must be in range for elevation - go to el-vel mode
   axes_mode.el_mode = AXIS_VEL;
@@ -1342,8 +1355,8 @@ void UpdateAxesMode() {
   case POINT_RASTER:
     DoScanMode();
     /*** FIXME: NEEDS TO BE WRITTEN ***/
-    axes_mode.el_mode = AXIS_VEL;
-    axes_mode.el_vel = 0.0;
+    //axes_mode.el_mode = AXIS_VEL;
+    //axes_mode.el_vel = 0.0;
     break;
   case POINT_LOCK:
     axes_mode.el_mode = AXIS_LOCK;
@@ -1372,8 +1385,8 @@ void UpdateAxesMode() {
     break;
   case POINT_RASTER:
     /*** FIXME: NEEDS TO BE WRITTEN ***/
-    axes_mode.az_mode = AXIS_VEL;
-    axes_mode.az_vel = 0.0;
+    //axes_mode.az_mode = AXIS_VEL;
+    //axes_mode.az_vel = 0.0;
     break;
   case POINT_SCAN:
     DoRasterMode();

@@ -233,7 +233,7 @@ void ClearPointingModeExtraFields() {
   }
 
   if (CommandData.pointing_mode.az_mode == POINT_POINT) {
-    CommandData.pointing_mode.az2 = CommandData.pointing_mode.az_vel = 0;
+    CommandData.pointing_mode.az2 = CommandData.pointing_mode.az_vel = 0.0;
   }
   
   if (CommandData.pointing_mode.el_mode == POINT_VEL) {
@@ -266,6 +266,8 @@ void SingleCommand (int command) {
     CommandData.use_vsc = 0;
   else if (command == SIndex("mag_veto"))
     CommandData.use_mag = 0;
+  else if (command == SIndex("gps_veto"))
+    CommandData.use_gps = 0;
 
   else if (command == SIndex("sun_allow"))       /* Un-veto sensors */
     CommandData.use_sun = 1;
@@ -274,6 +276,8 @@ void SingleCommand (int command) {
   else if (command == SIndex("vsc_allow"))
     CommandData.use_vsc = 1;
   else if (command == SIndex("mag_allow"))
+    CommandData.use_mag = 1;
+  else if (command == SIndex("gps_allow"))
     CommandData.use_mag = 1;
 
   else if (command == SIndex("clock_int"))    /* Bias settings */
@@ -1302,6 +1306,7 @@ void InitCommandData() {
   CommandData.use_isc = 1;
   CommandData.use_vsc = 0;
   CommandData.use_mag = 1;
+  CommandData.use_gps = 1;
 
   SIPData.MKScal.m_hi = 0.01;
   SIPData.MKScal.m_med = 0.1;

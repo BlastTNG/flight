@@ -1,5 +1,5 @@
 #define N_SCOMMANDS 63         /* total number of single word commands */
-#define N_NM_SCOMMANDS 50      /* total number of named single word cmds */
+#define N_NM_SCOMMANDS 52      /* total number of named single word cmds */
 #define N_MCOMMANDS 32         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -52,11 +52,13 @@ struct scom scommands[N_NM_SCOMMANDS] = {
   {"isc_veto", "veto integrating star-cam", GR_SENSOR},
   {"vsc_veto", "veto video star-cam", GR_SENSOR},
   {"mag_veto", "veto magnotometer", GR_SENSOR},
+  {"gps_veto", "veto differntial gps", GR_SENSOR},
 
   {"sun_allow", "un-veto sun sensor", GR_SENSOR},
   {"isc_allow", "un-veto integrating star-cam", GR_SENSOR},
   {"vsc_allow", "un-veto video star-cam", GR_SENSOR},
   {"mag_allow", "un-veto magnetometer", GR_SENSOR},
+  {"gps_allow", "un-veto differential gps", GR_SENSOR},
 
   {"clock_int", "bias clock internal", GR_BIAS},
   {"clock_ext", "bias clock external", GR_BIAS},

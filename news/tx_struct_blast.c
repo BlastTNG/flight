@@ -151,7 +151,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"inpump_lev",   'w', 21,  5,    -0.048851978505,           100.0, 'u'},
     {"outpump_lev",  'w', 21,  6,    -0.048851978505,           100.0, 'u'},
     {"g_p_az",       'w',  1,  7,                1.0,             0.0, 'u'},
-    {"g_i_az",       'w',  1,  8,                1.0,             0.0, 'u'},
+    {"sensor_veto",  'w', LOOPBACK, 15,          1.0,             0.0, 'u'},
     {"g_p_pivot",    'w',  1, 15,                1.0,             0.0, 'u'},
     {"pch_clin_pyr", 'r', 21, 33,      4.0/5333.3333,       -4.*6.144, 'u'},
     {"rll_clin_pyr", 'r', 21, 35,      4.0/5333.3333,       -4.*6.144, 'u'},
@@ -415,6 +415,12 @@ void SlowChIndex(char* field, int* channel, int* index) {
 
 void FPrintDerived(FILE *fp) {
     fprintf(fp,
+      "### Sensor Veto ###"
+      "SUN_VETO         BIT sensor_veto 1\n"
+      "ISC_VETO         BIT sensor_veto 2\n"
+      "VSC_VETO         BIT sensor_veto 3\n"
+      "MAG_VETO         BIT sensor_veto 4\n"
+      "GPS_VETO         BIT sensor_veto 5\n"
       "### Bias Generator Bitfield ###\n"
       "BIAS_IS_DC       BIT biasin 1\n"
       "BIAS_CLK_IS_INT  BIT biasin 2\n"
