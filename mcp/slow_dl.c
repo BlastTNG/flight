@@ -14,7 +14,7 @@
 #include "slow_dl.h"
 
 struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
-  {"t_dpm_3v", SLOWDL_FORCE_INT, 8,  0.0, -1, -1, -1},
+  {"t_dpm_5v", SLOWDL_FORCE_INT, 8,  0.0, -1, -1, -1},
   {"cpu_time", SLOWDL_U_MASK,    16, 0.0, -1, -1, -1},
   {"t_gybox",  SLOWDL_FORCE_INT, 8,  0.0, -1, -1, -1},
   {"gyro1",    SLOWDL_FORCE_INT, 8,  0.0, -1, -1, -1},
