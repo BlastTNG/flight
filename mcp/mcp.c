@@ -662,7 +662,7 @@ int main(int argc, char *argv[]) {
   signal(SIGINT, CloseBBC);
   signal(SIGTERM, CloseBBC);
 
-  memset(PointingData, 0, 3*sizeof(struct PointingDataStruct));
+  memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 
   /* Allocate the local data buffers */
   RxFrame = balloc(fatal, BiPhaseFrameSize);
@@ -672,10 +672,6 @@ int main(int argc, char *argv[]) {
 
   for (i = 0; i < FAST_PER_SLOW; ++i)
     slow_data[i] = balloc(fatal, slowsPerBi0Frame * sizeof(unsigned short));
-
-#ifndef BOLOTEST
-  pthread_create(&tdrss_id, NULL, (void*)&TDRSSWriter, NULL);
-#endif
 
   /* Find out whether I'm frodo or sam */
   SamIAm = AmISam();
@@ -694,11 +690,12 @@ int main(int argc, char *argv[]) {
 
   bputs(info, "BBC is up.\n");
 
+  InitTxFrame(RxFrame);
+
 #ifndef BOLOTEST
+  pthread_create(&tdrss_id, NULL, (void*)&TDRSSWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
 #endif
-
-  InitTxFrame(RxFrame);
 
   while (1) {
 
