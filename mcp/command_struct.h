@@ -73,8 +73,8 @@ struct CommandDataStruct {
   unsigned short int sucks;
   unsigned short int lat_range; 
 
-  unsigned short int apcu_reg;
-  unsigned short int dpcu_reg;
+  short int apcu_reg;
+  short int dpcu_reg;
 
   struct GainStruct roll_gain;
   struct GainStruct ele_gain;
