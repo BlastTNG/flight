@@ -800,11 +800,14 @@ void Pointing(){
     if (no_dgps_pos > 179) {
       PointingData[point_index].t = time(NULL); // for now use CPU time
     }
-    #warning CURRENTLY SET TO USE SIP ONLY FOR LAT AND LON: FIX FOR FLIGHT!!!
-    if (no_dgps_pos > 3000 || 1) { // no dgps for 30 seconds - revert to sip
+    if (no_dgps_pos > 3000) { // no dgps for 30 seconds - revert to sip
       PointingData[point_index].lat = SIPData.GPSpos.lat;
       PointingData[point_index].lon = -SIPData.GPSpos.lon;
     }
+
+#warning LAT/LON HAVE BEEN HARDCODED IN MCP -- REMOVE FOR FLIGHT
+    PointingData[point_index].lat = 31.78;
+    PointingData[point_index].lon = 95.712;
   }
 
   /*****************************/
@@ -835,9 +838,9 @@ void Pointing(){
   clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
 
   EvolveElSolution(&ClinEl, RG.gy1, PointingData[i_point_read].gy1_offset,
-		   clin_elev, 1);
+      clin_elev, 1);
   EvolveElSolution(&EncEl, RG.gy1, PointingData[i_point_read].gy1_offset,
-		   ACSData.enc_elev, 1);
+      ACSData.enc_elev, 1);
 
   if (CommandData.use_elenc) {
     AddElSolution(&ElAtt, &EncEl, 1);
@@ -960,7 +963,7 @@ void Pointing(){
   gy2 = RG.gy2;
   gy3 = RG.gy3;
   el_rad = PointingData[point_index].el * M_PI / 180.0,
-  gy_roll = fabs(-gy2 * sin(el_rad) + gy3 * cos(el_rad));
+         gy_roll = fabs(-gy2 * sin(el_rad) + gy3 * cos(el_rad));
   if (gy_roll > gy_roll_amp)
     gy_roll_amp = 0.98 * gy_roll_amp + 0.02 * gy_roll;
   else
