@@ -68,10 +68,52 @@
       <XLO value="-3.0"/>
     </EXTREMA>
     <EXTREMA name="current">
+      <HI value="4"/>
+      <LO value="-0.1"/>
+      <XHI value="6"/>
+      <XLO value="-1"/>
+    </EXTREMA>
+    <EXTREMA name="mcurrent">
+      <HI value="3"/>
+      <LO value="-3" textstyle="hiwarn"/>
+      <XHI value="10"/>
+      <XLO value="-10" textstyle="xhiwarn"/>
+    </EXTREMA>
+    <EXTREMA name="solarvolt">
+      <HI value="32.5"/>
+      <LO value="22"/>
+      <XHI value="40"/>
+      <XLO value="10"/>
+    </EXTREMA>
+    <EXTREMA name="battvolt">
+      <HI value="29.5"/>
+      <LO value="22"/>
+      <XHI value="31"/>
+      <XLO value="18"/>
+    </EXTREMA>
+    <EXTREMA name="acscurr">
+      <HI value="15"/>
+      <LO value="7"/>
+      <XHI value="20"/>
+      <XLO value="5"/>
+    </EXTREMA>
+    <EXTREMA name="dascurr">
+      <HI value="9.5"/>
+      <LO value="7.5"/>
+      <XHI value="12"/>
+      <XLO value="5.5"/>
+    </EXTREMA>
+    <EXTREMA name="battcurr">
       <HI value="15"/>
       <LO value="0"/>
-      <XHI value="40"/>
-      <XLO value="-40"/>
+      <XHI value="25"/>
+      <XLO value="-10"/>
+    </EXTREMA>
+    <EXTREMA name="solarcurr">
+      <HI value="15"/>
+      <LO value="5"/>
+      <XHI value="20"/>
+      <XLO value="0"/>
     </EXTREMA>
     <EXTREMA name="cpufan">
       <HI value="15000"/>
@@ -401,16 +443,16 @@
   </BOX>
   <BOX caption="Motor Currents" colour="#707" row="2" col="2">
     <NUMBER caption="I Roll">
-      <DATUM format="%.2f" src="I_ROLL" extrema="current"/>
+      <DATUM format="%.2f" src="I_ROLL" extrema="mcurrent"/>
     </NUMBER>
     <NUMBER caption="I Reac">
-      <DATUM format="%.2f" src="I_REAC" extrema="current"/>
+      <DATUM format="%.2f" src="I_REAC" extrema="mcurrent"/>
     </NUMBER>
     <NUMBER caption="I EL">
-      <DATUM format="%.2f" src="I_EL" extrema="current"/>
+      <DATUM format="%.2f" src="I_EL" extrema="mcurrent"/>
     </NUMBER>
     <NUMBER caption="I Pivot">
-      <DATUM format="%.2f" src="I_PIV" extrema="current"/>
+      <DATUM format="%.2f" src="I_PIV" extrema="mcurrent"/>
     </NUMBER>
   </BOX>
   <BOX caption="Currents" colour="#707" row="0" col="3" rowspan="1">
@@ -453,60 +495,60 @@
   </BOX>
   <BOX caption="PCUs" colour="#777700" row="3" col="2">
     <NUMBER caption="V ACS Battery">
-      <DATUM format="%.2f" src="V_BATT_ACS" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_BATT_ACS" extrema="battvolt"/>
     </NUMBER>
     <NUMBER caption="I ACS Gondola">
-      <DATUM format="%.2f" src="I_GOND_ACS" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_GOND_ACS" extrema="acscurr"/>
     </NUMBER>
     <NUMBER caption="I ACS Battery">
-      <DATUM format="%.2f" src="I_BATT_ACS" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_BATT_ACS" extrema="battcurr"/>
     </NUMBER>
     <NUMBER caption="I ACS Solar">
-      <DATUM format="%.2f" src="I_SOL_ACS" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_SOL_ACS" extrema="solarcurr"/>
     </NUMBER>
     <NUMBER caption="V DAS Battery">
-      <DATUM format="%.2f" src="V_BATT_DAS" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_BATT_DAS" extrema="battvolt"/>
     </NUMBER>
     <NUMBER caption="I DAS Gondola">
-      <DATUM format="%.2f" src="I_GOND_DAS" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_GOND_DAS" extrema="dascurr"/>
     </NUMBER>
     <NUMBER caption="I DAS Battery">
-      <DATUM format="%.2f" src="I_BATT_DAS" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_BATT_DAS" extrema="battcurr"/>
     </NUMBER>
     <NUMBER caption="I DAS Solar">
-      <DATUM format="%.2f" src="I_SOL_DAS" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_SOL_DAS" extrema="solarcurr"/>
     </NUMBER>
   </BOX>
   <BOX caption="Solar Panels" colour="#777700" row="3" col="3">
     <NUMBER caption="V Solar ACS 1">
-      <DATUM format="%.2f" src="V_SOL_ACS1" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_ACS1" extrema="solarvolt"/>
     </NUMBER>
     <NUMBER caption="V Solar ACS 2">
-      <DATUM format="%.2f" src="V_SOL_ACS2" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_ACS2" extrema="solarvolt"/>
     </NUMBER>
     <NUMBER caption="V Solar ACS 3">
-      <DATUM format="%.2f" src="V_SOL_ACS3" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_ACS3" extrema="solarvolt"/>
     </NUMBER>
     <NUMBER caption="V Solar ACS 4">
-      <DATUM format="%.2f" src="V_SOL_ACS4" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_ACS4" extrema="solarvolt"/>
     </NUMBER>
     <NUMBER caption="V Solar ACS 5">
-      <DATUM format="%.2f" src="V_SOL_ACS5" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_ACS5" extrema="solarvolt"/>
     </NUMBER>
     <NUMBER caption="V Solar ACS 6">
-      <DATUM format="%.2f" src="V_SOL_ACS6" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_ACS6" extrema="solarvolt"/>
     </NUMBER>
     <NUMBER caption="V Solar DAS 1">
-      <DATUM format="%.2f" src="V_SOL_DAS1" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_DAS1" extrema="solarvolt"/>
     </NUMBER>
     <NUMBER caption="V Solar DAS 2">
-      <DATUM format="%.2f" src="V_SOL_DAS2" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_DAS2" extrema="solarvolt"/>
     </NUMBER>
     <NUMBER caption="V Solar DAS 3">
-      <DATUM format="%.2f" src="V_SOL_DAS3" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_DAS3" extrema="solarvolt"/>
     </NUMBER>
     <NUMBER caption="V Solar DAS 4">
-      <DATUM format="%.2f" src="V_SOL_DAS4" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_DAS4" extrema="solarvolt"/>
     </NUMBER>
   </BOX>
   <BOX caption="Pressures" colour="#777700" row="3" col="4">
