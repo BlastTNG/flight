@@ -14,22 +14,22 @@ narsil: narsil.o moc_narsil.o doubleentry.o moc_doubleentry.o $(CMDS)
 	doubleentry.o moc_narsil.o moc_doubleentry.o $(LIBS)\
 	-o narsil
 
-moc_narsil.o: moc_narsil.cpp narsil.h commands.h
+moc_narsil.o: moc_narsil.cpp narsil.h commands.h isc_protocol.h
 	$(CPP) $(FLAGS) -c moc_narsil.cpp
 
-narsil.o: narsil.cpp narsil.h commands.h
+narsil.o: narsil.cpp narsil.h commands.h isc_protocol.h
 	$(CPP) $(FLAGS) -c narsil.cpp
 
-doubleentry.o: doubleentry.cpp doubleentry.h commands.h
+doubleentry.o: doubleentry.cpp doubleentry.h commands.h isc_protocol.h
 	$(CPP) $(FLAGS) -c doubleentry.cpp
 
-moc_doubleentry.cpp: doubleentry.cpp doubleentry.h
+moc_doubleentry.cpp: doubleentry.cpp doubleentry.h isc_protocol.h
 	$(MOC) -o moc_doubleentry.cpp doubleentry.h
 
-moc_doubleentry.o: moc_doubleentry.cpp doubleentry.h
+moc_doubleentry.o: moc_doubleentry.cpp doubleentry.h isc_protocol.h
 	$(CPP) $(FLAGS) -c moc_doubleentry.cpp
 
-moc_narsil.cpp: narsil.cpp narsil.h commands.h
+moc_narsil.cpp: narsil.cpp narsil.h commands.h isc_protocol.h
 	$(MOC) -o moc_narsil.cpp narsil.h
 
 install:
