@@ -5,7 +5,8 @@
 	Release defile-3.1.5
 
 	* defile.c (dputs): Raise SIGTERM on fatal or thread fatal message. (There's
-	no point in just killing one of the threads.)
+	no point in just killing one of the threads.)  This will write zlib footers
+	properly.
 	* defile.c (main): Call buos_disable_exit.
 	* channels.c (WriteFormatFile): Shorten field name to make getdata happy.
 
@@ -131,7 +132,6 @@
 	* client.c (InitClient): Add new_filename parameter.  All Callers Changed.
 	(QuenyaClient): Handle 213 from server.
 
-2004-11-01  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	Release defile-3.0.0
 
 	* defile.c: Look for defile.conf in ETC_DIR
@@ -275,8 +275,11 @@
 2004-09-13 (2.3.1)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* defile.c: Formating
 
-2004-09-13 (2.3.0) Matt Truch <matt@truch.net>  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+2004-09-13 (2.3.0) D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* defile.c, writer.c: Add -z (gzip) option
+
+2004-09-13 Matt Truch <matt@truch.net>
+	* defile.c, writer.c: Add gzip code
 
 2004-09-12 (2.2.3)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* writer.c: Fix double free segfault
