@@ -9,17 +9,19 @@ all: Makefile.config defile
 debug:
 	${MAKE} CFLAGS="$(CFLAGS) -g" LDFLAGS="$(LDFLAGS) -g" all
 
-defile: defile.o frameread.o reader.o channels.o writer.o
+defile: defile.o frameread.o reader.o channels.o writer.o blast.o
 
-defile.o: defile.c defile.h channels.h frameread.h
+blast.o: blast.c blast.h
 
-frameread.o: frameread.c channels.h frameread.h
+defile.o: defile.c defile.h channels.h frameread.h blast.h
 
-reader.o: reader.c channels.h defile.h frameread.h
+frameread.o: frameread.c channels.h frameread.h blast.h
 
-channels.o: channels.c channels.h
+reader.o: reader.c channels.h defile.h frameread.h blast.h
 
-writer.o: writer.c channels.h defile.h frameread.h
+channels.o: channels.c channels.h blast.h
+
+writer.o: writer.c channels.h defile.h frameread.h blast.h
 
 clean:
 	rm -f *.o defile

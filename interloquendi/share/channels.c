@@ -26,8 +26,9 @@
 #endif
 
 #ifdef INPUTTER
-#  include "bbc_pci.h"
 #  include "frameread.h"
+#else
+#  include "bbc_pci.h"
 #endif
 
 /* Be more verbose if we're running mcp */

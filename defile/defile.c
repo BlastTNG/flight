@@ -36,6 +36,7 @@
 #include <pthread.h>
 
 #include "defile.h"
+#include "blast.h"
 #include "channels.h"
 
 #define VERSION_MAJOR    "2"
@@ -54,7 +55,6 @@ struct ri_struct ri;
 struct rc_struct rc = {
   0, /* daemonise */
   0, /* framefile */
-  0, /* force_stdio */
   0, /* gzip_output */
   0, /* persist */
   0, /* silent */
@@ -75,56 +75,24 @@ struct rc_struct rc = {
 
 sigset_t signals;
 
-void dperror(int terminate, const char* s)
+/* filters info messages out of syslog output */
+void dputs(blog_t level, const char* string)
 {
-  char ss[2048] = "defile: ";
-  strncpy(ss + 8, s, 2040);
-  ss[2047] = '\0';
-  
-  if (rc.daemonise)
-    syslog(LOG_ERR, "%s: %m", s);
-  else
-    perror(ss);
-  
-  if (terminate)
-    exit(1);
-}
-
-void dprintf(int severity, const char* format, ...)
-{
-  char ss[2048] = "defile: ";
-  strncpy(ss + 8, format, 2040);
-  ss[2047] = '\0';
-  
-  va_list argptr;
-  va_start(argptr, format);
-
-  if (severity == DF_OUT) {
-    if (!rc.silent)
-      vprintf(format, argptr);
-  } else {
-    if (rc.daemonise && !rc.force_stdio) {
-      syslog(LOG_ERR, format, argptr);
-    } else 
-      vfprintf(stderr, ss, argptr);
-    if (DF_TERM)
-      exit(1);
-  }
-
-  va_end(argptr);
+  if (level != info) 
+    bputs_syslog(level, string);
 }
 
 char* ResolveOutputDirfile(char* dirfile, const char* parent)
 {
-  const char* parent_part, *dirfile_part;
+  char parent_part[NAME_MAX];
+  char dirfile_part[PATH_MAX];
   char path[PATH_MAX];
-  char gpb[GPB_LEN];
 
   /* is dirfile a relative path if so, we don't have to do anything */
   if (dirfile[0] != '/') {
     /* check string sizes */
     if (strlen(parent) + 1 + strlen(dirfile) >= PATH_MAX)
-      dprintf(DF_TERM, "output dirfile path is too long\n");
+      bprintf(fatal, "output dirfile path is too long\n");
 
     strcpy(path, parent);
     if (path[strlen(path) - 1] != '/')
@@ -134,14 +102,11 @@ char* ResolveOutputDirfile(char* dirfile, const char* parent)
     strcpy(path, dirfile);
 
   /* realpath() will fail with a non-existant path, so strip off dirfile name */
-  PathSplit(path, &parent_part, &dirfile_part);
+  PathSplit_r(path, parent_part, dirfile_part);
 
   /* canonicalise the path */
-  if (realpath(parent_part, dirfile) == NULL) {
-    snprintf(gpb, GPB_LEN, "cannot resolve output dirfile path `%s'",
-        parent_part);
-    dperror(1, gpb);
-  }
+  if (realpath(parent_part, dirfile) == NULL)
+    berror(fatal, "cannot resolve output dirfile path `%s'", parent_part);
 
   /* add back dirfile name */
   if (dirfile[strlen(dirfile) - 1] != '/')
@@ -153,21 +118,20 @@ char* ResolveOutputDirfile(char* dirfile, const char* parent)
 
 void Remount(const char* source, char* buffer)
 {
-  const char* element;
+  char element[PATH_MAX];
   char real_path[PATH_MAX];
   char path[PATH_MAX];
-  char gpb[GPB_LEN];
 
   /* is the remount_dir an absolute path? */
   if (rc.remount_dir[0] == '/') {
     strcpy(path, rc.remount_dir);
   } else {
     /* get the curfile's directory) */
-    PathSplit(source, &element, NULL);
+    PathSplit_r(source, element, NULL);
 
     /* check string sizes */
     if (strlen(element) + 1 + strlen(rc.remount_dir) >= PATH_MAX)
-      dprintf(DF_TERM, "remounted path is too long\n");
+      bprintf(fatal, "remounted path is too long\n");
 
     strcpy(path, element);
     if (path[strlen(path) - 1] != '/')
@@ -176,13 +140,11 @@ void Remount(const char* source, char* buffer)
   }
 
   /* canonicalise the path */
-  if (realpath(path, real_path) == NULL) {
-    snprintf(gpb, GPB_LEN, "cannot resolve remounted path `%s'", path);
-    dperror(1, gpb);
-  }
+  if (realpath(path, real_path) == NULL)
+    berror(fatal, "cannot resolve remounted path `%s'", path);
 
   /* now get the indirect file's filename */
-  PathSplit(buffer, NULL, &element);
+  PathSplit_r(buffer, NULL, element);
 
   strcpy(buffer, real_path);
   if (buffer[strlen(buffer) - 1] != '/')
@@ -198,27 +160,22 @@ char* GetFileName(const char* source)
   int index = 0;
   int is_binary = 0;
   struct stat stat_buf;
-  char gpb[GPB_LEN];
 
   /* allocate our buffer */
   if ((buffer = (char*)malloc(FILENAME_LEN)) == NULL)
-    dperror(1, "cannot allocate heap");
+    berror(fatal, "cannot allocate heap");
 
   /* first attempt to stat SOURCE to see if it is indeed a regular file */
-  if (stat(source, &stat_buf)) {
-    snprintf(gpb, GPB_LEN, "cannot stat `%s'", source);
-    dperror(1, gpb);
-  }
+  if (stat(source, &stat_buf))
+    berror(fatal, "cannot stat `%s'", source);
 
   /* the stat worked.  Now is this a regular file? */
   if (!S_ISREG(stat_buf.st_mode))
-    dprintf(DF_TERM, "`%s' is not a regular file\n", source);
+    bprintf(fatal, "`%s' is not a regular file\n", source);
 
   /* attempt to open the file */
-  if ((stream = fopen(source, "r")) == NULL) {
-    snprintf(gpb, GPB_LEN, "cannot open `%s'", source);
-    dperror(1, gpb);
-  }
+  if ((stream = fopen(source, "r")) == NULL)
+    berror(fatal, "cannot open `%s'", source);
 
   if (rc.framefile)
     /* user has indicated SOURCE is a framefile, nothing more to do */
@@ -230,10 +187,8 @@ char* GetFileName(const char* source)
         if (feof(stream)) {
           buffer[index] = '\0';
           break;
-        } else {
-          snprintf(gpb, GPB_LEN, "error reading `%s'", source);
-          dperror(1, gpb);
-        }
+        } else
+          berror(fatal, "error reading `%s'", source);
       }
 
       if (buffer[index] == '\n') {
@@ -258,24 +213,22 @@ char* GetFileName(const char* source)
        * curfile so we can check for changes */
       if (rc.persist)
         if ((rc.curfile_val = strdup(buffer)) == NULL)
-          dperror(1, "cannot allocate heap");
+          berror(fatal, "cannot allocate heap");
 
       if (rc.remount)
         /* user indicated curfile filesystem has been remounted, so fix up the
          * source path */
         Remount(source, buffer);
 
-      if (stat(buffer, &stat_buf)) {
+      if (stat(buffer, &stat_buf))
         /* stat failed, complain and die */
-        snprintf(gpb, GPB_LEN, "cannot stat `%s' pointed to by curfile",
-            buffer);
-        dperror(1, gpb);
-      } else
+        berror(fatal, "cannot stat `%s' pointed to by curfile", buffer);
+      else
         /* the stat worked.  Now is this a regular file? */
         if (!S_ISREG(stat_buf.st_mode))
           /* buffer doesn't point to a regular file, assume SOURCE is a frame
            * file */
-          dprintf(DF_TERM, "`%s' is not a regular file\n", buffer);
+          bprintf(fatal, "`%s' is not a regular file\n", buffer);
     }
   }
 
@@ -288,14 +241,14 @@ char* GetFileName(const char* source)
  * returns it in output */
 char* MakeDirFile(char* output, const char* source, const char* directory)
 {
-  const char* bname;
+  char bname[NAME_MAX];
   char* buffer;
 
   /* allocate our buffer */
   if ((buffer = (char*)malloc(FILENAME_LEN)) == NULL)
-    dperror(1, "cannot allocate heap");
+    berror(fatal, "cannot allocate heap");
 
-  PathSplit(source, NULL, &bname);
+  PathSplit_r(source, NULL, bname);
   StaticSourcePart(buffer, bname, NULL, rc.sufflen);
 
   strcpy(output, directory);
@@ -313,19 +266,16 @@ char* MakeDirFile(char* output, const char* source, const char* directory)
 void GetDirFile(char* buffer, const char* source, char* parent)
 {
   struct stat stat_buf;
-  char gpb[GPB_LEN];
 
   /* Step 1: stat parent to make sure it exists */
-  if (stat(parent, &stat_buf)) {
+  if (stat(parent, &stat_buf))
     /* stat failed -- parent doesn't exist; complain and exit */
-    snprintf(gpb, GPB_LEN, "cannot stat `%s'", parent);
-    dperror(1, gpb);
-  }
+    berror(fatal, "cannot stat `%s'", parent);
 
   /* parent exists.  Is it a directory? */
   if (!S_ISDIR(stat_buf.st_mode))
     /* not a directory, complain and exit */
-    dprintf(DF_TERM, "`%s' is not a directory", parent);
+    bprintf(fatal, "`%s' is not a directory", parent);
 
   /* parent is indeed a directory; make the dirfile name */
   MakeDirFile(buffer, source, parent);
@@ -336,7 +286,6 @@ void GetDirFile(char* buffer, const char* source, char* parent)
 void ReconstructChannelLists(void)
 {
   struct stat stat_buf;
-  char gpb[GPB_LEN];
   char buffer[200];
   char* ptr = buffer;
   FILE* stream;
@@ -345,7 +294,7 @@ void ReconstructChannelLists(void)
   if (rc.spec_file != NULL) {
     /* check for buffer overrun */
     if (strlen(rc.spec_file) >= 200)
-      dprintf(DF_TERM, "specification file path too long\n");
+      bprintf(fatal, "specification file path too long\n");
     strcpy(buffer, rc.spec_file);
   } else {
     /* if the chunk is 923488378.x000, the spec file will be 923488378.x.spec */
@@ -360,25 +309,21 @@ void ReconstructChannelLists(void)
 
     /* check for buffer overrun */
     if (ptr - buffer > 190)
-      dprintf(DF_TERM, "specification file path too long\n");
+      bprintf(fatal, "specification file path too long\n");
     strcpy(ptr, ".spec");
   }
 
   /* first attempt to stat spec file to see if it is indeed a regular file */
-  if (stat(buffer, &stat_buf)) {
-    snprintf(gpb, GPB_LEN, "cannot stat spec file `%s'", buffer);
-    dperror(1, gpb);
-  }
+  if (stat(buffer, &stat_buf))
+    berror(fatal, "cannot stat spec file `%s'", buffer);
 
   /* the stat worked.  Now is this a regular file? */
   if (!S_ISREG(stat_buf.st_mode))
-    dprintf(DF_TERM, "spec file `%s' is not a regular file\n", buffer);
+    bprintf(fatal, "spec file `%s' is not a regular file\n", buffer);
 
   /* attempt to open the file */
-  if ((stream = fopen(buffer, "r")) == NULL) {
-    snprintf(gpb, GPB_LEN, "cannot open spec file `%s'", buffer);
-    dperror(1, gpb);
-  }
+  if ((stream = fopen(buffer, "r")) == NULL)
+    berror(fatal, "cannot open spec file `%s'", buffer);
 
   ReadSpecificationFile(stream);
 
@@ -485,13 +430,13 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
 
   if ((argument = (struct argument_s*)malloc(argc * sizeof(struct argument_s)))
       == NULL)
-    dperror(1, "cannot allocate heap");
+    berror(fatal, "cannot allocate heap");
 
   memset(argument, 0, argc * sizeof(struct argument_s));
 
   if ((shortarg = (struct shortarg_s*)malloc(argc * sizeof(struct shortarg_s)))
       == NULL)
-    dperror(1, "cannot allocate heap");
+    berror(fatal, "cannot allocate heap");
 
   for (i = 1; i < argc; ++i) {
     if (opts_ok && argv[i][0] == '-') { /* an option */
@@ -506,15 +451,15 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           if (!rc->write_curfile) {
             rc->write_curfile = 1;
             if ((rc->output_curfile = strdup(DEFAULT_CURFILE)) == NULL)
-              dperror(1, "cannot allocate heap");
+              berror(fatal, "cannot allocate heap");
           }
         } else if (!strncmp(argv[i], "--curfile-name=", 15)) {
           rc->write_curfile = 1;
           free(rc->output_curfile);
           if ((rc->output_curfile = strdup(&argv[i][15])) == NULL)
-            dperror(1, "cannot allocate heap");
+            berror(fatal, "cannot allocate heap");
         } else if (!strcmp(argv[i], "--daemonise"))
-          rc->daemonise = rc->persist = rc->silent = rc->force_stdio = 1;
+          rc->daemonise = rc->persist = rc->silent = 1;
         else if (!strcmp(argv[i], "--force"))
           rc->write_mode = 1;
         else if (!strcmp(argv[i], "--framefile"))
@@ -524,7 +469,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
         else if (!strncmp(argv[i], "--output-dirfile=", 17)) {
           free(rc->remount_dir);
           if ((rc->output_dirfile = strdup(&argv[i][17])) == NULL)
-            dperror(1, "cannot allocate heap");
+            berror(fatal, "cannot allocate heap");
         } else if (!strcmp(argv[i], "--persistent"))
           rc->persist = 1;
         else if (!strcmp(argv[i], "--quiet"))
@@ -533,29 +478,29 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           if (!rc->remount) {
             rc->remount = 1;
             if ((rc->remount_dir = strdup(REMOUNT_PATH)) == NULL)
-              dperror(1, "cannot allocate heap");
+              berror(fatal, "cannot allocate heap");
           }
         } else if (!strncmp(argv[i], "--remounted-using=", 18)) {
           rc->remount = 1;
           free(rc->remount_dir);
           if ((rc->remount_dir = strdup(&argv[i][18])) == NULL)
-            dperror(1, "cannot allocate heap");
+            berror(fatal, "cannot allocate heap");
         } else if (!strcmp(argv[i], "--resume")) 
           rc->write_mode = 2;
         else if (!strncmp(argv[i], "--spec-file=", 12)) {
           free(rc->spec_file);
           if ((rc->spec_file = strdup(&argv[i][12])) == NULL)
-            dperror(1, "cannot allocate heap");
+            berror(fatal, "cannot allocate heap");
         } else if (!strncmp(argv[i], "--suffix-size=", 14)) {
           if (argv[i][14] >= '0' && argv[i][14] <= '9') {
             if ((rc->sufflen = atoi(&argv[i][14])) > SUFF_MAX)
-              dprintf(DF_TERM, "suffix size `%s' is not a valid value\n"
+              bprintf(fatal, "suffix size `%s' is not a valid value\n"
                   "Try `defile --help' for more information.\n", &argv[i][14]);
           } else
-            dprintf(DF_TERM, "suffix size `%s' is not a valid value\n"
+            bprintf(fatal, "suffix size `%s' is not a valid value\n"
                 "Try `defile --help' for more information.\n", &argv[i][14]);
         } else
-          dprintf(DF_TERM, "unrecognised option `%s'\n"
+          bprintf(fatal, "unrecognised option `%s'\n"
               "Try `defile --help' for more information.\n", argv[i]);
       } else /* a short option */
         for (j = 1; argv[i][j] != '\0'; ++j)
@@ -583,11 +528,11 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
               if (!rc->write_curfile) {
                 rc->write_curfile = 1;
                 if ((rc->output_curfile = strdup(DEFAULT_CURFILE)) == NULL)
-                  dperror(1, "cannot allocate heap");
+                  berror(fatal, "cannot allocate heap");
               }
               break;
             case 'd':
-              rc->daemonise = rc->persist = rc->silent = rc->force_stdio = 1;
+              rc->daemonise = rc->persist = rc->silent = 1;
               break;
             case 'f':
               rc->write_mode = 1;
@@ -608,7 +553,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
               if (!rc->remount) {
                 rc->remount = 1;
                 if ((rc->remount_dir = strdup(REMOUNT_PATH)) == NULL)
-                  dperror(1, "cannot allocate heap");
+                  berror(fatal, "cannot allocate heap");
               }
               break;
             case 's':
@@ -621,7 +566,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
               rc->gzip_output = 1;
               break;
             default:
-              dprintf(DF_TERM, "invalid option -- %c\n"
+              bprintf(fatal, "invalid option -- %c\n"
                   "Try `defile --help' for more information.\n", argv[i][j]);
           }
     } else { /* an argument */
@@ -631,14 +576,14 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
   } 
 
   if (rc->gzip_output == 1 && rc->write_mode == 2)
-    dprintf(DF_TERM, "cannot resume gzipped dirfiles\n"
+    bprintf(fatal, "cannot resume gzipped dirfiles\n"
         "Try `defile --help' for more information.\n");
 
   j = -1;
   /* resolve short option arguments */
   for (i = 0; i < nshortargs; ++i) {
     if (i >= nargs)
-      dprintf(DF_TERM, "option requires an argument -- %c\n"
+      bprintf(fatal, "option requires an argument -- %c\n"
           "Try `defile --help' for more information.\n", shortarg[i].option);
 
     /* find the next (unused) argument after this short option */
@@ -646,7 +591,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
 
     /* we didn't find an argument, complain and die */
     if (j == nargs)
-      dprintf(DF_TERM, "option requires an argument -- %c\n"
+      bprintf(fatal, "option requires an argument -- %c\n"
           "Try `defile --help' for more information.\n", shortarg[i].option);
 
     argument[j].used = 1;
@@ -655,48 +600,45 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
         if (argument[j].value[0] != '\0') {
           free(rc->output_curfile);
           if ((rc->output_curfile = strdup(argument[j].value)) == NULL)
-            dperror(1, "cannot allocate heap");
+            berror(fatal, "cannot allocate heap");
         } else
-          dprintf(DF_TERM, "curfile name `%s' is not a valid value\n"
+          bprintf(fatal, "curfile name `%s' is not a valid value\n"
               "Try `defile --help' for more information.\n", argument[j].value);
         break;
       case 'S':
         if (argument[j].value[0] != '\0') {
           free(rc->spec_file);
           if ((rc->spec_file = strdup(argument[j].value)) == NULL)
-            dperror(1, "cannot allocate heap");
+            berror(fatal, "cannot allocate heap");
         } else
-          dprintf(DF_TERM, "specification filename `%s' is not a valid "
-              "value\n"
+          bprintf(fatal, "specification filename `%s' is not a valid value\n"
               "Try `defile --help' for more information.\n", argument[j].value);
         break;
       case 'o':
         if (argument[j].value[0] != '\0') {
           free(rc->output_dirfile);
           if ((rc->output_dirfile = strdup(argument[j].value)) == NULL)
-            dperror(1, "cannot allocate heap");
+            berror(fatal, "cannot allocate heap");
         } else
-          dprintf(DF_TERM,
-              "output dirfile name `%s' is not a valid value\n"
+          bprintf(fatal, "output dirfile name `%s' is not a valid value\n"
               "Try `defile --help' for more information.\n", argument[j].value);
         break;
       case 's':
         if (argument[j].value[0] >= '0' && argument[j].value[0] <= '9') {
           if ((rc->sufflen = atoi(argument[j].value)) > SUFF_MAX)
-            dprintf(DF_TERM, "suffix size `%s' is not a valid value\n"
+            bprintf(fatal, "suffix size `%s' is not a valid value\n"
                 "Try `defile --help' for more information.\n", &argv[i][14]);
         } else
-          dprintf(DF_TERM, "suffix size `%s' is not a valid value\n"
+          bprintf(fatal, "suffix size `%s' is not a valid value\n"
               "Try `defile --help' for more information.\n", argument[j].value);
         break;
       default:
-        dprintf(DF_TERM, "Unexpected trap in ParseCommandLine().  "
-            "Bailing.\n");
+        bprintf(fatal, "Unexpected trap in ParseCommandLine().  Bailing.\n");
     }
   }
 
   if (nargs <= nshortargs)
-    dprintf(DF_TERM, "too few arguments\n"
+    bprintf(fatal, "too few arguments\n"
         "Try `defile --help' for more information.\n");
 
   /* first unused argument is SOURCE */
@@ -712,7 +654,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
   if (j < nargs) {
     rc->dest_dir = argument[j].value;
     if (strlen(rc->dest_dir) > PATH_MAX)
-      dprintf(DF_TERM, "Destination path too long\n");
+      bprintf(fatal, "Destination path too long\n");
   } else
     rc->dest_dir = strdup(DEFAULT_DIR);
 
@@ -732,6 +674,9 @@ int main (int argc, char** argv)
   pthread_t read_thread;
   pthread_t write_thread;
 
+  /* set up our outputs */
+  blog_use_stdio();
+
   /* fill rc struct from command line */
   ParseCommandLine(argc, argv, &rc);
 
@@ -744,10 +689,10 @@ int main (int argc, char** argv)
     /* Fork to background */
     if ((pid = fork()) != 0) {
       if (pid == -1)
-        dperror(1, "unable to fork to background");
+        berror(fatal, "unable to fork to background");
 
       if ((stream = fopen("/var/run/decomd.pid", "w")) == NULL) 
-        dperror(0, "unable to write PID to disk");
+        berror(err, "unable to write PID to disk");
       else {
         fprintf(stream, "%i\n", pid);
         fflush(stream);
@@ -758,6 +703,9 @@ int main (int argc, char** argv)
       exit(0);
     }
 
+    /* switch output to syslog */
+    blog_use_func(dputs);
+
     /* Daemonise */
     chdir("/");
     freopen("/dev/null", "r", stdin);
@@ -766,7 +714,7 @@ int main (int argc, char** argv)
     setsid();
   }
 
-  dprintf(DF_OUT, "defile " VERSION " (C) 2004 D. V. Wiebe\n"
+  bprintf(info, "defile " VERSION " (C) 2004 D. V. Wiebe\n"
       "Compiled on " __DATE__ " at " __TIME__ ".\n\n");
 
   /* Get the name of the frame file. This function handles following the
@@ -777,7 +725,7 @@ int main (int argc, char** argv)
   /* if rc.output_dirfile exists, we use that as the dirfile name, otherwise
    * we have to make one based on the input name */
   if ((rc.dirfile = malloc(FILENAME_LEN)) == NULL)
-    dperror(1, "cannot allocate heap");
+    berror(fatal, "cannot allocate heap");
 
   if (rc.output_dirfile != NULL)
     strncpy(rc.dirfile, rc.output_dirfile, FILENAME_LEN);
@@ -786,15 +734,13 @@ int main (int argc, char** argv)
 
   /* check the length of the output path */
   if (strlen(rc.dirfile) > PATH_MAX - FIELD_MAX - 1)
-    dprintf(DF_TERM, "destination dirfile `%s' too long\n",
-        rc.dirfile);
+    bprintf(fatal, "destination dirfile `%s' too long\n", rc.dirfile);
 
   /* Attempt to Open the Specification file and read the channel lists */
   ReconstructChannelLists();
 
   /* Start */
-  dprintf(DF_OUT, "Defiling `%s'\n    into `%s' ...\n\n", rc.chunk,
-      rc.dirfile);
+  bprintf(info, "Defiling `%s'\n    into `%s' ...\n\n", rc.chunk, rc.dirfile);
 
   /* Initialise things */
   ri.read = ri.wrote = ri.old_total = 0;
@@ -832,7 +778,7 @@ int main (int argc, char** argv)
     } while (!ri.writer_done);
   pthread_join(read_thread, NULL);
   pthread_join(write_thread, NULL);
-  dprintf(DF_OUT, "R:[%i of %i] W:[%i] %.3f kHz\n", ri.read, ri.old_total
+  bprintf(info, "R:[%i of %i] W:[%i] %.3f kHz\n", ri.read, ri.old_total
       + ri.chunk_total, ri.wrote, 1000. * ri.wrote / delta);
   return 0;
 }

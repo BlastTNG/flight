@@ -1,6 +1,9 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2004-09-20:
+  * defile: Migrate to blast.c and blast.h -- new unified ouput scheme
+
 2004-09-17 (2.4.0):
   * ChangeLog: Create ChangeLog
   * defile.1: Add BUGS section, which is probably one of the more useful parts

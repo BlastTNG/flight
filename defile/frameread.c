@@ -30,21 +30,6 @@
 #include "frameread.h"
 #include "channels.h"
 
-/* deprecated, non-reentrant version of PathSplit_r */
-void PathSplit(const char* path, const char** dname, const char** bname)
-{
-  static char static_base[NAME_MAX];
-  static char static_path[PATH_MAX];
-
-  PathSplit_r(path, static_path, static_base);
-
-  if (dname != NULL)
-    *dname = static_path;
-
-  if (bname != NULL)
-    *bname = static_base;
-}
-
 /* splits path into dname and bname */
 void PathSplit_r(const char* path, char* dname, char* bname)
 {
@@ -228,7 +213,7 @@ long int SetStartChunk(long int framenum, char* chunk, int sufflen)
     if ((new_chunk = GetNextChunk(chunk, sufflen)) == 0)
 #ifdef __DEFILE__
       /* no new chunk -- complain and exit */
-      dprintf(DF_TERM, "source file is smaller than destination.\n"
+      bprintf(fatal, "source file is smaller than destination.\n"
           "cannot resume.\n");
 #else
     /* start at end of last chunk */
@@ -259,7 +244,7 @@ int StreamToNextChunk(int keepalive, char* chunk, int sufflen, int *chunk_total,
       /* new frame total */
       n = chunk_stat.st_size / DiskFrameSize;
       if (n < *chunk_total)
-        bprintf(error, "chunk `%s' has shrunk.", chunk);
+        bprintf(err, "chunk `%s' has shrunk.", chunk);
 
       if (n > *chunk_total) {
         *chunk_total = n;

@@ -25,12 +25,15 @@
 
 #define BLOG_MAX 2048
 /* logging definitions */
-typedef enum {info, warning, error, tfatal, fatal, startup, sched} blog_t;
+typedef enum {info, warning, err, tfatal, fatal, startup, sched} blog_t;
 
+void bputs_stdio(blog_t l, const char* s);
+void bputs_syslog(blog_t l, const char* s);
 void bprintf(blog_t, const char*, ...);
 void berror(blog_t, const char*, ...);
 void bputs(blog_t, const char*);
 void blog_use_func(void (*puts_func)(blog_t, const char*));
-void blog_use_syslog();
+void blog_use_stdio(void);
+void blog_use_syslog(void);
 
 #endif

@@ -24,9 +24,34 @@
 #include <syslog.h>
 #include <errno.h>
 #include <string.h>
+#include <pthread.h>
 #include "blast.h"
 
 void (*real_bputs)(blog_t, const char*) = NULL;
+
+void bputs_stdio(blog_t l, const char* s)
+{
+  FILE* stream = stderr;
+
+  switch (l) {
+    case info:
+    case startup:
+    case sched:
+      stream = stdout;
+    case warning:
+    case err:
+    case tfatal:
+    case fatal:
+      fputs(s, stream);
+      if (strstr(s, "\n") == NULL)
+        fputs("\n", stream);
+  }
+
+  if (l == fatal)
+    exit(1);
+  else if (l == tfatal)
+    pthread_exit(NULL);
+}
 
 void bputs_syslog(blog_t l, const char* s)
 {
@@ -39,7 +64,7 @@ void bputs_syslog(blog_t l, const char* s)
     case warning:
       level = LOG_WARNING;
       break;
-    case error:
+    case err:
       level = LOG_ERR;
       break;
     case tfatal:
@@ -57,6 +82,11 @@ void bputs_syslog(blog_t l, const char* s)
   }
 
   syslog(level, "%s", s);
+
+  if (l == fatal)
+    exit(1);
+  else if (l == tfatal)
+    pthread_exit(NULL);
 }
 
 void bputs(blog_t l, const char* s)
@@ -64,7 +94,7 @@ void bputs(blog_t l, const char* s)
   if (real_bputs)
     (*real_bputs)(l, s);
   else
-    bputs_syslog(l, s);
+    bputs_stdio(l, s);
 }
 
 void bprintf(blog_t l, const char* fmt, ...) {
@@ -99,12 +129,17 @@ void berror(blog_t l, const char* fmt, ...) {
   bputs(l, message);
 }
 
-void blog_register(void (*puts_func)(blog_t, const char*))
+void blog_use_func(void (*puts_func)(blog_t, const char*))
 {
   real_bputs = puts_func;
 }
 
 void blog_use_syslog(void)
 {
-  real_bputs = NULL;
+  real_bputs = bputs_syslog;
+}
+
+void blog_use_stdio(void)
+{
+  real_bputs = bputs_stdio;
 }

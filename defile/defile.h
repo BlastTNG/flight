@@ -33,12 +33,8 @@
 #  define FIELD_MAX FIELD_LEN
 #endif
 
-#define DF_OUT  0
-#define DF_TERM 1
-#define DF_WARN 2
-
 struct rc_struct {
-  int daemonise, framefile, force_stdio, gzip_output, persist, remount, silent;
+  int daemonise, framefile, gzip_output, persist, remount, silent;
   int write_curfile;
   int write_mode; /* 0 = normal ; 1 = overwrite ; 2 = resume */
   int sufflen;
@@ -75,8 +71,6 @@ extern struct rc_struct rc;
 extern struct ri_struct ri;
 
 /* funxion prototypes */
-void  dperror(int, const char*);
-void  dprintf(int severity, const char* format, ...);
 void  DirFileWriter(void);
 void  FrameFileReader(void);
 void  GetDirFile(char*, const char*, char*);

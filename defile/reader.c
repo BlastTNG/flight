@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+#include "blast.h"
 #include "channels.h"
 #include "defile.h"
 #include "frameread.h"
@@ -39,7 +40,7 @@
 extern sigset_t signals;
 
 void ReaderDone(int signo) {
-  dprintf(DF_WARN, "Caught signal %d; exiting...\n", signo);
+  bprintf(warning, "Caught signal %d; exiting...\n", signo);
   ri.reader_done = 1;
   pthread_exit(0);
 }
@@ -75,7 +76,7 @@ void FrameFileReader(void)
 
   if ((InputBuffer[0] = (unsigned short*)malloc(DiskFrameSize * INPUT_BUF_SIZE))
       == NULL)
-    dperror(1, "cannot allocate heap");
+    berror(fatal, "cannot allocate heap");
 
   for (i = 1; i < INPUT_BUF_SIZE; ++i)
     InputBuffer[i] = (void*)InputBuffer[0] + i * DiskFrameSize;
@@ -93,10 +94,8 @@ void FrameFileReader(void)
       frames_read = 0;
 
       /* open the chunk */
-      if ((stream = fopen(rc.chunk, "r")) == NULL) {
-        snprintf(gpb, GPB_LEN, "defile: cannot open `%s'", rc.chunk);
-        dperror(1, gpb);
-      }
+      if ((stream = fopen(rc.chunk, "r")) == NULL)
+        berror(fatal, "cannot open `%s'", rc.chunk);
 
       if (seek_to > 0) {
         fseek(stream, seek_to, SEEK_SET);
@@ -104,10 +103,8 @@ void FrameFileReader(void)
       }
 
       /* stat file to find its size */
-      if (stat(rc.chunk, &chunk_stat)) {
-        snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", rc.chunk);
-        dperror(1, gpb);
-      }
+      if (stat(rc.chunk, &chunk_stat))
+        berror(fatal, "cannot stat `%s'", rc.chunk);
 
       ri.chunk_total = chunk_stat.st_size / DiskFrameSize;
     }
@@ -120,16 +117,12 @@ void FrameFileReader(void)
         if (feof(stream))
           break;
         else if ((i = ferror(stream))) {
-          snprintf(gpb, GPB_LEN, "defile: error reading `%s' (%i)",
-              rc.chunk, errno);
-          dperror(0, gpb);
+          berror(err, "error reading `%s' (%i)", rc.chunk, i);
 
           /* reopen file and try again */
           fclose(stream);
-          if ((stream = fopen(rc.chunk, "r")) == NULL) {
-            snprintf(gpb, GPB_LEN, "defile: cannot open `%s'", rc.chunk);
-            dperror(1, gpb);
-          }
+          if ((stream = fopen(rc.chunk, "r")) == NULL)
+            berror(fatal, "cannot open `%s'", rc.chunk);
 
           /* seek to our last position */
           fseek(stream, frames_read * DiskFrameSize, SEEK_SET);
