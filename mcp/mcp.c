@@ -248,6 +248,8 @@ void SunSensor(void) {
    * SIGPIPEs which are raised when the ssc drops the connection */
   signal(SIGPIPE, SigPipe);
 
+  fprintf(stderr, "SunSensor startup.\n");
+
   while (1) {
     /* create an empty socket connection */
     sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);

@@ -24,6 +24,8 @@ void IntegratingStarCamera(void)
   int n;
   struct sockaddr_in addr;
 
+  fprintf(stderr, "ISC startup.\n");
+
   sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (sock == -1) {
     fprintf(stderr, "ISC: socket creation failed.\n");
