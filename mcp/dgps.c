@@ -21,7 +21,7 @@ time_t DGPSTime;
 
 #define FLOAT_ALT 30480
 #define FRAMES_TO_OK_ATFLOAT 100
-#define LEAP_SECONDS 27
+#define LEAP_SECONDS 0
 
 int setGpsPort9600() {
   int fd;
