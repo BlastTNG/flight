@@ -44,7 +44,7 @@
 #define VERSION   "0.9.0"
 #define SOCK_PORT 44144
 #define PID_FILE "/var/run/interloquendi.pid"
-#define CONFIG_FILE "/home/dwiebe/cvs/interloquendi/interloquendi.conf"
+#define CONFIG_FILE "/etc/interloquendi.conf"
 
 #define DEBUG
 
