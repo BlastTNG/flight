@@ -511,10 +511,6 @@ void DoVBoxMode() {
   if (el2 < MIN_EL)
     el2 = MIN_EL;
 
-//  bprintf(info, "VBox: El: %.2f < %.2f > %.2f (%s)\n", el2, el, el1, (dir == 1)
-//      ? "POSITIVE" : "NEGATIVE");
-//  bprintf(info, "VBox: Az: %.2f < %.2f\n", az, az2);
-
   /* check for out of range in el */
   if (el > el1 + EL_BORDER) {
     axes_mode.az_mode = AXIS_POSITION;
@@ -523,7 +519,6 @@ void DoVBoxMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el1;
-//    bprintf(info, "VBox: El limit out of range! (%.2f > %.2f) dir is now NEGATIVE and we're SLEWING!\n", el, el1 + EL_BORDER);
     dir = -1;
     return;
   } else if (el < el2 - EL_BORDER) {
@@ -533,17 +528,12 @@ void DoVBoxMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el2;
-//    bprintf(info, "VBox: El limit out of range! (%.2f < %.2f) dir is now POSITIVE and we're SLEWING!\n", el, el2 - EL_BORDER);
     dir = 1;
     return;
   } else if (el> el1) { /* turn around */
-//    bprintf(info, "VBox: Bumped into the top (%.2f > %.2f) dir is now NEGATIVE.", el, el1);
     dir = -1;
   } else if (el < el2) { /* turn around */
-//    bprintf(info, "VBox: Bumped into the bottom (%.2f > %.2f) dir is now NEGATIVE.", el, el1);
     dir = 1;
-//  } else {  
-//    bprintf(info, "VBox: Did bupkis on the el check.");
   }
   v_el = CommandData.pointing_mode.del * dir;
 
@@ -560,7 +550,6 @@ void DoVBoxMode() {
 
   /* set az v */
   v = CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0);
-//  bprintf(info, "VBox: Requesting az scan @ %.2f for: %.2f <-> %.2f @ %.2f with daz_dt = %.2f\n", az, left, right, v, daz_dt);
   SetAzScanMode(az, left, right, v, daz_dt);
 }
 
@@ -665,17 +654,6 @@ void DoBoxMode() {
       return;
     }
   }
-
-/*   if ((az < left - AZ_MARGIN) || (az > right + AZ_MARGIN)) { // outside of cap */
-/*     axes_mode.az_mode = AXIS_POSITION; */
-/*     axes_mode.az_dest = caz; */
-/*     axes_mode.az_vel = 0.0; */
-/*     axes_mode.el_mode = AXIS_POSITION; */
-/*     axes_mode.el_dest = bottom; */
-/*     axes_mode.el_vel = 0.0; */
-/*     isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1; */
-/*     return; */
-/*   }	 */
 
   axes_mode.az_mode = AXIS_VEL;
   if (axes_mode.az_vel < -v + daz_dt)
@@ -881,6 +859,136 @@ void DoCapMode() {
   axes_mode.el_dest = S.el + cel;
 }
 
+void DoNewCapMode() {
+  double caz, cel, r, x2, y, xw; 
+  double bottom, top, left, right;
+  double az, az2, el, el1, el2;
+  double daz_dt, del_dt;
+  double lst;
+  double v_az, v_el, t;
+  int i_point;
+
+  static double last_X=0, last_Y=0, last_w=0;
+  static double az_dir = 0, el_dir = 1, speed_el = 0;
+
+  i_point = GETREADINDEX(point_index);
+  lst = PointingData[i_point].lst;
+  az = PointingData[i_point].az;
+  el = PointingData[i_point].el;
+
+  v_az = fabs(CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0));
+
+  /* get raster center and sky drift speed */
+  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+      lst, PointingData[i_point].lat,
+      &caz, &cel);
+  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+      lst + 1.0, PointingData[i_point].lat,
+      &az2, &el2);
+  daz_dt = drem(az2 - caz, 360.0);
+  del_dt = el2 - cel;
+
+  SetSafeDAz(az, &caz); 
+
+  r = CommandData.pointing_mode.w;
+  bottom = cel - r;
+  top = cel + r;
+
+  // FIXME: reboot proofing...
+  
+  /* If a new command, reset to bottom row */
+  if ((CommandData.pointing_mode.X != last_X) ||
+      (CommandData.pointing_mode.Y != last_Y) ||
+      (CommandData.pointing_mode.w != last_w)) {
+    if ( (fabs(az - (caz)) < 0.1) &&
+	 (fabs(el - (bottom)) < 0.05)) {
+      last_X = CommandData.pointing_mode.X;
+      last_Y = CommandData.pointing_mode.Y;
+      last_w = CommandData.pointing_mode.w;
+    } else {
+      axes_mode.az_mode = AXIS_POSITION;
+      axes_mode.az_dest = caz;
+      axes_mode.az_vel = 0.0;
+      axes_mode.el_mode = AXIS_POSITION;
+      axes_mode.el_dest = bottom;
+      axes_mode.el_vel = 0.0;
+      speed_el = 0.0;
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+      return;
+    }
+  }
+  
+  /** Get x limits **/
+  y = el - cel;
+  x2 = r * r - y * y;
+  if (x2 < 0) {
+    xw = 0.0;
+  } else {
+    xw = sqrt(x2);
+  }
+  if (xw < MIN_SCAN)
+    xw = MIN_SCAN;
+  xw /= cos(el * M_PI / 180.0);
+  left = caz - xw;
+  right = caz + xw;
+
+  /* set az v */
+  v_az = CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0);
+  SetAzScanMode(az, left, right, v_az, daz_dt);
+
+  /** set El V **/
+  if (az<left) {
+    if (az_dir < 0) {
+      t = xw*2.0/v_az + v_az/(AZ_ACCEL * 100.16);
+      speed_el = CommandData.pointing_mode.del/t;
+    }
+    az_dir = 1;
+  } else if (az>right) {
+    if (az_dir > 0) {
+      t = xw*2.0/v_az + v_az/(AZ_ACCEL * 100.16);
+      speed_el = CommandData.pointing_mode.del/t;
+    }
+    az_dir = -1;
+  }
+
+  el1 = cel + r;
+  el2 = cel - r;
+  if (el1 > MAX_EL)
+    el1 = MAX_EL;
+  if (el2 < MIN_EL)
+    el2 = MIN_EL;
+
+  /* check for out of range in el */
+  if (el > el1 + EL_BORDER) {
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = caz;
+    axes_mode.az_vel = 0.0;
+    axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_vel = 0.0;
+    axes_mode.el_dest = el1;
+    el_dir = -1;
+    return;
+  } else if (el < el2 - EL_BORDER) {
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = caz;
+    axes_mode.az_vel = 0.0;
+    axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_vel = 0.0;
+    axes_mode.el_dest = el2;
+    el_dir = 1;
+    return;
+  } else if (el > el1) { /* turn around */
+    el_dir = -1;
+  } else if (el < el2) { /* turn around */
+    el_dir = 1;
+  }    
+
+  v_el = speed_el * el_dir;  
+  axes_mode.el_mode = AXIS_VEL;
+  axes_mode.el_vel = v_el + del_dt;
+
+}
+
 /****************************************************************** 
  *                                                                * 
  * Update Axis Modes: Set axes_mode based on                      * 
@@ -918,7 +1026,7 @@ void UpdateAxesMode() {
       DoBoxMode();
       break;
     case P_CAP:
-      DoCapMode();
+      DoNewCapMode();
       break;
     case P_RADEC_GOTO:
       DoRaDecGotoMode();
