@@ -39,7 +39,7 @@
 extern sigset_t signals;
 
 void ReaderDone(int signo) {
-  fprintf(stderr, "\nCaught signal %d; exiting...\n", signo);
+  dprintf(DF_WARN, "Caught signal %d; exiting...\n", signo);
   ri.reader_done = 1;
   pthread_exit(0);
 }
@@ -73,11 +73,9 @@ void FrameFileReader(void)
   /* enable signals */
   pthread_sigmask(SIG_UNBLOCK, &signals, NULL);
 
-  if ((InputBuffer[0] = (unsigned short*)malloc(DiskFrameSize
-          * INPUT_BUF_SIZE)) == NULL) {
-    perror("defile: cannot allocate heap");
-    exit(1);
-  }                 
+  if ((InputBuffer[0] = (unsigned short*)malloc(DiskFrameSize * INPUT_BUF_SIZE))
+      == NULL)
+    dperror(1, "cannot allocate heap");
 
   for (i = 1; i < INPUT_BUF_SIZE; ++i)
     InputBuffer[i] = (void*)InputBuffer[0] + i * DiskFrameSize;
@@ -89,15 +87,15 @@ void FrameFileReader(void)
 
   do {
     if (new_chunk) {
-      printf("\nDefiling chunk `%s'\n", rc.chunk);
+      if (!rc.silent)
+        printf("\nDefiling chunk `%s'\n", rc.chunk);
 
       frames_read = 0;
 
       /* open the chunk */
       if ((stream = fopen(rc.chunk, "r")) == NULL) {
         snprintf(gpb, GPB_LEN, "defile: cannot open `%s'", rc.chunk);
-        perror(gpb);
-        exit(1);
+        dperror(1, gpb);
       }
 
       if (seek_to > 0) {
@@ -108,8 +106,7 @@ void FrameFileReader(void)
       /* stat file to find its size */
       if (stat(rc.chunk, &chunk_stat)) {
         snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", rc.chunk);
-        perror(gpb);
-        exit(1);
+        dperror(1, gpb);
       }
 
       ri.chunk_total = chunk_stat.st_size / DiskFrameSize;
@@ -125,14 +122,13 @@ void FrameFileReader(void)
         else if ((i = ferror(stream))) {
           snprintf(gpb, GPB_LEN, "defile: error reading `%s' (%i)",
               rc.chunk, errno);
-          perror(gpb);
+          dperror(0, gpb);
 
           /* reopen file and try again */
           fclose(stream);
           if ((stream = fopen(rc.chunk, "r")) == NULL) {
             snprintf(gpb, GPB_LEN, "defile: cannot open `%s'", rc.chunk);
-            perror(gpb);
-            exit(1);
+            dperror(1, gpb);
           }
 
           /* seek to our last position */
@@ -146,8 +142,8 @@ void FrameFileReader(void)
         /* push frame */
         PushFrame(InputBuffer[i]);
 
-	/* increment counter */
-	ri.read++;
+        /* increment counter */
+        ri.read++;
       }
     } while (!feof(stream));
 

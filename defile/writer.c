@@ -64,16 +64,9 @@ unsigned short* slow_data[FAST_PER_SLOW];
 int buf_overflow;
 int n_fast, bolo_i0;
 
-int (*defilecreat) ();
-int (*defilewrite) ();
 int (*defileclose) ();
 
 extern unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
-
-int gzcreat(const char *path, mode_t mode)
-{
-  return (int) gzdopen(creat(path, mode), "wb");
-}
 
 char* StringToLower(char* s)
 {
@@ -118,7 +111,7 @@ int FieldSize (char type, const char* field)
     case 'f':
       return 2;
     default:
-      fprintf(stderr, "defile: bad type in channel spec: %s %c\n", field, type);
+      dprintf(DF_TERM, "bad type in channel spec: %s %c\n", field, type);
       exit(1);
   }
 }
@@ -127,6 +120,9 @@ int FieldSize (char type, const char* field)
 int YesNo(const char* message, int dflt)
 {
   char gpb[GPB_LEN];
+
+  if (rc.silent)
+    return dflt;
 
   ri.tty = 1;
 
@@ -188,14 +184,13 @@ int CheckWriteAllow(int mkdir_err)
   /* The mkdir already failed, but we don't know why yet: it _could_ be
    * because the directory exists, but it could be for some other reason, too */
   if (stat(rc.dirfile, &stat_buf)) {
-    snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", rc.dirfile);
-    perror(gpb);
-    exit(1);
+    snprintf(gpb, GPB_LEN, "cannot stat `%s'", rc.dirfile);
+    dperror(1, gpb);
   }
 
   /* stat worked, so rc.dirfile exists -- is it a directory? */
   if (!S_ISDIR(stat_buf.st_mode)) {
-    fprintf(stderr, "defile: cannot write to `%s': Not a directory\n",
+    dprintf(DF_TERM, "cannot write to `%s': Not a directory\n",
         rc.dirfile);
     exit(1);
   }
@@ -208,8 +203,8 @@ int CheckWriteAllow(int mkdir_err)
     /* can't find a format file -- if we're trying to resume, give up here 
      * otherwise ask for confirmation to overwrite the directory */
     if (rc.write_mode == 2) {
-      fprintf(stderr, "defile: destination `%s' does not appear to be a "
-          "dirfile\ndefile: cannot resume\n", rc.dirfile);
+      dprintf(DF_TERM, "destination `%s' does not appear to be a "
+          "dirfile\ncannot resume\n", rc.dirfile);
       exit(1);
     }
 
@@ -222,12 +217,11 @@ int CheckWriteAllow(int mkdir_err)
 
   /* it's a dirfile, so prepare for resume and/or overwrite */
   if (rc.write_mode == 1)
-    printf("\nOverwriting dirfile `%s'\n", rc.dirfile);
+    dprintf(DF_OUT, "\nOverwriting dirfile `%s'\n", rc.dirfile);
 
   if ((dir = opendir(rc.dirfile)) == NULL) {
-    snprintf(gpb, GPB_LEN, "defile: cannot read directory `%s'", rc.dirfile);
-    perror(gpb);
-    exit(1);
+    snprintf(gpb, GPB_LEN, "cannot read directory `%s'", rc.dirfile);
+    dperror(1, gpb);
   }
 
   /* loop through the directory */
@@ -242,9 +236,8 @@ int CheckWriteAllow(int mkdir_err)
     strcpy(dirfile_end, lamb->d_name);
 
     if (stat(fullname, &stat_buf)) {
-      snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", fullname);
-      perror(gpb);
-      exit(1);
+      snprintf(gpb, GPB_LEN, "cannot stat `%s'", fullname);
+      dperror(1, gpb);
     }
 
     /* is it a regular file? */
@@ -324,17 +317,16 @@ int CheckWriteAllow(int mkdir_err)
               break;
             }
         if (!found) {
-          fprintf(stderr, "defile: error reading `%s': field `%s' is not in "
-              "the channel list.\ndefile: cannot resume\n", rc.dirfile,
+          dprintf(DF_TERM, "error reading `%s': field `%s' is not in "
+              "the channel list.\ncannot resume\n", rc.dirfile,
               lamb->d_name);
           exit(1);
         }
       } else
         /* overwrite mode - delete the file */
         if (unlink(fullname)) {
-          snprintf(gpb, GPB_LEN, "defile: cannot unlink `%s'", fullname);
-          perror(gpb);
-          exit(1);
+          snprintf(gpb, GPB_LEN, "cannot unlink `%s'", fullname);
+          dperror(1, gpb);
         }
     }
   }
@@ -344,8 +336,8 @@ int CheckWriteAllow(int mkdir_err)
     if ((n_fast != ccWideFast + ccNarrowFast + 1 + ccDecom) ||
         (n_slow != ccNarrowSlow + ccWideSlow) ||
         (n_bolo != DAS_CARDS * DAS_CHS)) {
-      fprintf(stderr, "defile: dirfile `%s' is missing field files\n"
-          "defile: cannot resume.\n", rc.dirfile);
+      dprintf(DF_TERM, "dirfile `%s' is missing field files\n"
+          "cannot resume.\n", rc.dirfile);
       exit(1);
     }
 
@@ -355,15 +347,14 @@ int CheckWriteAllow(int mkdir_err)
       min_wrote -= 20;
     }
 
-    printf("\nResuming dirfile `%s' at frame %li\n", rc.dirfile, min_wrote);
-    printf("ri.wrote = rc.resume_at\n");
+    dprintf(DF_OUT, "\nResuming dirfile `%s' at frame %li\n", rc.dirfile,
+        min_wrote);
     ri.wrote = rc.resume_at = min_wrote;
   }
 
   if (closedir(dir)) {
-    snprintf(gpb, GPB_LEN, "defile: error closing directory `%s'", rc.dirfile);
-    perror(gpb);
-    exit(1);
+    snprintf(gpb, GPB_LEN, "error closing directory `%s'", rc.dirfile);
+    dperror(1, gpb);
   }
 
   if (rc.write_mode == 2) {
@@ -378,22 +369,58 @@ void PreInitialiseDirFile(void)
 {
   int j;
 
-  if ((normal_fast = malloc(ccFast * sizeof(struct FieldType))) == NULL) {
-    perror("defile: cannot allocate heap");
-    exit(1);
-  }
+  if ((normal_fast = malloc(ccFast * sizeof(struct FieldType))) == NULL)
+    dperror(1, "cannot allocate heap");
+
   for (j = 0; j < FAST_PER_SLOW; ++j) {
     if ((slow_fields[j] = malloc(slowsPerBi0Frame * sizeof(struct FieldType)))
-        == NULL) {
-      perror("defile: cannot allocate heap");
-      exit(1);
-    }
+        == NULL)
+      dperror(1, "cannot allocate heap");
+
     if ((slow_data[j] = malloc(slowsPerBi0Frame * sizeof(unsigned int)))
-        == NULL) {
-      perror("defile: cannot allocate heap");
-      exit(1);
+        == NULL)
+      dperror(1, "cannot allocate heap");
+  }
+}
+
+int OpenField(int fast, int size, const char* filename)
+{
+  char gpb[GPB_LEN];
+  int file;
+  int gzerrno;
+  const char* gze;
+  int offset;
+
+  if (rc.resume_at >= 0) {
+    offset = rc.resume_at * size * 2;
+    if (!fast)
+      offset /= FAST_PER_SLOW;
+    /* append to file */
+    if ((file = open(filename, O_WRONLY)) == -1) {
+      snprintf(gpb, GPB_LEN, "cannot open file `%s'", filename);
+      dperror(1, gpb);
+    }
+    if (lseek(file, offset, SEEK_SET) < 0) {
+      snprintf(gpb, GPB_LEN, "cannot lseek file `%s'", filename);
+      dperror(1, gpb);
+    }
+  } else {
+    /* create new file */
+    if (rc.gzip_output && (file = (int)gzdopen(creat(filename, 00644), "wb"))
+        == 0) {
+      snprintf(gpb, GPB_LEN, "cannot create file `%s'", filename);
+      gze = gzerror((gzFile)file, &gzerrno);
+      if (errno == Z_ERRNO)
+        dperror(1, gpb);
+      else 
+        dprintf(DF_TERM, "%s: %s", gpb, gze);
+    } else if ((file = creat(filename, 00644)) == -1) {
+      snprintf(gpb, GPB_LEN, "cannot create file `%s'", filename);
+      dperror(1, gpb);
     }
   }
+
+  return file;
 }
 
 /* Initialise dirfile */
@@ -406,13 +433,9 @@ void InitialiseDirFile(int reset)
   char ext[4] = "";
 
   if (rc.gzip_output) {
-    defilecreat = &gzcreat;
-    defilewrite = &gzwrite;
     defileclose = &gzclose;
-    sprintf(ext, ".gz");
+    strcpy(ext, ".gz");
   } else {
-    defilecreat = &creat;
-    defilewrite = &write;
     defileclose = &close;
   }
 
@@ -421,53 +444,28 @@ void InitialiseDirFile(int reset)
 
   if (mkdir(rc.dirfile, 00755) < 0) {
     if (!CheckWriteAllow(errno)) {
-      snprintf(gpb, GPB_LEN, "defile: cannot create dirfile `%s'", rc.dirfile);
-      perror(gpb);
-      exit(1);
+      snprintf(gpb, GPB_LEN, "cannot create dirfile `%s'", rc.dirfile);
+      dperror(1, gpb);
     }
   }
 
-  printf("\nWriting to dirfile `%s'\n", rc.dirfile);
+  dprintf(DF_OUT, "\nWriting to dirfile `%s'\n", rc.dirfile);
 
   /*********************************** 
    * create and fill the format file * 
    ***********************************/
   sprintf(gpb, "%s/format", rc.dirfile);
   if ((fp = fopen(gpb, "w")) == NULL) {
-    snprintf(gpb, GPB_LEN, "defile: cannot create format file `%s/format'",
+    snprintf(gpb, GPB_LEN, "cannot create format file `%s/format'",
         rc.dirfile);
-    perror(gpb);
-    exit(1);
+    dperror(1, gpb);
   }
   fprintf(fp, "FASTSAMP         RAW    U 20\n");
   n_fast = 0;
   sprintf(gpb, "%s/FASTSAMP%s", rc.dirfile, ext);
   normal_fast[n_fast].size = 2; 
 
-  if (rc.resume_at >= 0) {
-    /* append to file */
-    if ((normal_fast[n_fast].fp = open(gpb, O_WRONLY)) == -1) {
-      snprintf(gpb, GPB_LEN, "defile: cannot open file `%s/FASTSAMP%s'",
-          rc.dirfile, ext);
-      perror(gpb);
-      exit(1);
-    }
-    if (lseek(normal_fast[n_fast].fp, rc.resume_at *
-          normal_fast[n_fast].size * 2, SEEK_SET) < 0) {
-      snprintf(gpb, GPB_LEN, "defile: cannot lseek file `%s/FASTSAMP%s'",
-          rc.dirfile, ext);
-      perror(gpb);
-      exit(1);
-    }
-  } else {
-    /* create new file */
-    if ((normal_fast[n_fast].fp = defilecreat(gpb, 00644)) == -1) {
-      snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/FASTSAMP%s'",
-          rc.dirfile, ext);
-      perror(gpb);
-      exit(1);
-    }
-  }
+  normal_fast[n_fast].fp = OpenField(1, 2, gpb);
   normal_fast[n_fast].i0 = 1;
   if (reset) {
     if (rc.resume_at > 0)
@@ -477,10 +475,9 @@ void InitialiseDirFile(int reset)
   }
 
   normal_fast[n_fast].i_in = normal_fast[n_fast].i_out = 0;
-  if ((normal_fast[n_fast].b = malloc(MAXBUF * sizeof(int))) == NULL) {
-    perror("malloc");
-    exit(1);
-  }
+  if ((normal_fast[n_fast].b = malloc(MAXBUF * sizeof(int))) == NULL)
+    dperror(1, "malloc");
+
   n_fast++;
 
   /* slow chs */
@@ -496,37 +493,17 @@ void InitialiseDirFile(int reset)
             StringToLower(SlowChList[i][j].field),
             SlowChList[i][j].m_c2e,
             SlowChList[i][j].b_e2e);
-        if (fflush(fp) < 0) {
-          perror("Error while flushing format file");
-          exit(1);
-        }
+        if (fflush(fp) < 0)
+          dperror(1, "Error while flushing format file");
 
         slow_fields[j][i].size = FieldSize(SlowChList[i][j].type,
             SlowChList[i][j].field);
 
         sprintf(gpb, "%s/%s%s", rc.dirfile, SlowChList[i][j].field, ext);
-        if (rc.resume_at >= 0) {
-          /* append to file */
-          if ((slow_fields[j][i].fp = open(gpb, O_WRONLY)) == -1) {
-            snprintf(gpb, GPB_LEN, "defile: cannot open file `%s/%s%s'",
-                rc.dirfile, SlowChList[i][j].field, ext);
-            perror(gpb);
-            exit(1);
-          }
-          lseek(slow_fields[j][i].fp, rc.resume_at *
-              slow_fields[j][i].size * 2 / FAST_PER_SLOW, SEEK_SET);
-        } else {
-          /* create new file */
-          if ((slow_fields[j][i].fp = defilecreat(gpb, 00644)) == -1) {
-            snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/%s%s'",
-                rc.dirfile, SlowChList[i][j].field, ext);
-            perror(gpb);
-            exit(1);
-          }
-        }
-      } else {
+        slow_fields[j][i].fp = OpenField(0, slow_fields[j][i].size, gpb);
+      } else
         slow_fields[j][i].fp = -1;
-      }
+
       slow_fields[j][i].i_in = slow_fields[j][i].i_out = 0;
       if (reset) {
         if (rc.resume_at > 0)
@@ -534,10 +511,10 @@ void InitialiseDirFile(int reset)
         else
           slow_fields[j][i].nw = 0;
       }
-      if ((slow_fields[j][i].b = malloc( 2 * MAXBUF)) == NULL) {
-        perror("malloc");
-        exit(1);
-      }
+
+      if ((slow_fields[j][i].b = malloc( 2 * MAXBUF)) == NULL)
+        dperror(1, "malloc");
+
       slow_fields[j][i].i0 = SLOW_OFFSET + i;
     }
   }
@@ -545,7 +522,7 @@ void InitialiseDirFile(int reset)
   /* normal fast chs */
   fprintf(fp, "\n## FAST CHANNELS:\n");
   if (fflush(fp) < 0) {
-    perror("Error while flushing format file");
+    dperror(1, "Error while flushing format file");
     exit(1);
   }
 
@@ -563,25 +540,7 @@ void InitialiseDirFile(int reset)
           FastChList[i].field);
       sprintf(gpb, "%s/%s%s", rc.dirfile, FastChList[i].field, ext);
 
-      if (rc.resume_at >= 0) {
-        /* append to file */
-        if ((normal_fast[n_fast].fp = open(gpb, O_WRONLY)) == -1) {
-          snprintf(gpb, GPB_LEN, "defile: cannot open file `%s/%s%s'",
-              rc.dirfile, FastChList[i].field, ext);
-          perror(gpb);
-          exit(1);
-        }
-        lseek(normal_fast[n_fast].fp, rc.resume_at *
-            normal_fast[n_fast].size * 2, SEEK_SET);
-      } else {
-        /* create new file */
-        if ((normal_fast[n_fast].fp = defilecreat(gpb, 00644)) == -1) {
-          snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/%s%s'",
-              rc.dirfile, FastChList[i].field, ext);
-          perror(gpb);
-          exit(1);
-        }
-      }
+      normal_fast[n_fast].fp = OpenField(1, normal_fast[n_fast].size, gpb);
       normal_fast[n_fast].i0 = i + SLOW_OFFSET + slowsPerBi0Frame;
       normal_fast[n_fast].i_in = normal_fast[n_fast].i_out = 0;
       if (reset) {
@@ -591,11 +550,10 @@ void InitialiseDirFile(int reset)
           normal_fast[n_fast].nw = 0;
       }
 
-      if ((normal_fast[n_fast].b
-            = malloc(MAXBUF * 2 * normal_fast[n_fast].size)) == NULL) {
-        perror("malloc");
-        exit(1);
-      }
+      if ((normal_fast[n_fast].b = malloc(MAXBUF * 2
+              * normal_fast[n_fast].size)) == NULL)
+        dperror(1, "malloc");
+
       n_fast++;
       fprintf(fp, "%-16s RAW    %c %d\n",
           StringToLower(FastChList[i].field),
@@ -604,44 +562,23 @@ void InitialiseDirFile(int reset)
           StringToUpper(FastChList[i].field),
           StringToLower(FastChList[i].field),
           FastChList[i].m_c2e, FastChList[i].b_e2e);
-      if (fflush(fp) < 0) {
-        perror("Error while flushing format file");
-        exit(1);
-      }
+      if (fflush(fp) < 0)
+        dperror(1, "Error while flushing format file");
     }
   }
 
   /* special (bolo) fast chs */
   fprintf(fp, "\n## BOLOMETERS:\n");
-  if (fflush(fp) < 0) {
-    perror("Error while flushing format file");
-    exit(1);
-  }
+  if (fflush(fp) < 0)
+    dperror(1, "Error while flushing format file");
+
   for (i = 0; i < DAS_CARDS; i++) {
     for (j = 0; j < DAS_CHS; j++) {
       bolo_fields[i][j].size = 2;
       sprintf(field, "n%dc%d", i + 5, j);
       sprintf(gpb, "%s/%s%s", rc.dirfile, field, ext);
 
-      if (rc.resume_at >= 0) {
-        /* append to file */
-        if ((bolo_fields[i][j].fp = open(gpb, O_WRONLY)) == -1) {
-          snprintf(gpb, GPB_LEN, "defile: cannot open file `%s/%s%s'",
-              rc.dirfile, field, ext);
-          perror(gpb);
-          exit(1);
-        }
-        lseek(bolo_fields[i][j].fp, rc.resume_at * bolo_fields[i][j].size * 2,
-            SEEK_SET);
-      } else {
-        /* create new file */
-        if ((bolo_fields[i][j].fp = defilecreat(gpb, 00644)) == -1) {
-          snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/%s%s'",
-              rc.dirfile, field, ext);
-          perror(gpb);
-          exit(1);
-        }
-      }
+      bolo_fields[i][j].fp = OpenField(1, 2, gpb);
       bolo_fields[i][j].i_in = bolo_fields[i][j].i_out = 0;
 
       if (reset) {
@@ -651,10 +588,9 @@ void InitialiseDirFile(int reset)
           bolo_fields[i][j].nw = 0;
       }
 
-      if ((bolo_fields[i][j].b = malloc(MAXBUF * 4)) == NULL) {
-        perror("malloc");
-        exit(1);
-      }
+      if ((bolo_fields[i][j].b = malloc(MAXBUF * 4)) == NULL)
+        dperror(1, "malloc");
+
       bolo_fields[i][j].i0 = bolo_i0 + i * (DAS_CARDS * 3 / 2)
         + j;
       fprintf(fp, "%-16s RAW    U %d\n",
@@ -668,27 +604,23 @@ void InitialiseDirFile(int reset)
   /* derived channels */
   FPrintDerived(fp);
 
-  if (fclose(fp) < 0) {
-    perror("Error while closing format file");
-    exit(1);
-  }
+  if (fclose(fp) < 0)
+    dperror(1, "Error while closing format file");
 
   if (rc.write_curfile) {
     if ((fp = fopen(rc.output_curfile, "w")) == NULL) {
-      snprintf(gpb, GPB_LEN, "defile: cannot create curfile `%s'",
+      snprintf(gpb, GPB_LEN, "cannot create curfile `%s'",
           rc.output_curfile);
-      perror(gpb);
-      exit(1);
+      dperror(1, gpb);
     }
 
     fprintf(fp, rc.dirfile);
     fprintf(fp, "\n");
 
     if (fclose(fp) < 0) {
-      snprintf(gpb, GPB_LEN, "defile: cannot close curfile `%s'",
+      snprintf(gpb, GPB_LEN, "cannot close curfile `%s'",
           rc.output_curfile);
-      perror(gpb);
-      exit(1);
+      dperror(1, gpb);
     }
   }
 
@@ -866,6 +798,21 @@ void PushFrame(unsigned short* frame)
   }
 }
 
+void WriteField(int file, int length, void *buffer)
+{
+  int gzerrno;
+  const char *gze;
+
+  if (rc.gzip_output && gzwrite((gzFile)file, buffer, length) == 0) {
+    gze = gzerror((gzFile)file, &gzerrno);
+    if (errno == Z_ERRNO)
+      dperror(1, "Error on write");
+    else 
+      dprintf(DF_TERM, "Error on write: %s", gze);
+  } else if (write(file, buffer, length) < 0)
+    dperror(1, "Error on write");
+}
+
 /* DirFileWriter: separate thread: writes each field to disk */
 void DirFileWriter(void)
 {
@@ -879,48 +826,41 @@ void DirFileWriter(void)
 
   while (1) {
     /* slow data */
-    for (i = 0; i < slowsPerBi0Frame; i++) {
+    for (i = 0; i < slowsPerBi0Frame; i++)
       for (j = 0; j < FAST_PER_SLOW; j++) {
-        i_in = slow_fields[j][i].i_in;
-        i_out = slow_fields[j][i].i_out;
-        i_buf = 0;
-        while (i_in != i_out) {
-          if ((SlowChList[i][j].type == 'U') ||
-              (SlowChList[i][j].type == 'I')) {
-            ibuffer[i_buf] = (unsigned)
-              ((((unsigned short*)slow_fields[j][i].b)[i_out]) << 16)
-              | (unsigned)
-              (((unsigned short*)slow_fields[j][i + 1].b)[i_out]);
-          } else
-            buffer[i_buf] = ((unsigned short*)slow_fields[j][i].b)[i_out];
+        if (slow_fields[j][i].fp != -1) {
+          i_in = slow_fields[j][i].i_in;
+          i_out = slow_fields[j][i].i_out;
+          i_buf = 0;
+          while (i_in != i_out) {
+            if ((SlowChList[i][j].type == 'U') ||
+                (SlowChList[i][j].type == 'I')) {
+              ibuffer[i_buf] = (unsigned)
+                ((((unsigned short*)slow_fields[j][i].b)[i_out]) << 16)
+                | (unsigned)
+                (((unsigned short*)slow_fields[j][i + 1].b)[i_out]);
+            } else
+              buffer[i_buf] = ((unsigned short*)slow_fields[j][i].b)[i_out];
 
-          if (i == 0 && j == 0)
-            wrote_count = ++slow_fields[j][i].nw * FAST_PER_SLOW;
-          else if (wrote_count < ++slow_fields[j][i].nw * FAST_PER_SLOW)
-            wrote_count = slow_fields[j][i].nw * FAST_PER_SLOW;
+            if (i == 0 && j == 0)
+              wrote_count = ++slow_fields[j][i].nw * FAST_PER_SLOW;
+            else if (wrote_count < ++slow_fields[j][i].nw * FAST_PER_SLOW)
+              wrote_count = slow_fields[j][i].nw * FAST_PER_SLOW;
 
-          i_out++;
-          i_buf++;
-          if (i_out >= MAXBUF)
-            i_out = 0;
+            i_out++;
+            i_buf++;
+            if (i_out >= MAXBUF)
+              i_out = 0;
+          }
+
+          if ((SlowChList[i][j].type == 'U') || (SlowChList[i][j].type == 'I'))
+            WriteField(slow_fields[j][i].fp, i_buf * sizeof(unsigned), ibuffer);
+          else 
+            WriteField(slow_fields[j][i].fp, i_buf * sizeof(unsigned short),
+                buffer);
         }
-        if ((SlowChList[i][j].type == 'U') ||
-            (SlowChList[i][j].type == 'I')) {
-          if ( (i_buf > 0) && (slow_fields[j][i].fp >= 0) ) 
-            if (defilewrite(slow_fields[j][i].fp,
-                  ibuffer, i_buf * sizeof(unsigned)) < 0) {
-              perror("Error while writing slow channels");
-            }
-        } else {
-          if ( (i_buf > 0)  && (slow_fields[j][i].fp >= 0) ) 
-            if (defilewrite(slow_fields[j][i].fp,
-                  buffer, i_buf * sizeof(unsigned short)) < 0) {
-              perror("Error while writing slow channels");
-            }
-        }
-        slow_fields[j][i].i_out = i_out;
+        slow_fields[j][i].i_out = slow_fields[j][i].i_in;
       }
-    }
 
     /********************** 
      ** normal fast data ** 
@@ -941,12 +881,8 @@ void DirFileWriter(void)
           if (i_out >= MAXBUF)
             i_out = 0;
         }
-        if ( (i_buf > 0) && (normal_fast[j].fp >= 0) ) {
-          if (defilewrite(normal_fast[j].fp, ibuffer, i_buf * sizeof(unsigned int))
-              < 0) {
-            perror("Error while writing fast channels");
-          }
-        }
+
+        WriteField(normal_fast[j].fp, i_buf * sizeof(unsigned), ibuffer);
       } else {
         while (i_in != i_out) {
           buffer[i_buf] = ((unsigned short*)normal_fast[j].b)[i_out];
@@ -959,12 +895,7 @@ void DirFileWriter(void)
           if (i_out >= MAXBUF)
             i_out = 0;
         }
-        if ( (i_buf > 0) && (normal_fast[j].fp >= 0) ) {
-          if (defilewrite(normal_fast[j].fp, buffer, i_buf * sizeof(unsigned short))
-              < 0) {
-            perror("Error while writing fast channels");
-          }
-        }
+        WriteField(normal_fast[j].fp, i_buf * sizeof(unsigned short), buffer);
       }
       normal_fast[j].i_out = i_out;
 
@@ -990,12 +921,7 @@ void DirFileWriter(void)
           if (i_out >= MAXBUF)
             i_out = 0;
         }
-        if ( (i_buf > 0) && (bolo_fields[i][j].fp >= 0) ) {
-          if (defilewrite(bolo_fields[i][j].fp, 
-                ibuffer, i_buf * sizeof(unsigned int)) < 0) {
-            perror("Error while writing fast channels");
-          }
-        }
+        WriteField(bolo_fields[i][j].fp, i_buf * sizeof(unsigned), ibuffer);
         bolo_fields[i][j].i_out = i_out;
       }
     }

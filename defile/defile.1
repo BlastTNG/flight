@@ -1,6 +1,6 @@
-.TH defile 1 "10 July 2004" "version 2.2" "BLAST UTILITIES"
+.TH defile 1 "17 September 2004" "version 2.4" "BLAST UTILITIES"
 .SH NAME
-defile \(em convert a MCP written framefile into a dirfile
+defile \(em convert a MCP-style framefile into a dirfile
 .SH SYNOPSIS
 .nh
 .B defile 
@@ -20,10 +20,14 @@ defile \(em convert a MCP written framefile into a dirfile
 .IR "name " |
 .BI \-\-spec\-file= name
 ]
+.RB [\~ "\-d " |
+.BR \-\-daemonise\~ ]
 .RB [\~ \-o
 .IR "dirfile " |
 .BI \-\-output\-dirfile= dirfile
 ]
+.RB [\~ "\-q " |
+.BR \-\-quiet\~ ]
 .RB [\~ "\-p " |
 .BR \-\-persistent\~ ]
 .RB [\~ "\-r " |
@@ -47,6 +51,8 @@ defile \(em convert a MCP written framefile into a dirfile
 .B defile
 converts a framefile created by
 .B mcp
+or
+.BR decomd (8)
 into a readable dirfile.
 .I source
 is typically the name of the first chunk of the framefile to convert.
@@ -61,7 +67,7 @@ option, the output dirfile will have the same name as the input framefile, and
 be placed in
 .IR directory ,
 if specified, or else in the default location, typically
-.BR /data/rawdir ,
+.IR /data/rawdir ,
 but see 
 .BR "COMPILE TIME DEFAULTS" .
 .PP
@@ -121,12 +127,24 @@ as the channel specification file instead of the default.
 .BR "\-c " "or " \-\-curfile
 Write a curfile pointing to the output dirfile.  The default curfile name is
 generally
-.BR /data/etc/defile.cur ,
+.IR /data/etc/defile.cur ,
 but see
 .BR "COMPILE TIME DEFAULTS" .
 To use a different name for the curfile, see the
 .B \-C
 option.
+.TP
+.BR "\-d " "or " \-\-daemonise
+Fork to background and daemonise on startup.  Implies both
+.B -p
+and
+.BR -q .
+Error messages (if any) are logged with
+.BR syslogd (8).
+On startup, the PID of the daemon will be writen to
+.IR /var/run/defile ,
+if possible, as well as being reported on the TTY.
+.PP
 .TP
 .BR "\-f " "or " \-\-force
 Overwrite an existing dirfile.  Normally
@@ -159,10 +177,16 @@ be added to the file.  For use when reading a framefile that is concurrently
 being written to by
 .B mcp
 or
-.BR decomd .
+.BR decomd (8).
 See
 .B PERSISTENT MODE
 for more information.
+.TP
+.BR "\-q " "or " \-\-quiet
+Quiet mode:
+.B defile
+writes nothing to the TTY except error messages (if any).
+.PP
 .TP
 .BR "\-r " "or " \-\-remounted\-source
 If
@@ -171,7 +195,7 @@ is a curfile, assume that the file it refers to has been mounted in a different
 location than the path given in the curfile.  By default
 .B defile
 will typically look for the framefile in the directory
-.B ../rawdir
+.I ../rawdir
 relative to the location of the
 .I source
 curfile, but see
@@ -201,20 +225,23 @@ Assume that the suffix of the framefile (the portion of the filename which is
 incremented as a hexadecimal number) is no larger than
 .I size
 characters.  This option only is useful if the character immediately preceding
-the suffix is a hexadecimal digit and you expect the suffix will overflow.
+the suffix is a valid hexadecimal digit and can affects the output dirfile name.
+The default value is
+.IR 3 .
 .RE
 .TP
 .BR "\-z " "or " \-\-gzip
-Compress output dirfiles with gzip compression.  Output files will have the suffix
+Compress output dirfiles with gzip compression.  Output field files will have
+the suffix
 .I .gz
-appended to each filename.  This option is incompatible with
+appended to their filename.  This option is incompatible with
 .BR -R .
 .TP
 .B \-\-help
 Show the usage summary and exit.
 .TP
 .B \-\-version
-Show the version information and exit.
+Show the version and license information and exit.
 .TP
 .B \-\-
 Indicates that everything following the
@@ -252,5 +279,40 @@ default output path:
 If they have been changed by your system administrator, this man page may not
 reflect reality.  To see the actual values of these defaults, use
 .BR "defile --help " .
+
+.SH FILES
+.TP
+.I /var/run/defile.pid
+The process-id file.
+
+.SH SEE ALSO
+.BR mcp (8),
+.BR decomd (8),
+.BR syslogd (8)
+
+.SH BUGS
+Defiling current data
+.RB ( -p
+mode) from a NFS volume mounted with option
+.I actimeo=0
+appears to be inherently unreliable: running in this mode,
+.B defile
+receives bad data on read, with no error flags raised.  An entire single
+read is corrupted this way (up to 50 frames). This can be very hard for
+.B defile
+to detect, since NFS behaves like it provided proper data, and the timestream
+is otherwise uninterrupted.  This appears to be the cause of very long
+timescale (~20 minute) spikes in the defiled data.  Defiling non-current data
+doesn't seem to have this problem (but see below).
+
+Quiet mode is probably a little
+.I too
+quiet...
+
+I'm seeing some single word dropouts, randomly, in the defiled data, when
+defiling non-current data. This may be due to NFS problems too. The error rate
+for an entire dirfile is on the order of 10 dropped 16-bit words per 230,000
+fast frames (about 80 errors per billion words).
+
 .SH AUTHOR
 D. V. Wiebe (dwiebe@physics.utoronto.ca)

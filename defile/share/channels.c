@@ -25,6 +25,11 @@
  * make up a fake one */
 #ifdef __MCP__
 #  include "mcp.h"
+#elif defined __DEFILE__
+#  include "defile.h"
+#  define MCP_INFO DF_OUT
+#  define MCP_FATAL DF_TERM
+#  define mprintf dprintf
 #else
 #  define mputs(x,s) \
      do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
@@ -116,17 +121,14 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
 #ifdef __DEFILE__
   /* check spec file version */
   if (versionMagic[0] != 'D' || versionMagic[1] != 'F'
-      || versionMagic[2] != 'I') {
-    fprintf(stderr, "Spec file too old: version magic not found.\n"
+      || versionMagic[2] != 'I')
+    dprintf(DF_TERM, "Spec file too old: version magic not found.\n"
         "To read this file, you will need defile version 2.1\n");
-    exit(1);
-  } else {
+  else {
     int version = atoi(&versionMagic[3]);
-    if (version != 10) {
-      fprintf(stderr, "Unsupported Spec file version: %i.  Cannot continue.\n",
+    if (version != 10)
+      dprintf(DF_TERM, "Unsupported Spec file version: %i.  Cannot continue.\n",
           version);
-      exit(1);
-    }
   }
 #endif
 
@@ -143,31 +145,26 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
 
   /* Reallocate channel lists, if we're reading them */
   if ((WideSlowChannels = realloc(WideSlowChannels,
-          ccWideSlow * sizeof(struct ChannelStruct))) == NULL) {
-    perror("defile: unable to allocate heap");
-    exit(1);
-  }
+          ccWideSlow * sizeof(struct ChannelStruct))) == NULL)
+    dperror(1, "unable to allocate heap");
+
   if ((SlowChannels = realloc(SlowChannels,
-          ccNarrowSlow * sizeof(struct ChannelStruct))) == NULL) {
-    perror("defile: unable to allocate heap");
-    exit(1);
-  }
+          ccNarrowSlow * sizeof(struct ChannelStruct))) == NULL)
+    dperror(1, "unable to allocate heap");
+
   if ((WideFastChannels = realloc(WideFastChannels,
-          ccWideFast * sizeof(struct ChannelStruct))) == NULL) {
-    perror("defile: unable to allocate heap");
-    exit(1);
-  }
+          ccWideFast * sizeof(struct ChannelStruct))) == NULL)
+    dperror(1, "unable to allocate heap");
+
   if ((FastChannels = realloc(FastChannels,
-          ccNarrowFast * sizeof(struct ChannelStruct))) == NULL) {
-    perror("defile: unable to allocate heap");
-    exit(1);
-  }
+          ccNarrowFast * sizeof(struct ChannelStruct))) == NULL)
+    dperror(1, "unable to allocate heap");
+
   if (ccDecom > 0)
     if ((DecomChannels = realloc(DecomChannels,
-            ccDecom * sizeof(struct ChannelStruct))) == NULL) {
-      perror("defile: unable to allocate heap");
-      exit(1);
-    }
+            ccDecom * sizeof(struct ChannelStruct))) == NULL)
+      dperror(1, "unable to allocate heap");
+
   ccSlow = ccNarrowSlow + ccWideSlow;
   ccFast = ccNarrowFast + ccWideFast + N_FAST_BOLOS + ccDecom;
   ccNoBolos = ccSlow + ccWideFast + ccNarrowFast;
@@ -199,7 +196,8 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   DiskFrameWords = SLOW_OFFSET + ccFast + slowsPerBi0Frame + ccWideFast;
   DiskFrameSize = 2 * DiskFrameWords;
 
-  mprintf(MCP_INFO, "Slow Channels per BiPhase Frame: %i\n", slowsPerBi0Frame);
+  mprintf(MCP_INFO, "Slow Channels per BiPhase Frame: %i\n",
+      slowsPerBi0Frame);
 
 #elif defined VERBOSE
   mputs(MCP_INFO, "Wrote version " SPEC_VERSION " specification file.\n");
@@ -712,25 +710,19 @@ void MakeAddressLookups(void)
 #else
   BiPhaseAddr = 0;
   /* allocate the Defile address tables */
-  if ((FastChList = malloc((ccFast + ccWideFast) * sizeof(struct ChannelStruct)))
-      == NULL) {
-    perror("defile: Unable to malloc heap");
-    exit(1);
-  }
+  if ((FastChList = malloc((ccFast + ccWideFast)
+          * sizeof(struct ChannelStruct)))
+      == NULL)
+    dperror(1, "Unable to malloc heap");
 
   if ((SlowChList = malloc(slowsPerBi0Frame * sizeof(struct ChannelStruct*)))
-      == NULL) {
-    perror("defile: Unable to malloc heap");
-    exit(1);
-  }
+      == NULL)
+    dperror(1, "Unable to malloc heap");
 
-  for (i = 0; i < slowsPerBi0Frame; ++i) {
+  for (i = 0; i < slowsPerBi0Frame; ++i)
     if ((SlowChList[i] = malloc(FAST_PER_SLOW * sizeof(struct ChannelStruct)))
-        == NULL) {
-      perror("defile: Unable to malloc heap");
-      exit(1);
-    }
-  }
+        == NULL)
+      dperror(1, "Unable to malloc heap");
 #endif
 
   /* initialise slow channels */
@@ -1039,7 +1031,7 @@ void FPrintDerived(FILE *fp) {
     "#T_horn_250       LINTERP N7C6         /data/etc/rox102a6.txt\n"
     "#T_horn_350       LINTERP N7C19        /data/etc/rox102a19.txt\n"
     "#T_horn_500       LINTERP N7C21        /data/etc/rox102a21.txt\n"
-    
+
 
     "T_he3fridge      LINTERP T_HE3FRIDGE   /data/etc/rox102a3.txt\n"
     "T_he4pot         LINTERP T_HE4POT      /data/etc/rox102a22.txt\n"
