@@ -223,7 +223,7 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
   start_time
     = slow_data[cycle_start_R_Addr->index][cycle_start_R_Addr->channel];
   start_time |=
-    slow_data[cycle_start_R_Addr->index][cycle_start_R_Addr->channel+1] << 16;
+    (unsigned long)slow_data[cycle_start_R_Addr->index][cycle_start_R_Addr->channel+1] << 16;
   cycle_state
     = slow_data[cycle_state_R_Addr->index][cycle_state_R_Addr->channel];
 
@@ -232,16 +232,18 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
     = (double)slow_data[t_charcoal_Addr->index][t_charcoal_Addr->channel];
   t_he3fridge
     = (double)(slow_data[t_he3fridge_Addr->index][t_he3fridge_Addr->channel] +
-		    (slow_data[t_he3fridge_Addr->index][t_he3fridge_Addr->channel + 1] << 16) );
+		    ((unsigned long)slow_data[t_he3fridge_Addr->index][t_he3fridge_Addr->channel
+         + 1] << 16));
   t_he4pot
     = (double)(slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel] +
-       		(slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel+1] << 16) );	
+        ((unsigned long)slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel
+         + 1] << 16));	
 
   t_lhe       = T_LHE_M*t_lhe + T_LHE_B;
   t_charcoal  = T_CHARCOAL_M*t_charcoal + T_CHARCOAL_B;
   t_he3fridge = (ROX_C2V)*t_he3fridge + ROX_OFFSET;
   t_he4pot    = (ROX_C2V)*t_he4pot    + ROX_OFFSET;
-  
+
   if (t_lhe < T_LHE_SET) {
     *cryoout |= CRYO_CHARCOAL_OFF;
     *cryostate &= ~CS_CHARCOAL;
@@ -355,6 +357,8 @@ void CryoControl (void)
 
   if (CommandData.Cryo.fridgeCycle) {
     FridgeCycle(&cryoout3, &cryostate, 0); 
+    cryoout3 |= CRYO_CHARCOAL_OFF;
+    cryostate &= 0xFFFF - CS_CHARCOAL;
   } else {
     FridgeCycle(&cryoout3, &cryostate, 1);
     if (CommandData.Cryo.charcoalHeater == 0) {
