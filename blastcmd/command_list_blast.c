@@ -14,7 +14,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.30 $";
+const char command_list_serial[] = "$Revision: 2.31 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -390,9 +390,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /******** Electronics Heaters  *********/
-  {COMMAND(t_gyrobox), "gyro box temperature set point", GR_EHEAT, 1,
+  {COMMAND(t_gyro_set), "gyro box temperature set points", GR_EHEAT, 5,
     {
-      {"Set Point (deg C)", 0, 60, 'f', "t_gy_set"}
+      {"Min Set Point (deg C)", 0, 60, 'f', "t_gy_min"},
+      {"Max Set Point (deg C)", 0, 60, 'f', "t_gy_max"},
+      {"Min Heater Level (%)", 0, 60, 'f', "gy_h_min"},
+      {"Max Heater Level (%)", 0, 60, 'f', "gy_h_max"},
+      {"Cur Set Point (deg C)", 0, 60, 'f', "t_gy_set"}
     }
   },
 

@@ -459,6 +459,12 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_foc_off",  'w', LOOP4, 34,                1.0,             0.0, 's'},
   {"isc_real_trig",'w', LOOP4, 35,                1.0,             0.0, 's'},
   {"osc_real_trig",'w', LOOP4, 36,                1.0,             0.0, 's'},
+  {"t_gy_min",     'w', LOOP2, 37,    (100.0/32768.0),             0.0, 'u'},
+  {"t_gy_max",     'w', LOOP2, 38,    (100.0/32768.0),             0.0, 'u'},
+  {"gy_h_min",     'w', LOOP2, 38,    (100.0/32768.0),             0.0, 'u'},
+  {"gy_h_max",     'w', LOOP2, 39,    (100.0/32768.0),             0.0, 'u'},
+  {"t_gy_hist",    'w', LOOP2, 40,    (100.0/32768.0),             0.0, 'u'},
+  {"t_gy_age",     'w', LOOP2, 41,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 

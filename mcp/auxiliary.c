@@ -86,25 +86,51 @@ extern short int start_ISC_cycle[2];
 double LockPosition(double elevation); 
 
 /****************************************************************/
-/*                                                              */
 /* Read the state of the lock motor pin (or guess it, whatever) */
-/*                                                              */
 /****************************************************************/
-int pinIsIn(void) {
+int pinIsIn(void)
+{
   return(pin_is_in);
 }
 
+#define GY_HEAT_TC 30000.  /* in 100 Hz Frames */
+#define GY_HEAT_STEP 2.5
+int SetGyHeatSetpoint(double history, int age)
+{
+  double setpoint = CommandData.gyheat.setpoint;
+
+  if (age < GY_HEAT_TC)
+    return age;
+
+  if (history < CommandData.gyheat.min_heat)
+    setpoint -= GY_HEAT_STEP;
+  else if (history > CommandData.gyheat.max_heat)
+    setpoint += GY_HEAT_STEP;
+
+  if (setpoint < CommandData.gyheat.min_set)
+    setpoint = CommandData.gyheat.min_set;
+  else if (setpoint > CommandData.gyheat.max_set)
+    setpoint = CommandData.gyheat.max_set;
+
+  if (setpoint != CommandData.gyheat.setpoint)
+    age = 0;
+
+  return age;
+}
+
 /************************************************************************/
-/*                                                                      */
 /*    ControlGyroHeat:  Controls gyro box temp by turning heater bit in */
 /*    ACS1 on and off.  Also calculates gyro offsets.                   */
-/*                                                                      */
 /************************************************************************/
-void ControlGyroHeat(unsigned short *RxFrame) {
+void ControlGyroHeat(unsigned short *RxFrame)
+{
   static struct BiPhaseStruct* tGyboxAddr;
   static struct NiosStruct *gyHeatAddr, *tGySetAddr, *pGyheatAddr, *iGyheatAddr;
-  static struct NiosStruct *dGyheatAddr;
+  static struct NiosStruct *dGyheatAddr, *tGyMinAddr, *tGyMaxAddr, *tGyHistAddr;
+  static struct NiosStruct *tGyAgeAddr, *gyHMinAddr, *gyHMaxAddr;
   static int firsttime = 1;
+  static double history = 0;
+  static int age = 0;
 
   int on = 0x40, off = 0x00;
   static int p_on = 0;
@@ -120,24 +146,36 @@ void ControlGyroHeat(unsigned short *RxFrame) {
   if (firsttime) {
     firsttime = 0;
     tGyboxAddr = GetBiPhaseAddr("t_gybox");
-    gyHeatAddr = GetNiosAddr("gy_heat");
 
+    gyHeatAddr = GetNiosAddr("gy_heat");
+    gyHMinAddr = GetNiosAddr("gy_h_min");
+    gyHMaxAddr = GetNiosAddr("gy_h_max");
     tGySetAddr = GetNiosAddr("t_gy_set");
+    tGyMinAddr = GetNiosAddr("t_gy_min");
+    tGyMaxAddr = GetNiosAddr("t_gy_max");
+    tGyHistAddr = GetNiosAddr("t_gy_hist");
+    tGyAgeAddr = GetNiosAddr("t_gy_age");
+
     pGyheatAddr = GetNiosAddr("g_p_gyheat");
     iGyheatAddr = GetNiosAddr("g_i_gyheat");
     dGyheatAddr = GetNiosAddr("g_d_gyheat");
   }
 
+  age = SetGyHeatSetpoint(history, age);
+
   /* send down the setpoints and gains values */
-  WriteData(tGySetAddr,
-      (unsigned short)(CommandData.t_gybox_setpoint * 32768.0 / 100.0), 0);
+  WriteData(tGySetAddr, CommandData.gyheat.setpoint * 32768.0 / 100.0, 0);
+  WriteData(tGyMinAddr, CommandData.gyheat.min_set * 32768.0 / 100.0, 0);
+  WriteData(tGyMaxAddr, CommandData.gyheat.max_set * 32768.0 / 100.0, 0);
+  WriteData(gyHMinAddr, CommandData.gyheat.min_heat * 32768.0 / 100.0, 0);
+  WriteData(gyHMaxAddr, CommandData.gyheat.max_heat * 32768.0 / 100.0, 0);
 
   WriteData(pGyheatAddr, CommandData.gy_heat_gain.P, NIOS_QUEUE);
   WriteData(iGyheatAddr, CommandData.gy_heat_gain.I, NIOS_QUEUE);
   WriteData(dGyheatAddr, CommandData.gy_heat_gain.D, NIOS_QUEUE);
 
   /* control the heat */
-  set_point = (CommandData.t_gybox_setpoint - 136.45) / (-9.5367431641e-08);
+  set_point = (CommandData.gyheat.setpoint - 136.45) / (-9.5367431641e-08);
   P = CommandData.gy_heat_gain.P * (-1.0 / 1000000.0);
   I = CommandData.gy_heat_gain.I * (-1.0 / 110000.0);
   D = CommandData.gy_heat_gain.D * ( 1.0 / 1000.0);
@@ -149,10 +187,10 @@ void ControlGyroHeat(unsigned short *RxFrame) {
                       | RxFrame[tGyboxAddr->channel]));
 
     integral = integral * 0.9975 + 0.0025 * error;
-    if (integral * I > 60){
+    if (integral * I > 60) {
       integral = 60.0 / I;
     }
-    if (integral * I < 0){
+    if (integral * I < 0) {
       integral = 0;
     }
 
@@ -170,11 +208,15 @@ void ControlGyroHeat(unsigned short *RxFrame) {
   }
 
   /******** do the pulse *****/
+  WriteData(tGyAgeAddr, ++age, NIOS_QUEUE);
+  WriteData(tGyHistAddr, (history * 32768. / 100.), NIOS_QUEUE);
   if (p_on > 0) {
     WriteData(gyHeatAddr, on, NIOS_FLUSH);
+    history = 100. / GY_HEAT_TC + (1. - 1. / GY_HEAT_TC) * history;
     p_on--;
   } else {
     WriteData(gyHeatAddr, off, NIOS_FLUSH);
+    history = (1. - 1. / GY_HEAT_TC) * history;
     p_off--;
   }
 }

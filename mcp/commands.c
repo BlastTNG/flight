@@ -716,9 +716,13 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
 
   /***************************************/
   /******** Electronics Heaters  *********/
-  else if (command == t_gyrobox)  /* gyro heater setpoint */
-    CommandData.t_gybox_setpoint = rvalues[0];
-  else if (command == t_gyro_gain) {  /* gyro heater gains */
+  else if (command == t_gyro_set) {  /* gyro heater setpoint */
+    CommandData.gyheat.min_set = rvalues[0];
+    CommandData.gyheat.max_set = rvalues[1];
+    CommandData.gyheat.min_heat = rvalues[2];
+    CommandData.gyheat.max_heat = rvalues[3];
+    CommandData.gyheat.setpoint = rvalues[4];
+  } else if (command == t_gyro_gain) {  /* gyro heater gains */
     CommandData.gy_heat_gain.P = ivalues[0];
     CommandData.gy_heat_gain.I = ivalues[1];
     CommandData.gy_heat_gain.D = ivalues[2];
@@ -1429,7 +1433,11 @@ void InitCommandData() {
   CommandData.emf_gain = 1;
   CommandData.emf_offset = 0;
 
-  CommandData.t_gybox_setpoint = 30.0;
+  CommandData.gyheat.min_set = 0.0;
+  CommandData.gyheat.max_set = 60.0;
+  CommandData.gyheat.min_heat = 5.0;
+  CommandData.gyheat.max_heat = 40.0;
+  CommandData.gyheat.setpoint = 30.0;
   CommandData.gy_heat_gain.P = 10;
   CommandData.gy_heat_gain.I = 60;
   CommandData.gy_heat_gain.D = 50;

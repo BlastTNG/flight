@@ -97,7 +97,13 @@ struct CommandDataStruct {
   double gy2_offset;
   double gy3_offset;
 
-  double t_gybox_setpoint;
+  struct {
+    double setpoint;
+    double min_set;
+    double max_set;
+    double min_heat;
+    double max_heat;
+  } gyheat;
   double t_isc_setpoint;
 
   unsigned char use_elenc;
