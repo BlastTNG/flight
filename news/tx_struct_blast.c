@@ -457,7 +457,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_gy_min",     'w', LOOP4, 37,    (100.0/32768.0),             0.0, 'u'},
   {"t_gy_max",     'w', LOOP4, 38,    (100.0/32768.0),             0.0, 'u'},
   {"t_gy_step",    'w', LOOP4, 39,      (10./32768.0),             0.0, 'u'},
-  {"gy_h_hist",    'w', LOOP4, 40,    (100.0/32768.0),             0.0, 'u'},
+  {"gy_h_hist",    'w', LOOP4, 42,    (100.0/32768.0),             0.0, 'u'},
 
   {"sync1",        'w', DLOOP, 56,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
@@ -502,10 +502,7 @@ struct ChannelStruct WideFastChannels[] = {
   {"n15ref",      'r', DAS15, 36,      1.19209e-7,                    0.0, 'U'},
   {"n16ref",      'r', DAS16, 36,      1.19209e-7,                    0.0, 'U'},
 
-// cryo control debug
-//{"pwmout",	  'r',  CRYO, 51,             1.0,                    0.0, 'S'},
-//{"pwmint",	  'r',  CRYO, 58,             1.0,                    0.0, 'S'},
-// end cryo control debug
+  {"rx_fastsamp", 'w', LOOP4, 40,             1.0,                    0.0, 'U'},
 
   END_OF_CHANNELS
 };
