@@ -200,6 +200,7 @@ struct ISCPulseType {
   int ack_timeout; // length of time to wait for ACK before giving up
   int start_wait; // whether we are waiting for data to come back from SC
   int start_timeout; // length of time to wait for data before giving up
+  int force_sync; // A semaphore to force MCP into lock-step with ISC
 };
 
 extern struct ISCPulseType isc_pulses[2];

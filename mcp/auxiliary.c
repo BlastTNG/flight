@@ -40,7 +40,7 @@
 
 /* This is the length of time to wait after receiving the ACK, bufore sending
  * the trigger */
-#define ISC_TRIGGER_DELAY   10   /* in 100Hz frames */
+#define ISC_TRIGGER_DELAY   ((which == 1) ? 1 : 30)  /* in 100Hz frames */
 
 /* If mcp has decided the handshaking isn't working, this is the period of the
  * handshake-less triggers */
@@ -48,12 +48,12 @@
 #define MAX_ISC_SLOW_PULSE_SPEED 0.015
 
 struct ISCPulseType isc_pulses[2] = {
-  {-1, 0, 0, 0, 0, 0, 0}, {-1, 0, 0, 0, 0, 0, 0}
+  {-1, 0, 0, 0, 0, 0, 0, 0}, {-1, 0, 0, 0, 0, 0, 0, 0}
 };
 
 int pin_is_in = 1;
 
-/* Semaphores for hanshaking with the ISC/OSC threads (isc.c) */
+/* Semaphores for handshaking with the ISC/OSC threads (isc.c) */
 extern short int write_ISC_pointing[2];
 extern short int write_ISC_trigger[2];
 extern short int ISC_link_ok[2];
@@ -365,34 +365,38 @@ void CameraTrigger(int which)
       /* Add pulse serial number */
       isc_pulses[which].pulse_req += isc_pulses[which].pulse_index << 14;
 
-      if (delay[which] == 0)
-        delay[which] = 0;
-
-      if (delay[which] > 1) {
-        if (WHICH)
-          bprintf(info, "%iISC (t): Delay %i\n", which, delay[which]);
-        delay[which]--;
-        return;
-      }
       delay[which] = 0;
 
-      /* Signal isc thread to send new pointing data */
-      if (write_ISC_trigger[which])
+      /* If force_sync is high, we've detected an out-of-sync condition.
+       * We get back in phase by skipping the ackwait stage.  We do this by
+       * simply not resetting the semaphores before going into the ackwait.
+       * Since write_ISC_trigger is already high, the ackwait will end 
+       * immediately. */
+      if (!isc_pulses[which].force_sync) {
+        /* Signal isc thread to send new pointing data */
+        if (write_ISC_trigger[which])
+          if (WHICH)
+            bprintf(info,
+                "%iSC (t): Unexpectedly lowered write_ISC_trigger Semaphore\n",
+                which);
+
+        write_ISC_trigger[which] = 0;
+        write_ISC_pointing[which] = 1;
+
         if (WHICH)
-          bprintf(info,
-              "%iSC (t): Unexpectedly lowered write_ISC_trigger Semaphore\n",
+          bprintf(info, "%iSC (t): Raised write_ISC_pointing Semaphore\n",
               which);
+      } else {
+        isc_pulses[which].force_sync = 0;
 
-      write_ISC_trigger[which] = 0;
-      write_ISC_pointing[which] = 1;
-
-      if (WHICH)
-        bprintf(info, "%iSC (t): Raised write_ISC_pointing Semaphore\n", which);
+        if (WHICH)
+          bprintf(info, "%iSC (t): Lowered force_sync Semaphore ++++++++++++++++++\n", which);
+      }
 
       /* Start waiting for ACK from star camera */
       isc_pulses[which].ack_wait = 1;
       isc_pulses[which].ack_timeout =
-        (ISC_link_ok[which]) ? ISC_ACK_TIMEOUT : 0;
+        (ISC_link_ok[which]) ? ISC_ACK_TIMEOUT : 10;
       if (WHICH) 
         bprintf(info, "%iSC (t): ackwait starts with timeout = %i\n", which,
             isc_pulses[which].ack_timeout);
@@ -400,16 +404,18 @@ void CameraTrigger(int which)
       if (isc_pulses[which].ack_wait > isc_pulses[which].ack_timeout
           || write_ISC_trigger[which]) {
 
-        /* if we exceeded the time-out, flag the link as bad */
-        if (ISC_link_ok[which] && isc_pulses[which].ack_wait
-            > isc_pulses[which].ack_timeout) {
-
-          bprintf(warning, "%s: timeout on ACK, flagging link as bad.\n",
-              (which) ? "Osc" : "Isc");
-          ISC_link_ok[which] = 0;
-        }
-
         if (delay[which] == 0) {
+          /* if we exceeded the time-out, flag the link as bad */
+          if (ISC_link_ok[which] && isc_pulses[which].ack_wait
+              > isc_pulses[which].ack_timeout) {
+
+            bprintf(warning,
+                "%s: timeout on ACK, flagging link as bad (wait = %i of %i).\n",
+                (which) ? "Osc" : "Isc", isc_pulses[which].ack_wait,
+                isc_pulses[which].ack_timeout);
+            ISC_link_ok[which] = 0;
+          }
+
           delay[which] = ISC_TRIGGER_DELAY;
           if (WHICH)
             bprintf(info, "%iSC (t): Trigger Delay Starts: %i\n", which,
@@ -439,7 +445,7 @@ void CameraTrigger(int which)
 
           /* the -2 is due to processing time in the loop */
           isc_pulses[which].start_timeout = (ISC_link_ok[which]) ?
-            ISC_DATA_TIMEOUT : ISC_DEFAULT_PERIOD - 2;
+            ISC_DATA_TIMEOUT : ISC_DEFAULT_PERIOD - ISC_TRIGGER_DELAY - 2;
 
           if (WHICH)
             bprintf(info, "%iSC (t): startwait starts with timeout = %i\n",
@@ -456,6 +462,20 @@ void CameraTrigger(int which)
     if ((++isc_pulses[which].start_wait > isc_pulses[which].start_timeout)
         || (start_ISC_cycle[which]))
       isc_pulses[which].start_wait = 0;
+
+    /* If the write_ISC_trigger semaphore goes high during startwait,
+     * it means that the ISC thread just got a handshake packet from
+     * the star camera -- ie. we're out of phase due to missing a packet
+     * earlier (most likely, this is because mcp has just started up)
+     * We need to resynchronise -- we do this by skipping the ackwait phase
+     * during the next cycle */
+    if (write_ISC_trigger[which]) {
+      isc_pulses[which].force_sync = 1;
+      isc_pulses[which].start_wait = 0;
+
+      if (WHICH)
+        bprintf(info, "%iSC (t): Raised force_sync Semaphore +++++++++++++++++++\n", which);
+    }
   }
 }
 

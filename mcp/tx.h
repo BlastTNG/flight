@@ -3,7 +3,7 @@
 #define NIOS_QUEUE  0
 #define NIOS_FLUSH -1
 
-#define WHICH 0
+#define WHICH (which == 0)
 
 #include "channels.h"
 

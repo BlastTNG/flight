@@ -167,6 +167,7 @@ void mputs(buos_t flag, const char* message) {
   for(bufstart = buffer; *bufstart != '\0' && bufstart < buffer
       + 1024; ++bufstart);
 
+
   strftime(bufstart, 1023, "%F %T", gmtime_r(&t.tv_sec, &now));
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
