@@ -35,19 +35,15 @@
 #include "quendi.h"
 
 /* internals */
-char *_quendi_server_version = NULL;
-char *_quendi_server_host = NULL;
-char *_quendi_server_name = NULL;
 const char _quendi_version[] = "1.0";
-int _quendi_dp = -1;
-int _quendi_access_level = 0;
+struct quendi_data *_quendi_server_data = NULL;
 
-int quendi_access_ok(int sock, int level) {
-  if (_quendi_access_level == 0) {
-    quendi_respond(sock, QUENDR_NOT_IDENTIFIED, NULL);
+int quendi_access_ok(int level) {
+  if (_quendi_server_data->access_level == 0) {
+    quendi_respond(QUENDR_NOT_IDENTIFIED, NULL);
     return 0;
-  } else if (_quendi_access_level < level) {
-    quendi_respond(sock, QUENDR_NO_ACCESS, NULL);
+  } else if (_quendi_server_data->access_level < level) {
+    quendi_respond(QUENDR_NO_ACCESS, NULL);
     return 0;
   }
 
@@ -65,7 +61,7 @@ int quendi_cmdnum(char* buffer)
   switch(htonl(*(int*)buffer)) {
     case 0x6173796e: return QUENDC_ASYN;
     case 0x666f726d: return QUENDC_FORM;
-    case 0x68657265: return QUENDC_HERE;
+    case 0x6964656e: return QUENDC_IDEN;
     case 0x6e6f6f70: return QUENDC_NOOP;
     case 0x6f70656e: return QUENDC_OPEN;
     case 0x716e6f77: return QUENDC_QNOW;
@@ -74,6 +70,47 @@ int quendi_cmdnum(char* buffer)
   }
 
   printf("cmd = %04x\n", htonl(*(int*)buffer));
+  return -1;
+}
+
+int quendi_get_cmd(char* buffer)
+{
+  int overrun;
+  int eolfound;
+  int n, i;
+
+  for (overrun = eolfound = 0; !eolfound; ) {
+
+    n = read(_quendi_server_data->csock, buffer, QUENDI_COMMAND_LENGTH);
+
+    if (n == 0)
+      return -2;
+
+    eolfound = 0;
+    /* check for buffer overrun */
+    for (i = 0; i < QUENDI_COMMAND_LENGTH; ++i)
+      if (buffer[i] == '\n') {
+        buffer[i] = '\0';
+        eolfound = 1;
+        break;
+      }
+
+    if (!eolfound)
+      overrun = 1;
+  }
+
+  if (overrun)
+    quendi_respond(QUENDR_SYNTAX_ERROR, "Command Line too Long");
+  else if (i <= 4 || buffer[i - 1] != '\r')
+    quendi_respond(QUENDR_SYNTAX_ERROR, NULL);
+  else if (buffer[4] != ' ' && buffer[4] != '\r') {
+    printf("'%c' == %i\n", buffer[4], buffer[4]);
+    quendi_respond(QUENDR_SYNTAX_ERROR, NULL);
+  } else {
+    buffer[i - 1] = '\0';
+    printf("Got: %s\n", buffer);
+    return 0;
+  }
   return -1;
 }
 
@@ -98,14 +135,14 @@ int quendi_get_next_param(char *buffer, int *nparams, char **params)
   return 0;
 }
 
-int quendi_dp_open(int sock)
+int quendi_dp_open(void)
 {
   struct sockaddr_in addr;
   int addrlen;
   int dsock;
 
   addrlen = sizeof(addr);
-  getsockname(sock, (struct sockaddr*)&addr, &addrlen);
+  getsockname(_quendi_server_data->csock, (struct sockaddr*)&addr, &addrlen);
   if ((dsock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
     syslog(LOG_WARNING, "socket: %m");
     return -1;
@@ -120,7 +157,7 @@ int quendi_dp_open(int sock)
   return dsock;
 }
 
-int quendi_dp_connect(int csock)
+int quendi_dp_connect(void)
 {
   int dsock;
   int i;
@@ -129,9 +166,9 @@ int quendi_dp_connect(int csock)
   int addrlen;
   struct request_info req;
 
-  dsock = quendi_dp_open(csock);
+  dsock = quendi_dp_open();
   if (dsock < 1) {
-    quendi_respond(csock, QUENDR_OPEN_ERROR, NULL);
+    quendi_respond(QUENDR_OPEN_ERROR, NULL);
     return -1;
   }
 
@@ -140,7 +177,7 @@ int quendi_dp_connect(int csock)
   snprintf(buffer, QUENDI_RESPONSE_LENGTH - 1,
       "%i@%s:%i Listening on Port", 1, inet_ntoa(addr.sin_addr),
       ntohs(addr.sin_port));
-  quendi_respond(csock, QUENDR_LISTENING, buffer);
+  quendi_respond(QUENDR_LISTENING, buffer);
 
   if (listen(dsock, 1)) {
     syslog(LOG_WARNING, "dp listen: %m");
@@ -152,7 +189,8 @@ int quendi_dp_connect(int csock)
     syslog(LOG_WARNING, "dp accept: %m");
 
   /* tcp wrapper check */
-  request_init(&req, RQ_DAEMON, "interloquendi", RQ_FILE, csock, 0);
+  request_init(&req, RQ_DAEMON, _quendi_server_data->server_name, RQ_FILE,
+      _quendi_server_data->csock, 0);
   fromhost(&req);
 
   if (!hosts_access(&req)) {
@@ -179,13 +217,13 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
       case QUENDR_SERVICE_READY: /* 220 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i %s %s %s/%s Service Ready\r\n", response_num,
-            _quendi_server_host, _quendi_server_name,
-            _quendi_server_version, _quendi_version);
+            _quendi_server_data->server_host, _quendi_server_data->server_name,
+            _quendi_server_data->server_version, _quendi_version);
         break;
       case QUENDR_GOODBYE: /* 221 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i %s Closing Connection\r\n", response_num,
-            _quendi_server_host);
+            _quendi_server_data->server_host);
         break;
       case QUENDR_PORT_OPENED: /* 222 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
@@ -199,9 +237,17 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH, "%i OK\r\n",
             response_num);
         break;
+      case QUENDR_DATA_STAGED: /* 251 */
+        size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
+            "%i Data Staged\r\n", response_num);
+        break; 
       case QUENDR_OPEN_ERROR: /* 420 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Error Opening Data Port\r\n", response_num);
+        break;
+      case QUENDR_NO_CUR_DATA: /* 450 */
+        size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
+            "%i No Current Data Writer\r\n", response_num);
         break;
       case QUENDR_SYNTAX_ERROR: /* 500 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH, "%i Syntax Error\r\n",
@@ -241,149 +287,34 @@ int quendi_parse(char *buffer, int *nparams, char **params)
 {
   int cmd = quendi_cmdnum(buffer);
 
-  if (cmd == QUENDC_HERE) {
+  *nparams = 0;
+
+  if (cmd == QUENDC_IDEN) {
     if (quendi_get_next_param(buffer + 4, nparams, params))
       return -2;
-  } else {
-    *nparams = 0;
   }
 
   return cmd;
 }
 
-int quendi_respond(int sock, int response_num, const char *message)
+int quendi_respond(int response_num, const char *message)
 {
   char buffer[QUENDI_RESPONSE_LENGTH + 1];
 
   if (quendi_make_response(buffer, response_num, message) == NULL)
     return -1;
 
-  write(sock, buffer, strlen(buffer));
+  write(_quendi_server_data->csock, buffer, strlen(buffer));
 
   return 0;
 }
 
-void quendi_server_init(const char* server_version, const char* server_name,
-    const char* server_host)
+void quendi_server_init(struct quendi_data* server_data)
 {
-  _quendi_server_version = strdup(server_version);
-  _quendi_server_name = strdup(server_name);
-  _quendi_server_host = strdup(server_host);
-}
-
-int quendi_server_start(int sock, const char* server_version,
-    const char* server_name, const char* server_host)
-{
-  char buffer[QUENDI_COMMAND_LENGTH + 1];
-  int i, n, np;
-  int overrun;
-  int eolfound;
-  char* params;
-
-  quendi_server_init(server_version, server_name, server_host);
-
-  quendi_respond(sock, QUENDR_SERVICE_READY, NULL);
-
-  /* Service Loop */
-  for (;;) {
-    for(overrun = eolfound = 0; !eolfound; ) {
-
-      n = read(sock, buffer, QUENDI_COMMAND_LENGTH);
-
-      if (n == 0) {
-        printf("connection dropped\n");
-        shutdown(sock, SHUT_RDWR);
-        close(sock);
-        quendi_server_shutdown();
-        return 0;
-      }
-
-      eolfound = 0;
-      /* check for buffer overrun */
-      for (i = 0; i < QUENDI_COMMAND_LENGTH; ++i)
-        if (buffer[i] == '\n') {
-          buffer[i] = '\0';
-          eolfound = 1;
-          break;
-        }
-
-      if (!eolfound)
-        overrun = 1;
-    }
-
-    if (overrun)
-      quendi_respond(sock, QUENDR_SYNTAX_ERROR, "Command Line too Long");
-    else if (i <= 4 || buffer[i - 1] != '\r')
-      quendi_respond(sock, QUENDR_SYNTAX_ERROR, NULL);
-    else if (buffer[4] != ' ' && buffer[4] != '\r') {
-      printf("'%c' == %i\n", buffer[4], buffer[4]);
-      quendi_respond(sock, QUENDR_SYNTAX_ERROR, NULL);
-    } else {
-      buffer[i - 1] = '\0';
-      printf("Got: %s\n", buffer);
-      switch(quendi_parse(buffer, &np, &params)) {
-        case -2:
-          quendi_respond(sock, QUENDR_PARAM_ERROR, "Parameter Missing");
-          break;
-        case -1:
-          quendi_respond(sock, QUENDR_SYNTAX_ERROR, "Unrecognised Command");
-          break;
-        case QUENDC_FORM:
-          if (_quendi_dp < 1)
-            quendi_respond(sock, QUENDR_PORT_NOT_OPEN, NULL);
-          else {
-            quendi_respond(sock, QUENDR_CMD_NOT_IMPL, NULL);
-          }
-          break;
-        case QUENDC_HERE:
-          _quendi_access_level = 1;
-          quendi_respond(sock, QUENDR_ACCESS_GRANTED, NULL);
-          break;
-        case QUENDC_SYNC:
-        case QUENDC_NOOP:
-          quendi_respond(sock, QUENDR_OK, NULL);
-          break;
-        case QUENDC_OPEN:
-          if (quendi_access_ok(sock, 1)) {
-            if (_quendi_dp < 1) {
-              _quendi_dp = quendi_dp_connect(sock);
-              if (_quendi_dp < 1)
-                quendi_respond(sock, QUENDR_OPEN_ERROR, NULL);
-              else
-                quendi_respond(sock, QUENDR_PORT_OPENED, NULL);
-            } else
-              quendi_respond(sock, QUENDR_OPEN_ERROR, "Too Many Open Ports");
-          }
-          break;
-        case QUENDC_QNOW:
-          if (quendi_access_ok(sock, 1)) {
-          }
-          break;
-        case QUENDC_QUIT:
-          quendi_respond(sock, QUENDR_GOODBYE, NULL);
-          close(sock);
-          return 0;
-        default:
-          quendi_respond(sock, QUENDR_CMD_NOT_IMPL, NULL);
-          break;
-      }
-    }
-  }
-  return 1;
+  _quendi_server_data = server_data;
+  quendi_respond(QUENDR_SERVICE_READY, NULL);
 }
 
 void quendi_server_shutdown(void)
 {
-  if (_quendi_server_version) {
-    free(_quendi_server_version);
-    _quendi_server_version = NULL;
-  }
-  if (_quendi_server_host) {
-    free(_quendi_server_host);
-    _quendi_server_host = NULL;
-  }
-  if (_quendi_server_name) {
-    free(_quendi_server_name);
-    _quendi_server_name = NULL;
-  }
 }

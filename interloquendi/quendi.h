@@ -28,7 +28,9 @@
 #define QUENDR_PORT_OPENED    222
 #define QUENDR_ACCESS_GRANTED 230
 #define QUENDR_OK             250
+#define QUENDR_DATA_STAGED    251
 #define QUENDR_OPEN_ERROR     420
+#define QUENDR_NO_CUR_DATA    450
 #define QUENDR_SYNTAX_ERROR   500
 #define QUENDR_PARAM_ERROR    501
 #define QUENDR_CMD_NOT_IMPL   502
@@ -38,8 +40,8 @@
 
 /* Commands */
 #define QUENDC_SYNC          1000
-#define QUENDC_HERE          1001
-#define QUENDC_FORM          1002
+#define QUENDC_FORM          1001
+#define QUENDC_IDEN          1002
 #define QUENDC_OPEN          1003
 #define QUENDC_ASYN          1004
 #define QUENDC_NOOP          1005
@@ -50,18 +52,24 @@
 #define QUENDI_COMMAND_LENGTH  1024
 #define QUENDI_RESPONSE_LENGTH 1024
 
-int   quendi_access_ok(int sock, int level);
-int   quendi_cmdnum(char* buffer);
-int   quendi_get_dp_connect(int csock);
-int   quendi_dp_open(int sock);
-int   quendi_get_next_param(char* buffer, int* nparams, char** params);
-char* quendi_make_response(char* buffer, int response_num, const char* message);
-int   quendi_parse(char* buffer, int* nparams, char** params);
-int   quendi_respond(int sock, int response_num, const char* message);
-void  quendi_server_init(const char* server_version, const char* server_name,
-    const char* server_host);
-void  quendi_server_shutdown(void);
-int   quendi_server_start(int sock, const char* server_version,
-    const char* server_name, const char* server_host);
+struct quendi_data {
+  const char* server_version;
+  const char* server_name;
+  const char* server_host;
+  int access_level;
+  char* directory;
+  int csock;
+};
+
+int   quendi_access_ok       ( int                                            );
+int   quendi_cmdnum          ( char*                                          );
+int   quendi_dp_connect      ( void                                           );
+int   quendi_get_cmd         ( char*                                          );
+int   quendi_get_next_param  ( char*               , int*        , char**     );
+char* quendi_make_response   ( char*               , int         , const char*);
+int   quendi_parse           ( char*               , int*        , char**     );
+int   quendi_respond         ( int                 , const char*              );
+void  quendi_server_init     ( struct quendi_data*                            );
+void  quendi_server_shutdown ( void                                           );
 
 #endif

@@ -1,8 +1,8 @@
 CC = gcc
 CFLAGS = -O3 -Wall
 
-OBJS = interloquendi.o quendi.o frameread.o
-HEADERS = quendi.h frameread.h channels.h
+OBJS = interloquendi.o channels.o quendi.o frameread.o
+HEADERS = quendi.h frameread.h channels.h bbc_pci.h
 
 all: interloquendi
 
