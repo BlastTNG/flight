@@ -336,7 +336,6 @@ MODULE_AUTHOR("Blast 2004");
 MODULE_DESCRIPTION("decom_pci: a driver for the pci dcom card");
 MODULE_ALIAS_CHARDEV_MAJOR(DECOM_MAJOR);
 MODULE_ALIAS("/dev/decompci");
-MODULE_ALIAS("/dev/bi0_pci");
 
 MODULE_PARM(decom_major, "i");
 
