@@ -136,7 +136,7 @@ private:
   int AMLsrc;
 };
 
-#define USE_SMALL_LOG
+#undef USE_SMALL_LOG
 #ifdef USE_SMALL_LOG
 extern FILE *smalllog;
 #  define SMALL_TRACE(fmt,...) \

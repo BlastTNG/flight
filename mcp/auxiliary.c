@@ -204,21 +204,24 @@ void ControlGyroHeat(unsigned short *RxFrame)
 
     if (p_on > 60)
       p_on = 60;
-  
+    else if (p_on < 0)
+      p_on = 0;
 
+    p_off = 60 - p_on;
   }
 
-  /******** do the pulse *****/
   if (CommandData.gyheat.age <= CommandData.gyheat.tc * 2)
     ++CommandData.gyheat.age;
   WriteData(gyHAgeAddr, CommandData.gyheat.age, NIOS_QUEUE);
   WriteData(gyHHistAddr, (history * 32768. / 100.), NIOS_QUEUE);
+
+  /******** do the pulse *****/
   if (p_on > 0) {
     WriteData(gyHeatAddr, on, NIOS_FLUSH);
     history = 100. / CommandData.gyheat.tc + (1. - 1. / CommandData.gyheat.tc)
       * history;
     p_on--;
-  } else {
+  } else if (p_off > 0) {
     WriteData(gyHeatAddr, off, NIOS_FLUSH);
     history = (1. - 1. / CommandData.gyheat.tc) * history;
     p_off--;
