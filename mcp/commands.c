@@ -1360,7 +1360,7 @@ void InitCommandData() {
   CommandData.ISCState.match_tol = 0.8;
   CommandData.ISCState.quit_tol = 1;
   CommandData.ISCState.rot_tol = 5 * DEG2RAD;
-  CommandData.ISC_save_period = 400;
+  CommandData.ISC_save_period = 4000;
   CommandData.ISC_pulse_width = 6;
   CommandData.ISC_fast_pulse_width = 3;
 

@@ -535,8 +535,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(bright_star), "set RA/Dec of bright source", GR_ISC, 2,
     {
-      {"RA (deg)",     0, 360, 'f', "ISC_BRRA"},
-      {"Dec (deg)", -180, 180, 'f', "ISC_BRDEC"}
+      {"RA (deg)",    0, 360, 'f', "ISC_BRRA"},
+      {"Dec (deg)", -90,  90, 'f', "ISC_BRDEC"}
     }
   },
 
