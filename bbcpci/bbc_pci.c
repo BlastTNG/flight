@@ -57,6 +57,8 @@ MODULE_DEVICE_TABLE(pci, bbc_pci_tbl);
 #define BI0_BUFFER_SIZE (624*25)
 
 extern volatile unsigned long jiffies;
+DECLARE_WAIT_QUEUE_HEAD(bbc_read_wq);
+
 
 static struct {
   unsigned long mem_base_raw;
@@ -185,6 +187,8 @@ static void timer_callback(unsigned long dummy)
       writel(rp, bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_RP);
       atomic_inc(&bbc_rfifo.n);
     }
+    if(atomic_read(&bbc_rfifo.n))
+      wake_up_interruptible(&bbc_read_wq);
   }
 
   /* Write Blast data to NIOS */
@@ -266,6 +270,17 @@ static ssize_t bbc_read(struct file *filp, char __user *buf,
 
     if(count < BBCPCI_SIZE_UINT) return 0;
     to_read = count / BBCPCI_SIZE_UINT;
+
+    /* What to do if no data are available ? */
+    if(atomic_read(&bbc_rfifo.n) == 0) {
+      if(filp->f_flags & O_NONBLOCK) {
+	/* Non blocking read, return immediately */
+	return -EAGAIN;
+      } else {
+	/* Blocking read: sleep untill data are available */
+	interruptible_sleep_on(&bbc_read_wq);
+      }
+    }
 
     for(i = 0; i < to_read; i++) {
       if(atomic_read(&bbc_rfifo.n) == 0) break;
@@ -399,6 +414,9 @@ static int bbc_ioctl(struct inode *inode, struct file *filp,
     break;
   case BBCPCI_IOC_READBUF_RP: /* Where the PC is about to read. */
     ret = readl(bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_RP);
+    break;
+  case BBCPCI_IOC_BBC_FIONREAD:
+    ret = atomic_read(&bbc_wfifo.n);
     break;
   case BBCPCI_IOC_BI0_FIONREAD:
     ret = atomic_read(&bi0_wfifo.n);
