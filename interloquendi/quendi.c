@@ -433,7 +433,7 @@ int quendi_respond(int response_num, const char *message)
   if (quendi_make_response(buffer, response_num, message) == NULL)
     return -1;
 
-  write(quendi_server_data->csock, buffer, strlen(buffer));
+  send(quendi_server_data->csock, buffer, strlen(buffer), MSG_DONTWAIT);
 
   return 0;
 }
