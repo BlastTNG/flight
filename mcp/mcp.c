@@ -41,6 +41,7 @@
 
 #define BI0_FRAME_BUFLEN (40)
 /* Define global variables */
+/* new comment */
 
 int bbc_fp = -1;
 int bi0_fp = -2;
