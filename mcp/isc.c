@@ -132,7 +132,8 @@ int ISCInit(int which)
     return -1;
   }
 
-  bprintf(info, "Connected to %s\n", isc_which[which].who);
+  bprintf(info, "Connected to %s in %s mode\n", isc_which[which].who,
+      (InCharge) ? "active" : "passive");
   CommandData.ISCState[which].shutdown = 0;
 
   if (WHICH)

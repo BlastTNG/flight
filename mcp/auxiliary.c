@@ -483,11 +483,13 @@ void CameraTrigger(int which)
           /* if we exceeded the time-out, flag the link as bad */
           if (ISC_link_ok[which] && isc_pulses[which].ack_wait
               > isc_pulses[which].ack_timeout) {
-
-            bprintf(warning,
-                "%s: timeout on ACK, flagging link as bad\n",
-                (which) ? "Osc" : "Isc");
-            ISC_link_ok[which] = 0;
+            if (InCharge) {
+              bprintf(warning,
+                  "%s: timeout on ACK, flagging link as bad\n",
+                  (which) ? "Osc" : "Isc");
+              ISC_link_ok[which] = 0;
+            } else if (WHICH)
+              bprintf(warning, "%iSC (t): timeout on ACK while NiC\n", which);
           }
 
           delay[which] = ISC_TRIGGER_DELAY;
@@ -537,9 +539,15 @@ void CameraTrigger(int which)
         || (start_ISC_cycle[which])) {
 
       if (ISC_link_ok[which] && isc_pulses[which].start_wait >
-          isc_pulses[which].start_timeout)
+          isc_pulses[which].start_timeout) {
+        if (InCharge) {
         bprintf(warning, "%s: Timeout while waiting for solution.\n",
             (which) ? "Osc" : "Isc");
+        } else if (WHICH)
+          bprintf(warning,
+              "%iSC (t): Timeout while waiting for solution and NiC.\n",
+              which);
+      }
 
       isc_pulses[which].start_wait = 0;
     }
