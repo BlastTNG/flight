@@ -514,13 +514,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(fast_integration), "set camera short integration time", GR_ISC, 1,
     {
-      {"integration time (ms)", 0, 5000, 'i', "ISC_FAST_PULSE"}
+      {"integration time (ms)", 0, 5000, 'i', "ISC_FPULSE"}
     }
   },
 
   {COMMAND(slow_integration), "set camera long integration time", GR_ISC, 1,
     {
-      {"integration time (ms)", 0, 5000, 'i', "ISC_PULSE"}
+      {"integration time (ms)", 0, 5000, 'i', "ISC_SPULSE"}
     }
   },
 
