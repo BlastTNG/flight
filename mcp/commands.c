@@ -45,8 +45,6 @@
 #  define USE_FIFO_CMD
 #endif
 
-extern int ADC_sync_timeout;  /* tx.c */
-
 void SetRaDec(double ra, double dec); /* defined in pointing.c */
 void SetTrimToISC();
 void ClearTrim();
@@ -217,9 +215,14 @@ void SingleCommand (enum singleCommand command) {
     CommandData.pointing_mode.h = 0;
 
   } else if (command == mcc_halt) {
+    mputs(MCP_WARNING, "Halting the MCC\n");
     system("/sbin/halt");
   } else if (command == sync_adc)
-    ADC_sync_timeout = 0;
+    CommandData.ADC_sync_timeout = 0;
+  else if (command == tdrss_veto)
+    CommandData.tdrssVeto = 1;
+  else if (command == tdrss_allow)
+    CommandData.tdrssVeto = 0;
 
   else if (command == trim_to_isc)
     SetTrimToISC();
@@ -1305,6 +1308,8 @@ void InitCommandData() {
   CommandData.ISCState[0].shutdown = 0;
   CommandData.ISCState[1].shutdown = 0;
 
+  CommandData.tdrssVeto = 0;
+
 #ifndef USE_FIFO_CMD
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
@@ -1422,6 +1427,8 @@ void InitCommandData() {
   CommandData.ISCState[0].match_tol = 0.8;
   CommandData.ISCState[0].quit_tol = 1;
   CommandData.ISCState[0].rot_tol = 5 * DEG2RAD;
+  CommandData.ISCState[0].gain = 1;
+  CommandData.ISCState[0].offset = 0;
   CommandData.ISCControl[0].save_period = 4000; /* 40 sec */
   CommandData.ISCControl[0].pulse_width = 3125; /* 300.00 msec */
   CommandData.ISCControl[0].fast_pulse_width = 625; /* 60.00 msec */
@@ -1449,9 +1456,12 @@ void InitCommandData() {
   CommandData.ISCState[1].match_tol = 0.8;
   CommandData.ISCState[1].quit_tol = 1;
   CommandData.ISCState[1].rot_tol = 5 * DEG2RAD;
+  CommandData.ISCState[1].gain = 1;
+  CommandData.ISCState[1].offset = 0;
   CommandData.ISCControl[1].save_period = 4000; /* 40 sec */
   CommandData.ISCControl[0].pulse_width = 3125; /* 300.00 msec */
   CommandData.ISCControl[0].fast_pulse_width = 625; /* 60.00 msec */
+  CommandData.ADC_sync_timeout = 0;
 
   WritePrevStatus();
 }

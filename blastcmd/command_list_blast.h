@@ -1,6 +1,6 @@
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 88         /* total number of named single word cmds */
+#define N_SCOMMANDS 90         /* total number of named single word cmds */
 #define N_MCOMMANDS 62         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -53,7 +53,7 @@ enum singleCommand {
   isc_veto,         level_off,          level_on,         mag_allow,
   mag_veto,         outer_cool_off,     outer_cool_on,    osc_auto_focus,
   outer_spare_off,  outer_spare_on,     pin_in,           pot_valve_close,
-  pot_valve_off,    pot_valve_on,
+  pot_valve_off,    pot_valve_on,       tdrss_veto,       tdrss_allow,
   pot_valve_open,   balpump_up,         balpump_off,      balpump_on,
   balpump_down,     sprpump_fwd,        sprpump_off,      sprpump_on,
   sprpump_rev,      ramp,               reset_trims,      isc_save_images,

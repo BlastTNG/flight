@@ -73,6 +73,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(xyzzy), "nothing happens here", GR_MISC},
   {COMMAND(sync_adc), "resync ADC Boards that require it", GR_MISC},
   {COMMAND(mcc_halt), "ask MCP to halt the MCC", GR_MISC | CONFIRM},
+  {COMMAND(tdrss_veto), "veto the TDRSS writer thread", GR_MISC | CONFIRM},
+  {COMMAND(tdrss_allow), "allow the TDRSS writer thread", GR_MISC},
 
   {COMMAND(balance_veto), "veto balance system", GR_BAL},
   {COMMAND(balance_allow), "unveto balance system", GR_BAL},

@@ -1,18 +1,18 @@
 /*()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()*\
-|*()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()*|
-|*()                                                                        ()*|
-|*() SMALL.CPP                                                              ()*|
-|*()                                                                        ()*|
-|*() Compression for high rate TDRSS downlink.  Requires dataholder.o and   ()*|
-|*() crc.o.                                                                 ()*|
-|*()                                                                        ()*|
-|*() See readme file for description of compression algorithm.              ()*|
-|*()                                                                        ()*|
-|*() Adam Hincks, Summer 2002, Toronto waterfront                           ()*|
-|*()   `-> revised Summer 2004, Toronto                                     ()*|
-|*()                                                                        ()*|
-|*()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()*|
-\*()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()*/
+ *()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()*|
+ *()                                                                        ()*|
+ *() SMALL.CPP                                                              ()*|
+ *()                                                                        ()*|
+ *() Compression for high rate TDRSS downlink.  Requires dataholder.o and   ()*|
+ *() crc.o.                                                                 ()*|
+ *()                                                                        ()*|
+ *() See readme file for description of compression algorithm.              ()*|
+ *()                                                                        ()*|
+ *() Adam Hincks, Summer 2002, Toronto waterfront                           ()*|
+ *()   `-> revised Summer 2004, Toronto                                     ()*|
+ *()                                                                        ()*|
+ *()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()*|
+ *()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,10 +47,10 @@ int tty_fd;
 extern unsigned short* slow_data[FAST_PER_SLOW];
 
 /******************************************************************************\
-|*                                                                            *|
-|* OpenSerial: open serial port.                                              *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * OpenSerial: open serial port.                                              *|
+ *                                                                            *|
+ ******************************************************************************/
 
 int OpenSerial() {
   int fd;
@@ -86,10 +86,10 @@ int OpenSerial() {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* printbin: prints binary number at cursor position.                         *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * printbin: prints binary number at cursor position.                         *|
+ *                                                                            *|
+ ******************************************************************************/
 
 
 void printbin(long num) {
@@ -105,24 +105,24 @@ void printbin(long num) {
 
 
 /******************************************************************************\
-|******************************************************************************|
-|**.------------------------------------------------------------------------.**|
-|**|                                                                        |**|
-|**|                              CLASS Buffer                              |**|
-|**|                                                                        |**|
-|**|     Constructs a buffer of data as you feed them to it.  (Not the      |**|
-|**|     same class as Buffer in big.cpp.)                                  |**|
-|**|                                                                        |**|
-|**`------------------------------------------------------------------------'**|
-|******************************************************************************|
-\******************************************************************************/
+ ******************************************************************************|
+ **.------------------------------------------------------------------------.**|
+ **|                                                                        |**|
+ **|                              CLASS Buffer                              |**|
+ **|                                                                        |**|
+ **|     Constructs a buffer of data as you feed them to it.  (Not the      |**|
+ **|     same class as Buffer in big.cpp.)                                  |**|
+ **|                                                                        |**|
+ **`------------------------------------------------------------------------'**|
+ ******************************************************************************|
+ ******************************************************************************/
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* Buffer: constructor.                                                       *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * Buffer: constructor.                                                       *|
+ *                                                                            *|
+ ******************************************************************************/
 
 Buffer::Buffer() {
   buf = (unsigned char *)malloc(1);
@@ -135,10 +135,10 @@ Buffer::~Buffer() {
 }
 
 /******************************************************************************\
-|*                                                                            *|
-|* SetSize (public): set the size of the buffer and malloc.                   *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * SetSize (public): set the size of the buffer and malloc.                   *|
+ *                                                                            *|
+ ******************************************************************************/
 
 
 void Buffer::SetSize(int s) {
@@ -153,14 +153,14 @@ void Buffer::SetSize(int s) {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* SectionSize (public): calculates size that a single field has taken in the *|
-|* buffer.                                                                    *|
-|*                                                                            *|
-|* Returns: amount buffer has grown since Introduce() was                     *|
-|* last called.                                                               *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * SectionSize (public): calculates size that a single field has taken in the *|
+ * buffer.                                                                    *|
+ *                                                                            *|
+ * Returns: amount buffer has grown since Introduce() was                     *|
+ * last called.                                                               *|
+ *                                                                            *|
+ ******************************************************************************/
 
 
   int Buffer::SectionSize() {
@@ -172,12 +172,12 @@ void Buffer::SetSize(int s) {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* CurrSize (public): get total size of the buffer.                           *|
-|*                                                                            *|
-|* Returns: size of buffer (bytes).                                           *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * CurrSize (public): get total size of the buffer.                           *|
+ *                                                                            *|
+ * Returns: size of buffer (bytes).                                           *|
+ *                                                                            *|
+ ******************************************************************************/
 
 
   int Buffer::CurrSize() {
@@ -189,12 +189,12 @@ void Buffer::SetSize(int s) {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* MaxSize (public)                                                           *|
-|*                                                                            *|
-|* Returns: size of the buffer.                                               *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * MaxSize (public)                                                           *|
+ *                                                                            *|
+ * Returns: size of the buffer.                                               *|
+ *                                                                            *|
+ ******************************************************************************/
 
 
 int Buffer::MaxSize() {
@@ -218,13 +218,13 @@ void Buffer::CheckBytePosRange() {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* Start (public): start a new buffer and write the first sync bytes.         *|
-|*                                                                            *|
-|* filenum  - The index of the AML file being used (files are named 0.aml,    *|
-|*            1.aml . . . 15.aml).                                            *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * Start (public): start a new buffer and write the first sync bytes.         *|
+ *                                                                            *|
+ * filenum  - The index of the AML file being used (files are named 0.aml,    *|
+ *            1.aml . . . 15.aml).                                            *|
+ *                                                                            *|
+ ******************************************************************************/
 
 
 void Buffer::Start(char filenum, unsigned int framenum) {
@@ -259,12 +259,12 @@ void Buffer::Start(char filenum, unsigned int framenum) {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* Introduce (public): to be called before a new field is written to the      *|
-|* buffer -- it writes the sync byte and reserves two bytes for writing in    *|
-|* later the size of the section.                                             *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * Introduce (public): to be called before a new field is written to the      *|
+ * buffer -- it writes the sync byte and reserves two bytes for writing in    *|
+ * later the size of the section.                                             *|
+ *                                                                            *|
+ ******************************************************************************/
 
 
   void Buffer::Introduce() {
@@ -284,11 +284,11 @@ void Buffer::Start(char filenum, unsigned int framenum) {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* NoDataMarker (public): to be called if for some reason the data cannot be  *|
-|* retrieved from MCP -- a marker that the field in this frame is blank.      *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * NoDataMarker (public): to be called if for some reason the data cannot be  *|
+ * retrieved from MCP -- a marker that the field in this frame is blank.      *|
+ *                                                                            *|
+ ******************************************************************************/
 
   void Buffer::NoDataMarker() {
     if (bitpos > 0)
@@ -305,11 +305,11 @@ void Buffer::Start(char filenum, unsigned int framenum) {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* RecordNumByes (public): to be called after a field has been written to the *|
-|* buffer -- goes back and records the size the field's compression took up.  *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * RecordNumByes (public): to be called after a field has been written to the *|
+ * buffer -- goes back and records the size the field's compression took up.  *|
+ *                                                                            *|
+ ******************************************************************************/
 
 void Buffer::RecordNumBytes() {
   buf[startbyte - 2] = SectionSize() & 0xff;
@@ -318,11 +318,11 @@ void Buffer::RecordNumBytes() {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* EraseLastSection (public): if the buffer has become too large, we need to  *|
-|* remove the last section that was written.                                  *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * EraseLastSection (public): if the buffer has become too large, we need to  *|
+ * remove the last section that was written.                                  *|
+ *                                                                            *|
+ ******************************************************************************/
 
 void Buffer::EraseLastSection() {
   bytepos = startbyte - 3;
@@ -330,10 +330,10 @@ void Buffer::EraseLastSection() {
 }
 
 /******************************************************************************\
-|*                                                                            *|
-|* Stop (public): writes final sync byte and sends buffer to serial port.     *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * Stop (public): writes final sync byte and sends buffer to serial port.     *|
+ *                                                                            *|
+ ******************************************************************************/
 
   void Buffer::Stop() {
     if (bitpos > 0)
@@ -356,13 +356,13 @@ void Buffer::EraseLastSection() {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* WriteChunk (private): writes a datum to the buffer.                        *|
-|*                                                                            *|
-|* numbits  - Length of datum in bits.                                        *|
-|* datum    - The datum.                                                      *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * WriteChunk (private): writes a datum to the buffer.                        *|
+ *                                                                            *|
+ * numbits  - Length of datum in bits.                                        *|
+ * datum    - The datum.                                                      *|
+ *                                                                            *|
+ ******************************************************************************/
 
 
 void Buffer::WriteChunk(char numbits, long long datum) {
@@ -399,18 +399,18 @@ void Buffer::WriteChunk(char numbits, long long datum) {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* WriteTo (public): writes a datum to the buffer, adding an offset for the   *|
-|* sign and dealing with any data that are larger than numbits                *|
-|*                                                                            *|
-|* datum    - The datum.                                                      *|
-|* numbits  - The number of bits into which we ideally want to fit the datum. *|
-|* oversize - The size (bits) of overflow chunks (for data that don't fit in  *|
-|*            numbits).                                                       *|
-|* hassign  - If the data are signed, we add an offset so all numbers are     *|
-|*            positive                                                        *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * WriteTo (public): writes a datum to the buffer, adding an offset for the   *|
+ * sign and dealing with any data that are larger than numbits                *|
+ *                                                                            *|
+ * datum    - The datum.                                                      *|
+ * numbits  - The number of bits into which we ideally want to fit the datum. *|
+ * oversize - The size (bits) of overflow chunks (for data that don't fit in  *|
+ *            numbits).                                                       *|
+ * hassign  - If the data are signed, we add an offset so all numbers are     *|
+ *            positive                                                        *|
+ *                                                                            *|
+ ******************************************************************************/
 
 
 void Buffer::WriteTo(long long datum, char numbits, char oversize,
@@ -450,24 +450,24 @@ void Buffer::WriteTo(long long datum, char numbits, char oversize,
 
 
 /******************************************************************************\
-|******************************************************************************|
-|**.------------------------------------------------------------------------.**|
-|**|                                                                        |**|
-|**|                                CLASS Alice                             |**|
-|**|                                                                        |**|
-|**|     `What a curious feeling!' said Alice; `I must be shutting up       |**|
-|**|     like a telescope.'                                                 |**|
-|**|                                                                        |**|
-|**`------------------------------------------------------------------------'**|
-|******************************************************************************|
-\******************************************************************************/
+ ******************************************************************************|
+ **.------------------------------------------------------------------------.**|
+ **|                                                                        |**|
+ **|                                CLASS Alice                             |**|
+ **|                                                                        |**|
+ **|     `What a curious feeling!' said Alice; `I must be shutting up       |**|
+ **|     like a telescope.'                                                 |**|
+ **|                                                                        |**|
+ **`------------------------------------------------------------------------'**|
+ ******************************************************************************|
+ ******************************************************************************/
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* Alice: Constructor.                                                        *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * Alice: Constructor.                                                        *|
+ *                                                                            *|
+ ******************************************************************************/
 
 Alice::Alice() {
   AMLsrc = -1;
@@ -478,15 +478,15 @@ Alice::Alice() {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* GetCurrentAML (private): mcp writes the AML file number to the command     *|
-|* struct whenever it receives commanding to do so.  This function            *|
-|* checks this struct, and if it has changed, loads all the information from  *|
-|* the file.                                                                  *|
-|*                                                                            *|
-|* Returns: true if the AML file changed and was loaded in.                   *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * GetCurrentAML (private): mcp writes the AML file number to the command     *|
+ * struct whenever it receives commanding to do so.  This function            *|
+ * checks this struct, and if it has changed, loads all the information from  *|
+ * the file.                                                                  *|
+ *                                                                            *|
+ * Returns: true if the AML file changed and was loaded in.                   *|
+ *                                                                            *|
+ ******************************************************************************/
 
 
 bool Alice::GetCurrentAML() {
@@ -510,19 +510,19 @@ bool Alice::GetCurrentAML() {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* Differentiate (private): differentiates data; i.e., finds the differences  *|
-|* between adjacent data in a time stream, and divides all these values by    *|
-|* some specified value.                                                      *|
-|*                                                                            *|
-|* *invals  - The data to differentiate.  The function overwrites these data  *|
-|*            with their differentials.                                       *|
-|* num      - The number of samples in invals.                                *|
-|* divider  - Number by which to divide differential data.                    *|
-|*                                                                            *|
-|* Returns: Offset (integration constant).                                    *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * Differentiate (private): differentiates data; i.e., finds the differences  *|
+ * between adjacent data in a time stream, and divides all these values by    *|
+ * some specified value.                                                      *|
+ *                                                                            *|
+ * *invals  - The data to differentiate.  The function overwrites these data  *|
+ *            with their differentials.                                       *|
+ * num      - The number of samples in invals.                                *|
+ * divider  - Number by which to divide differential data.                    *|
+ *                                                                            *|
+ * Returns: Offset (integration constant).                                    *|
+ *                                                                            *|
+ ******************************************************************************/
 
 
 double Alice::Differentiate(double *invals, int num, int divider) {
@@ -543,13 +543,13 @@ double Alice::Differentiate(double *invals, int num, int divider) {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* Integrate (private): add adjacent data in the time stream.                 *|
-|*                                                                            *|
-|* *invals  - Data in, which is overwritten with the integrated data.         *|
-|* num      - Number of samples in invals.                                    *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * Integrate (private): add adjacent data in the time stream.                 *|
+ *                                                                            *|
+ * *invals  - Data in, which is overwritten with the integrated data.         *|
+ * num      - Number of samples in invals.                                    *|
+ *                                                                            *|
+ ******************************************************************************/
 
 void Alice::Integrate(double *invals, int num) {
   int i;
@@ -562,14 +562,14 @@ void Alice::Integrate(double *invals, int num) {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* Round (private): Smart rounding of a float.                                *|
-|*                                                                            *|
-|* num  - Float to be rounded.                                                *|
-|*                                                                            *|
-|* Returns: Integer double.                                                   *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * Round (private): Smart rounding of a float.                                *|
+ *                                                                            *|
+ * num  - Float to be rounded.                                                *|
+ *                                                                            *|
+ * Returns: Integer double.                                                   *|
+ *                                                                            *|
+ ******************************************************************************/
 
   double Alice::Round(double num) {
     if (num >= 0)
@@ -580,16 +580,16 @@ void Alice::Integrate(double *invals, int num) {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* SendDiff (private): Differentiate data and send it to the buffer.          *|
-|*                                                                            *|
-|* *data        - Data to be compressed.                                      *|
-|* num          - Number of samples in *data.                                 *|
-|* *currInfo    - Pointer to structure containing info on the field           *|
-|* maxover      - The maximum fraction of data we want to spill over numbits. *|
-|* minover      - The minimum fraction etc.                                   *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * SendDiff (private): Differentiate data and send it to the buffer.          *|
+ *                                                                            *|
+ * *data        - Data to be compressed.                                      *|
+ * num          - Number of samples in *data.                                 *|
+ * *currInfo    - Pointer to structure containing info on the field           *|
+ * maxover      - The maximum fraction of data we want to spill over numbits. *|
+ * minover      - The minimum fraction etc.                                   *|
+ *                                                                            *|
+ ******************************************************************************/
 
 void Alice::SendDiff(double *data, int num, struct DataStruct_glob *currInfo,
     float maxover, float minover) {
@@ -635,17 +635,17 @@ void Alice::SendDiff(double *data, int num, struct DataStruct_glob *currInfo,
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* SendInt (private):  prepare integral preserving data and send it to the    *|
-|* buffer.                                                                    *|
-|*                                                                            *|
-|* *data        - Data to be compressed.                                      *|
-|* num          - Number of samples in *data.                                 *|
-|* *currInfo    - Pointer to struct containing info on the current field.     *|
-|* maxover      - The maximum fraction of data we want to spill over numbits. *|
-|* minover      - The minimum fraction etc.                                   *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * SendInt (private):  prepare integral preserving data and send it to the    *|
+ * buffer.                                                                    *|
+ *                                                                            *|
+ * *data        - Data to be compressed.                                      *|
+ * num          - Number of samples in *data.                                 *|
+ * *currInfo    - Pointer to struct containing info on the current field.     *|
+ * maxover      - The maximum fraction of data we want to spill over numbits. *|
+ * minover      - The minimum fraction etc.                                   *|
+ *                                                                            *|
+ ******************************************************************************/
 
 void Alice::SendInt(double *data, int num, struct DataStruct_glob *currInfo,
     float maxover, float minover) {
@@ -694,13 +694,13 @@ void Alice::SendInt(double *data, int num, struct DataStruct_glob *currInfo,
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* SendSingle (private):  send down the first value in the time stream.       *|
-|*                                                                            *|
-|* *data        - The time stream.                                            *|
-|* *currInfo    - Pointer to struct containing info on the current field.     *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * SendSingle (private):  send down the first value in the time stream.       *|
+ *                                                                            *|
+ * *data        - The time stream.                                            *|
+ * *currInfo    - Pointer to struct containing info on the current field.     *|
+ *                                                                            *|
+ ******************************************************************************/
 
 void Alice::SendSingle(double *data, struct DataStruct_glob *currInfo) {
   double divider, sendval;
@@ -719,13 +719,13 @@ void Alice::SendSingle(double *data, struct DataStruct_glob *currInfo) {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* SendAverage (private): obtain average of time stream and write to buffer.  *|
-|*                                                                            *|
-|* *data        - The data.                                                   *|
-|* *currInfo    - Pointer to struct containing info on the current field.     *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * SendAverage (private): obtain average of time stream and write to buffer.  *|
+ *                                                                            *|
+ * *data        - The data.                                                   *|
+ * *currInfo    - Pointer to struct containing info on the current field.     *|
+ *                                                                            *|
+ ******************************************************************************/
 
 void Alice::SendAverage(double *data, int num,
     struct DataStruct_glob *currInfo) {
@@ -752,17 +752,17 @@ void Alice::SendAverage(double *data, int num,
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* MaxPowTwo (private): checks all fields and sees which has the greatest     *|
-|* FindPowTwo (see below).                                                    *|
-|*                                                                            *|
-|* val          - The number of frames to consider (since # samples =         *|
-|*                # frames x samples per frame).                              *|
-|* threshold    - See FindPowTwo below.                                       *|
-|*                                                                            *|
-|* Returns:  the maximum FindPowTwo.                                          *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * MaxPowTwo (private): checks all fields and sees which has the greatest     *|
+ * FindPowTwo (see below).                                                    *|
+ *                                                                            *|
+ * val          - The number of frames to consider (since # samples =         *|
+ *                # frames x samples per frame).                              *|
+ * threshold    - See FindPowTwo below.                                       *|
+ *                                                                            *|
+ * Returns:  the maximum FindPowTwo.                                          *|
+ *                                                                            *|
+ ******************************************************************************/
 
 int Alice::MaxPowTwo(int val, float threshold) {
   struct DataStruct_glob *currInfo;
@@ -782,13 +782,13 @@ int Alice::MaxPowTwo(int val, float threshold) {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* MaxFrameFreq (private): checks all fields to see which has the greatest    *|
-|* samples per frame.                                                         *|
-|*                                                                            *|
-|* Returns:  maximum samples per frame.                                       *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * MaxFrameFreq (private): checks all fields to see which has the greatest    *|
+ * samples per frame.                                                         *|
+ *                                                                            *|
+ * Returns:  maximum samples per frame.                                       *|
+ *                                                                            *|
+ ******************************************************************************/
 
 int Alice::MaxFrameFreq() {
   struct DataStruct_glob *currInfo;
@@ -813,17 +813,17 @@ int Alice::MaxFrameFreq() {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* FindPowTwo (private): finds the smallest power of two greater than a given *|
-|* value.                                                                     *|
-|*                                                                            *|
-|* val          - The value greater than which the power of two must be.      *|
-|* threshold    - The fraction of the value by which the power of two must    *|
-|*                exceed that value.                                          *|
-|*                                                                            *|
-|* Returns:  the power of two.                                                *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * FindPowTwo (private): finds the smallest power of two greater than a given *|
+ * value.                                                                     *|
+ *                                                                            *|
+ * val          - The value greater than which the power of two must be.      *|
+ * threshold    - The fraction of the value by which the power of two must    *|
+ *                exceed that value.                                          *|
+ *                                                                            *|
+ * Returns:  the power of two.                                                *|
+ *                                                                            *|
+ ******************************************************************************/
 
 int Alice::FindPowTwo(int val, float threshold) {
   int i, num;
@@ -840,10 +840,10 @@ int Alice::FindPowTwo(int val, float threshold) {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* CompressionLoop (public): main control loop                                *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * CompressionLoop (public): main control loop                                *|
+ *                                                                            *|
+ ******************************************************************************/
 
 void Alice::CompressionLoop() {
   double *filterdata, *rawdata;
@@ -862,6 +862,12 @@ void Alice::CompressionLoop() {
   filterdatasize = 1;
 
   for (;;) {
+    /* Abort if we have vetoed the TDRSS writer */
+    if (CommandData.tdrssVeto) {
+      mputs(MCP_WARNING, "TDRSS veto detected. Bailing on TDRSS thread.\n");
+      return;
+    }
+
     // Check for new AML file command written by mcp.
     if (GetCurrentAML()) {
 
@@ -898,14 +904,26 @@ void Alice::CompressionLoop() {
 
       // Wait until there exists enough data for this padding
       framepos = DataSource->NumFrames();
-      while (DataSource->NumFrames() < framepos + readleftpad + readrightpad)
+      while (DataSource->NumFrames() < framepos + readleftpad + readrightpad) {
+        /* Abort if we have vetoed the TDRSS writer */
+        if (CommandData.tdrssVeto) {
+          mputs(MCP_WARNING, "TDRSS veto detected. Bailing on TDRSS thread.\n");
+          return;
+        }
         usleep(1000);
+      }
       framepos += readleftpad + readrightpad;
     }
 
     // Wait until mcp has written numframes of data
-    while (DataSource->NumFrames() < framepos + numframes)
+    while (DataSource->NumFrames() < framepos + numframes) {
+      /* Abort if we have vetoed the TDRSS writer */
+      if (CommandData.tdrssVeto) {
+        mputs(MCP_WARNING, "TDRSS veto detected. Bailing on TDRSS thread.\n");
+        return;
+      }
       usleep(1000);
+    }
 
     // Start a new buffer for the downlink
     sendbuf->Start(AMLsrc, (unsigned int)(framepos - readrightpad));
@@ -1028,10 +1046,10 @@ void Alice::CompressionLoop() {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* Alice: Destructor                                                          *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * Alice: Destructor                                                          *|
+ *                                                                            *|
+ ******************************************************************************/
 
 Alice::~Alice()
 {
@@ -1042,23 +1060,23 @@ Alice::~Alice()
 
 
 /******************************************************************************\
-|******************************************************************************|
-|**.------------------------------------------------------------------------.**|
-|**|                                                                        |**|
-|**|                            CLASS FrameBuffer                           |**|
-|**|                                                                        |**|
-|**|     Intercepts mcp frames and buffers them locally for Alice.          |**|
-|**|                                                                        |**|
-|**`------------------------------------------------------------------------'**|
-|******************************************************************************|
-\******************************************************************************/
+ ******************************************************************************|
+ **.------------------------------------------------------------------------.**|
+ **|                                                                        |**|
+ **|                            CLASS FrameBuffer                           |**|
+ **|                                                                        |**|
+ **|     Intercepts mcp frames and buffers them locally for Alice.          |**|
+ **|                                                                        |**|
+ **`------------------------------------------------------------------------'**|
+ ******************************************************************************|
+ ******************************************************************************/
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* FrameBuffer:  constructor.                                                 *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * FrameBuffer:  constructor.                                                 *|
+ *                                                                            *|
+ ******************************************************************************/
 
 FrameBuffer::FrameBuffer(unsigned int *mcpindex_in, 
     unsigned short **fastdata_in,
@@ -1077,13 +1095,13 @@ FrameBuffer::FrameBuffer(unsigned int *mcpindex_in,
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* Resize (public): change the size of the circular buffer grabbed from mcp   *|
-|* frames.                                                                    *|
-|*                                                                            *|
-|* numframes_in     - The size of the buffer, in units of 5 Hz frames.        *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * Resize (public): change the size of the circular buffer grabbed from mcp   *|
+ * frames.                                                                    *|
+ *                                                                            *|
+ * numframes_in     - The size of the buffer, in units of 5 Hz frames.        *|
+ *                                                                            *|
+ ******************************************************************************/
 
 void FrameBuffer::Resize(int numframes_in) {
   int i, j;
@@ -1153,14 +1171,14 @@ void FrameBuffer::Resize(int numframes_in) {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* UpdateThreadEntry (private): an annoying circumposition to start another   *|
-|* thread in an object.  One creates a pointer to the calling object and then *|
-|* calls the thread routine.                                                  *|
-|*                                                                            *|
-|* *pthis   - Pointer to the calling object.                                  *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * UpdateThreadEntry (private): an annoying circumposition to start another   *|
+ * thread in an object.  One creates a pointer to the calling object and then *|
+ * calls the thread routine.                                                  *|
+ *                                                                            *|
+ * *pthis   - Pointer to the calling object.                                  *|
+ *                                                                            *|
+ ******************************************************************************/
 
 void *FrameBuffer::UpdateThreadEntry(void *pthis) {
   pthread_setspecific(identity, "updt");
@@ -1173,16 +1191,22 @@ void *FrameBuffer::UpdateThreadEntry(void *pthis) {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* Update (private): copy new mcp frames into the circular buffer.            *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * Update (private): copy new mcp frames into the circular buffer.            *|
+ *                                                                            *|
+ ******************************************************************************/
 
 void FrameBuffer::Update() {
   unsigned int i;
   int j;
 
   while (1 == 1) {
+    /* Abort if we have vetoed the TDRSS writer */
+    if (CommandData.tdrssVeto) {
+      mputs(MCP_WARNING, "TDRSS veto detected. Bailing on update thread.\n");
+      return;
+    }
+
     usleep(1000);
     if (exitupdatethread) {
       exitupdatethread = false;
@@ -1224,12 +1248,12 @@ void FrameBuffer::Update() {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* NumFrames (public)                                                         *|
-|*                                                                            *|
-|* Returns: the linear frame counter.                                         *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * NumFrames (public)                                                         *|
+ *                                                                            *|
+ * Returns: the linear frame counter.                                         *|
+ *                                                                            *|
+ ******************************************************************************/
 
 int FrameBuffer::NumFrames() {
   return pseudoframe;
@@ -1237,19 +1261,19 @@ int FrameBuffer::NumFrames() {
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* ReadField (public): read a field of the 5 Hz frame.  User must ensure that *|
-|*                                                                            *|
-|* *returnbuf   - Buffer in which to place the field's data.  User must       *|
-|*                ensure that enough memory is allocated to fit requested     *|
-|*                data.                                                       *|
-|* *fieldname   - The field source name.                                      *|
-|* framenum_in  - The starting frame to read.                                 *|
-|* numframes_in - The number of frames past framenum_in to read.              *|
-|*                                                                            *|
-|* Returns: the number of values placed in *returnbuf.                        *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * ReadField (public): read a field of the 5 Hz frame.  User must ensure that *|
+ *                                                                            *|
+ * *returnbuf   - Buffer in which to place the field's data.  User must       *|
+ *                ensure that enough memory is allocated to fit requested     *|
+ *                data.                                                       *|
+ * *fieldname   - The field source name.                                      *|
+ * framenum_in  - The starting frame to read.                                 *|
+ * numframes_in - The number of frames past framenum_in to read.              *|
+ *                                                                            *|
+ * Returns: the number of values placed in *returnbuf.                        *|
+ *                                                                            *|
+ ******************************************************************************/
 
 int FrameBuffer::ReadField(double *returnbuf, const char *fieldname, 
     int framenum_in, int numframes_in) {
@@ -1266,7 +1290,7 @@ int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
       ((fieldname[2] >= 48 && fieldname[2] <= 57 &&
         fieldname[3] == 'c') ||
        (fieldname[2] == 'c'))) {
-    
+
     // Get the channel number.
     for (i = 0; i < (signed int)strlen(fieldname) && fieldname[i] != 'c'; i++);
     // Let 'wide' represent whether the ch. num. is even or odd.
@@ -1282,7 +1306,7 @@ int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
     sprintf(tmpstr, "%s%dhi", tmpstr, atoi(fieldname + i + 1) - wide);
     if ((address[1] = GetNiosAddr(tmpstr)) == NULL)
       return 0;
-        
+
     mindex = NOT_MULTIPLEXED + 1;  // Marker for bolometers.
     if (wide)
       mask = 0x00ff;
@@ -1322,7 +1346,7 @@ int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
       // Bolometers are all fast channels.
       for (k = 0; k < FAST_PER_SLOW; k++)
         returnbuf[j++] = ((fastbuf[truenum][k][chnum[1]] & mask) << wide) | 
-                         fastbuf[truenum][k][chnum[0]];
+          fastbuf[truenum][k][chnum[0]];
     } else {
       lsb = slowbuf[truenum][mindex][chnum[0]];
       if (wide)
@@ -1342,10 +1366,10 @@ int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
 
 
 /******************************************************************************\
-|*                                                                            *|
-|* ~FrameBuffer: destructor.                                                  *|
-|*                                                                            *|
-\******************************************************************************/
+ *                                                                            *|
+ * ~FrameBuffer: destructor.                                                  *|
+ *                                                                            *|
+ ******************************************************************************/
 
 FrameBuffer::~FrameBuffer() {
   int i, j;
@@ -1368,16 +1392,16 @@ FrameBuffer::~FrameBuffer() {
 
 
 /******************************************************************************\
-|******************************************************************************|
-|**.------------------------------------------------------------------------.**|
-|**|                                                                        |**|
-|**|                                TDRSWriter                              |**|
-|**|                                                                        |**|
-|**|                          Entry point from mcp.                         |**|
-|**|                                                                        |**|
-|**`------------------------------------------------------------------------'**|
-|******************************************************************************|
-\******************************************************************************/
+ ******************************************************************************|
+ **.------------------------------------------------------------------------.**|
+ **|                                                                        |**|
+ **|                                TDRSWriter                              |**|
+ **|                                                                        |**|
+ **|                          Entry point from mcp.                         |**|
+ **|                                                                        |**|
+ **`------------------------------------------------------------------------'**|
+ ******************************************************************************|
+ ******************************************************************************/
 
 extern "C" void TDRSSWriter(void) {
   Alice *drinkme;

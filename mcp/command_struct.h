@@ -149,6 +149,8 @@ struct CommandDataStruct {
 
   unsigned short bi0FifoSize;
   unsigned short bbcFifoSize;
+  unsigned short tdrssVeto;
+  unsigned short ADC_sync_timeout;
 
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
 

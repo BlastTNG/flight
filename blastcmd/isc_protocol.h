@@ -26,9 +26,9 @@
 #define FOCUS_RANGE 2550					// # steps range for focus stepper
 #define AP_RANGE 495						// # steps range for aperture stepper
 
-
 #define ISC_CCD_X_PIXELS 1312					// pixel dimenions of the CCD
 #define ISC_CCD_Y_PIXELS 1024					//   "        "     "   "   "
+
 #define OSC_CCD_X_PIXELS 1360					// pixel dimenions of the CCD
 #define OSC_CCD_Y_PIXELS 1036					//   "        "     "   "   "
 
@@ -41,6 +41,7 @@
 #define CCD_X_PIXELS OSC_CCD_X_PIXELS
 #define CCD_Y_PIXELS OSC_CCD_Y_PIXELS
 #endif
+
 
 typedef enum {full, roi, blob} ISCDisplayModeType;
 
@@ -55,6 +56,7 @@ struct ISCStatusStruct {
   int MCPFrameNum;		// current frame number of MCP
   int shutdown;			// 0=nothing 1=shutdown 2=reboot computer 3=camera power cycle
   int hold_current;	    // the hold "heater" current (0-50)
+  int exposure;			// *** new - exposure time in us REGARDLESS of self/hardware trigger ***
 
   // Display mode parameters
   ISCDisplayModeType display_mode;
@@ -82,6 +84,10 @@ struct ISCStatusStruct {
   int apbox;			// ask chapin
   int mult_dist;		// ed knows
 
+  // *** new gain/offset stuff ***
+  double gain;			// relative gain to the CCD factory default
+  int offset;			// offset to the CCD factory default (in digitized units)
+
   // Matching algorithm
   int maxBlobMatch;		// maximum # blobs used in the frame matching
   double mag_limit;		// size of tires
@@ -102,6 +108,12 @@ struct ISCSolutionStruct {
   double ra;			// RA of CCD in radians (apparent)
   double dec;			// DEC   "        "        "
   double sigma;			// uncertainty of solution in radians (or 2PI on failure)
+
+  double temp1;	        // temperature sensors
+  double temp2;
+  double temp3;
+  double temp4;
+  double pressure1;     // pressure sensor
 
   int n_blobs;
   double blob_x[MAX_ISC_BLOBS];

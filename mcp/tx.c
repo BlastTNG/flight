@@ -132,7 +132,6 @@ void WriteAux(void) {
 /* send the sync bit if they do.  Only one board can be synced   */
 /* in each superframe.                                           */
 /*****************************************************************/
-int ADC_sync_timeout = 0;
 void SyncADC (int TxIndex) {
   static struct NiosStruct* syncAddr;
   static struct BiPhaseStruct* syncReadAddr;
@@ -143,10 +142,10 @@ void SyncADC (int TxIndex) {
 
   int k, l;
 
-  if (ADC_sync_timeout >= 600)
+  if (CommandData.ADC_sync_timeout >= 600)
     return;
 
-  ADC_sync_timeout++;
+  CommandData.ADC_sync_timeout++;
   
   /******** Obtain correct indexes the first time here ***********/
   static int firsttime = 1;
@@ -245,6 +244,11 @@ void StoreStarCameraData(int index, int which)
   static struct NiosStruct* YOffAddr[2];
   static struct NiosStruct* HoldIAddr[2];
   static struct NiosStruct* SavePrdAddr[2];
+  static struct NiosStruct* Temp1Addr[2];
+  static struct NiosStruct* Temp2Addr[2];
+  static struct NiosStruct* Temp3Addr[2];
+  static struct NiosStruct* Temp4Addr[2];
+  static struct NiosStruct* PressureAddr[2];
 
   if (firsttime[which]) {
     firsttime[which] = 0;
@@ -292,6 +296,11 @@ void StoreStarCameraData(int index, int which)
     YOffAddr[which] = GetSCNiosAddr("y_off", which);
     HoldIAddr[which] = GetSCNiosAddr("hold_i", which);
     SavePrdAddr[which] = GetSCNiosAddr("save_prd", which);
+    Temp1Addr[which] = GetSCNiosAddr("temp1", which);
+    Temp2Addr[which] = GetSCNiosAddr("temp2", which);
+    Temp3Addr[which] = GetSCNiosAddr("temp3", which);
+    Temp4Addr[which] = GetSCNiosAddr("temp4", which);
+    PressureAddr[which] = GetSCNiosAddr("pressure1", which);
   }
 
   /** ISC Fields **/
@@ -409,6 +418,17 @@ void StoreStarCameraData(int index, int which)
       NIOS_QUEUE);
   WriteData(HoldIAddr[which], (unsigned int)(ISCSentState[which].hold_current),
       NIOS_QUEUE);
+  WriteData(Temp1Addr[which],
+      (unsigned int)(ISCSolution[which][i_isc].temp1 * 200.), NIOS_QUEUE);
+  WriteData(Temp2Addr[which],
+      (unsigned int)(ISCSolution[which][i_isc].temp2 * 200.), NIOS_QUEUE);
+  WriteData(Temp3Addr[which],
+      (unsigned int)(ISCSolution[which][i_isc].temp3 * 200.), NIOS_QUEUE);
+  WriteData(Temp4Addr[which],
+      (unsigned int)(ISCSolution[which][i_isc].temp4 * 200.), NIOS_QUEUE);
+  WriteData(PressureAddr[which],
+      (unsigned int)(ISCSolution[which][i_isc].pressure1 * 2000.), NIOS_QUEUE);
+
   WriteData(FpulseAddr[which],
       (unsigned int)(CommandData.ISCControl[which].fast_pulse_width),
       NIOS_QUEUE);
@@ -782,12 +802,6 @@ void RawNiosWrite(unsigned int addr, unsigned int data, int flush_flag)
 
   if (flush_flag || counter == 2 * NIOS_BUFFER_SIZE) {
     n = write(bbc_fp, niosData, counter * sizeof(unsigned int));
-//    if (flush_flag)
-//      mprintf(MCP_INFO, "Flushed %i of %i\n", n,
-//          counter * sizeof(unsigned int));
-//    else
-//      mprintf(MCP_INFO, "Autoflushed %i of %i\n", n,
-//          counter * sizeof(unsigned int));
     counter = 0;
   }
 }

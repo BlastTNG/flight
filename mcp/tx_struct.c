@@ -421,6 +421,16 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_maxblobs", 'w', LOOP4,  7,                1.0,             0.0, 'u'},
   {"bi0_fifo_size",'w', LOOP4,  8,             1./624,             0.0, 'u'},
   {"plover",       'w', LOOP4,  9,                1.0,             0.0, 'u'},
+  {"isc_temp1",    'w', LOOP4, 10,            1./200.,             0.0, 'u'},
+  {"isc_temp2",    'w', LOOP4, 11,            1./200.,             0.0, 'u'},
+  {"isc_temp3",    'w', LOOP4, 12,            1./200.,             0.0, 'u'},
+  {"isc_temp4",    'w', LOOP4, 13,            1./200.,             0.0, 'u'},
+  {"isc_pressure1",'w', LOOP4, 14,           1./2000.,             0.0, 'u'},
+  {"osc_temp1",    'w', LOOP4, 15,            1./200.,             0.0, 'u'},
+  {"osc_temp2",    'w', LOOP4, 16,            1./200.,             0.0, 'u'},
+  {"osc_temp3",    'w', LOOP4, 17,            1./200.,             0.0, 'u'},
+  {"osc_temp4",    'w', LOOP4, 18,            1./200.,             0.0, 'u'},
+  {"osc_pressure1",'w', LOOP4, 19,           1./2000.,             0.0, 'u'},
 
   END_OF_CHANNELS
 };
