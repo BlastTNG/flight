@@ -163,7 +163,8 @@
       <HI value="6"/>
       <XHI value="16"/>
     </EXTREMA>
-    <CURVEFILE name="/mnt/decom/etc/decom.cur"/>
+    <CURFILE name="/mnt/decom/etc/decom.cur"/>
+    <DECOMD host="galadriel.blast" port="11411"/>
   </SETTINGS>
   <DEFAULTS>
     <TEXTSTYLE>

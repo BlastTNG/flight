@@ -50,12 +50,12 @@
     <WORD value="0" caption="UH-OH" textstyle="apricot" alarm="doh.wav"/>
   </MULTI>
 
-	# CURVEFILE -- specify any curfiles you might want to read from.  They will
-	# be available from a drop-down menu in Palantir.  N.B. that I used to think
-	# .cur stood for "curve", hence "curvefile"
-  <CURVEFILE name="/data/etc/decom.cur"/>
-  <CURVEFILE name="/data/etc/second.cur"/>
-  <CURVEFILE name="/data/etc/third.cur"/>
+  # The place to look for data
+  <CURFILE name="/data/etc/decom.cur"/>
+
+  # A hostname and port to connect to for status information from the
+  # decom daemon.  host can be either an ip address or a hostname
+  <DECOMD host="galadriel.blast" port="11411">
 </SETTINGS>
 
 

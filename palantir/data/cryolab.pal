@@ -109,7 +109,7 @@
 
 
 
-  <CURVEFILE name="/mnt/decom/etc/decom.cur"/>
+  <CURFILE name="/mnt/decom/etc/decom.cur"/>
 </SETTINGS>
 
 <DEFAULTS>

@@ -110,7 +110,7 @@
 
 
 
-  <CURVEFILE name="/data/etc/alice.cur"/>
+  <CURFILE name="/data/etc/alice.cur"/>
 </SETTINGS>
 
 <DEFAULTS>

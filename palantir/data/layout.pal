@@ -21,9 +21,7 @@
     <WORD value="1" caption="A-OK" textstyle="banana"/>
     <WORD value="0" caption="UH-OH" textstyle="apricot" alarm="doh.wav"/>
   </MULTI>
-  <CURVEFILE name="decom.cur"/>
-  <CURVEFILE name="second.cur"/>
-  <CURVEFILE name="third.cur"/>
+  <CURFILE name="decom.cur"/>
 </SETTINGS>
 
 <DEFAULTS>
