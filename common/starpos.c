@@ -46,7 +46,7 @@
 #include "command_struct.h"
 #include "mcp.h"
 
-extern struct ScheduleType S;
+struct ScheduleType _S[2][3]; /* sched.c */
 
 #define EPHEM_FILE "/data/etc/ephem.2000"
 
@@ -606,16 +606,12 @@ double getlst(time_t t, double lon) {
 
   // S.t0 is from first line in schedule file: see sched.c;
 
-  /* XXX This is a kludge, it should be:
-   * t -= S.t0
-   */
-#warning REMOVE THE LST KLUDGE FROM STARPOS.C BEFORE FLIGHT
-  t -= 1093225963;//S.t0
+  t -= _S[CommandData.sucks][CommandData.lat_range].t0;
 
   t *= 1.002737909; // gst in seconds
 
-  t-= lon*(24.0*3600.0/360.0);
-  t = t%(24*3600);
+  t -= lon * (24.0 * 3600.0 / 360.0);
+  t = t % (24 * 3600);
 
   return(t);
 }
