@@ -314,16 +314,16 @@
       <DATUM format="%.0f" src="ISC_ERROR" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="T Front Flange">
-      <DATUM format="%.2f" src="ISC_TEMP1" extrema="temp"/>
+      <DATUM format="%.2f" src="T_ISC_FLANGE" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Heater Ring">
-      <DATUM format="%.2f" src="ISC_TEMP2" extrema="temp"/>
+      <DATUM format="%.2f" src="T_ISC_HEAT" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Lens">
-      <DATUM format="%.2f" src="ISC_TEMP3" extrema="temp"/>
+      <DATUM format="%.2f" src="T_ISC_LENS" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T ISC PC">
-      <DATUM format="%.2f" src="ISC_TEMP4" extrema="temp"/>
+      <DATUM format="%.2f" src="T_ISC_COMP" extrema="temp"/>
     </NUMBER>
   </BOX>
   <BOX caption="OSC" colour="#707" row="4" col="1">
@@ -400,16 +400,16 @@
       <DATUM format="%.0f" src="OSC_ERROR" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="T Front Flange">
-      <DATUM format="%.2f" src="OSC_TEMP1" extrema="temp"/>
+      <DATUM format="%.2f" src="T_OSC_FLANGE" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Heater Ring">
-      <DATUM format="%.2f" src="OSC_TEMP2" extrema="temp"/>
+      <DATUM format="%.2f" src="T_OSC_HEAT" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Lens">
-      <DATUM format="%.2f" src="OSC_TEMP3" extrema="temp"/>
+      <DATUM format="%.2f" src="T_OSC_LENS" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T OSC PC">
-      <DATUM format="%.2f" src="OSC_TEMP4" extrema="temp"/>
+      <DATUM format="%.2f" src="T_OSC_COMP" extrema="temp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Balance/Lock" colour="#880000" row="2" col="3">
