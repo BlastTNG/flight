@@ -182,32 +182,36 @@ void SunSensor(void) {
   char buff[256];
   const char P[] = "P";
 
+  fprintf(stderr, "SunSensor startup.\n");
+
   /* we don't want mcp to die of a broken pipe, so catch the
    * SIGPIPEs which are raised when the ssc drops the connection */
   signal(SIGPIPE, SigPipe);
 
-  fprintf(stderr, "SunSensor startup.\n");
-
   while (1) {
     /* create an empty socket connection */
     sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sock == -1) {
+      perror("SunSensor socket()");
+      return;
+    }
 
     /* set options */
     n = 1;
-    setsockopt(sock, SOL_TCP, TCP_NODELAY, &n, sizeof(n));
+    if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &n, sizeof(n)) == -1) {
+      perror("SunSensor setsockopt()");
+      return;
+    }
 
     /* Connect to Arien */
     inet_aton(ARIEN, &addr.sin_addr);
     addr.sin_family = AF_INET;
     addr.sin_port = htons(ARIEN_PORT);
-    //    fprintf(stderr, "Attempting to connect to Arien...\n");
     while ((n = connect(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)))
         < 0) {
-      //      fprintf(stderr, "Connection attempt to Arien failed [%i].\n", n);
-      sleep(1);
-      //      fprintf(stderr, "Attempting to connect to Arien...\n");
+      perror("SunSensor connect()");
+      sleep(10);
     };
-    //    fprintf(stderr, "Connect returned: %i\n", n);
 
     fprintf(stderr, "Connected to Arien\n");
     sigPipeRaised = n = 0;
@@ -216,8 +220,9 @@ void SunSensor(void) {
       curIndex = RxframeIndex;
       if (curIndex < lastIndex) {
         attempts = 0;
-        //        fprintf(stderr, "P\n");
-        send(sock, P, 2, 0);
+        if (send(sock, P, 2, 0) == -1) {
+          perror("SunSensor send()");
+        }
 
         do {
           n = recv(sock, buff, (socklen_t)255, MSG_DONTWAIT);
@@ -381,15 +386,19 @@ void write_to_biphase(unsigned short *Rxframe) {
   if (fp == -2) {
     fp = open("/dev/bi0", O_RDWR);
     if (fp == -1) {
-      fprintf(stderr, "Error opening biphase device\n");
+      perror("Error opening biphase device");
     }
     for (i = 0; i < 1024; i++) nothing[i] = 0xeeee;
   }
 
   if (fp >= 0) {
-    write(fp, &sync, 2); /* Write the sync word */
-    write(fp, Rxframe + 1, 2 * (FrameWords() - 1));
-    write(fp, nothing+FrameWords(), 2 * (624 - FrameWords()));
+    /* Write the sync word */
+    if (write(fp, &sync, 2) < 0)
+      perror("bi-phase write failed");
+    if (write(fp, Rxframe + 1, 2 * (FrameWords() - 1)) < 0)
+      perror("bi-phase write failed");
+    if (write(fp, nothing+FrameWords(), 2 * (624 - FrameWords())) < 0)
+      perror("bi-phase write failed");
   }
 }
 
@@ -399,7 +408,10 @@ void InitBi0Buffer() {
   bi0_buffer.i_in = 10; /* preload the fifo */
   bi0_buffer.i_out = 0;
   for (i = 0; i<BI0_FRAME_BUFLEN; i++) {
-    bi0_buffer.framelist[i] = malloc(FrameWords() * sizeof(unsigned short));
+    if ((bi0_buffer.framelist[i] = malloc(FrameWords() *
+            sizeof(unsigned short))) == NULL) {
+      perror("Unable to malloc for bi-phase");
+    }
   }
 }
 
@@ -430,7 +442,6 @@ void zero(unsigned short *Rxframe) {
 void BiphaseWriter(void) {
   int i_out, i_in;
 
-
   while (1) {
     i_in = bi0_buffer.i_in;
     i_out = bi0_buffer.i_out;
@@ -448,12 +459,12 @@ void BiphaseWriter(void) {
 int AmISam(void) {
   char buffer[2];
 
-  gethostname(buffer, 1);
+  if (gethostname(buffer, 1) == -1 && errno != ENAMETOOLONG) {
+    perror("Unable to get hostname");
+  }
 
   return (buffer[0] == 's') ? 1 : 0;
 }
-
-void WatchFIFO(void);
 
 int main(int argc, char *argv[]) {
   int i, j;
@@ -483,15 +494,26 @@ int main(int argc, char *argv[]) {
   struct CommandDataStruct CommandData_loc;
   int nread = 0, last_nread = 0, last_read = 0, df = 0;
 
+  if (argc == 1) {
+    fprintf(stderr, "Must specify file type:\n"
+        "p  pointing\n"
+        "m  maps\n"
+        "c  cryo\n"
+        "n  noise\n"
+        "x  software test\n"
+        "f  flight\n");
+    exit(0);
+  }
+
   //Initialize the Ephemeris
   ReductionInit();
+
+  InitCommandData();
+  pthread_mutex_init(&mutex, NULL);
 
 #ifndef NOVSC
   pthread_create(&starfind_id, NULL, (void*)&starfind, NULL);
 #endif
-
-  InitCommandData();
-  pthread_mutex_init(&mutex, NULL);
 
 #ifdef BOLOTEST
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, NULL);
@@ -510,22 +532,15 @@ int main(int argc, char *argv[]) {
 #endif
 
   memset(PointingData, 0, 3*sizeof(struct PointingDataStruct));
-  
+
   fprintf(stderr, "Tx Frame Bytes: %d.  Allowed: 2220\n", TxFrameBytes());
   if (TxFrameBytes() > 2220) exit(1);
 
-  Txframe = malloc(TxFrameBytes());
-  Rxframe = malloc(FrameWords() * sizeof(unsigned short));
-
-  if (argc == 1) {
-    fprintf(stderr, "Must specify file type:\n"
-        "p  pointing\n"
-        "m  maps\n"
-        "c  cryo\n"
-        "n  noise\n"
-        "x  software test\n"
-        "f  flight\n");
-    exit(0);
+  if ((Txframe = malloc(TxFrameBytes())) == NULL) {
+    perror("Unable to malloc Txframe");
+  }
+  if ((Rxframe = malloc(FrameWords() * sizeof(unsigned short))) == NULL) {
+    perror("Unable to malloc Rxframe");
   }
 
   /* Find out whether I'm frodo or sam */
@@ -540,7 +555,7 @@ int main(int argc, char *argv[]) {
 
   bbc_fp = open("/dev/bbc", O_RDWR);
   if (bbc_fp < 0) {
-    fprintf(stderr, "Error opening BBC\n");
+    perror("Error opening BBC");
     exit(0);
   }
 
@@ -565,6 +580,10 @@ int main(int argc, char *argv[]) {
       df = frames-last_frames;
       close(bbc_fp);
       bbc_fp = open("/dev/bbc", O_RDWR);
+      if (bbc_fp < 0) {
+        perror("Error opening BBC");
+        exit(0);
+      }
       frame_num = frames_in;
       fprintf(stderr, "EMPTY %d %d %d\n", df, frames, frame_num);
       last_frames = FRAME_MARGIN;
@@ -579,13 +598,19 @@ int main(int argc, char *argv[]) {
 
     n_to_read = ioctl(bbc_fp, BBC_IOC_RX_SW_COUNT);
     for (i = 0; i < n_to_read; i++) {
-      read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int));
+      if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) < 0) {
+        perror("Error on BBC read");
+      }
 
       nread++;
       if (nread == last_nread) last_read = in_data;
       if (!fill_Rx_frame(in_data, Txframe, slowTxFields, Rxframe)) {
         close(bbc_fp);
         bbc_fp = open("/dev/bbc", O_RDWR);
+        if (bbc_fp < 0) {
+          perror("Error opening BBC");
+          exit(0);
+        }
         frame_num = frames_in;
         do_Tx_frame(bbc_fp, Txframe, slowTxFields, Rxframe, 0);
         last_frames = FRAME_MARGIN + 1;
