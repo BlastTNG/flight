@@ -363,6 +363,70 @@ void StoreStarCameraData(int index, int which)
 
   i_isc = iscread_index[which];
 
+  /*** State Info ***/
+  WriteData(StateAddr[which], (unsigned int)(ISCSentState[which].pause * 2
+        + ISCSentState[which].abort * 4 + ISCSentState[which].autofocus * 8
+        + ISCSentState[which].shutdown * 32 + ISCSentState[which].eyeOn * 64
+        + ISCSentState[which].save), NIOS_QUEUE);
+  WriteData(FocusAddr[which], (unsigned int)ISCSentState[which].focus_pos,
+      NIOS_QUEUE);
+  WriteData(FocOffAddr[which], (unsigned int)ISCSentState[which].focusOffset,
+      NIOS_QUEUE);
+  WriteData(ApertAddr[which], (unsigned int)ISCSentState[which].ap_pos,
+      NIOS_QUEUE);
+  WriteData(ThreshAddr[which], (unsigned int)(ISCSentState[which].sn_threshold
+        * 10.), NIOS_QUEUE);
+  WriteData(GridAddr[which], (unsigned int)ISCSentState[which].grid,
+      NIOS_QUEUE);
+  WriteData(MdistAddr[which], (unsigned int)ISCSentState[which].mult_dist,
+      NIOS_QUEUE);
+  WriteData(MaxblobsAddr[which], (unsigned int)ISCSentState[which].maxBlobMatch,
+      NIOS_QUEUE);
+  WriteData(MaglimitAddr[which], (unsigned int)(ISCSentState[which].mag_limit
+        * 1000.), NIOS_QUEUE);
+  WriteData(NradAddr[which], (unsigned int)(ISCSentState[which].norm_radius
+        * RAD2I), NIOS_QUEUE);
+  WriteData(LradAddr[which], (unsigned int)(ISCSentState[which].lost_radius
+        * RAD2I), NIOS_QUEUE);
+  WriteData(TolAddr[which], (unsigned int)(ISCSentState[which].tolerance
+        * RAD2ARCSEC), NIOS_QUEUE);
+  WriteData(MtolAddr[which], (unsigned int)(ISCSentState[which].match_tol
+        * 65535.), NIOS_QUEUE);
+  WriteData(QtolAddr[which], (unsigned int)(ISCSentState[which].quit_tol
+        * 65535.), NIOS_QUEUE);
+  WriteData(RtolAddr[which], (unsigned int)(ISCSentState[which].rot_tol
+        * RAD2I), NIOS_QUEUE);
+  WriteData(XOffAddr[which], (unsigned int)(ISCSentState[which].azBDA * RAD2I),
+      NIOS_QUEUE);
+  WriteData(YOffAddr[which], (unsigned int)(ISCSentState[which].elBDA * RAD2I),
+      NIOS_QUEUE);
+  WriteData(HoldIAddr[which], (unsigned int)(ISCSentState[which].hold_current),
+      NIOS_QUEUE);
+  WriteData(Temp1Addr[which],
+      (unsigned int)(ISCSolution[which][i_isc].temp1 * 200.), NIOS_QUEUE);
+  WriteData(Temp2Addr[which],
+      (unsigned int)(ISCSolution[which][i_isc].temp2 * 200.), NIOS_QUEUE);
+  WriteData(Temp3Addr[which],
+      (unsigned int)(ISCSolution[which][i_isc].temp3 * 200.), NIOS_QUEUE);
+  WriteData(Temp4Addr[which],
+      (unsigned int)(ISCSolution[which][i_isc].temp4 * 200.), NIOS_QUEUE);
+  WriteData(PressureAddr[which],
+      (unsigned int)(ISCSolution[which][i_isc].pressure1 * 2000.), NIOS_QUEUE);
+  WriteData(GainAddr[which], (unsigned int)(ISCSentState[which].gain * 655.36),
+      NIOS_QUEUE);
+  WriteData(OffsetAddr[which], ISCSentState[which].offset, NIOS_QUEUE);
+  WriteData(ExposureAddr[which], ISCSentState[which].exposure / 100,
+      NIOS_QUEUE);
+  WriteData(TrigTypeAddr[which], ISCSentState[which].triggertype, NIOS_QUEUE);
+
+  WriteData(FpulseAddr[which],
+      (unsigned int)(CommandData.ISCControl[which].fast_pulse_width),
+      NIOS_QUEUE);
+  WriteData(SpulseAddr[which],
+      (unsigned int)(CommandData.ISCControl[which].pulse_width), NIOS_QUEUE);
+  WriteData(SavePrdAddr[which],
+      (unsigned int)(CommandData.ISCControl[which].save_period), NIOS_FLUSH);
+
   /* The handshake flag -- for handshakes, we only write this. */
   WriteData(HxFlagAddr[which], (unsigned int)ISCSolution[which][i_isc].flag,
       NIOS_QUEUE);
@@ -442,70 +506,6 @@ void StoreStarCameraData(int index, int which)
       NIOS_QUEUE);
   WriteData(MapmeanAddr[which], (unsigned int)ISCSolution[which][i_isc].mapMean,
       NIOS_QUEUE);
-
-  /*** State Info ***/
-  WriteData(StateAddr[which], (unsigned int)(ISCSentState[which].pause * 2
-        + ISCSentState[which].abort * 4 + ISCSentState[which].autofocus * 8
-        + ISCSentState[which].shutdown * 32 + ISCSentState[which].eyeOn * 64
-        + ISCSentState[which].save), NIOS_QUEUE);
-  WriteData(FocusAddr[which], (unsigned int)ISCSentState[which].focus_pos,
-      NIOS_QUEUE);
-  WriteData(FocOffAddr[which], (unsigned int)ISCSentState[which].focusOffset,
-      NIOS_QUEUE);
-  WriteData(ApertAddr[which], (unsigned int)ISCSentState[which].ap_pos,
-      NIOS_QUEUE);
-  WriteData(ThreshAddr[which], (unsigned int)(ISCSentState[which].sn_threshold
-        * 10.), NIOS_QUEUE);
-  WriteData(GridAddr[which], (unsigned int)ISCSentState[which].grid,
-      NIOS_QUEUE);
-  WriteData(MdistAddr[which], (unsigned int)ISCSentState[which].mult_dist,
-      NIOS_QUEUE);
-  WriteData(MaxblobsAddr[which], (unsigned int)ISCSentState[which].maxBlobMatch,
-      NIOS_QUEUE);
-  WriteData(MaglimitAddr[which], (unsigned int)(ISCSentState[which].mag_limit
-        * 1000.), NIOS_QUEUE);
-  WriteData(NradAddr[which], (unsigned int)(ISCSentState[which].norm_radius
-        * RAD2I), NIOS_QUEUE);
-  WriteData(LradAddr[which], (unsigned int)(ISCSentState[which].lost_radius
-        * RAD2I), NIOS_QUEUE);
-  WriteData(TolAddr[which], (unsigned int)(ISCSentState[which].tolerance
-        * RAD2ARCSEC), NIOS_QUEUE);
-  WriteData(MtolAddr[which], (unsigned int)(ISCSentState[which].match_tol
-        * 65535.), NIOS_QUEUE);
-  WriteData(QtolAddr[which], (unsigned int)(ISCSentState[which].quit_tol
-        * 65535.), NIOS_QUEUE);
-  WriteData(RtolAddr[which], (unsigned int)(ISCSentState[which].rot_tol
-        * RAD2I), NIOS_QUEUE);
-  WriteData(XOffAddr[which], (unsigned int)(ISCSentState[which].azBDA * RAD2I),
-      NIOS_QUEUE);
-  WriteData(YOffAddr[which], (unsigned int)(ISCSentState[which].elBDA * RAD2I),
-      NIOS_QUEUE);
-  WriteData(HoldIAddr[which], (unsigned int)(ISCSentState[which].hold_current),
-      NIOS_QUEUE);
-  WriteData(Temp1Addr[which],
-      (unsigned int)(ISCSolution[which][i_isc].temp1 * 200.), NIOS_QUEUE);
-  WriteData(Temp2Addr[which],
-      (unsigned int)(ISCSolution[which][i_isc].temp2 * 200.), NIOS_QUEUE);
-  WriteData(Temp3Addr[which],
-      (unsigned int)(ISCSolution[which][i_isc].temp3 * 200.), NIOS_QUEUE);
-  WriteData(Temp4Addr[which],
-      (unsigned int)(ISCSolution[which][i_isc].temp4 * 200.), NIOS_QUEUE);
-  WriteData(PressureAddr[which],
-      (unsigned int)(ISCSolution[which][i_isc].pressure1 * 2000.), NIOS_QUEUE);
-  WriteData(GainAddr[which], (unsigned int)(ISCSentState[which].gain * 655.36),
-      NIOS_QUEUE);
-  WriteData(OffsetAddr[which], ISCSentState[which].offset, NIOS_QUEUE);
-  WriteData(ExposureAddr[which], ISCSentState[which].exposure / 100,
-      NIOS_QUEUE);
-  WriteData(TrigTypeAddr[which], ISCSentState[which].triggertype, NIOS_QUEUE);
-
-  WriteData(FpulseAddr[which],
-      (unsigned int)(CommandData.ISCControl[which].fast_pulse_width),
-      NIOS_QUEUE);
-  WriteData(SpulseAddr[which],
-      (unsigned int)(CommandData.ISCControl[which].pulse_width), NIOS_QUEUE);
-  WriteData(SavePrdAddr[which],
-      (unsigned int)(CommandData.ISCControl[which].save_period), NIOS_FLUSH);
 }
 
 /************************************************************************/
