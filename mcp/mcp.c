@@ -606,7 +606,7 @@ int main(int argc, char *argv[]) {
 #ifndef BOLOTEST
   pthread_t small_id;
   pthread_t bi0_id;
-  //  pthread_t sensors_id;
+  pthread_t sensors_id;
   pthread_t dgps_id;
   pthread_t isc_id;
   pthread_t osc_id;
