@@ -13,7 +13,7 @@
 /**        Interpolate_State     -- returns position and velocity of planet  **/
 /**                                                                          **/
 /**     Note that client programs must make one, and only one, call to the   **/
-/**     function Initialize_Ephemeris before any of these other functions    **/ 
+/**     function Initialize_Ephemeris before any of these other functions    **/
 /**     be used. After this call any of the above functions can be called    **/
 /**     in any sequence.                                                     **/
 /**                                                                          **/
