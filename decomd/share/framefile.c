@@ -80,6 +80,11 @@ void OpenNextChunk(void) {
 /*     Initialize framefile                                          */
 /*                                                                   */
 /*********************************************************************/
+#ifdef __DECOMD__
+#  define CURFILE "/data/etc/decom.cur"
+#else
+#  define CURFILE "/data/etc/datafile.cur"
+#endif
 void InitialiseFrameFile(char type) {
   FILE* fp;
   char buffer[200];
@@ -104,7 +109,7 @@ void InitialiseFrameFile(char type) {
   framefile.buffer_end = framefile.buffer + BUFFER_SIZE * DiskFrameSize;
   framefile.b_write_to = framefile.b_read_from = framefile.buffer;
 
-  fp = fopen("/data/etc/datafile.cur","w");
+  fp = fopen(CURFILE,"w");
   if (fp == NULL) {
     merror(MCP_ERROR, "Error opening curfile");
     return;

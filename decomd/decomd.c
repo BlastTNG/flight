@@ -182,7 +182,7 @@ int main(void) {
 
   lastsock = sock = MakeSock();
 
-  InitialiseFrameFile('D');
+  InitialiseFrameFile('y');
 
   pthread_create(&framefile_thread, NULL, (void*)&FrameFileWriter, NULL);
   pthread_create(&decom_thread, NULL, (void*)&ReadDecom, NULL);
