@@ -12,7 +12,7 @@
 #define SIZE_ABOUT 80
 #define SIZE_PARNAME 80
 
-#define N_GROUPS 14
+#define N_GROUPS 15
 
 #define GR_POINT        0x0001
 #define GR_BAL          0x0002
@@ -24,10 +24,11 @@
 #define GR_EHEAT        0x0080
 #define GR_CRYO_HEAT    0x0100
 #define GR_GAIN         0x0200
-#define GR_MISC         0x0400
+#define GR_ISC_HOUSE    0x0400
 #define GR_CRYO_CONTROL 0x0800
 #define GR_LOCK         0x1000
-#define GR_ISC          0x2000
+#define GR_ISC_PARAM    0x2000
+#define GR_MISC         0x4000
 
 #ifdef INCLUDE_VARS
 
@@ -35,8 +36,8 @@ const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
   "Pointing Sensor Trims", "Cooling System",    "Cal Lamp",
   "Pointing Sensor Vetos", "Electronics Heat",  "Cryo Heat",
-  "Pointing Motor Gains",  "Miscellaneous",     "Cryo Control",
-  "Inner Frame Lock",      "ISC Commanding"
+  "Pointing Motor Gains",  "ISC Housekeeping",  "Cryo Control",
+  "Inner Frame Lock",      "ISC Parameters",    "Miscellaneous"
 };
 
 /* singleCommand enumeration.  The command list here does NOT have to be in
@@ -159,18 +160,18 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(pin_out_override),
     "override limit switch readout and set state to pin out", GR_LOCK},
 
-  {COMMAND(isc_run), "start automatic image capture (normal mode)", GR_ISC},
-  {COMMAND(isc_pause), "pause image capture", GR_ISC},
+  {COMMAND(isc_run), "start automatic image capture (normal mode)", GR_ISC_HOUSE},
+  {COMMAND(isc_pause), "pause image capture", GR_ISC_HOUSE},
   {COMMAND(isc_shutdown),
-    "shutdown ISC computer in prepratation for power cycle", GR_ISC},
-  {COMMAND(isc_abort), "abort current solution attempt", GR_ISC},
+    "shutdown ISC computer in prepratation for power cycle", GR_ISC_HOUSE},
+  {COMMAND(isc_abort), "abort current solution attempt", GR_ISC_HOUSE},
   {COMMAND(isc_reconnect),
-    "tell mcp to try and establish a new connection with ISC", GR_ISC},
-  {COMMAND(save_images), "turn on saving of images", GR_ISC},
-  {COMMAND(discard_images), "turn off saving of images", GR_ISC},
-  {COMMAND(no_bright_star), "cancel bright star mode", GR_ISC},
-  {COMMAND(full_screen), "show full screen", GR_ISC},
-  {COMMAND(auto_focus), "autofocus camera", GR_ISC}
+    "tell mcp to try and establish a new connection with ISC", GR_ISC_HOUSE},
+  {COMMAND(save_images), "turn on saving of images", GR_ISC_HOUSE},
+  {COMMAND(discard_images), "turn off saving of images", GR_ISC_HOUSE},
+  {COMMAND(no_bright_star), "cancel bright star mode", GR_ISC_PARAM},
+  {COMMAND(full_screen), "show full screen", GR_ISC_HOUSE},
+  {COMMAND(auto_focus), "autofocus camera", GR_ISC_HOUSE}
 };
 
 /* multiCommand enumeration.  The command list here does NOT have to be in
@@ -298,7 +299,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /***************************************/
   /********* Pointing Sensor Trims *******/
   {COMMAND(isc_offset), "set offset of star camera from primary beam",
-    GR_TRIM | GR_ISC, 2,
+    GR_TRIM | GR_ISC_PARAM, 2,
     {
       {"X Offset (deg)", -5., 5, 'f', "ISC_X_OFF"},
       {"Y Offset (deg)", -5., 5, 'f', "ISC_Y_OFF"}
@@ -501,58 +502,58 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********* ISC Commanding **************/
-  {COMMAND(set_focus), "set focus position", GR_ISC, 1,
+  {COMMAND(set_focus), "set focus position", GR_ISC_PARAM, 1,
     {
       {"Focus Position", 0, FOCUS_RANGE, 'i', "ISC_FOCUS"}
     }
   },
 
-  {COMMAND(set_aperture), "set the f-stop", GR_ISC, 1,
+  {COMMAND(set_aperture), "set the f-stop", GR_ISC_PARAM, 1,
     {
       {"Aperture Position", 0, AP_RANGE, 'i', "ISC_APERT"}
     }
   },
 
   {COMMAND(save_period), "set the time between automatically saved images",
-    GR_ISC, 1,
+    GR_ISC_HOUSE, 1,
     {
       {"Period (s):", 0, 1000, 'i', "ISC_SAVE_PRD"}
     }
   },
 
-  {COMMAND(pixel_centre), "centre display on pixel", GR_ISC, 2,
+  {COMMAND(pixel_centre), "centre display on pixel", GR_ISC_HOUSE, 2,
     {
       {"Pixel X", 0, CCD_X_PIXELS - 1, 'i', "NONE"},
       {"Pixel Y", 0, CCD_Y_PIXELS - 1, 'i', "NONE"}
     }
   },
 
-  {COMMAND(blob_centre), "centre display on blob", GR_ISC, 1,
+  {COMMAND(blob_centre), "centre display on blob", GR_ISC_HOUSE, 1,
     {
       {"Blob #", 0, MAX_ISC_BLOBS, 'i', "NONE"}
     }
   },
 
-  {COMMAND(bright_star), "set RA/Dec of bright source", GR_ISC, 2,
+  {COMMAND(bright_star), "set RA/Dec of bright source", GR_ISC_PARAM, 2,
     {
       {"RA (deg)",    0, 360, 'f', "ISC_BRRA"},
       {"Dec (deg)", -90,  90, 'f', "ISC_BRDEC"}
     }
   },
 
-  {COMMAND(fast_integration), "set camera short integration time", GR_ISC, 1,
+  {COMMAND(fast_integration), "set camera short integration time", GR_ISC_PARAM, 1,
     {
       {"integration time (ms)", 0, 5000, 'i', "ISC_FPULSE"}
     }
   },
 
-  {COMMAND(slow_integration), "set camera long integration time", GR_ISC, 1,
+  {COMMAND(slow_integration), "set camera long integration time", GR_ISC_PARAM, 1,
     {
       {"integration time (ms)", 0, 5000, 'i', "ISC_SPULSE"}
     }
   },
 
-  {COMMAND(det_set), "set detection parameters", GR_ISC, 5,
+  {COMMAND(det_set), "set detection parameters", GR_ISC_PARAM, 5,
     {
       {"Search Grid (px/side)",     0, CCD_Y_PIXELS, 'i', "ISC_GRID"},
       {"S/N Threshold",           0.1,       3276.7, 'f', "ISC_THRESH"},
@@ -562,13 +563,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(max_blobs), "max number of blobs used in solution", GR_ISC, 1,
+  {COMMAND(max_blobs), "max number of blobs used in solution", GR_ISC_PARAM, 1,
     {
       {"# of Blobs", 0, MAX_ISC_BLOBS, 'i', "ISC_MAXBLOBS"}
     }
   },
 
-  {COMMAND(catalogue), "set catalogue retreival parameters", GR_ISC, 3,
+  {COMMAND(catalogue), "set catalogue retreival parameters", GR_ISC_PARAM, 3,
     {
       {"Magnitude Limit",            0, 12, 'f', "ISC_MAGLIMIT"},
       {"Normal Search Radius (deg)", 0, 50, 'f', "ISC_NRAD"},
@@ -576,7 +577,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(tolerances), "set pointing solution tolerances", GR_ISC, 4,
+  {COMMAND(tolerances), "set pointing solution tolerances", GR_ISC_PARAM, 4,
     {
       {"Assoc. Tolerance (arcsec)", 0, 1000, 'f', "ISC_TOL"},
       {"Match Tolerance (%)",       0,  100, 'f', "ISC_MTOL"},
@@ -585,7 +586,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   
-  {COMMAND(hold_current), "set ISC stepper motor hold current", GR_ISC, 1,
+  {COMMAND(hold_current), "set ISC stepper motor hold current", GR_ISC_HOUSE, 1,
     {
       {"Level (%)", 0, 50, 'i', "ISC_HOLD_I"}
     }
