@@ -530,14 +530,14 @@ void MainForm::SendCommand() {
         != -1) {
 
       // Check to see if this command requires a confirm
-      if (scommands[index].group & CONFIRM) {
+      if (mcommands[index].group & CONFIRM) {
         sprintf(buffer, "The command %s requires confirmation.\n"
             "Are you sure you want to send this command?",
             NCommandList->text(NCommandList->currentItem()).ascii());
 
         if ( QMessageBox::warning(this, "Confirm Command", tr(buffer),
-              QMessageBox::Yes, QMessageBox::Escape |
-              QMessageBox::No | QMessageBox::Default) == QMessageBox::No ) {
+              QMessageBox::Yes, QMessageBox::Escape | QMessageBox::No |
+              QMessageBox::Default) == QMessageBox::No ) {
           strcpy(buffer, "Command not confirmed.");
           params[1] = buffer;
           params[2] = 0;
@@ -580,8 +580,8 @@ void MainForm::SendCommand() {
             NCommandList->text(NCommandList->currentItem()).ascii());
 
         if ( QMessageBox::warning(this, "Confirm Command", tr(buffer),
-              QMessageBox::Yes, QMessageBox::Escape |
-              QMessageBox::No | QMessageBox::Default) == QMessageBox::No ) {
+              QMessageBox::Yes, QMessageBox::Escape | QMessageBox::No |
+              QMessageBox::Default) == QMessageBox::No ) {
           strcpy(buffer, "Command not confirmed.");
           params[1] = buffer;
           params[2] = 0;
