@@ -1,7 +1,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 89         /* total number of named single word cmds */
-#define N_MCOMMANDS 68         /* total number of multiword commands */
+#define N_SCOMMANDS 78         /* total number of named single word cmds */
+#define N_MCOMMANDS 63         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 

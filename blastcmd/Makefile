@@ -1,21 +1,21 @@
 include Makefile.config
-CC = gcc -g
+CC = gcc 
 
-LIBS = -lm
+LDFLAGS = -lm
 INC  = -I.
-FLAGS = -Wall -O $(INC)
+CFLAGS = -Wall -O3 $(INC)
 
-OBJS = blastcmd.o
+OBJS = blastcmd.o command_list.o
 
 #----------------------------------------------------------------------------
 
 all: blastcmd
 
 blastcmd: $(OBJS)
-	$(CC) $(LIBS) $(OBJS) -o blastcmd
+
+command_list.o: command_list.c commands.h isc_protocol.h
 
 blastcmd.o: blastcmd.c commands.h isc_protocol.h
-	$(CC) $(FLAGS) -DLIB_DIR=\"$(DATA_DIR)\" -c blastcmd.c -o blastcmd.o
 
 Makefile.config:
 	./configure
