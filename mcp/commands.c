@@ -483,13 +483,13 @@ void MultiCommand (int command, unsigned short *dataq) {
   else if (command == MIndex("cryopwm"))
     CommandData.Cryo.sparePwm = 2047 - ivalues[0] * 20.47;
   else if (command == MIndex("b_levl1"))    /* Set bias 1 */
-    CommandData.Bias.bias1 = rvalues[0];
+    CommandData.Bias.bias1 = ivalues[0];
   else if (command == MIndex("b_levl2"))    /* Set bias 1 */
-    CommandData.Bias.bias2 = rvalues[0];
+    CommandData.Bias.bias2 = ivalues[0];
   else if (command == MIndex("b_levl3"))    /* Set bias 1 */
-    CommandData.Bias.bias3 = rvalues[0];
+    CommandData.Bias.bias3 = ivalues[0];
   else if (command == MIndex("phase"))
-    CommandData.Phase[ivalues[0]] = ivalues[1];
+    CommandData.Phase[ivalues[0] - 5] = ivalues[1];
   else if (command == MIndex("balgoal")) {
     CommandData.pumps.bal_on = rvalues[0] * 1648.;
     CommandData.pumps.bal_off = rvalues[1] * 1648.;
