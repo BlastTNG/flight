@@ -529,8 +529,7 @@ void MainForm::SendCommand() {
           WriteLog(NLog, 9);
           return;
         }
-        sprintf(args[i++], "%.*f ", mcommands[index].params[j].precision,
-            defaults[index][j]);
+        sprintf(args[i++], "%f ", defaults[index][j]);
       }
     }
 
