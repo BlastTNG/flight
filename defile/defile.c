@@ -37,7 +37,7 @@
 
 #define VERSION_MAJOR    "2"
 #define VERSION_MINOR    "1"
-#define VERSION_REVISION "0"
+#define VERSION_REVISION "1"
 #define VERSION VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION 
 
 #define DEFAULT_CURFILE "/data/etc/defile.cur"
@@ -868,16 +868,14 @@ int main (int argc, char** argv)
       gettimeofday(&now, &rc.tz);
       delta = (now.tv_sec - rc.start.tv_sec) * 1000000LL - rc.start.tv_usec
         + now.tv_usec;
-      printf("Read [%i of %i] Wrote [%i] Frame Rate %.3f kHz (%.1f sec)     \r",
-          ri.read, ri.old_total + ri.chunk_total, ri.wrote, 1000. * ri.wrote /
-          delta, delta / 1000000.);
+      printf("R:[%i of %i] W:[%i] %.3f kHz\r", ri.read, ri.old_total
+          + ri.chunk_total, ri.wrote, 1000. * ri.wrote / delta);
       fflush(stdout);
     }
     usleep(100000);
   } while (!ri.writer_done);
-  printf("Read [%i of %i] Wrote [%i] Frame Rate %.3f kHz (%.3f sec)        \n",
-      ri.read, ri.old_total + ri.chunk_total, ri.wrote, 1000. * ri.wrote /
-      delta, delta / 1000000.);
+  printf("R:[%i of %i] W:[%i] %.3f kHz\r", ri.read, ri.old_total
+      + ri.chunk_total, ri.wrote, 1000. * ri.wrote / delta);
 
   return 0;
 }
