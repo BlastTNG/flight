@@ -563,7 +563,7 @@ void StoreData(int index)
   WriteData(sipLonAddr, (int)(SIPData.GPSpos.lon*DEG2I));
   WriteData(sipAltAddr, (int)(SIPData.GPSpos.alt*0.25));
   WriteData(sipTimeAddr, SIPData.GPStime.UTC);
-
+  
   /********** SIP MKS Altitude ************/
   WriteData(sipMksLoAddr, (int)(SIPData.MKSalt.lo * 0.25));
   WriteData(sipMksMedAddr, (int)(SIPData.MKSalt.med * 0.25));
@@ -706,7 +706,8 @@ void InitTxFrame(void)
           for (j = 0; j < ccTotal; ++j)
             if (NiosLookup[j].niosAddr == niosAddr)
               RawNiosWrite(niosAddr, NiosLookup[j].bbcAddr);
-            else if (niosAddr == niosAddr - 1 && NiosLookup[j].wide)
+            else if (NiosLookup[j].niosAddr == niosAddr - 1
+			    && NiosLookup[j].wide)
               RawNiosWrite(niosAddr, BBC_NEXT_CHANNEL(NiosLookup[j].bbcAddr));
             else if (NiosLookup[j].fast && NiosLookup[j].niosAddr == m0addr)
               RawNiosWrite(niosAddr, NiosLookup[j].bbcAddr);
