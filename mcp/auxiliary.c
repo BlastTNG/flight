@@ -32,7 +32,7 @@
 
 /* Define to 1 to send synchronous star camera triggers based on ISC 
  * handshaking */
-#define SYNCHRONOUS_CAMERAS 1
+#define SYNCHRONOUS_CAMERAS 0
 
 /* This is the length of time to wait for an ACK from the star camera before
  * giving up */
