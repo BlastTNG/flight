@@ -35,8 +35,10 @@
 #define U_MASK     2
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
- * 90 degrees.  This is the offset to the true lock positions */
-#define LOCK_OFFSET (2.0)
+ * 90 degrees.  This is the offset to the true lock positions.
+ * This number is relative to the elevation encoder reading, NOT
+ * true elevation */
+#define LOCK_OFFSET (0.63)
 
 /* Seconds since 0TMG jan 1 1970 */
 #define SUN_JAN_6_1980 315964800L
