@@ -93,19 +93,17 @@ int pinIsIn(void)
   return(pin_is_in);
 }
 
-#define GY_HEAT_TC 30000.  /* in 100 Hz Frames */
-#define GY_HEAT_STEP 1.0
 int SetGyHeatSetpoint(double history, int age)
 {
   double setpoint = CommandData.gyheat.setpoint;
 
-  if (age < GY_HEAT_TC * 2)
+  if (age < CommandData.gyheat.tc * 2)
     return age;
 
   if (history < CommandData.gyheat.min_heat)
-    setpoint += GY_HEAT_STEP;
+    setpoint += CommandData.gyheat.step;
   else if (history > CommandData.gyheat.max_heat)
-    setpoint -= GY_HEAT_STEP;
+    setpoint -= CommandData.gyheat.step;
 
   if (setpoint < CommandData.gyheat.min_set)
     setpoint = CommandData.gyheat.min_set;
@@ -129,7 +127,8 @@ void ControlGyroHeat(unsigned short *RxFrame)
   static struct BiPhaseStruct* tGyboxAddr;
   static struct NiosStruct *gyHeatAddr, *tGySetAddr, *pGyheatAddr, *iGyheatAddr;
   static struct NiosStruct *dGyheatAddr, *tGyMinAddr, *tGyMaxAddr, *tGyHistAddr;
-  static struct NiosStruct *tGyAgeAddr, *gyHMinAddr, *gyHMaxAddr;
+  static struct NiosStruct *tGyAgeAddr, *gyHMinAddr, *gyHMaxAddr, *gyHTcAddr;
+  static struct NiosStruct *tGyStepAddr;
   static int firsttime = 1;
   static double history = 0;
 
@@ -151,6 +150,8 @@ void ControlGyroHeat(unsigned short *RxFrame)
     gyHeatAddr = GetNiosAddr("gy_heat");
     gyHMinAddr = GetNiosAddr("gy_h_min");
     gyHMaxAddr = GetNiosAddr("gy_h_max");
+    gyHTcAddr = GetNiosAddr("gy_h_tc");
+    tGyStepAddr = GetNiosAddr("t_gy_step");
     tGySetAddr = GetNiosAddr("t_gy_set");
     tGyMinAddr = GetNiosAddr("t_gy_min");
     tGyMaxAddr = GetNiosAddr("t_gy_max");
@@ -165,21 +166,24 @@ void ControlGyroHeat(unsigned short *RxFrame)
   CommandData.gyheat.age = SetGyHeatSetpoint(history, CommandData.gyheat.age);
 
   /* send down the setpoints and gains values */
-  WriteData(tGySetAddr, CommandData.gyheat.setpoint * 32768.0 / 100.0, 0);
-  WriteData(tGyMinAddr, CommandData.gyheat.min_set * 32768.0 / 100.0, 0);
-  WriteData(tGyMaxAddr, CommandData.gyheat.max_set * 32768.0 / 100.0, 0);
-  WriteData(gyHMinAddr, CommandData.gyheat.min_heat * 32768.0 / 100.0, 0);
-  WriteData(gyHMaxAddr, CommandData.gyheat.max_heat * 32768.0 / 100.0, 0);
+  WriteData(tGySetAddr, CommandData.gyheat.setpoint * 327.68, NIOS_QUEUE);
+  WriteData(tGyMinAddr, CommandData.gyheat.min_set * 327.68, NIOS_QUEUE);
+  WriteData(tGyMaxAddr, CommandData.gyheat.max_set * 327.68, NIOS_QUEUE);
+  WriteData(tGyStepAddr, CommandData.gyheat.step * 3276.8, NIOS_QUEUE);
 
-  WriteData(pGyheatAddr, CommandData.gy_heat_gain.P, NIOS_QUEUE);
-  WriteData(iGyheatAddr, CommandData.gy_heat_gain.I, NIOS_QUEUE);
-  WriteData(dGyheatAddr, CommandData.gy_heat_gain.D, NIOS_QUEUE);
+  WriteData(gyHMinAddr, CommandData.gyheat.min_heat * 327.68, NIOS_QUEUE);
+  WriteData(gyHMaxAddr, CommandData.gyheat.max_heat * 327.68, NIOS_QUEUE);
+  WriteData(gyHTcAddr, CommandData.gyheat.tc, NIOS_QUEUE);
+
+  WriteData(pGyheatAddr, CommandData.gyheat.gain.P, NIOS_QUEUE);
+  WriteData(iGyheatAddr, CommandData.gyheat.gain.I, NIOS_QUEUE);
+  WriteData(dGyheatAddr, CommandData.gyheat.gain.D, NIOS_QUEUE);
 
   /* control the heat */
   set_point = (CommandData.gyheat.setpoint - 136.45) / (-9.5367431641e-08);
-  P = CommandData.gy_heat_gain.P * (-1.0 / 1000000.0);
-  I = CommandData.gy_heat_gain.I * (-1.0 / 110000.0);
-  D = CommandData.gy_heat_gain.D * ( 1.0 / 1000.0);
+  P = CommandData.gyheat.gain.P * (-1.0 / 1000000.0);
+  I = CommandData.gyheat.gain.I * (-1.0 / 110000.0);
+  D = CommandData.gyheat.gain.D * ( 1.0 / 1000.0);
 
   /********* if end of pulse, calculate next pulse *********/
   if (p_off < 0) {
@@ -209,17 +213,18 @@ void ControlGyroHeat(unsigned short *RxFrame)
   }
 
   /******** do the pulse *****/
-  if (CommandData.gyheat.age <= GY_HEAT_TC * 2)
+  if (CommandData.gyheat.age <= CommandData.gyheat.tc * 2)
     ++CommandData.gyheat.age;
   WriteData(tGyAgeAddr, CommandData.gyheat.age, NIOS_QUEUE);
   WriteData(tGyHistAddr, (history * 32768. / 100.), NIOS_QUEUE);
   if (p_on > 0) {
     WriteData(gyHeatAddr, on, NIOS_FLUSH);
-    history = 100. / GY_HEAT_TC + (1. - 1. / GY_HEAT_TC) * history;
+    history = 100. / CommandData.gyheat.tc + (1. - 1. / CommandData.gyheat.tc)
+      * history;
     p_on--;
   } else {
     WriteData(gyHeatAddr, off, NIOS_FLUSH);
-    history = (1. - 1. / GY_HEAT_TC) * history;
+    history = (1. - 1. / CommandData.gyheat.tc) * history;
     p_off--;
   }
 }

@@ -75,7 +75,6 @@ struct CommandDataStruct {
   struct GainStruct ele_gain;
   struct GainStruct azi_gain;
   struct GainStruct pivot_gain;
-  struct GainStruct gy_heat_gain;
 
   int emf_gain;     /* for reaction wheel  */
   int emf_offset;   /*   back-EMF tweaking */
@@ -103,7 +102,10 @@ struct CommandDataStruct {
     double max_set;
     double min_heat;
     double max_heat;
+    double step;
     int age;
+    int tc;
+    struct GainStruct gain;
   } gyheat;
   double t_isc_setpoint;
 

@@ -719,14 +719,18 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
   else if (command == t_gyro_set) {  /* gyro heater setpoint */
     CommandData.gyheat.min_set = rvalues[0];
     CommandData.gyheat.max_set = rvalues[1];
-    CommandData.gyheat.min_heat = rvalues[2];
-    CommandData.gyheat.max_heat = rvalues[3];
-    CommandData.gyheat.setpoint = rvalues[4];
+    CommandData.gyheat.setpoint = rvalues[2];
     CommandData.gyheat.age = 0;
+  } else if (command == t_gyro_heat) { /* gyro heater levels */
+    CommandData.gyheat.min_heat = rvalues[0];
+    CommandData.gyheat.max_heat = rvalues[1];
+  } else if (command == t_gyro_param) { /* gyro thermostat parameters */
+    CommandData.gyheat.tc = (int)(6000 * rvalues[0]);
+    CommandData.gyheat.step = rvalues[1];
   } else if (command == t_gyro_gain) {  /* gyro heater gains */
-    CommandData.gy_heat_gain.P = ivalues[0];
-    CommandData.gy_heat_gain.I = ivalues[1];
-    CommandData.gy_heat_gain.D = ivalues[2];
+    CommandData.gyheat.gain.P = ivalues[0];
+    CommandData.gyheat.gain.I = ivalues[1];
+    CommandData.gyheat.gain.D = ivalues[2];
 
     /***************************************/
     /*************** Misc  *****************/
@@ -1441,9 +1445,11 @@ void InitCommandData() {
   CommandData.gyheat.min_heat = 5.0;
   CommandData.gyheat.max_heat = 40.0;
   CommandData.gyheat.setpoint = 30.0;
-  CommandData.gy_heat_gain.P = 10;
-  CommandData.gy_heat_gain.I = 60;
-  CommandData.gy_heat_gain.D = 50;
+  CommandData.gyheat.step = 1.0;
+  CommandData.gyheat.tc = 30000; /* = 5 minutes; in 100Hz frames */
+  CommandData.gyheat.gain.P = 10;
+  CommandData.gyheat.gain.I = 60;
+  CommandData.gyheat.gain.D = 50;
 
   CommandData.disable_az = 0;
   CommandData.disable_el = 0;
