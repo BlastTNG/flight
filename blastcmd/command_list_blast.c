@@ -14,7 +14,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.23 $";
+const char command_list_serial[] = "$Revision: 2.24 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -566,7 +566,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(isc_gain), "set CCD preamp gain and offset", GR_OSC_PARAM, 2,
+  {COMMAND(isc_gain), "set CCD preamp gain and offset", GR_ISC_PARAM, 2,
     {
       {"Gain", 0.1, 100, 'f', "ISC_CCD_GAIN"},
       {"Offset", -4096, 4096, 'i', "ISC_CCD_OFFSET"}
