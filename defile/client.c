@@ -142,6 +142,7 @@ void OpenDataPort(void)
   write(rc.csock, buffer, strlen(buffer));
   switch (n = GetServerResponse(buffer)) {
     case QUENYA_RESPONSE_LISTENING:
+      printf("%s\n", buffer);
       for (ptr1 = buffer; *ptr1 != '@'; ++ptr1);
       *(ptr1++) = 0;
       for (ptr2 = ptr1; *ptr2 != ':'; ++ptr2);
@@ -155,7 +156,7 @@ void OpenDataPort(void)
 
       if ((n = connect(rc.dsock, (struct sockaddr*)&dp_addr, sizeof(dp_addr)))
           != 0)
-        berror(fatal, "Connect failed");
+        berror(fatal, "d-Connect failed");
       break;
     default:
       bprintf(fatal, "Unexpected response from server (OPEN): %i\n", n);
@@ -184,7 +185,7 @@ void InitClient(char* new_filename)
 
     if ((n = connect(rc.csock, (struct sockaddr*)&rc.addr, sizeof(rc.addr)))
         != 0)
-      berror(fatal, "Connect failed");
+      berror(fatal, "c-Connect failed");
 
     switch (n = GetServerResponse(buffer)) {
       case QUENYA_RESPONSE_SERVICE_READY:

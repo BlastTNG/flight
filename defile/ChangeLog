@@ -2,6 +2,19 @@
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
 2005-01-19  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	Release defile-3.1.1
+
+	* defile.1.in.in: Update for defile-3.1.1
+
+	* writer.c (PreBuffer): re-initialise on getting NULL
+	* writer.c (InitialiseDirFile): call PreBuffer to re-initialise it
+
+	* writer.c (DirFileWriter): remove call to ReconstructChannelList: do it in
+	the reader instead.
+	* reader.c (FrameFileReader): ReconstructChannelList here, and then
+	re-allocate InputBuffer - fixes a data-corruption-on-new-spec bug ; complain
+	and exit if using -o and the frame size changes.
+
 	* writer.c (PreBuffer, PushFrame): fix range on memcpy
 	* writer.c (InitialiseDirFile): fix fast_frame/pre_buffer allocation
 

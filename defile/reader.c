@@ -1,19 +1,19 @@
 /* defile: converts BLAST-type framefiles into dirfiles
  *
- * This software is copyright (C) 2004 D. V. Wiebe
- * 
+ * This software is copyright (C) 2004-2005 D. V. Wiebe
+ *
  * This file is part of defile.
- * 
+ *
  * defile is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * defile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with defile; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -54,6 +54,7 @@ void InitReader(void)
 void FrameFileReader(void)
 {
   int fd = -1;
+  int old_frame_size;
   char gpb[GPB_LEN];
   int i, n, fullframes, remainder = 0;
   int frames_read = 0;
@@ -95,6 +96,7 @@ void FrameFileReader(void)
 
   do {
     if (new_chunk) {
+      remainder = 0;
       if (!rc.silent)
         printf("\nDefiling chunk `%s'\n", rc.chunk);
 
@@ -147,14 +149,14 @@ void FrameFileReader(void)
         /* increment counter */
         ri.read++;
       }
-      
+
       /* Copy remainder to the bottom of the buffer */
       if (fullframes > 0 && remainder > 0)
         memcpy(InputBuffer[0], InputBuffer[fullframes + 1], remainder);
     } while (n != 0);
 
     n = StreamToNextChunk(rc.persist, rc.chunk, rc.sufflen, &ri.chunk_total,
-            rc.source, rc.curfile_val);
+        rc.source, rc.curfile_val);
 
     if (n == FR_NEW_CHUNK) {
       close(fd);
@@ -168,18 +170,35 @@ void FrameFileReader(void)
 
       strcpy(rc.chunk, gpb);
 
+      /* Read the new Spec file */
+      old_frame_size = DiskFrameSize;
+      ReconstructChannelLists(rc.chunk, rc.spec_file);
+      bprintf(info, "\nFrame size: %i bytes\n", DiskFrameSize);
+
       /* remake the destination dirfile (if necessary) */
       if (rc.output_dirfile == NULL) {
         GetDirFile(rc.dirfile, rc.chunk, rc.dest_dir, 0);
 
+        /* Re-allocate InputBuffer */
+        bfree(fatal, InputBuffer[0]);
+        InputBuffer[0] = (unsigned short*)balloc(fatal, DiskFrameSize
+            * INPUT_BUF_SIZE);
+
+        for (i = 1; i < INPUT_BUF_SIZE; ++i)
+          InputBuffer[i] = (void*)InputBuffer[0] + i * DiskFrameSize;
+
         /* if the dirfile has changed, signal the writer to cycle */
         ri.dirfile_init = 0;
         close(fd);
+      } else if (old_frame_size != DiskFrameSize) {
+        printf("Frame size has changed.  Unable to continue writing to "
+            "current file.\n");
+        n = FR_DONE;
       }
 
       ri.old_total += ri.chunk_total;
       new_chunk = 1;
-    } else 
+    } else
       new_chunk = 0;
 
   } while (n != FR_DONE);

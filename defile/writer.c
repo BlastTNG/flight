@@ -389,6 +389,88 @@ int OpenField(int fast, int size, const char* filename)
   return file;
 }
 
+int CheckZeroes(int zeroes)
+{
+  if (zeroes > 0)
+    bprintf(warning, "Frame %lli: discarded %i zeroed frame%s.\n", fc - 1,
+        zeroes, (zeroes == 1) ? "" : "s");
+
+  return 0;
+}
+
+/* looks for and tries to correct dropped/mangled frames */
+int PreBuffer(unsigned short *frame)
+{
+  static int counter = 0;
+  static int start = 2;
+  static int zeroes = 0;
+  int range;
+  unsigned int last, this, next;
+  int li, ti, ni;
+
+  /* a reset */
+  if (frame == NULL) {
+    fc = 0;
+    start = 2;
+    counter = 0;
+    zeroes = 0;
+    return 0;
+  }
+
+  fc++; /* global frame counter */
+
+  counter++;
+  last = FAST_PER_SLOW + (counter + 0) % 3;
+  this = FAST_PER_SLOW + (counter + 1) % 3;
+  next = FAST_PER_SLOW + (counter + 2) % 3;
+
+  memcpy(pre_buffer[next], frame, DiskFrameSize);
+
+  if (start > 0) {
+    start--;
+    return -1;
+  }
+
+  li = pre_buffer[last][3];
+  ti = pre_buffer[this][3];
+  ni = pre_buffer[next][3];
+
+  if ((li + 1) % FAST_PER_SLOW != ti) {
+    if ((li + 2) % FAST_PER_SLOW == ni) {
+      zeroes = CheckZeroes(zeroes);
+      bprintf(warning,
+          "Frame %lli: corrected mangled multiplex index: %i %i %i\n", fc,
+          li, ti, ni);
+      pre_buffer[this][3] = ti = (li + 1) % FAST_PER_SLOW;
+      defile_flags |= DEFILE_FLAG_MANGLED_INDEX;
+    } else if (li == 0 && ti == 0 && (zeroes > 0 || ni == 0)) {
+      zeroes++;
+      defile_flags |= DEFILE_FLAG_ZEROED_FRAME;
+      return 0;
+    } else {
+      zeroes = CheckZeroes(zeroes);
+      if (ti >= FAST_PER_SLOW) {
+        bprintf(warning, "Frame %lli: index out of range: %i\n", fc, ti);
+        pre_buffer[this][3] = ti %= FAST_PER_SLOW;
+        exit(1);
+      }
+    }
+  }
+
+  if ((range = ti - li) <= 0)
+    range += FAST_PER_SLOW;
+
+  if (range > 1)
+    bprintf(warning, "Frame %lli: inserted %i missing frame%s: %i -> %i\n", fc,
+        range - 1, (range == 2) ?  "" : "s", li, ti);
+
+  li = (li + 1) % FAST_PER_SLOW;
+
+  memcpy(pre_buffer[ti], pre_buffer[this], DiskFrameSize);
+
+  return (range << 8) + li;
+}
+
 /* Initialise dirfile */
 void InitialiseDirFile(int reset, unsigned long offset)
 {
@@ -422,6 +504,9 @@ void InitialiseDirFile(int reset, unsigned long offset)
     pre_buffer[i] = balloc(fatal, DiskFrameSize);
     pre_buffer[i][3] = i;
   }
+
+  /* Reset the PreBuffer */
+  PreBuffer(NULL);
 
   for (i = 0; i < FAST_PER_SLOW; ++i)
     fast_frame[i] = balloc(fatal, DiskFrameSize);
@@ -621,78 +706,6 @@ void CleanUp(void)
         bfree(fatal, bolo_fields[i][j].b);
       bolo_fields[i][j].b = NULL;
     }
-}
-
-int CheckZeroes(int zeroes)
-{
-  if (zeroes > 0)
-    bprintf(warning, "Frame %lli: discarded %i zeroed frame%s.\n", fc - 1,
-        zeroes, (zeroes == 1) ? "" : "s");
-
-  return 0;
-}
-
-/* looks for and tries to correct dropped/mangled frames */
-int PreBuffer(unsigned short *frame)
-{
-  static int counter = 0;
-  static int start = 2;
-  static int zeroes = 0;
-  int range;
-  unsigned int last, this, next;
-  int li, ti, ni;
-
-  fc++; /* global frame counter */
-
-  counter++;
-  last = FAST_PER_SLOW + (counter + 0) % 3;
-  this = FAST_PER_SLOW + (counter + 1) % 3;
-  next = FAST_PER_SLOW + (counter + 2) % 3;
-
-  memcpy(pre_buffer[next], frame, DiskFrameSize);
-
-  if (start > 0) {
-    start--;
-    return -1;
-  }
-
-  li = pre_buffer[last][3];
-  ti = pre_buffer[this][3];
-  ni = pre_buffer[next][3];
-
-  if ((li + 1) % FAST_PER_SLOW != ti) {
-    if ((li + 2) % FAST_PER_SLOW == ni) {
-      zeroes = CheckZeroes(zeroes);
-      bprintf(warning,
-          "Frame %lli: corrected mangled multiplex index: %i %i %i\n", fc,
-          li, ti, ni);
-      pre_buffer[this][3] = ti = (li + 1) % FAST_PER_SLOW;
-      defile_flags |= DEFILE_FLAG_MANGLED_INDEX;
-    } else if (li == 0 && ti == 0 && (zeroes > 0 || ni == 0)) {
-      zeroes++;
-      defile_flags |= DEFILE_FLAG_ZEROED_FRAME;
-      return 0;
-    } else {
-      zeroes = CheckZeroes(zeroes);
-      if (ti >= FAST_PER_SLOW) {
-        bprintf(warning, "Frame %lli: index out of range: %i\n", fc, ti);
-        pre_buffer[this][3] = ti %= FAST_PER_SLOW;
-      }
-    }
-  }
-
-  if ((range = ti - li) <= 0)
-    range += FAST_PER_SLOW;
-
-  if (range > 1)
-    bprintf(warning, "Frame %lli: inserted %i missing frame%s: %i -> %i\n", fc,
-        range - 1, (range == 2) ?  "" : "s", li, ti);
-
-  li = (li + 1) % FAST_PER_SLOW;
-
-  memcpy(pre_buffer[ti], pre_buffer[this], DiskFrameSize);
-
-  return (range << 8) + li;
 }
 
 /* pushFrame: called from reader: puts rxframe into */
@@ -1107,12 +1120,6 @@ void DirFileWriter(void)
       else {
         /* Clean Up */
         CleanUp();
-
-        /* Read the new Spec file -- the Quenya Client does this itself */
-        if (!rc.quenya) {
-          ReconstructChannelLists(rc.chunk, rc.spec_file);
-          bprintf(info, "Frame size: %i bytes\n", DiskFrameSize);
-        }
 
         bprintf(info, "Defiling `%s'\n    into `%s'\n", rc.chunk, rc.dirfile);
         if (rc.resume_at > 0)

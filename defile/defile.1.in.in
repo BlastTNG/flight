@@ -239,7 +239,10 @@ can be a path relative to
 .I directory
 is given), or it can be an absolute path, in which case
 .I directory
-is ignored.
+is ignored.  When using this option in persistant mode,
+.B defile
+will complain and exit if the size of the frame changes due to a change in a
+cur file.
 .RE
 .TP
 .BR \-p\~ or\~ \-\-persistent
