@@ -33,7 +33,7 @@ fi
 
 echo QT_DIR = ${QT_DIR} >> Makefile.config
 
-if test [$HOSTNAME == 'galadriel']
+if [ "${HOSTNAME}" = "galadriel" ]
 then
   echo -n "blastcmd command name [blastcmd]: "
   read BLAST_CMD
