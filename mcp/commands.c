@@ -230,20 +230,12 @@ void SingleCommand (int command) {
   printf("Single command %d: %s\n", command, scommands[command].name);
   
   /* Update CommandData structure with new info */
-  if (command == SIndex("asc_mod"))                  /* Switch modes */
-    CommandData.current_mode = ASCENT_MODE;
-  else if (command == SIndex("ras_mod"))
-    CommandData.current_mode = RASTER_MODE;
-  else if (command == SIndex("sal_mod"))
-    CommandData.current_mode = POINT_MODE;
-  else if (command == SIndex("def_mod"))
-    CommandData.default_mode = CommandData.current_mode;
 
-  else if (command == SIndex("all_stp")) {      /* Pointing aborts */
-    CommandData.point_mode.az_mode = POINT_VEL;
-    CommandData.point_mode.el_mode = POINT_VEL;
-    CommandData.point_mode.az_vel = 0.0;
-    CommandData.point_mode.el_vel = 0.0;
+  if (command == SIndex("all_stp")) {      /* Pointing aborts */
+    CommandData.axes_mode.az_mode = AXIS_VEL;
+    CommandData.pointing_mode.el_mode = AXIS_VEL;
+    CommandData.axes_mode.az_vel = 0.0;
+    CommandData.axes_mode.el_vel = 0.0;
   } else if (command == SIndex("sns_def"))     /* Set default sensor */
     CommandData.default_sensor = SUN;
   else if (command == SIndex("isc_def"))
@@ -360,9 +352,9 @@ void SingleCommand (int command) {
     CommandData.pumps.lock_in = 1;
   else if (command == SIndex("lkmot_u")) {
     CommandData.pumps.lock_out = 1;
-    if (CommandData.point_mode.el_mode == POINT_LOCK) {
-      CommandData.point_mode.el_mode = POINT_VEL;
-      CommandData.point_mode.el_vel = 0.0;
+    if (CommandData.axes_mode.el_mode == AXIS_LOCK) {
+      CommandData.axes_mode.el_mode = AXIS_VEL;
+      CommandData.axes_mode.el_vel = 0.0;
     }
   }
   WritePrevStatus();
@@ -462,28 +454,28 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.isc_heat_gain.I = ivalues[1];
     CommandData.isc_heat_gain.D = ivalues[2];
   } else if (command == MIndex("lock_el")) {  /* Lock Inner Frame */
-    CommandData.point_mode.el_mode = POINT_LOCK;
+    CommandData.axes_mode.el_mode = AXIS_LOCK;
     CommandData.pumps.lock_point = 1;
-    CommandData.point_mode.el_dest = LockPosition(rvalues[0]);
+    CommandData.axes_mode.el_dest = LockPosition(rvalues[0]);
     if (CommandData.pumps.bal_veto >= 0)
       CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
-    fprintf(stderr, "Lock Mode: %g\n", CommandData.point_mode.el_dest);
+    fprintf(stderr, "Lock Mode: %g\n", CommandData.axes_mode.el_dest);
   } else if (command == MIndex("goto_el")) {  /* point in elevation */
     if (CommandData.pumps.bal_veto >= 0)
       CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
-    CommandData.point_mode.el_mode = POINT_POSITION;
-    CommandData.point_mode.el_dest = rvalues[0];
+    CommandData.axes_mode.el_mode = AXIS_POSITION;
+    CommandData.axes_mode.el_dest = rvalues[0];
   } else if (command == MIndex("goto_az")) {  /* point in azimuth */
-    CommandData.point_mode.az_mode = POINT_POSITION;
-    CommandData.point_mode.az_dest = rvalues[0];
+    CommandData.axes_mode.az_mode = AXIS_POSITION;
+    CommandData.axes_mode.az_dest = rvalues[0];
   } else if (command == MIndex("el_vel")) {  /* fixed elevation velocity */
     if (CommandData.pumps.bal_veto >= 0)
       CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
-    CommandData.point_mode.el_mode = POINT_VEL;
-    CommandData.point_mode.el_vel = rvalues[0];
+    CommandData.axes_mode.el_mode = AXIS_VEL;
+    CommandData.axes_mode.el_vel = rvalues[0];
   } else if (command == MIndex("az_vel")) {  /* fixed azimuth velocity */
-    CommandData.point_mode.az_mode = POINT_VEL;
-    CommandData.point_mode.az_vel = rvalues[0];
+    CommandData.axes_mode.az_mode = AXIS_VEL;
+    CommandData.axes_mode.az_vel = rvalues[0];
   } else if (command == MIndex("jfet_ht"))
     CommandData.Cryo.JFETHeat = rvalues[0] * 2047./100.;
   else if (command == MIndex("hs_heat"))
@@ -1224,9 +1216,6 @@ void InitCommandData() {
   CommandData.isc_heat_gain.I = 60;
   CommandData.isc_heat_gain.D = 50;
 
-  CommandData.current_mode = RASTER_MODE;
-  CommandData.default_mode = ASCENT_MODE;
-
   CommandData.default_sensor = ISC;
   CommandData.use_sun = 1;
   CommandData.use_isc = 1;
@@ -1247,12 +1236,12 @@ void InitCommandData() {
   SIPData.MKScal.b_med = 0;
   SIPData.MKScal.b_lo = 0;
 
-  CommandData.point_mode.az_mode = POINT_VEL;
-  CommandData.point_mode.el_mode = POINT_VEL;
-  CommandData.point_mode.az_dest = 0;
-  CommandData.point_mode.el_dest =45;
-  CommandData.point_mode.az_vel = 0;
-  CommandData.point_mode.el_vel = 0;
+  CommandData.axes_mode.az_mode = AXIS_VEL;
+  CommandData.axes_mode.el_mode = AXIS_VEL;
+  CommandData.axes_mode.az_dest = 0;
+  CommandData.axes_mode.el_dest =45;
+  CommandData.axes_mode.az_vel = 0;
+  CommandData.axes_mode.el_vel = 0;
 
   CommandData.Bias.clockInternal = 1;
   CommandData.Bias.biasAC = 1;

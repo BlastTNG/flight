@@ -1,8 +1,14 @@
 #define N_SLOWDL   7
 
+#define AXIS_VEL 0
+#define AXIS_POSITION 1
+#define AXIS_LOCK 2
+
 #define POINT_VEL 0
-#define POINT_POSITION 1
+#define POINT_POINT 1
 #define POINT_LOCK 2
+#define POINT_SCAN 3
+#define POINT_RASTER 4
 
 struct SlowDLStruct {
   char src[20];
@@ -23,13 +29,27 @@ struct GainStruct {
   unsigned short int SP;
 };
 
-struct PointModeStruct {
+struct AxesModeStruct {
   int az_mode;
   int el_mode;
   double az_dest;
   double el_dest;
   double az_vel;
   double el_vel;
+};
+
+struct PointingModeStruct {
+  int az_mode;
+  int el_mode;
+  double az1; // pointing, scan
+  double el1; // poining, scan, lock
+  double az2; // scan
+  double el2; // scan
+  double az_vel; // scan, map, vel
+  double el_vel; // scan, map, vel
+  double ra; // map
+  double dec; // map
+  double r; //map
 };
 
 struct PumpStruct {
@@ -87,9 +107,6 @@ struct CommandDataStruct {
   double t_gybox_setpoint;
   double t_isc_setpoint;
 
-  unsigned char current_mode;
-  unsigned char default_mode;
-
   unsigned char default_sensor;
   unsigned char use_sun;
   unsigned char use_isc;
@@ -106,7 +123,9 @@ struct CommandDataStruct {
   // sensors output: read in mcp:SensorReader()
   short fan;
   short T;
-  struct PointModeStruct point_mode;
+
+  struct AxesModeStruct axes_mode; // low level velocity mode
+  struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
 };
 
 int bc_setserial(char *input_tty);

@@ -79,16 +79,18 @@ void GyroOffsets(int index) {
     the new solution. **/
 #define GYRO_VAR 3.7808641975309e-08
 void EvolveSolution(struct SolutionStruct *s,
-		      double gyro, double new_angle) {
+		      double gyro, double new_angle, int new_reading) {
   double w1, w2;
   s->angle += gyro/100.0;
   s->varience += GYRO_VAR;
 
-  w1 = 1.0/(s->varience);
-  w2 = s->samp_weight;
+  if (new_reading) {
+    w1 = 1.0/(s->varience);
+    w2 = s->samp_weight;
 
-  s->angle = (w1*s->angle + new_angle * w2)/(w1+w2);
-  s->varience = 1.0/(w1+w2);
+    s->angle = (w1*s->angle + new_angle * w2)/(w1+w2);
+    s->varience = 1.0/(w1+w2);
+  }
 }
  
 /*****************************************************************
@@ -98,11 +100,14 @@ void EvolveSolution(struct SolutionStruct *s,
 /* Elevation encoder uncertainty: */
 void Pointing(){
   int new_index; 
-  double roll, gy2, gy3, el_rad;
+  double gy_az, gy_roll, gy2, gy3, el_rad;
   static double gy_roll_amp = 0.0;
 
   static struct SolutionStruct EncEl = {0.0, 360.0*360.0,
 					1.0/M2DV(6), M2DV(6)};
+  static struct SolutionStruct NullAz = {0.0, 360.0*360.0,
+					 1.0/M2DV(6), M2DV(6)};
+  
   new_index = INC_INDEX(point_index);
 
   /** Set the official Lat and Long: for now use SIP COM1... **/
@@ -115,23 +120,28 @@ void Pointing(){
 
   /*************************************/
   /**      do elevation solution      **/
-  EvolveSolution(&EncEl, -ACSData.gyro1, ACSData.enc_elev);
+  EvolveSolution(&EncEl, -ACSData.gyro1, ACSData.enc_elev, 1);
   //printf("%g %g %g\n", EncEl.angle, ACSData.enc_elev, ACSData.gyro1);
 
-  /* for now, use enc_elev for elev, and mag_az for az */
-  PointingData[new_index].az = ACSData.mag_az;
+  /* for now, use enc_elev solution for elev */
   PointingData[new_index].el = EncEl.angle;
 
   GyroOffsets(new_index);
 
-  /* recent amplitude for setting roll gain */
-
+  /*******************************/
+  /**      do az solution      **/
   gy2 = ACSData.gyro2;
   gy3 = ACSData.gyro3;
   el_rad = PointingData[new_index].el* M_PI/180.0;;
-  roll = fabs(-gy2 * sin(el_rad) + gy3 * cos(el_rad));
+  gy_az = gy2 * cos(el_rad) + gy3 * sin(el_rad);
+  EvolveSolution(&NullAz, gy_az, 0.0, 0);
+  PointingData[new_index].az = NullAz.angle;
 
-  if (roll>gy_roll_amp) gy_roll_amp = roll;
+  /************************/
+  /* set roll damper gain */
+  gy_roll = fabs(-gy2 * sin(el_rad) + gy3 * cos(el_rad));
+
+  if (gy_roll>gy_roll_amp) gy_roll_amp = gy_roll;
   else gy_roll_amp*=0.9999;
 
   if (gy_roll_amp > 1.0) gy_roll_amp *= 0.999; // probably a spike 

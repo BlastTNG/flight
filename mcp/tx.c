@@ -113,21 +113,19 @@ double GetVElev() {
   double dvel;
   double max_dv = 20;
 
-  if (CommandData.point_mode.el_mode == POINT_VEL) {
-    vel = CommandData.point_mode.el_vel;
-  } else if (CommandData.point_mode.el_mode == POINT_POSITION) {
-    vel = (PointingData[point_index].el - CommandData.point_mode.el_dest) * 0.36;
-  } else if (CommandData.point_mode.el_mode == POINT_LOCK) {
+  if (CommandData.axes_mode.el_mode == AXIS_VEL) {
+    vel = CommandData.axes_mode.el_vel;
+  } else if (CommandData.axes_mode.el_mode == AXIS_POSITION) {
+    vel = (PointingData[point_index].el - CommandData.axes_mode.el_dest)
+	  * 0.36;
+  } else if (CommandData.axes_mode.el_mode == AXIS_LOCK) {
     /* for the lock, only use the elevation encoder */
-    vel = (ACSData.enc_elev - CommandData.point_mode.el_dest) * 0.64;
+    vel = (ACSData.enc_elev - CommandData.axes_mode.el_dest) * 0.64;
   }
-
-  //fprintf(stderr, "%10f %10f %10f  ", PointingData[point_index].el, CommandData.point_mode.el_dest, vel);
-
+  
+  /* correct offset and convert to Gyro Units */
   vel += PointingData[point_index].gy1_offset;
-
-  vel *= DPS2GYU; // convert to Gyro Units
-  //fprintf(stderr, "%10f %10f\n", PointingData[point_index].gy1_offset, vel);
+  vel *= DPS2GYU; 
 
   /* Limit Maximim speed */
   if (vel > 2000.0) vel = 2000.0;
@@ -154,10 +152,11 @@ int GetVAz() {
   int dvel;
   int max_dv = 20;
 
-  if (CommandData.point_mode.az_mode == POINT_VEL) {
-    vel = CommandData.point_mode.az_vel;
-  } else if (CommandData.point_mode.az_mode == POINT_POSITION) {
-    vel = -(PointingData[point_index].az - CommandData.point_mode.az_dest) * 400.0;
+  if (CommandData.axes_mode.az_mode == AXIS_VEL) {
+    vel = CommandData.axes_mode.az_vel;
+  } else if (CommandData.axes_mode.az_mode == AXIS_POSITION) {
+    vel = -(PointingData[point_index].az - CommandData.axes_mode.az_dest)
+	  * 400.0;
   }
 
   vel *= DPS2GYU; // convert to gyro units
@@ -460,7 +459,8 @@ void ControlGyroHeat(unsigned int *Txframe,  unsigned short *Rxframe,
   }
 
   /* send down the setpoints and gains values */
-  WriteSlow(i_T_GY_SET, j_T_GY_SET, (unsigned short)(CommandData.t_gybox_setpoint * 32768.0 / 100.0));
+  WriteSlow(i_T_GY_SET, j_T_GY_SET,
+	    (unsigned short)(CommandData.t_gybox_setpoint * 32768.0 / 100.0));
 
   WriteSlow(i_G_PGYH, j_G_PGYH, CommandData.gy_heat_gain.P);
   WriteSlow(i_G_IGYH, j_G_IGYH, CommandData.gy_heat_gain.I);
@@ -739,7 +739,8 @@ int Balance(int iscBits, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
     pumpon = 1;
   } else if (error < CommandData.pumps.bal_off) {
     pumpon = 0;
-    if (CommandData.pumps.bal_veto >= 0) CommandData.pumps.bal_veto = BAL_OFF_VETO;
+    if (CommandData.pumps.bal_veto >= 0)
+      CommandData.pumps.bal_veto = BAL_OFF_VETO;
   }
 
   if (pumpon) {
@@ -747,8 +748,6 @@ int Balance(int iscBits, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   } else {
     iscBits &= (0xFF - BAL1_ON); /* turn off pump */
   }
-
-  /*  fprintf(stderr, "Balance: error = %6i, pwm = %4i, reverse = %i, on = %i\n", error, pumppwm, (iscBits & 0x02) >> 1, pumpon); */
 
   WriteSlow(balPwm1Ch, balPwm1Ind, pumppwm);
 
@@ -1073,6 +1072,21 @@ void StoreData(unsigned int* Txframe,
 
 /******************************************************************
  *                                                                *
+ * Update Axis Modes: Set CommandData.axes_mode based on          *
+ *    CommandData.pointing_mode                                   *
+ *                                                                *
+ ******************************************************************/
+/*void UpdateAxesMode() {
+   switch (CommandData.pointing_mode.el_mode) {
+   case POINT_VEL:
+     CommandData.axes_mode.el_mode = AXIS_VEL;
+     CommandData.axes_mode.el_vel = CommandData.pointing_mode.el_vel;
+     break;
+     case 
+}
+ */
+/******************************************************************
+ *                                                                *
  * IsNewFrame: returns true if d is a begining of frame marker,   *
  *    unless this is the first beginning of frame.                *
  *                                                                *
@@ -1146,6 +1160,7 @@ void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
 
   /*** do Controls ***/
 #ifndef BOLOTEST
+  //UpdateAxesMode();
   StoreData(Txframe, slowTxFields);
   ControlGyroHeat(Txframe, Rxframe, slowTxFields);
   ControlISCHeat(Txframe, Rxframe, slowTxFields);

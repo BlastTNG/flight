@@ -29,7 +29,7 @@ tx.o: tx.h tx.c tx_struct.h
 tx_struct.o: tx.h tx_struct.c tx_struct.h
 	$(CC) -c tx_struct.c
 
-dirfile.o: tx.h tx_struct.h dirfile.c
+dirfile.o: tx.h tx_struct.h tx_struct.c dirfile.c
 	$(CC) -c dirfile.c
 
 commands.o: command_struct.h commands.c commands.h

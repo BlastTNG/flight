@@ -168,7 +168,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"hspwm",        'w',  3,  4,         100./2047.,              0., 'u'}
   },
   {
-    {"sip_time",    'r', LOOPBACK, 33,           1.0,             0.0, 'U'},
+    {"sip_time",    'w', LOOPBACK, 33,           1.0,             0.0, 'U'},
     {"pch_clin_pyr", 'r', 21, 33,      4.0/5333.3333,       -4.*6.144, 'u'},
     {"rll_clin_pyr", 'r', 21, 35,      4.0/5333.3333,       -4.*6.144, 'u'},
     {"t_clin_pyr",   'r', 21, 23,           -0.00625,          136.45, 'u'},
@@ -190,12 +190,12 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"phase16",      'w', 16, 10,                1.0,             0.0, 'u'}
   },
   {
-    {"",            'r', LOOPBACK, 34,           1.0,             0.0, 'u'}, // sip_time
-    {"sip_lat",     'r', LOOPBACK, 23,           I2DEG,           0.0, 'u'},
-    {"sip_lon",     'r', LOOPBACK, 24,           I2DEG,           0.0, 'u'},
-    {"sip_alt",     'r', LOOPBACK, 25,           4.0,             0.0, 'u'},
-    {"lat",         'r', LOOPBACK, 31,           I2DEG,           0.0, 'u'},
-    {"lon",         'r', LOOPBACK, 32,           I2DEG,           0.0, 'u'},
+    {"",            'w', LOOPBACK, 34,           1.0,             0.0, 'u'}, // sip_time
+    {"sip_lat",     'w', LOOPBACK, 23,           I2DEG,           0.0, 'u'},
+    {"sip_lon",     'w', LOOPBACK, 24,           I2DEG,           0.0, 'u'},
+    {"sip_alt",     'w', LOOPBACK, 25,           4.0,             0.0, 'u'},
+    {"lat",         'w', LOOPBACK, 31,           I2DEG,           0.0, 'u'},
+    {"lon",         'w', LOOPBACK, 32,           I2DEG,           0.0, 'u'},
     {"spare7",      'r', SPARE, 7,               1.0,             0.0, 'u'},
     {"spare8",      'r', SPARE, 8,               1.0,             0.0, 'u'},
     {"spare9",      'r', SPARE, 9,               1.0,             0.0, 'u'},
