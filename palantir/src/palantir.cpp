@@ -1100,7 +1100,7 @@ void MainForm::UpdateData() {
           if (currLabel->laststyle != 1) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
-            currQtLabel->setText(tr("Num Read Error"));
+            currQtLabel->setText(tr("NAN"));
             currLabel->laststyle = 1;
           }
         } else {
@@ -1161,7 +1161,7 @@ void MainForm::UpdateData() {
           if (currLabel->laststyle != 1001) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
-            currQtLabel->setText(tr("Error: no such src"));
+            currQtLabel->setText(tr("bad src"));
             currLabel->laststyle = 1001;
           }
         } else {
@@ -1185,7 +1185,7 @@ void MainForm::UpdateData() {
             if (currLabel->laststyle != 1002) {
               currQtLabel->setPalette(Palette(ErrorStyle));
               currQtLabel->setFont(Font(ErrorStyle));
-              currQtLabel->setText(tr("Error: no such value"));
+              currQtLabel->setText(tr("NAN"));
               currLabel->laststyle = 1002;
             }
           } else
@@ -1201,7 +1201,7 @@ void MainForm::UpdateData() {
           if (currLabel->laststyle != 1) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
-            currQtLabel->setText(tr("Error: no such src"));
+            currQtLabel->setText(tr("bad src"));
             currLabel->laststyle = 1;
           }
         } else {
@@ -1225,7 +1225,7 @@ void MainForm::UpdateData() {
           if (currLabel->laststyle != 1) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
-            currQtLabel->setText(tr("Read Error"));
+            currQtLabel->setText(tr("NAN"));
             currLabel->laststyle = 1;
           }
         } else {

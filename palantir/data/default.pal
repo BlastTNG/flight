@@ -269,8 +269,6 @@
     <DATUM format="%.2f" src="T_PIV_MC" extrema="temp"/></NUMBER>
   <NUMBER caption="T ISC" textstyle="evenrow">
     <DATUM format="%.2f" src="T_ISC" extrema="temp"/></NUMBER>
-  <NUMBER caption="ISC Set" textstyle="evenrow">
-    <DATUM format="%.2f" src="T_ISC_SET" extrema="temp"/></NUMBER>
   <NUMBER caption="T PV" textstyle="evenrow">
     <DATUM format="%.2f" src="T_PV" extrema="temp"/></NUMBER>
   <NUMBER caption="T CPU" textstyle="evenrow">
