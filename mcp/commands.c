@@ -431,8 +431,6 @@ void SingleCommand (enum singleCommand command) {
   else if (command == isc_auto_focus) {
     CommandData.ISCState[0].abort = 1;
     CommandData.ISCControl[0].autofocus = 10;
-    CommandData.ISCControl[0].old_focus = CommandData.ISCState[1].focus_pos;
-    CommandData.ISCState[0].focus_pos = FOCUS_RANGE;
 
     /***************************************/
     /********* OSC Commanding  *************/
@@ -459,8 +457,6 @@ void SingleCommand (enum singleCommand command) {
   else if (command == osc_auto_focus) {
     CommandData.ISCState[1].abort = 1;
     CommandData.ISCControl[1].autofocus = 10;
-    CommandData.ISCControl[1].old_focus = CommandData.ISCState[1].focus_pos;
-    CommandData.ISCState[1].focus_pos = FOCUS_RANGE;
   } else if (command == xyzzy)
     ;
   else {

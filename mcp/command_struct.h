@@ -131,7 +131,6 @@ struct CryoStruct {
 struct ISCControlStruct {
   int pulse_width;
   int fast_pulse_width;
-  int old_focus;
   int reconnect;
   int autofocus;
   int save_period;

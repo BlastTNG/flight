@@ -51,6 +51,7 @@ extern short int InCharge; /* tx.c */
 extern int frame_num;      /* tx.c */
 
 short int write_ISC_pointing[2] = {0, 0}; // isc.c
+short int write_ISC_pulse[2]    = {0, 0}; // isc.c
 
 struct ISCStatusStruct ISCSentState[2];
 
@@ -122,6 +123,7 @@ void IntegratingStarCamera(void* parameter)
   fd_set fdr, fdw;
   struct PointingDataStruct MyPointData;
   int which = (int)parameter;
+  int waiting_for_ACK = 0;
 
   int sock = -1, ISCReadIndex;
 
@@ -197,11 +199,15 @@ void IntegratingStarCamera(void* parameter)
         }
 #endif
 
-        if (CommandData.ISCState[which].autofocus) {
+        /* Wait for acknowledgement from camera before sening trigger */
+        if (waiting_for_ACK)
+          if (ISCSolution[which][iscdata_index[which]].flag == 0) {
+            write_ISC_pulse[which] = 1;
+            waiting_for_ACK = 0;
+          }
+
+        if (CommandData.ISCState[which].autofocus)
           CommandData.ISCState[which].autofocus = 0;
-          CommandData.ISCState[which].focus_pos
-            = CommandData.ISCControl[which].old_focus;
-        }
 
         iscdata_index[which] = INC_INDEX(iscdata_index[which]);
       }
@@ -293,6 +299,8 @@ void IntegratingStarCamera(void* parameter)
           CommandData.ISCState[which].save = save_image_state;
           CommandData.ISCControl[which].auto_save = 0;
         }
+
+        waiting_for_ACK = 1;
       }
     }
   }
