@@ -1130,7 +1130,7 @@ void StoreData(unsigned int* Txframe,
     SlowChIndex("lst", &i_LST, &j_LST);
     SlowChIndex("lat", &i_LAT, &j_LAT);
     SlowChIndex("lon", &i_LON, &j_LON);
-    SlowChIndex("mag_model", i_MAG_MODEL, j_MAG_MODEL);
+    SlowChIndex("mag_model", &i_MAG_MODEL, &j_MAG_MODEL);
     
     SlowChIndex("p_az_mode", &i_AZ_MODE, &j_AZ_MODE);
     SlowChIndex("p_el_mode", &i_EL_MODE, &j_EL_MODE);
