@@ -362,8 +362,8 @@ void PrintUsage(void)
     "\n                          SIZE should be an integer between 0 and %i."
     "\n                          Default: %i"
 #ifdef HAVE_LIBZ
-    "\n  -z --gzip             gzip compress the output dirfile.  "
-    "Incompatible with"
+    "\n  -z --gzip             gzip compress the output dirfile.  Incompatible "
+    "with"
     "\n                          `--resume'"
 #endif
     "\n  --help                display this help and exit"
@@ -676,8 +676,7 @@ int main (int argc, char** argv)
       "Compiled on " __DATE__ " at " __TIME__ ".\n\n");
 
   /* Get the name of the frame file. This function handles following the
-   * curfile. Also fill the stat structure for the file, since we have
-   * to stat the file anyways (This allocated rc.chunk for us.) */
+   * curfile. (This allocates rc.chunk for us.) */
   rc.chunk = GetFileName(rc.source);
 
   /* if rc.output_dirfile exists, we use that as the dirfile name, otherwise
@@ -693,7 +692,7 @@ int main (int argc, char** argv)
   if (strlen(rc.dirfile) > PATH_MAX - FIELD_MAX - 1)
     bprintf(fatal, "destination dirfile `%s' too long\n", rc.dirfile);
 
-  /* Attempt to Open the Specification file and read the channel lists */
+  /* Attempt to open the Specification file and read the channel lists */
   ReconstructChannelLists(rc.chunk, rc.spec_file);
   bprintf(info, "Frame size: %i bytes\n", DiskFrameSize);
 
@@ -721,7 +720,8 @@ int main (int argc, char** argv)
   pthread_create(&read_thread, NULL, (void*)&FrameFileReader, NULL);
   pthread_create(&write_thread, NULL, (void*)&DirFileWriter, NULL);
 
-  /* Main status loop */
+  /* Main status loop -- if we're in silent mode we skip this entirely and
+   * just wait for the read and write threads to exit */
   if (!rc.silent)
     do {
       if (!ri.tty) {

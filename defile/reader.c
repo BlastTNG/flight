@@ -71,7 +71,8 @@ void FrameFileReader(void)
   sigaction(SIGHUP, &action, NULL);
   sigaction(SIGINT, &action, NULL);
 
-  /* enable signals */
+  /* enable signals -- they were blocked in main before this thread was
+   * spawned */
   pthread_sigmask(SIG_UNBLOCK, &signals, NULL);
 
   InputBuffer[0] = (unsigned short*)balloc(fatal, DiskFrameSize
