@@ -59,7 +59,7 @@ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_defile_OBJECTS = defile.$(OBJEXT) frameread.$(OBJEXT) \
 	reader.$(OBJEXT) channels.$(OBJEXT) writer.$(OBJEXT) \
-	blast.$(OBJEXT) client.$(OBJEXT)
+	blast.$(OBJEXT) client.$(OBJEXT) crc.$(OBJEXT)
 defile_OBJECTS = $(am_defile_OBJECTS)
 defile_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
@@ -182,7 +182,7 @@ SUBDIRS = etc
 man_MANS = defile.1
 EXTRA_DIST = fixup.sh
 @INSTALL_DEFILE_CONF_TRUE@sysconf_DATA = defile.conf
-defile_SOURCES = defile.c frameread.c reader.c channels.c writer.c blast.c client.c blast.h defile.h channels.h frameread.h derived.h quenya.h
+defile_SOURCES = defile.c frameread.c reader.c channels.c writer.c blast.c client.c blast.h defile.h channels.h frameread.h derived.h quenya.h crc.c crc.h
 INCLUDES = -Wall -O3 -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\"
 DISTCHECK_CONFIGURE_FLAGS = --with-data-etc="$$dc_install_base/data"
 all: config.h
@@ -280,6 +280,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/blast.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/channels.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/defile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/frameread.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reader.Po@am__quote@

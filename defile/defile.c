@@ -998,14 +998,14 @@ int main (int argc, char** argv)
         delta = (now.tv_sec - rc.start.tv_sec) * 1000000LL - rc.start.tv_usec
           + now.tv_usec;
         freq = 1000. * ri.wrote / delta;
-        if (rc.quenya)
+      if (rc.quenya)
           printf("R:[%i] W:[%i] %.*f kHz\r", ri.read, ri.wrote,
               (freq > 100) ? 1 : (freq > 10) ? 2 : 3, freq);
         else 
           printf("R:[%i of %i] W:[%i] %.*f kHz\r", ri.read, ri.old_total
               + ri.chunk_total, ri.wrote, (freq > 100) ? 1 : (freq > 10) ? 2
               : 3, freq);
-        fflush(stdout);
+      fflush(stdout);
       }
       usleep(100000);
     } while (!ri.writer_done);
