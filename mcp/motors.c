@@ -166,8 +166,8 @@ void WriteMot(int TxIndex, unsigned int *TxFrame, unsigned short *RxFrame,
     SlowChIndex("g_i_az", &i_g_Iaz, &j_g_Iaz);
     SlowChIndex("g_p_pivot", &i_g_pivot, &j_g_pivot);
     SlowChIndex("set_reac", &i_set_reac, &j_set_reac);
-    SlowChIndex("emf_gain", emfGainCh, emfGainInd);
-    SlowChIndex("emf_offset", emfOffsetCh, emfOffsetInd);
+    SlowChIndex("emf_gain", &emfGainCh, &emfGainInd);
+    SlowChIndex("emf_offset", &emfOffsetCh, &emfOffsetInd);
   }
   
   i_point = GETREADINDEX(point_index);
