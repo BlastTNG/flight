@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(src/narsil.cpp)
-AM_INIT_AUTOMAKE(narsil, 1.7.3)
+AC_INIT(narsil, 1.7.4, [dwiebe@physics.utoronto.ca])
+AM_INIT_AUTOMAKE(narsil, 1.7.4)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH(data-etc,[  --with-data-etc=DIR     put auxiliary data in DIR [[/data/etc]]], DATA_ETC_DIR="${withval}", DATA_ETC_DIR="/data/etc")
@@ -37,6 +37,11 @@ AC_CHECK_PROG(GREP,grep,yes)
 if test "x$GREP" = "x"; then
   AC_MSG_ERROR([*** No grep found -- please install first (You are lame) ***])
 fi
+
+AC_MSG_CHECKING(the revision number of the channel list)
+CMDVERSION=`grep command_list_serial ${srcdir}/src/command_list.c | gawk '{print $6}'`
+AC_MSG_RESULT([$CMDVERSION])
+AC_SUBST(CMDVERSION)
 
 dnl X
 AC_PATH_X

@@ -1,4 +1,4 @@
-/* config.h.in.  Generated from configure.in by autoheader.  */
+/* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define to the version number of the blastcmd command list */
 #undef BLASTCMD_CMD_VERSION

@@ -47,6 +47,7 @@ BLAST_CMD = @BLAST_CMD@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CMDVERSION = @CMDVERSION@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CUR_DIR = @CUR_DIR@
@@ -139,7 +140,7 @@ DIST_COMMON = $(srcdir)/Makefile.in Makefile.am
 all: all-am
 
 .SUFFIXES:
-$(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
+$(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
 	  $(AUTOMAKE) --gnu  data/Makefile
 Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status

@@ -973,7 +973,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
 
   if ( !name )
     setName("Narsil");
-  setCaption(tr("Narsil"));
+  setCaption(tr("Narsil " VERSION));
   //  setIcon(*Icon);
 
 

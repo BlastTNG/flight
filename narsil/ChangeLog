@@ -1,3 +1,8 @@
+2004-10-08 (1.7.4):
+  * configure.ac: rename from configure.in ; add CMDVERSION
+  * Makefile.am: add buildserial
+  * src/narsil.cpp (MainForm::MainForm): add version number to window title
+
 2004-09-28 (1.7.3):
   * configure.in, data/Makefile.am: Conditional installation of log.txt
 
