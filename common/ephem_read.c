@@ -44,13 +44,11 @@
 /**  Global Variables                                                        **/
 /**==========================================================================**/
 
-   static headOneType  H1;
-   static headTwoType  H2;
-   static recOneType   R1;
-   static FILE        *Ephemeris_File;
-   static double       Coeff_Array[ARRAY_SIZE] , T_beg , T_end , T_span;
-
-   static int Debug = FALSE;             /* Generates detailed output if true */
+static headOneType  H1;
+static headTwoType  H2;
+static recOneType   R1;
+static FILE        *Ephemeris_File;
+static double       Coeff_Array[ARRAY_SIZE] , T_beg , T_end , T_span;
 
 /**==========================================================================**/
 /**  Read_Coefficients                                                       **/
@@ -76,16 +74,16 @@ void Read_Coefficients( double Time )
   /*--------------------------------------------------------------------------*/
 
   if ( Time < T_beg )                    /* Compute backwards location offset */
-     {
-       T_delta = T_beg - Time;
-       Offset  = (int) -ceil(T_delta/T_span); 
-     }
+  {
+    T_delta = T_beg - Time;
+    Offset  = (int) -ceil(T_delta/T_span); 
+  }
 
   if ( Time > T_end )                    /* Compute forewards location offset */
-     {
-       T_delta = Time - T_end;
-       Offset  = (int) ceil(T_delta/T_span);
-     }
+  {
+    T_delta = Time - T_end;
+    Offset  = (int) ceil(T_delta/T_span);
+  }
 
   /*--------------------------------------------------------------------------*/
   /*  Retrieve ephemeris data from new record.                                */
@@ -93,7 +91,7 @@ void Read_Coefficients( double Time )
 
   fseek(Ephemeris_File,(Offset-1)*ARRAY_SIZE*sizeof(double),SEEK_CUR);
   fread(&Coeff_Array,sizeof(double),ARRAY_SIZE,Ephemeris_File);
-  
+
   T_beg  = Coeff_Array[0];
   T_end  = Coeff_Array[1];
   T_span = T_end - T_beg;
@@ -102,16 +100,15 @@ void Read_Coefficients( double Time )
   /*  Debug print (optional)                                                  */
   /*--------------------------------------------------------------------------*/
 
-  if ( Debug ) 
-     {
-       printf("\n  In: Read_Coefficients \n");
-       printf("\n      ARRAY_SIZE = %4d",ARRAY_SIZE);
-       printf("\n      Offset  = %3d",Offset);
-       printf("\n      T_delta = %7.3f",T_delta);
-       printf("\n      T_Beg   = %7.3f",T_beg);
-       printf("\n      T_End   = %7.3f",T_end);
-       printf("\n      T_Span  = %7.3f\n\n",T_span);
-     }
+#ifdef DEBUG
+  printf("\n  In: Read_Coefficients \n");
+  printf("\n      ARRAY_SIZE = %4d",ARRAY_SIZE);
+  printf("\n      Offset  = %3d",Offset);
+  printf("\n      T_delta = %7.3f",T_delta);
+  printf("\n      T_Beg   = %7.3f",T_beg);
+  printf("\n      T_End   = %7.3f",T_end);
+  printf("\n      T_Span  = %7.3f\n\n",T_span);
+#endif
 
 }
 
@@ -133,7 +130,7 @@ void Read_Coefficients( double Time )
 int Initialize_Ephemeris( char *fileName )
 {
   int headerID;
-  
+
   /*--------------------------------------------------------------------------*/
   /*  Open ephemeris file.                                                    */
   /*--------------------------------------------------------------------------*/
@@ -145,56 +142,55 @@ int Initialize_Ephemeris( char *fileName )
   /*--------------------------------------------------------------------------*/
 
   if ( Ephemeris_File == NULL ) /*........................No need to continue */
-     {
-       printf("\n Unable to open ephemeris file: %s.\n",fileName);
-       return FAILURE;
-     }
+  {
+    printf("\n Unable to open ephemeris file: %s.\n",fileName);
+    return FAILURE;
+  }
   else 
-     { /*.................Read first three header records from ephemeris file */
-         
-       fread(&H1,sizeof(double),ARRAY_SIZE,Ephemeris_File);
-       fread(&H2,sizeof(double),ARRAY_SIZE,Ephemeris_File);
-       fread(&Coeff_Array,sizeof(double),ARRAY_SIZE,Ephemeris_File);
-       
-       /*...............................Store header data in global variables */
-       
-       R1 = H1.data;
-              
-       /*..........................................Set current time variables */
+  { /*.................Read first three header records from ephemeris file */
 
-       T_beg  = Coeff_Array[0];
-       T_end  = Coeff_Array[1];
-       T_span = T_end - T_beg;
+    fread(&H1,sizeof(double),ARRAY_SIZE,Ephemeris_File);
+    fread(&H2,sizeof(double),ARRAY_SIZE,Ephemeris_File);
+    fread(&Coeff_Array,sizeof(double),ARRAY_SIZE,Ephemeris_File);
 
-       /*..............................Convert header ephemeris ID to integer */
+    /*...............................Store header data in global variables */
 
-       headerID = (int) R1.DENUM;
-       
-       /*..............................................Debug Print (optional) */
+    R1 = H1.data;
 
-       if ( Debug ) 
-          {
-            printf("\n  In: Initialize_Ephemeris \n");
-            printf("\n      ARRAY_SIZE = %4d",ARRAY_SIZE);
-            printf("\n      headerID   = %3d",headerID);
-            printf("\n      T_Beg      = %7.3f",T_beg);
-            printf("\n      T_End      = %7.3f",T_end);
-            printf("\n      T_Span     = %7.3f\n\n",T_span);
-          }
+    /*..........................................Set current time variables */
 
-       /*..................................................Return status code */
-       
-       if ( headerID == EPHEMERIS ) 
-          {
-            return SUCCESS;
-          }
-       else 
-          {
-            printf("\n Opened wrong file: %s",fileName);
-            printf(" for ephemeris: %d.\n",EPHEMERIS);
-            return FAILURE;
-          }
-     }
+    T_beg  = Coeff_Array[0];
+    T_end  = Coeff_Array[1];
+    T_span = T_end - T_beg;
+
+    /*..............................Convert header ephemeris ID to integer */
+
+    headerID = (int) R1.DENUM;
+
+    /*..............................................Debug Print (optional) */
+
+#ifdef DEBUG
+      printf("\n  In: Initialize_Ephemeris \n");
+      printf("\n      ARRAY_SIZE = %4d",ARRAY_SIZE);
+      printf("\n      headerID   = %3d",headerID);
+      printf("\n      T_Beg      = %7.3f",T_beg);
+      printf("\n      T_End      = %7.3f",T_end);
+      printf("\n      T_Span     = %7.3f\n\n",T_span);
+#endif
+
+    /*..................................................Return status code */
+
+    if ( headerID == EPHEMERIS ) 
+    {
+      return SUCCESS;
+    }
+    else 
+    {
+      printf("\n Opened wrong file: %s",fileName);
+      printf(" for ephemeris: %d.\n",EPHEMERIS);
+      return FAILURE;
+    }
+  }
 }
 
 /**==========================================================================**/
@@ -224,44 +220,43 @@ void Interpolate_Libration( double Time , int Target , double Libration[3] )
   /*--------------------------------------------------------------------------*/
 
   if ( Target != 12 )             /* Also protects against weird input errors */
-     {
-       printf("\n This function only computes librations.\n");
-       return;
-     }
- 
+  {
+    printf("\n This function only computes librations.\n");
+    return;
+  }
+
   /*--------------------------------------------------------------------------*/
   /* Initialize local coefficient array.                                      */
   /*--------------------------------------------------------------------------*/
 
   for ( i=0 ; i<50 ; i++ )
-      {
-        A[i] = 0.0;
-      }
+  {
+    A[i] = 0.0;
+  }
 
   /*--------------------------------------------------------------------------*/
   /* Determine if a new record needs to be input (if so, get it).             */
   /*--------------------------------------------------------------------------*/
-    
+
   if ( Time < T_beg || Time > T_end ) Read_Coefficients(Time);
 
   /*--------------------------------------------------------------------------*/
   /* Read the coefficients from the binary record.                            */
   /*--------------------------------------------------------------------------*/
-  
+
   C = R1.libratPtr[0] - 1;                   /* Coefficient array entry point */
   N = R1.libratPtr[1];                       /*        Number of coefficients */
   G = R1.libratPtr[2];                       /*    Granules in current record */
 
   /*...................................................Debug print (optional) */
 
-  if ( Debug )
-     {
-       printf("\n  In: Interpolate_Libration\n");
-       printf("\n  Target = %2d",Target);
-       printf("\n  C      = %4ld (before)",C);
-       printf("\n  N      = %4ld",N);
-       printf("\n  G      = %4ld\n",G);
-     }
+#ifdef DEBUG
+    printf("\n  In: Interpolate_Libration\n");
+    printf("\n  Target = %2d",Target);
+    printf("\n  C      = %4ld (before)",C);
+    printf("\n  N      = %4ld",N);
+    printf("\n  G      = %4ld\n",G);
+#endif
 
   /*--------------------------------------------------------------------------*/
   /*  Compute the normalized time, then load the Tchebeyshev coefficients     */
@@ -272,73 +267,72 @@ void Interpolate_Libration( double Time , int Target , double Libration[3] )
   /*--------------------------------------------------------------------------*/
 
   if ( G == 1 ) 
-     {
-       Tc = 2.0*(Time - T_beg) / T_span - 1.0;
-       for (i=C ; i<(C+3*N) ; i++)  A[i-C] = Coeff_Array[i];
-     }
+  {
+    Tc = 2.0*(Time - T_beg) / T_span - 1.0;
+    for (i=C ; i<(C+3*N) ; i++)  A[i-C] = Coeff_Array[i];
+  }
   else if ( G > 1 )
-     {
-       T_sub = T_span / ((double) G);          /* Compute subgranule interval */
-       
-       for ( j=G ; j>0 ; j-- ) 
-           {
-             T_break = T_beg + ((double) j-1) * T_sub;
-             if ( Time > T_break ) 
-                {
-                  T_seg  = T_break;
-                  offset = j-1;
-                  break;
-                }
-            }
-            
-       Tc = 2.0*(Time - T_seg) / T_sub - 1.0;
-       C  = C + 3 * offset * N;  
-       
-       for (i=C ; i<(C+3*N) ; i++) A[i-C] = Coeff_Array[i];
-     }
+  {
+    T_sub = T_span / ((double) G);          /* Compute subgranule interval */
+
+    for ( j=G ; j>0 ; j-- ) 
+    {
+      T_break = T_beg + ((double) j-1) * T_sub;
+      if ( Time > T_break ) 
+      {
+        T_seg  = T_break;
+        offset = j-1;
+        break;
+      }
+    }
+
+    Tc = 2.0*(Time - T_seg) / T_sub - 1.0;
+    C  = C + 3 * offset * N;  
+
+    for (i=C ; i<(C+3*N) ; i++) A[i-C] = Coeff_Array[i];
+  }
   else                                   /* Something has gone terribly wrong */
-     {
-       printf("\n Number of granules must be >= 1: check header data.\n");
-     }
+  {
+    printf("\n Number of granules must be >= 1: check header data.\n");
+  }
 
   /*...................................................Debug print (optional) */
 
-  if ( Debug )
-     {
-       printf("\n  C      = %4ld (after)",C);
-       printf("\n  offset = %4ld",offset);
-       printf("\n  Time   = %12.7f",Time);
-       printf("\n  T_sub  = %12.7f",T_sub);
-       printf("\n  T_seg  = %12.7f",T_seg);
-       printf("\n  Tc     = %12.7f\n",Tc);
-       printf("\n  Array Coefficients:\n");
-       for ( i=0 ; i<3*N ; i++ )
-           {
-             printf("\n  A[%2d] = % 22.15e",i,A[i]);
-           }
-       printf("\n\n");
-     }
+#ifdef DEBUG
+    printf("\n  C      = %4ld (after)",C);
+    printf("\n  offset = %4ld",offset);
+    printf("\n  Time   = %12.7f",Time);
+    printf("\n  T_sub  = %12.7f",T_sub);
+    printf("\n  T_seg  = %12.7f",T_seg);
+    printf("\n  Tc     = %12.7f\n",Tc);
+    printf("\n  Array Coefficients:\n");
+    for ( i=0 ; i<3*N ; i++ )
+    {
+      printf("\n  A[%2d] = % 22.15e",i,A[i]);
+    }
+    printf("\n\n");
+#endif
 
   /*..........................................................................*/
 
   /*--------------------------------------------------------------------------*/
   /* Compute interpolated the libration.                                      */
   /*--------------------------------------------------------------------------*/
-  
-  for ( i=0 ; i<3 ; i++ ) 
-      {                           
-        Cp[0]  = 1.0;                                 /* Begin polynomial sum */
-        Cp[1]  = Tc;
-        sum[i] = A[i*N] + A[1+i*N]*Tc;
 
-        for ( j=2 ; j<N ; j++ )                                  /* Finish it */
-            {
-              Cp[j]  = 2.0 * Tc * Cp[j-1] - Cp[j-2];
-              sum[i] = sum[i] + A[j+i*N] * Cp[j];
-            }
-        Libration[i] = sum[i];
-      }
-      
+  for ( i=0 ; i<3 ; i++ ) 
+  {                           
+    Cp[0]  = 1.0;                                 /* Begin polynomial sum */
+    Cp[1]  = Tc;
+    sum[i] = A[i*N] + A[1+i*N]*Tc;
+
+    for ( j=2 ; j<N ; j++ )                                  /* Finish it */
+    {
+      Cp[j]  = 2.0 * Tc * Cp[j-1] - Cp[j-2];
+      sum[i] = sum[i] + A[j+i*N] * Cp[j];
+    }
+    Libration[i] = sum[i];
+  }
+
   return;
 }
 
@@ -371,44 +365,43 @@ void Interpolate_Nutation( double Time , int Target , double Nutation[2] )
   /*--------------------------------------------------------------------------*/
 
   if ( Target != 11 )             /* Also protects against weird input errors */
-     {
-       printf("\n This function only computes nutations.\n");
-       return;
-     }
- 
+  {
+    printf("\n This function only computes nutations.\n");
+    return;
+  }
+
   /*--------------------------------------------------------------------------*/
   /* Initialize local coefficient array.                                      */
   /*--------------------------------------------------------------------------*/
 
   for ( i=0 ; i<50 ; i++ )
-      {
-        A[i] = 0.0;
-      }
+  {
+    A[i] = 0.0;
+  }
 
   /*--------------------------------------------------------------------------*/
   /* Determine if a new record needs to be input (if so, get it).             */
   /*--------------------------------------------------------------------------*/
-    
+
   if (Time < T_beg || Time > T_end)  Read_Coefficients(Time);
 
   /*--------------------------------------------------------------------------*/
   /* Read the coefficients from the binary record.                            */
   /*--------------------------------------------------------------------------*/
-  
+
   C = R1.coeffPtr[Target][0] - 1;            /* Coefficient array entry point */
   N = R1.coeffPtr[Target][1];                /*        Number of coefficients */
   G = R1.coeffPtr[Target][2];                /*    Granules in current record */
 
   /*...................................................Debug print (optional) */
 
-  if ( Debug )
-     {
-       printf("\n  In: Interpolate_Nutation\n");
-       printf("\n  Target = %2d",Target);
-       printf("\n  C      = %4ld (before)",C);
-       printf("\n  N      = %4ld",N);
-       printf("\n  G      = %4ld\n",G);
-     }
+#ifdef DEBUG
+    printf("\n  In: Interpolate_Nutation\n");
+    printf("\n  Target = %2d",Target);
+    printf("\n  C      = %4ld (before)",C);
+    printf("\n  N      = %4ld",N);
+    printf("\n  G      = %4ld\n",G);
+#endif
 
   /*--------------------------------------------------------------------------*/
   /*  Compute the normalized time, then load the Tchebeyshev coefficients     */
@@ -419,73 +412,72 @@ void Interpolate_Nutation( double Time , int Target , double Nutation[2] )
   /*--------------------------------------------------------------------------*/
 
   if ( G == 1 )
-     {
-       Tc = 2.0*(Time - T_beg) / T_span - 1.0;
-       for (i=C ; i<(C+3*N) ; i++)  A[i-C] = Coeff_Array[i];
-     }
+  {
+    Tc = 2.0*(Time - T_beg) / T_span - 1.0;
+    for (i=C ; i<(C+3*N) ; i++)  A[i-C] = Coeff_Array[i];
+  }
   else if ( G > 1 )
-     {
-       T_sub = T_span / ((double) G);          /* Compute subgranule interval */
-       
-       for ( j=G ; j>0 ; j-- ) 
-           {
-             T_break = T_beg + ((double) j-1) * T_sub;
-             if ( Time > T_break ) 
-                {
-                  T_seg  = T_break;
-                  offset = j-1;
-                  break;
-                }
-            }
-            
-       Tc = 2.0*(Time - T_seg) / T_sub - 1.0;
-       C  = C + 3 * offset * N;
-       
-       for (i=C ; i<(C+3*N) ; i++) A[i-C] = Coeff_Array[i];
-     }
+  {
+    T_sub = T_span / ((double) G);          /* Compute subgranule interval */
+
+    for ( j=G ; j>0 ; j-- ) 
+    {
+      T_break = T_beg + ((double) j-1) * T_sub;
+      if ( Time > T_break ) 
+      {
+        T_seg  = T_break;
+        offset = j-1;
+        break;
+      }
+    }
+
+    Tc = 2.0*(Time - T_seg) / T_sub - 1.0;
+    C  = C + 3 * offset * N;
+
+    for (i=C ; i<(C+3*N) ; i++) A[i-C] = Coeff_Array[i];
+  }
   else                                   /* Something has gone terribly wrong */
-     {
-       printf("\n Number of granules must be >= 1: check header data.\n");
-     }
+  {
+    printf("\n Number of granules must be >= 1: check header data.\n");
+  }
 
   /*...................................................Debug print (optional) */
 
-  if ( Debug )
-     {
-       printf("\n  C      = %4ld (after)",C);
-       printf("\n  offset = %4ld",offset);
-       printf("\n  Time   = %12.7f",Time);
-       printf("\n  T_sub  = %12.7f",T_sub);
-       printf("\n  T_seg  = %12.7f",T_seg);
-       printf("\n  Tc     = %12.7f\n",Tc);
-       printf("\n  Array Coefficients:\n");
-       for ( i=0 ; i<3*N ; i++ )
-           {
-             printf("\n  A[%2d] = % 22.15e",i,A[i]);
-           }
-       printf("\n\n");
-     }
+#ifdef DEBUG
+    printf("\n  C      = %4ld (after)",C);
+    printf("\n  offset = %4ld",offset);
+    printf("\n  Time   = %12.7f",Time);
+    printf("\n  T_sub  = %12.7f",T_sub);
+    printf("\n  T_seg  = %12.7f",T_seg);
+    printf("\n  Tc     = %12.7f\n",Tc);
+    printf("\n  Array Coefficients:\n");
+    for ( i=0 ; i<3*N ; i++ )
+    {
+      printf("\n  A[%2d] = % 22.15e",i,A[i]);
+    }
+    printf("\n\n");
+#endif
 
   /*..........................................................................*/
 
   /*--------------------------------------------------------------------------*/
   /* Compute interpolated the nutation.                                       */
   /*--------------------------------------------------------------------------*/
-  
-  for ( i=0 ; i<2 ; i++ )
-      {
-        Cp[0]  = 1.0;                                 /* Begin polynomial sum */
-        Cp[1]  = Tc;
-        sum[i] = A[i*N] + A[1+i*N]*Tc;
 
-        for ( j=2 ; j<N ; j++ )                                  /* Finish it */
-            {
-              Cp[j]  = 2.0 * Tc * Cp[j-1] - Cp[j-2];
-              sum[i] = sum[i] + A[j+i*N] * Cp[j];
-            }
-        Nutation[i] = sum[i];
-      }
-      
+  for ( i=0 ; i<2 ; i++ )
+  {
+    Cp[0]  = 1.0;                                 /* Begin polynomial sum */
+    Cp[1]  = Tc;
+    sum[i] = A[i*N] + A[1+i*N]*Tc;
+
+    for ( j=2 ; j<N ; j++ )                                  /* Finish it */
+    {
+      Cp[j]  = 2.0 * Tc * Cp[j-1] - Cp[j-2];
+      sum[i] = sum[i] + A[j+i*N] * Cp[j];
+    }
+    Nutation[i] = sum[i];
+  }
+
   return;
 }
 
@@ -517,44 +509,43 @@ void Interpolate_Position( double Time , int Target , double Position[3] )
   /*--------------------------------------------------------------------------*/
 
   if ( Target >= 11 )             /* Also protects against weird input errors */
-     {
-       printf("\n This function does not compute nutations or librations.\n");
-       return;
-     }
- 
+  {
+    printf("\n This function does not compute nutations or librations.\n");
+    return;
+  }
+
   /*--------------------------------------------------------------------------*/
   /* Initialize local coefficient array.                                      */
   /*--------------------------------------------------------------------------*/
 
   for ( i=0 ; i<50 ; i++ )
-      {
-        A[i] = 0.0;
-      }
+  {
+    A[i] = 0.0;
+  }
 
   /*--------------------------------------------------------------------------*/
   /* Determine if a new record needs to be input (if so, get it).             */
   /*--------------------------------------------------------------------------*/
-    
+
   if (Time < T_beg || Time > T_end)  Read_Coefficients(Time);
 
   /*--------------------------------------------------------------------------*/
   /* Read the coefficients from the binary record.                            */
   /*--------------------------------------------------------------------------*/
-  
+
   C = R1.coeffPtr[Target][0] - 1;          /*   Coefficient array entry point */
   N = R1.coeffPtr[Target][1];              /* Number of coeff's per component */
   G = R1.coeffPtr[Target][2];              /*      Granules in current record */
 
   /*...................................................Debug print (optional) */
 
-  if ( Debug )
-     {
-       printf("\n  In: Interpolate_Position\n");
-       printf("\n  Target = %2d",Target);
-       printf("\n  C      = %4ld (before)",C);
-       printf("\n  N      = %4ld",N);
-       printf("\n  G      = %4ld\n",G);
-     }
+#ifdef DEBUG
+    printf("\n  In: Interpolate_Position\n");
+    printf("\n  Target = %2d",Target);
+    printf("\n  C      = %4ld (before)",C);
+    printf("\n  N      = %4ld",N);
+    printf("\n  G      = %4ld\n",G);
+#endif
 
   /*--------------------------------------------------------------------------*/
   /*  Compute the normalized time, then load the Tchebeyshev coefficients     */
@@ -565,72 +556,71 @@ void Interpolate_Position( double Time , int Target , double Position[3] )
   /*--------------------------------------------------------------------------*/
 
   if ( G == 1 )
-     {
-       Tc = 2.0*(Time - T_beg) / T_span - 1.0;
-       for (i=C ; i<(C+3*N) ; i++)  A[i-C] = Coeff_Array[i];
-     }
+  {
+    Tc = 2.0*(Time - T_beg) / T_span - 1.0;
+    for (i=C ; i<(C+3*N) ; i++)  A[i-C] = Coeff_Array[i];
+  }
   else if ( G > 1 )
-     {
-       T_sub = T_span / ((double) G);          /* Compute subgranule interval */
-       
-       for ( j=G ; j>0 ; j-- ) 
-           {
-             T_break = T_beg + ((double) j-1) * T_sub;
-             if ( Time > T_break ) 
-                {
-                  T_seg  = T_break;
-                  offset = j-1;
-                  break;
-                }
-            }
-            
-       Tc = 2.0*(Time - T_seg) / T_sub - 1.0;
-       C  = C + 3 * offset * N;
-       
-       for (i=C ; i<(C+3*N) ; i++) A[i-C] = Coeff_Array[i];
-     }
+  {
+    T_sub = T_span / ((double) G);          /* Compute subgranule interval */
+
+    for ( j=G ; j>0 ; j-- ) 
+    {
+      T_break = T_beg + ((double) j-1) * T_sub;
+      if ( Time > T_break ) 
+      {
+        T_seg  = T_break;
+        offset = j-1;
+        break;
+      }
+    }
+
+    Tc = 2.0*(Time - T_seg) / T_sub - 1.0;
+    C  = C + 3 * offset * N;
+
+    for (i=C ; i<(C+3*N) ; i++) A[i-C] = Coeff_Array[i];
+  }
   else                                   /* Something has gone terribly wrong */
-     {
-       printf("\n Number of granules must be >= 1: check header data.\n");
-     }
+  {
+    printf("\n Number of granules must be >= 1: check header data.\n");
+  }
 
   /*...................................................Debug print (optional) */
 
-  if ( Debug )
-     {
-       printf("\n  C      = %4ld (after)",C);
-       printf("\n  offset = %4ld",offset);
-       printf("\n  Time   = %12.7f",Time);
-       printf("\n  T_sub  = %12.7f",T_sub);
-       printf("\n  T_seg  = %12.7f",T_seg);
-       printf("\n  Tc     = %12.7f\n",Tc);
-       printf("\n  Array Coefficients:\n");
-       for ( i=0 ; i<3*N ; i++ )
-           {
-             printf("\n  A[%2d] = % 22.15e",i,A[i]);
-           }
-       printf("\n\n");
-     }
+#ifdef DEBUG
+    printf("\n  C      = %4ld (after)",C);
+    printf("\n  offset = %4ld",offset);
+    printf("\n  Time   = %12.7f",Time);
+    printf("\n  T_sub  = %12.7f",T_sub);
+    printf("\n  T_seg  = %12.7f",T_seg);
+    printf("\n  Tc     = %12.7f\n",Tc);
+    printf("\n  Array Coefficients:\n");
+    for ( i=0 ; i<3*N ; i++ )
+    {
+      printf("\n  A[%2d] = % 22.15e",i,A[i]);
+    }
+    printf("\n\n");
+#endif
 
   /*..........................................................................*/
 
   /*--------------------------------------------------------------------------*/
   /* Compute interpolated the position.                                       */
   /*--------------------------------------------------------------------------*/
-  
-  for ( i=0 ; i<3 ; i++ ) 
-      {                           
-        Cp[0]  = 1.0;                                 /* Begin polynomial sum */
-        Cp[1]  = Tc;
-        sum[i] = A[i*N] + A[1+i*N]*Tc;
 
-        for ( j=2 ; j<N ; j++ )                                  /* Finish it */
-            {
-              Cp[j]  = 2.0 * Tc * Cp[j-1] - Cp[j-2];
-              sum[i] = sum[i] + A[j+i*N] * Cp[j];
-            }
-        Position[i] = sum[i];
-      }
+  for ( i=0 ; i<3 ; i++ ) 
+  {                           
+    Cp[0]  = 1.0;                                 /* Begin polynomial sum */
+    Cp[1]  = Tc;
+    sum[i] = A[i*N] + A[1+i*N]*Tc;
+
+    for ( j=2 ; j<N ; j++ )                                  /* Finish it */
+    {
+      Cp[j]  = 2.0 * Tc * Cp[j-1] - Cp[j-2];
+      sum[i] = sum[i] + A[j+i*N] * Cp[j];
+    }
+    Position[i] = sum[i];
+  }
 
   return;
 }
@@ -654,7 +644,7 @@ void Interpolate_Position( double Time , int Target , double Position[3] )
 void Interpolate_State(double Time , int Target, stateType *Planet)
 {
   double    A[50]   , B[50] , Cp[50] , P_Sum[3] , V_Sum[3] , Up[50] ,
-            T_break , T_seg = 0 , T_sub = 0 , Tc = 0;
+  T_break , T_seg = 0 , T_sub = 0 , Tc = 0;
   int       i , j;
   long int  C , G , N , offset = 0;
   stateType X;
@@ -664,45 +654,44 @@ void Interpolate_State(double Time , int Target, stateType *Planet)
   /*--------------------------------------------------------------------------*/
 
   if ( Target >= 11 )             /* Also protects against weird input errors */
-     {
-       printf("\n This function does not compute nutations or librations.\n");
-       return;
-     }
+  {
+    printf("\n This function does not compute nutations or librations.\n");
+    return;
+  }
 
   /*--------------------------------------------------------------------------*/
   /* Initialize local coefficient array.                                      */
   /*--------------------------------------------------------------------------*/
 
   for ( i=0 ; i<50 ; i++ )
-      {
-        A[i] = 0.0;
-        B[i] = 0.0;
-      }
+  {
+    A[i] = 0.0;
+    B[i] = 0.0;
+  }
 
   /*--------------------------------------------------------------------------*/
   /* Determine if a new record needs to be input.                             */
   /*--------------------------------------------------------------------------*/
-  
+
   if (Time < T_beg || Time > T_end)  Read_Coefficients(Time);
 
   /*--------------------------------------------------------------------------*/
   /* Read the coefficients from the binary record.                            */
   /*--------------------------------------------------------------------------*/
-  
+
   C = R1.coeffPtr[Target][0] - 1;               /*    Coeff array entry point */
   N = R1.coeffPtr[Target][1];                   /*          Number of coeff's */
   G = R1.coeffPtr[Target][2];                   /* Granules in current record */
 
   /*...................................................Debug print (optional) */
 
-  if ( Debug )
-     {
-       printf("\n  In: Interpolate_State\n");
-       printf("\n  Target = %2d",Target);
-       printf("\n  C      = %4ld (before)",C);
-       printf("\n  N      = %4ld",N);
-       printf("\n  G      = %4ld\n",G);
-     }
+#ifdef DEBUG
+    printf("\n  In: Interpolate_State\n");
+    printf("\n  Target = %2d",Target);
+    printf("\n  C      = %4ld (before)",C);
+    printf("\n  N      = %4ld",N);
+    printf("\n  G      = %4ld\n",G);
+#endif
 
   /*--------------------------------------------------------------------------*/
   /*  Compute the normalized time, then load the Tchebeyshev coefficients     */
@@ -713,84 +702,83 @@ void Interpolate_State(double Time , int Target, stateType *Planet)
   /*--------------------------------------------------------------------------*/
 
   if ( G == 1 )
-     {
-       Tc = 2.0*(Time - T_beg) / T_span - 1.0;
-       for (i=C ; i<(C+3*N) ; i++)  A[i-C] = Coeff_Array[i];
-     }
+  {
+    Tc = 2.0*(Time - T_beg) / T_span - 1.0;
+    for (i=C ; i<(C+3*N) ; i++)  A[i-C] = Coeff_Array[i];
+  }
   else if ( G > 1 )
-     {
-       T_sub = T_span / ((double) G);          /* Compute subgranule interval */
-       
-       for ( j=G ; j>0 ; j-- ) 
-           {
-             T_break = T_beg + ((double) j-1) * T_sub;
-             if ( Time > T_break ) 
-                {
-                  T_seg  = T_break;
-                  offset = j-1;
-                  break;
-                }
-            }
-            
-       Tc = 2.0*(Time - T_seg) / T_sub - 1.0;
-       C  = C + 3 * offset * N;
-       
-       for (i=C ; i<(C+3*N) ; i++) A[i-C] = Coeff_Array[i];
-     }
+  {
+    T_sub = T_span / ((double) G);          /* Compute subgranule interval */
+
+    for ( j=G ; j>0 ; j-- ) 
+    {
+      T_break = T_beg + ((double) j-1) * T_sub;
+      if ( Time > T_break ) 
+      {
+        T_seg  = T_break;
+        offset = j-1;
+        break;
+      }
+    }
+
+    Tc = 2.0*(Time - T_seg) / T_sub - 1.0;
+    C  = C + 3 * offset * N;
+
+    for (i=C ; i<(C+3*N) ; i++) A[i-C] = Coeff_Array[i];
+  }
   else                                   /* Something has gone terribly wrong */
-     {
-       printf("\n Number of granules must be >= 1: check header data.\n");
-     }
+  {
+    printf("\n Number of granules must be >= 1: check header data.\n");
+  }
 
   /*...................................................Debug print (optional) */
 
-  if ( Debug )
-     {
-       printf("\n  C      = %4ld (after)",C);
-       printf("\n  offset = %4ld",offset);
-       printf("\n  Time   = %12.7f",Time);
-       printf("\n  T_sub  = %12.7f",T_sub);
-       printf("\n  T_seg  = %12.7f",T_seg);
-       printf("\n  Tc     = %12.7f\n",Tc);
-       printf("\n  Array Coefficients:\n");
-       for ( i=0 ; i<3*N ; i++ )
-           {
-             printf("\n  A[%2d] = % 22.15e",i,A[i]);
-           }
-       printf("\n\n");
-     }
+#ifdef DEBUG
+    printf("\n  C      = %4ld (after)",C);
+    printf("\n  offset = %4ld",offset);
+    printf("\n  Time   = %12.7f",Time);
+    printf("\n  T_sub  = %12.7f",T_sub);
+    printf("\n  T_seg  = %12.7f",T_seg);
+    printf("\n  Tc     = %12.7f\n",Tc);
+    printf("\n  Array Coefficients:\n");
+    for ( i=0 ; i<3*N ; i++ )
+    {
+      printf("\n  A[%2d] = % 22.15e",i,A[i]);
+    }
+    printf("\n\n");
+#endif
 
   /*..........................................................................*/
 
   /*--------------------------------------------------------------------------*/
   /* Compute the interpolated position & velocity                             */
   /*--------------------------------------------------------------------------*/
-  
+
   for ( i=0 ; i<3 ; i++ )                /* Compute interpolating polynomials */
-      {
-        Cp[0] = 1.0;           
-        Cp[1] = Tc;
-        Cp[2] = 2.0 * Tc*Tc - 1.0;
-        
-        Up[0] = 0.0;
-        Up[1] = 1.0;
-        Up[2] = 4.0 * Tc;
+  {
+    Cp[0] = 1.0;           
+    Cp[1] = Tc;
+    Cp[2] = 2.0 * Tc*Tc - 1.0;
 
-        for ( j=3 ; j<N ; j++ )
-            {
-              Cp[j] = 2.0 * Tc * Cp[j-1] - Cp[j-2];
-              Up[j] = 2.0 * Tc * Up[j-1] + 2.0 * Cp[j-1] - Up[j-2];
-            }
+    Up[0] = 0.0;
+    Up[1] = 1.0;
+    Up[2] = 4.0 * Tc;
 
-        P_Sum[i] = 0.0;           /* Compute interpolated position & velocity */
-        V_Sum[i] = 0.0;
+    for ( j=3 ; j<N ; j++ )
+    {
+      Cp[j] = 2.0 * Tc * Cp[j-1] - Cp[j-2];
+      Up[j] = 2.0 * Tc * Up[j-1] + 2.0 * Cp[j-1] - Up[j-2];
+    }
 
-        for ( j=N-1 ; j>-1 ; j-- )  P_Sum[i] = P_Sum[i] + A[j+i*N] * Cp[j];
-        for ( j=N-1 ; j>0  ; j-- )  V_Sum[i] = V_Sum[i] + A[j+i*N] * Up[j];
+    P_Sum[i] = 0.0;           /* Compute interpolated position & velocity */
+    V_Sum[i] = 0.0;
 
-        X.Position[i] = P_Sum[i];
-        X.Velocity[i] = V_Sum[i] * 2.0 * ((double) G) / (T_span * 86400.0);
-      }
+    for ( j=N-1 ; j>-1 ; j-- )  P_Sum[i] = P_Sum[i] + A[j+i*N] * Cp[j];
+    for ( j=N-1 ; j>0  ; j-- )  V_Sum[i] = V_Sum[i] + A[j+i*N] * Up[j];
+
+    X.Position[i] = P_Sum[i];
+    X.Velocity[i] = V_Sum[i] * 2.0 * ((double) G) / (T_span * 86400.0);
+  }
 
   /*--------------------------------------------------------------------------*/
   /*  Return computed values.                                                 */
