@@ -576,7 +576,6 @@ int main(int argc, char *argv[]) {
 
   pthread_t CommandDatacomm1;
   pthread_t disk_id;
-  pthread_t sunsensor_id;
   pthread_t watchdog_id;
 
 #ifndef USE_FIFO_CMD
@@ -584,6 +583,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifndef BOLOTEST
+  pthread_t sunsensor_id;
   pthread_t tdrss_id;
   pthread_t bi0_id;
   pthread_t sensors_id;

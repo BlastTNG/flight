@@ -1382,7 +1382,7 @@ void InitCommandData() {
 
   CommandData.Bias.bias1 = 0x02;
   CommandData.Bias.bias2 = 0x02;
-  CommandData.Bias.bias3 = 0x0f;
+  CommandData.Bias.bias3 = 0x02;
 
   CommandData.Cryo.heliumLevel = 0;
   CommandData.Cryo.charcoalHeater = 0;

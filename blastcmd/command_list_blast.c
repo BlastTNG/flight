@@ -375,19 +375,19 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /*************** Bias  *****************/
   {COMMAND(bias1_level), "bias 1 level", GR_BIAS, 1,
     {
-      {"Level", 0, 15, 'i', "bias_lev1"}
+      {"Level", 0, 127, 'i', "bias_lev1"}
     }
   },
 
   {COMMAND(bias2_level), "bias 2 level", GR_BIAS, 1,
     {
-      {"Level", 0, 15, 'i', "bias_lev2"}
+      {"Level", 0, 127, 'i', "bias_lev2"}
     }
   },
 
   {COMMAND(bias3_level), "bias 3 level", GR_BIAS, 1,
     {
-      {"Level", 0, 15, 'i', "bias_lev3"}
+      {"Level", 0, 127, 'i', "bias_lev3"}
     }
   },
 

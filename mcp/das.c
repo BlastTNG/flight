@@ -228,7 +228,7 @@ void BiasControl (unsigned short* RxFrame) {
   static struct NiosStruct* biasLev2Addr;
   static struct NiosStruct* biasLev3Addr;
   unsigned short bias_status, biasout1 = 0;
-  static unsigned short biasout2 = 0x70;
+  static unsigned short biasout2 = 0x70, biaslsbs1=0; /* biaslsbs1 holds 2 lsbs for bias */
   int isBiasAC, isBiasRamp, isBiasClockInternal;
   static int hold = 0, ch = 0, rb_hold = 0;
 
@@ -299,11 +299,12 @@ void BiasControl (unsigned short* RxFrame) {
   if (hold > FAST_PER_SLOW + 2) { /* hold data with write low */
     hold--;
   } else if (hold > 0) {  /* hold data with write high */
-    biasout2 |= 0x0f;
+    biasout2 |= 0x07;
     hold--;
   } else if (ch == 0) {
     if (CommandData.Bias.SetLevel1) {
-      biasout2 = ((CommandData.Bias.bias1 << 4) & 0xf0) | 0x03;
+      biasout2 = ((CommandData.Bias.bias1 << 1) & 0xf8) | 0x03;
+      biaslsbs1 = (~(CommandData.Bias.bias1 << 2) & 0x0c);
       hold = 2 * FAST_PER_SLOW + 4;
       rb_hold = 400;
       CommandData.Bias.SetLevel1 = 0;
@@ -311,7 +312,8 @@ void BiasControl (unsigned short* RxFrame) {
     ch++;
   } else if (ch == 1) {
     if (CommandData.Bias.SetLevel2) {
-      biasout2 = ((CommandData.Bias.bias2 << 4) & 0xf0) | 0x05;
+      biasout2 = ((CommandData.Bias.bias2 << 1) & 0xf8) | 0x05;
+      biaslsbs1 = (~(CommandData.Bias.bias2 << 2) & 0x0c);
       hold = 2 * FAST_PER_SLOW + 4;
       rb_hold = 400;
       CommandData.Bias.SetLevel2 = 0;
@@ -319,7 +321,8 @@ void BiasControl (unsigned short* RxFrame) {
     ch++;
   } else if (ch == 2) {
     if (CommandData.Bias.SetLevel3) {
-      biasout2 = ((CommandData.Bias.bias3 << 4) & 0xf0) | 0x06;
+      biasout2 = ((CommandData.Bias.bias3 << 1) & 0xf8) | 0x06;
+      biaslsbs1 = (~(CommandData.Bias.bias3 << 2) & 0x0c);
       hold = 2 * FAST_PER_SLOW + 4;
       rb_hold = 400;
       CommandData.Bias.SetLevel3 = 0;
@@ -339,7 +342,9 @@ void BiasControl (unsigned short* RxFrame) {
 /*     CommandData.Bias.bias2 = slow_data[Bias_lev2Ch][Bias_lev2Ind]; */
 /*     CommandData.Bias.bias3 = slow_data[Bias_lev3Ch][Bias_lev3Ind]; */
   }
-
+  /*  Add the two lsbs of the bias to biasout1  */
+  biasout1 |= biaslsbs1;
+  
   /******************** set the outputs *********************/
   WriteData(biasout1Addr, biasout1 & 0xffff, NIOS_QUEUE);
   WriteData(biasout1Addr, (~biasout2) & 0xff, NIOS_QUEUE);
