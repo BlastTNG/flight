@@ -4537,6 +4537,9 @@ echo "${ECHO_T}yes" >&6
       echo "$as_me:$LINENO: checking for the host to which blastcmd connects" >&5
 echo $ECHO_N "checking for the host to which blastcmd connects... $ECHO_C" >&6
       BLASTCMD_HOST=`echo $BLASTCMD_SSH_LINE | gawk '{ print $2}'`
+      if test "$BLASTCMD_HOST" = "-tx"; then
+        BLASTCMD_HOST=`echo $BLASTCMD_SSH_LINE | gawk '{ print $3}'`
+      fi
       echo "$as_me:$LINENO: result: $BLASTCMD_HOST" >&5
 echo "${ECHO_T}$BLASTCMD_HOST" >&6
       if test "x$BLASTCMD_HOST" != "x"; then
@@ -4566,7 +4569,7 @@ echo "$as_me: WARNING: *** command-list revision checking will be disabled ***" 
   if test "$BLASTCMD_TRY_OK" = "yes"; then
     echo "$as_me:$LINENO: checking whether blastcmd accepts the -c option" >&5
 echo $ECHO_N "checking whether blastcmd accepts the -c option... $ECHO_C" >&6
-    BLASTCMD_LINE=`$BLAST_CMD -c | grep "Command List Serial"`
+    BLASTCMD_LINE=`$BLAST_CMD -c 2>/dev/null | grep "Command List Serial"`
     if test "x$BLASTCMD_LINE" = "x"; then
       echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6

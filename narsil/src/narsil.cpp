@@ -1314,6 +1314,7 @@ int main(int argc, char* argv[]) {
     close(1);
     dup2(pipefd[1], 1);
     close(pipefd[0]);
+    freopen("/dev/null", "w", stderr);
     if (execlp(BLASTCMDFILE, BLASTCMDFILE, "-c", NULL)) {
       perror(BLASTCMDFILE);
       exit(1);

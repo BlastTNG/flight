@@ -1,3 +1,8 @@
+2004-12-17:
+	* configure.ac: remove some unwanted stderr messages.  Fix ssh host check
+	for blastcmd-remote 1.1.9
+	* narsil.c (main): remove some unwanted stderr messages
+
 2004-11-26 (1.8.4):
 	* narsil.cpp: fix elog host
 	* configure.ac: allow overriding elog host name; fix help formatting

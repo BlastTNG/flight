@@ -227,6 +227,9 @@ if test "x$do_cmdlist_test" = "xyes"; then
       AC_MSG_RESULT(yes)
       AC_MSG_CHECKING([for the host to which blastcmd connects])
       BLASTCMD_HOST=`echo $BLASTCMD_SSH_LINE | gawk '{ print $2}'`
+      if test "$BLASTCMD_HOST" = "-tx"; then
+        BLASTCMD_HOST=`echo $BLASTCMD_SSH_LINE | gawk '{ print $3}'`
+      fi
       AC_MSG_RESULT([$BLASTCMD_HOST])
       if test "x$BLASTCMD_HOST" != "x"; then
         AC_MSG_CHECKING([whether configure can connect to the host without a password])
@@ -249,7 +252,7 @@ if test "x$do_cmdlist_test" = "xyes"; then
 
   if test "$BLASTCMD_TRY_OK" = "yes"; then
     AC_MSG_CHECKING([whether blastcmd accepts the -c option])
-    BLASTCMD_LINE=`$BLAST_CMD -c | grep "Command List Serial"`
+    BLASTCMD_LINE=`$BLAST_CMD -c 2>/dev/null | grep "Command List Serial"`
     if test "x$BLASTCMD_LINE" = "x"; then
       AC_MSG_RESULT(no)
       AC_MSG_WARN([*** blastcmd does not support command list versioning ***])
