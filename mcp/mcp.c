@@ -443,9 +443,9 @@ void WatchDog (void) {
 
   for (;;) {
     outb(0xAA, 0x378);
-    usleep(4000);
+    usleep(40000);
     outb(0x55, 0x378);
-    usleep(4000);
+    usleep(40000);
   }
 }
 
