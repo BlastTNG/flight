@@ -258,6 +258,7 @@ int main(void) {
   char buf[209];
   struct timeval no_time = {0, 0};
   unsigned long long int disk_free = 0;
+  int i, reset_lastsock = 0;
 
   struct sigaction action;
 
@@ -337,6 +338,12 @@ int main(void) {
   for (;;) {
     fdwrite = fdread = fdlist;
     FD_CLR(sock, &fdwrite);
+    if (reset_lastsock) {
+      reset_lastsock = 0;
+      for (i = 0; i < sizeof(fd_set) * 8; ++i)
+        if (__FDS_BITS(&fdlist)[__FDELT(i)] & __FDMASK(i))
+          lastsock = i;
+    }
     n = select(lastsock + 1, &fdread, &fdwrite, NULL, &no_time);
 
     if (statvfs("/data", &vfsbuf))
@@ -378,6 +385,7 @@ int main(void) {
               shutdown(n, SHUT_RDWR);
               close(n);
               FD_CLR(n, &fdlist);
+              reset_lastsock = 1;
             } else if (errno != EAGAIN)  /* ignore socket buffer overflows */
               syserror(LOG_ERR, "send");
           }

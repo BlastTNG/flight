@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -O3 -Wall -D__DECOMD__
-LDFLAGS = -lpthread
+CFLAGS = -O3 -Wall -D__DECOMD__ $(EXTRAFLAGS)
+LDFLAGS = -lpthread $(EXTRAFLAGS)
 
 all: decomd
 
