@@ -363,10 +363,17 @@ void StoreStarCameraData(int index, int which)
 
   i_isc = iscread_index[which];
 
+  /* The handshake flag -- for handshakes, we only write this. */
+  WriteData(HxFlagAddr[which], (unsigned int)ISCSolution[which][i_isc].flag,
+      NIOS_QUEUE);
+
+  if (!ISCSolution[which][i_isc].flag)
+    return;
+
   /*** Blobs ***/
   /* Save current blob data if the current frame is a pointing solution;
    * we only do this once per slow frame */
-  if (index == 0 && ISCSolution[which][i_isc].flag)
+  if (index == 0)
     for (i = 0; i < 15; ++i) {
       blob_data[which][i][0] = (int)(ISCSolution[which][i_isc].blob_x[i] * 40);
       blob_data[which][i][1] = (int)(ISCSolution[which][i_isc].blob_y[i] * 40);
@@ -429,8 +436,6 @@ void StoreStarCameraData(int index, int which)
 
   WriteData(McpnumAddr[which],
       (unsigned int)ISCSolution[which][i_isc].MCPFrameNum, NIOS_QUEUE);
-  WriteData(HxFlagAddr[which], (unsigned int)ISCSolution[which][i_isc].flag,
-      NIOS_QUEUE);
   WriteData(RealTrigAddr[which],
       (unsigned int)ISCSolution[which][i_isc].triggertype, NIOS_QUEUE);
   WriteData(ErrorAddr[which], (unsigned int)ISCSolution[which][i_isc].cameraerr,

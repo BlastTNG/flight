@@ -499,9 +499,9 @@ void SingleCommand (enum singleCommand command) {
     CommandData.ISCState[1].triggertype = ISC_TRIGGER_NEG;
   else if (command == osc_auto_focus)
     CommandData.ISCControl[1].autofocus = 10;
-  else if (command == isc_eye_on)
+  else if (command == osc_eye_on)
     CommandData.ISCState[1].eyeOn = 1;
-  else if (command == isc_eye_off)
+  else if (command == osc_eye_off)
     CommandData.ISCState[1].eyeOn = 0;
 
   else if (command == reap) {
