@@ -1298,6 +1298,10 @@ void InitCommandData() {
   CommandData.pumps.pwm3 = 0;
   CommandData.pumps.pwm4 = 0;
 
+  CommandData.Bias.SetLevel1 = 1;
+  CommandData.Bias.SetLevel2 = 1;
+  CommandData.Bias.SetLevel3 = 1;
+  
 #ifndef BOLOTEST
   /** return if we succsesfully read the previous status **/
   if (n_read == sizeof(struct CommandDataStruct)) return;
