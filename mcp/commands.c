@@ -802,18 +802,10 @@ void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues,
     CommandData.plover = ivalues[0];
   else if (command == apcu_charge) {
     CommandData.apcu_reg = rvalues[0]; // v_topoff, in V
-    CommandData.apcu_auto = 1;
-    if (CommandData.apcu_reg < 0)
-      CommandData.apcu_reg = 0;
-    if (CommandData.apcu_reg > 100)
-      CommandData.apcu_reg = 100;
+    CommandData.apcu_auto = 0;
   } else if (command == dpcu_charge) {
     CommandData.dpcu_reg = rvalues[0]; // v_topoff, in V
     CommandData.dpcu_auto = 0;
-    if (CommandData.dpcu_reg < 0)
-      CommandData.dpcu_reg = 0;
-    if (CommandData.dpcu_reg > 100)
-      CommandData.dpcu_reg = 100;
   } else if (command == auto_apcu) {
     CommandData.apcu_trim = rvalues[0];
     CommandData.apcu_auto = 1;
@@ -1545,11 +1537,11 @@ void InitCommandData() {
   /** prev_status overrides this stuff **/
   CommandData.timeout = 3600;
 
-  CommandData.apcu_reg = 0;
+  CommandData.apcu_reg = 28.0;
   CommandData.apcu_trim = 0.5;
   CommandData.apcu_auto = 1;
 
-  CommandData.dpcu_reg = 0;
+  CommandData.dpcu_reg = 28.0;
   CommandData.dpcu_trim = 0.5;
   CommandData.dpcu_auto = 1;
 

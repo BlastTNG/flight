@@ -533,6 +533,8 @@ void ChargeController(void) {
     tAcsBatAddr = GetBiPhaseAddr("t_batt_acs");
   }
 
+  bprintf(info, "DPU: %g APU: %g\n", CommandData.dpcu_reg, CommandData.apcu_reg);
+
   if (CommandData.apcu_auto) {
     T = I2T_M*slow_data[tAcsBatAddr->index][tAcsBatAddr->channel] + I2T_B;
     if (T<-60) T = 50; // if disconnected, assume hot.
@@ -541,8 +543,6 @@ void ChargeController(void) {
   } else {
     apcu_control = (CommandData.apcu_reg - 28.0209)/0.02402664;
   }
-  if (apcu_control>100) apcu_control = 100;
-  if (apcu_control<0) apcu_control = 0;
 
   if (CommandData.dpcu_auto) {
     T = I2T_M*slow_data[tDasBatAddr->index][tDasBatAddr->channel] + I2T_B;
@@ -550,15 +550,20 @@ void ChargeController(void) {
     V = 30.18 - 0.0436*T - exp((T-35.0)*0.1) + CommandData.dpcu_trim;
     dpcu_control = (V - 28.0209)/0.02402664;
   } else {
-    dpcu_control = (CommandData.dpcu_reg - 28.0209)/0.02402664;;
+    dpcu_control = (CommandData.dpcu_reg - 28.0209)/0.02402664;
   }
+
+  bprintf(info, "DPU: %g APU: %g\n", dpcu_control, apcu_control);
+  
+  if (apcu_control>100) apcu_control = 100;
+  if (apcu_control<0) apcu_control = 0;
   if (dpcu_control>100) dpcu_control = 100;
   if (dpcu_control<0) dpcu_control = 0;
 
   WriteData(apcuRegAddr, (int)apcu_control, NIOS_QUEUE);
   WriteData(apcuTrimAddr, CommandData.apcu_trim, NIOS_QUEUE);
   WriteData(apcuAutoAddr, CommandData.apcu_auto, NIOS_QUEUE);
-  WriteData(dpcuRegAddr, (int)apcu_control, NIOS_QUEUE);
+  WriteData(dpcuRegAddr, (int)dpcu_control, NIOS_QUEUE);
   WriteData(dpcuTrimAddr, CommandData.dpcu_trim, NIOS_QUEUE);
   WriteData(dpcuAutoAddr, CommandData.dpcu_auto, NIOS_FLUSH);
 }
