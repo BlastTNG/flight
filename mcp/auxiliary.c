@@ -16,7 +16,7 @@ struct ISCPulseType isc_pulses[2] = {{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}};
 int pin_is_in = 1;
 
 /* ACS0 digital signals (G1 and G3 output, G2 input) */
-#define ISC_NOHEAT   0x00  /* N0G1 - iscBits */
+#define ISC_NOHEAT   0x00  /* N0G1 - ifpmBits */
 #define ISC_HEAT     0x01  /* N0G1 */
 #define ISC_TRIGGER  0x02  /* N0G1 */
 #define BAL1_ON      0x04  /* N0G1 */
@@ -144,7 +144,7 @@ void ControlGyroHeat(unsigned short *RxFrame) {
 /* Balance: control balance system                                */
 /*                                                                */
 /******************************************************************/
-int Balance(int iscBits) {
+int Balance(int ifpmBits) {
   static struct BiPhaseStruct *iElAddr;
   static struct NiosStruct *balPwm1Addr;
   static int pumpon = 0;
@@ -166,9 +166,9 @@ int Balance(int iscBits) {
       - 32758 - CommandData.pumps.bal_target;
 
   if (error > 0) {
-    iscBits |= BAL1_REV;  /* set reverse bit */
+    ifpmBits |= BAL1_REV;  /* set reverse bit */
   } else {
-    iscBits &= (0xFF - BAL1_REV);  /* clear reverse bit */
+    ifpmBits &= (0xFF - BAL1_REV);  /* clear reverse bit */
     error = -error;
   }
 
@@ -189,14 +189,14 @@ int Balance(int iscBits) {
   }
 
   if (pumpon) {
-    iscBits |= BAL1_ON; /* turn on pump */
+    ifpmBits |= BAL1_ON; /* turn on pump */
   } else {
-    iscBits &= (0xFF - BAL1_ON); /* turn off pump */
+    ifpmBits &= (0xFF - BAL1_ON); /* turn off pump */
   }
 
   WriteData(balPwm1Addr, pumppwm);
 
-  return iscBits;
+  return ifpmBits;
 }
 
 /************************************************************************/
@@ -323,18 +323,18 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   static struct NiosStruct* balOnAddr, *balOffAddr;
   static struct NiosStruct* balTargetAddr, *balVetoAddr;
   static struct NiosStruct* balGainAddr, *balMinAddr, *balMaxAddr;
-  static struct NiosStruct* iscBitsAddr;
+  static struct NiosStruct* ifpmBitsAddr;
   static struct NiosStruct* lokmotPinAddr;
   static struct NiosStruct* lOverrideAddr;
 
-  int iscBits = 0;
+  int ifpmBits = 0;
   int pumpBits = 0;
   int pin_override;
 
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    iscBitsAddr = GetNiosAddr("isc_bits");
+    ifpmBitsAddr = GetNiosAddr("ifpm_bits");
     acs0BitsAddr = GetNiosAddr("acs0bits");
     pumpBitsAddr = GetNiosAddr("pump_bits");
     balpumpLevAddr = GetNiosAddr("balpump_lev");
@@ -357,21 +357,21 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   /* two non latching: on/off, fwd/rev */
   if (CommandData.pumps.bal_veto) {
     if (CommandData.pumps.bal1_on)
-      iscBits |= BAL1_ON;
+      ifpmBits |= BAL1_ON;
     if (CommandData.pumps.bal1_reverse)
-      iscBits |= BAL1_REV;
+      ifpmBits |= BAL1_REV;
     if (CommandData.pumps.bal2_on)
-      iscBits |= BAL2_ON;
+      ifpmBits |= BAL2_ON;
     if (CommandData.pumps.bal2_reverse)
-      iscBits |= BAL2_REV;
+      ifpmBits |= BAL2_REV;
   }
 
   /* two latching pumps: */
   if (CommandData.pumps.inframe_cool1_on > 0) {
-    iscBits |= IF_COOL1_ON;
+    ifpmBits |= IF_COOL1_ON;
     CommandData.pumps.inframe_cool1_on--;
   } else if (CommandData.pumps.inframe_cool1_off > 0) {
-    iscBits |= IF_COOL1_OFF;
+    ifpmBits |= IF_COOL1_OFF;
     CommandData.pumps.inframe_cool1_off--;
   }
 
@@ -401,7 +401,7 @@ void ControlAuxMotors(unsigned short *RxFrame) {
 
     WriteData(balpumpLevAddr, CommandData.pumps.pwm1 & 0x7ff);
   } else {
-    iscBits = Balance(iscBits);
+    ifpmBits = Balance(ifpmBits);
   }
 
   CameraTrigger(0); /* isc */
@@ -423,6 +423,6 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   WriteData(balGainAddr, (int)(CommandData.pumps.bal_gain * 1000.));
   WriteData(balMinAddr, (int)CommandData.pumps.bal_min);
   WriteData(balMaxAddr,(int)CommandData.pumps.bal_max);
-  WriteData(iscBitsAddr, iscBits);
+  WriteData(ifpmBitsAddr, ifpmBits);
 
 }

@@ -484,7 +484,7 @@ struct ChannelStruct FastChannels[] = {
   {"acs0bits",    'r',  ACS3, 59,             1.0,                    0.0, 'u'},
 
   /* send data to ACS 3 card */
-  {"isc_bits",    'w',  ACS3,  1,             1.0,                    0.0, 'u'},
+  {"ifpm_bits",   'w',  ACS3,  1,             1.0,                    0.0, 'u'},
 
   {"az",          'w', LOOP2, 51,           I2DEG,                    0.0, 'u'},
   {"el",          'w', LOOP2, 52,           I2DEG,                    0.0, 'u'},
