@@ -226,7 +226,7 @@
       <INFOBUTTON colour="#000000" size="8" bold="true"/>
     </TEXTSTYLE>
   </DEFAULTS>
-  <BOX caption="Balance/Lock" colour="#880000" row="2" col="1">
+  <BOX caption="Balance/Lock" colour="#880000" row="2" col="1" rowspan="1">
     <NUMBER caption="Status">
       <DATUM format="%.0f" src="BAL_VETO" extrema="balstatus"/>
     </NUMBER>
@@ -245,7 +245,7 @@
         <WORD value="1" caption="Locked" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
-<!--
+    <!--
     <MULTI caption="Override">
       <DATUM src="L_OVERRIDE">
         <WORD value="0" caption="OFF" textstyle="OK_BIT"/>
@@ -297,8 +297,32 @@
     <NUMBER caption="IF Heat">
       <DATUM format="%.2f" src="T_IN_HEATX" extrema="temp"/>
     </NUMBER>
+    <NUMBER caption="ISC Front Flange">
+      <DATUM format="%.2f" src="T_ISC_FLANGE" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="ISC Heater Ring">
+      <DATUM format="%.2f" src="T_ISC_HEAT" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="ISC Lens">
+      <DATUM format="%.2f" src="T_ISC_LENS" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="ISC PC">
+      <DATUM format="%.2f" src="T_ISC_COMP" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="OSC Front Flange">
+      <DATUM format="%.2f" src="T_OSC_FLANGE" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="OSC Heater Ring">
+      <DATUM format="%.2f" src="T_OSC_HEAT" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="OSC Lens">
+      <DATUM format="%.2f" src="T_OSC_LENS" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="OSC PC">
+      <DATUM format="%.2f" src="T_OSC_COMP" extrema="temp"/>
+    </NUMBER>
   </BOX>
-  <BOX caption="Mirror Temps" colour="#002222" row="2" col="5">
+  <BOX caption="Mirror Temps" colour="#002222" row="2" col="5" rowspan="1">
     <NUMBER caption="Primary Center">
       <DATUM format="%.2f" src="T_PRIMARY_C" extrema="temp"/>
     </NUMBER>
@@ -355,7 +379,7 @@
     <NUMBER caption="PYR Clin">
       <DATUM format="%.2f" src="T_CLIN_PYR" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T PIV Clin">
+    <NUMBER caption="PIV Clin">
       <DATUM format="%.2f" src="T_CLIN_PIV" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Batteries">
@@ -367,22 +391,22 @@
     <NUMBER caption="Sun Sensor">
       <DATUM format="%.2f" src="T_SUN_SENSOR" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T APCU">
+    <NUMBER caption="APCU">
       <DATUM format="%.2f" src="T_APCU" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T DPCU">
+    <NUMBER caption="DPCU">
       <DATUM format="%.2f" src="T_DPCU" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T Solar Port">
+    <NUMBER caption="Solar Port">
       <DATUM format="%.2f" src="T_SOL_PORT" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T Solar Starboard">
+    <NUMBER caption="Solar Starboard">
       <DATUM format="%.2f" src="T_SOL_STBD" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T ACS Battery">
+    <NUMBER caption="ACS Battery">
       <DATUM format="%.2f" src="T_BATT_ACS" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T DAS Battery">
+    <NUMBER caption="DAS Battery">
       <DATUM format="%.2f" src="T_BATT_DAS" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="SS CPU">
@@ -395,26 +419,23 @@
       <DATUM format="%.2f" src="SS_CHIP_TEMP" extrema="cputemp"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Motor Temps" colour="#002222" row="2" col="4">
-    <NUMBER caption="T Roll PWM">
+  <BOX caption="Motor Temps" colour="#002222" row="2" col="4" rowspan="1">
+    <NUMBER caption="Roll MC">
       <DATUM format="%.2f" src="T_ROLL" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T Roll MC">
-      <DATUM format="%.2f" src="T_ROLL" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="T Reac">
+    <NUMBER caption="Reac">
       <DATUM format="%.2f" src="T_REAC" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T Reac MC">
+    <NUMBER caption="Reac MC">
       <DATUM format="%.2f" src="T_REAC_MC" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T El">
+    <NUMBER caption="El">
       <DATUM format="%.2f" src="T_EL_MOT" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T El MC">
+    <NUMBER caption="El MC">
       <DATUM format="%.2f" src="T_EL_MC" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T Pivot MC">
+    <NUMBER caption="Pivot MC">
       <DATUM format="%.2f" src="T_PIV_MC" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="El Bearing">
@@ -424,7 +445,7 @@
       <DATUM format="%.2f" src="T_LOCK_MOTOR" extrema="temp"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Sun Shield Temps" colour="#002222" row="2" col="3">
+  <BOX caption="Sun Shield Temps" colour="#002222" row="4" col="5">
     <NUMBER caption="Scoop Tip">
       <DATUM format="%.2f" src="T_SCOOP_TIP" extrema="temp"/>
     </NUMBER>
@@ -441,62 +462,59 @@
       <DATUM format="%.2f" src="T_BR_SSHIELD" extrema="temp"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Motor Currents" colour="#707" row="2" col="2">
-    <NUMBER caption="I Roll">
+  <BOX caption="Motor Currents" colour="#707" row="2" col="3" rowspan="1">
+    <NUMBER caption="Roll">
       <DATUM format="%.2f" src="I_ROLL" extrema="mcurrent"/>
     </NUMBER>
-    <NUMBER caption="I Reac">
+    <NUMBER caption="Reac">
       <DATUM format="%.2f" src="I_REAC" extrema="mcurrent"/>
     </NUMBER>
-    <NUMBER caption="I EL">
+    <NUMBER caption="EL">
       <DATUM format="%.2f" src="I_EL" extrema="mcurrent"/>
     </NUMBER>
-    <NUMBER caption="I Pivot">
+    <NUMBER caption="Pivot">
       <DATUM format="%.2f" src="I_PIV" extrema="mcurrent"/>
     </NUMBER>
   </BOX>
   <BOX caption="Currents" colour="#707" row="0" col="3" rowspan="1">
-    <NUMBER caption="I DPM 3V">
+    <NUMBER caption="DPM 3V">
       <DATUM format="%.2f" src="I_DPM_3V" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I DPM 5V">
+    <NUMBER caption="DPM 5V">
       <DATUM format="%.2f" src="I_DPM_5V" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I DPM 10V">
+    <NUMBER caption="DPM 10V">
       <DATUM format="%.2f" src="I_DPM_10V" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I DPM 28V">
+    <NUMBER caption="DPM 28V">
       <DATUM format="%.2f" src="I_DPM_28V" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I REC">
+    <NUMBER caption="REC">
       <DATUM format="%.2f" src="I_REC" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I APM 3V">
+    <NUMBER caption="APM 3V">
       <DATUM format="%.2f" src="I_APM_3V" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I APM 5V">
+    <NUMBER caption="APM 5V">
       <DATUM format="%.2f" src="I_APM_5V" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I APM 10V">
+    <NUMBER caption="APM 10V">
       <DATUM format="%.2f" src="I_APM_10V" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I Gyro Box">
+    <NUMBER caption="Gyro Box">
       <DATUM format="%.2f" src="I_GYBOX" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I PV">
+    <NUMBER caption="PV">
       <DATUM format="%.2f" src="I_PV" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I ISC + OSC">
+    <NUMBER caption="ISC + OSC">
       <DATUM format="%.2f" src="I_STARCAM" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I Sun Sensor">
+    <NUMBER caption="Sun Sensor">
       <DATUM format="%.2f" src="I_SUN" extrema="current"/>
     </NUMBER>
   </BOX>
-  <BOX caption="PCUs" colour="#777700" row="3" col="2">
-    <NUMBER caption="V ACS Battery">
-      <DATUM format="%.2f" src="V_BATT_ACS" extrema="battvolt"/>
-    </NUMBER>
+  <BOX caption="APCU" colour="#777700" row="4" col="2">
     <NUMBER caption="I ACS Gondola">
       <DATUM format="%.2f" src="I_GOND_ACS" extrema="acscurr"/>
     </NUMBER>
@@ -506,9 +524,23 @@
     <NUMBER caption="I ACS Solar">
       <DATUM format="%.2f" src="I_SOL_ACS" extrema="solarcurr"/>
     </NUMBER>
-    <NUMBER caption="V DAS Battery">
-      <DATUM format="%.2f" src="V_BATT_DAS" extrema="battvolt"/>
+    <NUMBER caption="V ACS Battery">
+      <DATUM format="%.2f" src="V_BATT_ACS" extrema="battvolt"/>
     </NUMBER>
+    <NUMBER caption="V ACS Set">
+      <DATUM format="%.2f" src="APCU_REG" extrema="battvolt"/>
+    </NUMBER>
+    <NUMBER caption="V ACS Trim">
+      <DATUM format="%.2f" src="APCU_TRIM" extrema="unknown"/>
+    </NUMBER>
+    <MULTI caption="Auto Topoff">
+      <DATUM src="APCU_AUTO">
+        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+        <WORD value="1" caption="On" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+  </BOX>
+  <BOX caption="DPCU" colour="#777700" row="4" col="3">
     <NUMBER caption="I DAS Gondola">
       <DATUM format="%.2f" src="I_GOND_DAS" extrema="dascurr"/>
     </NUMBER>
@@ -518,40 +550,55 @@
     <NUMBER caption="I DAS Solar">
       <DATUM format="%.2f" src="I_SOL_DAS" extrema="solarcurr"/>
     </NUMBER>
+    <NUMBER caption="V DAS Battery">
+      <DATUM format="%.2f" src="V_BATT_DAS" extrema="battvolt"/>
+    </NUMBER>
+    <NUMBER caption="V DAS Set">
+      <DATUM format="%.2f" src="DPCU_REG" extrema="battvolt"/>
+    </NUMBER>
+    <NUMBER caption="V DAS Trim">
+      <DATUM format="%.2f" src="DPCU_TRIM" extrema="unknown"/>
+    </NUMBER>
+    <MULTI caption="Auto Topoff">
+      <DATUM src="DPCU_AUTO">
+        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+        <WORD value="1" caption="On" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
   </BOX>
-  <BOX caption="Solar Panels" colour="#777700" row="3" col="3">
-    <NUMBER caption="V Solar ACS 1">
+  <BOX caption="Solar Panels" colour="#777700" row="4" col="4">
+    <NUMBER caption="Solar ACS 1">
       <DATUM format="%.2f" src="V_SOL_ACS1" extrema="solarvolt"/>
     </NUMBER>
-    <NUMBER caption="V Solar ACS 2">
+    <NUMBER caption="Solar ACS 2">
       <DATUM format="%.2f" src="V_SOL_ACS2" extrema="solarvolt"/>
     </NUMBER>
-    <NUMBER caption="V Solar ACS 3">
+    <NUMBER caption="Solar ACS 3">
       <DATUM format="%.2f" src="V_SOL_ACS3" extrema="solarvolt"/>
     </NUMBER>
-    <NUMBER caption="V Solar ACS 4">
+    <NUMBER caption="Solar ACS 4">
       <DATUM format="%.2f" src="V_SOL_ACS4" extrema="solarvolt"/>
     </NUMBER>
-    <NUMBER caption="V Solar ACS 5">
+    <NUMBER caption="Solar ACS 5">
       <DATUM format="%.2f" src="V_SOL_ACS5" extrema="solarvolt"/>
     </NUMBER>
-    <NUMBER caption="V Solar ACS 6">
+    <NUMBER caption="Solar ACS 6">
       <DATUM format="%.2f" src="V_SOL_ACS6" extrema="solarvolt"/>
     </NUMBER>
-    <NUMBER caption="V Solar DAS 1">
+    <NUMBER caption="Solar DAS 1">
       <DATUM format="%.2f" src="V_SOL_DAS1" extrema="solarvolt"/>
     </NUMBER>
-    <NUMBER caption="V Solar DAS 2">
+    <NUMBER caption="Solar DAS 2">
       <DATUM format="%.2f" src="V_SOL_DAS2" extrema="solarvolt"/>
     </NUMBER>
-    <NUMBER caption="V Solar DAS 3">
+    <NUMBER caption="Solar DAS 3">
       <DATUM format="%.2f" src="V_SOL_DAS3" extrema="solarvolt"/>
     </NUMBER>
-    <NUMBER caption="V Solar DAS 4">
+    <NUMBER caption="Solar DAS 4">
       <DATUM format="%.2f" src="V_SOL_DAS4" extrema="solarvolt"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Pressures" colour="#777700" row="3" col="4">
+  <BOX caption="Pressures" colour="#777700" row="3" col="2">
     <NUMBER caption="P ISC">
       <DATUM format="%.2f" src="ISC_PRESSURE1" extrema="unknown"/>
     </NUMBER>
@@ -562,13 +609,13 @@
       <DATUM format="%.2f" src="P_PV" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Cooling" colour="#777700" row="3" col="5">
+  <BOX caption="Cooling" colour="#777700" row="2" col="2">
     <MULTI caption="IF Cooling">
       <DATUM src="INCOOL_STATE">
         <WORD value="1" caption="On" textstyle="OK_BIT"/>
-	<WORD value="0" caption="Off" textstyle="OK_BIT"/>
-	<WORD value="-1" caption="Manual" textstyle="W_BIT"/>
-	<WORD value="-3" caption="Auto-Vetoed" textstyle="E_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+        <WORD value="-1" caption="Manual" textstyle="W_BIT"/>
+        <WORD value="-3" caption="Auto-Vetoed" textstyle="E_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="IF Level (%)">
@@ -576,10 +623,10 @@
     </NUMBER>
     <MULTI caption="OF Cooling">
       <DATUM src="OUTCOOL_STATE">
-	<WORD value="1" caption="On" textstyle="OK_BIT"/>
-	<WORD value="0" caption="Off" textstyle="OK_BIT"/>
-	<WORD value="-1" caption="Manual" textstyle="W_BIT"/>
-	<WORD value="-3" caption="Auto-Vetoed" textstyle="E_BIT"/>
+        <WORD value="1" caption="On" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+        <WORD value="-1" caption="Manual" textstyle="W_BIT"/>
+        <WORD value="-3" caption="Auto-Vetoed" textstyle="E_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="OF Level (%)">

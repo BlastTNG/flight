@@ -313,18 +313,6 @@
     <NUMBER caption="Error Code">
       <DATUM format="%.0f" src="ISC_ERROR" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="T Front Flange">
-      <DATUM format="%.2f" src="T_ISC_FLANGE" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="T Heater Ring">
-      <DATUM format="%.2f" src="T_ISC_HEAT" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="T Lens">
-      <DATUM format="%.2f" src="T_ISC_LENS" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="T ISC PC">
-      <DATUM format="%.2f" src="T_ISC_COMP" extrema="temp"/>
-    </NUMBER>
   </BOX>
   <BOX caption="OSC" colour="#707" row="3" col="4" rowspan="1">
     <NUMBER caption="RA">
@@ -399,18 +387,6 @@
     <NUMBER caption="Error Code">
       <DATUM format="%.0f" src="OSC_ERROR" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="T Front Flange">
-      <DATUM format="%.2f" src="T_OSC_FLANGE" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="T Heater Ring">
-      <DATUM format="%.2f" src="T_OSC_HEAT" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="T Lens">
-      <DATUM format="%.2f" src="T_OSC_LENS" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="T OSC PC">
-      <DATUM format="%.2f" src="T_OSC_COMP" extrema="temp"/>
-    </NUMBER>
   </BOX>
   <BOX caption="dGPS" colour="#880000" row="3" col="5">
     <MULTI caption="dGPS OK">
@@ -456,7 +432,7 @@
         <WORD value="1" caption="Locked" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
-<!--
+    <!--
     <MULTI caption="Override">
       <DATUM src="L_OVERRIDE">
         <WORD value="0" caption="OFF" textstyle="OK_BIT"/>
