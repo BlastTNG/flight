@@ -413,7 +413,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {"integration", "Set Integration Time", GR_ISC, 1,
     {
-      {"integration time (ms)", 0, 5000, 'f', 0, "ADD"}
+      {"integration time (ms)", 0, 5000, 'f', 0, "ISC_PULSE"}
     }
   },
 
