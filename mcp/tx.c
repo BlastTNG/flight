@@ -761,7 +761,11 @@ int Balance(int iscBits, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
     SlowChIndex("i_el", &iElCh, &iElInd);
     SlowChIndex("balpump_lev", &balPwm1Ch, &balPwm1Ind);
   }
-  error = slow_data[iElCh][iElInd] - 32758 - CommandData.pumps.bal_target;
+
+  if (slow_data[iElCh][iElInd] < 8000)  /* don't turn on pump if we're */
+    error = 0;                          /* reading very small numbers */
+  else
+    error = slow_data[iElCh][iElInd] - 32758 - CommandData.pumps.bal_target;
 
   if (error > 0) {
     iscBits |= BAL1_REV;  /* set reverse bit */
