@@ -1,7 +1,7 @@
 // ***************************************************
 // *                                                 *
 // *  Programmed by Adam Hincks                      *
-// *                                                 *
+// *  Hacked by cbn and others                       *
 // *  The program is badly organised in some ways,   *
 // *  but it works fine.                             *
 // *                                                 *
@@ -166,7 +166,7 @@ bool MainForm::QStringToBool(QString str) {
 void MainForm::TStyleInit(struct TextStyle *tstyle) {
   tstyle->colour = "#000000";
   tstyle->backcolour = "#dcdcdc";
-  tstyle->font = "adobe-helvetica";
+  tstyle->font = "default";
   tstyle->bold = false;
   tstyle->italic = false;
   tstyle->size = 8;
@@ -732,7 +732,8 @@ QPalette MainForm::Palette(struct TextStyle tstyle) {
 
 QFont MainForm::Font(struct TextStyle tstyle) {
   QFont font;
-  font.setFamily(tstyle.font);
+  if (tstyle.font != "default")
+    font.setFamily(tstyle.font);
   font.setPointSize(tstyle.size);
   font.setBold(tstyle.bold);
   font.setItalic(tstyle.italic);
@@ -1052,6 +1053,8 @@ void MainForm::UpdateData() {
         break;
     }
   }
+  fflush(stderr);
+
 }
 
 
@@ -1143,6 +1146,7 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
             QtData.append(new QLabel(currQtBoxes, "Label"));
             currQtData = QtData.current();
             currLabel->labelindex = QtData.at();
+            //currLabel->labelindex = currQtData;
             currQtData->setText(tr("..."));
             if (currLabel->datumtype == NUMBER)
               currNumber = NumberInfo.at(currLabel->index);
@@ -1162,8 +1166,9 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
           currQtBox->row + currQtBox->rowspan,
           currQtBox->col,
           currQtBox->col + currQtBox->colspan);
-      if (currQtBox->row + currQtBox->rowspan > max_row)
+      if (currQtBox->row + currQtBox->rowspan > max_row) {
         max_row = currQtBox->row + currQtBox->rowspan;
+      }
       if (currQtBox->col < min_col) min_col = currQtBox->col;
     }
   }
