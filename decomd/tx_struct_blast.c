@@ -15,7 +15,6 @@
 #include "bbc_pci.h"
 
 /* card name to (node number, bus number) mapping */
-#define ACS0   0, 0
 #define ACS1   1, 0
 #define ACS2   2, 0
 #define CRYO   3, 1
@@ -38,6 +37,7 @@
 #define LOOP4 20, 0
 #define ACS3  21, 0
 #define DECOM 22, 0
+#define ACS0  23, 0
 
 /* read and write channel 56 on all boards reserved for ADC Sync */
 struct ChannelStruct WideSlowChannels[] = {

@@ -57,8 +57,7 @@ double GetVElev() {
   if (axes_mode.el_mode == AXIS_VEL) {
     vel = axes_mode.el_vel;
   } else if (axes_mode.el_mode == AXIS_POSITION) {
-    vel = (axes_mode.el_dest - PointingData[i_point].el)
-	  * 0.36;
+    vel = (axes_mode.el_dest - PointingData[i_point].el) * 0.36;
   } else if (axes_mode.el_mode == AXIS_LOCK) {
     /* for the lock, only use the elevation encoder */
     vel = (axes_mode.el_dest - ACSData.enc_elev) * 0.64;
