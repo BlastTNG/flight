@@ -283,6 +283,7 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
   static int balGainCh, balGainInd, balMinCh, balMinInd, balMaxCh, balMaxInd;
   static int iscBitsCh;
   static int i_lockpin, j_lockpin;
+  static int pinOverrideCh, pinOverrideInd;
 
   static int since_last_save = 0;
 
@@ -305,6 +306,7 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
     SlowChIndex("bal_max", &balMaxCh, &balMaxInd);
     SlowChIndex("bal_veto", &balVetoCh, &balVetoInd);
     SlowChIndex("lokmot_pin", &i_lockpin, &j_lockpin);
+    SlowChIndex("l_override", &pinOverrideCh, &pinOverrideInd);
   }
 
   /* inner frame box */
@@ -396,6 +398,10 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
   since_last_save++;
   /*********************/
 
+  /* Lock motor override writeback */
+  pin_override = (CommandData.lock_override) ? 1 : 0;
+
+  WriteSlow(pinOverrideCh, pinOverrideInd, pin_override);
   WriteSlow(i_lockpin, j_lockpin, pin_is_in);
   WriteSlow(pumpBitsCh, pumpBitsInd, pumpBits);
   WriteSlow(pumpPwm2Ch, pumpPwm2Ind, CommandData.pumps.pwm2 & 0x7ff);
