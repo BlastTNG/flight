@@ -1,6 +1,5 @@
 include ../Makefile.config
 MOC = $(QT_DIR)/bin/moc
-CMDS = ./commands.h
 FLAGS = -I. -I$(QT_DIR)/include -I../include -g
 DEFINES = -DBLAST_CMD=\"$(BLAST_CMD)\" -DDATA_DIR=\"$(DATA_DIR)\" \
 					-DCUR_DIR=\"$(CUR_DIR)\"
@@ -11,21 +10,21 @@ LIBS = -L../lib/ -L$(QT_DIR)/lib -lqt-mt -lkdecore -lRD
 all: narsil
 
 narsil: command_list.o narsil.o moc_narsil.o doubleentry.o moc_doubleentry.o \
-	$(CMDS) 
+	command_list.h
 	$(CPP) ../lib/kstfile.o ../lib/getdata.o narsil.o command_list.o \
 	doubleentry.o moc_narsil.o moc_doubleentry.o $(LIBS)\
 	-o narsil
 
-moc_narsil.o: moc_narsil.cpp narsil.h commands.h isc_protocol.h
+moc_narsil.o: moc_narsil.cpp narsil.h command_list.h isc_protocol.h
 	$(CPP) $(FLAGS) -c moc_narsil.cpp
 
-command_list.o: command_list.c commands.h isc_protocol.h
+command_list.o: command_list.c command_list.h isc_protocol.h
 	$(CC) $(FLAGS) -c command_list.c
 
-narsil.o: narsil.cpp narsil.h commands.h isc_protocol.h
+narsil.o: narsil.cpp narsil.h command_list.h isc_protocol.h
 	$(CPP) $(FLAGS) -c narsil.cpp
 
-doubleentry.o: doubleentry.cpp doubleentry.h commands.h isc_protocol.h
+doubleentry.o: doubleentry.cpp doubleentry.h command_list.h isc_protocol.h
 	$(CPP) $(FLAGS) -c doubleentry.cpp
 
 moc_doubleentry.cpp: doubleentry.cpp doubleentry.h isc_protocol.h
@@ -34,7 +33,7 @@ moc_doubleentry.cpp: doubleentry.cpp doubleentry.h isc_protocol.h
 moc_doubleentry.o: moc_doubleentry.cpp doubleentry.h isc_protocol.h
 	$(CPP) $(FLAGS) -c moc_doubleentry.cpp
 
-moc_narsil.cpp: narsil.cpp narsil.h commands.h isc_protocol.h
+moc_narsil.cpp: narsil.cpp narsil.h command_list.h isc_protocol.h
 	$(MOC) -o moc_narsil.cpp narsil.h
 
 install:

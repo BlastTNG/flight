@@ -7,7 +7,7 @@
 #ifndef NARSIL_H
 #define NARSIL_H
 
-#include "commands.h"
+#include "command_list.h"
 
 #include <qvariant.h>
 #include <qdialog.h>
