@@ -163,7 +163,7 @@ void WriteBuffer(unsigned char *buffer, int len, unsigned int *i_ack) {
 
   /* Read acknowledgement */
   n = 0;
-  while( (n += read(tty_fd, buf+n, 3-n)) != 3);
+  while( (n += read(tty_fd, buf+n, 3-n)) != 3) usleep(10000);
   if (*(unsigned short *)buf == 0xf3fa)
     *i_ack = (unsigned int)buf[2];
   else
