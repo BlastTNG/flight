@@ -39,6 +39,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#include "blast.h"
 #include "decom_pci.h"
 #include "bbc_pci.h"
 #include "channels.h"
@@ -86,10 +87,6 @@ double fs_bad = 0;
 double dq_bad = 0;
 unsigned short polarity = 1;
 int du = 0;
-
-inline void syserror(int priority, char* preamble) {
-  syslog(priority, "%s: %s", preamble, strerror(errno));
-}
 
 void ReadDecom (void)
 {
@@ -174,37 +171,27 @@ int MakeSock(void)
   int sock, n;
   struct sockaddr_in addr;
 
-  if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
-    syserror(LOG_CRIT, "socket");
-    exit(1);
-  }
+  if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1)
+    berror(fatal, "socket");
 
   n = 1;
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &n, sizeof(n)) != 0) {
-    syserror(LOG_CRIT, "setsockopt");
-    exit(1);
-  }
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &n, sizeof(n)) != 0)
+    berror(fatal, "setsockopt");
 
-  if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &n, sizeof(n)) != 0) {
-    syserror(LOG_CRIT, "setsockopt");
-    exit(1);
-  }
+  if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &n, sizeof(n)) != 0)
+    berror(fatal, "setsockopt");
 
   addr.sin_family = AF_INET;
   addr.sin_port = htons(SOCK_PORT);
   addr.sin_addr.s_addr = INADDR_ANY;
 
-  if (bind(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)) == -1) {
-    syserror(LOG_CRIT, "bind");
-    exit(1);
-  }
+  if (bind(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)) == -1)
+    berror(fatal, "bind");
 
-  if (listen(sock, 10) == -1) {
-    syserror(LOG_CRIT, "listen");
-    exit(1);
-  }
+  if (listen(sock, 10) == -1)
+    berror(fatal, "listen");
 
-  syslog(LOG_INFO, "decomd version " VERSION " listening on port %i.\n",
+  bprintf(info, "decomd version " VERSION " listening on port %i.\n",
       SOCK_PORT);
 
   return sock;
@@ -216,10 +203,10 @@ void CleanUp(void) {
 }
 
 void SigAction(int signo) {
-  if (system_idled) {
-    syslog(LOG_INFO, "caught signal %i while system idle", signo);
-  } else {
-    syslog(LOG_INFO, "caught signal %i; going down to idle", signo);
+  if (system_idled)
+    bprintf(info, "caught signal %i while system idle", signo);
+  else {
+    bprintf(info, "caught signal %i; going down to idle", signo);
 
     ShutdownFrameFile();
     system_idled = 1;
@@ -229,7 +216,7 @@ void SigAction(int signo) {
   if (signo == SIGINT) { /* idle */
     return;
   } else if (signo == SIGHUP) { /* cycle */
-    syslog(LOG_INFO, "system idle, bringing system back up");
+    bprintf(info, "system idle, bringing system back up");
 
     InitialiseFrameFile(FILE_SUFFIX);
 
@@ -243,7 +230,7 @@ void SigAction(int signo) {
 
     system_idled = 0;
   } else { /* terminate */
-    syslog(LOG_INFO, "system idle, terminating");
+    bprintf(info, "system idle, terminating");
     CleanUp();
     signal(signo, SIG_DFL);
     raise(signo);
@@ -269,17 +256,15 @@ int main(void) {
 
   /* set up our outputs */
   openlog("decomd", LOG_PID, LOG_DAEMON);
-  blog_use_syslog();
+  buos_use_syslog();
 
   /* Fork to background */
   if ((pid = fork()) != 0) {
-    if (pid == -1) {
-      syserror(LOG_CRIT, "unable to fork to background");
-      exit(1);
-    }
+    if (pid == -1)
+      berror(fatal, "unable to fork to background");
 
     if ((stream = fopen("/var/run/decomd.pid", "w")) == NULL) 
-      syserror(LOG_ERR, "unable to write PID to disk");
+      berror(err, "unable to write PID to disk");
     else {
       fprintf(stream, "%i\n", pid);
       fflush(stream);
@@ -299,10 +284,8 @@ int main(void) {
   setsid();
 
   /* Open Decom */
-  if ((decom = open(DEV, O_RDONLY | O_NONBLOCK)) == -1) {
-    syserror(LOG_CRIT, "fatal error opening " DEV);
-    exit(1);
-  }
+  if ((decom = open(DEV, O_RDONLY | O_NONBLOCK)) == -1)
+    berror(fatal, "fatal error opening " DEV);
 
   /* Initialise Channel Lists */
   MakeAddressLookups();
@@ -354,7 +337,7 @@ int main(void) {
     n = select(lastsock + 1, &fdread, &fdwrite, NULL, &no_time);
 
     if (statvfs("/mnt/decom", &vfsbuf))
-      syserror(LOG_ERR, "statvfs");
+      berror(err, "statvfs");
     else
       disk_free = (unsigned long long int)vfsbuf.f_bavail * vfsbuf.f_bsize;
 
@@ -367,7 +350,7 @@ int main(void) {
     if (n == -1 && errno == EINTR)
       continue;
     else if (n == -1)
-      syserror(LOG_ERR, "error on select");
+      berror(err, "error on select");
     else
 
       /* loop through all socket numbers, looking for ones that have been
@@ -378,7 +361,7 @@ int main(void) {
             /* listener has a new connexion */
             addrlen = sizeof(addr);
             if ((csock = accept(sock, (struct sockaddr*)&addr, &addrlen)) == -1)
-              syserror(LOG_ERR, "accept");
+              berror(err, "accept");
             FD_SET(csock, &fdlist);
             if (csock > lastsock)
               lastsock = csock;
@@ -397,7 +380,7 @@ int main(void) {
                 FD_CLR(n, &fdlist);
                 reset_lastsock = 1;
               } else if (errno != EAGAIN)  /* ignore socket buffer overflows */
-                syserror(LOG_ERR, "send");
+                berror(err, "send");
             }
       }
     usleep(1000000);

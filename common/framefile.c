@@ -22,34 +22,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "blast.h"
 #include "channels.h"
-
-/* if compiling MCP load the real bputs function prototypes, otherwise, just
- * make up fake ones */
-#ifdef __MCP__
-#  include "mcp.h"
-#elif defined __DECOMD__
-#  include "decomd.h"   /* the decom daemon gets special sysloggy functions */
-#else
-#  define bprintf(x, ...) \
-     do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
-       printf(__VA_ARGS__); \
-       if (strcmp(#x, "fatal") == 0) \
-         exit(1); \
-     } while (0)
-#  define bputs(x,s) \
-     do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
-       puts(s); \
-       if (strcmp(#x, "fatal") == 0) \
-         exit(1); \
-     } while (0)
-#  define berror(x,s) \
-     do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
-       perror(s); \
-       if (strcmp(#x, "fatal") == 0) \
-         exit(1); \
-     } while (0)
-#endif
 
 #ifdef __DECOMD__
 #  define CURFILE "/mnt/decom/etc/decom.cur"
