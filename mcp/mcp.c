@@ -588,7 +588,9 @@ int main(int argc, char *argv[]) {
       close(bbc_fp);
       bbc_fp = open("/dev/bbc", O_RDWR);
       frame_num = frames_in;
+#ifndef BOLOTEST
       fprintf(stderr, "EMPTY %d %d %d\n", df, frames, frame_num);
+#endif
       last_frames = FRAME_MARGIN;
     }
 
