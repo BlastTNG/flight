@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
+#include <pthread.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -170,8 +171,10 @@ void FrameFileWriter(void) {
   void* b_write_to;
   int write_len;
 
+#ifdef __MCP__ 
   pthread_setspecific(identity, "disk");
   mputs(MCP_STARTUP, "FrameFileWriter startup\n");
+#endif
 
   /* malloc output_buffer */
   if ((writeout_buffer = malloc(BUFFER_SIZE * BiPhaseFrameSize)) == NULL)
