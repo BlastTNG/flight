@@ -631,7 +631,7 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
   } else if (command == timeout) {        /* Set timeout */
     CommandData.timeout = ivalues[0];
   } else if (command == xml_file) {  /* change downlink XML file */
-    if ((fp = fopen("./alice/index.al", "w")) != NULL) {
+    if ((fp = fopen("tmp/alice_index", "w")) != NULL) {
       fprintf(fp, "%d\n", ivalues[0]);
       fclose(fp);
     }
