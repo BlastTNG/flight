@@ -500,7 +500,7 @@ int main(int argc, char *argv[]) {
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPortC2, NULL);
 
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS,NULL);
-  pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, NULL);
+//  pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, NULL);
 
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);

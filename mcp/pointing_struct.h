@@ -20,8 +20,8 @@
                                Ed Chapin and/or the ISC computer */
 
 // GETREADINDEX: converts circular buffer pointer to
-#define GETREADINDEX(i) ((i+2) % 3)
-#define INC_INDEX(i) ((i + 1) %3)
+#define GETREADINDEX(i) ((i+2) % 3)  /* i - 1 modulo 3 */
+#define INC_INDEX(i) ((i + 1) %3)    /* i + 1 modulo 3 */
 
 /**********************************************/
 /*  VSCDataStruct                             */
@@ -183,5 +183,7 @@ extern time_t DGPSTime;
 /*  Purpose: Store isc pointing and blob data */
 /*   Source: isc thread: isc.c                */
 /*     Used: Main thread;                     */
-extern server_frame ISCData[3];
-extern int iscdata_index;
+extern server_frame ISCData[3]; /* isc.c */
+extern int iscdata_index;       /* isc.c */
+
+extern short int write_ISC;     /* isc.c */

@@ -1,6 +1,6 @@
-#define N_SCOMMANDS 63         /* total number of single word commands */
-#define N_NM_SCOMMANDS 58      /* total number of named single word cmds */
-#define N_MCOMMANDS 34         /* total number of multiword commands */
+#define N_SCOMMANDS 99         /* total number of single word commands */
+#define N_NM_SCOMMANDS 62      /* total number of named single word cmds */
+#define N_MCOMMANDS 40         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -15,7 +15,7 @@
 #define SIZE_ABOUT 80
 #define SIZE_PARNAME 80
 
-#define N_GROUPS 12
+#define N_GROUPS 13
 
 #define GR_POINT 0
 #define GR_BAL 1
@@ -29,6 +29,7 @@
 #define GR_LOCK 9
 #define GR_MISC 10
 #define GR_CRYO_CONTROL 11
+#define GR_ISC 12
 
 #ifdef INCLUDE_VARS
 
@@ -112,7 +113,12 @@ struct scom scommands[N_NM_SCOMMANDS] = {
   {"outer_spare_off", "outer frame colling pump 2 off", GR_COOL},
 
   {"pin_in", "close lock pin without checking encoder (dangerous)", GR_LOCK},
-  {"unlock", "unlock the lock", GR_LOCK}
+  {"unlock", "unlock the lock", GR_LOCK},
+
+  {"isc_run", "start automatic image capture (normal mode)", GR_ISC},
+  {"expose", "take a single exposure", GR_ISC},
+  {"full_screen", "show full screen", GR_ISC},
+  {"auto_focus", "autofocus camera", GR_ISC}
 };
 
 struct par {
@@ -142,25 +148,25 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /***************************************/
   /********** Pointing Mode **************/
   {"ra_dec_raster", "raster scan a circle in RA/DEC", GR_POINT, 5,
-   {
-     {"RA of Center (h)", 0.0, 24.0, 'f', 4, "0.0"}, //FIXME: field
-     {"DEC of Center (deg)", -90.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
-     {"Radius (deg on sky)", 0.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
-     {"Az Scan Speed (deg az/s)", 0.0, 2.0, 'f', 4, "0.1"},
-     {"El drift Speed (deg el/s)", 0.0, 2.0, 'f', 4, "0.005"}
-   }
+    {
+      {"RA of Center (h)", 0.0, 24.0, 'f', 4, "0.0"}, //FIXME: field
+      {"DEC of Center (deg)", -90.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
+      {"Radius (deg on sky)", 0.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
+      {"Az Scan Speed (deg az/s)", 0.0, 2.0, 'f', 4, "0.1"},
+      {"El drift Speed (deg el/s)", 0.0, 2.0, 'f', 4, "0.005"}
+    }
   },
   {"ra_dec_goto", "Track a location RA/DEC", GR_POINT, 2,
-   {
-     {"RA of Center (h)", 0.0, 24.0, 'f', 4, "0.0"}, //FIXME: field
-     {"DEC of Center (deg)", -90.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
-   }
+    {
+      {"RA of Center (h)", 0.0, 24.0, 'f', 4, "0.0"}, //FIXME: field
+      {"DEC of Center (deg)", -90.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
+    }
   },
   {"ra_dec_set", "Define RA/DEC of current position", GR_POINT, 2,
-   {
-     {"Current RA (h)", 0.0, 24.0, 'f', 4, "0.0"}, //FIXME: field
-     {"Current DEC (deg)", -90.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
-   }
+    {
+      {"Current RA (h)", 0.0, 24.0, 'f', 4, "0.0"}, //FIXME: field
+      {"Current DEC (deg)", -90.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
+    }
   },
   {"az_scan", "scan in azimuth", GR_POINT, 3,
     {
@@ -321,7 +327,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"DAS card", 5, 16, 'i', 0, "ADD"},
       {"Phase", 0, 2000, 'i', 0, "ADD"}
-   }
+    }
   },
 
   /***************************************/
@@ -362,6 +368,51 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {"spare_heat", "Spare cryo pwm", GR_CRYO_HEAT, 1,
     {
       {"level (%)", 0, 100, 'f', 2, "CRYOPWM"}
+    }
+  },
+
+  /***************************************/
+  /********* ISC Commanding **************/
+  {"pixel_centre", "Centre display on pixel", GR_ISC, 2,
+    {
+      {"x", 0, 1311, 'i', 0, "ADD"},
+      {"y", 0, 1023, 'i', 0, "ADD"}
+    }
+  },
+
+  {"blob_centre", "Centre display on blob", GR_ISC, 1,
+    {
+      {"blob #", 0, 50, 'i', 0, "ADD"}
+    }
+  },
+  
+  {"set_focus", "Set the focus position", GR_ISC, 1,
+    {
+      {"focus position", 0, 2550, 'i', 0, "ADD"}
+    }
+  },
+
+  {"set_aperture", "Set the F-stop", GR_ISC, 1,
+    {
+      {"aperture position", 0, 495, 'i', 0, "ADD"}
+    }
+  },
+
+  {"cam_set", "Camera Settings", GR_ISC, 3,
+    {
+      {"integration time (ms)", 20, 5000, 'i', 0, "ADD"},
+      {"pre-amp gain", 0, 100, 'i', 0, "ADD"},
+      {"pre-amp offset", 0, 100, 'i', 0, "ADD"}
+    }
+  },
+
+  {"det_set", "Set Detection Parameters", GR_ISC, 5,
+    {
+      {"search grid (px/side)", 0, 100, 'i', 0, "ADD"},
+      {"S/N threshold", 0, 100, 'i', 0, "ADD"},
+      {"centroiding box (px/side)", 0, 100, 'i', 0, "ADD"},
+      {"photometry box (px/side)", 0, 100, 'i', 0, "ADD"},
+      {"exclusion distance (px)", 0, 100, 'i', 0, "ADD"}
     }
   }
 };

@@ -81,10 +81,10 @@ typedef struct
 {
 	isc_command command;		// command for the server
 		
-	double az;					// current pointing solution for the telescope (decimal degrees)
-	double el;
-	double lst;
-	double lat;
+	double az;					// current pointing solution for the telescope (In Radians)
+	double el;         // In Radians
+	double lst;        // In Radians
+	double lat;        // In Radians
 
 	unsigned long exposure;		// integration time (microseconds)
 	int	gyro_speed;				// current gyro speed
