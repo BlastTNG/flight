@@ -84,7 +84,6 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"t_bda1",       'r',  3, 43,  -2.8681e-09*65536,      12.3164528, 'u'},
     {"t_bda2",       'r',  3, 45, -2.87714e-09*65536,      12.3240610, 'u'},
     {"t_bda3",       'r',  3, 47,  -2.8779e-09*65536,      12.3446613, 'u'},
-    //{"he4_level",    'r',  3, 49, -2.90117e-09*65536,      12.4604317, 'u'},
     {"",             'r',  3, 49, -2.90117e-09*65536,      12.4604317, 'u'},
     {"cryoin",       'r',  3, 60,                1.0,             0.0, 'u'},
     {"cryoout2",     'w',  3,  1,                1.0,             0.0, 'u'},
@@ -171,7 +170,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
   {
     {"sip_time",     'w', LOOPBACK, 33,          1.0,             0.0, 'U'},
     {"lst",          'w', LOOPBACK, 50,   1.0/3600.0,             0.0, 'U'},
-    {"rll_clin_pyr", 'r', 21, 35,      4.0/5333.3333,       -4.*6.144, 'u'},
+    {"sip_lat",      'w', LOOPBACK, 23,        I2DEG,             0.0, 'u'},
     {"t_clin_pyr",   'r', 21, 23,           -0.00625,          136.45, 'u'},
     {"bias_lev1",    'w', LOOPBACK, 43,          1.0,             0.0, 'u'},
     {"bias_lev2",    'w', LOOPBACK, 44,          1.0,             0.0, 'u'},
