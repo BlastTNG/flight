@@ -116,12 +116,17 @@ unsigned int tdrss_index = 0;
 
 void mputs(buos_t flag, const char* message) {
   char buffer[MPRINT_BUFFER_SIZE];
-  time_t t = time(NULL);
+  struct timeval t;
+  struct timezone tz; /* We never use this, but gettimeofday won't let us
+                         give it a NULL -- also it's obsolete under linux */
   struct tm now;
   char local[1024];
   char *bufstart, *bufptr, *lastchr, *firstchr;
   int len;
   char marker[4];
+
+  /* time */
+  gettimeofday(&t, &tz);
 
   switch(flag) {
     case err:
@@ -161,7 +166,11 @@ void mputs(buos_t flag, const char* message) {
   for(bufstart = buffer; *bufstart != '\0' && bufstart < buffer
       + 1024; ++bufstart);
 
-  strftime(bufstart, 1023, "%F %T GMT ", gmtime_r(&t, &now));
+  strftime(bufstart, 1023, "%F %T", gmtime_r(&t.tv_sec, &now));
+
+  for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
+
+  sprintf(bufstart, ".%06li GMT ", t.tv_usec);
   strcat(buffer, marker);
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
