@@ -37,7 +37,7 @@
 
 #define VERSION_MAJOR    "1"
 #define VERSION_MINOR    "0"
-#define VERSION_REVISION "0"
+#define VERSION_REVISION "1"
 #define VERSION VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION 
 
 #define DEFAULT_CURFILE "/data/etc/defile.cur"
@@ -442,7 +442,7 @@ void PrintUsage(void)
     "large.\n"
     "                          SIZE should be an integer between 0 and %i.\n"
     "  --help                display this help and exit\n"
-    "  --version              display this version information and exit\n"
+    "  --version             display version information and exit\n"
     "  --                    last option; all following parameters are "
     "arguments.\n\n"
     "Summary of defaults:"
