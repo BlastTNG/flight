@@ -1037,7 +1037,7 @@ char *StringToUpper(char *s) {
  *    Store derived acs and pointing data in frame                      *
  *                                                                      *
  ************************************************************************/
-void StoreData(unsigned int* Txframe,
+void StoreData(int index, unsigned int* Txframe,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int i_V_COL = -1, j_V_COL = -1;
   static int i_V_ROW = -1, j_V_ROW = -1;
@@ -1280,8 +1280,10 @@ void StoreData(unsigned int* Txframe,
   WriteSlow(i_dgps_att_index, j_dgps_att_index, i_dgps);
 
   /** ISC Fields **/
-  if (blob_index == 0) {
-    i_isc = GETREADINDEX(iscdata_index); 
+  if (index == 0) {
+    if (++blob_index == 0) {
+      i_isc = GETREADINDEX(iscdata_index); 
+    }
   }
 
   /*** Blobs ***/
@@ -1348,13 +1350,13 @@ void DoAzScanMode() {
   p1 = CommandData.pointing_mode.az1;
   p2 = CommandData.pointing_mode.az2;
   v = CommandData.pointing_mode.az_vel;
-  
+
   while (az-p2>180.0) az-=360.0;
   while (p1-az>180.0) az+=360.0;
 
   if (axes_mode.az_vel < -v) axes_mode.az_vel = -v;
   if (axes_mode.az_vel > v) axes_mode.az_vel = v;
-  
+
   if (p1-az>AZ_MARGIN) { // out of range: move to p1
     axes_mode.az_mode = AXIS_POSITION;
     axes_mode.az_dest = p1;
@@ -1388,7 +1390,7 @@ void DoRasterMode() {
   int i_point;
   double x, y, r,v;
   double x2, xmin, xmax;
-  
+
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
   az = PointingData[i_point].az;
@@ -1400,11 +1402,11 @@ void DoRasterMode() {
 
   /* get raster center and sky drift speed */
   radec2azel(CommandData.pointing_mode.ra, CommandData.pointing_mode.dec,
- 	     lst, PointingData[i_point].lat,
- 	     &caz, &cel);
+      lst, PointingData[i_point].lat,
+      &caz, &cel);
   radec2azel(CommandData.pointing_mode.ra, CommandData.pointing_mode.dec,
- 	     lst+1.0, PointingData[i_point].lat,
- 	     &az2, &el2);
+      lst+1.0, PointingData[i_point].lat,
+      &az2, &el2);
   daz_dt = az2 - caz;
   del_dt = el2 - cel;
 
@@ -1419,7 +1421,7 @@ void DoRasterMode() {
 
   CommandData.pointing_mode.az1 = caz;
   CommandData.pointing_mode.az2 = caz;
-  
+
   // check for out of range in el
   if (el > el1+EL_BORDER) {
     axes_mode.az_mode = AXIS_POSITION;
@@ -1454,7 +1456,7 @@ void DoRasterMode() {
   while (x>180.0) x-=360.0;
   while (x<-180.0) x+=360.0;
   x*=cos(el * M_PI/180.0);
-  
+
   /** Get x limits **/
   y = el - cel;
   x2 = r*r-y*y;
@@ -1468,7 +1470,7 @@ void DoRasterMode() {
 
   /* set az v */
   v = CommandData.pointing_mode.az_vel/cos(el * M_PI/180.0);
-  
+
   /* set az mode */
   if (axes_mode.az_vel < -v) axes_mode.az_vel = -v;
   if (axes_mode.az_vel > v) axes_mode.az_vel = v;
@@ -1493,13 +1495,13 @@ void DoRaDecGotoMode() {
   double caz, cel;
   double lst;
   int i_point;
-  
+
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
 
   radec2azel(CommandData.pointing_mode.ra, CommandData.pointing_mode.dec,
- 	     lst, PointingData[i_point].lat,
- 	     &caz, &cel);
+      lst, PointingData[i_point].lat,
+      &caz, &cel);
 
   axes_mode.az_mode = AXIS_POSITION;
   axes_mode.az_dest = caz;
@@ -1510,79 +1512,79 @@ void DoRaDecGotoMode() {
 }
 
 /******************************************************************
- *                                                                *
+*                                                                *
  * Update Axis Modes: Set axes_mode based on                      *
- *    CommandData.pointing_mode                                   *
- *                                                                *
+*    CommandData.pointing_mode                                   *
+*                                                                *
  ******************************************************************/
 void UpdateAxesMode() {
   switch (CommandData.pointing_mode.el_mode) {
-  case POINT_VEL:
-    axes_mode.el_mode = AXIS_VEL;
-    axes_mode.el_vel = CommandData.pointing_mode.el_vel;
-    break;
-  case POINT_POINT:
-    axes_mode.el_mode = AXIS_POSITION;
-    axes_mode.el_dest = CommandData.pointing_mode.el1;
-    axes_mode.el_vel = 0.0;
-    break;
-  case POINT_RASTER:
-    DoRasterMode();
-    break;
-  case POINT_RADEC_GOTO:
-    DoRaDecGotoMode();
-    break;
-  case POINT_LOCK:
-    axes_mode.el_mode = AXIS_LOCK;
-    axes_mode.el_dest = CommandData.pointing_mode.el1;
-    axes_mode.el_vel = 0.0;
-    break;
-  default:
-    fprintf(stderr, "Unknown Elevation Pointing Mode %d: stopping\n",
-	    CommandData.pointing_mode.el_mode);
-    CommandData.pointing_mode.el_mode = POINT_VEL;
-    CommandData.pointing_mode.el_vel = 0.0;
-    axes_mode.el_mode = AXIS_VEL;
-    axes_mode.el_vel = 0.0;
-    break;
+    case POINT_VEL:
+      axes_mode.el_mode = AXIS_VEL;
+      axes_mode.el_vel = CommandData.pointing_mode.el_vel;
+      break;
+    case POINT_POINT:
+      axes_mode.el_mode = AXIS_POSITION;
+      axes_mode.el_dest = CommandData.pointing_mode.el1;
+      axes_mode.el_vel = 0.0;
+      break;
+    case POINT_RASTER:
+      DoRasterMode();
+      break;
+    case POINT_RADEC_GOTO:
+      DoRaDecGotoMode();
+      break;
+    case POINT_LOCK:
+      axes_mode.el_mode = AXIS_LOCK;
+      axes_mode.el_dest = CommandData.pointing_mode.el1;
+      axes_mode.el_vel = 0.0;
+      break;
+    default:
+      fprintf(stderr, "Unknown Elevation Pointing Mode %d: stopping\n",
+          CommandData.pointing_mode.el_mode);
+      CommandData.pointing_mode.el_mode = POINT_VEL;
+      CommandData.pointing_mode.el_vel = 0.0;
+      axes_mode.el_mode = AXIS_VEL;
+      axes_mode.el_vel = 0.0;
+      break;
   }
 
   switch (CommandData.pointing_mode.az_mode) {
-  case POINT_VEL:
-    axes_mode.az_mode = AXIS_VEL;
-    axes_mode.az_vel = CommandData.pointing_mode.az_vel;
-    break;
-  case POINT_POINT:
-    axes_mode.az_mode = AXIS_POSITION;
-    axes_mode.az_dest = CommandData.pointing_mode.az1;
-    axes_mode.az_vel = 0.0;
-    break;
-  case POINT_RASTER:
-    // already done in el mode test....
-    break;
-  case POINT_RADEC_GOTO:
-    // alread done
-    break;
-  case POINT_SCAN:
-    DoAzScanMode();
-    break;
-  default:
-    CommandData.pointing_mode.az_mode = POINT_VEL;
-    CommandData.pointing_mode.az_vel = 0.0;
-    fprintf(stderr, "Unknown Az Pointing Mode %d: stopping\n",
-	    CommandData.pointing_mode.az_mode);
-    axes_mode.az_mode = AXIS_VEL;
-    axes_mode.az_vel = 0.0;
-    break;
+    case POINT_VEL:
+      axes_mode.az_mode = AXIS_VEL;
+      axes_mode.az_vel = CommandData.pointing_mode.az_vel;
+      break;
+    case POINT_POINT:
+      axes_mode.az_mode = AXIS_POSITION;
+      axes_mode.az_dest = CommandData.pointing_mode.az1;
+      axes_mode.az_vel = 0.0;
+      break;
+    case POINT_RASTER:
+      // already done in el mode test....
+      break;
+    case POINT_RADEC_GOTO:
+      // alread done
+      break;
+    case POINT_SCAN:
+      DoAzScanMode();
+      break;
+    default:
+      CommandData.pointing_mode.az_mode = POINT_VEL;
+      CommandData.pointing_mode.az_vel = 0.0;
+      fprintf(stderr, "Unknown Az Pointing Mode %d: stopping\n",
+          CommandData.pointing_mode.az_mode);
+      axes_mode.az_mode = AXIS_VEL;
+      axes_mode.az_vel = 0.0;
+      break;
   }
-    
+
 }
- 
+
 /******************************************************************
- *                                                                *
+*                                                                *
  * IsNewFrame: returns true if d is a begining of frame marker,   *
- *    unless this is the first beginning of frame.                *
- *                                                                *
+*    unless this is the first beginning of frame.                *
+*                                                                *
  ******************************************************************/
 int IsNewFrame(unsigned int d) {
   static int first_bof = 1;
@@ -1655,7 +1657,7 @@ void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
 #ifndef BOLOTEST
   DoSched();
   UpdateAxesMode();
-  StoreData(Txframe, slowTxFields);
+  StoreData(index, Txframe, slowTxFields);
   ControlGyroHeat(Txframe, Rxframe, slowTxFields);
   WriteMot(index, Txframe, Rxframe, slowTxFields);
 #endif
