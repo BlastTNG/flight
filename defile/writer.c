@@ -781,10 +781,10 @@ void PushFrame(unsigned short* frame)
   /********************/
   for (i = 0; i < DAS_CARDS; i++) {
     for (j = 0; j < DAS_CHS; j += 2) {
-      B0 = (unsigned)frame[boloIndex[i][j][0]] +
-        (((unsigned)frame[boloIndex[i][j][1]] & 0xff00) << 8);
-      B1 = frame[boloIndex[i][j + 1][0]] +
-        ((frame[boloIndex[i][j + 1][1]] & 0x00ff) << 16);
+      B0 = (unsigned)frame[boloIndex[i][j][0] + BoloBaseIndex] +
+        (((unsigned)frame[boloIndex[i][j][1] + BoloBaseIndex] & 0xff00) << 8);
+      B1 = frame[boloIndex[i][j + 1][0] + BoloBaseIndex] +
+        ((frame[boloIndex[i][j + 1][1] + BoloBaseIndex] & 0x00ff) << 16);
 
       i_in = bolo_fields[i][j].i_in;
       ((unsigned*)bolo_fields[i][j].b)[i_in] = B0;

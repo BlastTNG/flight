@@ -74,6 +74,8 @@ extern "C" {
   extern unsigned short ccFast;
   extern unsigned short ccTotal;
 
+  extern unsigned short BoloBaseIndex;
+
   extern unsigned short BiPhaseFrameWords;
   extern unsigned short BiPhaseFrameSize;
   extern unsigned short slowsPerBi0Frame;

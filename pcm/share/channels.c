@@ -50,6 +50,8 @@ unsigned short ccFast;
 unsigned short ccNoBolos;
 unsigned short ccTotal;
 
+unsigned short BoloBaseIndex;
+
 unsigned short BiPhaseFrameWords;
 unsigned short BiPhaseFrameSize;
 unsigned short TxFrameWords[2];
@@ -158,7 +160,7 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
 /*                                                                      */
 /************************************************************************/
 void MakeBoloTable(void) {
-  int i, j, index = 0;;
+  int i, j, index = 0;
   struct ChannelStruct channel = {
     "", 'r', 3, BOLO_BUS, 0, 1.19209e-7, -2097152.0, 'u'
   };
@@ -171,17 +173,20 @@ void MakeBoloTable(void) {
     for (j = 0; j < DAS_CHS; j += 2) {
       /* lsw channel at j */
       channel.addr = j;
-      sprintf(channel.field, "n%ic%ilo", channel.node, j); /* ignored */
+      sprintf(channel.field, "n%ic%ilo", channel.node, j);
       boloIndex[i][j][0] = index;
+      printf("boloIndex[%i][%i][0] = %i\n", i, j, index);
       memcpy(&BoloChannels[index++], &channel, sizeof(channel));
       /* msw at j and j+1 */
       channel.addr = DAS_CHS + (j >> 1);
-      sprintf(channel.field, "n%ic%ihi", channel.node, j); /* ignored */
+      sprintf(channel.field, "n%ic%ihi", channel.node, j);
       boloIndex[i][j + 1][1] = boloIndex[i][j][1] = index;
+      printf("boloIndex[%i][%i][1] = %i\n", i, j, index);
       memcpy(&BoloChannels[index++], &channel, sizeof(channel));
       /* lsw channel at j+1 */
       channel.addr = j+1;
-      sprintf(channel.field, "n%ic%ilo", channel.node, j+1); /* ignored */
+      sprintf(channel.field, "n%ic%ilo", channel.node, j+1);
+      printf("boloIndex[%i][%i][0] = %i\n", i, j + 1, index);
       boloIndex[i][j + 1][0] = index;
       memcpy(&BoloChannels[index++], &channel, sizeof(channel));
     }
@@ -606,7 +611,7 @@ void MakeAddressLookups(void)
     SLOW_OFFSET + slowsPerBusFrame[0],
     1 + slowsPerBusFrame[1]
 #else
-      slowsPerBusFrame[0],
+    slowsPerBusFrame[0],
     slowsPerBusFrame[1]
 #endif
   };
@@ -782,6 +787,11 @@ void MakeAddressLookups(void)
 
     addr[(int)WideFastChannels[i].bus] += 2;
   }
+
+  /* save the location of the first bolometer in the frame so that defile
+   * can calculate the offsets properly when it goes to reconstruct the
+   * bolometers */
+  BoloBaseIndex = BiPhaseAddr;
 
   for (i = 0; i < N_FAST_BOLOS; ++i) {
 #ifndef __DEFILE__
