@@ -6,11 +6,6 @@ ifeq ($(DEBUG), 1)
   CC = gcc -O2 -DEBUG -Wall $(BOLOTEST)
 endif
 
-#OBJS = auxiliary.o commands.o das.o dgps.o dirfile.o \
-#      ephemeris/creader/Source/ephem_read.o geomag.o isc.o lut.o mcp.o \
-#      motors.o pointing.o sched.o sslutNA.o starfind.o starpos.o tx.o \
-#      tx_struct.o
-
 OBJS = auxiliary.o commands.o das.o dgps.o dirfile.o \
       ephemeris/creader/Source/ephem_read.o geomag.o isc.o lut.o mcp.o \
       motors.o pointing.o sched.o sslutNA.o starpos.o tx.o \
@@ -59,11 +54,6 @@ pointing.o: pointing.c pointing_struct.h isc_protocol.h command_struct.h \
 		tx_struct.h lut.h sslutNA.h
 
 sched.o: sched.c command_struct.h pointing_struct.h isc_protocol.h tx_struct.h
-
-#starfind.o: starfind.c itifgExt.h pointing_struct.h isc_protocol.h sort.h ephem_read.h starpos.h ephem_types.h 
-#	  $(CC) \
-#	  -c -L/usr/X11R6/lib -L. -o $@ $< \
-#	  -liticonfig_g $(FL_LIBS) -lm -lc  starpos.o ephem_read.o
 
 starpos.o: starpos.c ephem_read.h ephem_types.h command_struct.h tx_struct.h isc_protocol.h
 

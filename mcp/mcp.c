@@ -36,17 +36,11 @@
 #  define FRAME_MARGIN (-32)
 #endif
 
-#define NOVSC
-
 #define BI0_FRAME_BUFLEN (40)
 /* Define global variables */
 
 int bbc_fp;
 int frames_in = 0;
-
-#ifndef NOVSC
-  extern void starfind();
-#endif
 
 struct SunSensorDataStruct SunSensorData[3];
 
@@ -521,9 +515,6 @@ int main(int argc, char *argv[]) {
   pthread_t sunsensor_id;
 
 #ifndef BOLOTEST
-#  ifndef NOVSC
-  pthread_t starfind_id;
-#  endif
   pthread_t CommandDatacomm2;
   pthread_t bi0_id;
   pthread_t sensors_id;
@@ -559,10 +550,6 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
   pthread_mutex_init(&mutex, NULL);
-
-#ifndef NOVSC
-  pthread_create(&starfind_id, NULL, (void*)&starfind, NULL);
-#endif
 
 #ifdef BOLOTEST
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, NULL);
