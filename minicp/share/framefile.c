@@ -1,3 +1,16 @@
+/* framefile.c: writes raw frame streams to disk
+ *
+ * This software is copyright (C) 2001-2004 University of Toronto
+ * 
+ * This file is part of the BLAST flight code licensed under the GNU 
+ * General Public License.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this software; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -12,9 +25,11 @@
 #include "tx_struct.h"
 
 /* if compiling MCP load the real mputs function prototypes, otherwise, just
- * make up a fake one */
+ * make up fake ones */
 #ifdef __MCP__
 #  include "mcp.h"
+#elif defined __DECOMD__
+#  include "decomd.h"   /* the decom daemon gets special sysloggy functions */
 #else
 #  define mprintf(x, ...) \
      do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
@@ -67,9 +82,7 @@ void OpenNextChunk(void) {
   sprintf(framefile.name, "/data/rawdir/%lu.%c%03X", framefile.time,
       framefile.type, ++framefile.chunk);
 
-#ifdef __MCP__
   mprintf(MCP_INFO, "Writing to framefile %s\n", framefile.name);
-#endif
 
   if ((framefile.fd = creat(framefile.name, 0644)) == -1)
     merror(MCP_ERROR, "Error opening chunk");

@@ -1,13 +1,16 @@
-/******************************************************************************\
-|*                                                                            *|
-|* CRC.c                                                                      *|
-|* Performs a CRC checksum.                                                   *|
-|*                                                                            *|
-|* Enzo Pascale Jan. 25 1997 (for Boomerang)                                  *|
-|* Updated by Adam Hincks, August 2004, for BLAST                             *|
-|*                                                                            *|
-|*                                                                            *|
-\******************************************************************************/
+/* crc.c: performs a crc checksum
+ *
+ * This software is copyright (C) 1997 Enzo Pascale
+ * Updated by Adam Hincks, August 2004, for BLAST
+ * 
+ * This file is part of the BLAST flight code licensed under the GNU 
+ * General Public License.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this software; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
 
 unsigned short crctab[0x100] = {
   0x00000, 0x0C0C1, 0x0C181, 0x00140, 0x0C301, 0x003C0, 0x00280, 0x0C241,
