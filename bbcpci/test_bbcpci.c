@@ -33,29 +33,29 @@ int main(int argc, char *argv[]) {
   printf("NIOS program version is %d.\n", ioctl(fp, BBCPCI_IOC_VERSION));
  
   /* fill frames */
-  buf[0] = WFRAME1_ADD(0);
+  buf[0] = BBCPCI_WFRAME1_ADD(0);
   buf[1] = BBC_FSYNC;
   WBUF;
   
-  buf[0] = WFRAME2_ADD(0);
+  buf[0] = BBCPCI_WFRAME2_ADD(0);
   buf[1] = BBC_FSYNC;
   WBUF;
   
   for (i=1; i<F1LEN; i++) {
-    buf[0] = WFRAME1_ADD(i);
+    buf[0] = BBCPCI_WFRAME1_ADD(i);
     buf[1] = i;
     WBUF;
   }
-  buf[0] = WFRAME1_ADD(i);
+  buf[0] = BBCPCI_WFRAME1_ADD(i);
   buf[1] = BBC_ENDWORD;
   WBUF;
 
   for (i=1; i<F2LEN; i++) {
-    buf[0] = WFRAME2_ADD(i);
+    buf[0] = BBCPCI_WFRAME2_ADD(i);
     buf[1] = 0x2000 + i;
     WBUF;
   }
-  buf[0] = WFRAME2_ADD(i);
+  buf[0] = BBCPCI_WFRAME2_ADD(i);
   buf[1] = BBC_ENDWORD;
   WBUF;
 
@@ -69,9 +69,9 @@ int main(int argc, char *argv[]) {
   //getchar();
 
   while (1) {
-    while (read(fp, inbuf, SIZE_UINT)>0) {
+    while (read(fp, inbuf, BBCPCI_SIZE_UINT)>0) {
       if (inbuf[0] == BBC_FSYNC) {
-        buf[0] = WFRAME1_ADD(1);
+        buf[0] = BBCPCI_WFRAME1_ADD(1);
         buf[1] = frame++;
         WBUF;
         //printf("."); fflush(stdout);

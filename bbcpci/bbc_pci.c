@@ -84,17 +84,17 @@ static void timer_callback(unsigned long x) {
   unsigned int write_buf_p;
   unsigned int n_written;
 
-  if (readl(bbcpci_membase + ADD_COMREG) & (COMREG_RESET)) {
+  if (readl(bbcpci_membase + BBCPCI_ADD_COMREG) & (BBCPCI_COMREG_RESET)) {
     cbcounter = 0;
   } else {
-    write_buf_p = readl(bbcpci_membase + ADD_WRITE_BUF_P);
+    write_buf_p = readl(bbcpci_membase + BBCPCI_ADD_WRITE_BUF_P);
   
-    if (write_buf_p < ADD_IR_WRITE_BUF) { /* if nios is ready for data */
+    if (write_buf_p < BBCPCI_ADD_IR_WRITE_BUF) { /* if nios is ready for data */
     
-      write_buf_p = ADD_IR_WRITE_BUF;
+      write_buf_p = BBCPCI_ADD_IR_WRITE_BUF;
       n_written = 0;
     
-      while ((n_written<IR_WRITE_BUF_SIZE) &&
+      while ((n_written < BBCPCI_IR_WRITE_BUF_SIZE) &&
 	     (tx_buffer.i_in != tx_buffer.i_out)) {
       
 	writel(tx_buffer.add[tx_buffer.i_out], bbcpci_membase + write_buf_p);
@@ -109,8 +109,9 @@ static void timer_callback(unsigned long x) {
 	n_written++;
       }
     
-      write_buf_p -= 2 * SIZE_UINT;
-      writel((unsigned int)write_buf_p, bbcpci_membase + ADD_WRITE_BUF_P);
+      write_buf_p -= 2 * BBCPCI_SIZE_UINT;
+      writel((unsigned int)write_buf_p, bbcpci_membase +
+          BBCPCI_ADD_WRITE_BUF_P);
     } 
   }
   
@@ -137,28 +138,28 @@ static ssize_t read_bbc(struct file * filp, char * buf, size_t count,
   minor = *((int *)(filp->private_data));
 
   if (minor == bbc_minor) {
-    if (count < SIZE_UINT)
+    if (count < BBCPCI_SIZE_UINT)
       return 0;
   
-    rp = readl(bbcpci_membase + ADD_READ_BUF_RP); // Where pci read last.
-    wp = readl(bbcpci_membase + ADD_READ_BUF_WP); // Where nios is about to write.
+    rp = readl(bbcpci_membase + BBCPCI_ADD_READ_BUF_RP); // Where pci read last.
+    wp = readl(bbcpci_membase + BBCPCI_ADD_READ_BUF_WP); // Where nios is about to write.
 
-    rp += SIZE_UINT;
-    if (rp >= ADD_READ_BUF_END)
-      rp = ADD_READ_BUF;
+    rp += BBCPCI_SIZE_UINT;
+    if (rp >= BBCPCI_ADD_READ_BUF_END)
+      rp = BBCPCI_ADD_READ_BUF;
 
     if (rp == wp)  // No new data.
       return 0; 
     else {
       b = readl(bbcpci_membase + rp);
-      copy_to_user(buf, (void *)&b, SIZE_UINT);
-      writel(rp, bbcpci_membase + ADD_READ_BUF_RP); // update read pointer
-      return SIZE_UINT;
+      copy_to_user(buf, (void *)&b, BBCPCI_SIZE_UINT);
+      writel(rp, bbcpci_membase + BBCPCI_ADD_READ_BUF_RP); // update read pointer
+      return BBCPCI_SIZE_UINT;
     }
   } else if (minor == bi0_minor) {
     b = 42;
-    copy_to_user(buf, (void *)&b, SIZE_UINT);// FIXME: what should read bi0 do?
-    return SIZE_UINT;
+    copy_to_user(buf, (void *)&b, BBCPCI_SIZE_UINT);// FIXME: what should read bi0 do?
+    return BBCPCI_SIZE_UINT;
   }
   return (0);
 }
@@ -181,8 +182,8 @@ static ssize_t write_bbc(struct file * filp, const char * buf,
     if (count<8) return 0;
     if (count>8) count = 8;
 
-    copy_from_user((void *)(&add), buf, SIZE_UINT);
-    copy_from_user((void *)(&datum), buf + SIZE_UINT, SIZE_UINT);
+    copy_from_user((void *)(&add), buf, BBCPCI_SIZE_UINT);
+    copy_from_user((void *)(&datum), buf + BBCPCI_SIZE_UINT, BBCPCI_SIZE_UINT);
 
     tx_buffer.add[tx_buffer.i_in] = add;
     tx_buffer.data[tx_buffer.i_in] = datum;
@@ -231,8 +232,8 @@ static int open_bbc(struct inode *inode, struct file * filp){
     bbcpci_membase = ioremap_nocache(bbcpci_membase_raw, BBCPCI_MEMSIZE);
 
     /* reset the card */
-    bitfield = COMREG_RESET;
-    writel(bitfield, bbcpci_membase + ADD_COMREG);
+    bitfield = BBCPCI_COMREG_RESET;
+    writel(bitfield, bbcpci_membase + BBCPCI_ADD_COMREG);
 
     /* Start the timer */
     timer_on = 1;
@@ -301,24 +302,24 @@ static int ioctl_bbc (struct inode *inode, struct file * filp,
   if (minor == bbc_minor) {
     switch(cmd) {
     case BBCPCI_IOC_RESET:    /* Reset the BBC board - clear fifo, registers */
-      bitfield = COMREG_RESET;
-      writel(bitfield, bbcpci_membase + ADD_COMREG);
+      bitfield = BBCPCI_COMREG_RESET;
+      writel(bitfield, bbcpci_membase + BBCPCI_ADD_COMREG);
       break;
     case BBCPCI_IOC_SYNC:     /* Clear read buffers and restart frame. */
-      bitfield = COMREG_SYNC;
-      writel(bitfield, bbcpci_membase + ADD_COMREG);
+      bitfield = BBCPCI_COMREG_SYNC;
+      writel(bitfield, bbcpci_membase + BBCPCI_ADD_COMREG);
       break;
     case BBCPCI_IOC_VERSION:  /* Get the current version. */
-      ret = readl(bbcpci_membase + ADD_VERSION);
+      ret = readl(bbcpci_membase + BBCPCI_ADD_VERSION);
       break;
     case BBCPCI_IOC_COUNTER:  /* Get the counter. */
-      ret = readl(bbcpci_membase + ADD_COUNTER);
+      ret = readl(bbcpci_membase + BBCPCI_ADD_COUNTER);
       break;
     case BBCPCI_IOC_SECRET:   /* Ssshhh. */
       for (i = 0; i < 4; i++)
-	p[i] = readl(bbcpci_membase + (6 + i) * SIZE_UINT);
+        p[i] = readl(bbcpci_membase + (6 + i) * BBCPCI_SIZE_UINT);
       ret = copy_to_user((unsigned char *)arg, (unsigned char *)p, 
-			 4 * SIZE_UINT);
+          4 * BBCPCI_SIZE_UINT);
       break;	
     case BBCPCI_IOC_JIFFIES:  /* A way to read out jiffies... */
       ret = jiffies;  /* doesn't seem to work.  Bo'h? */
@@ -327,17 +328,17 @@ static int ioctl_bbc (struct inode *inode, struct file * filp,
       ret = cbcounter; 
       break;
     case BBCPCI_IOC_WRITEBUF:  /* How many words in the NIOS write buf? */
-      ret = readl(bbcpci_membase + ADD_WRITE_BUF_P) - ADD_IR_WRITE_BUF; 
+      ret = readl(bbcpci_membase + BBCPCI_ADD_WRITE_BUF_P) - BBCPCI_ADD_IR_WRITE_BUF; 
       break;
     case BBCPCI_IOC_COMREG:  /* return the command register */
       /* COMREG_RESET tells if it is resetting */
-      ret = readl(bbcpci_membase + ADD_COMREG);
+      ret = readl(bbcpci_membase + BBCPCI_ADD_COMREG);
       break;
     case BBCPCI_IOC_READBUF_WP: /* where nios is about to write */
-      ret = readl(bbcpci_membase + ADD_READ_BUF_WP);
+      ret = readl(bbcpci_membase + BBCPCI_ADD_READ_BUF_WP);
       break;
     case BBCPCI_IOC_READBUF_RP: /* where the PC is about to read */
-      ret = readl(bbcpci_membase + ADD_READ_BUF_RP);
+      ret = readl(bbcpci_membase + BBCPCI_ADD_READ_BUF_RP);
       break;
     case BBCPCI_IOC_WRITEBUF_N: /* how much data still to be read */
       ret = tx_buffer.n;

@@ -24,32 +24,32 @@
 #define BBCPCI_IOC_READBUF_RP   _IO(BBCPCI_IOC_MAGIC, 10)
 #define BBCPCI_IOC_WRITEBUF_N   _IO(BBCPCI_IOC_MAGIC, 11)
 
-#define SIZE_UINT           sizeof(unsigned int)
+#define BBCPCI_SIZE_UINT           sizeof(unsigned int)
 
-#define ADD_WRITE_BUF_P     0x01 * SIZE_UINT
-#define ADD_IR_WRITE_BUF    0x40
-#define ADD_IR_WRITE_PRE    0x36
-#define IR_WRITE_BUF_SIZE   0x100
-#define ADD_COMREG          0x03 * SIZE_UINT
-#define ADD_VERSION         0x00 * SIZE_UINT
-#define ADD_COUNTER         0x02 * SIZE_UINT
-#define ADD_READ_BUF        0x840
-#define ADD_READ_BUF_END    0x2ff0
-#define ADD_READ_BUF_WP     0x04 * SIZE_UINT
-#define ADD_READ_BUF_RP     0x05 * SIZE_UINT
+#define BBCPCI_ADD_WRITE_BUF_P     (0x01 * BBCPCI_SIZE_UINT)
+#define BBCPCI_ADD_IR_WRITE_BUF    0x40
+#define BBCPCI_ADD_IR_WRITE_PRE    0x36
+#define BBCPCI_IR_WRITE_BUF_SIZE   0x100
+#define BBCPCI_ADD_COMREG          (0x03 * BBCPCI_SIZE_UINT)
+#define BBCPCI_ADD_VERSION         (0x00 * BBCPCI_SIZE_UINT)
+#define BBCPCI_ADD_COUNTER         (0x02 * BBCPCI_SIZE_UINT)
+#define BBCPCI_ADD_READ_BUF        0x840
+#define BBCPCI_ADD_READ_BUF_END    0x2ff0
+#define BBCPCI_ADD_READ_BUF_WP     (0x04 * BBCPCI_SIZE_UINT)
+#define BBCPCI_ADD_READ_BUF_RP     (0x05 * BBCPCI_SIZE_UINT)
 
-#define MAX_FRAME_SIZE      0x10000
+#define BBCPCI_MAX_FRAME_SIZE      0x10000
 
-#define SD_WFRAME1          0x00
-#define SD_WFRAME2          (SD_WFRAME1 + MAX_FRAME_SIZE)
-#define SD_BI0_BUF          0x800000
-#define WFRAME1_ADD(x)      (SD_WFRAME1 + x)
-#define WFRAME2_ADD(x)      (SD_WFRAME2 + x)
-#define BI0_ADD(x)          (SD_BI0_BUF + x)
+#define BBCPCI_SD_WFRAME1          0x00
+#define BBCPCI_SD_WFRAME2          (BBCPCI_SD_WFRAME1 + BBCPCI_MAX_FRAME_SIZE)
+#define BI0_SD_BUF                  0x800000
+#define BBCPCI_WFRAME1_ADD(x)      (BBCPCI_SD_WFRAME1 + x)
+#define BBCPCI_WFRAME2_ADD(x)      (BBCPCI_SD_WFRAME2 + x)
+#define BI0_ADD(x)                 (BI0_SD_BUF + x)
 
 /* Command register bitfield. */
-#define COMREG_RESET    0x00000001  /* Fully reset all pointers etc. */
-#define COMREG_SYNC     0x00000002  /* Clear read buffers and start frame */
+#define BBCPCI_COMREG_RESET  0x00000001 /* Fully reset all pointers etc. */
+#define BBCPCI_COMREG_SYNC   0x00000002 /* Clear read buffers and start frame */
 
 /* The BBus bitfield looks like:
  * 1      1       1
