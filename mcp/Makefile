@@ -1,10 +1,6 @@
 include Makefile.config
-#FL_LIBS = -lfl
-FL_LIBS = 
-CC = gcc -O3 -Wall $(BOLOTEST)
-ifeq ($(DEBUG), 1)
-  CC = gcc -O2 -DEBUG -Wall $(BOLOTEST)
-endif
+CC = gcc
+CFLAGS = -O3 -Wall -D__MCP__ $(BOLOTEST)
 
 OBJS = auxiliary.o commands.o das.o dgps.o framefile.o \
       ephemeris/creader/Source/ephem_read.o geomag.o isc.o lut.o mcp.o \
@@ -22,13 +18,8 @@ clean:
 Makefile.config:
 	./configure
 
-#mcp: $(OBJS)
-#	$(CC) -L/usr/X11R6/lib -L. -o mcp $(OBJS) -lpthread -liticonfig_g \
-#	$(FL_LIBS) -lm
-
 mcp: $(OBJS)
-	$(CC) -L/usr/X11R6/lib -L. -o mcp $(OBJS) -lpthread \
-	$(FL_LIBS) -lm
+	$(CC) -o mcp -lpthread -lm $(OBJS)
 
 auxiliary.o: auxiliary.c tx_struct.h tx.h command_struct.h isc_protocol.h \
 	pointing_struct.h

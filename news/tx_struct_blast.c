@@ -3,7 +3,13 @@
 #include <stdlib.h>
 #include <time.h>
 #include "tx_struct.h"
+
+#ifdef __MCP__
 #include "mcp.h"
+#else
+#define mprintf(x, ...) printf(__VA_ARGS__)
+#endif
+
 
 unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
