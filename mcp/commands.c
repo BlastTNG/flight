@@ -327,20 +327,20 @@ void SingleCommand (int command) {
   else if (command == SIndex("cal_stop"))
     CommandData.Cryo.calib_pulse = 0;
   else if (command == SIndex("ln_valve_open")) {
-    CommandData.Cryo.lnvalve_open = 1;
+    CommandData.Cryo.lnvalve_open = 40;
     CommandData.Cryo.lnvalve_close = 0;
   } else if (command == SIndex("ln_valve_close")) {
-    CommandData.Cryo.lnvalve_close = 1;
+    CommandData.Cryo.lnvalve_close = 40;
     CommandData.Cryo.lnvalve_open = 0;
   } else if (command == SIndex("ln_valve_on"))
     CommandData.Cryo.lnvalve_on = 1;
   else if (command == SIndex("ln_valve_off"))
     CommandData.Cryo.lnvalve_on = 0;
   else if (command == SIndex("he_valve_open")) {
-    CommandData.Cryo.lhevalve_open = 1;
+    CommandData.Cryo.lhevalve_open = 40;
     CommandData.Cryo.lhevalve_close = 0;
   } else if (command == SIndex("he_valve_close")) {
-    CommandData.Cryo.lhevalve_close = 1;
+    CommandData.Cryo.lhevalve_close = 40;
     CommandData.Cryo.lhevalve_open = 0;
   } else if (command == SIndex("he_valve_on"))
     CommandData.Cryo.lhevalve_on = 1;
