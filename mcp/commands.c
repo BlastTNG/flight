@@ -1082,6 +1082,7 @@ void SendDownData(char tty_fd) {
   unsigned char buffer[SLOWDL_LEN], data[3 + SLOWDL_LEN + 1];
   int i, temp;
   int bitpos, bytepos, numbits;
+  double slowM, slowB;
   static char firsttime;
 
   bitpos = 0;
@@ -1092,14 +1093,18 @@ void SendDownData(char tty_fd) {
     switch (SlowDLInfo[i].type) {
       case SLOWDL_FORCE_INT:
         /* Round value to an integer and try to fit it in numbits */
-        if ((int)SlowDLInfo[i].value > (1 << (SlowDLInfo[i].numbits - 1)) - 1)
-          temp = 0;     /* Indicates value was too big */
-        else if ((int)SlowDLInfo[i].value < -1 * ((1 << 
-                (SlowDLInfo[i].numbits - 1)) - 2))
-          temp = 1;     /* Indicates value was too small */
-        else
-          temp = (int)SlowDLInfo[i].value + (1 << (SlowDLInfo[i].numbits - 1));
+
         numbits = SlowDLInfo[i].numbits;
+        if ((int)SlowDLInfo[i].value > SlowDLInfo[i].max)
+          temp = 0;     /* Indicates value was too big */
+        else if ((int)SlowDLInfo[i].value < SlowDLInfo[i].min)
+          temp = 1;     /* Indicates value was too small */
+        else {
+          slowM = (double)((1 << (numbits - 1)) - 1 - 2.0) /
+            (SlowDLInfo[i].max - SlowDLInfo[i].min);
+          slowB = 2.0 - slowM * (double)SlowDLInfo[i].min;
+          temp = (int)(slowM * SlowDLInfo[i].value + slowB);
+        }
         break;
 
       case SLOWDL_U_MASK:

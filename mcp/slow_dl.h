@@ -31,4 +31,6 @@ struct SlowDLStruct {
   int wide;
   int mindex;
   int chnum;
+  long min;
+  long max;
 };
