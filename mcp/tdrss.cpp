@@ -151,7 +151,8 @@ void printbin(long num) {
  ******************************************************************************/
 
 Buffer::Buffer() {
-  buf = (unsigned char *)malloc(1);
+  if (buf = (unsigned char *)malloc(1) == NULL)
+    berror(fatal, "malloc in Buffer::Buffer");
   startbyte = 0;
   size = 1;
 }
@@ -173,7 +174,8 @@ void Buffer::SetSize(int s) {
     // Important to allocate more than requested, in case a frame overflows and
     // has to be truncated.  Weird memory errors can ensue . . .
     safeallocsize = size * BUFFER_SAFE_ALLOC;
-    buf = (unsigned char *)realloc(buf, safeallocsize);
+    if ((buf = (unsigned char *)realloc(buf, safeallocsize)) == NULL)
+      berror(fatal, "Buffer::SetSize realloc");
   }
 }
 
@@ -928,7 +930,8 @@ void Alice::CompressionLoop() {
            DataInfo->looplength;
       if (ts > rawdatasize) {
         rawdatasize = ts;
-        rawdata = (double *)realloc(rawdata, ts);
+        if ((rawdata = (double *)realloc(rawdata, ts)) == NULL)
+          berror(fatal, "rawdata realloc");
       }
 
       ts = sizeof(double) * (3 * DataInfo->samplerate * MaxFrameFreq() *
@@ -1012,8 +1015,7 @@ void Alice::CompressionLoop() {
           case COMP_SINGLE:
             if ((numread = DataSource->ReadField(rawdata, currInfo->src,
                     framepos - readrightpad, 1)) != currInfo->framefreq) {
-              bprintf(err,
-                  "Error accessing correct number of data from frames "
+              bprintf(err, "Error accessing correct number of data from frames "
                   "(%d, %d).", numread, currInfo->framefreq);
               rawdata[0] = 0;
               SendSingle(rawdata, currInfo);  // Send down a zero
@@ -1026,8 +1028,7 @@ void Alice::CompressionLoop() {
             if ((numread = DataSource->ReadField(rawdata, currInfo->src,
                     framepos - readrightpad, numframes))
                 != rawsize) {
-              bprintf(err,
-                  "Error accessing correct number of data from frames "
+              bprintf(err, "Error accessing correct number of data from frames "
                   "(%d, %d).", numread, currInfo->framefreq);
               rawdata[0] = 0;
               SendSingle(rawdata, currInfo);  // Send down a zero
@@ -1193,7 +1194,6 @@ FrameBuffer::FrameBuffer(unsigned int *mcpindex_in,
 
 void FrameBuffer::Resize(int numframes_in) {
   int i, j;
-  bool err = false; 
 
   if (numframes_in == numframes) {
     // Do nothing.
@@ -1222,29 +1222,31 @@ void FrameBuffer::Resize(int numframes_in) {
 
   if ((fastbuf = (unsigned short ***)malloc(numframes * 
           sizeof(unsigned short **))) == NULL)
-    err = true;
+    berror(fatal, "unable to malloc fastbuf.");
+
   if ((slowbuf = (unsigned short ***)malloc(numframes * 
           sizeof(unsigned short **))) == NULL)
-    err = true;
+    berror(fatal, "unable to malloc slowbuf.");
+
+
   for (i = 0; i < numframes; i++) {
     if ((fastbuf[i] = (unsigned short **)malloc(FAST_PER_SLOW *
             sizeof(unsigned short *))) == NULL)
-      err = true;
+      berror(fatal, "unable to malloc fastbuf.");
+
     if ((slowbuf[i] = (unsigned short **)malloc(FAST_PER_SLOW * 
             sizeof(unsigned short *))) == NULL)
-      err = true;
+      berror(fatal, "unable to malloc slowbuf.");
+
     for (j = 0; j < FAST_PER_SLOW; j++) {
       if ((fastbuf[i][j] = (unsigned short *)malloc(BiPhaseFrameSize)) == NULL)
-        err = true;
+        berror(fatal, "unable to malloc fastbuf.");
+
       if ((slowbuf[i][j] = (unsigned short *)malloc(slowsPerBi0Frame *
               sizeof(unsigned short))) == NULL)
-        err = true;
+        berror(fatal, "unable to malloc slowbuf.");
     }
   }
-
-  if (err)
-    berror(tfatal, "SMALL (FrameBuffer): unable to malloc either fastbuf "
-        "or slowbuf.");
 
   framenum = -1;
   memallocated = true;
