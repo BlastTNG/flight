@@ -860,7 +860,7 @@ void DirFileWriter(void)
         CleanUp();
 
         /* Read the new Spec file */
-        ReconstructChannelLists(rc.spec_file, rc.chunk);
+        ReconstructChannelLists(rc.chunk, rc.spec_file);
         bprintf(info, "Frame size: %i bytes\n", DiskFrameSize);
 
         /* Re-initialise */
