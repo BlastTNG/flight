@@ -86,7 +86,7 @@ struct {
 
 void SensorReader(void) {
   int fan, T;
-  int nr;
+  int nr, df;
 
   FILE *fp;
   while (1) {
@@ -96,6 +96,13 @@ void SensorReader(void) {
       if (nr == 2) {
         CommandData.T = T;
         CommandData.fan = fan;
+      }
+      fclose(fp);
+    }
+    if ((fp = fopen("/data/rawdir/df.dat", "r")) != NULL) {
+      nr = fscanf(fp, "%d\n", &df);
+      if (nr == 1) {
+        CommandData.df = df;
       }
       fclose(fp);
     }

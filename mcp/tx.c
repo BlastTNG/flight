@@ -286,6 +286,7 @@ void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int i_t_cpu = -1, j_t_cpu = -1;
   static int i_time = -1, j_time = -1;
   static int i_samiam = -1, j_samiam = -1;
+  static int i_df = -1, j_df = -1;
   time_t t;
 
   if (i_fan == -1) {
@@ -293,6 +294,7 @@ void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
     SlowChIndex("t_cpu", &i_t_cpu, &j_t_cpu);
     SlowChIndex("cpu_time", &i_time, &j_time);
     SlowChIndex("sam_i_am", &i_samiam, &j_samiam);
+    SlowChIndex("disk_free", &i_df, &j_df);
   }
 
   t = time(NULL);
@@ -304,6 +306,7 @@ void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   WriteSlow(i_t_cpu, j_t_cpu, CommandData.T);
 
   WriteSlow(i_samiam, j_samiam, SamIAm);
+  WriteSlow(i_df, j_df, CommandData.df);
 }
 
 /************************************************************************
