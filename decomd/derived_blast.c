@@ -136,9 +136,9 @@ union DerivedUnion DerivedChannels[] = {
       "LN_IS_OPEN"
       ),
 
-  LINCOM2("POT_STATE", "POT_IS_CLOSED", 1, 0, "POT_IS_OPEN",  1, 0),
-  LINCOM2("LHE_STATE", "LHE_IS_CLOSED", 1, 0, "LHE_IS_OPEN",  1, 0),
-  LINCOM2("LN_STATE",  "LN_IS_CLOSED", 1, 0, "LN_IS_OPEN", 1, 0),
+  LINCOM2("POT_STATE", "POT_IS_CLOSED", 2, 0, "POT_IS_OPEN",  1, 0),
+  LINCOM2("LHE_STATE", "LHE_IS_CLOSED", 2, 0, "LHE_IS_OPEN",  1, 0),
+  LINCOM2("LN_STATE",  "LN_IS_CLOSED", 2, 0, "LN_IS_OPEN", 1, 0),
 
   COMMENT("Cryo Table Lookups"),
   COMMENT("Diodes"),
