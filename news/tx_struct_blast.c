@@ -519,9 +519,6 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
   {"n16ref",      'r', DAS16, 36,      1.19209e-7,                    0.0, 'U'},
   {"",            'r', DAS16, 37,      1.19209e-7,                    0.0, 'u'},
 
-  //{"testbolo", 'r',  DAS5, 38,   1.0,   0.0, 'U'}, // boh...
-  //{"",         'r',  DAS5, 39,   1.0,   0.0, 'u'}, // boh...
-
   {"ENDMARKER",   'x',  0,  0,               0,                    0.0, 'x'}
 };
 

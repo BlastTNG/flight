@@ -787,9 +787,9 @@ int main(int argc, char *argv[]) {
   else 
     mputs(MCP_INFO, "I am not Sam.\n");
 
-  do_Tx_frame(bbc_fp, TxFrame, slowTxFields, RxFrame, 0);
-
   MakeTxFrame();
+
+  do_Tx_frame(bbc_fp, TxFrame, slowTxFields, RxFrame, 0);
 
   InitSched();
 
