@@ -1,5 +1,5 @@
 #define N_SCOMMANDS 63         /* total number of single word commands */
-#define N_NM_SCOMMANDS 54      /* total number of named single word cmds */
+#define N_NM_SCOMMANDS 50      /* total number of named single word cmds */
 #define N_MCOMMANDS 30         /* total number of multiword commands */
 #define MAX_N_PARAMS 12
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -15,7 +15,7 @@
 #define SIZE_ABOUT 80
 #define SIZE_PARNAME 25
 
-#define N_GROUPS 13
+#define N_GROUPS 11
 
 #define GR_POINT 0
 #define GR_SENSOR 1
