@@ -8,7 +8,7 @@
 #include "command_struct.h"
 #include "pointing_struct.h"
 
-#define ISC_TRIG_PERIOD 100
+#define ISC_TRIG_PERIOD 100  /* in 100Hz frames */
 #define MAX_ISC_SLOW_PULSE_SPEED 0.015
 
 struct ISCPulseType isc_pulses[2] = {{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}};
@@ -16,28 +16,24 @@ struct ISCPulseType isc_pulses[2] = {{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}};
 int pin_is_in = 1;
 
 /* ACS0 digital signals (G1 and G3 output, G2 input) */
-#define ISC_NOHEAT   0x00  /* N0G1 - ifpmBits */
-#define ISC_HEAT     0x01  /* N0G1 */
-#define ISC_TRIGGER  0x02  /* N0G1 */
-#define BAL1_ON      0x04  /* N0G1 */
-#define BAL1_REV     0x08  /* N0G1 */
-#define IF_COOL1_OFF 0x10  /* N0G1 */
-#define IF_COOL1_ON  0x20  /* N0G1 */
-#define BAL2_ON      0x40  /* N0G1 */
-#define BAL2_REV     0x80  /* N0G1 */
+#define BAL1_ON      0x04  /* ACS3 Group 1 Bit 3 - ifpmBits */
+#define BAL1_REV     0x08  /* ACS3 Group 1 Bit 4 */
+#define IF_COOL1_OFF 0x10  /* ACS3 Group 1 Bit 5 */
+#define IF_COOL1_ON  0x20  /* ACS3 Group 1 Bit 6 */
+#define BAL2_ON      0x40  /* ACS3 Group 1 Bit 7 */
+#define BAL2_REV     0x80  /* ACS3 Group 1 Bit 8 */
 
-#define ISC_SYNC     0x01  /* N0G2  - acs0bits */
-#define LOKMOT_ISIN  0x40  /* N0G2 */
-#define LOKMOT_ISOUT 0x80  /* N0G2 */
+#define LOKMOT_ISIN  0x40  /* ACS3 Group 2 Bit 7 - lockBits */
+#define LOKMOT_ISOUT 0x80  /* ACS3 Group 2 Bit 8 */
 
-#define OF_COOL2_ON  0x01  /* N0G3 - pumpBits */
-#define OF_COOL2_OFF 0x02  /* N0G3 */
-#define OF_COOL1_ON  0x04  /* N0G3 */
-#define OF_COOL1_OFF 0x08  /* N0G3 */
-#define LOKMOT_ON    0x10  /* N0G3 */
-#define LOKMOT_OFF   0x20  /* N0G3 */
-#define LOKMOT_OUT   0x40  /* N0G3 */
-#define LOKMOT_IN    0x80  /* N0G3 */
+#define OF_COOL2_ON  0x01  /* ACS3 Group 3 Bit 1 - ofpmBits */
+#define OF_COOL2_OFF 0x02  /* ACS3 Group 3 Bit 2 */
+#define OF_COOL1_ON  0x04  /* ACS3 Group 3 Bit 3 */
+#define OF_COOL1_OFF 0x08  /* ACS3 Group 3 Bit 4 */
+#define LOKMOT_ON    0x10  /* ACS3 Group 3 Bit 5 */
+#define LOKMOT_OFF   0x20  /* ACS3 Group 3 Bit 6 */
+#define LOKMOT_OUT   0x40  /* ACS3 Group 3 Bit 7 */
+#define LOKMOT_IN    0x80  /* ACS3 Group 3 Bit 8 */
 
 #define BAL_OFF_VETO  1000            /* # of frames to veto balance system
                                          after turning off pump */
@@ -310,16 +306,16 @@ void CameraTrigger(int which)
 
 /*****************************************************************/
 /*                                                               */
-/*   Control the pumps and the lock and the ISC pulse            */
+/*   Control the pumps and the lock                              */
 /*                                                               */
 /*****************************************************************/
 void ControlAuxMotors(unsigned short *RxFrame) {
-  static struct NiosStruct* pumpBitsAddr;
+  static struct NiosStruct* ofpmBitsAddr;
   static struct NiosStruct* balpumpLevAddr;
   static struct NiosStruct* sprpumpLevAddr;
   static struct NiosStruct* inpumpLevAddr;
   static struct NiosStruct* outpumpLevAddr;
-  static struct NiosStruct* acs0BitsAddr;
+  static struct NiosStruct* lockBitsAddr;
   static struct NiosStruct* balOnAddr, *balOffAddr;
   static struct NiosStruct* balTargetAddr, *balVetoAddr;
   static struct NiosStruct* balGainAddr, *balMinAddr, *balMaxAddr;
@@ -328,15 +324,15 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   static struct NiosStruct* lOverrideAddr;
 
   int ifpmBits = 0;
-  int pumpBits = 0;
+  int ofpmBits = 0;
   int pin_override;
 
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
     ifpmBitsAddr = GetNiosAddr("ifpm_bits");
-    acs0BitsAddr = GetNiosAddr("acs0bits");
-    pumpBitsAddr = GetNiosAddr("pump_bits");
+    lockBitsAddr = GetNiosAddr("lock_bits");
+    ofpmBitsAddr = GetNiosAddr("ofpm_bits");
     balpumpLevAddr = GetNiosAddr("balpump_lev");
     sprpumpLevAddr = GetNiosAddr("sprpump_lev");
     inpumpLevAddr = GetNiosAddr("inpump_lev");
@@ -378,21 +374,21 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   /* outer frame box */
   /* three on, off motors (pulses) */
   if (CommandData.pumps.outframe_cool1_on > 0) {
-    pumpBits |= OF_COOL1_ON;
+    ofpmBits |= OF_COOL1_ON;
     CommandData.pumps.outframe_cool1_on--;
   } else if (CommandData.pumps.outframe_cool1_off > 0) {
-    pumpBits |= OF_COOL1_OFF;
+    ofpmBits |= OF_COOL1_OFF;
     CommandData.pumps.outframe_cool1_off--;
   }
   if (CommandData.pumps.outframe_cool2_on > 0) {
-    pumpBits |= OF_COOL2_ON;
+    ofpmBits |= OF_COOL2_ON;
     CommandData.pumps.outframe_cool2_on--;
   } else if (CommandData.pumps.outframe_cool2_off > 0) {
-    pumpBits |= OF_COOL2_OFF;
+    ofpmBits |= OF_COOL2_OFF;
     CommandData.pumps.outframe_cool2_off--;
   }
 
-  pumpBits |= GetLockBits();
+  ofpmBits |= GetLockBits();
 
   if (CommandData.pumps.bal_veto) {
     /* if we're in timeout mode, decrement the timer */
@@ -404,15 +400,12 @@ void ControlAuxMotors(unsigned short *RxFrame) {
     ifpmBits = Balance(ifpmBits);
   }
 
-  CameraTrigger(0); /* isc */
-  CameraTrigger(1); /* osc */
-
   /* Lock motor override writeback */
   pin_override = (CommandData.lock_override) ? 1 : 0;
 
   WriteData(lOverrideAddr, pin_override);
   WriteData(lokmotPinAddr, pin_is_in);
-  WriteData(pumpBitsAddr, pumpBits);
+  WriteData(ofpmBitsAddr, ofpmBits);
   WriteData(sprpumpLevAddr, CommandData.pumps.pwm2 & 0x7ff);
   WriteData(inpumpLevAddr, CommandData.pumps.pwm3 & 0x7ff);
   WriteData(outpumpLevAddr, CommandData.pumps.pwm4 & 0x7ff);
@@ -424,5 +417,4 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   WriteData(balMinAddr, (int)CommandData.pumps.bal_min);
   WriteData(balMaxAddr,(int)CommandData.pumps.bal_max);
   WriteData(ifpmBitsAddr, ifpmBits);
-
 }

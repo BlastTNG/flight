@@ -59,11 +59,6 @@ struct ChannelStruct SlowChannels[] = {
   {"t_clin_sip",   'r',  ACS0, 31,           -0.01875,           614.4, 'u'},
   {"t_clin_if",    'r',  ACS0, 41,           -0.01875,           614.4, 'u'},
   {"status00",     'r',  ACS0, 56,                1.0,             0.0, 'u'},
-  {"pump_bits",    'w',  ACS3,  2,                1.0,             0.0, 'u'},
-  {"balpump_lev",  'w',  ACS3,  3,    -0.048851978505,           100.0, 'u'},
-  {"sprpump_lev",  'w',  ACS3,  4,    -0.048851978505,           100.0, 'u'},
-  {"inpump_lev",   'w',  ACS3,  5,    -0.048851978505,           100.0, 'u'},
-  {"outpump_lev",  'w',  ACS3,  6,    -0.048851978505,           100.0, 'u'},
 
   {"t_roll",       'r',  ACS1,  9,           -0.00625,          136.45, 'u'},
   {"i_roll",       'r',  ACS1, 11,      0.00048828125,          -16.09, 'u'},
@@ -137,6 +132,13 @@ struct ChannelStruct SlowChannels[] = {
   {"v_s2",         'r',  ACS3, 43,                1.0,             0.0, 'u'},
   {"v_p1",         'r',  ACS3, 45,                1.0,             0.0, 'u'},
   {"v_s1",         'r',  ACS3, 47,                1.0,             0.0, 'u'},
+  {"lock_bits",    'r',  ACS3, 59,                1.0,             0.0, 'u'},
+  {"ifpm_bits",    'w',  ACS3,  1,                1.0,             0.0, 'u'},
+  {"ofpm_bits",    'w',  ACS3,  2,                1.0,             0.0, 'u'},
+  {"balpump_lev",  'w',  ACS3,  3,    -0.048851978505,           100.0, 'u'},
+  {"sprpump_lev",  'w',  ACS3,  4,    -0.048851978505,           100.0, 'u'},
+  {"inpump_lev",   'w',  ACS3,  5,    -0.048851978505,           100.0, 'u'},
+  {"outpump_lev",  'w',  ACS3,  6,    -0.048851978505,           100.0, 'u'},
 
   {"i_charcoal",   'r',  CRYO,  3,     -2.639826420E-6,     0.157988332, 'u'},
   {"i_coldplate",  'r',  CRYO,  5,      -2.32217573E-5,     1.390309833, 'u'},
@@ -484,12 +486,6 @@ struct ChannelStruct FastChannels[] = {
 
   /* read from board ACS2 */
   {"enc_elev",    'r',  ACS2, 50, -360.0/65536.0,ENC_ELEV_OFFSET,ENC_ELEV_TYPE},
-
-  /* read from ACS3 */
-  {"acs0bits",    'r',  ACS3, 59,             1.0,                    0.0, 'u'},
-
-  /* send data to ACS 3 card */
-  {"ifpm_bits",   'w',  ACS3,  1,             1.0,                    0.0, 'u'},
 
   {"az",          'w', LOOP2, 51,           I2DEG,                    0.0, 'u'},
   {"el",          'w', LOOP2, 52,           I2DEG,                    0.0, 'u'},
