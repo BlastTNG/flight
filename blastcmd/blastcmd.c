@@ -72,10 +72,13 @@ int verbose = 0;
 
 void USAGE(int flag) {
   printf("blastcmd [-v] [-f] [-s] [-los|-tdrss|-hf] [-com1|-com2] \\\n"
-      "         command [param00 [param01 [param02 [ ... ]]]]\n\n"
+      "         command [param00 [param01 [param02 [ ... ]]]]\n"
+      "blastcmd -c\n"
+      "blastcmd --license\n\n"
       "Options:\n"
       "       -v   Verbose\n"
       "       -s   Silent\n"
+      "       -c   Show the command list serial number and exit\n"
       "       -f   No confirm\n"
       "     -los   Set link to Line of Sight\n"
       "   -tdrss   Set link to TDRSS\n"
@@ -423,6 +426,11 @@ void WriteLogFile(int argc, char *argv[], unsigned int i_ack, char silent)
   chmod(LOGFILE, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 }
 
+void PrintCommandListSerial(void)
+{
+  printf("Command List Serial: %s\n", command_list_serial);
+  exit(0);
+}
 
 void PrintLicense(void)
 {
@@ -472,6 +480,8 @@ int main(int argc, char *argv[]) {
       CommandList();
     else if (strcmp(argv[i], "--license") == 0)
       PrintLicense();
+    else if (strcmp(argv[i], "-c") == 0)
+      PrintCommandListSerial();
   }
 
   i = 1;

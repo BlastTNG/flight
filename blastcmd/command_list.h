@@ -48,6 +48,7 @@
 
 #define CONFIRM         0x80000000
 
+extern const char command_list_serial[];
 extern const char *GroupNames[N_GROUPS];
 
 /* singleCommand enumeration.  The command list here does NOT have to be in
