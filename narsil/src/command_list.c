@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.54 $";
+const char command_list_serial[] = "$Revision: 2.55 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -257,7 +257,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   
-  {COMMAND(radbox), "scan a quadrilateral region in RA/Dec (corners must be "
+  {COMMAND(quad), "scan a quadrilateral region in RA/Dec (corners must be "
     "ordered)", GR_POINT, 10,
     {
       {"RA of Corner 1 (h)",        0, 24, 'f', "NONE"},

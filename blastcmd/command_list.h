@@ -122,7 +122,7 @@ enum multiCommand {
   isc_save_period,   back_emf,          osc_offset,       plugh,
   bda_gain,          bda_set,           jfet_set,         isc_foc_off,
   osc_foc_off,       t_gyro2_gain,      t_gyro2_set,      apcu_charge,
-  dpcu_charge,       auto_apcu,         auto_dpcu,        radbox
+  dpcu_charge,       auto_apcu,         auto_dpcu,        quad
 };
 
 struct par {
