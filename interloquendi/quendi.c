@@ -39,10 +39,15 @@
 #include "quendi.h"
 #include "frameread.h"
 
+#define INPUT_BUF_SIZE 50 /* Frames are big (~1 kb) and we take a big
+                           * performance hit if we read more than 64k at a
+                           * time, so we keep this small */
+
 /* internals */
 const char _quendi_version[] = "1.0";
 struct quendi_data *_quendi_server_data = NULL;
 
+/* functions */
 int quendi_access_ok(int level) {
   if (_quendi_server_data->access_level == 0) {
     quendi_respond(QUENDR_NOT_IDENTIFIED, NULL);
@@ -65,6 +70,7 @@ int quendi_cmdnum(char* buffer)
 
   switch(htonl(*(int*)buffer)) {
     case 0x6173796e: return QUENDC_ASYN;
+    case 0x64617461: return QUENDC_DATA; 
     case 0x6964656e: return QUENDC_IDEN;
     case 0x6e6f6f70: return QUENDC_NOOP;
     case 0x6f70656e: return QUENDC_OPEN;
@@ -215,7 +221,11 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Listening on Data Port for Connection\r\n", response_num);
         break;
-      case QUENDR_SENDING_SPEC: /* 150 */
+      case QUENDR_SENDING_DATA: /* 150 */
+        size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
+            "%i Sending Data\r\n", response_num);
+        break;
+      case QUENDR_SENDING_SPEC: /* 151 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Sending Spec File\r\n", response_num);
         break;
@@ -320,6 +330,90 @@ int quendi_respond(int response_num, const char *message)
   write(_quendi_server_data->csock, buffer, strlen(buffer));
 
   return 0;
+}
+
+void quendi_send_data(int dsock, const char* name, unsigned long pos,
+    unsigned frame_size, int sufflen, int persist)
+{
+  FILE* stream = NULL;
+  int new_chunk = 1;
+  long int seek_to = 0;
+  char* chunk = bstrdup(fatal, name);
+  int chunk_total = 0;
+  struct stat chunk_stat;
+  int i, n;
+  long int frames_read = 0;
+  char buffer[100];
+
+  unsigned short* InputBuffer[INPUT_BUF_SIZE];
+
+  InputBuffer[0] = (unsigned short*)balloc(fatal, frame_size * INPUT_BUF_SIZE);
+
+  for (i = 1; i < INPUT_BUF_SIZE; ++i)
+    InputBuffer[i] = (void*)InputBuffer[0] + i * frame_size;
+
+  seek_to = SetStartChunk(pos, chunk, sufflen) * frame_size;
+
+  snprintf(buffer, 100, "%i Data Transfer Starts", frame_size);
+  quendi_respond(QUENDR_SENDING_DATA, buffer);
+
+  do {
+    if (new_chunk) {
+      if ((stream = fopen(chunk, "r")) == NULL)
+        berror(fatal, "cannot open `%s'", chunk);
+
+      if (seek_to > 0) {
+        fseek(stream, seek_to, SEEK_SET);
+        seek_to = 0;
+      }
+
+      if (stat(chunk, &chunk_stat))
+        berror(fatal, "cannot stat `%s'", chunk);
+
+      chunk_total = chunk_stat.st_size / frame_size;
+    }
+
+    do {
+      clearerr(stream);
+      if ((n = fread(InputBuffer[0], frame_size, INPUT_BUF_SIZE, stream)) < 1) {
+        if (feof(stream))
+          break;
+        else if ((i = ferror(stream))) {
+          berror(err, "error reading `%s' (%i)", chunk, i);
+
+          fclose(stream);
+          if ((stream = fopen(chunk, "r")) == NULL)
+            berror(fatal, "cannot open `%s'", chunk);
+
+          fseek(stream, frames_read * frame_size, SEEK_SET);
+          n = 0;
+        }
+      }
+      frames_read += n;
+
+      for (i = 0; i < n; ++i)
+        write(dsock, InputBuffer[i], frame_size);
+
+    } while (!feof(stream));
+
+    n = StreamToNextChunk(persist, chunk, sufflen, &chunk_total, NULL, NULL);
+
+    if (n == FR_NEW_CHUNK) {
+      fclose(stream);
+      new_chunk = 1;
+    } else if (n == FR_CURFILE_CHANGED) {
+      /* do something */;
+    } else
+      new_chunk = 0;
+
+  } while (n != FR_DONE);
+
+  bfree(fatal, InputBuffer);
+  bfree(fatal, chunk);
+
+  quendi_respond(QUENDR_TRANS_COMPLETE, NULL);
+
+  return;
 }
 
 void quendi_send_spec(int dsock, const char* name, unsigned long pos)

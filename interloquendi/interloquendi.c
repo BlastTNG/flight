@@ -71,6 +71,7 @@ struct {
 struct data_connection {
   int sock;
   int staged;
+  int persist;
   unsigned frame_size;
   unsigned long pos;
   char name[PATH_MAX];
@@ -153,6 +154,15 @@ void Connection(int csock)
         case -1:
           quendi_respond(QUENDR_SYNTAX_ERROR, "Unrecognised Command");
           break;
+        case QUENDC_DATA:
+          if (data.sock < 1)
+            quendi_respond(QUENDR_PORT_NOT_OPEN, NULL);
+          else if (!data.staged)
+            quendi_respond(QUENDR_NO_DATA_STAGED, NULL);
+          else
+            quendi_send_data(data.sock, data.name, data.pos, data.frame_size,
+                options[CFG_SUFFIX_LENGTH].value.as_int, data.persist);
+          break;
         case QUENDC_IDEN:
           QuendiData.access_level = 1;
           quendi_respond(QUENDR_ACCESS_GRANTED, NULL);
@@ -178,11 +188,12 @@ void Connection(int csock)
             if (GetCurFile(data.name, QUENDI_COMMAND_LENGTH) == NULL)
               quendi_respond(QUENDR_NO_CUR_DATA, NULL);
             else {
+              data.persist = 1;
               data.staged = quendi_stage_data(data.name,
                   data.pos = GetFrameFileSize(data.name,
-                    options[CFG_SUFFIX_LENGTH].value.as_int) /
-                  (data.frame_size = ReconstructChannelLists(data.name, NULL)),
-                  options[CFG_SUFFIX_LENGTH].value.as_int);
+                    options[CFG_SUFFIX_LENGTH].value.as_int)
+                  / (data.frame_size = ReconstructChannelLists(data.name,
+                      NULL)), options[CFG_SUFFIX_LENGTH].value.as_int);
             }
           }
           break;

@@ -23,6 +23,7 @@
 
 /* Responses */
 #define QUENDR_LISTENING      123
+#define QUENDR_SENDING_DATA   151
 #define QUENDR_SENDING_SPEC   150
 #define QUENDR_SERVICE_READY  220
 #define QUENDR_GOODBYE        221
@@ -42,14 +43,15 @@
 #define QUENDR_NO_DATA_STAGED 550
 
 /* Commands */
-#define QUENDC_SPEC          1000
-#define QUENDC_SYNC          1001
-#define QUENDC_IDEN          1002
-#define QUENDC_OPEN          1003
-#define QUENDC_ASYN          1004
-#define QUENDC_NOOP          1005
-#define QUENDC_QUIT          1006
-#define QUENDC_QNOW          1007
+#define QUENDC_DATA          1000
+#define QUENDC_SPEC          1001
+#define QUENDC_SYNC          1002
+#define QUENDC_IDEN          1003
+#define QUENDC_OPEN          1004
+#define QUENDC_ASYN          1005
+#define QUENDC_NOOP          1006
+#define QUENDC_QUIT          1007
+#define QUENDC_QNOW          1008
 
 /* Server Constants */
 #define QUENDI_COMMAND_LENGTH  1024
@@ -101,6 +103,15 @@ int quendi_parse(
 int quendi_respond(
     int,
     const char*
+    );
+
+void quendi_send_data(
+    int,
+    const char*,
+    unsigned long,
+    unsigned,
+    int,
+    int
     );
 
 void quendi_send_spec(
