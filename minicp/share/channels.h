@@ -21,7 +21,8 @@ extern "C" {
 
 #define N_FAST_BOLOS (DAS_CARDS * (DAS_CHS + DAS_CHS / 2))
 
-#define FAST_OFFSET 4
+  /* number of channels below the first slow channel */
+#define SLOW_OFFSET 4
 
   /* offset of encoder.  Reset if encoder has been unmounted. */
   /* This is the elevation at which the encoder wraps around */

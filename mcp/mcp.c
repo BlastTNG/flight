@@ -419,7 +419,8 @@ int fill_Rx_frame(unsigned int in_data,
   if (BiPhaseData.index == NOT_MULTIPLEXED)
     RxFrame[BiPhaseData.channel] = BBC_DATA(in_data);
   else
-    slow_data[BiPhaseData.index][BiPhaseData.channel - FAST_OFFSET] = BBC_DATA(in_data);
+    slow_data[BiPhaseData.index][BiPhaseData.channel - SLOW_OFFSET]
+      = BBC_DATA(in_data);
 
   return(1);
 }
@@ -498,13 +499,10 @@ void PushBi0Buffer(unsigned short *RxFrame) {
 }
 
 void zero(unsigned short *RxFrame) {
-  int i, fw;
+  int i;
 
-  fw = FAST_OFFSET;
-
-  for (i = 0; i<fw; i++) {
+  for (i = 0; i < SLOW_OFFSET + slowsPerBi0Frame; i++)
     RxFrame[i] = 0;
-  }
 }
 
 void BiPhaseWriter(void) {

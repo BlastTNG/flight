@@ -138,7 +138,7 @@ void pushDiskFrame(unsigned short *RxFrame) {
   i_mindex = RxFrame[3];
   if (i_mindex < FAST_PER_SLOW) {
     for (i_slow = 0; i_slow < slowsPerBi0Frame; i_slow++) {
-      RxFrame[FAST_OFFSET + i_slow] = slow_data[i_mindex][i_slow];
+      RxFrame[SLOW_OFFSET + i_slow] = slow_data[i_mindex][i_slow];
     }
   }
 #endif

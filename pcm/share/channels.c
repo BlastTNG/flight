@@ -57,7 +57,7 @@ unsigned short TxFrameSize[2];
 unsigned short slowsPerBi0Frame;
 unsigned short slowCount[2] = {0, 0};
 unsigned short slowsPerBusFrame[2] = {0, 0};
-unsigned short fastsPerBusFrame[2] = {FAST_OFFSET, 1};
+unsigned short fastsPerBusFrame[2] = {SLOW_OFFSET, 1};
 
 #ifndef __DEFILE__
 unsigned int NiosSpares[FAST_PER_SLOW * 2];
@@ -139,7 +139,7 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   }
 
   slowsPerBi0Frame = slowsPerBusFrame[0] + slowsPerBusFrame[1];
-  BiPhaseFrameWords = FAST_OFFSET + ccFast + slowsPerBi0Frame + 1;
+  BiPhaseFrameWords = SLOW_OFFSET + ccFast + slowsPerBi0Frame + 1;
   BiPhaseFrameSize = 2 * BiPhaseFrameWords;
 
   mprintf(MCP_INFO, "Slow Channels Per Biphase Frame: %i\n", slowsPerBi0Frame);
@@ -535,13 +535,13 @@ void DoSanityChecks(void)
 #endif
   mprintf(MCP_INFO, "Slow Channels Per Biphase Frame: %i\n", slowsPerBi0Frame);
   mprintf(MCP_INFO, "Fast Channels Per Biphase Frame: %i\n", ccFast
-      + FAST_OFFSET);
+      + SLOW_OFFSET);
   mprintf(MCP_INFO, "Slow Channels Per Tx Frame: %i / %i\n",
       slowsPerBusFrame[0],  slowsPerBusFrame[1]);
   mprintf(MCP_INFO, "Fast Channels Per Tx Frame: %i / %i\n",
       fastsPerBusFrame[0],  fastsPerBusFrame[1]);
 
-  BiPhaseFrameWords = FAST_OFFSET + ccFast + slowsPerBi0Frame + 1;
+  BiPhaseFrameWords = SLOW_OFFSET + ccFast + slowsPerBi0Frame + 1;
   BiPhaseFrameSize = 2 * BiPhaseFrameWords;
   for (i = 0; i < 2; ++i) {
 #ifndef __BIG__
@@ -585,13 +585,13 @@ void MakeAddressLookups(void)
 
   unsigned int BiPhaseAddr;
   unsigned int addr[2] = {
-    FAST_OFFSET + slowsPerBusFrame[0],
+    SLOW_OFFSET + slowsPerBusFrame[0],
     1 + slowsPerBusFrame[1]
   };
 
   const int slowTop[2] = {
 #ifndef __DEFILE__
-    FAST_OFFSET + slowsPerBusFrame[0],
+    SLOW_OFFSET + slowsPerBusFrame[0],
     1 + slowsPerBusFrame[1]
 #else
       slowsPerBusFrame[0],
@@ -600,7 +600,7 @@ void MakeAddressLookups(void)
   };
 
 #ifndef __DEFILE__
-  BiPhaseAddr = FAST_OFFSET + slowsPerBi0Frame;
+  BiPhaseAddr = SLOW_OFFSET + slowsPerBi0Frame;
   /* allocate the Nios address table */
   if ((NiosLookup = malloc(ccTotal * sizeof(struct NiosStruct)))
       == NULL)
@@ -640,7 +640,7 @@ void MakeAddressLookups(void)
   /* initialise slow channels */
   for (i = 0; i < FAST_PER_SLOW; ++i) {
 #ifndef __DEFILE__
-    slowIndex[0][i] = FAST_OFFSET;
+    slowIndex[0][i] = SLOW_OFFSET;
     slowIndex[1][i] = 1;
 #else
     slowIndex[0][i] = 0;
@@ -668,11 +668,11 @@ void MakeAddressLookups(void)
 
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i].bbcAddr)].index = mplex;
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i].bbcAddr)].channel
-      = slowIndex[bus][mplex] + bus * (slowsPerBusFrame[0] + FAST_OFFSET - 1);
+      = slowIndex[bus][mplex] + bus * (slowsPerBusFrame[0] + SLOW_OFFSET - 1);
     BiPhaseLookup[BI0_MAGIC(BBC_NEXT_CHANNEL(NiosLookup[i].bbcAddr))].index
       = mplex;
     BiPhaseLookup[BI0_MAGIC(BBC_NEXT_CHANNEL(NiosLookup[i].bbcAddr))].channel
-      = slowIndex[bus][mplex] + 1 + bus * (slowsPerBusFrame[0] + FAST_OFFSET
+      = slowIndex[bus][mplex] + 1 + bus * (slowsPerBusFrame[0] + SLOW_OFFSET
           - 1);
 #else
     SlowChList[slowIndex[bus][mplex] + bus * slowsPerBusFrame[0]][mplex]
@@ -698,7 +698,7 @@ void MakeAddressLookups(void)
 
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccWideSlow].bbcAddr)].index = mplex;
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccWideSlow].bbcAddr)].channel
-      = slowIndex[bus][mplex] + bus * (slowsPerBusFrame[0] + FAST_OFFSET - 1);
+      = slowIndex[bus][mplex] + bus * (slowsPerBusFrame[0] + SLOW_OFFSET - 1);
 #else
     SlowChList[slowIndex[bus][mplex] + bus * slowsPerBusFrame[0]][mplex]
       = SlowChannels[i];
@@ -718,7 +718,7 @@ void MakeAddressLookups(void)
         BiPhaseLookup[BI0_MAGIC(BBCSpares[spare_count])].index = mplex;
         BiPhaseLookup[BI0_MAGIC(BBCSpares[spare_count])].channel
           = slowIndex[bus][mplex] + bus * (slowsPerBusFrame[0]
-              + FAST_OFFSET - 1);
+              + SLOW_OFFSET - 1);
         i = mplex * TxFrameWords[bus] + slowIndex[bus][mplex];
         NiosSpares[spare_count] = bus ? BBCPCI_WFRAME2_ADD(i)
           : BBCPCI_WFRAME1_ADD(i);
