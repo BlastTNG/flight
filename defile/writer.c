@@ -20,6 +20,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,7 +34,9 @@
 #include <fcntl.h>
 #include <unistd.h> 
 #include <time.h>
-#include <zlib.h>
+#ifdef HAVE_ZLIB_H
+#  include <zlib.h>
+#endif
 
 #include "blast.h"
 #include "channels.h"
@@ -330,8 +336,10 @@ int OpenField(int fast, int size, const char* filename)
 {
   char gpb[GPB_LEN];
   int file;
+#ifdef HAVE_LIBZ
   int gzerrno;
   const char* gze;
+#endif
   int offset;
 
   if (rc.resume_at >= 0) {
@@ -346,6 +354,7 @@ int OpenField(int fast, int size, const char* filename)
       berror(fatal, "cannot lseek file `%s'", filename);
   } else {
     /* create new file */
+#ifdef HAVE_LIBZ
     if (rc.gzip_output && (file = (int)gzdopen(creat(filename, 00644), "wb"))
         == 0) {
       snprintf(gpb, GPB_LEN, "cannot create file `%s'", filename);
@@ -356,6 +365,9 @@ int OpenField(int fast, int size, const char* filename)
         bprintf(fatal, "%s: %s", gpb, gze);
       }
     } else if (!rc.gzip_output && (file = creat(filename, 00644)) == -1)
+#else
+    if ((file = creat(filename, 00644)) == -1)
+#endif
       berror(fatal, "cannot create file `%s'", filename);
   }
 
@@ -372,13 +384,13 @@ void InitialiseDirFile(int reset)
   char gpb[GPB_LEN];
   char ext[4] = "";
 
+#ifdef HAVE_LIBZ
   if (rc.gzip_output) {
     defileclose = &gzclose;
     strcpy(ext, ".gz");
-  } else {
+  } else
+#endif
     defileclose = &close;
-  }
-
 
   rc.resume_at = -1;
 
@@ -690,6 +702,7 @@ void PushFrame(unsigned short* frame)
 
 void WriteField(int file, int length, void *buffer)
 {
+#ifdef HAVE_LIBZ
   int gzerrno;
   const char *gze;
 
@@ -702,6 +715,9 @@ void WriteField(int file, int length, void *buffer)
         bprintf(fatal, "Error on write: %s (%i)", gze, gzerrno);
     }
   } else if (!rc.gzip_output && write(file, buffer, length) < 0)
+#else
+  if (write(file, buffer, length) < 0)
+#endif
     berror(fatal, "Error on write");
 }
 

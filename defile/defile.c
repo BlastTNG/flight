@@ -20,6 +20,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <limits.h>
 #include <libgen.h>
@@ -39,14 +43,24 @@
 #include "blast.h"
 #include "channels.h"
 
-#define VERSION_MAJOR    "2"
-#define VERSION_MINOR    "5"
-#define VERSION_REVISION "1"
-#define VERSION VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION 
+#ifndef VERSION
+#  define VERSION_MAJOR    "2"
+#  define VERSION_MINOR    "5"
+#  define VERSION_REVISION "1"
+#  define VERSION VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION 
+#endif
 
-#define DEFAULT_CURFILE "/data/etc/defile.cur"
-#define DEFAULT_DIR "/data/rawdir"
-#define REMOUNT_PATH "../rawdir"
+#ifndef DEFAULT_CURFILE
+#  define DEFAULT_CURFILE "/data/etc/defile.cur"
+#endif
+
+#ifndef DEFAULT_DIR
+#  define DEFAULT_DIR "/data/rawdir"
+#endif
+
+#ifndef REMOUNT_PATH
+#  define REMOUNT_PATH "../rawdir"
+#endif
 
 #define SUFF_MAX sizeof(chunkindex_t)
 #define SUFF_DFLT 3
@@ -312,9 +326,11 @@ void PrintUsage(void)
       "of the"
       "\n                          file instead of `" DEFAULT_CURFILE "'."
       "\n  -F --framefile        assume SOURCE is a framefile."
-      "\n  -R --resume           resume an interrupted defiling.  Incompatible "
-      "with"
+      "\n  -R --resume           resume an interrupted defiling."
+#ifdef HAVE_LIBZ
+      "  Incompatible with"
       "\n                          `--gzip'"
+#endif
       "\n  -S --spec-file=NAME   use NAME as the specification file."
       "\n  -c --curfile          write a curfile called `" DEFAULT_CURFILE "'."
       "\n  -d --daemonise        fork to background and daemonise on startup.  "
@@ -346,9 +362,11 @@ void PrintUsage(void)
     "characters large."
     "\n                          SIZE should be an integer between 0 and %i."
     "\n                          Default: %i"
+#ifdef HAVE_LIBZ
     "\n  -z --gzip             gzip compress the output dirfile.  "
     "Incompatible with"
     "\n                          `--resume'"
+#endif
     "\n  --help                display this help and exit"
     "\n  --version             display version information and exit"
     "\n  --                    last option; all following parameters are "
@@ -410,8 +428,10 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           rc->write_mode = 1;
         else if (!strcmp(argv[i], "--framefile"))
           rc->framefile = 1;
+#ifdef HAVE_LIBZ
         else if (!strcmp(argv[i], "--gzip"))
           rc->gzip_output = 1;
+#endif
         else if (!strncmp(argv[i], "--output-dirfile=", 17)) {
           bfree(fatal, rc->remount_dir);
           rc->output_dirfile = bstrdup(fatal, &argv[i][17]);
@@ -503,9 +523,11 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
                 shortarg[nshortargs++].option = 's';
               }
               break;
+#ifdef HAVE_LIBZ
             case 'z':
               rc->gzip_output = 1;
               break;
+#endif
             default:
               bprintf(fatal, "invalid option -- %c\n"
                   "Try `defile --help' for more information.\n", argv[i][j]);
