@@ -289,6 +289,7 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
 
   int iscBits = 0;
   int pumpBits = 0;
+  int pin_override;
 
   if (pumpBitsInd == -1) {
     FastChIndex("isc_bits", &iscBitsCh);
