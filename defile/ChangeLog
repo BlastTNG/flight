@@ -1,6 +1,9 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2004-09-21 (2.4.4):
+  * defile: Migrate to BLAMM - BLAST memory manager
+
 2004-09-20 (2.4.3):
   * writer.c: fix wide slow reconstruction bug
 
@@ -9,8 +12,7 @@
   * defile.c: Fix output suppression (-q) after breaking it with BUOS
 
 2004-09-20 (2.4.1):
-  * defile: Migrate to blast.c and blast.h -- blast unified ouput scheme
-     (BUOS)
+  * defile: Migrate to blast.c and blast.h -- blast unified ouput scheme (BUOS)
 
 2004-09-17 (2.4.0):
   * ChangeLog: Create ChangeLog

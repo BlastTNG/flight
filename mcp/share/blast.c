@@ -196,3 +196,17 @@ void _bfree(buos_t l, void* p, const char* f, int w, const char* n)
   bprintf(mem, "freeing %p in %s", p, f);
   free(p);
 }
+
+char* _bstrdup(buos_t l, const char* s, const char* f, int w, const char* n)
+{
+  char *q;
+
+  bprintf(mem, "strduping `%s' in %s", s, f);
+
+  q = strdup(s);
+
+  if (q == NULL)
+    berror(l, "unable to strdup `%s' at %s:%i in %s", s, n, w, f);
+
+  return q;
+}

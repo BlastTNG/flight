@@ -74,9 +74,8 @@ void FrameFileReader(void)
   /* enable signals */
   pthread_sigmask(SIG_UNBLOCK, &signals, NULL);
 
-  if ((InputBuffer[0] = (unsigned short*)malloc(DiskFrameSize * INPUT_BUF_SIZE))
-      == NULL)
-    berror(fatal, "cannot allocate heap");
+  InputBuffer[0] = (unsigned short*)balloc(fatal, DiskFrameSize
+      * INPUT_BUF_SIZE);
 
   for (i = 1; i < INPUT_BUF_SIZE; ++i)
     InputBuffer[i] = (void*)InputBuffer[0] + i * DiskFrameSize;

@@ -350,17 +350,11 @@ void PreInitialiseDirFile(void)
 {
   int j;
 
-  if ((normal_fast = malloc(ccFast * sizeof(struct FieldType))) == NULL)
-    berror(fatal, "cannot allocate heap");
+  normal_fast = balloc(fatal, ccFast * sizeof(struct FieldType));
 
   for (j = 0; j < FAST_PER_SLOW; ++j) {
-    if ((slow_fields[j] = malloc(slowsPerBi0Frame * sizeof(struct FieldType)))
-        == NULL)
-      berror(fatal, "cannot allocate heap");
-
-    if ((slow_data[j] = malloc(slowsPerBi0Frame * sizeof(unsigned int)))
-        == NULL)
-      berror(fatal, "cannot allocate heap");
+    slow_fields[j] = balloc(fatal, slowsPerBi0Frame * sizeof(struct FieldType));
+    slow_data[j] = balloc(fatal, slowsPerBi0Frame * sizeof(unsigned int));
   }
 }
 
@@ -447,8 +441,7 @@ void InitialiseDirFile(int reset)
   }
 
   normal_fast[n_fast].i_in = normal_fast[n_fast].i_out = 0;
-  if ((normal_fast[n_fast].b = malloc(MAXBUF * sizeof(int))) == NULL)
-    berror(fatal, "malloc");
+  normal_fast[n_fast].b = balloc(fatal, MAXBUF * sizeof(int));
 
   n_fast++;
 
@@ -484,8 +477,7 @@ void InitialiseDirFile(int reset)
           slow_fields[j][i].nw = 0;
       }
 
-      if ((slow_fields[j][i].b = malloc( 2 * MAXBUF)) == NULL)
-        berror(fatal, "malloc");
+      slow_fields[j][i].b = balloc(fatal, 2 * MAXBUF);
 
       slow_fields[j][i].i0 = SLOW_OFFSET + i;
     }
@@ -520,9 +512,8 @@ void InitialiseDirFile(int reset)
           normal_fast[n_fast].nw = 0;
       }
 
-      if ((normal_fast[n_fast].b = malloc(MAXBUF * 2
-              * normal_fast[n_fast].size)) == NULL)
-        berror(fatal, "malloc");
+      normal_fast[n_fast].b = balloc(fatal, MAXBUF * 2 *
+          normal_fast[n_fast].size);
 
       n_fast++;
       fprintf(fp, "%-16s RAW    %c %d\n",
@@ -558,8 +549,7 @@ void InitialiseDirFile(int reset)
           bolo_fields[i][j].nw = 0;
       }
 
-      if ((bolo_fields[i][j].b = malloc(MAXBUF * 4)) == NULL)
-        berror(fatal, "malloc");
+      bolo_fields[i][j].b = balloc(fatal, MAXBUF * 4);
 
       bolo_fields[i][j].i0 = bolo_i0 + i * (DAS_CARDS * 3 / 2)
         + j;
@@ -602,7 +592,7 @@ void CleanUp(void)
       if (slow_fields[j][i].fp != -1)
         defileclose(slow_fields[j][i].fp);
       if (slow_fields[j][i].b)
-        free(slow_fields[j][i].b);
+        bfree(fatal, slow_fields[j][i].b);
       slow_fields[j][i].b = NULL;
     }
 
@@ -617,7 +607,7 @@ void CleanUp(void)
       if (normal_fast[i].fp != -1)
         defileclose(normal_fast[i].fp);
       if (normal_fast[i].b)
-        free(normal_fast[i].b);
+        bfree(fatal, normal_fast[i].b);
       normal_fast[i].b = NULL;
     }
   }
@@ -627,7 +617,7 @@ void CleanUp(void)
       if (bolo_fields[i][j].fp != -1)
         defileclose(bolo_fields[i][j].fp);
       if (bolo_fields[i][j].b)
-        free(bolo_fields[i][j].b);
+        bfree(fatal, bolo_fields[i][j].b);
       bolo_fields[i][j].b = NULL;
     }
 }

@@ -68,7 +68,7 @@ void PathSplit_r(const char* path, char* dname, char* bname)
   if (bname != NULL)
     strcpy(bname, the_base);
 
-  free(buffer);
+  bfree(fatal, buffer);
 }
 
 /* given a source filename, fills in the part of it which is static from chunk
@@ -104,7 +104,7 @@ int StaticSourcePart(char* output, const char* source, chunkindex_t* value,
     *value = number;
   strcpy(output, buffer);
 
-  free(buffer);
+  bfree(fatal, buffer);
 
   return counter;
 }
@@ -177,7 +177,7 @@ unsigned long long GetFrameFileSize(const char* file, int sufflen)
         length += chunk_stat.st_size;
   }
 
-  free(chunk);
+  bfree(fatal, chunk);
 
   return length;
 }
@@ -193,11 +193,8 @@ int GetNextChunk(char* chunk, int sufflen)
   struct stat chunk_stat;
 
   /* allocate our buffers */
-  if ((buffer = (char*)malloc(FILENAME_LEN)) == NULL) 
-    berror(fatal, "malloc");
-
-  if ((newchunk = (char*)malloc(FILENAME_LEN)) == NULL)
-    berror(fatal, "malloc");
+  buffer = (char*)balloc(fatal, FILENAME_LEN);
+  newchunk = (char*)balloc(fatal, FILENAME_LEN);
 
   /* get current chunk name */
   s = StaticSourcePart(buffer, chunk, &chunknum, sufflen);
@@ -205,16 +202,16 @@ int GetNextChunk(char* chunk, int sufflen)
   /* if incrementing chunknum causes it to wrap around, we're out of space
    * on our suffix -- no more chunks are possible */
   if (chunknum + 1 < chunknum) {
-    free(newchunk);
-    free(buffer);
+    bfree(fatal, newchunk);
+    bfree(fatal, buffer);
     return 0;
   }
 
   /* if incrementing chunknum causes it to be more than sufflen bytes,
    * we're out of space on our suffix -- no more chunks are possible */
   if (chunknum + 1 >= (chunkindex_t)1 << (4 * sufflen)) {
-    free(newchunk);
-    free(buffer);
+    bfree(fatal, newchunk);
+    bfree(fatal, buffer);
     return 0;
   }
 
@@ -224,16 +221,16 @@ int GetNextChunk(char* chunk, int sufflen)
 
   /* stat it to see if it exists */
   if (stat(newchunk, &chunk_stat)) {
-    free(newchunk);
-    free(buffer);
+    bfree(fatal, newchunk);
+    bfree(fatal, buffer);
     return 0;
   }
 
   /* stat worked, it's our new chunk */
   strcpy(chunk, newchunk);
 
-  free(newchunk);
-  free(buffer);
+  bfree(fatal, newchunk);
+  bfree(fatal, buffer);
 
   return 1;
 }

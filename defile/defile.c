@@ -79,6 +79,9 @@ sigset_t signals;
 /* filters info messages out of output when appropriate */
 void dputs(buos_t level, const char* string)
 {
+  if (level == mem)
+    return;
+  
   if (rc.daemonise && !rc.force_stdio && level != info)
     bputs_syslog(level, string);
   else if (level != info || !rc.silent)
@@ -165,8 +168,7 @@ char* GetFileName(const char* source)
   struct stat stat_buf;
 
   /* allocate our buffer */
-  if ((buffer = (char*)malloc(FILENAME_LEN)) == NULL)
-    berror(fatal, "cannot allocate heap");
+  buffer = (char*)balloc(fatal, FILENAME_LEN);
 
   /* first attempt to stat SOURCE to see if it is indeed a regular file */
   if (stat(source, &stat_buf))
@@ -215,8 +217,7 @@ char* GetFileName(const char* source)
       /* if we're in persistent mode, we need to remember the contents of the
        * curfile so we can check for changes */
       if (rc.persist)
-        if ((rc.curfile_val = strdup(buffer)) == NULL)
-          berror(fatal, "cannot allocate heap");
+        rc.curfile_val = bstrdup(fatal, buffer);
 
       if (rc.remount)
         /* user indicated curfile filesystem has been remounted, so fix up the
@@ -248,8 +249,7 @@ char* MakeDirFile(char* output, const char* source, const char* directory)
   char* buffer;
 
   /* allocate our buffer */
-  if ((buffer = (char*)malloc(FILENAME_LEN)) == NULL)
-    berror(fatal, "cannot allocate heap");
+  buffer = (char*)balloc(fatal, FILENAME_LEN);
 
   PathSplit_r(source, NULL, bname);
   StaticSourcePart(buffer, bname, NULL, rc.sufflen);
@@ -259,7 +259,7 @@ char* MakeDirFile(char* output, const char* source, const char* directory)
     strcat(output, "/");
   strcat(output, buffer);
 
-  free(buffer);
+  bfree(fatal, buffer);
 
   return output;
 }
@@ -378,15 +378,13 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
     int position;
   } *shortarg;
 
-  if ((argument = (struct argument_s*)malloc(argc * sizeof(struct argument_s)))
-      == NULL)
-    berror(fatal, "cannot allocate heap");
+  argument = (struct argument_s*)balloc(fatal, argc
+      * sizeof(struct argument_s));
 
   memset(argument, 0, argc * sizeof(struct argument_s));
 
-  if ((shortarg = (struct shortarg_s*)malloc(argc * sizeof(struct shortarg_s)))
-      == NULL)
-    berror(fatal, "cannot allocate heap");
+  shortarg = (struct shortarg_s*)balloc(fatal, argc
+      * sizeof(struct shortarg_s));
 
   for (i = 1; i < argc; ++i) {
     if (opts_ok && argv[i][0] == '-') { /* an option */
@@ -400,14 +398,12 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
         else if (!strcmp(argv[i], "--curfile")) {
           if (!rc->write_curfile) {
             rc->write_curfile = 1;
-            if ((rc->output_curfile = strdup(DEFAULT_CURFILE)) == NULL)
-              berror(fatal, "cannot allocate heap");
+            rc->output_curfile = bstrdup(fatal, DEFAULT_CURFILE);
           }
         } else if (!strncmp(argv[i], "--curfile-name=", 15)) {
           rc->write_curfile = 1;
-          free(rc->output_curfile);
-          if ((rc->output_curfile = strdup(&argv[i][15])) == NULL)
-            berror(fatal, "cannot allocate heap");
+          bfree(fatal, rc->output_curfile);
+          rc->output_curfile = bstrdup(fatal, &argv[i][15]);
         } else if (!strcmp(argv[i], "--daemonise"))
           rc->daemonise = rc->persist = rc->silent = rc->force_stdio = 1;
         else if (!strcmp(argv[i], "--force"))
@@ -417,9 +413,8 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
         else if (!strcmp(argv[i], "--gzip"))
           rc->gzip_output = 1;
         else if (!strncmp(argv[i], "--output-dirfile=", 17)) {
-          free(rc->remount_dir);
-          if ((rc->output_dirfile = strdup(&argv[i][17])) == NULL)
-            berror(fatal, "cannot allocate heap");
+          bfree(fatal, rc->remount_dir);
+          rc->output_dirfile = bstrdup(fatal, &argv[i][17]);
         } else if (!strcmp(argv[i], "--persistent"))
           rc->persist = 1;
         else if (!strcmp(argv[i], "--quiet"))
@@ -427,19 +422,17 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
         else if (!strcmp(argv[i], "--remounted-source")) {
           if (!rc->remount) {
             rc->remount = 1;
-            if ((rc->remount_dir = strdup(REMOUNT_PATH)) == NULL)
-              berror(fatal, "cannot allocate heap");
+            rc->remount_dir = bstrdup(fatal, REMOUNT_PATH);
           }
         } else if (!strncmp(argv[i], "--remounted-using=", 18)) {
           rc->remount = 1;
-          free(rc->remount_dir);
-          if ((rc->remount_dir = strdup(&argv[i][18])) == NULL)
-            berror(fatal, "cannot allocate heap");
+          bfree(fatal, rc->remount_dir);
+          rc->remount_dir = bstrdup(fatal, &argv[i][18]);
         } else if (!strcmp(argv[i], "--resume")) 
           rc->write_mode = 2;
         else if (!strncmp(argv[i], "--spec-file=", 12)) {
-          free(rc->spec_file);
-          if ((rc->spec_file = strdup(&argv[i][12])) == NULL)
+          bfree(fatal, rc->spec_file);
+          rc->spec_file = bstrdup(fatal, &argv[i][12]);
             berror(fatal, "cannot allocate heap");
         } else if (!strncmp(argv[i], "--suffix-size=", 14)) {
           if (argv[i][14] >= '0' && argv[i][14] <= '9') {
@@ -477,8 +470,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
             case 'c':
               if (!rc->write_curfile) {
                 rc->write_curfile = 1;
-                if ((rc->output_curfile = strdup(DEFAULT_CURFILE)) == NULL)
-                  berror(fatal, "cannot allocate heap");
+                rc->output_curfile = bstrdup(fatal, DEFAULT_CURFILE);
               }
               break;
             case 'd':
@@ -502,8 +494,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
             case 'r':
               if (!rc->remount) {
                 rc->remount = 1;
-                if ((rc->remount_dir = strdup(REMOUNT_PATH)) == NULL)
-                  berror(fatal, "cannot allocate heap");
+                rc->remount_dir = bstrdup(fatal, REMOUNT_PATH);
               }
               break;
             case 's':
@@ -548,27 +539,24 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
     switch(shortarg[i].option) {
       case 'C':
         if (argument[j].value[0] != '\0') {
-          free(rc->output_curfile);
-          if ((rc->output_curfile = strdup(argument[j].value)) == NULL)
-            berror(fatal, "cannot allocate heap");
+          bfree(fatal, rc->output_curfile);
+          rc->output_curfile = bstrdup(fatal, argument[j].value);
         } else
           bprintf(fatal, "curfile name `%s' is not a valid value\n"
               "Try `defile --help' for more information.\n", argument[j].value);
         break;
       case 'S':
         if (argument[j].value[0] != '\0') {
-          free(rc->spec_file);
-          if ((rc->spec_file = strdup(argument[j].value)) == NULL)
-            berror(fatal, "cannot allocate heap");
+          bfree(fatal, rc->spec_file);
+          rc->spec_file = bstrdup(fatal, argument[j].value);
         } else
           bprintf(fatal, "specification filename `%s' is not a valid value\n"
               "Try `defile --help' for more information.\n", argument[j].value);
         break;
       case 'o':
         if (argument[j].value[0] != '\0') {
-          free(rc->output_dirfile);
-          if ((rc->output_dirfile = strdup(argument[j].value)) == NULL)
-            berror(fatal, "cannot allocate heap");
+          bfree(fatal, rc->output_dirfile);
+          rc->output_dirfile = bstrdup(fatal, argument[j].value);
         } else
           bprintf(fatal, "output dirfile name `%s' is not a valid value\n"
               "Try `defile --help' for more information.\n", argument[j].value);
@@ -606,14 +594,14 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
     if (strlen(rc->dest_dir) > PATH_MAX)
       bprintf(fatal, "Destination path too long\n");
   } else
-    rc->dest_dir = strdup(DEFAULT_DIR);
+    rc->dest_dir = bstrdup(fatal, DEFAULT_DIR);
 
   /* Fix up output_dirfile, if present */
   if (rc->output_dirfile != NULL)
     rc->output_dirfile = ResolveOutputDirfile(rc->output_dirfile, rc->dest_dir);
 
-  free(argument);
-  free(shortarg);
+  bfree(fatal, argument);
+  bfree(fatal, shortarg);
 }
 
 int main (int argc, char** argv)
@@ -672,8 +660,7 @@ int main (int argc, char** argv)
 
   /* if rc.output_dirfile exists, we use that as the dirfile name, otherwise
    * we have to make one based on the input name */
-  if ((rc.dirfile = malloc(FILENAME_LEN)) == NULL)
-    berror(fatal, "cannot allocate heap");
+  rc.dirfile = balloc(fatal, FILENAME_LEN);
 
   if (rc.output_dirfile != NULL)
     strncpy(rc.dirfile, rc.output_dirfile, FILENAME_LEN);
