@@ -2,6 +2,9 @@
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
 2004-11-30  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	Release defile-3.0.4
+
+	* writer.c (PushFrame): Only push complete slow frames
 	* defile.c (main): Added a exponential filter to the frame rate display
 
 2004-11-22  D. V. Wiebe <dwiebe@physics.utoronto.ca>

@@ -653,44 +653,44 @@ void PushFrame(unsigned short* frame)
       }
     }
     n_frames++;
-  }
 
-  /********************/
-  /* normal fast data */
-  /********************/
+    /********************/
+    /* normal fast data */
+    /********************/
 
-  for (j = 0; j < n_fast; j++) {
-    i_in = normal_fast[j].i_in;
-    if (normal_fast[j].size == 2) {
-      ((unsigned*)normal_fast[j].b)[i_in] =
-        *((unsigned*)(frame + normal_fast[j].i0));      
-    } else {
-      ((unsigned short*)normal_fast[j].b)[i_in] =
-        ((unsigned short*)frame)[normal_fast[j].i0];      
-    }
-
-    if (++i_in >= MAXBUF)
-      i_in = 0;
-    normal_fast[j].i_in = i_in;
-  };
-
-  /********************/
-  /* fast bolo data   */
-  /********************/
-  for (i = 0; i < DAS_CARDS; i++) {
-    for (j = 0; j < DAS_CHS; j += 2) {
-      B0 = (unsigned)frame[boloIndex[i][j][0] + BoloBaseIndex] +
-        (((unsigned)frame[boloIndex[i][j][1] + BoloBaseIndex] & 0xff00) << 8);
-      B1 = frame[boloIndex[i][j + 1][0] + BoloBaseIndex] +
-        ((frame[boloIndex[i][j + 1][1] + BoloBaseIndex] & 0x00ff) << 16);
-
-      i_in = bolo_fields[i][j].i_in;
-      ((unsigned*)bolo_fields[i][j].b)[i_in] = B0;
-      ((unsigned*)bolo_fields[i][j + 1].b)[i_in] = B1;
+    for (j = 0; j < n_fast; j++) {
+      i_in = normal_fast[j].i_in;
+      if (normal_fast[j].size == 2) {
+        ((unsigned*)normal_fast[j].b)[i_in] =
+          *((unsigned*)(frame + normal_fast[j].i0));      
+      } else {
+        ((unsigned short*)normal_fast[j].b)[i_in] =
+          ((unsigned short*)frame)[normal_fast[j].i0];      
+      }
 
       if (++i_in >= MAXBUF)
         i_in = 0;
-      bolo_fields[i][j].i_in = bolo_fields[i][j + 1].i_in = i_in;
+      normal_fast[j].i_in = i_in;
+    };
+
+    /********************/
+    /* fast bolo data   */
+    /********************/
+    for (i = 0; i < DAS_CARDS; i++) {
+      for (j = 0; j < DAS_CHS; j += 2) {
+        B0 = (unsigned)frame[boloIndex[i][j][0] + BoloBaseIndex] +
+          (((unsigned)frame[boloIndex[i][j][1] + BoloBaseIndex] & 0xff00) << 8);
+        B1 = frame[boloIndex[i][j + 1][0] + BoloBaseIndex] +
+          ((frame[boloIndex[i][j + 1][1] + BoloBaseIndex] & 0x00ff) << 16);
+
+        i_in = bolo_fields[i][j].i_in;
+        ((unsigned*)bolo_fields[i][j].b)[i_in] = B0;
+        ((unsigned*)bolo_fields[i][j + 1].b)[i_in] = B1;
+
+        if (++i_in >= MAXBUF)
+          i_in = 0;
+        bolo_fields[i][j].i_in = bolo_fields[i][j + 1].i_in = i_in;
+      }
     }
   }
 }
@@ -711,9 +711,9 @@ void WriteField(int file, int length, void *buffer)
     }
   } else if (!rc.gzip_output && write(file, buffer, length) < 0)
 #else
-  if (write(file, buffer, length) < 0)
+    if (write(file, buffer, length) < 0)
 #endif
-    berror(fatal, "Error on write");
+      berror(fatal, "Error on write");
 }
 
 /* DirFileWriter: separate thread: writes each field to disk */
@@ -743,7 +743,7 @@ void DirFileWriter(void)
                 | (unsigned)
                 (((unsigned short*)slow_fields[j][i].b)[i_out]);
             } else
-              buffer[i_buf] = ((unsigned short*)slow_fields[j][i].b)[i_out];
+                  buffer[i_buf] = ((unsigned short*)slow_fields[j][i].b)[i_out];
 
             if (i == 0 && j == 0)
               wrote_count = ++slow_fields[j][i].nw * FAST_PER_SLOW;
