@@ -133,7 +133,7 @@ void Pointing(){
   gy2 = ACSData.gyro2;
   gy3 = ACSData.gyro3;
   el_rad = PointingData[new_index].el* M_PI/180.0;;
-  gy_az = gy2 * cos(el_rad) + gy3 * sin(el_rad);
+  gy_az = -gy2 * cos(el_rad) + -gy3 * sin(el_rad);
   EvolveSolution(&NullAz, gy_az, 0.0, 0);
   PointingData[new_index].az = NullAz.angle;
 

@@ -231,7 +231,7 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
   {"mag_y",       'r', 21, 47,               1.0,                    0.0, 'u'},
   {"acs0bits",    'r', 21, 59,               1.0,                    0.0, 'u'},
 
-  {"az",          'w', LOOPBACK, 20,       I2DEG,                 -180.0, 'u'},
+  {"az",          'w', LOOPBACK, 20,       I2DEG,                    0.0, 'u'},
   {"el",          'w', LOOPBACK, 21,       I2DEG,                    0.0, 'u'},
 
   /* send data to ACS0 */
