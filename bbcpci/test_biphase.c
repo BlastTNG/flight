@@ -7,7 +7,8 @@
 
 #include "bbc_pci.h"
 
-#define  FRAMELEN   0x0003
+#define FRAMELEN    0x0005
+#define DIVIDER     0x0002
 
 int main(int argc, char *argv[]) {
   int fp, nr;
@@ -44,9 +45,9 @@ int main(int argc, char *argv[]) {
   getchar();
   
   while (1) {
-    for (k = 0; k < FRAMELEN; k++) {
-      write(fp, (void *)&(i[k]), sizeof(unsigned short));
-    }
+    write(fp, (void *)i, (FRAMELEN - DIVIDER) * sizeof(unsigned short));
+    write(fp, (void *)(i + FRAMELEN - DIVIDER), DIVIDER * 
+                                                sizeof(unsigned short));
   }
   
   return 0;
