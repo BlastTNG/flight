@@ -1378,7 +1378,7 @@ void InitCommandData() {
 
   CommandData.pointing_mode.t = time(NULL) + CommandData.timeout;
 
-  /** initialize stuff that we don't want from prev_status here **/
+  /** this overrides prev_status **/
   CommandData.force_el = 0;
 
   CommandData.pumps.bal_veto = -1; //BAL_VETO_LENGTH;
@@ -1425,7 +1425,7 @@ void InitCommandData() {
 
   CommandData.pointing_mode.t = time(NULL) + CommandData.timeout;
 
-  /** put stuff that we want to keep from prev_status here **/
+  /** prev_status overrides this stuff **/
   CommandData.pointing_mode.mode = P_DRIFT;
   CommandData.pointing_mode.X = 0;
   CommandData.pointing_mode.Y = 0;
@@ -1492,6 +1492,8 @@ void InitCommandData() {
   CommandData.Bias.clockInternal = 0;
   CommandData.Bias.biasAC = 1;
   CommandData.Bias.biasRamp = 0;
+
+  CommandData.pin_is_in = 1;
 
   CommandData.Bias.bias1 = 0x02;
   CommandData.Bias.bias2 = 0x02;

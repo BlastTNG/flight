@@ -180,6 +180,7 @@ struct CommandDataStruct {
     int pwm1, pwm2, pwm3, pwm4;
   } pumps;
 
+  int pin_is_in;
 
   /* sensors output: read in mcp:SensorReader() */
   unsigned short fan;

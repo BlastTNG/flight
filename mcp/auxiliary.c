@@ -51,8 +51,6 @@ struct ISCPulseType isc_pulses[2] = {
   {-1, 0, 0, 0, 0, 0, 0, 0}, {-1, 0, 0, 0, 0, 0, 0, 0}
 };
 
-int pin_is_in = 1;
-
 /* Semaphores for handshaking with the ISC/OSC threads (isc.c) */
 extern short int write_ISC_pointing[2];
 extern short int write_ISC_trigger[2];
@@ -90,7 +88,7 @@ double LockPosition(double elevation);
 /****************************************************************/
 int pinIsIn(void)
 {
-  return(pin_is_in);
+  return(CommandData.pin_is_in);
 }
 
 int SetGyHeatSetpoint(double history, int age)
@@ -337,10 +335,10 @@ int GetLockBits(unsigned short lockBits) {
    * -- if we have reached a limit we can stop going in the direction
    * of the limitswitch that is active */
   if ((lockBits & LOKMOT_ISIN) && (~lockBits & LOKMOT_ISOUT)) {
-    pin_is_in = 1;
+    CommandData.pin_is_in = 1;
     is_closing = 0;
   } else if ((lockBits & LOKMOT_ISOUT) && (~lockBits & LOKMOT_ISIN)) {
-    pin_is_in = 0;
+    CommandData.pin_is_in = 0;
     is_opening = 0;
   }
 
@@ -625,7 +623,7 @@ void ControlAuxMotors(unsigned short *RxFrame) {
     ifpmBits = Balance(ifpmBits);
   }
 
-  WriteData(lokmotPinAddr, pin_is_in, NIOS_QUEUE);
+  WriteData(lokmotPinAddr, CommandData.pin_is_in, NIOS_QUEUE);
   WriteData(ofpmBitsAddr, ofpmBits, NIOS_QUEUE);
   WriteData(sprpumpLevAddr, CommandData.pumps.pwm2 & 0x7ff, NIOS_QUEUE);
   WriteData(inpumpLevAddr, CommandData.pumps.pwm3 & 0x7ff, NIOS_QUEUE);
