@@ -15,6 +15,7 @@
 
 extern short int SamIAm;   /* mcp.c */
 extern short int InCharge; /* tx.c */
+extern int frame_num;      /* tx.c */
 
 short int write_ISC_pointing = 0; // isc.c
 
@@ -73,13 +74,13 @@ void IntegratingStarCamera(void)
   fd_set fdr, fdw;
   struct PointingDataStruct MyPointData;
 
-  int sock = -1, ISCReadIndex;
+  int sock = -1, ISCReadIndex, autofocus_on = 0;
   time_t t;
 
   int n;
 
-  struct timeval t1, t2;
-  int delta;
+//  struct timeval t1, t2;
+//  int delta;
 
   int pid = getpid();
   fprintf(stderr, ">> ISC startup on pid %i\n", pid);
@@ -92,7 +93,6 @@ void IntegratingStarCamera(void)
 
       sock = ISCInit();
       if (sock == -1) {
-        //        fprintf(stderr, "ISC: connect failed.\n");
         sleep(10);
       }
     } while (sock == -1);
@@ -139,11 +139,22 @@ void IntegratingStarCamera(void)
           fflush(isc_log);
         }
 
-        t2 = t1;
-        gettimeofday(&t1, NULL);
-        delta = (t1.tv_sec - t2.tv_sec) * 1000000 + (t1.tv_usec - t2.tv_usec);
+        //t2 = t1;
+        //gettimeofday(&t1, NULL);
+        //delta = (t1.tv_sec - t2.tv_sec) * 1000000 + (t1.tv_usec - t2.tv_usec);
         //fprintf(stderr, "ISC: Received %i bytes after %f milliseconds.\n", n, (double)delta / 1000.);
+        
+        if (CommandData.ISCState.autofocus) {
+          if (autofocus_on) {
+            autofocus_on = 0;
+            CommandData.ISCState.autofocus = 0;
 
+            /* Process results of autofocus */
+            CommandData.ISCState.focus_pos = CommandData.old_ISC_focus;
+          } else
+            autofocus_on = 1;
+        }
+        
         iscdata_index = INC_INDEX(iscdata_index);
       }
 
@@ -158,10 +169,12 @@ void IntegratingStarCamera(void)
         CommandData.ISCState.az = MyPointData.az * DEG2RAD;
         CommandData.ISCState.el = MyPointData.el * DEG2RAD;
         CommandData.ISCState.lst = MyPointData.lst * SEC2RAD;
+        CommandData.ISCState.MCPFrameNum = frame_num;
 
         /* Write to ISC */
         if (InCharge) {
-          n = send(sock, &CommandData.ISCState, sizeof(CommandData.ISCState), 0);
+          n = send(sock, &CommandData.ISCState, sizeof(CommandData.ISCState),
+              0);
           if (n == -1) {
             perror("ISC send()");
             break;
@@ -173,7 +186,8 @@ void IntegratingStarCamera(void)
           write_ISC_pointing = 0;
           if (isc_log != NULL) {
             t = time(NULL);
-            fprintf(isc_log, "%s: %i %i %i %i - %i %i %i %i - %.4lf %.4lf %.4lf %.4lf\n"
+            fprintf(isc_log,
+                "%s: %i %i %i %i - %i %i %i %i - %.4lf %.4lf %.4lf %.4lf\n"
                 "%.1lf %i %i %i %i - %.1f %.6f %.4f - %.4f %.4f %.4f %.4f\n\n",
                 ctime(&t),
                 CommandData.ISCState.pause, CommandData.ISCState.save,
@@ -193,6 +207,10 @@ void IntegratingStarCamera(void)
             fflush(isc_log);
           }
         }
+
+        /* Deassert abort after (perhaps) sending it */
+        CommandData.ISCState.abort = 0;
+        
       }
     }
   }

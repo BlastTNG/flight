@@ -371,6 +371,10 @@ void SingleCommand (int command) {
     CommandData.ISCState.pause = 0;
   } else if (command == SIndex("pause")) {
     CommandData.ISCState.pause = 1;
+  } else if (command == SIndex("isc_abort")) {
+    CommandData.ISCState.abort = 1;
+  } else if (command == SIndex("no_bright_star")) {
+    CommandData.ISCState.brightStarMode = 0;
   } else if (command == SIndex("save_images")) {
     CommandData.ISCState.save = 1;
   } else if (command == SIndex("discard_images")) {
@@ -378,7 +382,9 @@ void SingleCommand (int command) {
   } else if (command == SIndex("full_screen")) {
     CommandData.ISCState.display_mode = full;
   } else if (command == SIndex("auto_focus")) {
-
+    CommandData.ISCState.autofocus = 1;
+    CommandData.old_ISC_focus = CommandData.ISCState.focus_pos;
+    CommandData.ISCState.focus_pos = FOCUS_RANGE;
   } else {
     return; // invalid command - no write or update
   }
@@ -638,25 +644,34 @@ void MultiCommand (int command, unsigned short *dataq) {
 
     /***************************************/
     /********* ISC Commanding  *************/
-  } else if (command == MIndex("pixel_centre")) {
-    CommandData.ISCState.display_mode = roi;
-    CommandData.ISCState.roi_x = ivalues[0];
-    CommandData.ISCState.roi_y = ivalues[1];
-  } else if (command == MIndex("blob_centre")) {
-    CommandData.ISCState.display_mode = blob;
-    CommandData.ISCState.blob_num = ivalues[0];
   } else if (command == MIndex("set_focus")) {
     CommandData.ISCState.focus_pos = ivalues[0];
   } else if (command == MIndex("set_aperture")) {
     CommandData.ISCState.ap_pos = ivalues[0];
+  } else if (command == MIndex("pixel_centre")) {
+    CommandData.ISCState.roi_x = ivalues[0];
+    CommandData.ISCState.roi_y = ivalues[1];
+    CommandData.ISCState.display_mode = roi;
+  } else if (command == MIndex("blob_centre")) {
+    CommandData.ISCState.blob_num = ivalues[0];
+    CommandData.ISCState.display_mode = blob;
+  } else if (command == MIndex("bda_offsets")) {
+    CommandData.ISCState.azBDA = rvalues[0] * DEG2RAD;
+    CommandData.ISCState.elBDA = rvalues[1] * DEG2RAD;
+  } else if (command == MIndex("bright_star")) {
+    CommandData.ISCState.brightRA = rvalues[0] * DEG2RAD;
+    CommandData.ISCState.brightDEC = rvalues[1] * DEG2RAD;
+    CommandData.ISCState.brightStarMode = 1;
+  } else if (command == MIndex("integration")) {
+    CommandData.ISC_pulse_width = (int)(rvalues[0] / 10.);
   } else if (command == MIndex("det_set")) {
     CommandData.ISCState.grid = ivalues[0];
     CommandData.ISCState.sn_threshold = rvalues[1];
     CommandData.ISCState.cenbox = ivalues[2];
     CommandData.ISCState.apbox = ivalues[3];
     CommandData.ISCState.mult_dist = ivalues[4];
-  } else if (command == MIndex("integration")) {
-    CommandData.ISC_pulse_width = (int)(rvalues[0] / 10.);
+  } else if (command == MIndex("max_blobs")) {
+    CommandData.ISCState.maxBlobMatch = ivalues[0];
   } else if (command == MIndex("catalogue")) {
     CommandData.ISCState.mag_limit = rvalues[0];
     CommandData.ISCState.norm_radius = rvalues[1] * DEG2RAD;
@@ -938,7 +953,6 @@ void WatchPort (void* parameter) {
   fprintf(stderr, ">> WatchPort(%i) startup on pid %i\n", port, pid);
 
   if((tty_fd = bc_setserial(COMM[port])) < 0) {
-    perror("Unable to open serial port");
     exit(1);
   }
 
@@ -1031,8 +1045,8 @@ void WatchPort (void* parameter) {
               mcommand = indata[0];
               mcommand_count = 0;
               dataqsize = DataQSize(mcommand);
-              fprintf(stderr, "COMM%i:  Multi word command %d started\n",
-                  port + 1, mcommand);
+              fprintf(stderr, "COMM%i:  Multi word command %d (%s) started\n",
+                  port + 1, mcommand, mcommands[mcommand].name);
 
               /* The time of sending, a "unique" number shared by the first */
               /* and last packed of a multi-command */

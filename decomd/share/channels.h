@@ -27,8 +27,7 @@
 #define FAST_OFFSET (4 + N_SLOW)
 
 /* offset of encoder.  Reset if encoder has been unmounted. */
-//#define ENC_ELEV_OFFSET 101.166
-#define ENC_ELEV_OFFSET 192.25
+#define ENC_ELEV_OFFSET (-8.73)
 
 #define LOCKIN_C2V (5.43736e-07)
 #define LOCKIN_OFFSET (-1.1403)
