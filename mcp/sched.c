@@ -88,7 +88,7 @@ void InitSched(void)
   /*******************************************/
   /*** Count number of schedule file lines ***/
   if ((fp = fopen(SCHEDULEFILE,"r")) == NULL) {
-    merror(MCP_ERROR, "sched: Unable to open schedule file");
+    berror(err, "sched: Unable to open schedule file");
     S.n_sched = 0;
     return;
   }
@@ -104,15 +104,15 @@ void InitSched(void)
   S.p = (struct PointingModeStruct*)malloc(S.n_sched *
       sizeof(struct PointingModeStruct));
   if (S.p == NULL)
-    merror(MCP_ERROR, "sched: Unable to malloc");
+    berror(err, "sched: Unable to malloc");
   
   if (fclose(fp) == EOF)
-    merror(MCP_ERROR, "sched: Error on close");
+    berror(err, "sched: Error on close");
 
   /**************************/
   /*** Read Starting Time ***/
   if ((fp = fopen(SCHEDULEFILE,"r")) == NULL) {
-    merror(MCP_ERROR, "sched: Unable to open schedule file");
+    berror(err, "sched: Unable to open schedule file");
     S.n_sched = 0;
     return;
   }
@@ -142,7 +142,7 @@ void InitSched(void)
 
   dt /= 3600.0;
   
-  mprintf(MCP_SCHED,
+  bprintf(sched,
       "***********************************************************\n"
       "***       Schedule File:\n"
       "*** Current local siderial date (hours relative to epoch): %g\n"
@@ -202,7 +202,7 @@ void InitSched(void)
     S.p[j].Y = dec;
 
     if (!entry_ok)
-      mprintf(MCP_SCHED,
+      bprintf(sched,
           "****** Warning Entry %d is Malformed: Skipping *****\n", j);
 
     if (entry_ok)
@@ -210,7 +210,7 @@ void InitSched(void)
   }
 
   if (fclose(fp) == EOF)
-    merror(MCP_ERROR, "sched: Error on close");
+    berror(err, "sched: Error on close");
 
   for (i = 0; i < S.n_sched; i++) {
     radec2azel(S.p[i].X, S.p[i].Y, S.p[i].t, CHECK_LAT, &az1, &el1);
@@ -241,16 +241,16 @@ void InitSched(void)
         el_range_warning = 1;
     }
     if (el_range_warning) {
-      mputs(MCP_SCHED, "******************************************\n"
+      bputs(sched, "******************************************\n"
           "*** Warning: El Range\n");
-      mprintf(MCP_SCHED, "*** LST: %7.4f Ra: %8.3f  Dec: %8.3f\n",
+      bprintf(sched, "*** LST: %7.4f Ra: %8.3f  Dec: %8.3f\n",
           S.p[i].t / 3600.0, S.p[i].X, S.p[i].Y);
     }
-    mprintf(MCP_SCHED,
+    bprintf(sched,
         "*** %2d LST: %7.4f Az: %8.3f - %8.3f El: %8.3f - %8.3f\n", i,
         S.p[i].t / 3600.0, az1, az2, el1, el2);
   }
-  mputs(MCP_SCHED,
+  bputs(sched,
       "***********************************************************\n");
 }
 
@@ -277,7 +277,7 @@ void DoSched(void) {
   i_dgps = GETREADINDEX(dgpspos_index);
   if (DGPSPos[i_dgps].at_float)
     if (pinIsIn()) {
-      mputs(MCP_INFO, "auto-unlocking pin\n");
+      bputs(info, "auto-unlocking pin\n");
       CommandData.pumps.lock_out = 1;
       CommandData.disable_az = 0;
       // Point North

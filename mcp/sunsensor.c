@@ -53,22 +53,22 @@ void SunSensor(void) {
 
 
   pthread_setspecific(identity, "suns");
-  mputs(MCP_STARTUP, "SunSensor startup\n");
+  bputs(startup, "SunSensor startup\n");
 
   while (1) {
     if (sock != -1)
       if (close(sock) == -1)
-        merror(MCP_ERROR, "SunSensor close()");
+        berror(err, "SunSensor close()");
 
     /* create an empty socket connection */
     sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock == -1)
-      merror(MCP_TFATAL, "SunSensor socket()");
+      berror(tfatal, "SunSensor socket()");
 
     /* set options */
     n = 1;
     if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &n, sizeof(n)) == -1)
-      merror(MCP_TFATAL, "SunSensor setsockopt()");
+      berror(tfatal, "SunSensor setsockopt()");
 
     /* Connect to Arien */
     inet_aton(ARIEN, &addr.sin_addr);
@@ -76,11 +76,11 @@ void SunSensor(void) {
     addr.sin_port = htons(ARIEN_PORT);
     while ((n = connect(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)))
         < 0) {
-      merror(MCP_ERROR, "SunSensor connect()");
+      berror(err, "SunSensor connect()");
       sleep(10);
     };
 
-    mputs(MCP_INFO, "Connected to Arien\n");
+    bputs(info, "Connected to Arien\n");
     n = 0;
 
     while (n != -1) {
@@ -95,11 +95,11 @@ void SunSensor(void) {
       n = select(sock + 1, &fdr, NULL, NULL, &timeout);
 
       if (n == -1 && errno == EINTR) {
-        mputs(MCP_WARNING, "timeout on Sun Sensor\n");
+        bputs(warning, "timeout on Sun Sensor\n");
         continue;
       }
       if (n == -1) {
-        merror(MCP_ERROR, "SunSensor select()");
+        berror(err, "SunSensor select()");
         continue;
       }
 
@@ -109,15 +109,15 @@ void SunSensor(void) {
           SunSensorData[ss_index] = Rx_Data;
           ss_index = INC_INDEX(ss_index);
         } else if (n == -1) {
-          merror(MCP_ERROR, "SunSensor recv()");
+          berror(err, "SunSensor recv()");
         } else if (n == 0) {
-          mprintf(MCP_ERROR, "Connection to Arien closed");
+          bprintf(err, "Connection to Arien closed");
           n = -1;
         } else {
-          mputs(MCP_ERROR, "Didn't receive all data from Sun Sensor.\n");
+          bputs(err, "Didn't receive all data from Sun Sensor.\n");
         }
       } else {
-        mputs(MCP_WARNING, "Connection to Arien timed out.\n");
+        bputs(warning, "Connection to Arien timed out.\n");
         n = -1;
       }
     }

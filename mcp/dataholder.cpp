@@ -37,10 +37,10 @@
     #include "mcp.h"
   }
 #else
-  # define mprintf(x, ...) \
+  # define bprintf(x, ...) \
     do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
       printf(__VA_ARGS__); \
-      if (strcmp(#x, "MCP_FATAL") == 0) \
+      if (strcmp(#x, "fatal") == 0) \
         exit(1); \
     } while (0)
 #endif
@@ -137,7 +137,7 @@ bool AMLParser::LoadFile(const char *filename) {
   char linebuf[AML_LEN_LINE], tmpstr[AML_LEN_LINE], tmpstr2[AML_LEN_LINE];
 
   if ((f = fopen(filename, "r")) == NULL) {
-    mprintf(MCP_ERROR,
+    bprintf(err,
         "AMLParser: couldn't open %s for openning.  Returning.\n", filename);
     return false;
   }
@@ -222,7 +222,7 @@ bool AMLParser::LoadFile(const char *filename) {
         for (k = 0; k < entrycount; k++) {
           ParseFullName(k, tmpstr2);
           if (!strcmp(tmpstr, tmpstr2)) {
-            mprintf(MCP_ERROR, 
+            bprintf(err, 
                 "AMLParser: found two instances of '%s' in the file '%s'.  "
                 "Using the first.\n", tmpstr, filename);
             entrycount--;
@@ -238,7 +238,7 @@ bool AMLParser::LoadFile(const char *filename) {
           if (!strcmp(datanames[entrycount][numdata[entrycount]],
                 datanames[entrycount][i])) {
             ParseFullName(entrycount, tmpstr);
-            mprintf(MCP_ERROR, 
+            bprintf(err, 
                 "AMLParser: found two instances of '%s' in entry '%s' in "
                 "the file '%s'.  Using the first.\n", 
                 datanames[entrycount][i], tmpstr, filename);
@@ -253,7 +253,7 @@ bool AMLParser::LoadFile(const char *filename) {
           if (!GetValue(linebuf, i, 
                 entries[entrycount][i][numdata[entrycount]])) {
             ParseFullName(entrycount, tmpstr);
-            mprintf(MCP_ERROR, 
+            bprintf(err, 
                 "AMLParser: couldn't get datum for '%s' in column '%s' in "
                 "entry '%s' in the file '%s'.  Ignoring this line.\n",
                 datanames[entrycount][numdata[entrycount]], 
@@ -649,7 +649,7 @@ bool DataHolder::LoadFromAML(const char *filename) {
     return false;
 
   if (!aml->FirstDatum("SETTINGS")) {
-    mprintf(MCP_ERROR,
+    bprintf(err,
         "Fatal (DataHolder): %s contains no data under the SETTINGS "
         "entry.\n", filename);
     return false;
@@ -658,30 +658,30 @@ bool DataHolder::LoadFromAML(const char *filename) {
   // Get settings.
   maxbitrate = atoi(aml->Value("maxbitrate"));
   if (!maxbitrate) {
-    mprintf(MCP_ERROR,
+    bprintf(err,
         "Fatal (DataHolder): %s has maxbitrate = 0.\n", filename);
     return false;
   }
   looplength = atoi(aml->Value("looplength"));
   if (!looplength) {
-    mprintf(MCP_ERROR,
+    bprintf(err,
         "Fatal (DataHolder): %s has looplength = 0.\n", filename);
     return false;
   }
   samplerate = atoi(aml->Value("samplerate"));
   if (!samplerate) {
-    mprintf(MCP_ERROR,
+    bprintf(err,
         "Fatal (DataHolder): %s has samplerate = 0.\n", filename);
     return false;
   }
   minover = atof(aml->Value("minover"));
   if (!minover) {
-    mprintf(MCP_ERROR, "Fatal (DataHolder): %s has minover = 0.\n", filename);
+    bprintf(err, "Fatal (DataHolder): %s has minover = 0.\n", filename);
     return false;
   }
   maxover = atof(aml->Value("maxover"));
   if (!maxover) {
-    mprintf(MCP_ERROR, "Fatal (DataHolder): %s has maxover = 0.\n", filename);
+    bprintf(err, "Fatal (DataHolder): %s has maxover = 0.\n", filename);
     return false;
   }
 
@@ -689,7 +689,7 @@ bool DataHolder::LoadFromAML(const char *filename) {
   numslows = aml->NumData("SLOWDATA.SINGLE") + aml->NumData("SLOWDATA.AVG");
   numfasts = aml->NumData("FASTDATA.DIFF") + aml->NumData("FASTDATA.INT");
   if (numslows == 0 && numfasts == 0)
-    mprintf(MCP_WARNING,
+    bprintf(warning,
         "Warning (DataHolder):  %s contains no channels.\n", filename);
 
   if (allocated) {

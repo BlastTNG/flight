@@ -120,9 +120,9 @@ void WriteAux(void) {
   InCharge = !(SamIAm
       ^ slow_data[samIAmReadAddr->index][samIAmReadAddr->channel]);
   if (InCharge != incharge && InCharge)
-    mputs(MCP_INFO, "I have gained control.\n");
+    bputs(info, "I have gained control.\n");
   else if (InCharge != incharge)
-    mputs(MCP_INFO, "I have lost control.\n");
+    bputs(info, "I have lost control.\n");
 
   incharge = InCharge;
 
@@ -197,7 +197,7 @@ void SyncADC (int TxIndex) {
       if (slow_data[statusAddr[k]->index][statusAddr[k]->channel] == 0x0001) {
         /* board needs to be synced */
         doingSync = 1;
-        mprintf(MCP_INFO, "ADC Sync board %i\n", k);
+        bprintf(info, "ADC Sync board %i\n", k);
         l = (k == 0) ? 21 : k;
         RawNiosWrite(syncAddr->niosAddr, BBC_WRITE | BBC_NODE(l) | BBC_CH(56) |
           BBC_ADC_SYNC | 0xa5a3, NIOS_QUEUE);
@@ -769,7 +769,7 @@ void InitTxFrame(void)
 {
   int bus, m, i, j, niosAddr, m0addr;
 
-  mprintf(MCP_INFO, "Writing Initial Tx Frame.\n");
+  bprintf(info, "Writing Initial Tx Frame.\n");
 
   for (bus = 0; bus < 2; ++bus) {
     for (m = 0; m < FAST_PER_SLOW; ++m) {

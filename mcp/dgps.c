@@ -52,10 +52,10 @@ void SetGPSPort(speed_t speed) {
   struct termios term; 
 
   if ((fd = open(GPSCOM, O_RDWR)) < 0)
-    merror(MCP_TFATAL, "Unable to open dgps serial port");
+    berror(tfatal, "Unable to open dgps serial port");
 
   if (tcgetattr(fd, &term))
-    merror(MCP_TFATAL, "Unable to get dgps serial port attributes");
+    berror(tfatal, "Unable to get dgps serial port attributes");
 
   term.c_iflag = 0;
   term.c_oflag = 0;
@@ -64,10 +64,10 @@ void SetGPSPort(speed_t speed) {
   term.c_lflag = 0;
 
   if (cfsetispeed(&term, speed))
-    merror(MCP_TFATAL, "error setting serial input speed");
+    berror(tfatal, "error setting serial input speed");
 
   if (tcsetattr(fd, TCSANOW, &term))
-    merror(MCP_TFATAL, "Unable to set serial attributes");
+    berror(tfatal, "Unable to set serial attributes");
 
   close(fd);
 }
@@ -103,7 +103,7 @@ void WatchDGPS() {
   static int i_at_float = 0;
 
   pthread_setspecific(identity, "dgps");
-  mputs(MCP_STARTUP, "WatchDGPS startup\n");
+  bputs(startup, "WatchDGPS startup\n");
 
   DGPSAtt[0].az = 0;
   DGPSAtt[0].pitch = 0;
@@ -127,7 +127,7 @@ void WatchDGPS() {
 
   fp = fopen(GPSCOM, "r+");
   if (fp == NULL)
-    merror(MCP_TFATAL, "error opening gps port for i/o");
+    berror(tfatal, "error opening gps port for i/o");
 
   fprintf(fp,"$PASHS,SPD,B,7\r\n");
 
@@ -137,7 +137,7 @@ void WatchDGPS() {
 
   fp = fopen(GPSCOM, "r+");
   if (fp == NULL)
-    merror(MCP_TFATAL, "error opening gps port for i/o");
+    berror(tfatal, "error opening gps port for i/o");
 
   /* fprintf(fp,"$PASHS,RST\r\n");  // reset to defaults */
   /* sleep(10); */

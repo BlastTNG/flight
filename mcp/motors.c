@@ -906,7 +906,7 @@ void UpdateAxesMode() {
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       break;
     default:
-      mprintf(MCP_WARNING, "Unknown Elevation Pointing Mode %d: stopping\n",
+      bprintf(warning, "Unknown Elevation Pointing Mode %d: stopping\n",
           CommandData.pointing_mode.mode);
       CommandData.pointing_mode.mode = P_DRIFT;
       CommandData.pointing_mode.X = 0;

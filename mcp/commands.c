@@ -88,17 +88,17 @@ void WritePrevStatus() {
   /** write the default file */
   fp = open("/tmp/mcp.prev_status", O_WRONLY|O_CREAT|O_TRUNC, 00666);
   if (fp < 0) {
-    merror(MCP_ERROR, "mcp.prev_status open()");
+    berror(err, "mcp.prev_status open()");
     return;
   }
 
   if ((n = write(fp, &CommandData, sizeof(struct CommandDataStruct))) < 0) {
-    merror(MCP_ERROR, "mcp.prev_status write()");
+    berror(err, "mcp.prev_status write()");
     return;
   }
 
   if ((n = close(fp)) < 0) {
-    merror(MCP_ERROR, "mcp.prev_status close()");
+    berror(err, "mcp.prev_status close()");
     return;
   }
 }
@@ -111,10 +111,10 @@ int bc_setserial(char *input_tty) {
   struct termios term; 
 
   if ((fd = open(input_tty, O_RDWR)) < 0)
-    merror(MCP_TFATAL, "Unable to open serial port");
+    berror(tfatal, "Unable to open serial port");
 
   if (tcgetattr(fd, &term))
-    merror(MCP_TFATAL, "Unable to get serial device attributes");
+    berror(tfatal, "Unable to get serial device attributes");
 
   term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
   term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
@@ -127,13 +127,13 @@ int bc_setserial(char *input_tty) {
   term.c_cflag |= CS8;
 
   if(cfsetospeed(&term, B1200))          /*  <======= SET THE SPEED HERE */
-    merror(MCP_TFATAL, "Error setting serial output speed");
+    berror(tfatal, "Error setting serial output speed");
 
   if(cfsetispeed(&term, B1200))          /*  <======= SET THE SPEED HERE */
-    merror(MCP_TFATAL, "Error setting serial input speed");
+    berror(tfatal, "Error setting serial input speed");
 
   if( tcsetattr(fd, TCSANOW, &term) )
-    merror(MCP_TFATAL, "Unable to set serial attributes");
+    berror(tfatal, "Unable to set serial attributes");
 
   return fd;
 }
@@ -223,7 +223,7 @@ const char* SName(enum singleCommand command) {
 void SingleCommand (enum singleCommand command) {
   int i_point;
 
-  mprintf(MCP_INFO, "Single command: %d (%s)\n", command, SName(command));
+  bprintf(info, "Single command: %d (%s)\n", command, SName(command));
 
   /* Update CommandData structure with new info */
 
@@ -237,7 +237,7 @@ void SingleCommand (enum singleCommand command) {
     CommandData.pointing_mode.h = 0;
 
   } else if (command == mcc_halt) {
-    mputs(MCP_WARNING, "Halting the MCC\n");
+    bputs(warning, "Halting the MCC\n");
     system("/sbin/halt");
   } else if (command == sync_adc)
     CommandData.ADC_sync_timeout = 0;
@@ -454,7 +454,7 @@ void SingleCommand (enum singleCommand command) {
   } else if (command == xyzzy)
     ;
   else {
-    mputs(MCP_WARNING, "***Invalid Single Word Command***\n");
+    bputs(warning, "***Invalid Single Word Command***\n");
     return; /* invalid command - no write or update */
   }
 
@@ -510,17 +510,17 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     type = mcommands[index].params[i].type;
     if (type == 'i')  /* 15 bit unsigned integer */ {
       ivalues[i] = dataq[dataqind++] + mcommands[index].params[i].min;
-      mprintf(MCP_INFO, "param%02i: integer: %i\n", i, ivalues[i]);
+      bprintf(info, "param%02i: integer: %i\n", i, ivalues[i]);
     } else if (type == 'f')  /* 15 bit floating point */ {
       rvalues[i] = (float)dataq[dataqind++] * (mcommands[index].params[i].max
           - min) / MAX_15BIT + min;
-      mprintf(MCP_INFO, "param%02i: 15 bits: %f\n", i, rvalues[i]);
+      bprintf(info, "param%02i: 15 bits: %f\n", i, rvalues[i]);
     } else if (type == 'l') { /* 30 bit floating point */
       rvalues[i] = (float)((int)dataq[dataqind++] << 15); /* upper 15 bits */
       rvalues[i] += (float)dataq[dataqind++];             /* lower 15 bits */
       rvalues[i] = rvalues[i] * (mcommands[index].params[i].max - min) /
         MAX_30BIT + min;
-      mprintf(MCP_INFO, "param%02i: 30 bits: %f\n", i, rvalues[i]);
+      bprintf(info, "param%02i: 30 bits: %f\n", i, rvalues[i]);
     }
   }
 #else
@@ -530,17 +530,17 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     type = mcommands[index].params[i].type;
     if (type == 'i')  /* 15 bit unsigned integer */ {
       ivalues[i] = atoi(dataqc[dataqind++]);
-      mprintf(MCP_INFO, "param%02i: integer: %i\n", i, ivalues[i]);
+      bprintf(info, "param%02i: integer: %i\n", i, ivalues[i]);
     } else if (type == 'f')  /* 15 bit floating point */ {
       rvalues[i] = atof(dataqc[dataqind++]);
-      mprintf(MCP_INFO, "param%02i: 15 bits: %f\n", i, rvalues[i]);
+      bprintf(info, "param%02i: 15 bits: %f\n", i, rvalues[i]);
     } else if (type == 'l') { /* 30 bit floating point */
       rvalues[i] = atof(dataqc[dataqind++]);
-      mprintf(MCP_INFO, "param%02i: 30 bits: %f\n", i, rvalues[i]);
+      bprintf(info, "param%02i: 30 bits: %f\n", i, rvalues[i]);
     }
   }
 
-  mprintf(MCP_INFO, "Multiword Command: %d (%s)\n", command, MName(command));
+  bprintf(info, "Multiword Command: %d (%s)\n", command, MName(command));
 #endif
 
   /* Update CommandData struct with new info
@@ -653,7 +653,7 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.pointing_mode.h = 0;
     CommandData.pointing_mode.vaz = 0;
     CommandData.pointing_mode.del = 0;
-    mprintf(MCP_INFO, "Lock Mode: %g\n", CommandData.pointing_mode.Y);
+    bprintf(info, "Lock Mode: %g\n", CommandData.pointing_mode.Y);
 
     /***************************************/
     /********** Balance System  ************/
@@ -830,7 +830,7 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.ISCState[1].offset = ivalues[1];
 
   } else {
-    mputs(MCP_WARNING, "Invalid Multi Word Command***\n");
+    bputs(warning, "Invalid Multi Word Command***\n");
     return; /* invalid command - don't update */
   }
 
@@ -977,14 +977,14 @@ void SendDownData(char tty_fd) {
     }
 
     if (bytepos >= SLOWDL_LEN) {
-      mprintf(MCP_WARNING, "Slow DL size is larger than maximum size of %d.  "
+      bprintf(warning, "Slow DL size is larger than maximum size of %d.  "
               "Reduce length of SlowDLInfo structure.", SLOWDL_LEN);
       break;
     }
   }
 
   if (firsttime) {
-    mprintf(MCP_INFO, "Slow DL size = %d\n", bytepos);
+    bprintf(info, "Slow DL size = %d\n", bytepos);
     firsttime = 0;
   }
 
@@ -1021,10 +1021,10 @@ void WatchFIFO () {
   int index, pindex = 0;
 
   pthread_setspecific(identity, "fifo");
-  mputs(MCP_STARTUP, "WatchFIFO startup\n");
+  bputs(startup, "WatchFIFO startup\n");
 
   if ((fifo = open("/tmp/SIPSS.FIFO", O_RDONLY | O_NONBLOCK)) == -1)
-    merror(MCP_TFATAL, "Unable to open FIFO");
+    berror(tfatal, "Unable to open FIFO");
 
   for (;;) {
     index = 0;
@@ -1035,7 +1035,7 @@ void WatchFIFO () {
       command[index++] = buf[0];
     } while (buf[0] != '\n');
     command[index - 1] = command[index] = 0;
-    mprintf(MCP_INFO, "Command received: %s\n", command);
+    bprintf(info, "Command received: %s\n", command);
     index = -1;
     while((command[++index] != ' ') && command[index]);
     command[index++] = 0;
@@ -1047,7 +1047,7 @@ void WatchFIFO () {
         pbuf[pindex] = 0;
         if (NULL == (mcommand_data[mcommand_count] =
               realloc(mcommand_data[mcommand_count], pindex + 2)))
-          merror(MCP_TFATAL, "malloc failed in FIFO CommandData");
+          berror(tfatal, "malloc failed in FIFO CommandData");
 
         strncpy(mcommand_data[mcommand_count++], pbuf, pindex + 1);
         pindex = 0;
@@ -1055,7 +1055,7 @@ void WatchFIFO () {
         pbuf[pindex++] = command[index];
       }
     } while (command[index++] != 0);
-    mprintf(MCP_INFO, "%i parameters found.\n", mcommand_count);
+    bprintf(info, "%i parameters found.\n", mcommand_count);
 
     pthread_mutex_lock(&mutex);
 
@@ -1066,7 +1066,7 @@ void WatchFIFO () {
       mcommand = -1;
     } else {
       mcommand = MCommand(command);
-      mputs(MCP_INFO, " Multi word command received\n");
+      bputs(info, " Multi word command received\n");
       MultiCommand(mcommand, (unsigned short*) mcommand_data);
       mcommand = -1;
     }
@@ -1099,7 +1099,7 @@ void WatchPort (void* parameter) {
   int bytecount = 0;
 
   pthread_setspecific(identity, ident[port]);
-  mprintf(MCP_STARTUP, "WatchPort(%i) startup\n", port);
+  bprintf(startup, "WatchPort(%i) startup\n", port);
 
   tty_fd = bc_setserial(COMM[port]);
 
@@ -1139,21 +1139,21 @@ void WatchPort (void* parameter) {
       case 1: /* wating for packet type */
         if (buf == 0x13) { /* Send data request */
           readstage = 3;
-//                    mprintf(MCP_INFO, "COMM%i: Data request\n", port + 1);
+//                    bprintf(info, "COMM%i: Data request\n", port + 1);
         } else if (buf == 0x14) { /* Command */
           readstage = 2;
-//                    mprintf(MCP_INFO, "COMM%i: Command\n", port + 1);
+//                    bprintf(info, "COMM%i: Command\n", port + 1);
         } else if (buf == 0x10) { /* GPS Position */
           readstage = 4;
-//                    mprintf(MCP_INFO, "COMM%i: GPS Position\n", port + 1);
+//                    bprintf(info, "COMM%i: GPS Position\n", port + 1);
         } else if (buf == 0x11) { /* GPS Time */
           readstage = 5;
-//                    mprintf(MCP_INFO, "COMM%i: GPS Time\n", port + 1);
+//                    bprintf(info, "COMM%i: GPS Time\n", port + 1);
         } else if (buf == 0x12) { /* MKS Altitude */
           readstage = 6;
-//                    mprintf(MCP_INFO, "COMM%i: MKS Altitude\n", port + 1);
+//                    bprintf(info, "COMM%i: MKS Altitude\n", port + 1);
         } else {
-          mprintf(MCP_WARNING,
+          bprintf(warning,
               "COMM%i: Bad packet received: Unrecognised Packet Type: %02X\n",
               port + 1, buf);
           readstage = 0;
@@ -1165,7 +1165,7 @@ void WatchPort (void* parameter) {
             bytecount = 1;
           else {
             readstage = 0;
-            mprintf(MCP_WARNING,
+            bprintf(warning,
                 "COMM%i: Bad command packet: Improper Encoding: %02X\n",
                 port + 1, buf);
           }
@@ -1188,7 +1188,7 @@ void WatchPort (void* parameter) {
 
             if (((indata[1] >> 5) & 0x07) == 0x05) {
               /*** Single command ***/
-              mprintf(MCP_INFO, "COMM%i:  Single command received\n",
+              bprintf(info, "COMM%i:  Single command received\n",
                   port + 1);
               SingleCommand(indata[0]);
               mcommand = -1;
@@ -1198,7 +1198,7 @@ void WatchPort (void* parameter) {
               mcommand = indata[0];
               mcommand_count = 0;
               dataqsize = DataQSize(MIndex(mcommand));
-              mprintf(MCP_INFO,
+              bprintf(info,
                   "COMM%i:  Multi word command %d (%s) started\n",
                   port + 1, mcommand, MName(mcommand));
 
@@ -1210,7 +1210,7 @@ void WatchPort (void* parameter) {
               /*** Parameter values in multi-command ***/
               indatadumper = (unsigned short *) indata;
               mcommand_data[mcommand_count] = *indatadumper;
-              mprintf(MCP_INFO, "COMM%i:  Multi word command continues...\n",
+              bprintf(info, "COMM%i:  Multi word command continues...\n",
                   port + 1);
               mcommand_count++;
             } else if ((((indata[1] >> 5) & 0x07) == 0x06) &&
@@ -1218,7 +1218,7 @@ void WatchPort (void* parameter) {
                 ((indata[1] & 0x1F) == mcommand_time) &&
                 (mcommand_count == dataqsize)) {
               /*** End of multi-command ***/
-              mprintf(MCP_INFO, "COMM%i:  Multi word command ends \n",
+              bprintf(info, "COMM%i:  Multi word command ends \n",
                   port + 1);
               MultiCommand(mcommand, (unsigned short *) mcommand_data);
               mcommand = -1;
@@ -1227,7 +1227,7 @@ void WatchPort (void* parameter) {
             } else {
               mcommand = -1;
               mcommand_count = 0;
-              mprintf(MCP_WARNING,
+              bprintf(warning,
                   "COMM%i: Command packet discarded: Bad Encoding: %02X\n",
                   port + 1 , buf);
               mcommand_time = 0;
@@ -1240,7 +1240,7 @@ void WatchPort (void* parameter) {
         if (buf == 0x03) {
           SendDownData(tty_fd);
         } else {
-          mprintf(MCP_WARNING,
+          bprintf(warning,
               "COMM%i: Bad encoding: Bad packet terminator: %02X\n",
               port + 1, buf);
         }
@@ -1255,7 +1255,7 @@ void WatchPort (void* parameter) {
           if (buf == 0x03) {
             GPSPosition((unsigned char *) indata);
           } else {
-            mprintf(MCP_WARNING, "COMM%i: Bad encoding in GPS Position: "
+            bprintf(warning, "COMM%i: Bad encoding in GPS Position: "
                 "Bad packet terminator: %02X\n", port + 1, buf);
           }
         }
@@ -1270,7 +1270,7 @@ void WatchPort (void* parameter) {
           if (buf == 0x03) {
             GPSTime((unsigned char *) indata);
           } else {
-            mprintf(MCP_WARNING, "COMM%i: Bad encoding in GPS Time: "
+            bprintf(warning, "COMM%i: Bad encoding in GPS Time: "
                 "Bad packet terminator: %02X\n", port + 1, buf);
           }
         }
@@ -1285,7 +1285,7 @@ void WatchPort (void* parameter) {
           if (buf == 0x03) {
             MKSAltitude((unsigned char *) indata);
           } else {
-            mprintf(MCP_WARNING, "COMM%i: Bad encoding in MKS Altitude: "
+            bprintf(warning, "COMM%i: Bad encoding in MKS Altitude: "
                 "Bad packet terminator: %02X\n", port + 1, buf);
           }
         }
@@ -1306,14 +1306,14 @@ void InitCommandData() {
   int fp, n_read = 0, junk, extra = 0;
 
   if ((fp = open("/tmp/mcp.prev_status", O_RDONLY)) < 0) {
-    merror(MCP_ERROR, "Unable to open prev_status file for reading");
+    berror(err, "Unable to open prev_status file for reading");
   } else {
     if ((n_read = read(fp, &CommandData, sizeof(struct CommandDataStruct))) < 0)
-      merror(MCP_ERROR, "prev_status read()");
+      berror(err, "prev_status read()");
     if ((extra = read(fp, &junk, sizeof(junk))) < 0)
-      merror(MCP_ERROR, "extra prev_status read()");
+      berror(err, "extra prev_status read()");
     if (close(fp) < 0)
-      merror(MCP_ERROR, "prev_status close()");
+      berror(err, "prev_status close()");
   }
 
   CommandData.pointing_mode.t = time(NULL) + CommandData.timeout;
@@ -1349,15 +1349,15 @@ void InitCommandData() {
 #ifndef USE_FIFO_CMD
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
-    mprintf(MCP_WARNING, "prev_status: Wanted %i bytes but got %i.\n",
+    bprintf(warning, "prev_status: Wanted %i bytes but got %i.\n",
         sizeof(struct CommandDataStruct), n_read);
   else if (extra > 0)
-    mputs(MCP_WARNING, "prev_status: Extra bytes found.\n");
+    bputs(warning, "prev_status: Extra bytes found.\n");
   else
     return;
 #endif
 
-  mputs(MCP_WARNING, "Regenerating Command Data and prev_status\n");
+  bputs(warning, "Regenerating Command Data and prev_status\n");
 
   CommandData.pointing_mode.t = time(NULL) + CommandData.timeout;
 

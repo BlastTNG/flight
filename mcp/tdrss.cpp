@@ -83,10 +83,10 @@ int OpenSerial() {
   struct termios term;
 
   if ((fd = open(INPUT_TTY, O_RDWR)) < 0)
-    merror(MCP_TFATAL, "Unable to open serial port");
+    berror(tfatal, "Unable to open serial port");
 
   if (tcgetattr(fd, &term))
-    merror(MCP_TFATAL, "Unable to get serial device attributes");
+    berror(tfatal, "Unable to get serial device attributes");
 
   term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
   term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
@@ -99,13 +99,13 @@ int OpenSerial() {
   term.c_cflag |= CS8;
 
   if (cfsetospeed(&term, B19200))
-    merror(MCP_TFATAL, "Error setting serial output speed");
+    berror(tfatal, "Error setting serial output speed");
 
   if (cfsetispeed(&term, B19200))
-    merror(MCP_TFATAL, "Error setting serial input speed");
+    berror(tfatal, "Error setting serial input speed");
 
   if (tcsetattr(fd, TCSANOW, &term))
-    merror(MCP_TFATAL, "Unable to set serial attributes");
+    berror(tfatal, "Unable to set serial attributes");
 
   return fd;
 }
@@ -230,7 +230,7 @@ int Buffer::MaxSize() {
 
 void Buffer::CheckBytePosRange() {
   if (bytepos >= safeallocsize) {
-    mprintf(MCP_ERROR,
+    bprintf(err,
         "Alice: serious error!!  Class BUFFER was not properly allocated.  "
         "Size was set to %d; tried to write to %d.  Make sure the size is "
         "being set correctly with the Buffer::SetSize function.  Resetting "
@@ -377,7 +377,7 @@ void Buffer::EraseLastSection() {
 
     // Send packets
     if (write(tty_fd, buf, CurrSize()) != CurrSize())
-      mprintf(MCP_ERROR, "Error sending through serial port.");
+      bprintf(err, "Error sending through serial port.");
   }
 
 
@@ -503,7 +503,7 @@ Alice::Alice() {
 
 #ifdef USE_SMALL_LOG
   if ((smalllog = fopen(SMALL_LOG_FILE, "a")) == NULL)
-    mprintf(MCP_WARNING, "Could not open small log file (%s).", SMALL_LOG_FILE);
+    bprintf(warning, "Could not open small log file (%s).", SMALL_LOG_FILE);
   else
     fprintf(smalllog, "\n\nSMALL LOG RESTART\n------------------\n");
 #endif
@@ -533,7 +533,7 @@ bool Alice::GetCurrentAML() {
     if (DataInfo->LoadFromAML(tmp)) {
       AMLsrc = newxml;
       sendbuf->SetSize(DataInfo->maxbitrate / 10 * DataInfo->looplength);
-      mprintf(MCP_INFO, "Alice now using %s.", tmp);
+      bprintf(info, "Alice now using %s.", tmp);
       return true;
     }
   }
@@ -916,7 +916,7 @@ void Alice::CompressionLoop() {
   for (;;) {
     /* Abort if we have vetoed the TDRSS writer */
     if (CommandData.tdrssVeto) {
-      mputs(MCP_WARNING, "TDRSS veto detected. Bailing on TDRSS thread.\n");
+      bputs(warning, "TDRSS veto detected. Bailing on TDRSS thread.\n");
       return;
     }
 
@@ -959,7 +959,7 @@ void Alice::CompressionLoop() {
       while (DataSource->NumFrames() < framepos + readleftpad + readrightpad) {
         /* Abort if we have vetoed the TDRSS writer */
         if (CommandData.tdrssVeto) {
-          mputs(MCP_WARNING, "TDRSS veto detected. Bailing on TDRSS thread.\n");
+          bputs(warning, "TDRSS veto detected. Bailing on TDRSS thread.\n");
           return;
         }
         usleep(1000);
@@ -971,7 +971,7 @@ void Alice::CompressionLoop() {
     while (DataSource->NumFrames() < framepos + numframes) {
       /* Abort if we have vetoed the TDRSS writer */
       if (CommandData.tdrssVeto) {
-        mputs(MCP_WARNING, "TDRSS veto detected. Bailing on TDRSS thread.\n");
+        bputs(warning, "TDRSS veto detected. Bailing on TDRSS thread.\n");
         return;
       }
       usleep(1000);
@@ -1012,7 +1012,7 @@ void Alice::CompressionLoop() {
           case COMP_SINGLE:
             if ((numread = DataSource->ReadField(rawdata, currInfo->src,
                     framepos - readrightpad, 1)) != currInfo->framefreq) {
-              mprintf(MCP_ERROR,
+              bprintf(err,
                   "Error accessing correct number of data from frames "
                   "(%d, %d).", numread, currInfo->framefreq);
               rawdata[0] = 0;
@@ -1026,7 +1026,7 @@ void Alice::CompressionLoop() {
             if ((numread = DataSource->ReadField(rawdata, currInfo->src,
                     framepos - readrightpad, numframes))
                 != rawsize) {
-              mprintf(MCP_ERROR,
+              bprintf(err,
                   "Error accessing correct number of data from frames "
                   "(%d, %d).", numread, currInfo->framefreq);
               rawdata[0] = 0;
@@ -1067,7 +1067,7 @@ void Alice::CompressionLoop() {
               numframes + rightpad + leftpad))
           != rawsize + currInfo->framefreq * (rightpad + leftpad)) {
 
-        mprintf(MCP_ERROR, "Error accessing correct number of data from frames "
+        bprintf(err, "Error accessing correct number of data from frames "
             "(%d, %d).", numread, rawsize + currInfo->framefreq *
             (rightpad + leftpad));
         sendbuf->NoDataMarker();
@@ -1103,7 +1103,7 @@ void Alice::CompressionLoop() {
         // Check the overall size
         if (sendbuf->CurrSize() > sendbuf->MaxSize()) {
           sendbuf->EraseLastSection();
-          mputs(MCP_WARNING, "TDRSS frame truncated.");
+          bputs(warning, "TDRSS frame truncated.");
 #ifdef USE_SMALL_LOG
           if (smalllog != NULL) {
             fprintf(smalllog, "WARNING: frame truncated!\n");
@@ -1243,7 +1243,7 @@ void FrameBuffer::Resize(int numframes_in) {
   }
 
   if (err)
-    merror(MCP_TFATAL, "SMALL (FrameBuffer): unable to malloc either fastbuf "
+    berror(tfatal, "SMALL (FrameBuffer): unable to malloc either fastbuf "
         "or slowbuf.");
 
   framenum = -1;
@@ -1291,7 +1291,7 @@ void FrameBuffer::Update() {
   while (1 == 1) {
     /* Abort if we have vetoed the TDRSS writer */
     if (CommandData.tdrssVeto) {
-      mputs(MCP_WARNING, "TDRSS veto detected. Bailing on update thread.\n");
+      bputs(warning, "TDRSS veto detected. Bailing on update thread.\n");
       return;
     }
 
@@ -1309,12 +1309,12 @@ void FrameBuffer::Update() {
       multiplexsynced = true;
 
       if (multiplexindex < 0 || multiplexindex >= FAST_PER_SLOW) {
-        mprintf(MCP_ERROR, "Multiplex index out of range (= %d)",
+        bprintf(err, "Multiplex index out of range (= %d)",
             multiplexindex);
         continue;
       }
       if (i < 0 || i >= 3) {
-        mprintf(MCP_ERROR, "Biphase buffer index out of range (= %d)", i);
+        bprintf(err, "Biphase buffer index out of range (= %d)", i);
         continue;
       }
 
@@ -1495,7 +1495,7 @@ extern "C" void TDRSSWriter(void) {
   Alice *drinkme;
 
   pthread_setspecific(identity, "tdrs");
-  mputs(MCP_STARTUP, "Alice start-up.\n");
+  bputs(startup, "Alice start-up.\n");
 
   tty_fd = OpenSerial();
 

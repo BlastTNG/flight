@@ -40,7 +40,7 @@ void LutInit(struct LutType *L) {
 
   fp = fopen(L->filename, "r");
   if (fp == NULL) {
-    mprintf(MCP_ERROR, "error reading LUT file %s: no calibration\n",
+    bprintf(err, "error reading LUT file %s: no calibration\n",
         L->filename);
     L->n = 1;
     return;
@@ -52,7 +52,7 @@ void LutInit(struct LutType *L) {
     i++;
   }
   if (i < 2) {
-    mprintf(MCP_ERROR, "error reading LUT file %s: no calibration\n",
+    bprintf(err, "error reading LUT file %s: no calibration\n",
         L->filename);
     L->n = 1;
     return;
@@ -130,7 +130,7 @@ double MagLutCal(struct LutType *L, double mag_x, double mag_y, double x)
     if(fabs(dx) < TOLERANCE) return (x*180.0/M_PI);
 
     if(iter == MAXITER) {
-      mprintf(MCP_ERROR, "Error MagLutCal: don't converge.\n");
+      bprintf(err, "Error MagLutCal: don't converge.\n");
       return (x*180.0/M_PI);
     }
   }

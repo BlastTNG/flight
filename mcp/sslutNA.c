@@ -43,7 +43,7 @@ int SSLut_GetLut(SSLut_t *SSLut, const char *filename)
   FILE *fd;
 
   if ( (fd = fopen(filename, "r")) == NULL ) {
-    merror(MCP_ERROR, "Unable to load Sun Sensor LUT: %s\n", filename);
+    berror(err, "Unable to load Sun Sensor LUT: %s\n", filename);
     return SS_LUTNOTFOUND;
   }
 

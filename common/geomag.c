@@ -53,7 +53,7 @@ static void E0000(int IENTRY, int *maxdeg, float alt, float glat, float glon,
 
 GEOMAG:
   if ((wmmdat = fopen("/data/etc/WMM.COF", "r")) == NULL) {
-    merror(MCP_ERROR, "Error opening WMM.COF");
+    berror(err, "Error opening WMM.COF");
     return;
   }
 
@@ -76,13 +76,13 @@ GEOMAG:
   c[0][0] = 0.0;
   cd[0][0] = 0.0;
   if (fgets(c_str, 80, wmmdat) == NULL) {
-    merror(MCP_ERROR, "Error while reading WMM.COF");
+    berror(err, "Error while reading WMM.COF");
     return;
   }
   sscanf(c_str, "%f%s", &epoch, model);
 S3:
   if (fgets(c_str, 80, wmmdat) == NULL) {
-    merror(MCP_ERROR, "Error while reading WMM.COF");
+    berror(err, "Error while reading WMM.COF");
     return;
   }
   /* CHECK FOR LAST LINE IN FILE */
@@ -146,7 +146,7 @@ GEOMG1:
   dt = time - epoch;
   if (otime < 0.0 && (dt < 0.0 || dt > 5.0))
   {
-    mprintf(MCP_ERROR, "!!!! Mag. model needs a year between %f and %f !!!!\n",
+    bprintf(err, "!!!! Mag. model needs a year between %f and %f !!!!\n",
         epoch, epoch + 5.0);
     return;
   }

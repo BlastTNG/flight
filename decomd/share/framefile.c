@@ -24,29 +24,29 @@
 
 #include "channels.h"
 
-/* if compiling MCP load the real mputs function prototypes, otherwise, just
+/* if compiling MCP load the real bputs function prototypes, otherwise, just
  * make up fake ones */
 #ifdef __MCP__
 #  include "mcp.h"
 #elif defined __DECOMD__
 #  include "decomd.h"   /* the decom daemon gets special sysloggy functions */
 #else
-#  define mprintf(x, ...) \
+#  define bprintf(x, ...) \
      do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
        printf(__VA_ARGS__); \
-       if (strcmp(#x, "MCP_FATAL") == 0) \
+       if (strcmp(#x, "fatal") == 0) \
          exit(1); \
      } while (0)
-#  define mputs(x,s) \
+#  define bputs(x,s) \
      do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
        puts(s); \
-       if (strcmp(#x, "MCP_FATAL") == 0) \
+       if (strcmp(#x, "fatal") == 0) \
          exit(1); \
      } while (0)
-#  define merror(x,s) \
+#  define berror(x,s) \
      do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
        perror(s); \
-       if (strcmp(#x, "MCP_FATAL") == 0) \
+       if (strcmp(#x, "fatal") == 0) \
          exit(1); \
      } while (0)
 #endif
@@ -86,15 +86,15 @@ struct file_info {
 void OpenNextChunk(void) {
   if (framefile.fd > -1)
     if (close(framefile.fd) == -1)
-      merror(MCP_ERROR, "Error closing chunk");
+      berror(err, "Error closing chunk");
 
   sprintf(framefile.name, RAWDIR "/%lu.%c%03X%c", framefile.time,
       framefile.type, ++framefile.chunk, '\0');
 
-  mprintf(MCP_INFO, "Writing to framefile %s\n", framefile.name);
+  bprintf(info, "Writing to framefile %s\n", framefile.name);
 
   if ((framefile.fd = creat(framefile.name, 0644)) == -1)
-    merror(MCP_ERROR, "Error opening chunk");
+    berror(err, "Error opening chunk");
 
   framefile.frames = 0;
 }
@@ -123,7 +123,7 @@ void InitialiseFrameFile(char type) {
   sprintf(buffer, RAWDIR "/%lu.%c.spec", framefile.time, framefile.type);
 
   if ((fp = fopen(buffer,"w")) == NULL)
-    merror(MCP_ERROR, "Unable to write spec file");
+    berror(err, "Unable to write spec file");
   else {
     WriteSpecificationFile(fp);
     fclose(fp);
@@ -131,13 +131,13 @@ void InitialiseFrameFile(char type) {
 
   /* malloc frame buffer */
   if ((framefile.buffer = malloc(BUFFER_SIZE * DiskFrameSize)) == NULL)
-    merror(MCP_TFATAL, "Unable to malloc framefile buffer");
+    berror(tfatal, "Unable to malloc framefile buffer");
   framefile.buffer_end = framefile.buffer + BUFFER_SIZE * DiskFrameSize;
   framefile.b_write_to = framefile.b_read_from = framefile.buffer;
 
   fp = fopen(CURFILE,"w");
   if (fp == NULL) {
-    merror(MCP_ERROR, "Error opening curfile");
+    berror(err, "Error opening curfile");
     return;
   }
 
@@ -145,7 +145,7 @@ void InitialiseFrameFile(char type) {
   fprintf(fp, "%s\n", framefile.name);
 
   if (fclose(fp) < 0)
-    merror(MCP_ERROR, "Error while closing curfile");
+    berror(err, "Error while closing curfile");
 }
 
 void* advance_in_buffer(void* ptr) {
@@ -181,7 +181,7 @@ void pushDiskFrame(unsigned short *RxFrame) {
   /* ****************************************************************** */
 
   if (new_write_to == framefile.b_read_from) {
-    mputs(MCP_WARNING, "Framefile buffer overflow (frame discarded)\n");
+    bputs(warning, "Framefile buffer overflow (frame discarded)\n");
     return;
   }	
 
@@ -204,12 +204,12 @@ void FrameFileWriter(void) {
 
 #ifdef __MCP__ 
   pthread_setspecific(identity, "disk");
-  mputs(MCP_STARTUP, "FrameFileWriter startup\n");
+  bputs(startup, "FrameFileWriter startup\n");
 #endif
 
   /* malloc output_buffer */
   if ((writeout_buffer = malloc(BUFFER_SIZE * DiskFrameSize)) == NULL)
-    mputs(MCP_TFATAL, "Unable to malloc write out buffer\n");
+    bputs(tfatal, "Unable to malloc write out buffer\n");
 
   while (1) {
     write_len = 0;
@@ -228,7 +228,7 @@ void FrameFileWriter(void) {
       if (++framefile.frames >= FRAMES_PER_FILE) {
         if (framefile.fd >= 0)
           if (write(framefile.fd, writeout_buffer, write_len) < 0)
-            merror(MCP_ERROR, "Error while writing frame");
+            berror(err, "Error while writing frame");
 
         OpenNextChunk();
         write_len = 0;
@@ -242,7 +242,7 @@ void FrameFileWriter(void) {
     if (shutdown_now) {
       if (framefile.fd > -1)
         if (close(framefile.fd) == -1)
-          merror(MCP_ERROR, "Error closing chunk");
+          berror(err, "Error closing chunk");
       framefile.fd = -1;
 
       free(framefile.buffer);
@@ -254,7 +254,7 @@ void FrameFileWriter(void) {
 
     if ((write_len > 0) && (framefile.fd >= 0)) 
       if (write(framefile.fd, writeout_buffer, write_len) < 0)
-        merror(MCP_ERROR, "Error while writing frame");
+        berror(err, "Error while writing frame");
 
     usleep(400000);
   }

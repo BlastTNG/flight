@@ -73,27 +73,27 @@ int ISCInit(int which)
   if (which) {
     if (isc_log[which] == NULL)
       if ((isc_log[which] = fopen("/tmp/isc.1.log", "a")) == NULL)
-        merror(MCP_ERROR, "%s log fopen()", isc_which[which].who);
+        berror(err, "%s log fopen()", isc_which[which].who);
   } else {
     if (isc_log[which] == NULL)
       if ((isc_log[which] = fopen("/tmp/isc.0.log", "a")) == NULL)
-        merror(MCP_ERROR, "%s log fopen()", isc_which[which].who);
+        berror(err, "%s log fopen()", isc_which[which].who);
   }
   fprintf(isc_log[which], "This is %s.\n", isc_which[which].who);
 #endif
 
   sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (sock == -1) {
-    merror(MCP_ERROR, "%s socket()", isc_which[which].who);
+    berror(err, "%s socket()", isc_which[which].who);
     return -1;
   }
 
   n = 1;
   if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &n, sizeof(n)) != 0) {
-    merror(MCP_ERROR, "%s setsockopt()", isc_which[which].who);
+    berror(err, "%s setsockopt()", isc_which[which].who);
     if (sock != -1)
       if (close(sock) < 0)
-        merror(MCP_ERROR, "%s close()", isc_which[which].who);
+        berror(err, "%s close()", isc_which[which].who);
     return -1;
   }
 
@@ -103,14 +103,14 @@ int ISCInit(int which)
 
   if ((n = connect(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)))
       < 0) {
-    merror(MCP_ERROR, "%s connect()", isc_which[which].who);
+    berror(err, "%s connect()", isc_which[which].who);
     if (sock != -1)
       if (close(sock) < 0)
-        merror(MCP_ERROR, "%s close()", isc_which[which].who);
+        berror(err, "%s close()", isc_which[which].who);
     return -1;
   }
 
-  mprintf(MCP_INFO, "Connected to %s\n", isc_which[which].who);
+  bprintf(info, "Connected to %s\n", isc_which[which].who);
   CommandData.ISCState[which].shutdown = 0;
 
   ISCSentState[which] = CommandData.ISCState[which];
@@ -134,13 +134,13 @@ void IntegratingStarCamera(void* parameter)
   int n, save_image_state = 0;
 
   pthread_setspecific(identity, isc_which[which].what);
-  mprintf(MCP_STARTUP, "%s startup\n", isc_which[which].who);
+  bprintf(startup, "%s startup\n", isc_which[which].who);
 
   for (;;) {
     do {
       if (sock != -1)
         if (close(sock) < 0)
-          merror(MCP_ERROR, "%s close()", isc_which[which].who);
+          berror(err, "%s close()", isc_which[which].who);
 
       sock = ISCInit(which);
       if (sock == -1) {
@@ -170,7 +170,7 @@ void IntegratingStarCamera(void* parameter)
       if (n == -1 && errno == EINTR)
         continue;
       if (n == -1) {
-        merror(MCP_ERROR, "%s select()", isc_which[which].who);
+        berror(err, "%s select()", isc_which[which].who);
         continue;
       }
 
@@ -180,10 +180,10 @@ void IntegratingStarCamera(void* parameter)
         n = recv(sock, &ISCSolution[which][iscdata_index[which]],
             sizeof(struct ISCSolutionStruct), 0);
         if (n == -1) {
-          merror(MCP_ERROR, "%s recv()", isc_which[which].who);
+          berror(err, "%s recv()", isc_which[which].who);
           break;
         } else if (n < sizeof(struct ISCSolutionStruct)) {
-          mprintf(MCP_ERROR, "ISC: Expected %i but received %i bytes.\n",
+          bprintf(err, "ISC: Expected %i but received %i bytes.\n",
               sizeof(struct ISCSolutionStruct), n);
           break;
         }
@@ -254,10 +254,10 @@ void IntegratingStarCamera(void* parameter)
           n = send(sock, &CommandData.ISCState[which],
               sizeof(CommandData.ISCState[which]), 0);
           if (n == -1) {
-            merror(MCP_ERROR, "%s send()", isc_which[which].who);
+            berror(err, "%s send()", isc_which[which].who);
             break;
           } else if (n < sizeof(struct ISCStatusStruct)) {
-            mprintf(MCP_ERROR, "ISC: Expected %i but sent %i bytes.\n",
+            bprintf(err, "ISC: Expected %i but sent %i bytes.\n",
                 sizeof(struct ISCStatusStruct), n);
             break;
           }

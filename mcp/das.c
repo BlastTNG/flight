@@ -361,7 +361,7 @@ void BiasControl (unsigned short* RxFrame) {
     ch = 0;
   } else {
     ch = 0;
-    mprintf(MCP_ERROR, "ch is an impossible value in bias control\n");
+    bprintf(err, "ch is an impossible value in bias control\n");
   }
 
   /* Bias readback -- we wait a few seconds after finishing the write */

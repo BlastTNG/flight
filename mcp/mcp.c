@@ -38,6 +38,7 @@
 #include <sys/time.h>
 #include "bbc_pci.h"
 
+#include "blast.h"
 #include "command_struct.h"
 #include "crc.h"
 #include "mcp.h"
@@ -113,7 +114,7 @@ unsigned int tdrss_index = 0;
   - 4                /* marker again plus NUL */ \
 )
 
-void mputs(int flag, const char* message) {
+void mputs(blog_t flag, const char* message) {
   char buffer[MPRINT_BUFFER_SIZE];
   time_t t = time(NULL);
   struct tm now;
@@ -123,25 +124,25 @@ void mputs(int flag, const char* message) {
   char marker[4];
 
   switch(flag) {
-    case MCP_ERROR:
+    case err:
       strcpy(marker, "** ");
       break;
-    case MCP_FATAL:
+    case fatal:
       strcpy(marker, "!! ");
       break;
-    case MCP_INFO:
+    case info:
       strcpy(marker, "-- ");
       break;
-    case MCP_SCHED:
+    case sched:
       strcpy(marker, "## ");
       break;
-    case MCP_STARTUP:
+    case startup:
       strcpy(marker, ">> ");
       break;
-    case MCP_TFATAL:
+    case tfatal:
       strcpy(marker, "$$ ");
       break;
-    case MCP_WARNING:
+    case warning:
       strcpy(marker, "== ");
       break;
     default:
@@ -195,7 +196,7 @@ void mputs(int flag, const char* message) {
     }
   }
 
-  if (flag == MCP_FATAL) {
+  if (flag == fatal) {
     if (logfile != NULL) {
       fputs("!! Last error is FATAL.  Cannot continue.\n", logfile);
       fflush(logfile);
@@ -206,7 +207,7 @@ void mputs(int flag, const char* message) {
     _exit(1);
   }
 
-  if (flag == MCP_TFATAL) {
+  if (flag == tfatal) {
     if (logfile != NULL) {
       fprintf(logfile,
           "$$ Last error is THREAD FATAL.  Thread [%s] exits.\n",
@@ -221,39 +222,6 @@ void mputs(int flag, const char* message) {
   }
 }
 
-void mprintf(int flag, char* fmt, ...) {
-  char message[1024];
-  va_list argptr;
-
-  va_start(argptr, fmt);
-  vsnprintf(message, 1023, fmt, argptr);
-  va_end(argptr);
-
-  mputs(flag, message);
-}
-
-void merror(int flag, char* fmt, ...) {
-  char message[1024];
-  va_list argptr;
-  int error = errno;
-
-  va_start(argptr, fmt);
-  vsnprintf(message, 1023, fmt, argptr);
-  va_end(argptr);
-
-  /* add a colon */
-  strncat(message, ": ", 1023 - strlen(message));
-
-  /* ensure the string is null terminated */
-  message[1023] = '\0';
-
-  /* copy error message into remainder of string -- Note: sterror is reentrant
-   * despite what STRERROR(3) insinuates (and strerror_r is horribly b0rked) */
-  strcat(message, strerror(error));
-
-  mputs(flag, message);
-}
-
 void SensorReader(void) {
   int data;
   int nr;
@@ -262,7 +230,7 @@ void SensorReader(void) {
   FILE *stream;
 
   pthread_setspecific(identity, "sens");
-  mputs(MCP_STARTUP, "SensorReader startup\n");
+  bputs(startup, "SensorReader startup\n");
 
   while (1) {
     if ((stream = fopen("/sys/bus/i2c/devices/0-0290/temp1_input", "r"))
@@ -271,7 +239,7 @@ void SensorReader(void) {
         CommandData.temp1 = data / 10;
       fclose(stream);
     } else
-      merror(MCP_WARNING, "Cannot read temp1 from I2C bus");
+      berror(warning, "Cannot read temp1 from I2C bus");
 
     if ((stream = fopen("/sys/bus/i2c/devices/0-0290/temp2_input", "r"))
         != NULL) {
@@ -279,7 +247,7 @@ void SensorReader(void) {
         CommandData.temp2 = data / 10;
       fclose(stream);
     } else
-      merror(MCP_WARNING, "Cannot read temp2 from I2C bus");
+      berror(warning, "Cannot read temp2 from I2C bus");
 
     if ((stream = fopen("/sys/bus/i2c/devices/0-0290/temp3_input", "r"))
         != NULL) {
@@ -287,7 +255,7 @@ void SensorReader(void) {
         CommandData.temp3 = data / 10;
       fclose(stream);
     } else
-      merror(MCP_WARNING, "Cannot read temp3 from I2C bus");
+      berror(warning, "Cannot read temp3 from I2C bus");
 
     if ((stream = fopen("/sys/bus/i2c/devices/0-0290/fan3_input", "r"))
         != NULL) {
@@ -295,10 +263,10 @@ void SensorReader(void) {
         CommandData.fan = data;
       fclose(stream);
     } else
-      merror(MCP_WARNING, "Cannot read fan3 from I2C bus");
+      berror(warning, "Cannot read fan3 from I2C bus");
 
     if (statvfs("/data", &vfsbuf))
-      merror(MCP_WARNING, "Cannot stat filesystem");
+      berror(warning, "Cannot stat filesystem");
     else {
       /* vfsbuf.f_bavail is the # of blocks, the blocksize is vfsbuf.f_bsize
        * which, in this case is 4096 bytes, so CommandData.df ends up in units
@@ -447,10 +415,10 @@ int fill_Rx_frame(unsigned int in_data,
 
 void WatchDog (void) {
   pthread_setspecific(identity, "wdog");
-  mputs(MCP_STARTUP, "Watchdog startup\n");
+  bputs(startup, "Watchdog startup\n");
 
   if (ioperm(0x378, 0x0F, 1) != 0)
-    merror(MCP_TFATAL, "Error setting watchdog permissions");
+    berror(tfatal, "Error setting watchdog permissions");
   ioperm(0x80, 1, 1);
 
   for (;;) {
@@ -469,7 +437,7 @@ void write_to_biphase(unsigned short *RxFrame) {
   if (bi0_fp == -2) {
     bi0_fp = open("/dev/bi0_pci", O_RDWR);
     if (bi0_fp == -1)
-      merror(MCP_TFATAL, "Error opening biphase device");
+      berror(tfatal, "Error opening biphase device");
 
     for (i = 0; i < BI0_FRAME_SIZE; i++)
       nothing[i] = 0xEEEE;
@@ -481,10 +449,10 @@ void write_to_biphase(unsigned short *RxFrame) {
     RxFrame[0] = sync;
     sync = ~sync;
     if (write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short)) < 0)
-      merror(MCP_ERROR, "bi-phase write (RxFrame) failed");
+      berror(err, "bi-phase write (RxFrame) failed");
     if (write(bi0_fp, nothing,
           (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short)) < 0)
-      merror(MCP_ERROR, "bi-phase write (padding) failed");
+      berror(err, "bi-phase write (padding) failed");
     CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
   }
 }
@@ -497,7 +465,7 @@ void InitBi0Buffer() {
   for (i = 0; i<BI0_FRAME_BUFLEN; i++) {
     if ((bi0_buffer.framelist[i] = malloc(BiPhaseFrameWords *
             sizeof(unsigned short))) == NULL)
-      merror(MCP_FATAL, "Unable to malloc for bi-phase");
+      berror(fatal, "Unable to malloc for bi-phase");
   }
 }
 
@@ -527,7 +495,7 @@ void BiPhaseWriter(void) {
   int i_out, i_in;
 
   pthread_setspecific(identity, "bi0 ");
-  mputs(MCP_STARTUP, "Biphase writer startup\n");
+  bputs(startup, "Biphase writer startup\n");
 
   while (1) {
     i_in = bi0_buffer.i_in;
@@ -565,7 +533,7 @@ int AmISam(void) {
   char buffer[2];
 
   if (gethostname(buffer, 1) == -1 && errno != ENAMETOOLONG) {
-    merror(MCP_ERROR, "Unable to get hostname");
+    berror(err, "Unable to get hostname");
   }
 
   return (buffer[0] == 's') ? 1 : 0;
@@ -573,7 +541,7 @@ int AmISam(void) {
 
 /* Signal handler called when we get a hup, int or term */
 void CloseBBC(int signo) {
-  mprintf(MCP_ERROR, "Caught signal %i, closing BBC and Bi0", signo);
+  bprintf(err, "Caught signal %i, closing BBC and Bi0", signo);
   if (bi0_fp >= 0)
     close(bi0_fp);
   if (bbc_fp >= 0)
@@ -637,17 +605,20 @@ int main(int argc, char *argv[]) {
   pthread_setspecific(identity, "mcp ");
 
   if ((logfile = fopen("/data/etc/mcp.log", "a")) == NULL)
-    merror(MCP_ERROR, "Can't open log file");
+    berror(err, "Can't open log file");
   else
     fputs("----- LOG RESTART -----\n", logfile);
 
-  mputs(MCP_STARTUP, "MCP startup");
+  /* register the output function */
+  blog_use_func(mputs);
+
+  bputs(startup, "MCP startup");
 
   /* Watchdog */
   pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
 
   if ((bbc_fp = open("/dev/bbcpci", O_RDWR)) < 0)
-    merror(MCP_FATAL, "Error opening BBC");
+    berror(fatal, "Error opening BBC");
 
   /* Initialize the Ephemeris */
   ReductionInit();
@@ -688,38 +659,38 @@ int main(int argc, char *argv[]) {
 
   /* Allocate the local data buffers */
   if ((RxFrame = malloc(BiPhaseFrameSize)) == NULL)
-    merror(MCP_FATAL, "Unable to malloc RxFrame");
+    berror(fatal, "Unable to malloc RxFrame");
 
   for (i = 0; i < 3; ++i)
     if ((tdrss_data[i] = (unsigned short *)malloc(BiPhaseFrameSize)) == NULL)
-      merror(MCP_FATAL, "Unable to malloc tdrss data buffer");
+      berror(fatal, "Unable to malloc tdrss data buffer");
 
   for (i = 0; i < FAST_PER_SLOW; ++i)
     if ((slow_data[i] = malloc(slowsPerBi0Frame * sizeof(unsigned short)))
         == NULL)
-      merror(MCP_FATAL, "Unable to malloc slow data buffer");
+      berror(fatal, "Unable to malloc slow data buffer");
 
   CommandData.tdrssVeto = 0;
 #ifndef BOLOTEST
   if (CommandData.tdrssVeto)
-    mputs(MCP_WARNING, "The TDRSS writer has been VETOed.");
-//  else
-//`    pthread_create(&tdrss_id, NULL, (void*)&TDRSSWriter, NULL);
+    bputs(warning, "The TDRSS writer has been VETOed.");
+  else
+    pthread_create(&tdrss_id, NULL, (void*)&TDRSSWriter, NULL);
 #endif
 
   /* Find out whether I'm frodo or sam */
   SamIAm = AmISam();
 
   if (SamIAm)
-    mputs(MCP_INFO, "I am Sam.\n");
+    bputs(info, "I am Sam.\n");
   else 
-    mputs(MCP_INFO, "I am not Sam.\n");
+    bputs(info, "I am not Sam.\n");
 
   InitSched();
 
-  mputs(MCP_INFO, "Finished Initialisation, waiting for BBC to come up.\n");
+  bputs(info, "Finished Initialisation, waiting for BBC to come up.\n");
 
-  mputs(MCP_INFO, "BBC is up.\n");
+  bputs(info, "BBC is up.\n");
 
 #ifndef BOLOTEST
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
@@ -730,7 +701,7 @@ int main(int argc, char *argv[]) {
   while (1) {
 
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0) 
-      merror(MCP_ERROR, "Error on BBC read");
+      berror(err, "Error on BBC read");
 
 
     //if(GET_NODE(in_data) == 6 && GET_CH(in_data) == 6 && GET_STORE(in_data))
@@ -754,7 +725,7 @@ int main(int argc, char *argv[]) {
     // END DEBUG TOOL
 
     if (!fill_Rx_frame(in_data, RxFrame))
-      mputs(MCP_ERROR, "Unrecognised word received from BBC");
+      bputs(err, "Unrecognised word received from BBC");
 
     if (IsNewFrame(in_data)) {
       if (StartupVeto > 1)
@@ -771,12 +742,11 @@ int main(int argc, char *argv[]) {
 
         /* Frame sequencing check */
         if (StartupVeto) {
-          mputs(MCP_INFO, "Startup Veto Ends\n");
+          bputs(info, "Startup Veto Ends\n");
           StartupVeto = 0;
         } else if (RxFrame[3] != (RxFrameIndex + 1) % FAST_PER_SLOW
             && RxFrameIndex >= 0)
-          mprintf(MCP_ERROR,
-              "Frame sequencing error detected: wanted %i, got %i\n",
+          bprintf(err, "Frame sequencing error detected: wanted %i, got %i\n",
               RxFrameIndex + 1, RxFrame[3]);
         RxFrameIndex = RxFrame[3];
 
