@@ -39,6 +39,7 @@
 #include "bbc_pci.h"
 
 #include "blast.h"
+#include "command_list.h"
 #include "command_struct.h"
 #include "crc.h"
 #include "mcp.h"
@@ -632,6 +633,7 @@ int main(int argc, char *argv[]) {
 
   MakeAddressLookups();
 
+  bprintf(info, "MCP Command List Version: %s", command_list_serial);
 #ifdef USE_FIFO_CMD
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, NULL);
 #else
@@ -724,7 +726,7 @@ int main(int argc, char *argv[]) {
     // END DEBUG TOOL
 
     if (!fill_Rx_frame(in_data, RxFrame))
-      bputs(err, "Unrecognised word received from BBC");
+      bprintf(err, "Unrecognised word received from BBC (%08x)", in_data);
 
     if (IsNewFrame(in_data)) {
       if (StartupVeto > 1)
