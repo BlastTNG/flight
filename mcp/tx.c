@@ -37,14 +37,14 @@
 #define LOKMOT_IN    0x80  /* N0G3 */
 
 /* Cryostat digital signals (G2 and G3 outputs) */
-#define CRYO_COLDPLATE_ON    0x01 /* N3G3 - cryoout3 */
-#define CRYO_COLDPLATE_OFF   0x02 /* N3G3 */
-#define CRYO_CALIBRATOR_ON   0x04 /* N3G3 */
-#define CRYO_CALIBRATOR_OFF  0x08 /* N3G3 */
-#define CRYO_HELIUMLEVEL_ON  0x10 /* N3G3 */
-#define CRYO_HELIUMLEVEL_OFF 0x20 /* N3G3 */
-#define CRYO_CHARCOAL_ON     0x40 /* N3G3 */
-#define CRYO_CHARCOAL_OFF    0x80 /* N3G3 */
+#define CRYO_COLDPLATE_ON    0x10 /* N3G3 - cryoout3 */
+#define CRYO_COLDPLATE_OFF   0x20 /* N3G3 */
+#define CRYO_CALIBRATOR_ON   0x40 /* N3G3 */
+#define CRYO_CALIBRATOR_OFF  0x80 /* N3G3 */
+#define CRYO_HELIUMLEVEL_ON  0x01 /* N3G3 */
+#define CRYO_HELIUMLEVEL_OFF 0x02 /* N3G3 */
+#define CRYO_CHARCOAL_ON     0x04 /* N3G3 */
+#define CRYO_CHARCOAL_OFF    0x08 /* N3G3 */
 
 #define CRYO_LNVALVE_ON      0x01 /* N3G2 - cryoout2 */
 #define CRYO_LNVALVE_OPEN    0x04 /* N3G2 */
