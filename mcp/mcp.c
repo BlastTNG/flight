@@ -25,14 +25,15 @@
 #include "starpos.h"
 
 #define ARIEN "192.168.1.99"
+#define ARIEN_PORT 8645
 
 #define BBC_EOF      (0xffff)
 #define BBC_BAD_DATA (0xfffffff0)
 
 #ifdef BOLOTEST
-  #define FRAME_MARGIN (-12)
+#define FRAME_MARGIN (-12)
 #else
-  #define FRAME_MARGIN (-12)
+#define FRAME_MARGIN (-12)
 #endif
 
 #define BI0_FRAME_BUFLEN (40)
@@ -74,7 +75,7 @@ void MakeTxFrame(void);
 /* Functions in the file 'geomag.c' */
 void MagModelInit(int maxdeg);
 void GetMagModel(float alt, float glat, float glon, float time,
-                 float *dec, float *dip, float *ti, float *gv);
+    float *dec, float *dip, float *ti, float *gv);
 
 void InitSched();
 
@@ -119,12 +120,12 @@ void SigPipe(int signal) {
   pthread_exit(NULL);
 }
 
-/************************************************************************\
-|*                                                                      *|
-|*   MagRead:  readout magnetometer, subtracting bais from x and        *|
-|*             y and determine angle                                    *|
-|*                                                                      *|
-\************************************************************************/
+/************************************************************************
+ *                                                                      *
+ *   MagRead:  readout magnetometer, subtracting bais from x and        *
+ *             y and determine angle                                    *
+ *                                                                      *
+ ************************************************************************/
 double MagRead(unsigned short *Rxframe) {
   static int i_mag_x = -1;
   static int i_mag_y = -1;
@@ -209,17 +210,17 @@ void GetACS(unsigned short *Rxframe){
   }
 
   rx_frame_index = ((Rxframe[1] & 0x0000ffff) |
-                    (Rxframe[2] & 0x0000ffff) << 16);
-  
+      (Rxframe[2] & 0x0000ffff) << 16);
+
   enc_elev = ((double)Rxframe[i_enc_elev] *
-  	      (-360.0 / 65536.0) + ENC_ELEV_OFFSET);
+      (-360.0 / 65536.0) + ENC_ELEV_OFFSET);
 
   gyro1 = (double)(Rxframe[i_GYRO1]-25794.0)*0.00091506980885;
   gyro2 = (double)(Rxframe[i_GYRO2]-25535.0)*0.00091506980885;
   gyro3 = (double)(Rxframe[i_GYRO3]-25600.0)*0.00091506980885;
 
   i_ss = ss_index;
-  
+
   ACSData.t = time(NULL);
   ACSData.mcp_frame = rx_frame_index;
   ACSData.mag_az = MagRead(Rxframe);
@@ -243,60 +244,62 @@ void SunSensor(void) {
    * SIGPIPEs which are raised when the ssc drops the connection */
   signal(SIGPIPE, SigPipe);
 
-  /* create an empty socket connection */
-  sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+  while (1) {
+    /* create an empty socket connection */
+    sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-  /* set options */
-  n = 1;
-  setsockopt(sock, SOL_TCP, TCP_NODELAY, &n, sizeof(n));
+    /* set options */
+    n = 1;
+    setsockopt(sock, SOL_TCP, TCP_NODELAY, &n, sizeof(n));
 
-  /* Connect to Arien */
-  inet_aton(ARIEN, &addr.sin_addr);
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(2718);
-  fprintf(stderr, "Attempting to connect to Arien...\n");
-  while (connect(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)) < 0) {
-    fprintf(stderr, "Connection attempt to Arien failed.\n");
-    sleep(1);
+    /* Connect to Arien */
+    inet_aton(ARIEN, &addr.sin_addr);
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(ARIEN_PORT);
     fprintf(stderr, "Attempting to connect to Arien...\n");
-  };
+    while ((n = connect(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)))
+        < 0) {
+      fprintf(stderr, "Connection attempt to Arien failed [%i].\n", n);
+      sleep(1);
+      fprintf(stderr, "Attempting to connect to Arien...\n");
+    };
+    fprintf(stderr, "Connect returned: %i\n", n);
 
-  fprintf(stderr, "Connected to Arien\n");
-  sigPipeRaised = n = 0;
-  lastIndex = RxframeIndex;
-  while (n != -1) {
-    curIndex = RxframeIndex;
-    if (curIndex < lastIndex) {
-      attempts = 0;
-      //fprintf(stderr, "P\n");
-      send(sock, P, 2, 0);
+    fprintf(stderr, "Connected to Arien\n");
+    sigPipeRaised = n = 0;
+    lastIndex = RxframeIndex;
+    while (n != -1) {
+      curIndex = RxframeIndex;
+      if (curIndex < lastIndex) {
+        attempts = 0;
+        //fprintf(stderr, "P\n");
+        send(sock, P, 2, 0);
 
-      do {
-        n = recv(sock, buff, (socklen_t)255, MSG_DONTWAIT);
-        if (n == -1) {
-          attempts++;
-          usleep(10);
-        }
-      } while ((n == -1) && (attempts < 200));
+        do {
+          n = recv(sock, buff, (socklen_t)255, MSG_DONTWAIT);
+          if (n == -1) {
+            attempts++;
+            usleep(10);
+          }
+        } while ((n == -1) && (attempts < 200));
 
-      if (n != -1) {
-        buff[n] = 0;
-        if (sscanf(buff, "%*f %*f %i %i %i", &ars, &ers, &prin) == 3) {
-          SunSensorData[ss_index].raw_el = (short int)(ars);
-          SunSensorData[ss_index].raw_az = (short int)(ers);
-          SunSensorData[ss_index].prin = prin;
-          ss_index = (ss_index + 1) % 3;
-          fprintf(stderr, "%i %i  %i  %i\n", attempts * 10, ars, ers, prin);
+        if (n != -1) {
+          buff[n] = 0;
+          if (sscanf(buff, "%*s %*s %i %i %i", &ars, &ers, &prin) == 3) {
+            SunSensorData[ss_index].raw_el = (short int)(ars);
+            SunSensorData[ss_index].raw_az = (short int)(ers);
+            SunSensorData[ss_index].prin = prin;
+            ss_index = (ss_index + 1) % 3;
+            fprintf(stderr, "%i %i  %i  %i\n", attempts * 10, ars, ers, prin);
+          }
         }
       }
+
+      lastIndex = curIndex;
     }
 
-    lastIndex = curIndex;
+    fprintf(stderr, "Connection to Arien timed out.\n");
   }
-
-  /* connection timed out .. raise SIGPIPE to force a restart */
-  fprintf(stderr, "Connection to Arien timed out.\n");
-  raise(SIGPIPE);
 }
 
 void FillSlowDL(unsigned short *Rxframe) {
@@ -534,8 +537,8 @@ int main(int argc, char *argv[]) {
   //Initialize the Ephemeris
   ReductionInit();
 
-//  pthread_create(&starfind_id, NULL, (void*)&starfind, NULL);
-   
+  //  pthread_create(&starfind_id, NULL, (void*)&starfind, NULL);
+
   InitCommandData();
   pthread_mutex_init(&mutex, NULL);
 
@@ -546,9 +549,9 @@ int main(int argc, char *argv[]) {
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPortC2, NULL);
 
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS,NULL);
-  
+
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
-  //pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
+  //  pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
 
   InitBi0Buffer();
   pthread_create(&bi0_id, NULL, (void*)&BiphaseWriter, NULL);
@@ -590,7 +593,7 @@ int main(int argc, char *argv[]) {
   InitializeDirfile(argv[1][0]);
 
   InitSched();
-  
+
   pthread_create(&disk_id, NULL, (void*)&DirFileWriter, NULL);
 
   do_Tx_frame(bbc_fp, Txframe, slowTxFields, Rxframe, 0);
@@ -646,9 +649,9 @@ int main(int argc, char *argv[]) {
         GetACS(Rxframe);
         Pointing();
 #endif
-        
+
         RxframeIndex = Rxframe[3];
-        
+
 #ifndef BOLOTEST
         PushBi0Buffer(Rxframe);
 #endif
