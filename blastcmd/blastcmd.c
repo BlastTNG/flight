@@ -135,7 +135,9 @@ void CommandList(void)
   exit(1);
 }
 
-void bc_close() {
+void bc_close(int fd) {
+  lockf(fd, F_ULOCK, 0);
+  close(fd);
 }
 
 int bc_setserial(void) {
@@ -176,12 +178,16 @@ int bc_setserial(void) {
     return -1;
   }
 
+  if((lockf(fd, F_LOCK, 0)) != 0) {
+    perror("Unable to get lock on serial port");
+    return -1;
+  }
+
   return fd;
 }
 
-void WriteBuffer(unsigned char *buffer, int len, unsigned int *i_ack) {
+void WriteBuffer(int tty_fd, unsigned char *buffer, int len, unsigned int *i_ack) {
   int i, n;
-  int tty_fd;
   char buf[3];
 
   if (verbose) {
@@ -190,12 +196,7 @@ void WriteBuffer(unsigned char *buffer, int len, unsigned int *i_ack) {
     }
     printf("\n");
   }
-
-  if ((tty_fd = bc_setserial()) < 0) {
-    perror("Unable to open serial port");
-    exit(2);
-  }
-
+  
   write(tty_fd, buffer, len);
 
   /* Read acknowledgement */
@@ -205,8 +206,6 @@ void WriteBuffer(unsigned char *buffer, int len, unsigned int *i_ack) {
     *i_ack = (unsigned int)buf[2];
   else
     *i_ack = 0x0f;
-
-  close(tty_fd);
 }
 
 void ConfirmSend() {
@@ -266,6 +265,7 @@ void McommandUSAGE(int mcmd) {
 
 void SendScommand(int i_cmd, int t_link, int t_route, unsigned int *i_ack, char conf) {
   unsigned char buffer[7];
+  int tty_fd;
 
   if (!conf)
     ConfirmSingleSend(i_cmd);
@@ -278,7 +278,14 @@ void SendScommand(int i_cmd, int t_link, int t_route, unsigned int *i_ack, char 
   buffer[5] = 0xa0;
   buffer[6] = 0x03;
 
-  WriteBuffer(buffer, 7, i_ack);
+  if ((tty_fd = bc_setserial()) < 0) {
+    perror("Unable to open serial port");
+    exit(2);
+  }
+
+  WriteBuffer(tty_fd, buffer, 7, i_ack);
+
+  bc_close(tty_fd);
 }
 
 void SendMcommand(int i_cmd, int t_link, int t_route, char *parms[], int np,
@@ -292,6 +299,7 @@ void SendMcommand(int i_cmd, int t_link, int t_route, char *parms[], int np,
   unsigned short *dataqbuffer;
   int i;
   time_t t;
+  int tty_fd;
 
   if (np != mcommands[i_cmd].numparams)
     McommandUSAGE(i_cmd);
@@ -367,25 +375,31 @@ void SendMcommand(int i_cmd, int t_link, int t_route, char *parms[], int np,
   buffer[3] = 2;
   buffer[6] = 0x03;
 
+  if ((tty_fd = bc_setserial()) < 0) {
+    perror("Unable to open serial port");
+    exit(2);
+  }
+
   /* Send command */
   buffer[4] = mcommands[i_cmd].command;
   buffer[5] = 0x80 | (unsigned char)(t & 0x1F); /* t gives unique sync number */
   /* to this multi command */
-  WriteBuffer(buffer, 7, i_ack);
+  WriteBuffer(tty_fd, buffer, 7, i_ack);
 
   /* Send parameters */
   dataqbuffer = (unsigned short *) (buffer + 4);
   for (i = 0; i < dataqsize; i++) {
     dataq[i] &= 0x7fff; /* first bit must be a zero */
     *dataqbuffer = dataq[i];
-    WriteBuffer(buffer, 7, i_ack);
+    WriteBuffer(tty_fd, buffer, 7, i_ack);
   }
 
   /* Send command footer */
   buffer[4] = mcommands[i_cmd].command;
   buffer[5] = 0xc0 | (unsigned char)(t & 0x1F);
-  WriteBuffer(buffer, 7, i_ack);
+  WriteBuffer(tty_fd, buffer, 7, i_ack);
 
+  bc_close(tty_fd);
   free(buffer);
 }
 
@@ -494,8 +508,6 @@ int main(int argc, char *argv[]) {
 
   if(i >= argc)
     USAGE(0);
-
-  atexit(bc_close);
 
   /* Look for single packet commands */
   for (i_cmd = 0; i_cmd < N_SCOMMANDS; i_cmd++) {
