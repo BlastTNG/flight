@@ -29,6 +29,10 @@
 #ifndef NARSIL_H
 #define NARSIL_H
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "command_list.h"
 
 #include <qvariant.h>

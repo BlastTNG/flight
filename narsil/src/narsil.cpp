@@ -62,7 +62,6 @@
 
 #define FIXEDFONT "courier"
 
-#define INCLUDE_VARS
 #include "narsil.h"
 #include "kstfile.h"
 #include "doubleentry.h"
@@ -73,10 +72,11 @@
 #define SPACING 3
 
 #define DEF_CURFILE CUR_DIR "/defile.cur"
-#define LOGFILE DATA_DIR "/log.txt"
-#define LOGFILEDIR DATA_DIR "/log/"
+#define LOGFILE DATA_ETC_NARSIL_DIR "/log.txt"
+#define LOGFILEDIR DATA_ETC_NARSIL_DIR "/log/"
 
 #define BLASTCMDFILE BLAST_CMD
+#define DATA_DIR DATA_ETC_NARSIL_DIR
 
 /* Defaults class holds the default parameter values */
 Defaults::Defaults()
@@ -1278,8 +1278,8 @@ int main(int argc, char* argv[]) {
 
   if (argc > 1) {
     printf(
-        "Narsil doesn't take arguments.  It was compiled on " __DATE__
-        "\nand is copyright (C) 2002-2004 University of Toronto.\n\n"
+        "Narsil " VERSION " doesn't take arguments.  It was compiled on "
+        __DATE__ "\nand is copyright (C) 2002-2004 University of Toronto.\n\n"
         "This program comes with NO WARRANTY, not even for MERCHANTABILITY or "
         "FITNESS\n"
         "FOR A PARTICULAR PURPOSE. You may redistribute it under the terms of "
