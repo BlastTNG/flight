@@ -516,7 +516,10 @@ void ChargeController(void) {
   static struct NiosStruct *dpcuRegAddr;
   static struct NiosStruct *dpcuTrimAddr;
   static struct NiosStruct *dpcuAutoAddr;
-
+  static struct BiPhaseStruct *tDasBatAddr, *tAcsBatAddr;
+  double apcu_control, T, V;
+  double dpcu_control;
+  
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
@@ -526,12 +529,36 @@ void ChargeController(void) {
     dpcuRegAddr = GetNiosAddr("dpcu_reg");
     dpcuTrimAddr = GetNiosAddr("dpcu_trim");
     dpcuAutoAddr = GetNiosAddr("dpcu_auto");
+    tDasBatAddr = GetBiPhaseAddr("t_batt_das");
+    tAcsBatAddr = GetBiPhaseAddr("t_batt_acs");
   }
 
-  WriteData(apcuRegAddr, CommandData.apcu_reg, NIOS_QUEUE);
+  if (CommandData.apcu_auto) {
+    T = I2T_M*slow_data[tAcsBatAddr->index][tAcsBatAddr->channel] + I2T_B;
+    if (T<-60) T = 50; // if disconnected, assume hot.
+    V = 30.18 - 0.0436*T - exp((T-35.0)*0.1) + CommandData.apcu_trim;
+    apcu_control = (V - 28.0209)/0.02402664;
+  } else {
+    apcu_control = (CommandData.apcu_reg - 28.0209)/0.02402664;
+  }
+  if (apcu_control>100) apcu_control = 100;
+  if (apcu_control<0) apcu_control = 0;
+
+  if (CommandData.dpcu_auto) {
+    T = I2T_M*slow_data[tDasBatAddr->index][tDasBatAddr->channel] + I2T_B;
+    if (T<-60) T = 50; // if disconnected, assume hot.
+    V = 30.18 - 0.0436*T - exp((T-35.0)*0.1) + CommandData.dpcu_trim;
+    dpcu_control = (V - 28.0209)/0.02402664;
+  } else {
+    dpcu_control = (CommandData.dpcu_reg - 28.0209)/0.02402664;;
+  }
+  if (dpcu_control>100) dpcu_control = 100;
+  if (dpcu_control<0) dpcu_control = 0;
+
+  WriteData(apcuRegAddr, (int)apcu_control, NIOS_QUEUE);
   WriteData(apcuTrimAddr, CommandData.apcu_trim, NIOS_QUEUE);
   WriteData(apcuAutoAddr, CommandData.apcu_auto, NIOS_QUEUE);
-  WriteData(dpcuRegAddr, CommandData.dpcu_reg, NIOS_QUEUE);
+  WriteData(dpcuRegAddr, (int)apcu_control, NIOS_QUEUE);
   WriteData(dpcuTrimAddr, CommandData.dpcu_trim, NIOS_QUEUE);
   WriteData(dpcuAutoAddr, CommandData.dpcu_auto, NIOS_FLUSH);
 }

@@ -801,14 +801,14 @@ void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues,
   else if (command == plugh) /* A hollow voice says "Plugh". */
     CommandData.plover = ivalues[0];
   else if (command == apcu_charge) {
-    CommandData.apcu_reg = (rvalues[0] - 28.0209) / 0.0163818; // v_topoff
-    CommandData.dpcu_auto = 1;
+    CommandData.apcu_reg = rvalues[0]; // v_topoff, in V
+    CommandData.apcu_auto = 1;
     if (CommandData.apcu_reg < 0)
       CommandData.apcu_reg = 0;
     if (CommandData.apcu_reg > 100)
       CommandData.apcu_reg = 100;
   } else if (command == dpcu_charge) {
-    CommandData.dpcu_reg = (rvalues[0] - 28.0209) / 0.0163818; // v_topoff
+    CommandData.dpcu_reg = rvalues[0]; // v_topoff, in V
     CommandData.dpcu_auto = 0;
     if (CommandData.dpcu_reg < 0)
       CommandData.dpcu_reg = 0;
@@ -819,9 +819,8 @@ void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues,
     CommandData.apcu_auto = 1;
   } else if (command == auto_dpcu) {
     CommandData.dpcu_trim = rvalues[0];
-    CommandData.apcu_auto = 1;
+    CommandData.dpcu_auto = 1;
  
-
   /***************************************/
   /*************** Bias  *****************/
   } else if (command == bias1_level) {    /* Set bias 1 */
