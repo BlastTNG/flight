@@ -97,7 +97,7 @@ void mputs(int flag, const char* message) {
   struct tm now;
   char local[1024];
   char *bufstart, *bufptr, *lastchr, *firstchr;
-  int len, pid;
+  int len;
   char marker[4];
 
   switch(flag) {
