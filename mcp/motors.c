@@ -959,8 +959,8 @@ void DoNewCapMode() {
       az_distance = next_right - left;
       t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * 100.16);
       speed_el = CommandData.pointing_mode.del/t;
-      bprintf(info, "L: el: %g targ_el: %g %g\n", el, targ_el, el-targ_el);
-      targ_el = el + CommandData.pointing_mode.del*el_dir;
+      bprintf(info, "ppp L: el: %g targ_el: %g\n", el - cel, targ_el);
+      targ_el = el - cel + CommandData.pointing_mode.del*el_dir;
     }
     az_dir = 1;
   } else if (az>right) {
@@ -968,8 +968,8 @@ void DoNewCapMode() {
       az_distance = right - next_left;
       t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * 100.16);
       speed_el = CommandData.pointing_mode.del/t;
-      bprintf(info, "R: el: %g targ_el: %g\n", el, targ_el);
-      targ_el = el + CommandData.pointing_mode.del*el_dir;
+      bprintf(info, "ppp R: el: %g targ_el: %g\n", el - cel, targ_el);
+      targ_el = el - cel + CommandData.pointing_mode.del*el_dir;
     }
     az_dir = -1;
   }
