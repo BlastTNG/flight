@@ -113,6 +113,7 @@ int FieldSize (char type, const char* field)
       return 2;
     default:
       bprintf(fatal, "bad type in channel spec: %s %c\n", field, type);
+      exit(1); /* can't get here */
   }
 }
 
