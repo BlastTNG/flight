@@ -822,6 +822,7 @@ void MainForm::UpdateData() {
   // Loop through all the data fields we need to read
   for (currLabel = LabelInfo.first(); currLabel != NULL;
       currLabel = LabelInfo.next()) {
+    usleep(10000);
     switch (currLabel->datumtype) {
       case NUMBER:
         currNumber = NumberInfo.at(currLabel->index);
