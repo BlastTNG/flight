@@ -1278,7 +1278,6 @@ void DoScanMode() {
 
   CommandData.pointing_mode.az1 = caz;
   CommandData.pointing_mode.az2 = caz;
-  printf("el: %g el1: %g el2: %g\n", el, el1, el2);
   
   // check for out of range in el
   if (el > el1+EL_BORDER) {

@@ -576,6 +576,8 @@ double getlst(time_t t, double lon) {
 
   //t -= (mktime(&gmt) - timezone); 
 
+  //printf("%ld %ld %ld %g\n", t, S.t0, t - S.t0);
+  
   t -= S.t0; // S.t0 is from first line in schedule file: see sched.c
   
   t *= 1.002737909; // gst in seconds
