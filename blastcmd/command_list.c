@@ -109,7 +109,23 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(isc_save_images), "turn on saving of images", GR_ISC_HOUSE},
   {COMMAND(isc_discard_images), "turn off saving of images", GR_ISC_HOUSE},
   {COMMAND(isc_full_screen), "show full screen", GR_ISC_HOUSE},
-  {COMMAND(isc_auto_focus), "autofocus camera", GR_ISC_HOUSE}
+  {COMMAND(isc_auto_focus), "autofocus camera", GR_ISC_HOUSE},
+
+  {COMMAND(osc_run), "start automatic image capture (normal mode)",
+    GR_ISC_HOUSE},
+  {COMMAND(osc_pause), "pause image capture", GR_OSC_HOUSE},
+  {COMMAND(osc_reboot), "ask for software reboot of OSC computer",
+    GR_OSC_HOUSE | CONFIRM},
+  {COMMAND(osc_shutdown), "ask for shutdown of OSC computer", GR_OSC_HOUSE |
+    CONFIRM},
+  {COMMAND(osc_cam_cycle), "cycle star camera CCD power", GR_OSC_HOUSE},
+  {COMMAND(osc_abort), "abort current solution attempt", GR_OSC_HOUSE},
+  {COMMAND(osc_reconnect),
+    "tell mcp to try and establish a new connection with OSC", GR_OSC_HOUSE},
+  {COMMAND(osc_save_images), "turn on saving of images", GR_OSC_HOUSE},
+  {COMMAND(osc_discard_images), "turn off saving of images", GR_OSC_HOUSE},
+  {COMMAND(osc_full_screen), "show full screen", GR_OSC_HOUSE},
+  {COMMAND(osc_auto_focus), "autofocus camera", GR_OSC_HOUSE}
 };
 
 /* parameter type:
