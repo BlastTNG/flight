@@ -37,7 +37,8 @@ const char *GroupNames[N_GROUPS] = {
   "Pointing Mode",        "Balance System",    "Bias",
   "Pointing Sensors",     "Cooling System",    "Cal Lamp",
   "Pointing Motor Gains", "Electronics Heat",  "Cryo Heat",
-  "Inner Frame Lock",     "Miscellaneous",     "Cryo Control"
+  "Inner Frame Lock",     "Miscellaneous",     "Cryo Control",
+  "ISC Commanding"
 };
 
 struct scom {
