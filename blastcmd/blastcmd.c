@@ -21,7 +21,7 @@ double round(double x);
 #  define LIB_DIR "/data/etc/blastcmd"
 #endif
 
-#define INPUT_TTY "/dev/ttyS0"
+#define INPUT_TTY "/dev/ttyS1"
 #define LOGFILE LIB_DIR "/log.txt"
 
 #define LINK_DEFAULT 0x01    /* Default link is TDRSS */
