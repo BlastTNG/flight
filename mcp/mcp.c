@@ -114,7 +114,7 @@ unsigned int tdrss_index = 0;
   - 4                /* marker again plus NUL */ \
 )
 
-void mputs(blog_t flag, const char* message) {
+void mputs(buos_t flag, const char* message) {
   char buffer[MPRINT_BUFFER_SIZE];
   time_t t = time(NULL);
   struct tm now;
@@ -610,7 +610,7 @@ int main(int argc, char *argv[]) {
     fputs("----- LOG RESTART -----\n", logfile);
 
   /* register the output function */
-  blog_use_func(mputs);
+  buos_use_func(mputs);
 
   bputs(startup, "MCP startup");
 

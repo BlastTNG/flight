@@ -77,7 +77,7 @@ struct rc_struct rc = {
 sigset_t signals;
 
 /* filters info messages out of output when appropriate */
-void dputs(blog_t level, const char* string)
+void dputs(buos_t level, const char* string)
 {
   if (rc.daemonise && !rc.force_stdio && level != info)
     bputs_syslog(level, string);
@@ -625,7 +625,7 @@ int main (int argc, char** argv)
   pthread_t write_thread;
 
   /* set up our outputs */
-  blog_use_func(dputs);
+  buos_use_func(dputs);
 
   /* fill rc struct from command line */
   ParseCommandLine(argc, argv, &rc);
