@@ -1475,6 +1475,14 @@ void InitCommandData() {
   CommandData.Cryo.BDAGain.SP = 21750;
   CommandData.Cryo.BDAFiltLen = 500;
 
+  CommandData.Cryo.potvalve_on = 0;
+  CommandData.Cryo.potvalve_open = 0;
+  CommandData.Cryo.potvalve_close = 0;
+  CommandData.Cryo.lhevalve_on = 0;
+  CommandData.Cryo.lvalve_open = 0;
+  CommandData.Cryo.lvalve_close = 0;
+  CommandData.Cryo.lnvalve_on = 0;
+
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
     bprintf(warning, "prev_status: Wanted %i bytes but got %i.\n",
@@ -1572,13 +1580,6 @@ void InitCommandData() {
   CommandData.Cryo.heatSwitch = 0;
   CommandData.Cryo.CryoSparePWM = 0;
   CommandData.Cryo.calibrator = off;
-  CommandData.Cryo.potvalve_on = 0;
-  CommandData.Cryo.potvalve_open = 0;
-  CommandData.Cryo.potvalve_close = 0;
-  CommandData.Cryo.lhevalve_on = 0;
-  CommandData.Cryo.lvalve_open = 0;
-  CommandData.Cryo.lvalve_close = 0;
-  CommandData.Cryo.lnvalve_on = 0;
 
   CommandData.Cryo.JFETHeat = 0;
   CommandData.Cryo.autoJFETheat = 1;
