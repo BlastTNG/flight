@@ -366,6 +366,7 @@ void InitialiseDirFile(int reset)
   n_fast = 0;
   sprintf(gpb, "%s/FASTSAMP", rc.dirfile);
   normal_fast[n_fast].size = 2; 
+
   if (rc.resume_at >= 0) {
     /* append to file */
     if ((normal_fast[n_fast].fp = open(gpb, O_WRONLY)) == -1) {
@@ -472,6 +473,7 @@ void InitialiseDirFile(int reset)
       normal_fast[n_fast].size = FieldSize(FastChList[i].type,
           FastChList[i].field);
       sprintf(gpb, "%s/%s", rc.dirfile, FastChList[i].field);
+
       if (rc.resume_at >= 0) {
         /* append to file */
         if ((normal_fast[n_fast].fp = open(gpb, O_WRONLY)) == -1) {
@@ -527,6 +529,7 @@ void InitialiseDirFile(int reset)
       bolo_fields[i][j].size = 2;
       sprintf(field, "n%dc%d", i + 5, j);
       sprintf(gpb, "%s/%s", rc.dirfile, field);
+
       if (rc.resume_at >= 0) {
         /* append to file */
         if ((bolo_fields[i][j].fp = open(gpb, O_WRONLY)) == -1) {
@@ -610,8 +613,8 @@ void CleanUp(void)
   for(i = 0; i < N_FASTCHLIST; ++i) {
     if (strcmp(FastChList[i].field, "n5c0lo") == 0)
       break;
-    close(normal_fast[n_fast].fp);
-    free(normal_fast[n_fast].b);
+    close(normal_fast[i].fp);
+    free(normal_fast[i].b);
   }
 
   for (i = 0; i < DAS_CARDS; i++)

@@ -37,7 +37,7 @@
 
 #define VERSION_MAJOR    "1"
 #define VERSION_MINOR    "0"
-#define VERSION_REVISION "6"
+#define VERSION_REVISION "7"
 #define VERSION VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION 
 
 #define DEFAULT_CURFILE "/data/etc/defile.cur"
@@ -316,10 +316,10 @@ int StaticSourcePart(char* output, const char* source, chunkindex_t* value)
       number += (*ptr - '0') << 4 * counter++;
       *ptr = '\0';
     } else if (*ptr >= 'a' && *ptr <= 'f') {
-      number += (*ptr - 'a') << 4 * counter++;
+      number += (*ptr - 'a' + 10) << 4 * counter++;
       *ptr = '\0';
     } else if (*ptr >= 'A' && *ptr <= 'F') {
-      number += (*ptr - 'A') << 4 * counter++;
+      number += (*ptr - 'A' + 10) << 4 * counter++;
       *ptr = '\0';
     } else
       break;
