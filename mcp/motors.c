@@ -865,13 +865,13 @@ void DoNewCapMode() {
   double next_left, next_right, az_distance;
   double az, az2, el, el1, el2;
   double daz_dt, del_dt;
-  double correction;
   double lst;
-  double v_az, v_el, t;
+  double v_az, t=1;
   int i_point;
+  int new_step = 0;
 
   static double last_X=0, last_Y=0, last_w=0;
-  static double az_dir = 0, el_dir = 1, speed_el = 0;
+  static double az_dir = 0, el_dir = 1, v_el = 0;
   static double targ_el=0.0;
   
   i_point = GETREADINDEX(point_index);
@@ -915,7 +915,7 @@ void DoNewCapMode() {
       axes_mode.el_mode = AXIS_POSITION;
       axes_mode.el_dest = bottom;
       axes_mode.el_vel = 0.0;
-      speed_el = 0.0;
+      v_el = 0.0;
       targ_el = -r;
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
@@ -955,30 +955,37 @@ void DoNewCapMode() {
   SetAzScanMode(az, left, right, v_az, daz_dt);
 
   /** set El V **/
+  new_step = 0;
   if (az<left) {
     if (az_dir < 0) {
       az_distance = next_right - left;
       t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * 100.16);
-      correction = (el - cel) - targ_el;
-      speed_el = (CommandData.pointing_mode.del-correction*el_dir)/t;
-      bprintf(info, "ppp L: el: %g targ_el: %g\n", el - cel, targ_el);
-      targ_el = el - cel +
-	(CommandData.pointing_mode.del*el_dir-correction);
+      new_step = 1;
     }
     az_dir = 1;
   } else if (az>right) {
     if (az_dir > 0) {
       az_distance = right - next_left;
       t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * 100.16);
-      correction = (el - cel) - targ_el;
-      speed_el = (CommandData.pointing_mode.del-correction*el_dir)/t;
-      bprintf(info, "ppp R: el: %g targ_el: %g\n", el - cel, targ_el);
-      targ_el = el - cel +
-	(CommandData.pointing_mode.del*el_dir-correction);
+      new_step = 1;
     }
     az_dir = -1;
   }
 
+  if (new_step) {
+    // set v for this step
+    v_el = (targ_el - (el-cel))/t;
+    bprintf(info, "qqq L: el: %g targ_el: %g\n", el - cel, targ_el);
+    // set targ_el for the next step
+    targ_el += CommandData.pointing_mode.del*el_dir;
+    if (targ_el>r) {
+      targ_el = r;
+      el_dir=-1;
+    } else if (targ_el<r) {
+      el_dir = 1;
+    }
+  }
+  
   el1 = cel + r;
   el2 = cel - r;
   if (el1 > MAX_EL)
@@ -1005,13 +1012,13 @@ void DoNewCapMode() {
     axes_mode.el_dest = el2;
     el_dir = 1;
     return;
-  } else if (el > el1) { /* turn around */
-    el_dir = -1;
-  } else if (el < el2) { /* turn around */
-    el_dir = 1;
-  }    
+  }
+  /* else if (el > el1) { */
+/*     el_dir = -1; */
+/*   } else if (el < el2) {  */
+/*     el_dir = 1; */
+/*   }     */
 
-  v_el = speed_el * el_dir;  
   axes_mode.el_mode = AXIS_VEL;
   axes_mode.el_vel = v_el + del_dt;
 
