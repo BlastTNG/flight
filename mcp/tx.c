@@ -67,6 +67,7 @@
                                          after turning off pump */
 
 #define DPS2GYU (66.7 * 65536.0/4000.0) /* deg per sec to "gyro units" */
+#define EXPOSURE2I (65536. / 5000000.)  /* ISC exposure time to int */
 
 extern short int SamIAm;
 short int InCharge;
@@ -1326,7 +1327,8 @@ void StoreData(int index, unsigned int* Txframe,
   WriteSlow(isc_framenumCh, isc_framenumInd,
       (unsigned int)ISCData[i_isc].framenum);
   WriteSlow(isc_errorCh, isc_errorInd, (unsigned int)ISCData[i_isc].error);
-  WriteSlow(isc_exposeCh, isc_exposeInd, (unsigned int)ISCData[i_isc].exposure);
+  WriteSlow(isc_exposeCh, isc_exposeInd,
+      (unsigned int)(ISCData[i_isc].exposure * EXPOSURE2I));
   WriteSlow(isc_rotCh, isc_rotInd, (unsigned int)(ISCData[i_isc].rot * RAD2I));
   WriteSlow(isc_raCh, isc_raInd,
       (unsigned int)(ISCData[i_isc].ra * RAD2LI) >> 16);

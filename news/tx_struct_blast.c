@@ -207,7 +207,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"blob1_x",     'w', LOOPBAK2,  1,        1./40.,             0.0, 'u'},
     {"blob2_x",     'w', LOOPBAK2,  2,        1./40.,             0.0, 'u'},
     {"isc_error",   'w', LOOPBAK2,  3,           1.0,             0.0, 'u'},
-    {"isc_expose",  'w', LOOPBAK2,  4,      1./1000.,             0.0, 'u'},
+    {"isc_expose",  'w', LOOPBAK2,  4,  5000./65536.,             0.0, 'u'},
     {"isc_rot",     'w', LOOPBAK2,  5,         I2DEG,             0.0, 'u'},
     {"isc_ra",      'w', LOOPBAK2,  6,        LI2DEG,             0.0, 'U'},
     {"isc_dec",     'w', LOOPBAK2,  8,     LI2DEG/2.,            -90., 'U'}

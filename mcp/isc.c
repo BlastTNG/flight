@@ -20,6 +20,7 @@ short int write_ISC_pointing = 0; // isc.c
 
 server_frame ISCData[3];
 int iscdata_index = 0;
+FILE* isc_log = NULL;
 
 int ISCInit(client_frame* client_data)
 {
@@ -28,8 +29,15 @@ int ISCInit(client_frame* client_data)
 
   int sock;
   struct sockaddr_in addr;
+  time_t t;
 
   int n;
+
+  if (isc_log == NULL) {
+    if ((isc_log = fopen("/tmp/mcp.isc.log", "a")) == NULL) {
+      perror("ISC log fopen()");
+    }
+  }
 
   sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (sock == -1) {
@@ -85,6 +93,7 @@ int ISCInit(client_frame* client_data)
     if (FD_ISSET(sock, &fds)) {
       /* Ask for defaults and start free run */
       client_data->command = freerun;
+      client_data->par1 = CommandData.ISC_save_to_disk;
 
       n = send(sock, client_data, sizeof(client_frame), 0);
       if (n == -1) {
@@ -100,6 +109,20 @@ int ISCInit(client_frame* client_data)
           if (close(sock) < 0)
             perror("ISC close()");
         return -1;
+      }
+
+      if (isc_log != NULL) {
+        t = time(NULL);
+        fprintf(isc_log, "# %s: %i - %.4lf %.4lf %.4lf %.4lf - %li %i %.1lf\n"
+            "%i %i %i - %.1lf %i %i %i %i - %i %i %i %i\n\n", ctime(&t),
+            client_data->command, client_data->az, client_data->el,
+            client_data->lst, client_data->lat, client_data->exposure,
+            client_data->gyro_speed, client_data->platescale,
+            client_data->gain, client_data->offset, client_data->saturation,
+            client_data->threshold, client_data->grid, client_data->cenbox,
+            client_data->apbox, client_data->multiple_dist, client_data->par1,
+            client_data->par2, client_data->par3, client_data->par4);
+        fflush(isc_log);
       }
     } else {
       fprintf(stderr, "ISC: Time out waiting for CTS\n");
@@ -194,6 +217,7 @@ void IntegratingStarCamera(void)
   struct PointingDataStruct MyPointData;
 
   int sock = -1, ISCReadIndex;
+  time_t t;
 
   int n;
 
@@ -311,7 +335,19 @@ void IntegratingStarCamera(void)
                 sizeof(client_frame), n);
             break;
           }
-          //        fprintf(stderr, "ISC: Sent %i bytes.\n", n);
+          if (isc_log != NULL) {
+            t = time(NULL);
+            fprintf(isc_log, "%s: %i - %.4lf %.4lf %.4lf %.4lf - %li %i %.1lf\n"
+                "%i %i %i - %.1lf %i %i %i %i - %i %i %i %i\n\n", ctime(&t),
+                client_data.command, client_data.az, client_data.el,
+                client_data.lst, client_data.lat, client_data.exposure,
+                client_data.gyro_speed, client_data.platescale,
+                client_data.gain, client_data.offset, client_data.saturation,
+                client_data.threshold, client_data.grid, client_data.cenbox,
+                client_data.apbox, client_data.multiple_dist, client_data.par1,
+                client_data.par2, client_data.par3, client_data.par4);
+            fflush(isc_log);
+          }
         }
       }
     }
