@@ -730,14 +730,12 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.Cryo.heliumThree = rvalues[0] * 2047./100.;
   } else if (command == bda_heat) {
     CommandData.Cryo.BDAHeat = rvalues[0] * 2047./100.;
+    CommandData.Cryo.autoBDAHeat = 0;
   } else if (command == bda_gain) {
     CommandData.Cryo.BDAGain.P = ivalues[0];
     CommandData.Cryo.BDAGain.I = ivalues[1];
     CommandData.Cryo.BDAGain.D = ivalues[2];
     CommandData.Cryo.BDAFiltLen = ivalues[3];
-  } else if (command == bda_heat) {
-    CommandData.Cryo.BDAHeat = ivalues[0];
-    CommandData.Cryo.autoBDAHeat = 0;
 
 
     /***************************************/

@@ -876,6 +876,7 @@ void UpdateBBCFrame(unsigned short *RxFrame) {
   /*** do slow Controls ***/
   if (index == 0) {
     WriteAux();
+    CryoControl();
     PhaseControl();
   }
   index = (index + 1) % FAST_PER_SLOW;
@@ -885,5 +886,4 @@ void UpdateBBCFrame(unsigned short *RxFrame) {
   CameraTrigger(0); /* isc */
   CameraTrigger(1); /* osc */
 #endif
-  CryoControl();
 }

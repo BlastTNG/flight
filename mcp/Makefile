@@ -5,12 +5,12 @@ CPP = g++
 CPPFLAGS = -O3 -Wall -D__MCP__ $(BOLOTEST)
 LDFLAGS = -lpthread -lm -lstdc++
 ifeq ($(DEBUG), 1)
-	CFLAGS := $(CFLAGS) -g
+	CPPFLAGS := $(CPPFLAGS) -g
 	LDFLAGS := $(LDFLAGS) -g
 endif
 
 ifeq ($(USE_FIFO_CMD), 1)
-	CFLAGS := $(CFLAGS) -DUSE_FIFO_CMD
+	CPPFLAGS := $(CPPFLAGS) -DUSE_FIFO_CMD
 endif
 
 HEADERS = alice.h bbc_pci.h command_list.h crc.h dataholder.h ephem_read.h \

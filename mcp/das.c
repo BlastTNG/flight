@@ -98,9 +98,12 @@ int CalLamp (void)
     calPulseAddr = GetNiosAddr("cal_pulse");
   }
 
+  /* Send the current pulse length */
+  WriteData(calPulseAddr, CommandData.Cryo.calib_pulse, NIOS_QUEUE);
+
   if (CommandData.Cryo.calibrator == on) {
     if (last_mode != on) {
-      update_counter = (update_counter + 1) % 4;
+      update_counter = (update_counter + 1) & 3;
       last_mode = on;
     }
     return update_counter | CRYOCTRL_CALON;
@@ -108,24 +111,22 @@ int CalLamp (void)
     if (last_mode != repeat || elapsed >= CommandData.Cryo.calib_period) {
       /* end of cycle -- send a new pulse */
       elapsed = 0;
-      update_counter = (update_counter + 1) % 4;
+      update_counter = (update_counter + 1) & 3;
     } else
       elapsed++;
     last_mode = repeat;
   } else { /* off or single pulse mode */
     if (CommandData.Cryo.calibrator == pulse)
-      update_counter = (update_counter + 1) % 4;
-    last_mode = CommandData.Cryo.calibrator == off;
+      update_counter = (update_counter + 1) & 3;
+    last_mode = CommandData.Cryo.calibrator = off;
   }
 
-  /* Send the current pulse length */
-  WriteData(calPulseAddr, CommandData.Cryo.calib_pulse, NIOS_QUEUE);
-
-  return update_counter;
+  printf("update_counter = %i\r", update_counter);
+  return update_counter & 0x3;
 }
 
 /***********************************************************************/
-/* CryoControl: Control heaters and calibrator                         */
+/* CryoControl: Control heaters and calibrator (a slow control)        */
 /***********************************************************************/
 void CryoControl (void)
 {
