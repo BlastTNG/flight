@@ -118,8 +118,6 @@ int ReconstructChannelLists(const char* chunk, const char * spec_file)
   char* ptr = buffer;
   FILE* stream;
 
-  printf("ReconstructChannelLists(%s, %s)\n", chunk, spec_file);
-
   /* if spec_file exists, the user has specified a spec file name, use it */
   if (spec_file != NULL) {
     /* check for buffer overrun */
@@ -170,8 +168,6 @@ unsigned long long GetFrameFileSize(const char* file, int sufflen)
   struct stat chunk_stat;
   unsigned long long length = 0;
 
-  printf("GetFrameFileSize(%s, %i)\n", file, sufflen);
-
   /* stat it to see if it exists */
   if (stat(chunk, &chunk_stat) == 0) {
     length = chunk_stat.st_size;
@@ -195,8 +191,6 @@ int GetNextChunk(char* chunk, int sufflen)
   int s;
   chunkindex_t chunknum;
   struct stat chunk_stat;
-
-  printf("GetNextChunk(%s, %i)\n", chunk, sufflen);
 
   /* allocate our buffers */
   if ((buffer = (char*)malloc(FILENAME_LEN)) == NULL) 
