@@ -334,8 +334,10 @@ void GetACS(unsigned short *RxFrame){
   gyro3 = (double)(RxFrame[i_GYRO3]-GYRO3_OFFSET)*ADU3_TO_DPS;
 
   bias = (double)(RxFrame[i_mag_bias]);
-  x_comp = (double)(RxFrame[i_mag_x]) - (26303.0+16881.0)/2.0;
-  y_comp = (double)(RxFrame[i_mag_y]) - (24792.0+15615.0)/2.0;
+  //x_comp = (double)(RxFrame[i_mag_x]) - (26303.0+16881.0)/2.0;
+  //y_comp = (double)(RxFrame[i_mag_y]) - (24792.0+15615.0)/2.0;
+  x_comp = (double)(RxFrame[i_mag_x]);
+  y_comp = (double)(RxFrame[i_mag_y]);
 
   i_ss = ss_index;
 

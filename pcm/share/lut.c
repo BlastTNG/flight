@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "lut.h"
 #include "mcp.h"
+
+#define MAXITER 10
+#define TOLERANCE (10.0/3600.*M_PI/180.)
 
 int GetLine(FILE *fp, char *line); // defined in sched.c
 
@@ -65,4 +69,48 @@ double LutCal(struct LutType *L, double x) {
     (x - L->x[i]);
 
   return(y);
+}
+
+double MagLutCal(struct LutType *L, double mag_x, double mag_y, double x) 
+{  
+  int i, n, iter;
+  double mod;
+  double mag_c, mag_s;
+  double tsin, tcos;
+  double dx;
+
+  if (L->n == 1)
+    return(x); // no LUT, not cal
+  
+  n = L->n >> 1;
+
+  mag_x -= L->x[0];
+  mag_y -= L->y[0];
+  mod = sqrt(mag_x*mag_x + mag_y*mag_y);
+  mag_x /= mod;
+  mag_y /= mod;
+
+  iter = 0;
+  x *= M_PI/180.0;
+  mag_s = mag_c = 0.0;
+  while(1) {
+    for (i = 1; i <= n; i++) {
+      tsin = sin(i*x); tcos = cos(i*x);
+      mag_s += L->y[2*i-1]*tsin + L->y[2*i]*tcos;
+      mag_c += L->x[2*i-1]*tsin + L->x[2*i]*tcos;
+    }
+    mod = sqrt(mag_s*mag_s + mag_c*mag_c);
+    mag_s /= mod; mag_c /= mod;
+
+    dx = mag_s*mag_x - mag_c*mag_y;
+    x += dx;
+    iter++;
+    if(fabs(dx) < TOLERANCE) return (x*180.0/M_PI);
+    if(iter == MAXITER) {
+      mprintf(MCP_ERROR, "Error MagLutCal: don't converge.\n");
+      return (x*180.0/M_PI);
+    }
+  }
+
+  return 0.0;
 }

@@ -156,7 +156,7 @@ int MagConvert(double *mag_az) {
   int i_point_read;
   static int firsttime = 1;
   static struct LutType magLut = {"/data/etc/mag.lut",0,NULL,NULL,0};
-  double raw_mag_az;
+  static double mag_az_tmp = 0.0;
 
   i_point_read = GETREADINDEX(point_index);
 
@@ -203,10 +203,15 @@ int MagConvert(double *mag_az) {
   /* Thus, depending on the sign convention, you have to either add or */
   /* subtract dec from az to get the true bearing. (Adam H.) */
 
-  raw_mag_az = (180.0 / M_PI) * atan2(ACSData.mag_y, ACSData.mag_x);
+  // Enzo commented out these two lines
+  //raw_mag_az = (180.0 / M_PI) * atan2(ACSData.mag_y, ACSData.mag_x);
+  //*mag_az = LutCal(&magLut, raw_mag_az);
 
-  *mag_az = LutCal(&magLut, raw_mag_az);
-
+  // Enzo inserted these two lines
+  mag_az_tmp = MagLutCal(&magLut, ACSData.mag_x, ACSData.mag_y, mag_az_tmp);
+  *mag_az = mag_az_tmp;  
+  
+  
   *mag_az += dec + MAG_ALIGNMENT;
 
   NormalizeAngle(mag_az);
