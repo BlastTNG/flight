@@ -307,6 +307,30 @@
   <NUMBER caption="Cryo PWM (V)" textstyle="oddrow">
     <DATUM format="%.3f" src="CRYOPWM" extrema="unknown"/>
   </NUMBER>
+  <MULTI caption="LN Valve" textstyle="oddrow">
+    <DATUM src="LN_VALVE">
+      <WORD value="1" caption="On" textstyle="W_BIT"/>
+      <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+    </DATUM>
+  </MULTI>
+  <MULTI caption="LN Valve Dir" textstyle="oddrow">
+    <DATUM src="LN_DIREC">
+      <WORD value="1" caption="Open" textstyle="W_BIT"/>
+      <WORD value="0" caption="Close" textstyle="OK_BIT"/>
+    </DATUM>
+  </MULTI>
+  <MULTI caption="LHe Valve" textstyle="oddrow">
+    <DATUM src="LHE_VALVE">
+      <WORD value="1" caption="On" textstyle="W_BIT"/>
+      <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+    </DATUM>
+  </MULTI>
+  <MULTI caption="LHe Valve Dir" textstyle="oddrow">
+    <DATUM src="LHE_DIREC">
+      <WORD value="1" caption="Open" textstyle="W_BIT"/>
+      <WORD value="0" caption="Close" textstyle="OK_BIT"/>
+    </DATUM>
+  </MULTI>
 </BOX>
 
 </DOCUMENT>
