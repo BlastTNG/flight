@@ -1045,7 +1045,7 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
       "DEFILE_INSERTED  BIT  DEFILE_FLAGS 2\n"
       "# Defile found a single frame error in the stream and replaced it with "
       "old datax\n"
-      "DEFILE_SINGLE_FRAME  BIT  DEFILE_FLAGS 3\n", FAST_PER_SLOW);
+      "DEFILE_SINGLE    BIT  DEFILE_FLAGS 3\n", FAST_PER_SLOW);
   write(fd, line, strlen(line));
 #endif
   
