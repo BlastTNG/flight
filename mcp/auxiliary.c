@@ -613,18 +613,7 @@ void CameraTrigger(int which)
       if (WHICH && delay[which] == 0)
         bprintf(info, "%iSC (t): Lowering start_ISC_cycle\n", which);
 
-      if (isc_pulses[which].is_fast) {  /* fast pulse */
-        if (waiting[which])
-          bprintf(warning, "%s: Velocity wait stated aborted.\n",
-              (which) ? "Osc" : "Isc");
-        waiting[which] = 0;
-        /* use fast (short) pulse length */
-        isc_pulses[which].pulse_req =
-          CommandData.ISCControl[which].fast_pulse_width;
-      } else {  /* slow pulse */
-        /* use slow (long) pulse length */
-        isc_pulses[which].pulse_req = CommandData.ISCControl[which].pulse_width;
-
+      if (!isc_pulses[which].is_fast) {  /* slow pulse */
         /* autosave next image -- we only do this on long pulses */
         if (isc_pulses[which].last_save >=
             CommandData.ISCControl[which].save_period &&
@@ -639,9 +628,6 @@ void CameraTrigger(int which)
       /* pulse request is in 100Hz frames, so multiply by 10k to get usecs */
       CommandData.ISCState[which].exposure =
         isc_pulses[which].pulse_req * 10000;
-
-      /* Add pulse serial number */
-      isc_pulses[which].pulse_req += isc_pulses[which].pulse_index << 14;
 
       delay[which] = 0;
 
@@ -729,8 +715,24 @@ void CameraTrigger(int which)
               bprintf(info, "%iSC (t): Velocity wait ends. -------> v\n",
                   which);
 
+            /* use slow (long) pulse length */
+            isc_pulses[which].pulse_req
+              = CommandData.ISCControl[which].pulse_width;
+
             waiting[which] = 0;
+          } else {
+            if (waiting[which])
+              bprintf(warning, "%s: Velocity wait stated aborted.\n",
+                  (which) ? "Osc" : "Isc");
+            waiting[which] = 0;
+
+            /* use fast (short) pulse length */
+            isc_pulses[which].pulse_req =
+              CommandData.ISCControl[which].fast_pulse_width;
           }
+
+          /* Add pulse serial number */
+          isc_pulses[which].pulse_req += isc_pulses[which].pulse_index << 14;
 
           /* write the pulse */
           if (WHICH)
