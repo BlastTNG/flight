@@ -56,6 +56,7 @@
 #define CS_HELIUMLEVEL    0x0001
 #define CS_CHARCOAL       0x0002
 #define CS_COLDPLATE      0x0004
+#define CS_DOING_CYCLE    0x0008
 #define CS_POTVALVE_ON    0x0010
 #define CS_POTVALVE_OPEN  0x0020
 #define CS_LHeVALVE_ON    0x0040
@@ -215,12 +216,19 @@ void CryoControl (void)
     cryoout3 |= CRYO_HELIUMLEVEL_ON;
     cryostate |= CS_HELIUMLEVEL;
   }
-  if (CommandData.Cryo.charcoalHeater == 0) {
-    cryoout3 |= CRYO_CHARCOAL_OFF;
-    cryostate &= 0xFFFF - CS_CHARCOAL;
+  if (CommandData.Cryo.fridgeCycle) {
+    cryostate |= CS_DOING_CYCLE;
+    printf("Cycling fridge %d\n", CommandData.Cryo.fridgeCycle); //cryoout3 |= something
   } else {
-    cryoout3 |= CRYO_CHARCOAL_ON;
-    cryostate |= CS_CHARCOAL;
+    printf("stop cycling\n");
+    cryostate &= 0xFFFF - CS_DOING_CYCLE;
+    if (CommandData.Cryo.charcoalHeater == 0) {
+      cryoout3 |= CRYO_CHARCOAL_OFF;
+      cryostate &= 0xFFFF - CS_CHARCOAL;
+    } else {
+      cryoout3 |= CRYO_CHARCOAL_ON;
+      cryostate |= CS_CHARCOAL;
+    }
   }
   if (CommandData.Cryo.coldPlate == 0) {
     cryoout3 |= CRYO_COLDPLATE_OFF;

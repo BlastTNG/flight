@@ -105,7 +105,6 @@ enum calmode { on, off, pulse, repeat };
 
 struct CryoStruct {
   unsigned short heliumLevel;
-  unsigned short charcoalHeater;
   unsigned short coldPlate;
   unsigned short heatSwitch;
   unsigned short CryoSparePWM;
@@ -121,6 +120,9 @@ struct CryoStruct {
   unsigned short autoJFETheat;
   unsigned short JFETHeat;
   double JFETSetOn, JFETSetOff;
+
+  unsigned short charcoalHeater;
+  unsigned short fridgeCycle;
 
   unsigned short potvalve_open, potvalve_on, potvalve_close;
   unsigned short lhevalve_open, lhevalve_on, lhevalve_close;

@@ -111,7 +111,7 @@ union DerivedUnion DerivedChannels[] = {
       "HE_LEV_SENS",
       "CHARC_HEATER",
       "COLDP_HEATER",
-      "",
+      "FRIDGE_CYCLING",
       "POT_VALVE",
       "POT_DIREC",
       "LHE_VALVE",

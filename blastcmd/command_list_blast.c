@@ -61,6 +61,7 @@ struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(charcoal_on), "charcoal heater on", GR_CRYO_HEAT},
   {COMMAND(charcoal_off), "charcoal heater off", GR_CRYO_HEAT},
+  {COMMAND(fridge_cycle), "start cycling the helium fridge", GR_CRYO_HEAT},
   {COMMAND(coldplate_on), "cold plate heater on", GR_CRYO_HEAT},
   {COMMAND(coldplate_off), "cold plate heater off", GR_CRYO_HEAT},
   {COMMAND(auto_jfetheat), "automatically reguate jfet heater level",

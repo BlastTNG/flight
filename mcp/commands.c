@@ -310,10 +310,14 @@ void SingleCommand (enum singleCommand command) {
     CommandData.Cryo.heliumLevel = 1;
   else if (command == level_off)
     CommandData.Cryo.heliumLevel = 0;
-  else if (command == charcoal_on)
+  else if (command == charcoal_on) {
     CommandData.Cryo.charcoalHeater = 1;
-  else if (command == charcoal_off)
+    CommandData.Cryo.fridgeCycle = 0;
+  } else if (command == charcoal_off) {
     CommandData.Cryo.charcoalHeater = 0;
+    CommandData.Cryo.fridgeCycle = 0;
+  } else if (command == fridge_cycle)
+    CommandData.Cryo.fridgeCycle = 1;
   else if (command == coldplate_on)
     CommandData.Cryo.coldPlate = 1;
   else if (command == coldplate_off)
@@ -679,8 +683,8 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
   else if (command == outer_level)
     CommandData.pumps.pwm4 = 2047 - rvalues[0] * 2047. / 100;
 
-    /***************************************/
-    /******** Electronics Heaters  *********/
+  /***************************************/
+  /******** Electronics Heaters  *********/
   else if (command == t_gyrobox)  /* gyro heater setpoint */
     CommandData.t_gybox_setpoint = rvalues[0];
   else if (command == t_gyro_gain) {  /* gyro heater gains */
@@ -697,8 +701,8 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
   else if (command == plugh) /* A hollow voice says "Plugh". */
     CommandData.plover = ivalues[0];
 
-    /***************************************/
-    /*************** Bias  *****************/
+  /***************************************/
+  /*************** Bias  *****************/
   else if (command == bias1_level) {    /* Set bias 1 */
     CommandData.Bias.SetLevel1 = 1;
     CommandData.Bias.bias1 = ivalues[0];
@@ -984,7 +988,7 @@ void SendDownData(char tty_fd) {
 
     if (bytepos >= SLOWDL_LEN) {
       bprintf(warning, "Slow DL size is larger than maximum size of %d.  "
-              "Reduce length of SlowDLInfo structure.", SLOWDL_LEN);
+          "Reduce length of SlowDLInfo structure.", SLOWDL_LEN);
       break;
     }
   }
@@ -1052,7 +1056,7 @@ void WatchFIFO () {
       if ((command[index] == ' ' || command[index] == 0) && pindex > 0) {
         pbuf[pindex] = 0;
         mcommand_data[mcommand_count] =
-              reballoc(tfatal, mcommand_data[mcommand_count], pindex + 2);
+          reballoc(tfatal, mcommand_data[mcommand_count], pindex + 2);
 
         strncpy(mcommand_data[mcommand_count++], pbuf, pindex + 1);
         pindex = 0;
@@ -1144,19 +1148,19 @@ void WatchPort (void* parameter) {
       case 1: /* wating for packet type */
         if (buf == 0x13) { /* Send data request */
           readstage = 3;
-//                    bprintf(info, "COMM%i: Data request\n", port + 1);
+          //                    bprintf(info, "COMM%i: Data request\n", port + 1);
         } else if (buf == 0x14) { /* Command */
           readstage = 2;
-//                    bprintf(info, "COMM%i: Command\n", port + 1);
+          //                    bprintf(info, "COMM%i: Command\n", port + 1);
         } else if (buf == 0x10) { /* GPS Position */
           readstage = 4;
-//                    bprintf(info, "COMM%i: GPS Position\n", port + 1);
+          //                    bprintf(info, "COMM%i: GPS Position\n", port + 1);
         } else if (buf == 0x11) { /* GPS Time */
           readstage = 5;
-//                    bprintf(info, "COMM%i: GPS Time\n", port + 1);
+          //                    bprintf(info, "COMM%i: GPS Time\n", port + 1);
         } else if (buf == 0x12) { /* MKS Altitude */
           readstage = 6;
-//                    bprintf(info, "COMM%i: MKS Altitude\n", port + 1);
+          //                    bprintf(info, "COMM%i: MKS Altitude\n", port + 1);
         } else {
           bprintf(warning,
               "COMM%i: Bad packet received: Unrecognised Packet Type: %02X\n",
@@ -1430,6 +1434,7 @@ void InitCommandData() {
 
   CommandData.Cryo.heliumLevel = 0;
   CommandData.Cryo.charcoalHeater = 0;
+  CommandData.Cryo.fridgeCycle = 0;
   CommandData.Cryo.coldPlate = 0;
   CommandData.Cryo.heatSwitch = 0;
   CommandData.Cryo.CryoSparePWM = 0;
