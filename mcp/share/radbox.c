@@ -73,10 +73,10 @@ double az_gcirc( double *az, double *el, double el_in )
   // of the solutions for the given input elevation
 
   c2_1 = atan2(tan(v[0])*sin(u[0]) - tan(v[1])*sin(u[1]),
-	       tan(v[0])*cos(u[0]) - tan(v[1])*cos(u[1]));
+      tan(v[0])*cos(u[0]) - tan(v[1])*cos(u[1]));
 
   c2_2 = atan2(tan(v[0])*sin(u[0]) - tan(v[1])*sin(u[1]),
-	       tan(v[0])*cos(u[0]) - tan(v[1])*cos(u[1])) + M_PI;
+      tan(v[0])*cos(u[0]) - tan(v[1])*cos(u[1])) + M_PI;
 
   //printf("c2_1=%lf c2_2=%lf\n",c2_1,c2_2);
 
@@ -184,8 +184,8 @@ double az_gcirc( double *az, double *el, double el_in )
 //-----------------------------------------------------------------------------
 
 void radbox_endpoints( double az[4], double el[4], double el_in, 
-                       double *az_left, double *az_right, double *min_el, 
-		       double *max_el )
+    double *az_left, double *az_right, double *min_el, 
+    double *max_el )
 {  
   int i;
   int min_index, max_index;
@@ -209,14 +209,14 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
       min_index = i;
       *min_el = el[i];
     }
-    
+
     if( el[i] >= *max_el ) 
     {
       max_index = i;
       *max_el = el[i];
     }
   }
-  
+
   // if the requested elevation within the polygon do the calculation
   if( (el_in >= *min_el) && (el_in <= *max_el) )
   {
@@ -230,7 +230,7 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
     }  
 
     else if( (el_in > el[ ((min_index-1)+4) % 4 ]) && 
-	     (el_in <= el[ ((min_index-2)+4) % 4 ]) )
+        (el_in <= el[ ((min_index-2)+4) % 4 ]) )
     {
       side1_index[0] = ((min_index-1)+4) % 4;
       side1_index[1] = ((min_index-2)+4) % 4;
@@ -249,7 +249,7 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
     }  
 
     else if( (el_in > el[ ((min_index+1)+4) % 4 ]) && 
-	     (el_in <= el[ ((min_index+2)+4) % 4 ]) )
+        (el_in <= el[ ((min_index+2)+4) % 4 ]) )
     {
       side2_index[0] = ((min_index+1)+4) % 4;
       side2_index[1] = ((min_index+2)+4) % 4;
@@ -274,7 +274,7 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
     el_side2[1] = el[side2_index[1]];
 
     // check for cases where endpoints of side same elevation
-    
+
     horizontal_side = 0;
 
     if( el_side1[0] != el_side1[1] )   
@@ -291,29 +291,29 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
     {
       if( horizontal_side == 1 )   
       {  
-	if( az[side1_index[0]] < az[side1_index[1]] )   
-	{ 
-	  *az_left = az[side1_index[0]];
-	  *az_right = az[side1_index[1]];  
-	}
+        if( az[side1_index[0]] < az[side1_index[1]] )   
+        { 
+          *az_left = az[side1_index[0]];
+          *az_right = az[side1_index[1]];  
+        }
         else 
-	{
+        {
           *az_left = az[side1_index[1]];
-	  *az_right = az[side1_index[0]];  
+          *az_right = az[side1_index[0]];  
         }
       } 
       else  
       {  
-	if( az[side2_index[0]] < az[side2_index[1]] )
-	{
+        if( az[side2_index[0]] < az[side2_index[1]] )
+        {
           *az_left = az[side2_index[0]];
           *az_right = az[side2_index[1]];
-	}
+        }
         else 
-	{
-	  *az_left = az[side2_index[1]];
-	  *az_right = az[side2_index[0]];  
-	}
+        {
+          *az_left = az[side2_index[1]];
+          *az_right = az[side2_index[0]];  
+        }
       }
     }
     else
@@ -321,19 +321,19 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
       // return the order of the endpoints left, right
       if( az_end1 < az_end2 ) 
       {
-	*az_left = az_end1;
-	*az_right = az_end2;  
+        *az_left = az_end1;
+        *az_right = az_end2;  
       }
       else
       {
-	*az_left = az_end2; 
-	*az_right = az_end1;
+        *az_left = az_end2; 
+        *az_right = az_end1;
       }
 
       // swap the order if the distance > 180
       if( fabs(*az_right - *az_left) > 180 )
       {  
-	temp = *az_left;
+        temp = *az_left;
         *az_left = *az_right;
         *az_right = temp;
       }
