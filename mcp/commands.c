@@ -485,7 +485,7 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     min = mcommands[index].params[i].min;
     type = mcommands[index].params[i].type;
     if (type == 'i')  /* 15 bit unsigned integer */ {
-      ivalues[i] = dataq[dataqind++];
+      ivalues[i] = dataq[dataqind++] + mcommands[index].params[i].min;
       mprintf(MCP_INFO, "param%02i: integer: %i\n", i, ivalues[i]);
     } else if (type == 'f')  /* 15 bit floating point */ {
       rvalues[i] = (float)dataq[dataqind++] * (mcommands[index].params[i].max
@@ -724,8 +724,8 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.ISCState[0].azBDA = rvalues[0] * DEG2RAD;
     CommandData.ISCState[0].elBDA = rvalues[1] * DEG2RAD;
   } else if (command == isc_integrate) {
-    CommandData.ISCControl[0].fast_pulse_width = (int)((4 + ivalues[0]) / 10);
-    CommandData.ISCControl[0].pulse_width = (int)((4 + ivalues[1]) / 10);
+    CommandData.ISCControl[0].fast_pulse_width = rvalues[0] * 10.4166666666667;
+    CommandData.ISCControl[0].pulse_width = rvalues[1] * 10.4166666666667;
   } else if (command == isc_det_set) {
     CommandData.ISCState[0].grid = ivalues[0];
     CommandData.ISCState[0].sn_threshold = rvalues[1];

@@ -821,26 +821,26 @@ void UpdateBBCFrame(unsigned short *RxFrame) {
 
   /*** do Controls ***/
 #ifndef BOLOTEST
-//  DoSched();
-//  UpdateAxesMode();
-//  StoreData(index);
-//  ControlGyroHeat(RxFrame);
-//  WriteMot(index, RxFrame);
+  DoSched();
+  UpdateAxesMode();
+  StoreData(index);
+  ControlGyroHeat(RxFrame);
+  WriteMot(index, RxFrame);
 #endif
-//  BiasControl(RxFrame);
-//  SyncADC(index);
+  BiasControl(RxFrame);
+  SyncADC(index);
 
   /*** do slow Controls ***/
   if (index == 0) {
-//    WriteAux();
-//    PhaseControl();
+    WriteAux();
+    PhaseControl();
   }
   index = (index + 1) % FAST_PER_SLOW;
 
 #ifndef BOLOTEST
-//  ControlAuxMotors(RxFrame);
-//  CameraTrigger(0); /* isc */
-//  CameraTrigger(1); /* osc */
+  ControlAuxMotors(RxFrame);
+  CameraTrigger(0); /* isc */
+  CameraTrigger(1); /* osc */
 #endif
-//  CryoControl();
+  CryoControl();
 }
