@@ -245,7 +245,12 @@ void SingleCommand (int command) {
     CommandData.use_mag = 0;
   else if (command == SIndex("gps_veto"))
     CommandData.use_gps = 0;
+  else if (command == SIndex("elenc_veto"))
+    CommandData.use_elenc = 0;
+  else if (command == SIndex("elclin_veto"))
+    CommandData.use_elclin = 0;
 
+  
   else if (command == SIndex("sun_allow"))       /* Un-veto sensors */
     CommandData.use_sun = 1;
   else if (command == SIndex("isc_allow"))
@@ -254,6 +259,10 @@ void SingleCommand (int command) {
     CommandData.use_mag = 1;
   else if (command == SIndex("gps_allow"))
     CommandData.use_gps = 1;
+  else if (command == SIndex("elenc_allow"))
+    CommandData.use_elenc = 1;
+  else if (command == SIndex("elclin_allow"))
+    CommandData.use_elclin = 1;
 
   else if (command == SIndex("clock_int"))    /* Bias settings */
     CommandData.Bias.clockInternal = 1;

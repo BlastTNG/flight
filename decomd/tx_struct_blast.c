@@ -526,6 +526,7 @@ void FPrintDerived(FILE *fp) {
       "T_base_500  LINTERP N10C4       /data/etc/rox102a.txt \n"
       "T_base_250  LINTERP N10C5       /data/etc/rox102a.txt\n"
       "#\n"
+      "Clin_Elev LINTERP clin_elev /data/etc/clin_elev.lut\n"
       "# Nice CPU Values\n"
       "CPU_SEC LINCOM  1       cpu_time        1       -%lu\n"
       "CPU_MIN LINCOM  1       CPU_SEC 0.016666666 0\n"

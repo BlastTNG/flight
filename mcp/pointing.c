@@ -16,8 +16,8 @@
 
 #define GY1_GAIN_ERROR 1.0407
 #define GY1_OFFSET (0.0075)
-#define GY2_OFFSET (0.0086)
-#define GY3_OFFSET (0.0150)
+#define GY2_OFFSET (0.0123)
+#define GY3_OFFSET (0.0143)
 
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
                 double *el);
@@ -373,13 +373,15 @@ void Pointing(){
     AddElSolution(&ElAtt, &EncEl);
   }
 
-  if (!CommandData.use_elclin) {
+  if (CommandData.use_elclin) {
     AddElSolution(&ElAtt, &ClinEl);
   }
 
   PointingData[point_index].gy1_offset = ElAtt.gy_offset;
   PointingData[point_index].el = ElAtt.el;
 
+  //printf("%g %g %g  %g %g %g\n", ElAtt.el, ClinEl.angle, EncEl.angle,
+  //	 ElAtt.gy_offset, ClinEl.gy_offset, EncEl.gy_offset);
 
 
   /*******************************/
