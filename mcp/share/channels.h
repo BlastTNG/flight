@@ -16,6 +16,7 @@
 #define CHANNELS_H
 
 #include <stdio.h>
+#include <time.h>
 
 /* Fix things up so we can include this in C++ applications */
 #ifdef __cplusplus

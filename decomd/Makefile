@@ -4,8 +4,8 @@ LDFLAGS = -lpthread $(EXTRAFLAGS)
 
 all: decomd
 
-OBJS = decomd.o crc.o framefile.o channels.o tx_struct.o blast.o
-HEADERS = bbc_pci.h crc.h decom_pci.h channels.h blast.h
+OBJS = decomd.o blast.o crc.o derived.o framefile.o channels.o tx_struct.o
+HEADERS = bbc_pci.h blast.h channels.h crc.h decom_pci.h derived.h
 
 decomd: $(OBJS)
 
