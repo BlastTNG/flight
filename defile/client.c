@@ -169,7 +169,6 @@ void InitClient(char* new_filename)
   char buffer[2000];
   int n;
   char *ptr1 = NULL, *ptr2;
-  char *hostname = NULL;
   FILE* stream;
 
   if (new_filename == NULL) {
@@ -193,7 +192,7 @@ void InitClient(char* new_filename)
         bprintf(info, "Connected to %s on %s speaking quenya version %s.\n",
             ptr1, buffer, ptr2);
 
-        hostname = strdup(buffer);
+        rc.hostname = strdup(buffer);
         break;
       default:
         bprintf(fatal, "Unexpected response from server (Connect): %i\n", n);
@@ -240,7 +239,7 @@ void InitClient(char* new_filename)
     GetDirFile(rc.dirfile, new_filename, rc.dest_dir, rc.resume_at);
 
   rc.chunk = (char*)balloc(fatal, FILENAME_LEN);
-  sprintf(rc.chunk, "%s:%s", hostname, new_filename);
+  sprintf(rc.chunk, "%s:%s", rc.hostname, new_filename);
 
   strcpy(buffer, "SPEC\r\n");
 
@@ -279,8 +278,6 @@ void InitClient(char* new_filename)
   bprintf(info, "Frame size: %i bytes\n", DiskFrameSize);
 
   OpenDataPort();
-
-  bfree(fatal, hostname);
 }
 
 void QuenyaClient(void)

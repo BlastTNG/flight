@@ -855,9 +855,16 @@ void DirFileWriter(void)
         /* Clean Up */
         CleanUp();
 
-        /* Read the new Spec file */
-        ReconstructChannelLists(rc.chunk, rc.spec_file);
-        bprintf(info, "Frame size: %i bytes\n", DiskFrameSize);
+        /* Read the new Spec file -- the Quenya Client does this itself */
+        if (!rc.quenya) {
+          ReconstructChannelLists(rc.chunk, rc.spec_file);
+          bprintf(info, "Frame size: %i bytes\n", DiskFrameSize);
+        }
+
+        bprintf(info, "Defiling `%s'\n    into `%s'\n", rc.chunk, rc.dirfile);
+        if (rc.resume_at > 0)
+          bprintf(info, "    starting at frame %li\n", rc.resume_at);
+        bprintf(info, "\n");
 
         /* Re-initialise */
         wrote_count = 0;

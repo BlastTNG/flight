@@ -61,6 +61,7 @@ struct rc_struct {
   struct timezone tz;
   char* chunk;
   char* dirfile;
+  char* hostname;
 };
 
 struct ri_struct {
