@@ -216,8 +216,8 @@ void GetACS(unsigned short *Rxframe){
       (-360.0 / 65536.0) + ENC_ELEV_OFFSET);
 
   gyro1 = (double)(Rxframe[i_GYRO1]-25794.0)*0.00091506980885;
-  gyro2 = (double)(Rxframe[i_GYRO2]-25535.0)*0.00091506980885;
-  gyro3 = (double)(Rxframe[i_GYRO3]-25600.0)*0.00091506980885;
+  gyro2 = (double)(Rxframe[i_GYRO2]-25535.0)*0.00091506980885-GY2_TMP_OFFSET;
+  gyro3 = (double)(Rxframe[i_GYRO3]-25600.0)*0.00091506980885-GY3_TMP_OFFSET;
 
   i_ss = ss_index;
 

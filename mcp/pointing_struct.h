@@ -165,3 +165,7 @@ extern struct DGPSAttStruct DGPSAtt[3];
 extern int dgpsatt_index;
 
 extern time_t DGPSTime;
+
+
+#define GY2_TMP_OFFSET (-0.01246)
+#define GY3_TMP_OFFSET (-0.01689)

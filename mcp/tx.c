@@ -159,7 +159,8 @@ int GetVAz() {
   int dvel;
   int max_dv = 20;
   int i_point;
-
+  double vel_offset;
+  
   i_point = GETREADINDEX(point_index);
 
   if (axes_mode.az_mode == AXIS_VEL) {
@@ -169,8 +170,14 @@ int GetVAz() {
 	  * 0.36;
   }
 
+  
+  //-[V5-GYRO2]*cos([el_rad-sv]) - [V6-GYRO3]*sin([el_rad-sv])
+  vel_offset = -GY2_TMP_OFFSET*cos(PointingData[i_point].el) -
+	       GY3_TMP_OFFSET*sin(PointingData[i_point].el);
+  
+  vel += vel_offset;
   vel *= DPS2GYU; // convert to gyro units
-
+  
   /* Limit Maximim speed */
   if (vel > 2000) vel = 2000;
   if (vel < -2000) vel = -2000;
@@ -229,9 +236,12 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   i_point = GETREADINDEX(point_index);
 
   v_elev = GetVElev() * 6.0; // the 6.0 is to improve dynamic range.
+  if (v_elev>32767) v_elev = 32767;
+  if (v_elev < -32768) v_elev = -32768;
+  
   // It is removed in the DSP/ACS1 code.
   WriteFast(i_elVreq, 32768 + v_elev);
-  v_az = GetVAz();
+  v_az = GetVAz()*6.0; // the 6.0 is to improve dynamic range.
   WriteFast(i_azVreq, 32768 + v_az);
 
   /*** Send elevation angles to acs1 from acs2 ***/
@@ -1168,7 +1178,7 @@ void StoreData(unsigned int* Txframe,
 #define AZ_ACCEL (0.001)
 #define AZ_MARGIN 0.5
 #define MIN_SCAN 0.2
-void DoRasterMode() {
+void DoAzScanMode() {
   double az, p1, p2, v;
   int i_point;
 
@@ -1338,9 +1348,6 @@ void UpdateAxesMode() {
     break;
   case POINT_RASTER:
     DoScanMode();
-    /*** FIXME: NEEDS TO BE WRITTEN ***/
-    //axes_mode.el_mode = AXIS_VEL;
-    //axes_mode.el_vel = 0.0;
     break;
   case POINT_LOCK:
     axes_mode.el_mode = AXIS_LOCK;
@@ -1373,7 +1380,7 @@ void UpdateAxesMode() {
     //axes_mode.az_vel = 0.0;
     break;
   case POINT_SCAN:
-    DoRasterMode();
+    DoAzScanMode();
     break;
   default:
     CommandData.pointing_mode.az_mode = POINT_VEL;

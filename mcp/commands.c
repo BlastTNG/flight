@@ -35,7 +35,7 @@
 #define FORCEINT   1
 #define U_MASK     2
 
-#define LOCK_OFFSET (0.1)
+#define LOCK_OFFSET (0.95)
 
  /* Seconds since 0TMG jan 1 1970 */
 #define SUN_JAN_6_1980 315964800L
@@ -477,23 +477,42 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pointing_mode.ra = 0.0;
     CommandData.pointing_mode.dec = 0.0;
     CommandData.pointing_mode.r = 0.0;
+    if (CommandData.pointing_mode.el_mode == POINT_RASTER) {
+      CommandData.pointing_mode.el_mode = POINT_VEL;
+      CommandData.pointing_mode.el_vel = 0.0;
+    }
   } else if (command == MIndex("az_goto")) {  /* point in azimuth */
     CommandData.pointing_mode.az_mode = POINT_POINT;
     CommandData.pointing_mode.az1 = rvalues[0];
+    if (CommandData.pointing_mode.el_mode == POINT_RASTER) {
+      CommandData.pointing_mode.el_mode = POINT_VEL;
+      CommandData.pointing_mode.el_vel = 0.0;
+    }
   } else if (command == MIndex("az_vel")) {  /* fixed azimuth velocity */
     CommandData.pointing_mode.az_mode = POINT_VEL;
     CommandData.pointing_mode.az_vel = rvalues[0];
+    if (CommandData.pointing_mode.el_mode == POINT_RASTER) {
+      CommandData.pointing_mode.el_mode = POINT_VEL;
+      CommandData.pointing_mode.el_vel = 0.0;
+    }
   } else if (command == MIndex("el_goto")) {  /* point in elevation */
     if (CommandData.pumps.bal_veto >= 0)
       CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
     CommandData.pointing_mode.el_mode = POINT_POINT;
     CommandData.pointing_mode.el1 = rvalues[0];
+    if (CommandData.pointing_mode.az_mode == POINT_RASTER) {
+      CommandData.pointing_mode.az_mode = POINT_VEL;
+      CommandData.pointing_mode.az_vel = 0.0;
+    }
   } else if (command == MIndex("el_vel")) {  /* fixed elevation velocity */
     if (CommandData.pumps.bal_veto >= 0)
       CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
     CommandData.pointing_mode.el_mode = POINT_VEL;
     CommandData.pointing_mode.el_vel = rvalues[0];
-
+    if (CommandData.pointing_mode.az_mode == POINT_RASTER) {
+      CommandData.pointing_mode.az_mode = POINT_VEL;
+      CommandData.pointing_mode.az_vel = 0.0;
+    }
   /***************************************/
   /********** Pointing Motor Gains *******/
   } else if (command == MIndex("roll_gain")) { /* roll Gains */
@@ -1311,7 +1330,7 @@ void InitCommandData() {
   CommandData.azi_gain.I = 10000; // unused
 
   CommandData.pivot_gain.SP = 2000;
-  CommandData.pivot_gain.P = 60;
+  CommandData.pivot_gain.P = 100;
   CommandData.pivot_gain.D = 18;  //unused
 
   CommandData.t_gybox_setpoint = 30.0;
