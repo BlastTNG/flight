@@ -616,8 +616,8 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.pumps.pwm1 = 2047 - rvalues[0] * 2047. / 100;
   } else if (command == bal_gain) {
     CommandData.pumps.bal_gain = rvalues[0];
-    CommandData.pumps.bal_min = 2047 - rvalues[1] * 2047. / 100;
-    CommandData.pumps.bal_max = 2047 - rvalues[2] * 2047. / 100;
+    CommandData.pumps.bal_max = 2047 - rvalues[1] * 2047. / 100;
+    CommandData.pumps.bal_min = 2047 - rvalues[2] * 2047. / 100;
 
     /***************************************/
     /********** Cooling System  ************/
