@@ -922,21 +922,21 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NSettingsButton->setText(tr("Settings . . ."));
   NSettingsButton->adjustSize();
 
-  NSendButton->setGeometry(PADDING, PADDING +
+  NSettingsButton->setGeometry(PADDING, PADDING +
                            2 * PADDING + h1 +
                            (int((2 + MAX_N_PARAMS)/2)) *
                            (h3 + SPACING) -
                            NSettingsButton->height()
-                           , NSendButton->width(),
-                           NSendButton->height());
-  NSettingsButton->setGeometry(2*PADDING + NAboutLabel->width() -
-                               NSettingsButton->width(),
+                           , NSettingsButton->width(),
+                           NSettingsButton->height());
+  NSendButton->setGeometry(2*PADDING + NAboutLabel->width() -
+                               NSendButton->width(),
                                PADDING + 2 * PADDING + h1 +
                                (int((2 + MAX_N_PARAMS)/2)) *
                                (h3 + SPACING) -
-                               NSettingsButton->height(),
-                               NSettingsButton->width(),
-                               NSettingsButton->height());
+                               NSendButton->height(),
+                               NSendButton->width(),
+                               NSendButton->height());
 
   NTopFrame->adjustSize();
 
