@@ -402,7 +402,7 @@ void InitialiseDirFile(int reset)
   int j, i, is_bolo = 0;
   char field[FIELD_LEN];
   char gpb[GPB_LEN];
-  char ext[9];
+  char ext[4] = "";
 
   if (rc.gzip_output) {
     defilecreat = &gzcreat;
@@ -413,7 +413,6 @@ void InitialiseDirFile(int reset)
     defilecreat = &creat;
     defilewrite = &write;
     defileclose = &close;
-    ext[0] = 0;
   }
 
 

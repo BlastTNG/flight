@@ -38,7 +38,7 @@
 
 #define VERSION_MAJOR    "2"
 #define VERSION_MINOR    "3"
-#define VERSION_REVISION "0"
+#define VERSION_REVISION "1"
 #define VERSION VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION 
 
 #define DEFAULT_CURFILE "/data/etc/defile.cur"
@@ -902,9 +902,9 @@ int main (int argc, char** argv)
     }
     usleep(100000);
   } while (!ri.writer_done);
-  printf("R:[%i of %i] W:[%i] %.3f kHz\n", ri.read, ri.old_total
-      + ri.chunk_total, ri.wrote, 1000. * ri.wrote / delta);
   pthread_join(read_thread, NULL);
   pthread_join(write_thread, NULL);
+  printf("R:[%i of %i] W:[%i] %.3f kHz\n", ri.read, ri.old_total
+      + ri.chunk_total, ri.wrote, 1000. * ri.wrote / delta);
   return 0;
 }
