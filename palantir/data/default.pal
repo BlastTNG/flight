@@ -322,12 +322,14 @@
         <WORD value="1" caption="Locked" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
+    <!--
     <MULTI caption="Override">
       <DATUM src="L_OVERRIDE">
         <WORD value="0" caption="OFF" textstyle="OK_BIT"/>
         <WORD value="1" caption="ON" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
+    -->
   </BOX>
   <BOX caption="Pointing Mode" colour="#880000" row="0" col="3" rowspan="1">
     <MULTI caption="Source">
@@ -393,20 +395,34 @@
     </NUMBER>
   </BOX>
   <BOX caption="Inner Frame Temps" colour="#002222" row="0" col="6" rowspan="1">
-    <NUMBER caption="DPM 3V">
-      <DATUM format="%.2f" src="T_DPM_3V" extrema="powtemp"/>
+    <NUMBER caption="DPM 5V">
+      <DATUM format="%.2f" src="T_DPM_5V" extrema="powtemp"/>
     </NUMBER>
     <NUMBER caption="DPM 7.5V">
       <DATUM format="%.2f" src="T_DPM_7.5V" extrema="powtemp"/>
     </NUMBER>
-    <NUMBER caption="Gyrobox">
+        <NUMBER caption="DPM 10V">
+                <DATUM format="%.2f" src="T_DPM_10V" extrema="powtemp"/>
+                    </NUMBER>
+                        <NUMBER caption="DAS">
+                                <DATUM format="%.2f" src="T_DAS" extrema="temp"/>
+                                    </NUMBER>
+
+    <NUMBER caption="Gyrobox 1">
       <DATUM format="%.2f" src="T_GYBOX" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Gyro Set">
+    <NUMBER caption="Gyro 1 Set">
       <DATUM format="%.2f" src="T_GY_SET" extrema="temp"/>
     </NUMBER>
+        <NUMBER caption="Gyrobox 2">
+                <DATUM format="%.2f" src="T_GYBOX2" extrema="temp"/>
+                    </NUMBER>
+                        <NUMBER caption="Gyro 2 Set">
+                                <DATUM format="%.2f" src="T_GY_SET2" extrema="temp"/>
+                                    </NUMBER>
+
     <NUMBER caption="ISC">
-      <DATUM format="%.2f" src="T_ISC" extrema="isctemp"/>
+      <DATUM format="%.2f" src="ISC_TEMP1" extrema="isctemp"/>
     </NUMBER>
     <NUMBER caption="IF Clin">
       <DATUM format="%.2f" src="T_CLIN_IF" extrema="temp"/>
@@ -464,7 +480,7 @@
       <DATUM format="%.2f" src="T_PV" extrema="pvtemp"/>
     </NUMBER>
     <NUMBER caption="CPU">
-      <DATUM format="%.2f" src="T_CPU" extrema="cputemp"/>
+      <DATUM format="%.2f" src="CPU_TEMP1" extrema="cputemp"/>
     </NUMBER>
     <NUMBER caption="SIP Clin">
       <DATUM format="%.2f" src="T_CLIN_SIP" extrema="temp"/>
@@ -485,9 +501,6 @@
   <BOX caption="Motor Temps" colour="#002222" row="3" col="5">
     <NUMBER caption="T Roll PWM">
       <DATUM format="%.2f" src="T_ROLL" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="T Race">
-      <DATUM format="%.2f" src="T_RACE" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Roll MC">
       <DATUM format="%.2f" src="T_ROLL" extrema="temp"/>
@@ -541,9 +554,6 @@
     <NUMBER caption="I Pivot">
       <DATUM format="%.2f" src="I_PIV" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I Race">
-      <DATUM format="%.2f" src="I_RACE" extrema="current"/>
-    </NUMBER>
   </BOX>
   <BOX caption="Currents" colour="#707" row="0" col="4" rowspan="1">
     <NUMBER caption="I DPM 3V">
@@ -576,8 +586,8 @@
     <NUMBER caption="I PV">
       <DATUM format="%.2f" src="I_PV" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I ISC">
-      <DATUM format="%.2f" src="I_ISC" extrema="current"/>
+    <NUMBER caption="I ISC + OSC">
+      <DATUM format="%.2f" src="I_STARCAM" extrema="current"/>
     </NUMBER>
   </BOX>
   <BOX caption="Bias and DAS" colour="#707" row="4" col="6">
@@ -642,7 +652,34 @@
       <DATUM format="%.0f" src="phase15" extrema="unknown"/>
    </NUMBER>
 
-  </BOX>
+ </BOX>
+ <BOX caption="PCUs" colour="#777700" row="5" col="2">
+    <NUMBER caption="V ACS Battery">
+      <DATUM format="%.2f" src="V_BATT_ACS" extrema="unknown"/>
+    </NUMBER>
+        <NUMBER caption="I ACS Gondola">
+                <DATUM format="%.2f" src="I_GOND_ACS" extrema="unknown"/>
+                    </NUMBER>
+
+     <NUMBER caption="I ACS Battery">
+             <DATUM format="%.2f" src="I_BATT_ACS" extrema="unknown"/>
+                 </NUMBER>
+     <NUMBER caption="I ACS Solar">
+             <DATUM format="%.2f" src="I_SOL_ACS" extrema="unknown"/>
+                 </NUMBER>
+      <NUMBER caption="V DAS Battery">
+              <DATUM format="%.2f" src="V_BATT_DAS" extrema="unknown"/>
+                  </NUMBER>
+       <NUMBER caption="I DAS Gondola">
+               <DATUM format="%.2f" src="I_GOND_DAS" extrema="unknown"/>
+                   </NUMBER>
+     <NUMBER caption="I DAS Battery">
+             <DATUM format="%.2f" src="I_BATT_DAS" extrema="unknown"/>
+                 </NUMBER>
+      <NUMBER caption="I DAS Solar">
+              <DATUM format="%.2f" src="I_SOL_DAS" extrema="unknown"/>
+                  </NUMBER>
+ </BOX>
   <BOX caption="State" colour="#777700" row="0" col="1" colspan="1" >
     <CURDIR caption="Dirfile">
       <DATUM/>
