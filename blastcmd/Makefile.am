@@ -40,4 +40,7 @@ distinstall: distcheck
 if INSTALL_BLASTCMD_LOG
 install-data-hook:
 	chmod 666 $(DESTDIR)$(dataetcdir)/blastcmd.log
+else
+install-data-hook:
+	/bin/true
 endif
