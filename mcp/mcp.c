@@ -12,6 +12,8 @@
 #include <errno.h>
 #include <signal.h>
 #include <math.h>
+#include <time.h>
+#include <sys/time.h>
 #include "bbc_pci.h"
 
 #include "tx_struct.h"
@@ -717,7 +719,6 @@ int main(int argc, char *argv[]) {
 #endif
 
   InitTxFrame();
-
   while (1) {
     pthread_mutex_lock(&mutex);
     CommandData_loc = CommandData;
@@ -727,7 +728,7 @@ int main(int argc, char *argv[]) {
       merror(MCP_ERROR, "Error on BBC read");
 
     if (!fill_Rx_frame(in_data, RxFrame))
-      mputs(MCP_ERROR, "Unrecognised word received from BBC");
+      ;//mputs(MCP_ERROR, "Unrecognised word received from BBC");
 
     if (IsNewFrame(in_data)) {
       frames_in++;

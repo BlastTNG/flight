@@ -53,7 +53,7 @@ extern "C" {
 #include "mcp.h"
 }
 
-#define INPUT_TTY "/dev/ttyS5"
+#define INPUT_TTY "/dev/ttyS1"
 
 int tty_fd;
 extern unsigned short* slow_data[FAST_PER_SLOW];
@@ -87,11 +87,11 @@ int OpenSerial() {
   term.c_oflag &= ~(OPOST);
   term.c_cflag |= CS8;
 
-  if (cfsetospeed(&term, B9600)) {       // Baud
+  if (cfsetospeed(&term, B19200)) {
     printf("Error setting serial output speed.");
     return -1;
   }
-  if (cfsetispeed(&term, B9600)) {       // Baud
+  if (cfsetispeed(&term, B19200)) {
     printf("Error setting serial output speed.");
     return -1;
   }
@@ -166,10 +166,11 @@ Buffer::~Buffer() {
 void Buffer::SetSize(int s) {
   if (s > size) {
     size = s;
-    buf = (unsigned char *)realloc(buf, size);
+    // Important to allocate more than requested, in case a frame overflows and
+    // has to be truncated.  Weird memory errors can ensue . . .
+    safeallocsize = size * BUFFER_SAFE_ALLOC;
+    buf = (unsigned char *)realloc(buf, safeallocsize);
   }
-  //buf = (unsigned char *)realloc(buf, size * 5);  // OK, so I'm being extra
-                                                  // careful by multiplying by 5
 }
 
 
@@ -239,6 +240,20 @@ int Buffer::MaxSize() {
 }
 
 
+void Buffer::CheckBytePosRange() {
+  if (bytepos >= safeallocsize) {
+    printf("Alice: serious error!!  Class BUFFER was not properly allocated.  "
+           "Size was set to %d; tried to write to %d.  Make sure the size is "
+           "being set correctly with the Buffer::SetSize function.  Resetting "
+           "bytepos to %d (compression will not work).\n", size, bytepos - 1,
+           size - 1);
+    bytepos = size - 1;
+  }
+
+  return;
+}
+
+
 //-------------------------------------------------------------
 //
 // Start (public): start a new buffer and write the first sync
@@ -271,13 +286,21 @@ void Buffer::Start(char filenum, unsigned int framenum) {
  // Postion 8, 9 reserved for CRC
   // Position 10, 11 reserved for buffer length
 
-  buf[FILEC] |= 0xf0 + filenum;
+/*  buf[FILEC] |= 0xf0 + filenum;
 
   buf[FRAMEC] = framenum & 0xff;
   buf[FRAMEC+1] = (framenum >> 8) & 0xff;
   buf[FRAMEC+2] = (framenum >> 16) & 0xff;
+*/
+  buf[4] |= 0xf0 + filenum;
 
-  bytepos = START_DATA;
+  buf[5] = framenum & 0xff;
+  buf[6] = (framenum >> 8) & 0xff;
+  buf[7] = (framenum >> 16) & 0xff;
+
+/*  bytepos = START_DATA;*/
+//  printf("======================>> %d\n", framenum);
+  bytepos = 8;
   bitpos = 0;
 }
 
@@ -295,10 +318,12 @@ void Buffer::Start(char filenum, unsigned int framenum) {
 void Buffer::Introduce() {
   if (bitpos > 0)
     bytepos++;
+  CheckBytePosRange();
 
   // Section intro:  10101010 + 16 bits = num bytes in section
   buf[bytepos++] = 0xaa;
   bytepos += 2; // Reserve 2 bytes to write in num bytes afterwards
+  CheckBytePosRange();
 
   bitpos = 0;
   overnum = 0;
@@ -317,9 +342,11 @@ void Buffer::Introduce() {
 void Buffer::NoDataMarker() {
   if (bitpos > 0)
     bytepos++;
+  CheckBytePosRange();
 
   // No data marker: 10011001 = 0x99
   buf[bytepos++] = 0x99;
+  CheckBytePosRange();
 
   bitpos = 0;
   overnum = 0;
@@ -365,14 +392,16 @@ void Buffer::Stop() {
 
   if (bitpos > 0)
     bytepos++;
-
+  CheckBytePosRange();
+  
   buf[bytepos++] = 0x55;
+  CheckBytePosRange();
   bitpos = 0;
 
   ndata = CurrSize() - 6;
 
-  *(unsigned short *)(buf + CRC) = UpdateCRCArc(0, buf + FILEC, CurrSize() - 8);
-  *(unsigned short *)(buf + BLEN) = ndata;
+//  *(unsigned short *)(buf + CRC) = UpdateCRCArc(0, buf + FILEC, CurrSize() - 8);
+//  *(unsigned short *)(buf + BLEN) = ndata;
 
   // Send packets
   if (write(tty_fd, buf, CurrSize()) != CurrSize())
@@ -393,7 +422,8 @@ void Buffer::Stop() {
 void Buffer::WriteChunk(char numbits, long long datum) {
 	// Do we have room for the whole datum in this byte?
   if (numbits - 1 > 7 - bitpos) {
-    buf[bytepos++] |= (datum & ((1 << (8 - bitpos)) - 1)) << bitpos;
+    buf[bytepos++] |= (datum & (((long long)1 << (8 - bitpos)) - 1)) << bitpos;
+    CheckBytePosRange();
     datum = datum >> (8 - bitpos);
     numbits -= 8 - bitpos;
     bitpos = 0;
@@ -402,6 +432,7 @@ void Buffer::WriteChunk(char numbits, long long datum) {
 	// Is the remaining datum larger than 8 bits?
   while (datum > 0xFF) {
     buf[bytepos++] |= datum & 0xFF;
+    CheckBytePosRange();
     datum = datum >> 8;
     numbits -= 8;
   }
@@ -412,6 +443,7 @@ void Buffer::WriteChunk(char numbits, long long datum) {
   while(bitpos > 7) {
     bitpos -= 8;
     bytepos++;
+    CheckBytePosRange();
   }
   //if (bitpos > 7) {
   //  bitpos = 0;
@@ -442,10 +474,10 @@ void Buffer::WriteTo(long long datum, char numbits, char oversize,
   long long i;
 
   if (hassign)
-   datum += (1 << (numbits - 1)) - 1;
+   datum += ((long long)1 << (numbits - 1)) - 1;
 
-  if (datum < (1 << numbits) - 1 && datum >= 0) {  // Does the datum fit in
-		                                               // numbits?
+  if (datum < ((long long)1 << numbits) - 1 && datum >= 0) { // Does the datum 
+                                                             // fit in numbits?
     WriteChunk(numbits, datum);
   }
   else {
@@ -453,14 +485,14 @@ void Buffer::WriteTo(long long datum, char numbits, char oversize,
 		// this part somewhat clear
 
     overnum++;
-    i = ((1 << oversize) - 1);
-    WriteChunk(numbits, (1 << numbits) - 1);
+    i = (((long long)1 << oversize) - 1);
+    WriteChunk(numbits, ((long long)1 << numbits) - 1);
     if (datum < 0) {
       datum =  datum * -1 - 1;
       WriteChunk(1, 1);
     }
     else {
-      datum = datum - (1 << numbits) + 1;
+      datum = datum - ((long long)1 << numbits) + 1;
       WriteChunk(1, 0);
     }
     while (datum > i) {
@@ -503,7 +535,7 @@ Alice::Alice() {
   DataSource = new FrameBuffer(&small_index, smalldata, slow_data, 1);
   sendbuf = new Buffer();    // 10 bits per byte
   DataInfo = new DataHolder();
-  fprintf(stderr, "allocating Alice\n");
+  mprintf(MCP_INFO, "SMALL (Alice): initialising.");
 }
 
 
@@ -643,8 +675,8 @@ void Alice::SendDiff(double *data, int num, struct DataStruct_glob *currInfo,
 
   offset = (long long)(Differentiate(data, num, currInfo->divider));
 
-  printf("Differentiated Compression (%d samples):  offset = %lld, "
-			   "divider = %d\n", num, offset, currInfo->divider);
+  //printf("Differentiated Compression (%d samples):  offset = %lld, "
+  //       "divider = %d\n", num, offset, currInfo->divider);
 
   sendbuf->WriteTo(offset, 24, 16, true);   // Send offset, divider information
   sendbuf->WriteTo(currInfo->divider, 4, 4, false);
@@ -666,13 +698,13 @@ void Alice::SendDiff(double *data, int num, struct DataStruct_glob *currInfo,
       currInfo->divider = 1;
   }
 
-  printf("Compression: %0.2f %% (%d bytes)\n",
-         100 * float(sendbuf->SectionSize()) / float(num * sizeof(int)),
-				 sendbuf->SectionSize());
-  printf("%0.2f %% of the samples spilled over the %d bit requested size\n"
-			   "   into %d bit overflow chunks.\n\n",
-         100 * float(sendbuf->overnum) / float(num), currInfo->numbits,
-         currInfo->overflowsize);
+  //printf("Compression: %0.2f %% (%d bytes)\n",
+  //       100 * float(sendbuf->SectionSize()) / float(num * sizeof(int)),
+  //       sendbuf->SectionSize());
+  //printf("%0.2f %% of the samples spilled over the %d bit requested size\n"
+  //       "   into %d bit overflow chunks.\n\n",
+  //       100 * float(sendbuf->overnum) / float(num), currInfo->numbits,
+  //       currInfo->overflowsize);
 }
 
 
@@ -704,8 +736,8 @@ void Alice::SendInt(double *data, int num, struct DataStruct_glob *currInfo,
   data[0] = Round(Differentiate(data, num, currInfo->divider) /
       currInfo->divider);
 
-  printf("Integral Preserving Compression (%d samples):  offset = %lld, "
-      "divider = %d\n", num, (long long)data[0], currInfo->divider);
+  //printf("Integral Preserving Compression (%d samples):  offset = %lld, "
+  //    "divider = %d\n", num, (long long)data[0], currInfo->divider);
 
   sendbuf->WriteTo(currInfo->divider, 4, 4, false);  // Send offset and divider
   sendbuf->WriteTo((long long)data[0], 24, 16, true);
@@ -727,13 +759,13 @@ void Alice::SendInt(double *data, int num, struct DataStruct_glob *currInfo,
       currInfo->divider = 1;
   }
 
-  printf("Compression: %0.2f %% (%d bytes)\n",
-      100 * float(sendbuf->SectionSize()) / float(num * sizeof(int)),
-      sendbuf->SectionSize());
-  printf("%0.2f %% of the samples spilled over the %d bit requested size\n"
-      "   into %d bit overflow chunks.\n\n",
-      100 * float(sendbuf->overnum) / float(num), currInfo->numbits,
-      currInfo->overflowsize);
+  //printf("Compression: %0.2f %% (%d bytes)\n",
+  //    100 * float(sendbuf->SectionSize()) / float(num * sizeof(int)),
+  //    sendbuf->SectionSize());
+  //printf("%0.2f %% of the samples spilled over the %d bit requested size\n"
+  //    "   into %d bit overflow chunks.\n\n",
+  //    100 * float(sendbuf->overnum) / float(num), currInfo->numbits,
+  //    currInfo->overflowsize);
 }
 
 
@@ -752,11 +784,11 @@ void Alice::SendSingle(double *data, struct DataStruct_glob *currInfo) {
   double divider, sendval;
 
   divider = (double)(currInfo->maxval - currInfo->minval + 1) /
-    (double)((unsigned int)(1 << currInfo->numbits));
+    (double)((long long)1 << currInfo->numbits);
   sendval = Round((data[0] - (double)currInfo->minval) / divider);
 
-  printf("Single Value Compression: value = %lld (%lld) - %f\n\n",
-      (long long)data[0], (long long)sendval, divider);
+  //printf("Single Value Compression: value = %lld (%lld) - %g\n\n",
+  //    (long long)data[0], (long long)sendval, divider);
 
   // Write the first value from *data
   sendbuf->WriteTo((long long)sendval, currInfo->numbits,
@@ -787,11 +819,11 @@ void Alice::SendAverage(double *data, int num,
     sum += data[i];
 
   divider = (double)(currInfo->maxval - currInfo->minval + 1) /
-    (double)((unsigned int)(1 << currInfo->numbits));
+    (double)((long long)1 << currInfo->numbits);
   sendval = Round((sum / (double)num - (double)currInfo->minval) / divider);
 
-  printf("Average Value Compression: average = %.12g (%lld, %g)\n\n",
-      Round(sum / num), (long long)sendval, divider);
+  //printf("Average Value Compression: average = %.12g (%lld, %g)\n\n",
+  //    Round(sum / num), (long long)sendval, divider);
 
   // Write average value to buffer
   sendbuf->WriteTo((long long)sendval, currInfo->numbits,
@@ -894,10 +926,7 @@ int Alice::FindPowTwo(int val, float threshold) {
 \*----------------------------------------------------------------------------*/
 
 void Alice::CompressionLoop() {
-  // For the CVS commit, comment out the meat of this routine while I debug it.
-  while (123 > 88)
-    usleep(5000);
-/*  double *filterdata, *rawdata;
+  double *filterdata, *rawdata;
   int i, j, k, l;
   struct DataStruct_glob *currInfo;
   int numframes = 0, numtoread, readleftpad, readrightpad = 0;
@@ -913,7 +942,6 @@ void Alice::CompressionLoop() {
   filterdatasize = 1;
 
   for (;;) {
-
     // Check for new XML file command written by mcp.
     if (GetCurrentXML()) {
 
@@ -948,29 +976,28 @@ void Alice::CompressionLoop() {
       DataSource->Resize(numtoread * 3);
 
       mprintf(MCP_INFO, "SMALL (Alice):  Filling padding buffer.");
-
       // Wait until there exists enough data for this padding
       framepos = DataSource->NumFrames();
       while (DataSource->NumFrames() < framepos + readleftpad + readrightpad) {
-        usleep(3000);
-        DataSource->Update();
+        usleep(1000);
+//        DataSource->Update();
       }
       framepos += readleftpad + readrightpad;
     }
-
+    
     // Wait until mcp has written numframes of data
     while (DataSource->NumFrames() < framepos + numframes) {
-      usleep(3000);
-      DataSource->Update();
+      usleep(1000);
+//      DataSource->Update();
     }
-
+    
     // Start a new buffer for the downlink
     sendbuf->Start(XMLsrc, (unsigned int)(framepos - readrightpad));
     i = 0;
     earlysend = false;
 
-    printf("Reading from %d to %d\n\n", framepos - readrightpad,
-        framepos + numframes - readrightpad);
+    mprintf(MCP_INFO, "SMALL (Alice): Reading from %d to %d . . .", 
+            framepos - readrightpad, framepos + numframes - readrightpad);
 
     // Go through each of the slow fields we want to compress.  Slow fields only
     // send down one value per frame.  They are treated like one big "fast"
@@ -983,7 +1010,7 @@ void Alice::CompressionLoop() {
       for (currInfo = DataInfo->firstSlow(); currInfo != NULL;
           currInfo = DataInfo->nextSlow()) {
 
-        printf("Reading from %s . . .\n", currInfo->src);
+        //printf("Reading from %s . . .\n", currInfo->src);
 
         switch (currInfo->type) {
           case SINGLE:
@@ -994,7 +1021,7 @@ void Alice::CompressionLoop() {
               rawdata[0] = 0;
               SendSingle(rawdata, currInfo);  // Send down a zero
             }
-            else
+            else              
               SendSingle(rawdata, currInfo);
             break;
 
@@ -1031,7 +1058,7 @@ void Alice::CompressionLoop() {
       rightpad = int((powtwo - rawsize - leftpad * currInfo->framefreq) /
           currInfo->framefreq) + 1;
 
-      printf("Reading from %s . . .\n", currInfo->src);
+      //printf("Reading from %s . . .\n", currInfo->src);
 
       // Read data from Frodo's disk
       if ((numread = DataSource->ReadField(filterdata, currInfo->src,
@@ -1086,10 +1113,10 @@ void Alice::CompressionLoop() {
     }
     // Send down the compressed buffer
     sendbuf->Stop();
-    printf("\nSmall: wrote a packet of %d bytes.\n\n", sendbuf->CurrSize());
+    mprintf(MCP_INFO, "SMALL (Alice): wrote a packet of %d bytes.", 
+            sendbuf->CurrSize());
     framepos += numframes;
-
-  }*/
+  }
 }
 
 
@@ -1141,6 +1168,14 @@ FrameBuffer::FrameBuffer(unsigned int *mcpindex_in,
 
   Resize(numframes_in);
   
+  int i, j;
+  testbuf = (unsigned short **)malloc(100 * sizeof(unsigned short *));
+  for (j = 0; j < 100; j++) {
+    testbuf[j] = (unsigned short *)malloc(BiPhaseFrameSize);
+    for (i = 0; (unsigned int)i < BiPhaseFrameSize / sizeof(unsigned short); i++)
+      testbuf[j][i] = j;
+  }
+  
   return;
 }
 
@@ -1154,6 +1189,10 @@ void FrameBuffer::Resize(int numframes_in) {
   }
 
   if (memallocated) {
+    exitupdatethread = true;
+    while (exitupdatethread)
+      usleep(1000);
+    
     for (i = 0; i < numframes; i++) {
       for (j = 0; j < FAST_PER_SLOW; j++) {
         free(slowbuf[i][j]);
@@ -1194,34 +1233,65 @@ void FrameBuffer::Resize(int numframes_in) {
     merror(MCP_FATAL, "SMALL (FrameBuffer): unable to malloc either fastbuf or "
                       "slowbuf.");
 
-  framenum = 0;
+  framenum = -1;
   memallocated = true;
   multiplexsynced = false;
-  pseudoframe = 0;
+  pseudoframe = -1;
+  exitupdatethread = false;
+
+  pthread_create(&update_id, NULL, FrameBuffer::UpdateThreadEntry, this);
+  
   return;
+}
+
+void *FrameBuffer::UpdateThreadEntry(void *pthis) {
+  FrameBuffer *mine = (FrameBuffer *)pthis;
+  mine->Update();
+
+  return NULL;
 }
 
 void FrameBuffer::Update() {
   unsigned int i;
+  static int k = 0;
   int j;
 
-  if ((i = GETREADINDEX(*mcpindex)) != lastmcpindex) {
-    lastmcpindex = i;
-    multiplexindex = fastdata[i][MULTIPLEX_WORD];
-    if (!multiplexsynced && multiplexindex) // We want to start out with
-      return;                               // multiplex index 0
-    multiplexsynced = true;
-    
-    memcpy(fastbuf[framenum][multiplexindex], fastdata[i], BiPhaseFrameSize);
-    if (!multiplexindex) {
-      for (j = 0; j < FAST_PER_SLOW; j++)
-        memcpy(slowbuf[framenum][j], slowdata[j], slowsPerBi0Frame * 
-               sizeof(unsigned short));
-      if (++framenum >= numframes)
-        framenum = 0;
-      pseudoframe++;
+  while (1 == 1) {
+    usleep(1000);
+    if (exitupdatethread) {
+      exitupdatethread = false;
+      break;
+    }
+  
+    if ((i = GETREADINDEX(*mcpindex)) != lastmcpindex) {
+      lastmcpindex = i;
+      multiplexindex = fastdata[i][MULTIPLEX_WORD];
+      if (!multiplexsynced && multiplexindex) // We want to start out with
+        continue;                             // multiplex index 0
+      multiplexsynced = true;
+
+      if (multiplexindex < 0 || multiplexindex >= FAST_PER_SLOW)
+        printf("!!!!!!!!!!!!!!!!!!!!!!---------!!!!!!!!!!!!!!!!!!!!!\n");
+      if (i < 0 || i >= 3)
+        printf("----------------------!!!!!!!!!---------------------\n");
+
+      if (!multiplexindex) {
+        if (++framenum >= numframes)
+          framenum = 0;
+        pseudoframe++;
+
+        for (j = 0; j < FAST_PER_SLOW; j++)
+          memcpy(slowbuf[framenum][j], slowdata[j], slowsPerBi0Frame * 
+              sizeof(unsigned short));
+      }
+      memcpy(fastbuf[framenum][multiplexindex], fastdata[i], BiPhaseFrameSize);
+      //memcpy(fastbuf[framenum][multiplexindex], testbuf[k], BiPhaseFrameSize);
+      if (++k >= 100)
+        k = 0;
     }
   }
+
+  return;
 }
 
 int FrameBuffer::NumFrames() {
@@ -1229,25 +1299,26 @@ int FrameBuffer::NumFrames() {
 }
 
 int FrameBuffer::ReadField(double *returnbuf, const char *fieldname, 
-                           int framenum_in, int numframes_in) {
+    int framenum_in, int numframes_in) {
   int i, j, k, truenum, wide, mindex, chnum;
   struct NiosStruct* address; 
   unsigned short msb, lsb;
 
   if ((address = GetNiosAddr(fieldname)) == NULL)
     return 0;
-  
+
   wide = address->wide;
   mindex = BiPhaseLookup[BI0_MAGIC(address->bbcAddr)].index;
   chnum = BiPhaseLookup[BI0_MAGIC(address->bbcAddr)].channel;
 
   if (pseudoframe - framenum_in > numframes || framenum_in > pseudoframe)
     return 0;
-  
+
+  truenum = framenum_in - (int)((double)framenum_in / (double)numframes) * 
+    numframes;
+  if (truenum < 0)
+    truenum += numframes;
   for (i = framenum_in, j = 0; i < framenum_in + numframes_in; i++) {
-    if ((truenum = framenum - i) < 0)
-      truenum += numframes;
-    
     if (mindex == NOT_MULTIPLEXED)
       for (k = 0; k < FAST_PER_SLOW; k++) {
         lsb = fastbuf[truenum][k][chnum];
@@ -1267,6 +1338,9 @@ int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
 
       returnbuf[j++] = (double)((msb << 16) | lsb);
     }
+
+    if (++truenum >= numframes)
+      truenum = 0;
   }
 
   return j;
@@ -1274,7 +1348,7 @@ int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
 
 FrameBuffer::~FrameBuffer() {
   int i, j;
-  
+
   if (memallocated) {
     for (i = 0; i < numframes; i++) {
       for (j = 0; j < FAST_PER_SLOW; j++) {
@@ -1287,7 +1361,7 @@ FrameBuffer::~FrameBuffer() {
     free(slowbuf);
     free(fastbuf);
   }
-  
+
   return;
 }
 
@@ -1308,10 +1382,10 @@ FrameBuffer::~FrameBuffer() {
 int startsmall() {
   Alice *drinkme;
 
-  printf("Opening serial port...\n");
-  if (1 == 0) {
-//  if ((tty_fd = OpenSerial()) < 0) {
-    mprintf(MCP_ERROR, "Couldn't open serial port!!\n");
+  mprintf(MCP_INFO, "SMALL (Alice):  Opening serial port.");
+//  if (1 == 0) {
+  if ((tty_fd = OpenSerial()) < 0) {
+    mprintf(MCP_ERROR, "Couldn't open serial port!");
     return 1;
   }
 

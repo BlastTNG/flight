@@ -7,7 +7,10 @@
 #ifndef SMALL_H
 #define SMALL_H
 
+#include <pthread.h>
 #include "small_c.h"
+
+#define BUFFER_SAFE_ALLOC       5
 
 class AliceFile;
 class DataHolder;
@@ -33,14 +36,18 @@ public:
   int overnum;
 private:
   void WriteChunk(char numbits, long long datum);
+  void CheckBytePosRange();
 
   unsigned char *buf;
   int size;
+  int safeallocsize;
   int bytepos;
   char bitpos;
   char overflowsize;
   int startbyte;
 };
+
+
 
 class FrameBuffer
 {
@@ -57,16 +64,18 @@ class FrameBuffer
   protected:
 
   private:
+    static void *UpdateThreadEntry(void *);
+    
     unsigned int *mcpindex, lastmcpindex;
-    unsigned short **fastdata, ***fastbuf;
+    unsigned short **fastdata, ***fastbuf, **testbuf;
     unsigned short **slowdata, ***slowbuf;
     int numframes;      // Number of frames in circular buffer.
     int framenum;       // Current frame in circ. buffer.
     int multiplexindex; // Alice defines frame as a 5 Hz frame. 
     int pseudoframe;    // Trick Alice into thinking that the buffer is linear
                         // by having a linear frame counter.
-
-    bool memallocated, multiplexsynced;
+    bool memallocated, multiplexsynced, exitupdatethread;
+    pthread_t update_id;
 };
 
 class Alice

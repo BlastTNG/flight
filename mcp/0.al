@@ -61,14 +61,13 @@
 <SLOWDATA>
 
   # SINGLE -- send down only one value (the first one) per downlink frame
-  <SINGLE src="i_el" predefined="u_to_8bits" perframe="1"/>
-  <SINGLE src="t_gybox" numbits="11" overbits="3" perframe="1" minval="1024"
+  <SINGLE src="t_gybox" numbits="11" overbits="3" perframe="20" minval="1024"
           maxval="60000"/>
+  <SINGLE src="mcp_frame" numbits="32" overbits="3" perframe="20" minval="0"
+          maxval="4294967295"/>
 
   # AVG -- average all samples and send down the arithmatic mean
   <AVG src="t_pv" predefined="u_to_8bits" minval="16" perframe="1"/>
-  <AVG src="cryoout2" numbits="4" overbits="1" perframe="1" minval="-1024"
-       maxval="1024"/>
   
 </SLOWDATA>
 
@@ -96,11 +95,10 @@
   <DIFF src="n7ref" predefined="diff1" divider="4" overbits="2"/>
 
   # INT -- integral preserving compression (see readme file for more info)
-  <INT src="gyro1" predefined="int1" samplefreq="8" divider="2"/>
-  <DIFF src="coolness" numbits="6" overbits="1" divider="2" forcediv="true"
-        perframe="1" samplefreq="1"/>
+  <INT src="gyro1" predefined="int1" numbits="9" samplefreq="1" divider="2"/>
+  <INT src="gyro2" predefined="int1" samplefreq="1" divider="2"/>
   <INT src="gyro3" numbits="3" overbits="1" divider="6" forcediv="false"
-       perframe="20" samplefreq="16"/>
+       perframe="20" samplefreq="1"/>
   
 </FASTDATA>
 
