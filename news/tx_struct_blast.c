@@ -91,6 +91,7 @@ struct ChannelStruct SlowChannels[] = {
 
   {"t_roll",       'r',  ACS1,  9,           -0.00625,          136.45, 'u'},
   {"i_roll",       'r',  ACS1, 11,      0.00048828125,          -16.09, 'u'},
+  {"t_of1",        'r',  ACS1, 13,           -0.00625,          136.45, 'u'},
   {"t_gyro2",      'r',  ACS1, 17,          -0.003125,            79.8, 'u'},
   {"t_gyro3",      'r',  ACS1, 19,          -0.003125,            79.8, 'u'},
   {"t_gyro1",      'r',  ACS1, 21,          -0.003125,            79.8, 'u'},
@@ -113,7 +114,7 @@ struct ChannelStruct SlowChannels[] = {
   {"use_analogue", 'w',  ACS1, 20,                1.0,             0.0, 'u'},
 
   {"t_battery",    'r',  ACS2,  1,           -0.00625,          136.45, 'u'},
-  {"t_out_heatx",  'r',  ACS2,  3,           -0.00625,          136.45, 'u'},
+  {"t_sun_sensor", 'r',  ACS2,  3,           -0.00625,          136.45, 'u'},
   {"i_gybox",      'r',  ACS2,  5,          -0.000625,           20.48, 'u'},
   {"pch_clin_piv", 'r',  ACS2,  7,      4.0/5333.3333,       -4.*6.144, 'u'},
   {"roll_clin_piv",'r',  ACS2,  9,      4.0/5333.3333,       -4.*6.144, 'u'},
@@ -127,7 +128,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_br_sshield", 'r',  ACS2, 25,           -0.00625,          136.45, 'u'},
   {"t_el_bearing", 'r',  ACS2, 27,           -0.00625,          136.45, 'u'},
   {"t_lock_motor", 'r',  ACS2, 29,           -0.00625,          136.45, 'u'},
-  {"t_sun_sensor", 'r',  ACS2, 31,           -0.00625,          136.45, 'u'},
+  {"t_out_heatx",  'r',  ACS2, 31,           -0.00625,          136.45, 'u'},
   {"t_pv",         'r',  ACS2, 33,           -0.00625,          136.45, 'u'},
   {"i_pv",         'r',  ACS2, 35,       -0.002083333,          68.267, 'u'},
   {"t_apm_3v",     'r',  ACS2, 37,           -0.00625,          136.45, 'u'},
@@ -215,9 +216,8 @@ struct ChannelStruct SlowChannels[] = {
   {"i_dpm_5v",     'r',  BIAS, 27,          -0.000625,           20.48, 'u'},
   {"i_dpm_10v",    'r',  BIAS, 29,          -0.000625,           20.48, 'u'},
   {"i_rec",        'r',  BIAS, 31,           0.000625,          -20.48, 'u'},
-  {"t_baffle",     'r',  BIAS, 33,           -0.00625,          136.45, 'u'},
   {"t_rec",        'r',  BIAS, 35,           -0.00625,          136.45, 'u'},
-  {"t_if12",       'r',  BIAS, 37,           -0.00625,          136.45, 'u'},
+  {"t_in_heatx",   'r',  BIAS, 37,           -0.00625,          136.45, 'u'},
   {"t_dpm_7.5v",   'r',  BIAS, 41,           -0.00625,          136.45, 'u'},
   {"t_dpm_10v",    'r',  BIAS, 43,           -0.00625,          136.45, 'u'},
   {"t_dpm_5v",     'r',  BIAS, 45,           -0.00625,          136.45, 'u'},
@@ -468,7 +468,7 @@ struct ChannelStruct SlowChannels[] = {
 
 struct ChannelStruct WideFastChannels[] = {
 #ifndef BOLOTEST
-  {"t_gybox2",    'r',  ACS1, 12,          TGYBOX_M,             TGYBOX_B, 'U'},
+  {"t_gybox2",    'r',  BIAS, 32,          TGYBOX_M ,            TGYBOX_B, 'U'},
   {"t_gybox",     'r',  ACS1, 14,          TGYBOX_M,             TGYBOX_B, 'U'},
   {"raw_gy1",     'r',  ACS1, 26,     -AGY32_TO_DPS,
                                      AGY32_OFFSET * AGY32_TO_DPS + 0.1925, 'U'},
