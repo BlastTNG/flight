@@ -845,7 +845,6 @@ int main (int argc, char** argv)
   /* Make the Channel Struct */
   MakeAddressLookups();
 
-
   printf("Frame size: %i bytes\n", BiPhaseFrameSize);
 
   /* Start */

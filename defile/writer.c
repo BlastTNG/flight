@@ -489,7 +489,7 @@ void InitialiseDirFile(int reset)
   }
   for (i = 0; i < ccFast; i++) {
     if (strcmp(FastChList[i].field, "n5c0lo") == 0) {
-      bolo_i0 = i + FAST_OFFSET;
+      bolo_i0 = i + FAST_OFFSET + slowsPerBi0Frame;
       break;
     } else if (strlen(FastChList[i].field) > 0) {
       normal_fast[n_fast].size = FieldSize(FastChList[i].type,
@@ -515,7 +515,7 @@ void InitialiseDirFile(int reset)
           exit(1);
         }
       }
-      normal_fast[n_fast].i0 = i + FAST_OFFSET;
+      normal_fast[n_fast].i0 = i + FAST_OFFSET + slowsPerBi0Frame;
       normal_fast[n_fast].i_in = normal_fast[n_fast].i_out = 0;
       if (reset) {
         if (rc.resume_at > 0)
