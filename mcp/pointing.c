@@ -159,7 +159,7 @@ int MagConvert(double *mag_az) {
   /* The year must be between 2000.0 and 2005.0 with current model data */
   /* */
   /* The functions called are in 'geomag.c' (Adam. H) */
-  if ((t = PointingData[i_point_read].t) > oldt + 300) {
+  if ((t = PointingData[i_point_read].t) > oldt + 10) {
     oldt = t;
     gmtime_r(&t, &now);
     year = 1900 + now.tm_year + now.tm_yday / 365.25;
@@ -203,15 +203,15 @@ int DGPSConvert(double *dgps_az) {
   int i_dgpsatt;
 
   i_dgpsatt = GETREADINDEX(dgpsatt_index);
+  *dgps_az = DGPSAtt[i_dgpsatt].az;
+  NormalizeAngle(dgps_az);
 
   if (i_dgpsatt != last_i_dgpsatt) {
     if (DGPSAtt[i_dgpsatt].att_ok==1) {
-      *dgps_az = DGPSAtt[i_dgpsatt].az;
-      NormalizeAngle(dgps_az);
       return (1);
     }
   }
-  *dgps_az = 0;
+  //*dgps_az = 0;
   return(0);
 }
 

@@ -19,12 +19,10 @@ int dgpspos_index = 0;
 
 time_t DGPSTime;
 
-int setGpsPort() {
+int setGpsPort9600() {
   int fd;
-  //int tmp_fd;
 
   struct termios term; 
-
 
   if ((fd = open(GPSCOM, O_RDWR)) < 0) {
     perror("Unable to open dgps serial port");
@@ -36,32 +34,12 @@ int setGpsPort() {
     return 1;
   }
 
-  //tmp_fd = open("/dev/ttyS5", O_RDWR);
-  //tcgetattr(tmp_fd, &term);
-  //close(tmp_fd);
-
-  //term.c_iflag &= ~(INPCK|IXON|IXOFF);
-  //term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
   term.c_iflag = 0;
-
-  //term.c_oflag &= ~(OPOST);
   term.c_oflag = 0;
-
   term.c_cflag &= ~(CSTOPB | CSIZE);
   term.c_cflag |= CS8;
-
-
   term.c_lflag = 0;
-  //term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
-
-  //term.c_cc[VMIN] = 0;
-  //term.c_cc[VTIME] = 0;
-
-
-  //if (cfsetospeed(&term, B9600)) {          /*  <======= SET THE SPEED HERE */
-  //  perror("error setting serial output speed");
-  //  return 1;
-  //}
+  
   if (cfsetispeed(&term, B9600)) {          /*  <======= SET THE SPEED HERE */
     perror("error setting serial input speed");
     return 1;
@@ -72,6 +50,43 @@ int setGpsPort() {
     return 1;
   }
 
+  close(fd);
+  return 0;
+}
+
+
+int setGpsPort38400() {
+  int fd;
+
+  struct termios term; 
+
+  if ((fd = open(GPSCOM, O_RDWR)) < 0) {
+    perror("Unable to open dgps serial port");
+    return 1;
+  }
+
+  if (tcgetattr(fd, &term)) {
+    perror("Unable to get dgps serial port attributes");
+    return 1;
+  }
+
+  term.c_iflag = 0;
+  term.c_oflag = 0;
+  term.c_cflag &= ~(CSTOPB | CSIZE);
+  term.c_cflag |= CS8;
+  term.c_lflag = 0;
+  
+  if (cfsetispeed(&term, B38400)) {          /*  <======= SET THE SPEED HERE */
+    perror("error setting serial input speed");
+    return 1;
+  }
+
+  if( tcsetattr(fd, TCSANOW, &term) ) {
+    perror("Unable to set serial attributes");
+    return 1;
+  }
+
+  close(fd);
   return 0;
 }
 
@@ -122,21 +137,35 @@ void WatchDGPS() {
 
   DGPSTime = 0; 
 
-  if (setGpsPort()) return; // exit thread on port error.
+  if (setGpsPort9600()) return; // exit thread on port error.
 
   fp = fopen(GPSCOM, "r+");
   if (fp==NULL) {
     perror("error opening gps port for i/o");
     return; // exit thread on port error
   }
+  fprintf(fp,"$PASHS,SPD,B,7\r\n");
+
+  fclose(fp);
+
+  if (setGpsPort38400()) return; // exit thread on port error.
+
+  fp = fopen(GPSCOM, "r+");
+  if (fp==NULL) {
+    perror("error opening gps port for i/o");
+    return; // exit thread on port error
+  }
+
   //fprintf(fp,"$PASHS,RST\r\n");  // reset to defaults
   //sleep(10);
-  /***** THESE NEED TO BE SET FROM A SURVEY ******/
-  fprintf(fp,"$PASHS,3DF,OFS,+45.0,+0.0,+0.0\r\n"); // array offest p71
-  fprintf(fp,"$PASHS,3DF,V12,+1.0,0.0,0.0\r\n");
-  fprintf(fp,"$PASHS,3DF,V13,+1.4,+1.4,0.0\r\n");
-  fprintf(fp,"$PASHS,3DF,V14,+0,+1.0,0.0\r\n");
+  /***** THESE were set by MD/ 8/28/03 ******/
+  fprintf(fp,"$PASHS,3DF,V12,+000.000,+003.239,-000.000\r\n");
+  fprintf(fp,"$PASHS,3DF,V13,-001.254,+002.446,-000.024\r\n");
+  fprintf(fp,"$PASHS,3DF,V14,+001.346,+000.560,-000.015\r\n");
+  fprintf(fp,"$PASHS,3DF,OFS,-062.85,+00.00,+00.00\r\n"); // array offest p71
+  fprintf(fp,"$PASHS,SAV,Y\r\n");
   /**********************************************/
+  fprintf(fp,"$PASHS,3DF,FLT,N\r\n"); // no averaging filter
   fprintf(fp,"$PASHS,3DF,ANG,3\r\n"); // max array tilt p 73
   fprintf(fp,"$PASHS,NME,ALL,B,OFF\r\n"); // turn off all messages
   fprintf(fp,"$PASHS,NME,PER,0\r\n");  	  // set to 2Hz messages
