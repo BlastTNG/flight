@@ -1,3 +1,25 @@
+/* mcp: the BLAST master control program
+ *
+ * This software is copyright (C) 2002-2004 University of Toronto
+ * 
+ * This file is part of mcp.
+ * 
+ * mcp is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * mcp is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with mcp; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
 #define INCLUDE_VARS
 
 #include <stdio.h>
@@ -297,13 +319,10 @@ void SingleCommand (enum singleCommand command) {
   else if (command == coldplate_off)
     CommandData.Cryo.coldPlate = 0;
   else if (command == cal_on)
-    CommandData.Cryo.calibrator = 1;
+    CommandData.Cryo.calibrator = on;
   else if (command == cal_off)
-    CommandData.Cryo.calibrator = 0;
-  else if (command == cal_stop) {
-    CommandData.Cryo.calib_pulse = 0;
-    CommandData.Cryo.calib_repeat = 0;
-  } else if (command == pot_valve_open) {
+    CommandData.Cryo.calibrator = off;
+  else if (command == pot_valve_open) {
     CommandData.Cryo.potvalve_open = 40;
     CommandData.Cryo.potvalve_close = 0;
   } else if (command == pot_valve_close) {
@@ -692,10 +711,11 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     /***************************************/
     /*********** Cal Lamp  *****************/
   } else if (command == cal_pulse) {
-    CommandData.Cryo.calib_pulse = (4 + ivalues[0]) / 10;
-    CommandData.Cryo.calib_repeat = -1;
+    CommandData.Cryo.calibrator = pulse;
+    CommandData.Cryo.calib_pulse = ivalues[0] / 10;
   } else if (command == cal_repeat) {
-    CommandData.Cryo.calib_pulse = (4 + ivalues[0]) / 10;
+    CommandData.Cryo.calibrator = repeat;
+    CommandData.Cryo.calib_pulse = ivalues[0] / 10;
     CommandData.Cryo.calib_repeat = ivalues[1];
 
     /***************************************/
@@ -706,8 +726,13 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.Cryo.heatSwitch = rvalues[0] * 2047./100.;
   } else if (command == he3_heat) {
     CommandData.Cryo.heliumThree = rvalues[0] * 2047./100.;
-  } else if (command == spare_heat) {
-    CommandData.Cryo.sparePwm = rvalues[0] * 2047./100.;
+  } else if (command == bda_heat) {
+    CommandData.Cryo.BDAHeat = rvalues[0] * 2047./100.;
+  } else if (command == bda_gain) {
+    CommandData.Cryo.bdaGain.P = ivalues[0];
+    CommandData.Cryo.bdaGain.I = ivalues[1];
+    CommandData.Cryo.bdaGain.D = ivalues[2];
+    CommandData.Cryo.bdaFiltLen = ivalues[3];
 
 
     /***************************************/
@@ -1401,8 +1426,8 @@ void InitCommandData() {
   CommandData.Cryo.JFETHeat = 0;
   CommandData.Cryo.heatSwitch = 0;
   CommandData.Cryo.heliumThree = 0;
-  CommandData.Cryo.sparePwm = 0;
-  CommandData.Cryo.calibrator = 0;
+  CommandData.Cryo.BDAHeat = 0;
+  CommandData.Cryo.calibrator = off;
   CommandData.Cryo.potvalve_on = 0;
   CommandData.Cryo.potvalve_open = 0;
   CommandData.Cryo.potvalve_close = 0;
