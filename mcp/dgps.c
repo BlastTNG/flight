@@ -22,12 +22,12 @@ time_t DGPSTime;
 int setGpsPort() {
   int fd;
   //int tmp_fd;
-  
+
   struct termios term; 
 
-  
+
   if ((fd = open(GPSCOM, O_RDWR)) < 0) {
-    perror("Unable to open dgps serial port");\
+    perror("Unable to open dgps serial port");
     return 1;
   }
 
@@ -39,25 +39,25 @@ int setGpsPort() {
   //tmp_fd = open("/dev/ttyS5", O_RDWR);
   //tcgetattr(tmp_fd, &term);
   //close(tmp_fd);
-  
+
   //term.c_iflag &= ~(INPCK|IXON|IXOFF);
   //term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
   term.c_iflag = 0;
-  
+
   //term.c_oflag &= ~(OPOST);
   term.c_oflag = 0;
 
   term.c_cflag &= ~(CSTOPB | CSIZE);
   term.c_cflag |= CS8;
 
-  
+
   term.c_lflag = 0;
   //term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
-  
+
   //term.c_cc[VMIN] = 0;
   //term.c_cc[VTIME] = 0;
 
-  
+
   //if (cfsetospeed(&term, B9600)) {          /*  <======= SET THE SPEED HERE */
   //  perror("error setting serial output speed");
   //  return 1;
@@ -82,7 +82,7 @@ int setGpsPort() {
 /** the next call **/
 int GetField(char *instr, char *outstr) {
   int i=0;
-  
+
   while ((instr[i] != ',') && (instr[i]!='\0') && (instr[i] != '*')) {
     outstr[i] = instr[i];
     i++;
@@ -108,7 +108,7 @@ void WatchDGPS() {
   DGPSAtt[0].roll = 0;
   DGPSAtt[0].att_ok = 0;
   dgpsatt_index = 1;
-  
+
   DGPSPos[0].lat = 0;
   DGPSPos[0].lon = 0;
   DGPSPos[0].alt = 0;
@@ -145,20 +145,20 @@ void WatchDGPS() {
   while (1) {
     fgets(instr, 499, fp);
     sscanf(instr,"$%5s,", cmd);
-    
+
     if (strcmp(cmd, "GPZDA")==0) {
       sscanf(instr,"$GPZDA,%2d%2d%f,%d,%d,%d",&(ts.tm_hour),&(ts.tm_min),
-	     &s,&(ts.tm_mday),&(ts.tm_mon),&(ts.tm_year));
+          &s,&(ts.tm_mday),&(ts.tm_mon),&(ts.tm_year));
       ts.tm_sec = s;
       ts.tm_year-=1900;
-  
+
       ts.tm_isdst = 0;
       ts.tm_mon--; /* Jan is 0 in struct tm.tm_mon, not 1 */
 
       DGPSTime = mktime(&ts)-timezone;
     } else if (strcmp(cmd, "GPPAT")==0) { // position & attitude: Page 98
       inptr=instr+7;
-      
+
       // Time field: skip it
       inptr += GetField(inptr,outstr);
       // Skip Latitude
@@ -187,9 +187,9 @@ void WatchDGPS() {
       // Attitude Valid flag
       inptr += GetField(inptr,outstr);
       if (outstr[0] == '0') {
-	DGPSAtt[dgpsatt_index].att_ok = 1;
+        DGPSAtt[dgpsatt_index].att_ok = 1;
       } else {
-	DGPSAtt[dgpsatt_index].att_ok = 0;
+        DGPSAtt[dgpsatt_index].att_ok = 0;
       }
       dgpsatt_index = INC_INDEX(dgpsatt_index);
     } else if (strcmp(cmd, "PASHR")==0) { // speed and position p99
@@ -202,10 +202,10 @@ void WatchDGPS() {
       // # Sattelites
       inptr += GetField(inptr,outstr);
       sscanf(outstr,"%d", &(DGPSPos[dgpspos_index].n_sat));
- 
+
       // skip time
       inptr += GetField(inptr,outstr);
-      
+
       // Latitude
       inptr += GetField(inptr,outstr);
       sscanf(outstr,"%2d%f", &d,&m);
@@ -228,7 +228,7 @@ void WatchDGPS() {
 
       // skip
       inptr += GetField(inptr,outstr);
-      
+
       // Direction
       inptr += GetField(inptr,outstr);
       sscanf(outstr,"%lf", &(DGPSPos[dgpspos_index].direction));
@@ -242,7 +242,7 @@ void WatchDGPS() {
       sscanf(outstr,"%lf", &(DGPSPos[dgpspos_index].climb));
 
       if (DGPSPos[dgpspos_index].n_sat>3) {
-	dgpspos_index = INC_INDEX(dgpspos_index);
+        dgpspos_index = INC_INDEX(dgpspos_index);
       }
     }
   }
