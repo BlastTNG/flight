@@ -651,13 +651,6 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifndef BOLOTEST
-  pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
-  pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
-  pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
-
-  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
-  pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
-
   InitBi0Buffer();
 #endif
 
@@ -700,6 +693,13 @@ int main(int argc, char *argv[]) {
   InitTxFrame(RxFrame);
 
 #ifndef BOLOTEST
+  pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
+  pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
+  pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
+
+  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
+  pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
+
   pthread_create(&tdrss_id, NULL, (void*)&TDRSSWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
 #endif
