@@ -66,9 +66,13 @@ struct CryoStruct {
   int heliumLevel;
   int charcoalHeater;
   int coldPlate;
+  int calibrator;
+  int sparePwm;
   int JFETHeat;
   int heatSwitch;
   int heliumThree;
+  int lndir, lnvalve;
+  int lhedir, lhevalve;
 };
 
 struct CommandDataStruct {
@@ -95,6 +99,7 @@ struct CommandDataStruct {
   struct BiasStruct Bias;
 
   struct CryoStruct Cryo;
+  int Phase[DAS_CARDS];
 
   struct PumpStruct pumps;
 
@@ -105,5 +110,5 @@ struct CommandDataStruct {
 };
 
 int bc_setserial(char *input_tty);
-void InitGaffer();
+void InitCommandData();
 double LockPosition(double);

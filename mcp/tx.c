@@ -5,7 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
-#include "../bbc/bbc.h"
+#include "bbc.h"
 
 #include "tx_struct.h"
 #include "pointing_struct.h"
@@ -281,6 +281,89 @@ void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
 }
 
 
+/************************************************************************
+ *                                                                      *
+ * PhaseControl: set phase shifts for DAS cards                         *
+ *                                                                      *
+ ************************************************************************/
+void PhaseControl(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
+{
+  static int first_time = 1;
+  static int i_c[DAS_CARDS];
+  static int j_c[DAS_CARDS];
+  char field[20];
+  int i;
+  
+  if(first_time) {
+    first_time = 0;
+    for(i = 0; i < DAS_CARDS; i++) {
+      sprintf(field, "phase%d", i+5);
+      SlowChIndex(field, &i_c[i], &j_c[i]);
+    }
+  }	
+
+  for(i = 0; i < DAS_CARDS; i++) {
+    slowTxFields[i_c[i]][j_c[i]] =
+      (slowTxFields[i_c[i]][j_c[i]] & 0xffff0000) | CommandData.Phase[i];
+  }
+}
+
+/***********************************************************************
+    CryoControl: Set heaters to values contained within the CommandData!
+ ***********************************************************************/
+void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
+  static int i_cryoout1 = -1, j_cryoout1 = -1;
+  static int i_cryoout2 = -1, j_cryoout2 = -1;
+  static int i_cryoout3 = -1, j_cryoout3 = -1;
+  int cryoout1 = 0, cryoout2 = 0;
+
+  /************** Set indices first time around *************/
+  if (i_cryoout1 == -1) {
+    SlowChIndex("cryoout1", &i_cryoout1, &j_cryoout1);
+    SlowChIndex("cryoout2", &i_cryoout2, &j_cryoout2);
+    SlowChIndex("cryoout3", &i_cryoout3, &j_cryoout3);
+  }
+  
+  /********** Set Output Bits **********/
+  if (CommandData.Cryo.heliumLevel == 0) {
+    cryoout1 |= 0x02;
+  } else {
+    cryoout1 |= 0x01;
+  }
+  if (CommandData.Cryo.charcoalHeater == 0) {
+    cryoout1 |= 0x08;
+  } else {
+    cryoout1 |= 0x04;
+  }
+  if (CommandData.Cryo.coldPlate == 0) {
+    cryoout1 |= 0x20;
+  } else {
+    cryoout1 |= 0x10;
+  }
+  if (CommandData.Cryo.JFETHeat == 0) {
+    cryoout1 |= 0x80;
+  } else {
+    cryoout1 |= 0x40;
+  }
+  if (CommandData.Cryo.heatSwitch == 0) {
+    cryoout2 |= 0x20;
+  } else {
+    cryoout2 |= 0x10;
+  }
+  if (CommandData.Cryo.heliumThree == 0) {
+    cryoout2 |= 0x80;
+  } else {
+    cryoout2 |= 0x40;
+  }
+
+  //We really want to control cryoout3, as if it were the old cryoout1, so
+  //I only did the change as in below.  Lazy Matthew, lazy matthew!
+  slowTxFields[i_cryoout3][j_cryoout3] =
+    (slowTxFields[i_cryoout3][j_cryoout3] & 0xffff0000) | cryoout1;
+  slowTxFields[i_cryoout2][j_cryoout2] =
+    (slowTxFields[i_cryoout2][j_cryoout2] & 0xffff0000) | cryoout2;
+}
+
 /************************************************************************\
 |*                                                                      *|
 |*    ControlGyroHeat:  Controls gyro box temp by turning heater bit in *|
@@ -473,6 +556,9 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
   static int i_BIASIN = -1;
   static int i_BIASOUT1 = -1, j_BIASOUT1 = -1;
   static int i_BIASOUT2 = -1, j_BIASOUT2 = -1;
+  static int Bias_lev1Ch, Bias_lev1Ind;
+  static int Bias_lev2Ch, Bias_lev2Ind;
+  static int Bias_lev3Ch, Bias_lev3Ind;
   unsigned short bias_status, biasout1 = 0;
   static unsigned short biasout2 = 0x70;
   int isBiasAC, isBiasRamp, isBiasClockInternal;
@@ -485,6 +571,9 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
 
     SlowChIndex("biasout1", &i_BIASOUT1, &j_BIASOUT1);
     SlowChIndex("biasout2", &i_BIASOUT2, &j_BIASOUT2);
+    SlowChIndex("bias_lev1", &Bias_lev1Ch, &Bias_lev1Ind);
+    SlowChIndex("bias_lev2", &Bias_lev2Ch, &Bias_lev2Ind);
+    SlowChIndex("bias_lev3", &Bias_lev3Ch, &Bias_lev3Ind);
   }
 
   bias_status = Rxframe[i_BIASIN];
@@ -557,11 +646,11 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
   }
 
   /******************** set the outputs *********************/
-  slowTxFields[i_BIASOUT1][j_BIASOUT1] =
-    (slowTxFields[i_BIASOUT1][j_BIASOUT1] & 0xffff0000) | (biasout1 & 0xffff);
-  slowTxFields[i_BIASOUT2][j_BIASOUT2] =
-    (slowTxFields[i_BIASOUT2][j_BIASOUT2] & 0xffff0000) | ((~biasout2) & 0xff);
-  
+  WriteSlow(i_BIASOUT1, j_BIASOUT1, biasout1 & 0xffff);
+  WriteSlow(i_BIASOUT2, j_BIASOUT2, (~biasout2) & 0xff);
+  WriteSlow(Bias_lev1Ch, Bias_lev1Ind, CommandData.Bias.bias1);
+  WriteSlow(Bias_lev2Ch, Bias_lev2Ind, CommandData.Bias.bias2);
+  WriteSlow(Bias_lev3Ch, Bias_lev3Ind, CommandData.Bias.bias3);
 }
 
 /******************************************************************\
@@ -612,8 +701,7 @@ int Balance(int iscBits, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
 
   /*  fprintf(stderr, "Balance: error = %6i, pwm = %4i, reverse = %i, on = %i\n", error, pumppwm, (iscBits & 0x02) >> 1, pumpon); */
 
-  slowTxFields[balPwm1Ch][balPwm1Ind] =
-    (slowTxFields[balPwm1Ch][balPwm1Ind] & 0xffff0000) | pumppwm;
+  WriteSlow(balPwm1Ch, balPwm1Ind, pumppwm);
 
   return iscBits;
 }
@@ -840,8 +928,27 @@ void SyncADC (int TxIndex,
   }
 }
 
+void SetReadBits(unsigned int* Txframe) {
+  static int i_readd3 = -1;
+  static unsigned int bit = 0;
+  int i_card;
+  
+  if (i_readd3 < 0) {
+    FastChIndex("readd3", &i_readd3);
+  }
+
+  bit++;
+  
+  for(i_card = 0; i_card < DAS_CARDS + 2; i_card++) {
+    Txframe[i_readd3 + i_card] = (Txframe[i_readd3 + i_card] & 0xffff0000)|
+			       (bit & 0x0000ffff);
+  }
+  
+}
+
 char *StringToLower(char *s) {
-  int i, len;  static char ls[256];
+  int i, len;
+  static char ls[256];
 
   len = strlen(s);
   if (len > 255) len = 255;
@@ -1018,6 +1125,10 @@ void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
     WriteAux(slowTxFields);
   }
   ControlAuxMotors(Txframe, Rxframe, slowTxFields);
+  CryoControl(slowTxFields);
+  PhaseControl(slowTxFields);
+
+  SetReadBits(Txframe);
 
   /*** write FSync ***/
   write(bbc_fp, (void*)&BBC_Fsync_Word, sizeof(unsigned int));

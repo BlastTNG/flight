@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <math.h>
-#include "../bbc/bbc.h"
+#include "bbc.h"
 
 #include "tx_struct.h"
 #include "tx.h"
@@ -58,6 +58,7 @@ extern pthread_mutex_t mutex;
 void Pointing();
 void WatchPortC1(void);
 void WatchPortC2(void);
+void WatchFIFO(void);
 void DirFileWriter(void);
 
 void InitializeDirfile(char type);
@@ -521,9 +522,13 @@ int main(int argc, char *argv[]) {
    
   InitCommandData();
   pthread_mutex_init(&mutex, NULL);
-  //pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, NULL);
+
+#ifdef BOLOTEST
+  pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, NULL);
+#else
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPortC1, NULL);
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPortC2, NULL);
+#endif
 
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   //pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);

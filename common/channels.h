@@ -23,6 +23,8 @@
 /* calibrated. */
 #define MAG_ALIGNMENT  0.0
 
+#define LOCKIN_C2V (5.43736e-07)
+#define LOCKIN_OFFSET (-1.1403)
 struct ChannelStruct {
     char field[20]; /* name of channel for FileFormats and CalSpecs */
     char rw;        /* 'r' = read, 'w' = write */

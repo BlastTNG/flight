@@ -11,7 +11,7 @@
 
 char filedirname[200];
 
-#define MAXBUF 400
+#define MAXBUF 1200
 
 struct FieldType {
   short i0;   // start of field in rxframe, words
@@ -150,7 +150,7 @@ void InitializeDirfile(char type) {
           StringToLower(field), FAST_PER_SLOW);
       fprintf(fp, "%-16s LINCOM 1 %-16s %12g %12g\n",
           StringToUpper(field), StringToLower(field),
-          1.1920928955e-07, -1.0);
+          LOCKIN_C2V, LOCKIN_OFFSET);
     }
   }
 
@@ -158,7 +158,54 @@ void InitializeDirfile(char type) {
   fprintf(fp,
       "BIAS_IS_DC       BIT biasin 1\n"
       "BIAS_CLK_IS_INT  BIT biasin 2\n"
-      "BIAS_IS_INT      BIT biasin 3\n");
+      "BIAS_IS_INT      BIT biasin 3\n"
+      "### Cryo Table Lookups ###\n"
+      "# Diodes\n"
+      "T_vcs1	LINTERP	T_VCS1	/data/etc/dt600.txt\n"
+      "T_vcs_fet   LINTERP T_VCS_FET	/data/etc/dt600.txt\n"
+      "T_he4   LINTERP T_HE4    /data/etc/dt600.txt\n"
+      "T_ln2   LINTERP T_LN2    /data/etc/dt600.txt\n"
+      "T_jfet   LINTERP T_JFET    /data/etc/dt600.txt\n"
+      "T_mirror3   LINTERP T_MIRROR3    /data/etc/dt600.txt\n"
+      "T_mirror5   LINTERP T_MIRROR5    /data/etc/dt600.txt\n"
+      "T_lyot_stim   LINTERP T_LYOT_STIM    /data/etc/dt600.txt\n"
+      "T_heatswitch   LINTERP T_HEATSWITCH    /data/etc/dt600.txt\n"
+      "T_charcoal   LINTERP T_CHARCOAL    /data/etc/dt600.txt\n"
+      "T_he4pot   LINTERP T_HE4POT    /data/etc/dt600.txt\n"
+      "T_mirror4   LINTERP T_MIRROR4    /data/etc/dt600.txt\n"
+      "T_ln_filt   LINTERP T_LN_FILT    /data/etc/dt600.txt\n"
+      "T_vcs_filt   LINTERP T_VCS_FILT    /data/etc/dt600.txt\n"
+      "T_he_filt   LINTERP T_HE_FILT    /data/etc/dt600.txt\n"
+      "# GRTs (ROX)\n"
+      "#T_he3	LINTERP	T_HE3	/data/etc/rox102a.txt\n"
+      "#T_bda1    LINTERP T_BDA1   /data/etc/rox102a.txt\n"
+      "#T_bda2   LINTERP T_BDAA   /data/etc/rox102a.txt\n"
+      "#T_bda3    LINTERP T_BDA3   /data/etc/rox102a.txt\n"
+      "# Level Sensor\n"
+      "he4_litre    LINTERP HE4_LEVEL   /data/etc/he4_level.txt\n"
+      "# Control Bits\n"
+      "# To Be Filled In At A Later Date\n"
+      "# TEMPORARY GRT Calibration\n"
+      "Res_He3	       LINCOM  1       N10C0   1.9416E04       -8.4574\n"
+      "Res_horn_500   LINCOM  1       N10C1   1.9416E04       -8.4574\n"
+      "Res_pot        LINCOM  1       N10C2   1.9416E04       -8.4574\n"
+      "Res_base_500   LINCOM  1       N10C4   1.9416E04       -8.4574\n"
+      "Res_ring_250   LINCOM  1       N10C7   1.9416E04       -8.4574\n"
+      "T_He3	   LINTERP N10C0        /data/etc/rox102a.txt\n"
+      "T_horn_500  LINTERP N10C1       /data/etc/rox102a.txt\n"
+      "T_pot       LINTERP N10C2       /data/etc/rox102a.txt\n"
+      "T_base_500  LINTERP N10C4       /data/etc/rox102a.txt \n"
+      "T_ring_250  LINTERP N10C7       /data/etc/rox102a.txt\n"
+      "#\n"
+      "# Nice CPU Values\n"
+      "CPU_SEC LINCOM  1       cpu_time        1       -%i\n"
+      "CPU_MIN LINCOM  1       CPU_SEC 0.016666666 0\n"
+      "CPU_HOUR LINCOM 1       CPU_SEC 0.000277777 0\n"
+      "CPU_DAY LINCOM  1       CPU_SEC 1.15741E-5  0\n"
+      "CPU_WEEK LINCOM 1       CPU_SEC 1.65344E-6  0\n"
+      "CPU_MONTh LINCOM 1      CPU_SEC 3.85803E-7  0\n"
+      "CPU_YEAR LINCOM 1       CPU_SEC 3.17099E-8  0\n", (unsigned)t
+      );
   fclose(fp);
   
   fp = fopen("/data/etc/datafile.cur","w");
@@ -175,6 +222,7 @@ void InitializeDirfile(char type) {
   
 }
 
+// called from main thread: puts rxframe into individual buffers
 void pushDiskFrame(unsigned short *Rxframe) {
   unsigned int i_slow, i_in;
   int i_card, i_ch;
@@ -200,16 +248,19 @@ void pushDiskFrame(unsigned short *Rxframe) {
         i_in = slow_fields[i_slow][i_ch].i_in;
         ((unsigned short *)slow_fields[i_slow][i_ch].b)[i_in] = 
           slow_data[i_slow][i_ch];
-        i_in++;
+
+        if(++i_in == slow_fields[i_slow][i_ch].i_out) {
+          // Buffer overflow: do something
+        }
         if (i_in>=MAXBUF) i_in = 0;
         slow_fields[i_slow][i_ch].i_in = i_in;
       }
     }
     n_frames++;
-//    if (n_frames % 5 == 0) { 
-//      printf("file: %s frame: %d\r", filedirname, n_frames);
-//      fflush(stdout);
-//    } 
+    //    if (n_frames % 5 == 0) { 
+    //      printf("file: %s frame: %d\r", filedirname, n_frames);
+    //      fflush(stdout);
+    //    } 
   }
 
   /********************/
@@ -223,72 +274,86 @@ void pushDiskFrame(unsigned short *Rxframe) {
       ((unsigned short*)normal_fast[i_ch].b)[i_in] =
         ((unsigned short*)Rxframe)[normal_fast[i_ch].i0];      
     }
-    i_in++; 
+    if(++i_in == normal_fast[i_ch].i_out) {
+      // Buffer overflow: do something
+    }
+
     if (i_in>=MAXBUF) i_in = 0;
     normal_fast[i_ch].i_in = i_in;
   };
 
   /********************\
-  |* fast bolo data   *|
-  \********************/
+    |* fast bolo data   *|
+    \********************/
   for (i_card = 0; i_card<DAS_CARDS; i_card++) {
     for (i_ch = 0; i_ch<DAS_CHS; i_ch += 2) {
       B0 = (unsigned)Rxframe[boloIndex[i_card][i_ch][0]] +
         (((unsigned)Rxframe[boloIndex[i_card][i_ch][1]] & 0xff00) << 8);
       B1 = Rxframe[boloIndex[i_card][i_ch + 1][0]] +
         ((Rxframe[boloIndex[i_card][i_ch + 1][1]] & 0x00ff) << 16);
-  
+
       i_in = bolo_fields[i_card][i_ch].i_in;
       ((unsigned *)bolo_fields[i_card][i_ch].b)[i_in] = B0;
       ((unsigned *)bolo_fields[i_card][i_ch + 1].b)[i_in] = B1;
-      i_in++;
+
+      if(++i_in == bolo_fields[i_card][i_ch].i_out) {
+        // Buffer overflow: do something
+      }	
+
       if (i_in>=MAXBUF) i_in = 0;
       bolo_fields[i_card][i_ch].i_in = bolo_fields[i_card][i_ch+1].i_in = i_in;
     }
   }
 }
 
+// separate thread: writes each field to disk
 void DirFileWriter(void) {
   unsigned short buffer[MAXBUF];
   unsigned int ibuffer[MAXBUF];
   int i_ch, i_slow, i_card;
   int i_in, i_out, i_buf;
   int k;
+  int d, d_field = 0;
+  static int max_d_field = 0;
+  static int min_d_field = 10000;
 
   while (1) {
+    d_field = 0;
+
     /** slow data **/
     for (i_slow = 0; i_slow<N_SLOW; i_slow++) {
       for (i_ch = 0; i_ch<FAST_PER_SLOW; i_ch++) {
-	if (slow_fields[i_slow][i_ch].fp >= 0) {
-	  i_in = slow_fields[i_slow][i_ch].i_in;
-	  i_out = slow_fields[i_slow][i_ch].i_out;
-	  i_buf = 0;
-	  while (i_in!=i_out) {
-	    if ((SlowChList[i_slow][i_ch].type=='U') ||
-		(SlowChList[i_slow][i_ch].type=='I')) {
-	      ibuffer[i_buf] =
-		(unsigned)
-		((((unsigned short *)slow_fields[i_slow][i_ch].b)[i_out]) << 16)
-		| (unsigned)
-		(((unsigned short *)slow_fields[i_slow + 1][i_ch].b)[i_out]);
-	    } else {
-	      buffer[i_buf] =
-		((unsigned short *)slow_fields[i_slow][i_ch].b)[i_out];
-	    }
-	    i_out++;
-	    i_buf++;
-	    if (i_out>=MAXBUF) i_out = 0;
-	  }
-	  if ((SlowChList[i_slow][i_ch].type=='U') ||
-	      (SlowChList[i_slow][i_ch].type=='I')) {
-	    if (i_buf > 0) write(slow_fields[i_slow][i_ch].fp,
-			       ibuffer, i_buf*sizeof(unsigned));
-	  } else {
-	    if (i_buf > 0) write(slow_fields[i_slow][i_ch].fp,
-			       buffer, i_buf*sizeof(unsigned short));
-	  }
-	  slow_fields[i_slow][i_ch].i_out = i_out;
-	}
+
+        if (slow_fields[i_slow][i_ch].fp >= 0) {
+          i_in = slow_fields[i_slow][i_ch].i_in;
+          i_out = slow_fields[i_slow][i_ch].i_out;
+          i_buf = 0;
+          while (i_in != i_out) {
+            if ((SlowChList[i_slow][i_ch].type=='U') ||
+                (SlowChList[i_slow][i_ch].type=='I')) {
+              ibuffer[i_buf] =
+                (unsigned)
+                ((((unsigned short *)slow_fields[i_slow][i_ch].b)[i_out]) << 16)
+                | (unsigned)
+                (((unsigned short *)slow_fields[i_slow + 1][i_ch].b)[i_out]);
+            } else {
+              buffer[i_buf] =
+                ((unsigned short *)slow_fields[i_slow][i_ch].b)[i_out];
+            }
+            i_out++;
+            i_buf++;
+            if (i_out>=MAXBUF) i_out = 0;
+          }
+          if ((SlowChList[i_slow][i_ch].type=='U') ||
+              (SlowChList[i_slow][i_ch].type=='I')) {
+            if (i_buf > 0) write(slow_fields[i_slow][i_ch].fp,
+                ibuffer, i_buf*sizeof(unsigned));
+          } else {
+            if (i_buf > 0) write(slow_fields[i_slow][i_ch].fp,
+                buffer, i_buf*sizeof(unsigned short));
+          }
+          slow_fields[i_slow][i_ch].i_out = i_out;
+        }
       }
     }
 
@@ -322,19 +387,25 @@ void DirFileWriter(void) {
     /** Bolometer data */
     for (i_card = 0; i_card<DAS_CARDS; i_card++) {
       for (i_ch = 0; i_ch<DAS_CHS; i_ch++) {
+
         i_in = bolo_fields[i_card][i_ch].i_in;
         i_out = bolo_fields[i_card][i_ch].i_out;
+
         i_buf = 0;
         k = 0;
-        while (i_in!=i_out) {
+        while (i_in != i_out) {
           ibuffer[i_buf] =
             ((unsigned int *)bolo_fields[i_card][i_ch].b)[i_out];
           i_out++;
           i_buf++;
           if (i_out>=MAXBUF) i_out = 0;
         }
-        if (i_buf > 0) write(bolo_fields[i_card][i_ch].fp,
+        if (i_buf > 0)
+          write(bolo_fields[i_card][i_ch].fp,
             ibuffer, i_buf*sizeof(unsigned int));
+        if (i_buf>d_field) d_field = i_buf;	
+        if (max_d_field < d_field) max_d_field = d_field;
+        if (min_d_field > d_field) min_d_field = d_field;
         bolo_fields[i_card][i_ch].i_out = i_out;
       }
     }

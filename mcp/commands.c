@@ -12,6 +12,7 @@
 #include <math.h>
 #include <pthread.h>
 
+#include "tx_struct.h"
 #include "command_struct.h"
 #include "pointing_struct.h"
 
@@ -290,18 +291,27 @@ void SingleCommand (int command) {
     CommandData.Cryo.coldPlate = 1;
   else if (command == SIndex("cplat_0"))
     CommandData.Cryo.coldPlate = 0;
-  else if (command == SIndex("jfeth_1"))
-    CommandData.Cryo.JFETHeat = 1;
-  else if (command == SIndex("jfeth_0"))
-    CommandData.Cryo.JFETHeat = 0;
-  else if (command == SIndex("hswch_1"))
-    CommandData.Cryo.heatSwitch = 1;
-  else if (command == SIndex("hswch_0"))
-    CommandData.Cryo.heatSwitch = 0;
-  else if (command == SIndex("hel-3_1"))
-    CommandData.Cryo.heliumThree = 1;
-  else if (command == SIndex("hel-3_0"))
-    CommandData.Cryo.heliumThree = 0;
+  else if (command == SIndex("calib_1"))
+    CommandData.Cryo.calibrator = 1;
+  else if (command == SIndex("calib_0"))
+    CommandData.Cryo.calibrator = 0;
+  else if (command == SIndex("lnv_opn"))
+    CommandData.Cryo.lndir = 1;
+  else if (command == SIndex("lnv_cls"))
+    CommandData.Cryo.lndir = 0;
+  else if (command == SIndex("ln_val1"))
+    CommandData.Cryo.lnvalve = 1;
+  else if (command == SIndex("ln_val0"))
+    CommandData.Cryo.lnvalve = 0;
+  else if (command == SIndex("lhe_opn"))
+    CommandData.Cryo.lhedir = 1;
+  else if (command == SIndex("lhe_cls"))
+    CommandData.Cryo.lhedir = 0;
+  else if (command == SIndex("lhe_vl1"))
+    CommandData.Cryo.lhevalve = 1;
+  else if (command == SIndex("lhe_vl0"))
+    CommandData.Cryo.lhevalve = 0;
+
   else if (command == SIndex("bal_vet"))
     CommandData.pumps.bal_veto = -1;
   else if (command == SIndex("bal_uvt"))
@@ -449,20 +459,30 @@ void MultiCommand (int command, unsigned short *dataq) {
     if (CommandData.pumps.bal_veto >= 0) CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
     fprintf(stderr, "Lock Mode: %g\n", CommandData.point_mode.el_dest);
   } else if (command == MIndex("goto_el")) {  /* point in elevation */
-    if (CommandData.pumps.bal_veto >= 0) CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
+    if (CommandData.pumps.bal_veto >= 0)
+      CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
     CommandData.point_mode.el_mode = POINT_POSITION;
     CommandData.point_mode.el_dest = rvalues[0];
   } else if (command == MIndex("goto_az")) {  /* point in azimuth */
     CommandData.point_mode.az_mode = POINT_POSITION;
     CommandData.point_mode.az_dest = rvalues[0];
   } else if (command == MIndex("el_vel")) {  /* fixed elevation velocity */
-    if (CommandData.pumps.bal_veto >= 0) CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
+    if (CommandData.pumps.bal_veto >= 0)
+      CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
     CommandData.point_mode.el_mode = POINT_VEL;
     CommandData.point_mode.el_vel = rvalues[0];
   } else if (command == MIndex("az_vel")) {  /* fixed azimuth velocity */
     CommandData.point_mode.az_mode = POINT_VEL;
     CommandData.point_mode.az_vel = rvalues[0];
-  } else if (command == MIndex("b_levl1"))    /* Set bias 1 */
+  } else if (command == MIndex("jfet_ht"))
+    CommandData.Cryo.JFETHeat = 2047 - ivalues[0] * 20.47;
+  else if (command == MIndex("hs_heat"))
+    CommandData.Cryo.heatSwitch = 2047 - ivalues[0] * 20.47;
+  else if (command == MIndex("he3_ht"))
+    CommandData.Cryo.heliumThree = 2047 - ivalues[0] * 20.47;
+  else if (command == MIndex("cryopwm"))
+    CommandData.Cryo.sparePwm = 2047 - ivalues[0] * 20.47;
+  else if (command == MIndex("b_levl1"))    /* Set bias 1 */
     CommandData.Bias.bias1 = rvalues[0];
   else if (command == MIndex("b_levl2"))    /* Set bias 1 */
     CommandData.Bias.bias2 = rvalues[0];
@@ -1237,6 +1257,12 @@ void InitCommandData() {
   CommandData.Cryo.JFETHeat = 0;
   CommandData.Cryo.heatSwitch = 0;
   CommandData.Cryo.heliumThree = 0;
+  CommandData.Cryo.sparePwm = 0;
+  CommandData.Cryo.calibrator = 0;
+  CommandData.Cryo.lndir = 0;
+  CommandData.Cryo.lnvalve = 0;
+  CommandData.Cryo.lhedir = 0;
+  CommandData.Cryo.lhevalve = 0;
 
   WritePrevStatus();
 

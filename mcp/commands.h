@@ -1,6 +1,6 @@
 #define N_SCOMMANDS 63         /* total number of single word commands */
-#define N_NM_SCOMMANDS 49      /* total number of named single word cmds */
-#define N_MCOMMANDS 23         /* total number of multiword commands */
+#define N_NM_SCOMMANDS 53      /* total number of named single word cmds */
+#define N_MCOMMANDS 27         /* total number of multiword commands */
 #define MAX_N_PARAMS 12
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -82,12 +82,16 @@ struct scom scommands[N_NM_SCOMMANDS] = {
   {"charc_0", "charcoal heater off", GR_CRYO},
   {"cplat_1", "cold plate heater on", GR_CRYO},
   {"cplat_0", "cold plate heater off", GR_CRYO},
-  {"jfeth_1", "JFET heat on", GR_CRYO},
-  {"jfeth_0", "JFET heat off", GR_CRYO},
-  {"hswch_1", "heat switch on", GR_CRYO},
-  {"hswch_0", "heat switch off", GR_CRYO},
-  {"hel-3_1", "helium-3 on", GR_CRYO},
-  {"hel-3_0", "helium-3 off", GR_CRYO},
+  {"calib_1", "calibrator on", GR_CRYO},
+  {"calib_0", "calibrator off", GR_CRYO},
+  {"lnv_opn", "set LN valve direction open", GR_CRYO},
+  {"lnv_cls", "set LN valve direction close", GR_CRYO},
+  {"ln_val1", "LN valve on", GR_CRYO},
+  {"ln_val0", "LN valve off", GR_CRYO},
+  {"lhe_opn", "set LHe valve direction open", GR_CRYO},
+  {"lhe_cls", "set LHe valve direction close", GR_CRYO},
+  {"lhe_vl1", "LHe valve on", GR_CRYO},
+  {"lhe_vl0", "LHe valve off", GR_CRYO},
 
   {"bal_vet", "veto balance system", GR_BAL},
   {"bal_uvt", "unveto balance system", GR_BAL},
@@ -243,6 +247,30 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {"b_levl3", "bias 3 level", GR_BIAS, 1,
     {
       {"level", 0, 15, 'i', 0, "ADD"}
+    }
+  },
+
+  {"jfet_ht", "JFET heater level", GR_CRYO, 1,
+    {
+      {"level", 0, 100, 'i', 0, "ADD"}
+    }
+  },
+
+  {"hs_heat", "Heat Switch heater level", GR_CRYO, 1,
+    {
+      {"level", 0, 100, 'i', 0, "ADD"}
+    }
+  },
+
+  {"he3_ht", "Helium 3 heater level", GR_CRYO, 1,
+    {
+      {"level", 0, 100, 'i', 0, "ADD"}
+    }
+  },
+
+  {"cryopwm", "Spare cryo pwm level", GR_CRYO, 1,
+    {
+      {"level", 0, 100, 'i', 0, "ADD"}
     }
   },
 
