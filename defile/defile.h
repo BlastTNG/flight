@@ -38,7 +38,7 @@
 typedef unsigned int chunkindex_t;
 
 struct rc_struct {
-  int framefile, persist, remount, write_curfile;
+  int framefile, persist, remount, write_curfile, gzip_output;
   int write_mode; /* 0 = normal ; 1 = overwrite ; 2 = resume */
   int sufflen;
   long int resume_at;
@@ -79,9 +79,10 @@ void  FrameFileReader(void);
 void  GetDirFile(char*, const char*, char*);
 void  PreInitialiseDirFile(void);
 void  InitialiseDirFile(int);
-void ReconstructChannelLists(void);
+void  ReconstructChannelLists(void);
 void  PushFrame(unsigned short*);
 void  Remount(const char*, char*);
 int   StaticSourcePart(char*, const char*, chunkindex_t*);
+void  CleanUp(void);
 
 #endif

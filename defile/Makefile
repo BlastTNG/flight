@@ -1,7 +1,7 @@
 TOPDIR=.
 CC = gcc
 CFLAGS = -O3 -Wall -D__DEFILE__
-LDFLAGS = -lpthread
+LDFLAGS = -lpthread -lz
 
 all: Makefile.config defile
 	cd $(TOPDIR)/etc && $(MAKE) all

@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <unistd.h> 
 #include <time.h>
+#include <zlib.h>
 
 #include "tx_struct.h"
 #include "defile.h"
@@ -63,7 +64,16 @@ unsigned short* slow_data[FAST_PER_SLOW];
 int buf_overflow;
 int n_fast, bolo_i0;
 
+int (*defilecreat) ();
+int (*defilewrite) ();
+int (*defileclose) ();
+
 extern unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
+
+int gzcreat(const char *path, mode_t mode)
+{
+  return (int) gzdopen(creat(path, mode), "wb");
+}
 
 char* StringToLower(char* s)
 {
@@ -392,6 +402,20 @@ void InitialiseDirFile(int reset)
   int j, i, is_bolo = 0;
   char field[FIELD_LEN];
   char gpb[GPB_LEN];
+  char ext[9];
+
+  if (rc.gzip_output) {
+    defilecreat = &gzcreat;
+    defilewrite = &gzwrite;
+    defileclose = &gzclose;
+    sprintf(ext, ".gz");
+  } else {
+    defilecreat = &creat;
+    defilewrite = &write;
+    defileclose = &close;
+    ext[0] = 0;
+  }
+
 
   rc.resume_at = -1;
 
@@ -417,29 +441,29 @@ void InitialiseDirFile(int reset)
   }
   fprintf(fp, "FASTSAMP         RAW    U 20\n");
   n_fast = 0;
-  sprintf(gpb, "%s/FASTSAMP", rc.dirfile);
+  sprintf(gpb, "%s/FASTSAMP%s", rc.dirfile, ext);
   normal_fast[n_fast].size = 2; 
 
   if (rc.resume_at >= 0) {
     /* append to file */
     if ((normal_fast[n_fast].fp = open(gpb, O_WRONLY)) == -1) {
-      snprintf(gpb, GPB_LEN, "defile: cannot open file `%s/FASTSAMP'",
-          rc.dirfile);
+      snprintf(gpb, GPB_LEN, "defile: cannot open file `%s/FASTSAMP%s'",
+          rc.dirfile, ext);
       perror(gpb);
       exit(1);
     }
     if (lseek(normal_fast[n_fast].fp, rc.resume_at *
           normal_fast[n_fast].size * 2, SEEK_SET) < 0) {
-      snprintf(gpb, GPB_LEN, "defile: cannot lseek file `%s/FASTSAMP'",
-          rc.dirfile);
+      snprintf(gpb, GPB_LEN, "defile: cannot lseek file `%s/FASTSAMP%s'",
+          rc.dirfile, ext);
       perror(gpb);
       exit(1);
     }
   } else {
     /* create new file */
-    if ((normal_fast[n_fast].fp = creat(gpb, 00644)) == -1) {
-      snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/FASTSAMP'",
-          rc.dirfile);
+    if ((normal_fast[n_fast].fp = defilecreat(gpb, 00644)) == -1) {
+      snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/FASTSAMP%s'",
+          rc.dirfile, ext);
       perror(gpb);
       exit(1);
     }
@@ -480,12 +504,12 @@ void InitialiseDirFile(int reset)
         slow_fields[j][i].size = FieldSize(SlowChList[i][j].type,
             SlowChList[i][j].field);
 
-        sprintf(gpb, "%s/%s", rc.dirfile, SlowChList[i][j].field);
+        sprintf(gpb, "%s/%s%s", rc.dirfile, SlowChList[i][j].field, ext);
         if (rc.resume_at >= 0) {
           /* append to file */
           if ((slow_fields[j][i].fp = open(gpb, O_WRONLY)) == -1) {
-            snprintf(gpb, GPB_LEN, "defile: cannot open file `%s/%s'",
-                rc.dirfile, SlowChList[i][j].field);
+            snprintf(gpb, GPB_LEN, "defile: cannot open file `%s/%s%s'",
+                rc.dirfile, SlowChList[i][j].field, ext);
             perror(gpb);
             exit(1);
           }
@@ -493,9 +517,9 @@ void InitialiseDirFile(int reset)
               slow_fields[j][i].size * 2 / FAST_PER_SLOW, SEEK_SET);
         } else {
           /* create new file */
-          if ((slow_fields[j][i].fp = creat(gpb, 00644)) == -1) {
-            snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/%s'",
-                rc.dirfile, SlowChList[i][j].field);
+          if ((slow_fields[j][i].fp = defilecreat(gpb, 00644)) == -1) {
+            snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/%s%s'",
+                rc.dirfile, SlowChList[i][j].field, ext);
             perror(gpb);
             exit(1);
           }
@@ -537,13 +561,13 @@ void InitialiseDirFile(int reset)
     if (!is_bolo && strlen(FastChList[i].field) > 0) {
       normal_fast[n_fast].size = FieldSize(FastChList[i].type,
           FastChList[i].field);
-      sprintf(gpb, "%s/%s", rc.dirfile, FastChList[i].field);
+      sprintf(gpb, "%s/%s%s", rc.dirfile, FastChList[i].field, ext);
 
       if (rc.resume_at >= 0) {
         /* append to file */
         if ((normal_fast[n_fast].fp = open(gpb, O_WRONLY)) == -1) {
-          snprintf(gpb, GPB_LEN, "defile: cannot open file `%s/%s'",
-              rc.dirfile, FastChList[i].field);
+          snprintf(gpb, GPB_LEN, "defile: cannot open file `%s/%s%s'",
+              rc.dirfile, FastChList[i].field, ext);
           perror(gpb);
           exit(1);
         }
@@ -551,9 +575,9 @@ void InitialiseDirFile(int reset)
             normal_fast[n_fast].size * 2, SEEK_SET);
       } else {
         /* create new file */
-        if ((normal_fast[n_fast].fp = creat(gpb, 00644)) == -1) {
-          snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/%s'",
-              rc.dirfile, FastChList[i].field);
+        if ((normal_fast[n_fast].fp = defilecreat(gpb, 00644)) == -1) {
+          snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/%s%s'",
+              rc.dirfile, FastChList[i].field, ext);
           perror(gpb);
           exit(1);
         }
@@ -597,13 +621,13 @@ void InitialiseDirFile(int reset)
     for (j = 0; j < DAS_CHS; j++) {
       bolo_fields[i][j].size = 2;
       sprintf(field, "n%dc%d", i + 5, j);
-      sprintf(gpb, "%s/%s", rc.dirfile, field);
+      sprintf(gpb, "%s/%s%s", rc.dirfile, field, ext);
 
       if (rc.resume_at >= 0) {
         /* append to file */
         if ((bolo_fields[i][j].fp = open(gpb, O_WRONLY)) == -1) {
-          snprintf(gpb, GPB_LEN, "defile: cannot open file `%s/%s'",
-              rc.dirfile, field);
+          snprintf(gpb, GPB_LEN, "defile: cannot open file `%s/%s%s'",
+              rc.dirfile, field, ext);
           perror(gpb);
           exit(1);
         }
@@ -611,9 +635,9 @@ void InitialiseDirFile(int reset)
             SEEK_SET);
       } else {
         /* create new file */
-        if ((bolo_fields[i][j].fp = creat(gpb, 00644)) == -1) {
-          snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/%s'",
-              rc.dirfile, field);
+        if ((bolo_fields[i][j].fp = defilecreat(gpb, 00644)) == -1) {
+          snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/%s%s'",
+              rc.dirfile, field, ext);
           perror(gpb);
           exit(1);
         }
@@ -679,7 +703,8 @@ void CleanUp(void)
 
   for(i = 0; i < slowsPerBi0Frame; i++)
     for(j = 0; j < FAST_PER_SLOW; j++) {
-      close(slow_fields[j][i].fp);
+      if (slow_fields[j][i].fp != -1)
+        defileclose(slow_fields[j][i].fp);
       if (slow_fields[j][i].b)
         free(slow_fields[j][i].b);
       slow_fields[j][i].b = NULL;
@@ -693,7 +718,8 @@ void CleanUp(void)
       is_bolo = 0;
 
     if (!is_bolo) {
-      close(normal_fast[i].fp);
+      if (normal_fast[i].fp != -1)
+        defileclose(normal_fast[i].fp);
       if (normal_fast[i].b)
         free(normal_fast[i].b);
       normal_fast[i].b = NULL;
@@ -702,7 +728,8 @@ void CleanUp(void)
 
   for (i = 0; i < DAS_CARDS; i++)
     for (j = 0; j < DAS_CHS; j++) {
-      close(bolo_fields[i][j].fp);
+      if (bolo_fields[i][j].fp != -1)
+        defileclose(bolo_fields[i][j].fp);
       if (bolo_fields[i][j].b)
         free(bolo_fields[i][j].b);
       bolo_fields[i][j].b = NULL;
@@ -880,13 +907,13 @@ void DirFileWriter(void)
         if ((SlowChList[i][j].type == 'U') ||
             (SlowChList[i][j].type == 'I')) {
           if ( (i_buf > 0) && (slow_fields[j][i].fp >= 0) ) 
-            if (write(slow_fields[j][i].fp,
+            if (defilewrite(slow_fields[j][i].fp,
                   ibuffer, i_buf * sizeof(unsigned)) < 0) {
               perror("Error while writing slow channels");
             }
         } else {
           if ( (i_buf > 0)  && (slow_fields[j][i].fp >= 0) ) 
-            if (write(slow_fields[j][i].fp,
+            if (defilewrite(slow_fields[j][i].fp,
                   buffer, i_buf * sizeof(unsigned short)) < 0) {
               perror("Error while writing slow channels");
             }
@@ -915,7 +942,7 @@ void DirFileWriter(void)
             i_out = 0;
         }
         if ( (i_buf > 0) && (normal_fast[j].fp >= 0) ) {
-          if (write(normal_fast[j].fp, ibuffer, i_buf * sizeof(unsigned int))
+          if (defilewrite(normal_fast[j].fp, ibuffer, i_buf * sizeof(unsigned int))
               < 0) {
             perror("Error while writing fast channels");
           }
@@ -933,7 +960,7 @@ void DirFileWriter(void)
             i_out = 0;
         }
         if ( (i_buf > 0) && (normal_fast[j].fp >= 0) ) {
-          if (write(normal_fast[j].fp, buffer, i_buf * sizeof(unsigned short))
+          if (defilewrite(normal_fast[j].fp, buffer, i_buf * sizeof(unsigned short))
               < 0) {
             perror("Error while writing fast channels");
           }
@@ -964,7 +991,7 @@ void DirFileWriter(void)
             i_out = 0;
         }
         if ( (i_buf > 0) && (bolo_fields[i][j].fp >= 0) ) {
-          if (write(bolo_fields[i][j].fp, 
+          if (defilewrite(bolo_fields[i][j].fp, 
                 ibuffer, i_buf * sizeof(unsigned int)) < 0) {
             perror("Error while writing fast channels");
           }
@@ -978,6 +1005,7 @@ void DirFileWriter(void)
 
     if (ri.reader_done && ri.wrote == ri.read) {
       ri.writer_done = 1;
+      CleanUp();
       return;
     }
 

@@ -25,6 +25,7 @@
 #include <libgen.h>
 #include <stdio.h>
 #include <error.h>
+#include <signal.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -52,6 +53,7 @@ struct rc_struct rc = {
   0, /* persist */
   0, /* remount */
   0, /* write_curfile */
+  0, /* gzip_output */
   0, /* write_mode */
   SUFF_MAX, /* sufflen */
   -1, /* resume_at */
@@ -501,6 +503,8 @@ void PrintUsage(void)
     "  -s --suffix-size=SIZE framefile suffix is no more than SIZE characters "
     "large.\n"
     "                          SIZE should be an integer between 0 and %i.\n"
+    "  -z --gzip             gzip compress the output dirfile.  Incompatible with "
+    "--resume\n"
     "  --help                display this help and exit\n"
     "  --version             display version information and exit\n"
     "  --                    last option; all following parameters are "
@@ -614,7 +618,9 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
                 "Try `defile --help' for more information.\n", &argv[i][14]);
             exit(1);
           }
-        } else {
+        } else if (!strcmp(argv[i], "--gzip"))
+          rc->gzip_output = 1;
+        else {
           fprintf(stderr, "defile: unrecognised option `%s'\n"
               "Try `defile --help' for more information.\n", argv[i]);
           exit(1);
@@ -677,6 +683,9 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
                 shortarg[nshortargs++].option = 's';
               }
               break;
+            case 'z':
+              rc->gzip_output = 1;
+              break;
             default:
               fprintf(stderr, "defile: invalid option -- %c\n"
                   "Try `defile --help' for more information.\n", argv[i][j]);
@@ -688,6 +697,12 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
       argument[nargs].value = argv[i];
       argument[nargs++].position = i;
     }
+  }
+
+  if (rc->gzip_output == 1 && rc->write_mode == 2) {
+    fprintf(stderr, "defile: cannot resume gzipped dirfiles\n"
+        "Try `defile --help' for more information.\n");
+    exit(1);
   }
 
   j = -1;
@@ -807,6 +822,15 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
   free(shortarg);
 }
 
+void CloseOutput(int signo) {
+  fprintf(stderr, "Caught signal %d; exiting...\n", signo);
+  CleanUp();
+  /* restore default handler and raise the signal again */
+  signal(signo, SIG_DFL);
+  raise(signo);
+}
+
+
 int main (int argc, char** argv)
 {
   struct timeval now;
@@ -858,6 +882,10 @@ int main (int argc, char** argv)
   PreInitialiseDirFile();
   InitialiseDirFile(1);
 
+  signal(SIGHUP, CloseOutput);
+  signal(SIGTERM, CloseOutput);
+  signal(SIGINT, CloseOutput);
+
   /* Spawn reader and writer */
   pthread_create(&read_thread, NULL, (void*)&FrameFileReader, NULL);
   pthread_create(&write_thread, NULL, (void*)&DirFileWriter, NULL);
@@ -874,8 +902,9 @@ int main (int argc, char** argv)
     }
     usleep(100000);
   } while (!ri.writer_done);
-  printf("R:[%i of %i] W:[%i] %.3f kHz\r", ri.read, ri.old_total
+  printf("R:[%i of %i] W:[%i] %.3f kHz\n", ri.read, ri.old_total
       + ri.chunk_total, ri.wrote, 1000. * ri.wrote / delta);
-
+  pthread_join(read_thread, NULL);
+  pthread_join(write_thread, NULL);
   return 0;
 }

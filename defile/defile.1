@@ -34,6 +34,8 @@ defile \(em convert a MCP written framefile into a dirfile
 .IR "size " |
 .BI \-\-suffix\-size= size
 ]
+.RB [\~ "\-z " |
+.BR \-\-gzip\~ ]
 .RB [\~ \-\-help\~ ]
 .RB [\~ \-\-version\~ ]
 .RB [\~ \-\-\~ ]
@@ -104,7 +106,8 @@ Always assume
 is a framefile, even when it looks like a curfile.
 .TP
 .BR "\-R " "or " \-\-resume
-Resume an interrupted defiling.
+Resume an interrupted defiling.  Incompatible with
+.BR -z .
 .PP
 .BI "\-S " name
 or
@@ -154,7 +157,9 @@ is ignored.
 Upon reaching the end of the framefile, don't exit but wait for more data to
 be added to the file.  For use when reading a framefile that is concurrently
 being written to by
-.BR mcp .
+.B mcp
+or
+.BR decomd .
 See
 .B PERSISTENT MODE
 for more information.
@@ -198,6 +203,12 @@ incremented as a hexadecimal number) is no larger than
 characters.  This option only is useful if the character immediately preceding
 the suffix is a hexadecimal digit and you expect the suffix will overflow.
 .RE
+.TP
+.BR "\-z " "or " \-\-gzip
+Compress output dirfiles with gzip compression.  Output files will have the suffix
+.I .gz
+appended to each filename.  This option is incompatible with
+.BR -R .
 .TP
 .B \-\-help
 Show the usage summary and exit.
