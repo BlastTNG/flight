@@ -76,6 +76,9 @@ struct {
   unsigned short *framelist[BI0_FRAME_BUFLEN];
 } bi0_buffer;
 
+unsigned short* AliceData[3];
+unsigned int alice_index = 0;
+
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
 ( \

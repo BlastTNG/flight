@@ -10,8 +10,6 @@ extern "C" {
 #include "alice.h"
 
 extern unsigned short* slow_data[FAST_PER_SLOW];
-unsigned short* AliceData[3];
-unsigned int alice_index = 0;
 
 extern "C" void Alice(void) {
   unsigned short* local_data;
