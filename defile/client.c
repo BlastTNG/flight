@@ -142,7 +142,6 @@ void OpenDataPort(void)
   write(rc.csock, buffer, strlen(buffer));
   switch (n = GetServerResponse(buffer)) {
     case QUENYA_RESPONSE_LISTENING:
-      printf("%s\n", buffer);
       for (ptr1 = buffer; *ptr1 != '@'; ++ptr1);
       *(ptr1++) = 0;
       for (ptr2 = ptr1; *ptr2 != ':'; ++ptr2);
