@@ -17,9 +17,9 @@
 #include "sslutNA.h"
 
 #define GY1_GAIN_ERROR 1.0407
-#define GY1_OFFSET (0.0075)
-#define GY2_OFFSET (0.0123)
-#define GY3_OFFSET (0.0143)
+#define GY1_OFFSET (-0.1365)
+#define GY2_OFFSET (0.008)
+#define GY3_OFFSET (0.140)
 
 #define MAX_ISC_AGE 200
 
@@ -317,7 +317,6 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
   double w1, w2;
   
   // evolve el
-  gy1 *= GY1_GAIN_ERROR;
   e->angle += (gy1 + gy1_off)/100.0;
   e->varience += GYRO_VAR;
 
@@ -394,8 +393,6 @@ void EvolveElSolution(struct ElSolutionStruct *s,
   double new_offset = 0;
   double fs;
 
-  gyro *= GY1_GAIN_ERROR;
-  
   s->angle += (gyro+gy_off)/100.0;
   s->varience += GYRO_VAR;
 
@@ -568,7 +565,7 @@ void Pointing(){
 					  0.0, // last input
 					  0.0, // gy integral
 					  GY1_OFFSET, // gy offset
-					  0.00004, // filter constant
+					  0.0001, // filter constant
 					  0, 0 // n_solutions, since_last
   };
   static struct ElSolutionStruct ClinEl = {0.0, // starting angle
@@ -579,7 +576,7 @@ void Pointing(){
 					  0.0, // last input
 					  0.0, // gy integral
 					  GY1_OFFSET, // gy offset
-					  0.00004, // filter constant
+					  0.0001, // filter constant
 					  0, 0 // n_solutions, since_last
   };
   static struct ElSolutionStruct ISCEl = {0.0, // starting angle
@@ -590,7 +587,7 @@ void Pointing(){
 					  0.0, // last input
 					  0.0, // gy integral
 					  GY1_OFFSET, // gy offset
-					  0.00004, // filter constant
+					  0.0001, // filter constant
 					  0, 0 // n_solutions, since_last
   };
   static struct AzSolutionStruct NullAz = {92.0, // starting angle
@@ -612,7 +609,7 @@ void Pointing(){
 					  0.0, // last input
 					  0.0, 0.0, // gy integrals
 					  GY2_OFFSET, GY3_OFFSET, // gy offsets
-					  0.0001, // filter constant
+					  0.001, // filter constant
 					  0, 0 // n_solutions, since_last
   };
   static struct AzSolutionStruct DGPSAz = {0.0, // starting angle
@@ -663,7 +660,7 @@ void Pointing(){
   cos_a = cos(PointingData[i_point_read].az * (M_PI/180.0));
   sin_a = sin(PointingData[i_point_read].az * (M_PI/180.0));
   
-  RG.gy1 = ACSData.gyro1 - R*(-cos_l*sin_a);
+  RG.gy1 = ACSData.gyro1*GY1_GAIN_ERROR - R*(-cos_l*sin_a);
   RG.gy2 = ACSData.gyro2 - R*(cos_e*sin_l - cos_l*sin_e*cos_a);
   RG.gy3 = ACSData.gyro3 - R*(sin_e*sin_l + cos_l*cos_e*cos_a);
   
@@ -696,8 +693,7 @@ void Pointing(){
   /*************************************/
   /**      do ISC Solution            **/
   EvolveSCSolution(&ISCEl, &ISCAz,
-		   RG.gy1, 
-		   PointingData[i_point_read].gy1_offset,
+		   RG.gy1, PointingData[i_point_read].gy1_offset,
 		   RG.gy2, PointingData[i_point_read].gy2_offset,
 		   RG.gy3, PointingData[i_point_read].gy3_offset,
 		   PointingData[point_index].el);
@@ -706,12 +702,10 @@ void Pointing(){
   /**      do elevation solution      **/
   clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
   
-  EvolveElSolution(&ClinEl, RG.gy1, 
-		 PointingData[i_point_read].gy1_offset,
-		 clin_elev, 1);
-  EvolveElSolution(&EncEl, RG.gy1, 
-		 PointingData[i_point_read].gy1_offset,
-		 ACSData.enc_elev, 1);
+  EvolveElSolution(&ClinEl, RG.gy1, PointingData[i_point_read].gy1_offset,
+		   clin_elev, 1);
+  EvolveElSolution(&EncEl, RG.gy1, PointingData[i_point_read].gy1_offset,
+		   ACSData.enc_elev, 1);
 
   if (CommandData.use_elenc) {
     AddElSolution(&ElAtt, &EncEl, 1);
