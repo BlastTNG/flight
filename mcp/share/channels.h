@@ -80,8 +80,8 @@ extern "C" {
 
   /* Approximate gyro offsets - to get us close */
 #define GYRO1_OFFSET 25940.0
-#define GYRO2_OFFSET 25550.0
-#define GYRO3_OFFSET 25235.0
+#define GYRO2_OFFSET 25370.0
+#define GYRO3_OFFSET 25370.0
 
   /* The size of the rx and downlink frames */
 #define FRAME_WORDS \
