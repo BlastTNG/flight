@@ -1,13 +1,13 @@
-/* --------------------------------------------------------------------------
-                                       ACSMAIN                                 
-   crc.c
-
-   A program for the BOOMERanG ACS Ground Station
-
-   (crc check sum)
-
-   Enzo Pascale Jan. 25 1997
---------------------------------------------------------------------------- */
+/******************************************************************************\
+|*                                                                            *|
+|* CRC.c                                                                      *|
+|* Performs a CRC checksum.                                                   *|
+|*                                                                            *|
+|* Enzo Pascale Jan. 25 1997 (for Boomerang)                                  *|
+|* Updated by Adam Hincks, August 2004, for BLAST                             *|
+|*                                                                            *|
+|*                                                                            *|
+\******************************************************************************/
 
 unsigned short crctab[0x100] = {
   0x00000, 0x0C0C1, 0x0C181, 0x00140, 0x0C301, 0x003C0, 0x00280, 0x0C241,
@@ -44,33 +44,27 @@ unsigned short crctab[0x100] = {
   0x08201, 0x042C0, 0x04380, 0x08341, 0x04100, 0x081C1, 0x08081, 0x04040 };
 
 
+/*-----------------------------------------------------------------------------
+ * CalculateCRC
+ * 
+ * This function computes the CRC used by SEA's ARC utility.  
+ *----------------------------------------------------------------------------*/
 
-/* --------------------------------------------------------------------------
-   UpdateCRCArc
-   This function computes the CRC used by SEA's ARC utility.  
-   Initialize with zero. 
---------------------------------------------------------------------------- */
-
-unsigned short UpdateCRCArc(unsigned short InitCRC, void *buffer,
-			    unsigned int InLen)
-{
+unsigned short CalculateCRC(unsigned int initword, void *buffer, 
+                            unsigned int buflen) {
   unsigned int k;
   unsigned short crc;
   unsigned char *b;
  
-  if(InLen) {
-    crc = InitCRC; 
-  } else {
-    return InitCRC;
-  }
+  if (buflen)
+    crc = 0; 
+  else 
+    return 0;
   
   b = (unsigned char *)buffer;
   
-  for(k = 0; k < InLen; k++) {
-    
+  for (k = 0; k < buflen; k++)
    crc = ((crc >> 8) & 0x00ff) ^ crctab[(crc ^ b[k]) & 0x00ff];
-
-  }
   
   return crc;
 }

@@ -482,7 +482,7 @@ void write_to_biphase(unsigned short *RxFrame) {
       nothing[i] = 0xEEEE;
   }
 
-  nothing[0] = UpdateCRCArc(0xEB90, RxFrame, BiPhaseFrameWords);
+  nothing[0] = CalculateCRC(0xEB90, RxFrame, BiPhaseFrameWords);
 
   if (bi0_fp >= 0) {
     RxFrame[0] = sync;

@@ -18,16 +18,7 @@
 #define SINGLE          2
 #define AVERAGE         3
 
-#define MAX_PERCENT     0.965
-
-#define CRC             6
-#define BLEN            4
-#define FILEC           8
-#define FRAMEC          9
-#define START_DATA      12
-
 #define ALICEFILE_DIR   "./"
-
 #define MULTIPLEX_WORD  3
 
 #include <stdio.h>
@@ -40,17 +31,16 @@
 #include <math.h>
 #include <string.h>
 
-#include "alicefile.h"
 #include "dataholder.h"
 #include "small.h"
 #include "fftsg_h.c"
 #include "bbc_pci.h"
+#include "crc.h"
 
 extern "C" {
-#include "crc.h"
-#include "pointing_struct.h"
-#include "tx_struct.h"
-#include "mcp.h"
+  #include "pointing_struct.h"
+  #include "tx_struct.h"
+  #include "mcp.h"
 }
 
 #define INPUT_TTY "/dev/ttyS1"
@@ -282,24 +272,12 @@ void Buffer::Start(char filenum, unsigned int framenum) {
   for (i = 0; i < 4; i++)
     buf[i] |= 0xff;    // 11111111
 
-
- // Postion 8, 9 reserved for CRC
-  // Position 10, 11 reserved for buffer length
-
-/*  buf[FILEC] |= 0xf0 + filenum;
-
-  buf[FRAMEC] = framenum & 0xff;
-  buf[FRAMEC+1] = (framenum >> 8) & 0xff;
-  buf[FRAMEC+2] = (framenum >> 16) & 0xff;
-*/
   buf[4] |= 0xf0 + filenum;
 
   buf[5] = framenum & 0xff;
   buf[6] = (framenum >> 8) & 0xff;
   buf[7] = (framenum >> 16) & 0xff;
-
-/*  bytepos = START_DATA;*/
-//  printf("======================>> %d\n", framenum);
+  
   bytepos = 8;
   bitpos = 0;
 }
