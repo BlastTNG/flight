@@ -74,6 +74,8 @@ int ISCInit(void)
   fprintf(stderr, "Connected to Elbereth\n");
   CommandData.ISCState.shutdown = 0;
 
+  SentState = CommandData.ISCState;
+
   return sock;
 }
 
