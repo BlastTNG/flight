@@ -16,7 +16,7 @@ OBJS = auxiliary.o commands.o das.o dgps.o framefile.o \
 all::
 ifeq ($(DEBUG), 1)
 		@echo "******************** WARNING ******************************"
-		@echo "Debugging sysmbols are being output to the binary"
+		@echo "Debugging symbols are being output to the binary"
 		@echo "Be sure to run \`make clean' before compiling flight version"
 		@echo "******************** WARNING ******************************"
 endif
@@ -24,7 +24,7 @@ endif
 all:: mcp
 ifeq ($(DEBUG), 1)
 		@echo "******************** WARNING ********************"
-		@echo "Debugging sysmbols are being output to the binary"
+		@echo "Debugging symbols are being output to the binary"
 		@echo "******************** WARNING ********************"
 endif
 
