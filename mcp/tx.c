@@ -2,7 +2,7 @@
 
 /* NB: As of 7 Sep 2003 this file has been split up into four pieces:
  *
- * auxiliary.c: Auxiliary controls: Lock Motor, Pumps, Electronics Heat
+ * auxiliary.c: Auxiliary controls: Lock Motor, Pumps, Electronics Heat, ISC
  * das.c:       DAS, Bias and Cryo controls
  * motors.c:    Motor commanding and Scan modes
  * tx.c:        Pointing data writeback, ADC sync, and standard Tx frame control
@@ -249,7 +249,8 @@ void StoreData(int index, unsigned int* Txframe,
   static int isc_mtolCh, isc_mtolInd;
   static int isc_qtolCh, isc_qtolInd;
   static int isc_rtolCh, isc_rtolInd;
-  static int isc_pulseCh, isc_pulseInd;
+  static int isc_fpulseCh, isc_fpulseInd;
+  static int isc_spulseCh, isc_spulseInd;
   static int isc_x_offCh, isc_x_offInd;
   static int isc_y_offCh, isc_y_offInd;
 
@@ -368,7 +369,8 @@ void StoreData(int index, unsigned int* Txframe,
     SlowChIndex("isc_mtol", &isc_mtolCh, &isc_mtolInd);
     SlowChIndex("isc_qtol", &isc_qtolCh, &isc_qtolInd);
     SlowChIndex("isc_rtol", &isc_rtolCh, &isc_rtolInd);
-    SlowChIndex("isc_pulse", &isc_pulseCh, &isc_pulseInd);
+    SlowChIndex("isc_fpulse", &isc_fpulseCh, &isc_fpulseInd);
+    SlowChIndex("isc_spulse", &isc_spulseCh, &isc_spulseInd);
     SlowChIndex("isc_x_off", &isc_x_offCh, &isc_x_offInd);
     SlowChIndex("isc_y_off", &isc_y_offCh, &isc_y_offInd);
   }
@@ -611,7 +613,9 @@ void StoreData(int index, unsigned int* Txframe,
       (unsigned int)(CommandData.ISCState.quit_tol * 65535.));
   WriteSlow(isc_rtolCh, isc_rtolInd,
       (unsigned int)(CommandData.ISCState.rot_tol * RAD2I));
-  WriteSlow(isc_pulseCh, isc_pulseInd,
+  WriteSlow(isc_fpulseCh, isc_fpulseInd,
+      (unsigned int)(CommandData.ISC_fast_pulse_width));
+  WriteSlow(isc_spulseCh, isc_spulseInd,
       (unsigned int)(CommandData.ISC_pulse_width));
   WriteSlow(isc_x_offCh, isc_x_offInd,
       (unsigned int)(CommandData.ISCState.azBDA * RAD2I));
