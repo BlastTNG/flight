@@ -199,12 +199,18 @@
     </MULTI>
     <MULTI caption="Sun">
       <DATUM src="SUN_VETO">
-        <WORD value="0" caption="Allowed" textstyle="W_BIT"/>
-        <WORD value="1" caption="Vetoed" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Allowed" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Vetoed" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="ISC">
       <DATUM src="ISC_VETO">
+        <WORD value="0" caption="Allowed" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Vetoed" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="OSC">
+      <DATUM src="OSC_VETO">
         <WORD value="0" caption="Allowed" textstyle="OK_BIT"/>
         <WORD value="1" caption="Vetoed" textstyle="W_BIT"/>
       </DATUM>
@@ -225,6 +231,12 @@
       <DATUM src="DGPS_ATT_OK">
         <WORD value="1" caption="OK" textstyle="OK_BIT"/>
         <WORD value="0" caption="Pissy" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Gyros">
+      <DATUM src="USE_ANALOGUE">
+        <WORD value="0" caption="Digital" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Analogue" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
   </BOX>
@@ -312,9 +324,6 @@
     </NUMBER>
     <NUMBER caption="T ISC PC">
       <DATUM format="%.2f" src="ISC_TEMP4" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="P ISC">
-      <DATUM format="%.2f" src="ISC_PRESSURE1" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Balance/Lock" colour="#880000" row="2" col="3">
@@ -427,6 +436,15 @@
     <NUMBER caption="Gyro 1 Set">
       <DATUM format="%.2f" src="T_GY_SET" extrema="temp"/>
     </NUMBER>
+    <NUMBER caption="Gyro 1">
+      <DATUM format="%.2f" src="T_GYRO1" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="Gyro 2">
+      <DATUM format="%.2f" src="T_GYRO2" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="Gyro 3">
+      <DATUM format="%.2f" src="T_GYRO3" extrema="temp"/>
+    </NUMBER>
     <NUMBER caption="Gyrobox 2">
       <DATUM format="%.2f" src="T_GYBOX2" extrema="temp"/>
     </NUMBER>
@@ -536,6 +554,15 @@
     <NUMBER caption="T DAS Battery">
       <DATUM format="%.2f" src="T_BATT_DAS" extrema="temp"/>
     </NUMBER>
+    <NUMBER caption="SS CPU">
+      <DATUM format="%.2f" src="SS_CPU_TEMP" extrema="cputemp"/>
+    </NUMBER>
+    <NUMBER caption="SS PC">
+      <DATUM format="%.2f" src="SS_PC_TEMP" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="SS Chipset">
+      <DATUM format="%.2f" src="SS_CHIP_TEMP" extrema="cputemp"/>
+    </NUMBER>
   </BOX>
   <BOX caption="Motor Temps" colour="#002222" row="3" col="5">
     <NUMBER caption="T Roll PWM">
@@ -631,6 +658,9 @@
     <NUMBER caption="I ISC + OSC">
       <DATUM format="%.2f" src="I_STARCAM" extrema="current"/>
     </NUMBER>
+    <NUMBER caption="I Sun Sensor">
+      <DATUM format="%.2f" src="I_SUN" extrema="current"/>
+    </NUMBER>
   </BOX>
   <BOX caption="Bias and DAS" colour="#707" row="4" col="6" rowspan="1">
     <MULTI caption="Type">
@@ -720,6 +750,51 @@
       <DATUM format="%.2f" src="I_SOL_DAS" extrema="unknown"/>
     </NUMBER>
   </BOX>
+  <BOX caption="Solar Panels" colour="#777700" row="5" col="3">
+    <NUMBER caption="V Solar ACS 1">
+      <DATUM format="%.2f" src="V_SOL_ACS1" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="V Solar ACS 2">
+      <DATUM format="%.2f" src="V_SOL_ACS2" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="V Solar ACS 3">
+      <DATUM format="%.2f" src="V_SOL_ACS3" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="V Solar ACS 4">
+      <DATUM format="%.2f" src="V_SOL_ACS4" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="V Solar ACS 5">
+      <DATUM format="%.2f" src="V_SOL_ACS5" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="V Solar ACS 6">
+      <DATUM format="%.2f" src="V_SOL_ACS6" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="V Solar DAS 1">
+      <DATUM format="%.2f" src="V_SOL_DAS1" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="V Solar DAS 2">
+      <DATUM format="%.2f" src="V_SOL_DAS2" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="V Solar DAS 3">
+      <DATUM format="%.2f" src="V_SOL_DAS3" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="V Solar DAS 4">
+      <DATUM format="%.2f" src="V_SOL_DAS4" extrema="unknown"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Pressures" colour="#777700" row="5" col="4">
+    <NUMBER caption="P ISC">
+      <DATUM format="%.2f" src="ISC_PRESSURE1" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="P OSC">
+      <DATUM format="%.2f" src="OSC_PRESSURE1" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="P PV">
+      <DATUM format="%.2f" src="P_PV" extrema="unknown"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Cooling" colour="#777700" row="5" col="5">
+  </BOX>
   <BOX caption="State" colour="#777700" row="0" col="1" colspan="1">
     <CURDIR caption="Dirfile">
       <DATUM/>
@@ -741,6 +816,12 @@
     </NUMBER>
     <NUMBER caption="MCP Frame">
       <DATUM format="%.0f" src="MCP_FRAME" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Alice File">
+      <DATUM format="%.0f" src="ALICE_FILE" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Plover">
+      <DATUM format="%.0f" src="PLOVER" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Time" colour="#777700" row="1" col="1" colspan="1">
