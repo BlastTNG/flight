@@ -113,6 +113,40 @@ union DerivedUnion DerivedChannels[] = {
       "OSC_EYE_ON"
       ),
   BITWORD("OSC_SENT_TRIG", "osc_trigger", 0, 14),
+
+  COMMENT("ACS Digital Signals"),
+
+  BITFIELD("ifpm_bits",
+      "",
+      "",
+      "BAL_ON",
+      "BAL_REV",
+      "IF_COOL1_OFF",
+      "IF_COOL1_ON",
+      "BAL2_ON",
+      "BAL2_REV"
+      ),
+  BITFIELD("lock_bits",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "LOKMOT_ISIN",
+      "LOKMOT_ISOUT"
+      ),
+  BITFIELD("ofpm_bits",
+      "OF_COOL2_ON",
+      "OF_COOL2_OFF",
+      "OF_COOL1_ON",
+      "OF_COOL1_OFF",
+      "LOKMOT_ON",
+      "LOKMOT_OFF",
+      "LOKMOT_OUT",
+      "LOKMOT_IN"
+      ),
+  LINCOM2("LOKMOT_STATE", "LOKMOT_ISOUT", 2, 0, "LOKMOT_ISIN",  1, 0),
 #endif
 
   /* BIAS */
