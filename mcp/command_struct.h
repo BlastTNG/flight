@@ -164,8 +164,6 @@ struct CommandDataStruct {
     double bal_off;
     double bal_target;
     double bal_gain;
-    int bal_max;
-    int bal_min;
 
     int inframe_cool1_on;
     int inframe_cool1_off;

@@ -57,6 +57,7 @@ double round(double x);
 
 /* in auxiliary.c */
 void ControlAuxMotors(unsigned short *RxFrame);
+void ControlInnerCool(unsigned short *RxFrame);
 void ControlGyroHeat(unsigned short *RxFrame);
 void CameraTrigger(int which);
 void SensorResets(void);
@@ -241,7 +242,7 @@ void StoreStarCameraData(int index, int which)
   static int blob_index[2] = {0, 0};
   static int blob_data[2][15][4];
 
-  int i, i_isc;
+  int i, i_isc = 0;
 
   /** isc fields **/
   static struct NiosStruct* Blob0XAddr[2];
@@ -954,6 +955,7 @@ void UpdateBBCFrame(unsigned short *RxFrame) {
   UpdateAxesMode();
   StoreData(index);
   ControlGyroHeat(RxFrame);
+  ControlInnerCool(RxFrame);
   WriteMot(index, RxFrame);
 #endif
   BiasControl(RxFrame);

@@ -58,6 +58,15 @@
 #define MIN_GYBOX_TEMP ((-50 - TGYBOX_B) / TGYBOX_M)  /* -50 C */
 #define MAX_GYBOX_TEMP ((60 - TGYBOX_B) / TGYBOX_M)   /* +60 C */
 
+/* limits for the inner cooling stuff */
+#define MIN_TEMP ((-50 - I2T_B) / I2T_M)  /* -50 C */
+#define MAX_TEMP ((60 - I2T_B) / I2T_M)   /* +60 C */
+#define IF_COOL_GOAL 25   /* in deg C */
+#define IF_COOL_RANGE 25   /* At a temp of IF_COOL_GOAL + IF_COOL_RANGE,
+                              pump on full */
+#define PUMP_MAX 1433 /* 70% */
+#define PUMP_MIN 307  /* 15% */
+
 struct ISCPulseType isc_pulses[2] = {
   {-1, 0, 0, 0, 0, 0, 0, 0}, {-1, 0, 0, 0, 0, 0, 0, 0}
 };
@@ -122,11 +131,65 @@ int SetGyHeatSetpoint(double history, int age)
     setpoint = CommandData.gyheat.max_set;
 
   if (setpoint != CommandData.gyheat.setpoint) {
+    bprintf(info, "Stepped gybox setpoint to: %.2f\n", setpoint);
     age = 0;
     CommandData.gyheat.setpoint = setpoint;
   }
 
   return age;
+}
+
+void ControlInnerCool(unsigned short *RxFrame)
+{
+  static struct BiPhaseStruct *tDasAddr, *tRecAddr;
+  static int firsttime = 1;
+  unsigned int das, rec;
+  int dg = 1, rg = 1; 
+  double temp = 0;
+  double error;
+  short int pwm;
+
+  if (firsttime) {
+    firsttime = 0;
+    tDasAddr = GetBiPhaseAddr("t_das");
+    tRecAddr = GetBiPhaseAddr("t_rec");
+  }
+
+  das = slow_data[tDasAddr->index][tDasAddr->channel];
+  rec = slow_data[tRecAddr->index][tRecAddr->channel];
+
+  /* NB: these tests are backwards due to a sign flip in the calibration */
+  if (das < MAX_TEMP || das > MIN_TEMP)
+    dg = 0;
+  if (rec < MAX_TEMP || rec > MIN_TEMP)
+    rg = 0;
+
+  if (dg && rg)
+    temp = I2T_M * 0.5 * (das + rec) + I2T_B;
+  else if (dg)
+    temp = I2T_M * das + I2T_B;
+  else if (rg)
+    temp = I2T_M * rec + I2T_B;
+  else
+    return; /* both temps bad */
+
+  if (temp < IF_COOL_GOAL - 1)
+    return; /* temperature below goal, nothing to do */
+
+  error = temp - IF_COOL_GOAL;
+
+  pwm = 2047. * error / IF_COOL_RANGE;
+
+  if (pwm > PUMP_MAX)
+    pwm = PUMP_MAX;
+  else if (pwm < PUMP_MIN)
+    pwm = PUMP_MIN;
+
+  static int foo = 0;
+  if (foo++ == 100) {
+    foo = 0;
+    bprintf(info, "%f => %i\n", temp, pwm);
+  }
 }
 
 /************************************************************************/
@@ -193,7 +256,8 @@ void ControlGyroHeat(unsigned short *RxFrame)
       RxFrame[tGyboxAddr->channel]);
 
   /* Only run these controls if we think the thermometer isn't broken */
-  if (temp < MAX_GYBOX_TEMP && temp > MIN_GYBOX_TEMP) {
+  /* NB: these tests are backwards due to a sign flip in the calibration */
+  if (temp > MAX_GYBOX_TEMP && temp < MIN_GYBOX_TEMP) {
     /* control the heat */
     CommandData.gyheat.age = SetGyHeatSetpoint(history, CommandData.gyheat.age);
 
@@ -282,29 +346,27 @@ int Balance(int ifpmBits) {
     error = -error;
   }
 
-  pumppwm = CommandData.pumps.bal_min - error * CommandData.pumps.bal_gain;
+  pumppwm = error * CommandData.pumps.bal_gain;
 
-  if (pumppwm < CommandData.pumps.bal_max) {
-    pumppwm = CommandData.pumps.bal_max;
-  } else if (pumppwm > 2047) {
-    pumppwm = 2047;
-  }
+  if (pumppwm < PUMP_MIN)
+    pumppwm = PUMP_MIN;
+  else if (pumppwm > PUMP_MAX)
+    pumppwm = PUMP_MAX;
 
-  if (error > CommandData.pumps.bal_on) {
+  if (error > CommandData.pumps.bal_on)
     pumpon = 1;
-  } else if (error < CommandData.pumps.bal_off) {
+  else if (error < CommandData.pumps.bal_off) {
     pumpon = 0;
     if (CommandData.pumps.bal_veto >= 0)
       CommandData.pumps.bal_veto = BAL_OFF_VETO;
   }
 
-  if (pumpon) {
+  if (pumpon)
     ifpmBits |= BAL1_ON; /* turn on pump */
-  } else {
+  else
     ifpmBits &= (0xFF - BAL1_ON); /* turn off pump */
-  }
 
-  WriteData(balPwm1Addr, pumppwm, NIOS_QUEUE);
+  WriteData(balPwm1Addr, 2047 - pumppwm, NIOS_QUEUE);
 
   return ifpmBits;
 }
@@ -583,7 +645,7 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   static struct NiosStruct* outpumpLevAddr;
   static struct NiosStruct* balOnAddr, *balOffAddr;
   static struct NiosStruct* balTargetAddr, *balVetoAddr;
-  static struct NiosStruct* balGainAddr, *balMinAddr, *balMaxAddr;
+  static struct NiosStruct* balGainAddr;
   static struct NiosStruct* ifpmBitsAddr;
   static struct NiosStruct* lokmotPinAddr;
 
@@ -607,8 +669,6 @@ void ControlAuxMotors(unsigned short *RxFrame) {
     balOffAddr = GetNiosAddr("bal_off");
     balTargetAddr = GetNiosAddr("bal_target");
     balGainAddr = GetNiosAddr("bal_gain");
-    balMinAddr = GetNiosAddr("bal_min");
-    balMaxAddr = GetNiosAddr("bal_max");
     balVetoAddr = GetNiosAddr("bal_veto");
     lokmotPinAddr = GetNiosAddr("lokmot_pin");
   }
@@ -677,8 +737,6 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   WriteData(balTargetAddr, (int)(CommandData.pumps.bal_target + 1648. * 5.),
       NIOS_QUEUE);
   WriteData(balGainAddr, (int)(CommandData.pumps.bal_gain * 1000.), NIOS_QUEUE);
-  WriteData(balMinAddr, (int)CommandData.pumps.bal_min, NIOS_QUEUE);
-  WriteData(balMaxAddr,(int)CommandData.pumps.bal_max, NIOS_QUEUE);
   WriteData(ifpmBitsAddr, ifpmBits, NIOS_FLUSH);
 }
 

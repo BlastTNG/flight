@@ -166,9 +166,13 @@ extern "C" {
 #define DPS_TO_DGY32 (1.0/DGY32_TO_DPS)
 #define DGY32_OFFSET (32768.0*65536.0)
 
-/* Gyrobox thermometer conversion */
-#define TGYBOX_B (136.45)
+/* Gyrobox thermometer conversion -- this is the 32bit AD590 conversion */
+#define TGYBOX_B (I2T_B)
 #define TGYBOX_M (-9.5367431641e-08)
+
+/* Gondola thermometry conversions -- this is the 16bit AD590 conversion */
+#define I2T_M (-0.00625)
+#define I2T_B (136.45)
 
 #ifdef __cplusplus
 }
