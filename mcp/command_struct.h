@@ -65,77 +65,7 @@ struct PointingModeStruct {
   time_t t;
 };
 
-struct PumpStruct {
-  int bal_veto;
-  int bal1_on;
-  int bal1_reverse;
-  int bal2_on;
-  int bal2_reverse;
-  double bal_on;
-  double bal_off;
-  double bal_target;
-  double bal_gain;
-  int bal_max;
-  int bal_min;
-
-  int inframe_cool1_on;
-  int inframe_cool1_off;
-  int lock_out;
-  int lock_off;
-  int lock_in;
-  int lock_point;
-  int outframe_cool1_on;
-  int outframe_cool1_off;
-  int outframe_cool2_on;
-  int outframe_cool2_off;
-  int pwm1, pwm2, pwm3, pwm4;
-};
-
-struct BiasStruct {
-  int clockInternal;
-  int biasAC;
-  int biasRamp;
-  int bias1;
-  int bias2;
-  int bias3;
-  int SetLevel1, SetLevel2, SetLevel3;
-};
-
 enum calmode { on, off, pulse, repeat };
-
-struct CryoStruct {
-  unsigned short heliumLevel;
-  unsigned short coldPlate;
-  unsigned short heatSwitch;
-  unsigned short CryoSparePWM;
-
-  enum calmode calibrator;
-  unsigned short calib_pulse, calib_period;
-
-  unsigned short autoBDAHeat;
-  unsigned short BDAHeat;
-  struct GainStruct BDAGain;
-  unsigned short BDAFiltLen;
-
-  unsigned short autoJFETheat;
-  unsigned short JFETHeat;
-  double JFETSetOn, JFETSetOff;
-
-  unsigned short charcoalHeater;
-  unsigned short fridgeCycle;
-
-  unsigned short potvalve_open, potvalve_on, potvalve_close;
-  unsigned short lhevalve_open, lhevalve_on, lhevalve_close;
-};
-
-struct ISCControlStruct {
-  int pulse_width;
-  int fast_pulse_width;
-  int reconnect;
-  int autofocus;
-  int save_period;
-  int auto_save;
-};
 
 struct CommandDataStruct {
   unsigned short int timeout;
@@ -149,6 +79,14 @@ struct CommandDataStruct {
 
   int emf_gain;     /* for reaction wheel  */
   int emf_offset;   /*   back-EMF tweaking */
+
+  struct {
+    int gps;       /* dgps is off */
+    int gyro;      /* digital gybox is off */
+    int isc;       /* isc is off */
+    int osc;       /* osc is off */
+    int ss;        /* ss is off */
+  } sensors_off;
 
   unsigned short disable_az;
   unsigned short disable_el;
@@ -169,12 +107,69 @@ struct CommandDataStruct {
   unsigned char use_mag;
   unsigned char use_gps;
 
-  struct BiasStruct Bias;
+  struct {
+    int clockInternal;
+    int biasAC;
+    int biasRamp;
+    int bias1;
+    int bias2;
+    int bias3;
+    int SetLevel1, SetLevel2, SetLevel3;
+  } Bias;
 
-  struct CryoStruct Cryo;
+  struct {
+    unsigned short heliumLevel;
+    unsigned short coldPlate;
+    unsigned short heatSwitch;
+    unsigned short CryoSparePWM;
+
+    enum calmode calibrator;
+    unsigned short calib_pulse, calib_period;
+
+    unsigned short autoBDAHeat;
+    unsigned short BDAHeat;
+    struct GainStruct BDAGain;
+    unsigned short BDAFiltLen;
+
+    unsigned short autoJFETheat;
+    unsigned short JFETHeat;
+    double JFETSetOn, JFETSetOff;
+
+    unsigned short charcoalHeater;
+    unsigned short fridgeCycle;
+
+    unsigned short potvalve_open, potvalve_on, potvalve_close;
+    unsigned short lhevalve_open, lhevalve_on, lhevalve_close;
+  } Cryo;
+
   int Phase[DAS_CARDS];
 
-  struct PumpStruct pumps;
+  struct {
+    int bal_veto;
+    int bal1_on;
+    int bal1_reverse;
+    int bal2_on;
+    int bal2_reverse;
+    double bal_on;
+    double bal_off;
+    double bal_target;
+    double bal_gain;
+    int bal_max;
+    int bal_min;
+
+    int inframe_cool1_on;
+    int inframe_cool1_off;
+    int lock_out;
+    int lock_off;
+    int lock_in;
+    int lock_point;
+    int outframe_cool1_on;
+    int outframe_cool1_off;
+    int outframe_cool2_on;
+    int outframe_cool2_off;
+    int pwm1, pwm2, pwm3, pwm4;
+  } pumps;
+
 
   /* sensors output: read in mcp:SensorReader() */
   unsigned short fan;
@@ -191,7 +186,14 @@ struct CommandDataStruct {
 
   /* Integrating Star Camera Stuff */
   struct ISCStatusStruct ISCState[2];
-  struct ISCControlStruct ISCControl[2];
+  struct {
+    int pulse_width;
+    int fast_pulse_width;
+    int reconnect;
+    int autofocus;
+    int save_period;
+    int auto_save;
+  } ISCControl[2];
 };
 
 struct ScheduleType {

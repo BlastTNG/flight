@@ -290,10 +290,32 @@ void SingleCommand (enum singleCommand command) {
   else if (command == elclin_allow)
     CommandData.use_elclin = 1;
 
-  else if (command == analogue_gyros)
+  else if (command == gps_off)           /* sensor power */
+    CommandData.sensors_off.gps = 1;
+  else if (command == gps_on)
+    CommandData.sensors_off.gps = 0;
+  else if (command == gyro_off)
+    CommandData.sensors_off.gyro = 1;
+  else if (command == gyro_on)
+    CommandData.sensors_off.gyro = 0;
+  else if (command == isc_off)
+    CommandData.sensors_off.isc = 1;
+  else if (command == isc_on)
+    CommandData.sensors_off.isc = 0;
+  else if (command == osc_off)
+    CommandData.sensors_off.osc = 1;
+  else if (command == osc_on)
+    CommandData.sensors_off.osc = 0;
+  else if (command == ss_off)
+    CommandData.sensors_off.ss = 1;
+  else if (command == ss_on)
+    CommandData.sensors_off.ss = 0;
+
+  else if (command == analogue_gyros)    /* gyro selection */
     CommandData.use_analogue_gyros = 1;
   else if (command == digital_gyros)
     CommandData.use_analogue_gyros = 0;
+    
   else if (command == clock_int)    /* Bias settings */
     CommandData.Bias.clockInternal = 1;
   else if (command == clock_ext)
@@ -1346,6 +1368,12 @@ void InitCommandData() {
 
   CommandData.ISCState[0].shutdown = 0;
   CommandData.ISCState[1].shutdown = 0;
+
+  CommandData.sensors_off.gps = 0;
+  CommandData.sensors_off.gyro = 0;
+  CommandData.sensors_off.isc = 0;
+  CommandData.sensors_off.osc = 0;
+  CommandData.sensors_off.ss = 0;
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))

@@ -490,7 +490,13 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   WriteData(ifpmBitsAddr, ifpmBits, NIOS_FLUSH);
 }
 
-/* SensorResets: Power cycle ISC, OSC, GPS and GYBOX2 */
+#define SENS_RST_GPS  0x08;
+#define SENS_RST_ISC  0x10;
+#define SENS_RST_SUNS 0x20;
+#define SENS_RST_GYRO 0x40;
+#define SENS_RST_OSC  0x80;
+
+/* SensorResets: Power veto ISC, OSC, GPS and GYBOX2 */
 void SensorResets(void)
 {
   static int firsttime = 1;
@@ -501,6 +507,17 @@ void SensorResets(void)
     firsttime = 0;
     sensorResetAddr = GetNiosAddr("sensor_reset");
   }
+
+  if (CommandData.sensors_off.gps)
+    sensor_resets |= SENS_RST_GPS;
+  if (CommandData.sensors_off.gyro)
+    sensor_resets |= SENS_RST_GYRO;
+  if (CommandData.sensors_off.isc)
+    sensor_resets |= SENS_RST_ISC;
+  if (CommandData.sensors_off.osc)
+    sensor_resets |= SENS_RST_OSC;
+  if (CommandData.sensors_off.ss)
+    sensor_resets |= SENS_RST_SUNS;
 
   WriteData(sensorResetAddr, sensor_resets, NIOS_QUEUE);
 }
