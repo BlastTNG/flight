@@ -200,6 +200,8 @@ void DumpNiosFrame(void)
 {
   int bus, m, i, j, n, addr, m0addr;
   FILE* map;
+  struct NiosStruct* ReverseMap[2][64][64];
+  memset(ReverseMap, 0, 2 * 64 * 64 * sizeof(struct NiosStruct*));
 
   if ((map = fopen("/data/etc/Nios.map", "w")) == NULL)
     return;
@@ -254,6 +256,9 @@ void DumpNiosFrame(void)
                   BiPhaseLookup[BI0_MAGIC(NiosLookup[j].bbcAddr)].channel,
                   BI0_MAGIC(NiosLookup[j].bbcAddr),
                   NiosLookup[j].fast ? 'f' : 's', NiosLookup[j].field);
+              ReverseMap[(NiosLookup[j].bbcAddr & BBC_READ) ? 1 : 0]
+                [GET_NODE(NiosLookup[j].bbcAddr)]
+                [GET_CH(NiosLookup[j].bbcAddr)] = &NiosLookup[j];
               if (NiosLookup[j].wide)
                 fprintf(map, " (lsb)");
             } else if (NiosLookup[j].niosAddr == addr - 1 &&
@@ -297,6 +302,8 @@ void DumpNiosFrame(void)
                 BiPhaseLookup[BI0_MAGIC(BBCSpares[j])].index,
                 BiPhaseLookup[BI0_MAGIC(BBCSpares[j])].channel,
                 BI0_MAGIC(BBCSpares[j]), j);
+            ReverseMap[0][GET_NODE(BBCSpares[j])][GET_CH(BBCSpares[j])]
+              = (struct NiosStruct*)(-j - 100);
           }
         }
         fprintf(map, "\n");
@@ -314,8 +321,99 @@ void DumpNiosFrame(void)
     fprintf(map, "\n");
   }
 
-  mprintf(MCP_INFO, "Wrote /data/etc/Nios.map.\n");
+  fprintf(map, "BBC Map:\n");
+  bus = 0;
+  for (i = 0; i < 64; ++i) {
+    for (j = 0; j < 64; ++j) {
+      if (i == SPECIAL && j <= 4) {
+        if (j == 0)
+          fprintf(map, "%02i %02i Y %-32s", i, j, "Frame Sync 0");
+        else if (j == 1)
+          fprintf(map, "%02i %02i F %-32s", i, j, "(lsb) FASTSAMP");
+        else if (j == 2)
+          fprintf(map, "%02i %02i F %-32s", i, j, "(msb) FASTSAMP");
+        else if (j == 3)
+          fprintf(map, "%02i %02i F %-32s", i, j, "Multiplex Index");
+        else if (j == 4)
+          fprintf(map, "%02i %02i Y %-32s", i, j, "Frame Sync 1");
+
+        if (ReverseMap[1][i][j]) {
+          if (ReverseMap[1][i][j]->wide) {
+            fprintf(map, "%02i %02i %c (lsb) %s", i, j,
+                ReverseMap[1][i][j]->fast ? 'f' : 's',
+                ReverseMap[1][i][j]->field);
+            bus |= 0x2;
+          } else
+            fprintf(map, "%02i %02i %c %s", i, j, ReverseMap[1][i][j]->fast
+                ? 'f' : 's', ReverseMap[1][i][j]->field);
+        } else if (bus & 0x2) {
+          fprintf(map, "%02i %02i %c (msb) %s", i, j, ReverseMap[1][i][j
+              - 1]->fast ? 'f' : 's', ReverseMap[1][i][j - 1]->field);
+          bus &= 0x1;
+        } else {
+          fprintf(map, "%02i %02i - -", i, j);
+        }
+        fprintf(map, "\n"); 
+      } else if (ReverseMap[0][i][j] || ReverseMap[1][i][j]) {
+        if ((int)ReverseMap[0][i][j] <= -100) {
+          fprintf(map, "%02i %02i s Spare %02i%-24s", i, j,
+              -(int)ReverseMap[0][i][j] - 100, "");
+        } else if (ReverseMap[0][i][j]) {
+          if (ReverseMap[0][i][j]->wide) {
+            fprintf(map, "%02i %02i %c (lsb) %-26s", i, j,
+                ReverseMap[0][i][j]->fast ? 'f' : 's',
+                ReverseMap[0][i][j]->field);
+            bus |= 0x1;
+          } else
+            fprintf(map, "%02i %02i %c %-32s", i, j, ReverseMap[0][i][j]->fast
+                ? 'f' : 's', ReverseMap[0][i][j]->field);
+        } else if (bus & 0x1) {
+          fprintf(map, "%02i %02i %c (msb) %-26s", i, j, ReverseMap[0][i][j
+              - 1]->fast ? 'f' : 's', ReverseMap[0][i][j - 1]->field);
+          bus &= 0x2;
+        } else
+          fprintf(map, "%02i %02i - %-32s", i, j, "-");
+
+        if (ReverseMap[1][i][j]) {
+          if (ReverseMap[1][i][j]->wide) {
+            fprintf(map, "%02i %02i %c (lsb) %s", i, j,
+                ReverseMap[1][i][j]->fast ? 'f' : 's',
+                ReverseMap[1][i][j]->field);
+            bus |= 0x2;
+          } else
+            fprintf(map, "%02i %02i %c %s", i, j, ReverseMap[1][i][j]->fast
+                ? 'f' : 's', ReverseMap[1][i][j]->field);
+        } else if (bus & 0x2) {
+          fprintf(map, "%02i %02i %c (msb) %s", i, j, ReverseMap[1][i][j
+              - 1]->fast ? 'f' : 's', ReverseMap[1][i][j - 1]->field);
+          bus &= 0x1;
+        } else {
+          fprintf(map, "%02i %02i - -", i, j);
+        }
+        fprintf(map, "\n"); 
+      } else if (bus) {
+        if (bus & 0x1) {
+          fprintf(map, "%02i %02i %c (msb) %-26s", i, j, ReverseMap[0][i][j
+              - 1]->fast ? 'f' : 's', ReverseMap[0][i][j - 1]->field);
+          bus &= 0x2;
+        } else
+          fprintf(map, "%02i %02i - %-32s", i, j, "-");
+
+        if (bus & 0x2) {
+          fprintf(map, "%02i %02i %c (msb) %-19s", i, j, ReverseMap[1][i][j
+              - 1]->fast ? 'f' : 's', ReverseMap[1][i][j - 1]->field);
+          bus &= 0x1;
+        } else
+          fprintf(map, "%02i %02i - -", i, j);
+        fprintf(map, "\n"); 
+      } else
+        fprintf(map, "%02i %02i - %-32s%02i %02i - -\n", i, j, "-", i, j);
+    }
+    fprintf(map, "\n");
+  }
+
   fclose(map);
+  mprintf(MCP_INFO, "Wrote /data/etc/Nios.map.\n");
 }
 #endif
 
@@ -479,7 +577,7 @@ void MakeAddressLookups(void)
     FAST_OFFSET + slowsPerBusFrame[0],
     1 + slowsPerBusFrame[1]
 #else
-    slowsPerBusFrame[0],
+      slowsPerBusFrame[0],
     slowsPerBusFrame[1]
 #endif
   };

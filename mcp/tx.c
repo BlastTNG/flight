@@ -25,8 +25,7 @@
 extern short int SamIAm;
 short int InCharge;
 
-extern short int write_ISC_pointing;  /* isc.c */
-extern struct ISCStatusStruct SentState;  /* isc.c */
+extern struct ISCStatusStruct ISCSentState[2];  /* isc.c */
 extern int bbc_fp;
 
 double round(double x);
@@ -173,13 +172,226 @@ void SyncADC (int TxIndex) {
   }
 }
 
+struct NiosStruct* GetSCNiosAddr(char* field, int which)
+{
+  char buffer[FIELD_LEN];
+  sprintf(buffer, "%s_%s", which ? "osc" : "isc", field);
+
+  return GetNiosAddr(buffer);
+}
+
+void StoreStarCameraData(int index, int which)
+{
+  static int firsttime[2] = {1, 1};
+
+  static int blob_index[2] = {0, 0};
+  int i_isc = GETREADINDEX(iscdata_index[which]);
+
+  /** isc fields **/
+  static struct NiosStruct* Blob0XAddr[2];
+  static struct NiosStruct* Blob1XAddr[2];
+  static struct NiosStruct* Blob2XAddr[2];
+  static struct NiosStruct* Blob0YAddr[2];
+  static struct NiosStruct* Blob1YAddr[2];
+  static struct NiosStruct* Blob2YAddr[2];
+  static struct NiosStruct* Blob0FluxAddr[2];
+  static struct NiosStruct* Blob1FluxAddr[2];
+  static struct NiosStruct* Blob2FluxAddr[2];
+  static struct NiosStruct* Blob0SnAddr[2];
+  static struct NiosStruct* Blob1SnAddr[2];
+  static struct NiosStruct* Blob2SnAddr[2];
+  static struct NiosStruct* ErrorAddr[2];
+  static struct NiosStruct* MapmeanAddr[2];
+  static struct NiosStruct* FramenumAddr[2];
+  static struct NiosStruct* RdSigmaAddr[2];
+  static struct NiosStruct* RaAddr[2];
+  static struct NiosStruct* DecAddr[2];
+  static struct NiosStruct* AfocusAddr[2];
+  static struct NiosStruct* McpnumAddr[2];
+  static struct NiosStruct* ApertAddr[2];
+  static struct NiosStruct* CenboxAddr[2];
+  static struct NiosStruct* ApboxAddr[2];
+  static struct NiosStruct* MdistAddr[2];
+  static struct NiosStruct* NblobsAddr[2];
+  static struct NiosStruct* FocusAddr[2];
+  static struct NiosStruct* ThreshAddr[2];
+  static struct NiosStruct* GridAddr[2];
+  static struct NiosStruct* StateAddr[2];
+  static struct NiosStruct* MaxblobsAddr[2];
+  static struct NiosStruct* MaglimitAddr[2];
+  static struct NiosStruct* NradAddr[2];
+  static struct NiosStruct* LradAddr[2];
+  static struct NiosStruct* TolAddr[2];
+  static struct NiosStruct* MtolAddr[2];
+  static struct NiosStruct* QtolAddr[2];
+  static struct NiosStruct* RtolAddr[2];
+  static struct NiosStruct* FpulseAddr[2];
+  static struct NiosStruct* SpulseAddr[2];
+  static struct NiosStruct* XOffAddr[2];
+  static struct NiosStruct* YOffAddr[2];
+  static struct NiosStruct* HoldIAddr[2];
+  static struct NiosStruct* SavePrdAddr[2];
+
+  if (firsttime[which]) {
+    Blob0XAddr[which] = GetSCNiosAddr("blob0_x", which);
+    Blob1XAddr[which] = GetSCNiosAddr("blob1_x", which);
+    Blob2XAddr[which] = GetSCNiosAddr("blob2_x", which);
+    Blob0YAddr[which] = GetSCNiosAddr("blob0_y", which);
+    Blob1YAddr[which] = GetSCNiosAddr("blob1_y", which);
+    Blob2YAddr[which] = GetSCNiosAddr("blob2_y", which);
+    Blob0FluxAddr[which] = GetSCNiosAddr("blob0_flx", which);
+    Blob1FluxAddr[which] = GetSCNiosAddr("blob1_flx", which);
+    Blob2FluxAddr[which] = GetSCNiosAddr("blob2_flx", which);
+    Blob0SnAddr[which] = GetSCNiosAddr("blob0_sn", which);
+    Blob1SnAddr[which] = GetSCNiosAddr("blob1_sn", which);
+    Blob2SnAddr[which] = GetSCNiosAddr("blob2_sn", which);
+    ErrorAddr[which] = GetSCNiosAddr("error", which);
+    MapmeanAddr[which] = GetSCNiosAddr("mapmean", which);
+    RdSigmaAddr[which] = GetSCNiosAddr("rd_sigma", which);
+    FramenumAddr[which] = GetSCNiosAddr("framenum", which);
+    RaAddr[which] = GetSCNiosAddr("ra", which);
+    DecAddr[which] = GetSCNiosAddr("dec", which);
+    NblobsAddr[which] = GetSCNiosAddr("nblobs", which);
+    AfocusAddr[which] = GetSCNiosAddr("afocus", which);
+    McpnumAddr[which] = GetSCNiosAddr("mcpnum", which);
+
+    StateAddr[which] = GetSCNiosAddr("state", which);
+    FocusAddr[which] = GetSCNiosAddr("focus", which);
+    ApertAddr[which] = GetSCNiosAddr("apert", which);
+    ThreshAddr[which] = GetSCNiosAddr("thresh", which);
+    GridAddr[which] = GetSCNiosAddr("grid", which);
+    CenboxAddr[which] = GetSCNiosAddr("cenbox", which);
+    ApboxAddr[which] = GetSCNiosAddr("apbox", which);
+    MdistAddr[which] = GetSCNiosAddr("mdist", which);
+    MaxblobsAddr[which] = GetSCNiosAddr("maxblobs", which);
+    MaglimitAddr[which] = GetSCNiosAddr("maglimit", which);
+    NradAddr[which] = GetSCNiosAddr("nrad", which);
+    LradAddr[which] = GetSCNiosAddr("lrad", which);
+    TolAddr[which] = GetSCNiosAddr("tol", which);
+    MtolAddr[which] = GetSCNiosAddr("mtol", which);
+    QtolAddr[which] = GetSCNiosAddr("qtol", which);
+    RtolAddr[which] = GetSCNiosAddr("rtol", which);
+    FpulseAddr[which] = GetSCNiosAddr("fpulse", which);
+    SpulseAddr[which] = GetSCNiosAddr("spulse", which);
+    XOffAddr[which] = GetSCNiosAddr("x_off", which);
+    YOffAddr[which] = GetSCNiosAddr("y_off", which);
+    HoldIAddr[which] = GetSCNiosAddr("hold_i", which);
+    SavePrdAddr[which] = GetSCNiosAddr("save_prd", which);
+  }
+
+  /** ISC Fields **/
+  if (index == 0)
+    if (blob_index[which] == 0)
+      i_isc = GETREADINDEX(iscdata_index[which]); 
+
+  /*** Blobs ***/
+  WriteData(Blob0XAddr[which],
+      (int)(ISCSolution[which][i_isc].blob_x[blob_index[which] * 3 + 0] * 40.));
+  WriteData(Blob1XAddr[which],
+      (int)(ISCSolution[which][i_isc].blob_x[blob_index[which] * 3 + 1] * 40.));
+  WriteData(Blob2XAddr[which],
+      (int)(ISCSolution[which][i_isc].blob_x[blob_index[which] * 3 + 2] * 40.));
+
+  WriteData(Blob0YAddr[which],
+      (int)(ISCSolution[which][i_isc].blob_y[blob_index[which] * 3 + 0] * 40.));
+  WriteData(Blob1YAddr[which],
+      (int)(ISCSolution[which][i_isc].blob_y[blob_index[which] * 3 + 1] * 40.));
+  WriteData(Blob2YAddr[which],
+      (int)(ISCSolution[which][i_isc].blob_y[blob_index[which] * 3 + 2] * 40.));
+
+  WriteData(Blob0FluxAddr[which],
+      (int)(ISCSolution[which][i_isc].blob_flux[blob_index[which] * 3 + 0]
+            / 32.));
+  WriteData(Blob1FluxAddr[which],
+      (int)(ISCSolution[which][i_isc].blob_flux[blob_index[which] * 3 + 1]
+            / 32.));
+  WriteData(Blob2FluxAddr[which],
+      (int)(ISCSolution[which][i_isc].blob_flux[blob_index[which] * 3 + 2]
+            / 32.));
+
+  WriteData(Blob0SnAddr[which],
+      (int)(ISCSolution[which][i_isc].blob_sn[blob_index[which] * 3 + 0]
+            * 65.536));
+  WriteData(Blob1SnAddr[which],
+      (int)(ISCSolution[which][i_isc].blob_sn[blob_index[which] * 3 + 1]
+            * 65.536));
+  WriteData(Blob2SnAddr[which],
+      (int)(ISCSolution[which][i_isc].blob_sn[blob_index[which] * 3 + 2]
+            * 65.536));
+
+  if (++blob_index[which] >= 5)
+    blob_index[which] = 0;
+
+  /*** Solution Info ***/
+  WriteData(FramenumAddr[which],
+      (unsigned int)ISCSolution[which][i_isc].framenum);
+  WriteData(RaAddr[which],
+      (unsigned int)(ISCSolution[which][i_isc].ra * RAD2LI));
+  WriteData(DecAddr[which],
+      (unsigned int)((ISCSolution[which][i_isc].dec + M_PI / 2) * 2. * RAD2LI));
+  WriteData(NblobsAddr[which], (unsigned int)ISCSolution[which][i_isc].n_blobs);
+
+  if (ISCSolution[which][i_isc].sigma * RAD2ARCSEC > 65535)
+    WriteData(RdSigmaAddr[which], 65535);
+  else 
+    WriteData(RdSigmaAddr[which],
+        (unsigned int)(ISCSolution[which][i_isc].sigma * RAD2ARCSEC));
+
+  WriteData(McpnumAddr[which],
+      (unsigned int)ISCSolution[which][i_isc].MCPFrameNum);
+  WriteData(AfocusAddr[which],
+      (unsigned int)ISCSolution[which][i_isc].autoFocusPosition);
+  WriteData(ErrorAddr[which],
+      (unsigned int)ISCSolution[which][i_isc].cameraerr);
+  WriteData(MapmeanAddr[which],
+      (unsigned int)ISCSolution[which][i_isc].mapMean);
+
+  /*** State Info ***/
+  WriteData(StateAddr[which], (unsigned int)(ISCSentState[which].pause * 2
+        + ISCSentState[which].abort * 4 + ISCSentState[which].autofocus * 8
+        + ISCSentState[which].shutdown * 32 + ISCSentState[which].save));
+  WriteData(FocusAddr[which], (unsigned int)ISCSentState[which].focus_pos);
+  WriteData(ApertAddr[which], (unsigned int)ISCSentState[which].ap_pos);
+  WriteData(ThreshAddr[which], (unsigned int)(ISCSentState[which].sn_threshold
+        * 10.));
+  WriteData(GridAddr[which], (unsigned int)ISCSentState[which].grid);
+  WriteData(CenboxAddr[which], (unsigned int)ISCSentState[which].cenbox);
+  WriteData(ApboxAddr[which], (unsigned int)ISCSentState[which].apbox);
+  WriteData(MdistAddr[which], (unsigned int)ISCSentState[which].mult_dist);
+  WriteData(MaxblobsAddr[which],
+      (unsigned int)ISCSentState[which].maxBlobMatch);
+  WriteData(MaglimitAddr[which], (unsigned int)(ISCSentState[which].mag_limit
+        * 1000.));
+  WriteData(NradAddr[which], (unsigned int)(ISCSentState[which].norm_radius
+        * RAD2I));
+  WriteData(LradAddr[which], (unsigned int)(ISCSentState[which].lost_radius
+        * RAD2I));
+  WriteData(TolAddr[which], (unsigned int)(ISCSentState[which].tolerance
+        * RAD2ARCSEC));
+  WriteData(MtolAddr[which], (unsigned int)(ISCSentState[which].match_tol
+        * 65535.));
+  WriteData(QtolAddr[which], (unsigned int)(ISCSentState[which].quit_tol
+        * 65535.));
+  WriteData(RtolAddr[which], (unsigned int)(ISCSentState[which].rot_tol
+        * RAD2I));
+  WriteData(XOffAddr[which], (unsigned int)(ISCSentState[which].azBDA * RAD2I));
+  WriteData(YOffAddr[which], (unsigned int)(ISCSentState[which].elBDA * RAD2I));
+  WriteData(HoldIAddr[which], (unsigned int)(ISCSentState[which].hold_current));
+  WriteData(FpulseAddr[which],
+      (unsigned int)(CommandData.ISCControl[which].fast_pulse_width));
+  WriteData(SpulseAddr[which],
+      (unsigned int)(CommandData.ISCControl[which].pulse_width));
+  WriteData(SavePrdAddr[which],
+      (unsigned int)(CommandData.ISCControl[which].save_period));
+}
+
 /************************************************************************/
 /*                                                                      */
 /*    Store derived acs and pointing data in frame                      */
 /*                                                                      */
 /************************************************************************/
-void StoreData(int index) {
-
+void StoreData(int index)
+{
   static int firsttime = 1;
   
   static struct NiosStruct* ssXCcdAddr;
@@ -188,6 +400,9 @@ void StoreData(int index) {
   static struct NiosStruct* sipLonAddr;
   static struct NiosStruct* sipAltAddr;
   static struct NiosStruct* sipTimeAddr;
+  static struct NiosStruct* sipMksLoAddr;
+  static struct NiosStruct* sipMksMedAddr;
+  static struct NiosStruct* sipMksHiAddr;
 
   /** pointing mode indexes **/
   static struct NiosStruct* pModeAddr;
@@ -242,63 +457,10 @@ void StoreData(int index) {
   static struct NiosStruct* dgpsPosIndexAddr;
   static struct NiosStruct* dgpsNSatAddr;
 
-  /** isc fields **/
-  static struct NiosStruct* blob0XAddr;
-  static struct NiosStruct* blob1XAddr;
-  static struct NiosStruct* blob2XAddr;
-  static struct NiosStruct* blob0YAddr;
-  static struct NiosStruct* blob1YAddr;
-  static struct NiosStruct* blob2YAddr;
-  static struct NiosStruct* blob0FluxAddr;
-  static struct NiosStruct* blob1FluxAddr;
-  static struct NiosStruct* blob2FluxAddr;
-  static struct NiosStruct* blob0SnAddr;
-  static struct NiosStruct* blob1SnAddr;
-  static struct NiosStruct* blob2SnAddr;
-  static struct NiosStruct* iscErrorAddr;
-  static struct NiosStruct* iscMapmeanAddr;
-  static struct NiosStruct* iscFramenumAddr;
-  static struct NiosStruct* iscRdSigmaAddr;
-  static struct NiosStruct* iscRaAddr;
-  static struct NiosStruct* iscDecAddr;
-  static struct NiosStruct* iscAfocusAddr;
-  static struct NiosStruct* iscMcpnumAddr;
-  static struct NiosStruct* iscBrraAddr;
-  static struct NiosStruct* iscBrdecAddr;
-  static struct NiosStruct* iscApertAddr;
-  static struct NiosStruct* iscCenboxAddr;
-  static struct NiosStruct* iscApboxAddr;
-  static struct NiosStruct* iscMdistAddr;
-  static struct NiosStruct* iscNblobsAddr;
-  static struct NiosStruct* iscFocusAddr;
-  static struct NiosStruct* iscThreshAddr;
-  static struct NiosStruct* iscGridAddr;
-  static struct NiosStruct* iscStateAddr;
-  static struct NiosStruct* iscMaxblobsAddr;
-  static struct NiosStruct* iscMaglimitAddr;
-  static struct NiosStruct* iscNradAddr;
-  static struct NiosStruct* iscLradAddr;
-  static struct NiosStruct* iscTolAddr;
-  static struct NiosStruct* iscMtolAddr;
-  static struct NiosStruct* iscQtolAddr;
-  static struct NiosStruct* iscRtolAddr;
-  static struct NiosStruct* iscFpulseAddr;
-  static struct NiosStruct* iscSpulseAddr;
-  static struct NiosStruct* iscXOffAddr;
-  static struct NiosStruct* iscYOffAddr;
-  static struct NiosStruct* iscHoldIAddr;
-  static struct NiosStruct* iscSavePrdAddr;
-  static struct NiosStruct* sipMksLoAddr;
-  static struct NiosStruct* sipMksMedAddr;
-  static struct NiosStruct* sipMksHiAddr;
-
-  static int blob_index = 0;
-
   int i_ss;
   int i_point;
   int i_dgps;
   int sensor_veto;
-  int i_isc = GETREADINDEX(iscdata_index);
 
   /******** Obtain correct indexes the first time here ***********/
   if (firsttime) {
@@ -367,53 +529,6 @@ void StoreData(int index) {
     dgpsPosIndexAddr = GetNiosAddr("dgps_pos_index");
     dgpsAttOkAddr = GetNiosAddr("dgps_att_ok");
     dgpsAttIndexAddr = GetNiosAddr("dgps_att_index");
-
-    blob0XAddr = GetNiosAddr("blob0_x");
-    blob1XAddr = GetNiosAddr("blob1_x");
-    blob2XAddr = GetNiosAddr("blob2_x");
-    blob0YAddr = GetNiosAddr("blob0_y");
-    blob1YAddr = GetNiosAddr("blob1_y");
-    blob2YAddr = GetNiosAddr("blob2_y");
-    blob0FluxAddr = GetNiosAddr("blob0_flux");
-    blob1FluxAddr = GetNiosAddr("blob1_flux");
-    blob2FluxAddr = GetNiosAddr("blob2_flux");
-    blob0SnAddr = GetNiosAddr("blob0_sn");
-    blob1SnAddr = GetNiosAddr("blob1_sn");
-    blob2SnAddr = GetNiosAddr("blob2_sn");
-    iscErrorAddr = GetNiosAddr("isc_error");
-    iscMapmeanAddr = GetNiosAddr("isc_mapmean");
-    iscRdSigmaAddr = GetNiosAddr("isc_rd_sigma");
-    iscFramenumAddr = GetNiosAddr("isc_framenum");
-    iscRaAddr = GetNiosAddr("isc_ra");
-    iscDecAddr = GetNiosAddr("isc_dec");
-    iscNblobsAddr = GetNiosAddr("isc_nblobs");
-    iscAfocusAddr = GetNiosAddr("isc_afocus");
-    iscMcpnumAddr = GetNiosAddr("isc_mcpnum");
-
-    iscStateAddr = GetNiosAddr("isc_state");
-    iscFocusAddr = GetNiosAddr("isc_focus");
-    iscBrraAddr = GetNiosAddr("isc_brra");
-    iscBrdecAddr = GetNiosAddr("isc_brdec");
-    iscApertAddr = GetNiosAddr("isc_apert");
-    iscThreshAddr = GetNiosAddr("isc_thresh");
-    iscGridAddr = GetNiosAddr("isc_grid");
-    iscCenboxAddr = GetNiosAddr("isc_cenbox");
-    iscApboxAddr = GetNiosAddr("isc_apbox");
-    iscMdistAddr = GetNiosAddr("isc_mdist");
-    iscMaxblobsAddr = GetNiosAddr("isc_maxblobs");
-    iscMaglimitAddr = GetNiosAddr("isc_maglimit");
-    iscNradAddr = GetNiosAddr("isc_nrad");
-    iscLradAddr = GetNiosAddr("isc_lrad");
-    iscTolAddr = GetNiosAddr("isc_tol");
-    iscMtolAddr = GetNiosAddr("isc_mtol");
-    iscQtolAddr = GetNiosAddr("isc_qtol");
-    iscRtolAddr = GetNiosAddr("isc_rtol");
-    iscFpulseAddr = GetNiosAddr("isc_fpulse");
-    iscSpulseAddr = GetNiosAddr("isc_spulse");
-    iscXOffAddr = GetNiosAddr("isc_x_off");
-    iscYOffAddr = GetNiosAddr("isc_y_off");
-    iscHoldIAddr = GetNiosAddr("isc_hold_i");
-    iscSavePrdAddr = GetNiosAddr("isc_save_prd");
   }
 
   i_point = GETREADINDEX(point_index);
@@ -539,88 +654,8 @@ void StoreData(int index) {
   WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok);
   WriteData(dgpsAttIndexAddr, i_dgps);
 
-  /** ISC Fields **/
-  if (index == 0)
-    if (blob_index == 0)
-      i_isc = GETREADINDEX(iscdata_index); 
-
-  /*** Blobs ***/
-  WriteData(blob0XAddr,
-      (int)(ISCSolution[i_isc].blob_x[blob_index * 3 + 0] * 40.));
-  WriteData(blob1XAddr,
-      (int)(ISCSolution[i_isc].blob_x[blob_index * 3 + 1] * 40.));
-  WriteData(blob2XAddr,
-      (int)(ISCSolution[i_isc].blob_x[blob_index * 3 + 2] * 40.));
-
-  WriteData(blob0YAddr,
-      (int)(ISCSolution[i_isc].blob_y[blob_index * 3 + 0] * 40.));
-  WriteData(blob1YAddr,
-      (int)(ISCSolution[i_isc].blob_y[blob_index * 3 + 1] * 40.));
-  WriteData(blob2YAddr,
-      (int)(ISCSolution[i_isc].blob_y[blob_index * 3 + 2] * 40.));
-
-  WriteData(blob0FluxAddr,
-      (int)(ISCSolution[i_isc].blob_flux[blob_index * 3 + 0] / 32.));
-  WriteData(blob1FluxAddr,
-      (int)(ISCSolution[i_isc].blob_flux[blob_index * 3 + 1] / 32.));
-  WriteData(blob2FluxAddr,
-      (int)(ISCSolution[i_isc].blob_flux[blob_index * 3 + 2] / 32.));
-
-  WriteData(blob0SnAddr,
-      (int)(ISCSolution[i_isc].blob_sn[blob_index * 3 + 0] * 65.536));
-  WriteData(blob1SnAddr,
-      (int)(ISCSolution[i_isc].blob_sn[blob_index * 3 + 1] * 65.536));
-  WriteData(blob2SnAddr,
-      (int)(ISCSolution[i_isc].blob_sn[blob_index * 3 + 2] * 65.536));
-
-  if (++blob_index >= 5)
-    blob_index = 0;
-
-  /*** Solution Info ***/
-  WriteData(iscFramenumAddr, (unsigned int)ISCSolution[i_isc].framenum);
-  WriteData(iscRaAddr, (unsigned int)(ISCSolution[i_isc].ra * RAD2LI));
-  WriteData(iscDecAddr,
-      (unsigned int)((ISCSolution[i_isc].dec + M_PI / 2) * 2. * RAD2LI));
-  WriteData(iscNblobsAddr, (unsigned int)ISCSolution[i_isc].n_blobs);
-  if (ISCSolution[i_isc].sigma * RAD2ARCSEC > 65535) {
-    WriteData(iscRdSigmaAddr, 65535);
-  } else {
-    WriteData(iscRdSigmaAddr,
-        (unsigned int)(ISCSolution[i_isc].sigma * RAD2ARCSEC));
-  }
-  WriteData(iscMcpnumAddr, (unsigned int)ISCSolution[i_isc].MCPFrameNum);
-  WriteData(iscAfocusAddr, (unsigned int)ISCSolution[i_isc].autoFocusPosition);
-  WriteData(iscErrorAddr, (unsigned int)ISCSolution[i_isc].cameraerr);
-  WriteData(iscMapmeanAddr, (unsigned int)ISCSolution[i_isc].mapMean);
-
-  /*** State Info ***/
-  WriteData(iscStateAddr,
-      (unsigned int)(SentState.pause * 2 + SentState.abort * 4 +
-                     SentState.autofocus * 8 + SentState.brightStarMode * 16 +
-                     SentState.shutdown * 32 + SentState.save));
-  WriteData(iscFocusAddr, (unsigned int)SentState.focus_pos);
-  WriteData(iscApertAddr, (unsigned int)SentState.ap_pos);
-  WriteData(iscBrraAddr, (unsigned int)(SentState.brightRA * RAD2I));
-  WriteData(iscBrdecAddr, (unsigned int)(SentState.brightDEC * RAD2I));
-  WriteData(iscThreshAddr, (unsigned int)(SentState.sn_threshold * 10.));
-  WriteData(iscGridAddr, (unsigned int)SentState.grid);
-  WriteData(iscCenboxAddr, (unsigned int)SentState.cenbox);
-  WriteData(iscApboxAddr, (unsigned int)SentState.apbox);
-  WriteData(iscMdistAddr, (unsigned int)SentState.mult_dist);
-  WriteData(iscMaxblobsAddr, (unsigned int)SentState.maxBlobMatch);
-  WriteData(iscMaglimitAddr, (unsigned int)(SentState.mag_limit * 1000.));
-  WriteData(iscNradAddr, (unsigned int)(SentState.norm_radius * RAD2I));
-  WriteData(iscLradAddr, (unsigned int)(SentState.lost_radius * RAD2I));
-  WriteData(iscTolAddr, (unsigned int)(SentState.tolerance * RAD2ARCSEC));
-  WriteData(iscMtolAddr, (unsigned int)(SentState.match_tol * 65535.));
-  WriteData(iscQtolAddr, (unsigned int)(SentState.quit_tol * 65535.));
-  WriteData(iscRtolAddr, (unsigned int)(SentState.rot_tol * RAD2I));
-  WriteData(iscXOffAddr, (unsigned int)(SentState.azBDA * RAD2I));
-  WriteData(iscYOffAddr, (unsigned int)(SentState.elBDA * RAD2I));
-  WriteData(iscHoldIAddr, (unsigned int)(SentState.hold_current));
-  WriteData(iscFpulseAddr, (unsigned int)(CommandData.ISC_fast_pulse_width));
-  WriteData(iscSpulseAddr, (unsigned int)(CommandData.ISC_pulse_width));
-  WriteData(iscSavePrdAddr, (unsigned int)(CommandData.ISC_save_period));
+  StoreStarCameraData(index, 0); /* write ISC data */
+  StoreStarCameraData(index, 1); /* write OSC data */
 }
 
 void InitTxFrame(void)

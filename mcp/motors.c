@@ -279,19 +279,19 @@ void SetAzScanMode(double az, double left, double right, double v, double D) {
     axes_mode.az_mode = AXIS_POSITION;
     axes_mode.az_dest = left;
     axes_mode.az_vel = 0.0;
-    isc_pulses.is_fast = 1;
+    isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
   } else if (az > right + AZ_MARGIN) { /* out of range - move to p2 */
     axes_mode.az_mode = AXIS_POSITION;
     axes_mode.az_dest = right;
     axes_mode.az_vel = 0.0;
-    isc_pulses.is_fast = 1;
+    isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
   } else if (az < left) {
-    isc_pulses.is_fast = 0;
+    isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
     axes_mode.az_mode = AXIS_VEL;
     if (axes_mode.az_vel < v + D)
       axes_mode.az_vel += AZ_ACCEL;
   } else if (az > right) {
-    isc_pulses.is_fast = 0;
+    isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
     axes_mode.az_mode = AXIS_VEL;
     if (axes_mode.az_vel > -v + D)
       axes_mode.az_vel -= AZ_ACCEL;
@@ -299,16 +299,16 @@ void SetAzScanMode(double az, double left, double right, double v, double D) {
     axes_mode.az_mode = AXIS_VEL;
     if (axes_mode.az_vel > 0) {
       axes_mode.az_vel = v + D;
-      if (az > right - v)
-        isc_pulses.is_fast = 0;/* within 1s of turnaround */
+      if (az > right - v) /* within 1 sec of turnaround */
+        isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       else
-        isc_pulses.is_fast = 1;
+        isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
     } else {
       axes_mode.az_vel = -v + D;
-      if (az < left + v)
-        isc_pulses.is_fast = 0; /* within 1s of turnaround */
+      if (az < left + v) /* within 1 sec of turnaround */
+        isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       else
-        isc_pulses.is_fast = 1;
+        isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
     }
   }
 }
@@ -537,7 +537,7 @@ void DoRaDecGotoMode() {
   axes_mode.el_mode = AXIS_POSITION;
   axes_mode.el_dest = cel;
   axes_mode.el_vel = 0.0;
-  isc_pulses.is_fast = 0;
+  isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
 }
 
 void DoBoxMode() {
@@ -613,7 +613,7 @@ void DoBoxMode() {
       axes_mode.el_mode = AXIS_POSITION;
       axes_mode.el_dest = bottom;
       axes_mode.el_vel = 0.0;
-      isc_pulses.is_fast = 1;
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
   }
@@ -625,7 +625,7 @@ void DoBoxMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_dest = bottom;
     axes_mode.el_vel = 0.0;
-    isc_pulses.is_fast = 1;
+    isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
     return;
   }	
 
@@ -641,7 +641,7 @@ void DoBoxMode() {
     }
     if (axes_mode.az_vel < v + daz_dt)
       axes_mode.az_vel += AZ_ACCEL;
-    isc_pulses.is_fast = 0;
+    isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
   } else if (az > right) {
     if (S.azdir > 0) {
       S.azdir = -1;
@@ -649,19 +649,19 @@ void DoBoxMode() {
     }
     if (axes_mode.az_vel > -v + daz_dt)
       axes_mode.az_vel -= AZ_ACCEL;
-    isc_pulses.is_fast = 0;
+    isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
   } else {
     axes_mode.az_vel = v * (double)S.azdir + daz_dt;
     if (S.azdir > 0) {
       if (az > right - v)
-        isc_pulses.is_fast = 0; /* within 1s of turnaround */
+        isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       else
-        isc_pulses.is_fast = 1;
+        isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
     } else {
       if (az < left + v)
-        isc_pulses.is_fast = 0; /* within 1s of turnaround */
+        isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       else
-        isc_pulses.is_fast = 1;
+        isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
     }
   }
 
@@ -749,7 +749,7 @@ void DoCapMode() {
       axes_mode.el_mode = AXIS_POSITION;
       axes_mode.el_dest = bottom;
       axes_mode.el_vel = 0.0;
-      isc_pulses.is_fast = 1;
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
   }
@@ -781,7 +781,7 @@ void DoCapMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_dest = bottom;
     axes_mode.el_vel = 0.0;
-    isc_pulses.is_fast = 1;
+    isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
     return;
   }
 
@@ -790,7 +790,7 @@ void DoCapMode() {
     axes_mode.az_vel = -v + daz_dt;
   if (axes_mode.az_vel > v + daz_dt)
     axes_mode.az_vel = v + daz_dt;
-  isc_pulses.is_fast = 0;
+  isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
   if (az < left) {
     if (S.azdir < 0) {
       S.azdir = 1; 
@@ -809,14 +809,14 @@ void DoCapMode() {
     axes_mode.az_vel = v * (double)S.azdir + daz_dt;
     if (S.azdir > 0) {
       if (az > right - v)
-        isc_pulses.is_fast = 0; /* within 1s of turnaround */
+        isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       else
-        isc_pulses.is_fast = 1;
+        isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
     } else {
       if (az < left + v)
-        isc_pulses.is_fast = 0; /* within 1s of turnaround */
+        isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       else
-        isc_pulses.is_fast = 1;
+        isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
     }
   }
 
@@ -846,7 +846,7 @@ void UpdateAxesMode() {
       axes_mode.el_vel = CommandData.pointing_mode.del;
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = CommandData.pointing_mode.vaz;
-      isc_pulses.is_fast = 0;
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       break;
     case P_AZEL_GOTO:
       axes_mode.el_mode = AXIS_POSITION;
@@ -855,7 +855,7 @@ void UpdateAxesMode() {
       axes_mode.az_mode = AXIS_POSITION;
       axes_mode.az_dest = CommandData.pointing_mode.X;
       axes_mode.az_vel = 0.0;
-      isc_pulses.is_fast = 0;
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       break;
     case P_AZ_SCAN:
       DoAzScanMode();
@@ -881,7 +881,7 @@ void UpdateAxesMode() {
       axes_mode.el_vel = 0.0;
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = 0.0;
-      isc_pulses.is_fast = 0;
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       break;
     default:
       mprintf(MCP_WARNING, "Unknown Elevation Pointing Mode %d: stopping\n",
@@ -897,7 +897,7 @@ void UpdateAxesMode() {
       axes_mode.el_vel = 0.0;
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = 0.0;
-      isc_pulses.is_fast = 0;
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       break;
   }
 }

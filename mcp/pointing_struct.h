@@ -200,9 +200,10 @@ struct ISCPulseType {
   int ctr; // where we are in the period
   int pulse_width; // how wide this pulse should be
   int is_fast; // if a fast pulse is requested: set in motors.c
+  int last_save;
 };
 
-extern struct ISCPulseType isc_pulses;
+extern struct ISCPulseType isc_pulses[2];
 
 struct AxesModeStruct {
   int az_mode;
@@ -232,7 +233,7 @@ extern time_t DGPSTime;
 /*  Purpose: Store isc pointing and blob data */
 /*   Source: isc thread: isc.c                */
 /*     Used: Main thread;                     */
-extern struct ISCSolutionStruct ISCSolution[3]; /* isc.c */
-extern int iscdata_index;       /* isc.c */
+extern struct ISCSolutionStruct ISCSolution[2][3]; /* isc.c */
+extern int iscdata_index[2];       /* isc.c */
 
-extern short int write_ISC_pointing;     /* isc.c */
+extern short int write_ISC_pointing[2];     /* isc.c */

@@ -267,10 +267,15 @@ void DoSched(void) {
       CommandData.pointing_mode.del = 0;
       CommandData.pointing_mode.h = 0;
       // start autofocus
-      CommandData.ISCState.abort = 1;
-      CommandData.ISC_autofocus = 300; 
-      CommandData.old_ISC_focus = CommandData.ISCState.focus_pos;
-      CommandData.ISCState.focus_pos = FOCUS_RANGE;
+      CommandData.ISCState[0].abort = 1;
+      CommandData.ISCControl[0].autofocus = 300; 
+      CommandData.ISCControl[0].old_focus = CommandData.ISCState[0].focus_pos;
+      CommandData.ISCState[0].focus_pos = FOCUS_RANGE;
+
+      CommandData.ISCState[1].abort = 1;
+      CommandData.ISCControl[1].autofocus = 300; 
+      CommandData.ISCControl[1].old_focus = CommandData.ISCState[0].focus_pos;
+      CommandData.ISCState[1].focus_pos = FOCUS_RANGE;
       // out of sched mode for a while
       CommandData.pointing_mode.t = t + 600;
       return;

@@ -387,32 +387,58 @@ void SingleCommand (enum singleCommand command) {
     /***************************************/
     /********* ISC Commanding  *************/
   } else if (command == isc_run)
-    CommandData.ISCState.pause = 0;
+    CommandData.ISCState[0].pause = 0;
   else if (command == isc_shutdown)
-    CommandData.ISCState.shutdown = 1;
+    CommandData.ISCState[0].shutdown = 1;
   else if (command == isc_reboot)
-    CommandData.ISCState.shutdown = 2;
-  else if (command == cam_cycle)
-    CommandData.ISCState.shutdown = 3;
+    CommandData.ISCState[0].shutdown = 2;
+  else if (command == isc_cam_cycle)
+    CommandData.ISCState[0].shutdown = 3;
   else if (command == isc_pause)
-    CommandData.ISCState.pause = 1;
+    CommandData.ISCState[0].pause = 1;
   else if (command == isc_abort)
-    CommandData.ISCState.abort = 1;
+    CommandData.ISCState[0].abort = 1;
   else if (command == isc_reconnect)
-    CommandData.ISC_reconnect = 1;
-  else if (command == no_bright_star)
-    CommandData.ISCState.brightStarMode = 0;
-  else if (command == save_images)
-    CommandData.ISCState.save = 1;
-  else if (command == discard_images)
-    CommandData.ISCState.save = 0;
-  else if (command == full_screen)
-    CommandData.ISCState.display_mode = full;
-  else if (command == auto_focus) {
-    CommandData.ISCState.abort = 1;
-    CommandData.ISC_autofocus = 10;
-    CommandData.old_ISC_focus = CommandData.ISCState.focus_pos;
-    CommandData.ISCState.focus_pos = FOCUS_RANGE;
+    CommandData.ISCControl[0].reconnect = 1;
+  else if (command == isc_save_images)
+    CommandData.ISCState[0].save = 1;
+  else if (command == isc_discard_images)
+    CommandData.ISCState[0].save = 0;
+  else if (command == isc_full_screen)
+    CommandData.ISCState[0].display_mode = full;
+  else if (command == isc_auto_focus) {
+    CommandData.ISCState[0].abort = 1;
+    CommandData.ISCControl[0].autofocus = 10;
+    CommandData.ISCControl[0].old_focus = CommandData.ISCState[1].focus_pos;
+    CommandData.ISCState[0].focus_pos = FOCUS_RANGE;
+
+    /***************************************/
+    /********* OSC Commanding  *************/
+  } else if (command == osc_run)
+    CommandData.ISCState[1].pause = 0;
+  else if (command == osc_shutdown)
+    CommandData.ISCState[1].shutdown = 1;
+  else if (command == osc_reboot)
+    CommandData.ISCState[1].shutdown = 2;
+  else if (command == osc_cam_cycle)
+    CommandData.ISCState[1].shutdown = 3;
+  else if (command == osc_pause)
+    CommandData.ISCState[1].pause = 1;
+  else if (command == osc_abort)
+    CommandData.ISCState[1].abort = 1;
+  else if (command == osc_reconnect)
+    CommandData.ISCControl[1].reconnect = 1;
+  else if (command == osc_save_images)
+    CommandData.ISCState[1].save = 1;
+  else if (command == osc_discard_images)
+    CommandData.ISCState[1].save = 0;
+  else if (command == osc_full_screen)
+    CommandData.ISCState[1].display_mode = full;
+  else if (command == osc_auto_focus) {
+    CommandData.ISCState[1].abort = 1;
+    CommandData.ISCControl[1].autofocus = 10;
+    CommandData.ISCControl[1].old_focus = CommandData.ISCState[1].focus_pos;
+    CommandData.ISCState[1].focus_pos = FOCUS_RANGE;
   } else if (command == xyzzy)
     ;
   else {
@@ -701,52 +727,90 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
 
     /***************************************/
     /********* ISC Commanding  *************/
-  } else if (command == set_focus) {
-    CommandData.ISCState.focus_pos = ivalues[0];
-  } else if (command == set_aperture) {
-    CommandData.ISCState.ap_pos = ivalues[0];
-  } else if (command == pixel_centre) {
-    CommandData.ISCState.roi_x = ivalues[0];
-    CommandData.ISCState.roi_y = ivalues[1];
-    CommandData.ISCState.display_mode = roi;
-  } else if (command == blob_centre) {
-    CommandData.ISCState.blob_num = ivalues[0];
-    CommandData.ISCState.display_mode = blob;
+  } else if (command == isc_set_focus) {
+    CommandData.ISCState[0].focus_pos = ivalues[0];
+  } else if (command == isc_set_aperture) {
+    CommandData.ISCState[0].ap_pos = ivalues[0];
+  } else if (command == isc_pixel_centre) {
+    CommandData.ISCState[0].roi_x = ivalues[0];
+    CommandData.ISCState[0].roi_y = ivalues[1];
+    CommandData.ISCState[0].display_mode = roi;
+  } else if (command == isc_blob_centre) {
+    CommandData.ISCState[0].blob_num = ivalues[0];
+    CommandData.ISCState[0].display_mode = blob;
   } else if (command == isc_offset) {
-    CommandData.ISCState.azBDA = rvalues[0] * DEG2RAD;
-    CommandData.ISCState.elBDA = rvalues[1] * DEG2RAD;
-  } else if (command == bright_star) {
-    CommandData.ISCState.brightRA = rvalues[0] * DEG2RAD;
-    CommandData.ISCState.brightDEC = rvalues[1] * DEG2RAD;
-    CommandData.ISCState.brightStarMode = 1;
-  } else if (command == fast_integration) {
-    CommandData.ISC_fast_pulse_width = (int)((4 + ivalues[0]) / 10);
-  } else if (command == slow_integration) {
-    CommandData.ISC_pulse_width = (int)((4 + ivalues[0]) / 10);
-  } else if (command == det_set) {
-    CommandData.ISCState.grid = ivalues[0];
-    CommandData.ISCState.sn_threshold = rvalues[1];
-    CommandData.ISCState.cenbox = ivalues[2];
-    CommandData.ISCState.apbox = ivalues[3];
-    CommandData.ISCState.mult_dist = ivalues[4];
-  } else if (command == max_blobs) {
-    CommandData.ISCState.maxBlobMatch = ivalues[0];
-  } else if (command == catalogue) {
-    CommandData.ISCState.mag_limit = rvalues[0];
-    CommandData.ISCState.norm_radius = rvalues[1] * DEG2RAD;
-    CommandData.ISCState.lost_radius = rvalues[2] * DEG2RAD;
-  } else if (command == tolerances) {
-    CommandData.ISCState.tolerance = rvalues[0] / 3600. * DEG2RAD;
-    CommandData.ISCState.match_tol = rvalues[1] / 100;
-    CommandData.ISCState.quit_tol = rvalues[2] / 100;
-    CommandData.ISCState.rot_tol = rvalues[3] * DEG2RAD;
-  } else if (command == hold_current)
-    CommandData.ISCState.hold_current = ivalues[0];
-  else if (command == save_period) {
-    CommandData.ISC_save_period = ivalues[0] * 100;
-    mprintf(MCP_INFO, "Save period is: %i\n", CommandData.ISC_save_period);
+    CommandData.ISCState[0].azBDA = rvalues[0] * DEG2RAD;
+    CommandData.ISCState[0].elBDA = rvalues[1] * DEG2RAD;
+  } else if (command == isc_fast_int) {
+    CommandData.ISCControl[0].fast_pulse_width = (int)((4 + ivalues[0]) / 10);
+  } else if (command == isc_slow_int) {
+    CommandData.ISCControl[0].pulse_width = (int)((4 + ivalues[0]) / 10);
+  } else if (command == isc_det_set) {
+    CommandData.ISCState[0].grid = ivalues[0];
+    CommandData.ISCState[0].sn_threshold = rvalues[1];
+    CommandData.ISCState[0].cenbox = ivalues[2];
+    CommandData.ISCState[0].apbox = ivalues[3];
+    CommandData.ISCState[0].mult_dist = ivalues[4];
+  } else if (command == isc_max_blobs) {
+    CommandData.ISCState[0].maxBlobMatch = ivalues[0];
+  } else if (command == isc_catalogue) {
+    CommandData.ISCState[0].mag_limit = rvalues[0];
+    CommandData.ISCState[0].norm_radius = rvalues[1] * DEG2RAD;
+    CommandData.ISCState[0].lost_radius = rvalues[2] * DEG2RAD;
+  } else if (command == isc_tolerances) {
+    CommandData.ISCState[0].tolerance = rvalues[0] / 3600. * DEG2RAD;
+    CommandData.ISCState[0].match_tol = rvalues[1] / 100;
+    CommandData.ISCState[0].quit_tol = rvalues[2] / 100;
+    CommandData.ISCState[0].rot_tol = rvalues[3] * DEG2RAD;
+  } else if (command == isc_hold_current)
+    CommandData.ISCState[0].hold_current = ivalues[0];
+  else if (command == isc_save_period)
+    CommandData.ISCControl[0].save_period = ivalues[0] * 100;
 
-  } else {
+
+    /***************************************/
+    /********* OSC Commanding  *************/
+  else if (command == osc_set_focus) {
+    CommandData.ISCState[1].focus_pos = ivalues[0];
+  } else if (command == osc_set_aperture) {
+    CommandData.ISCState[1].ap_pos = ivalues[0];
+  } else if (command == osc_pixel_centre) {
+    CommandData.ISCState[1].roi_x = ivalues[0];
+    CommandData.ISCState[1].roi_y = ivalues[1];
+    CommandData.ISCState[1].display_mode = roi;
+  } else if (command == osc_blob_centre) {
+    CommandData.ISCState[1].blob_num = ivalues[0];
+    CommandData.ISCState[1].display_mode = blob;
+  } else if (command == osc_offset) {
+    CommandData.ISCState[1].azBDA = rvalues[0] * DEG2RAD;
+    CommandData.ISCState[1].elBDA = rvalues[1] * DEG2RAD;
+  } else if (command == osc_fast_int) {
+    CommandData.ISCControl[1].fast_pulse_width = (int)((4 + ivalues[0]) / 10);
+  } else if (command == osc_slow_int) {
+    CommandData.ISCControl[1].pulse_width = (int)((4 + ivalues[0]) / 10);
+  } else if (command == osc_det_set) {
+    CommandData.ISCState[1].grid = ivalues[0];
+    CommandData.ISCState[1].sn_threshold = rvalues[1];
+    CommandData.ISCState[1].cenbox = ivalues[2];
+    CommandData.ISCState[1].apbox = ivalues[3];
+    CommandData.ISCState[1].mult_dist = ivalues[4];
+  } else if (command == osc_max_blobs) {
+    CommandData.ISCState[1].maxBlobMatch = ivalues[0];
+  } else if (command == osc_catalogue) {
+    CommandData.ISCState[1].mag_limit = rvalues[0];
+    CommandData.ISCState[1].norm_radius = rvalues[1] * DEG2RAD;
+    CommandData.ISCState[1].lost_radius = rvalues[2] * DEG2RAD;
+  } else if (command == osc_tolerances) {
+    CommandData.ISCState[1].tolerance = rvalues[0] / 3600. * DEG2RAD;
+    CommandData.ISCState[1].match_tol = rvalues[1] / 100;
+    CommandData.ISCState[1].quit_tol = rvalues[2] / 100;
+    CommandData.ISCState[1].rot_tol = rvalues[3] * DEG2RAD;
+  } else if (command == osc_hold_current)
+    CommandData.ISCState[1].hold_current = ivalues[0];
+  else if (command == osc_save_period)
+    CommandData.ISCControl[1].save_period = ivalues[0] * 100;
+
+  else {
     mputs(MCP_WARNING, "Invalid Multi Word Command***\n");
     return; /* invalid command - don't update */
   }
@@ -1247,7 +1311,8 @@ void InitCommandData() {
   CommandData.Bias.SetLevel2 = 1;
   CommandData.Bias.SetLevel3 = 1;
 
-  CommandData.ISCState.shutdown = 0;
+  CommandData.ISCState[0].shutdown = 0;
+  CommandData.ISCState[1].shutdown = 0;
 
 #ifndef USE_FIFO_CMD
   /** return if we succsesfully read the previous status **/
@@ -1345,32 +1410,59 @@ void InitCommandData() {
   CommandData.Cryo.lhevalve_open = 0;
   CommandData.Cryo.lhevalve_close = 0;
 
-  CommandData.ISCState.abort = 0;
-  CommandData.ISCState.pause = 0;
-  CommandData.ISCState.save = 0;
-  CommandData.ISCState.autofocus = 0;
-  CommandData.ISCState.focus_pos = 0;
-  CommandData.ISCState.ap_pos = 495;
-  CommandData.ISCState.display_mode = full;
-  CommandData.ISCState.azBDA = 0;
-  CommandData.ISCState.elBDA = 0;
-  CommandData.ISCState.brightStarMode = 0;
-  CommandData.ISCState.grid = 38;
-  CommandData.ISCState.cenbox = 20;
-  CommandData.ISCState.apbox = 5;
-  CommandData.ISCState.maxBlobMatch = 5;
-  CommandData.ISCState.sn_threshold = 3.5;
-  CommandData.ISCState.mult_dist = 30;
-  CommandData.ISCState.mag_limit = 9;
-  CommandData.ISCState.norm_radius = 2. * DEG2RAD;
-  CommandData.ISCState.lost_radius = 5. * DEG2RAD;
-  CommandData.ISCState.tolerance = 20. / 3600. * DEG2RAD; /* 20 arcsec */
-  CommandData.ISCState.match_tol = 0.8;
-  CommandData.ISCState.quit_tol = 1;
-  CommandData.ISCState.rot_tol = 5 * DEG2RAD;
-  CommandData.ISC_save_period = 4000;
-  CommandData.ISC_pulse_width = 30;
-  CommandData.ISC_fast_pulse_width = 6;
+  CommandData.ISCState[0].abort = 0;
+  CommandData.ISCState[0].pause = 0;
+  CommandData.ISCState[0].save = 0;
+  CommandData.ISCState[0].autofocus = 0;
+  CommandData.ISCState[0].focus_pos = 0;
+  CommandData.ISCState[0].ap_pos = 495;
+  CommandData.ISCState[0].display_mode = full;
+  CommandData.ISCState[0].azBDA = 0;
+  CommandData.ISCState[0].elBDA = 0;
+  CommandData.ISCState[0].brightStarMode = 0;
+  CommandData.ISCState[0].grid = 38;
+  CommandData.ISCState[0].cenbox = 20;
+  CommandData.ISCState[0].apbox = 5;
+  CommandData.ISCState[0].maxBlobMatch = 5;
+  CommandData.ISCState[0].sn_threshold = 3.5;
+  CommandData.ISCState[0].mult_dist = 30;
+  CommandData.ISCState[0].mag_limit = 9;
+  CommandData.ISCState[0].norm_radius = 2. * DEG2RAD;
+  CommandData.ISCState[0].lost_radius = 5. * DEG2RAD;
+  CommandData.ISCState[0].tolerance = 20. / 3600. * DEG2RAD; /* 20 arcsec */
+  CommandData.ISCState[0].match_tol = 0.8;
+  CommandData.ISCState[0].quit_tol = 1;
+  CommandData.ISCState[0].rot_tol = 5 * DEG2RAD;
+  CommandData.ISCControl[0].save_period = 4000;
+  CommandData.ISCControl[0].pulse_width = 30;
+  CommandData.ISCControl[0].fast_pulse_width = 6;
+
+  CommandData.ISCState[1].abort = 0;
+  CommandData.ISCState[1].pause = 0;
+  CommandData.ISCState[1].save = 0;
+  CommandData.ISCState[1].autofocus = 0;
+  CommandData.ISCState[1].focus_pos = 0;
+  CommandData.ISCState[1].ap_pos = 495;
+  CommandData.ISCState[1].display_mode = full;
+  CommandData.ISCState[1].azBDA = 0;
+  CommandData.ISCState[1].elBDA = 0;
+  CommandData.ISCState[1].brightStarMode = 0;
+  CommandData.ISCState[1].grid = 38;
+  CommandData.ISCState[1].cenbox = 20;
+  CommandData.ISCState[1].apbox = 5;
+  CommandData.ISCState[1].maxBlobMatch = 5;
+  CommandData.ISCState[1].sn_threshold = 3.5;
+  CommandData.ISCState[1].mult_dist = 30;
+  CommandData.ISCState[1].mag_limit = 9;
+  CommandData.ISCState[1].norm_radius = 2. * DEG2RAD;
+  CommandData.ISCState[1].lost_radius = 5. * DEG2RAD;
+  CommandData.ISCState[1].tolerance = 20. / 3600. * DEG2RAD; /* 20 arcsec */
+  CommandData.ISCState[1].match_tol = 0.8;
+  CommandData.ISCState[1].quit_tol = 1;
+  CommandData.ISCState[1].rot_tol = 5 * DEG2RAD;
+  CommandData.ISCControl[1].save_period = 4000;
+  CommandData.ISCControl[1].pulse_width = 30;
+  CommandData.ISCControl[1].fast_pulse_width = 6;
 
   WritePrevStatus();
 }

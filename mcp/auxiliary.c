@@ -11,7 +11,7 @@
 #define ISC_TRIG_PERIOD 100
 #define MAX_ISC_SLOW_PULSE_SPEED 0.015
 
-struct ISCPulseType isc_pulses = {0,0,4,0};
+struct ISCPulseType isc_pulses[2] = {{0, 0, 4, 0, 0}, {0, 0, 4, 0, 0}};
 
 int pin_is_in = 1;
 
@@ -263,6 +263,55 @@ int GetLockBits(int acs0bits) {
   }
 }
 
+/*********************/
+/* ISC Pulsing stuff */
+int CameraTrigger(int which)
+{
+  int iscBits = 0;
+
+  if (isc_pulses[which].ctr < isc_pulses[which].pulse_width) {
+    iscBits |= ISC_TRIGGER;
+  }
+  
+  /* We want to trigger sending the frame slightly after the pulse is sent
+   * to offset the 300 ms latency in the BLASTbus */
+  if (isc_pulses[which].ctr == 20)
+    write_ISC_pointing[which] = 1;	
+
+  if (isc_pulses[which].age >= 0)
+    isc_pulses[which].age++;
+  
+  if (isc_pulses[which].ctr < ISC_TRIG_PERIOD) {
+    isc_pulses[which].ctr++;
+  } else {
+    if (isc_pulses[which].is_fast) {
+      isc_pulses[which].pulse_width = CommandData.ISCControl[which].fast_pulse_width;
+      isc_pulses[which].ctr = 0;
+      if (isc_pulses[which].age < 0)
+        isc_pulses[which].age = 0;
+    } else if (fabs(axes_mode.az_vel) < MAX_ISC_SLOW_PULSE_SPEED) {
+      isc_pulses[which].pulse_width = CommandData.ISCControl[which].pulse_width;
+      isc_pulses[which].ctr = 0;
+
+      /* Trigger automatic image write-to-disk */
+      if (isc_pulses[which].last_save
+          >= CommandData.ISCControl[which].save_period &&
+          CommandData.ISCControl[which].save_period > 0) {
+        CommandData.ISCControl[which].auto_save = 1;
+        isc_pulses[which].last_save = 0;
+      }
+      
+      if (isc_pulses[which].age < 0)
+        isc_pulses[which].age = 0;
+    }
+  }
+
+  isc_pulses[which].last_save++;
+  /*********************/
+
+  return iscBits;
+}
+
 /*****************************************************************/
 /*                                                               */
 /*   Control the pumps and the lock and the ISC pulse            */
@@ -281,8 +330,6 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   static struct NiosStruct* iscBitsAddr;
   static struct NiosStruct* lokmotPinAddr;
   static struct NiosStruct* lOverrideAddr;
-
-  static int since_last_save = 0;
 
   int iscBits = 0;
   int pumpBits = 0;
@@ -362,46 +409,8 @@ void ControlAuxMotors(unsigned short *RxFrame) {
     iscBits = Balance(iscBits);
   }
 
-  /*********************/
-  /* ISC Pulsing stuff */
-  if (isc_pulses.ctr < isc_pulses.pulse_width) {
-    iscBits |= ISC_TRIGGER;
-  }
-  
-  /* We want to trigger sending the frame slightly after the pulse is sent
-   * to offset the 300 ms latency in the BLASTbus */
-  if (isc_pulses.ctr == 20)
-    write_ISC_pointing = 1;	
-
-  if (isc_pulses.age >= 0)
-    isc_pulses.age++;
-  
-  if (isc_pulses.ctr < ISC_TRIG_PERIOD) {
-    isc_pulses.ctr++;
-  } else {
-    if (isc_pulses.is_fast) {
-      isc_pulses.pulse_width = CommandData.ISC_fast_pulse_width;
-      isc_pulses.ctr = 0;
-      if (isc_pulses.age < 0)
-        isc_pulses.age = 0;
-    } else if (fabs(axes_mode.az_vel) < MAX_ISC_SLOW_PULSE_SPEED) {
-      isc_pulses.pulse_width = CommandData.ISC_pulse_width;
-      isc_pulses.ctr = 0;
-
-      /* Trigger automatic image write-to-disk */
-      if (since_last_save >= CommandData.ISC_save_period &&
-          CommandData.ISC_save_period > 0) {
-        CommandData.ISC_auto_save = 1;
-        since_last_save = 0;
-      }
-      
-      if (isc_pulses.age < 0)
-        isc_pulses.age = 0;
-    }
-  }
-
-  since_last_save++;
-  /*********************/
+  CameraTrigger(0); /* isc */
+  CameraTrigger(1); /* osc */
 
   /* Lock motor override writeback */
   pin_override = (CommandData.lock_override) ? 1 : 0;

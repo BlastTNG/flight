@@ -12,25 +12,29 @@
 #include "isc_protocol.h"
 #include "mcp.h"
 
-#define ELBERETH "192.168.62.6"
 #define BASE_PORT 2000
+
+struct {
+  char who[4];
+  char where[16];
+} isc_which[2] = {{"Isc", "192.168.62.5"}, {"Osc", "192.168.62.6"}};
 
 extern short int SamIAm;   /* mcp.c */
 extern short int InCharge; /* tx.c */
 extern int frame_num;      /* tx.c */
 
-short int write_ISC_pointing = 0; // isc.c
+short int write_ISC_pointing[2] = {0, 0}; // isc.c
 
-struct ISCStatusStruct SentState;
+struct ISCStatusStruct ISCSentState[2];
 
-struct ISCSolutionStruct ISCSolution[3];
-int iscdata_index = 0;
+struct ISCSolutionStruct ISCSolution[2][3];
+int iscdata_index[2] = {0, 0};
 
 #ifdef USE_ISC_LOG
 FILE* isc_log = NULL;
 #endif
 
-int ISCInit(void)
+int ISCInit(int which)
 {
   int sock;
   struct sockaddr_in addr;
@@ -40,51 +44,52 @@ int ISCInit(void)
 #ifdef USE_ISC_LOG
   if (isc_log == NULL) {
     if ((isc_log = fopen("/tmp/mcp.isc.log", "a")) == NULL) {
-      merror(MCP_ERROR, "ISC log fopen()");
+      merror(MCP_ERROR, "%s log fopen()", isc_which[which].who);
     }
   }
 #endif
 
   sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (sock == -1) {
-    merror(MCP_ERROR, "ISC socket()");
+    merror(MCP_ERROR, "%s socket()", isc_which[which].who);
     return -1;
   }
 
   n = 1;
   if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &n, sizeof(n)) != 0) {
-    merror(MCP_ERROR, "ISC setsockopt()");
+    merror(MCP_ERROR, "%s setsockopt()", isc_which[which].who);
     if (sock != -1)
       if (close(sock) < 0)
-        merror(MCP_ERROR, "ISC close()");
+        merror(MCP_ERROR, "%s close()", isc_which[which].who);
     return -1;
   }
 
-  inet_aton(ELBERETH, &addr.sin_addr);
+  inet_aton(isc_which[which].where, &addr.sin_addr);
   addr.sin_family = AF_INET;
   addr.sin_port = htons(BASE_PORT + SamIAm);
 
   if ((n = connect(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)))
       < 0) {
-    merror(MCP_ERROR, "ISC connect()");
+    merror(MCP_ERROR, "%s connect()", isc_which[which].who);
     if (sock != -1)
       if (close(sock) < 0)
-        merror(MCP_ERROR, "ISC close()");
+        merror(MCP_ERROR, "%s close()", isc_which[which].who);
     return -1;
   }
 
-  mputs(MCP_INFO, "Connected to Elbereth\n");
-  CommandData.ISCState.shutdown = 0;
+  mprintf(MCP_INFO, "Connected to %s\n", isc_which[which].who);
+  CommandData.ISCState[which].shutdown = 0;
 
-  SentState = CommandData.ISCState;
+  ISCSentState[which] = CommandData.ISCState[which];
 
   return sock;
 }
 
-void IntegratingStarCamera(void)
+void IntegratingStarCamera(void* parameter)
 {
   fd_set fdr, fdw;
   struct PointingDataStruct MyPointData;
+  int which = (int)parameter;
 
   int sock = -1, ISCReadIndex;
   static int come_down_to = -1;
@@ -95,18 +100,15 @@ void IntegratingStarCamera(void)
 
   int n, save_image_state = 0;
 
-  //  struct timeval t1, t2;
-  //  int delta;
-
-  mputs(MCP_STARTUP, "ISC startup\n");
+  mprintf(MCP_STARTUP, "%s startup\n", isc_which[which].who);
 
   for (;;) {
     do {
       if (sock != -1)
         if (close(sock) < 0)
-          merror(MCP_ERROR, "ISC close()");
+          merror(MCP_ERROR, "%s close()", isc_which[which].who);
 
-      sock = ISCInit();
+      sock = ISCInit(which);
       if (sock == -1) {
         sleep(10);
       }
@@ -122,8 +124,8 @@ void IntegratingStarCamera(void)
       FD_SET(sock, &fdr);
 
       /* request received to reconnect to ISC */
-      if (CommandData.ISC_reconnect) {
-        CommandData.ISC_reconnect = 0;
+      if (CommandData.ISCControl[which].reconnect) {
+        CommandData.ISCControl[which].reconnect = 0;
         break;
       }
 
@@ -134,16 +136,17 @@ void IntegratingStarCamera(void)
       if (n == -1 && errno == EINTR)
         continue;
       if (n == -1) {
-        merror(MCP_ERROR, "ISC select()");
+        merror(MCP_ERROR, "%s select()", isc_which[which].who);
         continue;
       }
 
       /* ------------ read ---------- */ 
 
       if (FD_ISSET(sock, &fdr)) {
-        n = recv(sock, &ISCSolution[iscdata_index], sizeof(struct ISCSolutionStruct), 0);
+        n = recv(sock, &ISCSolution[which][iscdata_index[which]],
+            sizeof(struct ISCSolutionStruct), 0);
         if (n == -1) {
-          merror(MCP_ERROR, "ISC recv()");
+          merror(MCP_ERROR, "%s recv()", isc_which[which].who);
           break;
         } else if (n < sizeof(struct ISCSolutionStruct)) {
           mprintf(MCP_ERROR, "ISC: Expected %i but received %i bytes.\n",
@@ -154,80 +157,76 @@ void IntegratingStarCamera(void)
         if (isc_log != NULL) {
           t = time(NULL);
           fprintf(isc_log, "%s: %i %i - %.4lf %.4lf %.4lf\n", ctime(&t),
-              ISCSolution[iscdata_index].framenum,
-              ISCSolution[iscdata_index].n_blobs,
-              ISCSolution[iscdata_index].ra * RAD2DEG,
-              ISCSolution[iscdata_index].dec * RAD2DEG,
-              ISCSolution[iscdata_index].sigma * RAD2DEG * 3600.);
+              ISCSolution[which][iscdata_index[which]].framenum,
+              ISCSolution[which][iscdata_index[which]].n_blobs,
+              ISCSolution[which][iscdata_index[which]].ra * RAD2DEG,
+              ISCSolution[which][iscdata_index[which]].dec * RAD2DEG,
+              ISCSolution[which][iscdata_index[which]].sigma * RAD2DEG * 3600.);
           fflush(isc_log);
         }
 #endif
 
-        //t2 = t1;
-        //gettimeofday(&t1, NULL);
-        //delta = (t1.tv_sec - t2.tv_sec) * 1000000 + (t1.tv_usec - t2.tv_usec);
-        //fprintf(stderr, "ISC: Received %i bytes after %f milliseconds.\n", n, (double)delta / 1000.);
-
-        if (CommandData.ISCState.autofocus) {
-          CommandData.ISCState.autofocus = 0;
-          CommandData.ISCState.focus_pos = CommandData.old_ISC_focus;
+        if (CommandData.ISCState[which].autofocus) {
+          CommandData.ISCState[which].autofocus = 0;
+          CommandData.ISCState[which].focus_pos
+            = CommandData.ISCControl[which].old_focus;
         }
 
         /* Process results of autofocus */
         if (come_down_to >= 0) {
-          CommandData.ISCState.focus_pos = come_down_to;
+          CommandData.ISCState[which].focus_pos = come_down_to;
           come_down_to = -1;
-        } else if (ISCSolution[iscdata_index].autoFocusPosition > 2000 &&
-            ISCSolution[iscdata_index].autoFocusPosition < FOCUS_RANGE &&
-            CommandData.ISCState.focus_pos !=
-            ISCSolution[iscdata_index].autoFocusPosition) {
-          come_down_to = ISCSolution[iscdata_index].autoFocusPosition;
-          CommandData.ISCState.focus_pos = FOCUS_RANGE;
+        } else if (ISCSolution[which][iscdata_index[which]].autoFocusPosition
+            > 2000 && ISCSolution[which][iscdata_index[which]].autoFocusPosition
+            < FOCUS_RANGE && CommandData.ISCState[which].focus_pos !=
+            ISCSolution[which][iscdata_index[which]].autoFocusPosition) {
+          come_down_to
+            = ISCSolution[which][iscdata_index[which]].autoFocusPosition;
+          CommandData.ISCState[which].focus_pos = FOCUS_RANGE;
         }
 
-        iscdata_index = INC_INDEX(iscdata_index);
+        iscdata_index[which] = INC_INDEX(iscdata_index[which]);
       }
 
       /* ------------ write ---------- */ 
 
-      if (FD_ISSET(sock, &fdw) && (write_ISC_pointing)) {
+      if (FD_ISSET(sock, &fdw) && (write_ISC_pointing[which])) {
         /* Retreive the derived pointing information */
         MyPointData = PointingData[GETREADINDEX(point_index)];
-        ISCReadIndex = GETREADINDEX(iscdata_index);
+        ISCReadIndex = GETREADINDEX(iscdata_index[which]);
 
-        if (CommandData.ISC_autofocus > 0) {
-          CommandData.ISCState.autofocus = 1;
-          CommandData.ISC_autofocus--;
+        if (CommandData.ISCControl[which].autofocus > 0) {
+          CommandData.ISCState[which].autofocus = 1;
+          CommandData.ISCControl[which].autofocus--;
         } else
-          CommandData.ISCState.autofocus = 0;
-        CommandData.ISCState.lat = MyPointData.lat * DEG2RAD;
-        CommandData.ISCState.az = MyPointData.az * DEG2RAD;
-        CommandData.ISCState.el = MyPointData.el * DEG2RAD;
-        CommandData.ISCState.lst = MyPointData.lst * SEC2RAD;
-        CommandData.ISCState.MCPFrameNum = frame_num;
+          CommandData.ISCState[which].autofocus = 0;
+        CommandData.ISCState[which].lat = MyPointData.lat * DEG2RAD;
+        CommandData.ISCState[which].az = MyPointData.az * DEG2RAD;
+        CommandData.ISCState[which].el = MyPointData.el * DEG2RAD;
+        CommandData.ISCState[which].lst = MyPointData.lst * SEC2RAD;
+        CommandData.ISCState[which].MCPFrameNum = frame_num;
 
-        CommandData.ISCState.az = 180 * DEG2RAD;
-        printf("lat az el lst: %f %f %f %f\n", CommandData.ISCState.lat / DEG2RAD, CommandData.ISCState.az / DEG2RAD, CommandData.ISCState.el / DEG2RAD, CommandData.ISCState.lst / DEG2RAD);
+        CommandData.ISCState[which].az = 180 * DEG2RAD;
 
         /* request for one automaticly saved image */
-        if (CommandData.ISC_auto_save) {
-          save_image_state = CommandData.ISCState.save;
-          CommandData.ISCState.save = 1;
+        if (CommandData.ISCControl[which].auto_save) {
+          save_image_state = CommandData.ISCState[which].save;
+          CommandData.ISCState[which].save = 1;
         }
 
         /* Write to ISC */
         if (InCharge) {
-          n = send(sock, &CommandData.ISCState, sizeof(CommandData.ISCState),
-              0);
+          n = send(sock, &CommandData.ISCState[which],
+              sizeof(CommandData.ISCState[which]), 0);
           if (n == -1) {
-            merror(MCP_ERROR, "ISC send()");
+            merror(MCP_ERROR, "%s send()", isc_which[which].who);
             break;
           } else if (n < sizeof(struct ISCStatusStruct)) {
             mprintf(MCP_ERROR, "ISC: Expected %i but sent %i bytes.\n",
                 sizeof(struct ISCStatusStruct), n);
             break;
           }
-          write_ISC_pointing = 0;
+          write_ISC_pointing[which] = 0;
 #ifdef USE_ISC_LOG
           if (isc_log != NULL) {
             t = time(NULL);
@@ -235,36 +234,45 @@ void IntegratingStarCamera(void)
                 "%s: %i %i %i %i - %i %i %i %i - %.4lf %.4lf %.4lf %.4lf\n"
                 "%.1lf %i %i %i %i - %.1f %.6f %.4f - %.4f %.4f %.4f %.4f\n\n",
                 ctime(&t),
-                CommandData.ISCState.pause, CommandData.ISCState.save,
-                CommandData.ISCState.focus_pos, CommandData.ISCState.ap_pos,
-                CommandData.ISCState.display_mode, CommandData.ISCState.roi_x,
-                CommandData.ISCState.roi_y, CommandData.ISCState.blob_num,
-                CommandData.ISCState.az, CommandData.ISCState.el,
-                CommandData.ISCState.lst, CommandData.ISCState.lat,
-                CommandData.ISCState.sn_threshold,
-                CommandData.ISCState.grid, CommandData.ISCState.cenbox,
-                CommandData.ISCState.apbox, CommandData.ISCState.mult_dist,
-                CommandData.ISCState.mag_limit,
-                CommandData.ISCState.norm_radius,
-                CommandData.ISCState.lost_radius,
-                CommandData.ISCState.tolerance, CommandData.ISCState.match_tol,
-                CommandData.ISCState.quit_tol, CommandData.ISCState.rot_tol);
+                CommandData.ISCState[which].pause,
+                CommandData.ISCState[which].save,
+                CommandData.ISCState[which].focus_pos,
+                CommandData.ISCState[which].ap_pos,
+                CommandData.ISCState[which].display_mode,
+                CommandData.ISCState[which].roi_x,
+                CommandData.ISCState[which].roi_y,
+                CommandData.ISCState[which].blob_num,
+                CommandData.ISCState[which].az, CommandData.ISCState[which].el,
+                CommandData.ISCState[which].lst,
+                CommandData.ISCState[which].lat,
+                CommandData.ISCState[which].sn_threshold,
+                CommandData.ISCState[which].grid,
+                CommandData.ISCState[which].cenbox,
+                CommandData.ISCState[which].apbox,
+                CommandData.ISCState[which].mult_dist,
+                CommandData.ISCState[which].mag_limit,
+                CommandData.ISCState[which].norm_radius,
+                CommandData.ISCState[which].lost_radius,
+                CommandData.ISCState[which].tolerance,
+                CommandData.ISCState[which].match_tol,
+                CommandData.ISCState[which].quit_tol,
+                CommandData.ISCState[which].rot_tol);
             fflush(isc_log);
           }
 #endif
         }
 
-        SentState = CommandData.ISCState;
+        ISCSentState[which] = CommandData.ISCState[which];
 
         /* Deassert abort, shutdown and set_focus after (perhaps) sending it */
-        CommandData.ISCState.abort = 0;
-        CommandData.ISCState.shutdown = 0;
-        CommandData.ISCState.focus_pos = 0;
+        CommandData.ISCState[which].abort = 0;
+        CommandData.ISCState[which].shutdown = 0;
+        CommandData.ISCState[which].focus_pos = 0;
 
         /* Return to default save_image state after autosaving image */
-        if (CommandData.ISC_auto_save) {
-          CommandData.ISCState.save = save_image_state;
-          CommandData.ISC_auto_save = 0;
+        if (CommandData.ISCControl[which].auto_save) {
+          CommandData.ISCState[which].save = save_image_state;
+          CommandData.ISCControl[which].auto_save = 0;
         }
       }
     }

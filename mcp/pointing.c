@@ -22,8 +22,8 @@
 
 #define MAX_ISC_AGE 200
 
-extern struct ISCSolutionStruct ISCSolution[3]; // isc.c
-extern int iscdata_index; // isc.c
+extern struct ISCSolutionStruct ISCSolution[2][3]; // isc.c
+extern int iscdata_index[2]; // isc.c
 
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
     double *el);
@@ -331,11 +331,11 @@ void RecordHistory(int index) {
  (0.02dps/sqrt(100Hz))^2 : gyro offset error dominated */
 #define GYRO_VAR (2.0E-6)
 void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
-    double gy1, double gy1_off,
-    double gy2, double gy2_off,
-    double gy3, double gy3_off, double enc_el) {
+    double gy1, double gy1_off, double gy2, double gy2_off,
+    double gy3, double gy3_off, double enc_el, int which) {
+
   double gy_az;
-  static int last_isc_framenum = 0xfffffff;
+  static int last_isc_framenum[2] = {0xfffffff, 0xfffffff};
   int i_isc, i_point;
   double new_az, new_el, ra, dec;
 
@@ -356,19 +356,20 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
   a->angle += gy_az / 100.0;
   a->varience += GYRO_VAR;
 
-  i_isc = GETREADINDEX(iscdata_index);
-  if (ISCSolution[i_isc].framenum != last_isc_framenum) { // new solution
-    if (isc_pulses.age < MAX_ISC_AGE) {
+  i_isc = GETREADINDEX(iscdata_index[which]);
+  if (ISCSolution[which][i_isc].framenum != last_isc_framenum[which]) {
+    // new solution
+    if (isc_pulses[which].age < MAX_ISC_AGE) {
       // get az and el for new solution
       i_point = GETREADINDEX(point_index);
-      ra = ISCSolution[i_isc].ra * (12.0 / M_PI);
-      dec = ISCSolution[i_isc].dec * (180.0 / M_PI);
+      ra = ISCSolution[which][i_isc].ra * (12.0 / M_PI);
+      dec = ISCSolution[which][i_isc].dec * (180.0 / M_PI);
       radec2azel(ra, dec, PointingData[i_point].lst, PointingData[i_point].lat,
           &new_az, &new_el);
       // this solution is isc_pulses.age old: how much have we moved?
       gy_el_delta = 0;
       gy_az_delta = 0;
-      for (i = 0; i < isc_pulses.age; i++) {
+      for (i = 0; i < isc_pulses[which].age; i++) {
         j = hs.i_history - i;
         if (j < 0)
           j += GY_HISTORY;
@@ -382,10 +383,10 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
       // evolve el solution
       e->angle -= gy_el_delta; // rewind to when the frame was grabbed
       w1 = 1.0 / (e->varience);
-      if (ISCSolution[i_isc].sigma > M_PI) {
+      if (ISCSolution[which][i_isc].sigma > M_PI) {
         w2 = 0;
       } else {
-        w2 = 10.0 * ISCSolution[i_isc].sigma * (180.0 / M_PI); //e->samp_weight;
+        w2 = 10.0 * ISCSolution[which][i_isc].sigma * (180.0 / M_PI); //e->samp_weight;
         if (w2 > 0)
           w2 = 1 / (w2 * w2);
         else
@@ -410,8 +411,8 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
       NormalizeAngle(&(a->angle));
     }
 
-    last_isc_framenum = ISCSolution[i_isc].framenum;
-    isc_pulses.age = -1; // reset counter.
+    last_isc_framenum[which] = ISCSolution[which][i_isc].framenum;
+    isc_pulses[which].age = -1; // reset counter.
   }
 }
 
@@ -630,6 +631,17 @@ void Pointing(){
     0.0001, // filter constant
     0, 0 // n_solutions, since_last
   };
+  static struct ElSolutionStruct OSCEl = {0.0, // starting angle
+    719.9 * 719.9, // varience
+    1.0 / M2DV(0.2), //sample weight
+    M2DV(0.2), // systemamatic varience
+    0.0, // trim 
+    0.0, // last input
+    0.0, // gy integral
+    GY1_OFFSET, // gy offset
+    0.0001, // filter constant
+    0, 0 // n_solutions, since_last
+  };
   static struct AzSolutionStruct NullAz = {92.0, // starting angle
     360.0 * 360.0, // varience
     1.0 / M2DV(6), //sample weight
@@ -675,6 +687,17 @@ void Pointing(){
     0, 0 // n_solutions, since_last
   };
   static struct AzSolutionStruct ISCAz = {0.0, // starting angle
+    360.0 * 360.0, // varience
+    1.0 / M2DV(0.3), //sample weight
+    M2DV(0.2), // systemamatic varience
+    0.0, // trim 
+    0.0, // last input
+    0.0, 0.0, // gy integrals
+    GY2_OFFSET, GY3_OFFSET, // gy offsets
+    0.0001, // filter constant
+    0, 0 // n_solutions, since_last
+  };
+  static struct AzSolutionStruct OSCAz = {0.0, // starting angle
     360.0 * 360.0, // varience
     1.0 / M2DV(0.3), //sample weight
     M2DV(0.2), // systemamatic varience
@@ -747,7 +770,15 @@ void Pointing(){
       RG.gy1, PointingData[i_point_read].gy1_offset,
       RG.gy2, PointingData[i_point_read].gy2_offset,
       RG.gy3, PointingData[i_point_read].gy3_offset,
-      PointingData[point_index].el);
+      PointingData[point_index].el, 0);
+
+  /*************************************/
+  /**      do OSC Solution            **/
+  EvolveSCSolution(&OSCEl, &OSCAz,
+      RG.gy1, PointingData[i_point_read].gy1_offset,
+      RG.gy2, PointingData[i_point_read].gy2_offset,
+      RG.gy3, PointingData[i_point_read].gy3_offset,
+      PointingData[point_index].el, 1);
 
   /*************************************/
   /**      do elevation solution      **/

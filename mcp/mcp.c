@@ -144,7 +144,7 @@ void mputs(int flag, const char* message) {
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
   
-  sprintf(bufstart, "[%i] ", getpid());
+  sprintf(bufstart, "[%li] ", pthread_self());
   
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
@@ -185,7 +185,7 @@ void mputs(int flag, const char* message) {
     fputs("!! Last error is FATAL.  Cannot continue.\n", stdout);
     fflush(stdout);
 
-    exit(1);
+    _exit(1);
   }
 
   if (flag == MCP_TFATAL) {
@@ -726,6 +726,7 @@ int main(int argc, char *argv[]) {
 //  pthread_t sensors_id;
   pthread_t dgps_id;
   pthread_t isc_id;
+  pthread_t osc_id;
 #endif
 
   struct CommandDataStruct CommandData_loc;
@@ -773,7 +774,8 @@ int main(int argc, char *argv[]) {
 
 #ifndef BOLOTEST
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
-  pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, NULL);
+  pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
+  pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
 
 //  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
@@ -859,6 +861,5 @@ int main(int argc, char *argv[]) {
       sigPipeRaised = 0;
     }
   }
-  /* atexit(bc_close); */
   return(0);
 }

@@ -1,11 +1,12 @@
 #include "isc_protocol.h"
 #include "tx_struct.h"
+#include <time.h>
 
 #define N_SLOWDL   7
 
-#define AXIS_VEL 0
+#define AXIS_VEL      0
 #define AXIS_POSITION 1
-#define AXIS_LOCK 2
+#define AXIS_LOCK     2
 
 #define P_AZEL_GOTO  1
 #define P_AZ_SCAN    2
@@ -104,6 +105,16 @@ struct CryoStruct {
   int lhevalve_open, lhevalve_on, lhevalve_close;
 };
 
+struct ISCControlStruct {
+  int pulse_width;
+  int fast_pulse_width;
+  int old_focus;
+  int reconnect;
+  int autofocus;
+  int save_period;
+  int auto_save;
+};
+
 struct CommandDataStruct {
   unsigned short int timeout;
   unsigned short int alice_file;
@@ -150,14 +161,8 @@ struct CommandDataStruct {
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
 
   /* Integrating Star Camera Stuff */
-  struct ISCStatusStruct ISCState;
-  int ISC_pulse_width;
-  int ISC_fast_pulse_width;
-  int old_ISC_focus;
-  int ISC_reconnect;
-  int ISC_autofocus;
-  int ISC_save_period;
-  int ISC_auto_save;
+  struct ISCStatusStruct ISCState[2];
+  struct ISCControlStruct ISCControl[2];
 };
 
 struct ScheduleType {
