@@ -13,8 +13,56 @@
 
 #include "derived.h"
 
+/* Don's Handy Guide to adding derived channels:
+ *
+ * There are five types of derived channels which can be added to the format
+ * file.  Channel names are, of course, case sensitive.  On start-up, both
+ * mcp and decomd run sanity checks on the channel lists, including the derived
+ * channel list.  The checks will fail for the derived channel list if either
+ * a source channel doesn't exist or a derived channel has a name already in
+ * use.  Listed below are the derived channel types and their arguments.  If
+ * more derived channel types are desired, please ask me to add them.  --dvw
+ *
+ * o LINCOM: Single field calibration.  Arguments:
+ *   1.  Derived Channel Name (string)
+ *   2.  Source Channel Name (string)
+ *   3.  Calibration Slope (double)
+ *   4.  Calibration Intercept (double)
+ * o LINCOM2: Two field linear combination
+ *   1.  Derived Channel Name (string)
+ *   2.  Source 1 Channel Name (string)
+ *   3.  Source 1 Calibration Slope (double)
+ *   4.  Source 1 Calibration Intercept (double)
+ *   5.  Source 2 Channel Name (string)
+ *   6.  Source 2 Calibration Slope (double)
+ *   7.  Source 2 Calibration Intercept (double)
+ * o LINTERP: Linearly interpolated look up table
+ *   1.  Derived Channel Name (string)
+ *   2.  Source Channel Name (string)
+ *   3.  Full Path to Look Up Table File (string)
+ * o BITFIELD: Single bit channels derived from a common source channel
+ *   1.  Source Channel Name (string)
+ *   2.  Bit 0 Derived Channel Name (string)
+ *   3.  Bit 1 Derived Channel Name (string)
+ *   ...
+ *   17. Bit 15 Derived Channel Name (string)
+ *   
+ *      NB: Bits for which no channel is defined should be given an empty string
+ *      "" as a channel name.  Additionally, unused trailing high-bit channels
+ *      can be omitted.
+ * o COMMENT: A litteral comment to be inserted into the format file
+ *   1.  Comment Text (string) -- there is no need to include the comment
+ *       delimiter (#).
+ *
+ *
+ * In addition to the derived channels derived below, defile will add the
+ * "Nice CPU Values" (to wit: CPU_SEC, CPU_HOUR, etc.), properly offset to the
+ * start of the file, to the end of the format file.
+ */
+
 union DerivedUnion DerivedChannels[] = {
   /* Pointing */
+  COMMENT("Pointing Stuff"), 
   LINCOM("P_X_H", "p_x_deg", 0.0003662109375, 0),
   LINTERP("Clin_Elev", "clin_elev", "/data/etc/clin_elev.lut"),
   BITFIELD("sensor_veto",
@@ -29,7 +77,6 @@ union DerivedUnion DerivedChannels[] = {
 
   /* ISC and OSC */
   COMMENT("Star Camera State"), 
-
   BITFIELD("isc_state",
       "ISC_SAVE_IMAGES",
       "ISC_PAUSE",
@@ -71,7 +118,7 @@ union DerivedUnion DerivedChannels[] = {
       "AUTO_JFET_HEAT"
       ),
 
-  COMMENT("Cryo Vale Limit Switches"),
+  COMMENT("Cryo Valve Limit Switches"),
 
   BITFIELD("cryoin",
       "POT_IS_CLOSED",
