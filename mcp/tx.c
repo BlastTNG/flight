@@ -72,6 +72,10 @@ void WriteMot(int TxIndex, unsigned short *RxFrame);
 
 int frame_num;
 
+/* this is provided to let the various controls know that we're doing our
+ * initial control writes -- there's no input data yet */
+int mcp_initial_controls = 0;
+
 double getlst(time_t t, double lon);
 
 void DoSched();
@@ -776,7 +780,7 @@ void StoreData(int index)
   StoreStarCameraData(index, 1); /* write OSC data */
 }
 
-void InitTxFrame(void)
+void InitTxFrame(unsigned short *RxFrame)
 {
   int bus, m, i, j, niosAddr, m0addr;
 
@@ -792,8 +796,13 @@ void InitTxFrame(void)
             RawNiosWrite(niosAddr, BBC_FSYNC | BBC_WRITE | BBC_NODE(63)
                 | BBC_CH(4) | 0xB008, NIOS_QUEUE);
           else
-            RawNiosWrite(niosAddr, BBC_FSYNC | BBC_WRITE | BBC_NODE(63)
-                | BBC_CH(0) | 0xEB90, NIOS_QUEUE);
+            /* this is address 0 in the NiosFrame; what _should_ go here is the
+             * Bus 0 framesync.  Instead we write BBC_ENDWORD which effectively
+             * traps Nios here, preventing it from trying to send out our frame
+             * while we're constructing it.  Later, once everything is composed,
+             * we'll write the framesync here and Nios will start sending out
+             * the frame -- we flush this so it takes effect immediately. */
+            RawNiosWrite(niosAddr, BBC_ENDWORD, NIOS_FLUSH);
         } else if (i == 1 && bus == 0) /* fastsamp lsb */
           RawNiosWrite(niosAddr, BBC_WRITE | BBC_NODE(63) | BBC_CH(1),
               NIOS_QUEUE);
@@ -808,7 +817,7 @@ void InitTxFrame(void)
             if (NiosLookup[j].niosAddr == niosAddr)
               RawNiosWrite(niosAddr, NiosLookup[j].bbcAddr, NIOS_QUEUE);
             else if (NiosLookup[j].niosAddr == niosAddr - 1
-			    && NiosLookup[j].wide)
+                && NiosLookup[j].wide)
               RawNiosWrite(niosAddr, BBC_NEXT_CHANNEL(NiosLookup[j].bbcAddr),
                   NIOS_QUEUE);
             else if (NiosLookup[j].fast && NiosLookup[j].niosAddr == m0addr)
@@ -827,6 +836,17 @@ void InitTxFrame(void)
 
   /* force flush of write buffer */
   RawNiosWrite(-1, -1, NIOS_FLUSH);
+
+  /* do initial controls */
+  bprintf(info, "Running Initial Controls.\n");
+  mcp_initial_controls = 1;
+  UpdateBBCFrame(RxFrame);
+  mcp_initial_controls = 0;
+
+  /* write the framesync to address 0 to get things going... */
+  bprintf(info, "Frame Composition Complete.  Starting NIOS.\n");
+  RawNiosWrite(0, BBC_FSYNC | BBC_WRITE | BBC_NODE(63) | BBC_CH(0) | 0xEB90,
+      NIOS_FLUSH);
 }
 
 void RawNiosWrite(unsigned int addr, unsigned int data, int flush_flag)
@@ -875,14 +895,16 @@ void UpdateBBCFrame(unsigned short *RxFrame) {
 
   /*** do Controls ***/
 #ifndef BOLOTEST
-  DoSched();
+  if (!mcp_initial_controls)
+    DoSched();
   UpdateAxesMode();
   StoreData(index);
   ControlGyroHeat(RxFrame);
   WriteMot(index, RxFrame);
 #endif
   BiasControl(RxFrame);
-  SyncADC(index);
+  if (!mcp_initial_controls)
+    SyncADC(index);
 
   /*** do slow Controls ***/
   if (index == 0) {
@@ -891,7 +913,9 @@ void UpdateBBCFrame(unsigned short *RxFrame) {
     CryoControl();
     PhaseControl();
   }
-  index = (index + 1) % FAST_PER_SLOW;
+
+  if (!mcp_initial_controls)
+    index = (index + 1) % FAST_PER_SLOW;
 
 #ifndef BOLOTEST
   ControlAuxMotors(RxFrame);

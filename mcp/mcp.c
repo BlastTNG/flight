@@ -687,13 +687,16 @@ int main(int argc, char *argv[]) {
 
   bputs(info, "Finished Initialisation, waiting for BBC to come up.\n");
 
+  /* mcp used to wait here for a semaphore from the BBC, which makes the
+   * presence of these messages somewhat "historical" */
+
   bputs(info, "BBC is up.\n");
 
 #ifndef BOLOTEST
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
 #endif
 
-  InitTxFrame();
+  InitTxFrame(RxFrame);
 
   while (1) {
 

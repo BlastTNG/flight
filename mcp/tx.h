@@ -8,8 +8,9 @@
 #include "channels.h"
 
 extern int frame_num;
+extern int mcp_initial_controls;
 
-void InitTxFrame(void);
+void InitTxFrame(unsigned short*);
 void UpdateBBCFrame(unsigned short*);
 
 void RawNiosWrite(unsigned int, unsigned int, int);
