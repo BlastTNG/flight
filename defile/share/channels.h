@@ -176,6 +176,9 @@ extern "C" {
 #define I2T_M (-0.00625)
 #define I2T_B (136.45)
 
+/* zero point (in counts) of i_el */
+#define I_EL_ZERO 32638
+
 #ifdef __cplusplus
 }
 #endif

@@ -76,9 +76,6 @@
 #define GY_TEMP_STEP 1 /* setpoint step - deg C */
 #define GY_HEAT_TC 30000 /* integral/age characteristic time in 100Hz Frames */
 
-/* zero point (in counts of i_el) */
-#define I_EL_ZERO 32638
-
 struct ISCPulseType isc_pulses[2] = {
   {-1, 0, 0, 0, 0, 0, 0, 0}, {-1, 0, 0, 0, 0, 0, 0, 0}
 };
@@ -371,7 +368,6 @@ int Balance(int ifpmBits) {
   else {
     smoothed_i = slow_data[iElAddr->index][iElAddr->channel] / 500. +
       smoothed_i * (499. / 500.);
-    bprintf(info, "smoothed i: %5.3f\n", smoothed_i);
     error = smoothed_i - I_EL_ZERO - CommandData.pumps.bal_target;
   }
 
