@@ -916,7 +916,7 @@ void DoNewCapMode() {
       axes_mode.el_dest = bottom;
       axes_mode.el_vel = 0.0;
       speed_el = 0.0;
-      targ_el = bottom;
+      targ_el = -r;
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
