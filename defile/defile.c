@@ -871,7 +871,7 @@ int main (int argc, char** argv)
 {
   struct timeval now;
   long long int delta;
-  float freq = 0;
+  double fr = 0;
   FILE* stream;
   const char* herr = NULL;
 
@@ -997,14 +997,14 @@ int main (int argc, char** argv)
         gettimeofday(&now, &rc.tz);
         delta = (now.tv_sec - rc.start.tv_sec) * 1000000LL - rc.start.tv_usec
           + now.tv_usec;
-        freq = 1000. * ri.wrote / delta;
+        fr = 1000. * ri.wrote / delta;
       if (rc.quenya)
           printf("R:[%i] W:[%i] %.*f kHz\r", ri.read, ri.wrote,
-              (freq > 100) ? 1 : (freq > 10) ? 2 : 3, freq);
+              (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
         else 
           printf("R:[%i of %i] W:[%i] %.*f kHz\r", ri.read, ri.old_total
-              + ri.chunk_total, ri.wrote, (freq > 100) ? 1 : (freq > 10) ? 2
-              : 3, freq);
+              + ri.chunk_total, ri.wrote, (fr > 100) ? 1 : (fr > 10) ? 2 : 3,
+              fr);
       fflush(stdout);
       }
       usleep(100000);
@@ -1014,11 +1014,10 @@ int main (int argc, char** argv)
   if (!rc.silent) {
     if (rc.quenya)
       bprintf(info, "R:[%i] W:[%i] %.*f kHz", ri.read, ri.wrote,
-          (freq > 100) ? 1 : (freq > 10) ? 2 : 3, freq);
+          (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
     else
       bprintf(info, "R:[%i of %i] W:[%i] %.*f kHz", ri.read, ri.old_total +
-          ri.chunk_total, ri.wrote, (freq > 100) ? 1 : (freq > 10) ? 2 : 3,
-          freq);
+          ri.chunk_total, ri.wrote, (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
   }
   return 0;
 }

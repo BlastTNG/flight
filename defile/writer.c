@@ -410,23 +410,23 @@ void InitialiseDirFile(int reset, unsigned long offset)
   if (close(fd) < 0)
     berror(fatal, "Error while closing format file");
 
-  n_fast = 0;
+  /* FASTSAMP */
   sprintf(gpb, "%s/FASTSAMP%s", rc.dirfile, ext);
-  normal_fast[n_fast].size = 2; 
+  normal_fast[0].size = 2; 
 
-  normal_fast[n_fast].fp = OpenField(1, 2, gpb);
-  normal_fast[n_fast].i0 = 1;
+  normal_fast[0].fp = OpenField(1, 2, gpb);
+  normal_fast[0].i0 = 1;
   if (reset) {
     if (rc.resume_at > 0)
-      normal_fast[n_fast].nw = rc.resume_at;
+      normal_fast[0].nw = rc.resume_at;
     else
-      normal_fast[n_fast].nw = 0;
+      normal_fast[0].nw = 0;
   }
 
-  normal_fast[n_fast].i_in = normal_fast[n_fast].i_out = 0;
-  normal_fast[n_fast].b = balloc(fatal, MAXBUF * sizeof(int));
+  normal_fast[0].i_in = normal_fast[0].i_out = 0;
+  normal_fast[0].b = balloc(fatal, MAXBUF * sizeof(int));
 
-  n_fast++;
+  n_fast = 1;
 
   /* slow chs */
   for (i = 0; i < slowsPerBi0Frame; i++) {
@@ -768,7 +768,10 @@ void DirFileWriter(void)
     /********************** 
      ** normal fast data ** 
      **********************/
-    for(j = 0; j < n_fast; j++) {
+
+    /* j = 0 (FASTSAMP) must be writen last if getdata is to return the proper
+     * number of frames */
+    for (j = 1; j < n_fast; j++) {
       i_in = normal_fast[j].i_in;
       i_out = normal_fast[j].i_out;
       i_buf = 0;
@@ -829,6 +832,25 @@ void DirFileWriter(void)
       }
     }
 
+    /* Write FASTSAMP last */
+    i_in = normal_fast[0].i_in;
+    i_out = normal_fast[0].i_out;
+    i_buf = 0;
+    while (i_in != i_out) {
+      ibuffer[i_buf] = ((unsigned int*)normal_fast[0].b)[i_out];
+
+      if (wrote_count < ++normal_fast[0].nw)
+        wrote_count = normal_fast[0].nw;
+
+      i_out++;
+      i_buf++;
+      if (i_out >= MAXBUF)
+        i_out = 0;
+    }
+    WriteField(normal_fast[0].fp, i_buf * sizeof(unsigned), ibuffer);
+    normal_fast[0].i_out = i_out;
+
+    /* Done writing */
     if (ri.wrote < wrote_count)
       ri.wrote = wrote_count;
 
