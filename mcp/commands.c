@@ -1351,7 +1351,6 @@ void InitCommandData() {
 
   CommandData.tdrssVeto = 0;
 
-#ifndef USE_FIFO_CMD
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
     bprintf(warning, "prev_status: Wanted %i bytes but got %i.\n",
@@ -1360,7 +1359,6 @@ void InitCommandData() {
     bputs(warning, "prev_status: Extra bytes found.\n");
   else
     return;
-#endif
 
   bputs(warning, "Regenerating Command Data and prev_status\n");
 

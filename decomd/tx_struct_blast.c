@@ -538,11 +538,6 @@ struct ChannelStruct FastChannels[] = {
   {"osc_trigger", 'w',  ACS0, 32,             1.0,                    0.0, 'u'},
 #endif
 
-// cryo control debug
-  {"t_cur",	   'r',  CRYO, 53,                 1.0,             0.0, 's'},
-  {"t_set",	   'r',  CRYO, 54,                 1.0,             0.0, 's'},
-  {"pwm_err",	   'r',  CRYO, 55,                 1.0,             0.0, 's'},
-// end debug
   /* read channels from ACS1 */
   {"gyro2",       'r',  ACS1, 50,  ADU2_TO_DPS, -GYRO2_OFFSET*ADU2_TO_DPS, 'u'},
   {"gyro3",       'r',  ACS1, 56,  ADU3_TO_DPS, -GYRO3_OFFSET*ADU3_TO_DPS, 'u'},
@@ -576,6 +571,11 @@ struct ChannelStruct FastChannels[] = {
   {"mcp_frame",   'w', LOOP2, 34,             1.0,                    0.0, 'u'},
 
 #endif
+// cryo control debug
+  {"t_cur",	   'r',  CRYO, 53,                 1.0,             0.0, 's'},
+  {"t_set",	   'r',  CRYO, 54,                 1.0,             0.0, 's'},
+  {"pwm_err",	   'r',  CRYO, 55,                 1.0,             0.0, 's'},
+// end debug
   /* Read from DAS3 -- cryo commanding */
   {"calstat",      'r',  CRYO, 61,                 1.0,             0.0, 'u'},
 

@@ -136,7 +136,7 @@ int JFETthermostat(void)
   double jfet_temp;
   static struct BiPhaseStruct* tJfetAddr;
 
-  struct LutType DiodeLut = {"/data/etc/dt600.txt", 0, NULL, NULL, 0};
+  static struct LutType DiodeLut = {"/data/etc/dt600.txt", 0, NULL, NULL, 0};
 
   static int firsttime = 1;
   if (firsttime) {
@@ -145,9 +145,9 @@ int JFETthermostat(void)
     LutInit(&DiodeLut);
   }
 
-  jfet_temp = LutCal(&DiodeLut,
-      (double)slow_data[tJfetAddr->index][tJfetAddr->channel] * T_JFET_M
-      + T_JFET_B);
+  jfet_temp = (double)slow_data[tJfetAddr->index][tJfetAddr->channel]
+    * T_JFET_M + T_JFET_B;
+  jfet_temp = LutCal(&DiodeLut, jfet_temp);
 
   if (jfet_temp < 0 || jfet_temp > 400)
     return CommandData.Cryo.JFETHeat;
@@ -269,7 +269,7 @@ void CryoControl (void)
     cryostate &= 0xFFFF - CS_LHeVALVE_ON;
 
   if (CommandData.Cryo.autoJFETheat) {
-    jfetHeat = 0;//JFETthermostat();
+    jfetHeat = JFETthermostat();
     cryostate |= CS_AUTO_JFET;
   } else {
     jfetHeat = CommandData.Cryo.JFETHeat;
