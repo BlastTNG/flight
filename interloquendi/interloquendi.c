@@ -40,7 +40,7 @@
 #include "frameread.h"
 #include "quendi.h"
 
-#define VERSION   "0.9.0"
+#define VERSION   "1.1.0"
 #define SOCK_PORT 44144
 #define PID_FILE "/var/run/interloquendi.pid"
 #define CONFIG_FILE "/etc/interloquendi.conf"
