@@ -21,7 +21,12 @@
 #ifndef BLAST_H
 #define BLAST_H
 
-#include <stdarg.h>
+#include <stdarg.h>  /* ANSI C variable arguments (va_list, va_start, va_end) */
+
+/* If we're not using GNU C, elide __attribute__ */
+#ifndef __GNUC__
+#  define  __attribute__(x)  /*NOTHING*/
+#endif
 
 /* BUOS (BLAST Unified Output Scheme) definitions */
 #define BUOS_MAX 2048
@@ -29,8 +34,8 @@ typedef enum {info, warning, err, tfatal, fatal, startup, sched, mem} buos_t;
 
 void bputs_stdio(buos_t l, const char* s);
 void bputs_syslog(buos_t l, const char* s);
-void bprintf(buos_t, const char*, ...);
-void berror(buos_t, const char*, ...);
+void bprintf(buos_t, const char*, ...) __attribute__((format(printf,2,3)));
+void berror(buos_t, const char*, ...) __attribute__((format(printf,2,3)));
 void bputs(buos_t, const char*);
 void buos_use_func(void (*puts_func)(buos_t, const char*));
 void buos_use_stdio(void);
