@@ -625,6 +625,8 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
+  umask(0);  /* clear umask */
+
   if ((logfile = fopen("/data/etc/mcp.log", "a")) == NULL)
     merror(MCP_ERROR, "Can't open log file");
   else

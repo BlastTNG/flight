@@ -393,7 +393,6 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   }
 
   pumpBits |= GetLockBits();
-  printf("pumpBits = %i\r", pumpBits);
 
   if (CommandData.pumps.bal_veto) {
     /* if we're in timeout mode, decrement the timer */
