@@ -31,27 +31,26 @@
 	#   must contain HI, LO, XHI, & XLO
 	#
 	#   name: a unique identifier for the extrema
-	#   value: if the value of the field goes above/below this, it i
+	#   value: if the value of the field goes above/below this, it
 	#      will be displayed with the textstyles specified in the tag
-	#   alarm: .wav file to be played if extremum is breached
 	#   textstyle: a predefined textstyle
 	#   style attributes: colour, backcolour, etc. -- will override any specified
 	#      in predefined textstyle
   <EXTREMA name="extrema1">
     <HI value="0.0015" textstyle="hiwarning"/>
     <LO value="-0.0015" textstyle="lowarning" colour="#000088"/>
-    <XHI value="0.004" textstyle="xhiwarning" alarm="doh.wav"/>
-    <XLO value="-0.004" textstyle="xlowarning" alarm="doh.wav"/>
+    <XHI value="0.004" textstyle="xhiwarning"/>
+    <XLO value="-0.004" textstyle="xlowarning"/>
   </EXTREMA>
 	
 	# MULTI -- predefine any combo values
   <MULTI name="bool1">
     <WORD value="1" caption="A-OK" textstyle="banana"/>
-    <WORD value="0" caption="UH-OH" textstyle="apricot" alarm="doh.wav"/>
+    <WORD value="0" caption="UH-OH" textstyle="apricot"/>
   </MULTI>
 
   # The place to look for data
-  <CURFILE name="/data/etc/decom.cur"/>
+  <CURFILE name="/data/etc/defile.cur"/>
 
   # A hostname and port to connect to for status information from the
   # decom daemon.  host can be either an ip address or a hostname
@@ -106,8 +105,8 @@
     <DATUM format="%f units" src="I_ROLL">
       <HI value="7.394" textstyle="hiwarning"/>
       <LO value="2.221" textstyle="lowarning"/>
-      <XHI value="12" textstyle="xhiwarning" alarm="doh.wav"/>
-      <XLO value="1" textstyle="xlowarning" alarm="doh.wav"/>
+      <XHI value="12" textstyle="xhiwarning"/>
+      <XLO value="1" textstyle="xlowarning"/>
     </DATUM>
   </NUMBER>
   <NUMBER caption="T Gybox" textstyle="banana" size="14">
