@@ -237,8 +237,8 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
 
   t_lhe       = T_LHE_M*t_lhe + T_LHE_B;
   t_charcoal  = T_CHARCOAL_M*t_charcoal + T_CHARCOAL_B;
-  t_he3fridge = (256.0*LOCKIN_C2V)*t_he3fridge + LOCKIN_OFFSET;
-  t_he4pot    = (256.0*LOCKIN_C2V)*t_he4pot    + LOCKIN_OFFSET;
+  t_he3fridge = (ROX_C2V)*t_he3fridge + ROX_OFFSET;
+  t_he4pot    = (ROX_C2V)*t_he4pot    + ROX_OFFSET;
 
   if (t_lhe < T_LHE_SET) {
     *cryoout |= CRYO_CHARCOAL_OFF;
