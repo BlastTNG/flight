@@ -29,7 +29,11 @@
 #define BBC_EOF      (0xffff)
 #define BBC_BAD_DATA (0xfffffff0)
 
-#define FRAME_MARGIN (-30)
+#ifdef BOLOTEST
+  #define FRAME_MARGIN (-12)
+#else
+  #define FRAME_MARGIN (-30)
+#endif
 
 #define BI0_FRAME_BUFLEN (40)
 /* Define global variables */
