@@ -95,8 +95,6 @@ void WriteAux(void) {
     ploverAddr = GetNiosAddr("plover");
   }
 
-  t = time(NULL);
-
   InCharge = !(SamIAm
       ^ slow_data[samIAmReadAddr->index][samIAmReadAddr->channel]);
   if (InCharge != incharge && InCharge)
@@ -106,7 +104,9 @@ void WriteAux(void) {
 
   incharge = InCharge;
 
-  WriteData(cpuTimeAddr, t >> 16, NIOS_QUEUE);
+  t = time(NULL);
+
+  WriteData(cpuTimeAddr, t, NIOS_QUEUE);
 
   WriteData(cpuFanAddr, CommandData.fan, NIOS_QUEUE);
   WriteData(cpuTemp1Addr, CommandData.temp1, NIOS_QUEUE);

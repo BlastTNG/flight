@@ -757,11 +757,13 @@ int main(int argc, char *argv[]) {
         UpdateBBCFrame(RxFrame);
         CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);
 
+        /* pushDiskFrame must be called before PushBi0Buffer to get the slow
+        data right */
+        pushDiskFrame(RxFrame);
 #ifndef BOLOTEST
         PushBi0Buffer(RxFrame);
 #endif
         FillSlowDL(RxFrame);
-        pushDiskFrame(RxFrame);
         zero(RxFrame);
       }
     }
