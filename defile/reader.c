@@ -148,8 +148,7 @@ void FrameFileReader(void)
   }                 
 
   for(i = 1; i < INPUT_BUF_SIZE; ++i)
-    InputBuffer[i] = InputBuffer[0] + i * BiPhaseFrameSize
-      * sizeof(unsigned short);
+    InputBuffer[i] = (void*)InputBuffer[0] + i * BiPhaseFrameSize;
 
   if (rc.resume_at >= 0) {
     ri.read = SetResumeChunk();
@@ -189,7 +188,7 @@ void FrameFileReader(void)
 
       /* read some frames */
       clearerr(stream);
-      if ((n = fread(InputBuffer, BiPhaseFrameSize, INPUT_BUF_SIZE, stream))
+      if ((n = fread(InputBuffer[0], BiPhaseFrameSize, INPUT_BUF_SIZE, stream))
           < 1) {
         if (feof(stream))
           break;

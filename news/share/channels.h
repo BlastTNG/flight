@@ -79,6 +79,7 @@ extern "C" {
   struct NiosStruct* GetNiosAddr(const char*);
   inline struct BiPhaseStruct* GetBiPhaseAddr(const char*);
   inline struct BiPhaseStruct* ExtractBiPhaseAddr(struct NiosStruct*);
+  void ReadSpecificationFile(FILE*);
 
 /* reserved node numbers */
 #define SPARE      62

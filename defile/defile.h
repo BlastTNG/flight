@@ -49,6 +49,7 @@ struct rc_struct {
   char* output_dirfile;
   char* source;
   char* dest_dir;
+  char* spec_file;
 
   struct timeval start;
   struct timezone tz;

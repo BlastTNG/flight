@@ -61,7 +61,8 @@ struct rc_struct rc = {
   NULL, /* output_curfile */
   NULL, /* output_dirfile */
   NULL, /* source */
-  NULL /* dest_dir */
+  NULL, /* dest_dir */
+  NULL  /* spec_file */
 };
 
 void PathSplit(const char* path, const char** dname, const char** bname)
@@ -385,6 +386,66 @@ void GetDirFile(char* buffer, const char* source, char* parent)
   MakeDirFile(buffer, source, parent);
 }
 
+/* Figures out the name of the channel specification file, and then tries to
+ * open and read it. */
+void ReconstructChannelLists(void)
+{
+  struct stat stat_buf;
+  char gpb[GPB_LEN];
+  char buffer[200];
+  char* ptr = buffer;
+  FILE* stream;
+
+  /* if rc.spec_file exists, the user has specified a spec file name, use it */
+  if (rc.spec_file != NULL) {
+    /* check for buffer overrun */
+    if (strlen(rc.spec_file) >= 200) {
+      fprintf(stderr, "defile: specification file path too long\n");
+      exit(1);
+    }
+    strcpy(buffer, rc.spec_file);
+  } else {
+    /* if the chunk is 923488378.x000, the spec file will be 923488378.x.spec */
+    strcpy(buffer, rc.chunk);
+    while (*ptr != '.' && *ptr != '\0')
+      ++ptr;
+    if (*ptr != '\0') {
+      ++ptr;
+      if (*ptr != '\0')
+        ++ptr;
+    }
+
+    /* check for buffer overrun */
+    if (ptr - buffer > 190) {
+      fprintf(stderr, "defile: specification file path too long\n");
+      exit(1);
+    }
+    strcpy(ptr, ".spec");
+  }
+
+  /* first attempt to stat spec file to see if it is indeed a regular file */
+  if (stat(buffer, &stat_buf)) {
+    snprintf(gpb, GPB_LEN, "defile: cannot stat spec file `%s'", buffer);
+    perror(gpb);
+    exit(1);
+  }
+
+  /* the stat worked.  Now is this a regular file? */
+  if (!S_ISREG(stat_buf.st_mode)) {
+    fprintf(stderr, "defile: spec file `%s' is not a regular file\n", buffer);
+    exit(1);
+  }
+
+  /* attempt to open the file */
+  if ((stream = fopen(buffer, "r")) == NULL) {
+    snprintf(gpb, GPB_LEN, "defile: cannot open spec file `%s'", buffer);
+    perror(gpb);
+    exit(1);
+  }
+
+  ReadSpecificationFile(stream);
+}
+
 void PrintVersion(void)
 {
   printf("defile " VERSION "  (C) 2004 D. V. Wiebe\n"
@@ -412,6 +473,7 @@ void PrintUsage(void)
       "                          instead of `" DEFAULT_CURFILE "'.\n"
       "  -F --framefile        assume SOURCE is a framefile.\n"
       "  -R --resume           resume an interrupted defiling.\n"
+      "  -S --spec-file=NAME   use NAME as the specification file.\n"
       "  -c --curfile          write a curfile called `" DEFAULT_CURFILE "'.\n"
       "  -f --force            overwrite destination.\n"
       "  -o --output-dirfile=NAME use name as the name of the dirfile. Name "
@@ -422,7 +484,7 @@ void PrintUsage(void)
       "keep\n"
       "                          writing to dirfile.\n"
       "  -r --remounted-source when SOURCE is a curfile, assume that the "
-      "framefile is\n"
+    "framefile is\n"
     "                          located in the directory `" REMOUNT_PATH"' "
     "relative\n"
     "                          to the curfile's location.  This option has "
@@ -479,7 +541,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
   for (i = 1; i < argc; ++i) {
     if (opts_ok && argv[i][0] == '-') { /* an option */
       if (argv[i][1] == '-') { /* a long option */
-        if (argv[i][2] == '\0') /* -- last option */
+        if (argv[i][2] == '\0') /* -- (last option flag) */
           opts_ok = 0;
         else if (!strcmp(argv[i], "--help"))
           PrintUsage();
@@ -527,9 +589,15 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
             perror("defile: cannot allocate heap");
             exit(1);
           }
-        } else if (!strcmp(argv[i], "--resume"))
+        } else if (!strcmp(argv[i], "--resume")) 
           rc->write_mode = 2;
-        else if (!strncmp(argv[i], "--suffix-size=", 14)) {
+        else if (!strncmp(argv[i], "--spec-file=", 12)) {
+          free(rc->spec_file);
+          if ((rc->spec_file = strdup(&argv[i][12])) == NULL) {
+            perror("defile: cannot allocate heap");
+            exit(1);
+          }
+        } else if (!strncmp(argv[i], "--suffix-size=", 14)) {
           if (argv[i][14] >= '0' && argv[i][14] <= '9') {
             if ((rc->sufflen = atoi(&argv[i][14])) > SUFF_MAX) {
               fprintf(stderr, "defile: suffix size `%s' is not a valid value\n"
@@ -561,6 +629,12 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
               break;
             case 'R':
               rc->write_mode = 2;
+              break;
+            case 'S':
+              if (nshortargs < argc) {
+                shortarg[nshortargs].position = i - 1;
+                shortarg[nshortargs++].option = 'S';
+              }
               break;
             case 'c':
               if (!rc->write_curfile) {
@@ -641,6 +715,20 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           }
         } else {
           fprintf(stderr, "defile: curfile name `%s' is not a valid value\n"
+              "Try `defile --help' for more information.\n", argument[j].value);
+          exit(1);
+        }
+        break;
+      case 'S':
+        if (argument[j].value[0] != '\0') {
+          free(rc->spec_file);
+          if ((rc->spec_file = strdup(argument[j].value)) == NULL) {
+            perror("defile: cannot allocate heap");
+            exit(1);
+          }
+        } else {
+          fprintf(stderr, "defile: specification filename `%s' is not a valid "
+              "value\n"
               "Try `defile --help' for more information.\n", argument[j].value);
           exit(1);
         }
@@ -751,8 +839,12 @@ int main (int argc, char** argv)
     exit(1);
   }
 
+  /* Attempt to Open the Specification file and read the channel lists */
+  ReconstructChannelLists();
+
   /* Make the Channel Struct */
   MakeAddressLookups();
+
 
   printf("Frame size: %i bytes\n", BiPhaseFrameSize);
 

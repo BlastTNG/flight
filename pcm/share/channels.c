@@ -47,7 +47,7 @@ unsigned short TxFrameWords[2];
 unsigned short TxFrameSize[2];
 unsigned short slowsPerBi0Frame;
 unsigned short slowCount[2] = {0, 0};
-unsigned short slowsPerBusFrame[2];
+unsigned short slowsPerBusFrame[2] = {0, 0};
 unsigned short fastsPerBusFrame[2] = {FAST_OFFSET, 1};
 
 #ifdef __MCP__
@@ -80,6 +80,8 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   FREADORWRITE(&ccNarrowFast, sizeof(unsigned short), 1, fp);
 
 #ifndef __MCP__
+  int bus, i;
+
   /* Reallocate channel lists, if we're reading them */
   if ((WideSlowChannels = malloc(ccWideSlow * sizeof(struct ChannelStruct)))
       == NULL) {
@@ -101,6 +103,10 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
     perror("defile: unable to allocate heap");
     exit(1);
   }
+  ccSlow = ccNarrowSlow + ccWideSlow;
+  ccFast = ccNarrowFast + ccWideFast + N_FAST_BOLOS;
+  ccNoBolos = ccSlow + ccWideFast + ccNarrowFast;
+  ccTotal = ccFast + ccSlow;
 #endif
 
   FREADORWRITE(WideSlowChannels, sizeof(struct ChannelStruct), ccWideSlow, fp);
@@ -108,7 +114,32 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   FREADORWRITE(WideFastChannels, sizeof(struct ChannelStruct), ccWideFast, fp);
   FREADORWRITE(FastChannels, sizeof(struct ChannelStruct), ccNarrowFast, fp);
 
-  mprintf(MCP_INFO, "Wrote specification file.\n");
+#ifndef __MCP__
+  /* Calculate slowsPerBi0Frame */
+  for (i = 0; i < ccWideSlow; ++i) {
+    slowsPerBusFrame[WideSlowChannels[i].bus] += 2;
+  }
+
+  for (i = 0; i < ccNarrowSlow; ++i)
+    slowsPerBusFrame[SlowChannels[i].bus]++;
+
+  for (bus = 0; bus < 2; ++bus) {
+    slowsPerBusFrame[bus] = 1 + (slowsPerBusFrame[bus] - 1) / FAST_PER_SLOW;
+    TxFrameWords[bus] = fastsPerBusFrame[bus] + slowsPerBusFrame[bus];
+    TxFrameSize[bus] = TxFrameWords[bus] * 4;
+  }
+
+  slowsPerBi0Frame = slowsPerBusFrame[0] + slowsPerBusFrame[1];
+  BiPhaseFrameWords = FAST_OFFSET + ccFast + slowsPerBi0Frame + 1;
+  BiPhaseFrameSize = 2 * BiPhaseFrameWords;
+
+  mprintf(MCP_INFO, "Slow Channels Per Biphase Frame: %i\n", slowsPerBi0Frame);
+  mprintf(MCP_INFO, "Slow Channels Per Tx Frame: %i / %i\n",
+      slowsPerBusFrame[0],  slowsPerBusFrame[1]);
+
+#else
+  mputs(MCP_INFO, "Wrote specification file.\n");
+#endif
 }
 
 /************************************************************************/
@@ -299,6 +330,7 @@ void BBCAddressCheck(char* fields[64][64], char* name, int node, int addr)
   fields[node][addr] = name;
 }
 
+#ifdef __MCP__
 /* DoSanityChecks - run various sanity checks on the channel tables.  Also
  * compute useful parameters */
 void DoSanityChecks(void)
@@ -389,12 +421,10 @@ void DoSanityChecks(void)
 
   slowsPerBi0Frame = slowsPerBusFrame[0] + slowsPerBusFrame[1];
 
-
   mprintf(MCP_INFO, "All Checks Passed.\n");
   mprintf(MCP_INFO, "Slow Channels Per Biphase Frame: %i\n", slowsPerBi0Frame);
   mprintf(MCP_INFO, "Fast Channels Per Biphase Frame: %i\n", ccFast
       + FAST_OFFSET);
-#ifdef __MCP__
   mprintf(MCP_INFO, "Slow Channels Per Tx Frame: %i / %i\n",
       slowsPerBusFrame[0],  slowsPerBusFrame[1]);
   mprintf(MCP_INFO, "Fast Channels Per Tx Frame: %i / %i\n",
@@ -417,8 +447,8 @@ void DoSanityChecks(void)
       100. * BiPhaseFrameWords / BI0_FRAME_SIZE);
   if (BiPhaseFrameWords > BI0_FRAME_SIZE)
     mprintf(MCP_FATAL, "FATAL: Biphase frame too big.\n");
-#endif
 }
+#endif
 
 /* MakeAddressLookups - fills the nios and biphase address lookup tables */
 void MakeAddressLookups(void)
@@ -432,22 +462,30 @@ void MakeAddressLookups(void)
 
   MakeBoloTable();
 
+#ifdef __MCP__
   DoSanityChecks();
+#endif
 
   mprintf(MCP_INFO, "Generating Address Lookup Tables\n");
 
-  unsigned int BiPhaseAddr = FAST_OFFSET + slowsPerBi0Frame;
+  unsigned int BiPhaseAddr;
   unsigned int addr[2] = {
     FAST_OFFSET + slowsPerBusFrame[0],
     1 + slowsPerBusFrame[1]
   };
 
-  int slowTop[2] = {
+  const int slowTop[2] = {
+#ifdef __MCP__
     FAST_OFFSET + slowsPerBusFrame[0],
     1 + slowsPerBusFrame[1]
+#else
+    slowsPerBusFrame[0],
+    slowsPerBusFrame[1]
+#endif
   };
 
 #ifdef __MCP__
+  BiPhaseAddr = FAST_OFFSET + slowsPerBi0Frame;
   /* allocate the Nios address table */
   if ((NiosLookup = malloc(ccTotal * sizeof(struct NiosStruct)))
       == NULL)
@@ -461,8 +499,9 @@ void MakeAddressLookups(void)
   /* fill BiPhase Lookup with invalid data */
   memset(BiPhaseLookup, 0xff, BI0_TABLE_SIZE * sizeof(struct BiPhaseStruct));
 #else
+  BiPhaseAddr = 0;
   /* allocate the Defile address tables */
-  if ((FastChList = malloc(ccFast * sizeof(struct ChannelStruct)))
+  if ((FastChList = malloc((ccFast + ccWideFast) * sizeof(struct ChannelStruct)))
       == NULL) {
     perror("defile: Unable to malloc heap");
     exit(1);
@@ -485,9 +524,15 @@ void MakeAddressLookups(void)
 
   /* initialise slow channels */
   for (i = 0; i < FAST_PER_SLOW; ++i) {
+#ifdef __MCP__
     slowIndex[0][i] = FAST_OFFSET;
     slowIndex[1][i] = 1;
+#else
+    slowIndex[0][i] = 0;
+    slowIndex[1][i] = 0;
+#endif
   }
+
 #ifdef __MCP__
   for (i = 0; i < FAST_PER_SLOW * 2; ++i)
     NiosSpares[i] = -1;
@@ -515,10 +560,10 @@ void MakeAddressLookups(void)
       = slowIndex[bus][mplex] + 1 + bus * (slowsPerBusFrame[0] + FAST_OFFSET
           - 1);
 #else
-    SlowChList[slowIndex[bus][mplex] + bus * (slowsPerBusFrame[0]
-        + FAST_OFFSET - 1)][mplex] = WideSlowChannels[i];
-    SlowChList[slowIndex[bus][mplex] + 1 + bus * (slowsPerBusFrame[0]
-        + FAST_OFFSET - 1)][mplex] = EmptyChannel;
+    SlowChList[slowIndex[bus][mplex] + bus * slowsPerBusFrame[0]][mplex]
+      = WideSlowChannels[i];
+    SlowChList[slowIndex[bus][mplex] + 1 + bus * slowsPerBusFrame[0]][mplex]
+      = EmptyChannel;
 #endif
 
     slowIndex[bus][mplex] += 2;
@@ -527,12 +572,10 @@ void MakeAddressLookups(void)
   for (i = 0; i < ccNarrowSlow; ++i) {
     bus = SlowChannels[i].bus;
     mplex = 0;
-    while (slowIndex[bus][mplex] >= slowTop[bus]) {
-      if (++mplex >= FAST_PER_SLOW) {
+    while (slowIndex[bus][mplex] >= slowTop[bus])
+      if (++mplex >= FAST_PER_SLOW)
         mprintf(MCP_FATAL, "FATAL: Ran out of subframes while trying to "
             "insert slow channel %s\n", SlowChannels[i].field);
-      }
-    }
 
 #ifdef __MCP__
     NiosLookup[i + ccWideSlow] = SetNiosData(&SlowChannels[i],
@@ -542,8 +585,8 @@ void MakeAddressLookups(void)
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccWideSlow].bbcAddr)].channel
       = slowIndex[bus][mplex] + bus * (slowsPerBusFrame[0] + FAST_OFFSET - 1);
 #else
-    SlowChList[slowIndex[bus][mplex] + bus * (slowsPerBusFrame[0]
-        + FAST_OFFSET - 1)][mplex] = SlowChannels[i];
+    SlowChList[slowIndex[bus][mplex] + bus * slowsPerBusFrame[0]][mplex]
+      = SlowChannels[i];
 #endif
 
     slowIndex[bus][mplex]++;
@@ -562,13 +605,14 @@ void MakeAddressLookups(void)
           = slowIndex[bus][mplex] + bus * (slowsPerBusFrame[0]
               + FAST_OFFSET - 1);
         i = mplex * TxFrameWords[bus] + slowIndex[bus][mplex];
-        NiosSpares[spare_count++] = bus ? BBCPCI_WFRAME2_ADD(i)
+        NiosSpares[spare_count] = bus ? BBCPCI_WFRAME2_ADD(i)
           : BBCPCI_WFRAME1_ADD(i);
-        slowIndex[bus][mplex]++;
 #else
-        SlowChList[slowIndex[bus][mplex] + bus * (slowsPerBusFrame[0]
-            + FAST_OFFSET - 1)][mplex] = EmptyChannel;
+        SlowChList[slowIndex[bus][mplex] + bus * slowsPerBusFrame[0]][mplex]
+          = EmptyChannel;
 #endif
+        slowIndex[bus][mplex]++;
+        spare_count++;
       }
 
   mprintf(MCP_INFO, "Added %i spare slow channels.\n", spare_count);
