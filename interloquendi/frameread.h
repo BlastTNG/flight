@@ -17,8 +17,12 @@
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+#ifndef FRAMEREAD_H
+#define FRAMEREAD_H
 
 #define GPB_LEN (PATH_MAX * 4)
 #define FILENAME_LEN (PATH_MAX + NAME_MAX + 1)
 
 typedef unsigned int chunkindex_t;
+
+#endif
