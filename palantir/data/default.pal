@@ -506,10 +506,10 @@
   </MULTI>
   <MULTI caption="LN State" textstyle="oddrow">
     <DATUM src="LN_STATE">
-      <WORD value="2" caption="Error" textstyle="E_BIT"/>
+      <WORD value="3" caption="Error" textstyle="E_BIT"/>
       <WORD value="0" caption="No Limit" textstyle="P_BIT"/>
-      <WORD value="2" caption="Open" textstyle="W_BIT"/>
-      <WORD value="1" caption="Close" textstyle="OK_BIT"/>
+      <WORD value="1" caption="Open" textstyle="W_BIT"/>
+      <WORD value="2" caption="Closed" textstyle="OK_BIT"/>
     </DATUM>
   </MULTI>
   <MULTI caption="He" textstyle="oddrow">
@@ -528,8 +528,8 @@
     <DATUM src="LHE_STATE">
       <WORD value="3" caption="Error" textstyle="E_BIT"/>
       <WORD value="0" caption="No Limit" textstyle="P_BIT"/>
-      <WORD value="2" caption="Open" textstyle="W_BIT"/>
-      <WORD value="1" caption="Close" textstyle="OK_BIT"/>
+      <WORD value="1" caption="Open" textstyle="W_BIT"/>
+      <WORD value="2" caption="Close" textstyle="OK_BIT"/>
     </DATUM>
   </MULTI>
 </BOX>
