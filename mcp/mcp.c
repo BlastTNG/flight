@@ -662,12 +662,8 @@ int main(int argc, char *argv[]) {
   for (i = 0; i < FAST_PER_SLOW; ++i)
     slow_data[i] = balloc(fatal, slowsPerBi0Frame * sizeof(unsigned short));
 
-  CommandData.tdrssVeto = 0;
 #ifndef BOLOTEST
-  if (CommandData.tdrssVeto)
-    bputs(warning, "The TDRSS writer has been VETOed.");
-  else
-    pthread_create(&tdrss_id, NULL, (void*)&TDRSSWriter, NULL);
+  pthread_create(&tdrss_id, NULL, (void*)&TDRSSWriter, NULL);
 #endif
 
   /* Find out whether I'm frodo or sam */

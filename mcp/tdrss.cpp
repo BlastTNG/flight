@@ -916,12 +916,6 @@ void Alice::CompressionLoop() {
   filterdatasize = 1;
 
   for (;;) {
-    /* Abort if we have vetoed the TDRSS writer */
-    if (CommandData.tdrssVeto) {
-      bputs(warning, "TDRSS veto detected. Bailing on TDRSS thread.\n");
-      return;
-    }
-
     // Check for new AML file command written by mcp.
     if (GetCurrentAML()) {
 
@@ -958,26 +952,15 @@ void Alice::CompressionLoop() {
 
       // Wait until there exists enough data for this padding
       framepos = DataSource->NumFrames();
-      while (DataSource->NumFrames() < framepos + readleftpad + readrightpad) {
-        /* Abort if we have vetoed the TDRSS writer */
-        if (CommandData.tdrssVeto) {
-          bputs(warning, "TDRSS veto detected. Bailing on TDRSS thread.\n");
-          return;
-        }
+      while (DataSource->NumFrames() < framepos + readleftpad + readrightpad)
         usleep(1000);
-      }
+
       framepos += readleftpad + readrightpad;
     }
 
     // Wait until mcp has written numframes of data
-    while (DataSource->NumFrames() < framepos + numframes) {
-      /* Abort if we have vetoed the TDRSS writer */
-      if (CommandData.tdrssVeto) {
-        bputs(warning, "TDRSS veto detected. Bailing on TDRSS thread.\n");
-        return;
-      }
+    while (DataSource->NumFrames() < framepos + numframes)
       usleep(1000);
-    }
 
     // Start a new buffer for the downlink
 #ifdef USE_SMALL_LOG
@@ -1284,12 +1267,6 @@ void FrameBuffer::Update() {
   int j;
 
   while (1 == 1) {
-    /* Abort if we have vetoed the TDRSS writer */
-    if (CommandData.tdrssVeto) {
-      bputs(warning, "TDRSS veto detected. Bailing on update thread.\n");
-      return;
-    }
-
     usleep(1000);
     if (exitupdatethread) {
       exitupdatethread = false;

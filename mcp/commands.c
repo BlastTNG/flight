@@ -242,10 +242,6 @@ void SingleCommand (enum singleCommand command) {
     system("/sbin/halt");
   } else if (command == sync_adc)
     CommandData.ADC_sync_timeout = 0;
-  else if (command == tdrss_veto)
-    CommandData.tdrssVeto = 1;
-  else if (command == tdrss_allow)
-    CommandData.tdrssVeto = 0;
 
   else if (command == trim_to_isc)
     SetTrimToISC();
@@ -1350,8 +1346,6 @@ void InitCommandData() {
 
   CommandData.ISCState[0].shutdown = 0;
   CommandData.ISCState[1].shutdown = 0;
-
-  CommandData.tdrssVeto = 0;
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))

@@ -13,7 +13,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 94         /* total number of named single word cmds */
+#define N_SCOMMANDS 102        /* total number of named single word cmds */
 #define N_MCOMMANDS 67         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -36,15 +36,15 @@
 #define GR_VETO         0x00000040
 #define GR_EHEAT        0x00000080
 #define GR_CRYO_HEAT    0x00000100
-#define GR_GAIN         0x00000200
+#define GR_POWER        0x00000200
 #define GR_LOCK         0x00000400
 #define GR_CRYO_CONTROL 0x00000800
-#define GR_ISC_HOUSE    0x00001000
+#define GR_GAIN         0x00001000
 #define GR_ISC_PARAM    0x00002000
-#define GR_MISC         0x00004000
-#define GR_OSC_HOUSE    0x00008000
+#define GR_ISC_HOUSE    0x00004000
+#define GR_MISC         0x00008000
 #define GR_OSC_PARAM    0x00010000
-#define GR_UNUSED       0x00020000
+#define GR_OSC_HOUSE    0x00020000
 
 #define CONFIRM         0x80000000
 
@@ -67,7 +67,7 @@ enum singleCommand {
   isc_veto,         level_off,          level_on,         mag_allow,
   mag_veto,         outer_cool_off,     outer_cool_on,    osc_auto_focus,
   outer_spare_off,  outer_spare_on,     pin_in,           pot_valve_close,
-  pot_valve_off,    pot_valve_on,       tdrss_veto,       tdrss_allow,
+  pot_valve_off,    pot_valve_on,       ss_off,           ss_on,
   pot_valve_open,   balpump_up,         balpump_off,      balpump_on,
   balpump_down,     sprpump_fwd,        sprpump_off,      sprpump_on,
   sprpump_rev,      ramp,               reset_trims,      isc_save_images,
@@ -77,7 +77,9 @@ enum singleCommand {
   osc_shutdown,     osc_reboot,         osc_cam_cycle,    osc_pause,
   osc_abort,        osc_reconnect,      osc_save_images,  osc_discard_images,
   osc_full_screen,  force_el_on,        auto_jfetheat,    fridge_cycle,
-  analogue_gyros,   digital_gyros
+  analogue_gyros,   digital_gyros,      gps_off,          gps_on,
+  gyro_off,         gyro_on,            isc_off,          isc_on,
+  osc_off,          osc_on
 };
 
 struct scom {

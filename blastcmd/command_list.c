@@ -14,21 +14,34 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.25 $";
+const char command_list_serial[] = "$Revision: 2.26 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
   "Pointing Sensor Trims", "Cooling System",    "Cal Lamp",
   "Pointing Sensor Vetos", "Electronics Heat",  "Cryo Heat",
-  "Pointing Motor Gains",  "Inner Frame Lock",  "Cryo Control",
-  "ISC Housekeeping",      "ISC Parameters",    "Miscellaneous",
-  "OSC Housekeeping",      "OSC Parameters",    "Unused"
+  "Pointing Sensor Power", "Inner Frame Lock",  "Cryo Control",
+  "Pointing Motor Gains",  "ISC Parameters",    "ISC Housekeeping",
+  "Miscellaneous",         "OSC Parameters",    "OSC Housekeeping"
 };
 
 #define COMMAND(x) x, #x
 
 struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
+
+  {COMMAND(gps_off), "turn off the dGPS at the ACS", GR_POWER | CONFIRM},
+  {COMMAND(gps_on), "turn on the dGPS at the ACS", GR_POWER},
+  {COMMAND(gyro_off), "turn off the digital gyros at the ACS", GR_POWER
+    | CONFIRM},
+  {COMMAND(gyro_on), "turn on the digital gyros at the ACS", GR_POWER},
+  {COMMAND(isc_off), "turn off the ISC at the ACS", GR_POWER | CONFIRM},
+  {COMMAND(isc_on), "turn on the ISC at the ACS", GR_POWER},
+  {COMMAND(osc_off), "turn off the OSC at the ACS", GR_POWER | CONFIRM},
+  {COMMAND(osc_on), "turn on the OSC at the ACS", GR_POWER},
+  {COMMAND(ss_off), "turn off the Sun Sensor at the ACS", GR_POWER
+    | CONFIRM},
+  {COMMAND(ss_on), "turn on the Sun Sensor at the ACS", GR_POWER},
 
   {COMMAND(az_off), "disable az motors", GR_GAIN},
   {COMMAND(az_on),  "enable az motors",  GR_GAIN},
@@ -96,8 +109,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(xyzzy), "nothing happens here", GR_MISC},
   {COMMAND(sync_adc), "resync ADC Boards that require it", GR_MISC},
   {COMMAND(mcc_halt), "ask MCP to halt the MCC", GR_MISC | CONFIRM},
-  {COMMAND(tdrss_veto), "veto the TDRSS writer thread", GR_MISC | CONFIRM},
-  {COMMAND(tdrss_allow), "allow the TDRSS writer thread", GR_MISC},
 
   {COMMAND(balance_veto), "veto balance system", GR_BAL},
   {COMMAND(balance_allow), "unveto balance system", GR_BAL},
