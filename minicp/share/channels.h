@@ -78,9 +78,9 @@ extern "C" {
 #define ADU3_TO_DPS (1.0/DPS_TO_ADU3)
 
   /* Approximate gyro offsets - to get us close */
-#define GYRO1_OFFSET 25795.0
-#define GYRO2_OFFSET 25535.0
-#define GYRO3_OFFSET 25600.0
+#define GYRO1_OFFSET 25940.0
+#define GYRO2_OFFSET 25550.0
+#define GYRO3_OFFSET 25235.0
 
   /* The size of the rx and downlink frames */
 #define FRAME_WORDS \
