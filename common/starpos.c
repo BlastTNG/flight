@@ -382,7 +382,7 @@ void PlanetPos(double tt, int target, double *ra, double *dec) {
   int i, j;
   double g, t;
   double baryE[3], baryEdot[3], baryQ[3], baryS[3];
-  double tau, normP, normE, normQ, oldnormP;
+  double tau, normP, normE = 0, normQ, oldnormP;
   double P[3], E[3], Q[3];
   double p[3], e[3], q[3];
   double p_dot_q, e_dot_p, q_dot_e;
