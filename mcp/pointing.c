@@ -11,6 +11,7 @@
 #include <pthread.h>
 
 #include "pointing_struct.h"
+#include "lut.h"
 
 #define GY1_GAIN_ERROR 1.0407
 #define GY1_OFFSET (0.0075)
@@ -170,10 +171,12 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
 */
 /* Elevation encoder uncertainty: */
 void Pointing(){
-  double gy_roll, gy2, gy3, el_rad;
+  double gy_roll, gy2, gy3, el_rad, clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0;
   int i_dgpspos;
   int i_point_read;
+
+  static struct LutType elClinLut = {"/data/etc/clin_elev.lut",0,NULL,NULL,0};
   
   static double gy_roll_amp = 0.0;
   
@@ -200,6 +203,8 @@ void Pointing(){
 					  0, 0 // n_solutions, since_last
   };
 
+  if (elClinLut.n==0) LutInit(&elClinLut);
+  
   i_dgpspos = GETREADINDEX(dgpspos_index);
   i_point_read = GETREADINDEX(point_index);
 
@@ -241,6 +246,8 @@ void Pointing(){
 
   PointingData[point_index].el = EncEl.angle + EncEl.trim;
 
+  clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
+
   /*******************************/
   /**      do az solution      **/
   EvolveAzSolution(&NullAz,
@@ -248,7 +255,7 @@ void Pointing(){
 		   ACSData.gyro3 + PointingData[i_point_read].gy3_offset,
 		   PointingData[point_index].el,
 		   0.0, 0);
-
+  
   PointingData[point_index].az = NullAz.angle + NullAz.trim;
   PointingData[point_index].gy2_offset = NullAz.gy2_offset;
   PointingData[point_index].gy3_offset = NullAz.gy3_offset;

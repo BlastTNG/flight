@@ -6,8 +6,8 @@ ifeq ($(DEBUG), 1)
 endif
 
 OBJS = mcp.o tx.o commands.o ephemeris/creader/Source/ephem_read.o starpos.o \
-			 starfind.o pointing.o tx_struct.o dirfile.o geomag.o sched.o dgps.o \
-			 isc.o
+			 starfind.o pointing.o tx_struct.o dirfile.o \
+			geomag.o sched.o dgps.o isc.o lut.o
 
 all: mcp
 
@@ -53,7 +53,7 @@ starfind.o: starfind.c pointing_struct.h starpos.h ephem_read.h
 #	  -c -L/usr/X11R6/lib -L. -o $@ $< \
 #	  -liticonfig_g $(FL_LIBS) -lm -lc  starpos.o ephem_read.o
 
-pointing.o: pointing_struct.h pointing.c
+pointing.o: pointing_struct.h pointing.c lut.o
 	  $(CC) -c pointing.c
 
 dgps.o: dgps.c pointing_struct.h
@@ -61,6 +61,8 @@ dgps.o: dgps.c pointing_struct.h
 
 isc.o: isc.c pointing_struct.h isc_protocol.h
 	$(CC) -c isc.c
+
+lut.o: lut.c lut.h
 
 install: mcp
 	install -m 755 mcp /usr/local/bin

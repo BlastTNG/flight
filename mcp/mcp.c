@@ -205,11 +205,13 @@ void GetACS(unsigned short *Rxframe){
   static int i_GYRO2 = -1;
   static int i_GYRO3 = -1;
   static int i_enc_elev = -1;
+  static int i_clin_elev = -1;
   unsigned int rx_frame_index = 0;
   int i_ss;
 
   if (i_enc_elev == -1) {
     FastChIndex("enc_elev", &i_enc_elev);
+    FastChIndex("clin_elev", &i_clin_elev);
     FastChIndex("gyro1", &i_GYRO1);
     FastChIndex("gyro2", &i_GYRO2);
     FastChIndex("gyro3", &i_GYRO3);
@@ -234,6 +236,7 @@ void GetACS(unsigned short *Rxframe){
   ACSData.gyro1 = gyro1;
   ACSData.gyro2 = gyro2;
   ACSData.gyro3 = gyro3;
+  ACSData.clin_elev = (double)Rxframe[i_enc_elev];
 
 }
 

@@ -52,9 +52,10 @@ extern int vsc_index;
 struct ACSDataStruct {
   double mag_az;   // degrees
   double enc_elev; // degrees
-  double gyro1;    // deg/s I think
-  double gyro2;    // deg/s I think
-  double gyro3;    // deg/s I think
+  double clin_elev;// counts
+  double gyro1;    // deg/s
+  double gyro2;    // deg/s
+  double gyro3;    // deg/s
   int mcp_frame;
   time_t t;
 };

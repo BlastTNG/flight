@@ -35,7 +35,7 @@
 #define FORCEINT   1
 #define U_MASK     2
 
-#define LOCK_OFFSET (0.95)
+#define LOCK_OFFSET (0.6)
 
  /* Seconds since 0TMG jan 1 1970 */
 #define SUN_JAN_6_1980 315964800L
