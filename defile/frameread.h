@@ -32,18 +32,42 @@
 
 typedef unsigned int chunkindex_t;
 
-int      GetNextChunk      ( char*       , int                                );
+unsigned long GetFrameFileSize(
+    const char*,
+    int
+    );
 
-void     PathSplit         ( const char* , const char** , const char**        );
+int GetNextChunk(
+    char*,
+    int
+    );
 
-void     PathSplit_r       ( const char* , char*        , char*               );
+void PathSplit_r(
+    const char*,
+    char*,
+    char*
+    );
 
-long int SetStartChunk     ( long int    , char*        , int                 );
+long int SetStartChunk(
+    long int,
+    char*,
+    int
+    );
 
-int      StaticSourcePart  ( char*       , const char*  , chunkindex_t* ,
-                             int                                              );
+int StaticSourcePart(
+    char*,
+    const char*,
+    chunkindex_t*,
+    int
+    );
 
-int      StreamToNextChunk ( int         , char*        , int           ,
-                             int*        , const char*  , char*               );
+int StreamToNextChunk(
+    int,
+    char*,
+    int,
+    int*,
+    const char*,
+    char*
+    );
 
 #endif

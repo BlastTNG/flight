@@ -1,13 +1,13 @@
 CC = gcc
-CFLAGS = -O3 -Wall
+CFLAGS = -O3 -Wall -D__BLASTD__
 
-OBJS = interloquendi.o channels.o quendi.o frameread.o
-HEADERS = quendi.h frameread.h channels.h bbc_pci.h
+OBJS = interloquendi.o channels.o quendi.o frameread.o blast.o
+HEADERS = quendi.h frameread.h channels.h bbc_pci.h blast.h
 
 all: interloquendi
 
 interloquendi: $(OBJS)
-	$(CC) interloquendi.o quendi.o -lwrap -o interloquendi
+	$(CC) $(OBJS) -lwrap -o interloquendi
 
 $(OBJS): $(HEADERS)
 

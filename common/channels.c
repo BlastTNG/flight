@@ -17,42 +17,27 @@
 #include <time.h>
 #include "channels.h"
 
-#ifndef __DEFILE__
+/* bputs functions */
+#include "blast.h"
+
+/* defile and blastd are inputters */
+#if (defined __DEFILE__ || defined __BLASTD__)
+#  define INPUTTER
+#endif
+
+#ifdef INPUTTER
 #  include "bbc_pci.h"
+#  include "frameread.h"
 #endif
 
-/* if compiling MCP load the real mprintf function prototypes, otherwise, just
- * make up a fake one */
-#ifdef __MCP__
-#  include "mcp.h"
-#elif defined __DEFILE__
-#  include "defile.h"
-#  define MCP_INFO DF_OUT
-#  define MCP_FATAL DF_TERM
-#  define mprintf dprintf
-#else
-#  define mputs(x,s) \
-     do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
-       puts(s); \
-       if (strcmp(#x, "MCP_FATAL") == 0) \
-         exit(1); \
-     } while (0)
-#  define mprintf(x, ...) \
-     do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
-       printf(__VA_ARGS__); \
-       if (strcmp(#x, "MCP_FATAL") == 0) \
-         exit(1); \
-     } while (0)
-#endif
-
-/* Be less verbose if we aren't running mcp */
+/* Be more verbose if we're running mcp */
 #ifdef __MCP__
 # define VERBOSE
 #endif
 
 unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
-#ifndef __DEFILE__
+#ifndef INPUTTER
 extern struct ChannelStruct WideSlowChannels[];
 extern struct ChannelStruct SlowChannels[];
 extern struct ChannelStruct WideFastChannels[];
@@ -89,7 +74,7 @@ unsigned short slowCount[2] = {0, 0};
 unsigned short slowsPerBusFrame[2] = {0, 0};
 unsigned short fastsPerBusFrame[2] = {SLOW_OFFSET, 1};
 
-#ifndef __DEFILE__
+#ifndef INPUTTER
 unsigned int NiosSpares[FAST_PER_SLOW * 2];
 unsigned int BBCSpares[FAST_PER_SLOW * 2];
 struct NiosStruct* NiosLookup;
@@ -105,7 +90,7 @@ struct ChannelStruct *FastChList;
 struct ChannelStruct BoloChannels[N_FAST_BOLOS];
 
 #define SPEC_VERSION "10"
-#ifndef __DEFILE__
+#ifndef INPUTTER
 #  define FREADORWRITE fwrite
 #  define SPECIFICATIONFILEFUNXION WriteSpecificationFile
 #else
@@ -118,16 +103,16 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
 
   FREADORWRITE(&versionMagic, 6, 1, fp);
 
-#ifdef __DEFILE__
+#ifdef INPUTTER
   /* check spec file version */
   if (versionMagic[0] != 'D' || versionMagic[1] != 'F'
       || versionMagic[2] != 'I')
-    dprintf(DF_TERM, "Spec file too old: version magic not found.\n"
+    berror(fatal, "Spec file too old: version magic not found.\n"
         "To read this file, you will need defile version 2.1\n");
   else {
     int version = atoi(&versionMagic[3]);
     if (version != 10)
-      dprintf(DF_TERM, "Unsupported Spec file version: %i.  Cannot continue.\n",
+      berror(fatal, "Unsupported Spec file version: %i.  Cannot continue.\n",
           version);
   }
 #endif
@@ -138,7 +123,7 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   FREADORWRITE(&ccNarrowFast, sizeof(unsigned short), 1, fp);
   FREADORWRITE(&ccDecom, sizeof(unsigned short), 1, fp);
 
-#ifdef __DEFILE__
+#ifdef INPUTTER
   int bus, i;
 
   slowsPerBusFrame[0] = slowsPerBusFrame[1] = 0;
@@ -146,24 +131,24 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   /* Reallocate channel lists, if we're reading them */
   if ((WideSlowChannels = realloc(WideSlowChannels,
           ccWideSlow * sizeof(struct ChannelStruct))) == NULL)
-    dperror(1, "unable to allocate heap");
+    berror(fatal, "unable to allocate heap");
 
   if ((SlowChannels = realloc(SlowChannels,
           ccNarrowSlow * sizeof(struct ChannelStruct))) == NULL)
-    dperror(1, "unable to allocate heap");
+    berror(fatal, "unable to allocate heap");
 
   if ((WideFastChannels = realloc(WideFastChannels,
           ccWideFast * sizeof(struct ChannelStruct))) == NULL)
-    dperror(1, "unable to allocate heap");
+    berror(fatal, "unable to allocate heap");
 
   if ((FastChannels = realloc(FastChannels,
           ccNarrowFast * sizeof(struct ChannelStruct))) == NULL)
-    dperror(1, "unable to allocate heap");
+    berror(fatal, "unable to allocate heap");
 
   if (ccDecom > 0)
     if ((DecomChannels = realloc(DecomChannels,
             ccDecom * sizeof(struct ChannelStruct))) == NULL)
-      dperror(1, "unable to allocate heap");
+      berror(fatal, "unable to allocate heap");
 
   ccSlow = ccNarrowSlow + ccWideSlow;
   ccFast = ccNarrowFast + ccWideFast + N_FAST_BOLOS + ccDecom;
@@ -178,7 +163,7 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   if (ccDecom > 0)
     FREADORWRITE(DecomChannels, sizeof(struct ChannelStruct), ccDecom, fp);
 
-#ifdef __DEFILE__
+#ifdef INPUTTER
   /* Calculate slowsPerBi0Frame */
   for (i = 0; i < ccWideSlow; ++i)
     slowsPerBusFrame[(int)WideSlowChannels[i].bus] += 2;
@@ -196,11 +181,11 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   DiskFrameWords = SLOW_OFFSET + ccFast + slowsPerBi0Frame + ccWideFast;
   DiskFrameSize = 2 * DiskFrameWords;
 
-  mprintf(MCP_INFO, "Slow Channels per BiPhase Frame: %i\n",
+  bprintf(info, "Slow Channels per BiPhase Frame: %i\n",
       slowsPerBi0Frame);
 
 #elif defined VERBOSE
-  mputs(MCP_INFO, "Wrote version " SPEC_VERSION " specification file.\n");
+  bputs(info, "Wrote version " SPEC_VERSION " specification file.\n");
 #endif
 }
 
@@ -216,7 +201,7 @@ void MakeBoloTable(void) {
   };
 
 #ifdef VERBOSE
-  mprintf(MCP_INFO, "Generating Bolometer Channel Table.\n");
+  bprintf(info, "Generating Bolometer Channel Table.\n");
 #endif
 
   for (i = 0; i < DAS_CARDS; ++i) {
@@ -242,7 +227,7 @@ void MakeBoloTable(void) {
   }
 }
 
-#ifndef __DEFILE__
+#ifndef INPUTTER
 struct NiosStruct SetNiosData(const struct ChannelStruct *channel, int addr,
     int fast, int wide)
 {
@@ -373,12 +358,12 @@ void DumpNiosFrame(void)
         if (n == 0) {
           fprintf(map, "**UNASSIGNED**\n");
           fclose(map);
-          mprintf(MCP_FATAL, "FATAL: unassigned address in Nios Address Table."
+          bprintf(fatal, "FATAL: unassigned address in Nios Address Table."
               " Consult Nios Map.\n");
         } else if (n != 1) {
           fprintf(map, "**COLLISION**\n");
           fclose(map);
-          mprintf(MCP_FATAL, "FATAL: collision in Nios Address Table "
+          bprintf(fatal, "FATAL: collision in Nios Address Table "
               "assignment. Consult Nios Map.\n");
         }
         fprintf(map, "\n");
@@ -480,7 +465,7 @@ void DumpNiosFrame(void)
 
   fclose(map);
 #ifdef VERBOSE
-  mprintf(MCP_INFO, "Wrote /data/etc/Nios.map.\n");
+  bprintf(info, "Wrote /data/etc/Nios.map.\n");
 #endif
 }
 #endif
@@ -493,20 +478,20 @@ void BBCAddressCheck(char** names, int nn, char* fields[64][64], char* name,
   int i;
 
   if (fields[node][addr])
-    mprintf(MCP_FATAL, "FATAL: Conflicting BBC address found for %s and %s"
+    bprintf(fatal, "FATAL: Conflicting BBC address found for %s and %s"
         " (node %i channel %i)\n", fields[node][addr], name, node, addr);
 
   if (nn != -1) {
     for (i = 0; i < nn; ++i)
       if (strcmp(names[i], name) == 0)
-        mprintf(MCP_FATAL, "FATAL: Duplicate channel name %s found\n", name);
+        bprintf(fatal, "FATAL: Duplicate channel name %s found\n", name);
     names[nn] = name;
   }
 
   fields[node][addr] = name;
 }
 
-#ifndef __DEFILE__
+#ifndef INPUTTER
 /* DoSanityChecks - run various sanity checks on the channel tables.  Also
  * compute useful parameters */
 void DoSanityChecks(void)
@@ -516,7 +501,7 @@ void DoSanityChecks(void)
   char* names[64 * 64];
 
 #ifdef VERBOSE
-  mprintf(MCP_INFO, "Running Sanity Checks on Channel Lists.\n");
+  bprintf(info, "Running Sanity Checks on Channel Lists.\n");
 #endif
 
   for (i = 0; i < 64; ++i)
@@ -527,7 +512,7 @@ void DoSanityChecks(void)
     slowCount[(int)WideSlowChannels[i].bus] += 2;
     if (WideSlowChannels[i].type != 'U' && WideSlowChannels[i].type != 'S'
         && WideSlowChannels[i].type != 'i')
-      mprintf(MCP_FATAL, "FATAL: Error in Wide Slow Channel List:\n"
+      bprintf(fatal, "FATAL: Error in Wide Slow Channel List:\n"
           "    %s does not have a valid wide type (%c)\n",
           WideSlowChannels[i].field, WideSlowChannels[i].type);
 
@@ -543,7 +528,7 @@ void DoSanityChecks(void)
   for (i = 0; SlowChannels[i].node != EOC_MARKER; ++i) {
     slowCount[(int)SlowChannels[i].bus]++;
     if (SlowChannels[i].type != 'u' && SlowChannels[i].type != 's')
-      mprintf(MCP_FATAL, "Error in Slow Channel List:\n"
+      bprintf(fatal, "Error in Slow Channel List:\n"
           "    %s does not have a valid type (%c)\n",
           SlowChannels[i].field, SlowChannels[i].type);
 
@@ -557,7 +542,7 @@ void DoSanityChecks(void)
     fastsPerBusFrame[(int)WideFastChannels[i].bus] += 2;
     if (WideFastChannels[i].type != 'U' && WideFastChannels[i].type != 'S'
         && WideFastChannels[i].type != 'i')
-      mprintf(MCP_FATAL, "FATAL: Error in Wide Fast Channel List:\n"
+      bprintf(fatal, "FATAL: Error in Wide Fast Channel List:\n"
           "    %s does not have a valid wide type (%c)\n",
           WideFastChannels[i].field, WideFastChannels[i].type);
 
@@ -573,7 +558,7 @@ void DoSanityChecks(void)
   for (i = 0; FastChannels[i].node != EOC_MARKER; ++i) {
     fastsPerBusFrame[(int)FastChannels[i].bus]++;
     if (FastChannels[i].type != 'u' && FastChannels[i].type != 's')
-      mprintf(MCP_FATAL, "Error in Fast Channel List:\n"
+      bprintf(fatal, "Error in Fast Channel List:\n"
           "    %s does not have a valid type (%c)\n",
           FastChannels[i].field, FastChannels[i].type);
 
@@ -625,35 +610,32 @@ void DoSanityChecks(void)
   BiPhaseFrameSize = BiPhaseFrameWords * 2;
 
 #ifdef VERBOSE
-  mprintf(MCP_INFO, "All Checks Passed.\n");
-  mprintf(MCP_INFO, "Slow Channels Per Biphase Frame: %i\n", slowsPerBi0Frame);
-  mprintf(MCP_INFO, "Fast Channels Per Biphase Frame: %i\n", ccFast
-      + SLOW_OFFSET);
-  mprintf(MCP_INFO, "Slow Channels Per Tx Frame: %i / %i\n",
-      slowsPerBusFrame[0],  slowsPerBusFrame[1]);
-  mprintf(MCP_INFO, "Fast Channels Per Tx Frame: %i / %i\n",
-      fastsPerBusFrame[0],  fastsPerBusFrame[1]);
+  bprintf(info, "All Checks Passed.\n");
+  bprintf(info, "Slow Channels Per Biphase Frame: %i\n", slowsPerBi0Frame);
+  bprintf(info, "Fast Channels Per Biphase Frame: %i\n", ccFast + SLOW_OFFSET);
+  bprintf(info, "Slow Channels Per Tx Frame: %i / %i\n", slowsPerBusFrame[0],
+      slowsPerBusFrame[1]);
+  bprintf(info, "Fast Channels Per Tx Frame: %i / %i\n", fastsPerBusFrame[0],
+      fastsPerBusFrame[1]);
 #endif
 
   for (i = 0; i < 2; ++i) {
 #ifdef VERBOSE
-    mprintf(MCP_INFO,
-        "BBC Bus %i: Frame Bytes: %4i  Allowed: %4i (%.2f%% full)\n", i,
-        4 * TxFrameWords[i], 4 * BBC_FRAME_SIZE,
+    bprintf(info, "BBC Bus %i: Frame Bytes: %4i  Allowed: %4i (%.2f%% full)\n",
+        i, 4 * TxFrameWords[i], 4 * BBC_FRAME_SIZE,
         100. * TxFrameWords[i] / BBC_FRAME_SIZE);
 #endif
     if (TxFrameWords[i] > BBC_FRAME_SIZE)
-      mprintf(MCP_FATAL, "FATAL: BBC Bus %i frame too big.\n", i);
+      bprintf(info, "FATAL: BBC Bus %i frame too big.\n", i);
   }
 
 #ifdef VERBOSE
-  mprintf(MCP_INFO,
-      " BiPhase : Frame Bytes: %4i  Allowed: %4i (%.2f%% full)\n",
+  bprintf(info, " BiPhase : Frame Bytes: %4i  Allowed: %4i (%.2f%% full)\n",
       2 * BiPhaseFrameWords, 2 * BI0_FRAME_SIZE,
       100. * BiPhaseFrameWords / BI0_FRAME_SIZE);
 #endif
   if (BiPhaseFrameWords > BI0_FRAME_SIZE)
-    mprintf(MCP_FATAL, "FATAL: Biphase frame too big.\n");
+    bprintf(info, "FATAL: Biphase frame too big.\n");
 }
 #endif
 
@@ -663,18 +645,18 @@ void MakeAddressLookups(void)
   int i, mplex, bus, spare_count;
   int slowIndex[2][FAST_PER_SLOW];
 
-#ifdef __DEFILE__
+#ifdef INPUTTER
   struct ChannelStruct EmptyChannel = {"", 'w', -1, -1, -1, 1, 1};
 #endif
 
   MakeBoloTable();
 
-#ifndef __DEFILE__
+#ifndef INPUTTER
   DoSanityChecks();
 #endif
 
 #ifdef VERBOSE
-  mprintf(MCP_INFO, "Generating Address Lookup Tables\n");
+  bprintf(info, "Generating Address Lookup Tables\n");
 #endif
 
   unsigned int BiPhaseAddr;
@@ -684,7 +666,7 @@ void MakeAddressLookups(void)
   };
 
   const int slowTop[2] = {
-#ifndef __DEFILE__
+#ifndef INPUTTER
     SLOW_OFFSET + slowsPerBusFrame[0],
     1 + slowsPerBusFrame[1]
 #else
@@ -693,17 +675,17 @@ void MakeAddressLookups(void)
 #endif
   };
 
-#ifndef __DEFILE__
+#ifndef INPUTTER
   BiPhaseAddr = SLOW_OFFSET + slowsPerBi0Frame;
   /* allocate the Nios address table */
   if ((NiosLookup = malloc(ccTotal * sizeof(struct NiosStruct)))
       == NULL)
-    mprintf(MCP_TFATAL, "Unable to malloc Nios Address Lookup Table.\n");
+    bprintf(tfatal, "Unable to malloc Nios Address Lookup Table.\n");
 
   /* allocate the BiPhase address table */
   if ((BiPhaseLookup = malloc(BI0_TABLE_SIZE * sizeof(struct BiPhaseStruct)))
       == NULL)
-    mprintf(MCP_TFATAL, "Unable to malloc Biphase Address Lookup Table.\n");
+    bprintf(tfatal, "Unable to malloc Biphase Address Lookup Table.\n");
 
   /* fill BiPhase Lookup with invalid data */
   memset(BiPhaseLookup, 0xff, BI0_TABLE_SIZE * sizeof(struct BiPhaseStruct));
@@ -713,21 +695,21 @@ void MakeAddressLookups(void)
   if ((FastChList = malloc((ccFast + ccWideFast)
           * sizeof(struct ChannelStruct)))
       == NULL)
-    dperror(1, "Unable to malloc heap");
+    berror(fatal, "Unable to malloc heap");
 
   if ((SlowChList = malloc(slowsPerBi0Frame * sizeof(struct ChannelStruct*)))
       == NULL)
-    dperror(1, "Unable to malloc heap");
+    berror(fatal, "Unable to malloc heap");
 
   for (i = 0; i < slowsPerBi0Frame; ++i)
     if ((SlowChList[i] = malloc(FAST_PER_SLOW * sizeof(struct ChannelStruct)))
         == NULL)
-      dperror(1, "Unable to malloc heap");
+      berror(fatal, "Unable to malloc heap");
 #endif
 
   /* initialise slow channels */
   for (i = 0; i < FAST_PER_SLOW; ++i) {
-#ifndef __DEFILE__
+#ifndef INPUTTER
     slowIndex[0][i] = SLOW_OFFSET;
     slowIndex[1][i] = 1;
 #else
@@ -736,7 +718,7 @@ void MakeAddressLookups(void)
 #endif
   }
 
-#ifndef __DEFILE__
+#ifndef INPUTTER
   for (i = 0; i < FAST_PER_SLOW * 2; ++i)
     NiosSpares[i] = -1;
 #endif
@@ -747,10 +729,10 @@ void MakeAddressLookups(void)
     mplex = 0;
     while (slowIndex[bus][mplex] + 1 >= slowTop[bus])
       if (++mplex >= FAST_PER_SLOW)
-        mprintf(MCP_FATAL, "FATAL: Ran out of subframes while trying to "
+        bprintf(fatal, "FATAL: Ran out of subframes while trying to "
             "insert wide slow channel %s\n", WideSlowChannels[i].field);
 
-#ifndef __DEFILE__
+#ifndef INPUTTER
     NiosLookup[i] = SetNiosData(&WideSlowChannels[i], mplex * TxFrameWords[bus]
         + slowIndex[bus][mplex], 0, 1);
 
@@ -778,10 +760,10 @@ void MakeAddressLookups(void)
     mplex = 0;
     while (slowIndex[bus][mplex] >= slowTop[bus])
       if (++mplex >= FAST_PER_SLOW)
-        mprintf(MCP_FATAL, "FATAL: Ran out of subframes while trying to "
+        bprintf(fatal, "FATAL: Ran out of subframes while trying to "
             "insert slow channel %s\n", SlowChannels[i].field);
 
-#ifndef __DEFILE__
+#ifndef INPUTTER
     NiosLookup[i + ccWideSlow] = SetNiosData(&SlowChannels[i],
         mplex * TxFrameWords[bus] + slowIndex[bus][mplex], 0, 0);
 
@@ -802,7 +784,7 @@ void MakeAddressLookups(void)
   for (bus = 0; bus < 2; ++bus)
     for (mplex = 0; mplex < FAST_PER_SLOW; ++mplex)
       while (slowIndex[bus][mplex] < slowTop[bus]) {
-#ifndef __DEFILE__ 
+#ifndef INPUTTER 
         BBCSpares[spare_count] = BBC_WRITE | BBC_NODE(SPARE) |
           BBC_CH(spare_count);
         BiPhaseLookup[BI0_MAGIC(BBCSpares[spare_count])].index = mplex;
@@ -821,11 +803,11 @@ void MakeAddressLookups(void)
       }
 
 #ifdef VERBOSE
-  mprintf(MCP_INFO, "Added %i spare slow channels.\n", spare_count);
+  bprintf(info, "Added %i spare slow channels.\n", spare_count);
 #endif
 
   for (i = 0; i < ccNarrowFast; ++i) {
-#ifndef __DEFILE__
+#ifndef INPUTTER
     NiosLookup[i + ccSlow + ccWideFast] = SetNiosData(&FastChannels[i],
         addr[(int)FastChannels[i].bus], 1, 0);
 
@@ -841,7 +823,7 @@ void MakeAddressLookups(void)
   }
 
   for (i = 0; i < ccWideFast; ++i) {
-#ifndef __DEFILE__
+#ifndef INPUTTER
     NiosLookup[i + ccSlow] = SetNiosData(&WideFastChannels[i],
         addr[(int)WideFastChannels[i].bus], 1, 1);
 
@@ -861,7 +843,7 @@ void MakeAddressLookups(void)
     addr[(int)WideFastChannels[i].bus] += 2;
   }
 
-#ifdef __DEFILE__
+#ifdef INPUTTER
   /* save the location of the first bolometer in the frame so that defile
    * can calculate the offsets properly when it goes to reconstruct the
    * bolometers */
@@ -869,7 +851,7 @@ void MakeAddressLookups(void)
 #endif
 
   for (i = 0; i < N_FAST_BOLOS; ++i) {
-#ifndef __DEFILE__
+#ifndef INPUTTER
     NiosLookup[i + ccNoBolos] = SetNiosData(&BoloChannels[i],
         addr[(int)BoloChannels[i].bus], 1, 0);
 
@@ -885,7 +867,7 @@ void MakeAddressLookups(void)
   }
 
   for (i = 0; i < ccDecom; ++i) {
-#ifndef __DEFILE__
+#ifndef INPUTTER
     NiosLookup[i + ccNoBolos + N_FAST_BOLOS] = SetNiosData(&DecomChannels[i],
         addr[(int)DecomChannels[i].bus], 1, 0);
 
@@ -900,7 +882,7 @@ void MakeAddressLookups(void)
     addr[(int)DecomChannels[i].bus]++;
   }
 
-#ifndef __DEFILE__
+#ifndef INPUTTER
   /* Add the channels that aren't in the channel list to the Biphase lookup */
 
   /* Bus 0 Frame Sync */
@@ -925,7 +907,7 @@ void MakeAddressLookups(void)
 #endif
 }
 
-#ifndef __DEFILE__
+#ifndef INPUTTER
 inline struct BiPhaseStruct* ExtractBiPhaseAddr(struct NiosStruct* niosAddr)
 {
   return &BiPhaseLookup[BI0_MAGIC(niosAddr->bbcAddr)];
@@ -948,7 +930,7 @@ struct NiosStruct* GetNiosAddr(const char* field) {
     if (strcmp(NiosLookup[i].field, field) == 0)
       return &NiosLookup[i];
 
-  mprintf(MCP_FATAL, "Nios Lookup for channel %s failed.\n", field);
+  bprintf(fatal, "Nios Lookup for channel %s failed.\n", field);
 
   return NULL;
 }

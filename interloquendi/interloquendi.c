@@ -37,6 +37,7 @@
 
 #include <arpa/inet.h>
 
+#include "frameread.h"
 #include "quendi.h"
 
 #define VERSION   "0.9.0"
@@ -47,19 +48,31 @@
 #define DEBUG
 
 struct {
-  void* value;
+  union {
+    char* as_string;
+    int   as_int;
+  } value;
   char type;
   const char name[48];
 } options[] = {
-  {NULL, 's', "Directory"},
-  {NULL, 's', "PidFile"},
-  {NULL, 's', "CurFile"},
-  {NULL, '\0', ""}
+  {{NULL}, 's', "Directory"},
+  {{NULL}, 's', "PidFile"},
+  {{NULL}, 's', "CurFile"},
+  {{NULL}, 'i', "SuffixLength"},
+  {{NULL}, '\0', ""}
 };
 
-#define CFG_DIRECTORY 0
-#define CFG_PID_FILE  1
-#define CFG_CUR_FILE  2
+#define CFG_DIRECTORY      0
+#define CFG_PID_FILE       1
+#define CFG_CUR_FILE       2
+#define CFG_SUFFIX_LENGTH  3
+
+struct data_connection {
+  int sock;
+  unsigned frame_size;
+  unsigned long pos;
+  char name[PATH_MAX];
+};
 
 /* for libwrap */
 int allow_severity = LOG_INFO;
@@ -70,7 +83,7 @@ char* GetCurFile(char *buffer, int buflen)
   FILE* stream = NULL;
   char* ptr;
   
-  if ((stream = fopen(options[CFG_CUR_FILE].value, "rt")) == NULL)
+  if ((stream = fopen(options[CFG_CUR_FILE].value.as_string, "rt")) == NULL)
     syslog(LOG_ERR, "can't open curfile: %m");
   else if (fgets(buffer, buflen, stream) == NULL) {
     syslog(LOG_ERR, "read error on curfile: %m");
@@ -94,9 +107,12 @@ void Connection(int csock)
   struct quendi_data QuendiData;
 
   char buffer[QUENDI_COMMAND_LENGTH];
-  int np, dp = -1;
+  int np;
   int n;
   char* params;
+  struct data_connection data;
+
+  data.sock = -1;
 
   /* tcp wrapper check */
   request_init(&req, RQ_DAEMON, "interloquendi", RQ_FILE, csock, 0);
@@ -121,7 +137,7 @@ void Connection(int csock)
     : inet_ntoa(addr.sin_addr);
   QuendiData.csock = csock;
   QuendiData.access_level = 0;
-  QuendiData.directory = (char*)options[CFG_DIRECTORY].value;
+  QuendiData.directory = (char*)options[CFG_DIRECTORY].value.as_string;
 
   quendi_server_init(&QuendiData);
 
@@ -136,7 +152,7 @@ void Connection(int csock)
           quendi_respond(QUENDR_SYNTAX_ERROR, "Unrecognised Command");
           break;
         case QUENDC_FORM:
-          if (dp < 1)
+          if (data.sock < 1)
             quendi_respond(QUENDR_PORT_NOT_OPEN, NULL);
           else {
             quendi_respond(QUENDR_CMD_NOT_IMPL, NULL);
@@ -152,9 +168,9 @@ void Connection(int csock)
           break;
         case QUENDC_OPEN:
           if (quendi_access_ok(1)) {
-            if (dp < 1) {
-              dp = quendi_dp_connect();
-              if (dp < 1)
+            if (data.sock < 1) {
+              data.sock = quendi_dp_connect();
+              if (data.sock < 1)
                 quendi_respond(QUENDR_OPEN_ERROR, NULL);
               else
                 quendi_respond(QUENDR_PORT_OPENED, NULL);
@@ -164,10 +180,12 @@ void Connection(int csock)
           break;
         case QUENDC_QNOW:
           if (quendi_access_ok(1)) {
-            if (GetCurFile(buffer, QUENDI_COMMAND_LENGTH) == NULL)
+            if (GetCurFile(data.name, QUENDI_COMMAND_LENGTH) == NULL)
               quendi_respond(QUENDR_NO_CUR_DATA, NULL);
             else
-              quendi_respond(QUENDR_DATA_STAGED, buffer);
+              quendi_stage_data(data.name,
+                  data.pos = GetFrameFileSize(data.name,
+                    options[CFG_SUFFIX_LENGTH].value.as_int) / data.frame_size);
           }
           break;
         case QUENDC_QUIT:
@@ -225,7 +243,7 @@ int MakeSock(void)
 
 void CleanUp(void)
 {
-  unlink(options[CFG_PID_FILE].value);
+  unlink(options[CFG_PID_FILE].value.as_string);
   closelog();
 }
 
@@ -258,7 +276,10 @@ void ReadConfig(FILE* stream)
         found = 1;
         switch (options[i].type) {
           case 's':
-            options[i].value = (void*)strdup(value);
+            options[i].value.as_string = strdup(value);
+            break;
+          case 'i':
+            options[i].value.as_int = atoi(value);
             break;
           default:
             printf("Unknown option type\n");
@@ -277,17 +298,19 @@ void LoadDefaultConfig(void)
   int i;
 
   for (i = 0; options[i].type; ++i)
-    if (options[i].value == NULL)
+    if (options[i].value.as_string == NULL)
       switch (i) {
         case CFG_DIRECTORY:
-          options[i].value = (void*)strdup("/mnt/decom/rawdir");
+          options[i].value.as_string = strdup("/mnt/decom/rawdir");
           break;
         case CFG_PID_FILE:
-          options[i].value = (void*)strdup(PID_FILE);
+          options[i].value.as_string = strdup(PID_FILE);
           break;
         case CFG_CUR_FILE:
-          options[i].value = (void*)strdup("/mnt/decom/etc/decom.cur");
+          options[i].value.as_string = strdup("/mnt/decom/etc/decom.cur");
           break;
+        case CFG_SUFFIX_LENGTH:
+          options[i].value.as_int = 3;
         default:
           syslog(LOG_WARNING, "No default value for option `%s'",
               options[i].name);

@@ -24,24 +24,13 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <stdarg.h>
 
-#ifdef __DEFILE__
-#  include "defile.h"
-#endif
-
+#include "blast.h"
 #include "frameread.h"
 #include "channels.h"
 
-void Croak(const char* string)
-{
-#ifdef __DEFILE__
-  dperror(1, string);
-#else
-  syslog(LOG_ERR, "%s: %m", string);
-  exit(1);
-#endif
-}
-
+/* deprecated, non-reentrant version of PathSplit_r */
 void PathSplit(const char* path, const char** dname, const char** bname)
 {
   static char static_base[NAME_MAX];
@@ -56,6 +45,7 @@ void PathSplit(const char* path, const char** dname, const char** bname)
     *bname = static_base;
 }
 
+/* splits path into dname and bname */
 void PathSplit_r(const char* path, char* dname, char* bname)
 {
   char the_base[NAME_MAX];
@@ -64,7 +54,7 @@ void PathSplit_r(const char* path, char* dname, char* bname)
   char* buffer;
 
   if ((buffer = strdup(path)) == NULL)
-    Croak("strdup");
+    berror(fatal, "strdup");
 
   for (ptr = buffer; *ptr != '\0'; ++ptr)
     if (*ptr == '/')
@@ -108,7 +98,7 @@ int StaticSourcePart(char* output, const char* source, chunkindex_t* value,
   long number = 0;
 
   if ((buffer = strdup(source)) == NULL)
-    Croak("strdup");
+    berror(fatal, "strdup");
 
   /* walk backwards through source looking for first non-hex digit */
   for (ptr = buffer + strlen(buffer) - 1; counter < sufflen && ptr != buffer;
@@ -134,6 +124,27 @@ int StaticSourcePart(char* output, const char* source, chunkindex_t* value,
     return counter;
 }
 
+/* Returns the length of a framefile */
+unsigned long GetFrameFileSize(const char* file, int sufflen)
+{
+  char *chunk = strdup(file);
+  struct stat chunk_stat;
+  unsigned long length = 0;
+
+  /* stat it to see if it exists */
+  if (stat(chunk, &chunk_stat) == 0) {
+    length = chunk_stat.st_size / DiskFrameSize;
+
+    while (GetNextChunk(chunk, sufflen))
+      if (stat(chunk, &chunk_stat) == 0)
+        length += chunk_stat.st_size / DiskFrameSize;
+  }
+
+  free(chunk);
+
+  return length;
+}
+
 /* Increments the chunk name.  Returns true on success. On failure returns
  * false and chunk isn't changed */
 int GetNextChunk(char* chunk, int sufflen)
@@ -146,10 +157,10 @@ int GetNextChunk(char* chunk, int sufflen)
 
   /* allocate our buffers */
   if ((buffer = (char*)malloc(FILENAME_LEN)) == NULL) 
-    Croak("malloc");
+    berror(fatal, "malloc");
 
   if ((newchunk = (char*)malloc(FILENAME_LEN)) == NULL)
-    Croak("malloc");
+    berror(fatal, "malloc");
 
   /* get current chunk name */
   s = StaticSourcePart(buffer, chunk, &chunknum, sufflen);
@@ -204,7 +215,7 @@ long int SetStartChunk(long int framenum, char* chunk, int sufflen)
     /* Stat the current chunk file to get its size */
     if (stat(chunk, &chunk_stat)) {
       snprintf(gpb, GPB_LEN, "stat `%s'", chunk);
-      Croak(gpb);
+      berror(fatal, gpb);
     }
 
     chunk_total = chunk_stat.st_size / DiskFrameSize;
@@ -220,8 +231,8 @@ long int SetStartChunk(long int framenum, char* chunk, int sufflen)
       dprintf(DF_TERM, "source file is smaller than destination.\n"
           "cannot resume.\n");
 #else
-      /* start at end of last chunk */
-      return chunk_total;
+    /* start at end of last chunk */
+    return chunk_total;
 #endif
 
     /* there is another chunk, decrement the total needed and try again */
@@ -242,17 +253,13 @@ int StreamToNextChunk(int keepalive, char* chunk, int sufflen, int *chunk_total,
       /* persistent: first check to see if we have more data in the file */
       if (stat(chunk, &chunk_stat)) {
         snprintf(gpb, GPB_LEN, "stat `%s'", chunk);
-        Croak(gpb);
+        berror(fatal, gpb);
       }
 
       /* new frame total */
       n = chunk_stat.st_size / DiskFrameSize;
       if (n < *chunk_total)
-#ifdef __DEFILE__
-        dprintf(DF_WARN, "warning: chunk `%s' has shrunk.\n", chunk);
-#else
-        syslog(LOG_WARNING, "chunk `%s' has shrunk.", chunk);
-#endif
+        bprintf(error, "chunk `%s' has shrunk.", chunk);
 
       if (n > *chunk_total) {
         *chunk_total = n;
@@ -268,7 +275,7 @@ int StreamToNextChunk(int keepalive, char* chunk, int sufflen, int *chunk_total,
       if (curfile_name != NULL) {
         if ((curfile = fopen(curfile_name, "r")) == NULL) {
           snprintf(gpb, GPB_LEN, "open `%s'", curfile_name);
-          Croak(gpb);
+          berror(fatal, gpb);
         }
 
         fgets(gpb, PATH_MAX, curfile);
