@@ -468,7 +468,7 @@ void FPrintDerived(FILE *fp) {
       "# Diodes\n"
       "T_opt_box_w	LINTERP	T_OPT_BOX_W	/data/etc/dt600.txt\n"
       "T_lhe_filt   LINTERP T_LHE_FILT    /data/etc/dt600.txt\n"
-      "T_vcs	LINTERP	T_VCS	/data/etc/dt602.txt\n"
+      "T_vcs	LINTERP	T_VCS	/data/etc/dt600.txt\n"
       "T_vcs_filt   LINTERP T_VCS_FILT    /data/etc/dt600.txt\n"
       "T_ln2   LINTERP T_LN2    /data/etc/dt600.txt\n"
       "T_ln2_filt   LINTERP T_LN2_FILT    /data/etc/dt600.txt\n"
