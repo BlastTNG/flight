@@ -1,6 +1,6 @@
 /***********************************************************************/
 /*                                                                     */
-/*   Definitions for using the BBCPCI device                              */
+/*   Definitions for using the BBCPCI device                           */
 /*                                                                     */
 /***********************************************************************/
 #include <linux/ioctl.h>
