@@ -8,3 +8,29 @@ sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+sleep 1
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+sleep 1
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+sleep 1
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+sleep 1
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+sleep 1
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+sleep 1
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+sleep 1
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+sleep 1
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+sleep 1
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+sleep 1
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+sleep 1
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+sleep 1
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+sleep 1
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
