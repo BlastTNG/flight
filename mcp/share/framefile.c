@@ -27,34 +27,6 @@ struct file_info {
 #define BUFFER_SIZE 3000 /* 30 seconds of frames */
 #define FRAMES_PER_FILE 90000 /* 15 minutes of data per file */
 
-char *StringToLower(char *s) {
-  int i, len;
-  static char ls[256];
-
-  len = strlen(s);
-  if (len > 255)
-    len = 255;
-
-  for (i = 0; i < len; i++)
-    ls[i] = tolower(s[i]);
-
-  ls[len] = '\0';
-  return(ls);
-}
-
-char *StringToUpper(char *s) {
-  int i, len;
-  static char us[256];
-
-  len = strlen(s);
-
-  for (i = 0; i < len; i++)
-    us[i] = toupper(s[i]);
-
-  us[len] = '\0';
-  return(us);
-}
-
 /* OpenNextChunk: closes the currently open chunk (if any), increments the
  * chunk index and opens creates the next chunk */
 void OpenNextChunk(void) {
