@@ -1,6 +1,7 @@
 include Makefile.config
 CC = gcc
 CFLAGS = -O3 -Wall -D__MCP__ $(BOLOTEST)
+LDFLAGS = -lpthread -lm
 
 OBJS = auxiliary.o commands.o das.o dgps.o framefile.o \
       ephemeris/creader/Source/ephem_read.o geomag.o isc.o lut.o mcp.o \
@@ -19,7 +20,6 @@ Makefile.config:
 	./configure
 
 mcp: $(OBJS)
-	$(CC) -o mcp -lpthread -lm $(OBJS)
 
 auxiliary.o: auxiliary.c tx_struct.h tx.h command_struct.h isc_protocol.h \
 	pointing_struct.h
