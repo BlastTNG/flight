@@ -1028,7 +1028,7 @@ void WriteFormatFile(int fd, time_t start_time)
   write(fd, line, strlen(line));
 
   for (i = 0; i < ccNarrowSlow; ++i) {
-    snprintf(line, 1024, "%-16s RAW    %c 1\n%-16s LINCOM 1 %-16s %12g %12g\n",
+    snprintf(line, 1024, "%-16s RAW    %c 1\n%-16s LINCOM 1 %-16s %.12e %.12e\n",
         FieldToLower(SlowChannels[i].field), SlowChannels[i].type,
         FieldToUpper(SlowChannels[i].field),
         FieldToLower(SlowChannels[i].field), SlowChannels[i].m_c2e,
@@ -1037,7 +1037,7 @@ void WriteFormatFile(int fd, time_t start_time)
   }
 
   for (i = 0; i < ccWideSlow; ++i) {
-    snprintf(line, 1024, "%-16s RAW    %c 1\n%-16s LINCOM 1 %-16s %12g %12g\n",
+    snprintf(line, 1024, "%-16s RAW    %c 1\n%-16s LINCOM 1 %-16s %.12e %.12e\n",
         FieldToLower(WideSlowChannels[i].field), WideSlowChannels[i].type,
         FieldToUpper(WideSlowChannels[i].field),
         FieldToLower(WideSlowChannels[i].field), WideSlowChannels[i].m_c2e,
@@ -1049,7 +1049,7 @@ void WriteFormatFile(int fd, time_t start_time)
   write(fd, line, strlen(line));
 
   for (i = 0; i < ccNarrowFast; i++) {
-    snprintf(line, 1024, "%-16s RAW    %c %d\n%-16s LINCOM 1 %-16s %12g %12g\n",
+    snprintf(line, 1024, "%-16s RAW    %c %d\n%-16s LINCOM 1 %-16s %.12e %.12e\n",
         FieldToLower(FastChannels[i].field), FastChannels[i].type,
         FAST_PER_SLOW, FieldToUpper(FastChannels[i].field),
         FieldToLower(FastChannels[i].field), FastChannels[i].m_c2e,
@@ -1058,7 +1058,7 @@ void WriteFormatFile(int fd, time_t start_time)
   }
 
   for (i = 0; i < ccWideFast; i++) {
-    snprintf(line, 1024, "%-16s RAW    %c %d\n%-16s LINCOM 1 %-16s %12g %12g\n",
+    snprintf(line, 1024, "%-16s RAW    %c %d\n%-16s LINCOM 1 %-16s %.12e %.12e\n",
         FieldToLower(WideFastChannels[i].field), WideFastChannels[i].type,
         FAST_PER_SLOW, FieldToUpper(WideFastChannels[i].field),
         FieldToLower(WideFastChannels[i].field), WideFastChannels[i].m_c2e,
@@ -1067,7 +1067,7 @@ void WriteFormatFile(int fd, time_t start_time)
   }
 
   for (i = 0; i < ccDecom; i++) {
-    snprintf(line, 1024, "%-16s RAW    %c %d\n%-16s LINCOM 1 %-16s %12g %12g\n",
+    snprintf(line, 1024, "%-16s RAW    %c %d\n%-16s LINCOM 1 %-16s %.12e %.12e\n",
         FieldToLower(DecomChannels[i].field), DecomChannels[i].type,
         FAST_PER_SLOW, FieldToUpper(DecomChannels[i].field),
         FieldToLower(DecomChannels[i].field), DecomChannels[i].m_c2e,
@@ -1083,7 +1083,7 @@ void WriteFormatFile(int fd, time_t start_time)
     for (j = 0; j < DAS_CHS; j++) {
       sprintf(field, "n%dc%d", i + 5, j);
       snprintf(line, 1024,
-          "%-16s RAW    U %d\n%-16s LINCOM 1 %-16s %12g %12g\n",
+          "%-16s RAW    U %d\n%-16s LINCOM 1 %-16s %.12e %.12e\n",
           FieldToLower(field), FAST_PER_SLOW, FieldToUpper(field),
           FieldToLower(field), LOCKIN_C2V, LOCKIN_OFFSET);
       write(fd, line, strlen(line));
@@ -1107,12 +1107,12 @@ void WriteFormatFile(int fd, time_t start_time)
           }
         break;
       case 'c': /* lincom */
-        snprintf(line, 1024, "%-16s LINCOM 1 %-16s %12g %12g\n",
+        snprintf(line, 1024, "%-16s LINCOM 1 %-16s %.12e %.12e\n",
             DerivedChannels[i].lincom.field, DerivedChannels[i].lincom.source,
             DerivedChannels[i].lincom.m_c2e, DerivedChannels[i].lincom.b_e2e);
         break;
       case '2': /* lincom2 */
-        snprintf(line, 1024, "%-16s LINCOM 2 %-16s %12g %12g %-16s %12g %12g\n",
+        snprintf(line, 1024, "%-16s LINCOM 2 %-16s %.12e %.12e %-16s %.12e %.12e\n",
             DerivedChannels[i].lincom2.field, DerivedChannels[i].lincom2.source,
             DerivedChannels[i].lincom2.m_c2e, DerivedChannels[i].lincom2.b_e2e,
             DerivedChannels[i].lincom2.source2,
