@@ -1,10 +1,10 @@
 include ../Makefile.config
 MOC = $(QT_DIR)/bin/moc
 CMDS = ./commands.h
-FLAGS = -I. -I$(QT_DIR)/include -g
+FLAGS = -I. -I$(QT_DIR)/include -I../include -g
 DEFINES = -DBLAST_CMD=\"$(BLAST_CMD)\" -DDATA_DIR=\"$(DATA_DIR)\" \
 					-DCUR_DIR=\"$(CUR_DIR)\"
-CPP = g++ $(FLAGS) $(DEFINES)
+CPP = g++ $(DEFINES)
 LIBS = -L../lib/ -L$(QT_DIR)/lib -lqt-mt -lRD
 
 all: narsil
