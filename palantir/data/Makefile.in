@@ -117,21 +117,20 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-dataetcdir = @DATA_ETC_DIR@
-dataetc_DATA = WMM.COF clin_elev.lut dt600.txt ephem.2000 he4_litre.txt \
-							 he4_percent.txt mag.lut rox102a19.txt rox102a20.txt \
-							 rox102a21.txt rox102a22.txt rox102a23.txt rox102a3.txt \
-							 rox102a4.txt rox102a5.txt rox102a6.txt rox102a7.txt sslut.dat \
-               b_amp1.txt b_amp2.txt b_amp3.txt
+dataetcpalantirdir = @DATA_ETC_DIR@/palantir
+dataetcpalantir_DATA = log.txt icon.gif palantir0.jpg palantir1.jpg \
+											 palantir2.jpg palantir3.jpg cryolab.pal default.pal \
+											 example.pal layout.pal projector.pal doh.wav eranu.wav \
+											 uvavu.wav cryo.png icon.gif
 
-EXTRA_DIST = ${dataetc_DATA}
-subdir = etc
+EXTRA_DIST = ${dataetcpalantir_DATA}
+subdir = data
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 DIST_SOURCES =
-DATA = $(dataetc_DATA)
+DATA = $(dataetcpalantir_DATA)
 
 DIST_COMMON = $(srcdir)/Makefile.in Makefile.am
 all: all-am
@@ -139,27 +138,27 @@ all: all-am
 .SUFFIXES:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  etc/Makefile
+	  $(AUTOMAKE) --gnu  data/Makefile
 Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)
 uninstall-info-am:
-dataetcDATA_INSTALL = $(INSTALL_DATA)
-install-dataetcDATA: $(dataetc_DATA)
+dataetcpalantirDATA_INSTALL = $(INSTALL_DATA)
+install-dataetcpalantirDATA: $(dataetcpalantir_DATA)
 	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(dataetcdir)
-	@list='$(dataetc_DATA)'; for p in $$list; do \
+	$(mkinstalldirs) $(DESTDIR)$(dataetcpalantirdir)
+	@list='$(dataetcpalantir_DATA)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " $(dataetcDATA_INSTALL) $$d$$p $(DESTDIR)$(dataetcdir)/$$f"; \
-	  $(dataetcDATA_INSTALL) $$d$$p $(DESTDIR)$(dataetcdir)/$$f; \
+	  echo " $(dataetcpalantirDATA_INSTALL) $$d$$p $(DESTDIR)$(dataetcpalantirdir)/$$f"; \
+	  $(dataetcpalantirDATA_INSTALL) $$d$$p $(DESTDIR)$(dataetcpalantirdir)/$$f; \
 	done
 
-uninstall-dataetcDATA:
+uninstall-dataetcpalantirDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(dataetc_DATA)'; for p in $$list; do \
+	@list='$(dataetcpalantir_DATA)'; for p in $$list; do \
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " rm -f $(DESTDIR)$(dataetcdir)/$$f"; \
-	  rm -f $(DESTDIR)$(dataetcdir)/$$f; \
+	  echo " rm -f $(DESTDIR)$(dataetcpalantirdir)/$$f"; \
+	  rm -f $(DESTDIR)$(dataetcpalantirdir)/$$f; \
 	done
 tags: TAGS
 TAGS:
@@ -204,7 +203,7 @@ check: check-am
 all-am: Makefile $(DATA)
 
 installdirs:
-	$(mkinstalldirs) $(DESTDIR)$(dataetcdir)
+	$(mkinstalldirs) $(DESTDIR)$(dataetcpalantirdir)
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -245,7 +244,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-dataetcDATA
+install-data-am: install-dataetcpalantirDATA
 
 install-exec-am:
 
@@ -271,16 +270,17 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-dataetcDATA uninstall-info-am
+uninstall-am: uninstall-dataetcpalantirDATA uninstall-info-am
 
 .PHONY: all all-am check check-am clean clean-generic distclean \
 	distclean-generic distdir dvi dvi-am info info-am install \
-	install-am install-data install-data-am install-dataetcDATA \
-	install-exec install-exec-am install-info install-info-am \
-	install-man install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic pdf pdf-am ps ps-am uninstall \
-	uninstall-am uninstall-dataetcDATA uninstall-info-am
+	install-am install-data install-data-am \
+	install-dataetcpalantirDATA install-exec install-exec-am \
+	install-info install-info-am install-man install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
+	pdf-am ps ps-am uninstall uninstall-am \
+	uninstall-dataetcpalantirDATA uninstall-info-am
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
