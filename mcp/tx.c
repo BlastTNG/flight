@@ -34,6 +34,7 @@ double round(double x);
 /* in auxiliary.c */
 void ControlAuxMotors(unsigned short *RxFrame);
 void ControlGyroHeat(unsigned short *RxFrame);
+void CameraTrigger(int which);
 
 /* in das.c */
 void BiasControl(unsigned short* RxFrame);
@@ -774,6 +775,8 @@ void UpdateBBCFrame(unsigned short *RxFrame) {
   }
 #ifndef BOLOTEST
   ControlAuxMotors(RxFrame);
+  CameraTrigger(0); /* isc */
+  CameraTrigger(1); /* osc */
 #endif
   CryoControl();
 }
