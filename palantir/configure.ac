@@ -31,10 +31,10 @@ AC_PATH_X
 
 # Look for Qt
 AC_MSG_CHECKING([for Qt])
-if test "x$QT_INCLUDE_DIR" = "x" -o "x$QT_LIB_DIR" = x; then
+if test "x$QT_INCLUDE_DIR" = "x" -o "x$QT_LIB_DIR" = "x"; then
   QT_LIBS="qt-mt.so qt.so qt-mt.a qt.a qte-mt.so qte.so qte-mt.a qte.a"
   QT_ROOT="/usr/share/ /usr/lib/ /usr/include/ /usr/bin/ /usr/local/ /usr/local/share/ /usr/local/lib/ /usr/local/include/ /usr/local/bin/" 
-  QT_NAME="qt3.3 qt33 qt3.2 qt32 qt3.1 qt31 qt3 qt"
+  QT_NAME="qt-3.3 qt3.3 qt33 qt3.2 qt32 qt3.1 qt31 qt3 qt"
   for q in $QT_ROOT; do
     for i in $QT_NAME; do
       if test -f $q$i/qglobal.h -a "x$QT_INCLUDE_DIR" = "x"; then
@@ -46,20 +46,20 @@ if test "x$QT_INCLUDE_DIR" = "x" -o "x$QT_LIB_DIR" = x; then
       fi
 
       for z in $QT_LIBS; do
-        if test -f $q$i/lib$z -a "x$QT_LIB_DIR = x"; then
+        if test -f $q$i/lib$z -a "x$QT_LIB_DIR" = "x"; then
           QT_LIB_DIR=$q$i;
-        elif test -f $q$i/lib/lib$z -a "x$QT_LIB_DIR = x"; then
+        elif test -f $q$i/lib/lib$z -a "x$QT_LIB_DIR" = "x"; then
           QT_LIB_DIR=$q$i/lib;
-        elif test -f $q/lib$z -a "x$QT_LIB_DIR = x"; then
+        elif test -f $q/lib$z -a "x$QT_LIB_DIR" = "x"; then
           QT_LIB_DIR=$q;
         fi
       done
 
-      if test -f $q$i/moc -a "x$QT_BIN_DIR = x"; then
+      if test -f $q$i/moc -a "x$QT_BIN_DIR" = "x"; then
         QT_BIN_DIR=$q$i;
-      elif test -f $q$i/bin/moc -a "x$QT_BIN_DIR = x"; then
+      elif test -f $q$i/bin/moc -a "x$QT_BIN_DIR" = "x"; then
         QT_BIN_DIR=$q$i/bin;
-      elif test -f $q/moc -a "x$QT_BIN_DIR = x"; then
+      elif test -f $q/moc -a "x$QT_BIN_DIR" = "x"; then
         QT_BIN_DIR=$q;
       fi
     done
