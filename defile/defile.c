@@ -47,7 +47,7 @@
 
 #define SUFF_MAX sizeof(chunkindex_t)
 
-#define TC  (10.)  /* characteristic time (in seconds) */
+#define TC  (15.)  /* characteristic time (in seconds) */
 
 /* defaults */
 #define CONFIG_FILE ETC_DIR "/defile.conf"
@@ -1000,31 +1000,31 @@ int main (int argc, char** argv)
         gettimeofday(&now, &rc.tz);
         delta = (now.tv_sec - ri.last.tv_sec) + (now.tv_usec - ri.last.tv_usec)
           / 1000000.;
-        nf = (ri.wrote - ri.lw) / 1000.;
+        nf = (ri.wrote - ri.lw) / 20.;
         ri.last = now;
         ri.lw = ri.wrote;
-        fr = delta / TC * nf + (1 - delta / TC) * fr;
+        fr = nf / TC + fr * (1 - delta / TC);
         if (rc.quenya)
-          printf("R:[%i] W:[%i] %.*f kHz\r", ri.read, ri.wrote, 
-              (fr / delta > 100) ? 1 : (fr / delta > 10) ? 2 : 3, fr / delta);
+          printf("R:[%i] W:[%i] %.*f Hz\r", ri.read / 20, ri.wrote / 20, (fr
+                > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
         else 
-          printf("R:[%i of %i] W:[%i] %.*f kHz\r", ri.read, ri.old_total
-              + ri.chunk_total, ri.wrote, (fr / delta > 100) ? 1 : (fr / delta
-                > 10) ? 2 : 3, fr / delta);
+          printf("R:[%i of %i] W:[%i] %.*f Hz\r", ri.read / 20, (ri.old_total
+              + ri.chunk_total) / 20, ri.wrote / 20, (fr > 100) ? 1 : (fr > 10)
+              ? 2 : 3, fr);
         fflush(stdout);
       }
-      usleep(100000);
+      usleep(500000);
     } while (!ri.writer_done);
   pthread_join(read_thread, NULL);
   pthread_join(write_thread, NULL);
   if (!rc.silent) {
     if (rc.quenya)
-      bprintf(info, "R:[%i] W:[%i] %.*f kHz", ri.read, ri.wrote,
-          (fr / delta > 100) ? 1 : (fr / delta > 10) ? 2 : 3, fr / delta);
+      bprintf(info, "R:[%i] W:[%i] %.*f Hz", ri.read / 20, ri.wrote / 20,
+          (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
     else
-      bprintf(info, "R:[%i of %i] W:[%i] %.*f kHz", ri.read, ri.old_total
-          + ri.chunk_total, ri.wrote, (fr / delta > 100) ? 1 : (fr / delta
-            > 10) ? 2 : 3, fr / delta);
+      bprintf(info, "R:[%i of %i] W:[%i] %.*f Hz", ri.read / 20, (ri.old_total
+          + ri.chunk_total) / 20, ri.wrote / 20, (fr > 100) ? 1 : (fr > 10)
+          ? 2 : 3, fr);
   }
   return 0;
 }

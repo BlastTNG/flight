@@ -136,8 +136,8 @@ void FrameFileReader(void)
         }
       }
       n += remainder;
-      fullframes = n / DiskFrameSize;
-      remainder = n % DiskFrameSize;
+      fullframes = (remainder + n) / DiskFrameSize;
+      remainder = (remainder + n) % DiskFrameSize;
       frames_read += fullframes;
 
       for (i = 0; i < fullframes; ++i) {

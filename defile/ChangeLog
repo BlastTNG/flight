@@ -1,6 +1,13 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2004-12-09  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	Release defile-3.0.6
+
+	* reader.c (FrameFileReader): Fix partial frame read fixup code bug.
+	* defile.c (main): Reduce status line update rate to 2 Hz.  Report 5 Hz
+	frame rate
+
 2004-12-01  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	Release defile-3.0.5
 
