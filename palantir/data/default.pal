@@ -313,17 +313,103 @@
     <NUMBER caption="Error Code">
       <DATUM format="%.0f" src="ISC_ERROR" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="T Case">
+    <NUMBER caption="T Front Flange">
       <DATUM format="%.2f" src="ISC_TEMP1" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T Lens">
+    <NUMBER caption="T Heater Ring">
       <DATUM format="%.2f" src="ISC_TEMP2" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T Heater Ring">
+    <NUMBER caption="T Lens">
       <DATUM format="%.2f" src="ISC_TEMP3" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T ISC PC">
       <DATUM format="%.2f" src="ISC_TEMP4" extrema="temp"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="OSC" colour="#707" row="4" col="1">
+    <NUMBER caption="RA">
+      <DATUM format="%.4f" src="OSC_RA" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="DEC">
+      <DATUM format="%.4f" src="OSC_DEC" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Sigma">
+      <DATUM format="%.3f" src="OSC_RD_SIGMA" extrema="unknown"/>
+    </NUMBER>
+    <MULTI caption="State">
+      <DATUM src="OSC_STATE">
+        <WORD value="0" caption="Running" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Save" textstyle="OK_BIT"/>
+        <WORD value="2" caption="Paused" textstyle="W_BIT"/>
+        <WORD value="3" caption="Paused" textstyle="W_BIT"/>
+        <WORD value="4" caption="Abort" textstyle="W_BIT"/>
+        <WORD value="5" caption="Abort" textstyle="W_BIT"/>
+        <WORD value="6" caption="Abort" textstyle="W_BIT"/>
+        <WORD value="7" caption="Abort" textstyle="W_BIT"/>
+        <WORD value="8" caption="Auto Focus" textstyle="OK_BIT"/>
+        <WORD value="9" caption="Auto Focus" textstyle="OK_BIT"/>
+        <WORD value="10" caption="Auto Focus" textstyle="OK_BIT"/>
+        <WORD value="11" caption="Auto Focus" textstyle="OK_BIT"/>
+        <WORD value="12" caption="Abort" textstyle="W_BIT"/>
+        <WORD value="13" caption="Abort" textstyle="W_BIT"/>
+        <WORD value="14" caption="Abort" textstyle="W_BIT"/>
+        <WORD value="15" caption="Abort" textstyle="W_BIT"/>
+        <WORD value="32" caption="Shutdown" textstyle="E_BIT"/>
+        <WORD value="33" caption="Shutdown" textstyle="E_BIT"/>
+        <WORD value="34" caption="Shutdown" textstyle="E_BIT"/>
+        <WORD value="35" caption="Shutdown" textstyle="E_BIT"/>
+        <WORD value="36" caption="Shutdown" textstyle="E_BIT"/>
+        <WORD value="37" caption="Shutdown" textstyle="E_BIT"/>
+        <WORD value="38" caption="Shutdown" textstyle="E_BIT"/>
+        <WORD value="39" caption="Shutdown" textstyle="E_BIT"/>
+        <WORD value="40" caption="Shutdown" textstyle="E_BIT"/>
+        <WORD value="41" caption="Shutdown" textstyle="E_BIT"/>
+        <WORD value="42" caption="Shutdown" textstyle="E_BIT"/>
+        <WORD value="43" caption="Shutdown" textstyle="E_BIT"/>
+        <WORD value="44" caption="Shutdown" textstyle="E_BIT"/>
+        <WORD value="45" caption="Shutdown" textstyle="E_BIT"/>
+        <WORD value="46" caption="Shutdown" textstyle="E_BIT"/>
+        <WORD value="47" caption="Shutdown" textstyle="E_BIT"/>
+        <WORD value="64" caption="Reboot" textstyle="E_BIT"/>
+        <WORD value="65" caption="Reboot" textstyle="E_BIT"/>
+        <WORD value="66" caption="Reboot" textstyle="E_BIT"/>
+        <WORD value="67" caption="Reboot" textstyle="E_BIT"/>
+        <WORD value="68" caption="Reboot" textstyle="E_BIT"/>
+        <WORD value="69" caption="Reboot" textstyle="E_BIT"/>
+        <WORD value="70" caption="Reboot" textstyle="E_BIT"/>
+        <WORD value="71" caption="Reboot" textstyle="E_BIT"/>
+        <WORD value="72" caption="Reboot" textstyle="E_BIT"/>
+        <WORD value="73" caption="Reboot" textstyle="E_BIT"/>
+        <WORD value="74" caption="Reboot" textstyle="E_BIT"/>
+        <WORD value="75" caption="Reboot" textstyle="E_BIT"/>
+        <WORD value="76" caption="Reboot" textstyle="E_BIT"/>
+        <WORD value="77" caption="Reboot" textstyle="E_BIT"/>
+        <WORD value="78" caption="Reboot" textstyle="E_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="# blobs">
+      <DATUM format="%.0f" src="OSC_NBLOBS" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Frame #">
+      <DATUM format="%.0f" src="OSC_FRAMENUM" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Map Mean">
+      <DATUM format="%.0f" src="OSC_MAPMEAN" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Error Code">
+      <DATUM format="%.0f" src="OSC_ERROR" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="T Front Flange">
+      <DATUM format="%.2f" src="OSC_TEMP1" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="T Heater Ring">
+      <DATUM format="%.2f" src="OSC_TEMP2" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="T Lens">
+      <DATUM format="%.2f" src="OSC_TEMP3" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="T OSC PC">
+      <DATUM format="%.2f" src="OSC_TEMP4" extrema="temp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Balance/Lock" colour="#880000" row="2" col="3">
