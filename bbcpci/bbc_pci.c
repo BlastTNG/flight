@@ -309,6 +309,12 @@ static int bbc_ioctl(struct inode *inode, struct file *filp,
   case BBCPCI_IOC_READBUF_RP: /* Where the PC is about to read. */
     ret = readl(bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_RP);
     break;
+  case BBCPCI_IOC_BI0_FIONREAD:
+    ret = bi0_wfifo.n;
+    break;
+  case BBCPCI_IOC_BBC_FIONREAD:
+    ret = bbc_wfifo.n;
+    break;
   default:
     break;
   }
