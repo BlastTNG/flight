@@ -1,0 +1,8 @@
+#! /bin/csh
+
+while 1
+   sensors | awk '($1=="fan1:"){printf "%d ",$2}($1=="temp:"){printf "%.1f \n", $2}' > /data/rawdir/sensors.tmp
+   mv /data/rawdir/sensors.tmp /data/rawdir/sensors.dat
+   sleep 1
+end
+
