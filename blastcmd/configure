@@ -818,7 +818,7 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-data-etc=DIR     put auxiliary data in DIR /data/etc
+  --with-data-etc=DIR     put auxiliary data in DIR [/data/etc]
   --with-remote-host=HOST use HOST as the remote host for blastcmd-remote
                           [arwen]
   --with-remote-user=USER have blastcmd-remote log into the remote host as
