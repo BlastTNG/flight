@@ -112,8 +112,10 @@ int SetGyHeatSetpoint(double history, int age)
   else if (setpoint > CommandData.gyheat.max_set)
     setpoint = CommandData.gyheat.max_set;
 
-  if (setpoint != CommandData.gyheat.setpoint)
+  if (setpoint != CommandData.gyheat.setpoint) {
     age = 0;
+    CommandData.gyheat.setpoint = setpoint;
+  }
 
   return age;
 }
