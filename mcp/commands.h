@@ -1,6 +1,6 @@
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_NM_SCOMMANDS 72      /* total number of named single word cmds */
+#define N_NM_SCOMMANDS 73      /* total number of named single word cmds */
 #define N_SCOMMANDS N_NM_SCOMMANDS  /* total number of single word commands */
 #define N_MCOMMANDS 44         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
@@ -131,6 +131,8 @@ struct scom scommands[N_NM_SCOMMANDS] = {
     GR_LOCK},
 
   {"isc_run", "start automatic image capture (normal mode)", GR_ISC},
+  {"isc_shutdown", "shutdown ISC computer in prepratation for power cycle",
+    GR_ISC},
   {"pause", "pause image capture", GR_ISC},
   {"isc_abort", "abort current solution attempt", GR_ISC},
   {"no_bright_star", "cancel bright star mode", GR_ISC},

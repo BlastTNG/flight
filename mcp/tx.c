@@ -998,8 +998,10 @@ void SyncADC (int TxIndex, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
 
   int k, l;
 
-  if (ADC_sync_timeout++ >= 600)
+  if (ADC_sync_timeout >= 600)
     return;
+
+  ADC_sync_timeout++;
   
   /******** Obtain correct indexes the first time here ***********/
   if (syncCh == -1) {

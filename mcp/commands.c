@@ -42,7 +42,9 @@
 /* Seconds in a week */
 #define SEC_IN_WEEK  604800L
 
-void SetRaDec(double ra, double dec); // defined in pointing.c
+extern int ADC_sync_timeout;  /* tx.c */
+
+void SetRaDec(double ra, double dec); /* defined in pointing.c */
 void SetTrimToISC();
 void ClearTrim();
 
@@ -212,6 +214,9 @@ void SingleCommand (int command) {
     CommandData.pointing_mode.h = 0;
   }
 
+  else if (command == SIndex("sync_adc"))
+    ADC_sync_timeout = 0;
+
   else if (command == SIndex("trim_to_isc"))
     SetTrimToISC();
   else if (command == SIndex("reset"))
@@ -237,7 +242,6 @@ void SingleCommand (int command) {
     CommandData.use_elenc = 0;
   else if (command == SIndex("elclin_veto"))
     CommandData.use_elclin = 0;
-
 
   else if (command == SIndex("sun_allow"))       /* Un-veto sensors */
     CommandData.use_sun = 1;
@@ -357,6 +361,8 @@ void SingleCommand (int command) {
     /********* ISC Commanding  *************/
   } else if (command == SIndex("isc_run")) {
     CommandData.ISCState.pause = 0;
+  } else if (command == SIndex("isc_shutdown")) {
+    CommandData.ISCState.shutdown = 1;
   } else if (command == SIndex("pause")) {
     CommandData.ISCState.pause = 1;
   } else if (command == SIndex("isc_abort")) {
@@ -375,7 +381,7 @@ void SingleCommand (int command) {
     CommandData.old_ISC_focus = CommandData.ISCState.focus_pos;
     CommandData.ISCState.focus_pos = FOCUS_RANGE;
   } else {
-    return; // invalid command - no write or update
+    return; /* invalid command - no write or update */
   }
 
   i_point = GETREADINDEX(point_index);
@@ -451,7 +457,7 @@ void MultiCommand (int command, unsigned short *dataq) {
    * If the parameter is type 'i'     set CommandData using ivalues[i]
    * If the parameter is type 'f'/'l' set CommandData using rvalues[i]
    */
-  if (0) { // allow easy re-arranging
+  if (0) { /* allow easy re-arranging */
 
     /***************************************/
     /********** Pointing Mode **************/
@@ -661,7 +667,7 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.ISCState.rot_tol = rvalues[3] * DEG2RAD;
 
   } else {
-    return; // invalid command - don't update
+    return; /* invalid command - don't update */
   }
 
   i_point = GETREADINDEX(point_index);
@@ -676,7 +682,7 @@ void GPSPosition (unsigned char *indata) {
   /* Send new information to CommandData */
 
   SIPData.GPSpos.lon = -ParseGPS(indata);
-  SIPData.GPSpos.lat = ParseGPS(indata + 4); // sip sends east lon
+  SIPData.GPSpos.lat = ParseGPS(indata + 4); /* sip sends east lon */
   SIPData.GPSpos.alt = ParseGPS(indata + 8);
   SIPData.GPSstatus1 = *(indata + 12);
   SIPData.GPSstatus2 = *(indata + 13);
@@ -739,7 +745,7 @@ void MKSAltitude (unsigned char *indata) {
 }
 
 
-// Send TDRSS Low Rate Packet
+/* Send TDRSS Low Rate Packet */
 
 void SendDownData(char tty_fd) {
   unsigned char buffer[50], data[37];
@@ -754,26 +760,26 @@ void SendDownData(char tty_fd) {
   for (i = 0; i < N_SLOWDL; i++) {
     switch (SlowDLInfo[i].type) {
       case FORCEINT:
-        // Round value to an integer and try to fit it in numbits
+        /* Round value to an integer and try to fit it in numbits */
         if ((int)SlowDLInfo[i].value > (1 << (SlowDLInfo[i].numbits - 1)) - 1)
-          temp = 0;     // Indicates value was too big
+          temp = 0;     /* Indicates value was too big */
         else if ((int)SlowDLInfo[i].value < -1 * ((1 << 
                 (SlowDLInfo[i].numbits - 1)) - 2))
-          temp = 1;     // Indicates value was too small
+          temp = 1;     /* Indicates value was too small */
         else
           temp = (int)SlowDLInfo[i].value + (1 << (SlowDLInfo[i].numbits - 1));
         numbits = SlowDLInfo[i].numbits;
         break;
 
       case U_MASK:
-        // Simply take the bottom numbits from the unsigned number
+        /* Simply take the bottom numbits from the unsigned number */
         temp = ((int)(SlowDLInfo[i].value)) & ((1 << SlowDLInfo[i].numbits) - 
             1);
         numbits = SlowDLInfo[i].numbits;
         break;
 
       case TAKEBIT:
-        // Intended for bitfields:  get the value of bit number numbit
+        /* Intended for bitfields:  get the value of bit number numbit */
         temp = (((int)(SlowDLInfo[i].value)) >> (SlowDLInfo[i].numbits - 1))
           & 0x01;
         numbits = 1;
@@ -898,7 +904,7 @@ void WatchFIFO () {
       mcommand = -1;
     }
 
-    // Relinquish control of memory
+    /* Relinquish control of memory */
     pthread_mutex_unlock(&mutex);
 
   }
@@ -947,7 +953,7 @@ void WatchPort (void* parameter) {
       usleep(10000); /* sleep for 10ms */
     }
     
-    // Take control of memory
+    /* Take control of memory */
     pthread_mutex_lock(&mutex);
 
     /* Process data */
@@ -1115,7 +1121,7 @@ void WatchPort (void* parameter) {
         }
     }
 
-    // Relinquish control of memory
+    /* Relinquish control of memory */
     pthread_mutex_unlock(&mutex);
   }
 }
@@ -1205,7 +1211,7 @@ void InitCommandData() {
 
   CommandData.pivot_gain.SP = 2000;
   CommandData.pivot_gain.P = 200;
-  CommandData.pivot_gain.D = 18;  //unused
+  CommandData.pivot_gain.D = 18;  /*unused */
 
   CommandData.t_gybox_setpoint = 30.0;
   CommandData.gy_heat_gain.P = 10;
