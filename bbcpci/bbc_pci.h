@@ -16,11 +16,19 @@
 #define BBCPCI_IOC_VERSION  _IO(BBCPCI_IOC_MAGIC, 2)
 #define BBCPCI_IOC_COUNTER  _IO(BBCPCI_IOC_MAGIC, 3)
 #define BBCPCI_IOC_SECRET   _IOR(BBCPCI_IOC_MAGIC, 4, unsigned char)
+#define BBCPCI_IOC_JIFFIES  _IO(BBCPCI_IOC_MAGIC, 5)
+#define BBCPCI_IOC_WRITEBUF _IO(BBCPCI_IOC_MAGIC, 6)
+#define BBCPCI_IOC_CBCOUNTER _IO(BBCPCI_IOC_MAGIC, 7)
+#define BBCPCI_IOC_COMREG   _IO(BBCPCI_IOC_MAGIC, 8)
+#define BBCPCI_IOC_READBUF_WP   _IO(BBCPCI_IOC_MAGIC, 9)
+#define BBCPCI_IOC_READBUF_RP   _IO(BBCPCI_IOC_MAGIC, 10)
+#define BBCPCI_IOC_WRITEBUF_N   _IO(BBCPCI_IOC_MAGIC, 11)
 
 #define SIZE_UINT           sizeof(unsigned int)
 
 #define ADD_WRITE_BUF_P     0x01 * SIZE_UINT
 #define ADD_IR_WRITE_BUF    0x40
+#define ADD_IR_WRITE_PRE    0x36
 #define IR_WRITE_BUF_SIZE   0x100
 #define ADD_COMREG          0x03 * SIZE_UINT
 #define ADD_VERSION         0x00 * SIZE_UINT
@@ -44,10 +52,10 @@
 #define COMREG_SYNC     0x00000002  /* Clear read buffers and start frame */
 
 /* The BBus bitfield looks like:
- * 1      1       1 
+ * 1      1       1
  * F      8       0       8       0
  * fwsnnnnnnrccccccdddddddddddddddd
- * 
+ *
  * where:
  *      d = data           (16 bits starting at bit  0)
  *      c = channel (0-63)  (6 bits starting at bit 16)
