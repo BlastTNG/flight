@@ -3,6 +3,9 @@
 if [ `hostname` = "ecosmo.physics.upenn.edu" ]
 then
   echo "BOLOTEST = -DBOLOTEST" > Makefile.config ;
+  echo "Configuring BOLOTEST version of mcp.  To compile flight version," ;
+  echo "  remove BOLOTEST line from Makefile.config" ;
 else
   touch Makefile.config ;
+  echo "Configuring flight version of mcp" ;
 fi;
