@@ -46,6 +46,7 @@
 #define ACS3  21, 0
 #define DECOM 22, 0
 #define ACS0  23, 0
+#define DLOOP 24, 1
 
 /* read and write channel 56 on all boards reserved for ADC Sync */
 struct ChannelStruct WideSlowChannels[] = {
@@ -290,7 +291,7 @@ struct ChannelStruct SlowChannels[] = {
   {"dgps_att_ok",  'w', LOOP1, 53,                1.0,             0.0, 'u'},
   {"dgps_att_index",'w',LOOP1, 54,                1.0,             0.0, 'u'},
   {"dgps_pos_index",'w',LOOP1, 55,                1.0,             0.0, 'u'},
-  {"sync",         'w', LOOP1, 56,                1.0,             0.0, 'u'},
+  {"sync0",        'w', LOOP1, 56,                1.0,             0.0, 'u'},
   {"dgps_n_sat",   'w', LOOP1, 57,                1.0,             0.0, 'u'},
   {"disk_free",    'w', LOOP1, 58,             1./250,             0.0, 'u'},
   {"p_mode",       'w', LOOP1, 59,                  1,             0.0, 'u'},
@@ -461,6 +462,8 @@ struct ChannelStruct SlowChannels[] = {
   {"gy_h_min",     'w', LOOP4, 42,    (100.0/32768.0),             0.0, 'u'},
   {"gy_h_max",     'w', LOOP4, 43,    (100.0/32768.0),             0.0, 'u'},
   {"gy_h_tc",      'w', LOOP4, 44,           1./6000.,             0.0, 'u'},
+
+  {"sync1",        'w', DLOOP, 56,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 

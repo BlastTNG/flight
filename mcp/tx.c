@@ -159,14 +159,14 @@ void WriteAux(void) {
 /*****************************************************************/
 #define NUM_STAT 18
 void SyncADC (void) {
-  static struct NiosStruct* syncAddr;
-  static struct BiPhaseStruct* syncReadAddr;
+  static struct NiosStruct* sync0Addr;
+  static struct NiosStruct* sync1Addr;
   static struct BiPhaseStruct* statusAddr[NUM_STAT];
   static int doingSync = 0;
   static int last_node = 0;
   char buffer[9];
 
-  int k, l;
+  int k, l, m;
 
   if (CommandData.ADC_sync_timeout >= 3000)
     return;
@@ -177,8 +177,8 @@ void SyncADC (void) {
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    syncAddr = GetNiosAddr("sync");
-    syncReadAddr = ExtractBiPhaseAddr(syncAddr);
+    sync0Addr = GetNiosAddr("sync0");
+    sync1Addr = GetNiosAddr("sync1");
 
     for (k = 0; k < NUM_STAT; ++k) {
       sprintf(buffer, "status%02i", k);
@@ -190,22 +190,31 @@ void SyncADC (void) {
   if (doingSync) {
     if (--doingSync == 0) {
       /* after timing out, turn off sync bit */
-      RawNiosWrite(syncAddr->niosAddr, BBC_WRITE | BBC_NODE(17) | BBC_CH(56),
+      RawNiosWrite(sync0Addr->niosAddr, BBC_WRITE | BBC_NODE(17) | BBC_CH(56),
+          NIOS_QUEUE);
+      RawNiosWrite(sync1Addr->niosAddr, BBC_WRITE | BBC_NODE(24) | BBC_CH(56),
           NIOS_QUEUE);
     }
   } else {
     /* if not, check to see if we need to sync a board */
-    for (k = 0; k < NUM_STAT; ++k) {
+    for (m = 0; m < NUM_STAT; ++m) {
+      k = (m + last_node) % NUM_STAT;
       /* read board status */
       if (slow_data[statusAddr[k]->index][statusAddr[k]->channel] == 0x0001) {
         /* board needs to be synced */
         doingSync = FAST_PER_SLOW * 2;
-        l = (k + last_node) % NUM_STAT;
-        l = (l == 0) ? 23 : (l == 17) ? 21 : l;
+        l = (k == 0) ? 23 : (k == 17) ? 21 : k;
         last_node = k;
-        bprintf(info, "ADC Sync board %i\n", l);
-        RawNiosWrite(syncAddr->niosAddr, BBC_WRITE | BBC_NODE(l) | BBC_CH(56) |
-            BBC_ADC_SYNC | 0xa5a3, NIOS_FLUSH);
+        bprintf(info, "ADC Sync node %i\n", l);
+        if (k >= 3 && k <= 16) {
+          /* Bus 1 Sync */
+          RawNiosWrite(sync1Addr->niosAddr, BBC_WRITE | BBC_NODE(l) | BBC_CH(56)
+              | BBC_ADC_SYNC | 0xa5a3, NIOS_FLUSH);
+        } else {
+          /* Bus 0 Sync */
+          RawNiosWrite(sync0Addr->niosAddr, BBC_WRITE | BBC_NODE(l) | BBC_CH(56)
+              | BBC_ADC_SYNC | 0xa5a3, NIOS_FLUSH);
+        }
         break;
       }
     }
