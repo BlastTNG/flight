@@ -173,6 +173,8 @@ void StoreData(int index, unsigned int* Txframe,
   static int gy2OffCh, gy2OffInd;
   static int gy3OffCh, gy3OffInd;
   static int gyRollAmpCh, gyRollAmpInd;
+  static int i_RA, j_RA;
+  static int i_DEC, j_DEC;  
   static int i_LAT, j_LAT;
   static int i_LON, j_LON;
   static int timeCh, timeInd;
@@ -285,6 +287,8 @@ void StoreData(int index, unsigned int* Txframe,
     SlowChIndex("gy2_offset", &gy2OffCh, &gy2OffInd);
     SlowChIndex("gy3_offset", &gy3OffCh, &gy3OffInd);
     SlowChIndex("gy_roll_amp", &gyRollAmpCh, &gyRollAmpInd);
+    SlowChIndex("ra", &i_RA, &j_RA);
+    SlowChIndex("dec", &i_DEC, &j_DEC);
     SlowChIndex("lat", &i_LAT, &j_LAT);
     SlowChIndex("lon", &i_LON, &j_LON);
     SlowChIndex("time", &timeCh, &timeInd);
@@ -402,6 +406,11 @@ void StoreData(int index, unsigned int* Txframe,
   WriteFast(i_az, (unsigned int)(PointingData[i_point].az * 65536.0/360.0));
   WriteFast(i_el, (unsigned int)(PointingData[i_point].el * 65536.0/360.0));
 
+  WriteSlow(i_RA, j_RA,
+	    (unsigned int)(PointingData[i_point].ra * 65536.0/24.0));
+  WriteSlow(i_DEC, j_DEC,
+	    (unsigned int)(PointingData[i_point].dec * 65536.0/360.0.0));
+	    
   WriteSlow(gy1OffCh, gy1OffInd,
       (signed int)(PointingData[i_point].gy1_offset * 32768.));
   WriteSlow(gy2OffCh, gy2OffInd,

@@ -130,6 +130,8 @@ extern struct SIPDataStruct SIPData;
 struct PointingDataStruct {
   double az;        // degrees
   double el;        // degrees
+  double ra;        // hours, aparent
+  double dec;       // degrees, aparent
   double gy1_offset;
   double gy2_offset;
   double gy3_offset;

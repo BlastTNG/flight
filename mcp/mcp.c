@@ -151,9 +151,9 @@ void GetACS(unsigned short *Rxframe){
   enc_elev = ((double)Rxframe[i_enc_elev] *
       (-360.0 / 65536.0) + ENC_ELEV_OFFSET);
 
-  gyro1 = (double)(Rxframe[i_GYRO1]-25794.0)*0.00091506980885;
-  gyro2 = (double)(Rxframe[i_GYRO2]-25535.0)*0.00091506980885;
-  gyro3 = (double)(Rxframe[i_GYRO3]-25600.0)*0.00091506980885;
+  gyro1 = (double)(Rxframe[i_GYRO1]-GYRO1_OFFSET)*ADU1_TO_DPS;
+  gyro2 = (double)(Rxframe[i_GYRO2]-GYRO2_OFFSET)*ADU2_TO_DPS;
+  gyro3 = (double)(Rxframe[i_GYRO3]-GYRO3_OFFSET)*ADU3_TO_DPS;
 
   bias = (double)(Rxframe[i_mag_bias]);
   x_comp = (double)(Rxframe[i_mag_x]) - (26303.0+16881.0)/2.0;

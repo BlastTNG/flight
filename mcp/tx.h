@@ -1,6 +1,5 @@
 #define FILETYPE 0x0001
 
-#define DPS2GYU (66.7 * 65536.0/4000.0) /* deg per sec to "gyro units" */
 #define EXPOSURE2I (65536. / 5000000.)  /* ISC exposure time to int */
 
 extern int frame_num;
@@ -9,10 +8,10 @@ void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
                  unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW],
                  unsigned short *Rxframe, int reset);
 
-/************************************************************************ 
- *                                                                      * 
- *   FrameWords: Returns the size of the rx and downlink frames         * 
- *                                                                      * 
+/************************************************************************
+ *                                                                      *
+ *   FrameWords: Returns the size of the rx and downlink frames         *
+ *                                                                      *
  ************************************************************************/
 #define FrameWords() \
       (1   /* FILETYPE */ \

@@ -51,11 +51,11 @@ double GetVElev() {
   /* correct offset and convert to Gyro Units */
   vel -= PointingData[i_point].gy1_offset;
 
-  vel *= DPS2GYU; 
+  vel *= DPS_TO_ADU1; 
 
-  /* Limit Maximim speed */
-  if (vel > DPS2GYU/2.0) vel = DPS2GYU/2.0;
-  if (vel < -DPS2GYU/2.0) vel = -DPS2GYU/2.0;
+  /* Limit Maximim speed to 0.5 dps*/
+  if (vel > 0.5 * DPS_TO_ADU1) vel = 0.5 * DPS_TO_ADU1;
+  if (vel < -0.5 * DPS_TO_ADU1) vel = -0.5 * DPS_TO_ADU1;
 
   /* limit Maximum acceleration */
   dvel = vel - last_vel;
@@ -94,7 +94,7 @@ int GetVAz() {
     PointingData[i_point].gy3_offset*sin(PointingData[i_point].el*M_PI/180.0);
   
   vel -= vel_offset;
-  vel *= DPS2GYU; /* convert to gyro units */
+  vel *= DPS_TO_ADU2; /* convert to gyro units FIXME: use elevation info*/
   
   /* Limit Maximim speed */
   if (vel > 2000) vel = 2000;

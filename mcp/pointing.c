@@ -31,6 +31,9 @@ extern int iscdata_index; // isc.c
 
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
                 double *el);
+void azel2radec(double *ra_out, double *dec_out,
+		double az, double el, time_t lst, double lat);
+
 double getlst(time_t t, double lon); // defined in starpos.c
 double GetJulian(time_t t);
 
@@ -540,6 +543,7 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
 void Pointing(){
   double R, cos_e, cos_l, cos_a;
   double sin_e, sin_l, sin_a;
+  double ra, dec;
   
   int ss_ok, mag_ok, dgps_ok;
   double ss_az, mag_az;
@@ -774,8 +778,15 @@ void Pointing(){
   PointingData[point_index].az = AzAtt.az;
   PointingData[point_index].gy2_offset = AzAtt.gy2_offset;
   PointingData[point_index].gy3_offset = AzAtt.gy3_offset;
-  
+
+  /** calculate ra/dec for convenience on the ground **/
+  azel2radec(&ra, &dec,
+	     PointingData[point_index].az,  PointingData[point_index].el,
+	     PointingData[point_index].lst, PointingData[point_index].lat);
+  PointingData[point_index].ra = ra;
+  PointingData[point_index].dec = dec;
   /** record solutions in pointing data **/
+  
   PointingData[point_index].enc_el = EncEl.angle;
   PointingData[point_index].enc_sigma = sqrt(EncEl.varience + EncEl.sys_var);
   PointingData[point_index].clin_el = ClinEl.angle;

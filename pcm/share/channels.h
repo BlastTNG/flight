@@ -63,4 +63,18 @@ void SlowChIndex(char*, int*, int*);
 #define VEL2I (65536.0/10.0)
 #define I2VEL (1.0/VEL2I)
 
+/* conversions between dps and a to d units for each gyro */
+#define DPS_TO_ADU1 (1092.8128/1.0407)
+#define ADU1_TO_DPS (1.0/DPS_TO_ADU1)
+#define DPS_TO_ADU2 (1092.8128/1.036)
+#define ADU2_TO_DPS (1.0/DPS_TO_ADU2)
+#define DPS_TO_ADU3 (1092.8128/1.036)
+#define ADU3_TO_DPS (1.0/DPS_TO_ADU3)
+
+/* Approximate gyro offsets - to get us close */
+#define GYRO1_OFFSET 25795.0
+#define GYRO2_OFFSET 25535.0
+#define GYRO3_OFFSET 25600.0
+
+
 #endif

@@ -114,9 +114,9 @@ void WatchDGPS() {
   char *inptr;
   int d;
   float s,m;
-  char cmd[500];
   struct tm ts;
-
+  int pos_ok;
+  
   int pid = getpid();
   fprintf(stderr, ">> WatchDGPS startup on pid %i\n", pid);
 
@@ -165,6 +165,7 @@ void WatchDGPS() {
   fprintf(fp,"$PASHS,3DF,OFS,-117.14,+00.00,+00.00\r\n"); // array offest p71
   fprintf(fp,"$PASHS,SAV,Y\r\n");
   /**********************************************/
+  fprintf(fp,"$PASHS,ELM,15\r\n"); // minimum elevation for sattelite p 53
   fprintf(fp,"$PASHS,3DF,FLT,N\r\n"); // no averaging filter
   fprintf(fp,"$PASHS,3DF,ANG,3\r\n"); // max array tilt p 73
   fprintf(fp,"$PASHS,NME,ALL,B,OFF\r\n"); // turn off all messages
@@ -175,9 +176,8 @@ void WatchDGPS() {
 
   while (1) {
     fgets(instr, 499, fp);
-    sscanf(instr,"$%5s,", cmd);
 
-    if (strcmp(cmd, "GPZDA")==0) {
+    if (strncmp(instr, "$GPZDA", 6)==0) { /* p 109 */
       sscanf(instr,"$GPZDA,%2d%2d%f,%d,%d,%d",&(ts.tm_hour),&(ts.tm_min),
           &s,&(ts.tm_mday),&(ts.tm_mon),&(ts.tm_year));
       ts.tm_sec = s;
@@ -187,7 +187,7 @@ void WatchDGPS() {
       ts.tm_mon--; /* Jan is 0 in struct tm.tm_mon, not 1 */
 
       DGPSTime = mktime(&ts)-timezone;
-    } else if (strcmp(cmd, "GPPAT")==0) { // position & attitude: Page 98
+    } else if (strncmp(instr, "$GPPAT",6)==0) { // position & attitude: Page 98
       inptr=instr+7;
 
       // Time field: skip it
@@ -223,7 +223,8 @@ void WatchDGPS() {
         DGPSAtt[dgpsatt_index].att_ok = 0;
       }
       dgpsatt_index = INC_INDEX(dgpsatt_index);
-    } else if (strcmp(cmd, "PASHR")==0) { // speed and position p99
+    } else if (strncmp(instr, "$PASHR,POS",10)==0) { // speed and position p99
+      pos_ok = 1;
       inptr=instr+7;
 
       // skip type
@@ -232,23 +233,34 @@ void WatchDGPS() {
 
       // # Sattelites
       inptr += GetField(inptr,outstr);
-      sscanf(outstr,"%d", &(DGPSPos[dgpspos_index].n_sat));
+      if (sscanf(outstr,"%d", &(DGPSPos[dgpspos_index].n_sat))!=1) {
+	pos_ok = 0;
+      } else if (DGPSPos[dgpspos_index].n_sat<4) {
+	pos_ok = 0;
+      }
 
       // skip time
       inptr += GetField(inptr,outstr);
 
       // Latitude
       inptr += GetField(inptr,outstr);
-      sscanf(outstr,"%2d%f", &d,&m);
-      DGPSPos[dgpspos_index].lat = (double)d + (double)m*(1.0/60.0);
+      if (sscanf(outstr,"%2d%f", &d,&m)!=2) {
+	pos_ok = 0;
+      } else {
+	DGPSPos[dgpspos_index].lat = (double)d + (double)m*(1.0/60.0);
+      }
+            
       // North/South
       inptr += GetField(inptr,outstr);
       if (outstr[0]=='S') DGPSPos[dgpspos_index].lat *=-1;
 
       // Longitude
       inptr += GetField(inptr,outstr);
-      sscanf(outstr,"%3d%f", &d,&m);
-      DGPSPos[dgpspos_index].lon = (double)d + (double)m*(1.0/60.0);
+      if (sscanf(outstr,"%3d%f", &d,&m)!=2) {
+	pos_ok = 0;
+      } else {
+	DGPSPos[dgpspos_index].lon = (double)d + (double)m*(1.0/60.0);
+      }
       // East/West
       inptr += GetField(inptr,outstr);
       if (outstr[0]=='E') DGPSPos[dgpspos_index].lon *=-1;

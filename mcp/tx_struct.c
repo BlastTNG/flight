@@ -143,7 +143,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"status16",     'r', 16, 57,                1.0,             0.0, 'u'},
     {"t_isc",        'r', 21, 25,           -0.00625,          136.45, 'u'},
     {"pch_clin_pyr", 'r', 21, 33,      4.0/5333.3333,       -4.*6.144, 'u'},
-    {"rll_clin_pyr", 'r', 21, 35,      4.0/5333.3333,       -4.*6.144, 'u'},
+    {"roll_clin_pyr", 'r', 21, 35,      4.0/5333.3333,       -4.*6.144, 'u'},
     {"t_clin_pyr",   'r', 21, 23,            -0.01875,          614.4, 'u'}
   },
   {
@@ -306,8 +306,8 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"t_of10",       'r',  2, 31,            -0.00625,          136.45, 'u'},
     {"isc_x_off",    'w', LOOPBAK2, 63,         I2DEG,             0.0, 'u'},
     {"isc_y_off",    'w', LOOPBAK3,  0,         I2DEG,             0.0, 'u'},
-    {"spare25",      'w', SPARE, 25,              1.0,             0.0, 'u'},
-    {"spare26",      'w', SPARE, 26,              1.0,             0.0, 'u'},
+    {"ra",           'w', LOOPBAK3,  1,  24.0/65536.0,             0.0, 'u'},
+    {"dec",          'w', LOOPBAK3,  2,         I2DEG,             0.0, 'u'},
     {"spare27",      'w', SPARE, 27,              1.0,             0.0, 'u'},
     {"spare28",      'w', SPARE, 28,              1.0,             0.0, 'u'},
     {"spare29",      'w', SPARE, 29,              1.0,             0.0, 'u'},
@@ -330,7 +330,7 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
   {"f_i_el",      'r',  1, 39, 1.0 / (0.01 * 10.0) * 4.096 / 65536.0,
                         -32768.0 * 1.0 / (0.01 * 10.0) * 4.096 / 65536.0, 'u'},
 
-  {"",             'r', 21, 25,               1.0,                    0.0, 'u'},
+  {"fspare",      'r', SPARE, 40,             1.0,                   0.0, 'u'},
   {"roll_clin_sip",'r', 21, 27,     4.0/5333.3333,              -4.*6.144, 'u'},
   {"pch_clin_sip", 'r', 21, 29,     4.0/5333.3333,              -4.*6.144, 'u'},
 
@@ -354,12 +354,12 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
   /* read channels from ACS1 */
   {"t_gybox",     'r',  1, 14, -9.5367431641e-08,                 136.45, 'U'},
   {"",            'r',  1, 15,               1.0,                    0.0, 'u'},
-  {"gyro2",       'r',  1, 22,  0.00091506980885, -25535.0*0.00091506980, 'u'},
-  {"raw_gy2",     'r',  1, 23,  0.00091506980885, -25747.0*0.00091506980, 'u'},
-  {"gyro3",       'r',  1, 24,  0.00091506980885, -25600.0*0.00091506980, 'u'},
-  {"raw_gy3",     'r',  1, 25,  0.00091506980885, -25804.0*0.00091506980, 'u'},
-  {"gyro1",       'r',  1, 26,  0.00091506980885, -25794.0*0.00091506980, 'u'},
-  {"raw_gy1",     'r',  1, 27,  0.00091506980885, -25800.0*0.00091506980, 'u'},
+  {"gyro2",       'r',  1, 22,    ADU2_TO_DPS, -GYRO2_OFFSET*ADU2_TO_DPS, 'u'},
+  {"raw_gy2",     'r',  1, 23,    ADU2_TO_DPS, -GYRO2_OFFSET*ADU2_TO_DPS, 'u'},
+  {"gyro3",       'r',  1, 24,    ADU3_TO_DPS, -GYRO3_OFFSET*ADU3_TO_DPS, 'u'},
+  {"raw_gy3",     'r',  1, 25,    ADU3_TO_DPS, -GYRO3_OFFSET*ADU3_TO_DPS, 'u'},
+  {"gyro1",       'r',  1, 26,    ADU1_TO_DPS, -GYRO1_OFFSET*ADU1_TO_DPS, 'u'},
+  {"raw_gy1",     'r',  1, 27,    ADU1_TO_DPS, -GYRO1_OFFSET*ADU1_TO_DPS, 'u'},
 
   {"piv_enc",     'r',  1, 59,      360.0/8192.0,                    0.0, 'u'},
   {"reac_enc",    'r',  1, 60,      360.0/4000.0,                    0.0, 'u'},
