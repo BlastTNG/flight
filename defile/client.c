@@ -287,7 +287,7 @@ void QuenyaClient(void)
 {
   unsigned short* InputBuffer[INPUT_BUF_SIZE];
   struct sigaction action;
-  int i, n, block_size, bytes_read;
+  int i, n, block_size = 0, bytes_read;
   unsigned long long block_count = 0;
   unsigned short crc;
   char buffer[2000];
@@ -344,9 +344,7 @@ void QuenyaClient(void)
       default:
         bprintf(fatal, "Unexpected response from server (DATA): %i\n", n);
     }
-    block_size = 0;
     bytes_read = 0;
-    printf("here\n\n");
 
     /* read the block */
     while (bytes_read < block_size * DiskFrameSize) {
@@ -365,6 +363,7 @@ void QuenyaClient(void)
     }
 
     sscanf(buffer, "0x%4hx Block CRC", &crc);
+    int oc = crc;
     crc -= CalculateCRC(CRC_SEED, InputBuffer[0], bytes_read);
 
     if (crc != 0) {
@@ -372,6 +371,7 @@ void QuenyaClient(void)
       strcpy(buffer, "RTBK\r\n");
       bprintf(err, "CRC checksum mismatch for block %lli.  Refetching block.\n",
           block_count);
+      printf("%04x, %04x\n", oc, oc - crc);
     } else {
       /* Defile block */
       for (i = 0; i < block_size; ++i) {
