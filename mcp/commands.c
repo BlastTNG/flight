@@ -1521,7 +1521,7 @@ void InitCommandData() {
 
   CommandData.Cryo.heliumLevel = 0;
   CommandData.Cryo.charcoalHeater = 0;
-  CommandData.Cryo.fridgeCycle = 0;
+  CommandData.Cryo.fridgeCycle = 1;
   CommandData.Cryo.coldPlate = 0;
   CommandData.Cryo.heatSwitch = 0;
   CommandData.Cryo.CryoSparePWM = 0;
