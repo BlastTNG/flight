@@ -76,6 +76,7 @@ void SetRaDec(double ra, double dec); /* defined in pointing.c */
 void SetTrimToSC(int);
 void ClearTrim();
 void AzElTrim(double az, double el);
+void NormalizeAngle(double *A);
 
 const char UnknownCommand[] = "Unknown Command";
 
@@ -230,6 +231,8 @@ const char* SName(enum singleCommand command) {
 void SingleCommand (enum singleCommand command) {
   int i_point;
 
+  i_point = GETREADINDEX(point_index);
+
   bprintf(info, "Single command: %d (%s)\n", command, SName(command));
 
   /* Update CommandData structure with new info */
@@ -243,6 +246,18 @@ void SingleCommand (enum singleCommand command) {
     CommandData.pointing_mode.w = 0;
     CommandData.pointing_mode.h = 0;
 
+  } else if (command == antisun) { /* turn antisolar (az-only) */
+    double sun_az = PointingData[i_point].sun_az + 180;
+    NormalizeAngle(&sun_az);
+
+    CommandData.pointing_mode.mode = P_AZEL_GOTO;
+    CommandData.pointing_mode.X = sun_az;  /* az */
+    CommandData.pointing_mode.Y = PointingData[i_point].el;  /* el */
+    CommandData.pointing_mode.vaz = 0.0;
+    CommandData.pointing_mode.del = 0.0;
+    CommandData.pointing_mode.w = 0;
+    CommandData.pointing_mode.h = 0;
+    
   } else if (command == mcc_halt) {
     bputs(warning, "Halting the MCC\n");
     system("/sbin/halt");
@@ -523,8 +538,6 @@ void SingleCommand (enum singleCommand command) {
     bputs(warning, "***Invalid Single Word Command***\n");
     return; /* invalid command - no write or update */
   }
-
-  i_point = GETREADINDEX(point_index);
 
   CommandData.pointing_mode.t =
     PointingData[i_point].t + CommandData.timeout;
