@@ -791,7 +791,7 @@ void MakeAddressLookups(void)
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccNoBolos].bbcAddr)].index
       = NOT_MULTIPLEXED;
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccNoBolos].bbcAddr)].channel
-      = addr[(int)BoloChannels[i].bus];
+      = BiPhaseAddr++;
 #else
     FastChList[BiPhaseAddr++] = BoloChannels[i];
 #endif
