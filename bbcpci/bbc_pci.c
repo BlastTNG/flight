@@ -81,10 +81,14 @@ static struct {
   int n;
 } bi0_buffer;
 
-int bi0_allocated = 0;
+char bi0_allocated = 0;
+char bbc_allocated = 0;
 
 const int bbc_minor = 0;
 const int bi0_minor = 1;
+
+/* Set to 1 the first time a device is opened. (Starts the callback etc.) */
+char device_was_opened = 0; 
 
 /********************************************************************/
 /*                                                                  */
@@ -96,59 +100,62 @@ static void timer_callback(unsigned long x) {
   unsigned int write_buf_p;
   unsigned int n_written;
 
-  if (readl(bbcpci_membase + BBCPCI_ADD_COMREG) & (BBCPCI_COMREG_RESET)) {
+  if (1 == 0 && readl(bbcpci_membase + BBCPCI_ADD_COMREG) & (BBCPCI_COMREG_RESET))
     cbcounter = 0;
-  } else {
-    write_buf_p = readl(bbcpci_membase + BBCPCI_ADD_WRITE_BUF_P);
-  
-    if (write_buf_p < BBCPCI_ADD_IR_WRITE_BUF) { /* if nios is ready for data */
-    
-      write_buf_p = BBCPCI_ADD_IR_WRITE_BUF;
-      n_written = 0;
-    
-      while ((n_written < BBCPCI_IR_WRITE_BUF_SIZE) &&
-	     (tx_buffer.i_in != tx_buffer.i_out)) {
-      
-	writel(tx_buffer.add[tx_buffer.i_out], bbcpci_membase + write_buf_p);
-	write_buf_p += sizeof(unsigned int);
-	writel(tx_buffer.data[tx_buffer.i_out], bbcpci_membase + write_buf_p);
-	write_buf_p += sizeof(unsigned int);
-      
-	tx_buffer.i_out++;
-	if (tx_buffer.i_out >= TX_BUFFER_SIZE) tx_buffer.i_out = 0;
+  else {
 
-	tx_buffer.n--;
-	n_written++;
-      }
+    // Write BBC data.
+    if (bbc_allocated) { 
+      write_buf_p = readl(bbcpci_membase + BBCPCI_ADD_WRITE_BUF_P);
+  
+      if (write_buf_p < BBCPCI_ADD_IR_WRITE_BUF) { // Is NIOS ready for data?
+        write_buf_p = BBCPCI_ADD_IR_WRITE_BUF;
+        n_written = 0;
     
-      write_buf_p -= 2 * BBCPCI_SIZE_UINT;
-      writel((unsigned int)write_buf_p, bbcpci_membase +
-	     BBCPCI_ADD_WRITE_BUF_P);
+        while ((n_written < BBCPCI_IR_WRITE_BUF_SIZE) &&
+               (tx_buffer.i_in != tx_buffer.i_out)) {
+          writel(tx_buffer.add[tx_buffer.i_out], bbcpci_membase + write_buf_p);
+          write_buf_p += sizeof(unsigned int);
+          writel(tx_buffer.data[tx_buffer.i_out], bbcpci_membase + write_buf_p);
+          write_buf_p += sizeof(unsigned int);
+      
+          tx_buffer.i_out++;
+          
+          if (tx_buffer.i_out >= TX_BUFFER_SIZE) tx_buffer.i_out = 0;
+
+          tx_buffer.n--;
+          n_written++;
+        }
+    
+        write_buf_p -= 2 * BBCPCI_SIZE_UINT;
+        writel((unsigned int)write_buf_p, bbcpci_membase +
+	                                        BBCPCI_ADD_WRITE_BUF_P);
+      }
     }
 
-    /** write the bi0 stuff **/
+    // Write BI0 data.
     if (bi0_allocated) {
       while (((write_buf_p = readl(bbcpci_membase + BBCPCI_ADD_BI0_WP)) !=
-	     readl(bbcpci_membase + BBCPCI_ADD_BI0_RP)) &&
-	     (bi0_buffer.i_in != bi0_buffer.i_out)) {
-	writel(bi0_buffer.data[bi0_buffer.i_out],
-	       bbcpci_membase + write_buf_p);
-	write_buf_p += BBCPCI_SIZE_UINT;
-	if (write_buf_p >= BBCPCI_IR_BI0_BUF_END)
-	  write_buf_p = BBCPCI_IR_BI0_BUF;
-	writel((unsigned int)write_buf_p, bbcpci_membase + BBCPCI_ADD_BI0_WP);
-	bi0_buffer.i_out++;
-	if (bi0_buffer.i_out >= TX_BUFFER_SIZE) bi0_buffer.i_out = 0;
+	           readl(bbcpci_membase + BBCPCI_ADD_BI0_RP)) &&
+	           (bi0_buffer.i_in != bi0_buffer.i_out)) {
+        writel(bi0_buffer.data[bi0_buffer.i_out], bbcpci_membase + write_buf_p);
+        write_buf_p += BBCPCI_SIZE_UINT;
+        if (write_buf_p >= BBCPCI_IR_BI0_BUF_END)
+          write_buf_p = BBCPCI_IR_BI0_BUF;
+        writel((unsigned int)write_buf_p, bbcpci_membase + BBCPCI_ADD_BI0_WP);
+        bi0_buffer.i_out++;
+        if (bi0_buffer.i_out >= TX_BUFFER_SIZE)
+          bi0_buffer.i_out = 0;
 
-	bi0_buffer.n--;
+        bi0_buffer.n--;
       }
-    }
+    } 
   }
   
   if (timer_on) {
     cbcounter++;
 
-    /* Re-start the timer so this callback gets called again in 1 jiffies. */
+    // Re-start the timer so this callback gets called again in 1 jiffies.
     bbc_cb_timer.expires = jiffies + 1;
 
     add_timer(&bbc_cb_timer);
@@ -254,42 +261,21 @@ static int open_bbc(struct inode *inode, struct file * filp){
 
     /* initialize tx buffer */
     tx_buffer.n = tx_buffer.i_in = tx_buffer.i_out = 0;
-    tx_buffer.data =
-      (unsigned int *) kmalloc(TX_BUFFER_SIZE *
-			       sizeof(unsigned int), GFP_KERNEL);
-    tx_buffer.add =
-      (unsigned int *) kmalloc(TX_BUFFER_SIZE *
-			       sizeof(unsigned int), GFP_KERNEL);
+    tx_buffer.data = (unsigned int *) kmalloc(TX_BUFFER_SIZE *
+        			       sizeof(unsigned int), GFP_KERNEL);
+    tx_buffer.add = (unsigned int *) kmalloc(TX_BUFFER_SIZE *
+                    sizeof(unsigned int), GFP_KERNEL);
     if (tx_buffer.add == NULL) {
       printk("Error allocating TX_BUFFER\n");
       return -EBUSY;
     }
   
-    if (check_mem_region(bbcpci_membase_raw, BBCPCI_MEMSIZE)) {
-      printk("bbc_pci: memory already in use\n");
-      return -EBUSY;
-    }
-    request_mem_region(bbcpci_membase_raw, BBCPCI_MEMSIZE, "bbc_pci");
-  
-    bbcpci_membase = ioremap_nocache(bbcpci_membase_raw, BBCPCI_MEMSIZE);
-
-    /* reset the card */
-    bitfield = BBCPCI_COMREG_RESET;
-    writel(bitfield, bbcpci_membase + BBCPCI_ADD_COMREG);
-
-    /* Start the timer */
-    timer_on = 1;
-    init_timer(&bbc_cb_timer);
-    bbc_cb_timer.function = timer_callback;
-    bbc_cb_timer.expires = jiffies + 1;
-
-    add_timer(&bbc_cb_timer);
-            
-    return 0;
-  } else if (minor == bi0_minor) {
+    bbc_allocated = 1;
+  }
+  else if (minor == bi0_minor) {
     filp->private_data = (void *) &bi0_minor;
 
-    /* initialize bi0 buffer */
+    /* Initialize bi0 buffer. */
     bi0_buffer.n = bi0_buffer.i_in = bi0_buffer.i_out = 0;
     bi0_buffer.data =
       (unsigned int *) kmalloc(BI0_BUFFER_SIZE *
@@ -299,11 +285,36 @@ static int open_bbc(struct inode *inode, struct file * filp){
       return -EBUSY;
     }
     bi0_allocated = 1;
-    return 0;
+    
   } else {
     printk("BBC: Invalid minor number\n");
     return -EBUSY;
   }
+
+  if (!device_was_opened) {
+    device_was_opened = 1;
+    
+    /* Get memory region. */
+    if (check_mem_region(bbcpci_membase_raw, BBCPCI_MEMSIZE)) {
+      printk("bbc_pci: memory already in use\n");
+      return -EBUSY;
+    }
+    request_mem_region(bbcpci_membase_raw, BBCPCI_MEMSIZE, "bbc_pci");
+      
+    /* Reset the card. */
+    bbcpci_membase = ioremap_nocache(bbcpci_membase_raw, BBCPCI_MEMSIZE);
+    bitfield = BBCPCI_COMREG_RESET;
+    writel(bitfield, bbcpci_membase + BBCPCI_ADD_COMREG);
+
+    /* Start the call-back timer. */
+    timer_on = 1;
+    init_timer(&bbc_cb_timer);
+    bbc_cb_timer.function = timer_callback;
+    bbc_cb_timer.expires = jiffies + 1;
+    add_timer(&bbc_cb_timer);
+  }
+      
+  return 0;
 } 
 
 /*******************************************************************/
@@ -315,20 +326,24 @@ static int release_bbc(struct inode *inode, struct file *filp) {
   int minor = MINOR(inode->i_rdev);
 
   if (minor == bbc_minor) {
-    timer_on = 0;
-    del_timer_sync(&bbc_cb_timer);
-
     kfree(tx_buffer.data);
     kfree(tx_buffer.add);
-    iounmap(bbcpci_membase);
-    release_mem_region(bbcpci_membase_raw, BBCPCI_MEMSIZE);
-  
-    return(0);
-  } else { // bi0_monor
+    bbc_allocated = 0;
+  } 
+  else {
     kfree(bi0_buffer.data);
     bi0_allocated = 0;
-    return(0);
   }
+
+  if (!bbc_allocated && !bi0_allocated) {
+    timer_on = 0;
+    del_timer_sync(&bbc_cb_timer);
+    iounmap(bbcpci_membase);
+    release_mem_region(bbcpci_membase_raw, BBCPCI_MEMSIZE);
+    device_was_opened = 0;
+  }
+
+  return 0;
 }
 
 /*******************************************************************/
@@ -436,6 +451,11 @@ int init_bbc_pci(void) {
     return -EIO;
   }
   
+  printk("MESSAGE TO BARTH:\nThe biphase appears to work now.  You can "
+         "see for yourself by running test_biphase in this directory.  Data "
+         "can be read back by using test_decom on galadriel in "
+         "/home/hincks/code/decom. -AH\n");
+
   dev = pci_find_device(BBCPCI_VENDOR, BBCPCI_ID, dev);
   if (!dev) {
     printk("Unable to find BBC_PCI card.\n");
