@@ -204,7 +204,7 @@ int Balance(int iscBits) {
 /*    Do Lock Logic: check status, determine if we are locked, etc      */
 /*                                                                      */
 /************************************************************************/
-#define MOVE_COUNTS 200
+#define MOVE_COUNTS 500
 #define SEARCH_COUNTS 500
 int GetLockBits(int acs0bits) {
   static int closing = 0;
