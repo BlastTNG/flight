@@ -234,6 +234,7 @@ void StoreStarCameraData(int index, int which)
   static struct NiosStruct* SavePrdAddr[2];
 
   if (firsttime[which]) {
+    firsttime[which] = 0;
     Blob0XAddr[which] = GetSCNiosAddr("blob0_x", which);
     Blob1XAddr[which] = GetSCNiosAddr("blob1_x", which);
     Blob2XAddr[which] = GetSCNiosAddr("blob2_x", which);
