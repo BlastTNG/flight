@@ -468,9 +468,9 @@ int Balance(int ifpmBits) {
     return ifpmBits;
 
   if (error > 0)
-    ifpmBits &= (0xFF - BAL1_REV);  /* clear reverse bit */
-  else {
     ifpmBits |= BAL1_REV;  /* set reverse bit */
+  else {
+    ifpmBits &= (0xFF - BAL1_REV);  /* clear reverse bit */
     error = -error;
   }
 
