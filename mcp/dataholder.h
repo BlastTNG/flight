@@ -32,6 +32,26 @@
 #include "tdrss_c.h"
 #include "channels.h"
 
+struct value_struct {
+  char (*entry)[AML_LEN_ENTRY];
+  char name[AML_LEN_ENTRY];
+};
+
+struct data_struct {
+  char name[AML_LEN_ENTRY];
+  char dflt[AML_LEN_ENTRY];
+};
+
+struct AML_struct {
+  struct value_struct* value;
+  struct data_struct* datum;
+  char entryname[AML_LEN_ENTRY];
+  int level;
+  int numvalues;
+  int numdata;
+  int parent;
+};
+
 struct DataStruct_glob {
   char type;
   char src[FIELD_LEN];
@@ -71,15 +91,7 @@ class AMLParser {
     int numentries;
     int maxvalues;
     int maxdata;
-    char ****entries;
-    char **entrynames;
-    char ***valuenames;
-    char ***datanames;
-    char ***datadefaults;
-    int *level;
-    int *parent;
-    int *numvalues;
-    int *numdata;
+    struct AML_struct *aml;
     int currentry;
     int currdatum;
 };

@@ -154,85 +154,24 @@ bool AMLParser::LoadFile(char *filename)
   }
 
   // Allocate memory.
-  SMALL_DEBUG("balloc(%i) as entries (%i of char ***)",
-      numentries * sizeof(char ***), numentries);
-  entries = (char ****)balloc(fatal, numentries * sizeof(char ***));
-  SMALL_DEBUG("entries = %p\n", entries);
-
-  SMALL_DEBUG("balloc(%i) as valuenames", numentries * sizeof(char **));
-  valuenames = (char ***)balloc(fatal, numentries * sizeof(char **));
-
-  SMALL_DEBUG("balloc(%i) as datanames", numentries * sizeof(char **));
-  datanames = (char ***)balloc(fatal, numentries * sizeof(char **));
-
-  SMALL_DEBUG("balloc(%i) as datadefaults", numentries * sizeof(char **));
-  datadefaults = (char ***)balloc(fatal, numentries * sizeof(char **));
-
-  SMALL_DEBUG("balloc(%i) as entrynames", numentries * sizeof(char *));
-  entrynames = (char **)balloc(fatal, numentries * sizeof(char *));
-
-  SMALL_DEBUG("balloc(%i) as level", numentries * sizeof(int));
-  level = (int *)balloc(fatal, numentries * sizeof(int));
-
-  SMALL_DEBUG("balloc(%i) as numvalues", numentries * sizeof(int));
-  numvalues = (int *)balloc(fatal, numentries * sizeof(int));
-
-  SMALL_DEBUG("balloc(%i) as numdata", numentries * sizeof(int));
-  numdata = (int *)balloc(fatal, numentries * sizeof(int));
-
-  SMALL_DEBUG("balloc(%i) as parent", numentries * sizeof(int));
-  parent = (int *)balloc(fatal, numentries * sizeof(int));
+  aml = (struct AML_struct*)balloc(fatal, numentries * sizeof(struct
+        AML_struct));
 
   for (i = 0; i < numentries; i++) {
-    SMALL_DEBUG("balloc(%i) as entries[%i] (%i of char**)",
-        maxvalues * sizeof(char **), i, maxvalues);
-    SMALL_DEBUG("entries = %p\n", entries);
-    entries[i] = (char ***)balloc(fatal, maxvalues * sizeof(char **));
-    SMALL_DEBUG("entries[%i] = %p\n", i, entries[i]);
+    aml[i].value = (struct value_struct*)balloc(fatal, maxvalues * sizeof(struct
+          value_struct));
 
-    SMALL_DEBUG("balloc(%i) as valuenames[%i]", maxvalues * sizeof(char *), i);
-    valuenames[i] = (char **)balloc(fatal, maxvalues * sizeof(char *));
+    for (j = 0; j < maxvalues; j++)
+      aml[i].value[j].entry = (char (*)[AML_LEN_ENTRY])balloc(fatal, maxdata *
+          sizeof(char) * AML_LEN_ENTRY);
 
-    SMALL_DEBUG("balloc(%i) as datanames[%i]", maxvalues * sizeof(char *), i);
-    datanames[i] = (char **)balloc(fatal, maxvalues * sizeof(char *));
+    aml[i].datum = (struct data_struct*)balloc(fatal, maxdata * sizeof(struct
+          data_struct));
 
-    SMALL_DEBUG("balloc(%i) as datadefaults[%i]", maxvalues * sizeof(char *), i);
-    datadefaults[i] = (char **)balloc(fatal, maxvalues * sizeof(char *));
-
-    SMALL_DEBUG("balloc(%i) as entrynames[%i]", AML_LEN_ENTRY * sizeof(char), i);
-    entrynames[i] = (char *)balloc(fatal, AML_LEN_ENTRY * sizeof(char));
-
-    level[i] = 0;
-    numvalues[i] = 0;
-    numdata[i] = 0;
-    parent[i] = -1;
-    for (j = 0; j < maxvalues; j++) {
-      SMALL_DEBUG("balloc(%i) as entries[%i][%i] (%i of char *)",
-          maxdata * sizeof(char *), i, j, maxdata);
-      SMALL_DEBUG("entries = %p\n", entries);
-      SMALL_DEBUG("entries[%i] = %p\n", i, entries[i]);
-      entries[i][j] = (char **)balloc(fatal, maxdata * sizeof(char *));
-      SMALL_DEBUG("entries[%i][%i] = %p\n", i, j, entries[i][j]);
-
-      SMALL_DEBUG("balloc(%i) as valuenames[%i][%i]",
-          AML_LEN_ENTRY * sizeof(char), i, j);
-      valuenames[i][j] = (char *)balloc(fatal, AML_LEN_ENTRY * sizeof(char));
-
-      for (k = 0; k < AML_LEN_ENTRY; k++) {
-        SMALL_DEBUG("balloc(%i) as entries[%i][%i][%i]",
-            AML_LEN_ENTRY * sizeof(char), i, j, k);
-        entries[i][j][k] = (char *)balloc(fatal, AML_LEN_ENTRY * sizeof(char));
-      }
-    }
-    for (j = 0; j < maxdata; j++) {
-      SMALL_DEBUG("balloc(%i) as datanames[%i][%i]",
-          AML_LEN_ENTRY * sizeof(char), i, j);
-      datanames[i][j] = (char *)balloc(fatal, AML_LEN_ENTRY * sizeof(char));
-
-      SMALL_DEBUG("balloc(%i) as datadefaults[%i][%i]",
-          AML_LEN_ENTRY * sizeof(char), i, j);
-      datadefaults[i][j] = (char *)balloc(fatal, AML_LEN_ENTRY * sizeof(char));
-    }
+    aml[i].level = 0;
+    aml[i].numvalues = 0;
+    aml[i].numdata = 0;
+    aml[i].parent = -1;
   }
 
   // Now fill the array entries from the file.
@@ -246,20 +185,20 @@ bool AMLParser::LoadFile(char *filename)
       case '+':
         entrycount++;
         for (j = 0; j < (signed int)strlen(linebuf) && linebuf[j] == '+'; j++);
-        level[entrycount] = j;
+        aml[entrycount].level = j;
 
         for (k = entrycount; k >= 0; k--) {
-          if (level[k] == j - 1) {
-            parent[entrycount] = k;
+          if (aml[k].level == j - 1) {
+            aml[entrycount].parent = k;
             break;
           }
         }
 
-        numvalues[entrycount] = GetNumValues(linebuf);
-        for (k = 0; k < numvalues[entrycount]; k++)
-          GetValue(linebuf, k, valuenames[entrycount][k]);
+        aml[entrycount].numvalues = GetNumValues(linebuf);
+        for (k = 0; k < aml[entrycount].numvalues; k++)
+          GetValue(linebuf, k, aml[entrycount].value[k].name);
 
-        GetEntryName(linebuf, entrynames[entrycount]);
+        GetEntryName(linebuf, aml[entrycount].entryname);
         ParseFullName(entrycount, tmpstr);
 
         for (k = 0; k < entrycount; k++) {
@@ -275,16 +214,18 @@ bool AMLParser::LoadFile(char *filename)
 
       case '-':
         j = 1;
-        GetEntryName(linebuf, datanames[entrycount][numdata[entrycount]]);
-        GetDataDefault(linebuf, datadefaults[entrycount][numdata[entrycount]]);
-        for (i = 0; i < numdata[entrycount]; i++) {
-          if (!strcmp(datanames[entrycount][numdata[entrycount]],
-                datanames[entrycount][i])) {
+        GetEntryName(linebuf,
+            aml[entrycount].datum[aml[entrycount].numdata].name);
+        GetDataDefault(linebuf,
+            aml[entrycount].datum[aml[entrycount].numdata].dflt);
+        for (i = 0; i < aml[entrycount].numdata; i++) {
+          if (!strcmp(aml[entrycount].datum[aml[entrycount].numdata].name,
+                aml[entrycount].datum[i].name)) {
             ParseFullName(entrycount, tmpstr);
             bprintf(err, 
                 "AMLParser: found two instances of '%s' in entry '%s' in "
                 "the file '%s'.  Using the first.\n", 
-                datanames[entrycount][i], tmpstr, filename);
+                aml[entrycount].datum[i].name, tmpstr, filename);
             j = 0;
           }
         }
@@ -292,23 +233,22 @@ bool AMLParser::LoadFile(char *filename)
         if (!j)
           break;
 
-        for (i = 0; i < numvalues[entrycount]; i++) {
+        for (i = 0; i < aml[entrycount].numvalues; i++) {
           if (!GetValue(linebuf, i, 
-                entries[entrycount][i][numdata[entrycount]])) {
+                aml[entrycount].value[i].entry[aml[entrycount].numdata])) {
             ParseFullName(entrycount, tmpstr);
             bprintf(err, 
                 "AMLParser: couldn't get datum for '%s' in column '%s' in "
                 "entry '%s' in the file '%s'.  Ignoring this line.\n",
-                datanames[entrycount][numdata[entrycount]], 
-                valuenames[entrycount][0], tmpstr, filename);
+                aml[entrycount].datum[aml[entrycount].numdata].name, 
+                aml[entrycount].value[0].name, tmpstr, filename);
             j = 0;
             break;
           }
         }
 
-        if (!j)
-          break;
-        numdata[entrycount]++;
+        if (j)
+          aml[entrycount].numdata++;
 
         break; 
     }
@@ -344,9 +284,9 @@ void AMLParser::ParseFullName(int num, char *namebuf)
   i = num;
 
   do {
-    sprintf(tmpstr, "%s.%s", entrynames[i], namebuf);
+    sprintf(tmpstr, "%s.%s", aml[i].entryname, namebuf);
     strcpy(namebuf, tmpstr);
-    i = parent[i];
+    i = aml[i].parent;
   } while (i >= 0);
 
   if (strlen(namebuf))
@@ -537,7 +477,7 @@ bool AMLParser::FirstDatum(const char *fullentryname)
   for (i = 0; i < numentries; i++) {
     ParseFullName(i, tmpstr);
     if (!strcmp(fullentryname, tmpstr)) {
-      if (numdata[i]) {
+      if (aml[i].numdata) {
         currentry = i;
         currdatum = 0;
         SMALL_RTN("%i", true);
@@ -577,8 +517,8 @@ int AMLParser::NumData(const char *fullentryname) {
   for (i = 0; i < numentries; i++) {
     ParseFullName(i, tmpstr);
     if (!strcmp(fullentryname, tmpstr)) {
-      SMALL_RTN("%i", numdata[i]);
-      return numdata[i];
+      SMALL_RTN("%i", aml[i].numdata);
+      return aml[i].numdata;
     }
   }
 
@@ -604,7 +544,7 @@ bool AMLParser::NextDatum(void)
     return false;
   }
 
-  if (++currdatum >= numdata[currentry]) {
+  if (++currdatum >= aml[currentry].numdata) {
     currentry = -1;
     currdatum = -1;
     SMALL_RTN("%i", false);
@@ -658,15 +598,15 @@ const char *AMLParser::Value(const char *valuename)
     return NULL;
   }
 
-  for (i = 0; i < numvalues[currentry]; i++) {
+  for (i = 0; i < aml[currentry].numvalues; i++) {
     // Look for the column requested.
-    if (!strcmp(valuename, valuenames[currentry][i])) {
+    if (!strcmp(valuename, aml[currentry].value[i].name)) {
 
       // Look for a request for a default value or zero length string.
-      if (!strcmp(entries[currentry][i][currdatum], "@")) {
+      if (!strcmp(aml[currentry].value[i].entry[currdatum], "@")) {
 
         // Check to see if a default has been assigned.
-        if (strlen(datadefaults[currentry][currdatum])) {
+        if (strlen(aml[currentry].datum[currdatum].dflt)) {
           j = currdatum;
 
           // Find the default value, recursively (a default value field could
@@ -674,11 +614,11 @@ const char *AMLParser::Value(const char *valuename)
           // in a circular way, don't let the recursion last forever -- cap it
           // at 50 recursions.
           for (l = 0; l < 50; l++) {
-            for (k = 0; k < numdata[currentry]; k++) {
-              if (!strcmp(datanames[currentry][k], 
-                    datadefaults[currentry][j]))
-                if (!strcmp(entries[currentry][i][k], "@")) {
-                  if (strlen(datadefaults[currentry][k]))
+            for (k = 0; k < aml[currentry].numdata; k++) {
+              if (!strcmp(aml[currentry].datum[k].name, 
+                    aml[currentry].datum[j].dflt))
+                if (!strcmp(aml[currentry].value[i].entry[k], "@")) {
+                  if (strlen(aml[currentry].datum[k].dflt))
                     j = k;
                   else {
                     SMALL_RTN("\"\"");
@@ -686,8 +626,8 @@ const char *AMLParser::Value(const char *valuename)
                   }
                 }
                 else {
-                  SMALL_RTN("%p", entries[currentry][i][k]);
-                  return entries[currentry][i][k];
+                  SMALL_RTN("%p", aml[currentry].value[i].entry[k]);
+                  return aml[currentry].value[i].entry[k];
                 }
             }
           }
@@ -698,8 +638,8 @@ const char *AMLParser::Value(const char *valuename)
           return "";
         }
       } else {
-        SMALL_RTN("\"\"");
-        return entries[currentry][i][currdatum];
+        SMALL_RTN("%p", aml[currentry].value[i].entry[currdatum]);
+        return aml[currentry].value[i].entry[currdatum];
       }
     }
   }
