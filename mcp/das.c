@@ -81,8 +81,8 @@ int CalLamp (int* cryostate) {
     if (repeat_left == 0) {
       if (CommandData.Cryo.calib_repeat > 0 && /* we're repeating and */
           CommandData.Cryo.calib_pulse > 0) {  /* just got to the end */
-        repeat_left = (CommandData.Cryo.calib_repeat + 1) * 100;
-        pulse_left = CommandData.Cryo.calib_pulse;
+        repeat_left = CommandData.Cryo.calib_repeat * 100;
+        pulse_left = CommandData.Cryo.calib_pulse + 1;
       }
     } else {  /* we're repeat pulsing, and counting down to next pulse */
       repeat_left--;  
