@@ -24,6 +24,9 @@
 
 #include "blast.h"
 #include "channels.h"
+#ifdef __MCP__
+#  include "mcp.h"
+#endif
 
 #ifdef __DECOMD__
 #  define CURFILE "/mnt/decom/etc/decom.cur"
