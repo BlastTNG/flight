@@ -553,12 +553,12 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
   if (isBiasAC) { /*  Bias is currently AC */
     if (CommandData.Bias.biasAC == 0) { /* it should be DC */
       biasout1 |= 0x01;
-      /*printf("to DC\n"); */
+      fprintf(stderr, "to DC\n"); 
     }
   } else { /* Bias is currently DC */
     if (CommandData.Bias.biasAC == 1) { /* it should be AC */
       biasout1 |= 0x02;
-      /*printf("to AC\n"); */
+      fprintf(stderr, "to AC\n");
     }
   }
 
@@ -566,12 +566,12 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
   if (isBiasRamp) { /* Bias is currently external Ramp */
     if (CommandData.Bias.biasRamp == 0) { /* it should be internal/fixed */
       biasout1 |= 0x40;
-      /* printf("to fixed\n");  */
+      fprintf(stderr, "to fixed\n");
     }
   } else { /* Bias is currently internal (fixed) */
     if (CommandData.Bias.biasRamp == 1) { /* it should be external/Ramp */
       biasout1 |= 0x80;
-      /* printf("to ramp\n"); */
+      fprintf(stderr, "to ramp\n");
     }
   }
 
@@ -579,12 +579,12 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
   if (isBiasClockInternal) { /* Bias is currently internal */
     if (CommandData.Bias.clockInternal == 0) { /* it should be external */
       biasout1 |= 0x10;
-      /* printf("to external\n");  */
+      fprintf(stderr, "to external\n");
     }
   } else { /* Bias clock is currenly external */
     if (CommandData.Bias.clockInternal == 1) { /* it should be internal */
       biasout1 |= 0x20;
-      /* printf("to internal\n");  */
+      fprintf(stderr, "to internal\n");
     }
   }
 

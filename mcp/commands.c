@@ -379,8 +379,7 @@ void MultiCommand (int command, unsigned short *dataq) {
   unsigned short ivalues[MAX_N_PARAMS];
   char type;
 
-#define SERIAL
-#ifdef SERIAL
+#ifndef BOLOTEST
   /* compute renormalised values */
   for (i = dataqind = 0; i < mcommands[command].numparams; ++i) {
     min = mcommands[command].params[i].min;
