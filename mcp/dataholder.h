@@ -1,12 +1,15 @@
 #ifndef DATAHOLDER_H
 #define DATAHOLDER_H
 
-#include <stdio.h>
-#include <qlist.h>
-#include <qstring.h>
+#define DIFFERENTIAL    0
+#define INT_PRESERVING  1
+#define SINGLE          2
+#define AVERAGE         3
+
+#define AML_LEN_LINE    512
+#define AML_LEN_ENTRY   32
 
 struct DataStruct_glob {
-  char name[25];
   char type;
   char src[15];
   int framefreq;      // Times per frame.
@@ -25,43 +28,68 @@ struct DataStruct_glob {
   int wide;
 };
 
-class AdamDom;
+class AMLParser {
+  public:
+    AMLParser(const char *filename);
+    AMLParser();
+    bool LoadFile(const char *filename);
+    int NumData(const char *fullentryname);
+    bool FirstDatum(const char *fullentryname);
+    bool NextDatum();
+    bool NoDatum();
+    const char *Value(const char *valuename);
 
-class DataHolder
-{
-public:
-  DataHolder(char *filename);
-  DataHolder();
-  bool LoadFromXML(char *filename);
-  struct DataStruct_glob *firstSlow();
-  struct DataStruct_glob *nextSlow();
-  struct DataStruct_glob *firstFast();
-  struct DataStruct_glob *nextFast();
-
-  int MaxBitRate;
-  int LoopLength;
-  int SampleRate;
-  float minover;
-  float maxover;
-
-private:
-  void GetXMLInfo(char *tagname, QList<struct DataStruct_glob> *dest, 
-                  AdamDom *InfoFile);
-  void GetPredefined(QString name, struct DataStruct_glob *dest,
-			               AdamDom *InfoFile);
-  void GetValue(char *attrib, int *dest, int def, AdamDom *InfoFile);
-  void GetValue(char *attrib, char *dest, char def, AdamDom *InfoFile);
-  void GetValue(char *attrib, bool *dest, bool def, AdamDom *InfoFile);
-  void GetValue(char *attrib, long long *dest, long long def,
-                AdamDom *InfoFile);
-
-  AdamDom *InfoFile;
-  QList<struct DataStruct_glob> SlowInfo;
-  QList<struct DataStruct_glob> FastInfo;
-  struct DataStruct_glob DefaultInfo;
-
-  int numpredefs;
-  char **predefs;
+  private:
+    void CommonConstructor();
+    int GetNumValues(const char *buf);
+    void GetEntryName(const char *buf, char *namebuf);
+    void GetDataDefault(const char *buf, char *defaultbuf);
+    bool GetValue(const char *buf, int num, char *valuebuf);
+    void ParseFullName(int num, char *namebuf);
+    
+    int numentries;
+    int maxvalues;
+    int maxdata;
+    char ****entries;
+    char **entrynames;
+    char ***valuenames;
+    char ***datanames;
+    char ***datadefaults;
+    int *level;
+    int *parent;
+    int *numvalues;
+    int *numdata;
+    int currentry;
+    int currdatum;
 };
+
+class DataHolder {
+  public:
+    DataHolder(const char *filename);
+    DataHolder();
+    bool LoadFromAML(const char *filename);
+    struct DataStruct_glob *FirstSlow();
+    struct DataStruct_glob *NextSlow();
+    struct DataStruct_glob *FirstFast();
+    struct DataStruct_glob *NextFast();
+
+    int maxbitrate;
+    int looplength;
+    int samplerate;
+    float minover;
+    float maxover;
+
+  private:
+    void PopulateDataStruct(struct DataStruct_glob *s, AMLParser *a);
+    
+    int numslows;
+    int numfasts;
+    int currslow;
+    int currfast;
+    struct DataStruct_glob *slows;
+    struct DataStruct_glob *fasts;
+    bool allocated;
+};
+
 
 #endif

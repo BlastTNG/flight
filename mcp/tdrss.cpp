@@ -538,10 +538,10 @@ bool Alice::GetCurrentXML() {
   }
 
   if (newxml != XMLsrc) {
-    sprintf(tmp, "%s%d.al", ALICEFILE_DIR, newxml);
-    if (DataInfo->LoadFromXML(tmp)) {
+    sprintf(tmp, "%s%d.aml", ALICEFILE_DIR, newxml);
+    if (DataInfo->LoadFromAML(tmp)) {
       XMLsrc = newxml;
-      sendbuf->SetSize(DataInfo->MaxBitRate / 10 * DataInfo->LoopLength);
+      sendbuf->SetSize(DataInfo->maxbitrate / 10 * DataInfo->looplength);
       mprintf(MCP_INFO, "SMALL (Alice):  now using .aml file number %d.\n", 
               XMLsrc);
       return true;
@@ -824,8 +824,8 @@ int Alice::MaxPowTwo(int val, float threshold) {
   int powtwo;
 
   powtwo = 0;
-  for (currInfo = DataInfo->firstFast(); currInfo != NULL;
-      currInfo = DataInfo->nextFast()) {
+  for (currInfo = DataInfo->FirstFast(); currInfo != NULL;
+      currInfo = DataInfo->NextFast()) {
     if (int(FindPowTwo(val * currInfo->framefreq, threshold) /
           currInfo->framefreq) + 1 > powtwo)
       powtwo = int(FindPowTwo(val * currInfo->framefreq, threshold) /
@@ -849,14 +849,14 @@ int Alice::MaxFrameFreq() {
   struct DataStruct_glob *currInfo;
   int max = 0;
 
-  for (currInfo = DataInfo->firstFast(); currInfo != NULL;
-      currInfo = DataInfo->nextFast()) {
+  for (currInfo = DataInfo->FirstFast(); currInfo != NULL;
+      currInfo = DataInfo->NextFast()) {
     if (currInfo->framefreq > max)
       max = currInfo->framefreq;
   }
 
-  for (currInfo = DataInfo->firstSlow(); currInfo != NULL;
-      currInfo = DataInfo->nextSlow()) {
+  for (currInfo = DataInfo->FirstSlow(); currInfo != NULL;
+      currInfo = DataInfo->NextSlow()) {
     if (currInfo->framefreq > max)
       max = currInfo->framefreq;
   }
@@ -921,15 +921,15 @@ void Alice::CompressionLoop() {
     if (GetCurrentXML()) {
 
       // Make sure our buffers for reading in data from disk are big enough.
-      ts = sizeof(double) * DataInfo->SampleRate * MaxFrameFreq() *
-           DataInfo->LoopLength;
+      ts = sizeof(double) * DataInfo->samplerate * MaxFrameFreq() *
+           DataInfo->looplength;
       if (ts > rawdatasize) {
         rawdatasize = ts;
         rawdata = (double *)realloc(rawdata, ts);
       }
 
-      ts = sizeof(double) * (3 * DataInfo->SampleRate * MaxFrameFreq() *
-                             DataInfo->LoopLength);
+      ts = sizeof(double) * (3 * DataInfo->samplerate * MaxFrameFreq() *
+                             DataInfo->looplength);
       if (ts > filterdatasize) {
         filterdatasize = ts;
         filterdata = (double *)realloc(filterdata, ts);
@@ -937,7 +937,7 @@ void Alice::CompressionLoop() {
 
       // Figure out how much we need to read each time around.  For FFT purposes
       // it needs to be a power of two, with at least 5 % buffering on the ends.
-      numframes = DataInfo->LoopLength * DataInfo->SampleRate;
+      numframes = DataInfo->looplength * DataInfo->samplerate;
       numtoread = MaxPowTwo(numframes, 0.05);
 
       // We need real data on either side of the data we are interested in so
@@ -976,11 +976,11 @@ void Alice::CompressionLoop() {
     // field -- we Introduce() before all of them and then RecordNumBytes()
     // after them.  All the slow fields are written one after the other here
     // at the beginning of the frame.
-    if ((currInfo = DataInfo->firstSlow()) != NULL) {
+    if ((currInfo = DataInfo->FirstSlow()) != NULL) {
       sendbuf->Introduce();
 
-      for (currInfo = DataInfo->firstSlow(); currInfo != NULL;
-          currInfo = DataInfo->nextSlow()) {
+      for (currInfo = DataInfo->FirstSlow(); currInfo != NULL;
+          currInfo = DataInfo->NextSlow()) {
 
         //printf("Reading from %s . . .\n", currInfo->src);
 
@@ -1019,8 +1019,8 @@ void Alice::CompressionLoop() {
 
     // Go through each of the fast fields we want to compress.  Fast fields
     // are those which send down more than one value per frame.
-    for (currInfo = DataInfo->firstFast(); currInfo != NULL && !earlysend;
-        currInfo = DataInfo->nextFast()) {
+    for (currInfo = DataInfo->FirstFast(); currInfo != NULL && !earlysend;
+        currInfo = DataInfo->NextFast()) {
 
       // Figure out how much to read and how much padding the current field
       // requires

@@ -2,8 +2,8 @@ include Makefile.config
 
 CC = gcc
 CPP = g++
-CPPFLAGS = -O3 -Wall -D__MCP__ -I/usr/lib/qt/include $(BOLOTEST)
-LDFLAGS = -L/usr/lib/qt/lib -lpthread -lm -lstdc++ -lqt
+CPPFLAGS = -O3 -Wall -D__MCP__ $(BOLOTEST)
+LDFLAGS = -lpthread -lm -lstdc++
 ifeq ($(DEBUG), 1)
 	CFLAGS := $(CFLAGS) -g
 	LDFLAGS := $(LDFLAGS) -g
@@ -18,12 +18,12 @@ HEADERS = bbc_pci.h command_list.h ephem_read.h ephem_types.h isc_protocol.h \
 		  tx_struct.h small_c.h
 
 # FIXME:  add these to header files when small devel. is done:  small.h
-# crc.h dataholder.h getdata_cpp.h adamdom.h getdata.h
+# crc.h dataholder.h alice.h
 
-OBJS = mcp.o adamdom.o auxiliary.o channels.o command_list.o \
-       commands.o crc.o das.o dataholder.o dgps.o fftsg_h.o framefile.o \
-	   ephem_read.o getdata.o geomag.o isc.o lut.o motors.o pointing.o \
-	   sched.o small.o sslutNA.o starpos.o sunsensor.o tx.o tx_struct.o
+OBJS = mcp.o auxiliary.o channels.o command_list.o commands.o crc.o das.o \
+	   dataholder.o dgps.o fftsg_h.o framefile.o ephem_read.o geomag.o isc.o \
+	   lut.o motors.o pointing.o sched.o small.o sslutNA.o starpos.o \
+	   sunsensor.o tx.o tx_struct.o
 
 all::
 ifeq ($(DEBUG), 1)
