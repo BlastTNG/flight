@@ -15,6 +15,7 @@
     -index = INC_INDEX(index) can be used to increment the write index.
 */
 
+#include <math.h>
 #include <time.h>
 #include "isc_protocol.h"   /* required for ISCData; get updates from
                                Ed Chapin and/or the ISC computer */
@@ -22,6 +23,10 @@
 // GETREADINDEX: converts circular buffer pointer to
 #define GETREADINDEX(i) ((i+2) % 3)  /* i - 1 modulo 3 */
 #define INC_INDEX(i) ((i + 1) %3)    /* i + 1 modulo 3 */
+
+#define RAD2SEC (180. * 3600. / M_PI / 15.)  /* radians to seconds (of time) */
+#define SEC2RAD (1. / RAD2SEC)
+#define DEG2RAD (180. / M_PI)  /* degrees to radians */
 
 /**********************************************/
 /*  VSCDataStruct                             */

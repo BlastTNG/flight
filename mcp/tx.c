@@ -68,8 +68,6 @@
 
 #define DPS2GYU (66.7 * 65536.0/4000.0) /* deg per sec to "gyro units" */
 
-#define RAD2SEC (180. * 3600. / M_PI / 15.)  /* radians to seconds (of time) */
-
 extern short int SamIAm;
 
 extern unsigned short slow_data[N_SLOW][FAST_PER_SLOW];

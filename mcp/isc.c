@@ -18,7 +18,6 @@ extern short int SamIAm;  /* mcp.c */
 short int write_ISC_pointing = 0;
 
 server_frame ISCData[3];
-client_frame ISCInput;
 int iscdata_index = 0;
 
 int ISCInit(client_frame* client_data)
@@ -104,7 +103,7 @@ int ISCInit(client_frame* client_data)
   client_data->apbox = ISCData[iscdata_index].apbox;
   client_data->multiple_dist = ISCData[iscdata_index].multiple_dist;
 
-  ISCInput = CommandData.ISCCommand = *client_data;
+  CommandData.ISCCommand = *client_data;
 
   /* Since we just trounced whatever data was queued to send (it would
    * have had uninitialised data in any case), deassert write semaphores. */
@@ -122,6 +121,7 @@ void IntegratingStarCamera(void)
 {
   client_frame client_data;
   fd_set fdr, fdw;
+  struct PointingDataStruct MyPointData;
 
   int sock = -1, ISCReadIndex;
 
@@ -187,18 +187,6 @@ void IntegratingStarCamera(void)
         delta = (t1.tv_sec - t2.tv_sec) * 1000000 + (t1.tv_usec - t2.tv_usec);
         //        fprintf(stderr, "ISC: Received %i bytes after %f milliseconds.\n", n, (double)delta / 1000.);
 
-        ISCInput.gain = ISCData[iscdata_index].gain;
-        ISCInput.exposure = ISCData[iscdata_index].exposure;
-        ISCInput.platescale = ISCData[iscdata_index].platescale;
-        ISCInput.gain = ISCData[iscdata_index].gain;
-        ISCInput.offset = ISCData[iscdata_index].offset;
-        ISCInput.saturation = ISCData[iscdata_index].saturation;
-        ISCInput.threshold = ISCData[iscdata_index].threshold;
-        ISCInput.grid = ISCData[iscdata_index].grid;
-        ISCInput.cenbox = ISCData[iscdata_index].cenbox;
-        ISCInput.apbox = ISCData[iscdata_index].apbox;
-        ISCInput.multiple_dist = ISCData[iscdata_index].multiple_dist;
-
         /* If we've received a command in the interrim, don't clobber it. */
         if (!CommandData.write_ISC_command) {
           CommandData.ISCCommand.gain = ISCData[iscdata_index].gain;
@@ -218,10 +206,12 @@ void IntegratingStarCamera(void)
         iscdata_index = INC_INDEX(iscdata_index);
       }
 
-      /* write */
+      /* ------------ write ---------- */ 
+
       if (FD_ISSET(sock, &fdw) &&
           (write_ISC_pointing || CommandData.write_ISC_command)) {
         /* Retreive the derived pointing information */
+        MyPointData = PointingData[GETREADINDEX(point_index)];
         ISCReadIndex = GETREADINDEX(iscdata_index);
 
         /* Fill client_frame */
@@ -230,10 +220,13 @@ void IntegratingStarCamera(void)
           client_data = CommandData.ISCCommand;
           CommandData.write_ISC_command = 0;
         } else if (write_ISC_pointing) {
-          fprintf(stderr, "ISC: Getting client frame from Pointing\n");
-          client_data = ISCInput;
           write_ISC_pointing = 0;
         }
+
+        client_data.az = MyPointData.az * DEG2RAD;
+        client_data.el = MyPointData.el * DEG2RAD;
+        client_data.lat = MyPointData.lat * DEG2RAD;
+        client_data.lst = MyPointData.lst * SEC2RAD;
 
         /* Write to ISC */
         n = send(sock, &client_data, sizeof(client_data), 0);
