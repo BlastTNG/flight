@@ -169,7 +169,7 @@ void MainForm::ChooseCommand() {
         == 0) {
       NAboutLabel->setText("abort a current failure mode");
       lastmcmd = -1;
-      NParamLabels[0]->setText("Failure mode");
+      NParamLabels[0]->setText("Failure mode (string)");
       NParamLabels[0]->show();
       NParamFields[0]->show();
       for (i = 1; i < MAX_N_PARAMS; i++) {
