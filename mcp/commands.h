@@ -352,7 +352,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 2,
     {
-      {"Set Point (rpm)",   0, MAX_15BIT, 'f', "set_reac"},
+      {"Set Point (rpm)",   0, 200.0, 'f', "set_reac"},
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_pivot"}
     }
   },

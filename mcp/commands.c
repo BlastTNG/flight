@@ -603,7 +603,7 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.azi_gain.P = ivalues[0];
     CommandData.azi_gain.I = ivalues[1];
   } else if (command == pivot_gain) {  /* pivot gains */
-    CommandData.pivot_gain.SP = (rvalues[0] + 2.605) / 7.9498291016e-5;
+    CommandData.pivot_gain.SP = (rvalues[0] / 60. + 2.605) / 7.9498291016e-5;
     CommandData.pivot_gain.P = ivalues[1];
 
     /***************************************/
