@@ -62,11 +62,11 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     //{"i_coldplate",  'r', 3,  5,       -6.2723597E-5,     4.114858676, 'u'},
     {"i_coldplate",  'r',  3,  5,     -2.32217573E-5,     1.390309833, 'u'},
     {"t_he3fridge",  'r',  3,  7, -2.87477e-09*65536,      12.3273561, 'u'},
-    {"t_he4pot_",     'r',  3,  9, -2.87539e-09*65536,      12.3309023, 'u'},   //Not used in the Aug. 7th 2003 Run
+    {"t_he4pot",     'r',  3,  9, -2.87539e-09*65536,      12.3309023, 'u'},   
     {"t_horn_500",   'r', 3, 11,  -2.87784e-09*65536,      12.3420847, 'u'},
     {"t_base_500",   'r', 3, 13,  -2.86354e-09*65536,      12.2829004, 'u'},
     {"t_base_250",   'r', 3, 15,  -1.50793738E-3,          12.49804401, 'u'},
-    {"t_optics_box_win",'r',  3, 17, -2.859373e-09*65536,    1.232225e+01, 'u'}, //formerly t_lhe
+    {"t_opt_box_w",'r',  3, 17, -2.859373e-09*65536,    1.232225e+01, 'u'}, //formerly t_lhe
     {"t_lhe_filt",   'r',  3, 19, -2.856350e-09*65536,    1.231143e+01 , 'u'},
     {"t_vcs",        'r',  3, 21, -2.869274e-09*65536,    1.236054e+01, 'u'},    //Not used in the Aug. 7th 2003 Run
     {"t_vcs_filt",   'r',  3, 23, -2.871969e-09*65536,    1.236866e+01, 'u'},
@@ -75,7 +75,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"t_charcoal",   'r',  3, 29, -2.865098e-09*65536,    1.235145e+01, 'u'},
     {"t_optics_box", 'r',  3, 31, -2.864185e-09*65536,    1.233900e+01, 'u'},    //formerly t_heatswitch
     {"t_jfet",       'r',  3, 33, -2.860308e-09*65536,    1.232735e+01, 'u'},
-    {"t_herpot",     'r',  3, 35, -2.865493e-09*65536,    1.234227e+01, 'u'},    //formerly t_vcs_fet
+    {"t_he4pot_d",   'r',  3, 35, -2.865493e-09*65536,    1.234227e+01, 'u'},    //formerly t_vcs_fet
     {"t_cold_plate", 'r',  3, 37, -2.863415e-09*65536,    1.232882e+01, 'u'},    //formerly t_xtherm_1
     {"t_optics_box_",'r',  3, 39, -2.87516e-09*65536,     12.3290947, 'u'}     //Not used int the Aug. 7th 2003 Run
   },
@@ -444,19 +444,17 @@ void FPrintDerived(FILE *fp) {
       "LHE_STATE        LINCOM 2 LHE_IS_CLOSED 2 0 LHE_IS_OPEN 1 0\n"
       "### Cryo Table Lookups ###\n"
       "# Diodes\n"
-      "T_vcs	LINTERP	T_VCS	/data/etc/dt600.txt\n"
-      "T_vcs_fet   LINTERP T_VCS_FET	/data/etc/dt600.txt\n"
-      "T_lhe   LINTERP T_LHE    /data/etc/dt600.txt\n"
-      "T_ln2   LINTERP T_LN2    /data/etc/dt600.txt\n"
-      "T_jfet   LINTERP T_JFET    /data/etc/dt600.txt\n"
-      "T_optics_box   LINTERP T_OPTICS_BOX    /data/etc/dt600.txt\n"
-      "T_heatswitch   LINTERP T_HEATSWITCH    /data/etc/dt600.txt\n"
-      "T_charcoal   LINTERP T_CHARCOAL    /data/etc/dt600.txt\n"
-      "T_ln2_filt   LINTERP T_LN2_FILT    /data/etc/dt600.txt\n"
-      "T_vcs_filt   LINTERP T_VCS_FILT    /data/etc/dt600.txt\n"
-      "T_vcs_fet   LINTERP T_VCS_FET    /data/etc/dt600.txt\n"
-      "T_xtherm_1   LINTERP T_XTHERM_1    /data/etc/dt600.txt\n"
+      "T_opt_box_w	LINTERP	T_OPT_BOX_W	/data/etc/dt600.txt\n"
       "T_lhe_filt   LINTERP T_LHE_FILT    /data/etc/dt600.txt\n"
+      "T_vcs	LINTERP	T_VCS	/data/etc/dt602.txt\n"
+      "T_vcs_filt   LINTERP T_VCS_FILT    /data/etc/dt600.txt\n"
+      "T_ln2   LINTERP T_LN2    /data/etc/dt600.txt\n"
+      "T_ln2_filt   LINTERP T_LN2_FILT    /data/etc/dt600.txt\n"
+      "T_charcoal   LINTERP T_CHARCOAL    /data/etc/dt600.txt\n"
+      "T_optics_box   LINTERP T_OPTICS_BOX    /data/etc/dt600.txt\n"
+      "T_jfet   LINTERP T_JFET    /data/etc/dt600.txt\n"
+      "T_he4pot_d   LINTERP T_HE4POT_D    /data/etc/dt600.txt\n"
+      "T_cold_plate   LINTERP T_COLD_PLATE   /data/etc/dt600.txt\n"
       "# GRTs (ROX)\n"
       "#T_he3fridge	LINTERP	T_HE3FRIDGE	/data/etc/rox102a.txt\n"
       "#T_he4pot    LINTERP T_HE4POT    /data/etc/rox102a.txt\n"
