@@ -337,7 +337,6 @@ void InitialiseDirFile(int reset)
 {
   FILE* fp;
   int j, i;
-  long int li;
   char field[FIELD_LEN];
   char gpb[GPB_LEN];
 
@@ -375,14 +374,13 @@ void InitialiseDirFile(int reset)
       perror(gpb);
       exit(1);
     }
-    if ((li = lseek(normal_fast[n_fast].fp, rc.resume_at *
-            normal_fast[n_fast].size * 2, SEEK_CUR | SEEK_SET)) < 0) {
+    if (lseek(normal_fast[n_fast].fp, rc.resume_at *
+            normal_fast[n_fast].size * 2, SEEK_SET) < 0) {
       snprintf(gpb, GPB_LEN, "defile: cannot lseek file `%s/FASTSAMP'",
           rc.dirfile);
       perror(gpb);
       exit(1);
     }
-    fprintf(stderr, "lseek to %07lx %i\n", li, normal_fast[n_fast].fp);
   } else {
     /* create new file */
     if ((normal_fast[n_fast].fp = creat(gpb, 00644)) == -1) {
@@ -482,10 +480,8 @@ void InitialiseDirFile(int reset)
           perror(gpb);
           exit(1);
         }
-        li = lseek(normal_fast[n_fast].fp, rc.resume_at *
+        lseek(normal_fast[n_fast].fp, rc.resume_at *
             normal_fast[n_fast].size * 2, SEEK_SET);
-        fprintf(stderr, "lseek to %07lx %i (%s)\n", li, normal_fast[n_fast].fp,
-            FastChList[i].field);
       } else {
         /* create new file */
         if ((normal_fast[n_fast].fp = creat(gpb, 00644)) == -1) {
@@ -897,11 +893,6 @@ void DirFileWriter(void)
 
     if (ri.wrote < wrote_count)
       ri.wrote = wrote_count;
-
-    if (rc.write_mode == 1 && ri.wrote >= 20000) {
-      printf("\n\n");
-      exit(1);
-    }
 
     if (ri.reader_done && ri.wrote == ri.read) {
       ri.writer_done = 1;

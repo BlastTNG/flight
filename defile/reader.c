@@ -128,10 +128,9 @@ void FrameFileReader(void)
   int frames_read = 0;
   int new_chunk = 1;
   int more_in_file = 0;
-  unsigned short InputBuffer[INPUT_BUF_SIZE][RX_FRAME_SIZE];
+  unsigned short InputBuffer[INPUT_BUF_SIZE][FRAME_WORDS];
   struct stat chunk_stat;
   long int seek_to = 0;
-  int is_first = 1;
 
   if (rc.resume_at >= 0) {
     ri.read = SetResumeChunk();
@@ -153,7 +152,6 @@ void FrameFileReader(void)
 
       if (seek_to > 0) {
         fseek(stream, seek_to, SEEK_SET);
-        printf("post seek: %07lx (%07lx %li)\n", ftell(stream), seek_to, seek_to / RX_FRAME_SIZE);
         seek_to = 0;
       }
     }
@@ -197,16 +195,10 @@ void FrameFileReader(void)
 
       for (i = 0; i < n; ++i) {
         /* increment counter */
-        if (is_first)
-          printf("%07x 0x%04x\n", 4 * ri.read, InputBuffer[i][1]);
-
         ri.read++;
-        is_first = 0;
 
         /* push frame */
         PushFrame(InputBuffer[i]);
-//        ri.reader_done = 1;
-//        return;
       }
     } while (!feof(stream));
 
