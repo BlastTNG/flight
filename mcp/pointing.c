@@ -11,6 +11,7 @@
 #include <pthread.h>
 
 #include "pointing_struct.h"
+#include "gps_struct.h"
 
 double getlst(time_t t, double lon); // defined in starpos.c
 
@@ -103,6 +104,8 @@ void EvolveSolution(struct SolutionStruct *s,
 void Pointing(){
   int new_index; 
   double gy_az, gy_roll, gy2, gy3, el_rad;
+  static int no_dgps_pos = 0, dgps_pos_index = 0;
+  
   static double gy_roll_amp = 0.0;
 
   static struct SolutionStruct EncEl = {0.0, 360.0*360.0,
@@ -113,8 +116,18 @@ void Pointing(){
   new_index = INC_INDEX(point_index);
 
   /** Set the official Lat and Long: for now use SIP COM1... **/
-  PointingData[new_index].lat = SIPData.GPSpos.lat;
-  PointingData[new_index].lon = SIPData.GPSpos.lon;
+  if (DGPSData.pos_index != dgps_pos_index) {
+    dgps_pos_index = DGPSData.pos_index;
+    PointingData[new_index].lat = DGPSData.lat;
+    PointingData[new_index].lon = DGPSData.lon;
+    no_dgps_pos = 0;
+  } else {
+    no_dgps_pos++;
+    if (no_dgps_pos>3000) { // no dgps for 30 seconds - revert to sip
+      PointingData[new_index].lat = SIPData.GPSpos.lat;
+      PointingData[new_index].lon = SIPData.GPSpos.lon;
+    }
+  }
 
   /** set time related things **/
   PointingData[new_index].mcp_frame = ACSData.mcp_frame;

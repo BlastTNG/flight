@@ -62,6 +62,7 @@ extern pthread_mutex_t mutex;
 void Pointing();
 void WatchPortC1(void);
 void WatchPortC2(void);
+void WatchDGPS(void);
 void WatchFIFO(void);
 void DirFileWriter(void);
 
@@ -518,6 +519,7 @@ int main(int argc, char *argv[]) {
   pthread_t CommandDatacomm2;
   pthread_t bi0_id;
   pthread_t sensors_id;
+  pthread_t dgps_id;
 #endif
 
   struct CommandDataStruct CommandData_loc;
@@ -537,6 +539,8 @@ int main(int argc, char *argv[]) {
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPortC1, NULL);
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPortC2, NULL);
 
+  pthread_create(&dgps_id, NULL, (void*)&WatchDGPS,NULL);
+  
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   //pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
 

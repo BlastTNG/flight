@@ -9,6 +9,7 @@
 
 #include "tx_struct.h"
 #include "pointing_struct.h"
+#include "gps_struct.h"
 #include "tx.h"
 #include "command_struct.h"
 
@@ -1093,6 +1094,19 @@ void StoreData(unsigned int* Txframe,
   static int i_AZ_VEL, j_AZ_VEL, i_EL_VEL, j_EL_VEL;
   static int i_RA, j_RA, i_DEC, j_DEC, i_R, j_R;
   static int i_SVETO, j_SVETO;
+
+  /** dgps fields */
+  static int i_dgps_time, j_dgps_time;
+  static int i_dgps_lat, j_dgps_lat;  
+  static int i_dgps_lon, j_dgps_lon;  
+  static int i_dgps_alt, j_dgps_alt;  
+  static int i_dgps_speed, j_dgps_speed;  
+  static int i_dgps_dir, j_dgps_dir;  
+  static int i_dgps_climb, j_dgps_climb;
+  static int i_dgps_att_ok, j_dgps_att_ok;
+  static int i_dgps_att_index, j_dgps_att_index;
+  static int i_dgps_pos_index, j_dgps_pos_index;
+  static int i_dgps_n_sat, j_dgps_n_sat;
   
   time_t t;
 
@@ -1133,7 +1147,15 @@ void StoreData(unsigned int* Txframe,
     SlowChIndex("p_ra", &i_RA, &j_RA);
     SlowChIndex("p_dec", &i_DEC, &j_DEC);
     SlowChIndex("p_r", &i_R, &j_R);
-    SlowChIndex("sensor_veto", &i_SVETO, &j_SVETO);  
+    SlowChIndex("sensor_veto", &i_SVETO, &j_SVETO);
+
+    SlowChIndex("dgps_time", &i_dgps_time, &j_dgps_time);
+    SlowChIndex("dgps_lat", &i_dgps_lat, &j_dgps_lat);
+    SlowChIndex("dgps_lon", &i_dgps_lon, &j_dgps_lon);
+    SlowChIndex("dgps_alt", &i_dgps_alt, &j_dgps_alt);
+    SlowChIndex("dgps_speed", &i_dgps_speed, &j_dgps_speed);
+    SlowChIndex("dgps_dir", &i_dgps_dir, &j_dgps_dir);
+    SlowChIndex("dgps_climb", &i_dgps_climb, &j_dgps_climb);
   }
 
   /********** VSC Data **********/
@@ -1191,6 +1213,23 @@ void StoreData(unsigned int* Txframe,
   }
   
   WriteSlow(i_SVETO, j_SVETO, sensor_veto);
+
+  /************* dgps fields *************/
+  t = DGPSData.t;
+  WriteSlow(i_dgps_time, j_dgps_time, t >> 16);
+  WriteSlow(i_dgps_time + 1, j_dgps_time + 1, t);
+
+  WriteSlow(i_dgps_lat, j_dgps_lat, (int)(DGPSData.lat * DEG2I));
+  WriteSlow(i_dgps_lon, j_dgps_lon, (int)(DGPSData.lon * DEG2I));
+  WriteSlow(i_dgps_alt, j_dgps_alt, (int)(DGPSData.alt * DEG2I));
+  WriteSlow(i_dgps_speed, j_dgps_speed, (int)(DGPSData.speed * DEG2I));
+  WriteSlow(i_dgps_dir, j_dgps_dir, (int)(DGPSData.direction * DEG2I));
+  WriteSlow(i_dgps_climb, j_dgps_climb, (int)(DGPSData.climb * DEG2I));
+  WriteSlow(i_dgps_att_ok, j_dgps_att_ok, DGPSData.att_ok);
+  WriteSlow(i_dgps_att_index, j_dgps_att_index, DGPSData.att_index);
+  WriteSlow(i_dgps_pos_index, j_dgps_pos_index, DGPSData.pos_index);
+  WriteSlow(i_dgps_n_sat, j_dgps_n_sat, DGPSData.n_sat);
+  
 }
 
 

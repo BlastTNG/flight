@@ -15,9 +15,9 @@ clean:
 Makefile.config:
 	./configure
 
-mcp: mcp.o tx.o tx.h tx_struct.h commands.o command_struct.h ephemeris/creader/Source/ephem_read.o starpos.o starfind.o pointing_struct.h pointing.o commands.h tx_struct.o dirfile.o geomag.o sched.o
+mcp: mcp.o tx.o tx.h tx_struct.h commands.o command_struct.h ephemeris/creader/Source/ephem_read.o starpos.o starfind.o pointing_struct.h pointing.o commands.h tx_struct.o dirfile.o geomag.o sched.o dgps.o
 	$(CC) -L/usr/X11R6/lib -L. -o mcp mcp.o tx.o commands.o ephemeris/creader/Source/ephem_read.o starpos.o starfind.o sched.o \
-	 dirfile.o geomag.o pointing.o tx_struct.o \
+	 dirfile.o geomag.o pointing.o tx_struct.o dgps.o\
         -lpthread -liticonfig_g $(FL_LIBS) -lm
 
 mcp.o: tx.h tx_struct.h command_struct.h pointing_struct.h ephem_read.h ephem_types.h mcp.c bbc.h starpos.h
@@ -52,6 +52,9 @@ starfind.o: starfind.c pointing_struct.h starpos.h ephem_read.h
 
 pointing.o: pointing_struct.h pointing.c
 	  $(CC) -c pointing.c
+
+dgps.o: dgps.c gps_struct.h
+	$(CC) -c dgps.c
 
 install: mcp
 	install -m 755 mcp /usr/local/bin

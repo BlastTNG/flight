@@ -170,7 +170,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
   {
     {"sip_time",     'w', LOOPBACK, 33,          1.0,             0.0, 'U'},
     {"lst",          'w', LOOPBACK, 50,   1.0/3600.0,             0.0, 'U'},
-    {"sip_lat",      'w', LOOPBACK, 23,        I2DEG,             0.0, 'u'},
+    {"dgps_time",    'w', LOOPBACK, 52,          1.0,             0.0, 'U'},
     {"t_clin_pyr",   'r', 21, 23,           -0.00625,          136.45, 'u'},
     {"bias_lev1",    'w', LOOPBACK, 43,          1.0,             0.0, 'u'},
     {"bias_lev2",    'w', LOOPBACK, 44,          1.0,             0.0, 'u'},
@@ -190,9 +190,9 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"phase16",      'w', 16, 10,                1.0,             0.0, 'u'}
   },
   {
-    {"",/*siptime*/ 'w', LOOPBACK, 34,           1.0,             0.0, 'u'},
-    {"", /* lst */  'w', LOOPBACK, 51,           1.0,             0.0, 'u'},
-    {"sip_lon",     'w', LOOPBACK, 24,           I2DEG,           0.0, 'u'},
+    {""/*siptime*/, 'w', LOOPBACK, 34,           1.0,             0.0, 'u'},
+    {""/*lst*/,     'w', LOOPBACK, 51,           1.0,             0.0, 'u'},
+    {""/*dgps_time*/, 'w', LOOPBACK, 53,         1.0,             0.0, 'u'},
     {"sip_alt",     'w', LOOPBACK, 25,           4.0,             0.0, 'u'},
     {"lat",         'w', LOOPBACK, 31,           I2DEG,           0.0, 'u'},
     {"lon",         'w', LOOPBACK, 32,           I2DEG,           0.0, 'u'},
@@ -209,9 +209,31 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"p_r",         'w', LOOPBACK, 48,           I2DEG,           0.0, 'u'},
     {"p_el_mode",   'w', LOOPBACK, 49,           1.0,             0.0, 'u'},
     {"pch_clin_pyr", 'r', 21, 33,      4.0/5333.3333,       -4.*6.144, 'u'},
-    {"spare19",     'r', SPARE, 19,              1.0,             0.0, 'u'},
+    {"spare1",      'r', SPARE, 1,               1.0,             0.0, 'u'}
+  },
+  {
+    {"sip_lat",     'w', LOOPBACK, 23,           I2DEG,           0.0, 'u'},
+    {"sip_lon",     'w', LOOPBACK, 24,           I2DEG,           0.0, 'u'},
+    {"dgps_lat",    'w', LOOPBACK, 19,           I2DEG,           0.0, 'u'},
+    {"dgps_lon",    'w', LOOPBACK, 26,           I2DEG,           0.0, 'u'},
+    {"dgps_alt",    'w', LOOPBACK, 54,           I2DEG,           0.0, 'u'},
+    {"dgps_speed",  'w', LOOPBACK, 54,           I2DEG,           0.0, 'u'},
+    {"dgps_dir",    'w', LOOPBACK, 55,           I2DEG,           0.0, 'u'},
+    {"dgps_climb",  'w', LOOPBACK, 57,           I2DEG,           0.0, 'u'},
+    {"dgps_att_ok", 'w', LOOPBACK, 58,           1.0,             0.0, 'u'},
+    {"dgps_att_index", 'w', LOOPBACK, 59,        1.0,             0.0, 'u'},
+    {"dgps_pos_index", 'w', LOOPBACK, 60,        1.0,             0.0, 'u'},
+    {"dgps_n_sat",  'w', LOOPBACK, 61,           1.0,             0.0, 'u'},
+    {"spare2",      'r', SPARE,    2,            1.0,             0.0, 'u'},
+    {"spare3",      'r', SPARE,    3,            1.0,             0.0, 'u'},
+    {"spare4",      'r', SPARE,    4,            1.0,             0.0, 'u'},
+    {"spare5",      'r', SPARE,    5,            1.0,             0.0, 'u'},
+    {"spare6",      'r', SPARE,    6,            1.0,             0.0, 'u'},
+    {"spare7",      'r', SPARE,    7,            1.0,             0.0, 'u'},
+    {"spare8",      'r', SPARE,    8,            1.0,             0.0, 'u'},
+    {"spare9",      'r', SPARE,    9,            1.0,             0.0, 'u'}
   }
-};
+}; 
 
 struct ChannelStruct FastChList[N_FASTCHLIST] = {
 #ifndef BOLOTEST
