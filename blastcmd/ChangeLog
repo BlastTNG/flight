@@ -1,3 +1,8 @@
+2005-01-05:
+	Release blastcmd-1.1.10
+
+	* blastcmd.c: Fix labeling of ACKs from GSE.
+
 2004-12-19:
 	* blastcmd-remote.in: Force tty allocation?  Huh?  (Removed -t)
 

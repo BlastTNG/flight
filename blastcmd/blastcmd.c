@@ -52,7 +52,7 @@ double round(double x);
 #define ROUTING_DEFAULT 0x09 /* Default routing is COM1 */
 
 char *ack[16] = {
-  "Commands Transmitted",
+  "Command transmitted.",
   "",
   "",
   "",
@@ -62,10 +62,10 @@ char *ack[16] = {
   "",
   "",
   "",
-  "GSE operator disabled science from sending commands",
-  "Routing address does not match the selected link",
-  "The link selected was not enabled",
-  "Bho!",
+  "GSE operator has disabled science from sending commands.",
+  "Routing address does not match the selected link.",
+  "The link selected was not enabled.",
+  "Unspecified error.  Command not sent by GSE.",
   "",
   "Received garbage"
 };
@@ -97,10 +97,10 @@ void USAGE(int flag) {
         "     1  No command specified or command cancelled by user.\n"
         "     2  Unable to open serial port.\n"
         "     3  Parameter out of range.\n"
-        "     4  ACK == 0x0A\n"
-        "     5  ACK == 0x0B\n"
-        "     6  ACK == 0x0C\n"
-        "     7  ACK == 0x0D\n"
+        "     4  Science commanding disabled by GSE operator.\n"
+        "     5  Invalid SIP routing address.\n"
+        "     6  Selected SIP link not enabled.\n"
+        "     7  Unspecified error from GSE.\n"
         "     8  ACK == 0x0E\n"
         "     9  ACK == 0x0F\n"
         "    10  Unexpected error in command definitions\n"
@@ -408,7 +408,7 @@ void WriteLogFile(int argc, char *argv[], unsigned int i_ack, char silent)
   for(n = 1; n < argc; n++)
     fprintf(f, "Sent: %s\n", argv[n]);
 
-  fprintf(f, "Ack: %s\n\n", ack[i_ack]);
+  fprintf(f, "Ack: (0x%02x) %s\n\n", i_ack, ack[i_ack]);
 
   fclose(f);
 
