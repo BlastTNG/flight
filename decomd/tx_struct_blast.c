@@ -87,8 +87,8 @@ struct ChannelStruct SlowChannels[] = {
   {"t_clin_sip",   'r',  ACS0, 31,           -0.01875,           614.4, 'u'},
   {"t_clin_if",    'r',  ACS0, 41,           -0.01875,           614.4, 'u'},
   {"status00",     'r',  ACS0, 56,                1.0,             0.0, 'u'},
-  {"apcu_reg",     'w',  ACS0,  4,          0.0163818,          28.209, 'u'},
-  {"dpcu_reg",     'w',  ACS0,  5,          0.0163818,          28.209, 'u'},
+  {"apcu_reg",     'w',  ACS0,  4,          0.0163818,         28.0209, 'u'},
+  {"dpcu_reg",     'w',  ACS0,  5,          0.0163818,         28.0209, 'u'},
   {"sync00",       'w',  ACS0, 56,                1.0,             0.0, 'u'},
 
   {"t_roll",       'r',  ACS1,  9,              I2T_M,           I2T_B, 'u'},
