@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 #include <sys/stat.h>
 
 #include "frameread.h"
@@ -38,7 +39,11 @@ int StaticSourcePart(char* output, const char* source, chunkindex_t* value,
   long number = 0;
 
   if ((buffer = strdup(source)) == NULL) {
+#ifdef __DEFILE__
     perror("defile: cannot allocate heap");
+#else
+    syslog(LOG_ERR, "strdup: %m");
+#endif
     exit(1);
   }
 
@@ -76,11 +81,19 @@ int GetNextChunk(char* chunk, int sufflen)
 
   /* allocate our buffers */
   if ((buffer = (char*)malloc(FILENAME_LEN)) == NULL) {
+#ifdef __DEFILE__
     perror("defile: cannot allocate heap");
+#else
+    syslog(LOG_ERR, "malloc: %m");
+#endif
     exit(1);
   }
   if ((newchunk = (char*)malloc(FILENAME_LEN)) == NULL) {
+#ifdef __DEFILE__
     perror("defile: cannot allocate heap");
+#else
+    syslog(LOG_ERR, "malloc: %m");
+#endif
     exit(1);
   }
 
