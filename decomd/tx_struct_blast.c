@@ -435,20 +435,11 @@ struct ChannelStruct FastChannels[] = {
   {"mag_bias",    'r',  ACS0, 43,             1.0,                    0.0, 'u'},
   {"mag_x",       'r',  ACS0, 45,             1.0,                    0.0, 'u'},
   {"mag_y",       'r',  ACS0, 47,             1.0,                    0.0, 'u'},
-  {"acs0bits",    'r',  ACS0, 59,             1.0,                    0.0, 'u'},
-
-  {"az",          'w', LOOP2, 51,           I2DEG,                    0.0, 'u'},
-  {"el",          'w', LOOP2, 52,           I2DEG,                    0.0, 'u'},
-
-  {"mcp_frame",   'w', LOOP2, 34,             1.0,                    0.0, 'u'},
-  {"ss_x_ccd",    'w', LOOP2, 50,             1.0,                    0.0, 's'},
+  {"piv_enc",     'r',  ACS0, 59,    360.0/8192.0,                    0.0, 'u'},
 
   /* send data to ACS0 */
   {"isc_trigger", 'w',  ACS0,  1,             1.0,                    0.0, 'u'},
   {"osc_trigger", 'w',  ACS0,  2,             1.0,                    0.0, 'u'},
-
-  /* send data to new ACS card */
-  {"isc_bits",    'w',  ACS3,  1,             1.0,                    0.0, 'u'},
 
   /* read channels from ACS1 */
   {"gyro5",       'r',  ACS1,  2,  ADU2_TO_DPS, -GYRO2_OFFSET*ADU2_TO_DPS, 'u'},
@@ -461,7 +452,6 @@ struct ChannelStruct FastChannels[] = {
   {"gyro3",       'r',  ACS1, 56,  ADU3_TO_DPS, -GYRO3_OFFSET*ADU3_TO_DPS, 'u'},
   {"gyro1",       'r',  ACS1, 59,  ADU1_TO_DPS, -GYRO1_OFFSET*ADU1_TO_DPS, 'u'},
 
-  {"piv_enc",     'r',  ACS1, 59,    360.0/8192.0,                    0.0, 'u'},
   {"reac_enc",    'r',  ACS1, 60,    360.0/4000.0,                    0.0, 'u'},
   {"pwm_el",      'r',  ACS1, 51,             1.0,                -4000.0, 'u'},
   {"pwm_roll",    'r',  ACS1, 52,             1.0,                -4000.0, 'u'},
@@ -480,6 +470,19 @@ struct ChannelStruct FastChannels[] = {
 
   /* read from board ACS2 */
   {"enc_elev",    'r',  ACS2, 50,  -360.0/65536.0,        ENC_ELEV_OFFSET, 'u'},
+
+  /* read from ACS3 */
+  {"acs0bits",    'r',  ACS3, 59,             1.0,                    0.0, 'u'},
+
+  /* send data to ACS 3 card */
+  {"isc_bits",    'w',  ACS3,  1,             1.0,                    0.0, 'u'},
+
+  {"az",          'w', LOOP2, 51,           I2DEG,                    0.0, 'u'},
+  {"el",          'w', LOOP2, 52,           I2DEG,                    0.0, 'u'},
+
+  {"mcp_frame",   'w', LOOP2, 34,             1.0,                    0.0, 'u'},
+  {"ss_x_ccd",    'w', LOOP2, 50,             1.0,                    0.0, 's'},
+
 #endif
 
   /* Write to DAS3 -- cryo controller */
