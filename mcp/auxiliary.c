@@ -511,17 +511,29 @@ int Balance(int ifpmBits) {
 
 void ChargeController(void) {
   static struct NiosStruct *apcuRegAddr;
+  static struct NiosStruct *apcuTrimAddr;
+  static struct NiosStruct *apcuAutoAddr;
   static struct NiosStruct *dpcuRegAddr;
+  static struct NiosStruct *dpcuTrimAddr;
+  static struct NiosStruct *dpcuAutoAddr;
 
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
     apcuRegAddr = GetNiosAddr("apcu_reg");
+    apcuTrimAddr = GetNiosAddr("apcu_trim");
+    apcuAutoAddr = GetNiosAddr("apcu_auto");
     dpcuRegAddr = GetNiosAddr("dpcu_reg");
+    dpcuTrimAddr = GetNiosAddr("dpcu_trim");
+    dpcuAutoAddr = GetNiosAddr("dpcu_auto");
   }
 
   WriteData(apcuRegAddr, CommandData.apcu_reg, NIOS_QUEUE);
-  WriteData(dpcuRegAddr, CommandData.dpcu_reg, NIOS_FLUSH);
+  WriteData(apcuTrimAddr, CommandData.apcu_trim, NIOS_QUEUE);
+  WriteData(apcuAutoAddr, CommandData.apcu_auto, NIOS_QUEUE);
+  WriteData(dpcuRegAddr, CommandData.dpcu_reg, NIOS_QUEUE);
+  WriteData(dpcuTrimAddr, CommandData.dpcu_trim, NIOS_QUEUE);
+  WriteData(dpcuAutoAddr, CommandData.dpcu_auto, NIOS_FLUSH);
 }
 
 /************************************************************************/

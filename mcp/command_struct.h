@@ -75,7 +75,11 @@ struct CommandDataStruct {
   unsigned short int lat_range; 
 
   short int apcu_reg;
+  double  apcu_trim;
+  short int apcu_auto;
   short int dpcu_reg;
+  double dpcu_trim;
+  short int dpcu_auto;
 
   struct GainStruct roll_gain;
   struct GainStruct ele_gain;

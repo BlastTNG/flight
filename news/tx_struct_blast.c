@@ -479,6 +479,10 @@ struct ChannelStruct SlowChannels[] = {
   {"gy2_h_age",    'w', LOOP4, 37,                1.0,             0.0, 'u'},
   {"gy2_h_hist",   'w', LOOP4, 38,    (100.0/32768.0),             0.0, 'u'},
   {"incool_state", 'w', LOOP4, 39,                1.0,             0.0, 's'},
+  {"apcu_trim",    'w', LOOP4, 40,                1.0,             0.0, 's'},
+  {"dpcu_trim",    'w', LOOP4, 41,                1.0,             0.0, 's'},
+  {"apcu_auto",    'w', LOOP4, 42,                1.0,             0.0, 'u'},
+  {"dpcu_auto",    'w', LOOP4, 43,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
@@ -520,9 +524,6 @@ struct ChannelStruct WideFastChannels[] = {
   {"n14ref",      'r', DAS14, 36,      1.19209e-7,                    0.0, 'U'},
   {"n15ref",      'r', DAS15, 36,      1.19209e-7,                    0.0, 'U'},
   {"n16ref",      'r', DAS16, 36,      1.19209e-7,                    0.0, 'U'},
-
-// cryo control debug
-{"tc_int",	   'r',  CRYO, 58,                 1.0,             0.0, 'S'},
 // end debug
   END_OF_CHANNELS
 };
@@ -579,13 +580,8 @@ struct ChannelStruct FastChannels[] = {
   {"el",          'w', LOOP2, 52,           I2DEG,                    0.0, 'u'},
 
   {"mcp_frame",   'w', LOOP2, 34,             1.0,                    0.0, 'u'},
-
 #endif
-// cryo control debug
-{"tc_pwm",	   'r',  CRYO, 51,                 1.0,             0.0, 's'},
-{"tc_to",	   'r',  CRYO, 54,          16777216.0,             0.0, 's'},
-{"tc_err",	   'r',  CRYO, 55,                 1.0,             0.0, 's'},
-// end debug
+
   /* Read from DAS3 -- cryo commanding */
   {"calstat",      'r',  CRYO, 61,                 1.0,             0.0, 'u'},
 
