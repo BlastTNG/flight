@@ -8,3 +8,4 @@ INCLUDES = -D__DEFILE__
 distinstall: distcheck
 	$(mkinstalldirs) ${prefix}/src
 	${INSTALL_DATA} ${distdir}.tar.gz ${prefix}/src
+	scp ${distdir}.tar.gz blast.physics.utoronto.ca:/data/src
