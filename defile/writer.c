@@ -698,7 +698,8 @@ void WriteField(int file, int length, void *buffer)
       berror(fatal, "Error on write");
     else {
       gze = gzerror((gzFile)file, &gzerrno);
-      bprintf(fatal, "Error on write: %s", gze);
+      if (gzerrno)
+        bprintf(fatal, "Error on write: %s (%i)", gze, gzerrno);
     }
   } else if (!rc.gzip_output && write(file, buffer, length) < 0)
     berror(fatal, "Error on write");
