@@ -74,7 +74,8 @@ int SSLut_find(double ccd_x, double *azi, double ele,
     
   } while ( (fabs(dx) > 1.0) && (*iter < MAXITER));
   
-  if(*iter >= MAXITER) return SS_NOTCONVERGING;
+  if(*iter >= MAXITER)
+    return SS_NOTCONVERGING;
   
   // Do a linear interpolation: this is good to <1 arc minute 
   

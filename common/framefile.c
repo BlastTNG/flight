@@ -34,11 +34,12 @@ char *StringToLower(char *s) {
   static char ls[256];
 
   len = strlen(s);
-  if (len > 255) len = 255;
+  if (len > 255)
+    len = 255;
 
-  for (i = 0; i < len; i++) {
+  for (i = 0; i < len; i++)
     ls[i] = tolower(s[i]);
-  }
+
   ls[len] = '\0';
   return(ls);
 }
@@ -49,9 +50,8 @@ char *StringToUpper(char *s) {
 
   len = strlen(s);
 
-  for (i = 0; i < len; i++) {
+  for (i = 0; i < len; i++)
     us[i] = toupper(s[i]);
-  }
 
   us[len] = '\0';
   return(us);

@@ -530,7 +530,8 @@ int fill_Rx_frame(unsigned int in_data,
 
     i++;
 
-    if (i >= FRAME_WORDS) i = 0;
+    if (i >= FRAME_WORDS)
+      i = 0;
 
     if (i == start) {
       //if (n_not_found==0) {
@@ -597,7 +598,8 @@ void PushBi0Buffer(unsigned short *RxFrame) {
   int i, fw, i_in;
 
   i_in = bi0_buffer.i_in + 1;
-  if (i_in>=BI0_FRAME_BUFLEN) i_in = 0;
+  if (i_in>=BI0_FRAME_BUFLEN)
+    i_in = 0;
 
   fw = FRAME_WORDS;
 
@@ -627,7 +629,8 @@ void BiPhaseWriter(void) {
     i_out = bi0_buffer.i_out;
     while (i_out != i_in) {
       i_out++;
-      if (i_out>=BI0_FRAME_BUFLEN) i_out = 0;
+      if (i_out>=BI0_FRAME_BUFLEN)
+        i_out = 0;
       write_to_biphase(bi0_buffer.framelist[i_out]);
     }
     bi0_buffer.i_out = i_out;

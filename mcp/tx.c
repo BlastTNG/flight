@@ -511,7 +511,6 @@ void StoreData(int index, unsigned int* TxFrame,
   t = DGPSTime;
   WriteSlow(i_dgps_time, j_dgps_time, t >> 16);
   WriteSlow(i_dgps_time + 1, j_dgps_time, t);
-  /*if (t<100) printf("t spike %lu\n", t); */
 
   /** Pos fields **/
   i_dgps = GETREADINDEX(dgpspos_index);
@@ -711,7 +710,8 @@ void do_Tx_frame(int bbc_fp, unsigned int *TxFrame,
     TxFrame[j + 4] = slowTxFields[j][index];
   }
   index++;
-  if (index >= FAST_PER_SLOW) index = 0;
+  if (index >= FAST_PER_SLOW)
+    index = 0;
 
   /*** do Controls ***/
 #ifndef BOLOTEST

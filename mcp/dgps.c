@@ -56,16 +56,18 @@ void SetGPSPort(speed_t speed) {
 /** instr should be incremented by the return value to prepare for **/
 /** the next call **/
 int GetField(char *instr, char *outstr) {
-  int i=0;
+  int i = 0;
 
-  while ((instr[i] != ',') && (instr[i]!='\0') && (instr[i] != '*')) {
+  while ((instr[i] != ',') && (instr[i] != '\0') && (instr[i] != '*')) {
     outstr[i] = instr[i];
     i++;
   }
   outstr[i] = '\0';
 
-  if (instr[i] == '\0') return i;
-  else return i+1;
+  if (instr[i] == '\0')
+    return i;
+  else
+    return i + 1;
 }
 
 void WatchDGPS() {
@@ -101,7 +103,7 @@ void WatchDGPS() {
   SetGPSPort(B9600);
 
   fp = fopen(GPSCOM, "r+");
-  if (fp==NULL)
+  if (fp == NULL)
     merror(MCP_TFATAL, "error opening gps port for i/o");
 
   fprintf(fp,"$PASHS,SPD,B,7\r\n");
@@ -111,7 +113,7 @@ void WatchDGPS() {
   SetGPSPort(B38400);
 
   fp = fopen(GPSCOM, "r+");
-  if (fp==NULL)
+  if (fp == NULL)
     merror(MCP_TFATAL, "error opening gps port for i/o");
 
   /* fprintf(fp,"$PASHS,RST\r\n");  // reset to defaults */
@@ -135,18 +137,19 @@ void WatchDGPS() {
   while (1) {
     fgets(instr, 499, fp);
 
-    if (strncmp(instr, "$GPZDA", 6)==0) { /* p 109 */
+    if (strncmp(instr, "$GPZDA", 6) == 0) { /* p 109 */
       sscanf(instr,"$GPZDA,%2d%2d%f,%d,%d,%d",&(ts.tm_hour),&(ts.tm_min),
           &s,&(ts.tm_mday),&(ts.tm_mon),&(ts.tm_year));
       ts.tm_sec = s;
-      ts.tm_year-=1900;
+      ts.tm_year -= 1900;
 
       ts.tm_isdst = 0;
       ts.tm_mon--; /* Jan is 0 in struct tm.tm_mon, not 1 */
 
-      DGPSTime = mktime(&ts)-timezone + LEAP_SECONDS;
-    } else if (strncmp(instr, "$GPPAT",6)==0) { // position & attitude: Page 98
-      inptr=instr+7;
+      DGPSTime = mktime(&ts) - timezone + LEAP_SECONDS;
+    } else if (strncmp(instr, "$GPPAT",6) == 0) { /* position & attitude:
+                                                   * Page 98 */
+      inptr = instr + 7;
 
       // Time field: skip it
       inptr += GetField(inptr,outstr);
@@ -181,9 +184,9 @@ void WatchDGPS() {
         DGPSAtt[dgpsatt_index].att_ok = 0;
       }
       dgpsatt_index = INC_INDEX(dgpsatt_index);
-    } else if (strncmp(instr, "$PASHR,POS",10)==0) { // speed and position p99
+    } else if (strncmp(instr, "$PASHR,POS",10) == 0) { // speed and position p99
       pos_ok = 1;
-      inptr=instr+7;
+      inptr = instr + 7;
 
       // skip type
       inptr += GetField(inptr,outstr);
@@ -191,9 +194,9 @@ void WatchDGPS() {
 
       // # Sattelites
       inptr += GetField(inptr,outstr);
-      if (sscanf(outstr,"%d", &(DGPSPos[dgpspos_index].n_sat))!=1) {
+      if (sscanf(outstr,"%d", &(DGPSPos[dgpspos_index].n_sat)) != 1) {
         pos_ok = 0;
-      } else if (DGPSPos[dgpspos_index].n_sat<4) {
+      } else if (DGPSPos[dgpspos_index].n_sat < 4) {
         pos_ok = 0;
       }
 
@@ -202,26 +205,28 @@ void WatchDGPS() {
 
       // Latitude
       inptr += GetField(inptr,outstr);
-      if (sscanf(outstr,"%2d%f", &d,&m)!=2) {
+      if (sscanf(outstr,"%2d%f", &d,&m) != 2) {
         pos_ok = 0;
       } else {
-        DGPSPos[dgpspos_index].lat = (double)d + (double)m*(1.0/60.0);
+        DGPSPos[dgpspos_index].lat = (double)d + (double) m * (1.0 / 60.0);
       }
 
       // North/South
       inptr += GetField(inptr,outstr);
-      if (outstr[0]=='S') DGPSPos[dgpspos_index].lat *=-1;
+      if (outstr[0] == 'S')
+        DGPSPos[dgpspos_index].lat *=-1;
 
       // Longitude
       inptr += GetField(inptr,outstr);
-      if (sscanf(outstr,"%3d%f", &d,&m)!=2) {
+      if (sscanf(outstr,"%3d%f", &d,&m) !=  2) {
         pos_ok = 0;
       } else {
-        DGPSPos[dgpspos_index].lon = (double)d + (double)m*(1.0/60.0);
+        DGPSPos[dgpspos_index].lon = (double)d + (double) m * (1.0 / 60.0);
       }
       // East/West
       inptr += GetField(inptr,outstr);
-      if (outstr[0]=='E') DGPSPos[dgpspos_index].lon *=-1;
+      if (outstr[0] == 'E')
+        DGPSPos[dgpspos_index].lon *=-1;
 
       // Altitude
       inptr += GetField(inptr,outstr);
@@ -242,7 +247,7 @@ void WatchDGPS() {
       inptr += GetField(inptr,outstr);
       sscanf(outstr,"%lf", &(DGPSPos[dgpspos_index].climb));
 
-      if (DGPSPos[dgpspos_index].n_sat<=3) {
+      if (DGPSPos[dgpspos_index].n_sat <= 3) {
         pos_ok = 0;
       }
 
