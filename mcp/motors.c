@@ -607,6 +607,7 @@ void DoCapMode() {
   double lst;
   double v;
   int i_point;
+  double turn_around;
 
   static struct PointingModeStruct last_pm = {
     P_BOX, 0.0, 0.0, 0.0, 0.0, 0.0,0.0,0};
@@ -678,8 +679,14 @@ void DoCapMode() {
   } else {
     xw = sqrt(x2);
   }
+  
+  turn_around = v*0.3; // FRAME_MARGIN * 10 ms - time delay
+  turn_around += (v*v*(0.5)/(AZ_ACCEL*100.0))*0.5;  // 
+  xw -= turn_around;
+  
   if (xw < MIN_SCAN) xw = MIN_SCAN;
   xw /= cos(el * M_PI/180.0);
+
   left = caz - xw;
   right = caz + xw;
 

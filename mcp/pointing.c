@@ -170,7 +170,7 @@ int MagConvert(double *mag_az) {
     year = 1900 + now.tm_year + now.tm_yday / 365.25;
 
     GetMagModel(SIPData.GPSpos.alt / 1000.0, PointingData[i_point_read].lat,
-        PointingData[i_point_read].lon, year, &fdec, &dip, &ti, &gv);
+        -PointingData[i_point_read].lon, year, &fdec, &dip, &ti, &gv);
 
     dec = fdec;
     
@@ -185,9 +185,9 @@ int MagConvert(double *mag_az) {
   /* subtract dec from az to get the true bearing. (Adam H.) */
 
   raw_mag_az = (180.0/M_PI) * atan2(ACSData.mag_y, ACSData.mag_x);
-  
+
   *mag_az = LutCal(&magLut, raw_mag_az);
-  
+
   *mag_az += dec + MAG_ALIGNMENT;
     
   NormalizeAngle(mag_az);
