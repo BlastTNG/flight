@@ -153,10 +153,17 @@ void WatchDGPS() {
   /* sleep(10); */
   /********* Set up array dimention and phase shifts *********/
   /***** THESE were set by MD/ 8/28/03 ******/
-  fprintf(fp,"$PASHS,3DF,V12,+000.000,+003.239,-000.000\r\n");
-  fprintf(fp,"$PASHS,3DF,V13,-001.254,+002.446,-000.024\r\n");
-  fprintf(fp,"$PASHS,3DF,V14,+001.346,+000.560,-000.015\r\n");
-  fprintf(fp,"$PASHS,3DF,OFS,-117.14,+00.00,+00.00\r\n"); // array offset p71
+  // fprintf(fp,"$PASHS,3DF,V12,+000.000,+003.239,-000.000\r\n");
+  // fprintf(fp,"$PASHS,3DF,V13,-001.254,+002.446,-000.024\r\n");
+  // fprintf(fp,"$PASHS,3DF,V14,+001.346,+000.560,-000.015\r\n");
+  // fprintf(fp,"$PASHS,3DF,OFS,-117.14,+00.00,+00.00\r\n"); // array offset p71
+  // fprintf(fp,"$PASHS,SAV,Y\r\n");
+  
+  /***** THESE were set by cbn/ Feb 14/05 ******/
+  fprintf(fp,"$PASHS,3DF,V12,+000.000,+003.762,+000.097\r\n");
+  fprintf(fp,"$PASHS,3DF,V13,+001.276,+002.786,+000.053\r\n");
+  fprintf(fp,"$PASHS,3DF,V14,-001.501,+000.355,+000.090\r\n");
+  fprintf(fp,"$PASHS,3DF,OFS,+000.00,+00.00,+00.00\r\n"); // array offset p71
   fprintf(fp,"$PASHS,SAV,Y\r\n");
   /**********************************************/
   fprintf(fp,"$PASHS,ELM,15\r\n"); // minimum elevation for sattelite p 53
