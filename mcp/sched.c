@@ -323,6 +323,7 @@ void DoSched(void) {
   static int last_is = -1;
   static int last_s = -1;
   static int last_l = -1;
+  static int doing_schedule = 0;
   int i_sched, i_point;
   int i_dgps;
   struct ScheduleType *S = &_S[CommandData.sucks][CommandData.lat_range];
@@ -370,11 +371,14 @@ void DoSched(void) {
   }
 
   /* no schedule file case */
-  if (S->n_sched < 1)
+  if (S->n_sched < 1) {
+    doing_schedule = 0;
     return;
+  }
 
   t = PointingData[i_point].t;
   if (t < CommandData.pointing_mode.t) {
+    doing_schedule = 0;
     last_is = -1;
     return;
   }
@@ -385,10 +389,10 @@ void DoSched(void) {
       bputs(info, "Scheduler: *** Executing initial float commands. ***\n");
       /* el on */
       event.command = el_on;
+      event.is_multi = 0;
       ScheduledCommand(&event);
       /* unlock */
       event.command = unlock;
-      event.is_multi = 0;
       ScheduledCommand(&event);
       /* az on */
       event.command = az_on;
@@ -401,8 +405,21 @@ void DoSched(void) {
       event.is_multi = 1;
       event.ivalues[0] = 600;
       ScheduledCommand(&event);
+      doing_schedule = 0;
+      bputs(info, "Scheduler: *** Initial float commands complete. ***\n");
       return;
     }
+
+  if (!doing_schedule) {
+    bputs(info, "Scheduler: *** Entering schedule file mode.  ***\n"
+        "Scheduler: *** Running initial schedule controls.  ***\n");
+    /* bias fixed */
+    event.command = fixed;
+    event.is_multi = 0;
+    ScheduledCommand(&event);
+    bputs(info, "Scheduler: *** Initial schedule controls complete.  ***\n");
+  }
+  doing_schedule = 1;
 
   /*************************************************************/
   /** find local comoving siderial date (in siderial seconds) **/

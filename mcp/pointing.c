@@ -38,6 +38,7 @@
 #include "pointing_struct.h"
 #include "command_struct.h"
 #include "lut.h"
+#include "tx.h"
 #include "sslutNA.h"
 
 /* #define GY1_OFFSET (-0.1365) */
@@ -645,7 +646,8 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
   update the pointing;
   */
 /* Elevation encoder uncertainty: */
-void Pointing(){
+void Pointing()
+{
   double R, cos_e, cos_l, cos_a;
   double sin_e, sin_l, sin_a;
   double ra, dec, az, el;
@@ -655,6 +657,15 @@ void Pointing(){
   double dgps_az, dgps_pitch, dgps_roll;
   double gy_roll, gy2, gy3, el_rad, clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0;
+
+  static struct NiosStruct *clinTrimAddr;
+  static struct NiosStruct *encTrimAddr;
+  static struct NiosStruct *nullTrimAddr;
+  static struct NiosStruct *magTrimAddr;
+  static struct NiosStruct *dgpsTrimAddr;
+  static struct NiosStruct *ssTrimAddr;
+
+  static int firsttime = 1;
 
   int i_dgpspos;
   int i_point_read;
@@ -776,6 +787,16 @@ void Pointing(){
     0.0001, // filter constant
     0, 0 // n_solutions, since_last
   };
+
+  if (firsttime) {
+    firsttime = 0;
+    clinTrimAddr = GetNiosAddr("clin_trim");
+    encTrimAddr = GetNiosAddr("enc_trim");
+    nullTrimAddr = GetNiosAddr("null_trim");
+    magTrimAddr = GetNiosAddr("mag_trim");
+    dgpsTrimAddr = GetNiosAddr("dgps_trim");
+    ssTrimAddr = GetNiosAddr("ss_trim");
+  }
 
   if (elClinLut.n == 0)
     LutInit(&elClinLut);
@@ -1013,7 +1034,15 @@ void Pointing(){
   }
 
   point_index = INC_INDEX(point_index);
-} 
+
+
+  WriteData(clinTrimAddr, ClinEl.trim * DEG2I, NIOS_QUEUE);
+  WriteData(encTrimAddr, EncEl.trim * DEG2I, NIOS_QUEUE);
+  WriteData(nullTrimAddr, NullAz.trim * DEG2I, NIOS_QUEUE);
+  WriteData(magTrimAddr, MagAz.trim * DEG2I, NIOS_QUEUE);
+  WriteData(dgpsTrimAddr, DGPSAz.trim * DEG2I, NIOS_QUEUE);
+  WriteData(ssTrimAddr, SSAz.trim * DEG2I, NIOS_FLUSH);
+}
 
 // called from the command thread in command.h
 void SetRaDec(double ra, double dec) {

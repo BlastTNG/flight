@@ -538,6 +538,10 @@ void StoreData(int index)
   static struct NiosStruct* pXDegAddr, *pYAddr;
   static struct NiosStruct* pVazAddr, *pDelAddr;
   static struct NiosStruct* pWAddr, *pHAddr;
+  static struct NiosStruct* pRa1Addr, *pDec1Addr;
+  static struct NiosStruct* pRa2Addr, *pDec2Addr;
+  static struct NiosStruct* pRa3Addr, *pDec3Addr;
+  static struct NiosStruct* pRa4Addr, *pDec4Addr;
 
   static struct NiosStruct* sensorVetoAddr;
 
@@ -658,6 +662,14 @@ void StoreData(int index)
     pDelAddr = GetNiosAddr("p_del");
     pWAddr = GetNiosAddr("p_w");
     pHAddr = GetNiosAddr("p_h");
+    pRa1Addr = GetNiosAddr("p_ra_1");
+    pDec1Addr = GetNiosAddr("p_dec_1");
+    pRa2Addr = GetNiosAddr("p_ra_2");
+    pDec2Addr = GetNiosAddr("p_dec_2");
+    pRa3Addr = GetNiosAddr("p_ra_3");
+    pDec3Addr = GetNiosAddr("p_dec_3");
+    pRa4Addr = GetNiosAddr("p_ra_4");
+    pDec4Addr = GetNiosAddr("p_dec_4");
 
     sensorVetoAddr = GetNiosAddr("sensor_veto");
 
@@ -786,6 +798,18 @@ void StoreData(int index)
   WriteData(pDelAddr, (int)(CommandData.pointing_mode.del * VEL2I), NIOS_QUEUE);
   WriteData(pWAddr, (int)(CommandData.pointing_mode.w * DEG2I), NIOS_QUEUE);
   WriteData(pHAddr, (int)(CommandData.pointing_mode.h * DEG2I), NIOS_QUEUE);
+  WriteData(pRa1Addr, (int)(CommandData.pointing_mode.ra[0] * H2I), NIOS_QUEUE);
+  WriteData(pDec1Addr, (int)(CommandData.pointing_mode.dec[0] * H2I),
+      NIOS_QUEUE);
+  WriteData(pRa2Addr, (int)(CommandData.pointing_mode.ra[1] * H2I), NIOS_QUEUE);
+  WriteData(pDec2Addr, (int)(CommandData.pointing_mode.dec[1] * H2I),
+      NIOS_QUEUE);
+  WriteData(pRa3Addr, (int)(CommandData.pointing_mode.ra[2] * H2I), NIOS_QUEUE);
+  WriteData(pDec3Addr, (int)(CommandData.pointing_mode.dec[2] * H2I),
+      NIOS_QUEUE);
+  WriteData(pRa4Addr, (int)(CommandData.pointing_mode.ra[3] * H2I), NIOS_QUEUE);
+  WriteData(pDec4Addr, (int)(CommandData.pointing_mode.dec[3] * H2I),
+      NIOS_QUEUE);
 
   sensor_veto = (!CommandData.use_sun) | ((!CommandData.use_isc) << 1) |
     ((!CommandData.use_elenc) << 2) |

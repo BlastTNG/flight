@@ -483,6 +483,20 @@ struct ChannelStruct SlowChannels[] = {
   {"dpcu_trim",    'w', LOOP4, 41,                1.0,             0.0, 's'},
   {"apcu_auto",    'w', LOOP4, 42,                1.0,             0.0, 'u'},
   {"dpcu_auto",    'w', LOOP4, 43,                1.0,             0.0, 'u'},
+  {"p_ra_1",       'w', LOOP4, 44,                I2H,             0.0, 'u'},
+  {"p_dec_1",      'w', LOOP4, 45,              I2DEG,             0.0, 's'},
+  {"p_ra_2",       'w', LOOP4, 46,                I2H,             0.0, 'u'},
+  {"p_dec_2",      'w', LOOP4, 47,              I2DEG,             0.0, 's'},
+  {"p_ra_3",       'w', LOOP4, 48,                I2H,             0.0, 'u'},
+  {"p_dec_3",      'w', LOOP4, 49,              I2DEG,             0.0, 's'},
+  {"p_ra_4",       'w', LOOP4, 50,                I2H,             0.0, 'u'},
+  {"p_dec_4",      'w', LOOP4, 51,              I2DEG,             0.0, 's'},
+  {"clin_trim",    'w', LOOP4, 52,              I2DEG,             0.0, 's'},
+  {"enc_trim",     'w', LOOP4, 53,              I2DEG,             0.0, 's'},
+  {"null_trim",    'w', LOOP4, 54,              I2DEG,             0.0, 's'},
+  {"mag_trim",     'w', LOOP4, 55,              I2DEG,             0.0, 's'},
+  {"dgps_trim",    'w', LOOP4, 56,              I2DEG,             0.0, 's'},
+  {"ss_trim",      'w', LOOP4, 57,              I2DEG,             0.0, 's'},
   END_OF_CHANNELS
 };
 

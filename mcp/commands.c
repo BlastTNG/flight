@@ -554,6 +554,8 @@ void SingleCommand (enum singleCommand command, int scheduled)
 
   if (!scheduled)
     CommandData.pointing_mode.t = PointingData[i_point].t + CommandData.timeout;
+  else
+    CommandData.pointing_mode.t = PointingData[i_point].t;
 
   WritePrevStatus();
 }
@@ -976,6 +978,8 @@ void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues,
 
   if (!scheduled)
     CommandData.pointing_mode.t = PointingData[i_point].t + CommandData.timeout;
+  else
+    CommandData.pointing_mode.t = PointingData[i_point].t;
 
   WritePrevStatus();
 }
@@ -1590,8 +1594,8 @@ void InitCommandData() {
   CommandData.emf_offset = 0;
 
   CommandData.gyheat[0].setpoint = 30.0;
-  CommandData.gyheat[0].gain.P = 60;
-  CommandData.gyheat[0].gain.I = 20;
+  CommandData.gyheat[0].gain.P = 30;
+  CommandData.gyheat[0].gain.I = 5;
   CommandData.gyheat[0].gain.D = 0;
 
   CommandData.gyheat[1].setpoint = 35.0;
