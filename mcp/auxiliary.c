@@ -533,8 +533,6 @@ void ChargeController(void) {
     tAcsBatAddr = GetBiPhaseAddr("t_batt_acs");
   }
 
-  bprintf(info, "DPU: %g APU: %g\n", CommandData.dpcu_reg, CommandData.apcu_reg);
-
   if (CommandData.apcu_auto) {
     T = I2T_M*slow_data[tAcsBatAddr->index][tAcsBatAddr->channel] + I2T_B;
     if (T<-60) T = 50; // if disconnected, assume hot.
@@ -552,8 +550,6 @@ void ChargeController(void) {
   } else {
     dpcu_control = (CommandData.dpcu_reg - 28.0209)/0.02402664;
   }
-
-  bprintf(info, "DPU: %g APU: %g\n", dpcu_control, apcu_control);
   
   if (apcu_control>100) apcu_control = 100;
   if (apcu_control<0) apcu_control = 0;

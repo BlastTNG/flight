@@ -116,7 +116,7 @@ struct ChannelStruct SlowChannels[] = {
   {"use_analogue", 'w',  ACS1, 20,                1.0,             0.0, 'u'},
   {"sync01",       'w',  ACS1, 56,                1.0,             0.0, 'u'},
 
-  {"t_of_heatx",   'r',  ACS2,  1,              I2T_M,           I2T_B, 'u'},
+  {"t_out_heatx",  'r',  ACS2,  1,              I2T_M,           I2T_B, 'u'},
   {"t_sun_sensor", 'r',  ACS2,  3,              I2T_M,           I2T_B, 'u'},
   {"i_gybox",      'r',  ACS2,  5,          -0.000625,           20.48, 'u'},
   {"pch_clin_piv", 'r',  ACS2,  7,      4.0/5333.3333,       -4.*6.144, 'u'},
