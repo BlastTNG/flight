@@ -640,10 +640,8 @@ void MainForm::GetXMLInfo(char *layoutfile) {
     strncpy(decomdHost, FindAttribute("host", "SETTINGS.DECOMD"),
         MAXPATHLENGTH);
     decomdPort = atoi(FindAttribute("port", "SETTINGS.DECOMD"));
-    pollDecomd = true;
     startupDecomd = true;
   } else {
-    pollDecomd = false;
     startupDecomd = false;
   }
 }
@@ -759,20 +757,20 @@ void MainForm::UpdateData() {
   int updating;
   FILE *curf;
 
-  if (startupDecomd && pollDecomd) {
-    DecomPoller->start();
+  if (startupDecomd) {
+    DecomPoller->start(decomdHost, decomdPort);
     startupDecomd = false;
   }
 
   if (DataSource->update()) {
     updating = 1;
     Picture->TurnOn(ShowPicture);
-    if (pollDecomd)
+    if (DecomPoller->pollDecomd)
       PalantirState->setText("PT: RUN");
   } else {
     // Blank palantir
     Picture->TurnOff(ShowPicture);
-    if (pollDecomd)
+    if (DecomPoller->pollDecomd)
       PalantirState->setText("PT: STP");
     updating = 0;
     if (NoIncomingOn) {
@@ -782,8 +780,8 @@ void MainForm::UpdateData() {
     }
   }
 
-  if (pollDecomd) {
-    switch (connectState) {
+  if (0 || DecomPoller->pollDecomd) {
+    switch (DecomPoller->connectState) {
       case 0:
         DecomState->setText("DD: DIS");
         break;
@@ -807,8 +805,8 @@ void MainForm::UpdateData() {
         break;
     }
 
-    if (connectState == 5) {
-      switch (theDecom->Status()) {
+    if (DecomPoller->connectState == 5) {
+      switch (DecomPoller->theDecom->Status()) {
         case 0:
           LockState->setText("DL: LST");
           break;
@@ -832,13 +830,13 @@ void MainForm::UpdateData() {
           break;
       }
 
-      sprintf(tmp, "FL: %5.1f%%", theDecom->FrameLoss());
+      sprintf(tmp, "FL: %5.1f%%", DecomPoller->theDecom->FrameLoss());
       FrameLoss->setText(tmp);
-      sprintf(tmp, "DQ: %5.1f%%", theDecom->DataQuality());
+      sprintf(tmp, "DQ: %5.1f%%", DecomPoller->theDecom->DataQuality());
       DataQuality->setText(tmp);
-      sprintf(tmp, "FN: %s%", theDecom->DecomFile());
+      sprintf(tmp, "FN: %s%", DecomPoller->theDecom->DecomFile());
       DecomFile->setText(tmp);
-      sprintf(tmp, "DF: %5.2f GB", theDecom->DiskFree());
+      sprintf(tmp, "DF: %5.2f GB", DecomPoller->theDecom->DiskFree());
       DiskFree->setText(tmp);
     } else {
       LockState->setText("DL: ???");
@@ -1131,7 +1129,7 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
 
   QFont font;
 
-  DecomPoller = new DecomPoll;
+  DecomPoller = new DecomPoll();
 
   XMLInfo = new AdamDom();
   GetXMLInfo(layoutfile);
@@ -1236,7 +1234,7 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
   NoIncomingOn = true;
   NoIncomingDialogUp = false;
 
-  if (pollDecomd) {
+  if (startupDecomd) {
     theStatusBar = statusBar();
     theStatusBar->setSizeGripEnabled(false);
 
@@ -1319,7 +1317,6 @@ int main(int argc, char* argv[]) {
     strncpy(layoutfile, DEF_LAYOUTFILE, MAXPATHLENGTH);
 
   MainForm palantir(0, "palantir", true, 0, &layoutfile[0]);
-  theDecom = new DecomData;
 
   app.setMainWidget(&palantir);
   palantir.show();

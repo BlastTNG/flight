@@ -231,6 +231,8 @@ class MainForm : public QMainWindow
     QLabel* DecomFile;
     QLabel* DiskFree;
 
+    char decomdHost[MAXPATHLENGTH];
+    int decomdPort;
     void WarningMessage(char* title, char* txt);
     void WarningMessage(char* title, QString txt);
     float QStringToFloat(QString str);

@@ -1,3 +1,16 @@
+2004-01-13 (1.2.5):
+	* decompoll.cpp, decompoll.h: Split decomd client stuff from palantir.cpp
+	for re-use in logger
+	* palantir.cpp, palantir.h: Fixes for better decomd encapsulation
+
+2005-01-09:
+	* configure.ac: QT detection fixes
+
+2004-11-03 (1.2.4):
+	* configure.ac: fix QT_VERSION code
+	* lib/getdata.o: Update to kst-1.0.0_pre1 version -- this has FRAMEOFFSET
+	code in it
+
 2004-10-24 (1.2.3):
 	* configure.ac, Makefila.am: migrate to auomake 1.9.2 & autoconf 2.59
 

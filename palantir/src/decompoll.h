@@ -57,13 +57,17 @@ class DecomData
 class DecomPoll : public QThread
 {
   public:
+    DecomPoll();
+    void start(const char*, int, Priority priority = InheritPriority);
     virtual void run();
-};
 
-extern char decomdHost[MAXPATHLENGTH];
-extern int decomdPort;
-extern bool pollDecomd;
-extern int connectState;
-extern class DecomData *theDecom;
+    int connectState;
+    class DecomData *theDecom;
+    bool pollDecomd;
+
+  private:
+    char decomdHost[MAXPATHLENGTH];
+    int decomdPort;
+};
 
 #endif

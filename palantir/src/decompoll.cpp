@@ -16,11 +16,8 @@
 
 #include "decompoll.h"
 
-char decomdHost[MAXPATHLENGTH];
-int decomdPort;
 bool pollDecomd;
 int connectState = 0;
-class DecomData *theDecom;
 
 /* Decom Data */
 DecomData::DecomData()
@@ -57,12 +54,28 @@ char* DecomData::DecomFile(void)
   return filename;
 }
 
-void DecomData::setData(char* buf) {
+void DecomData::setData(char* buf)
+{
   sscanf(buf, "%i %i %i %lf %lf %Lu %s", &status, &polarity, &decomUnlocks,
       &fs_bad, &dq_bad, &df, filename);
 }
 
 /* Polls the decom */
+DecomPoll::DecomPoll() : QThread()
+{
+  connectState = 0;
+  theDecom = new DecomData();
+}
+
+void DecomPoll::start(const char* h, int p, Priority priority)
+{
+  strncpy(decomdHost, h, MAXPATHLENGTH);
+  decomdPort = p;
+
+  QThread::start(priority);
+  pollDecomd = true;
+}
+
 void DecomPoll::run()
 {
   struct hostent* result;
@@ -155,4 +168,3 @@ void DecomPoll::run()
     sleep(5);
   }
 }
-
