@@ -144,6 +144,10 @@ static void timer_callback(unsigned long dummy)
       if(idx == 2) {
 	idx = 0;
 	writel(*(unsigned *)out_data, bbc_drv.mem_base + wp);
+
+	wp += BBCPCI_SIZE_UINT;
+	if (wp >= BBCPCI_IR_BI0_BUF_END) wp = BBCPCI_IR_BI0_BUF;
+
 	writel(wp, bbc_drv.mem_base + BBCPCI_ADD_BI0_WP);
       }
       bi0_wfifo.n--;
@@ -228,7 +232,6 @@ static ssize_t bbc_write(struct file *filp, const char __user *buf,
     return (2*i*BBCPCI_SIZE_UINT);
 
   } else if (minor == bi0_minor) {
-    return count;
     to_write = count / sizeof(unsigned short);
     if(to_write == 0) return 0;
 
