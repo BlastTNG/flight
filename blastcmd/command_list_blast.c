@@ -14,7 +14,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.26 $";
+const char command_list_serial[] = "$Revision: 2.27 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -147,7 +147,16 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(isc_save_images), "turn on saving of images", GR_ISC_HOUSE},
   {COMMAND(isc_discard_images), "turn off saving of images", GR_ISC_HOUSE},
   {COMMAND(isc_full_screen), "show full screen", GR_ISC_HOUSE},
-  {COMMAND(isc_auto_focus), "autofocus camera", GR_ISC_HOUSE},
+
+  {COMMAND(isc_trig_int), "tell ISC to use internal (software) triggers",
+    GR_ISC_HOUSE},
+  {COMMAND(isc_trig_edge), "tell ISC to use edge triggers", GR_ISC_HOUSE},
+  {COMMAND(isc_trig_pos), "tell ISC to use positive pulse triggers",
+    GR_ISC_HOUSE},
+  {COMMAND(isc_trig_neg), "tell ISC to use negative pulse triggers",
+    GR_ISC_HOUSE},
+
+  {COMMAND(isc_auto_focus), "autofocus camera", GR_ISC_PARAM},
 
   {COMMAND(osc_run), "start automatic image capture (normal mode)",
     GR_OSC_HOUSE},
@@ -163,7 +172,16 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(osc_save_images), "turn on saving of images", GR_OSC_HOUSE},
   {COMMAND(osc_discard_images), "turn off saving of images", GR_OSC_HOUSE},
   {COMMAND(osc_full_screen), "show full screen", GR_OSC_HOUSE},
-  {COMMAND(osc_auto_focus), "autofocus camera", GR_OSC_HOUSE}
+
+  {COMMAND(osc_trig_int), "tell OSC to use internal (software) triggers",
+    GR_OSC_HOUSE},
+  {COMMAND(osc_trig_edge), "tell OSC to use edge triggers", GR_OSC_HOUSE},
+  {COMMAND(osc_trig_pos), "tell OSC to use positive pulse triggers",
+    GR_OSC_HOUSE},
+  {COMMAND(osc_trig_neg), "tell OSC to use negative pulse triggers",
+    GR_OSC_HOUSE},
+
+  {COMMAND(osc_auto_focus), "autofocus camera", GR_OSC_PARAM}
 };
 
 /* parameter type:

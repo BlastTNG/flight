@@ -13,7 +13,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 102        /* total number of named single word cmds */
+#define N_SCOMMANDS 110        /* total number of single word cmds */
 #define N_MCOMMANDS 67         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -79,7 +79,9 @@ enum singleCommand {
   osc_full_screen,  force_el_on,        auto_jfetheat,    fridge_cycle,
   analogue_gyros,   digital_gyros,      gps_off,          gps_on,
   gyro_off,         gyro_on,            isc_off,          isc_on,
-  osc_off,          osc_on
+  osc_off,          osc_on,
+  isc_trig_int,     isc_trig_edge,      isc_trig_pos,     isc_trig_neg,
+  osc_trig_int,     osc_trig_edge,      osc_trig_pos,     osc_trig_neg,
 };
 
 struct scom {

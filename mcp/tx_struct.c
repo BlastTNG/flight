@@ -449,6 +449,10 @@ struct ChannelStruct SlowChannels[] = {
   {"jfet_set_off", 'w', LOOP4, 22,             1/100.,             0.0, 'u'},
   {"ss_chip_temp", 'w', LOOP4, 23,             1/100.,             0.0, 'u'},
   {"cycle_state",  'w', LOOP4, 26,                1.0,             0.0, 'u'},
+  {"isc_trig_type",'w', LOOP4, 27,                1.0,             0.0, 'u'},
+  {"isc_exposure", 'w', LOOP4, 28,               100.,             0.0, 'u'},
+  {"isc_trig_type",'w', LOOP4, 29,                1.0,             0.0, 'u'},
+  {"osc_exposure", 'w', LOOP4, 30,               100.,             0.0, 'u'},
   END_OF_CHANNELS
 };
 

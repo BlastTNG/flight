@@ -1,10 +1,10 @@
 /*  isc_protocol.h: define data structures for communcation between the server (ISC) and clients (Sam,Frodo,...)
  *
  * This software is copyright (C) 2003-2004 Edward Chapin
- * 
- * This file is part of the BLAST flight code licensed under the GNU 
+ *
+ * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -14,7 +14,7 @@
 /*
 	Overview:
 
-	The server program (netisc on the ISC computer) will connect several clients, each on a separate port. 
+	The server program (netisc on the ISC computer) will connect several clients, each on a separate port.
 
 	Any client may send ISCStatusStruct data frames. The server takes the appropriate action to achieve that status.
 	While the camera is busy changing the status, the server will continue accepting new frames but will ignore
@@ -31,37 +31,23 @@
 #pragma pack(2)		// same packing as in Linux
 #endif
 
-#define _ISC_CCD     // using the the original ISC
-//#define _OSC_CCD     // using the "other" ISC
-
 #define MAX_ISC_BLOBS 20					// static # blobs to store in data frames
 
-#define ISC_CCD_X_PIXELS 1312				// pixel dimenions of the CCD
+#define ISC_CCD_X_PIXELS 1312				// pixel dimenions of the ISC CCD
 #define ISC_CCD_Y_PIXELS 1024				//   "        "     "   "   "
 
-#define OSC_CCD_X_PIXELS 1360				// pixel dimenions of the CCD
+#define OSC_CCD_X_PIXELS 1360				// pixel dimenions of the OSC CCD
 #define OSC_CCD_Y_PIXELS 1036				//   "        "     "   "   "
 
-#ifdef _ISC_CCD
-#define CCD_X_PIXELS ISC_CCD_X_PIXELS
-#define CCD_Y_PIXELS ISC_CCD_Y_PIXELS
 #define FOCUS_RANGE 2550					// # steps range for focus stepper
 #define AP_RANGE 495						// # steps range for aperture stepper
-#endif
-
-#ifdef _OSC_CCD
-#define CCD_X_PIXELS OSC_CCD_X_PIXELS
-#define CCD_Y_PIXELS OSC_CCD_Y_PIXELS
-#define FOCUS_RANGE 2550					// # steps range for focus stepper
-#define AP_RANGE 495						// # steps range for aperture stepper
-#endif
 
 
 typedef enum {full, roi, blob} ISCDisplayModeType;
 
 struct ISCStatusStruct {
   // General server state
-  int abort;			// 1 abort current execution thread   
+  int abort;			// 1 abort current execution thread
   int pause;			// 1 is paused, 0 is continuous mode (doesn't apply to autofocus mode)
   int save;				// 1 save frames
   int autofocus;		// 1 auto focus on brightest blob in field
@@ -70,8 +56,9 @@ struct ISCStatusStruct {
   int MCPFrameNum;		// current frame number of MCP
   int shutdown;			// 0=nothing 1=shutdown 2=reboot computer 3=camera power cycle
   int hold_current;	    // the hold "heater" current (0-50)
-  int exposure;			// *** new - exposure time in us REGARDLESS of self/hardware trigger ***
-  int focusOffset;      // when camera focus ordered "home", step this far 
+  int exposure;			// exposure time in us REGARDLESS of self/hardware trigger
+  int triggertype;		// 0=software, 1=edge, 2=positive pulse, 3=negative pulse
+  int focusOffset;      // when camera focus ordered "home", step this far
 
   // Display mode parameters
   ISCDisplayModeType display_mode;
@@ -79,7 +66,7 @@ struct ISCStatusStruct {
   int roi_y;			// y pixel number for ROI
   int blob_num;			// blob # for ROI
   double azBDA;			// az tangent plane offset from BDA centre for the CCD (radians)
-  double elBDA;			// el   "      "     "    "    "    "    "  "  
+  double elBDA;			// el      "      "     "    "    "    "    "  "
 
   // telescope attitude
   double az;			// az in radians
@@ -94,12 +81,12 @@ struct ISCStatusStruct {
 
   // blob algorithm stuff
   double sn_threshold;
-  int grid;				// ask ed
-  int cenbox;			// ask ed
-  int apbox;			// ask chapin
-  int mult_dist;		// ed knows
+  int grid;	// ask ed
+  int cenbox;	// ask ed
+  int apbox;	// ask chapin
+  int mult_dist;	// ed knows
 
-  // *** new gain/offset stuff ***
+  // gain/offset
   double gain;			// relative gain to the CCD factory default
   int offset;			// offset to the CCD factory default (in digitized units)
 
@@ -138,8 +125,7 @@ struct ISCSolutionStruct {
   double blob_sn[MAX_ISC_BLOBS];
 };
 
-
-#ifdef _WINDOWS_	
+#ifdef _WINDOWS_
 #pragma pack()		// go back to default packing
 #endif
 

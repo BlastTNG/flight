@@ -47,11 +47,6 @@
 
 #define BAL_VETO_LENGTH 500
 
-/* #define SUN             0 */
-/* #define ISC             1 */
-/* #define VSC             2 */
-/* #define MAG             3 */
-
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.
  * This number is relative to the elevation encoder reading, NOT
@@ -66,6 +61,17 @@
 #ifdef BOLOTEST
 #  define USE_FIFO_CMD
 #endif
+
+/* based on isc_protocol.h */
+#define ISC_SHUTDOWN_NONE     0
+#define ISC_SHUTDOWN_HALT     1
+#define ISC_SHUTDOWN_REBOOT   2
+#define ISC_SHUTDOWN_CAMCYCLE 3
+
+#define ISC_TRIGGER_INT  0
+#define ISC_TRIGGER_EDGE 1
+#define ISC_TRIGGER_POS  2
+#define ISC_TRIGGER_NEG  3
 
 void SetRaDec(double ra, double dec); /* defined in pointing.c */
 void SetTrimToISC();
@@ -430,11 +436,11 @@ void SingleCommand (enum singleCommand command) {
   } else if (command == isc_run)
     CommandData.ISCState[0].pause = 0;
   else if (command == isc_shutdown)
-    CommandData.ISCState[0].shutdown = 1;
+    CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_HALT;
   else if (command == isc_reboot)
-    CommandData.ISCState[0].shutdown = 2;
+    CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_REBOOT;
   else if (command == isc_cam_cycle)
-    CommandData.ISCState[0].shutdown = 3;
+    CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_CAMCYCLE;
   else if (command == isc_pause)
     CommandData.ISCState[0].pause = 1;
   else if (command == isc_abort)
@@ -447,6 +453,14 @@ void SingleCommand (enum singleCommand command) {
     CommandData.ISCState[0].save = 0;
   else if (command == isc_full_screen)
     CommandData.ISCState[0].display_mode = full;
+  else if (command == isc_trig_int)
+    CommandData.ISCState[0].triggertype = ISC_TRIGGER_INT;
+  else if (command == isc_trig_edge)
+    CommandData.ISCState[0].triggertype = ISC_TRIGGER_EDGE;
+  else if (command == isc_trig_pos)
+    CommandData.ISCState[0].triggertype = ISC_TRIGGER_POS;
+  else if (command == isc_trig_neg)
+    CommandData.ISCState[0].triggertype = ISC_TRIGGER_NEG;
   else if (command == isc_auto_focus) {
     CommandData.ISCState[0].abort = 1;
     CommandData.ISCControl[0].autofocus = 10;
@@ -456,11 +470,11 @@ void SingleCommand (enum singleCommand command) {
   } else if (command == osc_run)
     CommandData.ISCState[1].pause = 0;
   else if (command == osc_shutdown)
-    CommandData.ISCState[1].shutdown = 1;
+    CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_HALT;
   else if (command == osc_reboot)
-    CommandData.ISCState[1].shutdown = 2;
+    CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_REBOOT;
   else if (command == osc_cam_cycle)
-    CommandData.ISCState[1].shutdown = 3;
+    CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_CAMCYCLE;
   else if (command == osc_pause)
     CommandData.ISCState[1].pause = 1;
   else if (command == osc_abort)
@@ -473,6 +487,14 @@ void SingleCommand (enum singleCommand command) {
     CommandData.ISCState[1].save = 0;
   else if (command == osc_full_screen)
     CommandData.ISCState[1].display_mode = full;
+  else if (command == osc_trig_int)
+    CommandData.ISCState[1].triggertype = ISC_TRIGGER_INT;
+  else if (command == osc_trig_edge)
+    CommandData.ISCState[1].triggertype = ISC_TRIGGER_EDGE;
+  else if (command == osc_trig_pos)
+    CommandData.ISCState[1].triggertype = ISC_TRIGGER_POS;
+  else if (command == osc_trig_neg)
+    CommandData.ISCState[1].triggertype = ISC_TRIGGER_NEG;
   else if (command == osc_auto_focus) {
     CommandData.ISCState[1].abort = 1;
     CommandData.ISCControl[1].autofocus = 10;
@@ -1366,8 +1388,8 @@ void InitCommandData() {
   CommandData.Bias.SetLevel2 = 1;
   CommandData.Bias.SetLevel3 = 1;
 
-  CommandData.ISCState[0].shutdown = 0;
-  CommandData.ISCState[1].shutdown = 0;
+  CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_NONE;
+  CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_NONE;
 
   CommandData.sensors_off.gps = 0;
   CommandData.sensors_off.gyro = 0;
@@ -1504,6 +1526,7 @@ void InitCommandData() {
   CommandData.ISCState[0].match_tol = 0.8;
   CommandData.ISCState[0].quit_tol = 1;
   CommandData.ISCState[0].rot_tol = 5 * DEG2RAD;
+  CommandData.ISCState[0].triggertype = ISC_TRIGGER_NEG;
   CommandData.ISCState[0].gain = 1;
   CommandData.ISCState[0].offset = 0;
   CommandData.ISCControl[0].save_period = 4000; /* 40 sec */
@@ -1533,6 +1556,7 @@ void InitCommandData() {
   CommandData.ISCState[1].match_tol = 0.8;
   CommandData.ISCState[1].quit_tol = 1;
   CommandData.ISCState[1].rot_tol = 5 * DEG2RAD;
+  CommandData.ISCState[1].triggertype = ISC_TRIGGER_NEG;
   CommandData.ISCState[1].gain = 1;
   CommandData.ISCState[1].offset = 0;
   CommandData.ISCControl[1].save_period = 4000; /* 40 sec */
