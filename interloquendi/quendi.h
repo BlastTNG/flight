@@ -21,37 +21,8 @@
 #ifndef QUENDI_H
 #define QUENDI_H
 
-/* Responses */
-#define QUENDR_LISTENING      123
-#define QUENDR_SENDING_DATA   151
-#define QUENDR_SENDING_SPEC   150
-#define QUENDR_SERVICE_READY  220
-#define QUENDR_GOODBYE        221
-#define QUENDR_PORT_OPENED    222
-#define QUENDR_ACCESS_GRANTED 230
-#define QUENDR_OK             250
-#define QUENDR_DATA_STAGED    251
-#define QUENDR_TRANS_COMPLETE 252
-#define QUENDR_OPEN_ERROR     420
-#define QUENDR_NO_CUR_DATA    450
-#define QUENDR_SYNTAX_ERROR   500
-#define QUENDR_PARAM_ERROR    501
-#define QUENDR_CMD_NOT_IMPL   502
-#define QUENDR_PORT_NOT_OPEN  520
-#define QUENDR_NOT_IDENTIFIED 530
-#define QUENDR_NO_ACCESS      531
-#define QUENDR_NO_DATA_STAGED 550
-
-/* Commands */
-#define QUENDC_DATA          1000
-#define QUENDC_SPEC          1001
-#define QUENDC_SYNC          1002
-#define QUENDC_IDEN          1003
-#define QUENDC_OPEN          1004
-#define QUENDC_ASYN          1005
-#define QUENDC_NOOP          1006
-#define QUENDC_QUIT          1007
-#define QUENDC_QNOW          1008
+/* Protocol definitions */
+#include "quenya.h"
 
 /* Server Constants */
 #define QUENDI_COMMAND_LENGTH  1024

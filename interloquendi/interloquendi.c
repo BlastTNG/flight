@@ -149,44 +149,44 @@ void Connection(int csock)
     if ((n = quendi_get_cmd(buffer)) == 0)
       switch(quendi_parse(buffer, &np, &params)) {
         case -2:
-          quendi_respond(QUENDR_PARAM_ERROR, "Parameter Missing");
+          quendi_respond(QUENYA_RESPONSE_PARAM_ERROR, "Parameter Missing");
           break;
         case -1:
-          quendi_respond(QUENDR_SYNTAX_ERROR, "Unrecognised Command");
+          quendi_respond(QUENYA_RESPONSE_SYNTAX_ERROR, "Unrecognised Command");
           break;
-        case QUENDC_DATA:
+        case QUENYA_COMMAND_DATA:
           if (data.sock < 1)
-            quendi_respond(QUENDR_PORT_NOT_OPEN, NULL);
+            quendi_respond(QUENYA_RESPONSE_PORT_NOT_OPEN, NULL);
           else if (!data.staged)
-            quendi_respond(QUENDR_NO_DATA_STAGED, NULL);
+            quendi_respond(QUENYA_RESPONSE_NO_DATA_STAGED, NULL);
           else
             quendi_send_data(data.sock, data.name, data.pos, data.frame_size,
                 options[CFG_SUFFIX_LENGTH].value.as_int, data.persist);
           break;
-        case QUENDC_IDEN:
+        case QUENYA_COMMAND_IDEN:
           QuendiData.access_level = 1;
-          quendi_respond(QUENDR_ACCESS_GRANTED, NULL);
+          quendi_respond(QUENYA_RESPONSE_ACCESS_GRANTED, NULL);
           break;
-        case QUENDC_SYNC:
-        case QUENDC_NOOP:
-          quendi_respond(QUENDR_OK, NULL);
+        case QUENYA_COMMAND_SYNC:
+        case QUENYA_COMMAND_NOOP:
+          quendi_respond(QUENYA_RESPONSE_OK, NULL);
           break;
-        case QUENDC_OPEN:
+        case QUENYA_COMMAND_OPEN:
           if (quendi_access_ok(1)) {
             if (data.sock < 1) {
               data.sock = quendi_dp_connect();
               if (data.sock < 1)
-                quendi_respond(QUENDR_OPEN_ERROR, NULL);
+                quendi_respond(QUENYA_RESPONSE_OPEN_ERROR, NULL);
               else
-                quendi_respond(QUENDR_PORT_OPENED, NULL);
+                quendi_respond(QUENYA_RESPONSE_PORT_OPENED, NULL);
             } else
-              quendi_respond(QUENDR_OPEN_ERROR, "Too Many Open Ports");
+              quendi_respond(QUENYA_RESPONSE_OPEN_ERROR, "Too Many Open Ports");
           }
           break;
-        case QUENDC_QNOW:
+        case QUENYA_COMMAND_QNOW:
           if (quendi_access_ok(1)) {
             if (GetCurFile(data.name, QUENDI_COMMAND_LENGTH) == NULL)
-              quendi_respond(QUENDR_NO_CUR_DATA, NULL);
+              quendi_respond(QUENYA_RESPONSE_NO_CUR_DATA, NULL);
             else {
               data.persist = 1;
               data.staged = quendi_stage_data(data.name,
@@ -197,21 +197,21 @@ void Connection(int csock)
             }
           }
           break;
-        case QUENDC_QUIT:
-          quendi_respond(QUENDR_GOODBYE, NULL);
+        case QUENYA_COMMAND_QUIT:
+          quendi_respond(QUENYA_RESPONSE_GOODBYE, NULL);
           close(csock);
           exit(0);
-        case QUENDC_SPEC:
+        case QUENYA_COMMAND_SPEC:
           if (data.sock < 1)
-            quendi_respond(QUENDR_PORT_NOT_OPEN, NULL);
+            quendi_respond(QUENYA_RESPONSE_PORT_NOT_OPEN, NULL);
           else if (!data.staged)
-            quendi_respond(QUENDR_NO_DATA_STAGED, NULL);
+            quendi_respond(QUENYA_RESPONSE_NO_DATA_STAGED, NULL);
           else
             quendi_send_spec(data.sock, data.name, data.pos);
           break;
-        case QUENDC_ASYN:
+        case QUENYA_COMMAND_ASYN:
         default:
-          quendi_respond(QUENDR_CMD_NOT_IMPL, NULL);
+          quendi_respond(QUENYA_RESPONSE_CMD_NOT_IMPL, NULL);
           break;
       }
     else if (n == -2) {
