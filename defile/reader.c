@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <signal.h>
+#include <pthread.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -34,6 +36,14 @@
                            * performance hit if we read more than 64k at a
                            * time, so we keep this small */
 
+extern sigset_t signals;
+
+void ReaderDone(int signo) {
+  fprintf(stderr, "\nCaught signal %d; exiting...\n", signo);
+  ri.reader_done = 1;
+  pthread_exit(0);
+}
+
 void FrameFileReader(void)
 {
   FILE *stream = NULL;
@@ -44,6 +54,24 @@ void FrameFileReader(void)
   unsigned short* InputBuffer[INPUT_BUF_SIZE];
   struct stat chunk_stat;
   long int seek_to = 0;
+
+  struct sigaction action;
+
+  /* set up signal masks */
+  sigemptyset(&signals);
+  sigaddset(&signals, SIGHUP);
+  sigaddset(&signals, SIGINT);
+  sigaddset(&signals, SIGTERM);
+
+  /* set up signal handlers */
+  action.sa_handler = ReaderDone;
+  action.sa_mask = signals;
+  sigaction(SIGTERM, &action, NULL);
+  sigaction(SIGHUP, &action, NULL);
+  sigaction(SIGINT, &action, NULL);
+
+  /* enable signals */
+  pthread_sigmask(SIG_UNBLOCK, &signals, NULL);
 
   if ((InputBuffer[0] = (unsigned short*)malloc(DiskFrameSize
           * INPUT_BUF_SIZE)) == NULL) {

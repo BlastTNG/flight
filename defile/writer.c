@@ -149,6 +149,7 @@ int YesNo(const char* message, int dflt)
       case 'N':
         ri.tty = 0;
         return 0;
+      case '\r':
       case '\n':
       case '\0':
         ri.tty = 0;

@@ -67,6 +67,8 @@ struct rc_struct rc = {
   NULL  /* spec_file */
 };
 
+sigset_t signals;
+
 void PathSplit(const char* path, const char** dname, const char** bname)
 {
   static char static_base[NAME_MAX];
@@ -787,15 +789,6 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
   free(shortarg);
 }
 
-void CloseOutput(int signo) {
-  fprintf(stderr, "\nCaught signal %d; exiting...\n", signo);
-  CleanUp();
-  /* restore default handler and raise the signal again */
-  signal(signo, SIG_DFL);
-  raise(signo);
-}
-
-
 int main (int argc, char** argv)
 {
   struct timeval now;
@@ -847,9 +840,14 @@ int main (int argc, char** argv)
   PreInitialiseDirFile();
   InitialiseDirFile(1);
 
-  signal(SIGHUP, CloseOutput);
-  signal(SIGTERM, CloseOutput);
-  signal(SIGINT, CloseOutput);
+  /* set up signal masks */
+  sigemptyset(&signals);
+  sigaddset(&signals, SIGHUP);
+  sigaddset(&signals, SIGINT);
+  sigaddset(&signals, SIGTERM);
+
+  /* block signals */
+  pthread_sigmask(SIG_BLOCK, &signals, NULL);
 
   /* Spawn reader and writer */
   pthread_create(&read_thread, NULL, (void*)&FrameFileReader, NULL);
