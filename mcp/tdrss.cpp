@@ -60,7 +60,6 @@ extern "C" {
 #include "command_struct.h"
 }
 
-//#define USE_SMALL_LOG
 #define SMALL_LOG_FILE  "/data/etc/tdrss.log"
 int smalllogspaces;
 
@@ -71,15 +70,22 @@ int smalllogspaces;
 int tty_fd;
 extern unsigned short* slow_data[FAST_PER_SLOW];
 
+#ifdef USE_SMALL_LOG
+FILE *smalllog;
+#endif
+
 /******************************************************************************\
  *                                                                            *|
  * OpenSerial: open serial port.                                              *|
  *                                                                            *|
  ******************************************************************************/
 
-int OpenSerial(void) {
+int OpenSerial(void)
+{
   int fd;
   struct termios term;
+
+  SMALL_TRACE("");
 
   if ((fd = open(INPUT_TTY, O_RDWR)) < 0)
     berror(tfatal, "Unable to open serial port");
@@ -106,6 +112,8 @@ int OpenSerial(void) {
   if (tcsetattr(fd, TCSANOW, &term))
     berror(tfatal, "Unable to set serial attributes");
 
+  SMALL_RTN("%i", fd);
+  
   return fd;
 }
 
@@ -132,14 +140,22 @@ int OpenSerial(void) {
 
 Buffer::Buffer(void)
 {
+  SMALL_TRACE("");
+
   buf = (unsigned char *)balloc(fatal, 1);
   startbyte = 0;
   size = 1;
+
+  SMALL_RTN("");
 }
 
 Buffer::~Buffer(void)
 {
+  SMALL_TRACE("");
+
   bfree(fatal, buf);
+
+  SMALL_RTN("");
 }
 
 /******************************************************************************\
@@ -151,6 +167,8 @@ Buffer::~Buffer(void)
 
 void Buffer::SetSize(int s)
 {
+  SMALL_TRACE("%i", s);
+
   if (s > size) {
     size = s;
     // Important to allocate more than requested, in case a frame overflows and
@@ -158,6 +176,8 @@ void Buffer::SetSize(int s)
     safeallocsize = size * BUFFER_SAFE_ALLOC;
     buf = (unsigned char *)reballoc(fatal, buf, safeallocsize);
   }
+
+  SMALL_RTN("");
 }
 
 
@@ -172,10 +192,15 @@ void Buffer::SetSize(int s)
  ******************************************************************************/
 int Buffer::SectionSize(void)
 {
-  if (bitpos > 0)
-    return bytepos - startbyte + 1;
-  else
-    return bytepos - startbyte;
+  int ret;
+
+  SMALL_TRACE("");
+
+  ret = (bitpos > 0) ?  bytepos - startbyte + 1 : bytepos - startbyte;
+
+  SMALL_RTN("%i", ret);
+
+  return ret;
 }
 
 
@@ -189,10 +214,15 @@ int Buffer::SectionSize(void)
 
 int Buffer::CurrSize(void)
 {
-  if (bitpos > 0)
-    return bytepos + 1;
-  else
-    return bytepos;
+  int ret;
+
+  SMALL_TRACE("");
+
+  ret = (bitpos > 0) ? bytepos + 1 : bytepos;
+
+  SMALL_RTN("%i", ret);
+
+  return ret;
 }
 
 
@@ -207,12 +237,18 @@ int Buffer::CurrSize(void)
 
 int Buffer::MaxSize(void)
 {
+  SMALL_TRACE("");
+
+  SMALL_RTN("%i", size);
+
   return size;
 }
 
 
 void Buffer::CheckBytePosRange(int num)
 {
+  SMALL_TRACE("%i", num);
+
   if (bytepos >= safeallocsize) {
     bprintf(err,
         "Alice: serious error (%i)!  Class BUFFER was not properly allocated.  "
@@ -222,6 +258,8 @@ void Buffer::CheckBytePosRange(int num)
         size - 1);
     bytepos = size - 1;
   }
+
+  SMALL_RTN("");
 
   return;
 }
@@ -240,6 +278,8 @@ void Buffer::CheckBytePosRange(int num)
 void Buffer::Start(char filenum, unsigned int framenum)
 {
   int i;
+
+  SMALL_TRACE("%i %i", filenum, framenum);
 
   // Clear the buffer
   for (i = 0; i < size; i++)
@@ -266,6 +306,8 @@ void Buffer::Start(char filenum, unsigned int framenum)
 
   bytepos = BUF_POS_DATA_START;
   bitpos = 0;
+
+  SMALL_RTN("");
 }
 
 
@@ -280,6 +322,8 @@ void Buffer::Start(char filenum, unsigned int framenum)
 
 void Buffer::Introduce(void)
 {
+  SMALL_TRACE("");
+
   if (bitpos > 0)
     bytepos++;
   CheckBytePosRange(1);
@@ -292,6 +336,8 @@ void Buffer::Introduce(void)
   bitpos = 0;
   overnum = 0;
   startbyte = bytepos;
+
+  SMALL_RTN("");
 }
 
 
@@ -304,6 +350,8 @@ void Buffer::Introduce(void)
 
 void Buffer::NoDataMarker(void)
 {
+  SMALL_TRACE("");
+
   if (bitpos > 0)
     bytepos++;
   CheckBytePosRange(3);
@@ -314,6 +362,8 @@ void Buffer::NoDataMarker(void)
 
   bitpos = 0;
   overnum = 0;
+
+  SMALL_RTN("");
 }
 
 
@@ -326,8 +376,12 @@ void Buffer::NoDataMarker(void)
 
 void Buffer::RecordNumBytes(void)
 {
+  SMALL_TRACE("");
+
   buf[startbyte - 2] = SectionSize() & 0xff;
   buf[startbyte - 1] = SectionSize() >> 8;
+
+  SMALL_RTN("");
 }
 
 
@@ -339,8 +393,12 @@ void Buffer::RecordNumBytes(void)
  ******************************************************************************/
 
 void Buffer::EraseLastSection(void) {
+  SMALL_TRACE("");
+  
   bytepos = startbyte - 3;
   bitpos = 0;
+
+  SMALL_RTN("");
 }
 
 /******************************************************************************\
@@ -351,6 +409,8 @@ void Buffer::EraseLastSection(void) {
 
 void Buffer::Stop(void)
 {
+  SMALL_TRACE("");
+
   if (bitpos > 0)
     bytepos++;
   CheckBytePosRange(5);
@@ -370,6 +430,8 @@ void Buffer::Stop(void)
       bprintf(err, "Error sending through serial port.");
   } else
     bprintf(err, "CurSize is bogus in Buffer::Stop\n");
+
+  SMALL_RTN("");
 }
 
 
@@ -385,6 +447,8 @@ void Buffer::Stop(void)
 
 void Buffer::WriteChunk(char numbits, long long datum)
 {
+  SMALL_TRACE("%i, %li", numbits, datum);
+
   // Do we have room for the whole datum in this byte?
   if (numbits - 1 > 7 - bitpos) {
     buf[bytepos++] |= (datum & (((long long)1 << (8 - bitpos)) - 1)) << bitpos;
@@ -414,6 +478,8 @@ void Buffer::WriteChunk(char numbits, long long datum)
   //  bitpos = 0;
   //  bytepos++;
   //}
+  
+  SMALL_RTN("");
 }
 
 
@@ -436,6 +502,8 @@ void Buffer::WriteTo(long long datum, char numbits, char oversize,
     bool hassign)
 {
   long long i;
+
+  SMALL_TRACE("%li, %i, %i %i", datum, numbits, oversize, hassign);
 
   if (hassign)
     datum += ((long long)1 << (numbits - 1)) - 1;
@@ -465,6 +533,8 @@ void Buffer::WriteTo(long long datum, char numbits, char oversize,
     WriteChunk(oversize, datum);
     WriteChunk(1, 0);
   }
+
+  SMALL_RTN("");
 }
 
 
@@ -491,17 +561,14 @@ void Buffer::WriteTo(long long datum, char numbits, char oversize,
 
 Alice::Alice(void)
 {
+  SMALL_TRACE("");
+  
   AMLsrc = -1;
   DataSource = new FrameBuffer(&tdrss_index, tdrss_data, slow_data, 1);
   sendbuf = new Buffer();    // 10 bits per byte
   DataInfo = new DataHolder();
 
-#ifdef USE_SMALL_LOG
-  if ((smalllog = fopen(SMALL_LOG_FILE, "a")) == NULL)
-    bprintf(warning, "Could not open tdrss log file (%s).", SMALL_LOG_FILE);
-  else
-    fprintf(smalllog, "\n\nTDRSS LOG RESTART\n------------------\n");
-#endif
+  SMALL_RTN("");
 }
 
 
@@ -521,6 +588,9 @@ bool Alice::GetCurrentAML(void)
 {
   char tmp[20];
   int newxml;
+  int ret = false;
+
+  SMALL_TRACE("");
 
   newxml = CommandData.alice_file;
 
@@ -530,11 +600,13 @@ bool Alice::GetCurrentAML(void)
       AMLsrc = newxml;
       sendbuf->SetSize(DataInfo->maxbitrate / 10 * DataInfo->looplength);
       bprintf(info, "Alice now using %s.", tmp);
-      return true;
+      ret = true;
     }
   }
 
-  return false;
+  SMALL_RTN("%i", ret);
+
+  return ret;
 }
 
 
@@ -554,9 +626,12 @@ bool Alice::GetCurrentAML(void)
  ******************************************************************************/
 
 
-double Alice::Differentiate(double *invals, int num, int divider) {
+double Alice::Differentiate(double *invals, int num, int divider)
+{
   double offset;
   int i;
+
+  SMALL_TRACE("%p, %i, %i", invals, num, divider);
 
   offset = invals[0];
 
@@ -566,6 +641,8 @@ double Alice::Differentiate(double *invals, int num, int divider) {
   for (i = num - 1; i > 0; i--)
     invals[i] = invals[i] - invals[i - 1];
   invals[0] = 0;
+
+  SMALL_TRACE("%i", offset);
 
   return offset;
 }
@@ -584,8 +661,12 @@ void Alice::Integrate(double *invals, int num)
 {
   int i;
 
+  SMALL_TRACE("%p, %i", invals, num);
+
   for (i = 1; i < num; i++)
     invals[i] += invals[i - 1];
+
+  SMALL_RTN("");
 
   return;
 }
@@ -603,10 +684,15 @@ void Alice::Integrate(double *invals, int num)
 
 double Alice::Round(double num)
 {
-  if (num >= 0)
-    return (int)(num + 0.5);
-  else
-    return (int)(num - 0.5);
+  int ret;
+
+  SMALL_TRACE("%e", num);
+  
+  ret = (num >= 0) ? (int)(num + 0.5) : (int)(num - 0.5);
+
+  SMALL_RTN("%e", ret);
+
+  return ret;
 }
 
 
@@ -627,6 +713,8 @@ void Alice::SendDiff(double *data, int num, struct DataStruct_glob *currInfo,
 {
   long long offset;
   int i;
+
+  SMALL_TRACE("%p, %i, %p, %e, %e", data, num, currInfo, maxover, minover);
 
   // Write introductory bytes
   sendbuf->Introduce();
@@ -666,6 +754,8 @@ void Alice::SendDiff(double *data, int num, struct DataStruct_glob *currInfo,
     fflush(smalllog);
   }
 #endif
+
+  SMALL_RTN("");
 }
 
 
@@ -686,6 +776,8 @@ void Alice::SendInt(double *data, int num, struct DataStruct_glob *currInfo,
     float maxover, float minover)
 {
   int i;
+
+  SMALL_TRACE("%p, %i, %p, %e, %e", data, num, currInfo, maxover, minover);
 
   // Write introductory bytes
   sendbuf->Introduce();
@@ -729,6 +821,8 @@ void Alice::SendInt(double *data, int num, struct DataStruct_glob *currInfo,
     fflush(smalllog);
   }
 #endif
+
+  SMALL_RTN("");
 }
 
 
@@ -745,6 +839,8 @@ void Alice::SendSingle(double *data, struct DataStruct_glob *currInfo)
 {
   double divider, sendval;
 
+  SMALL_TRACE("%p, %p", data, currInfo);
+
   divider = (double)(currInfo->maxval - currInfo->minval + 1) /
     (double)((long long)1 << currInfo->numbits);
   sendval = Round((data[0] - (double)currInfo->minval) / divider);
@@ -759,6 +855,8 @@ void Alice::SendSingle(double *data, struct DataStruct_glob *currInfo)
     fflush(smalllog);
   }
 #endif
+
+  SMALL_RTN("");
 }
 
 
@@ -776,6 +874,8 @@ void Alice::SendAverage(double *data, int num,
   int i;
   double sum;
   double divider, sendval;
+
+  SMALL_TRACE("%p, %i, %p", data, num, currInfo);
 
   // Find average
   sum = 0;
@@ -796,6 +896,8 @@ void Alice::SendAverage(double *data, int num,
     fflush(smalllog);
   }
 #endif
+
+  SMALL_RTN("");
 }
 
 
@@ -817,6 +919,8 @@ int Alice::MaxPowTwo(int val, float threshold)
   struct DataStruct_glob *currInfo;
   int powtwo;
 
+  SMALL_TRACE("%i %e", val, threshold);
+
   powtwo = 0;
   for (currInfo = DataInfo->FirstFast(); currInfo != NULL;
       currInfo = DataInfo->NextFast()) {
@@ -825,6 +929,8 @@ int Alice::MaxPowTwo(int val, float threshold)
       powtwo = int(FindPowTwo(val * currInfo->framefreq, threshold) /
           currInfo->framefreq) + 1;
   }
+
+  SMALL_RTN("%i", powtwo);
 
   return powtwo;
 }
@@ -839,9 +945,12 @@ int Alice::MaxPowTwo(int val, float threshold)
  *                                                                            *|
  ******************************************************************************/
 
-int Alice::MaxFrameFreq(void) {
+int Alice::MaxFrameFreq(void)
+{
   struct DataStruct_glob *currInfo;
   int max = 0;
+
+  SMALL_TRACE("");
 
   for (currInfo = DataInfo->FirstFast(); currInfo != NULL;
       currInfo = DataInfo->NextFast()) {
@@ -855,7 +964,7 @@ int Alice::MaxFrameFreq(void) {
       max = currInfo->framefreq;
   }
 
-
+  SMALL_RTN("%i", max);
 
   return max;
 }
@@ -878,12 +987,16 @@ int Alice::FindPowTwo(int val, float threshold)
 {
   int i, num;
 
+  SMALL_TRACE("%i %e", val, threshold);
+
   num = val;
   for (i = 0; num > 0; i++)
     num = num >> 1;
 
   if ((1 << i) - val < int(val * threshold))
     i++;
+
+  SMALL_RTN("%i", 1 << i);
 
   return 1 << i;
 }
@@ -911,6 +1024,8 @@ void Alice::CompressionLoop(void)
   time_t t;
   struct tm now;
 #endif
+
+  SMALL_TRACE("");
 
   rawdata = (double *)balloc(fatal, 1);
   rawdatasize = 1;
@@ -1110,6 +1225,8 @@ void Alice::CompressionLoop(void)
 #endif
     framepos += numframes;
   }
+
+  SMALL_RTN("");
 }
 
 
@@ -1129,6 +1246,8 @@ Alice::~Alice()
   if (smalllog != NULL)
     fclose(smalllog);
 #endif
+
+  SMALL_RTN("");
 }
 
 
@@ -1155,6 +1274,9 @@ FrameBuffer::FrameBuffer(unsigned int *mcpindex_in,
     unsigned short **fastdata_in,
     unsigned short **slowdata_in, int numframes_in)
 {
+  SMALL_TRACE("%p, %p, %p, %i", mcpindex_in, fastdata_in, slowdata_in,
+      numframes_in);
+  
   mcpindex = mcpindex_in;
   lastmcpindex = 2;
   fastdata = fastdata_in;
@@ -1163,6 +1285,8 @@ FrameBuffer::FrameBuffer(unsigned int *mcpindex_in,
   numframes = -1;
 
   Resize(numframes_in);
+
+  SMALL_RTN("");
 
   return;
 }
@@ -1181,8 +1305,13 @@ void FrameBuffer::Resize(int numframes_in)
 {
   int i, j;
 
+  SMALL_TRACE("%i", numframes_in);
+
   if (numframes_in == numframes) {
     // Do nothing.
+
+    SMALL_RTN("");
+
     return;
   }
 
@@ -1234,6 +1363,8 @@ void FrameBuffer::Resize(int numframes_in)
 
   pthread_create(&update_id, NULL, FrameBuffer::UpdateThreadEntry, this);
 
+  SMALL_RTN("");
+
   return;
 }
 
@@ -1250,12 +1381,16 @@ void FrameBuffer::Resize(int numframes_in)
 
 void *FrameBuffer::UpdateThreadEntry(void *pthis)
 {
+  SMALL_TRACE("%p", pthis);
+  
   bputs(startup, "Update start-up.\n");
 
   FrameBuffer *mine = (FrameBuffer *)pthis;
   mine->Update();
 
   bputs(info, "Update done.\n");
+
+  SMALL_RTN("%p", NULL);
 
   return NULL;
 }
@@ -1271,6 +1406,8 @@ void FrameBuffer::Update(void)
 {
   unsigned int i;
   int j;
+
+  SMALL_TRACE("");
 
   while (1 == 1) {
     usleep(1000);
@@ -1309,6 +1446,8 @@ void FrameBuffer::Update(void)
     }
   }
 
+  SMALL_RTN("");
+
   return;
 }
 
@@ -1323,6 +1462,10 @@ void FrameBuffer::Update(void)
 
 int FrameBuffer::NumFrames(void)
 {
+  SMALL_TRACE("");
+
+  SMALL_RTN("%i", pseudoframe);
+  
   return pseudoframe;
 }
 
@@ -1351,6 +1494,8 @@ int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
   unsigned short msb, lsb;
   char tmpstr[64];
 
+  SMALL_TRACE("%p, %p, %i %i", returnbuf, fieldname, framenum_in, numframes_in);
+
   // Is the field a bolometer?  The first character is 'n', followed by a number
   // of 1 or 2 characters, followed by 'c'.
   if (fieldname[0] == 'n' &&
@@ -1366,14 +1511,18 @@ int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
 
     // Get the address.
     sprintf(tmpstr, "%slo", fieldname);
-    if ((address[0] = GetNiosAddr(tmpstr)) == NULL)
+    if ((address[0] = GetNiosAddr(tmpstr)) == NULL) {
+      SMALL_RTN("%i", 0);
       return 0;
+    }
     strcpy(tmpstr, "");
     strncpy(tmpstr, fieldname, i);
     tmpstr[i + 1] = '\0';
     sprintf(tmpstr, "%s%dhi", tmpstr, atoi(fieldname + i + 1) - wide);
-    if ((address[1] = GetNiosAddr(tmpstr)) == NULL)
+    if ((address[1] = GetNiosAddr(tmpstr)) == NULL) {
+      SMALL_RTN("%i", 0);
       return 0;
+    }
 
     mindex = NOT_MULTIPLEXED + 1;  // Marker for bolometers.
     if (wide)
@@ -1384,16 +1533,20 @@ int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
     chnum[0] = BiPhaseLookup[BI0_MAGIC(address[0]->bbcAddr)].channel;
     chnum[1] = BiPhaseLookup[BI0_MAGIC(address[1]->bbcAddr)].channel;
   } else {
-    if ((address[0] = GetNiosAddr(fieldname)) == NULL)
+    if ((address[0] = GetNiosAddr(fieldname)) == NULL) {
+      SMALL_RTN("%i", 0);
       return 0;
+    }
     wide = address[0]->wide;
     mindex = BiPhaseLookup[BI0_MAGIC(address[0]->bbcAddr)].index;
     chnum[0] = BiPhaseLookup[BI0_MAGIC(address[0]->bbcAddr)].channel;
     mask = 0;
   }
 
-  if (pseudoframe - framenum_in > numframes || framenum_in > pseudoframe)
+  if (pseudoframe - framenum_in > numframes || framenum_in > pseudoframe) {
+    SMALL_RTN("%i", 0);
     return 0;
+  }
 
   truenum = framenum_in - (int)((double)framenum_in / (double)numframes) * 
     numframes;
@@ -1429,6 +1582,8 @@ int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
       truenum = 0;
   }
 
+  SMALL_RTN("%i", j);
+
   return j;
 }
 
@@ -1443,6 +1598,8 @@ FrameBuffer::~FrameBuffer(void)
 {
   int i, j;
 
+  SMALL_TRACE("");
+
   if (memallocated) {
     for (i = 0; i < numframes; i++) {
       for (j = 0; j < FAST_PER_SLOW; j++) {
@@ -1455,6 +1612,8 @@ FrameBuffer::~FrameBuffer(void)
     bfree(fatal, slowbuf);
     bfree(fatal, fastbuf);
   }
+
+  SMALL_RTN("");
 
   return;
 }
@@ -1475,6 +1634,13 @@ FrameBuffer::~FrameBuffer(void)
 extern "C" void TDRSSWriter(void) {
   Alice *drinkme;
 
+#ifdef USE_SMALL_LOG
+  if ((smalllog = fopen(SMALL_LOG_FILE, "w")) == NULL)
+    bprintf(warning, "Could not open tdrss log file (%s).", SMALL_LOG_FILE);
+#endif
+
+  SMALL_TRACE("");
+
   bputs(startup, "Alice start-up.\n");
 
   tty_fd = OpenSerial();
@@ -1485,5 +1651,8 @@ extern "C" void TDRSSWriter(void) {
   delete drinkme;
 
   close(tty_fd);
+
+  SMALL_RTN("");
+
   return;
 }

@@ -130,7 +130,23 @@ private:
   Buffer *sendbuf;
 
   int AMLsrc;
-  FILE *smalllog;
 };
+
+#define USE_SMALL_LOG
+#ifdef USE_SMALL_LOG
+extern FILE *smalllog;
+#  define SMALL_TRACE(fmt,...) \
+  fprintf(smalllog, "--> %s: (" fmt ")\n", __PRETTY_FUNCTION__, ##__VA_ARGS__) \
+  && fflush(smalllog)
+#  define SMALL_DEBUG(fmt,...) \
+  fprintf(smalllog, "--- %s: " fmt "\n", __PRETTY_FUNCTION__, ##__VA_ARGS__) \
+  && fflush(smalllog)
+#  define SMALL_RTN(fmt,...) \
+  fprintf(smalllog, "<-- %s = " fmt "\n", __PRETTY_FUNCTION__, ##__VA_ARGS__) \
+  && fflush(smalllog)
+#else
+#  define SMALL_TRACE(...) do {} while(0)
+#  define SMALL_RTN(...) SMALL_TRACE(__VA_ARGS__)
+#endif
 
 #endif

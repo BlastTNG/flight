@@ -28,6 +28,7 @@
 #define AML_LEN_LINE    512
 #define AML_LEN_ENTRY   32
 
+#include "tdrss.h"
 #include "tdrss_c.h"
 #include "channels.h"
 
