@@ -88,6 +88,10 @@ void SensorReader(void) {
   int nr, df;
 
   FILE *fp;
+
+  int pid = getpid();
+  fprintf(stderr, ">> SensorReader startup on pid %i\n", pid);
+
   while (1) {
     fp = fopen("/data/rawdir/sensors.dat", "r");
     if (fp !=NULL) {
@@ -173,22 +177,31 @@ void GetACS(unsigned short *Rxframe){
 }
 
 void SunSensor(void) {
-  int sock, n, prin, attempts, lastIndex, curIndex;
+  int sock = -1, n, prin, lastIndex, curIndex;
   int ars, ers;
   double az_rel_sun, el_rel_sun;
+
+  fd_set fdr;
+  struct timeval timeout;
 
   struct sockaddr_in addr;
 
   char buff[256];
   const char P[] = "P";
 
-  fprintf(stderr, "SunSensor startup.\n");
+  int pid = getpid();
+  fprintf(stderr, ">> SunSensor startup on pid %i\n", pid);
 
   /* we don't want mcp to die of a broken pipe, so catch the
    * SIGPIPEs which are raised when the ssc drops the connection */
   signal(SIGPIPE, SigPipe);
 
   while (1) {
+    if (sock != -1) 
+      if (close(sock) == -1)
+        perror("SunSensor close()");
+        
+
     /* create an empty socket connection */
     sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock == -1) {
@@ -219,37 +232,50 @@ void SunSensor(void) {
     while (n != -1) {
       curIndex = RxframeIndex;
       if (curIndex < lastIndex) {
-        attempts = 0;
+        usleep(100000);
         if (send(sock, P, 2, 0) == -1) {
           perror("SunSensor send()");
         }
+        
+        FD_ZERO(&fdr);
+        FD_SET(sock, &fdr);
 
-        do {
+        timeout.tv_sec = 10;
+        timeout.tv_usec = 0;
+
+        n = select(sock + 1, &fdr, NULL, NULL, &timeout);
+
+        if (n == -1 && errno == EINTR)
+          continue;
+        if (n == -1) {
+          perror("SunSensor select()");
+          continue;
+        }
+
+        if (FD_ISSET(sock, &fdr)) {
           n = recv(sock, buff, (socklen_t)255, MSG_DONTWAIT);
-          if (n == -1) {
-            attempts++;
-            usleep(10000);
-          }
-        } while ((n == -1) && (attempts < 200));
 
-        if (n != -1) {
-          buff[n] = 0;
-          if (sscanf(buff, "%lf %lf %i %i %i", &az_rel_sun, &el_rel_sun, &ars,
-                &ers, &prin) == 5) {
-            SunSensorData[ss_index].raw_el = (short int)(ars);
-            SunSensorData[ss_index].raw_az = (short int)(ers);
-            SunSensorData[ss_index].prin = prin;
-            ss_index = (ss_index + 1) % 3;
-            fprintf(stderr, "%i %lf %lf (%i %i) %i\n", attempts * 10000,
-                az_rel_sun, el_rel_sun, ars, ers, prin);
+          if (n != -1) {
+            buff[n] = 0;
+            if (sscanf(buff, "%lf %lf %i %i %i", &az_rel_sun, &el_rel_sun, &ars,
+                  &ers, &prin) == 5) {
+              SunSensorData[ss_index].raw_el = (short int)(ars);
+              SunSensorData[ss_index].raw_az = (short int)(ers);
+              SunSensorData[ss_index].prin = prin;
+              ss_index = INC_INDEX(ss_index + 1);
+//              fprintf(stderr, "%lf %lf (%i %i) %i\n", az_rel_sun, el_rel_sun, ars, ers, prin);
+            }
+          } else {
+            perror("SunSensor recv()");
           }
+        } else {
+          fprintf(stderr, "Connection to Arien timed out.\n");
+          n = -1;
         }
       }
 
       lastIndex = curIndex;
     }
-
-    fprintf(stderr, "Connection to Arien timed out.\n");
   }
 }
 
@@ -442,6 +468,9 @@ void zero(unsigned short *Rxframe) {
 void BiphaseWriter(void) {
   int i_out, i_in;
 
+  int pid = getpid();
+  fprintf(stderr, ">> Biphase writer startup on pid %i\n", pid);
+
   while (1) {
     i_in = bi0_buffer.i_in;
     i_out = bi0_buffer.i_out;
@@ -493,6 +522,9 @@ int main(int argc, char *argv[]) {
 
   struct CommandDataStruct CommandData_loc;
   int nread = 0, last_nread = 0, last_read = 0, df = 0;
+
+  int pid = getpid();
+  fprintf(stderr, ">> MCP startup on pid %i\n", pid);
 
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
