@@ -646,8 +646,8 @@ void Pointing(){
   struct AzAttStruct AzAtt = {0.0, 0.0, 0.0, 0.0};
 
   static struct ElSolutionStruct EncEl = {0.0, // starting angle
-    360.0 * 360.0, // varience
-    1.0 / M2DV(6), //sample weight
+    360.0 * 360.0, // starting varience
+    1.0 / M2DV(60), //sample weight
     M2DV(6), // systemamatic varience
     0.0, // trim 
     0.0, // last input
@@ -657,7 +657,7 @@ void Pointing(){
     0, 0 // n_solutions, since_last
   };
   static struct ElSolutionStruct ClinEl = {0.0, // starting angle
-    360.0 * 360.0, // varience
+    360.0 * 360.0, // starting varience
     1.0 / M2DV(6), //sample weight
     M2DV(60), // systemamatic varience
     0.0, // trim 
@@ -668,7 +668,7 @@ void Pointing(){
     0, 0 // n_solutions, since_last
   };
   static struct ElSolutionStruct ISCEl = {0.0, // starting angle
-    719.9 * 719.9, // varience
+    719.9 * 719.9, // starting varience
     1.0 / M2DV(0.2), //sample weight
     M2DV(0.2), // systemamatic varience
     0.0, // trim 
@@ -679,7 +679,7 @@ void Pointing(){
     0, 0 // n_solutions, since_last
   };
   static struct ElSolutionStruct OSCEl = {0.0, // starting angle
-    719.9 * 719.9, // varience
+    719.9 * 719.9, // starting varience
     1.0 / M2DV(0.2), //sample weight
     M2DV(0.2), // systemamatic varience
     0.0, // trim 
@@ -690,7 +690,7 @@ void Pointing(){
     0, 0 // n_solutions, since_last
   };
   static struct AzSolutionStruct NullAz = {92.0, // starting angle
-    360.0 * 360.0, // varience
+    360.0 * 360.0, // starting varience
     1.0 / M2DV(6), //sample weight
     M2DV(6000), // systemamatic varience
     0.0, // trim 
@@ -701,7 +701,7 @@ void Pointing(){
     0, 0 // n_solutions, since_last
   };
   static struct AzSolutionStruct MagAz = {0.0, // starting angle
-    360.0 * 360.0, // varience
+    360.0 * 360.0, // starting varience
     1.0 / M2DV(60), //sample weight
     M2DV(90), // systemamatic varience
     0.0, // trim 
@@ -712,7 +712,7 @@ void Pointing(){
     0, 0 // n_solutions, since_last
   };
   static struct AzSolutionStruct DGPSAz = {0.0, // starting angle
-    360.0 * 360.0, // varience
+    360.0 * 360.0, // starting varience
     1.0 / M2DV(20), //sample weight
     M2DV(10), // systemamatic varience
     0.0, // trim 
@@ -723,7 +723,7 @@ void Pointing(){
     0, 0 // n_solutions, since_last
   };
   static struct AzSolutionStruct SSAz =  {0.0, // starting angle
-    360.0 * 360.0, // varience
+    360.0 * 360.0, // starting varience
     1.0 / M2DV(8), //sample weight
     M2DV(10), // systemamatic varience
     0.0, // trim 
@@ -734,7 +734,7 @@ void Pointing(){
     0, 0 // n_solutions, since_last
   };
   static struct AzSolutionStruct ISCAz = {0.0, // starting angle
-    360.0 * 360.0, // varience
+    360.0 * 360.0, // starting varience
     1.0 / M2DV(0.3), //sample weight
     M2DV(0.2), // systemamatic varience
     0.0, // trim 
@@ -745,7 +745,7 @@ void Pointing(){
     0, 0 // n_solutions, since_last
   };
   static struct AzSolutionStruct OSCAz = {0.0, // starting angle
-    360.0 * 360.0, // varience
+    360.0 * 360.0, // starting varience
     1.0 / M2DV(0.3), //sample weight
     M2DV(0.2), // systemamatic varience
     0.0, // trim 
