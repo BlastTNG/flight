@@ -123,15 +123,15 @@ double GetVElev() {
   if (axes_mode.el_mode == AXIS_VEL) {
     vel = axes_mode.el_vel;
   } else if (axes_mode.el_mode == AXIS_POSITION) {
-    vel = (PointingData[i_point].el - axes_mode.el_dest)
+    vel = (axes_mode.el_dest - PointingData[i_point].el)
 	  * 0.36;
   } else if (axes_mode.el_mode == AXIS_LOCK) {
     /* for the lock, only use the elevation encoder */
-    vel = (ACSData.enc_elev - axes_mode.el_dest) * 0.64;
+    vel = (axes_mode.el_dest - ACSData.enc_elev) * 0.64;
   }
   
   /* correct offset and convert to Gyro Units */
-  vel += PointingData[i_point].gy1_offset;
+  vel -= PointingData[i_point].gy1_offset;
   vel *= DPS2GYU; 
 
   /* Limit Maximim speed */

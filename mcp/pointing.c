@@ -61,12 +61,12 @@ void GyroOffsets(int index) {
   if (i_history >= GY_HISTORY) i_history=0;
   if (n_h>=GY_HISTORY) {
     PointingData[index].gy1_offset =
-      (EL_GY_GAIN_ERROR*sum_gyro1*(0.00091506980885/100.0) + (e2-e1)) *
+      ((e2-e1) - EL_GY_GAIN_ERROR*sum_gyro1*(0.00091506980885/100.0)) *
       (100.0/(float)GY_HISTORY);
     sum_gyro1-=gyro1_history[i_history];	
   } else {
     PointingData[index].gy1_offset =
-      (EL_GY_GAIN_ERROR*sum_gyro1*(0.00091506980885/100.0) + (e2-elev_history[0])) *
+      ((e2-elev_history[0]) - EL_GY_GAIN_ERROR*sum_gyro1*(0.00091506980885/100.0) ) *
       (100.0/(float)n_h);
     n_h++;
   }
@@ -133,7 +133,9 @@ void Pointing(){
 	 
   /*************************************/
   /**      do elevation solution      **/
-  EvolveSolution(&EncEl, -ACSData.gyro1, ACSData.enc_elev, 1);
+  EvolveSolution(&EncEl, ACSData.gyro1
+		 + PointingData[GETREADINDEX(point_index)].gy1_offset,
+		 ACSData.enc_elev, 1);
   //printf("%g %g %g\n", EncEl.angle, ACSData.enc_elev, ACSData.gyro1);
 
   /* for now, use enc_elev solution for elev */
