@@ -115,7 +115,7 @@ sub Status {
     my $response = <SOCK>;
     my ($status, $polarity, $du, $fs_bad, $dq_bad, $disk_free,
       $name) = split " ", $response;
-    print "Status       : ";
+    print "Status        : ";
     if ($statuses[$status]) {
       print $statuses[$status], "\n";
     } else {
