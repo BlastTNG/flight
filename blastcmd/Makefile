@@ -17,6 +17,9 @@ blastcmd: $(OBJS)
 blastcmd.o: blastcmd.c commands.h
 	$(CC) $(FLAGS) -DLIB_DIR=\"$(DATA_DIR)\" -c blastcmd.c -o blastcmd.o
 
+Makefile.config:
+	./configure
+
 install_fifocmd:
 	install -D -m 755 fifocmd $(EXEC_DIR)/fifocmd
 
