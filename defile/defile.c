@@ -41,7 +41,7 @@
 
 #define VERSION_MAJOR    "2"
 #define VERSION_MINOR    "4"
-#define VERSION_REVISION "2"
+#define VERSION_REVISION "3"
 #define VERSION VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION 
 
 #define DEFAULT_CURFILE "/data/etc/defile.cur"
@@ -686,6 +686,7 @@ int main (int argc, char** argv)
 
   /* Attempt to Open the Specification file and read the channel lists */
   ReconstructChannelLists(rc.chunk, rc.spec_file);
+  bprintf(info, "Frame size: %i bytes\n", DiskFrameSize);
 
   /* Start */
   bprintf(info, "Defiling `%s'\n    into `%s' ...\n\n", rc.chunk, rc.dirfile);

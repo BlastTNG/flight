@@ -1,6 +1,9 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2004-09-20 (2.4.3):
+  * writer.c: fix wide slow reconstruction bug
+
 2004-09-20 (2.4.2):
   * defile.c, frameread.c: Move ReconstructChannelLists to frameread.c
   * defile.c: Fix output suppression (-q) after breaking it with BUOS

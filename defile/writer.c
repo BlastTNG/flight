@@ -800,9 +800,9 @@ void DirFileWriter(void)
             if ((SlowChList[i][j].type == 'U') ||
                 (SlowChList[i][j].type == 'I')) {
               ibuffer[i_buf] = (unsigned)
-                ((((unsigned short*)slow_fields[j][i].b)[i_out]) << 16)
+                ((((unsigned short*)slow_fields[j][i + 1].b)[i_out]) << 16)
                 | (unsigned)
-                (((unsigned short*)slow_fields[j][i + 1].b)[i_out]);
+                (((unsigned short*)slow_fields[j][i].b)[i_out]);
             } else
               buffer[i_buf] = ((unsigned short*)slow_fields[j][i].b)[i_out];
 
@@ -915,6 +915,7 @@ void DirFileWriter(void)
 
         /* Read the new Spec file */
         ReconstructChannelLists(rc.spec_file, rc.chunk);
+        bprintf(info, "Frame size: %i bytes\n", DiskFrameSize);
 
         /* Re-initialise */
         wrote_count = 0;
