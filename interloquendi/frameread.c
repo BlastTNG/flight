@@ -71,6 +71,8 @@ int StaticSourcePart(char* output, const char* source, chunkindex_t* value,
     return counter;
 }
 
+/* Increments the chunk name.  Returns true on success. On failure returns
+ * false and chunk isn't changed */
 int GetNextChunk(char* chunk, int sufflen)
 {
   char* buffer;
@@ -134,4 +136,50 @@ int GetNextChunk(char* chunk, int sufflen)
   free(buffer);
 
   return 1;
+}
+
+/* find the filename and position of the place where we're supposed to start */
+long int SetStartChunk(long int framenum, char* chunk, int sufflen)
+{
+  long int left_to_read = framenum;
+  int chunk_total;
+  int new_chunk;
+  struct stat chunk_stat;
+  char gpb[GPB_LEN];
+
+  /* Loop until we get to the right chunk */
+  for (;;) {
+    /* Stat the current chunk file to get its size */
+    if (stat(chunk, &chunk_stat)) {
+#ifdef __DEFILE__
+      snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", chunk);
+      perror(gpb);
+#else
+      syslog(LOG_ERR, "stat `%s': %m", chunk);
+#endif
+      exit(1);
+    }
+
+    chunk_total = chunk_stat.st_size / DiskFrameSize;
+
+    /* if there's more than we need, we're done */
+    if (chunk_total > left_to_read)
+      return left_to_read;
+
+    /* Otherwise, try to get a new chunk */
+    if ((new_chunk = GetNextChunk(chunk, sufflen)) == 0) {
+#ifdef __DEFILE__
+      /* no new chunk -- complain and exit */
+      fprintf(stderr, "defile: source file is smaller than destination.\n"
+          "defile: cannot resume.\n");
+      exit(1);
+#else
+      /* start at end of last chunk */
+      return chunk_total;
+#endif
+    }
+
+    /* there is another chunk, decrement the total needed and try again */
+    left_to_read -= chunk_total;
+  }
 }

@@ -34,43 +34,6 @@
                            * performance hit if we read more than 64k at a
                            * time, so we keep this small */
 
-/* find the filename and position of the place where we're supposed to start */
-long int SetResumeChunk(void)
-{
-  long int left_to_read = rc.resume_at;
-  int chunk_total;
-  int new_chunk;
-  struct stat chunk_stat;
-  char gpb[GPB_LEN];
-
-  /* Loop until we get to the right chunk */
-  for (;;) {
-    /* Stat the current chunk file to get its size */
-    if (stat(rc.chunk, &chunk_stat)) {
-      snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", rc.chunk);
-      perror(gpb);
-      exit(1);
-    }
-
-    chunk_total = chunk_stat.st_size / DiskFrameSize;
-
-    /* if there's more than we need, we're done */
-    if (chunk_total > left_to_read)
-      return left_to_read;
-
-    /* Otherwise, try to get a new chunk */
-    if ((new_chunk = GetNextChunk(rc.chunk, rc.sufflen)) == 0) {
-      /* no new chunk -- complain and exit */
-      fprintf(stderr, "defile: source file is smaller than destination.\n"
-          "defile: cannot resume.\n");
-      exit(1);
-    }
-
-    /* there is another chunk, decrement the total needed and try again */
-    left_to_read -= chunk_total;
-  }
-}
-
 void FrameFileReader(void)
 {
   FILE *stream = NULL;
@@ -94,7 +57,7 @@ void FrameFileReader(void)
     InputBuffer[i] = (void*)InputBuffer[0] + i * DiskFrameSize;
 
   if (rc.resume_at >= 0) {
-    ri.read = SetResumeChunk();
+    ri.read = SetStartChunk(rc.resume_at);
     seek_to = ri.read * DiskFrameWords;
   }
 
