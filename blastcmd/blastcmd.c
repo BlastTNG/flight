@@ -14,8 +14,8 @@
 
 double round(double x);
 
-/* Include file containing the commands and their parameters */
-#include "commands.h"
+/* Include file containing the command definitions */
+#include "command_list.h"
 
 #ifndef LIB_DIR
 #  define LIB_DIR "/data/etc/blastcmd"

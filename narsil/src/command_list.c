@@ -112,7 +112,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(isc_auto_focus), "autofocus camera", GR_ISC_HOUSE},
 
   {COMMAND(osc_run), "start automatic image capture (normal mode)",
-    GR_ISC_HOUSE},
+    GR_OSC_HOUSE},
   {COMMAND(osc_pause), "pause image capture", GR_OSC_HOUSE},
   {COMMAND(osc_reboot), "ask for software reboot of OSC computer",
     GR_OSC_HOUSE | CONFIRM},

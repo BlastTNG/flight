@@ -13,9 +13,9 @@ all: blastcmd
 
 blastcmd: $(OBJS)
 
-command_list.o: command_list.c commands.h isc_protocol.h
+command_list.o: command_list.c command_list.h isc_protocol.h
 
-blastcmd.o: blastcmd.c commands.h isc_protocol.h
+blastcmd.o: blastcmd.c command_list.h isc_protocol.h
 
 Makefile.config:
 	./configure
