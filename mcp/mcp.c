@@ -16,6 +16,7 @@
 
 #include "tx_struct.h"
 #include "tx.h"
+#include "crc.h"
 
 #include "pointing_struct.h"
 #include "command_struct.h"
@@ -239,7 +240,7 @@ void SensorReader(void) {
   mputs(MCP_STARTUP, "SensorReader startup\n");
 
   while (1) {
-    if ((stream = fopen("/sys/bus/i2c/devices/3-0290/temp1_input", "r"))
+    if ((stream = fopen("/sys/bus/i2c/devices/0-0290/temp1_input", "r"))
         != NULL) {
       if ((nr = fscanf(stream, "%i\n", &data)) == 1)
         CommandData.temp1 = data / 10;
@@ -247,7 +248,7 @@ void SensorReader(void) {
     } else
       merror(MCP_WARNING, "Cannot read temp1 from I2C bus");
 
-    if ((stream = fopen("/sys/bus/i2c/devices/3-0290/temp2_input", "r"))
+    if ((stream = fopen("/sys/bus/i2c/devices/0-0290/temp2_input", "r"))
         != NULL) {
       if ((nr = fscanf(stream, "%i\n", &data)) == 1)
         CommandData.temp2 = data / 10;
@@ -255,7 +256,7 @@ void SensorReader(void) {
     } else
       merror(MCP_WARNING, "Cannot read temp2 from I2C bus");
 
-    if ((stream = fopen("/sys/bus/i2c/devices/3-0290/temp3_input", "r"))
+    if ((stream = fopen("/sys/bus/i2c/devices/0-0290/temp3_input", "r"))
         != NULL) {
       if ((nr = fscanf(stream, "%i\n", &data)) == 1)
         CommandData.temp3 = data / 10;
@@ -465,6 +466,7 @@ void WatchDog (void) {
 void write_to_biphase(unsigned short *RxFrame) {
   int i;
   static unsigned short nothing[BI0_FRAME_SIZE];
+  static unsigned short sync = 0xEB90;
 
   if (bi0_fp == -2) {
     bi0_fp = open("/dev/bi0_pci", O_RDWR);
@@ -475,13 +477,15 @@ void write_to_biphase(unsigned short *RxFrame) {
       nothing[i] = 0xEEEE;
   }
 
-  int n;
+  nothing[0] = UpdateCRCArc(0xEB90, RxFrame, BiPhaseFrameWords);
+
   if (bi0_fp >= 0) {
-    RxFrame[0] = 0xEB90;
-    if ((n = write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short))) < 0)
+    RxFrame[0] = sync;
+    sync = ~sync;
+    if (write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short)) < 0)
       merror(MCP_ERROR, "bi-phase write (RxFrame) failed");
-    if ((n = write(bi0_fp, nothing,
-          (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short))) < 0)
+    if (write(bi0_fp, nothing,
+          (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short)) < 0)
       merror(MCP_ERROR, "bi-phase write (padding) failed");
   }
 }
@@ -638,7 +642,7 @@ int main(int argc, char *argv[]) {
     merror(MCP_FATAL, "Error opening BBC");
 
 
-  //Initialize the Ephemeris
+  /* Initialize the Ephemeris */
   ReductionInit();
 
   InitCommandData();
@@ -662,7 +666,7 @@ int main(int argc, char *argv[]) {
   pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
   pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
 
-  //  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
+  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
 
   InitBi0Buffer();
