@@ -291,6 +291,7 @@ void IntegratingStarCamera(void)
           client_data = CommandData.ISCCommand;
           CommandData.write_ISC_command = 0;
         } else if (write_ISC_pointing) {
+          client_data.command = nocmd;
           write_ISC_pointing = 0;
         }
 
