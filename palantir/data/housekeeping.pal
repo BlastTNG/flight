@@ -252,7 +252,7 @@
     <NUMBER caption="Rec">
       <DATUM format="%.2f" src="T_REC" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="IF Heat Exchanger">
+    <NUMBER caption="IF Heat">
       <DATUM format="%.2f" src="T_IN_HEATX" extrema="temp"/>
     </NUMBER>
   </BOX>
@@ -522,18 +522,22 @@
   </BOX>
   <BOX caption="Cooling" colour="#777700" row="3" col="5">
     <MULTI caption="IF Cooling">
-      <DATUM src="IF_COOL1_ON">
+      <DATUM src="INCOOL_STATE">
         <WORD value="1" caption="On" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+	<WORD value="0" caption="Off" textstyle="OK_BIT"/>
+	<WORD value="-1" caption="Manual" textstyle="W_BIT"/>
+	<WORD value="-3" caption="Auto-Vetoed" textstyle="E_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="IF Level (%)">
       <DATUM format="%.2f" src="INPUMP_LEV" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="OF Cooling">
-      <DATUM src="OF_COOL1_ON">
-        <WORD value="1" caption="On" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+      <DATUM src="OUTCOOL_STATE">
+	<WORD value="1" caption="On" textstyle="OK_BIT"/>
+	<WORD value="0" caption="Off" textstyle="OK_BIT"/>
+	<WORD value="-1" caption="Manual" textstyle="W_BIT"/>
+	<WORD value="-3" caption="Auto-Vetoed" textstyle="E_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="OF Level (%)">
