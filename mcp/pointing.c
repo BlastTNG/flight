@@ -10,6 +10,7 @@
 #include <ctype.h>
 #include <pthread.h>
 
+#include "isc_protocol.h"
 #include "pointing_struct.h"
 #include "command_struct.h"
 #include "lut.h"
@@ -18,6 +19,12 @@
 #define GY1_OFFSET (0.0075)
 #define GY2_OFFSET (0.0123)
 #define GY3_OFFSET (0.0143)
+
+extern int isc_trigger_count; // set in tx.c - frames since pulse
+
+
+extern server_frame ISCData[3]; // isc.c
+extern int iscdata_index; // isc.c
 
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
                 double *el);
@@ -185,11 +192,55 @@ void RecordHistory(int index) {
   hs.elev_history[hs.i_history] = PointingData[index].el;
 }
 
+#define GYRO_VAR 3.7808641975309e-08
+void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
+		      double gy1, double gy1_off,
+		      double gy2, double gy2_off,
+		      double gy3, double gy3_off, double enc_el) {
+  double gy_az;
+  static int last_isc_framenum = 0xfffffff;
+  int i_isc, i_point;
+  double az, el, ra, dec;
+
+  // integrals of gyros, since the last starfield, with offsets
+  static double gy_el_int1=0; 
+  static double gy_az_int1=0; 
+  double w1, w2;
+  
+  // evolve el
+  gy1 *= GY1_GAIN_ERROR;
+  e->angle += (gy1 + gy1_off)/100.0;
+  gy_el_int1 += (gy1 + gy1_off)/100.0;
+  e->varience += GYRO_VAR;
+
+  // evolve az
+  enc_el *= M_PI/180.0;
+  gy_az = -(gy2+gy2_off) * cos(enc_el) + -(gy3+gy3_off) * sin(enc_el);
+  a->angle += gy_az/100.0;
+  gy_az_int1 += gy_az/100.0;
+  a->varience += GYRO_VAR;
+
+  i_isc = GETREADINDEX(iscdata_index);
+  if (ISCData[i_isc].framenum!=last_isc_framenum) { // new solution
+    // get az and el for new solution
+    i_point = GETREADINDEX(point_index);
+    ra = ISCData[i_isc].ra * (12.0/M_PI);
+    dec = ISCData[i_isc].dec * (180.0/M_PI);
+    radec2azel(ra, dec, PointingData[i_point].lst, PointingData[i_point].lat,
+	       &az, &el);
+
+    // rewind to when the frame was grabbed
+    e->angle -= gy_el_int1;
+    a->angle -= gy_az_int1;
+
+    
+  }
+}
+
 /* Gyro noise: 7'/rt(hour) */
 /** the new solution is a weighted mean of:
     the old solution evolved by gyro motion and
     the new solution. **/
-#define GYRO_VAR 3.7808641975309e-08
 void EvolveElSolution(struct ElSolutionStruct *s,
 		      double gyro, double gy_off,
 		      double new_angle, int new_reading) {
@@ -342,7 +393,7 @@ void Pointing(){
 					  0.00004, // filter constant
 					  0, 0 // n_solutions, since_last
   };
-  static struct AzSolutionStruct NullAz = {0.0, // starting angle
+  static struct AzSolutionStruct NullAz = {90.0, // starting angle
 					  360.0*360.0, // varience
 					  1.0/M2DV(6), //sample weight
 					  M2DV(6000), // systemamatic varience

@@ -73,11 +73,15 @@ short int InCharge;
 
 extern unsigned short slow_data[N_SLOW][FAST_PER_SLOW];
 
+extern short int write_ISC_pointing;  // isc.c
+
 double round(double x);
 double LockPosition(double elevation); // defined in commands.c
 
 int frame_num;
 int pin_is_in = 1;
+
+int isc_trigger_count = 0;
 
 struct AxesModeStruct {
   int az_mode;
@@ -856,7 +860,6 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
   static int balTargetCh, balTargetInd, balVetoCh, balVetoInd;
   static int iscBitsCh;
   static int i_lockpin, j_lockpin;
-  static int isc_trigger_count = 0;
 
   int iscBits = 0;
   int pumpBits = 0;
@@ -927,6 +930,7 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
 
   if (isc_trigger_count<ISC_TRIG_LEN) {
     iscBits|=ISC_TRIGGER;
+    write_ISC_pointing = 1;	
   }
   isc_trigger_count++;
   if (isc_trigger_count>=ISC_TRIG_PER) {

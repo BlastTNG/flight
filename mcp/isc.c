@@ -16,7 +16,7 @@
 extern short int SamIAm;   /* mcp.c */
 extern short int InCharge; /* tx.c */
 
-short int write_ISC_pointing = 0;
+short int write_ISC_pointing = 0; // isc.c
 
 server_frame ISCData[3];
 int iscdata_index = 0;
