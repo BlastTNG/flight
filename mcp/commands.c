@@ -1544,22 +1544,22 @@ void InitCommandData() {
   CommandData.ISCState[0].elBDA = 0;
   CommandData.ISCState[0].brightStarMode = 0;
   CommandData.ISCState[0].grid = 38;
-  CommandData.ISCState[0].maxBlobMatch = 5;
-  CommandData.ISCState[0].sn_threshold = 3.5;
+  CommandData.ISCState[0].maxBlobMatch = 10;
+  CommandData.ISCState[0].sn_threshold = 4.5;
   CommandData.ISCState[0].mult_dist = 30;
-  CommandData.ISCState[0].mag_limit = 9;
-  CommandData.ISCState[0].norm_radius = 2. * DEG2RAD;
-  CommandData.ISCState[0].lost_radius = 5. * DEG2RAD;
+  CommandData.ISCState[0].mag_limit = 9.5;
+  CommandData.ISCState[0].norm_radius = 3. * DEG2RAD;
+  CommandData.ISCState[0].lost_radius = 6. * DEG2RAD;
   CommandData.ISCState[0].tolerance = 20. / 3600. * DEG2RAD; /* 20 arcsec */
-  CommandData.ISCState[0].match_tol = 0.8;
+  CommandData.ISCState[0].match_tol = 0.5;
   CommandData.ISCState[0].quit_tol = 1;
   CommandData.ISCState[0].rot_tol = 5 * DEG2RAD;
   CommandData.ISCState[0].triggertype = ISC_TRIGGER_NEG;
   CommandData.ISCState[0].gain = 1;
   CommandData.ISCState[0].offset = 0;
   CommandData.ISCControl[0].save_period = 4000; /* 40 sec */
-  CommandData.ISCControl[0].pulse_width = 3125; /* 300.00 msec */
-  CommandData.ISCControl[0].fast_pulse_width = 625; /* 60.00 msec */
+  CommandData.ISCControl[0].pulse_width = 10; /* 100.00 msec */
+  CommandData.ISCControl[0].fast_pulse_width = 10; /* 100.00 msec */
 
   CommandData.ISCState[1].abort = 0;
   CommandData.ISCState[1].pause = 0;
@@ -1573,12 +1573,12 @@ void InitCommandData() {
   CommandData.ISCState[1].elBDA = 0;
   CommandData.ISCState[1].brightStarMode = 0;
   CommandData.ISCState[1].grid = 38;
-  CommandData.ISCState[1].maxBlobMatch = 5;
-  CommandData.ISCState[1].sn_threshold = 3.5;
+  CommandData.ISCState[1].maxBlobMatch = 10;
+  CommandData.ISCState[1].sn_threshold = 4.5;
   CommandData.ISCState[1].mult_dist = 30;
-  CommandData.ISCState[1].mag_limit = 9;
-  CommandData.ISCState[1].norm_radius = 2. * DEG2RAD;
-  CommandData.ISCState[1].lost_radius = 5. * DEG2RAD;
+  CommandData.ISCState[1].mag_limit = 9.5;
+  CommandData.ISCState[1].norm_radius = 3. * DEG2RAD;
+  CommandData.ISCState[1].lost_radius = 6. * DEG2RAD;
   CommandData.ISCState[1].tolerance = 20. / 3600. * DEG2RAD; /* 20 arcsec */
   CommandData.ISCState[1].match_tol = 0.8;
   CommandData.ISCState[1].quit_tol = 1;
@@ -1587,8 +1587,8 @@ void InitCommandData() {
   CommandData.ISCState[1].gain = 1;
   CommandData.ISCState[1].offset = 0;
   CommandData.ISCControl[1].save_period = 4000; /* 40 sec */
-  CommandData.ISCControl[0].pulse_width = 3125; /* 300.00 msec */
-  CommandData.ISCControl[0].fast_pulse_width = 625; /* 60.00 msec */
+  CommandData.ISCControl[1].pulse_width = 10; /* 100.00 msec */
+  CommandData.ISCControl[1].fast_pulse_width = 10; /* 100.00 msec */
   CommandData.ADC_sync_timeout = 0;
 
   WritePrevStatus();
