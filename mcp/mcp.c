@@ -176,7 +176,7 @@ void GetACS(unsigned short *Rxframe){
 }
 
 void SunSensor(void) {
-  int sock = -1, n, prin, lastIndex, curIndex;
+  int sock = -1, n, prin;
   int ars, ers;
   double az_rel_sun, el_rel_sun;
 
@@ -227,53 +227,56 @@ void SunSensor(void) {
 
     fprintf(stderr, "Connected to Arien\n");
     sigPipeRaised = n = 0;
-    lastIndex = RxframeIndex;
+    //lastIndex = RxframeIndex;
     while (n != -1) {
-      curIndex = RxframeIndex;
-      if (curIndex < lastIndex) {
-        usleep(10000);
-        if (send(sock, P, 2, 0) == -1) {
-          perror("SunSensor send()");
-        }
-        
-        FD_ZERO(&fdr);
-        FD_SET(sock, &fdr);
-
-        timeout.tv_sec = 10;
-        timeout.tv_usec = 0;
-
-        n = select(sock + 1, &fdr, NULL, NULL, &timeout);
-
-        if (n == -1 && errno == EINTR)
-          continue;
-        if (n == -1) {
-          perror("SunSensor select()");
-          continue;
-        }
-
-        if (FD_ISSET(sock, &fdr)) {
-          n = recv(sock, buff, (socklen_t)255, MSG_DONTWAIT);
-
-          if (n != -1) {
-            buff[n] = 0;
-            if (sscanf(buff, "%lf %lf %i %i %i", &az_rel_sun, &el_rel_sun, &ars,
-                  &ers, &prin) == 5) {
-              SunSensorData[ss_index].raw_el = (short int)(ers);
-              SunSensorData[ss_index].raw_az = (short int)(ars);
-              SunSensorData[ss_index].prin = prin;
-              ss_index = INC_INDEX(ss_index + 1);
-//              fprintf(stderr, "%lf %lf (%i %i) %i\n", az_rel_sun, el_rel_sun, ars, ers, prin);
-            }
-          } else {
-            perror("SunSensor recv()");
-          }
-        } else {
-          fprintf(stderr, "Connection to Arien timed out.\n");
-          n = -1;
-        }
+      //curIndex = RxframeIndex;
+      //if (curIndex > lastIndex) {
+      //lastIndex = curIndex;
+      usleep(10000);
+      if (send(sock, P, 2, 0) == -1) {
+	perror("SunSensor send()");
       }
-
-      lastIndex = curIndex;
+      
+      FD_ZERO(&fdr);
+      FD_SET(sock, &fdr);
+      
+      timeout.tv_sec = 10;
+      timeout.tv_usec = 0;
+      
+      n = select(sock + 1, &fdr, NULL, NULL, &timeout);
+      
+      if (n == -1 && errno == EINTR) {
+	fprintf(stderr, "timeout on Sun Sensor\n");
+	continue;
+      }
+      if (n == -1) {
+	perror("SunSensor select()");
+	continue;
+      }
+      
+      if (FD_ISSET(sock, &fdr)) {
+	n = recv(sock, buff, (socklen_t)255, MSG_DONTWAIT);
+	
+	if (n != -1) {
+	  buff[n] = 0;
+	  if (sscanf(buff, "%lf %lf %i %i %i", &az_rel_sun, &el_rel_sun, &ars,
+		     &ers, &prin) == 5) {
+	    SunSensorData[ss_index].raw_el = (short int)(ers);
+	    SunSensorData[ss_index].raw_az = (short int)(ars);
+	    SunSensorData[ss_index].prin = prin;
+	    ss_index = INC_INDEX(ss_index + 1);
+	    //fprintf(stderr, "%lf %lf (%i %i) %i\n", az_rel_sun, el_rel_sun, ars, ers, prin);
+	  }
+	} else {
+	  perror("SunSensor recv()");
+	}
+      } else {
+	fprintf(stderr, "Connection to Arien timed out.\n");
+	n = -1;
+      }
+      //} else {
+      //	usleep(10000);
+      //}
     }
   }
 }
@@ -659,7 +662,7 @@ int main(int argc, char *argv[]) {
 #endif
 
         RxframeIndex = Rxframe[3];
-
+	
 #ifndef BOLOTEST
         PushBi0Buffer(Rxframe);
 #endif
