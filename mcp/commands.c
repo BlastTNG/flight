@@ -762,8 +762,8 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
 void GPSPosition (unsigned char *indata) {
   /* Send new information to CommandData */
 
-  SIPData.GPSpos.lon = -ParseGPS(indata);
-  SIPData.GPSpos.lat = ParseGPS(indata + 4); /* sip sends east lon */
+  SIPData.GPSpos.lat = ParseGPS(indata);
+  SIPData.GPSpos.lon = ParseGPS(indata + 4); /* sip sends east lon */
   SIPData.GPSpos.alt = ParseGPS(indata + 8);
   SIPData.GPSstatus1 = *(indata + 12);
   SIPData.GPSstatus2 = *(indata + 13);
@@ -1047,19 +1047,19 @@ void WatchPort (void* parameter) {
       case 1: /* wating for packet type */
         if (buf == 0x13) { /* Send data request */
           readstage = 3;
-          //          mprintf(MCP_INFO, "COMM%i: Data request\n", port + 1);
+//                    mprintf(MCP_INFO, "COMM%i: Data request\n", port + 1);
         } else if (buf == 0x14) { /* Command */
           readstage = 2;
-          //          mprintf(MCP_INFO, "COMM%i: Command\n", port + 1);
+//                    mprintf(MCP_INFO, "COMM%i: Command\n", port + 1);
         } else if (buf == 0x10) { /* GPS Position */
           readstage = 4;
-          //          mprintf(MCP_INFO, "COMM%i: GPS Position\n", port + 1);
+//                    mprintf(MCP_INFO, "COMM%i: GPS Position\n", port + 1);
         } else if (buf == 0x11) { /* GPS Time */
           readstage = 5;
-          //          mprintf(MCP_INFO, "COMM%i: GPS Time\n", port + 1);
+//                    mprintf(MCP_INFO, "COMM%i: GPS Time\n", port + 1);
         } else if (buf == 0x12) { /* MKS Altitude */
           readstage = 6;
-          //          mprintf(MCP_INFO, "COMM%i: MKS Altitude\n", port + 1);
+//                    mprintf(MCP_INFO, "COMM%i: MKS Altitude\n", port + 1);
         } else {
           mprintf(MCP_WARNING,
               "COMM%i: Bad packet received: Unrecognised Packet Type: %02X\n",

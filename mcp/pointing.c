@@ -717,7 +717,7 @@ void Pointing(){
 
   /************************************************/
   /** Set the official Lat and Long: prefer dgps **/
-  if (i_dgpspos != last_i_dgpspos) {
+  if (i_dgpspos != last_i_dgpspos && 0) {
     i_dgpspos = last_i_dgpspos;
     PointingData[point_index].lat = DGPSPos[i_dgpspos].lat;
     PointingData[point_index].lon = DGPSPos[i_dgpspos].lon;
@@ -728,7 +728,7 @@ void Pointing(){
     if (no_dgps_pos > 179) {
       PointingData[point_index].t = time(NULL); // for now use CPU time
     }
-    if (no_dgps_pos > 3000) { // no dgps for 30 seconds - revert to sip
+    if (no_dgps_pos > 3000 || 1) { // no dgps for 30 seconds - revert to sip
       PointingData[point_index].lat = SIPData.GPSpos.lat;
       PointingData[point_index].lon = SIPData.GPSpos.lon;
     }
@@ -737,7 +737,7 @@ void Pointing(){
   /*****************************/
   /** set time related things **/
   PointingData[point_index].mcp_frame = ACSData.mcp_frame;
-  //PointingData[point_index].t = time(NULL); // for now use CPU time
+  PointingData[point_index].t = time(NULL); // for now use CPU time
   PointingData[point_index].lst = getlst(PointingData[point_index].t,
       PointingData[point_index].lon);
 

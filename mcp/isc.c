@@ -12,7 +12,7 @@
 #include "isc_protocol.h"
 #include "mcp.h"
 
-#define ELBERETH "192.168.62.5"
+#define ELBERETH "192.168.62.6"
 #define BASE_PORT 2000
 
 extern short int SamIAm;   /* mcp.c */
@@ -205,6 +205,9 @@ void IntegratingStarCamera(void)
         CommandData.ISCState.el = MyPointData.el * DEG2RAD;
         CommandData.ISCState.lst = MyPointData.lst * SEC2RAD;
         CommandData.ISCState.MCPFrameNum = frame_num;
+
+        CommandData.ISCState.az = 180 * DEG2RAD;
+        printf("lat az el lst: %f %f %f %f\n", CommandData.ISCState.lat / DEG2RAD, CommandData.ISCState.az / DEG2RAD, CommandData.ISCState.el / DEG2RAD, CommandData.ISCState.lst / DEG2RAD);
 
         /* request for one automaticly saved image */
         if (CommandData.ISC_auto_save) {
