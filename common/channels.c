@@ -175,18 +175,15 @@ void MakeBoloTable(void) {
       channel.addr = j;
       sprintf(channel.field, "n%ic%ilo", channel.node, j);
       boloIndex[i][j][0] = index;
-      printf("boloIndex[%i][%i][0] = %i\n", i, j, index);
       memcpy(&BoloChannels[index++], &channel, sizeof(channel));
       /* msw at j and j+1 */
       channel.addr = DAS_CHS + (j >> 1);
       sprintf(channel.field, "n%ic%ihi", channel.node, j);
       boloIndex[i][j + 1][1] = boloIndex[i][j][1] = index;
-      printf("boloIndex[%i][%i][1] = %i\n", i, j, index);
       memcpy(&BoloChannels[index++], &channel, sizeof(channel));
       /* lsw channel at j+1 */
       channel.addr = j+1;
       sprintf(channel.field, "n%ic%ilo", channel.node, j+1);
-      printf("boloIndex[%i][%i][0] = %i\n", i, j + 1, index);
       boloIndex[i][j + 1][0] = index;
       memcpy(&BoloChannels[index++], &channel, sizeof(channel));
     }
