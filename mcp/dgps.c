@@ -162,7 +162,7 @@ void WatchDGPS() {
   fprintf(fp,"$PASHS,3DF,V12,+000.000,+003.239,-000.000\r\n");
   fprintf(fp,"$PASHS,3DF,V13,-001.254,+002.446,-000.024\r\n");
   fprintf(fp,"$PASHS,3DF,V14,+001.346,+000.560,-000.015\r\n");
-  fprintf(fp,"$PASHS,3DF,OFS,-062.85,+00.00,+00.00\r\n"); // array offest p71
+  fprintf(fp,"$PASHS,3DF,OFS,+117.14,+00.00,+00.00\r\n"); // array offest p71
   fprintf(fp,"$PASHS,SAV,Y\r\n");
   /**********************************************/
   fprintf(fp,"$PASHS,3DF,FLT,N\r\n"); // no averaging filter

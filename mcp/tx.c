@@ -1398,7 +1398,7 @@ void StoreData(int index, unsigned int* Txframe,
 
   /** Att fields **/
   i_dgps = GETREADINDEX(dgpsatt_index);
-  WriteSlow(i_dgps_att_ok, j_dgps_att_ok, 2); //DGPSAtt[i_dgps].att_ok);
+  WriteSlow(i_dgps_att_ok, j_dgps_att_ok, 10); //DGPSAtt[i_dgps].att_ok));
   WriteSlow(i_dgps_att_index, j_dgps_att_index, i_dgps);
 
   /** ISC Fields **/
