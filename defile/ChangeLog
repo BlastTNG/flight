@@ -1,6 +1,17 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2005-01-18  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	Release defile-3.1.0
+
+	* defile.1.in.in: Update for version 3.1.0
+	* defile.h: debugging defines
+	* writer.c: add DEFILE_FLAG/defiled_field all over the place
+	* writer.c (PreBuffer): Added, to resequence dropped frames.
+	* writer.c (PushFrame): Add call to PreBuffer ; flush slow frames only at the
+	end-of-frame ; discard first (probably partial) frame
+	* writer.c (DirFileWrite): Fix sample drop in slow frame push to disk
+
 2005-01-10  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	Release defile-3.0.8
 
