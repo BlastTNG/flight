@@ -1240,7 +1240,7 @@ void StoreData(int index, unsigned int* Txframe,
     SlowChIndex("dgps_climb", &i_dgps_climb, &j_dgps_climb);
     SlowChIndex("dgps_n_sat", &i_dgps_n_sat, &j_dgps_n_sat);
     SlowChIndex("dgps_pos_index", &i_dgps_pos_index, &j_dgps_pos_index);
-    SlowChIndex("dgps_att_ok", &i_dgps_att_ok, &j_dgps_att_ok);
+    SlowChIndex("spare25", &i_dgps_att_ok, &j_dgps_att_ok);
     SlowChIndex("dgps_att_index", &i_dgps_att_index, &j_dgps_att_index);
 
     SlowChIndex("blob0_x", &blob0_xCh, &blob0_xInd);
@@ -1411,7 +1411,7 @@ void StoreData(int index, unsigned int* Txframe,
 
   /** Att fields **/
   i_dgps = GETREADINDEX(dgpsatt_index);
-  WriteSlow(i_dgps_att_ok, j_dgps_att_ok, 10); //DGPSAtt[i_dgps].att_ok));
+  WriteSlow(i_dgps_att_ok, j_dgps_att_ok, DGPSAtt[i_dgps].att_ok);
   WriteSlow(i_dgps_att_index, j_dgps_att_index, i_dgps);
 
   /** ISC Fields **/

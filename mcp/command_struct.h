@@ -34,18 +34,18 @@ struct GainStruct {
 };
 
 struct PointingModeStruct {
-  /* Used by:        VEL   POINT   LOCK   SCAN   RASTER    */
+  /* Used by:        VEL   POINT   LOCK   SCAN   RASTER   BOXRASTER */
   int az_mode;
-  double az1;     /*         **            **      .       */
-  double az2;     /*                       **      .       */
-  double az_vel;  /*  **                   **      **      */
+  double az1;     /*         **            **      .       **  */
+  double az2;     /*                       **      .       .   */
+  double az_vel;  /*  **                   **      **      **  */
   int el_mode;
-  double el1;     /*         **     **     **      .       */
-  double el2;     /*                       **      .       */
-  double el_vel;  /*  **                   **      **      */
-  double ra;      /*                               **      */
-  double dec;     /*                               **      */
-  double r;       /*                               **      */
+  double el1;     /*         **     **     **      .       **  */
+  double el2;     /*                       **      .       .   */
+  double el_vel;  /*  **                   **      **      **  */
+  double ra;      /*                               **      **  */
+  double dec;     /*                               **      **  */
+  double r;       /*                               **          */
   time_t t_start_sched; /* after this time, use sched file */
 };
 
@@ -61,7 +61,7 @@ struct PumpStruct {
   double bal_gain;
   int bal_max;
   int bal_min;
-  
+
   int inframe_cool1_on;
   int inframe_cool1_off;
   int lock_out;

@@ -103,7 +103,7 @@ void SunPos(double tt, double *ra, double *dec); // in starpos.c
 
 #define M2DV(x) ((x/60.0)*(x/60.0))
 
-#define MAG_ALIGNMENT (0.0)
+#define MAG_ALIGNMENT (-170.0*M_PI/180.0)
 
 // limit to 0 to 360.0
 void NormalizeAngle(double *A) {
@@ -259,7 +259,7 @@ int SSConvert(double *ss_az) {
 
   if (eflag!=0) return (0);
   
-  *ss_az = az*180.0/M_PI-sun_az;
+  *ss_az = az*180.0/M_PI + 180.0 + sun_az;
   NormalizeAngle(ss_az);
  
   return (1);
@@ -328,7 +328,6 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
       dec = ISCSolution[i_isc].dec * (180.0/M_PI);
       radec2azel(ra, dec, PointingData[i_point].lst, PointingData[i_point].lat,
 		 &new_az, &new_el);
-
       // this solution is isc_trigger_since_last old: how much have we moved?
       gy_el_delta = 0;
       gy_az_delta = 0;
@@ -345,7 +344,7 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
       // evolve el solution
       e->angle -= gy_el_delta; // rewind to when the frame was grabbed
       w1 = 1.0/(e->varience);
-      w2 = ISCSolution[i_isc].sigma * (180.0/M_PI); //e->samp_weight;
+      w2 = 10.0*ISCSolution[i_isc].sigma * (180.0/M_PI); //e->samp_weight;
       if (w2>0) w2 = 1/(w2*w2);
       else w2 = 0; // shouldn't happen
       
@@ -358,7 +357,7 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
       // evolve az solution
       a->angle -= gy_az_delta; // rewind to when the frame was grabbed
       w1 = 1.0/(a->varience);
-      w2 = a->samp_weight;
+      // w2 already set 
 
       UnwindDiff(a->angle, &new_az);
       a->angle = (w1*a->angle + new_az * w2)/(w1+w2);
@@ -579,7 +578,7 @@ void Pointing(){
 					  0.00004, // filter constant
 					  0, 0 // n_solutions, since_last
   };
-  static struct AzSolutionStruct NullAz = {90.0, // starting angle
+  static struct AzSolutionStruct NullAz = {92.0, // starting angle
 					  360.0*360.0, // varience
 					  1.0/M2DV(6), //sample weight
 					  M2DV(6000), // systemamatic varience
@@ -736,8 +735,8 @@ void Pointing(){
 		   PointingData[point_index].el,
 		   ss_az, ss_ok);  
 
+  AddAzSolution(&AzAtt, &NullAz, 1);
   /** add az solutions **/
-//  AddAzSolution(&AzAtt, &NullAz, 1);
   if (CommandData.use_mag) {
     AddAzSolution(&AzAtt, &MagAz, 1);
   }

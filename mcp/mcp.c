@@ -157,8 +157,8 @@ void GetACS(unsigned short *Rxframe){
   gyro3 = (double)(Rxframe[i_GYRO3]-25600.0)*0.00091506980885;
 
   bias = (double)(Rxframe[i_mag_bias]);
-  x_comp = (double)(Rxframe[i_mag_x]) - bias;
-  y_comp = (double)(Rxframe[i_mag_y]) - bias;
+  x_comp = (double)(Rxframe[i_mag_x]) - (26303.0+16881.0)/2.0;
+  y_comp = (double)(Rxframe[i_mag_y]) - (24792.0+15615.0)/2.0;
 
   i_ss = ss_index;
 
