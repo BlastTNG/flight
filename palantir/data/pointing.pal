@@ -460,6 +460,7 @@
         <WORD value="7" caption="Box" textstyle="OK_BIT"/>
         <WORD value="8" caption="Lock" textstyle="W_BIT"/>
         <WORD value="9" caption="VBox" textstyle="OK_BIT"/>
+        <WORD value="10" caption="RadBox" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="X (deg)">
