@@ -282,7 +282,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"clin_el",      'w', LOOPBAK2, 54,         I2DEG,             0.0, 'u'},
     {"clin_sigma",   'w', LOOPBAK2, 55,         I2DEG,             0.0, 'u'},
     {"mag_az",       'w', LOOPBAK2, 56,         I2DEG,             0.0, 'u'},
-    {"isc_pulse",    'w', LOOPBAK2, 57,           1.0,             0.0, 'u'},
+    {"isc_pulse",    'w', LOOPBAK2, 57,          10.0,             0.0, 'u'},
     {"isc_afocus",   'w', LOOPBAK2, 58,           1.0,             0.0, 'u'},
     {"isc_brra",     'w', LOOPBAK2, 59,         I2DEG,             0.0, 'u'},
     {"isc_brdec",    'w', LOOPBAK2, 60,         I2DEG,             0.0, 'u'},

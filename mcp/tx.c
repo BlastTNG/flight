@@ -1467,7 +1467,7 @@ void StoreData(int index, unsigned int* Txframe,
   WriteSlow(isc_nblobsCh, isc_nblobsInd,
       (unsigned int)ISCSolution[i_isc].n_blobs);
   if (ISCSolution[i_isc].sigma * RAD2ARCSEC > 65535) {
-    WriteSlow(isc_rd_sigmaCh, isc_rd_sigmaInd, 65536);
+    WriteSlow(isc_rd_sigmaCh, isc_rd_sigmaInd, 65535);
   } else {
     WriteSlow(isc_rd_sigmaCh, isc_rd_sigmaInd,
         (unsigned int)(ISCSolution[i_isc].sigma * RAD2ARCSEC));

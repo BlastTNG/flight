@@ -33,7 +33,9 @@
 #define FORCEINT   1
 #define U_MASK     2
 
-#define LOCK_OFFSET (0.6)
+/* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
+ * 90 degrees.  This is the offset to the true lock positions */
+#define LOCK_OFFSET (2.9)
 
 /* Seconds since 0TMG jan 1 1970 */
 #define SUN_JAN_6_1980 315964800L
