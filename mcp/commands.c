@@ -61,17 +61,24 @@ struct CommandDataStruct CommandData;
 
 /** Write the Previous Status: called whenever anything changes */
 void WritePrevStatus() {
-  int fp;
+  int fp, n;
   
   /** write the default file */
   fp = open("/tmp/mcp.prev_status", O_WRONLY|O_CREAT|O_TRUNC, 00666);
-  if (fp<0) {
-    fprintf(stderr, "warning: could not open prev_status file\n");
+  if (fp < 0) {
+    perror("mcp.prev_status open()");
     return;
   }
 
-  write(fp, &CommandData, sizeof(struct CommandDataStruct));
-  close(fp);
+  if ((n = write(fp, &CommandData, sizeof(struct CommandDataStruct))) < 0) {
+    perror("mcp.prev_status write()");
+    return;
+  }
+
+  if ((n = close(fp)) < 0) {
+    perror("mcp.prev_status close()");
+    return;
+  }
 }
 
 void bc_close() {
@@ -102,11 +109,11 @@ int bc_setserial(char *input_tty) {
   term.c_cflag |= CS8;
   
   if(cfsetospeed(&term, B1200)) {          /*  <======= SET THE SPEED HERE */
-    perror("error setting serial output speed");
+    perror("Error setting serial output speed");
     return -1;
   }
   if(cfsetispeed(&term, B1200)) {          /*  <======= SET THE SPEED HERE */
-    perror("error setting serial input speed");
+    perror("Error setting serial input speed");
     return -1;
   }
 
@@ -871,8 +878,9 @@ void WatchFIFO () {
     do {
       if ((command[index] == ' ' || command[index] == 0) && pindex > 0) {
         pbuf[pindex] = 0;
-        if (NULL == (mcommand_data[mcommand_count] = realloc(mcommand_data[mcommand_count], pindex + 2))) {
-          perror("malloc failed in FIFO CommandData.\n");
+        if (NULL == (mcommand_data[mcommand_count] =
+              realloc(mcommand_data[mcommand_count], pindex + 2))) {
+          perror("malloc failed in FIFO CommandData");
           exit(1);
         }
         strncpy(mcommand_data[mcommand_count++], pbuf, pindex + 1);
@@ -1317,11 +1325,11 @@ void WatchPortC2 () {
 /*                                                          */
 /************************************************************/
 void InitCommandData() {
-  int fp, n_read=0;
+  int fp, n_read = 0;
 
-  fp = open("/tmp/mcp.prev_status", O_RDONLY);
-
-  if (fp >= 0) {
+  if (fp = open("/tmp/mcp.prev_status", O_RDONLY) < 0) {
+    perror("Unable to open prev_status file for reading");
+  } else {
     n_read = read(fp, &CommandData, sizeof(struct CommandDataStruct));
     close(fp);
   }
@@ -1355,13 +1363,16 @@ void InitCommandData() {
   CommandData.Bias.SetLevel1 = 1;
   CommandData.Bias.SetLevel2 = 1;
   CommandData.Bias.SetLevel3 = 1;
+
+  CommandData.write_ISC_command = 0;
   
 #ifndef BOLOTEST
   /** return if we succsesfully read the previous status **/
-  if (n_read == sizeof(struct CommandDataStruct)) return;
+  if (n_read == sizeof(struct CommandDataStruct))
+    return;
 #endif
 
-  fprintf(stderr,"Warning: regenerating Command Data and previous_status\n");
+  fprintf(stderr,"Warning: regenerating Command Data and prev_status\n");
 
   CommandData.pointing_mode.t_start_sched = time(NULL) + CommandData.timeout;
 
@@ -1444,8 +1455,6 @@ void InitCommandData() {
   CommandData.Cryo.lhevalve_on = 0;
   CommandData.Cryo.lhevalve_open = 0;
   CommandData.Cryo.lhevalve_close = 0;
-
-  CommandData.write_ISC_command = 0;
 
   WritePrevStatus();
 }
