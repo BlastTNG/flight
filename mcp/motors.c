@@ -1147,8 +1147,8 @@ void DoQuadMode() { // aka radbox
   }
 
   if (new_step) {
-    bprintf(info, "new step: %g %g %g %g %g\n", el, targ_el, CommandData.pointing_mode.del,
-	    bottom, top);
+    bprintf(info, "new step: %g %g %g %g %g %g\n", el, targ_el, CommandData.pointing_mode.del,
+	    bottom, top, del_dt);
     // set v for this step
     v_el = (targ_el - el)/t;
     // set targ_el for the next step
