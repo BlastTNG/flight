@@ -8,7 +8,7 @@ bin_PROGRAMS = blastcmd
 endif
 
 dataetcdir = @DATA_ETC_DIR@
-EXTRA_DIST = blastcmd.log fifocmd dummycmd
+EXTRA_DIST = blastcmd.log fifocmd dummycmd bootstrap.sh
 
 if INSTALL_BLASTCMD_LOG
 dataetc_DATA = blastcmd.log

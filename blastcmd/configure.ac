@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(blastcmd, 1.1.10, [dwiebe@physics.utoronto.ca])
-AM_INIT_AUTOMAKE(blastcmd, 1.1.10)
+AC_INIT(blastcmd, 1.1.11, [dwiebe@physics.utoronto.ca])
+AM_INIT_AUTOMAKE(blastcmd, 1.1.11)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH([data-etc], AS_HELP_STRING([--with-data-etc=DIR],
@@ -111,6 +111,8 @@ if test "$INSTALL_BLASTCMD_REMOTE" = "yes"; then
   AC_MSG_CHECKING([for the name of the remote command])
   AC_MSG_RESULT([$REMOTE_COMMAND])
   AC_SUBST(REMOTE_COMMAND)
+
+  AC_OUTPUT(blastcmd-remote)
 fi
 
 dnl Set Up blastcmd
@@ -130,4 +132,4 @@ else
 fi
 AM_CONDITIONAL(INSTALL_BLASTCMD_LOG, test "$HAVE_BLASTCMD_LOG" = "no")
 
-AC_OUTPUT(Makefile blastcmd-remote)
+AC_OUTPUT(Makefile)
