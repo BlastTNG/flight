@@ -36,6 +36,7 @@ typedef struct
   float el_snr;     //~2 when there is no sun; ~30 when there is sun
   float cpu_temp;   //cpu temp from I2C bus (celsius)
   float pc_temp;    //motherboard temp from I2C bus (celsius)
+  float chipset_temp; //third thermometer from I2C bus (celcius)
 } ss_packet_data;
 
 #endif
