@@ -41,12 +41,12 @@ double round(double x);
 /* Include file containing the command definitions */
 #include "command_list.h"
 
-#ifndef LIB_DIR
-#  define LIB_DIR "/data/etc/blastcmd"
+#ifndef DATA_ETC_DIR
+#  define DATA_ETC_DIR "/tmp"
 #endif
 
 #define INPUT_TTY "/dev/ttyS1"
-#define LOGFILE LIB_DIR "/log.txt"
+#define LOGFILE DATA_ETC_DIR "/blastcmd.log"
 
 #define LINK_DEFAULT 0x01    /* Default link is TDRSS */
 #define ROUTING_DEFAULT 0x09 /* Default routing is COM1 */
