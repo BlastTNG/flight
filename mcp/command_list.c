@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.55 $";
+const char command_list_serial[] = "$Revision: 2.56 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -213,6 +213,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********** Pointing Mode **************/
+  {COMMAND(drift), "move at constant speed in az and el", GR_POINT, 2,
+    {
+      {"Az Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"},
+      {"El Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"}
+    }
+  },
+
   {COMMAND(cap), "scan a circle centred on RA/Dec with el steps", GR_POINT, 5,
     {
       {"RA of Centre (h)",          0, 24, 'f', "NONE"},
@@ -270,13 +277,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Dec of Corner 3 (deg)",   -90, 90, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"}
-    }
-  },
-
-  {COMMAND(drift), "move at constant speed in az and el", GR_POINT, 2,
-    {
-      {"Az Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"},
-      {"El Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"}
     }
   },
 
