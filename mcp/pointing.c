@@ -33,6 +33,7 @@
 #include <pthread.h>
 
 #include "blast.h"
+#include "mcp.h"
 #include "isc_protocol.h"
 #include "pointing_struct.h"
 #include "command_struct.h"

@@ -528,6 +528,11 @@ void SingleCommand (enum singleCommand command) {
   else if (command == osc_eye_off)
     CommandData.ISCState[1].eyeOn = 0;
 
+  else if (command == rocks)
+    CommandData.sucks = 0;
+  else if (command == sucks)
+    CommandData.sucks = 1;
+
   else if (command == reap) {
     bprintf(err, "Reaping the watchdog tickle on command.");
     pthread_cancel(watchdog_id);
@@ -1513,6 +1518,7 @@ void InitCommandData() {
   CommandData.use_osc = 1;
   CommandData.use_mag = 1;
   CommandData.use_gps = 1;
+  CommandData.sucks = 0;
 
   SIPData.MKScal.m_hi = 0.01;
   SIPData.MKScal.m_med = 0.1;

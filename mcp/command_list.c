@@ -22,12 +22,12 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.47 $";
+const char command_list_serial[] = "$Revision: 2.48 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
   "Pointing Sensor Trims", "Cooling System",    "Cal Lamp",
-  "Pointing Sensor Vetos", "Electronics Heat",  "Cryo Heat",
+  "Pointing Sensor Vetos", "Telemetry",         "Cryo Heat",
   "Pointing Sensor Power", "Inner Frame Lock",  "Cryo Control",
   "Pointing Motor Gains",  "ISC Parameters",    "ISC Housekeeping",
   "Miscellaneous",         "OSC Parameters",    "OSC Housekeeping"
@@ -53,10 +53,10 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(ss_on), "turn on the Sun Sensor at the ACS", GR_POWER},
 
   {COMMAND(az_off), "disable az motors", GR_GAIN},
-  {COMMAND(az_on),  "enable az motors",  GR_GAIN},
+  {COMMAND(az_on), "enable az motors", GR_GAIN},
   {COMMAND(el_off), "disable el motors", GR_GAIN},
-  {COMMAND(el_on),  "enable el motors",  GR_GAIN},
-  {COMMAND(force_el_on),  "force enable el motors despite the pin being in",
+  {COMMAND(el_on), "enable el motors", GR_GAIN},
+  {COMMAND(force_el_on), "force enable el motors despite the pin being in",
     CONFIRM | GR_GAIN},
 
   {COMMAND(analogue_gyros), "use the analogue gyros for in-flight pointing",
@@ -105,13 +105,13 @@ struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(level_on), "helium level sensor on", GR_CRYO_CONTROL},
   {COMMAND(level_off), "helium level sensor off", GR_CRYO_CONTROL},
-  {COMMAND(pot_valve_on),  "He4 pot valve on", GR_CRYO_CONTROL},
+  {COMMAND(pot_valve_on), "He4 pot valve on", GR_CRYO_CONTROL},
   {COMMAND(pot_valve_off), "He4 pot valve off", GR_CRYO_CONTROL},
   {COMMAND(pot_valve_open), "set He4 pot valve direction open",
     GR_CRYO_CONTROL},
   {COMMAND(pot_valve_close), "set He4 pot valve direction close",
     GR_CRYO_CONTROL},
-  {COMMAND(he_valve_on),  "he4 tank valve on", GR_CRYO_CONTROL},
+  {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO_CONTROL},
   {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO_CONTROL},
   {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open",
     GR_CRYO_CONTROL},
@@ -119,6 +119,9 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_CRYO_CONTROL},
   {COMMAND(ln_valve_on), "ln tank valve on", GR_CRYO_CONTROL},
   {COMMAND(ln_valve_off), "ln tank valve off", GR_CRYO_CONTROL},
+
+  {COMMAND(rocks), "the receiver rocks, use the happy schedule file", GR_TELEM},
+  {COMMAND(sucks), "the receiver sucks, use the sad schedule file", GR_TELEM},
 
   {COMMAND(xyzzy), "nothing happens here", GR_MISC},
   {COMMAND(mcc_halt), "ask MCP to halt the MCC", GR_MISC | CONFIRM},
@@ -378,7 +381,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(bal_gain), "balance system gain", GR_BAL, 1,
     {
-      {"Gain",           0.01,   1, 'f', "BAL_GAIN"},
+      {"Gain",           0.01, 1, 'f', "BAL_GAIN"},
     }
   },
 
@@ -410,19 +413,26 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /******** Electronics Heaters  *********/
-  {COMMAND(t_gyro1_set), "gyro box 1 temperature set point", GR_EHEAT, 1,
+  {COMMAND(t_gyro1_set), "gyro box 1 temperature set point", GR_MISC, 1,
     {
       {"Set Point (deg C)", 0, 60, 'f', "T_GY_SET"}
     }
   },
 
-  {COMMAND(t_gyro2_set), "gyro box 2 temperature set point", GR_EHEAT, 1,
+  {COMMAND(t_gyro2_set), "gyro box 2 temperature set point", GR_MISC, 1,
     {
       {"Set Point (deg C)", 0, 60, 'f', "T_GY_SET"}
     }
   },
 
-  {COMMAND(t_gyro1_gain), "gyro box 1 heater gains", GR_EHEAT, 3,
+  {COMMAND(t_gyro1_gain), "gyro box 1 heater gains", GR_MISC, 3,
+    {
+      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_gyheat"},
+      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_gyheat"},
+      {"Derrivative Gain",  0, MAX_15BIT, 'i', "g_d_gyheat"}
+    }
+  },
+{COMMAND(t_gyro2_gain), "gyro box 2 heater gains", GR_MISC, 3,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_gyheat"},
       {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_gyheat"},
@@ -430,29 +440,23 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(t_gyro2_gain), "gyro box 2 heater gains", GR_EHEAT, 3,
-    {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_gyheat"},
-      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_gyheat"},
-      {"Derrivative Gain",  0, MAX_15BIT, 'i', "g_d_gyheat"}
-    }
-  },
-
-  /***************************************/
-  /*************** Misc  *****************/
-  {COMMAND(timeout), "time until schedule mode", GR_MISC, 1,
+  /*******************************************************/
+  /*************** Telemetry/Scheduling  *****************/
+  {COMMAND(timeout), "time until schedule mode", GR_TELEM, 1,
     {
       {"Timeout (s)", 1, 14400, 'i', "TIMEOUT"}
     }
   },
 
-  {COMMAND(alice_file), "set XML file for compressed (6kbit) downlink", GR_MISC,
-    1,
+  {COMMAND(alice_file), "set XML file for compressed (6kbit) downlink",
+    GR_TELEM, 1,
     {
       {"File #", 0, 15, 'i', "ALICE_FILE"}
     }
   },
 
+  /****************************************/
+  /*************** Misc.  *****************/
   {COMMAND(apcu_charge), "Set the ACS PCU battery charge level", GR_MISC, 1,
     {
       {"Level", 0, 100, 'i', "APCU_REG"}

@@ -70,6 +70,7 @@ enum calmode { on, off, pulse, repeat };
 struct CommandDataStruct {
   unsigned short int timeout;
   unsigned short int alice_file;
+  unsigned short int sucks;
 
   unsigned short int apcu_reg;
   unsigned short int dpcu_reg;

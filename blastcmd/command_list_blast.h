@@ -13,7 +13,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 118        /* total number of single word cmds */
+#define N_SCOMMANDS 120        /* total number of single word cmds */
 #define N_MCOMMANDS 73         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -34,7 +34,7 @@
 #define GR_COOL         0x00000010
 #define GR_CALLAMP      0x00000020
 #define GR_VETO         0x00000040
-#define GR_EHEAT        0x00000080
+#define GR_TELEM        0x00000080
 #define GR_CRYO_HEAT    0x00000100
 #define GR_POWER        0x00000200
 #define GR_LOCK         0x00000400
@@ -83,7 +83,7 @@ enum singleCommand {
   osc_trig_int,     osc_trig_ext,       ln_valve_on,      ln_valve_off,
   osc_veto,         osc_allow,          reap,             isc_eye_on,
   osc_eye_on,       osc_eye_off,        inner_cool_auto,  outer_cool_auto,
-  trim_to_osc,      antisun
+  trim_to_osc,      antisun,            rocks,            sucks
 };
 
 struct scom {
