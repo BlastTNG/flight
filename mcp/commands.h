@@ -166,7 +166,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {"az_goto", "goto azimuth", GR_POINT, 1,
     {
-      {"azimuth (deg)", 0, 360, 'f', 4, "AZ"}
+      {"azimuth (deg)", -360.0, 360.0, 'f', 4, "AZ"}
     }
   },
 
