@@ -868,7 +868,8 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
   static int balOnCh, balOnInd, balOffCh, balOffInd;
   static int balTargetCh, balTargetInd, balVetoCh, balVetoInd;
   static int iscBitsCh;
-
+  static int i_lockpin, j_lockpin;
+  
   int pumpBits = 0;
   int iscBits = ControlISCHeat(Txframe, Rxframe, slowTxFields);
 
@@ -884,6 +885,7 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
     SlowChIndex("bal_off", &balOffCh, &balOffInd);
     SlowChIndex("bal_target", &balTargetCh, &balTargetInd);
     SlowChIndex("bal_veto", &balVetoCh, &balVetoInd);
+    SlowChIndex("lokmot_pin", &i_lockpin, &j_lockpin);
   }
 
   /* inner frame box */
@@ -935,6 +937,7 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
     iscBits = Balance(iscBits, slowTxFields);
   }
 
+  WriteSlow(i_lockpin, j_lockpin, pin_is_in);
   WriteSlow(pumpBitsCh, pumpBitsInd, pumpBits);
   WriteSlow(pumpPwm2Ch, pumpPwm2Ind, CommandData.pumps.pwm2 & 0x7ff);
   WriteSlow(pumpPwm3Ch, pumpPwm3Ind, CommandData.pumps.pwm3 & 0x7ff);
@@ -1143,8 +1146,7 @@ void StoreData(unsigned int* Txframe,
 	    (int)(CommandData.pointing_mode.el_vel * VEL2I));
   WriteSlow(i_RA, j_RA, (int)(CommandData.pointing_mode.ra * H2I));	
   WriteSlow(i_DEC, j_DEC, (int)(CommandData.pointing_mode.dec * DEG2I));
-  WriteSlow(i_R, j_R, (int)(CommandData.pointing_mode.dec * DEG2I));
-  
+  WriteSlow(i_R, j_R, (int)(CommandData.pointing_mode.r * DEG2I));
 }
 
 
