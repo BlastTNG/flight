@@ -978,19 +978,14 @@ void WatchPort (void* parameter) {
       case 1: /* wating for packet type */
         if (buf == 0x13) { /* Send data request */
           readstage = 3;
-          fprintf(stderr, "COMM%i: Data request packet start\n", port + 1);
         } else if (buf == 0x14) { /* Command */
           readstage = 2;
-          fprintf(stderr, "COMM%i: Command packet start\n", port + 1);
         } else if (buf == 0x10) { /* GPS Position */
           readstage = 4;
-          fprintf(stderr, "COMM%i: GPS Position packet start\n", port + 1);
         } else if (buf == 0x11) { /* GPS Position */
           readstage = 5;
-          fprintf(stderr, "COMM%i: GPS Time packet start\n", port + 1);
         } else if (buf == 0x12) { /* MKS Pressure */
           readstage = 6;
-          fprintf(stderr, "COMM%i: MKS Altitude packet start\n", port + 1);
         } else {
           fprintf(stderr,
               "COMM%i: Bad packet received: Unrecognised Packet Type: %02X\n",
@@ -1075,7 +1070,6 @@ void WatchPort (void* parameter) {
         readstage = 0;
         if (buf == 0x03) {
           SendDownData(tty_fd);
-          fprintf(stderr, "COMM%i: Got Data Request End\n", port + 1);
         } else {
           fprintf(stderr, "COMM%i: Bad encoding: Bad packet terminator: %02X\n",
               port + 1, buf);
@@ -1090,7 +1084,6 @@ void WatchPort (void* parameter) {
           readstage = 0;
           if (buf == 0x03) {
             GPSPosition((unsigned char *) indata);
-            fprintf(stderr, "COMM%i: Got SIP GPS data\n", port + 1);
           } else {
             fprintf(stderr, "COMM%i: Bad encoding in GPS Position: "
                 "Bad packet terminator: %02X\n", port + 1, buf);
