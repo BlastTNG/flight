@@ -453,6 +453,8 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_exposure", 'w', LOOP4, 28,               100.,             0.0, 'u'},
   {"osc_trig_type",'w', LOOP4, 29,                1.0,             0.0, 'u'},
   {"osc_exposure", 'w', LOOP4, 30,               100.,             0.0, 'u'},
+  {"isc_fieldrot", 'w', LOOP4, 31,              I2DEG,             0.0, 'u'},
+  {"osc_fieldrot", 'w', LOOP4, 32,              I2DEG,             0.0, 'u'},
   END_OF_CHANNELS
 };
 

@@ -281,6 +281,7 @@ void StoreStarCameraData(int index, int which)
   static struct NiosStruct* OffsetAddr[2];
   static struct NiosStruct* ExposureAddr[2];
   static struct NiosStruct* TrigTypeAddr[2];
+  static struct NiosStruct* FieldrotAddr[2];
 
   if (firsttime[which]) {
     firsttime[which] = 0;
@@ -337,6 +338,7 @@ void StoreStarCameraData(int index, int which)
     OffsetAddr[which] = GetSCNiosAddr("offset", which);
     ExposureAddr[which] = GetSCNiosAddr("exposure", which);
     TrigTypeAddr[which] = GetSCNiosAddr("trig_type", which);
+    FieldrotAddr[which] = GetSCNiosAddr("fieldrot", which);
   }
 
   /** Increment isc index -- this only happens once per slow frame */
@@ -406,6 +408,9 @@ void StoreStarCameraData(int index, int which)
   else 
     WriteData(RdSigmaAddr[which], (unsigned int)(ISCSolution[which][i_isc].sigma
           * RAD2ARCSEC), NIOS_QUEUE);
+
+  WriteData(FieldrotAddr[which], (unsigned int)(ISCSolution[which][i_isc].rot
+        * RAD2I), NIOS_QUEUE);
 
   WriteData(McpnumAddr[which],
       (unsigned int)ISCSolution[which][i_isc].MCPFrameNum, NIOS_QUEUE);
