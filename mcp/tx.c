@@ -47,11 +47,9 @@
 #define CRYO_CHARCOAL_OFF    0x80 /* N3G3 */
 
 #define CRYO_LNVALVE_ON      0x01 /* N3G2 - cryoout2 */
-#define CRYO_LNVALVE_OFF     0x02 /* N3G2 */
 #define CRYO_LNVALVE_OPEN    0x04 /* N3G2 */
 #define CRYO_LNVALVE_CLOSE   0x08 /* N3G2 */
 #define CRYO_LHeVALVE_ON     0x10 /* N3G2 */
-#define CRYO_LHeVALVE_OFF    0x20 /* N3G2 */
 #define CRYO_LHeVALVE_OPEN   0x40 /* N3G2 */
 #define CRYO_LHeVALVE_CLOSE  0x80 /* N3G2 */
 
@@ -329,7 +327,7 @@ void PhaseControl(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
  ***********************************************************************/
 void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
 {
-  static int i_cryoout1 = -1, j_cryoout1 = -1;
+  static int i_cryoin = -1, j_cryoin = -1;
   static int i_cryoout2 = -1, j_cryoout2 = -1;
   static int i_cryoout3 = -1, j_cryoout3 = -1;
   static int cryostateCh = -1, cryostateInd = -1;
@@ -342,7 +340,7 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
 
   /************** Set indices first time around *************/
   if (i_cryoout3 == -1) {
-    SlowChIndex("cryoout1", &i_cryoout1, &j_cryoout1);
+    SlowChIndex("cryoin", &i_cryoin, &j_cryoin);
     SlowChIndex("cryoout2", &i_cryoout2, &j_cryoout2);
     SlowChIndex("cryoout3", &i_cryoout3, &j_cryoout3);
     SlowChIndex("cryostate", &cryostateCh, &cryostateInd);
@@ -392,15 +390,11 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
     cryostate &= 0xFFFF - CS_LNVALVE_OPEN;
     CommandData.Cryo.lnvalve_close--;
   }
-  if (CommandData.Cryo.lnvalve_on > 0) {
+  if (CommandData.Cryo.lnvalve_on) {
     cryoout2 |= CRYO_LNVALVE_ON;
     cryostate |= CS_LNVALVE_ON;
-    CommandData.Cryo.lnvalve_on--;
-  } else if (CommandData.Cryo.lnvalve_off > 0) {
-    cryoout2 |= CRYO_LNVALVE_OFF;
+  } else
     cryostate &= 0xFFFF - CS_LNVALVE_ON;
-    CommandData.Cryo.lnvalve_off--;
-  }
 
   if (CommandData.Cryo.lhevalve_open > 0) {
     cryoout2 |= CRYO_LHeVALVE_OPEN;
@@ -411,15 +405,11 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
     cryostate &= 0xFFFF - CS_LHeVALVE_OPEN;
     CommandData.Cryo.lhevalve_close--;
   }
-  if (CommandData.Cryo.lhevalve_on > 0) {
+  if (CommandData.Cryo.lhevalve_on) {
     cryoout2 |= CRYO_LHeVALVE_ON;
     cryostate |= CS_LHeVALVE_ON;
-    CommandData.Cryo.lhevalve_on--;
-  } else if (CommandData.Cryo.lhevalve_off > 0) {
-    cryoout2 |= CRYO_LHeVALVE_OFF;
+  } else
     cryostate &= 0xFFFF - CS_LHeVALVE_ON;
-    CommandData.Cryo.lhevalve_off--;
-  }
 
   WriteSlow(i_cryoout3, j_cryoout3, cryoout3);
   WriteSlow(i_cryoout2, j_cryoout2, cryoout2);

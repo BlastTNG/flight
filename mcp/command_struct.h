@@ -71,10 +71,8 @@ struct CryoStruct {
   int JFETHeat;
   int heatSwitch;
   int heliumThree;
-  int lnvalve_open, lnvalve_on;
-  int lnvalve_close, lnvalve_off;
-  int lhevalve_open, lhevalve_on;
-  int lhevalve_close, lhevalve_off;
+  int lnvalve_open, lnvalve_on, lnvalve_close;
+  int lhevalve_open, lhevalve_on, lhevalve_close;
 };
 
 struct CommandDataStruct {
