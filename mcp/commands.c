@@ -455,11 +455,7 @@ void SingleCommand (enum singleCommand command) {
     CommandData.ISCState[0].display_mode = full;
   else if (command == isc_trig_int)
     CommandData.ISCState[0].triggertype = ISC_TRIGGER_INT;
-  else if (command == isc_trig_edge)
-    CommandData.ISCState[0].triggertype = ISC_TRIGGER_EDGE;
-  else if (command == isc_trig_pos)
-    CommandData.ISCState[0].triggertype = ISC_TRIGGER_POS;
-  else if (command == isc_trig_neg)
+  else if (command == isc_trig_ext)
     CommandData.ISCState[0].triggertype = ISC_TRIGGER_NEG;
   else if (command == isc_auto_focus)
     CommandData.ISCControl[0].autofocus = 10;
@@ -488,11 +484,7 @@ void SingleCommand (enum singleCommand command) {
     CommandData.ISCState[1].display_mode = full;
   else if (command == osc_trig_int)
     CommandData.ISCState[1].triggertype = ISC_TRIGGER_INT;
-  else if (command == osc_trig_edge)
-    CommandData.ISCState[1].triggertype = ISC_TRIGGER_EDGE;
-  else if (command == osc_trig_pos)
-    CommandData.ISCState[1].triggertype = ISC_TRIGGER_POS;
-  else if (command == osc_trig_neg)
+  else if (command == osc_trig_ext)
     CommandData.ISCState[1].triggertype = ISC_TRIGGER_NEG;
   else if (command == osc_auto_focus)
     CommandData.ISCControl[1].autofocus = 10;
