@@ -314,8 +314,8 @@ static int bbc_open(struct inode *inode, struct file *filp)
   }
  
   if(bbc_drv.use_count && bbc_drv.timer_on == 0) {
-    // reset bbc
-    writel(BBCPCI_COMREG_RESET, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
+    // sync bbc
+    writel(BBCPCI_COMREG_SYNC, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
     // enable timer
     bbc_drv.timer_on = 1;
     init_timer(&bbc_drv.timer);
@@ -343,6 +343,9 @@ static int bbc_release(struct inode *inode, struct file *filp)
   if(bbc_drv.use_count == 0 && bbc_drv.timer_on) {
     bbc_drv.timer_on = 0;
     del_timer_sync(&bbc_drv.timer);
+
+    // Reset bbc 
+    writel(BBCPCI_COMREG_RESET, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
   }
   
   return 0;
