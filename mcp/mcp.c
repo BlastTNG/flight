@@ -678,7 +678,7 @@ int main(int argc, char *argv[]) {
       merror(MCP_FATAL, "Unable to malloc slow data buffer");
 
 #ifndef BOLOTEST
-  //pthread_create(&tdrss_id, NULL, (void*)&TDRSSWriter, NULL);
+//  pthread_create(&tdrss_id, NULL, (void*)&TDRSSWriter, NULL);
 #endif
 
   /* Find out whether I'm frodo or sam */

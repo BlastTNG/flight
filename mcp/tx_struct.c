@@ -452,9 +452,9 @@ struct ChannelStruct WideFastChannels[] = {
   {"raw_gy2",     'r',  ACS1, 22,  ADU2_TO_DPS, -GYRO2_OFFSET*ADU2_TO_DPS, 'U'},
   {"raw_gy3",     'r',  ACS1, 24,  ADU3_TO_DPS, -GYRO3_OFFSET*ADU3_TO_DPS, 'U'},
   {"raw_gy1",     'r',  ACS1, 26,  ADU1_TO_DPS, -GYRO1_OFFSET*ADU1_TO_DPS, 'U'},
-  {"raw_gy6",     'r',  ACS27H,  36,  60.0E-6, 0.0, 'S'},
-  {"raw_gy5",     'r',  ACS27H,  6,   60.0E-6, 0.0, 'S'},
-  {"raw_gy4",     'r',  ACS27H,  2,   60.0E-6, 0.0, 'S'},
+  {"raw_gy6",     'r',  ACS1,  36,  60.0E-6, 0.0, 'S'},
+  {"raw_gy5",     'r',  ACS1,  6,   60.0E-6, 0.0, 'S'},
+  {"raw_gy4",     'r',  ACS1,  2,   60.0E-6, 0.0, 'S'},
   {"int_gy6",     'r',  ACS27H,  40,  60.0E-9, 0.0, 'S'},
   {"int_gy5",     'r',  ACS27H,  34,  60.0E-9, 0.0, 'S'},
   {"int_gy4",     'r',  ACS27H,  4,   60.0E-9, 0.0, 'S'},
@@ -503,9 +503,9 @@ struct ChannelStruct FastChannels[] = {
 #endif
 
   /* read channels from ACS1 */
-  {"gyro4",       'r',  ACS1, 41,  1.0/1648,   -32768.0/1648, 'u'},
-  {"gyro5",       'r',  ACS1, 35,  -0.00625,          136.45, 'u'},
-  {"gyro6",       'r',  ACS1, 37,  1.0,             0.0, 'u'},
+  {"gyro4",       'r',  ACS27H, 36,  1.0/1648,   -32768.0/1648, 'u'},
+  {"gyro5",       'r',  ACS27H,  6,  -0.00625,          136.45, 'u'},
+  {"gyro6",       'r',  ACS27H,  2,  1.0,             0.0, 'u'},
   {"gyro2",       'r',  ACS1, 50,  ADU2_TO_DPS, -GYRO2_OFFSET*ADU2_TO_DPS, 'u'},
   {"gyro3",       'r',  ACS1, 56,  ADU3_TO_DPS, -GYRO3_OFFSET*ADU3_TO_DPS, 'u'},
   {"gyro1",       'r',  ACS1, 59,  ADU1_TO_DPS, -GYRO1_OFFSET*ADU1_TO_DPS, 'u'},
