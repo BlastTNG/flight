@@ -12,11 +12,11 @@ AC_ARG_WITH(cur-dir,
             [  --with-cur-dir=DIR      read curfiles from DIR [[/mtn/decom/etc]]],
             CUR_DIR="${withval}", CUR_DIR="/mnt/decom/etc")
 AC_SUBST(CUR_DIR)
-AC_DEFINE_UNQUOTED(CUR_DIR, "$CUR_DIR", [ Define to the path to your curfiles ])
+AC_DEFINE_UNQUOTED(CUR_DIR, "$CUR_DIR", [Define to the path to your curfiles])
 
 DATA_ETC_NARSIL_DIR="$DATA_ETC_DIR/narsil"
 AC_DEFINE_UNQUOTED(DATA_ETC_NARSIL_DIR, "$DATA_ETC_NARSIL_DIR",
-                   [ Define to the path to your narsil data directory ])
+                   [Define to the path to your narsil data directory])
 
 AC_ARG_WITH([qt-include-dir],
             [  --with-qt-include-dir=DIR   Qt include directory],
