@@ -35,9 +35,9 @@
 #include "defile.h"
 #include "tx_struct.h"
 
-#define VERSION_MAJOR    "1"
+#define VERSION_MAJOR    "2"
 #define VERSION_MINOR    "0"
-#define VERSION_REVISION "8"
+#define VERSION_REVISION "0"
 #define VERSION VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION 
 
 #define DEFAULT_CURFILE "/data/etc/defile.cur"
@@ -752,9 +752,9 @@ int main (int argc, char** argv)
   }
 
   /* Make the Channel Struct */
-  MakeTxFrame();
+  MakeAddressLookups();
 
-  printf("Frame size: %i bytes\n", RX_FRAME_SIZE);
+  printf("Frame size: %i bytes\n", BiPhaseFrameSize);
 
   /* Start */
   printf("Defiling `%s'\n    into `%s' ...\n\n", rc.chunk, rc.dirfile);
@@ -764,6 +764,7 @@ int main (int argc, char** argv)
   ri.tty = 0;
   delta = 1;
   gettimeofday(&rc.start, &rc.tz);
+  PreInitialiseDirFile();
   InitialiseDirFile(1);
 
   /* Spawn reader and writer */

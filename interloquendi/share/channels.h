@@ -60,7 +60,10 @@ extern "C" {
 
   extern struct NiosStruct* NiosLookup;
   extern struct BiPhaseStruct* BiPhaseLookup;
+  extern struct ChannelStruct** SlowChList;
+  extern struct ChannelStruct* FastChList;
 
+  extern unsigned short ccFast;
   extern unsigned short ccTotal;
 
   extern unsigned short BiPhaseFrameWords;

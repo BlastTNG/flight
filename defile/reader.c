@@ -109,7 +109,7 @@ long int SetResumeChunk(void)
       exit(1);
     }
 
-    chunk_total = chunk_stat.st_size / RX_FRAME_SIZE;
+    chunk_total = chunk_stat.st_size / BiPhaseFrameSize;
 
     /* if there's more than we need, we're done */
     if (chunk_total > left_to_read)
@@ -137,13 +137,23 @@ void FrameFileReader(void)
   int frames_read = 0;
   int new_chunk = 1;
   int more_in_file = 0;
-  unsigned short InputBuffer[INPUT_BUF_SIZE][FRAME_WORDS];
+  unsigned short* InputBuffer[INPUT_BUF_SIZE];
   struct stat chunk_stat;
   long int seek_to = 0;
 
+  if ((InputBuffer[0] = (unsigned short*)malloc(BiPhaseFrameSize
+          * INPUT_BUF_SIZE)) == NULL) {
+    perror("defile: cannot allocate heap");
+    exit(1);
+  }                 
+
+  for(i = 1; i < INPUT_BUF_SIZE; ++i)
+    InputBuffer[i] = InputBuffer[0] + i * BiPhaseFrameSize
+      * sizeof(unsigned short);
+
   if (rc.resume_at >= 0) {
     ri.read = SetResumeChunk();
-    seek_to = ri.read * RX_FRAME_SIZE;
+    seek_to = ri.read * BiPhaseFrameWords;
   }
 
   do {
@@ -174,12 +184,13 @@ void FrameFileReader(void)
           exit(1);
         }
 
-        ri.chunk_total = chunk_stat.st_size / RX_FRAME_SIZE;
+        ri.chunk_total = chunk_stat.st_size / BiPhaseFrameSize;
       }
 
       /* read some frames */
       clearerr(stream);
-      if ((n = fread(InputBuffer, RX_FRAME_SIZE, INPUT_BUF_SIZE, stream)) < 1) {
+      if ((n = fread(InputBuffer, BiPhaseFrameSize, INPUT_BUF_SIZE, stream))
+          < 1) {
         if (feof(stream))
           break;
         else if ((i = ferror(stream))) {
@@ -196,7 +207,7 @@ void FrameFileReader(void)
           }
 
           /* seek to our last position */
-          fseek(stream, frames_read * RX_FRAME_SIZE, SEEK_SET);
+          fseek(stream, frames_read * BiPhaseFrameSize, SEEK_SET);
           n = 0;
         }
       }
@@ -224,7 +235,7 @@ void FrameFileReader(void)
         }
 
         /* new frame total */
-        n = chunk_stat.st_size / RX_FRAME_SIZE;
+        n = chunk_stat.st_size / BiPhaseFrameSize;
         if (n < ri.chunk_total)
           fprintf(stderr, "defile: warning: chunk `%s' has shrunk.\n",
               rc.chunk);

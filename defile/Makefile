@@ -7,13 +7,13 @@ all: defile
 debug:
 	${MAKE} CFLAGS="$(CFLAGS) -g" LDFLAGS="$(LDFLAGS) -g" all
 
-defile: defile.o reader.o tx_struct.o writer.o
+defile: defile.o reader.o channels.o writer.o
 
 defile.o: defile.c defile.h tx_struct.h
 
 reader.o: reader.c tx_struct.h defile.h
 
-tx_struct.o: tx_struct.c tx_struct.h
+channels.o: channels.c tx_struct.h
 
 writer.o: writer.c tx_struct.h defile.h
 

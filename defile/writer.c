@@ -50,11 +50,11 @@ struct FieldType
   long int nw;
 };
 
-struct FieldType normal_fast[N_FASTCHLIST];
-struct FieldType slow_fields[N_SLOW][FAST_PER_SLOW];
+struct FieldType* normal_fast;
+struct FieldType* slow_fields[FAST_PER_SLOW];
 struct FieldType bolo_fields[DAS_CARDS][DAS_CHS];
 
-unsigned short slow_data[N_SLOW][FAST_PER_SLOW];
+unsigned short* slow_data[FAST_PER_SLOW];
 int buf_overflow;
 int n_fast, bolo_i0;
 
@@ -244,7 +244,7 @@ int CheckWriteAllow(int mkdir_err)
           n_fast += 2;
           found = 1;
         } else
-          for (i = 0; i < N_FASTCHLIST; ++i)
+          for (i = 0; i < ccFast; ++i)
             if (strcmp(lamb->d_name, FastChList[i].field) == 0) {
               if ((n = GetNumFrames(stat_buf.st_size, FastChList[i].type,
                       lamb->d_name)) < min_wrote)
@@ -268,7 +268,7 @@ int CheckWriteAllow(int mkdir_err)
               }
             }
         if (!found)
-          for (i = 0; i < N_SLOW; ++i)
+          for (i = 0; i < slowsPerBi0Frame; ++i)
             for (j = 0; j < FAST_PER_SLOW; ++j)
               if (strcmp(lamb->d_name, SlowChList[i][j].field) == 0) {
                 if ((n = GetNumFrames(stat_buf.st_size * FAST_PER_SLOW,
@@ -299,8 +299,8 @@ int CheckWriteAllow(int mkdir_err)
 
   if (rc.write_mode == 2) {
     /* check to see if we've read all the channels */
-    if ((n_fast != N_FASTCHLIST + 2 - DAS_CHS * DAS_CARDS * 3 / 2) ||
-        (n_slow != N_SLOW * FAST_PER_SLOW) ||
+    if ((n_fast != ccFast + 2 - DAS_CHS * DAS_CARDS * 3 / 2) ||
+        (n_slow != slowsPerBi0Frame * FAST_PER_SLOW) ||
         (n_bolo != DAS_CARDS * DAS_CHS)) {
       fprintf(stderr, "defile: dirfile `%s' is missing field files\n"
           "defile: cannot resume.\n", rc.dirfile);
@@ -331,6 +331,28 @@ int CheckWriteAllow(int mkdir_err)
   return 1;
 }
 
+void PreInitialiseDirFile(void)
+{
+  int j;
+
+  if ((normal_fast = malloc(ccFast * sizeof(struct FieldType)))
+      == NULL) {
+    perror("defile: cannot allocate heap");
+    exit(1);
+  }
+  for (j = 0; j < FAST_PER_SLOW; ++j) {
+    if ((slow_fields[j] = malloc(slowsPerBi0Frame * sizeof(struct FieldType)))
+        == NULL) {
+      perror("defile: cannot allocate heap");
+      exit(1);
+    }
+    if ((slow_data[j] = malloc(slowsPerBi0Frame * sizeof(unsigned int)))
+        == NULL) {
+      perror("defile: cannot allocate heap");
+      exit(1);
+    }
+  }
+}
 
 /* Initialise dirfile */
 void InitialiseDirFile(int reset)
@@ -376,7 +398,7 @@ void InitialiseDirFile(int reset)
       exit(1);
     }
     if (lseek(normal_fast[n_fast].fp, rc.resume_at *
-            normal_fast[n_fast].size * 2, SEEK_SET) < 0) {
+          normal_fast[n_fast].size * 2, SEEK_SET) < 0) {
       snprintf(gpb, GPB_LEN, "defile: cannot lseek file `%s/FASTSAMP'",
           rc.dirfile);
       perror(gpb);
@@ -405,7 +427,7 @@ void InitialiseDirFile(int reset)
 
   /* slow chs */
   fprintf(fp, "\n## SLOW CHANNELS:\n");
-  for (i = 0; i < N_SLOW; i++) {
+  for (i = 0; i < slowsPerBi0Frame; i++) {
     for (j = 0; j < FAST_PER_SLOW; j++) {
       if (strlen(SlowChList[i][j].field) > 0) {
         fprintf(fp, "%-16s RAW    %c 1\n",
@@ -421,23 +443,23 @@ void InitialiseDirFile(int reset)
           exit(1);
         }
 
-        slow_fields[i][j].size = FieldSize(SlowChList[i][j].type,
+        slow_fields[j][i].size = FieldSize(SlowChList[i][j].type,
             SlowChList[i][j].field);
 
         sprintf(gpb, "%s/%s", rc.dirfile, SlowChList[i][j].field);
         if (rc.resume_at >= 0) {
           /* append to file */
-          if ((slow_fields[i][j].fp = open(gpb, O_WRONLY)) == -1) {
+          if ((slow_fields[j][i].fp = open(gpb, O_WRONLY)) == -1) {
             snprintf(gpb, GPB_LEN, "defile: cannot open file `%s/%s'",
                 rc.dirfile, SlowChList[i][j].field);
             perror(gpb);
             exit(1);
           }
-          lseek(slow_fields[i][j].fp, rc.resume_at *
-              slow_fields[i][j].size * 2 / FAST_PER_SLOW, SEEK_SET);
+          lseek(slow_fields[j][i].fp, rc.resume_at *
+              slow_fields[j][i].size * 2 / FAST_PER_SLOW, SEEK_SET);
         } else {
           /* create new file */
-          if ((slow_fields[i][j].fp = creat(gpb, 00644)) == -1) {
+          if ((slow_fields[j][i].fp = creat(gpb, 00644)) == -1) {
             snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/%s'",
                 rc.dirfile, SlowChList[i][j].field);
             perror(gpb);
@@ -445,17 +467,17 @@ void InitialiseDirFile(int reset)
           }
         }
       } else {
-        slow_fields[i][j].fp = -1;
+        slow_fields[j][i].fp = -1;
       }
-      slow_fields[i][j].i_in = slow_fields[i][j].i_out = 0;
+      slow_fields[j][i].i_in = slow_fields[j][i].i_out = 0;
       if (reset) {
         if (rc.resume_at > 0)
-          slow_fields[i][j].nw = rc.resume_at / FAST_PER_SLOW;
+          slow_fields[j][i].nw = rc.resume_at / FAST_PER_SLOW;
         else
-          slow_fields[i][j].nw = 0;
+          slow_fields[j][i].nw = 0;
       }
-      slow_fields[i][j].b = malloc( 2 * MAXBUF);
-      slow_fields[i][j].i0 = 4 + i;
+      slow_fields[j][i].b = malloc( 2 * MAXBUF);
+      slow_fields[j][i].i0 = 4 + i;
     }
   }
 
@@ -465,7 +487,7 @@ void InitialiseDirFile(int reset)
     perror("Error while flushing format file");
     exit(1);
   }
-  for (i = 0; i < N_FASTCHLIST; i++) {
+  for (i = 0; i < ccFast; i++) {
     if (strcmp(FastChList[i].field, "n5c0lo") == 0) {
       bolo_i0 = i + FAST_OFFSET;
       break;
@@ -605,13 +627,13 @@ void CleanUp(void)
 {
   int j, i; 
 
-  for(i = 0; i < N_SLOW; i++)
+  for(i = 0; i < slowsPerBi0Frame; i++)
     for(j = 0; j < FAST_PER_SLOW; j++) {
-      close(slow_fields[i][j].fp);
-      free(slow_fields[i][j].b);
+      close(slow_fields[j][i].fp);
+      free(slow_fields[j][i].b);
     }
 
-  for(i = 0; i < N_FASTCHLIST; ++i) {
+  for(i = 0; i < ccFast; ++i) {
     if (strcmp(FastChList[i].field, "n5c0lo") == 0)
       break;
     close(normal_fast[i].fp);
@@ -646,11 +668,9 @@ void PushFrame(unsigned short* frame)
     /*************/
     /* slow data */
     j = frame[3];
-    if (j < FAST_PER_SLOW) {
-      for (i = 0; i < N_SLOW; i++) {
-        slow_data[i][j] = frame[slow_fields[i][j].i0];
-      }
-    }
+    if (j < FAST_PER_SLOW)
+      for (i = 0; i < slowsPerBi0Frame; i++)
+        slow_data[j][i] = frame[slow_fields[j][i].i0];
 
     /* ****************************************************************** */
     /* First make sure there is enough space in ALL the buffers           */
@@ -661,12 +681,12 @@ void PushFrame(unsigned short* frame)
     /************************************/   
     /* Check buffer space in slow field */
     /************************************/
-    for (i = 0; write_ok && i < N_SLOW; i++)
+    for (i = 0; write_ok && i < slowsPerBi0Frame; i++)
       for (j = 0; write_ok && j < FAST_PER_SLOW; j++) {
-        i_in = slow_fields[i][j].i_in;
+        i_in = slow_fields[j][i].i_in;
         if(++i_in >= MAXBUF)
           i_in = 0;
-        if(i_in == slow_fields[i][j].i_out)
+        if(i_in == slow_fields[j][i].i_out)
           write_ok = 0;
       }
 
@@ -704,15 +724,14 @@ void PushFrame(unsigned short* frame)
   /* push if FAST_PER_SLOW fasts are done... */
   if (++i_count == FAST_PER_SLOW) {
     i_count = 0;
-    for (i = 0; i < N_SLOW; i++) {
+    for (i = 0; i < slowsPerBi0Frame; i++) {
       for (j = 0; j < FAST_PER_SLOW; j++) {
-        i_in = slow_fields[i][j].i_in;
-        ((unsigned short*)slow_fields[i][j].b)[i_in] = 
-          slow_data[i][j];
+        i_in = slow_fields[j][i].i_in;
+        ((unsigned short*)slow_fields[j][i].b)[i_in] = slow_data[j][i];
 
         if (++i_in >= MAXBUF)
           i_in = 0;
-        slow_fields[i][j].i_in = i_in;
+        slow_fields[j][i].i_in = i_in;
       }
     }
     n_frames++;
@@ -771,28 +790,25 @@ void DirFileWriter(void)
 
   while (1) {
     /* slow data */
-    for (i = 0; i < N_SLOW; i++) {
+    for (i = 0; i < slowsPerBi0Frame; i++) {
       for (j = 0; j < FAST_PER_SLOW; j++) {
-        i_in = slow_fields[i][j].i_in;
-        i_out = slow_fields[i][j].i_out;
+        i_in = slow_fields[j][i].i_in;
+        i_out = slow_fields[j][i].i_out;
         i_buf = 0;
         while (i_in != i_out) {
           if ((SlowChList[i][j].type == 'U') ||
               (SlowChList[i][j].type == 'I')) {
-            ibuffer[i_buf] =
-              (unsigned)
-              ((((unsigned short*)slow_fields[i][j].b)[i_out]) << 16)
+            ibuffer[i_buf] = (unsigned)
+              ((((unsigned short*)slow_fields[j][i].b)[i_out]) << 16)
               | (unsigned)
-              (((unsigned short*)slow_fields[i + 1][j].b)[i_out]);
-          } else {
-            buffer[i_buf] =
-              ((unsigned short*)slow_fields[i][j].b)[i_out];
-          }
+              (((unsigned short*)slow_fields[j][i + 1].b)[i_out]);
+          } else
+            buffer[i_buf] = ((unsigned short*)slow_fields[j][i].b)[i_out];
 
           if (i == 0 && j == 0)
-            wrote_count = ++slow_fields[i][j].nw * FAST_PER_SLOW;
-          else if (wrote_count < ++slow_fields[i][j].nw * FAST_PER_SLOW)
-            wrote_count = slow_fields[i][j].nw * FAST_PER_SLOW;
+            wrote_count = ++slow_fields[j][i].nw * FAST_PER_SLOW;
+          else if (wrote_count < ++slow_fields[j][i].nw * FAST_PER_SLOW)
+            wrote_count = slow_fields[j][i].nw * FAST_PER_SLOW;
 
           i_out++;
           i_buf++;
@@ -801,19 +817,19 @@ void DirFileWriter(void)
         }
         if ((SlowChList[i][j].type == 'U') ||
             (SlowChList[i][j].type == 'I')) {
-          if ( (i_buf > 0) && (slow_fields[i][j].fp >= 0) ) 
-            if (write(slow_fields[i][j].fp,
+          if ( (i_buf > 0) && (slow_fields[j][i].fp >= 0) ) 
+            if (write(slow_fields[j][i].fp,
                   ibuffer, i_buf * sizeof(unsigned)) < 0) {
               perror("Error while writing slow channels");
             }
         } else {
-          if ( (i_buf > 0)  && (slow_fields[i][j].fp >= 0) ) 
-            if (write(slow_fields[i][j].fp,
+          if ( (i_buf > 0)  && (slow_fields[j][i].fp >= 0) ) 
+            if (write(slow_fields[j][i].fp,
                   buffer, i_buf * sizeof(unsigned short)) < 0) {
               perror("Error while writing slow channels");
             }
         }
-        slow_fields[i][j].i_out = i_out;
+        slow_fields[j][i].i_out = i_out;
       }
     }
 

@@ -76,6 +76,7 @@ extern struct ri_struct ri;
 void  DirFileWriter(void);
 void  FrameFileReader(void);
 void  GetDirFile(char*, const char*, char*);
+void  PreInitialiseDirFile(void);
 void  InitialiseDirFile(int);
 void  PushFrame(unsigned short*);
 void  Remount(const char*, char*);
