@@ -917,7 +917,7 @@ void DoNewBoxMode() {
     top = MAX_EL;
   if (bottom < MIN_EL)
     bottom = MIN_EL;
-  bprintf(info, "h: %g t: %g b: %g l: %g r: %g\n", h, top, bottom, left, right);
+  bprintf(info, "cel: %g h: %g t: %g b: %g l: %g r: %g\n", cel, h, top, bottom, left, right);
   
   // FIXME: reboot proofing...
   
