@@ -464,8 +464,6 @@ const char* MName(enum multiCommand command) {
 }
 
 void MultiCommand (enum multiCommand command, unsigned short *dataq) {
-  FILE *fp;
-
   int i, dataqind;
   double rvalues[MAX_N_PARAMS];
   int ivalues[MAX_N_PARAMS];
@@ -663,18 +661,12 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     /*************** Misc  *****************/
   } else if (command == timeout) {        /* Set timeout */
     CommandData.timeout = ivalues[0];
-  } else if (command == alice_file) {  /* change downlink XML file */
-    if ((fp = fopen("/tmp/alice_index", "w")) != NULL) {
+  } else if (command == alice_file)  /* change downlink XML file */
       CommandData.alice_file = ivalues[0];
-      fprintf(fp, "%d\n", ivalues[0]);
-      if (fclose(fp) != 0)
-        merror(MCP_ERROR, "alice_index fclose()");
-    } else
-      merror(MCP_ERROR, "alice_index fopen()");
 
     /***************************************/
     /*************** Bias  *****************/
-  } else if (command == bias1_level) {    /* Set bias 1 */
+  else if (command == bias1_level) {    /* Set bias 1 */
     CommandData.Bias.SetLevel1 = 1;
     CommandData.Bias.bias1 = ivalues[0];
   } else if (command == bias2_level) {   /* Set bias 2 */

@@ -35,6 +35,7 @@ extern "C" {
 #include "pointing_struct.h"
 #include "tx_struct.h"
 #include "mcp.h"
+#include "command_struct.h"
 }
 
 #define ALICEFILE_DIR   "./"
@@ -422,8 +423,7 @@ void Buffer::WriteTo(long long datum, char numbits, char oversize,
   if (datum < ((long long)1 << numbits) - 1 && datum >= 0) { // Does the datum 
     // fit in numbits?
     WriteChunk(numbits, datum);
-  }
-  else {
+  } else {
     // See the readme file for the compression algorithm -- it should make
     // this part somewhat clear
 
@@ -433,8 +433,7 @@ void Buffer::WriteTo(long long datum, char numbits, char oversize,
     if (datum < 0) {
       datum =  datum * -1 - 1;
       WriteChunk(1, 1);
-    }
-    else {
+    } else {
       datum = datum - ((long long)1 << numbits) + 1;
       WriteChunk(1, 0);
     }
@@ -480,9 +479,9 @@ Alice::Alice() {
 
 /******************************************************************************\
 |*                                                                            *|
-|* GetCurrentAML (private): mcp writes the AML file number to                 *|
-|* /tmp/alice_index whenever it receives commanding to do so.  This function  *|
-|* checks this file, and if it has changed, loads all the information from    *|
+|* GetCurrentAML (private): mcp writes the AML file number to the command     *|
+|* struct whenever it receives commanding to do so.  This function            *|
+|* checks this struct, and if it has changed, loads all the information from  *|
 |* the file.                                                                  *|
 |*                                                                            *|
 |* Returns: true if the AML file changed and was loaded in.                   *|
@@ -493,14 +492,8 @@ Alice::Alice() {
 bool Alice::GetCurrentAML() {
   char tmp[20];
   int newxml;
-  FILE *fp;
 
-  if ((fp = fopen("/tmp/alice_index", "r")) == NULL)
-    newxml = 0;
-  else {
-    fscanf(fp, "%d", &newxml);
-    fclose(fp);
-  }
+  newxml = CommandData.alice_file;
 
   if (newxml != AMLsrc) {
     sprintf(tmp, "%s%d.aml", ALICEFILE_DIR, newxml);
@@ -942,8 +935,7 @@ void Alice::CompressionLoop() {
                   "(%d, %d).", numread, currInfo->framefreq);
               rawdata[0] = 0;
               SendSingle(rawdata, currInfo);  // Send down a zero
-            }
-            else              
+            } else              
               SendSingle(rawdata, currInfo);
             break;
 
@@ -957,8 +949,7 @@ void Alice::CompressionLoop() {
                   "(%d, %d).", numread, currInfo->framefreq);
               rawdata[0] = 0;
               SendSingle(rawdata, currInfo);  // Send down a zero
-            }
-            else
+            } else
               SendAverage(rawdata, rawsize, currInfo);
             break;
         }
@@ -993,8 +984,7 @@ void Alice::CompressionLoop() {
             "(%d, %d).", numread, rawsize + currInfo->framefreq *
             (rightpad + leftpad));
         sendbuf->NoDataMarker();
-      }
-      else {
+      } else {
         // If we aren't sending down every frame, we must do a FFT filter to get
         // rid of high frequency junk.
         if (currInfo->samplefreq > 1) {
@@ -1008,8 +998,7 @@ void Alice::CompressionLoop() {
             rawdata[j] = filterdata[j * currInfo->samplefreq + l] *
               2.0 / powtwo;
           rawsize = int(rawsize / currInfo->samplefreq);
-        }
-        else
+        } else
           memcpy(rawdata, filterdata + leftpad * currInfo->framefreq,
               sizeof(double) * rawsize);
 
@@ -1303,8 +1292,7 @@ int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
     wide = 8 + wide * 8; // Now let wide be the amount to shift the 'hi' word.
     chnum[0] = BiPhaseLookup[BI0_MAGIC(address[0]->bbcAddr)].channel;
     chnum[1] = BiPhaseLookup[BI0_MAGIC(address[1]->bbcAddr)].channel;
-  }
-  else {
+  } else {
     if ((address[0] = GetNiosAddr(fieldname)) == NULL)
       return 0;
     wide = address[0]->wide;
@@ -1331,14 +1319,12 @@ int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
 
         returnbuf[j++] = (double)((msb << 16) | lsb);
       }
-    }
-    else if (mindex == NOT_MULTIPLEXED + 1) {
+    } else if (mindex == NOT_MULTIPLEXED + 1) {
       // Bolometers are all fast channels.
       for (k = 0; k < FAST_PER_SLOW; k++)
         returnbuf[j++] = ((fastbuf[truenum][k][chnum[1]] & mask) << wide) | 
                          fastbuf[truenum][k][chnum[0]];
-    }
-    else {
+    } else {
       lsb = slowbuf[truenum][mindex][chnum[0]];
       if (wide)
         msb = slowbuf[truenum][mindex][chnum[0] + 1];
