@@ -157,17 +157,17 @@ void WriteAux(void) {
 /* send the sync bit if they do.  Only one board can be synced   */
 /* in each superframe.                                           */
 /*****************************************************************/
-void SyncADC (int TxIndex) {
+#define NUM_STAT 18
+void SyncADC (void) {
   static struct NiosStruct* syncAddr;
   static struct BiPhaseStruct* syncReadAddr;
-  static struct BiPhaseStruct* statusAddr[17];
+  static struct BiPhaseStruct* statusAddr[NUM_STAT];
   static int doingSync = 0;
-  unsigned int nextInd = 0;
   char buffer[9];
 
   int k, l;
 
-  if (CommandData.ADC_sync_timeout >= 600)
+  if (CommandData.ADC_sync_timeout >= 3000)
     return;
 
   CommandData.ADC_sync_timeout++;
@@ -179,8 +179,7 @@ void SyncADC (int TxIndex) {
     syncAddr = GetNiosAddr("sync");
     syncReadAddr = ExtractBiPhaseAddr(syncAddr);
 
-    nextInd = (syncReadAddr->index + 1) % FAST_PER_SLOW;
-    for (k = 0; k < 17; ++k) {
+    for (k = 0; k < NUM_STAT; ++k) {
       sprintf(buffer, "status%02i", k);
       statusAddr[k] = GetBiPhaseAddr(buffer);
     }
@@ -188,23 +187,23 @@ void SyncADC (int TxIndex) {
 
   /* are we currently syncing? */
   if (doingSync) {
-    /* if yes, turn off sync bit if we sent the sync last frame */
-    if (TxIndex == nextInd) {
+    if (--doingSync == 0) {
+      /* after timing out, turn off sync bit */
       RawNiosWrite(syncAddr->niosAddr, BBC_WRITE | BBC_NODE(17) | BBC_CH(56),
           NIOS_QUEUE);
     }
   } else {
     /* if not, check to see if we need to sync a board */
-    for (k = 0; k < 17; ++k) {
+    for (k = 0; k < NUM_STAT; ++k) {
       /* read board status */
       if (slow_data[statusAddr[k]->index][statusAddr[k]->channel] == 0x0001) {
         /* board needs to be synced */
-        doingSync = 1;
-        bprintf(info, "ADC Sync board %i\n", k);
-        l = (k == 0) ? 21 : k;
+        doingSync = FAST_PER_SLOW * 2;
+        l = (k == 0) ? 23 : (k == 17) ? 21 : k;
+        bprintf(info, "ADC Sync board %i\n", l);
         RawNiosWrite(syncAddr->niosAddr, BBC_WRITE | BBC_NODE(l) | BBC_CH(56) |
-          BBC_ADC_SYNC | 0xa5a3, NIOS_QUEUE);
-        k = 17;  /* ABORT! ABORT! */
+            BBC_ADC_SYNC | 0xa5a3, NIOS_FLUSH);
+        break;
       }
     }
   }
@@ -936,7 +935,7 @@ void UpdateBBCFrame(unsigned short *RxFrame) {
 #endif
   BiasControl(RxFrame);
   if (!mcp_initial_controls)
-    SyncADC(index);
+    SyncADC();
 
   /*** do slow Controls ***/
   if (index == 0) {
