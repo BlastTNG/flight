@@ -1,144 +1,170 @@
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/ioport.h>
-#include <linux/interrupt.h>
-#include <linux/fs.h>
-#include <linux/mm.h>
-#include <linux/errno.h>
+#include <linux/pci.h>
+#include <linux/delay.h>
 #include <asm/io.h>
 #include <asm/uaccess.h>
-#include <linux/pci.h>
 
 #include "decom_pci.h"
+
+#define DRV_NAME    "decom_pci"
+#define DRV_VERSION "1.0"
+#define DRV_RELDATE ""
+
+#define DECOM_MAJOR 251
+
+#ifndef VERSION_CODE
+#  define VERSION_CODE(vers,rel,seq) ( ((vers)<<16) | ((rel)<<8) | (seq) )
+#endif
+
+#if LINUX_VERSION_CODE < VERSION_CODE(2,6,0)
+# error "This kernel is too old and is not supported" 
+#endif
+#if LINUX_VERSION_CODE >= VERSION_CODE(2,7,0)
+# error "This kernel version is not supported"
+#endif
+
+
+static int decom_major = DECOM_MAJOR;
+
+static struct pci_device_id decom_pci_tbl[] = {
+ {0x5045, 0x4244, (PCI_ANY_ID), (PCI_ANY_ID), 0, 0, 0},
+  {0,}
+};
+MODULE_DEVICE_TABLE(pci, decom_pci_tbl);
 
 /*******************************************************************/
 /* Definitions                                                     */
 /*******************************************************************/
 
-/* This major number is reserved for local or experimental use... */
-/* See Linux Device Drivers 2nd ed, P 58 footnote */
-/* Assuming no one else uses this number, this is more convenient */
-/* than dynamic major/minor.  Note though, that the BBCPCI (250) and the */
-/* Decom_PCI (251?) and any other board we make must have different majors. */
-#define DECOM_MAJOR 251
 
-#define DECOMPCI_VENDOR 0x5045
-#define DECOMPCI_ID 0x4244
+#define FIFO_DISABLED 0
+#define FIFO_ENABLED  1
 
-/* Card is programmed to show 32 KB on the PCI. */
-#define DECOMPCI_MEMSIZE 0x8000
+#define RX_BUFFER_SIZE 0x10000
 
-/********************************************************************/
-/* Define structures and locally global variables                   */
-/********************************************************************/
+extern volatile unsigned long jiffies;
 
-/* 2.6.x: Declare license to prevent tainting kernel */
-MODULE_LICENSE("GPL");
+static struct {
+  unsigned long mem_base_raw;
+  void          *mem_base;
+  unsigned long flags;
+  unsigned long len;
+  struct timer_list timer;
 
-/* Jiffies is a global kernel variable which is incremented at 1000 hz */
-volatile unsigned long jiffies;
+  int use_count;
+  int timer_on;
+} decom_drv;
 
-/* The address where the PCI card's memory landed */
-void *decom_membase = 0;
-unsigned long decom_membase_raw = 0;
-unsigned long decom_resourceflags = 0;
+#define DECOM_WFIFO_SIZE (RX_BUFFER_SIZE)
+static struct {
+  volatile int i_in;
+  volatile int i_out;
+  unsigned short data[DECOM_WFIFO_SIZE];
+  volatile int status;
+  volatile int n;
+} decom_wfifo;
 
-/*******************************************************************/
-/*                                                                 */
-/*  read_decom: copies from the memory to the output buffer.         */
-/*  Copies just one word, if there are words availible.            */
-/*                                                                 */
-/*******************************************************************/
-static ssize_t read_decom(struct file * filp, char * buf, size_t count,
-                         loff_t *dummy) {
-  unsigned int rp, wp, b;
 
-  if (count < DECOM_SIZE_UINT)
-    return 0;
 
-  rp = readl(decom_membase + DECOM_ADD_READ_BUF_RP); // Where pci read last.
-  wp = readl(decom_membase + DECOM_ADD_READ_BUF_WP); // Where NIOS is about to write.
+static void timer_callback(unsigned long dummy)
+{
+  static loff_t wp, rp;
+  static unsigned short in_data;
 
-  rp += DECOM_SIZE_UINT;
-  if (rp >= DECOM_ADD_READ_BUF_END)
-    rp = DECOM_ADD_READ_BUF;
+/*   static int all = 0; */
+/*   static unsigned long old = 0; */
 
-  if (rp == wp)  // No new data.
-    return 0;
-  else {
-    b = readl(decom_membase + rp);
-    copy_to_user(buf, (void *)&b, DECOM_SIZE_UINT);
-    writel(rp, decom_membase + DECOM_ADD_READ_BUF_RP); // Update read pointer.
-    return DECOM_SIZE_UINT;
+/*   all++; */
+/*   if(all == 1000) {  */
+/*     printk(KERN_EMERG "Ciaooooo------------------------------ %d %ld %x\n", */
+/* 	   all, (jiffies- old), bbc_wfifo.n); */
+/*         old = jiffies; */
+/*     all = 0; */
+/*   } */
+
+  wp = readl(decom_drv.mem_base + DECOM_ADD_READ_BUF_WP); // Where NIOS is about to write.
+  
+  while(1) {
+    if(decom_wfifo.n == DECOM_WFIFO_SIZE) {
+      printk(KERN_WARNING "%s: overrun on receiving buffer\n", DRV_NAME);
+      break;
+    }
+
+    rp = readl(decom_drv.mem_base + DECOM_ADD_READ_BUF_RP); // Where pci read last.
+    rp += DECOM_SIZE_UINT;
+    if( rp >= DECOM_ADD_READ_BUF_END ) rp = DECOM_ADD_READ_BUF;
+    if (rp == wp) break;
+
+    in_data = readl(decom_drv.mem_base + rp);
+    writel(rp, decom_drv.mem_base + DECOM_ADD_READ_BUF_RP);
+
+    decom_wfifo.data[decom_wfifo.i_in] = 
+      (unsigned short)(in_data & 0x0000ffffL);
+
+    if(decom_wfifo.i_in == (DECOM_WFIFO_SIZE - 1)) {
+      decom_wfifo.i_in = 0;
+    } else {
+      decom_wfifo.i_in++;
+    }
+
+    decom_wfifo.n++; 
   }
+
+
+  decom_drv.timer.expires = jiffies + 1;
+  add_timer(&decom_drv.timer);
 }
 
-/*******************************************************************/
-/*                                                                 */
-/*   write_decom: directly write the 32 bit words to the pci card    */
-/*                                                                 */
-/*******************************************************************/
-static ssize_t write_decom(struct file * filp, const char * buf,
-                         size_t count, loff_t *dummy) {
-  unsigned int datum;
-        
-  if (count < DECOM_SIZE_UINT)
-    return 0;
-  
-  /* There is really no need to write to the DECOM card.  The only thing PCI
-   * controls is the frame length, which is properly done through an ioctl call.
-   * So only allow users to write to frame length word on the board here. */
-  
-  copy_from_user((void *)(&datum), buf, DECOM_SIZE_UINT);
-  writel(datum, decom_membase + DECOM_ADD_FRAME_LEN);
 
-  printk("--> %d\n", readl(decom_membase + DECOM_ADD_FRAME_LEN));
+static ssize_t decom_read(struct file *filp, char __user *buf, 
+			size_t count, loff_t *dummy) 
+{
+  size_t to_read;
+  size_t available;
+  unsigned short out_data;
+  unsigned short *bufs;
+  int i;
+
+  to_read = count / sizeof(unsigned short);
+  available = decom_wfifo.n;
+
+  if(to_read > available) to_read = available;
+
+  if( to_read == 0 ) return 0;
   
-  return DECOM_SIZE_UINT;
+  bufs = (unsigned short *)buf;
+  for(i = 0; i < to_read; i++) {
+    //    printk(KERN_WARNING "to_read = %d\n", to_read);
+    out_data = decom_wfifo.data[decom_wfifo.i_out];
+    if(put_user(out_data, bufs)) return -EFAULT;
+    if( decom_wfifo.i_out == (DECOM_WFIFO_SIZE - 1) ) {
+      decom_wfifo.i_out = 0;
+    } else {
+      decom_wfifo.i_out++;
+    }
+    bufs++;
+    decom_wfifo.n--;
+  }
+
+  return i*sizeof(unsigned short);
 }
 
-/*******************************************************************/
-/*                                                                 */
-/*  open_decom:                                                    */
-/*                                                                 */
-/*******************************************************************/
-static int open_decom(struct inode *inode, struct file * filp){
-  if (check_mem_region(decom_membase_raw, DECOMPCI_MEMSIZE)) {
-    printk("Decom_PCI: memory already in use.\n");
-    return -EBUSY;
-  }
-  request_mem_region(decom_membase_raw, DECOMPCI_MEMSIZE, "Decom_PCI");
-  
-  decom_membase = ioremap_nocache(decom_membase_raw, DECOMPCI_MEMSIZE);
-
+static ssize_t decom_write(struct file *filp, const char __user *buf, 
+			 size_t count, loff_t *dummy) 
+{
   return 0;
-} 
-
-/*******************************************************************/
-/*                                                                 */
-/*   release_decom: free memory, stop timer                        */
-/*                                                                 */
-/*******************************************************************/
-static int release_decom(struct inode *inode, struct file *filp) {
-
-  iounmap(decom_membase);
-  release_mem_region(decom_membase_raw, DECOMPCI_MEMSIZE);
-  
-  return(0);
 }
 
-/*******************************************************************/
-/*                                                                 */
-/*   ioctl: control decom card: see decom_pci.h for definitions    */
-/*                                                                 */
-/*******************************************************************/
-static int ioctl_decom (struct inode *inode, struct file * filp,
-                        unsigned int cmd, unsigned long arg) {
-  unsigned int ret = 0;
-  unsigned int bitfield;
+static int decom_ioctl(struct inode *inode, struct file *filp,
+                     unsigned int cmd, unsigned long arg)
+{
+  int ret = 0;
   int size = _IOC_SIZE(cmd);
-  
+
   if (_IOC_DIR(cmd) & _IOC_READ) {
     if (!access_ok(VERIFY_WRITE, (void *)arg, size))
       return -EFAULT;
@@ -150,18 +176,26 @@ static int ioctl_decom (struct inode *inode, struct file * filp,
   
   switch(cmd) {
     case DECOM_IOC_RESET:
-      bitfield = DECOM_COMREG_RESET;
-      writel(bitfield, decom_membase + DECOM_ADD_COMREG);
+      writel(DECOM_COMREG_RESET, decom_drv.mem_base + DECOM_ADD_COMREG);
       break;
     case DECOM_IOC_VERSION:
-      ret = readl(decom_membase + DECOM_ADD_VERSION);
+      ret = readl(decom_drv.mem_base + DECOM_ADD_VERSION);
       break;
     case DECOM_IOC_COUNTER:
-      ret = readl(decom_membase + DECOM_ADD_COUNTER);
+      ret = readl(decom_drv.mem_base + DECOM_ADD_COUNTER);
       break;
     case DECOM_IOC_FRAMELEN:
-      writel(arg, decom_membase + DECOM_ADD_FRAME_LEN);
+      writel(arg, decom_drv.mem_base + DECOM_ADD_FRAME_LEN);
       ret = arg;
+      break;
+    case DECOM_IOC_LOCKED:
+      ret = readl(decom_drv.mem_base + DECOM_ADD_LOCKED);
+      break;
+    case DECOM_IOC_NUM_UNLOCKED:
+      ret = readl(decom_drv.mem_base + DECOM_ADD_NUM_UNLOCKED);
+      break;
+    case DECOM_IOC_FORCE_UNLOCK:
+      writel(DECOM_COMREG_FORCE_UNLOCK, decom_drv.mem_base + DECOM_ADD_COMREG);
       break;
     default:
       break;
@@ -170,59 +204,140 @@ static int ioctl_decom (struct inode *inode, struct file * filp,
   return ret;
 }
 
+static int decom_open(struct inode *inode, struct file *filp) 
+{
 
-/*******************************************************************/
-/*                                                                 */
-/*   file_operations structure: associates functions with file ops */
-/*                                                                 */
-/*******************************************************************/
-static struct file_operations decom_fops = {
-  owner:   THIS_MODULE,
-  llseek:  no_llseek,
-  read:  read_decom,
-  write:  write_decom,
-  ioctl:  ioctl_decom,
-  open:  open_decom,
-  release:  release_decom,
-};
-
-/*******************************************************************/
-/*                                                                 */
-/*   init_decom: called upon insmod decom.o                        */
-/*                                                                 */
-/*******************************************************************/
-int init_decom_pci(void) {
-  struct pci_dev *dev = NULL;
+  if(decom_wfifo.status & FIFO_ENABLED) return -ENODEV;
   
-  /* Register device */
-  if (register_chrdev(DECOM_MAJOR, "decom_pci", &decom_fops) != 0) {
-    printk("Unable to get major for decom_pci device\n");
-    return -EIO;
-  }
+  decom_wfifo.i_in = decom_wfifo.i_out = decom_wfifo.n = 0;
+  decom_wfifo.status |= FIFO_ENABLED;
   
-  dev = pci_find_device(DECOMPCI_VENDOR, DECOMPCI_ID, dev);
-  if (!dev) {
-    printk("Unable to find DECOM_PCI card.\n");
-    return -EIO;
+  decom_drv.use_count++;
+  
+   
+  if(decom_drv.use_count && decom_drv.timer_on == 0) {
+    // enable timer
+    decom_drv.timer_on = 1;
+    init_timer(&decom_drv.timer);
+    decom_drv.timer.function = timer_callback;
+    decom_drv.timer.expires = jiffies + 1;
+    add_timer(&decom_drv.timer);
   }
-  pci_enable_device(dev);
-  decom_membase_raw = pci_resource_start(dev, 0);
-  decom_resourceflags = pci_resource_flags(dev, 0);
-
-  printk("===> %lx, %lx\n", decom_resourceflags, decom_membase_raw);
   
   return 0;
 }
 
-/*******************************************************************/
-/*                                                                 */
-/*   cleanup_decom: called upon rmmod decom                        */
-/*                                                                 */
-/*******************************************************************/
-void cleanup_decom_pci(void) { 
-  unregister_chrdev(DECOM_MAJOR, "decom_pci");
+static int decom_release(struct inode *inode, struct file *filp)
+{
+  decom_wfifo.status = FIFO_DISABLED;
+  decom_drv.use_count--;
+  
+  
+  if(decom_drv.use_count == 0 && decom_drv.timer_on) {
+    decom_drv.timer_on = 0;
+    del_timer_sync(&decom_drv.timer);
+  }
+  
+  return 0;
 }
 
+
+static struct file_operations decom_fops = {
+  owner:          THIS_MODULE,
+  read:           decom_read,
+  write:          decom_write,
+  ioctl:          decom_ioctl,
+  open:           decom_open,
+  release:        decom_release
+};
+
+
+/* *********************************************************************** */
+/* *** this defines the pci layer                                       *** */
+/* *********************************************************************** */
+
+static int __devinit decom_pci_init_one(struct pci_dev *pdev, 
+				      const struct pci_device_id *ent)
+{
+  int ret;
+ 
+  ret = pci_enable_device (pdev);
+  if(ret) return ret;
+
+  decom_drv.mem_base_raw = pci_resource_start(pdev, 0);
+  decom_drv.flags        = pci_resource_flags(pdev, 0);
+  decom_drv.len          = pci_resource_len(pdev, 0);
+  
+  if(!decom_drv.mem_base_raw || ((decom_drv.flags & IORESOURCE_MEM)==0)) {
+    printk(KERN_ERR "%s: no I/O resource at PCI BAR #0\n", DRV_NAME);
+    return -ENODEV;
+  }
+
+  if (check_mem_region(decom_drv.mem_base_raw, decom_drv.len)) {
+    printk(KERN_WARNING "%s: memory already in use\n", DRV_NAME);
+    return -EBUSY;
+  }
+  
+  request_mem_region(decom_drv.mem_base_raw, decom_drv.len, DRV_NAME);
+
+  decom_drv.mem_base = ioremap_nocache(decom_drv.mem_base_raw, decom_drv.len);
+
+  // Register this as a character device
+  if(register_chrdev(decom_major, DRV_NAME, &decom_fops) != 0) {
+    printk(KERN_ERR "%s: unable to get major device\n", DRV_NAME);
+    return -EIO;
+  }
+  
+  
+  decom_drv.timer_on = 0;
+  decom_drv.use_count = 0;
+  decom_wfifo.status = FIFO_DISABLED;
+
+  printk(KERN_NOTICE "%s: driver initialized\n", DRV_NAME);
+  
+  return 0;
+}
+
+static void __devexit decom_pci_remove_one(struct pci_dev *pdev)
+{
+  iounmap(decom_drv.mem_base);
+  release_mem_region(decom_drv.mem_base_raw, decom_drv.len);
+  
+  unregister_chrdev(decom_major, DRV_NAME);
+
+  pci_disable_device(pdev);
+  printk(KERN_NOTICE "%s: driver removed\n", DRV_NAME); 
+}
+
+static struct pci_driver decom_driver = {
+  .name     = DRV_NAME,
+  .probe    = decom_pci_init_one,
+  .remove   = __devexit_p(decom_pci_remove_one),
+  .id_table = decom_pci_tbl,
+};
+
+static int __init decom_pci_init(void)
+{
+  return pci_module_init(&decom_driver);
+}
+
+static void __exit decom_pci_cleanup(void)
+{
+  pci_unregister_driver(&decom_driver);
+}
+
+
 /* Declare module init and exit functions */
-module_init(init_decom_pci);
-module_exit(cleanup_decom_pci);
+module_init(decom_pci_init);
+module_exit(decom_pci_cleanup);
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Blast 2004");
+MODULE_DESCRIPTION("decom_pci: a driver for the pci dcom card");
+MODULE_ALIAS_CHARDEV_MAJOR(DECOM_MAJOR);
+MODULE_ALIAS("/dev/decompci");
+MODULE_ALIAS("/dev/bi0_pci");
+
+MODULE_PARM(decom_major, "i");
+
+MODULE_PARM_DESC(decom_major, " decom major number");
