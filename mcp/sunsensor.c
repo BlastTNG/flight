@@ -107,7 +107,6 @@ void SunSensor(void) {
         n = recv(sock, &Rx_Data, sizeof(Rx_Data), MSG_DONTWAIT);
         if (n == sizeof(Rx_Data)) {
           SunSensorData[ss_index] = Rx_Data;
-          printf("%f %f %i %f %f\n", Rx_Data.az_center, Rx_Data.el_center, Rx_Data.prin, Rx_Data.az_snr, Rx_Data.el_snr);
           ss_index = INC_INDEX(ss_index);
         } else if (n == -1) {
           berror(err, "SunSensor recv()");
