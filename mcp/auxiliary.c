@@ -61,7 +61,7 @@ int pinIsIn(void) {
 /*    ACS1 on and off.  Also calculates gyro offsets.                   */
 /*                                                                      */
 /************************************************************************/
-void ControlGyroHeat(unsigned int *Txframe,  unsigned short *Rxframe,
+void ControlGyroHeat(unsigned int *TxFrame,  unsigned short *RxFrame,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int i_T_GYBOX = -1;
   static int i_GY_HEAT = -1;
@@ -110,7 +110,7 @@ void ControlGyroHeat(unsigned int *Txframe,  unsigned short *Rxframe,
   if (p_off < 0) {
 
     error = set_point -
-      ((unsigned int)(Rxframe[i_T_GYBOX + 1]<< 16 | Rxframe[i_T_GYBOX]));
+      ((unsigned int)(RxFrame[i_T_GYBOX + 1]<< 16 | RxFrame[i_T_GYBOX]));
 
     integral = integral * 0.9975 + 0.0025 * error;
     if (integral * I > 60){
@@ -266,7 +266,7 @@ int GetLockBits(int acs0bits) {
 /*   Control the pumps and the lock and the ISC pulse            */
 /*                                                               */
 /*****************************************************************/
-void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
+void ControlAuxMotors(unsigned int *TxFrame,  unsigned short *RxFrame,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int pumpBitsCh, pumpBitsInd = -1;
   static int pumpPwm1Ch, pumpPwm1Ind;
@@ -343,7 +343,7 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
     CommandData.pumps.outframe_cool2_off--;
   }
 
-  pumpBits |= GetLockBits(Rxframe[acs0bitsCh]);
+  pumpBits |= GetLockBits(RxFrame[acs0bitsCh]);
 
   if (CommandData.pumps.bal_veto) {
     /* if we're in timeout mode, decrement the timer */

@@ -32,6 +32,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "mcp.h"
+
 static void E0000(int IENTRY, int *maxdeg, float alt, float glat, float glon,
     float time, float *dec, float *dip, float *ti, float *gv) {
 
@@ -51,7 +53,7 @@ static void E0000(int IENTRY, int *maxdeg, float alt, float glat, float glon,
 
 GEOMAG:
   if ((wmmdat = fopen("/data/etc/WMM.COF","r")) == NULL) {
-    perror("Error opening WMM.COF");
+    merror(MCP_ERROR, "Error opening WMM.COF");
     return;
   }
 
@@ -74,13 +76,13 @@ GEOMAG:
   c[0][0] = 0.0;
   cd[0][0] = 0.0;
   if (fgets(c_str, 80, wmmdat) == NULL) {
-    perror("Error while reading WMM.COF");
+    merror(MCP_ERROR, "Error while reading WMM.COF");
     return;
   }
   sscanf(c_str,"%f%s",&epoch,model);
 S3:
   if (fgets(c_str, 80, wmmdat) == NULL) {
-    perror("Error while reading WMM.COF");
+    merror(MCP_ERROR, "Error while reading WMM.COF");
     return;
   }
   /* CHECK FOR LAST LINE IN FILE */
@@ -142,7 +144,7 @@ GEOMG1:
   dt = time - epoch;
   if (otime < 0.0 && (dt < 0.0 || dt > 5.0)) 
   {
-    printf("!!!! Mag. model needs a year between %f and %f !!!!\n",
+    mprintf(MCP_ERROR, "!!!! Mag. model needs a year between %f and %f !!!!\n",
         epoch, epoch + 5.0);
     return;
   }

@@ -5,6 +5,8 @@
 #include <math.h>
 
 #include "sslutNA.h"
+#include "mcp.h"
+
 void SSLut_Normalize(SSLut_t *SSLut)
 {
   int k;
@@ -19,7 +21,7 @@ int SSLut_GetLut(SSLut_t *SSLut, const char *filename)
   FILE *fd;
 
   if ( (fd = fopen(filename, "r")) == NULL ) {
-    fprintf(stderr, "Unable to load Sun Sensor LUT: file %s\n", filename);
+    merror(MCP_ERROR, "Unable to load Sun Sensor LUT: %s\n", filename);
     return SS_LUTNOTFOUND;
   }
 

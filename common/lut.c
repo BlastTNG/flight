@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "lut.h"
+#include "mcp.h"
 
 int GetLine(FILE *fp, char *line); // defined in sched.c
 
@@ -13,7 +14,8 @@ void LutInit(struct LutType *L) {
 
   fp = fopen(L->filename, "r");
   if (fp==NULL) {
-    printf("error reading LUT file %s: no calibration\n", L->filename);
+    mprintf(MCP_ERROR, "error reading LUT file %s: no calibration\n",
+        L->filename);
     L->n = 1;
     return;
   }
@@ -24,7 +26,8 @@ void LutInit(struct LutType *L) {
     i++;
   }
   if (i<2) {
-    printf("error reading LUT file %s: no calibration\n", L->filename);
+    mprintf(MCP_ERROR, "error reading LUT file %s: no calibration\n",
+        L->filename);
     L->n = 1;
     return;
   }

@@ -111,7 +111,7 @@ int CalLamp (int* cryostate, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
 /***********************************************************************/
 /* CryoControl: Set heaters to values contained within the CommandData */
 /***********************************************************************/
-void CryoControl (unsigned int* Txframe,
+void CryoControl (unsigned int* TxFrame,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
 {
   static int i_cryoin = -1, j_cryoin = -1;
@@ -262,7 +262,7 @@ void PulseCalibrator (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
 /*   BiasControl: Digital IO with the Bias Generator Card               */
 /*                                                                      */
 /************************************************************************/
-void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
+void BiasControl (unsigned int* TxFrame,  unsigned short* RxFrame,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int i_BIASIN = -1;
   static int i_BIASOUT1 = -1, j_BIASOUT1 = -1;
@@ -286,7 +286,7 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
     SlowChIndex("bias_lev3", &Bias_lev3Ch, &Bias_lev3Ind);
   }
 
-  bias_status = Rxframe[i_BIASIN];
+  bias_status = RxFrame[i_BIASIN];
 
   isBiasAC =            !(bias_status & 0x02);
   isBiasRamp =          !(bias_status & 0x08);
@@ -391,7 +391,7 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
   //printf("%d %d %d\n", CommandData.Bias.bias1, CommandData.Bias.bias2, CommandData.Bias.bias3);
 }
 
-void SetReadBits(unsigned int* Txframe) {
+void SetReadBits(unsigned int* TxFrame) {
   static int i_readd3 = -1;
   static unsigned int bit = 0;
   int i_card;

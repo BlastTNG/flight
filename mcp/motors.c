@@ -4,6 +4,7 @@
 #include "tx.h"
 #include "pointing_struct.h"
 #include "command_struct.h"
+#include "mcp.h"
 
 #define MIN_EL 20.0
 #define MAX_EL 65.0
@@ -115,7 +116,7 @@ int GetVAz() {
 /*    WriteMot: motors, and, for convenience, the inner frame lock      */
 /*                                                                      */
 /************************************************************************/
-void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
+void WriteMot(int TxIndex, unsigned int *TxFrame, unsigned short *RxFrame,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int i_elVreq = -1;
   static int i_azVreq = -1;
@@ -815,7 +816,7 @@ void UpdateAxesMode() {
     isc_pulses.is_fast = 0;
     break;
   default:
-    fprintf(stderr, "Unknown Elevation Pointing Mode %d: stopping\n",
+    mprintf(MCP_WARNING, "Unknown Elevation Pointing Mode %d: stopping\n",
 	    CommandData.pointing_mode.mode);
     CommandData.pointing_mode.mode = P_DRIFT;
     CommandData.pointing_mode.X = 0;

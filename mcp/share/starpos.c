@@ -21,6 +21,7 @@
 #include <time.h>
 
 #include "command_struct.h"
+#include "mcp.h"
 
 extern struct ScheduleType S;
 
@@ -160,9 +161,9 @@ void PrintAngle(double angle) {
   else
     sign = '+';
 
-  printf("%c%d %dm %.4gs", sign, (int)(angle), (int)((angle - (int)angle) * 
-        60.0), ((angle - (int)angle) * 60.0 - (int)((angle - (int)angle) *
-            60.0)) * 60);
+  mprintf(MCP_INFO, "%c%d %dm %.4gs", sign, (int)(angle), (int)((angle -
+          (int)angle) * 60.0), ((angle - (int)angle) * 60.0 -
+                                (int)((angle - (int)angle) * 60.0)) * 60);
 }
 
 

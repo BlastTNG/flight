@@ -20,6 +20,7 @@
 #include "pointing_struct.h"
 #include "tx.h"
 #include "command_struct.h"
+#include "mcp.h"
 
 extern short int SamIAm;
 short int InCharge;
@@ -32,22 +33,22 @@ extern struct ISCStatusStruct SentState;  /* isc.c */
 double round(double x);
 
 /* in auxiliary.c */
-void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
+void ControlAuxMotors(unsigned int *TxFrame,  unsigned short *RxFrame,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
-void ControlGyroHeat(unsigned int *Txframe,  unsigned short *Rxframe,
+void ControlGyroHeat(unsigned int *TxFrame,  unsigned short *RxFrame,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
 
 /* in das.c */
-void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
+void BiasControl (unsigned int* TxFrame,  unsigned short* RxFrame,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
 void CryoControl (unsigned int* Txfrmae,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
 void PhaseControl(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
-void SetReadBits(unsigned int* Txframe);
+void SetReadBits(unsigned int* TxFrame);
 
 /* in motors.c */
 void UpdateAxesMode(void);
-void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
+void WriteMot(int TxIndex, unsigned int *TxFrame, unsigned short *RxFrame,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
 
 int frame_num;
@@ -87,9 +88,9 @@ void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
 
   InCharge = !(SamIAm ^ slow_data[i_samiam][j_samiam]);
   if (InCharge != incharge && InCharge)
-    fprintf(stderr, "I have gained control.\n");
+    mputs(MCP_INFO, "I have gained control.\n");
   else if (InCharge != incharge)
-    fprintf(stderr, "I have lost control.\n");
+    mputs(MCP_INFO, "I have lost control.\n");
 
   incharge = InCharge;
 
@@ -151,7 +152,7 @@ void SyncADC (int TxIndex, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
       /* read board status */
       if (slow_data[statusCh[k]][statusInd[k]] == 0x0001) {
         /* board needs to be synced */
-        fprintf(stderr, "ADC Sync board %i\n", k);
+        mprintf(MCP_INFO, "ADC Sync board %i\n", k);
         l = (k == 0) ? 21 : k;
         slowTxFields[syncCh][syncInd] =
           BBC_WRITE | BBC_NODE(l) | BBC_CH(56) |
@@ -167,7 +168,7 @@ void SyncADC (int TxIndex, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
 /*    Store derived acs and pointing data in frame                      */
 /*                                                                      */
 /************************************************************************/
-void StoreData(int index, unsigned int* Txframe,
+void StoreData(int index, unsigned int* TxFrame,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
 
   static int firsttime = 1;
@@ -656,9 +657,9 @@ int IsNewFrame(unsigned int d) {
   return (is_bof);
 }
 
-void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
+void do_Tx_frame(int bbc_fp, unsigned int *TxFrame,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW],
-    unsigned short *Rxframe, int reset) {
+    unsigned short *RxFrame, int reset) {
   static int firsttime = 1;
   static int index = 0;
 
@@ -666,10 +667,10 @@ void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
   int i = 0, j;
 
   if (firsttime | reset) {
-    Txframe[0] = BBC_WRITE | BBC_NODE(63) | BBC_CH(0) | FILETYPE; /* BOF */
-    Txframe[1] = BBC_WRITE | BBC_NODE(63) | BBC_CH(1); /* f_num lsb */
-    Txframe[2] = BBC_WRITE | BBC_NODE(63) | BBC_CH(2); /* f_num msb */
-    Txframe[3] = BBC_WRITE | BBC_NODE(63) | BBC_CH(3); /* index */
+    TxFrame[0] = BBC_WRITE | BBC_NODE(63) | BBC_CH(0) | FILETYPE; /* BOF */
+    TxFrame[1] = BBC_WRITE | BBC_NODE(63) | BBC_CH(1); /* f_num lsb */
+    TxFrame[2] = BBC_WRITE | BBC_NODE(63) | BBC_CH(2); /* f_num msb */
+    TxFrame[3] = BBC_WRITE | BBC_NODE(63) | BBC_CH(3); /* index */
 
     for (j = 0; j < N_SLOW; j++) {
       for (i = 0; i < FAST_PER_SLOW; i++) {
@@ -689,10 +690,10 @@ void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
 
     for (i = 0; i < N_FASTCHLIST; i++) {
       if (FastChList[i].rw =='r') {
-        Txframe[i + FAST_OFFSET] =
+        TxFrame[i + FAST_OFFSET] =
           BBC_READ | BBC_NODE(FastChList[i].node) | BBC_CH(FastChList[i].adr);
       } else {
-        Txframe[i + FAST_OFFSET] =
+        TxFrame[i + FAST_OFFSET] =
           BBC_WRITE| BBC_NODE(FastChList[i].node) | BBC_CH(FastChList[i].adr);
       }
     }
@@ -707,7 +708,7 @@ void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
   /*** update mplex fields  ***/
   WriteFast(3, index);
   for (j = 0; j < N_SLOW; j++) {
-    Txframe[j + 4] = slowTxFields[j][index];
+    TxFrame[j + 4] = slowTxFields[j][index];
   }
   index++;
   if (index >= FAST_PER_SLOW) index = 0;
@@ -716,11 +717,11 @@ void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
 #ifndef BOLOTEST
   DoSched();
   UpdateAxesMode();
-  StoreData(index, Txframe, slowTxFields);
-  ControlGyroHeat(Txframe, Rxframe, slowTxFields);
-  WriteMot(index, Txframe, Rxframe, slowTxFields);
+  StoreData(index, TxFrame, slowTxFields);
+  ControlGyroHeat(TxFrame, RxFrame, slowTxFields);
+  WriteMot(index, TxFrame, RxFrame, slowTxFields);
 #endif
-  BiasControl(Txframe, Rxframe, slowTxFields);
+  BiasControl(TxFrame, RxFrame, slowTxFields);
   SyncADC(index, slowTxFields);
 
   /*** do slow Controls ***/
@@ -729,14 +730,14 @@ void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
     PhaseControl(slowTxFields);
   }
 #ifndef BOLOTEST
-  ControlAuxMotors(Txframe, Rxframe, slowTxFields);
+  ControlAuxMotors(TxFrame, RxFrame, slowTxFields);
 #endif
-  CryoControl(Txframe, slowTxFields);
+  CryoControl(TxFrame, slowTxFields);
 
-  SetReadBits(Txframe);
+  SetReadBits(TxFrame);
 
   /*** write FSync ***/
   write(bbc_fp, (void*)&BBC_Fsync_Word, sizeof(unsigned int));
   /*** Write Frame ***/
-  write(bbc_fp, (void*)Txframe, TxFrameBytes());
+  write(bbc_fp, (void*)TxFrame, TxFrameSize());
 }

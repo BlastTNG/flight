@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "tx_struct.h"
+#include "mcp.h"
 
 unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
@@ -451,14 +452,11 @@ void MakeTxFrame(void) {
   int i, j, last_fastchlist = N_FASTCHLIST_INIT;
   struct ChannelStruct channel = {"", 'r', 3, 0, 1.19209e-7, -2097152.0, 'u'};
 
-  if (strncmp(FastChList[last_fastchlist].field, "ENDMARKER", 9)!=0) {
-    printf("error: N_FASTCHLIST_INIT not correct\n");
-    printf("%d field: %s\n", last_fastchlist,
-        FastChList[last_fastchlist].field);
-    printf("%d field: %s\n", last_fastchlist - 1,
+  if (strncmp(FastChList[last_fastchlist].field, "ENDMARKER", 9) != 0)
+    mprintf(MCP_FATAL, "error: N_FASTCHLIST_INIT not correct\n"
+        "%d field: %s\n%d field: %s\n", last_fastchlist,
+        FastChList[last_fastchlist].field, last_fastchlist - 1,
         FastChList[last_fastchlist - 1].field);
-    exit(1);
-  }
 
   for (i = 0; i < DAS_CARDS; ++i) {
     channel.node = i + 5;
@@ -496,10 +494,8 @@ void FastChIndex(char* field, int* index) {
     if (strcmp(FastChList[i].field, field) == 0)
       t = i + FAST_OFFSET;
 
-  if (t == -1) {
-    fprintf(stderr, "Can't find fast channel: %s\n", field);
-    exit(1);
-  }
+  if (t == -1)
+    mprintf(MCP_FATAL, "Can't find fast channel: %s\n", field);
 
   *index = t;
 }
@@ -519,10 +515,8 @@ void SlowChIndex(char* field, int* channel, int* index) {
         t = j;
       }
 
-  if (t == -1) {
-    fprintf(stderr, "Can't find slow channel: %s\n", field);
-    exit(1);
-  }
+  if (t == -1)
+    mprintf(MCP_FATAL, "Can't find slow channel: %s\n", field);
 
   *index = t;
   *channel = c;

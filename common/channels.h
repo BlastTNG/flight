@@ -47,6 +47,7 @@ extern struct ChannelStruct FastChList[N_FASTCHLIST];
 
 #ifndef BLASTCOM    /* Don't forward declare prototype if compiling blastcom */
 void MakeTxFrame(void);
+void FPrintDerived(FILE*);
 #endif
 
 void FastChIndex(char*, int*);
@@ -76,5 +77,16 @@ void SlowChIndex(char*, int*, int*);
 #define GYRO2_OFFSET 25535.0
 #define GYRO3_OFFSET 25600.0
 
+/* The size of the rx and downlink frames */
+#define FrameWords() \
+( 1              /* FILETYPE */ \
+  + 2            /* FRAMENUM */ \
+  + 1            /* SLOW_INDEX */ \
+  + N_SLOW       /* slow channels */ \
+  + N_FASTCHLIST /* fast channels and bolometers */ \
+)
+
+#define TxFrameSize() (FrameWords() * sizeof(unsigned int))
+#define RxFrameSize() (FrameWords() * sizeof(unsigned short))
 
 #endif

@@ -8,6 +8,7 @@
 #include <fcntl.h>
 
 #include "pointing_struct.h"
+#include "mcp.h"
 
 #define GPSCOM "/dev/ttyS1"
 
@@ -23,75 +24,30 @@ time_t DGPSTime;
 #define FRAMES_TO_OK_ATFLOAT 100
 #define LEAP_SECONDS 0
 
-int setGpsPort9600() {
+void SetGPSPort(speed_t speed) {
   int fd;
 
   struct termios term; 
 
-  if ((fd = open(GPSCOM, O_RDWR)) < 0) {
-    perror("Unable to open dgps serial port");
-    return 1;
-  }
+  if ((fd = open(GPSCOM, O_RDWR)) < 0)
+    merror(MCP_TFATAL, "Unable to open dgps serial port");
 
-  if (tcgetattr(fd, &term)) {
-    perror("Unable to get dgps serial port attributes");
-    return 1;
-  }
+  if (tcgetattr(fd, &term))
+    merror(MCP_TFATAL, "Unable to get dgps serial port attributes");
 
   term.c_iflag = 0;
   term.c_oflag = 0;
   term.c_cflag &= ~(CSTOPB | CSIZE);
   term.c_cflag |= CS8;
   term.c_lflag = 0;
-  
-  if (cfsetispeed(&term, B9600)) {          /*  <======= SET THE SPEED HERE */
-    perror("error setting serial input speed");
-    return 1;
-  }
 
-  if( tcsetattr(fd, TCSANOW, &term) ) {
-    perror("Unable to set serial attributes");
-    return 1;
-  }
+  if (cfsetispeed(&term, speed))
+    merror(MCP_TFATAL, "error setting serial input speed");
+
+  if (tcsetattr(fd, TCSANOW, &term))
+    merror(MCP_TFATAL, "Unable to set serial attributes");
 
   close(fd);
-  return 0;
-}
-
-
-int setGpsPort38400() {
-  int fd;
-
-  struct termios term; 
-
-  if ((fd = open(GPSCOM, O_RDWR)) < 0) {
-    perror("Unable to open dgps serial port");
-    return 1;
-  }
-
-  if (tcgetattr(fd, &term)) {
-    perror("Unable to get dgps serial port attributes");
-    return 1;
-  }
-
-  term.c_iflag = 0;
-  term.c_oflag = 0;
-  term.c_cflag &= ~(CSTOPB | CSIZE);
-  term.c_cflag |= CS8;
-  term.c_lflag = 0;
-  
-  if (cfsetispeed(&term, B38400)) {          /*  <======= SET THE SPEED HERE */
-    perror("error setting serial input speed");
-    return 1;
-  }
-
-  if( tcsetattr(fd, TCSANOW, &term) ) {
-    perror("Unable to set serial attributes");
-    return 1;
-  }
-
-  close(fd);
-  return 0;
 }
 
 /** grab the next field from a command delimeted list **/
@@ -121,9 +77,9 @@ void WatchDGPS() {
   struct tm ts;
   int pos_ok;
   static int i_at_float = 0;
-  
+
   int pid = getpid();
-  fprintf(stderr, ">> WatchDGPS startup on pid %i\n", pid);
+  mprintf(MCP_STARTUP, "WatchDGPS startup on pid %i\n", pid);
 
   DGPSAtt[0].az = 0;
   DGPSAtt[0].pitch = 0;
@@ -143,32 +99,29 @@ void WatchDGPS() {
 
   DGPSTime = 0; 
 
-  if (setGpsPort9600()) return; // exit thread on port error.
+  SetGPSPort(B9600);
 
   fp = fopen(GPSCOM, "r+");
-  if (fp==NULL) {
-    perror("error opening gps port for i/o");
-    return; // exit thread on port error
-  }
+  if (fp==NULL)
+    merror(MCP_TFATAL, "error opening gps port for i/o");
+
   fprintf(fp,"$PASHS,SPD,B,7\r\n");
 
   fclose(fp);
 
-  if (setGpsPort38400()) return; // exit thread on port error.
+  SetGPSPort(B38400);
 
   fp = fopen(GPSCOM, "r+");
-  if (fp==NULL) {
-    perror("error opening gps port for i/o");
-    return; // exit thread on port error
-  }
+  if (fp==NULL)
+    merror(MCP_TFATAL, "error opening gps port for i/o");
 
-  //fprintf(fp,"$PASHS,RST\r\n");  // reset to defaults
-  //sleep(10);
+  /* fprintf(fp,"$PASHS,RST\r\n");  // reset to defaults */
+  /* sleep(10); */
   /***** THESE were set by MD/ 8/28/03 ******/
   fprintf(fp,"$PASHS,3DF,V12,+000.000,+003.239,-000.000\r\n");
   fprintf(fp,"$PASHS,3DF,V13,-001.254,+002.446,-000.024\r\n");
   fprintf(fp,"$PASHS,3DF,V14,+001.346,+000.560,-000.015\r\n");
-  fprintf(fp,"$PASHS,3DF,OFS,-117.14,+00.00,+00.00\r\n"); // array offest p71
+  fprintf(fp,"$PASHS,3DF,OFS,-117.14,+00.00,+00.00\r\n"); // array offset p71
   fprintf(fp,"$PASHS,SAV,Y\r\n");
   /**********************************************/
   fprintf(fp,"$PASHS,ELM,15\r\n"); // minimum elevation for sattelite p 53
@@ -240,9 +193,9 @@ void WatchDGPS() {
       // # Sattelites
       inptr += GetField(inptr,outstr);
       if (sscanf(outstr,"%d", &(DGPSPos[dgpspos_index].n_sat))!=1) {
-	pos_ok = 0;
+        pos_ok = 0;
       } else if (DGPSPos[dgpspos_index].n_sat<4) {
-	pos_ok = 0;
+        pos_ok = 0;
       }
 
       // skip time
@@ -251,11 +204,11 @@ void WatchDGPS() {
       // Latitude
       inptr += GetField(inptr,outstr);
       if (sscanf(outstr,"%2d%f", &d,&m)!=2) {
-	pos_ok = 0;
+        pos_ok = 0;
       } else {
-	DGPSPos[dgpspos_index].lat = (double)d + (double)m*(1.0/60.0);
+        DGPSPos[dgpspos_index].lat = (double)d + (double)m*(1.0/60.0);
       }
-            
+
       // North/South
       inptr += GetField(inptr,outstr);
       if (outstr[0]=='S') DGPSPos[dgpspos_index].lat *=-1;
@@ -263,9 +216,9 @@ void WatchDGPS() {
       // Longitude
       inptr += GetField(inptr,outstr);
       if (sscanf(outstr,"%3d%f", &d,&m)!=2) {
-	pos_ok = 0;
+        pos_ok = 0;
       } else {
-	DGPSPos[dgpspos_index].lon = (double)d + (double)m*(1.0/60.0);
+        DGPSPos[dgpspos_index].lon = (double)d + (double)m*(1.0/60.0);
       }
       // East/West
       inptr += GetField(inptr,outstr);
@@ -291,22 +244,22 @@ void WatchDGPS() {
       sscanf(outstr,"%lf", &(DGPSPos[dgpspos_index].climb));
 
       if (DGPSPos[dgpspos_index].n_sat<=3) {
-	pos_ok = 0;
+        pos_ok = 0;
       }
 
       if (pos_ok) {
         dgpspos_index = INC_INDEX(dgpspos_index);
-	if (DGPSPos[dgpspos_index].alt < FLOAT_ALT) {
-	  DGPSPos[dgpspos_index].at_float = 0;
-	  i_at_float = 0;
-	} else {
-	  i_at_float++;
-	  if (i_at_float > FRAMES_TO_OK_ATFLOAT) {
-	    DGPSPos[dgpspos_index].at_float = 1;
-	  } else {
-	    DGPSPos[dgpspos_index].at_float = 0;
-	  }
-	}
+        if (DGPSPos[dgpspos_index].alt < FLOAT_ALT) {
+          DGPSPos[dgpspos_index].at_float = 0;
+          i_at_float = 0;
+        } else {
+          i_at_float++;
+          if (i_at_float > FRAMES_TO_OK_ATFLOAT) {
+            DGPSPos[dgpspos_index].at_float = 1;
+          } else {
+            DGPSPos[dgpspos_index].at_float = 0;
+          }
+        }
       }
     }
   }

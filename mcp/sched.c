@@ -4,6 +4,7 @@
 
 #include "command_struct.h"
 #include "pointing_struct.h"
+#include "mcp.h"
 
 #define SCHEDULEFILE "/data/etc/schedule.mcp"
 
@@ -64,7 +65,8 @@ void InitSched(void) {
   /*** Count number of schedule file lines ***/
   fp = fopen(SCHEDULEFILE,"r");
   if (fp==NULL) {
-    S.n_sched=0;
+    merror(MCP_ERROR, "sched: Unable to open schedule file");
+    S.n_sched = 0;
     return;
   }
   while (GetLine(fp, line_in)) {
@@ -77,10 +79,10 @@ void InitSched(void) {
     (struct PointingModeStruct *)
     malloc(S.n_sched*sizeof(struct PointingModeStruct));
   if (S.p == NULL)
-    perror("sched: Unable to malloc");
+    merror(MCP_ERROR, "sched: Unable to malloc");
   
   if (fclose(fp) == EOF) {
-    perror("sched: Error on close");
+    merror(MCP_ERROR, "sched: Error on close");
   }
 
   /**************************/
@@ -111,70 +113,72 @@ void InitSched(void) {
 
   dt/=3600.0;
   
-  printf("***********************************************************\n"
-	 "***       Schedule File:\n"
-	 "*** Current local siderial date (hours relative to epoch): %g\n"
-	 "*** Assuming LAT = %g , LON = %g for checks\n", dt,
-	 CHECK_LAT, CHECK_LON);
-  
+  mprintf(MCP_SCHED,
+      "***********************************************************\n"
+      "***       Schedule File:\n"
+      "*** Current local siderial date (hours relative to epoch): %g\n"
+      "*** Assuming LAT = %g , LON = %g for checks\n", dt,
+      CHECK_LAT, CHECK_LON);
+
   /***********************/
   /*** Read the events ***/
   for (i=j=0; i<S.n_sched; i++) {
     entry_ok=1;
     GetLine(fp, line_in);
     switch (line_in[0]) {
-    case 'v':
-    case 'V':
-      n_fields = sscanf(line_in, "%*s %d %lg %lg %lg %lg %lg %lg %lg",
-			&day, &hours,
-			&ra, &dec, &(S.p[j].w), &(S.p[j].h),
-			&(S.p[j].vaz), &(S.p[j].del));
-      S.p[j].mode = P_VBOX;
-      rh = S.p[j].h;
-      if (n_fields != 8) entry_ok = 0;
-      break;
-    case 'b':
-    case 'B':
-      n_fields = sscanf(line_in, "%*s %d %lg %lg %lg %lg %lg %lg %lg",
-			&day, &hours,
-			&ra, &dec, &(S.p[j].w), &(S.p[j].h),
-			&(S.p[j].vaz), &(S.p[j].del));
-      S.p[j].mode = P_BOX;
-      rh = S.p[j].h;
-      if (n_fields != 8) entry_ok = 0;
-      break;
-    case 'c':
-    case 'C':
-      n_fields = sscanf(line_in, "%*s %d %lg %lg %lg %lg %lg %lg",
-			&day, &hours,
-			&ra, &dec, &(S.p[j].w),
-			&(S.p[j].vaz), &(S.p[j].del));
-      S.p[j].mode = P_CAP;
-      if (n_fields != 7) entry_ok = 0;
-      break;
-    default:
-      entry_ok = 0;
-      break;
+      case 'v':
+      case 'V':
+        n_fields = sscanf(line_in, "%*s %d %lg %lg %lg %lg %lg %lg %lg",
+            &day, &hours,
+            &ra, &dec, &(S.p[j].w), &(S.p[j].h),
+            &(S.p[j].vaz), &(S.p[j].del));
+        S.p[j].mode = P_VBOX;
+        rh = S.p[j].h;
+        if (n_fields != 8) entry_ok = 0;
+        break;
+      case 'b':
+      case 'B':
+        n_fields = sscanf(line_in, "%*s %d %lg %lg %lg %lg %lg %lg %lg",
+            &day, &hours,
+            &ra, &dec, &(S.p[j].w), &(S.p[j].h),
+            &(S.p[j].vaz), &(S.p[j].del));
+        S.p[j].mode = P_BOX;
+        rh = S.p[j].h;
+        if (n_fields != 8) entry_ok = 0;
+        break;
+      case 'c':
+      case 'C':
+        n_fields = sscanf(line_in, "%*s %d %lg %lg %lg %lg %lg %lg",
+            &day, &hours,
+            &ra, &dec, &(S.p[j].w),
+            &(S.p[j].vaz), &(S.p[j].del));
+        S.p[j].mode = P_CAP;
+        if (n_fields != 7) entry_ok = 0;
+        break;
+      default:
+        entry_ok = 0;
+        break;
     }
-    
+
     S.p[j].t = day*24l*3600l + hours*3600l;
-    
-/*     StarPos(GetJulian(S.t0), ra*(M_PI/180.0), dec*(M_PI/180.0), */
-/*      	    0.0, 0.0, 0.0, 0.0, */
-/* 	    &(S.p[j].X), &(S.p[j].Y)); */
-    
+
+    /*     StarPos(GetJulian(S.t0), ra*(M_PI/180.0), dec*(M_PI/180.0), */
+    /*      	    0.0, 0.0, 0.0, 0.0, */
+    /* 	    &(S.p[j].X), &(S.p[j].Y)); */
+
     S.p[j].X = ra/15.0;
     S.p[j].Y = dec;
-    
+
     if (!entry_ok) {
-      printf("****** Warning Entry %d is Malformed: Skipping *****\n", j);
+      mprintf(MCP_SCHED,
+          "****** Warning Entry %d is Malformed: Skipping *****\n", j);
     } 
     if (entry_ok) j++;
   }
   if (fclose(fp) == EOF) {
-    perror("sched: Error on close");
+    merror(MCP_ERROR, "sched: Error on close");
   }
-  
+
   for (i=0; i<S.n_sched; i++) {
     radec2azel(S.p[i].X, S.p[i].Y, S.p[i].t, CHECK_LAT, &az1, &el1);
     if (i==S.n_sched-1) {
@@ -202,17 +206,17 @@ void InitSched(void) {
       if (el1 < 25.0) el_range_warning = 1;
     }
     if (el_range_warning) {
-      printf("******************************************\n"
-	     "*** Warning: El Range\n");
-      printf("*** LST: %7.4f Ra: %8.3f  Dec: %8.3f\n",
-	     S.p[i].t/3600.0, S.p[i].X, S.p[i].Y);
+      mputs(MCP_SCHED, "******************************************\n"
+          "*** Warning: El Range\n");
+      mprintf(MCP_SCHED, "*** LST: %7.4f Ra: %8.3f  Dec: %8.3f\n",
+          S.p[i].t/3600.0, S.p[i].X, S.p[i].Y);
     }
-    printf("*** %2d LST: %7.4f Az: %8.3f - %8.3f El: %8.3f - %8.3f\n", i,
-	   S.p[i].t/3600.0,
-	   az1, az2, el1, el2);
+    mprintf(MCP_SCHED,
+        "*** %2d LST: %7.4f Az: %8.3f - %8.3f El: %8.3f - %8.3f\n", i,
+        S.p[i].t/3600.0, az1, az2, el1, el2);
   }
-  printf("***********************************************************\n");
-  fflush(stdout);
+  mputs(MCP_SCHED,
+      "***********************************************************\n");
 }
 
 void DoSched(void) {
@@ -234,7 +238,7 @@ void DoSched(void) {
   i_dgps = GETREADINDEX(dgpspos_index);
   if (DGPSPos[i_dgps].at_float) {
     if (pinIsIn()) {
-      printf("unlocking pin\n");
+      mputs(MCP_INFO, "auto-unlocking pin\n");
       CommandData.pumps.lock_out = 1;
       CommandData.disable_az = 0;
       // Point North
@@ -255,7 +259,7 @@ void DoSched(void) {
       return;
     }
   }
-  
+
   /*************************************************************/
   /** find local comoving siderial date (in siderial seconds) **/
   dt = (PointingData[i_point].t-S.t0)*1.002737909; /*Ref Siderial Time */
