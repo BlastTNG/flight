@@ -1,0 +1,18 @@
+----------------------------------------------------------------------------
+|
+| NARSIL -- "Narsil essenya, macil meletya; Telchar carneron Navarotesse"
+|
+| Adam Hincks, 9 August 2002
+| DV Wiebe     12 September 2002 -- updated location of commands.h
+|
+----------------------------------------------------------------------------
+
+Narsil is a wrapper for blastcmd, which is used for sending commands to the
+gondala via the SIP.
+
+Whenever the commands.h file changes (it is used both by blastcmd and mcp),
+Narsil must be recompiled as it reads the valid commands from this file.
+Currently commands.h is linked to ../blastcmd/commands.h .
+
+Narsil also uses the kstfile class written by Barth to look for default values. That is, it can look for the current value of a parameter in the most recent
+files in /data/rawdir and use that as the default.

@@ -1,0 +1,96 @@
+#!/bin/sh
+
+echo ----------------------------------------------
+echo "           Narsil configuration"
+echo
+echo -n "Executable destination [/usr/local/bin]: "
+read EXEC_DEST
+
+if [ -z ${EXEC_DIR} ]
+then
+  EXEC_DIR=/usr/local/bin ;
+fi
+
+echo EXEC_DIR = ${EXEC_DIR} > Makefile.config
+
+echo -n "Data directory [/data/etc/narsil]: "
+read DATA_DIR
+
+if [ -z ${DATA_DIR} ]
+then
+  DATA_DIR=/data/etc/narsil ;
+fi
+
+echo DATA_DIR = ${DATA_DIR} >> Makefile.config
+
+echo -n "Location of kstfile.o [/home/cbn/programs/KDE/kst/kst]: "
+read KSTFILE_DIR
+
+if [ -z ${KSTFILE_DIR} ]
+then
+  KSTFILE_DIR=/home/cbn/programs/KDE/kst/kst ;
+fi
+
+echo KSTFILE_DIR = ${KSTFILE_DIR} >> Makefile.config
+
+echo -n "Location of getdata.o [/home/cbn/programs/KDE/kst/kst]: "
+read GETDATA_DIR
+
+if [ -z ${GETDATA_DIR} ]
+then
+  GETDATA_DIR=/home/cbn/programs/KDE/kst/kst ;
+fi
+
+echo GETDATA_DIR = ${GETDATA_DIR} >> Makefile.config
+
+echo -n "Location of libRD.a [/usr/local/lib]: "
+read RD_DIR
+
+if [ -z ${RD_DIR} ]
+then
+  RD_DIR=/usr/local/lib ;
+fi
+
+echo RD_DIR = ${RD_DIR} >> Makefile.config
+
+echo -n "qt root directory [/usr/lib/qt3]: "
+read QT_DIR
+
+if [ -z ${QT_DIR} ]
+then
+  QT_DIR=/usr/lib/qt3 ;
+fi
+
+echo QT_DIR = ${QT_DIR} >> Makefile.config
+
+echo -n "Location of commands.h [/usr/local/src/blastcmd]: "
+read COMMANDS_DIR
+
+if [ -z ${COMMANDS_DIR} ]
+then
+  COMMANDS_DIR=/usr/local/src/blastcmd ;
+fi
+
+echo COMMANDS_DIR = ${COMMANDS_DIR} >> Makefile.config
+
+echo -n "blastcmd command name [blastcmd]: "
+read BLAST_CMD
+
+if [ -z ${BLAST_CMD} ]
+then
+  BLAST_CMD=blastcmd ;
+fi
+
+echo BLAST_CMD = ${BLAST_CMD} >> Makefile.config
+
+echo -n "cur file location [/data/etc]: "
+read CUR_DIR
+
+if [ -z ${CUR_DIR} ]
+then
+  CUR_DIR=/data/etc ;
+fi
+
+echo CUR_DIR = ${CUR_DIR} >> Makefile.config
+
+echo ----------------------------------------------
