@@ -1,6 +1,6 @@
 #define N_SCOMMANDS 63         /* total number of single word commands */
 #define N_NM_SCOMMANDS 53      /* total number of named single word cmds */
-#define N_MCOMMANDS 27         /* total number of multiword commands */
+#define N_MCOMMANDS 28         /* total number of multiword commands */
 #define MAX_N_PARAMS 12
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -34,7 +34,7 @@
 const char *GroupNames[N_GROUPS] = {
   "Pointing",
   "Motor Control",
-  "Bias Control",
+  "Bias and DAS",
   "Sensor Systems",
   "Cryo Control",
   "Balance System",
@@ -247,6 +247,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {"b_levl3", "bias 3 level", GR_BIAS, 1,
     {
       {"level", 0, 15, 'i', 0, "ADD"}
+    }
+  },
+
+  {"phase", "set phase shift", GR_BIAS, 2,
+    {
+      {"DAS card", 3, 16, 'i', 0, "ADD"},
+      {"Phase", 0, 2000, 'i', 0, "ADD"}
     }
   },
 

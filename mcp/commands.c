@@ -455,7 +455,8 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.point_mode.el_mode = POINT_LOCK;
     CommandData.pumps.lock_point = 1;
     CommandData.point_mode.el_dest = LockPosition(rvalues[0]);
-    if (CommandData.pumps.bal_veto >= 0) CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
+    if (CommandData.pumps.bal_veto >= 0)
+      CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
     fprintf(stderr, "Lock Mode: %g\n", CommandData.point_mode.el_dest);
   } else if (command == MIndex("goto_el")) {  /* point in elevation */
     if (CommandData.pumps.bal_veto >= 0)
@@ -487,6 +488,8 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.Bias.bias2 = rvalues[0];
   else if (command == MIndex("b_levl3"))    /* Set bias 1 */
     CommandData.Bias.bias3 = rvalues[0];
+  else if (command == MIndex("phase"))
+    CommandData.Phase[ivalues[0]] = ivalues[1];
   else if (command == MIndex("balgoal")) {
     CommandData.pumps.bal_on = rvalues[0] * 1648.;
     CommandData.pumps.bal_off = rvalues[1] * 1648.;
