@@ -1181,6 +1181,9 @@ void UpdateAxesMode() {
     case P_RADEC_GOTO:
       DoRaDecGotoMode();
       break;
+    case P_QUAD: // aka radbox
+      DoQuadMode();
+      break;
     case P_LOCK:
       axes_mode.el_mode = AXIS_LOCK;
       axes_mode.el_dest = CommandData.pointing_mode.Y;
