@@ -222,7 +222,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"disk_free",    'w', LOOPBACK, 58,       1./1024,             0.0, 'u'},
     {"p_mode",       'w', LOOPBACK, 59,             1,             0.0, 'u'},
     {"p_x_deg",      'w', LOOPBACK, 60,         I2DEG,             0.0, 'u'},
-    {"p_y",          'w', LOOPBACK, 61,         I2DEG,             0.0, 'u'},
+    {"p_y",          'w', LOOPBACK, 61,         I2DEG,             0.0, 's'},
     {"p_vaz",        'w', LOOPBACK, 62,         I2VEL,             0.0, 'u'},
     {"p_del",        'w', LOOPBACK, 63,         I2VEL,             0.0, 'u'},
     {"isc_rd_sigma", 'w', LOOPBAK2,  0,         I2DEG,             0.0, 'u'},
