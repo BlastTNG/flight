@@ -142,20 +142,26 @@ extern "C" {
 #define T_CHARCOAL_M (-2.865098e-09*65536.0)
 #define T_CHARCOAL_B (1.235145e+01)
   
-/* conversions between dps and a to d units for each gyro */
-#define DPS_TO_ADU1 (1092.8128/1.0407)
-#define ADU1_TO_DPS (1.0/DPS_TO_ADU1)
-#define DPS_TO_ADU2 (1092.8128/1.036)
-#define ADU2_TO_DPS (1.0/DPS_TO_ADU2)
-#define DPS_TO_ADU3 (1092.8128/1.036)
-#define ADU3_TO_DPS (1.0/DPS_TO_ADU3)
+// Conversion factors for the rotated/calibrated gyros
+// (GYRO1, GYRO2, GYRO3).  Any correction to this belongs
+// in ACS1, not here
+#define DPS_TO_GY16 1092.8128
+#define GY16_TO_DPS (1.0/DPS_TO_GY16)
+#define GY16_OFFSET 32768.0
 
-  /* Approximate gyro offsets - to get us close */
-  /* If these numbers are changed, they must be changed on the ACS1
-   * DSP as well */
-#define GYRO1_OFFSET 25795.0
-#define GYRO2_OFFSET 25535.0
-#define GYRO3_OFFSET 25600.0
+// Conversion factors for raw 32 bit analog gyro chanels
+// put any correction to these directly in tx_struct.c
+// these should only appear in tx_struct.c
+#define DPS_TO_AGY32 (1092.8128*65536.0)
+#define AGY32_TO_DPS (1.0/DPS_TO_AGY32)
+#define AGY32_OFFSET (25600.0*65536.0)
+
+// Conversion factors for raw 32 bit digital gyro chanels
+// put any correction to these directly in tx_struct.c
+// these should only appear in tx_struct.c
+#define DGY32_TO_DPS (60.0E-6 * 4.0/256.0)
+#define DPS_TO_DGY32 (1.0/DGY32_TO_DPS)
+#define DGY32_OFFSET (32768.0*65536.0)
 
 #ifdef __cplusplus
 }

@@ -452,14 +452,14 @@ struct ChannelStruct SlowChannels[] = {
 
 struct ChannelStruct WideFastChannels[] = {
 #ifndef BOLOTEST
-  {"raw_gy4",     'r',  ACS1,  2,         60.0E-6,                    0.0, 'U'},
-  {"raw_gy5",     'r',  ACS1,  6,         60.0E-6,                    0.0, 'U'},
   {"t_gybox2",    'r',  ACS1, 12, -9.5367431641e-08,               136.45, 'U'},
   {"t_gybox",     'r',  ACS1, 14, -9.5367431641e-08,               136.45, 'U'},
-  {"raw_gy2",     'r',  ACS1, 22,  ADU2_TO_DPS, -GYRO2_OFFSET*ADU2_TO_DPS, 'U'},
-  {"raw_gy3",     'r',  ACS1, 24,  ADU3_TO_DPS, -GYRO3_OFFSET*ADU3_TO_DPS, 'U'},
-  {"raw_gy1",     'r',  ACS1, 26,  ADU1_TO_DPS, -GYRO1_OFFSET*ADU1_TO_DPS, 'U'},
-  {"raw_gy6",     'r',  ACS1, 36,         60.0E-6,                    0.0, 'U'},
+  {"raw_gy1",     'r',  ACS1, 26,  -AGY32_TO_DPS, AGY32_OFFSET*AGY32_TO_DPS, 'U'},
+  {"raw_gy2",     'r',  ACS1, 22,  AGY32_TO_DPS, -AGY32_OFFSET*AGY32_TO_DPS, 'U'},
+  {"raw_gy3",     'r',  ACS1, 24,  AGY32_TO_DPS, -AGY32_OFFSET*AGY32_TO_DPS, 'U'},
+  {"raw_gy4",     'r',  ACS1,  6,  DGY32_TO_DPS, -DGY32_OFFSET*DGY32_TO_DPS, 'U'},
+  {"raw_gy5",     'r',  ACS1,  2,  DGY32_TO_DPS, -DGY32_OFFSET*DGY32_TO_DPS, 'U'},
+  {"raw_gy6",     'r',  ACS1, 36,  -DGY32_TO_DPS, DGY32_OFFSET*DGY32_TO_DPS, 'U'},
 #endif
 
   /* BIAS Amplitude */
@@ -512,9 +512,9 @@ struct ChannelStruct FastChannels[] = {
   {"osc_trigger", 'w',  ACS0, 32,             1.0,                    0.0, 'u'},
 
   /* read channels from ACS1 */
-  {"gyro2",       'r',  ACS1, 50,  ADU2_TO_DPS, -GYRO2_OFFSET*ADU2_TO_DPS, 'u'},
-  {"gyro3",       'r',  ACS1, 56,  ADU3_TO_DPS, -GYRO3_OFFSET*ADU3_TO_DPS, 'u'},
-  {"gyro1",       'r',  ACS1, 59,  ADU1_TO_DPS, -GYRO1_OFFSET*ADU1_TO_DPS, 'u'},
+  {"gyro2",       'r',  ACS1, 50,  GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
+  {"gyro3",       'r',  ACS1, 56,  GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
+  {"gyro1",       'r',  ACS1, 59,  GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
 
   {"reac_enc",    'r',  ACS1, 60,    360.0/4000.0,                    0.0, 'u'},
   {"pwm_el",      'r',  ACS1, 51,             1.0,                -4000.0, 'u'},

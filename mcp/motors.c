@@ -71,13 +71,13 @@ double GetVElev() {
   if (ACSData.enc_elev > MAX_EL)
     vel = -0.2; // go down
 
-  vel *= DPS_TO_ADU1; 
+  vel *= DPS_TO_GY16; 
 
   /* Limit Maximim speed to 0.5 dps*/
-  if (vel > 0.5 * DPS_TO_ADU1)
-    vel = 0.5 * DPS_TO_ADU1;
-  if (vel < -0.5 * DPS_TO_ADU1)
-    vel = -0.5 * DPS_TO_ADU1;
+  if (vel > 0.5 * DPS_TO_GY16)
+    vel = 0.5 * DPS_TO_GY16;
+  if (vel < -0.5 * DPS_TO_GY16)
+    vel = -0.5 * DPS_TO_GY16;
 
   /* limit Maximum acceleration */
   dvel = vel - last_vel;
@@ -123,7 +123,7 @@ int GetVAz() {
     sin(PointingData[i_point].el * M_PI / 180.0);
   
   vel -= vel_offset;
-  vel *= DPS_TO_ADU2; /* convert to gyro units FIXME: use elevation info*/
+  vel *= DPS_TO_GY16; 
   
   /* Limit Maximim speed */
   if (vel > 2000)

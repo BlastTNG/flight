@@ -313,9 +313,9 @@ void GetACS(unsigned short *RxFrame){
           + ENC_ELEV_OFFSET)) < 0)
     enc_elev += 360;
 
-  gyro1 = (double)(RxFrame[gyro1Addr->channel]-GYRO1_OFFSET) * ADU1_TO_DPS;
-  gyro2 = (double)(RxFrame[gyro2Addr->channel]-GYRO2_OFFSET) * ADU2_TO_DPS;
-  gyro3 = (double)(RxFrame[gyro3Addr->channel]-GYRO3_OFFSET) * ADU3_TO_DPS;
+  gyro1 = (double)(RxFrame[gyro1Addr->channel]-GY16_OFFSET) * GY16_TO_DPS;
+  gyro2 = (double)(RxFrame[gyro2Addr->channel]-GY16_OFFSET) * GY16_TO_DPS;
+  gyro3 = (double)(RxFrame[gyro3Addr->channel]-GY16_OFFSET) * GY16_TO_DPS;
 
   bias = (double)(RxFrame[magBiasAddr->channel]);
   x_comp = (double)(RxFrame[magXAddr->channel]);
