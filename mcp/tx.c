@@ -70,8 +70,6 @@ void PhaseControl();
 void UpdateAxesMode(void);
 void WriteMot(int TxIndex, unsigned short *RxFrame);
 
-int frame_num;
-
 /* this is provided to let the various controls know that we're doing our
  * initial control writes -- there's no input data yet */
 int mcp_initial_controls = 0;

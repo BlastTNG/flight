@@ -358,8 +358,9 @@ void CameraTrigger(int which)
       }
 
       /* Inform the Star camera of the exposure time */
+      /* pulse request is in 100Hz frames, so multiply by 10k to get usecs */
       CommandData.ISCState[which].exposure =
-        isc_pulses[which].pulse_req / 10416.6666666667;
+        isc_pulses[which].pulse_req * 10000;
 
       /* Add pulse serial number */
       isc_pulses[which].pulse_req += isc_pulses[which].pulse_index << 14;

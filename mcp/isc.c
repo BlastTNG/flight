@@ -49,7 +49,6 @@ struct {
 
 extern short int SamIAm;   /* mcp.c */
 extern short int InCharge; /* tx.c */
-extern int frame_num;      /* tx.c */
 
 /*---- ISC semaphores ----*/
 
@@ -284,7 +283,7 @@ void IntegratingStarCamera(void* parameter)
         CommandData.ISCState[which].az = MyPointData.az * DEG2RAD;
         CommandData.ISCState[which].el = MyPointData.el * DEG2RAD;
         CommandData.ISCState[which].lst = MyPointData.lst * SEC2RAD;
-        CommandData.ISCState[which].MCPFrameNum = frame_num;
+        CommandData.ISCState[which].MCPFrameNum = MyPointData.mcp_frame;
 
         /* az kludge XXX */
         //CommandData.ISCState[which].az = 180 * DEG2RAD;

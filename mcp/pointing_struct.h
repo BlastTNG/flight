@@ -54,26 +54,6 @@
 #define RAD2ARCSEC (180. * 3600. / M_PI)  /* radians to arcseconds */
 
 /**********************************************/
-/*  VSCDataStruct                             */
-/*  Purpose: Store VSC data                   */
-/*   Source: VSC thread in starfind.c         */
-/*     Used: Main thread                      */
-struct VSCDataStruct {
-  int sf_frame; // frame of found blob
-  double col;
-  double row;
-  double mag;
-  double az; // az based on ID'd star
-  double el; // el based on ID'd star
-  int id_frame; // frame of ID'd star
-  time_t mcp_time; // time of ID'd star
-};
-
-extern struct VSCDataStruct VSCData[3];
-extern int vsc_index;
-
-
-/**********************************************/
 /*  ACSDataStruct                             */
 /*  Purpose: Store raw pointing info          */
 /*   Source: main thread; GetACS()            */
