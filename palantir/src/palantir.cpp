@@ -1023,7 +1023,7 @@ double MainForm::GetSlope(struct Deriv *currDeriv) {
   int last = currDeriv->last;
   int i, j;
 
-  double b = 0;        // the slope
+  double b = 0;     // the slope
   double f, t, v = 0;  // scratch space
 
   if (first == last) // fifo full, read all data
@@ -1031,10 +1031,10 @@ double MainForm::GetSlope(struct Deriv *currDeriv) {
   else // fifo partially full, read only up to last;
     j = last;
 
-  f = (j + 1) / 2;  // = sum(i, i=0..j) / j (since the x's are equally spaced)
+  f = (j - 1) / 2.;  // = sum(i, i=0..j) / j (since the x's are equally spaced)
 
   for (i = 0; i < j; ++i) {
-    t = ((i + length - first) % length - f);  // true fifo index 
+    t = ((i + length - first) % length) - f;  // true fifo index 
     v += t * t;
     b += t * currDeriv->data[i];
   }
