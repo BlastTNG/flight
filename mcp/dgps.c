@@ -10,7 +10,7 @@
 #include "pointing_struct.h"
 #include "mcp.h"
 
-#define GPSCOM "/dev/ttyS5"
+#define GPSCOM "/dev/ttyS1"
 
 struct DGPSAttStruct DGPSAtt[3];
 int dgpsatt_index = 0;

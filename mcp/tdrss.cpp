@@ -1059,8 +1059,6 @@ Alice::~Alice()
   delete DataSource;
   delete sendbuf;
   delete DataInfo;
-
-  // No need to delete child widgets:  Qt does it all for us.
 }
 
 
@@ -1247,16 +1245,53 @@ int FrameBuffer::NumFrames() {
 
 int FrameBuffer::ReadField(double *returnbuf, const char *fieldname, 
     int framenum_in, int numframes_in) {
-  int i, j, k, truenum, wide, mindex, chnum;
-  struct NiosStruct* address; 
+  int i, j, k, truenum, wide, mindex, chnum[2];
+  unsigned short mask;
+  struct NiosStruct* address[2];
   unsigned short msb, lsb;
+  char tmpstr[64];
 
-  if ((address = GetNiosAddr(fieldname)) == NULL)
-    return 0;
+  // Is the field a bolometer?  The first character is 'n', followed by a number
+  // of 1 or 2 characters, followed by 'c'.
+  if (fieldname[0] == 'n' &&
+      fieldname[1] >= 48 && fieldname[1] <= 57 &&
+      ((fieldname[2] >= 48 && fieldname[2] <= 57 &&
+        fieldname[3] == 'c') ||
+       (fieldname[2] == 'c'))) {
+    
+    // Get the channel number.
+    for (i = 0; i < (signed int)strlen(fieldname) && fieldname[i] != 'c'; i++);
+    // Let 'wide' represent whether the ch. num. is even or odd.
+    wide = atoi(fieldname + i + 1) % 2;
 
-  wide = address->wide;
-  mindex = BiPhaseLookup[BI0_MAGIC(address->bbcAddr)].index;
-  chnum = BiPhaseLookup[BI0_MAGIC(address->bbcAddr)].channel;
+    // Get the address.
+    sprintf(tmpstr, "%slo", fieldname);
+    if ((address[0] = GetNiosAddr(tmpstr)) == NULL)
+      return 0;
+    strcpy(tmpstr, "");
+    strncpy(tmpstr, fieldname, i);
+    tmpstr[i + 1] = '\0';
+    sprintf(tmpstr, "%s%dhi", tmpstr, atoi(fieldname + i + 1) - wide);
+    if ((address[1] = GetNiosAddr(tmpstr)) == NULL)
+      return 0;
+        
+    mindex = NOT_MULTIPLEXED + 1;  // Marker for bolometers.
+    if (wide)
+      mask = 0x00ff;
+    else
+      mask = 0xff00;
+    wide = 8 + wide * 8; // Now let wide be the amount to shift the 'hi' word.
+    chnum[0] = BiPhaseLookup[BI0_MAGIC(address[0]->bbcAddr)].channel;
+    chnum[1] = BiPhaseLookup[BI0_MAGIC(address[1]->bbcAddr)].channel;
+  }
+  else {
+    if ((address[0] = GetNiosAddr(fieldname)) == NULL)
+      return 0;
+    wide = address[0]->wide;
+    mindex = BiPhaseLookup[BI0_MAGIC(address[0]->bbcAddr)].index;
+    chnum[0] = BiPhaseLookup[BI0_MAGIC(address[0]->bbcAddr)].channel;
+    mask = 0;
+  }
 
   if (pseudoframe - framenum_in > numframes || framenum_in > pseudoframe)
     return 0;
@@ -1266,20 +1301,27 @@ int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
   if (truenum < 0)
     truenum += numframes;
   for (i = framenum_in, j = 0; i < framenum_in + numframes_in; i++) {
-    if (mindex == NOT_MULTIPLEXED)
+    if (mindex == NOT_MULTIPLEXED) {
       for (k = 0; k < FAST_PER_SLOW; k++) {
-        lsb = fastbuf[truenum][k][chnum];
+        lsb = fastbuf[truenum][k][chnum[0]];
         if (wide)
-          msb = fastbuf[truenum][k][chnum + 1];
+          msb = fastbuf[truenum][k][chnum[0] + 1];
         else
           msb = 0;
 
         returnbuf[j++] = (double)((msb << 16) | lsb);
       }
+    }
+    else if (mindex == NOT_MULTIPLEXED + 1) {
+      // Bolometers are all fast channels.
+      for (k = 0; k < FAST_PER_SLOW; k++)
+        returnbuf[j++] = ((fastbuf[truenum][k][chnum[1]] & mask) << wide) | 
+                         fastbuf[truenum][k][chnum[0]];
+    }
     else {
-      lsb = slowbuf[truenum][mindex][chnum];
+      lsb = slowbuf[truenum][mindex][chnum[0]];
       if (wide)
-        msb = slowbuf[truenum][mindex][chnum + 1];
+        msb = slowbuf[truenum][mindex][chnum[0] + 1];
       else
         msb = 0;
 
