@@ -168,11 +168,6 @@ void SyncADC (void) {
 
   int k, l, m;
 
-  if (CommandData.ADC_sync_timeout >= 3000)
-    return;
-
-  CommandData.ADC_sync_timeout++;
-
   /******** Obtain correct indexes the first time here ***********/
   static int firsttime = 1;
   if (firsttime) {

@@ -1394,7 +1394,7 @@ void InitCommandData() {
   /** this overrides prev_status **/
   CommandData.force_el = 0;
 
-  CommandData.pumps.bal_veto = -1; //BAL_VETO_LENGTH;
+  CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
   CommandData.pumps.bal1_on = 0;
   CommandData.pumps.bal1_reverse = 0;
   CommandData.pumps.bal2_on = 0;
@@ -1425,6 +1425,14 @@ void InitCommandData() {
 
   CommandData.gyheat[0].age = 0;
   CommandData.gyheat[1].age = 0;
+
+  CommandData.Cryo.BDAHeat = 0;
+  CommandData.Cryo.autoBDAHeat = 0;
+  CommandData.Cryo.BDAGain.P = 600;
+  CommandData.Cryo.BDAGain.I = 1;
+  CommandData.Cryo.BDAGain.D = 20;
+  CommandData.Cryo.BDAGain.SP = 21750;
+  CommandData.Cryo.BDAFiltLen = 500;
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
@@ -1469,9 +1477,9 @@ void InitCommandData() {
   CommandData.gyheat[0].gain.I = 20;
   CommandData.gyheat[0].gain.D = 0;
 
-  CommandData.gyheat[1].setpoint = 30.0;
-  CommandData.gyheat[1].gain.P = 100;
-  CommandData.gyheat[1].gain.I = 20;
+  CommandData.gyheat[1].setpoint = 35.0;
+  CommandData.gyheat[1].gain.P = 40;
+  CommandData.gyheat[1].gain.I = 5;
   CommandData.gyheat[1].gain.D = 0;
 
   CommandData.disable_az = 0;
@@ -1481,7 +1489,7 @@ void InitCommandData() {
 
   CommandData.use_elenc = 1;
   CommandData.use_elclin = 1;
-  CommandData.use_sun = 0;
+  CommandData.use_sun = 1;
   CommandData.use_isc = 1;
   CommandData.use_mag = 1;
   CommandData.use_gps = 1;
@@ -1499,15 +1507,15 @@ void InitCommandData() {
   CommandData.pumps.bal_off = 0.2 * 1648.;
   CommandData.pumps.bal_target = 0.0 * 1648.;
   CommandData.pumps.bal_gain = 0.2;
-  CommandData.pumps.inframe_auto = 0;
+  CommandData.pumps.inframe_auto = 1;
   CommandData.pumps.outframe_auto = 0;
 
   CommandData.Bias.clockInternal = 0;
   CommandData.Bias.biasAC = 1;
   CommandData.Bias.biasRamp = 0;
-  CommandData.Bias.bias1 = 0x02;
-  CommandData.Bias.bias2 = 0x02;
-  CommandData.Bias.bias3 = 0x02;
+  CommandData.Bias.bias1 = 0x10;
+  CommandData.Bias.bias2 = 0x10;
+  CommandData.Bias.bias3 = 0x10;
 
   CommandData.pin_is_in = 1;
 
@@ -1531,14 +1539,6 @@ void InitCommandData() {
   CommandData.Cryo.JFETSetOn = 120;
   CommandData.Cryo.JFETSetOff = 135;
 
-  CommandData.Cryo.BDAHeat = 0;
-  CommandData.Cryo.autoBDAHeat = 1;
-  CommandData.Cryo.BDAGain.P = 600;
-  CommandData.Cryo.BDAGain.I = 1;
-  CommandData.Cryo.BDAGain.D = 20;
-  CommandData.Cryo.BDAGain.SP = 21750;
-  CommandData.Cryo.BDAFiltLen = 500;
-
   CommandData.ISCState[0].abort = 0;
   CommandData.ISCState[0].pause = 0;
   CommandData.ISCState[0].save = 0;
@@ -1554,19 +1554,19 @@ void InitCommandData() {
   CommandData.ISCState[0].maxBlobMatch = 10;
   CommandData.ISCState[0].sn_threshold = 4.5;
   CommandData.ISCState[0].mult_dist = 30;
-  CommandData.ISCState[0].mag_limit = 9.5;
+  CommandData.ISCState[0].mag_limit = 9;
   CommandData.ISCState[0].norm_radius = 3. * DEG2RAD;
   CommandData.ISCState[0].lost_radius = 6. * DEG2RAD;
   CommandData.ISCState[0].tolerance = 20. / 3600. * DEG2RAD; /* 20 arcsec */
   CommandData.ISCState[0].match_tol = 0.5;
   CommandData.ISCState[0].quit_tol = 1;
-  CommandData.ISCState[0].rot_tol = 5 * DEG2RAD;
+  CommandData.ISCState[0].rot_tol = 10 * DEG2RAD;
   CommandData.ISCState[0].triggertype = ISC_TRIGGER_NEG;
   CommandData.ISCState[0].gain = 1;
   CommandData.ISCState[0].offset = 0;
-  CommandData.ISCControl[0].save_period = 4000; /* 40 sec */
-  CommandData.ISCControl[0].pulse_width = 10; /* 100.00 msec */
-  CommandData.ISCControl[0].fast_pulse_width = 10; /* 100.00 msec */
+  CommandData.ISCControl[0].save_period = 6000; /* 60 sec */
+  CommandData.ISCControl[0].pulse_width = 50; /* 500.00 msec */
+  CommandData.ISCControl[0].fast_pulse_width = 5; /* 50.00 msec */
 
   CommandData.ISCState[1].abort = 0;
   CommandData.ISCState[1].pause = 0;
@@ -1583,20 +1583,19 @@ void InitCommandData() {
   CommandData.ISCState[1].maxBlobMatch = 10;
   CommandData.ISCState[1].sn_threshold = 4.5;
   CommandData.ISCState[1].mult_dist = 30;
-  CommandData.ISCState[1].mag_limit = 9.5;
+  CommandData.ISCState[1].mag_limit = 9;
   CommandData.ISCState[1].norm_radius = 3. * DEG2RAD;
   CommandData.ISCState[1].lost_radius = 6. * DEG2RAD;
   CommandData.ISCState[1].tolerance = 20. / 3600. * DEG2RAD; /* 20 arcsec */
-  CommandData.ISCState[1].match_tol = 0.8;
+  CommandData.ISCState[1].match_tol = 0.5;
   CommandData.ISCState[1].quit_tol = 1;
-  CommandData.ISCState[1].rot_tol = 5 * DEG2RAD;
+  CommandData.ISCState[1].rot_tol = 10 * DEG2RAD;
   CommandData.ISCState[1].triggertype = ISC_TRIGGER_NEG;
   CommandData.ISCState[1].gain = 1;
   CommandData.ISCState[1].offset = 0;
-  CommandData.ISCControl[1].save_period = 4000; /* 40 sec */
-  CommandData.ISCControl[1].pulse_width = 10; /* 100.00 msec */
-  CommandData.ISCControl[1].fast_pulse_width = 10; /* 100.00 msec */
-  CommandData.ADC_sync_timeout = 0;
+  CommandData.ISCControl[1].save_period = 6000; /* 60 sec */
+  CommandData.ISCControl[1].pulse_width = 50; /* 500.00 msec */
+  CommandData.ISCControl[1].fast_pulse_width = 5; /* 50.00 msec */
 
   WritePrevStatus();
 }
