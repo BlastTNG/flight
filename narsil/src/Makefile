@@ -1,16 +1,16 @@
 include ../Makefile.config
 MOC = $(QT_DIR)/bin/moc
-CMDS = $(COMMANDS_DIR)/commands.h
-FLAGS = -I$(COMMANDS_DIR) -I$(QT_DIR)/include -g
+CMDS = ./commands.h
+FLAGS = -I. -I$(QT_DIR)/include -g
 DEFINES = -DBLAST_CMD=\"$(BLAST_CMD)\" -DDATA_DIR=\"$(DATA_DIR)\" \
 					-DCUR_DIR=\"$(CUR_DIR)\"
 CPP = g++ $(FLAGS) $(DEFINES)
-LIBS = -L$(RD_DIR) -L$(QT_DIR)/lib -lqt-mt -lRD
+LIBS = -L../lib/ -L$(QT_DIR)/lib -lqt-mt -lRD
 
 all: narsil
 
 narsil: narsil.o moc_narsil.o doubleentry.o moc_doubleentry.o $(CMDS) 
-	$(CPP) $(KSTFILE_DIR)/kstfile.o $(GETDATA_DIR)/getdata.o narsil.o \
+	$(CPP) ../lib/kstfile.o ../lib/getdata.o narsil.o \
 	doubleentry.o moc_narsil.o moc_doubleentry.o $(LIBS)\
 	-o narsil
 
