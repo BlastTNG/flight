@@ -48,7 +48,6 @@ debug:: all
 clean:
 	rm -f mcp || true;
 	rm -f *.o || true;
-	cd etc && $(MAKE) clean
 
 Makefile.config:
 	./configure
@@ -60,11 +59,10 @@ $(OBJS): $(HEADERS)
 install: mcp
 	install -d -m 777 /data/rawdir
 	install -m 755 mcp /usr/local/bin
+	install -m 666 etc/WMM.COF etc/*.aml etc/*.lut etc/*.txt etc/ephem.2000 etc/*.dat /data/etc
 ifeq ($(BOLOTEST),-DBOLOTEST)
 	$(MAKE) fifo
 endif
-  install -m 666 etc/WMM.COF etc/*.aml etc/*.lut etc/*.txt etc/ephem.2000 etc/*.dat /data/etc
-	cd etc && $(MAKE) install
 
 fifo:
 	[ -e /tmp/SIPSS.FIFO ] || mkfifo -m 0777 /tmp/SIPSS.FIFO
