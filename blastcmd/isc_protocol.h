@@ -117,6 +117,7 @@ struct ISCSolutionStruct {
   double temp3;
   double temp4;
   double pressure1;     // pressure sensor
+  int heaterOn;         // 1 if the heater is on
 
   int n_blobs;
   double blob_x[MAX_ISC_BLOBS];
