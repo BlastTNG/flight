@@ -1,6 +1,6 @@
 /* blastcmd: groundstation BLAST command software
  *
- * This software is copyright (C) 2002-2004 University of Toronto
+ * This software is copyright (C) 2002-2005 University of Toronto
  * 
  * This file is part of blastcmd.
  * 
@@ -438,7 +438,7 @@ void PrintCommandListSerial(void)
 
 void PrintVersion(void)
 {
-  printf("blastcmd " VERSION "  (C) 2002-2004 University of Toronto\n"
+  printf("blastcmd " VERSION "  (C) 2002-2005 University of Toronto\n"
       "Compiled on " __DATE__ " at " __TIME__ ".\n\n"
       "This program comes with NO WARRANTY, not even for MERCHANTABILITY or "
       "FITNESS\n"
