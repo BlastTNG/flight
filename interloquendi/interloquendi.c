@@ -182,6 +182,7 @@ void Connection(int csock)
                 quendi_reader_shutdown(data.stream);
                 data.sending_data = 0; 
                 data.staged = 0;
+                data.port_active = 0;
                 break;
               case FR_MORE_IN_FILE:
                 data.new_chunk = 0;
@@ -193,6 +194,7 @@ void Connection(int csock)
               case FR_CURFILE_CHANGED:
                 quendi_reader_shutdown(data.stream);
                 data.sending_data = 0; 
+                data.port_active = 0;
                 if (GetCurFile(data.name, QUENDI_COMMAND_LENGTH) == NULL)
                   quendi_respond(QUENYA_RESPONSE_TRANS_COMPLETE, NULL);
                 else {
@@ -205,7 +207,6 @@ void Connection(int csock)
 
             if (n == FR_NEW_CHUNK || n == FR_MORE_IN_FILE) {
               /* read a block */
-              printf("quendi read from %p\n", data.stream);
               data.block_length = quendi_read_data(data.new_chunk, &data.stream,
                   data.chunk, data.seek_to, &data.chunk_total, data.frame_size,
                   &data.frames_read);
@@ -213,7 +214,6 @@ void Connection(int csock)
               /* send the block */
               quendi_send_data(data.sock, data.frame_size, data.block_length);
             }
-            data.port_active = 0;
           }
           break;
         case QUENYA_COMMAND_DATA:
@@ -241,7 +241,6 @@ void Connection(int csock)
 
             /* send the block */
             quendi_send_data(data.sock, data.frame_size, data.block_length);
-            data.port_active = 0;
           }
           break;
         case QUENYA_COMMAND_IDEN:
@@ -279,11 +278,11 @@ void Connection(int csock)
               quendi_respond(QUENYA_RESPONSE_NO_CUR_DATA, NULL);
             else {
               data.persist = 1;
-              data.staged = quendi_stage_data(data.name,
-                  data.pos = -10000 + GetFrameFileSize(data.name,
-                    options[CFG_SUFFIX_LENGTH].value.as_int)
-                  / (data.frame_size = ReconstructChannelLists(data.name,
-                      NULL)), options[CFG_SUFFIX_LENGTH].value.as_int, 0);
+              data.frame_size = ReconstructChannelLists(data.name, NULL);
+              data.pos = GetFrameFileSize(data.name,
+                    options[CFG_SUFFIX_LENGTH].value.as_int) / data.frame_size;
+              data.staged = quendi_stage_data(data.name, data.pos,
+                  options[CFG_SUFFIX_LENGTH].value.as_int, 0);
             }
           }
           break;
@@ -297,7 +296,6 @@ void Connection(int csock)
           else {
             data.port_active = 1;
             quendi_send_data(data.sock, data.frame_size, data.block_length);
-            data.port_active = 0;
           }
           break;
         case QUENYA_COMMAND_SPEC:
