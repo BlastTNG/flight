@@ -123,8 +123,6 @@ void SigPipe(int signal) {
   pthread_exit(NULL);
 }
 
-#define MAG_X_BIAS 20000
-#define MAG_Y_BIAS 20000
 /************************************************************************
 *                                                                      *
 *   MagRead:  readout magnetometer, subtracting bais from x and        *
@@ -134,8 +132,9 @@ void SigPipe(int signal) {
 double MagRead(unsigned short *Rxframe) {
   static int i_mag_x = -1;
   static int i_mag_y = -1;
+  static int i_mag_bias = -1;
 
-  double mag_az, x_comp, y_comp;
+  double mag_az, x_comp, y_comp, bias;
   float year;
   static float dec, dip, ti, gv;
   static time_t t, oldt;
@@ -148,6 +147,7 @@ double MagRead(unsigned short *Rxframe) {
   if (i_mag_x == -1) {
     FastChIndex("mag_x", &i_mag_x);
     FastChIndex("mag_y", &i_mag_y);
+    FastChIndex("mag_bias", &i_mag_bias);
 
     /* Initialise magnetic model reader: I'm not sure what the '12' is, but */
     /* I think it has something to do with the accuracy of the modelling -- */
@@ -156,13 +156,9 @@ double MagRead(unsigned short *Rxframe) {
     oldt = -1;
   }
 
-  x_comp = (M_PI / 180.0) *
-    ( ( (double)(Rxframe[i_mag_x]) )
-      * (-360.0 / 65536.0) ) - MAG_X_BIAS;
-
-  y_comp = (M_PI / 180.0) *
-    ( ( (double)(Rxframe[i_mag_y]) )
-      * (-360.0 / 65536.0) ) - MAG_Y_BIAS;
+  bias = (double)(Rxframe[i_mag_bias]);
+  x_comp = (double)(Rxframe[i_mag_x]) - bias;
+  y_comp = (double)(Rxframe[i_mag_y]) - bias;
 
   /* Every 300 s = 5 min, get new data from the magnetic model. */
   /* */
