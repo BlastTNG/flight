@@ -553,6 +553,12 @@ int main(int argc, char *argv[]) {
   ReductionInit();
 
   InitCommandData();
+
+  bbc_fp = open("/dev/bbc", O_RDWR);
+  if (bbc_fp < 0) {
+    perror("Error opening BBC");
+    exit(0);
+  }
   pthread_mutex_init(&mutex, NULL);
 
 #ifndef NOVSC
@@ -596,12 +602,6 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "I am not Sam.\n");
 
   MakeTxFrame();
-
-  bbc_fp = open("/dev/bbc", O_RDWR);
-  if (bbc_fp < 0) {
-    perror("Error opening BBC");
-    exit(0);
-  }
 
   InitializeDirfile(argv[1][0]);
 
