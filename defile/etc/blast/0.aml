@@ -53,10 +53,10 @@
 --a27@a0   t_rec           @        @         @           @           @                  
 --a28@a0   t_out_heatx     @        @         @           @           @                  
 --a29@a0   t_scoop_tip     @        @         @           @           @                  
---a30@a0   t_fl_sshield    @        @         @           @           @                  
---a31@a0   t_fr_sshield    @        @         @           @           @                  
---a32@a0   t_bl_sshield    @        @         @           @           @                  
---a33@a0   t_br_sshield    @        @         @           @           @                  
+--a30@a0   t_pv    @        @         @           @           @                  
+--a31@a0   t_pv    @        @         @           @           @                  
+--a32@a0   t_pv    @        @         @           @           @                  
+--a33@a0   t_pv    @        @         @           @           @                  
 --a34@a0   t_el_bearing    @        @         @           @           @                  
 --a35@a0   t_lock_motor    @        @         @           @           @                  
 --a36@a0   t_sun_sensor    @        @         @           @           @                  
