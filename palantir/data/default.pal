@@ -194,7 +194,7 @@
   <NUMBER caption="Az 2" textstyle="evenrow">
     <DATUM format="%.2f" src="P_AZ2" extrema="angle"/></NUMBER>
   <NUMBER caption="Az Vel" textstyle="evenrow">
-    <DATUM format="%.2f" src="P_AZ_VEL" extrema="dps"/></NUMBER>
+    <DATUM format="%.4f" src="P_AZ_VEL" extrema="dps"/></NUMBER>
   <MULTI caption="Az Mode" textstyle="oddrow">
     <DATUM src="P_AZ_MODE">
       <WORD value="0" caption="Not Set" textstyle="E_BIT"/>
@@ -209,7 +209,7 @@
   <NUMBER caption="El 2" textstyle="evenrow">
     <DATUM format="%.2f" src="P_EL2" extrema="angle"/></NUMBER>
   <NUMBER caption="El Vel" textstyle="evenrow">
-    <DATUM format="%.2f" src="P_EL_VEL" extrema="dps"/></NUMBER>
+    <DATUM format="%.4f" src="P_EL_VEL" extrema="dps"/></NUMBER>
   <MULTI caption="El Mode" textstyle="oddrow">
     <DATUM src="P_EL_MODE">
       <WORD value="0" caption="Not Set" textstyle="E_BIT"/>
@@ -376,6 +376,9 @@
   </NUMBER>
   <DATETIME caption="CPU Time" textstyle="evenrow">
     <DATUM format="%e %b %Y, %H:%M:%S" src="CPU_TIME"/>
+  </DATETIME>
+  <DATETIME caption="dGPS Time" textstyle="evenrow">
+    <DATUM format="%e %b %Y, %H:%M:%S" src="DGPS_TIME"/>
   </DATETIME>
   <DATETIME caption="SIP Time" textstyle="evenrow">
     <DATUM format="%e %b %Y, %H:%M:%S" src="SIP_TIME"/>
