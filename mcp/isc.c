@@ -218,6 +218,7 @@ void IntegratingStarCamera(void* parameter)
         CommandData.ISCState[which].lst = MyPointData.lst * SEC2RAD;
         CommandData.ISCState[which].MCPFrameNum = frame_num;
 
+        /* az kludge XXX */
         CommandData.ISCState[which].az = 180 * DEG2RAD;
 
         /* request for one automaticly saved image */

@@ -645,8 +645,8 @@ int main(int argc, char *argv[]) {
 
 #ifndef BOLOTEST
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
-//  pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
-//  pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
+  pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
+  pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
 
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
@@ -727,7 +727,6 @@ int main(int argc, char *argv[]) {
       mputs(MCP_ERROR, "Unrecognised word received from BBC");
 
     if (IsNewFrame(in_data)) {
-
       if (StartupVeto > 1)
         --StartupVeto;
       else {

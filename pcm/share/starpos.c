@@ -579,10 +579,10 @@ double getlst(time_t t, double lon) {
   //		   21, 06, 103, 0,0,0,0}; // day, month (0-11), year-1900
 
   //t -= (mktime(&gmt) - timezone); 
+  
+//  printf("%li %li %li %f\n", t, 1093312156, t - 1093312156, lon);
 
-  //printf("%ld %ld %ld %g\n", t, S.t0, t - S.t0);
-
-  t -= S.t0; // S.t0 is from first line in schedule file: see sched.c
+  t -= 1093225963;//S.t0; // S.t0 is from first line in schedule file: see sched.c
 
   t *= 1.002737909; // gst in seconds
 
