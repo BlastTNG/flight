@@ -662,12 +662,12 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
   if (isBiasAC) { /*  Bias is currently AC */
     if (CommandData.Bias.biasAC == 0) { /* it should be DC */
       biasout1 |= 0x01;
-      fprintf(stderr, "to DC\n");
+/*      fprintf(stderr, "to DC\n"); */
     }
   } else { /* Bias is currently DC */
     if (CommandData.Bias.biasAC == 1) { /* it should be AC */
       biasout1 |= 0x02;
-      fprintf(stderr, "to AC\n");
+/*      fprintf(stderr, "to AC\n"); */
     }
   }
 
@@ -675,12 +675,12 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
   if (isBiasRamp) { /* Bias is currently external Ramp */
     if (CommandData.Bias.biasRamp == 0) { /* it should be internal/fixed */
       biasout1 |= 0x40;
-      fprintf(stderr, "to fixed\n");
+/*      fprintf(stderr, "to fixed\n"); */
     }
   } else { /* Bias is currently internal (fixed) */
     if (CommandData.Bias.biasRamp == 1) { /* it should be external/Ramp */
       biasout1 |= 0x80;
-      fprintf(stderr, "to ramp\n");
+/*      fprintf(stderr, "to ramp\n"); */
     }
   }
 
@@ -688,12 +688,12 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
   if (isBiasClockInternal) { /* Bias is currently internal */
     if (CommandData.Bias.clockInternal == 0) { /* it should be external */
       biasout1 |= 0x10;
-      fprintf(stderr, "to external\n");
+/*      fprintf(stderr, "to external\n"); */
     }
   } else { /* Bias clock is currenly external */
     if (CommandData.Bias.clockInternal == 1) { /* it should be internal */
       biasout1 |= 0x20;
-      fprintf(stderr, "to internal\n");
+/*      fprintf(stderr, "to internal\n"); */
     }
   }
 
@@ -1026,6 +1026,7 @@ void SyncADC (int TxIndex, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
     for (k = 0; k < 17; ++k) {
       /* read board status */
       if (slow_data[statusCh[k]][statusInd[k]] == 0x0001) {
+        fprintf(stderr, "ADC Sync board %i\n", k);
         /* board needs to be synced */
         l = (k == 0) ? 21 : k;
         slowTxFields[syncCh][syncInd] =

@@ -360,13 +360,13 @@ int fill_Rx_frame(unsigned int in_data,
   do {
     if ((i < 4 + N_SLOW) && (i >= 4)) {
       
-      if ((GET_NODE(in_data)==1) && (GET_CH(in_data)==56)) {
+/*      if ((GET_NODE(in_data)==1) && (GET_CH(in_data)==56)) {
         printf("%d %08x %08x r: %d w: %d node: %2d ch: %2d\n", i,
            Txframe[i], in_data,
            GET_READ(in_data), GET_STORE(in_data),
            GET_NODE(in_data),
            GET_CH(in_data));
-      }
+      } */
       
       for (j = 0; j < FAST_PER_SLOW; j++) {
         if ((in_data & 0x3fff0000) == (slowTxFields[i - 4][j] & 0x3fff0000)) {
