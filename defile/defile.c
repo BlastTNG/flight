@@ -37,7 +37,7 @@
 
 #define VERSION_MAJOR    "1"
 #define VERSION_MINOR    "0"
-#define VERSION_REVISION "2"
+#define VERSION_REVISION "3"
 #define VERSION VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION 
 
 #define DEFAULT_CURFILE "/data/etc/defile.cur"
@@ -394,7 +394,7 @@ char* GetDirFile(const char* source, char* parent)
 
 void PrintVersion(void)
 {
-  printf("Defile " VERSION "  (C) 2004 D. V. Wiebe\n"
+  printf("defile " VERSION "  (C) 2004 D. V. Wiebe\n"
       "Compiled on " __DATE__ " at " __TIME__ ".\n\n"
       "This program comes with NO WARRANTY, not even for MERCHANTABILITY or "
       "FITNESS\n"
@@ -723,7 +723,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
 int main (int argc, char** argv)
 {
   struct timeval now;
-  long int delta;
+  long long int delta;
 
   pthread_t read_thread;
   pthread_t write_thread;
@@ -731,7 +731,7 @@ int main (int argc, char** argv)
   /* fill rc struct from command line */
   ParseCommandLine(argc, argv, &rc);
 
-  printf("Defile " VERSION " (C) 2004 D. V. Wiebe\n"
+  printf("defile " VERSION " (C) 2004 D. V. Wiebe\n"
       "Compiled on " __DATE__ " at " __TIME__ ".\n\n");
 
   /* Get the name of the frame file. This function handles following the
@@ -779,7 +779,7 @@ int main (int argc, char** argv)
       gettimeofday(&now, &rc.tz);
       delta = (now.tv_sec - rc.start.tv_sec) * 1000000 - rc.start.tv_usec
         + now.tv_usec;
-      printf("Read [%i of %i] Wrote [%i] Frame Rate %.3f kHz (%.1f sec)       \r",
+      printf("Read [%i of %i] Wrote [%i] Frame Rate %.3f kHz (%.1f sec)     \r",
           ri.read, ri.old_total + ri.chunk_total, ri.wrote, 1000. * ri.wrote /
           delta, delta / 1000000.);
       fflush(stdout);
