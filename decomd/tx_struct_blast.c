@@ -429,12 +429,12 @@ struct ChannelStruct WideFastChannels[] = {
   {"raw_gy2",     'r',  ACS1, 22,  ADU2_TO_DPS, -GYRO2_OFFSET*ADU2_TO_DPS, 'U'},
   {"raw_gy3",     'r',  ACS1, 24,  ADU3_TO_DPS, -GYRO3_OFFSET*ADU3_TO_DPS, 'U'},
   {"raw_gy1",     'r',  ACS1, 26,  ADU1_TO_DPS, -GYRO1_OFFSET*ADU1_TO_DPS, 'U'},
-  {"raw_gy6",     'r',  ACS27H,  58,  60.0E-6, 0.0, 'S'},
-  {"raw_gy5",     'r',  ACS27H,  54,  60.0E-6, 0.0, 'S'},
-  {"raw_gy4",     'r',  ACS27H,  50,  60.0E-6, 0.0, 'S'},
-  {"int_gy6",     'r',  ACS27H,  60,  60.0E-9, 0.0, 'S'},
-  {"int_gy5",     'r',  ACS27H,  56,  60.0E-9, 0.0, 'S'},
-  {"int_gy4",     'r',  ACS27H,  52,  60.0E-9, 0.0, 'S'},
+  {"raw_gy6",     'r',  ACS27H,  36,  60.0E-6, 0.0, 'S'},
+  {"raw_gy5",     'r',  ACS27H,  6,   60.0E-6, 0.0, 'S'},
+  {"raw_gy4",     'r',  ACS27H,  2,   60.0E-6, 0.0, 'S'},
+  {"int_gy6",     'r',  ACS27H,  40,  60.0E-9, 0.0, 'S'},
+  {"int_gy5",     'r',  ACS27H,  34,  60.0E-9, 0.0, 'S'},
+  {"int_gy4",     'r',  ACS27H,  4,   60.0E-9, 0.0, 'S'},
 /*   {"raw_gy6",     'r',  ACS1,  4,  ADU3_TO_DPS, -GYRO3_OFFSET*ADU3_TO_DPS, 'U'}, */
 /*   {"raw_gy5",     'r',  ACS1,  2,  ADU2_TO_DPS, -GYRO2_OFFSET*ADU2_TO_DPS, 'U'}, */
 /*   {"raw_gy4",     'r',  ACS1,  6,  ADU1_TO_DPS, -GYRO1_OFFSET*ADU1_TO_DPS, 'U'}, */
