@@ -852,8 +852,7 @@ void PushFrame(unsigned short* in_frame)
         for (k = 0; k < FAST_PER_SLOW; ++k) {
           /* defile_field */
           i_in = defile_field.i_in;
-          ((unsigned short*)defile_field.b)[i_in] =
-            defile_flag_buf[defile_field.i0];
+          ((unsigned short*)defile_field.b)[i_in] = defile_flag_buf[k];
 
           defile_field.i_in = (i_in + 1) % MAXBUF;
 
