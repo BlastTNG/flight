@@ -6,17 +6,18 @@
 
 # ---
 
-# Set CompressedOutput to 1 if you want defile to write gzipped dirfiles by
+# Set CompressedOutput if you want defile to write gzipped dirfiles by
 # default.  Default: don't compress
 
-# CompressedOutput 1
+# CompressedOutput
 
 # ---
 
-# Set Daemonise to 1 if you want defile to daemonise on start up by default.
-# Default: don't daemonise
+# Set Daemonise if you want defile to daemonise on start up by default.
+# Setting this will also force Persistent and Quiet . Default: don't
+# daemonise
 
-# Daemonise 1
+# Daemonise
 
 # ---
 
@@ -33,6 +34,13 @@ InputCurFileName /mnt/decom/etc/decom.cur
 
 # ---
 
+# Set OutpuCurFileName to the default output dirfile name.  This can be either
+# an absolute path, or a path relative to OutputDirectory. Default: none
+
+# OutputDirFile defile.d
+
+# ---
+
 # Set OutpuCurFileName to the default output curfile name.
 # Default: /data/etc/defile.cur
 
@@ -40,10 +48,10 @@ OutputCurFileName /data/etc/defile.cur
 
 # ---
 
-# Set Persistent to 1 if you don't want defile to exit when it reaches the end
+# Set Persistent if you don't want defile to exit when it reaches the end
 # of the input, but instead wait for more data.  Default: exit on EOF
 
-# Persistent 1
+# Persistent
 
 # ---
 
@@ -55,17 +63,24 @@ OutputCurFileName /data/etc/defile.cur
 
 # ---
 
-# Set QuendiHost to the hostname or IP address of the server running the Quendi
+# Set QuendiHost to the domain name or IP address of the host running the Quendi
 # (blastd) server.  Default: none
 
 QuendiHost arwen.blast
 
 # ---
 
-# Set Quiet to 1 to have defile supress normal console output.  Default: don't
+# Set QuendiPort to the port on which the Quendi (blastd) server is listening.
+# Default: 44144
+
+# QuendiPort 44144
+
+# ---
+
+# Set Quiet to have defile supress normal console output.  Default: don't
 # be quiet.
 
-# Quiet 1
+# Quiet
 
 # ---
 
@@ -76,18 +91,18 @@ QuendiHost arwen.blast
 
 # ---
 
-# Set RemountedSource to 1 to have defile assume that the datafile the input
+# Set RemountedSource to have defile assume that the datafile the input
 # curfile points to has been mounted in another location.  Default: don't
 # remount.
 
-RemountedSource 1
+RemountedSource
 
 # ---
 
-# Set ResumeMode to 1 to have defile resume a defiling if it finds the
+# Set ResumeMode to have defile resume a defiling if it finds the
 # destination dirfile already exists.  Default: don't resume.
 
-# ResumeMode 1
+# ResumeMode
 
 # ---
 
@@ -106,7 +121,7 @@ SuffixLength 3
 
 # ---
 
-# Set WriteCurfile to 1 to get data to write a curfile pointing to the defiled
+# Set WriteCurfile to get data to write a curfile pointing to the defiled
 # data.  Default: don't write a curfile.
 
-WriteCurfile 1
+WriteCurfile

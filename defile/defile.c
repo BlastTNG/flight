@@ -20,6 +20,7 @@
  *
  */
 
+/* we have to load the config before we load framefile.h */
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -44,27 +45,28 @@
 #include "channels.h"
 
 #ifndef VERSION
-#  define VERSION_MAJOR    "2"
-#  define VERSION_MINOR    "6"
-#  define VERSION VERSION_MAJOR "." VERSION_MINOR ".x"
-#endif
-
-#ifndef DEFAULT_CURFILE
-#  define DEFAULT_CURFILE "/data/etc/defile.cur"
-#endif
-
-#ifndef DEFAULT_DIR
-#  define DEFAULT_DIR "/data/rawdir"
-#endif
-
-#ifndef REMOUNT_PATH
-#  define REMOUNT_PATH "../rawdir"
+#  define VERSION_MAJOR    "3"
+#  define VERSION_MINOR    "0"
+#  define VERSION VERSION_MAJOR "." VERSION_MINOR ".?"
 #endif
 
 #define SUFF_MAX sizeof(chunkindex_t)
-#define SUFF_DFLT 3
+
+/* defaults */
+#define CONFIG_FILE "./defile.conf"
+#define CUR_FILE "/data/etc/defile.cur"
+#define OUTPUT_DIR "/data/rawdir"
+#define QUENDI_PORT 44144
+#define PID_FILE LOCALSTATEDIR "/run/defile.pid"
+#define REMOUNT_PATH "../rawdir"
 
 /* options */
+enum {CFG_CompressedOutput, CFG_Daemonise, CFG_InputSource,
+  CFG_OutputCurFileName, CFG_OutputDirectory, CFG_OutputDirFile, CFG_Persistent,
+  CFG_PidFile, CFG_QuendiHost, CFG_QuendiPort, CFG_Quiet, CFG_RemountPath,
+  CFG_RemountedSource, CFG_ResumeMode, CFG_SpecFile, CFG_SuffixLength,
+  CFG_WriteCurFile};
+
 struct {
   union {
     char* as_string;
@@ -73,47 +75,29 @@ struct {
   char type;
   const char name[48];
 } options[] = {
-  {{NULL}, 'i', "CompressedOutput"},
-  {{NULL}, 'i', "Daemonise"},
-  {{NULL}, 's', "InputCurFileName"},
+  {{NULL}, 'b', "CompressedOutput"},
+  {{NULL}, 'b', "Daemonise"},
+  {{NULL}, 's', "InputSource"},
   {{NULL}, 's', "OutputCurFileName"},
   {{NULL}, 's', "OutputDirectory"},
-  {{NULL}, 'i', "Persistent"},
+  {{NULL}, 's', "OutputDirFile"},
+  {{NULL}, 'b', "Persistent"},
   {{NULL}, 's', "PidFile"},
   {{NULL}, 's', "QuendiHost"},
-  {{NULL}, 'i', "Quiet"},
+  {{NULL}, 'i', "QuendiPort"},
+  {{NULL}, 'b', "Quiet"},
   {{NULL}, 's', "RemountPath"},
-  {{NULL}, 'i', "RemountedSource"},
-  {{NULL}, 'i', "ResumeMode"},
+  {{NULL}, 'b', "RemountedSource"},
+  {{NULL}, 'b', "ResumeMode"},
   {{NULL}, 's', "SpecFile"},
   {{NULL}, 'i', "SuffixLength"},
-  {{NULL}, 'i', "WriteCurfile"},
+  {{NULL}, 'b', "WriteCurFile"},
   {{NULL}, '\0', ""}
 };
 
 /* state structs */
 struct ri_struct ri;
-struct rc_struct rc = {
-  0, /* daemonise */
-  0, /* force_stdio */
-  0, /* framefile */
-  0, /* gzip_output */
-  0, /* persist */
-  0, /* silent */
-  0, /* remount */
-  0, /* write_curfile */
-  0, /* write_mode */
-  SUFF_DFLT, /* sufflen */
-  -1, /* resume_at */
-  0, /* source_is_curfile */
-  NULL, /* curfile_val */
-  NULL, /* remount_dir */
-  NULL, /* output_curfile */
-  NULL, /* output_dirfile */
-  NULL, /* source */
-  NULL, /* dest_dir */
-  NULL  /* spec_file */
-};
+struct rc_struct rc;
 
 sigset_t signals;
 
@@ -144,13 +128,16 @@ void ReadConfig(FILE* stream)
     if ((option = strchr(buffer, '\n')) != NULL)
       *option = '\0';
 
+    /* skip empty lines */
+    if (!*buffer)
+      continue;
+
     /* strip leading whitespace */
     option = buffer + strspn(buffer, " \t");
     if ((value = strchr(option, ' ')) != NULL) {
       *(value++) = '\0';
       value += strspn(value, " \t");
     }
-    printf("o: %s\nv: %s\n", option, value);
 
     found = 0;
     for (i = 0; options[i].type != '\0'; ++i)
@@ -160,11 +147,15 @@ void ReadConfig(FILE* stream)
           case 's':
             options[i].value.as_string = bstrdup(fatal, value);
             break;
+          case 'b':
+            options[i].value.as_int = 1;
+            break;
           case 'i':
             options[i].value.as_int = atoi(value);
             break;
           default:
-            printf("Unknown option type\n");
+            printf("Unknown option type: %c for %s\n", options[i].type,
+                options[i].name);
             exit(1);
         }
         break;
@@ -182,19 +173,74 @@ void LoadDefaultConfig(void)
   for (i = 0; options[i].type; ++i)
     if (options[i].value.as_string == NULL)
       switch (i) {
-        case CFG_PID_FILE:
+        case CFG_CompressedOutput:
+        case CFG_Daemonise:
+        case CFG_Persistent:
+        case CFG_Quiet:
+        case CFG_RemountedSource:
+        case CFG_ResumeMode:
+        case CFG_WriteCurFile:
+          options[i].value.as_int = 0;
+        case CFG_InputSource: /* these are null by default */
+        case CFG_OutputDirFile:
+        case CFG_QuendiHost:
+        case CFG_SpecFile:
+          break;
+        case CFG_OutputCurFileName:
+          options[i].value.as_string = bstrdup(fatal, CUR_FILE);
+          break;
+        case CFG_OutputDirectory:
+          options[i].value.as_string = bstrdup(fatal, OUTPUT_DIR);
+          break;
+        case CFG_PidFile:
           options[i].value.as_string = bstrdup(fatal, PID_FILE);
           break;
-        case CFG_CUR_FILE:
-          options[i].value.as_string
-            = bstrdup(fatal, "/mnt/decom/etc/decom.cur");
+        case CFG_QuendiPort:
+          options[i].value.as_int = QUENDI_PORT;
           break;
-        case CFG_SUFFIX_LENGTH:
-          options[i].value.as_int = 3;
+        case CFG_RemountPath:
+          options[i].value.as_string = bstrdup(fatal, REMOUNT_PATH);
+          break;
+        case CFG_SuffixLength:
+          options[i].value.as_int = SUFF_MAX;
+          break;
         default:
           bprintf(warning, "No default value for option `%s'",
               options[i].name);
       }
+}
+
+struct rc_struct InitRcStruct()
+{ 
+  struct rc_struct rc = {
+    .curfile_val       = NULL,
+    .daemonise         = options[CFG_Daemonise].value.as_int,
+    .dest_dir          = options[CFG_OutputDirectory].value.as_string,
+    .force_stdio       = options[CFG_Daemonise].value.as_int,
+    .framefile         = 0,
+#ifdef HAVE_LIBZ
+    .gzip_output       = options[CFG_CompressedOutput].value.as_int,
+#else
+    .gzip_output       = 0,
+#endif
+    .output_curfile    = options[CFG_OutputCurFileName].value.as_string,
+    .output_dirfile    = options[CFG_OutputDirFile].value.as_string,
+    .persist           = (options[CFG_Daemonise].value.as_int
+        || options[CFG_Persistent].value.as_int),
+    .remount           = options[CFG_RemountedSource].value.as_int,
+    .remount_dir       = options[CFG_RemountPath].value.as_string,
+    .resume_at         = 0,
+    .silent            = (options[CFG_Daemonise].value.as_int
+        || options[CFG_Quiet].value.as_int),
+    .source            = NULL,
+    .source_is_curfile = 0,
+    .spec_file         = options[CFG_SpecFile].value.as_string,
+    .sufflen           = options[CFG_SuffixLength].value.as_int,
+    .write_curfile     = options[CFG_WriteCurFile].value.as_int,
+    .write_mode        = options[CFG_ResumeMode].value.as_int * 2,
+  };
+
+  return rc;
 }
 
 char* ResolveOutputDirfile(char* dirfile, const char* parent)
@@ -414,25 +460,36 @@ void PrintUsage(void)
       "\n"
       "\nSOURCE may be either a .cur file or a framefile to start with."
       "\nDefault DIRECTORY to use if no DIRECTORY is given:"
-      "\n\t" DEFAULT_DIR
+      "\n\t" OUTPUT_DIR
       "\n"
       "\nArguments to long options are required for short arguments as well."
       "\n  -C --curfile-name=NAME same as `-curfile' but use NAME as the name "
       "of the"
-      "\n                          file instead of `" DEFAULT_CURFILE "'."
+      "\n                          curfile instead of the default."
       "\n  -F --framefile        assume SOURCE is a framefile."
       "\n  -R --resume           resume an interrupted defiling."
 #ifdef HAVE_LIBZ
       "  Incompatible with"
-      "\n                          `--gzip'"
+      "\n                          `--gzip'."
 #endif
       "\n  -S --spec-file=NAME   use NAME as the specification file."
-      "\n  -c --curfile          write a curfile called `" DEFAULT_CURFILE "'."
+      "\n  -c --curfile          write a curfile called `" CUR_FILE "'"
+      "\n                          pointing to the output directory."
       "\n  -d --daemonise        fork to background and daemonise on startup.  "
       "Implies"
       "\n                          `--persistent' and `--quiet'."
-      "\n  -f --force            overwrite destination."
-      "\n  -o --output-dirfile=NAME use name as the name of the dirfile. Name "
+      "\n  -f --force            overwrite destination dirfile."
+    "\n     --no-clobber       don't resume or overwrite existing dirfiles. "
+    "(default)"
+    "\n     --no-curfile       don't write a curfile. (default)"
+    "\n     --no-compress      don't compress the output. (default)"
+    "\n     --no-daemonise     don't daemonise. (default)"
+    "\n     --no-persist       exit upon reaching the end of the input stream."
+    "\n                          (default)"
+    "\n     --no-remount       assume the input curfile points to the right "
+    "place"
+    "\n                          (default)"
+    "\n  -o --output-dirfile=NAME use name as the name of the dirfile. Name "
     "can either"
     "\n                          be an absolute path, or a path realtive to "
     "DIRECTORY."
@@ -454,10 +511,12 @@ void PrintUsage(void)
     "\n                          path instead of the default `" REMOUNT_PATH
     "'."
     "\n  -s --suffix-size=SIZE framefile suffix is no more than SIZE "
-    "characters large."
-    "\n                          SIZE should be an integer between 0 and %i."
+    "characters "
+    "\n                          long.  SIZE should be an integer between 0 "
+    "and %i."
     "\n                          Default: %i"
 #ifdef HAVE_LIBZ
+    "\n     --verbose          output status information to the tty (default)"
     "\n  -z --gzip             gzip compress the output dirfile.  Incompatible "
     "with"
     "\n                          `--resume'"
@@ -466,12 +525,7 @@ void PrintUsage(void)
     "\n  --version             display version information and exit"
     "\n  --                    last option; all following parameters are "
     "arguments."
-    "\n"
-    "\nSummary of defaults:"
-    "\n  Default curfile name :  " DEFAULT_CURFILE
-    "\n  Default remount path :  " REMOUNT_PATH
-    "\n  Default output path  :  " DEFAULT_DIR
-    "\n", SUFF_MAX, SUFF_DFLT
+    "\n", SUFF_MAX, SUFF_MAX
     );
   exit(0);
 }
@@ -508,17 +562,14 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           PrintUsage();
         else if (!strcmp(argv[i], "--version"))
           PrintVersion();
-        else if (!strcmp(argv[i], "--curfile")) {
-          if (!rc->write_curfile) {
-            rc->write_curfile = 1;
-            rc->output_curfile = bstrdup(fatal, DEFAULT_CURFILE);
-          }
-        } else if (!strncmp(argv[i], "--curfile-name=", 15)) {
+        else if (!strcmp(argv[i], "--curfile"))
+          rc->write_curfile = 1;
+        else if (!strncmp(argv[i], "--curfile-name=", 15)) {
           rc->write_curfile = 1;
           bfree(fatal, rc->output_curfile);
           rc->output_curfile = bstrdup(fatal, &argv[i][15]);
         } else if (!strcmp(argv[i], "--daemonise"))
-          rc->daemonise = rc->persist = rc->silent = rc->force_stdio = 1;
+          rc->daemonise = 1;
         else if (!strcmp(argv[i], "--force"))
           rc->write_mode = 1;
         else if (!strcmp(argv[i], "--framefile"))
@@ -527,6 +578,18 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
         else if (!strcmp(argv[i], "--gzip"))
           rc->gzip_output = 1;
 #endif
+        else if (!strcmp(argv[i], "--no-clobber"))
+          rc->write_mode = 0;
+        else if (!strcmp(argv[i], "--no-compress"))
+          rc->gzip_output = 0;
+        else if (!strcmp(argv[i], "--no-curfile"))
+          rc->write_curfile = 0;
+        else if (!strcmp(argv[i], "--no-daemonise"))
+          rc->daemonise = 0;
+        else if (!strcmp(argv[i], "--no-persist"))
+          rc->persist = 0;
+        else if (!strcmp(argv[i], "--no-remount"))
+          rc->remount = 0;
         else if (!strncmp(argv[i], "--output-dirfile=", 17)) {
           bfree(fatal, rc->remount_dir);
           rc->output_dirfile = bstrdup(fatal, &argv[i][17]);
@@ -534,12 +597,9 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           rc->persist = 1;
         else if (!strcmp(argv[i], "--quiet"))
           rc->silent = 1;
-        else if (!strcmp(argv[i], "--remounted-source")) {
-          if (!rc->remount) {
-            rc->remount = 1;
-            rc->remount_dir = bstrdup(fatal, REMOUNT_PATH);
-          }
-        } else if (!strncmp(argv[i], "--remounted-using=", 18)) {
+        else if (!strcmp(argv[i], "--remounted-source"))
+          rc->remount = 1;
+        else if (!strncmp(argv[i], "--remounted-using=", 18)) {
           rc->remount = 1;
           bfree(fatal, rc->remount_dir);
           rc->remount_dir = bstrdup(fatal, &argv[i][18]);
@@ -548,7 +608,6 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
         else if (!strncmp(argv[i], "--spec-file=", 12)) {
           bfree(fatal, rc->spec_file);
           rc->spec_file = bstrdup(fatal, &argv[i][12]);
-            berror(fatal, "cannot allocate heap");
         } else if (!strncmp(argv[i], "--suffix-size=", 14)) {
           if (argv[i][14] >= '0' && argv[i][14] <= '9') {
             if ((rc->sufflen = atoi(&argv[i][14])) > SUFF_MAX)
@@ -557,18 +616,21 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           } else
             bprintf(fatal, "suffix size `%s' is not a valid value\n"
                 "Try `defile --help' for more information.\n", &argv[i][14]);
-        } else
+        } else if (!strcmp(argv[i], "--verbose"))
+          rc->silent = 0;
+        else
           bprintf(fatal, "unrecognised option `%s'\n"
               "Try `defile --help' for more information.\n", argv[i]);
       } else /* a short option */
         for (j = 1; argv[i][j] != '\0'; ++j)
           switch (argv[i][j]) {
             case 'C':
-              rc->write_curfile = 1;
               if (nshortargs < argc) {
                 shortarg[nshortargs].position = i - 1;
                 shortarg[nshortargs++].option = 'C';
               }
+            case 'c':
+              rc->write_curfile = 1;
               break;
             case 'F':
               rc->framefile = 1;
@@ -582,14 +644,8 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
                 shortarg[nshortargs++].option = 'S';
               }
               break;
-            case 'c':
-              if (!rc->write_curfile) {
-                rc->write_curfile = 1;
-                rc->output_curfile = bstrdup(fatal, DEFAULT_CURFILE);
-              }
-              break;
             case 'd':
-              rc->daemonise = rc->persist = rc->silent = rc->force_stdio = 1;
+              rc->daemonise = 1;
               break;
             case 'f':
               rc->write_mode = 1;
@@ -607,10 +663,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
               rc->silent = 1;
               break;
             case 'r':
-              if (!rc->remount) {
-                rc->remount = 1;
-                rc->remount_dir = bstrdup(fatal, REMOUNT_PATH);
-              }
+              rc->remount = 1;
               break;
             case 's':
               if (nshortargs < argc) {
@@ -633,6 +686,11 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
     }
   } 
 
+  /* fix up daemon mode */
+  if (rc->daemonise)
+    rc->persist = rc->silent = rc->force_stdio = 1;
+
+  /* compressed output sanity check */
   if (rc->gzip_output == 1 && rc->write_mode == 2)
     bprintf(fatal, "cannot resume gzipped dirfiles\n"
         "Try `defile --help' for more information.\n");
@@ -692,26 +750,30 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
     }
   }
 
-  if (nargs <= nshortargs)
-    bprintf(fatal, "too few arguments\n"
-        "Try `defile --help' for more information.\n");
-
   /* first unused argument is SOURCE */
   for (j = 0; j < nargs && argument[j].used; ++j);
 
-  /* SOURCE */
-  rc->source = argument[j].value;
+  if (j <= nargs || nargs == 0) {
+    if (options[CFG_InputSource].value.as_string != NULL)
+      rc->source = options[CFG_InputSource].value.as_string;
+    else
+      bprintf(fatal, "too few arguments\n"
+          "Try `defile --help' for more information.\n");
+  } else {
+    /* SOURCE */
+    rc->source = argument[j].value;
 
-  /* next unused argument is DESTINATION */
-  for (j++; j < nargs && argument[j].used; ++j);
+    /* next unused argument is DESTINATION */
+    for (j++; j < nargs && argument[j].used; ++j);
 
-  /* DIRECTORY (if any) */
-  if (j < nargs) {
-    rc->dest_dir = argument[j].value;
-    if (strlen(rc->dest_dir) > PATH_MAX)
-      bprintf(fatal, "Destination path too long\n");
-  } else
-    rc->dest_dir = bstrdup(fatal, DEFAULT_DIR);
+    /* DIRECTORY (if any) */
+    if (j < nargs || nargs <= 1) {
+      rc->dest_dir = argument[j].value;
+      if (strlen(rc->dest_dir) > PATH_MAX)
+        bprintf(fatal, "Destination path too long\n");
+    } else
+      rc->dest_dir = options[CFG_OutputDirectory].value.as_string;
+  }
 
   /* Fix up output_dirfile, if present */
   if (rc->output_dirfile != NULL)
@@ -726,12 +788,25 @@ int main (int argc, char** argv)
   struct timeval now;
   long long int delta;
   float freq = 0;
+  FILE* stream;
 
   pthread_t read_thread;
   pthread_t write_thread;
 
   /* set up our outputs */
   buos_use_func(dputs);
+
+  /* read config file */
+  if ((stream = fopen(CONFIG_FILE, "rt")) != NULL) {
+    ReadConfig(stream);
+    fclose(stream);
+  }
+
+  /* fill uninitialised options with default values */
+  LoadDefaultConfig();
+
+  /* initialise the rc struct with values from the config file */
+  rc = InitRcStruct();
 
   /* fill rc struct from command line */
   ParseCommandLine(argc, argv, &rc);

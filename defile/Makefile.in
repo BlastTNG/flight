@@ -76,6 +76,7 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -110,15 +111,16 @@ AUTOMAKE_OPTIONS = foreign
 SUBDIRS = etc
 bin_PROGRAMS = defile
 man_MANS = defile.1
+EXTRA_DIST = fixup.sh
 @INSTALL_DEFILE_CONF_TRUE@sysconf_DATA = defile.conf
 defile_SOURCES = defile.c frameread.c reader.c channels.c writer.c blast.c blast.h defile.h channels.h frameread.h derived.h
-INCLUDES = -D__DEFILE__
+INCLUDES = -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\"
 DISTCHECK_CONFIGURE_FLAGS = --with-data-etc="$$dc_install_base/data"
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = defile.1 defile.conf
+CONFIG_CLEAN_FILES = defile.1.in defile.conf
 bin_PROGRAMS = defile$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
@@ -154,7 +156,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 	check-recursive installcheck-recursive
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/configure COPYING \
 	ChangeLog Makefile.am aclocal.m4 config.h.in configure \
-	configure.ac defile.1.in defile.conf.in depcomp install-sh \
+	configure.ac defile.1.in.in defile.conf.in depcomp install-sh \
 	missing mkinstalldirs
 DIST_SUBDIRS = $(SUBDIRS)
 SOURCES = $(defile_SOURCES)
@@ -197,7 +199,7 @@ $(srcdir)/config.h.in:  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 
 distclean-hdr:
 	-rm -f config.h stamp-h1
-defile.1: $(top_builddir)/config.status defile.1.in
+defile.1.in: $(top_builddir)/config.status defile.1.in.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 defile.conf: $(top_builddir)/config.status defile.conf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
@@ -619,7 +621,7 @@ distclean: distclean-recursive
 	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic distclean-hdr \
-	distclean-tags
+	distclean-local distclean-tags
 
 dvi: dvi-recursive
 
@@ -669,22 +671,30 @@ uninstall-man: uninstall-man1
 	clean-binPROGRAMS clean-generic clean-recursive ctags \
 	ctags-recursive dist dist-all dist-gzip distcheck distclean \
 	distclean-compile distclean-generic distclean-hdr \
-	distclean-recursive distclean-tags distcleancheck distdir \
-	distuninstallcheck dvi dvi-am dvi-recursive info info-am \
-	info-recursive install install-am install-binPROGRAMS \
-	install-data install-data-am install-data-recursive \
-	install-exec install-exec-am install-exec-recursive \
-	install-info install-info-am install-info-recursive install-man \
-	install-man1 install-recursive install-strip \
-	install-sysconfDATA installcheck installcheck-am installdirs \
-	installdirs-am installdirs-recursive maintainer-clean \
-	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-recursive \
-	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
-	tags-recursive uninstall uninstall-am uninstall-binPROGRAMS \
-	uninstall-info-am uninstall-info-recursive uninstall-man \
-	uninstall-man1 uninstall-recursive uninstall-sysconfDATA
+	distclean-local distclean-recursive distclean-tags \
+	distcleancheck distdir distuninstallcheck dvi dvi-am \
+	dvi-recursive info info-am info-recursive install install-am \
+	install-binPROGRAMS install-data install-data-am \
+	install-data-recursive install-exec install-exec-am \
+	install-exec-recursive install-info install-info-am \
+	install-info-recursive install-man install-man1 \
+	install-recursive install-strip install-sysconfDATA \
+	installcheck installcheck-am installdirs installdirs-am \
+	installdirs-recursive maintainer-clean maintainer-clean-generic \
+	maintainer-clean-recursive mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-recursive pdf pdf-am \
+	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
+	uninstall uninstall-am uninstall-binPROGRAMS uninstall-info-am \
+	uninstall-info-recursive uninstall-man uninstall-man1 \
+	uninstall-recursive uninstall-sysconfDATA
 
+
+defile.1: Makefile $(top_builddir)/defile.1.in $(top_srcdir)/fixup.sh
+	rm -f defile.1 defile.1.tmp
+	sh $(top_srcdir)/fixup.sh "$(prefix)" "$(top_builddir)" defile.1
+
+distclean-local:
+	rm -f defile.1
 
 distinstall: distcheck
 	$(mkinstalldirs) ${prefix}/src

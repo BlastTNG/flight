@@ -1,155 +1,166 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
-2004-10-05:
-  * configure.ac: Add defile.conf as a target
-  * defile.conf.in: Add
+2004-10-05  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* configure.ac, Makefile.am: Fix paths in defile.1
+	* defile.1.in.in: Rename from defile.1.in
+	* fixup.sh: Add
+
+	* frameread.h: Better determination of chunkindex_t type.
+
+	* defile.c (InitRcStruct, LoadDefaultConfig, ReadConfig): Add
+	(ParseCommandLine): Update for new options and for config
+	(PrintUsage): Update for new options
+	* defile.1.in: Update for config file directives
+	* configure.ac, Makefile.am: Add defile.conf as a target
+	* defile.conf.in: Add
 
 2004-09-30 (2.5.4)  Matt Truch <matt@truch.net>
-  * writer.c (DirFileWriter):  Fix bug in ReconstructChannelList call
+	* writer.c (DirFileWriter):  Fix bug in ReconstructChannelList call
 
-2004-09-27 (2.5.3):
-  * writer.c, reader.c: Fix some unable-to-kill bugs
+2004-09-27 (2.5.3)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* writer.c, reader.c: Fix some unable-to-kill bugs
 
-2004-09-26 (2.5.2):
-  * frameread.c: Fix file descriptor leak.  Migrate to autoconf
+2004-09-26 (2.5.2)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* frameread.c: Fix file descriptor leak.  Migrate to autoconf
 
-2004-09-23 (2.5.1):
-  * writer.c: Fix gzip opening issues
+2004-09-23 (2.5.1)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* writer.c: Fix gzip opening issues
 
-2004-09-23 (2.5.0):
-  * defile: Spec File Version 11: Changed how format file is written.
+2004-09-23 (2.5.0)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile: Spec File Version 11: Changed how format file is written.
 
-2004-09-22:
-  * defile.c: Better dynamic Frame-Rate display handling
+2004-09-22  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile.c: Better dynamic Frame-Rate display handling
 
-2004-09-21 (2.4.4):
-  * defile: Migrate to BLAMM - BLAST memory manager
+2004-09-21 (2.4.4)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile: Migrate to BLAMM - BLAST memory manager
 
-2004-09-20 (2.4.3):
-  * writer.c: fix wide slow reconstruction bug
+2004-09-20 (2.4.3)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* writer.c: fix wide slow reconstruction bug
 
-2004-09-20 (2.4.2):
-  * frameread.c: Move ReconstructChannelLists to frameread.c
-  * defile.c: Fix output suppression (-q) after breaking it with BUOS ; Move
-  ReconstructChannelLists to frameread.c
+2004-09-20 (2.4.2)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* frameread.c: Move ReconstructChannelLists to frameread.c
 
-2004-09-20 (2.4.1):
-  * defile: Migrate to blast.c and blast.h -- blast unified ouput scheme (BUOS)
+	* defile.c: Fix output suppression (-q) after breaking it with BUOS ; Move
+	ReconstructChannelLists to frameread.c
 
-2004-09-17 (2.4.0):
-  * ChangeLog: Create ChangeLog
-  * defile.1: Add BUGS section, which is probably one of the more useful parts
-     of the man page...
-  * defile: Add -q (silent) and -d (daemon) options
-  * writer.c: Fix zlib error handling and clean up some redunant code
-  * defile.c: Set -s default to 3 rather than SUFF_MAX
+2004-09-20 (2.4.1)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile: Migrate to blast.c and blast.h -- blast unified ouput scheme (BUOS)
 
-2004-09-16 Matt Truch <matt@truch.net>:
-  * defile: Fix signal catching
+2004-09-17 (2.4.0)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* ChangeLog: Create ChangeLog
+	* defile.1: Add BUGS section, which is probably one of the more useful parts
+	   of the man page...
+	* defile: Add -q (silent) and -d (daemon) options
+	* writer.c: Fix zlib error handling and clean up some redunant code
+	* defile.c: Set -s default to 3 rather than SUFF_MAX
 
-2004-09-15:
-  * reader.c: fix -p remount bug ; Separated actual framefile reading from
-  defile by making frameread.c
-  * frameread.c: Separated actual framefile reading from defile by making
-  frameread.c
+2004-09-16 Matt Truch <matt@truch.net>  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile: Fix signal catching
 
-2004-09-13 (2.3.1):
-  * defile.c: Formating
+2004-09-15  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* reader.c: fix -p remount bug ; Separated actual framefile reading from
+	defile by making frameread.c
+	* frameread.c: Separated actual framefile reading from defile by making
+	frameread.c
 
-2004-09-13 (2.3.0) Matt Truch <matt@truch.net>:
-  * defile.c, writer.c: Add -z (gzip) option
+2004-09-13 (2.3.1)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile.c: Formating
 
-2004-09-12 (2.2.3):
-  * writer.c: Fix double free segfault
+2004-09-13 (2.3.0) Matt Truch <matt@truch.net>  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile.c, writer.c: Add -z (gzip) option
 
-2004-09-11 (2.2.2):
-  * defile: Reset counter when framefile changes
+2004-09-12 (2.2.3)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* writer.c: Fix double free segfault
 
-2004-09-06 (2.2.1):
-  * reader.c: Timing fixes
+2004-09-11 (2.2.2)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile: Reset counter when framefile changes
 
-2004-09-05:
-  * writer.c: Numerous fixes to frame generation
+2004-09-06 (2.2.1)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* reader.c: Timing fixes
 
-2004-09-03 (2.2.0):
-  * reader.c: Changes to support decom channels
-  * channels.c: spec file versioning ; Changes to support decom channels
+2004-09-05  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* writer.c: Numerous fixes to frame generation
 
-2004-09-02:
-  * writer.c: Fix bolomter reconstruction code
+2004-09-03 (2.2.0)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* reader.c: Changes to support decom channels
+	* channels.c: spec file versioning ; Changes to support decom channels
 
-2004-08-25 (2.1.4, 2.1.3):
-  * writer.c: Bolometer writing bugs
+2004-09-02  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* writer.c: Fix bolomter reconstruction code
 
-2004-08-25 (2.1.2):
-  * writer.c: Fix -R option (after breaking it with the new tx_struct format)
+2004-08-25 (2.1.4, 2.1.3)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* writer.c: Bolometer writing bugs
 
-2004-08-24 (2.1.1):
-  * defile.c: Remove some verbosity
-  * defile.1: Correct date
+2004-08-25 (2.1.2)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* writer.c: Fix -R option (after breaking it with the new tx_struct format)
 
-2004-08-18 (2.1.0):
-  * writer.c: Re-read spec file when cycling writer
+2004-08-24 (2.1.1)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile.c: Remove some verbosity
+	* defile.1: Correct date
 
-2004-08-14 (2.0.2):
-  * writer.c: Rename FAST_OFFSET to SLOW_OFFSET 'cause that's what it is now
+2004-08-18 (2.1.0)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* writer.c: Re-read spec file when cycling writer
 
-2004-08-13 (2.0.1):
-  * writer.c: Replace hardcoded number with FAST_OFFSET
+2004-08-14 (2.0.2)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* writer.c: Rename FAST_OFFSET to SLOW_OFFSET 'cause that's what it is now
 
-2004-07-10:
-  * defile.1: Documentation tweak
-  * writer.c: Frame parsing bug
+2004-08-13 (2.0.1)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* writer.c: Replace hardcoded number with FAST_OFFSET
 
-2004-07-10:
-  * channels.c: Add spec file support
-  * defile.c: Add -S (alternate specfile) option
+2004-07-10  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile.1: Documentation tweak
+	* writer.c: Frame parsing bug
 
-2004-07-09 (2.0.0):
-  * defile: Update to work with new tx_struct format
+2004-07-10  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* channels.c: Add spec file support
+	* defile.c: Add -S (alternate specfile) option
 
-2004-06-23 (1.0.8):
-  * writer.c: Add newline to curfile
+2004-07-09 (2.0.0)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile: Update to work with new tx_struct format
 
-2004-06-01 (1.0.7):
-  * writer.c: Fix file descriptor leak
-  * defile.c: Fix filename parsing
+2004-06-23 (1.0.8)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* writer.c: Add newline to curfile
 
-2004-05-28 (1.0.6):
-  * reader.c: Fix big memory leak
+2004-06-01 (1.0.7)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* writer.c: Fix file descriptor leak
+	* defile.c: Fix filename parsing
 
-2004-05-20 (1.0.5):
-  * defile.c: memory issues
+2004-05-28 (1.0.6)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* reader.c: Fix big memory leak
 
-2004-05-20 (1.0.4):
-  * defile.c: Fix overflow bug again
-  * reader.c: Reduce wait time between persistent updates
+2004-05-20 (1.0.5)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile.c: memory issues
 
-2004-05-19 (1.0.3):
-  * defile.c: Fix overflow in time
+2004-05-20 (1.0.4)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile.c: Fix overflow bug again
+	* reader.c: Reduce wait time between persistent updates
 
-2004-05-18 (1.0.2):
-  * reader.c: Fix next chunk bug
+2004-05-19 (1.0.3)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile.c: Fix overflow in time
 
-2004-03-30 (1.0.1):
-  * defile: Increment revision
+2004-05-18 (1.0.2)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* reader.c: Fix next chunk bug
 
-2004-02-10:
-  * reader.c: resume fixed
+2004-03-30 (1.0.1)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile: Increment revision
 
-2004-02-09:
-  * defile: Add -R (resume) option
+2004-02-10  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* reader.c: resume fixed
 
-2004-01-22:
-  * defile.c: Change -f to -F and add new -f (force) ; Fix command line
-  parsing ; Make --help briefer ; Pathname length check
-  * reader.c: Stop chunk counter overflow
-  * writer.c: Fix exit codes
+2004-02-09  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile: Add -R (resume) option
 
-2004-01-21:
-  * defile.c: Add -o (output dirfile) option ; Spelling
-  * defile.1: Spelling
+2004-01-22  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile.c: Change -f to -F and add new -f (force) ; Fix command line
+	parsing ; Make --help briefer ; Pathname length check
+	* reader.c: Stop chunk counter overflow
+	* writer.c: Fix exit codes
 
-2004-01-19 (1.0.0):
-  * defile: Release
+2004-01-21  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile.c: Add -o (output dirfile) option ; Spelling
+	* defile.1: Spelling
+
+2004-01-19 (1.0.0)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile: Release

@@ -30,7 +30,18 @@
 #define GPB_LEN (PATH_MAX * 4)
 #define FILENAME_LEN (PATH_MAX + NAME_MAX + 1)
 
-typedef unsigned int chunkindex_t;
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+typedef uint16_t chunkindex_t;
+#elif SIZEOF_UNSIGNED == 4
+typedef unsigned chunkindex_t;
+#elif SIZEOF_UNSIGNED_SHORT == 4
+typedef unsigned short chunkindex_t;
+#elif SIZEOF_UNSIGNED_LONG == 4
+typedef unsigned long chunkindex_t;
+#else
+typedef unsigned chunkindex_t;
+#endif
 
 unsigned long long GetFrameFileSize(
     const char*,
