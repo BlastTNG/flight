@@ -480,8 +480,9 @@ int quendi_read_data(int new_chunk, int* fd, const char* chunk,
       n = 0;
     }
   }
-  block_size = n / frame_size;
-  *remainder = n % frame_size;
+
+  block_size = (*remainder + n) / frame_size;
+  *remainder = (*remainder + n) % frame_size;
   *frames_read += block_size;
 
   return block_size;

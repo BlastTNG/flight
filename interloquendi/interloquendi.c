@@ -471,8 +471,12 @@ int main(void)
   struct sockaddr_in addr;
 
   /* set up our outputs */
+#ifdef DEBUG
+  buos_use_stdio();
+#else
   openlog("interloquendi", LOG_PID, LOG_DAEMON);
   buos_use_syslog();
+#endif
 
   /* read config file */
   if ((stream = fopen(CONFIG_FILE, "rt")) != NULL) {
@@ -510,7 +514,6 @@ int main(void)
   freopen("/dev/null", "w", stderr);
   setsid();
 #endif
-
   /* initialise listener socket */
   sock = MakeSock();
 
