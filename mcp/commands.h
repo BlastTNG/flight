@@ -2,7 +2,7 @@
 
 #define N_SCOMMANDS 99         /* total number of single word commands */
 #define N_NM_SCOMMANDS 64      /* total number of named single word cmds */
-#define N_MCOMMANDS 40         /* total number of multiword commands */
+#define N_MCOMMANDS 43         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -119,7 +119,7 @@ struct scom scommands[N_NM_SCOMMANDS] = {
   {"unlock", "unlock the lock", GR_LOCK},
 
   {"isc_run", "start automatic image capture (normal mode)", GR_ISC},
-  {"expose", "take a single exposure", GR_ISC},
+  {"pause", "pause image capture", GR_ISC},
   {"save_images", "turn on saving of images", GR_ISC},
   {"discard_images", "turn off saving of images", GR_ISC},
   {"full_screen", "show full screen", GR_ISC},
@@ -251,10 +251,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"target (A)", -2, 2, 'f', 5, "BAL_TARGET"}
     }
   },
-
-  {"pwm", "balance pump pwm level", GR_BAL, 1,
+  
+  {"bal_gain", "balance system gain and extrema", GR_BAL, 3,
     {
-      {"level", 0, 2047, 'i', 0, "balpump_lev"}
+      {"gain", 0.01, 1.00, 'f', 2, "BAL_GAIN"},
+      {"maximum speed (%)", 0, 100, 'f', 2, "BAL_MAX"},
+      {"minimum speed (%)", 0, 100, 'f', 2, "BAL_MIN"}
+    }
+  },
+
+  {"bal_level", "balance pump pwm level", GR_BAL, 1,
+    {
+      {"level (%)", 0, 100, 'f', 2, "BALPUMP_LEV"}
     }
   },
 
@@ -399,15 +407,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {"blob_centre", "Centre display on blob", GR_ISC, 1,
     {
-      {"blob #", 0, MAXBLOBS, 'i', 0, "ADD"}
+      {"blob #", 0, MAX_ISC_BLOBS, 'i', 0, "ADD"}
     }
   },
-  
-  {"cam_set", "Camera Settings", GR_ISC, 3,
+
+  {"integration", "Set Integration Time", GR_ISC, 1,
     {
-      {"integration time (ms)", 20, 5000, 'i', 0, "ISC_EXPOSE"},
-      {"pre-amp gain", 0, 32767, 'i', 0, "ISC_GAIN"},
-      {"pre-amp offset", 0, 32767, 'i', 0, "ISC_OFFSET"}
+      {"integration time (ms)", 0, 5000, 'f', 0, "ADD"}
     }
   },
 
@@ -418,6 +424,23 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"centroiding box (px/side)", 0, CCD_Y_PIXELS, 'i', 0, "ISC_CENBOX"},
       {"photometry box (px/side)", 0, CCD_Y_PIXELS, 'i', 0, "ISC_APBOX"},
       {"exclusion distance (px)", 0, CCD_Y_PIXELS, 'i', 0, "ISC_MDIST"}
+    }
+  },
+
+  {"catalogue", "Set Catalogue Retreival Parameters", GR_ISC, 3,
+    {
+      {"Magnitude Limit", 0, 12, 'f', 1, "ISC_MAG"},
+      {"Normal Search Radius (deg)", 0, 50, 'f', 2, "ISC_NRAD"},
+      {"Lost Search Radius (deg)", 0, 50, 'f', 2, "ISC_LRAD"}
+    }
+  },
+
+  {"tolerances", "Set Pointing Solution Tolerances", GR_ISC, 4,
+    {
+      {"Assoc. Tolerance (arcsec)", 0, 1000, 'f', 0, "ISC_TOL"},
+      {"Match Tolerance (%)", 0, 100, 'f', 2, "ISC_MTOL"},
+      {"Quit Tolerance (%)", 0, 100, 'f', 2, "ISC_QTOL"},
+      {"Rot. Tolerance (deg)", 0, 90, 'f', 1, "ISC_RTOL"}
     }
   }
 };

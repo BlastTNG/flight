@@ -182,14 +182,14 @@ extern time_t DGPSTime;
 
 /**********************************************/
 /* ISC Data struct                            */
-/* server_frame is a typedef'd struct in      */
+/* ISCSolutionStruct is a struct defined in   */
 /* isc_protocol.h which is copied verbatim    */
 /* from the ISC computer.                     */
 /*                                            */
 /*  Purpose: Store isc pointing and blob data */
 /*   Source: isc thread: isc.c                */
 /*     Used: Main thread;                     */
-extern server_frame ISCData[3]; /* isc.c */
+extern struct ISCSolutionStruct ISCSolution[3]; /* isc.c */
 extern int iscdata_index;       /* isc.c */
 
 extern short int write_ISC_pointing;     /* isc.c */

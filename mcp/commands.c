@@ -370,36 +370,16 @@ void SingleCommand (int command) {
     /***************************************/
     /********* ISC Commanding  *************/
   } else if (command == SIndex("isc_run")) {
-    CommandData.ISCCommand.command = freerun;
-    CommandData.ISCCommand.par1 = CommandData.ISC_save_to_disk;
-    CommandData.write_ISC_command = 1;
-    CommandData.ISC_mode = 0;
+    CommandData.ISCState.pause = 0;
   } else if (command == SIndex("expose")) {
-    CommandData.ISCCommand.command = expose;
-    CommandData.ISCCommand.par1 = CommandData.ISC_save_to_disk;
-    CommandData.write_ISC_command = 1;
-    CommandData.ISC_mode = 1;
+    CommandData.ISCState.pause = 1;
   } else if (command == SIndex("save_images")) {
-    CommandData.ISC_save_to_disk = 1;
-    if (CommandData.ISC_mode == 0) {
-      CommandData.ISCCommand.command = freerun;
-      CommandData.ISCCommand.par1 = 1;
-      CommandData.write_ISC_command = 1;
-    }
+    CommandData.ISCState.save = 1;
   } else if (command == SIndex("discard_images")) {
-    CommandData.ISC_save_to_disk = 0;
-    if (CommandData.ISC_mode == 0) {
-      CommandData.ISCCommand.command = freerun;
-      CommandData.ISCCommand.par1 = 0;
-      CommandData.write_ISC_command = 1;
-    }
+    CommandData.ISCState.save = 0;
   } else if (command == SIndex("full_screen")) {
-    CommandData.ISCCommand.command = displayMode;
-    CommandData.ISCCommand.par1 = -1;
-    CommandData.write_ISC_command = 1;
+    CommandData.ISCState.display_mode = full;
   } else if (command == SIndex("auto_focus")) {
-    CommandData.ISCCommand.command = autoFocus;
-    CommandData.write_ISC_command = 1;
 
   } else {
     return; // invalid command - no write or update
@@ -582,8 +562,12 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pumps.bal_on = rvalues[0] * 1648.;
     CommandData.pumps.bal_off = rvalues[1] * 1648.;
     CommandData.pumps.bal_target = rvalues[2] * 1648.;
-  } else if (command == MIndex("pwm")) {
-    CommandData.pumps.pwm1 = ivalues[0];
+  } else if (command == MIndex("bal_level")) {
+    CommandData.pumps.pwm1 = 2047 - rvalues[0] * 2047. / 100;
+  } else if (command == MIndex("bal_gain")) {
+    CommandData.pumps.bal_gain = rvalues[0];
+    CommandData.pumps.bal_min = 2047 - rvalues[0] * 2047. / 100;
+    CommandData.pumps.bal_max = 2047 - rvalues[0] * 2047. / 100;
 
     /***************************************/
     /********** Cooling System  ************/
@@ -652,37 +636,33 @@ void MultiCommand (int command, unsigned short *dataq) {
     /***************************************/
     /********* ISC Commanding  *************/
   } else if (command == MIndex("pixel_centre")) {
-    CommandData.ISCCommand.command = displayMode;
-    CommandData.ISCCommand.par1 = -2;
-    CommandData.ISCCommand.par2 = ivalues[0];
-    CommandData.ISCCommand.par3 = ivalues[1];
-    CommandData.write_ISC_command = 1;
+    CommandData.ISCState.display_mode = roi;
+    CommandData.ISCState.roi_x = ivalues[0];
+    CommandData.ISCState.roi_y = ivalues[1];
   } else if (command == MIndex("blob_centre")) {
-    CommandData.ISCCommand.command = displayMode;
-    CommandData.ISCCommand.par1 = ivalues[0];
-    CommandData.write_ISC_command = 1;
+    CommandData.ISCState.display_mode = blob;
+    CommandData.ISCState.blob_num = ivalues[0];
   } else if (command == MIndex("set_focus")) {
-    CommandData.ISCCommand.command = setFocus;
-    CommandData.ISCCommand.par1 = ivalues[0];
-    CommandData.write_ISC_command = 1;
+    CommandData.ISCState.focus_pos = ivalues[0];
   } else if (command == MIndex("set_aperture")) {
-    CommandData.ISCCommand.command = setAperture;
-    CommandData.ISCCommand.par1 = ivalues[0];
-    CommandData.write_ISC_command = 1;
-  } else if (command == MIndex("cam_set")) {
-    CommandData.ISCCommand.command = updateSettings;
-    CommandData.ISCCommand.exposure = ivalues[0] * 1000;
-    CommandData.ISCCommand.gain = ivalues[1];
-    CommandData.ISCCommand.offset = ivalues[2];
-    CommandData.write_ISC_command = 1;
+    CommandData.ISCState.ap_pos = ivalues[0];
   } else if (command == MIndex("det_set")) {
-    CommandData.ISCCommand.command = updateSettings;
-    CommandData.ISCCommand.grid = ivalues[0];
-    CommandData.ISCCommand.threshold = rvalues[1];
-    CommandData.ISCCommand.cenbox = ivalues[2];
-    CommandData.ISCCommand.apbox = ivalues[3];
-    CommandData.ISCCommand.multiple_dist = ivalues[4];
-    CommandData.write_ISC_command = 1;
+    CommandData.ISCState.grid = ivalues[0];
+    CommandData.ISCState.sn_threshold = rvalues[1];
+    CommandData.ISCState.cenbox = ivalues[2];
+    CommandData.ISCState.apbox = ivalues[3];
+    CommandData.ISCState.mult_dist = ivalues[4];
+  } else if (command == MIndex("integration")) {
+    CommandData.ISC_pulse_width = (int)(rvalues[0] / 10.);
+  } else if (command == MIndex("catalogue")) {
+    CommandData.ISCState.mag_limit = rvalues[0];
+    CommandData.ISCState.norm_radius = rvalues[1] * DEG2RAD;
+    CommandData.ISCState.lost_radius = rvalues[2] * DEG2RAD;
+  } else if (command == MIndex("tolerances")) {
+    CommandData.ISCState.tolerance = rvalues[0] / 3600. * DEG2RAD;
+    CommandData.ISCState.match_tol = rvalues[1] / 100;
+    CommandData.ISCState.quit_tol = rvalues[2] / 100;
+    CommandData.ISCState.rot_tol = rvalues[3] * DEG2RAD;
 
   } else {
     return; // invalid command - don't update
@@ -1369,9 +1349,6 @@ void InitCommandData() {
   CommandData.pumps.bal1_reverse = 0;
   CommandData.pumps.bal2_on = 0;
   CommandData.pumps.bal2_reverse = 0;
-  CommandData.pumps.bal_on = 0.5 * 1648.;
-  CommandData.pumps.bal_off = 0.2 * 1648.;
-  CommandData.pumps.bal_target = 0.0 * 1648.;
 
   CommandData.pumps.inframe_cool1_on = 0;
   CommandData.pumps.inframe_cool1_off = 0;
@@ -1390,8 +1367,6 @@ void InitCommandData() {
   CommandData.Bias.SetLevel1 = 1;
   CommandData.Bias.SetLevel2 = 1;
   CommandData.Bias.SetLevel3 = 1;
-
-  CommandData.write_ISC_command = 0;
 
 #ifndef BOLOTEST
   /** return if we succsesfully read the previous status **/
@@ -1462,6 +1437,13 @@ void InitCommandData() {
   CommandData.pointing_mode.az_vel = 0.0;
   CommandData.pointing_mode.el_vel = 0.0;
 
+  CommandData.pumps.bal_on = 0.5 * 1648.;
+  CommandData.pumps.bal_off = 0.2 * 1648.;
+  CommandData.pumps.bal_target = 0.0 * 1648.;
+  CommandData.pumps.bal_gain = 0.2;
+  CommandData.pumps.bal_max = 600;  /* 70% */
+  CommandData.pumps.bal_min = 1750; /* 15% */
+
   CommandData.Bias.clockInternal = 1;
   CommandData.Bias.biasAC = 1;
   CommandData.Bias.biasRamp = 0;
@@ -1488,8 +1470,24 @@ void InitCommandData() {
   CommandData.Cryo.lhevalve_open = 0;
   CommandData.Cryo.lhevalve_close = 0;
 
-  CommandData.ISC_mode = 0;
-  CommandData.ISC_save_to_disk = 0;
+  CommandData.ISCState.pause = 0;
+  CommandData.ISCState.save = 0;
+  CommandData.ISCState.focus_pos = 2300;
+  CommandData.ISCState.ap_pos = 495;
+  CommandData.ISCState.display_mode = full;
+  CommandData.ISCState.sn_threshold = 10;
+  CommandData.ISCState.grid = 38;
+  CommandData.ISCState.cenbox = 20;
+  CommandData.ISCState.apbox = 5;
+  CommandData.ISCState.mult_dist = 30;
+  CommandData.ISCState.mag_limit = 8.5;
+  CommandData.ISCState.norm_radius = 3. * DEG2RAD;
+  CommandData.ISCState.lost_radius = 10. * DEG2RAD;
+  CommandData.ISCState.tolerance = 35. / 3600. * DEG2RAD; /* 35 arcsec */
+  CommandData.ISCState.match_tol = 0.5;
+  CommandData.ISCState.quit_tol = 0.8;
+  CommandData.ISCState.rot_tol = 5 * DEG2RAD;
+  CommandData.ISC_pulse_width = 3;
 
   WritePrevStatus();
 }

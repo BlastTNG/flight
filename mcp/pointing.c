@@ -25,7 +25,7 @@
 extern int isc_trigger_since_last; // set in tx.c - frames since pulse
 
 
-extern server_frame ISCData[3]; // isc.c
+extern struct ISCSolutionStruct ISCSolution[3]; // isc.c
 extern int iscdata_index; // isc.c
 
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
@@ -230,12 +230,12 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
   a->varience += GYRO_VAR;
 
   i_isc = GETREADINDEX(iscdata_index);
-  if (ISCData[i_isc].framenum!=last_isc_framenum) { // new solution
+  if (ISCSolution[i_isc].framenum!=last_isc_framenum) { // new solution
     if (isc_trigger_since_last < MAX_ISC_AGE) {
       // get az and el for new solution
       i_point = GETREADINDEX(point_index);
-      ra = ISCData[i_isc].ra * (12.0/M_PI);
-      dec = ISCData[i_isc].dec * (180.0/M_PI);
+      ra = ISCSolution[i_isc].ra * (12.0/M_PI);
+      dec = ISCSolution[i_isc].dec * (180.0/M_PI);
       radec2azel(ra, dec, PointingData[i_point].lst, PointingData[i_point].lat,
 		 &new_az, &new_el);
 
@@ -269,7 +269,7 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
       a->angle += gy_az_delta; // add back to now
     }
     
-    last_isc_framenum = ISCData[i_isc].framenum;
+    last_isc_framenum = ISCSolution[i_isc].framenum;
     isc_trigger_since_last = -1; // reset counter.
   }
 }

@@ -55,9 +55,13 @@ struct PumpStruct {
   int bal1_reverse;
   int bal2_on;
   int bal2_reverse;
-  float bal_on;
-  float bal_off;
-  float bal_target;
+  double bal_on;
+  double bal_off;
+  double bal_target;
+  double bal_gain;
+  int bal_max;
+  int bal_min;
+  
   int inframe_cool1_on;
   int inframe_cool1_off;
   int lock_out;
@@ -130,10 +134,8 @@ struct CommandDataStruct {
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
 
   /* Integrating Star Camera Stuff */
-  client_frame ISCCommand;
-  int write_ISC_command;
-  int ISC_save_to_disk;
-  int ISC_mode;
+  struct ISCStatusStruct ISCState;
+  int ISC_pulse_width;
 };
 
 struct EventType {

@@ -5,7 +5,7 @@
 #define FAST_PER_SLOW 20
 
 /* N_SLOW is the number of slow fields */
-#define N_SLOW 11
+#define N_SLOW 12
 
 /* Number of DAS bolometer cards to include in the frame.  The maximum number
  * of cards is 11 */

@@ -639,7 +639,7 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
   unsigned short bias_status, biasout1 = 0;
   static unsigned short biasout2 = 0x70;
   int isBiasAC, isBiasRamp, isBiasClockInternal;
-  static int hold = 0, ch = 0;
+  static int hold = 0, ch = 0, rb_hold = 0;
 
   /******** Obtain correct indexes the first time here ***********/
   if (i_BIASIN == -1) {
@@ -708,6 +708,7 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
     if (CommandData.Bias.SetLevel1) {
       biasout2 = ((CommandData.Bias.bias1 << 4) & 0xf0) | 0x03;
       hold = 2 * FAST_PER_SLOW + 4;
+      rb_hold = 100;
       CommandData.Bias.SetLevel1 = 0;
     }
     ch++;
@@ -715,6 +716,7 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
     if (CommandData.Bias.SetLevel2) {
       biasout2 = ((CommandData.Bias.bias2 << 4) & 0xf0) | 0x05;
       hold = 2 * FAST_PER_SLOW + 4;
+      rb_hold = 100;
       CommandData.Bias.SetLevel2 = 0;
     }
     ch++;
@@ -722,9 +724,19 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
     if (CommandData.Bias.SetLevel3) {
       biasout2 = ((CommandData.Bias.bias3 << 4) & 0xf0) | 0x06;
       hold = 2 * FAST_PER_SLOW + 4;
+      rb_hold = 100;
       CommandData.Bias.SetLevel3 = 0;
     }
     ch = 0;
+  }
+
+  /* Bias readback -- we wait a second after finishing the write */
+  if (rb_hold > 0) {
+    rb_hold--;
+  } else {
+    CommandData.Bias.bias1 = slow_data[Bias_lev1Ch][Bias_lev1Ind];
+    CommandData.Bias.bias2 = slow_data[Bias_lev2Ch][Bias_lev2Ind];
+    CommandData.Bias.bias3 = slow_data[Bias_lev3Ch][Bias_lev3Ind];
   }
 
   /******************** set the outputs *********************/
@@ -740,7 +752,6 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
  * Balance: control balance system                                *
  *                                                                *
  ******************************************************************/
-#define BALANCE_GAIN 0.5
 int Balance(int iscBits, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int iElCh = -1, iElInd;
   static int balPwm1Ch, balPwm1Ind;
@@ -761,10 +772,10 @@ int Balance(int iscBits, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
     error = -error;
   }
 
-  pumppwm = 2047 - error * BALANCE_GAIN - 300;
+  pumppwm = CommandData.pumps.bal_min - error * CommandData.pumps.bal_gain;
 
-  if (pumppwm < 600) {
-    pumppwm = 600;
+  if (pumppwm < CommandData.pumps.bal_max) {
+    pumppwm = CommandData.pumps.bal_max;
   } else if (pumppwm > 2047) {
     pumppwm = 2047;
   }
@@ -862,6 +873,7 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
   static int acs0bitsCh;
   static int balOnCh, balOnInd, balOffCh, balOffInd;
   static int balTargetCh, balTargetInd, balVetoCh, balVetoInd;
+  static int balGainCh, balGainInd, balMinCh, balMinInd, balMaxCh, balMaxInd;
   static int iscBitsCh;
   static int i_lockpin, j_lockpin;
 
@@ -879,6 +891,9 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
     SlowChIndex("bal_on", &balOnCh, &balOnInd);
     SlowChIndex("bal_off", &balOffCh, &balOffInd);
     SlowChIndex("bal_target", &balTargetCh, &balTargetInd);
+    SlowChIndex("bal_gain", &balGainCh, &balGainInd);
+    SlowChIndex("bal_min", &balMinCh, &balMinInd);
+    SlowChIndex("bal_max", &balMaxCh, &balMaxInd);
     SlowChIndex("bal_veto", &balVetoCh, &balVetoInd);
     SlowChIndex("lokmot_pin", &i_lockpin, &j_lockpin);
   }
@@ -952,6 +967,9 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
   WriteSlow(balOffCh, balOffInd, (int)CommandData.pumps.bal_off);
   WriteSlow(balVetoCh, balVetoInd, (int)CommandData.pumps.bal_veto);
   WriteSlow(balTargetCh, balTargetInd, (int)CommandData.pumps.bal_target);
+  WriteSlow(balGainCh, balGainInd, (int)(CommandData.pumps.bal_gain * 1000.));
+  WriteSlow(balMinCh, balMinInd, (int)CommandData.pumps.bal_min);
+  WriteSlow(balMaxCh, balMaxInd, (int)CommandData.pumps.bal_max);
   WriteFast(iscBitsCh, iscBits);
 
 }
@@ -1100,26 +1118,29 @@ void StoreData(int index, unsigned int* Txframe,
   static int blob0_fluxCh, blob0_fluxInd;
   static int blob1_fluxCh, blob1_fluxInd;
   static int blob2_fluxCh, blob2_fluxInd;
+  static int blob0_snCh, blob0_snInd;
+  static int blob1_snCh, blob1_snInd;
+  static int blob2_snCh, blob2_snInd;
   static int isc_framenumCh, isc_framenumInd;
-  static int isc_errorCh, isc_errorInd;
-  static int isc_exposeCh, isc_exposeInd;
-  static int isc_rotCh, isc_rotInd;
+  static int isc_sigmaCh, isc_sigmaInd;
   static int isc_raCh, isc_raInd;
   static int isc_decCh, isc_decInd;
   static int isc_apertCh, isc_apertInd;
-  static int isc_pscaleCh, isc_pscaleInd;
-  static int isc_gainCh, isc_gainInd;
   static int isc_cenboxCh, isc_cenboxInd;
   static int isc_apboxCh, isc_apboxInd;
   static int isc_mdistCh, isc_mdistInd;
   static int isc_nblobsCh, isc_nblobsInd;
   static int isc_focusCh, isc_focusInd;
-  static int isc_offsetCh, isc_offsetInd;
-  static int isc_mapmeanCh, isc_mapmeanInd;
   static int isc_threshCh, isc_threshInd;
   static int isc_gridCh, isc_gridInd;
-  static int isc_lstCh, isc_lstInd;
-
+  static int isc_stateCh, isc_stateInd;
+  static int isc_maglimitCh, isc_maglimitInd;
+  static int isc_nradCh, isc_nradInd;
+  static int isc_lradCh, isc_lradInd;
+  static int isc_tolCh, isc_tolInd;
+  static int isc_mtolCh, isc_mtolInd;
+  static int isc_qtolCh, isc_qtolInd;
+  static int isc_rtolCh, isc_rtolInd;
   
   static int blob_index = 0;
 
@@ -1189,25 +1210,30 @@ void StoreData(int index, unsigned int* Txframe,
     SlowChIndex("blob0_flux", &blob0_fluxCh, &blob0_fluxInd);
     SlowChIndex("blob1_flux", &blob1_fluxCh, &blob1_fluxInd);
     SlowChIndex("blob2_flux", &blob2_fluxCh, &blob2_fluxInd);
+    SlowChIndex("blob0_sn", &blob0_snCh, &blob0_snInd);
+    SlowChIndex("blob1_sn", &blob1_snCh, &blob1_snInd);
+    SlowChIndex("blob2_sn", &blob2_snCh, &blob2_snInd);
+    SlowChIndex("isc_sigma", &isc_sigmaCh, &isc_sigmaInd);
     SlowChIndex("isc_framenum", &isc_framenumCh, &isc_framenumInd);
-    SlowChIndex("isc_error", &isc_errorCh, &isc_errorInd);
-    SlowChIndex("isc_expose", &isc_exposeCh, &isc_exposeInd);
-    SlowChIndex("isc_rot", &isc_rotCh, &isc_rotInd);
     SlowChIndex("isc_ra", &isc_raCh, &isc_raInd);
     SlowChIndex("isc_dec", &isc_decCh, &isc_decInd);
+    SlowChIndex("isc_nblobs", &isc_nblobsCh, &isc_nblobsInd);
+
+    SlowChIndex("isc_state", &isc_stateCh, &isc_stateInd);
+    SlowChIndex("isc_focus", &isc_focusCh, &isc_focusInd);
     SlowChIndex("isc_apert", &isc_apertCh, &isc_apertInd);
-    SlowChIndex("isc_pscale", &isc_pscaleCh, &isc_pscaleInd);
-    SlowChIndex("isc_gain", &isc_gainCh, &isc_gainInd);
+    SlowChIndex("isc_thresh", &isc_threshCh, &isc_threshInd);
+    SlowChIndex("isc_grid", &isc_gridCh, &isc_gridInd);
     SlowChIndex("isc_cenbox", &isc_cenboxCh, &isc_cenboxInd);
     SlowChIndex("isc_apbox", &isc_apboxCh, &isc_apboxInd);
     SlowChIndex("isc_mdist", &isc_mdistCh, &isc_mdistInd);
-    SlowChIndex("isc_nblobs", &isc_nblobsCh, &isc_nblobsInd);
-    SlowChIndex("isc_focus", &isc_focusCh, &isc_focusInd);
-    SlowChIndex("isc_offset", &isc_offsetCh, &isc_offsetInd);
-    SlowChIndex("isc_mapmean", &isc_mapmeanCh, &isc_mapmeanInd);
-    SlowChIndex("isc_thresh", &isc_threshCh, &isc_threshInd);
-    SlowChIndex("isc_grid", &isc_gridCh, &isc_gridInd);
-    SlowChIndex("isc_lst", &isc_lstCh, &isc_lstInd);
+    SlowChIndex("isc_maglimit", &isc_maglimitCh, &isc_maglimitInd);
+    SlowChIndex("isc_nrad", &isc_nradCh, &isc_nradInd);
+    SlowChIndex("isc_lrad", &isc_lradCh, &isc_lradInd);
+    SlowChIndex("isc_tol", &isc_tolCh, &isc_tolInd);
+    SlowChIndex("isc_mtol", &isc_mtolCh, &isc_mtolInd);
+    SlowChIndex("isc_qtol", &isc_qtolCh, &isc_qtolInd);
+    SlowChIndex("isc_rtol", &isc_rtolCh, &isc_rtolInd);
   }
 
   /********** VSC Data **********/
@@ -1298,71 +1324,89 @@ void StoreData(int index, unsigned int* Txframe,
 
   /** ISC Fields **/
   if (index == 0) {
-    if (++blob_index == 0) {
+    if (blob_index == 0) {
       i_isc = GETREADINDEX(iscdata_index); 
     }
   }
 
   /*** Blobs ***/
   WriteSlow(blob0_xCh, blob0_xInd,
-      (int)(ISCData[i_isc].x_blobs[blob_index * 3 + 0] * 40.));
+      (int)(ISCSolution[i_isc].blob_x[blob_index * 3 + 0] * 40.));
   WriteSlow(blob1_xCh, blob1_xInd,
-      (int)(ISCData[i_isc].x_blobs[blob_index * 3 + 1] * 40.));
+      (int)(ISCSolution[i_isc].blob_x[blob_index * 3 + 1] * 40.));
   WriteSlow(blob2_xCh, blob2_xInd,
-      (int)(ISCData[i_isc].x_blobs[blob_index * 3 + 2] * 40.));
+      (int)(ISCSolution[i_isc].blob_x[blob_index * 3 + 2] * 40.));
 
   WriteSlow(blob0_yCh, blob0_yInd,
-      (int)(ISCData[i_isc].y_blobs[blob_index * 3 + 0] * 40.));
+      (int)(ISCSolution[i_isc].blob_y[blob_index * 3 + 0] * 40.));
   WriteSlow(blob1_yCh, blob1_yInd,
-      (int)(ISCData[i_isc].y_blobs[blob_index * 3 + 1] * 40.));
+      (int)(ISCSolution[i_isc].blob_y[blob_index * 3 + 1] * 40.));
   WriteSlow(blob2_yCh, blob2_yInd,
-      (int)(ISCData[i_isc].y_blobs[blob_index * 3 + 2] * 40.));
+      (int)(ISCSolution[i_isc].blob_y[blob_index * 3 + 2] * 40.));
 
-  WriteSlow(blob0_fluxCh, blob0_fluxInd,
-      (int)(ISCData[i_isc].flux_blobs[blob_index * 3 + 0] / 32.));
-  WriteSlow(blob1_fluxCh, blob1_fluxInd,
-      (int)(ISCData[i_isc].flux_blobs[blob_index * 3 + 1] / 32.));
-  WriteSlow(blob2_fluxCh, blob2_fluxInd,
-      (int)(ISCData[i_isc].flux_blobs[blob_index * 3 + 2] / 32.));
+  WriteSlow(blob0_snCh, blob0_fluxInd,
+      (int)(ISCSolution[i_isc].blob_flux[blob_index * 3 + 0] / 32.));
+  WriteSlow(blob1_snCh, blob1_fluxInd,
+      (int)(ISCSolution[i_isc].blob_flux[blob_index * 3 + 1] / 32.));
+  WriteSlow(blob2_snCh, blob2_fluxInd,
+      (int)(ISCSolution[i_isc].blob_flux[blob_index * 3 + 2] / 32.));
 
-  if (blob_index >= 5)
+  WriteSlow(blob0_snCh, blob0_snInd,
+      (int)(ISCSolution[i_isc].blob_sn[blob_index * 3 + 0] * 65.536));
+  WriteSlow(blob1_snCh, blob1_snInd,
+      (int)(ISCSolution[i_isc].blob_sn[blob_index * 3 + 1] * 65.536));
+  WriteSlow(blob2_snCh, blob2_snInd,
+      (int)(ISCSolution[i_isc].blob_sn[blob_index * 3 + 2] * 65.536));
+
+  if (++blob_index >= 5)
     blob_index = 0;
 
-  /*** Camera Info ***/
+  /*** Solution Info ***/
   WriteSlow(isc_framenumCh, isc_framenumInd,
-      (unsigned int)ISCData[i_isc].framenum);
-  WriteSlow(isc_errorCh, isc_errorInd, (unsigned int)ISCData[i_isc].error);
-  WriteSlow(isc_exposeCh, isc_exposeInd,
-      (unsigned int)(ISCData[i_isc].exposure * EXPOSURE2I));
-  WriteSlow(isc_rotCh, isc_rotInd, (unsigned int)(ISCData[i_isc].rot * RAD2I));
+      (unsigned int)ISCSolution[i_isc].framenum);
   WriteSlow(isc_raCh, isc_raInd,
-      (unsigned int)(ISCData[i_isc].ra * RAD2LI) >> 16);
+      (unsigned int)(ISCSolution[i_isc].ra * RAD2LI) >> 16);
   WriteSlow(isc_raCh + 1, isc_raInd,
-      (unsigned int)(ISCData[i_isc].ra * RAD2LI));
+      (unsigned int)(ISCSolution[i_isc].ra * RAD2LI));
   WriteSlow(isc_decCh, isc_decInd,
-      (unsigned int)((ISCData[i_isc].dec + M_PI / 2) * 2. * RAD2LI) >> 16);
+      (unsigned int)((ISCSolution[i_isc].dec + M_PI / 2) * 2. * RAD2LI) >> 16);
   WriteSlow(isc_decCh + 1, isc_decInd,
-      (unsigned int)((ISCData[i_isc].dec + M_PI / 2) * 2.* RAD2LI));
-  WriteSlow(isc_apertCh, isc_apertInd,
-      (unsigned int)ISCData[i_isc].aperturePosition);
-  WriteSlow(isc_pscaleCh, isc_pscaleInd,
-      (unsigned int)(ISCData[i_isc].platescale * 1000.));
-  WriteSlow(isc_gainCh, isc_gainInd, (unsigned int)ISCData[i_isc].gain);
-  WriteSlow(isc_cenboxCh, isc_cenboxInd, (unsigned int)ISCData[i_isc].cenbox);
-  WriteSlow(isc_apboxCh, isc_apboxInd, (unsigned int)ISCData[i_isc].apbox);
-  WriteSlow(isc_mdistCh, isc_mdistInd,
-      (unsigned int)ISCData[i_isc].multiple_dist);
-  WriteSlow(isc_nblobsCh, isc_nblobsInd, (unsigned int)ISCData[i_isc].nblobs);
+      (unsigned int)((ISCSolution[i_isc].dec + M_PI / 2) * 2.* RAD2LI));
+  WriteSlow(isc_sigmaCh, isc_sigmaInd,
+      (unsigned int)(ISCSolution[i_isc].sigma * DEG2I));
+  WriteSlow(isc_nblobsCh, isc_nblobsInd,
+      (unsigned int)ISCSolution[i_isc].n_blobs);
+
+  WriteSlow(isc_stateCh, isc_stateInd,
+      (unsigned int)(CommandData.ISCState.pause * 2 +
+                     CommandData.ISCState.save));
   WriteSlow(isc_focusCh, isc_focusInd,
-      (unsigned int)ISCData[i_isc].focusPosition);
-  WriteSlow(isc_offsetCh, isc_offsetInd, (unsigned int)ISCData[i_isc].offset);
-  WriteSlow(isc_mapmeanCh, isc_mapmeanInd,
-      (unsigned int)(ISCData[i_isc].mapmean * 4.));
+      (unsigned int)CommandData.ISCState.focus_pos);
+  WriteSlow(isc_apertCh, isc_apertInd,
+      (unsigned int)CommandData.ISCState.ap_pos);
   WriteSlow(isc_threshCh, isc_threshInd,
-      (unsigned int)(ISCData[i_isc].threshold * 10.));
-  WriteSlow(isc_gridCh, isc_gridInd, (unsigned int)ISCData[i_isc].grid);
-  WriteSlow(isc_lstCh, isc_lstInd,
-      (unsigned int)(ISCData[i_isc].lst * RAD2SEC));
+      (unsigned int)(CommandData.ISCState.sn_threshold * 10.));
+  WriteSlow(isc_gridCh, isc_gridInd, (unsigned int)CommandData.ISCState.grid);
+  WriteSlow(isc_cenboxCh, isc_cenboxInd,
+      (unsigned int)CommandData.ISCState.cenbox);
+  WriteSlow(isc_apboxCh, isc_apboxInd,
+      (unsigned int)CommandData.ISCState.apbox);
+  WriteSlow(isc_mdistCh, isc_mdistInd,
+      (unsigned int)CommandData.ISCState.mult_dist);
+  WriteSlow(isc_maglimitCh, isc_maglimitInd,
+      (unsigned int)CommandData.ISCState.mag_limit);
+  WriteSlow(isc_nradCh, isc_nradInd,
+      (unsigned int)CommandData.ISCState.norm_radius);
+  WriteSlow(isc_lradCh, isc_lradInd,
+      (unsigned int)CommandData.ISCState.lost_radius);
+  WriteSlow(isc_tolCh, isc_tolInd,
+      (unsigned int)CommandData.ISCState.tolerance);
+  WriteSlow(isc_mtolCh, isc_mtolInd,
+      (unsigned int)CommandData.ISCState.match_tol);
+  WriteSlow(isc_qtolCh, isc_qtolInd,
+      (unsigned int)CommandData.ISCState.quit_tol);
+  WriteSlow(isc_rtolCh, isc_rtolInd,
+      (unsigned int)CommandData.ISCState.rot_tol);
 }
 
 
