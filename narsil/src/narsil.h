@@ -53,13 +53,13 @@ public:
   QColorGroup *NColorGroup2;
   QFrame *NTopFrame;
   QFrame *NBotFrame;
-  QLabel *NCurveFileCaption;
-  QLineEdit *NCurveFile;
+  QLabel *NCurFileCaption;
+  QLineEdit *NCurFile;
   QButtonGroup *NGroupsBox;
   QRadioButton *NGroups[N_GROUPS];
   QPushButton *NSendButton;
   QPushButton *NSettingsButton;
-  QPushButton *NCurveFileButton;
+  QPushButton *NCurFileButton;
   QPushButton *QuitButton;
   QListBox *NCommandList;
   QLabel *NAboutLabel;

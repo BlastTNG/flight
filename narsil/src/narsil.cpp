@@ -120,7 +120,6 @@ int MainForm::GetGroup() {
 void MainForm::ChangeCommandList() {
   int indexes[50];
   int i;
-  int group;
 
   NCommandList->clearSelection();
   NCommandList->clearFocus();
@@ -227,7 +226,7 @@ int MainForm::GroupSIndexes(int group, int *indexes) {
   int num = 0;
 
   for (i = 0; i < N_NM_SCOMMANDS; i++) {
-    if (scommands[i].group == group)
+    if (scommands[i].group & (1 << group))
       indexes[num++] = i;
   }
 
@@ -252,7 +251,7 @@ int MainForm::GroupMIndexes(int group, int *indexes) {
   int num = 0;
 
   for (i = 0; i < N_MCOMMANDS; i++) {
-    if (mcommands[i].group == group)
+    if (mcommands[i].group & (1 << group))
       indexes[num++] = i;
   }
 
@@ -408,8 +407,8 @@ void MainForm::TurnOn(QTimer *t) {
 
   NGroupsBox->setDisabled(true);
   QuitButton->setDisabled(true);
-  NCurveFileButton->setDisabled(true);
-  NCurveFile->setDisabled(true);
+  NCurFileButton->setDisabled(true);
+  NCurFile->setDisabled(true);
   NCommandList->setDisabled(true);
   NSettingsButton->setDisabled(true);
   NAboutLabel->setDisabled(true);
@@ -442,8 +441,8 @@ void MainForm::TurnOff(QTimer *t) {
   NGroupsBox->setEnabled(true);
   QuitButton->setEnabled(true);
   NSettingsButton->setEnabled(true);
-  NCurveFileButton->setEnabled(true);
-  NCurveFile->setEnabled(true);
+  NCurFileButton->setEnabled(true);
+  NCurFile->setEnabled(true);
   NCommandList->setEnabled(true);
   NAboutLabel->setEnabled(true);
   for (i = 0; i < MAX_N_PARAMS; i++) {
@@ -560,7 +559,7 @@ void MainForm::SendCommand() {
 void MainForm::ChangeCurFile() {
   char txt[50], info[255];
 
-  strcpy(txt, NCurveFile->text());
+  strcpy(txt, NCurFile->text());
   DataSource->~KstFile();
   DataSource = new KstFile(txt, UNKNOWN);
   sprintf(info, "Narsil will now read from %s.", txt);
@@ -923,7 +922,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NSendButton->setGeometry(2 * PADDING + NAboutLabel->width()
                            - NSendButton->width(), PADDING +
                            2 * PADDING + h1 +
-                           (int(MAX_N_PARAMS/2)) *
+                           (int((2 + MAX_N_PARAMS)/2)) *
                            (h3 + SPACING) -
                            NSettingsButton->height()
                            , NSendButton->width(),
@@ -932,7 +931,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
                                NSendButton->width() -
                                NSettingsButton->width(),
                                PADDING + 2 * PADDING + h1 +
-                               (int(MAX_N_PARAMS/2)) *
+                               (int((2 + MAX_N_PARAMS)/2)) *
                                (h3 + SPACING) -
                                NSettingsButton->height(),
                                NSettingsButton->width(),
@@ -997,26 +996,26 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NSettingsWindow->setCaption(tr("Narsil Settings"));
   //  NSettingsWindow->setIcon(*Icon);
 
-  NCurveFileCaption = new QLabel(NSettingsWindow, "NCurveFileCaption");
+  NCurFileCaption = new QLabel(NSettingsWindow, "NCurFileCaption");
   tfont.setFamily(default_family);
   tfont.setPointSize(LARGE_POINT_SIZE);
-  NCurveFileCaption->setFont(tfont);
-  NCurveFileCaption->setText(tr("Curve File: "));
-  NCurveFileCaption->adjustSize();
+  NCurFileCaption->setFont(tfont);
+  NCurFileCaption->setText(tr("Cur File: "));
+  NCurFileCaption->adjustSize();
 
-  NCurveFile = new QLineEdit(NSettingsWindow, "NCurveFile");
+  NCurFile = new QLineEdit(NSettingsWindow, "NCurFile");
   tfont.setFamily(FIXEDFONT);
   tfont.setPointSize(LARGE_POINT_SIZE);
-  NCurveFile->setFont(tfont);
-  NCurveFile->setText(tr(curvefile));
-  NCurveFile->adjustSize();
+  NCurFile->setFont(tfont);
+  NCurFile->setText(tr(curvefile));
+  NCurFile->adjustSize();
 
-  NCurveFileButton = new QPushButton(NSettingsWindow, "QCurveCaption");
+  NCurFileButton = new QPushButton(NSettingsWindow, "QCurCaption");
   tfont.setFamily(default_family);
   tfont.setPointSize(SMALL_POINT_SIZE);
-  NCurveFileButton->setFont(tfont);
-  NCurveFileButton->setText(tr("Change"));
-  NCurveFileButton->adjustSize();
+  NCurFileButton->setFont(tfont);
+  NCurFileButton->setText(tr("Change"));
+  NCurFileButton->adjustSize();
 
   tfont.setFamily(default_family);
   tfont.setPointSize(LARGE_POINT_SIZE);
@@ -1026,7 +1025,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NVerbose->setText(tr("-v (verbose)"));
   NVerbose->setChecked(false);
   NVerbose->adjustSize();
-  NVerbose->setGeometry(PADDING, 2 * PADDING + NCurveFileButton->height(),
+  NVerbose->setGeometry(PADDING, 2 * PADDING + NCurFileButton->height(),
       NVerbose->width(), NVerbose->height());
 
   NSendMethod = new QComboBox(NSettingsWindow, "NSendMethod");
@@ -1038,7 +1037,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NSendMethod->insertItem(tr("HF PTT"));
   NSendMethod->adjustSize();
   NSendMethod->setGeometry(2 * PADDING + NVerbose->width(),
-      2 * PADDING + NCurveFileButton->height(),
+      2 * PADDING + NCurFileButton->height(),
       NSendMethod->width(), NSendMethod->height());
 
   NSendRoute = new QComboBox(NSettingsWindow, "NSendRoute");
@@ -1050,7 +1049,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NSendRoute->adjustSize();
   NSendRoute->setGeometry(3 * PADDING + NSendMethod->width() +
       NVerbose->width(),
-      2 * PADDING + NCurveFileButton->height(),
+      2 * PADDING + NCurFileButton->height(),
       NSendRoute->width(), NSendRoute->height());
 
   NCloseSettingsWindow = new QPushButton(NSettingsWindow,
@@ -1062,7 +1061,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   tfont.setBold(false);
   NCloseSettingsWindow->setText(tr("Close"));
   NCloseSettingsWindow->adjustSize();
-  NCloseSettingsWindow->setGeometry(0, 4 * PADDING + NCurveFileButton->height()
+  NCloseSettingsWindow->setGeometry(0, 4 * PADDING + NCurFileButton->height()
       + NSendRoute->height(),
       NCloseSettingsWindow->width(),
       NCloseSettingsWindow->height());
@@ -1070,9 +1069,9 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NTSettingsLayout = new QHBoxLayout();
   NTSettingsLayout->setSpacing(3);
   NTSettingsLayout->setMargin(11);
-  NTSettingsLayout->addWidget(NCurveFileCaption);
-  NTSettingsLayout->addWidget(NCurveFile);
-  NTSettingsLayout->addWidget(NCurveFileButton);
+  NTSettingsLayout->addWidget(NCurFileCaption);
+  NTSettingsLayout->addWidget(NCurFile);
+  NTSettingsLayout->addWidget(NCurFileButton);
 
   NMSettingsLayout = new QHBoxLayout();
   NMSettingsLayout->setSpacing(3);
@@ -1122,7 +1121,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
 
   connect(QuitButton, SIGNAL(clicked()), this, SLOT(Quit()));
   connect(NSendButton, SIGNAL(clicked()), this, SLOT(SendCommand()));
-  connect(NCurveFileButton, SIGNAL(clicked()), this, SLOT(ChangeCurFile()));
+  connect(NCurFileButton, SIGNAL(clicked()), this, SLOT(ChangeCurFile()));
   connect(NSettingsButton, SIGNAL(clicked()), this, SLOT(ShowSettings()));
   connect(NCloseSettingsWindow, SIGNAL(clicked()), NSettingsWindow,
       SLOT(accept()));
