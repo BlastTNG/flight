@@ -710,6 +710,10 @@ int main(int argc, char *argv[]) {
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0) 
       merror(MCP_ERROR, "Error on BBC read");
 
+
+    //if(GET_NODE(in_data) == 6 && GET_CH(in_data) == 6 && GET_STORE(in_data))
+    //  printf("%08x\n", in_data);
+
     // DEBUG TOOLS
     if(GET_NODE(in_data) == 0x27) {
       if(GET_STORE(in_data) ) {
