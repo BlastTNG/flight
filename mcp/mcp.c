@@ -572,7 +572,7 @@ void SegV(int signo) {
 int main(int argc, char *argv[]) {
   unsigned int in_data, i;
   unsigned short* RxFrame;
-  int StartupVeto = STARTUP_VETO_LENGTH;
+  int StartupVeto = STARTUP_VETO_LENGTH + 1;
 
   pthread_t CommandDatacomm1;
   pthread_t disk_id;
@@ -728,10 +728,9 @@ int main(int argc, char *argv[]) {
 
     if (IsNewFrame(in_data)) {
 
-      if (StartupVeto) {
-        if (!--StartupVeto)
-          mputs(MCP_INFO, "Startup Veto Ends\n");
-      } else {
+      if (StartupVeto > 1)
+        --StartupVeto;
+      else {
 #ifndef BOLOTEST
         GetACS(RxFrame);
         Pointing();
@@ -742,7 +741,11 @@ int main(int argc, char *argv[]) {
 #endif
 
         /* Frame sequencing check */
-        if (RxFrame[3] != (RxFrameIndex + 1) % FAST_PER_SLOW && RxFrameIndex >= 0)
+        if (StartupVeto) {
+          mputs(MCP_INFO, "Startup Veto Ends\n");
+          StartupVeto = 0;
+        } else if (RxFrame[3] != (RxFrameIndex + 1) % FAST_PER_SLOW
+            && RxFrameIndex >= 0)
           mprintf(MCP_ERROR,
               "Frame sequencing error detected: wanted %i, got %i\n",
               RxFrameIndex + 1, RxFrame[3]);
