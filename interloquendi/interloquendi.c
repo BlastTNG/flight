@@ -174,46 +174,50 @@ void Connection(int csock)
             quendi_respond(QUENYA_RESPONSE_PORT_INACTIVE, NULL);
           else {
             data.port_active = 1;
-            n = quendi_advance_data(data.stream, data.persist, data.chunk,
-                options[CFG_SUFFIX_LENGTH].value.as_int, &data.chunk_total);
+            do {
+              n = quendi_advance_data(data.stream, data.persist, data.chunk,
+                  options[CFG_SUFFIX_LENGTH].value.as_int, &data.chunk_total);
 
-            switch (n) {
-              case FR_DONE:
-                quendi_reader_shutdown(data.stream);
-                data.sending_data = 0; 
-                data.staged = 0;
-                data.port_active = 0;
-                break;
-              case FR_MORE_IN_FILE:
-                data.new_chunk = 0;
-                break;
-              case FR_NEW_CHUNK:
-                fclose(data.stream);
-                data.new_chunk = 1;
-                break;
-              case FR_CURFILE_CHANGED:
-                quendi_reader_shutdown(data.stream);
-                data.sending_data = 0; 
-                data.port_active = 0;
-                if (GetCurFile(data.name, QUENDI_COMMAND_LENGTH) == NULL)
-                  quendi_respond(QUENYA_RESPONSE_TRANS_COMPLETE, NULL);
-                else {
-                  data.frame_size = ReconstructChannelLists(data.name, NULL);
-                  data.staged = quendi_stage_data(data.name, 0,
-                      options[CFG_SUFFIX_LENGTH].value.as_int, 1);
-                }
-                break;
-            }
+              switch (n) {
+                case FR_DONE:
+                  quendi_reader_shutdown(data.stream);
+                  data.sending_data = 0; 
+                  data.staged = 0;
+                  data.port_active = 0;
+                  break;
+                case FR_MORE_IN_FILE:
+                  data.new_chunk = 0;
+                  break;
+                case FR_NEW_CHUNK:
+                  fclose(data.stream);
+                  data.new_chunk = 1;
+                  break;
+                case FR_CURFILE_CHANGED:
+                  quendi_reader_shutdown(data.stream);
+                  data.sending_data = 0; 
+                  data.port_active = 0;
+                  if (GetCurFile(data.name, QUENDI_COMMAND_LENGTH) == NULL)
+                    quendi_respond(QUENYA_RESPONSE_TRANS_COMPLETE, NULL);
+                  else {
+                    data.frame_size = ReconstructChannelLists(data.name, NULL);
+                    data.staged = quendi_stage_data(data.name, 0,
+                        options[CFG_SUFFIX_LENGTH].value.as_int, 1);
+                  }
+                  break;
+              }
 
-            if (n == FR_NEW_CHUNK || n == FR_MORE_IN_FILE) {
-              /* read a block */
-              data.block_length = quendi_read_data(data.new_chunk, &data.stream,
-                  data.chunk, data.seek_to, &data.chunk_total, data.frame_size,
-                  &data.frames_read);
+              if (n == FR_NEW_CHUNK || n == FR_MORE_IN_FILE)
+                /* read a block */
+                data.block_length = quendi_read_data(data.new_chunk,
+                    &data.stream, data.chunk, data.seek_to, &data.chunk_total,
+                    data.frame_size, &data.frames_read);
+              else
+                break;
+            } while (data.block_length <= 0);
 
+            if (n == FR_NEW_CHUNK || n == FR_MORE_IN_FILE)
               /* send the block */
               quendi_send_data(data.sock, data.frame_size, data.block_length);
-            }
           }
           break;
         case QUENYA_COMMAND_DATA:
@@ -280,7 +284,7 @@ void Connection(int csock)
               data.persist = 1;
               data.frame_size = ReconstructChannelLists(data.name, NULL);
               data.pos = GetFrameFileSize(data.name,
-                    options[CFG_SUFFIX_LENGTH].value.as_int) / data.frame_size;
+                  options[CFG_SUFFIX_LENGTH].value.as_int) / data.frame_size;
               data.staged = quendi_stage_data(data.name, data.pos,
                   options[CFG_SUFFIX_LENGTH].value.as_int, 0);
             }

@@ -127,7 +127,7 @@ int quendi_get_cmd(char* buffer)
     n = read(quendi_data_port->sock, buffer, QUENDI_COMMAND_LENGTH);
 
     if (n == 0) {
-      printf("data port close\n");
+      bprintf(warning, "data port close\n");
       return -4;
     }
   }
@@ -464,7 +464,7 @@ int quendi_read_data(int new_chunk, FILE** stream, const char* chunk,
   if ((n = fread(quendi_input_buffer[0], frame_size, INPUT_BUF_SIZE,
           *stream)) < 1) {
     if (feof(*stream))
-      return -1;
+      return 0;
     else if ((i = ferror(*stream))) {
       berror(err, "error reading `%s' (%i)", chunk, i);
 
