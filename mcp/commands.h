@@ -1,7 +1,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 75      /* total number of named single word cmds */
-#define N_MCOMMANDS 45         /* total number of multiword commands */
+#define N_MCOMMANDS 46         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -175,15 +175,16 @@ struct scom scommands[N_SCOMMANDS] = {
 /* multiCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions below */
 enum multiCommand {
-  az_el_goto,   az_gain,      az_scan,      bal_gain,     bal_level,
-  bias1_level,  bias2_level,  bias3_level,  blob_centre,  box,
-  bright_star,  cal_pulse,    cal_repeat,   cap,          catalogue,
-  az_el_trim,   det_set,      drift,        el_gain,      he3_heat,
-  heatsw_heat,  inner_pwm,    integration,  isc_offset,   jfet_heat,
-  lock,         max_blobs,    outer_pwm,    phase,        pivot_gain,
-  pixel_centre, ra_dec_goto,  ra_dec_set,   roll_gain,    set_aperture,
-  set_focus,    setpoints,    spare_heat,   spare_pwm,    t_gyrobox,
-  t_gyro_gain,  timeout,      tolerances,   vcap,         xml_file
+  az_el_goto,   az_gain,      az_scan,          bal_gain,     bal_level,
+  bias1_level,  bias2_level,  bias3_level,      blob_centre,  box,
+  bright_star,  cal_pulse,    cal_repeat,       cap,          catalogue,
+  az_el_trim,   det_set,      drift,            el_gain,      fast_integration,
+  he3_heat,     heatsw_heat,  inner_pwm,        isc_offset,   jfet_heat,
+  lock,         max_blobs,    outer_pwm,        phase,        pivot_gain,
+  pixel_centre, ra_dec_goto,  ra_dec_set,       roll_gain,    set_aperture,
+  set_focus,    setpoints,    slow_integration, spare_heat,   spare_pwm,
+  t_gyrobox,    t_gyro_gain,  timeout,          tolerances,   vcap,
+  xml_file
 };
 
 struct par {
@@ -399,7 +400,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /*************** Misc  *****************/
   {COMMAND(timeout), "time until schedule mode", GR_MISC, 1,
     {
-      {"Timeout (s)", 15, 14400, 'i', "ADD"}
+      {"Timeout (s)", 1, 14400, 'i', "ADD"}
     }
   },
 
@@ -511,7 +512,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(integration), "set camera integration time", GR_ISC, 1,
+  {COMMAND(fast_integration), "set camera short integration time", GR_ISC, 1,
+    {
+      {"integration time (ms)", 0, 5000, 'i', "ISC_FAST_PULSE"}
+    }
+  },
+
+  {COMMAND(slow_integration), "set camera long integration time", GR_ISC, 1,
     {
       {"integration time (ms)", 0, 5000, 'i', "ISC_PULSE"}
     }

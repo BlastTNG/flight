@@ -143,8 +143,10 @@ struct CommandDataStruct {
   /* Integrating Star Camera Stuff */
   struct ISCStatusStruct ISCState;
   int ISC_pulse_width;
+  int ISC_fast_pulse_width;
   int old_ISC_focus;
   int ISC_reconnect;
+  int ISC_autofocus;
 };
 
 struct EventType {

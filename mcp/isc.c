@@ -174,6 +174,11 @@ void IntegratingStarCamera(void)
         MyPointData = PointingData[GETREADINDEX(point_index)];
         ISCReadIndex = GETREADINDEX(iscdata_index);
 
+        if (CommandData.ISC_autofocus > 0) {
+          CommandData.ISCState.autofocus = 1;
+          CommandData.ISC_autofocus--;
+        } else
+          CommandData.ISCState.autofocus = 0;
         CommandData.ISCState.lat = MyPointData.lat * DEG2RAD;
         CommandData.ISCState.az = MyPointData.az * DEG2RAD;
         CommandData.ISCState.el = MyPointData.el * DEG2RAD;

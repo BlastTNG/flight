@@ -403,7 +403,7 @@ void SingleCommand (enum singleCommand command) {
     CommandData.ISCState.display_mode = full;
   else if (command == auto_focus) {
     CommandData.ISCState.abort = 1;
-    CommandData.ISCState.autofocus = 1;
+    CommandData.ISC_autofocus = 10;
     CommandData.old_ISC_focus = CommandData.ISCState.focus_pos;
     CommandData.ISCState.focus_pos = FOCUS_RANGE;
   } else
@@ -631,10 +631,12 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
   } else if (command == timeout) {        /* Set timeout */
     CommandData.timeout = ivalues[0];
   } else if (command == xml_file) {  /* change downlink XML file */
-    if ((fp = fopen("tmp/alice_index", "w")) != NULL) {
+    if ((fp = fopen("/tmp/alice_index", "w")) != NULL) {
       fprintf(fp, "%d\n", ivalues[0]);
-      fclose(fp);
-    }
+      if (fclose(fp) != 0)
+        perror("alice_index fclose()");
+    } else
+      perror("alice_index fopen()");
 
     /***************************************/
     /*************** Bias  *****************/
@@ -692,7 +694,9 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.ISCState.brightRA = rvalues[0] * DEG2RAD;
     CommandData.ISCState.brightDEC = rvalues[1] * DEG2RAD;
     CommandData.ISCState.brightStarMode = 1;
-  } else if (command == integration) {
+  } else if (command == fast_integration) {
+    CommandData.ISC_fast_pulse_width = (int)((4 + ivalues[0]) / 10);
+  } else if (command == slow_integration) {
     CommandData.ISC_pulse_width = (int)((4 + ivalues[0]) / 10);
   } else if (command == det_set) {
     CommandData.ISCState.grid = ivalues[0];
