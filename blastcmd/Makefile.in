@@ -86,6 +86,7 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PERL = @PERL@
 REMOTE_COMMAND = @REMOTE_COMMAND@
 REMOTE_HOST = @REMOTE_HOST@
+REMOTE_USER = @REMOTE_USER@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -572,6 +573,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-binSCRIPTS \
 
 distinstall: distcheck
 	cp ${distdir}.tar.gz ${distdir}-${buildserial}.tar.gz
+	chown dwiebe:blast ${distdir}-${buildserial}.tar.gz
 	$(mkinstalldirs) ${prefix}/src
 	${INSTALL_DATA} ${distdir}-${buildserial}.tar.gz ${prefix}/src
 	scp ${distdir}-${buildserial}.tar.gz blast.physics.utoronto.ca:/data/src

@@ -31,6 +31,7 @@ DISTCHECK_CONFIGURE_FLAGS = --with-data-etc="$$dc_install_base/data" --enable-fi
 
 distinstall: distcheck
 	cp ${distdir}.tar.gz ${distdir}-${buildserial}.tar.gz
+	chown dwiebe:blast ${distdir}-${buildserial}.tar.gz
 	$(mkinstalldirs) ${prefix}/src
 	${INSTALL_DATA} ${distdir}-${buildserial}.tar.gz ${prefix}/src
 	scp ${distdir}-${buildserial}.tar.gz blast.physics.utoronto.ca:/data/src

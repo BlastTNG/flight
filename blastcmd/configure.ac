@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(blastcmd.c)
-AM_INIT_AUTOMAKE(blastcmd, 1.1.6)
+AM_INIT_AUTOMAKE(blastcmd, 1.1.7)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH( data-etc,
@@ -29,6 +29,10 @@ AC_ARG_ENABLE( dummycmd,
 AC_ARG_WITH( remote-host,
             [  --with-remote-host=HOST use HOST as the remote host for blastcmd-remote [galadriel]],
             REMOTE_HOST="${withval}", REMOTE_HOST="galadriel")
+
+AC_ARG_WITH( remote-user,
+            [  --with-remote-user=USER have blastcmd-remote log into the remote host as USER [none]],
+            REMOTE_USER="${withval}@", REMOTE_USER="")
 
 AC_ARG_WITH( remote-command,
             [  --with-remove-command=CMD use CMD as the remote command for blastcmd-remote [blastcmd]],
@@ -102,6 +106,7 @@ if test "$INSTALL_BLASTCMD_REMOTE" = "yes"; then
   AC_MSG_CHECKING([for the name of the remote host])
   AC_MSG_RESULT([$REMOTE_HOST])
   AC_SUBST(REMOTE_HOST)
+  AC_SUBST(REMOTE_USER)
 
   AC_MSG_CHECKING([for the name of the remote command])
   AC_MSG_RESULT([$REMOTE_COMMAND])
