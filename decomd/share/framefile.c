@@ -24,7 +24,6 @@
 
 #include "blast.h"
 #include "channels.h"
-#include "command_struct.h"
 #ifdef __MCP__
 #  include "mcp.h"
 #endif
@@ -69,8 +68,7 @@ void OpenNextChunk(void) {
   sprintf(framefile.name, RAWDIR "/%lu.%c%03X%c", framefile.time,
       framefile.type, ++framefile.chunk, '\0');
 
-  bprintf(info, "Writing to framefile %s (%.2f hours until disk full)\n",
-      framefile.name, (CommandData.df * 4096.) / (360. * DiskFrameSize));
+  bprintf(info, "Writing to framefile %s\n", framefile.name);
 
   if ((framefile.fd = creat(framefile.name, 0644)) == -1)
     berror(err, "Error opening chunk");
