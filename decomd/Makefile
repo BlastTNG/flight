@@ -4,7 +4,7 @@ LDFLAGS = -lpthread
 
 all: decomd
 
-decomd: decomd.o framefile.o
+decomd: decomd.o framefile.o channels.o tx_struct.o
 
 clean:
 	rm -f decom

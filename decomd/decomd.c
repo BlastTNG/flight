@@ -10,7 +10,9 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#include "decom.h"
+#include "decom_pci.h"
+#include "bbc_pci.h"
+#include "tx_struct.h"
 
 #define DEV "/dev/decom_pci"
 #define SOCK_PORT 11411
@@ -34,7 +36,10 @@ extern struct file_info {
   void* buffer_end;  /* end of frame buffer */
 } framefile;
 
-unsigned short FrameBuf[BI0_MAX_FRAME_SIZE];
+#define FRAME_SYNC_WORD 0xEB90
+
+unsigned short* slow_data[FAST_PER_SLOW];
+unsigned short FrameBuf[BI0_FRAME_SIZE];
 int status = 0;
 double f_bad = 0;
 
@@ -46,7 +51,7 @@ void ReadDecom (int decom)
 
   while ((read(decom, &buf, sizeof(unsigned short))) == 2) {
     FrameBuf[i_word] = buf;
-    if (i_word % BI0_MAX_FRAME_SIZE == 0) { /* begining of frame */
+    if (i_word % BI0_FRAME_SIZE == 0) { /* begining of frame */
       if (buf != FRAME_SYNC_WORD) {
         status = 0;
         i_word = 0;
@@ -60,7 +65,7 @@ void ReadDecom (int decom)
       }
     } else {
       i_word++;
-      if (i_word >= BI0_MAX_FRAME_SIZE)
+      if (i_word >= BI0_FRAME_SIZE)
         i_word = 0;
     }
   }

@@ -9,7 +9,35 @@
 #include <unistd.h>
 
 #include "tx_struct.h"
-#include "mcp.h"
+
+/* if compiling MCP load the real mputs function prototypes, otherwise, just
+ * make up a fake one */
+#ifdef __MCP__
+#  include "mcp.h"
+#else
+extern unsigned short* slow_data[FAST_PER_SLOW];
+#  define mprintf(x, ...) \
+     do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
+       printf(__VA_ARGS__); \
+       if (strcmp(#x, "MCP_FATAL") == 0) \
+         exit(1); \
+     } while (0)
+#  define mputs(x,s) \
+     do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
+       puts(s); \
+       if (strcmp(#x, "MCP_FATAL") == 0) \
+         exit(1); \
+     } while (0)
+#  define merror(x,s) \
+     do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
+       perror(s); \
+       if (strcmp(#x, "MCP_FATAL") == 0) \
+         exit(1); \
+     } while (0)
+#endif
+
+unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
+
 
 void WriteSpecificationFile(FILE*); /* in tx_struct.c */
 
@@ -42,7 +70,7 @@ void OpenNextChunk(void) {
   mprintf(MCP_INFO, "Writing to framefile %s\n", framefile.name);
 
   if ((framefile.fd = creat(framefile.name, 0644)) == -1)
-    merror(MCP_ERROR, "Error opening chunk\n");
+    merror(MCP_ERROR, "Error opening chunk");
 
   framefile.frames = 0;
 }

@@ -4,12 +4,21 @@
 #include <time.h>
 #include "tx_struct.h"
 
+#ifndef __DEFILE__
+#  include "bbc_pci.h"
+#endif
+
 /* if compiling MCP load the real mprintf function prototypes, otherwise, just
  * make up a fake one */
 #ifdef __MCP__
-#  include "bbc_pci.h"
 #  include "mcp.h"
 #else
+#  define mputs(x,s) \
+     do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
+       puts(s); \
+       if (strcmp(#x, "MCP_FATAL") == 0) \
+         exit(1); \
+     } while (0)
 #  define mprintf(x, ...) \
      do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
        printf(__VA_ARGS__); \
@@ -20,7 +29,7 @@
 
 unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
-#ifdef __MCP__
+#ifndef __DEFILE__
 extern struct ChannelStruct WideSlowChannels[];
 extern struct ChannelStruct SlowChannels[];
 extern struct ChannelStruct WideFastChannels[];
@@ -50,7 +59,7 @@ unsigned short slowCount[2] = {0, 0};
 unsigned short slowsPerBusFrame[2] = {0, 0};
 unsigned short fastsPerBusFrame[2] = {FAST_OFFSET, 1};
 
-#ifdef __MCP__
+#ifndef __DEFILE__
 unsigned int NiosSpares[FAST_PER_SLOW * 2];
 unsigned int BBCSpares[FAST_PER_SLOW * 2];
 struct NiosStruct* NiosLookup;
@@ -65,7 +74,7 @@ struct ChannelStruct *FastChList;
 
 struct ChannelStruct BoloChannels[N_FAST_BOLOS];
 
-#ifdef __MCP__
+#ifndef __DEFILE__
 #  define FREADORWRITE fwrite
 #  define SPECIFICATIONFILEFUNXION WriteSpecificationFile
 #else
@@ -79,7 +88,7 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   FREADORWRITE(&ccWideFast, sizeof(unsigned short), 1, fp);
   FREADORWRITE(&ccNarrowFast, sizeof(unsigned short), 1, fp);
 
-#ifndef __MCP__
+#ifdef __DEFILE__
   int bus, i;
 
   /* Reallocate channel lists, if we're reading them */
@@ -114,7 +123,7 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   FREADORWRITE(WideFastChannels, sizeof(struct ChannelStruct), ccWideFast, fp);
   FREADORWRITE(FastChannels, sizeof(struct ChannelStruct), ccNarrowFast, fp);
 
-#ifndef __MCP__
+#ifdef __DEFILE__
   /* Calculate slowsPerBi0Frame */
   for (i = 0; i < ccWideSlow; ++i) {
     slowsPerBusFrame[WideSlowChannels[i].bus] += 2;
@@ -178,7 +187,7 @@ void MakeBoloTable(void) {
   }
 }
 
-#ifdef __MCP__
+#ifndef __DEFILE__
 struct NiosStruct SetNiosData(const struct ChannelStruct *channel, int addr,
     int fast, int wide)
 {
@@ -428,7 +437,7 @@ void BBCAddressCheck(char* fields[64][64], char* name, int node, int addr)
   fields[node][addr] = name;
 }
 
-#ifdef __MCP__
+#ifndef __DEFILE__
 /* DoSanityChecks - run various sanity checks on the channel tables.  Also
  * compute useful parameters */
 void DoSanityChecks(void)
@@ -554,13 +563,13 @@ void MakeAddressLookups(void)
   int i, mplex, bus, spare_count;
   int slowIndex[2][FAST_PER_SLOW];
 
-#ifndef __MCP__
+#ifdef __DEFILE__
   struct ChannelStruct EmptyChannel = {"", 'w', -1, -1, -1, 1, 1};
 #endif
 
   MakeBoloTable();
 
-#ifdef __MCP__
+#ifndef __DEFILE__
   DoSanityChecks();
 #endif
 
@@ -573,7 +582,7 @@ void MakeAddressLookups(void)
   };
 
   const int slowTop[2] = {
-#ifdef __MCP__
+#ifndef __DEFILE__
     FAST_OFFSET + slowsPerBusFrame[0],
     1 + slowsPerBusFrame[1]
 #else
@@ -582,7 +591,7 @@ void MakeAddressLookups(void)
 #endif
   };
 
-#ifdef __MCP__
+#ifndef __DEFILE__
   BiPhaseAddr = FAST_OFFSET + slowsPerBi0Frame;
   /* allocate the Nios address table */
   if ((NiosLookup = malloc(ccTotal * sizeof(struct NiosStruct)))
@@ -622,7 +631,7 @@ void MakeAddressLookups(void)
 
   /* initialise slow channels */
   for (i = 0; i < FAST_PER_SLOW; ++i) {
-#ifdef __MCP__
+#ifndef __DEFILE__
     slowIndex[0][i] = FAST_OFFSET;
     slowIndex[1][i] = 1;
 #else
@@ -631,7 +640,7 @@ void MakeAddressLookups(void)
 #endif
   }
 
-#ifdef __MCP__
+#ifndef __DEFILE__
   for (i = 0; i < FAST_PER_SLOW * 2; ++i)
     NiosSpares[i] = -1;
 #endif
@@ -645,7 +654,7 @@ void MakeAddressLookups(void)
         mprintf(MCP_FATAL, "FATAL: Ran out of subframes while trying to "
             "insert wide slow channel %s\n", WideSlowChannels[i].field);
 
-#ifdef __MCP__
+#ifndef __DEFILE__
     NiosLookup[i] = SetNiosData(&WideSlowChannels[i], mplex * TxFrameWords[bus]
         + slowIndex[bus][mplex], 0, 1);
 
@@ -675,7 +684,7 @@ void MakeAddressLookups(void)
         mprintf(MCP_FATAL, "FATAL: Ran out of subframes while trying to "
             "insert slow channel %s\n", SlowChannels[i].field);
 
-#ifdef __MCP__
+#ifndef __DEFILE__
     NiosLookup[i + ccWideSlow] = SetNiosData(&SlowChannels[i],
         mplex * TxFrameWords[bus] + slowIndex[bus][mplex], 0, 0);
 
@@ -695,7 +704,7 @@ void MakeAddressLookups(void)
   for (bus = 0; bus < 2; ++bus)
     for (mplex = 0; mplex < FAST_PER_SLOW; ++mplex)
       while (slowIndex[bus][mplex] < slowTop[bus]) {
-#ifdef __MCP__ 
+#ifndef __DEFILE__ 
         BBCSpares[spare_count] = BBC_WRITE | BBC_NODE(SPARE) |
           BBC_CH(spare_count);
         BiPhaseLookup[BI0_MAGIC(BBCSpares[spare_count])].index = mplex;
@@ -716,7 +725,7 @@ void MakeAddressLookups(void)
   mprintf(MCP_INFO, "Added %i spare slow channels.\n", spare_count);
 
   for (i = 0; i < ccNarrowFast; ++i) {
-#ifdef __MCP__
+#ifndef __DEFILE__
     NiosLookup[i + ccSlow + ccWideFast] = SetNiosData(&FastChannels[i],
         addr[FastChannels[i].bus], 1, 0);
 
@@ -732,7 +741,7 @@ void MakeAddressLookups(void)
   }
 
   for (i = 0; i < ccWideFast; ++i) {
-#ifdef __MCP__
+#ifndef __DEFILE__
     NiosLookup[i + ccSlow] = SetNiosData(&WideFastChannels[i],
         addr[WideFastChannels[i].bus], 1, 1);
 
@@ -753,7 +762,7 @@ void MakeAddressLookups(void)
   }
 
   for (i = 0; i < N_FAST_BOLOS; ++i) {
-#ifdef __MCP__
+#ifndef __DEFILE__
     NiosLookup[i + ccNoBolos] = SetNiosData(&BoloChannels[i],
         addr[BoloChannels[i].bus], 1, 0);
 
@@ -768,7 +777,7 @@ void MakeAddressLookups(void)
     addr[BoloChannels[i].bus]++;
   }
 
-#ifdef __MCP__
+#ifndef __DEFILE__
   /* Add the channels that aren't in the channel list to the Biphase lookup */
   BiPhaseLookup[(BBC_NODE(SPECIAL) | BBC_CH(0)) >> 16].index = NOT_MULTIPLEXED;
   BiPhaseLookup[(BBC_NODE(SPECIAL) | BBC_CH(0)) >> 16].channel = 0;
@@ -788,7 +797,7 @@ void MakeAddressLookups(void)
 #endif
 }
 
-#ifdef __MCP__
+#ifndef __DEFILE__
 inline struct BiPhaseStruct* ExtractBiPhaseAddr(struct NiosStruct* niosAddr)
 {
   return &BiPhaseLookup[BI0_MAGIC(niosAddr->bbcAddr)];
