@@ -103,7 +103,7 @@ struct ISCStatusStruct {
 
 struct ISCSolutionStruct {
   int flag;             // 0=ready for pulse, 1=pointing solution
-
+  int triggertype;      // 0=software, 1=edge, 2=positive pulse, 3=negative pulse
   int cameraerr;		// 0 if everything is Kosher, otherwise problem...
   int framenum;			// ISC frame # (also file names for images)
   int MCPFrameNum;		// last MCP frame number received before image processing began

@@ -68,6 +68,7 @@ int bbc_fp = -1;
 int bi0_fp = -2;
 unsigned int debug = 0;
 short int SamIAm;
+int StartupVeto = STARTUP_VETO_LENGTH + 1;
 
 struct ACSDataStruct ACSData;
 
@@ -78,6 +79,8 @@ unsigned short* slow_data[FAST_PER_SLOW];
 extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 
 extern pthread_mutex_t mutex;
+
+int Death = 0;
 
 void Pointing();
 void WatchPort(void*);
@@ -429,6 +432,9 @@ int fill_Rx_frame(unsigned int in_data,
 void WatchDog (void) {
   bputs(startup, "Watchdog startup\n");
 
+  /* Allow other threads to kill this one at any time */
+  pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
   if (ioperm(0x378, 0x0F, 1) != 0)
     berror(tfatal, "Error setting watchdog permissions");
   ioperm(0x80, 1, 1);
@@ -509,11 +515,13 @@ void BiPhaseWriter(void) {
   while (1) {
     i_in = bi0_buffer.i_in;
     i_out = bi0_buffer.i_out;
+    if (StartupVeto == 0)
+      if (i_out == i_in)
+        Death++;
     while (i_out != i_in) {
-      i_out++;
-      if (i_out>=BI0_FRAME_BUFLEN)
-        i_out = 0;
+      i_out = (i_out + 1) % BI0_FRAME_BUFLEN;
       write_to_biphase(bi0_buffer.framelist[i_out]);
+      Death = 0;
     }
     bi0_buffer.i_out = i_out;
     usleep(10000);
@@ -571,7 +579,6 @@ void SegV(int signo) {
 int main(int argc, char *argv[]) {
   unsigned int in_data, i;
   unsigned short* RxFrame;
-  int StartupVeto = STARTUP_VETO_LENGTH + 1;
 
   pthread_t CommandDatacomm1;
   pthread_t disk_id;
@@ -698,10 +705,16 @@ int main(int argc, char *argv[]) {
 #endif
 
   while (1) {
+    /* Death meausres how long the BiPhaseWriter has gone without receiving
+     * any data -- an indication that we aren't receiving FSYNCs from the
+     * BLASTBus anymore */
+    if (Death > 25) {
+      berror(err, "Death is reaping the watchdog tickle.");
+      pthread_cancel(watchdog_id);
+    }
 
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0) 
       berror(err, "Error on BBC read");
-
 
     //if(GET_NODE(in_data) == 6 && GET_CH(in_data) == 6 && GET_STORE(in_data))
     //  printf("%08x\n", in_data);
