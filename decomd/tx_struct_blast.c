@@ -173,8 +173,8 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"status15",     'r', DAS15, 57,                1.0,             0.0, 'u'},
     {"status16",     'r', DAS16, 57,                1.0,             0.0, 'u'},
     {"t_isc_lens",   'r',  ACS0, 25,           -0.00625,          136.45, 'u'},
-    {"pch_clin_pyr", 'r',  ACS0, 33,      4.0/5333.3333,       -4.*6.144, 'u'},
-    {"roll_clin_pyr",'r',  ACS0, 35,      4.0/5333.3333,       -4.*6.144, 'u'},
+    {"roll_clin_pyr",'r',  ACS0, 33,     -4.0/5333.3333,        4.*6.144, 'u'},
+    {"pch_clin_pyr", 'r',  ACS0, 35,      4.0/5333.3333,       -4.*6.144, 'u'},
     {"t_clin_pyr",   'r',  ACS0, 23,           -0.01875,           614.4, 'u'}
   },
   {
