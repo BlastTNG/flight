@@ -452,7 +452,7 @@ void DoSanityChecks(void)
       fields[0][i][j] = fields[1][i][j] = NULL;
 
   for (i = 0; WideSlowChannels[i].node != EOC_MARKER; ++i) {
-    slowCount[WideSlowChannels[i].bus] += 2;
+    slowCount[(int)WideSlowChannels[i].bus] += 2;
     if (WideSlowChannels[i].type != 'U' && WideSlowChannels[i].type != 'S'
         && WideSlowChannels[i].type != 'i')
       mprintf(MCP_FATAL, "FATAL: Error in Wide Slow Channel List:\n"
@@ -469,7 +469,7 @@ void DoSanityChecks(void)
   ccWideSlow = i;
 
   for (i = 0; SlowChannels[i].node != EOC_MARKER; ++i) {
-    slowCount[SlowChannels[i].bus]++;
+    slowCount[(int)SlowChannels[i].bus]++;
     if (SlowChannels[i].type != 'u' && SlowChannels[i].type != 's')
       mprintf(MCP_FATAL, "Error in Slow Channel List:\n"
           "    %s does not have a valid slow type (%c)\n",
@@ -482,7 +482,7 @@ void DoSanityChecks(void)
   ccSlow = ccNarrowSlow + ccWideSlow;
 
   for (i = 0; WideFastChannels[i].node != EOC_MARKER; ++i) {
-    fastsPerBusFrame[WideFastChannels[i].bus] += 2;
+    fastsPerBusFrame[(int)WideFastChannels[i].bus] += 2;
     if (WideFastChannels[i].type != 'U' && WideFastChannels[i].type != 'S'
         && WideFastChannels[i].type != 'i')
       mprintf(MCP_FATAL, "FATAL: Error in Wide Fast Channel List:\n"
@@ -499,7 +499,7 @@ void DoSanityChecks(void)
   ccWideFast = i;
 
   for (i = 0; FastChannels[i].node != EOC_MARKER; ++i) {
-    fastsPerBusFrame[FastChannels[i].bus]++;
+    fastsPerBusFrame[(int)FastChannels[i].bus]++;
     if (FastChannels[i].type != 'u' && FastChannels[i].type != 's')
       mprintf(MCP_FATAL, "Error in Fast Channel List:\n"
           "    %s does not have a valid slow type (%c)\n",
@@ -727,7 +727,7 @@ void MakeAddressLookups(void)
   for (i = 0; i < ccNarrowFast; ++i) {
 #ifndef __DEFILE__
     NiosLookup[i + ccSlow + ccWideFast] = SetNiosData(&FastChannels[i],
-        addr[FastChannels[i].bus], 1, 0);
+        addr[(int)FastChannels[i].bus], 1, 0);
 
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccSlow + ccWideFast].bbcAddr)].index
       = NOT_MULTIPLEXED;
@@ -743,7 +743,7 @@ void MakeAddressLookups(void)
   for (i = 0; i < ccWideFast; ++i) {
 #ifndef __DEFILE__
     NiosLookup[i + ccSlow] = SetNiosData(&WideFastChannels[i],
-        addr[WideFastChannels[i].bus], 1, 1);
+        addr[(int)WideFastChannels[i].bus], 1, 1);
 
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccSlow].bbcAddr)].index
       = NOT_MULTIPLEXED;
@@ -764,12 +764,12 @@ void MakeAddressLookups(void)
   for (i = 0; i < N_FAST_BOLOS; ++i) {
 #ifndef __DEFILE__
     NiosLookup[i + ccNoBolos] = SetNiosData(&BoloChannels[i],
-        addr[BoloChannels[i].bus], 1, 0);
+        addr[(int)BoloChannels[i].bus], 1, 0);
 
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccNoBolos].bbcAddr)].index
       = NOT_MULTIPLEXED;
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccNoBolos].bbcAddr)].channel
-      = addr[BoloChannels[i].bus];
+      = addr[(int)BoloChannels[i].bus];
 #else
     FastChList[BiPhaseAddr++] = BoloChannels[i];
 #endif
