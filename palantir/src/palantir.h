@@ -33,6 +33,7 @@
 #define MULTI        1
 #define DATETIME     2
 #define DERIV        3
+#define CURDIR       4
 
 #define SOUND_CARD   0
 #define PC_SPEAKER   1
@@ -141,6 +142,11 @@ struct Multi {
 struct DateTime {
 	char format[50];
 	struct TextStyle textstyle;
+};
+
+struct CurDir {
+        char format[50];
+        struct TextStyle textstyle;
 };
 
 struct AlarmInfo {
@@ -264,6 +270,7 @@ private:
   QList<struct Multi> MultiInfo;
 	QList<struct DateTime> DateTimeInfo;
   QList<struct Deriv> DerivInfo;
+  QList<struct CurDir> CurDirInfo;
 
   QList<QString> CurveFiles;
 

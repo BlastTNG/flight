@@ -428,6 +428,7 @@ void MainForm::GetXMLInfo(char *layoutfile) {
   struct Multi *currMulti;
   struct Deriv *currDeriv;
   struct DateTime *currDateTime;
+  struct CurDir *currCurDir;
   QString *currCurFile;
   char tmp[50];
 
@@ -609,6 +610,16 @@ void MainForm::GetXMLInfo(char *layoutfile) {
           strcpy(currDateTime->format, FindAttribute("format",
                 "BOX.DATETIME.DATUM"));
           SetTextStyle(&(currDateTime->textstyle), BM_DEF_DATUM, BM_THIRD);
+        }
+      } else if (XMLInfo->GetTagName() == "CURDIR") {
+        if (XMLInfo->GotoEntry(".DATUM", 0, true)) {
+          XMLInfo->SetBookMark(BM_THIRD);
+          CurDirInfo.append(new CurDir);
+          currCurDir = CurDirInfo.current();
+                                                                                
+          currLabel->datumtype = CURDIR;
+          currLabel->index = CurDirInfo.count() - 1;
+          SetTextStyle(&(currCurDir->textstyle), BM_DEF_DATUM, BM_THIRD);
         }
       } else if (XMLInfo->GetTagName() == "DERIV") {
         if (XMLInfo->GotoEntry(".DATUM", 0, true)) {
@@ -1068,12 +1079,14 @@ void MainForm::UpdateData() {
   struct Multi *currMulti;
   struct Deriv *currDeriv;
   struct DateTime *currDateTime;
+  struct CurDir *currCurDir;
   QLabel *currQtLabel;
   QList<struct AlarmInfo> AlarmList;
   time_t timetmp;
   struct tm *currTime;
   char tmp[255];
   int updating;
+  FILE *curf;
 
   if (DataSource->update()) {
     updating = 1;
@@ -1217,6 +1230,28 @@ void MainForm::UpdateData() {
           }
           strftime(tmp, 255, currDateTime->format, currTime);
           currQtLabel->setText(tr(tmp));
+        }
+        break;
+      case CURDIR:
+        currCurDir = CurDirInfo.at(currLabel->index);
+        currQtLabel = QtData.at(currLabel->labelindex);
+        strncpy (tmp, DataSource->fileName(), 254);
+        if ((curf = fopen(tmp, "r")) == 0){
+          if (currLabel->laststyle != 1) {
+            currQtLabel->setPalette(Palette(ErrorStyle));
+            currQtLabel->setFont(Font(ErrorStyle));
+            currQtLabel->setText(tr("bad src"));
+            currLabel->laststyle = 1;
+          }
+        } else {
+          if (currLabel->laststyle != 0) {
+            currQtLabel->setPalette(Palette(currCurDir->textstyle));
+            currQtLabel->setFont(Font(currCurDir->textstyle));
+            currLabel->laststyle = 0;
+          }
+          fscanf(curf, "%s", tmp);
+          currQtLabel->setText(tr(basename(tmp)));
+          fclose(curf);
         }
         break;
       case DERIV:
