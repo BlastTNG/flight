@@ -486,10 +486,10 @@ void MainForm::SendCommand() {
     strcpy(args[i++], "-s");
     switch (NSendMethod->currentItem()) {
       case 0:
-        strcpy(args[i++], "-tdrss");
+        strcpy(args[i++], "-los");
         break;
       case 1:
-        strcpy(args[i++], "-los");
+        strcpy(args[i++], "-tdrss");
         break;
       case 2:
         strcpy(args[i++], "-hf_ptt");
@@ -1015,8 +1015,8 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   tfont.setFamily(FIXEDFONT);
   tfont.setPointSize(LARGE_POINT_SIZE);
   NSendMethod->setFont(tfont);
-  NSendMethod->insertItem(tr("TDRSS"));
   NSendMethod->insertItem(tr("LOS"));
+  NSendMethod->insertItem(tr("TDRSS"));
   NSendMethod->insertItem(tr("HF PTT"));
   NSendMethod->adjustSize();
   NSendMethod->setGeometry(2 * PADDING + NVerbose->width(),

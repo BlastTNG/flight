@@ -33,24 +33,43 @@ fi
 
 echo QT_DIR = ${QT_DIR} >> Makefile.config
 
-echo -n "blastcmd command name [blastcmd]: "
-read BLAST_CMD
-
-if [ -z ${BLAST_CMD} ]
+if test [$HOSTNAME == 'galadriel']
 then
-  BLAST_CMD=blastcmd ;
+  echo -n "blastcmd command name [blastcmd]: "
+  read BLAST_CMD
+
+  if [ -z ${BLAST_CMD} ]
+  then
+    BLAST_CMD=blastcmd ;
+  fi
+  echo BLAST_CMD = ${BLAST_CMD} >> Makefile.config
+  echo -n "cur file location [/data/etc]: "
+  read CUR_DIR
+
+  if [ -z ${CUR_DIR} ]
+  then
+    CUR_DIR=/data/etc ;
+  fi
+
+  echo CUR_DIR = ${CUR_DIR} >> Makefile.config
+else
+  echo -n "blastcmd command name [blastcmdatgaladriel]: "
+  read BLAST_CMD
+
+  if [ -z ${BLAST_CMD} ]
+  then
+    BLAST_CMD=blastcmdatgaladriel ;
+  fi
+  echo BLAST_CMD = ${BLAST_CMD} >> Makefile.config
+  echo -n "cur file location [/mnt/decom/etc]: "
+  read CUR_DIR
+
+  if [ -z ${CUR_DIR} ]
+  then
+    CUR_DIR=/mnt/decom/etc ;
+  fi
+
+  echo CUR_DIR = ${CUR_DIR} >> Makefile.config
 fi
-
-echo BLAST_CMD = ${BLAST_CMD} >> Makefile.config
-
-echo -n "cur file location [/data/etc]: "
-read CUR_DIR
-
-if [ -z ${CUR_DIR} ]
-then
-  CUR_DIR=/data/etc ;
-fi
-
-echo CUR_DIR = ${CUR_DIR} >> Makefile.config
 
 echo ----------------------------------------------
