@@ -68,7 +68,6 @@
 
 #define DPS2GYU (66.7 * 65536.0/4000.0)
 
-extern struct CommandDataStruct CommandData;
 extern short int SamIAm;
 
 extern unsigned short slow_data[N_SLOW][FAST_PER_SLOW];
@@ -1243,12 +1242,13 @@ void StoreData(unsigned int* Txframe,
   WriteSlow(i_R, j_R, (int)(CommandData.pointing_mode.r * DEG2I));
 
   sensor_veto = (!CommandData.use_sun) | ((!CommandData.use_isc)<<1) |
-		((!CommandData.use_vsc)<<2) |
+		((!CommandData.use_elenc)<<2) |		
 		((!CommandData.use_mag)<<3) |
-		((!CommandData.use_gps)<<4);
+		((!CommandData.use_gps)<<4) |
+		((!CommandData.use_elclin)<<5);
 
   if (PointingData[i_point].t >= CommandData.pointing_mode.t_start_sched) {
-    sensor_veto |= (1 << 5);
+    sensor_veto |= (1 << 6);
   }
   
   WriteSlow(i_SVETO, j_SVETO, sensor_veto);

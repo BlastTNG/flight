@@ -57,7 +57,6 @@ int RxframeIndex;
 short int SamIAm;
 
 extern struct SlowDLStruct SlowDLInfo[N_SLOWDL];
-extern struct CommandDataStruct CommandData;
 
 extern pthread_mutex_t mutex;
 

@@ -107,9 +107,10 @@ struct CommandDataStruct {
   double t_gybox_setpoint;
   double t_isc_setpoint;
 
+  unsigned char use_elenc;
+  unsigned char use_elclin;
   unsigned char use_sun;
   unsigned char use_isc;
-  unsigned char use_vsc;
   unsigned char use_mag;
   unsigned char use_gps;
 
@@ -146,3 +147,5 @@ struct ScheduleType {
 int bc_setserial(char *input_tty);
 void InitCommandData();
 double LockPosition(double);
+
+extern struct CommandDataStruct CommandData;

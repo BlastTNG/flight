@@ -59,42 +59,6 @@ pthread_mutex_t mutex;
 struct SIPDataStruct SIPData;
 struct CommandDataStruct CommandData;
 
-char *SatStatus[14] = {
-  "3 sat, 2D",
-  "4 sat, 3D",
-  "doing position fixes",
-  "do not have GPS time",
-  "waiting for almanac collection",
-  "PDOP is too high",
-  "0 satellites",
-  "1 satellite",
-  "2 satellites",
-  "3 satellites",
-  "0 useable satellites",
-  "1 useable satellite",
-  "2 useable satellites",
-  "3 useable satellites"  
-};
-
-char *ModeNames[4] = {
-  "Ascent",
-  "Raster",
-  "Sensor Alignment",
-  "Point"
-};
-
-char *SensorNames[4] = {
-  "Sun",
-  "Integrating Star Cam.",
-  "Video Star Cam.",
-  "Magnetometer"
-};
-
-char *SensorUse[2] = {
-  "Vetoed",
-  "Available"
-};
-
 /** Write the Previous Status: called whenever anything changes */
 void WritePrevStatus() {
   int fp;
@@ -277,8 +241,6 @@ void SingleCommand (int command) {
     CommandData.use_sun = 0;
   else if (command == SIndex("isc_veto"))
     CommandData.use_isc = 0;
-  else if (command == SIndex("vsc_veto"))
-    CommandData.use_vsc = 0;
   else if (command == SIndex("mag_veto"))
     CommandData.use_mag = 0;
   else if (command == SIndex("gps_veto"))
@@ -288,8 +250,6 @@ void SingleCommand (int command) {
     CommandData.use_sun = 1;
   else if (command == SIndex("isc_allow"))
     CommandData.use_isc = 1;
-  else if (command == SIndex("vsc_allow"))
-    CommandData.use_vsc = 1;
   else if (command == SIndex("mag_allow"))
     CommandData.use_mag = 1;
   else if (command == SIndex("gps_allow"))
@@ -1366,9 +1326,10 @@ void InitCommandData() {
   CommandData.disable_az = 0;
   CommandData.disable_el = 0;
   
+  CommandData.use_elenc = 1;
+  CommandData.use_elclin = 1;
   CommandData.use_sun = 1;
   CommandData.use_isc = 1;
-  CommandData.use_vsc = 0;
   CommandData.use_mag = 1;
   CommandData.use_gps = 1;
 

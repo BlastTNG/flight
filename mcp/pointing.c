@@ -11,6 +11,7 @@
 #include <pthread.h>
 
 #include "pointing_struct.h"
+#include "command_struct.h"
 #include "lut.h"
 
 #define GY1_GAIN_ERROR 1.0407
@@ -29,6 +30,12 @@ void GetMagModel(float alt, float glat, float glon, float time,
 
 int point_index=0;
 struct PointingDataStruct PointingData[3];
+
+struct ElAttStruct {
+  double el;
+  double gy_offset;
+  double weight;
+};
 
 struct ElSolutionStruct {
   double angle;    // solution's current angle
@@ -216,6 +223,25 @@ void EvolveElSolution(struct ElSolutionStruct *s,
   s->since_last++;
 }
 
+// Weighted mean of ElAtt and ElSol
+void AddElSolution(struct ElAttStruct *ElAtt, struct ElSolutionStruct *ElSol) {
+  double weight, var;
+
+  var = ElSol->varience + ElSol->sys_var;
+
+  if (var>0) weight = 1.0/var;
+  else weight = 1.0E30; // should be impossible
+
+  ElAtt->el = (weight * (ElSol->angle + ElSol->trim) +
+	       ElAtt->weight * ElAtt->el) /
+	      (weight + ElAtt->weight);
+
+  ElAtt->gy_offset = (weight * ElSol->gy_offset +
+		     ElAtt->weight * ElAtt->gy_offset) /
+		     (weight + ElAtt->weight);
+  ElAtt->weight+=weight;
+}
+
 //FIXME: need to add gyro offset stuff - extention of el version
 void EvolveAzSolution(struct AzSolutionStruct *s,
 		      double gy2, double gy3, double el,
@@ -252,6 +278,8 @@ void Pointing(){
   static struct LutType elClinLut = {"/data/etc/clin_elev.lut",0,NULL,NULL,0};
   
   static double gy_roll_amp = 0.0;
+
+  struct ElAttStruct ElAtt = {0.0, 0.0, 0.0};
   
   static struct ElSolutionStruct EncEl = {0.0, // starting angle
 					  360.0*360.0, // varience
@@ -267,7 +295,7 @@ void Pointing(){
   static struct ElSolutionStruct ClinEl = {0.0, // starting angle
 					  360.0*360.0, // varience
 					  1.0/M2DV(6), //sample weight
-					  M2DV(20), // systemamatic varience
+					  M2DV(60), // systemamatic varience
 					  0.0, // trim 
 					  0.0, // last input
 					  0.0, // gy integral
@@ -278,7 +306,18 @@ void Pointing(){
   static struct AzSolutionStruct NullAz = {0.0, // starting angle
 					  360.0*360.0, // varience
 					  1.0/M2DV(6), //sample weight
-					  M2DV(6), // systemamatic varience
+					  M2DV(6000), // systemamatic varience
+					  0.0, // trim 
+					  0.0, // last input
+					  0.0, 0.0, // gy integrals
+					  GY2_OFFSET, GY3_OFFSET, // gy offsets
+					  0.0001, // filter constant
+					  0, 0 // n_solutions, since_last
+  };
+  static struct AzSolutionStruct MagAz = {0.0, // starting angle
+					  360.0*360.0, // varience
+					  1.0/M2DV(60), //sample weight
+					  M2DV(90), // systemamatic varience
 					  0.0, // trim 
 					  0.0, // last input
 					  0.0, 0.0, // gy integrals
@@ -330,14 +369,16 @@ void Pointing(){
 		 PointingData[i_point_read].gy1_offset,
 		 ACSData.enc_elev, 1);
 
-  /* for now, use enc_elev solution for elev */
-  //PointingData[point_index].gy1_offset = EncEl.gy_offset;
+  if (CommandData.use_elenc) {
+    AddElSolution(&ElAtt, &EncEl);
+  }
 
-  //PointingData[point_index].el = EncEl.angle + EncEl.trim;
-  /* for now, use clin_elev solution for elev */
-  PointingData[point_index].gy1_offset = ClinEl.gy_offset;
+  if (!CommandData.use_elclin) {
+    AddElSolution(&ElAtt, &ClinEl);
+  }
 
-  PointingData[point_index].el = ClinEl.angle + ClinEl.trim;
+  PointingData[point_index].gy1_offset = ElAtt.gy_offset;
+  PointingData[point_index].el = ElAtt.el;
 
 
 
@@ -349,6 +390,11 @@ void Pointing(){
 		   ACSData.gyro3 + PointingData[i_point_read].gy3_offset,
 		   PointingData[point_index].el,
 		   0.0, 0);
+  EvolveAzSolution(&MagAz,
+		   ACSData.gyro2 + PointingData[i_point_read].gy2_offset,
+		   ACSData.gyro3 + PointingData[i_point_read].gy3_offset,
+		   PointingData[point_index].el,
+		   PointingData[point_index].mag_az, 0);
   
   PointingData[point_index].az = NullAz.angle + NullAz.trim;
   PointingData[point_index].gy2_offset = NullAz.gy2_offset;

@@ -5,8 +5,6 @@
 #include "command_struct.h"
 #include "pointing_struct.h"
 
-extern struct CommandDataStruct CommandData;
-
 #define SCHEDULEFILE "/data/etc/schedule.mcp"
 
 #define MAX_LINE_LENGTH 120
