@@ -27,4 +27,8 @@
 
 typedef unsigned int chunkindex_t;
 
+int      GetNextChunk     ( char*    , int                               );
+long int SetResumeChunk   ( long int , char*       , int                 );
+int      StaticSourcePart ( char*    , const char* , chunkindex_t* , int );
+
 #endif

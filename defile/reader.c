@@ -21,9 +21,8 @@
  */
 
 #include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
 #include <string.h>
+#include <errno.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -34,100 +33,6 @@
 #define INPUT_BUF_SIZE 50 /* Frames are big (~1 kb) and we take a big
                            * performance hit if we read more than 64k at a
                            * time, so we keep this small */
-
-int GetNextChunk(char* chunk, int sufflen)
-{
-  char* buffer;
-  char* newchunk;
-  int s;
-  chunkindex_t chunknum;
-  struct stat chunk_stat;
-
-  /* allocate our buffers */
-  if ((buffer = (char*)malloc(FILENAME_LEN)) == NULL) {
-    perror("defile: cannot allocate heap");
-    exit(1);
-  }
-  if ((newchunk = (char*)malloc(FILENAME_LEN)) == NULL) {
-    perror("defile: cannot allocate heap");
-    exit(1);
-  }
-
-  /* get current chunk name */
-  s = StaticSourcePart(buffer, chunk, &chunknum);
-
-  /* if incrementing chunknum causes it to wrap around, we're out of space
-   * on our suffix -- no more chunks are possible */
-  if (chunknum + 1 < chunknum) {
-    free(newchunk);
-    free(buffer);
-    return 0;
-  }
-
-  /* if incrementing chunknum causes it to be more than sufflen bytes,
-   * we're out of space on our suffix -- no more chunks are possible */
-  if (chunknum + 1 >= (chunkindex_t)1 << (4 * sufflen)) {
-    free(newchunk);
-    free(buffer);
-    return 0;
-  }
-  
-  /* generate new filename */
-  snprintf(newchunk, FILENAME_LEN, "%s%0*llX", buffer, s,
-      (unsigned long long)(chunknum + 1));
-
-  /* stat it to see if it exists */
-  if (stat(newchunk, &chunk_stat)) {
-    free(newchunk);
-    free(buffer);
-    return 0;
-  }
-
-  /* stat worked, it's our new chunk */
-  strcpy(chunk, newchunk);
-
-  free(newchunk);
-  free(buffer);
-
-  return 1;
-}
-
-/* find the filename and position of the place where we're supposed to start */
-long int SetResumeChunk(long int resume_at, char* chunk, int sufflen)
-{
-  long int left_to_read = resume_at;
-  int chunk_total;
-  int new_chunk;
-  struct stat chunk_stat;
-  char gpb[GPB_LEN];
-
-  /* Loop until we get to the right chunk */
-  for (;;) {
-    /* Stat the current chunk file to get its size */
-    if (stat(chunk, &chunk_stat)) {
-      snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", chunk);
-      perror(gpb);
-      exit(1);
-    }
-
-    chunk_total = chunk_stat.st_size / DiskFrameSize;
-
-    /* if there's more than we need, we're done */
-    if (chunk_total > left_to_read)
-      return left_to_read;
-
-    /* Otherwise, try to get a new chunk */
-    if ((new_chunk = GetNextChunk(chunk, sufflen)) == 0) {
-      /* no new chunk -- complain and exit */
-      fprintf(stderr, "defile: source file is smaller than destination.\n"
-          "defile: cannot resume.\n");
-      exit(1);
-    }
-
-    /* there is another chunk, decrement the total needed and try again */
-    left_to_read -= chunk_total;
-  }
-}
 
 void FrameFileReader(void)
 {

@@ -297,45 +297,6 @@ char* GetFileName(const char* source)
   return buffer;
 }
 
-/* given a source filename, fills in the part of it which is static from chunk
- * to chunk, the value of the counter, returns the length of the non-static
- * suffix */
-int StaticSourcePart(char* output, const char* source, chunkindex_t* value)
-{
-  char* buffer;
-  char* ptr;
-  int counter = 0;
-  long number = 0;
-
-  if ((buffer = strdup(source)) == NULL) {
-    perror("defile: cannot allocate heap");
-    exit(1);
-  }
-
-  /* walk backwards through source looking for first non-hex digit */
-  for (ptr = buffer + strlen(buffer) - 1; counter < rc.sufflen && ptr != buffer;
-      --ptr)
-    if (*ptr >= '0' && *ptr <= '9') {
-      number += (*ptr - '0') << 4 * counter++;
-      *ptr = '\0';
-    } else if (*ptr >= 'a' && *ptr <= 'f') {
-      number += (*ptr - 'a' + 10) << 4 * counter++;
-      *ptr = '\0';
-    } else if (*ptr >= 'A' && *ptr <= 'F') {
-      number += (*ptr - 'A' + 10) << 4 * counter++;
-      *ptr = '\0';
-    } else
-      break;
-
-    if (value != NULL)
-      *value = number;
-    strcpy(output, buffer);
-
-    free(buffer);
-
-    return counter;
-}
-
 /* given a destination path and a source filename, makes a dirfile name and
  * returns it in output */
 char* MakeDirFile(char* output, const char* source, const char* directory)
@@ -350,7 +311,7 @@ char* MakeDirFile(char* output, const char* source, const char* directory)
   }
 
   PathSplit(source, NULL, &bname);
-  StaticSourcePart(buffer, bname, NULL);
+  StaticSourcePart(buffer, bname, NULL, rc.sufflen);
 
   strcpy(output, directory);
   if (output[strlen(output) - 1] != '/')

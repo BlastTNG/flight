@@ -78,7 +78,6 @@ void  InitialiseDirFile(int);
 void  ReconstructChannelLists(void);
 void  PushFrame(unsigned short*);
 void  Remount(const char*, char*);
-int   StaticSourcePart(char*, const char*, chunkindex_t*);
 void  CleanUp(void);
 
 #endif
