@@ -1510,6 +1510,7 @@ void InitCommandData() {
   CommandData.use_elclin = 1;
   CommandData.use_sun = 1;
   CommandData.use_isc = 1;
+  CommandData.use_osc = 1;
   CommandData.use_mag = 1;
   CommandData.use_gps = 1;
 
