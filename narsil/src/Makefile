@@ -4,18 +4,23 @@ CMDS = ./commands.h
 FLAGS = -I. -I$(QT_DIR)/include -I../include -g
 DEFINES = -DBLAST_CMD=\"$(BLAST_CMD)\" -DDATA_DIR=\"$(DATA_DIR)\" \
 					-DCUR_DIR=\"$(CUR_DIR)\"
+CC = gcc $(DEFINES)
 CPP = g++ $(DEFINES)
 LIBS = -L../lib/ -L$(QT_DIR)/lib -lqt-mt -lkdecore -lRD
 
 all: narsil
 
-narsil: narsil.o moc_narsil.o doubleentry.o moc_doubleentry.o $(CMDS) 
-	$(CPP) ../lib/kstfile.o ../lib/getdata.o narsil.o \
+narsil: command_list.o narsil.o moc_narsil.o doubleentry.o moc_doubleentry.o \
+	$(CMDS) 
+	$(CPP) ../lib/kstfile.o ../lib/getdata.o narsil.o command_list.o \
 	doubleentry.o moc_narsil.o moc_doubleentry.o $(LIBS)\
 	-o narsil
 
 moc_narsil.o: moc_narsil.cpp narsil.h commands.h isc_protocol.h
 	$(CPP) $(FLAGS) -c moc_narsil.cpp
+
+command_list.o: command_list.c commands.h isc_protocol.h
+	$(CC) $(FLAGS) -c command_list.c
 
 narsil.o: narsil.cpp narsil.h commands.h isc_protocol.h
 	$(CPP) $(FLAGS) -c narsil.cpp
