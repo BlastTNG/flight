@@ -66,7 +66,9 @@
 #define BAL_OFF_VETO  1000            /* # of frames to veto balance system
                                          after turning off pump */
 
-#define DPS2GYU (66.7 * 65536.0/4000.0)
+#define DPS2GYU (66.7 * 65536.0/4000.0) /* deg per sec to "gyro units" */
+
+#define RAD2SEC (180. * 3600. / M_PI / 15.)  /* radians to seconds (of time) */
 
 extern short int SamIAm;
 
@@ -1099,6 +1101,7 @@ void StoreData(unsigned int* Txframe,
   static int isc_mapmeanCh, isc_mapmeanInd;
   static int isc_threshCh, isc_threshInd;
   static int isc_gridCh, isc_gridInd;
+  static int isc_lstCh, isc_lstInd;
 
   
   static int blob_index = 0;
@@ -1187,6 +1190,7 @@ void StoreData(unsigned int* Txframe,
     SlowChIndex("isc_mapmean", &isc_mapmeanCh, &isc_mapmeanInd);
     SlowChIndex("isc_thresh", &isc_threshCh, &isc_threshInd);
     SlowChIndex("isc_grid", &isc_gridCh, &isc_gridInd);
+    SlowChIndex("isc_lst", &isc_lstCh, &isc_lstInd);
   }
 
   /********** VSC Data **********/
@@ -1327,6 +1331,7 @@ void StoreData(unsigned int* Txframe,
   WriteSlow(isc_mapmeanCh, isc_mapmeanInd, (int)(ISCData[i_isc].mapmean * 4.));
   WriteSlow(isc_threshCh, isc_threshInd, (int)(ISCData[i_isc].threshold * 10.));
   WriteSlow(isc_gridCh, isc_gridInd, (int)ISCData[i_isc].grid);
+  WriteSlow(isc_lstCh, isc_lstInd, (int)(ISCData[i_isc].lst * RAD2SEC));
 }
 
 

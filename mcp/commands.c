@@ -359,6 +359,23 @@ void SingleCommand (int command) {
       CommandData.pointing_mode.el_mode = POINT_VEL;
       CommandData.pointing_mode.el_vel = 0.0;
     }
+
+  /***************************************/
+  /********* ISC Commanding  *************/
+  } else if (command == SIndex("isc_run")) {
+    CommandData.ISCCommand.command = freerun;
+    CommandData.write_ISC_command = 1;
+  } else if (command == SIndex("expose")) {
+    CommandData.ISCCommand.command = expose;
+    CommandData.write_ISC_command = 1;
+  } else if (command == SIndex("full_screen")) {
+    CommandData.ISCCommand.command = displayMode;
+    CommandData.ISCCommand.par1 = -1;
+    CommandData.write_ISC_command = 1;
+  } else if (command == SIndex("auto_focus")) {
+    CommandData.ISCCommand.command = autoFocus;
+    CommandData.write_ISC_command = 1;
+
   } else {
     return; // invalid command - no write or update
   }
@@ -605,6 +622,43 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.Cryo.heliumThree = rvalues[0] * 2047./100.;
   } else if (command == MIndex("spare_heat")) {
     CommandData.Cryo.sparePwm = rvalues[0] * 2047./100.;
+
+
+  /***************************************/
+  /********* ISC Commanding  *************/
+  } else if (command == MIndex("pixel_centre")) {
+    CommandData.ISCCommand.command = displayMode;
+    CommandData.ISCCommand.par1 = -2;
+    CommandData.ISCCommand.par2 = ivalues[0];
+    CommandData.ISCCommand.par3 = ivalues[1];
+    CommandData.write_ISC_command = 1;
+  } else if (command == MIndex("blob_centre")) {
+    CommandData.ISCCommand.command = displayMode;
+    CommandData.ISCCommand.par1 = ivalues[0];
+    CommandData.write_ISC_command = 1;
+  } else if (command == MIndex("set_focus")) {
+    CommandData.ISCCommand.command = setFocus;
+    CommandData.ISCCommand.par1 = ivalues[0];
+    CommandData.write_ISC_command = 1;
+  } else if (command == MIndex("set_aperture")) {
+    CommandData.ISCCommand.command = setAperture;
+    CommandData.ISCCommand.par1 = ivalues[0];
+    CommandData.write_ISC_command = 1;
+  } else if (command == MIndex("cam_set")) {
+    CommandData.ISCCommand.command = updateSettings;
+    CommandData.ISCCommand.exposure = ivalues[0] * 1000;
+    CommandData.ISCCommand.gain = ivalues[1];
+    CommandData.ISCCommand.offset = ivalues[2];
+    CommandData.write_ISC_command = 1;
+  } else if (command == MIndex("det_set")) {
+    CommandData.ISCCommand.command = updateSettings;
+    CommandData.ISCCommand.grid = ivalues[0];
+    CommandData.ISCCommand.threshold = rvalues[1];
+    CommandData.ISCCommand.cenbox = ivalues[2];
+    CommandData.ISCCommand.apbox = ivalues[3];
+    CommandData.ISCCommand.multiple_dist = ivalues[4];
+    CommandData.write_ISC_command = 1;
+
   } else {
     return; // invalid command - don't update
   }
@@ -1390,6 +1444,8 @@ void InitCommandData() {
   CommandData.Cryo.lhevalve_on = 0;
   CommandData.Cryo.lhevalve_open = 0;
   CommandData.Cryo.lhevalve_close = 0;
+
+  CommandData.write_ISC_command = 0;
 
   WritePrevStatus();
 }

@@ -1,3 +1,4 @@
+#include "isc_protocol.h"
 #include "tx_struct.h"
 
 #define N_SLOWDL   7
@@ -127,6 +128,9 @@ struct CommandDataStruct {
   int df;
 
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
+
+  client_frame ISCCommand;
+  int write_ISC_command;
 };
 
 struct EventType {

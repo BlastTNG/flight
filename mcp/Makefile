@@ -31,7 +31,7 @@ dirfile.o: dirfile.c tx_struct.h
 
 geomag.o: geomag.c
 
-isc.o: isc.c pointing_struct.h isc_protocol.h
+isc.o: isc.c pointing_struct.h isc_protocol.h command_struct.h tx_struct.h
 
 lut.o: lut.c lut.h
 
@@ -46,7 +46,7 @@ starfind.o: starfind.c itifgExt.h pointing_struct.h isc_protocol.h sort.h ephem_
 #	  -c -L/usr/X11R6/lib -L. -o $@ $< \
 #	  -liticonfig_g $(FL_LIBS) -lm -lc  starpos.o ephem_read.o
 
-starpos.o: starpos.c ephem_read.h ephem_types.h command_struct.h tx_struct.h
+starpos.o: starpos.c ephem_read.h ephem_types.h command_struct.h tx_struct.h isc_protocol.h
 
 tx.o: tx.c tx.h tx_struct.h command_struct.h pointing_struct.h isc_protocol.h
 

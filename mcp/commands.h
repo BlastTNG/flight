@@ -1,3 +1,5 @@
+#include "isc_protocol.h"  /* required for constants */
+
 #define N_SCOMMANDS 99         /* total number of single word commands */
 #define N_NM_SCOMMANDS 62      /* total number of named single word cmds */
 #define N_MCOMMANDS 40         /* total number of multiword commands */
@@ -376,44 +378,44 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /********* ISC Commanding **************/
   {"pixel_centre", "Centre display on pixel", GR_ISC, 2,
     {
-      {"x", 0, 1311, 'i', 0, "ADD"},
-      {"y", 0, 1023, 'i', 0, "ADD"}
+      {"pixel x", 0, CCD_X_PIXELS - 1, 'i', 0, "ADD"},
+      {"pixel y", 0, CCD_Y_PIXELS - 1, 'i', 0, "ADD"}
     }
   },
 
   {"blob_centre", "Centre display on blob", GR_ISC, 1,
     {
-      {"blob #", 0, 50, 'i', 0, "ADD"}
+      {"blob #", 0, MAXBLOBS, 'i', 0, "ADD"}
     }
   },
   
   {"set_focus", "Set the focus position", GR_ISC, 1,
     {
-      {"focus position", 0, 2550, 'i', 0, "ADD"}
+      {"focus position", 0, FOCUS_RANGE, 'i', 0, "ISC_FOCUS"}
     }
   },
 
   {"set_aperture", "Set the F-stop", GR_ISC, 1,
     {
-      {"aperture position", 0, 495, 'i', 0, "ADD"}
+      {"aperture position", 0, AP_RANGE, 'i', 0, "ISC_APERT"}
     }
   },
 
   {"cam_set", "Camera Settings", GR_ISC, 3,
     {
-      {"integration time (ms)", 20, 5000, 'i', 0, "ADD"},
-      {"pre-amp gain", 0, 100, 'i', 0, "ADD"},
-      {"pre-amp offset", 0, 100, 'i', 0, "ADD"}
+      {"integration time (ms)", 20, 5000, 'i', 0, "ISC_EXPOSE"},
+      {"pre-amp gain", 0, 32767, 'i', 0, "ISC_GAIN"},
+      {"pre-amp offset", 0, 32767, 'i', 0, "ISC_OFFSET"}
     }
   },
 
   {"det_set", "Set Detection Parameters", GR_ISC, 5,
     {
-      {"search grid (px/side)", 0, 100, 'i', 0, "ADD"},
-      {"S/N threshold", 0, 100, 'i', 0, "ADD"},
-      {"centroiding box (px/side)", 0, 100, 'i', 0, "ADD"},
-      {"photometry box (px/side)", 0, 100, 'i', 0, "ADD"},
-      {"exclusion distance (px)", 0, 100, 'i', 0, "ADD"}
+      {"search grid (px/side)", 0, CCD_Y_PIXELS, 'i', 0, "ISC_GRID"},
+      {"S/N threshold", 0.1, 3276.7, 'r', 1, "ISC_THRESH"},
+      {"centroiding box (px/side)", 0, CCD_Y_PIXELS, 'i', 0, "ISC_CENBOX"},
+      {"photometry box (px/side)", 0, CCD_Y_PIXELS, 'i', 0, "ISC_APBOX"},
+      {"exclusion distance (px)", 0, CCD_Y_PIXELS, 'i', 0, "ISC_MDIST"}
     }
   }
 };

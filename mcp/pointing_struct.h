@@ -186,4 +186,4 @@ extern time_t DGPSTime;
 extern server_frame ISCData[3]; /* isc.c */
 extern int iscdata_index;       /* isc.c */
 
-extern short int write_ISC;     /* isc.c */
+extern short int write_ISC_pointing;     /* isc.c */
