@@ -146,7 +146,6 @@ void pushDiskFrame(unsigned short *RxFrame) {
   /*********************/
   /* SHIP OUT RX FRAME */
   /*********************/
-  fprintf(stderr, "framefile.b_write_to = %p\r", framefile.b_write_to);
   memcpy(framefile.b_write_to, RxFrame, RX_FRAME_SIZE);
 
   /* advance write-to pointer */
