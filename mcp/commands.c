@@ -275,13 +275,6 @@ void SingleCommand (enum singleCommand command) {
   else if (command == elclin_allow)
     CommandData.use_elclin = 1;
 
-  else if (command == use_limitswitch)
-    CommandData.lock_override = 0;
-  else if (command == pin_in_override)
-    CommandData.lock_override = 1;
-  else if (command == pin_out_override)
-    CommandData.lock_override = 2;
-
   else if (command == clock_int)    /* Bias settings */
     CommandData.Bias.clockInternal = 1;
   else if (command == clock_ext)
@@ -372,6 +365,8 @@ void SingleCommand (enum singleCommand command) {
     CommandData.pumps.outframe_cool2_off = 40;
   else if (command == pin_in)
     CommandData.pumps.lock_in = 1;
+  else if (command == lock_off)
+    CommandData.pumps.lock_off = 1;
   else if (command == unlock) {
     CommandData.pumps.lock_out = 1;
     if (CommandData.pointing_mode.mode == P_LOCK) {

@@ -204,63 +204,56 @@ int Balance(int iscBits) {
 /*    Do Lock Logic: check status, determine if we are locked, etc      */
 /*                                                                      */
 /************************************************************************/
-#define MOVE_COUNTS 500
+#define MOVE_COUNTS 200
 #define SEARCH_COUNTS 500
-int GetLockBits(int acs0bits) {
-  static int closing = 0;
-  static int opening = 0;
-  static int searching = 0;
-
-  /* Override limit switches */
-  if (CommandData.lock_override != 0) {
-    pin_is_in = (CommandData.lock_override == 1);
-    return 0;
-  }
+int GetLockBits(void) {
+  static int is_closing = 0;
+  static int is_opening = 0;
+  static int is_searching = 0;
 
   /* check for commands from CommandData */
   if (CommandData.pumps.lock_in) {
     CommandData.pumps.lock_in = 0;
-    closing = MOVE_COUNTS;
-    opening = 0;
-    searching = 0;
+    is_opening = 0;
+    is_closing = 1;
+    is_searching = 0;
   } else if (CommandData.pumps.lock_out) {
     CommandData.pumps.lock_out = 0;
-    opening = MOVE_COUNTS;
-    searching = 0;
+    is_opening = 1;
+    is_closing = 0;
+    is_searching = 0;
   } else if (CommandData.pumps.lock_point) {
     CommandData.pumps.lock_point = 0;
-    searching = SEARCH_COUNTS;
+    is_searching = SEARCH_COUNTS;
+    is_opening = 0;
+    is_closing = 0;
+  } else if (CommandData.pumps.lock_off) {
+    is_opening = 0;
+    is_closing = 0;
+    is_searching = 0;
   }
 
-  if (searching > 1) {
+  /* elevation searching stuff */
+  if (is_searching > 1) {
     if (fabs(ACSData.enc_elev -
           LockPosition(ACSData.enc_elev)) > 0.2) {
-      searching = SEARCH_COUNTS;
+      is_searching = SEARCH_COUNTS;
     } else {
-      searching--;
+      is_searching--;
     }
+  } else if (is_searching == 1) {
+    is_searching = 0;
+    is_closing = 1;
   }
 
-  if (closing > 0) {
-    closing--;
+  /* set lock bits */
+  if (is_closing) {
     return(LOKMOT_IN | LOKMOT_ON);
-  } else if (opening > 0) {
-    opening--;
+  } else if (is_opening) {
     return(LOKMOT_OUT | LOKMOT_ON);
-  } else if (searching == 1) {
-    searching = 0;
-    closing = MOVE_COUNTS;
-    opening = 0;
-    return(LOKMOT_IN | LOKMOT_ON);
-  } else if ((acs0bits & 0xc0) == 0) { /* if motor is on, these bits are 0 */
-    return (LOKMOT_OFF);
-  } else { /* motor is off - we can read position */
-    if (acs0bits & 64)
-      pin_is_in = 1;
-    else
-      pin_is_in = 0;
-    return 0;
   }
+
+  return 0;
 }
 
 /*********************/
@@ -396,7 +389,8 @@ void ControlAuxMotors(unsigned short *RxFrame) {
     CommandData.pumps.outframe_cool2_off--;
   }
 
-  pumpBits |= GetLockBits(RxFrame[(ExtractBiPhaseAddr(acs0BitsAddr))->channel]);
+  pumpBits |= GetLockBits();
+  printf("pumpBits = %i\n", pumpBits);
 
   if (CommandData.pumps.bal_veto) {
     /* if we're in timeout mode, decrement the timer */

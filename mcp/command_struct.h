@@ -73,6 +73,7 @@ struct PumpStruct {
   int inframe_cool1_on;
   int inframe_cool1_off;
   int lock_out;
+  int lock_off;
   int lock_in;
   int lock_point;
   int outframe_cool1_on;

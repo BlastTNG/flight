@@ -93,12 +93,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},
   {COMMAND(unlock), "unlock the lock", GR_LOCK},
-  {COMMAND(use_limitswitch),
-    "reset pin position overrides and use limit switches", GR_LOCK},
-  {COMMAND(pin_in_override),
-    "override limit switch readout and set state to pin in", GR_LOCK},
-  {COMMAND(pin_out_override),
-    "override limit switch readout and set state to pin out", GR_LOCK},
+  {COMMAND(lock_off), "turn off the lock motor", GR_LOCK},
 
   {COMMAND(isc_run), "start automatic image capture (normal mode)",
     GR_ISC_HOUSE},

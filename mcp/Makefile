@@ -3,7 +3,6 @@ include Makefile.config
 CC = gcc
 CPP = g++
 CPPFLAGS = -O3 -Wall -D__MCP__ $(BOLOTEST)
-CFLAGS = -O3 -Wall -D__MCP__ $(BOLOTEST)
 LDFLAGS = -lpthread -lm -lstdc++
 ifeq ($(DEBUG), 1)
 	CFLAGS := $(CFLAGS) -g
