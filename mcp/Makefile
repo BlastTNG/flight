@@ -2,8 +2,8 @@ include Makefile.config
 
 CC = gcc
 CPP = g++
-CPPFLAGS = -O3 -Wall -D__MCP__ $(BOLOTEST)
-LDFLAGS = -lpthread -lm -lstdc++
+CPPFLAGS = -O3 -Wall -D__MCP__ -I/usr/share/qt3/include $(BOLOTEST)
+LDFLAGS = -lpthread -lm -lstdc++ -lqt
 ifeq ($(DEBUG), 1)
 	CFLAGS := $(CFLAGS) -g
 	LDFLAGS := $(LDFLAGS) -g
@@ -13,14 +13,15 @@ ifeq ($(USE_FIFO_CMD), 1)
 	CFLAGS := $(CFLAGS) -DUSE_FIFO_CMD
 endif
 
-HEADERS = alice.h bbc_pci.h command_list.h ephem_read.h ephem_types.h \
-					isc_protocol.h lut.h mcp.h pointing_struct.h sort.h ss_struct.h \
-					sslutNA.h starpos.h tx.h tx_struct.h alice.h
+HEADERS = bbc_pci.h commands.h ephem_read.h ephem_types.h isc_protocol.h lut.h \
+		  mcp.h pointing_struct.h sort.h sslutNA.h starpos.h tx.h tx_struct.h \
+		  small_c.h small.h alicefile.h crc.h dataholder.h getdata_cpp.h \
+		  adamdom.h getdata.h
 
-OBJS = mcp.o alice.o auxiliary.o channels.o command_list.o commands.o das.o \
-       dgps.o framefile.o ephem_read.o geomag.o isc.o lut.o \
-			 motors.o pointing.o sched.o sslutNA.o starpos.o sunsensor.o tx.o \
-			 tx_struct.o
+OBJS = mcp.o adamdom.o alicefile.o auxiliary.o channels.o command_list.o \
+       commands.o crc.o das.o dataholder.o dgps.o fftsg_h.o framefile.o \
+	   ephem_read.o getdata.o geomag.o isc.o lut.o motors.o pointing.o \
+	   sched.o small.o sslutNA.o starpos.o sunsensor.o tx.o tx_struct.o
 
 all::
 ifeq ($(DEBUG), 1)

@@ -21,7 +21,7 @@
 #include "command_struct.h"
 #include "starpos.h"
 #include "mcp.h"
-#include "alice.h"
+#include "small_c.h"
 
 #define BBC_EOF      (0xffff)
 #define BBC_BAD_DATA (0xfffffff0)
@@ -76,8 +76,8 @@ struct {
   unsigned short *framelist[BI0_FRAME_BUFLEN];
 } bi0_buffer;
 
-unsigned short* AliceData[3];
-unsigned int alice_index = 0;
+unsigned short* smalldata[3];
+unsigned int small_index = 0;
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -604,7 +604,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifndef BOLOTEST
-  pthread_t alice_id;
+  pthread_t small_id;
   pthread_t bi0_id;
   //  pthread_t sensors_id;
   pthread_t dgps_id;
@@ -683,11 +683,11 @@ int main(int argc, char *argv[]) {
     merror(MCP_FATAL, "Unable to malloc RxFrame");
 
   for (i = 0; i < 3; ++i)
-    if ((AliceData[i] = malloc(BiPhaseFrameSize)) == NULL)
-      merror(MCP_FATAL, "Unable to malloc AliceData");
+    if ((smalldata[i] = malloc(BiPhaseFrameSize)) == NULL)
+      merror(MCP_FATAL, "Unable to malloc smalldata");
 
 #ifndef BOLOTEST
-  pthread_create(&alice_id, NULL, (void*)&Alice, NULL);
+  pthread_create(&small_id, NULL, (void*)&smallinit, NULL);
 #endif
 
   for (i = 0; i < FAST_PER_SLOW; ++i)
@@ -734,9 +734,9 @@ int main(int argc, char *argv[]) {
       GetACS(RxFrame);
       Pointing();
       
-      /* Copy data to alice */
-      memcpy(AliceData[alice_index], &RxFrame, BiPhaseFrameSize);
-      alice_index = INC_INDEX(alice_index);
+      /* Copy data to small. */
+      memcpy(smalldata[small_index], &RxFrame, BiPhaseFrameSize);
+      small_index = INC_INDEX(small_index);
 #endif
 
       /* Frame sequencing check */

@@ -1,0 +1,1143 @@
+// **********************************************************
+// *                                                        *
+// *  Programmed by Adam Hincks                             *
+// *                                                        *
+// *  N.B.  For information on compression algorithms for   *
+// *  high rate TDRSS downlink, see readme file             *
+// *                                                        *
+// *  See also dataholder.cpp which contains a class used   *
+// *  in this file                                          *
+// *                                                        *
+// *  See the readme file for a description of the          *
+// *  compression algorithm                                 *
+// *                                                        *
+// **********************************************************
+
+#define DIFFERENTIAL   0
+#define INT_PRESERVING 1
+#define SINGLE         2
+#define AVERAGE        3
+
+#define MAX_PERCENT    0.965
+
+#define CRC 6
+#define BLEN 4
+#define FILEC 8
+#define FRAMEC 9
+#define START_DATA 12
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <termios.h>
+#include <time.h>
+#include <math.h>
+#include <string.h>
+
+#include "alicefile.h"
+#include "dataholder.h"
+#include "small.h"
+#include "fftsg_h.c"
+
+extern "C" {
+#include "crc.h"
+#include "pointing_struct.h"
+#include "tx_struct.h"
+#include "mcp.h"
+}
+
+#define INPUT_TTY "/dev/ttyS5"
+
+int tty_fd;
+extern unsigned short* slow_data[FAST_PER_SLOW];
+
+//-------------------------------------------------------------
+//
+// OpenSerial: open serial port
+//
+//-------------------------------------------------------------
+
+int OpenSerial() {
+  int fd;
+  struct termios term;
+
+  if ((fd = open(INPUT_TTY, O_RDWR)) < 0) {
+    printf("Unable to open serial port.\n");
+    exit(1);
+  }
+  if (tcgetattr(fd, &term)) {
+    printf("Unable to get serial device attributes.");
+    return -1;
+  }
+
+  term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+  term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+  term.c_iflag |= INPCK;
+  term.c_cc[VMIN] = 0;
+  term.c_cc[VTIME] = 0;
+
+  term.c_cflag &= ~(CSTOPB | CSIZE);
+  term.c_oflag &= ~(OPOST);
+  term.c_cflag |= CS8;
+
+  if (cfsetospeed(&term, B9600)) {       // Baud
+    printf("Error setting serial output speed.");
+    return -1;
+  }
+  if (cfsetispeed(&term, B9600)) {       // Baud
+    printf("Error setting serial output speed.");
+    return -1;
+  }
+  if(tcsetattr(fd, TCSANOW, &term)) {
+    printf("Unable to set serial attributes.");
+    return -1;
+  }
+
+  return fd;
+}
+
+
+//-------------------------------------------------------------
+//
+// printbin: prints binary number at cursor position
+//
+//-------------------------------------------------------------
+
+
+void printbin(long num) {
+   int i;
+
+   for (i = 24; i >= 0; i--) {
+     if (((1 << i) & num) != 0)
+       printf("1");
+     else
+       printf("0");
+   }
+ }
+
+
+
+
+//|||****_______________________________________________________________________
+//|||***************************************************************************
+//|||****
+//|||****
+//|||****     CLASS Buffer -- This class contructs a buffer of data as you
+//|||****                     feed them to it.  (Not the same class as the
+//|||****                     Buffer in big.cpp.)
+//|||****
+//|||****
+//|||****_______________________________________________________________________
+//|||***************************************************************************
+
+
+
+
+//-------------------------------------------------------------
+//
+// Buffer: constructor
+//
+//-------------------------------------------------------------
+
+Buffer::Buffer() {
+  buf = (unsigned char *)malloc(1);
+  startbyte = 0;
+  size = 1;
+}
+
+Buffer::~Buffer() {
+  free(buf);
+}
+
+//-------------------------------------------------------------i
+//
+// SetSize (public): set the size of the buffer and malloc
+//
+//-------------------------------------------------------------
+
+
+void Buffer::SetSize(int s) {
+  if (s > size) {
+    size = s;
+    buf = (unsigned char *)realloc(buf, size);
+  }
+  //buf = (unsigned char *)realloc(buf, size * 5);  // OK, so I'm being extra
+                                                  // careful by multiplying by 5
+}
+
+
+//-------------------------------------------------------------
+//
+// Tester (public): for testing purposes
+//
+//   pos: index to look at in buffer
+//
+//   Returns: value of buffer at index pos
+//
+//-------------------------------------------------------------
+
+
+short int Buffer::Tester(int pos) {
+  return buf[pos];
+}
+
+
+//-------------------------------------------------------------
+//
+// SectionSize (public): calculates size that a single field
+//      has taken in the buffer
+//
+//   Returns: amount buffer has grown since Introduce() was
+//      last called
+//
+//-------------------------------------------------------------
+
+
+int Buffer::SectionSize() {
+  if (bitpos > 0)
+    return bytepos - startbyte + 1;
+  else
+    return bytepos - startbyte;
+}
+
+
+//-------------------------------------------------------------
+//
+// CurrSize (public): get total size of the buffer
+//
+//   Returns: size of buffer (bytes)
+//
+//-------------------------------------------------------------
+
+
+int Buffer::CurrSize() {
+  if (bitpos > 0)
+    return bytepos + 1;
+  else
+    return bytepos;
+}
+
+
+//-------------------------------------------------------------
+//
+// MaxSize (public)
+//
+//   Returns: size
+//
+//-------------------------------------------------------------
+
+
+int Buffer::MaxSize() {
+  return size;
+}
+
+
+//-------------------------------------------------------------
+//
+// Start (public): start a new buffer and write the first sync
+//      bytes
+//
+//   filenum: the index of the XML file being used (files are
+//      named 0.al, 1.al . . . 15.al)
+//
+//-------------------------------------------------------------
+
+
+void Buffer::Start(char filenum, unsigned int framenum) {
+  int i;
+
+  // Clear the buffer
+  for (i = 0; i < size; i++)
+    buf[i] = 0;
+
+  // Start bytes
+  //   11111111 11111111 11111111 11111111
+  //   1111 | XML file num
+  //   next 3 bytes = framenum
+  //
+  //   Four FF bytes in a row will (almost) never happen naturally
+
+  for (i = 0; i < 4; i++)
+    buf[i] |= 0xff;    // 11111111
+
+
+ // Postion 8, 9 reserved for CRC
+  // Position 10, 11 reserved for buffer length
+
+  buf[FILEC] |= 0xf0 + filenum;
+
+  buf[FRAMEC] = framenum & 0xff;
+  buf[FRAMEC+1] = (framenum >> 8) & 0xff;
+  buf[FRAMEC+2] = (framenum >> 16) & 0xff;
+
+  bytepos = START_DATA;
+  bitpos = 0;
+}
+
+
+//-------------------------------------------------------------
+//
+// Introduce (public): to be called before a new field is
+//      written to the buffer -- it writes the sync byte and
+//      reserves two bytes for writing in later the size of
+//      the section
+//
+//-------------------------------------------------------------
+
+
+void Buffer::Introduce() {
+  if (bitpos > 0)
+    bytepos++;
+
+  // Section intro:  10101010 + 16 bits = num bytes in section
+  buf[bytepos++] = 0xaa;
+  bytepos += 2; // Reserve 2 bytes to write in num bytes afterwards
+
+  bitpos = 0;
+  overnum = 0;
+  startbyte = bytepos;
+}
+
+
+//-------------------------------------------------------------
+//
+// NoDataMarker (public): to be called if for some reason the
+//      data cannot be retrieved from AliceFile -- a marker that
+//      the field in this frame is blank
+//
+//-------------------------------------------------------------
+
+void Buffer::NoDataMarker() {
+  if (bitpos > 0)
+    bytepos++;
+
+  // No data marker: 10011001 = 0x99
+  buf[bytepos++] = 0x99;
+
+  bitpos = 0;
+  overnum = 0;
+}
+
+
+//-------------------------------------------------------------
+//
+// RecordNumByes (public): to be called after a field has been
+//      written to the buffer -- goes back and records the
+//      size the field's compression took up
+//
+//-------------------------------------------------------------
+
+void Buffer::RecordNumBytes() {
+  buf[startbyte - 2] = SectionSize() & 0xff;
+  buf[startbyte - 1] = SectionSize() >> 8;
+}
+
+
+//-------------------------------------------------------------
+//
+// EraseLastSection (public): if the buffer has become too
+//      large, we need to remove the last section that was
+//      written
+//
+//-------------------------------------------------------------
+
+void Buffer::EraseLastSection() {
+  bytepos = startbyte - 3;
+  bitpos = 0;
+}
+
+//-------------------------------------------------------------
+//
+// Stop (public): writes final sync byte and sends buffer to
+//      serial port
+//
+//-------------------------------------------------------------
+
+void Buffer::Stop() {
+  int ndata;
+
+  if (bitpos > 0)
+    bytepos++;
+
+  buf[bytepos++] = 0x55;
+  bitpos = 0;
+
+  ndata = CurrSize() - 6;
+
+  *(unsigned short *)(buf + CRC) = UpdateCRCArc(0, buf + FILEC, CurrSize() - 8);
+  *(unsigned short *)(buf + BLEN) = ndata;
+
+  // Send packets
+  if (write(tty_fd, buf, CurrSize()) != CurrSize())
+    printf("\nError sending through serial port.\n\n");
+}
+
+
+//-------------------------------------------------------------
+//
+// WriteChunk (private): writes a datum to the buffer
+//
+//   numbits: length of datum in bits
+//   datum: the datum
+//
+//-------------------------------------------------------------
+
+
+void Buffer::WriteChunk(char numbits, long long datum) {
+	// Do we have room for the whole datum in this byte?
+  if (numbits - 1 > 7 - bitpos) {
+    buf[bytepos++] |= (datum & ((1 << (8 - bitpos)) - 1)) << bitpos;
+    datum = datum >> (8 - bitpos);
+    numbits -= 8 - bitpos;
+    bitpos = 0;
+  }
+
+	// Is the remaining datum larger than 8 bits?
+  while (datum > 0xFF) {
+    buf[bytepos++] |= datum & 0xFF;
+    datum = datum >> 8;
+    numbits -= 8;
+  }
+
+  // Write the (rest of the) datum to the buffer
+	buf[bytepos] |= datum << bitpos;
+  bitpos += numbits;
+  while(bitpos > 7) {
+    bitpos -= 8;
+    bytepos++;
+  }
+  //if (bitpos > 7) {
+  //  bitpos = 0;
+  //  bytepos++;
+  //}
+}
+
+
+//-------------------------------------------------------------
+//
+// WriteTo (public): writes a datum to the buffer, adding an
+//      offset for the sign and dealing with any data that are
+//      larger than numbits
+//
+//   datum: the datum
+//   numbits: the number of bits we ideally want to fit each
+//      datum into
+//   oversize: the size (bits) of overflow chunks (for data
+//      that don't fit in numbits)
+//   hassign: if the data are signed, we add an offset so all
+//      numbers are positive
+//
+//-------------------------------------------------------------
+
+
+void Buffer::WriteTo(long long datum, char numbits, char oversize,
+                     bool hassign) {
+  long long i;
+
+  if (hassign)
+   datum += (1 << (numbits - 1)) - 1;
+
+  if (datum < (1 << numbits) - 1 && datum >= 0) {  // Does the datum fit in
+		                                               // numbits?
+    WriteChunk(numbits, datum);
+  }
+  else {
+    // See the readme file for the compression algorithm -- it should make
+		// this part somewhat clear
+
+    overnum++;
+    i = ((1 << oversize) - 1);
+    WriteChunk(numbits, (1 << numbits) - 1);
+    if (datum < 0) {
+      datum =  datum * -1 - 1;
+      WriteChunk(1, 1);
+    }
+    else {
+      datum = datum - (1 << numbits) + 1;
+      WriteChunk(1, 0);
+    }
+    while (datum > i) {
+      WriteChunk(oversize, datum & i);
+      datum = datum >> oversize;
+      WriteChunk(1, 1);
+    }
+    WriteChunk(oversize, datum);
+    WriteChunk(1, 0);
+  }
+}
+
+
+
+
+//|||****_______________________________________________________________________
+//|||***************************************************************************
+//|||****
+//|||****
+//|||****     CLASS Alice --  `What a curious feeling!' said Alice; `I must be
+//|||****                     shutting up like a telescope.'
+//|||****
+//|||****
+//|||****_______________________________________________________________________
+//|||***************************************************************************
+
+
+
+
+//-------------------------------------------------------------
+//
+// Alice: constructor
+//
+//-------------------------------------------------------------
+
+Alice::Alice() {
+  XMLsrc = -1;
+  DataSource = new AliceFile("/data/etc/datafile.cur", UNKNOWN);
+  sendbuf = new Buffer();    // 10 bits per byte
+  DataInfo = new DataHolder();
+  fprintf(stderr, "allocating Alice\n");
+}
+
+
+//-------------------------------------------------------------
+//
+// GetCurrentXML (private): mcp writes the XML file number to
+//      /tmp/alice_index whenever it receives commanding to do so.
+//      This function checks this file, and if it has changed,
+//      loads all the information from the file.
+//
+//   Returns: true if the XML file changed and was loaded in,
+//      false otherwise
+//
+//-------------------------------------------------------------
+
+
+bool Alice::GetCurrentXML() {
+  char tmp[20];
+  int newxml;
+  FILE *fp;
+
+  if ((fp = fopen("/tmp/alice_index", "r")) == NULL)
+    newxml = 0;
+  else {
+    fscanf(fp, "%d", &newxml);
+    fclose(fp);
+  }
+
+  if (newxml != XMLsrc) {
+    sprintf(tmp, "/data/etc/%d.al", newxml);
+    if (DataInfo->LoadFromXML(tmp)) {
+      XMLsrc = newxml;
+      sendbuf->SetSize(DataInfo->MaxBitRate / 10 * DataInfo->LoopLength);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
+//-------------------------------------------------------------
+//
+// Differentiate (private): differentiates data; i.e., finds
+//      the differences between adjacent data in a time stream,
+//      and divides all these values by some specified value
+//
+//   *invals: the data to differentiate.  The function
+//      overwrites these data with their differentials
+//   num: number of samples in invals
+//   divider: number by which to divide differential data
+//
+//   Returns: offset (integration constant)
+//
+//-------------------------------------------------------------
+
+
+double Alice::Differentiate(double *invals, int num, int divider) {
+  double offset;
+  int i;
+
+  offset = invals[0];
+
+  for (i = 0; i < num; i++)
+    invals[i] = Round(invals[i] / divider);
+
+  for (i = num - 1; i > 0; i--)
+    invals[i] = invals[i] - invals[i - 1];
+  invals[0] = 0;
+
+  return offset;
+}
+
+
+//-------------------------------------------------------------
+//
+// Integrate (private): add adjacent data in the time stream
+//
+//   *invals: data in, which is overwritten with the integrated
+//      data
+//   num: number of samples in invals
+//
+//-------------------------------------------------------------
+
+
+void Alice::Integrate(double *invals, int num) {
+  int i;
+
+  for (i = 1; i < num; i++)
+    invals[i] += invals[i - 1];
+
+  return;
+}
+
+
+//-------------------------------------------------------------
+//
+// Round (private): smart rounding of a float
+//
+//   num: float to be rounded
+//
+//   Returns: integer double
+//
+//-------------------------------------------------------------
+
+
+double Alice::Round(double num) {
+  if (num >= 0)
+    return (int)(num + 0.5);
+  else
+    return (int)(num - 0.5);
+}
+
+
+//-------------------------------------------------------------
+//
+// SendDiff (private): differentiate data and send it to the
+//      buffer
+//
+//   *data: data to be compressed
+//   num: number of samples in *data
+//   *currInfo: pointer to structure containing info on the
+//      field
+//   maxover: the maximum fraction of data we want to spill
+//      over numbits
+//   minover: the minimum fraction etc.
+//
+//-------------------------------------------------------------
+
+void Alice::SendDiff(double *data, int num, struct DataStruct_glob *currInfo,
+		                 float maxover, float minover) {
+  long long offset;
+  int i;
+
+  // Write introductory bytes
+  sendbuf->Introduce();
+
+  offset = (long long)(Differentiate(data, num, currInfo->divider));
+
+  printf("Differentiated Compression (%d samples):  offset = %lld, "
+			   "divider = %d\n", num, offset, currInfo->divider);
+
+  sendbuf->WriteTo(offset, 24, 16, true);   // Send offset, divider information
+  sendbuf->WriteTo(currInfo->divider, 4, 4, false);
+
+	// Write the data
+  for (i = 1; i < num; i++)
+    sendbuf->WriteTo((long long)data[i], currInfo->numbits,
+                     currInfo->overflowsize, true);
+
+  sendbuf->RecordNumBytes();
+
+  // Adjust the divider if too much/little was going over numbits
+	if (currInfo->forcediv == false) {
+    if (100 * float(sendbuf->overnum) / float(num) > maxover)
+      currInfo->divider ++;
+    else if (100 * float(sendbuf->overnum) / float(num) < minover)
+      currInfo->divider--;
+    if (currInfo->divider <= 0)
+      currInfo->divider = 1;
+  }
+
+  printf("Compression: %0.2f %% (%d bytes)\n",
+         100 * float(sendbuf->SectionSize()) / float(num * sizeof(int)),
+				 sendbuf->SectionSize());
+  printf("%0.2f %% of the samples spilled over the %d bit requested size\n"
+			   "   into %d bit overflow chunks.\n\n",
+         100 * float(sendbuf->overnum) / float(num), currInfo->numbits,
+         currInfo->overflowsize);
+}
+
+
+//-------------------------------------------------------------
+//
+// SendInt (private): prepare integral preserving data and send
+//      it to the buffer
+//
+//   *data: data to be compressed
+//   num: number of samples in *data
+//   *currInfo: pointer to struct containing info on the
+//      current field
+//   maxover: the maximum fraction of data we want to spill
+//      over numbits
+//   minover: the minimum fraction etc.
+//
+//-------------------------------------------------------------
+
+void Alice::SendInt(double *data, int num, struct DataStruct_glob *currInfo,
+    float maxover, float minover) {
+  int i;
+
+  // Write introductory bytes
+  sendbuf->Introduce();
+
+  // We want the integral to be preserved, so the place where we do the division
+  // is important.
+  Integrate(data, num);
+  data[0] = Round(Differentiate(data, num, currInfo->divider) /
+      currInfo->divider);
+
+  printf("Integral Preserving Compression (%d samples):  offset = %lld, "
+      "divider = %d\n", num, (long long)data[0], currInfo->divider);
+
+  sendbuf->WriteTo(currInfo->divider, 4, 4, false);  // Send offset and divider
+  sendbuf->WriteTo((long long)data[0], 24, 16, true);
+
+  // Send data
+  for (i = 1; i < num; i++)
+    sendbuf->WriteTo((long long)(data[i] - data[0]), currInfo->numbits,
+        currInfo->overflowsize, true);
+
+  sendbuf->RecordNumBytes();
+
+  // Adjust the divider if too much/little was going over numbits
+  if (currInfo->forcediv == false) {
+    if (100 * float(sendbuf->overnum) / float(num) > maxover)
+      currInfo->divider ++;
+    else if (100 * float(sendbuf->overnum) / float(num) < minover)
+      currInfo->divider--;
+    if (currInfo->divider <= 0)
+      currInfo->divider = 1;
+  }
+
+  printf("Compression: %0.2f %% (%d bytes)\n",
+      100 * float(sendbuf->SectionSize()) / float(num * sizeof(int)),
+      sendbuf->SectionSize());
+  printf("%0.2f %% of the samples spilled over the %d bit requested size\n"
+      "   into %d bit overflow chunks.\n\n",
+      100 * float(sendbuf->overnum) / float(num), currInfo->numbits,
+      currInfo->overflowsize);
+}
+
+
+//-------------------------------------------------------------
+//
+// SendSingle (private): send down the first value in the time
+//      stream
+//
+//   *data: the time stream
+//   *currInfo: pointer to struct containing info on the
+//      current field
+//
+//-------------------------------------------------------------
+
+void Alice::SendSingle(double *data, struct DataStruct_glob *currInfo) {
+  double divider, sendval;
+
+  divider = (double)(currInfo->maxval - currInfo->minval + 1) /
+    (double)((unsigned int)(1 << currInfo->numbits));
+  sendval = Round((data[0] - (double)currInfo->minval) / divider);
+
+  printf("Single Value Compression: value = %lld (%lld) - %f\n\n",
+      (long long)data[0], (long long)sendval, divider);
+
+  // Write the first value from *data
+  sendbuf->WriteTo((long long)sendval, currInfo->numbits,
+      currInfo->overflowsize, false);
+}
+
+
+//-------------------------------------------------------------
+//
+// SendAverage (private): obtain average of time stream and
+//      write to buffer
+//
+//   *data: the data
+//   *currInfo: pointer to struct containing info on the
+//      current field
+//
+//-------------------------------------------------------------
+
+void Alice::SendAverage(double *data, int num,
+    struct DataStruct_glob *currInfo) {
+  int i;
+  double sum;
+  double divider, sendval;
+
+  // Find average
+  sum = 0;
+  for (i = 0; i < num; i++)
+    sum += data[i];
+
+  divider = (double)(currInfo->maxval - currInfo->minval + 1) /
+    (double)((unsigned int)(1 << currInfo->numbits));
+  sendval = Round((sum / (double)num - (double)currInfo->minval) / divider);
+
+  printf("Average Value Compression: average = %.12g (%lld, %g)\n\n",
+      Round(sum / num), (long long)sendval, divider);
+
+  // Write average value to buffer
+  sendbuf->WriteTo((long long)sendval, currInfo->numbits,
+      currInfo->overflowsize, false);
+}
+
+
+//-------------------------------------------------------------
+//
+// CompressionLoop (public): main control loop
+//
+//-------------------------------------------------------------
+
+void Alice::CompressionLoop() {
+  double *filterdata, *rawdata;
+  int i, j, k, l;
+  struct DataStruct_glob *currInfo;
+  int numframes = 0, numtoread, readleftpad, readrightpad = 0;
+  int rawsize, powtwo, leftpad, rightpad;
+  bool earlysend;
+  int numread;
+  int framepos = 0;
+  int rawdatasize, filterdatasize, ts;
+
+  printf("\n");
+
+  rawdata = (double *)malloc(1);
+  rawdatasize = 1;
+  filterdata = (double *)malloc(1);
+  filterdatasize = 1;
+
+  for (;;) {
+
+    // Check for new XML file command written by mcp
+    if (GetCurrentXML()) {
+
+      // Make sure our buffers for reading in data from disk are big enough
+      ts =sizeof(double) * DataInfo->SampleRate * MaxFrameFreq() *
+          DataInfo->LoopLength;
+      if (ts > rawdatasize) {
+        rawdatasize = ts;
+        rawdata = (double *)realloc(rawdata, ts);
+      }
+
+      ts = sizeof(double) * (3 * DataInfo->SampleRate * MaxFrameFreq() *
+                             DataInfo->LoopLength);
+      if (ts > filterdatasize) {
+        filterdatasize = ts;
+        filterdata = (double *)realloc(filterdata, ts);
+      }
+
+      // Figure out how much we need to read each time around.  For FFT purposes
+      // it needs to be a power of two, with at least 5 % buffering on the ends.
+      numframes = DataInfo->LoopLength * DataInfo->SampleRate;
+      numtoread = MaxPowTwo(numframes, 0.05);
+
+      // We need real data on either side of the data we are interested in so
+      // that funny things don't happen to the edges of our data during an FFT.
+      // Calculate the maximum padding we will need for all our fields.
+      readleftpad = int((numtoread - numframes) / 2);
+      readrightpad = numtoread - numframes - readleftpad + 2;
+
+      printf("\nFilling padding buffer . . . \n\n");
+
+      // Wait until there exists enough data for this padding
+      framepos = DataSource->numFrames();
+      while (DataSource->numFrames() < framepos + readleftpad + readrightpad) {
+        usleep(1000);
+        DataSource->update();
+      }
+      framepos += readleftpad + readrightpad;
+    }
+
+    // Wait until mcp has written numframes of data
+    while (DataSource->numFrames() < framepos + numframes) {
+      usleep(1000);
+      DataSource->update();
+    }
+
+    // Start a new buffer for the downlink
+    sendbuf->Start(XMLsrc, (unsigned int)(framepos - readrightpad));
+    i = 0;
+    earlysend = false;
+
+    printf("Reading from %d to %d\n\n", framepos - readrightpad,
+        framepos + numframes - readrightpad);
+
+    // Go through each of the slow fields we want to compress.  Slow fields only
+    // send down one value per frame.  They are treated like one big "fast"
+    // field -- we Introduce() before all of them and then RecordNumBytes()
+    // after them.  All the slow fields are written one after the other here
+    // at the beginning of the frame.
+    if ((currInfo = DataInfo->firstSlow()) != NULL) {
+      sendbuf->Introduce();
+
+      for (currInfo = DataInfo->firstSlow(); currInfo != NULL;
+          currInfo = DataInfo->nextSlow()) {
+
+        printf("Reading from %s . . .\n", currInfo->src);
+
+        switch (currInfo->type) {
+          case SINGLE:
+            if ((numread = DataSource->readField(rawdata, currInfo->src,
+                    framepos - readrightpad, 1))
+                != currInfo->framefreq) {
+              printf("Error accessing correct number of data from frames "
+                  "(%d, %d).\n\n", numread, currInfo->framefreq);
+              rawdata[0] = 0;
+              SendSingle(rawdata, currInfo);  // Send down a zero
+            }
+            else
+              SendSingle(rawdata, currInfo);
+            break;
+
+          case AVERAGE:
+            rawsize = numframes * currInfo->framefreq;
+            if ((numread = DataSource->readField(rawdata, currInfo->src,
+                    framepos - readrightpad, numframes))
+                != rawsize) {
+              printf("Error accessing correct number of data from frames "
+                  "(%d, %d).\n\n", numread, currInfo->framefreq);
+              rawdata[0] = 0;
+              SendSingle(rawdata, currInfo);  // Send down a zero
+            }
+            else
+              SendAverage(rawdata, rawsize, currInfo);
+            break;
+        }
+      }
+
+      sendbuf->RecordNumBytes();
+    }
+
+
+    // Go through each of the fast fields we want to compress.  Fast fields
+    // are those which send down more than one value per frame.
+    for (currInfo = DataInfo->firstFast(); currInfo != NULL && !earlysend;
+        currInfo = DataInfo->nextFast()) {
+
+      // Figure out how much to read and how much padding the current field
+      // requires
+      rawsize = numframes * currInfo->framefreq;
+      powtwo = FindPowTwo(rawsize, 0.05);
+      leftpad = int((powtwo - rawsize) / (2 * currInfo->framefreq));
+      rightpad = int((powtwo - rawsize - leftpad * currInfo->framefreq) /
+          currInfo->framefreq) + 1;
+
+      printf("Reading from %s . . .\n", currInfo->src);
+
+      // Read data from Frodo's disk
+      if ((numread = DataSource->readField(filterdata, currInfo->src,
+              framepos - readrightpad - leftpad,
+              numframes + rightpad + leftpad))
+          != rawsize + currInfo->framefreq * (rightpad + leftpad)) {
+
+        printf("Error accessing correct number of data from frames "
+            "(%d, %d).\n\n", numread, rawsize + currInfo->framefreq *
+            (rightpad + leftpad));
+        sendbuf->NoDataMarker();
+      }
+      else {
+        // If we aren't sending down every frame, we must do a FFT filter to get
+        // rid of high frequency junk.
+        if (currInfo->samplefreq > 1) {
+          rdft(powtwo, 1, filterdata);
+          for (j = int(powtwo / currInfo->samplefreq); j < powtwo; j++)
+            filterdata[j] = 0;
+          rdft(powtwo, -1, filterdata);
+          k = int(rawsize / currInfo->samplefreq);
+          l = currInfo->framefreq * leftpad;
+          for (j = 0; j < k; j++)
+            rawdata[j] = filterdata[j * currInfo->samplefreq + l] *
+              2.0 / powtwo;
+          rawsize = int(rawsize / currInfo->samplefreq);
+        }
+        else
+          memcpy(rawdata, filterdata + leftpad * currInfo->framefreq,
+              sizeof(double) * rawsize);
+
+        switch (currInfo->type) {
+          case DIFFERENTIAL:
+            SendDiff(rawdata, rawsize, currInfo, DataInfo->maxover,
+                DataInfo->minover);
+            break;
+          case INT_PRESERVING:
+            SendInt(rawdata, rawsize, currInfo, DataInfo->maxover,
+                DataInfo->minover);
+            break;
+        }
+
+        // Check the overall size
+        if (sendbuf->CurrSize() > sendbuf->MaxSize()) {
+          sendbuf->EraseLastSection();
+          printf("WARNING: the last field was too large to fit in the "
+              "frame.  It was erased and a truncated frame was sent "
+              "down.\n\n");
+          earlysend = true;
+        }
+      }
+    }
+    // Send down the compressed buffer
+    sendbuf->Stop();
+    printf("\nSmall: wrote a packet of %d bytes.\n\n", sendbuf->CurrSize());
+    framepos += numframes;
+  }
+}
+
+
+//-------------------------------------------------------------
+//
+// MaxPowTwo (private): checks all fields and sees which has
+//      the greatest FindPowTwo (see below)
+//
+//   val: the number of frames to consider (since # samples =
+//      # frames * samples per frame)
+//   threshold: see FindPowTwo below
+//
+//   Returns: the maximum FindPowTwo
+//
+//-------------------------------------------------------------
+
+int Alice::MaxPowTwo(int val, float threshold) {
+  struct DataStruct_glob *currInfo;
+  int powtwo;
+
+  powtwo = 0;
+  for (currInfo = DataInfo->firstFast(); currInfo != NULL;
+      currInfo = DataInfo->nextFast()) {
+    if (int(FindPowTwo(val * currInfo->framefreq, threshold) /
+          currInfo->framefreq) + 1 > powtwo)
+      powtwo = int(FindPowTwo(val * currInfo->framefreq, threshold) /
+          currInfo->framefreq) + 1;
+  }
+
+  return powtwo;
+}
+
+
+//-------------------------------------------------------------
+//
+// MaxFrameFreq (private): checks all fields to see which has
+//      the greatest samples per frame
+//
+//   Returns: maximum samples per frame
+//
+//-------------------------------------------------------------
+
+int Alice::MaxFrameFreq() {
+  struct DataStruct_glob *currInfo;
+  int max = 0;
+
+  for (currInfo = DataInfo->firstFast(); currInfo != NULL;
+      currInfo = DataInfo->nextFast()) {
+    if (currInfo->framefreq > max)
+      max = currInfo->framefreq;
+  }
+
+  for (currInfo = DataInfo->firstSlow(); currInfo != NULL;
+      currInfo = DataInfo->nextSlow()) {
+    if (currInfo->framefreq > max)
+      max = currInfo->framefreq;
+  }
+
+
+
+  return max;
+}
+
+
+//-------------------------------------------------------------
+//
+// FindPowTwo (private): finds the smallest power of two
+//      greater than a given value
+//
+//   val: the value the power of two must be greater than
+//   threshold: the fraction of the value by which the power
+//      of two must exceed the value
+//
+//   Returns: the power of two
+//
+//-------------------------------------------------------------
+
+int Alice::FindPowTwo(int val, float threshold) {
+  int i, num;
+
+  num = val;
+  for (i = 0; num > 0; i++)
+    num = num >> 1;
+
+  if ((1 << i) - val < int(val * threshold))
+    i++;
+
+  return 1 << i;
+}
+
+
+//-------------------------------------------------------------
+//
+// ~Alice: deconstructor
+//
+//-------------------------------------------------------------
+
+Alice::~Alice()
+{
+  delete DataSource;
+  delete sendbuf;
+  delete DataInfo;
+
+  // no need to delete child widgets, Qt does it all for us
+}
+
+
+
+
+//|||****_______________________________________________________________________
+//|||***************************************************************************
+//|||****
+//|||****
+//|||****     Main()
+//|||****
+//|||****
+//|||****_______________________________________________________________________
+//|||***************************************************************************
+
+
+
+
+int mainloop(int argc, char* argv[]) {
+  Alice *drinkme;
+
+  printf("Opening serial port...\n");
+  if ((tty_fd = OpenSerial()) < 0)
+    return 1;
+
+  drinkme = new Alice();
+  drinkme->CompressionLoop();
+
+  delete drinkme;
+
+  close(tty_fd);
+  return 0;
+}
+
+extern "C" void smallinit(void) {
+  unsigned short* local_data;
+  
+  mputs(MCP_STARTUP, "Alice startup\n");
+
+  if ((local_data = (unsigned short*)malloc(BiPhaseFrameSize)) == NULL)
+    merror(MCP_FATAL, "Unable to malloc local_data");
+
+  while (1) {
+    memcpy(local_data, smalldata[GETREADINDEX(small_index)], BiPhaseFrameSize);
+    usleep(1000000);
+  }
+}
