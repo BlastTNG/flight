@@ -74,7 +74,7 @@ void IntegratingStarCamera(void)
   fd_set fdr, fdw;
   struct PointingDataStruct MyPointData;
 
-  int sock = -1, ISCReadIndex, autofocus_on = 0;
+  int sock = -1, ISCReadIndex;
   time_t t;
 
   int n;
@@ -145,16 +145,12 @@ void IntegratingStarCamera(void)
         //fprintf(stderr, "ISC: Received %i bytes after %f milliseconds.\n", n, (double)delta / 1000.);
         
         if (CommandData.ISCState.autofocus) {
-          if (autofocus_on) {
-            autofocus_on = 0;
-            CommandData.ISCState.autofocus = 0;
+          CommandData.ISCState.autofocus = 0;
 
-            /* Process results of autofocus */
-            CommandData.ISCState.focus_pos = CommandData.old_ISC_focus;
-          } else
-            autofocus_on = 1;
+          /* Process results of autofocus */
+          CommandData.ISCState.focus_pos = CommandData.old_ISC_focus;
         }
-        
+
         iscdata_index = INC_INDEX(iscdata_index);
       }
 
@@ -210,7 +206,7 @@ void IntegratingStarCamera(void)
 
         /* Deassert abort after (perhaps) sending it */
         CommandData.ISCState.abort = 0;
-        
+
       }
     }
   }

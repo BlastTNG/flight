@@ -384,6 +384,7 @@ void SingleCommand (int command) {
   } else if (command == SIndex("full_screen")) {
     CommandData.ISCState.display_mode = full;
   } else if (command == SIndex("auto_focus")) {
+    CommandData.ISCState.abort = 1;
     CommandData.ISCState.autofocus = 1;
     CommandData.old_ISC_focus = CommandData.ISCState.focus_pos;
     CommandData.ISCState.focus_pos = FOCUS_RANGE;
