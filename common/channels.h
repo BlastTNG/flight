@@ -36,8 +36,11 @@ extern "C" {
 
 #define LOCKIN_C2V (5.43736e-07)
 #define LOCKIN_OFFSET (-1.1403)
+
+#define FIELD_LEN 20
+
   struct ChannelStruct {
-    char field[20]; /* name of channel for FileFormats and CalSpecs */
+    char field[FIELD_LEN]; /* name of channel for FileFormats and CalSpecs */
     char rw;        /* 'r' = read, 'w' = write */
     int node;       /* BlastBus node: 0 to 63 */
     int adr;        /* BlastBus address: 0 to 63 */
@@ -80,7 +83,7 @@ extern "C" {
 #define GYRO3_OFFSET 25600.0
 
   /* The size of the rx and downlink frames */
-#define FrameWords() \
+#define FRAME_WORDS \
   ( 1              /* FILETYPE */ \
     + 2            /* FRAMENUM */ \
     + 1            /* SLOW_INDEX */ \
@@ -88,8 +91,8 @@ extern "C" {
     + N_FASTCHLIST /* fast channels and bolometers */ \
   )
 
-#define TxFrameSize() (FrameWords() * sizeof(unsigned int))
-#define RxFrameSize() (FrameWords() * sizeof(unsigned short))
+#define TX_FRAME_SIZE (FRAME_WORDS * sizeof(unsigned int))
+#define RX_FRAME_SIZE (FRAME_WORDS * sizeof(unsigned short))
 
 #ifdef __cplusplus
 }

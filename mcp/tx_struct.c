@@ -4,12 +4,18 @@
 #include <time.h>
 #include "tx_struct.h"
 
+/* if compiling MCP load the real mprintf function prototypes, otherwise, just
+ * make up a fake one */
 #ifdef __MCP__
 #include "mcp.h"
 #else
-#define mprintf(x, ...) printf(__VA_ARGS__)
+#define mprintf(x, ...) \
+do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
+  printf(__VA_ARGS__); \
+  if (strcmp(#x, "MCP_FATAL") == 0) \
+    exit(1); \
+} while (0)
 #endif
-
 
 unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
