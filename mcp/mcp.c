@@ -677,7 +677,7 @@ int main(int argc, char *argv[]) {
         == NULL)
       merror(MCP_FATAL, "Unable to malloc slow data buffer");
 
-  CommandData.tdrssVeto = 1;
+  CommandData.tdrssVeto = 0;
 #ifndef BOLOTEST
   if (CommandData.tdrssVeto)
     mputs(MCP_WARNING, "The TDRSS writer has been VETOed.");

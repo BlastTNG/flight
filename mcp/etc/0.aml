@@ -1,3 +1,5 @@
+# N.B. -- any line that does not start with '+' or '-' is treated as a comment
+
 +SETTINGS   maxbitrate  looplength  samplerate  maxover     minover
 --1         6000        5           5           11.23       0.25
 
@@ -12,9 +14,11 @@
 +FASTDATA
 ++DIFF      src         numbits     overbits    divider     forcediv    perframe    samplefreq
 --1         n7ref       4           2           4           false       20          64
---2         n5c6        25          2           1           false       20          1
---3         n5c7        25          2           1           false       20          1
+--2         n5c6        5           2           1           false       20          1
+--3         n5c7        5           2           1           false       20          1
 ++INT       src         numbits     overbits    divider     forcediv    perframe    samplefreq
 --1         gyro1       13          1           2           false       20          16
---2         gyro2       7           1           2           false       20          16
---3         gyro3       3           1           6           false       20          16
+# Entries 2 and 3 use entry 1 as default (indicated by '@1').  '@' replaces with
+# value from entry 1.
+--2@1       gyro2       7           @           @           @           @           @
+--3@1       gyro3       3           @           @           @           @           @

@@ -15,9 +15,11 @@
 #define AML_LEN_LINE    512
 #define AML_LEN_ENTRY   32
 
+#include "tx_struct.h"
+
 struct DataStruct_glob {
   char type;
-  char src[15];
+  char src[FIELD_LEN];
   int framefreq;      // Times per frame.
   char numbits;
   char overflowsize;

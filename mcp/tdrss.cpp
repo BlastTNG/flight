@@ -38,6 +38,10 @@ extern "C" {
 #include "command_struct.h"
 }
 
+#define USE_SMALL_LOG
+#define SMALL_LOG_FILE  "/data/etc/small.log"
+int smalllogspaces;
+
 #define ALICEFILE_DIR   "/data/etc/"
 #define MULTIPLEX_WORD  3
 
@@ -474,6 +478,13 @@ Alice::Alice() {
   DataSource = new FrameBuffer(&tdrss_index, tdrss_data, slow_data, 1);
   sendbuf = new Buffer();    // 10 bits per byte
   DataInfo = new DataHolder();
+
+#ifdef USE_SMALL_LOG
+  if ((smalllog = fopen(SMALL_LOG_FILE, "a")) == NULL)
+    mprintf(MCP_WARNING, "Could not open small log file (%s).", SMALL_LOG_FILE);
+  else
+    fprintf(smalllog, "\n\nSMALL LOG RESTART\n------------------\n");
+#endif
 }
 
 
@@ -601,9 +612,6 @@ void Alice::SendDiff(double *data, int num, struct DataStruct_glob *currInfo,
 
   offset = (long long)(Differentiate(data, num, currInfo->divider));
 
-  //printf("Differentiated Compression (%d samples):  offset = %lld, "
-  //       "divider = %d\n", num, offset, currInfo->divider);
-
   sendbuf->WriteTo(offset, 24, 16, true);   // Send offset, divider information
   sendbuf->WriteTo(currInfo->divider, 4, 4, false);
 
@@ -624,13 +632,19 @@ void Alice::SendDiff(double *data, int num, struct DataStruct_glob *currInfo,
       currInfo->divider = 1;
   }
 
-  //printf("Compression: %0.2f %% (%d bytes)\n",
-  //       100 * float(sendbuf->SectionSize()) / float(num * sizeof(int)),
-  //       sendbuf->SectionSize());
-  //printf("%0.2f %% of the samples spilled over the %d bit requested size\n"
-  //       "   into %d bit overflow chunks.\n\n",
-  //       100 * float(sendbuf->overnum) / float(num), currInfo->numbits,
-  //       currInfo->overflowsize);
+#ifdef USE_SMALL_LOG
+  if (smalllog != NULL) {
+    fprintf(smalllog, "DIFF (%d samples): offset = %lld, divider = %d\n", num,
+            offset, currInfo->divider);
+    for (i = 0; i < smalllogspaces; i++)
+      fprintf(smalllog, " ");
+    fprintf(smalllog, "      compression = %0.2f%% (%d bytes), "
+            "spillover = %0.2f%%\n",
+            100 * float(sendbuf->SectionSize()) / float(num * sizeof(int)),
+            sendbuf->SectionSize(), 100 * float(sendbuf->overnum) / float(num));
+    fflush(smalllog);
+  }
+#endif
 }
 
 
@@ -660,9 +674,6 @@ void Alice::SendInt(double *data, int num, struct DataStruct_glob *currInfo,
   data[0] = Round(Differentiate(data, num, currInfo->divider) /
       currInfo->divider);
 
-  //printf("Integral Preserving Compression (%d samples):  offset = %lld, "
-  //    "divider = %d\n", num, (long long)data[0], currInfo->divider);
-
   sendbuf->WriteTo(currInfo->divider, 4, 4, false);  // Send offset and divider
   sendbuf->WriteTo((long long)data[0], 24, 16, true);
 
@@ -683,13 +694,19 @@ void Alice::SendInt(double *data, int num, struct DataStruct_glob *currInfo,
       currInfo->divider = 1;
   }
 
-  //printf("Compression: %0.2f %% (%d bytes)\n",
-  //    100 * float(sendbuf->SectionSize()) / float(num * sizeof(int)),
-  //    sendbuf->SectionSize());
-  //printf("%0.2f %% of the samples spilled over the %d bit requested size\n"
-  //    "   into %d bit overflow chunks.\n\n",
-  //    100 * float(sendbuf->overnum) / float(num), currInfo->numbits,
-  //    currInfo->overflowsize);
+#ifdef USE_SMALL_LOG
+  if (smalllog != NULL) {
+    fprintf(smalllog, "DIFF (%d samples): offset = %lld, divider = %d\n", num,
+            (long long)data[0], currInfo->divider);
+    for (i = 0; i < smalllogspaces; i++)
+      fprintf(smalllog, " ");
+    fprintf(smalllog, "      compression = %0.2f%% (%d bytes), "
+            "spillover = %0.2f%%\n",
+            100 * float(sendbuf->SectionSize()) / float(num * sizeof(int)),
+            sendbuf->SectionSize(), 100 * float(sendbuf->overnum) / float(num));
+    fflush(smalllog);
+  }
+#endif
 }
 
 
@@ -709,12 +726,16 @@ void Alice::SendSingle(double *data, struct DataStruct_glob *currInfo) {
     (double)((long long)1 << currInfo->numbits);
   sendval = Round((data[0] - (double)currInfo->minval) / divider);
 
-  //printf("Single Value Compression: value = %lld (%lld) - %g\n\n",
-  //    (long long)data[0], (long long)sendval, divider);
-
   // Write the first value from *data
   sendbuf->WriteTo((long long)sendval, currInfo->numbits,
       currInfo->overflowsize, false);
+#ifdef USE_SMALL_LOG
+  if (smalllog != NULL) {
+    fprintf(smalllog, "SINGLE: value = %lld, sendval = %lld, divider = %g\n",
+            (long long)data[0], (long long)sendval, divider);
+    fflush(smalllog);
+  }
+#endif
 }
 
 
@@ -742,12 +763,16 @@ void Alice::SendAverage(double *data, int num,
     (double)((long long)1 << currInfo->numbits);
   sendval = Round((sum / (double)num - (double)currInfo->minval) / divider);
 
-  //printf("Average Value Compression: average = %.12g (%lld, %g)\n\n",
-  //    Round(sum / num), (long long)sendval, divider);
-
   // Write average value to buffer
   sendbuf->WriteTo((long long)sendval, currInfo->numbits,
       currInfo->overflowsize, false);
+#ifdef USE_SMALL_LOG
+  if (smalllog != NULL) {
+    fprintf(smalllog, "AVG: value = %.12g, sendval = %lld, divider = %g\n",
+            Round(sum / num), (long long)sendval, divider);
+    fflush(smalllog);
+  }
+#endif
 }
 
 
@@ -855,6 +880,9 @@ void Alice::CompressionLoop() {
   int numread;
   int framepos = 0;
   int rawdatasize, filterdatasize, ts;
+  char tmpstr[80];
+  time_t t;
+  struct tm now;
 
   rawdata = (double *)malloc(1);
   rawdatasize = 1;
@@ -873,7 +901,7 @@ void Alice::CompressionLoop() {
 
       // Make sure our buffers for reading in data from disk are big enough.
       ts = sizeof(double) * DataInfo->samplerate * MaxFrameFreq() *
-        DataInfo->looplength;
+           DataInfo->looplength;
       if (ts > rawdatasize) {
         rawdatasize = ts;
         rawdata = (double *)realloc(rawdata, ts);
@@ -926,6 +954,15 @@ void Alice::CompressionLoop() {
     }
 
     // Start a new buffer for the downlink
+#ifdef USE_SMALL_LOG
+    if (smalllog != NULL) {
+      t = time(NULL);
+      strftime(tmpstr, 80, "%F %T GMT >> ", gmtime_r(&t, &now));
+      fprintf(smalllog, "\n%sStarting new TDRSS frame.  AML file = %d.\n",
+              tmpstr, AMLsrc);
+      fflush(smalllog);
+    }
+#endif
     sendbuf->Start(AMLsrc, (unsigned int)(framepos - readrightpad));
     i = 0;
     earlysend = false;
@@ -941,8 +978,12 @@ void Alice::CompressionLoop() {
       for (currInfo = DataInfo->FirstSlow(); currInfo != NULL;
           currInfo = DataInfo->NextSlow()) {
 
-        //printf("Reading from %s . . .\n", currInfo->src);
-
+#ifdef USE_SMALL_LOG
+        if (smalllog != NULL) {
+          fprintf(smalllog, "  %s -> ", currInfo->src);
+          smalllogspaces = strlen(currInfo->src);
+        }
+#endif
         switch (currInfo->type) {
           case COMP_SINGLE:
             if ((numread = DataSource->ReadField(rawdata, currInfo->src,
@@ -989,7 +1030,12 @@ void Alice::CompressionLoop() {
       rightpad = int((powtwo - rawsize - leftpad * currInfo->framefreq) /
           currInfo->framefreq) + 1;
 
-      //printf("Reading from %s . . .\n", currInfo->src);
+#ifdef USE_SMALL_LOG
+        if (smalllog != NULL) {
+          fprintf(smalllog, "  %s -> ", currInfo->src);
+          smalllogspaces = strlen(currInfo->src);
+        }
+#endif
 
       // Read data from Frodo's disk
       if ((numread = DataSource->ReadField(filterdata, currInfo->src,
@@ -1034,12 +1080,25 @@ void Alice::CompressionLoop() {
         if (sendbuf->CurrSize() > sendbuf->MaxSize()) {
           sendbuf->EraseLastSection();
           mputs(MCP_WARNING, "TDRSS frame truncated.");
+#ifdef USE_SMALL_LOG
+          if (smalllog != NULL) {
+            fprintf(smalllog, "WARNING: frame truncated!\n");
+            fflush(smalllog);
+          }
+#endif
           earlysend = true;
         }
       }
     }
     // Send down the compressed buffer
     sendbuf->Stop();
+#ifdef USE_SMALL_LOG
+    if (smalllog != NULL) {
+      fprintf(smalllog, "End of TDRSS frame.  Total size = %d bytes.\n", 
+              sendbuf->CurrSize());
+      fflush(smalllog);
+    }
+#endif
     framepos += numframes;
   }
 }
@@ -1056,6 +1115,11 @@ Alice::~Alice()
   delete DataSource;
   delete sendbuf;
   delete DataInfo;
+
+#ifdef USE_SMALL_LOG
+  if (smalllog != NULL)
+    fclose(smalllog);
+#endif
 }
 
 

@@ -108,6 +108,7 @@ private:
   Buffer *sendbuf;
 
   int AMLsrc;
+  FILE *smalllog;
 };
 
 #endif
