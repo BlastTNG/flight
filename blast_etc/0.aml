@@ -123,7 +123,7 @@
 --s6@s0    clin_sigma      @        @         @           @           @         
 
 ### cryo ###
---c0       t_opt_box_filt  8        4         12859       20051       1         
+--c0       t_optbox_filt  8        4         12859       20051       1         
 --c1@c0    t_lhe_filt      @        @         12815       21836       @         
 --c2@c0    t_vcs_filt      @        @         30511       34549       @         
 --c3@c0    t_ln2           @        @         30508       34546       @         
