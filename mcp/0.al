@@ -95,8 +95,8 @@
   <DIFF src="n7ref" predefined="diff1" divider="4" overbits="2"/>
 
   # INT -- integral preserving compression (see readme file for more info)
-  <INT src="gyro1" predefined="int1" numbits="9" samplefreq="1" divider="2"/>
-  <INT src="gyro2" predefined="int1" samplefreq="1" divider="2"/>
+  <INT src="gyro1" predefined="int1" numbits="13" samplefreq="2" divider="2"/>
+  <INT src="gyro2" predefined="int1" numbits="7" samplefreq="1" divider="2"/>
   <INT src="gyro3" numbits="3" overbits="1" divider="6" forcediv="false"
        perframe="20" samplefreq="1"/>
   
