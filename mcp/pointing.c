@@ -316,7 +316,9 @@ void RecordHistory(int index) {
   hs.elev_history[hs.i_history] = PointingData[index].el*M_PI/180.0;
 }
 
-#define GYRO_VAR 3.7808641975309e-08
+//#define GYRO_VAR 3.7808641975309e-08
+// (0.02dps/sqrt(100Hz))^2 : gyro offset error dominated
+#define GYRO_VAR (2.0E-6)
 void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
 		      double gy1, double gy1_off,
 		      double gy2, double gy2_off,
@@ -634,7 +636,7 @@ void Pointing(){
   };
   static struct AzSolutionStruct DGPSAz = {0.0, // starting angle
 					  360.0*360.0, // varience
-					  1.0/M2DV(10), //sample weight
+					  1.0/M2DV(20), //sample weight
 					  M2DV(10), // systemamatic varience
 					  0.0, // trim 
 					  0.0, // last input
