@@ -416,11 +416,11 @@ void SlowChIndex(char* field, int* channel, int* index) {
 void FPrintDerived(FILE *fp) {
     fprintf(fp,
       "### Sensor Veto ###\n"
-      "SUN_VETO         BIT sensor_veto 1\n"
-      "ISC_VETO         BIT sensor_veto 2\n"
-      "VSC_VETO         BIT sensor_veto 3\n"
-      "MAG_VETO         BIT sensor_veto 4\n"
-      "GPS_VETO         BIT sensor_veto 5\n"
+      "SUN_VETO         BIT sensor_veto 0\n"
+      "ISC_VETO         BIT sensor_veto 1\n"
+      "VSC_VETO         BIT sensor_veto 2\n"
+      "MAG_VETO         BIT sensor_veto 3\n"
+      "GPS_VETO         BIT sensor_veto 4\n"
       "### Bias Generator Bitfield ###\n"
       "BIAS_IS_DC       BIT biasin 1\n"
       "BIAS_CLK_IS_INT  BIT biasin 2\n"

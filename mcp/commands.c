@@ -278,7 +278,7 @@ void SingleCommand (int command) {
   else if (command == SIndex("mag_allow"))
     CommandData.use_mag = 1;
   else if (command == SIndex("gps_allow"))
-    CommandData.use_mag = 1;
+    CommandData.use_gps = 1;
 
   else if (command == SIndex("clock_int"))    /* Bias settings */
     CommandData.Bias.clockInternal = 1;
