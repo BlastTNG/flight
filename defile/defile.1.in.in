@@ -522,26 +522,13 @@ The defile configuration file.
 .BR syslogd (8)
 
 .SH BUGS
-Defiling current data
-.RB ( \-p
-mode) from a NFS volume mounted with option
-.I actimeo=0
-appears to be inherently unreliable: running in this mode,
-.B defile
-receives bad data on read, with no error flags raised.  An entire single
-read is corrupted this way (up to 50 frames). This can be very hard for
-.B defile
-to detect, since NFS behaves like it provided proper data, and the timestream
-is otherwise uninterrupted.  This appears to be the cause of very long
-timescale (~20 minute) spikes in the defiled data.  Defiling non-current data
-doesn't seem to have this problem (but see below).
-
 Quiet mode is probably a little
 .I too
 quiet...
 
-I'm seeing some single word dropouts, randomly, in the defiled data, when
-defiling non-current data. This may be due to NFS problems too. The error rate
+In versions < 3.0.2, I was seeing some single word dropouts, randomly, in the
+defiled data, when defiling non-current data. This may have be due to the
+bufferend reads. If so, this problem should be gone as of 3.0.3.  The error rate
 for an entire dirfile is on the order of 1 dropped 16-bit word per 23,000 fast
 frames (about 80 errors per billion words).
 

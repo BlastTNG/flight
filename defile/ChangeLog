@@ -4,6 +4,7 @@
 2004-11-17  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	Release defile-3.0.3
 
+	* defile.1.in.in: Update for 3.0.3
 	* reader.c (FrameFileReader): Replace buffered reads with unbuffered input.
 
 2004-11-02  D. V. Wiebe <dwiebe@physics.utoronto.ca>
