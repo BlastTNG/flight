@@ -1,11 +1,12 @@
-#define FILETYPE 0x0001
-
 #define EXPOSURE2I (65536. / 5000000.)  /* ISC exposure time to int */
+
+#define NIOS_QUEUE  0
+#define NIOS_FLUSH -1
 
 extern int frame_num;
 
 void InitTxFrame(void);
-void UpdateBBCFrame(unsigned short *RxFrame);
+void UpdateBBCFrame(unsigned short*);
 
-void RawNiosWrite(unsigned int addr, unsigned int data);
-void WriteData(struct NiosStruct*, unsigned int);
+void RawNiosWrite(unsigned int, unsigned int, int);
+void WriteData(struct NiosStruct*, unsigned int, int);

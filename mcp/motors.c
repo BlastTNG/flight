@@ -182,7 +182,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     v_elev = 32767;
   if (v_elev < -32768)
     v_elev = -32768;  
-  WriteData(elVreqAddr, 32768 + v_elev);
+  WriteData(elVreqAddr, 32768 + v_elev, NIOS_QUEUE);
 
   /* zero motor gains if the pin is in */
   if ((pinIsIn() && !CommandData.force_el) || CommandData.disable_el) {
@@ -192,9 +192,9 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     elGainI = CommandData.ele_gain.I;	
   }
   /* proportional term for el motor */
-  WriteData(gPElAddr, elGainP);
+  WriteData(gPElAddr, elGainP, NIOS_QUEUE);
   /* integral term for el_motor */
-  WriteData(gIElAddr, elGainI);
+  WriteData(gIElAddr, elGainI, NIOS_QUEUE);
 
   
   /***************************************************/
@@ -202,10 +202,10 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   /* cos of el enc */
   el_rad = (M_PI / 180.0) * PointingData[i_point].el; /* convert to radians */
   ucos_el = (unsigned int)((cos(el_rad) + 1.0) * 32768.0);
-  WriteData(cosElAddr, ucos_el);
+  WriteData(cosElAddr, ucos_el, NIOS_QUEUE);
   /* sin of el enc */
   usin_el = (unsigned int)((sin(el_rad) + 1.0) * 32768.0);
-  WriteData(sinElAddr, usin_el);
+  WriteData(sinElAddr, usin_el, NIOS_QUEUE);
 
   /***************************************************/
   /**            Azimuth Drive Motors              **/
@@ -214,7 +214,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     v_az = 32767;
   if (v_az < -32768)
     v_az = -32768;  
-  WriteData(azVreqAddr, 32768 + v_az);
+  WriteData(azVreqAddr, 32768 + v_az, NIOS_QUEUE);
 
   if ((CommandData.disable_az) || (wait > 0)) {
     azGainP = 0;
@@ -227,18 +227,18 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   }
 
   /* p term for az motor */
-  WriteData(gPAzAddr, azGainP);
+  WriteData(gPAzAddr, azGainP, NIOS_QUEUE);
   /* I term for az motor */
-  WriteData(gIAzAddr, azGainI);
+  WriteData(gIAzAddr, azGainI, NIOS_QUEUE);
   /* p term for pivot motor */
-  WriteData(gPPivotAddr, pivGainP);
+  WriteData(gPPivotAddr, pivGainP, NIOS_QUEUE);
   /* setpoint for reaction wheel */
-  WriteData(setReacAddr, CommandData.pivot_gain.SP);
+  WriteData(setReacAddr, CommandData.pivot_gain.SP, NIOS_QUEUE);
 
   /* reaction wheel back-EMF gain correction */
-  WriteData(emfGainAddr, CommandData.emf_gain);
+  WriteData(emfGainAddr, CommandData.emf_gain, NIOS_QUEUE);
   /* reaction wheel back-EMF offset correction */
-  WriteData(emfOffsetAddr, CommandData.emf_offset + 32767);
+  WriteData(emfOffsetAddr, CommandData.emf_offset + 32767, NIOS_QUEUE);
 
   /***************************************************/
   /**                Roll Drive Motors              **/  
@@ -255,7 +255,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     rollGainP = 0;
   
   /* p term for roll motor */
-  WriteData(gPRollAddr, rollGainP);
+  WriteData(gPRollAddr, rollGainP, NIOS_FLUSH);
 
   if (wait > 0)
     wait--;

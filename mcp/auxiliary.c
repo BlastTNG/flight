@@ -86,11 +86,11 @@ void ControlGyroHeat(unsigned short *RxFrame) {
 
   /* send down the setpoints and gains values */
   WriteData(tGySetAddr,
-      (unsigned short)(CommandData.t_gybox_setpoint * 32768.0 / 100.0));
+      (unsigned short)(CommandData.t_gybox_setpoint * 32768.0 / 100.0), 0);
 
-  WriteData(pGyheatAddr, CommandData.gy_heat_gain.P);
-  WriteData(iGyheatAddr, CommandData.gy_heat_gain.I);
-  WriteData(dGyheatAddr, CommandData.gy_heat_gain.D);
+  WriteData(pGyheatAddr, CommandData.gy_heat_gain.P, NIOS_QUEUE);
+  WriteData(iGyheatAddr, CommandData.gy_heat_gain.I, NIOS_QUEUE);
+  WriteData(dGyheatAddr, CommandData.gy_heat_gain.D, NIOS_QUEUE);
 
   /* control the heat */
   set_point = (CommandData.t_gybox_setpoint - 136.45) / (-9.5367431641e-08);
@@ -127,10 +127,10 @@ void ControlGyroHeat(unsigned short *RxFrame) {
 
   /******** do the pulse *****/
   if (p_on > 0) {
-    WriteData(gyHeatAddr, on);
+    WriteData(gyHeatAddr, on, NIOS_FLUSH);
     p_on--;
   } else {
-    WriteData(gyHeatAddr, off);
+    WriteData(gyHeatAddr, off, NIOS_FLUSH);
     p_off--;
   }
 }
@@ -190,7 +190,7 @@ int Balance(int ifpmBits) {
     ifpmBits &= (0xFF - BAL1_ON); /* turn off pump */
   }
 
-  WriteData(balPwm1Addr, pumppwm);
+  WriteData(balPwm1Addr, pumppwm, NIOS_QUEUE);
 
   return ifpmBits;
 }
@@ -308,7 +308,7 @@ void CameraTrigger(int which)
     if (isc_pulses[which].age < 0)
       isc_pulses[which].age = 0;
 
-    WriteData(TriggerAddr[which], iscPulse);
+    WriteData(TriggerAddr[which], iscPulse, NIOS_FLUSH);
   }
 
   isc_pulses[which].last_save++;
@@ -405,22 +405,23 @@ void ControlAuxMotors(unsigned short *RxFrame) {
     if (CommandData.pumps.bal_veto != -1)
       CommandData.pumps.bal_veto--;
 
-    WriteData(balpumpLevAddr, CommandData.pumps.pwm1 & 0x7ff);
+    WriteData(balpumpLevAddr, CommandData.pumps.pwm1 & 0x7ff, NIOS_QUEUE);
   } else {
     ifpmBits = Balance(ifpmBits);
   }
 
-  WriteData(lokmotPinAddr, pin_is_in);
-  WriteData(ofpmBitsAddr, ofpmBits);
-  WriteData(sprpumpLevAddr, CommandData.pumps.pwm2 & 0x7ff);
-  WriteData(inpumpLevAddr, CommandData.pumps.pwm3 & 0x7ff);
-  WriteData(outpumpLevAddr, CommandData.pumps.pwm4 & 0x7ff);
-  WriteData(balOnAddr, (int)CommandData.pumps.bal_on);
-  WriteData(balOffAddr, (int)CommandData.pumps.bal_off);
-  WriteData(balVetoAddr, (int)CommandData.pumps.bal_veto);
-  WriteData(balTargetAddr, (int)(CommandData.pumps.bal_target + 1648. * 5.));
-  WriteData(balGainAddr, (int)(CommandData.pumps.bal_gain * 1000.));
-  WriteData(balMinAddr, (int)CommandData.pumps.bal_min);
-  WriteData(balMaxAddr,(int)CommandData.pumps.bal_max);
-  WriteData(ifpmBitsAddr, ifpmBits);
+  WriteData(lokmotPinAddr, pin_is_in, NIOS_QUEUE);
+  WriteData(ofpmBitsAddr, ofpmBits, NIOS_QUEUE);
+  WriteData(sprpumpLevAddr, CommandData.pumps.pwm2 & 0x7ff, NIOS_QUEUE);
+  WriteData(inpumpLevAddr, CommandData.pumps.pwm3 & 0x7ff, NIOS_QUEUE);
+  WriteData(outpumpLevAddr, CommandData.pumps.pwm4 & 0x7ff, NIOS_QUEUE);
+  WriteData(balOnAddr, (int)CommandData.pumps.bal_on, NIOS_QUEUE);
+  WriteData(balOffAddr, (int)CommandData.pumps.bal_off, NIOS_QUEUE);
+  WriteData(balVetoAddr, (int)CommandData.pumps.bal_veto, NIOS_QUEUE);
+  WriteData(balTargetAddr, (int)(CommandData.pumps.bal_target + 1648. * 5.),
+      NIOS_QUEUE);
+  WriteData(balGainAddr, (int)(CommandData.pumps.bal_gain * 1000.), NIOS_QUEUE);
+  WriteData(balMinAddr, (int)CommandData.pumps.bal_min, NIOS_QUEUE);
+  WriteData(balMaxAddr,(int)CommandData.pumps.bal_max, NIOS_QUEUE);
+  WriteData(ifpmBitsAddr, ifpmBits, NIOS_FLUSH);
 }

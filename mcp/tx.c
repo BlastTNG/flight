@@ -23,6 +23,8 @@
 #include "mcp.h"
 #include "ss_struct.h"
 
+#define NIOS_BUFFER_SIZE 100
+
 extern short int SamIAm;
 short int InCharge;
 
@@ -102,24 +104,24 @@ void WriteAux(void) {
 
   incharge = InCharge;
 
-  WriteData(cpuTimeAddr, t >> 16);
+  WriteData(cpuTimeAddr, t >> 16, NIOS_QUEUE);
 
-  WriteData(cpuFanAddr, CommandData.fan);
-  WriteData(cpuTemp1Addr, CommandData.temp1);
-  WriteData(cpuTemp2Addr, CommandData.temp2);
-  WriteData(cpuTemp3Addr, CommandData.temp3);
+  WriteData(cpuFanAddr, CommandData.fan, NIOS_QUEUE);
+  WriteData(cpuTemp1Addr, CommandData.temp1, NIOS_QUEUE);
+  WriteData(cpuTemp2Addr, CommandData.temp2, NIOS_QUEUE);
+  WriteData(cpuTemp3Addr, CommandData.temp3, NIOS_QUEUE);
 
-  WriteData(samIAmAddr, SamIAm);
-  WriteData(diskFreeAddr, CommandData.df);
+  WriteData(samIAmAddr, SamIAm, NIOS_QUEUE);
+  WriteData(diskFreeAddr, CommandData.df, NIOS_QUEUE);
 
   i_point = GETREADINDEX(point_index);
 
   t = PointingData[i_point].t;
 
-  WriteData(aliceFileAddr, CommandData.alice_file);
-  WriteData(timeoutAddr, CommandData.pointing_mode.t - t);
-  WriteData(bi0FifoSizeAddr, CommandData.bi0FifoSize);
-  WriteData(bbcFifoSizeAddr, CommandData.bbcFifoSize);
+  WriteData(aliceFileAddr, CommandData.alice_file, NIOS_QUEUE);
+  WriteData(timeoutAddr, CommandData.pointing_mode.t - t, NIOS_QUEUE);
+  WriteData(bi0FifoSizeAddr, CommandData.bi0FifoSize, NIOS_QUEUE);
+  WriteData(bbcFifoSizeAddr, CommandData.bbcFifoSize, NIOS_FLUSH);
 }
 
 /*****************************************************************/
@@ -161,7 +163,8 @@ void SyncADC (int TxIndex) {
   if (doingSync) {
     /* if yes, turn off sync bit if we sent the sync last frame */
     if (TxIndex == nextInd) {
-      RawNiosWrite(syncAddr->niosAddr, BBC_WRITE | BBC_NODE(17) | BBC_CH(56));
+      RawNiosWrite(syncAddr->niosAddr, BBC_WRITE | BBC_NODE(17) | BBC_CH(56),
+          NIOS_QUEUE);
     }
   } else {
     /* if not, check to see if we need to sync a board */
@@ -173,7 +176,7 @@ void SyncADC (int TxIndex) {
         mprintf(MCP_INFO, "ADC Sync board %i\n", k);
         l = (k == 0) ? 21 : k;
         RawNiosWrite(syncAddr->niosAddr, BBC_WRITE | BBC_NODE(l) | BBC_CH(56) |
-          BBC_ADC_SYNC | 0xa5a3);
+          BBC_ADC_SYNC | 0xa5a3, NIOS_QUEUE);
         k = 17;  /* ABORT! ABORT! */
       }
     }
@@ -295,103 +298,121 @@ void StoreStarCameraData(int index, int which)
 
   /*** Blobs ***/
   WriteData(Blob0XAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_x[blob_index[which] * 3 + 0] * 40.));
+      (int)(ISCSolution[which][i_isc].blob_x[blob_index[which] * 3 + 0] * 40.),
+      NIOS_QUEUE);
   WriteData(Blob1XAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_x[blob_index[which] * 3 + 1] * 40.));
+      (int)(ISCSolution[which][i_isc].blob_x[blob_index[which] * 3 + 1] * 40.),
+      NIOS_QUEUE);
   WriteData(Blob2XAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_x[blob_index[which] * 3 + 2] * 40.));
+      (int)(ISCSolution[which][i_isc].blob_x[blob_index[which] * 3 + 2] * 40.),
+      NIOS_QUEUE);
 
   WriteData(Blob0YAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_y[blob_index[which] * 3 + 0] * 40.));
+      (int)(ISCSolution[which][i_isc].blob_y[blob_index[which] * 3 + 0] * 40.),
+      NIOS_QUEUE);
   WriteData(Blob1YAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_y[blob_index[which] * 3 + 1] * 40.));
+      (int)(ISCSolution[which][i_isc].blob_y[blob_index[which] * 3 + 1] * 40.),
+      NIOS_QUEUE);
   WriteData(Blob2YAddr[which],
-      (int)(ISCSolution[which][i_isc].blob_y[blob_index[which] * 3 + 2] * 40.));
+      (int)(ISCSolution[which][i_isc].blob_y[blob_index[which] * 3 + 2] * 40.),
+      NIOS_QUEUE);
 
   WriteData(Blob0FluxAddr[which],
       (int)(ISCSolution[which][i_isc].blob_flux[blob_index[which] * 3 + 0]
-            / 32.));
+            / 32.), NIOS_QUEUE);
   WriteData(Blob1FluxAddr[which],
       (int)(ISCSolution[which][i_isc].blob_flux[blob_index[which] * 3 + 1]
-            / 32.));
+            / 32.), NIOS_QUEUE);
   WriteData(Blob2FluxAddr[which],
       (int)(ISCSolution[which][i_isc].blob_flux[blob_index[which] * 3 + 2]
-            / 32.));
+            / 32.), NIOS_QUEUE);
 
   WriteData(Blob0SnAddr[which],
       (int)(ISCSolution[which][i_isc].blob_sn[blob_index[which] * 3 + 0]
-            * 65.536));
+            * 65.536), NIOS_QUEUE);
   WriteData(Blob1SnAddr[which],
       (int)(ISCSolution[which][i_isc].blob_sn[blob_index[which] * 3 + 1]
-            * 65.536));
+            * 65.536), NIOS_QUEUE);
   WriteData(Blob2SnAddr[which],
       (int)(ISCSolution[which][i_isc].blob_sn[blob_index[which] * 3 + 2]
-            * 65.536));
+            * 65.536), NIOS_QUEUE);
 
   if (++blob_index[which] >= 5)
     blob_index[which] = 0;
 
   /*** Solution Info ***/
   WriteData(FramenumAddr[which],
-      (unsigned int)ISCSolution[which][i_isc].framenum);
+      (unsigned int)ISCSolution[which][i_isc].framenum, NIOS_QUEUE);
   WriteData(RaAddr[which],
-      (unsigned int)(ISCSolution[which][i_isc].ra * RAD2LI));
-  WriteData(DecAddr[which],
-      (unsigned int)((ISCSolution[which][i_isc].dec + M_PI / 2) * 2. * RAD2LI));
-  WriteData(NblobsAddr[which], (unsigned int)ISCSolution[which][i_isc].n_blobs);
+      (unsigned int)(ISCSolution[which][i_isc].ra * RAD2LI), NIOS_QUEUE);
+  WriteData(DecAddr[which], (unsigned int)((ISCSolution[which][i_isc].dec
+          + M_PI / 2) * 2. * RAD2LI), NIOS_QUEUE);
+  WriteData(NblobsAddr[which], (unsigned int)ISCSolution[which][i_isc].n_blobs,
+      NIOS_QUEUE);
 
   if (ISCSolution[which][i_isc].sigma * RAD2ARCSEC > 65535)
-    WriteData(RdSigmaAddr[which], 65535);
+    WriteData(RdSigmaAddr[which], 65535, NIOS_QUEUE);
   else 
-    WriteData(RdSigmaAddr[which],
-        (unsigned int)(ISCSolution[which][i_isc].sigma * RAD2ARCSEC));
+    WriteData(RdSigmaAddr[which], (unsigned int)(ISCSolution[which][i_isc].sigma
+          * RAD2ARCSEC), NIOS_QUEUE);
 
   WriteData(McpnumAddr[which],
-      (unsigned int)ISCSolution[which][i_isc].MCPFrameNum);
+      (unsigned int)ISCSolution[which][i_isc].MCPFrameNum, NIOS_QUEUE);
   WriteData(AfocusAddr[which],
-      (unsigned int)ISCSolution[which][i_isc].autoFocusPosition);
+      (unsigned int)ISCSolution[which][i_isc].autoFocusPosition, NIOS_QUEUE);
   WriteData(ErrorAddr[which],
-      (unsigned int)ISCSolution[which][i_isc].cameraerr);
+      (unsigned int)ISCSolution[which][i_isc].cameraerr, NIOS_QUEUE);
   WriteData(MapmeanAddr[which],
-      (unsigned int)ISCSolution[which][i_isc].mapMean);
+      (unsigned int)ISCSolution[which][i_isc].mapMean, NIOS_QUEUE);
 
   /*** State Info ***/
   WriteData(StateAddr[which], (unsigned int)(ISCSentState[which].pause * 2
         + ISCSentState[which].abort * 4 + ISCSentState[which].autofocus * 8
-        + ISCSentState[which].shutdown * 32 + ISCSentState[which].save));
-  WriteData(FocusAddr[which], (unsigned int)ISCSentState[which].focus_pos);
-  WriteData(ApertAddr[which], (unsigned int)ISCSentState[which].ap_pos);
+        + ISCSentState[which].shutdown * 32 + ISCSentState[which].save),
+      NIOS_QUEUE);
+  WriteData(FocusAddr[which], (unsigned int)ISCSentState[which].focus_pos,
+      NIOS_QUEUE);
+  WriteData(ApertAddr[which], (unsigned int)ISCSentState[which].ap_pos,
+      NIOS_QUEUE);
   WriteData(ThreshAddr[which], (unsigned int)(ISCSentState[which].sn_threshold
-        * 10.));
-  WriteData(GridAddr[which], (unsigned int)ISCSentState[which].grid);
-  WriteData(CenboxAddr[which], (unsigned int)ISCSentState[which].cenbox);
-  WriteData(ApboxAddr[which], (unsigned int)ISCSentState[which].apbox);
-  WriteData(MdistAddr[which], (unsigned int)ISCSentState[which].mult_dist);
-  WriteData(MaxblobsAddr[which],
-      (unsigned int)ISCSentState[which].maxBlobMatch);
+        * 10.), NIOS_QUEUE);
+  WriteData(GridAddr[which], (unsigned int)ISCSentState[which].grid,
+      NIOS_QUEUE);
+  WriteData(CenboxAddr[which], (unsigned int)ISCSentState[which].cenbox,
+      NIOS_QUEUE);
+  WriteData(ApboxAddr[which], (unsigned int)ISCSentState[which].apbox,
+      NIOS_QUEUE);
+  WriteData(MdistAddr[which], (unsigned int)ISCSentState[which].mult_dist,
+      NIOS_QUEUE);
+  WriteData(MaxblobsAddr[which], (unsigned int)ISCSentState[which].maxBlobMatch,
+      NIOS_QUEUE);
   WriteData(MaglimitAddr[which], (unsigned int)(ISCSentState[which].mag_limit
-        * 1000.));
+        * 1000.), NIOS_QUEUE);
   WriteData(NradAddr[which], (unsigned int)(ISCSentState[which].norm_radius
-        * RAD2I));
+        * RAD2I), NIOS_QUEUE);
   WriteData(LradAddr[which], (unsigned int)(ISCSentState[which].lost_radius
-        * RAD2I));
+        * RAD2I), NIOS_QUEUE);
   WriteData(TolAddr[which], (unsigned int)(ISCSentState[which].tolerance
-        * RAD2ARCSEC));
+        * RAD2ARCSEC), NIOS_QUEUE);
   WriteData(MtolAddr[which], (unsigned int)(ISCSentState[which].match_tol
-        * 65535.));
+        * 65535.), NIOS_QUEUE);
   WriteData(QtolAddr[which], (unsigned int)(ISCSentState[which].quit_tol
-        * 65535.));
+        * 65535.), NIOS_QUEUE);
   WriteData(RtolAddr[which], (unsigned int)(ISCSentState[which].rot_tol
-        * RAD2I));
-  WriteData(XOffAddr[which], (unsigned int)(ISCSentState[which].azBDA * RAD2I));
-  WriteData(YOffAddr[which], (unsigned int)(ISCSentState[which].elBDA * RAD2I));
-  WriteData(HoldIAddr[which], (unsigned int)(ISCSentState[which].hold_current));
+        * RAD2I), NIOS_QUEUE);
+  WriteData(XOffAddr[which], (unsigned int)(ISCSentState[which].azBDA * RAD2I),
+      NIOS_QUEUE);
+  WriteData(YOffAddr[which], (unsigned int)(ISCSentState[which].elBDA * RAD2I),
+      NIOS_QUEUE);
+  WriteData(HoldIAddr[which], (unsigned int)(ISCSentState[which].hold_current),
+      NIOS_QUEUE);
   WriteData(FpulseAddr[which],
-      (unsigned int)(CommandData.ISCControl[which].fast_pulse_width));
+      (unsigned int)(CommandData.ISCControl[which].fast_pulse_width),
+      NIOS_QUEUE);
   WriteData(SpulseAddr[which],
-      (unsigned int)(CommandData.ISCControl[which].pulse_width));
+      (unsigned int)(CommandData.ISCControl[which].pulse_width), NIOS_QUEUE);
   WriteData(SavePrdAddr[which],
-      (unsigned int)(CommandData.ISCControl[which].save_period));
+      (unsigned int)(CommandData.ISCControl[which].save_period), NIOS_FLUSH);
 }
 
 /************************************************************************/
@@ -557,128 +578,136 @@ void StoreData(int index)
   i_ss = GETREADINDEX(ss_index);
 
   /********** Sun Sensor Data **********/
-  WriteData(ssPrinAddr, SunSensorData[i_ss].prin);
-  WriteData(ssAzCenterAddr, SunSensorData[i_ss].az_center * 16);
-  WriteData(ssElCenterAddr, SunSensorData[i_ss].el_center * 16);
-  WriteData(ssAzSnrAddr, SunSensorData[i_ss].az_snr * 1000);
-  WriteData(ssElSnrAddr, SunSensorData[i_ss].el_snr * 1000);
-  WriteData(ssPcTempAddr, SunSensorData[i_ss].pc_temp * 100);
-  WriteData(ssCpuTempAddr, SunSensorData[i_ss].cpu_temp * 100);
+  WriteData(ssPrinAddr, SunSensorData[i_ss].prin, NIOS_QUEUE);
+  WriteData(ssAzCenterAddr, SunSensorData[i_ss].az_center * 16, NIOS_QUEUE);
+  WriteData(ssElCenterAddr, SunSensorData[i_ss].el_center * 16, NIOS_QUEUE);
+  WriteData(ssAzSnrAddr, SunSensorData[i_ss].az_snr * 1000, NIOS_QUEUE);
+  WriteData(ssElSnrAddr, SunSensorData[i_ss].el_snr * 1000, NIOS_QUEUE);
+  WriteData(ssPcTempAddr, SunSensorData[i_ss].pc_temp * 100, NIOS_QUEUE);
+  WriteData(ssCpuTempAddr, SunSensorData[i_ss].cpu_temp * 100, NIOS_QUEUE);
   /********** SIP GPS Data **********/
-  WriteData(sipLatAddr, (int)(SIPData.GPSpos.lat*DEG2I));
-  WriteData(sipLonAddr, (int)(SIPData.GPSpos.lon*DEG2I));
-  WriteData(sipAltAddr, (int)(SIPData.GPSpos.alt*0.25));
-  WriteData(sipTimeAddr, SIPData.GPStime.UTC);
+  WriteData(sipLatAddr, (int)(SIPData.GPSpos.lat*DEG2I), NIOS_QUEUE);
+  WriteData(sipLonAddr, (int)(SIPData.GPSpos.lon*DEG2I), NIOS_QUEUE);
+  WriteData(sipAltAddr, (int)(SIPData.GPSpos.alt*0.25), NIOS_QUEUE);
+  WriteData(sipTimeAddr, SIPData.GPStime.UTC, NIOS_QUEUE);
   
   /********** SIP MKS Altitude ************/
-  WriteData(sipMksLoAddr, (int)(SIPData.MKSalt.lo * 0.25));
-  WriteData(sipMksMedAddr, (int)(SIPData.MKSalt.med * 0.25));
-  WriteData(sipMksHiAddr, (int)(SIPData.MKSalt.hi * 0.25));
+  WriteData(sipMksLoAddr, (int)(SIPData.MKSalt.lo * 0.25), NIOS_QUEUE);
+  WriteData(sipMksMedAddr, (int)(SIPData.MKSalt.med * 0.25), NIOS_QUEUE);
+  WriteData(sipMksHiAddr, (int)(SIPData.MKSalt.hi * 0.25), NIOS_QUEUE);
 
   /************* processed pointing data *************/
-  WriteData(azAddr, (unsigned int)(PointingData[i_point].az * 65536.0/360.0));
-  WriteData(elAddr, (unsigned int)(PointingData[i_point].el * 65536.0/360.0));
+  WriteData(azAddr, (unsigned int)(PointingData[i_point].az * 65536.0/360.0),
+      NIOS_QUEUE);
+  WriteData(elAddr, (unsigned int)(PointingData[i_point].el * 65536.0/360.0),
+      NIOS_QUEUE);
 
-  WriteData(raAddr, (unsigned int)(PointingData[i_point].ra * 65536.0/24.0));
-  WriteData(decAddr, (unsigned int)(PointingData[i_point].dec * 65536.0/360.0));
+  WriteData(raAddr, (unsigned int)(PointingData[i_point].ra * 65536.0/24.0),
+      NIOS_QUEUE);
+  WriteData(decAddr, (unsigned int)(PointingData[i_point].dec * 65536.0/360.0),
+      NIOS_QUEUE);
 	    
   WriteData(gy1OffsetAddr,
-      (signed int)(PointingData[i_point].gy1_offset * 32768.));
+      (signed int)(PointingData[i_point].gy1_offset * 32768.), NIOS_QUEUE);
   WriteData(gy2OffsetAddr,
-      (signed int)(PointingData[i_point].gy2_offset * 32768.));
+      (signed int)(PointingData[i_point].gy2_offset * 32768.), NIOS_QUEUE);
   WriteData(gy3OffsetAddr,
-      (signed int)(PointingData[i_point].gy3_offset * 32768.));
+      (signed int)(PointingData[i_point].gy3_offset * 32768.), NIOS_QUEUE);
   WriteData(gyRollAmpAddr,
-      (unsigned int)(PointingData[i_point].gy_roll_amp * 65536.));
+      (unsigned int)(PointingData[i_point].gy_roll_amp * 65536.), NIOS_QUEUE);
 
-  WriteData(latAddr, (unsigned int)(PointingData[i_point].lat * DEG2I));
-  WriteData(lonAddr, (unsigned int)(PointingData[i_point].lon * DEG2I));
+  WriteData(latAddr, (unsigned int)(PointingData[i_point].lat * DEG2I),
+      NIOS_QUEUE);
+  WriteData(lonAddr, (unsigned int)(PointingData[i_point].lon * DEG2I),
+      NIOS_QUEUE);
 
-  WriteData(mcpFrameAddr, PointingData[i_point].mcp_frame);
-  WriteData(timeAddr, PointingData[i_point].t);
-  WriteData(lstAddr, PointingData[i_point].lst);
+  WriteData(mcpFrameAddr, PointingData[i_point].mcp_frame, NIOS_QUEUE);
+  WriteData(timeAddr, PointingData[i_point].t, NIOS_QUEUE);
+  WriteData(lstAddr, PointingData[i_point].lst, NIOS_QUEUE);
 
   WriteData(magAzAddr,
-      (unsigned int)(PointingData[i_point].mag_az * DEG2I));
+      (unsigned int)(PointingData[i_point].mag_az * DEG2I), NIOS_QUEUE);
   WriteData(magModelAddr,
-      (unsigned int)(PointingData[i_point].mag_model * DEG2I));
+      (unsigned int)(PointingData[i_point].mag_model * DEG2I), NIOS_QUEUE);
   WriteData(magSigmaAddr,
-      (unsigned int)(PointingData[i_point].mag_sigma * DEG2I));
+      (unsigned int)(PointingData[i_point].mag_sigma * DEG2I), NIOS_QUEUE);
   WriteData(dgpsAzAddr,
-      (unsigned int)(PointingData[i_point].dgps_az * DEG2I));
+      (unsigned int)(PointingData[i_point].dgps_az * DEG2I), NIOS_QUEUE);
   WriteData(dgpsPitchAddr,
-      (unsigned int)(PointingData[i_point].dgps_pitch * DEG2I));
+      (unsigned int)(PointingData[i_point].dgps_pitch * DEG2I), NIOS_QUEUE);
   WriteData(dgpsRollAddr,
-      (unsigned int)(PointingData[i_point].dgps_roll * DEG2I));
+      (unsigned int)(PointingData[i_point].dgps_roll * DEG2I), NIOS_QUEUE);
   WriteData(dgpsSigmaAddr,
-      (unsigned int)(PointingData[i_point].dgps_sigma * DEG2I));
+      (unsigned int)(PointingData[i_point].dgps_sigma * DEG2I), NIOS_QUEUE);
 
-  WriteData(ssAzAddr, (unsigned int)(PointingData[i_point].ss_az*DEG2I));
+  WriteData(ssAzAddr, (unsigned int)(PointingData[i_point].ss_az*DEG2I),
+      NIOS_QUEUE);
   WriteData(ssSigmaAddr,
-      (unsigned int)(PointingData[i_point].ss_sigma * DEG2I));
-  WriteData(sunAzAddr, (unsigned int)(PointingData[i_point].sun_az*DEG2I));
+      (unsigned int)(PointingData[i_point].ss_sigma * DEG2I), NIOS_QUEUE);
+  WriteData(sunAzAddr, (unsigned int)(PointingData[i_point].sun_az*DEG2I),
+      NIOS_QUEUE);
 
   WriteData(iscAzAddr,
-      (unsigned int)(PointingData[i_point].isc_az * DEG2I));
+      (unsigned int)(PointingData[i_point].isc_az * DEG2I), NIOS_QUEUE);
   WriteData(iscElAddr,
-      (unsigned int)(PointingData[i_point].isc_el * DEG2I));
+      (unsigned int)(PointingData[i_point].isc_el * DEG2I), NIOS_QUEUE);
   WriteData(iscSigmaAddr,
-      (unsigned int)(PointingData[i_point].isc_sigma * DEG2I));
+      (unsigned int)(PointingData[i_point].isc_sigma * DEG2I), NIOS_QUEUE);
 
   WriteData(encElAddr,
-      (unsigned int)(PointingData[i_point].enc_el * DEG2I));
+      (unsigned int)(PointingData[i_point].enc_el * DEG2I), NIOS_QUEUE);
   WriteData(encSigmaAddr,
-      (unsigned int)(PointingData[i_point].enc_sigma * DEG2I));
+      (unsigned int)(PointingData[i_point].enc_sigma * DEG2I), NIOS_QUEUE);
 
   WriteData(clinElAddr,
-      (unsigned int)(PointingData[i_point].clin_el * DEG2I));
+      (unsigned int)(PointingData[i_point].clin_el * DEG2I), NIOS_QUEUE);
   WriteData(clinSigmaAddr,
-      (unsigned int)(PointingData[i_point].clin_sigma * DEG2I));
+      (unsigned int)(PointingData[i_point].clin_sigma * DEG2I), NIOS_QUEUE);
 
   /************* Pointing mode fields *************/
-  WriteData(pModeAddr, (int)(CommandData.pointing_mode.mode));
+  WriteData(pModeAddr, (int)(CommandData.pointing_mode.mode), NIOS_QUEUE);
   if ((CommandData.pointing_mode.mode == P_AZEL_GOTO) ||
-      (CommandData.pointing_mode.mode == P_AZ_SCAN)) {
-    WriteData(pXDegAddr, (int)(CommandData.pointing_mode.X * DEG2I));
-  } else {
-    WriteData(pXDegAddr, (int)(CommandData.pointing_mode.X * H2I));
-  }
-  WriteData(pYAddr, (int)(CommandData.pointing_mode.Y * DEG2I));
-  WriteData(pVazAddr, (int)(CommandData.pointing_mode.vaz * VEL2I));
-  WriteData(pDelAddr, (int)(CommandData.pointing_mode.del * VEL2I));
-  WriteData(pWAddr, (int)(CommandData.pointing_mode.w * DEG2I));
-  WriteData(pHAddr, (int)(CommandData.pointing_mode.h * DEG2I));
+      (CommandData.pointing_mode.mode == P_AZ_SCAN))
+    WriteData(pXDegAddr, (int)(CommandData.pointing_mode.X * DEG2I),
+        NIOS_QUEUE);
+  else
+    WriteData(pXDegAddr, (int)(CommandData.pointing_mode.X * H2I), NIOS_QUEUE);
 
-  sensor_veto = (!CommandData.use_sun) | ((!CommandData.use_isc)<<1) |
-    ((!CommandData.use_elenc)<<2) |
-    ((!CommandData.use_mag)<<3) |
-    ((!CommandData.use_gps)<<4) |
-    ((!CommandData.use_elclin)<<5);
+  WriteData(pYAddr, (int)(CommandData.pointing_mode.Y * DEG2I), NIOS_QUEUE);
+  WriteData(pVazAddr, (int)(CommandData.pointing_mode.vaz * VEL2I), NIOS_QUEUE);
+  WriteData(pDelAddr, (int)(CommandData.pointing_mode.del * VEL2I), NIOS_QUEUE);
+  WriteData(pWAddr, (int)(CommandData.pointing_mode.w * DEG2I), NIOS_QUEUE);
+  WriteData(pHAddr, (int)(CommandData.pointing_mode.h * DEG2I), NIOS_QUEUE);
 
-  if (PointingData[i_point].t >= CommandData.pointing_mode.t) {
+  sensor_veto = (!CommandData.use_sun) | ((!CommandData.use_isc) << 1) |
+    ((!CommandData.use_elenc) << 2) |
+    ((!CommandData.use_mag) << 3) |
+    ((!CommandData.use_gps) << 4) |
+    ((!CommandData.use_elclin) << 5);
+
+  if (PointingData[i_point].t >= CommandData.pointing_mode.t)
     sensor_veto |= (1 << 6);
-  }
 
-  WriteData(sensorVetoAddr, sensor_veto);
+  WriteData(sensorVetoAddr, sensor_veto, NIOS_QUEUE);
 
   /************* dgps fields *************/
-  WriteData(dgpsTimeAddr, DGPSTime);
+  WriteData(dgpsTimeAddr, DGPSTime, NIOS_QUEUE);
 
   /** Pos fields **/
   i_dgps = GETREADINDEX(dgpspos_index);
-  WriteData(dgpsLatAddr, (int)(DGPSPos[i_dgps].lat * DEG2I));
-  WriteData(dgpsLonAddr, (int)(DGPSPos[i_dgps].lon * DEG2I));
-  WriteData(dgpsAltAddr, (int)(DGPSPos[i_dgps].alt));
-  WriteData(dgpsSpeedAddr, (int)(DGPSPos[i_dgps].speed * DEG2I));
-  WriteData(dgpsDirAddr, (int)(DGPSPos[i_dgps].direction * DEG2I));
-  WriteData(dgpsClimbAddr, (int)(DGPSPos[i_dgps].climb * DEG2I));
-  WriteData(dgpsNSatAddr, DGPSPos[i_dgps].n_sat);
-  WriteData(dgpsPosIndexAddr, i_dgps);
+  WriteData(dgpsLatAddr, (int)(DGPSPos[i_dgps].lat * DEG2I), NIOS_QUEUE);
+  WriteData(dgpsLonAddr, (int)(DGPSPos[i_dgps].lon * DEG2I), NIOS_QUEUE);
+  WriteData(dgpsAltAddr, (int)(DGPSPos[i_dgps].alt), NIOS_QUEUE);
+  WriteData(dgpsSpeedAddr, (int)(DGPSPos[i_dgps].speed * DEG2I), NIOS_QUEUE);
+  WriteData(dgpsDirAddr, (int)(DGPSPos[i_dgps].direction * DEG2I), NIOS_QUEUE);
+  WriteData(dgpsClimbAddr, (int)(DGPSPos[i_dgps].climb * DEG2I), NIOS_QUEUE);
+  WriteData(dgpsNSatAddr, DGPSPos[i_dgps].n_sat, NIOS_QUEUE);
+  WriteData(dgpsPosIndexAddr, i_dgps, NIOS_QUEUE);
 
   /** Att fields **/
   i_dgps = GETREADINDEX(dgpsatt_index);
-  WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok);
-  WriteData(dgpsAttIndexAddr, i_dgps);
+  WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok, NIOS_QUEUE);
+  WriteData(dgpsAttIndexAddr, i_dgps, NIOS_QUEUE);
 
   StoreStarCameraData(index, 0); /* write ISC data */
   StoreStarCameraData(index, 1); /* write OSC data */
@@ -698,66 +727,89 @@ void InitTxFrame(void)
         if (i == 0) {  /* framesync */
           if (bus)
             RawNiosWrite(niosAddr, BBC_FSYNC | BBC_WRITE | BBC_NODE(63)
-                | BBC_CH(4) | 0xB008);
+                | BBC_CH(4) | 0xB008, NIOS_QUEUE);
           else
             RawNiosWrite(niosAddr, BBC_FSYNC | BBC_WRITE | BBC_NODE(63)
-                | BBC_CH(0) | 0xEB90);
+                | BBC_CH(0) | 0xEB90, NIOS_QUEUE);
         } else if (i == 1 && bus == 0) /* fastsamp lsb */
-          RawNiosWrite(niosAddr, BBC_WRITE | BBC_NODE(63) | BBC_CH(1));
+          RawNiosWrite(niosAddr, BBC_WRITE | BBC_NODE(63) | BBC_CH(1),
+              NIOS_QUEUE);
         else if (i == 2 && bus == 0) /* fastsamp msb */
-          RawNiosWrite(niosAddr, BBC_WRITE | BBC_NODE(63) | BBC_CH(2));
+          RawNiosWrite(niosAddr, BBC_WRITE | BBC_NODE(63) | BBC_CH(2),
+              NIOS_QUEUE);
         else if (i == 3 && bus == 0) /* multiplex index */
-          RawNiosWrite(niosAddr, BBC_WRITE | BBC_NODE(63) | BBC_CH(3) | m);
+          RawNiosWrite(niosAddr, BBC_WRITE | BBC_NODE(63) | BBC_CH(3) | m,
+              NIOS_QUEUE);
         else
           for (j = 0; j < ccTotal; ++j)
             if (NiosLookup[j].niosAddr == niosAddr)
-              RawNiosWrite(niosAddr, NiosLookup[j].bbcAddr);
+              RawNiosWrite(niosAddr, NiosLookup[j].bbcAddr, NIOS_QUEUE);
             else if (NiosLookup[j].niosAddr == niosAddr - 1
 			    && NiosLookup[j].wide)
-              RawNiosWrite(niosAddr, BBC_NEXT_CHANNEL(NiosLookup[j].bbcAddr));
+              RawNiosWrite(niosAddr, BBC_NEXT_CHANNEL(NiosLookup[j].bbcAddr),
+                  NIOS_QUEUE);
             else if (NiosLookup[j].fast && NiosLookup[j].niosAddr == m0addr)
-              RawNiosWrite(niosAddr, NiosLookup[j].bbcAddr);
+              RawNiosWrite(niosAddr, NiosLookup[j].bbcAddr, NIOS_QUEUE);
             else if (NiosLookup[j].fast && NiosLookup[j].niosAddr
                 == m0addr - 1 && NiosLookup[j].wide)
-              RawNiosWrite(niosAddr, BBC_NEXT_CHANNEL(NiosLookup[j].bbcAddr));
+              RawNiosWrite(niosAddr, BBC_NEXT_CHANNEL(NiosLookup[j].bbcAddr),
+                  NIOS_QUEUE);
 
         for (j = 0; j < 2 * FAST_PER_SLOW; ++j)
           if (NiosSpares[j] == niosAddr)
-            RawNiosWrite(niosAddr, BBCSpares[j]);
-
+            RawNiosWrite(niosAddr, BBCSpares[j], NIOS_QUEUE);
       }
     }
   }
 
+  /* force flush of write buffer */
+  RawNiosWrite(-1, -1, NIOS_FLUSH);
 }
 
-void RawNiosWrite(unsigned int addr, unsigned int data)
+void RawNiosWrite(unsigned int addr, unsigned int data, int flush_flag)
 {
-  unsigned int niosData[2];
+  int n;
+  static int counter = 0;
+  static unsigned int niosData[2 * NIOS_BUFFER_SIZE];
 
-  niosData[0] = addr;
-  niosData[1] = data;
-  write(bbc_fp, niosData, 2 * sizeof(unsigned int));
+  if (addr != -1) {
+    niosData[counter++] = addr;
+    niosData[counter++] = data;
+  }
+
+  if (flush_flag || counter == 2 * NIOS_BUFFER_SIZE) {
+    n = write(bbc_fp, niosData, counter * sizeof(unsigned int));
+//    if (flush_flag)
+//      mprintf(MCP_INFO, "Flushed %i of %i\n", n,
+//          counter * sizeof(unsigned int));
+//    else
+//      mprintf(MCP_INFO, "Autoflushed %i of %i\n", n,
+//          counter * sizeof(unsigned int));
+    counter = 0;
+  }
 }
 
-void WriteData(struct NiosStruct* addr, unsigned int data)
+void WriteData(struct NiosStruct* addr, unsigned int data, int flush_flag)
 {
   int i;
 
   if (addr->fast)
     for (i = 0; i < FAST_PER_SLOW; ++i) {
       RawNiosWrite(addr->niosAddr + i * TxFrameWords[addr->bus],
-          addr->bbcAddr | (data & 0xffff));
+          addr->bbcAddr | (data & 0xffff),
+          flush_flag && !addr->wide && i == FAST_PER_SLOW - 1);
       if (addr->wide)
         RawNiosWrite(addr->niosAddr + 1 + i * TxFrameWords[addr->bus],
-            BBC_NEXT_CHANNEL(addr->bbcAddr) | (data >> 16));
+            BBC_NEXT_CHANNEL(addr->bbcAddr) | (data >> 16),
+            flush_flag && i == FAST_PER_SLOW - 1);
     }
   else {
     /* slow data */
-    RawNiosWrite(addr->niosAddr, addr->bbcAddr | (data & 0xffff));
+    RawNiosWrite(addr->niosAddr, addr->bbcAddr | (data & 0xffff),
+        flush_flag && !addr->wide);
     if (addr->wide)
       RawNiosWrite(addr->niosAddr + 1,
-          BBC_NEXT_CHANNEL(addr->bbcAddr) | (data >> 16));
+          BBC_NEXT_CHANNEL(addr->bbcAddr) | (data >> 16), flush_flag);
   }
 }
 

@@ -54,7 +54,7 @@ void PhaseControl(void)
   }	
 
   for(i = 0; i < DAS_CARDS; i++)
-    WriteData(NiosAddr[i], CommandData.Phase[i]);
+    WriteData(NiosAddr[i], CommandData.Phase[i], NIOS_FLUSH);
 }
 
 /***********************************************************************/
@@ -97,11 +97,11 @@ int CalLamp (int* cryostate)
       calLamp = CRYO_CALIBRATOR_ON;
       *cryostate |= CS_CALIBRATOR;
       pulse_left--; 
-      WriteData(calPulseAddr, 1);
+      WriteData(calPulseAddr, 1, NIOS_FLUSH);
     } else {               /* pulser off, or we're not pulsing, turn off lamp */
       calLamp = CRYO_CALIBRATOR_OFF;
       *cryostate &= 0xFFFF - CS_CALIBRATOR;
-      WriteData(calPulseAddr, 0);
+      WriteData(calPulseAddr, 0, NIOS_FLUSH);
     }
   }
 
@@ -144,8 +144,8 @@ void CryoControl (void)
   }
 
   /* We want to save these here since CalLamp might destroy calib_repeat */
-  WriteData(pulseLenAddr, CommandData.Cryo.calib_pulse);
-  WriteData(calRepeatAddr, CommandData.Cryo.calib_repeat);
+  WriteData(pulseLenAddr, CommandData.Cryo.calib_pulse, NIOS_QUEUE);
+  WriteData(calRepeatAddr, CommandData.Cryo.calib_repeat, NIOS_QUEUE);
 
   /********** Set Output Bits **********/
   if (CommandData.Cryo.heliumLevel == 0) {
@@ -205,14 +205,14 @@ void CryoControl (void)
   } else
     cryostate &= 0xFFFF - CS_LHeVALVE_ON;
 
-  WriteData(cryoout3Addr, cryoout3);
+  WriteData(cryoout3Addr, cryoout3, NIOS_QUEUE);
 
-  WriteData(cryoout2Addr, cryoout3);
-  WriteData(cryostateAddr, cryostate);
-  WriteData(he3pwmAddr, CommandData.Cryo.heliumThree);
-  WriteData(hspwmAddr, CommandData.Cryo.heatSwitch);
-  WriteData(jfetpwmAddr, CommandData.Cryo.JFETHeat);
-  WriteData(cryopwmAddr, CommandData.Cryo.sparePwm);
+  WriteData(cryoout2Addr, cryoout2, NIOS_QUEUE);
+  WriteData(cryostateAddr, cryostate, NIOS_QUEUE);
+  WriteData(he3pwmAddr, CommandData.Cryo.heliumThree, NIOS_QUEUE);
+  WriteData(hspwmAddr, CommandData.Cryo.heatSwitch, NIOS_QUEUE);
+  WriteData(jfetpwmAddr, CommandData.Cryo.JFETHeat, NIOS_QUEUE);
+  WriteData(cryopwmAddr, CommandData.Cryo.sparePwm, NIOS_FLUSH);
 }
 
 /************************************************************************/
@@ -341,9 +341,9 @@ void BiasControl (unsigned short* RxFrame) {
   }
 
   /******************** set the outputs *********************/
-  WriteData(biasout1Addr, biasout1 & 0xffff);
-  WriteData(biasout1Addr, (~biasout2) & 0xff);
-  WriteData(biasLev1Addr, CommandData.Bias.bias1);
-  WriteData(biasLev2Addr, CommandData.Bias.bias2);
-  WriteData(biasLev3Addr, CommandData.Bias.bias3);
+  WriteData(biasout1Addr, biasout1 & 0xffff, NIOS_QUEUE);
+  WriteData(biasout1Addr, (~biasout2) & 0xff, NIOS_QUEUE);
+  WriteData(biasLev1Addr, CommandData.Bias.bias1, NIOS_QUEUE);
+  WriteData(biasLev2Addr, CommandData.Bias.bias2, NIOS_QUEUE);
+  WriteData(biasLev3Addr, CommandData.Bias.bias3, NIOS_FLUSH);
 }
