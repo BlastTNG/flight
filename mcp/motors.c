@@ -865,6 +865,7 @@ void DoNewCapMode() {
   double next_left, next_right, az_distance;
   double az, az2, el, el1, el2;
   double daz_dt, del_dt;
+  double correction;
   double lst;
   double v_az, v_el, t;
   int i_point;
@@ -958,18 +959,22 @@ void DoNewCapMode() {
     if (az_dir < 0) {
       az_distance = next_right - left;
       t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * 100.16);
-      speed_el = CommandData.pointing_mode.del/t;
+      correction = (el - cel) - targ_el;
+      speed_el = (CommandData.pointing_mode.del-correction*el_dir)/t;
       bprintf(info, "ppp L: el: %g targ_el: %g\n", el - cel, targ_el);
-      targ_el = el - cel + CommandData.pointing_mode.del*el_dir;
+      targ_el = el - cel +
+	(CommandData.pointing_mode.del*el_dir-correction);
     }
     az_dir = 1;
   } else if (az>right) {
     if (az_dir > 0) {
       az_distance = right - next_left;
       t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * 100.16);
-      speed_el = CommandData.pointing_mode.del/t;
+      correction = (el - cel) - targ_el;
+      speed_el = (CommandData.pointing_mode.del-correction*el_dir)/t;
       bprintf(info, "ppp R: el: %g targ_el: %g\n", el - cel, targ_el);
-      targ_el = el - cel + CommandData.pointing_mode.del*el_dir;
+      targ_el = el - cel +
+	(CommandData.pointing_mode.del*el_dir-correction);
     }
     az_dir = -1;
   }
