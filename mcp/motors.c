@@ -1061,10 +1061,8 @@ void DoQuadMode() { // aka radbox
     if (c_el[i_bot]>c_el[i]) i_bot = i;
   }
   
-  radbox_endpoints(c_az, c_el,      el, &left, &right, &bottom, &top);
-  radbox_endpoints(c_az, c_el,      el, &left, &right, &bottom, &top);
-  radbox_endpoints(c_az, c_el, targ_el, &next_left,
-		   &next_right, &bottom, &top);
+  radbox_endpoints(c_az, c_el, targ_el,      &left,      &right, &bottom, &top);
+  radbox_endpoints(c_az, c_el, targ_el, &next_left, &next_right, &bottom, &top);
   bprintf(info, "-> %g %g %g %g %g %g\n", left, next_left, bottom, top, targ_el, el);
   if (right-left < MIN_SCAN) {
     left = (left+right)/2.0 - MIN_SCAN/2.0;
