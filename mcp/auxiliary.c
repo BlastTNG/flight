@@ -200,9 +200,9 @@ int Balance(int ifpmBits) {
 /*    Do Lock Logic: check status, determine if we are locked, etc      */
 /*                                                                      */
 /************************************************************************/
-#define PULSE_LENGTH 40   /* 400 msec */
+#define PULSE_LENGTH 400   /* 4 seconds */
 #define SEARCH_COUNTS 500 /* 5 seconds */
-int GetLockBits(void) {
+int GetLockBits(unsigned short lockBits) {
   static int is_closing = 0;
   static int is_opening = 0;
   static int is_searching = 0;
@@ -232,17 +232,26 @@ int GetLockBits(void) {
 
   /* elevation searching stuff */
   if (is_searching > 1) {
-    if (fabs(ACSData.enc_elev -
-          LockPosition(ACSData.enc_elev)) > 0.2) {
+    if (fabs(ACSData.enc_elev - LockPosition(ACSData.enc_elev)) > 0.2)
       is_searching = SEARCH_COUNTS;
-    } else {
+    else
       is_searching--;
-    }
   } else if (is_searching == 1) {
     is_searching = 0;
     is_closing = 1;
   }
 
+  /* check limit switches -- if both bits are set, the motor is running
+   * -- if we have reached a limit we can stop going in the direction
+   * of the limitswitch that is active */
+  if ((lockBits & LOKMOT_ISIN) && (~lockBits & LOKMOT_ISOUT)) {
+    pin_is_in = 1;
+    is_closing = 0;
+  } else if ((lockBits & LOKMOT_ISOUT) && (~lockBits & LOKMOT_ISIN)) {
+    pin_is_in = 0;
+    is_opening = 0;
+  }
+  
   /* set lock bits */
   if (is_closing) {
     is_closing--;
@@ -251,6 +260,7 @@ int GetLockBits(void) {
     is_opening--;
     return(LOKMOT_OUT | LOKMOT_ON);
   }
+
 
   return 0;
 }
@@ -315,23 +325,23 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   static struct NiosStruct* sprpumpLevAddr;
   static struct NiosStruct* inpumpLevAddr;
   static struct NiosStruct* outpumpLevAddr;
-  static struct NiosStruct* lockBitsAddr;
   static struct NiosStruct* balOnAddr, *balOffAddr;
   static struct NiosStruct* balTargetAddr, *balVetoAddr;
   static struct NiosStruct* balGainAddr, *balMinAddr, *balMaxAddr;
   static struct NiosStruct* ifpmBitsAddr;
   static struct NiosStruct* lokmotPinAddr;
-  static struct NiosStruct* lOverrideAddr;
+
+  static struct BiPhaseStruct* lockBitsAddr;
 
   int ifpmBits = 0;
   int ofpmBits = 0;
-  int pin_override;
 
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
+    lockBitsAddr = GetBiPhaseAddr("lock_bits");
+
     ifpmBitsAddr = GetNiosAddr("ifpm_bits");
-    lockBitsAddr = GetNiosAddr("lock_bits");
     ofpmBitsAddr = GetNiosAddr("ofpm_bits");
     balpumpLevAddr = GetNiosAddr("balpump_lev");
     sprpumpLevAddr = GetNiosAddr("sprpump_lev");
@@ -345,7 +355,6 @@ void ControlAuxMotors(unsigned short *RxFrame) {
     balMaxAddr = GetNiosAddr("bal_max");
     balVetoAddr = GetNiosAddr("bal_veto");
     lokmotPinAddr = GetNiosAddr("lokmot_pin");
-    lOverrideAddr = GetNiosAddr("l_override");
   }
 
   /* inner frame box */
@@ -388,7 +397,8 @@ void ControlAuxMotors(unsigned short *RxFrame) {
     CommandData.pumps.outframe_cool2_off--;
   }
 
-  ofpmBits |= GetLockBits();
+  ofpmBits |=
+    GetLockBits(slow_data[lockBitsAddr->index][lockBitsAddr->channel]);
 
   if (CommandData.pumps.bal_veto) {
     /* if we're in timeout mode, decrement the timer */
@@ -400,10 +410,6 @@ void ControlAuxMotors(unsigned short *RxFrame) {
     ifpmBits = Balance(ifpmBits);
   }
 
-  /* Lock motor override writeback */
-  pin_override = (CommandData.lock_override) ? 1 : 0;
-
-  WriteData(lOverrideAddr, pin_override);
   WriteData(lokmotPinAddr, pin_is_in);
   WriteData(ofpmBitsAddr, ofpmBits);
   WriteData(sprpumpLevAddr, CommandData.pumps.pwm2 & 0x7ff);

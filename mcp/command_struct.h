@@ -134,7 +134,6 @@ struct CommandDataStruct {
   unsigned char use_gps;
 
   struct BiasStruct Bias;
-  int lock_override;
 
   struct CryoStruct Cryo;
   int Phase[DAS_CARDS];

@@ -668,12 +668,13 @@ void MakeAddressLookups(void)
 
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i].bbcAddr)].index = mplex;
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i].bbcAddr)].channel
-      = slowIndex[bus][mplex] + bus * (slowsPerBusFrame[0] + SLOW_OFFSET - 1);
+      = slowIndex[bus][mplex] + bus * (slowsPerBusFrame[0] + SLOW_OFFSET - 1)
+      - SLOW_OFFSET;
     BiPhaseLookup[BI0_MAGIC(BBC_NEXT_CHANNEL(NiosLookup[i].bbcAddr))].index
       = mplex;
     BiPhaseLookup[BI0_MAGIC(BBC_NEXT_CHANNEL(NiosLookup[i].bbcAddr))].channel
       = slowIndex[bus][mplex] + 1 + bus * (slowsPerBusFrame[0] + SLOW_OFFSET
-          - 1);
+          - 1) - SLOW_OFFSET;
 #else
     SlowChList[slowIndex[bus][mplex] + bus * slowsPerBusFrame[0]][mplex]
       = WideSlowChannels[i];
@@ -698,7 +699,8 @@ void MakeAddressLookups(void)
 
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccWideSlow].bbcAddr)].index = mplex;
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccWideSlow].bbcAddr)].channel
-      = slowIndex[bus][mplex] + bus * (slowsPerBusFrame[0] + SLOW_OFFSET - 1);
+      = slowIndex[bus][mplex] + bus * (slowsPerBusFrame[0] + SLOW_OFFSET - 1)
+      - SLOW_OFFSET;
 #else
     SlowChList[slowIndex[bus][mplex] + bus * slowsPerBusFrame[0]][mplex]
       = SlowChannels[i];

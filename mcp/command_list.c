@@ -19,7 +19,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(az_on),  "enable az motors",  GR_GAIN},
   {COMMAND(el_off), "disable el motors", GR_GAIN},
   {COMMAND(el_on),  "enable el motors",  GR_GAIN},
-  {COMMAND(force_el_on),  "force enabling of el motors while pin in",
+  {COMMAND(force_el_on),  "force enable el motors despite the pin being in",
     CONFIRM | GR_GAIN},
 
   {COMMAND(elclin_veto), "veto elevation clinometer", GR_VETO},
@@ -94,7 +94,7 @@ struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},
-  {COMMAND(unlock), "unlock the lock", GR_LOCK},
+  {COMMAND(unlock), "unlock the inner frame", GR_LOCK},
   {COMMAND(lock_off), "turn off the lock motor", GR_LOCK},
 
   {COMMAND(isc_run), "start automatic image capture (normal mode)",

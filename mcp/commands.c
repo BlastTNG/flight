@@ -1384,8 +1384,6 @@ void InitCommandData() {
   CommandData.Bias.bias2 = 0x02;
   CommandData.Bias.bias3 = 0x0f;
 
-  CommandData.lock_override = 0;
-
   CommandData.Cryo.heliumLevel = 0;
   CommandData.Cryo.charcoalHeater = 0;
   CommandData.Cryo.coldPlate = 0;

@@ -360,7 +360,7 @@ struct ChannelStruct SlowChannels[] = {
   {"ra",           'w', LOOP3,  4,       24.0/65536.0,             0.0, 'u'},
   {"dec",          'w', LOOP3,  5,              I2DEG,             0.0, 's'},
   {"cal_pulse",    'w', LOOP3,  6,                1.0,             0.0, 'u'},
-  {"l_override",   'w', LOOP3,  7,                1.0,             0.0, 'u'},
+  {"bbc_fifo_size",'w', LOOP3,  7,             1./624,             0.0, 'u'},
   {"cpu_temp2",    'w', LOOP3,  8,               0.01,             0.0, 'u'},
   {"cpu_temp3",    'w', LOOP3,  9,               0.01,             0.0, 'u'},
   {"sip_mks_hi",   'w', LOOP3, 10,                4.0,             0.0, 'u'},
@@ -421,7 +421,6 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_maxblobs", 'w', LOOP4,  6,                1.0,             0.0, 'u'},
   {"osc_maxblobs", 'w', LOOP4,  7,                1.0,             0.0, 'u'},
   {"bi0_fifo_size",'w', LOOP4,  8,             1./624,             0.0, 'u'},
-  {"bbc_fifo_size",'w', LOOP4,  9,             1./624,             0.0, 'u'},
 
   END_OF_CHANNELS
 };

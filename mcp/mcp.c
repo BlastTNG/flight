@@ -418,8 +418,7 @@ int fill_Rx_frame(unsigned int in_data,
   if (BiPhaseData.index == NOT_MULTIPLEXED)
     RxFrame[BiPhaseData.channel] = BBC_DATA(in_data);
   else
-    slow_data[BiPhaseData.index][BiPhaseData.channel - SLOW_OFFSET]
-      = BBC_DATA(in_data);
+    slow_data[BiPhaseData.index][BiPhaseData.channel] = BBC_DATA(in_data);
 
   return(1);
 }
@@ -708,18 +707,19 @@ int main(int argc, char *argv[]) {
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) < 0)
       merror(MCP_ERROR, "Error on BBC read");
 
-    
+
     // DEBUG TOOLS
     if(GET_NODE(in_data) == 0x27) {
       if(GET_STORE(in_data) ) {
-	mycounter++;
+        mycounter++;
       } else {
-	mycounter2++;
+        mycounter2++;
       }
     }
     if (in_data == 0xdf80eb90)  {
-      if( (mycounter != 12) || (mycounter2 != 12) ) 
-	printf("++++++++++++++>>>>>> mycounter = %d mycounter2 = %d\n", mycounter, mycounter2);
+      if( (mycounter != 12) || (mycounter2 != 12) ) {
+//        printf("++++++++++++++>>>>>> mycounter = %d mycounter2 = %d\n", mycounter, mycounter2);
+      }
       mycounter  = 0;
       mycounter2 = 0;
     }
@@ -751,7 +751,7 @@ int main(int argc, char *argv[]) {
         RxFrameIndex = RxFrame[3];
 
         UpdateBBCFrame(RxFrame);
-//        CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);
+        //        CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);
 
 #ifndef BOLOTEST
         PushBi0Buffer(RxFrame);
