@@ -42,7 +42,8 @@
 #define BI0_FRAME_BUFLEN (40)
 /* Define global variables */
 
-int bbc_fp;
+int bbc_fp = -1;
+int bi0_fp = -2;
 int frames_in = 0;
 
 struct SunSensorDataStruct SunSensorData[3];
@@ -573,27 +574,27 @@ void WatchDog (void) {
 }
 
 void write_to_biphase(unsigned short *RxFrame) {
-  static int fp = -2;
   static unsigned short sync = 0xeb90;
   /* static unsigned short nothing = 0x00; */
   int i;
   static unsigned short nothing[1024];
 
-  if (fp == -2) {
-    fp = open("/dev/bi0", O_RDWR);
-    if (fp == -1)
+  if (bi0_fp == -2) {
+    bi0_fp = open("/dev/bi0", O_RDWR);
+    if (bi0_fp == -1)
       merror(MCP_TFATAL, "Error opening biphase device");
 
-    for (i = 0; i < 1024; i++) nothing[i] = 0xeeee;
+    for (i = 0; i < 1024; i++)
+      nothing[i] = 0xeeee;
   }
 
-  if (fp >= 0) {
+  if (bi0_fp >= 0) {
     /* Write the sync word */
-    if (write(fp, &sync, 2) < 0)
+    if (write(bi0_fp, &sync, 2) < 0)
       merror(MCP_ERROR, "bi-phase write (sync) failed");
-    if (write(fp, RxFrame + 1, 2 * (FRAME_WORDS - 1)) < 0)
+    if (write(bi0_fp, RxFrame + 1, 2 * (FRAME_WORDS - 1)) < 0)
       merror(MCP_ERROR, "bi-phase write (RxFrame) failed");
-    if (write(fp, nothing + FRAME_WORDS, 2 * (624 - FRAME_WORDS)) < 0)
+    if (write(bi0_fp, nothing + FRAME_WORDS, 2 * (624 - FRAME_WORDS)) < 0)
       merror(MCP_ERROR, "bi-phase write (padding) failed");
   }
 }
@@ -667,8 +668,11 @@ int AmISam(void) {
 
 /* Signal handler called when we get a hup, int or term */
 void CloseBBC(int signo) {
-  mprintf(MCP_ERROR, "Caught signal %i, closing BBC", signo);
-  close(bbc_fp);
+  mprintf(MCP_ERROR, "Caught signal %i, closing BBC and Bi0", signo);
+  if (bi0_fp >= 0)
+    close(bi0_fp);
+  if (bbc_fp >= 0)
+    close(bbc_fp);
 
   /* restore default handler and raise the signal again */
   signal(signo, SIG_DFL);
@@ -788,7 +792,7 @@ int main(int argc, char *argv[]) {
 
   InitSched();
 
-  last_frames =  ioctl(bbc_fp, BBC_IOC_FRAMES) + FRAME_MARGIN + 1;
+  last_frames = ioctl(bbc_fp, BBC_IOC_FRAMES) + FRAME_MARGIN + 1;
 
   while (1) {
     pthread_mutex_lock(&mutex);
