@@ -12,7 +12,7 @@
 #include "isc_protocol.h"
 #include "mcp.h"
 
-#define ELBERETH "192.168.1.98"
+#define ELBERETH "192.168.62.98"
 #define BASE_PORT 2000
 
 extern short int SamIAm;   /* mcp.c */

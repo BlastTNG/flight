@@ -27,7 +27,7 @@
 #include "starpos.h"
 #include "mcp.h"
 
-#define ARIEN "192.168.1.99"
+#define ARIEN "192.168.62.99"
 #define ARIEN_PORT 8645
 
 #define BBC_EOF      (0xffff)
