@@ -1,4 +1,4 @@
-/* quendi.h: an implementation of the Quendi Protocol
+/* quendi.h: an implementation of the Quenya Protocol
  *
  * This software is copyright (C) 2004 University of Toronto
  * 

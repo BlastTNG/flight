@@ -321,6 +321,7 @@ void LoadDefaultConfig(void)
           break;
         case CFG_SUFFIX_LENGTH:
           options[i].value.as_int = 3;
+          break;
         default:
           bprintf(warning, "No default value for option `%s'",
               options[i].name);
