@@ -1,3 +1,11 @@
+2004-01-21 (1.2.7):
+	* bootstrap.sh: Add
+	* data/palantir.png: Add
+	* data/Makefile.in: install palantir.png
+
+2004-01-14 (1.2.6):
+	* decompoll.cpp: Fixes for new decomd string.
+
 2004-01-13 (1.2.5):
 	* decompoll.cpp, decompoll.h: Split decomd client stuff from palantir.cpp
 	for re-use in logger
