@@ -27,6 +27,10 @@
 // *  but it works fine^H^H^H^H^H.                   *
 // ***************************************************
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -532,7 +536,7 @@ void MainForm::GetXMLInfo(char *layoutfile) {
       WarningMessage("File Error", "Could not read xml file.");
     }
   } else {
-    snprintf(tmp, MAXPATHLENGTH, "%s/%s", LIB_DIR, layoutfile);
+    snprintf(tmp, MAXPATHLENGTH, "%s/%s", DATA_ETC_PALANTIR_DIR, layoutfile);
     fprintf(stderr, "\nCould not read: %s\ntrying: %s\n", layoutfile, tmp);
     if (!XMLInfo->LoadXML(tmp)) {
       WarningMessage("File Error", "Could not read xml file.");
@@ -1436,9 +1440,19 @@ MainForm::~MainForm()
 
 
 void usage() {
-  printf("\npalantir [layout file]\n\n");
-  printf("Default layout file: " DEF_LAYOUTFILE "\n");
-  printf("  [layout file] -> specify layout file\n\n");
+  printf("palantir " VERSION "  (C) 2002-2004 University of Toronto\n"
+      "Qt: " QT_VERSION_STR "\n\n"
+      "Usage:\n"
+      "  palantir [layout file]\n\n"
+      "Default layout file: " DEF_LAYOUTFILE "\n\n"
+      "This program comes with NO WARRANTY, "
+      "not even for MERCHANTABILITY or FITNESS\n"
+      "FOR A PARTICULAR PURPOSE. You may "
+      "redistribute it under the terms of the GNU\n"
+      "General Public License; see the file named COPYING for details.\n\n"
+      "Programmed by Adam Hincks.\n"
+      "Hacked by cbn, dvw and others.\n"
+      );
   exit(1);
 }
 
@@ -1447,7 +1461,7 @@ int main(int argc, char* argv[]) {
   char layoutfile[MAXPATHLENGTH];
 
   // Parse command line
-  if (argc > 2)
+  if (argc > 2 || strcmp(argv[1], "--help") == 0)
     usage();
   else if (argc == 2)
     strncpy(layoutfile, argv[1], MAXPATHLENGTH);

@@ -63,28 +63,28 @@
 // Update palantir every 750 milliseconds
 #define UPDATETIME 500
 
-#ifndef LIB_DIR
-#  define LIB_DIR "/usr/local/lib/palantir/"
+#ifndef DATA_ETC_PALANTIR_DIR
+#  define DATA_ETC_PALANTIR_DIR "/usr/local/lib/palantir"
 #endif
 
 #ifndef DEF_LAYOUTFILE
-#  define DEF_LAYOUTFILE LIB_DIR "default.pal"
+#  define DEF_LAYOUTFILE DATA_ETC_PALANTIR_DIR "/default.pal"
 #endif
 
 #ifndef LOGFILE
-#  define LOGFILE LIB_DIR "log.txt"
+#  define LOGFILE DATA_ETC_PALANTIR_DIR "/log.txt"
 #endif
 
 #define MAXPATHLENGTH 255
 #define MAX_MULTI_WORDS 255
 
-#define PALANTIR_0_JPG LIB_DIR "palantir0.jpg"
-#define PALANTIR_1_JPG LIB_DIR "palantir1.jpg"
-#define PALANTIR_2_JPG LIB_DIR "palantir2.jpg"
-#define PALANTIR_3_JPG LIB_DIR "palantir3.jpg"
+#define PALANTIR_0_JPG DATA_ETC_PALANTIR_DIR "/palantir0.jpg"
+#define PALANTIR_1_JPG DATA_ETC_PALANTIR_DIR "/palantir1.jpg"
+#define PALANTIR_2_JPG DATA_ETC_PALANTIR_DIR "/palantir2.jpg"
+#define PALANTIR_3_JPG DATA_ETC_PALANTIR_DIR "/palantir3.jpg"
 
 
-#define ICON LIB_DIR "icon.gif"
+#define ICON DATA_ETC_PALANTIR_DIR "/icon.gif"
 
 struct TextStyle {
   QString colour;
