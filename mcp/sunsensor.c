@@ -82,7 +82,6 @@ void SunSensor(void) {
 
       if (FD_ISSET(sock, &fdr)) {
         n = recv(sock, &Rx_Data, sizeof(Rx_Data), MSG_DONTWAIT);
-        printf("Rx: %f\n", Rx_Data.az_center);
         if (n == sizeof(Rx_Data)) {
           SunSensorData[ss_index] = Rx_Data;
           ss_index = INC_INDEX(ss_index);
