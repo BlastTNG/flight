@@ -23,6 +23,8 @@
 	     colour="#000055" font="adobe-helvetica" size="12"/>
   <TEXTSTYLE name="E_BIT" backcolour="#ff0000" 
 	     colour="#000055" font="adobe-helvetica" size="12"/>
+  <TEXTSTYLE name="P_BIT" backcolour="#ffaaff" 
+	     colour="#000055" font="adobe-helvetica" size="12"/>
 
   <EXTREMA name="slope">
     <HI value="0" textstyle="increasing"/><LO value="0" textstyle="decreasing"/>
@@ -295,17 +297,17 @@
       <WORD value="0" caption="Off" textstyle="OK_BIT"/>
     </DATUM>
   </MULTI>
-  <NUMBER caption="He3 Heat (V)" textstyle="oddrow">
-    <DATUM format="%.3f" src="HE3PWM" extrema="unknown"/>
+  <NUMBER caption="He3 Heat (%)" textstyle="oddrow">
+    <DATUM format="%.2f" src="HE3PWM" extrema="unknown"/>
   </NUMBER>
-  <NUMBER caption="Heat Switch Heat (V)" textstyle="oddrow">
-    <DATUM format="%.3f" src="HSPWM" extrema="unknown"/>
+  <NUMBER caption="Heat Switch Heat (%)" textstyle="oddrow">
+    <DATUM format="%.2f" src="HSPWM" extrema="unknown"/>
   </NUMBER>
-  <NUMBER caption="JFET Heat (V)" textstyle="oddrow">
-    <DATUM format="%.3f" src="JFETPWM" extrema="unknown"/>
+  <NUMBER caption="JFET Heat (%)" textstyle="oddrow">
+    <DATUM format="%.2f" src="JFETPWM" extrema="unknown"/>
   </NUMBER>
-  <NUMBER caption="Cryo PWM (V)" textstyle="oddrow">
-    <DATUM format="%.3f" src="CRYOPWM" extrema="unknown"/>
+  <NUMBER caption="Cryo PWM (%)" textstyle="oddrow">
+    <DATUM format="%.2f" src="CRYOPWM" extrema="unknown"/>
   </NUMBER>
   <MULTI caption="LN Valve" textstyle="oddrow">
     <DATUM src="LN_VALVE">
@@ -322,7 +324,7 @@
   <MULTI caption="LN Valve State" textstyle="oddrow">
     <DATUM src="LN_STATE">
       <WORD value="2" caption="Error" textstyle="E_BIT"/>
-      <WORD value="0" caption="No Limit" textstyle="E_BIT"/>
+      <WORD value="0" caption="No Limit" textstyle="P_BIT"/>
       <WORD value="2" caption="Open" textstyle="W_BIT"/>
       <WORD value="1" caption="Close" textstyle="OK_BIT"/>
     </DATUM>
@@ -342,7 +344,7 @@
   <MULTI caption="LHe Valve State" textstyle="oddrow">
     <DATUM src="LHE_STATE">
       <WORD value="3" caption="Error" textstyle="E_BIT"/>
-      <WORD value="0" caption="No Limit" textstyle="E_BIT"/>
+      <WORD value="0" caption="No Limit" textstyle="P_BIT"/>
       <WORD value="2" caption="Open" textstyle="W_BIT"/>
       <WORD value="1" caption="Close" textstyle="OK_BIT"/>
     </DATUM>
