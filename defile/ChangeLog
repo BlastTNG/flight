@@ -1,6 +1,9 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2004-09-27 (2.5.3):
+  * writer.c, reader.c: Fix some unable-to-kill bugs
+
 2004-09-26 (2.5.2):
   * frameread.c: Fix file descriptor leak.  Migrate to autoconf
 
