@@ -9,6 +9,11 @@ all: mcp-bin
 
 mcp: mcp-bin
 
+clean:
+	rm -f mcp-bin || true;
+	rm -f *.o || true;
+	rm -f Makefile.config || true;
+
 Makefile.config:
 	./configure
 
