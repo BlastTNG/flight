@@ -136,9 +136,9 @@ void mputs(int flag, const char* message) {
   strcat(buffer, marker);
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
-  
+
   sprintf(bufstart, "[%li] ", pthread_self());
-  
+
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
   /* output the formatted string line by line */
@@ -218,7 +218,7 @@ void merror(int flag, char* fmt, ...) {
 
   /* add a colon */
   strncat(message, ": ", 1023 - strlen(message));
-  
+
   /* ensure the string is null terminated */
   message[1023] = '\0';
 
@@ -314,8 +314,8 @@ void GetACS(unsigned short *RxFrame){
       (RxFrame[2] & 0x0000ffff) << 16);
 
   if ((enc_elev = ((double)RxFrame[encElevAddr->channel] * (-360.0 / 65536.0)
-          + ENC_ELEV_OFFSET)) > 360)
-    enc_elev -= 360;
+          + ENC_ELEV_OFFSET)) < 0)
+    enc_elev += 360;
 
   gyro1 = (double)(RxFrame[gyro1Addr->channel]-GYRO1_OFFSET) * ADU1_TO_DPS;
   gyro2 = (double)(RxFrame[gyro2Addr->channel]-GYRO2_OFFSET) * ADU2_TO_DPS;
@@ -707,8 +707,6 @@ int main(int argc, char *argv[]) {
 
   mputs(MCP_INFO, "Finished Initialisation, waiting for BBC to come up.\n");
 
-  while (!ioctl(bbc_fp, BBCPCI_IOC_COMREG));
-
   mputs(MCP_INFO, "BBC is up.\n");
 
 #ifndef BOLOTEST
@@ -733,9 +731,9 @@ int main(int argc, char *argv[]) {
 #ifndef BOLOTEST
       GetACS(RxFrame);
       Pointing();
-      
+
       /* Copy data to small. */
-      memcpy(smalldata[small_index], &RxFrame, BiPhaseFrameSize);
+      memcpy(smalldata[small_index], RxFrame, BiPhaseFrameSize);
       small_index = INC_INDEX(small_index);
 #endif
 

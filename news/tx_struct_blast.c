@@ -478,7 +478,7 @@ struct ChannelStruct FastChannels[] = {
   {"sin_el",      'w',  ACS1, 10,             1.0,                    0.0, 'u'},
 
   /* read from board ACS2 */
-  {"enc_elev",    'r',  ACS2, 50,  -360.0/65536.0,        ENC_ELEV_OFFSET, 'u'},
+  {"enc_elev",    'r',  ACS2, 50, -360.0/65536.0,ENC_ELEV_OFFSET,ENC_ELEV_TYPE},
 
   /* read from ACS3 */
   {"acs0bits",    'r',  ACS3, 59,             1.0,                    0.0, 'u'},
