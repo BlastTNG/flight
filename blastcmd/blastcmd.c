@@ -443,7 +443,7 @@ int main(int argc, char *argv[]) {
 
   /* Look for single packet commands with nmonic names */
   for (i_cmd = 0; i_cmd < N_NM_SCOMMANDS; i_cmd++) {
-    if (strncmp(argv[i], scommands[i_cmd].name, 10) == 0) {
+    if (strncmp(argv[i], scommands[i_cmd].name, SIZE_NAME) == 0) {
       SendScommand(i_cmd, t_link, t_route, &i_ack, conf);
       WriteLogFile(argc, argv, i_ack, silent);
       exit(0);
@@ -453,7 +453,7 @@ int main(int argc, char *argv[]) {
   /* Look for single packet commands with only a command number */
   for (i_cmd = 0; i_cmd < N_SCOMMANDS; i_cmd++) {
     sprintf(tmpstr, "c%02d", i_cmd);
-    if (strncmp(argv[i], tmpstr, 10) == 0) {
+    if (strncmp(argv[i], tmpstr, SIZE_NAME) == 0) {
       SendScommand(i_cmd, t_link, t_route, &i_ack, conf);
       WriteLogFile(argc, argv, i_ack, silent);
       exit(0);
@@ -462,7 +462,7 @@ int main(int argc, char *argv[]) {
 
   /* Look for multi packet commands */
   for (i_cmd = 0; i_cmd < N_MCOMMANDS; i_cmd++) {
-    if (strncmp(argv[i], mcommands[i_cmd].name, 10) == 0) {
+    if (strncmp(argv[i], mcommands[i_cmd].name, SIZE_NAME) == 0) {
       SendMcommand(i_cmd, t_link, t_route, argv + i + 1 , argc - i - 1, &i_ack,
           conf);
       WriteLogFile(argc, argv, i_ack, silent);
