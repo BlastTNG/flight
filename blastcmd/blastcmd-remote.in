@@ -1,0 +1,4 @@
+#! /bin/csh
+# @configure_input@
+ssh @REMOTE_HOST@ @REMOTE_COMMAND@ $*
+exit 0

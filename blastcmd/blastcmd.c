@@ -20,7 +20,9 @@
  *
  */
 
-#define INCLUDE_VARS
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 
 #include <math.h>
 #include <stdio.h>
@@ -74,7 +76,7 @@ void USAGE(int flag) {
   printf("blastcmd [-v] [-f] [-s] [-los|-tdrss|-hf] [-com1|-com2] \\\n"
       "         command [param00 [param01 [param02 [ ... ]]]]\n"
       "blastcmd -c\n"
-      "blastcmd --license\n\n"
+      "blastcmd --version\n\n"
       "Options:\n"
       "       -v   Verbose\n"
       "       -s   Silent\n"
@@ -85,7 +87,7 @@ void USAGE(int flag) {
       "      -hf   Set link to HF\n"
       "    -com1   Set routing to comm1\n"
       "    -com2   Set routing to comm2\n"
-      "--license   Show license information and exit\n\n"
+      "--version   Show version and license information and exit\n\n"
       );
 
   if (!flag) {
@@ -432,9 +434,9 @@ void PrintCommandListSerial(void)
   exit(0);
 }
 
-void PrintLicense(void)
+void PrintVersion(void)
 {
-  printf("blastcmd (C) 2002-2004 University of Toronto\n"
+  printf("blastcmd " VERSION "  (C) 2002-2004 University of Toronto\n"
       "Compiled on " __DATE__ " at " __TIME__ ".\n\n"
       "This program comes with NO WARRANTY, not even for MERCHANTABILITY or "
       "FITNESS\n"
@@ -478,8 +480,8 @@ int main(int argc, char *argv[]) {
       silent = 1;
     else if (strcmp(argv[i], "-l") == 0)
       CommandList();
-    else if (strcmp(argv[i], "--license") == 0)
-      PrintLicense();
+    else if (strcmp(argv[i], "--version") == 0)
+      PrintVersion();
     else if (strcmp(argv[i], "-c") == 0)
       PrintCommandListSerial();
   }

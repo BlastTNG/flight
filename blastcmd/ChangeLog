@@ -1,0 +1,41 @@
+2004-09-27 (1.1.5):
+  * blastcmd.c: add -c option ; migrate to autoconf
+
+2004-09-09 (1.1.4):
+  * blastcmd.c: add --license
+
+2004-09-08:
+  * blastcmd: add copyright and license
+
+2004-08-24 (1.1.3):
+  * blastcmd.c: ability to send -ve integer parameters
+
+2004-07-14:
+  * blastcmd.c, Makefile: migrate to command_list.*
+
+2004-06-25 (1.1.2):
+  * blastcmd.c: separate command list from usage
+
+2003-09-12 (1.1.1)  Barth Netterfield:
+  * blastcmd.c: use ttyS1
+
+2003-09-07 (1.1.0):
+  * blastcmd.c: New commanding struct scheme
+
+2003-08-24:
+  * Makefile: Add isc_protocl.h to dependancies
+
+2003-08-15 (1.0.4)  Barth Netterfield:
+  * blastcmd.c: remove busy waiting in ack
+
+2003-07-19 (1.0.3)  Barth Netterfield:
+  * blastcmd.c: compare full field names (up to SIZE_NAME)
+
+2003-06-25 (1.0.2):
+  * fifocmd: Bugfix
+
+2003-06-18 (1.0.1):
+  * fifocmd: Add
+
+2003-06-16 (1.0.0):
+  * blastcmd: Release

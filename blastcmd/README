@@ -1,5 +1,17 @@
-To make:
+To make blastcmd-remote:
 
-./configure
+./configure [--with-remote-host=HOST] [--with-remote-command=CMD]
+make
+make install
+
+To make blastcmd
+
+./configure --enable-blastcmd
+make
+make install
+
+To make fifocmd
+
+./configure --enable-fifocmd
 make
 make install
