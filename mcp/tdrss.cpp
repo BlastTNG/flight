@@ -1170,6 +1170,8 @@ void FrameBuffer::Resize(int numframes_in) {
 \******************************************************************************/
 
 void *FrameBuffer::UpdateThreadEntry(void *pthis) {
+  pthread_setspecific(identity, "updt");
+
   FrameBuffer *mine = (FrameBuffer *)pthis;
   mine->Update();
 
@@ -1369,6 +1371,7 @@ FrameBuffer::~FrameBuffer() {
 extern "C" void TDRSSWriter(void) {
   Alice *drinkme;
 
+  pthread_setspecific(identity, "tdrs");
   mputs(MCP_STARTUP, "Alice start-up.\n");
 
   tty_fd = OpenSerial();

@@ -30,6 +30,7 @@ void SunSensor(void) {
   ss_packet_data Rx_Data;
 
 
+  pthread_setspecific(identity, "suns");
   mputs(MCP_STARTUP, "SunSensor startup\n");
 
   while (1) {

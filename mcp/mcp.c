@@ -44,7 +44,7 @@
 
 int bbc_fp = -1;
 int bi0_fp = -2;
-int frames_in = 0;
+pthread_key_t identity;
 
 struct ACSDataStruct ACSData;
 
@@ -142,7 +142,7 @@ void mputs(int flag, const char* message) {
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
-  sprintf(bufstart, "[%li] ", pthread_self());
+  sprintf(bufstart, "[%s] ", (char*)pthread_getspecific(identity));
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
@@ -241,6 +241,7 @@ void SensorReader(void) {
 
   FILE *stream;
 
+  pthread_setspecific(identity, "sens");
   mputs(MCP_STARTUP, "SensorReader startup\n");
 
   while (1) {
@@ -426,6 +427,7 @@ int fill_Rx_frame(unsigned int in_data,
 }
 
 void WatchDog (void) {
+  pthread_setspecific(identity, "wdog");
   mputs(MCP_STARTUP, "Watchdog startup\n");
 
   if (ioperm(0x378, 0x0F, 1) != 0)
@@ -510,6 +512,7 @@ void zero(unsigned short *RxFrame) {
 void BiPhaseWriter(void) {
   int i_out, i_in;
 
+  pthread_setspecific(identity, "bi0 ");
   mputs(MCP_STARTUP, "Biphase writer startup\n");
 
   while (1) {
@@ -611,6 +614,9 @@ int main(int argc, char *argv[]) {
   }
 
   umask(0);  /* clear umask */
+
+  pthread_key_create(&identity, NULL);
+  pthread_setspecific(identity, "mcp ");
 
   if ((logfile = fopen("/data/etc/mcp.log", "a")) == NULL)
     merror(MCP_ERROR, "Can't open log file");
@@ -715,7 +721,6 @@ int main(int argc, char *argv[]) {
         if (!--StartupVeto)
           mputs(MCP_ERROR, "Startup Veto Ends\n");
       } else {
-        frames_in++;
 #ifndef BOLOTEST
         GetACS(RxFrame);
         Pointing();

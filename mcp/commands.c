@@ -948,7 +948,7 @@ void SendDownData(char tty_fd) {
   }
 
   if (firsttime) {
-    mprintf(MCP_STARTUP, "Slow DL size = %d\n", bytepos);
+    mprintf(MCP_INFO, "Slow DL size = %d\n", bytepos);
     firsttime = 0;
   }
 
@@ -984,6 +984,7 @@ void WatchFIFO () {
 
   int index, pindex = 0;
 
+  pthread_setspecific(identity, "fifo");
   mputs(MCP_STARTUP, "WatchFIFO startup\n");
 
   if ((fifo = open("/tmp/SIPSS.FIFO", O_RDONLY | O_NONBLOCK)) == -1)
@@ -1041,6 +1042,7 @@ void WatchFIFO () {
 }
 
 char *COMM[] = {"/dev/ttyS0", "/dev/ttyS4"};
+char *ident[] = {"cmd0", "cmd1"};
 
 void WatchPort (void* parameter) {
   unsigned char buf;
@@ -1060,6 +1062,7 @@ void WatchPort (void* parameter) {
   int timer = 0;
   int bytecount = 0;
 
+  pthread_setspecific(identity, ident[port]);
   mprintf(MCP_STARTUP, "WatchPort(%i) startup\n", port);
 
   tty_fd = bc_setserial(COMM[port]);

@@ -80,6 +80,7 @@ void WatchDGPS() {
   int pos_ok;
   static int i_at_float = 0;
 
+  pthread_setspecific(identity, "dgps");
   mputs(MCP_STARTUP, "WatchDGPS startup\n");
 
   DGPSAtt[0].az = 0;

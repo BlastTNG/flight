@@ -170,6 +170,7 @@ void FrameFileWriter(void) {
   void* b_write_to;
   int write_len;
 
+  pthread_setspecific(identity, "disk");
   mputs(MCP_STARTUP, "FrameFileWriter startup\n");
 
   /* malloc output_buffer */

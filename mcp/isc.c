@@ -17,7 +17,11 @@
 struct {
   char who[4];
   char where[16];
-} isc_which[2] = {{"Isc", "192.168.62.5"}, {"Osc", "192.168.62.6"}};
+  char what[5];
+} isc_which[2] = {
+  {"Isc", "192.168.62.5", "isc "},
+  {"Osc", "192.168.62.6", "osc "}
+};
 
 extern short int SamIAm;   /* mcp.c */
 extern short int InCharge; /* tx.c */
@@ -100,6 +104,7 @@ void IntegratingStarCamera(void* parameter)
 
   int n, save_image_state = 0;
 
+  pthread_setspecific(identity, isc_which[which].what);
   mprintf(MCP_STARTUP, "%s startup\n", isc_which[which].who);
 
   for (;;) {
