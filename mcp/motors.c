@@ -1109,7 +1109,7 @@ void DoQuadMode() { // aka radbox
     next_right = next_left + MIN_SCAN;
   }
   
-  bprintf(info, "-> %g %g %g %g %g %g\n", next_left, next_right, bottom, top, targ_el, el);
+  bprintf(info, "-> %g %g %g %g %g %g\n", left, right, bottom, top, targ_el, el);
 
   /* set az v */
   v_az = CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0);
