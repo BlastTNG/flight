@@ -1,6 +1,12 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2004-10-29  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* client.c (QuenyaClient): Add block fetch and CRC checking routines.  Still
+	can't handle 250 or 213 responses.
+
+	* client.c (ClientDone): Send QUIT to server on cleanup.
+
 2004-10-27  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* defile.c (main): Only report file total if reading locally
 
@@ -17,7 +23,7 @@
 	a comment to the format file for now since kst doesn't support it yet.
 	All callers changed.
 
-	* client.c (InitClient): Handle 450 response from server.
+	* client.c (InitClient): Handle 451 response from server.
 
 	* client.c (InitClient, GetServerResponse): Handle errors in
 	GetServerResponse directly.
