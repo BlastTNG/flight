@@ -43,6 +43,8 @@
 #include "channels.h"
 #include "crc.h"
 
+#define VERSION "1.0.6"
+
 #define DEV "/dev/decom_pci"
 #define SOCK_PORT 11411
 #define FILE_SUFFIX 'y'
@@ -201,7 +203,8 @@ int MakeSock(void)
     exit(1);
   }
 
-  syslog(LOG_INFO, "listening on port %i with socket %i.\n", SOCK_PORT, sock);
+  syslog(LOG_INFO, "decomd version " VERSION "listening on port %i.\n",
+      SOCK_PORT);
 
   return sock;
 }
