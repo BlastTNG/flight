@@ -1,6 +1,6 @@
 /* tx_struct.h: contains channel list specific prototypes and definitions
  *
- * This software is copyright (C) 2004 University of Toronto
+ * This software is copyright (C) 2002-2004 University of Toronto
  * 
  * This file is part of the BLAST flight code licensed under the GNU 
  * General Public License.

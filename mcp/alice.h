@@ -1,6 +1,6 @@
 /* alice.h: TDRSS high-rate definitions and prototypes for BLAST
  *
- * This software is copyright (C) 2004 University of Toronto
+ * This software is copyright (C) 2002-2004 University of Toronto
  * 
  * This file is part of the BLAST flight code licensed under the GNU 
  * General Public License.
