@@ -43,6 +43,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILDSERIAL = @BUILDSERIAL@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -115,6 +116,8 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
+buildserial = @BUILDSERIAL@
+
 AUTOMAKE_OPTIONS = foreign
 blastcmd_SOURCES = blastcmd.c command_list.c command_list.h isc_protocol.h
 @INSTALL_BLASTCMD_TRUE@bin_PROGRAMS = blastcmd
@@ -164,7 +167,7 @@ DATA = $(dataetc_DATA)
 
 DIST_COMMON = README $(srcdir)/Makefile.in $(srcdir)/configure COPYING \
 	ChangeLog Makefile.am aclocal.m4 blastcmd-remote.in config.h.in \
-	configure configure.in depcomp install-sh missing mkinstalldirs
+	configure configure.ac depcomp install-sh missing mkinstalldirs
 SOURCES = $(blastcmd_SOURCES)
 
 all: config.h
@@ -175,7 +178,7 @@ all: config.h
 
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno
-$(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
+$(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
 	  $(AUTOMAKE) --foreign  Makefile
 Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
@@ -183,10 +186,10 @@ Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
 
 $(top_builddir)/config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	$(SHELL) ./config.status --recheck
-$(srcdir)/configure:  $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
+$(srcdir)/configure:  $(srcdir)/configure.ac $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
 	cd $(srcdir) && $(AUTOCONF)
 
-$(ACLOCAL_M4):  configure.in 
+$(ACLOCAL_M4):  configure.ac 
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 
 config.h: stamp-h1
@@ -199,7 +202,7 @@ stamp-h1: $(srcdir)/config.h.in $(top_builddir)/config.status
 	@rm -f stamp-h1
 	cd $(top_builddir) && $(SHELL) ./config.status config.h
 
-$(srcdir)/config.h.in:  $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+$(srcdir)/config.h.in:  $(top_srcdir)/configure.ac $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOHEADER)
 	touch $(srcdir)/config.h.in
 
@@ -568,9 +571,10 @@ uninstall-am: uninstall-binPROGRAMS uninstall-binSCRIPTS \
 
 
 distinstall: distcheck
+	cp ${distdir}.tar.gz ${distdir}-${buildserial}.tar.gz
 	$(mkinstalldirs) ${prefix}/src
-	${INSTALL_DATA} ${distdir}.tar.gz ${prefix}/src
-	scp ${distdir}.tar.gz blast.physics.utoronto.ca:/data/src
+	${INSTALL_DATA} ${distdir}-${buildserial}.tar.gz ${prefix}/src
+	scp ${distdir}-${buildserial}.tar.gz blast.physics.utoronto.ca:/data/src
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

@@ -1,7 +1,10 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(blastcmd.c)
-AM_INIT_AUTOMAKE(blastcmd, 1.1.5)
+AM_INIT_AUTOMAKE(blastcmd, 1.1.6)
 AM_CONFIG_HEADER(config.h)
+
+BUILDSERIAL=1
+AC_SUBST(BUILDSERIAL)
 
 AC_ARG_WITH( data-etc,
             [  --with-data-etc=DIR     put auxiliary data in DIR [/data/etc]],

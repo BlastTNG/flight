@@ -1,3 +1,7 @@
+2004-10-08 (1.1.6):
+  * configure.ac: rename from configure.in ; add BUILDSERIAL
+  * Makefile.am: add BUILDSERIAL
+
 2004-09-27 (1.1.5):
   * dummycmd: add
   * blastcmd.c: add -c option ; migrate to autoconf
