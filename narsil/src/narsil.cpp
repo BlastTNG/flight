@@ -1335,7 +1335,7 @@ int main(int argc, char* argv[]) {
   }
 
   close(pipefd[0]);
-  if (WEXITSTATUS(i) == 12 || strcmp(ptr, "Command List Revision")) {
+  if (WEXITSTATUS(i) == 12 || !strncmp(ptr, "$Revision: ", 11)) {
     if (strncmp(command_list_serial, ptr, strlen(command_list_serial))) {
       printf("\n                           **** ERROR ****\n\n"
           "Cowardly refusing to use a blastcmd with a different command list.\n"

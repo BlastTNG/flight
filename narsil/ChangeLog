@@ -1,4 +1,8 @@
-2004-11-15 (1.8.3):
+2004-11-18 (1.8.3):
+	* narsil.cpp (main): fix command list version check to work with
+	blastcmd-remote
+
+2004-11-15:
 	* data/Makefile.am: Add install-data-hook target to set permissions
 	properly.
 
