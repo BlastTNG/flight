@@ -217,7 +217,7 @@
   </MULTI>
 </BOX>
 
-<BOX caption="Elevation" row="4" col="1">
+<BOX caption="Elevation" row="4" col="2">
 <NUMBER caption="Encoder El" textstyle="evenrow">
     <DATUM format="%.2f" src="ENC_EL" extrema="unknown"/></NUMBER>
 <NUMBER caption="Sigma" textstyle="evenrow">
@@ -228,7 +228,7 @@
     <DATUM format="%.2f" src="CLIN_SIGMA" extrema="unknown"/></NUMBER>
 </BOX>
 
-<BOX caption="Sun Sensor" row="4" col="2">
+<BOX caption="Sun Sensor" row="4" col="3">
 <NUMBER caption="Az" textstyle="evenrow">
     <DATUM format="%.2f" src="SS_AZ" extrema="unknown"/></NUMBER>
 <NUMBER caption="Sigma" textstyle="evenrow">
@@ -237,27 +237,42 @@
     <DATUM format="%.2f" src="SUN_AZ" extrema="unknown"/></NUMBER>
 </BOX>
 
-<BOX caption="ISC" row="4" col="3">
+<BOX caption="ISC" row="4" col="4">
 <NUMBER caption="RA" textstyle="evenrow">
     <DATUM format="%.4f" src="ISC_RA" extrema="unknown"/></NUMBER>
 <NUMBER caption="DEC" textstyle="evenrow">
     <DATUM format="%.4f" src="ISC_DEC" extrema="unknown"/></NUMBER>
 <NUMBER caption="Sigma" textstyle="evenrow">
     <DATUM format="%.3f" src="ISC_RD_SIGMA" extrema="unknown"/></NUMBER>
+<MULTI caption="State" textstyle="evenrow">
+    <DATUM src="ISC_STATE">
+        <WORD value="0" caption="Error" textstyle="E_BIT"/>
+	<WORD value="1" caption="Running" textstyle="OK_BIT"/>
+	<WORD value="2" caption="Paused" textstyle="W_BIT"/>
+	<WORD value="4" caption="Abort" textstyle="W_BIT"/>
+	<WORD value="8" caption="Auto Focus" textstyle="W_BIT"/>
+	<WORD value="16" caption="Bright Star" textstyle="OK_BIT"/>
+	<WORD value="32" caption="Shutdown" textstyle="E_BIT"/>
+    </DATUM>
+</MULTI>
 <NUMBER caption="# blobs" textstyle="evenrow">
     <DATUM format="%.0f" src="ISC_NBLOBS" extrema="unknown"/></NUMBER>
 <NUMBER caption="Frame #" textstyle="evenrow">
     <DATUM format="%.0f" src="ISC_FRAMENUM" extrema="unknown"/></NUMBER>
+<NUMBER caption="Map Mean" textstyle="evenrow">
+    <DATUM format="%.2f" src="ISC_MAPMEAN" extrema="unknown"/></NUMBER>
+<NUMBER caption="Error Code" textstyle="evenrow">
+    <DATUM format="%.0f" src="ISC_ERROR" extrema="unknown"/></NUMBER>
 </BOX>
 
-<BOX caption="Magnetometer" row="4" col="4">
+<BOX caption="Magnetometer" row="4" col="5">
 <NUMBER caption="Az" textstyle="evenrow">
     <DATUM format="%.2f" src="MAG_AZ" extrema="unknown"/></NUMBER>
 <NUMBER caption="Sigma" textstyle="evenrow">
     <DATUM format="%.2f" src="MAG_SIGMA" extrema="unknown"/></NUMBER>
 </BOX>
 
-<BOX caption="dGPS" row="4" col="5">
+<BOX caption="dGPS" row="4" col="6">
 <NUMBER caption="Az" textstyle="evenrow">
     <DATUM format="%.2f" src="DGPS_AZ" extrema="unknown"/></NUMBER>
 <MULTI caption="Attitude" textstyle="evenrow">
@@ -276,17 +291,23 @@
     <DATUM format="%.0f" src="DGPS_N_SAT" extrema="unknown"/></NUMBER>
 </BOX>
 
-<BOX caption="Pointing Mode" row="2" col="1" rowspan="1">
+<BOX caption="Balance System" row="2" col="3">
+<NUMBER caption="Status" textstyle="evenrow">
+    <DATUM format="%.0f" src="BAL_VETO" extrema="unknown"/>
+</NUMBER>
+<NUMBER caption="Bal Target" textstyle="evenrow">
+    <DATUM format="%.2f" src="BAL_TARGET" extrema="unknown"/></NUMBER>
+<NUMBER caption="Balance %" textstyle="evenrow">
+    <DATUM format="%.2f" src="BALPUMP_LEV" extrema="unknown"/></NUMBER>
+</BOX>
+
+<BOX caption="Pointing Mode" row="2" col="1" rowspan="0">
   <MULTI caption="Source" textstyle="oddrow">
     <DATUM src="IS_SCHED">
       <WORD value="1" caption="Schedule" textstyle="OK_BIT"/>
       <WORD value="0" caption="Uplink" textstyle="W_BIT"/>
     </DATUM>
   </MULTI>
-  <NUMBER caption="Bal Target" textstyle="evenrow">
-    <DATUM format="%.2f" src="BAL_TARGET" extrema="unknown"/></NUMBER>
-  <NUMBER caption="Balance %" textstyle="evenrow">
-    <DATUM format="%.2f" src="BALPUMP_LEV" extrema="unknown"/></NUMBER>
   <MULTI caption="Lock" textstyle="oddrow">
     <DATUM src="lokmot_pin">
       <WORD value="0" caption="Unlocked" textstyle="OK_BIT"/>
@@ -320,11 +341,6 @@
     <DATUM format="%.2f" src="P_W" extrema="angle"/></NUMBER>
   <NUMBER caption="H" textstyle="evenrow">
     <DATUM format="%.4f" src="P_H" extrema="dps"/></NUMBER>
-  <NUMBER caption="Current Az" textstyle="evenrow">
-    <DATUM format="%.2f" src="AZ" extrema="angle"/></NUMBER>
-  <NUMBER caption="Current El" textstyle="evenrow">
-    <DATUM format="%.2f" src="EL" extrema="angle"/></NUMBER>
-                                                                                
 </BOX>
 
 <BOX caption="Motor Gains" row="3" col="2">
@@ -448,7 +464,7 @@
   <NUMBER caption="I Race" textstyle="oddrow">
     <DATUM format="%.2f" src="I_RACE" extrema="current"/></NUMBER>
 </BOX>
-<BOX caption="Currents" row="1" col="3" rowspan="1">
+<BOX caption="Currents" row="1" col="3" rowspan="0">
   <NUMBER caption="I DPM 3V" textstyle="oddrow">
     <DATUM format="%.2f" src="I_DPM_3V" extrema="current"/></NUMBER>
   <NUMBER caption="I DPM 5V" textstyle="oddrow">
@@ -473,7 +489,7 @@
     <DATUM format="%.2f" src="I_ISC" extrema="current"/></NUMBER>
 </BOX>
 
-<BOX caption="Bias Generator" row="3" col="7">
+<BOX caption="Bias Generator" row="3" col="6">
   <MULTI caption="Type" textstyle="oddrow">
     <DATUM src="BIAS_IS_DC">
       <WORD value="1" caption="DC" textstyle="W_BIT"/>
@@ -510,7 +526,7 @@
 
 <BOX caption="Time" row="1" col="1" colspan="1">
   <NUMBER caption="Hours" textstyle="oddrow">
-    <DATUM format="%.2f" src="CPU_HOUR" extrema="hours"/>
+    <DATUM format="%.4f" src="CPU_HOUR" extrema="hours"/>
   </NUMBER>
   <NUMBER caption="MCP Fastsamp" textstyle="oddrow">
     <DATUM format="%.0f" src="FASTSAMP" extrema="unknown"/>
@@ -524,24 +540,40 @@
   <DATETIME caption="CPU Time" textstyle="evenrow">
     <DATUM format="%e %b %Y, %H:%M:%S" src="CPU_TIME"/>
   </DATETIME>
+  <DATETIME caption="dGPS Time" textstyle="evenrow">
+    <DATUM format="%e %b %Y, %H:%M:%S" src="DGPS_TIME"/>
+  </DATETIME>
   <DATETIME caption="SIP Time" textstyle="evenrow">
     <DATUM format="%e %b %Y, %H:%M:%S" src="SIP_TIME"/>
   </DATETIME>
-  <NUMBER caption="North Latitude" textstyle="oddrow">
+  <NUMBER caption="Gondola Siderial Time" textstyle="oddrow">
+      <DATUM format="%.4f" src="LST" extrema="unknown"/>
+  </NUMBER>
+  <MULTI caption="Ring Bearer" textstyle="oddrow">
+    <DATUM src="SAM_I_AM">
+      <WORD value="1" caption="Sam" textstyle="OK_BIT"/>
+      <WORD value="0" caption="Frodo" textstyle="OK_BIT"/>
+    </DATUM>
+  </MULTI>
+</BOX>
+<BOX caption="Location" row="3" col="1">
+  <NUMBER caption="Latitude" textstyle="oddrow">
     <DATUM format="%.4f" src="SIP_LAT" extrema="unknown"/>
   </NUMBER>
-  <NUMBER caption="West Longitude" textstyle="oddrow">
+  <NUMBER caption="Longitude" textstyle="oddrow">
     <DATUM format="%.4f" src="SIP_LON" extrema="unknown"/>
   </NUMBER>
-  <NUMBER caption="Gondola Siderial Time" textstyle="oddrow">
-    <DATUM format="%.4f" src="LST" extrema="unknown"/>
+  <NUMBER caption="Altitude" textstyle="oddrow">
+    <DATUM format="%.0f" src="DGPS_ALT" extrema="unknown"/>
   </NUMBER>
-  <MULTI caption="Hobbit In Charge" textstyle="oddrow">
-     <DATUM src="SAM_I_AM">
-        <WORD value="1" caption="Sam" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Frodo" textstyle="OK_BIT"/>
-     </DATUM>
-   </MULTI>
+  <NUMBER caption="Az" textstyle="evenrow">
+      <DATUM format="%.2f" src="AZ" extrema="angle"/></NUMBER>
+  <NUMBER caption="El" textstyle="evenrow">
+    <DATUM format="%.2f" src="EL" extrema="angle"/></NUMBER>
+  <NUMBER caption="RA" textstyle="evenrow">
+    <DATUM format="%.4f" src="RA" extrema="angle"/></NUMBER>
+  <NUMBER caption="DEC" textstyle="evenrow">
+     <DATUM format="%.4f" src="DEC" extrema="angle"/></NUMBER>
 </BOX>
 
 <BOX caption="Cryostat Temps" row="1" col="6" rowspan="1">
@@ -577,7 +609,7 @@
     <DATUM format="%.3f" src="T_base_250" extrema="pottemp"/></NUMBER>
 </BOX>
 
-<BOX caption="DAS Phases" row="4" col="7" >
+<BOX caption="DAS Phases" row="3" col="7" >
   <NUMBER caption="DAS 6" textstyle="evenrow"><DATUM format="%.0f" src="phase6" extrema="unknown"/></NUMBER>
   <NUMBER caption="DAS 7" textstyle="oddrow"><DATUM format="%.0f" src="phase7" extrema="unknown"/></NUMBER>
   <NUMBER caption="DAS 9" textstyle="oddrow"><DATUM format="%.0f" src="phase9" extrema="unknown"/></NUMBER>
@@ -632,7 +664,7 @@
     </DATUM>
   </MULTI>
 </BOX>
-<BOX caption="Valves" row="3" col="6">
+<BOX caption="Valves" row="3" col="5">
   <MULTI caption="Pot" textstyle="oddrow">
     <DATUM src="POT_VALVE">
       <WORD value="1" caption="On" textstyle="W_BIT"/>
