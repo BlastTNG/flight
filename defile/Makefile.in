@@ -115,7 +115,7 @@ subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = defile.1
+CONFIG_CLEAN_FILES = defile.1 defile.conf
 bin_PROGRAMS = defile$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
@@ -149,8 +149,8 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 	check-recursive installcheck-recursive
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/configure COPYING \
 	ChangeLog Makefile.am aclocal.m4 config.h.in configure \
-	configure.ac defile.1.in depcomp install-sh missing \
-	mkinstalldirs
+	configure.ac defile.1.in defile.conf.in depcomp install-sh \
+	missing mkinstalldirs
 DIST_SUBDIRS = $(SUBDIRS)
 SOURCES = $(defile_SOURCES)
 
@@ -193,6 +193,8 @@ $(srcdir)/config.h.in:  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 distclean-hdr:
 	-rm -f config.h stamp-h1
 defile.1: $(top_builddir)/config.status defile.1.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+defile.conf: $(top_builddir)/config.status defile.conf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 install-binPROGRAMS: $(bin_PROGRAMS)

@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(defile, 2.5.4, dwiebe@physics.utoronto.ca)
-AM_INIT_AUTOMAKE(defile, 2.5.4)
+AC_INIT(defile, 2.6.0-test1, [dwiebe@physics.utoronto.ca])
+AM_INIT_AUTOMAKE(defile, 2.6.0-test1)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH(data-etc,[  --with-data-etc=DIR     put auxiliary data in DIR [/data/etc]], DATA_ETC_DIR="${withval}", DATA_ETC_DIR="/data/etc")
@@ -20,4 +20,4 @@ AC_CHECK_LIB(z, gzopen,,AC_MSG_WARN([*** libz not installed -- defile will have 
 dnl Headers
 AC_CHECK_HEADERS(zlib.h)
 
-AC_OUTPUT(Makefile etc/Makefile defile.1)
+AC_OUTPUT(Makefile etc/Makefile defile.1 defile.conf)

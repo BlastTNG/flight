@@ -1,0 +1,112 @@
+# @configure_input@
+#
+# Sample defile.conf for defile @VERSION@
+#
+# Report bugs to <@PACKAGE_BUGREPORT@>
+
+# ---
+
+# Set CompressedOutput to 1 if you want defile to write gzipped dirfiles by
+# default.  Default: don't compress
+
+# CompressedOutput 1
+
+# ---
+
+# Set Daemonise to 1 if you want defile to daemonise on start up by default.
+# Default: don't daemonise
+
+# Daemonise 1
+
+# ---
+
+# Set InputCurFileName to the default input filename.  Default: none.
+
+InputCurFileName /mnt/decom/etc/decom.cur
+
+# ---
+
+# Set OutputDirectory to the default parent directory for defile created
+# dirfiles.  Default: /data/rawdir
+
+# OutputDirectory /data/rawdir
+
+# ---
+
+# Set OutpuCurFileName to the default output curfile name.
+# Default: /data/etc/defile.cur
+
+OutputCurFileName /data/etc/defile.cur
+
+# ---
+
+# Set Persistent to 1 if you don't want defile to exit when it reaches the end
+# of the input, but instead wait for more data.  Default: exit on EOF
+
+# Persistent 1
+
+# ---
+
+# Set PidFile to the name of the file to write defile's pid to when in daemon
+# mode. This has no effect when not in daemon mode.
+# Default: /var/run/defile.pid
+
+# PidFile /var/run/defile.pid
+
+# ---
+
+# Set QuendiHost to the hostname or IP address of the server running the Quendi
+# (blastd) server.  Default: none
+
+QuendiHost arwen.blast
+
+# ---
+
+# Set Quiet to 1 to have defile supress normal console output.  Default: don't
+# be quiet.
+
+# Quiet 1
+
+# ---
+
+# Set RemountPath to the relative path from the curfile directory in which to
+# find the dirfile it points to.  Default: ../rawdir
+
+# RemountPath ../rawdir
+
+# ---
+
+# Set RemountedSource to 1 to have defile assume that the datafile the input
+# curfile points to has been mounted in another location.  Default: don't
+# remount.
+
+RemountedSource 1
+
+# ---
+
+# Set ResumeMode to 1 to have defile resume a defiling if it finds the
+# destination dirfile already exists.  Default: don't resume.
+
+# ResumeMode 1
+
+# ---
+
+# Set SpecFile to the name of the channel specification file for defile to use.
+# This overrides defile's automatically generated specification file name.
+# Default: none.
+
+# SpecFile channel.spec
+
+# ---
+
+# Set SuffixLength to the default length of the framefile suffix (the
+# hexidecimal chunk counter at the end of the chunk name).  Default: 4
+
+SuffixLength 3
+
+# ---
+
+# Set WriteCurfile to 1 to get data to write a curfile pointing to the defiled
+# data.  Default: don't write a curfile.
+
+WriteCurfile 1

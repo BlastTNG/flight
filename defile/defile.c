@@ -45,7 +45,7 @@
 
 #ifndef VERSION
 #  define VERSION_MAJOR    "2"
-#  define VERSION_MINOR    "5"
+#  define VERSION_MINOR    "6"
 #  define VERSION VERSION_MAJOR "." VERSION_MINOR ".x"
 #endif
 
@@ -64,6 +64,34 @@
 #define SUFF_MAX sizeof(chunkindex_t)
 #define SUFF_DFLT 3
 
+/* options */
+struct {
+  union {
+    char* as_string;
+    int   as_int;
+  } value;
+  char type;
+  const char name[48];
+} options[] = {
+  {{NULL}, 'i', "CompressedOutput"},
+  {{NULL}, 'i', "Daemonise"},
+  {{NULL}, 's', "InputCurFileName"},
+  {{NULL}, 's', "OutputCurFileName"},
+  {{NULL}, 's', "OutputDirectory"},
+  {{NULL}, 'i', "Persistent"},
+  {{NULL}, 's', "PidFile"},
+  {{NULL}, 's', "QuendiHost"},
+  {{NULL}, 'i', "Quiet"},
+  {{NULL}, 's', "RemountPath"},
+  {{NULL}, 'i', "RemountedSource"},
+  {{NULL}, 'i', "ResumeMode"},
+  {{NULL}, 's', "SpecFile"},
+  {{NULL}, 'i', "SuffixLength"},
+  {{NULL}, 'i', "WriteCurfile"},
+  {{NULL}, '\0', ""}
+};
+
+/* state structs */
 struct ri_struct ri;
 struct rc_struct rc = {
   0, /* daemonise */
@@ -99,6 +127,74 @@ void dputs(buos_t level, const char* string)
     bputs_syslog(level, string);
   else if (level != info || !rc.silent)
     bputs_stdio(level, string);
+}
+
+void ReadConfig(FILE* stream)
+{
+  char buffer[1024];
+  char *option, *value;
+  int i, found;
+
+  while (fgets(buffer, sizeof(buffer), stream)) {
+    /* remove comments */
+    if ((option = strchr(buffer, '#')) != NULL)
+      *option = '\0';
+
+    /* strip newline */
+    if ((option = strchr(buffer, '\n')) != NULL)
+      *option = '\0';
+
+    /* strip leading whitespace */
+    option = buffer + strspn(buffer, " \t");
+    if ((value = strchr(option, ' ')) != NULL) {
+      *(value++) = '\0';
+      value += strspn(value, " \t");
+    }
+    printf("o: %s\nv: %s\n", option, value);
+
+    found = 0;
+    for (i = 0; options[i].type != '\0'; ++i)
+      if (strcasecmp(option, options[i].name) == 0) {
+        found = 1;
+        switch (options[i].type) {
+          case 's':
+            options[i].value.as_string = bstrdup(fatal, value);
+            break;
+          case 'i':
+            options[i].value.as_int = atoi(value);
+            break;
+          default:
+            printf("Unknown option type\n");
+            exit(1);
+        }
+        break;
+      }
+
+    if (!found)
+      bprintf(warning, "Unknown option `%s'", option);
+  }
+}
+
+void LoadDefaultConfig(void)
+{
+  int i;
+
+  for (i = 0; options[i].type; ++i)
+    if (options[i].value.as_string == NULL)
+      switch (i) {
+        case CFG_PID_FILE:
+          options[i].value.as_string = bstrdup(fatal, PID_FILE);
+          break;
+        case CFG_CUR_FILE:
+          options[i].value.as_string
+            = bstrdup(fatal, "/mnt/decom/etc/decom.cur");
+          break;
+        case CFG_SUFFIX_LENGTH:
+          options[i].value.as_int = 3;
+        default:
+          bprintf(warning, "No default value for option `%s'",
+              options[i].name);
+      }
 }
 
 char* ResolveOutputDirfile(char* dirfile, const char* parent)
