@@ -59,7 +59,7 @@ unsigned short CalculateCRC(unsigned int initword, void *buffer,
   unsigned short crc;
   unsigned char *b;
 
-  if (buflen > 0)
+  if (buflen)
     crc = 0; 
   else 
     return 0;
