@@ -188,30 +188,36 @@ void SyncADC (void) {
 
   /* are we currently syncing? */
   if (doingSync) {
-    if (--doingSync == 0) {
+    l = (last_node == 0) ? 23 : (last_node == 17) ? 21 : last_node;
+    if (slow_data[statusAddr[last_node]->index][statusAddr[last_node]->channel] != 0x0001) {
+//      bprintf(info, "ADC Sync node %i successful.\n", l);
+      doingSync = 0;
+    }
+    if (--doingSync <= 0) {
+//      if (doingSync == 0) bprintf(info, "ADC Sync node %i timeout.\n", l);
+      doingSync = 0;
       /* after timing out, turn off sync bit */
       RawNiosWrite(sync0Addr->niosAddr, BBC_WRITE | BBC_NODE(17) | BBC_CH(56),
-          NIOS_QUEUE);
+          NIOS_FLUSH);
       RawNiosWrite(sync1Addr->niosAddr, BBC_WRITE | BBC_NODE(24) | BBC_CH(56),
-          NIOS_QUEUE);
+          NIOS_FLUSH);
     }
   } else {
     /* if not, check to see if we need to sync a board */
     for (m = 0; m < NUM_STAT; ++m) {
-      k = (m + last_node) % NUM_STAT;
+      k = (m + last_node + 1) % NUM_STAT;
       /* read board status */
       if (slow_data[statusAddr[k]->index][statusAddr[k]->channel] == 0x0001) {
         /* board needs to be synced */
-        doingSync = FAST_PER_SLOW * 2;
-        l = (k == 0) ? 23 : (k == 17) ? 21 : k;
+        doingSync = FAST_PER_SLOW * 10;
         last_node = k;
-        bprintf(info, "ADC Sync node %i\n", l);
+        l = (k == 0) ? 23 : (k == 17) ? 21 : k;
         if (k >= 3 && k <= 16) {
-          /* Bus 1 Sync */
+          bprintf(info, "Bus 1 ADC Sync node %i\n", l);
           RawNiosWrite(sync1Addr->niosAddr, BBC_WRITE | BBC_NODE(l) | BBC_CH(56)
               | BBC_ADC_SYNC | 0xa5a3, NIOS_FLUSH);
         } else {
-          /* Bus 0 Sync */
+          bprintf(info, "Bus 0 ADC Sync node %i\n", l);
           RawNiosWrite(sync0Addr->niosAddr, BBC_WRITE | BBC_NODE(l) | BBC_CH(56)
               | BBC_ADC_SYNC | 0xa5a3, NIOS_FLUSH);
         }
