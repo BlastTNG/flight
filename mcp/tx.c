@@ -785,6 +785,8 @@ int GetLockBits(int acs0bits) {
 
 }
 
+#define ISC_TRIG_LEN 3
+#define ISC_TRIG_PER 100
 /*****************************************************************
  *                                                               *
  *   Control the pumps and the lock                              *
@@ -802,6 +804,7 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
   static int balTargetCh, balTargetInd, balVetoCh, balVetoInd;
   static int iscBitsCh;
   static int i_lockpin, j_lockpin;
+  static int isc_trigger_count = 0;
 
   int iscBits = 0;
   int pumpBits = 0;
@@ -870,6 +873,14 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
     iscBits = Balance(iscBits, slowTxFields);
   }
 
+  if (isc_trigger_count<ISC_TRIG_LEN) {
+    iscBits|=ISC_TRIGGER;
+  }
+  isc_trigger_count++;
+  if (isc_trigger_count>=ISC_TRIG_PER) {
+    isc_trigger_count = 0;
+  }
+  
   WriteSlow(i_lockpin, j_lockpin, pin_is_in);
   WriteSlow(pumpBitsCh, pumpBitsInd, pumpBits);
   WriteSlow(pumpPwm2Ch, pumpPwm2Ind, CommandData.pumps.pwm2 & 0x7ff);
