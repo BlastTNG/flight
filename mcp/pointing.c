@@ -397,6 +397,11 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
       dec = ISCSolution[which][i_isc].dec * (180.0 / M_PI);
       radec2azel(ra, dec, PointingData[i_point].lst, PointingData[i_point].lat,
           &new_az, &new_el);
+
+      /* Add BDA offset */
+      new_el += CommandData.ISCState[which].elBDA * RAD2DEG;
+      new_az += CommandData.ISCState[which].azBDA * RAD2DEG;
+
       // this solution is isc_pulses.age old: how much have we moved?
       gy_el_delta = 0;
       gy_az_delta = 0;
@@ -430,9 +435,6 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
       e->varience = 1.0 / (w1 + w2);
       e->angle += gy_el_delta; // add back to now
       
-      /* Add BDA offset */
-      e->angle += CommandData.ISCState[which].elBDA * RAD2DEG;
-
       NormalizeAngle(&(e->angle));
 
       // evolve az solution
@@ -445,9 +447,6 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
       a->varience = 1.0 / (w1 + w2);
       a->angle += gy_az_delta; // add back to now
       
-      /* Add BDA offset */
-      a->angle += CommandData.ISCState[which].azBDA * RAD2DEG;
-        
       NormalizeAngle(&(a->angle));
     }
 

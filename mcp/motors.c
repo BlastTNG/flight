@@ -500,6 +500,10 @@ void DoVBoxMode() {
   if (el2 < MIN_EL)
     el2 = MIN_EL;
 
+//  bprintf(info, "VBox: El: %.2f < %.2f > %.2f (%s)\n", el2, el, el1, (dir == 1)
+//      ? "POSITIVE" : "NEGATIVE");
+//  bprintf(info, "VBox: Az: %.2f < %.2f\n", az, az2);
+
   /* check for out of range in el */
   if (el > el1 + EL_BORDER) {
     axes_mode.az_mode = AXIS_POSITION;
@@ -508,6 +512,7 @@ void DoVBoxMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el1;
+//    bprintf(info, "VBox: El limit out of range! (%.2f > %.2f) dir is now NEGATIVE and we're SLEWING!\n", el, el1 + EL_BORDER);
     dir = -1;
     return;
   } else if (el < el2 - EL_BORDER) {
@@ -517,13 +522,18 @@ void DoVBoxMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el2;
+//    bprintf(info, "VBox: El limit out of range! (%.2f < %.2f) dir is now POSITIVE and we're SLEWING!\n", el, el2 - EL_BORDER);
     dir = 1;
     return;
   } else if (el> el1) { /* turn around */
+//    bprintf(info, "VBox: Bumped into the top (%.2f > %.2f) dir is now NEGATIVE.", el, el1);
     dir = -1;
   } else if (el < el2) { /* turn around */
+//    bprintf(info, "VBox: Bumped into the bottom (%.2f > %.2f) dir is now NEGATIVE.", el, el1);
     dir = 1;
-  }    
+//  } else {  
+//    bprintf(info, "VBox: Did bupkis on the el check.");
+  }
   v_el = CommandData.pointing_mode.del * dir;
 
   /* we must be in range for elevation - go to el-vel mode */
@@ -539,8 +549,8 @@ void DoVBoxMode() {
 
   /* set az v */
   v = CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0);
+//  bprintf(info, "VBox: Requesting az scan @ %.2f for: %.2f <-> %.2f @ %.2f with daz_dt = %.2f\n", az, left, right, v, daz_dt);
   SetAzScanMode(az, left, right, v, daz_dt);
-
 }
 
 void DoRaDecGotoMode() {
