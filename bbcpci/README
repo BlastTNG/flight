@@ -8,9 +8,9 @@ been tested on Linux 2.6.
 
 1) Create the device file in /dev: 
 
-     [frodo]# mknod /dev/bbc_pci c 250 0
+     [frodo]# mknod /dev/bbcpci c 250 0
      [frodo]# mknod /dev/bbc_bi0 c 250 1
-     [frodo]# chmod 666 /dev/bbc_pci
+     [frodo]# chmod 666 /dev/bbcpci
      [frodo]# chmod 666 /dev/bi0_pci
 
    250 is the major number for the BBC card, defined in bbc_pci.c
@@ -60,7 +60,7 @@ open:
 
 	...	
 	# this order is important.  bbc first!
-	bbc_fd = open("/dev/bbc_pci", O_RDWR);
+	bbc_fd = open("/dev/bbcpci", O_RDWR);
 	bi0_fd = open("/dev/bi0_pci", O_RDWR);
 
 
