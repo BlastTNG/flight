@@ -1093,6 +1093,11 @@ void DoQuadMode() { // aka radbox
 
   if (targ_el<bottom) targ_el = bottom;
   if (targ_el>top) targ_el = top;
+
+  for (i=0; i<4; i++) {
+    bprintf(info, "%d %g %g\n", i, c_az[i], c_el[i]);
+  }
+  bprintf(info, "-> %g %g %g %g %g %g\n", next_left, next_right, bottom, top, targ_el, el);
   
   radbox_endpoints(c_az, c_el, targ_el, &next_left,
 		   &next_right, &bottom, &top);
