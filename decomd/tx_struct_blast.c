@@ -465,8 +465,8 @@ struct ChannelStruct SlowChannels[] = {
 
 struct ChannelStruct WideFastChannels[] = {
 #ifndef BOLOTEST
-  {"t_gybox2",    'r',  ACS1, 12, -9.5367431641e-08,               136.45, 'U'},
-  {"t_gybox",     'r',  ACS1, 14, -9.5367431641e-08,               136.45, 'U'},
+  {"t_gybox2",    'r',  ACS1, 12,          TGYBOX_M,             TGYBOX_B, 'U'},
+  {"t_gybox",     'r',  ACS1, 14,          TGYBOX_M,             TGYBOX_B, 'U'},
   {"raw_gy1",     'r',  ACS1, 26,     -AGY32_TO_DPS,
                                      AGY32_OFFSET * AGY32_TO_DPS + 0.1925, 'U'},
   {"raw_gy2",     'r',  ACS1, 22,      AGY32_TO_DPS,

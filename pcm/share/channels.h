@@ -163,6 +163,10 @@ extern "C" {
 #define DPS_TO_DGY32 (1.0/DGY32_TO_DPS)
 #define DGY32_OFFSET (32768.0*65536.0)
 
+/* Gyrobox thermometer conversion */
+#define TGYBOX_B (136.45)
+#define TGYBOX_M (-9.5367431641e-08)
+
 #ifdef __cplusplus
 }
 #endif

@@ -39,18 +39,24 @@
 #define ISC_DATA_TIMEOUT   900   /* in 100Hz frames */
 
 /* ISC_ACK_TIMEOUT + ISC_DATA_TIMEOUT sets the maximum length of the cycle.
- * ISC_ACK_TIMEOUT is purely responsible for the link-ok check and should be made
- * as small as possible, since any excess time effectively ends up as data timeout
- * time anyways. */
+ * ISC_ACK_TIMEOUT is purely responsible for the link-ok check and should be
+ * made small, since any excess time effectively ends up as data timeout time
+ * anyways. */
 
 /* This is the length of time to wait after receiving the ACK, bufore sending
  * the trigger */
-#define ISC_TRIGGER_DELAY   ((which == 1) ? 1 : 30)  /* in 100Hz frames */
+#define ISC_TRIGGER_DELAY   ((which == 1) ? 10 : 30)  /* in 100Hz frames */
 
 /* If mcp has decided the handshaking isn't working, this is the period of the
  * handshake-less triggers */
 #define ISC_DEFAULT_PERIOD 100   /* in 100Hz frames */
 #define MAX_ISC_SLOW_PULSE_SPEED 0.015
+
+/* limits for the gyrobox thermometer.  If the reading is outside this range,
+ * we don't regulate the box at all, since it means the thermometer is probably
+ * broken */
+#define MIN_GYBOX_TEMP ((-50 - TGYBOX_B) / TGYBOX_M)  /* -50 C */
+#define MAX_GYBOX_TEMP ((60 - TGYBOX_B) / TGYBOX_M)   /* +60 C */
 
 struct ISCPulseType isc_pulses[2] = {
   {-1, 0, 0, 0, 0, 0, 0, 0}, {-1, 0, 0, 0, 0, 0, 0, 0}
@@ -142,6 +148,7 @@ void ControlGyroHeat(unsigned short *RxFrame)
   static int p_off = -1;
 
   float error = 0, set_point;
+  unsigned int temp;
   static float integral = 0;
   static float deriv = 0;
   static float error_last = 0;
@@ -168,8 +175,6 @@ void ControlGyroHeat(unsigned short *RxFrame)
     dGyheatAddr = GetNiosAddr("g_d_gyheat");
   }
 
-  CommandData.gyheat.age = SetGyHeatSetpoint(history, CommandData.gyheat.age);
-
   /* send down the setpoints and gains values */
   WriteData(tGySetAddr, CommandData.gyheat.setpoint * 327.68, NIOS_QUEUE);
   WriteData(tGyMinAddr, CommandData.gyheat.min_set * 327.68, NIOS_QUEUE);
@@ -184,55 +189,64 @@ void ControlGyroHeat(unsigned short *RxFrame)
   WriteData(iGyheatAddr, CommandData.gyheat.gain.I, NIOS_QUEUE);
   WriteData(dGyheatAddr, CommandData.gyheat.gain.D, NIOS_QUEUE);
 
-  /* control the heat */
-  set_point = (CommandData.gyheat.setpoint - 136.45) / (-9.5367431641e-08);
-  P = CommandData.gyheat.gain.P * (-1.0 / 1000000.0);
-  I = CommandData.gyheat.gain.I * (-1.0 / 110000.0);
-  D = CommandData.gyheat.gain.D * ( 1.0 / 1000.0);
+  temp = (RxFrame[tGyboxAddr->channel + 1] << 16 |
+      RxFrame[tGyboxAddr->channel]);
 
-  /********* if end of pulse, calculate next pulse *********/
-  if (p_off <= 0 && p_on <= 0) {
-    error = set_point -
-      ((unsigned int)(RxFrame[tGyboxAddr->channel + 1] << 16
-                      | RxFrame[tGyboxAddr->channel]));
+  /* Only run these controls if we think the thermometer isn't broken */
+  if (temp < MAX_GYBOX_TEMP && temp > MIN_GYBOX_TEMP) {
+    /* control the heat */
+    CommandData.gyheat.age = SetGyHeatSetpoint(history, CommandData.gyheat.age);
 
-    integral = integral * 0.999 + 0.001 * error;
-    if (integral * I > 60) {
-      integral = 60.0 / I;
+    set_point = (CommandData.gyheat.setpoint - TGYBOX_B) / TGYBOX_M;
+    P = CommandData.gyheat.gain.P * (-1.0 / 1000000.0);
+    I = CommandData.gyheat.gain.I * (-1.0 / 110000.0);
+    D = CommandData.gyheat.gain.D * ( 1.0 / 1000.0);
+
+    /********* if end of pulse, calculate next pulse *********/
+    if (p_off <= 0 && p_on <= 0) {
+      error = set_point - temp;
+
+      integral = integral * 0.999 + 0.001 * error;
+      if (integral * I > 60) {
+        integral = 60.0 / I;
+      }
+      if (integral * I < 0) {
+        integral = 0;
+      }
+
+      deriv = error_last - error;
+      error_last = error;
+
+      p_on = P * error + (deriv / 60.0) * D + integral * I;
+
+      if (p_on > 60)
+        p_on = 60;
+      else if (p_on < 0)
+        p_on = 0;
+
+      p_off = 60 - p_on;
+
+      history = p_on * 100. / CommandData.gyheat.tc + (1. - 60. /
+          CommandData.gyheat.tc) * history;
     }
-    if (integral * I < 0) {
-      integral = 0;
+
+    if (CommandData.gyheat.age <= CommandData.gyheat.tc * 2)
+      ++CommandData.gyheat.age;
+
+    /******** do the pulse *****/
+    if (p_on > 0) {
+      WriteData(gyHeatAddr, on, NIOS_FLUSH);
+      p_on--;
+    } else if (p_off > 0) {
+      WriteData(gyHeatAddr, off, NIOS_FLUSH);
+      p_off--;
     }
+  } else 
+    /* Turn off heater if thermometer appears broken */
+    WriteData(gyHeatAddr, off, NIOS_FLUSH);
 
-    deriv = error_last - error;
-    error_last = error;
-
-    p_on = P * error + (deriv / 60.0) * D + integral * I;
-
-    if (p_on > 60)
-      p_on = 60;
-    else if (p_on < 0)
-      p_on = 0;
-
-    p_off = 60 - p_on;
-
-    history = p_on * 100. / CommandData.gyheat.tc + (1. - 60. /
-        CommandData.gyheat.tc) * history;
-  }
-
-  if (CommandData.gyheat.age <= CommandData.gyheat.tc * 2)
-    ++CommandData.gyheat.age;
   WriteData(gyHAgeAddr, CommandData.gyheat.age, NIOS_QUEUE);
   WriteData(gyHHistAddr, (history * 32768. / 100.), NIOS_QUEUE);
-
-  /******** do the pulse *****/
-  if (p_on > 0) {
-    WriteData(gyHeatAddr, on, NIOS_FLUSH);
-    p_on--;
-  } else if (p_off > 0) {
-    WriteData(gyHeatAddr, off, NIOS_FLUSH);
-    p_off--;
-  }
 }
 
 /******************************************************************/
