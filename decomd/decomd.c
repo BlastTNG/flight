@@ -267,7 +267,9 @@ int main(void) {
 
   struct sigaction action;
 
+  /* set up our outputs */
   openlog("decomd", LOG_PID, LOG_DAEMON);
+  blog_use_syslog();
 
   /* Fork to background */
   if ((pid = fork()) != 0) {
