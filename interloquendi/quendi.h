@@ -44,7 +44,15 @@ struct quendi_data_port_t {
   int port_active;
   unsigned frame_size;
   unsigned long pos;
+  unsigned long seek_to;
   char name[PATH_MAX];
+  char chunk[PATH_MAX];
+  int new_chunk;
+  int sending_data;
+  FILE* stream;
+  int chunk_total;
+  unsigned long frames_read;
+  int block_length;
 };
 
 int quendi_access_ok(
@@ -53,6 +61,14 @@ int quendi_access_ok(
 
 void quendi_add_data_port(
     const struct quendi_data_port_t*
+    );
+
+int quendi_advance_data(
+    FILE*,
+    int,
+    char*,
+    int,
+    int*
     );
 
 int quendi_cmdnum(
@@ -85,6 +101,28 @@ int quendi_parse(
     char**
     );
 
+unsigned long quendi_reader_init(
+    unsigned,
+    unsigned long,
+    char*,
+    const char*,
+    int
+    );
+
+void quendi_reader_shutdown(
+    FILE*
+    );
+
+int quendi_read_data(
+    int,
+    FILE**,
+    const char*,
+    unsigned long,
+    int*,
+    unsigned,
+    unsigned long*
+    );
+
 int quendi_respond(
     int,
     const char*
@@ -92,17 +130,13 @@ int quendi_respond(
 
 void quendi_send_data(
     int,
-    const char*,
-    unsigned long,
     unsigned,
-    int,
     int
     );
 
 void quendi_send_spec(
     int,
-    const char*,
-    unsigned long
+    const char*
     );
 
 void quendi_server_init(
@@ -116,6 +150,7 @@ void quendi_server_shutdown(
 int quendi_stage_data(
     const char*,
     unsigned long,
+    int,
     int
     );
 

@@ -36,6 +36,7 @@
 
 #include <arpa/inet.h>
 
+#include "crc.h"
 #include "blast.h"
 #include "quendi.h"
 #include "frameread.h"
@@ -48,6 +49,7 @@
 const char quendi_version[] = "1.0";
 const struct quendi_server_data_t *quendi_server_data = NULL;
 const struct quendi_data_port_t *quendi_data_port = NULL;
+unsigned short* quendi_input_buffer[INPUT_BUF_SIZE];
 
 /* functions */
 int quendi_access_ok(int level) {
@@ -76,14 +78,17 @@ int quendi_cmdnum(char* buffer)
     buffer[i] |= 0x20;
 
   switch(htonl(*(int*)buffer)) {
+    case 0x61626f72: return QUENYA_COMMAND_ABOR;
     case 0x6173796e: return QUENYA_COMMAND_ASYN;
     case 0x636c6f73: return QUENYA_COMMAND_CLOS;
+    case 0x636f6e74: return QUENYA_COMMAND_CONT;
     case 0x64617461: return QUENYA_COMMAND_DATA; 
     case 0x6964656e: return QUENYA_COMMAND_IDEN;
     case 0x6e6f6f70: return QUENYA_COMMAND_NOOP;
     case 0x6f70656e: return QUENYA_COMMAND_OPEN;
     case 0x716e6f77: return QUENYA_COMMAND_QNOW;
     case 0x71756974: return QUENYA_COMMAND_QUIT;
+    case 0x7274626b: return QUENYA_COMMAND_RTBK;
     case 0x73706563: return QUENYA_COMMAND_SPEC;
     case 0x73796e63: return QUENYA_COMMAND_SYNC;
   }
@@ -286,14 +291,22 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Listening on Data Port for Connection\r\n", response_num);
         break;
-      case QUENYA_RESPONSE_SENDING_DATA: /* 150 */
+      case QUENYA_RESPONSE_SENDING_DATA: /* 152 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Sending Data\r\n", response_num);
         break;
-      case QUENYA_RESPONSE_SENDING_SPEC: /* 151 */
+      case QUENYA_RESPONSE_SENDING_SPEC: /* 153 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Sending Spec File\r\n", response_num);
         break;
+      case QUENYA_RESPONSE_OK: /* 200 */
+        size = snprintf(buffer, QUENDI_RESPONSE_LENGTH, "%i OK\r\n",
+            response_num);
+        break;
+      case QUENYA_RESPONSE_DATA_STAGED: /* 211 */
+        size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
+            "%i Data Staged\r\n", response_num);
+        break; 
       case QUENYA_RESPONSE_SERVICE_READY: /* 220 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i %s %s %s/%s Service Ready\r\n", response_num,
@@ -305,31 +318,27 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
             "%i %s Closing Connection\r\n", response_num,
             quendi_server_data->server_host);
         break;
-      case QUENYA_RESPONSE_PORT_OPENED: /* 222 */
+      case QUENYA_RESPONSE_PORT_OPENED: /* 223 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Data Port Opened\r\n", response_num);
         break;
-      case QUENYA_RESPONSE_ACCESS_GRANTED: /* 222 */
+      case QUENYA_RESPONSE_ACCESS_GRANTED: /* 230 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Access Granted\r\n", response_num);
         break;
-      case QUENYA_RESPONSE_OK: /* 250 */
-        size = snprintf(buffer, QUENDI_RESPONSE_LENGTH, "%i OK\r\n",
-            response_num);
-        break;
-      case QUENYA_RESPONSE_DATA_STAGED: /* 251 */
-        size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
-            "%i Data Staged\r\n", response_num);
-        break; 
-      case QUENYA_RESPONSE_TRANS_COMPLETE: /* 252 */
+      case QUENYA_RESPONSE_TRANS_COMPLETE: /* 250 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Data Transfer Complete\r\n", response_num);
         break;
-      case QUENYA_RESPONSE_OPEN_ERROR: /* 420 */
+      case QUENYA_RESPONSE_BLOCK_CRC: /* 316 */
+        size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
+            "%i 0x0000 Chunk CRC\r\n", response_num);
+        break; 
+      case QUENYA_RESPONSE_OPEN_ERROR: /* 423 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Error Opening Data Port\r\n", response_num);
         break;
-      case QUENYA_RESPONSE_NO_CUR_DATA: /* 450 */
+      case QUENYA_RESPONSE_NO_CUR_DATA: /* 451 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i No Current Data Writer\r\n", response_num);
         break;
@@ -345,13 +354,17 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Command Not Implemented\r\n", response_num);
         break;
-      case QUENYA_RESPONSE_PORT_NOT_OPEN: /* 520 */
+      case QUENYA_RESPONSE_PORT_INACTIVE: /* 503 */
+        size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
+            "%i Invalid Command: Data Port Not Active\r\n", response_num);
+        break;
+      case QUENYA_RESPONSE_PORT_NOT_OPEN: /* 523 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Data Port Not Open\r\n", response_num);
         break;
-      case QUENYA_RESPONSE_TIMEOUT: /* 521 */
+      case QUENYA_RESPONSE_PORT_ACTIVE: /* 524 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
-            "%i Timeout Waiting for Command\r\n", response_num);
+            "%i Data Port Already Active.  Send ABOR First.\r\n", response_num);
         break;
       case QUENYA_RESPONSE_NOT_IDENTIFIED: /* 530 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
@@ -361,11 +374,15 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Insufficient Privilege\r\n", response_num);
         break;
-      case QUENYA_RESPONSE_NO_DATA_STAGED: /* 550 */
+      case QUENYA_RESPONSE_NO_DATA_STAGED: /* 551 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i No Data Staged\r\n", response_num);
         break;
-      case QUENYA_RESPONSE_PORT_CLOSE_ERR: /* 620 */
+      case QUENYA_RESPONSE_TIMEOUT: /* 621 */
+        size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
+            "%i Timeout Waiting for Command\r\n", response_num);
+        break;
+      case QUENYA_RESPONSE_PORT_CLOSE_ERR: /* 623 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Data Port Closed\r\n", response_num);
         break;
@@ -393,6 +410,22 @@ int quendi_parse(char *buffer, int *nparams, char **params)
   return cmd;
 }
 
+unsigned long quendi_reader_init(unsigned frame_size, unsigned long pos,
+    char* chunk, const char* name, int sufflen)
+{
+  int i;
+
+  strcpy(chunk, name);
+
+  quendi_input_buffer[0] = (unsigned short*)balloc(fatal,
+      frame_size * INPUT_BUF_SIZE);
+
+  for (i = 1; i < INPUT_BUF_SIZE; ++i)
+    quendi_input_buffer[i] = (void*)quendi_input_buffer[0] + i * frame_size;
+
+  return SetStartChunk(pos, chunk, sufflen) * frame_size;
+}
+
 int quendi_respond(int response_num, const char *message)
 {
   char buffer[QUENDI_RESPONSE_LENGTH + 1];
@@ -405,91 +438,91 @@ int quendi_respond(int response_num, const char *message)
   return 0;
 }
 
-void quendi_send_data(int dsock, const char* name, unsigned long pos,
-    unsigned frame_size, int sufflen, int persist)
+int quendi_read_data(int new_chunk, FILE** stream, const char* chunk,
+    unsigned long seek_to, int *chunk_total, unsigned frame_size,
+    unsigned long *frames_read)
 {
-  FILE* stream = NULL;
-  int new_chunk = 1;
-  long int seek_to = 0;
-  char* chunk = bstrdup(fatal, name);
-  int chunk_total = 0;
+  int n, i;
   struct stat chunk_stat;
-  int i, n;
-  long int frames_read = 0;
-  char buffer[100];
 
-  unsigned short* InputBuffer[INPUT_BUF_SIZE];
+  if (new_chunk) {
+    if ((*stream = fopen(chunk, "r")) == NULL)
+      berror(fatal, "cannot open `%s'", chunk);
 
-  InputBuffer[0] = (unsigned short*)balloc(fatal, frame_size * INPUT_BUF_SIZE);
-
-  for (i = 1; i < INPUT_BUF_SIZE; ++i)
-    InputBuffer[i] = (void*)InputBuffer[0] + i * frame_size;
-
-  seek_to = SetStartChunk(pos, chunk, sufflen) * frame_size;
-
-  snprintf(buffer, 100, "%i Data Transfer Starts", frame_size);
-  quendi_respond(QUENYA_RESPONSE_SENDING_DATA, buffer);
-
-  do {
-    if (new_chunk) {
-      if ((stream = fopen(chunk, "r")) == NULL)
-        berror(fatal, "cannot open `%s'", chunk);
-
-      if (seek_to > 0) {
-        fseek(stream, seek_to, SEEK_SET);
-        seek_to = 0;
-      }
-
-      if (stat(chunk, &chunk_stat))
-        berror(fatal, "cannot stat `%s'", chunk);
-
-      chunk_total = chunk_stat.st_size / frame_size;
+    if (seek_to > 0) {
+      fseek(*stream, seek_to, SEEK_SET);
+      seek_to = 0;
     }
 
-    do {
-      clearerr(stream);
-      if ((n = fread(InputBuffer[0], frame_size, INPUT_BUF_SIZE, stream)) < 1) {
-        if (feof(stream))
-          break;
-        else if ((i = ferror(stream))) {
-          berror(err, "error reading `%s' (%i)", chunk, i);
+    if (stat(chunk, &chunk_stat))
+      berror(fatal, "cannot stat `%s'", chunk);
 
-          fclose(stream);
-          if ((stream = fopen(chunk, "r")) == NULL)
-            berror(fatal, "cannot open `%s'", chunk);
+    *chunk_total = chunk_stat.st_size / frame_size;
+  }
 
-          fseek(stream, frames_read * frame_size, SEEK_SET);
-          n = 0;
-        }
-      }
-      frames_read += n;
+  clearerr(*stream);
+  if ((n = fread(quendi_input_buffer[0], frame_size, INPUT_BUF_SIZE,
+          *stream)) < 1) {
+    if (feof(*stream))
+      return -1;
+    else if ((i = ferror(*stream))) {
+      berror(err, "error reading `%s' (%i)", chunk, i);
 
-      for (i = 0; i < n; ++i)
-        write(dsock, InputBuffer[i], frame_size);
+      fclose(*stream);
+      if ((*stream = fopen(chunk, "r")) == NULL)
+        berror(fatal, "cannot open `%s'", chunk);
 
-    } while (!feof(stream));
+      fseek(*stream, *frames_read * frame_size, SEEK_SET);
+      n = 0;
+    }
+  }
+  *frames_read += n;
 
-    n = StreamToNextChunk(persist, chunk, sufflen, &chunk_total, NULL, NULL);
+  return n;
+}
 
-    if (n == FR_NEW_CHUNK) {
-      fclose(stream);
-      new_chunk = 1;
-    } else if (n == FR_CURFILE_CHANGED) {
-      /* do something */;
-    } else
-      new_chunk = 0;
+void quendi_send_data(int dsock, unsigned frame_size, int block_size)
+{
+  int i;
+  char buffer[100];
+  unsigned short crc;
 
-  } while (n != FR_DONE);
+  if (block_size > 0) {
+    snprintf(buffer, 100, "%i Frame Block Transfer Starting", block_size);
+    quendi_respond(QUENYA_RESPONSE_SENDING_DATA, buffer);
 
-  bfree(fatal, InputBuffer);
-  bfree(fatal, chunk);
+    for (i = 0; i < block_size; ++i)
+      write(dsock, quendi_input_buffer[i], frame_size);
 
-  quendi_respond(QUENYA_RESPONSE_TRANS_COMPLETE, NULL);
+    crc = CalculateCRC(CRC_SEED, quendi_input_buffer[0],
+        frame_size * block_size);
+
+    sprintf(buffer, "0x%04X Block CRC", crc);
+    quendi_respond(QUENYA_RESPONSE_BLOCK_CRC, buffer);
+  }
 
   return;
 }
 
-void quendi_send_spec(int dsock, const char* name, unsigned long pos)
+int quendi_advance_data(FILE* stream, int persist, char* chunk, int sufflen,
+    int *chunk_total)
+{
+  if (!feof(stream))
+    return FR_MORE_IN_FILE;
+
+  return StreamToNextChunk(persist, chunk, sufflen, chunk_total, NULL, NULL);
+}
+
+void quendi_reader_shutdown(FILE* stream)
+{
+  bfree(fatal, quendi_input_buffer[0]);
+
+  fclose(stream);
+
+  quendi_respond(QUENYA_RESPONSE_TRANS_COMPLETE, NULL);
+}
+
+void quendi_send_spec(int dsock, const char* name)
 {
   char spec_file[200];
   char buffer[100];
@@ -532,14 +565,21 @@ void quendi_server_shutdown(void)
 {
 }
 
-int quendi_stage_data(const char* file, unsigned long pos, int sufflen)
+int quendi_stage_data(const char* file, unsigned long pos, int sufflen,
+    int streamed_here)
 {
   char buffer[NAME_MAX + 60];
   char source[NAME_MAX];
 
   PathSplit_r(file, NULL, buffer);
   StaticSourcePart(source, buffer, NULL, sufflen);
-  snprintf(buffer, NAME_MAX + 60, "%lu:%s Data Staged", pos, source);
-  quendi_respond(QUENYA_RESPONSE_DATA_STAGED, buffer);
+  if (streamed_here) {
+    snprintf(buffer, NAME_MAX + 60, "%lu:%s Data Continues: New Data Staged",
+        pos, source);
+    quendi_respond(QUENYA_RESPONSE_DATA_STAGED, buffer);
+  } else {
+    snprintf(buffer, NAME_MAX + 60, "%lu:%s Data Staged", pos, source);
+    quendi_respond(QUENYA_RESPONSE_DATA_STAGED, buffer);
+  }
   return 1;
 }

@@ -108,6 +108,7 @@ void Connection(int csock)
 
   data.sock = -1;
   data.port_active = 0;
+  data.sending_data = 0;
 
   /* tcp wrapper check */
   request_init(&req, RQ_DAEMON, "interloquendi", RQ_FILE, csock, 0);
@@ -148,9 +149,19 @@ void Connection(int csock)
         case -1:
           quendi_respond(QUENYA_RESPONSE_SYNTAX_ERROR, "Unrecognised Command");
           break;
+        case QUENYA_COMMAND_ABOR:
+          if (!data.sending_data)
+            quendi_respond(QUENYA_RESPONSE_PORT_INACTIVE, NULL);
+          else {
+            quendi_reader_shutdown(data.stream);
+            data.sending_data = 0;
+          }
+          break;
         case QUENYA_COMMAND_CLOS:
           if (data.sock < 0)
             quendi_respond(QUENYA_RESPONSE_PORT_NOT_OPEN, NULL);
+          else if (data.sending_data)
+            quendi_respond(QUENYA_RESPONSE_PORT_ACTIVE, NULL);
           else {
             shutdown(data.sock, SHUT_RDWR);
             close(data.sock);
@@ -158,15 +169,78 @@ void Connection(int csock)
             quendi_respond(QUENYA_RESPONSE_OK, NULL);
           }
           break;
+        case QUENYA_COMMAND_CONT:
+          if (!data.sending_data)
+            quendi_respond(QUENYA_RESPONSE_PORT_INACTIVE, NULL);
+          else {
+            data.port_active = 1;
+            n = quendi_advance_data(data.stream, data.persist, data.chunk,
+                options[CFG_SUFFIX_LENGTH].value.as_int, &data.chunk_total);
+
+            switch (n) {
+              case FR_DONE:
+                quendi_reader_shutdown(data.stream);
+                data.sending_data = 0; 
+                data.staged = 0;
+                break;
+              case FR_MORE_IN_FILE:
+                data.new_chunk = 0;
+                break;
+              case FR_NEW_CHUNK:
+                fclose(data.stream);
+                data.new_chunk = 1;
+                break;
+              case FR_CURFILE_CHANGED:
+                quendi_reader_shutdown(data.stream);
+                data.sending_data = 0; 
+                if (GetCurFile(data.name, QUENDI_COMMAND_LENGTH) == NULL)
+                  quendi_respond(QUENYA_RESPONSE_TRANS_COMPLETE, NULL);
+                else {
+                  data.frame_size = ReconstructChannelLists(data.name, NULL);
+                  data.staged = quendi_stage_data(data.name, 0,
+                      options[CFG_SUFFIX_LENGTH].value.as_int, 1);
+                }
+                break;
+            }
+
+            if (n == FR_NEW_CHUNK || n == FR_MORE_IN_FILE) {
+              /* read a block */
+              printf("quendi read from %p\n", data.stream);
+              data.block_length = quendi_read_data(data.new_chunk, &data.stream,
+                  data.chunk, data.seek_to, &data.chunk_total, data.frame_size,
+                  &data.frames_read);
+
+              /* send the block */
+              quendi_send_data(data.sock, data.frame_size, data.block_length);
+            }
+            data.port_active = 0;
+          }
+          break;
         case QUENYA_COMMAND_DATA:
           if (data.sock < 0)
             quendi_respond(QUENYA_RESPONSE_PORT_NOT_OPEN, NULL);
           else if (!data.staged)
             quendi_respond(QUENYA_RESPONSE_NO_DATA_STAGED, NULL);
+          else if (data.sending_data)
+            quendi_respond(QUENYA_RESPONSE_PORT_ACTIVE, NULL);
           else {
+            data.seek_to = quendi_reader_init(data.frame_size, data.pos,
+                data.chunk, data.name, options[CFG_SUFFIX_LENGTH].value.as_int);
+
+            /* The first read from the file always involves a new chunk */
+            data.new_chunk = 1;
+            data.chunk_total = 0;
+            data.frames_read = 0;
+            data.sending_data = 1;
             data.port_active = 1;
-            quendi_send_data(data.sock, data.name, data.pos, data.frame_size,
-                options[CFG_SUFFIX_LENGTH].value.as_int, data.persist);
+
+            /* read a block */
+            data.block_length = quendi_read_data(data.new_chunk, &data.stream,
+                data.chunk, data.seek_to, &data.chunk_total, data.frame_size,
+                &data.frames_read);
+
+            /* send the block */
+            quendi_send_data(data.sock, data.frame_size, data.block_length);
             data.port_active = 0;
           }
           break;
@@ -190,23 +264,26 @@ void Connection(int csock)
                     "Access from Unauthorised Client on Data Port");
               else if (data.sock < 0)
                 quendi_respond(QUENYA_RESPONSE_OPEN_ERROR, NULL);
-              else
+              else {
                 quendi_respond(QUENYA_RESPONSE_PORT_OPENED, NULL);
+              }
             } else
               quendi_respond(QUENYA_RESPONSE_OPEN_ERROR, "Too Many Open Ports");
           }
           break;
         case QUENYA_COMMAND_QNOW:
           if (quendi_access_ok(1)) {
-            if (GetCurFile(data.name, QUENDI_COMMAND_LENGTH) == NULL)
+            if (data.sending_data)
+              quendi_respond(QUENYA_RESPONSE_PORT_ACTIVE, NULL);
+            else if (GetCurFile(data.name, QUENDI_COMMAND_LENGTH) == NULL)
               quendi_respond(QUENYA_RESPONSE_NO_CUR_DATA, NULL);
             else {
               data.persist = 1;
               data.staged = quendi_stage_data(data.name,
-                  data.pos = GetFrameFileSize(data.name,
+                  data.pos = -10000 + GetFrameFileSize(data.name,
                     options[CFG_SUFFIX_LENGTH].value.as_int)
                   / (data.frame_size = ReconstructChannelLists(data.name,
-                      NULL)), options[CFG_SUFFIX_LENGTH].value.as_int);
+                      NULL)), options[CFG_SUFFIX_LENGTH].value.as_int, 0);
             }
           }
           break;
@@ -214,14 +291,25 @@ void Connection(int csock)
           quendi_respond(QUENYA_RESPONSE_GOODBYE, NULL);
           close(csock);
           exit(0);
+        case QUENYA_COMMAND_RTBK:
+          if (!data.sending_data)
+            quendi_respond(QUENYA_RESPONSE_PORT_INACTIVE, NULL);
+          else {
+            data.port_active = 1;
+            quendi_send_data(data.sock, data.frame_size, data.block_length);
+            data.port_active = 0;
+          }
+          break;
         case QUENYA_COMMAND_SPEC:
           if (data.sock < 0)
             quendi_respond(QUENYA_RESPONSE_PORT_NOT_OPEN, NULL);
           else if (!data.staged)
             quendi_respond(QUENYA_RESPONSE_NO_DATA_STAGED, NULL);
+          else if (data.sending_data)
+            quendi_respond(QUENYA_RESPONSE_PORT_ACTIVE, NULL);
           else {
             data.port_active = 1;
-            quendi_send_spec(data.sock, data.name, data.pos);
+            quendi_send_spec(data.sock, data.name);
             data.port_active = 0;
           }
           break;
@@ -231,11 +319,11 @@ void Connection(int csock)
           break;
       }
     } else if (n == -2) {
-      printf("connection dropped\n");
+      bprintf(warning, "connection dropped\n");
       shutdown(csock, SHUT_RDWR);
       close(csock);
       if (data.sock >= 0) {
-        printf("shutdown data port\n");
+        bprintf(warning, "shutdown data port\n");
         shutdown(data.sock, SHUT_RDWR);
         close(data.sock);
       }
@@ -352,7 +440,8 @@ void LoadDefaultConfig(void)
           break;
         case CFG_CUR_FILE:
           options[i].value.as_string
-            = bstrdup(fatal, "/mnt/decom/etc/decom.cur");
+            //= bstrdup(fatal, "/mnt/decom/etc/decom.cur");
+            = bstrdup(fatal, "/mnt/decom/etc/temp.cur");
           break;
         case CFG_SUFFIX_LENGTH:
           options[i].value.as_int = 3;

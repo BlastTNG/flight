@@ -22,10 +22,10 @@
 
 #include <linux/limits.h>
 
-#define FR_DONE            0
-#define FR_MORE_IN_FILE    1
-#define FR_NEW_CHUNK       2
-#define FR_CURFILE_CHANGED 3
+#define FR_DONE            0  /* nothing left in file and not in persist mode */
+#define FR_MORE_IN_FILE    1  /* current chunk has increased in size */
+#define FR_NEW_CHUNK       2  /* current chunk done, new chunk found */
+#define FR_CURFILE_CHANGED 3  /* no new chunk, curfile points to new file */
 
 #define GPB_LEN (PATH_MAX * 4)
 #define FILENAME_LEN (PATH_MAX + NAME_MAX + 1)
