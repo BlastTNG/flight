@@ -417,8 +417,8 @@ struct ChannelStruct SlowChannels[] = {
   {"ss_az_snr",    'w', LOOP4,  1,           1./1000.,             0.0, 'u'},
   {"ss_el_center", 'w', LOOP4,  2,             1./16.,             0.0, 'u'},
   {"ss_az_center", 'w', LOOP4,  3,             1./16.,             0.0, 'u'},
-  {"ss_cpu_temp",  'w', LOOP4,  4,                1.0,             0.0, 'u'},
-  {"ss_pc_temp",   'w', LOOP4,  5,                1.0,             0.0, 'u'},
+  {"ss_cpu_temp",  'w', LOOP4,  4,             1/100.,             0.0, 'u'},
+  {"ss_pc_temp",   'w', LOOP4,  5,             1/100.,             0.0, 'u'},
   {"isc_maxblobs", 'w', LOOP4,  6,                1.0,             0.0, 'u'},
   {"osc_maxblobs", 'w', LOOP4,  7,                1.0,             0.0, 'u'},
   {"bi0_fifo_size",'w', LOOP4,  8,             1./624,             0.0, 'u'},
@@ -436,7 +436,7 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_gain",     'w', LOOP4, 20,        100./65536.,             0.0, 'u'},
   {"jfet_set_on",  'w', LOOP4, 21,             1/100.,             0.0, 'u'},
   {"jfet_set_off", 'w', LOOP4, 22,             1/100.,             0.0, 'u'},
-  {"ss_chip_temp", 'w', LOOP4, 23,                1.0,             0.0, 'u'},
+  {"ss_chip_temp", 'w', LOOP4, 23,             1/100.,             0.0, 'u'},
 
   END_OF_CHANNELS
 };

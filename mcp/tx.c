@@ -483,7 +483,7 @@ void StoreData(int index)
   static struct NiosStruct* ssAzSnrAddr;
   static struct NiosStruct* ssPcTempAddr;
   static struct NiosStruct* ssCpuTempAddr;
-  static struct NiosStruct* ssChipsetTempAddr;
+  static struct NiosStruct* ssChipTempAddr;
 
   static struct NiosStruct* sipLatAddr;
   static struct NiosStruct* sipLonAddr;
@@ -565,7 +565,7 @@ void StoreData(int index)
     ssElSnrAddr = GetNiosAddr("ss_el_snr");
     ssPcTempAddr = GetNiosAddr("ss_pc_temp");
     ssCpuTempAddr = GetNiosAddr("ss_cpu_temp");
-    ssChipsetTempAddr = GetNiosAddr("ss_chip_temp");
+    ssChipTempAddr = GetNiosAddr("ss_chip_temp");
 
 
     sipLatAddr = GetNiosAddr("sip_lat");
@@ -639,8 +639,7 @@ void StoreData(int index)
   WriteData(ssElSnrAddr, SunSensorData[i_ss].el_snr * 1000, NIOS_QUEUE);
   WriteData(ssPcTempAddr, SunSensorData[i_ss].pc_temp * 100, NIOS_QUEUE);
   WriteData(ssCpuTempAddr, SunSensorData[i_ss].cpu_temp * 100, NIOS_QUEUE);
-  WriteData(ssChipsetTempAddr, SunSensorData[i_ss].chipset_temp * 100, 
-      NIOS_QUEUE);
+  WriteData(ssChipTempAddr, SunSensorData[i_ss].chipset_temp * 100, NIOS_QUEUE);
   /********** SIP GPS Data **********/
   WriteData(sipLatAddr, (int)(SIPData.GPSpos.lat*DEG2I), NIOS_QUEUE);
   WriteData(sipLonAddr, (int)(SIPData.GPSpos.lon*DEG2I), NIOS_QUEUE);
