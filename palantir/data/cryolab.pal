@@ -58,21 +58,21 @@
     <XHI value="1000" alarm="eranu.wav"/>
   </EXTREMA>
 
-  <EXTREMA name="lhetemp">
+  <EXTREMA name="opticsboxwintemp">
     <XLO value="3" alarm="uvavu.wav"/>
     <LO value="3.5"/>
     <HI value="5"/>
     <XHI value="6" alarm="eranu.wav"/>
   </EXTREMA>
   
-  <EXTREMA name="lntemp">
-    <XLO value="70" alarm="uvavu.wav"/>
-    <LO value="75"/>
-    <HI value="81"/>
-    <XHI value="85" alarm="eranu.wav"/>
-  </EXTREMA>
+<EXTREMA name="lntemp">
+	<XLO value="70" alarm="uvavu.wav"/>
+	<LO value="75"/>
+ 	<HI value="81"/>
+    	<XHI value="85" alarm="eranu.wav"/>
+ </EXTREMA>
 
-  <EXTREMA name="vcstemp">
+<EXTREMA name="vcstemp">
 <XLO value="15" alarm="uvavu.wav"/>
 <LO value="20"/>
 <HI value="60"/>
@@ -186,57 +186,53 @@
 </BOX>
 
 <BOX caption="Diodes" row="1" col="3" rowspan="1">
-  <NUMBER caption="LHE" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_lhe" extrema="lhetemp"/></NUMBER>
-  <NUMBER caption="LHE Filter" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_lhe_filt" extrema="lhetemp"/></NUMBER>
-  <NUMBER caption="LN2" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_ln2" extrema="lhetemp"/></NUMBER>
   <NUMBER caption="LN2 Filter" textstyle="oddrow">
     <DATUM format="%.2f" src="T_ln2_filt" extrema="lhetemp"/></NUMBER>
+  <NUMBER caption="LN2" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_ln2" extrema="lhetemp"/></NUMBER>
+  <NUMBER caption="VCS Filter" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_vcs_filt" extrema="pottemp"/></NUMBER>
+  <NUMBER caption="VCS" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_vcs" extrema="pottemp"/></NUMBER>
+  <NUMBER caption="LHE Filter" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_lhe_filt" extrema="lhetemp"/></NUMBER>
+  <NUMBER caption="ColdPlate" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_cold_plate" extrema="pottemp"/></NUMBER>
+  <NUMBER caption="4He pot" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_he4pot_d" extrema="pottemp"/></NUMBER>
+  <NUMBER caption="Opt.Box Win" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_opt_box_w" extrema="opticsboxwintemp"/></NUMBER>
+  <NUMBER caption="Optics Box" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_optics_box" extrema="pottemp"/></NUMBER>
   <NUMBER caption="JFET" textstyle="oddrow">
     <DATUM format="%.2f" src="T_jfet" extrema="jfettemp"/></NUMBER>
   <NUMBER caption="Charcoal" textstyle="oddrow">
     <DATUM format="%.2f" src="T_charcoal" extrema="pottemp"/></NUMBER>
-  <NUMBER caption="Optics Box" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_optics_box" extrema="pottemp"/></NUMBER>
-  <NUMBER caption="VCS" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_vcs" extrema="pottemp"/></NUMBER>
-  <NUMBER caption="VCS Filter" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_vcs_filt" extrema="pottemp"/></NUMBER>
-  <NUMBER caption="VCS FET" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_vcs_fet" extrema="pottemp"/></NUMBER>
-  <NUMBER caption="Heat Switch" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_heatswitch" extrema="pottemp"/></NUMBER>
-  <NUMBER caption="Extra Therm 1" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_xtherm_1" extrema="pottemp"/></NUMBER>
 </BOX>
 
 <BOX caption="Diodes d/dt (K per hour)" row="1" col="4" rowspan="1">
-  <DERIV caption="LHE" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_lhe" extrema="slope" length="220" tunit="h"/></DERIV>
-  <DERIV caption="LHE Filter" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_lhe_filt" extrema="slope" length="220" tunit="h"/></DERIV>
   <DERIV caption="LN2" textstyle="oddrow">
     <DATUM format="%.2f" src="T_ln2" extrema="slope" length="220" tunit="h"/></DERIV>
   <DERIV caption="LN2 Filter" textstyle="oddrow">
     <DATUM format="%.2f" src="T_ln2_filt" extrema="slope" length="220" tunit="h"/></DERIV>
-  <DERIV caption="JFET" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_jfet" extrema="slope" length="220" tunit="h"/></DERIV>
-  <DERIV caption="Charcoal" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_charcoal" extrema="slope" length="220" tunit="h"/></DERIV>
-  <DERIV caption="Optics Box" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_optics_box" extrema="slope" length="220" tunit="h"/></DERIV>
   <DERIV caption="VCS" textstyle="oddrow">
     <DATUM format="%.2f" src="T_vcs" extrema="slope" length="220" tunit="h"/></DERIV>
   <DERIV caption="VCS Filter" textstyle="oddrow">
     <DATUM format="%.2f" src="T_vcs_filt" extrema="slope" length="220" tunit="h"/></DERIV>
-  <DERIV caption="VCS FET" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_vcs_fet" extrema="slope" length="220" tunit="h"/></DERIV>
-  <DERIV caption="Heat Switch" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_heatswitch" extrema="slope" length="220" tunit="h"/></DERIV>
-  <DERIV caption="Extra Therm 1" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_xtherm_1" extrema="slope" length="220" tunit="h"/></DERIV>
+  <DERIV caption="LHE Filter" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_lhe_filt" extrema="slope" length="220" tunit="h"/></DERIV>
+  <DERIV caption="ColdPlate" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_cold_plate" extrema="slope" length="220" tunit="h"/></DERIV>
+  <DERIV caption="4He Pot" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_he4pot_d" extrema="slope" length="220" tunit="h"/></DERIV>
+  <DERIV caption="OptBox Win" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_opt_box_w" extrema="slope" length="220" tunit="h"/></DERIV>
+  <DERIV caption="Optics Box" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_optics_box" extrema="slope" length="220" tunit="h"/></DERIV>
+  <DERIV caption="JFET" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_jfet" extrema="slope" length="220" tunit="h"/></DERIV>
+  <DERIV caption="Charcoal" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_charcoal" extrema="slope" length="220" tunit="h"/></DERIV>
 </BOX>
 
 <BOX caption="ROXs" row="3" col="3">

@@ -111,7 +111,7 @@
 
 
   <CURVEFILE name="/mnt/decom/etc/decom.cur"/>
-  <CURVEFILE name="/data/rawdir1/1059015901.x"/>
+  <CURVEFILE name="/data/etc/datafile.cur"/>
 </SETTINGS>
 
 <DEFAULTS>
