@@ -537,9 +537,9 @@ void SingleCommand (enum singleCommand command, int scheduled)
   else if (command == osc_eye_off)
     CommandData.ISCState[1].eyeOn = 0;
 
-  else if (command == rocks)
+  else if (command == blast_rocks)
     CommandData.sucks = 0;
-  else if (command == sucks)
+  else if (command == blast_sucks)
     CommandData.sucks = 1;
 
   else if (command == reap) {
