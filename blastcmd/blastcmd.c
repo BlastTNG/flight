@@ -272,10 +272,7 @@ void SendMcommand(int i_cmd, int t_link, int t_route, char *parms[], int np,
     if (type == 'i') {
       /* 15 bit integer parameter */
       ynt = atoi(parms[i]);
-      if (ynt < 0) {
-        printf("blastcmd: parameter %d out of range (%i < 0)\n", i+1, ynt);
-        exit(3);
-      } else if (ynt < min) {
+      if (ynt < min) {
         printf("blastcmd: parameter %d out of range (%i < %g)\n", i+1, ynt,
             min);
         exit(3);
@@ -288,7 +285,7 @@ void SendMcommand(int i_cmd, int t_link, int t_route, char *parms[], int np,
             max);
         exit(3);
       }
-      dataq[dataqsize++] = (unsigned short)ynt;
+      dataq[dataqsize++] = (unsigned short)(ynt - min);
     } else if (type == 'f') {
       /* 15 bit floating point parameter */
       flote = atof(parms[i]);
