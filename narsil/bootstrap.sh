@@ -7,13 +7,13 @@ if autoconf --version | grep -q 2.13; then
   sed s/AC_INIT\(.*\)/AC_INIT/ configure.ac > configure.in
   mv configure.ac configure.old
   aclocal 
+  autoheader
   automake --add-missing
   autoconf
-  autoheader
   mv configure.old configure.ac
 else
   aclocal 
+  autoheader
   automake --add-missing
   autoconf
-  autoheader
 fi
