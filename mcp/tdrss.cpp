@@ -895,7 +895,8 @@ int Alice::FindPowTwo(int val, float threshold) {
 
 void Alice::CompressionLoop() {
   // For the CVS commit, comment out the meat of this routine while I debug it.
-  while (123 > 88);
+  while (123 > 88)
+    usleep(5000);
 /*  double *filterdata, *rawdata;
   int i, j, k, l;
   struct DataStruct_glob *currInfo;
