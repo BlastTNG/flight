@@ -192,7 +192,7 @@ void mputs(int flag, const char* message) {
       fflush(logfile);
     }
     printf("$$ Last error is THREAD FATAL.  Thread [%s] exits.\n",
-          (char*)pthread_getspecific(identity));
+        (char*)pthread_getspecific(identity));
     fflush(stdout);
 
     pthread_exit(NULL);
@@ -443,7 +443,7 @@ void write_to_biphase(unsigned short *RxFrame) {
   int i;
   static unsigned short nothing[BI0_FRAME_SIZE];
   static unsigned short sync = 0xEB90;
-  
+
   if (bi0_fp == -2) {
     bi0_fp = open("/dev/bi0_pci", O_RDWR);
     if (bi0_fp == -1)
@@ -705,7 +705,7 @@ int main(int argc, char *argv[]) {
 
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0) 
       merror(MCP_ERROR, "Error on BBC read");
-    
+
     // DEBUG TOOLS
     if(GET_NODE(in_data) == 0x27) {
       if(GET_STORE(in_data) ) {
@@ -716,18 +716,18 @@ int main(int argc, char *argv[]) {
     }
     if (in_data == 0xdf80eb90)  {
       if( (mycounter != 12) || (mycounter2 != 12) ) {
-	printf("++++++++++++++>>>>>> mycounter = %d mycounter2 = %d\n", mycounter, mycounter2);
+//        printf("++++++++++++++>>>>>> mycounter = %d mycounter2 = %d\n", mycounter, mycounter2);
       }
       mycounter  = 0;
       mycounter2 = 0;
     }
     // END DEBUG TOOL
-    
+
     if (!fill_Rx_frame(in_data, RxFrame))
       mputs(MCP_ERROR, "Unrecognised word received from BBC");
-    
+
     if (IsNewFrame(in_data)) {
-      
+
       if (StartupVeto) {
         if (!--StartupVeto)
           mputs(MCP_INFO, "Startup Veto Ends\n");
@@ -735,22 +735,22 @@ int main(int argc, char *argv[]) {
 #ifndef BOLOTEST
         GetACS(RxFrame);
         Pointing();
-	
+
         /* Copy data to tdrss thread. */
         memcpy(tdrss_data[tdrss_index], RxFrame, BiPhaseFrameSize);
         tdrss_index = INC_INDEX(tdrss_index);
 #endif
-	
+
         /* Frame sequencing check */
         if (RxFrame[3] != (RxFrameIndex + 1) % FAST_PER_SLOW && RxFrameIndex >= 0)
           mprintf(MCP_ERROR,
-		  "Frame sequencing error detected: wanted %i, got %i\n",
-		  RxFrameIndex + 1, RxFrame[3]);
+              "Frame sequencing error detected: wanted %i, got %i\n",
+              RxFrameIndex + 1, RxFrame[3]);
         RxFrameIndex = RxFrame[3];
-	
+
         UpdateBBCFrame(RxFrame);
-	CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);
-	
+        CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);
+
 #ifndef BOLOTEST
         PushBi0Buffer(RxFrame);
 #endif
