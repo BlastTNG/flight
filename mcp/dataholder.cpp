@@ -19,10 +19,19 @@
 #include <string.h>
 #include "dataholder.h"
 #include "alice.h"
+#ifdef __MCP__
+  extern "C" {
+    #include "mcp.h"
+  }
+#else
+  # define mprintf(x, ...) \
+    do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
+      printf(__VA_ARGS__); \
+      if (strcmp(#x, "MCP_FATAL") == 0) \
+        exit(1); \
+    } while (0)
+#endif
 
-extern "C" {
-#include "mcp.h"
-}
 
 
 /******************************************************************************\
