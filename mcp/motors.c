@@ -906,7 +906,7 @@ void DoNewBoxMode() {
 
   SetSafeDAz(az, &caz); 
 
-  w = CommandData.pointing_mode.w;
+  w = CommandData.pointing_mode.w/cos(el * M_PI / 180.0);
   h = CommandData.pointing_mode.h;
   bottom = cel - h*0.5;
   top = cel + h*0.5;
