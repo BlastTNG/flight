@@ -82,7 +82,6 @@ static struct {
   volatile int status;
   volatile int n;
 } bi0_wfifo;
-DECLARE_WAIT_QUEUE_HEAD(bi0_wq);
 
 static void timer_callback(unsigned long dummy)
 {
@@ -171,6 +170,11 @@ static ssize_t bbc_read(struct file *filp, char __user *buf,
   size_t to_read;
   unsigned in_data;
   void *out_buf = (void *)buf;
+     
+  if( !access_ok(VERIFY_WRITE, (void *)buf, count) ) {
+    printk(KERN_WARNING "%s: (read)  error accessing user space memory\n", DRV_NAME);
+    return -EFAULT;
+  }
   
   minor = *(int *)filp->private_data;
   
@@ -188,7 +192,7 @@ static ssize_t bbc_read(struct file *filp, char __user *buf,
       if(rp == wp) break;
       
       in_data = readl(bbc_drv.mem_base + rp);
-      copy_to_user(out_buf, &in_data, BBCPCI_SIZE_UINT);
+      __copy_to_user(out_buf, &in_data, BBCPCI_SIZE_UINT);
       out_buf += BBCPCI_SIZE_UINT;
 
       writel(rp, bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_RP);
@@ -208,6 +212,12 @@ static ssize_t bbc_write(struct file *filp, const char __user *buf,
   size_t i;
   size_t to_write;
   void *in_buf = (void *)buf;
+ 
+
+  if( !access_ok(VERIFY_READ, (void *)buf, count) ) {
+    printk(KERN_WARNING "%s: (write) error accessing user space memory\n", DRV_NAME);
+    return -EFAULT;
+  }
   
   minor = *(int *)filp->private_data;
   if (minor == bbc_minor) {
@@ -220,7 +230,7 @@ static ssize_t bbc_write(struct file *filp, const char __user *buf,
 	break;
       }
 	
-      copy_from_user((void *)&bbc_wfifo.data[bbc_wfifo.i_in], 
+      __copy_from_user((void *)&bbc_wfifo.data[bbc_wfifo.i_in], 
 		     in_buf, 2*BBCPCI_SIZE_UINT);
 	     
       if( bbc_wfifo.i_in == (BBC_WFIFO_SIZE - 2) ) {
@@ -238,11 +248,8 @@ static ssize_t bbc_write(struct file *filp, const char __user *buf,
     to_write = count / sizeof(unsigned short);
     if(to_write == 0) return 0;
 
+    
     for(i = 0; i < to_write; i++) {
-/*      while(bi0_wfifo.n == BI0_WFIFO_SIZE) {
-        udelay(1000);
-        //sleep_on_timeout(&bi0_wq, jiffies+1);
-      }*/
       
       if(bi0_wfifo.n == BI0_WFIFO_SIZE) {
 	    printk(KERN_WARNING "%s: bi0 buffer overrun. size = %x\n", 
@@ -250,7 +257,7 @@ static ssize_t bbc_write(struct file *filp, const char __user *buf,
 	    break;
       }
       
-      copy_from_user( (void *)&bi0_wfifo.data[bi0_wfifo.i_in],
+      __copy_from_user( (void *)&bi0_wfifo.data[bi0_wfifo.i_in],
 		      in_buf, sizeof(unsigned short) );
       
       if( bi0_wfifo.i_in == (BI0_WFIFO_SIZE - 1) ) {
