@@ -69,6 +69,7 @@ unsigned int debug = 0;
 short int SamIAm;
 int StartupVeto = STARTUP_VETO_LENGTH + 1;
 int Death = -STARTUP_VETO_LENGTH;
+extern short int InCharge; /* tx.c */
 pthread_t watchdog_id;
 
 struct ACSDataStruct ACSData;
@@ -520,9 +521,11 @@ void BiPhaseWriter(void) {
       /* Death meausres how long the BiPhaseWriter has gone without receiving
        * any data -- an indication that we aren't receiving FSYNCs from the
        * BLASTBus anymore */
-      if (++Death == 25) {
-        bprintf(err, "Death is reaping the watchdog tickle.");
-        pthread_cancel(watchdog_id);
+      if (InCharge) {
+        if (++Death == 25) {
+          bprintf(err, "Death is reaping the watchdog tickle.");
+          pthread_cancel(watchdog_id);
+        }
       }
     } else
       while (i_out != i_in) {
@@ -569,7 +572,7 @@ void CloseBBC(int signo) {
   bprintf(err, "Caught signal %i; stopping NIOS", signo);
   RawNiosWrite(0, BBC_ENDWORD, NIOS_FLUSH);
   RawNiosWrite(BBCPCI_MAX_FRAME_SIZE, BBC_ENDWORD, NIOS_FLUSH);
-  bprintf(err, "Closing BBC and Bi0", signo);
+  bprintf(err, "Closing BBC and Bi0");
   if (bi0_fp >= 0)
     close(bi0_fp);
   if (bbc_fp >= 0)
