@@ -131,7 +131,6 @@ struct par {
   double min;
   double max;
   char type;
-  char precision;
   char field[12];
 };
 
@@ -154,54 +153,54 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /********** Pointing Mode **************/
   {"ra_dec_raster", "raster scan a circle in RA/DEC", GR_POINT, 5,
     {
-      {"RA of Center (h)", 0.0, 24.0, 'f', 4, "0.0"}, //FIXME: field
-      {"DEC of Center (deg)", -90.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
-      {"Radius (deg on sky)", 0.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
-      {"Az Scan Speed (deg az/s)", 0.0, 2.0, 'f', 4, "0.1"},
-      {"El drift Speed (deg el/s)", 0.0, 2.0, 'f', 4, "0.005"}
+      {"RA of Center (h)", 0.0, 24.0, 'f', "0.0"}, //FIXME: field
+      {"DEC of Center (deg)", -90.0, 90.0, 'f', "0.0"}, //FIXME: field
+      {"Radius (deg on sky)", 0.0, 90.0, 'f', "0.0"}, //FIXME: field
+      {"Az Scan Speed (deg az/s)", 0.0, 2.0, 'f', "0.1"},
+      {"El drift Speed (deg el/s)", 0.0, 2.0, 'f', "0.005"}
     }
   },
   {"ra_dec_goto", "Track a location RA/DEC", GR_POINT, 2,
     {
-      {"RA of Center (h)", 0.0, 24.0, 'f', 4, "0.0"}, //FIXME: field
-      {"DEC of Center (deg)", -90.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
+      {"RA of Center (h)", 0.0, 24.0, 'f', "0.0"}, //FIXME: field
+      {"DEC of Center (deg)", -90.0, 90.0, 'f', "0.0"}, //FIXME: field
     }
   },
   {"ra_dec_set", "Define RA/DEC of current position", GR_POINT, 2,
     {
-      {"Current RA (h)", 0.0, 24.0, 'f', 4, "0.0"}, //FIXME: field
-      {"Current DEC (deg)", -90.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
+      {"Current RA (h)", 0.0, 24.0, 'f', "0.0"}, //FIXME: field
+      {"Current DEC (deg)", -90.0, 90.0, 'f', "0.0"}, //FIXME: field
     }
   },
   {"az_scan", "scan in azimuth", GR_POINT, 3,
     {
-      {"centre (deg)", -180.0, 360.0, 'f', 4, "AZ"}, //FIXME: field
-      {"peak to peak (deg azimuth)", 0.0, 360, 'f', 4, "1.0"}, //FIXME: field
-      {"scan speed (deg az/s", 0.01, 2, 'f', 4, "0.1"} //FIXME: field
+      {"centre (deg)", -180.0, 360.0, 'f', "AZ"}, //FIXME: field
+      {"peak to peak (deg azimuth)", 0.0, 360, 'f', "1.0"}, //FIXME: field
+      {"scan speed (deg az/s", 0.01, 2, 'f', "0.1"} //FIXME: field
     }
   },
 
   {"az_goto", "goto azimuth", GR_POINT, 1,
     {
-      {"azimuth (deg)", -360.0, 360.0, 'f', 4, "AZ"}
+      {"azimuth (deg)", -360.0, 360.0, 'f', "AZ"}
     }
   },
 
   {"az_vel", "azimuth velocity", GR_POINT, 1,
     {
-      {"velocity (deg/s)", -2.0, 2.0, 'f', 4, "0.0"}
+      {"velocity (deg/s)", -2.0, 2.0, 'f', "0.0"}
     }
   },
 
   {"el_goto", "goto elevation", GR_POINT, 1,
     {
-      {"elevation (deg)", 5.2, 90, 'f', 4, "EL"}
+      {"elevation (deg)", 5.2, 90, 'f', "EL"}
     }
   },
 
   {"el_vel", "elevation velocity", GR_POINT, 1,
     {
-      {"velocity (deg/s)", -2.0, 2.0, 'f', 4, "0.0"}
+      {"velocity (deg/s)", -2.0, 2.0, 'f', "0.0"}
     }
   },
 
@@ -209,28 +208,28 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /********** Pointing Motor Gains *******/
   {"roll_gain", "roll reaction wheel gain", GR_GAIN, 1,
     {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_roll"}
+      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_roll"}
     }
   },
 
   {"el_gain", "elevation motor gains", GR_GAIN, 2,
     {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_el"},
-      {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_i_el"}
+      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_el"},
+      {"Integral Gain", 0, MAX_15BIT, 'i', "g_i_el"}
     }
   },
 
   {"az_gain", "az reaction wheel gains", GR_GAIN, 2,
     {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_az"},
-      {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_i_az"}
+      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_az"},
+      {"Integral Gain", 0, MAX_15BIT, 'i', "g_i_az"}
     }
   },
 
   {"pivot_gain", "pivot gains", GR_GAIN, 2,
     {
-      {"Set Point (rpm)", 0, MAX_15BIT, 'f', 0, "set_reac"},
-      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_pivot"}
+      {"Set Point (rpm)", 0, MAX_15BIT, 'f', "set_reac"},
+      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_pivot"}
     }
   },
 
@@ -238,7 +237,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /********** Inner Frame Lock  **********/
   {"lock", "Lock Inner Frame", GR_LOCK, 1,
     {
-      {"Lock Elevation (deg)", 5, 90, 'f', 4, "ENC_ELEV"}
+      {"Lock Elevation (deg)", 5, 90, 'f', "ENC_ELEV"}
     }
   },
 
@@ -246,23 +245,23 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /********** Balance System  ************/
   {"setpoints", "balance system setpoints", GR_BAL, 3,
     {
-      {"pump on point (A)", 0, 2, 'f', 5, "BAL_ON"},
-      {"pump off point (A)", 0, 2, 'f', 5, "BAL_OFF"},
-      {"target (A)", -2, 2, 'f', 5, "BAL_TARGET"}
+      {"pump on point (A)", 0, 2, 'f', "BAL_ON"},
+      {"pump off point (A)", 0, 2, 'f', "BAL_OFF"},
+      {"target (A)", -2, 2, 'f', "BAL_TARGET"}
     }
   },
   
   {"bal_gain", "balance system gain and extrema", GR_BAL, 3,
     {
-      {"gain", 0.01, 1.00, 'f', 2, "BAL_GAIN"},
-      {"maximum speed (%)", 0, 100, 'f', 2, "BAL_MAX"},
-      {"minimum speed (%)", 0, 100, 'f', 2, "BAL_MIN"}
+      {"gain", 0.01, 1.00, 'f', "BAL_GAIN"},
+      {"maximum speed (%)", 0, 100, 'f', "BAL_MAX"},
+      {"minimum speed (%)", 0, 100, 'f', "BAL_MIN"}
     }
   },
 
   {"bal_level", "balance pump pwm level", GR_BAL, 1,
     {
-      {"level (%)", 0, 100, 'f', 2, "BALPUMP_LEV"}
+      {"level (%)", 0, 100, 'f', "BALPUMP_LEV"}
     }
   },
 
@@ -270,19 +269,19 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /********** Cooling System  ************/
   {"spare_pwm", "spare pump pwm level", GR_COOL, 1,
     {
-      {"level", 0, 2047, 'i', 0, "sprpump_lev"}
+      {"level", 0, 2047, 'i', "sprpump_lev"}
     }
   },
 
   {"inner_pwm", "inner frame cooling pump speed", GR_COOL, 1,
     {
-      {"level", 0, 2047, 'i', 0, "inpump_lev"}
+      {"level", 0, 2047, 'i', "inpump_lev"}
     }
   },
 
   {"outer_pwm", "outer frame cooling pump speed", GR_COOL, 1,
     {
-      {"level", 0, 2047, 'i', 0, "outpump_lev"}
+      {"level", 0, 2047, 'i', "outpump_lev"}
     }
   },
 
@@ -290,15 +289,15 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /******** Electronics Heaters  *********/
   {"t_gyrobox", "gyro box T", GR_EHEAT, 1,
     {
-      {"deg C", 0, 60, 'f', 2, "t_gy_set"}
+      {"deg C", 0, 60, 'f', "t_gy_set"}
     }
   },
 
   {"t_gyro_gain", "gyro box heater gains", GR_EHEAT, 3,
     {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_gyheat"},
-      {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_i_gyheat"},
-      {"Derrivative Gain", 0, MAX_15BIT, 'i', 0, "g_d_gyheat"}
+      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_gyheat"},
+      {"Integral Gain", 0, MAX_15BIT, 'i', "g_i_gyheat"},
+      {"Derrivative Gain", 0, MAX_15BIT, 'i', "g_d_gyheat"}
     }
   },
 
@@ -306,13 +305,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /*************** Misc  *****************/
   {"timeout", "time until schedule mode", GR_MISC, 1,
     {
-      {"timeout (s)", 15, 14400, 'i', 0, "ADD"}
+      {"timeout (s)", 15, 14400, 'i', "ADD"}
     }
   },
 
   {"xml_file", "set XML file for compressed downlink", GR_MISC, 1,
     {
-      {"file#", 0, 15, 'i', 0, "ADD"}
+      {"file#", 0, 15, 'i', "ADD"}
     }
   },
 
@@ -320,26 +319,26 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /*************** Bias  *****************/
   {"bias1_level", "bias 1 level", GR_BIAS, 1,
     {
-      {"level", 0, 15, 'i', 0, "bias_lev1"}
+      {"level", 0, 15, 'i', "bias_lev1"}
     }
   },
 
   {"bias2_level", "bias 2 level", GR_BIAS, 1,
     {
-      {"level", 0, 15, 'i', 0, "bias_lev2"}
+      {"level", 0, 15, 'i', "bias_lev2"}
     }
   },
 
   {"bias3_level", "bias 3 level", GR_BIAS, 1,
     {
-      {"level", 0, 15, 'i', 0, "bias_lev3"}
+      {"level", 0, 15, 'i', "bias_lev3"}
     }
   },
 
   {"phase", "set phase shift", GR_BIAS, 2,
     {
-      {"DAS card", 5, 16, 'i', 0, "ADD"},
-      {"Phase", 0, 2000, 'i', 0, "ADD"}
+      {"DAS card", 5, 16, 'i', "ADD"},
+      {"Phase", 0, 2000, 'i', "ADD"}
     }
   },
 
@@ -347,14 +346,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /*********** Cal Lamp  *****************/
   {"cal_pulse", "calibrator single pulse", GR_CALLAMP, 1,
     {
-      {"pulse length (ms)", 0, 8000, 'i', 0, "ADD"}
+      {"pulse length (ms)", 0, 8000, 'i', "ADD"}
     }
   },
 
   {"cal_repeat", "pulse calibrator repeatedly", GR_CALLAMP, 2,
     {
-      {"pulse length (ms)", 1, 8000, 'i', 0, "ADD"},
-      {"repeat delay (s)", 1, 86400, 'f', 0, "ADD"}
+      {"pulse length (ms)", 1, 8000, 'i', "ADD"},
+      {"repeat delay (s)", 1, 86400, 'f', "ADD"}
     }
   },
 
@@ -362,25 +361,25 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /********* Cryo heat   *****************/
   {"jfet_heat", "JFET heater pwm", GR_CRYO_HEAT, 1,
     {
-      {"level (%)", 0, 100, 'f', 2, "JFETPWM"}
+      {"level (%)", 0, 100, 'f', "JFETPWM"}
     }
   },
 
   {"heatsw_heat", "Heat Switch pwm", GR_CRYO_HEAT, 1,
     {
-      {"level (%)", 0, 100, 'f', 2, "HSPWM"}
+      {"level (%)", 0, 100, 'f', "HSPWM"}
     }
   },
 
   {"he3_heat", "Helium 3 pwm", GR_CRYO_HEAT, 1,
     {
-      {"level (%)", 0, 100, 'f', 2, "HE3PWM"}
+      {"level (%)", 0, 100, 'f', "HE3PWM"}
     }
   },
 
   {"spare_heat", "Spare cryo pwm", GR_CRYO_HEAT, 1,
     {
-      {"level (%)", 0, 100, 'f', 2, "CRYOPWM"}
+      {"level (%)", 0, 100, 'f', "CRYOPWM"}
     }
   },
 
@@ -388,59 +387,59 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /********* ISC Commanding **************/
   {"set_focus", "Set the focus position", GR_ISC, 1,
     {
-      {"focus position", 0, FOCUS_RANGE, 'i', 0, "ISC_FOCUS"}
+      {"focus position", 0, FOCUS_RANGE, 'i', "ISC_FOCUS"}
     }
   },
 
   {"set_aperture", "Set the F-stop", GR_ISC, 1,
     {
-      {"aperture position", 0, AP_RANGE, 'i', 0, "ISC_APERT"}
+      {"aperture position", 0, AP_RANGE, 'i', "ISC_APERT"}
     }
   },
 
   {"pixel_centre", "Centre display on pixel", GR_ISC, 2,
     {
-      {"pixel x", 0, CCD_X_PIXELS - 1, 'i', 0, "ADD"},
-      {"pixel y", 0, CCD_Y_PIXELS - 1, 'i', 0, "ADD"}
+      {"pixel x", 0, CCD_X_PIXELS - 1, 'i', "ADD"},
+      {"pixel y", 0, CCD_Y_PIXELS - 1, 'i', "ADD"}
     }
   },
 
   {"blob_centre", "Centre display on blob", GR_ISC, 1,
     {
-      {"blob #", 0, MAX_ISC_BLOBS, 'i', 0, "ADD"}
+      {"blob #", 0, MAX_ISC_BLOBS, 'i', "ADD"}
     }
   },
 
   {"integration", "Set Integration Time", GR_ISC, 1,
     {
-      {"integration time (ms)", 0, 5000, 'f', 0, "ISC_PULSE"}
+      {"integration time (ms)", 0, 5000, 'f', "ISC_PULSE"}
     }
   },
 
   {"det_set", "Set Detection Parameters", GR_ISC, 5,
     {
-      {"search grid (px/side)", 0, CCD_Y_PIXELS, 'i', 0, "ISC_GRID"},
-      {"S/N threshold", 0.1, 3276.7, 'f', 1, "ISC_THRESH"},
-      {"centroiding box (px/side)", 0, CCD_Y_PIXELS, 'i', 0, "ISC_CENBOX"},
-      {"photometry box (px/side)", 0, CCD_Y_PIXELS, 'i', 0, "ISC_APBOX"},
-      {"exclusion distance (px)", 0, CCD_Y_PIXELS, 'i', 0, "ISC_MDIST"}
+      {"search grid (px/side)", 0, CCD_Y_PIXELS, 'i', "ISC_GRID"},
+      {"S/N threshold", 0.1, 3276.7, 'f', "ISC_THRESH"},
+      {"centroiding box (px/side)", 0, CCD_Y_PIXELS, 'i', "ISC_CENBOX"},
+      {"photometry box (px/side)", 0, CCD_Y_PIXELS, 'i', "ISC_APBOX"},
+      {"exclusion distance (px)", 0, CCD_Y_PIXELS, 'i', "ISC_MDIST"}
     }
   },
 
   {"catalogue", "Set Catalogue Retreival Parameters", GR_ISC, 3,
     {
-      {"Magnitude Limit", 0, 12, 'f', 1, "ISC_MAG"},
-      {"Normal Search Radius (deg)", 0, 50, 'f', 2, "ISC_NRAD"},
-      {"Lost Search Radius (deg)", 0, 50, 'f', 2, "ISC_LRAD"}
+      {"Magnitude Limit", 0, 12, 'f', "ISC_MAG"},
+      {"Normal Search Radius (deg)", 0, 50, 'f', "ISC_NRAD"},
+      {"Lost Search Radius (deg)", 0, 50, 'f', "ISC_LRAD"}
     }
   },
 
   {"tolerances", "Set Pointing Solution Tolerances", GR_ISC, 4,
     {
-      {"Assoc. Tolerance (arcsec)", 0, 1000, 'f', 0, "ISC_TOL"},
-      {"Match Tolerance (%)", 0, 100, 'f', 2, "ISC_MTOL"},
-      {"Quit Tolerance (%)", 0, 100, 'f', 2, "ISC_QTOL"},
-      {"Rot. Tolerance (deg)", 0, 90, 'f', 1, "ISC_RTOL"}
+      {"Assoc. Tolerance (arcsec)", 0, 1000, 'f', "ISC_TOL"},
+      {"Match Tolerance (%)", 0, 100, 'f', "ISC_MTOL"},
+      {"Quit Tolerance (%)", 0, 100, 'f', "ISC_QTOL"},
+      {"Rot. Tolerance (deg)", 0, 90, 'f', "ISC_RTOL"}
     }
   }
 };
