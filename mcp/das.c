@@ -20,6 +20,7 @@
  *
  */
 
+#include <math.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -549,21 +550,21 @@ void BiasControl (unsigned short* RxFrame) {
   if (hold <= 0) { /* Don't check if we're already sending a level */
     if (amp1_timeout > 0)
       amp1_timeout--;
-    else if (amp1 != CommandData.Bias.bias1) {
+    else if (fabs(amp1 - CommandData.Bias.bias1) > 1) {
       bprintf(warning, "Bias Control: Auto Set Level #1 to %i (saw %i)\n",
           CommandData.Bias.bias1, amp1);
       CommandData.Bias.SetLevel1 = 1;
     }
     if (amp2_timeout > 0)
       amp2_timeout--;
-    else if (amp2 != CommandData.Bias.bias2) {
+    else if (fabs(amp2 - CommandData.Bias.bias2) > 1) {
       bprintf(warning, "Bias Control: Auto Set Level #2 to %i (saw %i)\n",
           CommandData.Bias.bias2, amp2);
       CommandData.Bias.SetLevel2 = 1;
     }
     if (amp3_timeout > 0)
       amp3_timeout--;
-    else if (amp3 != CommandData.Bias.bias3) {
+    else if (fabs(amp3 - CommandData.Bias.bias3) > 1) {
       bprintf(warning, "Bias Control: Auto Set Level #3 to %i (saw %i)\n",
           CommandData.Bias.bias3, amp3);
       CommandData.Bias.SetLevel3 = 1;
