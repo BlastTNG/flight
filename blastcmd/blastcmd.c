@@ -73,13 +73,9 @@ void USAGE() {
   }
 
   printf("Valid Single Word Commands:\n");
-  for (i = 0; i < N_NM_SCOMMANDS; i++) {
+  for (i = 0; i < N_SCOMMANDS; i++) {
     printf("  %s - %s\n", scommands[i].name, scommands[i].about);
   }
-
-  printf("\n  c00 - c%d: Send single word command (N.B. that c00 - c%d are "
-      "reserved\n  by mnemonic single word commands listed above.)\n\n",
-      N_SCOMMANDS-1, N_NM_SCOMMANDS-1);
 
   printf("\nExit codes:\n"
          "     0  Command sent successfully.\n"
@@ -188,7 +184,7 @@ void ConfirmSend() {
 }
 
   void ConfirmSingleSend(int i_cmd) {
-    if (i_cmd > N_NM_SCOMMANDS)
+    if (i_cmd > N_SCOMMANDS)
       printf("\nCustom Command-> c%02d\n", i_cmd);
     else
       printf("\nSingle Command-> %s\n", scommands[i_cmd].name);
@@ -237,7 +233,7 @@ void SendScommand(int i_cmd, int t_link, int t_route, unsigned int *i_ack, char 
   buffer[1] = t_link;
   buffer[2] = t_route;
   buffer[3] = 2;
-  buffer[4] = i_cmd;
+  buffer[4] = scommands[i_cmd].command;
   buffer[5] = 0xa0;
   buffer[6] = 0x03;
 
@@ -335,7 +331,7 @@ void SendMcommand(int i_cmd, int t_link, int t_route, char *parms[], int np,
   buffer[6] = 0x03;
 
   /* Send command */
-  buffer[4] = i_cmd;
+  buffer[4] = mcommands[i_cmd].command;
   buffer[5] = 0x80 | (unsigned char)(t & 0x1F); /* t gives unique sync number */
   /* to this multi command */
   WriteBuffer(buffer, 7, i_ack);
@@ -349,7 +345,7 @@ void SendMcommand(int i_cmd, int t_link, int t_route, char *parms[], int np,
   }
 
   /* Send command footer */
-  buffer[4] = i_cmd;
+  buffer[4] = mcommands[i_cmd].command;
   buffer[5] = 0xc0 | (unsigned char)(t & 0x1F);
   WriteBuffer(buffer, 7, i_ack);
 
@@ -400,7 +396,6 @@ int main(int argc, char *argv[]) {
   int t_link, t_route;
   int i, i_cmd;
   unsigned int i_ack;
-  char tmpstr[20];
   char conf = 0;
   char silent = 0;
 
@@ -441,19 +436,9 @@ int main(int argc, char *argv[]) {
 
   atexit(bc_close);
 
-  /* Look for single packet commands with nmonic names */
-  for (i_cmd = 0; i_cmd < N_NM_SCOMMANDS; i_cmd++) {
-    if (strncmp(argv[i], scommands[i_cmd].name, SIZE_NAME) == 0) {
-      SendScommand(i_cmd, t_link, t_route, &i_ack, conf);
-      WriteLogFile(argc, argv, i_ack, silent);
-      exit(0);
-    }
-  }
-
-  /* Look for single packet commands with only a command number */
+  /* Look for single packet commands */
   for (i_cmd = 0; i_cmd < N_SCOMMANDS; i_cmd++) {
-    sprintf(tmpstr, "c%02d", i_cmd);
-    if (strncmp(argv[i], tmpstr, SIZE_NAME) == 0) {
+    if (strncmp(argv[i], scommands[i_cmd].name, SIZE_NAME) == 0) {
       SendScommand(i_cmd, t_link, t_route, &i_ack, conf);
       WriteLogFile(argc, argv, i_ack, silent);
       exit(0);
