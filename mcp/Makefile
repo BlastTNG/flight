@@ -1,5 +1,6 @@
 include Makefile.config
-FL_LIBS = -lfl
+#FL_LIBS = -lfl
+FL_LIBS = 
 CC = gcc -O3 -Wall $(BOLOTEST)
 ifeq ($(DEBUG), 1)
   CC = gcc -O2 -DEBUG -Wall $(BOLOTEST)

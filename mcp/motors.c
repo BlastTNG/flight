@@ -239,10 +239,12 @@ void SetAzScanMode(double az, double left, double right, double v, double D) {
     axes_mode.az_mode = AXIS_POSITION;
     axes_mode.az_dest = left;
     axes_mode.az_vel = 0.0;
+    isc_pulses.is_fast = 1;
   } else if (az > right + AZ_MARGIN) { /* out of range - move to p2 */
     axes_mode.az_mode = AXIS_POSITION;
     axes_mode.az_dest = right;
     axes_mode.az_vel = 0.0;
+    isc_pulses.is_fast = 1;
   } else if (az<left) {
     isc_pulses.is_fast = 0;
     axes_mode.az_mode = AXIS_VEL;
@@ -255,7 +257,7 @@ void SetAzScanMode(double az, double left, double right, double v, double D) {
     axes_mode.az_mode = AXIS_VEL;
     if (axes_mode.az_vel>0) {
       axes_mode.az_vel = v+D;
-      if (az > right - v) isc_pulses.is_fast = 0; /* within 1s of turnaround */
+      if (az > right - v) isc_pulses.is_fast = 0;/* within 1s of turnaround */
       else isc_pulses.is_fast = 1;
     } else {
       axes_mode.az_vel = -v+D;
@@ -298,6 +300,7 @@ void DoVCapMode() {
   double y, r,v;
   double x2, xw;
   double left, right;
+  static int dir = 1;
   
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
@@ -326,7 +329,6 @@ void DoVCapMode() {
   if (el1>MAX_EL) el1 = MAX_EL;
   if (el2<MIN_EL) el2 = MIN_EL;
 
-  v_el = CommandData.pointing_mode.del;
   /* check for out of range in el */
   if (el > el1+EL_BORDER) {
     axes_mode.az_mode = AXIS_POSITION;
@@ -335,7 +337,7 @@ void DoVCapMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el1;
-    v_el = -fabs(CommandData.pointing_mode.del);
+    dir = -1;
     return;
   } else if (el < el2-EL_BORDER) {
     axes_mode.az_mode = AXIS_POSITION;
@@ -344,13 +346,14 @@ void DoVCapMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el2;
-    v_el = fabs(CommandData.pointing_mode.del);
+    dir = 1;
     return;
   } else if (el> el1) { /* turn around */
-    v_el = -fabs(CommandData.pointing_mode.del);
+    dir = -1;
   } else if (el < el2) { /* turn around */
-    v_el = fabs(CommandData.pointing_mode.del);
+    dir = 1;
   }    
+  v_el = CommandData.pointing_mode.del * dir;
 
   /* we must be in range for elevation - go to el-vel mode */
   axes_mode.el_mode = AXIS_VEL;

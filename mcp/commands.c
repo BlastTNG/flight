@@ -1347,7 +1347,8 @@ void InitCommandData() {
   CommandData.ISCState.match_tol = 0.5;
   CommandData.ISCState.quit_tol = 0.8;
   CommandData.ISCState.rot_tol = 5 * DEG2RAD;
-  CommandData.ISC_pulse_width = 3;
+  CommandData.ISC_pulse_width = 6;
+  CommandData.ISC_fast_pulse_width = 3;
 
   WritePrevStatus();
 }
