@@ -124,7 +124,7 @@
   </TEXTSTYLE>
 </DEFAULTS>
 
-<BOX caption="DAS Power Module" row="3" col="1">
+<BOX caption="DAS Power Module" row="2" col="2">
   <NUMBER caption="I DPM 3V" textstyle="oddrow">
     <DATUM format="%.2f" src="I_DPM_3V" extrema="current"/></NUMBER>
   <NUMBER caption="I DPM 5V" textstyle="oddrow">
@@ -142,7 +142,7 @@
     <DATUM format="%.2f" src="T_DPM_7.5V" extrema="temp"/></NUMBER>
 </BOX>
 
-<BOX caption="Bias Generator" row="2" col="1">
+<BOX caption="Bias Generator" row="3" col="2">
   <MULTI caption="Bias Type" textstyle="oddrow">
     <DATUM src="BIAS_IS_DC">
       <WORD value="1" caption="DC" textstyle="W_BIT"/>
@@ -176,60 +176,80 @@
     <DATUM format="%.0f" src="bias_lev3" extrema="unknown"/>
   </NUMBER>
 </BOX>
-<BOX caption="Time" row="1" col="1" colspan="3">
+<BOX caption="Time" row="1" col="1" colspan="1">
   <NUMBER caption="Hours" textstyle="oddrow">
     <DATUM format="%.2f" src="CPU_HOUR" extrema="hours"/>
   </NUMBER>
   <DATETIME caption="CPU Time" textstyle="evenrow">
-    <DATUM format="%d %b %y, %H:%M:%S" src="CPU_TIME"/>
+    <DATUM format="%e %b %Y, %H:%M:%S" src="CPU_TIME"/>
   </DATETIME>
 </BOX>
 
-<BOX caption="Diodes" row="3" col="2">
+<BOX caption="Diodes" row="1" col="3" rowspan="1">
   <NUMBER caption="LHE" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_lhe" extrema="lhetemp"/></NUMBER>
+  <NUMBER caption="LHE Filter" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_lhe_filt" extrema="lhetemp"/></NUMBER>
+  <NUMBER caption="LN2" textstyle="oddrow">
     <DATUM format="%.2f" src="T_ln2" extrema="lhetemp"/></NUMBER>
+  <NUMBER caption="LN2 Filter" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_ln2_filt" extrema="lhetemp"/></NUMBER>
   <NUMBER caption="JFET" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_vcs_fet" extrema="jfettemp"/></NUMBER>
+    <DATUM format="%.2f" src="T_jfet" extrema="jfettemp"/></NUMBER>
   <NUMBER caption="Charcoal" textstyle="oddrow">
     <DATUM format="%.2f" src="T_charcoal" extrema="pottemp"/></NUMBER>
-  <NUMBER caption="He4 Pot" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_he4pot" extrema="pottemp"/></NUMBER>
   <NUMBER caption="Optics Box" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_jfet" extrema="pottemp"/></NUMBER>
+    <DATUM format="%.2f" src="T_optics_box" extrema="pottemp"/></NUMBER>
+  <NUMBER caption="VCS" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_vcs" extrema="pottemp"/></NUMBER>
+  <NUMBER caption="VCS Filter" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_vcs_filt" extrema="pottemp"/></NUMBER>
+  <NUMBER caption="Heat Switch" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_heatswitch" extrema="pottemp"/></NUMBER>
 </BOX>
 
-<BOX caption="Diodes d/dt (K per hour)" row="3" col="3">
+<BOX caption="Diodes d/dt (K per hour)" row="1" col="4" rowspan="1">
   <DERIV caption="LHE" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_lhe" extrema="slope" length="220" tunit="h"/></DERIV>
+  <DERIV caption="LHE Filter" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_lhe_filt" extrema="slope" length="220" tunit="h"/></DERIV>
+  <DERIV caption="LN2" textstyle="oddrow">
     <DATUM format="%.2f" src="T_ln2" extrema="slope" length="220" tunit="h"/></DERIV>
+  <DERIV caption="LN2 Filter" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_ln2_filt" extrema="slope" length="220" tunit="h"/></DERIV>
   <DERIV caption="JFET" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_vcs_fet" extrema="slope" length="220" tunit="h"/></DERIV>
+    <DATUM format="%.2f" src="T_jfet" extrema="slope" length="220" tunit="h"/></DERIV>
   <DERIV caption="Charcoal" textstyle="oddrow">
     <DATUM format="%.2f" src="T_charcoal" extrema="slope" length="220" tunit="h"/></DERIV>
-  <DERIV caption="He4 Pot" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_he4pot" extrema="slope" length="220" tunit="h"/></DERIV>
   <DERIV caption="Optics Box" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_jfet" extrema="slope" length="220" tunit="h"/></DERIV>
+    <DATUM format="%.2f" src="T_optics_box" extrema="slope" length="220" tunit="h"/></DERIV>
+  <DERIV caption="VCS" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_vcs" extrema="slope" length="220" tunit="h"/></DERIV>
+  <DERIV caption="VCS Filter" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_vcs_filt" extrema="slope" length="220" tunit="h"/></DERIV>
+  <DERIV caption="Heat Switch" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_heatswitch" extrema="slope" length="220" tunit="h"/></DERIV>
 </BOX>
 
-<BOX caption="ROXs" row="2" col="2">
+<BOX caption="ROXs" row="3" col="3">
   <NUMBER caption="He3 Fridge" textstyle="oddrow">
-    <DATUM format="%.3f" src="T_He3" extrema="he3fridge"/></NUMBER>
+    <DATUM format="%.3f" src="T_he3fridge" extrema="he3fridge"/></NUMBER>
   <NUMBER caption="He4 Pot" textstyle="oddrow">
-    <DATUM format="%.3f" src="T_pot" extrema="pottemp"/></NUMBER>
+    <DATUM format="%.3f" src="T_he4pot" extrema="pottemp"/></NUMBER>
   <NUMBER caption="500 um Horn" textstyle="oddrow">
     <DATUM format="%.3f" src="T_horn_500" extrema="he3fridge"/></NUMBER>
   <NUMBER caption="500 um Base" textstyle="oddrow">
     <DATUM format="%.3f" src="T_base_500" extrema="pottemp"/></NUMBER>
-  <NUMBER caption="250 um Ring" textstyle="oddrow">
-    <DATUM format="%.3f" src="T_ring_250" extrema="pottemp"/></NUMBER>
+  <NUMBER caption="250 um Base" textstyle="oddrow">
+    <DATUM format="%.3f" src="T_base_250" extrema="pottemp"/></NUMBER>
 </BOX>
 
-<BOX caption="ROXs d/dt (K per hour)" row="2" col="3">
+<BOX caption="ROXs d/dt (K per hour)" row="3" col="4">
   <DERIV caption="He3 Fridge" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_He3" extrema="slope" length="220" tunit="h"/>
+    <DATUM format="%.2f" src="T_he3fridge" extrema="slope" length="220" tunit="h"/>
   </DERIV>
   <DERIV caption="He4 Pot" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_pot" extrema="slope" length="220" tunit="h"/>
+    <DATUM format="%.2f" src="T_he4pot" extrema="slope" length="220" tunit="h"/>
   </DERIV>
   <DERIV caption="500 um Horn" textstyle="oddrow">
     <DATUM format="%.2f" src="T_horn_500" extrema="slope" length="220" tunit="h"/>
@@ -237,12 +257,12 @@
   <DERIV caption="500 um Base" textstyle="oddrow">
     <DATUM format="%.2f" src="T_base_500" extrema="slope" length="220" tunit="h"/>
   </DERIV>
-  <DERIV caption="250 um Ring" textstyle="oddrow">
-    <DATUM format="%.2f" src="T_ring_250" extrema="slope" length="220" tunit="h"/>
+  <DERIV caption="250 um Base" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_base_250" extrema="slope" length="220" tunit="h"/>
   </DERIV>
 </BOX>
 
-<BOX caption="DAS Phases" row="2" col="4" rowspan="1">
+<BOX caption="DAS Phases" row="2" col="1" rowspan="1">
   <NUMBER caption="DAS 5" textstyle="oddrow"><DATUM format="%.0f" src="phase5" extrema="unknown"/></NUMBER>
   <NUMBER caption="DAS 6" textstyle="oddrow"><DATUM format="%.0f" src="phase6" extrema="unknown"/></NUMBER>
   <NUMBER caption="DAS 7" textstyle="oddrow"><DATUM format="%.0f" src="phase7" extrema="unknown"/></NUMBER>
@@ -257,7 +277,7 @@
   <NUMBER caption="DAS 16" textstyle="oddrow"><DATUM format="%.0f" src="phase16" extrema="unknown"/></NUMBER>
 </BOX>
 
-<BOX caption="Cryostat" row="1" col="5" rowspan="2">
+<BOX caption="Cryostat" row="1" col="5" rowspan="1">
   <NUMBER caption="I Charcoal" textstyle="oddrow">
     <DATUM format="%.2f" src="I_CHARCOAL" extrema="unknown"/>
   </NUMBER>
@@ -266,12 +286,6 @@
   </NUMBER>
   <NUMBER caption="I Cold Plate" textstyle="oddrow">
     <DATUM format="%.2f" src="I_COLDPLATE" extrema="unknown"/>
-  </NUMBER>
-  <NUMBER caption="I Heat Switch" textstyle="oddrow">
-    <DATUM format="%.2f" src="I_HEATSWITCH" extrema="unknown"/>
-  </NUMBER>
-  <NUMBER caption="I Helium-3" textstyle="oddrow">
-    <DATUM format="%.2f" src="I_HE3" extrema="unknown"/>
   </NUMBER>
   <MULTI caption="He Level Sensor" textstyle="oddrow">
     <DATUM src="HE_LEV_SENS">
@@ -309,6 +323,8 @@
   <NUMBER caption="Cryo PWM (%)" textstyle="oddrow">
     <DATUM format="%.2f" src="CRYOPWM" extrema="unknown"/>
   </NUMBER>
+</BOX>
+<BOX caption="Valves" row="3" col="5">
   <MULTI caption="LN Valve" textstyle="oddrow">
     <DATUM src="LN_VALVE">
       <WORD value="1" caption="On" textstyle="W_BIT"/>
