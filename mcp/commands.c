@@ -1390,7 +1390,7 @@ void WatchPort (void* parameter) {
               mcommand = -1;
               mcommand_count = 0;
               bprintf(warning, "Commands: COMM%i: Command packet discarded: "
-                  "Bad Encoding: %02X\n", port + 1 , buf);
+                  "Bad Encoding: %04X\n", port + 1, indata[1]);
               mcommand_time = 0;
             }
           }
