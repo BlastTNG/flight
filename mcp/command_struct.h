@@ -153,6 +153,8 @@ struct CommandDataStruct {
   int old_ISC_focus;
   int ISC_reconnect;
   int ISC_autofocus;
+  int ISC_save_period;
+  int ISC_auto_save;
 };
 
 struct ScheduleType {

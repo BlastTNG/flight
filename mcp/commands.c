@@ -729,10 +729,11 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.ISCState.rot_tol = rvalues[3] * DEG2RAD;
   } else if (command == hold_current)
     CommandData.ISCState.hold_current = ivalues[0];
+  else if (command == save_period)
+    CommandData.ISC_save_period = ivalues[0] * 100;
 
-  else {
+  else
     return; /* invalid command - don't update */
-  }
 
   i_point = GETREADINDEX(point_index);
 
@@ -1359,6 +1360,7 @@ void InitCommandData() {
   CommandData.ISCState.match_tol = 0.8;
   CommandData.ISCState.quit_tol = 1;
   CommandData.ISCState.rot_tol = 5 * DEG2RAD;
+  CommandData.ISC_save_period = 400;
   CommandData.ISC_pulse_width = 6;
   CommandData.ISC_fast_pulse_width = 3;
 

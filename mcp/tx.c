@@ -267,6 +267,7 @@ void StoreData(int index, unsigned int* Txframe,
   static int isc_x_offCh, isc_x_offInd;
   static int isc_y_offCh, isc_y_offInd;
   static int isc_hold_iCh, isc_hold_iInd;
+  static int isc_save_periodCh, isc_save_periodInd;
 
   static int blob_index = 0;
 
@@ -388,6 +389,7 @@ void StoreData(int index, unsigned int* Txframe,
     SlowChIndex("isc_x_off", &isc_x_offCh, &isc_x_offInd);
     SlowChIndex("isc_y_off", &isc_y_offCh, &isc_y_offInd);
     SlowChIndex("isc_hold_i", &isc_hold_iCh, &isc_hold_iInd);
+    SlowChIndex("isc_save_prd", &isc_save_periodCh, &isc_save_periodInd);
   }
 
   i_point = GETREADINDEX(point_index);
@@ -638,6 +640,8 @@ void StoreData(int index, unsigned int* Txframe,
       (unsigned int)(CommandData.ISCState.elBDA * RAD2I));
   WriteSlow(isc_hold_iCh, isc_hold_iInd,
       (unsigned int)(CommandData.ISCState.hold_current));
+  WriteSlow(isc_save_periodCh, isc_save_periodInd,
+      (unsigned int)(CommandData.ISC_save_period));
 }
 
 /******************************************************************/

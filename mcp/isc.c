@@ -78,7 +78,7 @@ void IntegratingStarCamera(void)
   int sock = -1, ISCReadIndex;
   time_t t;
 
-  int n;
+  int n, save_image_state = 0;
 
 //  struct timeval t1, t2;
 //  int delta;
@@ -185,6 +185,12 @@ void IntegratingStarCamera(void)
         CommandData.ISCState.lst = MyPointData.lst * SEC2RAD;
         CommandData.ISCState.MCPFrameNum = frame_num;
 
+        /* request for one automaticly saved image */
+        if (CommandData.ISC_auto_save) {
+          save_image_state = CommandData.ISCState.save;
+          CommandData.ISCState.save = 1;
+        }
+
         /* Write to ISC */
         if (InCharge) {
           n = send(sock, &CommandData.ISCState, sizeof(CommandData.ISCState),
@@ -222,9 +228,15 @@ void IntegratingStarCamera(void)
           }
         }
 
-        /* Deassert abort after (perhaps) sending it */
+        /* Deassert abort and shutdown after (perhaps) sending it */
         CommandData.ISCState.abort = 0;
         CommandData.ISCState.shutdown = 0;
+
+        /* Return to default save_image state after autosaving image */
+        if (CommandData.ISC_auto_save) {
+          CommandData.ISCState.save = save_image_state;
+          CommandData.ISC_auto_save = 0;
+        }
       }
     }
   }

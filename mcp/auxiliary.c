@@ -262,7 +262,7 @@ int GetLockBits(int acs0bits) {
 
 /*****************************************************************/
 /*                                                               */
-/*   Control the pumps and the lock                              */
+/*   Control the pumps and the lock and the ISC pulse            */
 /*                                                               */
 /*****************************************************************/
 void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
@@ -278,6 +278,8 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
   static int balGainCh, balGainInd, balMinCh, balMinInd, balMaxCh, balMaxInd;
   static int iscBitsCh;
   static int i_lockpin, j_lockpin;
+
+  static int since_last_save = 0;
 
   int iscBits = 0;
   int pumpBits = 0;
@@ -357,7 +359,8 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
   
   /* We want to trigger sending the frame slightly after the pulse is sent
    * to offset the 300 ms latency in the BLASTbus */
-  if (isc_pulses.ctr == 20) write_ISC_pointing = 1;	
+  if (isc_pulses.ctr == 20)
+    write_ISC_pointing = 1;	
 
   if (isc_pulses.age>=0) isc_pulses.age++;
   
@@ -367,13 +370,25 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
     if (isc_pulses.is_fast) {
       isc_pulses.pulse_width = CommandData.ISC_fast_pulse_width;
       isc_pulses.ctr = 0;
-      if (isc_pulses.age<0) isc_pulses.age = 0;
+      if (isc_pulses.age < 0)
+        isc_pulses.age = 0;
     } else if (fabs(axes_mode.az_vel) < MAX_ISC_SLOW_PULSE_SPEED) {
       isc_pulses.pulse_width = CommandData.ISC_pulse_width;
       isc_pulses.ctr = 0;
-      if (isc_pulses.age<0) isc_pulses.age = 0;
+
+      /* Trigger automatic image write-to-disk */
+      if (since_last_save >= CommandData.ISC_save_period &&
+          CommandData.ISC_save_period > 0) {
+        CommandData.ISC_auto_save = 1;
+        since_last_save = 0;
+      }
+      
+      if (isc_pulses.age < 0)
+        isc_pulses.age = 0;
     }
   }
+
+  since_last_save++;
   /*********************/
 
   WriteSlow(i_lockpin, j_lockpin, pin_is_in);
