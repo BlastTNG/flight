@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
   
   /* Set up IO permissions: 16 words starting at 0x378 */
   if (ioperm(0x378,0x0F, 1)!=0) {
-    printf("Error setting permissions\n");
+    printf("Error setting permissionssss\n");
     exit(1);
   }
   ioperm(0x80,1,1); /* used for timing */
