@@ -11,7 +11,7 @@
 #define DAS_CHS 24
 
 /* Number of records in the frame below the DAS bolometer records */
-#define N_FASTCHLIST_INIT 62
+#define N_FASTCHLIST_INIT 78
 #define N_FASTCHLIST (N_FASTCHLIST_INIT + DAS_CARDS * (DAS_CHS+DAS_CHS/2))
 /* Fields defined in FastChList will be read at 100 Hz */
 
