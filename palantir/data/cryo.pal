@@ -184,7 +184,7 @@
       <INFOBUTTON colour="#000000" size="8" bold="true"/>
     </TEXTSTYLE>
   </DEFAULTS>
-  <BOX caption="Bias and DAS" colour="#707" row="4" col="6" rowspan="1">
+  <BOX caption="Bias and DAS" colour="#707" row="0" col="4" rowspan="3">
     <MULTI caption="Type">
       <DATUM src="BIAS_IS_DC">
         <WORD value="1" caption="DC" textstyle="W_BIT"/>
@@ -292,7 +292,7 @@
       <DATUM format="%H:%M:%S" src="TIMEOUT"/>
     </DATETIME>
   </BOX>
-  <BOX caption="Cryostat Temps" row="4" col="2">
+  <BOX caption="Cryostat Temps" row="2" col="1">
     <NUMBER caption="JFET">
       <DATUM format="%.2f" src="T_jfet" extrema="jfettemp"/>
     </NUMBER>
@@ -321,7 +321,7 @@
       <DATUM format="%.2f" src="T_vcs_fet" extrema="vcstemp"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Cold Optics Temps" row="4" col="3">
+  <BOX caption="Cold Optics Temps" row="2" col="2" rowspan="1">
     <NUMBER caption="Opt.Box Filter">
       <DATUM format="%.2f" src="T_optbox_filt" extrema="pottemp-diode"/>
     </NUMBER>
@@ -356,7 +356,7 @@
       <DATUM format="%.3f" src="T_m5" extrema="pottemp"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Cryo Heaters" row="4" col="4">
+  <BOX caption="Cryo Heaters" row="2" col="3" rowspan="1">
     <MULTI caption="He Level">
       <DATUM src="HE_LEV_SENS">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
@@ -415,7 +415,7 @@
       </DATUM>
     </MULTI>
   </BOX>
-  <BOX caption="Motorised Valves" row="4" col="5">
+  <BOX caption="Motorised Valves" row="0" col="3" rowspan="1">
     <MULTI caption="Pot">
       <DATUM src="POT_VALVE">
         <WORD value="1" caption="On" textstyle="W_BIT"/>

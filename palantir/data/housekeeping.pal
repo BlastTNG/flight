@@ -184,7 +184,7 @@
       <INFOBUTTON colour="#000000" size="8" bold="true"/>
     </TEXTSTYLE>
   </DEFAULTS>
-  <BOX caption="Balance/Lock" colour="#880000" row="2" col="3">
+  <BOX caption="Balance/Lock" colour="#880000" row="2" col="1">
     <NUMBER caption="Status">
       <DATUM format="%.0f" src="BAL_VETO" extrema="balstatus"/>
     </NUMBER>
@@ -212,7 +212,7 @@
     </MULTI>
     -->
   </BOX>
-  <BOX caption="Inner Frame Temps" colour="#002222" row="0" col="6" rowspan="1">
+  <BOX caption="Inner Frame Temps" colour="#002222" row="0" col="5" rowspan="1">
     <NUMBER caption="DPM 5V">
       <DATUM format="%.2f" src="T_DPM_5V" extrema="powtemp"/>
     </NUMBER>
@@ -256,7 +256,7 @@
       <DATUM format="%.2f" src="T_IN_HEATX" extrema="temp"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Mirror Temps" colour="#002222" row="3" col="6">
+  <BOX caption="Mirror Temps" colour="#002222" row="2" col="5">
     <NUMBER caption="Primary Center">
       <DATUM format="%.2f" src="T_PRIMARY_C" extrema="temp"/>
     </NUMBER>
@@ -285,7 +285,7 @@
       <DATUM format="%.2f" src="T_SECONDARY" extrema="temp"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Outer Frame Temps" colour="#002222" row="0" col="5" rowspan="1">
+  <BOX caption="Outer Frame Temps" colour="#002222" row="0" col="4" rowspan="1">
     <NUMBER caption="APM 3V">
       <DATUM format="%.2f" src="T_APM_3V" extrema="powtemp"/>
     </NUMBER>
@@ -353,7 +353,7 @@
       <DATUM format="%.2f" src="SS_CHIP_TEMP" extrema="cputemp"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Motor Temps" colour="#002222" row="3" col="5">
+  <BOX caption="Motor Temps" colour="#002222" row="2" col="4">
     <NUMBER caption="T Roll PWM">
       <DATUM format="%.2f" src="T_ROLL" extrema="temp"/>
     </NUMBER>
@@ -382,7 +382,7 @@
       <DATUM format="%.2f" src="T_LOCK_MOTOR" extrema="temp"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Sun Shield Temps" colour="#002222" row="2" col="6">
+  <BOX caption="Sun Shield Temps" colour="#002222" row="2" col="3">
     <NUMBER caption="Scoop Tip">
       <DATUM format="%.2f" src="T_SCOOP_TIP" extrema="temp"/>
     </NUMBER>
@@ -399,7 +399,7 @@
       <DATUM format="%.2f" src="T_BR_SSHIELD" extrema="temp"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Motor Currents" colour="#707" row="2" col="5">
+  <BOX caption="Motor Currents" colour="#707" row="2" col="2">
     <NUMBER caption="I Roll">
       <DATUM format="%.2f" src="I_ROLL" extrema="current"/>
     </NUMBER>
@@ -413,7 +413,7 @@
       <DATUM format="%.2f" src="I_PIV" extrema="current"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Currents" colour="#707" row="0" col="4" rowspan="1">
+  <BOX caption="Currents" colour="#707" row="0" col="3" rowspan="1">
     <NUMBER caption="I DPM 3V">
       <DATUM format="%.2f" src="I_DPM_3V" extrema="current"/>
     </NUMBER>
