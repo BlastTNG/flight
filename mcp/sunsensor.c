@@ -52,22 +52,22 @@ void SunSensor(void) {
   ss_packet_data Rx_Data;
 
 
-  bputs(startup, "SunSensor startup\n");
+  bputs(startup, "Sun Sensor: Startup\n");
 
   while (1) {
     if (sock != -1)
       if (close(sock) == -1)
-        berror(err, "SunSensor close()");
+        berror(err, "Sun Sensor: close()");
 
     /* create an empty socket connection */
     sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock == -1)
-      berror(tfatal, "SunSensor socket()");
+      berror(tfatal, "Sun Sensor: socket()");
 
     /* set options */
     n = 1;
     if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &n, sizeof(n)) == -1)
-      berror(tfatal, "SunSensor setsockopt()");
+      berror(tfatal, "Sun Sensor: setsockopt()");
 
     /* Connect to Arien */
     inet_aton(ARIEN, &addr.sin_addr);
@@ -75,11 +75,11 @@ void SunSensor(void) {
     addr.sin_port = htons(ARIEN_PORT);
     while ((n = connect(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)))
         < 0) {
-      berror(err, "SunSensor connect()");
+      berror(err, "Sun Sensor: connect()");
       sleep(10);
     };
 
-    bputs(info, "Connected to Arien\n");
+    bputs(info, "Sun Sensor: Connected to Arien\n");
     n = 0;
 
     while (n != -1) {
@@ -94,11 +94,11 @@ void SunSensor(void) {
       n = select(sock + 1, &fdr, NULL, NULL, &timeout);
 
       if (n == -1 && errno == EINTR) {
-        bputs(warning, "timeout on Sun Sensor\n");
+        bputs(warning, "Sun Sensor: Timeout\n");
         continue;
       }
       if (n == -1) {
-        berror(err, "SunSensor select()");
+        berror(err, "Sun Sensor: select()");
         continue;
       }
 
@@ -108,15 +108,15 @@ void SunSensor(void) {
           SunSensorData[ss_index] = Rx_Data;
           ss_index = INC_INDEX(ss_index);
         } else if (n == -1) {
-          berror(err, "SunSensor recv()");
+          berror(err, "Sun Sensor: recv()");
         } else if (n == 0) {
-          bprintf(err, "Connection to Arien closed");
+          bprintf(err, "Sun Sensor: Connection to Arien closed");
           n = -1;
         } else {
-          bputs(err, "Didn't receive all data from Sun Sensor.\n");
+          bputs(err, "Sun Sensor: Didn't receive all data from Sun Sensor.\n");
         }
       } else {
-        bputs(warning, "Connection to Arien timed out.\n");
+        bputs(warning, "Sun Sensor: Connection to Arien timed out.\n");
         n = -1;
       }
     }

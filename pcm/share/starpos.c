@@ -184,7 +184,7 @@ void PrintAngle(double angle) {
   else
     sign = '+';
 
-  bprintf(info, "%c%d %dm %.4gs", sign, (int)(angle), (int)((angle -
+  bprintf(info, "Ephemeris: %c%d %dm %.4gs", sign, (int)(angle), (int)((angle -
           (int)angle) * 60.0), ((angle - (int)angle) * 60.0 -
                                 (int)((angle - (int)angle) * 60.0)) * 60);
 }

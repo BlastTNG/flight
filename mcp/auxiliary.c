@@ -151,8 +151,8 @@ int SetGyHeatSetpoint(double history, int age, int box)
     setpoint = GY_TEMP_MAX;
 
   if (setpoint != CommandData.gyheat[box].setpoint) {
-    bprintf(info, "Stepped gybox %i setpoint to: %.2f degrees C\n", box + 1,
-        setpoint);
+    bprintf(info, "Gyrobox Heat: Stepped gybox %i setpoint to %.2f degrees C\n",
+        box + 1, setpoint);
     age = 0;
     CommandData.gyheat[box].setpoint = setpoint;
   }

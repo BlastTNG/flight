@@ -296,7 +296,7 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
     *cryostate &= ~CS_CHARCOAL;
     bprintf(info, "Auto Cycle: Everything A-OK.");
   } else {
-    bprintf(err, "cycle_state: %i unknown!", cycle_state);
+    bprintf(err, "Auto Cycle: cycle_state: %i unknown!", cycle_state);
     *cryoout |= CRYO_CHARCOAL_OFF;
     *cryostate &= ~CS_CHARCOAL;
     return;
@@ -504,12 +504,12 @@ void BiasControl (unsigned short* RxFrame) {
   if (isBiasAC) { /*  Bias is currently AC */
     if (CommandData.Bias.biasAC == 0) { /* it should be DC */
       biasout1 |= 0x01;
-      /*      bprintf(info, "to DC\n"); */
+      /*      bprintf(info, "Bias Control: to DC\n"); */
     }
   } else { /* Bias is currently DC */
     if (CommandData.Bias.biasAC == 1) { /* it should be AC */
       biasout1 |= 0x02;
-      /*      bprintf(info, "to AC\n"); */
+      /*      bprintf(info, "Bias Control: to AC\n"); */
     }
   }
 
@@ -517,12 +517,12 @@ void BiasControl (unsigned short* RxFrame) {
   if (isBiasRamp) { /* Bias is currently external Ramp */
     if (CommandData.Bias.biasRamp == 0) { /* it should be internal/fixed */
       biasout1 |= 0x40;
-      /*      bprintf(info, "to fixed\n"); */
+      /*      bprintf(info, "Bias Control: to fixed\n"); */
     }
   } else { /* Bias is currently internal (fixed) */
     if (CommandData.Bias.biasRamp == 1) { /* it should be external/Ramp */
       biasout1 |= 0x80;
-      /*      bprintf(info, "to ramp\n"); */
+      /*      bprintf(info, "Bias Control: to ramp\n"); */
     }
   }
 
@@ -530,12 +530,12 @@ void BiasControl (unsigned short* RxFrame) {
   if (isBiasClockInternal) { /* Bias is currently internal */
     if (CommandData.Bias.clockInternal == 0) { /* it should be external */
       biasout1 |= 0x10;
-      /*      bprintf(info, "to external\n"); */
+      /*      bprintf(info, "Bias Control: to external\n"); */
     }
   } else { /* Bias clock is currenly external */
     if (CommandData.Bias.clockInternal == 1) { /* it should be internal */
       biasout1 |= 0x20;
-      /*      bprintf(info, "to internal\n"); */
+      /*      bprintf(info, "Bias Control: to internal\n"); */
     }
   }
 
@@ -608,7 +608,7 @@ void BiasControl (unsigned short* RxFrame) {
     }
     ch = 0;
   } else {
-    bprintf(err, "ch is an impossible value in bias control (%i)\n", ch);
+    bprintf(err, "Bias Control: ch is an impossible value (%i)\n", ch);
     ch = 0;
   }
 

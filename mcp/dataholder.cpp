@@ -702,7 +702,7 @@ bool DataHolder::LoadFromAML(char *filename) {
   }
 
   if (!aml->FirstDatum("SETTINGS")) {
-    bprintf(err, "Fatal (DataHolder): %s contains no data under the SETTINGS "
+    bprintf(err, "DataHolder: %s contains no data under the SETTINGS "
         "entry.\n", filename);
     SMALL_RTN("%i", false);
     return false;
@@ -711,31 +711,31 @@ bool DataHolder::LoadFromAML(char *filename) {
   // Get settings.
   maxbitrate = atoi(aml->Value("maxbitrate"));
   if (!maxbitrate) {
-    bprintf(err, "Fatal (DataHolder): %s has maxbitrate = 0.\n", filename);
+    bprintf(err, "DataHolder: %s has maxbitrate = 0.\n", filename);
     SMALL_RTN("%i", false);
     return false;
   }
   looplength = atoi(aml->Value("looplength"));
   if (!looplength) {
-    bprintf(err, "Fatal (DataHolder): %s has looplength = 0.\n", filename);
+    bprintf(err, "DataHolder: %s has looplength = 0.\n", filename);
     SMALL_RTN("%i", false);
     return false;
   }
   samplerate = atoi(aml->Value("samplerate"));
   if (!samplerate) {
-    bprintf(err, "Fatal (DataHolder): %s has samplerate = 0.\n", filename);
+    bprintf(err, "DataHolder: %s has samplerate = 0.\n", filename);
     SMALL_RTN("%i", false);
     return false;
   }
   minover = atof(aml->Value("minover"));
   if (!minover) {
-    bprintf(err, "Fatal (DataHolder): %s has minover = 0.\n", filename);
+    bprintf(err, "DataHolder: %s has minover = 0.\n", filename);
     SMALL_RTN("%i", false);
     return false;
   }
   maxover = atof(aml->Value("maxover"));
   if (!maxover) {
-    bprintf(err, "Fatal (DataHolder): %s has maxover = 0.\n", filename);
+    bprintf(err, "DataHolder: %s has maxover = 0.\n", filename);
     SMALL_RTN("%i", false);
     return false;
   }
@@ -744,8 +744,7 @@ bool DataHolder::LoadFromAML(char *filename) {
   numslows = aml->NumData("SLOWDATA.SINGLE") + aml->NumData("SLOWDATA.AVG");
   numfasts = aml->NumData("FASTDATA.DIFF") + aml->NumData("FASTDATA.INT");
   if (numslows == 0 && numfasts == 0)
-    bprintf(warning,
-        "Warning (DataHolder):  %s contains no channels.\n", filename);
+    bprintf(warning, "DataHolder:  %s contains no channels.\n", filename);
 
   if (allocated) {
     slows = (struct DataStruct_glob *)reballoc(fatal, slows, numslows * 

@@ -123,8 +123,8 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
       bprintf(fatal, "Unsupported Spec file version %i.\n"
           "To read this file, you will need defile version 2.4\n", version);
     if (version != 11)
-      bprintf(fatal, "Unsupported Spec file version: %i.  Cannot continue.\n",
-          version);
+      bprintf(fatal, "Unsupported Spec file version: %i.  "
+          "Cannot continue.\n", version);
   }
 #endif
 
@@ -193,7 +193,7 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   DiskFrameSize = 2 * DiskFrameWords;
 
 #elif defined VERBOSE
-  bputs(info, "Wrote version " SPEC_VERSION " specification file.\n");
+  bputs(info, "Channels: Wrote version " SPEC_VERSION " specification file.\n");
 #endif
 }
 
@@ -209,7 +209,7 @@ void MakeBoloTable(void) {
   };
 
 #ifdef VERBOSE
-  bprintf(info, "Generating Bolometer Channel Table.\n");
+  bprintf(info, "Channels: Generating Bolometer Channel Table.\n");
 #endif
 
   for (i = 0; i < DAS_CARDS; ++i) {
@@ -366,12 +366,12 @@ void DumpNiosFrame(void)
         if (n == 0) {
           fprintf(map, "**UNASSIGNED**\n");
           fclose(map);
-          bprintf(fatal, "FATAL: unassigned address in Nios Address Table."
-              " Consult Nios Map.\n");
+          bprintf(fatal, "Channels: FATAL: unassigned address in Nios Address"
+              " Table.  Consult Nios Map.\n");
         } else if (n != 1) {
           fprintf(map, "**COLLISION**\n");
           fclose(map);
-          bprintf(fatal, "FATAL: collision in Nios Address Table "
+          bprintf(fatal, "Channels: FATAL: collision in Nios Address Table "
               "assignment. Consult Nios Map.\n");
         }
         fprintf(map, "\n");
@@ -473,7 +473,7 @@ void DumpNiosFrame(void)
 
   fclose(map);
 #ifdef VERBOSE
-  bprintf(info, "Wrote /data/etc/Nios.map.\n");
+  bprintf(info, "Channels: Wrote /data/etc/Nios.map.\n");
 #endif
 }
 #endif
@@ -496,13 +496,13 @@ void BBCAddressCheck(char names[4096][FIELD_LEN], int nn, char* fields[64][64],
     char* name, int node, int addr)
 {
   if (fields[node][addr])
-    bprintf(fatal, "FATAL: Conflicting BBC address found for %s and %s"
-        " (node %i channel %i)\n", fields[node][addr], name, node, addr);
+    bprintf(fatal, "Channels: FATAL: Conflicting BBC address found for %s and "
+        "%s (node %i channel %i)\n", fields[node][addr], name, node, addr);
 
   if (nn != -1) {
     if (GetChannelByName(names, nn, name) != -1)
-      bprintf(fatal, "Namespace Collision: Duplicate channel name %s found\n",
-          name);
+      bprintf(fatal, "Channels: Namespace Collision: Duplicate channel name "
+          "%s found\n", name);
     strcpy(names[nn], name);
     strcpy(names[nn + 1], FieldToUpper(name));
   }
@@ -520,7 +520,7 @@ void DoSanityChecks(void)
   char names[4096][FIELD_LEN];
 
 #ifdef VERBOSE
-  bprintf(info, "Running Sanity Checks on Channel Lists.\n");
+  bprintf(info, "Channels: Running Sanity Checks on Channel Lists.\n");
 #endif
 
   for (i = 0; i < 64; ++i)
@@ -531,7 +531,7 @@ void DoSanityChecks(void)
     slowCount[(int)WideSlowChannels[i].bus] += 2;
     if (WideSlowChannels[i].type != 'U' && WideSlowChannels[i].type != 'S'
         && WideSlowChannels[i].type != 'i')
-      bprintf(fatal, "FATAL: Error in Wide Slow Channel List:\n"
+      bprintf(fatal, "Channels: FATAL: Error in Wide Slow Channel List:\n"
           "    %s does not have a valid wide type (%c)\n",
           WideSlowChannels[i].field, WideSlowChannels[i].type);
 
@@ -548,7 +548,7 @@ void DoSanityChecks(void)
   for (i = 0; SlowChannels[i].node != EOC_MARKER; ++i) {
     slowCount[(int)SlowChannels[i].bus]++;
     if (SlowChannels[i].type != 'u' && SlowChannels[i].type != 's')
-      bprintf(fatal, "Error in Slow Channel List:\n"
+      bprintf(fatal, "Channels: Error in Slow Channel List:\n"
           "    %s does not have a valid type (%c)\n",
           SlowChannels[i].field, SlowChannels[i].type);
 
@@ -563,7 +563,7 @@ void DoSanityChecks(void)
     fastsPerBusFrame[(int)WideFastChannels[i].bus] += 2;
     if (WideFastChannels[i].type != 'U' && WideFastChannels[i].type != 'S'
         && WideFastChannels[i].type != 'i')
-      bprintf(fatal, "FATAL: Error in Wide Fast Channel List:\n"
+      bprintf(fatal, "Channels: FATAL: Error in Wide Fast Channel List:\n"
           "    %s does not have a valid wide type (%c)\n",
           WideFastChannels[i].field, WideFastChannels[i].type);
 
@@ -580,7 +580,7 @@ void DoSanityChecks(void)
   for (i = 0; FastChannels[i].node != EOC_MARKER; ++i) {
     fastsPerBusFrame[(int)FastChannels[i].bus]++;
     if (FastChannels[i].type != 'u' && FastChannels[i].type != 's')
-      bprintf(fatal, "Error in Fast Channel List:\n"
+      bprintf(fatal, "Channels: Error in Fast Channel List:\n"
           "    %s does not have a valid type (%c)\n",
           FastChannels[i].field, FastChannels[i].type);
 
@@ -602,7 +602,7 @@ void DoSanityChecks(void)
   for (i = 0; DecomChannels[i].node != EOC_MARKER; ++i) {
     fastsPerBusFrame[(int)DecomChannels[i].bus]++;
     if (DecomChannels[i].type != 'u' && DecomChannels[i].type != 's')
-      bprintf(fatal, "Error in Decom Channel List:\n"
+      bprintf(fatal, "Channels: Error in Decom Channel List:\n"
           "    %s does not have a valid type (%c)\n",
           DecomChannels[i].field, DecomChannels[i].type);
 
@@ -637,14 +637,14 @@ void DoSanityChecks(void)
       case 'b': /* bitfield */
         if (GetChannelByName(names, nn, DerivedChannels[i].bitfield.source)
             == -1)
-          bprintf(fatal, "Bitfield source %s not found.",
+          bprintf(fatal, "Channels: Bitfield source %s not found.",
               DerivedChannels[i].bitfield.source);
 
         for (j = 0; j < 16; ++j) {
           if (DerivedChannels[i].bitfield.field[j][0] && GetChannelByName(names,
                 nn, DerivedChannels[i].bitfield.field[j]) != -1)
-            bprintf(fatal, "Namespace Collision: Duplicate channel name %s "
-                "found in derived channels",
+            bprintf(fatal, "Channels: Namespace Collision: Duplicate channel "
+                "name %s found in derived channels",
                 DerivedChannels[i].bitfield.field[j]);
           strcpy(names[nn++], DerivedChannels[i].bitfield.field[j]);
         }
@@ -652,7 +652,7 @@ void DoSanityChecks(void)
       case '2': /* lincom2 -- one extra check from lincom */
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom2.source2)
             == -1)
-          bprintf(fatal, "Derived channel source %s not found.",
+          bprintf(fatal, "Channels: Derived channel source %s not found.",
               DerivedChannels[i].lincom2.source2);
 
         /* FALLTHROUGH */
@@ -660,51 +660,54 @@ void DoSanityChecks(void)
       case 't': /* linterp -- same checks as lincom */
       case 'c': /* lincom */
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom.source) == -1)
-          bprintf(fatal, "Derived channel source %s not found.",
+          bprintf(fatal, "Channels: Derived channel source %s not found.",
               DerivedChannels[i].lincom.source);
 
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom.field) != -1)
-          bprintf(fatal, "Namespace Collision: Duplicate channel name %s "
-              "found in derived channels", DerivedChannels[i].lincom.field);
+          bprintf(fatal, "Channels: Namespace Collision: Duplicate channel "
+              "name %s found in derived channels",
+              DerivedChannels[i].lincom.field);
         strcpy(names[nn++], DerivedChannels[i].lincom.field);
 
         /* FALLTHROUGH */
       case '#': /* comment -- they always pass the check */
         break;
       default:
-        bprintf(fatal, "FATAL: Unrecognised Derived Channel Type `%c'\n",
-            DerivedChannels[i].comment.type);
+        bprintf(fatal, "Channels: FATAL: Unrecognised Derived Channel Type "
+            "`%c'\n", DerivedChannels[i].comment.type);
     }
   ccDerived = i;
 
 #ifdef VERBOSE
-  bprintf(info, "All Checks Passed.\n");
-  bprintf(info, "Number of Derived Channel Records: %i\n", ccDerived);
-  bprintf(info, "Slow Channels Per Biphase Frame: %i\n", slowsPerBi0Frame);
-  bprintf(info, "Fast Channels Per Biphase Frame: %i\n", ccFast + SLOW_OFFSET);
-  bprintf(info, "Slow Channels Per Tx Frame: %i / %i\n", slowsPerBusFrame[0],
-      slowsPerBusFrame[1]);
-  bprintf(info, "Fast Channels Per Tx Frame: %i / %i\n", fastsPerBusFrame[0],
-      fastsPerBusFrame[1]);
+  bprintf(info, "Channels: All Checks Passed.\n");
+  bprintf(info, "Channels: Number of Derived Channel Records: %i\n", ccDerived);
+  bprintf(info, "Channels: Slow Channels Per Biphase Frame: %i\n",
+      slowsPerBi0Frame);
+  bprintf(info, "Channels: Fast Channels Per Biphase Frame: %i\n",
+      ccFast + SLOW_OFFSET);
+  bprintf(info, "Channels: Slow Channels Per Tx Frame: %i / %i\n",
+      slowsPerBusFrame[0], slowsPerBusFrame[1]);
+  bprintf(info, "Channels: Fast Channels Per Tx Frame: %i / %i\n",
+      fastsPerBusFrame[0], fastsPerBusFrame[1]);
 #endif
 
   for (i = 0; i < 2; ++i) {
 #ifdef VERBOSE
-    bprintf(info, "BBC Bus %i: Frame Bytes: %4i  Allowed: %4i (%.2f%% full)\n",
-        i, 4 * TxFrameWords[i], 4 * BBC_FRAME_SIZE,
+    bprintf(info, "Channels: BBC Bus %i: Frame Bytes: %4i  Allowed: %4i "
+        "(%.2f%% full)\n", i, 4 * TxFrameWords[i], 4 * BBC_FRAME_SIZE,
         100. * TxFrameWords[i] / BBC_FRAME_SIZE);
 #endif
     if (TxFrameWords[i] > BBC_FRAME_SIZE)
-      bprintf(fatal, "FATAL: BBC Bus %i frame too big.\n", i);
+      bprintf(fatal, "Channels: FATAL: BBC Bus %i frame too big.\n", i);
   }
 
 #ifdef VERBOSE
-  bprintf(info, " BiPhase : Frame Bytes: %4i  Allowed: %4i (%.2f%% full)\n",
-      2 * BiPhaseFrameWords, 2 * BI0_FRAME_SIZE,
+  bprintf(info, "Channels:  BiPhase : Frame Bytes: %4i  Allowed: %4i "
+      "(%.2f%% full)\n", 2 * BiPhaseFrameWords, 2 * BI0_FRAME_SIZE,
       100. * BiPhaseFrameWords / BI0_FRAME_SIZE);
 #endif
   if (BiPhaseFrameWords > BI0_FRAME_SIZE)
-    bprintf(fatal, "FATAL: Biphase frame too big.\n");
+    bprintf(fatal, "Channels: FATAL: Biphase frame too big.\n");
 }
 #endif
 
@@ -725,7 +728,7 @@ void MakeAddressLookups(void)
 #endif
 
 #ifdef VERBOSE
-  bprintf(info, "Generating Address Lookup Tables\n");
+  bprintf(info, "Channels: Generating Address Lookup Tables\n");
 #endif
 
   unsigned int BiPhaseAddr;
@@ -788,7 +791,7 @@ void MakeAddressLookups(void)
     mplex = 0;
     while (slowIndex[bus][mplex] + 1 >= slowTop[bus])
       if (++mplex >= FAST_PER_SLOW)
-        bprintf(fatal, "FATAL: Ran out of subframes while trying to "
+        bprintf(fatal, "Channels: FATAL: Ran out of subframes while trying to "
             "insert wide slow channel %s\n", WideSlowChannels[i].field);
 
 #ifndef INPUTTER
@@ -819,7 +822,7 @@ void MakeAddressLookups(void)
     mplex = 0;
     while (slowIndex[bus][mplex] >= slowTop[bus])
       if (++mplex >= FAST_PER_SLOW)
-        bprintf(fatal, "FATAL: Ran out of subframes while trying to "
+        bprintf(fatal, "Channels: FATAL: Ran out of subframes while trying to "
             "insert slow channel %s\n", SlowChannels[i].field);
 
 #ifndef INPUTTER
@@ -862,7 +865,7 @@ void MakeAddressLookups(void)
       }
 
 #ifdef VERBOSE
-  bprintf(info, "Added %i spare slow channels.\n", spare_count);
+  bprintf(info, "Channels: Added %i spare slow channels.\n", spare_count);
 #endif
 
   for (i = 0; i < ccNarrowFast; ++i) {
@@ -989,7 +992,7 @@ struct NiosStruct* GetNiosAddr(const char* field) {
     if (strcmp(NiosLookup[i].field, field) == 0)
       return &NiosLookup[i];
 
-  bprintf(fatal, "Nios Lookup for channel %s failed.\n", field);
+  bprintf(fatal, "Channels: Nios Lookup for channel %s failed.\n", field);
 
   return NULL;
 }

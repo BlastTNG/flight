@@ -124,9 +124,9 @@ void WriteAux(void) {
   InCharge = !(SamIAm
       ^ slow_data[samIAmReadAddr->index][samIAmReadAddr->channel]);
   if (InCharge != incharge && InCharge)
-    bputs(info, "I have gained control.\n");
+    bputs(info, "System: I have gained control.\n");
   else if (InCharge != incharge)
-    bputs(info, "I have lost control.\n");
+    bputs(info, "System: I have lost control.\n");
 
   incharge = InCharge;
 
@@ -826,7 +826,7 @@ void InitTxFrame(unsigned short *RxFrame)
 {
   int bus, m, i, j, niosAddr, m0addr;
 
-  bprintf(info, "Writing Initial Tx Frame.\n");
+  bprintf(info, "Frame Control: Writing Initial Tx Frame.\n");
 
   for (bus = 0; bus < 2; ++bus) {
     for (m = 0; m < FAST_PER_SLOW; ++m) {
@@ -883,13 +883,13 @@ void InitTxFrame(unsigned short *RxFrame)
   RawNiosWrite(-1, -1, NIOS_FLUSH);
 
   /* do initial controls */
-  bprintf(info, "Running Initial Controls.\n");
+  bprintf(info, "Frame Control: Running Initial Controls.\n");
   mcp_initial_controls = 1;
   UpdateBBCFrame(RxFrame);
   mcp_initial_controls = 0;
 
   /* write the framesync to address 0 to get things going... */
-  bprintf(info, "Frame Composition Complete.  Starting NIOS.\n");
+  bprintf(info, "Frame Control: Frame Composition Complete.  Starting NIOS.\n");
   RawNiosWrite(0, BBC_FSYNC | BBC_WRITE | BBC_NODE(63) | BBC_CH(0) | 0xEB90,
       NIOS_FLUSH);
 }

@@ -63,15 +63,15 @@ struct file_info {
 void OpenNextChunk(void) {
   if (framefile.fd > -1)
     if (close(framefile.fd) == -1)
-      berror(err, "Error closing chunk");
+      berror(err, "FrameFile Writer: Error closing chunk");
 
   sprintf(framefile.name, RAWDIR "/%lu.%c%03X%c", framefile.time,
       framefile.type, ++framefile.chunk, '\0');
 
-  bprintf(info, "Writing to framefile %s\n", framefile.name);
+  bprintf(info, "FrameFile Writer: Writing to framefile %s\n", framefile.name);
 
   if ((framefile.fd = creat(framefile.name, 0644)) == -1)
-    berror(err, "Error opening chunk");
+    berror(err, "FrameFile Writer: Error opening chunk");
 
   framefile.frames = 0;
 }
@@ -100,7 +100,7 @@ void InitialiseFrameFile(char type) {
   sprintf(buffer, RAWDIR "/%lu.%c.spec", framefile.time, framefile.type);
 
   if ((fp = fopen(buffer,"w")) == NULL)
-    berror(err, "Unable to write spec file");
+    berror(err, "FrameFile Writer: Unable to write spec file");
   else {
     WriteSpecificationFile(fp);
     fclose(fp);
@@ -113,7 +113,7 @@ void InitialiseFrameFile(char type) {
 
   fp = fopen(CURFILE,"w");
   if (fp == NULL) {
-    berror(err, "Error opening curfile");
+    berror(err, "FrameFile Writer: Error opening curfile");
     return;
   }
 
@@ -121,7 +121,7 @@ void InitialiseFrameFile(char type) {
   fprintf(fp, "%s\n", framefile.name);
 
   if (fclose(fp) < 0)
-    berror(err, "Error while closing curfile");
+    berror(err, "FrameFile Writer: Error while closing curfile");
 }
 
 void* advance_in_buffer(void* ptr) {
@@ -157,7 +157,7 @@ void pushDiskFrame(unsigned short *RxFrame) {
   /* ****************************************************************** */
 
   if (new_write_to == framefile.b_read_from) {
-    bputs(warning, "Framefile buffer overflow (frame discarded)\n");
+    bputs(warning, "FrameFile Writer: Buffer overflow (frame discarded)\n");
     return;
   }	
 
@@ -179,7 +179,7 @@ void FrameFileWriter(void) {
   int write_len;
 
 #ifdef __MCP__ 
-  bputs(startup, "FrameFileWriter startup\n");
+  bputs(startup, "FrameFile Writer: Startup\n");
 #endif
 
   /* alloc output_buffer */
@@ -202,7 +202,7 @@ void FrameFileWriter(void) {
       if (++framefile.frames >= FRAMES_PER_FILE) {
         if (framefile.fd >= 0)
           if (write(framefile.fd, writeout_buffer, write_len) < 0)
-            berror(err, "Error while writing frame");
+            berror(err, "FrameFile Writer: Error while writing frame");
 
         OpenNextChunk();
         write_len = 0;
@@ -216,7 +216,7 @@ void FrameFileWriter(void) {
     if (shutdown_now) {
       if (framefile.fd > -1)
         if (close(framefile.fd) == -1)
-          berror(err, "Error closing chunk");
+          berror(err, "FrameFile Writer: Error closing chunk");
       framefile.fd = -1;
 
       bfree(fatal, framefile.buffer);
@@ -228,7 +228,7 @@ void FrameFileWriter(void) {
 
     if ((write_len > 0) && (framefile.fd >= 0)) 
       if (write(framefile.fd, writeout_buffer, write_len) < 0)
-        berror(err, "Error while writing frame");
+        berror(err, "FrameFile Writer: Error while writing frame");
 
     usleep(400000);
   }

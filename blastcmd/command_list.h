@@ -11,6 +11,9 @@
  *
  */
 
+#ifndef COMMAND_LIST_H
+#define COMMAND_LIST_H
+
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 120        /* total number of single word cmds */
@@ -145,3 +148,5 @@ struct mcom {
  * l :  parameter is 30 bit renormalised floating point
  */
 extern struct mcom mcommands[N_MCOMMANDS];
+
+#endif /* COMMAND_LIST_H */

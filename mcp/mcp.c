@@ -119,7 +119,7 @@ unsigned int tdrss_index = 0;
   - 4                /* marker again plus NUL */ \
 )
 
-#define TEMPORAL_OFFSET 0
+#define TEMPORAL_OFFSET 9023652
 
 #if (TEMPORAL_OFFSET > 0)
 #warning TEMPORAL_OFFSET NON-ZERO; FIX FOR FLIGHT
@@ -263,7 +263,7 @@ void SensorReader(void) {
 
   FILE *stream;
 
-  bputs(startup, "SensorReader startup\n");
+  bputs(startup, "Sensor Reader: Startup\n");
 
   while (1) {
     if ((stream = fopen("/sys/bus/i2c/devices/0-0290/temp1_input", "r"))
@@ -272,7 +272,7 @@ void SensorReader(void) {
         CommandData.temp1 = data / 10;
       fclose(stream);
     } else
-          berror(warning, "Cannot read temp1 from I2C bus");
+          berror(warning, "Sensor Reader: Cannot read temp1 from I2C bus");
 
     if ((stream = fopen("/sys/bus/i2c/devices/0-0290/temp2_input", "r"))
         != NULL) {
@@ -280,7 +280,7 @@ void SensorReader(void) {
         CommandData.temp2 = data / 10;
       fclose(stream);
     } else
-          berror(warning, "Cannot read temp2 from I2C bus");
+          berror(warning, "Sensor Reader: Cannot read temp2 from I2C bus");
 
     if ((stream = fopen("/sys/bus/i2c/devices/0-0290/temp3_input", "r"))
         != NULL) {
@@ -288,7 +288,7 @@ void SensorReader(void) {
         CommandData.temp3 = data / 10;
       fclose(stream);
     } else
-          berror(warning, "Cannot read temp3 from I2C bus");
+          berror(warning, "Sensor Reader: Cannot read temp3 from I2C bus");
 
     if ((stream = fopen("/sys/bus/i2c/devices/0-0290/fan3_input", "r"))
         != NULL) {
@@ -296,10 +296,10 @@ void SensorReader(void) {
         CommandData.fan = data;
       fclose(stream);
     } else
-          berror(warning, "Cannot read fan3 from I2C bus");
+          berror(warning, "Sensor Reader: Cannot read fan3 from I2C bus");
 
     if (statvfs("/data", &vfsbuf))
-      berror(warning, "Cannot stat filesystem");
+      berror(warning, "Sensor Reader: Cannot stat filesystem");
     else {
       /* vfsbuf.f_bavail is the # of blocks, the blocksize is vfsbuf.f_bsize
        * which, in this case is 4096 bytes, so CommandData.df ends up in units
@@ -447,13 +447,13 @@ int fill_Rx_frame(unsigned int in_data,
 }
 
 void WatchDog (void) {
-  bputs(startup, "Watchdog startup\n");
+  bputs(startup, "Watchdog: Startup\n");
 
   /* Allow other threads to kill this one at any time */
   pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
   if (ioperm(0x378, 0x0F, 1) != 0)
-    berror(tfatal, "Error setting watchdog permissions");
+    berror(tfatal, "Watchdog: Error setting watchdog permissions");
   ioperm(0x80, 1, 1);
 
   for (;;) {
@@ -472,7 +472,7 @@ void write_to_biphase(unsigned short *RxFrame) {
   if (bi0_fp == -2) {
     bi0_fp = open("/dev/bi0_pci", O_RDWR);
     if (bi0_fp == -1)
-      berror(tfatal, "Error opening biphase device");
+      berror(tfatal, "BiPhase Writer: Error opening biphase device");
 
     for (i = 0; i < BI0_FRAME_SIZE; i++)
       nothing[i] = 0xEEEE;
@@ -484,10 +484,10 @@ void write_to_biphase(unsigned short *RxFrame) {
     RxFrame[0] = sync;
     sync = ~sync;
     if (write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short)) < 0)
-      berror(err, "bi-phase write (RxFrame) failed");
+      berror(err, "BiPhase Writer: bi-phase write (RxFrame) failed");
     if (write(bi0_fp, nothing,
           (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short)) < 0)
-      berror(err, "bi-phase write (padding) failed");
+      berror(err, "BiPhase Writer: bi-phase write (padding) failed");
     CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
   }
 }
@@ -527,7 +527,7 @@ void zero(unsigned short *RxFrame) {
 void BiPhaseWriter(void) {
   int i_out, i_in;
 
-  bputs(startup, "Biphase writer startup\n");
+  bputs(startup, "Biphase Writer: Startup\n");
 
   while (1) {
     i_in = bi0_buffer.i_in;
@@ -538,7 +538,7 @@ void BiPhaseWriter(void) {
        * BLASTBus anymore */
       if (InCharge) {
         if (++Death == 25) {
-          bprintf(err, "Death is reaping the watchdog tickle.");
+          bprintf(err, "BiPhase Writer: Death is reaping the watchdog tickle.");
           pthread_cancel(watchdog_id);
         }
       }
@@ -576,7 +576,7 @@ int AmISam(void) {
   char buffer[2];
 
   if (gethostname(buffer, 1) == -1 && errno != ENAMETOOLONG) {
-    berror(err, "Unable to get hostname");
+    berror(err, "System: Unable to get hostname");
   }
 
   return (buffer[0] == 's') ? 1 : 0;
@@ -584,10 +584,10 @@ int AmISam(void) {
 
 /* Signal handler called when we get a hup, int or term */
 void CloseBBC(int signo) {
-  bprintf(err, "Caught signal %i; stopping NIOS", signo);
+  bprintf(err, "System: Caught signal %i; stopping NIOS", signo);
   RawNiosWrite(0, BBC_ENDWORD, NIOS_FLUSH);
   RawNiosWrite(BBCPCI_MAX_FRAME_SIZE, BBC_ENDWORD, NIOS_FLUSH);
-  bprintf(err, "Closing BBC and Bi0");
+  bprintf(err, "System: Closing BBC and Bi0");
   if (bi0_fp >= 0)
     close(bi0_fp);
   if (bbc_fp >= 0)
@@ -640,7 +640,7 @@ int main(int argc, char *argv[]) {
   umask(0);  /* clear umask */
 
   if ((logfile = fopen("/data/etc/mcp.log", "a")) == NULL)
-    berror(err, "Can't open log file");
+    berror(err, "System: Can't open log file");
   else
     fputs("----- LOG RESTART -----\n", logfile);
 
@@ -648,16 +648,16 @@ int main(int argc, char *argv[]) {
   buos_use_func(mputs);
 
 #if (TEMPORAL_OFFSET > 0)
-  bprintf(warning, "TEMPORAL OFFSET = %li\n", TEMPORAL_OFFSET);
+  bprintf(warning, "System: TEMPORAL OFFSET = %i\n", TEMPORAL_OFFSET);
 #endif
 
-  bputs(startup, "MCP startup");
+  bputs(startup, "System: Startup");
 
   /* Watchdog */
   pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
 
   if ((bbc_fp = open("/dev/bbcpci", O_RDWR)) < 0)
-    berror(fatal, "Error opening BBC");
+    berror(fatal, "System: Error opening BBC");
 
   /* Initialize the Ephemeris */
   ReductionInit();
@@ -668,7 +668,7 @@ int main(int argc, char *argv[]) {
 
   MakeAddressLookups();
 
-  bprintf(info, "MCP Command List Version: %s", command_list_serial);
+  bprintf(info, "Commands: MCP Command List Version: %s", command_list_serial);
 #ifdef USE_FIFO_CMD
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, NULL);
 #else
@@ -703,18 +703,18 @@ int main(int argc, char *argv[]) {
   SamIAm = AmISam();
 
   if (SamIAm)
-    bputs(info, "I am Sam.\n");
+    bputs(info, "System: I am Sam.\n");
   else 
-    bputs(info, "I am not Sam.\n");
+    bputs(info, "System: I am not Sam.\n");
 
   InitSched();
 
-  bputs(info, "Finished Initialisation, waiting for BBC to come up.\n");
+  bputs(info, "System: Finished Initialisation, waiting for BBC to come up.\n");
 
   /* mcp used to wait here for a semaphore from the BBC, which makes the
    * presence of these messages somewhat "historical" */
 
-  bputs(info, "BBC is up.\n");
+  bputs(info, "System: BBC is up.\n");
 
   InitTxFrame(RxFrame);
 
@@ -732,7 +732,7 @@ int main(int argc, char *argv[]) {
 
   while (1) {
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0) 
-      berror(err, "Error on BBC read");
+      berror(err, "System: Error on BBC read");
 
 #if 0
     static int mycounter = 0;
@@ -761,7 +761,8 @@ int main(int argc, char *argv[]) {
 #endif
 
     if (!fill_Rx_frame(in_data, RxFrame))
-      bprintf(err, "Unrecognised word received from BBC (%08x)", in_data);
+      bprintf(err, "System: Unrecognised word received from BBC (%08x)",
+          in_data);
 
     if (IsNewFrame(in_data)) {
       if (StartupVeto > 1) {
@@ -778,13 +779,13 @@ int main(int argc, char *argv[]) {
 
         /* Frame sequencing check */
         if (StartupVeto) {
-          bputs(info, "Startup Veto Ends\n");
+          bputs(info, "System: Startup Veto Ends\n");
           StartupVeto = 0;
           Death = 0;
         } else if (RxFrame[3] != (RxFrameIndex + 1) % FAST_PER_SLOW
             && RxFrameIndex >= 0)
-          bprintf(err, "Frame sequencing error detected: wanted %i, got %i\n",
-              RxFrameIndex + 1, RxFrame[3]);
+          bprintf(err, "System: Frame sequencing error detected: wanted %i, "
+              "got %i\n", RxFrameIndex + 1, RxFrame[3]);
         RxFrameIndex = RxFrame[3];
 
         /* Save current fastsamp */

@@ -37,11 +37,12 @@ void LutInit(struct LutType *L) {
   int i;
 
   FILE *fp;
-  char line[255];
+  char line[1024];
 
   fp = fopen(L->filename, "r");
   if (fp == NULL) {
-    bprintf(err, "error reading LUT file %s: no calibration\n", L->filename);
+    bprintf(err, "LUT: error reading LUT file %s: no calibration\n",
+        L->filename);
     L->n = 1;
     return;
   }
@@ -52,11 +53,13 @@ void LutInit(struct LutType *L) {
     i++; 
 
   if (i < 2) {
-    bprintf(err, "error reading LUT file %s: no calibration\n", L->filename);
+    bprintf(err, "LUT: error reading LUT file %s: no calibration\n",
+        L->filename);
     L->n = 1;
     return;
   }
 
+  bprintf(info, "LUT: Reading lut `%s' with %i lines\n", L->filename, i);
   L->n = i;
   L->x = (double *)balloc(fatal, i * sizeof(double));
   L->y = (double *)balloc(fatal, i * sizeof(double));
@@ -68,8 +71,6 @@ void LutInit(struct LutType *L) {
     sscanf(line, "%lg %lg",&(L->x[i]), &(L->y[i]));
   }
   L->last_n = L->n / 2;
-  bprintf(info, "LutInit: Read lut `%s' with %i lines\n", L->filename,
-      L->n);
 }
 
 double LutCal(struct LutType *L, double x) {
@@ -133,7 +134,7 @@ double MagLutCal(struct LutType *L, double mag_x, double mag_y, double x)
     if(fabs(dx) < TOLERANCE) return (x*180.0/M_PI);
 
     if(iter == MAXITER) {
-      bprintf(err, "Error MagLutCal: don't converge.\n");
+      bprintf(err, "LUT: Error: MagLutCal doesn't converge.\n");
       return (x*180.0/M_PI);
     }
   }

@@ -976,7 +976,6 @@ void DoNewCapMode() {
   if (new_step) {
     // set v for this step
     v_el = (targ_el - (el-cel))/t;
-//    bprintf(info, "qqq L: el: %g targ_el: %g\n", el - cel, targ_el);
     // set targ_el for the next step
     targ_el += CommandData.pointing_mode.del*el_dir;
     if (targ_el>=r) {
@@ -1077,8 +1076,8 @@ void UpdateAxesMode() {
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       break;
     default:
-      bprintf(warning, "Unknown Elevation Pointing Mode %d: stopping\n",
-          CommandData.pointing_mode.mode);
+      bprintf(warning, "Pointing: Unknown Elevation Pointing Mode %d: "
+          "stopping\n", CommandData.pointing_mode.mode);
       CommandData.pointing_mode.mode = P_DRIFT;
       CommandData.pointing_mode.X = 0;
       CommandData.pointing_mode.Y = 0;

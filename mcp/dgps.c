@@ -52,10 +52,10 @@ void SetGPSPort(speed_t speed) {
   struct termios term; 
 
   if ((fd = open(GPSCOM, O_RDWR)) < 0)
-    berror(tfatal, "Unable to open dgps serial port");
+    berror(tfatal, "dGPS: Unable to open dgps serial port");
 
   if (tcgetattr(fd, &term))
-    berror(tfatal, "Unable to get dgps serial port attributes");
+    berror(tfatal, "dGPS: Unable to get dgps serial port attributes");
 
   term.c_iflag = 0;
   term.c_oflag = 0;
@@ -64,10 +64,10 @@ void SetGPSPort(speed_t speed) {
   term.c_lflag = 0;
 
   if (cfsetispeed(&term, speed))
-    berror(tfatal, "error setting serial input speed");
+    berror(tfatal, "dGPS: error setting serial input speed");
 
   if (tcsetattr(fd, TCSANOW, &term))
-    berror(tfatal, "Unable to set serial attributes");
+    berror(tfatal, "dGPS: Unable to set serial attributes");
 
   close(fd);
 }
@@ -102,7 +102,7 @@ void WatchDGPS() {
   int pos_ok;
   static int i_at_float = 0;
 
-  bputs(startup, "WatchDGPS startup\n");
+  bputs(startup, "dGPS: WatchDGPS startup\n");
 
   DGPSAtt[0].az = 0;
   DGPSAtt[0].pitch = 0;
@@ -130,7 +130,7 @@ void WatchDGPS() {
 
   fp = fopen(GPSCOM, "r+");
   if (fp == NULL)
-    berror(tfatal, "error opening gps port for i/o");
+    berror(tfatal, "dGPS: error opening gps port for i/o");
 
   fprintf(fp,"$PASHS,SPD,B,7\r\n"); // 38400 Pg 66
 
@@ -140,7 +140,7 @@ void WatchDGPS() {
 
   fp = fopen(GPSCOM, "r+");
   if (fp == NULL)
-    berror(tfatal, "error opening gps port for i/o");
+    berror(tfatal, "dGPS: error opening gps port for i/o");
 
   fprintf(fp,"$PASHS,SPD,B,7\r\n"); // 38400 Pg 66
 
@@ -150,7 +150,7 @@ void WatchDGPS() {
 
   fp = fopen(GPSCOM, "r+");
   if (fp == NULL)
-    berror(tfatal, "error opening gps port for i/o");
+    berror(tfatal, "dGPS: error opening gps port for i/o");
 
   /****************** Set up Port A for ntp output *********/
   /* see file:/usr/share/doc/ntp-4.2.0-r2/html/drivers/driver20.html */
@@ -186,6 +186,8 @@ void WatchDGPS() {
   fprintf(fp,"$PASHS,NME,ZDA,B,ON\r\n");  // turn on time message P109
   fprintf(fp,"$PASHS,NME,PAT,B,ON\r\n");   // turn on attitude/position P98
   fprintf(fp,"$PASHS,NME,POS,B,ON\r\n");   // turn on pos/vel message P99
+
+  berror(info, "dGPS: GPS initialised");
 
   while (1) {
     fgets(instr, 499, fp);

@@ -21,6 +21,7 @@
  */
 
 #include "isc_protocol.h"
+#include "command_list.h"
 #include "channels.h"
 #include <time.h>
 
@@ -204,10 +205,18 @@ struct CommandDataStruct {
   } ISCControl[2];
 };
 
+struct ScheduleEvent {
+  int t;
+  int is_multi;
+  int command;
+  double rvalues[MAX_N_PARAMS];
+  int ivalues[MAX_N_PARAMS];
+};
+
 struct ScheduleType {
   int n_sched;
   time_t t0;
-  struct PointingModeStruct *p;
+  struct ScheduleEvent* event;
 };
 
 int bc_setserial(char *input_tty);
