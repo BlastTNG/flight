@@ -21,6 +21,8 @@
  *
  */
 
+#undef DEBUG
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -243,8 +245,6 @@ void SigAction(int signo) {
 }
 
 int main(void) {
-  int pid;
-  FILE* stream;
   int sock, csock;
   int n, z, lastsock;
   fd_set fdlist, fdread, fdwrite;
@@ -258,6 +258,12 @@ int main(void) {
   char *ptr;
 
   struct sigaction action;
+
+#ifdef DEBUG
+  buos_use_stdio();
+#else
+  int pid;
+  FILE* stream;
 
   /* set up our outputs */
   openlog("decomd", LOG_PID, LOG_DAEMON);
@@ -287,6 +293,7 @@ int main(void) {
   freopen("/dev/null", "w", stdout);
   freopen("/dev/null", "w", stderr);
   setsid();
+#endif
 
   /* Open Decom */
   if ((decom = open(DEV, O_RDONLY | O_NONBLOCK)) == -1)
@@ -349,6 +356,10 @@ int main(void) {
     for(ptr = framefile.name + strlen(framefile.name); *ptr != '/'; --ptr);
 
     memset(buf, 0, 209);
+#ifdef DEBUG
+    printf("%1i %1i %3i %5.3f %5.3f %Lu %lu %s\n", status + system_idled
+        * 0x4, polarity, du, fs_bad, dq_bad, disk_free, frame_counter, ptr + 1);
+#endif
     sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu %lu %s\n", status + system_idled
         * 0x4, polarity, du, fs_bad, dq_bad, disk_free, frame_counter, ptr + 1);
 
