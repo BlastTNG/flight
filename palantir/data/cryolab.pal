@@ -204,8 +204,12 @@
     <DATUM format="%.2f" src="T_vcs" extrema="pottemp"/></NUMBER>
   <NUMBER caption="VCS Filter" textstyle="oddrow">
     <DATUM format="%.2f" src="T_vcs_filt" extrema="pottemp"/></NUMBER>
+  <NUMBER caption="VCS FET" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_vcs_fet" extrema="pottemp"/></NUMBER>
   <NUMBER caption="Heat Switch" textstyle="oddrow">
     <DATUM format="%.2f" src="T_heatswitch" extrema="pottemp"/></NUMBER>
+  <NUMBER caption="Extra Therm 1" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_xtherm_1" extrema="pottemp"/></NUMBER>
 </BOX>
 
 <BOX caption="Diodes d/dt (K per hour)" row="1" col="4" rowspan="1">
@@ -227,8 +231,12 @@
     <DATUM format="%.2f" src="T_vcs" extrema="slope" length="220" tunit="h"/></DERIV>
   <DERIV caption="VCS Filter" textstyle="oddrow">
     <DATUM format="%.2f" src="T_vcs_filt" extrema="slope" length="220" tunit="h"/></DERIV>
+  <DERIV caption="VCS FET" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_vcs_fet" extrema="slope" length="220" tunit="h"/></DERIV>
   <DERIV caption="Heat Switch" textstyle="oddrow">
     <DATUM format="%.2f" src="T_heatswitch" extrema="slope" length="220" tunit="h"/></DERIV>
+  <DERIV caption="Extra Therm 1" textstyle="oddrow">
+    <DATUM format="%.2f" src="T_xtherm_1" extrema="slope" length="220" tunit="h"/></DERIV>
 </BOX>
 
 <BOX caption="ROXs" row="3" col="3">
