@@ -35,6 +35,11 @@
 #include "adamdom.h"
 #include "dataholder.h"
 
+extern "C" {
+#include "tx_struct.h"
+#include "bbc_pci.h"
+}
+
 
 //-------------------------------------------------------------
 // 
@@ -170,7 +175,7 @@ void DataHolder::GetXMLInfo(char *tagname, QList<struct DataStruct_glob> *dest,
   struct DataStruct_glob *currDatumInfo;
   char tmp[30];
 
-	InfoFile->GotoEntry(tagname, 0, false);
+  InfoFile->GotoEntry(tagname, 0, false);
   for (InfoFile->GotoFirstChild(); !InfoFile->NullEntry();
 			 InfoFile->GotoNextSib()) {
     InfoFile->SetBookMark(BM_FIRST);
@@ -190,7 +195,7 @@ void DataHolder::GetXMLInfo(char *tagname, QList<struct DataStruct_glob> *dest,
 
     strcpy(currDatumInfo->src, InfoFile->GetAttribute("src"));
     strcpy(currDatumInfo->name, InfoFile->GetAttribute("name"));
-
+    
     GetPredefined(InfoFile->GetAttribute("predefined"), currDatumInfo,
 				          InfoFile);
 

@@ -9,7 +9,7 @@ struct DataStruct_glob {
   char name[25];
   char type;
   char src[15];
-  int framefreq;      // times per frame
+  int framefreq;      // Times per frame.
   char numbits;
   char overflowsize;
   int divider;
@@ -19,6 +19,10 @@ struct DataStruct_glob {
   char datatype;
   long long minval;
   long long maxval;
+
+  int mindex;
+  int chnum;
+  int wide;
 };
 
 class AdamDom;

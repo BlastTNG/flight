@@ -76,7 +76,7 @@ struct {
   unsigned short *framelist[BI0_FRAME_BUFLEN];
 } bi0_buffer;
 
-unsigned short* smalldata[3];
+unsigned short *smalldata[3];
 unsigned int small_index = 0;
 
 #define MPRINT_BUFFER_SIZE 1024
@@ -683,17 +683,17 @@ int main(int argc, char *argv[]) {
     merror(MCP_FATAL, "Unable to malloc RxFrame");
 
   for (i = 0; i < 3; ++i)
-    if ((smalldata[i] = malloc(BiPhaseFrameSize)) == NULL)
+    if ((smalldata[i] = (unsigned short *)malloc(BiPhaseFrameSize)) == NULL)
       merror(MCP_FATAL, "Unable to malloc smalldata");
-
-#ifndef BOLOTEST
-  pthread_create(&small_id, NULL, (void*)&smallinit, NULL);
-#endif
 
   for (i = 0; i < FAST_PER_SLOW; ++i)
     if ((slow_data[i] = malloc(slowsPerBi0Frame * sizeof(unsigned short)))
         == NULL)
       merror(MCP_FATAL, "Unable to malloc slow data buffer");
+
+#ifndef BOLOTEST
+  pthread_create(&small_id, NULL, (void*)&smallinit, NULL);
+#endif
 
   /* Find out whether I'm frodo or sam */
   SamIAm = AmISam();

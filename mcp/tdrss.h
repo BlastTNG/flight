@@ -42,6 +42,33 @@ private:
   int startbyte;
 };
 
+class FrameBuffer
+{
+  public:
+    FrameBuffer(unsigned int *mcpindex_in, unsigned short **fastin_in,
+                unsigned short **slowin_in, int numframes_in);
+    ~FrameBuffer();
+    void Update();
+    void Resize(int numframes_in);
+    int NumFrames();
+    int ReadField(double *returnbuf, const char *fieldname, int framenum_in,
+                  int numframes_in);
+
+  protected:
+
+  private:
+    unsigned int *mcpindex, lastmcpindex;
+    unsigned short **fastdata, ***fastbuf;
+    unsigned short **slowdata, ***slowbuf;
+    int numframes;      // Number of frames in circular buffer.
+    int framenum;       // Current frame in circ. buffer.
+    int multiplexindex; // Alice defines frame as a 5 Hz frame. 
+    int pseudoframe;    // Trick Alice into thinking that the buffer is linear
+                        // by having a linear frame counter.
+
+    bool memallocated, multiplexsynced;
+};
+
 class Alice
 {
 public:
@@ -53,7 +80,6 @@ protected:
 
 private:
   bool GetCurrentXML();
-
 
   double Differentiate(double *invals, int num, int divider);
   void Integrate(double *invals, int num);
@@ -70,7 +96,7 @@ private:
   int FindPowTwo(int num, float threshold);
   int MaxPowTwo(int val, float threshold);
 
-  AliceFile *DataSource;
+  FrameBuffer *DataSource;
   DataHolder *DataInfo;
   Buffer *sendbuf;
 

@@ -13,18 +13,22 @@
 // *                                                        *
 // **********************************************************
 
-#define DIFFERENTIAL   0
-#define INT_PRESERVING 1
-#define SINGLE         2
-#define AVERAGE        3
+#define DIFFERENTIAL    0
+#define INT_PRESERVING  1
+#define SINGLE          2
+#define AVERAGE         3
 
-#define MAX_PERCENT    0.965
+#define MAX_PERCENT     0.965
 
-#define CRC 6
-#define BLEN 4
-#define FILEC 8
-#define FRAMEC 9
-#define START_DATA 12
+#define CRC             6
+#define BLEN            4
+#define FILEC           8
+#define FRAMEC          9
+#define START_DATA      12
+
+#define ALICEFILE_DIR   "./"
+
+#define MULTIPLEX_WORD  3
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,6 +44,7 @@
 #include "dataholder.h"
 #include "small.h"
 #include "fftsg_h.c"
+#include "bbc_pci.h"
 
 extern "C" {
 #include "crc.h"
@@ -471,29 +476,31 @@ void Buffer::WriteTo(long long datum, char numbits, char oversize,
 
 
 
-//|||****_______________________________________________________________________
-//|||***************************************************************************
-//|||****
-//|||****
-//|||****     CLASS Alice --  `What a curious feeling!' said Alice; `I must be
-//|||****                     shutting up like a telescope.'
-//|||****
-//|||****
-//|||****_______________________________________________________________________
-//|||***************************************************************************
+/******************************************************************************\
+|******************************************************************************|
+|**                                                                          **|
+|**                                                                          **|
+|**                                CLASS Alice                               **|
+|**                                                                          **|
+!**     `What a curious feeling!' said Alice; `I must be shutting up         **|
+|**     like a telescope.'                                                   **|
+|**                                                                          **|
+|**                                                                          **|
+|******************************************************************************|
+\******************************************************************************/
 
 
 
-
-//-------------------------------------------------------------
-//
-// Alice: constructor
-//
-//-------------------------------------------------------------
+/*----------------------------------------------------------------------------*\
+|*                                                                            *|
+|* Alice: Constructor                                                         *|
+|*                                                                            *|
+\*----------------------------------------------------------------------------*/
 
 Alice::Alice() {
   XMLsrc = -1;
-  DataSource = new AliceFile("/data/etc/datafile.cur", UNKNOWN);
+//  DataSource = new AliceFile("/data/etc/datafile.cur", UNKNOWN);
+  DataSource = new FrameBuffer(&small_index, smalldata, slow_data, 1);
   sendbuf = new Buffer();    // 10 bits per byte
   DataInfo = new DataHolder();
   fprintf(stderr, "allocating Alice\n");
@@ -526,7 +533,7 @@ bool Alice::GetCurrentXML() {
   }
 
   if (newxml != XMLsrc) {
-    sprintf(tmp, "/data/etc/%d.al", newxml);
+    sprintf(tmp, "%s%d.al", ALICEFILE_DIR, newxml);
     if (DataInfo->LoadFromXML(tmp)) {
       XMLsrc = newxml;
       sendbuf->SetSize(DataInfo->MaxBitRate / 10 * DataInfo->LoopLength);
@@ -794,207 +801,6 @@ void Alice::SendAverage(double *data, int num,
 
 //-------------------------------------------------------------
 //
-// CompressionLoop (public): main control loop
-//
-//-------------------------------------------------------------
-
-void Alice::CompressionLoop() {
-  double *filterdata, *rawdata;
-  int i, j, k, l;
-  struct DataStruct_glob *currInfo;
-  int numframes = 0, numtoread, readleftpad, readrightpad = 0;
-  int rawsize, powtwo, leftpad, rightpad;
-  bool earlysend;
-  int numread;
-  int framepos = 0;
-  int rawdatasize, filterdatasize, ts;
-
-  printf("\n");
-
-  rawdata = (double *)malloc(1);
-  rawdatasize = 1;
-  filterdata = (double *)malloc(1);
-  filterdatasize = 1;
-
-  for (;;) {
-
-    // Check for new XML file command written by mcp
-    if (GetCurrentXML()) {
-
-      // Make sure our buffers for reading in data from disk are big enough
-      ts =sizeof(double) * DataInfo->SampleRate * MaxFrameFreq() *
-          DataInfo->LoopLength;
-      if (ts > rawdatasize) {
-        rawdatasize = ts;
-        rawdata = (double *)realloc(rawdata, ts);
-      }
-
-      ts = sizeof(double) * (3 * DataInfo->SampleRate * MaxFrameFreq() *
-                             DataInfo->LoopLength);
-      if (ts > filterdatasize) {
-        filterdatasize = ts;
-        filterdata = (double *)realloc(filterdata, ts);
-      }
-
-      // Figure out how much we need to read each time around.  For FFT purposes
-      // it needs to be a power of two, with at least 5 % buffering on the ends.
-      numframes = DataInfo->LoopLength * DataInfo->SampleRate;
-      numtoread = MaxPowTwo(numframes, 0.05);
-
-      // We need real data on either side of the data we are interested in so
-      // that funny things don't happen to the edges of our data during an FFT.
-      // Calculate the maximum padding we will need for all our fields.
-      readleftpad = int((numtoread - numframes) / 2);
-      readrightpad = numtoread - numframes - readleftpad + 2;
-
-      printf("\nFilling padding buffer . . . \n\n");
-
-      // Wait until there exists enough data for this padding
-      framepos = DataSource->numFrames();
-      while (DataSource->numFrames() < framepos + readleftpad + readrightpad) {
-        usleep(1000);
-        DataSource->update();
-      }
-      framepos += readleftpad + readrightpad;
-    }
-
-    // Wait until mcp has written numframes of data
-    while (DataSource->numFrames() < framepos + numframes) {
-      usleep(1000);
-      DataSource->update();
-    }
-
-    // Start a new buffer for the downlink
-    sendbuf->Start(XMLsrc, (unsigned int)(framepos - readrightpad));
-    i = 0;
-    earlysend = false;
-
-    printf("Reading from %d to %d\n\n", framepos - readrightpad,
-        framepos + numframes - readrightpad);
-
-    // Go through each of the slow fields we want to compress.  Slow fields only
-    // send down one value per frame.  They are treated like one big "fast"
-    // field -- we Introduce() before all of them and then RecordNumBytes()
-    // after them.  All the slow fields are written one after the other here
-    // at the beginning of the frame.
-    if ((currInfo = DataInfo->firstSlow()) != NULL) {
-      sendbuf->Introduce();
-
-      for (currInfo = DataInfo->firstSlow(); currInfo != NULL;
-          currInfo = DataInfo->nextSlow()) {
-
-        printf("Reading from %s . . .\n", currInfo->src);
-
-        switch (currInfo->type) {
-          case SINGLE:
-            if ((numread = DataSource->readField(rawdata, currInfo->src,
-                    framepos - readrightpad, 1))
-                != currInfo->framefreq) {
-              printf("Error accessing correct number of data from frames "
-                  "(%d, %d).\n\n", numread, currInfo->framefreq);
-              rawdata[0] = 0;
-              SendSingle(rawdata, currInfo);  // Send down a zero
-            }
-            else
-              SendSingle(rawdata, currInfo);
-            break;
-
-          case AVERAGE:
-            rawsize = numframes * currInfo->framefreq;
-            if ((numread = DataSource->readField(rawdata, currInfo->src,
-                    framepos - readrightpad, numframes))
-                != rawsize) {
-              printf("Error accessing correct number of data from frames "
-                  "(%d, %d).\n\n", numread, currInfo->framefreq);
-              rawdata[0] = 0;
-              SendSingle(rawdata, currInfo);  // Send down a zero
-            }
-            else
-              SendAverage(rawdata, rawsize, currInfo);
-            break;
-        }
-      }
-
-      sendbuf->RecordNumBytes();
-    }
-
-
-    // Go through each of the fast fields we want to compress.  Fast fields
-    // are those which send down more than one value per frame.
-    for (currInfo = DataInfo->firstFast(); currInfo != NULL && !earlysend;
-        currInfo = DataInfo->nextFast()) {
-
-      // Figure out how much to read and how much padding the current field
-      // requires
-      rawsize = numframes * currInfo->framefreq;
-      powtwo = FindPowTwo(rawsize, 0.05);
-      leftpad = int((powtwo - rawsize) / (2 * currInfo->framefreq));
-      rightpad = int((powtwo - rawsize - leftpad * currInfo->framefreq) /
-          currInfo->framefreq) + 1;
-
-      printf("Reading from %s . . .\n", currInfo->src);
-
-      // Read data from Frodo's disk
-      if ((numread = DataSource->readField(filterdata, currInfo->src,
-              framepos - readrightpad - leftpad,
-              numframes + rightpad + leftpad))
-          != rawsize + currInfo->framefreq * (rightpad + leftpad)) {
-
-        printf("Error accessing correct number of data from frames "
-            "(%d, %d).\n\n", numread, rawsize + currInfo->framefreq *
-            (rightpad + leftpad));
-        sendbuf->NoDataMarker();
-      }
-      else {
-        // If we aren't sending down every frame, we must do a FFT filter to get
-        // rid of high frequency junk.
-        if (currInfo->samplefreq > 1) {
-          rdft(powtwo, 1, filterdata);
-          for (j = int(powtwo / currInfo->samplefreq); j < powtwo; j++)
-            filterdata[j] = 0;
-          rdft(powtwo, -1, filterdata);
-          k = int(rawsize / currInfo->samplefreq);
-          l = currInfo->framefreq * leftpad;
-          for (j = 0; j < k; j++)
-            rawdata[j] = filterdata[j * currInfo->samplefreq + l] *
-              2.0 / powtwo;
-          rawsize = int(rawsize / currInfo->samplefreq);
-        }
-        else
-          memcpy(rawdata, filterdata + leftpad * currInfo->framefreq,
-              sizeof(double) * rawsize);
-
-        switch (currInfo->type) {
-          case DIFFERENTIAL:
-            SendDiff(rawdata, rawsize, currInfo, DataInfo->maxover,
-                DataInfo->minover);
-            break;
-          case INT_PRESERVING:
-            SendInt(rawdata, rawsize, currInfo, DataInfo->maxover,
-                DataInfo->minover);
-            break;
-        }
-
-        // Check the overall size
-        if (sendbuf->CurrSize() > sendbuf->MaxSize()) {
-          sendbuf->EraseLastSection();
-          printf("WARNING: the last field was too large to fit in the "
-              "frame.  It was erased and a truncated frame was sent "
-              "down.\n\n");
-          earlysend = true;
-        }
-      }
-    }
-    // Send down the compressed buffer
-    sendbuf->Stop();
-    printf("\nSmall: wrote a packet of %d bytes.\n\n", sendbuf->CurrSize());
-    framepos += numframes;
-  }
-}
-
-
-//-------------------------------------------------------------
-//
 // MaxPowTwo (private): checks all fields and sees which has
 //      the greatest FindPowTwo (see below)
 //
@@ -1081,11 +887,216 @@ int Alice::FindPowTwo(int val, float threshold) {
 }
 
 
-//-------------------------------------------------------------
-//
-// ~Alice: deconstructor
-//
-//-------------------------------------------------------------
+/*----------------------------------------------------------------------------*\
+|*                                                                            *|
+|* CompressionLoop (public): main control loop                                *|
+|*                                                                            *|
+\*----------------------------------------------------------------------------*/
+
+void Alice::CompressionLoop() {
+  // For the CVS commit, comment out the meat of this routine while I debug it.
+  while (123 > 88);
+/*  double *filterdata, *rawdata;
+  int i, j, k, l;
+  struct DataStruct_glob *currInfo;
+  int numframes = 0, numtoread, readleftpad, readrightpad = 0;
+  int rawsize, powtwo, leftpad, rightpad;
+  bool earlysend;
+  int numread;
+  int framepos = 0;
+  int rawdatasize, filterdatasize, ts;
+
+  rawdata = (double *)malloc(1);
+  rawdatasize = 1;
+  filterdata = (double *)malloc(1);
+  filterdatasize = 1;
+
+  for (;;) {
+
+    // Check for new XML file command written by mcp.
+    if (GetCurrentXML()) {
+
+      // Make sure our buffers for reading in data from disk are big enough.
+      ts = sizeof(double) * DataInfo->SampleRate * MaxFrameFreq() *
+           DataInfo->LoopLength;
+      if (ts > rawdatasize) {
+        rawdatasize = ts;
+        rawdata = (double *)realloc(rawdata, ts);
+      }
+
+      ts = sizeof(double) * (3 * DataInfo->SampleRate * MaxFrameFreq() *
+                             DataInfo->LoopLength);
+      if (ts > filterdatasize) {
+        filterdatasize = ts;
+        filterdata = (double *)realloc(filterdata, ts);
+      }
+
+      // Figure out how much we need to read each time around.  For FFT purposes
+      // it needs to be a power of two, with at least 5 % buffering on the ends.
+      numframes = DataInfo->LoopLength * DataInfo->SampleRate;
+      numtoread = MaxPowTwo(numframes, 0.05);
+
+      // We need real data on either side of the data we are interested in so
+      // that funny things don't happen to the edges of our data during an FFT.
+      // Calculate the maximum padding we will need for all our fields.
+      readleftpad = int((numtoread - numframes) / 2);
+      readrightpad = numtoread - numframes - readleftpad + 2;
+
+      // Make sure our data source has a large enough buffer:  keep three
+      // compression chunks in memory at a time.
+      DataSource->Resize(numtoread * 3);
+
+      mprintf(MCP_INFO, "SMALL (Alice):  Filling padding buffer.");
+
+      // Wait until there exists enough data for this padding
+      framepos = DataSource->NumFrames();
+      while (DataSource->NumFrames() < framepos + readleftpad + readrightpad) {
+        usleep(3000);
+        DataSource->Update();
+      }
+      framepos += readleftpad + readrightpad;
+    }
+
+    // Wait until mcp has written numframes of data
+    while (DataSource->NumFrames() < framepos + numframes) {
+      usleep(3000);
+      DataSource->Update();
+    }
+
+    // Start a new buffer for the downlink
+    sendbuf->Start(XMLsrc, (unsigned int)(framepos - readrightpad));
+    i = 0;
+    earlysend = false;
+
+    printf("Reading from %d to %d\n\n", framepos - readrightpad,
+        framepos + numframes - readrightpad);
+
+    // Go through each of the slow fields we want to compress.  Slow fields only
+    // send down one value per frame.  They are treated like one big "fast"
+    // field -- we Introduce() before all of them and then RecordNumBytes()
+    // after them.  All the slow fields are written one after the other here
+    // at the beginning of the frame.
+    if ((currInfo = DataInfo->firstSlow()) != NULL) {
+      sendbuf->Introduce();
+
+      for (currInfo = DataInfo->firstSlow(); currInfo != NULL;
+          currInfo = DataInfo->nextSlow()) {
+
+        printf("Reading from %s . . .\n", currInfo->src);
+
+        switch (currInfo->type) {
+          case SINGLE:
+            if ((numread = DataSource->ReadField(rawdata, currInfo->src,
+                framepos - readrightpad, 1)) != currInfo->framefreq) {
+              printf("Error accessing correct number of data from frames "
+                  "(%d, %d).\n\n", numread, currInfo->framefreq);
+              rawdata[0] = 0;
+              SendSingle(rawdata, currInfo);  // Send down a zero
+            }
+            else
+              SendSingle(rawdata, currInfo);
+            break;
+
+          case AVERAGE:
+            rawsize = numframes * currInfo->framefreq;
+            if ((numread = DataSource->ReadField(rawdata, currInfo->src,
+                    framepos - readrightpad, numframes))
+                != rawsize) {
+              printf("Error accessing correct number of data from frames "
+                  "(%d, %d).\n\n", numread, currInfo->framefreq);
+              rawdata[0] = 0;
+              SendSingle(rawdata, currInfo);  // Send down a zero
+            }
+            else
+              SendAverage(rawdata, rawsize, currInfo);
+            break;
+        }
+      }
+
+      sendbuf->RecordNumBytes();
+    }
+
+
+    // Go through each of the fast fields we want to compress.  Fast fields
+    // are those which send down more than one value per frame.
+    for (currInfo = DataInfo->firstFast(); currInfo != NULL && !earlysend;
+        currInfo = DataInfo->nextFast()) {
+
+      // Figure out how much to read and how much padding the current field
+      // requires
+      rawsize = numframes * currInfo->framefreq;
+      powtwo = FindPowTwo(rawsize, 0.05);
+      leftpad = int((powtwo - rawsize) / (2 * currInfo->framefreq));
+      rightpad = int((powtwo - rawsize - leftpad * currInfo->framefreq) /
+          currInfo->framefreq) + 1;
+
+      printf("Reading from %s . . .\n", currInfo->src);
+
+      // Read data from Frodo's disk
+      if ((numread = DataSource->ReadField(filterdata, currInfo->src,
+              framepos - readrightpad - leftpad,
+              numframes + rightpad + leftpad))
+          != rawsize + currInfo->framefreq * (rightpad + leftpad)) {
+
+        printf("Error accessing correct number of data from frames "
+            "(%d, %d).\n\n", numread, rawsize + currInfo->framefreq *
+            (rightpad + leftpad));
+        sendbuf->NoDataMarker();
+      }
+      else {
+        // If we aren't sending down every frame, we must do a FFT filter to get
+        // rid of high frequency junk.
+        if (currInfo->samplefreq > 1) {
+          rdft(powtwo, 1, filterdata);
+          for (j = int(powtwo / currInfo->samplefreq); j < powtwo; j++)
+            filterdata[j] = 0;
+          rdft(powtwo, -1, filterdata);
+          k = int(rawsize / currInfo->samplefreq);
+          l = currInfo->framefreq * leftpad;
+          for (j = 0; j < k; j++)
+            rawdata[j] = filterdata[j * currInfo->samplefreq + l] *
+              2.0 / powtwo;
+          rawsize = int(rawsize / currInfo->samplefreq);
+        }
+        else
+          memcpy(rawdata, filterdata + leftpad * currInfo->framefreq,
+              sizeof(double) * rawsize);
+
+        switch (currInfo->type) {
+          case DIFFERENTIAL:
+            SendDiff(rawdata, rawsize, currInfo, DataInfo->maxover,
+                DataInfo->minover);
+            break;
+          case INT_PRESERVING:
+            SendInt(rawdata, rawsize, currInfo, DataInfo->maxover,
+                DataInfo->minover);
+            break;
+        }
+
+        // Check the overall size
+        if (sendbuf->CurrSize() > sendbuf->MaxSize()) {
+          sendbuf->EraseLastSection();
+          printf("WARNING: the last field was too large to fit in the "
+              "frame.  It was erased and a truncated frame was sent "
+              "down.\n\n");
+          earlysend = true;
+        }
+      }
+    }
+    // Send down the compressed buffer
+    sendbuf->Stop();
+    printf("\nSmall: wrote a packet of %d bytes.\n\n", sendbuf->CurrSize());
+    framepos += numframes;
+
+  }*/
+}
+
+
+/*----------------------------------------------------------------------------*\
+|*                                                                            *|
+|* Alice: Destructor                                                          *|
+|*                                                                            *|
+\*----------------------------------------------------------------------------*/
 
 Alice::~Alice()
 {
@@ -1093,10 +1104,191 @@ Alice::~Alice()
   delete sendbuf;
   delete DataInfo;
 
-  // no need to delete child widgets, Qt does it all for us
+  // No need to delete child widgets:  Qt does it all for us.
 }
 
 
+
+
+
+/******************************************************************************\
+|******************************************************************************|
+|**                                                                          **|
+|**                                                                          **|
+|**                             CLASS FrameBuffer                            **|
+|**                                                                          **|
+|**                                                                          **|
+|******************************************************************************|
+\******************************************************************************/
+
+
+/*----------------------------------------------------------------------------*\
+|*                                                                            *|
+|* FrameBuffer: Constructor                                                   *|
+|*                                                                            *|
+\*----------------------------------------------------------------------------*/
+
+FrameBuffer::FrameBuffer(unsigned int *mcpindex_in, 
+                         unsigned short **fastdata_in,
+                         unsigned short **slowdata_in, int numframes_in) {
+  mcpindex = mcpindex_in;
+  lastmcpindex = 2;
+  fastdata = fastdata_in;
+  slowdata = slowdata_in;
+  memallocated = false;
+  numframes = -1;
+
+  Resize(numframes_in);
+  
+  return;
+}
+
+void FrameBuffer::Resize(int numframes_in) {
+  int i, j;
+  bool err = false; 
+
+  if (numframes_in == numframes) {
+    // Do nothing.
+    return;
+  }
+
+  if (memallocated) {
+    for (i = 0; i < numframes; i++) {
+      for (j = 0; j < FAST_PER_SLOW; j++) {
+        free(slowbuf[i][j]);
+        free(fastbuf[i][j]);
+      }
+      free(slowbuf[i]);
+      free(fastbuf[i]);
+    }
+    free(slowbuf);
+    free(fastbuf);
+  }
+
+  numframes = numframes_in; 
+  
+  if ((fastbuf = (unsigned short ***)malloc(numframes * 
+                 sizeof(unsigned short **))) == NULL)
+    err = true;
+  if ((slowbuf = (unsigned short ***)malloc(numframes * 
+                 sizeof(unsigned short **))) == NULL)
+    err = true;
+  for (i = 0; i < numframes; i++) {
+    if ((fastbuf[i] = (unsigned short **)malloc(FAST_PER_SLOW *
+                      sizeof(unsigned short *))) == NULL)
+      err = true;
+    if ((slowbuf[i] = (unsigned short **)malloc(FAST_PER_SLOW * 
+                      sizeof(unsigned short *))) == NULL)
+      err = true;
+    for (j = 0; j < FAST_PER_SLOW; j++) {
+      if ((fastbuf[i][j] = (unsigned short *)malloc(BiPhaseFrameSize)) == NULL)
+        err = true;
+      if ((slowbuf[i][j] = (unsigned short *)malloc(slowsPerBi0Frame *
+                           sizeof(unsigned short))) == NULL)
+        err = true;
+    }
+  }
+
+  if (err)
+    merror(MCP_FATAL, "SMALL (FrameBuffer): unable to malloc either fastbuf or "
+                      "slowbuf.");
+
+  framenum = 0;
+  memallocated = true;
+  multiplexsynced = false;
+  pseudoframe = 0;
+  return;
+}
+
+void FrameBuffer::Update() {
+  unsigned int i;
+  int j;
+
+  if ((i = GETREADINDEX(*mcpindex)) != lastmcpindex) {
+    lastmcpindex = i;
+    multiplexindex = fastdata[i][MULTIPLEX_WORD];
+    if (!multiplexsynced && multiplexindex) // We want to start out with
+      return;                               // multiplex index 0
+    multiplexsynced = true;
+    
+    memcpy(fastbuf[framenum][multiplexindex], fastdata[i], BiPhaseFrameSize);
+    if (!multiplexindex) {
+      for (j = 0; j < FAST_PER_SLOW; j++)
+        memcpy(slowbuf[framenum][j], slowdata[j], slowsPerBi0Frame * 
+               sizeof(unsigned short));
+      if (++framenum >= numframes)
+        framenum = 0;
+      pseudoframe++;
+    }
+  }
+}
+
+int FrameBuffer::NumFrames() {
+  return pseudoframe;
+}
+
+int FrameBuffer::ReadField(double *returnbuf, const char *fieldname, 
+                           int framenum_in, int numframes_in) {
+  int i, j, k, truenum, wide, mindex, chnum;
+  struct NiosStruct* address; 
+  unsigned short msb, lsb;
+
+  if ((address = GetNiosAddr(fieldname)) == NULL)
+    return 0;
+  
+  wide = address->wide;
+  mindex = BiPhaseLookup[BI0_MAGIC(address->bbcAddr)].index;
+  chnum = BiPhaseLookup[BI0_MAGIC(address->bbcAddr)].channel;
+
+  if (pseudoframe - framenum_in > numframes || framenum_in > pseudoframe)
+    return 0;
+  
+  for (i = framenum_in, j = 0; i < framenum_in + numframes_in; i++) {
+    if ((truenum = framenum - i) < 0)
+      truenum += numframes;
+    
+    if (mindex == NOT_MULTIPLEXED)
+      for (k = 0; k < FAST_PER_SLOW; k++) {
+        lsb = fastbuf[truenum][k][chnum];
+        if (wide)
+          msb = fastbuf[truenum][k][chnum + 1];
+        else
+          msb = 0;
+
+        returnbuf[j++] = (double)((msb << 16) | lsb);
+      }
+    else {
+      lsb = slowbuf[truenum][mindex][chnum];
+      if (wide)
+        msb = slowbuf[truenum][mindex][chnum + 1];
+      else
+        msb = 0;
+
+      returnbuf[j++] = (double)((msb << 16) | lsb);
+    }
+  }
+
+  return j;
+}
+
+FrameBuffer::~FrameBuffer() {
+  int i, j;
+  
+  if (memallocated) {
+    for (i = 0; i < numframes; i++) {
+      for (j = 0; j < FAST_PER_SLOW; j++) {
+        free(slowbuf[i][j]);
+        free(fastbuf[i][j]);
+      }
+      free(slowbuf[i]);
+      free(fastbuf[i]);
+    }
+    free(slowbuf);
+    free(fastbuf);
+  }
+  
+  return;
+}
 
 
 //|||****_______________________________________________________________________
@@ -1112,12 +1304,15 @@ Alice::~Alice()
 
 
 
-int mainloop(int argc, char* argv[]) {
+int startsmall() {
   Alice *drinkme;
 
   printf("Opening serial port...\n");
-  if ((tty_fd = OpenSerial()) < 0)
+  if (1 == 0) {
+//  if ((tty_fd = OpenSerial()) < 0) {
+    mprintf(MCP_ERROR, "Couldn't open serial port!!\n");
     return 1;
+  }
 
   drinkme = new Alice();
   drinkme->CompressionLoop();
@@ -1129,15 +1324,6 @@ int mainloop(int argc, char* argv[]) {
 }
 
 extern "C" void smallinit(void) {
-  unsigned short* local_data;
-  
-  mputs(MCP_STARTUP, "Alice startup\n");
-
-  if ((local_data = (unsigned short*)malloc(BiPhaseFrameSize)) == NULL)
-    merror(MCP_FATAL, "Unable to malloc local_data");
-
-  while (1) {
-    memcpy(local_data, smalldata[GETREADINDEX(small_index)], BiPhaseFrameSize);
-    usleep(1000000);
-  }
+  mputs(MCP_STARTUP, "Alice startup.\n");
+  startsmall();
 }
