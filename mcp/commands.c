@@ -785,9 +785,9 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.ISCState[1].azBDA = rvalues[0] * DEG2RAD;
     CommandData.ISCState[1].elBDA = rvalues[1] * DEG2RAD;
   } else if (command == osc_fast_int) {
-    CommandData.ISCControl[1].fast_pulse_width = rvalue[0] * 10.4166666666667;
+    CommandData.ISCControl[1].fast_pulse_width = rvalues[0] * 10.4166666666667;
   } else if (command == osc_slow_int) {
-    CommandData.ISCControl[1].pulse_width = rvalue[0] * 10.4166666666667;
+    CommandData.ISCControl[1].pulse_width = rvalues[0] * 10.4166666666667;
   } else if (command == osc_det_set) {
     CommandData.ISCState[1].grid = ivalues[0];
     CommandData.ISCState[1].sn_threshold = rvalues[1];

@@ -487,23 +487,5 @@ struct ChannelStruct FastChannels[] = {
 
   /* Read from DAS4 -- bias controller and DPM/inner frame monitoring */
   {"biasin",      'r',  BIAS, 50,             1.0,                    0.0, 'u'},
-
-  // Read Requests: for signalling the das to copy data to the BB memory
-  // Used for low/high word read synchronisation
-  /* !!! WARNING!  MCP assumes these appear sequentially in the frame !!! */
-  {"readd3",      'w',  CRYO, 40,             1.0,                    0.0, 'u'},
-  {"readd4",      'w',  BIAS, 40,             1.0,                    0.0, 'u'},
-  {"readd5",      'w',  DAS5, 40,             1.0,                    0.0, 'u'},
-  {"readd6",      'w',  DAS6, 40,             1.0,                    0.0, 'u'},
-  {"readd7",      'w',  DAS7, 40,             1.0,                    0.0, 'u'},
-  {"readd8",      'w',  DAS8, 40,             1.0,                    0.0, 'u'},
-  {"readd9",      'w',  DAS9, 40,             1.0,                    0.0, 'u'},
-  {"readd10",     'w', DAS10, 40,             1.0,                    0.0, 'u'},
-  {"readd11",     'w', DAS11, 40,             1.0,                    0.0, 'u'},
-  {"readd12",     'w', DAS12, 40,             1.0,                    0.0, 'u'},
-  {"readd13",     'w', DAS13, 40,             1.0,                    0.0, 'u'},
-  {"readd14",     'w', DAS14, 40,             1.0,                    0.0, 'u'},
-  {"readd15",     'w', DAS15, 40,             1.0,                    0.0, 'u'},
-  {"readd16",     'w', DAS16, 40,             1.0,                    0.0, 'u'},
   END_OF_CHANNELS
 };
