@@ -842,7 +842,13 @@ int main(int argc, char *argv[]) {
       Pointing();
 #endif
 
+      /* Frame sequencing check */
+      if (RxFrame[3] != (RxFrameIndex + 1) % FAST_PER_SLOW && RxFrameIndex >= 0)
+        mprintf(MCP_ERROR,
+            "Frame sequencing error detected: wanted %i, got %i\n",
+            RxFrameIndex + 1, RxFrame[3]);
       RxFrameIndex = RxFrame[3];
+      
       UpdateBBCFrame(RxFrame);
 
 #ifndef BOLOTEST
