@@ -92,6 +92,22 @@ extern int ss_index;
 int frame_num;
 int pin_is_in = 1;
 
+struct AxesModeStruct {
+  int az_mode;
+  int el_mode;
+  double az_dest;
+  double el_dest;
+  double az_vel;
+  double el_vel;
+};
+
+struct AxesModeStruct axes_mode; // low level velocity mode
+
+double getlst(time_t t, double lon);
+void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
+                double *el);
+
+
 /****************************************************************
  *                                                              *
  * Read the state of the lock motor pin (or guess it, whatever) *
@@ -113,14 +129,14 @@ double GetVElev() {
   double dvel;
   double max_dv = 20;
 
-  if (CommandData.axes_mode.el_mode == AXIS_VEL) {
-    vel = CommandData.axes_mode.el_vel;
-  } else if (CommandData.axes_mode.el_mode == AXIS_POSITION) {
-    vel = (PointingData[point_index].el - CommandData.axes_mode.el_dest)
+  if (axes_mode.el_mode == AXIS_VEL) {
+    vel = axes_mode.el_vel;
+  } else if (axes_mode.el_mode == AXIS_POSITION) {
+    vel = (PointingData[point_index].el - axes_mode.el_dest)
 	  * 0.36;
-  } else if (CommandData.axes_mode.el_mode == AXIS_LOCK) {
+  } else if (axes_mode.el_mode == AXIS_LOCK) {
     /* for the lock, only use the elevation encoder */
-    vel = (ACSData.enc_elev - CommandData.axes_mode.el_dest) * 0.64;
+    vel = (ACSData.enc_elev - axes_mode.el_dest) * 0.64;
   }
   
   /* correct offset and convert to Gyro Units */
@@ -152,10 +168,10 @@ int GetVAz() {
   int dvel;
   int max_dv = 20;
 
-  if (CommandData.axes_mode.az_mode == AXIS_VEL) {
-    vel = CommandData.axes_mode.az_vel;
-  } else if (CommandData.axes_mode.az_mode == AXIS_POSITION) {
-    vel = -(PointingData[point_index].az - CommandData.axes_mode.az_dest)
+  if (axes_mode.az_mode == AXIS_VEL) {
+    vel = axes_mode.az_vel;
+  } else if (axes_mode.az_mode == AXIS_POSITION) {
+    vel = -(PointingData[point_index].az - axes_mode.az_dest)
 	  * 400.0;
   }
 
@@ -1149,22 +1165,140 @@ void StoreData(unsigned int* Txframe,
   WriteSlow(i_R, j_R, (int)(CommandData.pointing_mode.r * DEG2I));
 }
 
+#define AZ_ACCEL (0.005)
 
+void DoRasterMode() {
+  double az, p1, p2, v;
+  int i_point;
+
+  i_point = GETREADINDEX(point_index);
+  az = PointingData[i_point].az; // FIXME - extrapolate velocity
+
+  p1 = CommandData.pointing_mode.az1;
+  p2 = CommandData.pointing_mode.az2;
+  v = CommandData.pointing_mode.az_vel;
+  
+  while (az-p2>180.0) az-=360.0;
+  while (p1-az>180.0) az+=360.0;
+
+  if (axes_mode.az_vel < -v) axes_mode.az_vel = -v;
+  if (axes_mode.az_vel > v) axes_mode.az_vel = v;
+  
+  if (p1-az>0.5) { // out of range: move to p1
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = p1;
+    axes_mode.az_vel = 0.0;
+  } else if (az-p2>0.5) { // out of range - move to p2
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = p2;
+    axes_mode.az_vel = 0.0;
+  } else if (az<p1) {
+    if (axes_mode.az_vel < v) axes_mode.az_vel+=AZ_ACCEL;
+  } else if (az>p2) {
+    if (axes_mode.az_vel > -v) axes_mode.az_vel-=AZ_ACCEL;
+  } else {
+    if (axes_mode.az_vel>0) axes_mode.az_vel = v;
+    else axes_mode.az_vel = -v;
+  } 
+}
+
+void DoScanMode() {
+  double caz, cel;
+  time_t t;
+  double lst;
+  int i_point;
+
+  i_point = GETREADINDEX(point_index);
+
+  t = PointingData[i_point].t;
+  
+  lst = getlst(t, PointingData[i_point].lon);
+
+  radec2azel(CommandData.pointing_mode.ra, CommandData.pointing_mode.dec,
+	     PointingData[i_point].lat, lst,
+	     &caz, &cel);
+
+  printf("%s %g lst: %d:%d:%d lat: %g lon: %g az: %g el: %g\n",
+	 ctime(&t), lst/3600.0, (int)lst/3600, ((int)lst%3600)/60, (((int)lst%3600)%60),
+	 PointingData[i_point].lat, PointingData[i_point].lon,
+	 caz, cel);
+  
+  //getlst(PointingData[i_point].t,
+  // PointingData[i_point].lon,
+  // get lst
+  // get ac and el of center of scan
+  
+  
+  
+}
 /******************************************************************
  *                                                                *
- * Update Axis Modes: Set CommandData.axes_mode based on          *
+ * Update Axis Modes: Set axes_mode based on                      *
  *    CommandData.pointing_mode                                   *
  *                                                                *
  ******************************************************************/
-/*void UpdateAxesMode() {
-   switch (CommandData.pointing_mode.el_mode) {
-   case POINT_VEL:
-     CommandData.axes_mode.el_mode = AXIS_VEL;
-     CommandData.axes_mode.el_vel = CommandData.pointing_mode.el_vel;
-     break;
-     case POINT_POINT:
+void UpdateAxesMode() {
+  switch (CommandData.pointing_mode.el_mode) {
+  case POINT_VEL:
+    axes_mode.el_mode = AXIS_VEL;
+    axes_mode.el_vel = CommandData.pointing_mode.el_vel;
+    break;
+  case POINT_POINT:
+    axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_dest = CommandData.pointing_mode.el1;
+    axes_mode.el_vel = 0.0;
+    break;
+  case POINT_RASTER:
+    DoScanMode();
+    /*** FIXME: NEEDS TO BE WRITTEN ***/
+    axes_mode.el_mode = AXIS_VEL;
+    axes_mode.el_vel = 0.0;
+    break;
+  case POINT_LOCK:
+    axes_mode.el_mode = AXIS_LOCK;
+    axes_mode.el_dest = CommandData.pointing_mode.el1;
+    axes_mode.el_vel = 0.0;
+    break;
+  default:
+    fprintf(stderr, "Unknown Elevation Pointing Mode %d: stopping\n",
+	    CommandData.pointing_mode.el_mode);
+    CommandData.pointing_mode.el_mode = POINT_VEL;
+    CommandData.pointing_mode.el_vel = 0.0;
+    axes_mode.el_mode = AXIS_VEL;
+    axes_mode.el_vel = 0.0;
+    break;
+  }
+
+  switch (CommandData.pointing_mode.az_mode) {
+  case POINT_VEL:
+    axes_mode.az_mode = AXIS_VEL;
+    axes_mode.az_vel = CommandData.pointing_mode.az_vel;
+    break;
+  case POINT_POINT:
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = CommandData.pointing_mode.az1;
+    axes_mode.az_vel = 0.0;
+    break;
+  case POINT_RASTER:
+    /*** FIXME: NEEDS TO BE WRITTEN ***/
+    axes_mode.az_mode = AXIS_VEL;
+    axes_mode.az_vel = 0.0;
+    break;
+  case POINT_SCAN:
+    DoRasterMode();
+    break;
+  default:
+    CommandData.pointing_mode.az_mode = POINT_VEL;
+    CommandData.pointing_mode.az_vel = 0.0;
+    fprintf(stderr, "Unknown Az Pointing Mode %d: stopping\n",
+	    CommandData.pointing_mode.az_mode);
+    axes_mode.az_mode = AXIS_VEL;
+    axes_mode.az_vel = 0.0;
+    break;
+  }
+    
 }
- */
+ 
 /******************************************************************
  *                                                                *
  * IsNewFrame: returns true if d is a begining of frame marker,   *
@@ -1240,7 +1374,7 @@ void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
 
   /*** do Controls ***/
 #ifndef BOLOTEST
-  //UpdateAxesMode();
+  UpdateAxesMode();
   StoreData(Txframe, slowTxFields);
   ControlGyroHeat(Txframe, Rxframe, slowTxFields);
   ControlISCHeat(Txframe, Rxframe, slowTxFields);

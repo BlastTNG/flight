@@ -138,7 +138,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
      {"RA of Center (h)", 0.0, 24.0, 'f', 4, "0.0"}, //FIXME: field
      {"DEC of Center (deg)", -90.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
      {"Radius (deg on sky)", 0.0, 90.0, 'f', 4, "0.0"}, //FIXME: field
-     {"Azimuth Scan Speed (deg az/s)", 0.0, 2.0, 'f', 4, "0.1"},
+     {"Az Scan Speed (deg az/s)", 0.0, 2.0, 'f', 4, "0.1"},
      {"El drift Speed (deg el/s)", 0.0, 2.0, 'f', 4, "0.005"}
    }
   },
@@ -189,7 +189,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"az_gain", "azimuth reaction wheel gains", GR_GAIN, 2,
+  {"az_gain", "az reaction wheel gains", GR_GAIN, 2,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_az"},
       {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_i_az"}
@@ -229,19 +229,19 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********** Cooling System  ************/
-  {"spare_pump_pwm", "spare pump pwm level", GR_COOL, 1,
+  {"spare_pwm", "spare pump pwm level", GR_COOL, 1,
     {
       {"level", 0, 2047, 'i', 0, "ADD"}
     }
   },
 
-  {"inner_pwm", "inner frame cooling pump pwm level", GR_COOL, 1,
+  {"inner_pwm", "inner frame cooling pump speed", GR_COOL, 1,
     {
       {"level", 0, 2047, 'i', 0, "ADD"}
     }
   },
 
-  {"outer_pwm", "outer frame cooling pump pwm level", GR_COOL, 1,
+  {"outer_pwm", "outer frame cooling pump speed", GR_COOL, 1,
     {
       {"level", 0, 2047, 'i', 0, "ADD"}
     }
@@ -255,7 +255,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"t_gyrobox_gain", "gyro box heater gains", GR_EHEAT, 3,
+  {"t_gyro_gain", "gyro box heater gains", GR_EHEAT, 3,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_gyheat"},
       {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_i_gyheat"},
@@ -326,7 +326,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"cal_pulse_repeat", "pulse calibrator repeatedly", GR_CALLAMP, 2,
+  {"cal_repeat", "pulse calibrator repeatedly", GR_CALLAMP, 2,
     {
       {"pulse length (ms)", 1, 8000, 'i', 0, "ADD"},
       {"repeat delay (s)", 1, 86400, 'f', 0, "ADD"}
@@ -335,25 +335,25 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********* Cryo heat   *****************/
-  {"jfet_heat", "JFET heater level", GR_CRYO_HEAT, 1,
+  {"jfet_heat", "JFET heater pwm", GR_CRYO_HEAT, 1,
     {
       {"level (%)", 0, 100, 'f', 2, "JFETPWM"}
     }
   },
 
-  {"heatswitch_heat", "Heat Switch heater level", GR_CRYO_HEAT, 1,
+  {"heatsw_heat", "Heat Switch pwm", GR_CRYO_HEAT, 1,
     {
       {"level (%)", 0, 100, 'f', 2, "HSPWM"}
     }
   },
 
-  {"he3_heat", "Helium 3 heater level", GR_CRYO_HEAT, 1,
+  {"he3_heat", "Helium 3 pwm", GR_CRYO_HEAT, 1,
     {
       {"level (%)", 0, 100, 'f', 2, "HE3PWM"}
     }
   },
 
-  {"spare_heat", "Spare cryo pwm level", GR_CRYO_HEAT, 1,
+  {"spare_heat", "Spare cryo pwm", GR_CRYO_HEAT, 1,
     {
       {"level (%)", 0, 100, 'f', 2, "CRYOPWM"}
     }

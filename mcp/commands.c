@@ -257,10 +257,6 @@ void SingleCommand (int command) {
     CommandData.pointing_mode.az_vel = 0.0;
     CommandData.pointing_mode.el_vel = 0.0;
     ClearPointingModeExtraFields();
-    CommandData.axes_mode.az_mode = AXIS_VEL; // DELME
-    CommandData.axes_mode.el_mode = AXIS_VEL; // DELME
-    CommandData.axes_mode.az_vel = 0.0; // DELME
-    CommandData.axes_mode.el_vel = 0.0; // DELME
   }
   else if (command == SIndex("sun_veto"))       /* Veto sensors */
     CommandData.use_sun = 0;
@@ -371,9 +367,9 @@ void SingleCommand (int command) {
     CommandData.pumps.lock_in = 1;
   else if (command == SIndex("unlock")) {
     CommandData.pumps.lock_out = 1;
-    if (CommandData.axes_mode.el_mode == AXIS_LOCK) {
-      CommandData.axes_mode.el_mode = AXIS_VEL;
-      CommandData.axes_mode.el_vel = 0.0;
+    if (CommandData.pointing_mode.el_mode == POINT_LOCK) {
+      CommandData.pointing_mode.el_mode = POINT_VEL;
+      CommandData.pointing_mode.el_vel = 0.0;
     }
   }
   WritePrevStatus();
@@ -469,27 +465,19 @@ void MultiCommand (int command, unsigned short *dataq) {
   } else if (command == MIndex("az_goto")) {  /* point in azimuth */
     CommandData.pointing_mode.az_mode = POINT_POINT;
     CommandData.pointing_mode.az1 = rvalues[0];
-    CommandData.axes_mode.az_mode = AXIS_POSITION; // DELME
-    CommandData.axes_mode.az_dest = rvalues[0];    // DELME
   } else if (command == MIndex("az_vel")) {  /* fixed azimuth velocity */
     CommandData.pointing_mode.az_mode = POINT_VEL;
     CommandData.pointing_mode.az_vel = rvalues[0];
-    CommandData.axes_mode.az_mode = AXIS_VEL;     // DELME
-    CommandData.axes_mode.az_vel = rvalues[0];    // DELME
   } else if (command == MIndex("el_goto")) {  /* point in elevation */
     if (CommandData.pumps.bal_veto >= 0)
       CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
     CommandData.pointing_mode.el_mode = POINT_POINT;
     CommandData.pointing_mode.el1 = rvalues[0];
-    CommandData.axes_mode.el_mode = AXIS_POSITION; // DELME
-    CommandData.axes_mode.el_dest = rvalues[0];    // DELME
   } else if (command == MIndex("el_vel")) {  /* fixed elevation velocity */
     if (CommandData.pumps.bal_veto >= 0)
       CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
     CommandData.pointing_mode.el_mode = POINT_VEL;
     CommandData.pointing_mode.el_vel = rvalues[0];
-    CommandData.axes_mode.el_mode = AXIS_VEL;     // DELME
-    CommandData.axes_mode.el_vel = rvalues[0];    // DELME
 
   /***************************************/
   /********** Pointing Motor Gains *******/
@@ -513,9 +501,7 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pumps.lock_point = 1;
     CommandData.pointing_mode.el_mode = POINT_LOCK;
     CommandData.pointing_mode.el1 = LockPosition(rvalues[0]);
-    CommandData.axes_mode.el_mode = AXIS_LOCK; // DELME
-    CommandData.axes_mode.el_dest = LockPosition(rvalues[0]); // DELME
-    fprintf(stderr, "Lock Mode: %g\n", CommandData.axes_mode.el_dest);
+    fprintf(stderr, "Lock Mode: %g\n", CommandData.pointing_mode.el1);
     
   /***************************************/
   /********** Balance System  ************/
@@ -528,7 +514,7 @@ void MultiCommand (int command, unsigned short *dataq) {
 
   /***************************************/
   /********** Cooling System  ************/
-  } else if (command == MIndex("spare_pump_pwm")) {
+  } else if (command == MIndex("spare_pwm")) {
     CommandData.pumps.pwm2 = ivalues[0];
   } else if (command == MIndex("inner_pwm")) {
     CommandData.pumps.pwm3 = ivalues[0];
@@ -541,7 +527,7 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.t_gybox_setpoint = rvalues[0];
   } else if (command == MIndex("t_iscbox"))  { /* isc heater setpoint */
     CommandData.t_isc_setpoint = rvalues[0];    
-  } else if (command == MIndex("t_gyrobox_gain")) {  /* gyro heater gains */
+  } else if (command == MIndex("t_gyro_gain")) {  /* gyro heater gains */
     CommandData.gy_heat_gain.P = ivalues[0];
     CommandData.gy_heat_gain.I = ivalues[1];
     CommandData.gy_heat_gain.D = ivalues[2];
@@ -577,7 +563,7 @@ void MultiCommand (int command, unsigned short *dataq) {
   } else if (command == MIndex("cal_pulse")) {
     CommandData.Cryo.calib_pulse = ivalues[0];
     CommandData.Cryo.calib_repeat = 0;
-  } else if (command == MIndex("cal_pulse_repeat")) {
+  } else if (command == MIndex("cal_repeat")) {
     CommandData.Cryo.calib_pulse = ivalues[0];
     CommandData.Cryo.calib_repeat = rvalues[1];
     
@@ -585,7 +571,7 @@ void MultiCommand (int command, unsigned short *dataq) {
   /********* Cryo heat   *****************/
   } else if (command == MIndex("jfet_heat")) {
     CommandData.Cryo.JFETHeat = rvalues[0] * 2047./100.;
-  } else if (command == MIndex("heatswitch_heat")) {
+  } else if (command == MIndex("heatsw_heat")) {
     CommandData.Cryo.heatSwitch = rvalues[0] * 2047./100.;
   } else if (command == MIndex("he3_heat")) {
     CommandData.Cryo.heliumThree = rvalues[0] * 2047./100.;
@@ -1280,7 +1266,14 @@ void InitCommandData() {
   if (n_read == sizeof(struct CommandDataStruct)) return;
 #endif
 
+  fprintf(stderr,"Warning: regenerating Command Data and previous_status\n");
+  
   /** put stuff that we want to keep from prev_status here **/
+  CommandData.pointing_mode.az_mode = POINT_VEL;
+  CommandData.pointing_mode.az_vel = 0.0;
+  CommandData.pointing_mode.el_mode = POINT_VEL;
+  CommandData.pointing_mode.el_vel = 0.0;
+
   CommandData.timeout = 60*60;
 
   CommandData.roll_gain.P = 30000;
@@ -1324,12 +1317,10 @@ void InitCommandData() {
   SIPData.MKScal.b_med = 0;
   SIPData.MKScal.b_lo = 0;
 
-  CommandData.axes_mode.az_mode = AXIS_VEL;
-  CommandData.axes_mode.el_mode = AXIS_VEL;
-  CommandData.axes_mode.az_dest = 0;
-  CommandData.axes_mode.el_dest =45;
-  CommandData.axes_mode.az_vel = 0;
-  CommandData.axes_mode.el_vel = 0;
+  CommandData.pointing_mode.az_mode = AXIS_VEL;
+  CommandData.pointing_mode.el_mode = AXIS_VEL;
+  CommandData.pointing_mode.az_vel = 0.0;
+  CommandData.pointing_mode.el_vel = 0.0;
 
   CommandData.Bias.clockInternal = 1;
   CommandData.Bias.biasAC = 1;

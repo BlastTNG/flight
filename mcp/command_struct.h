@@ -29,15 +29,6 @@ struct GainStruct {
   unsigned short int SP;
 };
 
-struct AxesModeStruct {
-  int az_mode;
-  int el_mode;
-  double az_dest;
-  double el_dest;
-  double az_vel;
-  double el_vel;
-};
-
 struct PointingModeStruct {
   // Used by:        VEL   POINT   LOCK   SCAN   RASTER
   int az_mode;
@@ -124,7 +115,6 @@ struct CommandDataStruct {
   short fan;
   short T;
 
-  struct AxesModeStruct axes_mode; // low level velocity mode
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
 };
 

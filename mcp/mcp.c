@@ -124,7 +124,7 @@ double MagRead(unsigned short *Rxframe) {
   float year;
   static float dec, dip, ti, gv;
   static time_t t, oldt;
-  struct tm *now;
+  struct tm now;
 
   /******** Obtain correct indexes the first time here ***********/
   if (i_mag_x == -1) {
@@ -159,8 +159,8 @@ double MagRead(unsigned short *Rxframe) {
   /* The functions called are in 'geomag.c' (Adam. H) */
   if ((t = time(NULL)) > oldt + 300) {
     oldt = t;
-    now = gmtime(&t);
-    year = 1900 + now->tm_year + now->tm_yday / 365.25;
+    gmtime_r(&t, &now);
+    year = 1900 + now.tm_year + now.tm_yday / 365.25;
 
     GetMagModel(SIPData.GPSpos.alt / 1000.0, SIPData.GPSpos.lat,
         SIPData.GPSpos.lon, year, &dec, &dip, &ti, &gv);
