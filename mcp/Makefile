@@ -63,6 +63,7 @@ install: mcp
 ifeq ($(BOLOTEST),-DBOLOTEST)
 	$(MAKE) fifo
 endif
+  install -m 666 etc/WMM.COF etc/*.aml etc/*.lut etc/*.txt etc/ephem.2000 etc/*.dat /data/etc
 	cd etc && $(MAKE) install
 
 fifo:
