@@ -28,6 +28,7 @@
 #include <syslog.h>
 #include <signal.h>
 #include <string.h>
+#include <libgen.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -43,7 +44,7 @@
 #include "channels.h"
 #include "crc.h"
 
-#define VERSION "1.0.6"
+#define VERSION "1.0.7"
 
 #define DEV "/dev/decom_pci"
 #define SOCK_PORT 11411
@@ -262,6 +263,7 @@ int main(void) {
   struct timeval no_time = {0, 0};
   unsigned long long int disk_free = 0;
   int i, reset_lastsock = 0;
+  char *ptr;
 
   struct sigaction action;
 
@@ -349,15 +351,16 @@ int main(void) {
     }
     n = select(lastsock + 1, &fdread, &fdwrite, NULL, &no_time);
 
-    if (statvfs("/data", &vfsbuf))
+    if (statvfs("/mnt/decom", &vfsbuf))
       syserror(LOG_ERR, "statvfs");
     else
       disk_free = (unsigned long long int)vfsbuf.f_bavail * vfsbuf.f_bsize;
 
+    for(ptr = framefile.name + strlen(framefile.name); *ptr != '/'; --ptr);
+
     memset(buf, 0, 209);
-    sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu ", status + system_idled
-        * 0x4, polarity, du, fs_bad, dq_bad, disk_free);
-    strcat(buf, framefile.name);
+    sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu %s\n", status + system_idled
+        * 0x4, polarity, du, fs_bad, dq_bad, disk_free, ptr + 1);
 
     if (n == -1 && errno == EINTR)
       continue;

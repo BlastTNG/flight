@@ -1,5 +1,7 @@
-2004-09-18:
-  * decomd.c, decomd.8, decomctl: add versioning
+2004-09-18 (1.0.7):
+  * decomd.c: Print only filename (not full path) to port 11411; report size of
+  correct filesystem
+  * decomd.c, decomd.8, decomctl: Add versioning
 
 2004-09-15 (1.0.6):
   * decomctl: Typo
