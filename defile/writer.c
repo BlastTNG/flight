@@ -319,8 +319,8 @@ int CheckWriteAllow(int mkdir_err)
 
   if (rc.write_mode == 2) {
     /* check to see if we've read all the channels */
-    if ((n_fast != ccFast + 2 - DAS_CHS * DAS_CARDS * 3 / 2) ||
-        (n_slow != slowsPerBi0Frame * FAST_PER_SLOW) ||
+    if ((n_fast != ccWideFast + ccNarrowFast + 1) ||
+        (n_slow != ccNarrowSlow + ccWideSlow) ||
         (n_bolo != DAS_CARDS * DAS_CHS)) {
       fprintf(stderr, "defile: dirfile `%s' is missing field files\n"
           "defile: cannot resume.\n", rc.dirfile);
