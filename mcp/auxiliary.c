@@ -30,12 +30,17 @@
 #include "command_struct.h"
 #include "pointing_struct.h"
 
-#define ISC_TRIG_PERIOD 100  /* in 100Hz frames */
+#define ISC_ACK_TIMEOUT 5000  /* in 100Hz frames */
+#define ISC_TRIG_PERIOD 100   /* in 100Hz frames */
 #define MAX_ISC_SLOW_PULSE_SPEED 0.015
 
 struct ISCPulseType isc_pulses[2] = {{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}};
 
 int pin_is_in = 1;
+
+/* Semaphores for hanshaking with the ISC/OSC threads (isc.c) */
+extern short int write_ISC_pointing[2];
+extern short int write_ISC_trigger[2];
 
 /* ACS0 digital signals (G1 and G3 output, G2 input) */
 #define BAL1_ON      0x04  /* ACS3 Group 1 Bit 3 - ifpmBits */

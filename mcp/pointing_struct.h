@@ -247,5 +247,3 @@ extern time_t DGPSTime;
 /*     Used: Main thread;                     */
 extern struct ISCSolutionStruct ISCSolution[2][3]; /* isc.c */
 extern int iscdata_index[2];       /* isc.c */
-
-extern short int write_ISC_pointing[2];     /* isc.c */
