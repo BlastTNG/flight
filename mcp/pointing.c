@@ -143,16 +143,16 @@ void NormalizeAngle(double *A) {
 }
 
 void UnwindDiff(double ref, double *A) {
-  *A = ref + drem(*A - ref, 360.0);
+  *A = ref + remainder(*A - ref, 360.0);
 }
 
 // adjust *A to be within +-180 of ref
 void SetSafeDAz(double ref, double *A) {
-  *A = ref + drem(*A - ref, 360.0);
+  *A = ref + remainder(*A - ref, 360.0);
   if (sun_el < MAX_SUN_EL)
     return;
 
-  sun_az = ref + drem(sun_az - ref, 360.0);
+  sun_az = ref + remainder(sun_az - ref, 360.0);
 
   if ((ref < sun_az) && (sun_az < *A)) {
     *A -= 360.0;
@@ -385,8 +385,8 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
 
   i_isc = iscpoint_index[which];
   /* in theory, iscpoint_index points to the last ISCSolution with flag set.
-   * In cases where we've been having handshaking issues, so we check flag, just
-   * as a sanity check */
+   * In cases where we've been having handshaking issues this last solution may
+   * have been overwriten, so we check flag, just as a sanity check */
   if (ISCSolution[which][i_isc].flag && ISCSolution[which][i_isc].framenum
       != last_isc_framenum[which]) {
     // new solution
@@ -429,6 +429,10 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
       e->angle = (w1 * e->angle + new_el * w2) / (w1 + w2);      
       e->varience = 1.0 / (w1 + w2);
       e->angle += gy_el_delta; // add back to now
+      
+      /* Add BDA offset */
+      e->angle += CommandData.ISCState[which].elBDA * RAD2DEG;
+
       NormalizeAngle(&(e->angle));
 
       // evolve az solution
@@ -440,6 +444,10 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
       a->angle = (w1 * a->angle + new_az * w2) / (w1 + w2);
       a->varience = 1.0 / (w1 + w2);
       a->angle += gy_az_delta; // add back to now
+      
+      /* Add BDA offset */
+      a->angle += CommandData.ISCState[which].azBDA * RAD2DEG;
+        
       NormalizeAngle(&(a->angle));
     }
 
@@ -582,7 +590,7 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
         fs = s->FC;
       }
 
-      daz = drem(new_angle - s->last_input, 360.0);
+      daz = remainder(new_angle - s->last_input, 360.0);
 
       /* Do Gyro2 */
       new_offset = -(daz * cos(el) + s->gy2_int) /
