@@ -1,3 +1,8 @@
+2005-02-09:
+	Release blastmcd-1.2.1
+
+	* blastcmd.c: Add timeout on read from GSE (error code 13)
+
 2005-02-08:
 	Release blastcmd-1.2.0
 

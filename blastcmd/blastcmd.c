@@ -51,7 +51,7 @@ double round(double x);
 #define LINK_DEFAULT 0x01    /* Default link is TDRSS */
 #define ROUTING_DEFAULT 0x09 /* Default routing is COM1 */
 
-char *ack[16] = {
+char *ack[17] = {
   "Command transmitted.",
   "",
   "",
@@ -67,7 +67,8 @@ char *ack[16] = {
   "The link selected was not enabled.",
   "Unspecified error.  Command not sent by GSE.",
   "",
-  "Received garbage"
+  "Received garbage",
+  "Timeout waiting for reply from GSE."
 };
 
 int verbose = 0;
@@ -105,7 +106,9 @@ void USAGE(int flag) {
         "     9  ACK == 0x0F\n"
         "    10  Unexpected error in command definitions\n"
         "    11  Syntax error on command line\n"
-        "    12  Program was passed the `-c' option\n\n");
+        "    12  Program was passed the `-c' option\n"
+        "    13  Program timeout waiting for response from GSE.\n"
+        "\n");
 
     printf("For a list of valid commands use `blastcmd -l'\n");
     exit(11);
@@ -188,6 +191,7 @@ int bc_setserial(void) {
 
 void WriteBuffer(int tty_fd, unsigned char *buffer, int len, unsigned int *i_ack) {
   int i, n;
+  int counter;
   char buf[3];
 
   if (verbose) {
@@ -201,8 +205,16 @@ void WriteBuffer(int tty_fd, unsigned char *buffer, int len, unsigned int *i_ack
 
   /* Read acknowledgement */
   n = 0;
-  while( (n += read(tty_fd, buf+n, 3-n)) != 3) usleep(10000);
-  if (*(unsigned short *)buf == 0xf3fa)
+  counter = 0;
+  while( (n += read(tty_fd, buf+n, 3-n)) != 3) {
+    if (counter++ == 2000)
+      break;
+    usleep(10000);
+  }
+
+  if (counter > 2000)
+    *i_ack = 0x10;
+  else if (*(unsigned short *)buf == 0xf3fa)
     *i_ack = (unsigned int)buf[2];
   else
     *i_ack = 0x0f;
@@ -431,16 +443,18 @@ void WriteLogFile(int argc, char *argv[], unsigned int i_ack, char silent)
 
   if (i_ack == 0x0a)
     exit(4);
-  if (i_ack == 0x0b)
+  else if (i_ack == 0x0b)
     exit(5);
-  if (i_ack == 0x0c)
+  else if (i_ack == 0x0c)
     exit(6);
-  if (i_ack == 0x0d)
+  else if (i_ack == 0x0d)
     exit(7);
-  if (i_ack == 0x0e)
+  else if (i_ack == 0x0e)
     exit(8);
-  if (i_ack == 0x0f)
+  else if (i_ack == 0x0f)
     exit(8);
+  else if (i_ack == 0x10)
+    exit(13);
   chmod(LOGFILE, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 }
 
