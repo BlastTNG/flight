@@ -130,16 +130,15 @@ void pushDiskFrame(unsigned short *RxFrame) {
   void* new_write_to = advance_in_buffer(framefile.b_write_to);
 
 #ifdef __MCP__
-  unsigned int i_slow;
-  int i_ch;
+  int i_slow, i_mindex;
 
   /*******************************************************************/
   /* fill the Rx slow data from the MCP internal slow data structure */
   /*******************************************************************/
-  i_ch = RxFrame[3];
-  if (i_ch < FAST_PER_SLOW) {
+  i_mindex = RxFrame[3];
+  if (i_mindex < FAST_PER_SLOW) {
     for (i_slow = 0; i_slow < slowsPerBi0Frame; i_slow++) {
-      RxFrame[4 + i_slow] = slow_data[i_slow][i_ch];
+      RxFrame[4 + i_slow] = slow_data[i_mindex][i_slow];
     }
   }
 #endif
