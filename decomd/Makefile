@@ -4,13 +4,13 @@ LDFLAGS = -lpthread
 
 all: decomd
 
-OBJS = crc.o decomd.o framefile.o channels.o tx_struct.o
-HEADERS = bbc_pci.h crc.h decom_pci.h tx_struct.h
+OBJS = decomd.o crc.o framefile.o channels.o tx_struct.o
+HEADERS = bbc_pci.h crc.h decomd.h decom_pci.h tx_struct.h
 
 decomd: $(OBJS)
 
 $(OBJS): $(HEADERS)
 
 clean:
-	rm -f decom
+	rm -f decomd
 	rm -f *.o

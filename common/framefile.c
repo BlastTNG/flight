@@ -53,6 +53,7 @@
 
 unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
+int shutdown_now = 0;
 
 void WriteSpecificationFile(FILE*); /* in tx_struct.c */
 
@@ -90,6 +91,11 @@ void OpenNextChunk(void) {
   framefile.frames = 0;
 }
 
+/* This function is only used by the decom daemon */
+void ShutdownFrameFile(void) {
+  shutdown_now = 1;
+}
+
 /*********************************************************************/
 /*                                                                   */
 /*     Initialize framefile                                          */
@@ -103,6 +109,8 @@ void OpenNextChunk(void) {
 void InitialiseFrameFile(char type) {
   FILE* fp;
   char buffer[200];
+
+  shutdown_now = 0;
 
   /* filename */
   framefile.fd = framefile.chunk = -1;
@@ -204,6 +212,7 @@ void FrameFileWriter(void) {
     write_len = 0;
     b_write_to = framefile.b_write_to;
 
+    /* fill the write buffer from the transfer buffer */
     while (b_write_to != framefile.b_read_from) {
       memcpy(writeout_buffer + write_len, framefile.b_read_from,
           DiskFrameSize);
@@ -222,6 +231,23 @@ void FrameFileWriter(void) {
         write_len = 0;
       }
     }
+
+    /* check to see if the decomd has been signaled to idle.  We encase this
+     * in a define for pananoiac reasons: don't wan't mcp to accidentally decide
+     * to shutdown the disk writer */
+#ifdef __DECOMD__
+    if (shutdown_now) {
+      if (framefile.fd > -1)
+        if (close(framefile.fd) == -1)
+          merror(MCP_ERROR, "Error closing chunk");
+      framefile.fd = -1;
+
+      free(framefile.buffer);
+      free(writeout_buffer);
+
+      return;
+    }
+#endif
 
     if ((write_len > 0) && (framefile.fd >= 0)) 
       if (write(framefile.fd, writeout_buffer, write_len) < 0)
