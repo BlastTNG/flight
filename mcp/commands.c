@@ -1269,15 +1269,15 @@ void InitCommandData() {
   CommandData.pumps.bal_max = 600;  /* 70% */
   CommandData.pumps.bal_min = 1750; /* 15% */
 
-  CommandData.Bias.clockInternal = 1;
+  CommandData.Bias.clockInternal = 0;
   CommandData.Bias.biasAC = 1;
   CommandData.Bias.biasRamp = 0;
 
   CommandData.Bias.SetLevel1 = 1;
   CommandData.Bias.SetLevel2 = 1;
   CommandData.Bias.SetLevel3 = 1;
-  CommandData.Bias.bias1 = 0x04;
-  CommandData.Bias.bias2 = 0x08;
+  CommandData.Bias.bias1 = 0x02;
+  CommandData.Bias.bias2 = 0x02;
   CommandData.Bias.bias3 = 0x0f;
 
   CommandData.Cryo.heliumLevel = 0;
