@@ -568,6 +568,17 @@ void DoBoxMode() {
     }
   }
 
+  if ((az < left-AZ_MARGIN) || (az > right+AZ_MARGIN)) { // outside of cap
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = caz;
+    axes_mode.az_vel = 0.0;
+    axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_dest = bottom;
+    axes_mode.el_vel = 0.0;
+    isc_pulses.is_fast = 1;
+    return;
+  }	
+
   axes_mode.az_mode = AXIS_VEL;
   if (axes_mode.az_vel < -v + daz_dt) axes_mode.az_vel = -v + daz_dt;
   if (axes_mode.az_vel > v + daz_dt) axes_mode.az_vel = v + daz_dt;
@@ -702,6 +713,17 @@ void DoCapMode() {
   left = caz - xw;
   right = caz + xw;
 
+  if ((az < left-AZ_MARGIN) || (az > right+AZ_MARGIN)) { // outside of cap
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = caz;
+    axes_mode.az_vel = 0.0;
+    axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_dest = bottom;
+    axes_mode.el_vel = 0.0;
+    isc_pulses.is_fast = 1;
+    return;
+  }
+  
   axes_mode.az_mode = AXIS_VEL;
   if (axes_mode.az_vel < -v + daz_dt) axes_mode.az_vel = -v + daz_dt;
   if (axes_mode.az_vel > v + daz_dt) axes_mode.az_vel = v + daz_dt;

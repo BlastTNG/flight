@@ -362,6 +362,9 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
       CommandData.Bias.SetLevel3 = 0;
     }
     ch = 0;
+  } else {
+    ch = 0;
+    printf("Warning: ch an impossible value in bias control\n");
   }
 
   /* Bias readback -- we wait a few seconds after finishing the write */
@@ -380,6 +383,7 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
   WriteSlow(Bias_lev1Ch, Bias_lev1Ind, CommandData.Bias.bias1);
   WriteSlow(Bias_lev2Ch, Bias_lev2Ind, CommandData.Bias.bias2);
   WriteSlow(Bias_lev3Ch, Bias_lev3Ind, CommandData.Bias.bias3);
+  //printf("%d %d %d\n", CommandData.Bias.bias1, CommandData.Bias.bias2, CommandData.Bias.bias3);
 }
 
 void SetReadBits(unsigned int* Txframe) {
