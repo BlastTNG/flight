@@ -382,6 +382,86 @@ void DoVCapMode() {
 
 }
 
+void DoVBoxMode() {
+  double caz, cel;
+  double az, az2, el, el1, el2;
+  double daz_dt, del_dt, v_el;
+  double lst;
+  int i_point;
+  double y, x, v;
+  double left, right;
+  static int dir = 1;
+  
+  i_point = GETREADINDEX(point_index);
+  lst = PointingData[i_point].lst;
+  az = PointingData[i_point].az;
+  el = PointingData[i_point].el;
+
+  if (el>80) el = 80; /* very bad situation - dont know how this can happen */
+  if (el<-10) el = -10; /* very bad situation - dont know how this can happen */
+
+  /* get raster center and sky drift speed */
+  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+      lst, PointingData[i_point].lat,
+      &caz, &cel);
+  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+      lst+1.0, PointingData[i_point].lat,
+      &az2, &el2);
+  daz_dt = drem(az2 - caz, 360.0);
+  del_dt = el2 - cel;
+
+  /* get elevation limits */
+  if (cel < MIN_EL) cel = MIN_EL;
+  if (cel > MAX_EL) cel = MAX_EL;
+  y = CommandData.pointing_mode.h/2.0;
+  el1 = cel + y;
+  el2 = cel - y;
+  if (el1>MAX_EL) el1 = MAX_EL;
+  if (el2<MIN_EL) el2 = MIN_EL;
+
+  /* check for out of range in el */
+  if (el > el1+EL_BORDER) {
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = caz;
+    axes_mode.az_vel = 0.0;
+    axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_vel = 0.0;
+    axes_mode.el_dest = el1;
+    dir = -1;
+    return;
+  } else if (el < el2-EL_BORDER) {
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = caz;
+    axes_mode.az_vel = 0.0;
+    axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_vel = 0.0;
+    axes_mode.el_dest = el2;
+    dir = 1;
+    return;
+  } else if (el> el1) { /* turn around */
+    dir = -1;
+  } else if (el < el2) { /* turn around */
+    dir = 1;
+  }    
+  v_el = CommandData.pointing_mode.del * dir;
+
+  /* we must be in range for elevation - go to el-vel mode */
+  axes_mode.el_mode = AXIS_VEL;
+  axes_mode.el_vel = v_el + del_dt;
+
+  /** Get x limits **/
+  x = CommandData.pointing_mode.w/2.0;
+  x = x/cos(el * M_PI/180.0);
+  
+  left = caz - x;
+  right = caz + x;
+
+  /* set az v */
+  v = CommandData.pointing_mode.vaz/cos(el * M_PI/180.0);
+  SetAzScanMode(az, left, right, v, daz_dt);
+
+}
+
 void DoRaDecGotoMode() {
   double caz, cel;
   double lst;
@@ -672,6 +752,9 @@ void UpdateAxesMode() {
     break;
   case P_VCAP:
     DoVCapMode();
+    break;
+  case P_VBOX:
+    DoVBoxMode();
     break;
   case P_BOX:
     DoBoxMode();

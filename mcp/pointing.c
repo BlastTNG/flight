@@ -776,8 +776,13 @@ void Pointing(){
   }
   
   PointingData[point_index].az = AzAtt.az;
-  PointingData[point_index].gy2_offset = AzAtt.gy2_offset;
-  PointingData[point_index].gy3_offset = AzAtt.gy3_offset;
+  if (CommandData.autogyro) {
+    PointingData[point_index].gy2_offset = AzAtt.gy2_offset;
+    PointingData[point_index].gy3_offset = AzAtt.gy3_offset;
+  } else {
+    PointingData[point_index].gy2_offset = CommandData.gy2_offset;
+    PointingData[point_index].gy3_offset = CommandData.gy3_offset;
+  }
 
   /** calculate ra/dec for convenience on the ground **/
   azel2radec(&ra, &dec,
