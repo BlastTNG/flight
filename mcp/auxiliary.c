@@ -57,6 +57,8 @@ extern short int write_ISC_trigger[2];
 extern short int ISC_link_ok[2];
 extern short int start_ISC_cycle[2];
 
+extern short int InCharge; /* tx.c */
+
 /* ACS0 digital signals (G1 and G3 output, G2 input) */
 #define BAL1_ON      0x04  /* ACS3 Group 1 Bit 3 - ifpmBits */
 #define BAL1_REV     0x08  /* ACS3 Group 1 Bit 4 */
@@ -520,7 +522,7 @@ void CameraTrigger(int which)
      * earlier (most likely, this is because mcp has just started up)
      * We need to resynchronise -- we do this by skipping the ackwait phase
      * during the next cycle */
-    if (write_ISC_trigger[which]) {
+    if (InCharge && write_ISC_trigger[which]) {
       isc_pulses[which].force_sync = 1;
       isc_pulses[which].start_wait = 0;
 
