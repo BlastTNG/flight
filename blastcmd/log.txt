@@ -1,0 +1,4806 @@
+Mon May 27 21:04:59 2002
+Sent: ele
+Sent: 12000
+Sent: 400
+Ack: Commands Transmitted
+
+Mon May 27 21:05:20 2002
+Sent: ele
+Sent: 10000
+Sent: 300
+Ack: Commands Transmitted
+
+Mon May 27 22:15:59 2002
+Sent: tgy
+Sent: 29
+Ack: Commands Transmitted
+
+Mon May 27 22:59:35 2002
+Sent: tgy
+Sent: 20
+Ack: Commands Transmitted
+
+Mon May 27 22:59:59 2002
+Sent: tgy
+Sent: 25
+Ack: Commands Transmitted
+
+Wed May 29 13:49:52 2002
+Sent: g_e
+Sent: 310
+Sent: 11000
+Ack: Commands Transmitted
+
+Wed May 29 13:50:49 2002
+Sent: g_e
+Sent: 11000
+Sent: 310
+Ack: Commands Transmitted
+
+Wed May 29 13:51:16 2002
+Sent: g_e
+Sent: 10000
+Sent: 300
+Ack: Commands Transmitted
+
+Wed May 29 13:53:37 2002
+Sent: -los
+Sent: g_e
+Sent: 11000
+Sent: 310
+Ack: Commands Transmitted
+
+Wed May 29 20:51:28 2002
+Sent: bdc
+Ack: Commands Transmitted
+
+Wed May 29 20:51:37 2002
+Sent: bac
+Ack: Commands Transmitted
+
+Wed May 29 22:19:43 2002
+Sent: bdc
+Ack: Commands Transmitted
+
+Wed May 29 22:20:07 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Wed May 29 22:20:13 2002
+Sent: bce
+Ack: Commands Transmitted
+
+Wed May 29 22:20:22 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Wed May 29 22:20:40 2002
+Sent: bra
+Ack: Commands Transmitted
+
+Wed May 29 22:21:01 2002
+Sent: bfi
+Ack: Commands Transmitted
+
+Wed May 29 22:21:13 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Wed May 29 22:21:19 2002
+Sent: bce
+Ack: Commands Transmitted
+
+Wed May 29 22:21:25 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Wed May 29 22:21:31 2002
+Sent: bce
+Ack: Commands Transmitted
+
+Wed May 29 22:21:37 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Wed May 29 22:21:55 2002
+Sent: bra
+Ack: Commands Transmitted
+
+Wed May 29 22:22:13 2002
+Sent: bfi
+Ack: Commands Transmitted
+
+Wed May 29 22:37:40 2002
+Sent: bra
+Ack: Commands Transmitted
+
+Wed May 29 22:42:28 2002
+Sent: bfi
+Ack: Commands Transmitted
+
+Wed May 29 22:42:34 2002
+Sent: bra
+Ack: Commands Transmitted
+
+Wed May 29 23:08:10 2002
+Sent: bra
+Ack: Commands Transmitted
+
+Wed May 29 23:08:19 2002
+Sent: bfi
+Ack: Commands Transmitted
+
+Wed May 29 23:08:28 2002
+Sent: bra
+Ack: Commands Transmitted
+
+Wed May 29 23:08:34 2002
+Sent: bfi
+Ack: Commands Transmitted
+
+Wed May 29 23:51:40 2002
+Sent: bra
+Ack: Commands Transmitted
+
+Wed May 29 23:51:49 2002
+Sent: bfi
+Ack: Commands Transmitted
+
+Wed May 29 23:51:55 2002
+Sent: bac
+Ack: Commands Transmitted
+
+Wed May 29 23:52:01 2002
+Sent: bdc
+Ack: Commands Transmitted
+
+Wed May 29 23:52:25 2002
+Sent: bac
+Ack: Commands Transmitted
+
+Wed May 29 23:52:49 2002
+Sent: bdc
+Ack: Commands Transmitted
+
+Wed May 29 23:53:01 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Wed May 29 23:53:07 2002
+Sent: bce
+Ack: Commands Transmitted
+
+Wed May 29 23:53:19 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Wed May 29 23:54:19 2002
+Sent: bac
+Ack: Commands Transmitted
+
+Wed May 29 23:54:25 2002
+Sent: bfi
+Ack: Commands Transmitted
+
+Wed May 29 23:56:25 2002
+Sent: bi1
+Sent: 1
+Ack: Commands Transmitted
+
+Wed May 29 23:56:37 2002
+Sent: bi1
+Sent: 5
+Ack: Commands Transmitted
+
+Wed May 29 23:57:01 2002
+Sent: bi1
+Sent: 4
+Ack: Commands Transmitted
+
+Wed May 29 23:57:19 2002
+Sent: bi2
+Sent: 8
+Ack: Commands Transmitted
+
+Wed May 29 23:57:34 2002
+Sent: bi2
+Sent: 15
+Ack: Commands Transmitted
+
+Thu May 30 11:52:51 2002
+Sent: def
+Ack: Commands Transmitted
+
+Thu May 30 11:53:03 2002
+Sent: def
+Ack: Commands Transmitted
+
+Thu May 30 11:53:27 2002
+Sent: def
+Ack: Commands Transmitted
+
+Thu May 30 11:53:36 2002
+Sent: -v
+Sent: def
+Ack: Commands Transmitted
+
+Thu May 30 11:54:24 2002
+Sent: -v
+Sent: def
+Ack: Commands Transmitted
+
+Thu May 30 12:00:30 2002
+Sent: -v
+Sent: def
+Ack: Commands Transmitted
+
+Thu May 30 12:03:48 2002
+Sent: dim
+Sent: 23.3
+Sent: 33.4
+Ack: Commands Transmitted
+
+Thu May 30 12:04:06 2002
+Sent: -v
+Sent: dim
+Sent: 23.3
+Sent: 33.4
+Ack: Commands Transmitted
+
+Thu May 30 12:13:30 2002
+Sent: cen
+Sent: 12.2
+Sent: 33.2
+Ack: Commands Transmitted
+
+Thu May 30 12:15:36 2002
+Sent: ras
+Sent: 13
+Sent: 11.2
+Sent: 33.3
+Sent: 22.3
+Sent: 12.1
+Sent: 4
+Sent: 45.4
+Sent: 11.2
+Ack: Commands Transmitted
+
+Thu May 30 12:18:51 2002
+Sent: -v
+Sent: -f
+Sent: ras
+Sent: 13
+Sent: 11.2
+Sent: 33.3
+Sent: 22.3
+Sent: 12.1
+Sent: 4
+Sent: 45.4
+Sent: 11.2
+Ack: Commands Transmitted
+
+Thu May 30 12:19:21 2002
+Sent: -f
+Sent: cen
+Sent: 23
+Sent: 22.1
+Ack: Commands Transmitted
+
+Thu May 30 12:19:42 2002
+Sent: -v
+Sent: cen
+Sent: 23
+Sent: 22.1
+Ack: Commands Transmitted
+
+Thu May 30 12:21:48 2002
+Sent: -v
+Sent: cen
+Sent: 23
+Sent: 22.1
+Ack: Commands Transmitted
+
+Thu May 30 12:24:06 2002
+Sent: -f
+Sent: cen
+Sent: 23.2
+Sent: 33.2
+Ack: Commands Transmitted
+
+Thu May 30 12:27:12 2002
+Sent: -v
+Sent: cen
+Sent: 23.2
+Sent: 33.2
+Ack: Commands Transmitted
+
+Thu May 30 12:27:27 2002
+Sent: -v
+Sent: cen
+Sent: 23.2
+Sent: 33.2
+Ack: Commands Transmitted
+
+Thu May 30 12:27:36 2002
+Sent: -v
+Sent: sun
+Ack: Commands Transmitted
+
+Thu May 30 12:28:33 2002
+Sent: mag
+Ack: Commands Transmitted
+
+Thu May 30 20:45:54 2002
+Sent: g_e
+Sent: 10000
+Sent: 500
+Ack: Commands Transmitted
+
+Thu May 30 20:47:12 2002
+Sent: g_e
+Sent: 10000
+Sent: 1000
+Ack: Commands Transmitted
+
+Thu May 30 20:49:00 2002
+Sent: g_e
+Sent: 10000
+Sent: 500
+Ack: Commands Transmitted
+
+Thu May 30 20:55:42 2002
+Sent: g_r
+Sent: 15000
+Ack: Commands Transmitted
+
+Thu May 30 20:56:30 2002
+Sent: g_r
+Sent: 20000
+Ack: Commands Transmitted
+
+Thu May 30 21:05:39 2002
+Sent: tgy
+Sent: 27
+Ack: Commands Transmitted
+
+Fri May 31 15:06:35 2002
+Sent: tgy
+Sent: 30
+Ack: Commands Transmitted
+
+Tue Jun  4 08:54:25 2002
+Sent: -v
+Sent: -f
+Sent: poi
+Sent: 0
+Sent: 10
+Ack: Commands Transmitted
+
+Tue Jun  4 09:01:31 2002
+Sent: -v
+Sent: -f
+Sent: poi
+Sent: 0
+Sent: 10
+Ack: Commands Transmitted
+
+Tue Jun  4 09:34:58 2002
+Sent: g_r
+Sent: 1001
+Ack: Commands Transmitted
+
+Tue Jun  4 09:36:25 2002
+Sent: tgy
+Sent: 29.1
+Ack: Commands Transmitted
+
+Tue Jun  4 09:36:46 2002
+Sent: bac
+Ack: Commands Transmitted
+
+Tue Jun  4 09:36:58 2002
+Sent: bdc
+Ack: Commands Transmitted
+
+Wed Jun  5 16:37:29 2002
+Sent: g_e
+Sent: 8000
+Sent: 1500
+Ack: Commands Transmitted
+
+Thu Jun  6 12:54:37 2002
+Sent: g_e
+Sent: 6500
+Sent: 1200
+Ack: Commands Transmitted
+
+Thu Jun  6 12:59:37 2002
+Sent: g_e
+Sent: 6500
+Sent: 1200
+Ack: Commands Transmitted
+
+Fri Jun  7 17:08:44 2002
+Sent: ras
+Sent: 23
+Sent: 23
+Sent: 23
+Sent: 23
+Sent: 23
+Sent: 3
+Sent: 23
+Sent: 23
+Sent: 23
+Ack: Commands Transmitted
+
+Tue Jun 18 04:02:51 2002
+Sent: vsu
+Ack: Received garbage
+
+Tue Jun 18 04:03:21 2002
+Sent: vsu
+Ack: Received garbage
+
+Tue Jun 18 04:04:03 2002
+Sent: vsu
+Ack: Commands Transmitted
+
+Tue Jun 18 04:06:06 2002
+Sent: vsu
+Ack: Commands Transmitted
+
+Wed Jun 19 13:54:39 2002
+Sent: vsu
+Ack: Commands Transmitted
+
+Wed Jun 19 13:59:03 2002
+Sent: vsu
+Ack: Commands Transmitted
+
+Wed Jun 19 14:08:15 2002
+Sent: vsu
+Ack: Commands Transmitted
+
+Wed Jun 19 14:11:15 2002
+Sent: tgy
+Sent: 29.87
+Ack: Commands Transmitted
+
+Wed Jun 19 14:11:51 2002
+Sent: tgy
+Sent: 33
+Ack: Commands Transmitted
+
+Wed Jun 19 14:15:00 2002
+Sent: tgy
+Sent: 33
+Ack: Commands Transmitted
+
+Wed Jun 19 14:18:18 2002
+Sent: tgy
+Sent: 33
+Ack: Commands Transmitted
+
+Wed Jun 19 14:19:09 2002
+Sent: tgy
+Sent: 33
+Ack: Commands Transmitted
+
+Wed Jun 19 15:05:48 2002
+Sent: tgy
+Sent: 29.5
+Ack: Commands Transmitted
+
+Wed Jun 19 15:07:27 2002
+Sent: tgy
+Sent: 29.5
+Ack: Commands Transmitted
+
+Wed Jun 19 15:11:27 2002
+Sent: tgy
+Sent: 29.5
+Ack: Commands Transmitted
+
+Wed Jun 19 15:11:45 2002
+Sent: vsu
+Ack: Commands Transmitted
+
+Wed Jun 19 15:12:54 2002
+Sent: tgy
+Sent: 29.5
+Ack: Commands Transmitted
+
+Wed Jun 19 15:23:12 2002
+Sent: tgy
+Sent: 29.5
+Ack: Commands Transmitted
+
+Wed Jun 19 15:24:03 2002
+Sent: tgy
+Sent: 29.5
+Ack: Commands Transmitted
+
+Wed Jun 19 15:28:09 2002
+Sent: tgy
+Sent: 29.5
+Ack: Commands Transmitted
+
+Thu Jun 20 10:20:53 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Thu Jun 20 10:21:44 2002
+Sent: bfi
+Ack: Commands Transmitted
+
+Thu Jun 20 10:22:38 2002
+Sent: tgy
+Sent: 29.5
+Ack: Commands Transmitted
+
+Thu Jun 20 10:22:53 2002
+Sent: tgy
+Sent: 29.5
+Ack: Commands Transmitted
+
+Thu Jun 20 10:25:08 2002
+Sent: tgy
+Sent: 29.5
+Ack: Commands Transmitted
+
+Thu Jun 20 10:27:41 2002
+Sent: tgy
+Sent: 29.52
+Ack: Commands Transmitted
+
+Thu Jun 20 10:28:47 2002
+Sent: tgy
+Sent: 29.52
+Ack: Commands Transmitted
+
+Thu Jun 20 10:34:56 2002
+Sent: ras
+Sent: 12
+Sent: 12
+Sent: 12
+Sent: 12
+Sent: 12
+Sent: 8
+Sent: 12
+Sent: 12
+Sent: 12
+Ack: Commands Transmitted
+
+Thu Jun 20 14:21:48 2002
+Sent: vsu
+Ack: Commands Transmitted
+
+Fri Jun 21 13:16:09 2002
+Sent: vsu
+Ack: Commands Transmitted
+
+Fri Jun 21 13:16:45 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Jun 21 13:18:21 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Fri Jun 21 13:18:33 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 30.23 
+Ack: Commands Transmitted
+
+Fri Jun 21 13:20:45 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Jun 21 13:20:57 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Fri Jun 21 13:56:09 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Jun 21 13:59:54 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 14:01:54 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Jun 21 14:02:03 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Jun 21 14:04:03 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bfi
+Ack: Commands Transmitted
+
+Fri Jun 21 14:04:15 2002
+Sent: -v
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bfi
+Ack: Commands Transmitted
+
+Fri Jun 21 14:11:12 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Jun 21 14:12:33 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bfi
+Ack: Commands Transmitted
+
+Fri Jun 21 14:16:18 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Jun 21 14:16:30 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 30.23 
+Ack: Commands Transmitted
+
+Fri Jun 21 14:17:03 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 30.23 
+Ack: Commands Transmitted
+
+Fri Jun 21 14:17:15 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 30.23 
+Ack: Commands Transmitted
+
+Fri Jun 21 14:17:27 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 30.23 
+Ack: Commands Transmitted
+
+Fri Jun 21 14:18:21 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 14:19:21 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bra
+Ack: Commands Transmitted
+
+Fri Jun 21 14:20:29 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 30.23 
+Ack: Bho!
+
+Fri Jun 21 14:22:03 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 14:22:18 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 14:22:30 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Jun 21 14:25:36 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bra
+Ack: Bho!
+
+Fri Jun 21 14:25:42 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Jun 21 14:54:36 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 14:55:33 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 30.23 
+Ack: Commands Transmitted
+
+Fri Jun 21 15:00:24 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Jun 21 15:00:30 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Fri Jun 21 15:01:06 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 15:01:27 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 15:02:00 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 15:02:06 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 15:02:12 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 15:03:15 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Jun 21 15:04:42 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Jun 21 15:05:15 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Jun 21 15:05:21 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Jun 21 15:05:57 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi2
+Sent: 0.00 
+Ack: Commands Transmitted
+
+Fri Jun 21 15:15:57 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Jun 21 15:16:06 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bfi
+Ack: Commands Transmitted
+
+Fri Jun 21 15:16:48 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Jun 21 15:16:57 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Jun 21 15:17:03 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Jun 21 15:17:06 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Jun 21 15:17:12 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Jun 21 15:19:24 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: mag
+Ack: Commands Transmitted
+
+Fri Jun 21 15:19:33 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: uis
+Ack: Commands Transmitted
+
+Fri Jun 21 15:20:54 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 15:21:06 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 0.00 
+Ack: Commands Transmitted
+
+Fri Jun 21 15:21:18 2002
+Sent: -v
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi1
+Sent: 0.00 
+Ack: Commands Transmitted
+
+Fri Jun 21 15:22:12 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 30.23 
+Ack: Commands Transmitted
+
+Fri Jun 21 15:22:33 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi1
+Sent: 0.00 
+Ack: Commands Transmitted
+
+Fri Jun 21 15:23:51 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: sch
+Sent: 27 
+Ack: Commands Transmitted
+
+Fri Jun 21 15:23:57 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Fri Jun 21 15:25:33 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: sch
+Sent: 27 
+Ack: Commands Transmitted
+
+Fri Jun 21 15:25:42 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Fri Jun 21 15:25:48 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bra
+Ack: Commands Transmitted
+
+Fri Jun 21 15:27:30 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 15:27:36 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 15:27:45 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi1
+Sent: 0.00 
+Ack: Commands Transmitted
+
+Fri Jun 21 15:27:51 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Jun 21 15:30:12 2002
+Sent: -v
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 15:30:18 2002
+Sent: -v
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bra
+Ack: Commands Transmitted
+
+Fri Jun 21 15:30:30 2002
+Sent: -v
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 0.00 
+Ack: Commands Transmitted
+
+Fri Jun 21 15:32:03 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bra
+Ack: Commands Transmitted
+
+Fri Jun 21 15:32:21 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bfi
+Ack: Commands Transmitted
+
+Fri Jun 21 15:32:27 2002
+Sent: -v
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bfi
+Ack: Commands Transmitted
+
+Fri Jun 21 15:32:39 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com2
+Sent: bfi
+Ack: Commands Transmitted
+
+Fri Jun 21 15:32:45 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com2
+Sent: bfi
+Ack: Commands Transmitted
+
+Fri Jun 21 15:33:21 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 15:33:30 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bfi
+Ack: Commands Transmitted
+
+Fri Jun 21 15:36:12 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 15:36:24 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Jun 21 15:36:45 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Jun 21 15:37:06 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: g_p
+Sent: 2 
+Sent: 1 
+Sent: 3 
+Ack: Commands Transmitted
+
+Mon Jun 24 06:28:12 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Mon Jun 24 06:29:36 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Mon Jun 24 06:30:00 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: mov
+Sent: 0.2341 
+Sent: 12.2120 
+Ack: Commands Transmitted
+
+Mon Jun 24 06:30:42 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: mov
+Sent: 0.2341 
+Sent: 12.2120 
+Ack: Commands Transmitted
+
+Mon Jun 24 06:31:11 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Bho!
+
+Mon Jun 24 06:31:18 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bra
+Ack: Commands Transmitted
+
+Mon Jun 24 06:31:48 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Mon Jun 24 06:32:06 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: cen
+Sent: 0.0000 
+Sent: 5.0000 
+Ack: Commands Transmitted
+
+Mon Jun 24 06:32:30 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: cen
+Sent: 0.0000 
+Sent: 5.0000 
+Ack: Commands Transmitted
+
+Mon Jun 24 06:32:40 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com1
+Sent: cen
+Sent: 0.0000 
+Sent: 5.0000 
+Ack: Routing address does not match the selected link
+
+Mon Jun 24 06:32:45 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com1
+Sent: cen
+Sent: 0.0000 
+Sent: 5.0000 
+Ack: Routing address does not match the selected link
+
+Mon Jun 24 06:32:49 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com1
+Sent: mse
+Ack: Routing address does not match the selected link
+
+Mon Jun 24 06:33:00 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: mse
+Ack: Commands Transmitted
+
+Mon Jun 24 06:33:06 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: mse
+Ack: Commands Transmitted
+
+Mon Jun 24 06:34:35 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: mra
+Ack: Bho!
+
+Mon Jun 24 06:35:36 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: mra
+Ack: Commands Transmitted
+
+Mon Jun 24 06:35:42 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com1
+Sent: mra
+Ack: Routing address does not match the selected link
+
+Mon Jun 24 06:35:44 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com1
+Sent: mra
+Ack: Routing address does not match the selected link
+
+Mon Jun 24 06:36:08 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com1
+Sent: mra
+Ack: Routing address does not match the selected link
+
+Mon Jun 24 06:36:22 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com1
+Sent: mra
+Ack: Bho!
+
+Mon Jun 24 06:36:23 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com1
+Sent: mra
+Ack: Routing address does not match the selected link
+
+Mon Jun 24 06:36:24 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com1
+Sent: mra
+Ack: Routing address does not match the selected link
+
+Mon Jun 24 06:36:34 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com1
+Sent: ras
+Sent: 0.0000 
+Sent: 5.0000 
+Sent: 1.0000 
+Sent: 0.0000 
+Sent: 0.0000 
+Sent: 4 
+Sent: 0.1000 
+Sent: 0.1000 
+Sent: 0.0000 
+Ack: Routing address does not match the selected link
+
+Mon Jun 24 06:38:00 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com1
+Sent: mse
+Ack: Bho!
+
+Mon Jun 24 06:38:03 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com1
+Sent: mse
+Ack: Routing address does not match the selected link
+
+Mon Jun 24 06:38:45 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com1
+Sent: mse
+Ack: Routing address does not match the selected link
+
+Mon Jun 24 06:38:48 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com1
+Sent: mse
+Ack: Routing address does not match the selected link
+
+Mon Jun 24 06:39:24 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: mse
+Ack: Commands Transmitted
+
+Mon Jun 24 06:40:29 2002
+Sent: -hf_ptt
+Sent: vsu
+Ack: Routing address does not match the selected link
+
+Mon Jun 24 06:51:36 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com1
+Sent: bac
+Ack: Routing address does not match the selected link
+
+Mon Jun 24 06:52:06 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Mon Jun 24 06:52:44 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com2
+Sent: bac
+Ack: Routing address does not match the selected link
+
+Mon Jun 24 06:53:33 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com2
+Sent: bac
+Ack: Routing address does not match the selected link
+
+Mon Jun 24 06:53:42 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Sat Jul 13 17:27:59 2002
+Sent: tgy
+Sent: 30
+Ack: Commands Transmitted
+
+Sat Jul 13 17:30:11 2002
+Sent: tgy
+Sent: 30
+Ack: Commands Transmitted
+
+Sat Jul 13 17:32:08 2002
+Sent: tgy
+Sent: 30
+Ack: Commands Transmitted
+
+Sat Jul 13 17:34:11 2002
+Sent: tgy
+Sent: 30
+Ack: Commands Transmitted
+
+Mon Jul 15 13:20:52 2002
+Sent: cp1
+Ack: Bho!
+
+Mon Jul 15 13:21:13 2002
+Sent: cp1
+Ack: Commands Transmitted
+
+Mon Jul 15 13:23:31 2002
+Sent: g_a
+Sent: 23
+Sent: 23
+Sent: 23
+Ack: Commands Transmitted
+
+Mon Jul 15 13:34:28 2002
+Sent: sch
+Sent: 1000
+Ack: Commands Transmitted
+
+Mon Jul 15 14:08:31 2002
+Sent: sch
+Sent: 1000
+Ack: Commands Transmitted
+
+Mon Jul 15 14:55:55 2002
+Sent: g_r
+Sent: 100
+Ack: Commands Transmitted
+
+Mon Jul 15 14:56:16 2002
+Sent: g_r
+Sent: 100
+Ack: Commands Transmitted
+
+Mon Jul 15 14:57:16 2002
+Sent: cp1
+Ack: Commands Transmitted
+
+Mon Jul 15 14:58:43 2002
+Sent: cp1
+Ack: Commands Transmitted
+
+Mon Jul 15 14:59:01 2002
+Sent: g_r
+Sent: 100
+Ack: Commands Transmitted
+
+Mon Jul 15 15:02:31 2002
+Sent: g_r
+Sent: 100
+Ack: Commands Transmitted
+
+Mon Jul 15 15:03:01 2002
+Sent: g_r
+Sent: 100
+Ack: Commands Transmitted
+
+Mon Jul 15 15:14:55 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: sch
+Sent: 25 
+Ack: Commands Transmitted
+
+Tue Jul 16 10:11:59 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 11 
+Ack: Commands Transmitted
+
+Tue Jul 16 10:19:11 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 7 
+Ack: Commands Transmitted
+
+Tue Jul 16 10:19:30 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com2
+Sent: xml
+Sent: 7 
+Ack: Routing address does not match the selected link
+
+Tue Jul 16 10:19:50 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 7 
+Ack: Commands Transmitted
+
+Tue Jul 16 10:20:20 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 7 
+Ack: Commands Transmitted
+
+Tue Jul 16 10:21:41 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: mra
+Ack: Commands Transmitted
+
+Tue Jul 16 10:21:59 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: def
+Ack: Commands Transmitted
+
+Tue Jul 16 10:22:17 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: tgy
+Sent: 30.00 
+Ack: Commands Transmitted
+
+Tue Jul 16 10:22:32 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 9 
+Ack: Commands Transmitted
+
+Tue Jul 16 10:24:02 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 9 
+Ack: Commands Transmitted
+
+Tue Jul 16 10:27:14 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 7 
+Ack: Commands Transmitted
+
+Tue Jul 16 10:27:29 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 7 
+Ack: Commands Transmitted
+
+Tue Jul 16 14:21:11 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Tue Jul 16 14:21:29 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Tue Jul 16 14:22:41 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Tue Jul 16 14:25:36 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Tue Jul 16 14:25:47 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Tue Jul 16 14:26:26 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Tue Jul 16 14:27:38 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 15 
+Ack: Commands Transmitted
+
+Tue Jul 16 14:28:41 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Tue Jul 16 15:16:12 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: tgy
+Sent: 30.00 
+Ack: Commands Transmitted
+
+Wed Jul 17 11:21:06 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Wed Jul 17 11:21:27 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Wed Jul 17 11:23:39 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Wed Jul 17 11:24:18 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Wed Jul 17 11:24:30 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Wed Jul 17 11:30:15 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Wed Jul 17 11:30:27 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Wed Jul 17 11:30:42 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Wed Jul 17 11:30:52 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com1
+Sent: xml
+Sent: 1 
+Ack: Routing address does not match the selected link
+
+Wed Jul 17 11:31:15 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: pss
+Ack: Commands Transmitted
+
+Wed Jul 17 11:31:30 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Wed Jul 17 13:28:54 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Wed Jul 17 13:29:48 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Mon Jul 22 09:24:16 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: psa
+Ack: Commands Transmitted
+
+Mon Jul 22 09:24:28 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: psa
+Ack: Commands Transmitted
+
+Mon Jul 22 09:26:28 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: psa
+Ack: Commands Transmitted
+
+Mon Jul 22 09:27:07 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: psa
+Ack: Bho!
+
+Mon Jul 22 09:27:13 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: psa
+Ack: Commands Transmitted
+
+Mon Jul 22 09:27:22 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: psa
+Ack: Commands Transmitted
+
+Mon Jul 22 09:28:01 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Mon Jul 22 09:28:31 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Mon Jul 22 09:30:28 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Mon Jul 22 09:33:43 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Mon Jul 22 09:51:58 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Mon Jul 22 09:52:28 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Mon Jul 22 09:53:43 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Mon Jul 22 09:54:19 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Mon Jul 22 10:01:13 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Mon Jul 22 10:03:22 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Mon Jul 22 10:03:37 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Mon Jul 22 10:03:46 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Thu Jul 25 14:41:55 2002
+Sent: bac
+Ack: Commands Transmitted
+
+Thu Jul 25 14:42:04 2002
+Sent: bac
+Ack: Commands Transmitted
+
+Thu Jul 25 14:53:25 2002
+Sent: bdc
+Ack: Commands Transmitted
+
+Thu Jul 25 14:53:40 2002
+Sent: bdc
+Ack: Commands Transmitted
+
+Thu Jul 25 14:54:04 2002
+Sent: bra
+Ack: Commands Transmitted
+
+Thu Jul 25 14:54:19 2002
+Sent: bfi
+Ack: Commands Transmitted
+
+Thu Jul 25 15:14:28 2002
+Sent: bfi
+Ack: Commands Transmitted
+
+Thu Jul 25 15:14:34 2002
+Sent: bra
+Ack: Commands Transmitted
+
+Thu Jul 25 16:41:19 2002
+Sent: bfi
+Ack: Commands Transmitted
+
+Thu Jul 25 16:41:31 2002
+Sent: bra
+Ack: Commands Transmitted
+
+Thu Jul 25 16:41:40 2002
+Sent: bac
+Ack: Commands Transmitted
+
+Thu Jul 25 16:41:52 2002
+Sent: bdc
+Ack: Commands Transmitted
+
+Thu Jul 25 16:42:13 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Thu Jul 25 16:42:19 2002
+Sent: bce
+Ack: Commands Transmitted
+
+Thu Jul 25 16:43:01 2002
+Sent: bce
+Ack: Commands Transmitted
+
+Thu Jul 25 16:43:10 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Thu Jul 25 16:43:49 2002
+Sent: bfi
+Ack: Commands Transmitted
+
+Thu Jul 25 16:44:01 2002
+Sent: bce
+Ack: Commands Transmitted
+
+Thu Jul 25 17:25:34 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Thu Jul 25 17:25:46 2002
+Sent: bac
+Ack: Commands Transmitted
+
+Thu Jul 25 17:26:04 2002
+Sent: bce
+Ack: Commands Transmitted
+
+Thu Jul 25 17:26:37 2002
+Sent: bdc
+Ack: Commands Transmitted
+
+Thu Jul 25 17:26:58 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Thu Jul 25 17:27:07 2002
+Sent: bce
+Ack: Commands Transmitted
+
+Thu Jul 25 17:27:20 2002
+Sent: bra
+Ack: Bho!
+
+Thu Jul 25 17:27:55 2002
+Sent: bra
+Ack: Commands Transmitted
+
+Thu Jul 25 17:28:07 2002
+Sent: bdc
+Ack: Commands Transmitted
+
+Thu Jul 25 17:28:13 2002
+Sent: bac
+Ack: Commands Transmitted
+
+Thu Jul 25 17:28:37 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Thu Jul 25 17:28:46 2002
+Sent: bdc
+Ack: Commands Transmitted
+
+Thu Jul 25 17:29:07 2002
+Sent: bra
+Ack: Commands Transmitted
+
+Thu Jul 25 17:29:16 2002
+Sent: bfi
+Ack: Commands Transmitted
+
+Thu Jul 25 17:29:25 2002
+Sent: bra
+Ack: Commands Transmitted
+
+Thu Jul 25 17:29:40 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Thu Jul 25 17:29:46 2002
+Sent: bce
+Ack: Commands Transmitted
+
+Thu Jul 25 17:30:25 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 17:31:19 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 17:32:49 2002
+Sent: bi3
+Sent: 7
+Ack: Commands Transmitted
+
+Thu Jul 25 17:33:01 2002
+Sent: bi2
+Sent: 7
+Ack: Commands Transmitted
+
+Thu Jul 25 17:33:16 2002
+Sent: bi1
+Sent: 7
+Ack: Commands Transmitted
+
+Thu Jul 25 17:33:34 2002
+Sent: bac
+Ack: Commands Transmitted
+
+Thu Jul 25 17:33:52 2002
+Sent: bdc
+Ack: Commands Transmitted
+
+Thu Jul 25 17:34:01 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Thu Jul 25 17:34:10 2002
+Sent: bac
+Ack: Commands Transmitted
+
+Thu Jul 25 17:34:28 2002
+Sent: bra
+Ack: Commands Transmitted
+
+Thu Jul 25 17:34:40 2002
+Sent: bfi
+Ack: Commands Transmitted
+
+Thu Jul 25 17:43:37 2002
+Sent: bi1
+Sent: 7
+Ack: Commands Transmitted
+
+Thu Jul 25 17:43:52 2002
+Sent: bi2
+Sent: 7
+Ack: Commands Transmitted
+
+Thu Jul 25 17:44:04 2002
+Sent: bi3
+Sent: 7
+Ack: Commands Transmitted
+
+Thu Jul 25 17:44:22 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 17:44:37 2002
+Sent: bi2
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 17:44:49 2002
+Sent: bi1
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 19:46:04 2002
+Sent: bac
+Ack: Commands Transmitted
+
+Thu Jul 25 19:46:13 2002
+Sent: bdc
+Ack: Commands Transmitted
+
+Thu Jul 25 19:46:22 2002
+Sent: bac
+Ack: Commands Transmitted
+
+Thu Jul 25 20:01:01 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Thu Jul 25 20:01:07 2002
+Sent: bce
+Ack: Commands Transmitted
+
+Thu Jul 25 20:01:16 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Thu Jul 25 20:09:37 2002
+Sent: bi3
+Sent: 7
+Ack: Commands Transmitted
+
+Thu Jul 25 20:15:28 2002
+Sent: bi3
+Sent: 7
+Ack: Commands Transmitted
+
+Thu Jul 25 20:15:43 2002
+Sent: bi3
+Sent: 6
+Ack: Commands Transmitted
+
+Thu Jul 25 20:15:58 2002
+Sent: bi3
+Sent: 7
+Ack: Commands Transmitted
+
+Thu Jul 25 20:22:22 2002
+Sent: bi3
+Sent: 4
+Ack: Commands Transmitted
+
+Thu Jul 25 20:22:37 2002
+Sent: bi2
+Sent: 4
+Ack: Commands Transmitted
+
+Thu Jul 25 20:22:52 2002
+Sent: bi1
+Sent: 4
+Ack: Commands Transmitted
+
+Thu Jul 25 20:26:40 2002
+Sent: bi3
+Sent: 4
+Ack: Commands Transmitted
+
+Thu Jul 25 20:26:55 2002
+Sent: bi3
+Sent: 7
+Ack: Commands Transmitted
+
+Thu Jul 25 20:28:43 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 20:28:58 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 20:32:28 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 20:35:01 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 20:35:19 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 20:42:37 2002
+Sent: bi3
+Sent: f
+Ack: Commands Transmitted
+
+Thu Jul 25 20:43:10 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 20:43:31 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 20:43:46 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 20:47:19 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 20:47:34 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 20:48:43 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 20:49:19 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 20:53:22 2002
+Sent: bi3
+Sent: 10
+Ack: Commands Transmitted
+
+Thu Jul 25 20:53:43 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 20:54:04 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 20:54:31 2002
+Sent: bi2
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 20:54:46 2002
+Sent: bi2
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 20:55:04 2002
+Sent: bi1
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 20:55:16 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 20:58:52 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 20:59:07 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 20:59:22 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 21:02:19 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 21:03:55 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 21:05:22 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 21:08:16 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 21:50:52 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 21:51:07 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 21:51:25 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 21:53:52 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 21:54:31 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 22:00:58 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 22:08:58 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 22:12:40 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 22:14:10 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 22:15:28 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 22:17:07 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 22:22:40 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 22:22:55 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 22:24:34 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 22:25:04 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 22:26:13 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 22:26:31 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 22:28:34 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 22:30:13 2002
+Sent: bi3
+Sent: 7
+Ack: Commands Transmitted
+
+Thu Jul 25 22:35:19 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 22:54:11 2002
+Sent: bi3
+Sent: 14
+Ack: Commands Transmitted
+
+Thu Jul 25 23:27:53 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 23:28:26 2002
+Sent: bi3
+Sent: 0
+Ack: Commands Transmitted
+
+Thu Jul 25 23:32:02 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 23:32:20 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 23:33:29 2002
+Sent: bi3
+Sent: 7
+Ack: Commands Transmitted
+
+Thu Jul 25 23:33:53 2002
+Sent: bi3
+Sent: 15
+Ack: Commands Transmitted
+
+Thu Jul 25 23:40:02 2002
+Sent: bce
+Ack: Commands Transmitted
+
+Thu Jul 25 23:40:38 2002
+Sent: bci
+Ack: Commands Transmitted
+
+Thu Jul 25 23:43:29 2002
+Sent: bce
+Ack: Commands Transmitted
+
+Mon Jul 29 14:30:20 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 29.00 
+Ack: Commands Transmitted
+
+Mon Jul 29 14:30:38 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: tgy
+Sent: 29.00 
+Ack: Commands Transmitted
+
+Mon Jul 29 14:31:14 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: cl1
+Ack: Commands Transmitted
+
+Mon Jul 29 14:31:29 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: cl1
+Ack: Commands Transmitted
+
+Mon Jul 29 14:31:41 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: cl1
+Ack: Commands Transmitted
+
+Wed Jul 31 12:33:04 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Wed Jul 31 12:34:07 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Wed Jul 31 12:35:04 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Wed Jul 31 12:36:10 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Wed Jul 31 12:39:43 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Wed Jul 31 12:40:49 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Wed Jul 31 12:41:01 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Wed Jul 31 13:04:40 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Wed Jul 31 13:05:01 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Wed Jul 31 13:07:13 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Fri Aug 16 14:58:44 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Aug 16 14:59:02 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Fri Aug 16 14:59:14 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Aug 16 14:59:20 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Aug 16 15:00:26 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 29.00 
+Ack: Commands Transmitted
+
+Fri Aug 16 15:00:53 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 29.00 
+Ack: Commands Transmitted
+
+Fri Aug 16 15:01:08 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Aug 16 15:03:11 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Aug 16 15:03:26 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Aug 16 15:04:47 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Aug 16 15:04:56 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Aug 16 15:05:41 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Fri Aug 16 15:05:47 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Aug 16 15:08:02 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 15:08:56 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 5.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 15:09:20 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 5.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 15:09:35 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 15:12:26 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Fri Aug 16 15:12:44 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Aug 16 15:19:26 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bra
+Ack: Commands Transmitted
+
+Fri Aug 16 15:19:32 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Aug 16 15:21:23 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Aug 16 15:21:32 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 15:22:08 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Aug 16 15:22:17 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Aug 16 15:37:23 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Aug 16 15:37:44 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bfi
+Ack: Commands Transmitted
+
+Fri Aug 16 15:38:44 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 15:39:29 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Aug 16 15:39:35 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Aug 16 15:39:44 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bfi
+Ack: Commands Transmitted
+
+Fri Aug 16 15:39:59 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Aug 16 15:40:08 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Aug 16 15:41:35 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 15:44:26 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Aug 16 15:44:38 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Aug 16 15:44:47 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Aug 16 15:45:14 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 5.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 15:45:32 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 15:48:50 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Fri Aug 16 15:50:20 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Aug 16 15:50:29 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Fri Aug 16 18:48:29 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 18:49:22 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Bho!
+
+Fri Aug 16 18:50:11 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Aug 16 18:50:26 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Aug 16 18:50:32 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Aug 16 18:50:47 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 18:51:02 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 18:51:23 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bi3
+Sent: 5.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 18:51:35 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 20:04:20 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bi3
+Sent: 14.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 20:04:29 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Aug 16 20:04:35 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Aug 16 20:04:50 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bi3
+Sent: 14.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 20:05:08 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 20:05:50 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bi3
+Sent: 5.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 20:06:05 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 20:08:05 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Aug 16 20:08:38 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bi3
+Sent: 14.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 20:08:56 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bi3
+Sent: 13.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 20:10:26 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bi3
+Sent: 14.0000 
+Ack: Commands Transmitted
+
+Fri Aug 16 20:12:47 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bra
+Ack: Commands Transmitted
+
+Fri Aug 16 20:12:53 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bfi
+Ack: Commands Transmitted
+
+Fri Aug 16 20:13:02 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bfi
+Ack: Commands Transmitted
+
+Fri Aug 16 20:13:14 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Aug 16 20:13:20 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Aug 16 20:58:29 2002
+Sent: -f
+Sent: -s
+Sent: -los
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Fri Aug 16 22:54:38 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Aug 16 22:55:50 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Fri Aug 16 22:56:14 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Aug 16 23:08:56 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Fri Aug 16 23:27:15 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Tue Aug 20 17:19:47 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tis
+Sent: 40.00 
+Ack: Commands Transmitted
+
+Wed Aug 21 17:14:05 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Wed Aug 21 17:16:14 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Wed Aug 21 17:16:23 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Wed Aug 21 17:17:35 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Wed Aug 21 17:24:49 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Bho!
+
+Wed Aug 21 17:24:56 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Wed Aug 21 17:25:08 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Wed Aug 21 17:27:30 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Wed Aug 21 17:28:56 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Wed Aug 21 18:17:06 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Wed Aug 21 18:17:33 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Wed Aug 21 19:38:24 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Wed Aug 21 19:38:42 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Wed Aug 21 20:59:09 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Wed Aug 21 20:59:21 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Wed Aug 21 21:01:27 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Wed Aug 21 21:10:24 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Wed Aug 21 21:11:12 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Wed Aug 21 21:26:30 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Wed Aug 21 21:26:48 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 14.0000 
+Ack: Commands Transmitted
+
+Wed Aug 21 21:27:03 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Wed Aug 21 21:39:33 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 0.0000 
+Ack: Commands Transmitted
+
+Wed Aug 21 21:39:45 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Wed Aug 21 21:39:51 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Wed Aug 21 21:40:09 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 0.0000 
+Ack: Commands Transmitted
+
+Wed Aug 21 21:42:36 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Wed Aug 21 21:42:42 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Wed Aug 21 21:42:57 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Thu Aug 22 12:09:44 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Thu Aug 22 12:10:05 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 14.0000 
+Ack: Commands Transmitted
+
+Thu Aug 22 12:10:20 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Thu Aug 22 12:10:35 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Thu Aug 22 12:10:50 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 14.0000 
+Ack: Commands Transmitted
+
+Thu Aug 22 12:11:02 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Thu Aug 22 13:48:36 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 14.0000 
+Ack: Commands Transmitted
+
+Thu Aug 22 15:01:27 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Thu Aug 22 15:08:33 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 14.0000 
+Ack: Commands Transmitted
+
+Fri Aug 23 10:56:24 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Aug 23 10:56:36 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Fri Aug 23 10:56:45 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Aug 23 10:56:54 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Aug 23 10:57:51 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Aug 23 11:18:15 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Aug 23 11:18:57 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Aug 23 11:19:48 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Aug 23 11:19:57 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Aug 23 11:20:09 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Wed Aug 28 21:35:28 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Wed Aug 28 21:35:37 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Wed Aug 28 21:35:52 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Wed Aug 28 21:35:58 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Wed Aug 28 21:37:44 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Bho!
+
+Wed Aug 28 21:37:49 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Wed Aug 28 21:37:58 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Wed Aug 28 21:38:16 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 8.0000 
+Ack: Commands Transmitted
+
+Wed Aug 28 21:38:31 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 15.0000 
+Ack: Commands Transmitted
+
+Wed Aug 28 21:43:55 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Mon Sep  2 12:58:07 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: sch
+Sent: 15 
+Ack: Commands Transmitted
+
+Mon Sep  2 13:02:25 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: psa
+Ack: Bho!
+
+Mon Sep  2 13:02:34 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: psa
+Ack: Commands Transmitted
+
+Mon Sep  2 13:03:10 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: ras
+Sent: 0.0000 
+Sent: 5.0000 
+Sent: 1.0000 
+Sent: 0.0000 
+Sent: 0.0000 
+Sent: 1 
+Sent: 0.1000 
+Sent: 0.1000 
+Ack: Commands Transmitted
+
+Mon Sep  2 13:06:07 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: poi
+Sent: 0.0000 
+Sent: 5.0000 
+Ack: Commands Transmitted
+
+Mon Sep  2 13:06:25 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: poi
+Sent: 0.0000 
+Sent: 5.0000 
+Ack: Commands Transmitted
+
+Mon Sep  2 13:07:07 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: ras
+Sent: 0.0000 
+Sent: 5.0000 
+Sent: 1.0000 
+Sent: 0.0000 
+Sent: 0.0000 
+Sent: 1 
+Sent: 0.1000 
+Sent: 0.1000 
+Ack: Commands Transmitted
+
+Thu Sep  5 15:02:27 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Thu Sep  5 15:13:34 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 2 
+Ack: Commands Transmitted
+
+Thu Sep  5 15:14:45 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 1 
+Ack: Commands Transmitted
+
+Fri Sep  6 10:51:28 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Fri Sep  6 10:51:43 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Fri Sep  6 14:58:31 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: psa
+Ack: Commands Transmitted
+
+Fri Sep  6 14:58:49 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 0.00 
+Ack: Commands Transmitted
+
+Fri Sep  6 14:59:04 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tis
+Sent: 40.00 
+Ack: Commands Transmitted
+
+Fri Sep  6 14:59:10 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: psd
+Ack: Commands Transmitted
+
+Fri Sep  6 14:59:16 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: psd
+Ack: Commands Transmitted
+
+Fri Sep  6 14:59:22 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: psa
+Ack: Commands Transmitted
+
+Fri Sep  6 14:59:34 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi1
+Sent: 0.0000 
+Ack: Commands Transmitted
+
+Fri Sep  6 14:59:49 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: cen
+Sent: 0.0000 
+Sent: 5.0000 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:01:04 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: ste
+Sent: 0.0000 
+Sent: 1.0000 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:01:37 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: ras
+Sent: 0.0000 
+Sent: 5.0000 
+Sent: 1.0000 
+Sent: 0.0000 
+Sent: 0.0000 
+Sent: 1 
+Sent: 0.1000 
+Sent: 0.1000 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:01:52 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi3
+Sent: 0.0000 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:01:58 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: isc
+Ack: Commands Transmitted
+
+Fri Sep  6 15:02:01 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: umg
+Ack: Commands Transmitted
+
+Fri Sep  6 15:02:07 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: vvs
+Ack: Commands Transmitted
+
+Fri Sep  6 15:02:28 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: psm
+Sent: 0.0000 
+Sent: 0.0000 
+Sent: 0.0000 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:02:43 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:02:52 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: psa
+Ack: Commands Transmitted
+
+Fri Sep  6 15:03:10 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: psm
+Sent: 0.0000 
+Sent: 0.0000 
+Sent: 0.0000 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:03:19 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bra
+Ack: Commands Transmitted
+
+Fri Sep  6 15:03:25 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: ch1
+Ack: Commands Transmitted
+
+Fri Sep  6 15:03:34 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: psd
+Ack: Commands Transmitted
+
+Fri Sep  6 15:03:43 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: ch0
+Ack: Commands Transmitted
+
+Fri Sep  6 15:04:01 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: g_a
+Sent: 0 
+Sent: 0 
+Sent: 0 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:04:07 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: uvs
+Ack: Commands Transmitted
+
+Fri Sep  6 15:28:58 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 0.00 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:29:31 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: dim
+Sent: 1.0000 
+Sent: 0.0000 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:32:07 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 30.00 
+Ack: Bho!
+
+Fri Sep  6 15:32:34 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Sep  6 15:32:40 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Sep  6 15:32:55 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Fri Sep  6 15:33:01 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
+Fri Sep  6 15:33:16 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 30.00 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:33:34 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 15.00 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:33:49 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 29.83 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:35:07 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi1
+Sent: 2.3210 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:35:19 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi1
+Sent: 2.3210 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:36:10 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi1
+Sent: 2.3210 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:36:22 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi1
+Sent: 2.3210 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:37:43 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: tgy
+Sent: 31.83 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:38:01 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: tgy
+Sent: 33.33 
+Ack: Commands Transmitted
+
+Fri Sep  6 15:44:55 2002
+Sent: -f
+Sent: -s
+Sent: -hf_ptt
+Sent: -com2
+Sent: tgy
+Sent: 33.33 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:00:34 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 33.33 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:01:07 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: tgy
+Sent: 33.33 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:01:49 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: ras
+Sent: 0.0000 
+Sent: 5.0000 
+Sent: 1.0000 
+Sent: 0.0000 
+Sent: 0.0000 
+Sent: 1 
+Sent: 0.1000 
+Sent: 0.1000 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:02:55 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: xml
+Sent: 0 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:03:04 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: mse
+Ack: Commands Transmitted
+
+Fri Sep  6 16:05:16 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: mse
+Ack: Commands Transmitted
+
+Fri Sep  6 16:05:52 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: ras
+Sent: 0.0000 
+Sent: 5.0000 
+Sent: 1.0000 
+Sent: 0.0000 
+Sent: 0.0000 
+Sent: 1 
+Sent: 0.1000 
+Sent: 0.1000 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:07:07 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: dim
+Sent: 1.0000 
+Sent: 0.0000 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:07:34 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: dim
+Sent: 1.0000 
+Sent: 0.0000 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:10:10 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: cp1
+Ack: Commands Transmitted
+
+Fri Sep  6 16:10:28 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: dim
+Sent: 1.0000 
+Sent: 0.0000 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:10:46 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: mov
+Sent: 0.1000 
+Sent: 0.1000 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:11:07 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: mov
+Sent: 0.1000 
+Sent: 0.1000 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:12:07 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: ras
+Sent: 0.0000 
+Sent: 5.0000 
+Sent: 1.0000 
+Sent: 0.0000 
+Sent: 0.0000 
+Sent: 1 
+Sent: 0.1000 
+Sent: 0.1000 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:14:25 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: ste
+Sent: 0.0000 
+Sent: 1.0000 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:14:40 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: vvs
+Ack: Commands Transmitted
+
+Fri Sep  6 16:14:46 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: uis
+Ack: Commands Transmitted
+
+Fri Sep  6 16:15:01 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: umg
+Ack: Commands Transmitted
+
+Fri Sep  6 16:18:04 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: vmg
+Ack: Commands Transmitted
+
+Fri Sep  6 16:21:25 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: g_p
+Sent: 0 
+Sent: 0 
+Sent: 0 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:21:50 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: def
+Ack: Bho!
+
+Fri Sep  6 16:21:55 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: def
+Ack: Commands Transmitted
+
+Fri Sep  6 16:22:07 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bi2
+Sent: 0.0000 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:22:33 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: psd
+Ack: Bho!
+
+Fri Sep  6 16:22:37 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: psd
+Ack: Commands Transmitted
+
+Fri Sep  6 16:22:52 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: psm
+Sent: 0.0000 
+Sent: 0.0000 
+Sent: 0.0000 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:23:07 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: psa
+Ack: Commands Transmitted
+
+Fri Sep  6 16:23:13 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: pss
+Ack: Commands Transmitted
+
+Fri Sep  6 16:23:19 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: cc1
+Ack: Commands Transmitted
+
+Fri Sep  6 16:23:25 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: umg
+Ack: Commands Transmitted
+
+Fri Sep  6 16:23:31 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: vis
+Ack: Commands Transmitted
+
+Fri Sep  6 16:23:52 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: g_e
+Sent: 0 
+Sent: 0 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:24:25 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: g_e
+Sent: 4 
+Sent: 4 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:24:46 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: g_e
+Sent: 293 
+Sent: 234 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:25:04 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: g_r
+Sent: 7 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:25:40 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: ghg
+Sent: 12 
+Sent: 47 
+Sent: 5 
+Ack: Commands Transmitted
+
+Fri Sep  6 16:51:46 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: def
+Ack: Commands Transmitted
+
+Wed Sep 11 20:17:22 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: abt
+Ack: Commands Transmitted
+
+Wed Sep 11 20:18:07 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: gto
+Sent: 10.0000 
+Sent: 5.0000 
+Sent: 0.1000 
+Sent: 0.1000 
+Ack: Commands Transmitted
+
+Wed Sep 11 20:22:22 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: gab
+Ack: Commands Transmitted
+
+Wed Sep 11 20:22:28 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: lab
+Ack: Commands Transmitted
+
+Wed Sep 11 20:22:34 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: abt
+Ack: Commands Transmitted
+
+Thu Sep 12 00:38:12 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: vvs
+Ack: Bho!
+
+Fri Sep 13 14:12:32 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Sep 13 14:12:41 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Sep 13 14:24:32 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Sep 13 14:26:11 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Sep 13 14:26:17 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bdc
+Ack: Commands Transmitted
+
+Fri Sep 13 16:38:33 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bac
+Ack: Commands Transmitted
+
+Fri Sep 13 21:55:39 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bce
+Ack: Commands Transmitted
+
+Fri Sep 13 21:56:48 2002
+Sent: -f
+Sent: -s
+Sent: -tdrss
+Sent: -com1
+Sent: bci
+Ack: Commands Transmitted
+
