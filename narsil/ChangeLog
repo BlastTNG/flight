@@ -1,7 +1,11 @@
+2005-02-08 (1.8.6):
+	* narsil.cpp (MainForm::WriteErr): Add text for timeout error (13) from
+	blastcmd
+
 2004-12-17:
 	* configure.ac: remove some unwanted stderr messages.  Fix ssh host check
 	for blastcmd-remote 1.1.9
-	* narsil.c (main): remove some unwanted stderr messages
+	* narsil.cpp (main): remove some unwanted stderr messages
 
 2004-11-26 (1.8.4):
 	* narsil.cpp: fix elog host

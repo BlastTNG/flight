@@ -895,6 +895,9 @@ void MainForm::WriteErr(QMultiLineEdit *dest, int retstatus) {
     case 11:
       txt = "  COMMAND NOT SENT: Command not confirmed by user.\n";
       break;
+    case 13:
+      txt = "  COMMAND POSSIBLY NOT SENT: Timeout waiting for ack from GSE.\n";
+      break;
   }
 
   QFile f(LOGFILE);
