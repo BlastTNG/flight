@@ -462,8 +462,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(isc_pixel_centre), "centre display on pixel", GR_ISC_HOUSE, 2,
     {
-      {"Pixel X", 0, CCD_X_PIXELS - 1, 'i', "NONE"},
-      {"Pixel Y", 0, CCD_Y_PIXELS - 1, 'i', "NONE"}
+      {"Pixel X", 0, ISC_CCD_X_PIXELS - 1, 'i', "NONE"},
+      {"Pixel Y", 0, ISC_CCD_Y_PIXELS - 1, 'i', "NONE"}
     }
   },
 
@@ -487,11 +487,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(isc_det_set), "set detection parameters", GR_ISC_PARAM, 5,
     {
-      {"Search Grid (px/side)",     0, CCD_Y_PIXELS, 'i', "ISC_GRID"},
+      {"Search Grid (px/side)",     0, ISC_CCD_Y_PIXELS, 'i', "ISC_GRID"},
       {"S/N Threshold",           0.1,       3276.7, 'f', "ISC_THRESH"},
-      {"Centroiding Box (px/side)", 0, CCD_Y_PIXELS, 'i', "ISC_CENBOX"},
-      {"Photometry Box (px/side)",  0, CCD_Y_PIXELS, 'i', "ISC_APBOX"},
-      {"Exclusion Distance (px)",   0, CCD_Y_PIXELS, 'i', "ISC_MDIST"}
+      {"Centroiding Box (px/side)", 0, ISC_CCD_Y_PIXELS, 'i', "ISC_CENBOX"},
+      {"Photometry Box (px/side)",  0, ISC_CCD_Y_PIXELS, 'i', "ISC_APBOX"},
+      {"Exclusion Distance (px)",   0, ISC_CCD_Y_PIXELS, 'i', "ISC_MDIST"}
     }
   },
 
@@ -547,8 +547,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(osc_pixel_centre), "centre display on pixel", GR_OSC_HOUSE, 2,
     {
-      {"Pixel X", 0, CCD_X_PIXELS - 1, 'i', "NONE"},
-      {"Pixel Y", 0, CCD_Y_PIXELS - 1, 'i', "NONE"}
+      {"Pixel X", 0, OSC_CCD_X_PIXELS - 1, 'i', "NONE"},
+      {"Pixel Y", 0, OSC_CCD_Y_PIXELS - 1, 'i', "NONE"}
     }
   },
 
@@ -572,11 +572,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(osc_det_set), "set detection parameters", GR_OSC_PARAM, 5,
     {
-      {"Search Grid (px/side)",     0, CCD_Y_PIXELS, 'i', "OSC_GRID"},
+      {"Search Grid (px/side)",     0, OSC_CCD_Y_PIXELS, 'i', "OSC_GRID"},
       {"S/N Threshold",           0.1,       3276.7, 'f', "OSC_THRESH"},
-      {"Centroiding Box (px/side)", 0, CCD_Y_PIXELS, 'i', "OSC_CENBOX"},
-      {"Photometry Box (px/side)",  0, CCD_Y_PIXELS, 'i', "OSC_APBOX"},
-      {"Exclusion Distance (px)",   0, CCD_Y_PIXELS, 'i', "OSC_MDIST"}
+      {"Centroiding Box (px/side)", 0, OSC_CCD_Y_PIXELS, 'i', "OSC_CENBOX"},
+      {"Photometry Box (px/side)",  0, OSC_CCD_Y_PIXELS, 'i', "OSC_APBOX"},
+      {"Exclusion Distance (px)",   0, OSC_CCD_Y_PIXELS, 'i', "OSC_MDIST"}
     }
   },
 
