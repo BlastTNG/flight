@@ -14,14 +14,14 @@ ifeq ($(USE_FIFO_CMD), 1)
 endif
 
 HEADERS = alice.h bbc_pci.h blast.h channels.h command_list.h command_struct.h \
-					crc.h dataholder.h ephem_read.h ephem_types.h isc_protocol.h lut.h \
-					mcp.h pointing_struct.h slow_dl.h sslutNA.h ss_struct.h starpos.h \
-					tdrss.h tdrss_c.h tx.h
+					crc.h dataholder.h derived.h ephem_read.h ephem_types.h \
+					isc_protocol.h lut.h mcp.h pointing_struct.h slow_dl.h sslutNA.h \
+					ss_struct.h starpos.h tdrss.h tdrss_c.h tx.h
 
 OBJS = mcp.o auxiliary.o blast.o channels.o command_list.o commands.o crc.o \
-			 das.o dataholder.o dgps.o fftsg_h.o framefile.o ephem_read.o geomag.o \
-			 isc.o lut.o motors.o pointing.o sched.o slow_dl.o tdrss.o sslutNA.o \
-			 starpos.o sunsensor.o tx.o tx_struct.o
+			 das.o derived.o dataholder.o dgps.o fftsg_h.o framefile.o ephem_read.o \
+			 geomag.o isc.o lut.o motors.o pointing.o sched.o slow_dl.o tdrss.o \
+			 sslutNA.o starpos.o sunsensor.o tx.o tx_struct.o
 
 .PHONEY: fifo install all debug
 
