@@ -2,7 +2,17 @@
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
 2004-11-01  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	Release defile-3.0.1
+
+	* client.c (InitClient): Add new_filename parameter.  All Callers Changed.
+	(QuenyaClient): Handle 213 from server.
+	
+
+2004-11-01  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	Release defile-3.0.0
+
+	* defile.c: Look for defile.conf in ETC_DIR
+	* configure.ac: define ETC_DIR
 	
 	* defile.conf.in.in: Renamed from defile.conf.in: run through fixup.sh
 	* Makefile.am, configure.ac: Generate defile.conf from defile.conf.in

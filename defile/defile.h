@@ -84,7 +84,7 @@ void CleanUp(void);
 void DirFileWriter(void);
 void FrameFileReader(void);
 void GetDirFile(char*, const char*, char*, int);
-void InitClient(void);
+void InitClient(char*);
 void InitReader(void);
 void InitialiseDirFile(int, unsigned long);
 void PreInitialiseDirFile(void);

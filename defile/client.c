@@ -153,96 +153,103 @@ void OpenDataPort(void)
         berror(fatal, "Connect failed");
       break;
     default:
-      bprintf(fatal, "Unexpected response from server: %i\n", n);
+      bprintf(fatal, "Unexpected response from server (OPEN): %i\n", n);
   }
 
   switch (n = GetServerResponse(buffer)) {
     case QUENYA_RESPONSE_PORT_OPENED:
       break;
     default:
-      bprintf(fatal, "Unexpected response from server: %i\n", n);
+      bprintf(fatal, "Unexpected response from server (OPEN/2): %i\n", n);
   }
 }
 
-void InitClient(void)
+void InitClient(char* new_filename)
 {
   char buffer[2000];
   int n;
   char *ptr1 = NULL, *ptr2;
   char *hostname = NULL;
-  rc.csock = MakeSock();
   FILE* stream;
 
-  printf("Connecting to %s:%i...\n", inet_ntoa(rc.addr.sin_addr),
-      ntohs(rc.addr.sin_port));
+  if (new_filename == NULL) {
+    rc.csock = MakeSock();
 
-  if ((n = connect(rc.csock, (struct sockaddr*)&rc.addr, sizeof(rc.addr))) != 0)
-    berror(fatal, "Connect failed");
+    printf("Connecting to %s:%i...\n", inet_ntoa(rc.addr.sin_addr),
+        ntohs(rc.addr.sin_port));
 
-  switch (n = GetServerResponse(buffer)) {
-    case QUENYA_RESPONSE_SERVICE_READY:
-      for (ptr1 = buffer; *ptr1 != ' '; ++ptr1);
-      *(ptr1++) = 0;
-      for (ptr2 = ptr1; *ptr2 != '/'; ++ptr2);
-      *(ptr2++) = 0;
-      *(strchr(ptr2, ' ')) = 0;
+    if ((n = connect(rc.csock, (struct sockaddr*)&rc.addr, sizeof(rc.addr)))
+        != 0)
+      berror(fatal, "Connect failed");
 
-      bprintf(info, "Connected to %s on %s speaking quenya version %s.\n",
-          ptr1, buffer, ptr2);
+    switch (n = GetServerResponse(buffer)) {
+      case QUENYA_RESPONSE_SERVICE_READY:
+        for (ptr1 = buffer; *ptr1 != ' '; ++ptr1);
+        *(ptr1++) = 0;
+        for (ptr2 = ptr1; *ptr2 != '/'; ++ptr2);
+        *(ptr2++) = 0;
+        *(strchr(ptr2, ' ')) = 0;
 
-      hostname = strdup(buffer);
-      break;
-    default:
-      bprintf(fatal, "Unexpected response from server: %i\n", n);
-  }
+        bprintf(info, "Connected to %s on %s speaking quenya version %s.\n",
+            ptr1, buffer, ptr2);
 
-  strcpy(buffer, "IDEN defile\r\n");
-  write(rc.csock, buffer, strlen(buffer));
-  switch (n = GetServerResponse(buffer)) {
-    case QUENYA_RESPONSE_ACCESS_GRANTED:
-      break;
-    default:
-      bprintf(fatal, "Unexpected response from server: %i\n", n);
-  }
+        hostname = strdup(buffer);
+        break;
+      default:
+        bprintf(fatal, "Unexpected response from server (Connect): %i\n", n);
+    }
 
-  OpenDataPort();
+    strcpy(buffer, "IDEN defile\r\n");
+    write(rc.csock, buffer, strlen(buffer));
+    switch (n = GetServerResponse(buffer)) {
+      case QUENYA_RESPONSE_ACCESS_GRANTED:
+        break;
+      default:
+        bprintf(fatal, "Unexpected response from server (IDEN): %i\n", n);
+    }
 
-  strcpy(buffer, "QNOW\r\n");
-  write(rc.csock, buffer, strlen(buffer));
-  switch (n = GetServerResponse(buffer)) {
-    case QUENYA_RESPONSE_DATA_STAGED:
-      for (ptr1 = buffer; *ptr1 != ':'; ++ptr1);
-      *(ptr1++) = 0;
-      *(strchr(ptr1, ' ')) = 0;
-      rc.chunk = bstrdup(fatal, ptr1);
-      rc.resume_at = atoi(buffer);
-      break;
-    case QUENYA_RESPONSE_NO_CUR_DATA:
-      /* 450 is returned by the server if reading the curfile fails -
-         It usually means that either the curfile doesn't exist or
-         the dirfile it points to doesn't exist */
-      bprintf(fatal,
-          "Can't fetch data from server: no current data is available.\n");
-      break;
-    default:
-      bprintf(fatal, "Unexpected response from server: %i\n", n);
+    OpenDataPort();
+
+    strcpy(buffer, "QNOW\r\n");
+    write(rc.csock, buffer, strlen(buffer));
+    switch (n = GetServerResponse(buffer)) {
+      case QUENYA_RESPONSE_DATA_STAGED:
+        for (ptr1 = buffer; *ptr1 != ':'; ++ptr1);
+        *(ptr1++) = 0;
+        *(strchr(ptr1, ' ')) = 0;
+        rc.chunk = bstrdup(fatal, ptr1);
+        rc.resume_at = atoi(buffer);
+        break;
+      case QUENYA_RESPONSE_NO_CUR_DATA:
+        /* 451 is returned by the server if reading the curfile fails -
+           It usually means that either the curfile doesn't exist or
+           the dirfile it points to doesn't exist */
+        bprintf(fatal,
+            "Can't fetch data from server: no current data is available.\n");
+        break;
+      default:
+        bprintf(fatal, "Unexpected response from server (QNOW): %i\n", n);
+    }
+
+    new_filename = ptr1;
   }
 
   if (rc.output_dirfile != NULL)
     strncpy(rc.dirfile, rc.output_dirfile, FILENAME_LEN);
   else
-    GetDirFile(rc.dirfile, ptr1, rc.dest_dir, rc.resume_at);
+    GetDirFile(rc.dirfile, new_filename, rc.dest_dir, rc.resume_at);
 
   rc.chunk = (char*)balloc(fatal, FILENAME_LEN);
-  sprintf(rc.chunk, "%s:%s", hostname, ptr1);
+  sprintf(rc.chunk, "%s:%s", hostname, new_filename);
 
   strcpy(buffer, "SPEC\r\n");
+
   write(rc.csock, buffer, strlen(buffer));
   switch (n = GetServerResponse(buffer)) {
     case QUENYA_RESPONSE_SENDING_SPEC:
       break;
     default:
-      bprintf(fatal, "Unexpected response from server: %i\n", n);
+      bprintf(fatal, "Unexpected response from server (SPEC): %i\n", n);
   }
 
   if ((stream = fdopen(rc.dsock, "w+")) == NULL)
@@ -254,7 +261,7 @@ void InitClient(void)
     case QUENYA_RESPONSE_TRANS_COMPLETE:
       break;
     default:
-      bprintf(fatal, "Unexpected response from server: %i\n", n);
+      bprintf(fatal, "Unexpected response from server (SPEC/2): %i\n", n);
   }
 
   strcpy(buffer, "CLOS\r\n");
@@ -263,7 +270,7 @@ void InitClient(void)
     case QUENYA_RESPONSE_OK:
       break;
     default:
-      bprintf(fatal, "Unexpected response from server: %i\n", n);
+      bprintf(fatal, "Unexpected response from server (CLOS): %i\n", n);
   }
 
   fclose(stream);
@@ -284,6 +291,7 @@ void QuenyaClient(void)
   unsigned long long block_count = 0;
   unsigned short crc;
   char buffer[2000];
+  char* ptr1;
 
   /* set up signal masks */
   sigemptyset(&signals);
@@ -316,12 +324,29 @@ void QuenyaClient(void)
     write(rc.csock, buffer, strlen(buffer));
     switch (n = GetServerResponse(buffer)) {
       case QUENYA_RESPONSE_SENDING_DATA:
+        block_size = atoi(buffer);
         break;
+      case QUENYA_RESPONSE_STAGED_NEXT:
+        for (ptr1 = buffer; *ptr1 != ':'; ++ptr1);
+        *(ptr1++) = 0;
+        *(strchr(ptr1, ' ')) = 0;
+        rc.chunk = bstrdup(fatal, ptr1);
+        rc.resume_at = atoi(buffer);
+        
+        /* refetch SPEC file */
+        InitClient(ptr1);
+
+        /* restart data transmission */
+        strcpy(buffer, "DATA\r\n");
+
+        /* skip the block read until data has restarted */
+        continue;
       default:
-        bprintf(fatal, "Unexpected response from server: %i\n", n);
+        bprintf(fatal, "Unexpected response from server (DATA): %i\n", n);
     }
-    block_size = atoi(buffer);
+    block_size = 0;
     bytes_read = 0;
+    printf("here\n\n");
 
     /* read the block */
     while (bytes_read < block_size * DiskFrameSize) {
@@ -336,9 +361,9 @@ void QuenyaClient(void)
       case QUENYA_RESPONSE_BLOCK_CRC:
         break;
       default:
-        bprintf(fatal, "Unexpected response from server: %i\n", n);
+        bprintf(fatal, "Unexpected response from server (crc): %i\n", n);
     }
-    
+
     sscanf(buffer, "0x%4hx Block CRC", &crc);
     crc -= CalculateCRC(CRC_SEED, InputBuffer[0], bytes_read);
 

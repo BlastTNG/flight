@@ -48,7 +48,7 @@
 #define SUFF_MAX sizeof(chunkindex_t)
 
 /* defaults */
-#define CONFIG_FILE "./defile.conf"
+#define CONFIG_FILE ETC_DIR "/defile.conf"
 #define CUR_FILE "/data/etc/defile.cur"
 #define OUTPUT_DIR "/data/rawdir"
 #define QUENDI_PORT 44144
@@ -951,7 +951,7 @@ int main (int argc, char** argv)
 
   /* Initialise the reader or client */
   if (rc.quenya)
-    InitClient();
+    InitClient(NULL);
   else
     InitReader();
 
