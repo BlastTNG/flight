@@ -307,7 +307,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"isc_x_off",    'w', LOOPBAK2, 63,         I2DEG,             0.0, 'u'},
     {"isc_y_off",    'w', LOOPBAK3,  0,         I2DEG,             0.0, 'u'},
     {"ra",           'w', LOOPBAK3,  1,  24.0/65536.0,             0.0, 'u'},
-    {"dec",          'w', LOOPBAK3,  2,         I2DEG,             0.0, 'u'},
+    {"dec",          'w', LOOPBAK3,  2,         I2DEG,             0.0, 's'},
     {"spare27",      'w', SPARE, 27,              1.0,             0.0, 'u'},
     {"spare28",      'w', SPARE, 28,              1.0,             0.0, 'u'},
     {"spare29",      'w', SPARE, 29,              1.0,             0.0, 'u'},
