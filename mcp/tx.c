@@ -1054,7 +1054,7 @@ void StoreData(unsigned int* Txframe,
   static int i_AZ_VEL, j_AZ_VEL, i_EL_VEL, j_EL_VEL;
   static int i_RA, j_RA, i_DEC, j_DEC, i_R, j_R;
   static int i_SVETO, j_SVETO;
-
+  
   /** dgps fields **/
   static int i_dgps_time, j_dgps_time;
   static int i_dgps_lat, j_dgps_lat;  
@@ -1067,7 +1067,7 @@ void StoreData(unsigned int* Txframe,
   static int i_dgps_att_index, j_dgps_att_index;
   static int i_dgps_pos_index, j_dgps_pos_index;
   static int i_dgps_n_sat, j_dgps_n_sat;
-  
+
   /** isc fields **/
   static int blob0_xCh, blob0_xInd;
   static int blob1_xCh, blob1_xInd;
@@ -1096,11 +1096,12 @@ void StoreData(unsigned int* Txframe,
   static int isc_threshCh, isc_threshInd;
   static int isc_gridCh, isc_gridInd;
 
+  
   static int blob_index = 0;
 
   time_t t;
 
-  static int i_az = -1, i_el = -1;
+  static int i_az = -1, i_el = -1, i_MAG_AZ;
   int i_vsc;
   int i_ss;
   int i_point;
@@ -1112,6 +1113,7 @@ void StoreData(unsigned int* Txframe,
   if (i_V_COL == -1) {
     FastChIndex("az", &i_az);
     FastChIndex("el", &i_el);
+    FastChIndex("mag_az", &i_MAG_AZ);
 
     SlowChIndex("vsc_col", &i_V_COL, &j_V_COL);
     SlowChIndex("vsc_row", &i_V_ROW, &j_V_ROW);
@@ -1152,7 +1154,7 @@ void StoreData(unsigned int* Txframe,
     SlowChIndex("dgps_pos_index", &i_dgps_pos_index, &j_dgps_pos_index);
     SlowChIndex("dgps_att_ok", &i_dgps_att_ok, &j_dgps_att_ok);
     SlowChIndex("dgps_att_index", &i_dgps_att_index, &j_dgps_att_index);
-
+    
     SlowChIndex("blob0_x", &blob0_xCh, &blob0_xInd);
     SlowChIndex("blob1_x", &blob1_xCh, &blob1_xInd);
     SlowChIndex("blob2_x", &blob2_xCh, &blob2_xInd);
@@ -1207,6 +1209,7 @@ void StoreData(unsigned int* Txframe,
   i_point = GETREADINDEX(point_index);
   WriteFast(i_az, (unsigned int)(PointingData[i_point].az * 65536.0/360.0));
   WriteFast(i_el, (unsigned int)(PointingData[i_point].el * 65536.0/360.0));
+  WriteFast(i_MAG_AZ, (unsigned int)(ACSData.mag_az * 65536.0/360.0));
   t = PointingData[i_point].lst;
   WriteSlow(i_LST, j_LST, t >> 16);
   WriteSlow(i_LST + 1, j_LST, t);
