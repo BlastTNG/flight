@@ -4,6 +4,8 @@
 2005-01-20  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	Release defile-3.1.2
 
+	* defile.c (MakeDirFile): Zero pad frame number in filename to sort
+	correctly
 	* client.c (OpenDataPort): Remove some debugging spam
 	* writer.c (PreBuffer): remove exit-on-corrupted-index bug
 

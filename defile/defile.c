@@ -416,7 +416,7 @@ char* MakeDirFile(char* output, const char* source, const char* directory,
   strcat(output, buffer);
 
   if (start > 0) {
-    sprintf(buffer, "_%i", start / FAST_PER_SLOW);
+    sprintf(buffer, "_%07i", start / FAST_PER_SLOW);
     strcat(output, buffer); 
   }
 
