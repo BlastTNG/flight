@@ -50,7 +50,7 @@ MODULE_DEVICE_TABLE(pci, bbc_pci_tbl);
 #define FIFO_FULL     4
 
 #define TX_BUFFER_SIZE 0x4000
-#define BI0_BUFFER_SIZE (624*100)
+#define BI0_BUFFER_SIZE (624*25)
 
 extern volatile unsigned long jiffies;
 
