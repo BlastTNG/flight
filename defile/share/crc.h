@@ -1,7 +1,7 @@
 /* crc.c: performs a crc checksum
  *
  * This software is copyright (C) 1997 Enzo Pascale
- * Updated by Adam Hincks, August 2004, for BLAST
+ * Updated by Adam Hincks and D.V. Wiebe for BLAST, 2004
  * 
  * This file is part of the BLAST flight code licensed under the GNU 
  * General Public License.
