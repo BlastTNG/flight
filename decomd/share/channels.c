@@ -27,6 +27,11 @@
      } while (0)
 #endif
 
+/* Be less verbose if we aren't running mcp */
+#ifdef __MCP__
+# define VERBOSE
+#endif
+
 unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
 #ifndef __DEFILE__
@@ -34,11 +39,13 @@ extern struct ChannelStruct WideSlowChannels[];
 extern struct ChannelStruct SlowChannels[];
 extern struct ChannelStruct WideFastChannels[];
 extern struct ChannelStruct FastChannels[];
+extern struct ChannelStruct DecomChannels[];
 #else
 struct ChannelStruct* WideSlowChannels;
 struct ChannelStruct* SlowChannels;
 struct ChannelStruct* WideFastChannels;
 struct ChannelStruct* FastChannels;
+struct ChannelStruct* DecomChannels;
 #endif
 
 unsigned short ccWideFast;
@@ -49,11 +56,14 @@ unsigned short ccSlow;
 unsigned short ccFast;
 unsigned short ccNoBolos;
 unsigned short ccTotal;
+unsigned short ccDecom;
 
 unsigned short BoloBaseIndex;
 
 unsigned short BiPhaseFrameWords;
 unsigned short BiPhaseFrameSize;
+unsigned short DiskFrameWords;
+unsigned short DiskFrameSize;
 unsigned short TxFrameWords[2];
 unsigned short TxFrameSize[2];
 unsigned short slowsPerBi0Frame;
@@ -89,6 +99,7 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   FREADORWRITE(&ccNarrowSlow, sizeof(unsigned short), 1, fp);
   FREADORWRITE(&ccWideFast, sizeof(unsigned short), 1, fp);
   FREADORWRITE(&ccNarrowFast, sizeof(unsigned short), 1, fp);
+  FREADORWRITE(&ccDecom, sizeof(unsigned short), 1, fp);
 
 #ifdef __DEFILE__
   int bus, i;
@@ -116,8 +127,13 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
     perror("defile: unable to allocate heap");
     exit(1);
   }
+  if ((DecomChannels = realloc(DecomChannels,
+          ccDecom * sizeof(struct ChannelStruct))) == NULL) {
+    perror("defile: unable to allocate heap");
+    exit(1);
+  }
   ccSlow = ccNarrowSlow + ccWideSlow;
-  ccFast = ccNarrowFast + ccWideFast + N_FAST_BOLOS;
+  ccFast = ccNarrowFast + ccWideFast + N_FAST_BOLOS + ccDecom;
   ccNoBolos = ccSlow + ccWideFast + ccNarrowFast;
   ccTotal = ccFast + ccSlow;
 #endif
@@ -126,6 +142,8 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   FREADORWRITE(SlowChannels, sizeof(struct ChannelStruct), ccNarrowSlow, fp);
   FREADORWRITE(WideFastChannels, sizeof(struct ChannelStruct), ccWideFast, fp);
   FREADORWRITE(FastChannels, sizeof(struct ChannelStruct), ccNarrowFast, fp);
+  if (ccDecom > 0)
+    FREADORWRITE(DecomChannels, sizeof(struct ChannelStruct), ccDecom, fp);
 
 #ifdef __DEFILE__
   /* Calculate slowsPerBi0Frame */
@@ -142,14 +160,12 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   }
 
   slowsPerBi0Frame = slowsPerBusFrame[0] + slowsPerBusFrame[1];
-  BiPhaseFrameWords = SLOW_OFFSET + ccFast + slowsPerBi0Frame + 1;
-  BiPhaseFrameSize = 2 * BiPhaseFrameWords;
+  DiskFrameWords = SLOW_OFFSET + ccFast + slowsPerBi0Frame + 1;
+  DiskFrameSize = 2 * DiskFrameWords;
 
-  mprintf(MCP_INFO, "Slow Channels Per Biphase Frame: %i\n", slowsPerBi0Frame);
-  mprintf(MCP_INFO, "Slow Channels Per Tx Frame: %i / %i\n",
-      slowsPerBusFrame[0],  slowsPerBusFrame[1]);
+  mprintf(MCP_INFO, "Slow Channels per BiPhase Frame: %i\n", slowsPerBi0Frame);
 
-#else
+#elif VERBOSE
   mputs(MCP_INFO, "Wrote specification file.\n");
 #endif
 }
@@ -165,7 +181,9 @@ void MakeBoloTable(void) {
     "", 'r', 3, BOLO_BUS, 0, 1.19209e-7, -2097152.0, 'u'
   };
 
+#ifdef VERBOSE
   mprintf(MCP_INFO, "Generating Bolometer Channel Table.\n");
+#endif
 
   for (i = 0; i < DAS_CARDS; ++i) {
     channel.node = i + 5;
@@ -225,44 +243,44 @@ void DumpNiosFrame(void)
         addr = i + bus * BBCPCI_MAX_FRAME_SIZE + m * TxFrameWords[bus];
         m0addr = i + bus * BBCPCI_MAX_FRAME_SIZE;
         n = 0;
-        fprintf(map, "%06x", addr);
+        fprintf(map, "%06x ", addr);
         if (i == 0) {
           if (bus) {
             n++;
             addr = BBC_WRITE | BBC_NODE(SPECIAL) | BBC_CH(4);
-            fprintf(map, " %08x [%2i %3i (%04x)] Y Frame Sync", addr,
+            fprintf(map, "%08x [%2i %3i (%04x)] Y Frame Sync", addr,
                 BiPhaseLookup[BI0_MAGIC(addr)].index,
                 BiPhaseLookup[BI0_MAGIC(addr)].channel, BI0_MAGIC(addr));
           } else {
             n++;
             addr = BBC_WRITE | BBC_NODE(SPECIAL) | BBC_CH(0);
-            fprintf(map, " %08x [%2i %3i (%04x)] Y Frame Sync", addr,
+            fprintf(map, "%08x [%2i %3i (%04x)] Y Frame Sync", addr,
                 BiPhaseLookup[BI0_MAGIC(addr)].index,
                 BiPhaseLookup[BI0_MAGIC(addr)].channel, BI0_MAGIC(addr));
           }
         } else if (i == 1 && bus == 0) {
           n++;
           addr = BBC_WRITE | BBC_NODE(SPECIAL) | BBC_CH(1);
-          fprintf(map, " %08x [%2i %3i (%04x)] F FASTSAMP (lsb)", addr,
+          fprintf(map, "%08x [%2i %3i (%04x)] F FASTSAMP (lsb)", addr,
               BiPhaseLookup[BI0_MAGIC(addr)].index,
               BiPhaseLookup[BI0_MAGIC(addr)].channel, BI0_MAGIC(addr));
         } else if (i == 2 && bus == 0) {
           n++;
           addr = BBC_WRITE | BBC_NODE(SPECIAL) | BBC_CH(2);
-          fprintf(map, " %08x [%2i %3i (%04x)] F FASTSAMP (msb)", addr,
+          fprintf(map, "%08x [%2i %3i (%04x)] F FASTSAMP (msb)", addr,
               BiPhaseLookup[BI0_MAGIC(addr)].index,
               BiPhaseLookup[BI0_MAGIC(addr)].channel, BI0_MAGIC(addr));
         } else if (i == 3 && bus == 0) {
           n++;
           addr = BBC_WRITE | BBC_NODE(SPECIAL) | BBC_CH(3);
-          fprintf(map, " %08x [%2i %3i (%04x)] M Multiplex Index = %i", addr,
+          fprintf(map, "%08x [%2i %3i (%04x)] M Multiplex Index = %i", addr,
               BiPhaseLookup[BI0_MAGIC(addr)].index,
               BiPhaseLookup[BI0_MAGIC(addr)].channel, BI0_MAGIC(addr), m);
         } else {
           for (j = 0; j < ccTotal; ++j)
             if (NiosLookup[j].niosAddr == addr) {
               n++;
-              fprintf(map, " %08x [%2i %3i (%04x)] %c %s",
+              fprintf(map, "%08x [%2i %3i (%04x)] %c %s",
                   NiosLookup[j].bbcAddr,
                   BiPhaseLookup[BI0_MAGIC(NiosLookup[j].bbcAddr)].index,
                   BiPhaseLookup[BI0_MAGIC(NiosLookup[j].bbcAddr)].channel,
@@ -276,7 +294,7 @@ void DumpNiosFrame(void)
             } else if (NiosLookup[j].niosAddr == addr - 1 &&
                 NiosLookup[j].wide) {
               n++;
-              fprintf(map, " %08x [%2i %3i (%04x)] %c %s (msb)",
+              fprintf(map, "%08x [%2i %3i (%04x)] %c %s (msb)",
                   BBC_NEXT_CHANNEL(NiosLookup[j].bbcAddr),
                   BiPhaseLookup[BI0_MAGIC(
                     BBC_NEXT_CHANNEL(NiosLookup[j].bbcAddr))].index,
@@ -286,7 +304,7 @@ void DumpNiosFrame(void)
                   NiosLookup[j].fast ? 'f' : 's', NiosLookup[j].field);
             } else if (NiosLookup[j].fast && NiosLookup[j].niosAddr == m0addr) {
               n++;
-              fprintf(map, " %08x [%2i %3i (%04x)] %c %s",
+              fprintf(map, "%08x [%2i %3i (%04x)] %c %s",
                   NiosLookup[j].bbcAddr,
                   BiPhaseLookup[BI0_MAGIC(NiosLookup[j].bbcAddr)].index,
                   BiPhaseLookup[BI0_MAGIC(NiosLookup[j].bbcAddr)].channel,
@@ -297,7 +315,7 @@ void DumpNiosFrame(void)
             } else if (NiosLookup[j].fast && NiosLookup[j].niosAddr
                 == m0addr - 1 && NiosLookup[j].wide) {
               n++;
-              fprintf(map, " %08x [%2i %3i (%04x)] %c %s (msb)",
+              fprintf(map, "%08x [%2i %3i (%04x)] %c %s (msb)",
                   BBC_NEXT_CHANNEL(NiosLookup[j].bbcAddr),
                   BiPhaseLookup[BI0_MAGIC(
                     BBC_NEXT_CHANNEL(NiosLookup[j].bbcAddr))].index,
@@ -310,7 +328,7 @@ void DumpNiosFrame(void)
         for (j = 0; j < 2 * FAST_PER_SLOW; ++j) {
           if (NiosSpares[j] == addr) {
             n++;
-            fprintf(map, " %08x [%2i %3i (%04x)] X Spare%i", BBCSpares[j],
+            fprintf(map, "%08x [%2i %3i (%04x)] X Spare%i", BBCSpares[j],
                 BiPhaseLookup[BI0_MAGIC(BBCSpares[j])].index,
                 BiPhaseLookup[BI0_MAGIC(BBCSpares[j])].channel,
                 BI0_MAGIC(BBCSpares[j]), j);
@@ -318,16 +336,18 @@ void DumpNiosFrame(void)
               = (struct NiosStruct*)(-j - 100);
           }
         }
-        fprintf(map, "\n");
         if (n == 0) {
+          fprintf(map, "**UNASSIGNED**\n");
           fclose(map);
           mprintf(MCP_FATAL, "FATAL: unassigned address in Nios Address Table."
               " Consult Nios Map.\n");
         } else if (n != 1) {
+          fprintf(map, "**COLLISION**\n");
           fclose(map);
           mprintf(MCP_FATAL, "FATAL: collision in Nios Address Table "
               "assignment. Consult Nios Map.\n");
         }
+        fprintf(map, "\n");
       }
     }
     fprintf(map, "\n");
@@ -459,7 +479,7 @@ void DoSanityChecks(void)
   char* fields[2][64][64];
   char* names[64 * 64];
 
-#ifndef __BIG__
+#ifdef VERBOSE
   mprintf(MCP_INFO, "Running Sanity Checks on Channel Lists.\n");
 #endif
 
@@ -488,7 +508,7 @@ void DoSanityChecks(void)
     slowCount[(int)SlowChannels[i].bus]++;
     if (SlowChannels[i].type != 'u' && SlowChannels[i].type != 's')
       mprintf(MCP_FATAL, "Error in Slow Channel List:\n"
-          "    %s does not have a valid slow type (%c)\n",
+          "    %s does not have a valid type (%c)\n",
           SlowChannels[i].field, SlowChannels[i].type);
 
     BBCAddressCheck(names, nn++, fields[SlowChannels[i].rw == 'r'],
@@ -518,22 +538,41 @@ void DoSanityChecks(void)
     fastsPerBusFrame[(int)FastChannels[i].bus]++;
     if (FastChannels[i].type != 'u' && FastChannels[i].type != 's')
       mprintf(MCP_FATAL, "Error in Fast Channel List:\n"
-          "    %s does not have a valid slow type (%c)\n",
+          "    %s does not have a valid type (%c)\n",
           FastChannels[i].field, FastChannels[i].type);
 
     BBCAddressCheck(names, nn++, fields[FastChannels[i].rw == 'r'],
         FastChannels[i].field, FastChannels[i].node, FastChannels[i].addr);
   }
   ccNarrowFast = i;
-  ccFast = ccWideFast + ccNarrowFast + N_FAST_BOLOS;
-  ccNoBolos = ccSlow + ccWideFast + ccNarrowFast;
-  ccTotal = ccFast + ccSlow;
 
   for (i = 0; i < N_FAST_BOLOS; ++i) {
     fastsPerBusFrame[BOLO_BUS]++;
     BBCAddressCheck(names, nn++, fields[1], BoloChannels[i].field,
         BoloChannels[i].node, BoloChannels[i].addr);
   }
+  ccNoBolos = ccSlow + ccWideFast + ccNarrowFast;
+
+#ifdef __DECOMD__
+  for (i = 0; DecomChannels[i].node != EOC_MARKER; ++i) {
+    fastsPerBusFrame[(int)DecomChannels[i].bus]++;
+    if (DecomChannels[i].type != 'u' && DecomChannels[i].type != 's') {
+      printf("Error in Decom Channel List:\n"
+          "    %s does not have a valid type (%c)\n",
+          DecomChannels[i].field, DecomChannels[i].type);
+      exit(1);
+    }
+
+    BBCAddressCheck(names, nn++, fields[DecomChannels[i].rw == 'r'],
+        DecomChannels[i].field, DecomChannels[i].node, DecomChannels[i].addr);
+  }
+  ccDecom = i;
+#else
+  ccDecom = 0;
+#endif
+
+  ccFast = ccWideFast + ccNarrowFast + N_FAST_BOLOS + ccDecom;
+  ccTotal = ccFast + ccSlow;
 
   /* Calculate slowsPerBi0Frame */
   for (i = 0; i < 2; ++ i) {
@@ -544,9 +583,13 @@ void DoSanityChecks(void)
 
   slowsPerBi0Frame = slowsPerBusFrame[0] + slowsPerBusFrame[1];
 
-#ifndef __BIG__
+  DiskFrameWords = SLOW_OFFSET + ccFast + slowsPerBi0Frame + 1;
+  DiskFrameSize = DiskFrameWords * 2;
+  BiPhaseFrameWords = DiskFrameWords - ccDecom;
+  BiPhaseFrameSize = BiPhaseFrameWords * 2;
+
+#ifdef VERBOSE
   mprintf(MCP_INFO, "All Checks Passed.\n");
-#endif
   mprintf(MCP_INFO, "Slow Channels Per Biphase Frame: %i\n", slowsPerBi0Frame);
   mprintf(MCP_INFO, "Fast Channels Per Biphase Frame: %i\n", ccFast
       + SLOW_OFFSET);
@@ -554,11 +597,10 @@ void DoSanityChecks(void)
       slowsPerBusFrame[0],  slowsPerBusFrame[1]);
   mprintf(MCP_INFO, "Fast Channels Per Tx Frame: %i / %i\n",
       fastsPerBusFrame[0],  fastsPerBusFrame[1]);
+#endif
 
-  BiPhaseFrameWords = SLOW_OFFSET + ccFast + slowsPerBi0Frame + 1;
-  BiPhaseFrameSize = 2 * BiPhaseFrameWords;
   for (i = 0; i < 2; ++i) {
-#ifndef __BIG__
+#ifdef VERBOSE
     mprintf(MCP_INFO,
         "BBC Bus %i: Frame Bytes: %4i  Allowed: %4i (%.2f%% full)\n", i,
         4 * TxFrameWords[i], 4 * BBC_FRAME_SIZE,
@@ -568,7 +610,7 @@ void DoSanityChecks(void)
       mprintf(MCP_FATAL, "FATAL: BBC Bus %i frame too big.\n", i);
   }
 
-#ifndef __BIG__
+#ifdef VERBOSE
   mprintf(MCP_INFO,
       " BiPhase : Frame Bytes: %4i  Allowed: %4i (%.2f%% full)\n",
       2 * BiPhaseFrameWords, 2 * BI0_FRAME_SIZE,
@@ -746,7 +788,9 @@ void MakeAddressLookups(void)
         spare_count++;
       }
 
+#ifdef VERBOSE
   mprintf(MCP_INFO, "Added %i spare slow channels.\n", spare_count);
+#endif
 
   for (i = 0; i < ccNarrowFast; ++i) {
 #ifndef __DEFILE__
@@ -808,17 +852,34 @@ void MakeAddressLookups(void)
     addr[(int)BoloChannels[i].bus]++;
   }
 
+  for (i = 0; i < ccDecom; ++i) {
+    NiosLookup[i + ccNoBolos + N_FAST_BOLOS] = SetNiosData(&DecomChannels[i],
+        addr[(int)DecomChannels[i].bus], 1, 0);
+
+    BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccNoBolos
+        + N_FAST_BOLOS].bbcAddr)].index = NOT_MULTIPLEXED;
+    BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccNoBolos
+        + N_FAST_BOLOS].bbcAddr)].channel = BiPhaseAddr++;
+
+    addr[(int)DecomChannels[i].bus]++;
+  }
+
 #ifndef __DEFILE__
   /* Add the channels that aren't in the channel list to the Biphase lookup */
+
+  /* Bus 0 Frame Sync */
   BiPhaseLookup[(BBC_NODE(SPECIAL) | BBC_CH(0)) >> 16].index = NOT_MULTIPLEXED;
   BiPhaseLookup[(BBC_NODE(SPECIAL) | BBC_CH(0)) >> 16].channel = 0;
 
+  /* FASTSAMP msb */
   BiPhaseLookup[(BBC_NODE(SPECIAL) | BBC_CH(1)) >> 16].index = NOT_MULTIPLEXED;
   BiPhaseLookup[(BBC_NODE(SPECIAL) | BBC_CH(1)) >> 16].channel = 1;
 
+  /* FASTSAMP lsb */
   BiPhaseLookup[(BBC_NODE(SPECIAL) | BBC_CH(2)) >> 16].index = NOT_MULTIPLEXED;
   BiPhaseLookup[(BBC_NODE(SPECIAL) | BBC_CH(2)) >> 16].channel = 2;
 
+  /* Bus 1 Frame Sync */
   BiPhaseLookup[(BBC_NODE(SPECIAL) | BBC_CH(3)) >> 16].index = NOT_MULTIPLEXED;
   BiPhaseLookup[(BBC_NODE(SPECIAL) | BBC_CH(3)) >> 16].channel = 3;
 

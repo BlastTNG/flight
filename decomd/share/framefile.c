@@ -99,9 +99,9 @@ void InitialiseFrameFile(char type) {
   }
 
   /* malloc frame buffer */
-  if ((framefile.buffer = malloc(BUFFER_SIZE * BiPhaseFrameSize)) == NULL)
+  if ((framefile.buffer = malloc(BUFFER_SIZE * DiskFrameSize)) == NULL)
     merror(MCP_TFATAL, "Unable to malloc framefile buffer");
-  framefile.buffer_end = framefile.buffer + BUFFER_SIZE * BiPhaseFrameSize;
+  framefile.buffer_end = framefile.buffer + BUFFER_SIZE * DiskFrameSize;
   framefile.b_write_to = framefile.b_read_from = framefile.buffer;
 
   fp = fopen("/data/etc/datafile.cur","w");
@@ -119,7 +119,7 @@ void InitialiseFrameFile(char type) {
 
 void* advance_in_buffer(void* ptr) {
   void* tmp;
-  tmp = ((char*)ptr + BiPhaseFrameSize);
+  tmp = ((char*)ptr + DiskFrameSize);
   return (tmp >= framefile.buffer_end) ? framefile.buffer : (void*)tmp;
 }
 
@@ -157,7 +157,7 @@ void pushDiskFrame(unsigned short *RxFrame) {
   /*********************/
   /* SHIP OUT RX FRAME */
   /*********************/
-  memcpy(framefile.b_write_to, RxFrame, BiPhaseFrameSize);
+  memcpy(framefile.b_write_to, RxFrame, DiskFrameSize);
 
   /* advance write-to pointer */
   framefile.b_write_to = new_write_to;
@@ -177,7 +177,7 @@ void FrameFileWriter(void) {
 #endif
 
   /* malloc output_buffer */
-  if ((writeout_buffer = malloc(BUFFER_SIZE * BiPhaseFrameSize)) == NULL)
+  if ((writeout_buffer = malloc(BUFFER_SIZE * DiskFrameSize)) == NULL)
     mputs(MCP_TFATAL, "Unable to malloc write out buffer\n");
 
   while (1) {
@@ -186,9 +186,9 @@ void FrameFileWriter(void) {
 
     while (b_write_to != framefile.b_read_from) {
       memcpy(writeout_buffer + write_len, framefile.b_read_from,
-          BiPhaseFrameSize);
+          DiskFrameSize);
       framefile.b_read_from = advance_in_buffer(framefile.b_read_from);
-      write_len += BiPhaseFrameSize;
+      write_len += DiskFrameSize;
 
       /* increment file frame counter and check to see if we're at the end
        * of a file.  If so, writeout what we've accumulated and reset everything

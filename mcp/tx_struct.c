@@ -25,6 +25,7 @@
 #define LOOP3 19, 0
 #define LOOP4 20, 0
 #define ACS3  21, 0
+#define DECOM 22, 0
 
 /* read and write channel 56 on all boards reserved for ADC Sync */
 struct ChannelStruct WideSlowChannels[] = {
@@ -441,14 +442,25 @@ struct ChannelStruct SlowChannels[] = {
 
 struct ChannelStruct WideFastChannels[] = {
 #ifndef BOLOTEST
+  {"raw_gy4",     'r',  ACS1,  2,         60.0E-6,                    0.0, 'U'},
+  {"raw_gy5",     'r',  ACS1,  6,         60.0E-6,                    0.0, 'U'},
   {"t_gybox2",    'r',  ACS1, 12, -9.5367431641e-08,               136.45, 'U'},
   {"t_gybox",     'r',  ACS1, 14, -9.5367431641e-08,               136.45, 'U'},
+  {"raw_gy2",     'r',  ACS1, 22,  ADU2_TO_DPS, -GYRO2_OFFSET*ADU2_TO_DPS, 'U'},
+  {"raw_gy3",     'r',  ACS1, 24,  ADU3_TO_DPS, -GYRO3_OFFSET*ADU3_TO_DPS, 'U'},
+  {"raw_gy1",     'r',  ACS1, 26,  ADU1_TO_DPS, -GYRO1_OFFSET*ADU1_TO_DPS, 'U'},
+  {"raw_gy6",     'r',  ACS1, 36,         60.0E-6,                    0.0, 'U'},
+  {"int_gy4",     'r',  ACS27H,4,         60.0E-9,                    0.0, 'S'},
+  {"int_gy5",     'r',  ACS27H,34,        60.0E-9,                    0.0, 'S'},
+  {"int_gy6",     'r',  ACS27H,40,        60.0E-9,                    0.0, 'S'},
 #endif
 
   /* BIAS Amplitude */
   {"b_amp2",      'r',  BIAS,  0,             1.0,                    0.0, 'U'},
   {"b_amp1",      'r',  BIAS,  2,             1.0,                    0.0, 'U'},
   {"b_amp3",      'r',  BIAS, 38,             1.0,                    0.0, 'U'},
+
+  /* Bolometer Bias References */
   {"n3ref",       'r',  CRYO, 48,      0.00390625,             -8388608.0, 'U'},
   {"n5ref",       'r',  DAS5, 36,      1.19209e-7,                    0.0, 'U'},
   {"n6ref",       'r',  DAS6, 36,      1.19209e-7,                    0.0, 'U'},
@@ -462,18 +474,6 @@ struct ChannelStruct WideFastChannels[] = {
   {"n14ref",      'r', DAS14, 36,      1.19209e-7,                    0.0, 'U'},
   {"n15ref",      'r', DAS15, 36,      1.23301e-7,                    0.0, 'U'},
   {"n16ref",      'r', DAS16, 36,      1.19209e-7,                    0.0, 'U'},
-  {"raw_gy2",     'r',  ACS1, 22,  ADU2_TO_DPS, -GYRO2_OFFSET*ADU2_TO_DPS, 'U'},
-  {"raw_gy3",     'r',  ACS1, 24,  ADU3_TO_DPS, -GYRO3_OFFSET*ADU3_TO_DPS, 'U'},
-  {"raw_gy1",     'r',  ACS1, 26,  ADU1_TO_DPS, -GYRO1_OFFSET*ADU1_TO_DPS, 'U'},
-  {"raw_gy6",     'r',  ACS1,  36,  60.0E-6, 0.0, 'U'},
-  {"raw_gy5",     'r',  ACS1,  6,   60.0E-6, 0.0, 'U'},
-  {"raw_gy4",     'r',  ACS1,  2,   60.0E-6, 0.0, 'U'},
-  {"int_gy6",     'r',  ACS27H,  40,  60.0E-9, 0.0, 'S'},
-  {"int_gy5",     'r',  ACS27H,  34,  60.0E-9, 0.0, 'S'},
-  {"int_gy4",     'r',  ACS27H,  4,   60.0E-9, 0.0, 'S'},
-/*   {"raw_gy6",     'r',  ACS1,  4,  ADU3_TO_DPS, -GYRO3_OFFSET*ADU3_TO_DPS, 'U'}, */
-/*   {"raw_gy5",     'r',  ACS1,  2,  ADU2_TO_DPS, -GYRO2_OFFSET*ADU2_TO_DPS, 'U'}, */
-/*   {"raw_gy4",     'r',  ACS1,  6,  ADU1_TO_DPS, -GYRO1_OFFSET*ADU1_TO_DPS, 'U'}, */
   END_OF_CHANNELS
 };
 
@@ -556,5 +556,12 @@ struct ChannelStruct FastChannels[] = {
 
   /* Read from DAS4 -- bias controller and DPM/inner frame monitoring */
   {"biasin",      'r',  BIAS, 50,             1.0,                    0.0, 'u'},
+  END_OF_CHANNELS
+};
+
+struct ChannelStruct DecomChannels[] = {
+  {"crc_ok",      'w', DECOM,  1,             1.0,                    0.0, 'u'},
+  {"polarity",    'w', DECOM,  2,             1.0,                    0.0, 'u'},
+  {"decom_unlock",'w', DECOM,  3,             1.0,                    0.0, 'u'},
   END_OF_CHANNELS
 };

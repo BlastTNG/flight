@@ -14,11 +14,13 @@
 #include "decom_pci.h"
 #include "bbc_pci.h"
 #include "tx_struct.h"
+#include "crc.h"
 
 #define DEV "/dev/decom_pci"
 #define SOCK_PORT 11411
 
-#define FB_K 0.99977
+#define FS_FILTER 0.999977
+#define DQ_FILTER 0.9977
 
 void InitialiseFrameFile(char type);
 void FrameFileWriter(void);
@@ -41,42 +43,84 @@ extern struct file_info {
 #define FRAME_SYNC_WORD 0xEB90
 
 unsigned short FrameBuf[BI0_FRAME_SIZE];
+unsigned short AntiFrameBuf[BI0_FRAME_SIZE];
 int status = 0;
-double f_bad = 0;
-
+double fs_bad = 0;
+double dq_bad = 0;
+unsigned short polarity = 1;
+int du = 0;
 
 void ReadDecom (void)
 {
+  unsigned short crc_ok = 1;
   unsigned short buf;
   int i_word = 0;
+  int read_data = 0;
 
   for (;;) {
     while ((read(decom, &buf, sizeof(unsigned short))) > 0) {
+      read_data = 1;
       FrameBuf[i_word] = buf;
+      AntiFrameBuf[i_word] = ~buf;
       if (i_word % BI0_FRAME_SIZE == 0) { /* begining of frame */
+        du = ioctl(decom, DECOM_IOC_NUM_UNLOCKED);
         if ((buf != FRAME_SYNC_WORD) && ((~buf & 0xffff) != FRAME_SYNC_WORD)) {
           status = 0;
           i_word = 0;
+          fs_bad = fs_bad * FS_FILTER + (1.0 - FS_FILTER);
         } else {
           if (status < 2)
             status++;
-          else
-            pushDiskFrame(FrameBuf);
+          else 
+            if (polarity) {
+              FrameBuf[BiPhaseFrameWords] = crc_ok;
+              FrameBuf[BiPhaseFrameWords + 1] = polarity;
+              FrameBuf[BiPhaseFrameWords + 2] = du;
+              pushDiskFrame(FrameBuf);
+              fs_bad *= FS_FILTER;
+            } else {
+              AntiFrameBuf[BiPhaseFrameWords] = crc_ok;
+              AntiFrameBuf[BiPhaseFrameWords + 1] = polarity;
+              AntiFrameBuf[BiPhaseFrameWords + 2] = du;
+              pushDiskFrame(AntiFrameBuf);
+              fs_bad *= FS_FILTER;
+            }
+      if (crc_ok)
+        dq_bad *= DQ_FILTER;
+      else
+        dq_bad = dq_bad * DQ_FILTER + (1.0 - DQ_FILTER);
 
           i_word++;
         }
       } else {
-        i_word++;
-        if (i_word >= BI0_FRAME_SIZE)
+        if (++i_word >= BI0_FRAME_SIZE)
           i_word = 0;
+
+        if (i_word - 1 == BiPhaseFrameWords) {
+          FrameBuf[0] = AntiFrameBuf[0] = 0xEB90;
+
+          if (buf == CalculateCRC(CRC_SEED, FrameBuf, BiPhaseFrameWords)) {
+            crc_ok = 1;
+            polarity = 1;
+          } else if ((unsigned short)~buf == CalculateCRC(CRC_SEED,
+                AntiFrameBuf, BiPhaseFrameWords)) {
+            polarity = 0;
+            crc_ok = 1;
+          } else
+            crc_ok = 0;
+        }
       }
     }
 
-    if (status == 2)
-      f_bad *= FB_K;
-    else
-      f_bad = f_bad * FB_K + (1.0 - FB_K);
+    if (!read_data) {
+      fs_bad = fs_bad * FS_FILTER + (1.0 - FS_FILTER);
+      fs_bad = fs_bad * FS_FILTER + (1.0 - FS_FILTER);
+      fs_bad = fs_bad * FS_FILTER + (1.0 - FS_FILTER);
+      fs_bad = fs_bad * FS_FILTER + (1.0 - FS_FILTER);
+    } else
+      read_data = 0;
 
+    usleep(1000);
   }
 }
 
@@ -151,7 +195,8 @@ int main(void) {
     fdwrite = fdread = fdlist;
     FD_CLR(sock, &fdwrite);
     n = select(lastsock + 1, &fdread, &fdwrite, NULL, &no_time);
-    sprintf(buf, "%1i %4.2f %-200s\n", status, f_bad, framefile.name);
+    sprintf(buf, "%1i %1i %3i %4.2f %4.2f %-200s\r\n", status, polarity, du,
+        fs_bad, dq_bad, framefile.name);
 
     if (n == -1 && errno == EINTR)
       continue;
@@ -220,7 +265,7 @@ int main(void) {
       }
     }
 
-    usleep(100000);
+    usleep(1000000);
   }
 
   return 1;

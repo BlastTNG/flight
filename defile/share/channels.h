@@ -76,8 +76,12 @@ extern "C" {
 
   extern unsigned short BoloBaseIndex;
 
+#if (defined __MCP__ || defined __DECOMD__)
   extern unsigned short BiPhaseFrameWords;
   extern unsigned short BiPhaseFrameSize;
+#endif
+  extern unsigned short DiskFrameWords;
+  extern unsigned short DiskFrameSize;
   extern unsigned short slowsPerBi0Frame;
   extern unsigned short TxFrameWords[2];
   extern unsigned short TxFrameSize[2];
