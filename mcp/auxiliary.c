@@ -34,13 +34,14 @@
 #define ISC_TRIG_PERIOD 100   /* in 100Hz frames */
 #define MAX_ISC_SLOW_PULSE_SPEED 0.015
 
-struct ISCPulseType isc_pulses[2] = {{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}};
+struct ISCPulseType isc_pulses[2] = {{-1, 0, 0, 0, 0, 0}, {-1, 0, 0, 0, 0, 0}};
 
 int pin_is_in = 1;
 
 /* Semaphores for hanshaking with the ISC/OSC threads (isc.c) */
 extern short int write_ISC_pointing[2];
 extern short int write_ISC_trigger[2];
+extern short int ISC_link_ok[2];
 
 /* ACS0 digital signals (G1 and G3 output, G2 input) */
 #define BAL1_ON      0x04  /* ACS3 Group 1 Bit 3 - ifpmBits */
@@ -278,7 +279,7 @@ int GetLockBits(unsigned short lockBits) {
     pin_is_in = 0;
     is_opening = 0;
   }
-  
+
   /* set lock bits */
   if (is_closing) {
     is_closing--;
@@ -306,43 +307,75 @@ void CameraTrigger(int which)
     TriggerAddr[1] = GetNiosAddr("osc_trigger");
   }
 
+  /* age is needed by pointing.c to tell it how old the solution is */
   if (isc_pulses[which].age >= 0)
     isc_pulses[which].age++;
-  
-  if (isc_pulses[which].ctr < ISC_TRIG_PERIOD) {
-    isc_pulses[which].ctr++;
-  } else {
-    write_ISC_pointing[which] = 1;	/* no blastbus latency any more */
-    isc_pulses[which].pulse_index = (isc_pulses[which].pulse_index + 1) % 4;
-    isc_pulses[which].ctr = 0;
-
-    if (isc_pulses[which].is_fast) {
-      iscPulse = (isc_pulses[which].pulse_index << 14)
-        | CommandData.ISCControl[which].fast_pulse_width;
-      CommandData.ISCState[which].exposure
-        = CommandData.ISCControl[which].fast_pulse_width / 10416.6666666667;
-    } else if (fabs(axes_mode.az_vel) < MAX_ISC_SLOW_PULSE_SPEED) {
-      iscPulse = (isc_pulses[which].pulse_index << 14)
-        | CommandData.ISCControl[which].pulse_width;
-
-      /* Trigger automatic image write-to-disk */
-      if (isc_pulses[which].last_save
-          >= CommandData.ISCControl[which].save_period &&
-          CommandData.ISCControl[which].save_period > 0) {
-        CommandData.ISCControl[which].auto_save = 1;
-        isc_pulses[which].last_save = 0;
-      }
-      CommandData.ISCState[which].exposure
-        = CommandData.ISCControl[which].pulse_width / 10416.6666666667;
-    }
-
-    if (isc_pulses[which].age < 0)
-      isc_pulses[which].age = 0;
-
-    WriteData(TriggerAddr[which], iscPulse, NIOS_FLUSH);
-  }
 
   isc_pulses[which].last_save++;
+
+  if (isc_pulses[which].ctr == 0) { /* start of new pulse */
+    if (!isc_pulses[which].ack_wait) { /* not waiting for ack: send new data */
+      if (isc_pulses[which].is_fast) {  /* fast pulse */
+        /* use fast (short) pulse length */
+        isc_pulses[which].pulse_req =
+          CommandData.ISCControl[which].fast_pulse_width;
+      } else {  /* slow pulse */
+        /* use slow (long) pulse length */
+        isc_pulses[which].pulse_req = CommandData.ISCControl[which].pulse_width;
+
+        /* autosave next image -- we only do this on long pulses */
+        if (isc_pulses[which].last_save >=
+            CommandData.ISCControl[which].save_period &&
+            CommandData.ISCControl[which].save_period > 0) {
+
+          CommandData.ISCControl[which].auto_save = 1;
+          isc_pulses[which].last_save = 0;
+        }
+      }
+
+      /* Inform the Star camera of the exposure time */
+      CommandData.ISCState[which].exposure =
+        isc_pulses[which].pulse_req / 10416.6666666667;
+
+      /* Add pulse serial number */
+      isc_pulses[which].pulse_index = (isc_pulses[which].pulse_index + 1) % 4;
+      isc_pulses[which].pulse_req += isc_pulses[which].pulse_index << 14;
+
+      /* Signal isc thread to send new pointing data */
+      write_ISC_trigger[which] = 0;
+      write_ISC_pointing[which] = 1;
+
+      /* Start waiting for ACK from star camera */
+      isc_pulses[which].ack_wait = 1;
+      isc_pulses[which].ack_timeout =
+        (ISC_link_ok[which]) ? ISC_ACK_TIMEOUT : 0;
+    } else { /* ACK wait state */
+      if (isc_pulses[which].ack_wait > isc_pulses[which].ack_timeout
+          || write_ISC_trigger[which]) {
+
+        /* if we exceeded the time-out, flag the link as bad */
+        if (ISC_link_ok[which] && isc_pulses[which].ack_wait
+            > isc_pulses[which].ack_timeout) {
+
+          bprintf(warning, "%s: timeout on ACK, flagging link as bad.\n",
+              (which) ? "Osc" : "Isc");
+          ISC_link_ok[which] = 0;
+        }
+
+        /* write the pulse */
+        isc_pulses[which].ctr = isc_pulses[which].ack_wait;
+        write_ISC_trigger[which] = 0;
+        WriteData(TriggerAddr[which], iscPulse, NIOS_FLUSH);
+
+        /* re-zero age, if needed */
+        if (isc_pulses[which].age < 0)
+          isc_pulses[which].age = 0;
+
+      } else
+        isc_pulses[which].ack_wait++;
+    }
+  } else if (++isc_pulses[which].ctr > ISC_TRIG_PERIOD)
+    isc_pulses[which].ctr = 0;
 }
 
 /*****************************************************************/
@@ -463,7 +496,7 @@ void SensorResets(void)
   static int firsttime = 1;
   static struct NiosStruct* sensorResetAddr;
   int sensor_resets = 0;
-  
+
   if (firsttime) {
     firsttime = 0;
     sensorResetAddr = GetNiosAddr("sensor_reset");

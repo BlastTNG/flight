@@ -210,9 +210,12 @@ struct DGPSPosStruct{
 struct ISCPulseType {
   int age; // time since start of last trigger
   int ctr; // where we are in the period
-  int pulse_index;
+  int pulse_index;  // pulse counter index
   int is_fast; // if a fast pulse is requested: set in motors.c
-  int last_save;
+  int last_save;  // time since last autosaved image
+  int pulse_req; // the pulse request waiting to be writen
+  int ack_wait; // whether we are waiting for ACK from SC
+  int ack_timeout; // length of time to wait for ACK before giving up
 };
 
 extern struct ISCPulseType isc_pulses[2];

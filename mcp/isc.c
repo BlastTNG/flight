@@ -51,7 +51,8 @@ extern short int InCharge; /* tx.c */
 extern int frame_num;      /* tx.c */
 
 short int write_ISC_pointing[2] = {0, 0}; // isc.c
-short int write_ISC_pulse[2]    = {0, 0}; // isc.c
+short int write_ISC_trigger[2]  = {0, 0}; // isc.c
+short int ISC_link_ok[2]        = {0, 0}; // isc.c
 
 struct ISCStatusStruct ISCSentState[2];
 
@@ -198,11 +199,16 @@ void IntegratingStarCamera(void* parameter)
           fflush(isc_log[which]);
         }
 #endif
+        /* Flag link as good if necessary */
+        if (!ISC_link_ok[which]) {
+          bprintf(info, "%s: Network link OK.\n", isc_which[which].who);
+          ISC_link_ok[which] = 1;
+        }
 
         /* Wait for acknowledgement from camera before sening trigger */
         if (waiting_for_ACK)
           if (ISCSolution[which][iscdata_index[which]].flag == 0) {
-            write_ISC_pulse[which] = 1;
+            write_ISC_trigger[which] = 1;
             waiting_for_ACK = 0;
           }
 
