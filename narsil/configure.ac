@@ -7,12 +7,13 @@ AC_ARG_WITH(data-etc,
             [  --with-data-etc=DIR     put auxiliary data in DIR [[/data/etc]]],
             DATA_ETC_DIR="${withval}", DATA_ETC_DIR="/data/etc")
 AC_SUBST(DATA_ETC_DIR)
+#
 
 AC_ARG_WITH(cur-dir,
             [  --with-cur-dir=DIR      read curfiles from DIR [[/mtn/decom/etc]]],
             CUR_DIR="${withval}", CUR_DIR="/mnt/decom/etc")
 AC_SUBST(CUR_DIR)
-AC_DEFINE_UNQUOTED(CUR_DIR, "$CUR_DIR", [Define to the path to your curfiles])
+AC_DEFINE_UNQUOTED(CUR_DIR, "$CUR_DIR", [Define to the path to your curfiles ])
 
 DATA_ETC_NARSIL_DIR="$DATA_ETC_DIR/narsil"
 AC_DEFINE_UNQUOTED(DATA_ETC_NARSIL_DIR, "$DATA_ETC_NARSIL_DIR",
