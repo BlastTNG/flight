@@ -13,6 +13,16 @@ fi
 
 echo EXEC_DIR = ${EXEC_DIR} > Makefile.config
 
+echo -n "Calibration files directory [/data/etc]: "
+read ETC_DIR
+
+if [ -z "${ETC_DIR}" ]
+then
+  ETC_DIR=/data/etc ;
+fi
+
+echo ETC_DIR = ${ETC_DIR} >> Makefile.config
+
 echo -n "Data directory [/data/etc/palantir]: "
 read DATA_DIR
 

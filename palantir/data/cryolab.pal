@@ -65,12 +65,19 @@
     <XHI value="6" alarm="eranu.wav"/>
   </EXTREMA>
   
+<EXTREMA name="lhetemp">
+	<XLO value="1" alarm="uvavu.wav"/>
+	<LO value="3"/>
+ 	<HI value="6"/>
+    	<XHI value="10" alarm="eranu.wav"/>
+</EXTREMA>
+
 <EXTREMA name="lntemp">
 	<XLO value="70" alarm="uvavu.wav"/>
 	<LO value="75"/>
  	<HI value="81"/>
     	<XHI value="85" alarm="eranu.wav"/>
- </EXTREMA>
+</EXTREMA>
 
 <EXTREMA name="vcstemp">
 <XLO value="15" alarm="uvavu.wav"/>
