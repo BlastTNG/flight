@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.43 $";
+const char command_list_serial[] = "$Revision: 2.44 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -409,29 +409,27 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /******** Electronics Heaters  *********/
-  {COMMAND(t_gyro_set), "gyro box temperature set points", GR_EHEAT, 3,
+  {COMMAND(t_gyro1_set), "gyro box 1 temperature set point", GR_EHEAT, 1,
     {
-      {"Min Set Point (deg C)", 0, 60, 'f', "T_GY_MIN"},
-      {"Max Set Point (deg C)", 0, 60, 'f', "T_GY_MAX"},
-      {"Cur Set Point (deg C)", 0, 60, 'f', "T_GY_SET"}
+      {"Set Point (deg C)", 0, 60, 'f', "T_GY_SET"}
     }
   },
 
-  {COMMAND(t_gyro_heat), "gyro box heater levels", GR_EHEAT, 2,
+  {COMMAND(t_gyro2_set), "gyro box 2 temperature set point", GR_EHEAT, 1,
     {
-      {"Min Heater Level (%)", 0, 60, 'f', "GY_H_MIN"},
-      {"Max Heater Level (%)", 0, 60, 'f', "GY_H_MAX"},
+      {"Set Point (deg C)", 0, 60, 'f', "T_GY_SET"}
     }
   },
 
-  {COMMAND(t_gyro_param), "gyro box thermostat parameters", GR_EHEAT, 2,
+  {COMMAND(t_gyro1_gain), "gyro box 1 heater gains", GR_EHEAT, 3,
     {
-      {"Integral Length (min)", 0.5, 60, 'f', "GY_H_TC"},
-      {"Setpoint step size (deg C)", 0.1, 5, 'f', "T_GY_STEP"},
+      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_gyheat"},
+      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_gyheat"},
+      {"Derrivative Gain",  0, MAX_15BIT, 'i', "g_d_gyheat"}
     }
   },
 
-  {COMMAND(t_gyro_gain), "gyro box heater gains", GR_EHEAT, 3,
+  {COMMAND(t_gyro2_gain), "gyro box 2 heater gains", GR_EHEAT, 3,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_gyheat"},
       {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_gyheat"},

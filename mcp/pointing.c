@@ -797,7 +797,7 @@ void Pointing(){
     if (no_dgps_pos > 179) {
       PointingData[point_index].t = time(NULL); // for now use CPU time
     }
-#warning Set to use SIP only for lat and lon: fix for flight!!!
+#warning CURRENTLY SET TO USE SIP ONLY FOR LAT AND LON: FIX FOR FLIGHT!!!
     if (no_dgps_pos > 3000 || 1) { // no dgps for 30 seconds - revert to sip
       PointingData[point_index].lat = SIPData.GPSpos.lat;
       PointingData[point_index].lon = -SIPData.GPSpos.lon;

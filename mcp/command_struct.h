@@ -98,16 +98,9 @@ struct CommandDataStruct {
 
   struct {
     double setpoint;
-    double min_set;
-    double max_set;
-    double min_heat;
-    double max_heat;
-    double step;
     int age;
-    int tc;
     struct GainStruct gain;
-  } gyheat;
-  double t_isc_setpoint;
+  } gyheat[2];
 
   unsigned char use_elenc;
   unsigned char use_elclin;

@@ -57,7 +57,7 @@ double round(double x);
 
 /* in auxiliary.c */
 void ControlAuxMotors(unsigned short *RxFrame);
-void ControlGyroHeat(unsigned short *RxFrame);
+void ControlGyroHeat(unsigned short *RxFrame, int);
 void CameraTrigger(int which);
 void SensorResets(void);
 
@@ -953,7 +953,8 @@ void UpdateBBCFrame(unsigned short *RxFrame) {
     DoSched();
   UpdateAxesMode();
   StoreData(index);
-  ControlGyroHeat(RxFrame);
+  ControlGyroHeat(RxFrame, 0);
+  ControlGyroHeat(RxFrame, 1);
   WriteMot(index, RxFrame);
 #endif
   BiasControl(RxFrame);

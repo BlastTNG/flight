@@ -744,21 +744,20 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
 
   /***************************************/
   /******** Electronics Heaters  *********/
-  else if (command == t_gyro_set) {  /* gyro heater setpoint */
-    CommandData.gyheat.min_set = rvalues[0];
-    CommandData.gyheat.max_set = rvalues[1];
-    CommandData.gyheat.setpoint = rvalues[2];
-    CommandData.gyheat.age = 0;
-  } else if (command == t_gyro_heat) { /* gyro heater levels */
-    CommandData.gyheat.min_heat = rvalues[0];
-    CommandData.gyheat.max_heat = rvalues[1];
-  } else if (command == t_gyro_param) { /* gyro thermostat parameters */
-    CommandData.gyheat.tc = (int)(6000 * rvalues[0]);
-    CommandData.gyheat.step = rvalues[1];
-  } else if (command == t_gyro_gain) {  /* gyro heater gains */
-    CommandData.gyheat.gain.P = ivalues[0];
-    CommandData.gyheat.gain.I = ivalues[1];
-    CommandData.gyheat.gain.D = ivalues[2];
+  else if (command == t_gyro1_set) {  /* gyro heater setpoint */
+    CommandData.gyheat[0].setpoint = rvalues[0];
+    CommandData.gyheat[0].age = 0;
+  } else if (command == t_gyro2_set) {  /* gyro heater setpoint */
+    CommandData.gyheat[1].setpoint = rvalues[0];
+    CommandData.gyheat[1].age = 0;
+  } else if (command == t_gyro1_gain) {  /* gyro heater gains */
+    CommandData.gyheat[0].gain.P = ivalues[0];
+    CommandData.gyheat[0].gain.I = ivalues[1];
+    CommandData.gyheat[0].gain.D = ivalues[2];
+  } else if (command == t_gyro2_gain) {  /* gyro heater gains */
+    CommandData.gyheat[1].gain.P = ivalues[0];
+    CommandData.gyheat[1].gain.I = ivalues[1];
+    CommandData.gyheat[1].gain.D = ivalues[2];
 
     /***************************************/
     /*************** Misc  *****************/
@@ -1424,7 +1423,8 @@ void InitCommandData() {
   CommandData.sensors_off.osc = 0;
   CommandData.sensors_off.ss = 0;
 
-  CommandData.gyheat.age = 0;
+  CommandData.gyheat[0].age = 0;
+  CommandData.gyheat[1].age = 0;
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
@@ -1464,16 +1464,15 @@ void InitCommandData() {
   CommandData.emf_gain = 1;
   CommandData.emf_offset = 0;
 
-  CommandData.gyheat.min_set = 0.0;
-  CommandData.gyheat.max_set = 60.0;
-  CommandData.gyheat.min_heat = 5.0;
-  CommandData.gyheat.max_heat = 40.0;
-  CommandData.gyheat.setpoint = 30.0;
-  CommandData.gyheat.step = 1.0;
-  CommandData.gyheat.tc = 30000; /* = 5 minutes; in 100Hz frames */
-  CommandData.gyheat.gain.P = 100;
-  CommandData.gyheat.gain.I = 20;
-  CommandData.gyheat.gain.D = 0;
+  CommandData.gyheat[0].setpoint = 30.0;
+  CommandData.gyheat[0].gain.P = 100;
+  CommandData.gyheat[0].gain.I = 20;
+  CommandData.gyheat[0].gain.D = 0;
+
+  CommandData.gyheat[1].setpoint = 30.0;
+  CommandData.gyheat[1].gain.P = 100;
+  CommandData.gyheat[1].gain.I = 20;
+  CommandData.gyheat[1].gain.D = 0;
 
   CommandData.disable_az = 0;
   CommandData.disable_el = 0;

@@ -110,12 +110,12 @@ enum multiCommand {
   lock,              isc_max_blobs,     outer_level,      phase,
   pivot_gain,        isc_pixel_centre,  ra_dec_goto,      ra_dec_set,
   roll_gain,         isc_set_aperture,  isc_set_focus,    setpoints,
-  bda_heat,          spare_level,       t_gyro_set,       osc_gain,
-  t_gyro_gain,       timeout,           isc_tolerances,   vcap,
+  bda_heat,          spare_level,       t_gyro1_set,      osc_gain,
+  t_gyro1_gain,      timeout,           isc_tolerances,   vcap,
   vbox,              alice_file,        gyro_override,    isc_hold_current,
   isc_save_period,   back_emf,          osc_offset,       plugh,
   bda_gain,          bda_set,           jfet_set,         isc_foc_off,
-  osc_foc_off,       t_gyro_heat,       t_gyro_param
+  osc_foc_off,       t_gyro2_gain,      t_gyro2_set
 };
 
 struct par {

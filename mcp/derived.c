@@ -90,6 +90,16 @@ union DerivedUnion DerivedChannels[] = {
       "IS_SCHED"
       ),
 
+  /* bits to acs 0 */
+  COMMENT("Auxiliary heaters"),
+  BITFIELD("gy2_heat",
+      "ISC_HEAT_ENABLE",
+      "",
+      "OSC_HEAT_ENABLE",
+      "",
+      "GYBOX2_HEAT"
+      ),
+
   /* ISC and OSC */
   COMMENT("Star Camera State"), 
   BITFIELD("isc_state",
@@ -177,7 +187,7 @@ union DerivedUnion DerivedChannels[] = {
       "AUTO_JFET_HEAT"
       ),
 
-  COMMENT("More internal to mcp references of the cryostat"),
+  COMMENT("Control bits to the Cryo control card"),
   BITFIELD("cryoctrl",
       "",
       "",
