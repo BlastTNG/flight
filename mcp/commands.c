@@ -1327,7 +1327,7 @@ void WatchPortC2 () {
 void InitCommandData() {
   int fp, n_read = 0;
 
-  if (fp = open("/tmp/mcp.prev_status", O_RDONLY) < 0) {
+  if ((fp = open("/tmp/mcp.prev_status", O_RDONLY)) < 0) {
     perror("Unable to open prev_status file for reading");
   } else {
     n_read = read(fp, &CommandData, sizeof(struct CommandDataStruct));
