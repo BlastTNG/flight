@@ -79,11 +79,8 @@ char* DecomData::DecomFile(void)
 
 void DecomData::setData(char* buf)
 {
-  sscanf(buf, "%i %i %i %lf %lf %Lu %s", &status, &polarity, &decomUnlocks,
-      &fs_bad, &dq_bad, &df, filename);
-  frame_counter = (unsigned long)df;
-//  sscanf(buf, "%i %i %i %lf %lf %Lu %lu %s", &status, &polarity, &decomUnlocks,
-//      &fs_bad, &dq_bad, &df, &frame_counter, filename);
+  sscanf(buf, "%i %i %i %lf %lf %Lu %lu %s", &status, &polarity, &decomUnlocks,
+      &fs_bad, &dq_bad, &df, &frame_counter, filename);
   filename[12] = 0;
 }
 
