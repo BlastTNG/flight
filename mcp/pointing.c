@@ -841,6 +841,10 @@ void Pointing(){
     AddElSolution(&ElAtt, &ISCEl, 0);
   }
 
+  if (CommandData.use_osc) {
+    AddElSolution(&ElAtt, &OSCEl, 0);
+  }
+
   PointingData[point_index].gy1_offset = ElAtt.gy_offset;
   PointingData[point_index].el = ElAtt.el;
 
@@ -893,6 +897,10 @@ void Pointing(){
   if (CommandData.use_isc) {
     AddAzSolution(&AzAtt, &ISCAz, 0);
   }
+  if (CommandData.use_osc) {
+    AddAzSolution(&AzAtt, &OSCAz, 0);
+  }
+
 
   PointingData[point_index].az = AzAtt.az;
   if (CommandData.autogyro) {
