@@ -407,7 +407,8 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
   WriteSlow(balOnCh, balOnInd, (int)CommandData.pumps.bal_on);
   WriteSlow(balOffCh, balOffInd, (int)CommandData.pumps.bal_off);
   WriteSlow(balVetoCh, balVetoInd, (int)CommandData.pumps.bal_veto);
-  WriteSlow(balTargetCh, balTargetInd, (int)CommandData.pumps.bal_target);
+  WriteSlow(balTargetCh, balTargetInd,
+      (int)(CommandData.pumps.bal_target + 1648. * 5.));
   WriteSlow(balGainCh, balGainInd, (int)(CommandData.pumps.bal_gain * 1000.));
   WriteSlow(balMinCh, balMinInd, (int)CommandData.pumps.bal_min);
   WriteSlow(balMaxCh, balMaxInd, (int)CommandData.pumps.bal_max);

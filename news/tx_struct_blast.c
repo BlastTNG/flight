@@ -188,7 +188,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"sensor_veto",  'w', LOOPBACK, 28,          1.0,             0.0, 'u'},
     {"bal_on",       'w', LOOPBACK, 29,     1./1648.,             0.0, 'u'},
     {"bal_off",      'w', LOOPBACK, 30,     1./1648.,             0.0, 'u'},
-    {"bal_target",   'w', LOOPBACK, 31,     1./1648.,             0.0, 'u'}
+    {"bal_target",   'w', LOOPBACK, 31,     1./1648.,            -5.0, 'u'}
   },
   {
     {"bal_veto",     'w', LOOPBACK, 32,           1.0,             0.0, 'u'},
