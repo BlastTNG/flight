@@ -498,19 +498,19 @@
 </BOX>
 <BOX caption="Valves" row="3" col="5">
   <MULTI caption="LN" textstyle="oddrow">
-    <DATUM src="LN_VALVE">
+    <DATUM src="POT_VALVE">
       <WORD value="1" caption="On" textstyle="W_BIT"/>
       <WORD value="0" caption="Off" textstyle="OK_BIT"/>
     </DATUM>
   </MULTI>
   <MULTI caption="LN Dir" textstyle="oddrow">
-    <DATUM src="LN_DIREC">
+    <DATUM src="POT_DIREC">
       <WORD value="1" caption="Opening" textstyle="W_BIT"/>
       <WORD value="0" caption="Closing" textstyle="OK_BIT"/>
     </DATUM>
   </MULTI>
   <MULTI caption="LN State" textstyle="oddrow">
-    <DATUM src="LN_STATE">
+    <DATUM src="POT_STATE">
       <WORD value="3" caption="Error" textstyle="E_BIT"/>
       <WORD value="0" caption="No Limit" textstyle="P_BIT"/>
       <WORD value="1" caption="Open" textstyle="W_BIT"/>
