@@ -111,7 +111,7 @@ void InitialiseFrameFile(char type) {
 void* advance_in_buffer(void* ptr) {
   void* tmp;
   tmp = ((char*)ptr + RX_FRAME_SIZE);
-  return (tmp > framefile.buffer_end) ? framefile.buffer : (void*)tmp;
+  return (tmp >= framefile.buffer_end) ? framefile.buffer : (void*)tmp;
 }
 
 /*************************************************************/
@@ -121,6 +121,7 @@ void* advance_in_buffer(void* ptr) {
 void pushDiskFrame(unsigned short *RxFrame) {
   unsigned int i_slow;
   int i_ch;
+  void* new_write_to = advance_in_buffer(framefile.b_write_to);
 
   /*********************************************/
   /* fill the MCP internal slow data structure */
@@ -134,10 +135,10 @@ void pushDiskFrame(unsigned short *RxFrame) {
 
   /* ****************************************************************** */
   /* First make sure there is enough space in the buffer                */
-  /* We discard the full frame id there is no space                     */
+  /* We discard the full frame if there is no space                     */
   /* ****************************************************************** */
 
-  if (advance_in_buffer(framefile.b_write_to) == framefile.b_read_from) {
+  if (new_write_to == framefile.b_read_from) {
     mputs(MCP_WARNING, "Framefile buffer overflow (frame discarded)\n");
     return;
   }	
@@ -145,10 +146,11 @@ void pushDiskFrame(unsigned short *RxFrame) {
   /*********************/
   /* SHIP OUT RX FRAME */
   /*********************/
+  fprintf(stderr, "framefile.b_write_to = %p\r", framefile.b_write_to);
   memcpy(framefile.b_write_to, RxFrame, RX_FRAME_SIZE);
 
   /* advance write-to pointer */
-  framefile.b_write_to = advance_in_buffer(framefile.b_write_to);
+  framefile.b_write_to = new_write_to;
 }
 
 /***************************************************************/
