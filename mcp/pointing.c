@@ -689,7 +689,7 @@ void Pointing(){
     0.0001, // filter constant
     0, 0 // n_solutions, since_last
   };
-  static struct AzSolutionStruct NullAz = {92.0, // starting angle
+  static struct AzSolutionStruct NullAz = {91.0, // starting angle
     360.0 * 360.0, // starting varience
     1.0 / M2DV(6), //sample weight
     M2DV(6000), // systemamatic varience

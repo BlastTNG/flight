@@ -163,7 +163,7 @@ void SyncADC (void) {
   static struct NiosStruct* syncAddr[NUM_SYNC];
   static struct BiPhaseStruct* statusAddr[NUM_SYNC];
   static int doingSync[NUM_SYNC];
-  static short int serial[NUM_SYNC];
+  static unsigned short int serial[NUM_SYNC];
   char buffer[9];
 
   int k, l, m;
@@ -174,7 +174,8 @@ void SyncADC (void) {
     firsttime = 0;
 
     for (k = 0; k < NUM_SYNC; ++k) {
-      doingSync[k] = serial[k] = 0;
+      doingSync[k] = 0;
+      serial[k] = 29000;
       sprintf(buffer, "sync%02i", k);
       syncAddr[k] = GetNiosAddr(buffer);
       sprintf(buffer, "status%02i", k);
@@ -198,8 +199,12 @@ void SyncADC (void) {
     }
 
     /* update the serial if we got a good response last time */
-    if ((k & 0xfffc) == serial[m])
-      serial[m] += 4;
+    if ((k & 0xfffc) == serial[m]) {
+      if (serial[m] > 30000)
+        serial[m] = 4;
+      else 
+        serial[m] += 4;
+    }
 
     RawNiosWrite(syncAddr[m]->niosAddr, BBC_WRITE | BBC_NODE(l) | BBC_CH(56)
         | doingSync[m] | (serial[m] & 0xfffc) | 0x3, NIOS_FLUSH);

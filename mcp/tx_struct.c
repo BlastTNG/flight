@@ -166,7 +166,7 @@ struct ChannelStruct SlowChannels[] = {
   {"v_sol_das3",   'r',  ACS3, 43,           -6.27E-5,         4.10151, 'u'},
   {"v_sol_acs2",   'r',  ACS3, 45,           -6.27E-5,         4.10108, 'u'},
   {"v_sol_das1",   'r',  ACS3, 47,           -6.27E-5,         4.10228, 'u'},
-  {"status17",     'r',  ACS3, 57,                1.0,             0.0, 'u'},
+  {"status17",     'r',  ACS3, 56,                1.0,             0.0, 'u'},
   {"lock_bits",    'r',  ACS3, 59,                1.0,             0.0, 'u'},
   {"ifpm_bits",    'w',  ACS3,  1,                1.0,             0.0, 'u'},
   {"ofpm_bits",    'w',  ACS3,  2,                1.0,             0.0, 'u'},

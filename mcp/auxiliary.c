@@ -30,6 +30,10 @@
 #include "command_struct.h"
 #include "pointing_struct.h"
 
+/* Define to 1 to send synchronous star camera triggers based on ISC 
+ * handshaking */
+#define SYNCHRONOUS_CAMERAS 0
+
 /* This is the length of time to wait for an ACK from the star camera before
  * giving up */
 #define ISC_ACK_TIMEOUT    100   /* in 100Hz frames */
@@ -721,8 +725,15 @@ void CameraTrigger(int which)
           if (WHICH)
             bprintf(info, "%iSC (t): Writing trigger (%04x)\n", which,
                 isc_pulses[which].pulse_req);
+#ifdef SYNCHRONOUS_CAMERAS
+          if (which == 0) {
+            WriteData(TriggerAddr[0], isc_pulses[0].pulse_req, NIOS_FLUSH);
+            WriteData(TriggerAddr[1], isc_pulses[1].pulse_req, NIOS_FLUSH);
+          }
+#else
           WriteData(TriggerAddr[which], isc_pulses[which].pulse_req,
               NIOS_FLUSH);
+#endif
 
           if (WHICH)
             bprintf(info, "%iSC (t): Lowering write_ISC_trigger\n", which);
