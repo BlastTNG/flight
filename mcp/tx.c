@@ -1074,6 +1074,7 @@ void StoreData(unsigned int* Txframe,
   static int i_SS_PRIN, j_SS_PRIN;
   static int i_SIP_LAT, i_SIP_LON, i_SIP_ALT, i_SIP_TIME;
   static int j_SIP_LAT, j_SIP_LON, j_SIP_ALT, j_SIP_TIME;
+  static int i_LST, j_LST;
   static int i_LAT, i_LON;
   static int j_LAT, j_LON;
 
@@ -1107,6 +1108,7 @@ void StoreData(unsigned int* Txframe,
     SlowChIndex("sip_lon", &i_SIP_LON, &j_SIP_LON);
     SlowChIndex("sip_alt", &i_SIP_ALT, &j_SIP_ALT);
     SlowChIndex("sip_time", &i_SIP_TIME, &j_SIP_TIME);
+    SlowChIndex("lst", &i_LST, &j_LST);
     SlowChIndex("lat", &i_LAT, &j_LAT);
     SlowChIndex("lon", &i_LON, &j_LON);
 
@@ -1144,10 +1146,14 @@ void StoreData(unsigned int* Txframe,
   WriteSlow(i_SIP_TIME, j_SIP_TIME, t >> 16);
   WriteSlow(i_SIP_TIME + 1, j_SIP_TIME, t);
 
+
   /************* processed pointing data *************/
   i_point = GETREADINDEX(point_index);
   WriteFast(i_az, (unsigned int)(PointingData[i_point].az * 65536.0/360.0));
   WriteFast(i_el, (unsigned int)(PointingData[i_point].el * 65536.0/360.0));
+  t = PointingData[i_point].lst;
+  WriteSlow(i_LST, j_LST, t >> 16);
+  WriteSlow(i_LST + 1, j_LST, t);
 
   /************* Pointing mode fields *************/
   WriteSlow(i_AZ_MODE, j_AZ_MODE, (int)(CommandData.pointing_mode.az_mode));
@@ -1212,16 +1218,16 @@ void DoScanMode() {
 
   t = PointingData[i_point].t;
   
-  lst = getlst(t, PointingData[i_point].lon);
+  //lst = getlst(t, PointingData[i_point].lon);
 
-  radec2azel(CommandData.pointing_mode.ra, CommandData.pointing_mode.dec,
-	     PointingData[i_point].lat, lst,
-	     &caz, &cel);
+/*   radec2azel(CommandData.pointing_mode.ra, CommandData.pointing_mode.dec, */
+/* 	     PointingData[i_point].lat, lst, */
+/* 	     &caz, &cel); */
 
-  printf("%s %g lst: %d:%d:%d lat: %g lon: %g az: %g el: %g\n",
-	 ctime(&t), lst/3600.0, (int)lst/3600, ((int)lst%3600)/60, (((int)lst%3600)%60),
-	 PointingData[i_point].lat, PointingData[i_point].lon,
-	 caz, cel);
+/*   printf("%s %g lst: %d:%d:%d lat: %g lon: %g az: %g el: %g\n", */
+/* 	 ctime(&t), lst/3600.0, (int)lst/3600, ((int)lst%3600)/60, (((int)lst%3600)%60), */
+/* 	 PointingData[i_point].lat, PointingData[i_point].lon, */
+/* 	 caz, cel); */
   
   //getlst(PointingData[i_point].t,
   // PointingData[i_point].lon,

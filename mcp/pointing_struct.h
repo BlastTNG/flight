@@ -113,5 +113,6 @@ struct PointingDataStruct {
   double lon;       // degrees
   int mcp_frame;
   time_t t;
+  time_t lst;
 };
 

@@ -12,6 +12,8 @@
 
 #include "pointing_struct.h"
 
+double getlst(time_t t, double lon); // defined in starpos.c
+
 int point_index=0;
 struct PointingDataStruct PointingData[3];
 
@@ -117,7 +119,9 @@ void Pointing(){
   /** set time related things **/
   PointingData[new_index].mcp_frame = ACSData.mcp_frame;
   PointingData[new_index].t = time(NULL); // for now use CPU time
-
+  PointingData[new_index].lst = getlst(PointingData[new_index].t,
+				       PointingData[new_index].lon);
+  
   /*************************************/
   /**      do elevation solution      **/
   EvolveSolution(&EncEl, -ACSData.gyro1, ACSData.enc_elev, 1);

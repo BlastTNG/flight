@@ -563,31 +563,20 @@ void ReductionInit() {
 /*get local sidereal time:  lon is in degrees                           */
 /************************************************************************/
 double getlst(time_t t, double lon) {
-  double S, T, T0, UT;
-  double gst, lst;
-  struct tm gmt;
-  double jd, d_jd;
-  double ref_jd = 2452840.67352; /// GST was 24:0:0 at this JD (July, 20 4:09:52 UTC)
 
-  gmtime_r(&t, &gmt);
-  jd = GetJulian(&gmt);
+  /* gmt is set to a time when gst was zero */
+  /* we are assuming that frodo is set to gmt. */
+  struct tm gmt = {56, 5, 4, /* s, m, h */
+		   21, 06, 103, 0,0,0,0}; // day, month (0-11), year-1900
 
-  d_jd = jd - ref_jd;
+  t -= (mktime(&gmt) - timezone); 
 
-  gst = d_jd * 1.002737909; // gst in days
+  t *= 1.002737909; // gst in seconds
+
+  t+= lon*(24.0*3600.0/360.0);
+  t = t%(24*3600);
   
-  while (gst < 0) 
-    gst += 1.0;
-  while (gst >= 1.0) 
-    gst -= 1.0;
-
-  lst = gst + lon/360.0;
-  while (lst < 0.0) 
-    lst += 1.0;
-  while (lst >= 1.0) 
-    lst -= 1.0;
-
-  return(lst*24.0*3600.0);
+  return(t);
 }
 
 /************************************************************************/
