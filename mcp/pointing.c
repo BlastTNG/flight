@@ -20,7 +20,9 @@
 #define GY2_OFFSET (0.0123)
 #define GY3_OFFSET (0.0143)
 
-extern int isc_trigger_count; // set in tx.c - frames since pulse
+#define MAX_ISC_AGE 200
+
+extern int isc_trigger_since_last; // set in tx.c - frames since pulse
 
 
 extern server_frame ISCData[3]; // isc.c
@@ -41,6 +43,13 @@ struct PointingDataStruct PointingData[3];
 struct ElAttStruct {
   double el;
   double gy_offset;
+  double weight;
+};
+
+struct AzAttStruct {
+  double az;
+  double gy2_offset;
+  double gy3_offset;
   double weight;
 };
 
@@ -189,7 +198,7 @@ void RecordHistory(int index) {
   hs.gyro1_history[hs.i_history] = ACSData.gyro1;
   hs.gyro2_history[hs.i_history] = ACSData.gyro2;
   hs.gyro3_history[hs.i_history] = ACSData.gyro3;
-  hs.elev_history[hs.i_history] = PointingData[index].el;
+  hs.elev_history[hs.i_history] = PointingData[index].el*M_PI/180.0;
 }
 
 #define GYRO_VAR 3.7808641975309e-08
@@ -200,40 +209,68 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
   double gy_az;
   static int last_isc_framenum = 0xfffffff;
   int i_isc, i_point;
-  double az, el, ra, dec;
-
-  // integrals of gyros, since the last starfield, with offsets
-  static double gy_el_int1=0; 
-  static double gy_az_int1=0; 
+  double new_az, new_el, ra, dec;
+  
+  // when we get a new frame, use these to correct for history
+  double gy_el_delta = 0;
+  double gy_az_delta = 0;
+  int i,j;
+  
   double w1, w2;
   
   // evolve el
   gy1 *= GY1_GAIN_ERROR;
   e->angle += (gy1 + gy1_off)/100.0;
-  gy_el_int1 += (gy1 + gy1_off)/100.0;
   e->varience += GYRO_VAR;
 
   // evolve az
   enc_el *= M_PI/180.0;
   gy_az = -(gy2+gy2_off) * cos(enc_el) + -(gy3+gy3_off) * sin(enc_el);
   a->angle += gy_az/100.0;
-  gy_az_int1 += gy_az/100.0;
   a->varience += GYRO_VAR;
 
   i_isc = GETREADINDEX(iscdata_index);
   if (ISCData[i_isc].framenum!=last_isc_framenum) { // new solution
-    // get az and el for new solution
-    i_point = GETREADINDEX(point_index);
-    ra = ISCData[i_isc].ra * (12.0/M_PI);
-    dec = ISCData[i_isc].dec * (180.0/M_PI);
-    radec2azel(ra, dec, PointingData[i_point].lst, PointingData[i_point].lat,
-	       &az, &el);
+    if (isc_trigger_since_last < MAX_ISC_AGE) {
+      // get az and el for new solution
+      i_point = GETREADINDEX(point_index);
+      ra = ISCData[i_isc].ra * (12.0/M_PI);
+      dec = ISCData[i_isc].dec * (180.0/M_PI);
+      radec2azel(ra, dec, PointingData[i_point].lst, PointingData[i_point].lat,
+		 &new_az, &new_el);
 
-    // rewind to when the frame was grabbed
-    e->angle -= gy_el_int1;
-    a->angle -= gy_az_int1;
+      // this solution is isc_trigger_since_last old: how much have we moved?
+      gy_el_delta = 0;
+      gy_az_delta = 0;
+      for (i=0; i<isc_trigger_since_last; i++) {
+	j = hs.i_history-i;
+	if (j<0) j+= GY_HISTORY;
 
+	gy_el_delta += (hs.gyro1_history[j] + gy1_off)*(1.0/100.0);
+	gy_az_delta +=
+	  (-(hs.gyro2_history[j]+gy2_off) * cos(hs.elev_history[j]) +
+	   -(hs.gyro3_history[j]+gy3_off) * sin(hs.elev_history[j]))*(1.0/100.0);
+      }
     
+      // evolve el solution
+      e->angle -= gy_el_delta; // rewind to when the frame was grabbed
+      w1 = 1.0/(e->varience);
+      w2 = e->samp_weight;
+      e->angle = (w1*e->angle + new_el * w2)/(w1+w2);
+      e->varience = 1.0/(w1+w2);
+      e->angle += gy_el_delta; // add back to now
+
+      // evolve az solution
+      a->angle -= gy_az_delta; // rewind to when the frame was grabbed
+      w1 = 1.0/(a->varience);
+      w2 = a->samp_weight;
+      a->angle = (w1*a->angle + new_az * w2)/(w1+w2);
+      a->varience = 1.0/(w1+w2);
+      a->angle += gy_az_delta; // add back to now
+    }
+    
+    last_isc_framenum = ISCData[i_isc].framenum;
+    isc_trigger_since_last = -1; // reset counter.
   }
 }
 
@@ -302,6 +339,28 @@ void AddElSolution(struct ElAttStruct *ElAtt, struct ElSolutionStruct *ElSol) {
   ElAtt->weight+=weight;
 }
 
+// Weighted mean of AzAtt and AzSol
+void AddAzSolution(struct AzAttStruct *AzAtt, struct AzSolutionStruct *AzSol) {
+  double weight, var;
+
+  var = AzSol->varience + AzSol->sys_var;
+
+  if (var>0) weight = 1.0/var;
+  else weight = 1.0E30; // should be impossible
+
+  AzAtt->az = (weight * (AzSol->angle + AzSol->trim) +
+	       AzAtt->weight * AzAtt->az) /
+	      (weight + AzAtt->weight);
+
+  AzAtt->gy2_offset = (weight * AzSol->gy2_offset +
+		     AzAtt->weight * AzAtt->gy2_offset) /
+		     (weight + AzAtt->weight);
+  AzAtt->gy3_offset = (weight * AzSol->gy3_offset +
+		     AzAtt->weight * AzAtt->gy3_offset) /
+		     (weight + AzAtt->weight);
+  AzAtt->weight+=weight;
+}
+
 //FIXME: need to add rotation of earth correction
 void EvolveAzSolution(struct AzSolutionStruct *s,
 		      double gy2, double gy2_offset, double gy3,
@@ -362,7 +421,9 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
 void Pointing(){
   double gy_roll, gy2, gy3, el_rad, clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0;
-  int i_dgpspos;
+  static int last_i_dgpsatt = 0;
+  
+  int i_dgpspos, i_dgpsatt;
   int i_point_read;
 
   static struct LutType elClinLut = {"/data/etc/clin_elev.lut",0,NULL,NULL,0};
@@ -393,7 +454,18 @@ void Pointing(){
 					  0.00004, // filter constant
 					  0, 0 // n_solutions, since_last
   };
-  static struct AzSolutionStruct NullAz = {90.0, // starting angle
+  static struct ElSolutionStruct ISCEl = {0.0, // starting angle
+					  360.0*360.0, // varience
+					  1.0/M2DV(0.2), //sample weight
+					  M2DV(0.2), // systemamatic varience
+					  0.0, // trim 
+					  0.0, // last input
+					  0.0, // gy integral
+					  GY1_OFFSET, // gy offset
+					  0.00004, // filter constant
+					  0, 0 // n_solutions, since_last
+  };
+  static struct AzSolutionStruct NullAz = {95.0, // starting angle
 					  360.0*360.0, // varience
 					  1.0/M2DV(6), //sample weight
 					  M2DV(6000), // systemamatic varience
@@ -415,10 +487,33 @@ void Pointing(){
 					  0.0001, // filter constant
 					  0, 0 // n_solutions, since_last
   };
+  static struct AzSolutionStruct DGPSAz = {0.0, // starting angle
+					  360.0*360.0, // varience
+					  1.0/M2DV(10), //sample weight
+					  M2DV(10), // systemamatic varience
+					  0.0, // trim 
+					  0.0, // last input
+					  0.0, 0.0, // gy integrals
+					  GY2_OFFSET, GY3_OFFSET, // gy offsets
+					  0.0001, // filter constant
+					  0, 0 // n_solutions, since_last
+  };
+  static struct AzSolutionStruct ISCAz = {0.0, // starting angle
+					  360.0*360.0, // varience
+					  1.0/M2DV(0.3), //sample weight
+					  M2DV(0.2), // systemamatic varience
+					  0.0, // trim 
+					  0.0, // last input
+					  0.0, 0.0, // gy integrals
+					  GY2_OFFSET, GY3_OFFSET, // gy offsets
+					  0.0001, // filter constant
+					  0, 0 // n_solutions, since_last
+  };
 
   if (elClinLut.n==0) LutInit(&elClinLut);
   
   i_dgpspos = GETREADINDEX(dgpspos_index);
+  i_dgpsatt = GETREADINDEX(dgpsatt_index);
   i_point_read = GETREADINDEX(point_index);
 
 
@@ -449,6 +544,15 @@ void Pointing(){
 				       PointingData[point_index].lon);
 	 
   /*************************************/
+  /**      do ISC Solution            **/
+  EvolveSCSolution(&ISCEl, &ISCAz,
+		   ACSData.gyro1, 
+		   PointingData[i_point_read].gy1_offset,
+		   ACSData.gyro2, PointingData[i_point_read].gy2_offset,
+		   ACSData.gyro3, PointingData[i_point_read].gy3_offset,
+		   PointingData[point_index].el);
+
+  /*************************************/
   /**      do elevation solution      **/
   clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
   
@@ -472,17 +576,31 @@ void Pointing(){
 
   /*******************************/
   /**      do az solution      **/
-  MagConvert();
   EvolveAzSolution(&NullAz,
 		   ACSData.gyro2, PointingData[i_point_read].gy2_offset,
 		   ACSData.gyro3, PointingData[i_point_read].gy3_offset,
 		   PointingData[point_index].el,
 		   0.0, 0);
+  /** MAG Az **/
+  MagConvert();
   EvolveAzSolution(&MagAz,
 		   ACSData.gyro2, PointingData[i_point_read].gy2_offset,
 		   ACSData.gyro3, PointingData[i_point_read].gy3_offset,
 		   PointingData[point_index].el,
 		   PointingData[point_index].mag_az, 1);
+
+  /** DGPS Az **/
+  if (i_dgpsatt != last_i_dgpsatt) {
+    if (DGPSAtt[i_dgpsatt].att_ok==1) {
+      PointingData[point_index].dgps_az = DGPSAtt[i_dgpsatt].az;
+    }
+  }
+  EvolveAzSolution(&DGPSAz,
+		   ACSData.gyro2, PointingData[i_point_read].gy2_offset,
+		   ACSData.gyro3, PointingData[i_point_read].gy3_offset,
+		   PointingData[point_index].el,
+		   PointingData[point_index].dgps_az,
+		   DGPSAtt[i_dgpsatt].att_ok);
 
   if (CommandData.use_mag) {
     PointingData[point_index].az = MagAz.angle + MagAz.trim;

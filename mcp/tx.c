@@ -83,6 +83,7 @@ int frame_num;
 int pin_is_in = 1;
 
 int isc_trigger_count = 0;
+int isc_trigger_since_last = -1;
 
 struct AxesModeStruct {
   int az_mode;
@@ -176,6 +177,7 @@ int GetVAz() {
 	  * 0.36;
   }
 
+  //printf("%d %g\n", axes_mode.az_mode, axes_mode.az_vel);
   
   //-[V5-GYRO2]*cos([el_rad-sv]) - [V6-GYRO3]*sin([el_rad-sv])
   //vel_offset = -GY2_TMP_OFFSET*cos(PointingData[i_point].el) -
@@ -738,6 +740,7 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
  * Balance: control balance system                                *
  *                                                                *
  ******************************************************************/
+#define BALANCE_GAIN 0.5
 int Balance(int iscBits, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int iElCh = -1, iElInd;
   static int balPwm1Ch, balPwm1Ind;
@@ -758,10 +761,10 @@ int Balance(int iscBits, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
     error = -error;
   }
 
-  pumppwm = 2047 - error / 10 - 300;
+  pumppwm = 2047 - error * BALANCE_GAIN - 300;
 
-  if (pumppwm < 800) {
-    pumppwm = 800;
+  if (pumppwm < 600) {
+    pumppwm = 600;
   } else if (pumppwm > 2047) {
     pumppwm = 2047;
   }
@@ -842,7 +845,7 @@ int GetLockBits(int acs0bits) {
 
 }
 
-#define ISC_TRIG_LEN 3
+#define ISC_TRIG_LEN 20
 #define ISC_TRIG_PER 100
 /*****************************************************************
  *                                                               *
@@ -936,7 +939,9 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
   isc_trigger_count++;
   if (isc_trigger_count>=ISC_TRIG_PER) {
     isc_trigger_count = 0;
+    if (isc_trigger_since_last<0) isc_trigger_since_last = 0;
   }
+  if (isc_trigger_since_last>=0) isc_trigger_since_last++;
   
   WriteSlow(i_lockpin, j_lockpin, pin_is_in);
   WriteSlow(pumpBitsCh, pumpBitsInd, pumpBits);
@@ -1273,7 +1278,7 @@ void StoreData(int index, unsigned int* Txframe,
   t = DGPSTime;
   WriteSlow(i_dgps_time, j_dgps_time, t >> 16);
   WriteSlow(i_dgps_time + 1, j_dgps_time, t);
-  if (t<100) printf("t spike %lu\n", t);
+  //if (t<100) printf("t spike %lu\n", t);
   
   /** Pos fields **/
   i_dgps = GETREADINDEX(dgpspos_index);
@@ -1404,7 +1409,7 @@ void DoAzScanMode() {
 
 #define MIN_EL 20.0
 #define MAX_EL 50.0
-#define EL_BORDER 0.1
+#define EL_BORDER 0.15
 
 void DoRasterMode() {
   double caz, cel;
@@ -1454,7 +1459,7 @@ void DoRasterMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el1;
-    CommandData.pointing_mode.el_vel = fabs(CommandData.pointing_mode.el_vel);
+    CommandData.pointing_mode.el_vel = -fabs(CommandData.pointing_mode.el_vel);
     return;
   } else if (el < el2-EL_BORDER) {
     axes_mode.az_mode = AXIS_POSITION;
@@ -1463,12 +1468,12 @@ void DoRasterMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el2;
-    CommandData.pointing_mode.el_vel = -fabs(CommandData.pointing_mode.el_vel);
+    CommandData.pointing_mode.el_vel = fabs(CommandData.pointing_mode.el_vel);
     return;
   } else if (el> el1) { // turn around
-    CommandData.pointing_mode.el_vel = fabs(CommandData.pointing_mode.el_vel);
-  } else if (el < el2) { // turn around
     CommandData.pointing_mode.el_vel = -fabs(CommandData.pointing_mode.el_vel);
+  } else if (el < el2) { // turn around
+    CommandData.pointing_mode.el_vel = fabs(CommandData.pointing_mode.el_vel);
   }    
 
   // we must be in range for elevation - go to el-vel mode
@@ -1512,7 +1517,10 @@ void DoRasterMode() {
     axes_mode.az_mode = AXIS_VEL;
     if (axes_mode.az_vel>0) axes_mode.az_vel = v;
     else axes_mode.az_vel = -v;
-  }  
+  }
+  //printf("v: %g  xmin: %g xmax: %g az_vel: %g, mode: %d\n",
+  //	 v, xmin, xmax, axes_mode.az_vel, axes_mode.az_mode);
+
 }
 
 void DoRaDecGotoMode() {

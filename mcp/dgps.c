@@ -120,7 +120,7 @@ void WatchDGPS() {
   DGPSPos[0].n_sat = 0;
   dgpspos_index = 1;
 
-  DGPSTime = time(NULL);
+  DGPSTime = 0; 
 
   if (setGpsPort()) return; // exit thread on port error.
 
