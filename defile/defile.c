@@ -37,7 +37,7 @@
 
 #define VERSION_MAJOR    "1"
 #define VERSION_MINOR    "0"
-#define VERSION_REVISION "5"
+#define VERSION_REVISION "6"
 #define VERSION VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION 
 
 #define DEFAULT_CURFILE "/data/etc/defile.cur"
@@ -260,7 +260,7 @@ char* GetFileName(const char* source)
       rc.source_is_curfile = 1;
 
       /* if we're in persistent mode, we need to remember the contents of the
-       * curfile so we can check for changed */
+       * curfile so we can check for changes */
       if (rc.persist)
         if ((rc.curfile_val = strdup(buffer)) == NULL) {
           perror("defile: cannot allocate heap");
@@ -361,17 +361,10 @@ char* MakeDirFile(char* output, const char* source, const char* directory)
 
 /* generates a dirfile name given the source and destination passed on the
  * command line */
-char* GetDirFile(const char* source, char* parent)
+void GetDirFile(char* buffer, const char* source, char* parent)
 {
-  char* buffer;
   struct stat stat_buf;
   char gpb[GPB_LEN];
-
-  /* allocate our buffer */
-  if ((buffer = (char*)malloc(FILENAME_LEN)) == NULL) {
-    perror("defile: cannot allocate heap");
-    exit(1);
-  }
 
   /* Step 1: stat parent to make sure it exists */
   if (stat(parent, &stat_buf)) {
@@ -389,7 +382,7 @@ char* GetDirFile(const char* source, char* parent)
   }
 
   /* parent is indeed a directory; make the dirfile name */
-  return MakeDirFile(buffer, source, parent);
+  MakeDirFile(buffer, source, parent);
 }
 
 void PrintVersion(void)
@@ -708,8 +701,9 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
       fprintf(stderr, "defile: Destination path too long\n");
       exit(1);
     }
-  } else
+  } else {
     rc->dest_dir = strdup(DEFAULT_DIR);
+  }
 
   /* Fix up output_dirfile, if present */
   if (rc->output_dirfile != NULL) {
@@ -741,11 +735,14 @@ int main (int argc, char** argv)
 
   /* if rc.output_dirfile exists, we use that as the dirfile name, otherwise
    * we have to make one based on the input name */
+  if ((rc.dirfile = malloc(FILENAME_LEN)) == NULL) {
+    perror("defile: cannot allocate heap");
+    exit(1);
+  }
   if (rc.output_dirfile != NULL)
-    rc.dirfile = rc.output_dirfile;
+    strncpy(rc.dirfile, rc.output_dirfile, FILENAME_LEN);
   else
-    /* this takes care of allocated rc.dirfile */
-    rc.dirfile  = GetDirFile(rc.chunk, rc.dest_dir);
+    GetDirFile(rc.dirfile, rc.chunk, rc.dest_dir);
 
   /* check the length of the output path */
   if (strlen(rc.dirfile) > PATH_MAX - FIELD_MAX - 1) {

@@ -57,21 +57,30 @@ int GetNextChunk(void)
 
   /* if incrementing chunknum causes it to wrap around, we're out of space
    * on our suffix -- no more chunks are possible */
-  if (chunknum + 1 < chunknum)
+  if (chunknum + 1 < chunknum) {
+    free(newchunk);
+    free(buffer);
     return 0;
+  }
 
   /* if incrementing chunknum causes it to be more than rc.sufflen bytes,
    * we're out of space on our suffix -- no more chunks are possible */
-  if (chunknum + 1 >= (chunkindex_t)1 << (4 * rc.sufflen))
+  if (chunknum + 1 >= (chunkindex_t)1 << (4 * rc.sufflen)) {
+    free(newchunk);
+    free(buffer);
     return 0;
+  }
   
   /* generate new filename */
   snprintf(newchunk, FILENAME_LEN, "%s%0*llX", buffer, s,
       (unsigned long long)(chunknum + 1));
 
   /* stat it to see if it exists */
-  if (stat(newchunk, &chunk_stat))
+  if (stat(newchunk, &chunk_stat)) {
+    free(newchunk);
+    free(buffer);
     return 0;
+  }
 
   /* stat worked, it's our new chunk */
   strcpy(rc.chunk, newchunk);
@@ -258,8 +267,7 @@ void FrameFileReader(void)
                   /* remake the destination dirfile (if necessary) */
                   if (rc.output_dirfile == NULL) {
                     strcpy(gpb, rc.dirfile);
-                    free(rc.dirfile);
-                    rc.dirfile  = GetDirFile(rc.chunk, rc.dest_dir);
+                    GetDirFile(rc.dirfile, rc.chunk, rc.dest_dir);
 
                     /* if the dirfile has changed, signal the writer to cycle */
                     ri.dirfile_init = 0;
