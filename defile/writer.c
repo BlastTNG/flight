@@ -54,7 +54,7 @@ unsigned short defile_flag_buf[FAST_PER_SLOW];
 #define DEFILE_FLAG_ZEROED_FRAME   0x1
 #define DEFILE_FLAG_MANGLED_INDEX  0x2
 #define DEFILE_FLAG_INSERTED_FRAME 0x4
-#define DEFILE_FLAG_OLD_DATA       0x8
+#define DEFILE_FLAG_SINGLE_FRAME   0x8
 
 struct FieldType
 {
@@ -444,18 +444,18 @@ int PreBuffer(unsigned short *frame)
   if ((li + 1) % FAST_PER_SLOW != ti) {
     if ((li + 2) % FAST_PER_SLOW == ni) {
       zeroes = CheckZeroes(zeroes);
-      if (ti == ni && tf + 40 == nf) {
-        bprintf(warning, "Frame %lli: old data detected, eliding (%i %i)\n", fc,
-            tf, nf);
-        ti = (li + 1) % FAST_PER_SLOW;
-        memcpy(pre_buffer[this], pre_buffer[ti], DiskFrameSize);
-        defile_flags |= DEFILE_FLAG_OLD_DATA;
-      } else {
+      if (tf + 1 == nf && lf + 1 == tf) {
         bprintf(warning,
-            "Frame %lli: corrected mangled multiplex index: %i %i %i "
-            "(%i %i %i)\n", fc, li, ti, ni, lf, tf, nf);
+            "Frame %lli: corrected mangled multiplex index: (%i %i %i)\n",
+            fc, lf, tf, nf);
         pre_buffer[this][3] = ti = (li + 1) % FAST_PER_SLOW;
         defile_flags |= DEFILE_FLAG_MANGLED_INDEX;
+      } else {
+        bprintf(warning, "Frame %lli: single frame seqencing error, eliding "
+            "%i %i %i (%i %i %i)\n", fc, li, ni, ti, lf, tf, nf);
+        ti = (li + 1) % FAST_PER_SLOW;
+        memcpy(pre_buffer[this], pre_buffer[ti], DiskFrameSize);
+        defile_flags |= DEFILE_FLAG_SINGLE_FRAME;
       }
     } else if (li == 0 && ti == 0 && (zeroes > 0 || ni == 0)) {
       zeroes++;

@@ -1043,9 +1043,9 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
       "DEFILE_MANGLED   BIT  DEFILE_FLAGS 1\n"
       "# Defile inserted this fast frame -- it's recycled old data\n"
       "DEFILE_INSERTED  BIT  DEFILE_FLAGS 2\n"
-      "# Defile found a repeated old frame here and replaced it with old data\n"
-      "#   with the correct multiplex index\n"
-      "DEFILE_OLD_DATA  BIT  DEFILE_FLAGS 3\n", FAST_PER_SLOW);
+      "# Defile found a single frame error in the stream and replaced it with "
+      "old datax\n"
+      "DEFILE_SINGLE_FRAME  BIT  DEFILE_FLAGS 3\n", FAST_PER_SLOW);
   write(fd, line, strlen(line));
 #endif
   
