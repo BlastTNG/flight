@@ -25,7 +25,6 @@
 #define BBCPCI_IOC_WRITEBUF_N   _IO(BBCPCI_IOC_MAGIC, 11)
 
 #define BBCPCI_SIZE_UINT           sizeof(unsigned int)
-
 #define BBCPCI_ADD_WRITE_BUF_P     (0x01 * BBCPCI_SIZE_UINT)
 #define BBCPCI_ADD_IR_WRITE_BUF    0x40
 #define BBCPCI_ADD_IR_WRITE_PRE    0x36
@@ -37,6 +36,10 @@
 #define BBCPCI_ADD_READ_BUF_END    0x2ff0
 #define BBCPCI_ADD_READ_BUF_WP     (0x04 * BBCPCI_SIZE_UINT)
 #define BBCPCI_ADD_READ_BUF_RP     (0x05 * BBCPCI_SIZE_UINT)
+#define BBCPCI_ADD_BI0_WP          0x06 * BBCPCI_SIZE_UINT
+#define BBCPCI_ADD_BI0_RP          0x07 * BBCPCI_SIZE_UINT
+#define BBCPCI_IR_BI0_BUF          0x3000
+#define BBCPCI_IR_BI0_BUF_END      0x3ff8
 
 #define BBCPCI_MAX_FRAME_SIZE      0x10000
 
@@ -45,7 +48,6 @@
 #define BI0_SD_BUF                  0x800000
 #define BBCPCI_WFRAME1_ADD(x)      (BBCPCI_SD_WFRAME1 + x)
 #define BBCPCI_WFRAME2_ADD(x)      (BBCPCI_SD_WFRAME2 + x)
-#define BI0_ADD(x)                 (BI0_SD_BUF + x)
 
 /* Command register bitfield. */
 #define BBCPCI_COMREG_RESET  0x00000001 /* Fully reset all pointers etc. */

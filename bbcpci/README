@@ -1,0 +1,113 @@
+BLASTbus Controller README:
+
+bbc_pci.c is the device driver for the PCI BLASTbus Controller Card.  
+This card controls both the blast bus, and writes bi0.  It has
+been tested on Linux 2.6. 
+
+*** INSTALLATION ***
+
+1) Create the device file in /dev: 
+
+     [frodo]# mknod /dev/bbc_pci c 250 0
+     [frodo]# mknod /dev/bbc_bi0 c 250 1
+     [frodo]# chmod 666 /dev/bbc_pci
+     [frodo]# chmod 666 /dev/bi0_pci
+
+   250 is the major number for the BBC card, defined in bbc_pci.c
+
+2) make the drivers
+
+     [frodo]# make 
+
+   Note: This driver makes use of the Linux 2.6, kernel build system.
+   To use the kernel build system, you must have write access to
+   /lib/modules/`uname -r`/buikd/.tmp_versions/bbc_mod as well as
+   /lib/modules/`uname -r`/build/.__modpost.cmd .  The easiest ways to
+   do this is to make them world writeable (which has been done on
+   frodo).or to build as root.
+
+3) install the module and header file
+
+     [frodo]# make install
+
+   This will place bbc_pci.ko in /usr/local/lib and bbc_pci.h in
+   /usr/local/include
+
+4) insert the module
+
+     [frodo]# insmod bbc_pci.ko
+
+   Step 4 needs to be done each time the computer is rebooted, so it may be
+   useful to add insmod to the end of rc.local:
+
+     echo 'Inserting BBC_PCI device driver'
+     insmod -o bbc /usr/local/lib/bbc_pci.ko
+
+*** USAGE ***
+
+  #include "bbc_pci.h"
+
+The device driver is accessed as a file.  The following file operations
+are defined:
+
+open:
+	#include <sys/types.h>
+	#include <sys/stat.h>
+	#include <fcntl.h>
+
+	int bbc_fd;
+	int bi0_fd;
+
+	...	
+	# this order is important.  bbc first!
+	bbc_fd = open("/dev/bbc_pci", O_RDWR);
+	bi0_fd = open("/dev/bi0_pci", O_RDWR);
+
+
+close:
+	# this order is important.  bbc first!
+	close(bbc_fd);
+	close(bi0_fd);
+
+read:
+     #include <unistd.h> 
+     unsigned int buf[1], nread;
+
+     nread = read(fd, (void *)buf, sizeof(unsigned int)):
+
+  fd is the bbc file desriptor from open, buf is where the data is to be
+  written, and nread is the number actually read.  We can only read 1
+  word at a time.  nread returns zero if there is no new words.  The
+  device returns 0xffffffff if the BlastBus is not powered.
+	
+
+writing to the BBC_PCI:
+    #include <unistd.h> 
+    unsigned int buf[2];
+
+    # buf[0] is the address in the frame, and buf[1] is the BBword to
+    # write we only send 1 at a time.
+
+    write(fd, (void *) buf, 2*sizeof(int));     
+
+writing to the BI0_PCI:
+    #include <unistd.h> 
+    unsigned int buf[624*25];
+
+
+    # after buf has been filled (maximum of 25*2 624 word frames): There
+    # are 2 16 bit words per write.
+    write(fd, (void *) buf, 624*25*sizeof(int));
+    
+
+ioctl:
+  Reset board:
+    ioctl(bbc_fd, BBC_IOC_RESET);
+    while (ioctl(fp, BBCPCI_IOC_COMREG) !=0); // wait 'til reset is done
+
+  Sync Bus 1 and Bus 2
+    ioctl(bbc_fd, BBC_IOC_SYNC);
+  
+  For all others (mainly for debugging), check the device driver code.
+
+test_bbc.c is a test example program.

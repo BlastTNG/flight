@@ -39,6 +39,7 @@
 /* the maximum allowed here is 128k/4/2 = 16384 */
 /* this is the number of (add, data) pairs.  */
 #define TX_BUFFER_SIZE  16380 
+#define BI0_BUFFER_SIZE (624*25)
 
 /********************************************************************/
 /* Define structures and locally global variables                   */
@@ -70,6 +71,17 @@ static struct {
   int i_out;// location we are about to read from
   int n;
 } tx_buffer;
+
+/* structure to hold the bi0 circular buffer.  NIOS on bbc_pci */
+/* can only handle 0x3ff8 words at a time.  This holds the rest */
+static struct {
+  unsigned int *data;
+  int i_in; // location we are about to write to
+  int i_out;// location we are about to read from
+  int n;
+} bi0_buffer;
+
+int bi0_allocated = 0;
 
 const int bbc_minor = 0;
 const int bi0_minor = 1;
@@ -111,8 +123,26 @@ static void timer_callback(unsigned long x) {
     
       write_buf_p -= 2 * BBCPCI_SIZE_UINT;
       writel((unsigned int)write_buf_p, bbcpci_membase +
-          BBCPCI_ADD_WRITE_BUF_P);
-    } 
+	     BBCPCI_ADD_WRITE_BUF_P);
+    }
+
+    /** write the bi0 stuff **/
+    if (bi0_allocated) {
+      while (((write_buf_p = readl(bbcpci_membase + BBCPCI_ADD_BI0_WP)) !=
+	     readl(bbcpci_membase + BBCPCI_ADD_BI0_RP)) &&
+	     (bi0_buffer.i_in != bi0_buffer.i_out)) {
+	writel(bi0_buffer.data[bi0_buffer.i_out],
+	       bbcpci_membase + write_buf_p);
+	write_buf_p += BBCPCI_SIZE_UINT;
+	if (write_buf_p >= BBCPCI_IR_BI0_BUF_END)
+	  write_buf_p = BBCPCI_IR_BI0_BUF;
+	writel((unsigned int)write_buf_p, bbcpci_membase + BBCPCI_ADD_BI0_WP);
+	bi0_buffer.i_out++;
+	if (bi0_buffer.i_out >= TX_BUFFER_SIZE) bi0_buffer.i_out = 0;
+
+	bi0_buffer.n--;
+      }
+    }
   }
   
   if (timer_on) {
@@ -176,6 +206,7 @@ static ssize_t write_bbc(struct file * filp, const char * buf,
                          size_t count, loff_t *dummy) {
   unsigned int add, datum;
   int minor;
+  int i, nw;
   minor = *((int *)(filp->private_data));
 
   if (minor == bbc_minor) {
@@ -192,7 +223,17 @@ static ssize_t write_bbc(struct file * filp, const char * buf,
     else tx_buffer.i_in++;
     tx_buffer.n++;
   } else if (minor == bi0_minor) {
-    /* FIXME: add bi0 write here */
+    nw = count/BBCPCI_SIZE_UINT;
+    for (i=0; i<nw; i++) {
+      copy_from_user((void *)(&datum), buf, BBCPCI_SIZE_UINT);
+      buf+=BBCPCI_SIZE_UINT;
+
+      bi0_buffer.data[bi0_buffer.i_in] = datum;
+      if (bi0_buffer.i_in+1 >= BI0_BUFFER_SIZE) bi0_buffer.i_in = 0;
+      else bi0_buffer.i_in++;
+      bi0_buffer.n++;
+    }
+    return(nw*BBCPCI_SIZE_UINT);
   }
   
   return count;
@@ -210,6 +251,7 @@ static int open_bbc(struct inode *inode, struct file * filp){
   if (minor == bbc_minor) {
     filp->private_data = (void *) &bbc_minor;
     cbcounter = 0;
+
     /* initialize tx buffer */
     tx_buffer.n = tx_buffer.i_in = tx_buffer.i_out = 0;
     tx_buffer.data =
@@ -246,6 +288,17 @@ static int open_bbc(struct inode *inode, struct file * filp){
     return 0;
   } else if (minor == bi0_minor) {
     filp->private_data = (void *) &bi0_minor;
+
+    /* initialize bi0 buffer */
+    bi0_buffer.n = bi0_buffer.i_in = bi0_buffer.i_out = 0;
+    bi0_buffer.data =
+      (unsigned int *) kmalloc(BI0_BUFFER_SIZE *
+			       sizeof(unsigned int), GFP_KERNEL);
+    if (bi0_buffer.data == NULL) {
+      printk("Error allocating BI0_BUFFER\n");
+      return -EBUSY;
+    }
+    bi0_allocated = 1;
     return 0;
   } else {
     printk("BBC: Invalid minor number\n");
@@ -272,6 +325,8 @@ static int release_bbc(struct inode *inode, struct file *filp) {
   
     return(0);
   } else { // bi0_monor
+    kfree(bi0_buffer.data);
+    bi0_allocated = 0;
     return(0);
   }
 }

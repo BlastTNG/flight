@@ -19,7 +19,7 @@ KDIR	:= /lib/modules/$(shell uname -r)/build
 PWD		:= $(shell pwd)
 CC    := gcc -O2 -g
 
-all: bbc_pci.ko test_bbcpci
+all: bbc_pci.ko test_bbcpci echo_test
 
 bbc_pci.ko: bbc_pci.c bbc_pci.h
 # invoke kernel build system
@@ -27,6 +27,9 @@ bbc_pci.ko: bbc_pci.c bbc_pci.h
 
 test_bbcpci: test_bbcpci.c
 	$(CC) -o test_bbcpci test_bbcpci.c -lm
+
+echo_test: echo_test.c
+	$(CC) -o echo_test echo_test.c -lm
 
 clean: 
 	rm -f .bbc* *.ko *.o test_bbcpci bbc_pci.mod.c
