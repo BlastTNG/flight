@@ -567,6 +567,8 @@ void starfind(){
     sys_check = system("/home/cmactavi/programs/cam_command/sc_com");
   }
 
+  fprintf(stderr, "Starfind startup.\n");
+
   //initialise frame grabber device
   Init_Devs ();
 

@@ -1269,7 +1269,8 @@ void StoreData(unsigned int* Txframe,
   WriteSlow(blob2_fluxCh, blob2_fluxInd,
       (int)(ISCData[i_isc].flux_blobs[blob_index * 3 + 2] / 32.));
 
-  blob_index++;
+  if (blob_index >= 5)
+    blob_index = 0;
 
   /*** Camera Info ***/
   WriteSlow(isc_errorCh, isc_errorInd, (int)ISCData[i_isc].error);
