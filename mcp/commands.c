@@ -1396,7 +1396,7 @@ void InitCommandData() {
 #ifndef BOLOTEST
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
-    fprintf(stderr, "prev_status: Wanted %i bytes but got %i.\n"
+    fprintf(stderr, "prev_status: Wanted %i bytes but got %i.\n",
         sizeof(struct CommandDataStruct), n_read);
   else if (extra > 0)
     fprintf(stderr, "prev_status: Extra bytes found.\n");
