@@ -959,7 +959,7 @@ void DoNewCapMode() {
       az_distance = next_right - left;
       t = az_distance/v_az + v_az/(AZ_ACCEL * 100.16);
       speed_el = CommandData.pointing_mode.del/t;
-      bprintf(info, "L: el: %g targ_el: %g\n", el, targ_el);
+      bprintf(info, "L: el: %g targ_el: %g %g\n", el, targ_el, el-targ_el);
       targ_el = el + CommandData.pointing_mode.del*el_dir;
     }
     az_dir = 1;
