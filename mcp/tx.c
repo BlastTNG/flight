@@ -359,7 +359,7 @@ void StoreStarCameraData(int index, int which)
   /*** State Info ***/
   WriteData(StateAddr[which], (unsigned int)(ISCSentState[which].pause * 2
         + ISCSentState[which].abort * 4 + ISCSentState[which].autofocus * 8
-        + ISCSentState[which].shutdown * 32 + ISCSentState[which].eyeOn * 64
+        + ISCSentState[which].shutdown * 16 + ISCSentState[which].eyeOn * 64
         + ISCSolution[which][i_isc].heaterOn * 128
         + ISCSentState[which].save), NIOS_QUEUE);
   WriteData(FocusAddr[which], (unsigned int)ISCSentState[which].focus_pos,

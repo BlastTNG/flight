@@ -107,8 +107,8 @@ union DerivedUnion DerivedChannels[] = {
       "ISC_PAUSE",
       "ISC_ABORT",
       "ISC_AUTOFOCUS",
-      "ISC_BRIGHT_STAR",
       "ISC_SHUTDOWN",
+      "ISC_REBOOT",
       "ISC_EYE_ON",
       "ISC_HEATER_ON"
       ),
@@ -119,8 +119,8 @@ union DerivedUnion DerivedChannels[] = {
       "OSC_PAUSE",
       "OSC_ABORT",
       "OSC_AUTOFOCUS",
-      "OSC_BRIGHT_STAR",
       "OSC_SHUTDOWN",
+      "OSC_REBOOT",
       "OSC_EYE_ON",
       "OSC_HEATER_ON"
       ),
