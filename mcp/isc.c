@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <sys/time.h>
 
+#include "tx.h"
 #include "command_struct.h"
 #include "pointing_struct.h"
 #include "isc_protocol.h"
@@ -50,9 +51,28 @@ extern short int SamIAm;   /* mcp.c */
 extern short int InCharge; /* tx.c */
 extern int frame_num;      /* tx.c */
 
-short int write_ISC_pointing[2] = {0, 0}; // isc.c
-short int write_ISC_trigger[2]  = {0, 0}; // isc.c
-short int ISC_link_ok[2]        = {0, 0}; // isc.c
+/*---- ISC semaphores ----*/
+
+/* write_ISC_pointing -- send a new solution packet to the star camera:
+ *   raised by auxiliary.c
+ *   lowered by isc.c
+ */
+short int write_ISC_pointing[2] = {0, 0};
+/* write_ISC_trigger -- send the timing pulse request to the ACS:
+ *   raised by isc.c
+ *   lowered by auxiliary.c
+ */
+short int write_ISC_trigger[2] = {0, 0};
+/* ISC_link_ok -- flag the link as bad: don't wait for handshaking from SC:
+ *   raised by auxiliary.c
+ *   lowered by isc.c
+ */
+short int ISC_link_ok[2] = {0, 0};
+/* start_ISC_cycle -- start a new isc plse cycle:
+ *   raised by isc.c
+ *   lowered by auxiliary.c
+ */
+short int start_ISC_cycle[2] = {0, 0};
 
 struct ISCStatusStruct ISCSentState[2];
 
@@ -113,6 +133,14 @@ int ISCInit(int which)
 
   bprintf(info, "Connected to %s\n", isc_which[which].who);
   CommandData.ISCState[which].shutdown = 0;
+
+  if (WHICH)
+    bprintf(info, "%iSC (i): Lowered write_ISC_pointing semaphore on connect\n",
+        which);
+  write_ISC_pointing[which] = 0;
+  if (WHICH)
+    bprintf(info, "%iSC (i): Raised ISC_link_ok\n", which);
+  ISC_link_ok[which] = 1;
 
   ISCSentState[which] = CommandData.ISCState[which];
 
@@ -199,18 +227,35 @@ void IntegratingStarCamera(void* parameter)
           fflush(isc_log[which]);
         }
 #endif
-        /* Flag link as good if necessary */
+        /* Flag link as good if necesary */
         if (!ISC_link_ok[which]) {
           bprintf(info, "%s: Network link OK.\n", isc_which[which].who);
           ISC_link_ok[which] = 1;
         }
 
         /* Wait for acknowledgement from camera before sening trigger */
-        if (waiting_for_ACK)
+        if (waiting_for_ACK) {
+          if (WHICH)
+            bprintf(info, "%iSC (i): Was waiting for ACK, flag was: %i\n",
+                which, ISCSolution[which][iscdata_index[which]].flag);
           if (ISCSolution[which][iscdata_index[which]].flag == 0) {
+            if (WHICH)
+              bprintf(info, "%iSC (i): Raise write_ISC_trigger semaphore\n",
+                  which);
+            if (WHICH)
+              bprintf(info, "%iSC (i): Stopped waiting for ACK\n", which);
             write_ISC_trigger[which] = 1;
             waiting_for_ACK = 0;
           }
+        } else {
+          if (WHICH)
+            bprintf(info, "%iSC (i): Wasn't waiting for ACK, flag was: %i\n", 
+                which, ISCSolution[which][iscdata_index[which]].flag);
+          if (WHICH)
+            bprintf(info, "%iSC (i): Raising start_ISC_cycle semaphore\n",
+                which);
+          start_ISC_cycle[which] = 1;
+        }
 
         if (CommandData.ISCState[which].autofocus)
           CommandData.ISCState[which].autofocus = 0;
@@ -257,6 +302,10 @@ void IntegratingStarCamera(void* parameter)
                 sizeof(struct ISCStatusStruct), n);
             break;
           }
+          if (WHICH)
+            bprintf(info,
+                "%iSC (i): Lower write_ISC_pointing semaphore --------------\n",
+                which);
           write_ISC_pointing[which] = 0;
 #ifdef USE_ISC_LOG
           if (isc_log[which] != NULL) {

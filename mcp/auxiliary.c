@@ -30,11 +30,26 @@
 #include "command_struct.h"
 #include "pointing_struct.h"
 
-#define ISC_ACK_TIMEOUT 5000  /* in 100Hz frames */
-#define ISC_TRIG_PERIOD 100   /* in 100Hz frames */
+/* This is the length of time to wait for an ACK from the star camera before
+ * giving up */
+#define ISC_ACK_TIMEOUT    500   /* in 100Hz frames */
+
+/* This is the length of time to wait for a pointing solution from the star
+ * camera before giving up */
+#define ISC_DATA_TIMEOUT   1000   /* in 100Hz frames */
+
+/* This is the length of time to wait after receiving the ACK, bufore sending
+ * the trigger */
+#define ISC_TRIGGER_DELAY   10   /* in 100Hz frames */
+
+/* If mcp has decided the handshaking isn't working, this is the period of the
+ * handshake-less triggers */
+#define ISC_DEFAULT_PERIOD 100   /* in 100Hz frames */
 #define MAX_ISC_SLOW_PULSE_SPEED 0.015
 
-struct ISCPulseType isc_pulses[2] = {{-1, 0, 0, 0, 0, 0}, {-1, 0, 0, 0, 0, 0}};
+struct ISCPulseType isc_pulses[2] = {
+  {-1, 0, 0, 0, 0, 0, 0}, {-1, 0, 0, 0, 0, 0, 0}
+};
 
 int pin_is_in = 1;
 
@@ -42,6 +57,7 @@ int pin_is_in = 1;
 extern short int write_ISC_pointing[2];
 extern short int write_ISC_trigger[2];
 extern short int ISC_link_ok[2];
+extern short int start_ISC_cycle[2];
 
 /* ACS0 digital signals (G1 and G3 output, G2 input) */
 #define BAL1_ON      0x04  /* ACS3 Group 1 Bit 3 - ifpmBits */
@@ -299,7 +315,7 @@ void CameraTrigger(int which)
 {
   static int firsttime = 1;
   static struct NiosStruct* TriggerAddr[2];
-  int iscPulse = 0;
+  static int delay[2] = {0, 0};
 
   if (firsttime) {
     firsttime = 0;
@@ -313,8 +329,16 @@ void CameraTrigger(int which)
 
   isc_pulses[which].last_save++;
 
-  if (isc_pulses[which].ctr == 0) { /* start of new pulse */
+  if (isc_pulses[which].start_wait == 0) { /* start of new pulse */
     if (!isc_pulses[which].ack_wait) { /* not waiting for ack: send new data */
+      if (WHICH && delay == 0)
+        bprintf(info, "%iSC (t): Start new pulse (%i)\n", which,
+            isc_pulses[which].pulse_index);
+
+      start_ISC_cycle[which] = 0;
+      if (WHICH && delay == 0)
+        bprintf(info, "%iSC (t): Lowering start_ISC_cycle\n", which);
+
       if (isc_pulses[which].is_fast) {  /* fast pulse */
         /* use fast (short) pulse length */
         isc_pulses[which].pulse_req =
@@ -338,17 +362,39 @@ void CameraTrigger(int which)
         isc_pulses[which].pulse_req / 10416.6666666667;
 
       /* Add pulse serial number */
-      isc_pulses[which].pulse_index = (isc_pulses[which].pulse_index + 1) % 4;
       isc_pulses[which].pulse_req += isc_pulses[which].pulse_index << 14;
 
+      if (delay[which] == 0)
+        delay[which] = 0;
+
+      if (delay[which] > 1) {
+        if (WHICH)
+          bprintf(info, "%iISC (t): Delay %i\n", which, delay[which]);
+        delay[which]--;
+        return;
+      }
+      delay[which] = 0;
+
       /* Signal isc thread to send new pointing data */
+      if (write_ISC_trigger[which])
+        if (WHICH)
+          bprintf(info,
+              "%iSC (t): Unexpectedly lowered write_ISC_trigger Semaphore\n",
+              which);
+
       write_ISC_trigger[which] = 0;
       write_ISC_pointing[which] = 1;
+
+      if (WHICH)
+        bprintf(info, "%iSC (t): Raised write_ISC_pointing Semaphore\n", which);
 
       /* Start waiting for ACK from star camera */
       isc_pulses[which].ack_wait = 1;
       isc_pulses[which].ack_timeout =
         (ISC_link_ok[which]) ? ISC_ACK_TIMEOUT : 0;
+      if (WHICH) 
+        bprintf(info, "%iSC (t): ackwait starts with timeout = %i\n", which,
+            isc_pulses[which].ack_timeout);
     } else { /* ACK wait state */
       if (isc_pulses[which].ack_wait > isc_pulses[which].ack_timeout
           || write_ISC_trigger[which]) {
@@ -362,20 +408,54 @@ void CameraTrigger(int which)
           ISC_link_ok[which] = 0;
         }
 
-        /* write the pulse */
-        isc_pulses[which].ctr = isc_pulses[which].ack_wait;
-        write_ISC_trigger[which] = 0;
-        WriteData(TriggerAddr[which], iscPulse, NIOS_FLUSH);
+        if (delay[which] == 0) {
+          delay[which] = ISC_TRIGGER_DELAY;
+          if (WHICH)
+            bprintf(info, "%iSC (t): Trigger Delay Starts: %i\n", which,
+                delay[which]);
+        } else if (delay[which] > 1)
+          delay[which]--;
+        else {
+          delay[which] = 0;
+          /* write the pulse */
+          if (WHICH)
+            bprintf(info, "%iSC (t): Writing trigger (%04x)\n", which,
+                isc_pulses[which].pulse_req);
+          WriteData(TriggerAddr[which], isc_pulses[which].pulse_req,
+              NIOS_FLUSH);
 
-        /* re-zero age, if needed */
-        if (isc_pulses[which].age < 0)
-          isc_pulses[which].age = 0;
+          if (WHICH)
+            bprintf(info, "%iSC (t): Lowering write_ISC_trigger\n", which);
+          write_ISC_trigger[which] = 0;
+          isc_pulses[which].ack_wait = 0;
 
+          /* increment pulse serial number */
+          isc_pulses[which].pulse_index
+            = (isc_pulses[which].pulse_index + 1) % 4;
+
+          /* start the start cycle timer */
+          isc_pulses[which].start_wait = isc_pulses[which].ack_wait + 1;
+
+          /* the -2 is due to processing time in the loop */
+          isc_pulses[which].start_timeout = (ISC_link_ok[which]) ?
+            ISC_DATA_TIMEOUT : ISC_DEFAULT_PERIOD - 2;
+
+          if (WHICH)
+            bprintf(info, "%iSC (t): startwait starts with timeout = %i\n",
+                which, isc_pulses[which].start_timeout);
+
+          /* re-zero age, if needed */
+          if (isc_pulses[which].age < 0)
+            isc_pulses[which].age = 0;
+        }
       } else
-        isc_pulses[which].ack_wait++;
+            isc_pulses[which].ack_wait++;
     }
-  } else if (++isc_pulses[which].ctr > ISC_TRIG_PERIOD)
-    isc_pulses[which].ctr = 0;
+  } else { /* startwait state */
+    if ((++isc_pulses[which].start_wait > isc_pulses[which].start_timeout)
+        || (start_ISC_cycle[which]))
+      isc_pulses[which].start_wait = 0;
+  }
 }
 
 /*****************************************************************/
