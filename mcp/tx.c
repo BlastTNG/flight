@@ -215,7 +215,8 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   static int i_g_Iaz = -1, j_g_Iaz = -1;
   static int i_g_pivot = -1, j_g_pivot = -1;
   static int i_set_reac = -1, j_set_reac = -1;
-  
+
+  static int wait = 100; // wait 20 frames before controlling.
   double el_rad;
   unsigned int ucos_el;
   unsigned int usin_el;
@@ -280,7 +281,7 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   if (v_az < -32768) v_az = -32768;  
   WriteFast(i_azVreq, 32768 + v_az);
 
-  if (CommandData.disable_az) {
+  if ((CommandData.disable_az) || (wait>0)) {
     azGainP = 0;
     azGainI = 0;
     pivGainP = 0;
@@ -309,9 +310,12 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   }
   if (rollGainP>CommandData.roll_gain.P) rollGainP = CommandData.roll_gain.P;
 
+  if (wait>0) rollGainP = 0;
+  
   /* p term for roll motor */
   WriteSlow(i_g_Proll, j_g_Proll, rollGainP);
 
+  if (wait>0) wait--;
 }
 
 /************************************************************************

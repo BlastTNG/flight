@@ -1352,7 +1352,7 @@ void InitCommandData() {
   CommandData.ele_gain.P = 1200;
 
   CommandData.azi_gain.P = 20000;
-  CommandData.azi_gain.I = 10000; // unused
+  CommandData.azi_gain.I = 5000; 
 
   CommandData.pivot_gain.SP = 2000;
   CommandData.pivot_gain.P = 200;
