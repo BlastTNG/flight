@@ -18,13 +18,9 @@
  *
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <syslog.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <stdarg.h>
+#include <string.h>     /* ANSI C strings (strlen, strncpy, strcmp, &c.)  */
+#include <sys/stat.h>   /* SYSV stat (stat, struct stat S_IS(FOO)) */
+#include <unistd.h>     /* UNIX std library (read, write, close, sleep) */
 
 #include "blast.h"
 #include "frameread.h"

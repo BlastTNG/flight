@@ -20,24 +20,15 @@
  *
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <signal.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <sys/stat.h>
+#include <pthread.h>    /* POSIX threads (pthread_create, pthread_join) */
+#include <string.h>     /* C string library (strcpy, strncpy)  */
+#include <signal.h>     /* ANSI C signals (SIG(FOO), sigemptyset, sigaddset) */
+#include <sys/stat.h>   /* SYSV stat (stat, struct stat S_IS(FOO)) */
 
 #include "blast.h"
 #include "channels.h"
 #include "defile.h"
 #include "frameread.h"
-
-#define INPUT_BUF_SIZE 50 /* Frames are big (~1 kb) and we take a big
-                           * performance hit if we read more than 64k at a
-                           * time, so we keep this small */
-
-extern sigset_t signals;
 
 void ReaderDone(int signo) {
   bprintf(warning, "Caught signal %d; exiting...\n", signo);

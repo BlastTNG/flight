@@ -23,11 +23,14 @@
 #ifndef DEFILE_H
 #define DEFILE_H
 
-#include <sys/time.h>  /* struct timeval, struct timezone */
-#include <netinet/in.h>
-#include <sys/socket.h> /* struct sockaddr_in */
+#include <sys/time.h>   /* SYSV time (struct timeval, struct timezone) */
+#include <netinet/in.h> /* ARPA Internet specification (struct sockaddr_in) */
 
 #include "frameread.h"
+
+#define INPUT_BUF_SIZE 50 /* Frames are big (~1 kb) and we take a big
+                           * performance hit if we read more than 64k at a
+                           * time, so we keep this small */
 
 #if FIELD_LEN < 6
 #  define FIELD_MAX 6
@@ -83,10 +86,12 @@ void FrameFileReader(void);
 void GetDirFile(char*, const char*, char*, int);
 void InitClient(void);
 void InitReader(void);
-void InitialiseDirFile(int);
+void InitialiseDirFile(int, unsigned long);
 void PreInitialiseDirFile(void);
 void PushFrame(unsigned short*);
 void QuenyaClient(void);
 void Remount(const char*, char*);
+
+extern sigset_t signals;
 
 #endif

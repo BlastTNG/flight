@@ -1,6 +1,27 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2004-10-27  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* defile.c (main): Only report file total if reading locally
+
+	* client.c (ClientDone): Add.
+	(QuenyaClient): Add signal code, input buffer allocation.
+	* defile.h, reader.c: Move INPUT_BUF_SIZE and signals definition to defile.h
+	
+	* blast.h [__GNU_C__]: Add printf format __atribute__ to bprintf and berror
+	* defile.c (main): fix type for resume_at bprintf
+
+	* writer.c (InitialiseDirFile):  Add offset parameter.
+	All callers changed.
+	* channels.c (WrtieFormatFile): Add offset parameter -- defile writes it as
+	a comment to the format file for now since kst doesn't support it yet.
+	All callers changed.
+
+	* client.c (InitClient): Handle 450 response from server.
+
+	* client.c (InitClient, GetServerResponse): Handle errors in
+	GetServerResponse directly.
+
 2004-10-15  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* client.c (InitClient): Add client connect and spec file reception.
 	(MakeSock, GetServerResponse, OpenDataPort): Add
@@ -201,3 +222,5 @@
 
 2004-01-19 (1.0.0)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* defile: Release
+
+vi:noet:ai:ts=2:sw=2

@@ -111,7 +111,7 @@ extern "C" {
   inline struct BiPhaseStruct* GetBiPhaseAddr(const char*);
   inline struct BiPhaseStruct* ExtractBiPhaseAddr(struct NiosStruct*);
   void ReadSpecificationFile(FILE*);
-  void WriteFormatFile(int, time_t);
+  void WriteFormatFile(int, time_t, unsigned long);
   char* FieldToLower(char*);
   char* FieldToUpper(char*);
 

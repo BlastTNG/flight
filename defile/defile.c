@@ -25,24 +25,14 @@
 #  include "config.h"
 #endif
 
-#include <stdlib.h>
-#include <arpa/inet.h>
-#include <error.h>
-#include <limits.h>
-#include <libgen.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <pthread.h>
-#include <signal.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include <syslog.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <unistd.h>
+#include <stdlib.h>     /* ANSI C std library (atoi, exit, realpath) */
+#include <netdb.h>      /* DNS queries (gethostbyname, hstrerror, h_errno) */
+#include <pthread.h>    /* POSIX threads (pthread_create, pthread_join) */
+#include <signal.h>     /* ANSI C signals (SIG(FOO), sigemptyset, sigaddset) */
+#include <string.h>     /* ANSI C strings (strcat, memcpy, &c.)  */
+#include <syslog.h>     /* BSD system logger (openlog, syslog, closelog) */
+#include <sys/stat.h>   /* SYSV stat (stat, struct stat S_IS(FOO)) */
+#include <unistd.h>     /* UNIX std library (fork, chdir, setsid, usleep &c.) */
 
 #include "defile.h"
 #include "blast.h"
@@ -972,10 +962,8 @@ int main (int argc, char** argv)
   /* Start */
   bprintf(info, "Defiling `%s'\n    into `%s'\n", rc.chunk, rc.dirfile);
   if (rc.resume_at > 0)
-    bprintf(info, "    starting at frame %i\n", rc.resume_at);
+    bprintf(info, "    starting at frame %li\n", rc.resume_at);
   bprintf(info, "\n");
-
-  exit(1);
 
   /* Initialise things */
   ri.read = ri.wrote = ri.old_total = 0;
@@ -983,7 +971,7 @@ int main (int argc, char** argv)
   delta = 1;
   gettimeofday(&rc.start, &rc.tz);
   PreInitialiseDirFile();
-  InitialiseDirFile(1);
+  InitialiseDirFile(1, rc.quenya ? rc.resume_at : 0);
 
   /* set up signal masks */
   sigemptyset(&signals);
@@ -1010,17 +998,27 @@ int main (int argc, char** argv)
         delta = (now.tv_sec - rc.start.tv_sec) * 1000000LL - rc.start.tv_usec
           + now.tv_usec;
         freq = 1000. * ri.wrote / delta;
-        printf("R:[%i of %i] W:[%i] %.*f kHz\r", ri.read, ri.old_total
-            + ri.chunk_total, ri.wrote, (freq > 100) ? 1 : (freq > 10) ? 2 : 3,
-            freq);
+        if (rc.quenya)
+          printf("R:[%i] W:[%i] %.*f kHz\r", ri.read, ri.wrote,
+              (freq > 100) ? 1 : (freq > 10) ? 2 : 3, freq);
+        else 
+          printf("R:[%i of %i] W:[%i] %.*f kHz\r", ri.read, ri.old_total
+              + ri.chunk_total, ri.wrote, (freq > 100) ? 1 : (freq > 10) ? 2
+              : 3, freq);
         fflush(stdout);
       }
       usleep(100000);
     } while (!ri.writer_done);
   pthread_join(read_thread, NULL);
   pthread_join(write_thread, NULL);
-  if (!rc.silent)
-    bprintf(info, "R:[%i of %i] W:[%i] %.*f kHz", ri.read, ri.old_total +
-        ri.chunk_total, ri.wrote, (freq > 100) ? 1 : (freq > 10) ? 2 : 3, freq);
+  if (!rc.silent) {
+    if (rc.quenya)
+      bprintf(info, "R:[%i] W:[%i] %.*f kHz", ri.read, ri.wrote,
+          (freq > 100) ? 1 : (freq > 10) ? 2 : 3, freq);
+    else
+      bprintf(info, "R:[%i of %i] W:[%i] %.*f kHz", ri.read, ri.old_total +
+          ri.chunk_total, ri.wrote, (freq > 100) ? 1 : (freq > 10) ? 2 : 3,
+          freq);
+  }
   return 0;
 }

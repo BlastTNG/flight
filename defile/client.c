@@ -20,19 +20,29 @@
  *
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/tcp.h>
+#include <stdlib.h>       /* ANSI C std library (atoi) */
+#include <arpa/inet.h>    /* IP4 specification (inet_aton, inet_ntoa) */
+#include <netinet/tcp.h>  /* TCP specification (SOL_TCP, TCP_NODELAY) */
+#include <pthread.h>      /* POSIX threads (pthread_exit) */
+#include <signal.h>       /* ANSI C signals (SIG(FOO), sigemptyset, &c.) */
+#include <string.h>       /* ANSI C strings (strcat, strdup, &c.)  */
+#include <unistd.h>       /* UNIX std library (read, write, close, sleep) */
 
 #include "channels.h"
 #include "defile.h"
 #include "blast.h"
+
+void ClientDone(int signo) {
+  bprintf(warning, "Caught signal %d; exiting...\n", signo);
+
+  if (rc.csock >= 0)
+    close(rc.csock);
+  if (rc.dsock > 0)
+    close(rc.dsock);
+
+  ri.reader_done = 1;
+  pthread_exit(0);
+}
 
 int MakeSock(void)
 {
@@ -59,10 +69,10 @@ int GetServerResponse(char* buffer)
   
   n = read(rc.csock, response, 2000);
   if (n < 0)
-    return -1;
+    berror(fatal, "Read error");
 
   if (n == 0)
-    return -3;
+    bprintf(fatal, "Unexpected server disconnect.\n");
 
   response[1999] = 0;
 
@@ -83,7 +93,7 @@ int GetServerResponse(char* buffer)
   printf("%s\n", response);
 
   if (n == 0)
-    return -2;
+    bprintf(fatal, "Indecypherable server response: %s\n", buffer);
 
   if (buffer != NULL)
     strcpy(buffer, response + 4);
@@ -102,12 +112,6 @@ void OpenDataPort(void)
   strcpy(buffer, "OPEN\r\n");
   write(rc.csock, buffer, strlen(buffer));
   switch (n = GetServerResponse(buffer)) {
-    case -3:
-      bprintf(fatal, "Unexpected server disconnect.\n");
-    case -2:
-      bprintf(fatal, "Indecypherable server response: %s\n", buffer);
-    case -1:
-      berror(fatal, "Read error");
     case 123:
       for (ptr1 = buffer; *ptr1 != '@'; ++ptr1);
       *(ptr1++) = 0;
@@ -131,12 +135,6 @@ void OpenDataPort(void)
   }
 
   switch (n = GetServerResponse(buffer)) {
-    case -3:
-      bprintf(fatal, "Unexpected server disconnect.\n");
-    case -2:
-      bprintf(fatal, "Indecypherable server response: %s\n", buffer);
-    case -1:
-      berror(fatal, "Read error");
     case 222:
       break;
     default:
@@ -160,12 +158,6 @@ void InitClient(void)
     berror(fatal, "Connect failed");
 
   switch (n = GetServerResponse(buffer)) {
-    case -3:
-      bprintf(fatal, "Unexpected server disconnect.\n");
-    case -2:
-      bprintf(fatal, "Indecypherable server response: %s\n", buffer);
-    case -1:
-      berror(fatal, "Read error");
     case 220:
       for (ptr1 = buffer; *ptr1 != ' '; ++ptr1);
       *(ptr1++) = 0;
@@ -185,12 +177,6 @@ void InitClient(void)
   strcpy(buffer, "IDEN defile\r\n");
   write(rc.csock, buffer, strlen(buffer));
   switch (n = GetServerResponse(buffer)) {
-    case -3:
-      bprintf(fatal, "Unexpected server disconnect.\n");
-    case -2:
-      bprintf(fatal, "Indecypherable server response: %s\n", buffer);
-    case -1:
-      berror(fatal, "Read error");
     case 230:
       break;
     default:
@@ -202,12 +188,6 @@ void InitClient(void)
   strcpy(buffer, "QNOW\r\n");
   write(rc.csock, buffer, strlen(buffer));
   switch (n = GetServerResponse(buffer)) {
-    case -3:
-      bprintf(fatal, "Unexpected server disconnect.\n");
-    case -2:
-      bprintf(fatal, "Indecypherable server response: %s\n", buffer);
-    case -1:
-      berror(fatal, "Read error");
     case 251:
       for (ptr1 = buffer; *ptr1 != ':'; ++ptr1);
       *(ptr1++) = 0;
@@ -236,12 +216,6 @@ void InitClient(void)
   strcpy(buffer, "SPEC\r\n");
   write(rc.csock, buffer, strlen(buffer));
   switch (n = GetServerResponse(buffer)) {
-    case -3:
-      bprintf(fatal, "Unexpected server disconnect.\n");
-    case -2:
-      bprintf(fatal, "Indecypherable server response: %s\n", buffer);
-    case -1:
-      berror(fatal, "Read error");
     case 150:
       break;
     default:
@@ -254,12 +228,6 @@ void InitClient(void)
   ReadSpecificationFile(stream);
 
   switch (n = GetServerResponse(buffer)) {
-    case -3:
-      bprintf(fatal, "Unexpected server disconnect.\n");
-    case -2:
-      bprintf(fatal, "Indecypherable server response: %s\n", buffer);
-    case -1:
-      berror(fatal, "Read error");
     case 252:
       break;
     default:
@@ -269,12 +237,6 @@ void InitClient(void)
   strcpy(buffer, "CLOS\r\n");
   write(rc.csock, buffer, strlen(buffer));
   switch (n = GetServerResponse(buffer)) {
-    case -3:
-      bprintf(fatal, "Unexpected server disconnect.\n");
-    case -2:
-      bprintf(fatal, "Indecypherable server response: %s\n", buffer);
-    case -1:
-      berror(fatal, "Read error");
     case 250:
       break;
     default:
@@ -293,4 +255,32 @@ void InitClient(void)
 
 void QuenyaClient(void)
 {
+  unsigned short* InputBuffer[INPUT_BUF_SIZE];
+  struct sigaction action;
+  int i;
+
+  /* set up signal masks */
+  sigemptyset(&signals);
+  sigaddset(&signals, SIGHUP);
+  sigaddset(&signals, SIGINT);
+  sigaddset(&signals, SIGTERM);
+
+  /* set up signal handlers */
+  action.sa_handler = ClientDone;
+  action.sa_mask = signals;
+  sigaction(SIGTERM, &action, NULL);
+  sigaction(SIGHUP, &action, NULL);
+  sigaction(SIGINT, &action, NULL);
+
+  /* enable signals -- they were blocked in main before this thread was
+   * spawned */
+  pthread_sigmask(SIG_UNBLOCK, &signals, NULL);
+
+  InputBuffer[0] = (unsigned short*)balloc(fatal, DiskFrameSize
+      * INPUT_BUF_SIZE);
+
+  for (i = 1; i < INPUT_BUF_SIZE; ++i)
+    InputBuffer[i] = (void*)InputBuffer[0] + i * DiskFrameSize;
+
+  exit(1);
 }

@@ -18,13 +18,13 @@
  *
  */
 
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <syslog.h>
-#include <errno.h>
-#include <string.h>
-#include <pthread.h>
+#include <stdlib.h>    /* ANSI C std library (exit, realloc, free) */
+#include <errno.h>     /* ANSI C library errors (errno) */
+#include <pthread.h>   /* POSIX threads (pthread_exit) */
+#include <stdio.h>     /* ANSI C std io library (FILE, stderr, stdout) */
+#include <string.h>    /* ANSI C strings (strlen, strncat, strdup, &c.) */
+#include <syslog.h>    /* BSD system logger (openlog, syslog, closelog) */
+
 #include "blast.h"
 
 /* BUOS (BLAST Unified Output Scheme) */

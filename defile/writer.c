@@ -24,18 +24,14 @@
 #  include "config.h"
 #endif
 
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <unistd.h> 
-#include <time.h>
+#include <stdlib.h>     /* ANSI C std library (atoi, exit) */
+#include <errno.h>      /* ANSI C library errors (errno) */
+#include <string.h>     /* ANSI C strings (strcpy, strcat, strlen, strcmp)  */
+#include <dirent.h>     /* POSIX directory IO (DIR, opendir, closedir, &c.) */
+#include <fcntl.h>      /* POSIX file descriptor manipulation (open, creat) */
+#include <sys/stat.h>   /* SYSV stat (stat, struct stat S_IS(FOO)) */
 #ifdef HAVE_ZLIB_H
-#  include <zlib.h>
+#  include <zlib.h>     /* libz compression library (gzwrite, gzopen, &c.) */
 #endif
 
 #include "blast.h"
@@ -87,7 +83,7 @@ int FieldSize (char type, const char* field)
       return 2;
     default:
       bprintf(fatal, "bad type in channel spec: %s %c\n", field, type);
-      exit(1); /* can't get here */
+      exit(1); /* can't get here -- added to suppress compiler warnings */
   }
 }
 
@@ -374,7 +370,7 @@ int OpenField(int fast, int size, const char* filename)
 }
 
 /* Initialise dirfile */
-void InitialiseDirFile(int reset)
+void InitialiseDirFile(int reset, unsigned long offset)
 {
   FILE* fp;
   int fd;
@@ -409,7 +405,7 @@ void InitialiseDirFile(int reset)
 
   PathSplit_r(rc.dirfile, NULL, gpb);
 
-  WriteFormatFile(fd, atoi(gpb));
+  WriteFormatFile(fd, atoi(gpb), offset);
 
   if (close(fd) < 0)
     berror(fatal, "Error while closing format file");
@@ -866,7 +862,7 @@ void DirFileWriter(void)
         /* Re-initialise */
         wrote_count = 0;
         ri.read = ri.wrote = ri.old_total = 0;
-        InitialiseDirFile(1);
+        InitialiseDirFile(1, 0);
         gettimeofday(&rc.start, &rc.tz);
         last_pass = 0;
       }
