@@ -89,7 +89,7 @@ enum singleCommand {
   osc_trig_int,     osc_trig_ext,       ln_valve_on,      ln_valve_off,
   osc_veto,         osc_allow,          reap,             isc_eye_on,
   osc_eye_on,       osc_eye_off,        inner_cool_auto,  outer_cool_auto,
-  trim_to_osc,      antisun,            rocks,            sucks
+  trim_to_osc,      antisun,            blast_rocks,      blast_sucks
 };
 
 struct scom {

@@ -157,6 +157,15 @@ int MainForm::GetGroup() {
       return i;
 }
 
+int TheSort(const void* a, const void* b)
+{
+  const char *za = (*(int*)a >= N_SCOMMANDS) ? mcommands[*(int*)a -
+    N_SCOMMANDS].name : scommands[*(int*)a].name;
+  const char *zb = (*(int*)b >= N_SCOMMANDS) ? mcommands[*(int*)b -
+    N_SCOMMANDS].name : scommands[*(int*)b].name;
+  return strcmp(za, zb);
+}
+
 //-------------------------------------------------------------
 // ChangeCommandList (slot): when a new group is selected,
 //      the list of commands must be cleared and the new
@@ -165,21 +174,23 @@ int MainForm::GetGroup() {
 //-------------------------------------------------------------
 
 void MainForm::ChangeCommandList() {
-  int indexes[50];
+  int indexes[N_SCOMMANDS + N_MCOMMANDS];
   int i;
+  int max;
 
   NCommandList->clearSelection();
   NCommandList->clearFocus();
   NCommandList->clear();
 
-  for (i = 0; i < GroupSIndexes(GetGroup(), indexes); i++)
-    NCommandList->insertItem(scommands[indexes[i]].name);
-  for (i = 0; i < GroupMIndexes(GetGroup(), indexes); i++)
-    NCommandList->insertItem(mcommands[indexes[i]].name);
+  max = GroupSIndexes(GetGroup(), indexes);
+  max += GroupMIndexes(GetGroup(), &indexes[max]);
+  qsort(indexes, max, sizeof(int), &TheSort);
 
-  if (strcmp(GroupNames[GetGroup()], "Miscellaneous") == 0) {
-    NCommandList->insertItem("abort_failure");
-  }
+  for (i = 0; i < max; i++)
+    if (indexes[i] >= N_SCOMMANDS)
+      NCommandList->insertItem(mcommands[indexes[i] - N_SCOMMANDS].name);
+    else
+      NCommandList->insertItem(scommands[indexes[i]].name);
 
   ChooseCommand();
 }
@@ -213,18 +224,7 @@ void MainForm::ChooseCommand() {
     }
   } else {
     NSendButton->setEnabled(true);
-    if (strcmp(NCommandList->text(NCommandList->currentItem()), "abort_failure")
-        == 0) {
-      NAboutLabel->setText("abort a current failure mode");
-      lastmcmd = -1;
-      NParamLabels[0]->setText("Failure mode (string)");
-      NParamLabels[0]->show();
-      NParamFields[0]->show();
-      for (i = 1; i < MAX_N_PARAMS; i++) {
-        NParamLabels[i]->hide();
-        NParamFields[i]->hide();
-      }
-    } else if ((index = SIndex(NCommandList->text(NCommandList->currentItem())))
+    if ((index = SIndex(NCommandList->text(NCommandList->currentItem())))
         != -1) {
       // Set up for a single command
       NAboutLabel->setText(scommands[index].about);
@@ -251,14 +251,12 @@ void MainForm::ChooseCommand() {
           if (IsData) {
             if (DataSource->readField(&indata,
                                       mcommands[index].params[i].field,
-                                      DataSource->numFrames() - 2, -1) == 0) {
+                                      DataSource->numFrames() - 2, -1) == 0)
               NParamFields[i]->SetDefaultValue(index, i);
-            } else {
+            else
               NParamFields[i]->SetValue(indata);
-            }
-          } else {
+          } else 
             NParamFields[i]->SetDefaultValue(index, i);
-          }
         } else {
           NParamLabels[i]->hide();
           NParamFields[i]->hide();
@@ -285,10 +283,9 @@ int MainForm::GroupSIndexes(int group, int *indexes) {
   int i;
   int num = 0;
 
-  for (i = 0; i < N_SCOMMANDS; i++) {
+  for (i = 0; i < N_SCOMMANDS; i++)
     if (scommands[i].group & (1 << group))
       indexes[num++] = i;
-  }
 
   return num;
 }
@@ -310,10 +307,9 @@ int MainForm::GroupMIndexes(int group, int *indexes) {
   int i;
   int num = 0;
 
-  for (i = 0; i < N_MCOMMANDS; i++) {
+  for (i = 0; i < N_MCOMMANDS; i++)
     if (mcommands[i].group & (1 << group))
-      indexes[num++] = i;
-  }
+      indexes[num++] = i + N_SCOMMANDS;
 
   return num;
 }
@@ -566,16 +562,7 @@ void MainForm::SendCommand() {
     strcpy(args[i++], NCommandList->text(NCommandList->currentItem()));
 
     // Parameters
-    if (strcmp(NCommandList->text(NCommandList->currentItem()), "abort_failure")
-        == 0) {
-      sprintf(buffer, "Error: Unable to abort failure mode: %s",
-          NParamFields[0]->text().ascii());
-      params[1] = buffer;
-      params[2] = 0;
-      WriteCmd(NLog, params);
-      WriteErr(NLog, 10);
-      return;
-    } else if ((index = MIndex(NCommandList->text(NCommandList->currentItem())))
+    if ((index = MIndex(NCommandList->text(NCommandList->currentItem())))
         != -1) {
 
       // Check to see if this command requires a confirm
@@ -690,7 +677,8 @@ void MainForm::ChangeCurFile() {
 //
 //-------------------------------------------------------------
 
-void MainForm::ShowSettings() {
+void MainForm::ShowSettings()
+{
   NSettingsWindow->show();
 }
 
@@ -888,9 +876,6 @@ void MainForm::WriteErr(QMultiLineEdit *dest, int retstatus) {
       break;
     case 9:
       txt = "  COMMAND NOT SENT: Narsil error: Parameter out of range.\n";
-      break;
-    case 10:
-      txt = "  COMMAND NOT SENT: Narsil error: Unable to abort failure mode.\n";
       break;
     case 11:
       txt = "  COMMAND NOT SENT: Command not confirmed by user.\n";
@@ -1241,9 +1226,9 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   setMinimumSize(QSize(width(), height()));
   setMaximumSize(QSize(width(), height()));
 
-  if (!curfile.isNull()) {
+  if (!curfile.isNull())
     strcpy(tmp, curfile);
-  } else
+  else
     strcpy(tmp, '\0');
 
   DataSource = new KstFile(tmp, UNKNOWN);
