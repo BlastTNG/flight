@@ -427,6 +427,8 @@ void EvolveElSolution(struct ElSolutionStruct *s,
       new_offset = ((new_angle - s->last_input) - s->gy_int) /
 		   (0.01*(double)s->since_last);
 
+      if (fabs(new_offset)>500.0) new_offset = 0; // 5 deg step is bunk!
+      
       if (s->n_solutions < 1000) {
 	fs = 20.0*s->FC;
       } else {

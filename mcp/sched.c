@@ -58,6 +58,7 @@ void InitSched(void) {
   
   int i,j, entry_ok;
   int n_fields;
+  int el_range_warning;
 
   /*******************************************/
   /*** Count number of schedule file lines ***/
@@ -187,22 +188,24 @@ void InitSched(void) {
       rh = S.p[i].h;
     }
 
+    el_range_warning = 0;
     if (el1>el2) {
       el1+= rh;
-      if (el1> 60.0) printf("******************************************\n"
-			    "*** Warning: El high\n");
       el2-= rh;
-      if (el2 < 27.0) printf("******************************************\n"
-			     "*** Warning: El low\n");
+      if (el1 > 60.0) el_range_warning = 1;
+      if (el2 < 27.0) el_range_warning = 1;
     } else {
       el1-= rh;
       el2+= rh;
-      if (el2> 60.0) printf("******************************************\n"
-			    "*** Warning: El high\n");
-      if (el1 < 27.0) printf("******************************************\n"
-			     "*** Warning: El low\n");
+      if (el2 > 60.0) el_range_warning = 1;
+      if (el1 < 27.0) el_range_warning = 1;
     }
-    
+    if (el_range_warning) {
+      printf("******************************************\n"
+	     "*** Warning: El Range\n");
+      printf("*** LST: %7.4f Ra: %8.3f  Dec: %8.3f\n",
+	     S.p[i].t, S.p[i].X, S.p[i].Y);
+    }
     printf("*** %2d Az: %8.3f - %8.3f El: %8.3f - %8.3f\n", i,
 	   az1, az2, el1, el2);
   }
