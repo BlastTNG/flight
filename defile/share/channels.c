@@ -86,6 +86,7 @@ struct ChannelStruct *FastChList;
 
 struct ChannelStruct BoloChannels[N_FAST_BOLOS];
 
+#define SPEC_VERSION "10"
 #ifndef __DEFILE__
 #  define FREADORWRITE fwrite
 #  define SPECIFICATIONFILEFUNXION WriteSpecificationFile
@@ -95,6 +96,27 @@ struct ChannelStruct BoloChannels[N_FAST_BOLOS];
 #endif
 void SPECIFICATIONFILEFUNXION(FILE* fp)
 {
+  char versionMagic[6] = "DFI" SPEC_VERSION;
+
+  FREADORWRITE(&versionMagic, 6, 1, fp);
+
+#ifdef __DEFILE__
+  /* check spec file version */
+  if (versionMagic[0] != 'D' || versionMagic[1] != 'F'
+      || versionMagic[2] != 'I') {
+    fprintf(stderr, "Spec file too old: version magic not found.\n"
+        "To read this file, you will need defile version 2.1\n");
+    exit(1);
+  } else {
+    int version = atoi(&versionMagic[3]);
+    if (version != 10) {
+      fprintf(stderr, "Unsupported Spec file version: %i.  Cannot continue.\n",
+          version);
+      exit(1);
+    }
+  }
+#endif
+
   FREADORWRITE(&ccWideSlow, sizeof(unsigned short), 1, fp);
   FREADORWRITE(&ccNarrowSlow, sizeof(unsigned short), 1, fp);
   FREADORWRITE(&ccWideFast, sizeof(unsigned short), 1, fp);
@@ -166,7 +188,7 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   mprintf(MCP_INFO, "Slow Channels per BiPhase Frame: %i\n", slowsPerBi0Frame);
 
 #elif VERBOSE
-  mputs(MCP_INFO, "Wrote specification file.\n");
+  mputs(MCP_INFO, "Wrote version " SPEC_VERSION " specification file.\n");
 #endif
 }
 
@@ -853,6 +875,7 @@ void MakeAddressLookups(void)
   }
 
   for (i = 0; i < ccDecom; ++i) {
+#ifndef __DEFILE__
     NiosLookup[i + ccNoBolos + N_FAST_BOLOS] = SetNiosData(&DecomChannels[i],
         addr[(int)DecomChannels[i].bus], 1, 0);
 
@@ -860,6 +883,9 @@ void MakeAddressLookups(void)
         + N_FAST_BOLOS].bbcAddr)].index = NOT_MULTIPLEXED;
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccNoBolos
         + N_FAST_BOLOS].bbcAddr)].channel = BiPhaseAddr++;
+#else
+    FastChList[BiPhaseAddr++] = DecomChannels[i];
+#endif
 
     addr[(int)DecomChannels[i].bus]++;
   }

@@ -109,7 +109,7 @@ long int SetResumeChunk(void)
       exit(1);
     }
 
-    chunk_total = chunk_stat.st_size / BiPhaseFrameSize;
+    chunk_total = chunk_stat.st_size / DiskFrameSize;
 
     /* if there's more than we need, we're done */
     if (chunk_total > left_to_read)
@@ -141,18 +141,18 @@ void FrameFileReader(void)
   struct stat chunk_stat;
   long int seek_to = 0;
 
-  if ((InputBuffer[0] = (unsigned short*)malloc(BiPhaseFrameSize
+  if ((InputBuffer[0] = (unsigned short*)malloc(DiskFrameSize
           * INPUT_BUF_SIZE)) == NULL) {
     perror("defile: cannot allocate heap");
     exit(1);
   }                 
 
   for(i = 1; i < INPUT_BUF_SIZE; ++i)
-    InputBuffer[i] = (void*)InputBuffer[0] + i * BiPhaseFrameSize;
+    InputBuffer[i] = (void*)InputBuffer[0] + i * DiskFrameSize;
 
   if (rc.resume_at >= 0) {
     ri.read = SetResumeChunk();
-    seek_to = ri.read * BiPhaseFrameWords;
+    seek_to = ri.read * DiskFrameWords;
   }
 
   do {
@@ -183,12 +183,12 @@ void FrameFileReader(void)
           exit(1);
         }
 
-        ri.chunk_total = chunk_stat.st_size / BiPhaseFrameSize;
+        ri.chunk_total = chunk_stat.st_size / DiskFrameSize;
       }
 
       /* read some frames */
       clearerr(stream);
-      if ((n = fread(InputBuffer[0], BiPhaseFrameSize, INPUT_BUF_SIZE, stream))
+      if ((n = fread(InputBuffer[0], DiskFrameSize, INPUT_BUF_SIZE, stream))
           < 1) {
         if (feof(stream))
           break;
@@ -206,7 +206,7 @@ void FrameFileReader(void)
           }
 
           /* seek to our last position */
-          fseek(stream, frames_read * BiPhaseFrameSize, SEEK_SET);
+          fseek(stream, frames_read * DiskFrameSize, SEEK_SET);
           n = 0;
         }
       }
@@ -234,7 +234,7 @@ void FrameFileReader(void)
         }
 
         /* new frame total */
-        n = chunk_stat.st_size / BiPhaseFrameSize;
+        n = chunk_stat.st_size / DiskFrameSize;
         if (n < ri.chunk_total)
           fprintf(stderr, "defile: warning: chunk `%s' has shrunk.\n",
               rc.chunk);

@@ -36,8 +36,8 @@
 #include "tx_struct.h"
 
 #define VERSION_MAJOR    "2"
-#define VERSION_MINOR    "1"
-#define VERSION_REVISION "4"
+#define VERSION_MINOR    "2"
+#define VERSION_REVISION "0"
 #define VERSION VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION 
 
 #define DEFAULT_CURFILE "/data/etc/defile.cur"
@@ -448,7 +448,7 @@ void ReconstructChannelLists(void)
   /* Make the Channel Struct */
   MakeAddressLookups();
 
-  printf("Frame size: %i bytes\n", BiPhaseFrameSize);
+  printf("Frame size: %i bytes\n", DiskFrameSize);
 }
 
 void PrintVersion(void)
