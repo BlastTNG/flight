@@ -132,6 +132,7 @@ void FrameFileReader(void)
       new_chunk = 1;
     } else if (n == FR_CURFILE_CHANGED) {
       /* fixup remounting */
+      strcpy(gpb, rc.curfile_val);
       if (rc.remount)
         Remount(rc.source, gpb);
 
