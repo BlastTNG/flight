@@ -1,5 +1,6 @@
 #include <math.h>
 #include <time.h>
+#include <stdio.h>
 
 #include "tx_struct.h"
 #include "tx.h"
@@ -168,6 +169,10 @@ int Balance(int iscBits, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
     iscBits &= (0xFF - BAL1_REV);  /* clear reverse bit */
     error = -error;
   }
+
+  printf("Balance: error = %i gain = %lf bal_min = %i bal_max = %i\n",
+      error, CommandData.pumps.bal_gain, CommandData.pumps.bal_min,
+      CommandData.pumps.bal_max);
 
   pumppwm = CommandData.pumps.bal_min - error * CommandData.pumps.bal_gain;
 
