@@ -15,6 +15,7 @@ clean:
 	rm -f mcp || true;
 	rm -f *.o || true;
 	rm -f Makefile.config || true;
+	cd etc && $(MAKE) clean
 
 Makefile.config:
 	./configure
@@ -58,3 +59,4 @@ sslutNA.o: sslutNA.h sslutNA.c
 install: mcp
 	install -m 755 mcp /usr/local/bin
 	install -m 755 doSensors /usr/local/bin
+	cd etc && $(MAKE) install
