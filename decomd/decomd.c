@@ -87,6 +87,7 @@ double fs_bad = 0;
 double dq_bad = 0;
 unsigned short polarity = 1;
 int du = 0;
+unsigned long frame_counter = 0;
 
 void ReadDecom (void)
 {
@@ -115,14 +116,18 @@ void ReadDecom (void)
               FrameBuf[BiPhaseFrameWords] = crc_ok;
               FrameBuf[BiPhaseFrameWords + 1] = polarity;
               FrameBuf[BiPhaseFrameWords + 2] = du;
-              if (!system_idled)
+              if (!system_idled) {
                 pushDiskFrame(FrameBuf);
+                frame_counter++;
+              }
             } else {
               AntiFrameBuf[BiPhaseFrameWords] = crc_ok;
               AntiFrameBuf[BiPhaseFrameWords + 1] = polarity;
               AntiFrameBuf[BiPhaseFrameWords + 2] = du;
-              if (!system_idled)
+              if (!system_idled) {
                 pushDiskFrame(AntiFrameBuf);
+                frame_counter++;
+              }
             }
           }
 
@@ -344,8 +349,8 @@ int main(void) {
     for(ptr = framefile.name + strlen(framefile.name); *ptr != '/'; --ptr);
 
     memset(buf, 0, 209);
-    sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu %s\n", status + system_idled
-        * 0x4, polarity, du, fs_bad, dq_bad, disk_free, ptr + 1);
+    sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu %lu %s\n", status + system_idled
+        * 0x4, polarity, du, fs_bad, dq_bad, disk_free, frame_counter, ptr + 1);
 
     if (n == -1 && errno == EINTR)
       continue;
