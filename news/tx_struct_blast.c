@@ -324,7 +324,7 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_mtol",     'w', LOOP2, 16,        100./65536.,             0.0, 'u'},
   {"isc_qtol",     'w', LOOP2, 17,        100./65536.,             0.0, 'u'},
   {"isc_blob02_f", 'w', LOOP2, 18,               32.0,             0.0, 'u'},
-  {"isc_focus",    'w', LOOP2, 19,                1.0,             0.0, 'u'},
+  {"isc_focus",    'w', LOOP2, 19,                1.0,             0.0, 's'},
   {"isc_state",    'w', LOOP2, 20,                1.0,             0.0, 'u'},
   {"isc_lrad",     'w', LOOP2, 21,              I2DEG,             0.0, 'u'},
   {"isc_thresh",   'w', LOOP2, 22,             1./10.,             0.0, 'u'},
@@ -404,7 +404,7 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_mtol",     'w', LOOP3, 40,        100./65536.,             0.0, 'u'},
   {"osc_qtol",     'w', LOOP3, 41,        100./65536.,             0.0, 'u'},
   {"osc_offset",   'w', LOOP3, 42,                1.0,             0.0, 's'},
-  {"osc_focus",    'w', LOOP3, 43,                1.0,             0.0, 'u'},
+  {"osc_focus",    'w', LOOP3, 43,                1.0,             0.0, 's'},
   {"osc_state",    'w', LOOP3, 44,                1.0,             0.0, 'u'},
   {"osc_lrad",     'w', LOOP3, 45,              I2DEG,             0.0, 'u'},
   {"osc_thresh",   'w', LOOP3, 46,             1./10.,             0.0, 'u'},
@@ -455,6 +455,8 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_exposure", 'w', LOOP4, 30,               100.,             0.0, 'u'},
   {"isc_fieldrot", 'w', LOOP4, 31,              I2DEG,             0.0, 'u'},
   {"osc_fieldrot", 'w', LOOP4, 32,              I2DEG,             0.0, 'u'},
+  {"isc_foc_off",  'w', LOOP4, 33,                1.0,             0.0, 's'},
+  {"osc_foc_off",  'w', LOOP4, 34,                1.0,             0.0, 's'},
   END_OF_CHANNELS
 };
 

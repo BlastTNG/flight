@@ -253,6 +253,7 @@ void StoreStarCameraData(int index, int which)
   static struct NiosStruct* MdistAddr[2];
   static struct NiosStruct* NblobsAddr[2];
   static struct NiosStruct* FocusAddr[2];
+  static struct NiosStruct* FocOffAddr[2];
   static struct NiosStruct* ThreshAddr[2];
   static struct NiosStruct* GridAddr[2];
   static struct NiosStruct* StateAddr[2];
@@ -307,6 +308,7 @@ void StoreStarCameraData(int index, int which)
 
     StateAddr[which] = GetSCNiosAddr("state", which);
     FocusAddr[which] = GetSCNiosAddr("focus", which);
+    FocOffAddr[which] = GetSCNiosAddr("foc_off", which);
     ApertAddr[which] = GetSCNiosAddr("apert", which);
     ThreshAddr[which] = GetSCNiosAddr("thresh", which);
     GridAddr[which] = GetSCNiosAddr("grid", which);
@@ -425,6 +427,8 @@ void StoreStarCameraData(int index, int which)
         + ISCSentState[which].shutdown * 32 + ISCSentState[which].save),
       NIOS_QUEUE);
   WriteData(FocusAddr[which], (unsigned int)ISCSentState[which].focus_pos,
+      NIOS_QUEUE);
+  WriteData(FocOffAddr[which], (unsigned int)ISCSentState[which].focusOffset,
       NIOS_QUEUE);
   WriteData(ApertAddr[which], (unsigned int)ISCSentState[which].ap_pos,
       NIOS_QUEUE);

@@ -14,7 +14,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.27 $";
+const char command_list_serial[] = "$Revision: 2.28 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -523,6 +523,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {COMMAND(isc_foc_off), "set focus offset relative to the home position", GR_ISC_PARAM, 1,
+    {
+      {"Focus Offset", -500, 2500, 'i', "ISC_FOC_OFF"}
+    }
+  },
+
   {COMMAND(isc_set_aperture), "set the f-stop", GR_ISC_PARAM, 1,
     {
       {"Aperture Position", 0, AP_RANGE, 'i', "ISC_APERT"}
@@ -610,6 +616,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(osc_set_focus), "set focus position", GR_OSC_PARAM, 1,
     {
       {"Focus Position", -1000, 1000, 'i', "OSC_FOCUS"}
+    }
+  },
+
+  {COMMAND(osc_foc_off), "set focus offset relative to the home position", GR_ISC_PARAM, 1,
+    {
+      {"Focus Offset", -500, 2500, 'i', "OSC_FOC_OFF"}
     }
   },
 

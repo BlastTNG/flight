@@ -795,6 +795,8 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     /********* ISC Commanding  *************/
   } else if (command == isc_set_focus) {
     CommandData.ISCState[0].focus_pos = ivalues[0];
+  } else if (command == isc_foc_off) {
+    CommandData.ISCState[0].focusOffset = ivalues[0];
   } else if (command == isc_set_aperture) {
     CommandData.ISCState[0].ap_pos = ivalues[0];
   } else if (command == isc_pixel_centre) {
@@ -840,6 +842,8 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     /********* OSC Commanding  *************/
   } else if (command == osc_set_focus) {
     CommandData.ISCState[1].focus_pos = ivalues[0];
+  } else if (command == osc_foc_off) {
+    CommandData.ISCState[1].focusOffset = ivalues[0];
   } else if (command == osc_set_aperture) {
     CommandData.ISCState[1].ap_pos = ivalues[0];
   } else if (command == osc_pixel_centre) {
