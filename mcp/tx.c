@@ -21,6 +21,7 @@
 #include "tx.h"
 #include "command_struct.h"
 #include "mcp.h"
+#include "ss_struct.h"
 
 extern short int SamIAm;
 short int InCharge;
@@ -394,8 +395,14 @@ void StoreData(int index)
 {
   static int firsttime = 1;
   
-  static struct NiosStruct* ssXCcdAddr;
+  static struct NiosStruct* ssAzCenterAddr;
   static struct NiosStruct* ssPrinAddr;
+  static struct NiosStruct* ssElCenterAddr;
+  static struct NiosStruct* ssElSnrAddr;
+  static struct NiosStruct* ssAzSnrAddr;
+  static struct NiosStruct* ssPcTempAddr;
+  static struct NiosStruct* ssCpuTempAddr;
+
   static struct NiosStruct* sipLatAddr;
   static struct NiosStruct* sipLonAddr;
   static struct NiosStruct* sipAltAddr;
@@ -409,7 +416,7 @@ void StoreData(int index)
   static struct NiosStruct* pXDegAddr, *pYAddr;
   static struct NiosStruct* pVazAddr, *pDelAddr;
   static struct NiosStruct* pWAddr, *pHAddr;
-  
+
   static struct NiosStruct* sensorVetoAddr;
 
   /** derived pointing data */
@@ -446,11 +453,11 @@ void StoreData(int index)
 
   /** dgps fields **/
   static struct NiosStruct* dgpsTimeAddr;
-  static struct NiosStruct* dgpsLatAddr;  
-  static struct NiosStruct* dgpsLonAddr;  
-  static struct NiosStruct* dgpsAltAddr;  
-  static struct NiosStruct* dgpsSpeedAddr;  
-  static struct NiosStruct* dgpsDirAddr;  
+  static struct NiosStruct* dgpsLatAddr;
+  static struct NiosStruct* dgpsLonAddr;
+  static struct NiosStruct* dgpsAltAddr;
+  static struct NiosStruct* dgpsSpeedAddr;
+  static struct NiosStruct* dgpsDirAddr;
   static struct NiosStruct* dgpsClimbAddr;
   static struct NiosStruct* dgpsAttOkAddr;
   static struct NiosStruct* dgpsAttIndexAddr;
@@ -464,13 +471,20 @@ void StoreData(int index)
 
   /******** Obtain correct indexes the first time here ***********/
   if (firsttime) {
-    firsttime = 0;	
+    firsttime = 0;
     azAddr = GetNiosAddr("az");
     elAddr = GetNiosAddr("el");
-    ssXCcdAddr = GetNiosAddr("ss_x_ccd");
     mcpFrameAddr = GetNiosAddr("mcp_frame");
 
     ssPrinAddr = GetNiosAddr("ss_prin");
+    ssAzCenterAddr = GetNiosAddr("ss_az_center");
+    ssElCenterAddr = GetNiosAddr("ss_el_center");
+    ssAzSnrAddr = GetNiosAddr("ss_az_snr");
+    ssElSnrAddr = GetNiosAddr("ss_el_snr");
+    ssPcTempAddr = GetNiosAddr("ss_pc_temp");
+    ssCpuTempAddr = GetNiosAddr("ss_cpu_temp");
+
+
     sipLatAddr = GetNiosAddr("sip_lat");
     sipLonAddr = GetNiosAddr("sip_lon");
     sipAltAddr = GetNiosAddr("sip_alt");
@@ -535,9 +549,13 @@ void StoreData(int index)
   i_ss = GETREADINDEX(ss_index);
 
   /********** Sun Sensor Data **********/
-  WriteData(ssXCcdAddr, SunSensorData[i_ss].raw_az);
   WriteData(ssPrinAddr, SunSensorData[i_ss].prin);
-
+  WriteData(ssAzCenterAddr, SunSensorData[i_ss].az_center);
+  WriteData(ssElCenterAddr, SunSensorData[i_ss].el_center);
+  WriteData(ssAzSnrAddr, SunSensorData[i_ss].az_snr);
+  WriteData(ssElSnrAddr, SunSensorData[i_ss].el_snr);
+  WriteData(ssPcTempAddr, SunSensorData[i_ss].pc_temp);
+  WriteData(ssCpuTempAddr, SunSensorData[i_ss].cpu_temp);
   /********** SIP GPS Data **********/
   WriteData(sipLatAddr, (int)(SIPData.GPSpos.lat*DEG2I));
   WriteData(sipLonAddr, (int)(SIPData.GPSpos.lon*DEG2I));

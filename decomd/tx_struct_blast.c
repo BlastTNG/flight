@@ -319,6 +319,7 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_sigma",    'w', LOOP2, 46,              I2DEG,             0.0, 'u'},
   {"enc_el",       'w', LOOP2, 47,              I2DEG,             0.0, 'u'},
   {"enc_sigma",    'w', LOOP2, 48,              I2DEG,             0.0, 'u'},
+  {"ss_el",        'w', LOOP2, 50,                1.0,             0.0, 'u'},
   {"isc_blob0_flx",'w', LOOP2, 53,               32.0,             0.0, 'u'},
   {"clin_el",      'w', LOOP2, 54,              I2DEG,             0.0, 'u'},
   {"clin_sigma",   'w', LOOP2, 55,              I2DEG,             0.0, 'u'},
@@ -391,8 +392,16 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_hold_i",   'w', LOOP3, 61,                1.0,             0.0, 'u'},
   {"osc_save_prd", 'w', LOOP3, 62,               0.01,             0.0, 'u'},
   {"osc_y_off",    'w', LOOP3, 63,              I2DEG,             0.0, 'u'},
+
+  {"ss_el_snr",    'w', LOOP4,  0,                1.0,             0.0, 'u'},
+  {"ss_az_snr",    'w', LOOP4,  1,                1.0,             0.0, 'u'},
+  {"ss_el_center", 'w', LOOP4,  2,                1.0,             0.0, 'u'},
+  {"ss_az_center", 'w', LOOP4,  3,                1.0,             0.0, 'u'},
+  {"ss_cpu_temp",  'w', LOOP4,  4,                1.0,             0.0, 'u'},
+  {"ss_pc_temp",   'w', LOOP4,  5,                1.0,             0.0, 'u'},
+
   END_OF_CHANNELS
-}; 
+};
 
 struct ChannelStruct WideFastChannels[] = {
 #ifndef BOLOTEST
@@ -481,7 +490,6 @@ struct ChannelStruct FastChannels[] = {
   {"el",          'w', LOOP2, 52,           I2DEG,                    0.0, 'u'},
 
   {"mcp_frame",   'w', LOOP2, 34,             1.0,                    0.0, 'u'},
-  {"ss_x_ccd",    'w', LOOP2, 50,             1.0,                    0.0, 's'},
 
 #endif
 

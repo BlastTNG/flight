@@ -288,7 +288,7 @@ int SSConvert(double *ss_az) {
   if (sun_el < 0)
     sun_el = 10.0;
 
-  eflag = SSLut_find((double)SunSensorData[i_ss].raw_az, &az,
+  eflag = SSLut_find((double)SunSensorData[i_ss].az_center, &az,
       sun_el * M_PI / 180.0, &SSLut, &iter);
 
   if (eflag != 0)

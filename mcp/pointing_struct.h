@@ -19,6 +19,7 @@
 #include <time.h>
 #include "isc_protocol.h"   /* required for ISCData; get updates from
                                Ed Chapin and/or the ISC computer */
+#include "ss_struct.h"
 
 // GETREADINDEX: converts circular buffer pointer to
 #define GETREADINDEX(i) ((i+2) % 3)  /* i - 1 modulo 3 */
@@ -70,18 +71,7 @@ struct ACSDataStruct {
 
 extern struct ACSDataStruct ACSData;
 
-/**********************************************/
-/*  SunSensorDataStruct                       */
-/*  Purpose: Store raw sun sensor data        */
-/*   Source: Sun Sensor thread                */
-/*     Used: Main thread                      */
-struct SunSensorDataStruct {
-  short int raw_az; // uncalibrated
-  short int raw_el; // uncalibrated
-  short int prin;
-};
-
-extern struct SunSensorDataStruct SunSensorData[3];
+extern ss_packet_data SunSensorData[3];
 extern int ss_index;
 
 /**********************************************/
