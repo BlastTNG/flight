@@ -451,7 +451,7 @@ struct ChannelStruct SlowChannels[] = {
   {"cycle_state",  'w', LOOP4, 26,                1.0,             0.0, 'u'},
   {"isc_trig_type",'w', LOOP4, 27,                1.0,             0.0, 'u'},
   {"isc_exposure", 'w', LOOP4, 28,               100.,             0.0, 'u'},
-  {"isc_trig_type",'w', LOOP4, 29,                1.0,             0.0, 'u'},
+  {"osc_trig_type",'w', LOOP4, 29,                1.0,             0.0, 'u'},
   {"osc_exposure", 'w', LOOP4, 30,               100.,             0.0, 'u'},
   END_OF_CHANNELS
 };
