@@ -7,7 +7,7 @@ HEADERS = quendi.h frameread.h channels.h bbc_pci.h blast.h derived.h
 all: interloquendi
 
 interloquendi: $(OBJS)
-	$(CC) $(OBJS) -lwrap -o interloquendi
+	$(CC) $(OBJS) -lnsl -lwrap -o interloquendi
 
 $(OBJS): $(HEADERS)
 
