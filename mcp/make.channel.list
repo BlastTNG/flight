@@ -36,9 +36,9 @@ print "# fast channel list offset (FAST_OFFSET): ", $FAST_OFFSET = 4 + $N_SLOW,
 open INPUT, "<tx_struct.c" or die "ERROR: Unable to open tx_struct.c";
 
 while (<INPUT>) {
-  if (/#define LOOPBACK ([0-9])/) {
+  if (/#define LOOPBACK ([0-9]*)/) {
     $LOOPBACK = $1;
-  } elsif (/#define SPARE ([0-9])/) {
+  } elsif (/#define SPARE ([0-9]*)/) {
     $SPARE = $1;
   } elsif ($slowlist) {
     if (@record =
