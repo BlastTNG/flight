@@ -926,8 +926,8 @@ void DoNewBoxMode() {
       (CommandData.pointing_mode.Y != last_Y) ||
       (CommandData.pointing_mode.w != last_w) ||
       (CommandData.pointing_mode.h != last_h)) {
-    if ( (fabs(az - (caz)) < 0.1) &&
-	 (fabs(el - (bottom)) < 0.01)) {
+    if ( (fabs(az - left) < 0.1) &&
+	 (fabs(el - bottom) < 0.01)) {
       last_X = CommandData.pointing_mode.X;
       last_Y = CommandData.pointing_mode.Y;
       last_w = CommandData.pointing_mode.w;
