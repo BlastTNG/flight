@@ -158,7 +158,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {"az_vel", "azimuth velocity", GR_POINT, 1,
     {
-      {"velocity (deg/s)", -2.0, 2.0, 'f', 1, "0.0"}
+      {"velocity (deg/s)", -2.0, 2.0, 'f', 4, "0.0"}
     }
   },
 
@@ -170,7 +170,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {"el_vel", "elevation velocity", GR_POINT, 1,
     {
-      {"velocity (deg/s)", -2.0, 2.0, 'f', 1, "0.0"}
+      {"velocity (deg/s)", -2.0, 2.0, 'f', 4, "0.0"}
     }
   },
 

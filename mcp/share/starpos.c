@@ -560,7 +560,7 @@ void ReductionInit() {
 /*                                                                   */
 /*********************************************************************/
 /************************************************************************/
-/*get local sidereal time:  lon is in degrees                           */
+/*get local sidereal time:  lon is in degrees west                      */
 /************************************************************************/
 double getlst(time_t t, double lon) {
 
@@ -573,7 +573,7 @@ double getlst(time_t t, double lon) {
 
   t *= 1.002737909; // gst in seconds
 
-  t+= lon*(24.0*3600.0/360.0);
+  t-= lon*(24.0*3600.0/360.0);
   t = t%(24*3600);
   
   return(t);

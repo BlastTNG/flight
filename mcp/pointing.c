@@ -121,7 +121,7 @@ void Pointing(){
   PointingData[new_index].t = time(NULL); // for now use CPU time
   PointingData[new_index].lst = getlst(PointingData[new_index].t,
 				       PointingData[new_index].lon);
-  
+	 
   /*************************************/
   /**      do elevation solution      **/
   EvolveSolution(&EncEl, -ACSData.gyro1, ACSData.enc_elev, 1);

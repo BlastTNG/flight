@@ -172,7 +172,7 @@ int GetVAz() {
     vel = axes_mode.az_vel;
   } else if (axes_mode.az_mode == AXIS_POSITION) {
     vel = -(PointingData[point_index].az - axes_mode.az_dest)
-	  * 400.0;
+	  * 0.36;
   }
 
   vel *= DPS2GYU; // convert to gyro units
@@ -1171,8 +1171,10 @@ void StoreData(unsigned int* Txframe,
   WriteSlow(i_R, j_R, (int)(CommandData.pointing_mode.r * DEG2I));
 }
 
-#define AZ_ACCEL (0.005)
 
+#define AZ_ACCEL (0.001)
+#define AZ_MARGIN 0.5
+#define MIN_SCAN 0.2
 void DoRasterMode() {
   double az, p1, p2, v;
   int i_point;
@@ -1190,53 +1192,136 @@ void DoRasterMode() {
   if (axes_mode.az_vel < -v) axes_mode.az_vel = -v;
   if (axes_mode.az_vel > v) axes_mode.az_vel = v;
   
-  if (p1-az>0.5) { // out of range: move to p1
+  if (p1-az>AZ_MARGIN) { // out of range: move to p1
     axes_mode.az_mode = AXIS_POSITION;
     axes_mode.az_dest = p1;
     axes_mode.az_vel = 0.0;
-  } else if (az-p2>0.5) { // out of range - move to p2
+  } else if (az-p2>AZ_MARGIN) { // out of range - move to p2
     axes_mode.az_mode = AXIS_POSITION;
     axes_mode.az_dest = p2;
     axes_mode.az_vel = 0.0;
   } else if (az<p1) {
+    axes_mode.az_mode = AXIS_VEL;
     if (axes_mode.az_vel < v) axes_mode.az_vel+=AZ_ACCEL;
   } else if (az>p2) {
+    axes_mode.az_mode = AXIS_VEL;
     if (axes_mode.az_vel > -v) axes_mode.az_vel-=AZ_ACCEL;
   } else {
+    axes_mode.az_mode = AXIS_VEL;
     if (axes_mode.az_vel>0) axes_mode.az_vel = v;
     else axes_mode.az_vel = -v;
   } 
 }
 
+#define MIN_EL 20.0
+#define MAX_EL 50.0
+#define EL_BORDER 0.1
+
 void DoScanMode() {
   double caz, cel;
-  time_t t;
+  double az, az2, el, el1, el2;
+  double daz_dt, del_dt;
   double lst;
   int i_point;
-
+  double x, y, r,v;
+  double x2, xmin, xmax;
+  
   i_point = GETREADINDEX(point_index);
+  lst = PointingData[i_point].lst;
+  az = PointingData[i_point].az;
+  el = PointingData[i_point].el;
+  while (el> 180.0) el-=360.0;
+  while (el<-180.0) el += 360.0;
+  if (el>80) el = 80; // very bad situation - don't know how this can happen
+  if (el-10) el = -10; // very bad situation - don't know how this can happen
 
-  t = PointingData[i_point].t;
-  
-  //lst = getlst(t, PointingData[i_point].lon);
+  /* get raster center and sky drift speed */
+  radec2azel(CommandData.pointing_mode.ra, CommandData.pointing_mode.dec,
+ 	     lst, PointingData[i_point].lat,
+ 	     &caz, &cel);
+  radec2azel(CommandData.pointing_mode.ra, CommandData.pointing_mode.dec,
+ 	     lst+1.0, PointingData[i_point].lat,
+ 	     &az2, &el2);
+  daz_dt = az2 - caz;
+  del_dt = el2 - cel;
 
-/*   radec2azel(CommandData.pointing_mode.ra, CommandData.pointing_mode.dec, */
-/* 	     PointingData[i_point].lat, lst, */
-/* 	     &caz, &cel); */
+  /* get elevation limits */
+  if (cel < MIN_EL) cel = MIN_EL;
+  if (cel > MAX_EL) cel = MAX_EL;
+  r = CommandData.pointing_mode.r;
+  el1 = CommandData.pointing_mode.el1 = cel + r;
+  el2 = CommandData.pointing_mode.el2 = cel - r;
+  if (el1>MAX_EL) el1 = MAX_EL;
+  if (el2<MIN_EL) el2 = MIN_EL;
 
-/*   printf("%s %g lst: %d:%d:%d lat: %g lon: %g az: %g el: %g\n", */
-/* 	 ctime(&t), lst/3600.0, (int)lst/3600, ((int)lst%3600)/60, (((int)lst%3600)%60), */
-/* 	 PointingData[i_point].lat, PointingData[i_point].lon, */
-/* 	 caz, cel); */
+  CommandData.pointing_mode.az1 = caz;
+  CommandData.pointing_mode.az2 = caz;
+
+  // check for out of range in el
+  if (el > el1+EL_BORDER) {
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = caz;
+    axes_mode.az_vel = 0.0;
+    axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_vel = 0.0;
+    axes_mode.el_dest = el1;
+    CommandData.pointing_mode.el_vel = -fabs(CommandData.pointing_mode.el_vel);
+    return;
+  } else if (el < el2-EL_BORDER) {
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = caz;
+    axes_mode.az_vel = 0.0;
+    axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_vel = 0.0;
+    axes_mode.el_dest = el2;
+    CommandData.pointing_mode.el_vel = -fabs(CommandData.pointing_mode.el_vel);
+    return;
+  }
+
+  // we must be in range for elevation - go to el-vel mode
+  axes_mode.el_mode = AXIS_VEL;
+  axes_mode.el_vel = CommandData.pointing_mode.el_vel + del_dt;
+
+  /** Get x (ie, az*cos_el-caz) **/
+  x = az - caz;
+  while (x>180.0) x-=360.0;
+  while (x<-180.0) x+=360.0;
+  x*=cos(el * M_PI/180.0);
   
-  //getlst(PointingData[i_point].t,
-  // PointingData[i_point].lon,
-  // get lst
-  // get ac and el of center of scan
+  /** Get x limits **/
+  y = el - cel;
+  x2 = r*r-y*y;
+  if (x2<0) {
+    xmin = xmax = 0.0;
+  } else {
+    xmax = sqrt(x2);
+  }
+  if (xmax < MIN_SCAN) xmax = MIN_SCAN;
+  xmin = -xmax;
+
+  /* set az v */
+  v = CommandData.pointing_mode.az_vel/cos(el * M_PI/180.0);
   
-  
-  
+  /* set az mode */
+  if (axes_mode.az_vel < -v) axes_mode.az_vel = -v;
+  if (axes_mode.az_vel > v) axes_mode.az_vel = v;
+  if ((x>xmax+AZ_MARGIN) || (x < xmin - AZ_MARGIN)) {
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = caz;
+    axes_mode.az_vel = 0.0;
+  } else if (x < xmin) {
+    axes_mode.az_mode = AXIS_VEL;
+    if (axes_mode.az_vel < v) axes_mode.az_vel+=AZ_ACCEL;
+  } else if (x > xmax) {
+    axes_mode.az_mode = AXIS_VEL;
+    if (axes_mode.az_vel > -v) axes_mode.az_vel-=AZ_ACCEL;
+  } else {
+    axes_mode.az_mode = AXIS_VEL;
+    if (axes_mode.az_vel>0) axes_mode.az_vel = v;
+    else axes_mode.az_vel = -v;
+  }  
 }
+
 /******************************************************************
  *                                                                *
  * Update Axis Modes: Set axes_mode based on                      *
