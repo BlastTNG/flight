@@ -23,10 +23,13 @@ int iscdata_index = 0;
 
 int ISCInit(client_frame* client_data)
 {
+  fd_set fds;
+  struct timeval timeout;
+
   int sock;
+  struct sockaddr_in addr;
 
   int n;
-  struct sockaddr_in addr;
 
   sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (sock == -1) {
@@ -56,66 +59,130 @@ int ISCInit(client_frame* client_data)
     return -1;
   }
 
-  /* Ask for defaults and start free run */
-  client_data->command = freerun;
   if (InCharge) {
-    n = send(sock, client_data, sizeof(client_frame), 0);
-    if (n == -1) {
-      perror("ISC send()");
-      if (sock != -1)
-        if (close(sock) < 0)
-          perror("ISC close()");
-      return -1;
-    } else if (n < sizeof(client_frame)) {
-      fprintf(stderr, "ISC: Expected %i bytes, but sent %i bytes.\n",
-          sizeof(client_frame), n);
+    FD_ZERO(&fds);
+    FD_SET(sock, &fds);
+
+    timeout.tv_sec = 10;
+    timeout.tv_usec = 0;
+
+    n = select(sock + 1, NULL, &fds, NULL, &timeout);
+
+    if (n == -1 && errno == EINTR) {
       if (sock != -1)
         if (close(sock) < 0)
           perror("ISC close()");
       return -1;
     }
+    if (n == -1) {
+      perror("ISC select()");
+      if (sock != -1)
+        if (close(sock) < 0)
+          perror("ISC close()");
+      return -1;
+    }
+
+    if (FD_ISSET(sock, &fds)) {
+      /* Ask for defaults and start free run */
+      client_data->command = freerun;
+
+      n = send(sock, client_data, sizeof(client_frame), 0);
+      if (n == -1) {
+        perror("ISC send()");
+        if (sock != -1)
+          if (close(sock) < 0)
+            perror("ISC close()");
+        return -1;
+      } else if (n < sizeof(client_frame)) {
+        fprintf(stderr, "ISC: Expected %i bytes, but sent %i bytes.\n",
+            sizeof(client_frame), n);
+        if (sock != -1)
+          if (close(sock) < 0)
+            perror("ISC close()");
+        return -1;
+      }
+    } else {
+      fprintf(stderr, "ISC: Time out waiting for CTS\n");
+      if (sock != -1)
+        if (close(sock) < 0)
+          perror("ISC close()");
+      return -1;
+    }
+  } else {
+    fprintf(stderr, "ISC: Not in charge\n");
   }
 
   /* Read defaults */
-  n = recv(sock, &ISCData[iscdata_index], sizeof(server_frame), 0);
-  if (n == -1) {
-    perror("ISC recv()");
+  FD_ZERO(&fds);
+  FD_SET(sock, &fds);
+
+  timeout.tv_sec = 10;
+  timeout.tv_usec = 0;
+
+  n = select(sock + 1, &fds, NULL, NULL, &timeout);
+
+  if (n == -1 && errno == EINTR) {
     if (sock != -1)
       if (close(sock) < 0)
         perror("ISC close()");
     return -1;
-  } else if (n < sizeof(server_frame)) {
-    fprintf(stderr, "ISC: Expected %i but received %i bytes.\n",
-        sizeof(server_frame), n);
+  }
+  if (n == -1) {
+    perror("ISC select()");
     if (sock != -1)
       if (close(sock) < 0)
         perror("ISC close()");
     return -1;
   }
 
-  /* Fill client frames with defaults */
-  client_data->gain = ISCData[iscdata_index].gain;
-  client_data->exposure = ISCData[iscdata_index].exposure;
-  client_data->platescale = ISCData[iscdata_index].platescale;
-  client_data->gain = ISCData[iscdata_index].gain;
-  client_data->offset = ISCData[iscdata_index].offset;
-  client_data->saturation = ISCData[iscdata_index].saturation;
-  client_data->threshold = ISCData[iscdata_index].threshold;
-  client_data->grid = ISCData[iscdata_index].grid;
-  client_data->cenbox = ISCData[iscdata_index].cenbox;
-  client_data->apbox = ISCData[iscdata_index].apbox;
-  client_data->multiple_dist = ISCData[iscdata_index].multiple_dist;
+  if (FD_ISSET(sock, &fds)) {
+    n = recv(sock, &ISCData[iscdata_index], sizeof(server_frame), 0);
+    if (n == -1) {
+      perror("ISC recv()");
+      if (sock != -1)
+        if (close(sock) < 0)
+          perror("ISC close()");
+      return -1;
+    } else if (n < sizeof(server_frame)) {
+      fprintf(stderr, "ISC: Expected %i but received %i bytes.\n",
+          sizeof(server_frame), n);
+      if (sock != -1)
+        if (close(sock) < 0)
+          perror("ISC close()");
+      return -1;
+    }
 
-  CommandData.ISCCommand = *client_data;
+    /* Fill client frames with defaults */
+    client_data->gain = ISCData[iscdata_index].gain;
+    client_data->exposure = ISCData[iscdata_index].exposure;
+    client_data->platescale = ISCData[iscdata_index].platescale;
+    client_data->gain = ISCData[iscdata_index].gain;
+    client_data->offset = ISCData[iscdata_index].offset;
+    client_data->saturation = ISCData[iscdata_index].saturation;
+    client_data->threshold = ISCData[iscdata_index].threshold;
+    client_data->grid = ISCData[iscdata_index].grid;
+    client_data->cenbox = ISCData[iscdata_index].cenbox;
+    client_data->apbox = ISCData[iscdata_index].apbox;
+    client_data->multiple_dist = ISCData[iscdata_index].multiple_dist;
 
-  /* Since we just trounced whatever data was queued to send (it would
-   * have had uninitialised data in any case), deassert write semaphores. */
-  write_ISC_pointing = CommandData.write_ISC_command = 0;
+    CommandData.ISCCommand = *client_data;
 
-  /* Increment index, finally */
-  iscdata_index = INC_INDEX(iscdata_index);
+    /* Since we just trounced whatever data was queued to send (it would
+     * have had uninitialised data in any case), deassert write semaphores. */
+    write_ISC_pointing = CommandData.write_ISC_command = 0;
 
-  fprintf(stderr, "ISC connect.\n");
+    /* Increment index, finally */
+    iscdata_index = INC_INDEX(iscdata_index);
+
+    fprintf(stderr, "ISC connect.\n");
+  } else {
+    fprintf(stderr, "ISC: Time out waiting for RTS\n");
+    if (sock != -1)
+      if (close(sock) < 0)
+        perror("ISC close()");
+    return -1;
+  }
+
 
   return sock;
 }
