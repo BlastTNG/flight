@@ -90,7 +90,7 @@ private:
   int GetGroup();
   int SIndex(QString cmd);
   int MIndex(QString cmd);
-  int LongestParam();
+  char *LongestParam();
   void ReadLog(QMultiLineEdit *dest);
   void WriteLog(QMultiLineEdit *dest, char *args[]);
   void WriteLog(QMultiLineEdit *dest, int retstatus);

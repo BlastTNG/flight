@@ -1,6 +1,7 @@
 // ***************************************************
 // *  Programmed by Adam Hincks                      *
 // *  (Later poked at a bit by D.V.Wiebe)            *
+// *  (and cbn)                                      *
 // ***************************************************
 
 
@@ -44,8 +45,8 @@
 
 #include <iostream>
 
-#define PADDING 6
-#define SPACING 6
+#define PADDING 3
+#define SPACING 3
 
 #define DEF_CURFILE CUR_DIR "/decom.cur"
 #define LOGFILE DATA_DIR "/log.txt"
@@ -309,18 +310,21 @@ int MainForm::MIndex(QString cmd) {
 //
 //-------------------------------------------------------------
 
-int MainForm::LongestParam() {
+char *MainForm::LongestParam() {
   int i, j;
   int len = 0;
+  static char lp[120];
 
   for (i = 0; i < N_MCOMMANDS; i++) {
     for (j = 0; j < mcommands[i].numparams; j++) {
-      if (strlen(mcommands[i].params[j].name) > len)
+      if (strlen(mcommands[i].params[j].name) > len) {
         len = strlen(mcommands[i].params[j].name);
+        strcpy(lp, mcommands[i].params[j].name);
+      }
     }
   }
 
-  return len;
+  return lp;
 }
 
 
@@ -401,7 +405,6 @@ void MainForm::TurnOn(QTimer *t) {
   sending = true;
 
   NGroupsBox->setDisabled(true);
-  QuitButton->setDisabled(true);
   NCurFileButton->setDisabled(true);
   NCurFile->setDisabled(true);
   NCommandList->setDisabled(true);
@@ -434,7 +437,6 @@ void MainForm::TurnOff(QTimer *t) {
   sending = false;
 
   NGroupsBox->setEnabled(true);
-  QuitButton->setEnabled(true);
   NSettingsButton->setEnabled(true);
   NCurFileButton->setEnabled(true);
   NCurFile->setEnabled(true);
@@ -789,20 +791,20 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NColorGroup2->setColor(QColorGroup::ButtonText, "darkGray");
 
   NGroupsBox = new QButtonGroup(this, "NGroupsBox");
-  tfont.setPointSize(LARGE_POINT_SIZE);
-  tfont.setBold(true);
-  NGroupsBox->setFont(tfont);
+  //tfont.setPointSize(LARGE_POINT_SIZE);
+  //tfont.setBold(true);
+  //NGroupsBox->setFont(tfont);
   NGroupsBox->setTitle(tr(""));
   NGroupsBox->setColumnLayout(0, Qt::Vertical);
   NGroupsBox->layout()->setSpacing(0);
   NGroupsBox->layout()->setMargin(0);
 
-  tfont.setBold(false);
+  //tfont.setBold(false);
 
   NGroupsLayout = new QGridLayout(NGroupsBox->layout());
   NGroupsLayout->setAlignment(Qt::AlignTop);
-  NGroupsLayout->setSpacing(3);
-  NGroupsLayout->setMargin(11);
+  NGroupsLayout->setSpacing(1);
+  NGroupsLayout->setMargin(5);
 
   for (i = 0; i < N_GROUPS; i++) {
     NGroups[i] = new QRadioButton(NGroupsBox, "QGroup");
@@ -821,43 +823,32 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NCommandList = new QListBox(this, "NCommandList");
   NCommandList->adjustSize();
   NCommandList->setGeometry(PADDING, PADDING, NCommandList->width() + 80, 0);
-  tfont.setFamily(FIXEDFONT);
-  tfont.setPointSize(LARGE_POINT_SIZE);
-  tfont.setBold(true);
-  NCommandList->setFont(tfont);
   connect(NCommandList, SIGNAL(highlighted(int)), this, SLOT(ChooseCommand()));
-
-  tfont.setBold(false);
 
 
   w1 = 0;
 
-  memset(tmp, 'H', LongestParam());
-  tmp[LongestParam()] = '\0';
+  strcpy(tmp, LongestParam());
   for (i = 0; i < MAX_N_PARAMS; i++) {
     NParamLabels[i] = new QLabel(NTopFrame, "NParamLabel");
-    tfont.setFamily(FIXEDFONT);
-    tfont.setPointSize(SMALL_POINT_SIZE);
-    NParamLabels[i]->setFont(tfont);
     NParamLabels[i]->setText(tr(tmp));
+    NParamLabels[i]->setAlignment(Qt::AlignHCenter);
     NParamLabels[i]->adjustSize();
+    w2 = NParamLabels[i]->width();
 
     NParamFields[i] = new DoubleEntry(NTopFrame, "NParamLabels");
-    tfont.setFamily(FIXEDFONT);
-    tfont.setPointSize(SMALL_POINT_SIZE);
-    NParamFields[i]->setFont(tfont);
+    NParamFields[i]->setFixedWidth(w2/2);
     NParamFields[i]->adjustSize();
 
-    w2 = NParamLabels[i]->width();
     w3 = NParamFields[i]->width();
     h2 = NParamLabels[i]->height();
     h3 = NParamFields[i]->height();
 
-    point.setX(w1 + 2 * PADDING + (i%2) * (w2 + w3 + PADDING + SPACING * 4));
+    point.setX(w1 + 2 * PADDING + (i%2) * (w2 + w3 + PADDING));
     NParamLabels[i]->setGeometry(point.x(), 0, w2, h2);
 
-    point.setX(w1 + 3 * PADDING +
-               (i%2) * (w2 + w3 + PADDING + SPACING * 4) + w2);
+    point.setX(w1 + PADDING +
+               (i%2) * (w2 + w3 + PADDING) + w2);
     NParamFields[i]->setGeometry(point.x(), 0, w3, h3);
   }
 
@@ -868,9 +859,6 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NAboutLabel = new QLabel(NTopFrame, "NAboutLabel");
   NAboutLabel->setFrameShape(QFrame::Box);
   NAboutLabel->setFrameShadow(QFrame::Plain);
-  tfont.setFamily(default_family);
-  tfont.setPointSize(LARGE_POINT_SIZE);
-  NAboutLabel->setFont(tfont);
   NAboutLabel->setText(tr(tmp));
   NAboutLabel->setAlignment(int(QLabel::WordBreak | QLabel::AlignLeft));
   NAboutLabel->setGeometry(0, 0, 2 * (w2 + w3 + PADDING) + SPACING * 4, 0);
@@ -899,31 +887,22 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
     NParamLabels[i]->hide();
   }
 
-  tfont.setFamily(default_family);
-  tfont.setPointSize(LARGE_POINT_SIZE);
-  tfont.setBold(true);
-
   NSendButton = new QPushButton(NTopFrame, "NSendButton");
-  NSendButton->setFont(tfont);
   NSendButton->setText(tr("Cancel"));
   NSendButton->adjustSize();
   NSendButton->setDisabled(true);
   NSettingsButton = new QPushButton(NTopFrame, "NSettingsButton");
-  NSettingsButton->setFont(tfont);
-  tfont.setBold(false);
   NSettingsButton->setText(tr("Settings . . ."));
   NSettingsButton->adjustSize();
 
-  NSendButton->setGeometry(2 * PADDING + NAboutLabel->width()
-                           - NSendButton->width(), PADDING +
+  NSendButton->setGeometry(PADDING, PADDING +
                            2 * PADDING + h1 +
                            (int((2 + MAX_N_PARAMS)/2)) *
                            (h3 + SPACING) -
                            NSettingsButton->height()
                            , NSendButton->width(),
                            NSendButton->height());
-  NSettingsButton->setGeometry(PADDING + NAboutLabel->width() -
-                               NSendButton->width() -
+  NSettingsButton->setGeometry(2*PADDING + NAboutLabel->width() -
                                NSettingsButton->width(),
                                PADDING + 2 * PADDING + h1 +
                                (int((2 + MAX_N_PARAMS)/2)) *
@@ -955,25 +934,12 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NWaitImage->setGeometry(NTopFrame->width() - NWaitImage->width() - PADDING,
       PADDING, NWaitImage->width(), NWaitImage->height());
 
-  QuitButton = new QPushButton(NBotFrame, "QuitButton");
-  tfont.setBold(true);
-  tfont.setFamily(default_family);
-  tfont.setPointSize(LARGE_POINT_SIZE);
-  QuitButton->setFont(tfont);
-  tfont.setBold(false);
-  QuitButton->setText(tr("Exit"));
-  QuitButton->adjustSize();
-  QuitButton->setGeometry(NTopFrame->width() - NWaitImage->width() - PADDING,
-      2 * PADDING + NWaitImage->height(),
-      NWaitImage->width(), QuitButton->height());
 
   NLog = new QMultiLineEdit(NBotFrame, "NLog");
   NLog->setReadOnly(true);
-  tfont.setFamily(FIXEDFONT);
-  tfont.setPointSize(SMALL_POINT_SIZE);
-  NLog->setFont(tfont);
-  NLog->setGeometry(PADDING, PADDING, NTopFrame->width() - NWaitImage->width() -                    3 * PADDING, PADDING + NWaitImage->height() +
-      QuitButton->height());
+  NLog->setGeometry(PADDING, PADDING, NTopFrame->width() -
+                    NWaitImage->width() -
+                    3 * PADDING, PADDING + NWaitImage->height());
   ReadLog(NLog);
 
   NBotFrame->adjustSize();
@@ -989,34 +955,20 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NSettingsWindow = new QDialog(this, "NSettingsWindow", true, 0);
   NSettingsWindow->setName("SettingsWindow");
   NSettingsWindow->setCaption(tr("Narsil Settings"));
-  //  NSettingsWindow->setIcon(*Icon);
 
   NCurFileCaption = new QLabel(NSettingsWindow, "NCurFileCaption");
-  tfont.setFamily(default_family);
-  tfont.setPointSize(LARGE_POINT_SIZE);
-  NCurFileCaption->setFont(tfont);
   NCurFileCaption->setText(tr("Cur File: "));
   NCurFileCaption->adjustSize();
 
   NCurFile = new QLineEdit(NSettingsWindow, "NCurFile");
-  tfont.setFamily(FIXEDFONT);
-  tfont.setPointSize(LARGE_POINT_SIZE);
-  NCurFile->setFont(tfont);
   NCurFile->setText(tr(curvefile));
   NCurFile->adjustSize();
 
   NCurFileButton = new QPushButton(NSettingsWindow, "QCurCaption");
-  tfont.setFamily(default_family);
-  tfont.setPointSize(SMALL_POINT_SIZE);
-  NCurFileButton->setFont(tfont);
   NCurFileButton->setText(tr("Change"));
   NCurFileButton->adjustSize();
 
-  tfont.setFamily(default_family);
-  tfont.setPointSize(LARGE_POINT_SIZE);
-
   NVerbose = new QCheckBox(NSettingsWindow, "NVerbose");
-  NVerbose->setFont(tfont);
   NVerbose->setText(tr("-v (verbose)"));
   NVerbose->setChecked(false);
   NVerbose->adjustSize();
@@ -1024,9 +976,6 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
       NVerbose->width(), NVerbose->height());
 
   NSendMethod = new QComboBox(NSettingsWindow, "NSendMethod");
-  tfont.setFamily(FIXEDFONT);
-  tfont.setPointSize(LARGE_POINT_SIZE);
-  NSendMethod->setFont(tfont);
   NSendMethod->insertItem(tr("LOS"));
   NSendMethod->insertItem(tr("TDRSS"));
   NSendMethod->insertItem(tr("HF PTT"));
@@ -1036,9 +985,6 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
       NSendMethod->width(), NSendMethod->height());
 
   NSendRoute = new QComboBox(NSettingsWindow, "NSendRoute");
-  NSendRoute->setFont(tfont);
-  tfont.setFamily(FIXEDFONT);
-  tfont.setPointSize(LARGE_POINT_SIZE);
   NSendRoute->insertItem(tr("COMM 1"));
   NSendRoute->insertItem(tr("COMM 2"));
   NSendRoute->adjustSize();
@@ -1049,11 +995,6 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
 
   NCloseSettingsWindow = new QPushButton(NSettingsWindow,
       "NCloseSettingsWindow");
-  tfont.setBold(true);
-  tfont.setFamily(default_family);
-  tfont.setPointSize(LARGE_POINT_SIZE);
-  NCloseSettingsWindow->setFont(tfont);
-  tfont.setBold(false);
   NCloseSettingsWindow->setText(tr("Close"));
   NCloseSettingsWindow->adjustSize();
   NCloseSettingsWindow->setGeometry(0, 4 * PADDING + NCurFileButton->height()
@@ -1092,13 +1033,10 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
         NSettingsWindow->height()));
   NSettingsWindow->setMaximumSize(QSize(NSettingsWindow->width(),
         NSettingsWindow->height()));
-  NSettingsWindow->setPalette(QPalette(*NColorGroup, *NColorGroup2,
-        *NColorGroup));
 
   adjustSize();
   setMinimumSize(QSize(width(), height()));
   setMaximumSize(QSize(width(), height()));
-  setPalette(QPalette(*NColorGroup, *NColorGroup2, *NColorGroup));
 
   if (!curvefile.isNull()) {
     strcpy(tmp, curvefile);
@@ -1114,7 +1052,6 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   ChangeCommandList();
   ChooseCommand();
 
-  connect(QuitButton, SIGNAL(clicked()), this, SLOT(Quit()));
   connect(NSendButton, SIGNAL(clicked()), this, SLOT(SendCommand()));
   connect(NCurFileButton, SIGNAL(clicked()), this, SLOT(ChangeCurFile()));
   connect(NSettingsButton, SIGNAL(clicked()), this, SLOT(ShowSettings()));
