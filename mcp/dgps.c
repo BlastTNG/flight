@@ -101,7 +101,9 @@ void WatchDGPS() {
   float s,m;
   char cmd[500];
   struct tm ts;
-  printf("WatchDGPS\n");
+
+  int pid = getpid();
+  fprintf(stderr, ">> WatchDGPS startup on pid %i\n", pid);
 
   DGPSAtt[0].az = 0;
   DGPSAtt[0].pitch = 0;

@@ -853,6 +853,8 @@ void WatchFIFO () {
 
   int index, pindex = 0;
 
+  int pid = getpid();
+  fprintf(stderr, ">> WatchFIFO startup on pid %i\n", pid);
 
   if ((fifo = open("/tmp/SIPSS.FIFO", O_RDONLY | O_NONBLOCK)) == -1) {
     perror("Unable to open FIFO");
@@ -927,13 +929,14 @@ void WatchPortC1 () {
   int timer = 0;
   int bytecount = 0;
 
+  int pid = getpid();
+  fprintf(stderr, ">> WatchPortC1 startup on pid %i\n", pid);
 
   if((tty_fd = bc_setserial(COMM1)) < 0) {
     perror("Unable to open serial port");
     exit(1);
   }
 
-  printf("Watching Port C1\n");
   do {
     /* Loop until data come in */
     while (read(tty_fd, buf, 1) <= 0) {
@@ -1130,6 +1133,8 @@ void WatchPortC2 () {
   int timer = 0;
   int bytecount = 0;
 
+  int pid = getpid();
+  fprintf(stderr, ">> WatchPortC2 startup on pid %i\n", pid);
 
   if((tty_fd = bc_setserial(COMM2)) < 0) {
     perror("Unable to open serial port");

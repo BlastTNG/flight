@@ -338,6 +338,9 @@ void DirFileWriter(void) {
   static int max_d_field = 0;
   static int min_d_field = 10000;
 
+  int pid = getpid();
+  fprintf(stderr, ">> DirFileWriter startup on pid %i\n", pid);
+
   while (1) {
     d_field = 0;
     /** slow data **/

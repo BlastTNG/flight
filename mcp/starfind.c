@@ -561,6 +561,9 @@ void starfind(){
   struct pollfd wait_fd;
   int wait_timeout;
   int sys_check = -1;
+
+  int pid = getpid();
+  fprintf(stderr, "Starfind startup on pid %i\n", pid);
   
   //initialise camera settings
   while (sys_check < 0){
