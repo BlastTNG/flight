@@ -201,7 +201,8 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   /***************************************************/
   /**           Elevation Drive Motors              **/
   /* elevation speed */
-  v_elev = GetVElev() * 6.0; /* the 6.0 is to improve dynamic range. */
+  v_elev = floor(GetVElev() * 6.0 + 0.5);
+  /* the 6.0 is to improve dynamic range on the elevation speeds. */
   if (v_elev > 32767)
     v_elev = 32767;
   if (v_elev < -32768)
@@ -294,25 +295,14 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
 /*                                                              */
 /****************************************************************/
 #define AZ_ACCEL (0.001)
-#define AZ_MARGIN 1.0
 #define MIN_SCAN 0.2
 void SetAzScanMode(double az, double left, double right, double v, double D) {
   if (axes_mode.az_vel < -v + D)
     axes_mode.az_vel = -v + D;
   if (axes_mode.az_vel > v + D)
     axes_mode.az_vel = v + D;
-
-  if (az < left - AZ_MARGIN) { /* out of range: move to left */
-    axes_mode.az_mode = AXIS_POSITION;
-    axes_mode.az_dest = left;
-    axes_mode.az_vel = 0.0;
-    isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
-  } else if (az > right + AZ_MARGIN) { /* out of range - move to p2 */
-    axes_mode.az_mode = AXIS_POSITION;
-    axes_mode.az_dest = right;
-    axes_mode.az_vel = 0.0;
-    isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
-  } else if (az < left) {
+    
+  if (az < left) {
     isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
     axes_mode.az_mode = AXIS_VEL;
     if (axes_mode.az_vel < v + D)
@@ -341,6 +331,7 @@ void SetAzScanMode(double az, double left, double right, double v, double D) {
 }
 
 void DoAzScanMode() {
+  static double last_az=0, last_w = 0;
   double az, left, right, v,w;
   int i_point;
 
@@ -354,11 +345,31 @@ void DoAzScanMode() {
   w = CommandData.pointing_mode.w;
   right = CommandData.pointing_mode.X + w / 2;
   left = CommandData.pointing_mode.X - w / 2;
+
   SetSafeDAz(left, &az);
 
   v = CommandData.pointing_mode.vaz;
 
-  SetAzScanMode(az, left, right, v, 0);
+  if (last_az!=az || last_w != w) {
+    if (az < left) {
+      axes_mode.az_mode = AXIS_POSITION;
+      axes_mode.az_dest = left;
+      axes_mode.az_vel = 0.0;
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+    } else if (az > right) {
+      axes_mode.az_mode = AXIS_POSITION;
+      axes_mode.az_dest = right;
+      axes_mode.az_vel = 0.0;
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+    } else {
+      // once we are within the new az/w range, we can mark this as 'last'.
+      last_az = az;
+      last_w = w;
+      SetAzScanMode(az, left, right, v, 0);
+    }
+  } else {
+    SetAzScanMode(az, left, right, v, 0);
+  }
 }
 
 #define EL_BORDER 1.0
@@ -655,16 +666,16 @@ void DoBoxMode() {
     }
   }
 
-  if ((az < left - AZ_MARGIN) || (az > right + AZ_MARGIN)) { // outside of cap
-    axes_mode.az_mode = AXIS_POSITION;
-    axes_mode.az_dest = caz;
-    axes_mode.az_vel = 0.0;
-    axes_mode.el_mode = AXIS_POSITION;
-    axes_mode.el_dest = bottom;
-    axes_mode.el_vel = 0.0;
-    isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
-    return;
-  }	
+/*   if ((az < left - AZ_MARGIN) || (az > right + AZ_MARGIN)) { // outside of cap */
+/*     axes_mode.az_mode = AXIS_POSITION; */
+/*     axes_mode.az_dest = caz; */
+/*     axes_mode.az_vel = 0.0; */
+/*     axes_mode.el_mode = AXIS_POSITION; */
+/*     axes_mode.el_dest = bottom; */
+/*     axes_mode.el_vel = 0.0; */
+/*     isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1; */
+/*     return; */
+/*   }	 */
 
   axes_mode.az_mode = AXIS_VEL;
   if (axes_mode.az_vel < -v + daz_dt)
@@ -726,7 +737,8 @@ void DoCapMode() {
   double turn_around;
 
   static struct PointingModeStruct last_pm = {
-    P_BOX, 0.0, 0.0, 0.0, 0.0, 0.0,0.0,0};
+    P_BOX, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0
+  };
 
   static struct {
     double el; /* el of current scan, relative to cel */
@@ -810,16 +822,16 @@ void DoCapMode() {
   left = caz - xw;
   right = caz + xw;
 
-  if ((az < left - AZ_MARGIN) || (az > right + AZ_MARGIN)) { // outside of cap
-    axes_mode.az_mode = AXIS_POSITION;
-    axes_mode.az_dest = caz;
-    axes_mode.az_vel = 0.0;
-    axes_mode.el_mode = AXIS_POSITION;
-    axes_mode.el_dest = bottom;
-    axes_mode.el_vel = 0.0;
-    isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
-    return;
-  }
+/*   if ((az < left - AZ_MARGIN) || (az > right + AZ_MARGIN)) { // outside of cap */
+/*     axes_mode.az_mode = AXIS_POSITION; */
+/*     axes_mode.az_dest = caz; */
+/*     axes_mode.az_vel = 0.0; */
+/*     axes_mode.el_mode = AXIS_POSITION; */
+/*     axes_mode.el_dest = bottom; */
+/*     axes_mode.el_vel = 0.0; */
+/*     isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1; */
+/*     return; */
+/*   } */
 
   axes_mode.az_mode = AXIS_VEL;
   if (axes_mode.az_vel < -v + daz_dt)
