@@ -469,7 +469,7 @@ void BiasControl (unsigned short* RxFrame) {
     biasLev3Addr = GetNiosAddr("bias_lev3");
   }
 
-  bias_status = RxFrame[biasinAddr->channel];
+  bias_status = slow_data[biasinAddr->index][biasinAddr->channel];
 
   isBiasAC =            !(bias_status & 0x02);
   isBiasRamp =          !(bias_status & 0x08);
