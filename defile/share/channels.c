@@ -785,10 +785,12 @@ void MakeAddressLookups(void)
     addr[(int)WideFastChannels[i].bus] += 2;
   }
 
+#ifdef __DEFILE__
   /* save the location of the first bolometer in the frame so that defile
    * can calculate the offsets properly when it goes to reconstruct the
    * bolometers */
-  BoloBaseIndex = BiPhaseAddr;
+  BoloBaseIndex = BiPhaseAddr + slowsPerBi0Frame + SLOW_OFFSET;
+#endif
 
   for (i = 0; i < N_FAST_BOLOS; ++i) {
 #ifndef __DEFILE__
