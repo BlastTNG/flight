@@ -152,23 +152,6 @@ void WriteAux(void) {
   WriteData(ploverAddr, CommandData.plover, NIOS_FLUSH);
 }
 
-/************************************************************************/
-/*                                                                      */
-/*  WriteFastData: write fast auxiliary data                            */
-/*                                                                      */
-/************************************************************************/
-void WriteFastData(void) {
-  static struct NiosStruct* rxFastsampAddr;
-
-  static int firsttime = 1;
-  if (firsttime) {
-    firsttime = 0;
-    rxFastsampAddr = GetNiosAddr("rx_fastsamp");
-  }
-
-  WriteData(rxFastsampAddr, RxFrameFastSamp, NIOS_FLUSH);
-}
-
 /*****************************************************************/
 /* SyncADC: check to see if any boards need to be synced and     */
 /* send the sync bit if they do.  Only one board can be synced   */
@@ -976,8 +959,6 @@ void UpdateBBCFrame(unsigned short *RxFrame) {
     CryoControl();
     PhaseControl();
   }
-
-  WriteFastData();
 
   if (!mcp_initial_controls)
     index = (index + 1) % FAST_PER_SLOW;
