@@ -13,7 +13,7 @@
 /* Number of records in the frame below the DAS bolometer records */
 #define N_FASTCHLIST_INIT_ACS 35
 #define N_FASTCHLIST_INIT_DAS 49
-#ifdef BOLOTEST 
+#ifdef BOLOTEST
   #define N_FASTCHLIST_INIT (N_FASTCHLIST_INIT_DAS)
 #else
   #define N_FASTCHLIST_INIT (N_FASTCHLIST_INIT_ACS + N_FASTCHLIST_INIT_DAS)
@@ -54,3 +54,5 @@ void SlowChIndex(char*, int*, int*);
 
 #define DEG2I (65536.0/360.0)
 #define I2DEG (1.0/DEG2I)
+
+void FPrintDerived(FILE *fp);

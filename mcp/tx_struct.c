@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include "tx_struct.h"
 
 unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
@@ -411,4 +412,74 @@ void SlowChIndex(char* field, int* channel, int* index) {
 
   *index = t;
   *channel = c;
+}
+
+void FPrintDerived(FILE *fp) {
+    fprintf(fp,
+      "### Bias Generator Bitfield ###\n"
+      "BIAS_IS_DC       BIT biasin 1\n"
+      "BIAS_CLK_IS_INT  BIT biasin 2\n"
+      "BIAS_IS_INT      BIT biasin 3\n"
+      "### Cryo State Bitfield ###\n"
+      "HE_LEV_SENS      BIT cryostate 0\n"
+      "CHARC_HEATER     BIT cryostate 1\n"
+      "COLDP_HEATER     BIT cryostate 2\n"
+      "CALIBRATOR       BIT cryostate 3\n"
+      "LN_VALVE         BIT cryostate 4\n"
+      "LN_DIREC         BIT cryostate 5\n"
+      "LHE_VALVE        BIT cryostate 6\n"
+      "LHE_DIREC        BIT cryostate 7\n"
+      "### Cryo Valve Limit Switches ###\n"
+      "LN_IS_CLOSED     BIT cryoin 0\n"
+      "LN_IS_OPEN       BIT cryoin 1\n"
+      "LN_STATE         LINCOM 2 LN_IS_CLOSED 2 0 LN_IS_OPEN 1 0\n"
+      "LHE_IS_CLOSED    BIT cryoin 3\n"
+      "LHE_IS_OPEN      BIT cryoin 4\n"
+      "LHE_STATE        LINCOM 2 LHE_IS_CLOSED 2 0 LHE_IS_OPEN 1 0\n"
+      "### Cryo Table Lookups ###\n"
+      "# Diodes\n"
+      "T_vcs	LINTERP	T_VCS	/data/etc/dt600.txt\n"
+      "T_vcs_fet   LINTERP T_VCS_FET	/data/etc/dt600.txt\n"
+      "T_lhe   LINTERP T_LHE    /data/etc/dt600.txt\n"
+      "T_ln2   LINTERP T_LN2    /data/etc/dt600.txt\n"
+      "T_jfet   LINTERP T_JFET    /data/etc/dt600.txt\n"
+      "T_optics_box   LINTERP T_OPTICS_BOX    /data/etc/dt600.txt\n"
+      "T_heatswitch   LINTERP T_HEATSWITCH    /data/etc/dt600.txt\n"
+      "T_charcoal   LINTERP T_CHARCOAL    /data/etc/dt600.txt\n"
+      "T_ln2_filt   LINTERP T_LN2_FILT    /data/etc/dt600.txt\n"
+      "T_vcs_filt   LINTERP T_VCS_FILT    /data/etc/dt600.txt\n"
+      "T_vcs_fet   LINTERP T_VCS_FET    /data/etc/dt600.txt\n"
+      "T_xtherm_1   LINTERP T_XTHERM_1    /data/etc/dt600.txt\n"
+      "T_lhe_filt   LINTERP T_LHE_FILT    /data/etc/dt600.txt\n"
+      "# GRTs (ROX)\n"
+      "#T_he3fridge	LINTERP	T_HE3FRIDGE	/data/etc/rox102a.txt\n"
+      "#T_he4pot    LINTERP T_HE4POT    /data/etc/rox102a.txt\n"
+      "#T_horn_500    LINTERP T_HORN_500   /data/etc/rox102a.txt\n"
+      "#T_base_500   LINTERP T_BASE_500   /data/etc/rox102a.txt\n"
+      "#T_base_250    LINTERP T_BASE_250   /data/etc/rox102a.txt\n"
+      "# Level Sensor\n"
+      "he4_litre    LINTERP HE4_LEVEL   /data/etc/he4_level.txt\n"
+      "# Control Bits\n"
+      "# To Be Filled In At A Later Date\n"
+      "# TEMPORARY GRT Calibration\n"
+      "Res_He3	       LINCOM  1       N10C0   1.9416E04       -8.4574\n"
+      "Res_horn_500   LINCOM  1       N10C1   1.9416E04       -8.4574\n"
+      "Res_pot        LINCOM  1       N10C2   1.9416E04       -8.4574\n"
+      "Res_base_500   LINCOM  1       N10C4   1.9416E04       -8.4574\n"
+      "Res_ring_250   LINCOM  1       N10C7   1.9416E04       -8.4574\n"
+      "T_he3fridge LINTERP N10C3        /data/etc/rox102a.txt\n"
+      "T_horn_500  LINTERP N10C7       /data/etc/rox102a.txt\n"
+      "T_he4pot    LINTERP N10C22       /data/etc/rox102a.txt\n"
+      "T_base_500  LINTERP N10C4       /data/etc/rox102a.txt \n"
+      "T_base_250  LINTERP N10C5       /data/etc/rox102a.txt\n"
+      "#\n"
+      "# Nice CPU Values\n"
+      "CPU_SEC LINCOM  1       cpu_time        1       -%lu\n"
+      "CPU_MIN LINCOM  1       CPU_SEC 0.016666666 0\n"
+      "CPU_HOUR LINCOM 1       CPU_SEC 0.000277777 0\n"
+      "CPU_DAY LINCOM  1       CPU_SEC 1.15741E-5  0\n"
+      "CPU_WEEK LINCOM 1       CPU_SEC 1.65344E-6  0\n"
+      "CPU_MONTH LINCOM 1      CPU_SEC 3.85803E-7  0\n"
+	    "CPU_YEAR LINCOM 1       CPU_SEC 3.17099E-8  0\n", time(NULL)
+      );
 }
