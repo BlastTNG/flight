@@ -78,7 +78,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"t_jfet",       'r',  3, 33, -2.860308e-09*65536,    1.232735e+01, 'u'},
     {"t_he4pot_d",   'r',  3, 35, -2.865493e-09*65536,    1.234227e+01, 'u'},    //formerly t_vcs_fet
     {"t_cold_plate", 'r',  3, 37, -2.863415e-09*65536,    1.232882e+01, 'u'},    //formerly t_xtherm_1
-    {"t_optics_box_",'r',  3, 39, -2.87516e-09*65536,     12.3290947, 'u'}     //Not used int the Aug. 7th 2003 Run
+    {"t_optics_box_",'r',  3, 39, -2.87516e-09*65536,     12.3290947, 'u'} //Not used int the Aug. 7th 2003 Run
   },
   {
     {"t_xtherm_2",   'r',  3, 41, -2.87482e-09*65536,      12.4223147, 'u'},

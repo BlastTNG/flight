@@ -46,12 +46,12 @@
 #define CRYO_CHARCOAL_ON     0x04 /* N3G3 */
 #define CRYO_CHARCOAL_OFF    0x08 /* N3G3 */
 
-#define CRYO_LNVALVE_ON      0x01 /* N3G2 - cryoout2 */
-#define CRYO_LNVALVE_OPEN    0x04 /* N3G2 */
-#define CRYO_LNVALVE_CLOSE   0x08 /* N3G2 */
-#define CRYO_LHeVALVE_ON     0x10 /* N3G2 */
-#define CRYO_LHeVALVE_OPEN   0x40 /* N3G2 */
-#define CRYO_LHeVALVE_CLOSE  0x80 /* N3G2 */
+#define CRYO_LNVALVE_ON      0x10 /* N3G2 - cryoout2 */
+#define CRYO_LNVALVE_OPEN    0x40 /* N3G2 Group two of the cryo card */
+#define CRYO_LNVALVE_CLOSE   0x80 /* N3G2 appears to have its nybbles */
+#define CRYO_LHeVALVE_ON     0x01 /* N3G2 backwards */
+#define CRYO_LHeVALVE_OPEN   0x04 /* N3G2 */
+#define CRYO_LHeVALVE_CLOSE  0x08 /* N3G2 */
 
 /* CryoState bitfield */
 #define CS_HELIUMLEVEL   0x0001
@@ -437,13 +437,16 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
     cryostate |= CS_CALIBRATOR;
   }
 
-  /* Control valves -- latching relays */
+  cryoout2 = CRYO_LNVALVE_OPEN | CRYO_LNVALVE_CLOSE | 
+   CRYO_LHeVALVE_OPEN | CRYO_LHeVALVE_CLOSE;
+
+  /* Control motorised valves -- latching relays */
   if (CommandData.Cryo.lnvalve_open > 0) {
-    cryoout2 |= CRYO_LNVALVE_OPEN;
+    cryoout2 &= ~CRYO_LNVALVE_OPEN;
     cryostate |= CS_LNVALVE_OPEN;
     CommandData.Cryo.lnvalve_open--;
   } else if (CommandData.Cryo.lnvalve_close > 0) {
-    cryoout2 |= CRYO_LNVALVE_CLOSE;
+    cryoout2 &= ~CRYO_LNVALVE_CLOSE;
     cryostate &= 0xFFFF - CS_LNVALVE_OPEN;
     CommandData.Cryo.lnvalve_close--;
   }
@@ -454,11 +457,11 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
     cryostate &= 0xFFFF - CS_LNVALVE_ON;
 
   if (CommandData.Cryo.lhevalve_open > 0) {
-    cryoout2 |= CRYO_LHeVALVE_OPEN;
+    cryoout2 &= ~CRYO_LHeVALVE_OPEN;
     cryostate |= CS_LHeVALVE_OPEN;
     CommandData.Cryo.lhevalve_open--;
   } else if (CommandData.Cryo.lhevalve_close > 0) {
-    cryoout2 |= CRYO_LHeVALVE_CLOSE;
+    cryoout2 &= ~CRYO_LHeVALVE_CLOSE;
     cryostate &= 0xFFFF - CS_LHeVALVE_OPEN;
     CommandData.Cryo.lhevalve_close--;
   }
