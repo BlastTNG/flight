@@ -46,7 +46,7 @@
 #ifndef VERSION
 #  define VERSION_MAJOR    "2"
 #  define VERSION_MINOR    "5"
-#  define VERSION VERSION_MAJOR "." VERSION_MINOR
+#  define VERSION VERSION_MAJOR "." VERSION_MINOR ".x"
 #endif
 
 #ifndef DEFAULT_CURFILE

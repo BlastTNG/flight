@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(defile.c, 2.5.4, dwiebe@physics.utoronto.ca)
+AC_INIT(defile, 2.5.4, dwiebe@physics.utoronto.ca)
 AM_INIT_AUTOMAKE(defile, 2.5.4)
 AM_CONFIG_HEADER(config.h)
 
