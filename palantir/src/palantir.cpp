@@ -427,11 +427,20 @@ void MainForm::GetXMLInfo(char *layoutfile) {
   struct DateTime *currDateTime;
   struct CurDir *currCurDir;
   QString *currCurFile;
-  char tmp[50];
+  char tmp[MAXPATHLENGTH];
 
   // Load XML file
-  if (!XMLInfo->LoadXML(layoutfile))
-    WarningMessage("File Error", "Could not read xml file.");
+  if (access(layoutfile, R_OK) == 0) {
+    if (!XMLInfo->LoadXML(layoutfile)) {
+      WarningMessage("File Error", "Could not read xml file.");
+    }
+  } else {
+    snprintf(tmp, MAXPATHLENGTH, "%s/%s", LIB_DIR, layoutfile);
+    fprintf(stderr, "\nCould not read: %s\ntrying: %s\n", layoutfile, tmp);
+    if (!XMLInfo->LoadXML(tmp)) {
+      WarningMessage("File Error", "Could not read xml file.");
+    }
+  }
 
   // Create bookmarks
   XMLInfo->AddBookMarks(BM_RES_NUM);
@@ -1056,7 +1065,7 @@ void MainForm::UpdateData() {
 MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
     char *layoutfile) : QDialog(parent, name, modal, fl)
 {
-  char tmp[255];
+  char tmp[MAXPATHLENGTH];
   int row, i;
   int bytecount;
   int max_row=0, min_col = 10;
@@ -1196,9 +1205,9 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
 
   if (!CurveFiles.isEmpty()) {
     currCurveFile = CurveFiles.first();
-    strcpy(tmp, *currCurveFile);
+    strncpy(tmp, *currCurveFile, MAXPATHLENGTH);
   } else
-    strcpy(tmp, '\0');
+    strncpy(tmp, '\0', MAXPATHLENGTH);
 
   // Initialise KstFile object
   DataSource = new KstFile(tmp, UNKNOWN);

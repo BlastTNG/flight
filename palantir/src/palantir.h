@@ -27,6 +27,7 @@
 #include <qframe.h>
 #include <qlistbox.h>
 #include <qmultilineedit.h>
+#include <unistd.h>
 
 #define NUMBER       0
 #define MULTI        1
