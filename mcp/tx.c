@@ -289,7 +289,7 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
     azGainI = CommandData.azi_gain.I;
     pivGainP = CommandData.pivot_gain.P;
   }
-  
+
   /* p term for az motor */
   WriteSlow(i_g_Paz, j_g_Paz, azGainP);
   /* I term for az motor */
