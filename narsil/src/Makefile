@@ -5,7 +5,7 @@ DEFINES = -DBLAST_CMD=\"$(BLAST_CMD)\" -DDATA_DIR=\"$(DATA_DIR)\" \
 					-DCUR_DIR=\"$(CUR_DIR)\"
 CC = gcc $(DEFINES)
 CPP = g++ $(DEFINES)
-LIBS = -L../lib/ -L$(QT_DIR)/lib -lqt-mt -lkdecore -lRD
+LIBS = -L../lib/ -L$(QT_DIR)/lib -lqt-mt -lRD
 
 all: narsil
 

@@ -26,10 +26,7 @@
 // *  further desecrated by cbn                      *
 // ***************************************************
 
-#include <kcmdlineargs.h>
-#include <kaboutdata.h>
-#include <klocale.h>
-#include <kapplication.h>
+#include <qapplication.h>
 #include <qbuttongroup.h>
 #include <qframe.h>
 #include <qlabel.h>
@@ -81,9 +78,6 @@
 #define BLASTCMDFILE BLAST_CMD
 
 double defaults[N_MCOMMANDS][MAX_N_PARAMS];
-
-static const char *description =
-        I18N_NOOP("Narsil: command program for BLAST");
 
 //-------------------------------------------------------------
 //
@@ -938,7 +932,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   QString default_family = tfont.family();
 
 
-  curvefile = cf;
+  curfile = cf;
   lastmcmd = -1;
   sending = 0;
   sendingpid = -1;
@@ -1137,7 +1131,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NCurFileCaption->adjustSize();
 
   NCurFile = new QLineEdit(NSettingsWindow, "NCurFile");
-  NCurFile->setText(tr(curvefile));
+  NCurFile->setText(tr(curfile));
   NCurFile->adjustSize();
 
   NCurFileButton = new QPushButton(NSettingsWindow, "QCurCaption");
@@ -1214,8 +1208,8 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   setMinimumSize(QSize(width(), height()));
   setMaximumSize(QSize(width(), height()));
 
-  if (!curvefile.isNull()) {
-    strcpy(tmp, curvefile);
+  if (!curfile.isNull()) {
+    strcpy(tmp, curfile);
   } else
     strcpy(tmp, '\0');
 
@@ -1254,25 +1248,29 @@ MainForm::~MainForm()
 //|||****_______________________________________________________________________
 //|||***************************************************************************
 
-static KCmdLineOptions options[] =
-{
-  { 0, 0, 0 }
-  // INSERT YOUR COMMANDLINE OPTIONS HERE
-};
-
-
 int main(int argc, char* argv[]) {
   int i, j;
   int fp;
   int n_read = 0;
-  int dummyc = 0;
-  char **dummyv = {'\0'};
-  char curfile[25];
+
+  if (argc > 1) {
+    printf(
+        "Narsil doesn't take arguments.  It was compiled on " __DATE__
+        "\nand is copyright (C) 2002-2004 University of Toronto.\n\n"
+        "This program comes with NO WARRANTY, not even for MERCHANTABILITY or "
+        "FITNESS\n"
+        "FOR A PARTICULAR PURPOSE. You may redistribute it under the terms of "
+        "the GNU\n"
+        "General Public License; see the file named COPYING for details.\n\n"
+        "Narsil was written by Adam Hincks. It was later poked at a bit by "
+        "D.V. Wiebe\n"
+        "and then further desecrated by cbn.\n"
+        );
+    exit(1);
+  }
 
   /* Read in previous default values */
-  fp = open(DATA_DIR "/prev_status", O_RDONLY);
-
-  if (fp >= 0) {
+  if ((fp = open(DATA_DIR "/prev_status", O_RDONLY)) >= 0) {
     n_read = read(fp, &defaults, sizeof(double) * N_MCOMMANDS * MAX_N_PARAMS);
     close(fp);
   }
@@ -1284,23 +1282,8 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  // Read in argv
-//   if (argc >= 2)
-//     strcpy(curfile, argv[1]);
-//   else
-  strcpy(curfile, DEF_CURFILE);
-
-  KAboutData aboutData( "narsil", I18N_NOOP("Narsil"),
-                        "0.88", description, KAboutData::License_GPL,
-                        "(c) 2004, UofT", 0, 0, "");
-  aboutData.addAuthor("adam hincks",0, "");
-  aboutData.addAuthor("don wiebe",0, "");
-  aboutData.addAuthor("cbn",0, "");
-  KCmdLineArgs::init( argc, argv, &aboutData );
-  KCmdLineArgs::addCmdLineOptions( options ); // Add our own options.
-
-  KApplication app;
-  MainForm narsil(curfile, 0, "narsil", true, 0);
+  QApplication app(argc, argv);
+  MainForm narsil(DEF_CURFILE, 0, "narsil", true, 0);
 
   app.setMainWidget(&narsil);
 

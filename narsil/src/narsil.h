@@ -121,7 +121,7 @@ private:
   void WriteLog(char *args[]);
 
   int lastmcmd;
-  QString curvefile;
+  QString curfile;
   KstFile *DataSource;
   int fid;
   bool sending;
