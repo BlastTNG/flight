@@ -40,7 +40,7 @@ for (@ARGV) {
     StartDecomd();
   } elsif (/^restart$/) {
     SendSig($SIGTERM);
-    sleep 1;
+    sleep 5;
     StartDecomd();
   } elsif (/^cycle$/) {
     SendSig($SIGHUP);
