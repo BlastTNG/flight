@@ -62,7 +62,7 @@ double GetVElev() {
     /* for the lock, only use the elevation encoder */
     vel = (axes_mode.el_dest - ACSData.enc_elev) * 0.64;
   }
-  
+
   /* correct offset and convert to Gyro Units */
   vel -= (PointingData[i_point].gy1_offset - PointingData[i_point].gy1_earth);
 
@@ -71,13 +71,13 @@ double GetVElev() {
   if (ACSData.enc_elev > MAX_EL)
     vel = -0.2; // go down
 
-  vel *= DPS_TO_GY16; 
-
   /* Limit Maximim speed to 0.5 dps*/
-  if (vel > 0.5 * DPS_TO_GY16)
-    vel = 0.5 * DPS_TO_GY16;
-  if (vel < -0.5 * DPS_TO_GY16)
-    vel = -0.5 * DPS_TO_GY16;
+  if (vel > 0.5)
+    vel = 0.5;
+  if (vel < -0.5)
+    vel = -0.5;
+
+  vel *= DPS_TO_GY16; 
 
   /* limit Maximum acceleration */
   dvel = vel - last_vel;

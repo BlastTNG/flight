@@ -315,7 +315,7 @@ void CameraTrigger(int which)
       iscPulse = (isc_pulses[which].pulse_index << 14)
         | CommandData.ISCControl[which].fast_pulse_width;
       CommandData.ISCState[which].exposure
-        = CommandData.ISCControl[which].fast_pulse_width / 10.4166666666667;
+        = CommandData.ISCControl[which].fast_pulse_width / 10416.6666666667;
     } else if (fabs(axes_mode.az_vel) < MAX_ISC_SLOW_PULSE_SPEED) {
       iscPulse = (isc_pulses[which].pulse_index << 14)
         | CommandData.ISCControl[which].pulse_width;
@@ -328,7 +328,7 @@ void CameraTrigger(int which)
         isc_pulses[which].last_save = 0;
       }
       CommandData.ISCState[which].exposure
-        = CommandData.ISCControl[which].pulse_width / 10.4166666666667;
+        = CommandData.ISCControl[which].pulse_width / 10416.6666666667;
     }
 
     if (isc_pulses[which].age < 0)
