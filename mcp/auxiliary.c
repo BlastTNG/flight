@@ -587,7 +587,7 @@ void CameraTrigger(int which)
   static struct NiosStruct* TriggerAddr[2];
   static int delay[2] = {0, 0};
   static int waiting = 0;
-#ifdef SYNCHRONOUS_CAMERAS
+#if SYNCHRONOUS_CAMERAS
   static int cameras_ready = 0;
 #endif
 
@@ -736,7 +736,7 @@ void CameraTrigger(int which)
           if (WHICH)
             bprintf(info, "%iSC (t): Writing trigger (%04x)\n", which,
                 isc_pulses[which].pulse_req);
-#ifdef SYNCHRONOUS_CAMERAS
+#if SYNCHRONOUS_CAMERAS
           if (which)
             cameras_ready |= 2;
           else
