@@ -231,21 +231,17 @@ void SingleCommand (int command) {
   
   /* Update CommandData structure with new info */
 
-  if (command == SIndex("all_stop")) {      /* Pointing aborts */
-    CommandData.axes_mode.az_mode = AXIS_VEL;
-    CommandData.pointing_mode.el_mode = AXIS_VEL;
-    CommandData.axes_mode.az_vel = 0.0;
-    CommandData.axes_mode.el_vel = 0.0;
-  } else if (command == SIndex("fss_default"))     /* Set default sensor */
-    CommandData.default_sensor = SUN;
-  else if (command == SIndex("isc_default"))
-    CommandData.default_sensor = ISC;
-  else if (command == SIndex("vsc_default"))
-    CommandData.default_sensor = VSC;
-  else if (command == SIndex("mag_default"))
-    CommandData.default_sensor = MAG;
-
-  else if (command == SIndex("fss_veto"))       /* Veto sensors */
+  if (command == SIndex("stop")) {      /* Pointing aborts */
+    CommandData.pointing_mode.el_mode = POINT_VEL;
+    CommandData.pointing_mode.az_mode = POINT_VEL;
+    CommandData.pointing_mode.az_vel = 0.0;
+    CommandData.pointing_mode.el_vel = 0.0;
+    CommandData.axes_mode.az_mode = AXIS_VEL; // DELME
+    CommandData.axes_mode.el_mode = AXIS_VEL; // DELME
+    CommandData.axes_mode.az_vel = 0.0; // DELME
+    CommandData.axes_mode.el_vel = 0.0; // DELME
+  }
+  else if (command == SIndex("sun_veto"))       /* Veto sensors */
     CommandData.use_sun = 0;
   else if (command == SIndex("isc_veto"))
     CommandData.use_isc = 0;
@@ -254,108 +250,105 @@ void SingleCommand (int command) {
   else if (command == SIndex("mag_veto"))
     CommandData.use_mag = 0;
 
-  else if (command == SIndex("fss_unveto"))       /* Un-veto sensors */
+  else if (command == SIndex("sun_allow"))       /* Un-veto sensors */
     CommandData.use_sun = 1;
-  else if (command == SIndex("isc_unveto"))
+  else if (command == SIndex("isc_allow"))
     CommandData.use_isc = 1;
-  else if (command == SIndex("vsc_unveto"))
+  else if (command == SIndex("vsc_allow"))
     CommandData.use_vsc = 1;
-  else if (command == SIndex("mag_unveto"))
+  else if (command == SIndex("mag_allow"))
     CommandData.use_mag = 1;
 
-  else if (command == SIndex("clock_internal"))    /* Bias settings */
+  else if (command == SIndex("clock_int"))    /* Bias settings */
     CommandData.Bias.clockInternal = 1;
-  else if (command == SIndex("clock_external"))
+  else if (command == SIndex("clock_ext"))
     CommandData.Bias.clockInternal = 0;
   else if (command == SIndex("bias_ac"))
     CommandData.Bias.biasAC = 1;
   else if (command == SIndex("bias_dc"))
     CommandData.Bias.biasAC = 0;
-  else if (command == SIndex("bias_ramp"))
+  else if (command == SIndex("ramp"))
     CommandData.Bias.biasRamp = 1;
-  else if (command == SIndex("bias_internal"))
+  else if (command == SIndex("fixed"))
     CommandData.Bias.biasRamp = 0;
 
-  else if (command == SIndex("levl_sensor_on"))    /* Cryo commanding */
+  else if (command == SIndex("level_on"))    /* Cryo commanding */
     CommandData.Cryo.heliumLevel = 1;
-  else if (command == SIndex("levl_sensor_off"))
+  else if (command == SIndex("level_off"))
     CommandData.Cryo.heliumLevel = 0;
-  else if (command == SIndex("charc_heat_on"))
+  else if (command == SIndex("charcoal_on"))
     CommandData.Cryo.charcoalHeater = 1;
-  else if (command == SIndex("charc_heat_off"))
+  else if (command == SIndex("charcoal_off"))
     CommandData.Cryo.charcoalHeater = 0;
-  else if (command == SIndex("cplate_heat_on"))
+  else if (command == SIndex("coldplate_on"))
     CommandData.Cryo.coldPlate = 1;
-  else if (command == SIndex("cplate_heat_off"))
+  else if (command == SIndex("coldplate_off"))
     CommandData.Cryo.coldPlate = 0;
-
-  else if (command == SIndex("calibrator_on"))        /* Calibrator */
+  else if (command == SIndex("cal_on"))
     CommandData.Cryo.calibrator = 1;
-  else if (command == SIndex("calibrator_off"))
+  else if (command == SIndex("cal_off"))
     CommandData.Cryo.calibrator = 0;
-  else if (command == SIndex("calibrator_stop"))
+  else if (command == SIndex("cal_stop"))
     CommandData.Cryo.calib_pulse = 0;
-
-  else if (command == SIndex("ln2_valve_open")) {    /* Motorised Valves */
+  else if (command == SIndex("ln_valve_open")) {
     CommandData.Cryo.lnvalve_open = 1;
     CommandData.Cryo.lnvalve_close = 0;
-  } else if (command == SIndex("ln2_valve_close")) {
+  } else if (command == SIndex("ln_valve_close")) {
     CommandData.Cryo.lnvalve_close = 1;
     CommandData.Cryo.lnvalve_open = 0;
-  } else if (command == SIndex("ln2_valve_on"))
+  } else if (command == SIndex("ln_valve_on"))
     CommandData.Cryo.lnvalve_on = 1;
-  else if (command == SIndex("ln2_valve_off"))
+  else if (command == SIndex("ln_valve_off"))
     CommandData.Cryo.lnvalve_on = 0;
-  else if (command == SIndex("lhe_valve_open")) {
+  else if (command == SIndex("he_valve_open")) {
     CommandData.Cryo.lhevalve_open = 1;
     CommandData.Cryo.lhevalve_close = 0;
-  } else if (command == SIndex("lhe_valve_close")) {
+  } else if (command == SIndex("he_valve_close")) {
     CommandData.Cryo.lhevalve_close = 1;
     CommandData.Cryo.lhevalve_open = 0;
-  } else if (command == SIndex("lhe_valve_on"))
+  } else if (command == SIndex("he_valve_on"))
     CommandData.Cryo.lhevalve_on = 1;
-  else if (command == SIndex("lhe_valve_off"))
+  else if (command == SIndex("he_valve_off"))
     CommandData.Cryo.lhevalve_on = 0;
 
-  else if (command == SIndex("bal_veto"))
+  else if (command == SIndex("balance_veto"))
     CommandData.pumps.bal_veto = -1;
-  else if (command == SIndex("bal_unveto"))
+  else if (command == SIndex("balance_allow"))
     CommandData.pumps.bal_veto = 0;
 
-  else if (command == SIndex("bal_pump1_on"))
+  else if (command == SIndex("pump1_on"))
     CommandData.pumps.bal1_on = 1;
-  else if (command == SIndex("bal_pump1_off"))
+  else if (command == SIndex("pump1_off"))
     CommandData.pumps.bal1_on = 0;
-  else if (command == SIndex("bal_pump1_frwrd"))
+  else if (command == SIndex("pump1_fwd"))
     CommandData.pumps.bal1_reverse = 0;
-  else if (command == SIndex("bal_pump1_rvrse"))
+  else if (command == SIndex("pump1_rev"))
     CommandData.pumps.bal1_reverse = 1;
-  else if (command == SIndex("bal_pump2_on"))
+  else if (command == SIndex("pump2_on"))
     CommandData.pumps.bal2_on = 1;
-  else if (command == SIndex("bal_pump2_off"))
+  else if (command == SIndex("pump2_off"))
     CommandData.pumps.bal2_on = 0;
-  else if (command == SIndex("bal_pump2_frwrd"))
+  else if (command == SIndex("pump2_fwd"))
     CommandData.pumps.bal2_reverse = 0;
-  else if (command == SIndex("bal_pump2_r"))
+  else if (command == SIndex("pump2_rev"))
     CommandData.pumps.bal2_reverse = 1;
 
-  else if (command == SIndex("if_pump1_on"))
+  else if (command == SIndex("inner_cool_on"))
     CommandData.pumps.inframe_cool1_on = 10;
-  else if (command == SIndex("if_pump1_off"))
+  else if (command == SIndex("inner_cool_off"))
     CommandData.pumps.inframe_cool1_off = 10;
 
-  else if (command == SIndex("of_pump1_on"))
+  else if (command == SIndex("outer_cool1_on"))
     CommandData.pumps.outframe_cool1_on = 10;
-  else if (command == SIndex("of_pump1_off"))
+  else if (command == SIndex("outer_cool1_off"))
     CommandData.pumps.outframe_cool1_off = 10;
-  else if (command == SIndex("of_pump2_on"))
+  else if (command == SIndex("outer_cool2_on"))
     CommandData.pumps.outframe_cool2_on = 10;
-  else if (command == SIndex("of_pump2_off"))
+  else if (command == SIndex("outer_cool2_off"))
     CommandData.pumps.outframe_cool2_off = 10;
-
-  else if (command == SIndex("lock_mot_lock"))              /* Lock motor */
+  else if (command == SIndex("pin_in"))
     CommandData.pumps.lock_in = 1;
-  else if (command == SIndex("lock_mot_unlock")) {
+  else if (command == SIndex("unlock")) {
     CommandData.pumps.lock_out = 1;
     if (CommandData.axes_mode.el_mode == AXIS_LOCK) {
       CommandData.axes_mode.el_mode = AXIS_VEL;
@@ -428,11 +421,11 @@ void MultiCommand (int command, unsigned short *dataq) {
    * If the parameter is type 'i'     set CommandData using ivalues[i]
    * If the parameter is type 'f'/'l' set CommandData using rvalues[i]
    */
-  if (command == MIndex("time_sched"))         /* Set timeout */
+  if (command == MIndex("timeout"))         /* Set timeout */
     CommandData.timeout = ivalues[0];
-  else if (command == MIndex("gyro_box_temp"))  /* gyro heater setpoint */
+  else if (command == MIndex("t_gyrobox"))  /* gyro heater setpoint */
     CommandData.t_gybox_setpoint = rvalues[0];
-  else if (command == MIndex("isc_pv_temp"))  /* isc heater setpoint */
+  else if (command == MIndex("t_iscbox"))  /* isc heater setpoint */
     CommandData.t_isc_setpoint = rvalues[0];
   else if (command == MIndex("xml_file")) {  /* change downlink XML file */
     if ((fp = fopen("./alice/index.al", "w")) != NULL) {
@@ -441,82 +434,90 @@ void MultiCommand (int command, unsigned short *dataq) {
     }
   } else if (command == MIndex("roll_gain"))  /* roll Gains */
     CommandData.roll_gain.P = ivalues[0];
-  else if (command == MIndex("elev_gain")) {  /* ele gains */
+  else if (command == MIndex("el_gain")) {  /* ele gains */
     CommandData.ele_gain.P = ivalues[0];
     CommandData.ele_gain.I = ivalues[1];
-  } else if (command == MIndex("azim_gain")) {  /* az gains */
+  } else if (command == MIndex("az_gain")) {  /* az gains */
     CommandData.azi_gain.P = ivalues[0];
     CommandData.azi_gain.I = ivalues[1];
   } else if (command == MIndex("pivot_gain")) {  /* pivot gains */
     CommandData.pivot_gain.SP = (rvalues[0] + 2.605) / 7.9498291016e-5;
     CommandData.pivot_gain.P = ivalues[1];
-  } else if (command == MIndex("gyro_heat_gain")) {  /* gyro heater gains */
+  } else if (command == MIndex("t_gyrobox_gain")) {  /* gyro heater gains */
     CommandData.gy_heat_gain.P = ivalues[0];
     CommandData.gy_heat_gain.I = ivalues[1];
     CommandData.gy_heat_gain.D = ivalues[2];
-  } else if (command == MIndex("isc_heat_gain")) {  /* isc heater gains */
+  } else if (command == MIndex("t_iscbox_gain")) {  /* isc heater gains */
     CommandData.isc_heat_gain.P = ivalues[0];
     CommandData.isc_heat_gain.I = ivalues[1];
     CommandData.isc_heat_gain.D = ivalues[2];
-  } else if (command == MIndex("lock_mot_el")) {  /* Lock Inner Frame */
-    CommandData.axes_mode.el_mode = AXIS_LOCK;
-    CommandData.pumps.lock_point = 1;
-    CommandData.axes_mode.el_dest = LockPosition(rvalues[0]);
+  } else if (command == MIndex("lock")) {  /* Lock Inner Frame */
     if (CommandData.pumps.bal_veto >= 0)
       CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
+    CommandData.pumps.lock_point = 1;
+    CommandData.pointing_mode.el_mode = POINT_LOCK;
+    CommandData.pointing_mode.el1 = LockPosition(rvalues[0]);
+    CommandData.axes_mode.el_mode = AXIS_LOCK; // DELME
+    CommandData.axes_mode.el_dest = LockPosition(rvalues[0]); // DELME
     fprintf(stderr, "Lock Mode: %g\n", CommandData.axes_mode.el_dest);
   } else if (command == MIndex("goto_el")) {  /* point in elevation */
     if (CommandData.pumps.bal_veto >= 0)
       CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
-    CommandData.axes_mode.el_mode = AXIS_POSITION;
-    CommandData.axes_mode.el_dest = rvalues[0];
+    CommandData.pointing_mode.el_mode = POINT_POINT;
+    CommandData.pointing_mode.el1 = rvalues[0];
+    CommandData.axes_mode.el_mode = AXIS_POSITION; // DELME
+    CommandData.axes_mode.el_dest = rvalues[0];    // DELME
   } else if (command == MIndex("goto_az")) {  /* point in azimuth */
-    CommandData.axes_mode.az_mode = AXIS_POSITION;
-    CommandData.axes_mode.az_dest = rvalues[0];
+    CommandData.pointing_mode.az_mode = POINT_POINT;
+    CommandData.pointing_mode.az1 = rvalues[0];
+    CommandData.axes_mode.az_mode = AXIS_POSITION; // DELME
+    CommandData.axes_mode.az_dest = rvalues[0];    // DELME
   } else if (command == MIndex("el_vel")) {  /* fixed elevation velocity */
     if (CommandData.pumps.bal_veto >= 0)
       CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
-    CommandData.axes_mode.el_mode = AXIS_VEL;
-    CommandData.axes_mode.el_vel = rvalues[0];
+    CommandData.pointing_mode.el_mode = POINT_VEL;
+    CommandData.pointing_mode.el_vel = rvalues[0];
+    CommandData.axes_mode.el_mode = AXIS_VEL;     // DELME
+    CommandData.axes_mode.el_vel = rvalues[0];    // DELME
   } else if (command == MIndex("az_vel")) {  /* fixed azimuth velocity */
-    CommandData.axes_mode.az_mode = AXIS_VEL;
-    CommandData.axes_mode.az_vel = rvalues[0];
-
+    CommandData.pointing_mode.az_mode = POINT_VEL;
+    CommandData.pointing_mode.az_vel = rvalues[0];
+    CommandData.axes_mode.az_mode = AXIS_VEL;     // DELME
+    CommandData.axes_mode.az_vel = rvalues[0];    // DELME
   } else if (command == MIndex("jfet_heat"))
     CommandData.Cryo.JFETHeat = rvalues[0] * 2047./100.;
   else if (command == MIndex("heatswitch_heat"))
     CommandData.Cryo.heatSwitch = rvalues[0] * 2047./100.;
   else if (command == MIndex("he3_heat"))
     CommandData.Cryo.heliumThree = rvalues[0] * 2047./100.;
-  else if (command == MIndex("spare_cryo_pwm"))
+  else if (command == MIndex("spare_heat"))
     CommandData.Cryo.sparePwm = rvalues[0] * 2047./100.;
-  else if (command == MIndex("calib_pulse")) {
+  else if (command == MIndex("cal_pulse")) {
     CommandData.Cryo.calib_pulse = ivalues[0];
     CommandData.Cryo.calib_repeat = 0;
-  } else if (command == MIndex("calib_pulse_rpt")) {
+  } else if (command == MIndex("cal_pulse_repeat")) {
     CommandData.Cryo.calib_pulse = ivalues[0];
     CommandData.Cryo.calib_repeat = rvalues[1];
-
-  } else if (command == MIndex("bias_1_level"))    /* Set bias 1 */
+  } else if (command == MIndex("bias1_level"))    /* Set bias 1 */
     CommandData.Bias.bias1 = ivalues[0];
-  else if (command == MIndex("bias_2_level"))    /* Set bias 2 */
+  else if (command == MIndex("bias2_level"))    /* Set bias 2 */
     CommandData.Bias.bias2 = ivalues[0];
-  else if (command == MIndex("bias_3_level"))    /* Set bias 3 */
+  else if (command == MIndex("bias3_level"))    /* Set bias 3 */
     CommandData.Bias.bias3 = ivalues[0];
   else if (command == MIndex("phase")) {
     if (ivalues[0] >= 5 && ivalues[0] <= 16) 
       CommandData.Phase[ivalues[0] - 5] = ivalues[1];
-  } else if (command == MIndex("balance_goal")) {
+  } else if (command == MIndex("setpoints")) {
     CommandData.pumps.bal_on = rvalues[0] * 1648.;
     CommandData.pumps.bal_off = rvalues[1] * 1648.;
     CommandData.pumps.bal_target = rvalues[2] * 1648.;
-  } else if (command == MIndex("balance_pwm"))
+  } else if (command == MIndex("pwm"))
     CommandData.pumps.pwm1 = ivalues[0];
   else if (command == MIndex("spare_pump_pwm"))
     CommandData.pumps.pwm2 = ivalues[0];
-  else if (command == MIndex("if_pump_pwm"))
+  else if (command == MIndex("inner_pwm"))
     CommandData.pumps.pwm3 = ivalues[0];
-  else if (command == MIndex("of_pump_pwm"))
+  else if (command == MIndex("outer_pwm"))
     CommandData.pumps.pwm4 = ivalues[0];
 
   WritePrevStatus();

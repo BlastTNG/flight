@@ -1118,14 +1118,14 @@ void StoreData(unsigned int* Txframe,
  *                                                                *
  ******************************************************************/
 /*void UpdateAxesMode() {
-  switch (CommandData.pointing_mode.el_mode) {
-  case POINT_VEL:
-  CommandData.axes_mode.el_mode = AXIS_VEL;
-  CommandData.axes_mode.el_vel = CommandData.pointing_mode.el_vel;
-  break;
-  case 
-  }
-  */
+   switch (CommandData.pointing_mode.el_mode) {
+   case POINT_VEL:
+     CommandData.axes_mode.el_mode = AXIS_VEL;
+     CommandData.axes_mode.el_vel = CommandData.pointing_mode.el_vel;
+     break;
+     case POINT_POINT:
+}
+ */
 /******************************************************************
  *                                                                *
  * IsNewFrame: returns true if d is a begining of frame marker,   *

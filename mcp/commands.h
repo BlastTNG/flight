@@ -11,42 +11,38 @@
 #define MAX_15BIT (32767.)
 #define MAX_30BIT (1073741823.)
 
-#define SIZE_NAME 16
+#define SIZE_NAME 80
 #define SIZE_ABOUT 80
 #define SIZE_PARNAME 25
 
 #define N_GROUPS 13
 
 #define GR_POINT 0
-#define GR_EHEAT 1
-#define GR_BIAS 2
-#define GR_MOTORS 3
+#define GR_SENSOR 1
+#define GR_GAIN 2
+#define GR_LOCK 3
 #define GR_BAL 4
-#define GR_CRYO 5
-#define GR_SENSOR 6
-#define GR_COOL 7
-#define GR_VALVE 8
-#define GR_LOCK 9
+#define GR_COOL 5
+#define GR_EHEAT 6
+#define GR_BIAS 7
+#define GR_CRYO_CONTROL 8
+#define GR_CRYO_HEAT 9
 #define GR_MISC 10
-#define GR_CALIBRATOR 11
-#define GR_TEST 12
 
 #ifdef INCLUDE_VARS
 
 const char *GroupNames[N_GROUPS] = {
-  "Pointing",
-  "Electronics Heat",
-  "Bias and DAS",
-  "Motor Control",
-  "Balance System",
-  "Cryo Control",
-  "Sensor Systems",
-  "Cooling System",
-  "Motorized Valves",
+  "Pointing Mode",
+  "Pointing Sensors",
+  "Pointing Motor Gains",
   "Inner Frame Lock",
+  "Balance System",
+  "Cooling System",
+  "Electronics Heat",
+  "Bias",
+  "Cryo Control",
+  "Cryo Heat",
   "Miscellaneous",
-  "Calibrator",
-  "Test"
 };
 
 struct scom {
@@ -56,72 +52,65 @@ struct scom {
 };
 
 struct scom scommands[N_NM_SCOMMANDS] = {
-  {"all_stop", "all stop: set az vel and el vel to zero", GR_POINT},
+  {"stop", "servo off of gyros to zero speed now", GR_POINT},
 
-  {"fss_default", "set sun sensor as default", GR_SENSOR},
-  {"isc_default", "set integrating star-cam as default", GR_SENSOR},
-  {"vsc_default", "set video star-cam as default", GR_SENSOR},
-  {"mag_default", "set magnetometer as default", GR_SENSOR},
-
-  {"fss_veto", "veto sun sensor", GR_SENSOR},
+  {"sun_veto", "veto sun sensor", GR_SENSOR},
   {"isc_veto", "veto integrating star-cam", GR_SENSOR},
   {"vsc_veto", "veto video star-cam", GR_SENSOR},
   {"mag_veto", "veto magnotometer", GR_SENSOR},
 
-  {"fss_unveto", "un-veto sun sensor", GR_SENSOR},
-  {"isc_unveto", "un-veto integrating star-cam", GR_SENSOR},
-  {"vsc_unveto", "un-veto video star-cam", GR_SENSOR},
-  {"mag_unveto", "un-veto magnetometer", GR_SENSOR},
+  {"sun_allow", "un-veto sun sensor", GR_SENSOR},
+  {"isc_allow", "un-veto integrating star-cam", GR_SENSOR},
+  {"vsc_allow", "un-veto video star-cam", GR_SENSOR},
+  {"mag_allow", "un-veto magnetometer", GR_SENSOR},
 
-  {"clock_internal", "bias clock internal", GR_BIAS},
-  {"clock_external", "bias clock external", GR_BIAS},
+  {"clock_int", "bias clock internal", GR_BIAS},
+  {"clock_ext", "bias clock external", GR_BIAS},
   {"bias_ac", "bias AC", GR_BIAS},
   {"bias_dc", "bias DC", GR_BIAS},
-  {"bias_ramp", "bias: external, ramp", GR_BIAS},
-  {"bias_internal", "bias: internal, fixed", GR_BIAS},
+  {"ramp", "bias: external, ramp", GR_BIAS},
+  {"fixed", "bias: internal, fixed", GR_BIAS},
 
-  {"levl_sensor_on", "helium level sensor on", GR_CRYO},
-  {"levl_sensor_off", "helium level sensor off", GR_CRYO},
-  {"charc_heat_on", "charcoal heater on", GR_CRYO},
-  {"charc_heat_off", "charcoal heater off", GR_CRYO},
-  {"cplate_heat_on", "cold plate heater on", GR_CRYO},
-  {"cplate_heat_off", "cold plate heater off", GR_CRYO},
+  {"level_on", "helium level sensor on", GR_CRYO_CONTROL},
+  {"level_off", "helium level sensor off", GR_CRYO_CONTROL},
+  {"charcoal_on", "charcoal heater on", GR_CRYO_HEAT},
+  {"charcoal_off", "charcoal heater off", GR_CRYO_HEAT},
+  {"coldplate_on", "cold plate heater on", GR_CRYO_HEAT},
+  {"coldplate_off", "cold plate heater off", GR_CRYO_HEAT},
+  {"cal_on", "calibrator on", GR_CRYO_CONTROL},
+  {"cal_off", "calibrator off", GR_CRYO_CONTROL},
+  {"cal_stop", "stop calibrator pulses", GR_CRYO_CONTROL},
+  {"ln_valve_on",  "LN valve on", GR_CRYO_CONTROL},
+  {"ln_valve_off", "LN valve off", GR_CRYO_CONTROL},
+  {"ln_valve_open", "set LN valve direction open", GR_CRYO_CONTROL},
+  {"ln_valve_close", "set LN valve direction close", GR_CRYO_CONTROL},
+  {"he_valve_on",  "Helium valve on", GR_CRYO_CONTROL},
+  {"he_valve_off", "Helium valve off", GR_CRYO_CONTROL},
+  {"he_valve_open", "set Helium valve direction open", GR_CRYO_CONTROL},
+  {"he_valve_close", "set Helium valve direction close", GR_CRYO_CONTROL},
 
-  {"ln2_valve_on",  "LN valve on", GR_VALVE},
-  {"ln2_valve_off", "LN valve off", GR_VALVE},
-  {"ln2_valve_open", "set LN valve direction open", GR_VALVE},
-  {"ln2_valve_close", "set LN valve direction close", GR_VALVE},
-  {"lhe_valve_on",  "LHe valve on", GR_VALVE},
-  {"lhe_valve_off", "LHe valve off", GR_VALVE},
-  {"lhe_valve_open", "set LHe valve direction open", GR_VALVE},
-  {"lhe_valve_close", "set LHe valve direction close", GR_VALVE},
+  {"balance_veto", "veto balance system", GR_BAL},
+  {"balance_allow", "unveto balance system", GR_BAL},
 
-  {"calibrator_on", "calibrator on", GR_CALIBRATOR},
-  {"calibrator_off", "calibrator off", GR_CALIBRATOR},
-  {"calibrator_stop", "stop calibrator pulsing", GR_CALIBRATOR},
+  {"pump1_on", "balance pump 1 on", GR_BAL},
+  {"pump1_off", "balance pump 1 off", GR_BAL},
+  {"pump1_fwd", "balance pump 1 forward", GR_BAL},
+  {"pump1_rev", "balance pump 1 reverse", GR_BAL},
+  {"pump2_on", "balance pump 2 on", GR_BAL},
+  {"pump2_off", "balance pump 2 off", GR_BAL},
+  {"pump2_fwd", "balance pump 2 forward", GR_BAL},
+  {"pump2_rev", "balance pump 2 reverse", GR_BAL},
 
-  {"bal_veto", "veto balance system", GR_BAL},
-  {"bal_unveto", "unveto balance system", GR_BAL},
+  {"inner_cool_on", "inner frame cooling pump 1 on", GR_COOL},
+  {"inner_cool_off", "inner frame cooling pump 1 off", GR_COOL},
 
-  {"bal_pump1_on", "balance pump 1 on", GR_BAL},
-  {"bal_pump1_off", "balance pump 1 off", GR_BAL},
-  {"bal_pump1_frwrd", "balance pump 1 forward", GR_BAL},
-  {"bal_pump1_rvrse", "balance pump 1 reverse", GR_BAL},
-  {"bal_pump2_on", "balance pump 2 on", GR_BAL},
-  {"bal_pump2_off", "balance pump 2 off", GR_BAL},
-  {"bal_pump2_frwrd", "balance pump 2 forward", GR_BAL},
-  {"bal_pump2_rvrse", "balance pump 2 reverse", GR_BAL},
+  {"outer_cool1_on", "outer frame colling pump 1 on", GR_COOL},
+  {"outer_cool1_off", "outer frame colling pump 1 off", GR_COOL},
+  {"outer_cool2_on", "outer frame colling pump 2 on", GR_COOL},
+  {"outer_cool2_off", "outer frame colling pump 2 off", GR_COOL},
 
-  {"if_pump1_on", "inner frame cooling pump 1 on", GR_COOL},
-  {"if_pump1_off", "inner frame cooling pump 1 off", GR_COOL},
-
-  {"of_pump1_on", "outer frame colling pump 1 on", GR_COOL},
-  {"of_pump1_off", "outer frame colling pump 1 off", GR_COOL},
-  {"of_pump2_on", "outer frame colling pump 2 on", GR_COOL},
-  {"of_pump2_off", "outer frame colling pump 2 off", GR_COOL},
-
-  {"lock_mot_lock", "close the lock motor now (dangerous)", GR_LOCK},
-  {"lock_mot_unlock", "unlock the lock now", GR_LOCK},
+  {"pin_in", "close lock pin without checking encoder (dangerous)", GR_LOCK},
+  {"unlock", "unlock the lock", GR_LOCK}
 };
 
 struct par {
@@ -147,7 +136,7 @@ struct mcom {
  * l :  parameter is 30 bit renormalised floating point
  */
 struct mcom mcommands[N_MCOMMANDS] = {
-  {"lock_mot_el", "Lock Inner Frame", GR_LOCK, 1,
+  {"lock", "Lock Inner Frame", GR_LOCK, 1,
     {
       {"Lock Elevation (deg)", 5, 90, 'f', 4, "ENC_ELEV"}
     }
@@ -177,53 +166,19 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"time_sched", "time until schedule mode", GR_MISC, 1,
+  {"timeout", "time until schedule mode", GR_MISC, 1,
     {
       {"timeout (s)", 15, 14400, 'i', 0, "ADD"}
     }
   },
 
-  {"gyro_box_temp", "gyro box temp", GR_EHEAT, 1,
+  {"t_gyrobox", "gyro box T", GR_EHEAT, 1,
     {
       {"deg C", 0, 60, 'f', 2, "t_gy_set"}
     }
   },
 
-  {"isc_pv_temp", "ISC pressure vessel temp", GR_EHEAT, 1,
-    {
-      {"deg C", 0, 60, 'f', 2, "t_isc_set"}
-    }
-  },
-
-
-  {"roll_gain", "roll gain", GR_MOTORS, 1,
-    {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_roll"}
-    }
-  },
-
-  {"elev_gain", "elevation gains", GR_MOTORS, 2,
-    {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_el"},
-      {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_i_el"}
-    }
-  },
-
-  {"azim_gain", "azimuth gains", GR_MOTORS, 2,
-    {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_az"},
-      {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_i_az"}
-    }
-  },
-
-  {"pivot_gain", "pivot gains", GR_MOTORS, 2,
-    {
-      {"Set Point(rpm)", 0, MAX_15BIT, 'f', 0, "set_reac"},
-      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_pivot"}
-    }
-  },
-
-  {"gyro_heat_gain", "gyro heat gain", GR_EHEAT, 3,
+  {"t_gyrobox_gain", "gyro box heater gains", GR_EHEAT, 3,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_gyheat"},
       {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_i_gyheat"},
@@ -231,7 +186,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"isc_heat_gain", "isc heat gain", GR_EHEAT, 3,
+  {"t_iscbox", "isc box T", GR_EHEAT, 1,
+    {
+      {"deg C", 0, 60, 'f', 2, "t_isc_set"}
+    }
+  },
+
+  {"t_iscbox_gain", "isc box heater gains", GR_EHEAT, 3,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_pisch"},
       {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_iisch"},
@@ -239,19 +200,47 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"bias_1_level", "bias 1 level", GR_BIAS, 1,
+  {"roll_gain", "roll reaction wheel gain", GR_GAIN, 1,
+    {
+      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_roll"}
+    }
+  },
+
+  {"el_gain", "elevation motor gains", GR_GAIN, 2,
+    {
+      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_el"},
+      {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_i_el"}
+    }
+  },
+
+  {"az_gain", "azimuth reaction wheel gains", GR_GAIN, 2,
+    {
+      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_az"},
+      {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_i_az"}
+    }
+  },
+
+  {"pivot_gain", "pivot gains", GR_GAIN, 2,
+    {
+      {"Set Point (rpm)", 0, MAX_15BIT, 'f', 0, "set_reac"},
+      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_pivot"}
+    }
+  },
+
+
+  {"bias1_level", "bias 1 level", GR_BIAS, 1,
     {
       {"level", 0, 15, 'i', 0, "ADD"}
     }
   },
 
-  {"bias_2_level", "bias 2 level", GR_BIAS, 1,
+  {"bias2_level", "bias 2 level", GR_BIAS, 1,
     {
       {"level", 0, 15, 'i', 0, "ADD"}
     }
   },
 
-  {"bias_3_level", "bias 3 level", GR_BIAS, 1,
+  {"bias3_level", "bias 3 level", GR_BIAS, 1,
     {
       {"level", 0, 15, 'i', 0, "ADD"}
     }
@@ -261,40 +250,40 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"DAS card", 5, 16, 'i', 0, "ADD"},
       {"Phase", 0, 2000, 'i', 0, "ADD"}
-    }
+   }
   },
 
-  {"jfet_heat", "JFET heater level", GR_CRYO, 1,
+  {"jfet_heat", "JFET heater level", GR_CRYO_HEAT, 1,
     {
       {"level (%)", 0, 100, 'f', 2, "JFETPWM"}
     }
   },
 
-  {"heatswitch_heat", "Heat Switch heater level", GR_CRYO, 1,
+  {"heatswitch_heat", "Heat Switch heater level", GR_CRYO_HEAT, 1,
     {
       {"level (%)", 0, 100, 'f', 2, "HSPWM"}
     }
   },
 
-  {"he3_heat", "Helium 3 heater level", GR_CRYO, 1,
+  {"he3_heat", "Helium 3 heater level", GR_CRYO_HEAT, 1,
     {
       {"level (%)", 0, 100, 'f', 2, "HE3PWM"}
     }
   },
 
-  {"spare_cryo_pwm", "Spare cryo pwm level", GR_CRYO, 1,
+  {"spare_heat", "Spare cryo pwm level", GR_CRYO_HEAT, 1,
     {
       {"level (%)", 0, 100, 'f', 2, "CRYOPWM"}
     }
   },
 
-  {"calib_pulse", "calibrator single pulse", GR_CALIBRATOR, 1,
+  {"cal_pulse", "calibrator single pulse", GR_CRYO_CONTROL, 1,
     {
       {"pulse length (ms)", 0, 8000, 'i', 0, "ADD"}
     }
   },
 
-  {"calib_pulse_rpt", "pulse calibrator repeatedly", GR_CALIBRATOR, 2,
+  {"cal_pulse_repeat", "pulse calibrator repeatedly", GR_CRYO_CONTROL, 2,
     {
       {"pulse length (ms)", 1, 8000, 'i', 0, "ADD"},
       {"repeat delay (s)", 1, 86400, 'f', 0, "ADD"}
@@ -307,17 +296,17 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"balance_pwm", "balance pump pwm level", GR_BAL, 1,
-    {
-      {"level", 0, 2047, 'i', 0, "ADD"}
-    }
-  },
-
-  {"balance_goal", "balance system goals", GR_BAL, 3,
+  {"setpoints", "balance system setpoints", GR_BAL, 3,
     {
       {"pump on point (A)", 0, 2, 'f', 5, "BAL_ON"},
       {"pump off point (A)", 0, 2, 'f', 5, "BAL_OFF"},
       {"target (A)", -2, 2, 'f', 5, "BAL_TARGET"}
+    }
+  },
+
+  {"pwm", "balance pump pwm level", GR_BAL, 1,
+    {
+      {"level", 0, 2047, 'i', 0, "ADD"}
     }
   },
 
@@ -327,13 +316,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"if_pump_pwm", "inner frame cooling pump pwm level", GR_COOL, 1,
+  {"inner_pwm", "inner frame cooling pump pwm level", GR_COOL, 1,
     {
       {"level", 0, 2047, 'i', 0, "ADD"}
     }
   },
 
-  {"of_pump_pwm", "outer frame cooling pump pwm level", GR_COOL, 1,
+  {"outer_pwm", "outer frame cooling pump pwm level", GR_COOL, 1,
     {
       {"level", 0, 2047, 'i', 0, "ADD"}
     }
