@@ -78,7 +78,7 @@ double az_gcirc( double *az, double *el, double el_in )
   c2_2 = atan2(tan(v[0])*sin(u[0]) - tan(v[1])*sin(u[1]),
 	       tan(v[0])*cos(u[0]) - tan(v[1])*cos(u[1])) + M_PI;
 
-  printf("c2_1=%lf c2_2=%lf\n",c2_1,c2_2);
+  //printf("c2_1=%lf c2_2=%lf\n",c2_1,c2_2);
 
   if( fmod((c2_1 - u[0]),M_PI) != 0 )
   {
@@ -87,7 +87,7 @@ double az_gcirc( double *az, double *el, double el_in )
     u_1a = -asin(1/(tan(v_in)*sqrt(1/(c1_1*c1_1) - 1.))) + c2_1;
     u_1b = M_PI + asin(1/(tan(v_in)*sqrt(1/(c1_1*c1_1) - 1.))) + c2_1;
 
-    printf("c1_1=%lf u_1a=%lf u_1b=%lf\n",c1_1,u_1a,u_1b);
+    //printf("c1_1=%lf u_1a=%lf u_1b=%lf\n",c1_1,u_1a,u_1b);
   }
   else 
   {
@@ -103,7 +103,7 @@ double az_gcirc( double *az, double *el, double el_in )
     u_2a = -asin(1/(tan(v_in)*sqrt(1/(c1_2*c1_2) - 1.))) + c2_2;
     u_2b = M_PI + asin(1/(tan(v_in)*sqrt(1/(c1_2*c1_2) - 1.))) + c2_2;
 
-    printf("c1_2=%lf u_2a=%lf u_2b=%lf\n",c1_2,u_2a,u_2b);
+    //printf("c1_2=%lf u_2a=%lf u_2b=%lf\n",c1_2,u_2a,u_2b);
   }
   else
   {  
@@ -119,7 +119,7 @@ double az_gcirc( double *az, double *el, double el_in )
   az_2a = fmod(((u_2a*180./M_PI) + 360.),360.);
   az_2b = fmod(((u_2b*180./M_PI) + 360.),360.);
 
-  printf("solutions: %lf %lf %lf %lf\n",az_1a,az_1b,az_2a,az_2b);
+  //printf("solutions: %lf %lf %lf %lf\n",az_1a,az_1b,az_2a,az_2b);
 
   // return one of the above solutions based on the relative orientations
   // of the end points
