@@ -27,6 +27,7 @@ short int InCharge;
 extern unsigned short slow_data[N_SLOW][FAST_PER_SLOW];
 
 extern short int write_ISC_pointing;  /* isc.c */
+extern struct ISCStatusStruct SentState;  /* isc.c */
 
 double round(double x);
 
@@ -591,55 +592,44 @@ void StoreData(int index, unsigned int* Txframe,
 
   /*** State Info ***/
   WriteSlow(isc_stateCh, isc_stateInd,
-      (unsigned int)(CommandData.ISCState.pause * 2 +
-                     CommandData.ISCState.abort * 4 +
-                     CommandData.ISCState.autofocus * 8 +
-                     CommandData.ISCState.brightStarMode * 16 +
-                     CommandData.ISCState.shutdown * 32 +
-                     CommandData.ISCState.save));
-  WriteSlow(isc_focusCh, isc_focusInd,
-      (unsigned int)CommandData.ISCState.focus_pos);
-  WriteSlow(isc_apertCh, isc_apertInd,
-      (unsigned int)CommandData.ISCState.ap_pos);
+      (unsigned int)(SentState.pause * 2 + SentState.abort * 4 +
+                     SentState.autofocus * 8 + SentState.brightStarMode * 16 +
+                     SentState.shutdown * 32 + SentState.save));
+  WriteSlow(isc_focusCh, isc_focusInd, (unsigned int)SentState.focus_pos);
+  WriteSlow(isc_apertCh, isc_apertInd, (unsigned int)SentState.ap_pos);
   WriteSlow(isc_brraCh, isc_brraInd,
-      (unsigned int)(CommandData.ISCState.brightRA * RAD2I));
+      (unsigned int)(SentState.brightRA * RAD2I));
   WriteSlow(isc_brdecCh, isc_brdecInd,
-      (unsigned int)(CommandData.ISCState.brightDEC * RAD2I));
+      (unsigned int)(SentState.brightDEC * RAD2I));
   WriteSlow(isc_threshCh, isc_threshInd,
-      (unsigned int)(CommandData.ISCState.sn_threshold * 10.));
-  WriteSlow(isc_gridCh, isc_gridInd, (unsigned int)CommandData.ISCState.grid);
-  WriteSlow(isc_cenboxCh, isc_cenboxInd,
-      (unsigned int)CommandData.ISCState.cenbox);
-  WriteSlow(isc_apboxCh, isc_apboxInd,
-      (unsigned int)CommandData.ISCState.apbox);
-  WriteSlow(isc_mdistCh, isc_mdistInd,
-      (unsigned int)CommandData.ISCState.mult_dist);
+      (unsigned int)(SentState.sn_threshold * 10.));
+  WriteSlow(isc_gridCh, isc_gridInd, (unsigned int)SentState.grid);
+  WriteSlow(isc_cenboxCh, isc_cenboxInd, (unsigned int)SentState.cenbox);
+  WriteSlow(isc_apboxCh, isc_apboxInd, (unsigned int)SentState.apbox);
+  WriteSlow(isc_mdistCh, isc_mdistInd, (unsigned int)SentState.mult_dist);
   WriteSlow(isc_maxblobsCh, isc_maxblobsInd,
-      (unsigned int)CommandData.ISCState.maxBlobMatch);
+      (unsigned int)SentState.maxBlobMatch);
   WriteSlow(isc_maglimitCh, isc_maglimitInd,
-      (unsigned int)(CommandData.ISCState.mag_limit * 1000.));
+      (unsigned int)(SentState.mag_limit * 1000.));
   WriteSlow(isc_nradCh, isc_nradInd,
-      (unsigned int)(CommandData.ISCState.norm_radius * RAD2I));
+      (unsigned int)(SentState.norm_radius * RAD2I));
   WriteSlow(isc_lradCh, isc_lradInd,
-      (unsigned int)(CommandData.ISCState.lost_radius * RAD2I));
+      (unsigned int)(SentState.lost_radius * RAD2I));
   WriteSlow(isc_tolCh, isc_tolInd,
-      (unsigned int)(CommandData.ISCState.tolerance * RAD2ARCSEC));
+      (unsigned int)(SentState.tolerance * RAD2ARCSEC));
   WriteSlow(isc_mtolCh, isc_mtolInd,
-      (unsigned int)(CommandData.ISCState.match_tol * 65535.));
+      (unsigned int)(SentState.match_tol * 65535.));
   WriteSlow(isc_qtolCh, isc_qtolInd,
-      (unsigned int)(CommandData.ISCState.quit_tol * 65535.));
-  WriteSlow(isc_rtolCh, isc_rtolInd,
-      (unsigned int)(CommandData.ISCState.rot_tol * RAD2I));
+      (unsigned int)(SentState.quit_tol * 65535.));
+  WriteSlow(isc_rtolCh, isc_rtolInd, (unsigned int)(SentState.rot_tol * RAD2I));
+  WriteSlow(isc_x_offCh, isc_x_offInd, (unsigned int)(SentState.azBDA * RAD2I));
+  WriteSlow(isc_y_offCh, isc_y_offInd, (unsigned int)(SentState.elBDA * RAD2I));
+  WriteSlow(isc_hold_iCh, isc_hold_iInd,
+      (unsigned int)(SentState.hold_current));
   WriteSlow(isc_fpulseCh, isc_fpulseInd,
       (unsigned int)(CommandData.ISC_fast_pulse_width));
   WriteSlow(isc_spulseCh, isc_spulseInd,
       (unsigned int)(CommandData.ISC_pulse_width));
-  WriteSlow(isc_x_offCh, isc_x_offInd,
-      (unsigned int)(CommandData.ISCState.azBDA * RAD2I));
-  WriteSlow(isc_y_offCh, isc_y_offInd,
-      (unsigned int)(CommandData.ISCState.elBDA * RAD2I));
-  WriteSlow(isc_hold_iCh, isc_hold_iInd,
-      (unsigned int)(CommandData.ISCState.hold_current));
   WriteSlow(isc_save_periodCh, isc_save_periodInd,
       (unsigned int)(CommandData.ISC_save_period));
 }

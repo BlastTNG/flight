@@ -19,6 +19,8 @@ extern int frame_num;      /* tx.c */
 
 short int write_ISC_pointing = 0; // isc.c
 
+struct ISCStatusStruct SentState;
+
 struct ISCSolutionStruct ISCSolution[3];
 int iscdata_index = 0;
 
@@ -239,6 +241,8 @@ void IntegratingStarCamera(void)
           }
 #endif
         }
+
+        SentState = CommandData.ISCState;
 
         /* Deassert abort and shutdown after (perhaps) sending it */
         CommandData.ISCState.abort = 0;
