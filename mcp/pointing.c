@@ -808,6 +808,7 @@ void Pointing(){
   /**      do az solution      **/
   /** Convert Sensors **/
   mag_ok = MagConvert(&mag_az);
+
   ss_ok = SSConvert(&ss_az);
   dgps_ok = DGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
 

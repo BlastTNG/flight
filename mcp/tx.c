@@ -593,7 +593,7 @@ void StoreData(int index)
   WriteData(lstAddr, PointingData[i_point].lst);
 
   WriteData(magAzAddr,
-      (unsigned int)(PointingData[i_point].mag_az * 65536.0/360.0));
+      (unsigned int)(PointingData[i_point].mag_az * DEG2I));
   WriteData(magModelAddr,
       (unsigned int)(PointingData[i_point].mag_model * DEG2I));
   WriteData(magSigmaAddr,

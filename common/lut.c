@@ -106,6 +106,7 @@ double MagLutCal(struct LutType *L, double mag_x, double mag_y, double x)
     x += dx;
     iter++;
     if(fabs(dx) < TOLERANCE) return (x*180.0/M_PI);
+
     if(iter == MAXITER) {
       mprintf(MCP_ERROR, "Error MagLutCal: don't converge.\n");
       return (x*180.0/M_PI);
