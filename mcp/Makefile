@@ -23,6 +23,8 @@ OBJS = mcp.o auxiliary.o channels.o command_list.o commands.o crc.o das.o \
 	   lut.o motors.o pointing.o sched.o slow_dl.o small.o sslutNA.o starpos.o \
 	   sunsensor.o tx.o tx_struct.o
 
+.PHONEY: fifo install all debug
+
 all::
 ifeq ($(DEBUG), 1)
 		@echo "******************** WARNING ******************************"
@@ -55,15 +57,13 @@ mcp: $(OBJS)
 
 $(OBJS): $(HEADERS)
 
-install:: mcp
+install: mcp
 	install -d -m 777 /data/rawdir
 	install -m 755 mcp /usr/local/bin
+ifeq ($(BOLOTEST),-DBOLOTEST)
+	$(MAKE) fifo
+endif
 	cd etc && $(MAKE) install
 
-ifeq ($(USE_FIFO_CMD), 1)
-install:: fifo
-
-endif
-
 fifo:
-	mkfifo -m 0777 /tmp/SIPSS.FIFO
+	[ -e /tmp/SIPSS.FIFO ] || mkfifo -m 0777 /tmp/SIPSS.FIFO
