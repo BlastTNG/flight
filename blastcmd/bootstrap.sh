@@ -1,10 +1,10 @@
 #!/bin/sh
 
 FINISHED_OK=0
+rm -f configure.in
 set -x
 
 if autoconf --version | grep -q 2.13; then
-  rm -f configure.in &&
   sed s/AC_INIT\(.*\)/AC_INIT/ configure.ac > configure.in &&
   mv configure.ac configure.old &&
   aclocal &&
