@@ -108,9 +108,6 @@ extern short int InCharge; /* tx.c */
 #define LOKMOT_OUT   0x40  /* ACS3 Group 3 Bit 7 */
 #define LOKMOT_IN    0x80  /* ACS3 Group 3 Bit 8 */
 
-#define BAL_OFF_VETO  1000            /* # of frames to veto balance system
-                                         after turning off pump */
-
 /* in commands.c */
 double LockPosition(double elevation); 
 
@@ -372,12 +369,11 @@ int Balance(int ifpmBits) {
   }
 
   /* Don't do anything else if we're vetoted */
-  if (CommandData.pumps.bal_veto) {
-    if (CommandData.pumps.bal_veto == -1)
-      pump_is_on = -1;
-
+  if (CommandData.pumps.bal_veto == -1) {
+    pump_is_on = -1;
     return ifpmBits;
-  }
+  } else if (CommandData.pumps.bal_veto > 1)
+    return ifpmBits;
 
   if (error > 0)
     ifpmBits &= (0xFF - BAL1_REV);  /* clear reverse bit */
@@ -393,12 +389,13 @@ int Balance(int ifpmBits) {
   else if (pumppwm > PUMP_MAX)
     pumppwm = PUMP_MAX;
 
-  if (error > CommandData.pumps.bal_on)
+  if (error > CommandData.pumps.bal_on) {
     pumpon = 1;
-  else if (error < CommandData.pumps.bal_off) {
+    CommandData.pumps.bal_veto = 0;
+  } else if (error < CommandData.pumps.bal_off) {
     pumpon = 0;
-    if (CommandData.pumps.bal_veto >= 0)
-      CommandData.pumps.bal_veto = BAL_OFF_VETO;
+    if (CommandData.pumps.bal_veto > 1)
+      CommandData.pumps.bal_veto = BAL_VETO_MAX;
   }
 
   if (pumpon) {
@@ -793,7 +790,7 @@ void ControlAuxMotors(unsigned short *RxFrame) {
 
   if (CommandData.pumps.bal_veto) {
     /* if we're in timeout mode, decrement the timer */
-    if (CommandData.pumps.bal_veto != -1)
+    if (CommandData.pumps.bal_veto > 1)
       CommandData.pumps.bal_veto--;
 
     WriteData(balpumpLevAddr, CommandData.pumps.pwm1 & 0x7ff, NIOS_QUEUE);

@@ -37,6 +37,7 @@
 #include "command_list.h"
 #include "command_struct.h"
 #include "mcp.h"
+#include "tx.h"
 #include "pointing_struct.h"
 #include "slow_dl.h"
 #include "channels.h"
@@ -44,8 +45,6 @@
 #define REQ_POSITION    0x50
 #define REQ_TIME        0x51
 #define REQ_ALTITUDE    0x52
-
-#define BAL_VETO_LENGTH 500
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.
@@ -392,7 +391,7 @@ void SingleCommand (enum singleCommand command) {
   else if (command == balance_veto)
     CommandData.pumps.bal_veto = -1;
   else if (command == balance_allow)
-    CommandData.pumps.bal_veto = 0;
+    CommandData.pumps.bal_veto = 1;
 
   else if (command == balpump_on)
     CommandData.pumps.bal1_on = 1;
@@ -711,7 +710,7 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     /********** Inner Frame Lock  **********/
   } else if (command == lock) {  /* Lock Inner Frame */
     if (CommandData.pumps.bal_veto >= 0)
-      CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
+      CommandData.pumps.bal_veto = BAL_VETO_MAX;
     CommandData.pumps.lock_point = 1;
     CommandData.pointing_mode.mode = P_LOCK;
     CommandData.pointing_mode.X = 0;
@@ -1394,7 +1393,7 @@ void InitCommandData() {
   /** this overrides prev_status **/
   CommandData.force_el = 0;
 
-  CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
+  CommandData.pumps.bal_veto = BAL_VETO_MAX;
   CommandData.pumps.bal1_on = 0;
   CommandData.pumps.bal1_reverse = 0;
   CommandData.pumps.bal2_on = 0;
