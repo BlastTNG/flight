@@ -112,7 +112,7 @@ QT_CXXFLAGS="$QT_CXXFLAGS -I$QT_INCLUDE_DIR"
 
 #Find Qt Version
 AC_MSG_CHECKING([Qt version])
-QT_VERSION=`grep 'define.*QT_VERSION_STR\W' $QTDIR/include/qglobal.h | sed 's/^.*"\(.*\)".*$/\1/'`
+QT_VERSION=`grep 'define.*QT_VERSION_STR\W' $QT_INCLUDE_DIR/qglobal.h | sed 's/^.*"\(.*\)".*$/\1/'`
 AC_MSG_RESULT([$QT_VERSION])
 
 #Which Qt Library do we have

@@ -4218,7 +4218,7 @@ QT_CXXFLAGS="$QT_CXXFLAGS -I$QT_INCLUDE_DIR"
 #Find Qt Version
 echo "$as_me:$LINENO: checking Qt version" >&5
 echo $ECHO_N "checking Qt version... $ECHO_C" >&6
-QT_VERSION=`grep 'define.*QT_VERSION_STR\W' $QTDIR/include/qglobal.h | sed 's/^.*"\(.*\)".*$/\1/'`
+QT_VERSION=`grep 'define.*QT_VERSION_STR\W' $QT_INCLUDE_DIR/qglobal.h | sed 's/^.*"\(.*\)".*$/\1/'`
 echo "$as_me:$LINENO: result: $QT_VERSION" >&5
 echo "${ECHO_T}$QT_VERSION" >&6
 
