@@ -1020,7 +1020,7 @@ void DoQuadMode() { // aka radbox
   int i, i_point;
   int new_step = 0;
   double c_az[4], c_el[4]; // corner az and corner el
-  int i_bot, new;
+  int i_top, i_bot, new;
   
   static double last_ra[4] = {0,0,0,0}, last_dec[4] = {0,0,0,0};
   static double az_dir = 0, el_dir = 1, v_el = 0;
@@ -1057,13 +1057,20 @@ void DoQuadMode() { // aka radbox
   }
 
   i_bot = 0;
+  i_top = 0;
   for (i=1; i<4; i++) {
     if (c_el[i_bot]>c_el[i]) i_bot = i;
+    if (c_el[i_top]>c_el[i]) i_top = i;
+  }
+
+  if (el<=c_el[i_bot]) {
+    left = right = c_az[i_bot];
+  } else if (el>=c_el[i_top]) {
+    left = right = c_az[i_top];
+  } else {
+    radbox_endpoints(c_az, c_el, el, &left, &right, &bottom, &top);
   }
   
-  radbox_endpoints(c_az, c_el,      el,      &left,      &right, &bottom, &top);
-  radbox_endpoints(c_az, c_el, targ_el, &next_left, &next_right, &bottom, &top);
-  bprintf(info, "-> %g %g %g %g %g %g\n", left, next_left, bottom, top, targ_el, el);
   if (right-left < MIN_SCAN) {
     left = (left+right)/2.0 - MIN_SCAN/2.0;
     right = left + MIN_SCAN;
@@ -1100,12 +1107,16 @@ void DoQuadMode() { // aka radbox
   if (targ_el<bottom) targ_el = bottom;
   if (targ_el>top) targ_el = top;
 
-  for (i=0; i<4; i++) {
-    bprintf(info, "%d %g %g\n", i, c_az[i], c_el[i]);
-  }
-  
   radbox_endpoints(c_az, c_el, targ_el, &next_left,
 		   &next_right, &bottom, &top);
+  if (targ_el<=c_el[i_bot]) {
+    next_left = next_right = c_az[i_bot];
+  } else if (targ_el>=c_el[i_top]) {
+    next_left = next_right = c_az[i_top];
+  } else {
+    radbox_endpoints(c_az, c_el, targ_el, &next_left, &next_right, &bottom, &top);
+  }
+
   if (next_right-next_left < MIN_SCAN) {
     next_left = (next_left+next_right)/2.0 - MIN_SCAN/2.0;
     next_right = next_left + MIN_SCAN;
