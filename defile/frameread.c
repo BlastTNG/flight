@@ -160,6 +160,8 @@ int ReconstructChannelLists(const char* chunk, const char *spec_file)
 
   ReadSpecificationFile(stream);
 
+  fclose(stream);
+
   /* Make the Channel Struct */
   MakeAddressLookups();
 
