@@ -81,7 +81,9 @@ void USAGE(int flag) {
       "   -tdrss   Set link to TDRSS\n"
       "      -hf   Set link to HF\n"
       "    -com1   Set routing to comm1\n"
-      "    -com2   Set routing to comm2\n\n");
+      "    -com2   Set routing to comm2\n"
+      "--license   Show license information and exit\n\n"
+      );
 
   if (!flag) {
     printf("Exit codes:\n"
@@ -422,6 +424,19 @@ void WriteLogFile(int argc, char *argv[], unsigned int i_ack, char silent)
 }
 
 
+void PrintLicense(void)
+{
+  printf("blastcmd (C) 2002-2004 University of Toronto\n"
+      "Compiled on " __DATE__ " at " __TIME__ ".\n\n"
+      "This program comes with NO WARRANTY, not even for MERCHANTABILITY or "
+      "FITNESS\n"
+      "FOR A PARTICULAR PURPOSE. You may redistribute it under the terms of "
+      "the GNU\n"
+      "General Public License; see the file named COPYING for details.\n"
+      );
+  exit(0);
+}
+
 int main(int argc, char *argv[]) {
   int t_link, t_route;
   int i, i_cmd;
@@ -455,6 +470,8 @@ int main(int argc, char *argv[]) {
       silent = 1;
     else if (strcmp(argv[i], "-l") == 0)
       CommandList();
+    else if (strcmp(argv[i], "--license") == 0)
+      PrintLicense();
   }
 
   i = 1;
