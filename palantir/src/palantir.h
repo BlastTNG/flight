@@ -36,7 +36,7 @@
 #define CURDIR       4
 
 // Update palantir every 750 milliseconds
-#define UPDATETIME 750
+#define UPDATETIME 50
 
 #ifndef LIB_DIR
 #  define LIB_DIR "/usr/local/lib/palantir/"

@@ -823,15 +823,15 @@ void MainForm::UpdateData() {
   // Loop through all the data fields we need to read
   for (currLabel = LabelInfo.first(); currLabel != NULL;
       currLabel = LabelInfo.next()) {
-    //if (i_label%2==0) usleep(10000);
-    //i_label++;
+    if (i_label%10==0) usleep(10000);
+    i_label++;
     switch (currLabel->datumtype) {
       case NUMBER:
         currNumber = NumberInfo.at(currLabel->index);
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in from disk
         if (DataSource->readField(indata, currLabel->src,
-              DataSource->numFrames() - 2, 1) == 0) {
+              DataSource->numFrames() - 3, 1) == 0) {
           if (currLabel->laststyle != 1) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
@@ -888,7 +888,7 @@ void MainForm::UpdateData() {
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in value from disk
         if (DataSource->readField(indata, currLabel->src,
-              DataSource->numFrames() - 1, 1) == 0) {
+              DataSource->numFrames() - 3, 1) == 0) {
           if (currLabel->laststyle != 1001) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
@@ -926,7 +926,7 @@ void MainForm::UpdateData() {
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in value from disk
         if (DataSource->readField(indata, currLabel->src,
-              DataSource->numFrames() - 1, 1) == 0) {
+              DataSource->numFrames() - 3, 1) == 0) {
           if (currLabel->laststyle != 1) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
@@ -972,7 +972,7 @@ void MainForm::UpdateData() {
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in from disk
         if (DataSource->readField(indata, currLabel->src,
-              DataSource->numFrames() - 1, 1) == 0) {
+              DataSource->numFrames() - 3, 1) == 0) {
           if (currLabel->laststyle != 1) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
