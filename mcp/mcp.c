@@ -97,8 +97,8 @@ void SensorReader(void) {
         CommandData.T = T;
         CommandData.fan = fan;
       }
+      fclose(fp);
     }
-    fclose(fp);
     sleep(1);
   }
 }
