@@ -3,16 +3,23 @@
 | NARSIL -- "Narsil essenya, macil meletya; Telchar carneron Navarotesse"
 |
 | Adam Hincks, 9 August 2002
-| DV Wiebe     12 September 2002 -- updated location of commands.h
+| D. V. Wiebe, 12 September 2002 -- updated location of commands.h
+| D. V. Wiebe, 21 October 2004   -- automatic command list version checking
 |
 ----------------------------------------------------------------------------
 
 Narsil is a wrapper for blastcmd, which is used for sending commands to the
 gondala via the SIP.
 
-Whenever the commands.h file changes (it is used both by blastcmd and mcp),
-Narsil must be recompiled as it reads the valid commands from this file.
-Currently commands.h is linked to ../blastcmd/commands.h .
+Narsil uses the kstfile class written by Barth to look for default values. That
+is, it can look for the current value of a parameter in the most recent files
+in /data/rawdir and use that as the default.
 
-Narsil also uses the kstfile class written by Barth to look for default values. That is, it can look for the current value of a parameter in the most recent
-files in /data/rawdir and use that as the default.
+As part of the configure script, it attempts to figure out the revision number
+of blastcmd's command list to see if it maches the one that narsil is using.
+In rare instances this may create problems.  To force configure to skip the test
+entirely, use
+
+  $ ./configure --disable-command-list-test
+
+See `./configure --help' for other potentially useful options.

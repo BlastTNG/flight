@@ -95,6 +95,7 @@ DEPDIR = @DEPDIR@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+ELOG = @ELOG@
 EXEEXT = @EXEEXT@
 FILE = @FILE@
 GREP = @GREP@
@@ -160,8 +161,9 @@ target_alias = @target_alias@
 AUTOMAKE_OPTIONS = foreign
 buildserial = @CMDVERSION@
 SUBDIRS = data src
-EXTRA_DIST = lib/kstfile.o lib/getdata.o include/kstfile.h include/getdata.h
+EXTRA_DIST = lib/libRD.a lib/kstfile.o lib/getdata.o include/kstfile.h include/getdata.h
 DISTCHECK_CONFIGURE_FLAGS = --with-data-etc="$$dc_install_base/data"
+CONFIG_STATUS_DEPENDENCIES = $(top_srcdir)/src/command_list.c
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

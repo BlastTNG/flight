@@ -643,7 +643,7 @@ void MainForm::SendCommand() {
 
 
 
-    params[i] = '\0';
+    params[i] = NULL;
     for (j = 0; j < i; j++)
       params[j] = args[j];
 
@@ -817,6 +817,7 @@ void MainForm::WriteLog(char *args[]) {
     logfile.close();
   }
 
+#ifdef USE_ELOG
   QString elog_command = QString(
     "elog -h blast.physics.utoronto.ca -p 8080 -l blast-narsil "
     "-u narsil submmblast "
@@ -826,7 +827,7 @@ void MainForm::WriteLog(char *args[]) {
                          .arg(logfilename);
 
   system(elog_command.latin1());
-
+#endif
 }
 
 //-------------------------------------------------------------
@@ -1275,10 +1276,14 @@ MainForm::~MainForm()
 
 Defaults *defaults;
 int main(int argc, char* argv[]) {
+  int pipefd[2];
+  int i, j;
+  char buffer[80]; 
+  char* ptr;
 
   if (argc > 1) {
     printf(
-        "Narsil " VERSION " doesn't take arguments.  It was compiled on "
+        "Narsil " VERSION " doesn't take arguments.  It was compiled at "
         __DATE__ "\nand is copyright (C) 2002-2004 University of Toronto.\n\n"
         "This program comes with NO WARRANTY, not even for MERCHANTABILITY or "
         "FITNESS\n"
@@ -1291,6 +1296,62 @@ int main(int argc, char* argv[]) {
         );
     exit(1);
   }
+
+  /* begin blastcmd command list revision check */ 
+  if (pipe(pipefd)) {
+    perror("pipe");
+    exit(1);
+  }
+
+  if ((i = fork()) == -1) {
+    perror("fork");
+    exit(1);
+  } else if (i == 0) {
+    close(1);
+    dup2(pipefd[1], 1);
+    close(pipefd[0]);
+    if (execlp(BLASTCMDFILE, BLASTCMDFILE, "-c", NULL)) {
+      perror(BLASTCMDFILE);
+      exit(1);
+    }
+  }
+  close(pipefd[1]);
+  j = read(pipefd[0], buffer, 80);
+  if (j == -1) {
+    perror("pipe read");
+    j = 0;
+  }
+
+  buffer[j] = '\n';
+  *strchr(buffer, '\n') = '\0';
+  
+  if ((ptr = strchr(buffer, '$')) == NULL)
+    ptr = buffer;
+
+  wait(&i);
+  if (!WIFEXITED(i)) {
+    printf("`%s -c' terminated abnormally; cannot continue.\n", BLASTCMDFILE);
+    exit(1);
+  }
+
+  close(pipefd[0]);
+  if (WEXITSTATUS(i) == 12) {
+    if (strncmp(command_list_serial, ptr, strlen(command_list_serial))) {
+      printf(
+          "Cowardly refusing to use a blastcmd with a different command list.\n"
+          "command list revision for %s:\n  %s\n"
+          "command list revision for narsil:\n  %s\n", BLASTCMDFILE, ptr,
+          command_list_serial);
+      exit(1);
+    }
+  } else {
+    printf("\n                          **** WARNING ****\n\n"
+        "The blastcmd program I'm attempting to use (%s)\n"
+        "doesn't support command list revsion reporting.  Be certain that the\n"
+        "command list used by narsil is identical to the one used by blastcmd\n"
+        "before using this program.\n", BLASTCMDFILE);
+  }
+  /* begin blastcmd command list revision check */ 
 
   defaults = new Defaults();
 

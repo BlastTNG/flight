@@ -1,8 +1,5 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Define to the version number of the blastcmd command list */
-#undef BLASTCMD_CMD_VERSION
-
 /* Define to the name of your blastcmd program */
 #undef BLAST_CMD
 
@@ -32,6 +29,9 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
+
+/* Define to 1 to enable elog support */
+#undef USE_ELOG
 
 /* Version number of package */
 #undef VERSION

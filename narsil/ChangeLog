@@ -1,90 +1,104 @@
+2004-10-21 (1.8.0):
+	* configure.ac: add elog check; add configuration summary
+	* narsil.cpp (MainForm::WriteLog): make elog support conditional
+	
+	* narsil.cpp (main): add command list version check
+
+	* configure.ac: add command list version check; add
+	--disable-command-list-test option
+
+	* Makefile.am: add command_list.c to CONFIG_STATUS_DEPENDENCIES
+	* configure.ac: add --with-blastcmd=
+
 2004-10-08 (1.7.4):
-  * configure.ac: rename from configure.in ; add CMDVERSION
-  * Makefile.am: add buildserial
-  * src/narsil.cpp (MainForm::MainForm): add version number to window title
+	* configure.ac: rename from configure.in ; add CMDVERSION
+	* Makefile.am: add buildserial
+	* narsil.cpp (MainForm::MainForm): add version number to window title
 
 2004-09-28 (1.7.3):
-  * configure.in, data/Makefile.am: Conditional installation of log.txt
+	* configure.in, data/Makefile.am: Conditional installation of log.txt
 
 2004-09-27 (1.7.2):
-  * narsil: Migrate to autoconf , add command list versioning
+	* narsil: Migrate to autoconf; add command list versioning
 
 2004-09-16 (1.7.1):
-  * narsil.cpp, narsil.h: Stop narsil from spamming data/etc
+	* narsil.cpp, narsil.h: Stop narsil from spamming data/etc
 
 2004-09-11 (1.7.0):
-  * narsil: Better handling of integer parameters
+	* narsil: Better handling of integer parameters
 
 2004-09-09 (1.6.3):
-  * narsil: Add copyright and license, fix command line parsing
+	* narsil: Add copyright and license, fix command line parsing
 
 2004-08-14:
-  * Makefile, narsil.h: move to command_list.h
+	* Makefile, narsil.h: move to command_list.h
 
 2004-07-13:
-  * Makefile: move to command_list.c
+	* Makefile: move to command_list.c
 
 2004-06-25 (1.6.2):
-  * narsil.cpp: use defile curfile by default
+	* narsil.cpp: use defile curfile by default
 
 2004-05-05 (1.6.1)  Barth Netterfield:
-  * narsil.cpp: Narsil now also submits to elog
+	* narsil.cpp: Narsil now also submits to elog
 
 2004-05-03 (1.6.0)  Barth Netterfield:
-  * narsil.cpp, narsil.h: file log system (not elog)
+	* narsil.cpp, narsil.h: file log system (not elog)
 
 2003-09-28 (1.5.1):
-  * narsil.cpp: Confirm box bugfix
+	* narsil.cpp: Confirm box bugfix
 
 2003-09-23 (1.5.0):
-  * narsil.cpp: Add confirmation for dangerous commands
+	* narsil.cpp: Add confirmation for dangerous commands
 
 2003-09-11 (1.4.2):
-  * narsil.cpp: Swap settings and send ; remove buffer overflow
+	* narsil.cpp: Swap settings and send ; remove buffer overflow
 
 2003-09-10 (1.4.1):
-  * narsil.cpp: tweaking
+	* narsil.cpp: tweaking
 
 2003-09-10 (1.4.0)  Barth Netterfield:
-  * narsil.cpp, narsil.h: smaller narsil
+	* narsil.cpp, narsil.h: smaller narsil
 
 2003-09-07 (1.3.1):
-  * narsil.cpp: new command struct bugs
+	* narsil.cpp: new command struct bugs
 
 2003-09-05 (1.3.0):
-  * narsil.cpp, narsil.h: new command struct scheme ; allow commands to appear
-  in multiple groups ; tweaking
+	* narsil.cpp, narsil.h: new command struct scheme ; allow commands to appear
+	in multiple groups ; tweaking
 
 2003-09-02 (1.2.4):
-  * narsil.cpp: Bigify NCommandList
+	* narsil.cpp: Bigify NCommandList
 
 2003-08-29 (1.2.3):
-  * narsil.cpp: Remove precision in output
+	* narsil.cpp: Remove precision in output
 
 2003-08-24:
-  * Makefile: Add isc_protocol to dependancies
+	* Makefile: Add isc_protocol to dependancies
 
 2003-08-22 (1.2.2):
-  * configure: Fixed bash bug
+	* configure: Fixed bash bug
 
 2003-08-15 (1.2.1):
-  * doubleentry.cpp, narsil.cpp: Add parameter out-of-range error checking
-  * blastcmdatgaladriel, dummycmd: Add
+	* doubleentry.cpp, narsil.cpp: Add parameter out-of-range error checking
+	* blastcmdatgaladriel, dummycmd: Add
 
 2003-08-15 (1.2.0)  Barth Netterfield:
-  * narsil.cpp: Added RA/DEC commands, allow remote operation (ssh)
+	* narsil.cpp: Added RA/DEC commands, allow remote operation (ssh)
 
 2003-07-22 (1.1.2)  Barth Netterfield:
-  * narsil.cpp: Re-formatting
+	* narsil.cpp: Re-formatting
 
 2003-07-21 (1.1.1)  Barth Netterfield:
-  * narsil.cpp: Make narsil more compact
+	* narsil.cpp: Make narsil more compact
 
 2003-07-18 (1.1.0):
-  * narsil.cpp: Increased command name length
+	* narsil.cpp: Increased command name length
 
 2003-06-25 (1.0.1):
-  * narsil: Update to use kst 0.88
+	* narsil: Update to use kst 0.88
 
 2003-06-16 (1.0.0):
-  * narsil: Release
+	* narsil: Release
+
+vi:noet:ts=2 sw=2
