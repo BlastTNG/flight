@@ -1082,6 +1082,7 @@ void StoreData(unsigned int* Txframe,
   static int blob0_fluxCh, blob0_fluxInd;
   static int blob1_fluxCh, blob1_fluxInd;
   static int blob2_fluxCh, blob2_fluxInd;
+  static int isc_framenumCh, isc_framenumInd;
   static int isc_errorCh, isc_errorInd;
   static int isc_exposeCh, isc_exposeInd;
   static int isc_rotCh, isc_rotInd;
@@ -1169,6 +1170,7 @@ void StoreData(unsigned int* Txframe,
     SlowChIndex("blob0_flux", &blob0_fluxCh, &blob0_fluxInd);
     SlowChIndex("blob1_flux", &blob1_fluxCh, &blob1_fluxInd);
     SlowChIndex("blob2_flux", &blob2_fluxCh, &blob2_fluxInd);
+    SlowChIndex("isc_framenum", &isc_framenumCh, &isc_framenumInd);
     SlowChIndex("isc_error", &isc_errorCh, &isc_errorInd);
     SlowChIndex("isc_expose", &isc_exposeCh, &isc_exposeInd);
     SlowChIndex("isc_rot", &isc_rotCh, &isc_rotInd);
@@ -1280,18 +1282,18 @@ void StoreData(unsigned int* Txframe,
 
   /*** Blobs ***/
   WriteSlow(blob0_xCh, blob0_xInd,
-      (int)(ISCData[i_isc].az_blobs[blob_index * 3 + 0] * 40.));
+      (int)(ISCData[i_isc].x_blobs[blob_index * 3 + 0] * 40.));
   WriteSlow(blob1_xCh, blob1_xInd,
-      (int)(ISCData[i_isc].az_blobs[blob_index * 3 + 1] * 40.));
+      (int)(ISCData[i_isc].x_blobs[blob_index * 3 + 1] * 40.));
   WriteSlow(blob2_xCh, blob2_xInd,
-      (int)(ISCData[i_isc].az_blobs[blob_index * 3 + 2] * 40.));
+      (int)(ISCData[i_isc].x_blobs[blob_index * 3 + 2] * 40.));
 
   WriteSlow(blob0_yCh, blob0_yInd,
-      (int)(ISCData[i_isc].el_blobs[blob_index * 3 + 0] * 40.));
+      (int)(ISCData[i_isc].y_blobs[blob_index * 3 + 0] * 40.));
   WriteSlow(blob1_yCh, blob1_yInd,
-      (int)(ISCData[i_isc].el_blobs[blob_index * 3 + 1] * 40.));
+      (int)(ISCData[i_isc].y_blobs[blob_index * 3 + 1] * 40.));
   WriteSlow(blob2_yCh, blob2_yInd,
-      (int)(ISCData[i_isc].el_blobs[blob_index * 3 + 2] * 40.));
+      (int)(ISCData[i_isc].y_blobs[blob_index * 3 + 2] * 40.));
 
   WriteSlow(blob0_fluxCh, blob0_fluxInd,
       (int)(ISCData[i_isc].flux_blobs[blob_index * 3 + 0] / 32.));
@@ -1304,6 +1306,7 @@ void StoreData(unsigned int* Txframe,
     blob_index = 0;
 
   /*** Camera Info ***/
+  WriteSlow(isc_framenumCh, isc_framenumInd, (int)ISCData[i_isc].framenum);
   WriteSlow(isc_errorCh, isc_errorInd, (int)ISCData[i_isc].error);
   WriteSlow(isc_exposeCh, isc_exposeInd, (int)ISCData[i_isc].exposure);
   WriteSlow(isc_rotCh, isc_rotInd, (int)(ISCData[i_isc].rot * DEG2I));

@@ -141,7 +141,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"i_apm_3v",     'r',  2,       43,     0.000625,          -20.48, 'u'},
     {"t_isc",        'r',  21,      25,     -0.00625,          136.45, 'u'},
     {"g_i_az",       'e',    1,     8,           1.0,             0.0, 'u'},
-    {"mag_model",    'w', LOOPBAK2, 28,        I2DEG,             0.0, 'u'},
+    {"mag_model",    'w', LOOPBACK, 62,        I2DEG,             0.0, 'u'},
     {"set_reac",     'w',  1, 16,    7.9498291016e-5,          -2.605, 'u'},
     {"pump_bits",    'w', 21,  2,                1.0,             0.0, 'u'},
     {"spare10",      'r', SPARE,    10,           1.0,             0.0, 'u'}
@@ -172,7 +172,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"sip_time",     'w', LOOPBACK, 30,          1.0,             0.0, 'U'},
     {"lst",          'w', LOOPBACK, 48,   1.0/3600.0,             0.0, 'U'},
     {"dgps_time",    'w', LOOPBACK, 50,          1.0,             0.0, 'U'},
-    {"spare12",      'r', SPARE,    12,          1.0,            0.0, 'u'},
+    {"isc_framenum", 'r', LOOPBACK, 63,          1.0,             0.0, 'u'},
     {"bias_lev1",    'w', LOOPBACK, 41,          1.0,             0.0, 'u'},
     {"bias_lev2",    'w', LOOPBACK, 42,          1.0,             0.0, 'u'},
     {"bias_lev3",    'w', LOOPBACK, 43,          1.0,             0.0, 'u'},
@@ -279,7 +279,7 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
   {"az",          'w', LOOPBACK, 17,       I2DEG,                    0.0, 's'},
   {"el",          'w', LOOPBACK, 18,       I2DEG,                    0.0, 'u'},
 
-  {"mag_az",      'w', LOOPBAK2, 28,       I2DEG,                    0.0, 's'},
+  {"mag_az",      'w', LOOPBACK, 61,       I2DEG,                    0.0, 's'},
   
   /* send data to ACS0 */
   {"isc_bits",    'w', 21,  1,               1.0,                    0.0, 'u'},

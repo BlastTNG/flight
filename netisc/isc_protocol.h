@@ -47,12 +47,12 @@ typedef enum
 	// If doing an expose or a freerun, setting par1=1 saves the images, par1=0 doesn't 
 	expose				= 2,	// take a single exposure
 	freerun				= 3,	// start continuous exposure loop until new command received	
-	stepFocus			= 10,	// manually run the focus drive relative # of steps
+	stepFocus			= 10,	// run the focus drive relative # of steps
 	autoFocus			= 11,	// do an autofocus operation
 	setFocus			= 12,	// set the focus to an absolute position (0-FOCUS_RANGE)
-	stepAperture		= 20,   // manually run the aperture drive
+	stepAperture		= 20,   // run the aperture drive relative # of steps
 	setAperture			= 21,	// set the aperture to an absolute position (0-AP_RANGE)
-	updateSettings		= 30,   // set camera/search parameters
+	updateSettings		= 30,   // set camera/search parameters from client frame data
 	displayMode			= 31,	// display mode on server:
 								// -1=fullscreen, (par1)
 								// -2=keep centred over pixel(x, y) (par1,par2,par3)
@@ -80,11 +80,7 @@ typedef enum
 typedef struct
 {
 	isc_command command;		// command for the server
-	
-	//double ra;				// pointing ra in decimal degrees (J2000)
-	//double dec;				//   "      dec "    "        "      "
-	//double rot;				// field rotation (angle between -RA axis and +Az axis)
-	
+		
 	double az;					// current pointing solution for the telescope (decimal degrees)
 	double el;
 	double lst;
@@ -113,13 +109,14 @@ typedef struct
 	isc_command response;		// command this frame is responding to
 	int port;					// the port the command arrived on
 	isc_error error;			// error code for the response
-	
+
+	unsigned int framenum;		// frame number
 	double ra;					// pointing solution ra in decimal degrees (J2000)
 	double dec;					//   "      "        dec "    "        "      "
-	double rot;					// field rotation (parallactic angle)
+	double rot;					// field rotation WRT parallactic angle
 	double lst;					// the lst used to find rot 
 	
-	unsigned long exposure;		// integration time (microseconds)
+	unsigned long exposure;		// integration time (microseconds) - meaningless in pulse triggered mode
 	double platescale;			// degrees/pixel on the CCD
 	unsigned int gain;			// camera pre-amp gain 
 	unsigned int offset;		// camera pre-amp offset
@@ -130,13 +127,13 @@ typedef struct
 	unsigned int cenbox;		// "       "     centroiding box
 	unsigned int apbox;			// "       "     photometry box
 	unsigned int multiple_dist; // Distance threshold (pixels) to reject multiple sources
-	unsigned int nblobs;		// # blobs in frame < MAXBLOBS
 	int focusPosition;			// Stepper position for the focus motor
 	int aperturePosition;		// Stepper position for the aperture motor
 
-	double az_blobs[MAXBLOBS];	// blob information - static arrays, but only contain useful information
-	double el_blobs[MAXBLOBS];  // up to nblobs-1. az and el are offsets in decimal pixel units from the 
-	int flux_blobs[MAXBLOBS];   // bottom-left corner. Flux units are uncalibrated. 
+	unsigned int nblobs;		// # blobs in frame < MAXBLOBS
+	double x_blobs[MAXBLOBS];	// x tangent plane offset of blob (approx. +ve az)
+	double y_blobs[MAXBLOBS];   // y   "       "     "    "   "      "      "  el 
+	int flux_blobs[MAXBLOBS];   // flux of blob 
 } server_frame;
 
 #ifdef _WINDOWS_	
