@@ -10,6 +10,10 @@
 #define MAX_LINE_LENGTH 120
 #define MAX_NSCHED 8000
 struct ScheduleType S;
+void StarPos(double t, double ra0, double dec0, double mra, double mdec,
+	     double pi, double rvel, double *ra, double *dec);
+double GetJulian(time_t t);
+
 
 /***************************************************************************/
 /*    GetLine: read non-comment line from file                             */
@@ -42,6 +46,7 @@ void InitSched(void) {
   char line_in[162];
   long day, hr, min, sec;
   struct tm ts;
+  double ra,dec;
 
   int i,j, entry_ok;
   int n_fields;
@@ -59,8 +64,10 @@ void InitSched(void) {
   S.n_sched--; /* don't count date line */
 
   if (S.n_sched>MAX_NSCHED) S.n_sched = MAX_NSCHED;
-  S.e = (struct EventType *)malloc(S.n_sched*sizeof(struct EventType));
-  if (S.e == NULL)
+  S.p =
+    (struct PointingModeStruct *)
+    malloc(S.n_sched*sizeof(struct PointingModeStruct));
+  if (S.p == NULL)
     perror("sched: Unable to malloc");
   
   if (fclose(fp) == EOF) {
@@ -85,18 +92,56 @@ void InitSched(void) {
 
   S.t0 = mktime(&ts)-timezone; 
 
+  printf("JD: %.4f\n", GetJulian(S.t0));
+  
   /***********************/
   /*** Read the events ***/
   for (i=j=0; i<S.n_sched; i++) {
     entry_ok=1;
     GetLine(fp, line_in);
 
-    n_fields = sscanf(line_in, "%ld %ld:%ld:%ld %lg %lg %lg %lg %lg",
-		      &day, &hr, &min, &sec,
-		      &(S.e[j].ra), &(S.e[j].dec), &(S.e[j].r),
-		      &(S.e[j].el_vel), &(S.e[j].az_vel));
-    if (n_fields != 9) entry_ok = 0;
-    S.e[j].t = day*24l*3600l + hr*3600l + min*60l + sec;
+    switch (line_in[0]) {
+    case 'v':
+    case 'V':
+      n_fields = sscanf(line_in, "%*s %ld %ld:%ld:%ld %lg %lg %lg %lg %lg",
+			&day, &hr, &min, &sec,
+			&ra, &dec, &(S.p[j].w),
+			&(S.p[j].vaz), &(S.p[j].del));
+      S.p[j].mode = P_VCAP;
+      if (n_fields != 9) entry_ok = 0;
+      break;
+    case 'b':
+    case 'B':
+      n_fields = sscanf(line_in, "%*s %ld %ld:%ld:%ld %lg %lg %lg %lg %lg %lg",
+			&day, &hr, &min, &sec,
+			&ra, &dec, &(S.p[j].w), &(S.p[j].h),
+			&(S.p[j].vaz), &(S.p[j].del));
+      S.p[j].mode = P_BOX;
+      if (n_fields != 10) entry_ok = 0;
+      break;
+    case 'c':
+    case 'C':
+      n_fields = sscanf(line_in, "%*s %ld %ld:%ld:%ld %lg %lg %lg %lg %lg",
+			&day, &hr, &min, &sec,
+			&ra, &dec, &(S.p[j].w),
+			&(S.p[j].vaz), &(S.p[j].del));
+      S.p[j].mode = P_CAP;
+      if (n_fields != 9) entry_ok = 0;
+      break;
+    default:
+      break;
+    }
+    
+    S.p[j].t = day*24l*3600l + hr*3600l + min*60l + sec;
+    StarPos(GetJulian(S.t0), ra*(M_PI/12.0), dec*(M_PI/180.0),
+	    0.0, 0.0, 0.0, 0.0, // proper motion, etc
+	    &(S.p[j].X), &(S.p[j].Y));
+
+    S.p[j].X*=12.0/M_PI;
+    S.p[j].Y*=180.0/M_PI;
+    
+    printf("%d %d ra: %.4f %.4f  dec: %.4f %.4f\n", entry_ok, S.p[j].mode,
+	   ra, S.p[j].X, dec, S.p[j].Y);
     if (entry_ok) j++;
   }
   if (fclose(fp) == EOF) {
@@ -115,7 +160,7 @@ void DoSched(void) {
   i_point = GETREADINDEX(point_index);
 
   t = PointingData[i_point].t;
-  if (t < CommandData.pointing_mode.t_start_sched) {
+  if (t < CommandData.pointing_mode.t) {
     last_is = -1;
     return;
   }
@@ -132,20 +177,19 @@ void DoSched(void) {
   /** find i_sched **/
   i_sched = last_is;
   if (i_sched<0) i_sched=0;
-  while ((dt>S.e[i_sched].t) && (i_sched<S.n_sched-1)) i_sched++;
-  while ((dt<S.e[i_sched].t) && (i_sched>0)) i_sched--;
+  while ((dt>S.p[i_sched].t) && (i_sched<S.n_sched-1)) i_sched++;
+  while ((dt<S.p[i_sched].t) && (i_sched>0)) i_sched--;
 
   if (i_sched!=last_is) {
     /************************************************/
     /** Copy scheduled scan mode into current mode **/
-    CommandData.pointing_mode.mode = P_VCAP;
-    CommandData.pointing_mode.mode = P_VCAP;
-    CommandData.pointing_mode.X = S.e[i_sched].ra;
-    CommandData.pointing_mode.Y = S.e[i_sched].dec;
-    CommandData.pointing_mode.w = S.e[i_sched].r;
-    CommandData.pointing_mode.vaz = S.e[i_sched].az_vel;
-    CommandData.pointing_mode.del = S.e[i_sched].el_vel;
-    CommandData.pointing_mode.h = 0;
+    CommandData.pointing_mode.mode = S.p[i_sched].mode;
+    CommandData.pointing_mode.X = S.p[i_sched].X;
+    CommandData.pointing_mode.Y = S.p[i_sched].Y;
+    CommandData.pointing_mode.w = S.p[i_sched].w;
+    CommandData.pointing_mode.h = S.p[i_sched].h;
+    CommandData.pointing_mode.vaz = S.p[i_sched].vaz;
+    CommandData.pointing_mode.del = S.p[i_sched].del;
   }
   last_is = i_sched;
 }

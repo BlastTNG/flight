@@ -16,15 +16,11 @@
 #include "lut.h"
 #include "sslutNA.h"
 
-#define GY1_GAIN_ERROR 1.0407
 #define GY1_OFFSET (-0.1365)
 #define GY2_OFFSET (0.008)
 #define GY3_OFFSET (0.140)
 
 #define MAX_ISC_AGE 200
-
-extern int isc_trigger_since_last; // set in tx.c - frames since pulse
-
 
 extern struct ISCSolutionStruct ISCSolution[3]; // isc.c
 extern int iscdata_index; // isc.c
@@ -331,17 +327,17 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
 
   i_isc = GETREADINDEX(iscdata_index);
   if (ISCSolution[i_isc].framenum!=last_isc_framenum) { // new solution
-    if (isc_trigger_since_last < MAX_ISC_AGE) {
+    if (isc_pulses.age < MAX_ISC_AGE) {
       // get az and el for new solution
       i_point = GETREADINDEX(point_index);
       ra = ISCSolution[i_isc].ra * (12.0/M_PI);
       dec = ISCSolution[i_isc].dec * (180.0/M_PI);
       radec2azel(ra, dec, PointingData[i_point].lst, PointingData[i_point].lat,
 		 &new_az, &new_el);
-      // this solution is isc_trigger_since_last old: how much have we moved?
+      // this solution is isc_pulses.age old: how much have we moved?
       gy_el_delta = 0;
       gy_az_delta = 0;
-      for (i=0; i<isc_trigger_since_last; i++) {
+      for (i=0; i<isc_pulses.age; i++) {
 	j = hs.i_history-i;
 	if (j<0) j+= GY_HISTORY;
 
@@ -381,7 +377,7 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
     }
     
     last_isc_framenum = ISCSolution[i_isc].framenum;
-    isc_trigger_since_last = -1; // reset counter.
+    isc_pulses.age = -1; // reset counter.
   }
 }
 
@@ -613,7 +609,7 @@ void Pointing(){
 					  0.0, // last input
 					  0.0, 0.0, // gy integrals
 					  GY2_OFFSET, GY3_OFFSET, // gy offsets
-					  0.001, // filter constant
+					  0.0001, // filter constant
 					  0, 0 // n_solutions, since_last
   };
   static struct AzSolutionStruct DGPSAz = {0.0, // starting angle
@@ -664,9 +660,13 @@ void Pointing(){
   cos_a = cos(PointingData[i_point_read].az * (M_PI/180.0));
   sin_a = sin(PointingData[i_point_read].az * (M_PI/180.0));
   
-  RG.gy1 = ACSData.gyro1*GY1_GAIN_ERROR - R*(-cos_l*sin_a);
-  RG.gy2 = ACSData.gyro2 - R*(cos_e*sin_l - cos_l*sin_e*cos_a);
-  RG.gy3 = ACSData.gyro3 - R*(sin_e*sin_l + cos_l*cos_e*cos_a);
+  PointingData[point_index].gy1_earth = R*(-cos_l*sin_a);
+  PointingData[point_index].gy2_earth = R*(cos_e*sin_l - cos_l*sin_e*cos_a);
+  PointingData[point_index].gy3_earth = R*(sin_e*sin_l + cos_l*cos_e*cos_a);
+  
+  RG.gy1 = ACSData.gyro1 - PointingData[point_index].gy1_earth;
+  RG.gy2 = ACSData.gyro2 - PointingData[point_index].gy2_earth;
+  RG.gy3 = ACSData.gyro3 - PointingData[point_index].gy3_earth;
   
   /*************************************/
   /** Record history for gyro offsets **/

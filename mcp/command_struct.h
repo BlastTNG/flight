@@ -52,7 +52,7 @@ struct PointingModeStruct {
   double del;
   double w;
   double h;
-  time_t t_start_sched;
+  time_t t;
 };
 
 struct PumpStruct {
@@ -149,19 +149,10 @@ struct CommandDataStruct {
   int ISC_autofocus;
 };
 
-struct EventType {
-  time_t t;          /* event time in comoving local sideral seconds */
-  double ra;
-  double dec;
-  double r;
-  double el_vel;
-  double az_vel;
-};
-
 struct ScheduleType {
   int n_sched;
   time_t t0;
-  struct EventType *e;
+  struct PointingModeStruct *p;
 };
 
 int bc_setserial(char *input_tty);

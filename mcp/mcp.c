@@ -44,7 +44,9 @@
 int bbc_fp;
 int frames_in = 0;
 
-extern void starfind();
+#ifndef NOVSC
+  extern void starfind();
+#endif
 
 struct SunSensorDataStruct SunSensorData[3];
 

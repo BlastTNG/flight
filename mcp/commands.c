@@ -411,7 +411,7 @@ void SingleCommand (enum singleCommand command) {
 
   i_point = GETREADINDEX(point_index);
 
-  CommandData.pointing_mode.t_start_sched =
+  CommandData.pointing_mode.t =
     PointingData[i_point].t + CommandData.timeout;
 
   WritePrevStatus();
@@ -722,7 +722,7 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
 
   i_point = GETREADINDEX(point_index);
 
-  CommandData.pointing_mode.t_start_sched =
+  CommandData.pointing_mode.t =
     PointingData[i_point].t + CommandData.timeout;
 
   WritePrevStatus();
@@ -1196,7 +1196,7 @@ void InitCommandData() {
       perror("prev_status close()");
   }
 
-  CommandData.pointing_mode.t_start_sched = time(NULL) + CommandData.timeout;
+  CommandData.pointing_mode.t = time(NULL) + CommandData.timeout;
 
   /** initialize stuff that we don't want from prev_status here **/
   CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
@@ -1238,7 +1238,7 @@ void InitCommandData() {
 
   fprintf(stderr,"Warning: regenerating Command Data and prev_status\n");
 
-  CommandData.pointing_mode.t_start_sched = time(NULL) + CommandData.timeout;
+  CommandData.pointing_mode.t = time(NULL) + CommandData.timeout;
 
   /** put stuff that we want to keep from prev_status here **/
   CommandData.pointing_mode.mode = P_DRIFT;

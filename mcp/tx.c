@@ -150,10 +150,9 @@ void SyncADC (int TxIndex, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
 /************************************************************************/
 void StoreData(int index, unsigned int* Txframe,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
-  static int i_V_COL = -1, j_V_COL = -1;
-  static int i_V_ROW = -1, j_V_ROW = -1;
-  static int i_V_MAG = -1, j_V_MAG = -1;
-  static int i_V_FRA = -1, j_V_FRA = -1;
+
+  static int firsttime = 1;
+  
   static int i_SS_XCCD;
   static int i_SS_PRIN, j_SS_PRIN;
   static int i_SIP_LAT, i_SIP_LON, i_SIP_ALT, i_SIP_TIME;
@@ -259,7 +258,6 @@ void StoreData(int index, unsigned int* Txframe,
   time_t t;
 
   static int i_az = -1, i_el = -1;
-  int i_vsc;
   int i_ss;
   int i_point;
   int i_dgps;
@@ -267,16 +265,13 @@ void StoreData(int index, unsigned int* Txframe,
   int i_isc = GETREADINDEX(iscdata_index);
 
   /******** Obtain correct indexes the first time here ***********/
-  if (i_V_COL == -1) {
+  if (firsttime) {
+    firsttime = 0;	
     FastChIndex("az", &i_az);
     FastChIndex("el", &i_el);
     FastChIndex("ss_x_ccd", &i_SS_XCCD);
     FastChIndex("mcp_frame", &mcpFrameCh);
 
-    SlowChIndex("vsc_col", &i_V_COL, &j_V_COL);
-    SlowChIndex("vsc_row", &i_V_ROW, &j_V_ROW);
-    SlowChIndex("vsc_mag", &i_V_MAG, &j_V_MAG);
-    SlowChIndex("vsc_fra", &i_V_FRA, &j_V_FRA);
     SlowChIndex("ss_prin", &i_SS_PRIN, &j_SS_PRIN);
     SlowChIndex("sip_lat", &i_SIP_LAT, &j_SIP_LAT);
     SlowChIndex("sip_lon", &i_SIP_LON, &j_SIP_LON);
@@ -379,15 +374,7 @@ void StoreData(int index, unsigned int* Txframe,
   }
 
   i_point = GETREADINDEX(point_index);
-  i_vsc = GETREADINDEX(vsc_index);
   i_ss = GETREADINDEX(ss_index);
-
-
-  /********** VSC Data **********/
-  WriteSlow(i_V_COL, j_V_COL, (int)(VSCData[i_vsc].col * 100));
-  WriteSlow(i_V_ROW, j_V_ROW, (int)(VSCData[i_vsc].row * 100));
-  WriteSlow(i_V_MAG, j_V_MAG, (int)(VSCData[i_vsc].mag * 100));
-  WriteSlow(i_V_FRA, j_V_FRA, VSCData[i_vsc].sf_frame);
 
   /********** Sun Sensor Data **********/
   WriteFast(i_SS_XCCD, SunSensorData[i_ss].raw_az);
@@ -488,7 +475,7 @@ void StoreData(int index, unsigned int* Txframe,
     ((!CommandData.use_gps)<<4) |
     ((!CommandData.use_elclin)<<5);
 
-  if (PointingData[i_point].t >= CommandData.pointing_mode.t_start_sched) {
+  if (PointingData[i_point].t >= CommandData.pointing_mode.t) {
     sensor_veto |= (1 << 6);
   }
 

@@ -6,12 +6,14 @@
 #include "command_struct.h"
 #include "pointing_struct.h"
 
+#define ISC_TRIG_PERIOD 100
+#define MAX_ISC_SLOW_PULSE_SPEED 0.015
+
+struct ISCPulseType isc_pulses = {0,0,4,0};
+
 extern unsigned short slow_data[N_SLOW][FAST_PER_SLOW];
 
 int pin_is_in = 1;
-
-int isc_trigger_count = 0;
-int isc_trigger_since_last = -1;
 
 /* ACS0 digital signals (G1 and G3 output, G2 input) */
 #define ISC_NOHEAT   0x00  /* N0G1 - iscBits */
@@ -253,10 +255,8 @@ int GetLockBits(int acs0bits) {
       pin_is_in = 0;
     return 0;
   }
-
 }
 
-#define ISC_TRIG_PER 100
 /*****************************************************************/
 /*                                                               */
 /*   Control the pumps and the lock                              */
@@ -346,25 +346,32 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
     iscBits = Balance(iscBits, slowTxFields);
   }
 
+  /*********************/
   /* ISC Pulsing stuff */
-
-  if (isc_trigger_count < CommandData.ISC_pulse_width) {
+  if (isc_pulses.ctr<isc_pulses.pulse_width) {
     iscBits |= ISC_TRIGGER;
   }
-  isc_trigger_count++;
-
+  
   /* We want to trigger sending the frame slightly after the pulse is sent
    * to offset the 300 ms latency in the BLASTbus */
-  if (isc_trigger_count == 20)
-    write_ISC_pointing = 1;	
+  if (isc_pulses.ctr == 20) write_ISC_pointing = 1;	
 
-  if (isc_trigger_count >= ISC_TRIG_PER) {
-    isc_trigger_count = 0;
-    if (isc_trigger_since_last < 0)
-      isc_trigger_since_last = 0;
+  if (isc_pulses.age>=0) isc_pulses.age++;
+  
+  if (isc_pulses.ctr < ISC_TRIG_PERIOD) {
+    isc_pulses.ctr++;
+  } else {
+    if (isc_pulses.is_fast) {
+      isc_pulses.pulse_width = CommandData.ISC_fast_pulse_width;
+      isc_pulses.ctr = 0;
+      if (isc_pulses.age<0) isc_pulses.age = 0;
+    } else if (fabs(axes_mode.az_vel) < MAX_ISC_SLOW_PULSE_SPEED) {
+      isc_pulses.pulse_width = CommandData.ISC_pulse_width;
+      isc_pulses.ctr = 0;
+      if (isc_pulses.age<0) isc_pulses.age = 0;
+    }
   }
-  if (isc_trigger_since_last >= 0)
-    isc_trigger_since_last++;
+  /*********************/
 
   WriteSlow(i_lockpin, j_lockpin, pin_is_in);
   WriteSlow(pumpBitsCh, pumpBitsInd, pumpBits);

@@ -135,6 +135,9 @@ struct PointingDataStruct {
   double gy1_offset;
   double gy2_offset;
   double gy3_offset;
+  double gy1_earth;
+  double gy2_earth;
+  double gy3_earth;
   double gy_roll_amp;
   double lat;       // degrees
   double lon;       // degrees
@@ -189,6 +192,26 @@ struct DGPSPosStruct{
   double climb; //
   int n_sat;  //
 };
+
+struct ISCPulseType {
+  int age; // time since start of last trigger
+  int ctr; // where we are in the period
+  int pulse_width; // how wide this pulse should be
+  int is_fast; // if a fast pulse is requested: set in motors.c
+};
+
+extern struct ISCPulseType isc_pulses;
+
+struct AxesModeStruct {
+  int az_mode;
+  int el_mode;
+  double az_dest;
+  double el_dest;
+  double az_vel;
+  double el_vel;
+};
+
+extern struct AxesModeStruct axes_mode;
 
 extern struct DGPSPosStruct DGPSPos[3];
 extern int dgpspos_index;
