@@ -80,7 +80,8 @@ void USAGE(int flag) {
       "Options:\n"
       "       -v   Verbose\n"
       "       -s   Silent\n"
-      "       -c   Show the command list serial number and exit\n"
+      "       -c   Show the command list serial number and exit with status 12"
+      "\n"
       "       -f   No confirm\n"
       "     -los   Set link to Line of Sight\n"
       "   -tdrss   Set link to TDRSS\n"
@@ -103,7 +104,8 @@ void USAGE(int flag) {
         "     8  ACK == 0x0E\n"
         "     9  ACK == 0x0F\n"
         "    10  Unexpected error in command definitions\n"
-        "    11  Syntax error on command line\n\n");
+        "    11  Syntax error on command line\n"
+        "    12  Program was passed the `-c' option\n\n");
 
     printf("For a list of valid commands use `blastcmd -l'\n");
     exit(11);
@@ -431,7 +433,7 @@ void WriteLogFile(int argc, char *argv[], unsigned int i_ack, char silent)
 void PrintCommandListSerial(void)
 {
   printf("Command List Serial: %s\n", command_list_serial);
-  exit(0);
+  exit(12);
 }
 
 void PrintVersion(void)
