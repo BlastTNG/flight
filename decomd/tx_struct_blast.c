@@ -436,6 +436,7 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_gain",     'w', LOOP4, 20,        100./65536.,             0.0, 'u'},
   {"jfet_set_on",  'w', LOOP4, 21,             1/100.,             0.0, 'u'},
   {"jfet_set_off", 'w', LOOP4, 22,             1/100.,             0.0, 'u'},
+  {"ss_chip_temp", 'w', LOOP4, 23,                1.0,             0.0, 'u'},
 
   END_OF_CHANNELS
 };
