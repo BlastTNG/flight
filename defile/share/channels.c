@@ -65,7 +65,7 @@ void WriteSpecificationFile(FILE* fp)
   fwrite(WideFastChannels, sizeof(struct ChannelStruct), ccWideFast, fp);
   fwrite(FastChannels, sizeof(struct ChannelStruct), ccNarrowFast, fp);
 
-  mputs(MCP_INFO, "Wrote specification file.\n");
+  mprintf(MCP_INFO, "Wrote specification file.\n");
 }
 
 /************************************************************************/
