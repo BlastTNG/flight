@@ -278,12 +278,14 @@ int SSConvert(double *ss_az) {
   double az;
   double sun_ra, sun_dec, jd;
   static int last_i_ss = -1;
+  static struct LutType new_ssLut = {"/data/etc/ss.lut",0,NULL,NULL,0};
 
   int eflag;
 
   if (firsttime) {
     SSLut_GetLut(&SSLut, "/data/etc/sslut.dat");
     firsttime = 0;
+    LutInit(&new_ssLut);
   }
 
   i_ss = GETREADINDEX(ss_index);
@@ -311,6 +313,7 @@ int SSConvert(double *ss_az) {
   if (sun_el < 0)
     sun_el = 10.0;
 
+#if 0
   eflag = SSLut_find((double)SunSensorData[i_ss].az_center, &az,
       sun_el * M_PI / 180.0, &SSLut, &iter);
 
@@ -318,6 +321,11 @@ int SSConvert(double *ss_az) {
     return (0);
 
   *ss_az = az * 180.0 / M_PI + 180.0 + sun_az;
+#endif
+  /* Temporary High-Bay az lookup */
+  az = LutCal(&new_ssLut, (double)SunSensorData[i_ss].az_center);
+  ss_az = az;
+
   NormalizeAngle(ss_az);
 
   return (1);
