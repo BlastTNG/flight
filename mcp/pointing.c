@@ -99,6 +99,8 @@ void MagConvert() {
   struct tm now;
   int i_point_read;
   static int firsttime = 1;
+  static struct LutType magLut = {"/data/etc/mag.lut",0,NULL,NULL,0};
+  double raw_mag_az;
   
   i_point_read = GETREADINDEX(point_index);
 
@@ -108,6 +110,8 @@ void MagConvert() {
     /* I think it has something to do with the accuracy of the modelling -- */
     /* probably shouldn't change this value.  (Adam H.) */
     MagModelInit(12);
+    LutInit(&magLut);
+
     oldt = -1;
     firsttime = 0;
   }
@@ -143,7 +147,10 @@ void MagConvert() {
   /* Thus, depending on the sign convention, you have to either add or */
   /* subtract dec from az to get the true bearing. (Adam H.) */
 
-  mag_az = atan2(ACSData.mag_y, ACSData.mag_x) + dec + MAG_ALIGNMENT + M_PI;
+  raw_mag_az = atan2(ACSData.mag_y, ACSData.mag_x);
+  mag_az = -LutCal(&magLut, raw_mag_az);
+  
+  mag_az += dec + MAG_ALIGNMENT + M_PI;
   mag_az *= 180.0/M_PI;
 
   PointingData[point_index].mag_az = mag_az;
@@ -184,14 +191,15 @@ void RecordHistory(int index) {
     the new solution. **/
 #define GYRO_VAR 3.7808641975309e-08
 void EvolveElSolution(struct ElSolutionStruct *s,
-		      double gyro, double new_angle, int new_reading) {
+		      double gyro, double gy_off,
+		      double new_angle, int new_reading) {
   double w1, w2;
   double new_offset = 0;
   double fs;
 
   gyro *= GY1_GAIN_ERROR;
   
-  s->angle += gyro/100.0;
+  s->angle += (gyro+gy_off)/100.0;
   s->varience += GYRO_VAR;
 
   s->gy_int += gyro/100.0; // in degrees
@@ -202,7 +210,8 @@ void EvolveElSolution(struct ElSolutionStruct *s,
 
     s->angle = (w1*s->angle + new_angle * w2)/(w1+w2);
     s->varience = 1.0/(w1+w2);
-    
+
+    /** calculate offset **/
     if (s->n_solutions>10) { // only calculate if we have had at least 10
       new_offset = ((new_angle - s->last_input) - s->gy_int) /
 		   (0.01*(double)s->since_last);
@@ -242,26 +251,56 @@ void AddElSolution(struct ElAttStruct *ElAtt, struct ElSolutionStruct *ElSol) {
   ElAtt->weight+=weight;
 }
 
-//FIXME: need to add gyro offset stuff - extention of el version
+//FIXME: need to add rotation of earth correction
 void EvolveAzSolution(struct AzSolutionStruct *s,
-		      double gy2, double gy3, double el,
-		      double new_angle, int new_reading) {
+		      double gy2, double gy2_offset, double gy3,
+		      double gy3_offset,
+		      double el, double new_angle, int new_reading) {
   double w1, w2;
   double gy_az;
+  double new_offset, fs, daz;
 
   el *= M_PI/180.0; // want el in radians
-  gy_az = -gy2 * cos(el) + -gy3 * sin(el);
+  gy_az = -(gy2+gy2_offset) * cos(el) + -(gy3+gy3_offset) * sin(el);
 
   s->angle += gy_az/100.0;
   s->varience += GYRO_VAR;
+
+  s->gy2_int += gy2/100.0; // in degrees
+  s->gy3_int += gy3/100.0; // in degrees
 
   if (new_reading) {    
     w1 = 1.0/(s->varience);
     w2 = s->samp_weight;
 
     s->angle = (w1*s->angle + new_angle * w2)/(w1+w2);
-    s->varience = 1.0/(w1+w2);    
+    s->varience = 1.0/(w1+w2);
+    
+    if (s->n_solutions>10) { // only calculate if we have had at least 10
+      if (s->n_solutions < 1000) {
+	fs = 20.0*s->FC;
+      } else {
+	fs = s->FC;
+      }
+
+      daz = new_angle - s->last_input;
+      
+      /* Do Gyro2 */
+      new_offset = -(daz*cos(el) + s->gy2_int)/(0.01*(double)s->since_last);
+      s->gy2_offset = fs*new_offset + (1.0-fs)*s->gy2_offset;
+
+      /* Do Gyro3 */
+      new_offset = -(daz*sin(el) + s->gy3_int)/(0.01*(double)s->since_last);
+      s->gy3_offset = fs*new_offset + (1.0-fs)*s->gy3_offset;
+
+    }
+    s->since_last = 0;
+    s->n_solutions++;
+    s->gy2_int = 0.0;
+    s->gy3_int = 0.0;
+    s->last_input = new_angle;      
   }
+  s->since_last++;
 }
 
 /*****************************************************************
@@ -362,10 +401,10 @@ void Pointing(){
   /**      do elevation solution      **/
   clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
   
-  EvolveElSolution(&ClinEl, ACSData.gyro1 +
+  EvolveElSolution(&ClinEl, ACSData.gyro1, 
 		 PointingData[i_point_read].gy1_offset,
 		 clin_elev, 1);
-  EvolveElSolution(&EncEl, ACSData.gyro1 +
+  EvolveElSolution(&EncEl, ACSData.gyro1, 
 		 PointingData[i_point_read].gy1_offset,
 		 ACSData.enc_elev, 1);
 
@@ -380,28 +419,30 @@ void Pointing(){
   PointingData[point_index].gy1_offset = ElAtt.gy_offset;
   PointingData[point_index].el = ElAtt.el;
 
-  //printf("%g %g %g  %g %g %g\n", ElAtt.el, ClinEl.angle, EncEl.angle,
-  //	 ElAtt.gy_offset, ClinEl.gy_offset, EncEl.gy_offset);
-
-
   /*******************************/
   /**      do az solution      **/
   MagConvert();
   EvolveAzSolution(&NullAz,
-		   ACSData.gyro2 + PointingData[i_point_read].gy2_offset,
-		   ACSData.gyro3 + PointingData[i_point_read].gy3_offset,
+		   ACSData.gyro2, PointingData[i_point_read].gy2_offset,
+		   ACSData.gyro3, PointingData[i_point_read].gy3_offset,
 		   PointingData[point_index].el,
 		   0.0, 0);
   EvolveAzSolution(&MagAz,
-		   ACSData.gyro2 + PointingData[i_point_read].gy2_offset,
-		   ACSData.gyro3 + PointingData[i_point_read].gy3_offset,
+		   ACSData.gyro2, PointingData[i_point_read].gy2_offset,
+		   ACSData.gyro3, PointingData[i_point_read].gy3_offset,
 		   PointingData[point_index].el,
-		   PointingData[point_index].mag_az, 0);
-  
-  PointingData[point_index].az = NullAz.angle + NullAz.trim;
-  PointingData[point_index].gy2_offset = NullAz.gy2_offset;
-  PointingData[point_index].gy3_offset = NullAz.gy3_offset;
+		   PointingData[point_index].mag_az, 1);
 
+  if (CommandData.use_mag) {
+    PointingData[point_index].az = MagAz.angle + MagAz.trim;
+    PointingData[point_index].gy2_offset = MagAz.gy2_offset;
+    PointingData[point_index].gy3_offset = MagAz.gy3_offset;
+  } else {
+    PointingData[point_index].az = NullAz.angle + NullAz.trim;
+    PointingData[point_index].gy2_offset = NullAz.gy2_offset;
+    PointingData[point_index].gy3_offset = NullAz.gy3_offset;
+  }
+  
   /************************/
   /* set roll damper gain */
   gy2 = ACSData.gyro2;

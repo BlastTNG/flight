@@ -184,7 +184,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {"el_goto", "goto elevation", GR_POINT, 1,
     {
-      {"elevation (deg)", 10, 90, 'f', 4, "EL"}
+      {"elevation (deg)", 5.2, 90, 'f', 4, "EL"}
     }
   },
 

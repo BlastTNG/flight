@@ -6,7 +6,7 @@
 
 unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
-/* pseudoboard to use to talk from tx to rx.. */
+/* pseudoboards to use to talk from tx to rx.. */
 #define LOOPBACK 17
 #define SPARE 18
 #define LOOPBAK2 19
@@ -36,7 +36,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"i_apm_5v",     'r',  2, 45,          -0.0020833,         68.267, 'u'} 
   },
   {
-    {"",             'w', LOOPBACK,  9,          1.0,        0.0, 'u'},//cpu_time
+    {"",             'w', LOOPBACK,  9,          1.0,     0.0, 'u'},//cpu_time
     {"i_apm_10v",    'r',  2, 47,          -0.000625,           20.48, 'u'},
     {"t_if1",        'r',  4,  5,           -0.00625,          136.45, 'u'},
     {"t_if2",        'r',  4,  7,           -0.00625,          136.45, 'u'},
@@ -59,7 +59,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
   },
   {
     {"i_charcoal",   'r',  3,  3,    -2.639826420E-6,     0.157988332, 'u'},
-    {"he4_lev",      'r',  3,  1,    -2.87477e-09*65536,  12.3273561, 'u'},
+    {"he4_lev",      'r',  3,  51,    -2.87477e-09*65536,  12.3273561, 'u'},
     //{"i_coldplate",  'r', 3,  5,       -6.2723597E-5,     4.114858676, 'u'},
     {"i_coldplate",  'r',  3,  5,     -2.32217573E-5,     1.390309833, 'u'},
     {"t_he3fridge",  'r',  3,  7, -2.87477e-09*65536,      12.3273561, 'u'},
@@ -85,7 +85,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"t_bda1",       'r',  3, 43,  -2.8681e-09*65536,      12.3164528, 'u'},
     {"t_bda2",       'r',  3, 45, -2.87714e-09*65536,      12.3240610, 'u'},
     {"t_bda3",       'r',  3, 47,  -2.8779e-09*65536,      12.3446613, 'u'},
-    {"",             'r',  3, 49, -2.90117e-09*65536,      12.4604317, 'u'},
+    {"spare0",       'r',  SPARE, 0, 1.0,                         0.0, 'u'},
     {"cryoin",       'r',  3, 60,                1.0,             0.0, 'u'},
     {"cryoout2",     'w',  3,  1,                1.0,             0.0, 'u'},
     {"cryoout3",     'w',  3,  2,                1.0,             0.0, 'u'},
