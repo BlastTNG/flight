@@ -1,3 +1,9 @@
+/******************************************************************************\
+|* DATAHOLDER.H                                                               *|
+|*                                                                            *|
+|* Comments in dataholder.h                                                   *|
+\******************************************************************************/
+
 #ifndef DATAHOLDER_H
 #define DATAHOLDER_H
 
@@ -90,6 +96,5 @@ class DataHolder {
     struct DataStruct_glob *fasts;
     bool allocated;
 };
-
 
 #endif

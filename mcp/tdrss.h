@@ -1,8 +1,8 @@
-// ***************************************************
-// *  Programmed by Adam Hincks                      *
-// *                                                 *
-// *  Comments on classes & functions in .cpp file   *
-// ***************************************************
+/******************************************************************************\
+|* SMALL.H                                                                    *|
+|*                                                                            *|
+|* Comments in small.cpp                                                      *|
+\******************************************************************************/
 
 #ifndef SMALL_H
 #define SMALL_H
@@ -47,14 +47,12 @@ private:
 };
 
 
-
 class FrameBuffer
 {
   public:
     FrameBuffer(unsigned int *mcpindex_in, unsigned short **fastin_in,
                 unsigned short **slowin_in, int numframes_in);
     ~FrameBuffer();
-    void Update();
     void Resize(int numframes_in);
     int NumFrames();
     int ReadField(double *returnbuf, const char *fieldname, int framenum_in,
@@ -63,6 +61,7 @@ class FrameBuffer
   protected:
 
   private:
+    void Update();
     static void *UpdateThreadEntry(void *);
     
     unsigned int *mcpindex, lastmcpindex;
