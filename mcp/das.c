@@ -175,8 +175,8 @@ int JFETthermostat(void)
   else if (jfet_temp < CommandData.Cryo.JFETSetOn)
     return 2047;
   else
-    return 2047 * (CommandData.Cryo.JFETSetOn - jfet_temp) /
-      (CommandData.Cryo.JFETSetOn - CommandData.Cryo.JFETSetOff);
+    return 2047 * (CommandData.Cryo.JFETSetOff - jfet_temp) /
+      (CommandData.Cryo.JFETSetOff - CommandData.Cryo.JFETSetOn);
 }
 
 void FridgeCycle(int *cryoout, int *cryostate, int  reset)
