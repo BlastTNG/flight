@@ -15,6 +15,7 @@
 #define P_CAP        6
 #define P_BOX        7
 #define P_LOCK       8
+#define P_VBOX       9
 
 struct SlowDLStruct {
   char src[20];

@@ -1,7 +1,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 75      /* total number of named single word cmds */
-#define N_MCOMMANDS 46         /* total number of multiword commands */
+#define N_MCOMMANDS 47         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -184,7 +184,7 @@ enum multiCommand {
   pixel_centre, ra_dec_goto,  ra_dec_set,       roll_gain,    set_aperture,
   set_focus,    setpoints,    slow_integration, spare_heat,   spare_pwm,
   t_gyrobox,    t_gyro_gain,  timeout,          tolerances,   vcap,
-  xml_file
+  vbox,         xml_file
 };
 
 struct par {
@@ -213,16 +213,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********** Pointing Mode **************/
-  {COMMAND(vcap), "scan a circle centred on RA/Dec with el drift", GR_POINT, 5,
-    {
-      {"RA of Centre (h)",          0, 24, 'f', "NONE"},
-      {"Dec of Centre (deg)",     -90, 90, 'f', "NONE"},
-      {"Radius (deg on sky)",       0, 90, 'f', "NONE"},
-      {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
-      {"El drift Speed (deg el/s)", 0,  2, 'f', "NONE"}
-    }
-  },
-
   {COMMAND(cap), "scan a circle centred on RA/Dec with el steps", GR_POINT, 5,
     {
       {"RA of Centre (h)",          0, 24, 'f', "NONE"},
@@ -233,6 +223,16 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
       
+  {COMMAND(vcap), "scan a circle centred on RA/Dec with el drift", GR_POINT, 5,
+    {
+      {"RA of Centre (h)",          0, 24, 'f', "NONE"},
+      {"Dec of Centre (deg)",     -90, 90, 'f', "NONE"},
+      {"Radius (deg on sky)",       0, 90, 'f', "NONE"},
+      {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
+      {"El Drift Speed (deg el/s)", 0,  2, 'f', "NONE"}
+    }
+  },
+
   {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps",
     GR_POINT, 6,
     {
@@ -242,6 +242,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"}
+    }
+  },
+      
+  {COMMAND(vbox), "scan an az/el box centred on RA/Dec with el drift",
+    GR_POINT, 6,
+    {
+      {"RA of Centre (h)",          0, 24, 'f', "NONE"},
+      {"Dec of Centre (deg)",     -90, 90, 'f', "NONE"},
+      {"Az Width (deg on sky)",     0, 90, 'f', "NONE"},
+      {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
+      {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
+      {"El Drift Speed (deg el/s)", 0,  2, 'f', "NONE"}
     }
   },
       

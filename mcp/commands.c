@@ -558,6 +558,14 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.pointing_mode.h = rvalues[3]; /* height */
     CommandData.pointing_mode.vaz = rvalues[4]; /* az scan speed */
     CommandData.pointing_mode.del = rvalues[5]; /* el step size */
+  } else if (command == vbox) {
+    CommandData.pointing_mode.mode = P_VBOX;
+    CommandData.pointing_mode.X = rvalues[0]; /* ra */
+    CommandData.pointing_mode.Y = rvalues[1]; /* dec */
+    CommandData.pointing_mode.w = rvalues[2]; /* width */
+    CommandData.pointing_mode.h = rvalues[3]; /* height */
+    CommandData.pointing_mode.vaz = rvalues[4]; /* az scan speed */
+    CommandData.pointing_mode.del = rvalues[5]; /* el drift speed */
 
     /***************************************/
     /********** Pointing Motor Trims *******/
