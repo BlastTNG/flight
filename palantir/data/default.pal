@@ -189,43 +189,33 @@
       <WORD value="1" caption="Locked" textstyle="W_BIT"/>
     </DATUM>
   </MULTI>
-  <NUMBER caption="Az 1" textstyle="evenrow">
-    <DATUM format="%.2f" src="P_AZ1" extrema="angle"/></NUMBER>
-  <NUMBER caption="Az 2" textstyle="evenrow">
-    <DATUM format="%.2f" src="P_AZ2" extrema="angle"/></NUMBER>
+  <MULTI caption="Mode" textstyle="oddrow">
+    <DATUM src="P_MODE">
+      <WORD value="0" caption="Not Set" textstyle="E_BIT"/>
+      <WORD value="1" caption="Az El Goto" textstyle="W_BIT"/>
+      <WORD value="2" caption="Az Scan" textstyle="W_BIT"/>
+      <WORD value="3" caption="Drift" textstyle="W_BIT"/>
+      <WORD value="4" caption="RA Dec Goto" textstyle="W_BIT"/>
+      <WORD value="5" caption="VCap" textstyle="OK_BIT"/>
+      <WORD value="6" caption="Cap" textstyle="OK_BIT"/>
+      <WORD value="7" caption="Box" textstyle="OK_BIT"/>
+      <WORD value="8" caption="Lock" textstyle="W_BIT"/>
+    </DATUM>
+  </MULTI>
+  <NUMBER caption="X (deg)" textstyle="evenrow">
+    <DATUM format="%.2f" src="P_X_DEG" extrema="angle"/></NUMBER>
+  <NUMBER caption="X (h)" textstyle="evenrow">
+    <DATUM format="%.2f" src="P_X_H" extrema="angle"/></NUMBER>
+  <NUMBER caption="Y" textstyle="evenrow">
+    <DATUM format="%.2f" src="P_Y" extrema="angle"/></NUMBER>
   <NUMBER caption="Az Vel" textstyle="evenrow">
-    <DATUM format="%.4f" src="P_AZ_VEL" extrema="dps"/></NUMBER>
-  <MULTI caption="Az Mode" textstyle="oddrow">
-    <DATUM src="P_AZ_MODE">
-      <WORD value="0" caption="Not Set" textstyle="E_BIT"/>
-      <WORD value="1" caption="Velocity" textstyle="W_BIT"/>
-      <WORD value="2" caption="Point" textstyle="W_BIT"/>
-      <WORD value="8" caption="Scan" textstyle="W_BIT"/>
-      <WORD value="16" caption="Raster" textstyle="OK_BIT"/>
-    </DATUM>
-  </MULTI>
-  <NUMBER caption="El 1" textstyle="evenrow">
-    <DATUM format="%.2f" src="P_EL1" extrema="angle"/></NUMBER>
-  <NUMBER caption="El 2" textstyle="evenrow">
-    <DATUM format="%.2f" src="P_EL2" extrema="angle"/></NUMBER>
-  <NUMBER caption="El Vel" textstyle="evenrow">
-    <DATUM format="%.4f" src="P_EL_VEL" extrema="dps"/></NUMBER>
-  <MULTI caption="El Mode" textstyle="oddrow">
-    <DATUM src="P_EL_MODE">
-      <WORD value="0" caption="Not Set" textstyle="E_BIT"/>
-      <WORD value="1" caption="Velocity" textstyle="W_BIT"/>
-      <WORD value="2" caption="Point" textstyle="W_BIT"/>
-      <WORD value="4" caption="Lock" textstyle="W_BIT"/>
-      <WORD value="8" caption="Scan" textstyle="W_BIT"/>
-      <WORD value="16" caption="Raster" textstyle="OK_BIT"/>
-    </DATUM>
-  </MULTI>
-  <NUMBER caption="RA" textstyle="evenrow">
-    <DATUM format="%.2f" src="P_RA" extrema="hours"/></NUMBER>
-  <NUMBER caption="Dec" textstyle="evenrow">
-    <DATUM format="%.2f" src="P_DEC" extrema="angle"/></NUMBER>
-  <NUMBER caption="Radius" textstyle="evenrow">
-    <DATUM format="%.2f" src="P_R" extrema="angle"/></NUMBER>
+    <DATUM format="%.4f" src="P_VAZ" extrema="dps"/></NUMBER>
+  <NUMBER caption="dEl" textstyle="evenrow">
+    <DATUM format="%.2f" src="P_DEL" extrema="angle"/></NUMBER>
+  <NUMBER caption="W" textstyle="evenrow">
+    <DATUM format="%.2f" src="P_W" extrema="angle"/></NUMBER>
+  <NUMBER caption="H" textstyle="evenrow">
+    <DATUM format="%.4f" src="P_H" extrema="dps"/></NUMBER>
   <NUMBER caption="Current Az" textstyle="evenrow">
     <DATUM format="%.2f" src="AZ" extrema="angle"/></NUMBER>
   <NUMBER caption="Current El" textstyle="evenrow">
