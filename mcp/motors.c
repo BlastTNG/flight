@@ -1107,8 +1107,14 @@ void DoQuadMode() { // aka radbox
     }
   }
 
-  if (targ_el<bottom) targ_el = bottom;
-  if (targ_el>top) targ_el = top;
+  if (targ_el<bottom) {
+    bprintf(info, "bot: %g %g\n", targ_el, bottom);
+    targ_el = bottom;
+  }
+  if (targ_el>top) {
+    bprintf(info, "top: %g %g\n", targ_el, top);
+    targ_el = top;
+  }
 
   radbox_endpoints(c_az, c_el, targ_el, &next_left,
 		   &next_right, &bottom, &top);
@@ -1141,7 +1147,8 @@ void DoQuadMode() { // aka radbox
   }
 
   if (new_step) {
-    bprintf(info, "new step: %g %g %g\n", el, targ_el, CommandData.pointing_mode.del);
+    bprintf(info, "new step: %g %g %g %g %g\n", el, targ_el, CommandData.pointing_mode.del,
+	    bottom, top);
     // set v for this step
     v_el = (targ_el - el)/t;
     // set targ_el for the next step

@@ -198,8 +198,6 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
   *az_left = -1;
   *az_right = -1;
 
-  bprintf(info, "el: %g\n", el_in);
-  
   // determine which points are the bottom/top
   min_index = 0; *min_el = el[0];
   max_index = 0; *max_el = el[0];
