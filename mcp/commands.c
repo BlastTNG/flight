@@ -37,7 +37,7 @@
 
 #define LOCK_OFFSET (0.6)
 
- /* Seconds since 0TMG jan 1 1970 */
+/* Seconds since 0TMG jan 1 1970 */
 #define SUN_JAN_6_1980 315964800L
 /* Seconds in a week */
 #define SEC_IN_WEEK  604800L
@@ -62,7 +62,7 @@ struct CommandDataStruct CommandData;
 /** Write the Previous Status: called whenever anything changes */
 void WritePrevStatus() {
   int fp, n;
-  
+
   /** write the default file */
   fp = open("/tmp/mcp.prev_status", O_WRONLY|O_CREAT|O_TRUNC, 00666);
   if (fp < 0) {
@@ -107,7 +107,7 @@ int bc_setserial(char *input_tty) {
   term.c_cflag &= ~(CSTOPB | CSIZE);
   term.c_oflag &= ~(OPOST);
   term.c_cflag |= CS8;
-  
+
   if(cfsetospeed(&term, B1200)) {          /*  <======= SET THE SPEED HERE */
     perror("Error setting serial output speed");
     return -1;
@@ -200,7 +200,7 @@ void ClearPointingModeExtraFields() {
       (CommandData.pointing_mode.az_mode != POINT_RADEC_GOTO) &&
       (CommandData.pointing_mode.el_mode != POINT_RADEC_GOTO)) {
     CommandData.pointing_mode.ra = CommandData.pointing_mode.dec =
-     CommandData.pointing_mode.r = 0.0;
+      CommandData.pointing_mode.r = 0.0;
   }
 
   if (CommandData.pointing_mode.az_mode == POINT_VEL) {
@@ -210,7 +210,7 @@ void ClearPointingModeExtraFields() {
   if (CommandData.pointing_mode.az_mode == POINT_POINT) {
     CommandData.pointing_mode.az2 = CommandData.pointing_mode.az_vel = 0.0;
   }
-  
+
   if (CommandData.pointing_mode.el_mode == POINT_VEL) {
     CommandData.pointing_mode.el1 = CommandData.pointing_mode.el2 = 0.0;
   }
@@ -224,7 +224,7 @@ void SingleCommand (int command) {
   int i_point;
 
   printf("Single command %d: %s\n", command, scommands[command].name);
-  
+
   /* Update CommandData structure with new info */
 
   if (command == SIndex("stop")) {      /* Pointing aborts */
@@ -243,7 +243,7 @@ void SingleCommand (int command) {
     CommandData.disable_el = 1;
   else if (command == SIndex("el_on")) /* enable el motors */
     CommandData.disable_el = 0;
-  
+
   else if (command == SIndex("sun_veto"))       /* Veto sensors */
     CommandData.use_sun = 0;
   else if (command == SIndex("isc_veto"))
@@ -257,7 +257,7 @@ void SingleCommand (int command) {
   else if (command == SIndex("elclin_veto"))
     CommandData.use_elclin = 0;
 
-  
+
   else if (command == SIndex("sun_allow"))       /* Un-veto sensors */
     CommandData.use_sun = 1;
   else if (command == SIndex("isc_allow"))
@@ -367,14 +367,32 @@ void SingleCommand (int command) {
       CommandData.pointing_mode.el_vel = 0.0;
     }
 
-  /***************************************/
-  /********* ISC Commanding  *************/
+    /***************************************/
+    /********* ISC Commanding  *************/
   } else if (command == SIndex("isc_run")) {
     CommandData.ISCCommand.command = freerun;
+    CommandData.ISCCommand.par1 = CommandData.ISC_save_to_disk;
     CommandData.write_ISC_command = 1;
+    CommandData.ISC_mode = 0;
   } else if (command == SIndex("expose")) {
     CommandData.ISCCommand.command = expose;
+    CommandData.ISCCommand.par1 = CommandData.ISC_save_to_disk;
     CommandData.write_ISC_command = 1;
+    CommandData.ISC_mode = 1;
+  } else if (command == SIndex("save_images")) {
+    CommandData.ISC_save_to_disk = 1;
+    if (CommandData.ISC_mode == 0) {
+      CommandData.ISCCommand.command = freerun;
+      CommandData.ISCCommand.par1 = 1;
+      CommandData.write_ISC_command = 1;
+    }
+  } else if (command == SIndex("discard_images")) {
+    CommandData.ISC_save_to_disk = 0;
+    if (CommandData.ISC_mode == 0) {
+      CommandData.ISCCommand.command = freerun;
+      CommandData.ISCCommand.par1 = 0;
+      CommandData.write_ISC_command = 1;
+    }
   } else if (command == SIndex("full_screen")) {
     CommandData.ISCCommand.command = displayMode;
     CommandData.ISCCommand.par1 = -1;
@@ -462,8 +480,8 @@ void MultiCommand (int command, unsigned short *dataq) {
    */
   if (0) { // allow easy re-arranging
 
-  /***************************************/
-  /********** Pointing Mode **************/
+    /***************************************/
+    /********** Pointing Mode **************/
   } else if (command == MIndex("ra_dec_raster")) {  /* raster a circle */
     CommandData.pointing_mode.az_mode = POINT_RASTER;
     CommandData.pointing_mode.el_mode = POINT_RASTER;
@@ -534,8 +552,8 @@ void MultiCommand (int command, unsigned short *dataq) {
       CommandData.pointing_mode.az_mode = POINT_VEL;
       CommandData.pointing_mode.az_vel = 0.0;
     }
-  /***************************************/
-  /********** Pointing Motor Gains *******/
+    /***************************************/
+    /********** Pointing Motor Gains *******/
   } else if (command == MIndex("roll_gain")) { /* roll Gains */
     CommandData.roll_gain.P = ivalues[0];
   } else if (command == MIndex("el_gain")) {  /* ele gains */
@@ -547,9 +565,9 @@ void MultiCommand (int command, unsigned short *dataq) {
   } else if (command == MIndex("pivot_gain")) {  /* pivot gains */
     CommandData.pivot_gain.SP = (rvalues[0] + 2.605) / 7.9498291016e-5;
     CommandData.pivot_gain.P = ivalues[1];
-        
-  /***************************************/
-  /********** Inner Frame Lock  **********/
+
+    /***************************************/
+    /********** Inner Frame Lock  **********/
   } else if (command == MIndex("lock")) {  /* Lock Inner Frame */
     if (CommandData.pumps.bal_veto >= 0)
       CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
@@ -557,9 +575,9 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pointing_mode.el_mode = POINT_LOCK;
     CommandData.pointing_mode.el1 = LockPosition(rvalues[0]);
     fprintf(stderr, "Lock Mode: %g\n", CommandData.pointing_mode.el1);
-    
-  /***************************************/
-  /********** Balance System  ************/
+
+    /***************************************/
+    /********** Balance System  ************/
   } else if (command == MIndex("setpoints")) {
     CommandData.pumps.bal_on = rvalues[0] * 1648.;
     CommandData.pumps.bal_off = rvalues[1] * 1648.;
@@ -567,8 +585,8 @@ void MultiCommand (int command, unsigned short *dataq) {
   } else if (command == MIndex("pwm")) {
     CommandData.pumps.pwm1 = ivalues[0];
 
-  /***************************************/
-  /********** Cooling System  ************/
+    /***************************************/
+    /********** Cooling System  ************/
   } else if (command == MIndex("spare_pwm")) {
     CommandData.pumps.pwm2 = ivalues[0];
   } else if (command == MIndex("inner_pwm")) {
@@ -576,8 +594,8 @@ void MultiCommand (int command, unsigned short *dataq) {
   } else if (command == MIndex("outer_pwm")) {
     CommandData.pumps.pwm4 = ivalues[0];
 
-  /***************************************/
-  /******** Electronics Heaters  *********/
+    /***************************************/
+    /******** Electronics Heaters  *********/
   } else if (command == MIndex("t_gyrobox")) {  /* gyro heater setpoint */
     CommandData.t_gybox_setpoint = rvalues[0];
   } else if (command == MIndex("t_gyro_gain")) {  /* gyro heater gains */
@@ -585,8 +603,8 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.gy_heat_gain.I = ivalues[1];
     CommandData.gy_heat_gain.D = ivalues[2];
 
-  /***************************************/
-  /*************** Misc  *****************/
+    /***************************************/
+    /*************** Misc  *****************/
   } else if (command == MIndex("timeout")) {        /* Set timeout */
     CommandData.timeout = ivalues[0];
   } else if (command == MIndex("xml_file")) {  /* change downlink XML file */
@@ -595,8 +613,8 @@ void MultiCommand (int command, unsigned short *dataq) {
       fclose(fp);
     }
 
-  /***************************************/
-  /*************** Bias  *****************/
+    /***************************************/
+    /*************** Bias  *****************/
   } else if (command == MIndex("bias1_level")) {    /* Set bias 1 */
     CommandData.Bias.SetLevel1 = 1;
     CommandData.Bias.bias1 = ivalues[0];
@@ -610,17 +628,17 @@ void MultiCommand (int command, unsigned short *dataq) {
     if (ivalues[0] >= 5 && ivalues[0] <= 16) 
       CommandData.Phase[ivalues[0] - 5] = ivalues[1];
 
-  /***************************************/
-  /*********** Cal Lamp  *****************/
+    /***************************************/
+    /*********** Cal Lamp  *****************/
   } else if (command == MIndex("cal_pulse")) {
     CommandData.Cryo.calib_pulse = ivalues[0];
     CommandData.Cryo.calib_repeat = 0;
   } else if (command == MIndex("cal_repeat")) {
     CommandData.Cryo.calib_pulse = ivalues[0];
     CommandData.Cryo.calib_repeat = rvalues[1];
-    
-  /***************************************/
-  /********* Cryo heat   *****************/
+
+    /***************************************/
+    /********* Cryo heat   *****************/
   } else if (command == MIndex("jfet_heat")) {
     CommandData.Cryo.JFETHeat = rvalues[0] * 2047./100.;
   } else if (command == MIndex("heatsw_heat")) {
@@ -631,8 +649,8 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.Cryo.sparePwm = rvalues[0] * 2047./100.;
 
 
-  /***************************************/
-  /********* ISC Commanding  *************/
+    /***************************************/
+    /********* ISC Commanding  *************/
   } else if (command == MIndex("pixel_centre")) {
     CommandData.ISCCommand.command = displayMode;
     CommandData.ISCCommand.par1 = -2;
@@ -676,7 +694,7 @@ void MultiCommand (int command, unsigned short *dataq) {
     PointingData[i_point].t + CommandData.timeout;
 
   ClearPointingModeExtraFields();
-  
+
   WritePrevStatus();
 }
 
@@ -705,7 +723,7 @@ void GPSTime (unsigned char *indata) {
   CPUtime = ParseGPS(indata + 10);
 
   SIPData.GPStime.UTC = (int)(SEC_IN_WEEK * (GPSweek+1024) + GPStime - offset) +
-				 SUN_JAN_6_1980;
+    SUN_JAN_6_1980;
   SIPData.GPStime.CPU = CPUtime;
 
   WritePrevStatus();
@@ -1330,17 +1348,21 @@ void WatchPortC2 () {
 /*                                                          */
 /************************************************************/
 void InitCommandData() {
-  int fp, n_read = 0;
+  int fp, n_read = 0, junk, extra = 0;
 
   if ((fp = open("/tmp/mcp.prev_status", O_RDONLY)) < 0) {
     perror("Unable to open prev_status file for reading");
   } else {
-    n_read = read(fp, &CommandData, sizeof(struct CommandDataStruct));
-    close(fp);
+    if ((n_read = read(fp, &CommandData, sizeof(struct CommandDataStruct))) < 0)
+      perror("prev_status read()");
+    if ((extra = read(fp, &junk, sizeof(junk))) < 0)
+      perror("extra prev_status read()");
+    if (close(fp) < 0)
+      perror("prev_status close()");
   }
 
   CommandData.pointing_mode.t_start_sched = time(NULL) + CommandData.timeout;
-  
+
   /** initialize stuff that we don't want from prev_status here **/
   CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
   CommandData.pumps.bal1_on = 0;
@@ -1370,10 +1392,15 @@ void InitCommandData() {
   CommandData.Bias.SetLevel3 = 1;
 
   CommandData.write_ISC_command = 0;
-  
+
 #ifndef BOLOTEST
   /** return if we succsesfully read the previous status **/
-  if (n_read == sizeof(struct CommandDataStruct))
+  if (n_read != sizeof(struct CommandDataStruct))
+    fprintf(stderr, "prev_status: Wanted %i bytes but got %i.\n"
+        sizeof(struct CommandDataStruct), n_read);
+  else if (extra > 0)
+    fprintf(stderr, "prev_status: Extra bytes found.\n");
+  else
     return;
 #endif
 
@@ -1408,7 +1435,7 @@ void InitCommandData() {
 
   CommandData.disable_az = 0;
   CommandData.disable_el = 0;
-  
+
   CommandData.use_elenc = 1;
   CommandData.use_elclin = 1;
   CommandData.use_sun = 1;
@@ -1460,6 +1487,9 @@ void InitCommandData() {
   CommandData.Cryo.lhevalve_on = 0;
   CommandData.Cryo.lhevalve_open = 0;
   CommandData.Cryo.lhevalve_close = 0;
+
+  CommandData.ISC_mode = 0;
+  CommandData.ISC_save_to_disk = 0;
 
   WritePrevStatus();
 }

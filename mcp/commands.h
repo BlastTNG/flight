@@ -1,7 +1,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 99         /* total number of single word commands */
-#define N_NM_SCOMMANDS 62      /* total number of named single word cmds */
+#define N_NM_SCOMMANDS 64      /* total number of named single word cmds */
 #define N_MCOMMANDS 40         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -120,6 +120,8 @@ struct scom scommands[N_NM_SCOMMANDS] = {
 
   {"isc_run", "start automatic image capture (normal mode)", GR_ISC},
   {"expose", "take a single exposure", GR_ISC},
+  {"save_images", "turn on saving of images", GR_ISC},
+  {"discard_images", "turn off saving of images", GR_ISC},
   {"full_screen", "show full screen", GR_ISC},
   {"auto_focus", "autofocus camera", GR_ISC}
 };
@@ -376,6 +378,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********* ISC Commanding **************/
+  {"set_focus", "Set the focus position", GR_ISC, 1,
+    {
+      {"focus position", 0, FOCUS_RANGE, 'i', 0, "ISC_FOCUS"}
+    }
+  },
+
+  {"set_aperture", "Set the F-stop", GR_ISC, 1,
+    {
+      {"aperture position", 0, AP_RANGE, 'i', 0, "ISC_APERT"}
+    }
+  },
+
   {"pixel_centre", "Centre display on pixel", GR_ISC, 2,
     {
       {"pixel x", 0, CCD_X_PIXELS - 1, 'i', 0, "ADD"},
@@ -389,18 +403,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   
-  {"set_focus", "Set the focus position", GR_ISC, 1,
-    {
-      {"focus position", 0, FOCUS_RANGE, 'i', 0, "ISC_FOCUS"}
-    }
-  },
-
-  {"set_aperture", "Set the F-stop", GR_ISC, 1,
-    {
-      {"aperture position", 0, AP_RANGE, 'i', 0, "ISC_APERT"}
-    }
-  },
-
   {"cam_set", "Camera Settings", GR_ISC, 3,
     {
       {"integration time (ms)", 20, 5000, 'i', 0, "ISC_EXPOSE"},

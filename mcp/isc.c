@@ -168,8 +168,8 @@ void IntegratingStarCamera(void)
       /* ------------ read ---------- */ 
 
       /* If there is a command frame to write, we forget about reading for a
-       * while.  This is to prevent us from clobbering possible command parameters
-       * when we get the updated parameters from the ISC.
+       * while.  This is to prevent us from clobbering possible command
+       * parameters when we get the updated parameters from the ISC.
        * We're banking on the expectation that the time it takes to poll, write
        * and poll again is significantly faster than we're getting frames. */
       if (FD_ISSET(sock, &fdr) && !CommandData.write_ISC_command) {

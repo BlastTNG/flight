@@ -34,19 +34,19 @@ struct GainStruct {
 };
 
 struct PointingModeStruct {
-  // Used by:        VEL   POINT   LOCK   SCAN   RASTER
+  /* Used by:        VEL   POINT   LOCK   SCAN   RASTER    */
   int az_mode;
-  double az1;     //         **            **      .
-  double az2;     //                       **      .
-  double az_vel;  //  **                   **      **
+  double az1;     /*         **            **      .       */
+  double az2;     /*                       **      .       */
+  double az_vel;  /*  **                   **      **      */
   int el_mode;
-  double el1;     //         **     **     **      .
-  double el2;     //                       **      .
-  double el_vel;  //  **                   **      **
-  double ra;      //                               **
-  double dec;     //                               **
-  double r;       //                               **
-  time_t t_start_sched; // after this time, use sched file
+  double el1;     /*         **     **     **      .       */
+  double el2;     /*                       **      .       */
+  double el_vel;  /*  **                   **      **      */
+  double ra;      /*                               **      */
+  double dec;     /*                               **      */
+  double r;       /*                               **      */
+  time_t t_start_sched; /* after this time, use sched file */
 };
 
 struct PumpStruct {
@@ -122,15 +122,18 @@ struct CommandDataStruct {
 
   struct PumpStruct pumps;
 
-  // sensors output: read in mcp:SensorReader()
+  /* sensors output: read in mcp:SensorReader() */
   short fan;
   short T;
   int df;
 
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
 
+  /* Integrating Star Camera Stuff */
   client_frame ISCCommand;
   int write_ISC_command;
+  int ISC_save_to_disk;
+  int ISC_mode;
 };
 
 struct EventType {
