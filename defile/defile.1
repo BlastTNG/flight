@@ -3,14 +3,16 @@
 defile \(em convert a MCP written framefile into a dirfile
 .SH SYNOPSIS
 .B defile 
-.RB [\  \-c\  |
-.BR \-\-curfile\  |
-.B \-C
+.RB [\  \-C
 .IR name\  |
 .BI \-\-curfile-name= name
-]
-.RB [\  \-f\  |
+|
+.BR \-c\  |
+.BR \-\-curfile\  ]
+.RB [\  \-F\  |
 .BR \-\-force-framefile\  ]
+.RB [\  \-f\  |
+.BR \-\-force\  ]
 .RB [\  \-o
 .IR dirfile\  |
 .BI \-\-output-dirfile= dirfile
@@ -76,6 +78,11 @@ but use
 for the name of the curfile instead of the default.
 .RE
 .TP
+.BR \-F\  or\  \-\-force-framefile
+Always assume
+.I source
+is a framefile, even when it looks like a curfile.
+.TP
 .BR \-c\  or\  \-\-curfile
 Write a curfile pointing to the output dirfile.  The default curfile name is
 generally
@@ -86,10 +93,13 @@ To use a different name for the curfile, see the
 .B \-C
 option.
 .TP
-.BR \-f\  or\  \-\-force-framefile
-Always assume
-.I source
-is a framefile, even when it looks like a curfile.
+.BR \-f\  or\  \-\-force
+Overwrite an existing dirfile.  Normally
+.B defile
+will complain and exit if it finds that the destination dirfile directory
+already exists.  Be careful using this option:  before starting the write
+.B defile
+will delete the current contents of the destination directory.
 .PP
 .BI \-o\  dirfile
 or

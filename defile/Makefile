@@ -4,6 +4,9 @@ LDFLAGS = -lpthread
 
 all: defile
 
+debug:
+	${MAKE} CFLAGS="$(CFLAGS) -g" LDFLAGS="$(LDFLAGS) -g" all
+
 defile: defile.o reader.o tx_struct.o writer.o
 
 defile.o: defile.c defile.h tx_struct.h

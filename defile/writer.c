@@ -21,11 +21,13 @@
  */
 
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h> 
 #include <time.h>
@@ -87,6 +89,133 @@ char* StringToUpper(char* s)
   return(us);
 }
 
+/* ask user a yes/no question */
+int YesNo(const char* message, int dflt)
+{
+  char gpb[GPB_LEN];
+
+  ri.tty = 1;
+
+  strcpy(gpb, message);
+  if (dflt)
+    strcat(gpb, " (Y/n) ");
+  else
+    strcat(gpb, " (y/N) ");
+
+  printf("\n");
+  for (;;) {
+    fputs(gpb, stdout);
+
+    switch (fgetc(stdin)) { 
+      case 'y':
+      case 'Y':
+        ri.tty = 0;
+        return 1;
+      case 'n':
+      case 'N':
+        ri.tty = 0;
+        return 0;
+      case '\n':
+      case '\0':
+        ri.tty = 0;
+        return dflt;
+      default:
+        while (fgetc(stdin) != '\n'); /* flush input */
+        printf("Invald response.\n");
+    }
+  }
+
+  fprintf(stderr, "defile: Unexpected trap in YesNo().  Bailing.\n");
+  exit(1);
+}
+
+/* Check to see if overwriting the directory is appropriate */
+int CheckWriteAllow(int mkdir_err)
+{
+  DIR* dir;
+  char* dirfile_end;
+  char fullname[FILENAME_LEN];
+  char gpb[GPB_LEN];
+  struct stat stat_buf;
+  struct dirent* lamb;
+
+  /* if user hasn't told us to try, don't */
+  if (rc.force == 0)
+    return 0;
+
+  /* The mkdir already failed, but we don't know why yet: it _could_ be
+   * because the directory exists, but it could be for some other reason, too */
+  if (stat(rc.dirfile, &stat_buf)) {
+    snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", rc.dirfile);
+    perror(gpb);
+    exit(1);
+  }
+
+  /* stat worked, so rc.dirfile exists -- is it a directory? */
+  if (!S_ISDIR(stat_buf.st_mode)) {
+    fprintf(stderr, "defile: cannot write to `%s': Not a directory\n",
+        rc.dirfile);
+    exit(1);
+  }
+
+  /* it is.  Look for a format file to double check that this is indeed ar
+   * dirfile */
+  strcpy(gpb, rc.dirfile);
+  strcat(gpb, "/format");
+  if (stat(gpb, &stat_buf)) {
+    snprintf(gpb, GPB_LEN,
+        "defile: destination `%s' does not appear to be a dirfile\nContinue?",
+        rc.dirfile);
+    if(!YesNo(gpb, 0))
+      exit(1);
+  }
+
+  printf("\nOverwriting dirfile `%s'\n", rc.dirfile);
+  /* It's a dirfile -- so we overwrite it.  We need to delete everything in it
+   * first, though */
+  if ((dir = opendir(rc.dirfile)) == NULL) {
+    snprintf(gpb, GPB_LEN, "defile: cannot read directory `%s'", rc.dirfile);
+    perror(gpb);
+    exit(1);
+  }
+  
+  /* loop through the directory */
+  strcpy(fullname, rc.dirfile);
+  dirfile_end = fullname + strlen(fullname);
+  if (*(dirfile_end - 1) != '/') {
+      strcat(fullname, "/");
+      dirfile_end++;
+  }
+
+  /* delete the directory contents */
+  while ((lamb = readdir(dir)) != NULL) {
+    strcpy(dirfile_end, lamb->d_name);
+
+    if (stat(fullname, &stat_buf)) {
+      snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", fullname);
+      perror(gpb);
+      exit(1);
+    }
+
+    /* if it's a real file, delete it */
+    if (S_ISREG(stat_buf.st_mode))
+      if (unlink(fullname)) {
+        snprintf(gpb, GPB_LEN, "defile: cannot unlink `%s'", fullname);
+        perror(gpb);
+        exit(1);
+      }
+  }
+  
+  if (closedir(dir)) {
+    snprintf(gpb, GPB_LEN, "defile: error closing dirrectory `%s'", rc.dirfile);
+    perror(gpb);
+    exit(1);
+  }
+
+  return 1;
+}
+
+
 /* Initialise dirfile */
 void InitialiseDirFile(int reset)
 {
@@ -97,12 +226,14 @@ void InitialiseDirFile(int reset)
 
 
   if (mkdir(rc.dirfile, 00755) < 0) {
-    snprintf(gpb, GPB_LEN, "defile: cannot create dirfile `%s'", rc.dirfile);
-    perror(gpb);
-    exit(0);
+    if (!CheckWriteAllow(errno)) {
+      snprintf(gpb, GPB_LEN, "defile: cannot create dirfile `%s'", rc.dirfile);
+      perror(gpb);
+      exit(1);
+    }
   }
 
-  printf("\nWriting to dirfile %s\n", rc.dirfile);
+  printf("\nWriting to dirfile `%s'\n", rc.dirfile);
 
   /*********************************** 
    * create and fill the format file * 
@@ -112,7 +243,7 @@ void InitialiseDirFile(int reset)
     snprintf(gpb, GPB_LEN, "defile: cannot create format file `%s/format'",
         rc.dirfile);
     perror(gpb);
-    exit(0);
+    exit(1);
   }
   fprintf(fp, "FASTSAMP         RAW    U 20\n");
   n_fast = 0;
@@ -121,7 +252,7 @@ void InitialiseDirFile(int reset)
     snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/FASTSAMP'",
         rc.dirfile);
     perror(gpb);
-    exit(0);
+    exit(1);
   }
   normal_fast[n_fast].i0 = 1;
   if (reset)
@@ -146,14 +277,14 @@ void InitialiseDirFile(int reset)
             SlowChList[i][j].b_e2e);
         if (fflush(fp) < 0) {
           perror("Error while flushing format file");
-          exit(0);
+          exit(1);
         }
         sprintf(gpb, "%s/%s", rc.dirfile, SlowChList[i][j].field);
         if ((slow_fields[i][j].fp = creat(gpb, 00644)) == -1) {
           snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/%s'",
               rc.dirfile, SlowChList[i][j].field);
           perror(gpb);
-          exit(0);
+          exit(1);
         }
       } else {
         slow_fields[i][j].fp = -1;
@@ -170,7 +301,7 @@ void InitialiseDirFile(int reset)
   fprintf(fp, "\n## FAST CHANNELS:\n");
   if (fflush(fp) < 0) {
     perror("Error while flushing format file");
-    exit(0);
+    exit(1);
   }
   for (i = 0; i<N_FASTCHLIST; i++) {
     if (strcmp(FastChList[i].field, "n5c0lo") == 0) {
@@ -187,14 +318,14 @@ void InitialiseDirFile(int reset)
         default:
           printf("error: bad type in initdirfile: %s %c %d\n",
               FastChList[i].field, FastChList[i].type, i);
-          exit(0);
+          exit(1);
       }
       sprintf(gpb, "%s/%s", rc.dirfile, FastChList[i].field);
       if ((normal_fast[n_fast].fp = creat(gpb, 00644)) == -1) {
         snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/%s'",
             rc.dirfile, SlowChList[i][j].field);
         perror(gpb);
-        exit(0);
+        exit(1);
       }
       normal_fast[n_fast].i0 = i + FAST_OFFSET;
       normal_fast[n_fast].i_in = normal_fast[n_fast].i_out = 0;
@@ -211,7 +342,7 @@ void InitialiseDirFile(int reset)
           FastChList[i].m_c2e, FastChList[i].b_e2e);
       if (fflush(fp) < 0) {
         perror("Error while flushing format file");
-        exit(0);
+        exit(1);
       }
     }
   }
@@ -220,7 +351,7 @@ void InitialiseDirFile(int reset)
   fprintf(fp, "\n## BOLOMETERS:\n");
   if (fflush(fp) < 0) {
     perror("Error while flushing format file");
-    exit(0);
+    exit(1);
   }
   for (i = 0; i < DAS_CARDS; i++) {
     for (j = 0; j < DAS_CHS; j++) {
@@ -230,7 +361,7 @@ void InitialiseDirFile(int reset)
         snprintf(gpb, GPB_LEN, "defile: cannot create file `%s/%s'",
             rc.dirfile, SlowChList[i][j].field);
         perror(gpb);
-        exit(0);
+        exit(1);
       }
       bolo_fields[i][j].size = 2;
       bolo_fields[i][j].i_in = bolo_fields[i][j].i_out = 0;
@@ -252,7 +383,7 @@ void InitialiseDirFile(int reset)
 
   if (fclose(fp) < 0) {
     perror("Error while closing format file");
-    exit(0);
+    exit(1);
   }
 
   if (rc.write_curfile) {
@@ -260,7 +391,7 @@ void InitialiseDirFile(int reset)
       snprintf(gpb, GPB_LEN, "defile: cannot create curfile `%s'",
           rc.output_curfile);
       perror(gpb);
-      exit(0);
+      exit(1);
     }
 
     fprintf(fp, rc.dirfile);
@@ -269,7 +400,7 @@ void InitialiseDirFile(int reset)
       snprintf(gpb, GPB_LEN, "defile: cannot close curfile `%s'",
           rc.output_curfile);
       perror(gpb);
-      exit(0);
+      exit(1);
     }
   }
 

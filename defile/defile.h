@@ -29,8 +29,17 @@
 #define GPB_LEN (PATH_MAX * 4)
 #define FILENAME_LEN (PATH_MAX + NAME_MAX + 1)
 
+#if FIELD_LEN < 6
+#  define FIELD_MAX 6
+#else
+#  define FIELD_MAX FIELD_LEN
+#endif
+
+typedef unsigned int chunkindex_t;
+
 struct rc_struct {
   int framefile, persist, remount, resume, write_curfile;
+  int force;
   int sufflen;
   int source_is_curfile;
   char* curfile_val;
@@ -55,6 +64,7 @@ struct ri_struct {
   int wrote;
   int dirfile_init;
   int writer_done;
+  int tty;
 };
 
 /* interthread communication */
@@ -67,6 +77,6 @@ void  FrameFileReader(void);
 char* GetDirFile(const char*, char*);
 void  PushFrame(unsigned short*);
 void  Remount(const char*, char*);
-int   StaticSourcePart(char*, const char*, long*);
+int   StaticSourcePart(char*, const char*, chunkindex_t*);
 
 #endif

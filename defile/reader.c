@@ -39,7 +39,7 @@ int GetNextChunk(void)
   char* buffer;
   char* newchunk;
   int s;
-  long cnum;
+  chunkindex_t chunknum;
   struct stat chunk_stat;
 
   /* allocate our buffers */
@@ -52,9 +52,22 @@ int GetNextChunk(void)
     exit(1);
   }
 
+  /* get current chunk name */
+  s = StaticSourcePart(buffer, rc.chunk, &chunknum);
+
+  /* if incrementing chunknum causes it to wrap around, we're out of space
+   * on our suffix -- no more chunks are possible */
+  if (chunknum + 1 < chunknum)
+    return 0;
+
+  /* if incrementing chunknum causes it to be more than rc.sufflen bytes,
+   * we're out of space on our suffix -- no more chunks are possible */
+  if (chunknum + 1 >= (chunkindex_t)1 >> (4 * rc.sufflen))
+    return 0;
+  
   /* generate new filename */
-  s = StaticSourcePart(buffer, rc.chunk, &cnum);
-  snprintf(newchunk, FILENAME_LEN, "%s%0*lX", buffer, s, cnum + 1);
+  snprintf(newchunk, FILENAME_LEN, "%s%0*llX", buffer, s,
+      (unsigned long long)(chunknum + 1));
 
   /* stat it to see if it exists */
   if (stat(newchunk, &chunk_stat))

@@ -44,6 +44,8 @@
 #define DEFAULT_DIR "/data/rawdir"
 #define REMOUNT_PATH "../rawdir"
 
+#define SUFF_MAX sizeof(chunkindex_t)
+
 struct ri_struct ri;
 struct rc_struct rc = {
   0, /* framefile */
@@ -51,7 +53,8 @@ struct rc_struct rc = {
   0, /* remount */
   0, /* resume */
   0, /* write_curfile */
-  NAME_MAX, /* sufflen */
+  0, /* force */
+  SUFF_MAX, /* sufflen */
   0, /* source_is_curfile */
   NULL, /* curfile_val */
   NULL, /* remount_dir */
@@ -294,7 +297,7 @@ char* GetFileName(const char* source)
 /* given a source filename, fills in the part of it which is static from chunk
  * to chunk, the value of the counter, returns the length of the non-static
  * suffix */
-int StaticSourcePart(char* output, const char* source, long* value)
+int StaticSourcePart(char* output, const char* source, chunkindex_t* value)
 {
   char* buffer;
   char* ptr;
@@ -307,7 +310,7 @@ int StaticSourcePart(char* output, const char* source, long* value)
   }
 
   /* walk backwards through source looking for first non-hex digit */
-  for(ptr = buffer + strlen(buffer) - 1; counter < rc.sufflen && ptr != buffer;
+  for (ptr = buffer + strlen(buffer) - 1; counter < rc.sufflen && ptr != buffer;
       --ptr)
     if (*ptr >= '0' && *ptr <= '9') {
       number += (*ptr - '0') << 4 * counter++;
@@ -406,53 +409,36 @@ void PrintVersion(void)
 void PrintUsage(void)
 {
   printf("Usage: defile [OPTION]... SOURCE [DIRECTORY]\n"
-      "  or:  defile [OPTION]... SOURCE DESTINATION\n"
-      "Convert the BLAST-type framefile SOURCE into dirfile DESTINATION or a "
-      "dirfile\n"
-      "under DIRECTORY.\n"
+      "Convert the BLAST-type framefile SOURCE into dirfile under DIRECTORY\n"
       "\nSOURCE may be either a .cur file or a framefile to start with.\n"
-      "\nDefault DIRECTORY to use if no DIRECTORY or DESTINATION is given:\n"
+      "Default DIRECTORY to use if no DIRECTORY is given:\n"
       "\t" DEFAULT_DIR "\n\n"
       "Arguments to long options are required for short arguments as well.\n"
-      "  -c --curfile          write a curfile called `" DEFAULT_CURFILE "'\n"
-      "                          pointing to the destination dirfile.\n"
-      "  -C --curfile-name=NAME same as `--curfile' but use NAME as the name of the\n"
-      "                          file instead of `" DEFAULT_CURFILE "'.\n"
-      "  -f --force-framefile  always assume SOURCE is a framefile, even when "
-      "it\n"
-      "                          appears to be a curfile\n"
-      "  -p --persistent       do not exit upon reaching the end of the "
-      "framefile.\n"
-      "                          Instead, defile will monitor the file and "
-      "wait until\n"
-      "                          new data is added to the file.  If SOURCE is "
-      "a\n"
-    "                          curfile, defile will also look for changes "
-    "in this.\n"
-    "  -r --remounted-source when SOURCE is a curfile, assume that it is "
-    "located\n"
-    "                          on a filesystem that has been mounted in a "
-    "different\n"
-    "                          location from the one referred to by the "
-    "curfile.\n"
-    "                          The filename extracted from the curfile is "
-    "assumed to\n"
-    "                          be in the directory `" REMOUNT_PATH "' relative "
-    "to\n"
-    "                          the curfile's location.  This is especially "
-    "useful\n"
-    "                          for NSF mounted filesystems.  This option has "
+      "  -C --curfile-name=NAME same as `-c' but use NAME as the name of the "
+      "file\n"
+      "                          instead of `" DEFAULT_CURFILE "'.\n"
+      "  -F --framefile        assume SOURCE is a framefile.\n"
+      "  -c --curfile          write a curfile called `" DEFAULT_CURFILE "'.\n"
+      "  -f --force            overwrite destination.\n"
+      "  -o --output-dirfile=NAME use name as the name of the dirfile. Name "
+      "can either\n"
+      "                          be an absolute path, or a path realtive to "
+      "DIRECTORY.\n"
+      "  -p --persistent       do not exit, but monitor SOURCE for changes and "
+      "keep\n"
+      "                          writing to dirfile.\n"
+    "  -r --remounted-source when SOURCE is a curfile, assume that the "
+    "framefile is\n"
+    "                          located in the directory `" REMOUNT_PATH"' "
+    "relative\n"
+    "                          to the curfile's location.  This option has "
     "no\n"
     "                          effect if SOURCE is not a curfile.\n"
     "     --remounted-using=DIR same as `--remounted-source' except use DIR as the\n"
-    "                          relative path instead of the default `"
-    REMOUNT_PATH "'.\n"
+    "                          path instead of the default `" REMOUNT_PATH
+    "'.\n"
     //    "  -R --resume           resume an interrupted defiling.\n"
-    "  -s --suffix-size=SIZE assume the framefile suffix (the portion of "
-    "the\n"
-    "                          framefile which is incremented as a "
-    "hexadecimal\n"
-    "                          number) is no more than SIZE characters "
+    "  -s --suffix-size=SIZE framefile suffix is no more than SIZE characters "
     "large.\n"
     "                          SIZE should be an integer between 0 and %i.\n"
     "  --help                display this help and exit\n"
@@ -463,7 +449,7 @@ void PrintUsage(void)
     "\n  Default curfile name :  " DEFAULT_CURFILE
     "\n  Default remount path :  " REMOUNT_PATH
     "\n  Default output path  :  " DEFAULT_DIR
-    "\n", NAME_MAX
+    "\n", SUFF_MAX
     );
   exit(0);
 }
@@ -473,20 +459,31 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
   int opts_ok = 1;
   int i, j, nargs = 0;
   int nshortargs = 0; /* number of arguments needed for short options */
-  char** argument;
-  char* shortarg;
+  struct argument_s {
+    char* value;
+    int position;
+    int used;
+  } *argument;
+  struct shortarg_s {
+    char option;
+    int position;
+  } *shortarg;
 
-  if ((argument = (char**)malloc(argc * sizeof(char*))) == NULL) {
+  if ((argument = (struct argument_s*)malloc(argc * sizeof(struct argument_s)))
+      == NULL) {
     perror("defile: cannot allocate heap");
     exit(1);
   }
 
-  if ((shortarg = (char*)malloc(argc * sizeof(char))) == NULL) {
+  memset(argument, 0, argc * sizeof(struct argument_s));
+
+  if ((shortarg = (struct shortarg_s*)malloc(argc * sizeof(struct shortarg_s)))
+      == NULL) {
     perror("defile: cannot allocate heap");
     exit(1);
   }
 
-  for(i = 1; i < argc; ++i) {
+  for (i = 1; i < argc; ++i) {
     if (opts_ok && argv[i][0] == '-') { /* an option */
       if (argv[i][1] == '-') { /* a long option */
         if (argv[i][2] == '\0') /* -- last option */
@@ -510,7 +507,9 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
             perror("defile: cannot allocate heap");
             exit(1);
           }
-        } else if (!strcmp(argv[i], "--force-framefile"))
+        } else if (!strcmp(argv[i], "--force"))
+          rc->force = 1;
+        else if (!strcmp(argv[i], "--framefile"))
           rc->framefile = 1;
         else if (!strncmp(argv[i], "--output-dirfile=", 17)) {
           free(rc->remount_dir);
@@ -539,7 +538,11 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           rc->resume = 1;
         else if (!strncmp(argv[i], "--suffix-size=", 14)) {
           if (argv[i][14] >= '0' && argv[i][14] <= '9') {
-            rc->sufflen = atoi(&argv[i][14]);
+            if ((rc->sufflen = atoi(&argv[i][14])) > SUFF_MAX) {
+              fprintf(stderr, "defile: suffix size `%s' is not a valid value\n"
+                  "Try `defile --help' for more information.\n", &argv[i][14]);
+              exit(1);
+            }
           } else {
             fprintf(stderr, "defile: suffix size `%s' is not a valid value\n"
                 "Try `defile --help' for more information.\n", &argv[i][14]);
@@ -555,8 +558,13 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           switch (argv[i][j]) {
             case 'C':
               rc->write_curfile = 1;
-              if (nshortargs < argc)
-                shortarg[nshortargs++] = 'C';
+              if (nshortargs < argc) {
+                shortarg[nshortargs].position = i - 1;
+                shortarg[nshortargs++].option = 'C';
+              }
+              break;
+            case 'F':
+              rc->framefile = 1;
               break;
             case 'R':
               rc->resume = 1;
@@ -571,11 +579,13 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
               }
               break;
             case 'f':
-              rc->framefile = 1;
+              rc->force = 1;
               break;
             case 'o':
-              if (nshortargs < argc)
-                shortarg[nshortargs++] = 'o';
+              if (nshortargs < argc) {
+                shortarg[nshortargs].position = i - 1;
+                shortarg[nshortargs++].option = 'o';
+              }
               break;
             case 'p':
               rc->persist = 1;
@@ -590,8 +600,10 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
               }
               break;
             case 's':
-              if (nshortargs < argc)
-                shortarg[nshortargs++] = 's';
+              if (nshortargs < argc) {
+                shortarg[nshortargs].position = i - 1;
+                shortarg[nshortargs++].option = 's';
+              }
               break;
             default:
               fprintf(stderr, "defile: invalid option -- %c\n"
@@ -601,52 +613,69 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
         }
       }
     } else { /* an argument */
-      argument[nargs++] = argv[i];
+      argument[nargs].value = argv[i];
+      argument[nargs++].position = i;
     }
   }
 
+  j = -1;
   /* resolve short option arguments */
   for (i = 0; i < nshortargs; ++i) {
     if (i >= nargs) {
       fprintf(stderr, "defile: option requires an argument -- %c\n"
-          "Try `defile --help' for more information.\n", shortarg[i]);
+          "Try `defile --help' for more information.\n", shortarg[i].option);
       exit(1);
     }
 
-    switch(shortarg[i]) {
+    /* find the next (unused) argument after this short option */
+    for (j++; j < nargs && argument[j].position <= shortarg[i].position; ++j);
+
+    /* we didn't find an argument, complain and die */
+    if (j == nargs) {
+      fprintf(stderr, "defile: option requires an argument -- %c\n"
+          "Try `defile --help' for more information.\n", shortarg[i].option);
+      exit(1);
+    }
+
+    argument[j].used = 1;
+    switch(shortarg[i].option) {
       case 'C':
-        if (argument[i][0] != '\0') {
+        if (argument[j].value[0] != '\0') {
           free(rc->output_curfile);
-          if ((rc->output_curfile = strdup(argument[i])) == NULL) {
+          if ((rc->output_curfile = strdup(argument[j].value)) == NULL) {
             perror("defile: cannot allocate heap");
             exit(1);
           }
         } else {
           fprintf(stderr, "defile: curfile name `%s' is not a valid value\n"
-              "Try `defile --help' for more information.\n", argument[i]);
+              "Try `defile --help' for more information.\n", argument[j].value);
           exit(1);
         }
         break;
       case 'o':
-        if (argument[i][0] != '\0') {
+        if (argument[j].value[0] != '\0') {
           free(rc->output_dirfile);
-          if ((rc->output_dirfile = strdup(argument[i])) == NULL) {
+          if ((rc->output_dirfile = strdup(argument[j].value)) == NULL) {
             perror("defile: cannot allocate heap");
             exit(1);
           }
         } else {
           fprintf(stderr,
               "defile: output dirfile name `%s' is not a valid value\n"
-              "Try `defile --help' for more information.\n", argument[i]);
+              "Try `defile --help' for more information.\n", argument[j].value);
           exit(1);
         }
         break;
       case 's':
-        if (argument[i][0] >= '0' && argument[i][0] <= '9') {
-          rc->sufflen = atoi(argument[i]);
+        if (argument[j].value[0] >= '0' && argument[j].value[0] <= '9') {
+            if ((rc->sufflen = atoi(argument[j].value)) > SUFF_MAX) {
+              fprintf(stderr, "defile: suffix size `%s' is not a valid value\n"
+                  "Try `defile --help' for more information.\n", &argv[i][14]);
+              exit(1);
+            }
         } else {
           fprintf(stderr, "defile: suffix size `%s' is not a valid value\n"
-              "Try `defile --help' for more information.\n", argument[i]);
+              "Try `defile --help' for more information.\n", argument[j].value);
           exit(1);
         }
         break;
@@ -663,12 +692,18 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
     exit(1);
   }
 
-  /* SOURCE */
-  rc->source = argument[nshortargs];
+  /* first unused argument is SOURCE */
+  for (j = 0; j < nargs && argument[j].used; ++j);
 
-  /* DESTINATION (if any) */
-  if (nargs > nshortargs + 1) {
-    rc->dest_dir = argument[nshortargs + 1];
+  /* SOURCE */
+  rc->source = argument[j].value;
+
+  /* next unused argument is DESTINATION */
+  for (j++; j < nargs && argument[j].used; ++j);
+
+  /* DIRECTORY (if any) */
+  if (j < nargs) {
+    rc->dest_dir = argument[j].value;
     if (strlen(rc->dest_dir) > PATH_MAX) {
       fprintf(stderr, "defile: Destination path too long\n");
       exit(1);
@@ -712,6 +747,13 @@ int main (int argc, char** argv)
     /* this takes care of allocated rc.dirfile */
     rc.dirfile  = GetDirFile(rc.chunk, rc.dest_dir);
 
+  /* check the length of the output path */
+  if (strlen(rc.dirfile) > PATH_MAX - FIELD_MAX - 1) {
+    fprintf(stderr, "defile: destination dirfile `%s' too long\n",
+        rc.dirfile);
+    exit(1);
+  }
+
   /* Make the Channel Struct */
   MakeTxFrame();
 
@@ -722,6 +764,8 @@ int main (int argc, char** argv)
 
   /* Initialise things */
   ri.read = ri.wrote = ri.old_total = 0;
+  ri.tty = 0;
+  delta = 1;
   gettimeofday(&rc.start, &rc.tz);
 
   /* Spawn reader and writer */
@@ -730,13 +774,15 @@ int main (int argc, char** argv)
 
   /* Main status loop */
   do {
-    gettimeofday(&now, &rc.tz);
-    delta = (now.tv_sec - rc.start.tv_sec) * 1000000 - rc.start.tv_usec
-      + now.tv_usec;
-    printf("Read [%i of %i] Wrote [%i] Frame Rate %.3f kHz (%.1f sec)       \r",
-        ri.read, ri.old_total + ri.chunk_total, ri.wrote, 1000. * ri.wrote /
-        delta, delta / 1000000.);
-    fflush(stdout);
+    if (!ri.tty) {
+      gettimeofday(&now, &rc.tz);
+      delta = (now.tv_sec - rc.start.tv_sec) * 1000000 - rc.start.tv_usec
+        + now.tv_usec;
+      printf("Read [%i of %i] Wrote [%i] Frame Rate %.3f kHz (%.1f sec)       \r",
+          ri.read, ri.old_total + ri.chunk_total, ri.wrote, 1000. * ri.wrote /
+          delta, delta / 1000000.);
+      fflush(stdout);
+    }
     usleep(100000);
   } while (!ri.writer_done);
   printf("Read [%i of %i] Wrote [%i] Frame Rate %.3f kHz (%.3f sec)        \n",
