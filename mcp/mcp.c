@@ -488,7 +488,7 @@ int AmISam(void) {
 
   gethostname(buffer, 1);
 
-  return (buffer[0] == 'f') ? 0 : 1;
+  return (buffer[0] == 's') ? 1 : 0;
 }
 
 void WatchFIFO(void);
@@ -559,7 +559,7 @@ int main(int argc, char *argv[]) {
   if (SamIAm)
     fprintf(stderr, "I am Sam.\n");
   else 
-    fprintf(stderr, "I am Frodo.\n");
+    fprintf(stderr, "I am not Sam.\n");
 
   MakeTxFrame();
 

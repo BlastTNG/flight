@@ -191,19 +191,19 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
 
   v_elev = GetVElev() * 6.0; // the 6.0 is to improve dynamic range.
                              // It is removed in the DSP/ACS1 code.
-  Txframe[i_elVreq] = (Txframe[i_elVreq] & 0xffff0000) | (32768 + v_elev);
+  WriteFast(i_elVreq, 32768 + v_elev);
   v_az = GetVAz();
-  Txframe[i_azVreq] = (Txframe[i_azVreq] & 0xffff0000) | (32768 + v_az);
+  WriteFast(i_azVreq, 32768 + v_az);
   
   /*** Send elevation angles to acs1 from acs2 ***/
   /* cos of el enc */
   el_rad = (M_PI / 180.0) * PointingData[point_index].el; // convert to radians 
   ucos_el = (unsigned int)((cos(el_rad) + 1.0) * 32768.0);
-  Txframe[i_cos_el] = (Txframe[i_cos_el] & 0xffff0000) | ucos_el;
+  WriteFast(i_cos_el, ucos_el);
 
   /* sin of el enc */
   usin_el = (unsigned int)((sin(el_rad) + 1.0) * 32768.0);
-  Txframe[i_sin_el] = (Txframe[i_sin_el] & 0xffff0000) | usin_el;
+  WriteFast(i_sin_el, usin_el);
 
   /* zero motor gains if the pin is in */
   if (pinIsIn())
@@ -224,25 +224,17 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
 
   /*** Send Gains ****/
   /* proportional term for el motor */
-  slowTxFields[i_g_Pel][j_g_Pel] =
-    (slowTxFields[i_g_Pel][j_g_Pel] & 0xffff0000) | elGainP;
+  WriteSlow(i_g_Pel, j_g_Pel, elGainP);
   /* integral term for el_motor */
-  slowTxFields[i_g_Iel][j_g_Iel] =
-    (slowTxFields[i_g_Iel][j_g_Iel] & 0xffff0000) | elGainI;
+  WriteSlow(i_g_Iel, j_g_Iel, elGainI);
   /* p term for roll motor */
-  slowTxFields[i_g_Proll][j_g_Proll] =
-    (slowTxFields[i_g_Proll][j_g_Proll] & 0xffff0000)| rollGainP;
+  WriteSlow(i_g_Proll, j_g_Proll, rollGainP);
   /* p term for az motor */
-  slowTxFields[i_g_Paz][j_g_Paz] =
-    (slowTxFields[i_g_Paz][j_g_Paz] & 0xffff0000) | CommandData.azi_gain.P;
+  WriteSlow(i_g_Paz, j_g_Paz, CommandData.azi_gain.P);
   /* p term for pivot motor */
-  slowTxFields[i_g_pivot][j_g_pivot] =
-    (slowTxFields[i_g_pivot][j_g_pivot] & 0xffff0000) | CommandData.pivot_gain.P;
+  WriteSlow(i_g_pivot, j_g_pivot, CommandData.pivot_gain.P);
   /* setpoint for reaction wheel */
-  slowTxFields[i_set_reac][j_set_reac] =
-    (slowTxFields[i_set_reac][j_set_reac] & 0xffff0000) |
-    (CommandData.pivot_gain.SP + 32768);
-
+  WriteSlow(i_set_reac, j_set_reac, CommandData.pivot_gain.SP + 32768);
 }
 
 /************************************************************************
@@ -266,20 +258,14 @@ void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
 
   t = time(NULL);
 
-  slowTxFields[i_time][j_time] =
-    (slowTxFields[i_time][j_time] & 0xffff0000) | ((t >> 16) & 0xffff);
-  slowTxFields[i_time + 1][j_time] =
-    (slowTxFields[i_time + 1][j_time] & 0xffff0000) | (t&0xffff);
+  WriteSlow(i_time, j_time, t >> 16);
+  WriteSlow(i_time + 1, j_time, t);
 
-  slowTxFields[i_fan][j_fan] =
-    (slowTxFields[i_fan][j_fan] & 0xffff0000) | CommandData.fan;
-  slowTxFields[i_t_cpu][j_t_cpu] =
-    (slowTxFields[i_t_cpu][j_t_cpu] & 0xffff0000) | CommandData.T;
+  WriteSlow(i_fan, j_fan, CommandData.fan);
+  WriteSlow(i_t_cpu, j_t_cpu, CommandData.T);
 
-  slowTxFields[i_samiam][j_samiam] =
-    (slowTxFields[i_samiam][j_samiam] & 0xffff0000) | SamIAm;
+  WriteSlow(i_samiam, j_samiam, SamIAm);
 }
-
 
 /************************************************************************
  *                                                                      *
@@ -303,8 +289,7 @@ void PhaseControl(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
   }	
 
   for(i = 0; i < DAS_CARDS; i++) {
-    slowTxFields[i_c[i]][j_c[i]] =
-      (slowTxFields[i_c[i]][j_c[i]] & 0xffff0000) | CommandData.Phase[i];
+    WriteSlow(i_c[i], j_c[i], CommandData.Phase[i]);
   }
 }
 
@@ -315,10 +300,10 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int i_cryoout1 = -1, j_cryoout1 = -1;
   static int i_cryoout2 = -1, j_cryoout2 = -1;
   static int i_cryoout3 = -1, j_cryoout3 = -1;
-  int cryoout1 = 0, cryoout2 = 0;
+  int cryoout3 = 0, cryoout2 = 0;
 
   /************** Set indices first time around *************/
-  if (i_cryoout1 == -1) {
+  if (i_cryoout3 == -1) {
     SlowChIndex("cryoout1", &i_cryoout1, &j_cryoout1);
     SlowChIndex("cryoout2", &i_cryoout2, &j_cryoout2);
     SlowChIndex("cryoout3", &i_cryoout3, &j_cryoout3);
@@ -326,24 +311,24 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   
   /********** Set Output Bits **********/
   if (CommandData.Cryo.heliumLevel == 0) {
-    cryoout1 |= 0x02;
+    cryoout3 |= 0x02;
   } else {
-    cryoout1 |= 0x01;
+    cryoout3 |= 0x01;
   }
   if (CommandData.Cryo.charcoalHeater == 0) {
-    cryoout1 |= 0x08;
+    cryoout3 |= 0x08;
   } else {
-    cryoout1 |= 0x04;
+    cryoout3 |= 0x04;
   }
   if (CommandData.Cryo.coldPlate == 0) {
-    cryoout1 |= 0x20;
+    cryoout3 |= 0x20;
   } else {
-    cryoout1 |= 0x10;
+    cryoout3 |= 0x10;
   }
   if (CommandData.Cryo.JFETHeat == 0) {
-    cryoout1 |= 0x80;
+    cryoout3 |= 0x80;
   } else {
-    cryoout1 |= 0x40;
+    cryoout3 |= 0x40;
   }
   if (CommandData.Cryo.heatSwitch == 0) {
     cryoout2 |= 0x20;
@@ -356,12 +341,8 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
     cryoout2 |= 0x40;
   }
 
-  //We really want to control cryoout3, as if it were the old cryoout1, so
-  //I only did the change as in below.  Lazy Matthew, lazy matthew!
-  slowTxFields[i_cryoout3][j_cryoout3] =
-    (slowTxFields[i_cryoout3][j_cryoout3] & 0xffff0000) | cryoout1;
-  slowTxFields[i_cryoout2][j_cryoout2] =
-    (slowTxFields[i_cryoout2][j_cryoout2] & 0xffff0000) | cryoout2;
+  WriteSlow(i_cryoout3, j_cryoout3, cryoout3);
+  WriteSlow(i_cryoout2, j_cryoout2, cryoout2);
 }
 
 /************************************************************************\
@@ -402,18 +383,11 @@ void ControlGyroHeat(unsigned int *Txframe,  unsigned short *Rxframe,
   }
 
   /* send down the setpoints and gains values */
-  slowTxFields[i_T_GY_SET][j_T_GY_SET] =
-    (slowTxFields[i_T_GY_SET][j_T_GY_SET] & 0xffff0000) |
-    (unsigned short) (CommandData.t_gybox_setpoint * 32768.0 / 100.0);
+  WriteSlow(i_T_GY_SET, j_T_GY_SET, (unsigned short)(CommandData.t_gybox_setpoint * 32768.0 / 100.0));
 
-  slowTxFields[i_G_PGYH][j_G_PGYH] =
-    (slowTxFields[i_G_PGYH][j_G_PGYH] & 0xffff0000) | CommandData.gy_heat_gain.P;
-
-  slowTxFields[i_G_IGYH][j_G_IGYH] =
-    (slowTxFields[i_G_IGYH][j_G_IGYH] & 0xffff0000) | CommandData.gy_heat_gain.I;
-
-  slowTxFields[i_G_DGYH][j_G_DGYH] =
-    (slowTxFields[i_G_DGYH][j_G_DGYH] & 0xffff0000) | CommandData.gy_heat_gain.D;
+  WriteSlow(i_G_PGYH, j_G_PGYH, CommandData.gy_heat_gain.P);
+  WriteSlow(i_G_IGYH, j_G_IGYH, CommandData.gy_heat_gain.I);
+  WriteSlow(i_G_DGYH, j_G_DGYH, CommandData.gy_heat_gain.D);
 
   /* control the heat */
   set_point = (CommandData.t_gybox_setpoint - 136.45) / (-9.5367431641e-08);
@@ -448,10 +422,10 @@ void ControlGyroHeat(unsigned int *Txframe,  unsigned short *Rxframe,
 
   /******** do the pulse *****/
   if (p_on > 0) {
-    Txframe[i_GY_HEAT] = (Txframe[i_GY_HEAT]&0xffff0000)| on;
+    WriteFast(i_GY_HEAT, on);
     p_on--;
   } else {
-    Txframe[i_GY_HEAT] = (Txframe[i_GY_HEAT]&0xffff0000)| off;
+    WriteFast(i_GY_HEAT, off);
     p_off--;
   }
 
@@ -492,18 +466,10 @@ int ControlISCHeat(unsigned int *Txframe,  unsigned short *Rxframe,
   }
 
   /* send down the setpoints and gains values */
-  slowTxFields[i_T_ISC_SET][j_T_ISC_SET] =
-    (slowTxFields[i_T_ISC_SET][j_T_ISC_SET] & 0xffff0000) |
-    (unsigned short) (CommandData.t_isc_setpoint * 32768.0 / 100.0);
-
-  slowTxFields[i_G_PISCH][j_G_PISCH] =
-    (slowTxFields[i_G_PISCH][j_G_PISCH] & 0xffff0000) | CommandData.isc_heat_gain.P;
-
-  slowTxFields[i_G_IISCH][j_G_IISCH] =
-    (slowTxFields[i_G_IISCH][j_G_IISCH] & 0xffff0000) | CommandData.isc_heat_gain.I;
-
-  slowTxFields[i_G_DISCH][j_G_DISCH] =
-    (slowTxFields[i_G_DISCH][j_G_DISCH] & 0xffff0000) | CommandData.isc_heat_gain.D;
+  WriteSlow(i_T_ISC_SET, j_T_ISC_SET, (unsigned short)(CommandData.t_isc_setpoint * 32768.0 / 100.0));
+  WriteSlow(i_G_PISCH, j_G_PISCH, CommandData.isc_heat_gain.P);
+  WriteSlow(i_G_IISCH, j_G_IISCH, CommandData.isc_heat_gain.I);
+  WriteSlow(i_G_DISCH, j_G_DISCH, CommandData.isc_heat_gain.D);
 
   /* control the heat */
   set_point = (CommandData.t_isc_setpoint - 136.45) / (-9.5367431641e-08);
@@ -772,7 +738,6 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int pumpBitsCh, pumpBitsInd = -1;
   static int pumpPwm1Ch, pumpPwm1Ind;
-  static int cryoPwm1Ch, cryoPwm1Ind;
   static int pumpPwm2Ch, pumpPwm2Ind;
   static int pumpPwm3Ch, pumpPwm3Ind;
   static int pumpPwm4Ch, pumpPwm4Ind;
@@ -787,7 +752,6 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
   if (pumpBitsInd == -1) {
     FastChIndex("isc_bits", &iscBitsCh);
     FastChIndex("acs0bits", &acs0bitsCh);
-    SlowChIndex("cryopwm1", &cryoPwm1Ch, &cryoPwm1Ind);
     SlowChIndex("pump_bits", &pumpBitsCh, &pumpBitsInd);
     SlowChIndex("balpump_lev", &pumpPwm1Ch, &pumpPwm1Ind);
     SlowChIndex("sprpump_lev", &pumpPwm2Ch, &pumpPwm2Ind);
@@ -848,43 +812,25 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
     iscBits = Balance(iscBits, slowTxFields);
   }
 
-  slowTxFields[pumpBitsCh][pumpBitsInd] =
-    (slowTxFields[pumpBitsCh][pumpBitsInd] & 0xffff0000) | pumpBits;
-  slowTxFields[pumpPwm2Ch][pumpPwm2Ind] =
-    (slowTxFields[pumpPwm2Ch][pumpPwm2Ind] & 0xffff0000) |
-    (CommandData.pumps.pwm2 & 0x7ff);
-  slowTxFields[pumpPwm3Ch][pumpPwm3Ind] =
-    (slowTxFields[pumpPwm3Ch][pumpPwm3Ind] & 0xffff0000) |
-    (CommandData.pumps.pwm3 & 0x7ff);
-  slowTxFields[pumpPwm4Ch][pumpPwm4Ind] =
-    (slowTxFields[pumpPwm4Ch][pumpPwm4Ind] & 0xffff0000) |
-    (CommandData.pumps.pwm4 & 0x7ff);
-  slowTxFields[cryoPwm1Ch][cryoPwm1Ind] =
-    (slowTxFields[cryoPwm1Ch][cryoPwm1Ind] & 0xffff0000) |
-    (CommandData.pumps.pwm4 & 0x7ff);
-  slowTxFields[balOnCh][balOnInd] =
-    (slowTxFields[balOnCh][balOnInd] & 0xffff0000) |
-    ((int)(CommandData.pumps.bal_on) & 0xffff);
-  slowTxFields[balOffCh][balOffInd] =
-    (slowTxFields[balOffCh][balOffInd] & 0xffff0000) |
-    ((int)(CommandData.pumps.bal_off) & 0xffff);
-  slowTxFields[balVetoCh][balVetoInd] =
-    (slowTxFields[balVetoCh][balVetoInd] & 0xffff0000) |
-    ((int)(CommandData.pumps.bal_veto) & 0xffff);
-  slowTxFields[balTargetCh][balTargetInd] =
-    (slowTxFields[balTargetCh][balTargetInd] & 0xffff0000) |
-    ((int)(CommandData.pumps.bal_target) & 0xffff);
-  Txframe[iscBitsCh] = (Txframe[iscBitsCh] & 0xffff0000) | iscBits;
+  WriteSlow(pumpBitsCh, pumpBitsInd, pumpBits);
+  WriteSlow(pumpPwm2Ch, pumpPwm2Ind, CommandData.pumps.pwm2 & 0x7ff);
+  WriteSlow(pumpPwm3Ch, pumpPwm3Ind, CommandData.pumps.pwm3 & 0x7ff);
+  WriteSlow(pumpPwm4Ch, pumpPwm4Ind, CommandData.pumps.pwm4 & 0x7ff);
+  WriteSlow(balOnCh, balOnInd, (int)CommandData.pumps.bal_on);
+  WriteSlow(balOffCh, balOffInd, (int)CommandData.pumps.bal_off);
+  WriteSlow(balVetoCh, balVetoInd, (int)CommandData.pumps.bal_veto);
+  WriteSlow(balTargetCh, balTargetInd, (int)CommandData.pumps.bal_target);
+  WriteFast(iscBitsCh, iscBits);
 
 }
 
 /*****************************************************************
 *                                                               *
- * SyncADC: check to see if any boards need to be synced and     *
+* SyncADC: check to see if any boards need to be synced and     *
 *    send the sync bit if they do.  Only one board can be       *
 *    synced in each superframe.                                 *
 *                                                               *
- *****************************************************************/
+*****************************************************************/
 void SyncADC (int TxIndex,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int syncCh = -1, syncInd, nextInd;
@@ -938,8 +884,7 @@ void SetReadBits(unsigned int* Txframe) {
   bit++;
   
   for(i_card = 0; i_card < DAS_CARDS + 2; i_card++) {
-    Txframe[i_readd3 + i_card] = (Txframe[i_readd3 + i_card] & 0xffff0000)|
-			       (bit & 0x0000ffff);
+    WriteFast(i_readd3 + i_card, bit);
   }
   
 }
@@ -977,12 +922,6 @@ char *StringToUpper(char *s) {
 *    Store derived acs and pointing data in frame                      *
 *                                                                      *
  ************************************************************************/
-void FillSlowTxField(unsigned d, int i, int j,
-		     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
-  slowTxFields[i][j] = (slowTxFields[i][j] & 0xffff0000) &
-		       (d & 0xffff);
-}
-
 void StoreData(unsigned int* Txframe, 
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int i_V_COL = -1, j_V_COL = -1;
@@ -1013,27 +952,21 @@ void StoreData(unsigned int* Txframe,
 
   /********** VSC Data **********/
   i_vsc = GETREADINDEX(vsc_index);
-  FillSlowTxField(VSCData[i_vsc].col * 100, i_V_COL, j_V_COL, slowTxFields);
-  FillSlowTxField(VSCData[i_vsc].row * 100, i_V_ROW, j_V_ROW, slowTxFields);
-  FillSlowTxField(VSCData[i_vsc].mag * 100, i_V_MAG, j_V_MAG, slowTxFields);
-  FillSlowTxField(VSCData[i_vsc].sf_frame,  i_V_FRA, j_V_FRA, slowTxFields);
+  WriteSlow(i_V_COL, j_V_COL, (int)(VSCData[i_vsc].col * 100));
+  WriteSlow(i_V_ROW, j_V_ROW, (int)(VSCData[i_vsc].row * 100));
+  WriteSlow(i_V_MAG, j_V_MAG, (int)(VSCData[i_vsc].mag * 100));
+  WriteSlow(i_V_FRA, j_V_FRA, VSCData[i_vsc].sf_frame);
 
   /********** Sun Sensor Data **********/
   i_ss = GETREADINDEX(ss_index);
-  FillSlowTxField(SunSensorData[i_ss].raw_az,  arsCh, arsInd,
-		  slowTxFields);
-  FillSlowTxField(SunSensorData[i_ss].raw_el,  ersCh, ersInd,
-		  slowTxFields);
-  FillSlowTxField(SunSensorData[i_ss].prin,  prinCh, prinInd,
-		  slowTxFields);
+  WriteSlow(arsCh, arsInd, SunSensorData[i_ss].raw_az);
+  WriteSlow(ersCh, ersInd, SunSensorData[i_ss].raw_el);
+  WriteSlow(prinCh, prinInd, SunSensorData[i_ss].prin);
 
   /************* processed pointing data *************/
   i_point = GETREADINDEX(point_index);
-  Txframe[i_az] = (Txframe[i_az]&0xffff0000) |
-    (unsigned int)(PointingData[i_point].az * 65536.0/360.0);
-  Txframe[i_el] = (Txframe[i_el]&0xffff0000) |
-    (unsigned int)(PointingData[i_point].el * 65536.0/360.0);
-  
+  WriteFast(i_az, (unsigned int)(PointingData[i_point].az * 65536.0/360.0));
+  WriteFast(i_el, (unsigned int)(PointingData[i_point].el * 65536.0/360.0));
 }
 
 
@@ -1098,12 +1031,12 @@ void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
   }
 
   /*** update frame num ***/
-  Txframe[1] = (Txframe[1] & 0xffff0000) | (frame_num & 0x0000ffff);
-  Txframe[2] = (Txframe[2] & 0xffff0000) | ((frame_num & 0xffff0000) >> 16);
+  WriteFast(1, frame_num);
+  WriteFast(2, frame_num >> 16);
   frame_num++;
 
   /*** update mplex fields  ***/
-  Txframe[3] = (Txframe[3] & 0xffff0000) | (index & 0x0000ffff);
+  WriteFast(3, index);
   for (j = 0; j < N_SLOW; j++) {
     Txframe[j + 4] = slowTxFields[j][index];
   }
