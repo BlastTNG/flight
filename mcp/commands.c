@@ -727,8 +727,10 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.ISCState.match_tol = rvalues[1] / 100;
     CommandData.ISCState.quit_tol = rvalues[2] / 100;
     CommandData.ISCState.rot_tol = rvalues[3] * DEG2RAD;
+  } else if (command == hold_current)
+    CommandData.ISCState.hold_current = ivalues[0];
 
-  } else {
+  else {
     return; /* invalid command - don't update */
   }
 
@@ -1281,7 +1283,7 @@ void InitCommandData() {
 
   CommandData.use_elenc = 1;
   CommandData.use_elclin = 1;
-  CommandData.use_sun = 1;
+  CommandData.use_sun = 0;
   CommandData.use_isc = 1;
   CommandData.use_mag = 1;
   CommandData.use_gps = 1;
