@@ -13,7 +13,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 111        /* total number of single word cmds */
+#define N_SCOMMANDS 110        /* total number of single word cmds */
 #define N_MCOMMANDS 71         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -71,7 +71,7 @@ enum singleCommand {
   pot_valve_open,   balpump_up,         balpump_off,      balpump_on,
   balpump_down,     sprpump_fwd,        sprpump_off,      sprpump_on,
   sprpump_rev,      ramp,               reset_trims,      isc_save_images,
-  stop,             sun_veto,           sun_allow,        sync_adc,
+  stop,             sun_veto,           sun_allow,
   trim_to_isc,      unlock,             lock_off,         xyzzy,
   mcc_halt,         isc_reboot,         isc_cam_cycle,    osc_run,
   osc_shutdown,     osc_reboot,         osc_cam_cycle,    osc_pause,

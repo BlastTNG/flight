@@ -247,10 +247,8 @@ void SingleCommand (enum singleCommand command) {
   } else if (command == mcc_halt) {
     bputs(warning, "Halting the MCC\n");
     system("/sbin/halt");
-  } else if (command == sync_adc)
-    CommandData.ADC_sync_timeout = 0;
 
-  else if (command == trim_to_isc)
+  } else if (command == trim_to_isc)
     SetTrimToISC();
   else if (command == reset_trims)
     ClearTrim();

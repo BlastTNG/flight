@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.36 $";
+const char command_list_serial[] = "$Revision: 2.37 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -119,7 +119,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(ln_valve_off), "ln tank valve off", GR_CRYO_CONTROL},
 
   {COMMAND(xyzzy), "nothing happens here", GR_MISC},
-  {COMMAND(sync_adc), "resync ADC Boards that require it", GR_MISC},
   {COMMAND(mcc_halt), "ask MCP to halt the MCC", GR_MISC | CONFIRM},
   {COMMAND(reap), "ask MCP to reap the watchdog tickle", GR_MISC | CONFIRM},
 
