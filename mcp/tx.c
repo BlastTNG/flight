@@ -163,6 +163,7 @@ void SyncADC (void) {
   static struct BiPhaseStruct* syncReadAddr;
   static struct BiPhaseStruct* statusAddr[NUM_STAT];
   static int doingSync = 0;
+  static int last_node = 0;
   char buffer[9];
 
   int k, l;
@@ -199,7 +200,8 @@ void SyncADC (void) {
       if (slow_data[statusAddr[k]->index][statusAddr[k]->channel] == 0x0001) {
         /* board needs to be synced */
         doingSync = FAST_PER_SLOW * 2;
-        l = (k == 0) ? 23 : (k == 17) ? 21 : k;
+        l = (k + last_node) % NUM_STAT;
+        l = (l == 0) ? 23 : (l == 17) ? 21 : l;
         bprintf(info, "ADC Sync board %i\n", l);
         RawNiosWrite(syncAddr->niosAddr, BBC_WRITE | BBC_NODE(l) | BBC_CH(56) |
             BBC_ADC_SYNC | 0xa5a3, NIOS_FLUSH);
