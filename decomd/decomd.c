@@ -8,6 +8,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <sys/statvfs.h>
 #include <unistd.h>
 #include <pthread.h>
 
@@ -163,8 +164,10 @@ int main(void) {
   fd_set fdlist, fdread, fdwrite;
   struct sockaddr_in addr;
   int addrlen;
+  struct statvfs vfsbuf;
   char buf[209];
   struct timeval no_time = {0, 0};
+  unsigned long long int disk_free = 0;
   pthread_t framefile_thread;
   pthread_t decom_thread;
 
@@ -193,8 +196,14 @@ int main(void) {
     fdwrite = fdread = fdlist;
     FD_CLR(sock, &fdwrite);
     n = select(lastsock + 1, &fdread, &fdwrite, NULL, &no_time);
-    sprintf(buf, "%1i %1i %3i %5.3f %5.3f %s%c", status, polarity, du,
-        fs_bad, dq_bad, framefile.name, '\0');
+
+    if (statvfs("/data", &vfsbuf))
+      perror("statvfs");
+    else
+      disk_free = (unsigned long long int)vfsbuf.f_bavail * vfsbuf.f_bsize;
+
+    sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu %s%c", status, polarity, du,
+        fs_bad, dq_bad, disk_free, framefile.name, '\0');
 
     if (n == -1 && errno == EINTR)
       continue;
@@ -252,6 +261,7 @@ int main(void) {
               == -1) {
             if (errno == EPIPE) {  /* connexion dropped */
               printf("decomd: connexion dropped on socket %i\n", n);
+              shutdown(n, SHUT_RDWR);
               close(n);
               FD_CLR(n, &fdlist);
             } else if (errno != EAGAIN) {  /* ignore socket buffer overflows */
