@@ -2,5 +2,5 @@
 
 aclocal
 automake --add-missing
-autoconf configure.ac
+autoconf configure.ac > configure
 autoheader
