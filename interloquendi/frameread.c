@@ -25,7 +25,7 @@
 #include <sys/stat.h>
 
 #include "frameread.h"
-#include "tx_struct.h"
+#include "channels.h"
 
 /* given a source filename, fills in the part of it which is static from chunk
  * to chunk, the value of the counter, returns the length of the non-static

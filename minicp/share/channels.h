@@ -1,4 +1,4 @@
-/* tx_struct.h: contains channel list specific prototypes and definitions
+/* channels.h: contains channel list specific prototypes and definitions
  *
  * This software is copyright (C) 2002-2004 University of Toronto
  * 
@@ -12,8 +12,8 @@
  */
 
 
-#ifndef TX_STRUCT_H
-#define TX_STRUCT_H
+#ifndef CHANNELS_H
+#define CHANNELS_H
 
 #include <stdio.h>
 
