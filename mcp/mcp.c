@@ -264,7 +264,7 @@ void SensorReader(void) {
     } else
       merror(MCP_WARNING, "Cannot read temp3 from I2C bus");
 
-    if ((stream = fopen("/sys/bus/i2c/devices/3-0290/fan3_input", "r"))
+    if ((stream = fopen("/sys/bus/i2c/devices/0-0290/fan3_input", "r"))
         != NULL) {
       if ((nr = fscanf(stream, "%i\n", &data)) == 1)
         CommandData.fan = data;
@@ -638,9 +638,11 @@ int main(int argc, char *argv[]) {
 
   mputs(MCP_STARTUP, "MCP startup");
 
+  /* Watchdog */
+  pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
+
   if ((bbc_fp = open("/dev/bbcpci", O_RDWR)) < 0)
     merror(MCP_FATAL, "Error opening BBC");
-
 
   /* Initialize the Ephemeris */
   ReductionInit();
@@ -650,9 +652,6 @@ int main(int argc, char *argv[]) {
   pthread_mutex_init(&mutex, NULL);
 
   MakeAddressLookups();
-
-  /* Watchdog */
-  pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
 
 #ifdef USE_FIFO_CMD
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, NULL);
