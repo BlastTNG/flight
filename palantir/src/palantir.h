@@ -25,7 +25,6 @@
 #include <qpixmap.h>
 #include <qcombobox.h>
 #include <qframe.h>
-#include <qsound.h>
 #include <qlistbox.h>
 #include <qmultilineedit.h>
 
@@ -35,18 +34,9 @@
 #define DERIV        3
 #define CURDIR       4
 
-#define SOUND_CARD   0
-#define PC_SPEAKER   1
-#define NO_ALARMS    2
-
 // Update palantir every 1358 milliseconds
-#define UPDATETIME 1358
-
-#ifdef DEFAULT_PC_SPEAKER
-#  define DEFAULT_ALARM PC_SPEAKER
-#else
-#  define DEFAULT_ALARM SOUND_CARD
-#endif
+//#define UPDATETIME 1358
+#define UPDATETIME 750
 
 #ifndef LIB_DIR
 #  define LIB_DIR "/usr/local/lib/palantir/"
@@ -55,9 +45,6 @@
 #ifndef DEF_LAYOUTFILE
 #  define DEF_LAYOUTFILE LIB_DIR "default.pal"
 #endif
-
-// All alarms are relative to LIB_DIR
-#define DEF_ALARM "doh.wav"
 
 #ifndef LOGFILE
 #  define LOGFILE LIB_DIR "log.txt"
@@ -111,7 +98,6 @@ struct Label {
 	int labelindex;
 	char datumtype;
 	int index;
-	bool alarmenabled;
 	bool dialogup;
 	int laststyle;
 	struct TextStyle textstyle;
@@ -167,7 +153,6 @@ class QDomNode;
 class QPixmap;
 class QComboBox;
 class QFrame;
-class QSound;
 class QListBox;
 class QMultiLineEdit;
 
@@ -192,8 +177,7 @@ class MainForm : public QDialog
 
 public:
   MainForm(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
-			     WFlags fl = 0, char *layoutfile = "layoutfile.pal", 
-					 char soundt = SOUND_CARD);
+           WFlags fl = 0, char *layoutfile = "layoutfile.pal");
   ~MainForm();
 
   QList<QGroupBox> QtBoxes;
@@ -203,24 +187,10 @@ public:
 
   QFrame *InfoBox;
   QComboBox *QtCurveFiles;
-  QComboBox *QtChooseSound;
-  QPushButton *EnableAlarms;
   QLabel *CurveFilesCaption;
-  QLabel *LayoutFilename;
-  QLabel *LayoutFileCaption;
   QLabel *InfoPlaceHolder;
   QLabel *InfoPlaceHolder2;
   QLabel *ShowPicture;
-  QPushButton *QuitButton;
-
-  QDialog *QAlarmsWindow;
-  QListBox *QAlarmsList;
-  QLabel *QAlarmsLabel;
-  QLabel *QAlarmsLogLabel;
-  QPushButton *QCloseAlarmsWindow;
-  QPushButton *QReanimateAlarm;
-  QPushButton *QReanimateAllAlarms;
-  QMultiLineEdit *QAlarmsLog;
 
 protected:
   QGridLayout* InfoLayout;
@@ -230,9 +200,6 @@ protected:
   QList<QSpacerItem> Spacer;
   QSpacerItem *InfoSpacer;
   QSpacerItem *MainFormSpacer;
-
-  QVBoxLayout *QAlarmsTopLayout;
-  QHBoxLayout *QAlarmsBotLayout;
 
 private:
   void WarningMessage(char title[], char txt[]);
@@ -253,11 +220,7 @@ private:
   void LabelInit(struct Label *lab);
   QPalette Palette(struct TextStyle tstyle);
   QFont Font(struct TextStyle tstyle);
-  void AddAlarmToList(QList<struct AlarmInfo> *AlarmList, Label *currLabel,
-	                    QString alarm, float val);
-	void Alarms(QList<struct AlarmInfo> AlarmList);
-  void NoDataAlarm();
-  void PlayAlarmSound(QString alarm);
+
   void WriteLog(char *message, QMultiLineEdit *);
   void ReadLog(QMultiLineEdit *);
   double GetSlope(struct Deriv *);
@@ -292,7 +255,7 @@ private:
   int firstpderiv;
 	int numpderivs;
 	char **pderivs;
-	
+
 
 	AdamDom *XMLInfo;
 
@@ -302,20 +265,14 @@ private:
 
   QList<bool> DisabledIndex;
 
-  char SoundType;
   char NoIncoming;
   bool NoIncomingOn;
   bool NoIncomingDialogUp;
-	bool DialogsUp;
-	int AlarmScroll;
+  bool DialogsUp;
+  int AlarmScroll;
 
 public slots:
   void UpdateData();
-  void ChangeCurFile();
-  void ShowAlarms();
-  void ChangeChooseSound();
-  void ReactivateAllAlarms();
-  void ReactivateAlarm();
 };
 
 #endif

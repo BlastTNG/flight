@@ -2,8 +2,8 @@ include ../Makefile.config
 MOC = $(QT_DIR)/bin/moc
 LIB_DIR = -DLIB_DIR=\"$(DATA_DIR)/\"
 INCLUDE = -I../include -I$(QT_DIR)/include
-CPP = g++ $(INCLUDE)
-CC = gcc
+CPP = g++ -g $(INCLUDE)
+CC = gcc -g
 EXTRA = -L$(QT_DIR)/lib -L../lib -lqt-mt -lRD
 
 all: palantir

@@ -186,7 +186,6 @@ void MainForm::LabelInit(struct Label *lab) {
   lab->caption = "-*-";
   strcpy(lab->src, "");
   lab->parentbox = lab->labelindex = lab->datumtype = lab->index = -1;
-  lab->alarmenabled = true;
   lab->dialogup = false;
   lab->laststyle = -1;
 }
@@ -319,8 +318,6 @@ void MainForm::GetExtrema(struct Extrema *ext, int bookmark) {
       SetTextStyle(&(currExtremum->textstyle), extbm, BM_RESERVE);
       if (XMLInfo->GetAttribute("value") != "")
         currExtremum->value = QStringToFloat(XMLInfo->GetAttribute("value"));
-      if (XMLInfo->GetAttribute("alarm") != "")
-        currExtremum->alarm = XMLInfo->GetAttribute("alarm");
     }
   }
 
@@ -616,7 +613,7 @@ void MainForm::GetXMLInfo(char *layoutfile) {
           XMLInfo->SetBookMark(BM_THIRD);
           CurDirInfo.append(new CurDir);
           currCurDir = CurDirInfo.current();
-                                                                                
+
           currLabel->datumtype = CURDIR;
           currLabel->index = CurDirInfo.count() - 1;
           SetTextStyle(&(currCurDir->textstyle), BM_DEF_DATUM, BM_THIRD);
@@ -734,295 +731,6 @@ QFont MainForm::Font(struct TextStyle tstyle) {
   return font;
 }
 
-
-//-------------------------------------------------------------
-//
-// ShowAlarms (slot): popup the alarms dialog window
-//
-//-------------------------------------------------------------
-
-void MainForm::ShowAlarms() {
-  QAlarmsWindow->show();
-}
-
-
-//-------------------------------------------------------------
-//
-// ReactivateAlarm (slot): reactivates the alarm currently
-//      selected in the alarm dialog window
-//
-//-------------------------------------------------------------
-
-void MainForm::ReactivateAlarm() {
-  bool *en;
-  char tmp[50];
-  int i;
-
-  if (QAlarmsList->currentItem() == -1) {
-    sprintf(tmp, "You must select a disabled alarm from the list above.");
-    WarningMessage("Help", tmp);
-  } else {
-    for (i = 0; i < QAlarmsList->count(); i++) {
-      if (QAlarmsList->isSelected(i)) {
-        en = DisabledIndex.at(i);
-        *en = true;
-        DisabledIndex.remove(i);
-        QAlarmsList->removeItem(i);
-        i--;
-      }
-    }
-  }
-}
-
-
-//-------------------------------------------------------------
-//
-// ReactivateAllAlarms (slot): turns back on all the alarms
-//
-//-------------------------------------------------------------
-
-void MainForm::ReactivateAllAlarms() {
-  Label *currLabel;
-
-  for (currLabel = LabelInfo.first(); currLabel != NULL;
-      currLabel = LabelInfo.next())
-    currLabel->alarmenabled = true;
-  NoIncomingOn = true;
-
-  QAlarmsList->clear();
-
-  DisabledIndex.first();
-  while (DisabledIndex.current() != NULL)
-    DisabledIndex.remove();
-}
-
-
-//-------------------------------------------------------------
-//
-// ChangeChooseSound (slot): fires when the combo-box listing
-//      alarm-playing options changes
-//
-//-------------------------------------------------------------
-
-  void MainForm::ChangeChooseSound() {
-    if (QtChooseSound->currentItem() == 0)
-      SoundType = SOUND_CARD;
-    else if (QtChooseSound->currentItem() == 1)
-      SoundType = PC_SPEAKER;
-    else
-      SoundType = NO_ALARMS;
-  }
-
-
-//-------------------------------------------------------------
-//
-// PlayAlarmSound (private): sounds an alarm
-//
-//   sound: filename of .wav file to use if sound card
-//      available
-//
-//-------------------------------------------------------------
-
-void MainForm::PlayAlarmSound(QString sound) {
-  char txt[25];
-
-  if (SoundType == SOUND_CARD) {
-    strcpy(txt, "play " LIB_DIR);
-    strcat(txt, sound);
-    system(txt);
-  } else if (SoundType == PC_SPEAKER)
-    QApplication::beep();
-}
-
-
-//-------------------------------------------------------------
-//
-// WriteLog (private): writes information on an alarm to a log
-//      file and also inserts it into the alarms dialog window
-//
-//   *message: log message to write
-//   *dest: textbox to write to in alarms dialog
-//
-//-------------------------------------------------------------
-
-void MainForm::WriteLog(char *message, QMultiLineEdit *dest) {
-  FILE *f;
-  time_t t;
-  char txt[255];
-
-  t = time(NULL);
-  f = fopen(LOGFILE, "a");
-
-  if (f == NULL) {
-    printf("Palantir: could not write log file %s.\n", LOGFILE);
-    return;
-  }
-
-  sprintf(txt, "%s-> %s\n\n", ctime(&t), message);
-  fprintf(f, txt);
-  dest->insertLine(tr(txt));
-  dest->setCursorPosition(dest->numLines() - 1, 0);
-  fclose(f);
-
-
-  chmod(LOGFILE, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-}
-
-
-//-------------------------------------------------------------
-//
-// ReadLog (private): read in log file from disk
-//
-//   *dest: textbox to write to in alarms dialog window
-//
-//-------------------------------------------------------------
-
-void MainForm::ReadLog(QMultiLineEdit *dest) {
-  FILE *f;
-  char txt[255];
-  int counter = 0;
-
-  f = fopen(LOGFILE, "r");
-  dest->setText(tr(""));
-
-  if (f == NULL) {
-    printf("Palantir:  could not read log file %s.\n", LOGFILE);
-    return;
-  }
-
-  while(fgets(txt, 255, f) != NULL) {
-    txt[strlen(txt) - 1] = '\0';              // Get rid of the \n character
-    dest->insertLine(txt, dest->numLines());
-    counter++;
-  }
-  dest->setCursorPosition(dest->numLines() - 1, 0);
-
-  if (counter > 4000) {
-    sprintf(txt, "Your log file is getting large and is slowing the "
-        "start up time of palantir.  Delete %s to start afresh.", LOGFILE);
-    WarningMessage("Hint", txt);
-  }
-}
-
-//-------------------------------------------------------------
-//
-// NoDataAlarm (private): warn user that downlink that no new
-//      frames are being written to disk
-//
-//-------------------------------------------------------------
-
-void MainForm::NoDataAlarm() {
-  char txt[200];
-  int disable;
-
-  if (SoundType != NO_ALARMS) {
-    PlayAlarmSound(DEF_ALARM);
-
-    if(!(NoIncomingDialogUp)) {
-      NoIncomingDialogUp = true;
-      strcpy(txt, "The downlink has stalled! (Blank palantir.)\n\n");
-      strcat(txt, "Do you wish to disable this alarm?");
-      disable = QMessageBox::critical(this, "Warning", txt, QMessageBox::Yes |
-          QMessageBox::Default,
-          QMessageBox::No | QMessageBox::Escape);
-      if (disable == QMessageBox::Yes) {
-        NoIncomingOn = false;
-        QAlarmsList->insertItem(tr("Downlink has stalled!"));
-        DisabledIndex.append(&NoIncomingOn);
-      }
-      NoIncomingDialogUp = false;
-    }
-  }
-}
-
-//-------------------------------------------------------------
-//
-// Alarms (private): Uh-oh!
-//
-//   *AlarmList: a list with info on which alarms need to be
-//      sounded
-//
-//-------------------------------------------------------------
-
-void MainForm::Alarms(QList<struct AlarmInfo> AlarmList) {
-  char tmp[255], tmp2[50], *txt;
-  int *dialogindex, i;
-  int numdialogs = 0;
-  char disable;
-  int fd;
-  struct AlarmInfo *currAlarm;
-
-  AlarmScroll++;
-  if (AlarmScroll >= AlarmList.count())
-    AlarmScroll = 0;
-  currAlarm = AlarmList.at(AlarmScroll);
-  PlayAlarmSound(currAlarm->alarm);
-
-  dialogindex = (int *)malloc(sizeof(int) * AlarmList.count());
-  txt = (char *)malloc(sizeof(char) * AlarmList.count() * 57 + 100);
-  strcpy(txt, "The following alarm(s) have been raised:\n\n");
-  for (currAlarm = AlarmList.first(); currAlarm != NULL;
-      currAlarm = AlarmList.next()) {
-    if (!currAlarm->lab->dialogup) {
-      strcpy(tmp, currAlarm->lab->caption);
-      sprintf(tmp, "%s: value out of range (%f)", tmp, currAlarm->val);
-      WriteLog(tmp, QAlarmsLog);
-      QAlarmsList->insertItem(tr(tmp));
-      DisabledIndex.append(&(currAlarm->lab->alarmenabled));
-      currAlarm->lab->dialogup = true;
-      strcat(txt, tmp);
-      strcat(txt, "\n");
-      dialogindex[numdialogs++] = AlarmList.at();
-    }
-  }
-  if (numdialogs) {
-    strcat(txt, "\nDo you wish to disable these alarms?");
-    disable = QMessageBox::critical(this, "Warning", txt, QMessageBox::Yes |
-        QMessageBox::Default, QMessageBox::No |
-        QMessageBox::Escape);
-    if (disable == QMessageBox::Yes) {
-      for (i = 0; i < numdialogs; i++) {
-        currAlarm = AlarmList.at(dialogindex[i]);
-        currAlarm->lab->alarmenabled = false;
-        currAlarm->lab->dialogup = false;
-      }
-    } else {
-      for (i = 0; i < numdialogs; i++) {
-        currAlarm = AlarmList.at(dialogindex[i]);
-        currAlarm->lab->dialogup = false;
-      }
-    }
-  }
-}
-
-
-//-------------------------------------------------------------
-//
-// AddAlarmToList (slot): Adds an alarm to the list of alarms
-//      that need to be sounded.
-//
-//   *AlarmList: list to which to add
-//   *currLabel: label of alarm that needs to be sounded
-//   alarm: alarm to sound
-//   val: value that triggered alarm
-//
-//-------------------------------------------------------------
-
-void MainForm::AddAlarmToList(QList<struct AlarmInfo> *AlarmList,
-    Label *currLabel, QString alarm, float val) {
-
-  struct AlarmInfo *currAlarm;
-
-  if (currLabel->alarmenabled && !alarm.isEmpty()) {
-    AlarmList->append(new AlarmInfo);
-    currAlarm = AlarmList->current();
-    currAlarm->lab = currLabel;
-    currAlarm->alarm = alarm;
-    currAlarm->val = val;
-  }
-}
-
-
 //-------------------------------------------------------------
 //
 // GetSlope: performs linear regression on the Deriv's buffer to
@@ -1072,7 +780,7 @@ double MainForm::GetSlope(struct Deriv *currDeriv) {
 
 void MainForm::UpdateData() {
   double indata[20];
-  char displayer[10];
+  char displayer[80];
   char i, j;
   struct Label *currLabel;
   struct Number *currNumber;
@@ -1081,7 +789,6 @@ void MainForm::UpdateData() {
   struct DateTime *currDateTime;
   struct CurDir *currCurDir;
   QLabel *currQtLabel;
-  QList<struct AlarmInfo> AlarmList;
   time_t timetmp;
   struct tm *currTime;
   char tmp[255];
@@ -1098,7 +805,6 @@ void MainForm::UpdateData() {
     if (NoIncomingOn) {
       if (++NoIncoming == 3) {
         NoIncoming = 0;
-        NoDataAlarm();
       }
     }
   }
@@ -1128,8 +834,6 @@ void MainForm::UpdateData() {
               currQtLabel->setFont(Font(currNumber->extrema.xhi.textstyle));
               currLabel->laststyle = 2;
             }
-            AddAlarmToList(&AlarmList, currLabel,
-                currNumber->extrema.xhi.alarm, *indata);
           } else if (*indata >= currNumber->extrema.hi.value) {
             if (currLabel->laststyle != 3) {
               currQtLabel->setPalette(Palette(
@@ -1137,8 +841,6 @@ void MainForm::UpdateData() {
               currQtLabel->setFont(Font(currNumber->extrema.hi.textstyle));
               currLabel->laststyle = 3;
             }
-            AddAlarmToList(&AlarmList, currLabel,
-                currNumber->extrema.hi.alarm, *indata);
           } else if (*indata <= currNumber->extrema.xlo.value) {
             if (currLabel->laststyle != 4) {
               currQtLabel->setPalette(Palette(
@@ -1146,8 +848,6 @@ void MainForm::UpdateData() {
               currQtLabel->setFont(Font(currNumber->extrema.xlo.textstyle));
               currLabel->laststyle = 4;
             }
-            AddAlarmToList(&AlarmList, currLabel,
-                currNumber->extrema.xlo.alarm, *indata);
           } else if (*indata <= currNumber->extrema.lo.value) {
             if (currLabel->laststyle != 5) {
               currQtLabel->setPalette(Palette(
@@ -1155,8 +855,6 @@ void MainForm::UpdateData() {
               currQtLabel->setFont(Font(currNumber->extrema.lo.textstyle));
               currLabel->laststyle = 5;
             }
-            AddAlarmToList(&AlarmList, currLabel,
-                currNumber->extrema.lo.alarm, *indata);
           } else {
             if (currLabel->laststyle != 0) {
               currQtLabel->setPalette(Palette(currNumber->textstyle));
@@ -1165,6 +863,10 @@ void MainForm::UpdateData() {
             }
           }
           sprintf(displayer, currNumber->format, *indata);
+          if (strlen(displayer)==1) {
+            displayer[1] = ' ';
+            displayer[2] = '\0';
+          }
           currQtLabel->setText(tr(displayer));
         }
         break;
@@ -1192,8 +894,6 @@ void MainForm::UpdateData() {
                 currQtLabel->setText(tr(currMulti->words[i].caption));
                 currLabel->laststyle = i;
               }
-              AddAlarmToList(&AlarmList, currLabel, currMulti->words[i].alarm,
-                  *indata);
               j = 1;
               break;
             }
@@ -1309,8 +1009,6 @@ void MainForm::UpdateData() {
               currQtLabel->setFont(Font(currDeriv->extrema.xhi.textstyle));
               currLabel->laststyle = 2;
             }
-            AddAlarmToList(&AlarmList, currLabel,
-                currDeriv->extrema.xhi.alarm, *indata);
           } else if (*indata >= currDeriv->extrema.hi.value) {
             if (currLabel->laststyle != 3) {
               currQtLabel->setPalette(Palette(
@@ -1318,8 +1016,6 @@ void MainForm::UpdateData() {
               currQtLabel->setFont(Font(currDeriv->extrema.hi.textstyle));
               currLabel->laststyle = 3;
             }
-            AddAlarmToList(&AlarmList, currLabel,
-                currDeriv->extrema.hi.alarm, *indata);
           } else if (*indata <= currDeriv->extrema.xlo.value) {
             if (currLabel->laststyle != 4) {
               currQtLabel->setPalette(Palette(
@@ -1327,8 +1023,6 @@ void MainForm::UpdateData() {
               currQtLabel->setFont(Font(currDeriv->extrema.xlo.textstyle));
               currLabel->laststyle = 4;
             }
-            AddAlarmToList(&AlarmList, currLabel,
-                currDeriv->extrema.xlo.alarm, *indata);
           } else if (*indata <= currDeriv->extrema.lo.value) {
             if (currLabel->laststyle != 5) {
               currQtLabel->setPalette(Palette(
@@ -1336,8 +1030,6 @@ void MainForm::UpdateData() {
               currQtLabel->setFont(Font(currDeriv->extrema.lo.textstyle));
               currLabel->laststyle = 5;
             }
-            AddAlarmToList(&AlarmList, currLabel,
-                currDeriv->extrema.lo.alarm, *indata);
           } else {
             if (currLabel->laststyle != 0) {
               currQtLabel->setPalette(Palette(currDeriv->textstyle));
@@ -1351,26 +1043,8 @@ void MainForm::UpdateData() {
         break;
     }
   }
-
-  if (AlarmList.count() && SoundType != NO_ALARMS)
-    Alarms(AlarmList);
 }
 
-
-//-------------------------------------------------------------
-//
-// ChangeCurFile (slot): fires when combo-box containing
-//      available .cur files
-//
-//-------------------------------------------------------------
-
-void MainForm::ChangeCurFile() {
-  char txt[50];
-
-  strcpy(txt, QtCurveFiles->currentText());
-  DataSource->~KstFile();
-  DataSource = new KstFile(txt, UNKNOWN);
-}
 
 
 //-------------------------------------------------------------
@@ -1380,11 +1054,12 @@ void MainForm::ChangeCurFile() {
 //-------------------------------------------------------------
 
 MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
-    char *layoutfile, char soundt) : QDialog(parent, name, modal, fl)
+    char *layoutfile) : QDialog(parent, name, modal, fl)
 {
   char tmp[255];
   int row, i;
   int bytecount;
+  int max_row=0, min_col = 10;
 
   struct Box *currQtBox;
   struct Label *currLabel;
@@ -1413,17 +1088,17 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
 
   if (!name)
     setName("MainForm");
-  setCaption(tr("Palantir"));
+  setCaption(tr("Palantir -")+layoutfile);
   setIcon(*Icon);
 
   ContentLayout = new QGridLayout;
-  ContentLayout->setSpacing(6);
+  ContentLayout->setSpacing(2);
   ContentLayout->setMargin(0);
 
   // Create the screen using the info specified in the layout.pal file
-  if (BoxInfo.isEmpty())
+  if (BoxInfo.isEmpty()) {
     WarningMessage("Error", "No boxes to display");
-  else {
+  } else {
     for (currQtBox = BoxInfo.first(); currQtBox != NULL;
         currQtBox = BoxInfo.next()) {
 
@@ -1433,8 +1108,6 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
 
       currQtBoxes->setTitle(tr(currQtBox->caption));
       currQtBoxes->setColumnLayout(0, Qt::Vertical);
-      currQtBoxes->layout()->setSpacing(0);
-      currQtBoxes->layout()->setMargin(0);
 
       currQtBoxes->setPalette(Palette(currQtBox->textstyle));
       currQtBoxes->setFont(Font(currQtBox->textstyle));
@@ -1443,8 +1116,6 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
       currQtBoxLayout = BoxLayout.current();
 
       currQtBoxLayout->setAlignment(Qt::AlignTop);
-      currQtBoxLayout->setSpacing(3);
-      currQtBoxLayout->setMargin(10);
 
       row = 0;
       for (currLabel = LabelInfo.first(); currLabel != NULL;
@@ -1463,7 +1134,7 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
             QtData.append(new QLabel(currQtBoxes, "Label"));
             currQtData = QtData.current();
             currLabel->labelindex = QtData.at();
-            currQtData->setText(tr("Stand by . . ."));
+            currQtData->setText(tr("..."));
             if (currLabel->datumtype == NUMBER)
               currNumber = NumberInfo.at(currLabel->index);
             if (currLabel->datumtype == MULTI)
@@ -1478,206 +1149,45 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
         }
       }
 
-      QtPlaceHolders.append(new QLabel(currQtBoxes, "Label"));
-      currQtPlaceHolder = QtPlaceHolders.current();
-      currQtPlaceHolder->setText(tr("  "));
-      font.setPointSize(2);
-      currQtPlaceHolder->setFont(font);
-
-      Spacer.append(new QSpacerItem(5, 5, QSizePolicy::Fixed,
-            QSizePolicy::Fixed));
-      currSpacer = Spacer.current();
-
-      currQtBoxLayout->addWidget(currQtPlaceHolder, 0, 1);
-      currQtBoxLayout->addItem(currSpacer, 0, 3);
-
       ContentLayout->addMultiCellWidget(currQtBoxes, currQtBox->row,
           currQtBox->row + currQtBox->rowspan,
           currQtBox->col,
           currQtBox->col + currQtBox->colspan);
+      if (currQtBox->row + currQtBox->rowspan > max_row)
+        max_row = currQtBox->row + currQtBox->rowspan;
+      if (currQtBox->col < min_col) min_col = currQtBox->col;
     }
   }
 
-
-  // Create control bar at bottom of screen
-  InfoBox = new QFrame(this, "InfoBox");
-  InfoBox->setFrameShape(QFrame::Box);
-  InfoBox->setFrameShadow(QFrame::Sunken);
-
-  ShowPicture = new QLabel(InfoBox, "ShowPicture");
+  ShowPicture = new QLabel(this, "ShowPicture");
   ShowPicture->setScaledContents(false);
+  ShowPicture->setFrameStyle(QFrame::Box|QFrame::Sunken);
+  ShowPicture->setAlignment(Qt::AlignCenter);
+  ShowPicture->setPaletteBackgroundColor(QColor("black"));
+  ContentLayout->addMultiCellWidget(ShowPicture,max_row,
+                                    max_row, min_col,min_col);
 
-  QtCurveFiles = new QComboBox(false, InfoBox, "CurveFiles");
-  QtCurveFiles->setPalette(Palette(InfoComboStyle));
-  QtCurveFiles->setFont(Font(InfoComboStyle));
-
-  // List .cur files
   if (CurveFiles.isEmpty())
     WarningMessage("Error",
-        "You have specified NO curve files in your layout file.");
-  else {
-    for (currCurveFile = CurveFiles.first(); currCurveFile != NULL;
-        currCurveFile = CurveFiles.next())
-      QtCurveFiles->insertItem(tr(*currCurveFile));
-  }
-
-  CurveFilesCaption = new QLabel(InfoBox, "CurveFilesCaption");
-  CurveFilesCaption->setText(tr("Current .cur file:"));
-  CurveFilesCaption->setPalette(Palette(InfoCaptionStyle));
-  CurveFilesCaption->setFont(Font(InfoCaptionStyle));
-
-  LayoutFileCaption = new QLabel(InfoBox, "LayoutFileCaption");
-  LayoutFileCaption->setText(tr("Current layout file:"));
-  LayoutFileCaption->setPalette(Palette(InfoCaptionStyle));
-  LayoutFileCaption->setFont(Font(InfoCaptionStyle));
-
-  LayoutFilename = new QLabel(InfoBox, "LayoutFileCaption");
-  LayoutFilename->setText(tr(layoutfile));
-  LayoutFilename->setPalette(Palette(InfoDataStyle));
-  LayoutFilename->setFont(Font(InfoDataStyle));
-
-  InfoPlaceHolder = new QLabel(InfoBox, "Label");
-  InfoPlaceHolder->setText(tr("  "));
-  font.setPointSize(2);
-  InfoPlaceHolder->setFont(font);
-
-  QtChooseSound = new QComboBox(false, InfoBox, "ChooseSound");
-  QtChooseSound->setPalette(Palette(InfoComboStyle));
-  QtChooseSound->setFont(Font(InfoComboStyle));
-  QtChooseSound->insertItem(tr("Use sound card"));
-  QtChooseSound->insertItem(tr("Use PC speaker"));
-  QtChooseSound->insertItem(tr("No Sounds or Warning Messages"));
-
-  EnableAlarms = new QPushButton(InfoBox, "EnableAlarms");
-  EnableAlarms->setText(tr("Manage Alarms"));
-  EnableAlarms->setPalette(Palette(InfoButtonStyle));
-  EnableAlarms->setFont(Font(InfoButtonStyle));
-
-  InfoPlaceHolder2 = new QLabel(InfoBox, "Label");
-  InfoPlaceHolder2->setText(tr("       "));
-  font.setPointSize(2);
-  InfoPlaceHolder2->setFont(font);
-
-  InfoSpacer = new QSpacerItem(5, 5, QSizePolicy::Expanding,
-      QSizePolicy::Fixed);
-
-  QuitButton = new QPushButton(InfoBox, "Exit");
-  QuitButton->setText(tr("Exit"));
-  QuitButton->setPalette(Palette(InfoButtonStyle));
-  QuitButton->setFont(Font(InfoButtonStyle));
-
-  InfoLayout = new QGridLayout(InfoBox);
-  InfoLayout->setSpacing(6);
-  InfoLayout->setMargin(11);
-  InfoLayout->addMultiCellWidget(ShowPicture, 1, 2, 1, 1);
-  InfoLayout->addWidget(CurveFilesCaption, 1, 2);
-  InfoLayout->addWidget(LayoutFileCaption, 2, 2);
-  InfoLayout->addWidget(InfoPlaceHolder, 1, 3);
-  InfoLayout->addWidget(QtCurveFiles, 1, 4);
-  InfoLayout->addWidget(LayoutFilename, 2, 4);
-  InfoLayout->addWidget(InfoPlaceHolder2, 1, 5);
-  InfoLayout->addWidget(QtChooseSound, 1, 6);
-  InfoLayout->addWidget(EnableAlarms, 2, 6);
-  InfoLayout->addItem(InfoSpacer, 1, 7);
-  InfoLayout->addWidget(QuitButton, 2, 8);
+        "You have specified NO .cur files in your layout file.");
 
   MainFormSpacer = new QSpacerItem(5, 5, QSizePolicy::Fixed,
       QSizePolicy::Fixed);
 
   MainFormLayout = new QVBoxLayout(this);
-  MainFormLayout->setSpacing(6);
-  MainFormLayout->setMargin(11);
+  MainFormLayout->setSpacing(2);
+  MainFormLayout->setMargin(2);
   MainFormLayout->addLayout(ContentLayout);
   MainFormLayout->addItem(MainFormSpacer);
-  MainFormLayout->addWidget(InfoBox);
-
-  // Create alarms dialog window and lay it out
-  QAlarmsWindow = new QDialog(this, "QAlarmsWindow", true, 0);
-  QAlarmsWindow->setName("AlarmsWindow");
-  QAlarmsWindow->setCaption(tr("Alarms Window"));
-  QAlarmsWindow->setIcon(*Icon);
-
-  QAlarmsTopLayout = new QVBoxLayout(QAlarmsWindow);
-  QAlarmsTopLayout->setSpacing(6);
-  QAlarmsTopLayout->setMargin(11);
-
-  QAlarmsList = new QListBox(QAlarmsWindow, "QAlarmsList", 0);
-  QAlarmsList->setMultiSelection(true);
-  for (i = 0; i <= 7; i++)
-    QAlarmsList->insertItem(tr("dummy"));
-
-  QAlarmsLogLabel = new QLabel(QAlarmsWindow, "QAlarmsLogLabel", 0);
-  QAlarmsLogLabel->setPalette(Palette(InfoCaptionStyle));
-  QAlarmsLogLabel->setFont(Font(InfoCaptionStyle));
-  QAlarmsLogLabel->setText(tr("Alarms Log File:"));
-
-  QAlarmsLog = new QMultiLineEdit(QAlarmsWindow, "QAlarmsLog");
-  QAlarmsLog->setReadOnly(true);
-  QAlarmsLog->setPalette(Palette(InfoDataStyle));
-  QAlarmsLog->setFont(Font(InfoDataStyle));
-  strcpy(tmp, "a\na\na\na\na\na\na\n"); // Temporary text to make right size
-  QAlarmsLog->setText(tr(tmp));
-
-  QAlarmsLabel = new QLabel(QAlarmsWindow, "QAlarmsLabel", 0);
-  QAlarmsLabel->setPalette(Palette(InfoCaptionStyle));
-  QAlarmsLabel->setFont(Font(InfoCaptionStyle));
-  QAlarmsLabel->setText(tr("\nDeactivated Alarms:"));
-
-  QCloseAlarmsWindow = new QPushButton(QAlarmsWindow, "Close");
-  QCloseAlarmsWindow->setText(tr("Close"));
-  QCloseAlarmsWindow->setPalette(Palette(InfoButtonStyle));
-  QCloseAlarmsWindow->setFont(Font(InfoButtonStyle));
-
-  QReanimateAlarm = new QPushButton(QAlarmsWindow, "Reanimate");
-  QReanimateAlarm->setText(tr("Reactivate Alarm(s)"));
-  QReanimateAlarm->setPalette(Palette(InfoButtonStyle));
-  QReanimateAlarm->setFont(Font(InfoButtonStyle));
-
-  QReanimateAllAlarms = new QPushButton(QAlarmsWindow, "ReanimateAll");
-  QReanimateAllAlarms->setText(tr("Reactivate All Alarms"));
-  QReanimateAllAlarms->setPalette(Palette(InfoButtonStyle));
-  QReanimateAllAlarms->setFont(Font(InfoButtonStyle));
-
-  QAlarmsTopLayout->addWidget(QAlarmsLogLabel);
-  QAlarmsTopLayout->addWidget(QAlarmsLog);
-  QAlarmsTopLayout->addWidget(QAlarmsLabel);
-  QAlarmsTopLayout->addWidget(QAlarmsList);
-
-  QAlarmsBotLayout = new QHBoxLayout();
-  QAlarmsBotLayout->setSpacing(6);
-  QAlarmsBotLayout->setMargin(0);
-  QAlarmsBotLayout->addWidget(QReanimateAlarm);
-  QAlarmsBotLayout->addWidget(QReanimateAllAlarms);
-  QAlarmsBotLayout->addWidget(QCloseAlarmsWindow);
-
-  QAlarmsTopLayout->addItem(QAlarmsBotLayout);
-
-  QAlarmsWindow->adjustSize();
-  QAlarmsList->clear();
-  ReadLog(QAlarmsLog);
+  //MainFormLayout->addWidget(ShowPicture);
 
   timer = new QTimer();
-  SoundType = soundt;
   NoIncoming = 0;
   NoIncomingOn = true;
   NoIncomingDialogUp = false;
-  AlarmScroll = -1;
-  QtChooseSound->setCurrentItem(SoundType);
 
   // Slots
-  connect(QuitButton, SIGNAL(clicked()), this, SLOT(accept()));
-  connect(QCloseAlarmsWindow, SIGNAL(clicked()), QAlarmsWindow,
-      SLOT(accept()));
-  connect(QReanimateAllAlarms, SIGNAL(clicked()), this,
-      SLOT(ReactivateAllAlarms()));
-  connect(QReanimateAlarm, SIGNAL(clicked()), this, SLOT(ReactivateAlarm()));
-  connect(EnableAlarms, SIGNAL(clicked()), this, SLOT(ShowAlarms()));
   connect(timer, SIGNAL(timeout()), this, SLOT(UpdateData()));
-  connect(QtCurveFiles, SIGNAL(activated(const QString&)), this,
-      SLOT(ChangeCurFile()));
-  connect(QtChooseSound, SIGNAL(activated(const QString&)), this,
-      SLOT(ChangeChooseSound()));
-
   // Update palantir every UPDATETIME milliseconds
   timer->start(UPDATETIME, false);
 
@@ -1708,60 +1218,31 @@ MainForm::~MainForm()
 
 
 void usage() {
-  printf("\npalantir [-pcal | -noal] [layout file]\n\n");
-  printf("  -pca -> start with PC speaker for alarms\n");
-  printf("  -noa -> start with no alarms\n\n");
+  printf("\npalantir [layout file]\n\n");
   printf("Default layout file: " DEF_LAYOUTFILE "\n");
   printf("  [layout file] -> specify layout file\n\n");
-#ifdef DEFAULT_PC_SPEAKER
-  printf("Default alarm system: pc speaker.\n");
-#else
-  printf("Default alarm system: sound card\n");
-#endif
 }
 
 int main(int argc, char* argv[]) {
   QApplication app(argc, argv);
   char layoutfile[25];
-  char soundtype = DEFAULT_ALARM;
 
   // Parse out command line
-  if (argc >= 4) {
+  if (argc >= 2) {
     usage();
     exit(1);
   }
-  if (argc == 3) {
+  if (argc==2) {
     if (argv[1][0] == '-') {
-      if (strcmp(argv[1], "-noa") == 0)
-        soundtype = NO_ALARMS;
-      else if (strcmp(argv[1], "-pca") == 0)
-        soundtype = PC_SPEAKER;
-      else {
-        usage();
-        exit(1);
-      }
-      strcpy(layoutfile, argv[2]);
-    } else {
       usage();
       exit(1);
-    }
-  } else if (argc == 2) {
-    if (argv[1][0] == '-') {
-      if (strcmp(argv[1], "-noa") == 0)
-        soundtype = NO_ALARMS;
-      else if (strcmp(argv[1], "-pca") == 0)
-        soundtype = PC_SPEAKER;
-      else {
-        usage();
-        exit(1);
-      }
-      strcpy(layoutfile, DEF_LAYOUTFILE);
-    } else
+    } else {
       strcpy(layoutfile, argv[1]);
-  } else
+    }
+  } else {
     strcpy(layoutfile, DEF_LAYOUTFILE);
-
-  MainForm palantir(0, "palantir", true, 0, &layoutfile[0], soundtype);
+  }
+  MainForm palantir(0, "palantir", true, 0, &layoutfile[0]);
 
   // Hand over control to Qt
   app.setMainWidget(&palantir);

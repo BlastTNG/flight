@@ -133,7 +133,7 @@
   </TEXTSTYLE>
 </DEFAULTS>
 
-<BOX caption="Sensors" row="2" col="2">
+<BOX caption="Sensors" row="3" col="3">
   <MULTI caption="El Encoder" textstyle="oddrow">
     <DATUM src="ELENC_VETO">
       <WORD value="0" caption="Allowed" textstyle="OK_BIT"/>
@@ -172,7 +172,7 @@
   </MULTI>
 </BOX>
 
-<BOX caption="Pointing Mode" row="2" col="1" rowspan="1">
+<BOX caption="Pointing Mode" row="2" col="2" rowspan="1">
   <MULTI caption="Source" textstyle="oddrow">
     <DATUM src="IS_SCHED">
       <WORD value="1" caption="Schedule" textstyle="OK_BIT"/>
@@ -223,7 +223,7 @@
 
 </BOX>
 
-<BOX caption="Motor Gains" row="3" col="2">
+<BOX caption="Motor Gains" row="2" col="1">
   <NUMBER caption="P Elev" textstyle="evenrow">
     <DATUM format="%.0f" src="g_p_el" extrema="unknown"/></NUMBER>
   <NUMBER caption="I Elev" textstyle="evenrow">
@@ -285,7 +285,7 @@
     <DATUM format="%.2f" src="T_CLIN_PIV" extrema="temp"/></NUMBER>
 </BOX>
 
-<BOX caption="Motor Currents" row="3" col="3" >
+<BOX caption="Motor Currents" row="2" col="3" >
   <NUMBER caption="I Roll" textstyle="oddrow">
     <DATUM format="%.2f" src="I_ROLL" extrema="current"/></NUMBER>
   <NUMBER caption="I Reac" textstyle="oddrow">
@@ -297,7 +297,7 @@
   <NUMBER caption="I Race" textstyle="oddrow">
     <DATUM format="%.2f" src="I_RACE" extrema="current"/></NUMBER>
 </BOX>
-<BOX caption="Currents" row="1" col="3" rowspan="1">
+<BOX caption="Currents" row="1" col="3">
   <NUMBER caption="I DPM 3V" textstyle="oddrow">
     <DATUM format="%.2f" src="I_DPM_3V" extrema="current"/></NUMBER>
   <NUMBER caption="I DPM 5V" textstyle="oddrow">
@@ -322,7 +322,7 @@
     <DATUM format="%.2f" src="I_ISC" extrema="current"/></NUMBER>
 </BOX>
 
-<BOX caption="Bias Generator" row="3" col="7">
+<BOX caption="Bias Generator" row="3" col="6">
   <MULTI caption="Type" textstyle="oddrow">
     <DATUM src="BIAS_IS_DC">
       <WORD value="1" caption="DC" textstyle="W_BIT"/>
@@ -384,7 +384,7 @@
   </NUMBER>
 </BOX>
 
-<BOX caption="Diodes" row="1" col="5" rowspan="1">
+<BOX caption="Diodes" row="1" col="5">
   <NUMBER caption="LN2 Filter" textstyle="oddrow">
     <DATUM format="%.2f" src="T_ln2_filt" extrema="lhetemp"/></NUMBER>
   <NUMBER caption="LN2" textstyle="oddrow">
@@ -409,7 +409,7 @@
     <DATUM format="%.2f" src="T_charcoal" extrema="pottemp"/></NUMBER>
 </BOX>
 
-<BOX caption="ROXs" row="3" col="5">
+<BOX caption="ROXs" row="2" col="5">
   <NUMBER caption="He3 Fridge" textstyle="oddrow">
     <DATUM format="%.3f" src="T_he3fridge" extrema="he3fridge"/></NUMBER>
   <NUMBER caption="He4 Pot" textstyle="oddrow">
@@ -422,22 +422,15 @@
     <DATUM format="%.3f" src="T_base_250" extrema="pottemp"/></NUMBER>
 </BOX>
 
-<BOX caption="DAS Phases" row="1" col="7" rowspan="1">
-  <NUMBER caption="DAS 5" textstyle="oddrow"><DATUM format="%.0f" src="phase5" extrema="unknown"/></NUMBER>
+<BOX caption="DAS Phases" row="2" col="6">
   <NUMBER caption="DAS 6" textstyle="oddrow"><DATUM format="%.0f" src="phase6" extrema="unknown"/></NUMBER>
   <NUMBER caption="DAS 7" textstyle="oddrow"><DATUM format="%.0f" src="phase7" extrema="unknown"/></NUMBER>
-  <NUMBER caption="DAS 8" textstyle="oddrow"><DATUM format="%.0f" src="phase8" extrema="unknown"/></NUMBER>
   <NUMBER caption="DAS 9" textstyle="oddrow"><DATUM format="%.0f" src="phase9" extrema="unknown"/></NUMBER>
   <NUMBER caption="DAS 10" textstyle="oddrow"><DATUM format="%.0f" src="phase10" extrema="unknown"/></NUMBER>
-  <NUMBER caption="DAS 11" textstyle="oddrow"><DATUM format="%.0f" src="phase11" extrema="unknown"/></NUMBER>
-  <NUMBER caption="DAS 12" textstyle="oddrow"><DATUM format="%.0f" src="phase12" extrema="unknown"/></NUMBER>
-  <NUMBER caption="DAS 13" textstyle="oddrow"><DATUM format="%.0f" src="phase13" extrema="unknown"/></NUMBER>
-  <NUMBER caption="DAS 14" textstyle="oddrow"><DATUM format="%.0f" src="phase14" extrema="unknown"/></NUMBER>
   <NUMBER caption="DAS 15" textstyle="oddrow"><DATUM format="%.0f" src="phase15" extrema="unknown"/></NUMBER>
-  <NUMBER caption="DAS 16" textstyle="oddrow"><DATUM format="%.0f" src="phase16" extrema="unknown"/></NUMBER>
 </BOX>
 
-<BOX caption="Cryo Heaters" row="1" col="6" rowspan="1">
+<BOX caption="Cryo Heaters" row="1" col="6">
   <MULTI caption="He Level" textstyle="oddrow">
     <DATUM src="HE_LEV_SENS">
       <WORD value="1" caption="On" textstyle="W_BIT"/>
@@ -484,7 +477,7 @@
     </DATUM>
   </MULTI>
 </BOX>
-<BOX caption="Valves" row="3" col="6">
+<BOX caption="Valves" row="3" col="5">
   <MULTI caption="LN" textstyle="oddrow">
     <DATUM src="LN_VALVE">
       <WORD value="1" caption="On" textstyle="W_BIT"/>
