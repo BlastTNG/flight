@@ -4,6 +4,9 @@
 2005-01-24  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	Release defile-3.1.5
 
+	* defile.c (dputs): Raise SIGTERM on fatal or thread fatal message. (There's
+	no point in just killing one of the threads.)
+	* defile.c (main): Call buos_disable_exit.
 	* channels.c (WriteFormatFile): Shorten field name to make getdata happy.
 
 	Release defile-3.1.4

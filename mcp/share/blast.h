@@ -40,6 +40,8 @@ void bputs(buos_t, const char*);
 void buos_use_func(void (*puts_func)(buos_t, const char*));
 void buos_use_stdio(void);
 void buos_use_syslog(void);
+void buos_disable_exit(void);
+void buos_enable_exit(void);
 
 /* BLAMM (BLAST Memory Manager) definitions */
 void *_balloc(buos_t, size_t, const char*, int, const char*);

@@ -107,6 +107,13 @@ void dputs(buos_t level, const char* string)
     bputs_syslog(level, string);
   else if (level != info || !rc.silent)
     bputs_stdio(level, string);
+
+  if (level == fatal || level == tfatal) {
+    /* raise sigterm and wait for the reader to stop */
+    raise(SIGTERM);
+    for (;;)
+      sleep(1);
+  }
 }
 
 void ReadConfig(FILE* stream)
@@ -444,7 +451,7 @@ int DetermineSourceType(const struct rc_struct* rc)
   for (x = rc->source; *x; ++x) 
     if (*x != '-' && *x != '.' && (*x < '0' || *x > '9')
         && (*x < 'a' || *x > 'z') && (*x < 'A' || *x > 'Z'))
-        return 0;
+      return 0;
 
   /* hmm... still can't tell.  Further study is required */
   return -1;
@@ -473,7 +480,7 @@ const char* ResolveHost(char* host, struct sockaddr_in* addr, int forced)
 {
   struct hostent* the_host;
   char* ptr;
-  
+
   if ((ptr = strchr(host, ':')) != NULL) {
     if ((addr->sin_port = htons(atoi(ptr + 1))) == htons(0))
       addr->sin_port = htons(QUENDI_PORT);
@@ -534,64 +541,64 @@ void PrintUsage(void)
       "\n  -S --spec-file=NAME   use NAME as the specification file."
       "\n  -c --curfile          write a curfile called `" CUR_FILE "'"
       "\n                          pointing to the output directory."
-    "\n  -d --daemonise        fork to background and daemonise on startup.  "
-    "Implies"
-    "\n                          `--persistent' and `--quiet'."
-    "\n  -f --force            overwrite destination dirfile."
-    "\n  -l --local-source     assume the input source is a local file, "
-    "even when"
-    "\n                          it looks like a remote hostname."
-    "\n  -n --network-source   assume the input source is a remote host, "
-    "even when"
-    "\n                          it looks like a local filename."
-    "\n     --no-clobber       don't resume or overwrite existing dirfiles. "
-    "(default)"
-    "\n     --no-curfile       don't write a curfile. (default)"
-    "\n     --no-compress      don't compress the output. (default)"
-    "\n     --no-daemonise     don't daemonise. (default)"
-    "\n     --no-persist       exit upon reaching the end of the input stream."
-    "\n                          (default)"
-    "\n     --no-remount       assume the input curfile points to the right "
-    "place"
-    "\n                          (default)"
-    "\n  -o --output-dirfile=NAME use name as the name of the dirfile. Name "
-    "can either"
-    "\n                          be an absolute path, or a path realtive to "
-    "DIRECTORY."
-    "\n  -p --persistent       do not exit, but monitor SOURCE for changes "
-    "and keep"
-    "\n                          writing to dirfile."
-    "\n  -q --quiet            supress normal output, including the read and "
-    "write"
-    "\n                          counters."
-    "\n  -r --remounted-source when SOURCE is a curfile, assume that the "
-    "framefile is"
-    "\n                          located in the directory `" REMOUNT_PATH"' "
-    "relative"
-    "\n                          to the curfile's location.  This option has "
-    "no"
-    "\n                          effect if SOURCE is not a curfile."
-    "\n     --remounted-using=DIR same as `--remounted-source' except use "
-    "DIR as the"
-    "\n                          path instead of the default `" REMOUNT_PATH
-    "'."
-    "\n  -s --suffix-size=SIZE framefile suffix is no more than SIZE "
-    "characters "
-    "\n                          long.  SIZE should be an integer between 0 "
-    "and %i."
-    "\n                          Default: %i"
+      "\n  -d --daemonise        fork to background and daemonise on startup.  "
+      "Implies"
+      "\n                          `--persistent' and `--quiet'."
+      "\n  -f --force            overwrite destination dirfile."
+      "\n  -l --local-source     assume the input source is a local file, "
+      "even when"
+      "\n                          it looks like a remote hostname."
+      "\n  -n --network-source   assume the input source is a remote host, "
+      "even when"
+      "\n                          it looks like a local filename."
+      "\n     --no-clobber       don't resume or overwrite existing dirfiles. "
+      "(default)"
+      "\n     --no-curfile       don't write a curfile. (default)"
+      "\n     --no-compress      don't compress the output. (default)"
+      "\n     --no-daemonise     don't daemonise. (default)"
+      "\n     --no-persist       exit upon reaching the end of the input stream."
+      "\n                          (default)"
+      "\n     --no-remount       assume the input curfile points to the right "
+      "place"
+      "\n                          (default)"
+      "\n  -o --output-dirfile=NAME use name as the name of the dirfile. Name "
+      "can either"
+      "\n                          be an absolute path, or a path realtive to "
+      "DIRECTORY."
+      "\n  -p --persistent       do not exit, but monitor SOURCE for changes "
+      "and keep"
+      "\n                          writing to dirfile."
+      "\n  -q --quiet            supress normal output, including the read and "
+      "write"
+      "\n                          counters."
+      "\n  -r --remounted-source when SOURCE is a curfile, assume that the "
+      "framefile is"
+      "\n                          located in the directory `" REMOUNT_PATH"' "
+      "relative"
+      "\n                          to the curfile's location.  This option has "
+      "no"
+      "\n                          effect if SOURCE is not a curfile."
+      "\n     --remounted-using=DIR same as `--remounted-source' except use "
+      "DIR as the"
+      "\n                          path instead of the default `" REMOUNT_PATH
+      "'."
+      "\n  -s --suffix-size=SIZE framefile suffix is no more than SIZE "
+      "characters "
+      "\n                          long.  SIZE should be an integer between 0 "
+      "and %i."
+      "\n                          Default: %i"
 #ifdef HAVE_LIBZ
-    "\n     --verbose          output status information to the tty (default)"
-    "\n  -z --gzip             gzip compress the output dirfile.  Incompatible "
-    "with"
-    "\n                          `--resume'"
+      "\n     --verbose          output status information to the tty (default)"
+      "\n  -z --gzip             gzip compress the output dirfile.  Incompatible "
+      "with"
+      "\n                          `--resume'"
 #endif
-    "\n  --help                display this help and exit"
-    "\n  --version             display version information and exit"
-    "\n  --                    last option; all following parameters are "
-    "arguments."
-    "\n", SUFF_MAX, SUFF_MAX
-    );
+      "\n  --help                display this help and exit"
+      "\n  --version             display version information and exit"
+      "\n  --                    last option; all following parameters are "
+      "arguments."
+      "\n", SUFF_MAX, SUFF_MAX
+      );
   exit(0);
 }
 
@@ -882,6 +889,7 @@ int main (int argc, char** argv)
   pthread_t write_thread;
 
   /* set up our outputs */
+  buos_disable_exit();
   buos_use_func(dputs);
 
   /* read config file */
@@ -1014,7 +1022,7 @@ int main (int argc, char** argv)
                 > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
         else 
           printf("R:[%i of %i] W:[%i] %.*f Hz\r", ri.read / 20, (ri.old_total
-              + ri.chunk_total) / 20, ri.wrote / 20, (fr > 100) ? 1 : (fr > 10)
+                + ri.chunk_total) / 20, ri.wrote / 20, (fr > 100) ? 1 : (fr > 10)
               ? 2 : 3, fr);
         fflush(stdout);
 #endif
@@ -1029,7 +1037,7 @@ int main (int argc, char** argv)
           (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
     else
       bprintf(info, "R:[%i of %i] W:[%i] %.*f Hz", ri.read / 20, (ri.old_total
-          + ri.chunk_total) / 20, ri.wrote / 20, (fr > 100) ? 1 : (fr > 10)
+            + ri.chunk_total) / 20, ri.wrote / 20, (fr > 100) ? 1 : (fr > 10)
           ? 2 : 3, fr);
   }
   return 0;

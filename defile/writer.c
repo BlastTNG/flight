@@ -722,7 +722,7 @@ void CleanUp(void)
 }
 
 /* pushFrame: called from reader: puts rxframe into */
-/* individual buffers                                   */
+/* individual buffers                               */
 void PushFrame(unsigned short* in_frame)
 {
   static int discard_me = 1; /* we discard the first slow frame, since it's
@@ -759,9 +759,9 @@ void PushFrame(unsigned short* in_frame)
     curr_index = frame[3];
 #ifdef DEBUG_SEQUENCING
     static int next_j = -1;
-    if (next_j > -1 && next_j != curr_index) {
-      printf("frame %lli sequencing error: expected %i but got %i\n", fc, next_j, curr_index);
-    }
+    if (next_j > -1 && next_j != curr_index)
+      printf("frame %lli sequencing error: expected %i but got %i\n", fc,
+          next_j, curr_index);
     next_j = (curr_index + 1) % FAST_PER_SLOW;
 #endif
 
