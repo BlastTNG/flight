@@ -451,3 +451,18 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   WriteData(balMaxAddr,(int)CommandData.pumps.bal_max, NIOS_QUEUE);
   WriteData(ifpmBitsAddr, ifpmBits, NIOS_FLUSH);
 }
+
+/* SensorResets: Power cycle ISC, OSC, GPS and GYBOX2 */
+void SensorResets(void)
+{
+  static int firsttime = 1;
+  static struct NiosStruct* sensorResetAddr;
+  int sensor_resets = 0;
+  
+  if (firsttime) {
+    firsttime = 0;
+    sensorResetAddr = GetNiosAddr("sensor_reset");
+  }
+
+  WriteData(sensorResetAddr, sensor_resets, NIOS_QUEUE);
+}

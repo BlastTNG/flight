@@ -180,8 +180,8 @@ void IntegratingStarCamera(void* parameter)
           berror(err, "%s recv()", isc_which[which].who);
           break;
         } else if (n < sizeof(struct ISCSolutionStruct)) {
-          bprintf(err, "ISC: Expected %i but received %i bytes.\n",
-              sizeof(struct ISCSolutionStruct), n);
+          bprintf(err, "%s: Expected %i but received %i bytes.\n",
+              isc_which[which].who, sizeof(struct ISCSolutionStruct), n);
           break;
         }
 #ifdef USE_ISC_LOG

@@ -59,6 +59,7 @@ double round(double x);
 void ControlAuxMotors(unsigned short *RxFrame);
 void ControlGyroHeat(unsigned short *RxFrame);
 void CameraTrigger(int which);
+void SensorResets(void);
 
 /* in das.c */
 void BiasControl(unsigned short* RxFrame);
@@ -878,6 +879,7 @@ void UpdateBBCFrame(unsigned short *RxFrame) {
 
   /*** do slow Controls ***/
   if (index == 0) {
+    SensorResets();
     WriteAux();
     CryoControl();
     PhaseControl();
