@@ -122,7 +122,6 @@ void InitSched(void) {
   for (i=j=0; i<S.n_sched; i++) {
     entry_ok=1;
     GetLine(fp, line_in);
-    printf("%s\n", line_in);
     switch (line_in[0]) {
     case 'v':
     case 'V':
@@ -167,8 +166,6 @@ void InitSched(void) {
     S.p[j].X = ra/15.0;
     S.p[j].Y = dec;
     
-    printf("-- %2d LST: %8.4f Ra: %8.5f %8.4f  Dec: %8.4f %8.4f\n", j,
-	   S.p[j].t*(1.0/3600.0), ra, S.p[j].X*15.0, dec, S.p[j].Y);
     if (!entry_ok) {
       printf("****** Warning Entry %d is Malformed: Skipping *****\n", j);
     } 
@@ -202,7 +199,7 @@ void InitSched(void) {
       el1-= rh;
       el2+= rh;
       if (el2 > 60.0) el_range_warning = 1;
-      if (el1 < 27.0) el_range_warning = 1;
+      if (el1 < 25.0) el_range_warning = 1;
     }
     if (el_range_warning) {
       printf("******************************************\n"
@@ -210,7 +207,8 @@ void InitSched(void) {
       printf("*** LST: %7.4f Ra: %8.3f  Dec: %8.3f\n",
 	     S.p[i].t/3600.0, S.p[i].X, S.p[i].Y);
     }
-    printf("*** %2d Az: %8.3f - %8.3f El: %8.3f - %8.3f\n", i,
+    printf("*** %2d LST: %7.4f Az: %8.3f - %8.3f El: %8.3f - %8.3f\n", i,
+	   S.p[i].t/3600.0,
 	   az1, az2, el1, el2);
   }
   printf("***********************************************************\n");

@@ -600,7 +600,7 @@ void Pointing(){
 					  0, 0 // n_solutions, since_last
   };
   static struct ElSolutionStruct ISCEl = {0.0, // starting angle
-					  360.0*360.0, // varience
+					  719.9*719.9, // varience
 					  1.0/M2DV(0.2), //sample weight
 					  M2DV(0.2), // systemamatic varience
 					  0.0, // trim 
@@ -833,7 +833,6 @@ void Pointing(){
   PointingData[point_index].isc_az = ISCAz.angle;
   PointingData[point_index].isc_el = ISCEl.angle;
   PointingData[point_index].isc_sigma = sqrt(ISCEl.varience + ISCEl.sys_var);
-    
   /************************/
   /* set roll damper gain */
   gy2 = RG.gy2;

@@ -26,8 +26,8 @@ double GetVElev() {
   double vel=0;
   static double last_vel=0;
   double dvel;
-  double max_dv = 20;
   int i_point;
+  double max_dv = 1.6;
 
   i_point = GETREADINDEX(point_index);
 
@@ -72,10 +72,10 @@ int GetVAz() {
   double vel=0;
   static int last_vel=0;
   int dvel;
-  int max_dv = 20;
   int i_point;
   double vel_offset;
   double az, az_dest;
+  double max_dv = 20;
   
   i_point = GETREADINDEX(point_index);
 
@@ -610,7 +610,7 @@ void DoBoxMode() {
   if (S.el> h_2) {
     S.el = h_2;
     S.eldir = -1;
-    S.new = 1; /* back to bottom left corner: comment out to go up/down */
+    //S.new = 1; /* back to bottom left corner: comment out to go up/down */
   }	
   if (S.el<-h_2) {
     S.el = -h_2;

@@ -332,6 +332,11 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
     }
   }
 
+  if (CommandData.Bias.SetLevel1 || CommandData.Bias.SetLevel2 ||
+      CommandData.Bias.SetLevel3) {
+    rb_hold = 400;
+  }
+  
   /************* Set the Bias Levels *******/
   if (hold > FAST_PER_SLOW + 2) { /* hold data with write low */
     hold--;
@@ -366,7 +371,7 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
     ch = 0;
     printf("Warning: ch an impossible value in bias control\n");
   }
-
+  
   /* Bias readback -- we wait a few seconds after finishing the write */
   if (rb_hold > 0) {
     rb_hold--;
