@@ -803,7 +803,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
 
   NCommandList = new QListBox(NTopFrame, "NCommandList");
   NCommandList->adjustSize();
-  NCommandList->setGeometry(PADDING, PADDING, NCommandList->width() + 8, 0);
+  NCommandList->setGeometry(PADDING, PADDING, NCommandList->width() + 80, 0);
   tfont.setFamily("adobe-courier");
   tfont.setPointSize(LARGE_POINT_SIZE);
   tfont.setBold(true);
