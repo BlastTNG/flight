@@ -106,9 +106,8 @@ void InitialiseFrameFile(char type) {
     fclose(fp);
   }
 
-  /* malloc frame buffer */
-  if ((framefile.buffer = malloc(BUFFER_SIZE * DiskFrameSize)) == NULL)
-    berror(tfatal, "Unable to malloc framefile buffer");
+  /* alloc frame buffer */
+  framefile.buffer = balloc(tfatal, BUFFER_SIZE * DiskFrameSize);
   framefile.buffer_end = framefile.buffer + BUFFER_SIZE * DiskFrameSize;
   framefile.b_write_to = framefile.b_read_from = framefile.buffer;
 
@@ -184,9 +183,8 @@ void FrameFileWriter(void) {
   bputs(startup, "FrameFileWriter startup\n");
 #endif
 
-  /* malloc output_buffer */
-  if ((writeout_buffer = malloc(BUFFER_SIZE * DiskFrameSize)) == NULL)
-    bputs(tfatal, "Unable to malloc write out buffer\n");
+  /* alloc output_buffer */
+  writeout_buffer = balloc(tfatal, BUFFER_SIZE * DiskFrameSize);
 
   while (1) {
     write_len = 0;
@@ -222,8 +220,8 @@ void FrameFileWriter(void) {
           berror(err, "Error closing chunk");
       framefile.fd = -1;
 
-      free(framefile.buffer);
-      free(writeout_buffer);
+      bfree(framefile.buffer);
+      bfree(writeout_buffer);
 
       return;
     }

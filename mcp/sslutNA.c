@@ -55,7 +55,7 @@ int SSLut_GetLut(SSLut_t *SSLut, const char *filename)
   fread(&SSLut->el_max, sizeof(SSLut->el_max), 1, fd);
   SSLut->size = SSLut->nx*SSLut->ny;
 
-  SSLut->LUT = malloc(SSLut->size * sizeof(*SSLut->LUT));
+  SSLut->LUT = balloc(fatal, SSLut->size * sizeof(*SSLut->LUT));
   memset(SSLut->LUT, 0, SSLut->size * sizeof(*SSLut->LUT));
   fread(SSLut->LUT, sizeof(*SSLut->LUT), SSLut->size, fd);
   fclose(fd);

@@ -145,6 +145,9 @@ void mputs(buos_t flag, const char* message) {
     case warning:
       strcpy(marker, "== ");
       break;
+    case mem:
+      strcpy(marker, "mm ");
+      break;
     default:
       strcpy(marker, "?? ");
       break;
@@ -462,11 +465,9 @@ void InitBi0Buffer() {
 
   bi0_buffer.i_in = 10; /* preload the fifo */
   bi0_buffer.i_out = 0;
-  for (i = 0; i<BI0_FRAME_BUFLEN; i++) {
-    if ((bi0_buffer.framelist[i] = malloc(BiPhaseFrameWords *
-            sizeof(unsigned short))) == NULL)
-      berror(fatal, "Unable to malloc for bi-phase");
-  }
+  for (i = 0; i<BI0_FRAME_BUFLEN; i++)
+    bi0_buffer.framelist[i] = balloc(fatal, BiPhaseFrameWords *
+        sizeof(unsigned short));
 }
 
 void PushBi0Buffer(unsigned short *RxFrame) {
@@ -658,17 +659,13 @@ int main(int argc, char *argv[]) {
   memset(PointingData, 0, 3*sizeof(struct PointingDataStruct));
 
   /* Allocate the local data buffers */
-  if ((RxFrame = malloc(BiPhaseFrameSize)) == NULL)
-    berror(fatal, "Unable to malloc RxFrame");
+  RxFrame = balloc(fatal, BiPhaseFrameSize);
 
   for (i = 0; i < 3; ++i)
-    if ((tdrss_data[i] = (unsigned short *)malloc(BiPhaseFrameSize)) == NULL)
-      berror(fatal, "Unable to malloc tdrss data buffer");
+    tdrss_data[i] = (unsigned short *)balloc(fatal, BiPhaseFrameSize);
 
   for (i = 0; i < FAST_PER_SLOW; ++i)
-    if ((slow_data[i] = malloc(slowsPerBi0Frame * sizeof(unsigned short)))
-        == NULL)
-      berror(fatal, "Unable to malloc slow data buffer");
+    slow_data[i] = balloc(fatal, slowsPerBi0Frame * sizeof(unsigned short));
 
   CommandData.tdrssVeto = 0;
 #ifndef BOLOTEST
@@ -717,7 +714,7 @@ int main(int argc, char *argv[]) {
     }
     if (in_data == 0xdf80eb90)  {
       if( (mycounter != 12) || (mycounter2 != 12) ) {
-//        printf("++++++++++++++>>>>>> mycounter = %d mycounter2 = %d\n", mycounter, mycounter2);
+        //        printf("++++++++++++++>>>>>> mycounter = %d mycounter2 = %d\n", mycounter, mycounter2);
       }
       mycounter  = 0;
       mycounter2 = 0;
@@ -754,7 +751,7 @@ int main(int argc, char *argv[]) {
         CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);
 
         /* pushDiskFrame must be called before PushBi0Buffer to get the slow
-        data right */
+           data right */
         pushDiskFrame(RxFrame);
 #ifndef BOLOTEST
         PushBi0Buffer(RxFrame);

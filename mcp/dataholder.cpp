@@ -152,34 +152,34 @@ bool AMLParser::LoadFile(const char *filename) {
   }
 
   // Allocate memory.
-  entries = (char ****)malloc(numentries * sizeof(char ***));
-  valuenames = (char ***)malloc(numentries * sizeof(char **));
-  datanames = (char ***)malloc(numentries * sizeof(char **));
-  datadefaults = (char ***)malloc(numentries * sizeof(char **));
-  entrynames = (char **)malloc(numentries * sizeof(char *));
-  level = (int *)malloc(numentries * sizeof(int));
-  numvalues = (int *)malloc(numentries * sizeof(int));
-  numdata = (int *)malloc(numentries * sizeof(int));
-  parent = (int *)malloc(numentries * sizeof(int));
+  entries = (char ****)balloc(fatal, numentries * sizeof(char ***));
+  valuenames = (char ***)balloc(fatal, numentries * sizeof(char **));
+  datanames = (char ***)balloc(fatal, numentries * sizeof(char **));
+  datadefaults = (char ***)balloc(fatal, numentries * sizeof(char **));
+  entrynames = (char **)balloc(fatal, numentries * sizeof(char *));
+  level = (int *)balloc(fatal, numentries * sizeof(int));
+  numvalues = (int *)balloc(fatal, numentries * sizeof(int));
+  numdata = (int *)balloc(fatal, numentries * sizeof(int));
+  parent = (int *)balloc(fatal, numentries * sizeof(int));
   for (i = 0; i < numentries; i++) {
-    entries[i] = (char ***)malloc(maxvalues * sizeof(char **));
-    valuenames[i] = (char **)malloc(maxvalues * sizeof(char *));
-    datanames[i] = (char **)malloc(maxvalues * sizeof(char *));
-    datadefaults[i] = (char **)malloc(maxvalues * sizeof(char *));
-    entrynames[i] = (char *)malloc(AML_LEN_ENTRY * sizeof(char));
+    entries[i] = (char ***)balloc(fatal, maxvalues * sizeof(char **));
+    valuenames[i] = (char **)balloc(fatal, maxvalues * sizeof(char *));
+    datanames[i] = (char **)balloc(fatal, maxvalues * sizeof(char *));
+    datadefaults[i] = (char **)balloc(fatal, maxvalues * sizeof(char *));
+    entrynames[i] = (char *)balloc(fatal, AML_LEN_ENTRY * sizeof(char));
     level[i] = 0;
     numvalues[i] = 0;
     numdata[i] = 0;
     parent[i] = -1;
     for (j = 0; j < maxvalues; j++) {
-      entries[i][j] = (char **)malloc(maxdata * sizeof(char *));
-      valuenames[i][j] = (char *)malloc(AML_LEN_ENTRY * sizeof(char));
+      entries[i][j] = (char **)balloc(fatal, maxdata * sizeof(char *));
+      valuenames[i][j] = (char *)balloc(fatal, AML_LEN_ENTRY * sizeof(char));
       for (k = 0; k < AML_LEN_ENTRY; k++)
-        entries[i][j][k] = (char *)malloc(AML_LEN_ENTRY * sizeof(char));
+        entries[i][j][k] = (char *)balloc(fatal, AML_LEN_ENTRY * sizeof(char));
     }
     for (j = 0; j < maxdata; j++) {
-      datanames[i][j] = (char *)malloc(AML_LEN_ENTRY * sizeof(char));
-      datadefaults[i][j] = (char *)malloc(AML_LEN_ENTRY * sizeof(char));
+      datanames[i][j] = (char *)balloc(fatal, AML_LEN_ENTRY * sizeof(char));
+      datadefaults[i][j] = (char *)balloc(fatal, AML_LEN_ENTRY * sizeof(char));
     }
   }
 
@@ -684,15 +684,14 @@ bool DataHolder::LoadFromAML(const char *filename) {
         "Warning (DataHolder):  %s contains no channels.\n", filename);
 
   if (allocated) {
-    slows = (struct DataStruct_glob *)realloc(slows, numslows * 
+    slows = (struct DataStruct_glob *)reballoc(fatal, slows, numslows * 
         sizeof(DataStruct_glob));
-    fasts = (struct DataStruct_glob *)realloc(fasts, numfasts * 
+    fasts = (struct DataStruct_glob *)reballoc(fatal, fasts, numfasts * 
         sizeof(DataStruct_glob));
-  }
-  else {
-    slows = (struct DataStruct_glob *)malloc(numslows * 
+  } else {
+    slows = (struct DataStruct_glob *)balloc(fatal, numslows * 
         sizeof(DataStruct_glob));
-    fasts = (struct DataStruct_glob *)malloc(numfasts * 
+    fasts = (struct DataStruct_glob *)balloc(fatal, numfasts * 
         sizeof(DataStruct_glob));
     allocated = true;
   }

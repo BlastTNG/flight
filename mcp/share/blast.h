@@ -23,9 +23,9 @@
 
 #include <stdarg.h>
 
+/* BUOS (BLAST Unified Output Scheme) definitions */
 #define BUOS_MAX 2048
-/* logging definitions */
-typedef enum {info, warning, err, tfatal, fatal, startup, sched} buos_t;
+typedef enum {info, warning, err, tfatal, fatal, startup, sched, mem} buos_t;
 
 void bputs_stdio(buos_t l, const char* s);
 void bputs_syslog(buos_t l, const char* s);
@@ -35,5 +35,13 @@ void bputs(buos_t, const char*);
 void buos_use_func(void (*puts_func)(buos_t, const char*));
 void buos_use_stdio(void);
 void buos_use_syslog(void);
+
+/* BLAMM (BLAST Memory Manager) definitions */
+void *_balloc(buos_t, size_t, const char*, int, const char*);
+void _bfree(buos_t, void*, const char*, int, const char*);
+void *_reballoc(buos_t, void*, size_t, const char*, int, const char*);
+#define balloc(x,y) _balloc( x , y , __FUNCTION__ , __LINE__ , __FILE__ )
+#define bfree(x,y) _bfree( x , y , __FUNCTION__ , __LINE__ , __FILE__ )
+#define reballoc(x,y,z) _reballoc( x , y , z , __FUNCTION__ , __LINE__ , __FILE__)
 
 #endif

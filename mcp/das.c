@@ -269,7 +269,7 @@ void CryoControl (void)
     cryostate &= 0xFFFF - CS_LHeVALVE_ON;
 
   if (CommandData.Cryo.autoJFETheat) {
-    jfetHeat = JFETthermostat();
+    jfetHeat = 0;//JFETthermostat();
     cryostate |= CS_AUTO_JFET;
   } else {
     jfetHeat = CommandData.Cryo.JFETHeat;

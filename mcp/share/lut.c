@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "blast.h"
 #include "lut.h"
 #include "mcp.h"
 
@@ -40,27 +41,26 @@ void LutInit(struct LutType *L) {
 
   fp = fopen(L->filename, "r");
   if (fp == NULL) {
-    bprintf(err, "error reading LUT file %s: no calibration\n",
-        L->filename);
+    bprintf(err, "error reading LUT file %s: no calibration\n", L->filename);
     L->n = 1;
     return;
   }
 
   /* first read the file to see how big it is */
   i = 0;
-  while (GetLine(fp, line)) {
-    i++;
-  }
+  while (GetLine(fp, line))
+    i++; 
+
   if (i < 2) {
-    bprintf(err, "error reading LUT file %s: no calibration\n",
-        L->filename);
+    bprintf(err, "error reading LUT file %s: no calibration\n", L->filename);
     L->n = 1;
     return;
   }
 
   L->n = i;
-  L->x = (double *)malloc(i * sizeof(double));
-  L->y = (double *)malloc(i * sizeof(double));
+  L->x = (double *)balloc(fatal, i * sizeof(double));
+  L->y = (double *)balloc(fatal, i * sizeof(double));
+
   /* now read in the data */
   rewind(fp);
   for (i = 0; i < L->n; i++) {
@@ -68,6 +68,8 @@ void LutInit(struct LutType *L) {
     sscanf(line, "%lg %lg",&(L->x[i]), &(L->y[i]));
   }
   L->last_n = L->n / 2;
+  bprintf(info, "LutInit: Read lut `%s' with %i lines\n", L->filename,
+      L->n);
 }
 
 double LutCal(struct LutType *L, double x) {

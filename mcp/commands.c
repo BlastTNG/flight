@@ -357,9 +357,9 @@ void SingleCommand (enum singleCommand command) {
   else if (command == balpump_off)
     CommandData.pumps.bal1_on = 0;
   else if (command == balpump_up)
-    CommandData.pumps.bal1_reverse = 0;
-  else if (command == balpump_down)
     CommandData.pumps.bal1_reverse = 1;
+  else if (command == balpump_down)
+    CommandData.pumps.bal1_reverse = 0;
   else if (command == sprpump_on)
     CommandData.pumps.bal2_on = 1;
   else if (command == sprpump_off)
@@ -1051,9 +1051,8 @@ void WatchFIFO () {
     do {
       if ((command[index] == ' ' || command[index] == 0) && pindex > 0) {
         pbuf[pindex] = 0;
-        if (NULL == (mcommand_data[mcommand_count] =
-              realloc(mcommand_data[mcommand_count], pindex + 2)))
-          berror(tfatal, "malloc failed in FIFO CommandData");
+        mcommand_data[mcommand_count] =
+              reballoc(tfatal, mcommand_data[mcommand_count], pindex + 2);
 
         strncpy(mcommand_data[mcommand_count++], pbuf, pindex + 1);
         pindex = 0;

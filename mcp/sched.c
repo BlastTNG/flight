@@ -101,10 +101,8 @@ void InitSched(void)
   if (S.n_sched > MAX_NSCHED)
     S.n_sched = MAX_NSCHED;
 
-  S.p = (struct PointingModeStruct*)malloc(S.n_sched *
+  S.p = (struct PointingModeStruct*)balloc(fatal, S.n_sched *
       sizeof(struct PointingModeStruct));
-  if (S.p == NULL)
-    berror(err, "sched: Unable to malloc");
   
   if (fclose(fp) == EOF)
     berror(err, "sched: Error on close");

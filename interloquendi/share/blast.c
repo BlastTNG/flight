@@ -27,6 +27,7 @@
 #include <pthread.h>
 #include "blast.h"
 
+/* BUOS (BLAST Unified Output Scheme) */
 int __buos_disable_exit = 0;
 void (*__buos_real_bputs)(buos_t, const char*) = NULL;
 
@@ -43,6 +44,7 @@ void bputs_stdio(buos_t l, const char* s)
     case err:
     case tfatal:
     case fatal:
+    case mem:
       fputs(s, stream);
       if (strstr(s, "\n") == NULL)
         fputs("\n", stream);
@@ -79,6 +81,7 @@ void bputs_syslog(buos_t l, const char* s)
     case startup:
       level = LOG_NOTICE;
       break;
+    case mem:
     case sched:
       level = LOG_DEBUG;
       break;
@@ -157,4 +160,39 @@ void buos_use_syslog(void)
 void buos_use_stdio(void)
 {
   __buos_real_bputs = bputs_stdio;
+}
+
+/* BLAMM (BLAST Memory Manager) definitions */
+void *_balloc(buos_t l, size_t s, const char* f, int w, const char* n)
+{
+  void *p;
+
+  bprintf(mem, "mallocing %u bytes in %s", s, f);
+  p = malloc(s);
+  
+  if (p == NULL)
+    berror(l, "unable to malloc %u bytes at %s:%i in %s", s, n, w, f);
+
+  return p;
+}
+
+void *_reballoc(buos_t l, void* p, size_t s, const char* f, int w,
+    const char* n)
+{
+  void *q;
+
+  bprintf(mem, "reallocing %u bytes from %p in %s", s, p, f);
+  q = realloc(p, s);
+  
+  if (q == NULL)
+    berror(l, "unable to realloc %u bytes from %p at %s:%i in %s", s, p, n, w,
+        f);
+
+  return q;
+}
+
+void _bfree(buos_t l, void* p, const char* f, int w, const char* n)
+{
+  bprintf(mem, "freeing %p in %s", p, f);
+  free(p);
 }

@@ -32,6 +32,7 @@
 #include <ctype.h>
 #include <pthread.h>
 
+#include "blast.h"
 #include "isc_protocol.h"
 #include "pointing_struct.h"
 #include "command_struct.h"
@@ -327,13 +328,13 @@ void RecordHistory(int index) {
   /*****************************************/
   /*   Allocate Memory                     */
   if (hs.gyro1_history == NULL) {
-    hs.gyro1_history = (double *)malloc(GY_HISTORY * sizeof(double));
+    hs.gyro1_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
     memset(hs.gyro1_history, 0, GY_HISTORY * sizeof(double));
-    hs.gyro2_history = (double *)malloc(GY_HISTORY * sizeof(double));
+    hs.gyro2_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
     memset(hs.gyro2_history, 0, GY_HISTORY * sizeof(double));
-    hs.gyro3_history = (double *)malloc(GY_HISTORY * sizeof(double));
+    hs.gyro3_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
     memset(hs.gyro3_history, 0, GY_HISTORY * sizeof(double));
-    hs.elev_history  = (double *)malloc(GY_HISTORY * sizeof(double));
+    hs.elev_history  = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
     memset(hs.elev_history, 0, GY_HISTORY * sizeof(double));
   }
 

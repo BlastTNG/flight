@@ -151,19 +151,18 @@ void printbin(long num) {
  ******************************************************************************/
 
 Buffer::Buffer() {
-  if (buf = (unsigned char *)malloc(1) == NULL)
-    berror(fatal, "malloc in Buffer::Buffer");
+  buf = (unsigned char *)balloc(fatal, 1);
   startbyte = 0;
   size = 1;
 }
 
 Buffer::~Buffer() {
-  free(buf);
+  bfree(fatal, buf);
 }
 
 /******************************************************************************\
  *                                                                            *|
- * SetSize (public): set the size of the buffer and malloc.                   *|
+ * SetSize (public): set the size of the buffer and alloc.                    *|
  *                                                                            *|
  ******************************************************************************/
 
@@ -174,8 +173,7 @@ void Buffer::SetSize(int s) {
     // Important to allocate more than requested, in case a frame overflows and
     // has to be truncated.  Weird memory errors can ensue . . .
     safeallocsize = size * BUFFER_SAFE_ALLOC;
-    if ((buf = (unsigned char *)realloc(buf, safeallocsize)) == NULL)
-      berror(fatal, "Buffer::SetSize realloc");
+    buf = (unsigned char *)reballoc(fatal, buf, safeallocsize);
   }
 }
 
@@ -910,9 +908,9 @@ void Alice::CompressionLoop() {
   struct tm now;
 #endif
 
-  rawdata = (double *)malloc(1);
+  rawdata = (double *)balloc(fatal, 1);
   rawdatasize = 1;
-  filterdata = (double *)malloc(1);
+  filterdata = (double *)balloc(fatal, 1);
   filterdatasize = 1;
 
   for (;;) {
@@ -930,15 +928,14 @@ void Alice::CompressionLoop() {
            DataInfo->looplength;
       if (ts > rawdatasize) {
         rawdatasize = ts;
-        if ((rawdata = (double *)realloc(rawdata, ts)) == NULL)
-          berror(fatal, "rawdata realloc");
+        rawdata = (double *)reballoc(fatal, rawdata, ts);
       }
 
       ts = sizeof(double) * (3 * DataInfo->samplerate * MaxFrameFreq() *
           DataInfo->looplength);
       if (ts > filterdatasize) {
         filterdatasize = ts;
-        filterdata = (double *)realloc(filterdata, ts);
+        filterdata = (double *)reballoc(fatal, filterdata, ts);
       }
 
       // Figure out how much we need to read each time around.  For FFT purposes
@@ -1208,43 +1205,35 @@ void FrameBuffer::Resize(int numframes_in) {
 
     for (i = 0; i < numframes; i++) {
       for (j = 0; j < FAST_PER_SLOW; j++) {
-        free(slowbuf[i][j]);
-        free(fastbuf[i][j]);
+        bfree(fatal, slowbuf[i][j]);
+        bfree(fatal, fastbuf[i][j]);
       }
-      free(slowbuf[i]);
-      free(fastbuf[i]);
+      bfree(fatal, slowbuf[i]);
+      bfree(fatal, fastbuf[i]);
     }
-    free(slowbuf);
-    free(fastbuf);
+    bfree(fatal, slowbuf);
+    bfree(fatal, fastbuf);
   }
 
   numframes = numframes_in; 
 
-  if ((fastbuf = (unsigned short ***)malloc(numframes * 
-          sizeof(unsigned short **))) == NULL)
-    berror(fatal, "unable to malloc fastbuf.");
+  fastbuf = (unsigned short ***)balloc(fatal, numframes * 
+          sizeof(unsigned short **));
 
-  if ((slowbuf = (unsigned short ***)malloc(numframes * 
-          sizeof(unsigned short **))) == NULL)
-    berror(fatal, "unable to malloc slowbuf.");
-
+  slowbuf = (unsigned short ***)balloc(fatal, numframes * 
+          sizeof(unsigned short **));
 
   for (i = 0; i < numframes; i++) {
-    if ((fastbuf[i] = (unsigned short **)malloc(FAST_PER_SLOW *
-            sizeof(unsigned short *))) == NULL)
-      berror(fatal, "unable to malloc fastbuf.");
+    fastbuf[i] = (unsigned short **)balloc(fatal, FAST_PER_SLOW *
+            sizeof(unsigned short *));
 
-    if ((slowbuf[i] = (unsigned short **)malloc(FAST_PER_SLOW * 
-            sizeof(unsigned short *))) == NULL)
-      berror(fatal, "unable to malloc slowbuf.");
+    slowbuf[i] = (unsigned short **)balloc(fatal, FAST_PER_SLOW * 
+            sizeof(unsigned short *));
 
     for (j = 0; j < FAST_PER_SLOW; j++) {
-      if ((fastbuf[i][j] = (unsigned short *)malloc(BiPhaseFrameSize)) == NULL)
-        berror(fatal, "unable to malloc fastbuf.");
-
-      if ((slowbuf[i][j] = (unsigned short *)malloc(slowsPerBi0Frame *
-              sizeof(unsigned short))) == NULL)
-        berror(fatal, "unable to malloc slowbuf.");
+      fastbuf[i][j] = (unsigned short *)balloc(fatal, BiPhaseFrameSize);
+      slowbuf[i][j] = (unsigned short *)balloc(fatal, slowsPerBi0Frame *
+              sizeof(unsigned short));
     }
   }
 
@@ -1467,14 +1456,14 @@ FrameBuffer::~FrameBuffer() {
   if (memallocated) {
     for (i = 0; i < numframes; i++) {
       for (j = 0; j < FAST_PER_SLOW; j++) {
-        free(slowbuf[i][j]);
-        free(fastbuf[i][j]);
+        bfree(fatal, slowbuf[i][j]);
+        bfree(fatal, fastbuf[i][j]);
       }
-      free(slowbuf[i]);
-      free(fastbuf[i]);
+      bfree(fatal, slowbuf[i]);
+      bfree(fatal, fastbuf[i]);
     }
-    free(slowbuf);
-    free(fastbuf);
+    bfree(fatal, slowbuf);
+    bfree(fatal, fastbuf);
   }
 
   return;

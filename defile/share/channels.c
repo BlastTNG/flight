@@ -108,12 +108,12 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   /* check spec file version */
   if (versionMagic[0] != 'D' || versionMagic[1] != 'F'
       || versionMagic[2] != 'I')
-    berror(fatal, "Spec file too old: version magic not found.\n"
+    bputs(fatal, "Spec file too old: version magic not found.\n"
         "To read this file, you will need defile version 2.1\n");
   else {
     int version = atoi(&versionMagic[3]);
     if (version != 10)
-      berror(fatal, "Unsupported Spec file version: %i.  Cannot continue.\n",
+      bprintf(fatal, "Unsupported Spec file version: %i.  Cannot continue.\n",
           version);
   }
 #endif
@@ -130,26 +130,21 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   slowsPerBusFrame[0] = slowsPerBusFrame[1] = 0;
 
   /* Reallocate channel lists, if we're reading them */
-  if ((WideSlowChannels = realloc(WideSlowChannels,
-          ccWideSlow * sizeof(struct ChannelStruct))) == NULL)
-    berror(fatal, "unable to allocate heap");
+  WideSlowChannels = reballoc(fatal, WideSlowChannels,
+          ccWideSlow * sizeof(struct ChannelStruct));
 
-  if ((SlowChannels = realloc(SlowChannels,
-          ccNarrowSlow * sizeof(struct ChannelStruct))) == NULL)
-    berror(fatal, "unable to allocate heap");
+  SlowChannels = reballoc(fatal, SlowChannels,
+          ccNarrowSlow * sizeof(struct ChannelStruct));
 
-  if ((WideFastChannels = realloc(WideFastChannels,
-          ccWideFast * sizeof(struct ChannelStruct))) == NULL)
-    berror(fatal, "unable to allocate heap");
+  WideFastChannels = reballoc(fatal, WideFastChannels,
+          ccWideFast * sizeof(struct ChannelStruct));
 
-  if ((FastChannels = realloc(FastChannels,
-          ccNarrowFast * sizeof(struct ChannelStruct))) == NULL)
-    berror(fatal, "unable to allocate heap");
+  FastChannels = reballoc(fatal, FastChannels,
+          ccNarrowFast * sizeof(struct ChannelStruct));
 
   if (ccDecom > 0)
-    if ((DecomChannels = realloc(DecomChannels,
-            ccDecom * sizeof(struct ChannelStruct))) == NULL)
-      berror(fatal, "unable to allocate heap");
+    DecomChannels = reballoc(fatal, DecomChannels,
+            ccDecom * sizeof(struct ChannelStruct));
 
   ccSlow = ccNarrowSlow + ccWideSlow;
   ccFast = ccNarrowFast + ccWideFast + N_FAST_BOLOS + ccDecom;
@@ -676,33 +671,23 @@ void MakeAddressLookups(void)
 #ifndef INPUTTER
   BiPhaseAddr = SLOW_OFFSET + slowsPerBi0Frame;
   /* allocate the Nios address table */
-  if ((NiosLookup = malloc(ccTotal * sizeof(struct NiosStruct)))
-      == NULL)
-    bprintf(tfatal, "Unable to malloc Nios Address Lookup Table.\n");
+  NiosLookup = balloc(tfatal, ccTotal * sizeof(struct NiosStruct));
 
   /* allocate the BiPhase address table */
-  if ((BiPhaseLookup = malloc(BI0_TABLE_SIZE * sizeof(struct BiPhaseStruct)))
-      == NULL)
-    bprintf(tfatal, "Unable to malloc Biphase Address Lookup Table.\n");
+  BiPhaseLookup = balloc(tfatal, BI0_TABLE_SIZE * sizeof(struct BiPhaseStruct));
 
   /* fill BiPhase Lookup with invalid data */
   memset(BiPhaseLookup, 0xff, BI0_TABLE_SIZE * sizeof(struct BiPhaseStruct));
 #else
   BiPhaseAddr = 0;
   /* allocate the Defile address tables */
-  if ((FastChList = malloc((ccFast + ccWideFast)
-          * sizeof(struct ChannelStruct)))
-      == NULL)
-    berror(fatal, "Unable to malloc heap");
+  FastChList = balloc(fatal, (ccFast + ccWideFast)
+      * sizeof(struct ChannelStruct));
 
-  if ((SlowChList = malloc(slowsPerBi0Frame * sizeof(struct ChannelStruct*)))
-      == NULL)
-    berror(fatal, "Unable to malloc heap");
+  SlowChList = balloc(fatal, slowsPerBi0Frame * sizeof(struct ChannelStruct*));
 
   for (i = 0; i < slowsPerBi0Frame; ++i)
-    if ((SlowChList[i] = malloc(FAST_PER_SLOW * sizeof(struct ChannelStruct)))
-        == NULL)
-      berror(fatal, "Unable to malloc heap");
+    SlowChList[i] = balloc(fatal, FAST_PER_SLOW * sizeof(struct ChannelStruct));
 #endif
 
   /* initialise slow channels */
