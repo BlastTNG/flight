@@ -77,7 +77,7 @@ extern unsigned short* slow_data[FAST_PER_SLOW];
  *                                                                            *|
  ******************************************************************************/
 
-int OpenSerial() {
+int OpenSerial(void) {
   int fd;
   struct termios term;
 
@@ -111,25 +111,6 @@ int OpenSerial() {
 
 
 /******************************************************************************\
- *                                                                            *|
- * printbin: prints binary number at cursor position.                         *|
- *                                                                            *|
- ******************************************************************************/
-
-
-void printbin(long num) {
-  int i;
-
-  for (i = 24; i >= 0; i--) {
-    if (((1 << i) & num) != 0)
-      printf("1");
-    else
-      printf("0");
-  }
-}
-
-
-/******************************************************************************\
  ******************************************************************************|
  **.------------------------------------------------------------------------.**|
  **|                                                                        |**|
@@ -149,13 +130,15 @@ void printbin(long num) {
  *                                                                            *|
  ******************************************************************************/
 
-Buffer::Buffer() {
+Buffer::Buffer(void)
+{
   buf = (unsigned char *)balloc(fatal, 1);
   startbyte = 0;
   size = 1;
 }
 
-Buffer::~Buffer() {
+Buffer::~Buffer(void)
+{
   bfree(fatal, buf);
 }
 
@@ -166,7 +149,8 @@ Buffer::~Buffer() {
  ******************************************************************************/
 
 
-void Buffer::SetSize(int s) {
+void Buffer::SetSize(int s)
+{
   if (s > size) {
     size = s;
     // Important to allocate more than requested, in case a frame overflows and
@@ -177,23 +161,22 @@ void Buffer::SetSize(int s) {
 }
 
 
-/******************************************************************************\
- *                                                                            *|
- * SectionSize (public): calculates size that a single field has taken in the *|
- * buffer.                                                                    *|
- *                                                                            *|
- * Returns: amount buffer has grown since Introduce() was                     *|
- * last called.                                                               *|
- *                                                                            *|
+/******************************************************************************
+ *                                                                            *
+ * SectionSize (public): calculates size that a single field has taken in the *
+ * buffer.                                                                    *
+ *                                                                            *
+ * Returns: amount buffer has grown since Introduce() was                     *
+ * last called.                                                               *
+ *                                                                            *
  ******************************************************************************/
-
-
-  int Buffer::SectionSize() {
-    if (bitpos > 0)
-      return bytepos - startbyte + 1;
-    else
-      return bytepos - startbyte;
-  }
+int Buffer::SectionSize(void)
+{
+  if (bitpos > 0)
+    return bytepos - startbyte + 1;
+  else
+    return bytepos - startbyte;
+}
 
 
 /******************************************************************************\
@@ -204,13 +187,13 @@ void Buffer::SetSize(int s) {
  *                                                                            *|
  ******************************************************************************/
 
-
-  int Buffer::CurrSize() {
-    if (bitpos > 0)
-      return bytepos + 1;
-    else
-      return bytepos;
-  }
+int Buffer::CurrSize(void)
+{
+  if (bitpos > 0)
+    return bytepos + 1;
+  else
+    return bytepos;
+}
 
 
 /******************************************************************************\
@@ -222,12 +205,14 @@ void Buffer::SetSize(int s) {
  ******************************************************************************/
 
 
-int Buffer::MaxSize() {
+int Buffer::MaxSize(void)
+{
   return size;
 }
 
 
-void Buffer::CheckBytePosRange(int num) {
+void Buffer::CheckBytePosRange(int num)
+{
   if (bytepos >= safeallocsize) {
     bprintf(err,
         "Alice: serious error (%i)!  Class BUFFER was not properly allocated.  "
@@ -252,7 +237,8 @@ void Buffer::CheckBytePosRange(int num) {
  ******************************************************************************/
 
 
-void Buffer::Start(char filenum, unsigned int framenum) {
+void Buffer::Start(char filenum, unsigned int framenum)
+{
   int i;
 
   // Clear the buffer
@@ -292,20 +278,21 @@ void Buffer::Start(char filenum, unsigned int framenum) {
  ******************************************************************************/
 
 
-  void Buffer::Introduce() {
-    if (bitpos > 0)
-      bytepos++;
-    CheckBytePosRange(1);
+void Buffer::Introduce(void)
+{
+  if (bitpos > 0)
+    bytepos++;
+  CheckBytePosRange(1);
 
-    // Section intro:  10101010 + 16 bits = num bytes in section
-    buf[bytepos++] = BUF_SECTION_SYNC;
-    bytepos += 2; // Reserve 2 bytes to write in num bytes afterwards
-    CheckBytePosRange(2);
+  // Section intro:  10101010 + 16 bits = num bytes in section
+  buf[bytepos++] = BUF_SECTION_SYNC;
+  bytepos += 2; // Reserve 2 bytes to write in num bytes afterwards
+  CheckBytePosRange(2);
 
-    bitpos = 0;
-    overnum = 0;
-    startbyte = bytepos;
-  }
+  bitpos = 0;
+  overnum = 0;
+  startbyte = bytepos;
+}
 
 
 /******************************************************************************\
@@ -315,18 +302,19 @@ void Buffer::Start(char filenum, unsigned int framenum) {
  *                                                                            *|
  ******************************************************************************/
 
-  void Buffer::NoDataMarker() {
-    if (bitpos > 0)
-      bytepos++;
-    CheckBytePosRange(3);
+void Buffer::NoDataMarker(void)
+{
+  if (bitpos > 0)
+    bytepos++;
+  CheckBytePosRange(3);
 
-    // No data marker: 10011001 = 0x99
-    buf[bytepos++] = BUF_NO_DATA;
-    CheckBytePosRange(4);
+  // No data marker: 10011001 = 0x99
+  buf[bytepos++] = BUF_NO_DATA;
+  CheckBytePosRange(4);
 
-    bitpos = 0;
-    overnum = 0;
-  }
+  bitpos = 0;
+  overnum = 0;
+}
 
 
 /******************************************************************************\
@@ -336,7 +324,8 @@ void Buffer::Start(char filenum, unsigned int framenum) {
  *                                                                            *|
  ******************************************************************************/
 
-void Buffer::RecordNumBytes() {
+void Buffer::RecordNumBytes(void)
+{
   buf[startbyte - 2] = SectionSize() & 0xff;
   buf[startbyte - 1] = SectionSize() >> 8;
 }
@@ -349,7 +338,7 @@ void Buffer::RecordNumBytes() {
  *                                                                            *|
  ******************************************************************************/
 
-void Buffer::EraseLastSection() {
+void Buffer::EraseLastSection(void) {
   bytepos = startbyte - 3;
   bitpos = 0;
 }
@@ -360,27 +349,28 @@ void Buffer::EraseLastSection() {
  *                                                                            *|
  ******************************************************************************/
 
-  void Buffer::Stop() {
-    if (bitpos > 0)
-      bytepos++;
-    CheckBytePosRange(5);
+void Buffer::Stop(void)
+{
+  if (bitpos > 0)
+    bytepos++;
+  CheckBytePosRange(5);
 
-    buf[bytepos++] = BUF_END_SYNC;
-    CheckBytePosRange(6);
-    bitpos = 0;
+  buf[bytepos++] = BUF_END_SYNC;
+  CheckBytePosRange(6);
+  bitpos = 0;
 
-    if (CurrSize() - BUF_POS_DATA_START >= 0) {
-      *(unsigned short *)(buf + BUF_POS_FRAME_LEN) = CurrSize();
-      *(unsigned short *)(buf + BUF_POS_CRC) = 
-        CalculateCRC(CRC_INIT, buf + BUF_POS_DATA_START, 
-            CurrSize() - BUF_POS_DATA_START);
+  if (CurrSize() - BUF_POS_DATA_START >= 0) {
+    *(unsigned short *)(buf + BUF_POS_FRAME_LEN) = CurrSize();
+    *(unsigned short *)(buf + BUF_POS_CRC) = 
+      CalculateCRC(CRC_INIT, buf + BUF_POS_DATA_START, 
+          CurrSize() - BUF_POS_DATA_START);
 
-      // Send packets
-      if (write(tty_fd, buf, CurrSize()) != CurrSize())
-        bprintf(err, "Error sending through serial port.");
-    } else
-      bprintf(err, "CurSize is bogus in Buffer::Stop\n");
-  }
+    // Send packets
+    if (write(tty_fd, buf, CurrSize()) != CurrSize())
+      bprintf(err, "Error sending through serial port.");
+  } else
+    bprintf(err, "CurSize is bogus in Buffer::Stop\n");
+}
 
 
 /******************************************************************************\
@@ -393,7 +383,8 @@ void Buffer::EraseLastSection() {
  ******************************************************************************/
 
 
-void Buffer::WriteChunk(char numbits, long long datum) {
+void Buffer::WriteChunk(char numbits, long long datum)
+{
   // Do we have room for the whole datum in this byte?
   if (numbits - 1 > 7 - bitpos) {
     buf[bytepos++] |= (datum & (((long long)1 << (8 - bitpos)) - 1)) << bitpos;
@@ -442,7 +433,8 @@ void Buffer::WriteChunk(char numbits, long long datum) {
 
 
 void Buffer::WriteTo(long long datum, char numbits, char oversize,
-    bool hassign) {
+    bool hassign)
+{
   long long i;
 
   if (hassign)
@@ -497,7 +489,8 @@ void Buffer::WriteTo(long long datum, char numbits, char oversize,
  *                                                                            *|
  ******************************************************************************/
 
-Alice::Alice() {
+Alice::Alice(void)
+{
   AMLsrc = -1;
   DataSource = new FrameBuffer(&tdrss_index, tdrss_data, slow_data, 1);
   sendbuf = new Buffer();    // 10 bits per byte
@@ -524,7 +517,8 @@ Alice::Alice() {
  ******************************************************************************/
 
 
-bool Alice::GetCurrentAML() {
+bool Alice::GetCurrentAML(void)
+{
   char tmp[20];
   int newxml;
 
@@ -586,7 +580,8 @@ double Alice::Differentiate(double *invals, int num, int divider) {
  *                                                                            *|
  ******************************************************************************/
 
-void Alice::Integrate(double *invals, int num) {
+void Alice::Integrate(double *invals, int num)
+{
   int i;
 
   for (i = 1; i < num; i++)
@@ -606,12 +601,13 @@ void Alice::Integrate(double *invals, int num) {
  *                                                                            *|
  ******************************************************************************/
 
-  double Alice::Round(double num) {
-    if (num >= 0)
-      return (int)(num + 0.5);
-    else
-      return (int)(num - 0.5);
-  }
+double Alice::Round(double num)
+{
+  if (num >= 0)
+    return (int)(num + 0.5);
+  else
+    return (int)(num - 0.5);
+}
 
 
 /******************************************************************************\
@@ -627,7 +623,8 @@ void Alice::Integrate(double *invals, int num) {
  ******************************************************************************/
 
 void Alice::SendDiff(double *data, int num, struct DataStruct_glob *currInfo,
-    float maxover, float minover) {
+    float maxover, float minover)
+{
   long long offset;
   int i;
 
@@ -686,7 +683,8 @@ void Alice::SendDiff(double *data, int num, struct DataStruct_glob *currInfo,
  ******************************************************************************/
 
 void Alice::SendInt(double *data, int num, struct DataStruct_glob *currInfo,
-    float maxover, float minover) {
+    float maxover, float minover)
+{
   int i;
 
   // Write introductory bytes
@@ -743,7 +741,8 @@ void Alice::SendInt(double *data, int num, struct DataStruct_glob *currInfo,
  *                                                                            *|
  ******************************************************************************/
 
-void Alice::SendSingle(double *data, struct DataStruct_glob *currInfo) {
+void Alice::SendSingle(double *data, struct DataStruct_glob *currInfo)
+{
   double divider, sendval;
 
   divider = (double)(currInfo->maxval - currInfo->minval + 1) /
@@ -813,7 +812,8 @@ void Alice::SendAverage(double *data, int num,
  *                                                                            *|
  ******************************************************************************/
 
-int Alice::MaxPowTwo(int val, float threshold) {
+int Alice::MaxPowTwo(int val, float threshold)
+{
   struct DataStruct_glob *currInfo;
   int powtwo;
 
@@ -839,7 +839,7 @@ int Alice::MaxPowTwo(int val, float threshold) {
  *                                                                            *|
  ******************************************************************************/
 
-int Alice::MaxFrameFreq() {
+int Alice::MaxFrameFreq(void) {
   struct DataStruct_glob *currInfo;
   int max = 0;
 
@@ -874,7 +874,8 @@ int Alice::MaxFrameFreq() {
  *                                                                            *|
  ******************************************************************************/
 
-int Alice::FindPowTwo(int val, float threshold) {
+int Alice::FindPowTwo(int val, float threshold)
+{
   int i, num;
 
   num = val;
@@ -894,7 +895,8 @@ int Alice::FindPowTwo(int val, float threshold) {
  *                                                                            *|
  ******************************************************************************/
 
-void Alice::CompressionLoop() {
+void Alice::CompressionLoop(void)
+{
   double *filterdata, *rawdata;
   int i, j, k, l;
   struct DataStruct_glob *currInfo;
@@ -1151,7 +1153,8 @@ Alice::~Alice()
 
 FrameBuffer::FrameBuffer(unsigned int *mcpindex_in, 
     unsigned short **fastdata_in,
-    unsigned short **slowdata_in, int numframes_in) {
+    unsigned short **slowdata_in, int numframes_in)
+{
   mcpindex = mcpindex_in;
   lastmcpindex = 2;
   fastdata = fastdata_in;
@@ -1174,7 +1177,8 @@ FrameBuffer::FrameBuffer(unsigned int *mcpindex_in,
  *                                                                            *|
  ******************************************************************************/
 
-void FrameBuffer::Resize(int numframes_in) {
+void FrameBuffer::Resize(int numframes_in)
+{
   int i, j;
 
   if (numframes_in == numframes) {
@@ -1244,7 +1248,8 @@ void FrameBuffer::Resize(int numframes_in) {
  *                                                                            *|
  ******************************************************************************/
 
-void *FrameBuffer::UpdateThreadEntry(void *pthis) {
+void *FrameBuffer::UpdateThreadEntry(void *pthis)
+{
   bputs(startup, "Update start-up.\n");
 
   FrameBuffer *mine = (FrameBuffer *)pthis;
@@ -1262,7 +1267,8 @@ void *FrameBuffer::UpdateThreadEntry(void *pthis) {
  *                                                                            *|
  ******************************************************************************/
 
-void FrameBuffer::Update() {
+void FrameBuffer::Update(void)
+{
   unsigned int i;
   int j;
 
@@ -1315,7 +1321,8 @@ void FrameBuffer::Update() {
  *                                                                            *|
  ******************************************************************************/
 
-int FrameBuffer::NumFrames() {
+int FrameBuffer::NumFrames(void)
+{
   return pseudoframe;
 }
 
@@ -1336,7 +1343,8 @@ int FrameBuffer::NumFrames() {
  ******************************************************************************/
 
 int FrameBuffer::ReadField(double *returnbuf, const char *fieldname, 
-    int framenum_in, int numframes_in) {
+    int framenum_in, int numframes_in)
+{
   int i, j, k, truenum, wide, mindex, chnum[2];
   unsigned short mask;
   struct NiosStruct *address[2];
@@ -1431,7 +1439,8 @@ int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
  *                                                                            *|
  ******************************************************************************/
 
-FrameBuffer::~FrameBuffer() {
+FrameBuffer::~FrameBuffer(void)
+{
   int i, j;
 
   if (memallocated) {
