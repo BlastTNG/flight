@@ -54,6 +54,8 @@
 #include <qstatusbar.h>
 #include <unistd.h>
 
+#include "decompoll.h"
+
 #define NUMBER       0
 #define MULTI        1
 #define DATETIME     2
@@ -75,7 +77,6 @@
 #  define LOGFILE DATA_ETC_PALANTIR_DIR "/log.txt"
 #endif
 
-#define MAXPATHLENGTH 255
 #define MAX_MULTI_WORDS 255
 
 #define PALANTIR_0_JPG DATA_ETC_PALANTIR_DIR "/palantir0.jpg"
@@ -199,33 +200,6 @@ class PalImage
     char framenum;
     char numframes;
     QPixmap *Images[4];
-};
-
-class DecomData
-{
-  public:
-    DecomData();
-    void setData(char*);
-    int Status(void);
-    double FrameLoss(void);
-    double DataQuality(void);
-    double DiskFree(void);
-    char* DecomFile(void);
-
-  private:
-    unsigned long long int df;
-    int status;
-    int polarity;
-    int decomUnlocks;
-    double fs_bad;
-    double dq_bad;
-    char filename[256];
-};
-
-class DecomPoll : public QThread
-{
-  public:
-    virtual void run();
 };
 
 class MainForm : public QMainWindow
