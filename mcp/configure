@@ -1,5 +1,7 @@
 #!/bin/sh
 
+[ -x "Makefile.config" ] || rm -rf Makefile.config;
+
 if [ `hostname` = "ecosmo" ]
 then
   echo "BOLOTEST = -DBOLOTEST" > Makefile.config ;
