@@ -82,6 +82,7 @@ const char UnknownCommand[] = "Unknown Command";
 
 extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 
+extern pthread_t watchdog_id;  /* mcp.c */
 pthread_mutex_t mutex;
 
 struct SIPDataStruct SIPData;
@@ -496,7 +497,10 @@ void SingleCommand (enum singleCommand command) {
     CommandData.ISCState[1].triggertype = ISC_TRIGGER_NEG;
   else if (command == osc_auto_focus)
     CommandData.ISCControl[1].autofocus = 10;
-  else if (command == xyzzy)
+  else if (command == reap) {
+    bprintf(err, "Reaping the watchdog tickle on command.");
+    pthread_cancel(watchdog_id);
+  } else if (command == xyzzy)
     ;
   else {
     bputs(warning, "***Invalid Single Word Command***\n");
