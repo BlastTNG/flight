@@ -27,7 +27,9 @@
 #define FAST_OFFSET (4 + N_SLOW)
 
 /* offset of encoder.  Reset if encoder has been unmounted. */
-#define ENC_ELEV_OFFSET 101.166
+//#define ENC_ELEV_OFFSET 101.166
+#define ENC_ELEV_OFFSET -160.77
+
 /* Angle between magnetometer aligment and pointing alignment -- to be */
 /* calibrated. */
 #define MAG_ALIGNMENT  0.0

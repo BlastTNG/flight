@@ -99,7 +99,10 @@ struct CommandDataStruct {
   struct GainStruct azi_gain;
   struct GainStruct pivot_gain;
   struct GainStruct gy_heat_gain;
-  struct GainStruct isc_heat_gain;
+
+  int disable_az;
+  int disable_el;
+
   double t_gybox_setpoint;
   double t_isc_setpoint;
 

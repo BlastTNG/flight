@@ -214,14 +214,13 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   static int i_g_Paz = -1, j_g_Paz = -1;
   static int i_g_pivot = -1, j_g_pivot = -1;
   static int i_set_reac = -1, j_set_reac = -1;
-
-  static int wait = 4;
   
   double el_rad;
   unsigned int ucos_el;
   unsigned int usin_el;
 
   int v_elev, v_az, elGainP, elGainI, rollGainP;
+  int azGainP, azGainI, pivGainP;
   int i_point;
   
   /******** Obtain correct indexes the first time here ***********/
@@ -241,61 +240,76 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   
   i_point = GETREADINDEX(point_index);
 
+  /***************************************************/
+  /**           Elevation Drive Motors              **/
+  /* elevation speed */
   v_elev = GetVElev() * 6.0; // the 6.0 is to improve dynamic range.
   if (v_elev>32767) v_elev = 32767;
-  if (v_elev < -32768) v_elev = -32768;
-
-  if (wait>0) v_elev = 0;
-  
-  // It is removed in the DSP/ACS1 code.
+  if (v_elev < -32768) v_elev = -32768;  
   WriteFast(i_elVreq, 32768 + v_elev);
-  v_az = GetVAz()*6.0; // the 6.0 is to improve dynamic range.
-  
-  if (wait>0) v_az = 0.0;
-  WriteFast(i_azVreq, 32768 + v_az);
 
+  /* zero motor gains if the pin is in */
+  if (pinIsIn() || CommandData.disable_el) {
+    elGainP = elGainI = 0;
+  } else {
+    elGainP = CommandData.ele_gain.P;
+    elGainI = CommandData.ele_gain.I;	
+  }
+  /* proportional term for el motor */
+  WriteSlow(i_g_Pel, j_g_Pel, elGainP);
+  /* integral term for el_motor */
+  WriteSlow(i_g_Iel, j_g_Iel, elGainI);
+
+  
+  /***************************************************/
   /*** Send elevation angles to acs1 from acs2 ***/
   /* cos of el enc */
   el_rad = (M_PI / 180.0) * PointingData[i_point].el; // convert to radians
   ucos_el = (unsigned int)((cos(el_rad) + 1.0) * 32768.0);
   WriteFast(i_cos_el, ucos_el);
-
   /* sin of el enc */
   usin_el = (unsigned int)((sin(el_rad) + 1.0) * 32768.0);
   WriteFast(i_sin_el, usin_el);
 
-  /* zero motor gains if the pin is in */
-  if (pinIsIn())
-    elGainP = elGainI = 0;
-  else {
-    elGainP = CommandData.ele_gain.P;
-    elGainI = CommandData.ele_gain.I;	
-  }
+  /***************************************************/
+  /**            Azimuth Drive Motors              **/
+  v_az = GetVAz()*6.0; // the 6.0 is to improve dynamic range.
+  if (v_az>32767) v_az = 32767;
+  if (v_az < -32768) v_az = -32768;  
+  WriteFast(i_azVreq, 32768 + v_az);
 
-  /*** adjust roll_gain ***/
-  if (PointingData[i_point].gy_roll_amp>0.003) {
+  if (CommandData.disable_az) {
+    azGainP = 0;
+    azGainI = 0;
+    pivGainP = 0;
+  } else {
+    azGainP = CommandData.azi_gain.P;
+    azGainI = CommandData.azi_gain.I;
+    pivGainP = CommandData.pivot_gain.P;
+  }
+  
+  /* p term for az motor */
+  WriteSlow(i_g_Paz, j_g_Paz, azGainP);
+  /* I term for az motor */
+  WriteSlow(i_g_Paz, j_g_Paz, azGainI);
+  /* p term for pivot motor */
+  WriteSlow(i_g_pivot, j_g_pivot, pivGainP);
+  /* setpoint for reaction wheel */
+  WriteSlow(i_set_reac, j_set_reac, CommandData.pivot_gain.SP + 32768);
+
+
+  /***************************************************/
+  /**                Roll Drive Motors              **/  
+  if (PointingData[i_point].gy_roll_amp>0.003) { 
     rollGainP = 1000.0/PointingData[i_point].gy_roll_amp;
   } else {
     rollGainP = CommandData.roll_gain.P;
   }
-
   if (rollGainP>CommandData.roll_gain.P) rollGainP = CommandData.roll_gain.P;
 
-  /*** Send Gains ****/
-  /* proportional term for el motor */
-  WriteSlow(i_g_Pel, j_g_Pel, elGainP);
-  /* integral term for el_motor */
-  WriteSlow(i_g_Iel, j_g_Iel, elGainI);
   /* p term for roll motor */
   WriteSlow(i_g_Proll, j_g_Proll, rollGainP);
-  /* p term for az motor */
-  WriteSlow(i_g_Paz, j_g_Paz, CommandData.azi_gain.P);
-  /* p term for pivot motor */
-  WriteSlow(i_g_pivot, j_g_pivot, CommandData.pivot_gain.P);
-  /* setpoint for reaction wheel */
-  WriteSlow(i_set_reac, j_set_reac, CommandData.pivot_gain.SP + 32768);
 
-  if (wait>0) wait--;
 }
 
 /************************************************************************
@@ -1452,18 +1466,11 @@ void DoRasterMode() {
 
 void DoRaDecGotoMode() {
   double caz, cel;
-  double az, el;
   double lst;
   int i_point;
   
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
-  az = PointingData[i_point].az;
-  el = PointingData[i_point].el;
-  while (el> 180.0) el-=360.0;
-  while (el<-180.0) el += 360.0;
-  if (el>80) el = 80; // very bad situation - don't know how this can happen
-  if (el<-10) el = -10; // very bad situation - don't know how this can happen
 
   radec2azel(CommandData.pointing_mode.ra, CommandData.pointing_mode.dec,
  	     lst, PointingData[i_point].lat,
@@ -1527,6 +1534,9 @@ void UpdateAxesMode() {
     break;
   case POINT_RASTER:
     // already done in el mode test....
+    break;
+  case POINT_RADEC_GOTO:
+    // alread done
     break;
   case POINT_SCAN:
     DoAzScanMode();

@@ -225,7 +225,9 @@ int SIndex(char *cmd) {
 /*** set fields unused in current mode to zero ***/
 void ClearPointingModeExtraFields() {
   if ((CommandData.pointing_mode.az_mode != POINT_RASTER) &&
-      (CommandData.pointing_mode.el_mode != POINT_RASTER)) {
+      (CommandData.pointing_mode.el_mode != POINT_RASTER) &&
+      (CommandData.pointing_mode.az_mode != POINT_RADEC_GOTO) &&
+      (CommandData.pointing_mode.el_mode != POINT_RADEC_GOTO)) {
     CommandData.pointing_mode.ra = CommandData.pointing_mode.dec =
      CommandData.pointing_mode.r = 0.0;
   }
@@ -261,6 +263,16 @@ void SingleCommand (int command) {
     CommandData.pointing_mode.el_vel = 0.0;
     ClearPointingModeExtraFields();
   }
+
+  else if (command == SIndex("az_off")) /* disable az motors */
+    CommandData.disable_az = 1;
+  else if (command == SIndex("az_on")) /* enable az motors */
+    CommandData.disable_az = 0;
+  else if (command == SIndex("el_off")) /* disable el motors */
+    CommandData.disable_el = 1;
+  else if (command == SIndex("el_on")) /* enable el motors */
+    CommandData.disable_el = 0;
+  
   else if (command == SIndex("sun_veto"))       /* Veto sensors */
     CommandData.use_sun = 0;
   else if (command == SIndex("isc_veto"))
@@ -575,16 +587,10 @@ void MultiCommand (int command, unsigned short *dataq) {
   /******** Electronics Heaters  *********/
   } else if (command == MIndex("t_gyrobox")) {  /* gyro heater setpoint */
     CommandData.t_gybox_setpoint = rvalues[0];
-  } else if (command == MIndex("t_iscbox"))  { /* isc heater setpoint */
-    CommandData.t_isc_setpoint = rvalues[0];    
   } else if (command == MIndex("t_gyro_gain")) {  /* gyro heater gains */
     CommandData.gy_heat_gain.P = ivalues[0];
     CommandData.gy_heat_gain.I = ivalues[1];
     CommandData.gy_heat_gain.D = ivalues[2];
-  } else if (command == MIndex("t_iscbox_gain")) {  /* isc heater gains */
-    CommandData.isc_heat_gain.P = ivalues[0];
-    CommandData.isc_heat_gain.I = ivalues[1];
-    CommandData.isc_heat_gain.D = ivalues[2];
 
   /***************************************/
   /*************** Misc  *****************/
@@ -1339,14 +1345,14 @@ void InitCommandData() {
 
   CommandData.roll_gain.P = 30000;
 
-  CommandData.ele_gain.I = 15000;
-  CommandData.ele_gain.P = 700;
+  CommandData.ele_gain.I = 8000;
+  CommandData.ele_gain.P = 1200;
 
-  CommandData.azi_gain.P = 1200;
+  CommandData.azi_gain.P = 20000;
   CommandData.azi_gain.I = 10000; // unused
 
   CommandData.pivot_gain.SP = 2000;
-  CommandData.pivot_gain.P = 100;
+  CommandData.pivot_gain.P = 200;
   CommandData.pivot_gain.D = 18;  //unused
 
   CommandData.t_gybox_setpoint = 30.0;
@@ -1354,11 +1360,9 @@ void InitCommandData() {
   CommandData.gy_heat_gain.I = 60;
   CommandData.gy_heat_gain.D = 50;
 
-  CommandData.t_isc_setpoint = 30.0;
-  CommandData.isc_heat_gain.P = 10;
-  CommandData.isc_heat_gain.I = 60;
-  CommandData.isc_heat_gain.D = 50;
-
+  CommandData.disable_az = 0;
+  CommandData.disable_el = 0;
+  
   CommandData.use_sun = 1;
   CommandData.use_isc = 1;
   CommandData.use_vsc = 0;

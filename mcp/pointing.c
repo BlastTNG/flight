@@ -283,6 +283,7 @@ void SetRaDec(double ra, double dec) {
   radec2azel(ra, dec, PointingData[i_point].lst,
 	     PointingData[i_point].lat,
  	     &(NewAzEl.az), &(NewAzEl.el));
+
   NewAzEl.fresh = 1;
 }
 

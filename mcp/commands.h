@@ -1,5 +1,5 @@
 #define N_SCOMMANDS 63         /* total number of single word commands */
-#define N_NM_SCOMMANDS 52      /* total number of named single word cmds */
+#define N_NM_SCOMMANDS 54      /* total number of named single word cmds */
 #define N_MCOMMANDS 34         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -47,6 +47,11 @@ struct scom {
 
 struct scom scommands[N_NM_SCOMMANDS] = {
   {"stop", "servo off of gyros to zero speed now", GR_POINT},
+
+  {"az_off", "disable az motors", GR_GAIN},
+  {"az_on",  "enable az motors",  GR_GAIN},
+  {"el_off", "disable el motors", GR_GAIN},
+  {"el_on",  "enable el motors",  GR_GAIN},
 
   {"sun_veto", "veto sun sensor", GR_SENSOR},
   {"isc_veto", "veto integrating star-cam", GR_SENSOR},
@@ -274,20 +279,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_p_gyheat"},
       {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_i_gyheat"},
       {"Derrivative Gain", 0, MAX_15BIT, 'i', 0, "g_d_gyheat"}
-    }
-  },
-
-  {"t_iscbox", "isc box T", GR_EHEAT, 1,
-    {
-      {"deg C", 0, 60, 'f', 2, "t_isc_set"}
-    }
-  },
-
-  {"t_iscbox_gain", "isc box heater gains", GR_EHEAT, 3,
-    {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', 0, "g_pisch"},
-      {"Integral Gain", 0, MAX_15BIT, 'i', 0, "g_iisch"},
-      {"Derrivative Gain", 0, MAX_15BIT, 'i', 0, "g_disch"}
     }
   },
 
