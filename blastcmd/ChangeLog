@@ -1,6 +1,7 @@
 2004-12-17:
 	Release blastcmd-1.1.9
 
+	* Makefile.am: Fix blastcmd.log permissions
 	* configure.ac: Use arwen as default blastcmd server
 
 2004-11-15:

@@ -36,3 +36,8 @@ distinstall: distcheck
 	$(mkinstalldirs) ${prefix}/src
 	${INSTALL_DATA} ${distdir}-${buildserial}.tar.gz ${prefix}/src
 	scp ${distdir}-${buildserial}.tar.gz blast.physics.utoronto.ca:/data/src
+
+if INSTALL_BLASTCMD_LOG
+install-data-hook:
+	chmod 666 $(DESTDIR)$(dataetcdir)/blastcmd.log
+endif
