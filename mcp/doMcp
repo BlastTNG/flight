@@ -1,6 +1,8 @@
 #! /bin/csh
-while 1
-  /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
-  sleep 1
-end
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+/usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+/sbin/reboot
 
