@@ -1,3 +1,6 @@
+2004-10-22:
+	* Makefile.am: add command_list.c to CONFIG_STATUS_DEPENDENCIES
+
 2004-10-21 (1.1.8):
 	* blastcmd.c (PrintCommandListSerial, USAGE): -c returns status 12.
 

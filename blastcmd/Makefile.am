@@ -1,4 +1,5 @@
 buildserial = @CMDVERSION@
+CONFIG_STATUS_DEPENDENCIES = $(top_srcdir)/command_list.c
 
 AUTOMAKE_OPTIONS = foreign
 blastcmd_SOURCES = blastcmd.c command_list.c command_list.h isc_protocol.h
