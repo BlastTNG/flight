@@ -234,6 +234,7 @@ void GetACS(unsigned short *Rxframe){
 void SunSensor(void) {
   int sock, n, prin, attempts, lastIndex, curIndex;
   int ars, ers;
+  double az_rel_sun, el_rel_sun;
 
   struct sockaddr_in addr;
 
@@ -256,14 +257,14 @@ void SunSensor(void) {
     inet_aton(ARIEN, &addr.sin_addr);
     addr.sin_family = AF_INET;
     addr.sin_port = htons(ARIEN_PORT);
-    fprintf(stderr, "Attempting to connect to Arien...\n");
+//    fprintf(stderr, "Attempting to connect to Arien...\n");
     while ((n = connect(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)))
         < 0) {
-      fprintf(stderr, "Connection attempt to Arien failed [%i].\n", n);
+//      fprintf(stderr, "Connection attempt to Arien failed [%i].\n", n);
       sleep(1);
-      fprintf(stderr, "Attempting to connect to Arien...\n");
+//      fprintf(stderr, "Attempting to connect to Arien...\n");
     };
-    fprintf(stderr, "Connect returned: %i\n", n);
+//    fprintf(stderr, "Connect returned: %i\n", n);
 
     fprintf(stderr, "Connected to Arien\n");
     sigPipeRaised = n = 0;
@@ -272,25 +273,27 @@ void SunSensor(void) {
       curIndex = RxframeIndex;
       if (curIndex < lastIndex) {
         attempts = 0;
-        //fprintf(stderr, "P\n");
+//        fprintf(stderr, "P\n");
         send(sock, P, 2, 0);
 
         do {
           n = recv(sock, buff, (socklen_t)255, MSG_DONTWAIT);
           if (n == -1) {
             attempts++;
-            usleep(10);
+            usleep(10000);
           }
         } while ((n == -1) && (attempts < 200));
 
         if (n != -1) {
           buff[n] = 0;
-          if (sscanf(buff, "%*s %*s %i %i %i", &ars, &ers, &prin) == 3) {
+          if (sscanf(buff, "%lf %lf %i %i %i", &az_rel_sun, &el_rel_sun, &ars,
+                &ers, &prin) == 5) {
             SunSensorData[ss_index].raw_el = (short int)(ars);
             SunSensorData[ss_index].raw_az = (short int)(ers);
             SunSensorData[ss_index].prin = prin;
             ss_index = (ss_index + 1) % 3;
-            fprintf(stderr, "%i %i  %i  %i\n", attempts * 10, ars, ers, prin);
+            fprintf(stderr, "%i %lf %lf (%i %i) %i\n", attempts * 10000,
+                az_rel_sun, el_rel_sun, ars, ers, prin);
           }
         }
       }
@@ -551,7 +554,7 @@ int main(int argc, char *argv[]) {
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS,NULL);
 
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
-  //  pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
+  pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
 
   InitBi0Buffer();
   pthread_create(&bi0_id, NULL, (void*)&BiphaseWriter, NULL);
