@@ -517,10 +517,10 @@
       <DATUM format="%.2f" src="T_DAS" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Gyrobox 1">
-      <DATUM format="%.2f" src="T_GYBOX" extrema="temp"/>
+      <DATUM format="%.2f" src="T_GYBOX1" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Gyro 1 Set">
-      <DATUM format="%.2f" src="T_GY_SET" extrema="temp"/>
+      <DATUM format="%.2f" src="T_GY1_SET" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Gyro 1">
       <DATUM format="%.2f" src="T_GYRO1" extrema="temp"/>
@@ -535,22 +535,16 @@
       <DATUM format="%.2f" src="T_GYBOX2" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Gyro 2 Set">
-      <DATUM format="%.2f" src="T_GY_SET2" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="ISC">
-      <DATUM format="%.2f" src="ISC_TEMP1" extrema="isctemp"/>
+      <DATUM format="%.2f" src="T_GY2_SET" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="IF Clin">
       <DATUM format="%.2f" src="T_CLIN_IF" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="ISC Baffle">
-      <DATUM format="%.2f" src="T_BAFFLE" extrema="temp"/>
-    </NUMBER>
     <NUMBER caption="Rec">
       <DATUM format="%.2f" src="T_REC" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T IF 12">
-      <DATUM format="%.2f" src="T_IF12" extrema="unknown"/>
+    <NUMBER caption="IF Heat Exchanger">
+      <DATUM format="%.2f" src="T_IN_HEATX" extrema="temp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Mirror Temps" colour="#002222" row="3" col="6">
@@ -880,6 +874,24 @@
     </NUMBER>
   </BOX>
   <BOX caption="Cooling" colour="#777700" row="5" col="5">
+    <MULTI caption="IF Cooling">
+      <DATUM src="IF_COOL1_ON">
+        <WORD value="1" caption="On" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="IF Level (%)">
+      <DATUM format="%.2f" src="INPUMP_LEV" extrema="unknown"/>
+    </NUMBER>
+    <MULTI caption="OF Cooling">
+      <DATUM src="OF_COOL1_ON">
+        <WORD value="1" caption="On" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="OF Level (%)">
+      <DATUM format="%.2f" src="OUTPUMP_LEV" extrema="unknown"/>
+    </NUMBER>
   </BOX>
   <BOX caption="State" colour="#777700" row="0" col="1" colspan="1">
     <CURDIR caption="Dirfile">
@@ -897,11 +909,8 @@
     <NUMBER caption="Index">
       <DATUM format="%.0f" src="INDEX" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="MCP Fastsamp">
+    <NUMBER caption="Fastsamp">
       <DATUM format="%.0f" src="FASTSAMP" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="MCP Frame">
-      <DATUM format="%.0f" src="MCP_FRAME" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Alice File">
       <DATUM format="%.0f" src="ALICE_FILE" extrema="unknown"/>
@@ -974,6 +983,9 @@
     <NUMBER caption="ISC">
       <DATUM format="%.2f" src="ISC_EL" extrema="angle"/>
     </NUMBER>
+    <NUMBER caption="OSC">
+      <DATUM format="%.2f" src="OSC_EL" extrema="angle"/>
+    </NUMBER>
     <NUMBER caption="Encoder">
       <DATUM format="%.2f" src="ENC_ELEV" extrema="angle"/>
     </NUMBER>
@@ -988,6 +1000,9 @@
     </NUMBER>
     <NUMBER caption="ISC Sigma">
       <DATUM format="%.2f" src="ISC_SIGMA" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="OSC Sigma">
+      <DATUM format="%.2f" src="OSC_SIGMA" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Enc Sigma">
       <DATUM format="%.2f" src="ENC_SIGMA" extrema="unknown"/>
@@ -1006,6 +1021,9 @@
     <NUMBER caption="ISC">
       <DATUM format="%.2f" src="ISC_AZ" extrema="angle"/>
     </NUMBER>
+    <NUMBER caption="OSC">
+      <DATUM format="%.2f" src="OSC_AZ" extrema="angle"/>
+    </NUMBER>
     <NUMBER caption="dGPS">
       <DATUM format="%.2f" src="DGPS_AZ" extrema="angle"/>
     </NUMBER>
@@ -1017,6 +1035,9 @@
     </NUMBER>
     <NUMBER caption="ISC Sigma">
       <DATUM format="%.2f" src="ISC_SIGMA" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="OSC Sigma">
+      <DATUM format="%.2f" src="OSC_SIGMA" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="dGPS Sigma">
       <DATUM format="%.2f" src="DGPS_SIGMA" extrema="unknown"/>
