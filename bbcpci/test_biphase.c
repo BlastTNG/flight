@@ -7,8 +7,8 @@
 
 #include "bbc_pci.h"
 
-#define FRAMELEN    0x0005
-#define DIVIDER     0x0002
+#define FRAMELEN    0x5555
+#define DIVIDER     0x0055
 
 int main(int argc, char *argv[]) {
   int fp, nr;
