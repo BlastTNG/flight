@@ -35,6 +35,8 @@ struct ChannelStruct WideSlowChannels[] = {
   {"time",         'w', LOOP1, 12,                1.0,             0.0, 'U'},
   {"osc_ra",       'w', LOOP3, 26,             LI2DEG,             0.0, 'U'},
   {"osc_dec",      'w', LOOP3, 28,          LI2DEG/2.,            -90., 'U'},
+  {"isc_mcpnum",   'w', LOOP2, 61,                1.0,             0.0, 'U'},
+  {"osc_mcpnum",   'w', LOOP3, 58,                1.0,             0.0, 'U'},
   END_OF_CHANNELS
 };
 
@@ -328,8 +330,6 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_afocus",   'w', LOOP2, 58,                1.0,             0.0, 'u'},
   {"isc_brra",     'w', LOOP2, 59,              I2DEG,             0.0, 'u'},
   {"isc_brdec",    'w', LOOP2, 60,              I2DEG,             0.0, 'u'},
-  {"isc_mcpnum",   'w', LOOP2, 61,                1.0,             0.0, 'u'},
-  {"isc_maxblobs", 'w', LOOP2, 62,                1.0,             0.0, 'u'},
   {"isc_x_off",    'w', LOOP2, 63,              I2DEG,             0.0, 'u'},
 
   {"pulse_len",    'w', LOOP3,  0,                10.,             0.0, 'u'},
@@ -386,8 +386,6 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_afocus",   'w', LOOP3, 55,                1.0,             0.0, 'u'},
   {"osc_brra",     'w', LOOP3, 56,              I2DEG,             0.0, 'u'},
   {"osc_brdec",    'w', LOOP3, 57,              I2DEG,             0.0, 'u'},
-  {"osc_mcpnum",   'w', LOOP3, 58,                1.0,             0.0, 'u'},
-  {"osc_maxblobs", 'w', LOOP3, 59,                1.0,             0.0, 'u'},
   {"osc_x_off",    'w', LOOP3, 60,              I2DEG,             0.0, 'u'},
   {"osc_hold_i",   'w', LOOP3, 61,                1.0,             0.0, 'u'},
   {"osc_save_prd", 'w', LOOP3, 62,               0.01,             0.0, 'u'},
@@ -399,6 +397,8 @@ struct ChannelStruct SlowChannels[] = {
   {"ss_az_center", 'w', LOOP4,  3,                1.0,             0.0, 'u'},
   {"ss_cpu_temp",  'w', LOOP4,  4,                1.0,             0.0, 'u'},
   {"ss_pc_temp",   'w', LOOP4,  5,                1.0,             0.0, 'u'},
+  {"isc_maxblobs", 'w', LOOP4,  6,                1.0,             0.0, 'u'},
+  {"osc_maxblobs", 'w', LOOP4,  7,                1.0,             0.0, 'u'},
 
   END_OF_CHANNELS
 };
