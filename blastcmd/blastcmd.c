@@ -48,11 +48,8 @@ char *ack[16] = {
 
 int verbose = 0;
 
-
-void USAGE() {
-  int i, j;
-  
-  printf("\nblastcmd [-v] [-f] [-s] [-los|-tdrss|-hf] [-com1|-com2] \\\n"
+void USAGE(int flag) {
+  printf("blastcmd [-v] [-f] [-s] [-los|-tdrss|-hf] [-com1|-com2] \\\n"
       "         command [param00 [param01 [param02 [ ... ]]]]\n\n"
       "Options:\n"
       "       -v   Verbose\n"
@@ -62,8 +59,35 @@ void USAGE() {
       "   -tdrss   Set link to TDRSS\n"
       "      -hf   Set link to HF\n"
       "    -com1   Set routing to comm1\n"
-      "    -com2   Set routing to comm2\n\n"
-      "Valid Multiword Commands:\n");
+      "    -com2   Set routing to comm2\n\n");
+
+  if (!flag) {
+    printf("Exit codes:\n"
+        "     0  Command sent successfully.\n"
+        "     1  No command specified or command cancelled by user.\n"
+        "     2  Unable to open serial port.\n"
+        "     3  Parameter out of range.\n"
+        "     4  ACK == 0x0A\n"
+        "     5  ACK == 0x0B\n"
+        "     6  ACK == 0x0C\n"
+        "     7  ACK == 0x0D\n"
+        "     8  ACK == 0x0E\n"
+        "     9  ACK == 0x0F\n"
+        "    10  Unexpected error in command definitions\n"
+        "    11  Syntax error on command line\n\n");
+
+    printf("For a list of valid commands use `blastcmd -l'\n");
+    exit(11);
+  }
+}
+
+void CommandList(void)
+{
+  int i, j;
+
+  USAGE(1);
+
+  printf("Valid Multiword Commands:\n");
 
   for (i = 0; i < N_MCOMMANDS; i++) {
     printf("  %s - %s\n", mcommands[i].name, mcommands[i].about);
@@ -77,21 +101,7 @@ void USAGE() {
     printf("  %s - %s\n", scommands[i].name, scommands[i].about);
   }
 
-  printf("\nExit codes:\n"
-         "     0  Command sent successfully.\n"
-         "     1  No command specified.\n"
-         "     2  Unable to open serial port.\n"
-         "     3  Parameter out of range.\n"
-         "     4  ACK == 0x0A\n"
-         "     5  ACK == 0x0B\n"
-         "     6  ACK == 0x0C\n"
-         "     7  ACK == 0x0D\n"
-         "     8  ACK == 0x0E\n"
-         "     9  ACK == 0x0F\n"
-         "    10  Unexpected error in command definitions\n"
-         "    11  Syntax error\n");
-
-  exit(11);
+  exit(1);
 }
 
 void bc_close() {
@@ -204,8 +214,8 @@ void ConfirmMultiSend(int i_cmd, char *params[], int np) {
 
 void McommandUSAGE(int mcmd) {
   int i;
-
-  printf("\n");
+  
+  printf("blastcmd: Error in multiword command parameter.\n\n");
 
   printf("  %s - %s\n", mcommands[mcmd].name, mcommands[mcmd].about);
   for (i = 0; i < mcommands[mcmd].numparams; i++) 
@@ -252,9 +262,8 @@ void SendMcommand(int i_cmd, int t_link, int t_route, char *parms[], int np,
   int i;
   time_t t;
 
-  if (np != mcommands[i_cmd].numparams) {
+  if (np != mcommands[i_cmd].numparams)
     McommandUSAGE(i_cmd);
-  }
 
   for (i = 0; i < np; i++) {
     min = mcommands[i_cmd].params[i].min;
@@ -310,8 +319,8 @@ void SendMcommand(int i_cmd, int t_link, int t_route, char *parms[], int np,
       dataq[dataqsize++] = ynt & 0x00007fff;          /* lower 15 bits */
     } else {
       printf("\nError in command definitions:\n   invalid parameter type '%c' "
-             "for parameter %i of mutlicommand: %s\n\n", type, i,
-             mcommands[i_cmd].name);
+          "for parameter %i of mutlicommand: %s\n\n", type, i,
+          mcommands[i_cmd].name);
       exit(10);
     }
   }
@@ -386,6 +395,8 @@ void WriteLogFile(int argc, char *argv[], unsigned int i_ack, char silent)
     exit(6);
   if (i_ack == 0x0d)
     exit(7);
+  if (i_ack == 0x0e)
+    exit(8);
   if (i_ack == 0x0f)
     exit(8);
   chmod(LOGFILE, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
@@ -402,9 +413,8 @@ int main(int argc, char *argv[]) {
   t_link = LINK_DEFAULT;
   t_route = ROUTING_DEFAULT;
 
-  if(argc <= 1) {
-    USAGE();
-  }
+  if(argc <= 1)
+    USAGE(0);
 
   /* Parse switches */
   for (i = 1; i < argc; i++) {
@@ -424,15 +434,16 @@ int main(int argc, char *argv[]) {
       conf = 1;
     else if (strcmp(argv[i], "-s") == 0)
       silent = 1;
+    else if (strcmp(argv[i], "-l") == 0)
+      CommandList();
   }
 
   i = 1;
   while ((i < argc) && (argv[i][0] == '-'))
     i++;
 
-  if(i >= argc) {
-    USAGE();
-  }
+  if(i >= argc)
+    USAGE(0);
 
   atexit(bc_close);
 
@@ -455,7 +466,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  USAGE();
+  printf("blastcmd: unknown command.  For a list of valid commands use `blastcmd -l'\n");
 
   return(1);
 }
