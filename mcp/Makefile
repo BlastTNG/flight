@@ -42,12 +42,6 @@ debug::
 
 debug:: all
 
-tx_test: tx_struct.c tx_test.c
-	gcc -O3 -Wall -o tx_test tx_struct.c tx_test.c
-
-tx_test.o:
-	
-
 clean:
 	rm -f mcp || true;
 	rm -f *.o || true;

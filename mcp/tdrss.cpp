@@ -38,7 +38,7 @@ extern "C" {
 #include "command_struct.h"
 }
 
-#define ALICEFILE_DIR   "./"
+#define ALICEFILE_DIR   "/data/etc/"
 #define MULTIPLEX_WORD  3
 
 #define INPUT_TTY "/dev/ttyS5"
@@ -500,8 +500,7 @@ bool Alice::GetCurrentAML() {
     if (DataInfo->LoadFromAML(tmp)) {
       AMLsrc = newxml;
       sendbuf->SetSize(DataInfo->maxbitrate / 10 * DataInfo->looplength);
-      mprintf(MCP_INFO, "SMALL (Alice):  now using .aml file number %d.", 
-          AMLsrc);
+      mprintf(MCP_INFO, "Alice now using %s.", tmp);
       return true;
     }
   }
