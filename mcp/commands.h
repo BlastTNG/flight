@@ -252,7 +252,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {"phase", "set phase shift", GR_BIAS, 2,
     {
-      {"DAS card", 3, 16, 'i', 0, "ADD"},
+      {"DAS card", 5, 16, 'i', 0, "ADD"},
       {"Phase", 0, 2000, 'i', 0, "ADD"}
     }
   },
