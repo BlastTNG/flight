@@ -198,7 +198,7 @@ struct DGPSPosStruct{
 struct ISCPulseType {
   int age; // time since start of last trigger
   int ctr; // where we are in the period
-  int pulse_width; // how wide this pulse should be
+  int pulse_index;
   int is_fast; // if a fast pulse is requested: set in motors.c
   int last_save;
 };

@@ -11,7 +11,7 @@
 #define ISC_TRIG_PERIOD 100
 #define MAX_ISC_SLOW_PULSE_SPEED 0.015
 
-struct ISCPulseType isc_pulses[2] = {{0, 0, 4, 0, 0}, {0, 0, 4, 0, 0}};
+struct ISCPulseType isc_pulses[2] = {{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}};
 
 int pin_is_in = 1;
 
@@ -265,18 +265,17 @@ int GetLockBits(int acs0bits) {
 
 /*********************/
 /* ISC Pulsing stuff */
-int CameraTrigger(int which)
+void CameraTrigger(int which)
 {
-  int iscBits = 0;
+  static int firsttime = 1;
+  static struct NiosStruct* TriggerAddr[2];
+  int iscPulse = 0;
 
-  if (isc_pulses[which].ctr < isc_pulses[which].pulse_width) {
-    iscBits |= ISC_TRIGGER;
+  if (firsttime) {
+    firsttime = 0;
+    TriggerAddr[0] = GetNiosAddr("isc_trigger");
+    TriggerAddr[1] = GetNiosAddr("osc_trigger");
   }
-  
-  /* We want to trigger sending the frame slightly after the pulse is sent
-   * to offset the 300 ms latency in the BLASTbus */
-  if (isc_pulses[which].ctr == 20)
-    write_ISC_pointing[which] = 1;	
 
   if (isc_pulses[which].age >= 0)
     isc_pulses[which].age++;
@@ -284,14 +283,16 @@ int CameraTrigger(int which)
   if (isc_pulses[which].ctr < ISC_TRIG_PERIOD) {
     isc_pulses[which].ctr++;
   } else {
+    write_ISC_pointing[which] = 1;	/* no blastbus latency any more */
+    isc_pulses[which].pulse_index = (isc_pulses[which].pulse_index + 1) % 4;
+    isc_pulses[which].ctr = 0;
+
     if (isc_pulses[which].is_fast) {
-      isc_pulses[which].pulse_width = CommandData.ISCControl[which].fast_pulse_width;
-      isc_pulses[which].ctr = 0;
-      if (isc_pulses[which].age < 0)
-        isc_pulses[which].age = 0;
+      iscPulse = (isc_pulses[which].pulse_index << 14)
+        | CommandData.ISCControl[which].fast_pulse_width;
     } else if (fabs(axes_mode.az_vel) < MAX_ISC_SLOW_PULSE_SPEED) {
-      isc_pulses[which].pulse_width = CommandData.ISCControl[which].pulse_width;
-      isc_pulses[which].ctr = 0;
+      iscPulse = (isc_pulses[which].pulse_index << 14)
+        | CommandData.ISCControl[which].pulse_width;
 
       /* Trigger automatic image write-to-disk */
       if (isc_pulses[which].last_save
@@ -300,16 +301,15 @@ int CameraTrigger(int which)
         CommandData.ISCControl[which].auto_save = 1;
         isc_pulses[which].last_save = 0;
       }
-      
-      if (isc_pulses[which].age < 0)
-        isc_pulses[which].age = 0;
     }
+
+    if (isc_pulses[which].age < 0)
+      isc_pulses[which].age = 0;
+
+    WriteData(TriggerAddr[which], iscPulse);
   }
 
   isc_pulses[which].last_save++;
-  /*********************/
-
-  return iscBits;
 }
 
 /*****************************************************************/
@@ -388,7 +388,6 @@ void ControlAuxMotors(unsigned short *RxFrame) {
     pumpBits |= OF_COOL1_OFF;
     CommandData.pumps.outframe_cool1_off--;
   }
-
   if (CommandData.pumps.outframe_cool2_on > 0) {
     pumpBits |= OF_COOL2_ON;
     CommandData.pumps.outframe_cool2_on--;

@@ -785,9 +785,9 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.ISCState[1].azBDA = rvalues[0] * DEG2RAD;
     CommandData.ISCState[1].elBDA = rvalues[1] * DEG2RAD;
   } else if (command == osc_fast_int) {
-    CommandData.ISCControl[1].fast_pulse_width = (int)((4 + ivalues[0]) / 10);
+    CommandData.ISCControl[1].fast_pulse_width = rvalue[0] * 10.4166666666667;
   } else if (command == osc_slow_int) {
-    CommandData.ISCControl[1].pulse_width = (int)((4 + ivalues[0]) / 10);
+    CommandData.ISCControl[1].pulse_width = rvalue[0] * 10.4166666666667;
   } else if (command == osc_det_set) {
     CommandData.ISCState[1].grid = ivalues[0];
     CommandData.ISCState[1].sn_threshold = rvalues[1];
@@ -1433,9 +1433,9 @@ void InitCommandData() {
   CommandData.ISCState[0].match_tol = 0.8;
   CommandData.ISCState[0].quit_tol = 1;
   CommandData.ISCState[0].rot_tol = 5 * DEG2RAD;
-  CommandData.ISCControl[0].save_period = 4000;
-  CommandData.ISCControl[0].pulse_width = 30;
-  CommandData.ISCControl[0].fast_pulse_width = 6;
+  CommandData.ISCControl[0].save_period = 4000; /* 40 sec */
+  CommandData.ISCControl[0].pulse_width = 3125; /* 300.00 msec */
+  CommandData.ISCControl[0].fast_pulse_width = 625; /* 60.00 msec */
 
   CommandData.ISCState[1].abort = 0;
   CommandData.ISCState[1].pause = 0;
@@ -1460,9 +1460,9 @@ void InitCommandData() {
   CommandData.ISCState[1].match_tol = 0.8;
   CommandData.ISCState[1].quit_tol = 1;
   CommandData.ISCState[1].rot_tol = 5 * DEG2RAD;
-  CommandData.ISCControl[1].save_period = 4000;
-  CommandData.ISCControl[1].pulse_width = 30;
-  CommandData.ISCControl[1].fast_pulse_width = 6;
+  CommandData.ISCControl[1].save_period = 4000; /* 40 sec */
+  CommandData.ISCControl[0].pulse_width = 3125; /* 300.00 msec */
+  CommandData.ISCControl[0].fast_pulse_width = 625; /* 60.00 msec */
 
   WritePrevStatus();
 }

@@ -423,8 +423,8 @@ struct ChannelStruct WideFastChannels[] = {
 struct ChannelStruct FastChannels[] = {
 #ifndef BOLOTEST
   /* read channels from ACS0 */
-  {"pch_clin_sip",'r', ACS0, 27,   4.0/5333.3333,              -4.*6.144, 'u'},
-  {"roll_clin_sip",'r',ACS0, 29,  -4.0/5333.3333,               4.*6.144, 'u'},
+  {"pch_clin_sip",'r',  ACS0, 27,   4.0/5333.3333,              -4.*6.144, 'u'},
+  {"roll_clin_sip",'r', ACS0, 29,  -4.0/5333.3333,               4.*6.144, 'u'},
 
   {"clin_elev",   'r',  ACS0, 37,      0.00546739,                -133.78, 'u'},
   {"xel_clin_if", 'r',  ACS0, 39,      0.00546739,             -25.*6.144, 'u'},
@@ -434,15 +434,15 @@ struct ChannelStruct FastChannels[] = {
   {"mag_y",       'r',  ACS0, 47,             1.0,                    0.0, 'u'},
   {"acs0bits",    'r',  ACS0, 59,             1.0,                    0.0, 'u'},
 
-  {"az",          'w', LOOP2, 51,       I2DEG,                    0.0, 'u'},
-  {"el",          'w', LOOP2, 52,       I2DEG,                    0.0, 'u'},
+  {"az",          'w', LOOP2, 51,           I2DEG,                    0.0, 'u'},
+  {"el",          'w', LOOP2, 52,           I2DEG,                    0.0, 'u'},
 
-  {"mcp_frame",   'w', LOOP2, 34,         1.0,                    0.0, 'u'},
-  {"ss_x_ccd",    'w', LOOP2, 50,         1.0,                    0.0, 's'},
+  {"mcp_frame",   'w', LOOP2, 34,             1.0,                    0.0, 'u'},
+  {"ss_x_ccd",    'w', LOOP2, 50,             1.0,                    0.0, 's'},
 
   /* send data to ACS0 */
-  {"isc_pulse",   'w',  ACS0,  1,             1.0,                    0.0, 'u'},
-  {"osc_pulse",   'w',  ACS0,  2,             1.0,                    0.0, 'u'},
+  {"isc_trigger", 'w',  ACS0,  1,             1.0,                    0.0, 'u'},
+  {"osc_trigger", 'w',  ACS0,  2,             1.0,                    0.0, 'u'},
 
   /* send data to new ACS card */
   {"isc_bits",    'w',  ACS3,  1,             1.0,                    0.0, 'u'},
