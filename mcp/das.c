@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "mcp.h"
 #include "tx_struct.h"
 #include "tx.h"
 #include "command_struct.h"
@@ -32,46 +33,45 @@
 #define CS_LHeVALVE_ON   0x0040
 #define CS_LHeVALVE_OPEN 0x0080
 
-extern unsigned short slow_data[N_SLOW][FAST_PER_SLOW];
-
 /************************************************************************/
 /*                                                                      */
 /* PhaseControl: set phase shifts for DAS cards                         */
 /*                                                                      */
 /************************************************************************/
-void PhaseControl(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
+void PhaseControl(void)
 {
   static int first_time = 1;
-  static int i_c[DAS_CARDS];
-  static int j_c[DAS_CARDS];
+  static struct NiosStruct* NiosAddr[DAS_CARDS];
   char field[20];
   int i;
 
-  if(first_time) {
+  if (first_time) {
     first_time = 0;
     for(i = 0; i < DAS_CARDS; i++) {
       sprintf(field, "phase%d", i+5);
-      SlowChIndex(field, &i_c[i], &j_c[i]);
+      NiosAddr[i] = GetNiosAddr(field);
     }
   }	
 
-  for(i = 0; i < DAS_CARDS; i++) {
-    WriteSlow(i_c[i], j_c[i], CommandData.Phase[i]);
-  }
+  for(i = 0; i < DAS_CARDS; i++)
+    WriteData(NiosAddr[i], CommandData.Phase[i]);
 }
 
 /***********************************************************************/
 /* CalLamp: Flash calibrator                                           */
 /***********************************************************************/
-int CalLamp (int* cryostate, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
+int CalLamp (int* cryostate)
 {
   int calLamp;
-  static int calPulseCh = -1, calPulseInd;
+  static struct NiosStruct* calPulseAddr;
   static int pulse_left = 0;
   static int repeat_left = 0;
 
-  if (calPulseCh == -1)
-    SlowChIndex("cal_pulse", &calPulseCh, &calPulseInd);
+  static int firsttime = 1;
+  if (firsttime) {
+    firsttime = 0;
+    calPulseAddr = GetNiosAddr("cal_pulse");
+  }
 
   if (CommandData.Cryo.calibrator == 1) {
     calLamp = CRYO_CALIBRATOR_ON;
@@ -97,11 +97,11 @@ int CalLamp (int* cryostate, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
       calLamp = CRYO_CALIBRATOR_ON;
       *cryostate |= CS_CALIBRATOR;
       pulse_left--; 
-      WriteSlow(calPulseCh, calPulseInd, 1);
+      WriteData(calPulseAddr, 1);
     } else {               /* pulser off, or we're not pulsing, turn off lamp */
       calLamp = CRYO_CALIBRATOR_OFF;
       *cryostate &= 0xFFFF - CS_CALIBRATOR;
-      WriteSlow(calPulseCh, calPulseInd, 0);
+      WriteData(calPulseAddr, 0);
     }
   }
 
@@ -111,42 +111,41 @@ int CalLamp (int* cryostate, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
 /***********************************************************************/
 /* CryoControl: Set heaters to values contained within the CommandData */
 /***********************************************************************/
-void CryoControl (unsigned int* TxFrame,
-    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
+void CryoControl (void)
 {
-  static int i_cryoin = -1, j_cryoin = -1;
-  static int i_cryoout2 = -1, j_cryoout2 = -1;
-  static int cryoOut3Ch;
-  static int cryostateCh, cryostateInd;
-  static int he3pwmCh, he3pwmInd;
-  static int jfetpwmCh, jfetpwmInd;
-  static int hspwmCh, hspwmInd;
-  static int cryopwmCh, cryopwmInd;
-  static int calRepeatCh, calRepeatInd;
-  static int pulseLenCh, pulseLenInd;
+  static struct NiosStruct* cryoout2Addr;
+  static struct NiosStruct* cryoout3Addr;
+  static struct NiosStruct* cryostateAddr;
+  static struct NiosStruct* he3pwmAddr;
+  static struct NiosStruct* jfetpwmAddr;
+  static struct NiosStruct* hspwmAddr;
+  static struct NiosStruct* cryopwmAddr;
+  static struct NiosStruct* calRepeatAddr;
+  static struct NiosStruct* pulseLenAddr;
 
   int cryoout3 = 0, cryoout2 = 0;
   static int cryostate = 0;
 
   /************** Set indices first time around *************/
-  if (i_cryoin == -1) {
-    FastChIndex("cryoout3", &cryoOut3Ch);
+  static int firsttime = 1;
+  if (firsttime) {
+    firsttime = 0;
+    cryoout3Addr = GetNiosAddr("cryoout3");
 
-    SlowChIndex("cryoin", &i_cryoin, &j_cryoin);
-    SlowChIndex("cryoout2", &i_cryoout2, &j_cryoout2);
-    SlowChIndex("cryostate", &cryostateCh, &cryostateInd);
-    SlowChIndex("he3pwm", &he3pwmCh, &he3pwmInd);
-    SlowChIndex("jfetpwm", &jfetpwmCh, &jfetpwmInd);
-    SlowChIndex("hspwm", &hspwmCh, &hspwmInd);
-    SlowChIndex("cryopwm", &cryopwmCh, &cryopwmInd);
+    cryoout2Addr = GetNiosAddr("cryoout2");
+    cryostateAddr = GetNiosAddr("cryostate");
+    he3pwmAddr = GetNiosAddr("he3pwm");
+    jfetpwmAddr = GetNiosAddr("jfetpwm");
+    hspwmAddr = GetNiosAddr("hspwm");
+    cryopwmAddr = GetNiosAddr("cryopwm");
 
-    SlowChIndex("pulse_len", &pulseLenCh, &pulseLenInd);
-    SlowChIndex("cal_repeat", &calRepeatCh, &calRepeatInd);
+    pulseLenAddr = GetNiosAddr("pulse_len");
+    calRepeatAddr = GetNiosAddr("cal_repeat");
   }
 
   /* We want to save these here since CalLamp might destroy calib_repeat */
-  WriteSlow(pulseLenCh, pulseLenInd, CommandData.Cryo.calib_pulse);
-  WriteSlow(calRepeatCh, calRepeatInd, CommandData.Cryo.calib_repeat);
+  WriteData(pulseLenAddr, CommandData.Cryo.calib_pulse);
+  WriteData(calRepeatAddr, CommandData.Cryo.calib_repeat);
 
   /********** Set Output Bits **********/
   if (CommandData.Cryo.heliumLevel == 0) {
@@ -170,7 +169,7 @@ void CryoControl (unsigned int* TxFrame,
     cryoout3 |= CRYO_COLDPLATE_ON;
     cryostate |= CS_COLDPLATE;
   }
-  cryoout3 |= CalLamp(&cryostate, slowTxFields);
+  cryoout3 |= CalLamp(&cryostate);
 
   cryoout2 = CRYO_POTVALVE_OPEN | CRYO_POTVALVE_CLOSE | 
    CRYO_LHeVALVE_OPEN | CRYO_LHeVALVE_CLOSE;
@@ -206,14 +205,14 @@ void CryoControl (unsigned int* TxFrame,
   } else
     cryostate &= 0xFFFF - CS_LHeVALVE_ON;
 
-  WriteFast(cryoOut3Ch, cryoout3);
+  WriteData(cryoout3Addr, cryoout3);
 
-  WriteSlow(i_cryoout2, j_cryoout2, cryoout2);
-  WriteSlow(cryostateCh, cryostateInd, cryostate);
-  WriteSlow(he3pwmCh, he3pwmInd, CommandData.Cryo.heliumThree);
-  WriteSlow(hspwmCh, hspwmInd, CommandData.Cryo.heatSwitch);
-  WriteSlow(jfetpwmCh, jfetpwmInd, CommandData.Cryo.JFETHeat);
-  WriteSlow(cryopwmCh, cryopwmInd, CommandData.Cryo.sparePwm);
+  WriteData(cryoout2Addr, cryoout3);
+  WriteData(cryostateAddr, cryostate);
+  WriteData(he3pwmAddr, CommandData.Cryo.heliumThree);
+  WriteData(hspwmAddr, CommandData.Cryo.heatSwitch);
+  WriteData(jfetpwmAddr, CommandData.Cryo.JFETHeat);
+  WriteData(cryopwmAddr, CommandData.Cryo.sparePwm);
 }
 
 /************************************************************************/
@@ -221,31 +220,31 @@ void CryoControl (unsigned int* TxFrame,
 /*   BiasControl: Digital IO with the Bias Generator Card               */
 /*                                                                      */
 /************************************************************************/
-void BiasControl (unsigned int* TxFrame,  unsigned short* RxFrame,
-    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
-  static int i_BIASIN = -1;
-  static int i_BIASOUT1 = -1, j_BIASOUT1 = -1;
-  static int i_BIASOUT2 = -1, j_BIASOUT2 = -1;
-  static int Bias_lev1Ch, Bias_lev1Ind;
-  static int Bias_lev2Ch, Bias_lev2Ind;
-  static int Bias_lev3Ch, Bias_lev3Ind;
+void BiasControl (unsigned short* RxFrame) {
+  static struct BiPhaseStruct* biasinAddr;
+  static struct NiosStruct* biasout1Addr;
+  static struct NiosStruct* biasout2Addr;
+  static struct NiosStruct* biasLev1Addr;
+  static struct NiosStruct* biasLev2Addr;
+  static struct NiosStruct* biasLev3Addr;
   unsigned short bias_status, biasout1 = 0;
   static unsigned short biasout2 = 0x70;
   int isBiasAC, isBiasRamp, isBiasClockInternal;
   static int hold = 0, ch = 0, rb_hold = 0;
 
   /******** Obtain correct indexes the first time here ***********/
-  if (i_BIASIN == -1) {
-    FastChIndex("biasin", &i_BIASIN);
-
-    SlowChIndex("biasout1", &i_BIASOUT1, &j_BIASOUT1);
-    SlowChIndex("biasout2", &i_BIASOUT2, &j_BIASOUT2);
-    SlowChIndex("bias_lev1", &Bias_lev1Ch, &Bias_lev1Ind);
-    SlowChIndex("bias_lev2", &Bias_lev2Ch, &Bias_lev2Ind);
-    SlowChIndex("bias_lev3", &Bias_lev3Ch, &Bias_lev3Ind);
+  static int firsttime = 1;
+  if (firsttime) {
+    firsttime = 0;
+    biasinAddr = GetBiPhaseAddr("biasin");
+    biasout1Addr = GetNiosAddr("biasout1");
+    biasout2Addr = GetNiosAddr("biasout2");
+    biasLev1Addr = GetNiosAddr("bias_lev1");
+    biasLev2Addr = GetNiosAddr("bias_lev2");
+    biasLev3Addr = GetNiosAddr("bias_lev3");
   }
 
-  bias_status = RxFrame[i_BIASIN];
+  bias_status = RxFrame[biasinAddr->channel];
 
   isBiasAC =            !(bias_status & 0x02);
   isBiasRamp =          !(bias_status & 0x08);
@@ -328,7 +327,7 @@ void BiasControl (unsigned int* TxFrame,  unsigned short* RxFrame,
     ch = 0;
   } else {
     ch = 0;
-    printf("Warning: ch an impossible value in bias control\n");
+    mprintf(MCP_ERROR, "ch is an impossible value in bias control\n");
   }
   
   /* Bias readback -- we wait a few seconds after finishing the write */
@@ -342,27 +341,9 @@ void BiasControl (unsigned int* TxFrame,  unsigned short* RxFrame,
   }
 
   /******************** set the outputs *********************/
-  WriteSlow(i_BIASOUT1, j_BIASOUT1, biasout1 & 0xffff);
-  WriteSlow(i_BIASOUT2, j_BIASOUT2, (~biasout2) & 0xff);
-  WriteSlow(Bias_lev1Ch, Bias_lev1Ind, CommandData.Bias.bias1);
-  WriteSlow(Bias_lev2Ch, Bias_lev2Ind, CommandData.Bias.bias2);
-  WriteSlow(Bias_lev3Ch, Bias_lev3Ind, CommandData.Bias.bias3);
-  //printf("%d %d %d\n", CommandData.Bias.bias1, CommandData.Bias.bias2, CommandData.Bias.bias3);
-}
-
-void SetReadBits(unsigned int* TxFrame) {
-  static int i_readd3 = -1;
-  static unsigned int bit = 0;
-  int i_card;
-
-  if (i_readd3 < 0) {
-    FastChIndex("readd3", &i_readd3);
-  }
-
-  bit++;
-
-  for(i_card = 0; i_card < DAS_CARDS + 2; i_card++) {
-    WriteFast(i_readd3 + i_card, bit);
-  }
-
+  WriteData(biasout1Addr, biasout1 & 0xffff);
+  WriteData(biasout1Addr, (~biasout2) & 0xff);
+  WriteData(biasLev1Addr, CommandData.Bias.bias1);
+  WriteData(biasLev2Addr, CommandData.Bias.bias2);
+  WriteData(biasLev3Addr, CommandData.Bias.bias3);
 }

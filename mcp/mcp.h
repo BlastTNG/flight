@@ -1,6 +1,9 @@
 #ifndef MCP_H
 #define MCP_H
 
+#include "tx_struct.h"
+extern unsigned short* slow_data[FAST_PER_SLOW];
+
 #define MCP_INFO    0
 #define MCP_STARTUP 1
 #define MCP_SCHED   2

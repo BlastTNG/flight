@@ -14,7 +14,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
-#include "bbc.h"
+#include "bbc_pci.h"
 
 #include "tx_struct.h"
 #include "pointing_struct.h"
@@ -25,31 +25,24 @@
 extern short int SamIAm;
 short int InCharge;
 
-extern unsigned short slow_data[N_SLOW][FAST_PER_SLOW];
-
 extern short int write_ISC_pointing;  /* isc.c */
 extern struct ISCStatusStruct SentState;  /* isc.c */
+extern int bbc_fp;
 
 double round(double x);
 
 /* in auxiliary.c */
-void ControlAuxMotors(unsigned int *TxFrame,  unsigned short *RxFrame,
-    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
-void ControlGyroHeat(unsigned int *TxFrame,  unsigned short *RxFrame,
-    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
+void ControlAuxMotors(unsigned short *RxFrame);
+void ControlGyroHeat(unsigned short *RxFrame);
 
 /* in das.c */
-void BiasControl (unsigned int* TxFrame,  unsigned short* RxFrame,
-    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
-void CryoControl (unsigned int* Txfrmae,
-    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
-void PhaseControl(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
-void SetReadBits(unsigned int* TxFrame);
+void BiasControl(unsigned short* RxFrame);
+void CryoControl();
+void PhaseControl();
 
 /* in motors.c */
 void UpdateAxesMode(void);
-void WriteMot(int TxIndex, unsigned int *TxFrame, unsigned short *RxFrame,
-    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
+void WriteMot(int TxIndex, unsigned short *RxFrame);
 
 int frame_num;
 
@@ -62,35 +55,41 @@ void DoSched();
 /*  WriteAux: write aux data, like cpu time, temperature, fan speed     */
 /*                                                                      */
 /************************************************************************/
-void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
-  static int i_fan = -1, j_fan = -1;
-  static int i_time = -1, j_time = -1;
-  static int i_samiam = -1, j_samiam = -1;
-  static int i_df = -1, j_df = -1;
-  static int aliceFileCh, aliceFileInd;
-  static int timeoutCh, timeoutInd;
-  static int cpuTemp1Ch, cpuTemp1Ind;
-  static int cpuTemp2Ch, cpuTemp2Ind;
-  static int cpuTemp3Ch, cpuTemp3Ind;
+void WriteAux(void) {
+  static struct NiosStruct* cpuFanAddr;
+  static struct NiosStruct* cpuTimeAddr;
+  static struct NiosStruct* diskFreeAddr;
+  static struct NiosStruct* aliceFileAddr;
+  static struct NiosStruct* timeoutAddr;
+  static struct NiosStruct* cpuTemp1Addr;
+  static struct NiosStruct* cpuTemp2Addr;
+  static struct NiosStruct* cpuTemp3Addr;
+  static struct NiosStruct* samIAmAddr;
+  static struct BiPhaseStruct* samIAmReadAddr;
   static int incharge = -1;
   time_t t;
   int i_point;
 
-  if (i_fan == -1) {
-    SlowChIndex("cpu_fan", &i_fan, &j_fan);
-    SlowChIndex("cpu_temp1", &cpuTemp1Ch, &cpuTemp1Ind);
-    SlowChIndex("cpu_temp2", &cpuTemp2Ch, &cpuTemp2Ind);
-    SlowChIndex("cpu_temp3", &cpuTemp3Ch, &cpuTemp3Ind);
-    SlowChIndex("cpu_time", &i_time, &j_time);
-    SlowChIndex("sam_i_am", &i_samiam, &j_samiam);
-    SlowChIndex("disk_free", &i_df, &j_df);
-    SlowChIndex("alice_file", &aliceFileCh, &aliceFileInd);
-    SlowChIndex("timeout", &timeoutCh, &timeoutInd);
+  static int firsttime = 1;
+  if (firsttime) {
+    firsttime = 0;
+    samIAmAddr = GetNiosAddr("sam_i_am");
+    samIAmReadAddr = ExtractBiPhaseAddr(samIAmAddr);
+
+    cpuFanAddr = GetNiosAddr("cpu_fan");
+    cpuTemp1Addr = GetNiosAddr("cpu_temp1");
+    cpuTemp2Addr = GetNiosAddr("cpu_temp2");
+    cpuTemp3Addr = GetNiosAddr("cpu_temp3");
+    cpuTimeAddr = GetNiosAddr("cpu_time");
+    diskFreeAddr = GetNiosAddr("disk_free");
+    aliceFileAddr = GetNiosAddr("alice_file");
+    timeoutAddr = GetNiosAddr("timeout");
   }
 
   t = time(NULL);
 
-  InCharge = !(SamIAm ^ slow_data[i_samiam][j_samiam]);
+  InCharge = !(SamIAm
+      ^ slow_data[samIAmReadAddr->index][samIAmReadAddr->channel]);
   if (InCharge != incharge && InCharge)
     mputs(MCP_INFO, "I have gained control.\n");
   else if (InCharge != incharge)
@@ -98,23 +97,22 @@ void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
 
   incharge = InCharge;
 
-  WriteSlow(i_time, j_time, t >> 16);
-  WriteSlow(i_time + 1, j_time, t);
+  WriteData(cpuTimeAddr, t >> 16);
 
-  WriteSlow(i_fan, j_fan, CommandData.fan);
-  WriteSlow(cpuTemp1Ch, cpuTemp1Ind, CommandData.temp1);
-  WriteSlow(cpuTemp2Ch, cpuTemp2Ind, CommandData.temp2);
-  WriteSlow(cpuTemp3Ch, cpuTemp3Ind, CommandData.temp3);
+  WriteData(cpuFanAddr, CommandData.fan);
+  WriteData(cpuTemp1Addr, CommandData.temp1);
+  WriteData(cpuTemp2Addr, CommandData.temp2);
+  WriteData(cpuTemp3Addr, CommandData.temp3);
 
-  WriteSlow(i_samiam, j_samiam, SamIAm);
-  WriteSlow(i_df, j_df, CommandData.df);
+  WriteData(samIAmAddr, SamIAm);
+  WriteData(diskFreeAddr, CommandData.df);
 
   i_point = GETREADINDEX(point_index);
 
   t = PointingData[i_point].t;
 
-  WriteSlow(aliceFileCh, aliceFileInd, CommandData.alice_file);
-  WriteSlow(timeoutCh, timeoutInd, CommandData.pointing_mode.t - t);
+  WriteData(aliceFileAddr, CommandData.alice_file);
+  WriteData(timeoutAddr, CommandData.pointing_mode.t - t);
 }
 
 /*****************************************************************/
@@ -123,10 +121,12 @@ void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
 /* in each superframe.                                           */
 /*****************************************************************/
 int ADC_sync_timeout = 0;
-void SyncADC (int TxIndex, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
-  static int syncCh = -1, syncInd, nextInd;
-  static int statusInd[17];
-  static int statusCh[17];
+void SyncADC (int TxIndex) {
+  static struct NiosStruct* syncAddr;
+  static struct BiPhaseStruct* syncReadAddr;
+  static struct BiPhaseStruct* statusAddr[17];
+  static int doingSync = 0;
+  unsigned int nextInd = 0;
   char buffer[9];
 
   int k, l;
@@ -137,32 +137,36 @@ void SyncADC (int TxIndex, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   ADC_sync_timeout++;
   
   /******** Obtain correct indexes the first time here ***********/
-  if (syncCh == -1) {
-    SlowChIndex("sync", &syncCh, &syncInd);
-    nextInd = (syncInd + 1) % FAST_PER_SLOW;
+  static int firsttime = 1;
+  if (firsttime) {
+    firsttime = 0;
+    syncAddr = GetNiosAddr("sync");
+    syncReadAddr = ExtractBiPhaseAddr(syncAddr);
+
+    nextInd = (syncReadAddr->index + 1) % FAST_PER_SLOW;
     for (k = 0; k < 17; ++k) {
       sprintf(buffer, "status%02i", k);
-      SlowChIndex(buffer, &statusCh[k], &statusInd[k]);
+      statusAddr[k] = GetBiPhaseAddr(buffer);
     }
   }
 
   /* are we currently syncing? */
-  if (slowTxFields[syncCh][syncInd] & BBC_ADC_SYNC) {
+  if (doingSync) {
     /* if yes, turn off sync bit if we sent the sync last frame */
     if (TxIndex == nextInd) {
-      slowTxFields[syncCh][syncInd] = BBC_WRITE | BBC_NODE(17) | BBC_CH(56);
+      RawNiosWrite(syncAddr->niosAddr, BBC_WRITE | BBC_NODE(17) | BBC_CH(56));
     }
   } else {
     /* if not, check to see if we need to sync a board */
     for (k = 0; k < 17; ++k) {
       /* read board status */
-      if (slow_data[statusCh[k]][statusInd[k]] == 0x0001) {
+      if (slow_data[statusAddr[k]->index][statusAddr[k]->channel] == 0x0001) {
         /* board needs to be synced */
+        doingSync = 1;
         mprintf(MCP_INFO, "ADC Sync board %i\n", k);
         l = (k == 0) ? 21 : k;
-        slowTxFields[syncCh][syncInd] =
-          BBC_WRITE | BBC_NODE(l) | BBC_CH(56) |
-          BBC_ADC_SYNC | 0xa5a3;
+        RawNiosWrite(syncAddr->niosAddr, BBC_WRITE | BBC_NODE(l) | BBC_CH(56) |
+          BBC_ADC_SYNC | 0xa5a3);
         k = 17;  /* ABORT! ABORT! */
       }
     }
@@ -174,119 +178,122 @@ void SyncADC (int TxIndex, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
 /*    Store derived acs and pointing data in frame                      */
 /*                                                                      */
 /************************************************************************/
-void StoreData(int index, unsigned int* TxFrame,
-    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
+void StoreData(int index) {
 
   static int firsttime = 1;
   
-  static int i_SS_XCCD;
-  static int i_SS_PRIN, j_SS_PRIN;
-  static int i_SIP_LAT, i_SIP_LON, i_SIP_ALT, i_SIP_TIME;
-  static int j_SIP_LAT, j_SIP_LON, j_SIP_ALT, j_SIP_TIME;
+  static struct NiosStruct* ssXCcdAddr;
+  static struct NiosStruct* ssPrinAddr;
+  static struct NiosStruct* sipLatAddr;
+  static struct NiosStruct* sipLonAddr;
+  static struct NiosStruct* sipAltAddr;
+  static struct NiosStruct* sipTimeAddr;
 
   /** pointing mode indexes **/
-  static int i_MODE, j_MODE;
-  static int i_X, j_X, i_Y, j_Y;
-  static int i_VAZ, j_VAZ, i_DEL, j_DEL;
-  static int i_W, j_W, i_H, j_H;
+  static struct NiosStruct* pModeAddr;
+  static struct NiosStruct* pXDegAddr, *pYAddr;
+  static struct NiosStruct* pVazAddr, *pDelAddr;
+  static struct NiosStruct* pWAddr, *pHAddr;
   
-  static int i_SVETO, j_SVETO;
+  static struct NiosStruct* sensorVetoAddr;
 
   /** derived pointing data */
-  static int mcpFrameCh;
-  static int gy1OffCh, gy1OffInd;
-  static int gy2OffCh, gy2OffInd;
-  static int gy3OffCh, gy3OffInd;
-  static int gyRollAmpCh, gyRollAmpInd;
-  static int i_RA, j_RA;
-  static int i_DEC, j_DEC;  
-  static int i_LAT, j_LAT;
-  static int i_LON, j_LON;
-  static int timeCh, timeInd;
-  static int i_LST, j_LST;
-  static int magAzCh, magAzInd;
-  static int i_MAG_MODEL, j_MAG_MODEL;
-  static int magSigmaCh, magSigmaInd;
-  static int dgpsAzCh, dgpsAzInd;
-  static int dgpsPitchCh, dgpsPitchInd;
-  static int dgpsRollCh, dgpsRollInd;
-  static int dgpsSigmaCh, dgpsSigmaInd;
-  static int ssAzCh, ssAzInd;
-  static int ssSigmaCh, ssSigmaInd;
-  static int i_AZ_SUN, j_AZ_SUN;
-  static int iscAzCh, iscAzInd;
-  static int iscElCh, iscElInd;
-  static int iscSigmaCh, iscSigmaInd;
-  static int encElCh, encElInd;
-  static int encSigmaCh, encSigmaInd;
-  static int clinElCh, clinElInd;
-  static int clinSigmaCh, clinSigmaInd;
+  static struct NiosStruct* mcpFrameAddr;
+  static struct NiosStruct* gy1OffsetAddr;
+  static struct NiosStruct* gy2OffsetAddr;
+  static struct NiosStruct* gy3OffsetAddr;
+  static struct NiosStruct* gyRollAmpAddr;
+  static struct NiosStruct* azAddr;
+  static struct NiosStruct* elAddr;
+  static struct NiosStruct* raAddr;
+  static struct NiosStruct* decAddr;
+  static struct NiosStruct* latAddr;
+  static struct NiosStruct* lonAddr;
+  static struct NiosStruct* timeAddr;
+  static struct NiosStruct* lstAddr;
+  static struct NiosStruct* magAzAddr;
+  static struct NiosStruct* magModelAddr;
+  static struct NiosStruct* magSigmaAddr;
+  static struct NiosStruct* dgpsAzAddr;
+  static struct NiosStruct* dgpsPitchAddr;
+  static struct NiosStruct* dgpsRollAddr;
+  static struct NiosStruct* dgpsSigmaAddr;
+  static struct NiosStruct* ssAzAddr;
+  static struct NiosStruct* ssSigmaAddr;
+  static struct NiosStruct* sunAzAddr;
+  static struct NiosStruct* iscAzAddr;
+  static struct NiosStruct* iscElAddr;
+  static struct NiosStruct* iscSigmaAddr;
+  static struct NiosStruct* encElAddr;
+  static struct NiosStruct* encSigmaAddr;
+  static struct NiosStruct* clinElAddr;
+  static struct NiosStruct* clinSigmaAddr;
 
   /** dgps fields **/
-  static int i_dgps_time, j_dgps_time;
-  static int i_dgps_lat, j_dgps_lat;  
-  static int i_dgps_lon, j_dgps_lon;  
-  static int i_dgps_alt, j_dgps_alt;  
-  static int i_dgps_speed, j_dgps_speed;  
-  static int i_dgps_dir, j_dgps_dir;  
-  static int i_dgps_climb, j_dgps_climb;
-  static int i_dgps_att_ok, j_dgps_att_ok;
-  static int i_dgps_att_index, j_dgps_att_index;
-  static int i_dgps_pos_index, j_dgps_pos_index;
-  static int i_dgps_n_sat, j_dgps_n_sat;
+  static struct NiosStruct* dgpsTimeAddr;
+  static struct NiosStruct* dgpsLatAddr;  
+  static struct NiosStruct* dgpsLonAddr;  
+  static struct NiosStruct* dgpsAltAddr;  
+  static struct NiosStruct* dgpsSpeedAddr;  
+  static struct NiosStruct* dgpsDirAddr;  
+  static struct NiosStruct* dgpsClimbAddr;
+  static struct NiosStruct* dgpsAttOkAddr;
+  static struct NiosStruct* dgpsAttIndexAddr;
+  static struct NiosStruct* dgpsPosIndexAddr;
+  static struct NiosStruct* dgpsNSatAddr;
 
   /** isc fields **/
-  static int blob0_xCh, blob0_xInd;
-  static int blob1_xCh, blob1_xInd;
-  static int blob2_xCh, blob2_xInd;
-  static int blob0_yCh, blob0_yInd;
-  static int blob1_yCh, blob1_yInd;
-  static int blob2_yCh, blob2_yInd;
-  static int blob0_fluxCh, blob0_fluxInd;
-  static int blob1_fluxCh, blob1_fluxInd;
-  static int blob2_fluxCh, blob2_fluxInd;
-  static int blob0_snCh, blob0_snInd;
-  static int blob1_snCh, blob1_snInd;
-  static int blob2_snCh, blob2_snInd;
-  static int isc_errorCh, isc_errorInd;
-  static int isc_mapMeanCh, isc_mapMeanInd;
-  static int isc_framenumCh, isc_framenumInd;
-  static int isc_rd_sigmaCh, isc_rd_sigmaInd;
-  static int isc_raCh, isc_raInd;
-  static int isc_decCh, isc_decInd;
-  static int isc_afocusCh, isc_afocusInd;
-  static int isc_mcpnumCh, isc_mcpnumInd;
-  static int isc_brraCh, isc_brraInd;
-  static int isc_brdecCh, isc_brdecInd;
-  static int isc_apertCh, isc_apertInd;
-  static int isc_cenboxCh, isc_cenboxInd;
-  static int isc_apboxCh, isc_apboxInd;
-  static int isc_mdistCh, isc_mdistInd;
-  static int isc_nblobsCh, isc_nblobsInd;
-  static int isc_focusCh, isc_focusInd;
-  static int isc_threshCh, isc_threshInd;
-  static int isc_gridCh, isc_gridInd;
-  static int isc_stateCh, isc_stateInd;
-  static int isc_maxblobsCh, isc_maxblobsInd;
-  static int isc_maglimitCh, isc_maglimitInd;
-  static int isc_nradCh, isc_nradInd;
-  static int isc_lradCh, isc_lradInd;
-  static int isc_tolCh, isc_tolInd;
-  static int isc_mtolCh, isc_mtolInd;
-  static int isc_qtolCh, isc_qtolInd;
-  static int isc_rtolCh, isc_rtolInd;
-  static int isc_fpulseCh, isc_fpulseInd;
-  static int isc_spulseCh, isc_spulseInd;
-  static int isc_x_offCh, isc_x_offInd;
-  static int isc_y_offCh, isc_y_offInd;
-  static int isc_hold_iCh, isc_hold_iInd;
-  static int isc_save_periodCh, isc_save_periodInd;
+  static struct NiosStruct* blob0XAddr;
+  static struct NiosStruct* blob1XAddr;
+  static struct NiosStruct* blob2XAddr;
+  static struct NiosStruct* blob0YAddr;
+  static struct NiosStruct* blob1YAddr;
+  static struct NiosStruct* blob2YAddr;
+  static struct NiosStruct* blob0FluxAddr;
+  static struct NiosStruct* blob1FluxAddr;
+  static struct NiosStruct* blob2FluxAddr;
+  static struct NiosStruct* blob0SnAddr;
+  static struct NiosStruct* blob1SnAddr;
+  static struct NiosStruct* blob2SnAddr;
+  static struct NiosStruct* iscErrorAddr;
+  static struct NiosStruct* iscMapmeanAddr;
+  static struct NiosStruct* iscFramenumAddr;
+  static struct NiosStruct* iscRdSigmaAddr;
+  static struct NiosStruct* iscRaAddr;
+  static struct NiosStruct* iscDecAddr;
+  static struct NiosStruct* iscAfocusAddr;
+  static struct NiosStruct* iscMcpnumAddr;
+  static struct NiosStruct* iscBrraAddr;
+  static struct NiosStruct* iscBrdecAddr;
+  static struct NiosStruct* iscApertAddr;
+  static struct NiosStruct* iscCenboxAddr;
+  static struct NiosStruct* iscApboxAddr;
+  static struct NiosStruct* iscMdistAddr;
+  static struct NiosStruct* iscNblobsAddr;
+  static struct NiosStruct* iscFocusAddr;
+  static struct NiosStruct* iscThreshAddr;
+  static struct NiosStruct* iscGridAddr;
+  static struct NiosStruct* iscStateAddr;
+  static struct NiosStruct* iscMaxblobsAddr;
+  static struct NiosStruct* iscMaglimitAddr;
+  static struct NiosStruct* iscNradAddr;
+  static struct NiosStruct* iscLradAddr;
+  static struct NiosStruct* iscTolAddr;
+  static struct NiosStruct* iscMtolAddr;
+  static struct NiosStruct* iscQtolAddr;
+  static struct NiosStruct* iscRtolAddr;
+  static struct NiosStruct* iscFpulseAddr;
+  static struct NiosStruct* iscSpulseAddr;
+  static struct NiosStruct* iscXOffAddr;
+  static struct NiosStruct* iscYOffAddr;
+  static struct NiosStruct* iscHoldIAddr;
+  static struct NiosStruct* iscSavePrdAddr;
+  static struct NiosStruct* sipMksLoAddr;
+  static struct NiosStruct* sipMksMedAddr;
+  static struct NiosStruct* sipMksHiAddr;
 
   static int blob_index = 0;
 
-  time_t t;
-
-  static int i_az = -1, i_el = -1;
   int i_ss;
   int i_point;
   int i_dgps;
@@ -296,210 +303,210 @@ void StoreData(int index, unsigned int* TxFrame,
   /******** Obtain correct indexes the first time here ***********/
   if (firsttime) {
     firsttime = 0;	
-    FastChIndex("az", &i_az);
-    FastChIndex("el", &i_el);
-    FastChIndex("ss_x_ccd", &i_SS_XCCD);
-    FastChIndex("mcp_frame", &mcpFrameCh);
+    azAddr = GetNiosAddr("az");
+    elAddr = GetNiosAddr("el");
+    ssXCcdAddr = GetNiosAddr("ss_x_ccd");
+    mcpFrameAddr = GetNiosAddr("mcp_frame");
 
-    SlowChIndex("ss_prin", &i_SS_PRIN, &j_SS_PRIN);
-    SlowChIndex("sip_lat", &i_SIP_LAT, &j_SIP_LAT);
-    SlowChIndex("sip_lon", &i_SIP_LON, &j_SIP_LON);
-    SlowChIndex("sip_alt", &i_SIP_ALT, &j_SIP_ALT);
-    SlowChIndex("sip_time", &i_SIP_TIME, &j_SIP_TIME);
+    ssPrinAddr = GetNiosAddr("ss_prin");
+    sipLatAddr = GetNiosAddr("sip_lat");
+    sipLonAddr = GetNiosAddr("sip_lon");
+    sipAltAddr = GetNiosAddr("sip_alt");
+    sipTimeAddr = GetNiosAddr("sip_time");
 
-    SlowChIndex("gy1_offset", &gy1OffCh, &gy1OffInd);
-    SlowChIndex("gy2_offset", &gy2OffCh, &gy2OffInd);
-    SlowChIndex("gy3_offset", &gy3OffCh, &gy3OffInd);
-    SlowChIndex("gy_roll_amp", &gyRollAmpCh, &gyRollAmpInd);
-    SlowChIndex("ra", &i_RA, &j_RA);
-    SlowChIndex("dec", &i_DEC, &j_DEC);
-    SlowChIndex("lat", &i_LAT, &j_LAT);
-    SlowChIndex("lon", &i_LON, &j_LON);
-    SlowChIndex("time", &timeCh, &timeInd);
-    SlowChIndex("lst", &i_LST, &j_LST);
-    SlowChIndex("mag_az", &magAzCh, &magAzInd);
-    SlowChIndex("mag_model", &i_MAG_MODEL, &j_MAG_MODEL);
-    SlowChIndex("mag_sigma", &magSigmaCh, &magSigmaInd);
-    SlowChIndex("dgps_az", &dgpsAzCh, &dgpsAzInd);
-    SlowChIndex("dgps_pitch", &dgpsPitchCh, &dgpsPitchInd);
-    SlowChIndex("dgps_roll", &dgpsRollCh, &dgpsRollInd);
-    SlowChIndex("dgps_sigma", &dgpsSigmaCh, &dgpsSigmaInd);
-    SlowChIndex("ss_az", &ssAzCh, &ssAzInd);
-    SlowChIndex("ss_sigma", &ssSigmaCh, &ssSigmaInd);
-    SlowChIndex("sun_az", &i_AZ_SUN, &j_AZ_SUN);
-    SlowChIndex("isc_az", &iscAzCh, &iscAzInd);
-    SlowChIndex("isc_el", &iscElCh, &iscElInd);
-    SlowChIndex("isc_sigma", &iscSigmaCh, &iscSigmaInd);
-    SlowChIndex("enc_el", &encElCh, &encElInd);
-    SlowChIndex("enc_sigma", &encSigmaCh, &encSigmaInd);
-    SlowChIndex("clin_el", &clinElCh, &clinElInd);
-    SlowChIndex("clin_sigma", &clinSigmaCh, &clinSigmaInd);
+    sipMksLoAddr = GetNiosAddr("sip_mks_lo");
+    sipMksMedAddr = GetNiosAddr("sip_mks_med");
+    sipMksHiAddr = GetNiosAddr("sip_mks_hi");
 
-    SlowChIndex("p_mode", &i_MODE, &j_MODE);
-    SlowChIndex("p_x_deg", &i_X, &j_X);
-    SlowChIndex("p_y", &i_Y, &j_Y);
-    SlowChIndex("p_vaz", &i_VAZ, &j_VAZ);
-    SlowChIndex("p_del", &i_DEL, &j_DEL);
-    SlowChIndex("p_w", &i_W, &j_W);
-    SlowChIndex("p_h", &i_H, &j_H);
+    gy1OffsetAddr = GetNiosAddr("gy1_offset");
+    gy2OffsetAddr = GetNiosAddr("gy2_offset");
+    gy3OffsetAddr = GetNiosAddr("gy3_offset");
+    gyRollAmpAddr = GetNiosAddr("gy_roll_amp");
+    raAddr = GetNiosAddr("ra");
+    decAddr = GetNiosAddr("dec");
+    latAddr = GetNiosAddr("lat");
+    lonAddr = GetNiosAddr("lon");
+    timeAddr = GetNiosAddr("time");
+    lstAddr = GetNiosAddr("lst");
+    magAzAddr = GetNiosAddr("mag_az");
+    magModelAddr = GetNiosAddr("mag_model");
+    magSigmaAddr = GetNiosAddr("mag_sigma");
+    dgpsAzAddr = GetNiosAddr("dgps_az");
+    dgpsPitchAddr = GetNiosAddr("dgps_pitch");
+    dgpsRollAddr = GetNiosAddr("dgps_roll");
+    dgpsSigmaAddr = GetNiosAddr("dgps_sigma");
+    ssAzAddr = GetNiosAddr("ss_az");
+    ssSigmaAddr = GetNiosAddr("ss_sigma");
+    sunAzAddr = GetNiosAddr("sun_az");
+    iscAzAddr = GetNiosAddr("isc_az");
+    iscElAddr = GetNiosAddr("isc_el");
+    iscSigmaAddr = GetNiosAddr("isc_sigma");
+    encElAddr = GetNiosAddr("enc_el");
+    encSigmaAddr = GetNiosAddr("enc_sigma");
+    clinElAddr = GetNiosAddr("clin_el");
+    clinSigmaAddr = GetNiosAddr("clin_sigma");
 
-    SlowChIndex("sensor_veto", &i_SVETO, &j_SVETO);
+    pModeAddr = GetNiosAddr("p_mode");
+    pXDegAddr = GetNiosAddr("p_x_deg");
+    pYAddr = GetNiosAddr("p_y");
+    pVazAddr = GetNiosAddr("p_vaz");
+    pDelAddr = GetNiosAddr("p_del");
+    pWAddr = GetNiosAddr("p_w");
+    pHAddr = GetNiosAddr("p_h");
 
-    SlowChIndex("dgps_time", &i_dgps_time, &j_dgps_time);
-    SlowChIndex("dgps_lat", &i_dgps_lat, &j_dgps_lat);
-    SlowChIndex("dgps_lon", &i_dgps_lon, &j_dgps_lon);
-    SlowChIndex("dgps_alt", &i_dgps_alt, &j_dgps_alt);
-    SlowChIndex("dgps_speed", &i_dgps_speed, &j_dgps_speed);
-    SlowChIndex("dgps_dir", &i_dgps_dir, &j_dgps_dir);
-    SlowChIndex("dgps_climb", &i_dgps_climb, &j_dgps_climb);
-    SlowChIndex("dgps_n_sat", &i_dgps_n_sat, &j_dgps_n_sat);
-    SlowChIndex("dgps_pos_index", &i_dgps_pos_index, &j_dgps_pos_index);
-    SlowChIndex("dgps_att_ok", &i_dgps_att_ok, &j_dgps_att_ok);
-    SlowChIndex("dgps_att_index", &i_dgps_att_index, &j_dgps_att_index);
+    sensorVetoAddr = GetNiosAddr("sensor_veto");
 
-    SlowChIndex("blob0_x", &blob0_xCh, &blob0_xInd);
-    SlowChIndex("blob1_x", &blob1_xCh, &blob1_xInd);
-    SlowChIndex("blob2_x", &blob2_xCh, &blob2_xInd);
-    SlowChIndex("blob0_y", &blob0_yCh, &blob0_yInd);
-    SlowChIndex("blob1_y", &blob1_yCh, &blob1_yInd);
-    SlowChIndex("blob2_y", &blob2_yCh, &blob2_yInd);
-    SlowChIndex("blob0_flux", &blob0_fluxCh, &blob0_fluxInd);
-    SlowChIndex("blob1_flux", &blob1_fluxCh, &blob1_fluxInd);
-    SlowChIndex("blob2_flux", &blob2_fluxCh, &blob2_fluxInd);
-    SlowChIndex("blob0_sn", &blob0_snCh, &blob0_snInd);
-    SlowChIndex("blob1_sn", &blob1_snCh, &blob1_snInd);
-    SlowChIndex("blob2_sn", &blob2_snCh, &blob2_snInd);
-    SlowChIndex("isc_error", &isc_errorCh, &isc_errorInd);
-    SlowChIndex("isc_mapmean", &isc_mapMeanCh, &isc_mapMeanInd);
-    SlowChIndex("isc_rd_sigma", &isc_rd_sigmaCh, &isc_rd_sigmaInd);
-    SlowChIndex("isc_framenum", &isc_framenumCh, &isc_framenumInd);
-    SlowChIndex("isc_ra", &isc_raCh, &isc_raInd);
-    SlowChIndex("isc_dec", &isc_decCh, &isc_decInd);
-    SlowChIndex("isc_nblobs", &isc_nblobsCh, &isc_nblobsInd);
-    SlowChIndex("isc_afocus", &isc_afocusCh, &isc_afocusInd);
-    SlowChIndex("isc_mcpnum", &isc_mcpnumCh, &isc_mcpnumInd);
+    dgpsTimeAddr = GetNiosAddr("dgps_time");
+    dgpsLatAddr = GetNiosAddr("dgps_lat");
+    dgpsLonAddr = GetNiosAddr("dgps_lon");
+    dgpsAltAddr = GetNiosAddr("dgps_alt");
+    dgpsSpeedAddr = GetNiosAddr("dgps_speed");
+    dgpsDirAddr = GetNiosAddr("dgps_dir");
+    dgpsClimbAddr = GetNiosAddr("dgps_climb");
+    dgpsNSatAddr = GetNiosAddr("dgps_n_sat");
+    dgpsPosIndexAddr = GetNiosAddr("dgps_pos_index");
+    dgpsAttOkAddr = GetNiosAddr("dgps_att_ok");
+    dgpsAttIndexAddr = GetNiosAddr("dgps_att_index");
 
-    SlowChIndex("isc_state", &isc_stateCh, &isc_stateInd);
-    SlowChIndex("isc_focus", &isc_focusCh, &isc_focusInd);
-    SlowChIndex("isc_brra", &isc_brraCh, &isc_brraInd);
-    SlowChIndex("isc_brdec", &isc_brdecCh, &isc_brdecInd);
-    SlowChIndex("isc_apert", &isc_apertCh, &isc_apertInd);
-    SlowChIndex("isc_thresh", &isc_threshCh, &isc_threshInd);
-    SlowChIndex("isc_grid", &isc_gridCh, &isc_gridInd);
-    SlowChIndex("isc_cenbox", &isc_cenboxCh, &isc_cenboxInd);
-    SlowChIndex("isc_apbox", &isc_apboxCh, &isc_apboxInd);
-    SlowChIndex("isc_mdist", &isc_mdistCh, &isc_mdistInd);
-    SlowChIndex("isc_maxblobs", &isc_maxblobsCh, &isc_maxblobsInd);
-    SlowChIndex("isc_maglimit", &isc_maglimitCh, &isc_maglimitInd);
-    SlowChIndex("isc_nrad", &isc_nradCh, &isc_nradInd);
-    SlowChIndex("isc_lrad", &isc_lradCh, &isc_lradInd);
-    SlowChIndex("isc_tol", &isc_tolCh, &isc_tolInd);
-    SlowChIndex("isc_mtol", &isc_mtolCh, &isc_mtolInd);
-    SlowChIndex("isc_qtol", &isc_qtolCh, &isc_qtolInd);
-    SlowChIndex("isc_rtol", &isc_rtolCh, &isc_rtolInd);
-    SlowChIndex("isc_fpulse", &isc_fpulseCh, &isc_fpulseInd);
-    SlowChIndex("isc_spulse", &isc_spulseCh, &isc_spulseInd);
-    SlowChIndex("isc_x_off", &isc_x_offCh, &isc_x_offInd);
-    SlowChIndex("isc_y_off", &isc_y_offCh, &isc_y_offInd);
-    SlowChIndex("isc_hold_i", &isc_hold_iCh, &isc_hold_iInd);
-    SlowChIndex("isc_save_prd", &isc_save_periodCh, &isc_save_periodInd);
+    blob0XAddr = GetNiosAddr("blob0_x");
+    blob1XAddr = GetNiosAddr("blob1_x");
+    blob2XAddr = GetNiosAddr("blob2_x");
+    blob0YAddr = GetNiosAddr("blob0_y");
+    blob1YAddr = GetNiosAddr("blob1_y");
+    blob2YAddr = GetNiosAddr("blob2_y");
+    blob0FluxAddr = GetNiosAddr("blob0_flux");
+    blob1FluxAddr = GetNiosAddr("blob1_flux");
+    blob2FluxAddr = GetNiosAddr("blob2_flux");
+    blob0SnAddr = GetNiosAddr("blob0_sn");
+    blob1SnAddr = GetNiosAddr("blob1_sn");
+    blob2SnAddr = GetNiosAddr("blob2_sn");
+    iscErrorAddr = GetNiosAddr("isc_error");
+    iscMapmeanAddr = GetNiosAddr("isc_mapmean");
+    iscRdSigmaAddr = GetNiosAddr("isc_rd_sigma");
+    iscFramenumAddr = GetNiosAddr("isc_framenum");
+    iscRaAddr = GetNiosAddr("isc_ra");
+    iscDecAddr = GetNiosAddr("isc_dec");
+    iscNblobsAddr = GetNiosAddr("isc_nblobs");
+    iscAfocusAddr = GetNiosAddr("isc_afocus");
+    iscMcpnumAddr = GetNiosAddr("isc_mcpnum");
+
+    iscStateAddr = GetNiosAddr("isc_state");
+    iscFocusAddr = GetNiosAddr("isc_focus");
+    iscBrraAddr = GetNiosAddr("isc_brra");
+    iscBrdecAddr = GetNiosAddr("isc_brdec");
+    iscApertAddr = GetNiosAddr("isc_apert");
+    iscThreshAddr = GetNiosAddr("isc_thresh");
+    iscGridAddr = GetNiosAddr("isc_grid");
+    iscCenboxAddr = GetNiosAddr("isc_cenbox");
+    iscApboxAddr = GetNiosAddr("isc_apbox");
+    iscMdistAddr = GetNiosAddr("isc_mdist");
+    iscMaxblobsAddr = GetNiosAddr("isc_maxblobs");
+    iscMaglimitAddr = GetNiosAddr("isc_maglimit");
+    iscNradAddr = GetNiosAddr("isc_nrad");
+    iscLradAddr = GetNiosAddr("isc_lrad");
+    iscTolAddr = GetNiosAddr("isc_tol");
+    iscMtolAddr = GetNiosAddr("isc_mtol");
+    iscQtolAddr = GetNiosAddr("isc_qtol");
+    iscRtolAddr = GetNiosAddr("isc_rtol");
+    iscFpulseAddr = GetNiosAddr("isc_fpulse");
+    iscSpulseAddr = GetNiosAddr("isc_spulse");
+    iscXOffAddr = GetNiosAddr("isc_x_off");
+    iscYOffAddr = GetNiosAddr("isc_y_off");
+    iscHoldIAddr = GetNiosAddr("isc_hold_i");
+    iscSavePrdAddr = GetNiosAddr("isc_save_prd");
   }
 
   i_point = GETREADINDEX(point_index);
   i_ss = GETREADINDEX(ss_index);
 
   /********** Sun Sensor Data **********/
-  WriteFast(i_SS_XCCD, SunSensorData[i_ss].raw_az);
-  WriteSlow(i_SS_PRIN, j_SS_PRIN, SunSensorData[i_ss].prin);
+  WriteData(ssXCcdAddr, SunSensorData[i_ss].raw_az);
+  WriteData(ssPrinAddr, SunSensorData[i_ss].prin);
 
   /********** SIP GPS Data **********/
-  WriteSlow(i_SIP_LAT, j_SIP_LAT, (int)(SIPData.GPSpos.lat*DEG2I));
-  WriteSlow(i_SIP_LON, j_SIP_LON, (int)(SIPData.GPSpos.lon*DEG2I));
-  WriteSlow(i_SIP_ALT, j_SIP_ALT, (int)(SIPData.GPSpos.alt*0.25));
-  t = SIPData.GPStime.UTC;
-  WriteSlow(i_SIP_TIME, j_SIP_TIME, t >> 16);
-  WriteSlow(i_SIP_TIME + 1, j_SIP_TIME, t);
+  WriteData(sipLatAddr, (int)(SIPData.GPSpos.lat*DEG2I));
+  WriteData(sipLonAddr, (int)(SIPData.GPSpos.lon*DEG2I));
+  WriteData(sipAltAddr, (int)(SIPData.GPSpos.alt*0.25));
+  WriteData(sipTimeAddr, SIPData.GPStime.UTC);
 
+  /********** SIP MKS Altitude ************/
+  WriteData(sipMksLoAddr, (int)(SIPData.MKSalt.lo * 0.25));
+  WriteData(sipMksMedAddr, (int)(SIPData.MKSalt.med * 0.25));
+  WriteData(sipMksHiAddr, (int)(SIPData.MKSalt.hi * 0.25));
 
   /************* processed pointing data *************/
-  WriteFast(i_az, (unsigned int)(PointingData[i_point].az * 65536.0/360.0));
-  WriteFast(i_el, (unsigned int)(PointingData[i_point].el * 65536.0/360.0));
+  WriteData(azAddr, (unsigned int)(PointingData[i_point].az * 65536.0/360.0));
+  WriteData(elAddr, (unsigned int)(PointingData[i_point].el * 65536.0/360.0));
 
-  WriteSlow(i_RA, j_RA,
-	    (unsigned int)(PointingData[i_point].ra * 65536.0/24.0));
-  WriteSlow(i_DEC, j_DEC,
-	    (unsigned int)(PointingData[i_point].dec * 65536.0/360.0));
+  WriteData(raAddr, (unsigned int)(PointingData[i_point].ra * 65536.0/24.0));
+  WriteData(decAddr, (unsigned int)(PointingData[i_point].dec * 65536.0/360.0));
 	    
-  WriteSlow(gy1OffCh, gy1OffInd,
+  WriteData(gy1OffsetAddr,
       (signed int)(PointingData[i_point].gy1_offset * 32768.));
-  WriteSlow(gy2OffCh, gy2OffInd,
+  WriteData(gy2OffsetAddr,
       (signed int)(PointingData[i_point].gy2_offset * 32768.));
-  WriteSlow(gy3OffCh, gy3OffInd,
+  WriteData(gy3OffsetAddr,
       (signed int)(PointingData[i_point].gy3_offset * 32768.));
-  WriteSlow(gyRollAmpCh, gyRollAmpInd,
+  WriteData(gyRollAmpAddr,
       (unsigned int)(PointingData[i_point].gy_roll_amp * 65536.));
 
-  WriteSlow(i_LAT, j_LAT, (unsigned int)(PointingData[i_point].lat * DEG2I));
-  WriteSlow(i_LON, j_LON, (unsigned int)(PointingData[i_point].lon * DEG2I));
+  WriteData(latAddr, (unsigned int)(PointingData[i_point].lat * DEG2I));
+  WriteData(lonAddr, (unsigned int)(PointingData[i_point].lon * DEG2I));
 
-  WriteFast(mcpFrameCh, PointingData[i_point].mcp_frame);
-  WriteSlow(timeCh, timeInd, PointingData[i_point].t >> 16);
-  WriteSlow(timeCh + 1, timeInd, PointingData[i_point].t);
-  t = PointingData[i_point].lst;
-  WriteSlow(i_LST, j_LST, t >> 16);
-  WriteSlow(i_LST + 1, j_LST, t);
+  WriteData(mcpFrameAddr, PointingData[i_point].mcp_frame);
+  WriteData(timeAddr, PointingData[i_point].t);
+  WriteData(lstAddr, PointingData[i_point].lst);
 
-  WriteSlow(magAzCh, magAzInd,
+  WriteData(magAzAddr,
       (unsigned int)(PointingData[i_point].mag_az * 65536.0/360.0));
-  WriteSlow(i_MAG_MODEL, j_MAG_MODEL,
+  WriteData(magModelAddr,
       (unsigned int)(PointingData[i_point].mag_model * DEG2I));
-  WriteSlow(magSigmaCh, magSigmaInd,
+  WriteData(magSigmaAddr,
       (unsigned int)(PointingData[i_point].mag_sigma * DEG2I));
-  WriteSlow(dgpsAzCh, dgpsAzInd,
+  WriteData(dgpsAzAddr,
       (unsigned int)(PointingData[i_point].dgps_az * DEG2I));
-  WriteSlow(dgpsPitchCh, dgpsPitchInd,
+  WriteData(dgpsPitchAddr,
       (unsigned int)(PointingData[i_point].dgps_pitch * DEG2I));
-  WriteSlow(dgpsRollCh, dgpsRollInd,
+  WriteData(dgpsRollAddr,
       (unsigned int)(PointingData[i_point].dgps_roll * DEG2I));
-  WriteSlow(dgpsSigmaCh, dgpsSigmaInd,
+  WriteData(dgpsSigmaAddr,
       (unsigned int)(PointingData[i_point].dgps_sigma * DEG2I));
 
-  WriteSlow(ssAzCh, ssAzInd, (unsigned int)(PointingData[i_point].ss_az*DEG2I));
-  WriteSlow(ssSigmaCh, ssSigmaInd,
+  WriteData(ssAzAddr, (unsigned int)(PointingData[i_point].ss_az*DEG2I));
+  WriteData(ssSigmaAddr,
       (unsigned int)(PointingData[i_point].ss_sigma * DEG2I));
-  WriteSlow(i_AZ_SUN, j_AZ_SUN,
-      (unsigned int)(PointingData[i_point].sun_az*DEG2I));
+  WriteData(sunAzAddr, (unsigned int)(PointingData[i_point].sun_az*DEG2I));
 
-  WriteSlow(iscAzCh, iscAzInd,
+  WriteData(iscAzAddr,
       (unsigned int)(PointingData[i_point].isc_az * DEG2I));
-  WriteSlow(iscElCh, iscElInd,
+  WriteData(iscElAddr,
       (unsigned int)(PointingData[i_point].isc_el * DEG2I));
-  WriteSlow(iscSigmaCh, iscSigmaInd,
+  WriteData(iscSigmaAddr,
       (unsigned int)(PointingData[i_point].isc_sigma * DEG2I));
 
-  WriteSlow(encElCh, encElInd,
+  WriteData(encElAddr,
       (unsigned int)(PointingData[i_point].enc_el * DEG2I));
-  WriteSlow(encSigmaCh, encSigmaInd,
+  WriteData(encSigmaAddr,
       (unsigned int)(PointingData[i_point].enc_sigma * DEG2I));
 
-  WriteSlow(clinElCh, clinElInd,
+  WriteData(clinElAddr,
       (unsigned int)(PointingData[i_point].clin_el * DEG2I));
-  WriteSlow(clinSigmaCh, clinSigmaInd,
+  WriteData(clinSigmaAddr,
       (unsigned int)(PointingData[i_point].clin_sigma * DEG2I));
 
   /************* Pointing mode fields *************/
-  WriteSlow(i_MODE, j_MODE, (int)(CommandData.pointing_mode.mode));
+  WriteData(pModeAddr, (int)(CommandData.pointing_mode.mode));
   if ((CommandData.pointing_mode.mode == P_AZEL_GOTO) ||
       (CommandData.pointing_mode.mode == P_AZ_SCAN)) {
-    WriteSlow(i_X, j_X, (int)(CommandData.pointing_mode.X * DEG2I));
+    WriteData(pXDegAddr, (int)(CommandData.pointing_mode.X * DEG2I));
   } else {
-    WriteSlow(i_X, j_X, (int)(CommandData.pointing_mode.X * H2I));
+    WriteData(pXDegAddr, (int)(CommandData.pointing_mode.X * H2I));
   }
-  WriteSlow(i_Y, j_Y, (int)(CommandData.pointing_mode.Y * DEG2I));
-  WriteSlow(i_VAZ, j_VAZ, (int)(CommandData.pointing_mode.vaz * VEL2I));
-  WriteSlow(i_DEL, j_DEL, (int)(CommandData.pointing_mode.del * VEL2I));
-  WriteSlow(i_W, j_W, (int)(CommandData.pointing_mode.w * DEG2I));
-  WriteSlow(i_H, j_H, (int)(CommandData.pointing_mode.h * DEG2I));
+  WriteData(pYAddr, (int)(CommandData.pointing_mode.Y * DEG2I));
+  WriteData(pVazAddr, (int)(CommandData.pointing_mode.vaz * VEL2I));
+  WriteData(pDelAddr, (int)(CommandData.pointing_mode.del * VEL2I));
+  WriteData(pWAddr, (int)(CommandData.pointing_mode.w * DEG2I));
+  WriteData(pHAddr, (int)(CommandData.pointing_mode.h * DEG2I));
 
   sensor_veto = (!CommandData.use_sun) | ((!CommandData.use_isc)<<1) |
     ((!CommandData.use_elenc)<<2) |
@@ -511,239 +518,208 @@ void StoreData(int index, unsigned int* TxFrame,
     sensor_veto |= (1 << 6);
   }
 
-  WriteSlow(i_SVETO, j_SVETO, sensor_veto);
+  WriteData(sensorVetoAddr, sensor_veto);
 
   /************* dgps fields *************/
-  t = DGPSTime;
-  WriteSlow(i_dgps_time, j_dgps_time, t >> 16);
-  WriteSlow(i_dgps_time + 1, j_dgps_time, t);
+  WriteData(dgpsTimeAddr, DGPSTime);
 
   /** Pos fields **/
   i_dgps = GETREADINDEX(dgpspos_index);
-  WriteSlow(i_dgps_lat, j_dgps_lat, (int)(DGPSPos[i_dgps].lat * DEG2I));
-  WriteSlow(i_dgps_lon, j_dgps_lon, (int)(DGPSPos[i_dgps].lon * DEG2I));
-  WriteSlow(i_dgps_alt, j_dgps_alt, (int)(DGPSPos[i_dgps].alt));
-  WriteSlow(i_dgps_speed, j_dgps_speed, (int)(DGPSPos[i_dgps].speed * DEG2I));
-  WriteSlow(i_dgps_dir, j_dgps_dir, (int)(DGPSPos[i_dgps].direction * DEG2I));
-  WriteSlow(i_dgps_climb, j_dgps_climb, (int)(DGPSPos[i_dgps].climb * DEG2I));
-  WriteSlow(i_dgps_n_sat, j_dgps_n_sat, DGPSPos[i_dgps].n_sat);
-  WriteSlow(i_dgps_pos_index, j_dgps_pos_index, i_dgps);
+  WriteData(dgpsLatAddr, (int)(DGPSPos[i_dgps].lat * DEG2I));
+  WriteData(dgpsLonAddr, (int)(DGPSPos[i_dgps].lon * DEG2I));
+  WriteData(dgpsAltAddr, (int)(DGPSPos[i_dgps].alt));
+  WriteData(dgpsSpeedAddr, (int)(DGPSPos[i_dgps].speed * DEG2I));
+  WriteData(dgpsDirAddr, (int)(DGPSPos[i_dgps].direction * DEG2I));
+  WriteData(dgpsClimbAddr, (int)(DGPSPos[i_dgps].climb * DEG2I));
+  WriteData(dgpsNSatAddr, DGPSPos[i_dgps].n_sat);
+  WriteData(dgpsPosIndexAddr, i_dgps);
 
   /** Att fields **/
   i_dgps = GETREADINDEX(dgpsatt_index);
-  WriteSlow(i_dgps_att_ok, j_dgps_att_ok, DGPSAtt[i_dgps].att_ok);
-  WriteSlow(i_dgps_att_index, j_dgps_att_index, i_dgps);
+  WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok);
+  WriteData(dgpsAttIndexAddr, i_dgps);
 
   /** ISC Fields **/
-  if (index == 0) {
-    if (blob_index == 0) {
+  if (index == 0)
+    if (blob_index == 0)
       i_isc = GETREADINDEX(iscdata_index); 
-    }
-  }
 
   /*** Blobs ***/
-  WriteSlow(blob0_xCh, blob0_xInd,
+  WriteData(blob0XAddr,
       (int)(ISCSolution[i_isc].blob_x[blob_index * 3 + 0] * 40.));
-  WriteSlow(blob1_xCh, blob1_xInd,
+  WriteData(blob1XAddr,
       (int)(ISCSolution[i_isc].blob_x[blob_index * 3 + 1] * 40.));
-  WriteSlow(blob2_xCh, blob2_xInd,
+  WriteData(blob2XAddr,
       (int)(ISCSolution[i_isc].blob_x[blob_index * 3 + 2] * 40.));
 
-  WriteSlow(blob0_yCh, blob0_yInd,
+  WriteData(blob0YAddr,
       (int)(ISCSolution[i_isc].blob_y[blob_index * 3 + 0] * 40.));
-  WriteSlow(blob1_yCh, blob1_yInd,
+  WriteData(blob1YAddr,
       (int)(ISCSolution[i_isc].blob_y[blob_index * 3 + 1] * 40.));
-  WriteSlow(blob2_yCh, blob2_yInd,
+  WriteData(blob2YAddr,
       (int)(ISCSolution[i_isc].blob_y[blob_index * 3 + 2] * 40.));
 
-  WriteSlow(blob0_fluxCh, blob0_fluxInd,
+  WriteData(blob0FluxAddr,
       (int)(ISCSolution[i_isc].blob_flux[blob_index * 3 + 0] / 32.));
-  WriteSlow(blob1_fluxCh, blob1_fluxInd,
+  WriteData(blob1FluxAddr,
       (int)(ISCSolution[i_isc].blob_flux[blob_index * 3 + 1] / 32.));
-  WriteSlow(blob2_fluxCh, blob2_fluxInd,
+  WriteData(blob2FluxAddr,
       (int)(ISCSolution[i_isc].blob_flux[blob_index * 3 + 2] / 32.));
 
-  WriteSlow(blob0_snCh, blob0_snInd,
+  WriteData(blob0SnAddr,
       (int)(ISCSolution[i_isc].blob_sn[blob_index * 3 + 0] * 65.536));
-  WriteSlow(blob1_snCh, blob1_snInd,
+  WriteData(blob1SnAddr,
       (int)(ISCSolution[i_isc].blob_sn[blob_index * 3 + 1] * 65.536));
-  WriteSlow(blob2_snCh, blob2_snInd,
+  WriteData(blob2SnAddr,
       (int)(ISCSolution[i_isc].blob_sn[blob_index * 3 + 2] * 65.536));
 
   if (++blob_index >= 5)
     blob_index = 0;
 
   /*** Solution Info ***/
-  WriteSlow(isc_framenumCh, isc_framenumInd,
-      (unsigned int)ISCSolution[i_isc].framenum);
-  WriteSlow(isc_raCh, isc_raInd,
-      (unsigned int)(ISCSolution[i_isc].ra * RAD2LI) >> 16);
-  WriteSlow(isc_raCh + 1, isc_raInd,
-      (unsigned int)(ISCSolution[i_isc].ra * RAD2LI));
-  WriteSlow(isc_decCh, isc_decInd,
-      (unsigned int)((ISCSolution[i_isc].dec + M_PI / 2) * 2. * RAD2LI) >> 16);
-  WriteSlow(isc_decCh + 1, isc_decInd,
-      (unsigned int)((ISCSolution[i_isc].dec + M_PI / 2) * 2.* RAD2LI));
-  WriteSlow(isc_nblobsCh, isc_nblobsInd,
-      (unsigned int)ISCSolution[i_isc].n_blobs);
+  WriteData(iscFramenumAddr, (unsigned int)ISCSolution[i_isc].framenum);
+  WriteData(iscRaAddr, (unsigned int)(ISCSolution[i_isc].ra * RAD2LI));
+  WriteData(iscDecAddr,
+      (unsigned int)((ISCSolution[i_isc].dec + M_PI / 2) * 2. * RAD2LI));
+  WriteData(iscNblobsAddr, (unsigned int)ISCSolution[i_isc].n_blobs);
   if (ISCSolution[i_isc].sigma * RAD2ARCSEC > 65535) {
-    WriteSlow(isc_rd_sigmaCh, isc_rd_sigmaInd, 65535);
+    WriteData(iscRdSigmaAddr, 65535);
   } else {
-    WriteSlow(isc_rd_sigmaCh, isc_rd_sigmaInd,
+    WriteData(iscRdSigmaAddr,
         (unsigned int)(ISCSolution[i_isc].sigma * RAD2ARCSEC));
   }
-  WriteSlow(isc_mcpnumCh, isc_mcpnumInd,
-      (unsigned int)ISCSolution[i_isc].MCPFrameNum);
-  WriteSlow(isc_afocusCh, isc_afocusInd,
-      (unsigned int)ISCSolution[i_isc].autoFocusPosition);
-  WriteSlow(isc_errorCh, isc_errorInd,
-      (unsigned int)ISCSolution[i_isc].cameraerr);
-  WriteSlow(isc_mapMeanCh, isc_mapMeanInd,
-      (unsigned int)ISCSolution[i_isc].mapMean);
+  WriteData(iscMcpnumAddr, (unsigned int)ISCSolution[i_isc].MCPFrameNum);
+  WriteData(iscAfocusAddr, (unsigned int)ISCSolution[i_isc].autoFocusPosition);
+  WriteData(iscErrorAddr, (unsigned int)ISCSolution[i_isc].cameraerr);
+  WriteData(iscMapmeanAddr, (unsigned int)ISCSolution[i_isc].mapMean);
 
   /*** State Info ***/
-  WriteSlow(isc_stateCh, isc_stateInd,
+  WriteData(iscStateAddr,
       (unsigned int)(SentState.pause * 2 + SentState.abort * 4 +
                      SentState.autofocus * 8 + SentState.brightStarMode * 16 +
                      SentState.shutdown * 32 + SentState.save));
-  WriteSlow(isc_focusCh, isc_focusInd, (unsigned int)SentState.focus_pos);
-  WriteSlow(isc_apertCh, isc_apertInd, (unsigned int)SentState.ap_pos);
-  WriteSlow(isc_brraCh, isc_brraInd,
-      (unsigned int)(SentState.brightRA * RAD2I));
-  WriteSlow(isc_brdecCh, isc_brdecInd,
-      (unsigned int)(SentState.brightDEC * RAD2I));
-  WriteSlow(isc_threshCh, isc_threshInd,
-      (unsigned int)(SentState.sn_threshold * 10.));
-  WriteSlow(isc_gridCh, isc_gridInd, (unsigned int)SentState.grid);
-  WriteSlow(isc_cenboxCh, isc_cenboxInd, (unsigned int)SentState.cenbox);
-  WriteSlow(isc_apboxCh, isc_apboxInd, (unsigned int)SentState.apbox);
-  WriteSlow(isc_mdistCh, isc_mdistInd, (unsigned int)SentState.mult_dist);
-  WriteSlow(isc_maxblobsCh, isc_maxblobsInd,
-      (unsigned int)SentState.maxBlobMatch);
-  WriteSlow(isc_maglimitCh, isc_maglimitInd,
-      (unsigned int)(SentState.mag_limit * 1000.));
-  WriteSlow(isc_nradCh, isc_nradInd,
-      (unsigned int)(SentState.norm_radius * RAD2I));
-  WriteSlow(isc_lradCh, isc_lradInd,
-      (unsigned int)(SentState.lost_radius * RAD2I));
-  WriteSlow(isc_tolCh, isc_tolInd,
-      (unsigned int)(SentState.tolerance * RAD2ARCSEC));
-  WriteSlow(isc_mtolCh, isc_mtolInd,
-      (unsigned int)(SentState.match_tol * 65535.));
-  WriteSlow(isc_qtolCh, isc_qtolInd,
-      (unsigned int)(SentState.quit_tol * 65535.));
-  WriteSlow(isc_rtolCh, isc_rtolInd, (unsigned int)(SentState.rot_tol * RAD2I));
-  WriteSlow(isc_x_offCh, isc_x_offInd, (unsigned int)(SentState.azBDA * RAD2I));
-  WriteSlow(isc_y_offCh, isc_y_offInd, (unsigned int)(SentState.elBDA * RAD2I));
-  WriteSlow(isc_hold_iCh, isc_hold_iInd,
-      (unsigned int)(SentState.hold_current));
-  WriteSlow(isc_fpulseCh, isc_fpulseInd,
-      (unsigned int)(CommandData.ISC_fast_pulse_width));
-  WriteSlow(isc_spulseCh, isc_spulseInd,
-      (unsigned int)(CommandData.ISC_pulse_width));
-  WriteSlow(isc_save_periodCh, isc_save_periodInd,
-      (unsigned int)(CommandData.ISC_save_period));
+  WriteData(iscFocusAddr, (unsigned int)SentState.focus_pos);
+  WriteData(iscApertAddr, (unsigned int)SentState.ap_pos);
+  WriteData(iscBrraAddr, (unsigned int)(SentState.brightRA * RAD2I));
+  WriteData(iscBrdecAddr, (unsigned int)(SentState.brightDEC * RAD2I));
+  WriteData(iscThreshAddr, (unsigned int)(SentState.sn_threshold * 10.));
+  WriteData(iscGridAddr, (unsigned int)SentState.grid);
+  WriteData(iscCenboxAddr, (unsigned int)SentState.cenbox);
+  WriteData(iscApboxAddr, (unsigned int)SentState.apbox);
+  WriteData(iscMdistAddr, (unsigned int)SentState.mult_dist);
+  WriteData(iscMaxblobsAddr, (unsigned int)SentState.maxBlobMatch);
+  WriteData(iscMaglimitAddr, (unsigned int)(SentState.mag_limit * 1000.));
+  WriteData(iscNradAddr, (unsigned int)(SentState.norm_radius * RAD2I));
+  WriteData(iscLradAddr, (unsigned int)(SentState.lost_radius * RAD2I));
+  WriteData(iscTolAddr, (unsigned int)(SentState.tolerance * RAD2ARCSEC));
+  WriteData(iscMtolAddr, (unsigned int)(SentState.match_tol * 65535.));
+  WriteData(iscQtolAddr, (unsigned int)(SentState.quit_tol * 65535.));
+  WriteData(iscRtolAddr, (unsigned int)(SentState.rot_tol * RAD2I));
+  WriteData(iscXOffAddr, (unsigned int)(SentState.azBDA * RAD2I));
+  WriteData(iscYOffAddr, (unsigned int)(SentState.elBDA * RAD2I));
+  WriteData(iscHoldIAddr, (unsigned int)(SentState.hold_current));
+  WriteData(iscFpulseAddr, (unsigned int)(CommandData.ISC_fast_pulse_width));
+  WriteData(iscSpulseAddr, (unsigned int)(CommandData.ISC_pulse_width));
+  WriteData(iscSavePrdAddr, (unsigned int)(CommandData.ISC_save_period));
 }
 
-/******************************************************************/
-/*                                                                */
-/* IsNewFrame: returns true if d is a begining of frame marker,   */
-/*    unless this is the first beginning of frame.                */
-/*                                                                */
-/******************************************************************/
-int IsNewFrame(unsigned int d) {
-  static int first_bof = 1;
-  int is_bof;
-  is_bof = (d == (BBC_WRITE | BBC_NODE(63) | BBC_CH(0) | FILETYPE));
-  if (is_bof && first_bof) {
-    is_bof = 0; first_bof = 0;
+void InitTxFrame(void)
+{
+  int bus, m, i, j, niosAddr, m0addr;
+
+  mprintf(MCP_INFO, "Writing Initial Tx Frame.\n");
+
+  for (bus = 0; bus < 2; ++bus) {
+    for (m = 0; m < FAST_PER_SLOW; ++m) {
+      for (i = 0; i < TxFrameWords[bus]; ++i) {
+        niosAddr = i + bus * BBCPCI_MAX_FRAME_SIZE + m * TxFrameWords[bus];
+        m0addr = i + bus * BBCPCI_MAX_FRAME_SIZE;
+        if (i == 0) {  /* framesync */
+          if (bus)
+            RawNiosWrite(niosAddr, BBC_FSYNC | BBC_WRITE | BBC_NODE(63)
+                | BBC_CH(4) | 0xB008);
+          else
+            RawNiosWrite(niosAddr, BBC_FSYNC | BBC_WRITE | BBC_NODE(63)
+                | BBC_CH(0) | 0xEB90);
+        } else if (i == 1 && bus == 0) /* fastsamp lsb */
+          RawNiosWrite(niosAddr, BBC_WRITE | BBC_NODE(63) | BBC_CH(1));
+        else if (i == 2 && bus == 0) /* fastsamp msb */
+          RawNiosWrite(niosAddr, BBC_WRITE | BBC_NODE(63) | BBC_CH(2));
+        else if (i == 3 && bus == 0) /* multiplex index */
+          RawNiosWrite(niosAddr, BBC_WRITE | BBC_NODE(63) | BBC_CH(3) | m);
+        else
+          for (j = 0; j < ccTotal; ++j)
+            if (NiosLookup[j].niosAddr == niosAddr)
+              RawNiosWrite(niosAddr, NiosLookup[j].bbcAddr);
+            else if (niosAddr == niosAddr - 1 && NiosLookup[j].wide)
+              RawNiosWrite(niosAddr, BBC_NEXT_CHANNEL(NiosLookup[j].bbcAddr));
+            else if (NiosLookup[j].fast && NiosLookup[j].niosAddr == m0addr)
+              RawNiosWrite(niosAddr, NiosLookup[j].bbcAddr);
+            else if (NiosLookup[j].fast && NiosLookup[j].niosAddr
+                == m0addr - 1 && NiosLookup[j].wide)
+              RawNiosWrite(niosAddr, BBC_NEXT_CHANNEL(NiosLookup[j].bbcAddr));
+
+        for (j = 0; j < 2 * FAST_PER_SLOW; ++j)
+          if (NiosSpares[j] == niosAddr)
+            RawNiosWrite(niosAddr, BBCSpares[j]);
+
+      }
+    }
   }
 
-  return (is_bof);
 }
 
-void do_Tx_frame(int bbc_fp, unsigned int *TxFrame,
-    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW],
-    unsigned short *RxFrame, int reset) {
-  static int firsttime = 1;
+void RawNiosWrite(unsigned int addr, unsigned int data)
+{
+  unsigned int niosData[2];
+
+  niosData[0] = addr;
+  niosData[1] = data;
+  write(bbc_fp, niosData, 2 * sizeof(unsigned int));
+}
+
+void WriteData(struct NiosStruct* addr, unsigned int data)
+{
+  int i;
+
+  if (addr->fast)
+    for (i = 0; i < FAST_PER_SLOW; ++i) {
+      RawNiosWrite(addr->niosAddr + i * TxFrameSize[addr->bus],
+          addr->bbcAddr | (data & 0xffff));
+      if (addr->wide)
+        RawNiosWrite(addr->niosAddr + 1 + i * TxFrameSize[addr->bus],
+            BBC_NEXT_CHANNEL(addr->bbcAddr) | (data >> 16));
+    }
+  else {
+    /* slow data */
+    RawNiosWrite(addr->niosAddr, addr->bbcAddr | (data & 0xffff));
+    if (addr->wide)
+      RawNiosWrite(addr->niosAddr + 1,
+          BBC_NEXT_CHANNEL(addr->bbcAddr) | (data >> 16));
+  }
+}
+
+void UpdateBBCFrame(unsigned short *RxFrame) {
   static int index = 0;
-
-  static int BBC_Fsync_Word = BBC_FSYNC;
-  int i = 0, j;
-
-  if (firsttime | reset) {
-    TxFrame[0] = BBC_WRITE | BBC_NODE(63) | BBC_CH(0) | FILETYPE; /* BOF */
-    TxFrame[1] = BBC_WRITE | BBC_NODE(63) | BBC_CH(1); /* f_num lsb */
-    TxFrame[2] = BBC_WRITE | BBC_NODE(63) | BBC_CH(2); /* f_num msb */
-    TxFrame[3] = BBC_WRITE | BBC_NODE(63) | BBC_CH(3); /* index */
-
-    for (j = 0; j < N_SLOW; j++) {
-      for (i = 0; i < FAST_PER_SLOW; i++) {
-        if (SlowChList[j][i].rw=='r') {
-          slowTxFields[j][i] =
-            BBC_READ |
-            BBC_NODE(SlowChList[j][i].node) |
-            BBC_CH(SlowChList[j][i].adr);
-        } else {
-          slowTxFields[j][i] =
-            BBC_WRITE |
-            BBC_NODE(SlowChList[j][i].node) |
-            BBC_CH(SlowChList[j][i].adr);
-        }
-      }
-    }
-
-    for (i = 0; i < N_FASTCHLIST; i++) {
-      if (FastChList[i].rw =='r') {
-        TxFrame[i + FAST_OFFSET] =
-          BBC_READ | BBC_NODE(FastChList[i].node) | BBC_CH(FastChList[i].adr);
-      } else {
-        TxFrame[i + FAST_OFFSET] =
-          BBC_WRITE| BBC_NODE(FastChList[i].node) | BBC_CH(FastChList[i].adr);
-      }
-    }
-    firsttime = 0;
-  }
-
-  /*** update frame num ***/
-  WriteFast(1, frame_num);
-  WriteFast(2, frame_num >> 16);
-  frame_num++;
-
-  /*** update mplex fields  ***/
-  WriteFast(3, index);
-  for (j = 0; j < N_SLOW; j++) {
-    TxFrame[j + 4] = slowTxFields[j][index];
-  }
-  index++;
-  if (index >= FAST_PER_SLOW)
-    index = 0;
 
   /*** do Controls ***/
 #ifndef BOLOTEST
   DoSched();
   UpdateAxesMode();
-  StoreData(index, TxFrame, slowTxFields);
-  ControlGyroHeat(TxFrame, RxFrame, slowTxFields);
-  WriteMot(index, TxFrame, RxFrame, slowTxFields);
+  StoreData(index);
+  ControlGyroHeat(RxFrame);
+  WriteMot(index, RxFrame);
 #endif
-  BiasControl(TxFrame, RxFrame, slowTxFields);
-  SyncADC(index, slowTxFields);
+  BiasControl(RxFrame);
+  SyncADC(index);
 
   /*** do slow Controls ***/
   if (index == 0) {
-    WriteAux(slowTxFields);
-    PhaseControl(slowTxFields);
+    WriteAux();
+    PhaseControl();
   }
 #ifndef BOLOTEST
-  ControlAuxMotors(TxFrame, RxFrame, slowTxFields);
+  ControlAuxMotors(RxFrame);
 #endif
-  CryoControl(TxFrame, slowTxFields);
-
-  SetReadBits(TxFrame);
-
-  /*** write FSync ***/
-  write(bbc_fp, (void*)&BBC_Fsync_Word, sizeof(unsigned int));
-  /*** Write Frame ***/
-  write(bbc_fp, (void*)TxFrame, TX_FRAME_SIZE);
+  CryoControl();
 }

@@ -2,6 +2,7 @@
 #include <time.h>
 #include <stdio.h>
 
+#include "mcp.h"
 #include "tx_struct.h"
 #include "tx.h"
 #include "command_struct.h"
@@ -11,8 +12,6 @@
 #define MAX_ISC_SLOW_PULSE_SPEED 0.015
 
 struct ISCPulseType isc_pulses = {0,0,4,0};
-
-extern unsigned short slow_data[N_SLOW][FAST_PER_SLOW];
 
 int pin_is_in = 1;
 
@@ -61,15 +60,11 @@ int pinIsIn(void) {
 /*    ACS1 on and off.  Also calculates gyro offsets.                   */
 /*                                                                      */
 /************************************************************************/
-void ControlGyroHeat(unsigned int *TxFrame,  unsigned short *RxFrame,
-    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
-  static int i_T_GYBOX = -1;
-  static int i_GY_HEAT = -1;
-
-  static int i_T_GY_SET = -1, j_T_GY_SET = -1;
-  static int i_G_PGYH = -1, j_G_PGYH = -1;
-  static int i_G_IGYH = -1, j_G_IGYH = -1;
-  static int i_G_DGYH = -1, j_G_DGYH = -1;
+void ControlGyroHeat(unsigned short *RxFrame) {
+  static struct BiPhaseStruct* tGyboxAddr;
+  static struct NiosStruct *gyHeatAddr, *tGySetAddr, *pGyheatAddr, *iGyheatAddr;
+  static struct NiosStruct *dGyheatAddr;
+  static int firsttime = 1;
 
   int on = 0x40, off = 0x00;
   static int p_on = 0;
@@ -82,23 +77,24 @@ void ControlGyroHeat(unsigned int *TxFrame,  unsigned short *RxFrame,
   float P, I, D;
 
   /******** Obtain correct indexes the first time here ***********/
-  if (i_T_GYBOX == -1) {
-    FastChIndex("t_gybox", &i_T_GYBOX);
-    FastChIndex("gy_heat", &i_GY_HEAT);
+  if (firsttime) {
+    firsttime = 0;
+    tGyboxAddr = GetBiPhaseAddr("t_gybox");
+    gyHeatAddr = GetNiosAddr("gy_heat");
 
-    SlowChIndex("t_gy_set", &i_T_GY_SET, &j_T_GY_SET);
-    SlowChIndex("g_p_gyheat", &i_G_PGYH, &j_G_PGYH);
-    SlowChIndex("g_i_gyheat", &i_G_IGYH, &j_G_IGYH);
-    SlowChIndex("g_d_gyheat", &i_G_DGYH, &j_G_DGYH);
+    tGySetAddr = GetNiosAddr("t_gy_set");
+    pGyheatAddr = GetNiosAddr("g_p_gyheat");
+    iGyheatAddr = GetNiosAddr("g_i_gyheat");
+    dGyheatAddr = GetNiosAddr("g_d_gyheat");
   }
 
   /* send down the setpoints and gains values */
-  WriteSlow(i_T_GY_SET, j_T_GY_SET,
+  WriteData(tGySetAddr,
       (unsigned short)(CommandData.t_gybox_setpoint * 32768.0 / 100.0));
 
-  WriteSlow(i_G_PGYH, j_G_PGYH, CommandData.gy_heat_gain.P);
-  WriteSlow(i_G_IGYH, j_G_IGYH, CommandData.gy_heat_gain.I);
-  WriteSlow(i_G_DGYH, j_G_DGYH, CommandData.gy_heat_gain.D);
+  WriteData(pGyheatAddr, CommandData.gy_heat_gain.P);
+  WriteData(iGyheatAddr, CommandData.gy_heat_gain.I);
+  WriteData(dGyheatAddr, CommandData.gy_heat_gain.D);
 
   /* control the heat */
   set_point = (CommandData.t_gybox_setpoint - 136.45) / (-9.5367431641e-08);
@@ -108,9 +104,9 @@ void ControlGyroHeat(unsigned int *TxFrame,  unsigned short *RxFrame,
 
   /********* if end of pulse, calculate next pulse *********/
   if (p_off < 0) {
-
     error = set_point -
-      ((unsigned int)(RxFrame[i_T_GYBOX + 1]<< 16 | RxFrame[i_T_GYBOX]));
+      ((unsigned int)(RxFrame[tGyboxAddr->channel + 1] << 16
+                      | RxFrame[tGyboxAddr->channel]));
 
     integral = integral * 0.9975 + 0.0025 * error;
     if (integral * I > 60){
@@ -135,10 +131,10 @@ void ControlGyroHeat(unsigned int *TxFrame,  unsigned short *RxFrame,
 
   /******** do the pulse *****/
   if (p_on > 0) {
-    WriteFast(i_GY_HEAT, on);
+    WriteData(gyHeatAddr, on);
     p_on--;
   } else {
-    WriteFast(i_GY_HEAT, off);
+    WriteData(gyHeatAddr, off);
     p_off--;
   }
 }
@@ -148,22 +144,26 @@ void ControlGyroHeat(unsigned int *TxFrame,  unsigned short *RxFrame,
 /* Balance: control balance system                                */
 /*                                                                */
 /******************************************************************/
-int Balance(int iscBits, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
-  static int iElCh = -1, iElInd;
-  static int balPwm1Ch, balPwm1Ind;
+int Balance(int iscBits) {
+  static struct BiPhaseStruct *iElAddr;
+  static struct NiosStruct *balPwm1Addr;
   static int pumpon = 0;
   int pumppwm;
   int error;
 
-  if (iElCh == -1) {
-    SlowChIndex("i_el", &iElCh, &iElInd);
-    SlowChIndex("balpump_lev", &balPwm1Ch, &balPwm1Ind);
+  static int firsttime = 1;
+  if (firsttime) {
+    firsttime = 0;
+    iElAddr = GetBiPhaseAddr("i_el");
+    balPwm1Addr = GetNiosAddr("balpump_lev");
   }
 
-  if (slow_data[iElCh][iElInd] < 8000)  /* don't turn on pump if we're */
-    error = 0;                          /* reading very small numbers */
+  /* don't turn on pump if we're reading very small numbers */
+  if (slow_data[iElAddr->index][iElAddr->channel] < 8000)
+    error = 0;
   else
-    error = slow_data[iElCh][iElInd] - 32758 - CommandData.pumps.bal_target;
+    error = slow_data[iElAddr->index][iElAddr->channel]
+      - 32758 - CommandData.pumps.bal_target;
 
   if (error > 0) {
     iscBits |= BAL1_REV;  /* set reverse bit */
@@ -194,7 +194,7 @@ int Balance(int iscBits, unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
     iscBits &= (0xFF - BAL1_ON); /* turn off pump */
   }
 
-  WriteSlow(balPwm1Ch, balPwm1Ind, pumppwm);
+  WriteData(balPwm1Addr, pumppwm);
 
   return iscBits;
 }
@@ -268,20 +268,19 @@ int GetLockBits(int acs0bits) {
 /*   Control the pumps and the lock and the ISC pulse            */
 /*                                                               */
 /*****************************************************************/
-void ControlAuxMotors(unsigned int *TxFrame,  unsigned short *RxFrame,
-    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
-  static int pumpBitsCh, pumpBitsInd = -1;
-  static int pumpPwm1Ch, pumpPwm1Ind;
-  static int pumpPwm2Ch, pumpPwm2Ind;
-  static int pumpPwm3Ch, pumpPwm3Ind;
-  static int pumpPwm4Ch, pumpPwm4Ind;
-  static int acs0bitsCh;
-  static int balOnCh, balOnInd, balOffCh, balOffInd;
-  static int balTargetCh, balTargetInd, balVetoCh, balVetoInd;
-  static int balGainCh, balGainInd, balMinCh, balMinInd, balMaxCh, balMaxInd;
-  static int iscBitsCh;
-  static int i_lockpin, j_lockpin;
-  static int pinOverrideCh, pinOverrideInd;
+void ControlAuxMotors(unsigned short *RxFrame) {
+  static struct NiosStruct* pumpBitsAddr;
+  static struct NiosStruct* balpumpLevAddr;
+  static struct NiosStruct* sprpumpLevAddr;
+  static struct NiosStruct* inpumpLevAddr;
+  static struct NiosStruct* outpumpLevAddr;
+  static struct NiosStruct* acs0BitsAddr;
+  static struct NiosStruct* balOnAddr, *balOffAddr;
+  static struct NiosStruct* balTargetAddr, *balVetoAddr;
+  static struct NiosStruct* balGainAddr, *balMinAddr, *balMaxAddr;
+  static struct NiosStruct* iscBitsAddr;
+  static struct NiosStruct* lokmotPinAddr;
+  static struct NiosStruct* lOverrideAddr;
 
   static int since_last_save = 0;
 
@@ -289,23 +288,25 @@ void ControlAuxMotors(unsigned int *TxFrame,  unsigned short *RxFrame,
   int pumpBits = 0;
   int pin_override;
 
-  if (pumpBitsInd == -1) {
-    FastChIndex("isc_bits", &iscBitsCh);
-    FastChIndex("acs0bits", &acs0bitsCh);
-    SlowChIndex("pump_bits", &pumpBitsCh, &pumpBitsInd);
-    SlowChIndex("balpump_lev", &pumpPwm1Ch, &pumpPwm1Ind);
-    SlowChIndex("sprpump_lev", &pumpPwm2Ch, &pumpPwm2Ind);
-    SlowChIndex("inpump_lev", &pumpPwm3Ch, &pumpPwm3Ind);
-    SlowChIndex("outpump_lev", &pumpPwm4Ch, &pumpPwm4Ind);
-    SlowChIndex("bal_on", &balOnCh, &balOnInd);
-    SlowChIndex("bal_off", &balOffCh, &balOffInd);
-    SlowChIndex("bal_target", &balTargetCh, &balTargetInd);
-    SlowChIndex("bal_gain", &balGainCh, &balGainInd);
-    SlowChIndex("bal_min", &balMinCh, &balMinInd);
-    SlowChIndex("bal_max", &balMaxCh, &balMaxInd);
-    SlowChIndex("bal_veto", &balVetoCh, &balVetoInd);
-    SlowChIndex("lokmot_pin", &i_lockpin, &j_lockpin);
-    SlowChIndex("l_override", &pinOverrideCh, &pinOverrideInd);
+  static int firsttime = 1;
+  if (firsttime) {
+    firsttime = 0;
+    iscBitsAddr = GetNiosAddr("isc_bits");
+    acs0BitsAddr = GetNiosAddr("acs0bits");
+    pumpBitsAddr = GetNiosAddr("pump_bits");
+    balpumpLevAddr = GetNiosAddr("balpump_lev");
+    sprpumpLevAddr = GetNiosAddr("sprpump_lev");
+    inpumpLevAddr = GetNiosAddr("inpump_lev");
+    outpumpLevAddr = GetNiosAddr("outpump_lev");
+    balOnAddr = GetNiosAddr("bal_on");
+    balOffAddr = GetNiosAddr("bal_off");
+    balTargetAddr = GetNiosAddr("bal_target");
+    balGainAddr = GetNiosAddr("bal_gain");
+    balMinAddr = GetNiosAddr("bal_min");
+    balMaxAddr = GetNiosAddr("bal_max");
+    balVetoAddr = GetNiosAddr("bal_veto");
+    lokmotPinAddr = GetNiosAddr("lokmot_pin");
+    lOverrideAddr = GetNiosAddr("l_override");
   }
 
   /* inner frame box */
@@ -349,16 +350,16 @@ void ControlAuxMotors(unsigned int *TxFrame,  unsigned short *RxFrame,
     CommandData.pumps.outframe_cool2_off--;
   }
 
-  pumpBits |= GetLockBits(RxFrame[acs0bitsCh]);
+  pumpBits |= GetLockBits(RxFrame[(ExtractBiPhaseAddr(acs0BitsAddr))->channel]);
 
   if (CommandData.pumps.bal_veto) {
     /* if we're in timeout mode, decrement the timer */
     if (CommandData.pumps.bal_veto != -1)
       CommandData.pumps.bal_veto--;
 
-    WriteSlow(pumpPwm1Ch, pumpPwm1Ind, CommandData.pumps.pwm1 & 0x7ff);
+    WriteData(balpumpLevAddr, CommandData.pumps.pwm1 & 0x7ff);
   } else {
-    iscBits = Balance(iscBits, slowTxFields);
+    iscBits = Balance(iscBits);
   }
 
   /*********************/
@@ -405,20 +406,19 @@ void ControlAuxMotors(unsigned int *TxFrame,  unsigned short *RxFrame,
   /* Lock motor override writeback */
   pin_override = (CommandData.lock_override) ? 1 : 0;
 
-  WriteSlow(pinOverrideCh, pinOverrideInd, pin_override);
-  WriteSlow(i_lockpin, j_lockpin, pin_is_in);
-  WriteSlow(pumpBitsCh, pumpBitsInd, pumpBits);
-  WriteSlow(pumpPwm2Ch, pumpPwm2Ind, CommandData.pumps.pwm2 & 0x7ff);
-  WriteSlow(pumpPwm3Ch, pumpPwm3Ind, CommandData.pumps.pwm3 & 0x7ff);
-  WriteSlow(pumpPwm4Ch, pumpPwm4Ind, CommandData.pumps.pwm4 & 0x7ff);
-  WriteSlow(balOnCh, balOnInd, (int)CommandData.pumps.bal_on);
-  WriteSlow(balOffCh, balOffInd, (int)CommandData.pumps.bal_off);
-  WriteSlow(balVetoCh, balVetoInd, (int)CommandData.pumps.bal_veto);
-  WriteSlow(balTargetCh, balTargetInd,
-      (int)(CommandData.pumps.bal_target + 1648. * 5.));
-  WriteSlow(balGainCh, balGainInd, (int)(CommandData.pumps.bal_gain * 1000.));
-  WriteSlow(balMinCh, balMinInd, (int)CommandData.pumps.bal_min);
-  WriteSlow(balMaxCh, balMaxInd, (int)CommandData.pumps.bal_max);
-  WriteFast(iscBitsCh, iscBits);
+  WriteData(lOverrideAddr, pin_override);
+  WriteData(lokmotPinAddr, pin_is_in);
+  WriteData(pumpBitsAddr, pumpBits);
+  WriteData(sprpumpLevAddr, CommandData.pumps.pwm2 & 0x7ff);
+  WriteData(inpumpLevAddr, CommandData.pumps.pwm3 & 0x7ff);
+  WriteData(outpumpLevAddr, CommandData.pumps.pwm4 & 0x7ff);
+  WriteData(balOnAddr, (int)CommandData.pumps.bal_on);
+  WriteData(balOffAddr, (int)CommandData.pumps.bal_off);
+  WriteData(balVetoAddr, (int)CommandData.pumps.bal_veto);
+  WriteData(balTargetAddr, (int)(CommandData.pumps.bal_target + 1648. * 5.));
+  WriteData(balGainAddr, (int)(CommandData.pumps.bal_gain * 1000.));
+  WriteData(balMinAddr, (int)CommandData.pumps.bal_min);
+  WriteData(balMaxAddr,(int)CommandData.pumps.bal_max);
+  WriteData(iscBitsAddr, iscBits);
 
 }

@@ -4,12 +4,8 @@
 
 extern int frame_num;
 
-void do_Tx_frame(int bbc_fp, unsigned int *TxFrame,
-                 unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW],
-                 unsigned short *RxFrame, int reset);
+void InitTxFrame(void);
+void UpdateBBCFrame(unsigned short *RxFrame);
 
-#define WriteSlow(c, i, v) slowTxFields[c][i] = (slowTxFields[c][i] & 0xffff0000) | ((v) & 0xffff)
-#define WriteFast(c, v) TxFrame[c] = (TxFrame[c] & 0xffff0000) | ((v) & 0xffff)
-
-
-int IsNewFrame();
+void RawNiosWrite(unsigned int addr, unsigned int data);
+void WriteData(struct NiosStruct*, unsigned int);

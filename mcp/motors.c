@@ -126,22 +126,22 @@ int GetVAz() {
 /*    WriteMot: motors, and, for convenience, the inner frame lock      */
 /*                                                                      */
 /************************************************************************/
-void WriteMot(int TxIndex, unsigned int *TxFrame, unsigned short *RxFrame,
-    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
-  static int i_elVreq = -1;
-  static int i_azVreq = -1;
-  static int i_cos_el = -1;
-  static int i_sin_el = -1;
+void WriteMot(int TxIndex, unsigned short *RxFrame)
+{
+  static struct NiosStruct* elVreqAddr;
+  static struct NiosStruct* azVreqAddr;
+  static struct NiosStruct* cosElAddr;
+  static struct NiosStruct* sinElAddr;
 
-  static int i_g_Pel = -1, j_g_Pel = -1;
-  static int i_g_Iel = -1, j_g_Iel = -1;
-  static int i_g_Proll = -1, j_g_Proll = -1;
-  static int i_g_Paz = -1, j_g_Paz = -1;
-  static int i_g_Iaz = -1, j_g_Iaz = -1;
-  static int i_g_pivot = -1, j_g_pivot = -1;
-  static int i_set_reac = -1, j_set_reac = -1;
-  static int emfGainCh, emfGainInd;
-  static int emfOffsetCh, emfOffsetInd;
+  static struct NiosStruct* gPElAddr;
+  static struct NiosStruct* gIElAddr;
+  static struct NiosStruct* gPRollAddr;
+  static struct NiosStruct* gPAzAddr;
+  static struct NiosStruct* gIAzAddr;
+  static struct NiosStruct* gPPivotAddr;
+  static struct NiosStruct* setReacAddr;
+  static struct NiosStruct* emfGainAddr;
+  static struct NiosStruct* emfOffsetAddr;
 
   static int wait = 100; /* wait 20 frames before controlling. */
   double el_rad;
@@ -153,21 +153,23 @@ void WriteMot(int TxIndex, unsigned int *TxFrame, unsigned short *RxFrame,
   int i_point;
 
   /******** Obtain correct indexes the first time here ***********/
-  if (i_g_Pel == -1) {
-    FastChIndex("el_vreq", &i_elVreq);
-    FastChIndex("az_vreq", &i_azVreq);
-    FastChIndex("cos_el", &i_cos_el);
-    FastChIndex("sin_el", &i_sin_el);
+  static int firsttime = 1;
+  if (firsttime) {
+    firsttime = 0;
+    elVreqAddr = GetNiosAddr("el_vreq");
+    azVreqAddr = GetNiosAddr("az_vreq");
+    cosElAddr = GetNiosAddr("cos_el");
+    sinElAddr = GetNiosAddr("sin_el");
 
-    SlowChIndex("g_p_el", &i_g_Pel, &j_g_Pel);
-    SlowChIndex("g_i_el", &i_g_Iel, &j_g_Iel);
-    SlowChIndex("g_p_roll", &i_g_Proll, &j_g_Proll);
-    SlowChIndex("g_p_az", &i_g_Paz, &j_g_Paz);
-    SlowChIndex("g_i_az", &i_g_Iaz, &j_g_Iaz);
-    SlowChIndex("g_p_pivot", &i_g_pivot, &j_g_pivot);
-    SlowChIndex("set_reac", &i_set_reac, &j_set_reac);
-    SlowChIndex("emf_gain", &emfGainCh, &emfGainInd);
-    SlowChIndex("emf_offset", &emfOffsetCh, &emfOffsetInd);
+    gPElAddr = GetNiosAddr("g_p_el");
+    gIElAddr = GetNiosAddr("g_i_el");
+    gPRollAddr = GetNiosAddr("g_p_roll");
+    gPAzAddr = GetNiosAddr("g_p_az");
+    gIAzAddr = GetNiosAddr("g_i_az");
+    gPPivotAddr = GetNiosAddr("g_p_pivot");
+    setReacAddr = GetNiosAddr("set_reac");
+    emfGainAddr = GetNiosAddr("emf_gain");
+    emfOffsetAddr = GetNiosAddr("emf_offset");
   }
   
   i_point = GETREADINDEX(point_index);
@@ -180,7 +182,7 @@ void WriteMot(int TxIndex, unsigned int *TxFrame, unsigned short *RxFrame,
     v_elev = 32767;
   if (v_elev < -32768)
     v_elev = -32768;  
-  WriteFast(i_elVreq, 32768 + v_elev);
+  WriteData(elVreqAddr, 32768 + v_elev);
 
   /* zero motor gains if the pin is in */
   if (pinIsIn() || CommandData.disable_el) {
@@ -190,9 +192,9 @@ void WriteMot(int TxIndex, unsigned int *TxFrame, unsigned short *RxFrame,
     elGainI = CommandData.ele_gain.I;	
   }
   /* proportional term for el motor */
-  WriteSlow(i_g_Pel, j_g_Pel, elGainP);
+  WriteData(gPElAddr, elGainP);
   /* integral term for el_motor */
-  WriteSlow(i_g_Iel, j_g_Iel, elGainI);
+  WriteData(gIElAddr, elGainI);
 
   
   /***************************************************/
@@ -200,10 +202,10 @@ void WriteMot(int TxIndex, unsigned int *TxFrame, unsigned short *RxFrame,
   /* cos of el enc */
   el_rad = (M_PI / 180.0) * PointingData[i_point].el; /* convert to radians */
   ucos_el = (unsigned int)((cos(el_rad) + 1.0) * 32768.0);
-  WriteFast(i_cos_el, ucos_el);
+  WriteData(cosElAddr, ucos_el);
   /* sin of el enc */
   usin_el = (unsigned int)((sin(el_rad) + 1.0) * 32768.0);
-  WriteFast(i_sin_el, usin_el);
+  WriteData(sinElAddr, usin_el);
 
   /***************************************************/
   /**            Azimuth Drive Motors              **/
@@ -212,7 +214,7 @@ void WriteMot(int TxIndex, unsigned int *TxFrame, unsigned short *RxFrame,
     v_az = 32767;
   if (v_az < -32768)
     v_az = -32768;  
-  WriteFast(i_azVreq, 32768 + v_az);
+  WriteData(azVreqAddr, 32768 + v_az);
 
   if ((CommandData.disable_az) || (wait > 0)) {
     azGainP = 0;
@@ -225,18 +227,18 @@ void WriteMot(int TxIndex, unsigned int *TxFrame, unsigned short *RxFrame,
   }
 
   /* p term for az motor */
-  WriteSlow(i_g_Paz, j_g_Paz, azGainP);
+  WriteData(gPAzAddr, azGainP);
   /* I term for az motor */
-  WriteSlow(i_g_Iaz, j_g_Iaz, azGainI);
+  WriteData(gIAzAddr, azGainI);
   /* p term for pivot motor */
-  WriteSlow(i_g_pivot, j_g_pivot, pivGainP);
+  WriteData(gPPivotAddr, pivGainP);
   /* setpoint for reaction wheel */
-  WriteSlow(i_set_reac, j_set_reac, CommandData.pivot_gain.SP);
+  WriteData(setReacAddr, CommandData.pivot_gain.SP);
 
   /* reaction wheel back-EMF gain correction */
-  WriteSlow(emfGainCh, emfGainInd, CommandData.emf_gain);
+  WriteData(emfGainAddr, CommandData.emf_gain);
   /* reaction wheel back-EMF offset correction */
-  WriteSlow(emfOffsetCh, emfOffsetInd, CommandData.emf_offset + 32767);
+  WriteData(emfOffsetAddr, CommandData.emf_offset + 32767);
 
   /***************************************************/
   /**                Roll Drive Motors              **/  
@@ -253,7 +255,7 @@ void WriteMot(int TxIndex, unsigned int *TxFrame, unsigned short *RxFrame,
     rollGainP = 0;
   
   /* p term for roll motor */
-  WriteSlow(i_g_Proll, j_g_Proll, rollGainP);
+  WriteData(gPRollAddr, rollGainP);
 
   if (wait > 0)
     wait--;

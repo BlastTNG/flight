@@ -8,9 +8,8 @@ extern "C" {
 
   /* FAST_PER_SLOW is the number of fast samples for each slow one */
 #define FAST_PER_SLOW 20
-
-  /* N_SLOW is the number of slow fields */
-#define N_SLOW 16
+#define NOT_MULTIPLEXED (FAST_PER_SLOW)
+#define DISCARD_WORD    (FAST_PER_SLOW + 1)
 
   /* Number of DAS bolometer cards to include in the frame.  The maximum number
    * of cards is 11 */
@@ -18,18 +17,9 @@ extern "C" {
 
 #define DAS_CHS 24
 
-  /* Number of records in the frame below the DAS bolometer records */
-#define N_FASTCHLIST_INIT_ACS 42
-#define N_FASTCHLIST_INIT_DAS 48
-#ifdef BOLOTEST
-#define N_FASTCHLIST_INIT (N_FASTCHLIST_INIT_DAS)
-#else
-#define N_FASTCHLIST_INIT (N_FASTCHLIST_INIT_ACS + N_FASTCHLIST_INIT_DAS)
-#endif
-#define N_FASTCHLIST (N_FASTCHLIST_INIT + DAS_CARDS * (DAS_CHS+DAS_CHS/2))
-  /* Fields defined in FastChList will be read at 100 Hz */
+#define N_FAST_BOLOS (DAS_CARDS * (DAS_CHS + DAS_CHS / 2))
 
-#define FAST_OFFSET (4 + N_SLOW)
+#define FAST_OFFSET 4
 
   /* offset of encoder.  Reset if encoder has been unmounted. */
   /* This is actually 360 - the real offset */
@@ -44,20 +34,46 @@ extern "C" {
     char field[FIELD_LEN]; /* name of channel for FileFormats and CalSpecs */
     char rw;        /* 'r' = read, 'w' = write */
     int node;       /* BlastBus node: 0 to 63 */
-    int adr;        /* BlastBus address: 0 to 63 */
+    int bus;        /* Bus number: 0 to 1 */
+    int addr;       /* BlastBus address: 0 to 63 */
     float m_c2e;    /* Conversion from counts to enginering units is */
     float b_e2e;    /*   e = c * m_c2e + b_e2e */
     char type;      /* 's' = short, signed o'u' = unsigned short 'i' = 'S'
                        = signed 32 bit int, 'U' = unsigned 32 bit int */
   };
 
-  extern struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW];
-  extern struct ChannelStruct FastChList[N_FASTCHLIST];
+  struct NiosStruct {
+    unsigned int niosAddr;
+    unsigned int bbcAddr;
+    unsigned char fast;
+    unsigned char wide;
+    unsigned char bus;
+    const char* field;
+  };
 
-  void MakeTxFrame(void);
+  struct BiPhaseStruct {
+    unsigned int channel;
+    unsigned int index;
+  };
+
+  extern struct NiosStruct* NiosLookup;
+  extern struct BiPhaseStruct* BiPhaseLookup;
+
+  extern unsigned short ccTotal;
+
+  extern unsigned short BiPhaseFrameWords;
+  extern unsigned short BiPhaseFrameSize;
+  extern unsigned short slowsPerBi0Frame;
+  extern unsigned short TxFrameWords[2];
+  extern unsigned short TxFrameSize[2];
+  extern unsigned int NiosSpares[FAST_PER_SLOW * 2];
+  extern unsigned int BBCSpares[FAST_PER_SLOW * 2];
+
+  void MakeAddressLookups(void);
   void FPrintDerived(FILE*);
-  void FastChIndex(char*, int*);
-  void SlowChIndex(char*, int*, int*);
+  struct NiosStruct* GetNiosAddr(const char*);
+  inline struct BiPhaseStruct* GetBiPhaseAddr(const char*);
+  inline struct BiPhaseStruct* ExtractBiPhaseAddr(struct NiosStruct* niosAddr);
 
 #define DEG2LI (4294967296.0/360.0)
 #define LI2DEG (1.0/DEG2LI)
@@ -84,18 +100,6 @@ extern "C" {
 #define GYRO1_OFFSET 25795.0
 #define GYRO2_OFFSET 25535.0
 #define GYRO3_OFFSET 25600.0
-
-  /* The size of the rx and downlink frames */
-#define FRAME_WORDS \
-  ( 1              /* FILETYPE */ \
-    + 2            /* FRAMENUM */ \
-    + 1            /* SLOW_INDEX */ \
-    + N_SLOW       /* slow channels */ \
-    + N_FASTCHLIST /* fast channels and bolometers */ \
-  )
-
-#define TX_FRAME_SIZE (FRAME_WORDS * sizeof(unsigned int))
-#define RX_FRAME_SIZE (FRAME_WORDS * sizeof(unsigned short))
 
 #ifdef __cplusplus
 }

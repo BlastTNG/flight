@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <limits.h>
 
 #include "command_struct.h"
 #include "mcp.h"
@@ -417,7 +418,7 @@ void PlanetPos(double tt, int target, double *ra, double *dec) {
 
   // Iterate for the planet & sun's position
   tau = 0;
-  normP = 999999999999999999; // Make this number ridiculous so that normP -
+  normP = UINT_MAX; // Make this number ridiculous so that normP -
   j = 0;                      // oldnorm will be large the first time through
   do { 
     oldnormP = normP;
@@ -520,7 +521,7 @@ void SunPos(double tt, double *ra, double *dec) {
 
   // Iterate for the planet & sun's position
   tau = 0;
-  normP = 999999999999999999; // make this ridiculous so that the first time
+  normP = UINT_MAX; // make this ridiculous so that the first time
   j = 0;                      // through, normP - oldnormP is big
   do { 
     oldnormP = normP;

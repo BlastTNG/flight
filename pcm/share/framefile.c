@@ -11,8 +11,6 @@
 #include "tx_struct.h"
 #include "mcp.h"
 
-unsigned short slow_data[N_SLOW][FAST_PER_SLOW];
-
 struct file_info {
   int fd;            /* current file descriptor */
   int chunk;         /* current chunk number */
@@ -90,9 +88,9 @@ void InitialiseFrameFile(char type) {
   OpenNextChunk();
 
   /* malloc frame buffer */
-  if ((framefile.buffer = malloc(BUFFER_SIZE * RX_FRAME_SIZE)) == NULL)
+  if ((framefile.buffer = malloc(BUFFER_SIZE * BiPhaseFrameSize)) == NULL)
     mputs(MCP_TFATAL, "Unable to malloc framefile buffer\n");
-  framefile.buffer_end = framefile.buffer + BUFFER_SIZE * RX_FRAME_SIZE;
+  framefile.buffer_end = framefile.buffer + BUFFER_SIZE * BiPhaseFrameSize;
   framefile.b_write_to = framefile.b_read_from = framefile.buffer;
 
   fp = fopen("/data/etc/datafile.cur","w");
@@ -110,7 +108,7 @@ void InitialiseFrameFile(char type) {
 
 void* advance_in_buffer(void* ptr) {
   void* tmp;
-  tmp = ((char*)ptr + RX_FRAME_SIZE);
+  tmp = ((char*)ptr + BiPhaseFrameSize);
   return (tmp >= framefile.buffer_end) ? framefile.buffer : (void*)tmp;
 }
 
@@ -123,13 +121,13 @@ void pushDiskFrame(unsigned short *RxFrame) {
   int i_ch;
   void* new_write_to = advance_in_buffer(framefile.b_write_to);
 
-  /*********************************************/
-  /* fill the MCP internal slow data structure */
-  /*********************************************/
+  /*******************************************************************/
+  /* fill the Rx slow data from the MCP internal slow data structure */
+  /*******************************************************************/
   i_ch = RxFrame[3];
   if (i_ch < FAST_PER_SLOW) {
-    for (i_slow = 0; i_slow<N_SLOW; i_slow++) {
-      slow_data[i_slow][i_ch] = RxFrame[4 + i_slow];
+    for (i_slow = 0; i_slow < slowsPerBi0Frame; i_slow++) {
+      RxFrame[4 + i_slow] = slow_data[i_slow][i_ch];
     }
   }
 
@@ -146,7 +144,7 @@ void pushDiskFrame(unsigned short *RxFrame) {
   /*********************/
   /* SHIP OUT RX FRAME */
   /*********************/
-  memcpy(framefile.b_write_to, RxFrame, RX_FRAME_SIZE);
+  memcpy(framefile.b_write_to, RxFrame, BiPhaseFrameSize);
 
   /* advance write-to pointer */
   framefile.b_write_to = new_write_to;
@@ -163,7 +161,7 @@ void FrameFileWriter(void) {
   mputs(MCP_STARTUP, "FrameFileWriter startup\n");
 
   /* malloc output_buffer */
-  if ((writeout_buffer = malloc(BUFFER_SIZE * RX_FRAME_SIZE)) == NULL)
+  if ((writeout_buffer = malloc(BUFFER_SIZE * BiPhaseFrameSize)) == NULL)
     mputs(MCP_TFATAL, "Unable to malloc write out buffer\n");
 
   while (1) {
@@ -171,9 +169,10 @@ void FrameFileWriter(void) {
     b_write_to = framefile.b_write_to;
 
     while (b_write_to != framefile.b_read_from) {
-      memcpy(writeout_buffer + write_len, framefile.b_read_from, RX_FRAME_SIZE);
+      memcpy(writeout_buffer + write_len, framefile.b_read_from,
+          BiPhaseFrameSize);
       framefile.b_read_from = advance_in_buffer(framefile.b_read_from);
-      write_len += RX_FRAME_SIZE;
+      write_len += BiPhaseFrameSize;
 
       /* increment file frame counter and check to see if we're at the end
        * of a file.  If so, writeout what we've accumulated and reset everything

@@ -12,7 +12,7 @@
 #include "isc_protocol.h"
 #include "mcp.h"
 
-#define ELBERETH "192.168.62.98"
+#define ELBERETH "192.168.62.5"
 #define BASE_PORT 2000
 
 extern short int SamIAm;   /* mcp.c */
@@ -253,9 +253,10 @@ void IntegratingStarCamera(void)
 
         SentState = CommandData.ISCState;
 
-        /* Deassert abort and shutdown after (perhaps) sending it */
+        /* Deassert abort, shutdown and set_focus after (perhaps) sending it */
         CommandData.ISCState.abort = 0;
         CommandData.ISCState.shutdown = 0;
+        CommandData.ISCState.focus_pos = 0;
 
         /* Return to default save_image state after autosaving image */
         if (CommandData.ISC_auto_save) {

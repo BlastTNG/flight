@@ -45,6 +45,10 @@
 /* Seconds in a week */
 #define SEC_IN_WEEK  604800L
 
+#ifdef BOLOTEST
+#  define USE_FIFO_CMD
+#endif
+
 extern int ADC_sync_timeout;  /* tx.c */
 
 void SetRaDec(double ra, double dec); /* defined in pointing.c */
@@ -98,15 +102,11 @@ int bc_setserial(char *input_tty) {
   int fd;
   struct termios term; 
 
-  if ((fd = open(input_tty, O_RDWR)) < 0) {
-    merror(MCP_ERROR, "Unable to open serial port");
-    return -1;
-  }
+  if ((fd = open(input_tty, O_RDWR)) < 0)
+    merror(MCP_TFATAL, "Unable to open serial port");
 
-  if (tcgetattr(fd, &term)) {
-    merror(MCP_ERROR, "Unable to get serial device attributes");
-    return -1;
-  }
+  if (tcgetattr(fd, &term))
+    merror(MCP_TFATAL, "Unable to get serial device attributes");
 
   term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
   term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
@@ -118,19 +118,14 @@ int bc_setserial(char *input_tty) {
   term.c_oflag &= ~(OPOST);
   term.c_cflag |= CS8;
 
-  if(cfsetospeed(&term, B1200)) {          /*  <======= SET THE SPEED HERE */
-    merror(MCP_ERROR, "Error setting serial output speed");
-    return -1;
-  }
-  if(cfsetispeed(&term, B1200)) {          /*  <======= SET THE SPEED HERE */
-    merror(MCP_ERROR, "Error setting serial input speed");
-    return -1;
-  }
+  if(cfsetospeed(&term, B1200))          /*  <======= SET THE SPEED HERE */
+    merror(MCP_TFATAL, "Error setting serial output speed");
 
-  if( tcsetattr(fd, TCSANOW, &term) ) {
-    merror(MCP_ERROR, "Unable to set serial attributes");
-    return -1;
-  }
+  if(cfsetispeed(&term, B1200))          /*  <======= SET THE SPEED HERE */
+    merror(MCP_TFATAL, "Error setting serial input speed");
+
+  if( tcsetattr(fd, TCSANOW, &term) )
+    merror(MCP_TFATAL, "Unable to set serial attributes");
 
   return fd;
 }
@@ -464,13 +459,13 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
 
   int i, dataqind;
   double rvalues[MAX_N_PARAMS];
-  unsigned short ivalues[MAX_N_PARAMS];
+  int ivalues[MAX_N_PARAMS];
   char type;
   int i_point;
   int index = MIndex(command);
 
 
-#ifndef BOLOTEST
+#ifndef USE_FIFO_CMD
   double min;
 
   /* compute renormalised values */
@@ -1014,9 +1009,7 @@ void WatchPort (void* parameter) {
 
   mprintf(MCP_STARTUP, "WatchPort(%i) startup\n", port);
 
-  if((tty_fd = bc_setserial(COMM[port])) < 0) {
-    exit(1);
-  }
+  tty_fd = bc_setserial(COMM[port]);
 
   for(;;) {
     /* Loop until data come in */
@@ -1256,7 +1249,7 @@ void InitCommandData() {
 
   CommandData.ISCState.shutdown = 0;
 
-#ifndef BOLOTEST
+#ifndef USE_FIFO_CMD
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
     mprintf(MCP_WARNING, "prev_status: Wanted %i bytes but got %i.\n",
@@ -1318,13 +1311,6 @@ void InitCommandData() {
   SIPData.MKScal.b_med = 0;
   SIPData.MKScal.b_lo = 0;
 
-  SIPData.MKScal.m_hi = 0.01;
-  SIPData.MKScal.m_med = 0.1;
-  SIPData.MKScal.m_lo = 1;
-  SIPData.MKScal.b_hi = 0;
-  SIPData.MKScal.b_med = 0;
-  SIPData.MKScal.b_lo = 0;
-
   CommandData.autogyro = 1;
 
   CommandData.pumps.bal_on = 0.5 * 1648.;
@@ -1363,7 +1349,7 @@ void InitCommandData() {
   CommandData.ISCState.pause = 0;
   CommandData.ISCState.save = 0;
   CommandData.ISCState.autofocus = 0;
-  CommandData.ISCState.focus_pos = 2300;
+  CommandData.ISCState.focus_pos = 0;
   CommandData.ISCState.ap_pos = 495;
   CommandData.ISCState.display_mode = full;
   CommandData.ISCState.azBDA = 0;

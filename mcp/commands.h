@@ -520,7 +520,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /********* ISC Commanding **************/
   {COMMAND(set_focus), "set focus position", GR_ISC_PARAM, 1,
     {
-      {"Focus Position", 0, FOCUS_RANGE, 'i', "ISC_FOCUS"}
+      {"Focus Position", -1000, 1000, 'i', "ISC_FOCUS"}
     }
   },
 

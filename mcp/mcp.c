@@ -18,7 +18,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <math.h>
-#include "bbc.h"
+#include "bbc_pci.h"
 
 #include "tx_struct.h"
 #include "tx.h"
@@ -36,6 +36,7 @@
 
 #ifdef BOLOTEST
 #  define FRAME_MARGIN (-12)
+#  define USE_FIFO_CMD
 #else
 #  define FRAME_MARGIN (-2)
 #endif
@@ -58,6 +59,8 @@ int RxFrameIndex;
 
 short int SamIAm;
 
+unsigned short* slow_data[FAST_PER_SLOW];
+
 extern struct SlowDLStruct SlowDLInfo[N_SLOWDL];
 
 extern pthread_mutex_t mutex;
@@ -72,8 +75,6 @@ void FrameFileWriter(void);
 void InitialiseFrameFile(char);
 void dirFileWriteFrame(unsigned short *RxFrame);
 void pushDiskFrame(unsigned short *RxFrame);
-
-void MakeTxFrame(void);
 
 void InitSched();
 
@@ -301,44 +302,44 @@ void SigPipe(int signal) {
 void GetACS(unsigned short *RxFrame){
   double enc_elev, gyro1, gyro2, gyro3;
   double x_comp, y_comp, bias;
-  static int i_GYRO1 = -1;
-  static int i_GYRO2 = -1;
-  static int i_GYRO3 = -1;
-  static int i_enc_elev = -1;
-  static int i_clin_elev = -1;
-  static int i_mag_x = -1;
-  static int i_mag_y = -1;
-  static int i_mag_bias = -1;
+  static struct BiPhaseStruct* gyro1Addr;
+  static struct BiPhaseStruct* gyro2Addr;
+  static struct BiPhaseStruct* gyro3Addr;
+  static struct BiPhaseStruct* encElevAddr;
+  static struct BiPhaseStruct* clinElevAddr;
+  static struct BiPhaseStruct* magXAddr;
+  static struct BiPhaseStruct* magYAddr;
+  static struct BiPhaseStruct* magBiasAddr;
   unsigned int rx_frame_index = 0;
   int i_ss;
 
-  if (i_enc_elev == -1) {
-    FastChIndex("enc_elev", &i_enc_elev);
-    FastChIndex("clin_elev", &i_clin_elev);
-    FastChIndex("gyro1", &i_GYRO1);
-    FastChIndex("gyro2", &i_GYRO2);
-    FastChIndex("gyro3", &i_GYRO3);
-    FastChIndex("mag_x", &i_mag_x);
-    FastChIndex("mag_y", &i_mag_y);
-    FastChIndex("mag_bias", &i_mag_bias);
+  static int firsttime = 1;
+  if (firsttime) {
+    firsttime = 0;
+    encElevAddr = GetBiPhaseAddr("enc_elev");
+    clinElevAddr = GetBiPhaseAddr("clin_elev");
+    gyro1Addr = GetBiPhaseAddr("gyro1");
+    gyro2Addr = GetBiPhaseAddr("gyro2");
+    gyro3Addr = GetBiPhaseAddr("gyro3");
+    magXAddr = GetBiPhaseAddr("mag_x");
+    magYAddr = GetBiPhaseAddr("mag_y");
+    magBiasAddr = GetBiPhaseAddr("mag_bias");
   }
 
   rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
       (RxFrame[2] & 0x0000ffff) << 16);
 
-  if ((enc_elev = ((double)RxFrame[i_enc_elev] * (-360.0 / 65536.0)
+  if ((enc_elev = ((double)RxFrame[encElevAddr->channel] * (-360.0 / 65536.0)
           + ENC_ELEV_OFFSET)) > 360)
     enc_elev -= 360;
 
-  gyro1 = (double)(RxFrame[i_GYRO1]-GYRO1_OFFSET)*ADU1_TO_DPS;
-  gyro2 = (double)(RxFrame[i_GYRO2]-GYRO2_OFFSET)*ADU2_TO_DPS;
-  gyro3 = (double)(RxFrame[i_GYRO3]-GYRO3_OFFSET)*ADU3_TO_DPS;
+  gyro1 = (double)(RxFrame[gyro1Addr->channel]-GYRO1_OFFSET) * ADU1_TO_DPS;
+  gyro2 = (double)(RxFrame[gyro2Addr->channel]-GYRO2_OFFSET) * ADU2_TO_DPS;
+  gyro3 = (double)(RxFrame[gyro3Addr->channel]-GYRO3_OFFSET) * ADU3_TO_DPS;
 
-  bias = (double)(RxFrame[i_mag_bias]);
-  //x_comp = (double)(RxFrame[i_mag_x]) - (26303.0+16881.0)/2.0;
-  //y_comp = (double)(RxFrame[i_mag_y]) - (24792.0+15615.0)/2.0;
-  x_comp = (double)(RxFrame[i_mag_x]);
-  y_comp = (double)(RxFrame[i_mag_y]);
+  bias = (double)(RxFrame[magBiasAddr->channel]);
+  x_comp = (double)(RxFrame[magXAddr->channel]);
+  y_comp = (double)(RxFrame[magYAddr->channel]);
 
   i_ss = ss_index;
 
@@ -351,7 +352,7 @@ void GetACS(unsigned short *RxFrame){
   ACSData.mag_x = x_comp;
   ACSData.mag_y = y_comp;
 
-  ACSData.clin_elev = (double)RxFrame[i_clin_elev];
+  ACSData.clin_elev = (double)RxFrame[clinElevAddr->channel];
 
 }
 
@@ -455,6 +456,7 @@ void SunSensor(void) {
   }
 }
 
+#if 0
 void FillSlowDL(unsigned short *RxFrame) {
   static char firsttime = 1;
   int i, j, k;
@@ -515,75 +517,48 @@ void FillSlowDL(unsigned short *RxFrame) {
   }
   pthread_mutex_unlock(&mutex);
 }
+#endif
 
+/* fill_Rx_frame: places one 32 bit word into the RxFrame. Returns true on
+ * success */
 int fill_Rx_frame(unsigned int in_data,
-    unsigned int *TxFrame,
-    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW],
     unsigned short *RxFrame) {
-  static int i = 0;
-  static int n_not_found=0;
-  int start, done = 0;
-  int j;
+  static int n_not_found = 0;
+  struct BiPhaseStruct BiPhaseData;
 
-  if (in_data == 0xffffffff) {
-    return (0);
+  if (in_data == 0xffffffff)
+    return 1;
+
+  /* discard ADC sync words */
+  if (in_data & BBC_ADC_SYNC)
+    return 1;
+
+  /* words with no write flag are ignored, don't process them */ 
+  if (~in_data & BBC_WRITE)
+    return 1;
+
+  /* BBC reverse address lookup */
+  BiPhaseData = BiPhaseLookup[BI0_MAGIC(in_data)];
+
+  /* Return error if the lookup failed */
+  if (BiPhaseData.index == -1) {
+    if (++n_not_found > 2)
+      return 0;
+    else
+      return 1;
   }
 
-  start = i;
-
-  do {
-    if ((i < 4 + N_SLOW) && (i >= 4)) {
-
-      /*      if ((GET_NODE(in_data)==1) && (GET_CH(in_data)==56)) {
-              printf("%d %08x %08x r: %d w: %d node: %2d ch: %2d\n", i,
-              TxFrame[i], in_data,
-              GET_READ(in_data), GET_STORE(in_data),
-              GET_NODE(in_data),
-              GET_CH(in_data));
-              } */
-
-      for (j = 0; j < FAST_PER_SLOW; j++) {
-        if ((in_data & 0x3fff0000) == (slowTxFields[i - 4][j] & 0x3fff0000)) {
-          RxFrame[i] = (unsigned short)(in_data & 0xffff);
-          done = 1;
-        }
-      }
-      if (!done) {
-        if ((in_data & (BBC_ADC_SYNC | 0xffff))==(BBC_ADC_SYNC | 0xa5a3)) {
-          done = 1;
-        }
-      }
-    } else {
-      if ((in_data & 0x3fff0000) == (TxFrame[i] & 0x3fff0000)) {
-        RxFrame[i] = (unsigned short)(in_data & 0xffff);
-        done = 1;
-      }
-    }
-
-    i++;
-
-    if (i >= FRAME_WORDS)
-      i = 0;
-
-    if (i == start) {
-      //if (n_not_found==0) {
-      //  printf("%d %08x %08x r: %d w: %d node: %2d ch: %2d\n", start,
-      //     TxFrame[start], in_data,
-      //     GET_READ(in_data), GET_STORE(in_data),
-      //     GET_NODE(in_data),
-      //     GET_CH(in_data));
-      //}
-
-      n_not_found++;
-      if (n_not_found>2) {
-        return(0);
-      } else {
-        return(1);
-      }
-    }
-  } while(!done);
-
   n_not_found = 0;
+
+  /* Discard words we're not saving */
+  if (BiPhaseData.index == DISCARD_WORD)
+    return 1;
+
+  /* Write the data to the local buffers */
+  if (BiPhaseData.index == NOT_MULTIPLEXED)
+    RxFrame[BiPhaseData.channel] = BBC_DATA(in_data);
+  else
+    slow_data[BiPhaseData.index][BiPhaseData.channel] = BBC_DATA(in_data);
 
   return(1);
 }
@@ -604,27 +579,27 @@ void WatchDog (void) {
 }
 
 void write_to_biphase(unsigned short *RxFrame) {
-  static unsigned short sync = 0xeb90;
-  /* static unsigned short nothing = 0x00; */
   int i;
-  static unsigned short nothing[1024];
+  static unsigned short nothing[BI0_FRAME_SIZE];
 
   if (bi0_fp == -2) {
-    bi0_fp = open("/dev/bi0", O_RDWR);
+    bi0_fp = open("/dev/bi0_pci", O_RDWR);
     if (bi0_fp == -1)
       merror(MCP_TFATAL, "Error opening biphase device");
 
     for (i = 0; i < 1024; i++)
-      nothing[i] = 0xeeee;
+      nothing[i] = 0xEEEE;
   }
 
   if (bi0_fp >= 0) {
-    /* Write the sync word */
-    if (write(bi0_fp, &sync, 2) < 0)
-      merror(MCP_ERROR, "bi-phase write (sync) failed");
-    if (write(bi0_fp, RxFrame + 1, 2 * (FRAME_WORDS - 1)) < 0)
+    /* In the new scheme, the biphase sync word is already in frame position
+     * one since it's transmitted in the framesync */
+    RxFrame[1] = 0x64E3;
+    if (write(bi0_fp, RxFrame, 4) < 0)
+//    if (write(bi0_fp, RxFrame + 1, 2 * BiPhaseFrameWords) < 0)
       merror(MCP_ERROR, "bi-phase write (RxFrame) failed");
-    if (write(bi0_fp, nothing + FRAME_WORDS, 2 * (624 - FRAME_WORDS)) < 0)
+    if (write(bi0_fp, nothing + BiPhaseFrameWords, 2 * (BI0_FRAME_SIZE -
+            BiPhaseFrameWords)) < 0)
       merror(MCP_ERROR, "bi-phase write (padding) failed");
   }
 }
@@ -635,7 +610,7 @@ void InitBi0Buffer() {
   bi0_buffer.i_in = 10; /* preload the fifo */
   bi0_buffer.i_out = 0;
   for (i = 0; i<BI0_FRAME_BUFLEN; i++) {
-    if ((bi0_buffer.framelist[i] = malloc(FRAME_WORDS *
+    if ((bi0_buffer.framelist[i] = malloc(BiPhaseFrameWords *
             sizeof(unsigned short))) == NULL)
       merror(MCP_FATAL, "Unable to malloc for bi-phase");
   }
@@ -648,7 +623,7 @@ void PushBi0Buffer(unsigned short *RxFrame) {
   if (i_in>=BI0_FRAME_BUFLEN)
     i_in = 0;
 
-  fw = FRAME_WORDS;
+  fw = BiPhaseFrameWords;
 
   for (i = 0; i<fw; i++) {
     bi0_buffer.framelist[i_in][i] = RxFrame[i];
@@ -683,7 +658,24 @@ void BiPhaseWriter(void) {
     bi0_buffer.i_out = i_out;
     usleep(10000);
   }
-} 
+}
+
+/******************************************************************/
+/*                                                                */
+/* IsNewFrame: returns true if d is a begining of frame marker,   */
+/*    unless this is the first beginning of frame.                */
+/*                                                                */
+/******************************************************************/
+int IsNewFrame(unsigned int d) {
+  static int first_bof = 1;
+  int is_bof;
+  is_bof = (d == (BBC_FSYNC | BBC_WRITE | BBC_NODE(63) | BBC_CH(0) | 0xEB90));
+  if (is_bof && first_bof) {
+    is_bof = first_bof = 0;
+  }
+
+  return is_bof;
+}
 
 /* Identity crisis: am I frodo or sam? */
 int AmISam(void) {
@@ -717,29 +709,26 @@ void SegV(int signo) {
 }
 
 int main(int argc, char *argv[]) {
-  int i, j;
-  unsigned int in_data, n_to_read = 0, status;
+  unsigned int in_data, i;
   unsigned short* RxFrame;
-  unsigned int *TxFrame;
-  int last_frames = FRAME_MARGIN, frames;
-  unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW];
-  int n_reset=0;
 
   pthread_t CommandDatacomm1;
   pthread_t disk_id;
   pthread_t sunsensor_id;
   pthread_t watchdog_id;
 
-#ifndef BOLOTEST
+#ifndef USE_FIFO_CMD
   pthread_t CommandDatacomm2;
+#endif
+
+#ifndef BOLOTEST
   pthread_t bi0_id;
-  pthread_t sensors_id;
+//  pthread_t sensors_id;
   pthread_t dgps_id;
   pthread_t isc_id;
 #endif
 
   struct CommandDataStruct CommandData_loc;
-  int nread = 0, last_nread = 0, last_read = 0, df = 0;
 
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
@@ -752,15 +741,16 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
-  if ((bbc_fp = open("/dev/bbc", O_RDWR)) < 0)
-    merror(MCP_FATAL, "Error opening BBC");
-
   if ((logfile = fopen("/data/etc/mcp.log", "a")) == NULL)
     merror(MCP_ERROR, "Can't open log file");
   else
     fputs("----- LOG RESTART -----\n", logfile);
 
   mputs(MCP_STARTUP, "MCP startup");
+
+  if ((bbc_fp = open("/dev/bbcpci", O_RDWR)) < 0)
+    merror(MCP_FATAL, "Error opening BBC");
+
 
   //Initialize the Ephemeris
   ReductionInit();
@@ -769,25 +759,28 @@ int main(int argc, char *argv[]) {
 
   pthread_mutex_init(&mutex, NULL);
 
+  MakeAddressLookups();
+
   /* Watchdog */
   pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
 
-#ifdef BOLOTEST
+#ifdef USE_FIFO_CMD
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, NULL);
 #else
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
+#endif
 
+#ifndef BOLOTEST
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
   pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, NULL);
 
-  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
+//  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
 
   InitBi0Buffer();
-
-  pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
 #endif
+
   InitialiseFrameFile(argv[1][0]);
 
   pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
@@ -798,15 +791,14 @@ int main(int argc, char *argv[]) {
 
   memset(PointingData, 0, 3*sizeof(struct PointingDataStruct));
 
-  mprintf(MCP_INFO, "Tx Frame Bytes: %d.  Allowed: 2220\n", TX_FRAME_SIZE);
-  if (TX_FRAME_SIZE > 2220)
-    merror(MCP_FATAL, "TxFrame too big\n");
-
-  if ((TxFrame = malloc(TX_FRAME_SIZE)) == NULL)
-    merror(MCP_FATAL, "Unable to malloc TxFrame");
-
-  if ((RxFrame = malloc(RX_FRAME_SIZE)) == NULL)
+  /* Allocate the local data buffers */
+  if ((RxFrame = malloc(BiPhaseFrameSize)) == NULL)
     merror(MCP_FATAL, "Unable to malloc RxFrame");
+
+  for (i = 0; i < FAST_PER_SLOW; ++i)
+    if ((slow_data[i] = malloc(slowsPerBi0Frame * sizeof(unsigned short)))
+        == NULL)
+      merror(MCP_FATAL, "Unable to malloc slow data buffer");
 
   /* Find out whether I'm frodo or sam */
   SamIAm = AmISam();
@@ -816,83 +808,49 @@ int main(int argc, char *argv[]) {
   else 
     mputs(MCP_INFO, "I am not Sam.\n");
 
-  MakeTxFrame();
-
-  do_Tx_frame(bbc_fp, TxFrame, slowTxFields, RxFrame, 0);
-
   InitSched();
 
-  last_frames = ioctl(bbc_fp, BBC_IOC_FRAMES) + FRAME_MARGIN + 1;
+  mputs(MCP_INFO, "Finished Initialisation, waiting for BBC to come up.\n");
+
+  while (!ioctl(bbc_fp, BBCPCI_IOC_COMREG));
+
+  mputs(MCP_INFO, "BBC is up.\n");
+
+#ifndef BOLOTEST
+  pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
+#endif
+
+  InitTxFrame();
 
   while (1) {
     pthread_mutex_lock(&mutex);
     CommandData_loc = CommandData;
     pthread_mutex_unlock(&mutex);
-    status = ioctl(bbc_fp, BBC_IOC_STATUS);
 
-    if (!(BBC_TX_NOT_EMPTY(status))) {
-      frames =  ioctl(bbc_fp, BBC_IOC_FRAMES);
-      df = frames-last_frames;
-      close(bbc_fp);
-      bbc_fp = open("/dev/bbc", O_RDWR);
-      if (bbc_fp < 0)
-        merror(MCP_FATAL, "Error opening BBC");
+    if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) < 0)
+      merror(MCP_ERROR, "Error on BBC read");
 
-      frame_num = frames_in;
-      mprintf(MCP_WARNING, "EMPTY %d %d %d\n", df, frames, frame_num);
-      last_frames = FRAME_MARGIN;
-    }
+    if (!fill_Rx_frame(in_data, RxFrame))
+      mputs(MCP_ERROR, "Unrecognised word received from BBC");
 
-    frames =  ioctl(bbc_fp, BBC_IOC_FRAMES);
-    df = frames-last_frames;
-    for ( j = last_frames; j < frames; j++ ) {
-      do_Tx_frame(bbc_fp, TxFrame, slowTxFields, RxFrame, 0);
-    }
-    last_frames = frames;
-
-    n_to_read = ioctl(bbc_fp, BBC_IOC_RX_SW_COUNT);
-    for (i = 0; i < n_to_read; i++) {
-      if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) < 0) {
-        merror(MCP_ERROR, "Error on BBC read");
-      }
-
-      nread++;
-      if (nread == last_nread)
-        last_read = in_data;
-      if (!fill_Rx_frame(in_data, TxFrame, slowTxFields, RxFrame)) {
-        close(bbc_fp);
-        bbc_fp = open("/dev/bbc", O_RDWR);
-        if (bbc_fp < 0)
-          merror(MCP_FATAL, "Error opening BBC");
-
-        frame_num = frames_in;
-        do_Tx_frame(bbc_fp, TxFrame, slowTxFields, RxFrame, 0);
-        last_frames = FRAME_MARGIN + 1;
-        n_reset++;
-        mprintf(MCP_WARNING, "RESET (%.4f %% cumulative loss)\n",
-            100.0*(double)n_reset/((double)frame_num));
-        break;
-      }
-
-      if (IsNewFrame(in_data)) {
-        frames_in++;
+    if (IsNewFrame(in_data)) {
+      frames_in++;
 #ifndef BOLOTEST
-        GetACS(RxFrame);
-        Pointing();
+      GetACS(RxFrame);
+      Pointing();
 #endif
 
-        RxFrameIndex = RxFrame[3];
+      RxFrameIndex = RxFrame[3];
+      UpdateBBCFrame(RxFrame);
 
 #ifndef BOLOTEST
-        PushBi0Buffer(RxFrame);
+      PushBi0Buffer(RxFrame);
 #endif
-        //FillSlowDL(RxFrame);
-        pushDiskFrame(RxFrame);
-        zero(RxFrame);
-
-        last_nread = nread;
-        nread = 0;
-      }
+#if 0
+      FillSlowDL(RxFrame);
+#endif
+      pushDiskFrame(RxFrame);
+      zero(RxFrame);
     }
 
     if (sigPipeRaised) {
@@ -900,7 +858,6 @@ int main(int argc, char *argv[]) {
       pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
       sigPipeRaised = 0;
     }
-    usleep(10000);
   }
   /* atexit(bc_close); */
   return(0);
