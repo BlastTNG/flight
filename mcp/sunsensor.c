@@ -12,7 +12,7 @@
 #include "pointing_struct.h"
 #include "mcp.h"
 
-#define ARIEN "192.168.62.99"
+#define ARIEN "192.168.62.7"
 #define ARIEN_PORT 8645
 
 ss_packet_data SunSensorData[3];
@@ -52,7 +52,6 @@ void SunSensor(void) {
       if (close(sock) == -1)
         merror(MCP_ERROR, "SunSensor close()");
 
-
     /* create an empty socket connection */
     sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock == -1)
@@ -75,11 +74,8 @@ void SunSensor(void) {
 
     mputs(MCP_INFO, "Connected to Arien\n");
     sigPipeRaised = n = 0;
-    //lastIndex = RxFrameIndex;
+
     while (n != -1) {
-      //curIndex = RxFrameIndex;
-      //if (curIndex > lastIndex) {
-      //lastIndex = curIndex;
       usleep(10000);
 
       FD_ZERO(&fdr);
@@ -101,24 +97,19 @@ void SunSensor(void) {
 
       if (FD_ISSET(sock, &fdr)) {
         n = recv(sock, &Rx_Data, sizeof(Rx_Data), MSG_DONTWAIT);
-
         if (n == sizeof(Rx_Data)) {
-
-	    SunSensorData[ss_index] = Rx_Data;
-
-            ss_index = INC_INDEX(ss_index);
+          SunSensorData[ss_index] = Rx_Data;
+          ss_index = INC_INDEX(ss_index);
         } else if (n == -1) {
-            merror(MCP_ERROR, "SunSensor recv()");
+          merror(MCP_ERROR, "SunSensor recv()");
         } else {
-            mputs(MCP_ERROR, "Didn't receive all data from Sun Sensor.\n");
+          mputs(MCP_ERROR, "Didn't receive all data from Sun Sensor.\n");
         }
-
       } else {
-
-	mputs(MCP_WARNING, "Connection to Arien timed out.\n");
+        mputs(MCP_WARNING, "Connection to Arien timed out.\n");
         n = -1;
       }
     }
+    }
   }
-}
 
