@@ -1031,8 +1031,7 @@ void SetTrimToSC(which) {
   int i_point;
 
   i_point = GETREADINDEX(point_index);
-
-  if (which == 1) {
+  if (which == 0) {    
     NewAzEl.az = PointingData[i_point].isc_az;
     NewAzEl.el = PointingData[i_point].isc_el;
   } else {

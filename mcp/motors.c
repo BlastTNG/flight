@@ -756,7 +756,7 @@ void DoNewCapMode() {
       (CommandData.pointing_mode.Y != last_Y) ||
       (CommandData.pointing_mode.w != last_w)) {
     if ( (fabs(az - (caz)) < 0.1) &&
-	 (fabs(el - (bottom)) < CommandData.pointing_mode.del/2)) {
+	 (fabs(el - (bottom)) < 0.05)) {
       last_X = CommandData.pointing_mode.X;
       last_Y = CommandData.pointing_mode.Y;
       last_w = CommandData.pointing_mode.w;
@@ -932,7 +932,7 @@ void DoNewBoxMode() {
       (CommandData.pointing_mode.w != last_w) ||
       (CommandData.pointing_mode.h != last_h)) {
     if ( (fabs(az - left) < 0.1) &&
-	 (fabs(el - bottom) < CommandData.pointing_mode.del)) {
+	 (fabs(el - bottom) < 0.05)) {
       last_X = CommandData.pointing_mode.X;
       last_Y = CommandData.pointing_mode.Y;
       last_w = CommandData.pointing_mode.w;
@@ -1087,7 +1087,7 @@ void DoQuadMode() { // aka radbox
 
   if (new) {
     if ( (fabs(az - c_az[i_bot]) < 0.1) &&
-	 (fabs(el - c_el[i_bot]) < CommandData.pointing_mode.del)) {
+	 (fabs(el - c_el[i_bot]) < 0.05)) {
       for (i=0; i<4; i++) {
 	last_ra[i] = CommandData.pointing_mode.ra[i];
 	last_dec[i] = CommandData.pointing_mode.dec[i];

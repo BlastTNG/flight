@@ -157,7 +157,7 @@ void WatchDGPS() {
   fprintf(fp,"$PASHS,SPD,A,4\r\n"); // 4800 baud Pg66
   fprintf(fp,"$PASHS,NME,ALL,A,OFF\r\n"); // turn off all messages
   fprintf(fp,"$PASHS,NME,GLL,A,ON\r\n"); // turn on GLL Pg89
-  //fprintf(fp,"$PASHS,NME,PER,1\r\n"); // NEMA period = 1s
+  fprintf(fp,"$PASHS,NME,PER,1\r\n"); // NEMA period = 1s
   
   //fprintf(fp,"$PASHS,RST\r\n");  // reset to defaults
   //sleep(10);
@@ -181,7 +181,7 @@ void WatchDGPS() {
   fprintf(fp,"$PASHS,3DF,FLT,N\r\n"); // no averaging filter
   fprintf(fp,"$PASHS,3DF,ANG,3\r\n"); // max array tilt p 73
   fprintf(fp,"$PASHS,NME,ALL,B,OFF\r\n"); // turn off all messages on B
-  fprintf(fp,"$PASHS,NME,PER,0\r\n");  	  // set to 2Hz messages
+  //fprintf(fp,"$PASHS,NME,PER,0\r\n");  	  // set to 2Hz messages
   fprintf(fp,"$PASHS,POS,0\r\n");
   fprintf(fp,"$PASHS,NME,ZDA,B,ON\r\n");  // turn on time message P109
   fprintf(fp,"$PASHS,NME,PAT,B,ON\r\n");   // turn on attitude/position P98
