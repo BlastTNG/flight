@@ -57,7 +57,6 @@ struct rc_struct {
   char* dest_dir;
   char* spec_file;
 
-  struct timeval start;
   struct timezone tz;
   char* chunk;
   char* dirfile;
@@ -70,6 +69,8 @@ struct ri_struct {
   int old_total;
   int reader_done;
 
+  struct timeval last;
+  int lw;
   int wrote;
   int dirfile_init;
   int writer_done;

@@ -892,7 +892,7 @@ void DirFileWriter(void)
         wrote_count = 0;
         ri.read = ri.wrote = ri.old_total = 0;
         InitialiseDirFile(1, 0);
-        gettimeofday(&rc.start, &rc.tz);
+        gettimeofday(&ri.last, &rc.tz);
         last_pass = 0;
       }
     }

@@ -47,6 +47,8 @@
 
 #define SUFF_MAX sizeof(chunkindex_t)
 
+#define TC  (10.)  /* characteristic time (in seconds) */
+
 /* defaults */
 #define CONFIG_FILE ETC_DIR "/defile.conf"
 #define CUR_FILE "/data/etc/defile.cur"
@@ -870,8 +872,9 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
 int main (int argc, char** argv)
 {
   struct timeval now;
-  long long int delta;
+  double delta;
   double fr = 0;
+  double nf = 0;
   FILE* stream;
   const char* herr = NULL;
 
@@ -966,10 +969,10 @@ int main (int argc, char** argv)
   bprintf(info, "\n");
 
   /* Initialise things */
-  ri.read = ri.wrote = ri.old_total = 0;
+  ri.read = ri.wrote = ri.old_total = ri.lw = 0;
   ri.tty = 0;
   delta = 1;
-  gettimeofday(&rc.start, &rc.tz);
+  gettimeofday(&ri.last, &rc.tz);
   PreInitialiseDirFile();
   InitialiseDirFile(1, rc.quenya ? rc.resume_at : 0);
 
@@ -995,17 +998,20 @@ int main (int argc, char** argv)
     do {
       if (!ri.tty) {
         gettimeofday(&now, &rc.tz);
-        delta = (now.tv_sec - rc.start.tv_sec) * 1000000LL - rc.start.tv_usec
-          + now.tv_usec;
-        fr = 1000. * ri.wrote / delta;
-      if (rc.quenya)
-          printf("R:[%i] W:[%i] %.*f kHz\r", ri.read, ri.wrote,
-              (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
+        delta = (now.tv_sec - ri.last.tv_sec) + (now.tv_usec - ri.last.tv_usec)
+          / 1000000.;
+        nf = (ri.wrote - ri.lw) / 1000.;
+        ri.last = now;
+        ri.lw = ri.wrote;
+        fr = delta / TC * nf + (1 - delta / TC) * fr;
+        if (rc.quenya)
+          printf("R:[%i] W:[%i] %.*f kHz\r", ri.read, ri.wrote, 
+              (fr / delta > 100) ? 1 : (fr / delta > 10) ? 2 : 3, fr / delta);
         else 
           printf("R:[%i of %i] W:[%i] %.*f kHz\r", ri.read, ri.old_total
-              + ri.chunk_total, ri.wrote, (fr > 100) ? 1 : (fr > 10) ? 2 : 3,
-              fr);
-      fflush(stdout);
+              + ri.chunk_total, ri.wrote, (fr / delta > 100) ? 1 : (fr / delta
+                > 10) ? 2 : 3, fr / delta);
+        fflush(stdout);
       }
       usleep(100000);
     } while (!ri.writer_done);
@@ -1014,10 +1020,11 @@ int main (int argc, char** argv)
   if (!rc.silent) {
     if (rc.quenya)
       bprintf(info, "R:[%i] W:[%i] %.*f kHz", ri.read, ri.wrote,
-          (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
+          (fr / delta > 100) ? 1 : (fr / delta > 10) ? 2 : 3, fr / delta);
     else
-      bprintf(info, "R:[%i of %i] W:[%i] %.*f kHz", ri.read, ri.old_total +
-          ri.chunk_total, ri.wrote, (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
+      bprintf(info, "R:[%i of %i] W:[%i] %.*f kHz", ri.read, ri.old_total
+          + ri.chunk_total, ri.wrote, (fr / delta > 100) ? 1 : (fr / delta
+            > 10) ? 2 : 3, fr / delta);
   }
   return 0;
 }
