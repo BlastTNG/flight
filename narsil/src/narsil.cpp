@@ -126,6 +126,10 @@ void MainForm::ChangeCommandList() {
   for (i = 0; i < GroupMIndexes(GetGroup(), indexes); i++)
     NCommandList->insertItem(tr(mcommands[indexes[i]].name));
 
+  if (strcmp(GroupNames[GetGroup()], "Miscellaneous") == 0) {
+    NCommandList->insertItem(tr("abort_failure"));
+  }
+
   ChooseCommand();
 }
 
@@ -161,7 +165,18 @@ void MainForm::ChooseCommand() {
     }
   } else {
     NSendButton->setEnabled(true);
-    if ((index = SIndex(NCommandList->text(NCommandList->currentItem())))
+    if (strcmp(NCommandList->text(NCommandList->currentItem()), "abort_failure")
+        == 0) {
+      NAboutLabel->setText("abort a current failure mode");
+      lastmcmd = -1;
+      NParamLabels[0]->setText("Failure mode");
+      NParamLabels[0]->show();
+      NParamFields[0]->show();
+      for (i = 1; i < MAX_N_PARAMS; i++) {
+        NParamLabels[i]->hide();
+        NParamFields[i]->hide();
+      }
+    } else if ((index = SIndex(NCommandList->text(NCommandList->currentItem())))
         != -1) {
       // Set up for a single command
       NAboutLabel->setText(scommands[index].about);
@@ -502,7 +517,16 @@ void MainForm::SendCommand() {
     strcpy(args[i++], NCommandList->text(NCommandList->currentItem()));
 
     // Parameters
-    if ((index = MIndex(NCommandList->text(NCommandList->currentItem())))
+    if (strcmp(NCommandList->text(NCommandList->currentItem()), "abort_failure")
+        == 0) {
+      sprintf(errorbuffer, "Error: Unable to abort failure mode: %s", 
+          NParamFields[0]->text().ascii());
+      params[1] = errorbuffer;
+      params[2] = 0;
+      WriteLog(NLog, params);
+      WriteLog(NLog, 10);
+      return;
+    } else if ((index = MIndex(NCommandList->text(NCommandList->currentItem())))
         != -1) {
       for (j = 0; j < mcommands[index].numparams; j++) {
         NParamFields[j]->RecordDefaults();
@@ -685,6 +709,9 @@ void MainForm::WriteLog(QMultiLineEdit *dest, int retstatus) {
       break;
     case 9:
       strcpy(txt, "  COMMAND NOT SENT: Narsil error: Parameter out of range.\n\n");
+      break;
+    case 10:
+      strcpy(txt, "  COMMAND NOT SENT: Narsil error: Unable to abort failure mode.\n\n");
       break;
   }
 
