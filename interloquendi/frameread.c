@@ -145,13 +145,13 @@ long int SetStartChunk(long int framenum, char* chunk, int sufflen)
   int chunk_total;
   int new_chunk;
   struct stat chunk_stat;
-  char gpb[GPB_LEN];
 
   /* Loop until we get to the right chunk */
   for (;;) {
     /* Stat the current chunk file to get its size */
     if (stat(chunk, &chunk_stat)) {
 #ifdef __DEFILE__
+      char gpb[GPB_LEN];
       snprintf(gpb, GPB_LEN, "defile: cannot stat `%s'", chunk);
       perror(gpb);
 #else
