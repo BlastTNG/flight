@@ -93,6 +93,7 @@ sub SendSig {
     my ($untainted_pid) = $pid =~ /([0-9]*)/;
     if ($untainted_pid > 100) {
       kill $signo, $untainted_pid;
+      print "sent signal $signo to PID $untainted_pid\n";
     } else {
       die "the decomd pid appears to be wrong (PID = $untainted_pid)\n";
     }
