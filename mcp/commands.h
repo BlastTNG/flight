@@ -166,7 +166,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {"az_goto", "goto azimuth", GR_POINT, 1,
     {
-      {"azimuth (deg)", 0, 360, 'f', 4, "MAG_AZ"}
+      {"azimuth (deg)", 0, 360, 'f', 4, "AZ"}
     }
   },
 
@@ -178,7 +178,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {"el_goto", "goto elevation", GR_POINT, 1,
     {
-      {"elevation (deg)", 10, 90, 'f', 4, "ENC_ELEV"}
+      {"elevation (deg)", 10, 90, 'f', 4, "EL"}
     }
   },
 
@@ -237,7 +237,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {"pwm", "balance pump pwm level", GR_BAL, 1,
     {
-      {"level", 0, 2047, 'i', 0, "ADD"}
+      {"level", 0, 2047, 'i', 0, "balpump_lev"}
     }
   },
 
@@ -245,19 +245,19 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /********** Cooling System  ************/
   {"spare_pwm", "spare pump pwm level", GR_COOL, 1,
     {
-      {"level", 0, 2047, 'i', 0, "ADD"}
+      {"level", 0, 2047, 'i', 0, "sprpump_lev"}
     }
   },
 
   {"inner_pwm", "inner frame cooling pump speed", GR_COOL, 1,
     {
-      {"level", 0, 2047, 'i', 0, "ADD"}
+      {"level", 0, 2047, 'i', 0, "inpump_lev"}
     }
   },
 
   {"outer_pwm", "outer frame cooling pump speed", GR_COOL, 1,
     {
-      {"level", 0, 2047, 'i', 0, "ADD"}
+      {"level", 0, 2047, 'i', 0, "outpump_lev"}
     }
   },
 
@@ -309,19 +309,19 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /*************** Bias  *****************/
   {"bias1_level", "bias 1 level", GR_BIAS, 1,
     {
-      {"level", 0, 15, 'i', 0, "ADD"}
+      {"level", 0, 15, 'i', 0, "bias_lev1"}
     }
   },
 
   {"bias2_level", "bias 2 level", GR_BIAS, 1,
     {
-      {"level", 0, 15, 'i', 0, "ADD"}
+      {"level", 0, 15, 'i', 0, "bias_lev2"}
     }
   },
 
   {"bias3_level", "bias 3 level", GR_BIAS, 1,
     {
-      {"level", 0, 15, 'i', 0, "ADD"}
+      {"level", 0, 15, 'i', 0, "bias_lev3"}
     }
   },
 
