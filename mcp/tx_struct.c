@@ -305,7 +305,7 @@ struct ChannelStruct SlowChannels[] = {
   {"p_vaz",        'w', LOOP1, 62,              I2VEL,             0.0, 'u'},
   {"p_del",        'w', LOOP1, 63,              I2VEL,             0.0, 'u'},
 
-  {"isc_rd_sigma", 'w', LOOP2,  0,              I2DEG,             0.0, 'u'},
+  {"isc_rd_sigma", 'w', LOOP2,  0,                1.0,             0.0, 'u'},
   {"bal_gain",     'w', LOOP2,  1,            1/1000.,             0.0, 'u'},
   {"isc_blob00_s", 'w', LOOP2,  2,       1000./65536.,             0.0, 'u'},
   {"isc_blob01_s", 'w', LOOP2,  3,       1000./65536.,             0.0, 'u'},
@@ -414,7 +414,7 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_mdist",    'w', LOOP3, 50,                1.0,             0.0, 'u'},
   {"osc_nblobs",   'w', LOOP3, 51,                1.0,             0.0, 'u'},
   {"osc_rtol",     'w', LOOP3, 52,              I2DEG,             0.0, 'u'},
-  {"osc_rd_sigma", 'w', LOOP3, 53,              I2DEG,             0.0, 'u'},
+  {"osc_rd_sigma", 'w', LOOP3, 53,                1.0,             0.0, 'u'},
   {"osc_spulse",   'w', LOOP3, 54,               10.0,             0.0, 'u'},
   {"osc_hx_flag",  'w', LOOP3, 55,                1.0,             0.0, 'u'},
   {"osc_brra",     'w', LOOP3, 56,              I2DEG,             0.0, 'u'},
