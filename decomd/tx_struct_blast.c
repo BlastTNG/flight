@@ -18,7 +18,6 @@
 #define ACS0   0, 0
 #define ACS1   1, 0
 #define ACS2   2, 0
-#define ACS27H 0x27, 0
 #define CRYO   3, 1
 #define BIAS   4, 1
 #define DAS5   5, 1
@@ -201,11 +200,6 @@ struct ChannelStruct SlowChannels[] = {
   {"t_optbox_filt",'r',  CRYO, 47,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'},
   {"cryoin",       'r',  CRYO, 60,                 1.0,             0.0, 'u'},
   {"status03",     'r',  CRYO, 57,                 1.0,             0.0, 'u'},
-// cryo control debug
-  {"t_cur",	   'r',  CRYO, 53,                 1.0,             0.0, 's'},
-  {"t_set",	   'r',  CRYO, 54,                 1.0,             0.0, 's'},
-  {"pwm_err",	   'r',  CRYO, 55,                 1.0,             0.0, 's'},
-// end debug
   {"cryoout2",     'w',  CRYO,  1,                 1.0,             0.0, 'u'},
   {"cryoout3",     'w',  CRYO,  2,             1.0,                 0.0, 'u'},
   {"bdapwm",       'w',  CRYO,  3,          100./2047.,              0., 'u'},
@@ -474,10 +468,6 @@ struct ChannelStruct WideFastChannels[] = {
   {"raw_gy3",     'r',  ACS1, 24,  ADU3_TO_DPS, -GYRO3_OFFSET*ADU3_TO_DPS, 'U'},
   {"raw_gy1",     'r',  ACS1, 26,  ADU1_TO_DPS, -GYRO1_OFFSET*ADU1_TO_DPS, 'U'},
   {"raw_gy6",     'r',  ACS1, 36,         60.0E-6,                    0.0, 'U'},
-  {"int_gy4",     'r',  ACS27H,4,         60.0E-9,                    0.0, 'S'},
-  {"int_gy5",     'r',  ACS27H,34,        60.0E-9,                    0.0, 'S'},
-  {"int_gy6",     'r',  ACS27H,40,        60.0E-9,                    0.0, 'S'},
-  {"pwmout",	   'r',  CRYO, 51,                 1.0,             0.0, 'S'},
 #endif
 
   /* BIAS Amplitude */
@@ -486,6 +476,7 @@ struct ChannelStruct WideFastChannels[] = {
   {"b_amp3",      'r',  BIAS, 38,             1.0,                    0.0, 'U'},
 
   /* Bolometer Bias References */
+
   {"n3ref",       'r',  CRYO, 48,      0.00390625,             -8388608.0, 'U'},
   {"n5ref",       'r',  DAS5, 36,      1.19209e-7,                    0.0, 'U'},
   {"n6ref",       'r',  DAS6, 36,      1.19209e-7,                    0.0, 'U'},
@@ -499,6 +490,12 @@ struct ChannelStruct WideFastChannels[] = {
   {"n14ref",      'r', DAS14, 36,      1.19209e-7,                    0.0, 'U'},
   {"n15ref",      'r', DAS15, 36,      1.23301e-7,                    0.0, 'U'},
   {"n16ref",      'r', DAS16, 36,      1.19209e-7,                    0.0, 'U'},
+
+// cryo control debug
+  {"pwmout",	  'r',  CRYO, 51,             1.0,                    0.0, 'S'},
+  {"pwmint",	  'r',  CRYO, 58,             1.0,                    0.0, 'S'},
+// end cryo control debug
+
   END_OF_CHANNELS
 };
 
@@ -539,10 +536,12 @@ struct ChannelStruct FastChannels[] = {
   {"osc_trigger", 'w',  ACS0, 32,             1.0,                    0.0, 'u'},
 #endif
 
+// cryo control debug
+  {"t_cur",	   'r',  CRYO, 53,                 1.0,             0.0, 's'},
+  {"t_set",	   'r',  CRYO, 54,                 1.0,             0.0, 's'},
+  {"pwm_err",	   'r',  CRYO, 55,                 1.0,             0.0, 's'},
+// end debug
   /* read channels from ACS1 */
-  {"gyro4",       'r',  ACS27H, 36,  1.0/1648,   -32768.0/1648, 'u'},
-  {"gyro5",       'r',  ACS27H,  6,  -0.00625,          136.45, 'u'},
-  {"gyro6",       'r',  ACS27H,  2,  1.0,             0.0, 'u'},
   {"gyro2",       'r',  ACS1, 50,  ADU2_TO_DPS, -GYRO2_OFFSET*ADU2_TO_DPS, 'u'},
   {"gyro3",       'r',  ACS1, 56,  ADU3_TO_DPS, -GYRO3_OFFSET*ADU3_TO_DPS, 'u'},
   {"gyro1",       'r',  ACS1, 59,  ADU1_TO_DPS, -GYRO1_OFFSET*ADU1_TO_DPS, 'u'},
