@@ -220,6 +220,31 @@ int SIndex(char *cmd) {
   return -1;
 }
 
+/*** set fields unused in current mode to zero ***/
+void ClearPointingModeExtraFields() {
+  if ((CommandData.pointing_mode.az_mode != POINT_RASTER) &&
+      (CommandData.pointing_mode.el_mode != POINT_RASTER)) {
+    CommandData.pointing_mode.ra = CommandData.pointing_mode.dec =
+     CommandData.pointing_mode.r = 0.0;
+  }
+
+  if (CommandData.pointing_mode.az_mode == POINT_VEL) {
+    CommandData.pointing_mode.az1 = CommandData.pointing_mode.az2 = 0.0;
+  }
+
+  if (CommandData.pointing_mode.az_mode == POINT_POINT) {
+    CommandData.pointing_mode.az2 = CommandData.pointing_mode.az_vel = 0;
+  }
+  
+  if (CommandData.pointing_mode.el_mode == POINT_VEL) {
+    CommandData.pointing_mode.el1 = CommandData.pointing_mode.el2 = 0.0;
+  }
+
+  if (CommandData.pointing_mode.el_mode == POINT_POINT) {
+    CommandData.pointing_mode.el2 = CommandData.pointing_mode.el_vel = 0.0;
+  }
+}
+
 void SingleCommand (int command) {
 
   printf("Single command %d: %s\n", command, scommands[command].name);
@@ -231,6 +256,7 @@ void SingleCommand (int command) {
     CommandData.pointing_mode.az_mode = POINT_VEL;
     CommandData.pointing_mode.az_vel = 0.0;
     CommandData.pointing_mode.el_vel = 0.0;
+    ClearPointingModeExtraFields();
     CommandData.axes_mode.az_mode = AXIS_VEL; // DELME
     CommandData.axes_mode.el_mode = AXIS_VEL; // DELME
     CommandData.axes_mode.az_vel = 0.0; // DELME
@@ -428,11 +454,18 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pointing_mode.r = rvalues[2];
     CommandData.pointing_mode.az_vel = rvalues[3];
     CommandData.pointing_mode.el_vel = rvalues[4];
+    CommandData.pointing_mode.az1 = 0.0;
+    CommandData.pointing_mode.az2 = 0.0;
+    CommandData.pointing_mode.el1 = 0.0;
+    CommandData.pointing_mode.el2 = 0.0;    
   } else if (command == MIndex("az_scan")) {  /* scan in azimuth */
     CommandData.pointing_mode.az_mode = POINT_SCAN;
     CommandData.pointing_mode.az1 = rvalues[0]-rvalues[1]/2.0;
     CommandData.pointing_mode.az2 = rvalues[0]+rvalues[1]/2.0;
     CommandData.pointing_mode.az_vel = rvalues[2];
+    CommandData.pointing_mode.ra = 0.0;
+    CommandData.pointing_mode.dec = 0.0;
+    CommandData.pointing_mode.r = 0.0;
   } else if (command == MIndex("az_goto")) {  /* point in azimuth */
     CommandData.pointing_mode.az_mode = POINT_POINT;
     CommandData.pointing_mode.az1 = rvalues[0];
@@ -559,6 +592,8 @@ void MultiCommand (int command, unsigned short *dataq) {
   } else if (command == MIndex("spare_heat")) {
     CommandData.Cryo.sparePwm = rvalues[0] * 2047./100.;
   }
+
+  ClearPointingModeExtraFields();
   
   WritePrevStatus();
 }

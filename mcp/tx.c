@@ -1051,11 +1051,20 @@ void StoreData(unsigned int* Txframe,
   static int i_V_ROW = -1, j_V_ROW = -1;
   static int i_V_MAG = -1, j_V_MAG = -1;
   static int i_V_FRA = -1, j_V_FRA = -1;
-  static int arsCh = -1, arsInd, ersCh, ersInd, prinCh, prinInd;
+  static int i_AZ_REL_SUN = -1, j_AZ_REL_SUN, i_EL_REL_SUN, j_EL_REL_SUN;
+  static int i_SS_PRIN, j_SS_PRIN;
   static int i_SIP_LAT, i_SIP_LON, i_SIP_ALT, i_SIP_TIME;
   static int j_SIP_LAT, j_SIP_LON, j_SIP_ALT, j_SIP_TIME;
   static int i_LAT, i_LON;
   static int j_LAT, j_LON;
+
+  /** pointing mode indexes **/
+  static int i_AZ_MODE, j_AZ_MODE, i_EL_MODE, j_EL_MODE;
+  static int i_AZ1, j_AZ1, i_AZ2, j_AZ2;
+  static int i_EL1, j_EL1, i_EL2, j_EL2;
+  static int i_AZ_VEL, j_AZ_VEL, i_EL_VEL, j_EL_VEL;
+  static int i_RA, j_RA, i_DEC, j_DEC, i_R, j_R;
+  
   time_t t;
 
   static int i_az = -1, i_el = -1;
@@ -1072,15 +1081,27 @@ void StoreData(unsigned int* Txframe,
     SlowChIndex("vsc_row", &i_V_ROW, &j_V_ROW);
     SlowChIndex("vsc_mag", &i_V_MAG, &j_V_MAG);
     SlowChIndex("vsc_fra", &i_V_FRA, &j_V_FRA);
-    SlowChIndex("az_rel_sun", &arsCh, &arsInd);
-    SlowChIndex("el_rel_sun", &ersCh, &ersInd);
-    SlowChIndex("ss_prin", &prinCh, &prinInd);
+    SlowChIndex("az_rel_sun", &i_AZ_REL_SUN, &j_AZ_REL_SUN);
+    SlowChIndex("el_rel_sun", &i_EL_REL_SUN, &j_EL_REL_SUN);
+    SlowChIndex("ss_prin", &i_SS_PRIN, &j_SS_PRIN);
     SlowChIndex("sip_lat", &i_SIP_LAT, &j_SIP_LAT);
     SlowChIndex("sip_lon", &i_SIP_LON, &j_SIP_LON);
     SlowChIndex("sip_alt", &i_SIP_ALT, &j_SIP_ALT);
     SlowChIndex("sip_time", &i_SIP_TIME, &j_SIP_TIME);
     SlowChIndex("lat", &i_LAT, &j_LAT);
     SlowChIndex("lon", &i_LON, &j_LON);
+
+    SlowChIndex("p_az_mode", &i_AZ_MODE, &j_AZ_MODE);
+    SlowChIndex("p_el_mode", &i_EL_MODE, &j_EL_MODE);
+    SlowChIndex("p_az1", &i_AZ1, &j_AZ1);
+    SlowChIndex("p_az2", &i_AZ2, &j_AZ2);
+    SlowChIndex("p_el1", &i_EL1, &j_EL1);
+    SlowChIndex("p_el2", &i_EL2, &j_EL2);
+    SlowChIndex("p_az_vel", &i_AZ_VEL, &j_AZ_VEL);
+    SlowChIndex("p_el_vel", &i_EL_VEL, &j_EL_VEL);
+    SlowChIndex("p_ra", &i_RA, &j_RA);
+    SlowChIndex("p_dec", &i_DEC, &j_DEC);
+    SlowChIndex("p_r", &i_R, &j_R);
   }
 
   /********** VSC Data **********/
@@ -1092,9 +1113,9 @@ void StoreData(unsigned int* Txframe,
 
   /********** Sun Sensor Data **********/
   i_ss = GETREADINDEX(ss_index);
-  WriteSlow(arsCh, arsInd, SunSensorData[i_ss].raw_az);
-  WriteSlow(ersCh, ersInd, SunSensorData[i_ss].raw_el);
-  WriteSlow(prinCh, prinInd, SunSensorData[i_ss].prin);
+  WriteSlow(i_AZ_REL_SUN, j_AZ_REL_SUN, SunSensorData[i_ss].raw_az);
+  WriteSlow(i_EL_REL_SUN, j_EL_REL_SUN, SunSensorData[i_ss].raw_el);
+  WriteSlow(i_SS_PRIN, j_SS_PRIN, SunSensorData[i_ss].prin);
 
   /********** SIP GPS Data **********/
   WriteSlow(i_SIP_LAT, j_SIP_LAT, (int)(SIPData.GPSpos.lat*DEG2I));
@@ -1108,6 +1129,22 @@ void StoreData(unsigned int* Txframe,
   i_point = GETREADINDEX(point_index);
   WriteFast(i_az, (unsigned int)(PointingData[i_point].az * 65536.0/360.0));
   WriteFast(i_el, (unsigned int)(PointingData[i_point].el * 65536.0/360.0));
+
+  /************* Pointing mode fields *************/
+  WriteSlow(i_AZ_MODE, j_AZ_MODE, (int)(CommandData.pointing_mode.az_mode));
+  WriteSlow(i_EL_MODE, j_EL_MODE, (int)(CommandData.pointing_mode.el_mode));
+  WriteSlow(i_AZ1, j_AZ1, (int)(CommandData.pointing_mode.az1 * DEG2I));
+  WriteSlow(i_AZ2, j_AZ2, (int)(CommandData.pointing_mode.az2 * DEG2I));
+  WriteSlow(i_EL1, j_EL1, (int)(CommandData.pointing_mode.el1 * DEG2I));
+  WriteSlow(i_EL2, j_EL2, (int)(CommandData.pointing_mode.el2 * DEG2I));
+  WriteSlow(i_AZ_VEL, j_AZ_VEL,
+	    (int)(CommandData.pointing_mode.az_vel * VEL2I));
+  WriteSlow(i_EL_VEL, j_EL_VEL,
+	    (int)(CommandData.pointing_mode.el_vel * VEL2I));
+  WriteSlow(i_RA, j_RA, (int)(CommandData.pointing_mode.ra * H2I));	
+  WriteSlow(i_DEC, j_DEC, (int)(CommandData.pointing_mode.dec * DEG2I));
+  WriteSlow(i_R, j_R, (int)(CommandData.pointing_mode.dec * DEG2I));
+  
 }
 
 

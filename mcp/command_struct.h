@@ -4,11 +4,11 @@
 #define AXIS_POSITION 1
 #define AXIS_LOCK 2
 
-#define POINT_VEL 0
-#define POINT_POINT 1
-#define POINT_LOCK 2
-#define POINT_SCAN 3
-#define POINT_RASTER 4
+#define POINT_VEL 1
+#define POINT_POINT 2
+#define POINT_LOCK 4
+#define POINT_SCAN 8
+#define POINT_RASTER 16
 
 struct SlowDLStruct {
   char src[20];
@@ -39,17 +39,18 @@ struct AxesModeStruct {
 };
 
 struct PointingModeStruct {
+  // Used by:        VEL   POINT   LOCK   SCAN   RASTER
   int az_mode;
+  double az1;     //         **            **      .
+  double az2;     //                       **      .
+  double az_vel;  //  **                   **      **
   int el_mode;
-  double az1; // pointing, scan
-  double el1; // poining, scan, lock
-  double az2; // scan
-  double el2; // scan
-  double az_vel; // scan, map, vel
-  double el_vel; // scan, map, vel
-  double ra; // map
-  double dec; // map
-  double r; //map
+  double el1;     //         **     **     **      .
+  double el2;     //                       **      .
+  double el_vel;  //  **                   **      **
+  double ra;      //                               **
+  double dec;     //                               **
+  double r;       //                               **
 };
 
 struct PumpStruct {
