@@ -23,7 +23,7 @@ use Socket;
 
 my $DECOMD_DIR = "/usr/local/sbin/";
 
-my $VERSION = "1.0.7";
+my $VERSION = "1.1.0";
 $ENV{'PATH'} = "/usr/sbin:/usr/local/sbin";
 delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
 

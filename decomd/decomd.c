@@ -45,7 +45,7 @@
 #include "channels.h"
 #include "crc.h"
 
-#define VERSION "1.0.7"
+#define VERSION "1.1.0"
 
 #define DEV "/dev/decom_pci"
 #define SOCK_PORT 11411
