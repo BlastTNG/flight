@@ -23,6 +23,10 @@ AC_ARG_ENABLE( fifocmd,
           [  --enable-fifocmd         install the fifocmd script [default=no]],
           enable_fifocmd="${enableval}",enable_fifocmd="no")
 
+AC_ARG_ENABLE( dummycmd,
+          [  --enable-dummycmd        install the dummycmd script [default=no]],
+          enable_dummycmd="${enableval}",enable_dummycmd="no")
+
 AC_ARG_WITH( remote-host,
             [  --with-remote-host=HOST use HOST as the remote host for blastcmd-remote [galadriel]],
             REMOTE_HOST="${withval}", REMOTE_HOST="galadriel")
@@ -67,6 +71,16 @@ else
 fi
 AC_MSG_RESULT([$INSTALL_FIFOCMD])
 AM_CONDITIONAL(INSTALL_FIFOCMD, test "$INSTALL_FIFOCMD" = "yes")
+
+AC_MSG_CHECKING(whether we are installing dummycmd)
+if test "x$enable_dummycmd" = "xyes"; then
+  INSTALL_DUMMYCMD=yes;
+  INSTALLING_SOMETHING=yes;
+else
+  INSTALL_DUMMYCMD=no;
+fi
+AC_MSG_RESULT([$INSTALL_DUMMYCMD])
+AM_CONDITIONAL(INSTALL_DUMMYCMD, test "$INSTALL_DUMMYCMD" = "yes")
 
 if test "x$INSTALLING_SOMETHING" = "x"; then
   AC_MSG_ERROR([*** Dude, you gotta install something... ***])

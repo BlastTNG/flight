@@ -1,4 +1,5 @@
 2004-09-27 (1.1.5):
+  * dummycmd: add
   * blastcmd.c: add -c option ; migrate to autoconf
 
 2004-09-09 (1.1.4):

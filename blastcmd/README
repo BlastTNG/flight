@@ -15,3 +15,9 @@ To make fifocmd
 ./configure --enable-fifocmd
 make
 make install
+
+To make dummycmd
+
+./configure --enable-dummycmd
+make
+make install
