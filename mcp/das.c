@@ -238,8 +238,8 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
     = (double)slow_data[t_charcoal_Addr->index][t_charcoal_Addr->channel];
   t_he3fridge
     = (double)(slow_data[t_he3fridge_Addr->index][t_he3fridge_Addr->channel] +
-		    ((unsigned long)slow_data[t_he3fridge_Addr->index][t_he3fridge_Addr->channel
-         + 1] << 16));
+		    ((unsigned long)slow_data[t_he3fridge_Addr->index]
+         [t_he3fridge_Addr->channel + 1] << 16));
   t_he4pot
     = (double)(slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel] +
         ((unsigned long)slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel
@@ -546,28 +546,29 @@ void BiasControl (unsigned short* RxFrame) {
   }
 
   /************* Check Bias Level ReadBack *******/
-  //bprintf(info, "%i %i %i (%i %i %i)\n", amp1_timeout, amp2_timeout, amp3_timeout, amp1, amp2, amp3);
-  if (hold <= 0) { /* Don't check if we're already sending a level */
-    if (amp1_timeout > 0)
-      amp1_timeout--;
-    else if (fabs(amp1 - CommandData.Bias.bias1) > 1) {
-      bprintf(warning, "Bias Control: Auto Set Level #1 to %i (saw %i)\n",
-          CommandData.Bias.bias1, amp1);
-      CommandData.Bias.SetLevel1 = 1;
-    }
-    if (amp2_timeout > 0)
-      amp2_timeout--;
-    else if (fabs(amp2 - CommandData.Bias.bias2) > 1) {
-      bprintf(warning, "Bias Control: Auto Set Level #2 to %i (saw %i)\n",
-          CommandData.Bias.bias2, amp2);
-      CommandData.Bias.SetLevel2 = 1;
-    }
-    if (amp3_timeout > 0)
-      amp3_timeout--;
-    else if (fabs(amp3 - CommandData.Bias.bias3) > 1) {
-      bprintf(warning, "Bias Control: Auto Set Level #3 to %i (saw %i)\n",
-          CommandData.Bias.bias3, amp3);
-      CommandData.Bias.SetLevel3 = 1;
+  if (CommandData.Bias.biasRamp == 0) { /* Not when ramping */
+    if (hold <= 0) { /* Don't check if we're already sending a level */
+      if (amp1_timeout > 0)
+        amp1_timeout--;
+      else if (fabs(amp1 - CommandData.Bias.bias1) > 1) {
+        bprintf(warning, "Bias Control: Auto Set Level #1 to %i (saw %i)\n",
+            CommandData.Bias.bias1, amp1);
+        CommandData.Bias.SetLevel1 = 1;
+      }
+      if (amp2_timeout > 0)
+        amp2_timeout--;
+      else if (fabs(amp2 - CommandData.Bias.bias2) > 1) {
+        bprintf(warning, "Bias Control: Auto Set Level #2 to %i (saw %i)\n",
+            CommandData.Bias.bias2, amp2);
+        CommandData.Bias.SetLevel2 = 1;
+      }
+      if (amp3_timeout > 0)
+        amp3_timeout--;
+      else if (fabs(amp3 - CommandData.Bias.bias3) > 1) {
+        bprintf(warning, "Bias Control: Auto Set Level #3 to %i (saw %i)\n",
+            CommandData.Bias.bias3, amp3);
+        CommandData.Bias.SetLevel3 = 1;
+      }
     }
   }
 
