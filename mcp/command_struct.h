@@ -165,8 +165,10 @@ struct CommandDataStruct {
     double bal_target;
     double bal_gain;
 
-    int inframe_cool1_on;
-    int inframe_cool1_off;
+    int inframe_auto;
+    int outframe_auto;
+    int inframe_cool_on;
+    int inframe_cool_off;
     int lock_out;
     int lock_off;
     int lock_in;

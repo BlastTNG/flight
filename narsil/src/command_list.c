@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.41 $";
+const char command_list_serial[] = "$Revision: 2.42 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -133,12 +133,16 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(sprpump_fwd), "balance pump 2 forward", GR_BAL},
   {COMMAND(sprpump_rev), "balance pump 2 reverse", GR_BAL},
 
-  {COMMAND(inner_cool_on), "inner frame cooling pump 1 on", GR_COOL},
-  {COMMAND(inner_cool_off), "inner frame cooling pump 1 off", GR_COOL},
-  {COMMAND(outer_cool_on), "outer frame colling pump 1 on", GR_COOL},
-  {COMMAND(outer_cool_off), "outer frame colling pump 1 off", GR_COOL},
-  {COMMAND(outer_spare_on), "outer frame colling pump 2 on", GR_COOL},
-  {COMMAND(outer_spare_off), "outer frame colling pump 2 off", GR_COOL},
+  {COMMAND(inner_cool_on), "inner frame cooling pump on", GR_COOL},
+  {COMMAND(inner_cool_off), "inner frame cooling pump off", GR_COOL},
+  {COMMAND(inner_cool_auto), "automatically regulate inner frame cooling pump",
+    GR_COOL},
+  {COMMAND(outer_cool_on), "outer frame cooling pump on", GR_COOL},
+  {COMMAND(outer_cool_off), "outer frame cooling pump off", GR_COOL},
+  {COMMAND(outer_cool_auto), "automatically regulate inner frame cooling pump",
+    GR_COOL},
+  {COMMAND(outer_spare_on), "spare cooling pump on", GR_COOL},
+  {COMMAND(outer_spare_off), "spare cooling pump off", GR_COOL},
 
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},

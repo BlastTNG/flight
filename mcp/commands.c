@@ -409,15 +409,24 @@ void SingleCommand (enum singleCommand command) {
   else if (command == sprpump_rev)
     CommandData.pumps.bal2_reverse = 1;
 
-  else if (command == inner_cool_on)
-    CommandData.pumps.inframe_cool1_on = 40;
-  else if (command == inner_cool_off)
-    CommandData.pumps.inframe_cool1_off = 40;
+  else if (command == inner_cool_on) {
+    CommandData.pumps.inframe_cool_on = 40;
+    CommandData.pumps.inframe_auto = 0;
+  } else if (command == inner_cool_off) {
+    CommandData.pumps.inframe_cool_off = 40;
+    CommandData.pumps.inframe_auto = 0;
+  } else if (command == inner_cool_auto)
+    CommandData.pumps.inframe_auto = 1;
 
-  else if (command == outer_cool_on)
+  else if (command == outer_cool_on) {
     CommandData.pumps.outframe_cool1_on = 40;
-  else if (command == outer_cool_off)
+    CommandData.pumps.outframe_auto = 0;
+  } else if (command == outer_cool_off) {
     CommandData.pumps.outframe_cool1_off = 40;
+    CommandData.pumps.outframe_auto = 0;
+  } else if (command == outer_cool_auto)
+    CommandData.pumps.outframe_auto = 1;
+
   else if (command == outer_spare_on)
     CommandData.pumps.outframe_cool2_on = 40;
   else if (command == outer_spare_off)
@@ -1390,8 +1399,8 @@ void InitCommandData() {
   CommandData.pumps.bal2_on = 0;
   CommandData.pumps.bal2_reverse = 0;
 
-  CommandData.pumps.inframe_cool1_on = 0;
-  CommandData.pumps.inframe_cool1_off = 0;
+  CommandData.pumps.inframe_cool_on = 0;
+  CommandData.pumps.inframe_cool_off = 0;
   CommandData.pumps.lock_out = 0;
   CommandData.pumps.lock_in = 0;
   CommandData.pumps.lock_point = 0;
@@ -1489,16 +1498,17 @@ void InitCommandData() {
   CommandData.pumps.bal_off = 0.2 * 1648.;
   CommandData.pumps.bal_target = 0.0 * 1648.;
   CommandData.pumps.bal_gain = 0.2;
+  CommandData.pumps.inframe_auto = 0;
+  CommandData.pumps.outframe_auto = 0;
 
   CommandData.Bias.clockInternal = 0;
   CommandData.Bias.biasAC = 1;
   CommandData.Bias.biasRamp = 0;
-
-  CommandData.pin_is_in = 1;
-
   CommandData.Bias.bias1 = 0x02;
   CommandData.Bias.bias2 = 0x02;
   CommandData.Bias.bias3 = 0x02;
+
+  CommandData.pin_is_in = 1;
 
   CommandData.Cryo.heliumLevel = 0;
   CommandData.Cryo.charcoalHeater = 0;

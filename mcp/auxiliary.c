@@ -155,6 +155,9 @@ void ControlInnerCool(unsigned short *RxFrame)
     tRecAddr = GetBiPhaseAddr("t_rec");
   }
 
+  if (CommandData.pumps.inframe_auto == 0)
+    return;
+
   das = slow_data[tDasAddr->index][tDasAddr->channel];
   rec = slow_data[tRecAddr->index][tRecAddr->channel];
 
@@ -688,12 +691,12 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   }
 
   /* two latching pumps: */
-  if (CommandData.pumps.inframe_cool1_on > 0) {
+  if (CommandData.pumps.inframe_cool_on > 0) {
     ifpmBits |= IF_COOL1_ON;
-    CommandData.pumps.inframe_cool1_on--;
-  } else if (CommandData.pumps.inframe_cool1_off > 0) {
+    CommandData.pumps.inframe_cool_on--;
+  } else if (CommandData.pumps.inframe_cool_off > 0) {
     ifpmBits |= IF_COOL1_OFF;
-    CommandData.pumps.inframe_cool1_off--;
+    CommandData.pumps.inframe_cool_off--;
   }
 
   /* outer frame box */
