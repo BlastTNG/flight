@@ -684,6 +684,11 @@ void CameraTrigger(int which)
       if (isc_pulses[which].ack_wait > isc_pulses[which].ack_timeout
           || write_ISC_trigger[which]) {
 
+        /* don't bother doing the trigger wait if we're already in velocity
+         * wait state */
+        if (waiting)
+          delay[which] = 1;
+
         if (delay[which] == 0) {
           /* if we exceeded the time-out, flag the link as bad */
           if (ISC_link_ok[which] && isc_pulses[which].ack_wait
@@ -706,13 +711,7 @@ void CameraTrigger(int which)
         else {
           delay[which] = 0;
 
-          if (isc_pulses[which].is_fast) {
-            if (waiting)
-              bprintf(warning,
-                  "%s: aborted waiting for velocity on slow pulse\n",
-                  (which) ? "Osc" : "Isc");
-            waiting = 0;
-          } else {
+          if (!isc_pulses[which].is_fast) {
             /* wait until we're below the slow speed */
             if (fabs(axes_mode.az_vel) >= MAX_ISC_SLOW_PULSE_SPEED) {
               if (!waiting && WHICH)
