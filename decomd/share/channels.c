@@ -47,6 +47,7 @@ extern struct ChannelStruct SlowChannels[];
 extern struct ChannelStruct WideFastChannels[];
 extern struct ChannelStruct FastChannels[];
 extern struct ChannelStruct DecomChannels[];
+extern union DerivedUnion DerivedChannels[];
 #else
 struct ChannelStruct* WideSlowChannels;
 struct ChannelStruct* SlowChannels;

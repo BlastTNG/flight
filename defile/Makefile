@@ -19,7 +19,7 @@ frameread.o: frameread.c channels.h frameread.h blast.h
 
 reader.o: reader.c channels.h defile.h frameread.h blast.h
 
-channels.o: channels.c channels.h blast.h
+channels.o: channels.c channels.h blast.h derived.h
 
 writer.o: writer.c channels.h defile.h frameread.h blast.h
 
