@@ -99,11 +99,18 @@ struct {
   int fresh;
 } NewAzEl = {0.0, 0.0, 0};
 
+// gyros, with earth's rotation removed
+struct {
+  double gy1;
+  double gy2;
+  double gy3;
+} RG;
+
 void SunPos(double tt, double *ra, double *dec); // in starpos.c
 
 #define M2DV(x) ((x/60.0)*(x/60.0))
 
-#define MAG_ALIGNMENT (-170.0*M_PI/180.0)
+#define MAG_ALIGNMENT 0.0;
 
 // limit to 0 to 360.0
 void NormalizeAngle(double *A) {
@@ -132,7 +139,6 @@ int MagConvert(double *mag_az) {
   static int firsttime = 1;
   static struct LutType magLut = {"/data/etc/mag.lut",0,NULL,NULL,0};
   double raw_mag_az;
-  double ddec;
   
   i_point_read = GETREADINDEX(point_index);
 
@@ -169,8 +175,6 @@ int MagConvert(double *mag_az) {
 
     dec = fdec;
     
-    dec *= M_PI / 180.0;
-    dip *= M_PI / 180.0;
   }
 
   /* The dec is the correction to the azimuth of the magnetic field. */
@@ -181,19 +185,17 @@ int MagConvert(double *mag_az) {
   /* Thus, depending on the sign convention, you have to either add or */
   /* subtract dec from az to get the true bearing. (Adam H.) */
 
-  raw_mag_az = atan2(ACSData.mag_y, ACSData.mag_x);
+  raw_mag_az = (180.0/M_PI) * atan2(ACSData.mag_y, ACSData.mag_x);
   
-  *mag_az = -LutCal(&magLut, raw_mag_az);
+  *mag_az = LutCal(&magLut, raw_mag_az);
   
-  *mag_az += dec + MAG_ALIGNMENT + M_PI;
-  *mag_az *= 180.0/M_PI;
+  *mag_az += dec + MAG_ALIGNMENT;
     
   NormalizeAngle(mag_az);
 
-  ddec=dec*180.0/M_PI;
-  NormalizeAngle(&ddec);
+  NormalizeAngle(&dec);
   
-  PointingData[point_index].mag_model = ddec;
+  PointingData[point_index].mag_model = dec;
   
   return (1);
 }
@@ -291,9 +293,9 @@ void RecordHistory(int index) {
   hs.i_history++;
   if (hs.i_history >= GY_HISTORY) hs.i_history=0;
   
-  hs.gyro1_history[hs.i_history] = ACSData.gyro1;
-  hs.gyro2_history[hs.i_history] = ACSData.gyro2;
-  hs.gyro3_history[hs.i_history] = ACSData.gyro3;
+  hs.gyro1_history[hs.i_history] = RG.gy1;
+  hs.gyro2_history[hs.i_history] = RG.gy2;
+  hs.gyro3_history[hs.i_history] = RG.gy3;
   hs.elev_history[hs.i_history] = PointingData[index].el*M_PI/180.0;
 }
 
@@ -539,6 +541,9 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
 */
 /* Elevation encoder uncertainty: */
 void Pointing(){
+  double R, cos_e, cos_l, cos_a;
+  double sin_e, sin_l, sin_a;
+  
   int ss_ok, mag_ok, dgps_ok;
   double ss_az, mag_az;
   double dgps_az, dgps_pitch, dgps_roll;
@@ -649,7 +654,19 @@ void Pointing(){
   i_dgpspos = GETREADINDEX(dgpspos_index);
   i_point_read = GETREADINDEX(point_index);
 
-
+  // Make aristotle correct
+  R = 15.0/3600.0;
+  cos_e = cos(PointingData[i_point_read].el * (M_PI/180.0));
+  sin_e = sin(PointingData[i_point_read].el * (M_PI/180.0));
+  cos_l = cos(PointingData[i_point_read].lat * (M_PI/180.0));
+  sin_l = sin(PointingData[i_point_read].lat * (M_PI/180.0));
+  cos_a = cos(PointingData[i_point_read].az * (M_PI/180.0));
+  sin_a = sin(PointingData[i_point_read].az * (M_PI/180.0));
+  
+  RG.gy1 = ACSData.gyro1 - R*(-cos_l*sin_a);
+  RG.gy2 = ACSData.gyro2 - R*(cos_e*sin_l - cos_l*sin_e*cos_a);
+  RG.gy3 = ACSData.gyro3 - R*(sin_e*sin_l + cos_l*cos_e*cos_a);
+  
   /*************************************/
   /** Record history for gyro offsets **/
   RecordHistory(i_point_read);
@@ -679,20 +696,20 @@ void Pointing(){
   /*************************************/
   /**      do ISC Solution            **/
   EvolveSCSolution(&ISCEl, &ISCAz,
-		   ACSData.gyro1, 
+		   RG.gy1, 
 		   PointingData[i_point_read].gy1_offset,
-		   ACSData.gyro2, PointingData[i_point_read].gy2_offset,
-		   ACSData.gyro3, PointingData[i_point_read].gy3_offset,
+		   RG.gy2, PointingData[i_point_read].gy2_offset,
+		   RG.gy3, PointingData[i_point_read].gy3_offset,
 		   PointingData[point_index].el);
 
   /*************************************/
   /**      do elevation solution      **/
   clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
   
-  EvolveElSolution(&ClinEl, ACSData.gyro1, 
+  EvolveElSolution(&ClinEl, RG.gy1, 
 		 PointingData[i_point_read].gy1_offset,
 		 clin_elev, 1);
-  EvolveElSolution(&EncEl, ACSData.gyro1, 
+  EvolveElSolution(&EncEl, RG.gy1, 
 		 PointingData[i_point_read].gy1_offset,
 		 ACSData.enc_elev, 1);
 
@@ -720,28 +737,28 @@ void Pointing(){
 
   /** evolve solutions **/
   EvolveAzSolution(&NullAz,
-		   ACSData.gyro2, PointingData[i_point_read].gy2_offset,
-		   ACSData.gyro3, PointingData[i_point_read].gy3_offset,
+		   RG.gy2, PointingData[i_point_read].gy2_offset,
+		   RG.gy3, PointingData[i_point_read].gy3_offset,
 		   PointingData[point_index].el,
 		   0.0, 0);
   /** MAG Az **/
   EvolveAzSolution(&MagAz,
-		   ACSData.gyro2, PointingData[i_point_read].gy2_offset,
-		   ACSData.gyro3, PointingData[i_point_read].gy3_offset,
+		   RG.gy2, PointingData[i_point_read].gy2_offset,
+		   RG.gy3, PointingData[i_point_read].gy3_offset,
 		   PointingData[point_index].el,
 		   mag_az, mag_ok);
 
   /** DGPS Az **/
   EvolveAzSolution(&DGPSAz,
-		   ACSData.gyro2, PointingData[i_point_read].gy2_offset,
-		   ACSData.gyro3, PointingData[i_point_read].gy3_offset,
+		   RG.gy2, PointingData[i_point_read].gy2_offset,
+		   RG.gy3, PointingData[i_point_read].gy3_offset,
 		   PointingData[point_index].el,
 		   dgps_az, dgps_ok);
 
   /** Sun Sensor **/
   EvolveAzSolution(&SSAz,
-		   ACSData.gyro2, PointingData[i_point_read].gy2_offset,
-		   ACSData.gyro3, PointingData[i_point_read].gy3_offset,
+		   RG.gy2, PointingData[i_point_read].gy2_offset,
+		   RG.gy3, PointingData[i_point_read].gy3_offset,
 		   PointingData[point_index].el,
 		   ss_az, ss_ok);  
 
@@ -785,8 +802,8 @@ void Pointing(){
     
   /************************/
   /* set roll damper gain */
-  gy2 = ACSData.gyro2;
-  gy3 = ACSData.gyro3;
+  gy2 = RG.gy2;
+  gy3 = RG.gy3;
   el_rad = PointingData[point_index].el * M_PI/180.0,
   gy_roll = fabs(-gy2 * sin(el_rad) + gy3 * cos(el_rad));
   if (gy_roll>gy_roll_amp) gy_roll_amp = gy_roll;

@@ -94,6 +94,8 @@ struct AxesModeStruct {
   double el_vel;
 };
 
+int fast_pulse = 0; // 0 means slow pulse if slow enough, 1 means fast pulse
+
 struct AxesModeStruct axes_mode; // low level velocity mode
 
 double getlst(time_t t, double lon);
@@ -1552,12 +1554,50 @@ void StoreData(int index, unsigned int* Txframe,
       (unsigned int)(CommandData.ISC_pulse_width));
 }
 
-
+/****************************************************************/
+/*                                                              */
+/*   Do scan modes                                              */
+/*                                                              */
+/****************************************************************/
 #define AZ_ACCEL (0.001)
 #define AZ_MARGIN 0.5
 #define MIN_SCAN 0.2
+void SetAzScanMode(double az, double left, double right, double v, double D) {
+  if (axes_mode.az_vel < -v+D) axes_mode.az_vel = -v+D;
+  if (axes_mode.az_vel > v+D) axes_mode.az_vel = v+D;
+
+  if (az < left - AZ_MARGIN) { // out of range: move to left
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = left;
+    axes_mode.az_vel = 0.0;
+  } else if (az > right + AZ_MARGIN) { // out of range - move to p2
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = right;
+    axes_mode.az_vel = 0.0;
+  } else if (az<left) {
+    fast_pulse = 0;
+    axes_mode.az_mode = AXIS_VEL;
+    if (axes_mode.az_vel < v+D) axes_mode.az_vel+=AZ_ACCEL;
+  } else if (az > right) {
+    fast_pulse = 0;
+    axes_mode.az_mode = AXIS_VEL;
+    if (axes_mode.az_vel > -v+D) axes_mode.az_vel-=AZ_ACCEL;
+  } else {
+    axes_mode.az_mode = AXIS_VEL;
+    if (axes_mode.az_vel>0) {
+      axes_mode.az_vel = v+D;
+      if (az > right - v) fast_pulse = 0; // within 1s of turnaround
+      else fast_pulse = 1;
+    } else {
+      axes_mode.az_vel = -v+D;
+      if (az < left + v) fast_pulse = 0; // within 1s of turnaround
+      else fast_pulse = 1;
+    }
+  }
+}
+
 void DoAzScanMode() {
-  double az, p1, p2, v,w;
+  double az, left, right, v,w;
   int i_point;
 
   axes_mode.el_mode = AXIS_POSITION;
@@ -1568,36 +1608,13 @@ void DoAzScanMode() {
   az = PointingData[i_point].az; // FIXME - extrapolate velocity
 
   w = CommandData.pointing_mode.w;
-  p1 = CommandData.pointing_mode.X + w/2;
-  p2 = CommandData.pointing_mode.X - w/2;
-  UnwindDiff(p1, &p2);
-  UnwindDiff(p1, &az);
+  right = CommandData.pointing_mode.X + w/2;
+  left = CommandData.pointing_mode.X - w/2;
+  UnwindDiff(left, &az);
 
+  v = CommandData.pointing_mode.vaz;
 
-  v = CommandData.pointing_mode.del;
-
-  if (axes_mode.az_vel < -v) axes_mode.az_vel = -v;
-  if (axes_mode.az_vel > v) axes_mode.az_vel = v;
-
-  if (p1-az>AZ_MARGIN) { // out of range: move to p1
-    axes_mode.az_mode = AXIS_POSITION;
-    axes_mode.az_dest = p1;
-    axes_mode.az_vel = 0.0;
-  } else if (az-p2>AZ_MARGIN) { // out of range - move to p2
-    axes_mode.az_mode = AXIS_POSITION;
-    axes_mode.az_dest = p2;
-    axes_mode.az_vel = 0.0;
-  } else if (az<p1) {
-    axes_mode.az_mode = AXIS_VEL;
-    if (axes_mode.az_vel < v) axes_mode.az_vel+=AZ_ACCEL;
-  } else if (az>p2) {
-    axes_mode.az_mode = AXIS_VEL;
-    if (axes_mode.az_vel > -v) axes_mode.az_vel-=AZ_ACCEL;
-  } else {
-    axes_mode.az_mode = AXIS_VEL;
-    if (axes_mode.az_vel>0) axes_mode.az_vel = v;
-    else axes_mode.az_vel = -v;
-  } 
+  SetAzScanMode(az, left, right, v, 0);
 }
 
 #define MIN_EL 20.0
@@ -1609,9 +1626,10 @@ void DoVCapMode() {
   double daz_dt, del_dt, v_el;
   double lst;
   int i_point;
-  double x, y, r,v;
-  double x2, xmin, xmax;
-
+  double y, r,v;
+  double x2, xw;
+  double left, right;
+  
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
   az = PointingData[i_point].az;
@@ -1670,43 +1688,26 @@ void DoVCapMode() {
   axes_mode.el_vel = v_el + del_dt;
 
   /** Get x (ie, (az-caz)*cos_el) **/
-  x = drem(az - caz, 360.0);
-  x*=cos(el * M_PI/180.0);
+/*   x = drem(az - caz, 360.0); */
+/*   x*=cos(el * M_PI/180.0); */
 
   /** Get x limits **/
   y = el - cel;
   x2 = r*r-y*y;
   if (x2<0) {
-    xmin = xmax = 0.0;
+    xw = 0.0;
   } else {
-    xmax = sqrt(x2);
+    xw = sqrt(x2);
   }
-  if (xmax < MIN_SCAN) xmax = MIN_SCAN;
-  xmin = -xmax;
+  if (xw < MIN_SCAN) xw = MIN_SCAN;
+  xw /= cos(el * M_PI/180.0);
+  left = az - xw;
+  right = az + xw;
 
   /* set az v */
   v = CommandData.pointing_mode.vaz/cos(el * M_PI/180.0);
 
-  /* set az mode */
-  if (axes_mode.az_vel < -v) axes_mode.az_vel = -v;
-  if (axes_mode.az_vel > v) axes_mode.az_vel = v;
-  if ((x>xmax+AZ_MARGIN) || (x < xmin - AZ_MARGIN)) {
-    axes_mode.az_mode = AXIS_POSITION;
-    axes_mode.az_dest = caz;
-    axes_mode.az_vel = 0.0;
-  } else if (x < xmin) {
-    axes_mode.az_mode = AXIS_VEL;
-    if (axes_mode.az_vel < v) axes_mode.az_vel+=AZ_ACCEL;
-  } else if (x > xmax) {
-    axes_mode.az_mode = AXIS_VEL;
-    if (axes_mode.az_vel > -v) axes_mode.az_vel-=AZ_ACCEL;
-  } else {
-    axes_mode.az_mode = AXIS_VEL;
-    if (axes_mode.az_vel>0) axes_mode.az_vel = v;
-    else axes_mode.az_vel = -v;
-  }
-  //printf("v: %g  xmin: %g xmax: %g az_vel: %g, mode: %d\n",
-  //	 v, xmin, xmax, axes_mode.az_vel, axes_mode.az_mode);
+  SetAzScanMode(az, left, right, v, daz_dt);
 
 }
 
@@ -1730,6 +1731,112 @@ void DoRaDecGotoMode() {
   axes_mode.el_vel = 0.0;
 }
 
+void DoBoxMode() {
+  double caz, cel, sw_2, h_2;
+  double bottom, top, left, right;
+  double az, az2, el, el2;
+  double daz_dt;
+  double lst;
+  double v;
+  int i_point;
+
+  static struct PointingModeStruct last_pm = {
+    P_BOX, 0.0, 0.0, 0.0, 0.0, 0.0,0.0,0};
+  
+  static struct {
+    double el; // el of current scan, relative to cel
+    int eldir; // 1 = going up, -1 = going down
+    double azdir; // current scan direction
+    int new;
+  } S = {0,1,1,1};
+
+  i_point = GETREADINDEX(point_index);
+  lst = PointingData[i_point].lst;
+  az = PointingData[i_point].az;
+  el = PointingData[i_point].el;
+  v = fabs(CommandData.pointing_mode.vaz);
+  
+  if (el>80) el = 80; // very bad situation - don't know how this can happen
+  if (el<-10) el = -10; // very bad situation - don't know how this can happen
+
+  /* get raster center and sky drift speed */
+  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+      lst, PointingData[i_point].lat,
+      &caz, &cel);
+  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+      lst+1.0, PointingData[i_point].lat,
+      &az2, &el2);
+  daz_dt = drem(az2 - caz, 360.0);
+
+  UnwindDiff(az, &caz); 
+
+  h_2 = 0.5*CommandData.pointing_mode.h;
+  bottom = cel - h_2;
+  top = cel + h_2;
+  
+  sw_2 = 0.5*CommandData.pointing_mode.w / cos(el*M_PI/180.0);
+  left = caz - sw_2;
+  right = caz + sw_2;
+  
+  // If a new command, reset to bottom row
+  if ((CommandData.pointing_mode.X != last_pm.X) ||
+      (CommandData.pointing_mode.Y != last_pm.Y)) {
+    S.new = 1;
+    last_pm.X = CommandData.pointing_mode.X;
+    last_pm.Y = CommandData.pointing_mode.Y;
+  }
+
+  /* if a new command, go to bottom left corner */
+  if (S.new) {
+    S.el = -h_2;
+    S.eldir = 1;
+    S.azdir = 1;
+    if ( (fabs(az - (left)) < 0.1) &&
+	(fabs(el - (bottom)) < 0.1)) {
+      S.new = 0;
+    } else {
+      axes_mode.az_mode = AXIS_POSITION;
+      axes_mode.az_dest = left;
+      axes_mode.az_vel = 0.0;
+      axes_mode.el_mode = AXIS_POSITION;
+      axes_mode.el_dest = bottom;
+      axes_mode.el_vel = 0.0;
+      return;
+    }
+  }
+
+  axes_mode.az_mode = AXIS_VEL;
+  if (axes_mode.az_vel < -v + daz_dt) axes_mode.az_vel = -v + daz_dt;
+  if (axes_mode.az_vel > v + daz_dt) axes_mode.az_vel = v + daz_dt;
+  if (az<left) {
+    if (S.azdir<0) {
+      S.azdir = 1; 
+      S.el += CommandData.pointing_mode.del * S.eldir; // step up
+    }
+    if (axes_mode.az_vel < v + daz_dt) axes_mode.az_vel += AZ_ACCEL;
+  } else if (az>right) {
+    if (S.azdir>0) {
+      S.azdir = -1;
+      S.el += CommandData.pointing_mode.del * S.eldir; // step up
+    }
+    if (axes_mode.az_vel > -v + daz_dt) axes_mode.az_vel -= AZ_ACCEL;
+  } else {
+    axes_mode.az_vel = v * (double)S.azdir + daz_dt;
+  }
+
+  if (S.el> h_2) {
+    S.el = h_2;
+    S.eldir = -1;
+    S.new = 1; // back to bottom left corner: comment out to go up/down
+  }	
+  if (S.el<-h_2) {
+    S.el = -h_2;
+    S.eldir = 1;
+  }
+  axes_mode.el_mode = AXIS_POSITION;
+  axes_mode.el_dest = S.el + cel;
+}
+
 /******************************************************************
 *                                                                *
  * Update Axis Modes: Set axes_mode based on                      *
@@ -1738,51 +1845,54 @@ void DoRaDecGotoMode() {
  ******************************************************************/
 void UpdateAxesMode() {
   switch (CommandData.pointing_mode.mode) {
-    case P_DRIFT:
-      axes_mode.el_mode = AXIS_VEL;
-      axes_mode.el_vel = CommandData.pointing_mode.del;
-      axes_mode.az_mode = AXIS_VEL;
-      axes_mode.az_vel = CommandData.pointing_mode.vaz;
-      break;
-    case P_AZEL_GOTO:
-      axes_mode.el_mode = AXIS_POSITION;
-      axes_mode.el_dest = CommandData.pointing_mode.Y;
-      axes_mode.el_vel = 0.0;
-      axes_mode.az_mode = AXIS_POSITION;
-      axes_mode.az_dest = CommandData.pointing_mode.X;
-      axes_mode.az_vel = 0.0;
-      break;
-    case P_AZ_SCAN:
-      DoAzScanMode();
-      break;
-    case P_VCAP:
-      DoVCapMode();
-      break;
-    case P_RADEC_GOTO:
-      DoRaDecGotoMode();
-      break;
-    case P_LOCK:
-      axes_mode.el_mode = AXIS_LOCK;
-      axes_mode.el_dest = CommandData.pointing_mode.Y;
-      axes_mode.el_vel = 0.0;
-      axes_mode.az_mode = AXIS_VEL;
-      axes_mode.az_vel = 0.0;
-      break;
-    default:
-      fprintf(stderr, "Unknown Elevation Pointing Mode %d: stopping\n",
-          CommandData.pointing_mode.mode);
-      CommandData.pointing_mode.mode = P_DRIFT;
-      CommandData.pointing_mode.X = 0;
-      CommandData.pointing_mode.Y = 0;
-      CommandData.pointing_mode.vaz = 0.0;
-      CommandData.pointing_mode.del = 0.0;
-      CommandData.pointing_mode.w = 0;
-      CommandData.pointing_mode.h = 0;      
-      axes_mode.el_mode = AXIS_VEL;
-      axes_mode.el_vel = 0.0;
-      axes_mode.az_mode = AXIS_VEL;
-      axes_mode.az_vel = 0.0;
-      break;
+  case P_DRIFT:
+    axes_mode.el_mode = AXIS_VEL;
+    axes_mode.el_vel = CommandData.pointing_mode.del;
+    axes_mode.az_mode = AXIS_VEL;
+    axes_mode.az_vel = CommandData.pointing_mode.vaz;
+    break;
+  case P_AZEL_GOTO:
+    axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_dest = CommandData.pointing_mode.Y;
+    axes_mode.el_vel = 0.0;
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_dest = CommandData.pointing_mode.X;
+    axes_mode.az_vel = 0.0;
+    break;
+  case P_AZ_SCAN:
+    DoAzScanMode();
+    break;
+  case P_VCAP:
+    DoVCapMode();
+    break;
+  case P_BOX:
+    DoBoxMode();
+    break;
+  case P_RADEC_GOTO:
+    DoRaDecGotoMode();
+    break;
+  case P_LOCK:
+    axes_mode.el_mode = AXIS_LOCK;
+    axes_mode.el_dest = CommandData.pointing_mode.Y;
+    axes_mode.el_vel = 0.0;
+    axes_mode.az_mode = AXIS_VEL;
+    axes_mode.az_vel = 0.0;
+    break;
+  default:
+    fprintf(stderr, "Unknown Elevation Pointing Mode %d: stopping\n",
+	    CommandData.pointing_mode.mode);
+    CommandData.pointing_mode.mode = P_DRIFT;
+    CommandData.pointing_mode.X = 0;
+    CommandData.pointing_mode.Y = 0;
+    CommandData.pointing_mode.vaz = 0.0;
+    CommandData.pointing_mode.del = 0.0;
+    CommandData.pointing_mode.w = 0;
+    CommandData.pointing_mode.h = 0;      
+    axes_mode.el_mode = AXIS_VEL;
+    axes_mode.el_vel = 0.0;
+    axes_mode.az_mode = AXIS_VEL;
+    axes_mode.az_vel = 0.0;
+    break;
   }
 }
 
