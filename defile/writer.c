@@ -477,7 +477,7 @@ void InitialiseDirFile(int reset)
           slow_fields[j][i].nw = 0;
       }
       slow_fields[j][i].b = malloc( 2 * MAXBUF);
-      slow_fields[j][i].i0 = 4 + i;
+      slow_fields[j][i].i0 = FAST_OFFSET + i;
     }
   }
 
