@@ -1,3 +1,7 @@
+2004-11-03 (1.8.2):
+	* lib/getdata.o: link against getdata.o from kst 1.0.0_pre1 -- this has
+	FASTOFFSET code in it.
+
 2004-10-27 (1.8.1):
 	* narsil.cpp (main): make error message more visible.  fix typo in comment
 
