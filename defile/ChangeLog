@@ -1,6 +1,9 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2004-09-22:
+  * defile.c: Better dynamic Frame-Rate display handling
+
 2004-09-21 (2.4.4):
   * defile: Migrate to BLAMM - BLAST memory manager
 
