@@ -104,6 +104,7 @@ struct ChannelStruct SlowChannels[] = {
   {"emf_offset",   'w',  ACS1, 12,                1.0,             0.0, 'u'},
   {"g_p_pivot",    'w',  ACS1, 15,                1.0,             0.0, 'u'},
   {"set_reac",     'w',  ACS1, 16,    7.9498291016e-5,          -2.605, 'u'}, 
+  {"use_analogue", 'w',  ACS1, 20,                1.0,             0.0, 'u'},
 
   {"t_battery",    'r',  ACS2,  1,           -0.00625,          136.45, 'u'},
   {"t_out_heatx",  'r',  ACS2,  3,           -0.00625,          136.45, 'u'},

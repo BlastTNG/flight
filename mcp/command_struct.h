@@ -154,6 +154,7 @@ struct CommandDataStruct {
   unsigned short disable_az;
   unsigned short disable_el;
   unsigned short force_el;
+  unsigned short use_analogue_gyros;
 
   int autogyro;
   double gy2_offset;

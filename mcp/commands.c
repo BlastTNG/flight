@@ -293,6 +293,10 @@ void SingleCommand (enum singleCommand command) {
   else if (command == elclin_allow)
     CommandData.use_elclin = 1;
 
+  else if (command == analogue_gyros)
+    CommandData.use_analogue_gyros = 1;
+  else if (command == digital_gyros)
+    CommandData.use_analogue_gyros = 0;
   else if (command == clock_int)    /* Bias settings */
     CommandData.Bias.clockInternal = 1;
   else if (command == clock_ext)
@@ -1397,6 +1401,8 @@ void InitCommandData() {
 
   CommandData.disable_az = 0;
   CommandData.disable_el = 0;
+
+  CommandData.use_analogue_gyros = 0;
 
   CommandData.use_elenc = 1;
   CommandData.use_elclin = 1;

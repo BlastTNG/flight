@@ -163,6 +163,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   static struct NiosStruct* setReacAddr;
   static struct NiosStruct* emfGainAddr;
   static struct NiosStruct* emfOffsetAddr;
+  static struct NiosStruct* useAnalogueAddr;
 
   static int wait = 100; /* wait 20 frames before controlling. */
   double el_rad;
@@ -191,6 +192,8 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     setReacAddr = GetNiosAddr("set_reac");
     emfGainAddr = GetNiosAddr("emf_gain");
     emfOffsetAddr = GetNiosAddr("emf_offset");
+
+    useAnalogueAddr = GetNiosAddr("use_analogue");
   }
   
   i_point = GETREADINDEX(point_index);
@@ -276,10 +279,13 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     rollGainP = 0;
   
   /* p term for roll motor */
-  WriteData(gPRollAddr, rollGainP, NIOS_FLUSH);
+  WriteData(gPRollAddr, rollGainP, NIOS_QUEUE);
 
   if (wait > 0)
     wait--;
+
+  /* Gyro selection code */
+  WriteData(useAnalogueAddr, CommandData.use_analogue_gyros, NIOS_FLUSH);
 }
 
 /****************************************************************/
