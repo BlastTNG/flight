@@ -20,4 +20,14 @@ AC_CHECK_LIB(z, gzopen,,AC_MSG_WARN([*** libz not installed -- defile will have 
 dnl Headers
 AC_CHECK_HEADERS(zlib.h)
 
+dnl Data
+AC_MSG_CHECKING(whether a defile.conf is already present)
+if test -f "$sysconfdir/defile.conf"; then
+  HAVE_DEFILE_CONF=yes;
+else
+  HAVE_DEFILE_CONF=no;
+fi
+AC_MSG_RESULT([$HAVE_DEFILE_CONF])
+AM_CONDITIONAL(INSTALL_DEFILE_CONF, test "$HAVE_DEFILE_CONF" = "no")
+
 AC_OUTPUT(Makefile etc/Makefile defile.1 defile.conf)
