@@ -50,10 +50,11 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(charcoal_off), "charcoal heater off", GR_CRYO_HEAT},
   {COMMAND(coldplate_on), "cold plate heater on", GR_CRYO_HEAT},
   {COMMAND(coldplate_off), "cold plate heater off", GR_CRYO_HEAT},
+  {COMMAND(auto_bdaheat), "automatically reguate bda heater level",
+    GR_CRYO_HEAT},
 
   {COMMAND(cal_on), "calibrator on", GR_CALLAMP},
   {COMMAND(cal_off), "calibrator off", GR_CALLAMP},
-  {COMMAND(cal_stop), "stop calibrator pulses", GR_CALLAMP},
 
   {COMMAND(level_on), "helium level sensor on", GR_CRYO_CONTROL},
   {COMMAND(level_off), "helium level sensor off", GR_CRYO_CONTROL},
@@ -435,9 +436,24 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(spare_heat), "spare cryo pwm", GR_CRYO_HEAT, 1,
+  {COMMAND(bda_heat), "manually set bda heater pwm", GR_CRYO_HEAT, 1,
     {
-      {"Level (%)", 0, 100, 'f', "CRYOPWM"}
+      {"Level (%)", 0, 100, 'f', "BDAPWM"}
+    }
+  },
+   
+  {COMMAND(bda_gain), "set bda heater gains", GR_CRYO_HEAT, 5,
+    {
+      {"Proportional Gain", 0, MAX_15BIT, 'i', "G_P_BDAHEAT"},
+      {"Integral Gain", 0, MAX_15BIT, 'i', "G_I_BDAHEAT"},
+      {"Derivative Gain", 0, MAX_15BIT, 'i', "G_D_BDAHEAT"},
+      {"Integral Length", 0, MAX_15BIT, 'i', "G_FL_BDAHEAT"},
+    }
+  },
+
+  {COMMAND(bda_set), "set bda heater setpoint", GR_CRYO_HEAT, 1,
+    {
+      {"Set Point (Counts)", 0, MAX_15BIT, 'i', "SET_BDAHEAT"}
     }
   },
 

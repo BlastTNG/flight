@@ -1,7 +1,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 90         /* total number of named single word cmds */
-#define N_MCOMMANDS 64         /* total number of multiword commands */
+#define N_MCOMMANDS 66         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -42,7 +42,7 @@ extern const char *GroupNames[N_GROUPS];
 enum singleCommand {
   isc_auto_focus,   auto_gyro,          az_off,           az_on,
   balance_allow,    balance_veto,       bias_ac,          bias_dc,
-  cal_off,          cal_on,             cal_stop,         charcoal_off,
+  cal_off,          cal_on,             auto_bdaheat,     charcoal_off,
   charcoal_on,      clock_ext,          clock_int,        coldplate_off,
   coldplate_on,     isc_discard_images, el_off,           el_on,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
@@ -89,10 +89,11 @@ enum multiCommand {
   lock,              isc_max_blobs,     outer_level,      phase,
   pivot_gain,        isc_pixel_centre,  ra_dec_goto,      ra_dec_set,
   roll_gain,         isc_set_aperture,  isc_set_focus,    setpoints,
-  spare_heat,        spare_level,      t_gyrobox,         osc_gain,
+  spare_heat,        spare_level,       t_gyrobox,        osc_gain,
   t_gyro_gain,       timeout,           isc_tolerances,   vcap,
   vbox,              alice_file,        gyro_override,    isc_hold_current,
-  isc_save_period,   back_emf,          osc_offset,       plugh
+  isc_save_period,   back_emf,          osc_offset,       plugh,
+  bda_heat,          bda_gain,          bda_set
 };
 
 struct par {
