@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.44 $";
+const char command_list_serial[] = "$Revision: 2.45 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -127,8 +127,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(balance_allow), "unveto balance system", GR_BAL},
   {COMMAND(balpump_on), "balance pump 1 on", GR_BAL},
   {COMMAND(balpump_off), "balance pump 1 off", GR_BAL},
-  {COMMAND(balpump_up), "balance pump 1 reverse", GR_BAL},
-  {COMMAND(balpump_down), "balance pump 1 forward", GR_BAL},
+  {COMMAND(balpump_up), "balance pump 1 forward", GR_BAL},
+  {COMMAND(balpump_down), "balance pump 1 reverse", GR_BAL},
   {COMMAND(sprpump_on), "balance pump 2 on", GR_BAL},
   {COMMAND(sprpump_off), "balance pump 2 off", GR_BAL},
   {COMMAND(sprpump_fwd), "balance pump 2 forward", GR_BAL},
