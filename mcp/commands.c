@@ -17,8 +17,6 @@
 #include "pointing_struct.h"
 
 #include "commands.h"
-#define COMM1 "/dev/ttyS0"
-#define COMM2 "/dev/ttyS4"
 
 #define REQ_POSITION    0x50
 #define REQ_TIME        0x51
@@ -223,7 +221,7 @@ void ClearPointingModeExtraFields() {
 void SingleCommand (int command) {
   int i_point;
 
-  printf("Single command %d: %s\n", command, scommands[command].name);
+  fprintf(stderr, "Single command %d: %s\n", command, scommands[command].name);
 
   /* Update CommandData structure with new info */
 
@@ -423,17 +421,17 @@ void MultiCommand (int command, unsigned short *dataq) {
     type = mcommands[command].params[i].type;
     if (type == 'i')  /* 15 bit unsigned integer */ {
       ivalues[i] = dataq[dataqind++];
-      printf("param%02i: integer: %i\n", i, ivalues[i]);
+      fprintf(stderr, "param%02i: integer: %i\n", i, ivalues[i]);
     } else if (type == 'f')  /* 15 bit floating point */ {
       rvalues[i] = (float)dataq[dataqind++] * (mcommands[command].params[i].max
           - min) / MAX_15BIT + min;
-      printf("param%02i: 15 bits: %f\n", i, rvalues[i]);
+      fprintf(stderr, "param%02i: 15 bits: %f\n", i, rvalues[i]);
     } else if (type == 'l') { /* 30 bit floating point */
       rvalues[i] = (float)((int)dataq[dataqind++] << 15); /* upper 15 bits */
       rvalues[i] += (float)dataq[dataqind++];             /* lower 15 bits */
       rvalues[i] = rvalues[i] * (mcommands[command].params[i].max - min) /
         MAX_30BIT + min;
-      printf("param%02i: 30 bits: %f\n", i, rvalues[i]);
+      fprintf(stderr, "param%02i: 30 bits: %f\n", i, rvalues[i]);
     }
   }
 #else
@@ -443,13 +441,13 @@ void MultiCommand (int command, unsigned short *dataq) {
     type = mcommands[command].params[i].type;
     if (type == 'i')  /* 15 bit unsigned integer */ {
       ivalues[i] = atoi(dataqc[dataqind++]);
-      printf("param%02i: integer: %i\n", i, ivalues[i]);
+      fprintf(stderr, "param%02i: integer: %i\n", i, ivalues[i]);
     } else if (type == 'f')  /* 15 bit floating point */ {
       rvalues[i] = atof(dataqc[dataqind++]);
-      printf("param%02i: 15 bits: %f\n", i, rvalues[i]);
+      fprintf(stderr, "param%02i: 15 bits: %f\n", i, rvalues[i]);
     } else if (type == 'l') { /* 30 bit floating point */
       rvalues[i] = atof(dataqc[dataqind++]);
-      printf("param%02i: 30 bits: %f\n", i, rvalues[i]);
+      fprintf(stderr, "param%02i: 30 bits: %f\n", i, rvalues[i]);
     }
   }
 #endif
@@ -820,7 +818,7 @@ void SendDownData(char tty_fd) {
   }
 
   if (firsttime) {
-    printf("Slow DL size = %d\n", bytepos);
+    fprintf(stderr, "Slow DL size = %d\n", bytepos);
     firsttime = 0;
   }
 
@@ -905,7 +903,7 @@ void WatchFIFO () {
       mcommand = -1;
     } else {
       mcommand = MIndex(command);
-      printf(" Multi word command received\n");
+      fprintf(stderr, " Multi word command received\n");
       MultiCommand(mcommand, (unsigned short*) mcommand_data);
       mcommand = -1;
     }
@@ -916,12 +914,16 @@ void WatchFIFO () {
   }
 }
 
-void WatchPortC1 () {
-  unsigned char buf[1];
+char *COMM[] = {"/dev/ttyS0", "/dev/ttyS4"};
+
+void WatchPort (void* parameter) {
+  unsigned char buf;
   unsigned short *indatadumper;
   unsigned char indata[20];
   char readstage = 0;
   char tty_fd;
+  
+  int port = (int)parameter;
 
   int mcommand = -1;
   int mcommand_count = 0;
@@ -933,16 +935,16 @@ void WatchPortC1 () {
   int bytecount = 0;
 
   int pid = getpid();
-  fprintf(stderr, ">> WatchPortC1 startup on pid %i\n", pid);
+  fprintf(stderr, ">> WatchPort(%i) startup on pid %i\n", port, pid);
 
-  if((tty_fd = bc_setserial(COMM1)) < 0) {
+  if((tty_fd = bc_setserial(COMM[port])) < 0) {
     perror("Unable to open serial port");
     exit(1);
   }
 
-  do {
+  for(;;) {
     /* Loop until data come in */
-    while (read(tty_fd, buf, 1) <= 0) {
+    while (read(tty_fd, &buf, 1) <= 0) {
       timer++;
       /** Request updated info every 5 seconds */
       if (timer == 250) { 
@@ -955,7 +957,7 @@ void WatchPortC1 () {
       }
       usleep(10000); /* sleep for 10ms */
     }
-
+    
     // Take control of memory
     pthread_mutex_lock(&mutex);
 
@@ -970,40 +972,49 @@ void WatchPortC1 () {
       /*            6: waiting for MKS pressure datum: case 0x12 */
 
       case 0: /* waiting for packet beginning */
-        if (buf[0] == 0x10)
+        if (buf == 0x10)
           readstage = 1;
         break;
-
-
       case 1: /* wating for packet type */
-        if (buf[0] == 0x13) /* Send data request */
+        if (buf == 0x13) { /* Send data request */
           readstage = 3;
-        else if (buf[0] == 0x14) /* Command */
+          fprintf(stderr, "COMM%i: Data request packet start\n", port + 1);
+        } else if (buf == 0x14) { /* Command */
           readstage = 2;
-        else if (buf[0] == 0x10) /* GPS Position */
+          fprintf(stderr, "COMM%i: Command packet start\n", port + 1);
+        } else if (buf == 0x10) { /* GPS Position */
           readstage = 4;
-        else if (buf[0] == 0x11) /* GPS Position */
+          fprintf(stderr, "COMM%i: GPS Position packet start\n", port + 1);
+        } else if (buf == 0x11) { /* GPS Position */
           readstage = 5;
-        else if (buf[0] == 0x12) /* MKS Pressure */
+          fprintf(stderr, "COMM%i: GPS Time packet start\n", port + 1);
+        } else if (buf == 0x12) { /* MKS Pressure */
           readstage = 6;
+          fprintf(stderr, "COMM%i: MKS Altitude packet start\n", port + 1);
+        } else {
+          fprintf(stderr,
+              "COMM%i: Bad packet received: Unrecognised Packet Type: %02X\n",
+              port + 1, buf);
+          readstage = 0;
+        }
         break;
-
-
       case 2: /* waiting for command packet datum */
         if (bytecount == 0) {  /* Look for 2nd byte of command packet = 0x02 */
-          if (buf[0] == 0x02)
+          if (buf == 0x02)
             bytecount = 1;
           else {
             readstage = 0;
-            fprintf(stderr, "\nBad packet terminated (improper encoding).\n");
+            fprintf(stderr,
+                "COMM%i: Bad command packet: Improper Encoding: %02X\n",
+                port + 1, buf);
           }
         } else if (bytecount >= 1 && bytecount <= 2) {
           /* Read the two data bytes of the command packet */
-          indata[bytecount - 1] = buf[0];
+          indata[bytecount - 1] = buf;
           bytecount++;
         } else {
           bytecount = 0;
-          if (buf[0] == 0x03) {
+          if (buf == 0x03) {
             /* We should now be at the end of the command packet */
             readstage = 0;
 
@@ -1016,7 +1027,7 @@ void WatchPortC1 () {
 
             if (((indata[1] >> 5) & 0x07) == 0x05) {
               /*** Single command ***/
-              printf(" Single command received\n");
+              fprintf(stderr, "COMM%i:  Single command received\n", port + 1);
               SingleCommand(indata[0]);
               mcommand = -1;
             } else if (((indata[1] >> 5) & 0x07) == 0x04) {
@@ -1025,7 +1036,8 @@ void WatchPortC1 () {
               mcommand = indata[0];
               mcommand_count = 0;
               dataqsize = DataQSize(mcommand);
-              printf(" Multi word command %d started\n", mcommand);
+              fprintf(stderr, "COMM%i:  Multi word command %d started\n",
+                  port + 1, mcommand);
 
               /* The time of sending, a "unique" number shared by the first */
               /* and last packed of a multi-command */
@@ -1035,14 +1047,15 @@ void WatchPortC1 () {
               /*** Parameter values in multi-command ***/
               indatadumper = (unsigned short *) indata;
               mcommand_data[mcommand_count] = *indatadumper;
-              printf(" Multi word command continues...\n");
+              fprintf(stderr, "COMM%i:  Multi word command continues...\n",
+                  port + 1);
               mcommand_count++;
             } else if ((((indata[1] >> 5) & 0x07) == 0x06) &&
                 (mcommand == indata[0]) && 
                 ((indata[1] & 0x1F) == mcommand_time) &&
                 (mcommand_count == dataqsize)) {
               /*** End of multi-command ***/
-              printf(" Multi word command ends \n");
+              fprintf(stderr, "COMM%i:  Multi word command ends \n", port + 1);
               MultiCommand(mcommand, (unsigned short *) mcommand_data);
               mcommand = -1;
               mcommand_count = 0;
@@ -1050,281 +1063,75 @@ void WatchPortC1 () {
             } else {
               mcommand = -1;
               mcommand_count = 0;
-              printf(" Command packet discarded (bad encoding).\n");
+              fprintf(stderr,
+                  "COMM%i: Command packet discarded: Bad Encoding: %02X\n",
+                  port + 1 , buf);
               mcommand_time = 0;
             }
           }
         }
         break;
-
       case 3: /* waiting for request data packet end */
         readstage = 0;
-        if (buf[0] == 0x03) {
-          //printf(" *1 \n");
+        if (buf == 0x03) {
           SendDownData(tty_fd);
+          fprintf(stderr, "COMM%i: Got Data Request End\n", port + 1);
         } else {
-          fprintf(stderr, "\nBad packet terminated (improper closing byte).\n");
+          fprintf(stderr, "COMM%i: Bad encoding: Bad packet terminator: %02X\n",
+              port + 1, buf);
         }
         break;
-
       case 4: /* waiting for GPS position datum */
         if (bytecount < 14) {  /* There are 14 data bytes for GPS position */
-          indata[bytecount] = buf[0];
+          indata[bytecount] = buf;
           bytecount++;
         } else {
           bytecount = 0;
           readstage = 0;
-          if (buf[0] == 0x03) {
+          if (buf == 0x03) {
             GPSPosition((unsigned char *) indata);
+            fprintf(stderr, "COMM%i: Got SIP GPS data\n", port + 1);
           } else {
-            printf(" error in SIP GPS reading \n");
+            fprintf(stderr, "COMM%i: Bad encoding in GPS Position: "
+                "Bad packet terminator: %02X\n", port + 1, buf);
           }
         }
         break;
-
-
       case 5: /* waiting for GPS time datum:  case 0x11 */
         if (bytecount < 14) {  /* There are fourteen data bytes for GPS time */
-          indata[bytecount] = buf[0];
+          indata[bytecount] = buf;
           bytecount++;
         } else {
           bytecount = 0;
           readstage = 0;
-          if (buf[0] == 0x03) {
+          if (buf == 0x03) {
             GPSTime((unsigned char *) indata);
           } else {
-            printf(" error in SIP TIME reading \n");
+            fprintf(stderr, "COMM%i: Bad encoding in GPS Time: "
+                "Bad packet terminator: %02X\n", port + 1, buf);
           }
         }
         break;
-
       case 6: /* waiting for MKS pressure datum: case 0x12 */
         if (bytecount < 6) {
-          indata[bytecount] = buf[0];
+          indata[bytecount] = buf;
           bytecount++;
         } else {
           bytecount = 0;
           readstage = 0;
-          if (buf[0] == 0x03) {
+          if (buf == 0x03) {
             MKSAltitude((unsigned char *) indata);
-            //printf(" @ \n");
           } else {
-            printf(" error in MKS altitude reading\n");
+            fprintf(stderr, "COMM%i: Bad encoding in MKS Altitude: "
+                "Bad packet terminator: %02X\n", port + 1, buf);
           }
         }
     }
 
     // Relinquish control of memory
     pthread_mutex_unlock(&mutex);
-
-  } while (1 == 1);
-}
-
-void WatchPortC2 () {
-  unsigned char buf[1];
-  unsigned short *indatadumper;
-  unsigned char indata[20];
-  char readstage = 0;
-  char tty_fd;
-
-  int mcommand = -1;
-  int mcommand_count = 0;
-  int dataqsize = 0;
-  unsigned short mcommand_data[DATA_Q_SIZE];
-  unsigned char mcommand_time = 0;
-
-  int timer = 0;
-  int bytecount = 0;
-
-  int pid = getpid();
-  fprintf(stderr, ">> WatchPortC2 startup on pid %i\n", pid);
-
-  if((tty_fd = bc_setserial(COMM2)) < 0) {
-    perror("Unable to open serial port");
-    exit(1);
   }
-
-  do {
-    /* Loop until data come in */
-    while (read(tty_fd, buf, 1) <= 0) {
-      timer++;
-      /** Request updated info every 5 seconds */
-      if (timer == 250) { 
-        pthread_mutex_lock(&mutex);
-        SendRequest (REQ_POSITION, tty_fd);
-        SendRequest (REQ_TIME, tty_fd);
-        SendRequest (REQ_ALTITUDE, tty_fd);
-        pthread_mutex_unlock(&mutex);
-        timer = 0;
-      }
-      usleep(10000); /* sleep for 10ms */
-    }
-
-    // Take control of memory
-    pthread_mutex_lock(&mutex);
-
-    /* Process data */
-    switch (readstage) {
-      /* readstage: 0: waiting for packet beginning (0x10) */
-      /*            1: waiting for packet type (e.g., 0x14 = command packet) */
-      /*            2: waiting for command packet datum: case 0x14 */
-      /*            3: waiting for request data packet end: case 0x13 */
-      /*            4: waiting for GPS position datum: case 0x10 */
-      /*            5: waiting for GPS time datum:  case 0x11 */
-      /*            6: waiting for MKS pressure datum: case 0x12 */
-
-      case 0: /* waiting for packet beginning */
-        if (buf[0] == 0x10)
-          readstage = 1;
-        break;
-
-
-      case 1: /* wating for packet type */
-        if (buf[0] == 0x13) /* Send data request */
-          readstage = 3;
-        else if (buf[0] == 0x14) /* Command */
-          readstage = 2;
-        else if (buf[0] == 0x10) /* GPS Position */
-          readstage = 4;
-        else if (buf[0] == 0x11) /* GPS Position */
-          readstage = 5;
-        else if (buf[0] == 0x12) /* MKS Pressure */
-          readstage = 6;
-        else
-          printf("Bad packet received (unrecognised header).\n");
-        break;
-
-
-      case 2: /* waiting for command packet datum */
-        if (bytecount == 0) {  /* Look for 2nd byte of command packet = 0x02 */
-          if (buf[0] == 0x02)
-            bytecount = 1;
-          else {
-            readstage = 0;
-            fprintf(stderr, "\nBad packet terminated (improper encoding).\n");
-          }
-        } else if (bytecount >= 1 && bytecount <= 2) {
-          /* Read the two data bytes of the command packet */
-          indata[bytecount - 1] = buf[0];
-          bytecount++;
-        } else {
-          bytecount = 0;
-          if (buf[0] == 0x03) {
-            /* We should now be at the end of the command packet */
-            readstage = 0;
-
-            /* Check bits 6-8 from second data byte for type of command */
-            /* Recall:    101 = 0x05 = single command */
-            /*            100 = 0x04 = begin multi command */
-            /*            110 = 0x06 = end multi command */
-            /*            0?? = 0x00 = data packet in multi command */
-
-
-            if (((indata[1] >> 5) & 0x07) == 0x05) {
-              /*** Single command ***/
-              printf(" Single command received\n");
-              SingleCommand(indata[0]);
-              mcommand = -1;
-            } else if (((indata[1] >> 5) & 0x07) == 0x04) {
-              /*** Beginning of multi command ***/
-              /*Grab first five bits of second byte containing command number*/
-              mcommand = indata[0];
-              mcommand_count = 0;
-              dataqsize = DataQSize(mcommand);
-              printf(" Multi word command %d started\n", mcommand);
-
-              /* The time of sending, a "unique" number shared by the first */
-              /* and last packed of a multi-command */
-              mcommand_time = indata[1] & 0x1F;  
-            } else if ((((indata[1] >> 7) & 0x01) == 0) && (mcommand >= 0) &&
-                (mcommand_count < dataqsize)) {
-              /*** Parameter values in multi-command ***/
-              indatadumper = (unsigned short *) indata;
-              mcommand_data[mcommand_count] = *indatadumper;
-              printf(" Multi word command continues...\n");
-              mcommand_count++;
-            } else if ((((indata[1] >> 5) & 0x07) == 0x06) &&
-                (mcommand == indata[0]) && 
-                ((indata[1] & 0x1F) == mcommand_time) &&
-                (mcommand_count == dataqsize)) {
-              /*** End of multi-command ***/
-              printf(" Multi word command ends \n");
-              MultiCommand(mcommand, (unsigned short *) mcommand_data);
-              mcommand = -1;
-              mcommand_count = 0;
-              mcommand_time = 0;
-            } else {
-              mcommand = -1;
-              mcommand_count = 0;
-              printf(" Command packet discarded (bad encoding).\n");
-              mcommand_time = 0;
-            }
-          }
-        }
-        break;
-
-      case 3: /* waiting for request data packet end */
-        readstage = 0;
-        if (buf[0] == 0x03) {
-          //printf(" *1 \n");
-          SendDownData(tty_fd);
-        } else {
-          fprintf(stderr, "\nBad packet terminated (improper closing byte).\n");
-        }
-        break;
-
-      case 4: /* waiting for GPS position datum */
-        if (bytecount < 14) {  /* There are 14 data bytes for GPS position */
-          indata[bytecount] = buf[0];
-          bytecount++;
-        } else {
-          bytecount = 0;
-          readstage = 0;
-          if (buf[0] == 0x03) {
-            GPSPosition((unsigned char *) indata);
-          } else {
-            printf(" error in SIP GPS reading \n");
-          }
-        }
-        break;
-
-
-      case 5: /* waiting for GPS time datum:  case 0x11 */
-        if (bytecount < 14) {  /* There are fourteen data bytes for GPS time */
-          indata[bytecount] = buf[0];
-          bytecount++;
-        } else {
-          bytecount = 0;
-          readstage = 0;
-          if (buf[0] == 0x03) {
-            GPSTime((unsigned char *) indata);
-          } else {
-            printf(" error in SIP TIME reading \n");
-          }
-        }
-        break;
-
-      case 6: /* waiting for MKS pressure datum: case 0x12 */
-        if (bytecount < 6) {
-          indata[bytecount] = buf[0];
-          bytecount++;
-        } else {
-          bytecount = 0;
-          readstage = 0;
-          if (buf[0] == 0x03) {
-            MKSAltitude((unsigned char *) indata);
-          } else {
-            printf(" error in MKS altitude reading\n");
-          }
-        }
-    }
-
-    // Relinquish control of memory
-    pthread_mutex_unlock(&mutex);
-
-  } while (1 == 1);
 }
-
 
 /************************************************************/
 /*                                                          */

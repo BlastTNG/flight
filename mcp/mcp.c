@@ -61,8 +61,7 @@ extern struct SlowDLStruct SlowDLInfo[N_SLOWDL];
 extern pthread_mutex_t mutex;
 
 void Pointing();
-void WatchPortC1(void);
-void WatchPortC2(void);
+void WatchPort(void*);
 void WatchDGPS(void);
 void IntegratingStarCamera(void);
 void WatchFIFO(void);
@@ -550,8 +549,8 @@ int main(int argc, char *argv[]) {
 #ifdef BOLOTEST
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, NULL);
 #else
-  pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPortC1, NULL);
-  pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPortC2, NULL);
+  pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
+  pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
 
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS,NULL);
   pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, NULL);
