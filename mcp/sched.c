@@ -204,7 +204,7 @@ void InitSched(void) {
       printf("******************************************\n"
 	     "*** Warning: El Range\n");
       printf("*** LST: %7.4f Ra: %8.3f  Dec: %8.3f\n",
-	     S.p[i].t, S.p[i].X, S.p[i].Y);
+	     S.p[i].t/3600.0, S.p[i].X, S.p[i].Y);
     }
     printf("*** %2d Az: %8.3f - %8.3f El: %8.3f - %8.3f\n", i,
 	   az1, az2, el1, el2);
