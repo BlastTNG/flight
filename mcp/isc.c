@@ -21,7 +21,10 @@ short int write_ISC_pointing = 0; // isc.c
 
 struct ISCSolutionStruct ISCSolution[3];
 int iscdata_index = 0;
+
+#ifdef USE_ISC_LOG
 FILE* isc_log = NULL;
+#endif
 
 int ISCInit(void)
 {
@@ -30,11 +33,13 @@ int ISCInit(void)
 
   int n;
 
+#ifdef USE_ISC_LOG
   if (isc_log == NULL) {
     if ((isc_log = fopen("/tmp/mcp.isc.log", "a")) == NULL) {
       perror("ISC log fopen()");
     }
   }
+#endif
 
   sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (sock == -1) {
@@ -76,7 +81,10 @@ void IntegratingStarCamera(void)
   struct PointingDataStruct MyPointData;
 
   int sock = -1, ISCReadIndex;
+
+#ifdef USE_ISC_LOG
   time_t t;
+#endif
 
   int n, save_image_state = 0;
 
@@ -136,6 +144,7 @@ void IntegratingStarCamera(void)
               sizeof(struct ISCSolutionStruct), n);
           break;
         }
+#ifdef USE_ISC_LOG
         if (isc_log != NULL) {
           t = time(NULL);
           fprintf(isc_log, "%s: %i %i - %.4lf %.4lf %.4lf\n", ctime(&t),
@@ -146,6 +155,7 @@ void IntegratingStarCamera(void)
               ISCSolution[iscdata_index].sigma * RAD2DEG * 3600.);
           fflush(isc_log);
         }
+#endif
 
         //t2 = t1;
         //gettimeofday(&t1, NULL);
@@ -204,6 +214,7 @@ void IntegratingStarCamera(void)
             break;
           }
           write_ISC_pointing = 0;
+#ifdef USE_ISC_LOG
           if (isc_log != NULL) {
             t = time(NULL);
             fprintf(isc_log,
@@ -226,6 +237,7 @@ void IntegratingStarCamera(void)
                 CommandData.ISCState.quit_tol, CommandData.ISCState.rot_tol);
             fflush(isc_log);
           }
+#endif
         }
 
         /* Deassert abort and shutdown after (perhaps) sending it */
