@@ -415,7 +415,7 @@ void SlowChIndex(char* field, int* channel, int* index) {
 
 void FPrintDerived(FILE *fp) {
     fprintf(fp,
-      "### Sensor Veto ###"
+      "### Sensor Veto ###\n"
       "SUN_VETO         BIT sensor_veto 1\n"
       "ISC_VETO         BIT sensor_veto 2\n"
       "VSC_VETO         BIT sensor_veto 3\n"
