@@ -4,7 +4,7 @@ while true;
 do
   sensors | awk '($1=="fan1:"){printf "%d ",$2}($1=="temp:"){printf "%.1f \n", $2}' > /data/rawdir/sensors.tmp;
   mv -f /data/rawdir/sensors.tmp /data/rawdir/sensors.dat;
-  df /data | awk '($1=="/dev/hda6") {print $4}' > /data/rawdir/df.tmp;
+  df -B 1M /data | awk '($6=="/data") {print $4}' > /data/rawdir/df.tmp;
   mv -f /data/rawdir/df.tmp /data/rawdir/df.dat;
   sleep 1;
 done;
