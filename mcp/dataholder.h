@@ -29,7 +29,6 @@
 #define AML_LEN_ENTRY   32
 
 #include "tdrss.h"
-#include "tdrss_c.h"
 #include "channels.h"
 
 struct value_struct {
