@@ -135,6 +135,16 @@ void WatchDGPS() {
   fprintf(fp,"$PASHS,SPD,B,7\r\n"); // 38400 Pg 66
 
   fclose(fp);
+  
+  SetGPSPort(B115200);
+
+  fp = fopen(GPSCOM, "r+");
+  if (fp == NULL)
+    berror(tfatal, "error opening gps port for i/o");
+
+  fprintf(fp,"$PASHS,SPD,B,7\r\n"); // 38400 Pg 66
+
+  fclose(fp);
 
   SetGPSPort(B38400);
 
