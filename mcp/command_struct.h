@@ -86,7 +86,7 @@ struct CryoStruct {
   int heliumLevel;
   int charcoalHeater;
   int coldPlate;
-  int calibrator;
+  int calibrator, calib_pulse, calib_repeat;
   int sparePwm;
   int JFETHeat;
   int heatSwitch;

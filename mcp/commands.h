@@ -296,8 +296,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {"calib_pulse_rpt", "pulse calibrator repeatedly", GR_CALIBRATOR, 2,
     {
-      {"pulse length (ms)", 0, 8000, 'i', 0, "ADD"},
-      {"repeat delay (s)", 0, 86400, 'f', 0, "ADD"}
+      {"pulse length (ms)", 1, 8000, 'i', 0, "ADD"},
+      {"repeat delay (s)", 1, 86400, 'f', 0, "ADD"}
     }
   },
 

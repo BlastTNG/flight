@@ -293,6 +293,8 @@ void SingleCommand (int command) {
     CommandData.Cryo.calibrator = 1;
   else if (command == SIndex("calibrator_off"))
     CommandData.Cryo.calibrator = 0;
+  else if (command == SIndex("calibrator_stop"))
+    CommandData.Cryo.calib_pulse = 0;
 
   else if (command == SIndex("ln2_valve_open")) {    /* Motorised Valves */
     CommandData.Cryo.lnvalve_open = 1;
@@ -479,6 +481,7 @@ void MultiCommand (int command, unsigned short *dataq) {
   } else if (command == MIndex("az_vel")) {  /* fixed azimuth velocity */
     CommandData.axes_mode.az_mode = AXIS_VEL;
     CommandData.axes_mode.az_vel = rvalues[0];
+
   } else if (command == MIndex("jfet_heat"))
     CommandData.Cryo.JFETHeat = rvalues[0] * 2047./100.;
   else if (command == MIndex("heatswitch_heat"))
@@ -487,11 +490,18 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.Cryo.heliumThree = rvalues[0] * 2047./100.;
   else if (command == MIndex("spare_cryo_pwm"))
     CommandData.Cryo.sparePwm = rvalues[0] * 2047./100.;
-  else if (command == MIndex("bias_1_level"))    /* Set bias 1 */
+  else if (command == MIndex("calib_pulse")) {
+    CommandData.Cryo.calib_pulse = ivalues[0];
+    CommandData.Cryo.calib_repeat = 0;
+  } else if (command == MIndex("calib_pulse_rpt")) {
+    CommandData.Cryo.calib_pulse = ivalues[0];
+    CommandData.Cryo.calib_repeat = rvalues[1];
+
+  } else if (command == MIndex("bias_1_level"))    /* Set bias 1 */
     CommandData.Bias.bias1 = ivalues[0];
-  else if (command == MIndex("bias_2_level"))    /* Set bias 1 */
+  else if (command == MIndex("bias_2_level"))    /* Set bias 2 */
     CommandData.Bias.bias2 = ivalues[0];
-  else if (command == MIndex("bias_3_level"))    /* Set bias 1 */
+  else if (command == MIndex("bias_3_level"))    /* Set bias 3 */
     CommandData.Bias.bias3 = ivalues[0];
   else if (command == MIndex("phase")) {
     if (ivalues[0] >= 5 && ivalues[0] <= 16) 
