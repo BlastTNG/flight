@@ -125,8 +125,10 @@ void ControlGyroHeat(unsigned int *TxFrame,  unsigned short *RxFrame,
 
     p_on = P * error + (deriv / 60.0) * D + integral * I;
 
-    if (p_on > 60) p_on = 60;
-    if (p_on < 0) p_on = 0;
+    if (p_on > 60)
+      p_on = 60;
+    if (p_on < 0)
+      p_on = 0;
     p_off = 60 - p_on;
 
   }
@@ -230,7 +232,7 @@ int GetLockBits(int acs0bits) {
     searching = SEARCH_COUNTS;
   }
 
-  if (searching>1) {
+  if (searching > 1) {
     if (fabs(ACSData.enc_elev -
           LockPosition(ACSData.enc_elev)) > 0.2) {
       searching = SEARCH_COUNTS;
@@ -310,10 +312,14 @@ void ControlAuxMotors(unsigned int *TxFrame,  unsigned short *RxFrame,
   /* two latching pumps 3/4 */
   /* two non latching: on/off, fwd/rev */
   if (CommandData.pumps.bal_veto) {
-    if (CommandData.pumps.bal1_on) iscBits |= BAL1_ON;
-    if (CommandData.pumps.bal1_reverse) iscBits |= BAL1_REV;
-    if (CommandData.pumps.bal2_on) iscBits |= BAL2_ON;
-    if (CommandData.pumps.bal2_reverse) iscBits |= BAL2_REV;
+    if (CommandData.pumps.bal1_on)
+      iscBits |= BAL1_ON;
+    if (CommandData.pumps.bal1_reverse)
+      iscBits |= BAL1_REV;
+    if (CommandData.pumps.bal2_on)
+      iscBits |= BAL2_ON;
+    if (CommandData.pumps.bal2_reverse)
+      iscBits |= BAL2_REV;
   }
 
   /* two latching pumps: */
@@ -357,7 +363,7 @@ void ControlAuxMotors(unsigned int *TxFrame,  unsigned short *RxFrame,
 
   /*********************/
   /* ISC Pulsing stuff */
-  if (isc_pulses.ctr<isc_pulses.pulse_width) {
+  if (isc_pulses.ctr < isc_pulses.pulse_width) {
     iscBits |= ISC_TRIGGER;
   }
   
@@ -366,7 +372,8 @@ void ControlAuxMotors(unsigned int *TxFrame,  unsigned short *RxFrame,
   if (isc_pulses.ctr == 20)
     write_ISC_pointing = 1;	
 
-  if (isc_pulses.age>=0) isc_pulses.age++;
+  if (isc_pulses.age >= 0)
+    isc_pulses.age++;
   
   if (isc_pulses.ctr < ISC_TRIG_PERIOD) {
     isc_pulses.ctr++;
