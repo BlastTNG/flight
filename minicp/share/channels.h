@@ -66,6 +66,10 @@ extern "C" {
   extern struct ChannelStruct** SlowChList;
   extern struct ChannelStruct* FastChList;
 
+  extern unsigned short ccWideFast;
+  extern unsigned short ccNarrowFast;
+  extern unsigned short ccWideSlow;
+  extern unsigned short ccNarrowSlow;
   extern unsigned short ccFast;
   extern unsigned short ccTotal;
 

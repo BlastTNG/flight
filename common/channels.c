@@ -824,7 +824,7 @@ struct NiosStruct* GetNiosAddr(const char* field) {
 
   return NULL;
 }
-#else
+#endif
 
 void FPrintDerived(FILE *fp) {
   fprintf(fp,
@@ -911,4 +911,3 @@ void FPrintDerived(FILE *fp) {
     "CPU_YEAR LINCOM 1       CPU_SEC 3.17099E-8  0\n", time(NULL)
     );
 }
-#endif
