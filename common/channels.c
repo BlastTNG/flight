@@ -515,7 +515,7 @@ void DoSanityChecks(void)
 
   for (i = 0; i < N_FAST_BOLOS; ++i) {
     fastsPerBusFrame[BOLO_BUS]++;
-    BBCAddressCheck(fields[1], FastChannels[i].field, BoloChannels[i].node,
+    BBCAddressCheck(fields[1], BoloChannels[i].field, BoloChannels[i].node,
         BoloChannels[i].addr);
   }
 
