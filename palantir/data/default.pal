@@ -203,17 +203,17 @@
     </DATUM>
   </MULTI>
   <NUMBER caption="X (deg)" textstyle="evenrow">
-    <DATUM format="%.2f" src="P_X_DEG" extrema="angle"/></NUMBER>
+    <DATUM format="%.4f" src="P_X_DEG" extrema="angle"/></NUMBER>
   <NUMBER caption="X (h)" textstyle="evenrow">
-    <DATUM format="%.2f" src="P_X_H" extrema="angle"/></NUMBER>
+    <DATUM format="%.4f" src="P_X_H" extrema="angle"/></NUMBER>
   <NUMBER caption="Y" textstyle="evenrow">
-    <DATUM format="%.2f" src="P_Y" extrema="angle"/></NUMBER>
+    <DATUM format="%.4f" src="P_Y" extrema="angle"/></NUMBER>
   <NUMBER caption="Az Vel" textstyle="evenrow">
     <DATUM format="%.4f" src="P_VAZ" extrema="dps"/></NUMBER>
   <NUMBER caption="dEl" textstyle="evenrow">
-    <DATUM format="%.2f" src="P_DEL" extrema="angle"/></NUMBER>
+    <DATUM format="%.4f" src="P_DEL" extrema="angle"/></NUMBER>
   <NUMBER caption="W" textstyle="evenrow">
-    <DATUM format="%.2f" src="P_W" extrema="angle"/></NUMBER>
+    <DATUM format="%.4f" src="P_W" extrema="angle"/></NUMBER>
   <NUMBER caption="H" textstyle="evenrow">
     <DATUM format="%.4f" src="P_H" extrema="dps"/></NUMBER>
   <NUMBER caption="Current Az" textstyle="evenrow">
