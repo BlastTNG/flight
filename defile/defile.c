@@ -608,6 +608,7 @@ int main (int argc, char** argv)
 {
   struct timeval now;
   long long int delta;
+  float freq = 0;
 
   pthread_t read_thread;
   pthread_t write_thread;
@@ -706,15 +707,18 @@ int main (int argc, char** argv)
         gettimeofday(&now, &rc.tz);
         delta = (now.tv_sec - rc.start.tv_sec) * 1000000LL - rc.start.tv_usec
           + now.tv_usec;
-        printf("R:[%i of %i] W:[%i] %.3f kHz\r", ri.read, ri.old_total
-            + ri.chunk_total, ri.wrote, 1000. * ri.wrote / delta);
+        freq = 1000. * ri.wrote / delta;
+        printf("R:[%i of %i] W:[%i] %.*f kHz\r", ri.read, ri.old_total
+            + ri.chunk_total, ri.wrote, (freq > 100) ? 1 : (freq > 10) ? 2 : 3,
+            freq);
         fflush(stdout);
       }
       usleep(100000);
     } while (!ri.writer_done);
   pthread_join(read_thread, NULL);
   pthread_join(write_thread, NULL);
-  bprintf(info, "R:[%i of %i] W:[%i] %.3f kHz\n", ri.read, ri.old_total
-      + ri.chunk_total, ri.wrote, 1000. * ri.wrote / delta);
+  if (!rc.silent)
+    bprintf(info, "R:[%i of %i] W:[%i] %.*f kHz", ri.read, ri.old_total +
+        ri.chunk_total, ri.wrote, (freq > 100) ? 1 : (freq > 10) ? 2 : 3, freq);
   return 0;
 }
