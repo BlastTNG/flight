@@ -699,29 +699,13 @@ void MainForm::WriteCmd(QMultiLineEdit *dest, char *args[]) {
 void MainForm::WriteLog(char *args[]) {
   QDateTime qdt;
   QString LogEntry, Group;
+  int i, j;
 
   Group = GroupNames[GetGroup()];
 
   qdt = QDateTime::currentDateTime();
-  LogEntry = QString(
-    "-- Time  : %1\n"
-    "-- Source: %2  Type: %3  Entry By: %4\n"
-    "-- Frame : %5  File: %6  \n")
-             .arg(qdt.toString())
-             .arg("narsil",-10)
-             .arg(Group, -10)
-             .arg((getpwuid(getuid()))->pw_name, -10)
-             .arg(DataSource->numFrames(),-10)
-             .arg(DataSource->fileName());
 
-  int i, j;
-  for (i=0; args[i] != '\0'; i++) {
-    LogEntry += args[i];
-    LogEntry += " ";
-  }
-  LogEntry += "\nDescription: ";
-
-  LogEntry += NAboutLabel->text();
+  LogEntry = NAboutLabel->text();
   LogEntry += "\n";
 
   if ((j = MIndex(NCommandList->text(NCommandList->currentItem())))
@@ -734,7 +718,15 @@ void MainForm::WriteLog(char *args[]) {
     }
       LogEntry += "\n";
   }
-  LogEntry+="Transmit via ";
+
+  LogEntry+="\n";
+
+  for (i=0; args[i] != '\0'; i++) {
+    LogEntry += args[i];
+    LogEntry += " ";
+  }
+
+  LogEntry+="\nTransmit via ";
   switch (NSendMethod->currentItem()) {
       case 0:
         LogEntry+="Line of Sight";
@@ -757,7 +749,18 @@ void MainForm::WriteLog(char *args[]) {
   }
 
   LogEntry += "\n";
+  LogEntry += QString(
+    "-- Time  : %1\n"
+    "-- Source: %2  Type: %3  Entry By: %4\n"
+    "-- Frame : %5  File: %6  \n")
+             .arg(qdt.toString())
+             .arg("narsil",-10)
+             .arg(Group, -10)
+             .arg((getpwuid(getuid()))->pw_name, -10)
+             .arg(DataSource->numFrames(),-10)
+             .arg(DataSource->fileName());
 
+  LogEntry+="--------------------------------------------------\n\n";
   QString logfilename = LOGFILEDIR +
                         qdt.toString("yyyy-MM-dd.hh:mm:ss") + "." +
                         "narsil." +
@@ -771,6 +774,16 @@ void MainForm::WriteLog(char *args[]) {
     stream << LogEntry;
     logfile.close();
   }
+
+  QString elog_command = QString(
+    "elog -h blast.physics.utoronto.ca -p 8080 -l blast-narsil "
+    "-u narsil submmblast "
+    "-a User=%1 -a Source=narsil -a Category=%2 -m %3")
+                         .arg(QString((getpwuid(getuid()))->pw_name))
+                         .arg(Group)
+                         .arg(logfilename);
+
+  system(elog_command.latin1());
 
 }
 
@@ -1255,7 +1268,7 @@ int main(int argc, char* argv[]) {
   strcpy(curfile, DEF_CURFILE);
 
   KAboutData aboutData( "narsil", I18N_NOOP("Narsil"),
-                        "0.87", description, KAboutData::License_GPL,
+                        "0.88", description, KAboutData::License_GPL,
                         "(c) 2004, UofT", 0, 0, "");
   aboutData.addAuthor("adam hincks",0, "");
   aboutData.addAuthor("don wiebe",0, "");
