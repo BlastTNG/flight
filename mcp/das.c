@@ -144,7 +144,7 @@ void CryoControl (unsigned int* Txframe,
     SlowChIndex("cal_repeat", &calRepeatCh, &calRepeatInd);
   }
 
-  /* We want to save these here since CalLamp will destroy calib_repeat */
+  /* We want to save these here since CalLamp might destroy calib_repeat */
   WriteSlow(pulseLenCh, pulseLenInd, CommandData.Cryo.calib_pulse);
   WriteSlow(calRepeatCh, calRepeatInd, CommandData.Cryo.calib_repeat);
 
@@ -342,7 +342,7 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
     if (CommandData.Bias.SetLevel1) {
       biasout2 = ((CommandData.Bias.bias1 << 4) & 0xf0) | 0x03;
       hold = 2 * FAST_PER_SLOW + 4;
-      rb_hold = 100;
+      rb_hold = 400;
       CommandData.Bias.SetLevel1 = 0;
     }
     ch++;
@@ -350,7 +350,7 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
     if (CommandData.Bias.SetLevel2) {
       biasout2 = ((CommandData.Bias.bias2 << 4) & 0xf0) | 0x05;
       hold = 2 * FAST_PER_SLOW + 4;
-      rb_hold = 100;
+      rb_hold = 400;
       CommandData.Bias.SetLevel2 = 0;
     }
     ch++;
@@ -358,13 +358,13 @@ void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
     if (CommandData.Bias.SetLevel3) {
       biasout2 = ((CommandData.Bias.bias3 << 4) & 0xf0) | 0x06;
       hold = 2 * FAST_PER_SLOW + 4;
-      rb_hold = 100;
+      rb_hold = 400;
       CommandData.Bias.SetLevel3 = 0;
     }
     ch = 0;
   }
 
-  /* Bias readback -- we wait a second after finishing the write */
+  /* Bias readback -- we wait a few seconds after finishing the write */
   if (rb_hold > 0) {
     rb_hold--;
   } else if (!CommandData.Bias.SetLevel3 && !CommandData.Bias.SetLevel3 &&
