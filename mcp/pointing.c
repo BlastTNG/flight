@@ -234,6 +234,9 @@ int MagConvert(double *mag_az) {
   mag_az_tmp = MagLutCal(&magLut, ACSData.mag_x, ACSData.mag_y, mag_az_tmp);
   *mag_az = mag_az_tmp;  
 
+#warning the magnetic model has been disabled
+  dec = 0; // disable mag model.
+  
   *mag_az += dec + MAG_ALIGNMENT;
 
   NormalizeAngle(mag_az);

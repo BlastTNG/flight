@@ -163,7 +163,7 @@ void WatchDGPS() {
   fprintf(fp,"$PASHS,3DF,FLT,N\r\n"); // no averaging filter
   fprintf(fp,"$PASHS,3DF,ANG,3\r\n"); // max array tilt p 73
   fprintf(fp,"$PASHS,NME,ALL,B,OFF\r\n"); // turn off all messages on B
-  fprintf(fp,"$PASHS,NME,PER,0\r\n");  	  // set to 2Hz messages
+  //fprintf(fp,"$PASHS,NME,PER,0\r\n");  	  // set to 2Hz messages
   fprintf(fp,"$PASHS,NME,ZDA,B,ON\r\n");  // turn on time message P109
   fprintf(fp,"$PASHS,NME,PAT,B,ON\r\n");   // turn on attitude/position P98
   fprintf(fp,"$PASHS,NME,POS,B,ON\r\n");   // turn on pos/vel message P99
