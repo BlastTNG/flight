@@ -42,6 +42,8 @@
 /* Seconds in a week */
 #define SEC_IN_WEEK  604800L
 
+void SetRaDec(double ra, double dec); // defined in pointing.c
+
 struct SlowDLStruct SlowDLInfo[N_SLOWDL] = {
   {"t_dpm_3v", FORCEINT, 8, -1, -1, -1, -1, -1, -1},
   {"cpu_time", U_MASK,   8, -1, -1, -1, -1, -1, -1},
@@ -468,7 +470,7 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pointing_mode.az1 = 0.0;
     CommandData.pointing_mode.az2 = 0.0;
     CommandData.pointing_mode.el1 = 0.0;
-    CommandData.pointing_mode.el2 = 0.0;    
+    CommandData.pointing_mode.el2 = 0.0;
   } else if (command == MIndex("ra_dec_goto")) {  /* raster a circle */
     CommandData.pointing_mode.az_mode = POINT_RADEC_GOTO;
     CommandData.pointing_mode.el_mode = POINT_RADEC_GOTO;
@@ -481,6 +483,8 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.pointing_mode.az2 = 0.0;
     CommandData.pointing_mode.el1 = 0.0;
     CommandData.pointing_mode.el2 = 0.0;    
+  } else if (command == MIndex("ra_dec_set")) {
+    SetRaDec(rvalues[0], rvalues[1]);
   } else if (command == MIndex("az_scan")) {  /* scan in azimuth */
     CommandData.pointing_mode.az_mode = POINT_SCAN;
     CommandData.pointing_mode.az1 = rvalues[0]-rvalues[1]/2.0;

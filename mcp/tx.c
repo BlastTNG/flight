@@ -132,6 +132,7 @@ double GetVElev() {
   
   /* correct offset and convert to Gyro Units */
   vel -= PointingData[i_point].gy1_offset;
+
   vel *= DPS2GYU; 
 
   /* Limit Maximim speed */
@@ -175,8 +176,8 @@ int GetVAz() {
   //vel_offset = -GY2_TMP_OFFSET*cos(PointingData[i_point].el) -
   //       GY3_TMP_OFFSET*sin(PointingData[i_point].el);
   vel_offset =
-    -PointingData[i_point].gy2_offset*cos(PointingData[i_point].el) -
-    PointingData[i_point].gy3_offset*sin(PointingData[i_point].el);
+    -PointingData[i_point].gy2_offset*cos(PointingData[i_point].el*M_PI/180.0) -
+    PointingData[i_point].gy3_offset*sin(PointingData[i_point].el*M_PI/180.0);
   
   vel -= vel_offset;
   vel *= DPS2GYU; // convert to gyro units
@@ -214,6 +215,8 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   static int i_g_pivot = -1, j_g_pivot = -1;
   static int i_set_reac = -1, j_set_reac = -1;
 
+  static int wait = 4;
+  
   double el_rad;
   unsigned int ucos_el;
   unsigned int usin_el;
@@ -235,16 +238,20 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
     SlowChIndex("g_p_pivot", &i_g_pivot, &j_g_pivot);
     SlowChIndex("set_reac", &i_set_reac, &j_set_reac);
   }
-
+  
   i_point = GETREADINDEX(point_index);
 
   v_elev = GetVElev() * 6.0; // the 6.0 is to improve dynamic range.
   if (v_elev>32767) v_elev = 32767;
   if (v_elev < -32768) v_elev = -32768;
+
+  if (wait>0) v_elev = 0;
   
   // It is removed in the DSP/ACS1 code.
   WriteFast(i_elVreq, 32768 + v_elev);
   v_az = GetVAz()*6.0; // the 6.0 is to improve dynamic range.
+  
+  if (wait>0) v_az = 0.0;
   WriteFast(i_azVreq, 32768 + v_az);
 
   /*** Send elevation angles to acs1 from acs2 ***/
@@ -287,6 +294,8 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   WriteSlow(i_g_pivot, j_g_pivot, CommandData.pivot_gain.P);
   /* setpoint for reaction wheel */
   WriteSlow(i_set_reac, j_set_reac, CommandData.pivot_gain.SP + 32768);
+
+  if (wait>0) wait--;
 }
 
 /************************************************************************

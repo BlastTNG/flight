@@ -560,6 +560,8 @@ int main(int argc, char *argv[]) {
   pthread_create(&bi0_id, NULL, (void*)&BiphaseWriter, NULL);
 #endif
 
+  memset(PointingData, 0, 3*sizeof(struct PointingDataStruct));
+  
   fprintf(stderr, "Tx Frame Bytes: %d.  Allowed: 2220\n", TxFrameBytes());
   if (TxFrameBytes() > 2220) exit(1);
 
