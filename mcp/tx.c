@@ -734,10 +734,6 @@ void InitTxFrame(void)
 void RawNiosWrite(unsigned int addr, unsigned int data)
 {
   unsigned int niosData[2];
-/*   static int nwrite = 20000; */
-
-/*   if(nwrite == 0) return; */
-/*   nwrite--; */
 
   niosData[0] = addr;
   niosData[1] = data;
