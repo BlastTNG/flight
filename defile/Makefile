@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O3 -Wall
+CFLAGS = -O3 -Wall -D__DEFILE__
 LDFLAGS = -lpthread
 
 all: defile
