@@ -42,7 +42,7 @@
 
 #include <iostream>
 
-#define PADDING 12
+#define PADDING 6
 #define SPACING 6
 
 #define DEF_CURFILE CUR_DIR "/decom.cur"
@@ -901,7 +901,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NSettingsButton->adjustSize();
 
   NCommandList->setGeometry(PADDING, PADDING, NCommandList->width(),
-      2 * PADDING + h1 + (int(MAX_N_PARAMS/2) + 3) *
+      2 * PADDING + h1 + (int(MAX_N_PARAMS/2) + 0) *
       (h3 + SPACING));
 
   NSendButton->setGeometry(2 * PADDING + NAboutLabel->width() +
