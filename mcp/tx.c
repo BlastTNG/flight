@@ -202,6 +202,7 @@ void SyncADC (void) {
         doingSync = FAST_PER_SLOW * 2;
         l = (k + last_node) % NUM_STAT;
         l = (l == 0) ? 23 : (l == 17) ? 21 : l;
+        last_node = k;
         bprintf(info, "ADC Sync board %i\n", l);
         RawNiosWrite(syncAddr->niosAddr, BBC_WRITE | BBC_NODE(l) | BBC_CH(56) |
             BBC_ADC_SYNC | 0xa5a3, NIOS_FLUSH);
