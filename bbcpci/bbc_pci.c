@@ -89,7 +89,7 @@ static void timer_callback(unsigned long dummy)
   static loff_t wp, rp;
   static int nwritten;
   static unsigned short out_data[2];
-  static int idx = 0;
+  static int idx = 1;
 
 /*   static int all = 0; */
 /*   static unsigned long old = 0; */
@@ -135,14 +135,14 @@ static void timer_callback(unsigned long dummy)
     while( bi0_wfifo.n ) {
       wp = readl(bbc_drv.mem_base + BBCPCI_ADD_BI0_WP);
       if(wp == rp) break;
-      out_data[idx++] = bi0_wfifo.data[bi0_wfifo.i_out];
+      out_data[idx--] = bi0_wfifo.data[bi0_wfifo.i_out];
       if(bi0_wfifo.i_out == (BI0_WFIFO_SIZE - 1)) {
 	bi0_wfifo.i_out = 0;
       } else {
 	bi0_wfifo.i_out++;
       }
-      if(idx == 2) {
-	idx = 0;
+      if(idx == -1) {
+	idx = 1;
 	writel(*(unsigned *)out_data, bbc_drv.mem_base + wp);
 
 	wp += BBCPCI_SIZE_UINT;
