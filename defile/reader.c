@@ -20,10 +20,12 @@
  *
  */
 
+#include <fcntl.h>      /* File control (open) */
 #include <pthread.h>    /* POSIX threads (pthread_create, pthread_join) */
 #include <string.h>     /* C string library (strcpy, strncpy)  */
 #include <signal.h>     /* ANSI C signals (SIG(FOO), sigemptyset, sigaddset) */
 #include <sys/stat.h>   /* SYSV stat (stat, struct stat S_IS(FOO)) */
+#include <unistd.h>     /* UNIX std library (lseek, read, close) */
 
 #include "blast.h"
 #include "channels.h"
@@ -51,9 +53,9 @@ void InitReader(void)
 
 void FrameFileReader(void)
 {
-  FILE *stream = NULL;
+  int fd = -1;
   char gpb[GPB_LEN];
-  int i, n;
+  int i, n, fullframes, remainder = 0;
   int frames_read = 0;
   int new_chunk = 1;
   unsigned short* InputBuffer[INPUT_BUF_SIZE];
@@ -99,11 +101,11 @@ void FrameFileReader(void)
       frames_read = 0;
 
       /* open the chunk */
-      if ((stream = fopen(rc.chunk, "r")) == NULL)
+      if ((fd = open(rc.chunk, O_RDONLY)) < 0)
         berror(fatal, "cannot open `%s'", rc.chunk);
 
       if (seek_to > 0) {
-        fseek(stream, seek_to, SEEK_SET);
+        lseek(fd, seek_to, SEEK_SET);
         seek_to = 0;
       }
 
@@ -116,40 +118,46 @@ void FrameFileReader(void)
 
     do {
       /* read some frames */
-      clearerr(stream);
-      if ((n = fread(InputBuffer[0], DiskFrameSize, INPUT_BUF_SIZE, stream))
-          < 1) {
-        if (feof(stream))
+      if ((n = read(fd, (void*)InputBuffer[0] + remainder, DiskFrameSize
+              * INPUT_BUF_SIZE - remainder)) < 1) {
+        if (n == 0)
           break;
-        else if ((i = ferror(stream))) {
-          berror(err, "error reading `%s' (%i)", rc.chunk, i);
+        else {
+          berror(err, "error reading `%s'", rc.chunk);
 
           /* reopen file and try again */
-          fclose(stream);
-          if ((stream = fopen(rc.chunk, "r")) == NULL)
+          close(fd);
+          if ((fd = open(rc.chunk, O_RDONLY)) < 0)
             berror(fatal, "cannot open `%s'", rc.chunk);
 
           /* seek to our last position */
-          fseek(stream, frames_read * DiskFrameSize, SEEK_SET);
+          lseek(fd, frames_read * DiskFrameSize, SEEK_SET);
           n = 0;
         }
       }
-      frames_read += n;
+      n += remainder;
+      fullframes = n / DiskFrameSize;
+      remainder = n % DiskFrameSize;
+      frames_read += fullframes;
 
-      for (i = 0; i < n; ++i) {
+      for (i = 0; i < fullframes; ++i) {
         /* push frame */
         PushFrame(InputBuffer[i]);
 
         /* increment counter */
         ri.read++;
       }
-    } while (!feof(stream));
+      
+      /* Copy remainder to the bottom of the buffer */
+      if (fullframes > 0 && remainder > 0)
+        memcpy(InputBuffer[0], InputBuffer[fullframes + 1], remainder);
+    } while (n != 0);
 
     n = StreamToNextChunk(rc.persist, rc.chunk, rc.sufflen, &ri.chunk_total,
             rc.source, rc.curfile_val);
 
     if (n == FR_NEW_CHUNK) {
-      fclose(stream);
+      close(fd);
       ri.old_total += ri.chunk_total;
       new_chunk = 1;
     } else if (n == FR_CURFILE_CHANGED) {
@@ -166,7 +174,7 @@ void FrameFileReader(void)
 
         /* if the dirfile has changed, signal the writer to cycle */
         ri.dirfile_init = 0;
-        fclose(stream);
+        close(fd);
       }
 
       ri.old_total += ri.chunk_total;

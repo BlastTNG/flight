@@ -1,6 +1,11 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2004-11-17  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	Release defile-3.0.3
+
+	* reader.c (FrameFileReader): Replace buffered reads with unbuffered input.
+
 2004-11-02  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	Release defile-3.0.2
 
@@ -17,7 +22,6 @@
 
 	* client.c (InitClient): Add new_filename parameter.  All Callers Changed.
 	(QuenyaClient): Handle 213 from server.
-	
 
 2004-11-01  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	Release defile-3.0.0
