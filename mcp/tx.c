@@ -29,16 +29,22 @@ extern unsigned short slow_data[N_SLOW][FAST_PER_SLOW];
 extern short int write_ISC_pointing;  /* isc.c */
 
 double round(double x);
-double LockPosition(double elevation); /* defined in commands.c */
-void ControlGyroHeat(unsigned int *Txframe,  unsigned short *Rxframe,
-    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
+
+/* in auxiliary.c */
 void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
-void PhaseControl(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
-void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
+void ControlGyroHeat(unsigned int *Txframe,  unsigned short *Rxframe,
+    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
+
+/* in das.c */
 void BiasControl (unsigned int* Txframe,  unsigned short* Rxframe,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
+void CryoControl (unsigned int* Txfrmae,
+    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
+void PhaseControl(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
 void SetReadBits(unsigned int* Txframe);
+
+/* in motors.c */
 void UpdateAxesMode(void);
 void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
     unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]);
@@ -60,6 +66,8 @@ void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   static int i_time = -1, j_time = -1;
   static int i_samiam = -1, j_samiam = -1;
   static int i_df = -1, j_df = -1;
+  static int aliceFileCh, aliceFileInd;
+  static int timeoutCh, timeoutInd;
   static int incharge = -1;
   time_t t;
 
@@ -69,6 +77,8 @@ void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
     SlowChIndex("cpu_time", &i_time, &j_time);
     SlowChIndex("sam_i_am", &i_samiam, &j_samiam);
     SlowChIndex("disk_free", &i_df, &j_df);
+    SlowChIndex("alice_file", &aliceFileCh, &aliceFileInd);
+    SlowChIndex("timeout", &timeoutCh, &timeoutInd);
   }
 
   t = time(NULL);
@@ -89,6 +99,9 @@ void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
 
   WriteSlow(i_samiam, j_samiam, SamIAm);
   WriteSlow(i_df, j_df, CommandData.df);
+
+  WriteSlow(aliceFileCh, aliceFileInd, CommandData.alice_file);
+  WriteSlow(timeoutCh, timeoutInd, CommandData.timeout);
 }
 
 /*****************************************************************/
@@ -385,7 +398,7 @@ void StoreData(int index, unsigned int* Txframe,
   /********** SIP GPS Data **********/
   WriteSlow(i_SIP_LAT, j_SIP_LAT, (int)(SIPData.GPSpos.lat*DEG2I));
   WriteSlow(i_SIP_LON, j_SIP_LON, (int)(SIPData.GPSpos.lon*DEG2I));
-  WriteSlow(i_SIP_ALT, j_SIP_ALT, (int)(SIPData.GPSpos.lat*0.25));
+  WriteSlow(i_SIP_ALT, j_SIP_ALT, (int)(SIPData.GPSpos.alt*0.25));
   t = SIPData.GPStime.UTC;
   WriteSlow(i_SIP_TIME, j_SIP_TIME, t >> 16);
   WriteSlow(i_SIP_TIME + 1, j_SIP_TIME, t);
@@ -715,7 +728,7 @@ void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
 #ifndef BOLOTEST
   ControlAuxMotors(Txframe, Rxframe, slowTxFields);
 #endif
-  CryoControl(slowTxFields);
+  CryoControl(Txframe, slowTxFields);
 
   SetReadBits(Txframe);
 

@@ -106,6 +106,7 @@ struct CryoStruct {
 
 struct CommandDataStruct {
   unsigned short int timeout;
+  unsigned short int alice_file;
 
   struct GainStruct roll_gain;
   struct GainStruct ele_gain;

@@ -229,9 +229,8 @@ void SingleCommand (enum singleCommand command) {
     CommandData.pointing_mode.del = 0.0;
     CommandData.pointing_mode.w = 0;
     CommandData.pointing_mode.h = 0;
-  }
 
-  else if (command == sync_adc)
+  } else if (command == sync_adc)
     ADC_sync_timeout = 0;
 
   else if (command == trim_to_isc)
@@ -312,9 +311,10 @@ void SingleCommand (enum singleCommand command) {
     CommandData.Cryo.calibrator = 1;
   else if (command == cal_off)
     CommandData.Cryo.calibrator = 0;
-  else if (command == cal_stop)
+  else if (command == cal_stop) {
     CommandData.Cryo.calib_pulse = 0;
-  else if (command == pot_valve_open) {
+    CommandData.Cryo.calib_repeat = 0;
+  } else if (command == pot_valve_open) {
     CommandData.Cryo.potvalve_open = 40;
     CommandData.Cryo.potvalve_close = 0;
   } else if (command == pot_valve_close) {
@@ -340,21 +340,21 @@ void SingleCommand (enum singleCommand command) {
   else if (command == balance_allow)
     CommandData.pumps.bal_veto = 0;
 
-  else if (command == pump1_on)
+  else if (command == balpump_on)
     CommandData.pumps.bal1_on = 1;
-  else if (command == pump1_off)
+  else if (command == balpump_off)
     CommandData.pumps.bal1_on = 0;
-  else if (command == pump1_fwd)
+  else if (command == balpump_up)
     CommandData.pumps.bal1_reverse = 0;
-  else if (command == pump1_rev)
+  else if (command == balpump_down)
     CommandData.pumps.bal1_reverse = 1;
-  else if (command == pump2_on)
+  else if (command == sprpump_on)
     CommandData.pumps.bal2_on = 1;
-  else if (command == pump2_off)
+  else if (command == sprpump_off)
     CommandData.pumps.bal2_on = 0;
-  else if (command == pump2_fwd)
+  else if (command == sprpump_fwd)
     CommandData.pumps.bal2_reverse = 0;
-  else if (command == pump2_rev)
+  else if (command == sprpump_rev)
     CommandData.pumps.bal2_reverse = 1;
 
   else if (command == inner_cool_on)
@@ -501,11 +501,7 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
    * If the parameter is type 'i'     set CommandData using ivalues[i]
    * If the parameter is type 'f'/'l' set CommandData using rvalues[i]
    */
-  if (0) { /* allow easy re-arranging */
-
-    /***************************************/
-    /********** Pointing Mode **************/
-  } else if (command == az_el_goto) {
+  if (command == az_el_goto) {
     CommandData.pointing_mode.mode = P_AZEL_GOTO;
     CommandData.pointing_mode.X = rvalues[0];  /* az */
     CommandData.pointing_mode.Y = rvalues[1];  /* el */
@@ -625,12 +621,12 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
 
     /***************************************/
     /********** Cooling System  ************/
-  } else if (command == spare_pwm) {
-    CommandData.pumps.pwm2 = ivalues[0];
-  } else if (command == inner_pwm) {
-    CommandData.pumps.pwm3 = ivalues[0];
-  } else if (command == outer_pwm) {
-    CommandData.pumps.pwm4 = ivalues[0];
+  } else if (command == spare_level) {
+    CommandData.pumps.pwm2 = 2047 - rvalues[0] * 2047. / 100;
+  } else if (command == inner_level) {
+    CommandData.pumps.pwm3 = 2047 - rvalues[0] * 2047. / 100;
+  } else if (command == outer_level) {
+    CommandData.pumps.pwm4 = 2047 - rvalues[0] * 2047. / 100;
 
     /***************************************/
     /******** Electronics Heaters  *********/
@@ -645,8 +641,9 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     /*************** Misc  *****************/
   } else if (command == timeout) {        /* Set timeout */
     CommandData.timeout = ivalues[0];
-  } else if (command == xml_file) {  /* change downlink XML file */
+  } else if (command == alice_file) {  /* change downlink XML file */
     if ((fp = fopen("/tmp/alice_index", "w")) != NULL) {
+      CommandData.alice_file = ivalues[0];
       fprintf(fp, "%d\n", ivalues[0]);
       if (fclose(fp) != 0)
         perror("alice_index fclose()");
@@ -671,11 +668,11 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     /***************************************/
     /*********** Cal Lamp  *****************/
   } else if (command == cal_pulse) {
-    CommandData.Cryo.calib_pulse = ivalues[0];
-    CommandData.Cryo.calib_repeat = 0;
+    CommandData.Cryo.calib_pulse = (4 + ivalues[0]) / 10;
+    CommandData.Cryo.calib_repeat = -1;
   } else if (command == cal_repeat) {
-    CommandData.Cryo.calib_pulse = ivalues[0];
-    CommandData.Cryo.calib_repeat = rvalues[1];
+    CommandData.Cryo.calib_pulse = (4 + ivalues[0]) / 10;
+    CommandData.Cryo.calib_repeat = ivalues[1];
 
     /***************************************/
     /********* Cryo heat   *****************/
@@ -1229,10 +1226,6 @@ void InitCommandData() {
   CommandData.pumps.outframe_cool1_off = 0;
   CommandData.pumps.outframe_cool2_on = 0;
   CommandData.pumps.outframe_cool2_off = 0;
-  CommandData.pumps.pwm1 = 0;
-  CommandData.pumps.pwm2 = 0;
-  CommandData.pumps.pwm3 = 0;
-  CommandData.pumps.pwm4 = 0;
 
   CommandData.Bias.SetLevel1 = 1;
   CommandData.Bias.SetLevel2 = 1;
@@ -1264,7 +1257,7 @@ void InitCommandData() {
   CommandData.pointing_mode.w = 0;
   CommandData.pointing_mode.h = 0;
 
-  CommandData.timeout = 60*60;
+  CommandData.timeout = 3600;
 
   CommandData.roll_gain.P = 30000;
 

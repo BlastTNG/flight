@@ -56,9 +56,9 @@ enum singleCommand {
   mag_veto,         no_bright_star,   outer_cool_off,   outer_cool_on,
   outer_spare_off,  outer_spare_on,   pin_in,           pin_in_override,
   pin_out_override, pot_valve_close,  pot_valve_off,    pot_valve_on,
-  pot_valve_open,   pump1_fwd,        pump1_off,        pump1_on,
-  pump1_rev,        pump2_fwd,        pump2_off,        pump2_on,
-  pump2_rev,        ramp,             reset_trims,      save_images,
+  pot_valve_open,   balpump_up,       balpump_off,      balpump_on,
+  balpump_down,     sprpump_fwd,      sprpump_off,      sprpump_on,
+  sprpump_rev,      ramp,             reset_trims,      save_images,
   stop,             sun_veto,         sun_allow,        sync_adc,
   trim_to_isc,      unlock,           use_limitswitch,  xyzzy
 };
@@ -133,14 +133,14 @@ struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(balance_veto), "veto balance system", GR_BAL},
   {COMMAND(balance_allow), "unveto balance system", GR_BAL},
-  {COMMAND(pump1_on), "balance pump 1 on", GR_BAL},
-  {COMMAND(pump1_off), "balance pump 1 off", GR_BAL},
-  {COMMAND(pump1_fwd), "balance pump 1 forward", GR_BAL},
-  {COMMAND(pump1_rev), "balance pump 1 reverse", GR_BAL},
-  {COMMAND(pump2_on), "balance pump 2 on", GR_BAL},
-  {COMMAND(pump2_off), "balance pump 2 off", GR_BAL},
-  {COMMAND(pump2_fwd), "balance pump 2 forward", GR_BAL},
-  {COMMAND(pump2_rev), "balance pump 2 reverse", GR_BAL},
+  {COMMAND(balpump_on), "balance pump 1 on", GR_BAL},
+  {COMMAND(balpump_off), "balance pump 1 off", GR_BAL},
+  {COMMAND(balpump_up), "balance pump 1 forward", GR_BAL},
+  {COMMAND(balpump_down), "balance pump 1 reverse", GR_BAL},
+  {COMMAND(sprpump_on), "balance pump 2 on", GR_BAL},
+  {COMMAND(sprpump_off), "balance pump 2 off", GR_BAL},
+  {COMMAND(sprpump_fwd), "balance pump 2 forward", GR_BAL},
+  {COMMAND(sprpump_rev), "balance pump 2 reverse", GR_BAL},
 
   {COMMAND(inner_cool_on), "inner frame cooling pump 1 on", GR_COOL},
   {COMMAND(inner_cool_off), "inner frame cooling pump 1 off", GR_COOL},
@@ -180,12 +180,12 @@ enum multiCommand {
   bias1_level,  bias2_level,  bias3_level,      blob_centre,  box,
   bright_star,  cal_pulse,    cal_repeat,       cap,          catalogue,
   az_el_trim,   det_set,      drift,            el_gain,      fast_integration,
-  he3_heat,     heatsw_heat,  inner_pwm,        isc_offset,   jfet_heat,
-  lock,         max_blobs,    outer_pwm,        phase,        pivot_gain,
+  he3_heat,     heatsw_heat,  inner_level,      isc_offset,   jfet_heat,
+  lock,         max_blobs,    outer_level,      phase,        pivot_gain,
   pixel_centre, ra_dec_goto,  ra_dec_set,       roll_gain,    set_aperture,
-  set_focus,    setpoints,    slow_integration, spare_heat,   spare_pwm,
+  set_focus,    setpoints,    slow_integration, spare_heat,   spare_level,
   t_gyrobox,    t_gyro_gain,  timeout,          tolerances,   vcap,
-  vbox,         xml_file,     gyro_override
+  vbox,         alice_file,   gyro_override
 };
 
 struct par {
@@ -382,21 +382,21 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********** Cooling System  ************/
-  {COMMAND(spare_pwm), "spare pump pwm level", GR_COOL | GR_BAL, 1,
+  {COMMAND(spare_level), "spare pump pwm level", GR_COOL | GR_BAL, 1,
     {
-      {"Level", 0, 2047, 'i', "sprpump_lev"}
+      {"Level (%)", 0, 100, 'f', "SPRPUMP_LEV"}
     }
   },
 
-  {COMMAND(inner_pwm), "inner frame cooling pump speed", GR_COOL, 1,
+  {COMMAND(inner_level), "inner frame cooling pump speed", GR_COOL, 1,
     {
-      {"Level", 0, 2047, 'i', "inpump_lev"}
+      {"Level (%)", 0, 100, 'f', "INPUMP_LEV"}
     }
   },
 
-  {COMMAND(outer_pwm), "outer frame cooling pump speed", GR_COOL, 1,
+  {COMMAND(outer_level), "outer frame cooling pump speed", GR_COOL, 1,
     {
-      {"Level", 0, 2047, 'i', "outpump_lev"}
+      {"Level (%)", 0, 100, 'f', "OUTPUMP_LEV"}
     }
   },
 
@@ -420,13 +420,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /*************** Misc  *****************/
   {COMMAND(timeout), "time until schedule mode", GR_MISC, 1,
     {
-      {"Timeout (s)", 1, 14400, 'i', "ADD"}
+      {"Timeout (s)", 1, 14400, 'i', "TIMEOUT"}
     }
   },
 
-  {COMMAND(xml_file), "set XML file for compressed downlink", GR_MISC, 1,
+  {COMMAND(alice_file), "set XML file for compressed (6kbit) downlink", GR_MISC,
+    1,
     {
-      {"File #", 0, 15, 'i', "ADD"}
+      {"File #", 0, 15, 'i', "ALICE_FILE"}
     }
   },
 
@@ -452,8 +453,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(phase), "set phase shift", GR_BIAS, 2,
     {
-      {"DAS Card", 5,   16, 'i', "ADD"},
-      {"Phase",    0, 2000, 'i', "ADD"}
+      {"DAS Card", 5,   16, 'i', "NONE"},
+      {"Phase",    0, 2000, 'i', "NONE"}
     }
   },
 
@@ -461,14 +462,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /*********** Cal Lamp  *****************/
   {COMMAND(cal_pulse), "calibrator single pulse", GR_CALLAMP, 1,
     {
-      {"Pulse Length (ms)", 0, 8000, 'i', "ADD"}
+      {"Pulse Length (ms)", 0, 8000, 'i', "CAL_PULSE"}
     }
   },
 
   {COMMAND(cal_repeat), "pulse calibrator repeatedly", GR_CALLAMP, 2,
     {
-      {"Pulse Length (ms)", 1,  8000, 'i', "ADD"},
-      {"Repeat Delay (s)",  1, 86400, 'f', "ADD"}
+      {"Pulse Length (ms)", 10, 8000, 'i', "CAL_PULSE"},
+      {"Repeat Delay (s)",  1, 32767, 'i', "CAL_REPEAT"}
     }
   },
 
@@ -514,14 +515,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(pixel_centre), "centre display on pixel", GR_ISC, 2,
     {
-      {"Pixel X", 0, CCD_X_PIXELS - 1, 'i', "ADD"},
-      {"Pixel Y", 0, CCD_Y_PIXELS - 1, 'i', "ADD"}
+      {"Pixel X", 0, CCD_X_PIXELS - 1, 'i', "NONE"},
+      {"Pixel Y", 0, CCD_Y_PIXELS - 1, 'i', "NONE"}
     }
   },
 
   {COMMAND(blob_centre), "centre display on blob", GR_ISC, 1,
     {
-      {"Blob #", 0, MAX_ISC_BLOBS, 'i', "ADD"}
+      {"Blob #", 0, MAX_ISC_BLOBS, 'i', "NONE"}
     }
   },
 

@@ -50,7 +50,7 @@ static void E0000(int IENTRY, int *maxdeg, float alt, float glat, float glon,
   switch(IENTRY){case 0: goto GEOMAG; case 1: goto GEOMG1;}
 
 GEOMAG:
-  if ((wmmdat = fopen("WMM.COF","r")) == NULL) {
+  if ((wmmdat = fopen("/data/etc/WMM.COF","r")) == NULL) {
     perror("Error opening WMM.COF");
     return;
   }

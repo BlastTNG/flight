@@ -75,7 +75,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"t_base_250",   'r',  3, 15,      -1.50793738E-3,     12.49804401, 'u'},
     {"t_opt_box_w",  'r',  3, 17, -2.859373e-09*65536,    1.232225e+01, 'u'}, //formerly t_lhe
     {"t_lhe_filt",   'r',  3, 19, -2.856350e-09*65536,    1.231143e+01, 'u'},
-    {"t_vcs",        'r',  3, 21, -2.869274e-09*65536,    1.236054e+01, 'u'}, //Not used in the Aug. 7th 2003 Run
+    {"t_vcs",        'r',  3, 21, -2.869274e-09*65536,    1.236054e+01, 'u'},
     {"t_vcs_filt",   'r',  3, 23, -2.871969e-09*65536,    1.236866e+01, 'u'},
     {"t_ln2",        'r',  3, 25, -2.871958e-09*65536,    1.236808e+01, 'u'},
     {"t_ln2_filt",   'r',  3, 27, -2.873729e-09*65536,    1.238262e+01, 'u'}
@@ -86,7 +86,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"t_jfet",       'r',  3, 33, -2.860308e-09*65536,    1.232735e+01, 'u'},
     {"t_he4pot_d",   'r',  3, 35, -2.865493e-09*65536,    1.234227e+01, 'u'}, //formerly t_vcs_fet
     {"t_cold_plate", 'r',  3, 37, -2.863415e-09*65536,    1.232882e+01, 'u'}, //formerly t_xtherm_1
-    {"t_optics_box_",'r',  3, 39,  -2.87516e-09*65536,      12.3290947, 'u'}, //Not used int the Aug. 7th 2003 Run
+    {"t_opt_box_rox",'r',  3, 39,  -2.87516e-09*65536,      12.3290947, 'u'}, //Not used int the Aug. 7th 2003 Run
     {"t_xtherm_2",   'r',  3, 41,  -2.87482e-09*65536,      12.4223147, 'u'},
     {"t_bda1",       'r',  3, 43,   -2.8681e-09*65536,      12.3164528, 'u'},
     {"t_bda2",       'r',  3, 45,  -2.87714e-09*65536,      12.3240610, 'u'},
@@ -94,12 +94,12 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"he4_lev",      'r',  3, 51,  -2.87477e-09*65536,      12.3273561, 'u'},
     {"cryoin",       'r',  3, 60,                 1.0,             0.0, 'u'},
     {"cryoout2",     'w',  3,  1,                1.0,             0.0, 'u'},
-    {"cryoout3",     'w',  3,  2,                1.0,             0.0, 'u'},
+    {"cal_pulse",    'w',  LOOPBAK3, 1,          1.0,             0.0, 'u'},
     {"he3pwm",       'w',  3,  3,         100./2047.,              0., 'u'},
     {"hspwm",        'w',  3,  4,         100./2047.,              0., 'u'},
     {"cryopwm",      'w',  3,  5,         100./2047.,              0., 'u'},
     {"jfetpwm",      'w',  3,  6,         100./2047.,              0., 'u'},
-    {"cal_puls",     'w',  3,  7,                1.0,             0.0, 'u'},
+    {"spare25",      'w',  SPARE, 25,            1.0,             0.0, 'u'},
     {"t_rstrt_mid",  'r',  4,  5,           -0.00625,          136.45, 'u'}
   },
   {
@@ -149,7 +149,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
   {
     {"t_clin_if",    'r', 21, 41,            -0.01875,          614.4, 'u'},
     {"t_clin_sip",   'r', 21, 31,            -0.01875,          614.4, 'u'},
-    {"pch_clin_pyr", 'r', 21, 33,      4.0/5333.3333,       -4.*6.144, 'u'},
+    {"spare26",      'r', SPARE, 26,   4.0/5333.3333,       -4.*6.144, 'u'},
     {"pump_bits",    'w', 21,  2,                1.0,             0.0, 'u'},
     {"balpump_lev",  'w', 21,  3,    -0.048851978505,           100.0, 'u'},
     {"sprpump_lev",  'w', 21,  4,    -0.048851978505,           100.0, 'u'},
@@ -175,9 +175,9 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"g_d_gyheat",   'w', LOOPBACK, 15,          1.0,             0.0, 'u'},
     {"lokmot_pin",   'w', LOOPBACK, 16,          1.0,             0.0, 'u'},
     {"isc_fpulse",   'w', LOOPBACK, 17,          10.,             0.0, 'u'},
-    {"lbspare18",    'w', LOOPBACK, 18,          1.0,             0.0, 'u'},
-    {"lbspare19",    'w', LOOPBACK, 19,          1.0,             0.0, 'u'},
-    {"lbspare20",    'w', LOOPBACK, 20,          1.0,             0.0, 'u'},
+    {"cal_repeat",   'w', LOOPBACK, 18,          1.0,             0.0, 'u'},
+    {"alice_file",   'w', LOOPBACK, 19,          1.0,             0.0, 'u'},
+    {"timeout",      'w', LOOPBACK, 20,          1.0,             0.0, 'u'},
     {"sun_az",       'w', LOOPBACK, 21,          1.0,             0.0, 's'},
     {"ss_prin",      'w', LOOPBACK, 22,          1.0,             0.0, 'u'},
     {"sam_i_am",     'w', LOOPBACK, 23,          1.0,             0.0, 'u'},
@@ -306,8 +306,8 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"t_sun_sensor", 'r',  2, 31,            -0.00625,          136.45, 'u'},
     {"isc_x_off",    'w', LOOPBAK2, 63,         I2DEG,             0.0, 'u'},
     {"isc_y_off",    'w', LOOPBAK3,  0,         I2DEG,             0.0, 'u'},
-    {"ra",           'w', LOOPBAK3,  1,  24.0/65536.0,             0.0, 'u'},
-    {"dec",          'w', LOOPBAK3,  2,         I2DEG,             0.0, 's'},
+    {"ra",           'w', LOOPBAK3,  2,  24.0/65536.0,             0.0, 'u'},
+    {"dec",          'w', LOOPBAK3,  3,         I2DEG,             0.0, 's'},
     {"spare27",      'w', SPARE, 27,              1.0,             0.0, 'u'},
     {"spare28",      'w', SPARE, 28,              1.0,             0.0, 'u'},
     {"spare29",      'w', SPARE, 29,              1.0,             0.0, 'u'},
@@ -327,9 +327,6 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
 struct ChannelStruct FastChList[N_FASTCHLIST] = {
 #ifndef BOLOTEST
     /* read channels from ACS0 */
-  {"fast_i_el",   'r',  1, 39, 1.0 / (0.01 * 10.0) * 4.096 / 65536.0, -32768.0 * 1.0 / (0.01 * 10.0) * 4.096 / 65536.0, 'u'},
-
-  {"fspare",      'r', SPARE, 40,             1.0,                   0.0, 'u'},
   {"roll_clin_sip",'r', 21, 27,     4.0/5333.3333,              -4.*6.144, 'u'},
   {"pch_clin_sip", 'r', 21, 29,     4.0/5333.3333,              -4.*6.144, 'u'},
 
@@ -398,6 +395,9 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
   {"readd14",     'w', 14, 40,               1.0,                    0.0, 'u'},
   {"readd15",     'w', 15, 40,               1.0,                    0.0, 'u'},
   {"readd16",     'w', 16, 40,               1.0,                    0.0, 'u'},
+
+  /* Write to DAS3 -- cryo controller */
+  {"cryoout3",    'w',  3,  2,               1.0,                    0.0, 'u'},
 
   /* Read from DAS4 -- bias controller and DPM/inner frame monitoring */
   {"biasin",      'r',  4, 50,               1.0,                    0.0, 'u'},

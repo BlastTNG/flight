@@ -61,34 +61,85 @@ void PhaseControl(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
 }
 
 /***********************************************************************/
-/*                                                                     */
-/* CryoControl: Set heaters to values contained within the CommandData */
-/*                                                                     */
+/* CalLamp: Flash calibrator                                           */
 /***********************************************************************/
-void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
+int CalLamp (int* cryostate) {
+  int calLamp;
+  static int pulse_left = 0;
+  static int repeat_left = 0;
+
+  if (CommandData.Cryo.calibrator == 1) {
+    calLamp = CRYO_CALIBRATOR_ON;
+    *cryostate |= CS_CALIBRATOR;
+  } else {
+    if (CommandData.Cryo.calib_repeat == -1) {  /* single pulse request */
+      pulse_left = CommandData.Cryo.calib_pulse;
+      CommandData.Cryo.calib_repeat = 0;
+      repeat_left = 0;
+    }
+    
+    if (repeat_left == 0) {
+      if (CommandData.Cryo.calib_repeat > 0 && /* we're repeating and */
+          CommandData.Cryo.calib_pulse > 0) {  /* just got to the end */
+        repeat_left = CommandData.Cryo.calib_repeat * 100;
+        pulse_left = CommandData.Cryo.calib_pulse;
+      }
+    } else {  /* we're repeat pulsing, and counting down to next pulse */
+      repeat_left--;  
+    }
+
+    if (pulse_left > 0) {  /* pulser on, turn on lamp */
+      calLamp = CRYO_CALIBRATOR_ON;
+      *cryostate |= CS_CALIBRATOR;
+      pulse_left--; 
+    } else {               /* pulser off, or we're not pulsing, turn off lamp */
+      calLamp = CRYO_CALIBRATOR_OFF;
+      *cryostate &= 0xFFFF - CS_CALIBRATOR;
+    }
+  }
+
+  return calLamp;
+}
+
+/***********************************************************************/
+/* CryoControl: Set heaters to values contained within the CommandData */
+/***********************************************************************/
+void CryoControl (unsigned int* Txframe,
+    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
 {
   static int i_cryoin = -1, j_cryoin = -1;
   static int i_cryoout2 = -1, j_cryoout2 = -1;
-  static int i_cryoout3 = -1, j_cryoout3 = -1;
+  static int cryoOut3Ch;
   static int cryostateCh, cryostateInd;
   static int he3pwmCh, he3pwmInd;
   static int jfetpwmCh, jfetpwmInd;
   static int hspwmCh, hspwmInd;
   static int cryopwmCh, cryopwmInd;
+  static int calRepeatCh, calRepeatInd;
+  static int calPulseCh, calPulseInd;
+
   int cryoout3 = 0, cryoout2 = 0;
   static int cryostate = 0;
 
   /************** Set indices first time around *************/
-  if (i_cryoout3 == -1) {
+  if (i_cryoin == -1) {
+    FastChIndex("cryoout3", &cryoOut3Ch);
+
     SlowChIndex("cryoin", &i_cryoin, &j_cryoin);
     SlowChIndex("cryoout2", &i_cryoout2, &j_cryoout2);
-    SlowChIndex("cryoout3", &i_cryoout3, &j_cryoout3);
     SlowChIndex("cryostate", &cryostateCh, &cryostateInd);
     SlowChIndex("he3pwm", &he3pwmCh, &he3pwmInd);
     SlowChIndex("jfetpwm", &jfetpwmCh, &jfetpwmInd);
     SlowChIndex("hspwm", &hspwmCh, &hspwmInd);
     SlowChIndex("cryopwm", &cryopwmCh, &cryopwmInd);
+
+    SlowChIndex("cal_pulse", &calPulseCh, &calPulseInd);
+    SlowChIndex("cal_repeat", &calRepeatCh, &calRepeatInd);
   }
+
+  /* We want to save these here since CalLamp will destroy calib_repeat */
+  WriteSlow(calPulseCh, calPulseInd, CommandData.Cryo.calib_pulse);
+  WriteSlow(calRepeatCh, calRepeatInd, CommandData.Cryo.calib_repeat);
 
   /********** Set Output Bits **********/
   if (CommandData.Cryo.heliumLevel == 0) {
@@ -112,13 +163,7 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
     cryoout3 |= CRYO_COLDPLATE_ON;
     cryostate |= CS_COLDPLATE;
   }
-  if (CommandData.Cryo.calibrator == 0) {
-    cryoout3 |= CRYO_CALIBRATOR_OFF;
-    cryostate &= 0xFFFF - CS_CALIBRATOR;
-  } else {
-    cryoout3 |= CRYO_CALIBRATOR_ON;
-    cryostate |= CS_CALIBRATOR;
-  }
+  cryoout3 |= CalLamp(&cryostate);
 
   cryoout2 = CRYO_POTVALVE_OPEN | CRYO_POTVALVE_CLOSE | 
    CRYO_LHeVALVE_OPEN | CRYO_LHeVALVE_CLOSE;
@@ -154,7 +199,8 @@ void CryoControl (unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW])
   } else
     cryostate &= 0xFFFF - CS_LHeVALVE_ON;
 
-  WriteSlow(i_cryoout3, j_cryoout3, cryoout3);
+  WriteFast(cryoOut3Ch, cryoout3);
+
   WriteSlow(i_cryoout2, j_cryoout2, cryoout2);
   WriteSlow(cryostateCh, cryostateInd, cryostate);
   WriteSlow(he3pwmCh, he3pwmInd, CommandData.Cryo.heliumThree);

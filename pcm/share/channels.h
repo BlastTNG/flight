@@ -14,8 +14,8 @@
 #define DAS_CHS 24
 
 /* Number of records in the frame below the DAS bolometer records */
-#define N_FASTCHLIST_INIT_ACS 34
-#define N_FASTCHLIST_INIT_DAS 49
+#define N_FASTCHLIST_INIT_ACS 32
+#define N_FASTCHLIST_INIT_DAS 50
 #ifdef BOLOTEST
   #define N_FASTCHLIST_INIT (N_FASTCHLIST_INIT_DAS)
 #else

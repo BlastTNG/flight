@@ -42,6 +42,9 @@ int pin_is_in = 1;
 #define BAL_OFF_VETO  1000            /* # of frames to veto balance system
                                          after turning off pump */
 
+/* in commands.c */
+double LockPosition(double elevation); 
+
 /****************************************************************/
 /*                                                              */
 /* Read the state of the lock motor pin (or guess it, whatever) */
