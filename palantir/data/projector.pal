@@ -536,6 +536,9 @@
   <NUMBER caption="MCP Frame" textstyle="oddrow">
      <DATUM format="%.0f" src="MCP_FRAME" extrema="unknown"/>
   </NUMBER>
+  <NUMBER caption="Index" textstyle="oddrow">
+     <DATUM format="%.0f" src="INDEX" extrema="unknown"/>
+  </NUMBER>
   <CURDIR caption="Dirfile" textstyle="evenrow">
      <DATUM/>
   </CURDIR>
