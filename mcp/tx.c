@@ -565,87 +565,6 @@ void ControlGyroHeat(unsigned int *Txframe,  unsigned short *Rxframe,
 
 /************************************************************************
  *                                                                      *
- *    ControlISCHeat:  Controls ISC box temp by turning heater bit in   *
- *    ACS0 on and off.                                                  *
- *                                                                      *
- ************************************************************************/
-int ControlISCHeat(unsigned int *Txframe,  unsigned short *Rxframe,
-    unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
-  static int i_T_ISC = -1;
-
-  static int i_T_ISC_SET = -1, j_T_ISC_SET = -1;
-  static int i_G_PISCH = -1, j_G_PISCH = -1;
-  static int i_G_IISCH = -1, j_G_IISCH = -1;
-  static int i_G_DISCH = -1, j_G_DISCH = -1;
-
-  static int p_on = 0;
-  static int p_off = -1;
-
-  float error = 0, set_point;
-  static float integral = 0;
-  static float deriv = 0;
-  static float error_last = 0;
-  float P, I, D;
-
-  /******** Obtain correct indexes the first time here ***********/
-  if (i_T_ISC == -1) {
-    FastChIndex("t_isc", &i_T_ISC);
-
-    SlowChIndex("t_isc_set", &i_T_ISC_SET, &j_T_ISC_SET);
-    SlowChIndex("g_p_ischeat", &i_G_PISCH, &j_G_PISCH);
-    SlowChIndex("g_i_ischeat", &i_G_IISCH, &j_G_IISCH);
-    SlowChIndex("g_d_ischeat", &i_G_DISCH, &j_G_DISCH);
-  }
-
-  /* send down the setpoints and gains values */
-  WriteSlow(i_T_ISC_SET, j_T_ISC_SET, (unsigned short)(CommandData.t_isc_setpoint * 32768.0 / 100.0));
-  WriteSlow(i_G_PISCH, j_G_PISCH, CommandData.isc_heat_gain.P);
-  WriteSlow(i_G_IISCH, j_G_IISCH, CommandData.isc_heat_gain.I);
-  WriteSlow(i_G_DISCH, j_G_DISCH, CommandData.isc_heat_gain.D);
-
-  /* control the heat */
-  set_point = (CommandData.t_isc_setpoint - 136.45) / (-9.5367431641e-08);
-  P = CommandData.isc_heat_gain.P * (-1.0 / 1000000.0);
-  I = CommandData.isc_heat_gain.I * (-1.0 / 110000.0);
-  D = CommandData.isc_heat_gain.D * ( 1.0 / 1000.0);
-
-  /********* if end of pulse, calculate next pulse *********/
-  if (p_off < 0) {
-
-    error = set_point -
-      ((unsigned int)(Rxframe[i_T_ISC + 1]<< 16 | Rxframe[i_T_ISC]));
-
-    integral = integral * 0.9975 + 0.0025 * error;
-    if (integral * I > 60){
-      integral = 60.0 / I;
-    }
-    if (integral * I < 0){
-      integral = 0;
-    }
-
-    deriv = error_last - error;
-    error_last = error;
-
-    p_on = P * error + (deriv / 60.0) * D + integral * I;
-
-    if (p_on > 60) p_on = 60;
-    if (p_on < 0) p_on = 0;
-    p_off = 60 - p_on;
-
-  }
-
-  /******** return the pulse *****/
-  if (p_on > 0) {
-    return ISC_HEAT;
-    p_on--;
-  } else {
-    return ISC_NOHEAT;
-    p_off--;
-  }
-}
-
-/************************************************************************
- *                                                                      *
  *   BiasControl: Digital IO with the Bias Generator Card               *
  *                                                                      *
  ************************************************************************/
@@ -883,9 +802,9 @@ void ControlAuxMotors(unsigned int *Txframe,  unsigned short *Rxframe,
   static int balTargetCh, balTargetInd, balVetoCh, balVetoInd;
   static int iscBitsCh;
   static int i_lockpin, j_lockpin;
-  
+
+  int iscBits = 0;
   int pumpBits = 0;
-  int iscBits = ControlISCHeat(Txframe, Rxframe, slowTxFields);
 
   if (pumpBitsInd == -1) {
     FastChIndex("isc_bits", &iscBitsCh);
@@ -1536,7 +1455,6 @@ void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
   UpdateAxesMode();
   StoreData(Txframe, slowTxFields);
   ControlGyroHeat(Txframe, Rxframe, slowTxFields);
-  ControlISCHeat(Txframe, Rxframe, slowTxFields);
   WriteMot(index, Txframe, Rxframe, slowTxFields);
 #endif
   BiasControl(Txframe, Rxframe, slowTxFields);
