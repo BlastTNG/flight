@@ -1,0 +1,6 @@
+dataetcpalantirdir = @DATA_ETC_DIR@/palantir
+dataetcpalantir_DATA = log.txt icon.gif palantir0.jpg palantir1.jpg \
+											 palantir2.jpg palantir3.jpg cryolab.pal default.pal \
+											 example.pal layout.pal projector.pal doh.wav eranu.wav \
+											 uvavu.wav cryo.png icon.gif
+EXTRA_DIST = ${dataetcpalantir_DATA}

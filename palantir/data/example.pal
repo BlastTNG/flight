@@ -55,7 +55,7 @@
 
   # A hostname and port to connect to for status information from the
   # decom daemon.  host can be either an ip address or a hostname
-  <DECOMD host="galadriel.blast" port="11411">
+  <DECOMD host="arwen.blast" port="11411">
 </SETTINGS>
 
 

@@ -164,7 +164,7 @@
       <XHI value="16"/>
     </EXTREMA>
     <CURFILE name="/data/etc/defile.cur"/>
-    <DECOMD host="galadriel.blast" port="11411"/>
+    <DECOMD host="arwen.blast" port="11411"/>
   </SETTINGS>
   <DEFAULTS>
     <TEXTSTYLE>
