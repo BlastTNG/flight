@@ -81,7 +81,7 @@ struct ChannelStruct WideSlowChannels[] = {
 struct ChannelStruct SlowChannels[] = {
   {"t_el_mc",      'r',  ACS0,  3,              I2T_M,           I2T_B, 'u'},
   {"t_el_mot",     'r',  ACS0,  5,              I2T_M,           I2T_B, 'u'},
-  {"i_starcam",    'r',  ACS0, 21,                1.0,             0.0, 'u'},
+  {"i_starcam",    'r',  ACS0, 21,          -0.000625,           20.48, 'u'},
   {"roll_clin_pyr",'r',  ACS0, 33,     -4.0/5333.3333,        4.*6.144, 'u'},
   {"pch_clin_pyr", 'r',  ACS0, 35,      4.0/5333.3333,       -4.*6.144, 'u'},
   {"t_clin_pyr",   'r',  ACS0, 23,           -0.01875,           614.4, 'u'},

@@ -347,12 +347,12 @@ void StoreStarCameraData(int index, int which)
     RealTrigAddr[which] = GetSCNiosAddr("real_trig", which);
 
     Temp1Addr[0] = GetNiosAddr("t_isc_flange");
-    Temp2Addr[0] = GetNiosAddr("t_isc_lens");
-    Temp3Addr[0] = GetNiosAddr("t_isc_heat");
+    Temp2Addr[0] = GetNiosAddr("t_isc_heat");
+    Temp3Addr[0] = GetNiosAddr("t_isc_lens");
     Temp4Addr[0] = GetNiosAddr("t_isc_comp");
     Temp1Addr[1] = GetNiosAddr("t_osc_flange");
-    Temp2Addr[1] = GetNiosAddr("t_osc_lens");
-    Temp3Addr[1] = GetNiosAddr("t_osc_heat");
+    Temp2Addr[1] = GetNiosAddr("t_osc_heat");
+    Temp3Addr[1] = GetNiosAddr("t_osc_lens");
     Temp4Addr[1] = GetNiosAddr("t_osc_comp");
   }
 

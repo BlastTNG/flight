@@ -489,6 +489,7 @@ void CameraTrigger(int which)
   static int firsttime = 1;
   static struct NiosStruct* TriggerAddr[2];
   static int delay[2] = {0, 0};
+  static int waiting = 0;
 
   if (firsttime) {
     firsttime = 0;
@@ -513,13 +514,28 @@ void CameraTrigger(int which)
         bprintf(info, "%iSC (t): Lowering start_ISC_cycle\n", which);
 
       if (isc_pulses[which].is_fast) {  /* fast pulse */
+        if (waiting)
+          bprintf(warning, "%s: Velocity wait stated aborted.\n",
+              (which) ? "Osc" : "Isc");
+        waiting = 0;
         /* use fast (short) pulse length */
         isc_pulses[which].pulse_req =
           CommandData.ISCControl[which].fast_pulse_width;
       } else {  /* slow pulse */
         /* wait until we're below the slow speed */
-        if (fabs(axes_mode.az_vel) >= MAX_ISC_SLOW_PULSE_SPEED)
+        if (fabs(axes_mode.az_vel) >= MAX_ISC_SLOW_PULSE_SPEED) {
+          if (!waiting && WHICH)
+            bprintf(info,
+                "%iSC (t): Velocity wait starts (%.3f %.3f) <----- v\n", which,
+                fabs(axes_mode.az_vel), MAX_ISC_SLOW_PULSE_SPEED);
+          waiting = 1;
           return;
+        }
+
+        if (WHICH)
+          bprintf(info, "%iSC (t): Velocity wait ends. -------> v\n", which);
+
+        waiting = 0;
 
         /* use slow (long) pulse length */
         isc_pulses[which].pulse_req = CommandData.ISCControl[which].pulse_width;
