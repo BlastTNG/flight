@@ -788,7 +788,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
 }
 
 void CloseOutput(int signo) {
-  fprintf(stderr, "Caught signal %d; exiting...\n", signo);
+  fprintf(stderr, "\nCaught signal %d; exiting...\n", signo);
   CleanUp();
   /* restore default handler and raise the signal again */
   signal(signo, SIG_DFL);
