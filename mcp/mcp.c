@@ -151,6 +151,7 @@ void mputs(buos_t flag, const char* message) {
       strcpy(marker, "== ");
       break;
     case mem:
+      return;  /* don't record mem messages at all */
       strcpy(marker, "mm ");
       break;
     default:
@@ -179,36 +180,36 @@ void mputs(buos_t flag, const char* message) {
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
-  /* output the formatted string line by line */
-  for (firstchr = bufptr = local; *bufptr != '\0' &&
-      bufptr < local + 1023; ++bufptr) {
+    /* output the formatted string line by line */
+    for (firstchr = bufptr = local; *bufptr != '\0' &&
+        bufptr < local + 1023; ++bufptr) {
 
-    /* writeout the string when we find a newline or the EOS */
-    if (*bufptr == '\n' || *(bufptr + 1) == '\0') {
-      lastchr = (*bufptr == '\n') ? bufptr : bufptr + 1;
-      *lastchr = '\0';
+      /* writeout the string when we find a newline or the EOS */
+      if (*bufptr == '\n' || *(bufptr + 1) == '\0') {
+        lastchr = (*bufptr == '\n') ? bufptr : bufptr + 1;
+        *lastchr = '\0';
 
-      /* compute length of string to writeout */
-      len = lastchr - firstchr + 1;
-      if (len > MAX_MPRINT_STRING - 1)
-        len = MAX_MPRINT_STRING - 1;
+        /* compute length of string to writeout */
+        len = lastchr - firstchr + 1;
+        if (len > MAX_MPRINT_STRING - 1)
+          len = MAX_MPRINT_STRING - 1;
 
-      /* append string part and a newline to preamble */
-      strncpy(bufstart, firstchr, len);
-      *(bufstart + len + 1) = '\0';
-      strcat(bufstart, "\n");
-      if (logfile != NULL || flag != mem) {
-        fputs(buffer, logfile);
-        fflush(logfile);
+        /* append string part and a newline to preamble */
+        strncpy(bufstart, firstchr, len);
+        *(bufstart + len + 1) = '\0';
+        strcat(bufstart, "\n");
+        if (logfile != NULL) {
+          fputs(buffer, logfile);
+          fflush(logfile);
+        }
+        if (logfile == NULL || flag != mem) {
+          fputs(buffer, stdout);
+          fflush(stdout);
+        }
+
+        firstchr = bufptr + 1;
       }
-      if (logfile == NULL || flag != mem) {
-        fputs(buffer, stdout);
-        fflush(stdout);
-      }
-
-      firstchr = bufptr + 1;
     }
-  }
 
   if (flag == fatal) {
     if (logfile != NULL) {
@@ -619,7 +620,7 @@ int main(int argc, char *argv[]) {
   bputs(startup, "MCP startup");
 
   /* Watchdog */
-    pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
+  pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
 
   if ((bbc_fp = open("/dev/bbcpci", O_RDWR)) < 0)
     berror(fatal, "Error opening BBC");
