@@ -414,7 +414,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {"det_set", "Set Detection Parameters", GR_ISC, 5,
     {
       {"search grid (px/side)", 0, CCD_Y_PIXELS, 'i', 0, "ISC_GRID"},
-      {"S/N threshold", 0.1, 3276.7, 'r', 1, "ISC_THRESH"},
+      {"S/N threshold", 0.1, 3276.7, 'f', 1, "ISC_THRESH"},
       {"centroiding box (px/side)", 0, CCD_Y_PIXELS, 'i', 0, "ISC_CENBOX"},
       {"photometry box (px/side)", 0, CCD_Y_PIXELS, 'i', 0, "ISC_APBOX"},
       {"exclusion distance (px)", 0, CCD_Y_PIXELS, 'i', 0, "ISC_MDIST"}
