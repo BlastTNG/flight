@@ -785,7 +785,7 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
   else if (command == apcu_charge)
     CommandData.apcu_reg = ivalues[0];
   else if (command == dpcu_charge)
-    CommandData.dpcu_reg = ivalues[1];
+    CommandData.dpcu_reg = ivalues[0];
 
   /***************************************/
   /*************** Bias  *****************/
