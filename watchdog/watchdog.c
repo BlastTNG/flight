@@ -18,10 +18,10 @@ int main(int argc, char *argv[]) {
 
  
   while (1) {
-    outb_p(0xFF,0x378);
-    usleep(100000);
-    outb_p(0x00,0x378);
-    usleep (100000);
+    outb(0xAA,0x378);
+    usleep(4000);
+    outb(0x55,0x378);
+    usleep(4000);
   }
 
   return 1;
