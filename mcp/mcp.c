@@ -471,7 +471,7 @@ void write_to_biphase(unsigned short *RxFrame) {
     if (bi0_fp == -1)
       merror(MCP_TFATAL, "Error opening biphase device");
 
-    for (i = 0; i < 1024; i++)
+    for (i = 0; i < BI0_FRAME_SIZE; i++)
       nothing[i] = 0xEEEE;
   }
 

@@ -718,7 +718,7 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
   } else if (command == cal_repeat) {
     CommandData.Cryo.calibrator = repeat;
     CommandData.Cryo.calib_pulse = ivalues[0] / 10;
-    CommandData.Cryo.calib_period = ivalues[1];
+    CommandData.Cryo.calib_period = ivalues[1] * 5;
 
     /***************************************/
     /********* Cryo heat   *****************/

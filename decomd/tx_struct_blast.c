@@ -269,7 +269,7 @@ struct ChannelStruct SlowChannels[] = {
   {"g_d_gyheat",   'w', LOOP1, 15,                1.0,             0.0, 'u'},
   {"lokmot_pin",   'w', LOOP1, 16,                1.0,             0.0, 'u'},
   {"isc_fpulse",   'w', LOOP1, 17,                10.,             0.0, 'u'},
-  {"cal_repeat",   'w', LOOP1, 18,                1.0,             0.0, 'u'},
+  {"cal_repeat",   'w', LOOP1, 18,                .20,             0.0, 'u'},
   {"alice_file",   'w', LOOP1, 19,                1.0,             0.0, 'u'},
   {"timeout",      'w', LOOP1, 20,                1.0,             0.0, 'u'},
   {"sun_az",       'w', LOOP1, 21,              I2DEG,             0.0, 's'},
