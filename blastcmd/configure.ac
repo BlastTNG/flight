@@ -1,41 +1,41 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(blastcmd.c)
+AC_INIT(blastcmd, 1.1.8, [dwiebe@physics.utoronto.ca])
 AM_INIT_AUTOMAKE(blastcmd, 1.1.8)
 AM_CONFIG_HEADER(config.h)
 
-AC_ARG_WITH( data-etc,
+AC_ARG_WITH([data-etc],
             [  --with-data-etc=DIR     put auxiliary data in DIR [/data/etc]],
             DATA_ETC_DIR="${withval}", DATA_ETC_DIR="/data/etc")
 AC_SUBST(DATA_ETC_DIR)
 AC_DEFINE_UNQUOTED(DATA_ETC_DIR, "$DATA_ETC_DIR",
                    [ Define to the path to your data directory ])
 
-AC_ARG_ENABLE( blastcmd,
-          [  --enable-blastcmd       install the blastcmd binary [default=no]],
+AC_ARG_ENABLE([blastcmd], AS_HELP_STRING([--enable-blastcmd],
+              [install the blastcmd binary [[default=no]]]),
           enable_blastcmd="${enableval}",enable_blastcmd="no")
 
-AC_ARG_ENABLE( blastcmd-remote,
-          [  --enable-blastcmd-remote install blastcmd-remote [default=yes]],
+AC_ARG_ENABLE([blastcmd-remote], AS_HELP_STRING([--enable-blastcmd-remote],
+              [install the blastcmd-remote script [[default=yes]]]),
           enable_blastcmd_remote="${enableval}",enable_blastcmd_remote="yes")
 
-AC_ARG_ENABLE( fifocmd,
-          [  --enable-fifocmd         install the fifocmd script [default=no]],
+AC_ARG_ENABLE([fifocmd], AS_HELP_STRING([--enable-fifocmd],
+              [install the fifocmd script [[default=no]]]),
           enable_fifocmd="${enableval}",enable_fifocmd="no")
 
-AC_ARG_ENABLE( dummycmd,
-          [  --enable-dummycmd        install the dummycmd script [default=no]],
+AC_ARG_ENABLE([dummycmd], AS_HELP_STRING([--enable-dummycmd],
+              [install the dummycmd script [[default=no]]]),
           enable_dummycmd="${enableval}",enable_dummycmd="no")
 
-AC_ARG_WITH( remote-host,
-            [  --with-remote-host=HOST use HOST as the remote host for blastcmd-remote [galadriel]],
+AC_ARG_WITH([remote-host], AS_HELP_STRING([--with-remote-host=HOST],
+            [use HOST as the remote host for blastcmd-remote [[galadriel]]]),
             REMOTE_HOST="${withval}", REMOTE_HOST="galadriel")
 
-AC_ARG_WITH( remote-user,
-            [  --with-remote-user=USER have blastcmd-remote log into the remote host as USER [none]],
+AC_ARG_WITH([remote-user], AS_HELP_STRING([--with-remote-user=USER],
+            [have blastcmd-remote log into the remote host as USER [[none]]]),
             REMOTE_USER="${withval}@", REMOTE_USER="")
 
-AC_ARG_WITH( remote-command,
-            [  --with-remove-command=CMD use CMD as the remote command for blastcmd-remote [blastcmd]],
+AC_ARG_WITH([remote-command], AS_HELP_STRING([--with-remove-command=CMD],
+            [use CMD as the remote command for blastcmd-remote [[blastcmd]]]),
             REMOTE_COMMAND="${withval}", REMOTE_COMMAND="blastcmd")
 
 dnl Programs

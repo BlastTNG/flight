@@ -1,3 +1,6 @@
+2004-11-15:
+	* configure.ac: Fix help formatting. Migrate to new-style AC_INIT
+
 2004-10-22:
 	* Makefile.am: add command_list.c to CONFIG_STATUS_DEPENDENCIES
 
