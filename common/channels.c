@@ -995,7 +995,7 @@ void FPrintDerived(FILE *fp) {
     "#T_base_500      LINTERP  T_BASE_500   /data/etc/rox102a.txt\n"
     "#T_base_250      LINTERP  T_BASE_250   /data/etc/rox102a.txt\n"
     "# Level Sensor\n"
-    "HE4_LITRE        LINTERP  HE4_LEV      /data/etc/he4_level.txt\n"
+    "HE4_LITRE        LINTERP  HE4_LEV      /data/etc/he4_litre.txt\n"
     "HE4_PERCENT      LINTERP  HE4_LEV      /data/etc/he4_percent.txt\n"
     "# Control Bits\n"
     "# To Be Filled In At A Later Date\n"
