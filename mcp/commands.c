@@ -1590,6 +1590,7 @@ void InitCommandData() {
   CommandData.ISCState[0].triggertype = ISC_TRIGGER_NEG;
   CommandData.ISCState[0].gain = 1;
   CommandData.ISCState[0].offset = 0;
+  CommandData.ISCControl[0].autofocus = 0;
   CommandData.ISCControl[0].save_period = 6000; /* 60 sec */
   CommandData.ISCControl[0].pulse_width = 50; /* 500.00 msec */
   CommandData.ISCControl[0].fast_pulse_width = 5; /* 50.00 msec */
@@ -1619,6 +1620,7 @@ void InitCommandData() {
   CommandData.ISCState[1].triggertype = ISC_TRIGGER_NEG;
   CommandData.ISCState[1].gain = 1;
   CommandData.ISCState[1].offset = 0;
+  CommandData.ISCControl[1].autofocus = 0;
   CommandData.ISCControl[1].save_period = 6000; /* 60 sec */
   CommandData.ISCControl[1].pulse_width = 50; /* 500.00 msec */
   CommandData.ISCControl[1].fast_pulse_width = 5; /* 50.00 msec */
