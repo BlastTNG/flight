@@ -203,7 +203,7 @@ int MakeSock(void)
     exit(1);
   }
 
-  syslog(LOG_INFO, "decomd version " VERSION "listening on port %i.\n",
+  syslog(LOG_INFO, "decomd version " VERSION " listening on port %i.\n",
       SOCK_PORT);
 
   return sock;
