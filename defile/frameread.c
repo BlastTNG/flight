@@ -262,15 +262,16 @@ long int SetStartChunk(long int framenum, char* chunk, int sufflen)
       return left_to_read;
 
     /* Otherwise, try to get a new chunk */
-    if ((new_chunk = GetNextChunk(chunk, sufflen)) == 0)
+    if ((new_chunk = GetNextChunk(chunk, sufflen)) == 0) {
 #ifdef __DEFILE__
       /* no new chunk -- complain and exit */
       bprintf(fatal, "source file is smaller than destination.\n"
           "cannot resume.\n");
 #else
-    /* start at end of last chunk */
-    return chunk_total;
+      /* start at end of last chunk */
+      return chunk_total;
 #endif
+    }
 
     /* there is another chunk, decrement the total needed and try again */
     left_to_read -= chunk_total;
@@ -281,6 +282,7 @@ int StreamToNextChunk(int keepalive, char* chunk, int sufflen, int *chunk_total,
     const char* curfile_name, char* curfile_val)
 {
   FILE *curfile = NULL;
+  char* new_chunk;
   struct stat chunk_stat;
   char gpb[GPB_LEN];
   int n, i;
@@ -298,18 +300,30 @@ int StreamToNextChunk(int keepalive, char* chunk, int sufflen, int *chunk_total,
       if (n < *chunk_total)
         bprintf(err, "chunk `%s' has shrunk.", chunk);
 
-      if (n > *chunk_total) {
-        *chunk_total = n;
+      /* Don't read the last frame in the file */
+      if (n - 75 > *chunk_total) {
+        *chunk_total = n - 75;
         return FR_MORE_IN_FILE;
       }
 
       /* nothing more in file, check to see if we have a new chunk */
-      if (GetNextChunk(chunk, sufflen))
-        return FR_NEW_CHUNK;
+      new_chunk = bstrdup(fatal, chunk);
+
+      if (GetNextChunk(new_chunk, sufflen)) {
+        if (n > *chunk_total) {
+          bfree(fatal, new_chunk);
+          *chunk_total = n;
+          return FR_MORE_IN_FILE;
+        } else {
+          strcpy(chunk, new_chunk);
+          bfree(fatal, new_chunk);
+          return FR_NEW_CHUNK;
+        }
+      }
 
       /* no new chunk either, check for a change in SOURCE curfile if
        * we're using one */
-      if (curfile_name != NULL) {
+      if (curfile_val != NULL) {
         if ((curfile = fopen(curfile_name, "r")) == NULL) {
           snprintf(gpb, GPB_LEN, "open `%s'", curfile_name);
           berror(fatal, gpb);
