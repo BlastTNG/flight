@@ -1221,7 +1221,7 @@ void StoreData(unsigned int* Txframe,
 
   WriteSlow(i_dgps_lat, j_dgps_lat, (int)(DGPSData.lat * DEG2I));
   WriteSlow(i_dgps_lon, j_dgps_lon, (int)(DGPSData.lon * DEG2I));
-  WriteSlow(i_dgps_alt, j_dgps_alt, (int)(DGPSData.alt * 10));
+  WriteSlow(i_dgps_alt, j_dgps_alt, (int)(DGPSData.alt));
   WriteSlow(i_dgps_speed, j_dgps_speed, (int)(DGPSData.speed * DEG2I));
   WriteSlow(i_dgps_dir, j_dgps_dir, (int)(DGPSData.direction * DEG2I));
   WriteSlow(i_dgps_climb, j_dgps_climb, (int)(DGPSData.climb * DEG2I));
