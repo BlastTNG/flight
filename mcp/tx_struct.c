@@ -189,6 +189,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
 };
 
 struct ChannelStruct FastChList[N_FASTCHLIST] = {
+#ifndef BOLOTEST
     /* read channels from ACS0 */
     {"f_i_el",         'r',  1, 39, 1.0/(0.01*10.0)*4.096/65536.0,
      -32768.0*1.0/(0.01*10.0)*4.096/65536.0,   'u'},
@@ -241,6 +242,7 @@ struct ChannelStruct FastChList[N_FASTCHLIST] = {
 
   /* read from board ACS2 */
     {"enc_elev", 'r', 2, 50, -360.0/65536.0,   ENC_ELEV_OFFSET,   'u'},
+#endif
 
     // Read Requests: for signalling the das to copy data to the BB memory
     /* !!! WARNING!  MCP assumes these appear sequentially in the frame !!! */

@@ -1,8 +1,8 @@
 include Makefile.config
 FL_LIBS = -lfl
-CC = gcc -O3 -Wall
+CC = gcc -O3 -Wall $(BOLOTEST)
 ifeq ($(DEBUG), 1)
-  CC = gcc -O2 -DEBUG -Wall
+  CC = gcc -O2 -DEBUG -Wall $(BOLOTEST)
 endif
 
 all: mcp-bin
@@ -23,7 +23,7 @@ mcp-bin: mcp.o tx.o tx.h tx_struct.h commands.o command_struct.h ephemeris/cread
         -lpthread -liticonfig_g $(FL_LIBS) -lm
 
 mcp.o: tx.h tx_struct.h command_struct.h pointing_struct.h ephem_read.h ephem_types.h mcp.c
-	$(CC) $(BOLOTEST) -c mcp.c
+	$(CC) -c mcp.c
 
 tx.o: tx.h tx.c tx_struct.h
 	$(CC) -c tx.c

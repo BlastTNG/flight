@@ -528,13 +528,13 @@ int main(int argc, char *argv[]) {
 #else
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPortC1, NULL);
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPortC2, NULL);
-#endif
 
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   //pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
 
   InitBi0Buffer();
   pthread_create(&bi0_id, NULL, (void*)&BiphaseWriter, NULL);
+#endif
 
   fprintf(stderr, "Tx Frame Bytes: %d.  Allowed: 2220\n", TxFrameBytes());
   if (TxFrameBytes() > 2220) exit(1);
@@ -588,7 +588,7 @@ int main(int argc, char *argv[]) {
       close(bbc_fp);
       bbc_fp = open("/dev/bbc", O_RDWR);
       frame_num = frames_in;
-      fprintf(stderr, "EMPTY %d\n", df);
+      fprintf(stderr, "EMPTY %d %d %d\n", df, frames, frame_num);
       last_frames = FRAME_MARGIN;
     }
 
@@ -621,12 +621,16 @@ int main(int argc, char *argv[]) {
       if (IsNewFrame(in_data)) {
         frames_in++;
 
+#ifndef BOLOTEST
         GetACS(Rxframe);
         Pointing();
+#endif
         
         RxframeIndex = Rxframe[3];
         
+#ifndef BOLOTEST
         PushBi0Buffer(Rxframe);
+#endif
         //FillSlowDL(Rxframe);
         pushDiskFrame(Rxframe);
         zero(Rxframe);

@@ -1044,10 +1044,12 @@ void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
   if (index >= FAST_PER_SLOW) index = 0;
 
   /*** do Controls ***/
+#ifndef BOLOTEST
   StoreData(Txframe, slowTxFields);
   ControlGyroHeat(Txframe, Rxframe, slowTxFields);
   ControlISCHeat(Txframe, Rxframe, slowTxFields);
   WriteMot(index, Txframe, Rxframe, slowTxFields);
+#endif
   BiasControl(Txframe, Rxframe, slowTxFields);
   SyncADC(index, slowTxFields);
 
@@ -1055,7 +1057,9 @@ void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
   if (index == 0) {
     WriteAux(slowTxFields);
   }
+#ifndef BOLOTEST
   ControlAuxMotors(Txframe, Rxframe, slowTxFields);
+#endif
   CryoControl(slowTxFields);
   PhaseControl(slowTxFields);
 
