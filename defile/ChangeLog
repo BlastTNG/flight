@@ -2,6 +2,11 @@
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
 2005-01-23  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	Release defile-3.1.4
+	
+	* defile.1.in.in: Update for 3.1.4
+	* writer.c (PreBuffer): detect the 40-frame-jitter and correct it better.
+	
 	Release defile-3.1.3
 
 	* writer.c (pushFrame): fix indexing error in defile_flag_buf

@@ -54,6 +54,7 @@ unsigned short defile_flag_buf[FAST_PER_SLOW];
 #define DEFILE_FLAG_ZEROED_FRAME   0x1
 #define DEFILE_FLAG_MANGLED_INDEX  0x2
 #define DEFILE_FLAG_INSERTED_FRAME 0x4
+#define DEFILE_FLAG_OLD_DATA       0x8
 
 struct FieldType
 {
@@ -407,6 +408,7 @@ int PreBuffer(unsigned short *frame)
   int range;
   unsigned int last, this, next;
   int li, ti, ni;
+  int lf, tf, nf;
 
   /* a reset */
   if (frame == NULL) {
@@ -435,14 +437,26 @@ int PreBuffer(unsigned short *frame)
   ti = pre_buffer[this][3];
   ni = pre_buffer[next][3];
 
+  lf = pre_buffer[last][1];
+  tf = pre_buffer[this][1];
+  nf = pre_buffer[next][1];
+
   if ((li + 1) % FAST_PER_SLOW != ti) {
     if ((li + 2) % FAST_PER_SLOW == ni) {
       zeroes = CheckZeroes(zeroes);
-      bprintf(warning,
-          "Frame %lli: corrected mangled multiplex index: %i %i %i\n", fc,
-          li, ti, ni);
-      pre_buffer[this][3] = ti = (li + 1) % FAST_PER_SLOW;
-      defile_flags |= DEFILE_FLAG_MANGLED_INDEX;
+      if (ti == ni && tf + 40 == nf) {
+        bprintf(warning, "Frame %lli: old data detected, eliding (%i %i)\n", fc,
+            tf, nf);
+        ti = (li + 1) % FAST_PER_SLOW;
+        memcpy(pre_buffer[this], pre_buffer[ti], DiskFrameSize);
+        defile_flags |= DEFILE_FLAG_OLD_DATA;
+      } else {
+        bprintf(warning,
+            "Frame %lli: corrected mangled multiplex index: %i %i %i "
+            "(%i %i %i)\n", fc, li, ti, ni, lf, tf, nf);
+        pre_buffer[this][3] = ti = (li + 1) % FAST_PER_SLOW;
+        defile_flags |= DEFILE_FLAG_MANGLED_INDEX;
+      }
     } else if (li == 0 && ti == 0 && (zeroes > 0 || ni == 0)) {
       zeroes++;
       defile_flags |= DEFILE_FLAG_ZEROED_FRAME;
@@ -983,7 +997,7 @@ void DirFileWriter(void)
           else
             WriteField(slow_fields[j][i].fp, i_buf * sizeof(unsigned short),
                 buffer);
-        slow_fields[j][i].i_out = i_out;
+          slow_fields[j][i].i_out = i_out;
         } else
           slow_fields[j][i].i_out = slow_fields[j][i].i_in;
       }
