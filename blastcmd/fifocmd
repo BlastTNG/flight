@@ -6,5 +6,5 @@ for (@ARGV) {
   push @args, $_ if (!/^-/);
 }
 open FIFO, ">/tmp/SIPSS.FIFO" or die "fifocmd: $!\n";
-print FIFO join " ", @args, "\n" or die "fifocmd: $!\n";
+print FIFO join(" ", @args), "\n" or die "fifocmd: $!\n";
 close FIFO or die "fifocmd: $!\n";
