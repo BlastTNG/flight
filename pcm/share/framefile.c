@@ -15,7 +15,6 @@
 #ifdef __MCP__
 #  include "mcp.h"
 #else
-extern unsigned short* slow_data[FAST_PER_SLOW];
 #  define mprintf(x, ...) \
      do {  /* encase in a do {} while(0) loop to properly swallow the ; */ \
        printf(__VA_ARGS__); \
@@ -128,9 +127,11 @@ void* advance_in_buffer(void* ptr) {
 /* individual buffers                                        */
 /*************************************************************/
 void pushDiskFrame(unsigned short *RxFrame) {
+  void* new_write_to = advance_in_buffer(framefile.b_write_to);
+
+#ifdef __MCP__
   unsigned int i_slow;
   int i_ch;
-  void* new_write_to = advance_in_buffer(framefile.b_write_to);
 
   /*******************************************************************/
   /* fill the Rx slow data from the MCP internal slow data structure */
@@ -141,6 +142,7 @@ void pushDiskFrame(unsigned short *RxFrame) {
       RxFrame[4 + i_slow] = slow_data[i_slow][i_ch];
     }
   }
+#endif
 
   /* ****************************************************************** */
   /* First make sure there is enough space in the buffer                */
