@@ -54,7 +54,7 @@ enum singleCommand {
   outer_cool_on, outer_cool_off, outer_spare_on, outer_spare_off, pin_in,
   unlock, use_limitswitch, pin_in_override, pin_out_override, isc_run,
   isc_shutdown, isc_pause, isc_abort, no_bright_star, save_images,
-  discard_images, full_screen, auto_focus, nop
+  discard_images, full_screen, auto_focus, xyzzy
 };
 
 struct scom {
@@ -118,7 +118,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(he_valve_close), "set helium valve direction close",
     GR_CRYO_CONTROL},
 
-  {COMMAND(nop), "no command", GR_MISC},
+  {COMMAND(xyzzy), "nothing happens here", GR_MISC},
   {COMMAND(sync_adc), "resync ADC Boards that require it", GR_MISC},
 
   {COMMAND(balance_veto), "veto balance system", GR_BAL},
