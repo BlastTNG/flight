@@ -390,6 +390,10 @@ void SingleCommand (enum singleCommand command) {
     CommandData.ISCState.pause = 0;
   else if (command == isc_shutdown)
     CommandData.ISCState.shutdown = 1;
+  else if (command == isc_reboot)
+    CommandData.ISCState.shutdown = 2;
+  else if (command == cam_cycle)
+    CommandData.ISCState.shutdown = 2;
   else if (command == isc_pause)
     CommandData.ISCState.pause = 1;
   else if (command == isc_abort)
@@ -649,6 +653,8 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
         perror("alice_index fclose()");
     } else
       perror("alice_index fopen()");
+  } else if (command == mcc_halt) {
+    system("/sbin/telinit 6");
 
     /***************************************/
     /*************** Bias  *****************/

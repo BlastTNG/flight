@@ -1,6 +1,6 @@
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 76      /* total number of named single word cmds */
+#define N_SCOMMANDS 79      /* total number of named single word cmds */
 #define N_MCOMMANDS 50         /* total number of multiword commands */
 #define MAX_N_PARAMS 6
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -14,21 +14,23 @@
 
 #define N_GROUPS 15
 
-#define GR_POINT        0x0001
-#define GR_BAL          0x0002
-#define GR_BIAS         0x0004
-#define GR_TRIM         0x0008
-#define GR_COOL         0x0010
-#define GR_CALLAMP      0x0020
-#define GR_VETO         0x0040
-#define GR_EHEAT        0x0080
-#define GR_CRYO_HEAT    0x0100
-#define GR_GAIN         0x0200
-#define GR_ISC_HOUSE    0x0400
-#define GR_CRYO_CONTROL 0x0800
-#define GR_LOCK         0x1000
-#define GR_ISC_PARAM    0x2000
-#define GR_MISC         0x4000
+#define GR_POINT        0x00000001
+#define GR_BAL          0x00000002
+#define GR_BIAS         0x00000004
+#define GR_TRIM         0x00000008
+#define GR_COOL         0x00000010
+#define GR_CALLAMP      0x00000020
+#define GR_VETO         0x00000040
+#define GR_EHEAT        0x00000080
+#define GR_CRYO_HEAT    0x00000100
+#define GR_GAIN         0x00000200
+#define GR_ISC_HOUSE    0x00000400
+#define GR_CRYO_CONTROL 0x00000800
+#define GR_LOCK         0x00001000
+#define GR_ISC_PARAM    0x00002000
+#define GR_MISC         0x00004000
+
+#define CONFIRM         0x80000000
 
 #ifdef INCLUDE_VARS
 
@@ -61,14 +63,15 @@ enum singleCommand {
   balpump_down,     sprpump_fwd,      sprpump_off,      sprpump_on,
   sprpump_rev,      ramp,             reset_trims,      save_images,
   stop,             sun_veto,         sun_allow,        sync_adc,
-  trim_to_isc,      unlock,           use_limitswitch,  xyzzy
+  trim_to_isc,      unlock,           use_limitswitch,  xyzzy,
+  mcc_halt,         isc_reboot,       cam_cycle
 };
 
 struct scom {
   enum singleCommand command;
   char name[SIZE_NAME];
   char about[SIZE_ABOUT];
-  int group;
+  unsigned int group;
 };
 
 #define COMMAND(x) x, #x
@@ -131,6 +134,7 @@ struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(xyzzy), "nothing happens here", GR_MISC},
   {COMMAND(sync_adc), "resync ADC Boards that require it", GR_MISC},
+  {COMMAND(mcc_halt), "ask MCP to halt the MCC", GR_MISC | CONFIRM},
 
   {COMMAND(balance_veto), "veto balance system", GR_BAL},
   {COMMAND(balance_allow), "unveto balance system", GR_BAL},
@@ -151,7 +155,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(outer_spare_off), "outer frame colling pump 2 off", GR_COOL},
 
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
-    GR_LOCK},
+    GR_LOCK | CONFIRM},
   {COMMAND(unlock), "unlock the lock", GR_LOCK},
   {COMMAND(use_limitswitch),
     "reset pin position overrides and use limit switches", GR_LOCK},
@@ -160,10 +164,14 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(pin_out_override),
     "override limit switch readout and set state to pin out", GR_LOCK},
 
-  {COMMAND(isc_run), "start automatic image capture (normal mode)", GR_ISC_HOUSE},
+  {COMMAND(isc_run), "start automatic image capture (normal mode)",
+    GR_ISC_HOUSE},
   {COMMAND(isc_pause), "pause image capture", GR_ISC_HOUSE},
-  {COMMAND(isc_shutdown),
-    "shutdown ISC computer in prepratation for power cycle", GR_ISC_HOUSE},
+  {COMMAND(isc_reboot), "ask for software reboot of ISC computer",
+    GR_ISC_HOUSE | CONFIRM},
+  {COMMAND(isc_shutdown), "ask for shutdown of ISC computer", GR_ISC_HOUSE |
+    CONFIRM},
+  {COMMAND(cam_cycle), "cycle star camera CCD power", GR_ISC_HOUSE},
   {COMMAND(isc_abort), "abort current solution attempt", GR_ISC_HOUSE},
   {COMMAND(isc_reconnect),
     "tell mcp to try and establish a new connection with ISC", GR_ISC_HOUSE},
@@ -201,7 +209,7 @@ struct mcom {
   enum multiCommand command;
   char name[SIZE_NAME];
   char about[SIZE_ABOUT];
-  int group;
+  unsigned int group;
   char numparams;
   struct par params[MAX_N_PARAMS];
 };

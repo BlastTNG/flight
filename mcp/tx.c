@@ -102,7 +102,7 @@ void WriteAux(unsigned int slowTxFields[N_SLOW][FAST_PER_SLOW]) {
   WriteSlow(i_df, j_df, CommandData.df);
 
   WriteSlow(aliceFileCh, aliceFileInd, CommandData.alice_file);
-  WriteSlow(timeoutCh, timeoutInd, CommandData.timeout);
+  WriteSlow(timeoutCh, timeoutInd, CommandData.pointing_mode.t);
 }
 
 /*****************************************************************/
