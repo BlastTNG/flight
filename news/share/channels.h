@@ -38,9 +38,9 @@ extern "C" {
   struct ChannelStruct {
     char field[FIELD_LEN]; /* name of channel for FileFormats and CalSpecs */
     char rw;        /* 'r' = read, 'w' = write */
-    int node;       /* BlastBus node: 0 to 63 */
-    int bus;        /* Bus number: 0 to 1 */
-    int addr;       /* BlastBus address: 0 to 63 */
+    char node;       /* BlastBus node: 0 to 63 */
+    char bus;        /* Bus number: 0 to 1 */
+    char addr;       /* BlastBus address: 0 to 63 */
     float m_c2e;    /* Conversion from counts to enginering units is */
     float b_e2e;    /*   e = c * m_c2e + b_e2e */
     char type;      /* 's' = short, signed o'u' = unsigned short 'i' = 'S'
