@@ -1,38 +1,56 @@
 #! /bin/csh
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 sleep 1
 /usr/local/bin/mcp b >>& /data/rawdir/mcp.log
+killall small
 /sbin/reboot
 
