@@ -15,26 +15,28 @@
 #define SIZE_ABOUT 80
 #define SIZE_PARNAME 25
 
-#define N_GROUPS 11
+#define N_GROUPS 12
 
 #define GR_POINT 0
 #define GR_BAL 1
 #define GR_BIAS 2
 #define GR_SENSOR 3
 #define GR_COOL 4
-#define GR_CRYO_CONTROL 5
+#define GR_CALLAMP 5
 #define GR_GAIN 6
 #define GR_EHEAT 7
 #define GR_CRYO_HEAT 8
 #define GR_LOCK 9
 #define GR_MISC 10
+#define GR_CRYO_CONTROL 11
+
 #ifdef INCLUDE_VARS
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Mode",        "Balance System",    "Bias",
-  "Pointing Sensors",     "Cooling System",    "Cryo Control",
+  "Pointing Sensors",     "Cooling System",    "Cal Lamp",
   "Pointing Motor Gains", "Electronics Heat",  "Cryo Heat",
-  "Inner Frame Lock",     "Miscellaneous",
+  "Inner Frame Lock",     "Miscellaneous",     "Cryo Control"
 };
 
 struct scom {
@@ -69,9 +71,9 @@ struct scom scommands[N_NM_SCOMMANDS] = {
   {"charcoal_off", "charcoal heater off", GR_CRYO_HEAT},
   {"coldplate_on", "cold plate heater on", GR_CRYO_HEAT},
   {"coldplate_off", "cold plate heater off", GR_CRYO_HEAT},
-  {"cal_on", "calibrator on", GR_CRYO_CONTROL},
-  {"cal_off", "calibrator off", GR_CRYO_CONTROL},
-  {"cal_stop", "stop calibrator pulses", GR_CRYO_CONTROL},
+  {"cal_on", "calibrator on", GR_CALLAMP},
+  {"cal_off", "calibrator off", GR_CALLAMP},
+  {"cal_stop", "stop calibrator pulses", GR_CALLAMP},
   {"ln_valve_on",  "LN valve on", GR_CRYO_CONTROL},
   {"ln_valve_off", "LN valve off", GR_CRYO_CONTROL},
   {"ln_valve_open", "set LN valve direction open", GR_CRYO_CONTROL},
@@ -269,13 +271,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {"cal_pulse", "calibrator single pulse", GR_CRYO_CONTROL, 1,
+  {"cal_pulse", "calibrator single pulse", GR_CALLAMP, 1,
     {
       {"pulse length (ms)", 0, 8000, 'i', 0, "ADD"}
     }
   },
 
-  {"cal_pulse_repeat", "pulse calibrator repeatedly", GR_CRYO_CONTROL, 2,
+  {"cal_pulse_repeat", "pulse calibrator repeatedly", GR_CALLAMP, 2,
     {
       {"pulse length (ms)", 1, 8000, 'i', 0, "ADD"},
       {"repeat delay (s)", 1, 86400, 'f', 0, "ADD"}
