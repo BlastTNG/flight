@@ -103,6 +103,7 @@ struct CommandDataStruct {
     double max_set;
     double min_heat;
     double max_heat;
+    int age;
   } gyheat;
   double t_isc_setpoint;
 

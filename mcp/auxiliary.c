@@ -132,7 +132,6 @@ void ControlGyroHeat(unsigned short *RxFrame)
   static struct NiosStruct *tGyAgeAddr, *gyHMinAddr, *gyHMaxAddr;
   static int firsttime = 1;
   static double history = 0;
-  static int age = 0;
 
   int on = 0x40, off = 0x00;
   static int p_on = 0;
@@ -163,7 +162,7 @@ void ControlGyroHeat(unsigned short *RxFrame)
     dGyheatAddr = GetNiosAddr("g_d_gyheat");
   }
 
-  age = SetGyHeatSetpoint(history, age);
+  CommandData.gyheat.age = SetGyHeatSetpoint(history, CommandData.gyheat.age);
 
   /* send down the setpoints and gains values */
   WriteData(tGySetAddr, CommandData.gyheat.setpoint * 32768.0 / 100.0, 0);
@@ -210,9 +209,9 @@ void ControlGyroHeat(unsigned short *RxFrame)
   }
 
   /******** do the pulse *****/
-  if (age <= GY_HEAT_TC * 2)
-    ++age;
-  WriteData(tGyAgeAddr, age, NIOS_QUEUE);
+  if (CommandData.gyheat.age <= GY_HEAT_TC * 2)
+    ++CommandData.gyheat.age;
+  WriteData(tGyAgeAddr, CommandData.gyheat.age, NIOS_QUEUE);
   WriteData(tGyHistAddr, (history * 32768. / 100.), NIOS_QUEUE);
   if (p_on > 0) {
     WriteData(gyHeatAddr, on, NIOS_FLUSH);

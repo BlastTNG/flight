@@ -722,6 +722,7 @@ void MultiCommand (enum multiCommand command, unsigned short *dataq) {
     CommandData.gyheat.min_heat = rvalues[2];
     CommandData.gyheat.max_heat = rvalues[3];
     CommandData.gyheat.setpoint = rvalues[4];
+    CommandData.gyheat.age = 0;
   } else if (command == t_gyro_gain) {  /* gyro heater gains */
     CommandData.gy_heat_gain.P = ivalues[0];
     CommandData.gy_heat_gain.I = ivalues[1];
@@ -1394,6 +1395,8 @@ void InitCommandData() {
   CommandData.sensors_off.isc = 0;
   CommandData.sensors_off.osc = 0;
   CommandData.sensors_off.ss = 0;
+
+  CommandData.gyheat.age = 0;
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
