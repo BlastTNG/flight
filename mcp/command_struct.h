@@ -1,3 +1,25 @@
+/* mcp: the BLAST master control program
+ *
+ * This software is copyright (C) 2002-2004 University of Toronto
+ * 
+ * This file is part of mcp.
+ * 
+ * mcp is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * mcp is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with mcp; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
 #include "isc_protocol.h"
 #include "tx_struct.h"
 #include <time.h>
@@ -79,17 +101,22 @@ struct BiasStruct {
   int SetLevel1, SetLevel2, SetLevel3;
 };
 
+enum calmode { on, off, pulse, repeat };
+
 struct CryoStruct {
-  int heliumLevel;
-  int charcoalHeater;
-  int coldPlate;
-  int calibrator, calib_pulse, calib_repeat;
-  int sparePwm;
-  int JFETHeat;
-  int heatSwitch;
-  int heliumThree;
-  int potvalve_open, potvalve_on, potvalve_close;
-  int lhevalve_open, lhevalve_on, lhevalve_close;
+  unsigned short heliumLevel;
+  unsigned short charcoalHeater;
+  unsigned short coldPlate;
+  enum calmode calibrator;
+  unsigned short calib_pulse, calib_repeat;
+  unsigned short BDAHeat;
+  struct GainStruct bdaGain;
+  unsigned short bdaFiltLen;
+  unsigned short JFETHeat;
+  unsigned short heatSwitch;
+  unsigned short heliumThree;
+  unsigned short potvalve_open, potvalve_on, potvalve_close;
+  unsigned short lhevalve_open, lhevalve_on, lhevalve_close;
 };
 
 struct ISCControlStruct {
