@@ -482,7 +482,7 @@ void MainForm::SendCommand() {
   int index, i, j;
   char args[MAX_N_PARAMS + 7][SIZE_NAME];
   char *params[MAX_N_PARAMS + 7];
-  char errorbuffer[1024];
+  char buffer[1024];
 
   if (!sending) {
     i = 0;
@@ -519,31 +519,50 @@ void MainForm::SendCommand() {
     // Parameters
     if (strcmp(NCommandList->text(NCommandList->currentItem()), "abort_failure")
         == 0) {
-      sprintf(errorbuffer, "Error: Unable to abort failure mode: %s", 
+      sprintf(buffer, "Error: Unable to abort failure mode: %s", 
           NParamFields[0]->text().ascii());
-      params[1] = errorbuffer;
+      params[1] = buffer;
       params[2] = 0;
       WriteLog(NLog, params);
       WriteLog(NLog, 10);
       return;
     } else if ((index = MIndex(NCommandList->text(NCommandList->currentItem())))
         != -1) {
+
+      // Check to see if this command requires a confirm
+      if (scommands[index].group & CONFIRM) {
+        sprintf(buffer, "The command %s requires confirmation.\n"
+            "Are you sure you want to send this command?",
+            NCommandList->text(NCommandList->currentItem()).ascii());
+
+        if ( QMessageBox::warning(this, "Confirm Command", tr(buffer),
+              QMessageBox::Yes, QMessageBox::Escape |
+              QMessageBox::No | QMessageBox::Default) == QMessageBox::No ) {
+          strcpy(buffer, "Command not confirmed.");
+          params[1] = buffer;
+          params[2] = 0;
+          WriteLog(NLog, params);
+          WriteLog(NLog, 11);
+          return;
+        }
+      }
+
       for (j = 0; j < mcommands[index].numparams; j++) {
         NParamFields[j]->RecordDefaults();
         if (defaults[index][j] < mcommands[index].params[j].min) {
-          sprintf(errorbuffer, "Error: Parameter \"%s\" out of range: %f < %f",
+          sprintf(buffer, "Error: Parameter \"%s\" out of range: %f < %f",
               mcommands[index].params[j].name, defaults[index][j],
               mcommands[index].params[j].min);
-          params[1] = errorbuffer;
+          params[1] = buffer;
           params[2] = 0;
           WriteLog(NLog, params);
           WriteLog(NLog, 9);
           return;
         } else if (defaults[index][j] > mcommands[index].params[j].max) {
-          sprintf(errorbuffer, "Error: Parameter \"%s\" out of range: %f > %f",
+          sprintf(buffer, "Error: Parameter \"%s\" out of range: %f > %f",
               mcommands[index].params[j].name, defaults[index][j],
               mcommands[index].params[j].max);
-          params[1] = errorbuffer;
+          params[1] = buffer;
           params[2] = 0;
           WriteLog(NLog, params);
           WriteLog(NLog, 9);
@@ -551,7 +570,29 @@ void MainForm::SendCommand() {
         }
         sprintf(args[i++], "%f ", defaults[index][j]);
       }
+    } else {
+      index = SIndex(NCommandList->text(NCommandList->currentItem()));
+
+      // Check to see if this command requires a confirm
+      if (scommands[index].group & CONFIRM) {
+        sprintf(buffer, "The command %s requires confirmation.\n"
+            "Are you sure you want to send this command?",
+            NCommandList->text(NCommandList->currentItem()).ascii());
+
+        if ( QMessageBox::warning(this, "Confirm Command", tr(buffer),
+              QMessageBox::Yes, QMessageBox::Escape |
+              QMessageBox::No | QMessageBox::Default) == QMessageBox::No ) {
+          strcpy(buffer, "Command not confirmed.");
+          params[1] = buffer;
+          params[2] = 0;
+          WriteLog(NLog, params);
+          WriteLog(NLog, 11);
+          return;
+        }
+      }
     }
+
+
 
     params[i] = '\0';
     for (j = 0; j < i; j++)
@@ -712,6 +753,9 @@ void MainForm::WriteLog(QMultiLineEdit *dest, int retstatus) {
       break;
     case 10:
       strcpy(txt, "  COMMAND NOT SENT: Narsil error: Unable to abort failure mode.\n\n");
+      break;
+    case 11:
+      strcpy(txt, "  COMMAND NOT SENT: Command not confirmed by user.\n\n");
       break;
   }
 
@@ -875,7 +919,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
     NParamLabels[i]->setGeometry(point.x(), 0, w2, h2);
 
     point.setX(w1 + PADDING +
-               (i%2) * (w2 + w3 + PADDING) + w2);
+        (i%2) * (w2 + w3 + PADDING) + w2);
     NParamFields[i]->setGeometry(point.x(), 0, w3, h3);
   }
 
@@ -923,31 +967,31 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NSettingsButton->adjustSize();
 
   NSettingsButton->setGeometry(PADDING, PADDING +
-                           2 * PADDING + h1 +
-                           (int((2 + MAX_N_PARAMS)/2)) *
-                           (h3 + SPACING) -
-                           NSettingsButton->height()
-                           , NSettingsButton->width(),
-                           NSettingsButton->height());
+      2 * PADDING + h1 +
+      (int((2 + MAX_N_PARAMS)/2)) *
+      (h3 + SPACING) -
+      NSettingsButton->height()
+      , NSettingsButton->width(),
+      NSettingsButton->height());
   NSendButton->setGeometry(2*PADDING + NAboutLabel->width() -
-                               NSendButton->width(),
-                               PADDING + 2 * PADDING + h1 +
-                               (int((2 + MAX_N_PARAMS)/2)) *
-                               (h3 + SPACING) -
-                               NSendButton->height(),
-                               NSendButton->width(),
-                               NSendButton->height());
+      NSendButton->width(),
+      PADDING + 2 * PADDING + h1 +
+      (int((2 + MAX_N_PARAMS)/2)) *
+      (h3 + SPACING) -
+      NSendButton->height(),
+      NSendButton->width(),
+      NSendButton->height());
 
   NTopFrame->adjustSize();
 
   NGroupsBox->adjustSize();
   NGroupsBox->setGeometry(2*PADDING+NCommandList->width(), PADDING,
-                          NTopFrame->width(),
-                          NGroupsBox->height());
+      NTopFrame->width(),
+      NGroupsBox->height());
 
   NTopFrame->setGeometry(2*PADDING+NCommandList->width(),
-                         PADDING * 2 + NGroupsBox->height(),
-                         NTopFrame->width(), NTopFrame->height());
+      PADDING * 2 + NGroupsBox->height(),
+      NTopFrame->width(), NTopFrame->height());
 
 
   NBotFrame = new QFrame(this, "NBotFrame");
@@ -965,20 +1009,21 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
   NLog = new QMultiLineEdit(NBotFrame, "NLog");
   NLog->setReadOnly(true);
   NLog->setGeometry(PADDING, PADDING, NTopFrame->width() -
-                    NWaitImage->width() -
-                    3 * PADDING, PADDING + NWaitImage->height());
+      NWaitImage->width() -
+      3 * PADDING, PADDING + NWaitImage->height());
   ReadLog(NLog);
 
   NBotFrame->adjustSize();
   NBotFrame->setGeometry(2*PADDING+NCommandList->width(),
-                         PADDING * 3 + NGroupsBox->height() +
+      PADDING * 3 + NGroupsBox->height() +
       NTopFrame->height(), NTopFrame->width(),
       NBotFrame->height());
 
   NCommandList->setGeometry(PADDING, PADDING, NCommandList->width(),
-                            PADDING * 2 + NGroupsBox->height() +
-                            NTopFrame->height() + NBotFrame->height());
+      PADDING * 2 + NGroupsBox->height() +
+      NTopFrame->height() + NBotFrame->height());
 
+  // Settings window
   NSettingsWindow = new QDialog(this, "NSettingsWindow", true, 0);
   NSettingsWindow->setName("SettingsWindow");
   NSettingsWindow->setCaption(tr("Narsil Settings"));
