@@ -21,16 +21,16 @@
  */
 
 /******************************************************************************\
-|* SMALL.H                                                                    *|
+|* TDRSS.H                                                                    *|
 |*                                                                            *|
-|* Comments in small.cpp                                                      *|
+|* Comments in tdrss.cpp                                                      *|
 \******************************************************************************/
 
-#ifndef SMALL_H
-#define SMALL_H
+#ifndef TDRSS_H
+#define TDRSS_H
 
 #include <pthread.h>
-#include "small_c.h"
+#include "tdrss_c.h"
 
 #define BUFFER_SAFE_ALLOC       5
 

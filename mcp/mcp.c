@@ -43,7 +43,7 @@
 #include "crc.h"
 #include "mcp.h"
 #include "pointing_struct.h"
-#include "small_c.h"
+#include "tdrss_c.h"
 #include "slow_dl.h"
 #include "starpos.h"
 #include "channels.h"

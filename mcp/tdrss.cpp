@@ -23,7 +23,7 @@
 /*()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()*\
  *()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()*|
  *()                                                                        ()*|
- *() SMALL.CPP                                                              ()*|
+ *() TDRSS.CPP                                                              ()*|
  *()                                                                        ()*|
  *() Compression for high rate TDRSS downlink.  Requires dataholder.o and   ()*|
  *() crc.o.                                                                 ()*|
@@ -47,7 +47,7 @@
 #include <string.h>
 
 #include "dataholder.h"
-#include "small.h"
+#include "tdrss.h"
 #include "fftsg_h.c"
 #include "bbc_pci.h"
 #include "alice.h"
@@ -61,7 +61,7 @@ extern "C" {
 }
 
 //#define USE_SMALL_LOG
-#define SMALL_LOG_FILE  "/data/etc/small.log"
+#define SMALL_LOG_FILE  "/data/etc/tdrss.log"
 int smalllogspaces;
 
 #define ALICEFILE_DIR   "/data/etc/"
@@ -503,9 +503,9 @@ Alice::Alice() {
 
 #ifdef USE_SMALL_LOG
   if ((smalllog = fopen(SMALL_LOG_FILE, "a")) == NULL)
-    bprintf(warning, "Could not open small log file (%s).", SMALL_LOG_FILE);
+    bprintf(warning, "Could not open tdrss log file (%s).", SMALL_LOG_FILE);
   else
-    fprintf(smalllog, "\n\nSMALL LOG RESTART\n------------------\n");
+    fprintf(smalllog, "\n\nTDRSS LOG RESTART\n------------------\n");
 #endif
 }
 
