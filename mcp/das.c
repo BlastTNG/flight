@@ -355,11 +355,9 @@ void CryoControl (void)
     cryostate |= CS_HELIUMLEVEL;
   }
 
-  if (CommandData.Cryo.fridgeCycle) {
+  if (CommandData.Cryo.fridgeCycle)
     FridgeCycle(&cryoout3, &cryostate, 0); 
-    cryoout3 |= CRYO_CHARCOAL_OFF;
-    cryostate &= 0xFFFF - CS_CHARCOAL;
-  } else {
+  else {
     FridgeCycle(&cryoout3, &cryostate, 1);
     if (CommandData.Cryo.charcoalHeater == 0) {
       cryoout3 |= CRYO_CHARCOAL_OFF;
