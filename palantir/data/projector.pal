@@ -391,10 +391,10 @@
      <DATUM format="%.2f" src="T_LSTRT_MID" extrema="temp"/></NUMBER>
  <NUMBER caption="Secondary" textstyle="evenrow">
      <DATUM format="%.2f" src="T_SECONDARY" extrema="temp"/></NUMBER>
- <NUMBER caption="T IF 10" textstyle="evenrow">
-     <DATUM format="%.2f" src="T_IF10" extrema="temp"/></NUMBER>
- <NUMBER caption="T IF 11" textstyle="evenrow">
-     <DATUM format="%.2f" src="T_IF11" extrema="temp"/></NUMBER>
+ <NUMBER caption="ISC Baffle" textstyle="evenrow">
+     <DATUM format="%.2f" src="T_BAFFLE" extrema="temp"/></NUMBER>
+ <NUMBER caption="Rec" textstyle="evenrow">
+     <DATUM format="%.2f" src="T_REC" extrema="temp"/></NUMBER>
  <NUMBER caption="T IF 12" textstyle="evenrow">
      <DATUM format="%.2f" src="T_IF12" extrema="temp"/></NUMBER>
 </BOX>
