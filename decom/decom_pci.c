@@ -54,23 +54,23 @@ static ssize_t read_decom(struct file * filp, char * buf, size_t count,
                          loff_t *dummy) {
   unsigned int rp, wp, b;
 
-  if (count < SIZE_UINT)
+  if (count < DECOM_SIZE_UINT)
     return 0;
 
-  rp = readl(decom_membase + ADD_READ_BUF_RP); // Where pci read last.
-  wp = readl(decom_membase + ADD_READ_BUF_WP); // Where NIOS is about to write.
+  rp = readl(decom_membase + DECOM_ADD_READ_BUF_RP); // Where pci read last.
+  wp = readl(decom_membase + DECOM_ADD_READ_BUF_WP); // Where NIOS is about to write.
 
-  rp += SIZE_UINT;
-  if (rp >= ADD_READ_BUF_END)
-    rp = ADD_READ_BUF;
+  rp += DECOM_SIZE_UINT;
+  if (rp >= DECOM_ADD_READ_BUF_END)
+    rp = DECOM_ADD_READ_BUF;
 
   if (rp == wp)  // No new data.
     return 0;
   else {
     b = readl(decom_membase + rp);
-    copy_to_user(buf, (void *)&b, SIZE_UINT);
-    writel(rp, decom_membase + ADD_READ_BUF_RP); // Update read pointer.
-    return SIZE_UINT;
+    copy_to_user(buf, (void *)&b, DECOM_SIZE_UINT);
+    writel(rp, decom_membase + DECOM_ADD_READ_BUF_RP); // Update read pointer.
+    return DECOM_SIZE_UINT;
   }
 }
 
@@ -83,19 +83,19 @@ static ssize_t write_decom(struct file * filp, const char * buf,
                          size_t count, loff_t *dummy) {
   unsigned int datum;
         
-  if (count < SIZE_UINT)
+  if (count < DECOM_SIZE_UINT)
     return 0;
   
   /* There is really no need to write to the DECOM card.  The only thing PCI
    * controls is the frame length, which is properly done through an ioctl call.
    * So only allow users to write to frame length word on the board here. */
   
-  copy_from_user((void *)(&datum), buf, SIZE_UINT);
-  writel(datum, decom_membase + ADD_FRAME_LEN);
+  copy_from_user((void *)(&datum), buf, DECOM_SIZE_UINT);
+  writel(datum, decom_membase + DECOM_ADD_FRAME_LEN);
 
-  printk("--> %d\n", readl(decom_membase + ADD_FRAME_LEN));
+  printk("--> %d\n", readl(decom_membase + DECOM_ADD_FRAME_LEN));
   
-  return SIZE_UINT;
+  return DECOM_SIZE_UINT;
 }
 
 /*******************************************************************/
@@ -150,17 +150,17 @@ static int ioctl_decom (struct inode *inode, struct file * filp,
   
   switch(cmd) {
     case DECOM_IOC_RESET:
-      bitfield = COMREG_RESET;
-      writel(bitfield, decom_membase + ADD_COMREG);
+      bitfield = DECOM_COMREG_RESET;
+      writel(bitfield, decom_membase + DECOM_ADD_COMREG);
       break;
     case DECOM_IOC_VERSION:
-      ret = readl(decom_membase + ADD_VERSION);
+      ret = readl(decom_membase + DECOM_ADD_VERSION);
       break;
     case DECOM_IOC_COUNTER:
-      ret = readl(decom_membase + ADD_COUNTER);
+      ret = readl(decom_membase + DECOM_ADD_COUNTER);
       break;
     case DECOM_IOC_FRAMELEN:
-      writel(arg, decom_membase + ADD_FRAME_LEN);
+      writel(arg, decom_membase + DECOM_ADD_FRAME_LEN);
       ret = arg;
       break;
     default:

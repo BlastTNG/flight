@@ -6,7 +6,7 @@
 #include <unistd.h> 
 
 #include "decom_pci.h"
-#define BIPHASE_FRAME_WORDS ((0x000f + 1) * 2)
+#define BIPHASE_FRAME_WORDS 624
 
 int main(int argc, char *argv[]) {
   int fp, nr;
@@ -26,10 +26,10 @@ int main(int argc, char *argv[]) {
   getchar();
 
   while (1234 > 2) {
-    for (k = 0; read(fp, (void *)(&j), SIZE_UINT) > 0; k++) {
+    for (k = 0; read(fp, (void *)(&j), DECOM_SIZE_UINT) > 0; k++) {
       printf("%2d -> %10u %8x (%10u)\n", k, j, j, ioctl(fp, DECOM_IOC_COUNTER));
     }
-    printf("Stopped.\n");
+    printf("Stopped.\r");
   }
   
   return 0;
