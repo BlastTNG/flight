@@ -773,7 +773,7 @@ void UpdateBBCFrame(unsigned short *RxFrame) {
     WriteAux();
     PhaseControl();
   }
-  index = (index + 1) % 20;
+  index = (index + 1) % FAST_PER_SLOW;
 
 #ifndef BOLOTEST
   ControlAuxMotors(RxFrame);
