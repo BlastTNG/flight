@@ -107,6 +107,7 @@ double getlst(time_t t, double lon);
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
                 double *el);
 
+void DoSched();
 
 /****************************************************************
  *                                                              *
@@ -128,11 +129,14 @@ double GetVElev() {
   static double last_vel=0;
   double dvel;
   double max_dv = 20;
+  int i_point;
+
+  i_point = GETREADINDEX(point_index);
 
   if (axes_mode.el_mode == AXIS_VEL) {
     vel = axes_mode.el_vel;
   } else if (axes_mode.el_mode == AXIS_POSITION) {
-    vel = (PointingData[point_index].el - axes_mode.el_dest)
+    vel = (PointingData[i_point].el - axes_mode.el_dest)
 	  * 0.36;
   } else if (axes_mode.el_mode == AXIS_LOCK) {
     /* for the lock, only use the elevation encoder */
@@ -140,7 +144,7 @@ double GetVElev() {
   }
   
   /* correct offset and convert to Gyro Units */
-  vel += PointingData[point_index].gy1_offset;
+  vel += PointingData[i_point].gy1_offset;
   vel *= DPS2GYU; 
 
   /* Limit Maximim speed */
@@ -167,11 +171,14 @@ int GetVAz() {
   static int last_vel=0;
   int dvel;
   int max_dv = 20;
+  int i_point;
+
+  i_point = GETREADINDEX(point_index);
 
   if (axes_mode.az_mode == AXIS_VEL) {
     vel = axes_mode.az_vel;
   } else if (axes_mode.az_mode == AXIS_POSITION) {
-    vel = -(PointingData[point_index].az - axes_mode.az_dest)
+    vel = -(PointingData[i_point].az - axes_mode.az_dest)
 	  * 0.36;
   }
 
@@ -215,7 +222,8 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   unsigned int usin_el;
 
   int v_elev, v_az, elGainP, elGainI, rollGainP;
-
+  int i_point;
+  
   /******** Obtain correct indexes the first time here ***********/
   if (i_g_Pel == -1) {
     FastChIndex("el_vreq", &i_elVreq);
@@ -231,6 +239,8 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
     SlowChIndex("set_reac", &i_set_reac, &j_set_reac);
   }
 
+  i_point = GETREADINDEX(point_index);
+
   v_elev = GetVElev() * 6.0; // the 6.0 is to improve dynamic range.
   // It is removed in the DSP/ACS1 code.
   WriteFast(i_elVreq, 32768 + v_elev);
@@ -239,7 +249,7 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
 
   /*** Send elevation angles to acs1 from acs2 ***/
   /* cos of el enc */
-  el_rad = (M_PI / 180.0) * PointingData[point_index].el; // convert to radians
+  el_rad = (M_PI / 180.0) * PointingData[i_point].el; // convert to radians
   ucos_el = (unsigned int)((cos(el_rad) + 1.0) * 32768.0);
   WriteFast(i_cos_el, ucos_el);
 
@@ -256,8 +266,8 @@ void WriteMot(int TxIndex, unsigned int *Txframe, unsigned short *Rxframe,
   }
 
   /*** adjust roll_gain ***/
-  if (PointingData[point_index].gy_roll_amp>0.003) {
-    rollGainP = 1000.0/PointingData[point_index].gy_roll_amp;
+  if (PointingData[i_point].gy_roll_amp>0.003) {
+    rollGainP = 1000.0/PointingData[i_point].gy_roll_amp;
   } else {
     rollGainP = CommandData.roll_gain.P;
   }
@@ -1176,6 +1186,10 @@ void StoreData(unsigned int* Txframe,
 		((!CommandData.use_mag)<<3) |
 		((!CommandData.use_gps)<<4);
 
+  if (PointingData[i_point].t >= CommandData.pointing_mode.t_start_sched) {
+    sensor_veto |= (1 << 5);
+  }
+  
   WriteSlow(i_SVETO, j_SVETO, sensor_veto);
 }
 
@@ -1478,6 +1492,7 @@ void do_Tx_frame(int bbc_fp, unsigned int *Txframe,
 
   /*** do Controls ***/
 #ifndef BOLOTEST
+  DoSched();
   UpdateAxesMode();
   StoreData(Txframe, slowTxFields);
   ControlGyroHeat(Txframe, Rxframe, slowTxFields);

@@ -421,6 +421,7 @@ void FPrintDerived(FILE *fp) {
       "VSC_VETO         BIT sensor_veto 2\n"
       "MAG_VETO         BIT sensor_veto 3\n"
       "GPS_VETO         BIT sensor_veto 4\n"
+      "IS_SCHED         BIT sensor_veto 5\n"
       "### Bias Generator Bitfield ###\n"
       "BIAS_IS_DC       BIT biasin 1\n"
       "BIAS_CLK_IS_INT  BIT biasin 2\n"

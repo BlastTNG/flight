@@ -20,6 +20,11 @@
 #include <math.h>
 #include <time.h>
 
+#include "command_struct.h"
+
+extern struct ScheduleType S;
+
+
 #define EPHEM_FILE "./ephemeris/ephem.2000"
 
 #define AU         149597870.691                // in km
@@ -566,11 +571,13 @@ double getlst(time_t t, double lon) {
 
   /* gmt is set to a time when gst was zero */
   /* we are assuming that frodo is set to gmt. */
-  struct tm gmt = {56, 5, 4, /* s, m, h */
-		   21, 06, 103, 0,0,0,0}; // day, month (0-11), year-1900
+  //  struct tm gmt = {56, 5, 4, // s, m, h 
+  //		   21, 06, 103, 0,0,0,0}; // day, month (0-11), year-1900
 
-  t -= (mktime(&gmt) - timezone); 
+  //t -= (mktime(&gmt) - timezone); 
 
+  t -= S.t0; // S.t0 is from first line in schedule file: see sched.c
+  
   t *= 1.002737909; // gst in seconds
 
   t-= lon*(24.0*3600.0/360.0);

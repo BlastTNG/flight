@@ -76,6 +76,8 @@ void MagModelInit(int maxdeg);
 void GetMagModel(float alt, float glat, float glon, float time,
                  float *dec, float *dip, float *ti, float *gv);
 
+void InitSched();
+
 struct {
   int i_in;
   int i_out;
@@ -576,6 +578,9 @@ int main(int argc, char *argv[]) {
   }
 
   InitializeDirfile(argv[1][0]);
+
+  InitSched();
+  
   pthread_create(&disk_id, NULL, (void*)&DirFileWriter, NULL);
 
   do_Tx_frame(bbc_fp, Txframe, slowTxFields, Rxframe, 0);

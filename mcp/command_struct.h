@@ -1,3 +1,5 @@
+#include "tx_struct.h"
+
 #define N_SLOWDL   7
 
 #define AXIS_VEL 0
@@ -42,6 +44,7 @@ struct PointingModeStruct {
   double ra;      //                               **
   double dec;     //                               **
   double r;       //                               **
+  time_t t_start_sched; // after this time, use sched file
 };
 
 struct PumpStruct {
@@ -117,6 +120,21 @@ struct CommandDataStruct {
   short T;
 
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
+};
+
+struct EventType {
+  time_t t;          /* event time in comoving local sideral seconds */
+  double ra;
+  double dec;
+  double r;
+  double el_vel;
+  double az_vel;
+};
+
+struct ScheduleType {
+  int n_sched;
+  time_t t0;
+  struct EventType *e;
 };
 
 int bc_setserial(char *input_tty);

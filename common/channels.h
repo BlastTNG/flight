@@ -1,3 +1,6 @@
+#ifndef TX_STRUCT_H
+#define TX_STRUCT_H
+
 /* FAST_PER_SLOW is the number of fast samples for each slow one */
 #define FAST_PER_SLOW 20
 
@@ -59,3 +62,4 @@ void SlowChIndex(char*, int*, int*);
 #define VEL2I (65536.0/10.0)
 #define I2VEL (1.0/VEL2I)
 
+#endif

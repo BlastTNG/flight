@@ -56,6 +56,8 @@ pthread_mutex_t mutex;
 
 struct SIPDataStruct SIPData;
 struct CommandDataStruct CommandData;
+extern struct PointingDataStruct PointingData[3];
+extern int point_index;
 
 char *SatStatus[14] = {
   "3 sat, 2D",
@@ -246,6 +248,7 @@ void ClearPointingModeExtraFields() {
 }
 
 void SingleCommand (int command) {
+  int i_point;
 
   printf("Single command %d: %s\n", command, scommands[command].name);
   
@@ -375,7 +378,15 @@ void SingleCommand (int command) {
       CommandData.pointing_mode.el_mode = POINT_VEL;
       CommandData.pointing_mode.el_vel = 0.0;
     }
+  } else {
+    return; // invalid command - no write or update
   }
+
+  i_point = GETREADINDEX(point_index);
+
+  CommandData.pointing_mode.t_start_sched =
+    PointingData[i_point].t + CommandData.timeout;
+
   WritePrevStatus();
 }
 
@@ -397,6 +408,8 @@ void MultiCommand (int command, unsigned short *dataq) {
   double rvalues[MAX_N_PARAMS];
   unsigned short ivalues[MAX_N_PARAMS];
   char type;
+  int i_point;
+
 
 #ifndef BOLOTEST
   double min;
@@ -581,7 +594,14 @@ void MultiCommand (int command, unsigned short *dataq) {
     CommandData.Cryo.heliumThree = rvalues[0] * 2047./100.;
   } else if (command == MIndex("spare_heat")) {
     CommandData.Cryo.sparePwm = rvalues[0] * 2047./100.;
+  } else {
+    return; // invalid command - don't update
   }
+
+  i_point = GETREADINDEX(point_index);
+
+  CommandData.pointing_mode.t_start_sched =
+    PointingData[i_point].t + CommandData.timeout;
 
   ClearPointingModeExtraFields();
   
@@ -1241,6 +1261,8 @@ void InitCommandData() {
     close(fp);
   }
 
+  CommandData.pointing_mode.t_start_sched = time(NULL) + CommandData.timeout;
+  
   /** initialize stuff that we don't want from prev_status here **/
   CommandData.pumps.bal_veto = BAL_VETO_LENGTH;
   CommandData.pumps.bal1_on = 0;
@@ -1271,7 +1293,9 @@ void InitCommandData() {
 #endif
 
   fprintf(stderr,"Warning: regenerating Command Data and previous_status\n");
-  
+
+  CommandData.pointing_mode.t_start_sched = time(NULL) + CommandData.timeout;
+
   /** put stuff that we want to keep from prev_status here **/
   CommandData.pointing_mode.az_mode = POINT_VEL;
   CommandData.pointing_mode.az_vel = 0.0;
