@@ -917,13 +917,14 @@ void DoNewCapMode() {
       axes_mode.el_vel = 0.0;
       v_el = 0.0;
       targ_el = -r;
+      el_dir = 1;
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
   }
 
   /** Get x limits at the next elevation row **/
-  y = el - cel + CommandData.pointing_mode.del*el_dir;
+  y = targ_el; //el - cel + CommandData.pointing_mode.del*el_dir;
   x2 = r * r - y * y;
   if (x2 < 0) {
     xw = 0.0;
