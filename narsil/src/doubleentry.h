@@ -6,7 +6,7 @@
 class DoubleEntry : public QLineEdit {
   Q_OBJECT
 public:
-  DoubleEntry(double min, double max, QWidget *parent, const char *name);
+  DoubleEntry(QWidget *parent, const char *name);
   void SetMinMax(double mi, double ma);
   void SetDoubleValue(double val);
   void SetParentField(int com, int par);

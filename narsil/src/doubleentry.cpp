@@ -4,7 +4,7 @@
 //|||****     CLASS DoubleEntry -- a child class of Qt's TextEntry.  This is
 //|||****          designed to work with doubles instead of just integers
 //|||****          by tweaking some of the parent's functions.  Note: this
-//|||****  is not a general class - it deals with narsil's defaults...
+//|||****          is not a general class - it deals with narsil's defaults...
 //|||****
 //|||****_______________________________________________________________________
 //|||***************************************************************************
@@ -22,10 +22,10 @@ extern double defaults[N_MCOMMANDS][MAX_N_PARAMS];
 //
 //-------------------------------------------------------------
 
-DoubleEntry::DoubleEntry(double min, double max, QWidget *parent, const char *name) : QLineEdit(parent, name) {
+DoubleEntry::DoubleEntry(QWidget *parent, const char *name) : QLineEdit(parent, name) {
   command = 0;
   param = 0;
-  SetMinMax(min, max);
+  SetMinMax(-1000000, 1000000);
 }
 
 //-------------------------------------------------------------

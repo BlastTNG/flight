@@ -89,7 +89,6 @@ void SetDefaults() {
 //|||***************************************************************************
 
 
-
 //-------------------------------------------------------------
 //
 // GetGroup (private): checks the radio group of buttons to see
@@ -189,8 +188,6 @@ void MainForm::ChooseCommand() {
           NParamLabels[i]->setText(tr(mcommands[index].params[i].name));
           NParamLabels[i]->show();
           NParamFields[i]->show();
-          NParamFields[i]->SetMinMax(mcommands[index].params[i].min,
-              mcommands[index].params[i].max);
           NParamFields[i]->SetParentField(index, i);
           if (IsData) {
             if (DataSource->readField(&indata,
@@ -474,6 +471,7 @@ void MainForm::SendCommand() {
   int index, i, j;
   char args[MAX_N_PARAMS + 7][15];
   char *params[MAX_N_PARAMS + 7];
+  char errorbuffer[1024];
 
   if (!sending) {
     i = 0;
@@ -512,6 +510,25 @@ void MainForm::SendCommand() {
         != -1) {
       for (j = 0; j < mcommands[index].numparams; j++) {
         NParamFields[j]->RecordDefaults();
+        if (defaults[index][j] < mcommands[index].params[j].min) {
+          sprintf(errorbuffer, "Error: Parameter \"%s\" out of range: %f < %f",
+              mcommands[index].params[j].name, defaults[index][j],
+              mcommands[index].params[j].min);
+          params[1] = errorbuffer;
+          params[2] = 0;
+          WriteLog(NLog, params);
+          WriteLog(NLog, 9);
+          return;
+        } else if (defaults[index][j] > mcommands[index].params[j].max) {
+          sprintf(errorbuffer, "Error: Parameter \"%s\" out of range: %f > %f",
+              mcommands[index].params[j].name, defaults[index][j],
+              mcommands[index].params[j].max);
+          params[1] = errorbuffer;
+          params[2] = 0;
+          WriteLog(NLog, params);
+          WriteLog(NLog, 9);
+          return;
+        }
         sprintf(args[i++], "%.*f ", mcommands[index].params[j].precision,
             defaults[index][j]);
       }
@@ -578,7 +595,7 @@ void MainForm::ShowSettings() {
 void MainForm::WriteLog(QMultiLineEdit *dest, char *args[]) {
   FILE *f;
   time_t t;
-  char txt[255];
+  char txt[2048];
   int i;
 
   t = time(NULL);
@@ -670,6 +687,9 @@ void MainForm::WriteLog(QMultiLineEdit *dest, int retstatus) {
     case 8:
       strcpy(txt, "  COMMAND POSSIBLY NOT SENT:  Received a garbage "
           "acknowledgement packet.\n\n");
+      break;
+    case 9:
+      strcpy(txt, "  COMMAND NOT SENT: Narsil error: Parameter out of range.\n\n");
       break;
   }
 
@@ -829,8 +849,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
     NParamLabels[i]->setText(tr(tmp));
     NParamLabels[i]->adjustSize();
 
-    NParamFields[i] = new DoubleEntry(-100.0, 100.0, NTopFrame,
-                                      "NParamLabels");
+    NParamFields[i] = new DoubleEntry(NTopFrame, "NParamLabels");
     tfont.setFamily(FIXEDFONT);
     tfont.setPointSize(SMALL_POINT_SIZE);
     NParamFields[i]->setFont(tfont);
