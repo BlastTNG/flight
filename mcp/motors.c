@@ -1112,14 +1112,7 @@ void DoQuadMode() { // aka radbox
 
   radbox_endpoints(c_az, c_el, targ_el, &next_left,
 		   &next_right, &bottom, &top);
-  if (targ_el<=c_el[i_bot]) {
-    next_left = next_right = c_az[i_bot];
-  } else if (targ_el>=c_el[i_top]) {
-    next_left = next_right = c_az[i_top];
-  } else {
-    radbox_endpoints(c_az, c_el, targ_el, &next_left, &next_right, &bottom, &top);
-  }
-
+  
   if (next_right-next_left < MIN_SCAN) {
     next_left = (next_left+next_right)/2.0 - MIN_SCAN/2.0;
     next_right = next_left + MIN_SCAN;
@@ -1148,6 +1141,7 @@ void DoQuadMode() { // aka radbox
   }
 
   if (new_step) {
+    bprintf(info, "new step: %g %g %g\n", el, targ_el, CommandData.pointing_mode.del);
     // set v for this step
     v_el = (targ_el - el)/t;
     // set targ_el for the next step
