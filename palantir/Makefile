@@ -1,4 +1,4 @@
-TOPDIR = .
+TOPDIR=.
 
 all: Makefile.config
 	cd $(TOPDIR)/src && $(MAKE) all
