@@ -143,6 +143,8 @@ struct PointingDataStruct {
   double mag_model; // degrees
   double mag_sigma; // degrees
   double dgps_az; // degrees
+  double dgps_pitch; // degrees
+  double dgps_roll; // degrees
   double dgps_sigma; // degrees
   double ss_az; // degrees
   double ss_sigma; // degrees

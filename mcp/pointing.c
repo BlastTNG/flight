@@ -198,13 +198,19 @@ int MagConvert(double *mag_az) {
   return (1);
 }
 
-int DGPSConvert(double *dgps_az) {
+int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll) {
   static int last_i_dgpsatt = 0;
   int i_dgpsatt;
 
   i_dgpsatt = GETREADINDEX(dgpsatt_index);
   *dgps_az = DGPSAtt[i_dgpsatt].az;
   NormalizeAngle(dgps_az);
+
+  *dgps_pitch = DGPSAtt[i_dgpsatt].pitch;
+  NormalizeAngle(dgps_pitch);
+
+  *dgps_roll = DGPSAtt[i_dgpsatt].roll;
+  NormalizeAngle(dgps_roll);
 
   if (i_dgpsatt != last_i_dgpsatt) {
     if (DGPSAtt[i_dgpsatt].att_ok==1) {
@@ -534,8 +540,8 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
 /* Elevation encoder uncertainty: */
 void Pointing(){
   int ss_ok, mag_ok, dgps_ok;
-  double ss_az, dgps_az, mag_az;
-  
+  double ss_az, mag_az;
+  double dgps_az, dgps_pitch, dgps_roll;
   double gy_roll, gy2, gy3, el_rad, clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0;
   
@@ -710,7 +716,7 @@ void Pointing(){
   /** Convert Sensors **/
   mag_ok = MagConvert(&mag_az);
   ss_ok = SSConvert(&ss_az);
-  dgps_ok = DGPSConvert(&dgps_az);
+  dgps_ok = DGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
 
   /** evolve solutions **/
   EvolveAzSolution(&NullAz,
@@ -767,6 +773,8 @@ void Pointing(){
   PointingData[point_index].mag_az = mag_az;
   PointingData[point_index].mag_sigma = sqrt(MagAz.varience + MagAz.sys_var);
   PointingData[point_index].dgps_az = dgps_az;
+  PointingData[point_index].dgps_pitch = dgps_pitch;
+  PointingData[point_index].dgps_roll = dgps_roll;
   PointingData[point_index].dgps_sigma = sqrt(DGPSAz.varience + DGPSAz.sys_var);
   PointingData[point_index].ss_az = ss_az;
   PointingData[point_index].ss_sigma = sqrt(SSAz.varience + SSAz.sys_var);

@@ -1104,6 +1104,8 @@ void StoreData(int index, unsigned int* Txframe,
   static int i_MAG_MODEL, j_MAG_MODEL;
   static int magSigmaCh, magSigmaInd;
   static int dgpsAzCh, dgpsAzInd;
+  static int dgpsPitchCh, dgpsPitchInd;
+  static int dgpsRollCh, dgpsRollInd;
   static int dgpsSigmaCh, dgpsSigmaInd;
   static int ssAzCh, ssAzInd;
   static int ssSigmaCh, ssSigmaInd;
@@ -1210,6 +1212,8 @@ void StoreData(int index, unsigned int* Txframe,
     SlowChIndex("mag_model", &i_MAG_MODEL, &j_MAG_MODEL);
     SlowChIndex("mag_sigma", &magSigmaCh, &magSigmaInd);
     SlowChIndex("dgps_az", &dgpsAzCh, &dgpsAzInd);
+    SlowChIndex("dgps_pitch", &dgpsPitchCh, &dgpsPitchInd);
+    SlowChIndex("dgps_roll", &dgpsRollCh, &dgpsRollInd);
     SlowChIndex("dgps_sigma", &dgpsSigmaCh, &dgpsSigmaInd);
     SlowChIndex("ss_az", &ssAzCh, &ssAzInd);
     SlowChIndex("ss_sigma", &ssSigmaCh, &ssSigmaInd);
@@ -1340,6 +1344,10 @@ void StoreData(int index, unsigned int* Txframe,
       (unsigned int)(PointingData[i_point].mag_sigma * DEG2I));
   WriteSlow(dgpsAzCh, dgpsAzInd,
       (unsigned int)(PointingData[i_point].dgps_az * DEG2I));
+  WriteSlow(dgpsPitchCh, dgpsPitchInd,
+      (unsigned int)(PointingData[i_point].dgps_pitch * DEG2I));
+  WriteSlow(dgpsRollCh, dgpsRollInd,
+      (unsigned int)(PointingData[i_point].dgps_roll * DEG2I));
   WriteSlow(dgpsSigmaCh, dgpsSigmaInd,
       (unsigned int)(PointingData[i_point].dgps_sigma * DEG2I));
 
