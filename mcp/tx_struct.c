@@ -523,6 +523,9 @@ struct ChannelStruct FastChannels[] = {
   {"az_vreq",     'w',  ACS1, 14,             1.0,                 -32768, 'u'},
   {"cos_el",      'w',  ACS1,  9,             1.0,                    0.0, 'u'},
   {"sin_el",      'w',  ACS1, 10,             1.0,                    0.0, 'u'},
+  {"gy4_errs",    'r',  ACS1, 58,             1.0,                    0.0, 'u'},
+  {"gy5_errs",    'r',  ACS1, 62,             1.0,                    0.0, 'u'},
+  {"gy6_errs",    'r',  ACS1, 63,             1.0,                    0.0, 'u'},
 
   /* read from board ACS2 */
   {"enc_elev",    'r',  ACS2, 50, -360.0/65536.0,ENC_ELEV_OFFSET,ENC_ELEV_TYPE},

@@ -1382,7 +1382,7 @@ FrameBuffer::~FrameBuffer() {
 extern "C" void TDRSSWriter(void) {
   Alice *drinkme;
 
-  pthread_setspecific(identity, "tdrs");
+  pthread_setspecific(identity, "tdrss");
   mputs(MCP_STARTUP, "Alice start-up.\n");
 
   tty_fd = OpenSerial();
