@@ -543,7 +543,7 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
 void Pointing(){
   double R, cos_e, cos_l, cos_a;
   double sin_e, sin_l, sin_a;
-  double ra, dec;
+  double ra, dec, az, el;
   
   int ss_ok, mag_ok, dgps_ok;
   double ss_az, mag_az;
@@ -783,6 +783,10 @@ void Pointing(){
   azel2radec(&ra, &dec,
 	     PointingData[point_index].az,  PointingData[point_index].el,
 	     PointingData[point_index].lst, PointingData[point_index].lat);
+  radec2azel(ra, dec, PointingData[point_index].lst,
+	     PointingData[point_index].lat,
+	     &az, &el);
+
   PointingData[point_index].ra = ra;
   PointingData[point_index].dec = dec;
   /** record solutions in pointing data **/

@@ -409,7 +409,7 @@ void StoreData(int index, unsigned int* Txframe,
   WriteSlow(i_RA, j_RA,
 	    (unsigned int)(PointingData[i_point].ra * 65536.0/24.0));
   WriteSlow(i_DEC, j_DEC,
-	    (unsigned int)(PointingData[i_point].dec * 65536.0/360.0.0));
+	    (unsigned int)(PointingData[i_point].dec * 65536.0/360.0));
 	    
   WriteSlow(gy1OffCh, gy1OffInd,
       (signed int)(PointingData[i_point].gy1_offset * 32768.));
