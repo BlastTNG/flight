@@ -352,6 +352,7 @@ int Balance(int ifpmBits) {
   static int pumpon = 0;
   int pumppwm;
   int error;
+  static int pump_is_on = -1;
 
   static int firsttime = 1;
   if (firsttime) {
@@ -360,6 +361,9 @@ int Balance(int ifpmBits) {
     balPwm1Addr = GetNiosAddr("balpump_lev");
   }
 
+  if (CommandData.pumps.bal_veto == -1)
+    pump_is_on = -1;
+
   /* don't turn on pump if we're reading very small numbers */
   if (slow_data[iElAddr->index][iElAddr->channel] < 8000)
     error = 0;
@@ -367,9 +371,9 @@ int Balance(int ifpmBits) {
     error = slow_data[iElAddr->index][iElAddr->channel]
       - 32758 - CommandData.pumps.bal_target;
 
-  if (error > 0) {
+  if (error > 0)
     ifpmBits &= (0xFF - BAL1_REV);  /* clear reverse bit */
-  } else {
+  else {
     ifpmBits |= BAL1_REV;  /* set reverse bit */
     error = -error;
   }
@@ -389,10 +393,19 @@ int Balance(int ifpmBits) {
       CommandData.pumps.bal_veto = BAL_OFF_VETO;
   }
 
-  if (pumpon)
+  if (pumpon) {
+    if (pump_is_on != 1) {
+      bprintf(info, "Balance System: Pump On\n");
+      pump_is_on = 1;
+    }
     ifpmBits |= BAL1_ON; /* turn on pump */
-  else
+  } else {
+    if (pump_is_on != 0) {
+      bprintf(info, "Balance System: Pump Off\n");
+      pump_is_on = 0;
+    }
     ifpmBits &= (0xFF - BAL1_ON); /* turn off pump */
+  }
 
   WriteData(balPwm1Addr, 2047 - pumppwm, NIOS_QUEUE);
 
@@ -752,9 +765,8 @@ void ControlAuxMotors(unsigned short *RxFrame) {
       CommandData.pumps.bal_veto--;
 
     WriteData(balpumpLevAddr, CommandData.pumps.pwm1 & 0x7ff, NIOS_QUEUE);
-  } else {
+  } else
     ifpmBits = Balance(ifpmBits);
-  }
 
   WriteData(lokmotPinAddr, CommandData.pin_is_in, NIOS_QUEUE);
   WriteData(ofpmBitsAddr, ofpmBits, NIOS_QUEUE);
