@@ -220,8 +220,8 @@ void FrameFileWriter(void) {
           berror(err, "Error closing chunk");
       framefile.fd = -1;
 
-      bfree(framefile.buffer);
-      bfree(writeout_buffer);
+      bfree(fatal, framefile.buffer);
+      bfree(fatal, writeout_buffer);
 
       return;
     }
