@@ -42,7 +42,6 @@ extern struct ChannelStruct* SlowChannels;
 extern struct ChannelStruct* WideFastChannels;
 extern struct ChannelStruct* FastChannels;
 extern struct ChannelStruct* DecomChannels;
-void FPrintDerived(FILE* fp);
 
 #define MAXBUF 3000 /* This is a 30 second buffer */
 
@@ -396,7 +395,9 @@ void InitialiseDirFile(int reset)
   if ((fd = creat(gpb, 0666)) < 0)
     berror(fatal, "cannot create format file `%s/format'", rc.dirfile);
 
-  WriteFormatFile(fd);
+  PathSplit_r(rc.dirfile, NULL, gpb);
+
+  WriteFormatFile(fd, atoi(gpb));
 
   if (close(fd) < 0)
     berror(fatal, "Error while closing format file");
@@ -497,8 +498,7 @@ void InitialiseDirFile(int reset)
 
       bolo_fields[i][j].b = balloc(fatal, MAXBUF * 4);
 
-      bolo_fields[i][j].i0 = bolo_i0 + i * (DAS_CARDS * 3 / 2)
-        + j;
+      bolo_fields[i][j].i0 = bolo_i0 + i * (DAS_CARDS * 3 / 2) + j;
     }
   }
 

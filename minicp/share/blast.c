@@ -167,8 +167,8 @@ void *_balloc(buos_t l, size_t s, const char* f, int w, const char* n)
 {
   void *p;
 
-  bprintf(mem, "mallocing %u bytes in %s", s, f);
   p = malloc(s);
+  bprintf(mem, "malloced %u bytes in %s as %p", s, f, p);
   
   if (p == NULL)
     berror(l, "unable to malloc %u bytes at %s:%i in %s", s, n, w, f);
@@ -181,8 +181,8 @@ void *_reballoc(buos_t l, void* p, size_t s, const char* f, int w,
 {
   void *q;
 
-  bprintf(mem, "reallocing %u bytes from %p in %s", s, p, f);
   q = realloc(p, s);
+  bprintf(mem, "realloced %u bytes from %p in %s as %p", s, p, f, q);
   
   if (q == NULL)
     berror(l, "unable to realloc %u bytes from %p at %s:%i in %s", s, p, n, w,
@@ -193,17 +193,16 @@ void *_reballoc(buos_t l, void* p, size_t s, const char* f, int w,
 
 void _bfree(buos_t l, void* p, const char* f, int w, const char* n)
 {
-  bprintf(mem, "freeing %p in %s", p, f);
   free(p);
+  bprintf(mem, "freed %p in %s", p, f);
 }
 
 char* _bstrdup(buos_t l, const char* s, const char* f, int w, const char* n)
 {
   char *q;
 
-  bprintf(mem, "strduping `%s' in %s", s, f);
-
   q = strdup(s);
+  bprintf(mem, "strduped `%s' in %s as %p", s, f, q);
 
   if (q == NULL)
     berror(l, "unable to strdup `%s' at %s:%i in %s", s, n, w, f);

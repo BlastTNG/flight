@@ -105,13 +105,14 @@ extern "C" {
   extern unsigned int BBCSpares[FAST_PER_SLOW * 2];
 
   void MakeAddressLookups(void);
-  void FPrintDerived(FILE*);
+  void FPrintDerived(int);
   struct NiosStruct* GetNiosAddr(const char*);
   inline struct BiPhaseStruct* GetBiPhaseAddr(const char*);
   inline struct BiPhaseStruct* ExtractBiPhaseAddr(struct NiosStruct*);
   void ReadSpecificationFile(FILE*);
-  char* FieldToLower(char* s);
-  char* FieldToUpper(char* s);
+  void WriteFormatFile(int, time_t);
+  char* FieldToLower(char*);
+  char* FieldToUpper(char*);
 
 /* reserved node numbers */
 #define SPARE      62

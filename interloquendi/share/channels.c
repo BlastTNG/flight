@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <time.h>
 #include "channels.h"
 #include "derived.h"
@@ -118,7 +119,10 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
         "To read this file, you will need defile version 2.1\n");
   else {
     int version = atoi(&versionMagic[3]);
-    if (version != 10)
+    if (version == 10)
+      bprintf(fatal, "Unsupported Spec file version %i.\n"
+          "To read this file, you will need defile version 2.4\n", version);
+    if (version != 11)
       bprintf(fatal, "Unsupported Spec file version: %i.  Cannot continue.\n",
           version);
   }
@@ -990,6 +994,7 @@ struct NiosStruct* GetNiosAddr(const char* field) {
 }
 #endif
 
+/* NB: This function is non-reentrant */
 char* FieldToLower(char* s)
 {
   int i;
@@ -1001,6 +1006,7 @@ char* FieldToLower(char* s)
   return(ls);
 }
 
+/* NB: This function is non-reentrant */
 char* FieldToUpper(char* s)
 {
   int i;
@@ -1012,89 +1018,127 @@ char* FieldToUpper(char* s)
   return(us);
 }
 
-void FPrintDerived(FILE *fp) {
-  fprintf(fp,
-      "P_X_H         LINCOM 1 p_x_deg 0.0003662109375 0\n"
+void WriteFormatFile(int fd, time_t start_time)
+{
+  char field[FIELD_LEN];
+  char line[1024];
+  int i, j;
 
-      "### Sensor Veto ###\n"
-      "SUN_VETO         BIT sensor_veto 0\n"
-      "ISC_VETO         BIT sensor_veto 1\n"
-      "ELENC_VETO       BIT sensor_veto 2\n"
-      "MAG_VETO         BIT sensor_veto 3\n"
-      "GPS_VETO         BIT sensor_veto 4\n"
-      "ELCLIN_VETO      BIT sensor_veto 5\n"
-      "IS_SCHED         BIT sensor_veto 6\n"
+  strcpy(line, "FASTSAMP         RAW    U 20\n\n## SLOW CHANNELS:\n");
+  write(fd, line, strlen(line));
 
-      "### ISC State Field ###\n"
-      "ISC_SAVE_IMAGES  BIT isc_state 0\n"
-      "ISC_PAUSE        BIT isc_state 1\n"
-      "ISC_ABORT        BIT isc_state 2\n"
-      "ISC_AUTOFOCUS    BIT isc_state 3\n"
-      "ISC_BRIGHT_STAR  BIT isc_state 4\n"
-      "ISC_SHUTDOWN     BIT isc_state 5\n"
-      "ISC_PULSE        BIT isc_bits  1\n"
+  for (i = 0; i < ccNarrowSlow; ++i) {
+    snprintf(line, 1024, "%-16s RAW    %c 1\n%-16s LINCOM 1 %-16s %12g %12g\n",
+        FieldToLower(SlowChannels[i].field), SlowChannels[i].type,
+        FieldToUpper(SlowChannels[i].field),
+        FieldToLower(SlowChannels[i].field), SlowChannels[i].m_c2e,
+        SlowChannels[i].b_e2e);
+    write(fd, line, strlen(line));
+  }
 
-      "### Bias Generator Bitfield ###\n"
-    "BIAS_IS_DC       BIT biasin 1\n"
-    "BIAS_CLK_IS_INT  BIT biasin 2\n"
-    "BIAS_IS_INT      BIT biasin 3\n"
+  for (i = 0; i < ccWideSlow; ++i) {
+    snprintf(line, 1024, "%-16s RAW    %c 1\n%-16s LINCOM 1 %-16s %12g %12g\n",
+        FieldToLower(WideSlowChannels[i].field), WideSlowChannels[i].type,
+        FieldToUpper(WideSlowChannels[i].field),
+        FieldToLower(WideSlowChannels[i].field), WideSlowChannels[i].m_c2e,
+        WideSlowChannels[i].b_e2e);
+    write(fd, line, strlen(line));
+  }
 
-    "### Cryo State Bitfield ###\n"
-    "HE_LEV_SENS      BIT cryostate 0\n"
-    "CHARC_HEATER     BIT cryostate 1\n"
-    "COLDP_HEATER     BIT cryostate 2\n"
-    "POT_VALVE        BIT cryostate 4\n"
-    "POT_DIREC        BIT cryostate 5\n"
-    "LHE_VALVE        BIT cryostate 6\n"
-    "LHE_DIREC        BIT cryostate 7\n"
-    "AUTO_JFET_HEAT   BIT cryostate 9\n"
+  strcpy(line, "\n## FAST CHANNELS:\n");
+  write(fd, line, strlen(line));
 
-    "### Cryo Valve Limit Switches ###\n"
-    "POT_IS_CLOSED    BIT cryoin 0\n"
-    "POT_IS_OPEN      BIT cryoin 1\n"
-    "POT_STATE        LINCOM 2 POT_IS_CLOSED 1 0 POT_IS_OPEN 1 0\n"
-    "LHE_IS_CLOSED    BIT cryoin 2\n"
-    "LHE_IS_OPEN      BIT cryoin 3\n"
-    "LHE_STATE        LINCOM 2 LHE_IS_CLOSED 1 0 LHE_IS_OPEN 1 0\n"
+  for (i = 0; i < ccNarrowFast; i++) {
+    snprintf(line, 1024, "%-16s RAW    %c %d\n%-16s LINCOM 1 %-16s %12g %12g\n",
+        FieldToLower(FastChannels[i].field), FastChannels[i].type,
+        FAST_PER_SLOW, FieldToUpper(FastChannels[i].field),
+        FieldToLower(FastChannels[i].field), FastChannels[i].m_c2e,
+        FastChannels[i].b_e2e);
+    write(fd, line, strlen(line));
+  }
 
-    "### Cryo Table Lookups ###\n"
-    "# Diodes\n"
-    "T_charcoal       LINTERP  T_CHARCOAL   /data/etc/dt600.txt\n"
-    "T_lhe            LINTERP  T_LHE        /data/etc/dt600.txt\n"
-    "T_ln2            LINTERP  T_LN2        /data/etc/dt600.txt\n"
-    "T_heatswitch     LINTERP  T_HEATSWITCH /data/etc/dt600.txt\n"
-    "T_jfet           LINTERP  T_JFET       /data/etc/dt600.txt\n"
-    "T_vcs_filt       LINTERP  T_VCS_FILT   /data/etc/dt600.txt\n"
-    "T_ln2_filt       LINTERP  T_LN2_FILT   /data/etc/dt600.txt\n"
-    "T_lhe_filt       LINTERP  T_LHE_FILT   /data/etc/dt600.txt\n"
-    "T_he4pot_d       LINTERP  T_HE4POT_D   /data/etc/dt600.txt\n"
-    "T_vcs_fet        LINTERP  T_VCS_FET    /data/etc/dt600.txt\n"
+  for (i = 0; i < ccWideFast; i++) {
+    snprintf(line, 1024, "%-16s RAW    %c %d\n%-16s LINCOM 1 %-16s %12g %12g\n",
+        FieldToLower(WideFastChannels[i].field), WideFastChannels[i].type,
+        FAST_PER_SLOW, FieldToUpper(WideFastChannels[i].field),
+        FieldToLower(WideFastChannels[i].field), WideFastChannels[i].m_c2e,
+        WideFastChannels[i].b_e2e);
+    write(fd, line, strlen(line));
+  }
 
-    "# GRTs (ROX)\n"
-    "T_he3fridge      LINTERP T_HE3FRIDGE   /data/etc/rox102a3.txt\n"
-    "T_he4pot         LINTERP T_HE4POT      /data/etc/rox102a22.txt\n"
-    "T_m3             LINTERP T_M3          /data/etc/rox102a7.txt\n"
-    "T_m4             LINTERP T_M4          /data/etc/rox102a4.txt \n"
-    "T_m5             LINTERP T_M5          /data/etc/rox102a5.txt\n"
-    "T_optbox_filt    LINTERP T_OPTBOX_FILT /data/etc/rox102a23.txt\n"
-    "T_300mk_strap    LINTERP T_300MK_STRAP /data/etc/rox102a20.txt\n"
-    "T_horn_250       LINTERP T_HORN_250    /data/etc/rox102a6.txt\n"
-    "T_horn_350       LINTERP T_HORN_350    /data/etc/rox102a19.txt\n"
-    "T_horn_500       LINTERP T_HORN_500    /data/etc/rox102a21.txt\n"
+  for (i = 0; i < ccDecom; i++) {
+    snprintf(line, 1024, "%-16s RAW    %c %d\n%-16s LINCOM 1 %-16s %12g %12g\n",
+        FieldToLower(DecomChannels[i].field), DecomChannels[i].type,
+        FAST_PER_SLOW, FieldToUpper(DecomChannels[i].field),
+        FieldToLower(DecomChannels[i].field), DecomChannels[i].m_c2e,
+        DecomChannels[i].b_e2e);
+    write(fd, line, strlen(line));
+  }
 
-    "# Level Sensor\n"
-    "HE4_LITRE        LINTERP  HE4_LEV      /data/etc/he4_litre.txt\n"
-    "HE4_PERCENT      LINTERP  HE4_LEV      /data/etc/he4_percent.txt\n"
+  /* bolo channels */
+  strcpy(line, "\n## BOLOMETER:\n");
+  write(fd, line, strlen(line));
 
-    "#\n"
-    "Clin_Elev LINTERP clin_elev /data/etc/clin_elev.lut\n"
-    "# Nice CPU Values\n"
-    "CPU_SEC LINCOM  1       cpu_time        1       -%lu\n"
+  for (i = 0; i < DAS_CARDS; i++)
+    for (j = 0; j < DAS_CHS; j++) {
+      sprintf(field, "n%dc%d", i + 5, j);
+      snprintf(line, 1024,
+          "%-16s RAW    U %d\n%-16s LINCOM 1 %-16s %12g %12g\n",
+          FieldToLower(field), FAST_PER_SLOW, FieldToUpper(field),
+          FieldToLower(field), LOCKIN_C2V, LOCKIN_OFFSET);
+      write(fd, line, strlen(line));
+    }
+
+  /* derived channels */
+  strcpy(line, "\n## DERIVED CHANNELS:\n");
+  write(fd, line, strlen(line));
+
+  for (i = 0; i < ccDerived; ++i) {
+    switch (DerivedChannels[i].comment.type) {
+      case 'b': /* bitfield */
+        snprintf(line, 1024, "\n# %s BITFIELD:\n",
+            DerivedChannels[i].bitfield.source);
+        for (j = 0; j < 16; ++j)
+          if (DerivedChannels[i].bitfield.field[j][0]) {
+            write(fd, line, strlen(line));
+            snprintf(line, 1024, "%-16s BIT %-16s %i\n",
+                DerivedChannels[i].bitfield.field[j],
+                DerivedChannels[i].bitfield.source, j);
+          }
+        break;
+      case 'c': /* lincom */
+        snprintf(line, 1024, "%-16s LINCOM 1 %-16s %12g %12g\n",
+            DerivedChannels[i].lincom.field, DerivedChannels[i].lincom.source,
+            DerivedChannels[i].lincom.m_c2e, DerivedChannels[i].lincom.b_e2e);
+        break;
+      case '2': /* lincom2 */
+        snprintf(line, 1024, "%-16s LINCOM 2 %-16s %12g %12g %-16s %12g %12g\n",
+            DerivedChannels[i].lincom2.field, DerivedChannels[i].lincom2.source,
+            DerivedChannels[i].lincom2.m_c2e, DerivedChannels[i].lincom2.b_e2e,
+            DerivedChannels[i].lincom2.source2,
+            DerivedChannels[i].lincom2.m2_c2e,
+            DerivedChannels[i].lincom2.b2_e2e);
+        break;
+      case 't': /* linterp */
+        snprintf(line, 1024, "%-16s LINTERP %-16s %s\n",
+            DerivedChannels[i].linterp.field, DerivedChannels[i].linterp.source,
+            DerivedChannels[i].linterp.lut);
+        break;
+      case '#': /* comment */
+        snprintf(line, 1024, "\n# %s\n", DerivedChannels[i].comment.text);
+        break;
+    }
+    write(fd, line, strlen(line));
+  }
+
+  snprintf(line, 1024, "\n# Nice CPU Values\n"
+    "CPU_SEC LINCOM  1       cpu_time 1 -%lu\n"
     "CPU_MIN LINCOM  1       CPU_SEC 0.016666666 0\n"
     "CPU_HOUR LINCOM 1       CPU_SEC 0.000277777 0\n"
     "CPU_DAY LINCOM  1       CPU_SEC 1.15741E-5  0\n"
     "CPU_WEEK LINCOM 1       CPU_SEC 1.65344E-6  0\n"
     "CPU_MONTH LINCOM 1      CPU_SEC 3.85803E-7  0\n"
-    "CPU_YEAR LINCOM 1       CPU_SEC 3.17099E-8  0\n", time(NULL)
+    "CPU_YEAR LINCOM 1       CPU_SEC 3.17099E-8  0\n", start_time
     );
+  write(fd, line, strlen(line));
 }
