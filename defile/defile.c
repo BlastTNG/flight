@@ -969,7 +969,7 @@ int main (int argc, char** argv)
   bprintf(info, "\n");
 
   /* Initialise things */
-  ri.read = ri.wrote = ri.old_total = ri.lw = 0;
+  ri.read = ri.wrote = ri.old_total = ri.lw = ri.frame_rate_reset = 0;
   ri.tty = 0;
   delta = 1;
   gettimeofday(&ri.last, &rc.tz);
@@ -1004,6 +1004,10 @@ int main (int argc, char** argv)
         ri.last = now;
         ri.lw = ri.wrote;
         fr = nf / TC + fr * (1 - delta / TC);
+        if (ri.frame_rate_reset) {
+          ri.frame_rate_reset = 0;
+          fr = 0;
+        }
         if (rc.quenya)
           printf("R:[%i] W:[%i] %.*f Hz\r", ri.read / 20, ri.wrote / 20, (fr
                 > 100) ? 1 : (fr > 10) ? 2 : 3, fr);

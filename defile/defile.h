@@ -75,6 +75,7 @@ struct ri_struct {
   int dirfile_init;
   int writer_done;
   int tty;
+  int frame_rate_reset;
 };
 
 /* interthread communication */

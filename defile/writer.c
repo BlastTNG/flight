@@ -910,6 +910,7 @@ void DirFileWriter(void)
         /* Re-initialise */
         wrote_count = 0;
         ri.read = ri.wrote = ri.old_total = 0;
+        ri.frame_rate_reset = 1;
         InitialiseDirFile(1, 0);
         gettimeofday(&ri.last, &rc.tz);
         last_pass = 0;
