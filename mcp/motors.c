@@ -912,11 +912,12 @@ void DoNewBoxMode() {
   top = cel + h*0.5;
   left = caz - w*0.5;
   right = caz + w*0.5;
+  
   if (top > MAX_EL)
     top = MAX_EL;
   if (bottom < MIN_EL)
     bottom = MIN_EL;
-
+  bprintf(info, "t: %g b: %g l: %g r: %g\n", top, bottom, left, right);
   
   // FIXME: reboot proofing...
   
@@ -979,7 +980,7 @@ void DoNewBoxMode() {
       el_dir = 1;
     }
   }
-  
+  bprintf(info, "targ_el: %g\n", targ_el);
   /* check for out of range in el */
   if (el > top + EL_BORDER) {
     axes_mode.az_mode = AXIS_POSITION;
