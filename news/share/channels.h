@@ -133,10 +133,16 @@ extern "C" {
 #define VEL2I (65536.0/10.0)
 #define I2VEL (1.0/VEL2I)
 
-#define T_JFET_M (-2.860308e-09*65536)
+#define T_JFET_M (-2.860308e-09*65536.0)
 #define T_JFET_B (1.232735e+01)
 
-  /* conversions between dps and a to d units for each gyro */
+#define T_LHE_M (-2.859373e-09*65536.0)
+#define T_LHE_B (1.232225e+01)
+
+#define T_CHARCOAL_M (-2.865098e-09*65536.0)
+#define T_CHARCOAL_B (1.235145e+01)
+  
+/* conversions between dps and a to d units for each gyro */
 #define DPS_TO_ADU1 (1092.8128/1.0407)
 #define ADU1_TO_DPS (1.0/DPS_TO_ADU1)
 #define DPS_TO_ADU2 (1092.8128/1.036)

@@ -60,6 +60,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"osc_dec",      'w', LOOP3, 28,          LI2DEG/2.,            -90., 'U'},
   {"isc_mcpnum",   'w', LOOP2, 61,                1.0,             0.0, 'U'},
   {"osc_mcpnum",   'w', LOOP3, 58,                1.0,             0.0, 'U'},
+  {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U'},
   END_OF_CHANNELS
 };
 
@@ -170,13 +171,13 @@ struct ChannelStruct SlowChannels[] = {
   {"t_m5",         'r',  CRYO, 11,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'},
   {"t_horn_250",   'r',  CRYO, 13,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'},
   {"t_m3",         'r',  CRYO, 15,    256.0*LOCKIN_C2V,   LOCKIN_OFFSET, 'u'},
-  {"t_lhe",        'r',  CRYO, 17, -2.859373e-09*65536,    1.232225e+01, 'u'},
+  {"t_lhe",        'r',  CRYO, 17,             T_LHE_M,         T_LHE_B, 'u'},
   {"t_lhe_filt",   'r',  CRYO, 19, -2.856350e-09*65536,    1.231143e+01, 'u'},
   {"t_he4pot_d",   'r',  CRYO, 21, -2.869274e-09*65536,    1.236054e+01, 'u'},
   {"t_vcs_filt",   'r',  CRYO, 23, -2.871969e-09*65536,    1.236866e+01, 'u'},
   {"t_ln2",        'r',  CRYO, 25, -2.871958e-09*65536,    1.236808e+01, 'u'},
   {"t_ln2_filt",   'r',  CRYO, 27, -2.873729e-09*65536,    1.238262e+01, 'u'},
-  {"t_charcoal",   'r',  CRYO, 29, -2.865098e-09*65536,    1.235145e+01, 'u'},
+  {"t_charcoal",   'r',  CRYO, 29,        T_CHARCOAL_M,    T_CHARCOAL_B, 'u'},
   {"t_heatswitch", 'r',  CRYO, 31, -2.864185e-09*65536,    1.233900e+01, 'u'},
   {"t_jfet",       'r',  CRYO, 33,            T_JFET_M,        T_JFET_B, 'u'},
   {"t_vcs_fet",    'r',  CRYO, 35, -2.865493e-09*65536,    1.234227e+01, 'u'},
@@ -445,7 +446,7 @@ struct ChannelStruct SlowChannels[] = {
   {"jfet_set_on",  'w', LOOP4, 21,             1/100.,             0.0, 'u'},
   {"jfet_set_off", 'w', LOOP4, 22,             1/100.,             0.0, 'u'},
   {"ss_chip_temp", 'w', LOOP4, 23,             1/100.,             0.0, 'u'},
-
+  {"cycle_state",  'w', LOOP4, 26,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
