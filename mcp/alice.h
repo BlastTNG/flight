@@ -18,7 +18,7 @@
 #define COMP_AVERAGE            3
 
 // Special bytes.
-#define BUF_FRAME_SYNC          0xff
+#define BUF_FRAME_SYNC          0xeb90
 #define BUF_FILE_NUM_PADDER     0xf0
 #define BUF_SECTION_SYNC        0xaa
 #define BUF_NO_DATA             0x99
@@ -26,7 +26,7 @@
 
 // Reserved bytes in the frame.
 #define BUF_POS_FRAME_SYNC      0
-#define BUF_LEN_FRAME_SYNC      4
+#define BUF_LEN_FRAME_SYNC      2
 #define BUF_POS_FILE_NUM        (BUF_POS_FRAME_SYNC + BUF_LEN_FRAME_SYNC)
 #define BUF_POS_FRAME_NUM       (BUF_POS_FILE_NUM + 1)
 #define BUF_LEN_FRAME_NUM       3

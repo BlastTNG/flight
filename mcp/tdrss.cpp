@@ -294,8 +294,11 @@ void Buffer::Start(char filenum, unsigned int framenum)
   //
   //   Four FF bytes in a row will (almost) never happen naturally
 
-  for (i = BUF_POS_FRAME_SYNC; i < BUF_POS_FRAME_SYNC + BUF_LEN_FRAME_SYNC; i++)
-    buf[i] |= BUF_FRAME_SYNC;
+  //for (i = BUF_POS_FRAME_SYNC; i < BUF_POS_FRAME_SYNC + 
+  //	BUF_LEN_FRAME_SYNC; i++)
+  //buf[i] |= BUF_FRAME_SYNC;
+
+  *(unsigned short *)buf = BUF_FRAME_SYNC;
 
   buf[BUF_POS_FILE_NUM] |= BUF_FILE_NUM_PADDER + filenum;
 
