@@ -46,8 +46,6 @@
 #define PID_FILE "/var/run/interloquendi.pid"
 #define CONFIG_FILE "/etc/interloquendi.conf"
 
-#define DEBUG
-
 struct {
   union {
     char* as_string;
@@ -480,7 +478,7 @@ int main(void)
     if (pid == -1)
       berror(fatal, "unable to fork to background");
 
-    if ((stream = fopen(options[CFG_PID_FILE].value, "w")) == NULL)
+    if ((stream = fopen(options[CFG_PID_FILE].value.as_string, "w")) == NULL)
       berror(err, "unable to write PID to disk");
     else {
       fprintf(stream, "%i\n", pid);
