@@ -261,7 +261,7 @@ struct ChannelStruct SlowChList[N_SLOW][FAST_PER_SLOW] = {
     {"bal_min",     'w', LOOPBAK2, 30,           1.0,             0.0, 'u'},
     {"bal_max",     'w', LOOPBAK2, 31,           1.0,             0.0, 'u'},
     {"isc_tol",     'w', LOOPBAK2, 32,           1.0,             0.0, 'u'},
-    {"spare06",     'w', SPARE,  6,              1.0,             0.0, 'u'},
+    {"gy1_off",     'w', LOOPBAK2, 33,           1.0/32768.0,     0.0, 's'},
     {"spare07",     'w', SPARE,  7,              1.0,             0.0, 'u'},
     {"spare08",     'w', SPARE,  8,              1.0,             0.0, 'u'},
     {"spare09",     'w', SPARE,  9,              1.0,             0.0, 'u'},
