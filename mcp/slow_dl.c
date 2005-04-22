@@ -50,7 +50,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"b_amp2",       SLOWDL_FORCE_INT, 8,  0, 127}, // 0.5 step resolution
   {"b_amp3",       SLOWDL_FORCE_INT, 8,  0, 127}, // 0.5 step resolution
   /* Do the bolometers work? == 12/35 bytes */
-  {"n5c6",         SLOWDL_FORCE_INT, 8,  0, 5},   // 19mV resolution
+/*  {"n5c5",         SLOWDL_FORCE_INT, 8,  0, 5},   // 19mV resolution
   {"n6c5",         SLOWDL_FORCE_INT, 8,  0, 5},   // 19mV resolution
   {"n7c5",         SLOWDL_FORCE_INT, 8,  0, 5},   // 19mV resolution
   {"n8c5",         SLOWDL_FORCE_INT, 8,  0, 5},   // 19mV resolution
@@ -62,7 +62,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"n14c5",        SLOWDL_FORCE_INT, 8,  0, 5},   // 19mV resolution
   {"n15c5",        SLOWDL_FORCE_INT, 8,  0, 5},   // 19mV resolution
   {"n16c5",        SLOWDL_FORCE_INT, 8,  0, 5},   // 19mV resolution
-  /* Do the motors work? == 4/39 bytes */
+*//* Do the motors work? == 4/39 bytes */
   {"i_el",         SLOWDL_FORCE_INT, 8,-10, 10},  // 78mV resolution
   {"i_reac",       SLOWDL_FORCE_INT, 8,-10, 10},  // 78mV resolution
   {"i_piv",        SLOWDL_FORCE_INT, 8,-10, 10},  // 78mV resolution
