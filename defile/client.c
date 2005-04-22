@@ -91,8 +91,10 @@ int GetServerResponse(char* buffer)
     if (n < 0)
       berror(fatal, "Read error");
 
-    if (n == 0 && errno != EAGAIN)
-      bprintf(fatal, "Unexpected server disconnect.\n");
+    if (n == 0 && errno != EAGAIN) {
+      bprintf(err, "Unexpected server disconnect.\n");
+      return -3;
+    }
 
     response[1999] = 0;
   } else
@@ -130,7 +132,7 @@ int GetServerResponse(char* buffer)
   return n;
 }
 
-void OpenDataPort(void)
+int OpenDataPort(void)
 {
   char buffer[2000];
   int n;
@@ -141,6 +143,8 @@ void OpenDataPort(void)
   strcpy(buffer, "OPEN\r\n");
   write(rc.csock, buffer, strlen(buffer));
   switch (n = GetServerResponse(buffer)) {
+    case -3:
+      return -1;
     case QUENYA_RESPONSE_LISTENING:
       for (ptr1 = buffer; *ptr1 != '@'; ++ptr1);
       *(ptr1++) = 0;
@@ -158,15 +162,21 @@ void OpenDataPort(void)
         berror(fatal, "d-Connect failed");
       break;
     default:
-      bprintf(fatal, "Unexpected response from server (OPEN): %i\n", n);
+      bprintf(fatal, "Unexpected response from server after OPEN: %i\n", n);
+      return -1;
   }
 
   switch (n = GetServerResponse(buffer)) {
+    case -3: /* disconnect */
+      return -1;
     case QUENYA_RESPONSE_PORT_OPENED:
       break;
     default:
-      bprintf(fatal, "Unexpected response from server (OPEN/2): %i\n", n);
+      bprintf(err, "Unexpected response from server after OPEN/2: %i\n", n);
+      return -1;
   }
+
+  return 0;
 }
 
 void InitClient(char* new_filename)
@@ -200,7 +210,7 @@ void InitClient(char* new_filename)
         rc.hostname = strdup(buffer);
         break;
       default:
-        bprintf(fatal, "Unexpected response from server (Connect): %i\n", n);
+        bprintf(fatal, "Unexpected response from server on connect: %i\n", n);
     }
 
     strcpy(buffer, "IDEN defile\r\n");
@@ -209,7 +219,7 @@ void InitClient(char* new_filename)
       case QUENYA_RESPONSE_ACCESS_GRANTED:
         break;
       default:
-        bprintf(fatal, "Unexpected response from server (IDEN): %i\n", n);
+        bprintf(fatal, "Unexpected response from server after IDEN: %i\n", n);
     }
 
     OpenDataPort();
@@ -232,7 +242,7 @@ void InitClient(char* new_filename)
             "Can't fetch data from server: no current data is available.\n");
         break;
       default:
-        bprintf(fatal, "Unexpected response from server (QNOW): %i\n", n);
+        bprintf(fatal, "Unexpected response from server after QNOW: %i\n", n);
     }
 
     new_filename = ptr1;
@@ -253,7 +263,7 @@ void InitClient(char* new_filename)
     case QUENYA_RESPONSE_SENDING_SPEC:
       break;
     default:
-      bprintf(fatal, "Unexpected response from server (SPEC): %i\n", n);
+      bprintf(fatal, "Unexpected response from server after SPEC: %i\n", n);
   }
 
   if ((stream = fdopen(rc.dsock, "w+")) == NULL)
@@ -265,7 +275,7 @@ void InitClient(char* new_filename)
     case QUENYA_RESPONSE_TRANS_COMPLETE:
       break;
     default:
-      bprintf(fatal, "Unexpected response from server (SPEC/2): %i\n", n);
+      bprintf(fatal, "Unexpected response from server after SPEC/2: %i\n", n);
   }
 
   strcpy(buffer, "CLOS\r\n");
@@ -274,7 +284,7 @@ void InitClient(char* new_filename)
     case QUENYA_RESPONSE_OK:
       break;
     default:
-      bprintf(fatal, "Unexpected response from server (CLOS): %i\n", n);
+      bprintf(fatal, "Unexpected response from server after CLOS: %i\n", n);
   }
 
   fclose(stream);
@@ -348,7 +358,7 @@ void QuenyaClient(void)
         /* skip the block read until data has restarted */
         continue;
       default:
-        bprintf(fatal, "Unexpected response from server (DATA): %i\n", n);
+        bprintf(fatal, "Unexpected response from server after DATA: %i\n", n);
     }
     bytes_read = 0;
 
@@ -379,7 +389,8 @@ void QuenyaClient(void)
       case QUENYA_RESPONSE_BLOCK_CRC:
         break;
       default:
-        bprintf(fatal, "Unexpected response from server (crc): %i\n", n);
+        bprintf(fatal, "Unexpected response from server while waiting for CRC: "
+            "%i\n", n);
     }
 
     sscanf(buffer, "0x%4hx Block CRC", &crc);

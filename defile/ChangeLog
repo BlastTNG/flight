@@ -2,6 +2,9 @@
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
 2005-04-23  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* client.c: Formatting change to error messages.
+	* client.c (GetServerResponse, OpenDataPort): Return non-zero on error.
+
 	* etc/Makefile.am: Update for changes in support files
 
 2005-02-18  D. V. WIebe <dwiebe@physics.utoronto.ca>
