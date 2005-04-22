@@ -50,7 +50,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"b_amp2",       SLOWDL_FORCE_INT, 8,  0, 127}, // 0.5 step resolution
   {"b_amp3",       SLOWDL_FORCE_INT, 8,  0, 127}, // 0.5 step resolution
   /* Do the bolometers work? == 12/35 bytes */
-  {"n5c5",         SLOWDL_FORCE_INT, 8,  0, 5},   // 19mV resolution
+  {"n5c6",         SLOWDL_FORCE_INT, 8,  0, 5},   // 19mV resolution
   {"n6c5",         SLOWDL_FORCE_INT, 8,  0, 5},   // 19mV resolution
   {"n7c5",         SLOWDL_FORCE_INT, 8,  0, 5},   // 19mV resolution
   {"n8c5",         SLOWDL_FORCE_INT, 8,  0, 5},   // 19mV resolution
