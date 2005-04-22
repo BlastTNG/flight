@@ -41,7 +41,7 @@ extern "C" {
 
   /* offset of encoder.  Reset if encoder has been unmounted. */
   /* This is the elevation at which the encoder wraps around */
-#define ENC_ELEV_OFFSET 169.8
+#define ENC_ELEV_OFFSET 169.35
   /* to get proper wrapping in KST, the encoder elevation type should be
    * 'u' for 135 <= ENC_ELEV_OFFSET < 315 and 's' otherwise */
 #define ENC_ELEV_TYPE 'u'
