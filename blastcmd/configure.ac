@@ -34,7 +34,7 @@ AC_ARG_WITH([remote-user], AS_HELP_STRING([--with-remote-user=USER],
             [have blastcmd-remote log into the remote host as USER [[none]]]),
             REMOTE_USER="${withval}@", REMOTE_USER="")
 
-AC_ARG_WITH([remote-command], AS_HELP_STRING([--with-remove-command=CMD],
+AC_ARG_WITH([remote-command], AS_HELP_STRING([--with-remote-command=CMD],
             [use CMD as the remote command for blastcmd-remote [[blastcmd]]]),
             REMOTE_COMMAND="${withval}", REMOTE_COMMAND="blastcmd")
 
