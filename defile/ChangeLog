@@ -1,6 +1,12 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2005-04-23  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* etc/Makefile.am: Update for changes in support files
+
+2005-02-18  D. V. WIebe <dwiebe@physics.utoronto.ca>
+	* writer.c (PreBuffer): Typo
+
 2005-01-24  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	Release defile-3.1.5
 

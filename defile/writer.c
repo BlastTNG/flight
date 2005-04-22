@@ -451,7 +451,7 @@ int PreBuffer(unsigned short *frame)
         pre_buffer[this][3] = ti = (li + 1) % FAST_PER_SLOW;
         defile_flags |= DEFILE_FLAG_MANGLED_INDEX;
       } else {
-        bprintf(warning, "Frame %lli: single frame seqencing error, eliding "
+        bprintf(warning, "Frame %lli: single frame sequencing error, eliding "
             "%i %i %i (%i %i %i)\n", fc, li, ni, ti, lf, tf, nf);
         ti = (li + 1) % FAST_PER_SLOW;
         memcpy(pre_buffer[this], pre_buffer[ti], DiskFrameSize);
