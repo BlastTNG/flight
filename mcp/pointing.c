@@ -826,27 +826,21 @@ void Pointing()
   /** Record history for gyro offsets **/
   RecordHistory(i_point_read);
 
+  PointingData[point_index].t = mcp_systime(NULL); // CPU time
+
   /************************************************/
   /** Set the official Lat and Long: prefer dgps **/
   if (i_dgpspos != last_i_dgpspos && 0) {
     i_dgpspos = last_i_dgpspos;
     PointingData[point_index].lat = DGPSPos[i_dgpspos].lat;
     PointingData[point_index].lon = DGPSPos[i_dgpspos].lon;
-    PointingData[point_index].t = DGPSTime;
     no_dgps_pos = 0;
   } else {
     no_dgps_pos++;
-    if (no_dgps_pos > 179) {
-      PointingData[point_index].t = mcp_systime(NULL); // for now use CPU time
-    }
     if (no_dgps_pos > 3000) { // no dgps for 30 seconds - revert to sip
       PointingData[point_index].lat = SIPData.GPSpos.lat;
       PointingData[point_index].lon = -SIPData.GPSpos.lon;
     }
-
-#warning LAT/LON HAVE BEEN HARDCODED IN MCP -- REMOVE FOR FLIGHT
-    PointingData[point_index].lat = 31.78;
-    PointingData[point_index].lon = 95.712;
   }
 
   /*****************************/
