@@ -803,6 +803,9 @@
     <NUMBER caption="DAS Phase 15">
       <DATUM format="%.0f" src="phase15" extrema="unknown"/>
     </NUMBER>
+    <NUMBER caption="DAS Phase 16">
+      <DATUM format="%.0f" src="phase16" extrema="unknown"/>
+    </NUMBER>
   </BOX>
   <BOX caption="PCUs" colour="#777700" row="5" col="2">
     <NUMBER caption="V ACS Battery">
