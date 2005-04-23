@@ -830,7 +830,7 @@ void Pointing()
 
   /************************************************/
   /** Set the official Lat and Long: prefer dgps **/
-  if (i_dgpspos != last_i_dgpspos && 0) {
+  if (i_dgpspos != last_i_dgpspos) {
     i_dgpspos = last_i_dgpspos;
     PointingData[point_index].lat = DGPSPos[i_dgpspos].lat;
     PointingData[point_index].lon = DGPSPos[i_dgpspos].lon;
