@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.60 $";
+const char command_list_serial[] = "$Revision: 2.61 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -221,7 +221,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(az_el_goto), "goto point in azimuth and elevation", GR_POINT, 2,
     {
       {"Azimuth (deg)", -360, 360, 'f', "NONE"},
-      {"Elevation (deg)", 15,  65, 'f', "NONE"}
+      {"Elevation (deg)", 4.95,  65, 'f', "NONE"}
     }
   },
 
