@@ -253,8 +253,10 @@ int MagConvert(double *mag_az) {
   mag_az_tmp = MagLutCal(&magLut, ACSData.mag_x, ACSData.mag_y, mag_az_tmp);
   *mag_az = mag_az_tmp;  
 
+#if 0
 #warning THE MAGNETIC MODEL HAS BEEN DISABLED
   dec = 0; // disable mag model.
+#endif
   
   *mag_az += dec + MAG_ALIGNMENT;
 
