@@ -138,7 +138,7 @@ void SunPos(double tt, double *ra, double *dec); // in starpos.c
 
 #define M2DV(x) ((x / 60.0) * (x / 60.0))
 
-#define MAG_ALIGNMENT 237.0;
+#define MAG_ALIGNMENT 267 //237.0;
 
 // limit to 0 to 360.0
 void NormalizeAngle(double *A) {
