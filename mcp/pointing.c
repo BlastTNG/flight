@@ -385,7 +385,7 @@ void RecordHistory(int index) {
  (0.02dps/sqrt(100Hz))^2 : gyro offset error dominated */
 #define GYRO_VAR (2.0E-6)
 void EvolveSCSolution(struct ElSolutionStruct *e,
-    struct AzSolutionStruct *a, double gy1, double gy1_off, double gy2
+    struct AzSolutionStruct *a, double gy1, double gy1_off, double gy2,
     double gy2_off, double gy3, double gy3_off, double old_el, int which) {
 
   double gy_az;
