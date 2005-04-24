@@ -384,9 +384,9 @@ void RecordHistory(int index) {
 /* #define GYRO_VAR 3.7808641975309e-08
  (0.02dps/sqrt(100Hz))^2 : gyro offset error dominated */
 #define GYRO_VAR (2.0E-6)
-void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
-    double gy1, double gy1_off, double gy2, double gy2_off,
-    double gy3, double gy3_off, double enc_el, int which) {
+void EvolveSCSolution(struct ElSolutionStruct *e,
+    struct AzSolutionStruct *a, double gy1, double gy1_off, double gy2
+    double gy2_off, double gy3, double gy3_off, double old_el, int which) {
 
   double gy_az;
   static int last_isc_framenum[2] = {0xfffffff, 0xfffffff};
@@ -405,8 +405,8 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
   e->varience += GYRO_VAR;
 
   // evolve az
-  enc_el *= M_PI / 180.0;
-  gy_az = -(gy2 + gy2_off) * cos(enc_el) + -(gy3 + gy3_off) * sin(enc_el);
+  old_el *= M_PI / 180.0;
+  gy_az = -(gy2 + gy2_off) * cos(old_el) + -(gy3 + gy3_off) * sin(old_el);
   a->angle += gy_az / 100.0;
   a->varience += GYRO_VAR;
 
@@ -425,9 +425,10 @@ void EvolveSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a,
       radec2azel(ra, dec, PointingData[i_point].lst, PointingData[i_point].lat,
           &new_az, &new_el);
 
-      /* Add BDA offset */
+      /* Add BDA offset -- there's a pole here at EL = 90 degrees! */
       new_el += CommandData.ISCState[which].elBDA * RAD2DEG;
-      new_az += CommandData.ISCState[which].azBDA * RAD2DEG;
+      if (old_el < 80. * M_PI / 180)
+        new_az += CommandData.ISCState[which].azBDA * RAD2DEG / cos(old_el);
 
       // this solution is isc_pulses.age old: how much have we moved?
       gy_el_delta = 0;
