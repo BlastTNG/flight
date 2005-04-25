@@ -660,6 +660,7 @@ void Pointing()
   double dgps_az, dgps_pitch, dgps_roll;
   double gy_roll, gy2, gy3, el_rad, clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0;
+  double x;
 
   static struct NiosStruct *clinTrimAddr;
   static struct NiosStruct *encTrimAddr;
@@ -673,7 +674,7 @@ void Pointing()
   int i_dgpspos;
   int i_point_read;
 
-  static struct LutType elClinLut = {"/data/etc/clin_elev.lut",0,NULL,NULL,0};
+  //static struct LutType elClinLut = {"/data/etc/clin_elev.lut",0,NULL,NULL,0};
 
   static double gy_roll_amp = 0.0;
 
@@ -801,8 +802,8 @@ void Pointing()
     ssTrimAddr = GetNiosAddr("ss_trim");
   }
 
-  if (elClinLut.n == 0)
-    LutInit(&elClinLut);
+/*   if (elClinLut.n == 0) */
+/*     LutInit(&elClinLut); */
 
   i_dgpspos = GETREADINDEX(dgpspos_index);
   i_point_read = GETREADINDEX(point_index);
@@ -871,8 +872,11 @@ void Pointing()
 
   /*************************************/
   /**      do elevation solution      **/
-  clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
-
+  //clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
+  x = ACSData.clin_elev;
+  clin_elev = ((((1.13288E-19*x - 1.83627E-14)*x +
+		 1.17066e-9)*x - 3.66444E-5)*x + 0.567815)*x - 3513.56;
+  
   EvolveElSolution(&ClinEl, RG.gy1, PointingData[i_point_read].gy1_offset,
       clin_elev, 1);
   EvolveElSolution(&EncEl, RG.gy1, PointingData[i_point_read].gy1_offset,
