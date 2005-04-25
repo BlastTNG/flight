@@ -192,7 +192,7 @@ void ClientReconnect(void)
   rc.dsock = 0;
 
   /* pause */
-  sleep(10);
+  sleep(1);
   
   if (InitClient(NULL))
     bprintf(fatal,
