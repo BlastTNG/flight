@@ -1,13 +1,30 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2005-04-25: D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* fixup.sh: Header formatting.
+
+	* defile.c (QuenyaClient): Call ClientReconnect on disconnect.
+	* defile.c (ClientReconnect): Add.
+
+	* defile.h: Add auto_reconnect to rc struct.
+	* defile.c (PrintUsage, ParseCommandLine):  Add -a and --no-autoreconnect
+		options.
+	* defile.c (LoadDefaultConfig, InitRcStruct): Add AutoReconnect directive.
+	* defile.conf.in.in: Update for new directive.
+	* defile.1.in.in: Update for new directive and options.
+
+	* client.c (InitClient): Return non-zero on error.
+	* client.c (QuenyClient): Complain and die on InitClient error.
+	* defile.c (main): Complain and die on InitClient error.
+
 2005-04-23  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* client.c: Formatting change to error messages.
 	* client.c (GetServerResponse, OpenDataPort): Return non-zero on error.
 
 	* etc/Makefile.am: Update for changes in support files
 
-2005-02-18  D. V. WIebe <dwiebe@physics.utoronto.ca>
+2005-02-18  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* writer.c (PreBuffer): Typo
 
 2005-01-24  D. V. Wiebe <dwiebe@physics.utoronto.ca>

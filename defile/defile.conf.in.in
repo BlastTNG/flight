@@ -7,6 +7,14 @@
 
 # ---
 
+# Set AutoReconnect if you want defile to attempt to reconnect to a remote host
+# when the connection is unexpectedly dropped.  Default: don't reconnect and
+# terminate.
+
+AutoReconnect
+
+# ---
+
 # Set CompressedOutput if you want defile to write gzipped dirfiles by
 # default.  Default: don't compress
 

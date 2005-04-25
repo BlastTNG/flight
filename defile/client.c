@@ -82,6 +82,9 @@ int GetServerResponse(char* buffer)
   int n, overrun;
   char* response;
 
+//  if (buffer != NULL)
+//    printf("<-- %s\n", buffer);
+
   strcpy(cbuf, extra);
   response = cbuf + strlen(cbuf);
   
@@ -121,7 +124,7 @@ int GetServerResponse(char* buffer)
 
   n = atoi(cbuf);
 
-//  printf("%s\n", cbuf);
+//  printf("--> %s\n", cbuf);
 
   if (n == 0)
     bprintf(fatal, "Indecypherable server response: %s\n", cbuf);
@@ -179,7 +182,24 @@ int OpenDataPort(void)
   return 0;
 }
 
-void InitClient(char* new_filename)
+void ClientReconnect(void)
+{
+  /* clean up stuff that InitClient will malloc */
+  if (rc.hostname)
+    free(rc.hostname);
+  if (rc.dsock)
+    close(rc.dsock);
+  rc.dsock = 0;
+
+  /* pause */
+  sleep(10);
+  
+  if (InitClient(NULL))
+    bprintf(fatal,
+        "Cannot continue after server disconnect in initialisation");
+}
+
+int InitClient(char* new_filename)
 {
   char buffer[2000];
   int n;
@@ -194,9 +214,11 @@ void InitClient(char* new_filename)
 
     if ((n = connect(rc.csock, (struct sockaddr*)&rc.addr, sizeof(rc.addr)))
         != 0)
-      berror(fatal, "c-Connect failed");
+      berror(fatal, "Connect failed");
 
     switch (n = GetServerResponse(buffer)) {
+      case -3:
+        return -1;
       case QUENYA_RESPONSE_SERVICE_READY:
         for (ptr1 = buffer; *ptr1 != ' '; ++ptr1);
         *(ptr1++) = 0;
@@ -216,17 +238,22 @@ void InitClient(char* new_filename)
     strcpy(buffer, "IDEN defile\r\n");
     write(rc.csock, buffer, strlen(buffer));
     switch (n = GetServerResponse(buffer)) {
+      case -3:
+        return -1;
       case QUENYA_RESPONSE_ACCESS_GRANTED:
         break;
       default:
         bprintf(fatal, "Unexpected response from server after IDEN: %i\n", n);
     }
 
-    OpenDataPort();
+    if (OpenDataPort())
+      return -1;
 
     strcpy(buffer, "QNOW\r\n");
     write(rc.csock, buffer, strlen(buffer));
     switch (n = GetServerResponse(buffer)) {
+      case -3:
+        return -1;
       case QUENYA_RESPONSE_DATA_STAGED:
         for (ptr1 = buffer; *ptr1 != ':'; ++ptr1);
         *(ptr1++) = 0;
@@ -260,6 +287,8 @@ void InitClient(char* new_filename)
 
   write(rc.csock, buffer, strlen(buffer));
   switch (n = GetServerResponse(buffer)) {
+    case -3:
+      return -1;
     case QUENYA_RESPONSE_SENDING_SPEC:
       break;
     default:
@@ -272,6 +301,8 @@ void InitClient(char* new_filename)
   ReadSpecificationFile(stream);
 
   switch (n = GetServerResponse(buffer)) {
+    case -3:
+      return -1;
     case QUENYA_RESPONSE_TRANS_COMPLETE:
       break;
     default:
@@ -281,6 +312,8 @@ void InitClient(char* new_filename)
   strcpy(buffer, "CLOS\r\n");
   write(rc.csock, buffer, strlen(buffer));
   switch (n = GetServerResponse(buffer)) {
+    case -3:
+      return -1;
     case QUENYA_RESPONSE_OK:
       break;
     default:
@@ -292,7 +325,10 @@ void InitClient(char* new_filename)
   MakeAddressLookups();
   bprintf(info, "Frame size: %i bytes\n", DiskFrameSize);
 
-  OpenDataPort();
+  if (OpenDataPort())
+    return -1;
+
+  return 0;
 }
 
 void QuenyaClient(void)
@@ -304,6 +340,7 @@ void QuenyaClient(void)
   unsigned short crc;
   char buffer[2000];
   char* ptr1;
+  int do_reconnect = -1;
 
   /* set up signal masks */
   sigemptyset(&signals);
@@ -322,19 +359,43 @@ void QuenyaClient(void)
    * spawned */
   pthread_sigmask(SIG_UNBLOCK, &signals, NULL);
 
-  InputBuffer[0] = (unsigned short*)balloc(fatal, DiskFrameSize
-      * INPUT_BUF_SIZE);
-
-  for (i = 1; i < INPUT_BUF_SIZE; ++i)
-    InputBuffer[i] = (void*)InputBuffer[0] + i * DiskFrameSize;
-
-  /* Initiate data transfer */
-  strcpy(buffer, "DATA\r\n");
-
   for (;;) {
+    if (do_reconnect) {
+      if (do_reconnect == 1) {
+        if (rc.auto_reconnect) {
+          free(InputBuffer[0]);
+
+          ClientReconnect();
+
+          if (rc.output_dirfile == NULL)
+            ri.dirfile_init = 0;
+        } else {
+          /* If we're not in reconnect mode, terminate nicely */
+          raise(SIGTERM);
+          sleep(100);
+        }
+      }
+
+      /* initialisation for reader */
+      InputBuffer[0] = (unsigned short*)balloc(fatal, DiskFrameSize
+          * INPUT_BUF_SIZE);
+
+      for (i = 1; i < INPUT_BUF_SIZE; ++i)
+        InputBuffer[i] = (void*)InputBuffer[0] + i * DiskFrameSize;
+
+      do_reconnect = 0;
+
+      /* Initiate data transfer */
+      strcpy(buffer, "DATA\r\n");
+
+    }
+
     /* Get the block header */
     write(rc.csock, buffer, strlen(buffer));
     switch (n = GetServerResponse(buffer)) {
+      case -3:
+        do_reconnect = 1;
+        continue;
       case QUENYA_RESPONSE_SENDING_DATA:
         block_size = atoi(buffer);
         break;
@@ -344,9 +405,11 @@ void QuenyaClient(void)
         *(strchr(ptr1, ' ')) = 0;
         rc.chunk = bstrdup(fatal, ptr1);
         rc.resume_at = atoi(buffer);
-        
+
         /* refetch SPEC file */
-        InitClient(ptr1);
+        if (InitClient(ptr1))
+          bprintf(fatal,
+              "Cannot continue after server disconnect in initialisation");
 
         /* if the dirfile has changed, signal the writer to cycle */
         if (rc.output_dirfile == NULL)
@@ -386,6 +449,9 @@ void QuenyaClient(void)
 
     /* Get the block footer */
     switch (n = GetServerResponse(buffer)) {
+      case -3:
+        do_reconnect = 1;
+        continue;
       case QUENYA_RESPONSE_BLOCK_CRC:
         break;
       default:

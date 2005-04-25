@@ -24,6 +24,9 @@ defile \(em convert a MCP-style framefile into a dirfile
 .IR name \~|
 .BI \-\-spec\-file= name
 ]
+.RB [\~ \-a \~|
+.BR \-\-autoreconnect \~|
+.BR \-\-no\-autoreconnect \~]
 .RB [\~ \-d \~|
 .BR \-\-daemonise \~|
 .BR \-\-no\-daemonise \~]
@@ -165,6 +168,11 @@ Use
 as the channel specification file instead of the default.
 .RE
 .TP
+.BR \-a\~ or\~ \-\-autoreconnect
+Attempt to reconnect to a remote host if the server unexpectedly drops the
+connection.  A new output file will be created on reconnexion, and any data
+obtained during the reconnection will not be recorded.
+.TP
 .BR \-c\~ or\~ \-\-curfile
 Write a curfile pointing to the output dirfile.  The curfile name is
 generally
@@ -197,6 +205,13 @@ already exists.  Be careful using this option:  before starting the write
 will delete the current contents of the destination directory.  This will
 override the
 .I ResumeMode
+directive, if present.
+.TP
+.B \-\-no\-autoreconnect
+Don't attempt to reconnect to a server that unexpectedly drops the connexion.
+Instead, defile with close its files and terminate.  This is the default
+behaviour, and this option is provided only to allow overriding the
+.I AutoReconnect
 directive, if present.
 .TP
 .B \-\-no\-clobber
@@ -353,7 +368,7 @@ In addition to accepting command line arguments,
 .B defile
 can be controlled through the use of directives placed in the defile
 configuration file:
-.IR @sysconfdir@/defile.conf .
+.IR @etcdir@/defile.conf .
 There should be at most one directive per line, formatted as:
 .IP
 .BI <Directive>\~ [Value]
@@ -362,6 +377,14 @@ Everything following a hash mark
 .RI ( # )
 to the end of line is considered a comment and is ignored.  The following
 directives are recognised:
+.TP
+.I AutoReconnect
+A boolean.  Attempt to reconnect to a server that unexpectedly drops the
+connexion.  Equivalent to the
+.B \-a
+command line option.  Overrideable with the
+.B \-\-no\-autoreconnect
+command line option.
 .TP
 .I CompressedOutput
 A boolean.  Write compressed dirfiles.  Equivalent to the
@@ -378,7 +401,7 @@ command line option.  Overrideable with the
 command line option.
 .TP
 .I InputSource
-A filename or host, optionally with a port number to use if no
+A filename or host, optionally with a port number, to use if no
 .I source
 or
 .IR host [: port ] 
@@ -524,7 +547,7 @@ inserted into the frame stream to make it fully sequenced.  It does this by
 taking the most recently received frame with the appropriate multiplex index
 and repeating it in the appropriate place.
 .PP
-In all three of these cases, defile sets appropriate bits in a 16-bit word
+In all three of these cases, defile sets appropriate bits in a 16\-bit word
 which it writes as part of the dirfile stream as a field called
 .IR DEFILE_FLAGS .
 It inserts appropriate records in the format file to allow retrieval of these

@@ -41,7 +41,7 @@
 
 #ifndef VERSION
 #  define VERSION_MAJOR    "3"
-#  define VERSION_MINOR    "0"
+#  define VERSION_MINOR    "2"
 #  define VERSION VERSION_MAJOR "." VERSION_MINOR ".?"
 #endif
 
@@ -58,7 +58,7 @@
 #define REMOUNT_PATH "../rawdir"
 
 /* options */
-enum {CFG_CompressedOutput, CFG_Daemonise, CFG_InputSource,
+enum {CFG_AutoReconnect, CFG_CompressedOutput, CFG_Daemonise, CFG_InputSource,
   CFG_OutputCurFileName, CFG_OutputDirectory, CFG_OutputDirFile, CFG_Persistent,
   CFG_PidFile, CFG_Quiet, CFG_RemoteInputSource, CFG_RemountPath,
   CFG_RemountedSource, CFG_ResumeMode, CFG_SpecFile, CFG_SuffixLength,
@@ -72,6 +72,7 @@ struct {
   char type;
   const char name[48];
 } options[] = {
+  {{NULL}, 'b', "AutoReconnect"},
   {{NULL}, 'b', "CompressedOutput"},
   {{NULL}, 'b', "Daemonise"},
   {{NULL}, 's', "InputSource"},
@@ -176,6 +177,7 @@ void LoadDefaultConfig(void)
   for (i = 0; options[i].type; ++i)
     if (options[i].value.as_string == NULL)
       switch (i) {
+        case CFG_AutoReconnect:
         case CFG_CompressedOutput:
         case CFG_Daemonise:
         case CFG_Persistent:
@@ -213,6 +215,7 @@ void LoadDefaultConfig(void)
 struct rc_struct InitRcStruct()
 { 
   struct rc_struct rc = {
+    .auto_reconnect    = options[CFG_AutoReconnect].value.as_int,
     .curfile_val       = NULL,
     .daemonise         = options[CFG_Daemonise].value.as_int,
     .dest_dir          = options[CFG_OutputDirectory].value.as_string,
@@ -539,6 +542,9 @@ void PrintUsage(void)
       "\n                          `--gzip'."
 #endif
       "\n  -S --spec-file=NAME   use NAME as the specification file."
+      "\n  -a --autoreconnect    try to reconnect to a remote host when the "
+      "connection"
+      "\n                          is dropped."
       "\n  -c --curfile          write a curfile called `" CUR_FILE "'"
       "\n                          pointing to the output directory."
       "\n  -d --daemonise        fork to background and daemonise on startup.  "
@@ -551,12 +557,14 @@ void PrintUsage(void)
       "\n  -n --network-source   assume the input source is a remote host, "
       "even when"
       "\n                          it looks like a local filename."
+      "\n     --no-1utoreconnect don't try to reconnect to a remote host. "
+      " (default)"
       "\n     --no-clobber       don't resume or overwrite existing dirfiles. "
       "(default)"
       "\n     --no-curfile       don't write a curfile. (default)"
       "\n     --no-compress      don't compress the output. (default)"
       "\n     --no-daemonise     don't daemonise. (default)"
-      "\n     --no-persist       exit upon reaching the end of the input stream."
+      "\n     --no-persist       exit on reaching the end of the input stream."
       "\n                          (default)"
       "\n     --no-remount       assume the input curfile points to the right "
       "place"
@@ -634,6 +642,8 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           PrintUsage();
         else if (!strcmp(argv[i], "--version"))
           PrintVersion();
+        else if (!strcmp(argv[i], "--autoreconnect"))
+          rc->auto_reconnect = 1;
         else if (!strcmp(argv[i], "--curfile"))
           rc->write_curfile = 1;
         else if (!strncmp(argv[i], "--curfile-name=", 15)) {
@@ -655,6 +665,8 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           rc->quenya = 0;
         } else if (!strcmp(argv[i], "--network-source"))
           rc->force_quenya = rc->quenya = 1;
+        else if (!strcmp(argv[i], "--no-autoreconnect"))
+          rc->auto_reconnect = 0;
         else if (!strcmp(argv[i], "--no-clobber"))
           rc->write_mode = 0;
         else if (!strcmp(argv[i], "--no-compress"))
@@ -720,6 +732,9 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
                 shortarg[nshortargs].position = i - 1;
                 shortarg[nshortargs++].option = 'S';
               }
+              break;
+            case 'a':
+              rc->auto_reconnect = 1;
               break;
             case 'd':
               rc->daemonise = 1;
@@ -961,9 +976,11 @@ int main (int argc, char** argv)
   rc.dirfile = balloc(fatal, FILENAME_LEN);
 
   /* Initialise the reader or client */
-  if (rc.quenya)
-    InitClient(NULL);
-  else
+  if (rc.quenya) {
+    if (InitClient(NULL))
+      bprintf(fatal,
+          "Cannot continue after server disconnect in initialisation");
+  } else
     InitReader();
 
   /* check the length of the output path */

@@ -39,8 +39,8 @@
 #endif
 
 struct rc_struct {
-  int daemonise, force_quenya, force_stdio, framefile, gzip_output, persist;
-  int quenya, remount, silent, write_curfile;
+  int auto_reconnect, daemonise, force_quenya, force_stdio, framefile;
+  int gzip_output, persist, quenya, remount, silent, write_curfile;
   int write_mode; /* 0 = normal ; 1 = overwrite ; 2 = resume */
 
   struct sockaddr_in addr;
@@ -87,7 +87,7 @@ void CleanUp(void);
 void DirFileWriter(void);
 void FrameFileReader(void);
 void GetDirFile(char*, const char*, char*, int);
-void InitClient(char*);
+int  InitClient(char*);
 void InitReader(void);
 void InitialiseDirFile(int, unsigned long);
 void PreInitialiseDirFile(void);
