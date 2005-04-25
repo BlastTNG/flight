@@ -593,6 +593,15 @@ void StoreData(int index)
   static struct NiosStruct* dgpsPosIndexAddr;
   static struct NiosStruct* dgpsNSatAddr;
 
+  /* trim fields */
+  static struct NiosStruct *clinTrimAddr;
+  static struct NiosStruct *encTrimAddr;
+  static struct NiosStruct *nullTrimAddr;
+  static struct NiosStruct *magTrimAddr;
+  static struct NiosStruct *dgpsTrimAddr;
+  static struct NiosStruct *ssTrimAddr;
+
+
   int i_ss;
   int i_point;
   int i_dgps;
@@ -684,6 +693,13 @@ void StoreData(int index)
     dgpsPosIndexAddr = GetNiosAddr("dgps_pos_index");
     dgpsAttOkAddr = GetNiosAddr("dgps_att_ok");
     dgpsAttIndexAddr = GetNiosAddr("dgps_att_index");
+
+    clinTrimAddr = GetNiosAddr("clin_trim");
+    encTrimAddr = GetNiosAddr("enc_trim");
+    nullTrimAddr = GetNiosAddr("null_trim");
+    magTrimAddr = GetNiosAddr("mag_trim");
+    dgpsTrimAddr = GetNiosAddr("dgps_trim");
+    ssTrimAddr = GetNiosAddr("ss_trim");
   }
 
   i_point = GETREADINDEX(point_index);
@@ -739,27 +755,34 @@ void StoreData(int index)
   WriteData(lstAddr, PointingData[i_point].lst, NIOS_QUEUE);
 
   WriteData(magAzAddr,
-      (unsigned int)(PointingData[i_point].mag_az * DEG2I), NIOS_QUEUE);
+	    (unsigned int)((PointingData[i_point].mag_az +
+			    CommandData.mag_az_trim) * DEG2I), NIOS_QUEUE);
   WriteData(magModelAddr,
       (unsigned int)(PointingData[i_point].mag_model * DEG2I), NIOS_QUEUE);
   WriteData(magSigmaAddr,
       (unsigned int)(PointingData[i_point].mag_sigma * DEG2I), NIOS_QUEUE);
+  WriteData(magTrimAddr, CommandData.mag_az_trim * DEG2I, NIOS_QUEUE);
+  
   WriteData(dgpsAzAddr,
-      (unsigned int)(PointingData[i_point].dgps_az * DEG2I), NIOS_QUEUE);
+	    (unsigned int)((PointingData[i_point].dgps_az  +
+			    CommandData.dgps_az_trim) * DEG2I), NIOS_QUEUE);
   WriteData(dgpsPitchAddr,
       (unsigned int)(PointingData[i_point].dgps_pitch * DEG2I), NIOS_QUEUE);
   WriteData(dgpsRollAddr,
       (unsigned int)(PointingData[i_point].dgps_roll * DEG2I), NIOS_QUEUE);
   WriteData(dgpsSigmaAddr,
       (unsigned int)(PointingData[i_point].dgps_sigma * DEG2I), NIOS_QUEUE);
-
-  WriteData(ssAzAddr, (unsigned int)(PointingData[i_point].ss_az*DEG2I),
-      NIOS_QUEUE);
+  WriteData(dgpsTrimAddr, CommandData.dgps_az_trim * DEG2I, NIOS_QUEUE);
+  
+  WriteData(ssAzAddr, (unsigned int)((PointingData[i_point].ss_az +
+				      CommandData.ss_az_trim) * DEG2I),
+	    NIOS_QUEUE);
   WriteData(ssSigmaAddr,
       (unsigned int)(PointingData[i_point].ss_sigma * DEG2I), NIOS_QUEUE);
   WriteData(sunAzAddr, (unsigned int)(PointingData[i_point].sun_az*DEG2I),
       NIOS_QUEUE);
-
+  WriteData(ssTrimAddr, CommandData.ss_az_trim * DEG2I, NIOS_QUEUE);
+  
   WriteData(iscAzAddr,
       (unsigned int)(PointingData[i_point].isc_az * DEG2I), NIOS_QUEUE);
   WriteData(iscElAddr,
@@ -775,14 +798,20 @@ void StoreData(int index)
       (unsigned int)(PointingData[i_point].osc_sigma * DEG2I), NIOS_QUEUE);
 
   WriteData(encElAddr,
-      (unsigned int)(PointingData[i_point].enc_el * DEG2I), NIOS_QUEUE);
+	    (unsigned int)((PointingData[i_point].enc_el
+			    +CommandData.enc_el_trim)* DEG2I), NIOS_QUEUE);
   WriteData(encSigmaAddr,
       (unsigned int)(PointingData[i_point].enc_sigma * DEG2I), NIOS_QUEUE);
+  WriteData(encTrimAddr, CommandData.enc_el_trim * DEG2I, NIOS_QUEUE);
 
   WriteData(clinElAddr,
-      (unsigned int)(PointingData[i_point].clin_el * DEG2I), NIOS_QUEUE);
+	    (unsigned int)((PointingData[i_point].clin_el +
+			    CommandData.clin_el_trim) * DEG2I), NIOS_QUEUE);
   WriteData(clinSigmaAddr,
       (unsigned int)(PointingData[i_point].clin_sigma * DEG2I), NIOS_QUEUE);
+  WriteData(clinTrimAddr, CommandData.clin_el_trim * DEG2I, NIOS_QUEUE);
+  
+  WriteData(nullTrimAddr, CommandData.null_az_trim * DEG2I, NIOS_QUEUE); 
 
   /************* Pointing mode fields *************/
   WriteData(pModeAddr, (int)(CommandData.pointing_mode.mode), NIOS_QUEUE);

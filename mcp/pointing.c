@@ -514,7 +514,9 @@ void EvolveElSolution(struct ElSolutionStruct *s,
       if (fabs(new_offset) > 500.0)
         new_offset = 0; // 5 deg step is bunk!
 
-      if (s->n_solutions < 1000) {
+      if (CommandData.fast_gy_offset>0) {
+        fs = (1.0 + 20.0/3000.0*(double)CommandData.fast_gy_offset) * s->FC;
+      } else if (s->n_solutions < 1000) {
         fs = 20.0 * s->FC;
       } else {
         fs = s->FC;
@@ -614,7 +616,10 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
     NormalizeAngle(&(s->angle));
 
     if (s->n_solutions > 10) { // only calculate if we have had at least 10
-      if (s->n_solutions < 1000) {
+      if (CommandData.fast_gy_offset>0) {
+        //fs = 20.0 * s->FC;
+        fs = (1.0 + 20.0/3000.0*(double)CommandData.fast_gy_offset) * s->FC;
+      } else if (s->n_solutions < 1000) {
         fs = 20.0 * s->FC;
       } else {
         fs = s->FC;
@@ -661,13 +666,6 @@ void Pointing()
   double gy_roll, gy2, gy3, el_rad, clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0;
   double x;
-
-  static struct NiosStruct *clinTrimAddr;
-  static struct NiosStruct *encTrimAddr;
-  static struct NiosStruct *nullTrimAddr;
-  static struct NiosStruct *magTrimAddr;
-  static struct NiosStruct *dgpsTrimAddr;
-  static struct NiosStruct *ssTrimAddr;
 
   static int firsttime = 1;
 
@@ -794,12 +792,12 @@ void Pointing()
 
   if (firsttime) {
     firsttime = 0;
-    clinTrimAddr = GetNiosAddr("clin_trim");
-    encTrimAddr = GetNiosAddr("enc_trim");
-    nullTrimAddr = GetNiosAddr("null_trim");
-    magTrimAddr = GetNiosAddr("mag_trim");
-    dgpsTrimAddr = GetNiosAddr("dgps_trim");
-    ssTrimAddr = GetNiosAddr("ss_trim");
+    ClinEl.trim = CommandData.clin_el_trim;
+    EncEl.trim = CommandData.enc_el_trim; 
+    NullAz.trim = CommandData.null_az_trim; 
+    MagAz.trim = CommandData.mag_az_trim;
+    DGPSAz.trim = CommandData.dgps_az_trim;
+    SSAz.trim = CommandData.ss_az_trim;
   }
 
 /*   if (elClinLut.n == 0) */
@@ -936,6 +934,10 @@ void Pointing()
       PointingData[point_index].el,
       ss_az, ss_ok);  
 
+  if (CommandData.fast_gy_offset>0) {
+    CommandData.fast_gy_offset--;
+  }
+  
   AddAzSolution(&AzAtt, &NullAz, 1);
   /** add az solutions **/
   if (CommandData.use_mag) {
@@ -1036,13 +1038,13 @@ void Pointing()
 
   point_index = INC_INDEX(point_index);
 
+  CommandData.clin_el_trim = ClinEl.trim;
+  CommandData.enc_el_trim = EncEl.trim;
+  CommandData.null_az_trim = NullAz.trim;
+  CommandData.mag_az_trim = MagAz.trim;
+  CommandData.dgps_az_trim = DGPSAz.trim;
+  CommandData.ss_az_trim = SSAz.trim;
 
-  WriteData(clinTrimAddr, ClinEl.trim * DEG2I, NIOS_QUEUE);
-  WriteData(encTrimAddr, EncEl.trim * DEG2I, NIOS_QUEUE);
-  WriteData(nullTrimAddr, NullAz.trim * DEG2I, NIOS_QUEUE);
-  WriteData(magTrimAddr, MagAz.trim * DEG2I, NIOS_QUEUE);
-  WriteData(dgpsTrimAddr, DGPSAz.trim * DEG2I, NIOS_QUEUE);
-  WriteData(ssTrimAddr, SSAz.trim * DEG2I, NIOS_FLUSH);
 }
 
 // called from the command thread in command.h

@@ -123,6 +123,15 @@ struct CommandDataStruct {
   unsigned char use_mag;
   unsigned char use_gps;
 
+  unsigned short fast_gy_offset;
+  
+  double clin_el_trim;
+  double enc_el_trim;
+  double null_az_trim;
+  double mag_az_trim;
+  double dgps_az_trim;
+  double ss_az_trim;
+
   struct {
     int clockInternal;
     int biasAC;

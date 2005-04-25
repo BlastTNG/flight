@@ -344,12 +344,13 @@ void SingleCommand (enum singleCommand command, int scheduled)
   else if (command == ss_on)
     CommandData.sensors_off.ss = 0;
 
-  else if (command == analogue_gyros)    /* gyro selection */
+  else if (command == analogue_gyros) {   /* gyro selection */
     CommandData.use_analogue_gyros = 1;
-  else if (command == digital_gyros)
+    CommandData.fast_gy_offset = 3000;
+  } else if (command == digital_gyros) {
     CommandData.use_analogue_gyros = 0;
-    
-  else if (command == clock_int)    /* Bias settings */
+    CommandData.fast_gy_offset = 3000;
+  } else if (command == clock_int)    /* Bias settings */
     CommandData.Bias.clockInternal = 1;
   else if (command == clock_ext)
     CommandData.Bias.clockInternal = 0;
@@ -1548,6 +1549,8 @@ void InitCommandData() {
   CommandData.Cryo.lvalve_close = 0;
   CommandData.Cryo.lnvalve_on = 0;
 
+  CommandData.fast_gy_offset = 0;
+  
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
     bprintf(warning, "Commands: prev_status: Wanted %i bytes but got %i.\n",
@@ -1617,6 +1620,13 @@ void InitCommandData() {
   CommandData.use_gps = 1;
   CommandData.lat_range = 1;
   CommandData.sucks = 0;
+
+  CommandData.clin_el_trim = 0;
+  CommandData.enc_el_trim = 0;
+  CommandData.null_az_trim = 0;
+  CommandData.mag_az_trim = 0;
+  CommandData.dgps_az_trim = 0;
+  CommandData.ss_az_trim = 0;
 
   SIPData.MKScal.m_hi = 0.01;
   SIPData.MKScal.m_med = 0.1;
