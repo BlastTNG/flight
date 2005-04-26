@@ -274,6 +274,9 @@ int InitClient(char* new_filename)
     new_filename = ptr1;
   }
 
+  /* networked data already has the suffix stripped */
+  rc.sufflen = 0;
+
   if (rc.output_dirfile != NULL)
     strncpy(rc.dirfile, rc.output_dirfile, FILENAME_LEN);
   else
