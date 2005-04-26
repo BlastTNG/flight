@@ -28,6 +28,7 @@ extern "C" {
 #define NOT_MULTIPLEXED (FAST_PER_SLOW)
 #define DISCARD_WORD    (FAST_PER_SLOW + 1)
 
+#define SR (100.16)
   /* Number of DAS bolometer cards to include in the frame.  The maximum number
    * of cards is 11 */
 #define DAS_CARDS 12

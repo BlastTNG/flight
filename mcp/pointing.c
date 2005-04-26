@@ -39,7 +39,8 @@
 #include "command_struct.h"
 #include "lut.h"
 #include "tx.h"
-#include "sslutNA.h"
+/* #include "sslutNA.h" */
+#include "fir.h"
 
 /* #define GY1_OFFSET (-0.1365) */
 /* #define GY2_OFFSET (0.008) */
@@ -91,6 +92,7 @@ struct ElSolutionStruct {
   double FC; // filter constant
   int n_solutions; // number of angle inputs
   int since_last;
+  struct FirStruct *fs;
 };
 
 struct AzSolutionStruct {
@@ -107,6 +109,8 @@ struct AzSolutionStruct {
   double FC; // filter constant
   int n_solutions; // number of angle inputs
   int since_last;
+  struct FirStruct *fs2;
+  struct FirStruct *fs3;
 };
 
 struct HistoryStruct {
@@ -300,11 +304,11 @@ int SSConvert(double *ss_az) {
   double az;
   double sun_ra, sun_dec, jd;
   static int last_i_ss = -1;
-  static struct LutType new_ssLut = {"/data/etc/ss.lut",0,NULL,NULL,0};
+  static struct LutType ssAzLut = {"/data/etc/ss.lut",0,NULL,NULL,0};
 
   if (firsttime) {
     firsttime = 0;
-    LutInit(&new_ssLut);
+    LutInit(&ssAzLut);
   }
 
   i_ss = GETREADINDEX(ss_index);
@@ -326,11 +330,13 @@ int SSConvert(double *ss_az) {
 
   if (i_ss == last_i_ss)
     return (0); 
+  //if (SunSensorData[i_ss].prin < MIN_SS_PRIN)
+  //  return (0);
+
   if (SunSensorData[i_ss].az_snr < MIN_SS_AZ_SNR)
     return (0);
   
-  az = LutCal(&new_ssLut, (double)SunSensorData[i_ss].az_center);  
-
+  az = LutCal(&ssAzLut, (double)SunSensorData[i_ss].az_center);
   *ss_az = az + sun_az;
 
   NormalizeAngle(ss_az);
@@ -385,13 +391,13 @@ void EvolveSCSolution(struct ElSolutionStruct *e,
   double w1, w2;
 
   // evolve el
-  e->angle += (gy1 + gy1_off) / 100.0;
+  e->angle += (gy1 + gy1_off) / SR;
   e->varience += GYRO_VAR;
 
   // evolve az
   old_el *= M_PI / 180.0;
   gy_az = -(gy2 + gy2_off) * cos(old_el) + -(gy3 + gy3_off) * sin(old_el);
-  a->angle += gy_az / 100.0;
+  a->angle += gy_az / SR;
   a->varience += GYRO_VAR;
 
   i_isc = iscpoint_index[which];
@@ -422,10 +428,10 @@ void EvolveSCSolution(struct ElSolutionStruct *e,
         if (j < 0)
           j += GY_HISTORY;
 
-        gy_el_delta += (hs.gyro1_history[j] + gy1_off) * (1.0 / 100.0);
+        gy_el_delta += (hs.gyro1_history[j] + gy1_off) * (1.0 / SR);
         gy_az_delta += (-(hs.gyro2_history[j] + gy2_off) *
             cos(hs.elev_history[j]) + -(hs.gyro3_history[j] + gy3_off) *
-            sin(hs.elev_history[j])) * (1.0 / 100.0);
+            sin(hs.elev_history[j])) * (1.0 / SR);
       }
 
       // evolve el solution
@@ -476,12 +482,11 @@ void EvolveElSolution(struct ElSolutionStruct *s,
     double new_angle, int new_reading) {
   double w1, w2;
   double new_offset = 0;
-  double fs;
 
-  s->angle += (gyro + gy_off) / 100.0;
+  s->angle += (gyro + gy_off) / SR;
   s->varience += GYRO_VAR;
 
-  s->gy_int += gyro / 100.0; // in degrees
+  s->gy_int += gyro / SR; // in degrees
 
   if (new_reading) {    
     w1 = 1.0 / (s->varience);
@@ -493,7 +498,52 @@ void EvolveElSolution(struct ElSolutionStruct *s,
     /** calculate offset **/
     if (s->n_solutions > 10) { // only calculate if we have had at least 10
       new_offset = ((new_angle - s->last_input) - s->gy_int) /
-        (0.01 * (double)s->since_last);
+        ((1.0/SR) * (double)s->since_last);
+
+      if (fabs(new_offset) > 500.0)
+        new_offset = 0; // 5 deg step is bunk!
+
+
+      s->gy_offset = filter(new_offset, s->fs);
+    }
+    s->since_last = 0;
+    if (s->n_solutions<10000) {
+      s->n_solutions++;
+    }
+    
+    s->gy_int = 0.0;
+    s->last_input = new_angle;      
+  }
+  s->since_last++;
+}
+
+/* Gyro noise: 7' / rt(hour) */
+/** the new solution is a weighted mean of:
+  the old solution evolved by gyro motion and
+  the new solution. **/
+void oldEvolveElSolution(struct ElSolutionStruct *s,
+    double gyro, double gy_off,
+    double new_angle, int new_reading) {
+  double w1, w2;
+  double new_offset = 0;
+  double fs;
+
+  s->angle += (gyro + gy_off) / SR;
+  s->varience += GYRO_VAR;
+
+  s->gy_int += gyro / SR; // in degrees
+
+  if (new_reading) {    
+    w1 = 1.0 / (s->varience);
+    w2 = s->samp_weight;
+
+    s->angle = (w1 * s->angle + new_angle * w2) / (w1 + w2);
+    s->varience = 1.0 / (w1 + w2);
+
+    /** calculate offset **/
+    if (s->n_solutions > 10) { // only calculate if we have had at least 10
+      new_offset = ((new_angle - s->last_input) - s->gy_int) /
+        ((1.0/SR) * (double)s->since_last);
 
       if (fabs(new_offset) > 500.0)
         new_offset = 0; // 5 deg step is bunk!
@@ -579,16 +629,16 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
     double el, double new_angle, int new_reading) {
   double w1, w2;
   double gy_az;
-  double new_offset, fs, daz;
+  double new_offset, daz;
 
   el *= M_PI / 180.0; // want el in radians
   gy_az = -(gy2 + gy2_offset) * cos(el) + -(gy3 + gy3_offset) * sin(el);
 
-  s->angle += gy_az / 100.0;
+  s->angle += gy_az / SR;
   s->varience += GYRO_VAR;
 
-  s->gy2_int += gy2 / 100.0; // in degrees
-  s->gy3_int += gy3 / 100.0; // in degrees
+  s->gy2_int += gy2 / SR; // in degrees
+  s->gy3_int += gy3 / SR; // in degrees
 
   if (new_reading) {    
     w1 = 1.0 / (s->varience);
@@ -600,26 +650,18 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
     NormalizeAngle(&(s->angle));
 
     if (s->n_solutions > 10) { // only calculate if we have had at least 10
-      if (CommandData.fast_gy_offset>0) {
-        //fs = 20.0 * s->FC;
-        fs = (1.0 + 20.0/3000.0*(double)CommandData.fast_gy_offset) * s->FC;
-      } else if (s->n_solutions < 1000) {
-        fs = 20.0 * s->FC;
-      } else {
-        fs = s->FC;
-      }
 
       daz = remainder(new_angle - s->last_input, 360.0);
 
       /* Do Gyro2 */
       new_offset = -(daz * cos(el) + s->gy2_int) /
-        (0.01 * (double)s->since_last);
-      s->gy2_offset = fs * new_offset + (1.0 - fs) * s->gy2_offset;
+        ((1.0/SR) * (double)s->since_last);
+      s->gy2_offset = filter(new_offset, s->fs2);;
 
       /* Do Gyro3 */
       new_offset = -(daz * sin(el) + s->gy3_int) /
-        (0.01 * (double)s->since_last);
-      s->gy3_offset = fs * new_offset + (1.0 - fs) * s->gy3_offset;
+        ((1.0/SR) * (double)s->since_last);
+      s->gy3_offset = filter(new_offset, s->fs3);;
 
     }
     s->since_last = 0;
@@ -649,14 +691,13 @@ void Pointing()
   double dgps_az, dgps_pitch, dgps_roll;
   double gy_roll, gy2, gy3, el_rad, clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0;
-  double x;
 
   static int firsttime = 1;
 
   int i_dgpspos;
   int i_point_read;
 
-  //static struct LutType elClinLut = {"/data/etc/clin_elev.lut",0,NULL,NULL,0};
+  static struct LutType elClinLut = {"/data/etc/clin_elev.lut",0,NULL,NULL,0};
 
   static double gy_roll_amp = 0.0;
 
@@ -666,13 +707,14 @@ void Pointing()
   static struct ElSolutionStruct EncEl = {0.0, // starting angle
     360.0 * 360.0, // starting varience
     1.0 / M2DV(60), //sample weight
-    M2DV(6), // systemamatic varience
+    M2DV(20), // systemamatic varience
     0.0, // trim 
     0.0, // last input
     0.0, // gy integral
     GY1_OFFSET, // gy offset
     0.0001, // filter constant
-    0, 0 // n_solutions, since_last
+    0, 0, // n_solutions, since_last
+    NULL // firstruct					  
   };
   static struct ElSolutionStruct ClinEl = {0.0, // starting angle
     360.0 * 360.0, // starting varience
@@ -683,7 +725,8 @@ void Pointing()
     0.0, // gy integral
     GY1_OFFSET, // gy offset
     0.0001, // filter constant
-    0, 0 // n_solutions, since_last
+    0, 0, // n_solutions, since_last
+    NULL // firstruct					  
   };
   static struct ElSolutionStruct ISCEl = {0.0, // starting angle
     719.9 * 719.9, // starting varience
@@ -716,7 +759,8 @@ void Pointing()
     0.0, 0.0, // gy integrals
     GY2_OFFSET, GY3_OFFSET, // gy offsets
     0.0001, // filter constant
-    0, 0 // n_solutions, since_last
+    0, 0, // n_solutions, since_last
+    NULL, NULL
   };
   static struct AzSolutionStruct MagAz = {0.0, // starting angle
     360.0 * 360.0, // starting varience
@@ -727,29 +771,32 @@ void Pointing()
     0.0, 0.0, // gy integrals
     GY2_OFFSET, GY3_OFFSET, // gy offsets
     0.0001, // filter constant
-    0, 0 // n_solutions, since_last
+    0, 0, // n_solutions, since_last
+    NULL, NULL
   };
   static struct AzSolutionStruct DGPSAz = {0.0, // starting angle
     360.0 * 360.0, // starting varience
     1.0 / M2DV(20), //sample weight
-    M2DV(10), // systemamatic varience
+    M2DV(15), // systemamatic varience
     0.0, // trim 
     0.0, // last input
     0.0, 0.0, // gy integrals
     GY2_OFFSET, GY3_OFFSET, // gy offsets
     0.0001, // filter constant
-    0, 0 // n_solutions, since_last
+    0, 0, // n_solutions, since_last
+    NULL, NULL
   };
   static struct AzSolutionStruct SSAz =  {0.0, // starting angle
     360.0 * 360.0, // starting varience
     1.0 / M2DV(8), //sample weight
-    M2DV(10), // systemamatic varience
+    M2DV(60), // systemamatic varience
     0.0, // trim 
     0.0, // last input
     0.0, 0.0, // gy integrals
     GY2_OFFSET, GY3_OFFSET, // gy offsets
     0.0001, // filter constant
-    0, 0 // n_solutions, since_last
+    0, 0, // n_solutions, since_last
+    NULL, NULL
   };
   static struct AzSolutionStruct ISCAz = {0.0, // starting angle
     360.0 * 360.0, // starting varience
@@ -760,7 +807,8 @@ void Pointing()
     0.0, 0.0, // gy integrals
     GY2_OFFSET, GY3_OFFSET, // gy offsets
     0.0001, // filter constant
-    0, 0 // n_solutions, since_last
+    0, 0, // n_solutions, since_last
+    NULL, NULL
   };
   static struct AzSolutionStruct OSCAz = {0.0, // starting angle
     360.0 * 360.0, // starting varience
@@ -771,7 +819,8 @@ void Pointing()
     0.0, 0.0, // gy integrals
     GY2_OFFSET, GY3_OFFSET, // gy offsets
     0.0001, // filter constant
-    0, 0 // n_solutions, since_last
+    0, 0, // n_solutions, since_last
+    NULL, NULL
   };
 
   if (firsttime) {
@@ -782,10 +831,35 @@ void Pointing()
     MagAz.trim = CommandData.mag_az_trim;
     DGPSAz.trim = CommandData.dgps_az_trim;
     SSAz.trim = CommandData.ss_az_trim;
+
+    ClinEl.fs = (struct FirStruct *)malloc(sizeof(struct FirStruct));
+    initFir(ClinEl.fs, (int)(100*SR));
+    EncEl.fs = (struct FirStruct *)malloc(sizeof(struct FirStruct));
+    initFir(EncEl.fs, (int)(100*SR));
+
+    NullAz.fs2 = (struct FirStruct *)malloc(sizeof(struct FirStruct));
+    NullAz.fs3 = (struct FirStruct *)malloc(sizeof(struct FirStruct));
+    initFir(NullAz.fs2, (int)(10)); // not used
+    initFir(NullAz.fs3, (int)(10)); // not used
+    
+    MagAz.fs2 = (struct FirStruct *)malloc(sizeof(struct FirStruct));
+    MagAz.fs3 = (struct FirStruct *)malloc(sizeof(struct FirStruct));
+    initFir(MagAz.fs2, (int)(100*SR)); 
+    initFir(MagAz.fs3, (int)(100*SR)); 
+
+    DGPSAz.fs2 = (struct FirStruct *)malloc(sizeof(struct FirStruct));
+    DGPSAz.fs3 = (struct FirStruct *)malloc(sizeof(struct FirStruct));
+    initFir(DGPSAz.fs2, (int)(100*10)); 
+    initFir(DGPSAz.fs3, (int)(100*10)); 
+
+    SSAz.fs2 = (struct FirStruct *)malloc(sizeof(struct FirStruct));
+    SSAz.fs3 = (struct FirStruct *)malloc(sizeof(struct FirStruct));
+    initFir(SSAz.fs2, (int)(100*SR)); 
+    initFir(SSAz.fs3, (int)(100*SR)); 
   }
 
-/*   if (elClinLut.n == 0) */
-/*     LutInit(&elClinLut); */
+  if (elClinLut.n == 0)
+    LutInit(&elClinLut);
 
   i_dgpspos = GETREADINDEX(dgpspos_index);
   i_point_read = GETREADINDEX(point_index);
@@ -854,10 +928,10 @@ void Pointing()
 
   /*************************************/
   /**      do elevation solution      **/
-  //clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
-  x = ACSData.clin_elev;
-  clin_elev = ((((1.13288E-19*x - 1.83627E-14)*x +
-		 1.17066e-9)*x - 3.66444E-5)*x + 0.567815)*x - 3513.56;
+  clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
+  /* x = ACSData.clin_elev; */
+/*   clin_elev = ((((1.13288E-19*x - 1.83627E-14)*x + */
+/* 		 1.17066e-9)*x - 3.66444E-5)*x + 0.567815)*x - 3513.56; */
   
   EvolveElSolution(&ClinEl, RG.gy1, PointingData[i_point_read].gy1_offset,
       clin_elev, 1);

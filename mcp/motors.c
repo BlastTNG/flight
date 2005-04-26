@@ -812,14 +812,14 @@ void DoNewCapMode() {
   if (az<left) {
     if (az_dir < 0) {
       az_distance = next_right - left;
-      t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * 100.16);
+      t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * SR);
       new_step = 1;
     }
     az_dir = 1;
   } else if (az>right) {
     if (az_dir > 0) {
       az_distance = right - next_left;
-      t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * 100.16);
+      t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * SR);
       new_step = 1;
     }
     az_dir = -1;
@@ -960,13 +960,13 @@ void DoNewBoxMode() {
   new_step = 0;
   if (az<left) {
     if (az_dir < 0) {
-      t = w/v_az + 2.0*v_az/(AZ_ACCEL * 100.16);
+      t = w/v_az + 2.0*v_az/(AZ_ACCEL * SR);
       new_step = 1;
     }
     az_dir = 1;
   } else if (az>right) {
     if (az_dir > 0) {
-      t = w/v_az + 2.0*v_az/(AZ_ACCEL * 100.16);
+      t = w/v_az + 2.0*v_az/(AZ_ACCEL * SR);
       new_step = 1;
     }
     az_dir = -1;
@@ -1133,14 +1133,14 @@ void DoQuadMode() { // aka radbox
   if (az<left) {
     if (az_dir < 0) {
       az_distance = next_right - left;
-      t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * 100.16);
+      t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * SR);
       new_step = 1;
     }
     az_dir = 1;
   } else if (az>right) {
     if (az_dir > 0) {
       az_distance = right - next_left;
-      t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * 100.16);
+      t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * SR);
       new_step = 1;
     }
     az_dir = -1;

@@ -13,15 +13,15 @@ ifeq ($(USE_FIFO_CMD), 1)
 	CPPFLAGS := $(CPPFLAGS) -DUSE_FIFO_CMD
 endif
 
-HEADERS = alice.h bbc_pci.h blast.h channels.h command_list.h command_struct.h \
+HEADERS = fir.h alice.h bbc_pci.h blast.h channels.h command_list.h command_struct.h \
 					crc.h dataholder.h derived.h ephem_read.h ephem_types.h \
-					isc_protocol.h lut.h mcp.h pointing_struct.h slow_dl.h sslutNA.h \
+					isc_protocol.h lut.h mcp.h pointing_struct.h slow_dl.h \
 					ss_struct.h starpos.h tdrss.h tx.h
 
 OBJS = mcp.o auxiliary.o blast.o channels.o command_list.o commands.o crc.o \
 			 das.o derived.o dataholder.o dgps.o ephem_read.o fftsg_h.o framefile.o \
 			 geomag.o isc.o lut.o motors.o pointing.o radbox.o sched.o slow_dl.o \
-			 sslutNA.o starpos.o sunsensor.o tdrss.o tx.o tx_struct.o
+			 starpos.o sunsensor.o tdrss.o tx.o tx_struct.o fir.o
 
 .PHONEY: fifo install all debug
 
