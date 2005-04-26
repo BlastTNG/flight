@@ -82,8 +82,7 @@ int GetServerResponse(char* buffer)
   int n, overrun;
   char* response;
 
-//  if (buffer != NULL)
-//    printf("<-- %s\n", buffer);
+//  if (buffer != NULL) printf("<-- %s\n", buffer);
 
   strcpy(cbuf, extra);
   response = cbuf + strlen(cbuf);
@@ -428,7 +427,7 @@ void QuenyaClient(void)
     /* read the block */
     while (bytes_read < block_size * DiskFrameSize) {
       n = read(rc.dsock, (void*)InputBuffer[0] + bytes_read,
-          (block_size - bytes_read) * DiskFrameSize);
+          block_size * DiskFrameSize - bytes_read);
 
       bytes_read += n;
 
