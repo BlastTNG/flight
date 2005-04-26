@@ -206,23 +206,19 @@ void Connection(int csock)
 
               switch (n) {
                 case FR_DONE:
-//                  printf("FR_DONE\n");
                   quendi_reader_shutdown(data.fd, 1);
                   data.sending_data = 0; 
                   data.staged = 0;
                   data.port_active = 0;
                   break;
                 case FR_MORE_IN_FILE:
-//                  printf("FR_MORE_IN_FILE\n");
                   data.new_chunk = 0;
                   break;
                 case FR_NEW_CHUNK:
-//                  printf("FR_NEW_CHUNK\n");
                   close(data.fd);
                   data.new_chunk = 1;
                   break;
                 case FR_CURFILE_CHANGED:
-//                  printf("FR_CURFILE_CHANGED\n");
                   quendi_reader_shutdown(data.fd, 0);
                   data.sending_data = 0; 
                   data.port_active = 0;
