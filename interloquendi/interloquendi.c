@@ -20,8 +20,6 @@
  *
  */
 
-#define DEBUG
-
 #include <stdlib.h>
 
 #include <errno.h>
