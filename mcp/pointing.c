@@ -293,20 +293,16 @@ int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll) {
 }
 
 // return 1 if new sun, and 0 otherwise
-#define MIN_SS_PRIN 7
+#define MIN_SS_AZ_SNR 30
 int SSConvert(double *ss_az) {
-  static SSLut_t SSLut;
   static int firsttime = 1;
-  int i_point, i_ss, iter;
+  int i_point, i_ss;
   double az;
   double sun_ra, sun_dec, jd;
   static int last_i_ss = -1;
   static struct LutType new_ssLut = {"/data/etc/ss.lut",0,NULL,NULL,0};
 
-  int eflag;
-
   if (firsttime) {
-    SSLut_GetLut(&SSLut, "/data/etc/sslut.dat");
     firsttime = 0;
     LutInit(&new_ssLut);
   }
@@ -330,24 +326,12 @@ int SSConvert(double *ss_az) {
 
   if (i_ss == last_i_ss)
     return (0); 
-  if (SunSensorData[i_ss].prin < MIN_SS_PRIN)
+  if (SunSensorData[i_ss].az_snr < MIN_SS_AZ_SNR)
     return (0);
+  
+  az = LutCal(&new_ssLut, (double)SunSensorData[i_ss].az_center);  
 
-  if (sun_el < 0)
-    sun_el = 10.0;
-
-#if 0
-  eflag = SSLut_find((double)SunSensorData[i_ss].az_center, &az,
-      sun_el * M_PI / 180.0, &SSLut, &iter);
-
-  if (eflag != 0)
-    return (0);
-
-  *ss_az = az * 180.0 / M_PI + 180.0 + sun_az;
-#endif
-  /* Temporary High-Bay az lookup */
-  az = LutCal(&new_ssLut, (double)SunSensorData[i_ss].az_center * 16);
-  *ss_az = az;
+  *ss_az = az + sun_az;
 
   NormalizeAngle(ss_az);
 
