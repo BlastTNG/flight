@@ -321,6 +321,8 @@ int StreamToNextChunk(int keepalive, char* chunk, int sufflen, int *chunk_total,
         }
       }
 
+      bfree(fatal, new_chunk);
+
       /* no new chunk either, check for a change in SOURCE curfile if
        * we're using one */
       if (curfile_val != NULL) {

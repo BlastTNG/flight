@@ -20,6 +20,8 @@
  *
  */
 
+#define DEBUG
+
 #include <stdlib.h>
 
 #include <errno.h>
@@ -41,7 +43,7 @@
 #include "frameread.h"
 #include "quendi.h"
 
-#define VERSION   "1.1.1"
+#define VERSION   "1.1.2"
 #define SOCK_PORT 44144
 #define PID_FILE "/var/run/interloquendi.pid"
 #define CONFIG_FILE "/etc/interloquendi.conf"
@@ -470,6 +472,7 @@ int main(void)
   /* set up our outputs */
 #ifdef DEBUG
   buos_use_stdio();
+  buos_allow_mem();
 #else
   openlog("interloquendi", LOG_PID, LOG_DAEMON);
   buos_use_syslog();
