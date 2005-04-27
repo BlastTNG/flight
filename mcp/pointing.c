@@ -306,8 +306,6 @@ int SSConvert(double *ss_az) {
   static int last_i_ss = -1;
   static struct LutType ssAzLut = {"/data/etc/ss.lut",0,NULL,NULL,0};
  
-  static int counter = 0;
-  int idx;
   if (firsttime) {
     firsttime = 0;
     LutInit(&ssAzLut);
@@ -336,20 +334,11 @@ int SSConvert(double *ss_az) {
   if (SunSensorData[i_ss].az_snr < MIN_SS_AZ_SNR)
     return (0);
   
-  az = LutCal(&ssAzLut, (double)(SunSensorData[i_ss].az_center*16.0));
-  *ss_az = az; // + sun_az;
+  az = LutCal(&ssAzLut, (double)SunSensorData[i_ss].az_center);
+  *ss_az =  sun_az - az;
 
-  if(++counter == 40) {
-           counter = 0;
-           bprintf(info, "--------- SS %f %f\n",
-	   (double)SunSensorData[i_ss].az_center*16.0,
-           az);
-  }
-	  
-
+  NormalizeAngle(ss_az);
   
-  //NormalizeAngle(ss_az);
-
   return (1);
 }
 
