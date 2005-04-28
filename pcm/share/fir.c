@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "blast.h"
 #include "fir.h"
 
 void initFir(struct FirStruct *fs, int ns) {
