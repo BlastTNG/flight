@@ -16,7 +16,7 @@ void initFir(struct FirStruct *fs, int ns) {
   fs->out = 0;
   fs->ns = ns;
   
-  fs->w = (double *)malloc(ns*sizeof(double));
+  fs->w = (double *)balloc(fatal, ns * sizeof(double));
 
   for (i=0; i<ns; i++) {
     x = i-ns/2;

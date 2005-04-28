@@ -830,28 +830,28 @@ void Pointing()
     DGPSAz.trim = CommandData.dgps_az_trim;
     SSAz.trim = CommandData.ss_az_trim;
 
-    ClinEl.fs = (struct FirStruct *)malloc(sizeof(struct FirStruct));
+    ClinEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(ClinEl.fs, (int)(100*SR));
-    EncEl.fs = (struct FirStruct *)malloc(sizeof(struct FirStruct));
+    EncEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(EncEl.fs, (int)(100*SR));
 
-    NullAz.fs2 = (struct FirStruct *)malloc(sizeof(struct FirStruct));
-    NullAz.fs3 = (struct FirStruct *)malloc(sizeof(struct FirStruct));
+    NullAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
+    NullAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(NullAz.fs2, (int)(10)); // not used
     initFir(NullAz.fs3, (int)(10)); // not used
     
-    MagAz.fs2 = (struct FirStruct *)malloc(sizeof(struct FirStruct));
-    MagAz.fs3 = (struct FirStruct *)malloc(sizeof(struct FirStruct));
+    MagAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
+    MagAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(MagAz.fs2, (int)(100*SR)); 
     initFir(MagAz.fs3, (int)(100*SR)); 
 
-    DGPSAz.fs2 = (struct FirStruct *)malloc(sizeof(struct FirStruct));
-    DGPSAz.fs3 = (struct FirStruct *)malloc(sizeof(struct FirStruct));
+    DGPSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
+    DGPSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(DGPSAz.fs2, (int)(100*10)); 
     initFir(DGPSAz.fs3, (int)(100*10)); 
 
-    SSAz.fs2 = (struct FirStruct *)malloc(sizeof(struct FirStruct));
-    SSAz.fs3 = (struct FirStruct *)malloc(sizeof(struct FirStruct));
+    SSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
+    SSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(SSAz.fs2, (int)(100*SR)); 
     initFir(SSAz.fs3, (int)(100*SR)); 
   }
