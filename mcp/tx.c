@@ -36,6 +36,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/time.h>
+
 #include "bbc_pci.h"
 
 #include "channels.h"
@@ -87,6 +89,7 @@ void DoSched();
 void WriteAux(void) {
   static struct NiosStruct* cpuFanAddr;
   static struct NiosStruct* cpuTimeAddr;
+  static struct NiosStruct* cpuTimeuSAddr;
   static struct NiosStruct* diskFreeAddr;
   static struct NiosStruct* aliceFileAddr;
   static struct NiosStruct* timeoutAddr;
@@ -101,7 +104,9 @@ void WriteAux(void) {
   static int incharge = -1;
   time_t t;
   int i_point;
-
+  struct timeval tv;
+  struct timezone tz;
+  
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
@@ -113,6 +118,7 @@ void WriteAux(void) {
     cpuTemp2Addr = GetNiosAddr("cpu_temp2");
     cpuTemp3Addr = GetNiosAddr("cpu_temp3");
     cpuTimeAddr = GetNiosAddr("cpu_time");
+    cpuTimeuSAddr = GetNiosAddr("cpu_usec");
     diskFreeAddr = GetNiosAddr("disk_free");
     aliceFileAddr = GetNiosAddr("alice_file");
     timeoutAddr = GetNiosAddr("timeout");
@@ -130,9 +136,10 @@ void WriteAux(void) {
 
   incharge = InCharge;
 
-  t = time(NULL);
+  gettimeofday(&tv, &tz);
 
-  WriteData(cpuTimeAddr, t, NIOS_QUEUE);
+  WriteData(cpuTimeAddr, tv.tv_sec, NIOS_QUEUE);
+  WriteData(cpuTimeuSAddr, tv.tv_usec, NIOS_QUEUE);
 
   WriteData(cpuFanAddr, CommandData.fan, NIOS_QUEUE);
   WriteData(cpuTemp1Addr, CommandData.temp1, NIOS_QUEUE);

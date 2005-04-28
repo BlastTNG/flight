@@ -481,6 +481,7 @@ void EvolveElSolution(struct ElSolutionStruct *s,
   double w1, w2;
   double new_offset = 0;
 
+  //bprintf(info, "%g %g %g %g\n", gyro, gy_off, s->angle, s->varience);
   s->angle += (gyro + gy_off) / SR;
   s->varience += GYRO_VAR;
 
@@ -930,7 +931,7 @@ void Pointing()
   /* x = ACSData.clin_elev; */
 /*   clin_elev = ((((1.13288E-19*x - 1.83627E-14)*x + */
 /* 		 1.17066e-9)*x - 3.66444E-5)*x + 0.567815)*x - 3513.56; */
-  
+
   EvolveElSolution(&ClinEl, RG.gy1, PointingData[i_point_read].gy1_offset,
       clin_elev, 1);
   EvolveElSolution(&EncEl, RG.gy1, PointingData[i_point_read].gy1_offset,
@@ -1088,7 +1089,7 @@ void Pointing()
     NullAz.trim = NewAzEl.az - NullAz.angle;
     MagAz.trim = NewAzEl.az - MagAz.angle;
     DGPSAz.trim = NewAzEl.az - DGPSAz.angle;
-    SSAz.trim = NewAzEl.az - SSAz.trim;
+    SSAz.trim = NewAzEl.az - SSAz.angle;
     NewAzEl.fresh = 0;
   }
 

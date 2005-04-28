@@ -50,6 +50,7 @@
 /* read and write channel 56 on all boards reserved for ADC Sync */
 struct ChannelStruct WideSlowChannels[] = {
   {"cpu_time",     'w', LOOP1,  0,                1.0,             0.0, 'U'},
+  {"cpu_usec",     'w', LOOP4,  58,                1.0,             0.0, 'U'},
   {"sip_time",     'w', LOOP1,  2,                1.0,             0.0, 'U'},
   {"dgps_time",    'w', LOOP1,  4,                1.0,             0.0, 'U'},
   {"lst",          'w', LOOP1,  6,         1.0/3600.0,             0.0, 'U'},
@@ -497,6 +498,7 @@ struct ChannelStruct SlowChannels[] = {
   {"mag_trim",     'w', LOOP4, 55,              I2DEG,             0.0, 's'},
   {"dgps_trim",    'w', LOOP4, 56,              I2DEG,             0.0, 's'},
   {"ss_trim",      'w', LOOP4, 57,              I2DEG,             0.0, 's'},
+  // 58 is used as a 32 bit....
   END_OF_CHANNELS
 };
 
