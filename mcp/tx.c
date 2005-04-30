@@ -728,9 +728,9 @@ void StoreData(int index)
   WriteData(sipTimeAddr, SIPData.GPStime.UTC, NIOS_QUEUE);
 
   /********** SIP MKS Altitude ************/
-  WriteData(sipMksLoAddr, (int)(SIPData.MKSalt.lo * 0.25), NIOS_QUEUE);
-  WriteData(sipMksMedAddr, (int)(SIPData.MKSalt.med * 0.25), NIOS_QUEUE);
-  WriteData(sipMksHiAddr, (int)(SIPData.MKSalt.hi * 0.25), NIOS_QUEUE);
+  WriteData(sipMksLoAddr, (int)(SIPData.MKSalt.lo), NIOS_QUEUE);
+  WriteData(sipMksMedAddr, (int)(SIPData.MKSalt.med), NIOS_QUEUE);
+  WriteData(sipMksHiAddr, (int)(SIPData.MKSalt.hi), NIOS_QUEUE);
 
   /************* processed pointing data *************/
   WriteData(azAddr, (unsigned int)(PointingData[i_point].az * 65536.0/360.0),

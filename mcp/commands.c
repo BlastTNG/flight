@@ -1046,37 +1046,11 @@ void GPSTime (unsigned char *indata) {
 }
 
 void MKSAltitude (unsigned char *indata) {
-  float hi, med, lo;
-  float z_hi, z_med, z_lo;
 
-  /* Update CommandData */
-
-  /* The pressure data are two (backwards) bytes long */
-  hi = (*(indata + 1) << 8) + *indata;
-  med = (*(indata + 3) << 8) + *(indata + 2);
-  lo = (*(indata + 5) << 8) + *(indata + 4);
-
-  /* Calculate pressure */
-  z_hi = log(SIPData.MKScal.m_hi * hi + SIPData.MKScal.b_hi);  
-  z_med = log(SIPData.MKScal.m_med * med + SIPData.MKScal.b_med);
-  z_lo = log(SIPData.MKScal.m_lo * lo + SIPData.MKScal.b_lo);
-
-  /* Use the MKS algorithm to calculate altitude (ft) */
-  SIPData.MKSalt.hi = 156776.89 - 25410.089 * z_hi
-    + 462.44626 * pow(z_hi, 2)
-    + 130.61746 * pow(z_hi, 3)
-    - 20.0116288 * pow(z_hi, 4);
-
-  SIPData.MKSalt.med = 156776.89 - 25410.089 * z_med
-    + 462.44626 * pow(z_med, 2)
-    + 130.61746 * pow(z_med, 3)
-    - 20.0116288 * pow(z_med, 4);
-
-  SIPData.MKSalt.lo = 156776.89 - 25410.089 * z_lo
-    + 462.44626 * pow(z_lo, 2)
-    + 130.61746 * pow(z_lo, 3)
-    - 20.0116288 * pow(z_lo, 4);
-
+  SIPData.MKSalt.hi = ((unsigned short *)indata)[0];;
+  SIPData.MKSalt.med = ((unsigned short *)indata)[1];;
+  SIPData.MKSalt.lo = ((unsigned short *)indata)[2];;
+  
   WritePrevStatus();
 }
 

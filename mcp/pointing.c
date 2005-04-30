@@ -686,6 +686,8 @@ void Pointing()
   double ra, dec, az, el;
 
   int ss_ok, mag_ok, dgps_ok;
+  static unsigned dgps_since_ok = 500;  
+  static unsigned ss_since_ok = 500;  
   double ss_az, mag_az;
   double dgps_az, dgps_pitch, dgps_roll;
   double gy_roll, gy2, gy3, el_rad, clin_elev;
@@ -962,8 +964,19 @@ void Pointing()
   mag_ok = MagConvert(&mag_az);
 
   ss_ok = SSConvert(&ss_az);
+  if (ss_ok) {
+    ss_since_ok = 0;
+  } else {
+    ss_since_ok++;
+  }
+  
   dgps_ok = DGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
-
+  if (dgps_ok) {
+    dgps_since_ok = 0;
+  } else {
+    dgps_since_ok++;
+  }
+  
   /** evolve solutions **/
   EvolveAzSolution(&NullAz,
       RG.gy2, PointingData[i_point_read].gy2_offset,
@@ -1088,8 +1101,12 @@ void Pointing()
     EncEl.trim = NewAzEl.el - EncEl.angle;	
     NullAz.trim = NewAzEl.az - NullAz.angle;
     MagAz.trim = NewAzEl.az - MagAz.angle;
-    DGPSAz.trim = NewAzEl.az - DGPSAz.angle;
-    SSAz.trim = NewAzEl.az - SSAz.angle;
+    if (dgps_since_ok<500) {
+      DGPSAz.trim = NewAzEl.az - DGPSAz.angle;
+    }
+    if (ss_since_ok) {
+      SSAz.trim = NewAzEl.az - SSAz.angle;
+    }
     NewAzEl.fresh = 0;
   }
 
