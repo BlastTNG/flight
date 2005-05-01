@@ -305,7 +305,7 @@ int SSConvert(double *ss_az) {
   double sun_ra, sun_dec, jd;
   static int last_i_ss = -1;
   static struct LutType ssAzLut = {"/data/etc/ss.lut",0,NULL,NULL,0};
- 
+  
   if (firsttime) {
     firsttime = 0;
     LutInit(&ssAzLut);
@@ -314,12 +314,13 @@ int SSConvert(double *ss_az) {
   i_ss = GETREADINDEX(ss_index);
   i_point = GETREADINDEX(point_index);
 
-
   /* get current sun az, el */
   jd = GetJulian(PointingData[i_point].t);
   SunPos(jd, &sun_ra, &sun_dec);
   sun_ra *= (12.0 / M_PI);
   sun_dec *= (180.0 / M_PI);
+
+
 
   radec2azel(sun_ra, sun_dec, PointingData[i_point].lst,
       PointingData[i_point].lat, &sun_az, &sun_el);
@@ -856,7 +857,11 @@ void Pointing()
     SSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     SSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(SSAz.fs2, (int)(100*SR)); 
-    initFir(SSAz.fs3, (int)(100*SR)); 
+    initFir(SSAz.fs3, (int)(100*SR));
+
+    // the first t about to be read needs to be set
+    PointingData[GETREADINDEX(point_index)].t = mcp_systime(NULL); // CPU time
+    
   }
 
   if (elClinLut.n == 0)
@@ -887,6 +892,7 @@ void Pointing()
   /** Record history for gyro offsets **/
   RecordHistory(i_point_read);
 
+  // xxxxxxxxxxxxxxxxxxxx
   PointingData[point_index].t = mcp_systime(NULL); // CPU time
 
   /************************************************/
@@ -946,7 +952,6 @@ void Pointing()
   if (CommandData.use_elclin) {
     AddElSolution(&ElAtt, &ClinEl, 1);
   }
-
   if (CommandData.use_isc) {
     AddElSolution(&ElAtt, &ISCEl, 0);
   }
