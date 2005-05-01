@@ -99,6 +99,7 @@ AMLParser::AMLParser(void)
   numentries = 0;
   maxvalues = 0;
   maxdata = 0;
+  aml = NULL;
   currentry = -1;
   currdatum = -1;
 
@@ -674,6 +675,9 @@ DataHolder::DataHolder(void)
   SMALL_TRACE("");
 
   allocated = false;
+  
+  numslows = numfasts = currslow = currfast = 0;
+  slows = fasts = NULL;
 
   SMALL_RTN("");
   return;
