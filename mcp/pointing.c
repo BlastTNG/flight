@@ -1053,13 +1053,13 @@ void Pointing()
   PointingData[point_index].clin_el = ClinEl.angle;
   PointingData[point_index].clin_sigma = sqrt(ClinEl.varience + ClinEl.sys_var);
 
-  PointingData[point_index].mag_az = mag_az;
+  PointingData[point_index].mag_az = MagAz.angle;
   PointingData[point_index].mag_sigma = sqrt(MagAz.varience + MagAz.sys_var);
-  PointingData[point_index].dgps_az = dgps_az;
+  PointingData[point_index].dgps_az = DGPSAz.angle;
   PointingData[point_index].dgps_pitch = dgps_pitch;
   PointingData[point_index].dgps_roll = dgps_roll;
   PointingData[point_index].dgps_sigma = sqrt(DGPSAz.varience + DGPSAz.sys_var);
-  PointingData[point_index].ss_az = ss_az;
+  PointingData[point_index].ss_az = SSAz.angle;
   PointingData[point_index].ss_sigma = sqrt(SSAz.varience + SSAz.sys_var);
 
   PointingData[point_index].isc_az = ISCAz.angle;

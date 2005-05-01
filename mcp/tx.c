@@ -596,6 +596,7 @@ void StoreData(int index)
   static struct NiosStruct* dgpsDirAddr;
   static struct NiosStruct* dgpsClimbAddr;
   static struct NiosStruct* dgpsAttOkAddr;
+  static struct NiosStruct* dgpsAzRawAddr;
   static struct NiosStruct* dgpsAttIndexAddr;
   static struct NiosStruct* dgpsPosIndexAddr;
   static struct NiosStruct* dgpsNSatAddr;
@@ -699,6 +700,7 @@ void StoreData(int index)
     dgpsNSatAddr = GetNiosAddr("dgps_n_sat");
     dgpsPosIndexAddr = GetNiosAddr("dgps_pos_index");
     dgpsAttOkAddr = GetNiosAddr("dgps_att_ok");
+    dgpsAzRawAddr = GetNiosAddr("dgps_az_raw");
     dgpsAttIndexAddr = GetNiosAddr("dgps_att_index");
 
     clinTrimAddr = GetNiosAddr("clin_trim");
@@ -875,6 +877,7 @@ void StoreData(int index)
 
   /** Att fields **/
   i_dgps = GETREADINDEX(dgpsatt_index);
+  WriteData(dgpsAzRawAddr, DGPSAtt[i_dgps].az, NIOS_QUEUE);
   WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok, NIOS_QUEUE);
   WriteData(dgpsAttIndexAddr, i_dgps, NIOS_QUEUE);
 

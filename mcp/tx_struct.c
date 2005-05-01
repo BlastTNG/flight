@@ -50,7 +50,7 @@
 /* read and write channel 56 on all boards reserved for ADC Sync */
 struct ChannelStruct WideSlowChannels[] = {
   {"cpu_time",     'w', LOOP1,  0,                1.0,             0.0, 'U'},
-  {"cpu_usec",     'w', LOOP4,  58,                1.0,             0.0, 'U'},
+  {"cpu_usec",     'w', LOOP4, 58,                1.0,             0.0, 'U'},
   {"sip_time",     'w', LOOP1,  2,                1.0,             0.0, 'U'},
   {"dgps_time",    'w', LOOP1,  4,                1.0,             0.0, 'U'},
   {"lst",          'w', LOOP1,  6,         1.0/3600.0,             0.0, 'U'},
@@ -94,7 +94,6 @@ struct ChannelStruct SlowChannels[] = {
 
   {"t_roll",       'r',  ACS1,  9,              I2T_M,           I2T_B, 'u'},
   {"i_roll",       'r',  ACS1, 11,      0.00048828125,          -16.09, 'u'},
-  {"t_of1",        'r',  ACS1, 13,              I2T_M,           I2T_B, 'u'},
   {"t_gyro2",      'r',  ACS1, 17,          -0.003125,            79.8, 'u'},
   {"t_gyro3",      'r',  ACS1, 19,          -0.003125,            79.8, 'u'},
   {"t_gyro1",      'r',  ACS1, 21,          -0.003125,            79.8, 'u'},
@@ -209,15 +208,15 @@ struct ChannelStruct SlowChannels[] = {
   {"g_p_bdaheat",  'w',  CRYO, 36,                 1.0,              0., 'u'},
   {"sync03",       'w',  CRYO, 56,                 1.0,             0.0, 'u'},
 
-  {"t_rstrt_mid",  'r',  BIAS,  5,              I2T_M,           I2T_B, 'u'},
-  {"t_lstrt_mid",  'r',  BIAS,  7,              I2T_M,           I2T_B, 'u'},
-  {"t_tstrt_pri",  'r',  BIAS,  9,              I2T_M,           I2T_B, 'u'},
-  {"t_tstrt_sec",  'r',  BIAS, 11,              I2T_M,           I2T_B, 'u'},
-  {"t_bstrt_pri",  'r',  BIAS, 13,              I2T_M,           I2T_B, 'u'},
-  {"t_bstrt_sec",  'r',  BIAS, 15,              I2T_M,           I2T_B, 'u'},
-  {"t_secondary",  'r',  BIAS, 17,              I2T_M,           I2T_B, 'u'},
-  {"t_primary_r",  'r',  BIAS, 19,              I2T_M,           I2T_B, 'u'},
-  {"t_primary_c",  'r',  BIAS, 21,              I2T_M,           I2T_B, 'u'},
+  {"t_if01",       'r',  BIAS,  5,              I2T_M,           I2T_B, 'u'},
+  {"t_if02",       'r',  BIAS,  7,              I2T_M,           I2T_B, 'u'},
+  {"t_if03",       'r',  BIAS,  9,              I2T_M,           I2T_B, 'u'},
+  {"t_if04",       'r',  BIAS, 11,              I2T_M,           I2T_B, 'u'},
+  {"t_if05",       'r',  BIAS, 13,              I2T_M,           I2T_B, 'u'},
+  {"t_if06",       'r',  BIAS, 15,              I2T_M,           I2T_B, 'u'},
+  {"t_if07",       'r',  BIAS, 17,              I2T_M,           I2T_B, 'u'},
+  {"t_if08",       'r',  BIAS, 19,              I2T_M,           I2T_B, 'u'},
+  {"t_if09",       'r',  BIAS, 21,              I2T_M,           I2T_B, 'u'},
   {"i_dpm_28v",    'r',  BIAS, 23,           0.000625,          -20.48, 'u'},
   {"i_dpm_3v",     'r',  BIAS, 25,          -0.000625,           20.48, 'u'},
   {"i_dpm_5v",     'r',  BIAS, 27,          -0.000625,           20.48, 'u'},
@@ -498,7 +497,7 @@ struct ChannelStruct SlowChannels[] = {
   {"mag_trim",     'w', LOOP4, 55,              I2DEG,             0.0, 's'},
   {"dgps_trim",    'w', LOOP4, 56,              I2DEG,             0.0, 's'},
   {"ss_trim",      'w', LOOP4, 57,              I2DEG,             0.0, 's'},
-  // 58 is used as a 32 bit....
+  {"dgps_az_raw",  'w', LOOP4, 60,              I2DEG,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
