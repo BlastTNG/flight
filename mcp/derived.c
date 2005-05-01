@@ -75,12 +75,13 @@
 
 union DerivedUnion DerivedChannels[] = {
   /* Pointing */
+  COMMENT("Microsecond Resolution Time"),
+  LINCOM2("Time", "cpu_time", 1, 0, "cpu_usec",  1.0E-6, 0),
 #ifndef BOLOTEST
   COMMENT("Pointing Stuff"), 
   LINCOM("P_X_H", "p_x_deg", 0.0003662109375, 0),
   LINTERP("Clin_Elev", "clin_elev", "/data/etc/clin_elev.lut"),
   LINTERP("SS_AzRelSun", "SS_AZ_CENTER", "/data/etc/ss.lut"),
-  LINCOM2("Time", "cpu_time", 1, 0, "cpu_usec",  1.0E-6, 0),
   BITFIELD("sensor_veto",
       "SUN_VETO",
       "ISC_VETO",
