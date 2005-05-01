@@ -1109,7 +1109,7 @@ void Pointing()
     if (dgps_since_ok<500) {
       DGPSAz.trim = NewAzEl.az - DGPSAz.angle;
     }
-    if (ss_since_ok) {
+    if (ss_since_ok<500) {
       SSAz.trim = NewAzEl.az - SSAz.angle;
     }
     NewAzEl.fresh = 0;
