@@ -655,7 +655,7 @@ int main(int argc, char *argv[]) {
 
   MakeAddressLookups();
 
-  bprintf(info, "Slow Downlink: Initialisation");
+  bprintf(info, "System: Slow Downlink Initialisation");
   InitSlowDL();
 
   bprintf(info, "Commands: MCP Command List Version: %s", command_list_serial);
@@ -789,7 +789,7 @@ int main(int argc, char *argv[]) {
         pushDiskFrame(RxFrame);
 #ifndef BOLOTEST
         PushBi0Buffer(RxFrame);
-        //FillSlowDL(RxFrame);
+        FillSlowDL(RxFrame);
 #endif
         zero(RxFrame);
       }
