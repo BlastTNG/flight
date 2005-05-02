@@ -142,7 +142,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"i_gybox",       SLOWDL_FORCE_INT, 8, -10, 10}, /* 78 mA */
   /* CRYO SENSORS */
   {"he4_lev",       SLOWDL_FORCE_INT, 8,   0, 10}, /* 0.039 */
-  {"cyroin",        SLOWDL_U_MASK,    8},
+  {"cryoin",        SLOWDL_U_MASK,    8},
   /* CRYO DIODES */
   {"t_lhe",         SLOWDL_FORCE_INT, 8, 8.98, 10}, /* 0-6 deg / 0.020 deg */
   {"t_lhe_filt",    SLOWDL_FORCE_INT, 8, 8.98, 10}, /* 0-6 deg / 0.020 deg */
