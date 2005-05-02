@@ -36,3 +36,5 @@ struct SlowDLStruct {
   long min;
   long max;
 };
+
+void FillSlowDL(unsigned short *);
