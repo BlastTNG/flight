@@ -11,6 +11,7 @@
  *
  */
 
+#include "channels.h"
 #include "slow_dl.h"
 
 /* SLOWDL_FORCE_INT force an integer on numbits between min and max */
@@ -167,39 +168,16 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"t_optbox_filt", SLOWDL_FORCE_INT, 8,    1, 2.5},
 };
 
-void FillSlowDL(unsigned short *RxFrame) {
-  static char firsttime = 1;
+void InitSlowDL(void) {
   int i;
-  unsigned short msb, lsb;
   struct NiosStruct *address;
 
-  if (firsttime) {
-    firsttime = 0;
-    for (i = 0; i < SLOWDL_NUM_DATA; i++) {
-      address = GetNiosAddr(SlowDLInfo[i].src);
-      SlowDLInfo[i].wide = address->wide;
-      SlowDLInfo[i].mindex = ExtractBiPhaseAddr(address)->index;
-      SlowDLInfo[i].chnum = ExtractBiPhaseAddr(address)->channel;
-      SlowDLInfo[i].max = (SlowDLInfo[i].calib_max - address->b) * address->m;
-      SlowDLInfo[i].min = (SlowDLInfo[i].calib_min - address->b) * address->m;
-    }
-  }
-
-  for (i = 0, msb = 0; i < SLOWDL_NUM_DATA; i++) {
-    if (SlowDLInfo[i].mindex == NOT_MULTIPLEXED) {
-      lsb = RxFrame[SlowDLInfo[i].chnum];
-      if (SlowDLInfo[i].wide)
-        msb = RxFrame[SlowDLInfo[i].chnum + 1];
-      else
-        msb = 0;
-      SlowDLInfo[i].value = (double)((msb << 16) | lsb);
-    } else {
-      lsb = slow_data[SlowDLInfo[i].mindex][SlowDLInfo[i].chnum];
-      if (SlowDLInfo[i].wide)
-        msb = slow_data[SlowDLInfo[i].mindex][SlowDLInfo[i].chnum + 1];
-      else
-        msb = 0;
-      SlowDLInfo[i].value = (double)((msb << 16) | lsb);
-    }
+  for (i = 0; i < SLOWDL_NUM_DATA; i++) {
+    address = GetNiosAddr(SlowDLInfo[i].src);
+    SlowDLInfo[i].wide = address->wide;
+    SlowDLInfo[i].mindex = ExtractBiPhaseAddr(address)->index;
+    SlowDLInfo[i].chnum = ExtractBiPhaseAddr(address)->channel;
+    SlowDLInfo[i].max = (SlowDLInfo[i].calib_max - address->b) * address->m;
+    SlowDLInfo[i].min = (SlowDLInfo[i].calib_min - address->b) * address->m;
   }
 }

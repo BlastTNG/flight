@@ -256,6 +256,29 @@ void mputs(buos_t flag, const char* message) {
   }
 }
 
+void FillSlowDL(unsigned short *RxFrame) {
+  int i;
+  unsigned short msb, lsb;
+
+  for (i = 0, msb = 0; i < SLOWDL_NUM_DATA; i++) {
+    if (SlowDLInfo[i].mindex == NOT_MULTIPLEXED) {
+      lsb = RxFrame[SlowDLInfo[i].chnum];
+      if (SlowDLInfo[i].wide)
+        msb = RxFrame[SlowDLInfo[i].chnum + 1];
+      else
+        msb = 0;
+      SlowDLInfo[i].value = (double)((msb << 16) | lsb);
+    } else {
+      lsb = slow_data[SlowDLInfo[i].mindex][SlowDLInfo[i].chnum];
+      if (SlowDLInfo[i].wide)
+        msb = slow_data[SlowDLInfo[i].mindex][SlowDLInfo[i].chnum + 1];
+      else
+        msb = 0;
+      SlowDLInfo[i].value = (double)((msb << 16) | lsb);
+    }
+  }
+}
+
 void SensorReader(void) {
   int data;
   int nr;
@@ -272,15 +295,14 @@ void SensorReader(void) {
         CommandData.temp1 = data / 10;
       fclose(stream);
     } else
-          berror(warning, "Sensor Reader: Cannot read temp1 from I2C bus");
-
+      berror(warning, "Sensor Reader: Cannot read temp1 from I2C bus");
     if ((stream = fopen("/sys/bus/i2c/devices/0-0290/temp2_input", "r"))
         != NULL) {
       if ((nr = fscanf(stream, "%i\n", &data)) == 1)
         CommandData.temp2 = data / 10;
       fclose(stream);
     } else
-          berror(warning, "Sensor Reader: Cannot read temp2 from I2C bus");
+      berror(warning, "Sensor Reader: Cannot read temp2 from I2C bus");
 
     if ((stream = fopen("/sys/bus/i2c/devices/0-0290/temp3_input", "r"))
         != NULL) {
@@ -632,6 +654,9 @@ int main(int argc, char *argv[]) {
   pthread_mutex_init(&mutex, NULL);
 
   MakeAddressLookups();
+
+  bprintf(info, "Slow Downlink: Initialisation");
+  InitSlowDL();
 
   bprintf(info, "Commands: MCP Command List Version: %s", command_list_serial);
 #ifdef USE_FIFO_CMD

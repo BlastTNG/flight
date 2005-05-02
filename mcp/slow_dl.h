@@ -11,7 +11,7 @@
  *
  */
 
-#define SLOWDL_NUM_DATA     78
+#define SLOWDL_NUM_DATA     131
 
 #define SLOWDL_LEN          255
 
@@ -37,4 +37,4 @@ struct SlowDLStruct {
   long max;
 };
 
-void FillSlowDL(unsigned short *);
+void InitSlowDL(void);
