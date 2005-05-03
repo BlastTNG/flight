@@ -375,9 +375,13 @@ void SingleCommand (enum singleCommand command, int scheduled)
   } else if (command == charcoal_off) {
     CommandData.Cryo.charcoalHeater = 0;
     CommandData.Cryo.fridgeCycle = 0;
-  } else if (command == auto_cycle)
+  } else if (command == auto_cycle) {
     CommandData.Cryo.fridgeCycle = 1;
-  else if (command == coldplate_on)
+    CommandData.Cryo.force_cycle = 0;
+  } else if (command == fridge_cycle) {
+    CommandData.Cryo.fridgeCycle = 1;
+    CommandData.Cryo.force_cycle = 1;
+  } else if (command == coldplate_on)
     CommandData.Cryo.coldPlate = 1;
   else if (command == coldplate_off)
     CommandData.Cryo.coldPlate = 0;
@@ -1641,6 +1645,7 @@ void InitCommandData() {
 
   CommandData.Cryo.JFETHeat = 0;
   CommandData.Cryo.autoJFETheat = 1;
+  CommandData.Cryo.force_cycle = 0;
   CommandData.Cryo.JFETSetOn = 120;
   CommandData.Cryo.JFETSetOff = 135;
 

@@ -184,7 +184,7 @@ int JFETthermostat(void)
       (CommandData.Cryo.JFETSetOff - CommandData.Cryo.JFETSetOn);
 }
 
-void FridgeCycle(int *cryoout, int *cryostate, int  reset)
+void FridgeCycle(int *cryoout, int *cryostate, int  reset, int *force_cycle)
 {
   static int firsttime = 1;
   static struct BiPhaseStruct* t_lhe_Addr;
@@ -216,7 +216,7 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
     return;
   }
 
-  if (reset) {
+  if (reset || force_cycle == NULL) {
    WriteData(cycleStateWAddr, CRYO_CYCLE_OUT_OF_HELIUM, NIOS_QUEUE);
    iterator = 1;
    return;
@@ -256,7 +256,9 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
   } 
 
   if (cycle_state == CRYO_CYCLE_COLD) {
-    if(t_he3fridge < T_HE3FRIDGE_TOO_HOT && t_he4pot > T_HE4POT_SET) {
+    if((t_he3fridge < T_HE3FRIDGE_TOO_HOT && t_he4pot > T_HE4POT_SET)
+        || *force_cycle) {
+      *force_cycle = 0;
       WriteData(cycleStateWAddr, CRYO_CYCLE_ON, NIOS_QUEUE);
       WriteData(cycleStartWAddr, mcp_systime(NULL), NIOS_QUEUE);
       *cryoout |= CRYO_CHARCOAL_ON;
@@ -360,9 +362,9 @@ void CryoControl (void)
   }
 
   if (CommandData.Cryo.fridgeCycle)
-    FridgeCycle(&cryoout3, &cryostate, 0); 
+    FridgeCycle(&cryoout3, &cryostate, 0, &CommandData.Cryo.force_cycle);
   else {
-    FridgeCycle(&cryoout3, &cryostate, 1);
+    FridgeCycle(&cryoout3, &cryostate, 1, NULL);
     if (CommandData.Cryo.charcoalHeater == 0) {
       cryoout3 |= CRYO_CHARCOAL_OFF;
       cryostate &= 0xFFFF - CS_CHARCOAL;

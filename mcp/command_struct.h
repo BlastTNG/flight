@@ -162,6 +162,7 @@ struct CommandDataStruct {
 
     unsigned short charcoalHeater;
     unsigned short fridgeCycle;
+    unsigned short force_cycle;
 
     unsigned short potvalve_open, potvalve_on, potvalve_close;
     unsigned short lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
