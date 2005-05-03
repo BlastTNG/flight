@@ -81,6 +81,8 @@ const char UnknownCommand[] = "Unknown Command";
 
 extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 
+extern int doing_schedule; /* sched.c */
+
 extern pthread_t watchdog_id;  /* mcp.c */
 pthread_mutex_t mutex;
 
@@ -553,9 +555,11 @@ void SingleCommand (enum singleCommand command, int scheduled)
     return; /* invalid command - no write or update */
   }
 
-  if (!scheduled)
+  if (!scheduled) {
+    if (doing_schedule)
+      bprintf(info, "Scheduler: *** Out of schedule file mode ***");
     CommandData.pointing_mode.t = PointingData[i_point].t + CommandData.timeout;
-  else
+  } else
     CommandData.pointing_mode.t = PointingData[i_point].t;
 
   WritePrevStatus();

@@ -39,6 +39,8 @@ void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
 		double *el);
 int pinIsIn();
 
+int doing_schedule = 0;
+
 #define NOMINAL_LATITUDE 67.82 /* degrees North */
 #define LATITUDE_BAND     8.00 /* in degrees of latitude */
 #define LATITUDE_OVERLAP  1.00 /* hysteresis between the bands,
@@ -323,9 +325,9 @@ void DoSched(void) {
   static int last_is = -1;
   static int last_s = -1;
   static int last_l = -1;
-  static int doing_schedule = 0;
   int i_sched, i_point;
   int i_dgps;
+  int i, index;
   struct ScheduleType *S = &_S[CommandData.sucks][CommandData.lat_range];
   struct ScheduleEvent event;
 
@@ -410,24 +412,13 @@ void DoSched(void) {
       return;
     }
 
-  if (!doing_schedule) {
-    bputs(info, "Scheduler: *** Entering schedule file mode.  ***\n"
-        "Scheduler: *** Running initial schedule controls.  ***\n");
-    /* bias fixed */
-    event.command = fixed;
-    event.is_multi = 0;
-    ScheduledCommand(&event);
-    bputs(info, "Scheduler: *** Initial schedule controls complete.  ***\n");
-  }
-  doing_schedule = 1;
-
   /*************************************************************/
   /** find local comoving siderial date (in siderial seconds) **/
   dt = (PointingData[i_point].t - S->t0) * 1.002737909; /*Ref Siderial Time */
   d_lon = PointingData[i_point].lon;
-  while (d_lon < 0)
+  while (d_lon < -180)
     d_lon += 360.0;
-  while (d_lon >= 360.0)
+  while (d_lon >= 180.0)
     d_lon -= 360.0;
   dt -= ((d_lon) * 3600.00 * 24.00 / 360.0); /* add longitude correction */
 
@@ -441,10 +432,52 @@ void DoSched(void) {
   while ((i_sched > 0) && (dt < S->event[i_sched].t))
     i_sched--;
 
+  /******************************/
+  /** Execute initial controls **/
+  if (!doing_schedule) {
+    bputs(info, "Scheduler: *** Entering schedule file mode.  ***\n"
+        "Scheduler: *** Running initial schedule controls.  ***\n");
+    /* bias fixed */
+    event.command = fixed;
+    event.is_multi = 0;
+    ScheduledCommand(&event);
+
+    bputs(info, "Scheduler: *** Searching for current pointing mode. ***\n");
+
+    /* find last pointing command */
+    for (i = i_sched; i >= 0; --i)
+      if (S->event[i].is_multi) {
+        index = MIndex(S->event[i].command);
+        if (mcommands[index].group & GR_POINT)
+          break;
+      } else {
+        index = SIndex(S->event[i].command);
+        if (scommands[index].group & GR_POINT)
+          break;
+      }
+
+    if (i == -1) {
+      bputs(warning,
+          "Scheduler: *** No previous pointing mode, turning antisolar. ***\n");
+      event.command = antisun;
+      event.is_multi = 0;
+      ScheduledCommand(&event);
+    } else if (i == i_sched) {
+      bputs(info, "Scheduler: *** Pointing mode change imminent. ***\n");
+    } else {
+      bprintf(info,
+          "Scheduler: *** Recovering scheduled pointing mode (event %i). ***\n",
+          i);
+      ScheduledCommand(&S->event[i]);
+    }
+  }
+  doing_schedule = 1;
+
   /*******************************/
   /** Execute scheduled command **/
   dt /= 3600;
   if (i_sched != last_is) {
+    bprintf(info, "time: %li ref: %li dt: %f lon: %f\n", PointingData[i_point].t, S->t0, dt, d_lon);
     bprintf(info, "Scheduler: Submitting event %i from %s to command "
         "subsystem (LST = %i/%f)", i_sched,
         filename[CommandData.sucks][CommandData.lat_range], (int)(dt / 24), 

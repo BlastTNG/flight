@@ -208,9 +208,12 @@ struct CommandDataStruct {
   unsigned short bbcFifoSize;
 
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
+  double lat;
+  double lon;
 
   /* Integrating Star Camera Stuff */
   struct ISCStatusStruct ISCState[2];
+
   struct {
     int pulse_width;
     int fast_pulse_width;
@@ -238,5 +241,7 @@ struct ScheduleType {
 int bc_setserial(char *input_tty);
 void InitCommandData();
 double LockPosition(double);
+int SIndex(enum singleCommand);
+int MIndex(enum multiCommand);
 
 extern struct CommandDataStruct CommandData;

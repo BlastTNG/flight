@@ -862,6 +862,11 @@ void Pointing()
     // the first t about to be read needs to be set
     PointingData[GETREADINDEX(point_index)].t = mcp_systime(NULL); // CPU time
     
+    /* Load lat/lon from disk */
+    PointingData[0].lon = PointingData[1].lon = PointingData[2].lon
+      = CommandData.lon;
+    PointingData[0].lat = PointingData[1].lat = PointingData[2].lat
+      = CommandData.lat;
   }
 
   if (elClinLut.n == 0)
@@ -909,6 +914,10 @@ void Pointing()
       PointingData[point_index].lon = -SIPData.GPSpos.lon;
     }
   }
+
+  /* Save lat/lon */
+  CommandData.lat = PointingData[point_index].lat;
+  CommandData.lon = PointingData[point_index].lon;
 
   /*****************************/
   /** set time related things **/
