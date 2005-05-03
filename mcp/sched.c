@@ -441,6 +441,9 @@ void DoSched(void) {
     event.command = fixed;
     event.is_multi = 0;
     ScheduledCommand(&event);
+    /* fridge autocycle on */
+    event.command = auto_cycle;
+    ScheduledCommand(&event);
 
     bputs(info, "Scheduler: *** Searching for current pointing mode. ***\n");
 
