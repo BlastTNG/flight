@@ -375,7 +375,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
   } else if (command == charcoal_off) {
     CommandData.Cryo.charcoalHeater = 0;
     CommandData.Cryo.fridgeCycle = 0;
-  } else if (command == fridge_cycle)
+  } else if (command == auto_cycle)
     CommandData.Cryo.fridgeCycle = 1;
   else if (command == coldplate_on)
     CommandData.Cryo.coldPlate = 1;

@@ -82,7 +82,7 @@ enum singleCommand {
   mcc_halt,         isc_reboot,         isc_cam_cycle,    osc_run,
   osc_shutdown,     osc_reboot,         osc_cam_cycle,    osc_pause,
   osc_abort,        osc_reconnect,      osc_save_images,  osc_discard_images,
-  osc_full_screen,  force_el_on,        auto_jfetheat,    fridge_cycle,
+  osc_full_screen,  force_el_on,        auto_jfetheat,    auto_cycle,
   analogue_gyros,   digital_gyros,      gps_off,          gps_on,
   gyro_off,         gyro_on,            isc_off,          isc_on,
   osc_off,          osc_on,             isc_trig_int,     isc_trig_ext,

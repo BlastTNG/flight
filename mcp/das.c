@@ -191,10 +191,10 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
   static struct BiPhaseStruct* t_he3fridge_Addr;
   static struct BiPhaseStruct* t_charcoal_Addr;
   static struct BiPhaseStruct* t_he4pot_Addr;
-  static struct NiosStruct*    cycle_start_W_Addr;
-  static struct BiPhaseStruct* cycle_start_R_Addr;
-  static struct NiosStruct*    cycle_state_W_Addr;
-  static struct BiPhaseStruct* cycle_state_R_Addr;
+  static struct NiosStruct*    cycleStartWAddr;
+  static struct BiPhaseStruct* cycleStartRAddr;
+  static struct NiosStruct*    cycleStateWAddr;
+  static struct BiPhaseStruct* cycleStateRAddr;
 
   double t_lhe, t_he3fridge, t_charcoal, t_he4pot;
 
@@ -208,16 +208,16 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
     t_he3fridge_Addr = GetBiPhaseAddr("t_he3fridge");
     t_charcoal_Addr = GetBiPhaseAddr("t_charcoal");
     t_he4pot_Addr = GetBiPhaseAddr("t_he4pot");
-    cycle_start_W_Addr = GetNiosAddr("cycle_start");
-    cycle_start_R_Addr = ExtractBiPhaseAddr(cycle_start_W_Addr);
-    cycle_state_W_Addr = GetNiosAddr("cycle_state");
-    cycle_state_R_Addr = ExtractBiPhaseAddr(cycle_state_W_Addr);
-    WriteData(cycle_state_W_Addr, CRYO_CYCLE_OUT_OF_HELIUM, NIOS_QUEUE);
+    cycleStartWAddr = GetNiosAddr("cycle_start");
+    cycleStartRAddr = ExtractBiPhaseAddr(cycleStartWAddr);
+    cycleStateWAddr = GetNiosAddr("cycle_state");
+    cycleStateRAddr = ExtractBiPhaseAddr(cycleStateWAddr);
+    WriteData(cycleStateWAddr, CRYO_CYCLE_OUT_OF_HELIUM, NIOS_QUEUE);
     return;
   }
 
   if (reset) {
-   WriteData(cycle_state_W_Addr, CRYO_CYCLE_OUT_OF_HELIUM, NIOS_QUEUE);
+   WriteData(cycleStateWAddr, CRYO_CYCLE_OUT_OF_HELIUM, NIOS_QUEUE);
    iterator = 1;
    return;
   }
@@ -225,20 +225,19 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
   if(iterator++ % 10)  /* Run this loop at 0.5 Hz */
     return;
 
-  start_time
-    = slow_data[cycle_start_R_Addr->index][cycle_start_R_Addr->channel];
+  start_time = slow_data[cycleStartRAddr->index][cycleStartRAddr->channel];
   start_time |=
-    (unsigned long)slow_data[cycle_start_R_Addr->index][cycle_start_R_Addr->channel+1] << 16;
-  cycle_state
-    = slow_data[cycle_state_R_Addr->index][cycle_state_R_Addr->channel];
+    (unsigned long)slow_data[cycleStartRAddr->index][cycleStartRAddr->channel
+    + 1] << 16;
+  cycle_state = slow_data[cycleStateRAddr->index][cycleStateRAddr->channel];
 
   t_lhe = (double)slow_data[t_lhe_Addr->index][t_lhe_Addr->channel];
   t_charcoal
     = (double)slow_data[t_charcoal_Addr->index][t_charcoal_Addr->channel];
   t_he3fridge
     = (double)(slow_data[t_he3fridge_Addr->index][t_he3fridge_Addr->channel] +
-		    ((unsigned long)slow_data[t_he3fridge_Addr->index]
-         [t_he3fridge_Addr->channel + 1] << 16));
+		    ((unsigned long)slow_data[t_he3fridge_Addr->index][1 +
+         t_he3fridge_Addr->channel] << 16));
   t_he4pot
     = (double)(slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel] +
         ((unsigned long)slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel
@@ -252,14 +251,14 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
   if (t_lhe < T_LHE_SET) {
     *cryoout |= CRYO_CHARCOAL_OFF;
     *cryostate &= ~CS_CHARCOAL;
-    WriteData(cycle_state_W_Addr, CRYO_CYCLE_OUT_OF_HELIUM, NIOS_QUEUE);
+    WriteData(cycleStateWAddr, CRYO_CYCLE_OUT_OF_HELIUM, NIOS_QUEUE);
     return;
   } 
 
   if (cycle_state == CRYO_CYCLE_COLD) {
     if(t_he3fridge < T_HE3FRIDGE_TOO_HOT && t_he4pot > T_HE4POT_SET) {
-      WriteData(cycle_state_W_Addr, CRYO_CYCLE_ON, NIOS_QUEUE);
-      WriteData(cycle_start_W_Addr, mcp_systime(NULL), NIOS_QUEUE);
+      WriteData(cycleStateWAddr, CRYO_CYCLE_ON, NIOS_QUEUE);
+      WriteData(cycleStartWAddr, mcp_systime(NULL), NIOS_QUEUE);
       *cryoout |= CRYO_CHARCOAL_ON;
       *cryostate |= CS_CHARCOAL;
       bprintf(info, "Auto Cycle: Turning charcoal heat on.");
@@ -271,7 +270,7 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
     if (((mcp_systime(NULL) - start_time) > CRYO_CYCLE_TIMEOUT) ||
         t_charcoal < T_CHARCOAL_SET ||
         t_he4pot < T_HE4POT_SET) {
-      WriteData(cycle_state_W_Addr, CRYO_CYCLE_COOL, NIOS_QUEUE);
+      WriteData(cycleStateWAddr, CRYO_CYCLE_COOL, NIOS_QUEUE);
       *cryoout |= CRYO_CHARCOAL_OFF;
       *cryostate &= ~CS_CHARCOAL;
       bprintf(info, "Auto Cycle: Turning charcoal heat off.");
@@ -282,7 +281,7 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
   } else if ( cycle_state == CRYO_CYCLE_COOL) {
     if ((t_he3fridge > T_HE3FRIDGE_COLD)
         || ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_COOL_TIMEOUT) ) {
-      WriteData(cycle_state_W_Addr, CRYO_CYCLE_COLD, NIOS_QUEUE);
+      WriteData(cycleStateWAddr, CRYO_CYCLE_COLD, NIOS_QUEUE);
       *cryoout |= CRYO_CHARCOAL_OFF;
       *cryostate &= ~CS_CHARCOAL;
       bprintf(info, "Auto Cycle: Fridge is now cold!.");
@@ -291,7 +290,7 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset)
     *cryoout |= CRYO_CHARCOAL_OFF;
     *cryostate &= ~CS_CHARCOAL;
   } else if (cycle_state == CRYO_CYCLE_OUT_OF_HELIUM) {
-    WriteData(cycle_state_W_Addr, CRYO_CYCLE_COLD, NIOS_QUEUE);
+    WriteData(cycleStateWAddr, CRYO_CYCLE_COLD, NIOS_QUEUE);
     *cryoout |= CRYO_CHARCOAL_OFF;
     *cryostate &= ~CS_CHARCOAL;
     bprintf(info, "Auto Cycle: Everything A-OK.");
