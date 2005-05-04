@@ -73,8 +73,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"t_horn_500",   'r',  CRYO, 42,    ROX_C2V,   ROX_OFFSET, 'U'},
   {"t_he4pot",     'r',  CRYO, 44,    ROX_C2V,   ROX_OFFSET, 'U'},
   {"t_optbox_filt",'r',  CRYO, 46,    ROX_C2V,   ROX_OFFSET, 'U'},
-  
-  
+ 
   END_OF_CHANNELS
 };
 

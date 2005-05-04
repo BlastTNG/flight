@@ -184,7 +184,8 @@ int JFETthermostat(void)
       (CommandData.Cryo.JFETSetOff - CommandData.Cryo.JFETSetOn);
 }
 
-void FridgeCycle(int *cryoout, int *cryostate, int  reset, int *force_cycle)
+void FridgeCycle(int *cryoout, int *cryostate, int  reset,
+    unsigned short *force_cycle)
 {
   static int firsttime = 1;
   static struct BiPhaseStruct* t_lhe_Addr;

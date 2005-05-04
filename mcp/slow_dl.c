@@ -28,6 +28,20 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"lat",           SLOWDL_FORCE_INT, 8, 0, 90}, /* 0.35 deg */
   {"lon",           SLOWDL_FORCE_INT, 8, 0, 360}, /* 1.41 deg */
   {"sip_alt",       SLOWDL_FORCE_INT, 8, 0, 40000}, /* 157 m */
+  {"cpu_temp1",     SLOWDL_FORCE_INT, 8, 0, 75}, /* 0.29 deg */
+  {"disk_free",     SLOWDL_FORCE_INT, 8, 0, 200},
+  /* POINTING */
+  {"sensor_veto",   SLOWDL_U_MASK, 8},
+  {"lat",           SLOWDL_FORCE_INT, 8, 0, 90},
+  {"lon",           SLOWDL_FORCE_INT, 8, 0, 360},
+  {"p_h",           SLOWDL_FORCE_INT, 8, 0, 24},
+  {"p_mode",        SLOWDL_U_MASK, 4},
+  {"p_x_deg",       SLOWDL_FORCE_INT, 8, 0, 360},
+  {"p_vaz",         SLOWDL_FORCE_INT, 8, 0, 10},
+  {"p_del",         SLOWDL_FORCE_INT, 8, 0, 10},
+  {"p_w",           SLOWDL_FORCE_INT, 8, 0, 360},
+  {"ra",            SLOWDL_FORCE_INT, 8, 0, 24},
+  {"dec",           SLOWDL_FORCE_INT, 8, 0, 360},
   /* MOTORS */
   {"t_el_mc",       SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
   {"t_el_mot",      SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
@@ -59,10 +73,53 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"balpump_lev",   SLOWDL_FORCE_INT, 8,  0, 100}, /* 0.39 */
   {"inpump_lev",    SLOWDL_FORCE_INT, 8,  0, 100}, /* 0.39 */
   {"outpump_lev",   SLOWDL_FORCE_INT, 8,  0, 100}, /* 0.39 */
-  /* STAR CAMERAS */
+  {"bal_veto",      SLOWDL_FORCE_INT, 8,  0, 1000},
+  /* MAGNETOMETER */
+  {"mag_model",     SLOWDL_FORCE_INT, 8,  0, 360},
+  {"mag_az",        SLOWDL_FORCE_INT, 8,  0, 360},
+  /* DGPS */
+  {"dgps_pitch",    SLOWDL_FORCE_INT, 8, -10, 10},
+  {"dgps_roll",     SLOWDL_FORCE_INT, 8, -10, 10},
+  {"dgps_alt",      SLOWDL_FORCE_INT, 8,   0, 40000}, /* 157 m */
+  {"dgps_att_ok",   SLOWDL_U_MASK, 1},
+  {"dgps_n_sat",    SLOWDL_U_MASK, 4},
+  {"dgps_az",       SLOWDL_FORCE_INT, 8, 0, 360},
+  /* POWER */
+  {"apcu_reg",     SLOWDL_FORCE_INT,  8, 20, 32},
+  {"dpcu_reg",     SLOWDL_FORCE_INT,  8, 20, 32},
+  /* ELEVATION ENCODER */
+  {"enc_el",        SLOWDL_FORCE_INT, 8, 0, 90},
+  /* PUMPS */
+  {"outcool_state", SLOWDL_U_MASK, 4},
+  {"incool_state",  SLOWDL_U_MASK, 4},
+  /* ISC */
   {"i_starcam",     SLOWDL_FORCE_INT, 8,   0,  5}, /* 20 mA */
+  {"isc_fpulse",    SLOWDL_FORCE_INT, 8,   0, 1000},
+  {"isc_spulse",    SLOWDL_FORCE_INT, 8,   0, 1000},
+  {"isc_framenum",  SLOWDL_U_MASK,    8},
+  {"isc_mapmean",   SLOWDL_FORCE_INT, 8,   0, 16383},
+  {"isc_state",     SLOWDL_U_MASK,    8},
+  {"isc_nblobs",    SLOWDL_U_MASK,    4},
+  {"isc_az",        SLOWDL_FORCE_INT, 8,   0, 360},
+  {"isc_el",        SLOWDL_FORCE_INT, 8,   0, 90},
+  {"t_isc_flange",  SLOWDL_FORCE_INT, 8, -10, 55},
+  {"isc_pressure1", SLOWDL_FORCE_INT, 8, 0, 20},
+  /* OSC */
+  {"osc_fpulse",    SLOWDL_FORCE_INT, 8,   0, 1000},
+  {"osc_spulse",    SLOWDL_FORCE_INT, 8,   0, 1000},
+  {"osc_framenum",  SLOWDL_U_MASK,    8},
+  {"osc_mapmean",   SLOWDL_FORCE_INT, 8,   0, 4095},
+  {"osc_state",     SLOWDL_U_MASK,    8},
+  {"osc_nblobs",    SLOWDL_U_MASK,    4},
+  {"osc_az",        SLOWDL_FORCE_INT, 8,   0, 360},
+  {"osc_el",        SLOWDL_FORCE_INT, 8,   0, 90},
+  {"t_osc_flange",  SLOWDL_FORCE_INT, 8, -10, 55},
+  {"osc_pressure1", SLOWDL_FORCE_INT, 8, 0, 20},
   /* SUN SENSOR */
   {"i_sun",         SLOWDL_FORCE_INT, 8,   0,  5}, /* 20 mA */
+  {"sun_az",        SLOWDL_FORCE_INT, 8,   0, 360},
+  {"ss_az",         SLOWDL_FORCE_INT, 8,   0, 360},
+  {"ss_pc_temp",    SLOWDL_FORCE_INT, 8,   0, 127},
   /* CINOMETERS */
   {"roll_clin_piv", SLOWDL_FORCE_INT, 8, -10, 10}, /* 4.68 arcmin */
   {"pch_clin_piv",  SLOWDL_FORCE_INT, 8, -10, 10}, /* 4.68 arcmin */
@@ -134,6 +191,9 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"t_das",         SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
   /* BIAS */
   {"biasin",        SLOWDL_U_MASK, 8},
+  {"bias_lev1",     SLOWDL_U_MASK, 8},
+  {"bias_lev2",     SLOWDL_U_MASK, 8},
+  {"bias_lev3",     SLOWDL_U_MASK, 8},
   /* GYROS */
   {"t_gyro1",       SLOWDL_FORCE_INT, 8, 10,  50}, /* 0.16 deg */
   {"t_gyro2",       SLOWDL_FORCE_INT, 8, 10,  50}, /* 0.16 deg */
@@ -142,7 +202,8 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"i_gybox",       SLOWDL_FORCE_INT, 8, -10, 10}, /* 78 mA */
   /* CRYO SENSORS */
   {"he4_lev",       SLOWDL_FORCE_INT, 8,   0, 10}, /* 0.039 */
-  {"cryoin",        SLOWDL_U_MASK,    8},
+  {"cryoin",        SLOWDL_U_MASK,    6},
+  {"cryostate",     SLOWDL_U_MASK,    10},
   /* CRYO DIODES */
   {"t_lhe",         SLOWDL_FORCE_INT, 8, 8.98, 10}, /* 0-6 deg / 0.020 deg */
   {"t_lhe_filt",    SLOWDL_FORCE_INT, 8, 8.98, 10}, /* 0-6 deg / 0.020 deg */
@@ -166,6 +227,8 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"t_300mk_strap", SLOWDL_FORCE_INT, 8, 1.25, 5.5},
   {"t_he4pot",      SLOWDL_FORCE_INT, 8,    1, 2.5},
   {"t_optbox_filt", SLOWDL_FORCE_INT, 8,    1, 2.5},
+  /* LOCK MOTOR */
+  {"lokmot_pin",    SLOWDL_U_MASK,    1},
 };
 
 void InitSlowDL(void) {
