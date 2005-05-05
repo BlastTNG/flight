@@ -1081,17 +1081,16 @@ void SendDownData(char tty_fd) {
       case SLOWDL_FORCE_INT:
         /* Round value to an integer and try to fit it in numbits */
 
-        numbits = SlowDLInfo[i].numbits;
+        numbits = SlowDLInfo[i].numbits; 
+        slowM = (double)((1 << (numbits - 1)) - 1) / 
+          (SlowDLInfo[i].max - SlowDLInfo[i].min); 
+        slowB = - slowM * (double)SlowDLInfo[i].min;
         if ((int)SlowDLInfo[i].value > SlowDLInfo[i].max)
-          temp = 0;     /* Indicates value was too big */
+          temp = (int)(slowM * SlowDLInfo[i].max + slowB);
         else if ((int)SlowDLInfo[i].value < SlowDLInfo[i].min)
-          temp = 1;     /* Indicates value was too small */
-        else {
-          slowM = (double)((1 << (numbits - 1)) - 1 - 2.0) /
-            (SlowDLInfo[i].max - SlowDLInfo[i].min);
-          slowB = 2.0 - slowM * (double)SlowDLInfo[i].min;
+          temp = 0;
+        else
           temp = (int)(slowM * SlowDLInfo[i].value + slowB);
-        }
         break;
 
       case SLOWDL_U_MASK:
