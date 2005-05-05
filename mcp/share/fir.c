@@ -10,8 +10,9 @@ void initFir(struct FirStruct *fs, int ns) {
   double x, sw = 0.0;
 
   for (i=0; i<NSTAGE; i++) {
-    fs->sum[NSTAGE] = 0;
+    fs->sum[i] = 0;
     fs->i_w[i] = i*ns/NSTAGE;
+    bprintf(info, "%d %d\n", i, fs->i_w[i]);
   }
     
   fs->out = 0;
@@ -36,9 +37,9 @@ double filter(double x, struct FirStruct *fs) {
 
   for (i_stage = 0; i_stage<NSTAGE; i_stage++) {
     i = fs->i_w[i_stage];
-  
+      
     fs->sum[i_stage] += fs->w[i]*x;
-
+      
     i++;
     if (i>=fs->ns) {
       fs->out = fs->sum[i_stage];

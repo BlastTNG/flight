@@ -482,7 +482,6 @@ void EvolveElSolution(struct ElSolutionStruct *s,
   double w1, w2;
   double new_offset = 0;
 
-  //bprintf(info, "%g %g %g %g\n", gyro, gy_off, s->angle, s->varience);
   s->angle += (gyro + gy_off) / SR;
   s->varience += GYRO_VAR;
 
@@ -897,7 +896,6 @@ void Pointing()
   /** Record history for gyro offsets **/
   RecordHistory(i_point_read);
 
-  // xxxxxxxxxxxxxxxxxxxx
   PointingData[point_index].t = mcp_systime(NULL); // CPU time
 
   /************************************************/
@@ -918,7 +916,7 @@ void Pointing()
   /* Save lat/lon */
   CommandData.lat = PointingData[point_index].lat;
   CommandData.lon = PointingData[point_index].lon;
-
+  
   /*****************************/
   /** set time related things **/
   PointingData[point_index].mcp_frame = ACSData.mcp_frame;
@@ -1021,6 +1019,8 @@ void Pointing()
   if (CommandData.fast_gy_offset>0) {
     CommandData.fast_gy_offset--;
   }
+
+  //bprintf(info, "off: %g %g %g %g\n", EncEl.angle, ClinEl.angle, EncEl.gy_offset, ClinEl.gy_offset);
   
   AddAzSolution(&AzAtt, &NullAz, 1);
   /** add az solutions **/
