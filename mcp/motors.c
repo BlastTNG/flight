@@ -1108,11 +1108,9 @@ void DoQuadMode() { // aka radbox
   }
 
   if (targ_el<0) {
-    bprintf(info, "bot: %g\n", targ_el);
     targ_el = 0;
   }
   if (targ_el>top-bottom) {
-    bprintf(info, "top: %g %g\n", targ_el, top-bottom);
     targ_el = top-bottom;
   }
 
@@ -1147,8 +1145,6 @@ void DoQuadMode() { // aka radbox
   }
 
   if (new_step) {
-    bprintf(info, "new step: %g %g %g %g %g ", bottom, top, del_dt,
-	    CommandData.pointing_mode.del, targ_el);
     // set v for this step
     v_el = (targ_el+bottom - el)/t;
     // set targ_el for the next step
@@ -1160,7 +1156,6 @@ void DoQuadMode() { // aka radbox
       targ_el = 0;
       el_dir = 1;
     }
-    bprintf(info, "%g\n", targ_el);
   }
   
   axes_mode.el_mode = AXIS_VEL;

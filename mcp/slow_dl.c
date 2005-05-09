@@ -168,15 +168,15 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"t_acs",         SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
   {"t_pv_ext",      SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
   /* IF GONDOLA THERMOMETRY */
-  {"t_if01",        SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
-  {"t_if02",        SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
-  {"t_if03",        SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
-  {"t_if04",        SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
-  {"t_if05",        SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
-  {"t_if06",        SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
-  {"t_if07",        SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
-  {"t_if08",        SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
-  {"t_if09",        SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
+  {"t_sc_baf",      SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
+  {"t_scoop",       SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
+  {"t_prim",        SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
+  {"t_cryo",        SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
+  {"t_cryo_valve",  SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
+  {"t_bal_bot",     SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
+  {"t_if_tpb",        SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
+  {"t_if_tss",        SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
+  {"t_triangle",        SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
   {"t_rec",         SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
   {"t_in_heatx",    SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
   /* DAS */
