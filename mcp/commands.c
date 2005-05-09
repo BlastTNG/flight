@@ -1463,7 +1463,7 @@ void WatchPort (void* parameter) {
 /*                                                          */
 /************************************************************/
 void InitCommandData() {
-  int fp, n_read = 0, junk, extra = 0;
+  int fp, n_read = 0, junk, extra = 0, i;
 
   if ((fp = open("/tmp/mcp.prev_status", O_RDONLY)) < 0) {
     berror(err, "Commands: Unable to open prev_status file for reading");
@@ -1479,7 +1479,8 @@ void InitCommandData() {
   /** this overrides prev_status **/
   CommandData.force_el = 0;
 
-  CommandData.pumps.bal_veto = BAL_VETO_MAX;
+  if (CommandData.pumps.bal_veto != -1)
+    CommandData.pumps.bal_veto = BAL_VETO_MAX;
   CommandData.pumps.bal1_on = 0;
   CommandData.pumps.bal1_reverse = 0;
   CommandData.pumps.bal2_on = 0;
@@ -1494,9 +1495,6 @@ void InitCommandData() {
   CommandData.pumps.outframe_cool1_off = 0;
   CommandData.pumps.outframe_cool2_on = 0;
   CommandData.pumps.outframe_cool2_off = 0;
-
-  CommandData.pumps.pwm3 = 1638; /* inner frame cooling default --  20% */
-  CommandData.pumps.pwm4 = 1638; /* outer frame cooling default --  20% */
 
   CommandData.Bias.SetLevel1 = 0;
   CommandData.Bias.SetLevel2 = 0;
@@ -1530,6 +1528,7 @@ void InitCommandData() {
   CommandData.Cryo.lvalve_close = 0;
   CommandData.Cryo.lnvalve_on = 0;
 
+  /* unused */
   CommandData.fast_gy_offset = 0;
   
   /** return if we succsesfully read the previous status **/
@@ -1617,6 +1616,9 @@ void InitCommandData() {
   SIPData.MKScal.b_lo = 0;
 
   CommandData.autogyro = 1;
+
+  CommandData.pumps.pwm3 = 1638; /* inner frame cooling default --  20% */
+  CommandData.pumps.pwm4 = 1638; /* outer frame cooling default --  20% */
 
   CommandData.pumps.bal_on = 0.5 * 1648.;
   CommandData.pumps.bal_off = 0.2 * 1648.;
@@ -1707,6 +1709,9 @@ void InitCommandData() {
   CommandData.ISCControl[1].save_period = 6000; /* 60 sec */
   CommandData.ISCControl[1].pulse_width = 50; /* 500.00 msec */
   CommandData.ISCControl[1].fast_pulse_width = 5; /* 50.00 msec */
+
+  for (i = 0; i < DAS_CARDS; ++i)
+    CommandData.Phase[i] = 0;
 
   WritePrevStatus();
 }

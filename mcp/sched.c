@@ -402,11 +402,13 @@ void DoSched(void) {
       /* point antisolar */
       event.command = antisun;
       ScheduledCommand(&event);
-      // out of sched mode for a while
-      event.command = timeout;
-      event.is_multi = 1;
-      event.ivalues[0] = 600;
+      /* pot_valve_open */
+      event.command = pot_valve_open;
       ScheduledCommand(&event);
+      event.command = pot_valve_on;
+      ScheduledCommand(&event);
+      // out of sched mode for a while
+      CommandData.pointing_mode.t = t + 30;
       doing_schedule = 0;
       bputs(info, "Scheduler: *** Initial float commands complete. ***\n");
       return;
@@ -440,9 +442,6 @@ void DoSched(void) {
     /* bias fixed */
     event.command = fixed;
     event.is_multi = 0;
-    ScheduledCommand(&event);
-    /* fridge autocycle on */
-    event.command = auto_cycle;
     ScheduledCommand(&event);
 
     bputs(info, "Scheduler: *** Searching for current pointing mode. ***\n");
