@@ -112,7 +112,7 @@ if test "$INSTALL_BLASTCMD_REMOTE" = "yes"; then
   AC_MSG_RESULT([$REMOTE_COMMAND])
   AC_SUBST(REMOTE_COMMAND)
 
-  AC_OUTPUT(blastcmd-remote)
+  AC_CONFIG_FILES(blastcmd-remote)
 fi
 
 dnl Set Up blastcmd
@@ -132,4 +132,5 @@ else
 fi
 AM_CONDITIONAL(INSTALL_BLASTCMD_LOG, test "$HAVE_BLASTCMD_LOG" = "no")
 
-AC_OUTPUT(Makefile)
+AC_CONFIG_FILES(Makefile)
+AC_OUTPUT
