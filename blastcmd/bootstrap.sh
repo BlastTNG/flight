@@ -6,6 +6,9 @@ set -x
 
 if autoconf --version | grep -q 2.13; then
   sed s/AC_INIT\(.*\)/AC_INIT/ configure.ac > configure.in &&
+  if [ -e configure.legacy ]; then
+    cat configure.legacy | patch -p0 --verbose
+  fi &&
   mv configure.ac configure.old &&
   aclocal &&
   autoheader &&
