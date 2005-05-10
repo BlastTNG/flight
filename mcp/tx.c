@@ -183,7 +183,7 @@ void SyncADC (void) {
 
     for (k = 0; k < NUM_SYNC; ++k) {
       doingSync[k] = 0;
-      serial[k] = 29000;
+      serial[k] = 0xeb90;
       sprintf(buffer, "sync%02i", k);
       syncAddr[k] = GetNiosAddr(buffer);
       sprintf(buffer, "status%02i", k);
@@ -208,10 +208,10 @@ void SyncADC (void) {
 
     /* update the serial if we got a good response last time */
     if ((k & 0xfffc) == serial[m]) {
-      if (serial[m] > 30000)
-        serial[m] = 4;
+      if (serial[m] == 0xeb90)
+        serial[m] = (~0xeb90) & 0xfffc;
       else 
-        serial[m] += 4;
+        serial[m] = 0xeb90;
     }
 
     RawNiosWrite(syncAddr[m]->niosAddr, BBC_WRITE | BBC_NODE(l) | BBC_CH(56)
