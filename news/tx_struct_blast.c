@@ -277,7 +277,7 @@ struct ChannelStruct SlowChannels[] = {
   {"cal_repeat",   'w', LOOP1, 18,                .20,             0.0, 'u'},
   {"alice_file",   'w', LOOP1, 19,                1.0,             0.0, 'u'},
   {"timeout",      'w', LOOP1, 20,                1.0,             0.0, 'u'},
-  {"sun_az",       'w', LOOP1, 21,              I2DEG,             0.0, 'u'},
+  {"sun_az",       'w', LOOP1, 21,              I2DEG,             0.0, 's'},
   {"ss_prin",      'w', LOOP1, 22,                1.0,             0.0, 'u'},
   {"sam_i_am",     'w', LOOP1, 23,                1.0,             0.0, 'u'},
   {"cryostate",    'w', LOOP1, 24,                1.0,             0.0, 'u'},
