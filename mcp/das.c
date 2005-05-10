@@ -80,7 +80,7 @@
 #define CS_AUTO_JFET      0x0200
 
 /* The length of time to wait between successive auto-bias level sets */
-#define B_AMP_TIMEOUT    180000 /* = 30 minues in 100Hz Frames */
+#define B_AMP_TIMEOUT      6000 /* = 60 seconds in 100Hz Frames */
 /* The length of time to wait after starting up before auto-bias level check */
 #define B_AMP_STARTUP      3000 /* = 30 seconds in 100Hz Frames */
 
@@ -455,7 +455,6 @@ void CryoControl (void)
 }
 
 void ForceBiasCheck(void) {
-  bprintf(info, "Bias Control: Forcing Bias Level Check.");
   bias_amp1_timeout = bias_amp2_timeout = bias_amp3_timeout = 10;
 }
 
