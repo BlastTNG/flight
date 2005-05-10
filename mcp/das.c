@@ -84,6 +84,10 @@
 /* The length of time to wait after starting up before auto-bias level check */
 #define B_AMP_STARTUP      3000 /* = 30 seconds in 100Hz Frames */
 
+int bias_amp1_timeout = B_AMP_STARTUP;
+int bias_amp2_timeout = B_AMP_STARTUP;
+int bias_amp3_timeout = B_AMP_STARTUP;
+
 void WritePrevStatus();
 
 /************************************************************************/
@@ -450,6 +454,11 @@ void CryoControl (void)
   WriteData(cryoctrlAddr, cryoctrl, NIOS_FLUSH);
 }
 
+void ForceBiasCheck(void) {
+  bprintf(info, "Bias Control: Forcing Bias Level Check.");
+  bias_amp1_timeout = bias_amp2_timeout = bias_amp3_timeout = 10;
+}
+
 /************************************************************************/
 /*                                                                      */
 /*   BiasControl: Digital IO with the Bias Generator Card               */
@@ -463,9 +472,6 @@ void BiasControl (unsigned short* RxFrame) {
   static struct NiosStruct* biasLev1Addr;
   static struct NiosStruct* biasLev2Addr;
   static struct NiosStruct* biasLev3Addr;
-  static int amp1_timeout = B_AMP_STARTUP;
-  static int amp2_timeout = B_AMP_STARTUP;
-  static int amp3_timeout = B_AMP_STARTUP;
   unsigned short bias_status, biasout1 = 0;
   static unsigned short biasout2 = 0x70,
                         biaslsbs1=0; /* biaslsbs1 holds 2 lsbs for bias */
@@ -519,6 +525,7 @@ void BiasControl (unsigned short* RxFrame) {
   if (isBiasRamp) { /* Bias is currently external Ramp */
     if (CommandData.Bias.biasRamp == 0) { /* it should be internal/fixed */
       biasout1 |= 0x40;
+      ForceBiasCheck();
       /*      bprintf(info, "Bias Control: to fixed\n"); */
     }
   } else { /* Bias is currently internal (fixed) */
@@ -549,22 +556,22 @@ void BiasControl (unsigned short* RxFrame) {
   /************* Check Bias Level ReadBack *******/
   if (CommandData.Bias.biasRamp == 0) { /* Not when ramping */
     if (hold <= 0) { /* Don't check if we're already sending a level */
-      if (amp1_timeout > 0)
-        amp1_timeout--;
+      if (bias_amp1_timeout > 0)
+        bias_amp1_timeout--;
       else if (fabs(amp1 - CommandData.Bias.bias1) > 3) {
         bprintf(warning, "Bias Control: Auto Set Level #1 to %i (saw %i)\n",
             CommandData.Bias.bias1, amp1);
         CommandData.Bias.SetLevel1 = 1;
       }
-      if (amp2_timeout > 0)
-        amp2_timeout--;
+      if (bias_amp2_timeout > 0)
+        bias_amp2_timeout--;
       else if (fabs(amp2 - CommandData.Bias.bias2) > 3) {
         bprintf(warning, "Bias Control: Auto Set Level #2 to %i (saw %i)\n",
             CommandData.Bias.bias2, amp2);
         CommandData.Bias.SetLevel2 = 1;
       }
-      if (amp3_timeout > 0)
-        amp3_timeout--;
+      if (bias_amp3_timeout > 0)
+        bias_amp3_timeout--;
       else if (fabs(amp3 - CommandData.Bias.bias3) > 3) {
         bprintf(warning, "Bias Control: Auto Set Level #3 to %i (saw %i)\n",
             CommandData.Bias.bias3, amp3);
@@ -586,7 +593,7 @@ void BiasControl (unsigned short* RxFrame) {
       hold = 2 * FAST_PER_SLOW + 4;
       rb_hold = 400;
       CommandData.Bias.SetLevel1 = 0;
-      amp1_timeout = B_AMP_TIMEOUT;
+      bias_amp1_timeout = B_AMP_TIMEOUT;
     }
     ch++;
   } else if (ch == 1) {
@@ -596,7 +603,7 @@ void BiasControl (unsigned short* RxFrame) {
       hold = 2 * FAST_PER_SLOW + 4;
       rb_hold = 400;
       CommandData.Bias.SetLevel2 = 0;
-      amp2_timeout = B_AMP_TIMEOUT;
+      bias_amp2_timeout = B_AMP_TIMEOUT;
     }
     ch++;
   } else if (ch == 2) {
@@ -606,7 +613,7 @@ void BiasControl (unsigned short* RxFrame) {
       hold = 2 * FAST_PER_SLOW + 4;
       rb_hold = 400;
       CommandData.Bias.SetLevel3 = 0;
-      amp3_timeout = B_AMP_TIMEOUT;
+      bias_amp3_timeout = B_AMP_TIMEOUT;
     }
     ch = 0;
   } else {

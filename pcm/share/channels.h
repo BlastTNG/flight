@@ -30,7 +30,7 @@ extern "C" {
 
 #define SR (100.16)
   /* Number of DAS bolometer cards to include in the frame.  The maximum number
-   * of cards is 11 */
+   * of cards is 12 */
 #define DAS_CARDS 12
 
 #define DAS_CHS 24

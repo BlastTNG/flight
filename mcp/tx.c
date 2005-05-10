@@ -66,20 +66,23 @@ void SensorResets(void);
 
 /* in das.c */
 void BiasControl(unsigned short* RxFrame);
-void CryoControl();
-void PhaseControl();
+void CryoControl(void);
+void ForceBiasCheck(void);
+void PhaseControl(void);
 
 /* in motors.c */
 void UpdateAxesMode(void);
 void WriteMot(int TxIndex, unsigned short *RxFrame);
 
+/* in sched.c */
+void DoSched();
+
+/* in starpos.c */
+double getlst(time_t t, double lon);
+
 /* this is provided to let the various controls know that we're doing our
  * initial control writes -- there's no input data yet */
 int mcp_initial_controls = 0;
-
-double getlst(time_t t, double lon);
-
-void DoSched();
 
 /************************************************************************/
 /*                                                                      */
@@ -201,8 +204,11 @@ void SyncADC (void) {
         bprintf(info, "ADC Sync: node %i asserted\n", l);
       doingSync[m] = BBC_ADC_SYNC;
     } else {
-      if (doingSync[m])
+      if (doingSync[m]) {
         bprintf(info, "ADC Sync: node %i deasserted\n", l);
+        if (l == 4)
+          ForceBiasCheck();
+      }
       doingSync[m] = 0;
     }
 
