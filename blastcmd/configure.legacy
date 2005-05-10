@@ -1,12 +1,12 @@
 --- configure.in.orig	2005-05-10 20:44:48.000000000 +0200
-+++ configure.in	2005-05-10 20:48:25.000000000 +0200
++++ configure.in	2005-05-10 20:52:30.000000000 +0200
 @@ -3,39 +3,31 @@
  AM_INIT_AUTOMAKE(blastcmd, 1.2.1)
  AM_CONFIG_HEADER(config.h)
  
 -AC_ARG_WITH([data-etc], AS_HELP_STRING([--with-data-etc=DIR],
 -            [put auxiliary data in DIR [[/data/etc]]]),
-+AC_ARG_WITH([data-etc], [--with-data-etc=DIR put auxiliary data in DIR [[/data/etc]]]),
++AC_ARG_WITH([data-etc], [--with-data-etc=DIR put auxiliary data in DIR [[/data/etc]]],
              DATA_ETC_DIR="${withval}", DATA_ETC_DIR="/data/etc")
  AC_SUBST(DATA_ETC_DIR)
  AC_DEFINE_UNQUOTED(DATA_ETC_DIR, "$DATA_ETC_DIR",
@@ -14,37 +14,37 @@
  
 -AC_ARG_ENABLE([blastcmd], AS_HELP_STRING([--enable-blastcmd],
 -              [install the blastcmd binary [[default=no]]]),
-+AC_ARG_ENABLE([blastcmd], [--enable-blastcmd install the blastcmd binary [[default=no]]]),
++AC_ARG_ENABLE([blastcmd], [--enable-blastcmd install the blastcmd binary [[default=no]]],
            enable_blastcmd="${enableval}",enable_blastcmd="no")
  
 -AC_ARG_ENABLE([blastcmd-remote], AS_HELP_STRING([--enable-blastcmd-remote],
 -              [install the blastcmd-remote script [[default=yes]]]),
-+AC_ARG_ENABLE([blastcmd-remote], [--enable-blastcmd-remote install the blastcmd-remote script [[default=yes]]]),
++AC_ARG_ENABLE([blastcmd-remote], [--enable-blastcmd-remote install the blastcmd-remote script [[default=yes]]],
            enable_blastcmd_remote="${enableval}",enable_blastcmd_remote="yes")
  
 -AC_ARG_ENABLE([fifocmd], AS_HELP_STRING([--enable-fifocmd],
 -              [install the fifocmd script [[default=no]]]),
-+AC_ARG_ENABLE([fifocmd], [--enable-fifocmd install the fifocmd script [[default=no]]]),
++AC_ARG_ENABLE([fifocmd], [--enable-fifocmd install the fifocmd script [[default=no]]],
            enable_fifocmd="${enableval}",enable_fifocmd="no")
  
 -AC_ARG_ENABLE([dummycmd], AS_HELP_STRING([--enable-dummycmd],
 -              [install the dummycmd script [[default=no]]]),
-+AC_ARG_ENABLE([dummycmd], [--enable-dummycmd install the dummycmd script [[default=no]]]),
++AC_ARG_ENABLE([dummycmd], [--enable-dummycmd install the dummycmd script [[default=no]]],
            enable_dummycmd="${enableval}",enable_dummycmd="no")
  
 -AC_ARG_WITH([remote-host], AS_HELP_STRING([--with-remote-host=HOST],
 -            [use HOST as the remote host for blastcmd-remote [[arwen]]]),
-+AC_ARG_WITH([remote-host], [--with-remote-host=HOST use HOST as the remote host for blastcmd-remote [[arwen]]]),
++AC_ARG_WITH([remote-host], [--with-remote-host=HOST use HOST as the remote host for blastcmd-remote [[arwen]]],
              REMOTE_HOST="${withval}", REMOTE_HOST="arwen")
  
 -AC_ARG_WITH([remote-user], AS_HELP_STRING([--with-remote-user=USER],
 -            [have blastcmd-remote log into the remote host as USER [[none]]]),
-+AC_ARG_WITH([remote-user], [--with-remote-user=USER have blastcmd-remote log into the remote host as USER [[none]]]),
++AC_ARG_WITH([remote-user], [--with-remote-user=USER have blastcmd-remote log into the remote host as USER [[none]]],
              REMOTE_USER="${withval}@", REMOTE_USER="")
  
 -AC_ARG_WITH([remote-command], AS_HELP_STRING([--with-remote-command=CMD],
 -            [use CMD as the remote command for blastcmd-remote [[blastcmd]]]),
-+AC_ARG_WITH([remote-command], --with-remote-command=CMD use CMD as the remote command for blastcmd-remote [[blastcmd]]]),
++AC_ARG_WITH([remote-command], --with-remote-command=CMD use CMD as the remote command for blastcmd-remote [[blastcmd]]],
              REMOTE_COMMAND="${withval}", REMOTE_COMMAND="blastcmd")
  
  dnl Programs
