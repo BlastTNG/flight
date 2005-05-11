@@ -748,7 +748,7 @@ void StoreData(int index)
 
   WriteData(raAddr, (unsigned int)(PointingData[i_point].ra * (65536.0 *
           65536) / 24.0), NIOS_QUEUE);
-  WriteData(decAddr, (unsigned int)(PointingData[i_point].dec * DEG2LI),
+  WriteData(decAddr, (signed int)(PointingData[i_point].dec * DEG2LI),
       NIOS_QUEUE);
 
   WriteData(gy1OffsetAddr,
