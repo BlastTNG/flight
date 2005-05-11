@@ -46,6 +46,7 @@
 #define ACS3  21, 0
 #define DECOM 22, 0
 #define ACS0  23, 0
+#define LOOP5 24, 0
 
 /* read and write channel 56 on all boards reserved for ADC Sync */
 struct ChannelStruct WideSlowChannels[] = {
@@ -62,6 +63,8 @@ struct ChannelStruct WideSlowChannels[] = {
   {"isc_mcpnum",   'w', LOOP2, 61,                1.0,             0.0, 'U'},
   {"osc_mcpnum",   'w', LOOP3, 58,                1.0,             0.0, 'U'},
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U'},
+  {"lat",          'w', LOOP1, 38,             LI2DEG,             0.0, 'U'},
+  {"lon",          'w', LOOP1, 40,             LI2DEG,             0.0, 'U'},
 /* Rox a la Jeff */
   {"t_he3fridge",  'r',  CRYO,  6,    ROX_C2V,   ROX_OFFSET, 'U'}, 
   {"t_m4",         'r',  CRYO,  8,    ROX_C2V,   ROX_OFFSET, 'U'}, 
@@ -294,10 +297,6 @@ struct ChannelStruct SlowChannels[] = {
   {"bias_lev2",    'w', LOOP1, 35,                1.0,             0.0, 'u'},
   {"bias_lev3",    'w', LOOP1, 36,                1.0,             0.0, 'u'},
   {"sip_alt",      'w', LOOP1, 37,                4.0,             0.0, 'u'},
-  {"lat",          'w', LOOP1, 38,              I2DEG,             0.0, 'u'},
-  {"lon",          'w', LOOP1, 39,              I2DEG,             0.0, 'u'},
-  {"p_h",          'w', LOOP1, 40,              I2DEG,             0.0, 'u'},
-  {"isc_error",    'w', LOOP1, 41,                 1.,             0.0, 'u'},
   {"isc_mapmean",  'w', LOOP1, 42,                 1.,             0.0, 'u'},
   {"dgps_pitch",   'w', LOOP1, 43,              I2DEG,             0.0, 'u'},
   {"dgps_roll",    'w', LOOP1, 44,              I2DEG,             0.0, 'u'},
@@ -371,8 +370,6 @@ struct ChannelStruct SlowChannels[] = {
   {"enc_sigma",    'w', LOOP2, 48,              I2DEG,             0.0, 'u'},
   {"cal_pulse",    'w', LOOP2, 49,               10.0,              0., 'u'},
   {"ss_el",        'w', LOOP2, 50,                1.0,             0.0, 'u'},
-  {"isc_blob00_f", 'w', LOOP2, 53,               32.0,             0.0, 'u'},
-  {"clin_el",      'w', LOOP2, 54,              I2DEG,             0.0, 'u'},
   {"clin_sigma",   'w', LOOP2, 55,              I2DEG,             0.0, 'u'},
   {"mag_az",       'w', LOOP2, 56,              I2DEG,             0.0, 'u'},
   {"isc_spulse",   'w', LOOP2, 57,               10.0,             0.0, 'u'},
@@ -497,6 +494,11 @@ struct ChannelStruct SlowChannels[] = {
   {"dgps_trim",    'w', LOOP4, 56,              I2DEG,             0.0, 's'},
   {"ss_trim",      'w', LOOP4, 57,              I2DEG,             0.0, 's'},
   {"dgps_az_raw",  'w', LOOP4, 60,              I2DEG,             0.0, 'u'},
+  {"isc_blob00_f", 'w', LOOP4, 61,               32.0,             0.0, 'u'},
+  {"clin_el",      'w', LOOP4, 62,              I2DEG,             0.0, 'u'},
+  {"p_h",          'w', LOOP4, 63,              I2DEG,             0.0, 'u'},
+
+  {"isc_error",    'w', LOOP5,  0,                 1.,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
@@ -516,6 +518,9 @@ struct ChannelStruct WideFastChannels[] = {
                                      -DGY32_OFFSET * DGY32_TO_DPS + 0.010, 'U'},
   {"raw_gy6",     'r',  ACS1, 36,     -DGY32_TO_DPS,
                                       DGY32_OFFSET * DGY32_TO_DPS - 0.005, 'U'},
+  {"az",          'w', LOOP2, 51,          LI2DEG,                    0.0, 'U'},
+  {"el",          'w', LOOP2, 53,          LI2DEG,                    0.0, 'U'},
+
 #endif
 
   /* BIAS Stuff */
@@ -589,9 +594,6 @@ struct ChannelStruct FastChannels[] = {
 
   /* read from board ACS2 */
   {"enc_elev",    'r',  ACS2, 50, -360.0/65536.0,ENC_ELEV_OFFSET,ENC_ELEV_TYPE},
-
-  {"az",          'w', LOOP2, 51,           I2DEG,                    0.0, 'u'},
-  {"el",          'w', LOOP2, 52,           I2DEG,                    0.0, 'u'},
 
   {"mcp_frame",   'w', LOOP2, 34,             1.0,                    0.0, 'u'},
 #endif

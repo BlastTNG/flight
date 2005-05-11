@@ -741,9 +741,9 @@ void StoreData(int index)
   WriteData(sipMksHiAddr, (int)(SIPData.MKSalt.hi), NIOS_QUEUE);
 
   /************* processed pointing data *************/
-  WriteData(azAddr, (unsigned int)(PointingData[i_point].az * 65536.0/360.0),
+  WriteData(azAddr, (unsigned int)(PointingData[i_point].az * DEG2LI),
       NIOS_QUEUE);
-  WriteData(elAddr, (unsigned int)(PointingData[i_point].el * 65536.0/360.0),
+  WriteData(elAddr, (unsigned int)(PointingData[i_point].el * DEG2LI),
       NIOS_QUEUE);
 
   WriteData(raAddr, (unsigned int)(PointingData[i_point].ra * 65536.0/24.0),
@@ -760,9 +760,9 @@ void StoreData(int index)
   WriteData(gyRollAmpAddr,
       (unsigned int)(PointingData[i_point].gy_roll_amp * 65536.), NIOS_QUEUE);
 
-  WriteData(latAddr, (unsigned int)(PointingData[i_point].lat * DEG2I),
+  WriteData(latAddr, (unsigned int)(PointingData[i_point].lat * DEG2LI),
       NIOS_QUEUE);
-  WriteData(lonAddr, (unsigned int)(PointingData[i_point].lon * DEG2I),
+  WriteData(lonAddr, (unsigned int)(PointingData[i_point].lon * DEG2LI),
       NIOS_QUEUE);
 
   WriteData(mcpFrameAddr, PointingData[i_point].mcp_frame, NIOS_QUEUE);
