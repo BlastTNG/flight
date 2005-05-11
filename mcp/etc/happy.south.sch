@@ -1,4 +1,4 @@
-2005-5-11 07:18:57
+2005-5-11 08:43:03
  
 # Latitude band 56.82 - 64.82
 # East Longitude START  20.33 END   20.33
