@@ -60,6 +60,8 @@ struct ChannelStruct WideSlowChannels[] = {
   {"osc_ra",       'w', LOOP3, 26,               LI2H,             0.0, 'U'},
   {"osc_dec",      'w', LOOP3, 28,          LI2DEG/2.,            -90., 'U'},
   {"isc_mcpnum",   'w', LOOP2, 61,                1.0,             0.0, 'U'},
+  {"ra",           'w', LOOP3,  4,       24.0/65536.0,             0.0, 'u'},
+  {"dec",          'w', LOOP3,  6,              I2DEG,             0.0, 's'},
   {"osc_mcpnum",   'w', LOOP3, 58,                1.0,             0.0, 'U'},
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U'},
 /* Rox a la Jeff */
@@ -385,10 +387,6 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_hold_i",   'w', LOOP3,  1,                1.0,             0.0, 'u'},
   {"isc_save_prd", 'w', LOOP3,  2,               0.01,             0.0, 'u'},
   {"isc_y_off",    'w', LOOP3,  3,              I2DEG,             0.0, 'u'},
-  {"ra",           'w', LOOP3,  4,       24.0/65536.0,             0.0, 'u'},
-  {"dec",          'w', LOOP3,  5,              I2DEG,             0.0, 's'},
-  {"isc_offset",   'w', LOOP3,  6,                1.0,             0.0, 's'},
-  {"bbc_fifo_size",'w', LOOP3,  7,             1./624,             0.0, 'u'},
   {"cpu_temp2",    'w', LOOP3,  8,               0.01,             0.0, 'u'},
   {"cpu_temp3",    'w', LOOP3,  9,               0.01,             0.0, 'u'},
   {"sip_mks_hi",   'w', LOOP3, 10,           0.003256,       -0.226858, 'u'},
@@ -497,6 +495,8 @@ struct ChannelStruct SlowChannels[] = {
   {"dgps_trim",    'w', LOOP4, 56,              I2DEG,             0.0, 's'},
   {"ss_trim",      'w', LOOP4, 57,              I2DEG,             0.0, 's'},
   {"dgps_az_raw",  'w', LOOP4, 60,              I2DEG,             0.0, 'u'},
+  {"isc_offset",   'w', LOOP4, 61,                1.0,             0.0, 's'},
+  {"bbc_fifo_size",'w', LOOP4, 62,             1./624,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
