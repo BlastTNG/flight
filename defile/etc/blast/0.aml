@@ -243,7 +243,7 @@
 --u73@u0      osc_maxblobs  @             @             0             50            1             
 --u74@u0      osc_x_off     @             @             -909          910           @             
 --u75@u43     osc_y_off     @             @             @             @             @             
---u76@u0      FASTSAMP      @             @             @             @             20            
+--u76@u0      mcpframe      @             @             @             @             20            
 --u77@u0      ss_az_snr     @             @             @             @             @             
 --u78@u0      ss_az_center  @             @             @             @             @             
 --u79@u0      sip_mks_hi    @             @             @             @             @             
