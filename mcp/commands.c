@@ -1268,12 +1268,21 @@ void WatchPort (void* parameter) {
     /* Loop until data come in */
     while (read(tty_fd, &buf, 1) <= 0) {
       timer++;
-      /** Request updated info every 5 seconds */
-      if (timer == 250) { 
+      /** Request updated info every 50 seconds */
+      if (timer == 800) {
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_POSITION, tty_fd);
+	bprintf(info, "Request SIP Position port %d\n", port);
+        pthread_mutex_unlock(&mutex);
+      } else if (timer == 1700) {
+        pthread_mutex_lock(&mutex);
         SendRequest (REQ_TIME, tty_fd);
+	bprintf(info, "Request SIP Time port %d\n", port);
+        pthread_mutex_unlock(&mutex);	
+      } else if (timer > 2500) { 
+        pthread_mutex_lock(&mutex);
         SendRequest (REQ_ALTITUDE, tty_fd);
+	bprintf(info, "Request SIP Altitude port %d\n", port);
         pthread_mutex_unlock(&mutex);
         timer = 0;
       }
