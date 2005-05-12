@@ -583,6 +583,7 @@ void DoRaDecGotoMode() {
   isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
 }
 
+#if 0
 void DoBoxMode() {
   double caz, cel, sw_2, h_2;
   double bottom, top, left, right;
@@ -709,6 +710,7 @@ void DoBoxMode() {
   axes_mode.el_mode = AXIS_POSITION;
   axes_mode.el_dest = S.el + cel;
 }
+#endif
 
 void DoNewCapMode() {
   double caz, cel, r, x2, y, xw; 
