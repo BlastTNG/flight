@@ -32,8 +32,6 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"disk_free",     SLOWDL_FORCE_INT, 8, 0, 200},
   /* POINTING */
   {"sensor_veto",   SLOWDL_U_MASK, 8},
-  {"lat",           SLOWDL_FORCE_INT, 8, 0, 90},
-  {"lon",           SLOWDL_FORCE_INT, 8, 0, 360},
   {"p_h",           SLOWDL_FORCE_INT, 8, 0, 24},
   {"p_mode",        SLOWDL_U_MASK, 4},
   {"p_x_deg",       SLOWDL_FORCE_INT, 8, 0, 360},
@@ -84,9 +82,6 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"dgps_att_ok",   SLOWDL_U_MASK, 1},
   {"dgps_n_sat",    SLOWDL_U_MASK, 4},
   {"dgps_az",       SLOWDL_FORCE_INT, 8, 0, 360},
-  /* POWER */
-  {"apcu_reg",     SLOWDL_FORCE_INT,  8, 20, 32},
-  {"dpcu_reg",     SLOWDL_FORCE_INT,  8, 20, 32},
   /* ELEVATION ENCODER */
   {"enc_el",        SLOWDL_FORCE_INT, 8, 0, 90},
   /* PUMPS */
