@@ -30,6 +30,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"sip_alt",       SLOWDL_FORCE_INT, 8, 0, 40000}, /* 157 m */
   {"cpu_temp1",     SLOWDL_FORCE_INT, 8, 0, 75}, /* 0.29 deg */
   {"disk_free",     SLOWDL_FORCE_INT, 8, 0, 200},
+  {"plover",        SLOWDL_U_MASK, 8},
   /* POINTING */
   {"sensor_veto",   SLOWDL_U_MASK, 8},
   {"p_h",           SLOWDL_FORCE_INT, 8, 0, 24},
@@ -82,6 +83,9 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"dgps_att_ok",   SLOWDL_U_MASK, 1},
   {"dgps_n_sat",    SLOWDL_U_MASK, 4},
   {"dgps_az",       SLOWDL_FORCE_INT, 8, 0, 360},
+  {"dgps_climb",    SLOWDL_FORCE_INT, 8, -127, 128},
+  {"dgps_dir",      SLOWDL_FORCE_INT, 8, 0, 360},
+  {"dgps_speed",    SLOWDL_FORCE_INT, 8, 0, 100},
   /* ELEVATION ENCODER */
   {"enc_el",        SLOWDL_FORCE_INT, 8, 0, 90},
   /* PUMPS */
@@ -114,7 +118,9 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"i_sun",         SLOWDL_FORCE_INT, 8,   0,  5}, /* 20 mA */
   {"sun_az",        SLOWDL_FORCE_INT, 8,   0, 360},
   {"ss_az",         SLOWDL_FORCE_INT, 8,   0, 360},
+  {"ss_az_snr",     SLOWDL_FORCE_INT, 8,   0, 150},
   {"ss_pc_temp",    SLOWDL_FORCE_INT, 8,   0, 127},
+  {"ss_cpu_temp",   SLOWDL_FORCE_INT, 8,   0, 127},
   /* CINOMETERS */
   {"roll_clin_piv", SLOWDL_FORCE_INT, 8, -10, 10}, /* 4.68 arcmin */
   {"pch_clin_piv",  SLOWDL_FORCE_INT, 8, -10, 10}, /* 4.68 arcmin */
@@ -186,9 +192,12 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"t_das",         SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
   /* BIAS */
   {"biasin",        SLOWDL_U_MASK, 8},
-  {"bias_lev1",     SLOWDL_U_MASK, 8},
-  {"bias_lev2",     SLOWDL_U_MASK, 8},
-  {"bias_lev3",     SLOWDL_U_MASK, 8},
+  {"bias_lev1",     SLOWDL_U_MASK, 7},
+  {"bias_lev2",     SLOWDL_U_MASK, 7},
+  {"bias_lev3",     SLOWDL_U_MASK, 7},
+  {"b_amp1",        SLOWDL_FORCE_INT, 8, 0, 127},
+  {"b_amp2",        SLOWDL_FORCE_INT, 8, 0, 127},
+  {"b_amp3",        SLOWDL_FORCE_INT, 8, 0, 127},
   /* GYROS */
   {"t_gyro1",       SLOWDL_FORCE_INT, 8, 10,  50}, /* 0.16 deg */
   {"t_gyro2",       SLOWDL_FORCE_INT, 8, 10,  50}, /* 0.16 deg */
