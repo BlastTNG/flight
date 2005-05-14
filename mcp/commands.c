@@ -1272,17 +1272,17 @@ void WatchPort (void* parameter) {
       if (timer == 800) {
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_POSITION, tty_fd);
-	bprintf(info, "Request SIP Position port %d\n", port);
+        bprintf(info, "Commands: COMM%i: Request SIP Position\n", port + 1);
         pthread_mutex_unlock(&mutex);
       } else if (timer == 1700) {
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_TIME, tty_fd);
-	bprintf(info, "Request SIP Time port %d\n", port);
+        bprintf(info, "Commands: COMM%i: Request SIP Time\n", port + 1);
         pthread_mutex_unlock(&mutex);	
       } else if (timer > 2500) { 
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_ALTITUDE, tty_fd);
-	bprintf(info, "Request SIP Altitude port %d\n", port);
+        bprintf(info, "Commands: COMM%i: Request SIP Altitude\n", port + 1);
         pthread_mutex_unlock(&mutex);
         timer = 0;
       }
@@ -1539,7 +1539,7 @@ void InitCommandData() {
 
   /* unused */
   CommandData.fast_gy_offset = 0;
-  
+
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
     bprintf(warning, "Commands: prev_status: Wanted %i bytes but got %i.\n",
