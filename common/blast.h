@@ -40,6 +40,8 @@ void bputs(buos_t, const char*);
 void buos_use_func(void (*puts_func)(buos_t, const char*));
 void buos_use_stdio(void);
 void buos_use_syslog(void);
+void buos_disallow_mem(void);
+void buos_allow_mem(void);
 void buos_disable_exit(void);
 void buos_enable_exit(void);
 

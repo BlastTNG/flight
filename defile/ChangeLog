@@ -1,6 +1,22 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2005-05-14: D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	Release defile-3.2.2
+
+	* client.c (ClientDone): Chain to ReaderDone to avoid having to duplicate
+	abort code.
+
+	* defile.c (main) [DEBUG]: Call buos_allow_mem.
+	* defile.c (ResolveOutputDirfile): Shell expand path if necessary.
+	* defile.c (ParseCommandLine): Remove pointer errors from output_dirfile
+	code.
+
+2005-05-13: D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	* configure.ac: Add --enable-install-defile-conf argument
+
+	* reader.c (ReaderDone): Add writer_done failsafe.
+
 2005-04-26: D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	Release defile-3.2.1
 

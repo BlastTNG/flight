@@ -33,6 +33,7 @@
 #include <syslog.h>     /* BSD system logger (openlog, syslog, closelog) */
 #include <sys/stat.h>   /* SYSV stat (stat, struct stat S_IS(FOO)) */
 #include <unistd.h>     /* UNIX std library (fork, chdir, setsid, usleep &c.) */
+#include <wordexp.h>    /* POSIX-shell-like word expansion (wordexp) */
 
 #include "defile.h"
 #include "blast.h"
@@ -101,9 +102,6 @@ sigset_t signals;
 /* filters info messages out of output when appropriate */
 void dputs(buos_t level, const char* string)
 {
-  if (level == mem)
-    return;
-  
   if (rc.daemonise && !rc.force_stdio && level != info)
     bputs_syslog(level, string);
   else if (level != info || !rc.silent)
@@ -253,19 +251,33 @@ char* ResolveOutputDirfile(char* dirfile, const char* parent)
   char parent_part[NAME_MAX];
   char dirfile_part[PATH_MAX];
   char path[PATH_MAX];
+  wordexp_t expansion;
 
-  /* is dirfile a relative path if so, we don't have to do anything */
-  if (dirfile[0] != '/') {
+  /* is dirfile a relative path? if so, we don't have to do anything */
+  if (dirfile[0] != '/' && dirfile[0] != '~') {
     /* check string sizes */
     if (strlen(parent) + 1 + strlen(dirfile) >= PATH_MAX)
       bprintf(fatal, "output dirfile path is too long\n");
 
     strcpy(path, parent);
-    if (path[strlen(path) - 1] != '/')
-      strcat(path, "/");
     strcat(path, dirfile);
   } else
     strcpy(path, dirfile);
+
+  if (path[strlen(path) - 1] == '/')
+    path[strlen(path) - 1] = 0;
+
+  /* shell expand the path, if necessary */
+  if (wordexp(path, &expansion, 0) != 0)
+    berror(fatal, "unable to expand output dirfile path `%s'", path);
+
+  if (expansion.we_wordc > 1)
+    bprintf(fatal, "cannot handle multiple expansion of `%s'", path);
+
+  /* repace path with the output of the shell expansion */
+  strcpy(path, expansion.we_wordv[0]);
+
+  wordfree(&expansion);
 
   /* realpath() will fail with a non-existant path, so strip off dirfile name */
   PathSplit_r(path, parent_part, dirfile_part);
@@ -479,7 +491,7 @@ void GetDirFile(char* buffer, const char* source, char* parent, int start)
   MakeDirFile(buffer, source, parent, start);
 }
 
-const char* ResolveHost(char* host, struct sockaddr_in* addr, int forced)
+const char* ResolveHost(const char* host, struct sockaddr_in* addr, int forced)
 {
   struct hostent* the_host;
   char* ptr;
@@ -680,8 +692,10 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
         else if (!strcmp(argv[i], "--no-remount"))
           rc->remount = 0;
         else if (!strncmp(argv[i], "--output-dirfile=", 17)) {
-          bfree(fatal, rc->remount_dir);
-          rc->output_dirfile = bstrdup(fatal, &argv[i][17]);
+          if (rc->output_dirfile)
+            bfree(fatal, rc->output_dirfile);
+          rc->output_dirfile = balloc(fatal, PATH_MAX);
+          strcpy(rc->output_dirfile, &argv[i][17]);
         } else if (!strcmp(argv[i], "--persistent"))
           rc->persist = 1;
         else if (!strcmp(argv[i], "--quiet"))
@@ -829,8 +843,10 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
         break;
       case 'o':
         if (argument[j].value[0] != '\0') {
-          bfree(fatal, rc->output_dirfile);
-          rc->output_dirfile = bstrdup(fatal, argument[j].value);
+          if (rc->output_dirfile)
+            bfree(fatal, rc->output_dirfile);
+          rc->output_dirfile = balloc(fatal, PATH_MAX);
+          strcpy(rc->output_dirfile, argument[j].value);
         } else
           bprintf(fatal, "output dirfile name `%s' is not a valid value\n"
               "Try `defile --help' for more information.\n", argument[j].value);
@@ -852,7 +868,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
   /* first unused argument is SOURCE */
   for (j = 0; j < nargs && argument[j].used; ++j);
 
-  if (j > nargs || nargs == 0) {
+  if (j >= nargs || nargs == 0) {
     if (options[CFG_InputSource].value.as_string != NULL) {
       rc->source = options[CFG_InputSource].value.as_string;
       rc->force_quenya = 1;
@@ -874,6 +890,8 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
     } else
       rc->dest_dir = options[CFG_OutputDirectory].value.as_string;
   }
+
+  if (rc->source == NULL) bputs(fatal, "no source!\n");
 
   /* If the user hasn't told us what type source is, determine whether source
    * is a filename or a hostname */
@@ -904,6 +922,9 @@ int main (int argc, char** argv)
   pthread_t write_thread;
 
   /* set up our outputs */
+#ifdef DEBUG
+  buos_allow_mem();
+#endif
   buos_disable_exit();
   buos_use_func(dputs);
 

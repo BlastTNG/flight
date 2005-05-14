@@ -42,8 +42,6 @@
 void ClientDone(int signo) {
   const char quit[] = "QUIT\r\n";
 
-  bprintf(warning, "Caught signal %d; exiting...\n", signo);
-
   if (rc.csock > 0)
     write(rc.csock, quit, strlen(quit));
 
@@ -52,8 +50,7 @@ void ClientDone(int signo) {
   if (rc.dsock > 0)
     close(rc.dsock);
 
-  ri.reader_done = 1;
-  pthread_exit(0);
+  ReaderDone(signo);
 }
 
 int MakeSock(void)

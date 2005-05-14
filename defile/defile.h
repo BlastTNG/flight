@@ -92,6 +92,7 @@ void InitReader(void);
 void InitialiseDirFile(int, unsigned long);
 void PreInitialiseDirFile(void);
 void PushFrame(unsigned short*);
+void ReaderDone(int);
 void QuenyaClient(void);
 void Remount(const char*, char*);
 

@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(defile, 3.2.1, [dwiebe@physics.utoronto.ca])
+AC_INIT(defile, 3.2.2, [dwiebe@physics.utoronto.ca])
 localstatedir="/var"
-AM_INIT_AUTOMAKE(defile, 3.2.1)
+AM_INIT_AUTOMAKE(defile, 3.2.2)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH(data-etc, AS_HELP_STRING([--with-data-etc=DIR],
@@ -54,6 +54,16 @@ else
 fi
 
 dnl Data
+AC_ARG_ENABLE(install-defile-conf,
+              AS_HELP_STRING([--enable-install-defile-conf],
+                             [install defile.conf even if it already exists.  The old file will be overwritten.]),
+              [
+               case ${enableval} in
+                 no) force_conf="no";;
+                 *) force_conf="yes";;
+               esac
+              ], [force_conf="no"])
+              
 AC_ARG_WITH(etc,
             AS_HELP_STRING([--with-etc=DIR],[put defile.conf in DIR [[/etc]]]),
             [etcdir="${withval}"],[etcdir="/etc"])
@@ -64,10 +74,19 @@ AC_DEFINE_UNQUOTED(ETC_DIR,["$etcdir"],
 AC_MSG_CHECKING(whether a defile.conf is already present)
 if test -f "$etcdir/defile.conf"; then
   HAVE_DEFILE_CONF=yes;
+  INSTALL_DEFILE_CONF=no;
 else
   HAVE_DEFILE_CONF=no;
+  INSTALL_DEFILE_CONF=yes;
 fi
 AC_MSG_RESULT([$HAVE_DEFILE_CONF])
-AM_CONDITIONAL(INSTALL_DEFILE_CONF, test "$HAVE_DEFILE_CONF" = "no")
+AC_MSG_CHECKING(whether to install defile.conf)
+if test "${force_conf}" = "yes" -a "${HAVE_DEFILE_CONF}" = "yes"; then
+  AC_MSG_RESULT([yes (forced)])
+  INSTALL_DEFILE_CONF=yes;
+else
+  AC_MSG_RESULT([$INSTALL_DEFILE_CONF])
+fi
+AM_CONDITIONAL(INSTALL_DEFILE_CONF, test "$INSTALL_DEFILE_CONF" = "yes")
 
 AC_OUTPUT(Makefile defile.1.in defile.conf.in etc/Makefile)

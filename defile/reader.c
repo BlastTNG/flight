@@ -33,9 +33,17 @@
 #include "frameread.h"
 
 void ReaderDone(int signo) {
+  int i;
+
   bprintf(warning, "Caught signal %d; exiting...\n", signo);
   ri.reader_done = 1;
-  pthread_exit(0);
+  for (i = 0; i < 60; ++i) {
+    sleep(1);
+    if (ri.writer_done)
+      pthread_exit(0);
+  }
+  bputs(err, "Timeout waiting for writer to exit.  Stop.\n");
+  raise(SIGKILL);
 }
 
 void InitReader(void)
