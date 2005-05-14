@@ -575,7 +575,7 @@
     <NUMBER caption="Cryo Valves">
       <DATUM format="%.2f" src="T_CRYO_VALVE" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Ballance Tank">
+    <NUMBER caption="Balance Tank">
       <DATUM format="%.2f" src="T_BAL_BOT" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="IF Port Ear">
@@ -587,7 +587,7 @@
     <NUMBER caption="Triangle">
       <DATUM format="%.2f" src="T_TRIANGLE" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Scoop Tip">
+    <NUMBER caption="Chin Tip">
       <DATUM format="%.2f" src="T_SCOOP_TIP" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Left SS">
