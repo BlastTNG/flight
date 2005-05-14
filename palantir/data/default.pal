@@ -776,79 +776,79 @@
     </NUMBER>
   </BOX>
   <BOX caption="Bolos C5" colour="#707" row="4" col="4">
-    <NUMBER caption="N5C5">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N5C5 (250)">
+      <DATUM format="%.3f" src="N5C5" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N6C5">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N6C5 (250)">
+      <DATUM format="%.3f" src="N6C5" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N7C5">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N7C5 (250)">
+      <DATUM format="%.3f" src="N7C5" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N8C5">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N8C5 (250)">
+      <DATUM format="%.3f" src="N8C5" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N9C5">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N9C5 (250)">
+      <DATUM format="%.3f" src="N9C5" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N10C5">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N10C5 (250)">
+      <DATUM format="%.3f" src="N10C5" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N11C5">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N11C5 (350)">
+      <DATUM format="%.3f" src="N11C5" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N12C5">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N12C5 (350)">
+      <DATUM format="%.3f" src="N12C5" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N13C5">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N13C5 (350)">
+      <DATUM format="%.3f" src="N13C5" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N14C5">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N14C5 (350)">
+      <DATUM format="%.3f" src="N14C5" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N15C5">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N15C5 (500)">
+      <DATUM format="%.3f" src="N15C5" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N16C5">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N16C5 (500)">
+      <DATUM format="%.3f" src="N16C5" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Bolos C20" colour="#707" row="4" col="5">
-    <NUMBER caption="N5C20">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+  <BOX caption="Bolos C15" colour="#707" row="4" col="5">
+    <NUMBER caption="N5C15 (250)">
+      <DATUM format="%.3f" src="N5C15" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N6C20">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N6C15 (250)">
+      <DATUM format="%.3f" src="N6C15" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N7C20">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N7C15 (250)">
+      <DATUM format="%.3f" src="N7C15" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N8C20">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N8C15 (250)">
+      <DATUM format="%.3f" src="N8C15" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N9C20">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N9C15 (250)">
+      <DATUM format="%.3f" src="N9C15" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N10C20">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N10C15 (250)">
+      <DATUM format="%.3f" src="N10C15" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N11C20">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N11C15 (350)">
+      <DATUM format="%.3f" src="N11C15" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N12C20">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N12C15 (350)">
+      <DATUM format="%.3f" src="N12C15" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N13C20">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N13C15 (350)">
+      <DATUM format="%.3f" src="N13C15" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N14C20">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N14C15 (350)">
+      <DATUM format="%.3f" src="N14C15" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N15C20">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N15C15 (500)">
+      <DATUM format="%.3f" src="N15C15" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N16C20">
-      <DATUM format="%.0f" src="N5C5" extrema="unknown"/>
+    <NUMBER caption="N16C15 (500)">
+      <DATUM format="%.3f" src="N16C15" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Phase" colour="#707" row="4" col="2">
