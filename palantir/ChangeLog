@@ -1,12 +1,16 @@
-2004-01-21 (1.2.7):
+2005-05-16 (1.2.7.1):
+	* data/palantir.png: Add alpha channel.
+	* data/default.pal: Multiple updates by Barth Netterfield and Matt Truch.
+
+2005-01-21 (1.2.7):
 	* bootstrap.sh: Add
 	* data/palantir.png: Add
 	* data/Makefile.in: install palantir.png
 
-2004-01-14 (1.2.6):
+2005-01-14 (1.2.6):
 	* decompoll.cpp: Fixes for new decomd string.
 
-2004-01-13 (1.2.5):
+2005-01-13 (1.2.5):
 	* decompoll.cpp, decompoll.h: Split decomd client stuff from palantir.cpp
 	for re-use in logger
 	* palantir.cpp, palantir.h: Fixes for better decomd encapsulation
