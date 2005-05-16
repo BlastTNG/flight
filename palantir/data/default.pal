@@ -80,10 +80,10 @@
       <XLO value="5000"/>
     </EXTREMA>
     <EXTREMA name="unknown">
-      <HI value="6440000"/>
-      <LO value="-6440000"/>
-      <XHI value="6440000"/>
-      <XLO value="-6440000"/>
+      <HI value="2147483640"/>
+      <LO value="-2147483640"/>
+      <XHI value="2147483648"/>
+      <XLO value="-2147483648"/>
     </EXTREMA>
     <EXTREMA name="balstatus">
       <HI value="1000"/>
@@ -98,52 +98,64 @@
       <XHI value="1000"/>
     </EXTREMA>
     <EXTREMA name="lhetemp">
-      <XLO value="1"/>
-      <LO value="3"/>
-      <HI value="5"/>
-      <XHI value="6"/>
+      <XLO value="3"/>
+      <LO value="3.5"/>
+      <HI value="4.5"/>
+      <XHI value="5"/>
     </EXTREMA>
     <EXTREMA name="lntemp">
       <XLO value="55"/>
-      <LO value="60"/>
-      <HI value="80"/>
-      <XHI value="85"/>
+      <LO value="65"/>
+      <HI value="79"/>
+      <XHI value="83"/>
     </EXTREMA>
     <EXTREMA name="vcstemp">
-      <XLO value="15"/>
-      <LO value="20"/>
-      <HI value="60"/>
-      <XHI value="75"/>
+      <XLO value="30"/>
+      <LO value="35"/>
+      <HI value="50"/>
+      <XHI value="55"/>
+    </EXTREMA>
+    <EXTREMA name="vcsfet">
+      <XLO value="40"/>
+      <LO value="50"/>
+      <HI value="70"/>
+      <XHI value="80"/>
     </EXTREMA>
     <EXTREMA name="jfettemp">
-      <XLO value="100"/>
-      <LO value="110"/>
-      <HI value="140"/>
-      <XHI value="150"/>
+      <XLO value="120"/>
+      <LO value="135"/>
+      <HI value="150"/>
+      <XHI value="160"/>
     </EXTREMA>
     <EXTREMA name="pottemp-diode">
-      <XLO value="0"/>
-      <LO value="0"/>
-      <HI value="2.2"/>
-      <XHI value="4"/>
+      <XLO value="1"/>
+      <LO value="1.4"/>
+      <HI value="2.5"/>
+      <XHI value="3.5"/>
     </EXTREMA>
     <EXTREMA name="pottemp">
       <XLO value="1"/>
       <LO value="1.5"/>
-      <HI value="2.5"/>
-      <XHI value="4"/>
+      <HI value="2.8"/>
+      <XHI value="3.5"/>
     </EXTREMA>
     <EXTREMA name="he3fridge">
-      <XLO value="0"/>
-      <LO value=".220"/>
-      <HI value=".320"/>
-      <XHI value="4"/>
+      <XLO value="0.2"/>
+      <LO value=".240"/>
+      <HI value=".290"/>
+      <XHI value="0.32"/>
+    </EXTREMA>
+    <EXTREMA name="horn">
+      <XLO value="0.26"/>
+      <LO value=".300"/>
+      <HI value=".350"/>
+      <XHI value="0.37"/>
     </EXTREMA>
     <EXTREMA name="chartemp">
       <XLO value="3"/>
       <LO value="3.5"/>
       <HI value="4.5"/>
-      <XHI value="45"/>
+      <XHI value="7"/>
     </EXTREMA>
     <EXTREMA name="bias1">
       <XLO value="-1"/>
@@ -552,9 +564,6 @@
     <NUMBER caption="Rec">
       <DATUM format="%.2f" src="T_REC" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Lock Motor">
-      <DATUM format="%.2f" src="T_LOCK_MOTOR" extrema="temp"/>
-    </NUMBER>
     <NUMBER caption="IF Heat Exchanger">
       <DATUM format="%.2f" src="T_IN_HEATX" extrema="temp"/>
     </NUMBER>
@@ -642,9 +651,6 @@
     <NUMBER caption="PV CPU">
       <DATUM format="%.2f" src="CPU_TEMP1" extrema="cputemp"/>
     </NUMBER>
-    <NUMBER caption="PV Chipset">
-      <DATUM format="%.2f" src="CPU_TEMP2" extrema="cputemp"/>
-    </NUMBER>
     <NUMBER caption="PV Motherboard">
       <DATUM format="%.2f" src="CPU_TEMP3" extrema="cputemp"/>
     </NUMBER>
@@ -653,9 +659,6 @@
     </NUMBER>
     <NUMBER caption="PYR Clin">
       <DATUM format="%.2f" src="T_CLIN_PYR" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="T PIV Clin">
-      <DATUM format="%.2f" src="T_CLIN_PIV" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="OF HeatX">
       <DATUM format="%.2f" src="T_OUT_HEATX" extrema="temp"/>
@@ -671,6 +674,9 @@
     </NUMBER>
     <NUMBER caption="SS Chipset">
       <DATUM format="%.2f" src="SS_CHIP_TEMP" extrema="cputemp"/>
+    </NUMBER>
+    <NUMBER caption="Lock Motor">
+      <DATUM format="%.2f" src="T_LOCK_MOTOR" extrema="temp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Motor Temps" colour="#002222" row="2" col="6">
@@ -1164,7 +1170,7 @@
       <DATUM format="%.2f" src="T_heatswitch" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="VCS Fet">
-      <DATUM format="%.2f" src="T_vcs_fet" extrema="vcstemp"/>
+      <DATUM format="%.2f" src="T_vcs_fet" extrema="vcsfet"/>
     </NUMBER>
   </BOX>
   <BOX caption="Cold Optics Temps" row="4" col="7">
@@ -1180,17 +1186,14 @@
     <NUMBER caption="He3 Fridge">
       <DATUM format="%.3f" src="T_he3fridge" extrema="he3fridge"/>
     </NUMBER>
-    <NUMBER caption="300mK Strap">
-      <DATUM format="%.3f" src="T_300mk_strap" extrema="he3fridge"/>
-    </NUMBER>
     <NUMBER caption="500 um Horn">
-      <DATUM format="%.3f" src="T_horn_500" extrema="he3fridge"/>
+      <DATUM format="%.3f" src="T_horn_500" extrema="horn"/>
     </NUMBER>
     <NUMBER caption="350 um Horn">
-      <DATUM format="%.3f" src="T_horn_350" extrema="he3fridge"/>
+      <DATUM format="%.3f" src="T_horn_350" extrema="horn"/>
     </NUMBER>
     <NUMBER caption="250 um Horn">
-      <DATUM format="%.3f" src="T_horn_250" extrema="he3fridge"/>
+      <DATUM format="%.3f" src="T_horn_250" extrema="horn"/>
     </NUMBER>
     <NUMBER caption="Mirror 3">
       <DATUM format="%.3f" src="T_m3" extrema="pottemp"/>
@@ -1232,8 +1235,8 @@
     </NUMBER>
     <MULTI caption="300mK Auto Heat">
       <DATUM src="AUTO_CYCLE_ON">
-        <WORD value="1" caption="On" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+        <WORD value="1" caption="On" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="BDA Heat (%)">
