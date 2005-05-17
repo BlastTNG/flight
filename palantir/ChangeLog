@@ -1,7 +1,3 @@
-2005-05-17 (1.2.8):
-	* data/: Updates to pal files.
-	* src/palantir.cpp: Fix title.
-
 2005-05-16 (1.2.7.1):
 	* data/palantir.png: Add alpha channel.
 	* data/default.pal: Multiple updates by Barth Netterfield and Matt Truch.
