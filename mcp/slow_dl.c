@@ -42,6 +42,8 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"p_w",           SLOWDL_FORCE_INT, 8, 0, 360},
   {"ra",            SLOWDL_FORCE_INT, 8, 0, 24},
   {"dec",           SLOWDL_FORCE_INT, 8, 0, 360},
+  {"az",            SLOWDL_FORCE_INT, 8, 0, 360},
+  {"el",            SLOWDL_FORCE_INT, 8, 10, 65},
   /* MOTORS */
   {"t_el_mc",       SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
   {"t_el_mot",      SLOWDL_FORCE_INT, 8, -10, 55}, /* 0.25 deg */
@@ -60,6 +62,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"g_i_az",        SLOWDL_FORCE_INT, 8, 0, 30000},  /* 118 */
   {"g_p_pivot",     SLOWDL_FORCE_INT, 8, 0, 30000},  /* 118 */
   {"set_reac",      SLOWDL_FORCE_INT, 8, 0, 10},     /* 0.039 */ 
+  {"rps_reac",      SLOWDL_FORCE_INT, 8, -10, 10},
   /* ACS */
   {"i_apm_3v",      SLOWDL_FORCE_INT, 8, -10, 10}, /* 78 mA */
   {"i_apm_5v",      SLOWDL_FORCE_INT, 8, -10, 10}, /* 78 mA */
@@ -104,6 +107,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"isc_el",        SLOWDL_FORCE_INT, 8,   0, 90},
   {"t_isc_flange",  SLOWDL_FORCE_INT, 8, -10, 55},
   {"isc_pressure1", SLOWDL_FORCE_INT, 8, 0, 20},
+  {"isc_sigma",     SLOWDL_FORCE_INT, 8, 0, 50},
   /* OSC */
   {"osc_fpulse",    SLOWDL_FORCE_INT, 8,   0, 1000},
   {"osc_spulse",    SLOWDL_FORCE_INT, 8,   0, 1000},
@@ -115,6 +119,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"osc_el",        SLOWDL_FORCE_INT, 8,   0, 90},
   {"t_osc_flange",  SLOWDL_FORCE_INT, 8, -10, 55},
   {"osc_pressure1", SLOWDL_FORCE_INT, 8, 0, 20},
+  {"osc_sigma",     SLOWDL_FORCE_INT, 8, 0, 50},
   /* SUN SENSOR */
   {"i_sun",         SLOWDL_FORCE_INT, 8,   0,  5}, /* 20 mA */
   {"sun_az",        SLOWDL_FORCE_INT, 8,   0, 360},
@@ -200,9 +205,11 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"b_amp2",        SLOWDL_FORCE_INT, 8, 0, 127},
   {"b_amp3",        SLOWDL_FORCE_INT, 8, 0, 127},
   /* GYROS */
-  {"t_gyro1",       SLOWDL_FORCE_INT, 8, 10,  50}, /* 0.16 deg */
-  {"t_gyro2",       SLOWDL_FORCE_INT, 8, 10,  50}, /* 0.16 deg */
-  {"t_gyro3",       SLOWDL_FORCE_INT, 8, 10,  50}, /* 0.16 deg */
+  {"t_gyro1",       SLOWDL_FORCE_INT, 8, -10,  60}, 
+  {"t_gyro2",       SLOWDL_FORCE_INT, 8, -10,  60},
+  {"t_gyro3",       SLOWDL_FORCE_INT, 8, -10,  60}, 
+  {"t_gybox1",      SLOWDL_FORCE_INT, 8, -10,  60},
+  {"t_gybox2",      SLOWDL_FORCE_INT, 8, -10, 60},
   {"use_analogue",  SLOWDL_U_MASK,    1},
   {"i_gybox",       SLOWDL_FORCE_INT, 8, -10, 10}, /* 78 mA */
   /* CRYO SENSORS */
