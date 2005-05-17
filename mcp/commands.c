@@ -1667,8 +1667,10 @@ void InitCommandData() {
   CommandData.ISCState[0].focus_pos = 0;
   CommandData.ISCState[0].ap_pos = 495;
   CommandData.ISCState[0].display_mode = full;
-  CommandData.ISCState[0].azBDA = 0;
-  CommandData.ISCState[0].elBDA = 0;
+  /* ISC-BDA offsets per Ed Chapin 2005-05-17 */
+  CommandData.ISCState[0].azBDA = 0.1894;
+  CommandData.ISCState[0].elBDA = -0.2522;
+
   CommandData.ISCState[0].brightStarMode = 0;
   CommandData.ISCState[0].grid = 38;
   CommandData.ISCState[0].maxBlobMatch = 10;
@@ -1697,8 +1699,10 @@ void InitCommandData() {
   CommandData.ISCState[1].focus_pos = 0;
   CommandData.ISCState[1].ap_pos = 495;
   CommandData.ISCState[1].display_mode = full;
-  CommandData.ISCState[1].azBDA = 0;
-  CommandData.ISCState[1].elBDA = 0;
+  /* OSC-BDA offsets per Ed Chapin 2005-05-17 */
+  CommandData.ISCState[1].azBDA = 0.1804;
+  CommandData.ISCState[1].elBDA = 0.4828;
+
   CommandData.ISCState[1].brightStarMode = 0;
   CommandData.ISCState[1].grid = 38;
   CommandData.ISCState[1].maxBlobMatch = 10;

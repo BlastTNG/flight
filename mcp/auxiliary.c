@@ -122,8 +122,8 @@ extern short int InCharge; /* tx.c */
 /* in commands.c */
 double LockPosition(double elevation); 
 
-short int incool_state = -2;
-short int outcool_state = -2;
+short int incool_state = 0;
+short int outcool_state = 0;
 
 /****************************************************************/
 /* Read the state of the lock motor pin (or guess it, whatever) */
@@ -177,9 +177,9 @@ int ControlInnerCool(void)
   }
 
   if (CommandData.pumps.inframe_auto == 0) {
-    if (incool_state != -1) {
+    if (incool_state < 0) {
       bprintf(info, "Inner Frame Cooling: Vetoed\n");
-      incool_state = -1;
+      incool_state = 0;
     }
     return CommandData.pumps.pwm3;
   }
@@ -200,32 +200,32 @@ int ControlInnerCool(void)
   else if (rg)
     temp = I2T_M * rec + I2T_B;
   else {
-    if (incool_state != -3) {
+    if (incool_state != 3) {
       bprintf(info, "Inner Frame Cooling: Auto-Vetoed\n");
       CommandData.pumps.inframe_cool_on = 40; /* turn on pump */
       CommandData.pumps.inframe_cool_off = 0;
-      incool_state = -3;
+      incool_state = 3;
     }
     return CommandData.pumps.pwm3; /* both temps bad --
                                       revert to manual settings */
   }
 
   if (temp < IF_COOL_GOAL - IF_COOL_DELTA ||
-      (temp < IF_COOL_GOAL && incool_state == 0)) {
-    if (incool_state != 0) {
+      (temp < IF_COOL_GOAL && incool_state == 1)) {
+    if (incool_state != 1) {
       bprintf(info, "Inner Frame Cooling: Pump Off\n");
       CommandData.pumps.inframe_cool_off = 40;
       CommandData.pumps.inframe_cool_on = 0;
-      incool_state = 0;
+      incool_state = 1;
     }
     return 2047; /* temperature below goal, nothing to do, turn off pump */
   }
 
-  if (incool_state != 1) { 
+  if (incool_state != 2) { 
     bprintf(info, "Inner Frame Cooling: Pump On\n");
     CommandData.pumps.inframe_cool_on = 40; /* turn on pump */
     CommandData.pumps.inframe_cool_off = 0;
-    incool_state = 1;
+    incool_state = 2;
   }
 
   error = temp - IF_COOL_GOAL;
@@ -254,9 +254,9 @@ int ControlOuterCool(void)
   }
 
   if (CommandData.pumps.outframe_auto == 0) {
-    if (outcool_state != -1) {
+    if (outcool_state < 0) {
       bprintf(info, "Outer Frame Cooling: Vetoed\n");
-      outcool_state = -1;
+      outcool_state = 0;
     }
     return CommandData.pumps.pwm4;
   }
@@ -265,11 +265,11 @@ int ControlOuterCool(void)
 
   /* NB: these tests are backwards due to a sign flip in the calibration */
   if (temp < MAX_TEMP || temp > MIN_TEMP) {
-    if (outcool_state != -3) {
+    if (outcool_state != 3) {
       bprintf(info, "Outer Frame Cooling: Auto-Vetoed\n");
       CommandData.pumps.outframe_cool1_on = 40; /* turn on pump */
       CommandData.pumps.outframe_cool1_off = 0;
-      outcool_state = -3;
+      outcool_state = 3;
     }
     return CommandData.pumps.pwm3; /* temp bad -- revert to manual settings */
   }
@@ -277,21 +277,21 @@ int ControlOuterCool(void)
   temp = I2T_M * temp + I2T_B;
 
   if (temp < OF_COOL_GOAL - OF_COOL_DELTA ||
-      (temp < OF_COOL_GOAL && outcool_state == 0)) {
-    if (outcool_state != 0) {
+      (temp < OF_COOL_GOAL && outcool_state == 1)) {
+    if (outcool_state != 1) {
       bprintf(info, "Outer Frame Cooling: Pump Off\n");
       CommandData.pumps.outframe_cool1_off = 40;
       CommandData.pumps.outframe_cool1_on = 0;
-      outcool_state = 0;
+      outcool_state = 1;
     }
     return 2047; /* temperature below goal, nothing to do, turn off pump */
   }
 
-  if (outcool_state != 1) { 
+  if (outcool_state != 2) { 
     bprintf(info, "Outer Frame Cooling: Pump On\n");
     CommandData.pumps.outframe_cool1_on = 40; /* turn on pump */
     CommandData.pumps.outframe_cool1_off = 0;
-    outcool_state = 1;
+    outcool_state = 2;
   }
 
   error = temp - OF_COOL_GOAL;
@@ -940,9 +940,17 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   if (CommandData.pumps.inframe_cool_on > 0) {
     ifpmBits |= IF_COOL1_ON;
     CommandData.pumps.inframe_cool_on--;
+    if (CommandData.pumps.inframe_auto == 0 && incool_state != -2) {
+      bprintf(info, "Inner Frame Cooling: Pump On\n");
+      incool_state = -2;
+    }
   } else if (CommandData.pumps.inframe_cool_off > 0) {
     ifpmBits |= IF_COOL1_OFF;
     CommandData.pumps.inframe_cool_off--;
+    if (CommandData.pumps.inframe_auto == 0 && incool_state != -1) {
+      bprintf(info, "Inner Frame Cooling: Pump Off\n");
+      incool_state = -1;
+    }
   }
 
   /* outer frame box */
@@ -950,10 +958,20 @@ void ControlAuxMotors(unsigned short *RxFrame) {
   if (CommandData.pumps.outframe_cool1_on > 0) {
     ofpmBits |= OF_COOL1_ON;
     CommandData.pumps.outframe_cool1_on--;
+    if (CommandData.pumps.outframe_auto == 0 && outcool_state != -2) {
+      bprintf(info, "Outer Frame Cooling: Pump On\n");
+      outcool_state = -2;
+    }
   } else if (CommandData.pumps.outframe_cool1_off > 0) {
     ofpmBits |= OF_COOL1_OFF;
     CommandData.pumps.outframe_cool1_off--;
+    if (CommandData.pumps.outframe_auto == 0 && outcool_state != -1) {
+      bprintf(info, "Outer Frame Cooling: Pump Off\n");
+      outcool_state = -1;
+    }
   }
+
+  /* this pump isn't used */
   if (CommandData.pumps.outframe_cool2_on > 0) {
     ofpmBits |= OF_COOL2_ON;
     CommandData.pumps.outframe_cool2_on--;
