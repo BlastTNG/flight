@@ -100,6 +100,9 @@ void ReadDecom (void)
 
   for (;;) {
     while ((read(decom, &buf, sizeof(unsigned short))) > 0) {
+#ifdef DEBUG
+      printf("%04x ", buf);
+#endif
       read_data = 1;
       FrameBuf[i_word] = buf;
       AntiFrameBuf[i_word] = ~buf;
