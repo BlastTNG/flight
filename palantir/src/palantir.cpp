@@ -1138,7 +1138,7 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
 
   if (!name)
     setName("MainForm");
-  setCaption(tr("Palantir -")+layoutfile);
+  setCaption(tr("Palantir " VERSION " - ") + layoutfile);
   setIcon(*Icon);
 
   ContentLayout = new QGridLayout;
@@ -1316,7 +1316,7 @@ int main(int argc, char* argv[]) {
   else
     strncpy(layoutfile, DEF_LAYOUTFILE, MAXPATHLENGTH);
 
-  MainForm palantir(0, "palantir", true, 0, &layoutfile[0]);
+  MainForm palantir(0, "palantir " VERSION, true, 0, &layoutfile[0]);
 
   app.setMainWidget(&palantir);
   palantir.show();
