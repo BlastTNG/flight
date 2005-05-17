@@ -215,10 +215,10 @@
         <WORD value="1" caption="Vetoed" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
-    <NUMBER caption="Sun Sensor Az SNR">
+    <NUMBER caption="SS Az SNR">
       <DATUM format="%.0f" src="SS_AZ_SNR" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="Sun Sensor Prin">
+    <NUMBER caption="SS Prin">
       <DATUM format="%.0f" src="SS_PRIN" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="ISC">
