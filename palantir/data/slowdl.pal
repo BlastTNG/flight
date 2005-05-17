@@ -1130,6 +1130,84 @@
       <HI value="6.5"/>
       <XHI value="6.5"/>
     </EXTREMA>
+    <EXTREMA name="t_vcs_fet">
+      <XLO value="6"/>
+      <LO value="6"/>
+      <HI value="7.5"/>
+      <XHI value="7.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_opt_box_ext">
+      <XLO value="5"/>
+      <LO value="5"/>
+      <HI value="10"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="t_he3fridge">
+      <XLO value="1.25"/>
+      <LO value="1.25"/>
+      <HI value="5.5"/>
+      <XHI value="5.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_m3">
+      <XLO value="1"/>
+      <LO value="1"/>
+      <HI value="2.5"/>
+      <XHI value="2.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_m4">
+      <XLO value="1"/>
+      <LO value="1"/>
+      <HI value="2.5"/>
+      <XHI value="2.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_m5">
+      <XLO value="1"/>
+      <LO value="1"/>
+      <HI value="2.5"/>
+      <XHI value="2.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_horn_250">
+      <XLO value="1.25"/>
+      <LO value="1.25"/>
+      <HI value="5.5"/>
+      <XHI value="5.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_horn_350">
+      <XLO value="1.25"/>
+      <LO value="1.25"/>
+      <HI value="5.5"/>
+      <XHI value="5.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_horn_500">
+      <XLO value="1.25"/>
+      <LO value="1.25"/>
+      <HI value="5.5"/>
+      <XHI value="5.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_300mk_strap">
+      <XLO value="1.25"/>
+      <LO value="1.25"/>
+      <HI value="5.5"/>
+      <XHI value="5.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_he4pot">
+      <XLO value="1"/>
+      <LO value="1"/>
+      <HI value="2.5"/>
+      <XHI value="2.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_optbox_filt">
+      <XLO value="1"/>
+      <LO value="1"/>
+      <HI value="2.5"/>
+      <XHI value="2.5"/>
+    </EXTREMA>
+    <EXTREMA name="lokmot_pin">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="1"/>
+      <XHI value="1"/>
+    </EXTREMA>
     <CURFILE name="/data/etc/slow_dl.cur"/>
   </SETTINGS>
   <DEFAULTS>
