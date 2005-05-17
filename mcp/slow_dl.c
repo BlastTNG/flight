@@ -252,7 +252,7 @@ void InitSlowDL(void) {
     SlowDLInfo[i].wide = address->wide;
     SlowDLInfo[i].mindex = ExtractBiPhaseAddr(address)->index;
     SlowDLInfo[i].chnum = ExtractBiPhaseAddr(address)->channel;
-    SlowDLInfo[i].max = (SlowDLInfo[i].calib_max - address->b) * address->m;
-    SlowDLInfo[i].min = (SlowDLInfo[i].calib_min - address->b) * address->m;
+    SlowDLInfo[i].max = (SlowDLInfo[i].calib_max - address->b) / address->m;
+    SlowDLInfo[i].min = (SlowDLInfo[i].calib_min - address->b) / address->m;
   }
 }
