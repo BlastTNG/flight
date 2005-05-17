@@ -47,11 +47,12 @@ extern "C" {
    * 'u' for 135 <= ENC_ELEV_OFFSET < 315 and 's' otherwise */
 #define ENC_ELEV_TYPE 'u'
 
-#define LOCKIN_C2V (5.43736e-07)
-#define LOCKIN_OFFSET (-1.1403)
+  /* New Bolo calibrations per Jeff  2005-05-17 */
+#define LOCKIN_C2V (1.5704089784e-6)
+#define LOCKIN_OFFSET (-1.3178421494e+1)
 
-#define ROX_C2V   (LOCKIN_C2V/256.0)
-#define ROX_OFFSET LOCKIN_OFFSET
+#define ROX_C2V   (5.43736e-07/256.0)
+#define ROX_OFFSET (-1.1403)
 
 #define FIELD_LEN 20
 
