@@ -432,7 +432,7 @@
         <WORD value="1" caption="Locked" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
-    <!--
+<!--
     <MULTI caption="Override">
       <DATUM src="L_OVERRIDE">
         <WORD value="0" caption="OFF" textstyle="OK_BIT"/>
