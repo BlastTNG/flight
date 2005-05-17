@@ -205,7 +205,7 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
 void MakeBoloTable(void) {
   int i, j, index = 0;
   struct ChannelStruct channel = {
-    "", 'r', 3, BOLO_BUS, 0, 1.19209e-7, -2097152.0, 'u'
+    "", 'r', 3, BOLO_BUS, 0, 1.5704089784E-6, -1.3178421494E+1, 'u'
   };
 
 #ifdef VERBOSE
