@@ -596,7 +596,7 @@
     <NUMBER caption="Triangle">
       <DATUM format="%.2f" src="T_TRIANGLE" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Chin Tip">
+    <NUMBER caption="Mental Protuberance">
       <DATUM format="%.2f" src="T_SCOOP_TIP" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Left SS">
