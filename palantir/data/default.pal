@@ -964,18 +964,26 @@
       <DATUM format="%.2f" src="P_PV" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="IF Cooling">
-      <DATUM src="IF_COOL1_ON">
-        <WORD value="1" caption="On" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+      <DATUM src="INCOOL_STATE">
+        <WORD value="1" caption="Auto On" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Auto Off" textstyle="W_BIT"/>
+        <WORD value="-1" caption="Vetoed Off" textstyle="OK_BIT"/>
+        <WORD value="-2" caption="Unknown" textstyle="P_BIT"/>
+        <WORD value="-3" caption="Autoveto" textstyle="E_BIT"/>
+        <WORD value="-4" caption="Vetoed On" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="IF Level (%)">
       <DATUM format="%.2f" src="INPUMP_LEV" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="OF Cooling">
-      <DATUM src="OF_COOL1_ON">
-        <WORD value="1" caption="On" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+      <DATUM src="OUTCOOL_STATE">
+        <WORD value="3" caption="Autoveto" textstyle="E_BIT"/>
+        <WORD value="2" caption="Auto On" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Auto Off" textstyle="W_BIT"/>
+        <WORD value="0" caption="Unknown" textstyle="P_BIT"/>
+        <WORD value="-1" caption="Vetoed Off" textstyle="OK_BIT"/>
+        <WORD value="-2" caption="Vetoed On" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="OF Level (%)">
