@@ -1154,7 +1154,7 @@
     <MULTI caption="Source" textstyle="oddrow">
       <DATUM src="1">
         <WORD value="255" caption="TDRSS" textstyle="OK_BIT"/>
-        <WORD value="1" caption="IRIDIUM" textstyle="OK_BIT"/>
+        <WORD value="253" caption="IRIDIUM" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="p_pv" textstyle="evenrow">
