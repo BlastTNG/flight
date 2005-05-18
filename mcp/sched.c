@@ -478,8 +478,11 @@ void DoSched(void) {
   /*******************************/
   /** Execute scheduled command **/
   dt /= 3600;
-  if (i_sched != last_is) {
-    bprintf(info, "time: %li ref: %li dt: %f lon: %f\n", PointingData[i_point].t, S->t0, dt, d_lon);
+  if (i_sched > S->n_sched)
+    bprintf(info, "Ran out of schedule file commands.\n");
+  else if (i_sched != last_is) {
+    bprintf(info, "time: %li ref: %li dt: %f lon: %f\n",
+        PointingData[i_point].t, S->t0, dt, d_lon);
     bprintf(info, "Scheduler: Submitting event %i from %s to command "
         "subsystem (LST = %i/%f)", i_sched,
         filename[CommandData.sucks][CommandData.lat_range], (int)(dt / 24), 
