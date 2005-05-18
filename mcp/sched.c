@@ -209,7 +209,7 @@ void LoadSchedFile(const char* file, struct ScheduleType* S)
       S->event[j].is_multi = 0;
       command = SCommand(token[0]);
       if (command == -1) {
-        bprintf(sched, "Scheduler: ERROR: command not recognised: %s\n",
+        bprintf(sched, "Scheduler: *** ERROR: command not recognised: %s\n",
             token[0]);
         entry_ok = 0;
       }
@@ -220,7 +220,7 @@ void LoadSchedFile(const char* file, struct ScheduleType* S)
 
     /* lst */
     if (n_fields < 3) {
-      bprintf(sched, "Scheduler: ERROR: cannot find lst!\n");
+      bprintf(sched, "Scheduler: *** ERROR: cannot find lst!\n");
       entry_ok = 0;
     } else {
       day = atoi(token[1]);
@@ -232,8 +232,9 @@ void LoadSchedFile(const char* file, struct ScheduleType* S)
     if (entry_ok && S->event[j].is_multi) {
       mindex = MIndex(command);
       if (n_fields < 3 + mcommands[mindex].numparams) {
-        bprintf(sched, "Scheduler: ERROR: insufficient parameters for command "
-            "(wanted %i; got %i)\n", mcommands[mindex].numparams, n_fields - 3);
+        bprintf(sched, "Scheduler: *** ERROR: insufficient parameters for "
+            "command (wanted %i; got %i)\n", mcommands[mindex].numparams,
+            n_fields - 3);
         entry_ok = 0;
       } else
         for (k = 0; k < mcommands[mindex].numparams; ++k) {
@@ -338,13 +339,14 @@ void DoSched(void) {
   int i, index;
   struct ScheduleType *S = &_S[CommandData.sucks][CommandData.lat_range];
   struct ScheduleEvent event;
+  static int c = 0;
 
   i_point = GETREADINDEX(point_index);
   d_lat = PointingData[i_point].lat - NOMINAL_LATITUDE;
 
   /* check our latitude band */
   if (CommandData.lat_range == 2) { /* southern band */
-    if (d_lat > (LATITUDE_BAND / 2) - LATITUDE_OVERLAP) {
+    if (d_lat > -(LATITUDE_BAND / 2) + LATITUDE_OVERLAP) {
       bprintf(info, "Scheduler: Entering middle latitude band.\n");
       CommandData.lat_range = 1;
     }
