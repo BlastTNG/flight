@@ -965,12 +965,12 @@
     </NUMBER>
     <MULTI caption="IF Cooling">
       <DATUM src="INCOOL_STATE">
-        <WORD value="1" caption="Auto On" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Auto Off" textstyle="W_BIT"/>
+        <WORD value="3" caption="Autoveto" textstyle="E_BIT"/>
+        <WORD value="2" caption="Auto On" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Auto Off" textstyle="W_BIT"/>
+        <WORD value="0" caption="Unknown" textstyle="P_BIT"/>
         <WORD value="-1" caption="Vetoed Off" textstyle="OK_BIT"/>
-        <WORD value="-2" caption="Unknown" textstyle="P_BIT"/>
-        <WORD value="-3" caption="Autoveto" textstyle="E_BIT"/>
-        <WORD value="-4" caption="Vetoed On" textstyle="W_BIT"/>
+        <WORD value="-2" caption="Vetoed On" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="IF Level (%)">
