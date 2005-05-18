@@ -177,7 +177,7 @@ int ControlInnerCool(void)
   }
 
   if (CommandData.pumps.inframe_auto == 0) {
-    if (incool_state < 0) {
+    if (incool_state > 0) {
       bprintf(info, "Inner Frame Cooling: Vetoed\n");
       incool_state = 0;
     }
@@ -254,7 +254,7 @@ int ControlOuterCool(void)
   }
 
   if (CommandData.pumps.outframe_auto == 0) {
-    if (outcool_state < 0) {
+    if (outcool_state > 0) {
       bprintf(info, "Outer Frame Cooling: Vetoed\n");
       outcool_state = 0;
     }
@@ -457,7 +457,7 @@ int Balance(int ifpmBits) {
     error = smoothed_i - I_EL_ZERO - CommandData.pumps.bal_target;
   }
 
-  /* Don't do anything else if we're vetoted */
+  /* Don't do anything else if we're vetoed */
   if (CommandData.pumps.bal_veto == -1) {
     if (pump_is_on != -1) {
       bprintf(info, "Balance System: Vetoed\n");
