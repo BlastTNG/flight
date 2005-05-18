@@ -105,6 +105,7 @@ void LoadSchedFile(const char* file, struct ScheduleType* S)
   int i, j, k, entry_ok;
   int n_fields, mindex;
   int el_range_warning;
+  int discarded_lines;
 
   /*******************************************/
   /*** Count number of schedule file lines ***/
@@ -174,6 +175,7 @@ void LoadSchedFile(const char* file, struct ScheduleType* S)
 
   /***********************/
   /*** Read the events ***/
+  discarded_lines = 0;
   for (i = j = 0; i < S->n_sched; i++) {
     entry_ok = 1;
     GetLine(fp, line_in);
@@ -245,13 +247,15 @@ void LoadSchedFile(const char* file, struct ScheduleType* S)
         }
     }
 
-    if (!entry_ok)
+    if (!entry_ok) {
       bprintf(sched,
           "Scheduler: ****** Warning Line %i is Malformed: Skipping *****\n",
           i);
-    else 
+      discarded_lines++;
+    } else 
       j++;
   }
+  S->n_sched -= discarded_lines;
 
   for (i = 0; i < S->n_sched; i++) {
     if (S->event[i].command == box || S->event[i].command == vbox ||
@@ -298,6 +302,10 @@ void LoadSchedFile(const char* file, struct ScheduleType* S)
   }
   bputs(sched, "Scheduler: "
       "***********************************************************\n");
+
+  if (discarded_lines)
+    bprintf(warning, "Discarded %i malformed lines from schedule file.",
+        discarded_lines);
 
   if (fclose(fp) == EOF)
     berror(err, "Scheduler: Error on close");
@@ -478,9 +486,7 @@ void DoSched(void) {
   /*******************************/
   /** Execute scheduled command **/
   dt /= 3600;
-  if (i_sched > S->n_sched)
-    bprintf(info, "Ran out of schedule file commands.\n");
-  else if (i_sched != last_is) {
+  if (i_sched != last_is) {
     bprintf(info, "time: %li ref: %li dt: %f lon: %f\n",
         PointingData[i_point].t, S->t0, dt, d_lon);
     bprintf(info, "Scheduler: Submitting event %i from %s to command "
