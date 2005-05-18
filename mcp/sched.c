@@ -339,7 +339,6 @@ void DoSched(void) {
   int i, index;
   struct ScheduleType *S = &_S[CommandData.sucks][CommandData.lat_range];
   struct ScheduleEvent event;
-  static int c = 0;
 
   i_point = GETREADINDEX(point_index);
   d_lat = PointingData[i_point].lat - NOMINAL_LATITUDE;
