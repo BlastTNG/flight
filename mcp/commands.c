@@ -1112,7 +1112,8 @@ void SendDownData(char tty_fd) {
         numbits = 1;
         break;
     }
-
+    //bprintf(info, "%g %ld %ld %x %s\n", SlowDLInfo[i].value, SlowDLInfo[i].max,
+    //	   SlowDLInfo[i].min, temp, SlowDLInfo[i].src);
 
     if (numbits - 1 > 7 - bitpos) {         /* Do we need to wrap? */
       data[bytepos++] |= (temp & ((1 << (8 - bitpos)) - 1)) << bitpos;
@@ -1153,6 +1154,10 @@ void SendDownData(char tty_fd) {
   buffer[3 + SLOWDL_LEN] = SLOWDL_ETX;
 
   write(tty_fd, buffer, 3 + SLOWDL_LEN + 1);
+  for (i=0; i<3 + SLOWDL_LEN + 1; i++) {
+    bprintf(info, "%d %2x", i, buffer[i]);
+  }
+
 }
 
 /* compute the size of the data queue for the given command */

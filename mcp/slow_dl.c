@@ -13,6 +13,7 @@
 
 #include "channels.h"
 #include "slow_dl.h"
+#include "blast.h"
 
 /* SLOWDL_FORCE_INT force an integer on numbits between min and max */
 /* SLOWDL_U_MASK    masks off all but the lowest numbits and sends those */
@@ -20,9 +21,9 @@
 /* "src", type, numbits, min, max */
 struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   /* PV */
-  {"p_pv",          SLOWDL_FORCE_INT, 8,  0, 120},
-  {"t_pv",          SLOWDL_FORCE_INT, 8, -10, 65}, 
-  {"i_pv",          SLOWDL_FORCE_INT, 8, -10, 10}, /* 78 mA */
+  {"p_pv",          SLOWDL_FORCE_INT, 8,  120, 0},
+  {"t_pv",          SLOWDL_FORCE_INT, 8, 65, -10}, 
+  {"i_pv",          SLOWDL_FORCE_INT, 8, 10, -10}, /* 78 mA */
   {"time",          SLOWDL_FORCE_INT, 16, 11163273747, 1121507747}, 
   {"sam_i_am",      SLOWDL_U_MASK,    8},
   {"lat",           SLOWDL_FORCE_INT, 8, 0, 90}, /* 0.35 deg */
@@ -45,12 +46,12 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"az",            SLOWDL_FORCE_INT, 8, 0, 360},
   {"el",            SLOWDL_FORCE_INT, 8, 10, 65},                                                                                                                                                                                                                                  
   /* MOTORS */
-  {"t_el_mc",       SLOWDL_FORCE_INT, 8, -55, 55},
-  {"t_el_mot",      SLOWDL_FORCE_INT, 8, -55, 55},
-  {"t_roll",        SLOWDL_FORCE_INT, 8, -55, 55},
-  {"t_reac",        SLOWDL_FORCE_INT, 8, -55, 55},
-  {"t_reac_mc",     SLOWDL_FORCE_INT, 8, -55, 55},
-  {"t_piv_mc",      SLOWDL_FORCE_INT, 8, -55, 55}, 
+  {"t_el_mc",       SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_el_mot",      SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_roll",        SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_reac",        SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_reac_mc",     SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_piv_mc",      SLOWDL_FORCE_INT, 8, 55, -55},
   {"i_roll",        SLOWDL_FORCE_INT, 8, -10, 10}, /* 78 mA */
   {"i_piv",         SLOWDL_FORCE_INT, 8, -10, 10}, /* 78 mA */
   {"i_reac",        SLOWDL_FORCE_INT, 8, -10, 10}, /* 78 mA */
@@ -64,12 +65,12 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"set_reac",      SLOWDL_FORCE_INT, 8, 0, 3}, 
   {"rps_reac",      SLOWDL_FORCE_INT, 8, -3, 3},
   /* ACS */
-  {"i_apm_3v",      SLOWDL_FORCE_INT, 8, -10, 10}, /* 78 mA */
-  {"i_apm_5v",      SLOWDL_FORCE_INT, 8, -10, 10}, /* 78 mA */
-  {"i_apm_10v",     SLOWDL_FORCE_INT, 8, -10, 10}, /* 78 mA */
-  {"t_apm_3v",      SLOWDL_FORCE_INT, 8, -55, 70},
-  {"t_apm_5v",      SLOWDL_FORCE_INT, 8, -55, 70},
-  {"t_apm_10v",     SLOWDL_FORCE_INT, 8, -55, 70}, 
+  {"i_apm_3v",      SLOWDL_FORCE_INT, 8, 10, -10}, /* 78 mA */
+  {"i_apm_5v",      SLOWDL_FORCE_INT, 8, 10, -10}, /* 78 mA */
+  {"i_apm_10v",     SLOWDL_FORCE_INT, 8, 10, -10}, /* 78 mA */
+  {"t_apm_3v",      SLOWDL_FORCE_INT, 8, 70, -55},
+  {"t_apm_5v",      SLOWDL_FORCE_INT, 8, 70, -55},
+  {"t_apm_10v",     SLOWDL_FORCE_INT, 8, 70, -55}, 
   {"sensor_reset",  SLOWDL_U_MASK,    8},
   {"lock_bits",     SLOWDL_U_MASK,    8},
   /* BALANCE */
@@ -96,7 +97,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"outcool_state", SLOWDL_U_MASK, 8},
   {"incool_state",  SLOWDL_U_MASK, 8},
   /* ISC */
-  {"i_starcam",     SLOWDL_FORCE_INT, 8,   0,  5}, /* 20 mA */
+  {"i_starcam",     SLOWDL_FORCE_INT, 8,   5, 0}, /* 20 mA */
   {"isc_fpulse",    SLOWDL_FORCE_INT, 8,   0, 1000},
   {"isc_spulse",    SLOWDL_FORCE_INT, 8,   0, 1000},
   {"isc_framenum",  SLOWDL_U_MASK,    8},
@@ -121,7 +122,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"osc_pressure1", SLOWDL_FORCE_INT, 8, 0, 20},
   {"osc_sigma",     SLOWDL_FORCE_INT, 8, 0, 50},
   /* SUN SENSOR */
-  {"i_sun",         SLOWDL_FORCE_INT, 8,   0,  5}, /* 20 mA */
+  {"i_sun",         SLOWDL_FORCE_INT, 8,   5,  0}, /* 20 mA */
   {"sun_az",        SLOWDL_FORCE_INT, 8,   0, 360},
   {"ss_az",         SLOWDL_FORCE_INT, 8,   0, 360},
   {"ss_az_snr",     SLOWDL_FORCE_INT, 8,   0, 150},
@@ -132,17 +133,17 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"pch_clin_piv",  SLOWDL_FORCE_INT, 8, -10, 10},
   {"roll_clin_pyr", SLOWDL_FORCE_INT, 8, -10, 10},
   {"pch_clin_pyr",  SLOWDL_FORCE_INT, 8, -10, 10},
-  {"t_clin_piv",    SLOWDL_FORCE_INT, 8, -55, 55},
-  {"t_clin_pyr",    SLOWDL_FORCE_INT, 8, -55, 55},
-  {"t_clin_sip",    SLOWDL_FORCE_INT, 8, -55, 55},
-  {"t_clin_if",     SLOWDL_FORCE_INT, 8, -55, 55},
+  {"t_clin_piv",    SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_clin_pyr",    SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_clin_sip",    SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_clin_if",     SLOWDL_FORCE_INT, 8, 55, -55},
   /* POWER */
   {"apcu_reg",      SLOWDL_FORCE_INT, 8, 24,  34},
   {"dpcu_reg",      SLOWDL_FORCE_INT, 8, 24,  34},
-  {"v_batt_acs",    SLOWDL_FORCE_INT, 8, 17,  37}, /* 0.078 deg */
-  {"v_batt_das",    SLOWDL_FORCE_INT, 8, 17,  37}, /* 0.078 deg */
-  {"t_apcu",        SLOWDL_FORCE_INT, 8, -55, 65},
-  {"t_dpcu",        SLOWDL_FORCE_INT, 8, -55, 65},
+  {"v_batt_acs",    SLOWDL_FORCE_INT, 8, 37,  17}, /* 0.078 deg */
+  {"v_batt_das",    SLOWDL_FORCE_INT, 8, 37,  17}, /* 0.078 deg */
+  {"t_apcu",        SLOWDL_FORCE_INT, 8, 65, -55},
+  {"t_dpcu",        SLOWDL_FORCE_INT, 8, 65, -55},
   {"t_sol_port",    SLOWDL_FORCE_INT, 8,  0, 150}, /* 0.59 deg */
   {"t_sol_stbd",    SLOWDL_FORCE_INT, 8,  0, 150}, /* 0.59 deg */
   {"t_batt_acs",    SLOWDL_FORCE_INT, 8, -55, 55},
@@ -246,6 +247,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
 void InitSlowDL(void) {
   int i;
   struct NiosStruct *address;
+  long tmp;
 
   for (i = 0; i < SLOWDL_NUM_DATA; i++) {
     address = GetNiosAddr(SlowDLInfo[i].src);
@@ -254,5 +256,10 @@ void InitSlowDL(void) {
     SlowDLInfo[i].chnum = ExtractBiPhaseAddr(address)->channel;
     SlowDLInfo[i].max = (SlowDLInfo[i].calib_max - address->b) / address->m;
     SlowDLInfo[i].min = (SlowDLInfo[i].calib_min - address->b) / address->m;
+/*     if (SlowDLInfo[i].max < SlowDLInfo[i].min) { */
+/*       tmp = SlowDLInfo[i].min; */
+/*       SlowDLInfo[i].min = SlowDLInfo[i].max; */
+/*       SlowDLInfo[i].max = tmp; */
+/*     } */
   }
 }
