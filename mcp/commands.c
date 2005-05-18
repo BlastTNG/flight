@@ -1005,6 +1005,11 @@ void GPSPosition (unsigned char *indata) {
   WritePrevStatus();
 }
 
+const char* CommandName(int is_multi, int command)
+{
+  return (is_multi) ? MName(command) : SName(command);
+}
+
 void ScheduledCommand(struct ScheduleEvent *event)
 {
   

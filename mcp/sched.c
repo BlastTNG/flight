@@ -51,6 +51,7 @@ enum multiCommand MCommand(char*);
 int MIndex(enum multiCommand);
 enum singleCommand SCommand(char*);
 void ScheduledCommand(struct ScheduleEvent*);
+const char* CommandName(int, int);
 
 const char filename[2][3][32] = {
   {"/data/etc/happy.north.sch",
@@ -291,13 +292,14 @@ void LoadSchedFile(const char* file, struct ScheduleType* S)
           el_range_warning = 1;
       }
       if (el_range_warning) {
-        bputs(sched, "Scheduler: ******************************************\n"
-            "Scheduler: *** Warning: El Range\n");
-        bprintf(sched, "Scheduler: *** LST: %7.4f Ra: %8.3f  Dec: %8.3f\n",
-            S->event[i].t / 3600.0, S->event[i].rvalues[0],
-            S->event[i].rvalues[1]);
-        bprintf(sched, "Scheduler: *** %3d LST: %7.4f Az: %8.3f - %8.3f El: "
-            "%8.3f - %8.3f\n", i, S->event[i].t / 3600.0, az1, az2, el1, el2);
+        bprintf(sched, "Scheduler: ******************************************\n"
+            "Scheduler: *** Warning: El Range of Event %i (%s)\n", i,
+            CommandName(S->event[i].is_multi, S->event[i].command));
+        bprintf(sched, "Scheduler: *** LST: %i/%7.4f Ra: %8.3f  Dec: %8.3f\n",
+            (int)(S->event[i].t / 86400), fmod(S->event[i].t / 3600.0, 24),
+            S->event[i].rvalues[0], S->event[i].rvalues[1]);
+        bprintf(sched, "Scheduler: *** LST: %7.4f Az: %8.3f - %8.3f El: "
+            "%8.3f - %8.3f\n", S->event[i].t / 3600.0, az1, az2, el1, el2);
       }
     }
   }
@@ -488,8 +490,6 @@ void DoSched(void) {
   /** Execute scheduled command **/
   dt /= 3600;
   if (i_sched != last_is) {
-    bprintf(info, "time: %li ref: %li dt: %f lon: %f\n",
-        PointingData[i_point].t, S->t0, dt, d_lon);
     bprintf(info, "Scheduler: Submitting event %i from %s to command "
         "subsystem (LST = %i/%f)", i_sched,
         filename[CommandData.sucks][CommandData.lat_range], (int)(dt / 24), 
