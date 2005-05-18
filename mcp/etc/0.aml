@@ -304,9 +304,9 @@
 --q4@q0       i_batt_acs    @             @             20000         45000         @             
 --q5@q4       i_batt_das    @             @             @             @             @             
 --q6@q0       i_gond_acs    @             @             22000         32500         @             
---q7@q7       i_gond_das    @             @             @             @             @             
---q8@q7       i_sol_das     @             @             @             @             @             
---q9@q7       i_sol_acs     @             @             @             @             @             
+--q7@q6       i_gond_das    @             @             @             @             @             
+--q8@q6       i_sol_das     @             @             @             @             @             
+--q9@q6       i_sol_acs     @             @             @             @             @             
 --q10@q0      v_batt_acs    @             @             10000         20000         @             
 --q11@q10     v_batt_das    @             @             @             @             @             
 --q12@q0      v_sol_acs1    @             @             20000         46000         @             

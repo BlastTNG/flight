@@ -1118,7 +1118,8 @@ void Alice::CompressionLoop(void)
             if ((numread = DataSource->ReadField(rawdata, currInfo->src,
                     framepos - readrightpad, 1)) != currInfo->framefreq) {
               bprintf(err, "TDRSS: Error accessing correct number of data "
-                  "from frames (%d, %d).", numread, currInfo->framefreq);
+                  "from frames (%s, %d, %d).", currInfo->src, numread,
+                  currInfo->framefreq);
               rawdata[0] = 0;
               SendSingle(rawdata, currInfo);  // Send down a zero
             } else              
