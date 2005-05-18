@@ -1154,10 +1154,11 @@ void SendDownData(char tty_fd) {
   buffer[3 + SLOWDL_LEN] = SLOWDL_ETX;
 
   write(tty_fd, buffer, 3 + SLOWDL_LEN + 1);
+#if 0
   for (i=0; i<3 + SLOWDL_LEN + 1; i++) {
     bprintf(info, "%d %2x", i, buffer[i]);
   }
-
+#endif
 }
 
 /* compute the size of the data queue for the given command */
