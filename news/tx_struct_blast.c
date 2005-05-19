@@ -210,15 +210,15 @@ struct ChannelStruct SlowChannels[] = {
   {"g_p_bdaheat",  'w',  CRYO, 36,                 1.0,              0., 'u'},
   {"sync03",       'w',  CRYO, 56,                 1.0,             0.0, 'u'},
 
-  {"t_sc_baf",       'r',  BIAS,  5,              I2T_M,           I2T_B, 'u'},
-  {"t_scoop",       'r',  BIAS,  7,              I2T_M,           I2T_B, 'u'},
+  {"t_sc_baf",     'r',  BIAS,  5,              I2T_M,           I2T_B, 'u'},
+  {"t_scoop",      'r',  BIAS,  7,              I2T_M,           I2T_B, 'u'},
   {"t_prim",       'r',  BIAS,  9,              I2T_M,           I2T_B, 'u'},
   {"t_cryo",       'r',  BIAS, 11,              I2T_M,           I2T_B, 'u'},
-  {"t_cryo_valve",       'r',  BIAS, 13,              I2T_M,           I2T_B, 'u'},
-  {"t_bal_bot",       'r',  BIAS, 15,              I2T_M,           I2T_B, 'u'},
-  {"t_if_tpb",       'r',  BIAS, 17,              I2T_M,           I2T_B, 'u'},
-  {"t_if_tss",       'r',  BIAS, 19,              I2T_M,           I2T_B, 'u'},
-  {"t_triangle",       'r',  BIAS, 21,              I2T_M,           I2T_B, 'u'},
+  {"t_cryo_valve", 'r',  BIAS, 13,              I2T_M,           I2T_B, 'u'},
+  {"t_bal_bot",    'r',  BIAS, 15,              I2T_M,           I2T_B, 'u'},
+  {"t_if_tpb",     'r',  BIAS, 17,              I2T_M,           I2T_B, 'u'},
+  {"t_if_tss",     'r',  BIAS, 19,              I2T_M,           I2T_B, 'u'},
+  {"t_triangle",   'r',  BIAS, 21,              I2T_M,           I2T_B, 'u'},
   {"i_dpm_28v",    'r',  BIAS, 23,           0.000625,          -20.48, 'u'},
   {"i_dpm_3v",     'r',  BIAS, 25,          -0.000625,           20.48, 'u'},
   {"i_dpm_5v",     'r',  BIAS, 27,          -0.000625,           20.48, 'u'},
@@ -499,6 +499,7 @@ struct ChannelStruct SlowChannels[] = {
   {"p_h",          'w', LOOP4, 63,              I2DEG,             0.0, 'u'},
 
   {"isc_error",    'w', LOOP5,  0,                 1.,             0.0, 'u'},
+  {"schedule",     'w', LOOP5,  1,                 1.,              0., 'u'},
   END_OF_CHANNELS
 };
 

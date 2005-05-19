@@ -103,6 +103,7 @@ void WriteAux(void) {
   static struct NiosStruct* bi0FifoSizeAddr;
   static struct NiosStruct* bbcFifoSizeAddr;
   static struct NiosStruct* ploverAddr;
+  static struct NiosStruct* scheduleAddr;
   static struct BiPhaseStruct* samIAmReadAddr;
   static int incharge = -1;
   time_t t;
@@ -128,6 +129,7 @@ void WriteAux(void) {
     bi0FifoSizeAddr = GetNiosAddr("bi0_fifo_size");
     bbcFifoSizeAddr = GetNiosAddr("bbc_fifo_size");
     ploverAddr = GetNiosAddr("plover");
+    scheduleAddr = GetNiosAddr("schedule");
   }
 
   InCharge = !(SamIAm
@@ -160,7 +162,9 @@ void WriteAux(void) {
   WriteData(timeoutAddr, CommandData.pointing_mode.t - t, NIOS_QUEUE);
   WriteData(bi0FifoSizeAddr, CommandData.bi0FifoSize, NIOS_QUEUE);
   WriteData(bbcFifoSizeAddr, CommandData.bbcFifoSize, NIOS_QUEUE);
-  WriteData(ploverAddr, CommandData.plover, NIOS_FLUSH);
+  WriteData(ploverAddr, CommandData.plover, NIOS_QUEUE);
+  WriteData(scheduleAddr, CommandData.sucks + CommandData.lat_range * 2,
+      NIOS_FLUSH);
 }
 
 /*****************************************************************/
