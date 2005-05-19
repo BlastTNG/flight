@@ -31,6 +31,12 @@
       <XHI value="60"/>
       <XLO value="-40"/>
     </EXTREMA>
+    <EXTREMA name="battemp">
+      <HI value="30"/>
+      <LO value="-10"/>
+      <XHI value="45"/>
+      <XLO value="-30"/>
+    </EXTREMA>
     <EXTREMA name="cputemp">
       <HI value="65"/>
       <LO value="30"/>
@@ -967,10 +973,10 @@
       <DATUM format="%.2f" src="T_SOL_STBD" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T ACS Battery">
-      <DATUM format="%.2f" src="T_BATT_ACS" extrema="temp"/>
+      <DATUM format="%.2f" src="T_BATT_ACS" extrema="battemp"/>
     </NUMBER>
     <NUMBER caption="T DAS Battery">
-      <DATUM format="%.2f" src="T_BATT_DAS" extrema="temp"/>
+      <DATUM format="%.2f" src="T_BATT_DAS" extrema="battemp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Pressures/Cooling" colour="#777700" row="2" col="4">
