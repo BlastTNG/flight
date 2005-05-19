@@ -360,7 +360,7 @@ void DoSched(void) {
       CommandData.lat_range = 0;
     }
   } else if (CommandData.lat_range == 0) { /* norhtern band */
-    if (d_lat < -(LATITUDE_BAND / 2) + LATITUDE_OVERLAP) {
+    if (d_lat < (LATITUDE_BAND / 2) - LATITUDE_OVERLAP) {
       bprintf(info, "Scheduler: Entering middle latitude band.\n");
       CommandData.lat_range = 1;
     }
