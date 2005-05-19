@@ -609,26 +609,6 @@
       <DATUM format="%.2f" src="T_MB_SSHIELD" extrema="temp"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Power System" colour="#002222" row="1" col="5">
-    <NUMBER caption="T APCU">
-      <DATUM format="%.2f" src="T_APCU" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="T DPCU">
-      <DATUM format="%.2f" src="T_DPCU" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="T Solar Port">
-      <DATUM format="%.2f" src="T_SOL_PORT" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="T Solar Starboard">
-      <DATUM format="%.2f" src="T_SOL_STBD" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="T ACS Battery">
-      <DATUM format="%.2f" src="T_BATT_ACS" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="T DAS Battery">
-      <DATUM format="%.2f" src="T_BATT_DAS" extrema="temp"/>
-    </NUMBER>
-  </BOX>
   <BOX caption="Outer Frame Electronics" colour="#002222" row="0" col="6" rowspan="1">
     <NUMBER caption="APM 3V">
       <DATUM format="%.2f" src="T_APM_3V" extrema="powtemp"/>
@@ -677,6 +657,12 @@
     </NUMBER>
     <NUMBER caption="Lock Motor">
       <DATUM format="%.2f" src="T_LOCK_MOTOR" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="T APCU">
+      <DATUM format="%.2f" src="T_APCU" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="T DPCU">
+      <DATUM format="%.2f" src="T_DPCU" extrema="temp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Motor Temps" colour="#002222" row="2" col="6">
@@ -895,7 +881,19 @@
       <DATUM format="%.0f" src="phase16" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="PCUs" colour="#777700" row="2" col="4">
+  <BOX caption="Solar Power System" colour="#777700" row="0" col="5" rowspan="2">
+    <MULTI caption="APCU Auto">
+      <DATUM src="APCU_AUTO">
+        <WORD value="0" caption="Manual" textstyle="W_BIT"/>
+        <WORD value="1" caption="Auto" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="V ACS Trim">
+      <DATUM format="%.2f" src="APCU_TRIM" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="V ACS Lid">
+      <DATUM format="%.2f" src="APCU_REG" extrema="unknown"/>
+    </NUMBER>
     <NUMBER caption="V ACS Battery">
       <DATUM format="%.2f" src="V_BATT_ACS" extrema="unknown"/>
     </NUMBER>
@@ -907,6 +905,18 @@
     </NUMBER>
     <NUMBER caption="I ACS Solar">
       <DATUM format="%.2f" src="I_SOL_ACS" extrema="unknown"/>
+    </NUMBER>
+    <MULTI caption="DPCU Auto">
+      <DATUM src="DPCU_AUTO">
+        <WORD value="0" caption="Manual" textstyle="W_BIT"/>
+        <WORD value="1" caption="Auto" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="V ACS Trim">
+      <DATUM format="%.2f" src="APCU_TRIM" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="V DAS Lid">
+      <DATUM format="%.2f" src="APCU_REG" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="V DAS Battery">
       <DATUM format="%.2f" src="V_BATT_DAS" extrema="unknown"/>
@@ -920,8 +930,6 @@
     <NUMBER caption="I DAS Solar">
       <DATUM format="%.2f" src="I_SOL_DAS" extrema="unknown"/>
     </NUMBER>
-  </BOX>
-  <BOX caption="Solar Panels" colour="#777700" row="0" col="5">
     <NUMBER caption="V Solar ACS 1">
       <DATUM format="%.2f" src="V_SOL_ACS1" extrema="unknown"/>
     </NUMBER>
@@ -952,8 +960,20 @@
     <NUMBER caption="V Solar DAS 4">
       <DATUM format="%.2f" src="V_SOL_DAS4" extrema="unknown"/>
     </NUMBER>
+    <NUMBER caption="T Solar Port">
+      <DATUM format="%.2f" src="T_SOL_PORT" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="T Solar Starboard">
+      <DATUM format="%.2f" src="T_SOL_STBD" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="T ACS Battery">
+      <DATUM format="%.2f" src="T_BATT_ACS" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="T DAS Battery">
+      <DATUM format="%.2f" src="T_BATT_DAS" extrema="temp"/>
+    </NUMBER>
   </BOX>
-  <BOX caption="Pressures/Cooling" colour="#777700" row="2" col="5">
+  <BOX caption="Pressures/Cooling" colour="#777700" row="2" col="4">
     <NUMBER caption="P ISC">
       <DATUM format="%.2f" src="ISC_PRESSURE1" extrema="unknown"/>
     </NUMBER>
