@@ -1020,6 +1020,9 @@
     <CURDIR caption="Dirfile">
       <DATUM/>
     </CURDIR>
+    <NUMBER caption="Index">
+      <DATUM format="%.0f" src="INDEX" extrema="unknown"/>
+    </NUMBER>
     <MULTI caption="Ring Bearer">
       <DATUM src="SAM_I_AM">
         <WORD value="1" caption="Sam" textstyle="W_BIT"/>
@@ -1029,12 +1032,19 @@
     <NUMBER caption="Disk Space (GB)">
       <DATUM format="%.2f" src="DISK_FREE" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="Index">
-      <DATUM format="%.0f" src="INDEX" extrema="unknown"/>
-    </NUMBER>
     <NUMBER caption="Fastsamp">
       <DATUM format="%.0f" src="FASTSAMP" extrema="unknown"/>
     </NUMBER>
+    <MULTI caption="Schedule File">
+      <DATUM src="SCHEDULE">
+        <WORD value="0" caption="Happy North" textstyle="W_BIT"/>
+        <WORD value="1" caption="Sad North" textstyle="E_BIT"/>
+        <WORD value="2" caption="Happy Mid" textstyle="OK_BIT"/>
+        <WORD value="3" caption="Sad Mid" textstyle="W_BIT"/>
+        <WORD value="4" caption="Happy South" textstyle="W_BIT"/>
+        <WORD value="5" caption="Sad South" textstyle="E_BIT"/>
+      </DATUM>
+    </MULTI>
     <NUMBER caption="Alice File">
       <DATUM format="%.0f" src="ALICE_FILE" extrema="unknown"/>
     </NUMBER>
