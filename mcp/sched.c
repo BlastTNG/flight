@@ -87,9 +87,8 @@ int GetLine(FILE *fp, char *line)
     return 0; /* there were no valid lines */
 }
 
-#define CHECK_LAT 67.49
-#define CHECK_LON 50.00
-void LoadSchedFile(const char* file, struct ScheduleType* S)
+#define CHECK_LON 20.00
+void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
 {
   FILE *fp;
   char line_in[MAX_LINE_LENGTH];
@@ -100,6 +99,8 @@ void LoadSchedFile(const char* file, struct ScheduleType* S)
   double dt;
   double d_lon;
   int day, command, type;
+  double check_lat = NOMINAL_LATITUDE + lband * (LATITUDE_BAND
+      - LATITUDE_OVERLAP);
 
   double az1, az2, el1, el2, height;
 
@@ -172,7 +173,7 @@ void LoadSchedFile(const char* file, struct ScheduleType* S)
       "Scheduler: ***       Schedule File: %s\n"
       "Scheduler: *** Current local sid. date (hours relative to epoch) %g\n"
       "Scheduler: *** Assuming LAT = %g , LON = %g for checks\n", file, dt,
-      CHECK_LAT, CHECK_LON);
+      check_lat, CHECK_LON);
 
   /***********************/
   /*** Read the events ***/
@@ -263,13 +264,13 @@ void LoadSchedFile(const char* file, struct ScheduleType* S)
     if (S->event[i].command == box || S->event[i].command == vbox ||
         S->event[i].command == cap || S->event[i].command == vcap) {
       radec2azel(S->event[i].rvalues[0], S->event[i].rvalues[1], S->event[i].t,
-          CHECK_LAT, &az1, &el1);
+          check_lat, &az1, &el1);
       if (i == S->n_sched - 1)
         radec2azel(S->event[i].rvalues[0], S->event[i].rvalues[1],
-            S->event[i].t, CHECK_LAT, &az2, &el2);
+            S->event[i].t, check_lat, &az2, &el2);
       else
         radec2azel(S->event[i].rvalues[0], S->event[i].rvalues[1],
-            S->event[i + 1].t, CHECK_LAT, &az2, &el2);
+            S->event[i + 1].t, check_lat, &az2, &el2);
 
       height = S->event[i].rvalues[3];
       if (S->event[i].command == box || S->event[i].command == vbox)
@@ -325,7 +326,7 @@ void InitSched(void)
 
   for (s = 0; s < 2; ++s)
     for (l = 0; l < 3; ++l)
-      LoadSchedFile(filename[s][l], &_S[s][l]);
+      LoadSchedFile(filename[s][l], &_S[s][l], 1 - l);
 }
 
 void DoSched(void) {
