@@ -135,7 +135,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_acs",        'r',  ACS2, 29,              I2T_M,           I2T_B, 'u'},
   {"t_pv_ext",     'r',  ACS2, 31,              I2T_M,           I2T_B, 'u'},
   {"t_pv",         'r',  ACS2, 33,              I2T_M,           I2T_B, 'u'},
-  {"i_pv",         'r',  ACS2, 35,       -0.002083333,          68.267, 'u'},
+  {"i_pv",         'r',  ACS2, 35,           -0.00625,           204.8, 'u'},
   {"t_apm_3v",     'r',  ACS2, 37,              I2T_M,           I2T_B, 'u'},
   {"t_apm_5v",     'r',  ACS2, 39,              I2T_M,           I2T_B, 'u'},
   {"t_apm_10v",    'r',  ACS2, 41,              I2T_M,           I2T_B, 'u'},
