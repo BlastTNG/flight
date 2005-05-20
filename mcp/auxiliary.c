@@ -65,6 +65,7 @@
 /* limits for the inner cooling stuff */
 #define MIN_TEMP ((-50 - I2T_B) / I2T_M)  /* -50 C */
 #define MAX_TEMP ((60 - I2T_B) / I2T_M)   /* +60 C */
+#define BAL_PUMP_MAX 1228 /* 60% */
 #define PUMP_MAX 819 /* 40% */
 #define PUMP_MIN 307  /* 15% */
 
@@ -478,8 +479,8 @@ int Balance(int ifpmBits) {
 
   if (pumppwm < PUMP_MIN)
     pumppwm = PUMP_MIN;
-  else if (pumppwm > PUMP_MAX)
-    pumppwm = PUMP_MAX;
+  else if (pumppwm > BAL_PUMP_MAX)
+    pumppwm = BAL_PUMP_MAX;
 
   if (error > CommandData.pumps.bal_on) {
     pumpon = 1;
