@@ -1,3 +1,13 @@
+2005-05-21:
+	Release blastcmd-2.0.0
+
+	* dummycmd, fifocmd, blastcmd-remote.in: Remove
+	* netcmd.c, netcmd.h: Add
+	* daemon.c, daemon.h: Add
+	* blastcmd.c: Send larger packets, rewrite for daemon
+	* README: Update
+	* configure.ac, Makefile.am: Remove unneeded tests for old scripts
+
 2005-04-22:
 	* configure.ac: Fix typo in help strings
 
