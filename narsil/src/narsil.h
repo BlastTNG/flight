@@ -33,12 +33,16 @@
 #  include "config.h"
 #endif
 
+extern "C" {
 #include "command_list.h"
+#include "netcmd.h"
+}
 
 #include <qvariant.h>
 #include <qdialog.h>
 #include <qstring.h>
 #include <qspinbox.h>
+#include <qmainwindow.h>
 
 #include <sys/types.h>
 
@@ -75,17 +79,19 @@ class Defaults
     void Save();
 
   private:
-    double rdefaults[N_MCOMMANDS][MAX_N_PARAMS];
-    int idefaults[N_MCOMMANDS][MAX_N_PARAMS];
+    double *rdefaults[MAX_N_PARAMS];
+    int *idefaults[MAX_N_PARAMS];
 };
 
-class MainForm : public QDialog
+extern Defaults *defaults;
+
+class MainForm : public QMainWindow
 {
   Q_OBJECT
 
   public:
     MainForm(char *cf, QWidget* parent = 0, const char* name = 0,
-        bool modal = FALSE, WFlags fl = 0);
+        WFlags fl = 0);
     ~MainForm();
 
     QColorGroup *NColorGroup;
@@ -112,8 +118,8 @@ class MainForm : public QDialog
     QMultiLineEdit *NLog;
     QPushButton *NCloseSettingsWindow;
 
-    void TurnOn(QTimer *t);
-    void TurnOff(QTimer *t);
+    void TurnOn(void);
+    void TurnOff(void);
     QTimer *timer;
 
   protected:
@@ -131,30 +137,30 @@ class MainForm : public QDialog
     int MIndex(QString cmd);
     char *LongestParam();
     void ReadLog(QMultiLineEdit *dest);
-    void WriteCmd(QMultiLineEdit *dest, char *args[]);
+    void WriteCmd(QMultiLineEdit *dest, const char *request);
     void WriteErr(QMultiLineEdit *dest, int retstatus);
-    void WriteLog(char *args[]);
+    void WriteLog(const char *request);
+    QLabel* ConnBanner;
 
     int lastmcmd;
     QString curfile;
     KstFile *DataSource;
     int fid;
     bool sending;
-    pid_t sendingpid;
 
+    int verbose;
     int framenum;
     int numframes;
     int dir;
     QPixmap *Images[4];
 
-    public slots:
-      void ChangeCommandList();
+  public slots:
+    void ChangeCommandList();
     void ChooseCommand();
     void Quit();
     void SendCommand();
-    void ChangeImage();
+    void Tick();
     void ChangeCurFile();
     void ShowSettings();
 };
-extern Defaults *defaults;
 #endif
