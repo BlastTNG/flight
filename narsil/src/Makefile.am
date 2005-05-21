@@ -7,8 +7,8 @@ narsil_LDADD = @QT_LDADD@ $(top_srcdir)/lib/getdata.o $(top_srcdir)/lib/kstfile.
 INCLUDES = -Wall -I$(top_srcdir)/include @QT_CXXFLAGS@
 MOC = @MOC@
 
-moc_doubleentry.cpp: doubleentry.cpp doubleentry.h
-	  $(MOC) -o moc_doubleentry.cpp doubleentry.h
+moc_doubleentry.cpp: doubleentry.h
+	$(MOC) -o moc_doubleentry.cpp doubleentry.h
 
-moc_narsil.cpp: narsil.cpp narsil.h
-	  $(MOC) -o moc_narsil.cpp narsil.h
+moc_narsil.cpp: narsil.h
+	$(MOC) -o moc_narsil.cpp narsil.h
