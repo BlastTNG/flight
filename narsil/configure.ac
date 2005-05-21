@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(narsil, 1.8.7, [dwiebe@physics.utoronto.ca])
-AM_INIT_AUTOMAKE(narsil, 1.8.7)
+AC_INIT(narsil, 2.0.0, [dwiebe@physics.utoronto.ca])
+AM_INIT_AUTOMAKE(narsil, 2.0.0)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH(data-etc, AS_HELP_STRING([--with-data-etc=DIR],
@@ -24,38 +24,12 @@ AC_ARG_WITH([qt-lib-dir], AS_HELP_STRING([--with-qt-lib-dir=DIR],
             [Qt library directory]), QT_LIB_DIR=$withval)
 AC_ARG_WITH([qt-bin-dir], AS_HELP_STRING([--with-qt-bin-dir=DIR],
             [Qt binary directory]), QT_BIN_DIR=$withval)
-AC_ARG_WITH([blastcmd], AS_HELP_STRING([--with-blastcmd=NAME],
-            [use NAME as the BLASTcmd program (overrides autodetect)]),
-            FORCE_BLASTCMD=$withval)
-AC_ARG_ENABLE([command-list-test], AS_HELP_STRING([--disable-command-list-test],
-              [don't check to see if blastcmd's command list revision matches the one for this package]),
-              do_cmdlist_test="${enableval}",do_cmdlist_test="yes")
 
 dnl Programs
 AC_PROG_CC
 AC_PROG_CXX
 AC_C_CONST
 AC_PROG_INSTALL
-
-AC_CHECK_PROG(FILE,file,yes)
-if test "x$FILE" = "x"; then
-  AC_MSG_ERROR([*** No file command found -- please install first (You are lame) ***])
-fi
-
-AC_CHECK_PROG(SED,sed,yes)
-if test "x$SED" = "x"; then
-  AC_MSG_ERROR([*** No sed found -- please install first (You are lame) ***])
-fi
-
-AC_CHECK_PROG(GREP,grep,yes)
-if test "x$GREP" = "x"; then
-  AC_MSG_ERROR([*** No grep found -- please install first (You are lame) ***])
-fi
-
-AC_MSG_CHECKING(the revision number of the channel list)
-CMDVERSION=`grep command_list_serial ${srcdir}/src/command_list.c | gawk '{print $6}'`
-AC_MSG_RESULT([$CMDVERSION])
-AC_SUBST(CMDVERSION)
 
 dnl X
 AC_PATH_X
@@ -181,100 +155,6 @@ else
                      [Define to the name of your elog server])
   AC_DEFINE(USE_ELOG, 1, [Define to 1 to enable elog support])
 fi
-  
-  
-
-dnl look for blastcmd
-if test "x$FORCE_BLASTCMD" = "x"; then
-  AC_PATH_PROGS(BLAST_CMD, [blastcmd fifocmd blastcmd-remote dummycmd])
-else
-  AC_PATH_PROGS(BLAST_CMD, $FORCE_BLASTCMD)
-fi
-
-if test "x$BLAST_CMD" = "x"; then
-  AC_MSG_ERROR([*** no blastcmd found -- please install blastcmd first ***])
-fi
-AC_DEFINE_UNQUOTED(BLAST_CMD, "$BLAST_CMD",
-                   [ Define to the name of your blastcmd program ])
-
-AC_MSG_CHECKING([whether to skip the command list revision check])
-if test "x$do_cmdlist_test" = "xyes"; then
-  AC_MSG_RESULT(no)
-  AC_MSG_CHECKING([whether we are using the blastcmd binary])
-  if `file $BLAST_CMD | grep -q "script"`; then
-    BLASTCMD_IS_BLASTCMD=no;
-    BLASTCMD_IS_SCRIPT=yes;
-  elif `$BLAST_CMD --version | grep -q "^blastcmd"`; then
-    BLASTCMD_IS_BLASTCMD=yes;
-    BLASTCMD_IS_SCRIPT=no;
-    BLASTCMD_TRY_OK=yes;
-  else
-    BLASTCMD_IS_BLASTCMD=no;
-    BLASTCMD_IS_SCRIPT=no;
-    BLASTCMD_TRY_OK=yes;
-  fi
-  AC_MSG_RESULT([$BLASTCMD_IS_BLASTCMD])
-  AC_MSG_CHECKING([whether blastcmd is a script])
-  AC_MSG_RESULT([$BLASTCMD_IS_SCRIPT])
-
-  if test "$BLASTCMD_IS_SCRIPT" = "yes"; then
-    AC_MSG_CHECKING([whether the blastcmd script uses ssh])
-    BLASTCMD_SSH_LINE=`grep ssh $BLAST_CMD`;
-    if test "x$BLASTCMD_SSH_LINE" = "x"; then
-      AC_MSG_RESULT(no)
-      BLASTCMD_TRY_OK=yes
-    else
-      AC_MSG_RESULT(yes)
-      AC_MSG_CHECKING([for the host to which blastcmd connects])
-      BLASTCMD_HOST=`echo $BLASTCMD_SSH_LINE | gawk '{ print $2}'`
-      if test "$BLASTCMD_HOST" = "-tx"; then
-        BLASTCMD_HOST=`echo $BLASTCMD_SSH_LINE | gawk '{ print $3}'`
-      fi
-      AC_MSG_RESULT([$BLASTCMD_HOST])
-      if test "x$BLASTCMD_HOST" != "x"; then
-        AC_MSG_CHECKING([whether configure can connect to the host without a password])
-        if ssh -o "BatchMode yes" \
-          $BLASTCMD_HOST -n true >/dev/null 2>&1 </dev/null; then
-          BLASTCMD_TRY_OK=yes;
-          AC_MSG_RESULT([$BLASTCMD_TRY_OK])
-        else
-          BLASTCMD_TRY_OK=no;
-          AC_MSG_RESULT([$BLASTCMD_TRY_OK])
-          AC_MSG_WARN([*** configure ca'n't connect to the remote blastcmd ***])
-          AC_MSG_WARN([*** command-list revision checking will be disabled ***])
-          result_cmdlist="can't ssh to remote host"
-        fi
-      else
-        BLASTCMD_TRY_OK=yes;
-      fi
-    fi
-  fi
-
-  if test "$BLASTCMD_TRY_OK" = "yes"; then
-    AC_MSG_CHECKING([whether blastcmd accepts the -c option])
-    BLASTCMD_LINE=`$BLAST_CMD -c 2>/dev/null | grep "Command List Serial"`
-    if test "x$BLASTCMD_LINE" = "x"; then
-      AC_MSG_RESULT(no)
-      AC_MSG_WARN([*** blastcmd does not support command list versioning ***])
-      AC_MSG_WARN([*** command-list revision checking will be disabled ***])
-      result_cmdlist="not supported by blastcmd"
-    else
-      AC_MSG_RESULT(yes)
-      AC_MSG_CHECKING([the revision number of blastcmd's command list])
-      BLASTCMD_CMD_VERSION=`echo "$BLASTCMD_LINE" | gawk '{print $5}'`
-      AC_MSG_RESULT([$BLASTCMD_CMD_VERSION])
-      if test "`expr $CMDVERSION \> $BLASTCMD_CMD_VERSION`" != "0"; then
-        AC_MSG_ERROR([*** The command list provided by blastcmd is too old.  Please upgrade blastcmd before installing this package ***])
-      elif test "`expr $CMDVERSION \< $BLASTCMD_CMD_VERSION`" != "0"; then
-        AC_MSG_ERROR([*** The command list provided by this package is too old.  Please upgrade this package ***])
-      fi
-      result_cmdlist="ok"
-    fi
-  fi
-else
-  AC_MSG_RESULT(yes)
-  result_cmdlist="test skipped"
-fi
 
 dnl Libraries
 AC_CHECK_LIB(pthread, pthread_create,,
@@ -290,13 +170,16 @@ fi
 AC_MSG_RESULT([$HAVE_LOG_TXT])
 AM_CONDITIONAL(INSTALL_LOG_TXT, test "$HAVE_LOG_TXT" = "no")
 
+dnl BLASTcmd Host
+AC_ARG_WITH([blastcmd-host], AS_HELP_STRING([--with-blastcmd-host=HOST],
+            [connect to the blastcmd daemon running on HOST [[arwen]]]),
+            BLASTCMD_HOST="${withval}", BLASTCMD_HOST="arwen")
+
+AC_MSG_CHECKING([for the name of the blastcmd host])
+AC_MSG_RESULT([$BLASTCMD_HOST])
+AC_DEFINE_UNQUOTED(BLASTCMD_HOST, "$BLASTCMD_HOST",
+                   [ Define to the default blastcmd host ])
+AC_SUBST(BLASTCMD_HOST)
+
 dnl Output
 AC_OUTPUT(data/Makefile src/Makefile Makefile)
-
-echo ""
-echo "Configuration:"
-echo ""
-echo "  Install Path:               ${prefix}"
-echo "  blastcmd Program:           $BLAST_CMD"
-echo "  Command List Revision Test: $result_cmdlist"
-echo "  Elog Support:               $ELOG"
