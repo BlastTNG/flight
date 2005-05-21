@@ -1,4 +1,0 @@
-#!/bin/sh
-# @configure_input@
-ssh -x @REMOTE_USER@@REMOTE_HOST@ @REMOTE_COMMAND@ $*
-exit 0

@@ -30,11 +30,15 @@
 #include <string.h>
 #include <termios.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
 #include <signal.h>
+
+#include "daemon.h"
+#include "netcmd.h"
 
 double round(double x);
 
@@ -45,102 +49,96 @@ double round(double x);
 #  define DATA_ETC_DIR "/tmp"
 #endif
 
+#define ACK_COUNT 16
+
 #define INPUT_TTY "/dev/ttyS1"
 #define LOGFILE DATA_ETC_DIR "/blastcmd.log"
 
-#define LINK_DEFAULT 0x01    /* Default link is TDRSS */
-#define ROUTING_DEFAULT 0x09 /* Default routing is COM1 */
+int silent = 0;
 
-char *ack[17] = {
+char host[1024] = "localhost";
+
+char *ack[ACK_COUNT] = {
   "Command transmitted.",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "",
-  "GSE operator has disabled science from sending commands.",
-  "Routing address does not match the selected link.",
-  "The link selected was not enabled.",
-  "Unspecified error.  Command not sent by GSE.",
-  "",
-  "Received garbage",
-  "Timeout waiting for reply from GSE."
+  "Unrecognised command.",
+  "Unable to open output device.",
+  "Parameter out of range.",
+  "Science commanding disabled by GSE operator.",
+  "Invalid SIP routing address.",
+  "Selected SIP link not enabled.",
+  "Unspecified error from GSE.",
+  "GSE ACK == 0x0E.",
+  "GSE ACK == 0x0F.",
+  "Unexpected error in command definitions.",
+  "Syntax error on command line.",
+  "Command cancelled by user.",
+  "Program timeout waiting for response from GSE.",
+  "Unable to connect to daemon.",
+  "Unable to start daemon.",
 };
 
-int verbose = 0;
-
 void USAGE(int flag) {
-  printf("blastcmd [-v] [-f] [-s] [-los|-tdrss|-hf] [-com1|-com2] \\\n"
+  int i;
+  
+  printf("blastcmd [@host] [-v] [-f] [-s] [-los|-tdrss|-hf|-iridium] "
+      "[-com1|-com2] \\\n"
       "         command [param00 [param01 [param02 [ ... ]]]]\n"
-      "blastcmd -c\n"
+      "blastcmd -l\n"
+      "blastcmd -d [-fifo|-null]\n"
       "blastcmd --version\n\n"
       "Options:\n"
-      "       -v   Verbose\n"
-      "       -s   Silent\n"
-      "       -c   Show the command list serial number and exit with status 12"
-      "\n"
-      "       -f   No confirm\n"
-      "     -los   Set link to Line of Sight\n"
-      "   -tdrss   Set link to TDRSS\n"
-      "      -hf   Set link to HF\n"
-      "    -com1   Set routing to comm1\n"
-      "    -com2   Set routing to comm2\n"
-      "--version   Show version and license information and exit\n\n"
+      "    @host   Connect to the blastcmd daemon running on host "
+      "(default localhost).\n"
+      "       -f   Unused.  For backwards compatibility.\n"
+      "       -s   Silent.\n"
+      "       -v   Unused.  For backwards compatibility.\n"
+      "     -los   Set link to Line of Sight.\n"
+      "   -tdrss   Set link to TDRSS.\n"
+      " -iridium   Set link to Iridium.\n"
+      "      -hf   A synonym for -iridium.  For backwards compatibility.\n"
+      "    -com1   Set routing to COMM1.\n"
+      "    -com2   Set routing to COMM2.\n"
+      "       -l   List valid commands and parameters and exit.\n"
+      "       -d   Start the blastcmd daemon.\n"
+      "    -fifo   Route all commands through the local fifo.\n"
+      "    -null   Route all commands through /dev/null.\n"
+      "--version   Show version and license information and exit.\n\n"
       );
 
-  if (!flag) {
     printf("Exit codes:\n"
-        "     0  Command sent successfully.\n"
-        "     1  No command specified or command cancelled by user.\n"
-        "     2  Unable to open serial port.\n"
-        "     3  Parameter out of range.\n"
-        "     4  Science commanding disabled by GSE operator.\n"
-        "     5  Invalid SIP routing address.\n"
-        "     6  Selected SIP link not enabled.\n"
-        "     7  Unspecified error from GSE.\n"
-        "     8  ACK == 0x0E\n"
-        "     9  ACK == 0x0F\n"
-        "    10  Unexpected error in command definitions\n"
-        "    11  Syntax error on command line\n"
-        "    12  Program was passed the `-c' option\n"
-        "    13  Program timeout waiting for response from GSE.\n"
-        "\n");
+        "    -1  Unexpected internal error.\n");
 
-    printf("For a list of valid commands use `blastcmd -l'\n");
+    for (i = 0; i < ACK_COUNT; ++i)
+      if (ack[i][0])
+        printf("    %2i  %s\n", i, ack[i]);
+
+    printf("\nFor a list of valid commands use `blastcmd -l'\n");
     exit(11);
-  }
 }
 
 void CommandList(void)
 {
   int i, j;
 
-  USAGE(1);
+  NetCmdGetCmdList();
 
-  printf("Valid Multiword Commands:\n");
+  printf("\nCommand List Serial: %s\n\n", client_command_list_serial);
+  
+  printf("Valid Multiword Commands reported by server:\n");
 
-  for (i = 0; i < N_MCOMMANDS; i++) {
-    printf("  %s - %s\n", mcommands[i].name, mcommands[i].about);
-    for (j = 0; j < mcommands[i].numparams; j++) 
-      printf("    param%02i: %s\n", j, mcommands[i].params[j].name);
+  for (i = 0; i < client_n_mcommands; i++) {
+    printf("  %s - %s\n", client_mcommands[i].name, client_mcommands[i].about);
+    for (j = 0; j < client_mcommands[i].numparams; j++) 
+      printf("    param%02i: %s\n", j, client_mcommands[i].params[j].name);
     printf("\n");
   }
 
-  printf("Valid Single Word Commands:\n");
-  for (i = 0; i < N_SCOMMANDS; i++) {
-    printf("  %s - %s\n", scommands[i].name, scommands[i].about);
+  printf("Valid Single Word Commands reported by server:\n");
+  for (i = 0; i < client_n_scommands; i++) {
+    printf("  %s - %s\n", client_scommands[i].name, client_scommands[i].about);
   }
 
   exit(1);
-}
-
-void bc_close(int fd) {
-  lockf(fd, F_ULOCK, 0);
-  close(fd);
 }
 
 int bc_setserial(void) {
@@ -149,12 +147,12 @@ int bc_setserial(void) {
 
   if( (fd = open(INPUT_TTY, O_RDWR)) < 0 ) {
     perror("Unable to open serial port");
-    return -1;
+    exit(2);
   }
 
   if( tcgetattr(fd, &term) ) {
     perror("Unable to get serial device attributes");
-    return -1;
+    exit(2);
   }
 
   term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
@@ -169,46 +167,58 @@ int bc_setserial(void) {
 
   if(cfsetospeed(&term, B2400)) {          /*  <======= SET THE SPEED HERE */
     perror("error setting serial output speed");
-    return -1;
+    exit(2);
   }
   if(cfsetispeed(&term, B2400)) {          /*  <======= SET THE SPEED HERE */
     perror("error setting serial input speed");
-    return -1;
+    exit(2);
   }
 
   if( tcsetattr(fd, TCSANOW, &term) ) {
     perror("Unable to set serial attributes");
-    return -1;
-  }
-
-  if((lockf(fd, F_LOCK, 0)) != 0) {
-    perror("Unable to get lock on serial port");
-    return -1;
+    exit(2);
   }
 
   return fd;
 }
 
-void WriteBuffer(int tty_fd, unsigned char *buffer, int len, unsigned int *i_ack) {
+void WriteBuffer(int sock, int tty_fd, unsigned char *buffer, int len,
+    unsigned int *i_ack)
+{
   int i, n;
   int counter;
   char buf[3];
+  char output[1024] = ":::sent:::";
+  char hex[4];
 
-  if (verbose) {
-    for (i = 0; i < len; i++) {
-      printf("%hx ", (unsigned short)buffer[i]);
-    }
-    printf("\n");
+  for (i = 0; i < len; i++) {
+    sprintf(hex, "%02X.", buffer[i]);
+    strcat(output, hex);
   }
-  
+
+  printf("%i<--%s\n", sock, output);
+  strcat(output, "\r\n");
+
+  send(sock, output, strlen(output), MSG_NOSIGNAL);
+
+  /* Write the packet to the GSE */
   write(tty_fd, buffer, len);
 
   /* Read acknowledgement */
   n = 0;
   counter = 0;
-  while( (n += read(tty_fd, buf+n, 3-n)) != 3) {
+  while( (n += read(tty_fd, buf + n, 3 - n)) != 3) {
     if (counter++ == 2000)
       break;
+    i = recv(sock, output, 1024, MSG_DONTWAIT);
+    if (i > 0) {
+      output[i] = '\0';
+      printf("%i-->%s", sock, output);
+      if (strncmp(output, "::kill::", 8) == 0) {
+        *i_ack = 0x112;
+        return;
+      }
+    }
     usleep(10000);
   }
 
@@ -235,14 +245,11 @@ void ConfirmSend() {
   }
 }
 
-  void ConfirmSingleSend(int i_cmd) {
-    if (i_cmd > N_SCOMMANDS)
-      printf("\nCustom Command-> c%02d\n", i_cmd);
-    else
-      printf("\nSingle Command-> %s\n", scommands[i_cmd].name);
+void ConfirmSingleSend(int i_cmd) {
+  printf("\nSingle Command-> %s\n", scommands[i_cmd].name);
 
-    ConfirmSend();
-  }
+  ConfirmSend();
+}
 
 void ConfirmMultiSend(int i_cmd, char *params[], int np) {
   int i;
@@ -256,7 +263,7 @@ void ConfirmMultiSend(int i_cmd, char *params[], int np) {
 
 void McommandUSAGE(int mcmd) {
   int i;
-  
+
   printf("blastcmd: Error in multiword command parameter.\n\n");
 
   printf("  %s - %s\n", mcommands[mcmd].name, mcommands[mcmd].about);
@@ -275,12 +282,11 @@ void McommandUSAGE(int mcmd) {
  *          0?? -> data word
  */
 
-void SendScommand(int i_cmd, int t_link, int t_route, unsigned int *i_ack, char conf) {
+void SendScommand(int sock, int i_cmd, int t_link, int t_route,
+    unsigned int *i_ack)
+{
   unsigned char buffer[7];
   int tty_fd;
-
-  if (!conf)
-    ConfirmSingleSend(i_cmd);
 
   buffer[0] = 0x10;
   buffer[1] = t_link;
@@ -295,26 +301,30 @@ void SendScommand(int i_cmd, int t_link, int t_route, unsigned int *i_ack, char 
     exit(2);
   }
 
-  WriteBuffer(tty_fd, buffer, 7, i_ack);
+  WriteBuffer(sock, tty_fd, buffer, 7, i_ack);
 
-  bc_close(tty_fd);
+  close(tty_fd);
 }
 
-void SendMcommand(int i_cmd, int t_link, int t_route, char *parms[], int np,
-    unsigned int *i_ack, char conf) {
+void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
+    int np, unsigned int *i_ack) {
   unsigned short dataq[DATA_Q_SIZE];
   int dataqsize = 0;
   float flote, max, min;
   int ynt;
   char type;
-  unsigned char *buffer;
+  int packet_length = 6;
+  unsigned char buffer[25];
   unsigned short *dataqbuffer;
   int i;
   time_t t;
+  char output[1024];
   int tty_fd;
 
-  if (np != mcommands[i_cmd].numparams)
-    McommandUSAGE(i_cmd);
+  if (np != mcommands[i_cmd].numparams) {
+    *i_ack = 0x111;
+    return;
+  }
 
   for (i = 0; i < np; i++) {
     min = mcommands[i_cmd].params[i].min;
@@ -324,43 +334,57 @@ void SendMcommand(int i_cmd, int t_link, int t_route, char *parms[], int np,
       /* 15 bit integer parameter */
       ynt = atoi(parms[i]);
       if (ynt < min) {
-        printf("blastcmd: parameter %d out of range (%i < %g)\n", i+1, ynt,
-            min);
-        exit(3);
+        sprintf(output, ":::limit:::parameter %d out of range (%i < %g)\r\n",
+            i + 1, ynt, min);
+        *i_ack = 0x103;
+        send(sock, output, sizeof(output), MSG_NOSIGNAL);
+        return;
       } else if (ynt > MAX_15BIT) {
-        printf("blastcmd: parameter %d out of range (%i > %g)\n", i+1, ynt,
-            MAX_15BIT);
-        exit(3);
+        sprintf(output, ":::limit:::parameter %d out of range (%i > %g)\r\n",
+            i + 1, ynt, MAX_15BIT);
+        *i_ack = 0x103;
+        send(sock, output, sizeof(output), MSG_NOSIGNAL);
+        return;
       } else if (ynt > max) {
-        printf("blastcmd: parameter %d out of range (%i > %g)\n", i+1, ynt,
-            max);
-        exit(3);
+        sprintf(output, ":::limit:::parameter %d out of range (%i > %g)\r\n",
+            i + 1, ynt, max);
+        *i_ack = 0x103;
+        send(sock, output, sizeof(output), MSG_NOSIGNAL);
+        return;
       }
       dataq[dataqsize++] = (unsigned short)(ynt - min);
     } else if (type == 'f') {
       /* 15 bit floating point parameter */
       flote = atof(parms[i]);
       if (flote < min) {
-        printf("blastcmd: parameter %d out of range (%g < %g)\n", i+1, flote,
-            min);
-        exit(3);
+        sprintf(output, ":::limit:::parameter %d out of range (%g < %g)\r\n",
+            i + 1, flote, min);
+        *i_ack = 0x103;
+        send(sock, output, sizeof(output), MSG_NOSIGNAL);
+        return;
       } else if (flote > max) {
-        printf("blastcmd: parameter %d out of range (%g > %g)\n", i+1, flote,
-            max);
-        exit(3);
+        sprintf(output, ":::limit:::parameter %d out of range (%g > %g)\r\n",
+            i + 1, flote, max);
+        *i_ack = 0x103;
+        send(sock, output, sizeof(output), MSG_NOSIGNAL);
+        return;
       }
       dataq[dataqsize++] = round((flote - min) * MAX_15BIT / (max - min)); 
     } else if (type == 'l') {
       /* 30 bit floating point parameter */
       flote = atof(parms[i]);
       if (flote < min) {
-        printf("blastcmd: parameter %d out of range (%g < %g)\n", i+1, flote,
-            min);
-        exit(3);
+        sprintf(output, ":::limit:::parameter %d out of range (%g < %g)\r\n",
+            i + 1, flote, min);
+        *i_ack = 0x103;
+        send(sock, output, sizeof(output), MSG_NOSIGNAL);
+        return;
       } else if (flote > max) {
-        printf("blastcmd: parameter %d out of range (%g > %g)\n", i+1, flote,
-            max);
-        exit(3);
+        sprintf(output, ":::limit:::parameter %d out of range (%g > %g)\r\n",
+            i + 1, flote, max);
+        send(sock, output, sizeof(output), MSG_NOSIGNAL);
+        *i_ack = 0x103;
+        return;
       }
       ynt = round((flote - min) * MAX_30BIT / (max - min)); 
       dataq[dataqsize++] = (ynt & 0x3fff8000) >> 15;  /* upper 15 bits */
@@ -369,53 +393,61 @@ void SendMcommand(int i_cmd, int t_link, int t_route, char *parms[], int np,
       printf("\nError in command definitions:\n   invalid parameter type '%c' "
           "for parameter %i of mutlicommand: %s\n\n", type, i,
           mcommands[i_cmd].name);
-      exit(10);
+      *i_ack = 0x110;
+      return;
     }
   }
 
-  if (!conf)
-    ConfirmMultiSend(i_cmd, parms, np);
-
   time(&t);
-
-  buffer = malloc(7);
 
   /* Initialize buffer */
   buffer[0] = 0x10;
   buffer[1] = t_link;
   buffer[2] = t_route;
-  buffer[3] = 2;
-  buffer[6] = 0x03;
 
   if ((tty_fd = bc_setserial()) < 0) {
     perror("Unable to open serial port");
-    exit(2);
+    *i_ack = 0x102;
+    return;
   }
 
   /* Send command */
   buffer[4] = mcommands[i_cmd].command;
-  buffer[5] = 0x80 | (unsigned char)(t & 0x1F); /* t gives unique sync number */
-  /* to this multi command */
-  WriteBuffer(tty_fd, buffer, 7, i_ack);
+  /* t gives unique sync number to this multi command */
+  buffer[5] = 0x80 | (unsigned char)(t & 0x1F);
 
   /* Send parameters */
-  dataqbuffer = (unsigned short *) (buffer + 4);
   for (i = 0; i < dataqsize; i++) {
     dataq[i] &= 0x7fff; /* first bit must be a zero */
+    dataqbuffer = (unsigned short *)(buffer + packet_length);
     *dataqbuffer = dataq[i];
-    WriteBuffer(tty_fd, buffer, 7, i_ack);
+    packet_length += 2;
+
+    /* If the packet is full write it out */
+    if (packet_length == 24) {
+      buffer[packet_length++] = 0x3;
+      buffer[3] = packet_length - 5;
+      WriteBuffer(sock, tty_fd, buffer, packet_length, i_ack);
+
+      if (*i_ack >= 0x10)
+        return;
+
+      packet_length = 4;
+    }
   }
 
   /* Send command footer */
-  buffer[4] = mcommands[i_cmd].command;
-  buffer[5] = 0xc0 | (unsigned char)(t & 0x1F);
-  WriteBuffer(tty_fd, buffer, 7, i_ack);
+  buffer[packet_length++] = mcommands[i_cmd].command;
+  buffer[packet_length++] = 0xc0 | (unsigned char)(t & 0x1F);
+  buffer[packet_length++] = 0x3;
+  buffer[3] = packet_length - 5;
 
-  bc_close(tty_fd);
-  free(buffer);
+  WriteBuffer(sock, tty_fd, buffer, packet_length, i_ack);
+
+  close(tty_fd);
 }
 
-void WriteLogFile(int argc, char *argv[], unsigned int i_ack, char silent)
+void WriteLogFile(int count, char *token[], unsigned int i_ack)
 {
   FILE *f;
   time_t t;
@@ -431,118 +463,111 @@ void WriteLogFile(int argc, char *argv[], unsigned int i_ack, char silent)
 
   fprintf(f, "%s", ctime(&t));
 
-  for(n = 1; n < argc; n++)
-    fprintf(f, "Sent: %s\n", argv[n]);
+  for(n = 0; n < count; n++)
+    fprintf(f, "Sent: %s\n", token[n]);
 
   fprintf(f, "Ack: (0x%02x) %s\n\n", i_ack, ack[i_ack]);
 
   fclose(f);
 
-  if (!silent)
-    printf("%s\n", ack[i_ack]);
-
-  if (i_ack == 0x0a)
-    exit(4);
-  else if (i_ack == 0x0b)
-    exit(5);
-  else if (i_ack == 0x0c)
-    exit(6);
-  else if (i_ack == 0x0d)
-    exit(7);
-  else if (i_ack == 0x0e)
-    exit(8);
-  else if (i_ack == 0x0f)
-    exit(8);
-  else if (i_ack == 0x10)
-    exit(13);
   chmod(LOGFILE, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-}
-
-void PrintCommandListSerial(void)
-{
-  printf("Command List Serial: %s\n", command_list_serial);
-  exit(12);
 }
 
 void PrintVersion(void)
 {
   printf("blastcmd " VERSION "  (C) 2002-2005 University of Toronto\n"
       "Compiled on " __DATE__ " at " __TIME__ ".\n\n"
+      "Local command list serial: %s\n\n"
       "This program comes with NO WARRANTY, not even for MERCHANTABILITY or "
       "FITNESS\n"
       "FOR A PARTICULAR PURPOSE. You may redistribute it under the terms of "
       "the GNU\n"
-      "General Public License; see the file named COPYING for details.\n"
+      "General Public License; see the file named COPYING for details.\n",
+      command_list_serial
       );
   exit(0);
 }
 
 int main(int argc, char *argv[]) {
-  int t_link, t_route;
-  int i, i_cmd;
-  unsigned int i_ack;
-  char conf = 0;
-  char silent = 0;
+  char t_link, t_route;
+  int i;
+  int daemon_route = 0, daemon_fork = 0;
+  int daemonise = 0;
+  char* command[200];
+  int nc = 0;
 
-  t_link = LINK_DEFAULT;
-  t_route = ROUTING_DEFAULT;
-
-  if(argc <= 1)
-    USAGE(0);
+  t_link = LINK_DEFAULT_CHAR;
+  t_route = ROUTING_DEFAULT_CHAR;
 
   /* Parse switches */
   for (i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-los") == 0)
-      t_link = 0x00;
+      t_link = 'l';
     else if (strcmp(argv[i], "-tdrss") == 0)
-      t_link = 0x01;
+      t_link = 't';
     else if (strcmp(argv[i], "-hf") == 0)
-      t_link = 0x02;
+      t_link = 'i';
+    else if (strcmp(argv[i], "-iridium") == 0)
+      t_link = 'i';
     else if (strcmp(argv[i], "-com1") == 0)
-      t_route = 0x09;
+      t_route = '1';
     else if (strcmp(argv[i], "-com2") == 0)
-      t_route = 0x0c;
+      t_route = '2';
     else if (strcmp(argv[i], "-v") == 0)
-      verbose = 1;
+      ; /* unused */
     else if (strcmp(argv[i], "-f") == 0)
-      conf = 1;
+      ; /* unused */
     else if (strcmp(argv[i], "-s") == 0)
       silent = 1;
-    else if (strcmp(argv[i], "-l") == 0)
-      CommandList();
+    else if (strcmp(argv[i], "-l") == 0) {
+      command[0] = "-l";
+      nc = 1;
+    } else if (strcmp(argv[i], "-d") == 0)
+      daemonise = 1;
+    else if (strcmp(argv[i], "-fifo") == 0)
+      daemon_route = 1;
+    else if (strcmp(argv[i], "-null") == 0)
+      daemon_route = 2;
+    else if (strcmp(argv[i], "-nf") == 0)
+      daemon_fork = 1;
     else if (strcmp(argv[i], "--version") == 0)
       PrintVersion();
-    else if (strcmp(argv[i], "-c") == 0)
-      PrintCommandListSerial();
+    else if (argv[i][0] == '@')
+      strcpy(host, &argv[i][1]);
+    else if (argv[i][0] == '-' && (argv[i][1] < '0' || argv[i][1] > '9')
+        && argv[i][1] != '.')
+      USAGE(0);
+    else
+      command[nc++] = argv[i];
   }
 
-  i = 1;
-  while ((i < argc) && (argv[i][0] == '-'))
-    i++;
+  if (daemonise)
+    Daemonise(daemon_route, daemon_fork);
 
-  if(i >= argc)
+  if (daemon_route || daemon_fork)
     USAGE(0);
 
-  /* Look for single packet commands */
-  for (i_cmd = 0; i_cmd < N_SCOMMANDS; i_cmd++) {
-    if (strncmp(argv[i], scommands[i_cmd].name, SIZE_NAME) == 0) {
-      SendScommand(i_cmd, t_link, t_route, &i_ack, conf);
-      WriteLogFile(argc, argv, i_ack, silent);
-      exit(0);
+  /* command given on comannd line */
+  if (nc) {
+    NetCmdConnect(host, silent, silent);
+
+    if (strcmp(command[0], "-l") == 0)
+      CommandList();
+
+    if (NetCmdTakeConn()) {
+      if (!silent)
+        printf("Took the conn.\n");
+      i = NetCmdSubmitCommand(t_link, t_route, nc, command, silent);
+      if (!silent)
+        printf("%s\n", ack[i]);
+      return i;
+    } else {
+      fprintf(stderr, "Unable to take the conn.\n");
+      return 14;
     }
-  }
+  } else
+    USAGE(0);
 
-  /* Look for multi packet commands */
-  for (i_cmd = 0; i_cmd < N_MCOMMANDS; i_cmd++) {
-    if (strncmp(argv[i], mcommands[i_cmd].name, SIZE_NAME) == 0) {
-      SendMcommand(i_cmd, t_link, t_route, argv + i + 1 , argc - i - 1, &i_ack,
-          conf);
-      WriteLogFile(argc, argv, i_ack, silent);
-      exit(0);
-    }
-  }
-
-  printf("blastcmd: unknown command.  For a list of valid commands use `blastcmd -l'\n");
-
-  return(1);
+  fprintf(stderr, "Unexpected trap in main. Stop.\n");
+  return -1;
 }

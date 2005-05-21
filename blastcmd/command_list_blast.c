@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.63 $";
+const char command_list_serial[] = "$Revision: 2.64 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -95,7 +95,8 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_CRYO_HEAT},
   {COMMAND(auto_jfetheat), "automatically reguate jfet heater level",
     GR_CRYO_HEAT},
-  {COMMAND(charcoal_on), "charcoal heater on", GR_CRYO_HEAT},
+  {COMMAND(charcoal_on), "charcoal heater on, helium fridge autocycle off",
+    GR_CRYO_HEAT},
   {COMMAND(charcoal_off), "charcoal heater off, helium fridge autocycle off",
     GR_CRYO_HEAT},
   {COMMAND(coldplate_on), "cold plate heater on", GR_CRYO_HEAT},
@@ -273,8 +274,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps",
     GR_POINT, 6,
     {
-      {"RA of Centre (h)",          0, 24, 'f', "NONE"},
-      {"Dec of Centre (deg)",     -90, 90, 'f', "NONE"},
+      {"RA of Centre (h)",          0, 24, 'l', "NONE"},
+      {"Dec of Centre (deg)",     -90, 90, 'l', "NONE"},
       {"Az Width (deg on sky)",     0, 90, 'f', "NONE"},
       {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
@@ -284,8 +285,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(cap), "scan a circle centred on RA/Dec with el steps", GR_POINT, 5,
     {
-      {"RA of Centre (h)",          0, 24, 'f', "NONE"},
-      {"Dec of Centre (deg)",     -90, 90, 'f', "NONE"},
+      {"RA of Centre (h)",          0, 24, 'l', "NONE"},
+      {"Dec of Centre (deg)",     -90, 90, 'l', "NONE"},
       {"Radius (deg on sky)",       0, 90, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"}

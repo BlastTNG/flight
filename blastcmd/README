@@ -1,23 +1,14 @@
-To make blastcmd-remote:
+DVW 2005-05-20
 
-./configure [--with-remote-host=HOST] [--with-remote-command=CMD]
-make
-make install
+There is but one blastcmd binary now that fills the roles of the previous
+blastcmd, the scripts blastcmd-remote, dummycmd, fifocmd as well as providing
+the daemon for the new system.  It should be installed on all commanding
+systems.
 
 To make blastcmd
 
-./configure --enable-blastcmd
+./bootstrap.sh
+./configure
 make
 make install
 
-To make fifocmd
-
-./configure --enable-fifocmd
-make
-make install
-
-To make dummycmd
-
-./configure --enable-dummycmd
-make
-make install
