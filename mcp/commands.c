@@ -1346,7 +1346,7 @@ void WatchPort (void* parameter) {
           else {
             readstage = 0;
             bprintf(warning, "Commands: COMM%i: Bad command packet: "
-                "Improper Encoding: %02X\n", port + 1, buf);
+                "Unsupported Length: %02X\n", port + 1, buf);
           }
         } else if (bytecount >= 1 && bytecount <= 2) {
           /* Read the two data bytes of the command packet */
