@@ -4,7 +4,7 @@ bin_PROGRAMS = narsil
 narsil_SOURCES = doubleentry.cpp doubleentry.h command_list.c narsil.cpp \
 								 command_list.h isc_protocol.h narsil.h $(BUILT_SOURCES)
 narsil_LDADD = @QT_LDADD@ $(top_srcdir)/lib/getdata.o $(top_srcdir)/lib/kstfile.o -L$(top_srcdir)/lib -lRD
-INCLUDES = -I$(top_srcdir)/include @QT_CXXFLAGS@
+INCLUDES = -Wall -I$(top_srcdir)/include @QT_CXXFLAGS@
 MOC = @MOC@
 
 moc_doubleentry.cpp: doubleentry.cpp doubleentry.h

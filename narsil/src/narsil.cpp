@@ -155,6 +155,8 @@ int MainForm::GetGroup() {
   for (i = 0; i < N_GROUPS; i++)
     if (NGroups[i]->isChecked())
       return i;
+
+  return 0;
 }
 
 int TheSort(const void* a, const void* b)
@@ -371,8 +373,9 @@ int MainForm::MIndex(QString cmd) {
 //-------------------------------------------------------------
 
 char *MainForm::LongestParam() {
-  int i, j;
-  int len = 0;
+  unsigned int i;
+  int j;
+  unsigned int len = 0;
   static char lp[120];
 
   for (i = 0; i < N_MCOMMANDS; i++) {
@@ -523,7 +526,6 @@ void MainForm::TurnOff(QTimer *t) {
 //-------------------------------------------------------------
 
 void MainForm::SendCommand() {
-  char tmp[12];
   int index, i, j;
   char args[MAX_N_PARAMS + 7][SIZE_NAME];
   char *params[MAX_N_PARAMS + 7];
@@ -833,7 +835,6 @@ void MainForm::WriteLog(char *args[]) {
 //-------------------------------------------------------------
 
 void MainForm::WriteErr(QMultiLineEdit *dest, int retstatus) {
-  time_t t;
   QString txt;
 
   switch (retstatus) {
@@ -941,7 +942,6 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name, bool modal,
 
   QFont tfont;
   int i;
-  int indexes[25];
   char tmp[SIZE_NAME + SIZE_ABOUT + SIZE_PARNAME];
   QSize tempsize;
   QRect rect;

@@ -142,9 +142,9 @@ class MainForm : public QDialog
     bool sending;
     pid_t sendingpid;
 
-    char framenum;
-    char numframes;
-    char dir;
+    int framenum;
+    int numframes;
+    int dir;
     QPixmap *Images[4];
 
     public slots:
