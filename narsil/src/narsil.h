@@ -1,6 +1,6 @@
 /* narsil: GUI commanding front-end
  *
- * This software is copyright (C) 2002-2004 University of Toronto
+ * This software is copyright (C) 2002-2005 University of Toronto
  * 
  * This file is part of narsil.
  * 
