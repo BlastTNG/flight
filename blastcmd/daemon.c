@@ -151,13 +151,13 @@ void ExecuteCommand(int sock, int fd, int route, char* buffer)
   printf("EXE %s\n", buffer);
 
   switch (buffer[0]) {
-    case 'l':
+    case 'L':
       t_link = 0x00;
       break;
-    case 't':
+    case 'T':
       t_link = 0x01;
       break;
-    case 'i':
+    case 'I':
       t_link = 0x02;
     default:
       result = 11;

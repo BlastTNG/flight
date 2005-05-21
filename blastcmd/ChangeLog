@@ -1,6 +1,10 @@
 2005-05-21:
 	Release blastcmd-2.0.0
 
+	* blastcmd.c (main): Use upper case letters for link (TLI)
+	* daemon.c (ExecuteCommand): Use upper case letters for link (TLI)
+	* daemon.h: Use upper case letters for link (TLI)
+
 	* dummycmd, fifocmd, blastcmd-remote.in: Remove
 	* netcmd.c, netcmd.h: Add
 	* daemon.c, daemon.h: Add

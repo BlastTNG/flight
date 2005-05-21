@@ -25,7 +25,7 @@
 
 #define LINK_DEFAULT      0x01    /* Default link is TDRSS */
 #define ROUTING_DEFAULT      0x09 /* Default routing is COM1 */
-#define LINK_DEFAULT_CHAR 't'     /* Default link is TDRSS */
+#define LINK_DEFAULT_CHAR 'T'     /* Default link is TDRSS */
 #define ROUTING_DEFAULT_CHAR '1'  /* Default routing is COM1 */
 
 int  bc_setserial(void);

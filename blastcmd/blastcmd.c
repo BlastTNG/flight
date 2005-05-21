@@ -502,13 +502,13 @@ int main(int argc, char *argv[]) {
   /* Parse switches */
   for (i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-los") == 0)
-      t_link = 'l';
+      t_link = 'L';
     else if (strcmp(argv[i], "-tdrss") == 0)
-      t_link = 't';
+      t_link = 'T';
     else if (strcmp(argv[i], "-hf") == 0)
-      t_link = 'i';
+      t_link = 'I';
     else if (strcmp(argv[i], "-iridium") == 0)
-      t_link = 'i';
+      t_link = 'I';
     else if (strcmp(argv[i], "-com1") == 0)
       t_route = '1';
     else if (strcmp(argv[i], "-com2") == 0)
