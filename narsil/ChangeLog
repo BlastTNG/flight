@@ -1,3 +1,6 @@
+2005-05-18 (2.0.0):
+	* narsil.cpp: Update for daemon mode.
+
 2005-02-18 (1.8.7):
 	* command_list.h: Increase maximum number of parameters
 	* narsil.cpp (MainForm::ChangeCommandList): Sort commands in list
