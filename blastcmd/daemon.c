@@ -159,6 +159,7 @@ void ExecuteCommand(int sock, int fd, int route, char* buffer)
       break;
     case 'I':
       t_link = 0x02;
+      break;
     default:
       result = 11;
   }
