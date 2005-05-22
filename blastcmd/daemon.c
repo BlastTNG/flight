@@ -44,7 +44,7 @@
 #include "daemon.h"
 #include "command_list.h"
 
-int SIPRoute(int sock, int fd, int t_link, int t_route, char* buffer)
+int SIPRoute(int sock, int t_link, int t_route, char* buffer)
 {
   int i_cmd, i_ack;
   int count = 0;
@@ -179,7 +179,7 @@ void ExecuteCommand(int sock, int fd, int route, char* buffer)
     if (route)
       result = SimpleRoute(sock, fd, &buffer[3]);
     else
-      result = SIPRoute(sock, fd, t_link, t_route, &buffer[3]);
+      result = SIPRoute(sock, t_link, t_route, &buffer[3]);
   }
 
   sprintf(output, ":::ack:::%i\r\n", result);
@@ -263,9 +263,9 @@ void Daemonise(int route, int no_fork)
 
   /* open our output before daemonising just in case it fails. */
   if (route == 1) /* fifo */
-    fd = open("/tmp/SIPSS.FIFO", O_RDONLY);
+    fd = open("/tmp/SIPSS.FIFO", O_WRONLY);
   else if (route == 2) /* null */
-    fd = open("/dev/null", O_RDONLY);
+    fd = open("/dev/null", O_WRONLY);
   else
     fd = bc_setserial();
 

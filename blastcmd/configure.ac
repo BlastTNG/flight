@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(blastcmd, 2.0.0, [dwiebe@physics.utoronto.ca])
-AM_INIT_AUTOMAKE(blastcmd, 2.0.0)
+AC_INIT(blastcmd, 2.0.1, [dwiebe@physics.utoronto.ca])
+AM_INIT_AUTOMAKE(blastcmd, 2.0.1)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH([data-etc], AS_HELP_STRING([--with-data-etc=DIR],
