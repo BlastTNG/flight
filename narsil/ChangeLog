@@ -1,5 +1,7 @@
 2005-05-18 (2.0.0):
-	* data/Makefile.am: Fix log.txt install
+	* narsil.cpp (MainForm::SendCommand): Use upper case letters for link.
+
+	* data/Makefile.am: Fix log.txt install.
 	* narsil.cpp: Update for daemon mode.
 
 2005-02-18 (1.8.7):

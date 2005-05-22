@@ -532,7 +532,7 @@ void MainForm::SendCommand() {
   int index, i, j;
   char buffer[1024];
   char request[1024];
-  const char link[] = "lti";
+  const char link[] = "LTI";
   const char route[] = "12";
 
   if (!sending) {
@@ -1205,7 +1205,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name,
   theStatusBar->addWidget(ConnBanner);
 
   w1 = NCommandList->width() + NGroupsBox->width() + 2 * PADDING + SPACING;
-  h1 = NCommandList->height() + theStatusBar->height() + PADDING;
+  h1 = NCommandList->height() + theStatusBar->height();
 
   setMinimumSize(w1, h1);
   setMaximumSize(w1, h1);
@@ -1249,7 +1249,7 @@ int main(int argc, char* argv[]) {
   }
 
   /* Client negotiation */
-  NetCmdConnect(BLASTCMD_HOST, 1, 0);
+  NetCmdConnect(BLASTCMD_HOST, 1, 1);
   NetCmdGetCmdList();
 
   defaults = new Defaults();
