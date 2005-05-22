@@ -1,5 +1,13 @@
-2005-05-18 (2.0.0):
+2005-05-22 (2.0.1):
+	* netcmd.c (NetCmdConnect): Replace getlogin with getpwuid to make WMs more
+	happy.
+	* narsil.cpp (MainForm::Tick): Don't bother updating the aragorn pixmap if
+	it hasn't changed.
+
+2005-05-21:
 	* narsil.cpp (MainForm::SendCommand): Use upper case letters for link.
+
+2005-05-20 (2.0.0):
 
 	* data/Makefile.am: Fix log.txt install.
 	* narsil.cpp: Update for daemon mode.

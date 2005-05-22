@@ -26,6 +26,7 @@
 
 #include <errno.h>
 #include <netdb.h>
+#include <pwd.h>
 #include <signal.h>
 #include <string.h>
 #include <tcpd.h>
@@ -219,7 +220,7 @@ void NetCmdUpdateConn(void)
 const char* NetCmdBanner(void)
 {
   if (is_free)
-    return "No one has the conn.";
+    return "The conn is free.";
   else if (strncmp(owner, me, strlen(me)) == 0)
     return "I have the conn.";
   else {
@@ -258,6 +259,8 @@ void NetCmdConnect(const char* host, int silent, int silenter)
   char buffer[1024];
   struct hostent* the_host;
   struct sockaddr_in addr;
+  struct passwd pw;
+  struct passwd *pwptr;
 
   /* get remote host IP */
   the_host = gethostbyname(host);
@@ -273,7 +276,8 @@ void NetCmdConnect(const char* host, int silent, int silenter)
   memcpy(&(addr.sin_addr.s_addr), the_host->h_addr, the_host->h_length);
 
   /* set user */
-  strcpy(me, getlogin());
+  getpwuid_r(getuid(), &pw, buffer, 1024, &pwptr);
+  strcpy(me, pw.pw_name);
   strcat(me, "@");
   i = strlen(me);
   gethostname(me + i, 1023 - i);

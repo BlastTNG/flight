@@ -440,15 +440,16 @@ void MainForm::Tick() {
       dir = -1;
     if (framenum == 1)
       dir = 1;
+    NWaitImage->setPixmap(*Images[framenum]);
   } else {
     NetCmdUpdateConn();
     ConnBanner->setText(NetCmdBanner());
 
-    if (framenum != 0)
+    if (framenum != 0) {
       framenum = 0;
+      NWaitImage->setPixmap(*Images[framenum]);
+    }
   }
-
-  NWaitImage->setPixmap(*Images[framenum]);
 
   if (sending) {
     if (NetCmdGetAck(&returnstatus, !verbose)) {
@@ -1249,7 +1250,7 @@ int main(int argc, char* argv[]) {
   }
 
   /* Client negotiation */
-  NetCmdConnect(BLASTCMD_HOST, 1, 1);
+  NetCmdConnect(BLASTCMD_HOST, 1, 0);
   NetCmdGetCmdList();
 
   defaults = new Defaults();
