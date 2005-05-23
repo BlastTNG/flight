@@ -1,4 +1,7 @@
 2005-05-23:
+	* netcmd.c: Include stdio.h ; don't include tcpd.h
+	* daemon.c: Include stdio.h ; don't include tcpd.h
+
 	Release blastcmd-2.0.2
 
 	* netcmd.c (ReadLine): Add.
