@@ -655,8 +655,10 @@ int main(int argc, char *argv[]) {
 
   MakeAddressLookups();
 
+#ifndef BOLOTEST
   bprintf(info, "System: Slow Downlink Initialisation");
   InitSlowDL();
+#endif
 
   bprintf(info, "Commands: MCP Command List Version: %s", command_list_serial);
 #ifdef USE_FIFO_CMD
