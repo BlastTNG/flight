@@ -911,7 +911,7 @@ void Pointing()
     no_dgps_pos++;
     if (no_dgps_pos > 3000) { // no dgps for 30 seconds - revert to sip
       PointingData[point_index].lat = SIPData.GPSpos.lat;
-      PointingData[point_index].lon = -SIPData.GPSpos.lon;
+      PointingData[point_index].lon = SIPData.GPSpos.lon;
     }
   }
 
