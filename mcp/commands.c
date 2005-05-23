@@ -1516,6 +1516,9 @@ void InitCommandData() {
   CommandData.pumps.outframe_cool2_on = 0;
   CommandData.pumps.outframe_cool2_off = 0;
 
+  CommandData.Bias.clockInternal = 0;
+  CommandData.Bias.biasAC = 1;
+  CommandData.Bias.biasRamp = 0;
   CommandData.Bias.SetLevel1 = 0;
   CommandData.Bias.SetLevel2 = 0;
   CommandData.Bias.SetLevel3 = 0;
@@ -1647,9 +1650,6 @@ void InitCommandData() {
   CommandData.pumps.inframe_auto = 1;
   CommandData.pumps.outframe_auto = 0;
 
-  CommandData.Bias.clockInternal = 0;
-  CommandData.Bias.biasAC = 1;
-  CommandData.Bias.biasRamp = 0;
   CommandData.Bias.bias1 = 0x10;
   CommandData.Bias.bias2 = 0x10;
   CommandData.Bias.bias3 = 0x10;

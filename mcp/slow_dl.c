@@ -247,7 +247,6 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
 void InitSlowDL(void) {
   int i;
   struct NiosStruct *address;
-  //long tmp;
 
   for (i = 0; i < SLOWDL_NUM_DATA; i++) {
     address = GetNiosAddr(SlowDLInfo[i].src);
@@ -256,10 +255,5 @@ void InitSlowDL(void) {
     SlowDLInfo[i].chnum = ExtractBiPhaseAddr(address)->channel;
     SlowDLInfo[i].max = (SlowDLInfo[i].calib_max - address->b) / address->m;
     SlowDLInfo[i].min = (SlowDLInfo[i].calib_min - address->b) / address->m;
-/*     if (SlowDLInfo[i].max < SlowDLInfo[i].min) { */
-/*       tmp = SlowDLInfo[i].min; */
-/*       SlowDLInfo[i].min = SlowDLInfo[i].max; */
-/*       SlowDLInfo[i].max = tmp; */
-/*     } */
   }
 }
