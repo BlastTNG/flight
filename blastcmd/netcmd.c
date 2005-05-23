@@ -55,6 +55,45 @@ char banner[1024];
 int is_free = -1;
 int sock;
 
+int ReadLine(int sock, char* buffer, int bufflen)
+{
+  static int prebuffer_size = 0;
+  static char prebuffer[2048] = "";
+  int i;
+
+  i = recv(sock, prebuffer + prebuffer_size, 2048 - prebuffer_size,
+      MSG_DONTWAIT);
+  
+  if (i < 0) {
+    if (errno == EAGAIN && prebuffer_size != 0)
+      i = 0;
+    else
+      return i;
+  }
+
+  if (i + prebuffer_size == 0)
+    return 0;
+
+  prebuffer_size += i;
+
+  buffer[bufflen - 1] = 0;
+  for (i = 0; i < bufflen - 1; ++i) {
+    if (prebuffer[i] == '\r' || prebuffer[i] == '\n' || prebuffer[i] == '\0') {
+      buffer[i] = 0;
+      break;
+    } else
+      buffer[i] = prebuffer[i];
+  }
+
+  while ((prebuffer[i] == '\r' || prebuffer[i] == '\n') && i < 2048)
+    i++;
+
+  memmove(prebuffer, prebuffer + i, 2048 - i);
+  prebuffer_size -= i;
+
+  return strlen(buffer);
+}
+
 void SetOwner(char* buffer)
 {
   int i;
@@ -63,6 +102,8 @@ void SetOwner(char* buffer)
   for (i = 0; i < 1023; ++i)
     if (buffer[i] == '\n' || buffer[i] == '\r')
       buffer[i] = 0;
+
+  printf("so %s\n", buffer);
 
   if (strcmp(buffer, ":::free:::") == 0) {
     is_free = 1;
@@ -83,7 +124,9 @@ int NetCmdGetAck(int *ack, int silent)
   char buffer[1024] = "\0";
   int i;
 
-  i = recv(sock, buffer, 1024, MSG_DONTWAIT);
+  i = ReadLine(sock, buffer, 1024);
+
+  printf("ga %s\n", buffer);
 
   if (i < 0) {
     if (errno == EAGAIN)
@@ -203,7 +246,8 @@ void NetCmdUpdateConn(void)
   int i;
 
   do {
-    i = recv(sock, buffer, 1024, MSG_DONTWAIT);
+    i = ReadLine(sock, buffer, 1024);
+
     if (i == -1 && errno == EAGAIN) {
       break;
     } else if (i == -1) {
