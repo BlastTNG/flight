@@ -268,8 +268,8 @@
     </MULTI>
     <MULTI caption="Autogyro">
       <DATUM src="AUTO_GYRO">
-        <WORD value="0" caption="On" textstyle="OK_BIT"/>
-        <WORD value="1" caption="Off" textstyle="W_BIT"/>
+        <WORD value="1" caption="On" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Off" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
   </BOX>
