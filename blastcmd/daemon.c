@@ -136,6 +136,7 @@ int SIPRoute(int sock, int t_link, int t_route, char* buffer)
 
 int SimpleRoute(int sock, int fd, char* buffer)
 {
+  strcat(buffer, "\n");
   write(fd, buffer, strlen(buffer));
   return 0;
 }

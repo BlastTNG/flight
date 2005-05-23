@@ -103,8 +103,6 @@ void SetOwner(char* buffer)
     if (buffer[i] == '\n' || buffer[i] == '\r')
       buffer[i] = 0;
 
-  printf("so %s\n", buffer);
-
   if (strcmp(buffer, ":::free:::") == 0) {
     is_free = 1;
   } else if (strncmp(buffer, ":::conn:::", 10) == 0) {
@@ -125,8 +123,6 @@ int NetCmdGetAck(int *ack, int silent)
   int i;
 
   i = ReadLine(sock, buffer, 1024);
-
-  printf("ga %s\n", buffer);
 
   if (i < 0) {
     if (errno == EAGAIN)
