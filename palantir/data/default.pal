@@ -266,6 +266,12 @@
         <WORD value="1" caption="Analogue" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
+    <MULTI caption="Autogyro">
+      <DATUM src="AUTO_GYRO">
+        <WORD value="0" caption="On" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Off" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
   </BOX>
   <BOX caption="ISC" colour="#707" row="3" col="4">
     <NUMBER caption="RA">
@@ -528,6 +534,12 @@
     </NUMBER>
     <NUMBER caption="P Pivot">
       <DATUM format="%.0f" src="g_p_pivot" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Set Reac">
+      <DATUM format="%.2f" src="SET_REAC" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Reac RPS">
+      <DATUM format="%.2f" src="RPS_REAC" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Inner Frame Electronics" colour="#002222" row="0" col="7" rowspan="1">
@@ -1305,6 +1317,12 @@
       <DATUM src="CALSTAT">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Autocycle">
+      <DATUM src="AUTO_CYCLE_ON">
+        <WORD value="1" caption="On" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Off" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
   </BOX>
