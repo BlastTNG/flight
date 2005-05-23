@@ -22,12 +22,12 @@
 
 #include <fcntl.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <errno.h>
 #include <netdb.h>
 #include <signal.h>
 #include <string.h>
-#include <tcpd.h>
 #include <time.h>
 #include <unistd.h>
 

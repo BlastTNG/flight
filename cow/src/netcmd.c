@@ -23,13 +23,13 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <errno.h>
 #include <netdb.h>
 #include <pwd.h>
 #include <signal.h>
 #include <string.h>
-#include <tcpd.h>
 #include <unistd.h>
 
 #include <sys/socket.h>
