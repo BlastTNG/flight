@@ -1,3 +1,10 @@
+2005-05-23:
+	Release blastcmd-2.0.2
+
+	* netcmd.c (ReadLine): Add.
+	* netcmd.c (NetCmdGetAck, NetCmdUpdateConn): Call ReadLine instead of recv
+	directly.
+
 2005-05-22:
 	Release blastcmd-2.0.1
 
