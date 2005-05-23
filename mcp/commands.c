@@ -996,8 +996,8 @@ void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues,
 void GPSPosition (unsigned char *indata) {
   /* Send new information to CommandData */
 
-  SIPData.GPSpos.lat = ParseGPS(indata);
-  SIPData.GPSpos.lon = ParseGPS(indata + 4); /* sip sends east lon */
+  SIPData.GPSpos.lon = ParseGPS(indata);
+  SIPData.GPSpos.lat = -ParseGPS(indata + 4); /* sip sends east lon */
   SIPData.GPSpos.alt = ParseGPS(indata + 8);
   SIPData.GPSstatus1 = *(indata + 12);
   SIPData.GPSstatus2 = *(indata + 13);
