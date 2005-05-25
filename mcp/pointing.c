@@ -142,7 +142,7 @@ void SunPos(double tt, double *ra, double *dec); // in starpos.c
 
 #define M2DV(x) ((x / 60.0) * (x / 60.0))
 
-#define MAG_ALIGNMENT 267 //237.0;
+#define MAG_ALIGNMENT 0.0 // 267 //237.0;
 
 // limit to 0 to 360.0
 void NormalizeAngle(double *A) {
@@ -201,7 +201,7 @@ int MagConvert(double *mag_az) {
   struct tm now;
   int i_point_read;
   static int firsttime = 1;
-  static struct LutType magLut = {"/data/etc/mag.lut",0,NULL,NULL,0};
+  //static struct LutType magLut = {"/data/etc/mag.lut",0,NULL,NULL,0};
 
   i_point_read = GETREADINDEX(point_index);
 
@@ -211,9 +211,9 @@ int MagConvert(double *mag_az) {
     /* I think it has something to do with the accuracy of the modelling -- */
     /* probably shouldn't change this value.  (Adam H.) */
     MagModelInit(12);
-    LutInit(&magLut);
+    //LutInit(&magLut);
 
-    oldt = -1;
+    oldt = 1;
     firsttime = 0;
   }
 

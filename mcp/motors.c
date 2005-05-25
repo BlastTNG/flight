@@ -45,6 +45,8 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
 		       double *max_el );
 
 
+int last_mode = -1;
+
 /************************************************************************/
 /*                                                                      */
 /*   GetVElev: get the current elevation velocity, given current        */
@@ -756,13 +758,15 @@ void DoNewCapMode() {
   /* If a new command, reset to bottom row */
   if ((CommandData.pointing_mode.X != last_X) ||
       (CommandData.pointing_mode.Y != last_Y) ||
-      (CommandData.pointing_mode.w != last_w)) {
+      (CommandData.pointing_mode.w != last_w) ||
+      (last_mode != P_CAP)) {
     if ( (fabs(az - (caz)) < 0.1) &&
 	 (fabs(el - (bottom)) < 0.05)) {
       last_X = CommandData.pointing_mode.X;
       last_Y = CommandData.pointing_mode.Y;
       last_w = CommandData.pointing_mode.w;
     } else {
+      last_w = 0; // remember we are moving...
       axes_mode.az_mode = AXIS_POSITION;
       axes_mode.az_dest = caz;
       axes_mode.az_vel = 0.0;
@@ -932,7 +936,8 @@ void DoNewBoxMode() {
   if ((CommandData.pointing_mode.X != last_X) ||
       (CommandData.pointing_mode.Y != last_Y) ||
       (CommandData.pointing_mode.w != last_w) ||
-      (CommandData.pointing_mode.h != last_h)) {
+      (CommandData.pointing_mode.h != last_h) ||
+      (last_mode != P_BOX)) {
     if ( (fabs(az - left) < 0.1) &&
 	 (fabs(el - bottom) < 0.05)) {
       last_X = CommandData.pointing_mode.X;
@@ -940,6 +945,7 @@ void DoNewBoxMode() {
       last_w = CommandData.pointing_mode.w;
       last_h = CommandData.pointing_mode.h;
     } else {
+      last_w = 0; // remember we are moving...
       axes_mode.az_mode = AXIS_POSITION;
       axes_mode.az_dest = left;
       axes_mode.az_vel = 0.0;
@@ -1082,6 +1088,7 @@ void DoQuadMode() { // aka radbox
   }
 
   new = 0;
+  if (last_mode != P_QUAD) new = 1;
   for (i=0; i<4; i++) {
     if (CommandData.pointing_mode.ra[i] != last_ra[i]) new = 1;
     if (CommandData.pointing_mode.dec[i] != last_dec[i]) new = 1;
@@ -1095,6 +1102,7 @@ void DoQuadMode() { // aka radbox
 	last_dec[i] = CommandData.pointing_mode.dec[i];
       }
     } else {
+      last_dec[i] = 0; // remember it is new....
       axes_mode.az_mode = AXIS_POSITION;
       axes_mode.az_dest = c_az[i_bot];
       axes_mode.az_vel = 0.0;
@@ -1236,4 +1244,5 @@ void UpdateAxesMode() {
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       break;
   }
+  last_mode = CommandData.pointing_mode.mode;
 }
