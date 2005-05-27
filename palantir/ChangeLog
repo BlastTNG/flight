@@ -1,3 +1,9 @@
+2005-05-28 (1.2.9):
+	* configure.ac: Add qt-3.1 to detection check.
+
+2005-05-25 (1.2.8.4):
+	* data/default.pal: Add a few more fields.
+
 2005-05-19 (1.2.8.3):
 	* data/default.pal: Update.
 
