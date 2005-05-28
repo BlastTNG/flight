@@ -143,7 +143,7 @@ void WriteAux(void) {
 
   gettimeofday(&tv, &tz);
 
-  WriteData(cpuTimeAddr, tv.tv_sec, NIOS_QUEUE);
+  WriteData(cpuTimeAddr, tv.tv_sec + TEMPORAL_OFFSET, NIOS_QUEUE);
   WriteData(cpuTimeuSAddr, tv.tv_usec, NIOS_QUEUE);
 
   WriteData(cpuFanAddr, CommandData.fan, NIOS_QUEUE);

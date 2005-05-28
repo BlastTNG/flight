@@ -33,6 +33,8 @@ extern time_t mcp_systime(time_t *t);
 extern unsigned short* tdrss_data[3];
 extern unsigned int tdrss_index;
 
+#define TEMPORAL_OFFSET 0
+
 #ifdef DEBUG
 #warning "Debugging set."
 #endif
