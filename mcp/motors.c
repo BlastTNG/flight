@@ -42,7 +42,7 @@ void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
 /* in radbox.c */
 void radbox_endpoints( double az[4], double el[4], double el_in, 
                        double *az_left, double *az_right, double *min_el, 
-		       double *max_el );
+		       double *max_el, double *az_of_bot );
 
 
 int last_mode = -1;
@@ -893,6 +893,7 @@ void DoNewBoxMode() {
   double v_az, t=1;
   int i_point;
   int new_step = 0;
+  int new = 0;
 
   static double last_X=0, last_Y=0, last_w=0, last_h = 0;
   static double az_dir = 0, el_dir = 1, v_el = 0;
@@ -931,6 +932,8 @@ void DoNewBoxMode() {
     bottom = MIN_EL;
   
   // FIXME: reboot proofing...
+
+  new = 0;
   
   /* If a new command, reset to bottom row */
   if ((CommandData.pointing_mode.X != last_X) ||
@@ -938,6 +941,15 @@ void DoNewBoxMode() {
       (CommandData.pointing_mode.w != last_w) ||
       (CommandData.pointing_mode.h != last_h) ||
       (last_mode != P_BOX)) {
+    new = 1;
+  }
+  if (el < bottom - 0.5) new = 1;
+  if (el > top + 0.5) new = 1;
+  if (az < left - 2.0) new = 1;
+  if (az > right + 2.0) new = 1;
+
+  /* If a new command, reset to bottom row */
+  if (new) {
     if ( (fabs(az - left) < 0.1) &&
 	 (fabs(el - bottom) < 0.05)) {
       last_X = CommandData.pointing_mode.X;
@@ -1028,7 +1040,9 @@ void DoQuadMode() { // aka radbox
   int i, i_point;
   int new_step = 0;
   double c_az[4], c_el[4]; // corner az and corner el
-  int i_top, i_bot, new;
+  double az_of_bot;
+  int new;
+  //int i_top, i_bot, new;
   
   static double last_ra[4] = {0,0,0,0}, last_dec[4] = {0,0,0,0};
   static double az_dir = 0, el_dir = 1, v_el = 0;
@@ -1040,8 +1054,6 @@ void DoQuadMode() { // aka radbox
   az = PointingData[i_point].az;
   el = PointingData[i_point].el;
 
-  v_az = fabs(CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0));
-
   /* convert ra/decs to az/el */
   for (i=0; i<4; i++) {
     radec2azel(CommandData.pointing_mode.ra[i],
@@ -1049,39 +1061,25 @@ void DoQuadMode() { // aka radbox
 	       lst, lat,
 	       c_az+i, c_el+i);
   }
+  
   /* get sky drift speed */
   radec2azel(CommandData.pointing_mode.ra[0],
 	     CommandData.pointing_mode.dec[0],
 	     lst+1.0, lat,
 	     &az2, &el2);
+
+  UnwindDiff(az, &az2);
   
   daz_dt = drem(az2 - c_az[0], 360.0);
   del_dt = el2 - c_el[0];
 
-  // make sure our path to the source doesn't cross the sun.
-  SetSafeDAzC(az, c_az, &az2);
-  for (i=1; i<4; i++) {
-    c_az[i] += az2;
-  }
-
-  i_bot = 0;
-  i_top = 0;
-  for (i=1; i<4; i++) {
-    if (c_el[i_bot]>c_el[i]) i_bot = i;
-    if (c_el[i_top]<c_el[i]) i_top = i;
-  }
-
-  bottom = c_el[i_bot];
-  top = c_el[i_top];
+  radbox_endpoints(c_az, c_el, el, &left, &right, &bottom, &top, &az_of_bot);
   
-  if (el<=c_el[i_bot]) {
-    left = right = c_az[i_bot];
-  } else if (el>=c_el[i_top]) {
-    left = right = c_az[i_top];
-  } else {
-    radbox_endpoints(c_az, c_el, el, &left, &right, &bottom, &top);
-  }
+  SetSafeDAz(az, &left); // don't cross the sun
+  UnwindDiff(left, &right);
   
+  SetSafeDAz(az, &az_of_bot); // correct left
+
   if (right-left < MIN_SCAN) {
     left = (left+right)/2.0 - MIN_SCAN/2.0;
     right = left + MIN_SCAN;
@@ -1089,25 +1087,30 @@ void DoQuadMode() { // aka radbox
 
   new = 0;
   if (last_mode != P_QUAD) new = 1;
+  if (el < bottom - 0.5) new = 1;
+  if (el > top + 0.5) new = 1;
+  if (az < left - 2.0) new = 1;
+  if (az > right + 2.0) new = 1;
+  
   for (i=0; i<4; i++) {
     if (CommandData.pointing_mode.ra[i] != last_ra[i]) new = 1;
     if (CommandData.pointing_mode.dec[i] != last_dec[i]) new = 1;
   }
 
   if (new) {
-    if ( (fabs(az - c_az[i_bot]) < 0.1) &&
-	 (fabs(el - c_el[i_bot]) < 0.05)) {
+    if ( (fabs(az - az_of_bot) < 0.1) &&
+	 (fabs(el - bottom) < 0.05)) {
       for (i=0; i<4; i++) {
 	last_ra[i] = CommandData.pointing_mode.ra[i];
 	last_dec[i] = CommandData.pointing_mode.dec[i];
       }
     } else {
-      last_dec[i] = 0; // remember it is new....
+      last_dec[0] = -99.9745; // remember it is new....
       axes_mode.az_mode = AXIS_POSITION;
-      axes_mode.az_dest = c_az[i_bot];
+      axes_mode.az_dest = az_of_bot;
       axes_mode.az_vel = 0.0;
       axes_mode.el_mode = AXIS_POSITION;
-      axes_mode.el_dest = c_el[i_bot];
+      axes_mode.el_dest = bottom;
       axes_mode.el_vel = 0.0;
       v_el = 0.0;
       targ_el = 0.0;
@@ -1125,8 +1128,13 @@ void DoQuadMode() { // aka radbox
   }
 
   radbox_endpoints(c_az, c_el, targ_el+bottom, &next_left,
-		   &next_right, &bottom, &top);
-  
+		   &next_right, &bottom, &top, &az_of_bot);
+
+
+  // make next close to this...
+  UnwindDiff(left, &next_left);
+  UnwindDiff(left, &next_right);
+
   if (next_right-next_left < MIN_SCAN) {
     next_left = (next_left+next_right)/2.0 - MIN_SCAN/2.0;
     next_right = next_left + MIN_SCAN;

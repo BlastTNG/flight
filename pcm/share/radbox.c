@@ -185,7 +185,7 @@ double az_gcirc( double *az, double *el, double el_in )
 
 void radbox_endpoints( double az[4], double el[4], double el_in, 
     double *az_left, double *az_right, double *min_el, 
-    double *max_el )
+		       double *max_el, double *az_of_bot )
 {  
   int i;
   int min_index, max_index;
@@ -217,6 +217,8 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
     }
   }
 
+  *az_of_bot = az[min_index];
+  
   // if the requested elevation within the polygon do the calculation
   if( (el_in >= *min_el) && (el_in <= *max_el) )
   {
@@ -338,5 +340,13 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
         *az_right = temp;
       }
     } 
+  }
+  else if (el_in <= *min_el)
+  {
+    *az_left = *az_right = az[min_index];
+  }
+  else // if (el_in >= *max_el)
+  {
+    *az_left = *az_right = az[max_index];
   }
 }
