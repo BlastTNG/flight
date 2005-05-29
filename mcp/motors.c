@@ -36,6 +36,8 @@ struct AxesModeStruct axes_mode; /* low level velocity mode */
 int pinIsIn(void);  /* auxcontrol.c */
 void SetSafeDAz(double ref, double *A); /* in pointing.c */
 void SetSafeDAzC(double ref, double *A, double *C); /* in pointing.c */
+void UnwindDiff(double ref, double *A);
+
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
                 double *el);
 
