@@ -1166,7 +1166,7 @@ void DoQuadMode() { // aka radbox
 
   if (new_step) {
     // set v for this step
-    v_el = (targ_el+bottom - el)/t;
+    //v_el = (targ_el+bottom - el)/t;
     // set targ_el for the next step
     targ_el += CommandData.pointing_mode.del*el_dir;
     if (targ_el>top-bottom) {
@@ -1176,6 +1176,7 @@ void DoQuadMode() { // aka radbox
       targ_el = 0;
       el_dir = 1;
     }
+    v_el = (targ_el+bottom - el)/t;
   }
   
   axes_mode.el_mode = AXIS_VEL;
