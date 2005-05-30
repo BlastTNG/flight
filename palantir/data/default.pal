@@ -461,6 +461,18 @@
     <NUMBER caption="Balance %">
       <DATUM format="%.2f" src="BALPUMP_LEV" extrema="unknown"/>
     </NUMBER>
+    <MULTI caption="Motor">
+      <DATUM src="BAL_ON_BIT">
+        <WORD value="1" caption="On" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Direction">
+      <DATUM src="BAL_REV">
+        <WORD value="1" caption="Down" textstyle="W_BIT"/>
+        <WORD value="0" caption="Up" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
     <NUMBER caption="Gain">
       <DATUM format="%.2f" src="BAL_GAIN" extrema="unknown"/>
     </NUMBER>
@@ -1346,8 +1358,10 @@
       </DATUM>
     </MULTI>
     <MULTI caption="Autocycle">
-      <DATUM src="AUTO_CYCLE_ON">
-        <WORD value="1" caption="On" textstyle="OK_BIT"/>
+      <DATUM src="cycle_state">
+        <WORD value="4" caption="Cooling" textstyle="P_BIT"/>
+        <WORD value="2" caption="Heating" textstyle="E_BIT"/>
+        <WORD value="1" caption="Watching" textstyle="OK_BIT"/>
         <WORD value="0" caption="Off" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
