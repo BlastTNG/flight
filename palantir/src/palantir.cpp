@@ -754,7 +754,7 @@ void MainForm::UpdateData() {
   time_t timetmp;
   struct tm *currTime;
   char tmp[255];
-  int updating;
+  static bool updating = false;
   FILE *curf;
 
   if (startupDecomd) {
@@ -763,7 +763,7 @@ void MainForm::UpdateData() {
   }
 
   if (DataSource->update()) {
-    updating = 1;
+    updating = true;
     Picture->TurnOn(ShowPicture);
     if (DecomPoller->pollDecomd)
       PalantirState->setText("PT: RUN");
@@ -772,7 +772,7 @@ void MainForm::UpdateData() {
     Picture->TurnOff(ShowPicture);
     if (DecomPoller->pollDecomd)
       PalantirState->setText("PT: STP");
-    updating = 0;
+    updating = false;
     if (NoIncomingOn) {
       if (++NoIncoming == 3) {
         NoIncoming = 0;
@@ -860,7 +860,7 @@ void MainForm::UpdateData() {
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in from disk
         if (DataSource->readField(indata, currLabel->src,
-              DataSource->numFrames() - 3, 1) == 0) {
+              DataSource->numFrames() - 1, -1) == 0) {
           if (currLabel->laststyle != 1) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
@@ -917,7 +917,7 @@ void MainForm::UpdateData() {
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in value from disk
         if (DataSource->readField(indata, currLabel->src,
-              DataSource->numFrames() - 3, 1) == 0) {
+              DataSource->numFrames() - 1, -1) == 0) {
           if (currLabel->laststyle != 1001) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
@@ -955,7 +955,7 @@ void MainForm::UpdateData() {
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in value from disk
         if (DataSource->readField(indata, currLabel->src,
-              DataSource->numFrames() - 3, 1) == 0) {
+              DataSource->numFrames() - 1, -1) == 0) {
           if (currLabel->laststyle != 1) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
@@ -1001,7 +1001,7 @@ void MainForm::UpdateData() {
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in from disk
         if (DataSource->readField(indata, currLabel->src,
-              DataSource->numFrames() - 3, 1) == 0) {
+              DataSource->numFrames() - 1, -1) == 0) {
           if (currLabel->laststyle != 1) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
