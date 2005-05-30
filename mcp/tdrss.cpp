@@ -844,8 +844,8 @@ void Alice::SendSingle(double *data, struct DataStruct_glob *currInfo)
 
   SMALL_TRACE("%p, %p", data, currInfo);
 
-  divider = (double)(currInfo->maxval - currInfo->minval + 1) /
-    (double)((long long)1 << currInfo->numbits);
+  divider = (double)(currInfo->maxval - currInfo->minval) /
+    (double)(((long long)1 << currInfo->numbits) - 1);
   sendval = Round((data[0] - (double)currInfo->minval) / divider);
 
   // Write the first value from *data
@@ -885,8 +885,8 @@ void Alice::SendAverage(double *data, int num,
   for (i = 0; i < num; i++)
     sum += data[i];
 
-  divider = (double)(currInfo->maxval - currInfo->minval + 1) /
-    (double)((long long)1 << currInfo->numbits);
+  divider = (double)(currInfo->maxval - currInfo->minval) /
+    (double)(((long long)1 << currInfo->numbits) - 1);
   sendval = Round((sum / (double)num - (double)currInfo->minval) / divider);
 
   // Write average value to buffer
