@@ -1,3 +1,6 @@
+2005-05-29 (1.2.9.1):
+	* data/default.pal: Add more pointing mode info.
+
 2005-05-28 (1.2.9):
 	* configure.ac: Add qt-3.1 to detection check.
 
