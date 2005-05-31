@@ -43,7 +43,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"p_w",           SLOWDL_FORCE_INT, 8, 0, 10},
   {"ra",            SLOWDL_FORCE_INT, 8, 0, 24},
   {"dec",           SLOWDL_FORCE_INT, 8, -90, 90},
-  {"az",            SLOWDL_FORCE_INT, 8, 180, 180},
+  {"az",            SLOWDL_FORCE_INT, 8, -180, 180},
   {"el",            SLOWDL_FORCE_INT, 8, 10, 65},                                                                                                                                                                                                                                  
   /* MOTORS */
   {"t_el_mc",       SLOWDL_FORCE_INT, 8, 55, -55},
