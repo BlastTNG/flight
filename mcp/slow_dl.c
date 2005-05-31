@@ -27,7 +27,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"time",          SLOWDL_FORCE_INT, 16, 1116327374, 1121507747}, 
   {"sam_i_am",      SLOWDL_U_MASK,    8},
   {"lat",           SLOWDL_FORCE_INT, 8, 0, 90}, /* 0.35 deg */
-  {"lon",           SLOWDL_FORCE_INT, 8, -180, 360},
+  {"lon",           SLOWDL_FORCE_INT, 8, 0, 358.59},
   {"sip_alt",       SLOWDL_FORCE_INT, 8, 0, 40000}, /* 157 m */
   {"cpu_temp1",     SLOWDL_FORCE_INT, 8, 0, 75}, /* 0.29 deg */
   {"disk_free",     SLOWDL_FORCE_INT, 8, 0, 200},
@@ -43,7 +43,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"p_w",           SLOWDL_FORCE_INT, 8, 0, 10},
   {"ra",            SLOWDL_FORCE_INT, 8, 0, 24},
   {"dec",           SLOWDL_FORCE_INT, 8, -90, 90},
-  {"az",            SLOWDL_FORCE_INT, 8, 0, 360},
+  {"az",            SLOWDL_FORCE_INT, 8, 0, 358.59},
   {"el",            SLOWDL_FORCE_INT, 8, 10, 65},                                                                                                                                                                                                                                  
   /* MOTORS */
   {"t_el_mc",       SLOWDL_FORCE_INT, 8, 55, -55},
