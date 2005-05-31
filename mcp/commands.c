@@ -1085,7 +1085,6 @@ void SendDownData(char tty_fd) {
     switch (SlowDLInfo[i].type) {
       case SLOWDL_FORCE_INT:
         /* Round value to an integer and try to fit it in numbits */
-
         numbits = SlowDLInfo[i].numbits; 
         slowM = (double)((1 << (numbits - 1)) - 1) / 
           (SlowDLInfo[i].max - SlowDLInfo[i].min); 
@@ -1096,6 +1095,14 @@ void SendDownData(char tty_fd) {
           temp = 0;
         else
           temp = (int)(slowM * SlowDLInfo[i].value + slowB);
+	
+	if (strcmp(SlowDLInfo[i].src, "az")==0) {
+	  bprintf(info, "az: %g %d %g %g\n", SlowDLInfo[i].value, temp, SlowDLInfo[i].max, SlowDLInfo[i].min);
+	}
+	if (strcmp(SlowDLInfo[i].src, "el")==0) {
+	  bprintf(info, "el: %g %d %g %g\n", SlowDLInfo[i].value, temp, SlowDLInfo[i].max, SlowDLInfo[i].min);
+	}
+
         break;
 
       case SLOWDL_U_MASK:

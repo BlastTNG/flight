@@ -33,8 +33,8 @@ struct SlowDLStruct {
   int wide;
   int mindex;
   int chnum;
-  long min;
-  long max;
+  double min;
+  double max;
 };
 
 void InitSlowDL(void);
