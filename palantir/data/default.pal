@@ -25,6 +25,12 @@
       <XHI value="32768"/>
       <XLO value="0"/>
     </EXTREMA>
+    <EXTREMA name="gyheat">
+      <HI value="40"/>
+      <LO value="5"/>
+      <XHI value="60"/>
+      <XLO value="0"/>
+    </EXTREMA>
     <EXTREMA name="temp">
       <HI value="40"/>
       <LO value="-20"/>
@@ -590,11 +596,14 @@
     <NUMBER caption="DAS">
       <DATUM format="%.2f" src="T_DAS" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Gyrobox 1">
+    <NUMBER caption="Gybox 1">
       <DATUM format="%.2f" src="T_GYBOX1" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Gyro 1 Set">
+    <NUMBER caption="Gybox 1 Set">
       <DATUM format="%.2f" src="T_GY1_SET" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="Gybox 1 Heater %">
+      <DATUM format="%.2f" src="GY1_H_HIST" extrema="gyheat"/>
     </NUMBER>
     <NUMBER caption="Gyro 1">
       <DATUM format="%.2f" src="T_GYRO1" extrema="temp"/>
@@ -605,11 +614,14 @@
     <NUMBER caption="Gyro 3">
       <DATUM format="%.2f" src="T_GYRO3" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Gyrobox 2">
+    <NUMBER caption="Gybox 2">
       <DATUM format="%.2f" src="T_GYBOX2" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Gyro 2 Set">
+    <NUMBER caption="Gybox 2 Set">
       <DATUM format="%.2f" src="T_GY2_SET" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="Gybox 2 Heater %">
+      <DATUM format="%.2f" src="GY2_H_HIST" extrema="gyheat"/>
     </NUMBER>
     <NUMBER caption="IF Clin">
       <DATUM format="%.2f" src="T_CLIN_IF" extrema="temp"/>
