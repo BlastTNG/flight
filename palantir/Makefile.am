@@ -1,7 +1,6 @@
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = data etc src
-EXTRA_DIST = bootstrap.sh lib/kstfile.o lib/getdata.o include/kstfile.h \
-						 include/getdata.h lib/libRD.a
+EXTRA_DIST = bootstrap.sh lib/libRD.a
 DISTCHECK_CONFIGURE_FLAGS = --with-data-etc="$$dc_install_base/data"
 
 distinstall: distcheck

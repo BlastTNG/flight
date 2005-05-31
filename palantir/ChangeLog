@@ -1,3 +1,9 @@
+2005-05-31 (1.2.10.1):
+	* data/default.pal: Update.
+
+2005-05-30 (1.2.10):
+	* src/kstfile.cpp src/getdata.c src/readdata.c src/creaddata.c: Add.
+
 2005-05-29 (1.2.9.1):
 	* data/default.pal: Add more pointing mode info.
 
@@ -55,7 +61,7 @@
 	* palantir: migrate to autoconf
 
 2004-09-09 (1.2.0):
-	* palantir: Convert to a application ; add decomd listening ; CURVEFILE ->
+	* palantir: Convert to an application ; add decomd listening ; CURVEFILE ->
 	CURFILE ; copyright and license
 
 2003-09-26 (1.1.6)  Barth Netterfield:

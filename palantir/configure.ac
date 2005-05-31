@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(palantir, 1.2.9.1, [dwiebe@physics.utoronto.ca])
-AM_INIT_AUTOMAKE(palantir, 1.2.9.1)
+AC_INIT(palantir, 1.2.10.1, [dwiebe@physics.utoronto.ca])
+AM_INIT_AUTOMAKE(palantir, 1.2.10.1)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH(data-etc,[  --with-data-etc=DIR     put auxiliary data in DIR [[/data/etc]]], DATA_ETC_DIR="${withval}", DATA_ETC_DIR="/data/etc")
