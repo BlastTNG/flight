@@ -1,3 +1,7 @@
+2005-06-01 (1.2.11):
+	* src/decompoll.cpp (DecomPoll::start): Remove Priority to premit
+	compilation under qt 3.1.
+
 2005-05-31 (1.2.10.1):
 	* data/default.pal: Update.
 
