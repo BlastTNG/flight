@@ -52,7 +52,7 @@ class DecomPoll : public QThread
 {
   public:
     DecomPoll();
-    void start(const char*, int, Priority priority = InheritPriority);
+    void start(const char*, int);
     virtual void run();
 
     int connectState;

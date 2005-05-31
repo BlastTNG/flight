@@ -91,12 +91,12 @@ DecomPoll::DecomPoll() : QThread()
   theDecom = new DecomData();
 }
 
-void DecomPoll::start(const char* h, int p, Priority priority)
+void DecomPoll::start(const char* h, int p)
 {
   strncpy(decomdHost, h, MAXPATHLENGTH);
   decomdPort = p;
 
-  QThread::start(priority);
+  QThread::start();
   pollDecomd = true;
 }
 
