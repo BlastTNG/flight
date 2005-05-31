@@ -335,6 +335,11 @@
 --z11@z0      n16c15        @             @             @             @             @             
 
 +FASTDATA     
+++INT         src           numbits       overbits      divider       forcediv      perframe      samplefreq    
+--0           gyro2         6             2             5             false         20            8             
+--1           gyro3         6             2             5             false         20            8             
+--2           gyro1         6             2             5             false         20            8             
+
 ++DIFF        src           numbits       overbits      divider       forcediv      perframe      samplefreq    
 --0           enc_elev      6             2             3             false         20            32            
 --1           az            6             2             3             false         20            32            
@@ -354,14 +359,9 @@
 --15          osc_ra        6             2             3             false         1             4             
 --16          osc_dec       6             2             3             false         1             4             
 
-++INT         src           numbits       overbits      divider       forcediv      perframe      samplefreq    
---0           gyro2         6             2             5             false         20            8             
---1           gyro3         6             2             5             false         20            8             
---2           gyro1         6             2             5             false         20            8             
-
 ### Bolometers ###
 # Mixed up as we will probably only get the first few...
-++DIFF        src           numbits       overbits      divider       forcediv      perframe      samplefreq    
+#++DIFF        src           numbits       overbits      divider       forcediv      perframe      samplefreq    
 --b0          n5c5          7             2             300           false         20            1             
 --b1          n11c5         7             2             300           false         20            1             
 --b2          n15c5         7             2             300           false         20            1             
