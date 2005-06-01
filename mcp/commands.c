@@ -1096,13 +1096,14 @@ void SendDownData(char tty_fd) {
         else
           temp = (int)(slowM * SlowDLInfo[i].value + slowB);
 	
-	if (strcmp(SlowDLInfo[i].src, "az")==0) {
-	  bprintf(info, "az: %g %d %g %g\n", SlowDLInfo[i].value, temp, SlowDLInfo[i].max, SlowDLInfo[i].min);
-	}
-	if (strcmp(SlowDLInfo[i].src, "el")==0) {
-	  bprintf(info, "el: %g %d %g %g\n", SlowDLInfo[i].value, temp, SlowDLInfo[i].max, SlowDLInfo[i].min);
-	}
-
+#if 0
+        if (strcmp(SlowDLInfo[i].src, "az")==0) {
+          bprintf(info, "az: %g %d %g %g\n", SlowDLInfo[i].value, temp, SlowDLInfo[i].max, SlowDLInfo[i].min);
+        }
+        if (strcmp(SlowDLInfo[i].src, "el")==0) {
+          bprintf(info, "el: %g %d %g %g\n", SlowDLInfo[i].value, temp, SlowDLInfo[i].max, SlowDLInfo[i].min);
+        }
+#endif
         break;
 
       case SLOWDL_U_MASK:
@@ -1290,17 +1291,17 @@ void WatchPort (void* parameter) {
       if (timer == 800) {
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_POSITION, tty_fd);
-//        bprintf(info, "Commands: COMM%i: Request SIP Position\n", port + 1);
+        //        bprintf(info, "Commands: COMM%i: Request SIP Position\n", port + 1);
         pthread_mutex_unlock(&mutex);
       } else if (timer == 1700) {
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_TIME, tty_fd);
-//        bprintf(info, "Commands: COMM%i: Request SIP Time\n", port + 1);
+        //        bprintf(info, "Commands: COMM%i: Request SIP Time\n", port + 1);
         pthread_mutex_unlock(&mutex);	
       } else if (timer > 2500) { 
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_ALTITUDE, tty_fd);
-//        bprintf(info, "Commands: COMM%i: Request SIP Altitude\n", port + 1);
+        //        bprintf(info, "Commands: COMM%i: Request SIP Altitude\n", port + 1);
         pthread_mutex_unlock(&mutex);
         timer = 0;
       }
