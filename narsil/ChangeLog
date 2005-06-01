@@ -1,3 +1,7 @@
+2005-05-25 (2.0.3):
+	* netcmd.c (ReadLine): Reset prebuffer size to zero if the first character
+	happens to be a zero to prevent erroneous connexion errors.
+
 2005-05-23 (2.0.2):
 	* netcmd.c (ReadLine): Add.
 	* netcmd.c (NetCmdUpdateConn, int NetCmdGetAck): Call ReadLine instead of

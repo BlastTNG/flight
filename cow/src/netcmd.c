@@ -69,9 +69,7 @@ int ReadLine(int sock, char* buffer, int bufflen)
       i = 0;
     else
       return i;
-  }
-
-  if (i + prebuffer_size == 0)
+  } else if (i == 0)
     return 0;
 
   prebuffer_size += i;
@@ -90,6 +88,9 @@ int ReadLine(int sock, char* buffer, int bufflen)
 
   memmove(prebuffer, prebuffer + i, 2048 - i);
   prebuffer_size -= i;
+
+  if (prebuffer[0] == '\0')
+    prebuffer_size = 0;
 
   return strlen(buffer);
 }
