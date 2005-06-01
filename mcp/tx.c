@@ -298,6 +298,7 @@ void StoreStarCameraData(int index, int which)
   static struct NiosStruct* ExposureAddr[2];
   static struct NiosStruct* TrigTypeAddr[2];
   static struct NiosStruct* RealTrigAddr[2];
+  static struct NiosStruct* BlobIdxAddr[2];
   static struct NiosStruct* FieldrotAddr[2];
 
   if (firsttime[which]) {
@@ -352,6 +353,7 @@ void StoreStarCameraData(int index, int which)
     TrigTypeAddr[which] = GetSCNiosAddr("trig_type", which);
     FieldrotAddr[which] = GetSCNiosAddr("fieldrot", which);
     RealTrigAddr[which] = GetSCNiosAddr("real_trig", which);
+    BlobIdxAddr[which] = GetSCNiosAddr("blob_idx", which);
 
     Temp1Addr[0] = GetNiosAddr("t_isc_flange");
     Temp2Addr[0] = GetNiosAddr("t_isc_heat");
@@ -485,6 +487,8 @@ void StoreStarCameraData(int index, int which)
       NIOS_QUEUE);
   WriteData(Blob2SAddr[which], blob_data[which][blob_index[which] * 3 + 2][3],
       NIOS_QUEUE);
+
+  WriteData(BlobIdxAddr[which], blob_index[which], NIOS_QUEUE);
 
   /* increment blob index once per slow frame */
   if (index == 0)
