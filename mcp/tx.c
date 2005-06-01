@@ -370,8 +370,9 @@ void StoreStarCameraData(int index, int which)
     if (((iscread_index[which] + 1) % 5) != iscwrite_index[which]) {
       iscread_index[which] = (iscread_index[which] + 1) % 5;
       /* reset blob multiplexing if this is a pointing packet */
-      if (ISCSolution[which][i_isc].flag == 1)
+      if (ISCSolution[which][i_isc].flag == 1) {
         blob_index[which] = 0;
+      }
     }
 
   i_isc = iscread_index[which];
@@ -458,41 +459,42 @@ void StoreStarCameraData(int index, int which)
           * 65.536);
     }
 
-  /* When we're writing a handshake packet, these blobs are still from the
-   * previous pointing packet */
-  WriteData(Blob0XAddr[which], blob_data[which][blob_index[which] * 3 + 0][0],
-      NIOS_QUEUE);
-  WriteData(Blob1XAddr[which], blob_data[which][blob_index[which] * 3 + 1][0],
-      NIOS_QUEUE);
-  WriteData(Blob2XAddr[which], blob_data[which][blob_index[which] * 3 + 2][0],
-      NIOS_QUEUE);
+  if (index == 0) {
+    /* When we're writing a handshake packet, these blobs are still from the
+     * previous pointing packet */
+    WriteData(Blob0XAddr[which], blob_data[which][blob_index[which] * 3 + 0][0],
+        NIOS_QUEUE);
+    WriteData(Blob1XAddr[which], blob_data[which][blob_index[which] * 3 + 1][0],
+        NIOS_QUEUE);
+    WriteData(Blob2XAddr[which], blob_data[which][blob_index[which] * 3 + 2][0],
+        NIOS_QUEUE);
 
-  WriteData(Blob0YAddr[which], blob_data[which][blob_index[which] * 3 + 0][1],
-      NIOS_QUEUE);
-  WriteData(Blob1YAddr[which], blob_data[which][blob_index[which] * 3 + 1][1],
-      NIOS_QUEUE);
-  WriteData(Blob2YAddr[which], blob_data[which][blob_index[which] * 3 + 2][1],
-      NIOS_QUEUE);
+    WriteData(Blob0YAddr[which], blob_data[which][blob_index[which] * 3 + 0][1],
+        NIOS_QUEUE);
+    WriteData(Blob1YAddr[which], blob_data[which][blob_index[which] * 3 + 1][1],
+        NIOS_QUEUE);
+    WriteData(Blob2YAddr[which], blob_data[which][blob_index[which] * 3 + 2][1],
+        NIOS_QUEUE);
 
-  WriteData(Blob0FAddr[which], blob_data[which][blob_index[which] * 3 + 0][2],
-      NIOS_QUEUE);
-  WriteData(Blob1FAddr[which], blob_data[which][blob_index[which] * 3 + 1][2],
-      NIOS_QUEUE);
-  WriteData(Blob2FAddr[which], blob_data[which][blob_index[which] * 3 + 2][2],
-      NIOS_QUEUE);
+    WriteData(Blob0FAddr[which], blob_data[which][blob_index[which] * 3 + 0][2],
+        NIOS_QUEUE);
+    WriteData(Blob1FAddr[which], blob_data[which][blob_index[which] * 3 + 1][2],
+        NIOS_QUEUE);
+    WriteData(Blob2FAddr[which], blob_data[which][blob_index[which] * 3 + 2][2],
+        NIOS_QUEUE);
 
-  WriteData(Blob0SAddr[which], blob_data[which][blob_index[which] * 3 + 0][3],
-      NIOS_QUEUE);
-  WriteData(Blob1SAddr[which], blob_data[which][blob_index[which] * 3 + 1][3],
-      NIOS_QUEUE);
-  WriteData(Blob2SAddr[which], blob_data[which][blob_index[which] * 3 + 2][3],
-      NIOS_QUEUE);
+    WriteData(Blob0SAddr[which], blob_data[which][blob_index[which] * 3 + 0][3],
+        NIOS_QUEUE);
+    WriteData(Blob1SAddr[which], blob_data[which][blob_index[which] * 3 + 1][3],
+        NIOS_QUEUE);
+    WriteData(Blob2SAddr[which], blob_data[which][blob_index[which] * 3 + 2][3],
+        NIOS_QUEUE);
 
-  WriteData(BlobIdxAddr[which], blob_index[which], NIOS_QUEUE);
+    WriteData(BlobIdxAddr[which], blob_index[which], NIOS_QUEUE);
 
-  /* increment blob index once per slow frame */
-  if (index == 0)
+    /* increment blob index once per slow frame */
     blob_index[which] = (blob_index[which] + 1) % 5;
+  }
 
   if (!ISCSolution[which][i_isc].flag)
     return;
@@ -778,17 +780,17 @@ void StoreData(int index)
   WriteData(lstAddr, PointingData[i_point].lst, NIOS_QUEUE);
 
   WriteData(magAzAddr,
-	    (unsigned int)((PointingData[i_point].mag_az +
-			    CommandData.mag_az_trim) * DEG2I), NIOS_QUEUE);
+      (unsigned int)((PointingData[i_point].mag_az +
+                      CommandData.mag_az_trim) * DEG2I), NIOS_QUEUE);
   WriteData(magModelAddr,
       (unsigned int)(PointingData[i_point].mag_model * DEG2I), NIOS_QUEUE);
   WriteData(magSigmaAddr,
       (unsigned int)(PointingData[i_point].mag_sigma * DEG2I), NIOS_QUEUE);
   WriteData(magTrimAddr, CommandData.mag_az_trim * DEG2I, NIOS_QUEUE);
-  
+
   WriteData(dgpsAzAddr,
-	    (unsigned int)((PointingData[i_point].dgps_az  +
-			    CommandData.dgps_az_trim) * DEG2I), NIOS_QUEUE);
+      (unsigned int)((PointingData[i_point].dgps_az  +
+                      CommandData.dgps_az_trim) * DEG2I), NIOS_QUEUE);
   WriteData(dgpsPitchAddr,
       (unsigned int)(PointingData[i_point].dgps_pitch * DEG2I), NIOS_QUEUE);
   WriteData(dgpsRollAddr,
@@ -796,16 +798,16 @@ void StoreData(int index)
   WriteData(dgpsSigmaAddr,
       (unsigned int)(PointingData[i_point].dgps_sigma * DEG2I), NIOS_QUEUE);
   WriteData(dgpsTrimAddr, CommandData.dgps_az_trim * DEG2I, NIOS_QUEUE);
-  
+
   WriteData(ssAzAddr, (unsigned int)((PointingData[i_point].ss_az +
-				      CommandData.ss_az_trim) * DEG2I),
-	    NIOS_QUEUE);
+          CommandData.ss_az_trim) * DEG2I),
+      NIOS_QUEUE);
   WriteData(ssSigmaAddr,
       (unsigned int)(PointingData[i_point].ss_sigma * DEG2I), NIOS_QUEUE);
   WriteData(sunAzAddr, (unsigned int)(PointingData[i_point].sun_az*DEG2I),
       NIOS_QUEUE);
   WriteData(ssTrimAddr, CommandData.ss_az_trim * DEG2I, NIOS_QUEUE);
-  
+
   WriteData(iscAzAddr,
       (unsigned int)(PointingData[i_point].isc_az * DEG2I), NIOS_QUEUE);
   WriteData(iscElAddr,
@@ -821,19 +823,19 @@ void StoreData(int index)
       (unsigned int)(PointingData[i_point].osc_sigma * DEG2I), NIOS_QUEUE);
 
   WriteData(encElAddr,
-	    (unsigned int)((PointingData[i_point].enc_el
-			    +CommandData.enc_el_trim)* DEG2I), NIOS_QUEUE);
+      (unsigned int)((PointingData[i_point].enc_el
+                      +CommandData.enc_el_trim)* DEG2I), NIOS_QUEUE);
   WriteData(encSigmaAddr,
       (unsigned int)(PointingData[i_point].enc_sigma * DEG2I), NIOS_QUEUE);
   WriteData(encTrimAddr, CommandData.enc_el_trim * DEG2I, NIOS_QUEUE);
 
   WriteData(clinElAddr,
-	    (unsigned int)((PointingData[i_point].clin_el +
-			    CommandData.clin_el_trim) * DEG2I), NIOS_QUEUE);
+      (unsigned int)((PointingData[i_point].clin_el +
+                      CommandData.clin_el_trim) * DEG2I), NIOS_QUEUE);
   WriteData(clinSigmaAddr,
       (unsigned int)(PointingData[i_point].clin_sigma * DEG2I), NIOS_QUEUE);
   WriteData(clinTrimAddr, CommandData.clin_el_trim * DEG2I, NIOS_QUEUE);
-  
+
   WriteData(nullTrimAddr, CommandData.null_az_trim * DEG2I, NIOS_QUEUE); 
 
   /************* Pointing mode fields *************/
