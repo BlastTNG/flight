@@ -1683,6 +1683,7 @@ void InitCommandData() {
   CommandData.ISCState[0].eyeOn = 1;
   CommandData.ISCState[0].autofocus = 0;
   CommandData.ISCState[0].focus_pos = 0;
+  CommandData.ISCState[0].focusOffset = 0;
   CommandData.ISCState[0].ap_pos = 495;
   CommandData.ISCState[0].display_mode = full;
   /* ISC-BDA offsets per Ed Chapin 2005-05-17 */
@@ -1715,6 +1716,7 @@ void InitCommandData() {
   CommandData.ISCState[1].eyeOn = 1;
   CommandData.ISCState[1].autofocus = 0;
   CommandData.ISCState[1].focus_pos = 0;
+  CommandData.ISCState[1].focusOffset = 0;
   CommandData.ISCState[1].ap_pos = 495;
   CommandData.ISCState[1].display_mode = full;
   /* OSC-BDA offsets per Ed Chapin 2005-05-17 */
