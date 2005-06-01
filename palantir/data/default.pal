@@ -177,21 +177,21 @@
     </EXTREMA>
     <EXTREMA name="bias1">
       <XLO value="-1"/>
-      <LO value="1"/>
-      <HI value="3"/>
-      <XHI value="16"/>
+      <LO value="20"/>
+      <HI value="80"/>
+      <XHI value="127"/>
     </EXTREMA>
     <EXTREMA name="bias2">
       <XLO value="-1"/>
-      <LO value="1"/>
-      <HI value="3"/>
-      <XHI value="16"/>
+      <LO value="20"/>
+      <HI value="80"/>
+      <XHI value="127"/>
     </EXTREMA>
     <EXTREMA name="bias3">
       <XLO value="-1"/>
-      <LO value="4"/>
-      <HI value="6"/>
-      <XHI value="16"/>
+      <LO value="20"/>
+      <HI value="80"/>
+      <XHI value="127"/>
     </EXTREMA>
     <CURFILE name="/data/etc/defile.cur"/>
     <DECOMD host="arwen.blast" port="11411"/>
@@ -646,7 +646,7 @@
     <NUMBER caption="Cryo Window">
       <DATUM format="%.2f" src="T_CRYO" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Cryo Valves">
+    <NUMBER caption="Cryo Valve">
       <DATUM format="%.2f" src="T_CRYO_VALVE" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Balance Tank">
@@ -1416,7 +1416,7 @@
         <WORD value="3" caption="Error" textstyle="E_BIT"/>
         <WORD value="0" caption="No Limit" textstyle="P_BIT"/>
         <WORD value="1" caption="Open" textstyle="W_BIT"/>
-        <WORD value="2" caption="Close" textstyle="OK_BIT"/>
+        <WORD value="2" caption="Closed" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="LN">
@@ -1430,7 +1430,7 @@
         <WORD value="3" caption="Error" textstyle="E_BIT"/>
         <WORD value="0" caption="No Limit" textstyle="P_BIT"/>
         <WORD value="1" caption="Open" textstyle="W_BIT"/>
-        <WORD value="2" caption="Close" textstyle="OK_BIT"/>
+        <WORD value="2" caption="Closed" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
   </BOX>
