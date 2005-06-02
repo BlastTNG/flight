@@ -370,9 +370,8 @@ void StoreStarCameraData(int index, int which)
     if (((iscread_index[which] + 1) % 5) != iscwrite_index[which]) {
       iscread_index[which] = (iscread_index[which] + 1) % 5;
       /* reset blob multiplexing if this is a pointing packet */
-      if (ISCSolution[which][i_isc].flag == 1) {
+      if (ISCSolution[which][iscread_index[which]].flag == 1)
         blob_index[which] = 0;
-      }
     }
 
   i_isc = iscread_index[which];
