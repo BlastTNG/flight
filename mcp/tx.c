@@ -450,10 +450,9 @@ void StoreStarCameraData(int index, int which)
    * we only do this once per slow frame */
   if (index == 0 && ISCSolution[which][i_isc].flag)
     for (i = 0; i < 15; ++i) {
-      blob_data[which][i][0] = (int)(ISCSolution[which][i_isc].blob_x[i] * 40);
-      blob_data[which][i][1] = (int)(ISCSolution[which][i_isc].blob_y[i] * 40);
-      blob_data[which][i][2] = (int)(ISCSolution[which][i_isc].blob_flux[i]
-          / 32);
+      blob_data[which][i][0] = (int)(ISCSolution[which][i_isc].blob_x[i] * 40.);
+      blob_data[which][i][1] = (int)(ISCSolution[which][i_isc].blob_y[i] * 40.);
+      blob_data[which][i][2] = ISCSolution[which][i_isc].blob_flux[i];
       blob_data[which][i][3] = (int)(ISCSolution[which][i_isc].blob_sn[i]
           * 65.536);
     }
