@@ -11,7 +11,7 @@
     <TEXTSTYLE name="spacer" size="0"/>
     <TEXTSTYLE name="OK_BIT" colour="#000055" size="8"/>
     <TEXTSTYLE name="W_BIT" colour="#cc0000" size="8" bold="true"/>
-    <TEXTSTYLE name="E_BIT" colour="#000055" size="8" bold="true"/>
+    <TEXTSTYLE name="E_BIT" backcolour="#faa" colour="#000055" size="8" bold="true"/>
     <TEXTSTYLE name="P_BIT" backcolour="#ffaaff" colour="#000055" size="8"/>
     <EXTREMA name="slope">
       <HI value="0.1" textstyle="increasing"/>
