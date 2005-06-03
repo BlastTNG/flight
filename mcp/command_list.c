@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 2.64 $";
+const char command_list_serial[] = "$Revision: 2.65 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -118,7 +118,7 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_CRYO_CONTROL},
   {COMMAND(ln_valve_on), "ln tank valve on", GR_CRYO_CONTROL},
   {COMMAND(ln_valve_off), "ln tank valve off", GR_CRYO_CONTROL},
-  {COMMAND(pot_valve_on), "He4 pot valve on", GR_CRYO_CONTROL},
+  {COMMAND(pot_valve_on), "He4 pot valve on", GR_CRYO_CONTROL | CONFIRM},
   {COMMAND(pot_valve_off), "He4 pot valve off", GR_CRYO_CONTROL},
   {COMMAND(pot_valve_open), "set He4 pot valve direction open",
     GR_CRYO_CONTROL},
@@ -320,7 +320,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(isc_offset), "set offset of ISC from primary beam",
+  {COMMAND(isc_offset), "set offset of ISC to primary beam",
     GR_TRIM | GR_ISC_PARAM, 2,
     {
       {"X Offset (deg)", -5., 5, 'f', "ISC_X_OFF"},
@@ -334,7 +334,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(osc_offset), "set offset of OSC from primary beam",
+  {COMMAND(osc_offset), "set offset of OSC to primary beam",
     GR_TRIM | GR_OSC_PARAM, 2,
     {
       {"X Offset (deg)", -5., 5, 'f', "OSC_X_OFF"},
