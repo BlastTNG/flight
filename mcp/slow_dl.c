@@ -32,7 +32,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"cpu_temp1",     SLOWDL_FORCE_INT, 8, 0, 75}, /* 0.29 deg */
   {"disk_free",     SLOWDL_FORCE_INT, 8, 0, 200},
   {"timeout",       SLOWDL_FORCE_INT, 8, 0, 7200},
-  {"plover",        SLOWDL_FORCE_INT, 8, -1, 256},
+  {"plover",        SLOWDL_FORCE_INT, 8, -2, 256},
   /* POINTING */
   {"sensor_veto",   SLOWDL_FORCE_INT, 8, 0, 255},
   {"p_h",           SLOWDL_FORCE_INT, 8, 0, 10},
