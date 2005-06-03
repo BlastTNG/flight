@@ -285,7 +285,7 @@
       </DATUM>
     </MULTI>
   </BOX>
-  <BOX caption="ISC" colour="#707" row="3" col="5">
+  <BOX caption="ISC" colour="#707" row="4" col="5" rowspan="1">
     <NUMBER caption="RA">
       <DATUM format="%.4f" src="ISC_RA" extrema="unknown"/>
     </NUMBER>
@@ -295,55 +295,28 @@
     <NUMBER caption="Sigma">
       <DATUM format="%.3f" src="ISC_RD_SIGMA" extrema="unknown"/>
     </NUMBER>
-    <MULTI caption="State">
-      <DATUM src="ISC_STATE">
-        <WORD value="0" caption="Running" textstyle="OK_BIT"/>
-        <WORD value="1" caption="Save" textstyle="OK_BIT"/>
-        <WORD value="2" caption="Paused" textstyle="W_BIT"/>
-        <WORD value="3" caption="Paused" textstyle="W_BIT"/>
-        <WORD value="4" caption="Abort" textstyle="W_BIT"/>
-        <WORD value="5" caption="Abort" textstyle="W_BIT"/>
-        <WORD value="6" caption="Abort" textstyle="W_BIT"/>
-        <WORD value="7" caption="Abort" textstyle="W_BIT"/>
-        <WORD value="8" caption="Auto Focus" textstyle="OK_BIT"/>
-        <WORD value="9" caption="Auto Focus" textstyle="OK_BIT"/>
-        <WORD value="10" caption="Auto Focus" textstyle="OK_BIT"/>
-        <WORD value="11" caption="Auto Focus" textstyle="OK_BIT"/>
-        <WORD value="12" caption="Abort" textstyle="W_BIT"/>
-        <WORD value="13" caption="Abort" textstyle="W_BIT"/>
-        <WORD value="14" caption="Abort" textstyle="W_BIT"/>
-        <WORD value="15" caption="Abort" textstyle="W_BIT"/>
-        <WORD value="32" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="33" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="34" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="35" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="36" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="37" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="38" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="39" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="40" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="41" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="42" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="43" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="44" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="45" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="46" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="47" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="64" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="65" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="66" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="67" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="68" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="69" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="70" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="71" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="72" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="73" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="74" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="75" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="76" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="77" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="78" caption="Reboot" textstyle="E_BIT"/>
+    <MULTI caption="Autofocus">
+      <DATUM src="OSC_AUTOFOCUS">
+        <WORD value="1" caption="On" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Capture">
+      <DATUM src="OSC_PAUSE">
+        <WORD value="0" caption="Run" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Pause" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Evil Eye">
+      <DATUM src="OSC_EYE_ON">
+        <WORD value="1" caption="On" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Save Images">
+      <DATUM src="OSC_SAVE_IMAGES">
+        <WORD value="1" caption="On" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="# blobs">
@@ -371,7 +344,7 @@
       <DATUM format="%.2f" src="T_ISC_COMP" extrema="temp"/>
     </NUMBER>
   </BOX>
-  <BOX caption="OSC" colour="#707" row="3" col="6">
+  <BOX caption="OSC" colour="#707" row="4" col="6" rowspan="1">
     <NUMBER caption="RA">
       <DATUM format="%.4f" src="OSC_RA" extrema="unknown"/>
     </NUMBER>
@@ -381,55 +354,28 @@
     <NUMBER caption="Sigma">
       <DATUM format="%.3f" src="OSC_RD_SIGMA" extrema="unknown"/>
     </NUMBER>
-    <MULTI caption="State">
-      <DATUM src="OSC_STATE">
-        <WORD value="0" caption="Running" textstyle="OK_BIT"/>
-        <WORD value="1" caption="Save" textstyle="OK_BIT"/>
-        <WORD value="2" caption="Paused" textstyle="W_BIT"/>
-        <WORD value="3" caption="Paused" textstyle="W_BIT"/>
-        <WORD value="4" caption="Abort" textstyle="W_BIT"/>
-        <WORD value="5" caption="Abort" textstyle="W_BIT"/>
-        <WORD value="6" caption="Abort" textstyle="W_BIT"/>
-        <WORD value="7" caption="Abort" textstyle="W_BIT"/>
-        <WORD value="8" caption="Auto Focus" textstyle="OK_BIT"/>
-        <WORD value="9" caption="Auto Focus" textstyle="OK_BIT"/>
-        <WORD value="10" caption="Auto Focus" textstyle="OK_BIT"/>
-        <WORD value="11" caption="Auto Focus" textstyle="OK_BIT"/>
-        <WORD value="12" caption="Abort" textstyle="W_BIT"/>
-        <WORD value="13" caption="Abort" textstyle="W_BIT"/>
-        <WORD value="14" caption="Abort" textstyle="W_BIT"/>
-        <WORD value="15" caption="Abort" textstyle="W_BIT"/>
-        <WORD value="32" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="33" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="34" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="35" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="36" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="37" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="38" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="39" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="40" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="41" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="42" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="43" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="44" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="45" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="46" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="47" caption="Shutdown" textstyle="E_BIT"/>
-        <WORD value="64" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="65" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="66" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="67" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="68" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="69" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="70" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="71" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="72" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="73" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="74" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="75" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="76" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="77" caption="Reboot" textstyle="E_BIT"/>
-        <WORD value="78" caption="Reboot" textstyle="E_BIT"/>
+    <MULTI caption="Autofocus">
+      <DATUM src="OSC_AUTOFOCUS">
+        <WORD value="1" caption="On" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Capture">
+      <DATUM src="OSC_PAUSE">
+        <WORD value="0" caption="Run" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Pause" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Evil Eye">
+      <DATUM src="OSC_EYE_ON">
+        <WORD value="1" caption="On" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Save Images">
+      <DATUM src="OSC_SAVE_IMAGES">
+        <WORD value="1" caption="On" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="# blobs">
@@ -467,7 +413,7 @@
     <NUMBER caption="Balance %">
       <DATUM format="%.2f" src="BALPUMP_LEV" extrema="unknown"/>
     </NUMBER>
-    <MULTI caption="Motor">
+    <MULTI caption="Pump">
       <DATUM src="BAL_ON_BIT">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
@@ -1107,6 +1053,9 @@
     <NUMBER caption="Alice File">
       <DATUM format="%.0f" src="ALICE_FILE" extrema="unknown"/>
     </NUMBER>
+    <NUMBER caption="Plover">
+      <DATUM format="%.0f" src="PLOVER" extrema="unknown"/>
+    </NUMBER>
   </BOX>
   <BOX caption="Time" colour="#777700" row="1" col="1" colspan="1">
     <NUMBER caption="Hours">
@@ -1250,7 +1199,7 @@
       <DATUM format="%.4f" src="GY3_OFFSET" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Cryostat Temps" row="4" col="5" rowspan="1">
+  <BOX caption="Cryostat Temps" row="3" col="5">
     <NUMBER caption="JFET">
       <DATUM format="%.2f" src="T_jfet" extrema="jfettemp"/>
     </NUMBER>
@@ -1279,7 +1228,7 @@
       <DATUM format="%.2f" src="T_vcs_fet" extrema="vcsfet"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Cold Optics Temps" row="4" col="6" rowspan="1">
+  <BOX caption="Cold Optics Temps" row="3" col="6">
     <NUMBER caption="Opt.Box Filter">
       <DATUM format="%.2f" src="T_optbox_filt" extrema="pottemp-diode"/>
     </NUMBER>
@@ -1373,7 +1322,7 @@
       <DATUM src="cycle_state">
         <WORD value="4" caption="Cooling" textstyle="P_BIT"/>
         <WORD value="2" caption="Heating" textstyle="E_BIT"/>
-        <WORD value="1" caption="Watching" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Idle" textstyle="OK_BIT"/>
         <WORD value="0" caption="Off" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
