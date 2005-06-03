@@ -10,8 +10,8 @@
     <TEXTSTYLE name="standard" colour="#000000" size="8"/>
     <TEXTSTYLE name="spacer" size="0"/>
     <TEXTSTYLE name="OK_BIT" colour="#000055" size="8"/>
-    <TEXTSTYLE name="W_BIT" colour="#cc0000" size="8"/>
-    <TEXTSTYLE name="E_BIT" backcolour="#ffaaaa" colour="#000055" size="8"/>
+    <TEXTSTYLE name="W_BIT" colour="#cc0000" size="8" bold="true"/>
+    <TEXTSTYLE name="E_BIT" colour="#000055" size="8" bold="true"/>
     <TEXTSTYLE name="P_BIT" backcolour="#ffaaff" colour="#000055" size="8"/>
     <EXTREMA name="slope">
       <HI value="0.1" textstyle="increasing"/>
@@ -923,8 +923,8 @@
         <WORD value="1" caption="Auto" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
-    <NUMBER caption="V ACS Trim">
-      <DATUM format="%.2f" src="APCU_TRIM" extrema="unknown"/>
+    <NUMBER caption="V DAS Trim">
+      <DATUM format="%.2f" src="DPCU_TRIM" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="V DAS Lid">
       <DATUM format="%.2f" src="APCU_REG" extrema="unknown"/>
@@ -1319,11 +1319,17 @@
       </DATUM>
     </MULTI>
     <MULTI caption="Autocycle">
+      <DATUM src="AUTO_CYCLE_ON">
+        <WORD value="1" caption="On" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Off" textstyle="E_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Autocycle State">
       <DATUM src="cycle_state">
-        <WORD value="4" caption="Cooling" textstyle="P_BIT"/>
-        <WORD value="2" caption="Heating" textstyle="E_BIT"/>
+        <WORD value="4" caption="Cooling" textstyle="W_BIT"/>
+        <WORD value="2" caption="Heating" textstyle="W_BIT"/>
         <WORD value="1" caption="Idle" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="E_BIT"/>
       </DATUM>
     </MULTI>
   </BOX>
