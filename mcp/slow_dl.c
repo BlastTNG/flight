@@ -24,14 +24,14 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"p_pv",          SLOWDL_FORCE_INT, 8,  120, 0},
   {"t_pv",          SLOWDL_FORCE_INT, 8, 65, -10}, 
   {"i_pv",          SLOWDL_FORCE_INT, 8, 10, -10}, /* 78 mA */
-  {"time",          SLOWDL_FORCE_INT, 8, 0, 255},
+  {"lst",           SLOWDL_FORCE_INT, 8, 0, 24},
   {"sam_i_am",      SLOWDL_FORCE_INT, 8, 0, 255},
   {"lat",           SLOWDL_FORCE_INT, 8, 0, 90}, /* 0.35 deg */
   {"lon",           SLOWDL_FORCE_INT, 8, -180, 360},
   {"sip_alt",       SLOWDL_FORCE_INT, 8, 0, 40000}, /* 157 m */
   {"cpu_temp1",     SLOWDL_FORCE_INT, 8, 0, 75}, /* 0.29 deg */
   {"disk_free",     SLOWDL_FORCE_INT, 8, 0, 200},
-  {"timeout",       SLOWDL_FORCE_INT, 16, 0, 15000},
+  {"timeout",       SLOWDL_FORCE_INT, 8, 0, 15000},
   {"plover",        SLOWDL_U_MASK, 8},
   /* POINTING */
   {"sensor_veto",   SLOWDL_U_MASK,8},
