@@ -24,7 +24,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"p_pv",          SLOWDL_FORCE_INT, 8,  120, 0},
   {"t_pv",          SLOWDL_FORCE_INT, 8, 65, -10}, 
   {"i_pv",          SLOWDL_FORCE_INT, 8, 10, -10}, /* 78 mA */
-  {"time",          SLOWDL_U_MASK, 32}, 
+  {"time",          SLOWDL_FORCE_INT, 8, 0, 255},
   {"sam_i_am",      SLOWDL_FORCE_INT, 8, 0, 255},
   {"lat",           SLOWDL_FORCE_INT, 8, 0, 90}, /* 0.35 deg */
   {"lon",           SLOWDL_FORCE_INT, 8, -180, 360},
