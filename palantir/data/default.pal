@@ -579,7 +579,7 @@
       <DATUM format="%.2f" src="T_IN_HEATX" extrema="temp"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Ambient Thermometers" colour="#002222" row="3" col="7">
+  <BOX caption="Ambient Thermometers" colour="#002222" row="3" col="5">
     <NUMBER caption="SC Baffle">
       <DATUM format="%.2f" src="T_SC_BAF" extrema="temp"/>
     </NUMBER>
@@ -1199,7 +1199,7 @@
       <DATUM format="%.4f" src="GY3_OFFSET" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Cryostat Temps" row="3" col="5">
+  <BOX caption="Cryostat Temps" row="3" col="7">
     <NUMBER caption="JFET">
       <DATUM format="%.2f" src="T_jfet" extrema="jfettemp"/>
     </NUMBER>
