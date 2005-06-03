@@ -1,3 +1,9 @@
+2005-06-03:
+	Release blastcmd-2.1.0
+
+	* daemon.c (Daemonise): Refuse connexions from unauthorised clients.
+	* netcmd.c (SetOwner): Complain and die on refused connexion.
+
 2005-05-23:
 	* netcmd.c: Include stdio.h ; don't include tcpd.h
 	* daemon.c: Include stdio.h ; don't include tcpd.h

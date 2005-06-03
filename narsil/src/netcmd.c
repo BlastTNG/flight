@@ -109,6 +109,9 @@ void SetOwner(char* buffer)
   } else if (strncmp(buffer, ":::conn:::", 10) == 0) {
     strcpy(owner, buffer + 10);
     is_free = 0;
+  } else if (strcmp(buffer, ":::nope:::") == 0) {
+    fprintf(stderr, "Connexion refused from this host.\n");
+    exit(16);
   }
 }
 

@@ -44,6 +44,8 @@
 #include "daemon.h"
 #include "command_list.h"
 
+#define GOOD_ADDR "193.44.5.11"
+
 int SIPRoute(int sock, int t_link, int t_route, char* buffer)
 {
   int i_cmd, i_ack;
@@ -262,6 +264,12 @@ void Daemonise(int route, int no_fork)
   int addrlen, sock, csock, lastsock;
   fd_set fdlist, fdread, fdwrite;
 
+  /* the addresses we allow connections from */
+  struct in_addr good_addr;
+  struct in_addr local_addr;
+  inet_aton(GOOD_ADDR, &good_addr);
+  inet_aton("127.0.0.1", &local_addr);
+
   /* open our output before daemonising just in case it fails. */
   if (route == 1) /* fifo */
     fd = open("/tmp/SIPSS.FIFO", O_WRONLY);
@@ -344,9 +352,19 @@ void Daemonise(int route, int no_fork)
                 lastsock = csock;
               printf("connect from %s accepted on socket %i\n",
                   inet_ntoa(addr.sin_addr), csock);
-              conn[csock].state = 0;
+              if (!memcmp(&addr.sin_addr, &good_addr, sizeof(struct in_addr))) {
+                printf("Autentication OK from client.\n");
+                conn[csock].state = 0;
+              } else if (!memcmp(&addr.sin_addr, &local_addr, sizeof(struct
+                      in_addr))) {
+                printf("Autentication OK from local client.\n");
+                conn[csock].state = 0;
+              } else {
+                printf("Failed authentication from client.\n");
+                conn[csock].state = 8;
+              }
             }
-          } else { /* read from client */
+          } else if (conn[n].state != 8) { /* read from authorised client */
             if ((size = recv(n, &buffer, 1024, 0)) == -1)
               perror("recv");
             else if (size == 0) { /* connection closed */
@@ -434,7 +452,8 @@ void Daemonise(int route, int no_fork)
             } else if (conn[n].state == 5) { /* request with no conn */
               strcpy(buffer, ":::noconn:::\r\n");
               conn[n].state = 1;
-            }
+            } else if (conn[n].state == 8) /* authentication failed */
+              strcpy(buffer, ":::nope:::\r\n");
 
             /* send */
             if (buffer[0]) {
@@ -455,6 +474,21 @@ void Daemonise(int route, int no_fork)
                 } else if (errno != EAGAIN) /* ignore socket buffer overflows */
                   perror("send");
               }
+            }
+
+            /* close unauthorised connexions */
+            if (conn[n].state == 8) {
+              shutdown(n, SHUT_RDWR);
+              close(n);
+              FD_CLR(n, &fdlist);
+              FD_CLR(n, &fdwrite);
+              reset_lastsock = 1;
+              if (owner == n) {
+                printf("Conn dropped!\n");
+                report = 1;
+                owner = 0;
+              }
+              continue;
             }
 
             if (conn[n].state == 2 && conn[n].report) {

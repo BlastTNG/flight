@@ -49,7 +49,7 @@ double round(double x);
 #  define DATA_ETC_DIR "/tmp"
 #endif
 
-#define ACK_COUNT 16
+#define ACK_COUNT 17
 
 #define INPUT_TTY "/dev/ttyS1"
 #define LOGFILE DATA_ETC_DIR "/blastcmd.log"
@@ -75,6 +75,7 @@ char *ack[ACK_COUNT] = {
   "Program timeout waiting for response from GSE.",
   "Unable to connect to daemon.",
   "Unable to start daemon.",
+  "Connexion refused by daemon.",
 };
 
 void USAGE(int flag) {
