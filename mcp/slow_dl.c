@@ -202,9 +202,9 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"bias_lev1",     SLOWDL_U_MASK, 8},
   {"bias_lev2",     SLOWDL_U_MASK, 8},
   {"bias_lev3",     SLOWDL_U_MASK, 8},
-  {"b_amp1",        SLOWDL_FORCE_INT, 8, 0, 127},
-  {"b_amp2",        SLOWDL_FORCE_INT, 8, 0, 127},
-  {"b_amp3",        SLOWDL_FORCE_INT, 8, 0, 127},
+  {"b_amp1",        SLOWDL_FORCE_INT, 8, 127, 0},
+  {"b_amp2",        SLOWDL_FORCE_INT, 8, 127, 0},
+  {"b_amp3",        SLOWDL_FORCE_INT, 8, 127, 0},
   /* GYROS */
   {"t_gyro1",       SLOWDL_FORCE_INT, 8, 60, -30}, 
   {"t_gyro2",       SLOWDL_FORCE_INT, 8, 60, -30}, 
