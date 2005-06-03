@@ -144,9 +144,9 @@ int NetCmdGetAck(int *ack, int silent)
       puts(buffer + 11);
   } else if (strncmp(buffer, ":::sent:::", 10) == 0) {
     if (!silent)
-      printf("Packet: %s", buffer + 10);
+      printf("Packet: %s\n", buffer + 10);
   } else
-    printf("%s", buffer);
+    printf("%s\n", buffer);
 
   return 0;
 }
