@@ -144,14 +144,14 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"v_batt_das",    SLOWDL_FORCE_INT, 8, 37,  17}, /* 0.078 deg */
   {"t_apcu",        SLOWDL_FORCE_INT, 8, 65, -55},
   {"t_dpcu",        SLOWDL_FORCE_INT, 8, 65, -55},
-  {"t_sol_port",    SLOWDL_FORCE_INT, 8,  0, 150}, /* 0.59 deg */
-  {"t_sol_stbd",    SLOWDL_FORCE_INT, 8,  0, 150}, /* 0.59 deg */
+  {"t_sol_port",    SLOWDL_FORCE_INT, 8, 150, 0}, /* 0.59 deg */
+  {"t_sol_stbd",    SLOWDL_FORCE_INT, 8, 150, 0}, /* 0.59 deg */
   {"t_batt_acs",    SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_batt_das",    SLOWDL_FORCE_INT, 8, 55, -55},
   {"i_gond_acs",    SLOWDL_FORCE_INT, 8,   30, 0}, /* 0.12 mA */
   {"i_gond_das",    SLOWDL_FORCE_INT, 8,   30, 0}, /* 0.12 mA */
-  {"i_batt_acs",    SLOWDL_FORCE_INT, 8, 30, -30}, /* 0.24 mA */
-  {"i_batt_das",    SLOWDL_FORCE_INT, 8, 30, -30}, /* 0.24 mA */
+  {"i_batt_acs",    SLOWDL_FORCE_INT, 8, -30, 30}, /* 0.24 mA */
+  {"i_batt_das",    SLOWDL_FORCE_INT, 8, -30, 30}, /* 0.24 mA */
   {"i_sol_acs",     SLOWDL_FORCE_INT, 8,   30, 0}, /* 0.12 mA */
   {"i_sol_das",     SLOWDL_FORCE_INT, 8,   30, 0},
   {"v_sol_acs1",    SLOWDL_FORCE_INT, 8,  60, 20},
@@ -188,11 +188,11 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"t_rec",         SLOWDL_FORCE_INT, 8, 55, -55}, 
   {"t_in_heatx",    SLOWDL_FORCE_INT, 8, 55, -55}, 
   /* DAS */
-  {"i_dpm_28v",     SLOWDL_FORCE_INT, 8, 10, -2}, /* 78 mA */
+  {"i_dpm_28v",     SLOWDL_FORCE_INT, 8, -2, 10}, /* 78 mA */
   {"i_dpm_3v",      SLOWDL_FORCE_INT, 8, 10, -2}, /* 78 mA */
   {"i_dpm_5v",      SLOWDL_FORCE_INT, 8, 10, -2}, /* 78 mA */
   {"i_dpm_10v",     SLOWDL_FORCE_INT, 8, 10, -2}, /* 78 mA */
-  {"i_rec",         SLOWDL_FORCE_INT, 8, 10, -2}, /* 78 mA */
+  {"i_rec",         SLOWDL_FORCE_INT, 8, -2, 10}, /* 78 mA */
   {"t_dpm_7.5v",    SLOWDL_FORCE_INT, 8, 70, -55},
   {"t_dpm_10v",     SLOWDL_FORCE_INT, 8, 70, -55},
   {"t_dpm_5v",      SLOWDL_FORCE_INT, 8, 70, -55},
