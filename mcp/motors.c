@@ -28,7 +28,7 @@
 #include "command_struct.h"
 #include "mcp.h"
 
-#define MIN_EL 18.0
+#define MIN_EL 22.5
 #define MAX_EL 65.0
 
 struct AxesModeStruct axes_mode; /* low level velocity mode */

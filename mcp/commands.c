@@ -1095,15 +1095,6 @@ void SendDownData(char tty_fd) {
           temp = 0;
         else
           temp = (int)(slowM * SlowDLInfo[i].value + slowB);
-	
-#if 0
-        if (strcmp(SlowDLInfo[i].src, "az")==0) {
-          bprintf(info, "az: %g %d %g %g\n", SlowDLInfo[i].value, temp, SlowDLInfo[i].max, SlowDLInfo[i].min);
-        }
-        if (strcmp(SlowDLInfo[i].src, "el")==0) {
-          bprintf(info, "el: %g %d %g %g\n", SlowDLInfo[i].value, temp, SlowDLInfo[i].max, SlowDLInfo[i].min);
-        }
-#endif
         break;
 
       case SLOWDL_U_MASK:
