@@ -74,9 +74,9 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"sensor_reset",  SLOWDL_U_MASK,8},
   {"lock_bits",     SLOWDL_U_MASK,8},
   /* BALANCE */
-  {"balpump_lev",   SLOWDL_FORCE_INT, 8,  0, 100}, /* 0.39 */
-  {"inpump_lev",    SLOWDL_FORCE_INT, 8,  0, 100}, /* 0.39 */
-  {"outpump_lev",   SLOWDL_FORCE_INT, 8,  0, 100}, /* 0.39 */
+  {"balpump_lev",   SLOWDL_FORCE_INT, 8,  100, 0}, /* 0.39 */
+  {"inpump_lev",    SLOWDL_FORCE_INT, 8,  100, 0}, /* 0.39 */
+  {"outpump_lev",   SLOWDL_FORCE_INT, 8,  100, 0}, /* 0.39 */
   {"bal_veto",      SLOWDL_FORCE_INT, 8,  0, 1000},
   /* MAGNETOMETER */
   {"mag_model",     SLOWDL_FORCE_INT, 8,  0, 360},
