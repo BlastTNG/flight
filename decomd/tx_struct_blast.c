@@ -63,8 +63,8 @@ struct ChannelStruct WideSlowChannels[] = {
   {"isc_mcpnum",   'w', LOOP2, 61,                1.0,             0.0, 'U'},
   {"osc_mcpnum",   'w', LOOP3, 58,                1.0,             0.0, 'U'},
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U'},
-  {"lat",          'w', LOOP1, 38,             LI2DEG,             0.0, 'S'},
-  {"lon",          'w', LOOP1, 40,             LI2DEG,             0.0, 'S'},
+  {"lat",          'w', LOOP1, 38,             LI2DEG,             0.0, 'U'},
+  {"lon",          'w', LOOP1, 40,             LI2DEG,             0.0, 'U'},
 /* Rox a la Jeff */
   {"t_he3fridge",  'r',  CRYO,  6,    ROX_C2V,   ROX_OFFSET, 'U'}, 
   {"t_m4",         'r',  CRYO,  8,    ROX_C2V,   ROX_OFFSET, 'U'}, 
