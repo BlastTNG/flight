@@ -1568,11 +1568,11 @@ void InitCommandData() {
   CommandData.timeout = 3600;
 
   CommandData.apcu_reg = 28.0;
-  CommandData.apcu_trim = 0.5;
+  CommandData.apcu_trim = 0.0;
   CommandData.apcu_auto = 1;
 
   CommandData.dpcu_reg = 28.0;
-  CommandData.dpcu_trim = 0.5;
+  CommandData.dpcu_trim = 0.0;
   CommandData.dpcu_auto = 1;
 
   CommandData.pointing_mode.mode = P_DRIFT;
@@ -1649,9 +1649,9 @@ void InitCommandData() {
   CommandData.pumps.inframe_auto = 1;
   CommandData.pumps.outframe_auto = 0;
 
-  CommandData.Bias.bias1 = 0x10;
-  CommandData.Bias.bias2 = 0x10;
-  CommandData.Bias.bias3 = 0x10;
+  CommandData.Bias.bias1 = 40;
+  CommandData.Bias.bias2 = 25;
+  CommandData.Bias.bias3 = 25;
 
   CommandData.pin_is_in = 1;
 
@@ -1736,7 +1736,7 @@ void InitCommandData() {
   CommandData.ISCControl[1].fast_pulse_width = 5; /* 50.00 msec */
 
   for (i = 0; i < DAS_CARDS; ++i)
-    CommandData.Phase[i] = 0;
+    CommandData.Phase[i] = 1970;
 
   WritePrevStatus();
 }
