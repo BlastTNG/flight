@@ -295,6 +295,7 @@
 --m26         timeout       4             2             0             2000          1             
 --m27         outcool_state 2             2             0             4             1             
 --m28@m27     incool_state  @             @             @             @             @             
+--m29         schedule      3             1             0             7             1
 
 ### Charge Controllers ###
 --q0          apcu_reg      7             2             0             65535         1             
