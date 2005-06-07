@@ -321,18 +321,18 @@
 --q21@q12     v_sol_das4    @             @             @             @             @             
 
 ### Slow Bolometers ###
---z0          n6c0          8             1             0             65535         20            
---z1@z0       n5c19         @             @             @             @             @             
---z2@z0       n9c17         @             @             @             @             @             
---z3@z0       n11c15        @             @             @             @             @             
---z4@z0       n16c5         @             @             @             @             @             
---z5@z0       n12c6         @             @             @             @             @             
---z6@z0       n13c21        @             @             @             @             @             
---z7@z0       n7c7          @             @             @             @             @             
---z8@z0       n14c10        @             @             @             @             @             
---z9@z0       n15c17        @             @             @             @             @             
---z10@z0      n10c21        @             @             @             @             @             
---z11@z0      n8c12         @             @             @             @             @             
+--z0          n10c21        8             1             0             65535         20            
+--z1@z0       n8c13         @             @             @             @             @             
+--z2@z0       n12c9         @             @             @             @             @             
+--z3@z0       n16c6         @             @             @             @             @             
+--z4@z0       n14c10        @             @             @             @             @             
+--z5@z0       n13c21        @             @             @             @             @             
+--z6@z0       n7c7          @             @             @             @             @             
+--z7@z0       n9c17         @             @             @             @             @             
+--z8@z0       n15c17        @             @             @             @             @             
+--z9@z0       n11c15        @             @             @             @             @             
+--z10@z0      n5c19         @             @             @             @             @             
+--z11@z0      n6c0          @             @             @             @             @             
 
 +FASTDATA     
 ++INT         src           numbits       overbits      divider       forcediv      perframe      samplefreq    
@@ -361,15 +361,15 @@
 
 ### Bolometers ###
 #++DIFF        src           numbits       overbits      divider       forcediv      perframe      samplefreq    
---b0          n11c1         7             2             3           false         20            4             
---b1          n9c9          7             2             3           false         20            4             
---b2          n14c5         7             2             3           false         20            4             
---b3          n12c4         7             2             3           false         20            4             
---b4          n16c3         7             2             3           false         20            4             
---b5          n5c3          7             2             3           false         20            4             
---b6          n15c22        7             2             3           false         20            4             
---b7          n10c11        7             2             3           false         20            4             
---b8          n7c12         7             2             3           false         20            4             
---b9          n13c23        7             2             3           false         20            4             
---b10         n6c18         7             2             3           false         20            4             
---b11         n8c2          7             2             3           false         20            4             
+--b0          n12c4         7             2             3           false         20            4             
+--b1          n14c5         7             2             3           false         20            4             
+--b2          n10c11        7             2             3           false         20            4             
+--b3          n13c9         7             2             3           false         20            4             
+--b4          n9c18         7             2             3           false         20            4             
+--b5          n16c10        7             2             3           false         20            4             
+--b6          n7c13         7             2             3           false         20            4             
+--b7          n8c2          7             2             3           false         20            4             
+--b8          n6c18         7             2             3           false         20            4             
+--b9          n5c11         7             2             3           false         20            4             
+--b10         n11c1         7             2             3           false         20            4             
+--b11         n15c22        7             2             3           false         20            4             
