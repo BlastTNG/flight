@@ -91,11 +91,47 @@
       <XHI value="40"/>
       <XLO value="-40"/>
     </EXTREMA>
+    <EXTREMA name="compcurrent">
+      <HI value="3"/>
+      <LO value="1"/>
+      <XHI value="4"/>
+      <XLO value="0"/>
+    </EXTREMA>
     <EXTREMA name="cpufan">
       <HI value="15000"/>
       <LO value="6000"/>
       <XHI value="20000"/>
       <XLO value="5000"/>
+    </EXTREMA>
+    <EXTREMA name="vsolar">
+      <HI value="55"/>
+      <LO value="23"/>
+      <XHI value="60"/>
+      <XLO value="20"/>
+    </EXTREMA>
+    <EXTREMA name="vbat">
+      <HI value="27.5"/>
+      <LO value="24"/>
+      <XHI value="28"/>
+      <XLO value="22"/>
+    </EXTREMA>
+    <EXTREMA name="pressure">
+      <HI value="100"/>
+      <LO value="70"/>
+      <XHI value="110"/>
+      <XLO value="50"/>
+    </EXTREMA>
+    <EXTREMA name="psi">
+      <HI value="15"/>
+      <LO value="11"/>
+      <XHI value="16"/>
+      <XLO value="9"/>
+    </EXTREMA>
+    <EXTREMA name="sssnr">
+      <HI value="150"/>
+      <LO value="50"/>
+      <XHI value="200"/>
+      <XLO value="0"/>
     </EXTREMA>
     <EXTREMA name="unknown">
       <HI value="2147483640"/>
@@ -234,7 +270,7 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="SS Az SNR">
-      <DATUM format="%.0f" src="SS_AZ_SNR" extrema="unknown"/>
+      <DATUM format="%.0f" src="SS_AZ_SNR" extrema="sssnr"/>
     </NUMBER>
     <NUMBER caption="SS Prin">
       <DATUM format="%.0f" src="SS_PRIN" extrema="unknown"/>
@@ -725,16 +761,16 @@
       <DATUM format="%.2f" src="I_APM_10V" extrema="current"/>
     </NUMBER>
     <NUMBER caption="I Gyro Box">
-      <DATUM format="%.2f" src="I_GYBOX" extrema="current"/>
+      <DATUM format="%.2f" src="I_GYBOX" extrema="compcurrent"/>
     </NUMBER>
     <NUMBER caption="I PV">
-      <DATUM format="%.2f" src="I_PV" extrema="current"/>
+      <DATUM format="%.2f" src="I_PV" extrema="compcurrent"/>
     </NUMBER>
     <NUMBER caption="I ISC + OSC">
-      <DATUM format="%.2f" src="I_STARCAM" extrema="current"/>
+      <DATUM format="%.2f" src="I_STARCAM" extrema="compcurrent"/>
     </NUMBER>
     <NUMBER caption="I Sun Sensor">
-      <DATUM format="%.2f" src="I_SUN" extrema="current"/>
+      <DATUM format="%.2f" src="I_SUN" extrema="compcurrent"/>
     </NUMBER>
     <NUMBER caption="I Roll">
       <DATUM format="%.2f" src="I_ROLL" extrema="current"/>
@@ -906,16 +942,16 @@
       <DATUM format="%.2f" src="APCU_REG" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="V ACS Battery">
-      <DATUM format="%.2f" src="V_BATT_ACS" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_BATT_ACS" extrema="vbat"/>
     </NUMBER>
     <NUMBER caption="I ACS Gondola">
-      <DATUM format="%.2f" src="I_GOND_ACS" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_GOND_ACS" extrema="current"/>
     </NUMBER>
     <NUMBER caption="I ACS Battery">
       <DATUM format="%.2f" src="I_BATT_ACS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="I ACS Solar">
-      <DATUM format="%.2f" src="I_SOL_ACS" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_SOL_ACS" extrema="current"/>
     </NUMBER>
     <MULTI caption="DPCU Auto">
       <DATUM src="DPCU_AUTO">
@@ -930,46 +966,46 @@
       <DATUM format="%.2f" src="APCU_REG" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="V DAS Battery">
-      <DATUM format="%.2f" src="V_BATT_DAS" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_BATT_DAS" extrema="vbat"/>
     </NUMBER>
     <NUMBER caption="I DAS Gondola">
-      <DATUM format="%.2f" src="I_GOND_DAS" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_GOND_DAS" extrema="current"/>
     </NUMBER>
     <NUMBER caption="I DAS Battery">
       <DATUM format="%.2f" src="I_BATT_DAS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="I DAS Solar">
-      <DATUM format="%.2f" src="I_SOL_DAS" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_SOL_DAS" extrema="current"/>
     </NUMBER>
     <NUMBER caption="V Solar ACS 1">
-      <DATUM format="%.2f" src="V_SOL_ACS1" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_ACS1" extrema="vsolar"/>
     </NUMBER>
     <NUMBER caption="V Solar ACS 2">
-      <DATUM format="%.2f" src="V_SOL_ACS2" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_ACS2" extrema="vsolar"/>
     </NUMBER>
     <NUMBER caption="V Solar ACS 3">
-      <DATUM format="%.2f" src="V_SOL_ACS3" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_ACS3" extrema="vsolar"/>
     </NUMBER>
     <NUMBER caption="V Solar ACS 4">
-      <DATUM format="%.2f" src="V_SOL_ACS4" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_ACS4" extrema="vsolar"/>
     </NUMBER>
     <NUMBER caption="V Solar ACS 5">
-      <DATUM format="%.2f" src="V_SOL_ACS5" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_ACS5" extrema="vsolar"/>
     </NUMBER>
     <NUMBER caption="V Solar ACS 6">
-      <DATUM format="%.2f" src="V_SOL_ACS6" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_ACS6" extrema="vsolar"/>
     </NUMBER>
     <NUMBER caption="V Solar DAS 1">
-      <DATUM format="%.2f" src="V_SOL_DAS1" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_DAS1" extrema="vsolar"/>
     </NUMBER>
     <NUMBER caption="V Solar DAS 2">
-      <DATUM format="%.2f" src="V_SOL_DAS2" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_DAS2" extrema="vsolar"/>
     </NUMBER>
     <NUMBER caption="V Solar DAS 3">
-      <DATUM format="%.2f" src="V_SOL_DAS3" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_DAS3" extrema="vsolar"/>
     </NUMBER>
     <NUMBER caption="V Solar DAS 4">
-      <DATUM format="%.2f" src="V_SOL_DAS4" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_SOL_DAS4" extrema="vsolar"/>
     </NUMBER>
     <NUMBER caption="T Solar Port">
       <DATUM format="%.2f" src="T_SOL_PORT" extrema="temp"/>
@@ -986,13 +1022,13 @@
   </BOX>
   <BOX caption="Pressures/Cooling" colour="#777700" row="2" col="4">
     <NUMBER caption="P ISC">
-      <DATUM format="%.2f" src="ISC_PRESSURE1" extrema="unknown"/>
+      <DATUM format="%.2f" src="ISC_PRESSURE1" extrema="psi"/>
     </NUMBER>
     <NUMBER caption="P OSC">
-      <DATUM format="%.2f" src="OSC_PRESSURE1" extrema="unknown"/>
+      <DATUM format="%.2f" src="OSC_PRESSURE1" extrema="psi"/>
     </NUMBER>
     <NUMBER caption="P PV">
-      <DATUM format="%.2f" src="P_PV" extrema="unknown"/>
+      <DATUM format="%.2f" src="P_PV" extrema="pressure"/>
     </NUMBER>
     <MULTI caption="IF Cooling">
       <DATUM src="INCOOL_STATE">
