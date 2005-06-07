@@ -1066,7 +1066,7 @@
     </NUMBER>
     <MULTI caption="Ring Bearer">
       <DATUM src="SAM_I_AM">
-        <WORD value="1" caption="Sam" textstyle="W_BIT"/>
+        <WORD value="1" caption="Sam" textstyle="OK_BIT"/>
         <WORD value="0" caption="Frodo" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
