@@ -1354,12 +1354,6 @@
       </DATUM>
     </MULTI>
     <MULTI caption="Autocycle">
-      <DATUM src="AUTO_CYCLE_ON">
-        <WORD value="1" caption="On" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Off" textstyle="E_BIT"/>
-      </DATUM>
-    </MULTI>
-    <MULTI caption="Autocycle State">
       <DATUM src="cycle_state">
         <WORD value="4" caption="Cooling" textstyle="W_BIT"/>
         <WORD value="2" caption="Heating" textstyle="W_BIT"/>
