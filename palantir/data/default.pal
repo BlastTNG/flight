@@ -122,10 +122,10 @@
       <XLO value="20"/>
     </EXTREMA>
     <EXTREMA name="vbat">
-      <HI value="27.5"/>
-      <LO value="24"/>
-      <XHI value="28"/>
-      <XLO value="22"/>
+      <HI value="29"/>
+      <LO value="23"/>
+      <XHI value="29.6"/>
+      <XLO value="22.5"/>
     </EXTREMA>
     <EXTREMA name="pressure">
       <HI value="100"/>
