@@ -103,6 +103,12 @@
       <XHI value="4.5"/>
       <XLO value="0"/>
     </EXTREMA>
+    <EXTREMA name="solcurrent">
+      <HI value="20"/>
+      <LO value="0"/>
+      <XHI value="25"/>
+      <XLO value="-0.25"/>
+    </EXTREMA>
     <EXTREMA name="cpufan">
       <HI value="15000"/>
       <LO value="6000"/>
@@ -957,7 +963,7 @@
       <DATUM format="%.2f" src="I_BATT_ACS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="I ACS Solar">
-      <DATUM format="%.2f" src="I_SOL_ACS" extrema="current"/>
+      <DATUM format="%.2f" src="I_SOL_ACS" extrema="solcurrent"/>
     </NUMBER>
     <MULTI caption="DPCU Auto">
       <DATUM src="DPCU_AUTO">
@@ -981,7 +987,7 @@
       <DATUM format="%.2f" src="I_BATT_DAS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="I DAS Solar">
-      <DATUM format="%.2f" src="I_SOL_DAS" extrema="current"/>
+      <DATUM format="%.2f" src="I_SOL_DAS" extrema="solcurrent"/>
     </NUMBER>
     <NUMBER caption="V Solar ACS 1">
       <DATUM format="%.2f" src="V_SOL_ACS1" extrema="vsolar"/>
