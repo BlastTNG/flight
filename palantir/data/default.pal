@@ -97,6 +97,12 @@
       <XHI value="4"/>
       <XLO value="0"/>
     </EXTREMA>
+    <EXTREMA name="gycurrent">
+      <HI value="4"/>
+      <LO value="1"/>
+      <XHI value="4.5"/>
+      <XLO value="0"/>
+    </EXTREMA>
     <EXTREMA name="cpufan">
       <HI value="15000"/>
       <LO value="6000"/>
@@ -761,7 +767,7 @@
       <DATUM format="%.2f" src="I_APM_10V" extrema="current"/>
     </NUMBER>
     <NUMBER caption="I Gyro Box">
-      <DATUM format="%.2f" src="I_GYBOX" extrema="compcurrent"/>
+      <DATUM format="%.2f" src="I_GYBOX" extrema="gycurrent"/>
     </NUMBER>
     <NUMBER caption="I PV">
       <DATUM format="%.2f" src="I_PV" extrema="compcurrent"/>
