@@ -1,3 +1,6 @@
+2006-06-11 (1.2.13):
+	* configure.ac: Add AC_PROG_CC
+
 2005-06-11 (1.2.11.6):
 	* etc/*.sch: Update.
 

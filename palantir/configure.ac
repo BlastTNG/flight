@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(palantir, 1.2.11.6, [dwiebe@physics.utoronto.ca])
-AM_INIT_AUTOMAKE(palantir, 1.2.11.6)
+AC_INIT(palantir, 1.2.12, [dwiebe@physics.utoronto.ca])
+AM_INIT_AUTOMAKE(palantir, 1.2.12)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH(data-etc,[  --with-data-etc=DIR     put auxiliary data in DIR [[/data/etc]]], DATA_ETC_DIR="${withval}", DATA_ETC_DIR="/data/etc")
@@ -14,6 +14,7 @@ AC_ARG_WITH([qt-lib-dir], [  --with-qt-lib-dir=DIR   Qt library directory], QT_L
 AC_ARG_WITH([qt-bin-dir], [  --with-qt-bin-dir=DIR   Qt binary directory], QT_BIN_DIR=$withval)
 
 dnl Programs
+AC_PROG_CC
 AC_PROG_CXX
 AC_C_CONST
 AC_PROG_INSTALL
