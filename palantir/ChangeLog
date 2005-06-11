@@ -1,3 +1,9 @@
+2005-06-11 (1.2.11.6):
+	* etc/*.sch: Update.
+
+2005-06-11 (1.2.11.5):
+	* data/default.pal: Update.
+
 2005-06-01 (1.2.11):
 	* src/decompoll.cpp (DecomPoll::start): Remove Priority to premit
 	compilation under qt 3.1.
