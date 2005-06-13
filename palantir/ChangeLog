@@ -1,4 +1,7 @@
-2006-06-11 (1.2.13):
+2006-06-13 (1.2.13):
+	* src/decompoll.cpp (DecomPoll::DecomPoll): initialise pollDecomd.
+
+2006-06-11 (1.2.12):
 	* configure.ac: Add AC_PROG_CC
 
 2005-06-11 (1.2.11.6):

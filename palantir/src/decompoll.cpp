@@ -89,6 +89,7 @@ DecomPoll::DecomPoll() : QThread()
 {
   connectState = 0;
   theDecom = new DecomData();
+  pollDecomd = false;
 }
 
 void DecomPoll::start(const char* h, int p)
