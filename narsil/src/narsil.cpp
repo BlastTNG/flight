@@ -577,7 +577,7 @@ void MainForm::SendCommand() {
               client_mcommands[index].params[j].name, defaults->asDouble(index,
                 j), client_mcommands[index].params[j].min);
           WriteCmd(NLog, buffer);
-          WriteErr(NLog, 9);
+          WriteErr(NLog, 10);
           return;
         } else if (defaults->asDouble(index, j)
             > client_mcommands[index].params[j].max) {
@@ -586,7 +586,7 @@ void MainForm::SendCommand() {
               defaults->asDouble(index, j),
               client_mcommands[index].params[j].max);
           WriteCmd(NLog, buffer);
-          WriteErr(NLog, 9);
+          WriteErr(NLog, 10);
           return;
         }
         if (client_mcommands[index].params[j].type == 'i')
@@ -845,10 +845,11 @@ void MainForm::WriteErr(QMultiLineEdit *dest, int retstatus) {
         "computer (0x0d).\n";
       break;
     case 8:
+    case 9:
       txt = "  COMMAND POSSIBLY NOT SENT:  Received a garbage "
         "acknowledgement packet.\n";
       break;
-    case 9:
+    case 10:
       txt = "  COMMAND NOT SENT: Narsil error: Parameter out of range.\n";
       break;
     case 11:
