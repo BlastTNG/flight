@@ -1,3 +1,8 @@
+2005-06-13 (2.0.4):
+	* narsil.cpp (MainForm::SendCommand, MainForm::WriteErr): Fix a clash
+	between narsil error numbers and blastcmd error numbers: make narsil's
+	paramter out of range error 10.
+
 2005-05-25 (2.0.3):
 	* netcmd.c (ReadLine): Reset prebuffer size to zero if the first character
 	happens to be a zero to prevent erroneous connexion errors.
