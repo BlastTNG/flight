@@ -1,6 +1,6 @@
 /* frameread: reads mcp-style framefiles
  *
- * This software is copyright (C) 2004 University of Toronto
+ * This software is copyright (C) 2004-2005 University of Toronto
  * 
  * frameread is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
