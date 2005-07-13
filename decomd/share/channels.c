@@ -11,6 +11,38 @@
  *
  */
 
+/* Author's Apology:
+ * ================
+ *
+ * This code is purposely tricky.  It was writen to be robust in what it does,
+ * with no thought to legibility, or ease of maintenance.  It's basically two
+ * complementary programs rolled into one in order to prevent them from
+ * diverging.  The two programs are broadly delimited by the INPUTTER define.
+ * INPUTTERs, such as defile or interloquendi read framefiles.  Non-INPUTTERs,
+ * sunch as decomd or mcp write them.
+ *
+ * Non-INPUTTERs get their data format from the tx_struct, which has to be
+ * compiled into the program.  INPUTTERs get their data format from the .spec
+ * file which the Non-INPUTTERs have writen.  In a nutshell, having to deal with
+ * these two possibilities is what the bulk of the voodoo in this code is about.
+ *
+ * Unlike some other parts of the BLAST flight code, the dirfile writer, for
+ * example, this code does what it set out to do: it provides a common interface
+ * to the channel structures for both readers and writers of framefiles.  As
+ * such, it should be fine as it is, unless major feature changes are needed.
+ * In the four programs I've listed above you should have sufficient example to
+ * understand how these functions work.  The only way a rewrite could make
+ * things simpler would be if you split the two program classes (INPUTTER/non-
+ * INPUTTER) into separate manifestations, something which would degrade this
+ * library's robustness, since it would lead to divergence between the two
+ * unless great diligence was practiced to prevent this.
+ *
+ * If you're looking for something to re-write, try the dirfile writer.
+ *
+ * Cheers,
+ * -dvw
+ */
+
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
@@ -971,6 +1003,7 @@ void MakeAddressLookups(void)
 #endif
 }
 
+/* If you need to access these, trust me, buddy, you aren't an inputter */
 #ifndef INPUTTER
 inline struct BiPhaseStruct* ExtractBiPhaseAddr(struct NiosStruct* niosAddr)
 {
