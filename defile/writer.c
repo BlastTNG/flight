@@ -1,6 +1,6 @@
 /* defile: converts BLAST-type framefiles into dirfiles
  *
- * This software is copyright (C) 2004-2005 University of Toronto
+ * This software is copyright (C) 2003-2005 University of Toronto
  *
  * This file is part of defile.
  *
@@ -18,6 +18,91 @@
  * along with defile; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ */
+
+/* MAINTAINERS PLEASE READ:
+ * =======================
+ *
+ * IF YOU ARE READING THIS because you been given the unfortunate task of
+ * maintaining this code in my absense, you have my deepest sympathy.
+ *
+ * Seriously.
+ *
+ * This code is an abomination, the result of too many field campaigns, kludgy
+ * patches, and a general lack of big-picture foresight.  And make no mistake:
+ * a good deal of the blame is mine.  At some point someone should really scrap
+ * this thing in its entirety and re-write it from scratch. */
+ 
+/* This code started life in the BLAST master control program (mcp) when we
+ * realised that the old-style flat file format wasn't a good way for us to
+ * store our data for analysis.  Barth wrote the kernel of this module, the
+ * dirfile writing part that makes up the bulk of DirFileWritier, before the
+ * BLAST 2003 test flight.  In the field for the test flight campaign, Enzo
+ * discovered that overflows in the passacross ring buffer would lead to
+ * data corruption.  This he fixed by writing the space-checking routine that
+ * makes up the first part of PushFrame.  At the time, the fix was to discard
+ * frames that didn't fit, since this code needed to run real-time in mcp.
+ *
+ * Early in 2004, after the test flight we decided it was best to have mcp go
+ * back to writing the flat BiPhase stream, since it was certain to result in a
+ * better data set, since any flakiness in the dirfile writer could be shoved
+ * to post-analysis, where bugs could be found and fixed as needed and the
+ * dirfiles recreated from the raw datastream.  Subsequent development has shown
+ * this to have been a very good idea.  At any rate, as a result of this
+ * decision, I removed the dirfile writer from mcp, replaced it with a framefile
+ * writer, and then wrote defile to create the dirfiles from the framefiles.
+ *
+ * The original disk writing thread became this writer thread in defile, at
+ * first little change from its manifestation in mcp.  This is also the reason
+ * why defile is multithreaded.  A lot of harriness could likely be removed by
+ * simply making defile unthreaded.  The initialisation routines for the
+ * dirfile I extracted from mcp and dumped them in the InitialiseDirFile
+ * function.  In defile, instead of dropping frames, we could just wait until
+ * there was time to write them, so a wait was put in pushFrame.  With the
+ * start of the defile project, complexity and craziness increased:  the
+ * introduction of resume mode made a mess of InitialiseDirFile.  Later, Matt
+ * added gzip write support, which added another level of complexity to the
+ * writer kernel.  Some of this has since been simplified by the introduciton
+ * of OpenField and WriteField.
+ *
+ * Giving defile the ability to switch on the fly to a new source file,
+ * possibly with a different data format, meant that a proper CleanUp of the
+ * writer was needed before cycling and re-initialisation after.  Things that
+ * needed to be only done at program startup were removed from
+ * InitialiseDirFile and placed in PreInitialiseDirFile and InitialiseDirFile
+ * became the re-initialisation function.  This was certainly a kludge: a
+ * complete shutdown and restart was the only easy way to adapt the code to
+ * such a task.
+ *
+ * During this time Barth and I were fighting to get defile and kst to talk
+ * to one-another happily while the one wrote dirfiles and the other read from
+ * them concurrently.  This lead us to realise that defile needed to write
+ * entire slow frames at a time, which resulted in the "staging" buffers which
+ * are now present in PushFrame.  This ensured that the no partial frames would
+ * be writen.  Later it was realised that an uninterrupted sequence of multiplex
+ * indicies was required to ensure that the proper ratio of slow to fast data
+ * was kept, so PreBuffer was introduced.
+ *
+ * If you've been paying attention, you might notice that before being writen
+ * to disk, the data is TRIPLE buffered IN THE WRITER ALONE:
+ *
+ * 1) The pre_buffer which handles frame sequencing via the multiplex index to
+ *     keep slow and fast data synchronised.
+ *
+ * 2) The staging buffers which hold the fast frames until a full slow frame
+ *     has been composed so it can all be shipped out at once.
+ *
+ * 3) The passacross ring buffers, where the data are finally split up into
+ *     channels and the data is passed from the input thread to the dirfile
+ *     writer thread.
+ *
+ * It is supposed by some that this might be simplified... */
+
+/* Now, if you enjoyed that, you should take a look at channels.c -- the channel
+ * manipulation library.  It's much more entertaining.
+ *
+ * Cheers!
+ * -dvw
  */
 
 #ifdef HAVE_CONFIG_H
@@ -959,6 +1044,7 @@ void DirFileWriter(void)
   unsigned int ibuffer[MAXBUF];
   int j, i;
   int i_in, i_out, i_buf;
+  int i_in2, i_out2;
   int k;
   int wrote_count = 0;
   int last_pass = 0;
@@ -971,35 +1057,56 @@ void DirFileWriter(void)
           i_in = slow_fields[j][i].i_in;
           i_out = slow_fields[j][i].i_out;
           i_buf = 0;
-          while (i_in != i_out) {
-            if ((SlowChList[i][j].type == 'U') ||
-                (SlowChList[i][j].type == 'I')) {
+          if ((SlowChList[i][j].type == 'U') || (SlowChList[i][j].type == 'I'))
+          {
+            i_in2 = slow_fields[j][i + 1].i_in;
+            i_out2 = slow_fields[j][i + 1].i_out;
+            while (i_in != i_out && i_in2 != i_out2) {
               ibuffer[i_buf] = (unsigned)
-                ((((unsigned short*)slow_fields[j][i + 1].b)[i_out]) << 16)
+                ((((unsigned short*)slow_fields[j][i + 1].b)[i_out2]) << 16)
                 | (unsigned)
                 (((unsigned short*)slow_fields[j][i].b)[i_out]);
-            } else
-                  buffer[i_buf] = ((unsigned short*)slow_fields[j][i].b)[i_out];
 
-            if (i == 0 && j == 0)
-              wrote_count = ++slow_fields[j][i].nw * FAST_PER_SLOW;
-            else if (wrote_count < ++slow_fields[j][i].nw * FAST_PER_SLOW)
-              wrote_count = slow_fields[j][i].nw * FAST_PER_SLOW;
+              if (i == 0 && j == 0)
+                wrote_count = ++slow_fields[j][i].nw * FAST_PER_SLOW;
+              else if (wrote_count < ++slow_fields[j][i].nw * FAST_PER_SLOW)
+                wrote_count = slow_fields[j][i].nw * FAST_PER_SLOW;
 
-            i_out++;
-            i_buf++;
-            if (i_out >= MAXBUF)
-              i_out = 0;
-          }
+              i_out++;
+              i_out2++;
+              i_buf++;
+              if (i_out >= MAXBUF)
+                i_out = 0;
+              if (i_out2 >= MAXBUF)
+                i_out2 = 0;
+            }
 
-          if ((SlowChList[i][j].type == 'U') || (SlowChList[i][j].type == 'I'))
             WriteField(slow_fields[j][i].fp, i_buf * sizeof(unsigned), ibuffer);
-          else
+            slow_fields[j][i].i_out = i_out;
+            slow_fields[j][i + 1].i_out = i_out2;
+          } else {
+            while (i_in != i_out) {
+              buffer[i_buf] = ((unsigned short*)slow_fields[j][i].b)[i_out];
+
+              if (i == 0 && j == 0)
+                wrote_count = ++slow_fields[j][i].nw * FAST_PER_SLOW;
+              else if (wrote_count < ++slow_fields[j][i].nw * FAST_PER_SLOW)
+                wrote_count = slow_fields[j][i].nw * FAST_PER_SLOW;
+
+              i_out++;
+              i_buf++;
+              if (i_out >= MAXBUF)
+                i_out = 0;
+            }
+
             WriteField(slow_fields[j][i].fp, i_buf * sizeof(unsigned short),
                 buffer);
-          slow_fields[j][i].i_out = i_out;
-        } else
+            slow_fields[j][i].i_out = i_out;
+          }
+        } else if (i == 0 || ((SlowChList[i - 1][j].type != 'U')
+              && (SlowChList[i - 1][j].type != 'I'))) {
           slow_fields[j][i].i_out = slow_fields[j][i].i_in;
+        }
       }
 
     /* defile flags */
