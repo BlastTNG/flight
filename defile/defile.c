@@ -46,7 +46,7 @@
 #  define VERSION VERSION_MAJOR "." VERSION_MINOR ".?"
 #endif
 
-#define SUFF_MAX sizeof(chunkindex_t)
+#define SUFF_MAX (2 * sizeof(chunkindex_t))
 
 #define TC  (15.)  /* characteristic time (in seconds) */
 
@@ -854,10 +854,11 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
       case 's':
         if (argument[j].value[0] >= '0' && argument[j].value[0] <= '9') {
           if ((rc->sufflen = atoi(argument[j].value)) > SUFF_MAX)
-            bprintf(fatal, "suffix size `%s' is not a valid value\n"
-                "Try `defile --help' for more information.\n", &argv[i][14]);
+            bprintf(fatal, "suffix size `%s' is too big.\n"
+                "Try `defile --help' for more information.\n",
+                argument[j].value);
         } else
-          bprintf(fatal, "suffix size `%s' is not a valid value\n"
+          bprintf(fatal, "suffix size `%s' is not a valid value.\n"
               "Try `defile --help' for more information.\n", argument[j].value);
         break;
       default:
