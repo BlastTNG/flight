@@ -48,7 +48,7 @@
 
 #define SUFF_MAX (2 * sizeof(chunkindex_t))
 
-#define TC  (15.)  /* characteristic time (in seconds) */
+#define TC  (120.)  /* characteristic time (in seconds) */
 
 /* defaults */
 #define CONFIG_FILE ETC_DIR "/defile.conf"

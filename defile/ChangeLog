@@ -4,7 +4,8 @@
 2005-07-19: D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	Release defile-3.2.6
 
-	* defile.c: Fix calculation of SUFF_MAX
+	* defile.c: Fix calculation of SUFF_MAX, increase characteristic time of
+	rate filter.
 	(ParseCommandLine): Fix suffix length error message.
 
 2005-07-13: D. V. Wiebe <dwiebe@physics.utoronto.ca>
