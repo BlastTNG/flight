@@ -30,10 +30,10 @@
 	* command_list.h: Increase maximum number of parameters
 	* narsil.cpp (MainForm::ChangeCommandList): Sort commands in list
 
-2005-02-12:
+2005-02-12 (1.8.6):
 	* narsil.cpp (MainForm::WriteLog): Stop elog from spamming the console
 
-2005-02-08 (1.8.6):
+2005-02-08 (1.8.5):
 	* narsil.cpp (MainForm::WriteErr): Add text for timeout error (13) from
 	blastcmd
 
