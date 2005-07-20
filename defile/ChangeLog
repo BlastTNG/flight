@@ -311,7 +311,7 @@
 2004-09-22  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* defile.c: Better dynamic Frame-Rate display handling
 
-2004-09-21 (2.4.4)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+2004-09-21  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* defile: Migrate to BLAMM - BLAST memory manager
 
 2004-09-20 (2.4.3)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
@@ -346,13 +346,13 @@
 2004-09-13 (2.3.1)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* defile.c: Formating
 
-2004-09-13 (2.3.0) D. V. Wiebe <dwiebe@physics.utoronto.ca>
+2004-09-13 (2.3.0)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* defile.c, writer.c: Add -z (gzip) option
 
-2004-09-13 Matt Truch <matt@truch.net>
+2004-09-13  Matt Truch <matt@truch.net>
 	* defile.c, writer.c: Add gzip code
 
-2004-09-12 (2.2.3)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+2004-09-12  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* writer.c: Fix double free segfault
 
 2004-09-11 (2.2.2)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
@@ -368,10 +368,10 @@
 	* reader.c: Changes to support decom channels
 	* channels.c: spec file versioning ; Changes to support decom channels
 
-2004-09-02  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+2004-09-02 (2.1.4)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* writer.c: Fix bolomter reconstruction code
 
-2004-08-25 (2.1.4, 2.1.3)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
+2004-08-25 (2.1.3)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	* writer.c: Bolometer writing bugs
 
 2004-08-25 (2.1.2)  D. V. Wiebe <dwiebe@physics.utoronto.ca>
