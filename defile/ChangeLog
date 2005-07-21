@@ -2,7 +2,7 @@
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
 2005-07-19: D. V. Wiebe <dwiebe@physics.utoronto.ca>
-	Release defile-3.2.6
+	Release defile-3.2.5
 
 	* defile.c: Fix calculation of SUFF_MAX, increase characteristic time of
 	rate filter.
