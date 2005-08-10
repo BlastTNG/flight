@@ -8,7 +8,7 @@
 # ---
 
 # Set AutoReconnect if you want defile to attempt to reconnect to a remote host
-# when the connection is unexpectedly dropped.  Default: don't reconnect and
+# when the connection is unexpectedly dropped.  Default: don't reconnect but
 # terminate.
 
 AutoReconnect
@@ -27,6 +27,15 @@ AutoReconnect
 # daemonise
 
 # Daemonise
+
+# ---
+
+# Set FlakeySource if you are reading from a local file which is on an
+# unreliable filesystem, such as an overloaded NFS mount.  This will reduce
+# the number of times defile exits due to read errors.  Default: exit if a
+# source chunk cannot be read.
+
+# FlakeySource
 
 # ---
 

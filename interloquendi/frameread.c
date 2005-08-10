@@ -108,7 +108,7 @@ int StaticSourcePart(char* output, const char* source, chunkindex_t* value,
 char* GetSpecFile(char* buffer, const char* chunk, const char *spec_file)
 {
   struct stat stat_buf;
-  char* ptr = buffer;
+  char* ptr;
 
   /* if spec_file exists, the user has specified a spec file name, use it */
   if (spec_file != NULL) {
@@ -119,8 +119,11 @@ char* GetSpecFile(char* buffer, const char* chunk, const char *spec_file)
   } else {
     /* if the chunk is 923488378.x000, the spec file will be 923488378.x.spec */
     strcpy(buffer, chunk);
-    while (*ptr != '.' && *ptr != '\0')
-      ++ptr;
+    ptr = buffer + strlen(buffer);
+    while (*ptr != '.' && ptr != buffer)
+      --ptr;
+    if (ptr == buffer)
+      ptr += strlen(buffer);
     if (*ptr != '\0') {
       ++ptr;
       if (*ptr != '\0')

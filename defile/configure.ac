@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(defile, 3.2.5, [dwiebe@physics.utoronto.ca])
+AC_INIT(defile, 3.3.0, [dwiebe@physics.utoronto.ca])
 localstatedir="/var"
-AM_INIT_AUTOMAKE(defile, 3.2.5)
+AM_INIT_AUTOMAKE(defile, 3.3.0)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH(data-etc, AS_HELP_STRING([--with-data-etc=DIR],

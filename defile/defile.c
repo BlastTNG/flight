@@ -41,9 +41,7 @@
 #include "quenya.h"
 
 #ifndef VERSION
-#  define VERSION_MAJOR    "3"
-#  define VERSION_MINOR    "2"
-#  define VERSION VERSION_MAJOR "." VERSION_MINOR ".?"
+#  define VERSION "3.3.x"
 #endif
 
 #define SUFF_MAX (2 * sizeof(chunkindex_t))
@@ -59,11 +57,11 @@
 #define REMOUNT_PATH "../rawdir"
 
 /* options */
-enum {CFG_AutoReconnect, CFG_CompressedOutput, CFG_Daemonise, CFG_InputSource,
-  CFG_OutputCurFileName, CFG_OutputDirectory, CFG_OutputDirFile, CFG_Persistent,
-  CFG_PidFile, CFG_Quiet, CFG_RemoteInputSource, CFG_RemountPath,
-  CFG_RemountedSource, CFG_ResumeMode, CFG_SpecFile, CFG_SuffixLength,
-  CFG_WriteCurFile};
+enum {CFG_AutoReconnect, CFG_CompressedOutput, CFG_Daemonise, CFG_FlakeySource,
+  CFG_InputSource, CFG_OutputCurFileName, CFG_OutputDirectory,
+  CFG_OutputDirFile, CFG_Persistent, CFG_PidFile, CFG_Quiet,
+  CFG_RemoteInputSource, CFG_RemountPath, CFG_RemountedSource, CFG_ResumeMode,
+  CFG_SpecFile, CFG_SuffixLength, CFG_WriteCurFile};
 
 struct {
   union {
@@ -76,6 +74,7 @@ struct {
   {{NULL}, 'b', "AutoReconnect"},
   {{NULL}, 'b', "CompressedOutput"},
   {{NULL}, 'b', "Daemonise"},
+  {{NULL}, 'b', "FlakeySource"},
   {{NULL}, 's', "InputSource"},
   {{NULL}, 's', "OutputCurFileName"},
   {{NULL}, 's', "OutputDirectory"},
@@ -177,6 +176,7 @@ void LoadDefaultConfig(void)
       switch (i) {
         case CFG_AutoReconnect:
         case CFG_CompressedOutput:
+        case CFG_FlakeySource:
         case CFG_Daemonise:
         case CFG_Persistent:
         case CFG_Quiet:
@@ -217,6 +217,7 @@ struct rc_struct InitRcStruct()
     .curfile_val       = NULL,
     .daemonise         = options[CFG_Daemonise].value.as_int,
     .dest_dir          = options[CFG_OutputDirectory].value.as_string,
+    .flakey_source     = options[CFG_FlakeySource].value.as_int,
     .force_quenya      = 0,
     .force_stdio       = options[CFG_Daemonise].value.as_int,
     .framefile         = 0,
@@ -562,13 +563,17 @@ void PrintUsage(void)
       "\n  -d --daemonise        fork to background and daemonise on startup.  "
       "Implies"
       "\n                          `--persistent' and `--quiet'."
+      "\n     --flakey-source    when reading from a file, don't give up on "
+      "read errors."
+      "\n                          Useful for unreliable or overloaded NFS "
+      "mounts."
       "\n  -f --force            overwrite destination dirfile."
       "\n  -l --local-source     assume the input source is a local file, "
-      "even when"
-      "\n                          it looks like a remote hostname."
+      "even when it"
+      "\n                          looks like a remote hostname."
       "\n  -n --network-source   assume the input source is a remote host, "
-      "even when"
-      "\n                          it looks like a local filename."
+      "even when it"
+      "\n                          looks like a local filename."
       "\n     --no-1utoreconnect don't try to reconnect to a remote host. "
       " (default)"
       "\n     --no-clobber       don't resume or overwrite existing dirfiles. "
@@ -576,10 +581,12 @@ void PrintUsage(void)
       "\n     --no-curfile       don't write a curfile. (default)"
       "\n     --no-compress      don't compress the output. (default)"
       "\n     --no-daemonise     don't daemonise. (default)"
-      "\n     --no-persist       exit on reaching the end of the input stream."
-      "\n                          (default)"
+      "\n     --no-flakey-source don't assume the input file is on a flakey"
+      "\n                          filesystem. (default)"
+      "\n     --no-persist       exit on reaching the end of the input stream. "
+      "(default)"
       "\n     --no-remount       assume the input curfile points to the right "
-      "place"
+      "place."
       "\n                          (default)"
       "\n  -o --output-dirfile=NAME use name as the name of the dirfile. Name "
       "can either"
@@ -594,28 +601,27 @@ void PrintUsage(void)
       "\n  -r --remounted-source when SOURCE is a curfile, assume that the "
       "framefile is"
       "\n                          located in the directory `" REMOUNT_PATH"' "
-      "relative"
-      "\n                          to the curfile's location.  This option has "
-      "no"
-      "\n                          effect if SOURCE is not a curfile."
+      "relative to the"
+      "\n                          curfile's location.  This option has no "
+      "effect if"
+      "\n                          SOURCE is not a curfile."
       "\n     --remounted-using=DIR same as `--remounted-source' except use "
       "DIR as the"
       "\n                          path instead of the default `" REMOUNT_PATH
       "'."
       "\n  -s --suffix-size=SIZE framefile suffix is no more than SIZE "
-      "characters "
-      "\n                          long.  SIZE should be an integer between 0 "
-      "and %i."
-      "\n                          Default: %i"
-#ifdef HAVE_LIBZ
+      "characters long"
+      "\n                          SIZE should be an integer between 0 "
+      "and %i. (default=%i)"
       "\n     --verbose          output status information to the tty (default)"
+#ifdef HAVE_LIBZ
       "\n  -z --gzip             gzip compress the output dirfile.  Incompatible "
       "with"
       "\n                          `--resume'"
 #endif
-      "\n  --help                display this help and exit"
-      "\n  --version             display version information and exit"
-      "\n  --                    last option; all following parameters are "
+      "\n     --help             display this help and exit"
+      "\n     --version          display version information and exit"
+      "\n     --                 last option; all following parameters are "
       "arguments."
       "\n", SUFF_MAX, SUFF_MAX
       );
@@ -664,6 +670,8 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           rc->output_curfile = bstrdup(fatal, &argv[i][15]);
         } else if (!strcmp(argv[i], "--daemonise"))
           rc->daemonise = 1;
+        else if (!strcmp(argv[i], "--flakey-source"))
+          rc->flakey_source = 1;
         else if (!strcmp(argv[i], "--force"))
           rc->write_mode = 1;
         else if (!strcmp(argv[i], "--framefile"))
@@ -687,6 +695,8 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           rc->write_curfile = 0;
         else if (!strcmp(argv[i], "--no-daemonise"))
           rc->daemonise = 0;
+        else if (!strcmp(argv[i], "--no-flakey-source"))
+          rc->flakey_source = 0;
         else if (!strcmp(argv[i], "--no-persist"))
           rc->persist = 0;
         else if (!strcmp(argv[i], "--no-remount"))

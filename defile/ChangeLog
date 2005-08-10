@@ -1,6 +1,20 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2005-08-10: D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	Release defile-3.3.0
+
+	* frameread.c (GetSpecFile): Fix determination of spec file to work with
+		paths that have more than one '.'.
+
+	* reader.c (FrameFileReader): Add FLAKEY wrappers to stat and opens.
+	* defile.h: Add flakey_source to rc struct.
+	* defile.c (PrintUsage, ParseCommandLine):  Add --flakey-source and
+	  --no-flakey-source options.
+	* defile.c (LoadDefaultConfig, InitRcStruct): Add FlakeySource directive.
+	* defile.conf.in.in: Update for new directive.
+	* defile.1.in.in: Update for new directive and options.
+
 2005-07-19: D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	Release defile-3.2.5
 

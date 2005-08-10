@@ -30,6 +30,8 @@ defile \(em convert a MCP-style framefile into a dirfile
 .RB [\~ \-d \~|
 .BR \-\-daemonise \~|
 .BR \-\-no\-daemonise \~]
+.RB [\~ \-\-flakey\-source \~|
+.BR \-\-no\-flakey\-source \~]
 .RB [\~ \-l \~|
 .BR \-\-local\-source \~|
 .BR \-n \~|
@@ -196,6 +198,12 @@ unless overridden with the
 .I PidFile
 directive.  The PID is also reported on the controlling TTY.
 .TP
+.B \-\-flakey\-source
+Assume that a local framefile which is being read is on a flakey filesystem.
+This increases the number of attempts defile will make to stat, open and
+read from local files before giving up.  This option is primarily useful for
+source files which reside on overloaded or unreliable NFS mounts.
+.TP
 .BR \-f\~ or\~ \-\-force
 Overwrite an existing dirfile.  Normally
 .B defile
@@ -238,6 +246,20 @@ Don't go into daemon mode (see the
 option).  This is the default behaviour, and this option is provided only to
 allow overriding the
 .I Daemonise
+directive, if present.
+.TP
+.B \-\-no\-flakey\-source
+Don't assume the source file being read is on a flakey filesystem.  This is the
+default behaviour, and this option is provided only to allow overriding the
+.I FlakeySource
+directive, if present.
+.TP
+.B \-\-no\-persist
+Don't go into persistent mode (see the
+.B \-p
+option).  This is the default behaviour, and this option is provided only to
+allow overriding the
+.I Persistent
 directive, if present.
 .PP
 .BI \-o\~ dirfile
@@ -398,6 +420,14 @@ A boolean.  Daemonise on startup.  Equivalent to the
 .B \-d
 command line option.  Overrideable with the
 .B \-\-no\-daemonise
+command line option.
+.TP
+.I FlakeySource
+A boolean.  Assume the local input file is on a flakey filesystem.  Equivalent
+to the
+.B \-\-flakey\-source
+command line option.  Overrideable with the
+.B \-\-no\-flakey\-source
 command line option.
 .TP
 .I InputSource

@@ -39,8 +39,8 @@
 #endif
 
 struct rc_struct {
-  int auto_reconnect, daemonise, force_quenya, force_stdio, framefile;
-  int gzip_output, persist, quenya, remount, silent, write_curfile;
+  int auto_reconnect, daemonise, force_quenya, force_stdio, flakey_source,
+      framefile, gzip_output, persist, quenya, remount, silent, write_curfile;
   int write_mode; /* 0 = normal ; 1 = overwrite ; 2 = resume */
 
   struct sockaddr_in addr;

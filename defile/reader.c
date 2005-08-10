@@ -32,6 +32,12 @@
 #include "defile.h"
 #include "frameread.h"
 
+#define FLAKEY_MAX 9      /* Maximum number of attempts to make with a flakey
+                           * source */
+#define FLAKEY_WAIT 10    /* Number of seconds to wait before retying a flakey
+                             source */
+#define FLAKEY(x) ((!rc.flakey_source || ++x >= FLAKEY_MAX) ? fatal : err)
+
 void ReaderDone(int signo) {
   int i;
 
@@ -65,6 +71,7 @@ void FrameFileReader(void)
   int old_frame_size;
   char gpb[GPB_LEN];
   int i, n, fullframes, remainder = 0;
+  int flakey_count = 0;
   int frames_read = 0;
   int new_chunk = 1;
   unsigned short* InputBuffer[INPUT_BUF_SIZE];
@@ -111,8 +118,12 @@ void FrameFileReader(void)
       frames_read = 0;
 
       /* open the chunk */
-      if ((fd = open(rc.chunk, O_RDONLY)) < 0)
-        berror(fatal, "cannot open `%s'", rc.chunk);
+      flakey_count = 0;
+      while ((fd = open(rc.chunk, O_RDONLY)) < 0) {
+        berror(FLAKEY(flakey_count), "cannot open `%s'", rc.chunk);
+        bprintf(warning, "Sleeping for %i seconds...", FLAKEY_WAIT);
+        sleep(FLAKEY_WAIT);
+      }
 
       if (seek_to > 0) {
         lseek(fd, seek_to, SEEK_SET);
@@ -120,8 +131,12 @@ void FrameFileReader(void)
       }
 
       /* stat file to find its size */
-      if (stat(rc.chunk, &chunk_stat))
-        berror(fatal, "cannot stat `%s'", rc.chunk);
+      flakey_count = 0;
+      while (stat(rc.chunk, &chunk_stat)) {
+        berror(FLAKEY(flakey_count), "cannot stat `%s'", rc.chunk);
+        bprintf(warning, "Sleeping for %i seconds...", FLAKEY_WAIT);
+        sleep(FLAKEY_WAIT);
+      }
 
       ri.chunk_total = chunk_stat.st_size / DiskFrameSize;
     }
@@ -137,8 +152,13 @@ void FrameFileReader(void)
 
           /* reopen file and try again */
           close(fd);
-          if ((fd = open(rc.chunk, O_RDONLY)) < 0)
-            berror(fatal, "cannot open `%s'", rc.chunk);
+
+          flakey_count = 0;
+          while ((fd = open(rc.chunk, O_RDONLY)) < 0) {
+            berror(FLAKEY(flakey_count), "cannot open `%s'", rc.chunk);
+            bprintf(warning, "Sleeping for %i seconds...", FLAKEY_WAIT);
+            sleep(FLAKEY_WAIT);
+          }
 
           /* seek to our last position */
           lseek(fd, frames_read * DiskFrameSize, SEEK_SET);
