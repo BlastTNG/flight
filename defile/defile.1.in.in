@@ -1,6 +1,6 @@
 .\" @fixup_input@
 .\" @configure_input@
-.TH defile 1 "24 January 2005" "version @VERSION@" "BLAST UTILITIES"
+.TH defile 1 "10 August 2005" "version @VERSION@" "BLAST UTILITIES"
 .SH NAME
 defile \(em convert a MCP-style framefile into a dirfile
 .SH SYNOPSIS
