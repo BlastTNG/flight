@@ -56,7 +56,6 @@
 
 #ifdef BOLOTEST
 #  define FRAME_MARGIN (-12)
-#  define USE_FIFO_CMD
 #else
 #  define FRAME_MARGIN (-2)
 #endif
@@ -254,6 +253,7 @@ void mputs(buos_t flag, const char* message) {
   }
 }
 
+#ifndef BOLOTEST
 void FillSlowDL(unsigned short *RxFrame) {
   int i;
   unsigned short msb, lsb;
@@ -386,6 +386,7 @@ void GetACS(unsigned short *RxFrame){
   ACSData.clin_elev = (double)RxFrame[clinElevAddr->channel];
 
 }
+#endif
 
 /* fill_Rx_frame: places one 32 bit word into the RxFrame. Returns true on
  * success */
@@ -431,6 +432,7 @@ int fill_Rx_frame(unsigned int in_data,
   return(1);
 }
 
+#ifndef BOLOTEST
 void WatchDog (void) {
   bputs(startup, "Watchdog: Startup\n");
 
@@ -501,6 +503,7 @@ void PushBi0Buffer(unsigned short *RxFrame) {
   }
   bi0_buffer.i_in = i_in;
 }
+#endif
 
 void zero(unsigned short *RxFrame) {
   int i;
@@ -509,6 +512,7 @@ void zero(unsigned short *RxFrame) {
     RxFrame[i] = 0;
 }
 
+#ifndef BOLOTEST
 void BiPhaseWriter(void) {
   int i_out, i_in;
 
@@ -538,6 +542,7 @@ void BiPhaseWriter(void) {
     usleep(10000);
   }
 }
+#endif
 
 /******************************************************************/
 /*                                                                */
@@ -638,25 +643,19 @@ int main(int argc, char *argv[]) {
 
   bputs(startup, "System: Startup");
 
+#ifndef BOLOTEST
   /* Watchdog */
   pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
+#endif
 
   if ((bbc_fp = open("/dev/bbcpci", O_RDWR)) < 0)
     berror(fatal, "System: Error opening BBC");
-
-  /* Initialize the Ephemeris */
-  ReductionInit();
 
   InitCommandData();
 
   pthread_mutex_init(&mutex, NULL);
 
   MakeAddressLookups();
-
-#ifndef BOLOTEST
-  bprintf(info, "System: Slow Downlink Initialisation");
-  InitSlowDL();
-#endif
 
   bprintf(info, "Commands: MCP Command List Version: %s", command_list_serial);
 #ifdef USE_FIFO_CMD
@@ -667,7 +666,15 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifndef BOLOTEST
+  /* Initialize the Ephemeris */
+  ReductionInit();
+
+  bprintf(info, "System: Slow Downlink Initialisation");
+  InitSlowDL();
+
   InitBi0Buffer();
+
+  memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
   InitialiseFrameFile(argv[1][0]);
@@ -677,8 +684,6 @@ int main(int argc, char *argv[]) {
   signal(SIGHUP, CloseBBC);
   signal(SIGINT, CloseBBC);
   signal(SIGTERM, CloseBBC);
-
-  memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 
   /* Allocate the local data buffers */
   RxFrame = balloc(fatal, BiPhaseFrameSize);
@@ -697,7 +702,9 @@ int main(int argc, char *argv[]) {
   else 
     bputs(info, "System: I am not Sam.\n");
 
+#ifndef BOLOTEST
   InitSched();
+#endif
 
   bputs(info, "System: Finished Initialisation, waiting for BBC to come up.\n");
 

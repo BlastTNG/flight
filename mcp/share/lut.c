@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
 #include "blast.h"
@@ -30,8 +31,32 @@
 
 #define MAXITER 10
 #define TOLERANCE (10.0/3600.*M_PI/180.)
+#define MAX_LINE_LENGTH 1024
 
-int GetLine(FILE *fp, char *line); // defined in sched.c
+/***************************************************************************/
+/*    GetLine: read non-comment line from file                             */
+/*        The line is placed   in *line.                                   */
+/*        Returns 1 if succesful, 0 if unsuccesful                         */
+/***************************************************************************/
+int GetLine(FILE *fp, char *line)
+{
+  char buffer[MAX_LINE_LENGTH];
+  char *ret_val;
+  int first_char;
+
+  do {
+    ret_val = fgets(buffer, MAX_LINE_LENGTH, fp);
+    first_char = 0;
+    while ((buffer[first_char] == ' ') || (buffer[first_char] == '\t'))
+      first_char++;
+    strncpy(line, &buffer[first_char], MAX_LINE_LENGTH);
+  } while (((line[0] == '#') || (strlen(line) < 2)) && (ret_val != NULL));
+
+  if (ret_val != NULL)
+    return 1; /* a line was read */
+  else
+    return 0; /* there were no valid lines */
+}
 
 void LutInit(struct LutType *L) {
   int i;

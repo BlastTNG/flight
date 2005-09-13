@@ -29,7 +29,6 @@
 #include "pointing_struct.h"
 #include "mcp.h"
 
-#define MAX_LINE_LENGTH 1024
 #define MAX_NSCHED 8000
 struct ScheduleType _S[2][3];
 void StarPos(double t, double ra0, double dec0, double mra, double mdec,
@@ -62,30 +61,7 @@ const char filename[2][3][32] = {
     "/data/etc/sad.south.sch"}
 };
 
-/***************************************************************************/
-/*    GetLine: read non-comment line from file                             */
-/*        The line is placed   in *line.                                   */
-/*        Returns 1 if succesful, 0 if unsuccesful                         */
-/***************************************************************************/
-int GetLine(FILE *fp, char *line)
-{
-  char buffer[MAX_LINE_LENGTH];
-  char *ret_val;
-  int first_char;
-
-  do {
-    ret_val = fgets(buffer, MAX_LINE_LENGTH, fp);
-    first_char = 0;
-    while ((buffer[first_char] == ' ') || (buffer[first_char] == '\t'))
-      first_char++;
-    strncpy(line, &buffer[first_char], MAX_LINE_LENGTH);
-  } while (((line[0] == '#') || (strlen(line) < 2)) && (ret_val != NULL));
-
-  if (ret_val != NULL)
-    return 1; /* a line was read */
-  else
-    return 0; /* there were no valid lines */
-}
+int GetLine(FILE *fp, char *line); // defined in lut.c
 
 #define CHECK_LON 20.00
 void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)

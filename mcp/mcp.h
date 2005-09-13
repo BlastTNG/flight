@@ -35,6 +35,10 @@ extern unsigned int tdrss_index;
 
 #define TEMPORAL_OFFSET 0
 
+#ifdef BOLOTEST
+#  define USE_FIFO_CMD
+#endif
+
 #ifdef DEBUG
 #warning "Debugging set."
 #endif

@@ -56,10 +56,6 @@
 /* Seconds in a week */
 #define SEC_IN_WEEK  604800L
 
-#ifdef BOLOTEST
-#  define USE_FIFO_CMD
-#endif
-
 /* based on isc_protocol.h */
 #define ISC_SHUTDOWN_NONE     0
 #define ISC_SHUTDOWN_HALT     1
@@ -237,9 +233,9 @@ const char* SName(enum singleCommand command)
 
 void SingleCommand (enum singleCommand command, int scheduled)
 {
-  int i_point;
-
-  i_point = GETREADINDEX(point_index);
+#ifndef BOLOTEST
+  int i_point = GETREADINDEX(point_index);
+#endif
 
   if (!scheduled)
     bprintf(info, "Commands: Single command: %d (%s)\n", command,
@@ -247,228 +243,9 @@ void SingleCommand (enum singleCommand command, int scheduled)
 
   /* Update CommandData structure with new info */
 
-  if (command == stop) {      /* Pointing aborts */
-    CommandData.pointing_mode.mode = P_DRIFT;
-    CommandData.pointing_mode.X = 0;
-    CommandData.pointing_mode.Y = 0;
-    CommandData.pointing_mode.vaz = 0.0;
-    CommandData.pointing_mode.del = 0.0;
-    CommandData.pointing_mode.w = 0;
-    CommandData.pointing_mode.h = 0;
-
-  } else if (command == antisun) { /* turn antisolar (az-only) */
-    double sun_az = PointingData[i_point].sun_az + 180;
-    NormalizeAngle(&sun_az);
-
-    CommandData.pointing_mode.mode = P_AZEL_GOTO;
-    CommandData.pointing_mode.X = sun_az;  /* az */
-    CommandData.pointing_mode.Y = PointingData[i_point].el;  /* el */
-    CommandData.pointing_mode.vaz = 0.0;
-    CommandData.pointing_mode.del = 0.0;
-    CommandData.pointing_mode.w = 0;
-    CommandData.pointing_mode.h = 0;
-    
-  } else if (command == mcc_halt) {
-    bputs(warning, "Commands: Halting the MCC\n");
-    system("/sbin/halt");
-
-  } else if (command == trim_to_isc)
-    SetTrimToSC(0);
-  else if (command == trim_to_osc)
-    SetTrimToSC(1);
-  else if (command == reset_trims)
-    ClearTrim();
-  else if (command == auto_gyro)
-    CommandData.autogyro = 1;
-
-  else if (command == az_off) /* disable az motors */
-    CommandData.disable_az = 1;
-  else if (command == az_on) /* enable az motors */
-    CommandData.disable_az = 0;
-  else if (command == el_off) { /* disable el motors */
-    CommandData.disable_el = 1;
-    CommandData.force_el = 0;
-  } else if (command == el_on) { /* enable el motors */
-    CommandData.disable_el = 0;
-    CommandData.force_el = 0;
-  } else if (command == force_el_on) { /* force enabling of el motors */
-    CommandData.disable_el = 0;
-    CommandData.force_el = 1;
-
-  } else if (command == sun_veto)       /* Veto sensors */
-    CommandData.use_sun = 0;
-  else if (command == isc_veto)
-    CommandData.use_isc = 0;
-  else if (command == osc_veto)
-    CommandData.use_osc = 0;
-  else if (command == mag_veto)
-    CommandData.use_mag = 0;
-  else if (command == gps_veto)
-    CommandData.use_gps = 0;
-  else if (command == elenc_veto)
-    CommandData.use_elenc = 0;
-  else if (command == elclin_veto)
-    CommandData.use_elclin = 0;
-
-  else if (command == sun_allow)       /* Un-veto sensors */
-    CommandData.use_sun = 1;
-  else if (command == isc_allow)
-    CommandData.use_isc = 1;
-  else if (command == osc_allow)
-    CommandData.use_osc = 1;
-  else if (command == mag_allow)
-    CommandData.use_mag = 1;
-  else if (command == gps_allow)
-    CommandData.use_gps = 1;
-  else if (command == elenc_allow)
-    CommandData.use_elenc = 1;
-  else if (command == elclin_allow)
-    CommandData.use_elclin = 1;
-
-  else if (command == gps_off)           /* sensor power */
-    CommandData.sensors_off.gps = 1;
-  else if (command == gps_on)
-    CommandData.sensors_off.gps = 0;
-  else if (command == gyro_off)
-    CommandData.sensors_off.gyro = 1;
-  else if (command == gyro_on)
-    CommandData.sensors_off.gyro = 0;
-  else if (command == isc_off)
-    CommandData.sensors_off.isc = 1;
-  else if (command == isc_on)
-    CommandData.sensors_off.isc = 0;
-  else if (command == osc_off)
-    CommandData.sensors_off.osc = 1;
-  else if (command == osc_on)
-    CommandData.sensors_off.osc = 0;
-  else if (command == ss_off)
-    CommandData.sensors_off.ss = 1;
-  else if (command == ss_on)
-    CommandData.sensors_off.ss = 0;
-
-  else if (command == analogue_gyros) {   /* gyro selection */
-    CommandData.use_analogue_gyros = 1;
-    CommandData.fast_gy_offset = 3000;
-  } else if (command == digital_gyros) {
-    CommandData.use_analogue_gyros = 0;
-    CommandData.fast_gy_offset = 3000;
-  } else if (command == clock_int)    /* Bias settings */
-    CommandData.Bias.clockInternal = 1;
-  else if (command == clock_ext)
-    CommandData.Bias.clockInternal = 0;
-  else if (command == bias_ac)
-    CommandData.Bias.biasAC = 1;
-  else if (command == bias_dc)
-    CommandData.Bias.biasAC = 0;
-  else if (command == ramp)
-    CommandData.Bias.biasRamp = 1;
-  else if (command == fixed)
-    CommandData.Bias.biasRamp = 0;
-
-  else if (command == level_on)    /* Cryo commanding */
-    CommandData.Cryo.heliumLevel = 1;
-  else if (command == level_off)
-    CommandData.Cryo.heliumLevel = 0;
-  else if (command == charcoal_on) {
-    CommandData.Cryo.charcoalHeater = 1;
-    CommandData.Cryo.fridgeCycle = 0;
-  } else if (command == charcoal_off) {
-    CommandData.Cryo.charcoalHeater = 0;
-    CommandData.Cryo.fridgeCycle = 0;
-  } else if (command == auto_cycle) {
-    CommandData.Cryo.fridgeCycle = 1;
-    CommandData.Cryo.force_cycle = 0;
-  } else if (command == fridge_cycle) {
-    CommandData.Cryo.fridgeCycle = 1;
-    CommandData.Cryo.force_cycle = 1;
-  } else if (command == coldplate_on)
-    CommandData.Cryo.coldPlate = 1;
-  else if (command == coldplate_off)
-    CommandData.Cryo.coldPlate = 0;
-  else if (command == cal_on)
-    CommandData.Cryo.calibrator = on;
-  else if (command == cal_off)
-    CommandData.Cryo.calibrator = off;
-  else if (command == pot_valve_open) {
-    CommandData.Cryo.potvalve_open = 40;
-    CommandData.Cryo.potvalve_close = 0;
-  } else if (command == pot_valve_close) {
-    CommandData.Cryo.potvalve_close = 40;
-    CommandData.Cryo.potvalve_open = 0;
-  } else if (command == pot_valve_on)
-    CommandData.Cryo.potvalve_on = 1;
-  else if (command == pot_valve_off)
-    CommandData.Cryo.potvalve_on = 0;
-  else if (command == l_valve_open) {
-    CommandData.Cryo.lvalve_open = 40;
-    CommandData.Cryo.lvalve_close = 0;
-  } else if (command == l_valve_close) {
-    CommandData.Cryo.lvalve_close = 40;
-    CommandData.Cryo.lvalve_open = 0;
-  } else if (command == he_valve_on)
-    CommandData.Cryo.lhevalve_on = 1;
-  else if (command == he_valve_off)
-    CommandData.Cryo.lhevalve_on = 0;
-  else if (command == ln_valve_on)
-    CommandData.Cryo.lnvalve_on = 1;
-  else if (command == ln_valve_off)
-    CommandData.Cryo.lnvalve_on = 0;
-  else if (command == auto_bdaheat)
-    CommandData.Cryo.autoBDAHeat = 1;
-  else if (command == auto_jfetheat)
-    CommandData.Cryo.autoJFETheat = 1;
-
-  else if (command == balance_veto)
-    CommandData.pumps.bal_veto = -1;
-  else if (command == balance_allow)
-    CommandData.pumps.bal_veto = 1;
-
-  else if (command == balpump_on)
-    CommandData.pumps.bal1_on = 1;
-  else if (command == balpump_off)
-    CommandData.pumps.bal1_on = 0;
-  else if (command == balpump_up)
-    CommandData.pumps.bal1_reverse = 0;
-  else if (command == balpump_down)
-    CommandData.pumps.bal1_reverse = 1;
-  else if (command == sprpump_on)
-    CommandData.pumps.bal2_on = 1;
-  else if (command == sprpump_off)
-    CommandData.pumps.bal2_on = 0;
-  else if (command == sprpump_fwd)
-    CommandData.pumps.bal2_reverse = 0;
-  else if (command == sprpump_rev)
-    CommandData.pumps.bal2_reverse = 1;
-
-  else if (command == inner_cool_on) {
-    CommandData.pumps.inframe_cool_on = 40;
-    CommandData.pumps.inframe_auto = 0;
-  } else if (command == inner_cool_off) {
-    CommandData.pumps.inframe_cool_off = 40;
-    CommandData.pumps.inframe_auto = 0;
-  } else if (command == inner_cool_auto)
-    CommandData.pumps.inframe_auto = 1;
-
-  else if (command == outer_cool_on) {
-    CommandData.pumps.outframe_cool1_on = 40;
-    CommandData.pumps.outframe_auto = 0;
-  } else if (command == outer_cool_off) {
-    CommandData.pumps.outframe_cool1_off = 40;
-    CommandData.pumps.outframe_auto = 0;
-  } else if (command == outer_cool_auto)
-    CommandData.pumps.outframe_auto = 1;
-
-  else if (command == outer_spare_on)
-    CommandData.pumps.outframe_cool2_on = 40;
-  else if (command == outer_spare_off)
-    CommandData.pumps.outframe_cool2_off = 40;
-  else if (command == pin_in)
-    CommandData.pumps.lock_in = 1;
-  else if (command == lock_off)
-    CommandData.pumps.lock_off = 1;
-  else if (command == unlock) {
-    CommandData.pumps.lock_out = 1;
-    if (CommandData.pointing_mode.mode == P_LOCK) {
+  switch (command) {
+#ifndef BOLOTEST
+    case stop: /* Pointing abort */
       CommandData.pointing_mode.mode = P_DRIFT;
       CommandData.pointing_mode.X = 0;
       CommandData.pointing_mode.Y = 0;
@@ -476,95 +253,439 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.pointing_mode.del = 0.0;
       CommandData.pointing_mode.w = 0;
       CommandData.pointing_mode.h = 0;
-    }
+      break;
+    case antisun: /* turn antisolar (az-only)*/
+      double sun_az = PointingData[i_point].sun_az + 180;
+      NormalizeAngle(&sun_az);
 
-    /***************************************/
-    /********* ISC Commanding  *************/
-  } else if (command == isc_run)
-    CommandData.ISCState[0].pause = 0;
-  else if (command == isc_shutdown)
-    CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_HALT;
-  else if (command == isc_reboot)
-    CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_REBOOT;
-  else if (command == isc_cam_cycle)
-    CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_CAMCYCLE;
-  else if (command == isc_pause)
-    CommandData.ISCState[0].pause = 1;
-  else if (command == isc_abort)
-    CommandData.ISCState[0].abort = 1;
-  else if (command == isc_reconnect)
-    CommandData.ISCControl[0].reconnect = 1;
-  else if (command == isc_save_images)
-    CommandData.ISCState[0].save = 1;
-  else if (command == isc_discard_images)
-    CommandData.ISCState[0].save = 0;
-  else if (command == isc_full_screen)
-    CommandData.ISCState[0].display_mode = full;
-  else if (command == isc_trig_int)
-    CommandData.ISCState[0].triggertype = ISC_TRIGGER_INT;
-  else if (command == isc_trig_ext)
-    CommandData.ISCState[0].triggertype = ISC_TRIGGER_NEG;
-  else if (command == isc_auto_focus)
-    CommandData.ISCControl[0].autofocus = 10;
-  else if (command == isc_eye_on)
-    CommandData.ISCState[0].eyeOn = 1;
-  else if (command == isc_eye_off)
-    CommandData.ISCState[0].eyeOn = 0;
+      CommandData.pointing_mode.mode = P_AZEL_GOTO;
+      CommandData.pointing_mode.X = sun_az;  /* az */
+      CommandData.pointing_mode.Y = PointingData[i_point].el;  /* el */
+      CommandData.pointing_mode.vaz = 0.0;
+      CommandData.pointing_mode.del = 0.0;
+      CommandData.pointing_mode.w = 0;
+      CommandData.pointing_mode.h = 0;
+      break;
 
-    /***************************************/
-    /********* OSC Commanding  *************/
-  else if (command == osc_run)
-    CommandData.ISCState[1].pause = 0;
-  else if (command == osc_shutdown)
-    CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_HALT;
-  else if (command == osc_reboot)
-    CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_REBOOT;
-  else if (command == osc_cam_cycle)
-    CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_CAMCYCLE;
-  else if (command == osc_pause)
-    CommandData.ISCState[1].pause = 1;
-  else if (command == osc_abort)
-    CommandData.ISCState[1].abort = 1;
-  else if (command == osc_reconnect)
-    CommandData.ISCControl[1].reconnect = 1;
-  else if (command == osc_save_images)
-    CommandData.ISCState[1].save = 1;
-  else if (command == osc_discard_images)
-    CommandData.ISCState[1].save = 0;
-  else if (command == osc_full_screen)
-    CommandData.ISCState[1].display_mode = full;
-  else if (command == osc_trig_int)
-    CommandData.ISCState[1].triggertype = ISC_TRIGGER_INT;
-  else if (command == osc_trig_ext)
-    CommandData.ISCState[1].triggertype = ISC_TRIGGER_NEG;
-  else if (command == osc_auto_focus)
-    CommandData.ISCControl[1].autofocus = 10;
-  else if (command == osc_eye_on)
-    CommandData.ISCState[1].eyeOn = 1;
-  else if (command == osc_eye_off)
-    CommandData.ISCState[1].eyeOn = 0;
+    case trim_to_isc:
+      SetTrimToSC(0);
+      break;
+    case trim_to_osc:
+      SetTrimToSC(1);
+      break;
+    case reset_trims:
+      ClearTrim();
+      break;
+    case auto_gyro:
+      CommandData.autogyro = 1;
+      break;
 
-  else if (command == blast_rocks)
-    CommandData.sucks = 0;
-  else if (command == blast_sucks)
-    CommandData.sucks = 1;
+    case az_off:/* disable az motors */
+      CommandData.disable_az = 1;
+      break;
+    case az_on:/* enable az motors */
+      CommandData.disable_az = 0;
+      break;
+    case el_off: /* disable el motors */
+      CommandData.disable_el = 1;
+      CommandData.force_el = 0;
+      break;
+    case el_on: /* enable el motors */
+      CommandData.disable_el = 0;
+      CommandData.force_el = 0;
+      break;
+    case force_el_on: /* force enabling of el motors */
+      CommandData.disable_el = 0;
+      CommandData.force_el = 1;
+      break;
 
-  else if (command == reap) {
-    bprintf(err, "Commands: Reaping the watchdog tickle on command.");
-    pthread_cancel(watchdog_id);
-  } else if (command == xyzzy)
-    ;
-  else {
-    bputs(warning, "Commands: ***Invalid Single Word Command***\n");
-    return; /* invalid command - no write or update */
+    case sun_veto:      /* Veto sensors */
+      CommandData.use_sun = 0;
+      break;
+    case isc_veto:
+      CommandData.use_isc = 0;
+      break;
+    case osc_veto:
+      CommandData.use_osc = 0;
+      break;
+    case mag_veto:
+      CommandData.use_mag = 0;
+      break;
+    case gps_veto:
+      CommandData.use_gps = 0;
+      break;
+    case elenc_veto:
+      CommandData.use_elenc = 0;
+      break;
+    case elclin_veto:
+      CommandData.use_elclin = 0;
+      break;
+
+    case sun_allow:      /* Un-veto sensors */
+      CommandData.use_sun = 1;
+      break;
+    case isc_allow:
+      CommandData.use_isc = 1;
+      break;
+    case osc_allow:
+      CommandData.use_osc = 1;
+      break;
+    case mag_allow:
+      CommandData.use_mag = 1;
+      break;
+    case gps_allow:
+      CommandData.use_gps = 1;
+      break;
+    case elenc_allow:
+      CommandData.use_elenc = 1;
+      break;
+    case elclin_allow:
+      CommandData.use_elclin = 1;
+      break;
+
+    case gps_off:          /* sensor power */
+      CommandData.sensors_off.gps = 1;
+      break;
+    case gps_on:
+      CommandData.sensors_off.gps = 0;
+      break;
+    case gyro_off:
+      CommandData.sensors_off.gyro = 1;
+      break;
+    case gyro_on:
+      CommandData.sensors_off.gyro = 0;
+      break;
+    case isc_off:
+      CommandData.sensors_off.isc = 1;
+      break;
+    case isc_on:
+      CommandData.sensors_off.isc = 0;
+      break;
+    case osc_off:
+      CommandData.sensors_off.osc = 1;
+      break;
+    case osc_on:
+      CommandData.sensors_off.osc = 0;
+      break;
+    case ss_off:
+      CommandData.sensors_off.ss = 1;
+      break;
+    case ss_on:
+      CommandData.sensors_off.ss = 0;
+      break;
+
+    case analogue_gyros:   /* gyro selection */
+      CommandData.use_analogue_gyros = 1;
+      CommandData.fast_gy_offset = 3000;
+      break;
+    case digital_gyros:
+      CommandData.use_analogue_gyros = 0;
+      CommandData.fast_gy_offset = 3000;
+      break;
+#endif
+
+    case clock_int:   /* Bias settings */
+      CommandData.Bias.clockInternal = 1;
+      break;
+    case clock_ext:
+      CommandData.Bias.clockInternal = 0;
+      break;
+    case bias_ac:
+      CommandData.Bias.biasAC = 1;
+      break;
+    case bias_dc:
+      CommandData.Bias.biasAC = 0;
+      break;
+    case ramp:
+      CommandData.Bias.biasRamp = 1;
+      break;
+    case fixed:
+      CommandData.Bias.biasRamp = 0;
+      break;
+
+    case level_on:   /* Cryo commanding */
+      CommandData.Cryo.heliumLevel = 1;
+      break;
+    case level_off:
+      CommandData.Cryo.heliumLevel = 0;
+      break;
+    case charcoal_on:
+      CommandData.Cryo.charcoalHeater = 1;
+      CommandData.Cryo.fridgeCycle = 0;
+      break;
+    case charcoal_off:
+      CommandData.Cryo.charcoalHeater = 0;
+      CommandData.Cryo.fridgeCycle = 0;
+      break;
+    case auto_cycle:
+      CommandData.Cryo.fridgeCycle = 1;
+      CommandData.Cryo.force_cycle = 0;
+      break;
+    case fridge_cycle:
+      CommandData.Cryo.fridgeCycle = 1;
+      CommandData.Cryo.force_cycle = 1;
+      break;
+    case coldplate_on:
+      CommandData.Cryo.coldPlate = 1;
+      break;
+    case coldplate_off:
+      CommandData.Cryo.coldPlate = 0;
+      break;
+    case cal_on:
+      CommandData.Cryo.calibrator = on;
+      break;
+    case cal_off:
+      CommandData.Cryo.calibrator = off;
+      break;
+    case pot_valve_open:
+      CommandData.Cryo.potvalve_open = 40;
+      CommandData.Cryo.potvalve_close = 0;
+      break;
+    case pot_valve_close:
+      CommandData.Cryo.potvalve_close = 40;
+      CommandData.Cryo.potvalve_open = 0;
+      break;
+    case pot_valve_on:
+      CommandData.Cryo.potvalve_on = 1;
+      break;
+    case pot_valve_off:
+      CommandData.Cryo.potvalve_on = 0;
+      break;
+    case l_valve_open:
+      CommandData.Cryo.lvalve_open = 40;
+      CommandData.Cryo.lvalve_close = 0;
+      break;
+    case l_valve_close:
+      CommandData.Cryo.lvalve_close = 40;
+      CommandData.Cryo.lvalve_open = 0;
+      break;
+    case he_valve_on:
+      CommandData.Cryo.lhevalve_on = 1;
+      break;
+    case he_valve_off:
+      CommandData.Cryo.lhevalve_on = 0;
+      break;
+    case ln_valve_on:
+      CommandData.Cryo.lnvalve_on = 1;
+      break;
+    case ln_valve_off:
+      CommandData.Cryo.lnvalve_on = 0;
+      break;
+    case auto_bdaheat:
+      CommandData.Cryo.autoBDAHeat = 1;
+      break;
+    case auto_jfetheat:
+      CommandData.Cryo.autoJFETheat = 1;
+      break;
+
+#ifndef BOLOTEST
+    case balance_veto:/* Balance/pump commanding */
+      CommandData.pumps.bal_veto = -1;
+      break;
+    case balance_allow:
+      CommandData.pumps.bal_veto = 1;
+      break;
+
+    case balpump_on:
+      CommandData.pumps.bal1_on = 1;
+      break;
+    case balpump_off:
+      CommandData.pumps.bal1_on = 0;
+      break;
+    case balpump_up:
+      CommandData.pumps.bal1_reverse = 0;
+      break;
+    case balpump_down:
+      CommandData.pumps.bal1_reverse = 1;
+      break;
+    case sprpump_on:
+      CommandData.pumps.bal2_on = 1;
+      break;
+    case sprpump_off:
+      CommandData.pumps.bal2_on = 0;
+      break;
+    case sprpump_fwd:
+      CommandData.pumps.bal2_reverse = 0;
+      break;
+    case sprpump_rev:
+      CommandData.pumps.bal2_reverse = 1;
+      break;
+
+    case inner_cool_on:
+      CommandData.pumps.inframe_cool_on = 40;
+      CommandData.pumps.inframe_auto = 0;
+      break;
+    case inner_cool_off:
+      CommandData.pumps.inframe_cool_off = 40;
+      CommandData.pumps.inframe_auto = 0;
+      break;
+    case inner_cool_auto:
+      CommandData.pumps.inframe_auto = 1;
+      break;
+
+    case outer_cool_on:
+      CommandData.pumps.outframe_cool1_on = 40;
+      CommandData.pumps.outframe_auto = 0;
+      break;
+    case outer_cool_off:
+      CommandData.pumps.outframe_cool1_off = 40;
+      CommandData.pumps.outframe_auto = 0;
+      break;
+    case outer_cool_auto:
+      CommandData.pumps.outframe_auto = 1;
+      break;
+
+    case outer_spare_on:
+      CommandData.pumps.outframe_cool2_on = 40;
+      break;
+    case outer_spare_off:
+      CommandData.pumps.outframe_cool2_off = 40;
+      break;
+    case pin_in:
+      CommandData.pumps.lock_in = 1;
+      break;
+    case lock_off:
+      CommandData.pumps.lock_off = 1;
+      break;
+    case unlock:
+      CommandData.pumps.lock_out = 1;
+      if (CommandData.pointing_mode.mode == P_LOCK) {
+        CommandData.pointing_mode.mode = P_DRIFT;
+        CommandData.pointing_mode.X = 0;
+        CommandData.pointing_mode.Y = 0;
+        CommandData.pointing_mode.vaz = 0.0;
+        CommandData.pointing_mode.del = 0.0;
+        CommandData.pointing_mode.w = 0;
+        CommandData.pointing_mode.h = 0;
+      }
+
+      /***************************************/
+      /********* ISC Commanding  *************/
+      break;
+    case isc_run:
+      CommandData.ISCState[0].pause = 0;
+      break;
+    case isc_shutdown:
+      CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_HALT;
+      break;
+    case isc_reboot:
+      CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_REBOOT;
+      break;
+    case isc_cam_cycle:
+      CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_CAMCYCLE;
+      break;
+    case isc_pause:
+      CommandData.ISCState[0].pause = 1;
+      break;
+    case isc_abort:
+      CommandData.ISCState[0].abort = 1;
+      break;
+    case isc_reconnect:
+      CommandData.ISCControl[0].reconnect = 1;
+      break;
+    case isc_save_images:
+      CommandData.ISCState[0].save = 1;
+      break;
+    case isc_discard_images:
+      CommandData.ISCState[0].save = 0;
+      break;
+    case isc_full_screen:
+      CommandData.ISCState[0].display_mode = full;
+      break;
+    case isc_trig_int:
+      CommandData.ISCState[0].triggertype = ISC_TRIGGER_INT;
+      break;
+    case isc_trig_ext:
+      CommandData.ISCState[0].triggertype = ISC_TRIGGER_NEG;
+      break;
+    case isc_auto_focus:
+      CommandData.ISCControl[0].autofocus = 10;
+      break;
+    case isc_eye_on:
+      CommandData.ISCState[0].eyeOn = 1;
+      break;
+    case isc_eye_off:
+      CommandData.ISCState[0].eyeOn = 0;
+
+      /***************************************/
+      /********* OSC Commanding  *************/
+      break;
+    case osc_run:
+      CommandData.ISCState[1].pause = 0;
+      break;
+    case osc_shutdown:
+      CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_HALT;
+      break;
+    case osc_reboot:
+      CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_REBOOT;
+      break;
+    case osc_cam_cycle:
+      CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_CAMCYCLE;
+      break;
+    case osc_pause:
+      CommandData.ISCState[1].pause = 1;
+      break;
+    case osc_abort:
+      CommandData.ISCState[1].abort = 1;
+      break;
+    case osc_reconnect:
+      CommandData.ISCControl[1].reconnect = 1;
+      break;
+    case osc_save_images:
+      CommandData.ISCState[1].save = 1;
+      break;
+    case osc_discard_images:
+      CommandData.ISCState[1].save = 0;
+      break;
+    case osc_full_screen:
+      CommandData.ISCState[1].display_mode = full;
+      break;
+    case osc_trig_int:
+      CommandData.ISCState[1].triggertype = ISC_TRIGGER_INT;
+      break;
+    case osc_trig_ext:
+      CommandData.ISCState[1].triggertype = ISC_TRIGGER_NEG;
+      break;
+    case osc_auto_focus:
+      CommandData.ISCControl[1].autofocus = 10;
+      break;
+    case osc_eye_on:
+      CommandData.ISCState[1].eyeOn = 1;
+      break;
+    case osc_eye_off:
+      CommandData.ISCState[1].eyeOn = 0;
+      break;
+
+    case blast_rocks:
+      CommandData.sucks = 0;
+      break;
+    case blast_sucks:
+      CommandData.sucks = 1;
+      break;
+
+    case reap:  /* Miscellaneous commands */
+      bprintf(err, "Commands: Reaping the watchdog tickle on command.");
+      pthread_cancel(watchdog_id);
+#endif
+      break;
+    case mcc_halt:
+      bputs(warning, "Commands: Halting the MCC\n");
+      system("/sbin/halt");
+    case xyzzy:
+      break;
+    default:
+      bputs(warning, "Commands: ***Invalid Single Word Command***\n");
+      return; /* invalid command - no write or update */
   }
 
+#ifndef BOLOTEST
   if (!scheduled) {
     if (doing_schedule)
       bprintf(info, "Scheduler: *** Out of schedule file mode ***");
     CommandData.pointing_mode.t = PointingData[i_point].t + CommandData.timeout;
   } else
     CommandData.pointing_mode.t = PointingData[i_point].t;
+#endif
 
   WritePrevStatus();
 }
@@ -652,343 +773,416 @@ void SetParameters(enum multiCommand command, unsigned short *dataq,
 void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues,
     int scheduled)
 {
-  int i, i_point;
-
   /* Update CommandData struct with new info
    * If the parameter is type 'i'     set CommandData using ivalues[i]
    * If the parameter is type 'f'/'l' set CommandData using rvalues[i]
    */
-  if (command == az_el_goto) {
-    CommandData.pointing_mode.mode = P_AZEL_GOTO;
-    CommandData.pointing_mode.X = rvalues[0];  /* az */
-    CommandData.pointing_mode.Y = rvalues[1];  /* el */
-    CommandData.pointing_mode.vaz = 0.0;
-    CommandData.pointing_mode.del = 0.0;
-    CommandData.pointing_mode.w = 0;
-    CommandData.pointing_mode.h = 0;
-  } else if (command == az_scan) {
-    CommandData.pointing_mode.mode = P_AZ_SCAN;
-    CommandData.pointing_mode.X = rvalues[0];  /* az */
-    CommandData.pointing_mode.Y = rvalues[1];  /* el */
-    CommandData.pointing_mode.w = rvalues[2];  /* width */
-    CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
-    CommandData.pointing_mode.del = 0.0;
-    CommandData.pointing_mode.h = 0;
-  } else if (command == drift) {
-    CommandData.pointing_mode.mode = P_DRIFT;
-    CommandData.pointing_mode.X = 0;
-    CommandData.pointing_mode.Y = 0;
-    CommandData.pointing_mode.w = 0;
-    CommandData.pointing_mode.vaz = rvalues[0]; /* az speed */
-    CommandData.pointing_mode.del = rvalues[1]; /* el speed */
-    CommandData.pointing_mode.h = 0;
-  } else if (command == ra_dec_goto) {
-    CommandData.pointing_mode.mode = P_RADEC_GOTO;
-    CommandData.pointing_mode.X = rvalues[0]; /* ra */
-    CommandData.pointing_mode.Y = rvalues[1]; /* dec */
-    CommandData.pointing_mode.w = 0;
-    CommandData.pointing_mode.vaz = 0;
-    CommandData.pointing_mode.del = 0;
-    CommandData.pointing_mode.h = 0;
-  } else if (command == vcap) {
-    CommandData.pointing_mode.mode = P_VCAP;
-    CommandData.pointing_mode.X = rvalues[0]; /* ra */
-    CommandData.pointing_mode.Y = rvalues[1]; /* dec */
-    CommandData.pointing_mode.w = rvalues[2]; /* radius */
-    CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
-    CommandData.pointing_mode.del = rvalues[4]; /* el drift speed */
-    CommandData.pointing_mode.h = 0;
-  } else if (command == cap) {
-    CommandData.pointing_mode.mode = P_CAP;
-    CommandData.pointing_mode.X = rvalues[0]; /* ra */
-    CommandData.pointing_mode.Y = rvalues[1]; /* dec */
-    CommandData.pointing_mode.w = rvalues[2]; /* radius */
-    CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
-    CommandData.pointing_mode.del = rvalues[4]; /* el step size */
-    CommandData.pointing_mode.h = 0;
-  } else if (command == box) {
-    CommandData.pointing_mode.mode = P_BOX;
-    CommandData.pointing_mode.X = rvalues[0]; /* ra */
-    CommandData.pointing_mode.Y = rvalues[1]; /* dec */
-    CommandData.pointing_mode.w = rvalues[2]; /* width */
-    CommandData.pointing_mode.h = rvalues[3]; /* height */
-    CommandData.pointing_mode.vaz = rvalues[4]; /* az scan speed */
-    CommandData.pointing_mode.del = rvalues[5]; /* el step size */
-  } else if (command == vbox) {
-    CommandData.pointing_mode.mode = P_VBOX;
-    CommandData.pointing_mode.X = rvalues[0]; /* ra */
-    CommandData.pointing_mode.Y = rvalues[1]; /* dec */
-    CommandData.pointing_mode.w = rvalues[2]; /* width */
-    CommandData.pointing_mode.h = rvalues[3]; /* height */
-    CommandData.pointing_mode.vaz = rvalues[4]; /* az scan speed */
-    CommandData.pointing_mode.del = rvalues[5]; /* el drift speed */
-  } else if (command == quad) {
-    CommandData.pointing_mode.mode = P_QUAD;
-    CommandData.pointing_mode.ra[0] = rvalues[0];
-    for (i=0; i<4; i++) {
-      CommandData.pointing_mode.ra[i] = rvalues[i*2];
-      CommandData.pointing_mode.dec[i] = rvalues[i*2+1];
-    }
-    CommandData.pointing_mode.vaz = rvalues[8]; /* az scan speed */
-    CommandData.pointing_mode.del = rvalues[9]; /* el step size */
 
-    // send down the 1st 2 points in existing fields for now
-    // we may want to add 3 & 4 fields 'soon'.
-    CommandData.pointing_mode.X = rvalues[0]; /* ra */
-    CommandData.pointing_mode.Y = rvalues[1]; /* dec */
-    CommandData.pointing_mode.w = rvalues[2]; /* width */
-    CommandData.pointing_mode.h = rvalues[3]; /* height */
-    
-    /***************************************/
-    /********** Pointing Motor Trims *******/
-  } else if (command == az_el_trim)
-    AzElTrim(rvalues[0], rvalues[1]);
-  else if (command == ra_dec_set)
-    SetRaDec(rvalues[0], rvalues[1]);
-  else if (command == gyro_override) {
-    CommandData.gy2_offset = rvalues[0];
-    CommandData.gy3_offset = rvalues[1];
-    CommandData.autogyro = 0;
+  /* Pointing Modes */
+  switch(command) {
+#ifndef BOLOTEST
+    case az_el_goto:
+      CommandData.pointing_mode.mode = P_AZEL_GOTO;
+      CommandData.pointing_mode.X = rvalues[0];  /* az */
+      CommandData.pointing_mode.Y = rvalues[1];  /* el */
+      CommandData.pointing_mode.vaz = 0.0;
+      CommandData.pointing_mode.del = 0.0;
+      CommandData.pointing_mode.w = 0;
+      CommandData.pointing_mode.h = 0;
+      break;
+    case az_scan:
+      CommandData.pointing_mode.mode = P_AZ_SCAN;
+      CommandData.pointing_mode.X = rvalues[0];  /* az */
+      CommandData.pointing_mode.Y = rvalues[1];  /* el */
+      CommandData.pointing_mode.w = rvalues[2];  /* width */
+      CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
+      CommandData.pointing_mode.del = 0.0;
+      CommandData.pointing_mode.h = 0;
+      break;
+    case drift:
+      CommandData.pointing_mode.mode = P_DRIFT;
+      CommandData.pointing_mode.X = 0;
+      CommandData.pointing_mode.Y = 0;
+      CommandData.pointing_mode.w = 0;
+      CommandData.pointing_mode.vaz = rvalues[0]; /* az speed */
+      CommandData.pointing_mode.del = rvalues[1]; /* el speed */
+      CommandData.pointing_mode.h = 0;
+      break;
+    case ra_dec_goto:
+      CommandData.pointing_mode.mode = P_RADEC_GOTO;
+      CommandData.pointing_mode.X = rvalues[0]; /* ra */
+      CommandData.pointing_mode.Y = rvalues[1]; /* dec */
+      CommandData.pointing_mode.w = 0;
+      CommandData.pointing_mode.vaz = 0;
+      CommandData.pointing_mode.del = 0;
+      CommandData.pointing_mode.h = 0;
+      break;
+    case vcap:
+      CommandData.pointing_mode.mode = P_VCAP;
+      CommandData.pointing_mode.X = rvalues[0]; /* ra */
+      CommandData.pointing_mode.Y = rvalues[1]; /* dec */
+      CommandData.pointing_mode.w = rvalues[2]; /* radius */
+      CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
+      CommandData.pointing_mode.del = rvalues[4]; /* el drift speed */
+      CommandData.pointing_mode.h = 0;
+      break;
+    case cap:
+      CommandData.pointing_mode.mode = P_CAP;
+      CommandData.pointing_mode.X = rvalues[0]; /* ra */
+      CommandData.pointing_mode.Y = rvalues[1]; /* dec */
+      CommandData.pointing_mode.w = rvalues[2]; /* radius */
+      CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
+      CommandData.pointing_mode.del = rvalues[4]; /* el step size */
+      CommandData.pointing_mode.h = 0;
+      break;
+    case box:
+      CommandData.pointing_mode.mode = P_BOX;
+      CommandData.pointing_mode.X = rvalues[0]; /* ra */
+      CommandData.pointing_mode.Y = rvalues[1]; /* dec */
+      CommandData.pointing_mode.w = rvalues[2]; /* width */
+      CommandData.pointing_mode.h = rvalues[3]; /* height */
+      CommandData.pointing_mode.vaz = rvalues[4]; /* az scan speed */
+      CommandData.pointing_mode.del = rvalues[5]; /* el step size */
+      break;
+    case vbox:
+      CommandData.pointing_mode.mode = P_VBOX;
+      CommandData.pointing_mode.X = rvalues[0]; /* ra */
+      CommandData.pointing_mode.Y = rvalues[1]; /* dec */
+      CommandData.pointing_mode.w = rvalues[2]; /* width */
+      CommandData.pointing_mode.h = rvalues[3]; /* height */
+      CommandData.pointing_mode.vaz = rvalues[4]; /* az scan speed */
+      CommandData.pointing_mode.del = rvalues[5]; /* el drift speed */
+      break;
+    case quad:
+      CommandData.pointing_mode.mode = P_QUAD;
+      CommandData.pointing_mode.ra[0] = rvalues[0];
+      for (int i = 0; i < 4; i++) {
+        CommandData.pointing_mode.ra[i] = rvalues[i * 2];
+        CommandData.pointing_mode.dec[i] = rvalues[i * 2 + 1];
+      }
+      CommandData.pointing_mode.vaz = rvalues[8]; /* az scan speed */
+      CommandData.pointing_mode.del = rvalues[9]; /* el step size */
+      break;
 
-    /***************************************/
-    /********** Pointing Motor Gains *******/
-  } else if (command == roll_gain) /* roll Gains */
-    CommandData.roll_gain.P = ivalues[0];
-  else if (command == el_gain) {  /* ele gains */
-    CommandData.ele_gain.P = ivalues[0];
-    CommandData.ele_gain.I = ivalues[1];
-  } else if (command == az_gain) {  /* az gains */
-    CommandData.azi_gain.P = ivalues[0];
-    CommandData.azi_gain.I = ivalues[1];
-  } else if (command == pivot_gain) {  /* pivot gains */
-    CommandData.pivot_gain.SP = (rvalues[0] + 2.605) / 7.9498291016e-5;
-    CommandData.pivot_gain.P = ivalues[1];
-  } else if (command == back_emf) {
-    CommandData.emf_gain = rvalues[0] * 6500;
-    CommandData.emf_offset = rvalues[1] * 500;
+      /***************************************/
+      /********** Pointing Motor Trims *******/
+    case az_el_trim:
+      AzElTrim(rvalues[0], rvalues[1]);
+      break;
+    case ra_dec_set:
+      SetRaDec(rvalues[0], rvalues[1]);
+      break;
+    case gyro_override:
+      CommandData.gy2_offset = rvalues[0];
+      CommandData.gy3_offset = rvalues[1];
+      CommandData.autogyro = 0;
+      break;
 
-    /***************************************/
-    /********** Inner Frame Lock  **********/
-  } else if (command == lock) {  /* Lock Inner Frame */
-    if (CommandData.pumps.bal_veto >= 0)
-      CommandData.pumps.bal_veto = BAL_VETO_MAX;
-    CommandData.pumps.lock_point = 1;
-    CommandData.pointing_mode.mode = P_LOCK;
-    CommandData.pointing_mode.X = 0;
-    CommandData.pointing_mode.Y = LockPosition(rvalues[0]);
-    CommandData.pointing_mode.w = 0;
-    CommandData.pointing_mode.h = 0;
-    CommandData.pointing_mode.vaz = 0;
-    CommandData.pointing_mode.del = 0;
-    bprintf(info, "Commands: Lock Mode: %g\n", CommandData.pointing_mode.Y);
+      /***************************************/
+      /********** Pointing Motor Gains *******/
+    case roll_gain:/* roll Gains */
+      CommandData.roll_gain.P = ivalues[0];
+      break;
+    case el_gain:  /* ele gains */
+      CommandData.ele_gain.P = ivalues[0];
+      CommandData.ele_gain.I = ivalues[1];
+      break;
+    case az_gain:  /* az gains */
+      CommandData.azi_gain.P = ivalues[0];
+      CommandData.azi_gain.I = ivalues[1];
+      break;
+    case pivot_gain:  /* pivot gains */
+      CommandData.pivot_gain.SP = (rvalues[0] + 2.605) / 7.9498291016e-5;
+      CommandData.pivot_gain.P = ivalues[1];
+      break;
+    case back_emf:
+      CommandData.emf_gain = rvalues[0] * 6500;
+      CommandData.emf_offset = rvalues[1] * 500;
+      break;
 
-    /***************************************/
-    /********** Balance System  ************/
-  } else if (command == setpoints) {
-    CommandData.pumps.bal_on = rvalues[0] * 1648.;
-    CommandData.pumps.bal_off = rvalues[1] * 1648.;
-    CommandData.pumps.bal_target = rvalues[2] * 1648.;
-  } else if (command == bal_level)
-    CommandData.pumps.pwm1 = 2047 - rvalues[0] * 2047. / 100;
-  else if (command == bal_gain) {
-    CommandData.pumps.bal_gain = rvalues[0];
+      /***************************************/
+      /********** Inner Frame Lock  **********/
+    case lock:  /* Lock Inner Frame */
+      if (CommandData.pumps.bal_veto >= 0)
+        CommandData.pumps.bal_veto = BAL_VETO_MAX;
+      CommandData.pumps.lock_point = 1;
+      CommandData.pointing_mode.mode = P_LOCK;
+      CommandData.pointing_mode.X = 0;
+      CommandData.pointing_mode.Y = LockPosition(rvalues[0]);
+      CommandData.pointing_mode.w = 0;
+      CommandData.pointing_mode.h = 0;
+      CommandData.pointing_mode.vaz = 0;
+      CommandData.pointing_mode.del = 0;
+      bprintf(info, "Commands: Lock Mode: %g\n", CommandData.pointing_mode.Y);
+      break;
 
-    /***************************************/
-    /********** Cooling System  ************/
-  } else if (command == spare_level)
-    CommandData.pumps.pwm2 = 2047 - rvalues[0] * 2047. / 100;
-  else if (command == inner_level)
-    CommandData.pumps.pwm3 = 2047 - rvalues[0] * 2047. / 100;
-  else if (command == outer_level)
-    CommandData.pumps.pwm4 = 2047 - rvalues[0] * 2047. / 100;
+      /***************************************/
+      /********** Balance System  ************/
+    case setpoints:
+      CommandData.pumps.bal_on = rvalues[0] * 1648.;
+      CommandData.pumps.bal_off = rvalues[1] * 1648.;
+      CommandData.pumps.bal_target = rvalues[2] * 1648.;
+      break;
+    case bal_level:
+      CommandData.pumps.pwm1 = 2047 - rvalues[0] * 2047. / 100;
+      break;
+    case bal_gain:
+      CommandData.pumps.bal_gain = rvalues[0];
+      break;
 
-  /***************************************/
-  /******** Electronics Heaters  *********/
-  else if (command == t_gyro1_set) {  /* gyro heater setpoint */
-    CommandData.gyheat[0].setpoint = rvalues[0];
-    CommandData.gyheat[0].age = 0;
-  } else if (command == t_gyro2_set) {  /* gyro heater setpoint */
-    CommandData.gyheat[1].setpoint = rvalues[0];
-    CommandData.gyheat[1].age = 0;
-  } else if (command == t_gyro1_gain) {  /* gyro heater gains */
-    CommandData.gyheat[0].gain.P = ivalues[0];
-    CommandData.gyheat[0].gain.I = ivalues[1];
-    CommandData.gyheat[0].gain.D = ivalues[2];
-  } else if (command == t_gyro2_gain) {  /* gyro heater gains */
-    CommandData.gyheat[1].gain.P = ivalues[0];
-    CommandData.gyheat[1].gain.I = ivalues[1];
-    CommandData.gyheat[1].gain.D = ivalues[2];
+      /***************************************/
+      /********** Cooling System  ************/
+    case spare_level:
+      CommandData.pumps.pwm2 = 2047 - rvalues[0] * 2047. / 100;
+      break;
+    case inner_level:
+      CommandData.pumps.pwm3 = 2047 - rvalues[0] * 2047. / 100;
+      break;
+    case outer_level:
+      CommandData.pumps.pwm4 = 2047 - rvalues[0] * 2047. / 100;
+      break;
 
-    /***************************************/
-    /*************** Misc  *****************/
-  } else if (command == timeout)        /* Set timeout */
-    CommandData.timeout = ivalues[0];
-  else if (command == alice_file)  /* change downlink XML file */
-    CommandData.alice_file = ivalues[0];
-  else if (command == plugh) /* A hollow voice says "Plugh". */
-    CommandData.plover = ivalues[0];
-  else if (command == apcu_charge) {
-    CommandData.apcu_reg = rvalues[0]; // v_topoff, in V
-    CommandData.apcu_auto = 0;
-  } else if (command == dpcu_charge) {
-    CommandData.dpcu_reg = rvalues[0]; // v_topoff, in V
-    CommandData.dpcu_auto = 0;
-  } else if (command == auto_apcu) {
-    CommandData.apcu_trim = rvalues[0];
-    CommandData.apcu_auto = 1;
-  } else if (command == auto_dpcu) {
-    CommandData.dpcu_trim = rvalues[0];
-    CommandData.dpcu_auto = 1;
- 
-  /***************************************/
-  /*************** Bias  *****************/
-  } else if (command == bias1_level) {    /* Set bias 1 */
-    CommandData.Bias.SetLevel1 = 1;
-    CommandData.Bias.bias1 = ivalues[0];
-  } else if (command == bias2_level) {   /* Set bias 2 */
-    CommandData.Bias.SetLevel2 = 1;
-    CommandData.Bias.bias2 = ivalues[0];
-  } else if (command == bias3_level) {   /* Set bias 3 */
-    CommandData.Bias.SetLevel3 = 1;
-    CommandData.Bias.bias3 = ivalues[0];
-  } else if (command == phase) {
-    if (ivalues[0] >= 5 && ivalues[0] <= 16) 
-      CommandData.Phase[ivalues[0] - 5] = ivalues[1];
+      /***************************************/
+      /******** Electronics Heaters  *********/
+    case t_gyro1_set:  /* gyro heater setpoint */
+      CommandData.gyheat[0].setpoint = rvalues[0];
+      CommandData.gyheat[0].age = 0;
+      break;
+    case t_gyro2_set:  /* gyro heater setpoint */
+      CommandData.gyheat[1].setpoint = rvalues[0];
+      CommandData.gyheat[1].age = 0;
+      break;
+    case t_gyro1_gain:  /* gyro heater gains */
+      CommandData.gyheat[0].gain.P = ivalues[0];
+      CommandData.gyheat[0].gain.I = ivalues[1];
+      CommandData.gyheat[0].gain.D = ivalues[2];
+      break;
+    case t_gyro2_gain:  /* gyro heater gains */
+      CommandData.gyheat[1].gain.P = ivalues[0];
+      CommandData.gyheat[1].gain.I = ivalues[1];
+      CommandData.gyheat[1].gain.D = ivalues[2];
+      break;
 
-    /***************************************/
-    /*********** Cal Lamp  *****************/
-  } else if (command == cal_pulse) {
-    CommandData.Cryo.calibrator = pulse;
-    CommandData.Cryo.calib_pulse = ivalues[0] / 10;
-  } else if (command == cal_repeat) {
-    CommandData.Cryo.calibrator = repeat;
-    CommandData.Cryo.calib_pulse = ivalues[0] / 10;
-    CommandData.Cryo.calib_period = ivalues[1] * 5;
+      /***************************************/
+      /*************** Misc  *****************/
+    case timeout:       /* Set timeout */
+      CommandData.timeout = ivalues[0];
+      break;
+    case alice_file: /* change downlink XML file */
+      CommandData.alice_file = ivalues[0];
+      break;
+    case plugh:/* A hollow voice says "Plugh". */
+      CommandData.plover = ivalues[0];
+      break;
+    case apcu_charge:
+      CommandData.apcu_reg = rvalues[0]; // v_topoff, in V
+      CommandData.apcu_auto = 0;
+      break;
+    case dpcu_charge:
+      CommandData.dpcu_reg = rvalues[0]; // v_topoff, in V
+      CommandData.dpcu_auto = 0;
+      break;
+    case auto_apcu:
+      CommandData.apcu_trim = rvalues[0];
+      CommandData.apcu_auto = 1;
+      break;
+    case auto_dpcu:
+      CommandData.dpcu_trim = rvalues[0];
+      CommandData.dpcu_auto = 1;
+      break;
+#endif
 
-    /***************************************/
-    /********* Cryo heat   *****************/
-  } else if (command == jfet_heat) {
-    CommandData.Cryo.JFETHeat = rvalues[0] * 2047./100.;
-    CommandData.Cryo.autoJFETheat = 0;
-  } else if (command == jfet_set) {
-    CommandData.Cryo.JFETSetOn = rvalues[0];
-    CommandData.Cryo.JFETSetOff = rvalues[1];
-  } else if (command == heatsw_heat) {
-    CommandData.Cryo.heatSwitch = rvalues[0] * 2047./100.;
-  } else if (command == cryo_heat) {
-    CommandData.Cryo.CryoSparePWM = rvalues[0] * 2047./100.;
-  } else if (command == bda_heat) {
-    CommandData.Cryo.BDAHeat = rvalues[0] * 2047./100.;
-    CommandData.Cryo.autoBDAHeat = 0;
-  } else if (command == bda_gain) {
-    CommandData.Cryo.BDAGain.P = ivalues[0];
-    CommandData.Cryo.BDAGain.I = ivalues[1];
-    CommandData.Cryo.BDAGain.D = ivalues[2];
-    CommandData.Cryo.BDAFiltLen = ivalues[3];
-  } else if (command == bda_set) {
-    CommandData.Cryo.BDAGain.SP = ivalues[0];
+      /***************************************/
+      /*************** Bias  *****************/
+    case bias1_level:    /* Set bias 1 */
+      CommandData.Bias.SetLevel1 = 1;
+      CommandData.Bias.bias1 = ivalues[0];
+      break;
+    case bias2_level:   /* Set bias 2 */
+      CommandData.Bias.SetLevel2 = 1;
+      CommandData.Bias.bias2 = ivalues[0];
+      break;
+    case bias3_level:   /* Set bias 3 */
+      CommandData.Bias.SetLevel3 = 1;
+      CommandData.Bias.bias3 = ivalues[0];
+      break;
+    case phase:
+      if (ivalues[0] >= 5 && ivalues[0] <= 16) 
+        CommandData.Phase[ivalues[0] - 5] = ivalues[1];
 
+      /***************************************/
+      /*********** Cal Lamp  *****************/
+      break;
+    case cal_pulse:
+      CommandData.Cryo.calibrator = pulse;
+      CommandData.Cryo.calib_pulse = ivalues[0] / 10;
+      break;
+    case cal_repeat:
+      CommandData.Cryo.calibrator = repeat;
+      CommandData.Cryo.calib_pulse = ivalues[0] / 10;
+      CommandData.Cryo.calib_period = ivalues[1] * 5;
+      break;
 
-    /***************************************/
-    /********* ISC Commanding  *************/
-  } else if (command == isc_set_focus) {
-    CommandData.ISCState[0].focus_pos = ivalues[0];
-  } else if (command == isc_foc_off) {
-    CommandData.ISCState[0].focusOffset = ivalues[0];
-  } else if (command == isc_set_aperture) {
-    CommandData.ISCState[0].ap_pos = ivalues[0];
-  } else if (command == isc_pixel_centre) {
-    CommandData.ISCState[0].roi_x = ivalues[0];
-    CommandData.ISCState[0].roi_y = ivalues[1];
-    CommandData.ISCState[0].display_mode = roi;
-  } else if (command == isc_blob_centre) {
-    CommandData.ISCState[0].blob_num = ivalues[0];
-    CommandData.ISCState[0].display_mode = blob;
-  } else if (command == isc_offset) {
-    CommandData.ISCState[0].azBDA = rvalues[0] * DEG2RAD;
-    CommandData.ISCState[0].elBDA = rvalues[1] * DEG2RAD;
-  } else if (command == isc_integrate) {
-    CommandData.ISCControl[0].fast_pulse_width = rvalues[0] / 10.;
-    CommandData.ISCControl[0].pulse_width = rvalues[1] / 10.;
-  } else if (command == isc_det_set) {
-    CommandData.ISCState[0].grid = ivalues[0];
-    CommandData.ISCState[0].sn_threshold = rvalues[1];
-    CommandData.ISCState[0].mult_dist = ivalues[2];
-  } else if (command == isc_max_blobs) {
-    CommandData.ISCState[0].maxBlobMatch = ivalues[0];
-  } else if (command == isc_catalogue) {
-    CommandData.ISCState[0].mag_limit = rvalues[0];
-    CommandData.ISCState[0].norm_radius = rvalues[1] * DEG2RAD;
-    CommandData.ISCState[0].lost_radius = rvalues[2] * DEG2RAD;
-  } else if (command == isc_tolerances) {
-    CommandData.ISCState[0].tolerance = rvalues[0] / 3600. * DEG2RAD;
-    CommandData.ISCState[0].match_tol = rvalues[1] / 100;
-    CommandData.ISCState[0].quit_tol = rvalues[2] / 100;
-    CommandData.ISCState[0].rot_tol = rvalues[3] * DEG2RAD;
-  } else if (command == isc_hold_current)
-    CommandData.ISCState[0].hold_current = ivalues[0];
-  else if (command == isc_save_period)
-    CommandData.ISCControl[0].save_period = ivalues[0] * 100;
-  else if (command == isc_gain) {
-    CommandData.ISCState[0].gain = rvalues[0];
-    CommandData.ISCState[0].offset = ivalues[1];
+      /***************************************/
+      /********* Cryo heat   *****************/
+    case jfet_heat:
+      CommandData.Cryo.JFETHeat = rvalues[0] * 2047./100.;
+      CommandData.Cryo.autoJFETheat = 0;
+      break;
+    case jfet_set:
+      CommandData.Cryo.JFETSetOn = rvalues[0];
+      CommandData.Cryo.JFETSetOff = rvalues[1];
+      break;
+    case heatsw_heat:
+      CommandData.Cryo.heatSwitch = rvalues[0] * 2047./100.;
+      break;
+    case cryo_heat:
+      CommandData.Cryo.CryoSparePWM = rvalues[0] * 2047./100.;
+      break;
+    case bda_heat:
+      CommandData.Cryo.BDAHeat = rvalues[0] * 2047./100.;
+      CommandData.Cryo.autoBDAHeat = 0;
+      break;
+    case bda_gain:
+      CommandData.Cryo.BDAGain.P = ivalues[0];
+      CommandData.Cryo.BDAGain.I = ivalues[1];
+      CommandData.Cryo.BDAGain.D = ivalues[2];
+      CommandData.Cryo.BDAFiltLen = ivalues[3];
+      break;
+    case bda_set:
+      CommandData.Cryo.BDAGain.SP = ivalues[0];
+      break;
 
+#ifndef BOLOTEST
+      /***************************************/
+      /********* ISC Commanding  *************/
+    case isc_set_focus:
+      CommandData.ISCState[0].focus_pos = ivalues[0];
+      break;
+    case isc_foc_off:
+      CommandData.ISCState[0].focusOffset = ivalues[0];
+      break;
+    case isc_set_aperture:
+      CommandData.ISCState[0].ap_pos = ivalues[0];
+      break;
+    case isc_pixel_centre:
+      CommandData.ISCState[0].roi_x = ivalues[0];
+      CommandData.ISCState[0].roi_y = ivalues[1];
+      CommandData.ISCState[0].display_mode = roi;
+      break;
+    case isc_blob_centre:
+      CommandData.ISCState[0].blob_num = ivalues[0];
+      CommandData.ISCState[0].display_mode = blob;
+      break;
+    case isc_offset:
+      CommandData.ISCState[0].azBDA = rvalues[0] * DEG2RAD;
+      CommandData.ISCState[0].elBDA = rvalues[1] * DEG2RAD;
+      break;
+    case isc_integrate:
+      CommandData.ISCControl[0].fast_pulse_width = rvalues[0] / 10.;
+      CommandData.ISCControl[0].pulse_width = rvalues[1] / 10.;
+      break;
+    case isc_det_set:
+      CommandData.ISCState[0].grid = ivalues[0];
+      CommandData.ISCState[0].sn_threshold = rvalues[1];
+      CommandData.ISCState[0].mult_dist = ivalues[2];
+      break;
+    case isc_max_blobs:
+      CommandData.ISCState[0].maxBlobMatch = ivalues[0];
+      break;
+    case isc_catalogue:
+      CommandData.ISCState[0].mag_limit = rvalues[0];
+      CommandData.ISCState[0].norm_radius = rvalues[1] * DEG2RAD;
+      CommandData.ISCState[0].lost_radius = rvalues[2] * DEG2RAD;
+      break;
+    case isc_tolerances:
+      CommandData.ISCState[0].tolerance = rvalues[0] / 3600. * DEG2RAD;
+      CommandData.ISCState[0].match_tol = rvalues[1] / 100;
+      CommandData.ISCState[0].quit_tol = rvalues[2] / 100;
+      CommandData.ISCState[0].rot_tol = rvalues[3] * DEG2RAD;
+      break;
+    case isc_hold_current:
+      CommandData.ISCState[0].hold_current = ivalues[0];
+      break;
+    case isc_save_period:
+      CommandData.ISCControl[0].save_period = ivalues[0] * 100;
+      break;
+    case isc_gain:
+      CommandData.ISCState[0].gain = rvalues[0];
+      CommandData.ISCState[0].offset = ivalues[1];
+      break;
 
-    /***************************************/
-    /********* OSC Commanding  *************/
-  } else if (command == osc_set_focus) {
-    CommandData.ISCState[1].focus_pos = ivalues[0];
-  } else if (command == osc_foc_off) {
-    CommandData.ISCState[1].focusOffset = ivalues[0];
-  } else if (command == osc_set_aperture) {
-    CommandData.ISCState[1].ap_pos = ivalues[0];
-  } else if (command == osc_pixel_centre) {
-    CommandData.ISCState[1].roi_x = ivalues[0];
-    CommandData.ISCState[1].roi_y = ivalues[1];
-    CommandData.ISCState[1].display_mode = roi;
-  } else if (command == osc_blob_centre) {
-    CommandData.ISCState[1].blob_num = ivalues[0];
-    CommandData.ISCState[1].display_mode = blob;
-  } else if (command == osc_offset) {
-    CommandData.ISCState[1].azBDA = rvalues[0] * DEG2RAD;
-    CommandData.ISCState[1].elBDA = rvalues[1] * DEG2RAD;
-  } else if (command == osc_integrate) {
-    CommandData.ISCControl[1].fast_pulse_width = rvalues[0] / 10.;
-    CommandData.ISCControl[1].pulse_width = rvalues[1] / 10.;
-  } else if (command == osc_det_set) {
-    CommandData.ISCState[1].grid = ivalues[0];
-    CommandData.ISCState[1].sn_threshold = rvalues[1];
-    CommandData.ISCState[1].mult_dist = ivalues[2];
-  } else if (command == osc_max_blobs) {
-    CommandData.ISCState[1].maxBlobMatch = ivalues[0];
-  } else if (command == osc_catalogue) {
-    CommandData.ISCState[1].mag_limit = rvalues[0];
-    CommandData.ISCState[1].norm_radius = rvalues[1] * DEG2RAD;
-    CommandData.ISCState[1].lost_radius = rvalues[2] * DEG2RAD;
-  } else if (command == osc_tolerances) {
-    CommandData.ISCState[1].tolerance = rvalues[0] / 3600. * DEG2RAD;
-    CommandData.ISCState[1].match_tol = rvalues[1] / 100;
-    CommandData.ISCState[1].quit_tol = rvalues[2] / 100;
-    CommandData.ISCState[1].rot_tol = rvalues[3] * DEG2RAD;
-  } else if (command == osc_hold_current)
-    CommandData.ISCState[1].hold_current = ivalues[0];
-  else if (command == osc_save_period)
-    CommandData.ISCControl[1].save_period = ivalues[0] * 100;
-  else if (command == osc_gain) {
-    CommandData.ISCState[1].gain = rvalues[0];
-    CommandData.ISCState[1].offset = ivalues[1];
-
-  } else {
-    bputs(warning, "Commands: Invalid Multi Word Command***\n");
-    return; /* invalid command - don't update */
+      /***************************************/
+      /********* OSC Commanding  *************/
+    case osc_set_focus:
+      CommandData.ISCState[1].focus_pos = ivalues[0];
+      break;
+    case osc_foc_off:
+      CommandData.ISCState[1].focusOffset = ivalues[0];
+      break;
+    case osc_set_aperture:
+      CommandData.ISCState[1].ap_pos = ivalues[0];
+      break;
+    case osc_pixel_centre:
+      CommandData.ISCState[1].roi_x = ivalues[0];
+      CommandData.ISCState[1].roi_y = ivalues[1];
+      CommandData.ISCState[1].display_mode = roi;
+      break;
+    case osc_blob_centre:
+      CommandData.ISCState[1].blob_num = ivalues[0];
+      CommandData.ISCState[1].display_mode = blob;
+      break;
+    case osc_offset:
+      CommandData.ISCState[1].azBDA = rvalues[0] * DEG2RAD;
+      CommandData.ISCState[1].elBDA = rvalues[1] * DEG2RAD;
+      break;
+    case osc_integrate:
+      CommandData.ISCControl[1].fast_pulse_width = rvalues[0] / 10.;
+      CommandData.ISCControl[1].pulse_width = rvalues[1] / 10.;
+      break;
+    case osc_det_set:
+      CommandData.ISCState[1].grid = ivalues[0];
+      CommandData.ISCState[1].sn_threshold = rvalues[1];
+      CommandData.ISCState[1].mult_dist = ivalues[2];
+      break;
+    case osc_max_blobs:
+      CommandData.ISCState[1].maxBlobMatch = ivalues[0];
+      break;
+    case osc_catalogue:
+      CommandData.ISCState[1].mag_limit = rvalues[0];
+      CommandData.ISCState[1].norm_radius = rvalues[1] * DEG2RAD;
+      CommandData.ISCState[1].lost_radius = rvalues[2] * DEG2RAD;
+      break;
+    case osc_tolerances:
+      CommandData.ISCState[1].tolerance = rvalues[0] / 3600. * DEG2RAD;
+      CommandData.ISCState[1].match_tol = rvalues[1] / 100;
+      CommandData.ISCState[1].quit_tol = rvalues[2] / 100;
+      CommandData.ISCState[1].rot_tol = rvalues[3] * DEG2RAD;
+      break;
+    case osc_hold_current:
+      CommandData.ISCState[1].hold_current = ivalues[0];
+      break;
+    case osc_save_period:
+      CommandData.ISCControl[1].save_period = ivalues[0] * 100;
+      break;
+    case osc_gain:
+      CommandData.ISCState[1].gain = rvalues[0];
+      CommandData.ISCState[1].offset = ivalues[1];
+      break;
+#endif
+    default:
+      bputs(warning, "Commands: Invalid Multi Word Command***\n");
+      return; /* invalid command - don't update */
   }
 
-  i_point = GETREADINDEX(point_index);
+#ifndef BOLOTEST
+  int i_point = GETREADINDEX(point_index);
 
   if (!scheduled)
     CommandData.pointing_mode.t = PointingData[i_point].t + CommandData.timeout;
   else
     CommandData.pointing_mode.t = PointingData[i_point].t;
+#endif
 
   WritePrevStatus();
 }
@@ -1012,7 +1206,7 @@ const char* CommandName(int is_multi, int command)
 
 void ScheduledCommand(struct ScheduleEvent *event)
 {
-  
+
   if (event->is_multi) {
     int i;
     int index = MIndex(event->command);
@@ -1063,11 +1257,11 @@ void MKSAltitude (unsigned char *indata) {
   SIPData.MKSalt.hi = ((unsigned short *)indata)[0];;
   SIPData.MKSalt.med = ((unsigned short *)indata)[1];;
   SIPData.MKSalt.lo = ((unsigned short *)indata)[2];;
-  
+
   WritePrevStatus();
 }
 
-
+#ifndef BOLOTEST
 /* Send TDRSS Low Rate Packet */
 
 void SendDownData(char tty_fd) {
@@ -1164,6 +1358,7 @@ void SendDownData(char tty_fd) {
   }
 #endif
 }
+#endif
 
 /* compute the size of the data queue for the given command */
 int DataQSize(int index) {
@@ -1249,6 +1444,7 @@ void WatchFIFO () {
 
 char *COMM[] = {"/dev/ttyS0", "/dev/ttyS4"};
 
+#ifndef BOLOTEST
 void WatchPort (void* parameter) {
   unsigned char buf;
   unsigned short *indatadumper;
@@ -1474,6 +1670,7 @@ void WatchPort (void* parameter) {
     pthread_mutex_unlock(&mutex);
   }
 }
+#endif
 
 /************************************************************/
 /*                                                          */

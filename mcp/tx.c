@@ -156,7 +156,11 @@ void WriteAux(void) {
 
   i_point = GETREADINDEX(point_index);
 
+#ifdef BOLOTEST
+  t = mcp_systime(NULL);
+#else
   t = PointingData[i_point].t;
+#endif
 
   WriteData(aliceFileAddr, CommandData.alice_file, NIOS_QUEUE);
   WriteData(timeoutAddr, CommandData.pointing_mode.t - t, NIOS_QUEUE);
@@ -237,6 +241,7 @@ struct NiosStruct* GetSCNiosAddr(char* field, int which)
   return GetNiosAddr(buffer);
 }
 
+#ifndef BOLOTEST
 void StoreStarCameraData(int index, int which)
 {
   static int firsttime[2] = {1, 1};
@@ -900,6 +905,7 @@ void StoreData(int index)
   StoreStarCameraData(index, 0); /* write ISC data */
   StoreStarCameraData(index, 1); /* write OSC data */
 }
+#endif
 
 void InitTxFrame(unsigned short *RxFrame)
 {
@@ -1033,11 +1039,13 @@ void UpdateBBCFrame(unsigned short *RxFrame) {
   if (index == 0) {
     if (!mcp_initial_controls)
       SyncADC();
-    SensorResets();
     WriteAux();
     CryoControl();
     PhaseControl();
+#ifndef BOLOTEST
+    SensorResets();
     ChargeController();
+#endif
   }
 
   if (!mcp_initial_controls)
