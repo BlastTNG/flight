@@ -235,6 +235,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
 {
 #ifndef BOLOTEST
   int i_point = GETREADINDEX(point_index);
+  double sun_az;
 #endif
 
   if (!scheduled)
@@ -254,8 +255,8 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.pointing_mode.w = 0;
       CommandData.pointing_mode.h = 0;
       break;
-    case antisun: /* turn antisolar (az-only)*/
-      double sun_az = PointingData[i_point].sun_az + 180;
+    case antisun: /* turn antisolar (az-only) */
+      sun_az = PointingData[i_point].sun_az + 180;
       NormalizeAngle(&sun_az);
 
       CommandData.pointing_mode.mode = P_AZEL_GOTO;
@@ -773,6 +774,10 @@ void SetParameters(enum multiCommand command, unsigned short *dataq,
 void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues,
     int scheduled)
 {
+#ifndef BOLOTEST
+  int i;
+#endif
+
   /* Update CommandData struct with new info
    * If the parameter is type 'i'     set CommandData using ivalues[i]
    * If the parameter is type 'f'/'l' set CommandData using rvalues[i]
@@ -856,7 +861,7 @@ void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues,
     case quad:
       CommandData.pointing_mode.mode = P_QUAD;
       CommandData.pointing_mode.ra[0] = rvalues[0];
-      for (int i = 0; i < 4; i++) {
+      for (i = 0; i < 4; i++) {
         CommandData.pointing_mode.ra[i] = rvalues[i * 2];
         CommandData.pointing_mode.dec[i] = rvalues[i * 2 + 1];
       }

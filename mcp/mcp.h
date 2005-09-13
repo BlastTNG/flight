@@ -35,6 +35,8 @@ extern unsigned int tdrss_index;
 
 #define TEMPORAL_OFFSET 0
 
+#define MAX_LINE_LENGTH 1024
+
 #ifdef BOLOTEST
 #  define USE_FIFO_CMD
 #endif

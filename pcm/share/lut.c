@@ -31,7 +31,6 @@
 
 #define MAXITER 10
 #define TOLERANCE (10.0/3600.*M_PI/180.)
-#define MAX_LINE_LENGTH 1024
 
 /***************************************************************************/
 /*    GetLine: read non-comment line from file                             */
