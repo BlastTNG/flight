@@ -1386,6 +1386,11 @@ void WatchFIFO () {
   int mcommand_count = 0;
   char *mcommand_data[DATA_Q_SIZE];
 
+  int i;
+  for (i = 0; i < DATA_Q_SIZE; ++i) {
+    mcommand_data[i] = NULL;
+  }
+
   double rvalues[MAX_N_PARAMS];
   int ivalues[MAX_N_PARAMS];
 
