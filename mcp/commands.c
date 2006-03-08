@@ -20,7 +20,8 @@
  *
  */
 
-#define INCLUDE_VARS
+/* Define this symbol to have mcp log all SIP traffic */
+#undef SIP_CHATTER
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1488,17 +1489,23 @@ void WatchPort (void* parameter) {
       if (timer == 800) {
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_POSITION, tty_fd);
-        //        bprintf(info, "Commands: COMM%i: Request SIP Position\n", port + 1);
+#ifdef SIP_CHATTER
+        bprintf(info, "Commands: COMM%i: Request SIP Position\n", port + 1);
+#endif
         pthread_mutex_unlock(&mutex);
       } else if (timer == 1700) {
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_TIME, tty_fd);
-        //        bprintf(info, "Commands: COMM%i: Request SIP Time\n", port + 1);
+#ifdef SIP_CHATTER
+        bprintf(info, "Commands: COMM%i: Request SIP Time\n", port + 1);
+#endif
         pthread_mutex_unlock(&mutex);	
       } else if (timer > 2500) { 
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_ALTITUDE, tty_fd);
-        //        bprintf(info, "Commands: COMM%i: Request SIP Altitude\n", port + 1);
+#ifdef SIP_CHATTER
+        bprintf(info, "Commands: COMM%i: Request SIP Altitude\n", port + 1);
+#endif
         pthread_mutex_unlock(&mutex);
         timer = 0;
       }
@@ -1525,19 +1532,29 @@ void WatchPort (void* parameter) {
       case 1: /* wating for packet type */
         if (buf == 0x13) { /* Send data request */
           readstage = 3;
-          //bprintf(info, "Commands: COMM%i: Data request\n", port + 1);
+#ifdef SIP_CHATTER
+          bprintf(info, "Commands: COMM%i: Data request\n", port + 1);
+#endif
         } else if (buf == 0x14) { /* Command */
           readstage = 2;
-          //bprintf(info, "Commands: COMM%i: Command\n", port + 1);
+#ifdef SIP_CHATTER
+          bprintf(info, "Commands: COMM%i: Command\n", port + 1);
+#endif
         } else if (buf == 0x10) { /* GPS Position */
           readstage = 4;
-          //bprintf(info, "Commands: COMM%i: GPS Position\n", port + 1);
+#ifdef SIP_CHATTER
+          bprintf(info, "Commands: COMM%i: GPS Position\n", port + 1);
+#endif
         } else if (buf == 0x11) { /* GPS Time */
           readstage = 5;
-          //bprintf(info, "Commands: COMM%i: GPS Time\n", port + 1);
+#ifdef SIP_CHATTER
+          bprintf(info, "Commands: COMM%i: GPS Time\n", port + 1);
+#endif
         } else if (buf == 0x12) { /* MKS Altitude */
           readstage = 6;
-          //bprintf(info, "Commands: COMM%i: MKS Altitude\n", port + 1);
+#ifdef SIP_CHATTER
+          bprintf(info, "Commands: COMM%i: MKS Altitude\n", port + 1);
+#endif
         } else {
           bprintf(warning, "Commands: COMM%i: Bad packet received: "
               "Unrecognised Packet Type: %02X\n", port + 1, buf);
