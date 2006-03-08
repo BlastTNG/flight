@@ -34,7 +34,7 @@
 #include "pointing_struct.h"
 #include "mcp.h"
 
-#define ARIEN "192.168.62.7"
+#define ARIEN "192.168.1.7"
 #define ARIEN_PORT 11235
 
 ss_packet_data SunSensorData[3];
