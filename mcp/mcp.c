@@ -86,6 +86,7 @@ void Pointing();
 void WatchPort(void*);
 void WatchDGPS(void);
 void IntegratingStarCamera(void);
+void ActuatorBus(void);
 void WatchFIFO(void);
 void FrameFileWriter(void);
 void TDRSSWriter(void);
@@ -612,6 +613,7 @@ int main(int argc, char *argv[]) {
   pthread_t bi0_id;
   pthread_t sensors_id;
   pthread_t dgps_id;
+  pthread_t abus_id;
   pthread_t isc_id;
   pthread_t osc_id;
 #endif
@@ -717,6 +719,7 @@ int main(int argc, char *argv[]) {
 
 #ifndef BOLOTEST
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
+//  pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
   pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
   pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
 
