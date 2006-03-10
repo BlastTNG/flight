@@ -58,8 +58,10 @@ struct ChannelStruct WideSlowChannels[] = {
   {"isc_ra",       'w', LOOP1,  8,              LI2H,              0.0, 'U'},
   {"isc_dec",      'w', LOOP1, 10,          LI2DEG/2.,            -90., 'U'},
   {"time",         'w', LOOP1, 12,                1.0,             0.0, 'U'},
+  {"isc_framenum", 'w', LOOP1, 33,                1.0,             0.0, 'U'},
   {"osc_ra",       'w', LOOP3, 26,               LI2H,             0.0, 'U'},
   {"osc_dec",      'w', LOOP3, 28,          LI2DEG/2.,            -90., 'U'},
+  {"osc_framenum", 'w', LOOP3, 31,                1.0,             0.0, 'U'},
   {"isc_mcpnum",   'w', LOOP2, 61,                1.0,             0.0, 'U'},
   {"osc_mcpnum",   'w', LOOP3, 58,                1.0,             0.0, 'U'},
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U'},
@@ -293,8 +295,7 @@ struct ChannelStruct SlowChannels[] = {
   {"bal_off",      'w', LOOP1, 30,           1./1648.,             0.0, 'u'},
   {"bal_target",   'w', LOOP1, 31,           1./1648.,            -5.0, 'u'},
   {"bal_veto",     'w', LOOP1, 32,                1.0,             0.0, 's'},
-  {"isc_framenum", 'w', LOOP1, 33,                1.0,             0.0, 'u'},
-  {"bias_lev1",    'w', LOOP1, 34,                1.0,             0.0, 'u'},
+  /* LOOP1 33-34 are wide */
   {"bias_lev2",    'w', LOOP1, 35,                1.0,             0.0, 'u'},
   {"bias_lev3",    'w', LOOP1, 36,                1.0,             0.0, 'u'},
   {"sip_alt",      'w', LOOP1, 37,                4.0,             0.0, 'u'},
@@ -411,8 +412,7 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_mapmean",  'w', LOOP3, 25,                 1.,             0.0, 'u'},
   /* LOOP3 26-29 are wide */
   {"osc_fpulse",   'w', LOOP3, 30,                10.,             0.0, 'u'},
-  {"osc_framenum", 'w', LOOP3, 31,                1.0,             0.0, 'u'},
-  {"osc_error",    'w', LOOP3, 32,                 1.,             0.0, 'u'},
+  /* LOOP3 31-32 are wide */
   {"osc_az",       'w', LOOP3, 33,              I2DEG,             0.0, 'u'},
   {"osc_el",       'w', LOOP3, 34,              I2DEG,             0.0, 'u'},
   {"osc_sigma",    'w', LOOP3, 35,              I2DEG,             0.0, 'u'},
@@ -511,6 +511,8 @@ struct ChannelStruct SlowChannels[] = {
   {"schedule",     'w', LOOP5,  1,                 1.,              0., 'u'},
   {"isc_rd_sigma", 'w', LOOP5,  2,                1.0,             0.0, 'u'},
   {"sip_mks_lo",   'w', LOOP5,  3,           0.327045,       -5.944902, 'u'},
+  {"bias_lev1",    'w', LOOP5,  4,                1.0,             0.0, 'u'},
+  {"osc_error",    'w', LOOP5,  5,                 1.,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
