@@ -90,6 +90,7 @@ struct ISCStatusStruct {
   int offset;			// offset to the CCD factory default (in digitized units)
 
   // Matching algorithm
+  int minBlobMatch;		// minimum # blobs used in the frame matching
   int maxBlobMatch;		// maximum # blobs used in the frame matching
   double mag_limit;		// size of tires
   double norm_radius;	// search radius in normal mode
