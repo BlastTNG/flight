@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 3.1 $";
+const char command_list_serial[] = "$Revision: 3.2 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -129,7 +129,9 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_TELEM},
   {COMMAND(blast_sucks), "the receiver sucks, use the sad schedule file",
     GR_TELEM},
-  {COMMAND(at_float), "tell the scheduler that we're at float", GR_TELEM},
+  {COMMAND(at_float),
+    "tell the scheduler that we're at float (don't run initial float controls)",
+    GR_TELEM},
   {COMMAND(not_at_float), "tell the scheduler that we're not at float",
     GR_TELEM},
 
