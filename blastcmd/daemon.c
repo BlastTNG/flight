@@ -44,7 +44,9 @@
 #include "daemon.h"
 #include "command_list.h"
 
+#ifdef USE_AUTHENTICATION
 #define GOOD_ADDR "193.44.5.11"
+#endif
 
 int SIPRoute(int sock, int t_link, int t_route, char* buffer)
 {
@@ -264,11 +266,13 @@ void Daemonise(int route, int no_fork)
   int addrlen, sock, csock, lastsock;
   fd_set fdlist, fdread, fdwrite;
 
+#ifdef USE_AUTHENTICATION
   /* the addresses we allow connections from */
   struct in_addr good_addr;
   struct in_addr local_addr;
   inet_aton(GOOD_ADDR, &good_addr);
   inet_aton("127.0.0.1", &local_addr);
+#endif
 
   /* open our output before daemonising just in case it fails. */
   if (route == 1) /* fifo */
@@ -352,6 +356,7 @@ void Daemonise(int route, int no_fork)
                 lastsock = csock;
               printf("connect from %s accepted on socket %i\n",
                   inet_ntoa(addr.sin_addr), csock);
+#ifdef USE_AUTHENTICATION
               if (!memcmp(&addr.sin_addr, &good_addr, sizeof(struct in_addr))) {
                 printf("Autentication OK from client.\n");
                 conn[csock].state = 0;
@@ -363,6 +368,9 @@ void Daemonise(int route, int no_fork)
                 printf("Failed authentication from client.\n");
                 conn[csock].state = 8;
               }
+#else
+              conn[csock].state = 0;
+#endif
             }
           } else if (conn[n].state != 8) { /* read from authorised client */
             if ((size = recv(n, &buffer, 1024, 0)) == -1)
