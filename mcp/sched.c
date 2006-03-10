@@ -40,8 +40,8 @@ int pinIsIn();
 
 int doing_schedule = 0;
 
-#define NOMINAL_LATITUDE 67.82 /* degrees North */
-#define LATITUDE_BAND     6.00 /* in degrees of latitude */
+#define NOMINAL_LATITUDE -77.50 /* degrees North */
+#define LATITUDE_BAND     2.00 /* in degrees of latitude */
 #define LATITUDE_OVERLAP  1.00 /* hysteresis between the bands,
                                   in degress of latitude */
 
