@@ -1100,8 +1100,9 @@ void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues,
       CommandData.ISCState[0].sn_threshold = rvalues[1];
       CommandData.ISCState[0].mult_dist = ivalues[2];
       break;
-    case isc_max_blobs:
-      CommandData.ISCState[0].maxBlobMatch = ivalues[0];
+    case isc_blobs:
+      CommandData.ISCState[0].minBlobMatch = ivalues[0];
+      CommandData.ISCState[0].maxBlobMatch = ivalues[1];
       break;
     case isc_catalogue:
       CommandData.ISCState[0].mag_limit = rvalues[0];
@@ -1158,8 +1159,9 @@ void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues,
       CommandData.ISCState[1].sn_threshold = rvalues[1];
       CommandData.ISCState[1].mult_dist = ivalues[2];
       break;
-    case osc_max_blobs:
-      CommandData.ISCState[1].maxBlobMatch = ivalues[0];
+    case osc_blobs:
+      CommandData.ISCState[1].minBlobMatch = ivalues[0];
+      CommandData.ISCState[1].maxBlobMatch = ivalues[1];
       break;
     case osc_catalogue:
       CommandData.ISCState[1].mag_limit = rvalues[0];

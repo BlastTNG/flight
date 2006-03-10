@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 3.2 $";
+const char command_list_serial[] = "$Revision: 3.3 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -642,10 +642,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(isc_max_blobs), "max number of blobs used in solution",
-    GR_ISC_PARAM, 1,
+  {COMMAND(isc_blobs), "number of blobs used in solution",
+    GR_ISC_PARAM, 2,
     {
-      {"# of Blobs", 0, MAX_ISC_BLOBS, 'i', "ISC_MAXBLOBS"}
+      {"Min Blobs", 0, MAX_ISC_BLOBS, 'i', "ISC_MINBLOBS"},
+      {"Max Blobs", 0, MAX_ISC_BLOBS, 'i', "ISC_MAXBLOBS"}
     }
   },
 
@@ -737,10 +738,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(osc_max_blobs), "max number of blobs used in solution",
-    GR_OSC_PARAM, 1,
+  {COMMAND(osc_blobs), "number of blobs used in solution",
+    GR_OSC_PARAM, 2,
     {
-      {"# of Blobs", 0, MAX_ISC_BLOBS, 'i', "OSC_MAXBLOBS"}
+      {"Min Blobs", 0, MAX_ISC_BLOBS, 'i', "OSC_MINBLOBS"},
+      {"Max Blobs", 0, MAX_ISC_BLOBS, 'i', "OSC_MAXBLOBS"}
     }
   },
 
