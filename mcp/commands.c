@@ -665,6 +665,13 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.sucks = 1;
       break;
 
+    case at_float:
+      CommandData.at_float = 1;
+      break;
+    case not_at_float:
+      CommandData.at_float = 0;
+      break;
+
     case reap:  /* Miscellaneous commands */
       bprintf(err, "Commands: Reaping the watchdog tickle on command.");
       pthread_cancel(watchdog_id);
@@ -1460,8 +1467,8 @@ void WatchPort (void* parameter) {
   unsigned char buf;
   unsigned short *indatadumper;
   unsigned char indata[20];
-  char readstage = 0;
-  char tty_fd;
+  int readstage = 0;
+  int tty_fd;
 
   int port = (int)parameter;
 
@@ -1789,6 +1796,7 @@ void InitCommandData() {
   bputs(warning, "Commands: Regenerating Command Data and prev_status\n");
 
   /** prev_status overrides this stuff **/
+  CommandData.at_float = 0;
   CommandData.timeout = 3600;
 
   CommandData.apcu_reg = 28.0;

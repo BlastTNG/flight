@@ -76,6 +76,7 @@ struct CommandDataStruct {
   unsigned short int alice_file;
   unsigned short int sucks;
   unsigned short int lat_range; 
+  unsigned short int at_float;
 
   double apcu_reg;
   double  apcu_trim;

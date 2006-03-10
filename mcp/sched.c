@@ -374,7 +374,7 @@ void DoSched(void) {
   }
 
   i_dgps = GETREADINDEX(dgpspos_index);
-  if (DGPSPos[i_dgps].at_float)
+  if (DGPSPos[i_dgps].at_float && !CommandData.at_float)
     if (pinIsIn()) {
       bputs(info, "Scheduler: *** Executing initial float commands. ***\n");
       /* el on */
@@ -398,6 +398,7 @@ void DoSched(void) {
       // out of sched mode for a while
       CommandData.pointing_mode.t = t + 30;
       doing_schedule = 0;
+      CommandData.at_float = 1;
       bputs(info, "Scheduler: *** Initial float commands complete. ***\n");
       return;
     }
