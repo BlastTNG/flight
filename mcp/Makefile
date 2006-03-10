@@ -24,9 +24,9 @@ OBJS = mcp.o blast.o channels.o command_list.o commands.o das.o derived.o \
 
 # These are only needed by the flight version
 ifndef BOLOTEST
-OBJS := $(OBJS) auxiliary.o crc.o dataholder.o dgps.o ephem_read.o fftsg_h.o \
-       fir.o geomag.o isc.o motors.o pointing.o radbox.o sched.o slow_dl.o \
-			 starpos.o sunsensor.o tdrss.o
+OBJS := $(OBJS) actuators.o auxiliary.o crc.o dataholder.o dgps.o ephem_read.o \
+		    fftsg_h.o fir.o geomag.o isc.o motors.o pointing.o radbox.o sched.o \
+			  slow_dl.o starpos.o sunsensor.o tdrss.o
 endif
 
 .PHONEY: fifo install all debug

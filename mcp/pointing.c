@@ -42,6 +42,9 @@
 /* #include "sslutNA.h" */
 #include "fir.h"
 
+#define FLOAT_ALT 30480
+#define FRAMES_TO_OK_ATFLOAT 100
+
 /* #define GY1_OFFSET (-0.1365) */
 /* #define GY2_OFFSET (0.008) */
 /* #define GY3_OFFSET (0.140) */
@@ -233,8 +236,9 @@ int MagConvert(double *mag_az) {
     gmtime_r(&t, &now);
     year = 1900 + now.tm_year + now.tm_yday / 365.25;
 
-    GetMagModel(SIPData.GPSpos.alt / 1000.0, PointingData[i_point_read].lat,
-        -PointingData[i_point_read].lon, year, &fdec, &dip, &ti, &gv);
+    GetMagModel(PointingData[i_point_read].alt / 1000.0,
+        PointingData[i_point_read].lat, -PointingData[i_point_read].lon,
+        year, &fdec, &dip, &ti, &gv);
 
     dec = fdec;
 
@@ -693,7 +697,8 @@ void Pointing()
   double ss_az, mag_az;
   double dgps_az, dgps_pitch, dgps_roll;
   double gy_roll, gy2, gy3, el_rad, clin_elev;
-  static int no_dgps_pos = 0, last_i_dgpspos = 0;
+  static int no_dgps_pos = 0, last_i_dgpspos = 0, using_dgps = -1;
+  static int i_at_float = 0;
 
   static int firsttime = 1;
 
@@ -903,22 +908,42 @@ void Pointing()
   /************************************************/
   /** Set the official Lat and Long: prefer dgps **/
   if (i_dgpspos != last_i_dgpspos) {
+    if (using_dgps != 0)
+      bprintf(info, "Pointing: Using dGPS for positional data");
     i_dgpspos = last_i_dgpspos;
     PointingData[point_index].lat = DGPSPos[i_dgpspos].lat;
     PointingData[point_index].lon = DGPSPos[i_dgpspos].lon;
+    PointingData[point_index].alt = DGPSPos[i_dgpspos].alt;
     no_dgps_pos = 0;
   } else {
     no_dgps_pos++;
     if (no_dgps_pos > 3000) { // no dgps for 30 seconds - revert to sip
+      if (using_dgps != 1)
+        bprintf(info, "Pointing: Using SIP for positional data");
       PointingData[point_index].lat = SIPData.GPSpos.lat;
       PointingData[point_index].lon = SIPData.GPSpos.lon;
+      PointingData[point_index].alt = SIPData.GPSpos.alt;
+      using_dgps = 1;
+    }
+  }
+
+  /* At float check */
+  if (PointingData[point_index].alt < FLOAT_ALT) {
+    PointingData[point_index].at_float = 0;
+    i_at_float = 0;
+  } else {
+    i_at_float++;
+    if (i_at_float > FRAMES_TO_OK_ATFLOAT) {
+      PointingData[point_index].at_float = 1;
+    } else {
+      PointingData[point_index].at_float = 0;
     }
   }
 
   /* Save lat/lon */
   CommandData.lat = PointingData[point_index].lat;
   CommandData.lon = PointingData[point_index].lon;
-  
+
   /*****************************/
   /** set time related things **/
   PointingData[point_index].mcp_frame = ACSData.mcp_frame;
@@ -946,8 +971,8 @@ void Pointing()
   /**      do elevation solution      **/
   clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
   /* x = ACSData.clin_elev; */
-/*   clin_elev = ((((1.13288E-19*x - 1.83627E-14)*x + */
-/* 		 1.17066e-9)*x - 3.66444E-5)*x + 0.567815)*x - 3513.56; */
+  /*   clin_elev = ((((1.13288E-19*x - 1.83627E-14)*x + */
+  /* 		 1.17066e-9)*x - 3.66444E-5)*x + 0.567815)*x - 3513.56; */
 
   EvolveElSolution(&ClinEl, RG.gy1, PointingData[i_point_read].gy1_offset,
       clin_elev, 1);
@@ -983,14 +1008,14 @@ void Pointing()
   } else {
     ss_since_ok++;
   }
-  
+
   dgps_ok = DGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
   if (dgps_ok) {
     dgps_since_ok = 0;
   } else {
     dgps_since_ok++;
   }
-  
+
   /** evolve solutions **/
   EvolveAzSolution(&NullAz,
       RG.gy2, PointingData[i_point_read].gy2_offset,
@@ -1023,7 +1048,7 @@ void Pointing()
   }
 
   //bprintf(info, "off: %g %g %g %g\n", EncEl.angle, ClinEl.angle, EncEl.gy_offset, ClinEl.gy_offset);
-  
+
   AddAzSolution(&AzAtt, &NullAz, 1);
   /** add az solutions **/
   if (CommandData.use_mag) {

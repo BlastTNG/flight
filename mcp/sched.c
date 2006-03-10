@@ -314,7 +314,6 @@ void DoSched(void) {
   static int last_s = -1;
   static int last_l = -1;
   int i_sched, i_point;
-  int i_dgps;
   int i, index;
   struct ScheduleType *S = &_S[CommandData.sucks][CommandData.lat_range];
   struct ScheduleEvent event;
@@ -373,8 +372,7 @@ void DoSched(void) {
     return;
   }
 
-  i_dgps = GETREADINDEX(dgpspos_index);
-  if (DGPSPos[i_dgps].at_float && !CommandData.at_float)
+  if (PointingData[i_point].at_float && !CommandData.at_float)
     if (pinIsIn()) {
       bputs(info, "Scheduler: *** Executing initial float commands. ***\n");
       /* el on */

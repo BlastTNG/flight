@@ -133,6 +133,8 @@ struct PointingDataStruct {
   double gy_roll_amp;
   double lat;       // degrees
   double lon;       // degrees
+  double alt;       // m
+  int at_float;
   int mcp_frame;
   time_t t;
   time_t lst;
@@ -187,7 +189,6 @@ struct DGPSPosStruct{
   double direction; //
   double climb; //
   int n_sat;  //
-  int at_float; //
 };
 
 struct ISCPulseType {

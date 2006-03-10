@@ -581,6 +581,7 @@ void StoreData(int index)
   static struct NiosStruct* elAddr;
   static struct NiosStruct* raAddr;
   static struct NiosStruct* decAddr;
+  static struct NiosStruct* altAddr;
   static struct NiosStruct* latAddr;
   static struct NiosStruct* lonAddr;
   static struct NiosStruct* timeAddr;
@@ -667,6 +668,7 @@ void StoreData(int index)
     raAddr = GetNiosAddr("ra");
     decAddr = GetNiosAddr("dec");
     latAddr = GetNiosAddr("lat");
+    altAddr = GetNiosAddr("alt");
     lonAddr = GetNiosAddr("lon");
     timeAddr = GetNiosAddr("time");
     lstAddr = GetNiosAddr("lst");
@@ -745,7 +747,7 @@ void StoreData(int index)
   /********** SIP GPS Data **********/
   WriteData(sipLatAddr, (int)(SIPData.GPSpos.lat*DEG2I), NIOS_QUEUE);
   WriteData(sipLonAddr, (int)(SIPData.GPSpos.lon*DEG2I), NIOS_QUEUE);
-  WriteData(sipAltAddr, (int)(SIPData.GPSpos.alt*0.25), NIOS_QUEUE);
+  WriteData(sipAltAddr, (int)(SIPData.GPSpos.alt), NIOS_QUEUE);
   WriteData(sipTimeAddr, SIPData.GPStime.UTC, NIOS_QUEUE);
 
   /********** SIP MKS Altitude ************/
@@ -777,6 +779,7 @@ void StoreData(int index)
       NIOS_QUEUE);
   WriteData(lonAddr, (unsigned int)(PointingData[i_point].lon * DEG2LI),
       NIOS_QUEUE);
+  WriteData(altAddr, (unsigned int)(PointingData[i_point].alt), NIOS_QUEUE);
 
   WriteData(mcpFrameAddr, PointingData[i_point].mcp_frame, NIOS_QUEUE);
   WriteData(timeAddr, PointingData[i_point].t, NIOS_QUEUE);

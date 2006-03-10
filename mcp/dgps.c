@@ -42,8 +42,6 @@ int dgpspos_index = 0;
 
 time_t DGPSTime;
 
-#define FLOAT_ALT 30480
-#define FRAMES_TO_OK_ATFLOAT 100
 #define LEAP_SECONDS 0
 
 void SetGPSPort(speed_t speed) {
@@ -100,7 +98,6 @@ void WatchDGPS() {
   float s,m;
   struct tm ts;
   int pos_ok;
-  static int i_at_float = 0;
 
   bputs(startup, "dGPS: WatchDGPS startup\n");
 
@@ -113,7 +110,6 @@ void WatchDGPS() {
   DGPSPos[0].lat = 0;
   DGPSPos[0].lon = 0;
   DGPSPos[0].alt = 0;
-  DGPSPos[0].at_float = 0;
   DGPSPos[0].speed = 0;
   DGPSPos[0].direction = 0;
   DGPSPos[0].climb = 0;
@@ -307,24 +303,11 @@ void WatchDGPS() {
       inptr += GetField(inptr,outstr);
       sscanf(outstr,"%lf", &(DGPSPos[dgpspos_index].climb));
 
-      if (DGPSPos[dgpspos_index].n_sat <= 3) {
+      if (DGPSPos[dgpspos_index].n_sat <= 3)
         pos_ok = 0;
-      }
 
-      if (pos_ok) {
+      if (pos_ok)
         dgpspos_index = INC_INDEX(dgpspos_index);
-        if (DGPSPos[dgpspos_index].alt < FLOAT_ALT) {
-          DGPSPos[dgpspos_index].at_float = 0;
-          i_at_float = 0;
-        } else {
-          i_at_float++;
-          if (i_at_float > FRAMES_TO_OK_ATFLOAT) {
-            DGPSPos[dgpspos_index].at_float = 1;
-          } else {
-            DGPSPos[dgpspos_index].at_float = 0;
-          }
-        }
-      }
     }
   }
 }

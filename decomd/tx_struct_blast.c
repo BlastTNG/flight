@@ -298,7 +298,7 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP1 33-34 are wide */
   {"bias_lev2",    'w', LOOP1, 35,                1.0,             0.0, 'u'},
   {"bias_lev3",    'w', LOOP1, 36,                1.0,             0.0, 'u'},
-  {"sip_alt",      'w', LOOP1, 37,                4.0,             0.0, 'u'},
+  {"sip_alt",      'w', LOOP1, 37,                1.0,             0.0, 'u'},
   /* LOOP1 38-41 are wide */
   {"isc_mapmean",  'w', LOOP1, 42,                 1.,             0.0, 'u'},
   {"dgps_pitch",   'w', LOOP1, 43,              I2DEG,             0.0, 'u'},
@@ -513,6 +513,7 @@ struct ChannelStruct SlowChannels[] = {
   {"sip_mks_lo",   'w', LOOP5,  3,           0.327045,       -5.944902, 'u'},
   {"bias_lev1",    'w', LOOP5,  4,                1.0,             0.0, 'u'},
   {"osc_error",    'w', LOOP5,  5,                 1.,             0.0, 'u'},
+  {"alt",          'w', LOOP5,  6,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
