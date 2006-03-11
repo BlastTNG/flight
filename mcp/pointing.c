@@ -995,7 +995,8 @@ void Pointing()
     AddElSolution(&ElAtt, &OSCEl, 0);
   }
 
-  PointingData[point_index].gy1_offset = ElAtt.gy_offset;
+  PointingData[point_index].gy1_offset = (CommandData.el_autogyro)
+    ? ElAtt.gy_offset : CommandData.gy1_offset;
   PointingData[point_index].el = ElAtt.el;
 
   /*******************************/
@@ -1070,7 +1071,7 @@ void Pointing()
 
 
   PointingData[point_index].az = AzAtt.az;
-  if (CommandData.autogyro) {
+  if (CommandData.az_autogyro) {
     PointingData[point_index].gy2_offset = AzAtt.gy2_offset;
     PointingData[point_index].gy3_offset = AzAtt.gy3_offset;
   } else {

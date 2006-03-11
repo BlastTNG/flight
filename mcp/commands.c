@@ -278,8 +278,11 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case reset_trims:
       ClearTrim();
       break;
-    case auto_gyro:
-      CommandData.autogyro = 1;
+    case az_auto_gyro:
+      CommandData.az_autogyro = 1;
+      break;
+    case el_auto_gyro:
+      CommandData.el_autogyro = 1;
       break;
 
     case az_off:/* disable az motors */
@@ -885,10 +888,14 @@ void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues,
     case ra_dec_set:
       SetRaDec(rvalues[0], rvalues[1]);
       break;
-    case gyro_override:
+    case az_gyro_offset:
       CommandData.gy2_offset = rvalues[0];
       CommandData.gy3_offset = rvalues[1];
-      CommandData.autogyro = 0;
+      CommandData.az_autogyro = 0;
+      break;
+    case el_gyro_offset:
+      CommandData.gy1_offset = rvalues[0];
+      CommandData.el_autogyro = 0;
       break;
 
       /***************************************/
@@ -1871,7 +1878,8 @@ void InitCommandData() {
   SIPData.MKScal.b_med = 0;
   SIPData.MKScal.b_lo = 0;
 
-  CommandData.autogyro = 1;
+  CommandData.az_autogyro = 1;
+  CommandData.el_autogyro = 1;
 
   CommandData.pumps.pwm3 = 1638; /* inner frame cooling default --  20% */
   CommandData.pumps.pwm4 = 1638; /* outer frame cooling default --  20% */

@@ -91,7 +91,8 @@ union DerivedUnion DerivedChannels[] = {
       "ELCLIN_VETO",
       "OSC_VETO",
       "IS_SCHED",
-      "AUTO_GYRO"
+      "AZ_AUTO_GYRO",
+      "EL_AUTO_GYRO"
       ),
   BITFIELD("sensor_reset",
       "",

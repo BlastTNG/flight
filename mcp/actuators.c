@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/select.h>
+#include <errno.h>
 
 #include "mcp.h"
 
@@ -87,7 +88,7 @@ int act_setserial(char *input_tty) {
 
 void BusSend(int who, const char* what)
 {
-  size_t len = strlen(what) + 6;
+  size_t len = strlen(what) + 7;
   char *buffer = malloc(len);
 
   snprintf(buffer, len, "/%i%s\r\n", who + 1, what);
@@ -127,9 +128,10 @@ int BusRecv(char* buffer)
       if (i <= 0) {
         if (state == 7 || state == 13)
           break;
-        if (read_tries) {
+        if (errno == EAGAIN && read_tries) {
           read_tries--;
           usleep(1000);
+          continue;
         } else {
           *ptr = 0;
           berror(warning, "Unexpected out-of-data reading bus (%i %s)", state,

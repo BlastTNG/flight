@@ -718,8 +718,8 @@ int main(int argc, char *argv[]) {
   InitTxFrame(RxFrame);
 
 #ifndef BOLOTEST
-//  pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
-  pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
+  pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
+//  pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
   pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
   pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
 

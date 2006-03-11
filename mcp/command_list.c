@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 3.3 $";
+const char command_list_serial[] = "$Revision: 3.4 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -79,7 +79,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(sun_veto), "veto sun sensor", GR_VETO},
   {COMMAND(sun_allow), "un-veto sun sensor", GR_VETO},
 
-  {COMMAND(auto_gyro), "automatically calculate gyro offsets", GR_TRIM},
+  {COMMAND(az_auto_gyro), "automatically calculate az gyro offsets", GR_TRIM},
+  {COMMAND(el_auto_gyro), "automatically calculate el gyro offset", GR_TRIM},
   {COMMAND(reset_trims), "reset coarse pointing trims to zero", GR_TRIM},
   {COMMAND(trim_to_isc), "trim coarse sensors to ISC", GR_TRIM},
   {COMMAND(trim_to_osc), "trim coarse sensors to OSC", GR_TRIM},
@@ -312,10 +313,16 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(gyro_override), "manually set gyro offsets", GR_TRIM, 2,
+  {COMMAND(az_gyro_offset), "manually set az gyro offsets", GR_TRIM, 2,
     {
       {"Gyro 2 offset (deg/s)", -0.5, 0.5, 'f', "GY2_OFFSET"},
       {"Gyro 3 offset (deg/s)", -0.5, 0.5, 'f', "GY3_OFFSET"}
+    }
+  },
+
+  {COMMAND(el_gyro_offset), "manually set el gyro offset", GR_TRIM, 1,
+    {
+      {"Gyro 1 offset (deg/s)", -0.5, 0.5, 'f', "GY1_OFFSET"},
     }
   },
 

@@ -16,8 +16,8 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 123        /* total number of single word cmds */
-#define N_MCOMMANDS 76         /* total number of multiword commands */
+#define N_SCOMMANDS 124        /* total number of single word cmds */
+#define N_MCOMMANDS 77         /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -60,7 +60,7 @@ extern const char *GroupNames[N_GROUPS];
 /* singleCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
 enum singleCommand {
-  isc_auto_focus,   auto_gyro,          az_off,           az_on,
+  isc_auto_focus,   az_auto_gyro,       az_off,           az_on,
   balance_allow,    balance_veto,       bias_ac,          bias_dc,
   cal_off,          cal_on,             auto_bdaheat,     charcoal_off,
   charcoal_on,      clock_ext,          clock_int,        coldplate_off,
@@ -90,7 +90,7 @@ enum singleCommand {
   osc_veto,         osc_allow,          reap,             isc_eye_on,
   osc_eye_on,       osc_eye_off,        inner_cool_auto,  outer_cool_auto,
   trim_to_osc,      antisun,            blast_rocks,      blast_sucks,
-  fridge_cycle,     at_float,           not_at_float,
+  fridge_cycle,     at_float,           not_at_float,     el_auto_gyro
 };
 
 struct scom {
@@ -119,11 +119,12 @@ enum multiCommand {
   roll_gain,         isc_set_aperture,  isc_set_focus,    setpoints,
   bda_heat,          spare_level,       t_gyro1_set,      osc_gain,
   t_gyro1_gain,      timeout,           isc_tolerances,   vcap,
-  vbox,              alice_file,        gyro_override,    isc_hold_current,
+  vbox,              alice_file,        az_gyro_offset,   isc_hold_current,
   isc_save_period,   back_emf,          osc_offset,       plugh,
   bda_gain,          bda_set,           jfet_set,         isc_foc_off,
   osc_foc_off,       t_gyro2_gain,      t_gyro2_set,      apcu_charge,
-  dpcu_charge,       auto_apcu,         auto_dpcu,        quad
+  dpcu_charge,       auto_apcu,         auto_dpcu,        quad,
+  el_gyro_offset
 };
 
 struct par {

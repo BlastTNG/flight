@@ -881,7 +881,8 @@ void StoreData(int index)
   if (PointingData[i_point].t >= CommandData.pointing_mode.t)
     sensor_veto |= (1 << 7);
 
-  sensor_veto |= (CommandData.autogyro << 8);
+  sensor_veto |= (CommandData.az_autogyro << 8);
+  sensor_veto |= (CommandData.el_autogyro << 9);
 
   WriteData(sensorVetoAddr, sensor_veto, NIOS_QUEUE);
 
