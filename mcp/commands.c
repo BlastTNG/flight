@@ -495,10 +495,10 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.pumps.bal1_on = 0;
       break;
     case balpump_up:
-      CommandData.pumps.bal1_reverse = 0;
+      CommandData.pumps.bal1_reverse = 1;
       break;
     case balpump_down:
-      CommandData.pumps.bal1_reverse = 1;
+      CommandData.pumps.bal1_reverse = 0;
       break;
     case sprpump_on:
       CommandData.pumps.bal2_on = 1;

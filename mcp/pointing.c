@@ -914,6 +914,7 @@ void Pointing()
     PointingData[point_index].lat = DGPSPos[i_dgpspos].lat;
     PointingData[point_index].lon = DGPSPos[i_dgpspos].lon;
     PointingData[point_index].alt = DGPSPos[i_dgpspos].alt;
+    using_dgps = 0;
     no_dgps_pos = 0;
   } else {
     no_dgps_pos++;
