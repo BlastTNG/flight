@@ -342,7 +342,8 @@ int SSConvert(double *ss_az) {
     return (0);
   
   az = LutCal(&ssAzLut, (double)SunSensorData[i_ss].az_center);
-  *ss_az =  sun_az - az;
+  *ss_az =  -az;//sun_az - az;
+#warning "SUN AZ DISABLED"
 
   NormalizeAngle(ss_az);
   
@@ -841,9 +842,9 @@ void Pointing()
     SSAz.trim = CommandData.ss_az_trim;
 
     ClinEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(ClinEl.fs, (int)(100*SR));
+    initFir(ClinEl.fs, (int)(500*SR));
     EncEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(EncEl.fs, (int)(100*SR));
+    initFir(EncEl.fs, (int)(500*SR));
 
     NullAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     NullAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
@@ -852,18 +853,18 @@ void Pointing()
     
     MagAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     MagAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(MagAz.fs2, (int)(100*SR)); 
-    initFir(MagAz.fs3, (int)(100*SR)); 
+    initFir(MagAz.fs2, (int)(500*SR)); 
+    initFir(MagAz.fs3, (int)(500*SR)); 
 
     DGPSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     DGPSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(DGPSAz.fs2, (int)(100*10)); 
-    initFir(DGPSAz.fs3, (int)(100*10)); 
+    initFir(DGPSAz.fs2, (int)(500*SR)); 
+    initFir(DGPSAz.fs3, (int)(500*SR)); 
 
     SSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     SSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(SSAz.fs2, (int)(100*SR)); 
-    initFir(SSAz.fs3, (int)(100*SR));
+    initFir(SSAz.fs2, (int)(500*SR)); 
+    initFir(SSAz.fs3, (int)(500*SR));
 
     // the first t about to be read needs to be set
     PointingData[GETREADINDEX(point_index)].t = mcp_systime(NULL); // CPU time
