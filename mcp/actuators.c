@@ -34,11 +34,12 @@
 #include "mcp.h"
 
 /* Define this symbol to have mcp log all actuator bus traffic */
-#define ACTBUS_CHATTER
+#undef ACTBUS_CHATTER
 
 #define ACT_BUS "/dev/ttyS1"
 
 #define NACT 4
+#define POLL_TIMEOUT 30000 /* 5 minutes */
 
 /* EZ Stepper status bits */
 #define EZ_ERROR  0x0F
@@ -93,7 +94,7 @@ void BusSend(int who, const char* what)
 
   snprintf(buffer, len, "/%i%s\r\n", who + 1, what);
 #ifdef ACTBUS_CHATTER
-  bprintf(info, "Wrote: %s", buffer);
+  bprintf(info, "ActBus: Request=%s", buffer);
 #endif
   if (write(bus_fd, buffer, strlen(buffer)) < 0)
     berror(err, "Error writing on bus");
@@ -209,13 +210,18 @@ int BusRecv(char* buffer)
 
   *ptr = '\0';
 
+#ifdef ACTBUS_CHATTER
+  bprintf(info, "ActBus: Response=%s (%i)\n", buffer, status);
+#endif
+
   return status;
 }
 
-void PollBus(int rescan, int *status)
+int PollBus(int rescan, int *status)
 {
   int i, result;
   char buffer[1000];
+  int all_ok = 1;
 
   if (rescan)
     bputs(info, "ActBus: Repolling Actuator Bus.");
@@ -223,24 +229,48 @@ void PollBus(int rescan, int *status)
     bputs(info, "ActBus: Polling Actuator Bus.");
 
   for (i = 0; i < NACT; ++i) {
+    if (rescan && status[i] != -1)
+      continue;
     BusSend(i, "&");
     if ((result = BusRecv(buffer)) < 0) {
       bprintf(warning, "ActBus: No response from %s, will repoll later.",
           name[i]);
-      status[i] = 1;
+      status[i] = -1;
+      all_ok = 0;
+    } else if (!strncmp(buffer, "EZHR17EN AllMotion", 18)) {
+      bprintf(info, "ActBus: Found %s at address %i.\n", name[i], i + 1);
+      status[i] = 0;
     } else {
-      bprintf(info, "Read: %i = %s\n", result, buffer);
+      bprintf(warning,
+          "ActBus: Unrecognised response from %s,  will repoll later.\n",
+          buffer);
+      status[i] = -1;
+      all_ok = 0;
     }
   }
+
+  return all_ok;
 }
 
 void ActuatorBus(void)
 {
   unsigned int controller_status[NACT];
+  int poll_timeout = POLL_TIMEOUT;
+  int all_ok = 0;
 
   bputs(startup, "ActBus: ActuatorBus startup.");
 
   bus_fd = act_setserial(ACT_BUS);
 
-  PollBus(0, controller_status);
+  all_ok = PollBus(0, controller_status);
+
+  for (;;) {
+    if (poll_timeout == 0 && !all_ok) {
+      all_ok = PollBus(1, controller_status);
+      poll_timeout = POLL_TIMEOUT;
+    } else if (poll_timeout > 0)
+      poll_timeout--;
+
+    usleep(10000);
+  }
 }
