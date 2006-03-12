@@ -53,6 +53,7 @@
 #define GY3_OFFSET (0)
 
 #define MAX_ISC_AGE 200
+#define FIR_LENGTH (500 * SR)
 
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
     double *el);
@@ -842,9 +843,9 @@ void Pointing()
     SSAz.trim = CommandData.ss_az_trim;
 
     ClinEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(ClinEl.fs, (int)(500*SR));
+    initFir(ClinEl.fs, FIR_LENGTH);
     EncEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(EncEl.fs, (int)(500*SR));
+    initFir(EncEl.fs, FIR_LENGTH);
 
     NullAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     NullAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
@@ -853,18 +854,18 @@ void Pointing()
     
     MagAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     MagAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(MagAz.fs2, (int)(500*SR)); 
-    initFir(MagAz.fs3, (int)(500*SR)); 
+    initFir(MagAz.fs2, FIR_LENGTH); 
+    initFir(MagAz.fs3, FIR_LENGTH); 
 
     DGPSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     DGPSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(DGPSAz.fs2, (int)(500*SR)); 
-    initFir(DGPSAz.fs3, (int)(500*SR)); 
+    initFir(DGPSAz.fs2, FIR_LENGTH); 
+    initFir(DGPSAz.fs3, FIR_LENGTH); 
 
     SSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     SSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(SSAz.fs2, (int)(500*SR)); 
-    initFir(SSAz.fs3, (int)(500*SR));
+    initFir(SSAz.fs2, FIR_LENGTH); 
+    initFir(SSAz.fs3, FIR_LENGTH);
 
     // the first t about to be read needs to be set
     PointingData[GETREADINDEX(point_index)].t = mcp_systime(NULL); // CPU time
