@@ -1841,8 +1841,8 @@ void InitCommandData() {
 
   CommandData.gyheat[0].setpoint = 30.0;
   CommandData.gyheat[0].gain.P = 30;
-  CommandData.gyheat[0].gain.I = 5;
-  CommandData.gyheat[0].gain.D = 0;
+  CommandData.gyheat[0].gain.I = 10;
+  CommandData.gyheat[0].gain.D = 3;
 
   CommandData.gyheat[1].setpoint = 35.0;
   CommandData.gyheat[1].gain.P = 40;
