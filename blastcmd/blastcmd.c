@@ -398,13 +398,14 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
       dataq[dataqsize++] = ynt & 0x00007fff;          /* lower 15 bits */
     } else if (type == 's') {
       /* 7-bit character string */
-      char c = 0xff;
+      unsigned char c = 0xff;
       int j, len = strlen(parms[i]);
-      if (max > CMD_STRING_LEN)
-        max = CMD_STRING_LEN;
-      max += (max % 2);
-      for (j = 0; j < max; ++j) {
-        char q = (j > len) ? 0 : params[i][j] & 0x7F;
+      ynt = rint(max);
+      if (ynt > CMD_STRING_LEN)
+        ynt = CMD_STRING_LEN;
+      ynt += (ynt % 2);
+      for (j = 0; j < ynt; ++j) {
+        char q = (j > len) ? 0 : parms[i][j] & 0x7F;
         if (c == 0xff)
           c = q;
         else {
