@@ -76,11 +76,13 @@ class Defaults
     void Set(int, int, QString);
     int asInt(int, int);
     double asDouble(int, int);
+    const char* asString(int, int);
     void Save();
 
   private:
     double *rdefaults[MAX_N_PARAMS];
     int *idefaults[MAX_N_PARAMS];
+    char (*sdefaults[MAX_N_PARAMS])[32];
 };
 
 extern Defaults *defaults;

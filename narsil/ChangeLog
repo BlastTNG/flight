@@ -1,3 +1,14 @@
+2006-03-14 (2.1.0):
+	* doubleentry.cpp (DoubleEntry::SetStringValue): Add.
+	* doubleentry.cpp (DoubleEntry::SetDefaultValue, DoubleEntry::value): Update
+	for s-type parameters.
+	* narsil.cpp (Defaults::Defaults, Defaults::Save, Defaults::Set): Add
+	sdefaults code.
+	* narsil.cpp (Defaults::asString): Add.
+	* narsil.cpp (MainForm::ChooseCommand): Set DoubleEntry string directly for
+	s-type parameters.
+	* narsil.cpp (MainForm::SendCommand): Send s-type parameters verbatim.
+
 2005-06-13 (2.0.4):
 	* narsil.cpp (MainForm::SendCommand, MainForm::WriteErr): Fix a clash
 	between narsil error numbers and blastcmd error numbers: make narsil's

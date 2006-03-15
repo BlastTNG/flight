@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 3.6 $";
+const char command_list_serial[] = "$Revision: 3.7 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -219,6 +219,7 @@ struct scom scommands[N_SCOMMANDS] = {
  * i :  parameter is 15 bit unnormalised integer
  * f :  parameter is 15 bit renormalised floating point
  * l :  parameter is 30 bit renormalised floating point
+ * s :  parameter is 7-bit character string
  */
 struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(alice_file), "set XML file for compressed (6kbit) downlink",
@@ -345,6 +346,15 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Lock Elevation (deg)", 5, 90, 'f', "ENC_ELEV"}
     }
   },
+
+  {COMMAND(general), "send a general command string to the lock or actuators",
+    GR_LOCK, 2,
+    {
+        {"Address (1-4)", 1, 4, 'i', "1.0"},
+        {"Command", 0, 18, 's', ""},
+    }
+  },
+          
 
   {COMMAND(osc_offset), "set offset of OSC to primary beam",
     GR_TRIM | GR_OSC_PARAM, 2,

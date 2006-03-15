@@ -31,6 +31,7 @@ public:
   DoubleEntry(QWidget *parent, const char *name);
   void SetMinMax(double mi, double ma);
   void SetValue(double val);
+  void SetStringValue(const char* str);
   void SetType(char);
   void SetDefaultValue(int, int);
   void SetParentField(int com, int par);

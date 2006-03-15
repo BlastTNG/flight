@@ -95,9 +95,13 @@ void DoubleEntry::SetValue(double val) {
   }
 }
 
+void DoubleEntry::SetStringValue(const char* str) { setText(str); }
+
 void DoubleEntry::SetDefaultValue(int i, int j) {
   if (type == 'i')
     setText(QString::number(defaults->asInt(i, j)));
+  else if (type == 's')
+    setText(defaults->asString(i, j));
   else
     setText(QString::number(defaults->asDouble(i, j)));
 }
@@ -125,6 +129,8 @@ QString DoubleEntry::value() {
     if (v < iMin) v = iMin;
     if (v > iMax) v = iMax;
     setText(QString::number(v));
+  } else if (type == 's') {
+    setText(text());
   } else {
     double v = text().toDouble();
     if (v < rMin) v = rMin;

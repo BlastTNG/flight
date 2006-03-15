@@ -94,6 +94,8 @@ Defaults::Defaults()
   for (i = 0; i < MAX_N_PARAMS; ++i) {
     rdefaults[i] = (double*)malloc(sizeof(double) * client_n_mcommands);
     idefaults[i] = (int*)malloc(sizeof(int) * client_n_mcommands);
+    sdefaults[i] = (char(*)[CMD_STRING_LEN])malloc(sizeof(char) *
+        CMD_STRING_LEN * client_n_mcommands);
   }
 
   /* Read in previous default values */
@@ -101,15 +103,17 @@ Defaults::Defaults()
     for (i = 0; i < MAX_N_PARAMS; ++i) {
       n_read += read(fp, rdefaults[i], sizeof(double) * client_n_mcommands);
       n_read += read(fp, idefaults[i], sizeof(int) * client_n_mcommands);
+      n_read += read(fp, sdefaults[i], sizeof(char) * CMD_STRING_LEN
+          * client_n_mcommands);
     }
     close(fp);
   }
 
-  if (n_read != (int)(sizeof(int) + sizeof(double)) * client_n_mcommands
-      * MAX_N_PARAMS)
+  if (n_read != (int)(sizeof(int) + sizeof(double) + 32 * sizeof(char))
+      * client_n_mcommands * MAX_N_PARAMS)
     for (i = 0; i < client_n_mcommands; i++)
       for (j = 0; j < MAX_N_PARAMS; j++)
-        rdefaults[j][i] = idefaults[j][i] = 0;
+        rdefaults[j][i] = idefaults[j][i] = sdefaults[j][i][0] = 0;
 }
 
 //-------------------------------------------------------------
@@ -130,6 +134,8 @@ void Defaults::Save() {
     for (i = 0; i < MAX_N_PARAMS; ++i) {
       write(fp, rdefaults[i], sizeof(double) * client_n_mcommands);
       write(fp, idefaults[i], sizeof(int) * client_n_mcommands);
+      write(fp, sdefaults[i], sizeof(char) * CMD_STRING_LEN
+          * client_n_mcommands);
     }
     close(fp);
   }
@@ -139,10 +145,13 @@ void Defaults::Set(int i, int j, QString text)
 {
   idefaults[j][i] = text.toInt();
   rdefaults[j][i] = text.toDouble();
+  strncpy(sdefaults[j][i], text.ascii(), CMD_STRING_LEN - 1);
+  sdefaults[j][i][CMD_STRING_LEN - 1] = 0;
 }
 
 int Defaults::asInt(int i, int j) { return idefaults[j][i]; }
 double Defaults::asDouble(int i, int j) { return rdefaults[j][i]; }
+const char* Defaults::asString(int i, int j) { return sdefaults[j][i]; }
 
 //***************************************************************************
 //****     CLASS MainForm -- main control class
@@ -257,15 +266,20 @@ void MainForm::ChooseCommand() {
           NParamFields[i]->show();
           NParamFields[i]->SetParentField(index, i);
           NParamFields[i]->SetType(client_mcommands[index].params[i].type);
-          if (IsData) {
-            if (DataSource->readField(&indata,
-                                      client_mcommands[index].params[i].field,
-                                      DataSource->numFrames() - 2, -1) == 0)
+          if (client_mcommands[index].params[i].type == 's')
+            NParamFields[i]->SetStringValue(
+                client_mcommands[index].params[i].field);
+          else {
+            if (IsData) {
+              if (DataSource->readField(&indata,
+                    client_mcommands[index].params[i].field,
+                    DataSource->numFrames() - 2, -1) == 0)
+                NParamFields[i]->SetDefaultValue(index, i);
+              else
+                NParamFields[i]->SetValue(indata);
+            } else 
               NParamFields[i]->SetDefaultValue(index, i);
-            else
-              NParamFields[i]->SetValue(indata);
-          } else 
-            NParamFields[i]->SetDefaultValue(index, i);
+          }
         } else {
           NParamLabels[i]->hide();
           NParamFields[i]->hide();
@@ -591,6 +605,8 @@ void MainForm::SendCommand() {
         }
         if (client_mcommands[index].params[j].type == 'i')
           sprintf(buffer, " %i", defaults->asInt(index, j));
+        else if (client_mcommands[index].params[j].type == 's')
+          sprintf(buffer, " %s", defaults->asString(index, j));
         else
           sprintf(buffer, " %f", defaults->asDouble(index, j));
         strcat(request, buffer);
