@@ -1,3 +1,9 @@
+2006-03-15:
+	Release blastcmd-2.2.0
+
+	* blastcmd.c (ConfirmMultiSend, SendMCommand): Add s-type parameter handling
+	code.
+
 2006-03-10:
 	Release blastcmd-2.1.1
 

@@ -255,9 +255,15 @@ void ConfirmSingleSend(int i_cmd) {
 void ConfirmMultiSend(int i_cmd, char *params[], int np) {
   int i;
 
-  printf("\nMulti Command-> %s (%s)\n", mcommands[i_cmd].name, mcommands[i_cmd].about);
+  printf("\nMulti Command-> %s (%s)\n", mcommands[i_cmd].name,
+      mcommands[i_cmd].about);
   for (i = 0; i < np; i++)
-    printf("                %s = %f\n", mcommands[i_cmd].params[i].name, atof(params[i]));
+    if (mcommands[i_cmd].params[i].type == 's')
+      printf("                %s = %s\n", mcommands[i_cmd].params[i].name,
+          params[i]);
+    else
+      printf("                %s = %f\n", mcommands[i_cmd].params[i].name,
+          atof(params[i]));
 
   ConfirmSend();
 }
@@ -390,6 +396,24 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
       ynt = round((flote - min) * MAX_30BIT / (max - min)); 
       dataq[dataqsize++] = (ynt & 0x3fff8000) >> 15;  /* upper 15 bits */
       dataq[dataqsize++] = ynt & 0x00007fff;          /* lower 15 bits */
+    } else if (type == 's') {
+      /* 7-bit character string */
+      char c = 0xff;
+      int j, len = strlen(parms[i]);
+      if (max > CMD_STRING_LEN)
+        max = CMD_STRING_LEN;
+      max += (max % 2);
+      for (j = 0; j < max; ++j) {
+        char q = (j > len) ? 0 : params[i][j] & 0x7F;
+        if (c == 0xff)
+          c = q;
+        else {
+          dataq[dataqsize++] = (c << 8) | q;
+          c = 0xff;
+        }
+      }
+      if (c != 0xff)
+        dataq[dataqsize++] = c << 8;
     } else {
       printf("\nError in command definitions:\n   invalid parameter type '%c' "
           "for parameter %i of mutlicommand: %s\n\n", type, i,
