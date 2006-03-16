@@ -58,15 +58,17 @@ struct ChannelStruct WideSlowChannels[] = {
   {"isc_ra",       'w', LOOP1,  8,              LI2H,              0.0, 'U'},
   {"isc_dec",      'w', LOOP1, 10,          LI2DEG/2.,            -90., 'U'},
   {"time",         'w', LOOP1, 12,                1.0,             0.0, 'U'},
-  {"isc_framenum", 'w', LOOP1, 33,                1.0,             0.0, 'U'},
+  {"isc_framenum", 'w', LOOP1, 32,                1.0,             0.0, 'U'},
+  {"lat",          'w', LOOP1, 38,             LI2DEG,             0.0, 'S'},
+  {"lon",          'w', LOOP1, 40,             LI2DEG,             0.0, 'S'},
+  {"isc_mcpnum",   'w', LOOP2, 60,                1.0,             0.0, 'U'},
+  {"ra",           'w', LOOP3,  4,       24.0/65536.0,             0.0, 'U'},
   {"osc_ra",       'w', LOOP3, 26,               LI2H,             0.0, 'U'},
   {"osc_dec",      'w', LOOP3, 28,          LI2DEG/2.,            -90., 'U'},
   {"osc_framenum", 'w', LOOP3, 31,                1.0,             0.0, 'U'},
-  {"isc_mcpnum",   'w', LOOP2, 61,                1.0,             0.0, 'U'},
   {"osc_mcpnum",   'w', LOOP3, 58,                1.0,             0.0, 'U'},
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U'},
-  {"lat",          'w', LOOP1, 38,             LI2DEG,             0.0, 'U'},
-  {"lon",          'w', LOOP1, 40,             LI2DEG,             0.0, 'U'},
+  {"dec",          'w', LOOP5,  6,              I2DEG,             0.0, 'S'},
 /* Rox a la Jeff */
   {"t_he3fridge",  'r',  CRYO,  6,    ROX_C2V,   ROX_OFFSET, 'U'}, 
   {"t_m4",         'r',  CRYO,  8,    ROX_C2V,   ROX_OFFSET, 'U'}, 
@@ -294,8 +296,8 @@ struct ChannelStruct SlowChannels[] = {
   {"bal_on",       'w', LOOP1, 29,           1./1648.,             0.0, 'u'},
   {"bal_off",      'w', LOOP1, 30,           1./1648.,             0.0, 'u'},
   {"bal_target",   'w', LOOP1, 31,           1./1648.,            -5.0, 'u'},
-  {"bal_veto",     'w', LOOP1, 32,                1.0,             0.0, 's'},
-  /* LOOP1 33-34 are wide */
+  /* LOOP1 32-33 are wide */
+  {"bal_veto",     'w', LOOP1, 34,                1.0,             0.0, 's'},
   {"bias_lev2",    'w', LOOP1, 35,                1.0,             0.0, 'u'},
   {"bias_lev3",    'w', LOOP1, 36,                1.0,             0.0, 'u'},
   {"sip_alt",      'w', LOOP1, 37,                1.0,             0.0, 'u'},
@@ -380,16 +382,15 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_spulse",   'w', LOOP2, 57,               10.0,             0.0, 'u'},
   {"isc_hx_flag",  'w', LOOP2, 58,                1.0,             0.0, 'u'},
   {"isc_brra",     'w', LOOP2, 59,              I2DEG,             0.0, 'u'},
-  {"isc_brdec",    'w', LOOP2, 60,              I2DEG,             0.0, 'u'},
-  /* LOOP2 61-62 are wide */
+  /* LOOP2 60-61 are wide */
+  {"isc_brdec",    'w', LOOP2, 62,              I2DEG,             0.0, 'u'},
   {"isc_x_off",    'w', LOOP2, 63,              I2DEG,             0.0, 's'},
 
   {"osc_gain",     'w', LOOP3,  0,        100./65536.,             0.0, 'u'},
   {"isc_hold_i",   'w', LOOP3,  1,                1.0,             0.0, 'u'},
   {"isc_save_prd", 'w', LOOP3,  2,               0.01,             0.0, 'u'},
   {"isc_y_off",    'w', LOOP3,  3,              I2DEG,             0.0, 's'},
-  {"ra",           'w', LOOP3,  4,       24.0/65536.0,             0.0, 'u'},
-  {"dec",          'w', LOOP3,  5,              I2DEG,             0.0, 's'},
+  /* LOOP2 4-5 are wide */
   {"isc_offset",   'w', LOOP3,  6,                1.0,             0.0, 's'},
   {"bbc_fifo_size",'w', LOOP3,  7,             1./624,             0.0, 'u'},
   {"cpu_temp2",    'w', LOOP3,  8,               0.01,             0.0, 'u'},
@@ -513,7 +514,8 @@ struct ChannelStruct SlowChannels[] = {
   {"sip_mks_lo",   'w', LOOP5,  3,           0.327045,       -5.944902, 'u'},
   {"bias_lev1",    'w', LOOP5,  4,                1.0,             0.0, 'u'},
   {"osc_error",    'w', LOOP5,  5,                 1.,             0.0, 'u'},
-  {"alt",          'w', LOOP5,  6,                1.0,             0.0, 'u'},
+  /* LOOP5 6-7 are wide */
+  {"alt",          'w', LOOP5,  8,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
@@ -599,8 +601,8 @@ struct ChannelStruct FastChannels[] = {
 
   /* send data to ACS1 */
   {"gy1_heat",    'w',  ACS1,  1,             1.0,                    0.0, 'u'},
-  {"el_vreq",     'w',  ACS1,  4,             1.0,                 -32768, 'u'},
-  {"az_vreq",     'w',  ACS1, 14,             1.0,                 -32768, 'u'},
+  {"el_vreq",     'w',  ACS1,  4,  GY16_TO_DPS/6.,  -32768*GY16_TO_DPS/6., 'u'},
+  {"az_vreq",     'w',  ACS1, 14,  GY16_TO_DPS/6.,  -32768*GY16_TO_DPS/6., 'u'},
   {"cos_el",      'w',  ACS1,  9,             1.0,                    0.0, 'u'},
   {"sin_el",      'w',  ACS1, 10,             1.0,                    0.0, 'u'},
   {"gy4_errs",    'r',  ACS1, 58,             1.0,                    0.0, 'u'},
