@@ -762,8 +762,8 @@ void StoreData(int index)
   WriteData(elDirAddr, axes_mode.el_dir, NIOS_QUEUE);
   WriteData(azDestAddr, axes_mode.az_dest * DEG2I, NIOS_QUEUE);
   WriteData(elDestAddr, axes_mode.el_dest * DEG2I, NIOS_QUEUE);
-  WriteData(azVelAddr, axes_mode.az_dest * 6000., NIOS_QUEUE);
-  WriteData(elVelAddr, axes_mode.el_dest * 6000., NIOS_QUEUE);
+  WriteData(azVelAddr, axes_mode.az_vel * 6000., NIOS_QUEUE);
+  WriteData(elVelAddr, axes_mode.el_vel * 6000., NIOS_QUEUE);
 
   /********** Sun Sensor Data **********/
   WriteData(ssPrinAddr, SunSensorData[i_ss].prin, NIOS_QUEUE);
