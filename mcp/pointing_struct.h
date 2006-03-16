@@ -209,6 +209,8 @@ extern struct ISCPulseType isc_pulses[2];
 struct AxesModeStruct {
   int az_mode;
   int el_mode;
+  int el_dir;
+  int az_dir;
   double az_dest;
   double el_dest;
   double az_vel;

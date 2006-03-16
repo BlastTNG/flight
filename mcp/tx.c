@@ -52,6 +52,8 @@
 extern short int SamIAm;
 short int InCharge;
 
+extern struct AxesModeStruct axes_mode; /* motors.c */
+
 extern struct ISCStatusStruct ISCSentState[2];  /* isc.c */
 extern int bbc_fp;
 
@@ -629,6 +631,15 @@ void StoreData(int index)
   static struct NiosStruct *dgpsTrimAddr;
   static struct NiosStruct *ssTrimAddr;
 
+  /* low level scan mode diagnostics */
+  static struct NiosStruct *azModeAddr;
+  static struct NiosStruct *elModeAddr;
+  static struct NiosStruct *azDirAddr;
+  static struct NiosStruct *elDirAddr;
+  static struct NiosStruct *azDestAddr;
+  static struct NiosStruct *elDestAddr;
+  static struct NiosStruct *azVelAddr;
+  static struct NiosStruct *elVelAddr;
 
   int i_ss;
   int i_point;
@@ -730,10 +741,29 @@ void StoreData(int index)
     magTrimAddr = GetNiosAddr("mag_trim");
     dgpsTrimAddr = GetNiosAddr("dgps_trim");
     ssTrimAddr = GetNiosAddr("ss_trim");
+
+    azModeAddr = GetNiosAddr("az_mode");
+    elModeAddr = GetNiosAddr("el_mode");
+    azDestAddr = GetNiosAddr("az_dest");
+    elDestAddr = GetNiosAddr("el_dest");
+    azVelAddr = GetNiosAddr("az_vel");
+    elVelAddr = GetNiosAddr("el_vel");
+    azDirAddr = GetNiosAddr("az_dir");
+    elDirAddr = GetNiosAddr("el_dir");
   }
 
   i_point = GETREADINDEX(point_index);
   i_ss = GETREADINDEX(ss_index);
+
+  /* scan modes */
+  WriteData(azModeAddr, axes_mode.az_mode, NIOS_QUEUE);
+  WriteData(elModeAddr, axes_mode.el_mode, NIOS_QUEUE);
+  WriteData(azDirAddr, axes_mode.az_dir, NIOS_QUEUE);
+  WriteData(elDirAddr, axes_mode.el_dir, NIOS_QUEUE);
+  WriteData(azDestAddr, axes_mode.az_dest * DEG2I, NIOS_QUEUE);
+  WriteData(elDestAddr, axes_mode.el_dest * DEG2I, NIOS_QUEUE);
+  WriteData(azVelAddr, axes_mode.az_dest * 6000., NIOS_QUEUE);
+  WriteData(elVelAddr, axes_mode.el_dest * 6000., NIOS_QUEUE);
 
   /********** Sun Sensor Data **********/
   WriteData(ssPrinAddr, SunSensorData[i_ss].prin, NIOS_QUEUE);

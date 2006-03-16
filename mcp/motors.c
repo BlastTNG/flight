@@ -31,7 +31,10 @@
 #define MIN_EL 22.5
 #define MAX_EL 65.0
 
-struct AxesModeStruct axes_mode; /* low level velocity mode */
+struct AxesModeStruct axes_mode = {
+  .el_dir = 1,
+  .az_dir = 0
+}; /* low level velocity mode */
 
 int pinIsIn(void);  /* auxcontrol.c */
 void SetSafeDAz(double ref, double *A); /* in pointing.c */
@@ -392,7 +395,6 @@ void DoVCapMode() {
   double y, r,v;
   double x2, xw;
   double left, right;
-  static int dir = 1;
 
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
@@ -436,7 +438,7 @@ void DoVCapMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el1;
-    dir = -1;
+    axes_mode.el_dir = -1;
     return;
   } else if (el < el2 - EL_BORDER) {
     axes_mode.az_mode = AXIS_POSITION;
@@ -445,14 +447,14 @@ void DoVCapMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el2;
-    dir = 1;
+    axes_mode.el_dir = 1;
     return;
   } else if (el > el1) { /* turn around */
-    dir = -1;
+    axes_mode.el_dir = -1;
   } else if (el < el2) { /* turn around */
-    dir = 1;
+    axes_mode.el_dir = 1;
   }    
-  v_el = CommandData.pointing_mode.del * dir;
+  v_el = CommandData.pointing_mode.del * axes_mode.el_dir;
 
   /* we must be in range for elevation - go to el-vel mode */
   axes_mode.el_mode = AXIS_VEL;
@@ -485,7 +487,6 @@ void DoVBoxMode() {
   int i_point;
   double y, x, v;
   double left, right;
-  static int dir = 1;
 
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
@@ -529,7 +530,7 @@ void DoVBoxMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el1;
-    dir = -1;
+    axes_mode.el_dir = -1;
     return;
   } else if (el < el2 - EL_BORDER) {
     axes_mode.az_mode = AXIS_POSITION;
@@ -538,14 +539,14 @@ void DoVBoxMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el2;
-    dir = 1;
+    axes_mode.el_dir = 1;
     return;
   } else if (el> el1) { /* turn around */
-    dir = -1;
+    axes_mode.el_dir = -1;
   } else if (el < el2) { /* turn around */
-    dir = 1;
+    axes_mode.el_dir = 1;
   }
-  v_el = CommandData.pointing_mode.del * dir;
+  v_el = CommandData.pointing_mode.del * axes_mode.el_dir;
 
   /* we must be in range for elevation - go to el-vel mode */
   axes_mode.el_mode = AXIS_VEL;
@@ -728,7 +729,7 @@ void DoNewCapMode() {
   int new_step = 0;
 
   static double last_X=0, last_Y=0, last_w=0;
-  static double az_dir = 0, el_dir = 1, v_el = 0;
+  static double v_el = 0;
   static double targ_el=0.0;
   
   i_point = GETREADINDEX(point_index);
@@ -777,7 +778,7 @@ void DoNewCapMode() {
       axes_mode.el_vel = 0.0;
       v_el = 0.0;
       targ_el = -r;
-      el_dir = 1;
+      axes_mode.el_dir = 1;
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
@@ -818,32 +819,32 @@ void DoNewCapMode() {
   /** set El V **/
   new_step = 0;
   if (az<left) {
-    if (az_dir < 0) {
+    if (axes_mode.az_dir < 0) {
       az_distance = next_right - left;
       t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * SR);
       new_step = 1;
     }
-    az_dir = 1;
+    axes_mode.az_dir = 1;
   } else if (az>right) {
-    if (az_dir > 0) {
+    if (axes_mode.az_dir > 0) {
       az_distance = right - next_left;
       t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * SR);
       new_step = 1;
     }
-    az_dir = -1;
+    axes_mode.az_dir = -1;
   }
 
   if (new_step) {
     // set v for this step
     v_el = (targ_el - (el-cel))/t;
     // set targ_el for the next step
-    targ_el += CommandData.pointing_mode.del*el_dir;
+    targ_el += CommandData.pointing_mode.del*axes_mode.el_dir;
     if (targ_el>=r) {
       targ_el = r;
-      el_dir=-1;
+      axes_mode.el_dir=-1;
     } else if (targ_el<=-r) {
       targ_el = -r;
-      el_dir = 1;
+      axes_mode.el_dir = 1;
     }
   }
   
@@ -862,7 +863,7 @@ void DoNewCapMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el1;
-    el_dir = -1;
+    axes_mode.el_dir = -1;
     return;
   } else if (el < el2 - EL_BORDER) {
     axes_mode.az_mode = AXIS_POSITION;
@@ -871,13 +872,13 @@ void DoNewCapMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el2;
-    el_dir = 1;
+    axes_mode.el_dir = 1;
     return;
   }
   /* else if (el > el1) { */
-/*     el_dir = -1; */
+/*     axes_mode.el_dir = -1; */
 /*   } else if (el < el2) {  */
-/*     el_dir = 1; */
+/*     axes_mode.el_dir = 1; */
 /*   }     */
 
   axes_mode.el_mode = AXIS_VEL;
@@ -898,7 +899,7 @@ void DoNewBoxMode() {
   int new = 0;
 
   static double last_X=0, last_Y=0, last_w=0, last_h = 0;
-  static double az_dir = 0, el_dir = 1, v_el = 0;
+  static double v_el = 0;
   static double targ_el=0.0;
   
   i_point = GETREADINDEX(point_index);
@@ -968,7 +969,7 @@ void DoNewBoxMode() {
       axes_mode.el_vel = 0.0;
       v_el = 0.0;
       targ_el = -h*0.5;
-      el_dir = 1;
+      axes_mode.el_dir = 1;
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
@@ -981,30 +982,30 @@ void DoNewBoxMode() {
   /** set El V **/
   new_step = 0;
   if (az<left) {
-    if (az_dir < 0) {
+    if (axes_mode.az_dir < 0) {
       t = w/v_az + 2.0*v_az/(AZ_ACCEL * SR);
       new_step = 1;
     }
-    az_dir = 1;
+    axes_mode.az_dir = 1;
   } else if (az>right) {
-    if (az_dir > 0) {
+    if (axes_mode.az_dir > 0) {
       t = w/v_az + 2.0*v_az/(AZ_ACCEL * SR);
       new_step = 1;
     }
-    az_dir = -1;
+    axes_mode.az_dir = -1;
   }
 
   if (new_step) {
     // set v for this step
     v_el = (targ_el - (el-cel))/t;
     // set targ_el for the next step
-    targ_el += CommandData.pointing_mode.del*el_dir;
+    targ_el += CommandData.pointing_mode.del*axes_mode.el_dir;
     if (targ_el>h*0.5) {
       targ_el = h*0.5;
-      el_dir=-1;
+      axes_mode.el_dir=-1;
     } else if (targ_el<-h*0.5) {
       targ_el = -h*0.5;
-      el_dir = 1;
+      axes_mode.el_dir = 1;
     }
   }
   /* check for out of range in el */
@@ -1015,7 +1016,7 @@ void DoNewBoxMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = top;
-    el_dir = -1;
+    axes_mode.el_dir = -1;
     return;
   } else if (el < bottom - EL_BORDER) {
     axes_mode.az_mode = AXIS_POSITION;
@@ -1024,7 +1025,7 @@ void DoNewBoxMode() {
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = bottom;
-    el_dir = 1;
+    axes_mode.el_dir = 1;
     return;
   }
 
@@ -1047,7 +1048,7 @@ void DoQuadMode() { // aka radbox
   //int i_top, i_bot, new;
   
   static double last_ra[4] = {0,0,0,0}, last_dec[4] = {0,0,0,0};
-  static double az_dir = 0, el_dir = 1, v_el = 0;
+  static double v_el = 0;
   static double targ_el=0.0; // targ_el is in degrees from bottom
   
   i_point = GETREADINDEX(point_index);
@@ -1116,7 +1117,7 @@ void DoQuadMode() { // aka radbox
       axes_mode.el_vel = 0.0;
       v_el = 0.0;
       targ_el = 0.0;
-      el_dir = 1;
+      axes_mode.el_dir = 1;
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
@@ -1149,32 +1150,32 @@ void DoQuadMode() { // aka radbox
   /** set El V **/
   new_step = 0;
   if (az<left) {
-    if (az_dir < 0) {
+    if (axes_mode.az_dir < 0) {
       az_distance = next_right - left;
       t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * SR);
       new_step = 1;
     }
-    az_dir = 1;
+    axes_mode.az_dir = 1;
   } else if (az>right) {
-    if (az_dir > 0) {
+    if (axes_mode.az_dir > 0) {
       az_distance = right - next_left;
       t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * SR);
       new_step = 1;
     }
-    az_dir = -1;
+    axes_mode.az_dir = -1;
   }
 
   if (new_step) {
     // set v for this step
     v_el = (targ_el+bottom - el)/t;
     // set targ_el for the next step
-    targ_el += CommandData.pointing_mode.del*el_dir;
+    targ_el += CommandData.pointing_mode.del*axes_mode.el_dir;
     if (targ_el>top-bottom) {
       targ_el = top-bottom;
-      el_dir=-1;
+      axes_mode.el_dir=-1;
     } else if (targ_el<0) {
       targ_el = 0;
-      el_dir = 1;
+      axes_mode.el_dir = 1;
     }
   }
   
