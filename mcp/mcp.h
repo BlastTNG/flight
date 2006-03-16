@@ -33,7 +33,7 @@ extern time_t mcp_systime(time_t *t);
 extern unsigned short* tdrss_data[3];
 extern unsigned int tdrss_index;
 
-#define TEMPORAL_OFFSET 0
+#define TEMPORAL_OFFSET 25401600
 
 #define MAX_LINE_LENGTH 1024
 
