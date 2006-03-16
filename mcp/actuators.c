@@ -36,7 +36,7 @@
 /* Define this symbol to have mcp log all actuator bus traffic */
 #undef ACTBUS_CHATTER
 
-#define ACT_BUS "/dev/ttyS1"
+#define ACT_BUS "/dev/ttyS7"
 
 #define NACT 4
 #define POLL_TIMEOUT 30000 /* 5 minutes */
