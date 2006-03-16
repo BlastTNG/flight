@@ -1057,7 +1057,8 @@ void DirFileWriter(void)
           i_in = slow_fields[j][i].i_in;
           i_out = slow_fields[j][i].i_out;
           i_buf = 0;
-          if ((SlowChList[i][j].type == 'U') || (SlowChList[i][j].type == 'I'))
+          if ((SlowChList[i][j].type == 'U') || (SlowChList[i][j].type == 'I')
+              || (SlowChList[i][j].type == 'S'))
           {
             i_in2 = slow_fields[j][i + 1].i_in;
             i_out2 = slow_fields[j][i + 1].i_out;
@@ -1104,7 +1105,8 @@ void DirFileWriter(void)
             slow_fields[j][i].i_out = i_out;
           }
         } else if (i == 0 || ((SlowChList[i - 1][j].type != 'U')
-              && (SlowChList[i - 1][j].type != 'I'))) {
+              && (SlowChList[i - 1][j].type != 'I') &&
+              (SlowChList[i - 1][j].type != 'S'))) {
           slow_fields[j][i].i_out = slow_fields[j][i].i_in;
         }
       }
