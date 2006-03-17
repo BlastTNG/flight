@@ -1,10 +1,10 @@
 /* framefile.c: writes raw frame streams to disk
  *
- * This software is copyright (C) 2002-2004 University of Toronto
- * 
- * This file is part of the BLAST flight code licensed under the GNU 
+ * This software is copyright (C) 2002-2006 University of Toronto
+ *
+ * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -38,7 +38,7 @@
 
 unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
-int shutdown_now = 0;
+static int shutdown_now = 0;
 
 void WriteSpecificationFile(FILE*); /* in tx_struct.c */
 
@@ -60,7 +60,8 @@ struct file_info {
 
 /* OpenNextChunk: closes the currently open chunk (if any), increments the
  * chunk index and opens creates the next chunk */
-void OpenNextChunk(void) {
+static void OpenNextChunk(void)
+{
   if (framefile.fd > -1)
     if (close(framefile.fd) == -1)
       berror(err, "FrameFile Writer: Error closing chunk");
@@ -77,7 +78,8 @@ void OpenNextChunk(void) {
 }
 
 /* This function is only used by the decom daemon */
-void ShutdownFrameFile(void) {
+void ShutdownFrameFile(void)
+{
   shutdown_now = 1;
 }
 
@@ -86,7 +88,8 @@ void ShutdownFrameFile(void) {
 /*     Initialize framefile                                          */
 /*                                                                   */
 /*********************************************************************/
-void InitialiseFrameFile(char type) {
+void InitialiseFrameFile(char type)
+{
   FILE* fp;
   char buffer[200];
 
@@ -124,7 +127,8 @@ void InitialiseFrameFile(char type) {
     berror(err, "FrameFile Writer: Error while closing curfile");
 }
 
-void* advance_in_buffer(void* ptr) {
+static void* advance_in_buffer(void* ptr)
+{
   void* tmp;
   tmp = ((char*)ptr + DiskFrameSize);
   return (tmp >= framefile.buffer_end) ? framefile.buffer : (void*)tmp;
@@ -134,7 +138,8 @@ void* advance_in_buffer(void* ptr) {
 /* pushDiskFrame: called from main thread: puts rxframe into */
 /* individual buffers                                        */
 /*************************************************************/
-void pushDiskFrame(unsigned short *RxFrame) {
+void pushDiskFrame(unsigned short *RxFrame)
+{
   void* new_write_to = advance_in_buffer(framefile.b_write_to);
 
 #ifdef __MCP__
@@ -173,12 +178,13 @@ void pushDiskFrame(unsigned short *RxFrame) {
 /***************************************************************/
 /* FrameFileWriter: separate thread: writes each frame to disk */
 /***************************************************************/
-void FrameFileWriter(void) {
+void FrameFileWriter(void)
+{
   void* writeout_buffer;
   void* b_write_to;
   int write_len;
 
-#ifdef __MCP__ 
+#ifdef __MCP__
   bputs(startup, "FrameFile Writer: Startup\n");
 #endif
 
@@ -226,7 +232,7 @@ void FrameFileWriter(void) {
     }
 #endif
 
-    if ((write_len > 0) && (framefile.fd >= 0)) 
+    if ((write_len > 0) && (framefile.fd >= 0))
       if (write(framefile.fd, writeout_buffer, write_len) < 0)
         berror(err, "FrameFile Writer: Error while writing frame");
 

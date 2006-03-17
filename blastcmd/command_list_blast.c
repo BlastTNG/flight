@@ -1,10 +1,10 @@
 /* command_list.c: BLAST command specification file
  *
- * This software is copyright (C) 2002-2005 University of Toronto
- * 
- * This file is part of the BLAST flight code licensed under the GNU 
+ * This software is copyright (C) 2002-2006 University of Toronto
+ *
+ * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -15,14 +15,14 @@
  *
  * IF YOU ADD, MODIFY, OR DELETE *ANY* COMMANDS IN THIS FILE YOU *MUST*
  * RECOMPILE AND REINSTALL BLASTCMD ON ARWEN!
- * 
+ *
  * !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
  */
 
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char command_list_serial[] = "$Revision: 3.8 $";
+const char *command_list_serial = "$Revision: 3.9 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -354,7 +354,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
         {"Command", 0, 16, 's', ""},
     }
   },
-          
+
 
   {COMMAND(osc_offset), "set offset of OSC to primary beam",
     GR_TRIM | GR_OSC_PARAM, 2,
@@ -472,7 +472,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Drift Speed (deg el/s)", 0,  2, 'f', "NONE"}
     }
   },
-  
+
   {COMMAND(vcap), "scan a circle centred on RA/Dec with el drift", GR_POINT, 5,
     {
       {"RA of Centre (h)",          0, 24, 'f', "NONE"},
@@ -493,7 +493,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Trim (V)", -1, 1, 'f', "APCU_TRIM"}
     }
   },
-  
+
   {COMMAND(apcu_charge), "Set the ACS PCU battery charge level", GR_ELECT, 1,
     {
       {"Level (V)", 27.25, 31.06, 'f', "APCU_REG"}
@@ -506,7 +506,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Trim (V)", -1, 1, 'f', "DPCU_TRIM"}
     }
   },
-  
+
   {COMMAND(dpcu_charge), "Set the DAS PCU battery charge level", GR_ELECT, 1,
     {
       {"Level (V)", 27.25, 31.09, 'f', "DPCU_REG"}

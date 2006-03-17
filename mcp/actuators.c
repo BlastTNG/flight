@@ -1,19 +1,19 @@
 /* mcp: the BLAST master control program
  *
  * This software is copyright (C) 2006 University of Toronto
- * 
+ *
  * This file is part of mcp.
- * 
+ *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * mcp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -50,9 +50,10 @@ static int bus_fd = -1;
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
   "Lock Motor"};
 
-int act_setserial(char *input_tty) {
+static int act_setserial(char *input_tty)
+{
   int fd;
-  struct termios term; 
+  struct termios term;
 
   if ((fd = open(input_tty, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0)
     berror(tfatal, "ActBus: Unable to open serial port");
@@ -87,7 +88,7 @@ int act_setserial(char *input_tty) {
   return fd;
 }
 
-void BusSend(int who, const char* what)
+static void BusSend(int who, const char* what)
 {
   size_t len = strlen(what) + 7;
   char *buffer = malloc(len);
@@ -102,7 +103,7 @@ void BusSend(int who, const char* what)
   free(buffer);
 }
 
-int BusRecv(char* buffer)
+static int BusRecv(char* buffer)
 {
   int i, fd, status = 0;
   fd_set rfds;
@@ -217,7 +218,7 @@ int BusRecv(char* buffer)
   return status;
 }
 
-int PollBus(int rescan, int *status)
+static int PollBus(int rescan, int *status)
 {
   int i, result;
   char buffer[1000];

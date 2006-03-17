@@ -1,10 +1,10 @@
 /* tx_struct.c: contains the channel specificiation lists
  *
  * This software is copyright (C) 2002-2005 University of Toronto
- * 
- * This file is part of the BLAST flight code licensed under the GNU 
+ *
+ * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -15,7 +15,7 @@
  *
  * IF YOU ADD, MOVE, OR DELETE *ANY* CHANNELS IN THIS FILE YOU *MUST*
  * RECOMPILE AND RESTART THE DECOM DAEMON (DECOMD) ON ARWEN!
- * 
+ *
  * !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
  */
 
@@ -70,8 +70,8 @@ struct ChannelStruct WideSlowChannels[] = {
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U'},
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S'},
 /* Rox a la Jeff */
-  {"t_he3fridge",  'r',  CRYO,  6,    ROX_C2V,   ROX_OFFSET, 'U'}, 
-  {"t_m4",         'r',  CRYO,  8,    ROX_C2V,   ROX_OFFSET, 'U'}, 
+  {"t_he3fridge",  'r',  CRYO,  6,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_m4",         'r',  CRYO,  8,    ROX_C2V,   ROX_OFFSET, 'U'},
   {"t_m5",         'r',  CRYO, 10,    ROX_C2V,   ROX_OFFSET, 'U'},
   {"t_horn_250",   'r',  CRYO, 12,    ROX_C2V,   ROX_OFFSET, 'U'},
   {"t_m3",         'r',  CRYO, 14,    ROX_C2V,   ROX_OFFSET, 'U'},
@@ -80,7 +80,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"t_horn_500",   'r',  CRYO, 42,    ROX_C2V,   ROX_OFFSET, 'U'},
   {"t_he4pot",     'r',  CRYO, 44,    ROX_C2V,   ROX_OFFSET, 'U'},
   {"t_optbox_filt",'r',  CRYO, 46,    ROX_C2V,   ROX_OFFSET, 'U'},
- 
+
   END_OF_CHANNELS
 };
 
@@ -118,7 +118,7 @@ struct ChannelStruct SlowChannels[] = {
   {"emf_gain",     'w',  ACS1, 11,                1.0,             0.0, 'u'},
   {"emf_offset",   'w',  ACS1, 12,                1.0,             0.0, 'u'},
   {"g_p_pivot",    'w',  ACS1, 15,                1.0,             0.0, 'u'},
-  {"set_reac",     'w',  ACS1, 16,    7.9498291016e-5,          -2.605, 'u'}, 
+  {"set_reac",     'w',  ACS1, 16,    7.9498291016e-5,          -2.605, 'u'},
   {"use_analogue", 'w',  ACS1, 20,                1.0,             0.0, 'u'},
   {"sync01",       'w',  ACS1, 56,                1.0,             0.0, 'u'},
 
@@ -144,7 +144,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_apm_5v",     'r',  ACS2, 39,              I2T_M,           I2T_B, 'u'},
   {"t_apm_10v",    'r',  ACS2, 41,              I2T_M,           I2T_B, 'u'},
   {"i_apm_3v",     'r',  ACS2, 43,          -0.000625,           20.48, 'u'},
-  {"i_apm_5v",     'r',  ACS2, 45,         -0.0020833,          68.267, 'u'}, 
+  {"i_apm_5v",     'r',  ACS2, 45,         -0.0020833,          68.267, 'u'},
   {"i_apm_10v",    'r',  ACS2, 47,           -0.00625,           204.8, 'u'},
   {"status02",     'r',  ACS2, 56,                1.0,             0.0, 'u'},
   {"sensor_reset", 'w',  ACS2,  1,                1.0,             0.0, 'u'},

@@ -1,19 +1,19 @@
 /* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2002-2005 University of Toronto
- * 
+ * This software is copyright (C) 2002-2006 University of Toronto
+ *
  * This file is part of mcp.
- * 
+ *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * mcp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -84,9 +84,9 @@
 /* The length of time to wait after starting up before auto-bias level check */
 #define B_AMP_STARTUP      3000 /* = 30 seconds in 100Hz Frames */
 
-int bias_amp1_timeout = B_AMP_STARTUP;
-int bias_amp2_timeout = B_AMP_STARTUP;
-int bias_amp3_timeout = B_AMP_STARTUP;
+static int bias_amp1_timeout = B_AMP_STARTUP;
+static int bias_amp2_timeout = B_AMP_STARTUP;
+static int bias_amp3_timeout = B_AMP_STARTUP;
 
 void WritePrevStatus();
 
@@ -117,7 +117,7 @@ void PhaseControl(void)
 /***********************************************************************/
 /* CalLamp: Flash calibrator                                           */
 /***********************************************************************/
-int CalLamp (void)
+static int CalLamp (void)
 {
   static struct NiosStruct* calPulseAddr;
   static int update_counter = 0;
@@ -159,7 +159,7 @@ int CalLamp (void)
 }
 
 /* Automatic conrol of JFET heater */
-int JFETthermostat(void)
+static int JFETthermostat(void)
 {
   double jfet_temp;
   static struct BiPhaseStruct* tJfetAddr;
@@ -188,7 +188,7 @@ int JFETthermostat(void)
       (CommandData.Cryo.JFETSetOff - CommandData.Cryo.JFETSetOn);
 }
 
-void FridgeCycle(int *cryoout, int *cryostate, int  reset,
+static void FridgeCycle(int *cryoout, int *cryostate, int  reset,
     unsigned short *force_cycle)
 {
   static int firsttime = 1;
@@ -258,7 +258,7 @@ void FridgeCycle(int *cryoout, int *cryostate, int  reset,
     *cryostate &= ~CS_CHARCOAL;
     WriteData(cycleStateWAddr, CRYO_CYCLE_OUT_OF_HELIUM, NIOS_QUEUE);
     return;
-  } 
+  }
 
   if (cycle_state == CRYO_CYCLE_COLD) {
     if((t_he3fridge < T_HE3FRIDGE_TOO_HOT && t_he4pot > T_HE4POT_SET)
@@ -390,7 +390,7 @@ void CryoControl (void)
   if (CommandData.Cryo.autoBDAHeat)
     cryoctrl |= CRYOCTRL_BDAHEATON;
 
-  cryoout2 = CRYO_POTVALVE_OPEN | CRYO_POTVALVE_CLOSE | 
+  cryoout2 = CRYO_POTVALVE_OPEN | CRYO_POTVALVE_CLOSE |
     CRYO_LVALVE_OPEN | CRYO_LVALVE_CLOSE;
 
   /* Control motorised valves -- latching relays */
@@ -465,7 +465,8 @@ void ForceBiasCheck(void) {
 /*   BiasControl: Digital IO with the Bias Generator Card               */
 /*                                                                      */
 /************************************************************************/
-void BiasControl (unsigned short* RxFrame) {
+void BiasControl (unsigned short* RxFrame)
+{
   static struct BiPhaseStruct* biasinAddr;
   static struct BiPhaseStruct* bAmp1Addr, *bAmp2Addr, *bAmp3Addr;
   static struct NiosStruct* biasout1Addr;

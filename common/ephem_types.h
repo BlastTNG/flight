@@ -38,7 +38,7 @@
 
 #define EPHEMERIS 405                /* Note the obvious: input XXX for DEXXX */
 
-#if EPHEMERIS==200  
+#if EPHEMERIS==200
 #define ARRAY_SIZE 826
 #elif EPHEMERIS==405
 #define ARRAY_SIZE 1018
@@ -46,7 +46,7 @@
 
 #define TYPES_DEFINED 0  /* Dummy variable (see ephem_read.h for explanation) */
 
-#define TRUE 1 
+#define TRUE 1
 #define FALSE 0
 
 #define FAILURE 1              /* Exception handling only needed for failures */
@@ -101,7 +101,7 @@
 
    struct recTwoData {
      double constValue[400];
-     }; 
+     };
 
    typedef struct recOneData recOneType;
    typedef struct recTwoData recTwoType;

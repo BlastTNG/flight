@@ -1,19 +1,19 @@
 /* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2003-2004 University of Toronto
- * 
+ * This software is copyright (C) 2003-2006 University of Toronto
+ *
  * This file is part of mcp.
- * 
+ *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * mcp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -44,10 +44,11 @@ time_t DGPSTime;
 
 #define LEAP_SECONDS 0
 
-void SetGPSPort(speed_t speed) {
+static void SetGPSPort(speed_t speed)
+{
   int fd;
 
-  struct termios term; 
+  struct termios term;
 
   if ((fd = open(GPSCOM, O_RDWR)) < 0)
     berror(tfatal, "dGPS: Unable to open dgps serial port");
@@ -75,7 +76,8 @@ void SetGPSPort(speed_t speed) {
 /** calling function **/
 /** instr should be incremented by the return value to prepare for **/
 /** the next call **/
-int GetField(char *instr, char *outstr) {
+static int GetField(char *instr, char *outstr)
+{
   int i = 0;
 
   while ((instr[i] != ',') && (instr[i] != '\0') && (instr[i] != '*')) {
@@ -90,7 +92,8 @@ int GetField(char *instr, char *outstr) {
     return i + 1;
 }
 
-void WatchDGPS() {
+void WatchDGPS()
+{
   FILE *fp;
   char instr[500], outstr[500];
   char *inptr;
@@ -116,7 +119,7 @@ void WatchDGPS() {
   DGPSPos[0].n_sat = 0;
   dgpspos_index = 1;
 
-  DGPSTime = 0; 
+  DGPSTime = 0;
 
   /************************ Set serial ports: *******************/
   /* Set our serial port to 9600 (the dGPS default, then
@@ -131,7 +134,7 @@ void WatchDGPS() {
   fprintf(fp,"$PASHS,SPD,B,7\r\n"); // 38400 Pg 66
 
   fclose(fp);
-  
+
   SetGPSPort(B115200);
 
   fp = fopen(GPSCOM, "r+");
@@ -155,10 +158,10 @@ void WatchDGPS() {
   fprintf(fp,"$PASHS,NME,GLL,A,ON\r\n"); // turn on GLL Pg89
   //fprintf(fp,"$PASHS,NME,ZDA,A,ON\r\n");  // turn on time message P109
   //fprintf(fp,"$PASHS,NME,PER,1\r\n"); // NEMA period = 1s
-  
+
   //fprintf(fp,"$PASHS,RST\r\n");  // reset to defaults
   //sleep(10);
-  
+
   /********* Set up array dimention and phase shifts *********/
   /***** THESE were set by MD/ 8/28/03 ******/
   // fprintf(fp,"$PASHS,3DF,V12,+000.000,+003.239,-000.000\r\n");
@@ -166,7 +169,7 @@ void WatchDGPS() {
   // fprintf(fp,"$PASHS,3DF,V14,+001.346,+000.560,-000.015\r\n");
   // fprintf(fp,"$PASHS,3DF,OFS,-117.14,+00.00,+00.00\r\n"); // array offset p71
   // fprintf(fp,"$PASHS,SAV,Y\r\n");
-  
+
   /***** THESE were set by cbn/ Feb 14/05 ******/
   //fprintf(fp,"$PASHS,3DF,V12,+000.000,+003.762,+000.097\r\n");
   //fprintf(fp,"$PASHS,3DF,V13,+001.276,+002.786,+000.053\r\n");

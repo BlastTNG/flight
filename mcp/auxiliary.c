@@ -1,19 +1,19 @@
 /* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2002-2005 University of Toronto
- * 
+ * This software is copyright (C) 2002-2006 University of Toronto
+ *
  * This file is part of mcp.
- * 
+ *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * mcp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -30,7 +30,7 @@
 #include "command_struct.h"
 #include "pointing_struct.h"
 
-/* Define to 1 to send synchronous star camera triggers based on ISC 
+/* Define to 1 to send synchronous star camera triggers based on ISC
  * handshaking */
 #define SYNCHRONOUS_CAMERAS 0
 
@@ -121,10 +121,10 @@ extern short int InCharge; /* tx.c */
 #define LOKMOT_IN    0x80  /* ACS3 Group 3 Bit 8 */
 
 /* in commands.c */
-double LockPosition(double elevation); 
+double LockPosition(double elevation);
 
-short int incool_state = 0;
-short int outcool_state = 0;
+static short int incool_state = 0;
+static short int outcool_state = 0;
 
 /****************************************************************/
 /* Read the state of the lock motor pin (or guess it, whatever) */
@@ -134,7 +134,7 @@ int pinIsIn(void)
   return(CommandData.pin_is_in);
 }
 
-int SetGyHeatSetpoint(double history, int age, int box)
+static int SetGyHeatSetpoint(double history, int age, int box)
 {
   double setpoint = CommandData.gyheat[box].setpoint;
 
@@ -161,12 +161,12 @@ int SetGyHeatSetpoint(double history, int age, int box)
   return age;
 }
 
-int ControlInnerCool(void)
+static int ControlInnerCool(void)
 {
   static struct BiPhaseStruct *tDasAddr, *tRecAddr;
   static int firsttime = 1;
   unsigned int das, rec;
-  int dg = 1, rg = 1; 
+  int dg = 1, rg = 1;
   double temp = 0;
   double error;
   short int pwm;
@@ -222,7 +222,7 @@ int ControlInnerCool(void)
     return 2047; /* temperature below goal, nothing to do, turn off pump */
   }
 
-  if (incool_state != 2) { 
+  if (incool_state != 2) {
     bprintf(info, "Inner Frame Cooling: Pump On\n");
     CommandData.pumps.inframe_cool_on = 40; /* turn on pump */
     CommandData.pumps.inframe_cool_off = 0;
@@ -241,7 +241,7 @@ int ControlInnerCool(void)
   return 2047 - pwm;
 }
 
-int ControlOuterCool(void)
+static int ControlOuterCool(void)
 {
   static struct BiPhaseStruct *tSunSensorAddr;
   static int firsttime = 1;
@@ -288,7 +288,7 @@ int ControlOuterCool(void)
     return 2047; /* temperature below goal, nothing to do, turn off pump */
   }
 
-  if (outcool_state != 2) { 
+  if (outcool_state != 2) {
     bprintf(info, "Outer Frame Cooling: Pump On\n");
     CommandData.pumps.outframe_cool1_on = 40; /* turn on pump */
     CommandData.pumps.outframe_cool1_off = 0;
@@ -420,7 +420,7 @@ void ControlGyroHeat(unsigned short *RxFrame, int box)
       WriteData(gyHeatAddr[box], off[box], NIOS_FLUSH);
       p_off[box]--;
     }
-  } else 
+  } else
     /* Turn off heater if thermometer appears broken */
     WriteData(gyHeatAddr[box], off[box], NIOS_FLUSH);
 
@@ -433,7 +433,8 @@ void ControlGyroHeat(unsigned short *RxFrame, int box)
 /* Balance: control balance system                                */
 /*                                                                */
 /******************************************************************/
-int Balance(int ifpmBits) {
+static int Balance(int ifpmBits)
+{
   static struct BiPhaseStruct *iElAddr;
   static struct NiosStruct *balPwm1Addr;
   static int pumpon = 0;
@@ -510,7 +511,8 @@ int Balance(int ifpmBits) {
   return ifpmBits;
 }
 
-void ChargeController(void) {
+void ChargeController(void)
+{
   static struct NiosStruct *apcuRegAddr;
   static struct NiosStruct *apcuTrimAddr;
   static struct NiosStruct *apcuAutoAddr;
@@ -520,7 +522,7 @@ void ChargeController(void) {
   static struct BiPhaseStruct *tDasBatAddr, *tAcsBatAddr;
   double apcu_control, T, V;
   double dpcu_control;
-  
+
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
@@ -555,7 +557,7 @@ void ChargeController(void) {
     //dpcu_control = (CommandData.dpcu_reg - 28.0209)/0.02402664;
     dpcu_control = (CommandData.dpcu_reg - 27.25)/0.0382;
   }
-  
+
   if (apcu_control>100) apcu_control = 100;
   if (apcu_control<0) apcu_control = 0;
   if (dpcu_control>100) dpcu_control = 100;
@@ -576,7 +578,8 @@ void ChargeController(void) {
 /************************************************************************/
 #define PULSE_LENGTH 400   /* 4 seconds */
 #define SEARCH_COUNTS 500 /* 5 seconds */
-int GetLockBits(unsigned short lockBits) {
+static int GetLockBits(unsigned short lockBits)
+{
   static int is_closing = 0;
   static int is_opening = 0;
   static int is_searching = 0;
@@ -694,7 +697,7 @@ void CameraTrigger(int which)
       /* If force_sync is high, we've detected an out-of-sync condition.
        * We get back in phase by skipping the ackwait stage.  We do this by
        * simply not resetting the semaphores before going into the ackwait.
-       * Since write_ISC_trigger is already high, the ackwait will end 
+       * Since write_ISC_trigger is already high, the ackwait will end
        * immediately. */
       if (!isc_pulses[which].force_sync) {
         /* Signal isc thread to send new pointing data */
@@ -726,7 +729,7 @@ void CameraTrigger(int which)
       isc_pulses[which].ack_wait = 1;
       isc_pulses[which].ack_timeout =
         (ISC_link_ok[which]) ? ISC_ACK_TIMEOUT : 10;
-      if (WHICH) 
+      if (WHICH)
         bprintf(info, "%iSC (t): ackwait starts with timeout = %i\n", which,
             isc_pulses[which].ack_timeout);
     } else { /* ACK wait state */
@@ -882,7 +885,8 @@ void CameraTrigger(int which)
 /*   Control the pumps and the lock                              */
 /*                                                               */
 /*****************************************************************/
-void ControlAuxMotors(unsigned short *RxFrame) {
+void ControlAuxMotors(unsigned short *RxFrame)
+{
   static struct NiosStruct* ofpmBitsAddr;
   static struct NiosStruct* balpumpLevAddr;
   static struct NiosStruct* sprpumpLevAddr;

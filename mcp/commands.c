@@ -1,19 +1,19 @@
 /* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2002-2005 University of Toronto
- * 
+ * This software is copyright (C) 2002-2006 University of Toronto
+ *
  * This file is part of mcp.
- * 
+ *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * mcp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -74,7 +74,7 @@ void ClearTrim();
 void AzElTrim(double az, double el);
 void NormalizeAngle(double *A);
 
-const char UnknownCommand[] = "Unknown Command";
+static const char *UnknownCommand = "Unknown Command";
 
 extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 
@@ -87,7 +87,8 @@ struct SIPDataStruct SIPData;
 struct CommandDataStruct CommandData;
 
 /** Write the Previous Status: called whenever anything changes */
-void WritePrevStatus() {
+static void WritePrevStatus()
+{
   int fp, n;
 
   /** write the default file */
@@ -108,12 +109,10 @@ void WritePrevStatus() {
   }
 }
 
-void bc_close() {
-}
-
-int bc_setserial(char *input_tty) {
+static int bc_setserial(char *input_tty)
+{
   int fd;
-  struct termios term; 
+  struct termios term;
 
   if ((fd = open(input_tty, O_RDWR)) < 0)
     berror(tfatal, "Commands: Unable to open serial port");
@@ -158,7 +157,7 @@ double LockPosition (double elevation)
   return position + LOCK_OFFSET;
 }
 
-float ParseGPS (unsigned char *data)
+static float ParseGPS (unsigned char *data)
 {
   char exponent;
   char sign;
@@ -192,7 +191,7 @@ float ParseGPS (unsigned char *data)
   return((mantissa + 1) * pow(2, exponent) * sign);
 }
 
-void SendRequest (int req, char tty_fd)
+static void SendRequest (int req, char tty_fd)
 {
   unsigned char buffer[3];
 
@@ -226,13 +225,13 @@ int SIndex(enum singleCommand command)
   return -1;
 }
 
-const char* SName(enum singleCommand command)
+static const char* SName(enum singleCommand command)
 {
   int i = SIndex(command);
   return (i == -1) ? UnknownCommand : scommands[i].name;
 }
 
-void SingleCommand (enum singleCommand command, int scheduled)
+static void SingleCommand (enum singleCommand command, int scheduled)
 {
 #ifndef BOLOTEST
   int i_point = GETREADINDEX(point_index);
@@ -725,13 +724,13 @@ int MIndex(enum multiCommand command)
   return -1;
 }
 
-const char* MName(enum multiCommand command)
+static const char* MName(enum multiCommand command)
 {
   int i = MIndex(command);
   return (i == -1) ? UnknownCommand : mcommands[i].name;
 }
 
-void SetParameters(enum multiCommand command, unsigned short *dataq,
+static void SetParameters(enum multiCommand command, unsigned short *dataq,
     double* rvalues, int* ivalues)
 {
   int i, dataqind;
@@ -782,8 +781,8 @@ void SetParameters(enum multiCommand command, unsigned short *dataq,
 #endif
 }
 
-void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues,
-    int scheduled)
+static void MultiCommand(enum multiCommand command, double *rvalues,
+    int *ivalues, int scheduled)
 {
 #ifndef BOLOTEST
   int i;
@@ -1027,7 +1026,7 @@ void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues,
       CommandData.Bias.bias3 = ivalues[0];
       break;
     case phase:
-      if (ivalues[0] >= 5 && ivalues[0] <= 16) 
+      if (ivalues[0] >= 5 && ivalues[0] <= 16)
         CommandData.Phase[ivalues[0] - 5] = ivalues[1];
 
       /***************************************/
@@ -1209,7 +1208,8 @@ void MultiCommand(enum multiCommand command, double *rvalues, int *ivalues,
   WritePrevStatus();
 }
 
-void GPSPosition (unsigned char *indata) {
+static void GPSPosition (unsigned char *indata)
+{
   /* Send new information to CommandData */
 
   SIPData.GPSpos.lon = -ParseGPS(indata); /* sip sends east lon */
@@ -1256,7 +1256,8 @@ void ScheduledCommand(struct ScheduleEvent *event)
   }
 }
 
-void GPSTime (unsigned char *indata) {
+static void GPSTime (unsigned char *indata)
+{
   float GPStime, offset;
   int CPUtime, GPSweek;
 
@@ -1274,7 +1275,8 @@ void GPSTime (unsigned char *indata) {
   WritePrevStatus();
 }
 
-void MKSAltitude (unsigned char *indata) {
+static void MKSAltitude (unsigned char *indata)
+{
 
   SIPData.MKSalt.hi = ((unsigned short *)indata)[0];;
   SIPData.MKSalt.med = ((unsigned short *)indata)[1];;
@@ -1286,7 +1288,8 @@ void MKSAltitude (unsigned char *indata) {
 #ifndef BOLOTEST
 /* Send TDRSS Low Rate Packet */
 
-void SendDownData(char tty_fd) {
+static void SendDownData(char tty_fd)
+{
   unsigned char buffer[SLOWDL_LEN], data[3 + SLOWDL_LEN + 1];
   int i, temp;
   int bitpos, bytepos, numbits;
@@ -1301,9 +1304,9 @@ void SendDownData(char tty_fd) {
     switch (SlowDLInfo[i].type) {
       case SLOWDL_FORCE_INT:
         /* Round value to an integer and try to fit it in numbits */
-        numbits = SlowDLInfo[i].numbits; 
-        slowM = (double)((1 << (numbits - 1)) - 1) / 
-          (SlowDLInfo[i].max - SlowDLInfo[i].min); 
+        numbits = SlowDLInfo[i].numbits;
+        slowM = (double)((1 << (numbits - 1)) - 1) /
+          (SlowDLInfo[i].max - SlowDLInfo[i].min);
         slowB = - slowM * (double)SlowDLInfo[i].min;
         if ((int)SlowDLInfo[i].value > SlowDLInfo[i].max)
           temp = (int)(slowM * SlowDLInfo[i].max + slowB);
@@ -1315,7 +1318,7 @@ void SendDownData(char tty_fd) {
 
       case SLOWDL_U_MASK:
         /* Simply take the bottom numbits from the unsigned number */
-        temp = ((int)(SlowDLInfo[i].value)) & ((1 << SlowDLInfo[i].numbits) - 
+        temp = ((int)(SlowDLInfo[i].value)) & ((1 << SlowDLInfo[i].numbits) -
             1);
         numbits = SlowDLInfo[i].numbits;
         break;
@@ -1383,7 +1386,8 @@ void SendDownData(char tty_fd) {
 #endif
 
 /* compute the size of the data queue for the given command */
-int DataQSize(int index) {
+static int DataQSize(int index)
+{
   int i, size = mcommands[index].numparams;
 
   for (i = 0; i < mcommands[index].numparams; ++i)
@@ -1393,7 +1397,8 @@ int DataQSize(int index) {
   return size;
 }
 
-void WatchFIFO () {
+void WatchFIFO ()
+{
   unsigned char buf[1];
   char command[100];
   char pbuf[30];
@@ -1469,10 +1474,11 @@ void WatchFIFO () {
   }
 }
 
-char *COMM[] = {"/dev/ttyS0", "/dev/ttyS4"};
+static char *COMM[] = {"/dev/ttyS0", "/dev/ttyS4"};
 
 #ifndef BOLOTEST
-void WatchPort (void* parameter) {
+void WatchPort (void* parameter)
+{
   unsigned char buf;
   unsigned short *indatadumper;
   unsigned char indata[20];
@@ -1516,7 +1522,7 @@ void WatchPort (void* parameter) {
         bprintf(info, "Commands: COMM%i: Request SIP Time\n", port + 1);
 #endif
         pthread_mutex_unlock(&mutex);	
-      } else if (timer > 2500) { 
+      } else if (timer > 2500) {
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_ALTITUDE, tty_fd);
 #ifdef SIP_CHATTER
@@ -1621,7 +1627,7 @@ void WatchPort (void* parameter) {
 
               /* The time of sending, a "unique" number shared by the first */
               /* and last packed of a multi-command */
-              mcommand_time = indata[1] & 0x1F;  
+              mcommand_time = indata[1] & 0x1F;
             } else if ((((indata[1] >> 7) & 0x01) == 0) && (mcommand >= 0) &&
                 (mcommand_count < dataqsize)) {
               /*** Parameter values in multi-command ***/
@@ -1631,7 +1637,7 @@ void WatchPort (void* parameter) {
                   "continues...\n", port + 1);
               mcommand_count++;
             } else if ((((indata[1] >> 5) & 0x07) == 0x06) &&
-                (mcommand == indata[0]) && 
+                (mcommand == indata[0]) &&
                 ((indata[1] & 0x1F) == mcommand_time) &&
                 (mcommand_count == dataqsize)) {
               /*** End of multi-command ***/
@@ -1721,7 +1727,8 @@ void WatchPort (void* parameter) {
 /*   no previous state file, set to default                 */
 /*                                                          */
 /************************************************************/
-void InitCommandData() {
+void InitCommandData()
+{
   int fp, n_read = 0, junk, extra = 0, i;
 
   if ((fp = open("/tmp/mcp.prev_status", O_RDONLY)) < 0) {
@@ -1831,7 +1838,7 @@ void InitCommandData() {
   CommandData.ele_gain.P = 10000; /* was 1200 */
 
   CommandData.azi_gain.P = 20000;
-  CommandData.azi_gain.I = 5000; 
+  CommandData.azi_gain.I = 5000;
 
   CommandData.pivot_gain.SP = 36960;
   CommandData.pivot_gain.P = 200;

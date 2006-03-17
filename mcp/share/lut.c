@@ -1,19 +1,19 @@
 /* mcp: the BLAST master control program
  *
  * This software is copyright (C) 2003-2005 University of Toronto
- * 
+ *
  * This file is part of mcp.
- * 
+ *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * mcp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -57,7 +57,8 @@ int GetLine(FILE *fp, char *line)
     return 0; /* there were no valid lines */
 }
 
-void LutInit(struct LutType *L) {
+void LutInit(struct LutType *L)
+{
   int i;
 
   FILE *fp;
@@ -74,7 +75,7 @@ void LutInit(struct LutType *L) {
   /* first read the file to see how big it is */
   i = 0;
   while (GetLine(fp, line))
-    i++; 
+    i++;
 
   if (i < 2) {
     bprintf(err, "LUT: error reading LUT file %s: no calibration\n",
@@ -97,7 +98,8 @@ void LutInit(struct LutType *L) {
   L->last_n = L->n / 2;
 }
 
-double LutCal(struct LutType *L, double x) {
+double LutCal(struct LutType *L, double x)
+{
   int i, n;
   double y;
 
@@ -121,8 +123,8 @@ double LutCal(struct LutType *L, double x) {
   return(y);
 }
 
-double MagLutCal(struct LutType *L, double mag_x, double mag_y, double x) 
-{  
+double MagLutCal(struct LutType *L, double mag_x, double mag_y, double x)
+{
   int i, n, iter;
   double mod;
   double mag_c, mag_s;

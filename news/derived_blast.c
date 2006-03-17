@@ -1,10 +1,10 @@
 /* derived.c: a list of derived channels
  *
  * This software is copyright (C) 2002-2005 University of Toronto
- * 
- * This file is part of the BLAST flight code licensed under the GNU 
+ *
+ * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -15,7 +15,7 @@
  *
  * IF YOU ADD, MODIFY, OR DELETE *ANY* CHANNELS IN THIS FILE YOU *MUST*
  * RECOMPILE AND RESTART THE DECOM DAEMON (DECOMD) ON ARWEN!
- * 
+ *
  * !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
  */
 
@@ -54,7 +54,7 @@
  *   3.  Bit 1 Derived Channel Name (string)
  *   ...
  *   17. Bit 15 Derived Channel Name (string)
- *   
+ *
  *      NB: Bits for which no channel is defined should be given an empty string
  *      "" as a channel name.  Additionally, unused trailing high-bit channels
  *      can be omitted.
@@ -78,7 +78,7 @@ union DerivedUnion DerivedChannels[] = {
   COMMENT("Microsecond Resolution Time"),
   LINCOM2("Time", "cpu_time", 1, 0, "cpu_usec",  1.0E-6, 0),
 #ifndef BOLOTEST
-  COMMENT("Pointing Stuff"), 
+  COMMENT("Pointing Stuff"),
   LINCOM("P_X_H", "p_x_deg", 0.0003662109375, 0),
   LINTERP("Clin_Elev", "clin_elev", "/data/etc/clin_elev.lut"),
   LINTERP("SS_AzRelSun", "SS_AZ_CENTER", "/data/etc/ss.lut"),
@@ -116,7 +116,7 @@ union DerivedUnion DerivedChannels[] = {
       ),
 
   /* ISC and OSC */
-  COMMENT("Star Camera State"), 
+  COMMENT("Star Camera State"),
   BITFIELD("isc_state",
       "ISC_SAVE_IMAGES",
       "ISC_PAUSE",

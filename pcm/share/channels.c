@@ -1,10 +1,10 @@
 /* channels.c: contains routines for manipulating the BLAST channel lists
  *
- * This software is copyright (C) 2002-2005 University of Toronto
- * 
- * This file is part of the BLAST flight code licensed under the GNU 
+ * This software is copyright (C) 2002-2006 University of Toronto
+ *
+ * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -72,7 +72,7 @@
 # define VERBOSE
 #endif
 
-unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
+static unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
 #ifndef INPUTTER
 extern struct ChannelStruct WideSlowChannels[];
@@ -101,8 +101,6 @@ unsigned short ccTotal;
 unsigned short ccDecom;
 unsigned short ccDerived;
 
-unsigned short BoloBaseIndex;
-
 unsigned short BiPhaseFrameWords;
 unsigned short BiPhaseFrameSize;
 unsigned short DiskFrameWords;
@@ -120,6 +118,7 @@ unsigned int BBCSpares[FAST_PER_SLOW * 2];
 struct NiosStruct* NiosLookup;
 struct BiPhaseStruct *BiPhaseLookup;
 #else
+unsigned short BoloBaseIndex;
 struct ChannelStruct **SlowChList;
 struct ChannelStruct *FastChList;
 #endif
@@ -127,7 +126,7 @@ struct ChannelStruct *FastChList;
 /* bus on which the bolometers live */
 #define BOLO_BUS  1
 
-struct ChannelStruct BoloChannels[N_FAST_BOLOS];
+static struct ChannelStruct BoloChannels[N_FAST_BOLOS];
 
 #define SPEC_VERSION "11"
 #ifndef INPUTTER
@@ -234,7 +233,7 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
 /*    MakeBoloTable: create the bolometer channel table                 */
 /*                                                                      */
 /************************************************************************/
-void MakeBoloTable(void) {
+static void MakeBoloTable(void) {
   int i, j, index = 0;
   struct ChannelStruct channel = {
     "", 'r', 3, BOLO_BUS, 0, LOCKIN_C2V, LOCKIN_OFFSET, 'u'
@@ -268,8 +267,8 @@ void MakeBoloTable(void) {
 }
 
 #ifndef INPUTTER
-struct NiosStruct SetNiosData(const struct ChannelStruct *channel, int addr,
-    int fast, int wide)
+static struct NiosStruct SetNiosData(const struct ChannelStruct *channel,
+    int addr, int fast, int wide)
 {
   struct NiosStruct NiosData;
   NiosData.field = channel->field;
@@ -287,7 +286,7 @@ struct NiosStruct SetNiosData(const struct ChannelStruct *channel, int addr,
 }
 
 /* DumpNiosFrame - writes the constructed nios frame to the map file */
-void DumpNiosFrame(void)
+static void DumpNiosFrame(void)
 {
   int bus, m, i, j, n, addr, m0addr;
   FILE* map;
@@ -446,7 +445,7 @@ void DumpNiosFrame(void)
         } else {
           fprintf(map, "%02i %02i - -", i, j);
         }
-        fprintf(map, "\n"); 
+        fprintf(map, "\n");
       } else if (ReverseMap[0][i][j] || ReverseMap[1][i][j]) {
         if ((int)ReverseMap[0][i][j] <= -100) {
           fprintf(map, "%02i %02i s Spare %02i%-24s", i, j,
@@ -483,7 +482,7 @@ void DumpNiosFrame(void)
         } else {
           fprintf(map, "%02i %02i - -", i, j);
         }
-        fprintf(map, "\n"); 
+        fprintf(map, "\n");
       } else if (bus) {
         if (bus & 0x1) {
           fprintf(map, "%02i %02i %c (msb) %-26s", i, j, ReverseMap[0][i][j
@@ -498,7 +497,7 @@ void DumpNiosFrame(void)
           bus &= 0x1;
         } else
           fprintf(map, "%02i %02i - -", i, j);
-        fprintf(map, "\n"); 
+        fprintf(map, "\n");
       } else
         fprintf(map, "%02i %02i - %-32s%02i %02i - -\n", i, j, "-", i, j);
     }
@@ -512,7 +511,7 @@ void DumpNiosFrame(void)
 }
 #endif
 
-int GetChannelByName(char names[4096][FIELD_LEN], int nn, char* field)
+static int GetChannelByName(char names[4096][FIELD_LEN], int nn, char* field)
 {
   int i;
 
@@ -526,8 +525,8 @@ int GetChannelByName(char names[4096][FIELD_LEN], int nn, char* field)
 
 /* Checks BBC Addresses to see if multiple fields are occupying the same
  * place or namespace */
-void BBCAddressCheck(char names[4096][FIELD_LEN], int nn, char* fields[64][64],
-    char* name, int node, int addr)
+static void BBCAddressCheck(char names[4096][FIELD_LEN], int nn,
+    char* fields[64][64], char* name, int node, int addr)
 {
   if (fields[node][addr])
     bprintf(fatal, "Channels: FATAL: Conflicting BBC address found for %s and "
@@ -547,7 +546,7 @@ void BBCAddressCheck(char names[4096][FIELD_LEN], int nn, char* fields[64][64],
 #ifndef INPUTTER
 /* DoSanityChecks - run various sanity checks on the channel tables.  Also
  * compute useful parameters */
-void DoSanityChecks(void)
+static void DoSanityChecks(void)
 {
   int i, j, nn = 0;
   char* fields[2][64][64];
@@ -880,7 +879,7 @@ void MakeAddressLookups(void)
   for (bus = 0; bus < 2; ++bus)
     for (mplex = 0; mplex < FAST_PER_SLOW; ++mplex)
       while (slowIndex[bus][mplex] < slowTop[bus]) {
-#ifndef INPUTTER 
+#ifndef INPUTTER
         BBCSpares[spare_count] = BBC_WRITE | BBC_NODE(SPARE) |
           BBC_CH(spare_count);
         BiPhaseLookup[BI0_MAGIC(BBCSpares[spare_count])].index = mplex;
@@ -1086,7 +1085,7 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
       "DEFILE_SINGLE    BIT  DEFILE_FLAGS 3\n", FAST_PER_SLOW);
   write(fd, line, strlen(line));
 #endif
-  
+
   strcpy(line, "\n## SLOW CHANNELS:\n");
   write(fd, line, strlen(line));
 

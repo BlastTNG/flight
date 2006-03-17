@@ -76,7 +76,7 @@ void Read_Coefficients( double Time )
   if ( Time < T_beg )                    /* Compute backwards location offset */
   {
     T_delta = T_beg - Time;
-    Offset  = (int) -ceil(T_delta/T_span); 
+    Offset  = (int) -ceil(T_delta/T_span);
   }
 
   if ( Time > T_end )                    /* Compute forewards location offset */
@@ -146,7 +146,7 @@ int Initialize_Ephemeris( char *fileName )
     printf("\n Unable to open ephemeris file: %s.\n",fileName);
     return FAILURE;
   }
-  else 
+  else
   { /*.................Read first three header records from ephemeris file */
 
     fread(&H1,sizeof(double),ARRAY_SIZE,Ephemeris_File);
@@ -180,11 +180,11 @@ int Initialize_Ephemeris( char *fileName )
 
     /*..................................................Return status code */
 
-    if ( headerID == EPHEMERIS ) 
+    if ( headerID == EPHEMERIS )
     {
       return SUCCESS;
     }
-    else 
+    else
     {
       printf("\n Opened wrong file: %s",fileName);
       printf(" for ephemeris: %d.\n",EPHEMERIS);
@@ -266,7 +266,7 @@ void Interpolate_Libration( double Time , int Target , double Libration[3] )
   /*  to load the coefficients.                                               */
   /*--------------------------------------------------------------------------*/
 
-  if ( G == 1 ) 
+  if ( G == 1 )
   {
     Tc = 2.0*(Time - T_beg) / T_span - 1.0;
     for (i=C ; i<(C+3*N) ; i++)  A[i-C] = Coeff_Array[i];
@@ -275,10 +275,10 @@ void Interpolate_Libration( double Time , int Target , double Libration[3] )
   {
     T_sub = T_span / ((double) G);          /* Compute subgranule interval */
 
-    for ( j=G ; j>0 ; j-- ) 
+    for ( j=G ; j>0 ; j-- )
     {
       T_break = T_beg + ((double) j-1) * T_sub;
-      if ( Time > T_break ) 
+      if ( Time > T_break )
       {
         T_seg  = T_break;
         offset = j-1;
@@ -287,7 +287,7 @@ void Interpolate_Libration( double Time , int Target , double Libration[3] )
     }
 
     Tc = 2.0*(Time - T_seg) / T_sub - 1.0;
-    C  = C + 3 * offset * N;  
+    C  = C + 3 * offset * N;
 
     for (i=C ; i<(C+3*N) ; i++) A[i-C] = Coeff_Array[i];
   }
@@ -319,8 +319,8 @@ void Interpolate_Libration( double Time , int Target , double Libration[3] )
   /* Compute interpolated the libration.                                      */
   /*--------------------------------------------------------------------------*/
 
-  for ( i=0 ; i<3 ; i++ ) 
-  {                           
+  for ( i=0 ; i<3 ; i++ )
+  {
     Cp[0]  = 1.0;                                 /* Begin polynomial sum */
     Cp[1]  = Tc;
     sum[i] = A[i*N] + A[1+i*N]*Tc;
@@ -420,10 +420,10 @@ void Interpolate_Nutation( double Time , int Target , double Nutation[2] )
   {
     T_sub = T_span / ((double) G);          /* Compute subgranule interval */
 
-    for ( j=G ; j>0 ; j-- ) 
+    for ( j=G ; j>0 ; j-- )
     {
       T_break = T_beg + ((double) j-1) * T_sub;
-      if ( Time > T_break ) 
+      if ( Time > T_break )
       {
         T_seg  = T_break;
         offset = j-1;
@@ -564,10 +564,10 @@ void Interpolate_Position( double Time , int Target , double Position[3] )
   {
     T_sub = T_span / ((double) G);          /* Compute subgranule interval */
 
-    for ( j=G ; j>0 ; j-- ) 
+    for ( j=G ; j>0 ; j-- )
     {
       T_break = T_beg + ((double) j-1) * T_sub;
-      if ( Time > T_break ) 
+      if ( Time > T_break )
       {
         T_seg  = T_break;
         offset = j-1;
@@ -608,8 +608,8 @@ void Interpolate_Position( double Time , int Target , double Position[3] )
   /* Compute interpolated the position.                                       */
   /*--------------------------------------------------------------------------*/
 
-  for ( i=0 ; i<3 ; i++ ) 
-  {                           
+  for ( i=0 ; i<3 ; i++ )
+  {
     Cp[0]  = 1.0;                                 /* Begin polynomial sum */
     Cp[1]  = Tc;
     sum[i] = A[i*N] + A[1+i*N]*Tc;
@@ -710,10 +710,10 @@ void Interpolate_State(double Time , int Target, stateType *Planet)
   {
     T_sub = T_span / ((double) G);          /* Compute subgranule interval */
 
-    for ( j=G ; j>0 ; j-- ) 
+    for ( j=G ; j>0 ; j-- )
     {
       T_break = T_beg + ((double) j-1) * T_sub;
-      if ( Time > T_break ) 
+      if ( Time > T_break )
       {
         T_seg  = T_break;
         offset = j-1;
@@ -756,7 +756,7 @@ void Interpolate_State(double Time , int Target, stateType *Planet)
 
   for ( i=0 ; i<3 ; i++ )                /* Compute interpolating polynomials */
   {
-    Cp[0] = 1.0;           
+    Cp[0] = 1.0;
     Cp[1] = Tc;
     Cp[2] = 2.0 * Tc*Tc - 1.0;
 

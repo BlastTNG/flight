@@ -1,6 +1,6 @@
 /* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2002-2004 University of Toronto
+ * This software is copyright (C) 2002-2006 University of Toronto
  *
  * This file is part of mcp.
  *
@@ -50,7 +50,7 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
     double *max_el, double *az_of_bot );
 
 
-int last_mode = -1;
+static int last_mode = -1;
 
 /************************************************************************/
 /*                                                                      */
@@ -58,7 +58,8 @@ int last_mode = -1;
 /*   pointing mode, etc..                                               */
 /*                                                                      */
 /************************************************************************/
-double GetVElev() {
+static double GetVElev(void)
+{
   double vel = 0;
   static double last_vel = 0;
   double dvel;
@@ -109,7 +110,8 @@ double GetVElev() {
 /*   pointing mode, etc..                                               */
 /*                                                                      */
 /************************************************************************/
-int GetVAz() {
+static int GetVAz(void)
+{
   double vel = 0;
   static int last_vel = 0;
   int dvel;
@@ -309,7 +311,9 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
 /****************************************************************/
 #define AZ_ACCEL (0.001)
 #define MIN_SCAN 0.2
-  void SetAzScanMode(double az, double left, double right, double v, double D) {
+static void SetAzScanMode(double az, double left, double right, double v,
+    double D)
+{
     if (axes_mode.az_vel < -v + D)
       axes_mode.az_vel = -v + D;
     if (axes_mode.az_vel > v + D)
@@ -343,7 +347,8 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     }
   }
 
-void DoAzScanMode() {
+static void DoAzScanMode(void)
+{
   static double last_x=0, last_w = 0;
   double az, left, right, v,w;
   int i_point;
@@ -386,7 +391,8 @@ void DoAzScanMode() {
 }
 
 #define EL_BORDER 1.0
-void DoVCapMode() {
+static void DoVCapMode(void)
+{
   double caz, cel;
   double az, az2, el, el1, el2;
   double daz_dt, del_dt, v_el;
@@ -479,7 +485,8 @@ void DoVCapMode() {
   SetAzScanMode(az, left, right, v, daz_dt);
 }
 
-void DoVBoxMode() {
+static void DoVBoxMode(void)
+{
   double caz, cel;
   double az, az2, el, el1, el2;
   double daz_dt, del_dt, v_el;
@@ -564,7 +571,8 @@ void DoVBoxMode() {
   SetAzScanMode(az, left, right, v, daz_dt);
 }
 
-void DoRaDecGotoMode() {
+static void DoRaDecGotoMode(void)
+{
   double caz, cel;
   double lst, az;
   int i_point;
@@ -588,7 +596,8 @@ void DoRaDecGotoMode() {
   isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
 }
 
-void DoNewCapMode() {
+static void DoNewCapMode(void)
+{
   double caz, cel, r, x2, y, xw;
   double bottom, top, left, right;
   double next_left, next_right, az_distance;
@@ -757,8 +766,8 @@ void DoNewCapMode() {
 
 }
 
-
-void DoNewBoxMode() {
+static void DoNewBoxMode(void)
+{
   double caz, cel, w, h;
   double bottom, top, left, right;
   double az, az2, el, el2;
@@ -905,7 +914,8 @@ void DoNewBoxMode() {
 
 }
 
-void DoQuadMode() { // aka radbox
+void DoQuadMode(void) // aka radbox
+{
   double bottom, top, left, right, next_left, next_right, az_distance;
   double az, az2, el, el2;
   double daz_dt, del_dt;
@@ -1061,7 +1071,8 @@ void DoQuadMode() { // aka radbox
  *    CommandData.pointing_mode                                   *
  *                                                                *
  ******************************************************************/
-void UpdateAxesMode() {
+void UpdateAxesMode(void)
+{
   switch (CommandData.pointing_mode.mode) {
     case P_DRIFT:
       axes_mode.el_mode = AXIS_VEL;

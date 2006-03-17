@@ -1,19 +1,19 @@
 /* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2002-2005 University of Toronto
- * 
+ * This software is copyright (C) 2002-2006 University of Toronto
+ *
  * This file is part of mcp.
- * 
+ *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * mcp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -63,23 +63,20 @@
 #define BI0_FRAME_BUFLEN (40)
 /* Define global variables */
 int bbc_fp = -1;
-int bi0_fp = -2;
 unsigned int debug = 0;
 short int SamIAm;
-int StartupVeto = STARTUP_VETO_LENGTH + 1;
-int Death = -STARTUP_VETO_LENGTH;
-extern short int InCharge; /* tx.c */
+struct ACSDataStruct ACSData;
+unsigned int RxFrameFastSamp;
+unsigned short* slow_data[FAST_PER_SLOW];
 pthread_t watchdog_id;
 
-struct ACSDataStruct ACSData;
+static int bi0_fp = -2;
+static int StartupVeto = STARTUP_VETO_LENGTH + 1;
+static int Death = -STARTUP_VETO_LENGTH;
+static int RxFrameIndex;
 
-int RxFrameIndex;
-unsigned int RxFrameFastSamp;
-
-unsigned short* slow_data[FAST_PER_SLOW];
-
+extern short int InCharge; /* tx.c */
 extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
-
 extern pthread_mutex_t mutex;
 
 void Pointing();
@@ -99,9 +96,9 @@ void SunSensor(void);
 
 void InitSched();
 
-FILE* logfile = NULL;
+static FILE* logfile = NULL;
 
-struct {
+static struct {
   int i_in;
   int i_out;
   unsigned short *framelist[BI0_FRAME_BUFLEN];
@@ -255,7 +252,8 @@ void mputs(buos_t flag, const char* message) {
 }
 
 #ifndef BOLOTEST
-void FillSlowDL(unsigned short *RxFrame) {
+static void FillSlowDL(unsigned short *RxFrame)
+{
   int i;
   unsigned short msb, lsb;
 
@@ -278,7 +276,8 @@ void FillSlowDL(unsigned short *RxFrame) {
   }
 }
 
-void SensorReader(void) {
+static void SensorReader(void)
+{
   int data;
   int nr;
   struct statvfs vfsbuf;
@@ -331,7 +330,8 @@ void SensorReader(void) {
   }
 }
 
-void GetACS(unsigned short *RxFrame){
+static void GetACS(unsigned short *RxFrame)
+{
   double enc_elev, gyro1, gyro2, gyro3;
   double x_comp, y_comp, bias;
   static struct BiPhaseStruct* gyro1Addr;
@@ -391,8 +391,8 @@ void GetACS(unsigned short *RxFrame){
 
 /* fill_Rx_frame: places one 32 bit word into the RxFrame. Returns true on
  * success */
-int fill_Rx_frame(unsigned int in_data,
-    unsigned short *RxFrame) {
+static int fill_Rx_frame(unsigned int in_data, unsigned short *RxFrame)
+{
   static int n_not_found = 0;
   struct BiPhaseStruct BiPhaseData;
 
@@ -403,7 +403,7 @@ int fill_Rx_frame(unsigned int in_data,
   if (in_data & BBC_ADC_SYNC)
     return 1;
 
-  /* words with no write flag are ignored, don't process them */ 
+  /* words with no write flag are ignored, don't process them */
   if (~in_data & BBC_WRITE)
     return 1;
 
@@ -434,7 +434,8 @@ int fill_Rx_frame(unsigned int in_data,
 }
 
 #ifndef BOLOTEST
-void WatchDog (void) {
+static void WatchDog (void)
+{
   bputs(startup, "Watchdog: Startup\n");
 
   /* Allow other threads to kill this one at any time */
@@ -452,7 +453,8 @@ void WatchDog (void) {
   }
 }
 
-void write_to_biphase(unsigned short *RxFrame) {
+static void write_to_biphase(unsigned short *RxFrame)
+{
   int i;
   static unsigned short nothing[BI0_FRAME_SIZE];
   static unsigned short sync = 0xEB90;
@@ -480,7 +482,8 @@ void write_to_biphase(unsigned short *RxFrame) {
   }
 }
 
-void InitBi0Buffer() {
+static void InitBi0Buffer()
+{
   int i;
 
   bi0_buffer.i_in = 10; /* preload the fifo */
@@ -490,7 +493,8 @@ void InitBi0Buffer() {
         sizeof(unsigned short));
 }
 
-void PushBi0Buffer(unsigned short *RxFrame) {
+static void PushBi0Buffer(unsigned short *RxFrame)
+{
   int i, fw, i_in;
 
   i_in = bi0_buffer.i_in + 1;
@@ -506,7 +510,8 @@ void PushBi0Buffer(unsigned short *RxFrame) {
 }
 #endif
 
-void zero(unsigned short *RxFrame) {
+static void zero(unsigned short *RxFrame)
+{
   int i;
 
   for (i = 0; i < SLOW_OFFSET + slowsPerBi0Frame; i++)
@@ -514,7 +519,8 @@ void zero(unsigned short *RxFrame) {
 }
 
 #ifndef BOLOTEST
-void BiPhaseWriter(void) {
+static void BiPhaseWriter(void)
+{
   int i_out, i_in;
 
   bputs(startup, "Biphase Writer: Startup\n");
@@ -551,7 +557,8 @@ void BiPhaseWriter(void) {
 /*    unless this is the first beginning of frame.                */
 /*                                                                */
 /******************************************************************/
-int IsNewFrame(unsigned int d) {
+static int IsNewFrame(unsigned int d)
+{
   static int first_bof = 1;
   int is_bof;
   is_bof = (d == (BBC_FSYNC | BBC_WRITE | BBC_NODE(63) | BBC_CH(0) | 0xEB90));
@@ -563,7 +570,8 @@ int IsNewFrame(unsigned int d) {
 }
 
 /* Identity crisis: am I frodo or sam? */
-int AmISam(void) {
+static int AmISam(void)
+{
   char buffer[2];
 
   if (gethostname(buffer, 1) == -1 && errno != ENAMETOOLONG) {
@@ -574,7 +582,8 @@ int AmISam(void) {
 }
 
 /* Signal handler called when we get a hup, int or term */
-void CloseBBC(int signo) {
+static void CloseBBC(int signo)
+{
   bprintf(err, "System: Caught signal %i; stopping NIOS", signo);
   RawNiosWrite(0, BBC_ENDWORD, NIOS_FLUSH);
   RawNiosWrite(BBCPCI_MAX_FRAME_SIZE, BBC_ENDWORD, NIOS_FLUSH);
@@ -589,14 +598,18 @@ void CloseBBC(int signo) {
   raise(signo);
 }
 
-char segvregs[100];
-int segvcnt = 0;
-void SegV(int signo) {
+#if 0
+static char segvregs[100];
+static int segvcnt = 0;
+static void SegV(int signo)
+{
   fprintf(stderr, "SEGV caught: %s\n", segvregs);
   raise(SIGTERM);
 }
+#endif
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   unsigned int in_data, i;
   unsigned short* RxFrame;
 
@@ -701,7 +714,7 @@ int main(int argc, char *argv[]) {
 
   if (SamIAm)
     bputs(info, "System: I am Sam.\n");
-  else 
+  else
     bputs(info, "System: I am not Sam.\n");
 
 #ifndef BOLOTEST
@@ -731,7 +744,7 @@ int main(int argc, char *argv[]) {
 #endif
 
   while (1) {
-    if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0) 
+    if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0)
       berror(err, "System: Error on BBC read");
 
 #if 0

@@ -1,19 +1,19 @@
 /* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2003-2004 University of Toronto
- * 
+ * This software is copyright (C) 2003-2006 University of Toronto
+ *
  * This file is part of mcp.
- * 
+ *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * mcp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -38,7 +38,7 @@
 
 //#define USE_ISC_LOG
 
-struct {
+static struct {
   char who[4];
   char where[16];
 } isc_which[2] = {
@@ -80,10 +80,10 @@ int iscwrite_index[2] = {0, 0};
 int iscpoint_index[2] = {0, 0};
 
 #ifdef USE_ISC_LOG
-FILE* isc_log[2] = {NULL, NULL};
+static FILE* isc_log[2] = {NULL, NULL};
 #endif
 
-int ISCInit(int which)
+static int ISCInit(int which)
 {
   int sock;
   struct sockaddr_in addr;
@@ -203,7 +203,7 @@ void IntegratingStarCamera(void* parameter)
         continue;
       }
 
-      /* ------------ read ---------- */ 
+      /* ------------ read ---------- */
 
       if (FD_ISSET(sock, &fdr)) {
         n = recv(sock, &ISCSolution[which][iscwrite_index[which]],
@@ -252,7 +252,7 @@ void IntegratingStarCamera(void* parameter)
         } else {
           if (WHICH)
             bprintf(info,
-                "%iSC (i): Wasn't waiting for ACK, flag was: %i (%i)\n", 
+                "%iSC (i): Wasn't waiting for ACK, flag was: %i (%i)\n",
                 which, ISCSolution[which][iscwrite_index[which]].flag,
                 ISCSolution[which][iscwrite_index[which]].framenum);
           if (WHICH)
@@ -271,7 +271,7 @@ void IntegratingStarCamera(void* parameter)
         iscwrite_index[which] = (iscwrite_index[which] + 1) % 5;
       }
 
-      /* ------------ write ---------- */ 
+      /* ------------ write ---------- */
 
       if (FD_ISSET(sock, &fdw) && (write_ISC_pointing[which])) {
         /* Retreive the derived pointing information */

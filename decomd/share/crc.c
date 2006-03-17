@@ -2,17 +2,17 @@
  *
  * This software is copyright (C) 1997 Enzo Pascale
  * Updated by Adam Hincks, August 2004, for BLAST
- * 
- * This file is part of the BLAST flight code licensed under the GNU 
+ *
+ * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
 
-unsigned short crctab[0x100] = {
+static unsigned short crctab[0x100] = {
   0x00000, 0x0C0C1, 0x0C181, 0x00140, 0x0C301, 0x003C0, 0x00280, 0x0C241,
   0x0C601, 0x006C0, 0x00780, 0x0C741, 0x00500, 0x0C5C1, 0x0C481, 0x00440,
   0X0CC01, 0x00CC0, 0x00D80, 0x0CD41, 0x00F00, 0x0CFC1, 0x0CE81, 0x00E40,
@@ -49,19 +49,19 @@ unsigned short crctab[0x100] = {
 
 /*-----------------------------------------------------------------------------
  * CalculateCRC
- * 
- * This function computes the CRC used by SEA's ARC utility.  
+ *
+ * This function computes the CRC used by SEA's ARC utility.
  *----------------------------------------------------------------------------*/
 
-unsigned short CalculateCRC(unsigned int initword, void *buffer, 
+unsigned short CalculateCRC(unsigned int initword, void *buffer,
                             unsigned int buflen) {
   unsigned int k;
   unsigned short crc;
   unsigned char *b;
 
   if (buflen)
-    crc = 0; 
-  else 
+    crc = 0;
+  else
     return 0;
 
   b = (unsigned char *)buffer;

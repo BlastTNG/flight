@@ -1,10 +1,10 @@
 /* dataholder.cpp: mcp data buffer for TDRSS high-rate downlink
  *
- * This software is copyright (C) 2004 University of Toronto
- * 
- * This file is part of the BLAST flight code licensed under the GNU 
+ * This software is copyright (C) 2004,2005 University of Toronto
+ *
+ * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -46,7 +46,7 @@ extern "C" {
  *                                                                            *|
  ******************************************************************************/
 
-void trim(char *buf)
+static void trim(char *buf)
 {
   int i;
   char tempbuf[strlen(buf)];
@@ -205,7 +205,7 @@ bool AMLParser::LoadFile(char *filename)
         for (k = 0; k < entrycount; k++) {
           ParseFullName(k, tmpstr2);
           if (!strcmp(tmpstr, tmpstr2)) {
-            bprintf(err, 
+            bprintf(err,
                 "AMLParser: found two instances of '%s' in the file '%s'.  "
                 "Using the first.\n", tmpstr, filename);
             entrycount--;
@@ -223,9 +223,9 @@ bool AMLParser::LoadFile(char *filename)
           if (!strcmp(aml[entrycount].datum[aml[entrycount].numdata].name,
                 aml[entrycount].datum[i].name)) {
             ParseFullName(entrycount, tmpstr);
-            bprintf(err, 
+            bprintf(err,
                 "AMLParser: found two instances of '%s' in entry '%s' in "
-                "the file '%s'.  Using the first.\n", 
+                "the file '%s'.  Using the first.\n",
                 aml[entrycount].datum[i].name, tmpstr, filename);
             j = 0;
           }
@@ -235,13 +235,13 @@ bool AMLParser::LoadFile(char *filename)
           break;
 
         for (i = 0; i < aml[entrycount].numvalues; i++) {
-          if (!GetValue(linebuf, i, 
+          if (!GetValue(linebuf, i,
                 aml[entrycount].value[i].entry[aml[entrycount].numdata])) {
             ParseFullName(entrycount, tmpstr);
-            bprintf(err, 
+            bprintf(err,
                 "AMLParser: couldn't get datum for '%s' in column '%s' in "
                 "entry '%s' in the file '%s'.  Ignoring this line.\n",
-                aml[entrycount].datum[aml[entrycount].numdata].name, 
+                aml[entrycount].datum[aml[entrycount].numdata].name,
                 aml[entrycount].value[0].name, tmpstr, filename);
             j = 0;
             break;
@@ -251,7 +251,7 @@ bool AMLParser::LoadFile(char *filename)
         if (j)
           aml[entrycount].numdata++;
 
-        break; 
+        break;
     }
   }
   fclose(file);
@@ -351,10 +351,10 @@ void AMLParser::GetEntryName(const char *buf, char *namebuf)
 
   SMALL_TRACE("%p, %p", buf, namebuf);
 
-  for (i = 0; i < (signed int)strlen(buf) && (buf[i] == '+' || buf[i] == '-'); 
+  for (i = 0; i < (signed int)strlen(buf) && (buf[i] == '+' || buf[i] == '-');
       i++);
 
-  for (j = i; j < (signed int)strlen(buf) && buf[j] != ' ' && buf[j] != '@'; 
+  for (j = i; j < (signed int)strlen(buf) && buf[j] != ' ' && buf[j] != '@';
       j++)
     namebuf[j - i] = buf[j];
   namebuf[j - i] = '\0';
@@ -380,14 +380,14 @@ void AMLParser::GetDataDefault(const char *buf, char *defaultbuf)
 
   SMALL_TRACE("%p, %p", buf, defaultbuf);
 
-  for (i = 0; i < (signed int)strlen(buf) && (buf[i] == '+' || buf[i] == '-'); 
+  for (i = 0; i < (signed int)strlen(buf) && (buf[i] == '+' || buf[i] == '-');
       i++);
 
-  for (j = i; j < (signed int)strlen(buf) && buf[j] != ' ' && buf[j] != '@'; 
+  for (j = i; j < (signed int)strlen(buf) && buf[j] != ' ' && buf[j] != '@';
       j++);
 
   if (buf[j] != '@') {
-    defaultbuf[0] = '\0'; 
+    defaultbuf[0] = '\0';
     SMALL_RTN("");
     return;
   }
@@ -449,7 +449,7 @@ bool AMLParser::GetValue(const char *buf, int num, char *valuebuf)
     return false;
   }
 
-  for (j = i; j < (signed int)strlen(buf) && buf[j] != ' '; j++) 
+  for (j = i; j < (signed int)strlen(buf) && buf[j] != ' '; j++)
     valuebuf[j - i] = buf[j];
   valuebuf[j - i] = '\0';
 
@@ -616,7 +616,7 @@ const char *AMLParser::Value(const char *valuename)
           // at 50 recursions.
           for (l = 0; l < 50; l++) {
             for (k = 0; k < aml[currentry].numdata; k++) {
-              if (!strcmp(aml[currentry].datum[k].name, 
+              if (!strcmp(aml[currentry].datum[k].name,
                     aml[currentry].datum[j].dflt))
                 if (!strcmp(aml[currentry].value[i].entry[k], "@")) {
                   if (strlen(aml[currentry].datum[k].dflt))
@@ -675,7 +675,7 @@ DataHolder::DataHolder(void)
   SMALL_TRACE("");
 
   allocated = false;
-  
+
   numslows = numfasts = currslow = currfast = 0;
   slows = fasts = NULL;
 
@@ -751,14 +751,14 @@ bool DataHolder::LoadFromAML(char *filename) {
     bprintf(warning, "DataHolder:  %s contains no channels.\n", filename);
 
   if (allocated) {
-    slows = (struct DataStruct_glob *)reballoc(fatal, slows, numslows * 
+    slows = (struct DataStruct_glob *)reballoc(fatal, slows, numslows *
         sizeof(DataStruct_glob));
-    fasts = (struct DataStruct_glob *)reballoc(fatal, fasts, numfasts * 
+    fasts = (struct DataStruct_glob *)reballoc(fatal, fasts, numfasts *
         sizeof(DataStruct_glob));
   } else {
-    slows = (struct DataStruct_glob *)balloc(fatal, numslows * 
+    slows = (struct DataStruct_glob *)balloc(fatal, numslows *
         sizeof(DataStruct_glob));
-    fasts = (struct DataStruct_glob *)balloc(fatal, numfasts * 
+    fasts = (struct DataStruct_glob *)balloc(fatal, numfasts *
         sizeof(DataStruct_glob));
     allocated = true;
   }
@@ -831,7 +831,7 @@ struct DataStruct_glob *DataHolder::FirstFast(void)
 
   if (numfasts) {
     SMALL_RTN("%p", fasts);
-    return fasts; 
+    return fasts;
   }
 
   SMALL_RTN("%p", NULL);
@@ -858,7 +858,7 @@ struct DataStruct_glob *DataHolder::NextSlow(void)
   }
 
   SMALL_RTN("%p", &(slows[currslow]));
-  return &(slows[currslow]); 
+  return &(slows[currslow]);
 }
 
 
@@ -881,7 +881,7 @@ struct DataStruct_glob *DataHolder::NextFast(void)
   }
 
   SMALL_RTN("%p", &(fasts[currfast]));
-  return &(fasts[currfast]); 
+  return &(fasts[currfast]);
 }
 
 

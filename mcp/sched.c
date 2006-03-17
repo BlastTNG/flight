@@ -1,19 +1,19 @@
 /* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2003-2005 University of Toronto
- * 
+ * This software is copyright (C) 2003-2006 University of Toronto
+ *
  * This file is part of mcp.
- * 
+ *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * mcp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -31,14 +31,14 @@
 
 #define MAX_NSCHED 8000
 struct ScheduleType _S[2][3];
+int doing_schedule = 0;
+
 void StarPos(double t, double ra0, double dec0, double mra, double mdec,
 	     double pi, double rvel, double *ra, double *dec);
 double GetJulian(time_t t);
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
 		double *el);
 int pinIsIn();
-
-int doing_schedule = 0;
 
 #define NOMINAL_LATITUDE -77.50 /* degrees North */
 #define LATITUDE_BAND     2.00 /* in degrees of latitude */
@@ -52,7 +52,7 @@ enum singleCommand SCommand(char*);
 void ScheduledCommand(struct ScheduleEvent*);
 const char* CommandName(int, int);
 
-const char filename[2][3][32] = {
+static const char filename[2][3][32] = {
   {"/data/etc/happy.north.sch",
     "/data/etc/happy.mid.sch",
     "/data/etc/happy.south.sch"},
@@ -64,7 +64,7 @@ const char filename[2][3][32] = {
 int GetLine(FILE *fp, char *line); // defined in lut.c
 
 #define CHECK_LON 20.00
-void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
+static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
 {
   FILE *fp;
   char line_in[MAX_LINE_LENGTH];
@@ -130,7 +130,7 @@ void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
   ts.tm_isdst = 0;
   ts.tm_mon--; /* Jan is 0 in struct tm.tm_mon, not 1 */
 
-  S->t0 = mktime(&ts) - timezone; 
+  S->t0 = mktime(&ts) - timezone;
 
   /*************************************************************/
   /** find local comoving siderial date (in siderial seconds) **/
@@ -165,7 +165,7 @@ void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
     token[0] = ptr;
     for (;;) {
       if (*ptr == ' ' || *ptr == '\t' || *ptr == '\n' || *ptr == '\r') {
-        if (k) 
+        if (k)
           *(ptr - 1) = '\0';
         else
           k = 1;
@@ -231,7 +231,7 @@ void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
           "Scheduler: ****** Warning Line %i is Malformed: Skipping *****\n",
           i);
       discarded_lines++;
-    } else 
+    } else
       j++;
   }
   S->n_sched -= discarded_lines;
@@ -305,7 +305,8 @@ void InitSched(void)
       LoadSchedFile(filename[s][l], &_S[s][l], 1 - l);
 }
 
-void DoSched(void) {
+void DoSched(void)
+{
   time_t t;
   double dt;
   double d_lon;
@@ -468,7 +469,7 @@ void DoSched(void) {
   if (i_sched != last_is) {
     bprintf(info, "Scheduler: Submitting event %i from %s to command "
         "subsystem (LST = %i/%f)", i_sched,
-        filename[CommandData.sucks][CommandData.lat_range], (int)(dt / 24), 
+        filename[CommandData.sucks][CommandData.lat_range], (int)(dt / 24),
         fmod(dt, 24));
     ScheduledCommand(&S->event[i_sched]);
   }

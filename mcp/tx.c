@@ -1,19 +1,19 @@
 /* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2002-2005 University of Toronto
- * 
+ * This software is copyright (C) 2002-2006 University of Toronto
+ *
  * This file is part of mcp.
- * 
+ *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * mcp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -28,7 +28,7 @@
  * das.c:       DAS, Bias and Cryo controls
  * motors.c:    Motor commanding and Scan modes
  * tx.c:        Pointing data writeback, ADC sync, and standard Tx frame control
- * 
+ *
  * -dvw */
 
 #include <stdlib.h>
@@ -91,7 +91,8 @@ int mcp_initial_controls = 0;
 /*  WriteAux: write aux data, like cpu time, temperature, fan speed     */
 /*                                                                      */
 /************************************************************************/
-void WriteAux(void) {
+static void WriteAux(void)
+{
   static struct NiosStruct* cpuFanAddr;
   static struct NiosStruct* cpuTimeAddr;
   static struct NiosStruct* cpuTimeuSAddr;
@@ -112,7 +113,7 @@ void WriteAux(void) {
   int i_point;
   struct timeval tv;
   struct timezone tz;
-  
+
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
@@ -180,7 +181,8 @@ void WriteAux(void) {
 /*****************************************************************/
 #define NUM_SYNC 18
 #define REBOOT_TIMEOUT 50 /* 10 sec -- in 5Hz Frames */
-void SyncADC (void) {
+static void SyncADC (void)
+{
   static struct NiosStruct* syncAddr[NUM_SYNC];
   static struct BiPhaseStruct* statusAddr[NUM_SYNC];
   static int doingSync[NUM_SYNC];
@@ -226,7 +228,7 @@ void SyncADC (void) {
     if ((k & 0xfffc) == serial[m]) {
       if (serial[m] == 0xeb90)
         serial[m] = (~0xeb90) & 0xfffc;
-      else 
+      else
         serial[m] = 0xeb90;
     }
 
@@ -235,7 +237,7 @@ void SyncADC (void) {
   }
 }
 
-struct NiosStruct* GetSCNiosAddr(char* field, int which)
+static struct NiosStruct* GetSCNiosAddr(char* field, int which)
 {
   char buffer[FIELD_LEN];
   sprintf(buffer, "%s_%s", which ? "osc" : "isc", field);
@@ -244,7 +246,7 @@ struct NiosStruct* GetSCNiosAddr(char* field, int which)
 }
 
 #ifndef BOLOTEST
-void StoreStarCameraData(int index, int which)
+static void StoreStarCameraData(int index, int which)
 {
   static int firsttime[2] = {1, 1};
   static int blob_index[2] = {0, 0};
@@ -518,7 +520,7 @@ void StoreStarCameraData(int index, int which)
 
   if (ISCSolution[which][i_isc].sigma * RAD2ARCSEC > 65535)
     WriteData(RdSigmaAddr[which], 65535, NIOS_QUEUE);
-  else 
+  else
     WriteData(RdSigmaAddr[which], (unsigned int)(ISCSolution[which][i_isc].sigma
           * RAD2ARCSEC), NIOS_QUEUE);
 
@@ -540,7 +542,7 @@ void StoreStarCameraData(int index, int which)
 /*    Store derived acs and pointing data in frame                      */
 /*                                                                      */
 /************************************************************************/
-void StoreData(int index)
+static void StoreData(int index)
 {
   static int firsttime = 1;
 
@@ -872,7 +874,7 @@ void StoreData(int index)
       (unsigned int)(PointingData[i_point].clin_sigma * DEG2I), NIOS_QUEUE);
   WriteData(clinTrimAddr, CommandData.clin_el_trim * DEG2I, NIOS_QUEUE);
 
-  WriteData(nullTrimAddr, CommandData.null_az_trim * DEG2I, NIOS_QUEUE); 
+  WriteData(nullTrimAddr, CommandData.null_az_trim * DEG2I, NIOS_QUEUE);
 
   /************* Pointing mode fields *************/
   WriteData(pModeAddr, (int)(CommandData.pointing_mode.mode), NIOS_QUEUE);
@@ -964,7 +966,7 @@ void InitTxFrame(unsigned short *RxFrame)
              * we'll write the framesync here and Nios will start sending out
              * the frame -- we flush this so it takes effect immediately. */
             RawNiosWrite(niosAddr, BBC_ENDWORD, NIOS_FLUSH);
-          else 
+          else
             RawNiosWrite(niosAddr, BBC_FSYNC | BBC_WRITE | BBC_NODE(63)
                 | BBC_CH(0) | 0xEB90, NIOS_QUEUE);
         } else if (i == 1 && bus == 0) /* fastsamp lsb */
@@ -1027,6 +1029,8 @@ void RawNiosWrite(unsigned int addr, unsigned int data, int flush_flag)
   if (flush_flag || counter == 2 * NIOS_BUFFER_SIZE) {
     n = write(bbc_fp, niosData, counter * sizeof(unsigned int));
     counter = 0;
+    if (n < counter * sizeof(unsigned int))
+      bprintf(warning, "System: Short write to Nios");
   }
 }
 
@@ -1054,7 +1058,8 @@ void WriteData(struct NiosStruct* addr, unsigned int data, int flush_flag)
   }
 }
 
-void UpdateBBCFrame(unsigned short *RxFrame) {
+void UpdateBBCFrame(unsigned short *RxFrame)
+{
   static int index = 0;
 
   /*** do Controls ***/

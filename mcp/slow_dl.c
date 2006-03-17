@@ -1,10 +1,10 @@
 /* slow_dl.c: slow downlink packet specification
  *
  * This software is copyright (C) 2004-2005 University of Toronto
- * 
- * This file is part of the BLAST flight code licensed under the GNU 
+ *
+ * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -22,7 +22,7 @@
 struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   /* PV */
   {"p_pv",          SLOWDL_FORCE_INT, 8,  120, 0},
-  {"t_pv",          SLOWDL_FORCE_INT, 8, 65, -10}, 
+  {"t_pv",          SLOWDL_FORCE_INT, 8, 65, -10},
   {"i_pv",          SLOWDL_FORCE_INT, 8, 10, -10}, /* 78 mA */
   {"lst",           SLOWDL_FORCE_INT, 8, 0, 24},
   {"sam_i_am",      SLOWDL_FORCE_INT, 8, 0, 255},
@@ -44,7 +44,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"ra",            SLOWDL_FORCE_INT, 8, 0, 24},
   {"dec",           SLOWDL_FORCE_INT, 8, -90, 90},
   {"az",            SLOWDL_FORCE_INT, 8, -180, 180},
-  {"el",            SLOWDL_FORCE_INT, 8, 10, 65},                                                                                                                                                                                                                                  
+  {"el",            SLOWDL_FORCE_INT, 8, 10, 65},
   /* MOTORS */
   {"t_el_mc",       SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_el_mot",      SLOWDL_FORCE_INT, 8, 55, -55},
@@ -62,7 +62,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"g_p_az",        SLOWDL_FORCE_INT, 8, 0, 30000},  /* 118 */
   {"g_i_az",        SLOWDL_FORCE_INT, 8, 0, 30000},  /* 118 */
   {"g_p_pivot",     SLOWDL_FORCE_INT, 8, 0, 30000},  /* 118 */
-  {"set_reac",      SLOWDL_FORCE_INT, 8, 0, 3}, 
+  {"set_reac",      SLOWDL_FORCE_INT, 8, 0, 3},
   {"rps_reac",      SLOWDL_FORCE_INT, 8, -3, 3},
   /* ACS */
   {"i_apm_3v",      SLOWDL_FORCE_INT, 8, 10, -10}, /* 78 mA */
@@ -70,7 +70,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"i_apm_10v",     SLOWDL_FORCE_INT, 8, 10, -10}, /* 78 mA */
   {"t_apm_3v",      SLOWDL_FORCE_INT, 8, 70, -55},
   {"t_apm_5v",      SLOWDL_FORCE_INT, 8, 70, -55},
-  {"t_apm_10v",     SLOWDL_FORCE_INT, 8, 70, -55}, 
+  {"t_apm_10v",     SLOWDL_FORCE_INT, 8, 70, -55},
   {"sensor_reset",  SLOWDL_U_MASK,8},
   {"lock_bits",     SLOWDL_U_MASK,8},
   /* BALANCE */
@@ -165,28 +165,28 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"v_sol_das3",    SLOWDL_FORCE_INT, 8,  60, 20},
   {"v_sol_das4",    SLOWDL_FORCE_INT, 8,  60, 20},
   /* OF GONDOLA THERMOMETRY */
-  {"t_out_heatx",   SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_sun_sensor",  SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_scoop_tip",   SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_l_sshield",   SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_r_sshield",   SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_mb_sshield",  SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_lock_motor",  SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_el_bearing",  SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_acs",         SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_pv_ext",      SLOWDL_FORCE_INT, 8, 55, -55}, 
+  {"t_out_heatx",   SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_sun_sensor",  SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_scoop_tip",   SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_l_sshield",   SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_r_sshield",   SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_mb_sshield",  SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_lock_motor",  SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_el_bearing",  SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_acs",         SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_pv_ext",      SLOWDL_FORCE_INT, 8, 55, -55},
   /* IF GONDOLA THERMOMETRY */
-  {"t_sc_baf",      SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_scoop",       SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_prim",        SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_cryo",        SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_cryo_valve",  SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_bal_bot",     SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_if_tpb",        SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_if_tss",        SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_triangle",        SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_rec",         SLOWDL_FORCE_INT, 8, 55, -55}, 
-  {"t_in_heatx",    SLOWDL_FORCE_INT, 8, 55, -55}, 
+  {"t_sc_baf",      SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_scoop",       SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_prim",        SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_cryo",        SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_cryo_valve",  SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_bal_bot",     SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_if_tpb",        SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_if_tss",        SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_triangle",        SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_rec",         SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_in_heatx",    SLOWDL_FORCE_INT, 8, 55, -55},
   /* DAS */
   {"i_dpm_28v",     SLOWDL_FORCE_INT, 8, -2, 10}, /* 78 mA */
   {"i_dpm_3v",      SLOWDL_FORCE_INT, 8, 10, -2}, /* 78 mA */
@@ -206,11 +206,11 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"b_amp2",        SLOWDL_FORCE_INT, 8, 0, 127},
   {"b_amp3",        SLOWDL_FORCE_INT, 8, 127, 0},
   /* GYROS */
-  {"t_gyro1",       SLOWDL_FORCE_INT, 8, 60, -30}, 
-  {"t_gyro2",       SLOWDL_FORCE_INT, 8, 60, -30}, 
-  {"t_gyro3",       SLOWDL_FORCE_INT, 8, 60, -30}, 
-  {"t_gybox1",      SLOWDL_FORCE_INT, 8, 60, -30}, 
-  {"t_gybox2",      SLOWDL_FORCE_INT, 8, 60, -30}, 
+  {"t_gyro1",       SLOWDL_FORCE_INT, 8, 60, -30},
+  {"t_gyro2",       SLOWDL_FORCE_INT, 8, 60, -30},
+  {"t_gyro3",       SLOWDL_FORCE_INT, 8, 60, -30},
+  {"t_gybox1",      SLOWDL_FORCE_INT, 8, 60, -30},
+  {"t_gybox2",      SLOWDL_FORCE_INT, 8, 60, -30},
   {"use_analogue",  SLOWDL_U_MASK,8},
   {"i_gybox",       SLOWDL_FORCE_INT, 8, 10, -10}, /* 78 mA */
   /* CRYO SENSORS */

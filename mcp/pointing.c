@@ -1,19 +1,19 @@
 /* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2002-2004 University of Toronto
- * 
+ * This software is copyright (C) 2002-2006 University of Toronto
+ *
  * This file is part of mcp.
- * 
+ *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * mcp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -24,11 +24,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <errno.h> 
+#include <errno.h>
 #include <fcntl.h>
 #include <time.h>
 #include <math.h>
-#include <termios.h> 
+#include <termios.h>
 #include <ctype.h>
 #include <pthread.h>
 
@@ -39,15 +39,11 @@
 #include "command_struct.h"
 #include "lut.h"
 #include "tx.h"
-/* #include "sslutNA.h" */
 #include "fir.h"
 
 #define FLOAT_ALT 30480
 #define FRAMES_TO_OK_ATFLOAT 100
 
-/* #define GY1_OFFSET (-0.1365) */
-/* #define GY2_OFFSET (0.008) */
-/* #define GY3_OFFSET (0.140) */
 #define GY1_OFFSET (0)
 #define GY2_OFFSET (0)
 #define GY3_OFFSET (0)
@@ -117,7 +113,7 @@ struct AzSolutionStruct {
   struct FirStruct *fs3;
 };
 
-struct HistoryStruct {
+static struct HistoryStruct {
   double *elev_history;
   double *gyro1_history;
   double *gyro2_history;
@@ -125,14 +121,14 @@ struct HistoryStruct {
   int i_history;  // points to last valid point.  Not thread safe.
 } hs = {NULL, NULL, NULL, NULL, 0};
 
-struct {
+static struct {
   double az;
   double el;
   int fresh;
 } NewAzEl = {0.0, 0.0, 0};
 
 // gyros, with earth's rotation removed
-struct {
+static struct {
   double gy1;
   double gy2;
   double gy3;
@@ -140,7 +136,7 @@ struct {
 
 #define MAX_SUN_EL 5.0
 
-double sun_az, sun_el; // set in SSConvert and used in UnwindDiff
+static double sun_az, sun_el; // set in SSConvert and used in UnwindDiff
 
 void SunPos(double tt, double *ra, double *dec); // in starpos.c
 
@@ -149,18 +145,21 @@ void SunPos(double tt, double *ra, double *dec); // in starpos.c
 #define MAG_ALIGNMENT 0.0 // 267 //237.0;
 
 // limit to 0 to 360.0
-void NormalizeAngle(double *A) {
+void NormalizeAngle(double *A)
+{
   *A = fmod(*A, 360.0);
   if (*A < 0)
     *A += 360.0;
 }
 
-void UnwindDiff(double ref, double *A) {
+void UnwindDiff(double ref, double *A)
+{
   *A = ref + remainder(*A - ref, 360.0);
 }
 
 // adjust *A to be within +-180 of ref
-void SetSafeDAz(double ref, double *A) {
+void SetSafeDAz(double ref, double *A)
+{
   *A = ref + remainder(*A - ref, 360.0);
   if (sun_el < MAX_SUN_EL)
     return;
@@ -171,23 +170,6 @@ void SetSafeDAz(double ref, double *A) {
     *A -= 360.0;
   } else if ((ref > sun_az) && (sun_az > *A)) {
     *A += 360.0;
-  }
-}
-
-void SetSafeDAzC(double ref, double *A, double *C) {
-  *C = 0;
-  *A = ref + remainder(*A - ref, 360.0);
-  if (sun_el < MAX_SUN_EL)
-    return;
-
-  sun_az = ref + remainder(sun_az - ref, 360.0);
-
-  if ((ref < sun_az) && (sun_az < *A)) {
-    *A -= 360.0;
-    *C = -360.0;
-  } else if ((ref > sun_az) && (sun_az > *A)) {
-    *A += 360.0;
-    *C = 360.0;
   }
 }
 
@@ -197,7 +179,8 @@ void SetSafeDAzC(double ref, double *A, double *C) {
 /*             to convert mag_x and mag_y to mag_az                     */
 /*                                                                      */
 /************************************************************************/
-int MagConvert(double *mag_az) {
+static int MagConvert(double *mag_az)
+{
   float year;
   static float fdec, dip, ti, gv;
   static double dec;
@@ -259,16 +242,16 @@ int MagConvert(double *mag_az) {
 
   // cbn added this line
   *mag_az = (180.0 / M_PI) * atan2(ACSData.mag_y-43087.0, ACSData.mag_x-44015);
-  
+
   // Enzo inserted these two lines
   //mag_az_tmp = MagLutCal(&magLut, ACSData.mag_x, ACSData.mag_y, mag_az_tmp);
-  //*mag_az = mag_az_tmp;  
+  //*mag_az = mag_az_tmp;
 
 #if 0
 #warning THE MAGNETIC MODEL HAS BEEN DISABLED
   dec = 0; // disable mag model.
 #endif
-  
+
   *mag_az += dec + MAG_ALIGNMENT;
 
   NormalizeAngle(mag_az);
@@ -280,7 +263,8 @@ int MagConvert(double *mag_az) {
   return (1);
 }
 
-int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll) {
+static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
+{
   static int last_i_dgpsatt = 0;
   int i_dgpsatt;
 
@@ -305,14 +289,15 @@ int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll) {
 
 // return 1 if new sun, and 0 otherwise
 #define MIN_SS_AZ_SNR 30
-int SSConvert(double *ss_az) {
+static int SSConvert(double *ss_az)
+{
   static int firsttime = 1;
   int i_point, i_ss;
   double az;
   double sun_ra, sun_dec, jd;
   static int last_i_ss = -1;
   static struct LutType ssAzLut = {"/data/etc/ss.lut",0,NULL,NULL,0};
-  
+
   if (firsttime) {
     firsttime = 0;
     LutInit(&ssAzLut);
@@ -337,22 +322,23 @@ int SSConvert(double *ss_az) {
   PointingData[point_index].sun_el = sun_el;
 
   if (i_ss == last_i_ss)
-    return (0); 
+    return (0);
 
   if (SunSensorData[i_ss].az_snr < MIN_SS_AZ_SNR)
     return (0);
-  
+
   az = LutCal(&ssAzLut, (double)SunSensorData[i_ss].az_center);
   *ss_az =  -az;//sun_az - az;
 #warning "SUN AZ DISABLED"
 
   NormalizeAngle(ss_az);
-  
+
   return (1);
 }
 
 #define GY_HISTORY 300
-void RecordHistory(int index) {
+static void RecordHistory(int index)
+{
   /*****************************************/
   /*   Allocate Memory                     */
   if (hs.gyro1_history == NULL) {
@@ -381,9 +367,10 @@ void RecordHistory(int index) {
 /* #define GYRO_VAR 3.7808641975309e-08
  (0.02dps/sqrt(100Hz))^2 : gyro offset error dominated */
 #define GYRO_VAR (2.0E-6)
-void EvolveSCSolution(struct ElSolutionStruct *e,
+static void EvolveSCSolution(struct ElSolutionStruct *e,
     struct AzSolutionStruct *a, double gy1, double gy1_off, double gy2,
-    double gy2_off, double gy3, double gy3_off, double old_el, int which) {
+    double gy2_off, double gy3, double gy3_off, double old_el, int which)
+{
 
   double gy_az;
   static int last_isc_framenum[2] = {0xfffffff, 0xfffffff};
@@ -456,22 +443,22 @@ void EvolveSCSolution(struct ElSolutionStruct *e,
       }
 
       UnwindDiff(e->angle, &new_el);
-      e->angle = (w1 * e->angle + new_el * w2) / (w1 + w2);      
+      e->angle = (w1 * e->angle + new_el * w2) / (w1 + w2);
       e->varience = 1.0 / (w1 + w2);
       e->angle += gy_el_delta; // add back to now
-      
+
       NormalizeAngle(&(e->angle));
 
       // evolve az solution
       a->angle -= gy_az_delta; // rewind to when the frame was grabbed
       w1 = 1.0 / (a->varience);
-      // w2 already set 
+      // w2 already set
 
       UnwindDiff(a->angle, &new_az);
       a->angle = (w1 * a->angle + new_az * w2) / (w1 + w2);
       a->varience = 1.0 / (w1 + w2);
       a->angle += gy_az_delta; // add back to now
-      
+
       NormalizeAngle(&(a->angle));
     }
 
@@ -484,9 +471,10 @@ void EvolveSCSolution(struct ElSolutionStruct *e,
 /** the new solution is a weighted mean of:
   the old solution evolved by gyro motion and
   the new solution. **/
-void EvolveElSolution(struct ElSolutionStruct *s,
+static void EvolveElSolution(struct ElSolutionStruct *s,
     double gyro, double gy_off,
-    double new_angle, int new_reading) {
+    double new_angle, int new_reading)
+{
   double w1, w2;
   double new_offset = 0;
 
@@ -495,7 +483,7 @@ void EvolveElSolution(struct ElSolutionStruct *s,
 
   s->gy_int += gyro / SR; // in degrees
 
-  if (new_reading) {    
+  if (new_reading) {
     w1 = 1.0 / (s->varience);
     w2 = s->samp_weight;
 
@@ -517,68 +505,17 @@ void EvolveElSolution(struct ElSolutionStruct *s,
     if (s->n_solutions<10000) {
       s->n_solutions++;
     }
-    
+
     s->gy_int = 0.0;
-    s->last_input = new_angle;      
-  }
-  s->since_last++;
-}
-
-/* Gyro noise: 7' / rt(hour) */
-/** the new solution is a weighted mean of:
-  the old solution evolved by gyro motion and
-  the new solution. **/
-void oldEvolveElSolution(struct ElSolutionStruct *s,
-    double gyro, double gy_off,
-    double new_angle, int new_reading) {
-  double w1, w2;
-  double new_offset = 0;
-  double fs;
-
-  s->angle += (gyro + gy_off) / SR;
-  s->varience += GYRO_VAR;
-
-  s->gy_int += gyro / SR; // in degrees
-
-  if (new_reading) {    
-    w1 = 1.0 / (s->varience);
-    w2 = s->samp_weight;
-
-    s->angle = (w1 * s->angle + new_angle * w2) / (w1 + w2);
-    s->varience = 1.0 / (w1 + w2);
-
-    /** calculate offset **/
-    if (s->n_solutions > 10) { // only calculate if we have had at least 10
-      new_offset = ((new_angle - s->last_input) - s->gy_int) /
-        ((1.0/SR) * (double)s->since_last);
-
-      if (fabs(new_offset) > 500.0)
-        new_offset = 0; // 5 deg step is bunk!
-
-      if (CommandData.fast_gy_offset>0) {
-        fs = (1.0 + 20.0/3000.0*(double)CommandData.fast_gy_offset) * s->FC;
-      } else if (s->n_solutions < 1000) {
-        fs = 20.0 * s->FC;
-      } else {
-        fs = s->FC;
-      }
-
-      s->gy_offset = fs * new_offset + (1.0 - fs) * s->gy_offset;
-    }
-    s->since_last = 0;
-    if (s->n_solutions<10000) {
-      s->n_solutions++;
-    }
-    
-    s->gy_int = 0.0;
-    s->last_input = new_angle;      
+    s->last_input = new_angle;
   }
   s->since_last++;
 }
 
 // Weighted mean of ElAtt and ElSol
-void AddElSolution(struct ElAttStruct *ElAtt, struct ElSolutionStruct *ElSol,
-    int add_offset) {
+static void AddElSolution(struct ElAttStruct *ElAtt,
+    struct ElSolutionStruct *ElSol, int add_offset)
+{
   double weight, var;
 
   var = ElSol->varience + ElSol->sys_var;
@@ -602,8 +539,9 @@ void AddElSolution(struct ElAttStruct *ElAtt, struct ElSolutionStruct *ElSol,
 }
 
 // Weighted mean of AzAtt and AzSol
-void AddAzSolution(struct AzAttStruct *AzAtt, struct AzSolutionStruct *AzSol,
-    int add_offset) {
+static void AddAzSolution(struct AzAttStruct *AzAtt,
+    struct AzSolutionStruct *AzSol, int add_offset)
+{
   double weight, var, az;
 
   var = AzSol->varience + AzSol->sys_var;
@@ -630,10 +568,10 @@ void AddAzSolution(struct AzAttStruct *AzAtt, struct AzSolutionStruct *AzSol,
 }
 
 //FIXME: need to add rotation of earth correction
-void EvolveAzSolution(struct AzSolutionStruct *s,
-    double gy2, double gy2_offset, double gy3,
-    double gy3_offset,
-    double el, double new_angle, int new_reading) {
+static void EvolveAzSolution(struct AzSolutionStruct *s, double gy2,
+    double gy2_offset, double gy3, double gy3_offset, double el, double new_angle,
+    int new_reading)
+{
   double w1, w2;
   double gy_az;
   double new_offset, daz;
@@ -647,7 +585,7 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
   s->gy2_int += gy2 / SR; // in degrees
   s->gy3_int += gy3 / SR; // in degrees
 
-  if (new_reading) {    
+  if (new_reading) {
     w1 = 1.0 / (s->varience);
     w2 = s->samp_weight;
 
@@ -677,7 +615,7 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
     }
     s->gy2_int = 0.0;
     s->gy3_int = 0.0;
-    s->last_input = new_angle;      
+    s->last_input = new_angle;
   }
   s->since_last++;
 }
@@ -687,15 +625,15 @@ void EvolveAzSolution(struct AzSolutionStruct *s,
   update the pointing;
   */
 /* Elevation encoder uncertainty: */
-void Pointing()
+void Pointing(void)
 {
   double R, cos_e, cos_l, cos_a;
   double sin_e, sin_l, sin_a;
   double ra, dec, az, el;
 
   int ss_ok, mag_ok, dgps_ok;
-  static unsigned dgps_since_ok = 500;  
-  static unsigned ss_since_ok = 500;  
+  static unsigned dgps_since_ok = 500;
+  static unsigned ss_since_ok = 500;
   double ss_az, mag_az;
   double dgps_az, dgps_pitch, dgps_roll;
   double gy_roll, gy2, gy3, el_rad, clin_elev;
@@ -718,31 +656,31 @@ void Pointing()
     360.0 * 360.0, // starting varience
     1.0 / M2DV(60), //sample weight
     M2DV(20), // systemamatic varience
-    0.0, // trim 
+    0.0, // trim
     0.0, // last input
     0.0, // gy integral
     GY1_OFFSET, // gy offset
     0.0001, // filter constant
     0, 0, // n_solutions, since_last
-    NULL // firstruct					  
+    NULL // firstruct					
   };
   static struct ElSolutionStruct ClinEl = {0.0, // starting angle
     360.0 * 360.0, // starting varience
     1.0 / M2DV(60), //sample weight
     M2DV(60), // systemamatic varience
-    0.0, // trim 
+    0.0, // trim
     0.0, // last input
     0.0, // gy integral
     GY1_OFFSET, // gy offset
     0.0001, // filter constant
     0, 0, // n_solutions, since_last
-    NULL // firstruct					  
+    NULL // firstruct					
   };
   static struct ElSolutionStruct ISCEl = {0.0, // starting angle
     719.9 * 719.9, // starting varience
     1.0 / M2DV(0.2), //sample weight
     M2DV(0.2), // systemamatic varience
-    0.0, // trim 
+    0.0, // trim
     0.0, // last input
     0.0, // gy integral
     GY1_OFFSET, // gy offset
@@ -753,7 +691,7 @@ void Pointing()
     719.9 * 719.9, // starting varience
     1.0 / M2DV(0.2), //sample weight
     M2DV(0.2), // systemamatic varience
-    0.0, // trim 
+    0.0, // trim
     0.0, // last input
     0.0, // gy integral
     GY1_OFFSET, // gy offset
@@ -764,7 +702,7 @@ void Pointing()
     360.0 * 360.0, // starting varience
     1.0 / M2DV(6), //sample weight
     M2DV(6000), // systemamatic varience
-    0.0, // trim 
+    0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
     GY2_OFFSET, GY3_OFFSET, // gy offsets
@@ -776,7 +714,7 @@ void Pointing()
     360.0 * 360.0, // starting varience
     1.0 / M2DV(60), //sample weight
     M2DV(90), // systemamatic varience
-    0.0, // trim 
+    0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
     GY2_OFFSET, GY3_OFFSET, // gy offsets
@@ -788,7 +726,7 @@ void Pointing()
     360.0 * 360.0, // starting varience
     1.0 / M2DV(20), //sample weight
     M2DV(15), // systemamatic varience
-    0.0, // trim 
+    0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
     GY2_OFFSET, GY3_OFFSET, // gy offsets
@@ -800,7 +738,7 @@ void Pointing()
     360.0 * 360.0, // starting varience
     1.0 / M2DV(30), //sample weight
     M2DV(60), // systemamatic varience
-    0.0, // trim 
+    0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
     GY2_OFFSET, GY3_OFFSET, // gy offsets
@@ -812,7 +750,7 @@ void Pointing()
     360.0 * 360.0, // starting varience
     1.0 / M2DV(0.3), //sample weight
     M2DV(0.2), // systemamatic varience
-    0.0, // trim 
+    0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
     GY2_OFFSET, GY3_OFFSET, // gy offsets
@@ -824,7 +762,7 @@ void Pointing()
     360.0 * 360.0, // starting varience
     1.0 / M2DV(0.3), //sample weight
     M2DV(0.2), // systemamatic varience
-    0.0, // trim 
+    0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
     GY2_OFFSET, GY3_OFFSET, // gy offsets
@@ -836,8 +774,8 @@ void Pointing()
   if (firsttime) {
     firsttime = 0;
     ClinEl.trim = CommandData.clin_el_trim;
-    EncEl.trim = CommandData.enc_el_trim; 
-    NullAz.trim = CommandData.null_az_trim; 
+    EncEl.trim = CommandData.enc_el_trim;
+    NullAz.trim = CommandData.null_az_trim;
     MagAz.trim = CommandData.mag_az_trim;
     DGPSAz.trim = CommandData.dgps_az_trim;
     SSAz.trim = CommandData.ss_az_trim;
@@ -851,25 +789,25 @@ void Pointing()
     NullAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(NullAz.fs2, (int)(10)); // not used
     initFir(NullAz.fs3, (int)(10)); // not used
-    
+
     MagAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     MagAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(MagAz.fs2, FIR_LENGTH); 
-    initFir(MagAz.fs3, FIR_LENGTH); 
+    initFir(MagAz.fs2, FIR_LENGTH);
+    initFir(MagAz.fs3, FIR_LENGTH);
 
     DGPSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     DGPSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(DGPSAz.fs2, FIR_LENGTH); 
-    initFir(DGPSAz.fs3, FIR_LENGTH); 
+    initFir(DGPSAz.fs2, FIR_LENGTH);
+    initFir(DGPSAz.fs3, FIR_LENGTH);
 
     SSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     SSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(SSAz.fs2, FIR_LENGTH); 
+    initFir(SSAz.fs2, FIR_LENGTH);
     initFir(SSAz.fs3, FIR_LENGTH);
 
     // the first t about to be read needs to be set
     PointingData[GETREADINDEX(point_index)].t = mcp_systime(NULL); // CPU time
-    
+
     /* Load lat/lon from disk */
     PointingData[0].lon = PointingData[1].lon = PointingData[2].lon
       = CommandData.lon;
@@ -1045,7 +983,7 @@ void Pointing()
       RG.gy2, PointingData[i_point_read].gy2_offset,
       RG.gy3, PointingData[i_point_read].gy3_offset,
       PointingData[point_index].el,
-      ss_az, ss_ok);  
+      ss_az, ss_ok);
 
   if (CommandData.fast_gy_offset>0) {
     CommandData.fast_gy_offset--;
@@ -1126,7 +1064,7 @@ void Pointing()
   else
     gy_roll_amp *= 0.9999;
   if (gy_roll_amp > 1.0)
-    gy_roll_amp *= 0.999; // probably a spike 
+    gy_roll_amp *= 0.999; // probably a spike
   PointingData[point_index].gy_roll_amp = gy_roll_amp;
 
   /********************/
@@ -1167,7 +1105,8 @@ void Pointing()
 }
 
 // called from the command thread in command.h
-void SetRaDec(double ra, double dec) {
+void SetRaDec(double ra, double dec)
+{
   int i_point;
   i_point = GETREADINDEX(point_index);
 
@@ -1178,11 +1117,12 @@ void SetRaDec(double ra, double dec) {
   NewAzEl.fresh = 1;
 }
 
-void SetTrimToSC(which) {
+void SetTrimToSC(int which)
+{
   int i_point;
 
   i_point = GETREADINDEX(point_index);
-  if (which == 0) {    
+  if (which == 0) {
     NewAzEl.az = PointingData[i_point].isc_az;
     NewAzEl.el = PointingData[i_point].isc_el;
   } else {
@@ -1193,13 +1133,15 @@ void SetTrimToSC(which) {
   NewAzEl.fresh = 1;
 }
 
-void AzElTrim(double az, double el) {
+void AzElTrim(double az, double el)
+{
   NewAzEl.az = az;
   NewAzEl.el = el;
 
   NewAzEl.fresh = 1;
 }
 
-void ClearTrim() {
+void ClearTrim()
+{
   NewAzEl.fresh = -1;
 }

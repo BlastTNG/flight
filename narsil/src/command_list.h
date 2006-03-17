@@ -1,10 +1,10 @@
 /* command_list.h: BLAST command specification file definitions
  *
- * This software is copyright (C) 2002-2005 University of Toronto
- * 
- * This file is part of the BLAST flight code licensed under the GNU 
+ * This software is copyright (C) 2002-2006 University of Toronto
+ *
+ * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -55,7 +55,7 @@
 
 #define CONFIRM         0x80000000
 
-extern const char command_list_serial[];
+extern const char *command_list_serial;
 extern const char *GroupNames[N_GROUPS];
 
 /* singleCommand enumeration.  The command list here does NOT have to be in

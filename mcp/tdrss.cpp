@@ -1,19 +1,19 @@
 /* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2002-2004 University of Toronto
- * 
+ * This software is copyright (C) 2002-2006 University of Toronto
+ *
  * This file is part of mcp.
- * 
+ *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * mcp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -48,9 +48,10 @@
 
 #include "dataholder.h"
 #include "tdrss.h"
-#include "fftsg_h.c"
 #include "bbc_pci.h"
 #include "alice.h"
+
+extern "C" void rdft(int, int, double *); /* in fftsg_h.c */
 
 extern "C" {
 #include "crc.h"
@@ -61,17 +62,17 @@ extern "C" {
 }
 
 #define SMALL_LOG_FILE  "/data/etc/tdrss.log"
-int smalllogspaces;
 
 #define MULTIPLEX_WORD  3
 
 #define INPUT_TTY "/dev/ttyS5"
 
-int tty_fd;
+static int tty_fd;
 extern unsigned short* slow_data[FAST_PER_SLOW];
 
 #ifdef USE_SMALL_LOG
-FILE *smalllog;
+static int smalllogspaces;
+static FILE *smalllog;
 #endif
 
 /******************************************************************************\
@@ -80,7 +81,7 @@ FILE *smalllog;
  *                                                                            *|
  ******************************************************************************/
 
-int OpenSerial(void)
+static int OpenSerial(void)
 {
   int fd;
   struct termios term;
@@ -113,7 +114,7 @@ int OpenSerial(void)
     berror(tfatal, "TDRSS: Unable to set serial attributes");
 
   SMALL_RTN("%i", fd);
-  
+
   return fd;
 }
 
@@ -294,7 +295,7 @@ void Buffer::Start(char filenum, unsigned int framenum)
   //
   //   Four FF bytes in a row will (almost) never happen naturally
 
-  //for (i = BUF_POS_FRAME_SYNC; i < BUF_POS_FRAME_SYNC + 
+  //for (i = BUF_POS_FRAME_SYNC; i < BUF_POS_FRAME_SYNC +
   //	BUF_LEN_FRAME_SYNC; i++)
   //buf[i] |= BUF_FRAME_SYNC;
 
@@ -397,7 +398,7 @@ void Buffer::RecordNumBytes(void)
 
 void Buffer::EraseLastSection(void) {
   SMALL_TRACE("");
-  
+
   bytepos = startbyte - 3;
   bitpos = 0;
 
@@ -424,8 +425,8 @@ void Buffer::Stop(void)
 
   if (CurrSize() - BUF_POS_DATA_START >= 0) {
     *(unsigned short *)(buf + BUF_POS_FRAME_LEN) = CurrSize();
-    *(unsigned short *)(buf + BUF_POS_CRC) = 
-      CalculateCRC(CRC_INIT, buf + BUF_POS_DATA_START, 
+    *(unsigned short *)(buf + BUF_POS_CRC) =
+      CalculateCRC(CRC_INIT, buf + BUF_POS_DATA_START,
           CurrSize() - BUF_POS_DATA_START);
 
     // Send packets
@@ -481,7 +482,7 @@ void Buffer::WriteChunk(char numbits, long long datum)
   //  bitpos = 0;
   //  bytepos++;
   //}
-  
+
   SMALL_RTN("");
 }
 
@@ -511,7 +512,7 @@ void Buffer::WriteTo(long long datum, char numbits, char oversize,
   if (hassign)
     datum += ((long long)1 << (numbits - 1)) - 1;
 
-  if (datum < ((long long)1 << numbits) - 1 && datum >= 0) { // Does the datum 
+  if (datum < ((long long)1 << numbits) - 1 && datum >= 0) { // Does the datum
     // fit in numbits?
     WriteChunk(numbits, datum);
   } else {
@@ -565,7 +566,7 @@ void Buffer::WriteTo(long long datum, char numbits, char oversize,
 Alice::Alice(void)
 {
   SMALL_TRACE("");
-  
+
   AMLsrc = -1;
   DataSource = new FrameBuffer(&tdrss_index, tdrss_data, slow_data, 1);
   sendbuf = new Buffer();    // 10 bits per byte
@@ -690,7 +691,7 @@ double Alice::Round(double num)
   int ret;
 
   SMALL_TRACE("%e", num);
-  
+
   ret = (num >= 0) ? (int)(num + 0.5) : (int)(num - 0.5);
 
   SMALL_RTN("%e", ret);
@@ -1122,7 +1123,7 @@ void Alice::CompressionLoop(void)
                   currInfo->framefreq);
               rawdata[0] = 0;
               SendSingle(rawdata, currInfo);  // Send down a zero
-            } else              
+            } else
                       SendSingle(rawdata, currInfo);
             break;
 
@@ -1222,7 +1223,7 @@ void Alice::CompressionLoop(void)
     sendbuf->Stop();
 #ifdef USE_SMALL_LOG
     if (smalllog != NULL) {
-      fprintf(smalllog, "End of TDRSS frame.  Total size = %d bytes.\n", 
+      fprintf(smalllog, "End of TDRSS frame.  Total size = %d bytes.\n",
           sendbuf->CurrSize());
       fflush(smalllog);
     }
@@ -1274,13 +1275,13 @@ Alice::~Alice()
  *                                                                            *|
  ******************************************************************************/
 
-FrameBuffer::FrameBuffer(unsigned int *mcpindex_in, 
+FrameBuffer::FrameBuffer(unsigned int *mcpindex_in,
     unsigned short **fastdata_in,
     unsigned short **slowdata_in, int numframes_in)
 {
   SMALL_TRACE("%p, %p, %p, %i", mcpindex_in, fastdata_in, slowdata_in,
       numframes_in);
-  
+
   mcpindex = mcpindex_in;
   lastmcpindex = 2;
   fastdata = fastdata_in;
@@ -1337,19 +1338,19 @@ void FrameBuffer::Resize(int numframes_in)
     bfree(fatal, fastbuf);
   }
 
-  numframes = numframes_in; 
+  numframes = numframes_in;
 
-  fastbuf = (unsigned short ***)balloc(fatal, numframes * 
+  fastbuf = (unsigned short ***)balloc(fatal, numframes *
       sizeof(unsigned short **));
 
-  slowbuf = (unsigned short ***)balloc(fatal, numframes * 
+  slowbuf = (unsigned short ***)balloc(fatal, numframes *
       sizeof(unsigned short **));
 
   for (i = 0; i < numframes; i++) {
     fastbuf[i] = (unsigned short **)balloc(fatal, FAST_PER_SLOW *
         sizeof(unsigned short *));
 
-    slowbuf[i] = (unsigned short **)balloc(fatal, FAST_PER_SLOW * 
+    slowbuf[i] = (unsigned short **)balloc(fatal, FAST_PER_SLOW *
         sizeof(unsigned short *));
 
     for (j = 0; j < FAST_PER_SLOW; j++) {
@@ -1386,7 +1387,7 @@ void FrameBuffer::Resize(int numframes_in)
 void *FrameBuffer::UpdateThreadEntry(void *pthis)
 {
   SMALL_TRACE("%p", pthis);
-  
+
   bputs(startup, "TDRSS Update: Startup.\n");
 
   FrameBuffer *mine = (FrameBuffer *)pthis;
@@ -1443,7 +1444,7 @@ void FrameBuffer::Update(void)
         pseudoframe++;
 
         for (j = 0; j < FAST_PER_SLOW; j++)
-          memcpy(slowbuf[framenum][j], slowdata[j], slowsPerBi0Frame * 
+          memcpy(slowbuf[framenum][j], slowdata[j], slowsPerBi0Frame *
               sizeof(unsigned short));
       }
       memcpy(fastbuf[framenum][multiplexindex], fastdata[i], BiPhaseFrameSize);
@@ -1469,7 +1470,7 @@ int FrameBuffer::NumFrames(void)
   SMALL_TRACE("");
 
   SMALL_RTN("%i", pseudoframe);
-  
+
   return pseudoframe;
 }
 
@@ -1489,7 +1490,7 @@ int FrameBuffer::NumFrames(void)
  *                                                                            *|
  ******************************************************************************/
 
-int FrameBuffer::ReadField(double *returnbuf, const char *fieldname, 
+int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
     int framenum_in, int numframes_in)
 {
   int i, j, k, truenum, wide, mindex, chnum[2];
@@ -1552,7 +1553,7 @@ int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
     return 0;
   }
 
-  truenum = framenum_in - (int)((double)framenum_in / (double)numframes) * 
+  truenum = framenum_in - (int)((double)framenum_in / (double)numframes) *
     numframes;
   if (truenum < 0)
     truenum += numframes;
@@ -1570,7 +1571,7 @@ int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
     } else if (mindex == NOT_MULTIPLEXED + 1) {
       // Bolometers are all fast channels.
       for (k = 0; k < FAST_PER_SLOW; k++)
-        returnbuf[j++] = ((fastbuf[truenum][k][chnum[1]] & mask) << wide) | 
+        returnbuf[j++] = ((fastbuf[truenum][k][chnum[1]] & mask) << wide) |
           fastbuf[truenum][k][chnum[0]];
     } else {
       lsb = slowbuf[truenum][mindex][chnum[0]];
