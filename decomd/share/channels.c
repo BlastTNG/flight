@@ -72,7 +72,7 @@
 # define VERBOSE
 #endif
 
-static unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
+unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
 #ifndef INPUTTER
 extern struct ChannelStruct WideSlowChannels[];
@@ -509,7 +509,6 @@ static void DumpNiosFrame(void)
   bprintf(info, "Channels: Wrote /data/etc/Nios.map.\n");
 #endif
 }
-#endif
 
 static int GetChannelByName(char names[4096][FIELD_LEN], int nn, char* field)
 {
@@ -543,7 +542,6 @@ static void BBCAddressCheck(char names[4096][FIELD_LEN], int nn,
   fields[node][addr] = name;
 }
 
-#ifndef INPUTTER
 /* DoSanityChecks - run various sanity checks on the channel tables.  Also
  * compute useful parameters */
 static void DoSanityChecks(void)
