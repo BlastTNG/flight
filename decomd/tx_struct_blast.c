@@ -520,10 +520,10 @@ struct ChannelStruct SlowChannels[] = {
   {"el_mode",      'w', LOOP5, 10,                1.0,             0.0, 'u'},
   {"az_dest",      'w', LOOP5, 11,              I2DEG,             0.0, 'u'},
   {"el_dest",      'w', LOOP5, 12,              I2DEG,             0.0, 'u'},
-  {"az_vel",       'w', LOOP5, 13,            1./6000,             0.0, 'u'},
+  {"az_vel",       'w', LOOP5, 13,            1./6000,             0.0, 's'},
   {"el_vel",       'w', LOOP5, 14,            1./6000,             0.0, 's'},
-  {"az_dir",       'w', LOOP5, 15,                1.0,             0.0, 'u'},
-  {"el_dir",       'w', LOOP5, 16,                1.0,             0.0, 'u'},
+  {"az_dir",       'w', LOOP5, 15,                1.0,             0.0, 's'},
+  {"el_dir",       'w', LOOP5, 16,                1.0,             0.0, 's'},
   END_OF_CHANNELS
 };
 
