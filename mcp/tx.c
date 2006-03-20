@@ -1028,9 +1028,9 @@ void RawNiosWrite(unsigned int addr, unsigned int data, int flush_flag)
 
   if (flush_flag || counter == 2 * NIOS_BUFFER_SIZE) {
     n = write(bbc_fp, niosData, counter * sizeof(unsigned int));
-    counter = 0;
     if (n < counter * sizeof(unsigned int))
-      bprintf(warning, "System: Short write to Nios");
+      bprintf(warning, "Frame Control: Short write to Nios");
+    counter = 0;
   }
 }
 
