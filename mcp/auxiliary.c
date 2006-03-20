@@ -701,11 +701,10 @@ void CameraTrigger(int which)
        * immediately. */
       if (!isc_pulses[which].force_sync) {
         /* Signal isc thread to send new pointing data */
-        if (write_ISC_trigger[which])
-          if (WHICH)
-            bprintf(info,
-                "%iSC (t): Unexpectedly lowered write_ISC_trigger Semaphore\n",
-                which);
+        if (WHICH && write_ISC_trigger[which])
+          bprintf(info,
+              "%iSC (t): Unexpectedly lowered write_ISC_trigger Semaphore\n",
+              which);
 
         write_ISC_trigger[which] = 0;
         write_ISC_pointing[which] = 1;
