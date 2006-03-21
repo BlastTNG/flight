@@ -16,7 +16,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 124        /* total number of single word cmds */
+#define N_SCOMMANDS 125        /* total number of single word cmds */
 #define N_MCOMMANDS 79         /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
@@ -91,7 +91,8 @@ enum singleCommand {
   osc_veto,         osc_allow,          reap,             isc_eye_on,
   osc_eye_on,       osc_eye_off,        inner_cool_auto,  outer_cool_auto,
   trim_to_osc,      antisun,            blast_rocks,      blast_sucks,
-  fridge_cycle,     at_float,           not_at_float,     el_auto_gyro
+  fridge_cycle,     at_float,           not_at_float,     el_auto_gyro,
+  repoll
 };
 
 struct scom {

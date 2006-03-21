@@ -540,13 +540,14 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case outer_cool_auto:
       CommandData.pumps.outframe_auto = 1;
       break;
-
     case outer_spare_on:
       CommandData.pumps.outframe_cool2_on = 40;
       break;
     case outer_spare_off:
       CommandData.pumps.outframe_cool2_off = 40;
       break;
+
+    /* Lock and Actuators */
     case pin_in:
       CommandData.pumps.lock_in = 1;
       break;
@@ -565,10 +566,13 @@ static void SingleCommand (enum singleCommand command, int scheduled)
         CommandData.pointing_mode.w = 0;
         CommandData.pointing_mode.h = 0;
       }
+      break;
+    case repoll:
+      CommandData.actbus.force_repoll = 1;
+      break;
 
       /***************************************/
       /********* ISC Commanding  *************/
-      break;
     case isc_run:
       CommandData.ISCState[0].pause = 0;
       break;
@@ -1777,6 +1781,8 @@ void InitCommandData()
   CommandData.pumps.outframe_cool1_off = 0;
   CommandData.pumps.outframe_cool2_on = 0;
   CommandData.pumps.outframe_cool2_off = 0;
+
+  CommandData.actbus.force_repoll = 0;
 
   CommandData.Bias.clockInternal = 0;
   CommandData.Bias.biasAC = 1;

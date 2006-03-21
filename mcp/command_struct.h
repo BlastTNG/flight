@@ -201,6 +201,10 @@ struct CommandDataStruct {
     int pwm1, pwm2, pwm3, pwm4;
   } pumps;
 
+  struct {
+    int force_repoll;
+  } actbus;
+
   int pin_is_in;
 
   /* sensors output: read in mcp:SensorReader() */
