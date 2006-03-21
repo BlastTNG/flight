@@ -564,6 +564,8 @@ static void StoreData(int index)
   static struct NiosStruct* sipMksHiAddr;
 
   /** pointing mode indexes **/
+  static struct NiosStruct* svetoLenAddr;
+  static struct NiosStruct* slewVetoAddr;
   static struct NiosStruct* pModeAddr;
   static struct NiosStruct* pXDegAddr, *pYAddr;
   static struct NiosStruct* pVazAddr, *pDelAddr;
@@ -706,6 +708,8 @@ static void StoreData(int index)
     clinElAddr = GetNiosAddr("clin_el");
     clinSigmaAddr = GetNiosAddr("clin_sigma");
 
+    svetoLenAddr = GetNiosAddr("sveto_len");
+    slewVetoAddr = GetNiosAddr("slew_veto");
     pModeAddr = GetNiosAddr("p_mode");
     pXDegAddr = GetNiosAddr("p_x_deg");
     pYAddr = GetNiosAddr("p_y");
@@ -877,6 +881,9 @@ static void StoreData(int index)
   WriteData(nullTrimAddr, CommandData.null_az_trim * DEG2I, NIOS_QUEUE);
 
   /************* Pointing mode fields *************/
+  WriteData(slewVetoAddr, (int)(CommandData.pointing_mode.nw) / 4.,
+      NIOS_QUEUE);
+  WriteData(svetoLenAddr, (int)(CommandData.slew_veto) / 4., NIOS_QUEUE);
   WriteData(pModeAddr, (int)(CommandData.pointing_mode.mode), NIOS_QUEUE);
   if ((CommandData.pointing_mode.mode == P_AZEL_GOTO) ||
       (CommandData.pointing_mode.mode == P_AZ_SCAN))

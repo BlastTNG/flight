@@ -524,6 +524,8 @@ struct ChannelStruct SlowChannels[] = {
   {"el_vel",       'w', LOOP5, 14,            1./6000,             0.0, 's'},
   {"az_dir",       'w', LOOP5, 15,                1.0,             0.0, 's'},
   {"el_dir",       'w', LOOP5, 16,                1.0,             0.0, 's'},
+  {"slew_veto",    'w', LOOP5, 17,           4.0 / SR,             0.0, 'u'},
+  {"sveto_len",    'w', LOOP5, 18,           4.0 / SR,             0.0, 'u'},
   END_OF_CHANNELS
 };
 

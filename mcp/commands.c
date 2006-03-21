@@ -247,6 +247,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
   switch (command) {
 #ifndef BOLOTEST
     case stop: /* Pointing abort */
+      CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_DRIFT;
       CommandData.pointing_mode.X = 0;
       CommandData.pointing_mode.Y = 0;
@@ -259,6 +260,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       sun_az = PointingData[i_point].sun_az + 180;
       NormalizeAngle(&sun_az);
 
+      CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_AZEL_GOTO;
       CommandData.pointing_mode.X = sun_az;  /* az */
       CommandData.pointing_mode.Y = PointingData[i_point].el;  /* el */
@@ -554,6 +556,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case unlock:
       CommandData.pumps.lock_out = 1;
       if (CommandData.pointing_mode.mode == P_LOCK) {
+        CommandData.pointing_mode.nw = CommandData.slew_veto;
         CommandData.pointing_mode.mode = P_DRIFT;
         CommandData.pointing_mode.X = 0;
         CommandData.pointing_mode.Y = 0;
@@ -797,6 +800,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
   switch(command) {
 #ifndef BOLOTEST
     case az_el_goto:
+      CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_AZEL_GOTO;
       CommandData.pointing_mode.X = rvalues[0];  /* az */
       CommandData.pointing_mode.Y = rvalues[1];  /* el */
@@ -806,6 +810,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = 0;
       break;
     case az_scan:
+      CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_AZ_SCAN;
       CommandData.pointing_mode.X = rvalues[0];  /* az */
       CommandData.pointing_mode.Y = rvalues[1];  /* el */
@@ -815,6 +820,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = 0;
       break;
     case drift:
+      CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_DRIFT;
       CommandData.pointing_mode.X = 0;
       CommandData.pointing_mode.Y = 0;
@@ -824,6 +830,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = 0;
       break;
     case ra_dec_goto:
+      CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_RADEC_GOTO;
       CommandData.pointing_mode.X = rvalues[0]; /* ra */
       CommandData.pointing_mode.Y = rvalues[1]; /* dec */
@@ -833,6 +840,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = 0;
       break;
     case vcap:
+      CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_VCAP;
       CommandData.pointing_mode.X = rvalues[0]; /* ra */
       CommandData.pointing_mode.Y = rvalues[1]; /* dec */
@@ -842,6 +850,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = 0;
       break;
     case cap:
+      CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_CAP;
       CommandData.pointing_mode.X = rvalues[0]; /* ra */
       CommandData.pointing_mode.Y = rvalues[1]; /* dec */
@@ -851,6 +860,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = 0;
       break;
     case box:
+      CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_BOX;
       CommandData.pointing_mode.X = rvalues[0]; /* ra */
       CommandData.pointing_mode.Y = rvalues[1]; /* dec */
@@ -860,6 +870,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.del = rvalues[5]; /* el step size */
       break;
     case vbox:
+      CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_VBOX;
       CommandData.pointing_mode.X = rvalues[0]; /* ra */
       CommandData.pointing_mode.Y = rvalues[1]; /* dec */
@@ -869,6 +880,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.del = rvalues[5]; /* el drift speed */
       break;
     case quad:
+      CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_QUAD;
       CommandData.pointing_mode.ra[0] = rvalues[0];
       for (i = 0; i < 4; i++) {
@@ -895,6 +907,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case el_gyro_offset:
       CommandData.gy1_offset = rvalues[0];
       CommandData.el_autogyro = 0;
+      break;
+    case slew_veto:
+      CommandData.slew_veto = rvalues[0] * SR;
       break;
 
       /***************************************/
@@ -925,6 +940,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       if (CommandData.pumps.bal_veto >= 0)
         CommandData.pumps.bal_veto = BAL_VETO_MAX;
       CommandData.pumps.lock_point = 1;
+      CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_LOCK;
       CommandData.pointing_mode.X = 0;
       CommandData.pointing_mode.Y = LockPosition(rvalues[0]);
@@ -1797,7 +1813,7 @@ void InitCommandData()
   CommandData.Cryo.lvalve_close = 0;
   CommandData.Cryo.lnvalve_on = 0;
 
-  /* unused */
+  /* don't use the fast gy offset calculator */
   CommandData.fast_gy_offset = 0;
 
   /** return if we succsesfully read the previous status **/
@@ -1823,6 +1839,9 @@ void InitCommandData()
   CommandData.dpcu_trim = 0.0;
   CommandData.dpcu_auto = 1;
 
+  CommandData.slew_veto = 60000; /* 10 minutes */
+
+  CommandData.pointing_mode.nw = 0;
   CommandData.pointing_mode.mode = P_DRIFT;
   CommandData.pointing_mode.X = 0;
   CommandData.pointing_mode.Y = 0;

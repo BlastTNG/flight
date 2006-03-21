@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.9 $";
+const char *command_list_serial = "$Revision: 3.10 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -324,6 +324,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(el_gyro_offset), "manually set el gyro offset", GR_TRIM, 1,
     {
       {"Gyro 1 offset (deg/s)", -0.5, 0.5, 'f', "GY1_OFFSET"},
+    }
+  },
+
+  {COMMAND(slew_veto), "set the length of the gyro offset slew veto", GR_TRIM,
+    1,
+    {
+      {"Slew Veto (s)", 0., 1200., 'f', "SVETO_LEN"},
     }
   },
 

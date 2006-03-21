@@ -490,20 +490,24 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
     s->angle = (w1 * s->angle + new_angle * w2) / (w1 + w2);
     s->varience = 1.0 / (w1 + w2);
 
-    /** calculate offset **/
-    if (s->n_solutions > 10) { // only calculate if we have had at least 10
-      new_offset = ((new_angle - s->last_input) - s->gy_int) /
-        ((1.0/SR) * (double)s->since_last);
+    if (CommandData.pointing_mode.nw > 0)
+      CommandData.pointing_mode.nw--; /* slew veto */
+    else {
+      /** calculate offset **/
+      if (s->n_solutions > 10) { // only calculate if we have had at least 10
+        new_offset = ((new_angle - s->last_input) - s->gy_int) /
+          ((1.0/SR) * (double)s->since_last);
 
-      if (fabs(new_offset) > 500.0)
-        new_offset = 0; // 5 deg step is bunk!
+        if (fabs(new_offset) > 500.0)
+          new_offset = 0; // 5 deg step is bunk!
 
 
-      s->gy_offset = filter(new_offset, s->fs);
-    }
-    s->since_last = 0;
-    if (s->n_solutions<10000) {
-      s->n_solutions++;
+        s->gy_offset = filter(new_offset, s->fs);
+      }
+      s->since_last = 0;
+      if (s->n_solutions<10000) {
+        s->n_solutions++;
+      }
     }
 
     s->gy_int = 0.0;
@@ -594,24 +598,28 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double gy2,
     s->varience = 1.0 / (w1 + w2);
     NormalizeAngle(&(s->angle));
 
-    if (s->n_solutions > 10) { // only calculate if we have had at least 10
+    if (CommandData.pointing_mode.nw > 0)
+      CommandData.pointing_mode.nw--; /* slew veto */
+    else {
+      if (s->n_solutions > 10) { // only calculate if we have had at least 10
 
-      daz = remainder(new_angle - s->last_input, 360.0);
+        daz = remainder(new_angle - s->last_input, 360.0);
 
-      /* Do Gyro2 */
-      new_offset = -(daz * cos(el) + s->gy2_int) /
-        ((1.0/SR) * (double)s->since_last);
-      s->gy2_offset = filter(new_offset, s->fs2);;
+        /* Do Gyro2 */
+        new_offset = -(daz * cos(el) + s->gy2_int) /
+          ((1.0/SR) * (double)s->since_last);
+        s->gy2_offset = filter(new_offset, s->fs2);;
 
-      /* Do Gyro3 */
-      new_offset = -(daz * sin(el) + s->gy3_int) /
-        ((1.0/SR) * (double)s->since_last);
-      s->gy3_offset = filter(new_offset, s->fs3);;
+        /* Do Gyro3 */
+        new_offset = -(daz * sin(el) + s->gy3_int) /
+          ((1.0/SR) * (double)s->since_last);
+        s->gy3_offset = filter(new_offset, s->fs3);;
 
-    }
-    s->since_last = 0;
-    if (s->n_solutions<10000) {
-      s->n_solutions++;
+      }
+      s->since_last = 0;
+      if (s->n_solutions<10000) {
+        s->n_solutions++;
+      }
     }
     s->gy2_int = 0.0;
     s->gy3_int = 0.0;

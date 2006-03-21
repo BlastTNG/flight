@@ -57,6 +57,7 @@ struct GainStruct {
 // CAP         ra    dec  vaz   elstep r
 // BOX         ra    dec  vaz   elstep w    h
 struct PointingModeStruct {
+  int nw; /* used for gy-offset veto during slews */
   int mode;
   double X;
   double Y;
@@ -127,6 +128,7 @@ struct CommandDataStruct {
   unsigned char use_gps;
 
   unsigned short fast_gy_offset;
+  unsigned int slew_veto;
 
   double clin_el_trim;
   double enc_el_trim;
