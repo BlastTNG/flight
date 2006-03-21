@@ -738,7 +738,7 @@ static const char* MName(enum multiCommand command)
 }
 
 static void SetParameters(enum multiCommand command, unsigned short *dataq,
-    double* rvalues, int* ivalues)
+    double* rvalues, int* ivalues, char svalues[][CMD_STRING_LEN])
 {
   int i, dataqind;
   char type;
@@ -764,6 +764,12 @@ static void SetParameters(enum multiCommand command, unsigned short *dataq,
       rvalues[i] = rvalues[i] * (mcommands[index].params[i].max - min) /
         MAX_30BIT + min;
       bprintf(info, "Commands: param%02i: 30 bits: %f\n", i, rvalues[i]);
+    } else if (type == 's') { /* string of 7-bit characters */
+      int j;
+      for (j = 0; j < mcommands[index].params[i].max; ++j)
+        svalues[i][j] = ((j % 2) ? dataq[dataqind++] : dataq[dataqind] >> 8)
+          & 0x7f;
+      bprintf(info, "Commands: param%02i: string: %s\n", i, svalues[i]);
     }
   }
 #else
@@ -780,6 +786,10 @@ static void SetParameters(enum multiCommand command, unsigned short *dataq,
     } else if (type == 'l') { /* 30 bit floating point */
       rvalues[i] = atof(dataqc[dataqind++]);
       bprintf(info, "Commands: param%02i: 30 bits: %f\n", i, rvalues[i]);
+    } else if (type == 's') { /* string */
+      strncpy(svaules[i], dataqc[dataqind++], CMD_STRING_LEN - 1);
+      svalues[i][CMD_STRING_LEN - 1] = 0;
+      bprintf(info, "Commands: param%02i: string: %s\n", i, svalues[i]);
     }
   }
 
@@ -789,7 +799,7 @@ static void SetParameters(enum multiCommand command, unsigned short *dataq,
 }
 
 static void MultiCommand(enum multiCommand command, double *rvalues,
-    int *ivalues, int scheduled)
+    int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled)
 {
 #ifndef BOLOTEST
   int i;
@@ -1212,7 +1222,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 #endif
     default:
-      bputs(warning, "Commands: Invalid Multi Word Command***\n");
+      bputs(warning, "Commands: ***Invalid Multi Word Command***\n");
       return; /* invalid command - don't update */
   }
 
@@ -1267,7 +1277,8 @@ void ScheduledCommand(struct ScheduleEvent *event)
         bprintf(info, "Commands:   param%02i: 30 bits: %f\n", i,
             event->rvalues[i]);
     }
-    MultiCommand(event->command, event->rvalues, event->ivalues, 1);
+    MultiCommand(event->command, event->rvalues, event->ivalues, event->svalues,
+        1);
 
   } else {
     bprintf(info, "Commands: Executing Scheduled Command: %i (%s)\n",
@@ -1413,6 +1424,8 @@ static int DataQSize(int index)
   for (i = 0; i < mcommands[index].numparams; ++i)
     if (mcommands[index].params[i].type == 'l')
       size++;
+    else if (mcommands[index].params[i].type == 's')
+      size += (mcommands[index].params[i].max - 1) / 2;
 
   return size;
 }
@@ -1435,6 +1448,7 @@ void WatchFIFO ()
 
   double rvalues[MAX_N_PARAMS];
   int ivalues[MAX_N_PARAMS];
+  char svalues[MAX_N_PARAMS][CMD_STRING_LEN];
 
   int index, pindex = 0;
 
@@ -1483,8 +1497,9 @@ void WatchFIFO ()
     } else {
       mcommand = MCommand(command);
       bputs(info, "Commands:  Multi word command received\n");
-      SetParameters(mcommand, (unsigned short*)mcommand_data, rvalues, ivalues);
-      MultiCommand(mcommand, rvalues, ivalues, 0);
+      SetParameters(mcommand, (unsigned short*)mcommand_data, rvalues, ivalues,
+          svalues);
+      MultiCommand(mcommand, rvalues, ivalues, svalues, 0);
       mcommand = -1;
     }
 
@@ -1509,6 +1524,7 @@ void WatchPort (void* parameter)
 
   double rvalues[MAX_N_PARAMS];
   int ivalues[MAX_N_PARAMS];
+  char svalues[MAX_N_PARAMS][CMD_STRING_LEN];
 
   int mcommand = -1;
   int mcommand_count = 0;
@@ -1623,19 +1639,19 @@ void WatchPort (void* parameter)
             readstage = 0;
 
             /* Check bits 6-8 from second data byte for type of command */
-            /* Recall:    101 = 0x05 = single command */
-            /*            100 = 0x04 = begin multi command */
-            /*            110 = 0x06 = end multi command */
-            /*            0?? = 0x00 = data packet in multi command */
+            /* Recall:    101? ???? = 0xA0 = single command */
+            /*            100? ???? = 0x80 = begin multi command */
+            /*            110? ???? = 0xC0 = end multi command */
+            /*            0??? ???? = 0x00 = data packet in multi command */
 
 
-            if (((indata[1] >> 5) & 0x07) == 0x05) {
+            if ((indata[1] & 0xE0) == 0xA0) {
               /*** Single command ***/
               bprintf(info, "Commands: COMM%i:  Single command received\n",
                   port + 1);
               SingleCommand(indata[0], 0);
               mcommand = -1;
-            } else if (((indata[1] >> 5) & 0x07) == 0x04) {
+            } else if ((indata[1] & 0xE0) == 0x80) {
               /*** Beginning of multi command ***/
               /*Grab first five bits of second byte containing command number*/
               mcommand = indata[0];
@@ -1648,7 +1664,7 @@ void WatchPort (void* parameter)
               /* The time of sending, a "unique" number shared by the first */
               /* and last packed of a multi-command */
               mcommand_time = indata[1] & 0x1F;
-            } else if ((((indata[1] >> 7) & 0x01) == 0) && (mcommand >= 0) &&
+            } else if (((indata[1] & 0x80) == 0) && (mcommand >= 0) &&
                 (mcommand_count < dataqsize)) {
               /*** Parameter values in multi-command ***/
               indatadumper = (unsigned short *) indata;
@@ -1656,16 +1672,15 @@ void WatchPort (void* parameter)
               bprintf(info, "Commands: COMM%i:  Multi word command "
                   "continues...\n", port + 1);
               mcommand_count++;
-            } else if ((((indata[1] >> 5) & 0x07) == 0x06) &&
-                (mcommand == indata[0]) &&
-                ((indata[1] & 0x1F) == mcommand_time) &&
+            } else if (((indata[1] & 0xE0) == 0xC0) && (mcommand == indata[0])
+                && ((indata[1] & 0x1F) == mcommand_time) &&
                 (mcommand_count == dataqsize)) {
               /*** End of multi-command ***/
               bprintf(info, "Commands: COMM%i:  Multi word command ends \n",
                   port + 1);
               SetParameters(mcommand, (unsigned short*)mcommand_data, rvalues,
-                  ivalues);
-              MultiCommand(mcommand, rvalues, ivalues, 0);
+                  ivalues, svalues);
+              MultiCommand(mcommand, rvalues, ivalues, svalues, 0);
               mcommand = -1;
               mcommand_count = 0;
               mcommand_time = 0;

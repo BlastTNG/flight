@@ -240,6 +240,7 @@ struct ScheduleEvent {
   int command;
   double rvalues[MAX_N_PARAMS];
   int ivalues[MAX_N_PARAMS];
+  char svalues[MAX_N_PARAMS][CMD_STRING_LEN];
 };
 
 struct ScheduleType {

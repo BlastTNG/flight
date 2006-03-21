@@ -38,7 +38,7 @@ void StarPos(double t, double ra0, double dec0, double mra, double mdec,
 double GetJulian(time_t t);
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
 		double *el);
-int pinIsIn();
+int pinIsIn(); /* actuators.c */
 
 #define NOMINAL_LATITUDE -77.50 /* degrees North */
 #define LATITUDE_BAND     2.00 /* in degrees of latitude */

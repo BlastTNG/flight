@@ -32,6 +32,7 @@
 #include <errno.h>
 
 #include "mcp.h"
+#include "command_struct.h"
 
 /* Define this symbol to have mcp log all actuator bus traffic */
 #undef ACTBUS_CHATTER
@@ -46,9 +47,32 @@
 #define EZ_READY  0x20
 #define EZ_STATUS 0x40
 
+/* ActBus status bits ... these must live in the top byte of the word */
+#define ACTBUS_OK       0x0000
+#define ACTBUS_OOD      0x0100
+#define ACTBUS_TIMEOUT  0x0200
+#define ACTBUS_CHECKSUM 0x0400
+
+/* in commands.c */
+double LockPosition(double elevation);
+
 static int bus_fd = -1;
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
   "Lock Motor"};
+
+static struct stepper_struct {
+  unsigned char buffer[1000];
+  int status;
+  int sequence;
+} stepper[NACT];
+
+/****************************************************************/
+/* Read the state of the lock motor pin (or guess it, whatever) */
+/****************************************************************/
+int pinIsIn(void)
+{
+  return(CommandData.pin_is_in);
+}
 
 static int act_setserial(char *input_tty)
 {
@@ -88,16 +112,39 @@ static int act_setserial(char *input_tty)
   return fd;
 }
 
+#ifdef ACTBUS_CHATTER
+static char hex_buffer[1000];
+static const char* HexDump(const unsigned char* buffer, int len)
+{
+  int i;
+
+  sprintf(hex_buffer, "%02x", buffer[0]);
+  for (i = 1; i < len; ++i)
+    sprintf(hex_buffer + i * 3 - 1, ".%02x", buffer[i]);
+
+  return hex_buffer;
+}
+#endif
+
 static void BusSend(int who, const char* what)
 {
-  size_t len = strlen(what) + 7;
+  size_t len = strlen(what) + 5;
   char *buffer = malloc(len);
+  unsigned char chk = 3;
+  unsigned char *ptr;
 
-  snprintf(buffer, len, "/%i%s\r\n", who + 1, what);
+  buffer[0] = 0x2;
+  buffer[1] = who + 0x31;
+  buffer[2] = '1';
+  sprintf(buffer + 3, "%s", what);
+  buffer[len - 2] = 0x3;
+  for (ptr = buffer; *ptr != '\03'; ++ptr)
+    chk ^= *ptr;
+  buffer[len - 1] = chk;
 #ifdef ACTBUS_CHATTER
-  bprintf(info, "ActBus: Request=%s", buffer);
+  bprintf(info, "ActBus: Request=%s", HexDump(buffer, len));
 #endif
-  if (write(bus_fd, buffer, strlen(buffer)) < 0)
+  if (write(bus_fd, buffer, len) < 0)
     berror(err, "Error writing on bus");
 
   free(buffer);
@@ -109,6 +156,7 @@ static int BusRecv(char* buffer)
   fd_set rfds;
   struct timeval timeout = {1, 0};
   unsigned char byte;
+  unsigned char checksum = 0;
   char* ptr = buffer;
 
   FD_ZERO(&rfds);
@@ -119,7 +167,7 @@ static int BusRecv(char* buffer)
   if (fd == -1)
     berror(err, "Error waiting for input on bus");
   else if (!fd) /* Timeout */
-    return -1;
+    return ACTBUS_TIMEOUT;
   else {
     int state = 0;
     int had_errors = 0;
@@ -128,7 +176,7 @@ static int BusRecv(char* buffer)
     for(;;) {
       i = read(bus_fd, &byte, 1);
       if (i <= 0) {
-        if (state == 7 || state == 13)
+        if (state == 6 || state == 13)
           break;
         if (errno == EAGAIN && read_tries) {
           read_tries--;
@@ -138,10 +186,14 @@ static int BusRecv(char* buffer)
           *ptr = 0;
           berror(warning, "Unexpected out-of-data reading bus (%i %s)", state,
               buffer);
-          return -2;
+          return ACTBUS_OOD;
         }
       }
-      //      bprintf(info, "%02x. (%i/%i)", byte, state, i);
+      checksum ^= byte;
+
+#if 0
+      bprintf(info, "%02x. (%i/%i)", byte, state, i);
+#endif
 
       /* The following involves a number of semi-hidden fallthroughs which
        * attempt to recover malformed strings */
@@ -149,25 +201,26 @@ static int BusRecv(char* buffer)
         case 0: /* RS-485 turnaround */
           state++;
           if (byte != 0xFF) { /* RS-485 turnaround */
-            bputs(warning, "RS-485 turnaround not found in response");
+            bputs(warning, "ActBus: RS-485 turnaround not found in response");
             had_errors++;
           } else
             break;
         case 1: /* start byte */
           state++;
-          if (byte != 0x2F) { /* Start character == '/' */
+          if (byte != 0x02) { /* Start character == '/' */
             had_errors++;
-            bputs(warning, "Start byte not found in response");
+            bputs(warning, "ActBus: Start byte not found in response");
           } else
             break;
         case 2: /* address byte */
           state++;
           if (byte != 0x30) { /* Recipient address (should be '0') */
             had_errors++;
-            bputs(warning, "Found misaddressed response");
+            bputs(warning, "ActBus: Found misaddressed response");
           }
           if (had_errors > 1) {
-            bputs(err, "Too many errors parsing response string, aborting.");
+            bputs(err,
+                "ActBus: Too many errors parsing response string, aborting.");
             state = 13;
           }
           break;
@@ -176,7 +229,8 @@ static int BusRecv(char* buffer)
           if (byte & EZ_STATUS)
             status = byte & (EZ_ERROR | EZ_READY);
           else {
-            bputs(err, "Status byte malfomed in response string, aborting.");
+            bputs(err,
+                "ActBus: Status byte malfomed in response string, aborting.");
             state = 13;
           }
           break;
@@ -186,22 +240,16 @@ static int BusRecv(char* buffer)
           else
             *(ptr++) = byte;
           break;
-        case 5:
+        case 5: /* checksum */
           state++;
-          if (byte != 0x0D) { /* \r */
-            bputs(err, "Malformed footer in response string, aborting.");
-            state = 13;
-          }
+          /* Remember: the checksum here should be 0xff instead of 0 because
+           * we've added the turnaround byte into the checksum */
+          if (checksum != 0xff)
+            bprintf(err, "ActBus: Checksum error in response (%02x).",
+                checksum);
           break;
-        case 6:
-          state++;
-          if (byte != 0x0A) { /* \n */
-            bputs(err, "Malformed footer in response string, aborting.");
-            state = 13;
-          }
-          break;
-        case 7: /* End of string check */
-          bputs(err, "Malformed footer in response string, aborting.");
+        case 6: /* End of string check */
+          bputs(err, "ActBus: Malformed footer in response string, aborting.");
           state = 13;
         case 13: /* General abort: flush input */
           break;
@@ -218,7 +266,7 @@ static int BusRecv(char* buffer)
   return status;
 }
 
-static int PollBus(int rescan, int *status)
+static int PollBus(int rescan)
 {
   int i, result;
   char buffer[1000];
@@ -230,22 +278,22 @@ static int PollBus(int rescan, int *status)
     bputs(info, "ActBus: Polling Actuator Bus.");
 
   for (i = 0; i < NACT; ++i) {
-    if (rescan && status[i] != -1)
+    if (rescan && stepper[i].status != -1)
       continue;
     BusSend(i, "&");
-    if ((result = BusRecv(buffer)) < 0) {
+    if ((result = BusRecv(buffer)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
       bprintf(warning, "ActBus: No response from %s, will repoll later.",
           name[i]);
-      status[i] = -1;
+      stepper[i].status = -1;
       all_ok = 0;
     } else if (!strncmp(buffer, "EZHR17EN AllMotion", 18)) {
       bprintf(info, "ActBus: Found %s at address %i.\n", name[i], i + 1);
-      status[i] = 0;
+      stepper[i].status = 0;
     } else {
       bprintf(warning,
-          "ActBus: Unrecognised response from %s,  will repoll later.\n",
+          "ActBus: Unrecognised response from %s, will repoll later.\n",
           buffer);
-      status[i] = -1;
+      stepper[i].status = -1;
       all_ok = 0;
     }
   }
@@ -255,22 +303,33 @@ static int PollBus(int rescan, int *status)
 
 void ActuatorBus(void)
 {
-  unsigned int controller_status[NACT];
   int poll_timeout = POLL_TIMEOUT;
   int all_ok = 0;
+  int i;
 
   bputs(startup, "ActBus: ActuatorBus startup.");
 
+  for (i = 0; i < NACT; ++i)
+    stepper[i].sequence = 1;
+
   bus_fd = act_setserial(ACT_BUS);
 
-  all_ok = PollBus(0, controller_status);
+  all_ok = PollBus(0);
 
   for (;;) {
     if (poll_timeout == 0 && !all_ok) {
-      all_ok = PollBus(1, controller_status);
+      all_ok = PollBus(1);
       poll_timeout = POLL_TIMEOUT;
     } else if (poll_timeout > 0)
       poll_timeout--;
+
+    if (CommandData.actbus.force_repoll) {
+      CommandData.actbus.force_repoll = 0;
+      poll_timeout = 0;
+      all_ok = 0;
+      for (i = 0; i < NACT; ++i)
+        stepper[i].status = -1;
+    }
 
     usleep(10000);
   }

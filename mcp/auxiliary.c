@@ -126,14 +126,6 @@ double LockPosition(double elevation);
 static short int incool_state = 0;
 static short int outcool_state = 0;
 
-/****************************************************************/
-/* Read the state of the lock motor pin (or guess it, whatever) */
-/****************************************************************/
-int pinIsIn(void)
-{
-  return(CommandData.pin_is_in);
-}
-
 static int SetGyHeatSetpoint(double history, int age, int box)
 {
   double setpoint = CommandData.gyheat[box].setpoint;
