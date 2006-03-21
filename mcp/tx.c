@@ -137,9 +137,10 @@ static void WriteAux(void)
 
   InCharge = !(SamIAm
       ^ slow_data[samIAmReadAddr->index][samIAmReadAddr->channel]);
-  if (InCharge != incharge && InCharge)
+  if (InCharge != incharge && InCharge) {
     bputs(info, "System: I have gained control.\n");
-  else if (InCharge != incharge)
+    CommandData.actbus.force_repoll = 1;
+  } else if (InCharge != incharge)
     bputs(info, "System: I have lost control.\n");
 
   incharge = InCharge;

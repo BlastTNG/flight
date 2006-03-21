@@ -53,8 +53,12 @@
 #define ACTBUS_TIMEOUT  0x0200
 #define ACTBUS_CHECKSUM 0x0400
 
+#define ACT_RECV_ABORT 3000000
+
 /* in commands.c */
 double LockPosition(double elevation);
+
+extern short int InCharge; /* tx.c */
 
 static int bus_fd = -1;
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
@@ -150,7 +154,7 @@ static void BusSend(int who, const char* what)
   free(buffer);
 }
 
-static int BusRecv(char* buffer)
+static int BusRecv(char* buffer, int nic)
 {
   int i, fd, status = 0;
   fd_set rfds;
@@ -169,14 +173,14 @@ static int BusRecv(char* buffer)
   else if (!fd) /* Timeout */
     return ACTBUS_TIMEOUT;
   else {
-    int state = 0;
+    int state = (nic) ? ACT_RECV_ABORT : 0;
     int had_errors = 0;
     int read_tries = 100;
 
     for(;;) {
       i = read(bus_fd, &byte, 1);
       if (i <= 0) {
-        if (state == 6 || state == 13)
+        if (state == 6 || state == ACT_RECV_ABORT)
           break;
         if (errno == EAGAIN && read_tries) {
           read_tries--;
@@ -221,7 +225,7 @@ static int BusRecv(char* buffer)
           if (had_errors > 1) {
             bputs(err,
                 "ActBus: Too many errors parsing response string, aborting.");
-            state = 13;
+            state = ACT_RECV_ABORT;
           }
           break;
         case 3: /* state byte */
@@ -231,7 +235,7 @@ static int BusRecv(char* buffer)
           else {
             bputs(err,
                 "ActBus: Status byte malfomed in response string, aborting.");
-            state = 13;
+            state = ACT_RECV_ABORT;
           }
           break;
         case 4: /* response */
@@ -250,8 +254,8 @@ static int BusRecv(char* buffer)
           break;
         case 6: /* End of string check */
           bputs(err, "ActBus: Malformed footer in response string, aborting.");
-          state = 13;
-        case 13: /* General abort: flush input */
+          state = ACT_RECV_ABORT;
+        case ACT_RECV_ABORT: /* General abort: flush input */
           break;
       }
     }
@@ -281,7 +285,7 @@ static int PollBus(int rescan)
     if (rescan && stepper[i].status != -1)
       continue;
     BusSend(i, "&");
-    if ((result = BusRecv(buffer)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
+    if ((result = BusRecv(buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
       bprintf(warning, "ActBus: No response from %s, will repoll later.",
           name[i]);
       stepper[i].status = -1;
@@ -317,6 +321,9 @@ void ActuatorBus(void)
   all_ok = PollBus(0);
 
   for (;;) {
+    while (!InCharge) /* NiC MCC traps here */
+      BusRecv(NULL, 1); /* this is a blocking call */
+      
     if (poll_timeout == 0 && !all_ok) {
       all_ok = PollBus(1);
       poll_timeout = POLL_TIMEOUT;
