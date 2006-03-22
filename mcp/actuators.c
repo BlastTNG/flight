@@ -197,9 +197,7 @@ static int BusRecv(char* buffer, int nic)
           usleep(1000);
           continue;
         } else {
-          *ptr = 0;
-          berror(warning, "Unexpected out-of-data reading bus (%i %s)", state,
-              buffer);
+          berror(warning, "Unexpected out-of-data reading bus (%i)", state);
           return ACTBUS_OOD;
         }
       }
@@ -271,11 +269,13 @@ static int BusRecv(char* buffer, int nic)
     }
   }
 
-  *ptr = '\0';
+  if (!nic) {
+    *ptr = '\0';
 
 #ifdef ACTBUS_CHATTER
-  bprintf(info, "ActBus: Response=%s (%x)\n", buffer, status);
+    bprintf(info, "ActBus: Response=%s (%x)\n", buffer, status);
 #endif
+  }
 
   return status;
 }
@@ -468,7 +468,7 @@ void ActuatorBus(void)
   for (;;) {
     while (!InCharge) /* NiC MCC traps here */
       BusRecv(NULL, 1); /* this is a blocking call */
-      
+
     /* Repoll bus if necessary */
     if (CommandData.actbus.force_repoll) {
       poll_timeout = 0;
