@@ -532,6 +532,9 @@ struct ChannelStruct SlowChannels[] = {
   {"lock_adc1",    'w', LOOP5, 22,          -0.007425,     121.5325215, 'u'},
   {"lock_adc2",    'w', LOOP5, 23,                1.0,             0.0, 'u'},
   {"lock_adc3",    'w', LOOP5, 24,                1.0,             0.0, 'u'},
+  {"lock_state",   'w', LOOP5, 25,                1.0,             0.0, 'u'},
+  {"lock_goal",    'w', LOOP5, 26,                1.0,             0.0, 'u'},
+  {"seized_bus",   'w', LOOP5, 27,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 

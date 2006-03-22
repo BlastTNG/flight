@@ -158,10 +158,6 @@ union DerivedUnion DerivedChannels[] = {
       "OF_COOL2_OFF",
       "OF_COOL1_ON",
       "OF_COOL1_OFF",
-      "LOKMOT_ON",
-      "LOKMOT_OFF",
-      "LOKMOT_OUT",
-      "LOKMOT_IN"
       ),
 #endif
 

@@ -38,7 +38,6 @@ void StarPos(double t, double ra0, double dec0, double mra, double mdec,
 double GetJulian(time_t t);
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
 		double *el);
-int pinIsIn(); /* actuators.c */
 
 #define NOMINAL_LATITUDE -77.50 /* degrees North */
 #define LATITUDE_BAND     2.00 /* in degrees of latitude */
@@ -373,34 +372,33 @@ void DoSched(void)
     return;
   }
 
-  if (PointingData[i_point].at_float && !CommandData.at_float)
-    if (pinIsIn()) {
-      bputs(info, "Scheduler: *** Executing initial float commands. ***\n");
-      /* el on */
-      event.command = el_on;
-      event.is_multi = 0;
-      ScheduledCommand(&event);
-      /* unlock */
-      event.command = unlock;
-      ScheduledCommand(&event);
-      /* az on */
-      event.command = az_on;
-      ScheduledCommand(&event);
-      /* point antisolar */
-      event.command = antisun;
-      ScheduledCommand(&event);
-      /* pot_valve_open */
-      event.command = pot_valve_open;
-      ScheduledCommand(&event);
-      event.command = pot_valve_on;
-      ScheduledCommand(&event);
-      // out of sched mode for a while
-      CommandData.pointing_mode.t = t + 30;
-      doing_schedule = 0;
-      CommandData.at_float = 1;
-      bputs(info, "Scheduler: *** Initial float commands complete. ***\n");
-      return;
-    }
+  if (PointingData[i_point].at_float && !CommandData.at_float) {
+    bputs(info, "Scheduler: *** Executing initial float commands. ***\n");
+    /* el on */
+    event.command = el_on;
+    event.is_multi = 0;
+    ScheduledCommand(&event);
+    /* unlock */
+    event.command = unlock;
+    ScheduledCommand(&event);
+    /* az on */
+    event.command = az_on;
+    ScheduledCommand(&event);
+    /* point antisolar */
+    event.command = antisun;
+    ScheduledCommand(&event);
+    /* pot_valve_open */
+    event.command = pot_valve_open;
+    ScheduledCommand(&event);
+    event.command = pot_valve_on;
+    ScheduledCommand(&event);
+    // out of sched mode for a while
+    CommandData.pointing_mode.t = t + 30;
+    doing_schedule = 0;
+    CommandData.at_float = 1;
+    bputs(info, "Scheduler: *** Initial float commands complete. ***\n");
+    return;
+  }
 
   /*************************************************************/
   /** find local comoving siderial date (in siderial seconds) **/

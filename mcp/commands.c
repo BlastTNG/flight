@@ -549,13 +549,13 @@ static void SingleCommand (enum singleCommand command, int scheduled)
 
     /* Lock and Actuators */
     case pin_in:
-      CommandData.pumps.lock_in = 1;
+      CommandData.actbus.lock_goal = LS_CLOSED | LS_DRIVE_OFF | LS_IGNORE_EL;
       break;
     case lock_off:
-      CommandData.pumps.lock_off = 1;
+      CommandData.actbus.lock_goal = LS_DRIVE_OFF | LS_DRIVE_FORCE;
       break;
     case unlock:
-      CommandData.pumps.lock_out = 1;
+      CommandData.actbus.lock_goal = LS_OPEN | LS_DRIVE_OFF;
       if (CommandData.pointing_mode.mode == P_LOCK) {
         CommandData.pointing_mode.nw = CommandData.slew_veto;
         CommandData.pointing_mode.mode = P_DRIFT;
@@ -959,7 +959,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case lock:  /* Lock Inner Frame */
       if (CommandData.pumps.bal_veto >= 0)
         CommandData.pumps.bal_veto = BAL_VETO_MAX;
-      CommandData.pumps.lock_point = 1;
+      CommandData.actbus.lock_goal = LS_CLOSED | LS_DRIVE_OFF;
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_LOCK;
       CommandData.pointing_mode.X = 0;
@@ -1801,14 +1801,12 @@ void InitCommandData()
 
   CommandData.pumps.inframe_cool_on = 0;
   CommandData.pumps.inframe_cool_off = 0;
-  CommandData.pumps.lock_out = 0;
-  CommandData.pumps.lock_in = 0;
-  CommandData.pumps.lock_point = 0;
   CommandData.pumps.outframe_cool1_on = 0;
   CommandData.pumps.outframe_cool1_off = 0;
   CommandData.pumps.outframe_cool2_on = 0;
   CommandData.pumps.outframe_cool2_off = 0;
 
+  CommandData.actbus.lock_goal = LS_DRIVE_OFF;
   CommandData.actbus.force_repoll = 0;
   CommandData.actbus.cindex = 0;
   CommandData.actbus.caddr[0] = 0;

@@ -30,9 +30,11 @@
 #include <fcntl.h>
 #include <sys/select.h>
 #include <errno.h>
+#include <math.h>
 
 #include "mcp.h"
 #include "command_struct.h"
+#include "pointing_struct.h"
 #include "tx.h"
 
 /* Define this symbol to have mcp log all actuator bus traffic */
@@ -59,6 +61,9 @@
 
 #define LOCK_MOTOR_DATA_TIMER 100
 
+#define LOCK_MIN_POT 16000
+#define LOCK_MAX_POT 3000
+
 /* in commands.c */
 double LockPosition(double elevation);
 
@@ -67,6 +72,7 @@ extern short int InCharge; /* tx.c */
 static int bus_fd = -1;
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
   "Lock Motor"};
+static const int id[NACT] = {0x31, 0x32, 0x33, 0x34};
 
 static char gp_buffer[1000];
 static struct stepper_struct {
@@ -78,15 +84,10 @@ static struct stepper_struct {
 struct lock_struct {
   unsigned int pos;
   unsigned short adc[4];
-} lock_data;
+  unsigned int state;
+} lock_data = { .state = LS_DRIVE_UNK };
 
-/****************************************************************/
-/* Read the state of the lock motor pin (or guess it, whatever) */
-/****************************************************************/
-int pinIsIn(void)
-{
-  return(CommandData.pin_is_in);
-}
+int bus_seized = -1;
 
 static int act_setserial(char *input_tty)
 {
@@ -126,6 +127,20 @@ static int act_setserial(char *input_tty)
   return fd;
 }
 
+static inline void TakeBus(int who)
+{
+  if (bus_seized != who)
+    bprintf(info, "ActBus: Bus seized by %s.\n", name[who]);
+  bus_seized = who;
+}
+
+static inline void ReleaseBus(int who)
+{
+  if (bus_seized == who)
+    bprintf(info, "ActBus: Bus released by %s.\n", name[who]);
+  bus_seized = -1;
+}
+
 #ifdef ACTBUS_CHATTER
 static char hex_buffer[1000];
 static const char* HexDump(const unsigned char* buffer, int len)
@@ -148,7 +163,7 @@ static void BusSend(int who, const char* what)
   unsigned char *ptr;
 
   buffer[0] = 0x2;
-  buffer[1] = who + 0x31;
+  buffer[1] = id[who];
   buffer[2] = '1';
   sprintf(buffer + 3, "%s", what);
   buffer[len - 2] = 0x3;
@@ -316,7 +331,7 @@ static int PollBus(int rescan)
   return all_ok;
 }
 
-static void GetLockData(void)
+static void GetLockData(int mult)
 {
   static int counter = 0;
   int result;
@@ -324,7 +339,7 @@ static void GetLockData(void)
   if (stepper[LOCKNUM].status == -1)
     return;
 
-  if (counter++ < LOCK_MOTOR_DATA_TIMER)
+  if (counter++ < mult * LOCK_MOTOR_DATA_TIMER)
     return;
 
   counter = 0;
@@ -349,78 +364,165 @@ static void GetLockData(void)
       &lock_data.adc[2], &lock_data.adc[3]);
 }
 
-#if 0
+/* The NiC MCC does this via the BlastBus to give it a chance to know what's
+ * going on.  The ICC reads it directly to get more promptly the answer
+ * (since all these fields are slow). */
+static void SetLockState(int nic)
+{
+  static int firsttime = 1;
+  int pot = lock_data.adc[1];
+  int ls = lock_data.adc[2];
+  unsigned int state = lock_data.state; 
+
+  static struct BiPhaseStruct* lockAdc1Addr;
+  static struct BiPhaseStruct* lockAdc2Addr;
+  static struct BiPhaseStruct* lockStateAddr;
+
+  if (firsttime) {
+    firsttime = 0;
+    lockAdc1Addr = GetBiPhaseAddr("lock_adc1");
+    lockAdc2Addr = GetBiPhaseAddr("lock_adc2");
+    lockStateAddr = GetBiPhaseAddr("lock_state");
+  }
+
+  if (nic) {
+    pot = slow_data[lockAdc1Addr->index][lockAdc1Addr->channel];
+    ls = slow_data[lockAdc2Addr->index][lockAdc2Addr->channel];
+    state = slow_data[lockStateAddr->index][lockStateAddr->channel];
+  }
+
+  state &= LS_DRIVE_MASK; /* zero everything but drive info */
+
+  if (pot < LOCK_MIN_POT)
+    state |= LS_CLOSED;
+  else if (pot > LOCK_MAX_POT)
+    state |= LS_OPEN;
+
+  if (fabs(ACSData.enc_elev - LockPosition(ACSData.enc_elev)) <= 0.2)
+    state |= LS_EL_OK;
+
+  /* Assume the pin is in unless we're all the way open */
+  if (state & LS_OPEN)
+    CommandData.pin_is_in = 0;
+  else
+    CommandData.pin_is_in = 1;
+}
+
 /************************************************************************/
 /*                                                                      */
 /*    Do Lock Logic: check status, determine if we are locked, etc      */
 /*                                                                      */
 /************************************************************************/
-#define PULSE_LENGTH 400   /* 4 seconds */
-#define SEARCH_COUNTS 500 /* 5 seconds */
-static int GetLockBits(unsigned short lockBits)
+#define SEND_SLEEP 100000 /* .1 seconds */
+#define WAIT_SLEEP 50000 /* .05 seconds */
+#define LA_EXIT    0
+#define LA_STOP    1
+#define LA_WAIT    2
+#define LA_EXTEND  3
+#define LA_RETRACT 4
+static void DoLock(void)
 {
-  static int is_closing = 0;
-  static int is_opening = 0;
-  static int is_searching = 0;
+  int action = LA_EXIT;
+  int result;
+  const char* command = NULL;
 
-  /* check for commands from CommandData */
-  if (CommandData.pumps.lock_in) {
-    CommandData.pumps.lock_in = 0;
-    is_opening = 0;
-    is_closing = PULSE_LENGTH;
-    is_searching = 0;
-  } else if (CommandData.pumps.lock_out) {
-    CommandData.pumps.lock_out = 0;
-    is_opening = PULSE_LENGTH;
-    is_closing = 0;
-    is_searching = 0;
-  } else if (CommandData.pumps.lock_point) {
-    CommandData.pumps.lock_point = 0;
-    is_searching = SEARCH_COUNTS;
-    is_opening = 0;
-    is_closing = 0;
-  } else if (CommandData.pumps.lock_off) {
-    CommandData.pumps.lock_off = 0;
-    is_opening = 0;
-    is_closing = 0;
-    is_searching = 0;
-  }
+  do {
+    GetLockData((bus_seized == LOCKNUM) ? 0 : 1);
+    SetLockState(0);
 
-  /* elevation searching stuff */
-  if (is_searching > 1) {
-    if (fabs(ACSData.enc_elev - LockPosition(ACSData.enc_elev)) > 0.2)
-      is_searching = SEARCH_COUNTS;
+    /* Fix weird states */
+    if ((lock_data.state & (LS_DRIVE_EXT | LS_DRIVE_RET | LS_DRIVE_UNK)
+          && lock_data.state & LS_DRIVE_OFF)
+        || lock_data.state & LS_DRIVE_FORCE) {
+      lock_data.state &= ~LS_DRIVE_MASK | LS_DRIVE_UNK;
+      bprintf(info, "ActBus: Reset lock motor state.");
+    }
+
+    /* compare goal to current state -- only 3 goals are supported:
+     * open + off, closed + off and off */
+    if (CommandData.actbus.lock_goal & (LS_OPEN | LS_DRIVE_OFF)) {
+      /*                                       ORe -.
+       * cUe -+-(stp)- cFe -(ext)- cXe -(---)- OXe -+-(stp)- OFe ->
+       * cRe -'                                OUe -'
+       */
+      if (lock_data.state & (LS_OPEN | LS_DRIVE_OFF))
+        action = LA_EXIT;
+      else if (lock_data.state & LS_OPEN)
+        action = LA_STOP;
+      else if (lock_data.state & LS_DRIVE_EXT)
+        action = LA_WAIT;
+      else if (lock_data.state & LS_DRIVE_OFF)
+        action = LA_EXTEND;
+      else
+        action = LA_STOP;
+    } else if (CommandData.actbus.lock_goal & (LS_CLOSED | LS_DRIVE_OFF)) {
+      /* oX -.         oUE -(stp)-.              CRe -(stp)-+
+       * oR -+-(stp) - oF  -(---)-+- oFE -(ret)- oRE -(---)-+- CFe ->
+       * oU -'         oXE -(stp)-'              CUe -(stp)-+
+       *                                         CXe -(stp)-'
+       */
+      if (lock_data.state & (LS_CLOSED | LS_DRIVE_OFF)) 
+        action = LA_EXIT;
+      else if (lock_data.state & LS_CLOSED)
+        action = LA_STOP;
+      else if (lock_data.state & (LS_EL_OK | LS_IGNORE_EL)) { /* el in range */
+        if (lock_data.state & LS_DRIVE_RET)
+          action = LA_WAIT;
+        else if (lock_data.state & LS_DRIVE_OFF)
+          action = LA_RETRACT;
+        else
+          action = LA_STOP;
+      } else /* el out of range */
+        action = (lock_data.state & LS_DRIVE_OFF) ? LA_WAIT : LA_STOP;
+    } else if (CommandData.actbus.lock_goal & LS_DRIVE_OFF)
+      /* ocXe -.
+       * ocRe -+-(stp)- ocFe ->
+       * ocUe -'
+       */
+      action = (lock_data.state & LS_DRIVE_OFF) ? LA_EXIT : LA_STOP;
+    else {
+      bprintf(warning, "ActBus: Unhandled lock goal (%x) ignored.",
+          CommandData.actbus.lock_goal);
+      CommandData.actbus.lock_goal = LS_DRIVE_OFF;
+    }
+
+    /* Seize the bus */
+    if (action == LA_EXIT)
+      ReleaseBus(LOCKNUM);
     else
-      is_searching--;
-  } else if (is_searching == 1) {
-    is_searching = 0;
-    is_closing = PULSE_LENGTH;
-  }
+      TakeBus(LOCKNUM);
 
-  /* check limit switches -- if both bits are set, the motor is running
-   * -- if we have reached a limit we can stop going in the direction
-   * of the limitswitch that is active */
-  if ((lockBits & LOKMOT_ISIN) && (~lockBits & LOKMOT_ISOUT)) {
-    CommandData.pin_is_in = 1;
-    is_closing = 0;
-  } else if ((lockBits & LOKMOT_ISOUT) && (~lockBits & LOKMOT_ISIN)) {
-    CommandData.pin_is_in = 0;
-    is_opening = 0;
-  }
+    /* Figure out what to do... */
+    switch (action) {
+      case LA_STOP:
+        bputs(info, "ActBus: Stopping lock motor.");
+        command = "T"; /* terminate all strings */
+        lock_data.state &= ~LS_DRIVE_MASK;
+        lock_data.state |= LS_DRIVE_OFF;
+        break;
+      case LA_EXTEND:
+        bputs(info, "ActBus: Extending lock motor.");
+        command = "V10000P0R"; /* move out forever */
+        break;
+      case LA_RETRACT:
+        bputs(info, "ActBus: Retracting lock motor.");
+        command = "V10000D0R"; /* move in forever */
+        break;
+      default:
+        command = NULL;
+    }
 
-  /* set lock bits */
-  if (is_closing) {
-    is_closing--;
-    return(LOKMOT_IN | LOKMOT_ON);
-  } else if (is_opening) {
-    is_opening--;
-    return(LOKMOT_OUT | LOKMOT_ON);
-  }
-
-
-  return 0;
+    /* ... and do it! */
+    if (command != NULL) {
+      BusSend(LOCKNUM, command);
+      if ((result = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD))
+        bputs(warning,
+            "ActBus: Timeout waiting for response from lock motor.");
+      usleep(SEND_SLEEP); /* wait for a bit */
+    } else if (action == LA_WAIT)
+      usleep(WAIT_SLEEP); /* wait for a bit */
+  } while (action != LA_EXIT);
 }
-#endif
 
 /* This function is called by the frame control thread */
 void StoreActBus(void)
@@ -429,6 +531,9 @@ void StoreActBus(void)
   static int firsttime = 1;
 
   static struct NiosStruct* lockPosAddr;
+  static struct NiosStruct* lockStateAddr;
+  static struct NiosStruct* lockGoalAddr;
+  static struct NiosStruct* seizedBusAddr;
   static struct NiosStruct* lockAdcAddr[4];
   static struct NiosStruct* lokmotPinAddr;
 
@@ -436,6 +541,9 @@ void StoreActBus(void)
     firsttime = 0;
     lokmotPinAddr = GetNiosAddr("lokmot_pin");
     lockPosAddr = GetNiosAddr("lock_pos");
+    lockStateAddr = GetNiosAddr("lock_state");
+    seizedBusAddr = GetNiosAddr("seized_bus");
+    lockGoalAddr = GetNiosAddr("lock_goal");
     lockAdcAddr[0] = GetNiosAddr("lock_adc0");
     lockAdcAddr[1] = GetNiosAddr("lock_adc1");
     lockAdcAddr[2] = GetNiosAddr("lock_adc2");
@@ -446,6 +554,9 @@ void StoreActBus(void)
 
   for (i = 0; i < 4; ++i)
     WriteData(lockAdcAddr[i], lock_data.adc[i], NIOS_QUEUE);
+  WriteData(lockStateAddr, lock_data.state, NIOS_QUEUE);
+  WriteData(seizedBusAddr, bus_seized, NIOS_QUEUE);
+  WriteData(lockGoalAddr, CommandData.actbus.lock_goal, NIOS_QUEUE);
   WriteData(lockPosAddr, lock_data.pos, NIOS_FLUSH);
 }
 
@@ -466,8 +577,13 @@ void ActuatorBus(void)
   all_ok = PollBus(0);
 
   for (;;) {
-    while (!InCharge) /* NiC MCC traps here */
-      BusRecv(NULL, 1); /* this is a blocking call */
+    while (!InCharge) { /* NiC MCC traps here */
+      CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining
+                                              control */
+      BusRecv(NULL, 1); /* this is a blocking call -- clear the recv buffer */
+      SetLockState(1); /* to ensure the NiC MCC knows the pin state */
+      /* no need to sleep -- BusRecv does that for us */
+    }
 
     /* Repoll bus if necessary */
     if (CommandData.actbus.force_repoll) {
@@ -495,8 +611,8 @@ void ActuatorBus(void)
       CommandData.actbus.caddr[my_cindex] = 0;
     }
 
-    /* Get data from lock motor */
-    GetLockData();
+    DoLock(); /* Lock motor stuff -- this will seize the bus until
+                 the lock motor's state has settled */
 
     usleep(10000);
   }

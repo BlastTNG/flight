@@ -47,6 +47,17 @@ struct GainStruct {
   unsigned short int SP;
 };
 
+#define LS_OPEN        0x0001
+#define LS_CLOSED      0x0002
+#define LS_DRIVE_OFF   0x0004
+#define LS_DRIVE_EXT   0x0008
+#define LS_DRIVE_RET   0x0010
+#define LS_DRIVE_UNK   0x0020
+#define LS_EL_OK       0x0040
+#define LS_IGNORE_EL   0x0080
+#define LS_DRIVE_FORCE 0x0100
+#define LS_DRIVE_MASK  0x013C
+
 // mode        X     Y    vaz   del    w    h
 // LOCK              el
 // AZEL_GOTO   az    el
@@ -190,10 +201,6 @@ struct CommandDataStruct {
     int outframe_auto;
     int inframe_cool_on;
     int inframe_cool_off;
-    int lock_out;
-    int lock_off;
-    int lock_in;
-    int lock_point;
     int outframe_cool1_on;
     int outframe_cool1_off;
     int outframe_cool2_on;
@@ -206,6 +213,8 @@ struct CommandDataStruct {
     int caddr[3];
     char command[3][CMD_STRING_LEN];
     int force_repoll;
+
+    unsigned int lock_goal;
   } actbus;
 
   int pin_is_in;

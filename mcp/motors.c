@@ -36,7 +36,6 @@ struct AxesModeStruct axes_mode = {
   .az_dir = 0
 }; /* low level velocity mode */
 
-int pinIsIn(void);  /* actuators.c */
 void SetSafeDAz(double ref, double *A); /* in pointing.c */
 void SetSafeDAzC(double ref, double *A, double *C); /* in pointing.c */
 void UnwindDiff(double ref, double *A);
@@ -225,9 +224,10 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   WriteData(elVreqAddr, 32768 + v_elev, NIOS_QUEUE);
 
   /* zero motor gains if the pin is in */
-  if ((pinIsIn() && !CommandData.force_el) || CommandData.disable_el) {
+  if ((CommandData.pin_is_in && !CommandData.force_el)
+      || CommandData.disable_el)
     elGainP = elGainI = 0;
-  } else {
+  else {
     elGainP = CommandData.ele_gain.P;
     elGainI = CommandData.ele_gain.I;	
   }
