@@ -33,12 +33,14 @@
 
 #include "mcp.h"
 #include "command_struct.h"
+#include "tx.h"
 
 /* Define this symbol to have mcp log all actuator bus traffic */
 #undef ACTBUS_CHATTER
 
 #define ACT_BUS "/dev/ttyS7"
 
+#define LOCKNUM 3
 #define NACT 4
 #define POLL_TIMEOUT 30000 /* 5 minutes */
 
@@ -55,6 +57,8 @@
 
 #define ACT_RECV_ABORT 3000000
 
+#define LOCK_MOTOR_DATA_TIMER 100
+
 /* in commands.c */
 double LockPosition(double elevation);
 
@@ -70,6 +74,11 @@ static struct stepper_struct {
   int status;
   int sequence;
 } stepper[NACT];
+
+struct lock_struct {
+  unsigned int pos;
+  unsigned short adc[4];
+} lock_data;
 
 /****************************************************************/
 /* Read the state of the lock motor pin (or guess it, whatever) */
@@ -307,6 +316,62 @@ static int PollBus(int rescan)
   return all_ok;
 }
 
+static void GetLockData(void)
+{
+  static int counter = 0;
+  int result;
+
+  if (stepper[LOCKNUM].status == -1)
+    return;
+
+  if (counter++ < LOCK_MOTOR_DATA_TIMER)
+    return;
+
+  counter = 0;
+
+  BusSend(LOCKNUM, "?0");
+  if ((result = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
+    bputs(warning, "ActBus: Timeout waiting for response from lock motor.");
+    stepper[LOCKNUM].status = -1;
+    return;
+  }
+
+  lock_data.pos = atoi(gp_buffer);
+
+  BusSend(LOCKNUM, "?aa");
+  if ((result = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
+    bputs(warning, "ActBus: Timeout waiting for response from lock motor.");
+    stepper[LOCKNUM].status = -1;
+    return;
+  }
+
+  sscanf(gp_buffer, "%hi,%hi,%hi,%hi", &lock_data.adc[0], &lock_data.adc[1],
+      &lock_data.adc[2], &lock_data.adc[3]);
+}
+
+/* This function is called by the frame control thread */
+void StoreActBus(void)
+{
+  int i;
+  static int firsttime = 1;
+
+  static struct NiosStruct* lockPosAddr;
+  static struct NiosStruct* lockAdcAddr[4];
+
+  if (firsttime) {
+    firsttime = 0;
+    lockPosAddr = GetNiosAddr("lock_pos");
+    lockAdcAddr[0] = GetNiosAddr("lock_adc0");
+    lockAdcAddr[1] = GetNiosAddr("lock_adc1");
+    lockAdcAddr[2] = GetNiosAddr("lock_adc2");
+    lockAdcAddr[3] = GetNiosAddr("lock_adc3");
+  }
+
+  for (i = 0; i < 4; ++i)
+    WriteData(lockAdcAddr[i], lock_data.adc[i], NIOS_QUEUE);
+  WriteData(lockPosAddr, lock_data.pos, NIOS_FLUSH);
+}
+
 void ActuatorBus(void)
 {
   int poll_timeout = POLL_TIMEOUT;
@@ -349,9 +414,12 @@ void ActuatorBus(void)
       /* Discard response to get it off the bus */
       if ((i = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD))
         bputs(warning,
-            "ActBus: Timout waiting for response after uplinked command.");
+            "ActBus: Timeout waiting for response after uplinked command.");
       CommandData.actbus.caddr[my_cindex] = 0;
     }
+
+    /* Get data from lock motor */
+    GetLockData();
 
     usleep(10000);
   }

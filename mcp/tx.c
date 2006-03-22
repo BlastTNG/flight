@@ -59,6 +59,9 @@ extern int bbc_fp;
 
 double round(double x);
 
+/* in actuators.c */
+void StoreActBus(void);
+
 /* in auxiliary.c */
 void ChargeController(void);
 void ControlAuxMotors(unsigned short *RxFrame);
@@ -1076,6 +1079,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     DoSched();
   UpdateAxesMode();
   StoreData(index);
+  StoreActBus();
   ControlGyroHeat(RxFrame, 0);
   ControlGyroHeat(RxFrame, 1);
   WriteMot(index, RxFrame);

@@ -69,6 +69,8 @@ struct ChannelStruct WideSlowChannels[] = {
   {"osc_mcpnum",   'w', LOOP3, 58,                1.0,             0.0, 'U'},
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U'},
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S'},
+  {"lock_pos",     'w', LOOP5, 18,                1.0,             0.0, 'U'},
+
 /* Rox a la Jeff */
   {"t_he3fridge",  'r',  CRYO,  6,    ROX_C2V,   ROX_OFFSET, 'U'},
   {"t_m4",         'r',  CRYO,  8,    ROX_C2V,   ROX_OFFSET, 'U'},
@@ -525,7 +527,12 @@ struct ChannelStruct SlowChannels[] = {
   {"az_dir",       'w', LOOP5, 15,                1.0,             0.0, 's'},
   {"el_dir",       'w', LOOP5, 16,                1.0,             0.0, 's'},
   {"slew_veto",    'w', LOOP5, 17,           4.0 / SR,             0.0, 'u'},
-  {"sveto_len",    'w', LOOP5, 18,           4.0 / SR,             0.0, 'u'},
+  /* LOOP5 18-19 are wide */
+  {"sveto_len",    'w', LOOP5, 20,           4.0 / SR,             0.0, 'u'},
+  {"lock_adc0",    'w', LOOP5, 21,                1.0,             0.0, 'u'},
+  {"lock_adc1",    'w', LOOP5, 22,                1.0,             0.0, 'u'},
+  {"lock_adc2",    'w', LOOP5, 23,                1.0,             0.0, 'u'},
+  {"lock_adc3",    'w', LOOP5, 24,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
