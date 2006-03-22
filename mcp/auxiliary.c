@@ -108,9 +108,6 @@ extern short int InCharge; /* tx.c */
 #define BAL2_ON      0x40  /* ACS3 Group 1 Bit 7 */
 #define BAL2_REV     0x80  /* ACS3 Group 1 Bit 8 */
 
-#define LOKMOT_ISIN  0x40  /* ACS3 Group 2 Bit 7 - lockBits */
-#define LOKMOT_ISOUT 0x80  /* ACS3 Group 2 Bit 8 */
-
 #define OF_COOL2_ON  0x01  /* ACS3 Group 3 Bit 1 - ofpmBits */
 #define OF_COOL2_OFF 0x02  /* ACS3 Group 3 Bit 2 */
 #define OF_COOL1_ON  0x04  /* ACS3 Group 3 Bit 3 */
@@ -563,77 +560,6 @@ void ChargeController(void)
   WriteData(dpcuAutoAddr, CommandData.dpcu_auto, NIOS_FLUSH);
 }
 
-/************************************************************************/
-/*                                                                      */
-/*    Do Lock Logic: check status, determine if we are locked, etc      */
-/*                                                                      */
-/************************************************************************/
-#define PULSE_LENGTH 400   /* 4 seconds */
-#define SEARCH_COUNTS 500 /* 5 seconds */
-static int GetLockBits(unsigned short lockBits)
-{
-  static int is_closing = 0;
-  static int is_opening = 0;
-  static int is_searching = 0;
-
-  /* check for commands from CommandData */
-  if (CommandData.pumps.lock_in) {
-    CommandData.pumps.lock_in = 0;
-    is_opening = 0;
-    is_closing = PULSE_LENGTH;
-    is_searching = 0;
-  } else if (CommandData.pumps.lock_out) {
-    CommandData.pumps.lock_out = 0;
-    is_opening = PULSE_LENGTH;
-    is_closing = 0;
-    is_searching = 0;
-  } else if (CommandData.pumps.lock_point) {
-    CommandData.pumps.lock_point = 0;
-    is_searching = SEARCH_COUNTS;
-    is_opening = 0;
-    is_closing = 0;
-  } else if (CommandData.pumps.lock_off) {
-    CommandData.pumps.lock_off = 0;
-    is_opening = 0;
-    is_closing = 0;
-    is_searching = 0;
-  }
-
-  /* elevation searching stuff */
-  if (is_searching > 1) {
-    if (fabs(ACSData.enc_elev - LockPosition(ACSData.enc_elev)) > 0.2)
-      is_searching = SEARCH_COUNTS;
-    else
-      is_searching--;
-  } else if (is_searching == 1) {
-    is_searching = 0;
-    is_closing = PULSE_LENGTH;
-  }
-
-  /* check limit switches -- if both bits are set, the motor is running
-   * -- if we have reached a limit we can stop going in the direction
-   * of the limitswitch that is active */
-  if ((lockBits & LOKMOT_ISIN) && (~lockBits & LOKMOT_ISOUT)) {
-    CommandData.pin_is_in = 1;
-    is_closing = 0;
-  } else if ((lockBits & LOKMOT_ISOUT) && (~lockBits & LOKMOT_ISIN)) {
-    CommandData.pin_is_in = 0;
-    is_opening = 0;
-  }
-
-  /* set lock bits */
-  if (is_closing) {
-    is_closing--;
-    return(LOKMOT_IN | LOKMOT_ON);
-  } else if (is_opening) {
-    is_opening--;
-    return(LOKMOT_OUT | LOKMOT_ON);
-  }
-
-
-  return 0;
-}
-
 /*********************/
 /* ISC Pulsing stuff */
 void CameraTrigger(int which)
@@ -887,9 +813,6 @@ void ControlAuxMotors(unsigned short *RxFrame)
   static struct NiosStruct* balTargetAddr, *balVetoAddr;
   static struct NiosStruct* balGainAddr;
   static struct NiosStruct* ifpmBitsAddr;
-  static struct NiosStruct* lokmotPinAddr;
-
-  static struct BiPhaseStruct* lockBitsAddr;
 
   int ifpmBits = 0;
   int ofpmBits = 0;
@@ -900,8 +823,6 @@ void ControlAuxMotors(unsigned short *RxFrame)
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    lockBitsAddr = GetBiPhaseAddr("lock_bits");
-
     ifpmBitsAddr = GetNiosAddr("ifpm_bits");
     ofpmBitsAddr = GetNiosAddr("ofpm_bits");
     balpumpLevAddr = GetNiosAddr("balpump_lev");
@@ -915,7 +836,6 @@ void ControlAuxMotors(unsigned short *RxFrame)
     balTargetAddr = GetNiosAddr("bal_target");
     balGainAddr = GetNiosAddr("bal_gain");
     balVetoAddr = GetNiosAddr("bal_veto");
-    lokmotPinAddr = GetNiosAddr("lokmot_pin");
   }
 
   /* inner frame box */
@@ -976,9 +896,6 @@ void ControlAuxMotors(unsigned short *RxFrame)
     CommandData.pumps.outframe_cool2_off--;
   }
 
-  ofpmBits |=
-    GetLockBits(slow_data[lockBitsAddr->index][lockBitsAddr->channel]);
-
   /* Run Balance System, Maybe */
   ifpmBits = Balance(ifpmBits);
 
@@ -992,7 +909,6 @@ void ControlAuxMotors(unsigned short *RxFrame)
 
   WriteData(incoolStateAddr, incool_state, NIOS_QUEUE);
   WriteData(outcoolStateAddr, outcool_state, NIOS_QUEUE);
-  WriteData(lokmotPinAddr, CommandData.pin_is_in, NIOS_QUEUE);
   WriteData(ofpmBitsAddr, ofpmBits, NIOS_QUEUE);
   WriteData(sprpumpLevAddr, CommandData.pumps.pwm2 & 0x7ff, NIOS_QUEUE);
   WriteData(inpumpLevAddr, inframe_pwm & 0x7ff, NIOS_QUEUE);

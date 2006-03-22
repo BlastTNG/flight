@@ -349,6 +349,79 @@ static void GetLockData(void)
       &lock_data.adc[2], &lock_data.adc[3]);
 }
 
+#if 0
+/************************************************************************/
+/*                                                                      */
+/*    Do Lock Logic: check status, determine if we are locked, etc      */
+/*                                                                      */
+/************************************************************************/
+#define PULSE_LENGTH 400   /* 4 seconds */
+#define SEARCH_COUNTS 500 /* 5 seconds */
+static int GetLockBits(unsigned short lockBits)
+{
+  static int is_closing = 0;
+  static int is_opening = 0;
+  static int is_searching = 0;
+
+  /* check for commands from CommandData */
+  if (CommandData.pumps.lock_in) {
+    CommandData.pumps.lock_in = 0;
+    is_opening = 0;
+    is_closing = PULSE_LENGTH;
+    is_searching = 0;
+  } else if (CommandData.pumps.lock_out) {
+    CommandData.pumps.lock_out = 0;
+    is_opening = PULSE_LENGTH;
+    is_closing = 0;
+    is_searching = 0;
+  } else if (CommandData.pumps.lock_point) {
+    CommandData.pumps.lock_point = 0;
+    is_searching = SEARCH_COUNTS;
+    is_opening = 0;
+    is_closing = 0;
+  } else if (CommandData.pumps.lock_off) {
+    CommandData.pumps.lock_off = 0;
+    is_opening = 0;
+    is_closing = 0;
+    is_searching = 0;
+  }
+
+  /* elevation searching stuff */
+  if (is_searching > 1) {
+    if (fabs(ACSData.enc_elev - LockPosition(ACSData.enc_elev)) > 0.2)
+      is_searching = SEARCH_COUNTS;
+    else
+      is_searching--;
+  } else if (is_searching == 1) {
+    is_searching = 0;
+    is_closing = PULSE_LENGTH;
+  }
+
+  /* check limit switches -- if both bits are set, the motor is running
+   * -- if we have reached a limit we can stop going in the direction
+   * of the limitswitch that is active */
+  if ((lockBits & LOKMOT_ISIN) && (~lockBits & LOKMOT_ISOUT)) {
+    CommandData.pin_is_in = 1;
+    is_closing = 0;
+  } else if ((lockBits & LOKMOT_ISOUT) && (~lockBits & LOKMOT_ISIN)) {
+    CommandData.pin_is_in = 0;
+    is_opening = 0;
+  }
+
+  /* set lock bits */
+  if (is_closing) {
+    is_closing--;
+    return(LOKMOT_IN | LOKMOT_ON);
+  } else if (is_opening) {
+    is_opening--;
+    return(LOKMOT_OUT | LOKMOT_ON);
+  }
+
+
+  return 0;
+}
+#endif
+
 /* This function is called by the frame control thread */
 void StoreActBus(void)
 {
@@ -357,15 +430,19 @@ void StoreActBus(void)
 
   static struct NiosStruct* lockPosAddr;
   static struct NiosStruct* lockAdcAddr[4];
+  static struct NiosStruct* lokmotPinAddr;
 
   if (firsttime) {
     firsttime = 0;
+    lokmotPinAddr = GetNiosAddr("lokmot_pin");
     lockPosAddr = GetNiosAddr("lock_pos");
     lockAdcAddr[0] = GetNiosAddr("lock_adc0");
     lockAdcAddr[1] = GetNiosAddr("lock_adc1");
     lockAdcAddr[2] = GetNiosAddr("lock_adc2");
     lockAdcAddr[3] = GetNiosAddr("lock_adc3");
   }
+
+  WriteData(lokmotPinAddr, CommandData.pin_is_in, NIOS_QUEUE);
 
   for (i = 0; i < 4; ++i)
     WriteData(lockAdcAddr[i], lock_data.adc[i], NIOS_QUEUE);

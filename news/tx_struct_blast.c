@@ -177,7 +177,6 @@ struct ChannelStruct SlowChannels[] = {
   {"v_sol_acs2",   'r',  ACS3, 45, -0.00140361, 91.9873, 'u'},
   {"v_sol_das1",   'r',  ACS3, 47, -0.00140993, 92.4015, 'u'},
   {"status17",     'r',  ACS3, 56,                1.0,             0.0, 'u'},
-  {"lock_bits",    'r',  ACS3, 59,                1.0,             0.0, 'u'},
   {"ifpm_bits",    'w',  ACS3,  1,                1.0,             0.0, 'u'},
   {"ofpm_bits",    'w',  ACS3,  2,                1.0,             0.0, 'u'},
   {"balpump_lev",  'w',  ACS3,  3,    -0.048851978505,           100.0, 'u'},
@@ -530,7 +529,7 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP5 18-19 are wide */
   {"sveto_len",    'w', LOOP5, 20,           4.0 / SR,             0.0, 'u'},
   {"lock_adc0",    'w', LOOP5, 21,                1.0,             0.0, 'u'},
-  {"lock_adc1",    'w', LOOP5, 22,                1.0,             0.0, 'u'},
+  {"lock_adc1",    'w', LOOP5, 22,          -0.007425,     121.5325215, 'u'},
   {"lock_adc2",    'w', LOOP5, 23,                1.0,             0.0, 'u'},
   {"lock_adc3",    'w', LOOP5, 24,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
