@@ -137,18 +137,22 @@ sub Status {
     printf "Disk Free     : %6.2f GB\n", ($disk_free / 1024 / 1024 / 1024);
     print "Filename      : $name\n";
     my ($bof) = $name =~ /(^[0-9]*)\.y/;
-    my $delta = time() - $bof;
-    my $min = int($delta / 60);
-    $delta -= $min * 60;
-    my $hour = int($min / 60);
-    $min -= $hour * 60;
-    my $day = int($hour / 24);
-    $hour -= $day * 24;
     print "Time since BOF: ";
-    print $day, "d" if ($day > 0);
-    print $hour, "h" if ($day > 0 || $hour > 0);
-    print $min, "m" if ($day > 0 || $hour > 0 || $min > 0);
-    print $delta, "s\n";
+    if ($bof) {
+      my $delta = time() - $bof;
+      my $min = int($delta / 60);
+      $delta -= $min * 60;
+      my $hour = int($min / 60);
+      $min -= $hour * 60;
+      my $day = int($hour / 24);
+      $hour -= $day * 24;
+      print $day, "d" if ($day eq "??" or $day > 0);
+      print $hour, "h" if ($day eq "??" or $day > 0 || $hour > 0);
+      print $min, "m" if ($day eq "??" or $day > 0 || $hour > 0 || $min > 0);
+      print $delta, "s\n";
+    } else {
+      print "???\n";
+    }
     close SOCK;
   } else {
     die "decomd doesn't appear to be running (/var/run/decomd.pid doesn't exist).\n";
