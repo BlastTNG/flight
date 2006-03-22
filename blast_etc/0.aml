@@ -215,7 +215,7 @@
 --u45@u0      roll_clin_sip @             @             27435         38101         20            
 --u46@u45     pch_clin_sip  @             @             @             @             @             
 --u47@u0      clin_elev     @             @             25698         37586         20            
---u48@u0      lock_bits     @             @             0             255           @             
+--u48@u0      t_pv          @             @             0             255           @             
 --u49@u0      rps_reac      @             @             7610          57926         20            
 --u50@u0      biasin        @             @             0             255           @             
 --u51@u0      disk_free     @             @             0             30720         @             
