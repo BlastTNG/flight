@@ -163,7 +163,6 @@ union DerivedUnion DerivedChannels[] = {
       "LOKMOT_OUT",
       "LOKMOT_IN"
       ),
-  LINCOM2("LOKMOT_STATE", "LOKMOT_ISOUT", 2, 0, "LOKMOT_ISIN",  1, 0),
 #endif
 
   /* BIAS */

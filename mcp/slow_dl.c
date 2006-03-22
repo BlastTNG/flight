@@ -72,7 +72,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"t_apm_5v",      SLOWDL_FORCE_INT, 8, 70, -55},
   {"t_apm_10v",     SLOWDL_FORCE_INT, 8, 70, -55},
   {"sensor_reset",  SLOWDL_U_MASK,8},
-  {"lock_bits",     SLOWDL_U_MASK,8},
+  {"lock_adc2",     SLOWDL_U_MASK,8},
   /* BALANCE */
   {"balpump_lev",   SLOWDL_FORCE_INT, 8,  100, 0}, /* 0.39 */
   {"inpump_lev",    SLOWDL_FORCE_INT, 8,  100, 0}, /* 0.39 */
