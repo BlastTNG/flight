@@ -305,7 +305,7 @@ static int PollBus(int rescan)
     } else {
       bprintf(warning,
           "ActBus: Unrecognised response from %s, will repoll later.\n",
-          gp_buffer);
+          name[i]);
       stepper[i].status = -1;
       all_ok = 0;
     }
