@@ -202,6 +202,9 @@ struct CommandDataStruct {
   } pumps;
 
   struct {
+    int cindex;
+    int caddr[3];
+    char command[3][CMD_STRING_LEN];
     int force_repoll;
   } actbus;
 

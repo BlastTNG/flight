@@ -798,6 +798,12 @@ static void SetParameters(enum multiCommand command, unsigned short *dataq,
 #endif
 }
 
+static inline void copysvalue(char* dest, const char* src)
+{
+  strncpy(dest, src, CMD_STRING_LEN - 1);
+  dest[CMD_STRING_LEN - 1] = '\0';
+}
+
 static void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled)
 {
@@ -949,7 +955,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 
       /***************************************/
-      /********** Inner Frame Lock  **********/
+      /********** Lock / Actuators  **********/
     case lock:  /* Lock Inner Frame */
       if (CommandData.pumps.bal_veto >= 0)
         CommandData.pumps.bal_veto = BAL_VETO_MAX;
@@ -963,6 +969,12 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.vaz = 0;
       CommandData.pointing_mode.del = 0;
       bprintf(info, "Commands: Lock Mode: %g\n", CommandData.pointing_mode.Y);
+      break;
+    case general: /* General actuator bus command */
+      CommandData.actbus.caddr[CommandData.actbus.cindex] = ivalues[0];
+      copysvalue(CommandData.actbus.command[CommandData.actbus.cindex],
+          svalues[1]);
+      CommandData.actbus.cindex = INC_INDEX(CommandData.actbus.cindex);
       break;
 
       /***************************************/
@@ -1798,6 +1810,10 @@ void InitCommandData()
   CommandData.pumps.outframe_cool2_off = 0;
 
   CommandData.actbus.force_repoll = 0;
+  CommandData.actbus.cindex = 0;
+  CommandData.actbus.caddr[0] = 0;
+  CommandData.actbus.caddr[1] = 0;
+  CommandData.actbus.caddr[2] = 0;
 
   CommandData.Bias.clockInternal = 0;
   CommandData.Bias.biasAC = 1;

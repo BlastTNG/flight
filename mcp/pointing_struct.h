@@ -43,10 +43,6 @@
                                Ed Chapin and/or the ISC computer */
 #include "ss_struct.h"
 
-// GETREADINDEX: converts circular buffer pointer to
-#define GETREADINDEX(i) ((i+2) % 3)  /* i - 1 modulo 3 */
-#define INC_INDEX(i) ((i + 1) %3)    /* i + 1 modulo 3 */
-
 #define RAD2SEC (180. * 3600. / M_PI / 15.)  /* radians to seconds (of time) */
 #define SEC2RAD (1. / RAD2SEC)
 #define DEG2RAD (M_PI / 180.)  /* degrees to radians */

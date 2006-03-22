@@ -64,6 +64,7 @@ static int bus_fd = -1;
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
   "Lock Motor"};
 
+static char gp_buffer[1000];
 static struct stepper_struct {
   unsigned char buffer[1000];
   int status;
@@ -211,7 +212,7 @@ static int BusRecv(char* buffer, int nic)
             break;
         case 1: /* start byte */
           state++;
-          if (byte != 0x02) { /* Start character == '/' */
+          if (byte != 0x02) { /* STX */
             had_errors++;
             bputs(warning, "ActBus: Start byte not found in response");
           } else
@@ -264,7 +265,7 @@ static int BusRecv(char* buffer, int nic)
   *ptr = '\0';
 
 #ifdef ACTBUS_CHATTER
-  bprintf(info, "ActBus: Response=%s (%i)\n", buffer, status);
+  bprintf(info, "ActBus: Response=%s (%x)\n", buffer, status);
 #endif
 
   return status;
@@ -273,7 +274,6 @@ static int BusRecv(char* buffer, int nic)
 static int PollBus(int rescan)
 {
   int i, result;
-  char buffer[1000];
   int all_ok = 1;
 
   if (rescan)
@@ -285,22 +285,24 @@ static int PollBus(int rescan)
     if (rescan && stepper[i].status != -1)
       continue;
     BusSend(i, "&");
-    if ((result = BusRecv(buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
+    if ((result = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
       bprintf(warning, "ActBus: No response from %s, will repoll later.",
           name[i]);
       stepper[i].status = -1;
       all_ok = 0;
-    } else if (!strncmp(buffer, "EZHR17EN AllMotion", 18)) {
+    } else if (!strncmp(gp_buffer, "EZHR17EN AllMotion", 18)) {
       bprintf(info, "ActBus: Found %s at address %i.\n", name[i], i + 1);
       stepper[i].status = 0;
     } else {
       bprintf(warning,
           "ActBus: Unrecognised response from %s, will repoll later.\n",
-          buffer);
+          gp_buffer);
       stepper[i].status = -1;
       all_ok = 0;
     }
   }
+
+  CommandData.actbus.force_repoll = 0;
 
   return all_ok;
 }
@@ -310,6 +312,7 @@ void ActuatorBus(void)
   int poll_timeout = POLL_TIMEOUT;
   int all_ok = 0;
   int i;
+  int my_cindex = 0;
 
   bputs(startup, "ActBus: ActuatorBus startup.");
 
@@ -324,18 +327,30 @@ void ActuatorBus(void)
     while (!InCharge) /* NiC MCC traps here */
       BusRecv(NULL, 1); /* this is a blocking call */
       
+    /* Repoll bus if necessary */
+    if (CommandData.actbus.force_repoll) {
+      poll_timeout = 0;
+      all_ok = 0;
+      for (i = 0; i < NACT; ++i)
+        stepper[i].status = -1;
+    }
+
     if (poll_timeout == 0 && !all_ok) {
       all_ok = PollBus(1);
       poll_timeout = POLL_TIMEOUT;
     } else if (poll_timeout > 0)
       poll_timeout--;
 
-    if (CommandData.actbus.force_repoll) {
-      CommandData.actbus.force_repoll = 0;
-      poll_timeout = 0;
-      all_ok = 0;
-      for (i = 0; i < NACT; ++i)
-        stepper[i].status = -1;
+    /* Send the uplinked command, if any */
+    my_cindex = GETREADINDEX(CommandData.actbus.cindex);
+    if (CommandData.actbus.caddr[my_cindex] != 0) {
+      BusSend(CommandData.actbus.caddr[my_cindex],
+          CommandData.actbus.command[my_cindex]);
+      /* Discard response to get it off the bus */
+      if ((i = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD))
+        bputs(warning,
+            "ActBus: Timout waiting for response after uplinked command.");
+      CommandData.actbus.caddr[my_cindex] = 0;
     }
 
     usleep(10000);
