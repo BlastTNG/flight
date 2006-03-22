@@ -153,16 +153,6 @@ union DerivedUnion DerivedChannels[] = {
       "BAL2_ON",
       "BAL2_REV"
       ),
-  BITFIELD("lock_bits",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "LOKMOT_ISIN",
-      "LOKMOT_ISOUT"
-      ),
   BITFIELD("ofpm_bits",
       "OF_COOL2_ON",
       "OF_COOL2_OFF",
