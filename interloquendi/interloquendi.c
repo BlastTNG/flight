@@ -46,6 +46,8 @@
 #define PID_FILE "/var/run/interloquendi.pid"
 #define CONFIG_FILE "/etc/interloquendi.conf"
 
+#undef DEBUG
+
 struct {
   union {
     char* as_string;
@@ -470,7 +472,6 @@ int main(void)
   /* set up our outputs */
 #ifdef DEBUG
   buos_use_stdio();
-  buos_allow_mem();
 #else
   openlog("interloquendi", LOG_PID, LOG_DAEMON);
   buos_use_syslog();

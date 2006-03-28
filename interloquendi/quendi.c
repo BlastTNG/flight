@@ -434,6 +434,7 @@ int quendi_respond(int response_num, const char *message)
     return -1;
 
   send(quendi_server_data->csock, buffer, strlen(buffer), MSG_DONTWAIT);
+  printf("Replied: %s", buffer);
 
   return 0;
 }
