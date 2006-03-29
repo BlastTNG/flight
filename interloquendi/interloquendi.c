@@ -47,7 +47,10 @@
 #define PID_FILE "/var/run/interloquendi.pid"
 #define CONFIG_FILE "/etc/interloquendi.conf"
 
-#undef DEBUG
+#define DEBUG
+
+/* in rendezvous.c */
+int InitRendezvous(const char*, int, const char*);
 
 struct {
   union {
@@ -546,7 +549,7 @@ int main(void)
   if (InitRendezvous(options[CFG_RENDEZ_WITH].value.as_string,
       options[CFG_RENDEZ_AT].value.as_int,
       options[CFG_RENDEZ_AS].value.as_string))
-    bputs(err, "Unable to rendezvous with upstream host.");
+    bputs(fatal, "Unable to rendezvous with upstream host.");
     
 
   /* accept loop */

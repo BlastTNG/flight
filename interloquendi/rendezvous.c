@@ -20,11 +20,20 @@
  *
  */
 
+#include "quendiclient.h"
+#include "blast.h"
+
 int InitRendezvous(const char* host, int port, const char* masq)
 {
+  struct sockaddr_in addr;
+  const char* herr;
+
   /* No rendezvous host means no rendezvousing */
   if (host[0] == '\0')
     return 0;
+
+  if ((herr = ResolveHost(host, &addr, 1)) != NULL) 
+    bprintf(fatal, "Unable to resolve upstream rendezvous server: %s", herr);
 
   return 0;
 }
