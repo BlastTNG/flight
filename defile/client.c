@@ -26,7 +26,6 @@
 
 #include <stdlib.h>       /* ANSI C std library (atoi) */
 #include <arpa/inet.h>    /* IP4 specification (inet_aton, inet_ntoa) */
-#include <errno.h>        /* ANSI C library errors (errno) */
 #include <pthread.h>      /* POSIX threads (pthread_exit) */
 #include <signal.h>       /* ANSI C signals (SIG(FOO), sigemptyset, &c.) */
 #include <string.h>       /* ANSI C strings (strcat, strdup, &c.)  */
@@ -54,66 +53,6 @@ void ClientDone(int signo) {
   ReaderDone(signo);
 }
 
-int GetServerResponse(char* buffer)
-{
-  static char extra[2000] = "";
-  char cbuf[4000];
-  char* ptr;
-  int n, overrun;
-  char* response;
-
-//  if (buffer != NULL) printf("<-- %s\n", buffer);
-
-  strcpy(cbuf, extra);
-  response = cbuf + strlen(cbuf);
-  
-  if (strchr(cbuf, '\n') == NULL) {
-    n = read(rc.csock, response, 2000);
-
-    if (n < 0)
-      berror(fatal, "Read error");
-
-    if (n == 0 && errno != EAGAIN) {
-      bprintf(err, "Unexpected server disconnect.\n");
-      return -3;
-    }
-
-    response[1999] = 0;
-  } else
-    n = 0;
-
-  for (ptr = cbuf; *ptr; ++ptr)
-    if (*ptr == '\r') {
-      *ptr = '\0';
-      overrun = n - (ptr - response) - 2;
-      if (overrun > 0) {
-        memcpy(extra, ptr + 2, overrun);
-        extra[n - (ptr - response) - 2] = 0;
-      } else
-        extra[0] = 0;
-
-      break;
-    }
-
-  if (buffer != NULL)
-    strcpy(buffer, cbuf);
-
-  if (cbuf[3] != ' ')
-    return -2;
-
-  n = atoi(cbuf);
-
-//  printf("--> %s\n", cbuf);
-
-  if (n == 0)
-    bprintf(fatal, "Indecypherable server response: %s\n", cbuf);
-
-  if (buffer != NULL)
-    strcpy(buffer, cbuf + 4);
-
-  return n;
-}
-
 int OpenDataPort(void)
 {
   char buffer[2000];
@@ -124,7 +63,7 @@ int OpenDataPort(void)
   rc.dsock = MakeSock();
   strcpy(buffer, "OPEN\r\n");
   write(rc.csock, buffer, strlen(buffer));
-  switch (n = GetServerResponse(buffer)) {
+  switch (n = GetServerResponse(rc.csock, buffer)) {
     case -3:
       return -1;
     case QUENYA_RESPONSE_LISTENING:
@@ -148,7 +87,7 @@ int OpenDataPort(void)
       return -1;
   }
 
-  switch (n = GetServerResponse(buffer)) {
+  switch (n = GetServerResponse(rc.csock, buffer)) {
     case -3: /* disconnect */
       return -1;
     case QUENYA_RESPONSE_PORT_OPENED:
@@ -195,7 +134,7 @@ int InitClient(char* new_filename)
         != 0)
       berror(fatal, "Connect failed");
 
-    switch (n = GetServerResponse(buffer)) {
+    switch (n = GetServerResponse(rc.csock, buffer)) {
       case -3:
         return -1;
       case QUENYA_RESPONSE_SERVICE_READY:
@@ -216,7 +155,7 @@ int InitClient(char* new_filename)
 
     strcpy(buffer, "IDEN defile\r\n");
     write(rc.csock, buffer, strlen(buffer));
-    switch (n = GetServerResponse(buffer)) {
+    switch (n = GetServerResponse(rc.csock, buffer)) {
       case -3:
         return -1;
       case QUENYA_RESPONSE_ACCESS_GRANTED:
@@ -230,7 +169,7 @@ int InitClient(char* new_filename)
 
     strcpy(buffer, "QNOW\r\n");
     write(rc.csock, buffer, strlen(buffer));
-    switch (n = GetServerResponse(buffer)) {
+    switch (n = GetServerResponse(rc.csock, buffer)) {
       case -3:
         return -1;
       case QUENYA_RESPONSE_DATA_STAGED:
@@ -268,7 +207,7 @@ int InitClient(char* new_filename)
   strcpy(buffer, "SPEC\r\n");
 
   write(rc.csock, buffer, strlen(buffer));
-  switch (n = GetServerResponse(buffer)) {
+  switch (n = GetServerResponse(rc.csock, buffer)) {
     case -3:
       return -1;
     case QUENYA_RESPONSE_SENDING_SPEC:
@@ -282,7 +221,7 @@ int InitClient(char* new_filename)
 
   ReadSpecificationFile(stream);
 
-  switch (n = GetServerResponse(buffer)) {
+  switch (n = GetServerResponse(rc.csock, buffer)) {
     case -3:
       return -1;
     case QUENYA_RESPONSE_TRANS_COMPLETE:
@@ -293,7 +232,7 @@ int InitClient(char* new_filename)
 
   strcpy(buffer, "CLOS\r\n");
   write(rc.csock, buffer, strlen(buffer));
-  switch (n = GetServerResponse(buffer)) {
+  switch (n = GetServerResponse(rc.csock, buffer)) {
     case -3:
       return -1;
     case QUENYA_RESPONSE_OK:
@@ -374,7 +313,7 @@ void QuenyaClient(void)
 
     /* Get the block header */
     write(rc.csock, buffer, strlen(buffer));
-    switch (n = GetServerResponse(buffer)) {
+    switch (n = GetServerResponse(rc.csock, buffer)) {
       case -3:
         do_reconnect = 1;
         continue;
@@ -430,7 +369,7 @@ void QuenyaClient(void)
 #endif
 
     /* Get the block footer */
-    switch (n = GetServerResponse(buffer)) {
+    switch (n = GetServerResponse(rc.csock, buffer)) {
       case -3:
         do_reconnect = 1;
         continue;

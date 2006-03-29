@@ -20,13 +20,75 @@
 
 #include <stdlib.h>       /* ANSI C std library (atoi) */
 #include <arpa/inet.h>    /* IP4 specification (inet_aton, inet_ntoa) */
+#include <errno.h>        /* ANSI C library errors (errno) */
 #include <netinet/tcp.h>  /* TCP specification (SOL_TCP, TCP_NODELAY) */
 #include <netdb.h>        /* DNS queries (gethostbyname, hstrerror, h_errno) */
 #include <string.h>       /* ANSI C strings (strcat, strdup, &c.)  */
+#include <unistd.h>       /* UNIX std library (read, write, close, sleep) */
 
 #include "blast.h"
 
 #define QUENDI_PORT 44144
+
+int GetServerResponse(int sock, char* buffer)
+{
+  static char extra[2000] = "";
+  char cbuf[4000];
+  char* ptr;
+  int n, overrun;
+  char* response;
+
+//  if (buffer != NULL) printf("<-- %s\n", buffer);
+
+  strcpy(cbuf, extra);
+  response = cbuf + strlen(cbuf);
+  
+  if (strchr(cbuf, '\n') == NULL) {
+    n = read(sock, response, 2000);
+
+    if (n < 0)
+      berror(fatal, "Read error");
+
+    if (n == 0 && errno != EAGAIN) {
+      bprintf(err, "Unexpected server disconnect.\n");
+      return -3;
+    }
+
+    response[1999] = 0;
+  } else
+    n = 0;
+
+  for (ptr = cbuf; *ptr; ++ptr)
+    if (*ptr == '\r') {
+      *ptr = '\0';
+      overrun = n - (ptr - response) - 2;
+      if (overrun > 0) {
+        memcpy(extra, ptr + 2, overrun);
+        extra[n - (ptr - response) - 2] = 0;
+      } else
+        extra[0] = 0;
+
+      break;
+    }
+
+  if (buffer != NULL)
+    strcpy(buffer, cbuf);
+
+  if (cbuf[3] != ' ')
+    return -2;
+
+  n = atoi(cbuf);
+
+//  printf("--> %s\n", cbuf);
+
+  if (n == 0)
+    bprintf(fatal, "Indecypherable server response: %s\n", cbuf);
+
+  if (buffer != NULL)
+    strcpy(buffer, cbuf + 4);
+
+  return n;
+}
 
 int MakeSock(void)
 {
