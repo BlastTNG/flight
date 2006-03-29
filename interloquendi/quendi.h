@@ -32,6 +32,7 @@ struct quendi_server_data_t {
   const char* server_version;
   const char* server_name;
   const char* server_host;
+  const char* rendezvous_name;
   int access_level;
   char* directory;
   int csock;

@@ -114,7 +114,7 @@ void Connection(int csock)
   char buffer[QUENDI_COMMAND_LENGTH];
   int np;
   int n;
-  char* params;
+  char** params = NULL;
   struct quendi_data_port_t data;
 
   data.sock = -1;
@@ -152,7 +152,7 @@ void Connection(int csock)
   /* Service Loop */
   for (;;) {
     if ((n = quendi_get_cmd(buffer)) == 0) {
-      n = quendi_parse(buffer, &np, &params);
+      n = quendi_parse(buffer, &np, params);
       switch(n) {
         case -2:
           quendi_respond(QUENYA_RESPONSE_PARAM_ERROR, "Parameter Missing");
@@ -314,6 +314,11 @@ void Connection(int csock)
           quendi_respond(QUENYA_RESPONSE_GOODBYE, NULL);
           close(csock);
           exit(0);
+        case QUENYA_COMMAND_RDVS:
+          QuendiData.rendezvous_name = params[0];
+          printf("Rendezvous = %s\n", QuendiData.rendezvous_name);
+          quendi_respond(QUENYA_RESPONSE_OK, NULL);
+          break;
         case QUENYA_COMMAND_RTBK:
           if (!data.sending_data)
             quendi_respond(QUENYA_RESPONSE_PORT_INACTIVE, NULL);
