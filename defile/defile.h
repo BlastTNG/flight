@@ -92,8 +92,9 @@ void InitReader(void);
 void InitialiseDirFile(int, unsigned long);
 void PreInitialiseDirFile(void);
 void PushFrame(unsigned short*);
-void ReaderDone(int);
 void QuenyaClient(void);
+void ReaderDone(int);
+const char* ResolveHost(const char*, struct sockaddr_in*, int);
 void Remount(const char*, char*);
 
 extern sigset_t signals;

@@ -26,7 +26,6 @@
 #endif
 
 #include <stdlib.h>     /* ANSI C std library (atoi, exit, realpath) */
-#include <netdb.h>      /* DNS queries (gethostbyname, hstrerror, h_errno) */
 #include <pthread.h>    /* POSIX threads (pthread_create, pthread_join) */
 #include <signal.h>     /* ANSI C signals (SIG(FOO), sigemptyset, sigaddset) */
 #include <string.h>     /* ANSI C strings (strcat, memcpy, &c.)  */
@@ -52,7 +51,6 @@
 #define CONFIG_FILE ETC_DIR "/defile.conf"
 #define CUR_FILE "/data/etc/defile.cur"
 #define OUTPUT_DIR "/data/rawdir"
-#define QUENDI_PORT 44144
 #define PID_FILE LOCALSTATEDIR "/run/defile.pid"
 #define REMOUNT_PATH "../rawdir"
 
@@ -490,33 +488,6 @@ void GetDirFile(char* buffer, const char* source, char* parent, int start)
 
   /* parent is indeed a directory; make the dirfile name */
   MakeDirFile(buffer, source, parent, start);
-}
-
-const char* ResolveHost(const char* host, struct sockaddr_in* addr, int forced)
-{
-  struct hostent* the_host;
-  char* ptr;
-
-  if ((ptr = strchr(host, ':')) != NULL) {
-    if ((addr->sin_port = htons(atoi(ptr + 1))) == htons(0))
-      addr->sin_port = htons(QUENDI_PORT);
-    *ptr = '\0';
-  } else
-    addr->sin_port = htons(QUENDI_PORT);
-
-  the_host = gethostbyname(host);
-
-  if (the_host == NULL) {
-    if (forced)
-      bprintf(fatal, "host lookup failed: %s\n", hstrerror(h_errno));
-
-    return hstrerror(h_errno);
-  }
-
-  addr->sin_family = AF_INET;
-  memcpy(&(addr->sin_addr.s_addr), the_host->h_addr, the_host->h_length);
-
-  return NULL;
 }
 
 void PrintVersion(void)
