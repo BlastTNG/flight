@@ -174,7 +174,8 @@ int quendi_get_cmd(char* buffer)
     return -1;
 }
 
-int quendi_get_next_param(char *buffer, int *nparams, char **params)
+int quendi_get_next_param(char *buffer, int *nparams,
+    char params[][QUENDI_COMMAND_LENGTH])
 {
   char* ptr = buffer;
   if (*ptr == '\0')
@@ -183,7 +184,7 @@ int quendi_get_next_param(char *buffer, int *nparams, char **params)
   if (*++ptr == '\0')
     return 1;
 
-  params[(*nparams)++] = ptr;
+  strncpy(params[(*nparams)++], ptr, QUENDI_COMMAND_LENGTH);
 
   while (*ptr != '\0' && *ptr != ' ')
     ++ptr;
@@ -397,7 +398,8 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
   return buffer;
 }
 
-int quendi_parse(char *buffer, int *nparams, char **params)
+int quendi_parse(char *buffer, int *nparams,
+    char params[][QUENDI_COMMAND_LENGTH])
 {
   int cmd = quendi_cmdnum(buffer);
 

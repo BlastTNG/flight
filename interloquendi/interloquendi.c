@@ -114,7 +114,7 @@ void Connection(int csock)
   char buffer[QUENDI_COMMAND_LENGTH];
   int np;
   int n;
-  char** params = NULL;
+  char params[1][QUENDI_COMMAND_LENGTH];
   struct quendi_data_port_t data;
 
   data.sock = -1;

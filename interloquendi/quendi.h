@@ -91,7 +91,7 @@ int quendi_get_cmd(
 int quendi_get_next_param(
     char*,
     int*,
-    char**
+    char[][QUENDI_COMMAND_LENGTH]
     );
 
 char* quendi_make_response(
@@ -103,7 +103,7 @@ char* quendi_make_response(
 int quendi_parse(
     char*,
     int*,
-    char**
+    char[][QUENDI_COMMAND_LENGTH]
     );
 
 unsigned long quendi_reader_init(
