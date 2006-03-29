@@ -27,6 +27,7 @@
 #include <unistd.h>       /* UNIX std library (read, write, close, sleep) */
 
 #include "blast.h"
+#include "quenya.h"
 
 #define QUENDI_PORT 44144
 
@@ -106,6 +107,53 @@ int MakeSock(void)
     berror(fatal, "setsockopt");
 
   return sock;
+}
+
+int OpenDataPort(int csock, int* dsock)
+{
+  char buffer[2000];
+  int n;
+  char *ptr1 = NULL, *ptr2;
+  struct sockaddr_in dp_addr;
+
+  *dsock = MakeSock();
+  strcpy(buffer, "OPEN\r\n");
+  write(csock, buffer, strlen(buffer));
+  switch (n = GetServerResponse(csock, buffer)) {
+    case -3:
+      return -1;
+    case QUENYA_RESPONSE_LISTENING:
+      for (ptr1 = buffer; *ptr1 != '@'; ++ptr1);
+      *(ptr1++) = 0;
+      for (ptr2 = ptr1; *ptr2 != ':'; ++ptr2);
+      *(ptr2++) = 0;
+      *(strchr(ptr2, ' ')) = 0;
+
+      dp_addr.sin_family = AF_INET;
+      dp_addr.sin_port = htons(atoi(ptr2));
+      inet_aton(ptr1, &dp_addr.sin_addr);
+      sleep(1);
+
+      if ((n = connect(*dsock, (struct sockaddr*)&dp_addr, sizeof(dp_addr)))
+          != 0)
+        berror(fatal, "d-Connect failed");
+      break;
+    default:
+      bprintf(fatal, "Unexpected response from server after OPEN: %i\n", n);
+      return -1;
+  }
+
+  switch (n = GetServerResponse(csock, buffer)) {
+    case -3: /* disconnect */
+      return -1;
+    case QUENYA_RESPONSE_PORT_OPENED:
+      break;
+    default:
+      bprintf(err, "Unexpected response from server after OPEN/2: %i\n", n);
+      return -1;
+  }
+
+  return 0;
 }
 
 const char* ResolveHost(const char* host, struct sockaddr_in* addr, int forced)
