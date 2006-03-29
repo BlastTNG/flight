@@ -27,7 +27,6 @@
 #include <stdlib.h>       /* ANSI C std library (atoi) */
 #include <arpa/inet.h>    /* IP4 specification (inet_aton, inet_ntoa) */
 #include <netinet/tcp.h>  /* TCP specification (SOL_TCP, TCP_NODELAY) */
-#include <netdb.h>        /* DNS queries (gethostbyname, hstrerror, h_errno) */
 #include <errno.h>        /* ANSI C library errors (errno) */
 #include <pthread.h>      /* POSIX threads (pthread_exit) */
 #include <signal.h>       /* ANSI C signals (SIG(FOO), sigemptyset, &c.) */
@@ -54,33 +53,6 @@ void ClientDone(int signo) {
     close(rc.dsock);
 
   ReaderDone(signo);
-}
-
-const char* ResolveHost(const char* host, struct sockaddr_in* addr, int forced)
-{
-  struct hostent* the_host;
-  char* ptr;
-
-  if ((ptr = strchr(host, ':')) != NULL) {
-    if ((addr->sin_port = htons(atoi(ptr + 1))) == htons(0))
-      addr->sin_port = htons(QUENDI_PORT);
-    *ptr = '\0';
-  } else
-    addr->sin_port = htons(QUENDI_PORT);
-
-  the_host = gethostbyname(host);
-
-  if (the_host == NULL) {
-    if (forced)
-      bprintf(fatal, "host lookup failed: %s\n", hstrerror(h_errno));
-
-    return hstrerror(h_errno);
-  }
-
-  addr->sin_family = AF_INET;
-  memcpy(&(addr->sin_addr.s_addr), the_host->h_addr, the_host->h_length);
-
-  return NULL;
 }
 
 int MakeSock(void)

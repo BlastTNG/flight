@@ -27,6 +27,7 @@
 #include <netinet/in.h> /* ARPA Internet specification (struct sockaddr_in) */
 
 #include "frameread.h"
+#include "quendiclient.h"
 
 #define INPUT_BUF_SIZE 50 /* Frames are big (~1 kb) and we take a big
                            * performance hit if we read more than 64k at a
@@ -94,7 +95,6 @@ void PreInitialiseDirFile(void);
 void PushFrame(unsigned short*);
 void QuenyaClient(void);
 void ReaderDone(int);
-const char* ResolveHost(const char*, struct sockaddr_in*, int);
 void Remount(const char*, char*);
 
 extern sigset_t signals;
