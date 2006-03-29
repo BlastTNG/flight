@@ -62,5 +62,6 @@
 #define QUENYA_COMMAND_QUIT          1010
 #define QUENYA_COMMAND_CONT          1011
 #define QUENYA_COMMAND_QNOW          1012
+#define QUENYA_COMMAND_RDVS          1013
 
 #endif

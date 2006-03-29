@@ -88,6 +88,7 @@ int quendi_cmdnum(char* buffer)
     case 0x6f70656e: return QUENYA_COMMAND_OPEN;
     case 0x716e6f77: return QUENYA_COMMAND_QNOW;
     case 0x71756974: return QUENYA_COMMAND_QUIT;
+    case 0x72647673: return QUENYA_COMMAND_RDVS;
     case 0x7274626b: return QUENYA_COMMAND_RTBK;
     case 0x73706563: return QUENYA_COMMAND_SPEC;
     case 0x73796e63: return QUENYA_COMMAND_SYNC;
@@ -402,9 +403,12 @@ int quendi_parse(char *buffer, int *nparams, char **params)
 
   *nparams = 0;
 
-  if (cmd == QUENYA_COMMAND_IDEN) {
-    if (quendi_get_next_param(buffer + 4, nparams, params))
-      return -2;
+  switch(cmd) {
+    case QUENYA_COMMAND_IDEN:
+    case QUENYA_COMMAND_RDVS:
+      if (quendi_get_next_param(buffer + 4, nparams, params))
+        return -2;
+      break;
   }
 
   return cmd;
@@ -519,7 +523,7 @@ int quendi_advance_data(int persist, char* chunk, int sufflen, int *chunk_total,
   if (block_size > 0 && remainder > 0)
     memcpy(quendi_input_buffer[0], quendi_input_buffer[block_size + 1],
         remainder);
-  
+
   return StreamToNextChunk(persist, chunk, sufflen, chunk_total, curfile_name,
       curfile_val);
 }

@@ -20,20 +20,104 @@
  *
  */
 
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+
 #include "quendiclient.h"
+#include "quenya.h"
 #include "blast.h"
 
-int InitRendezvous(const char* host, int port, const char* masq)
+static char* hostname;
+
+int InitRendezvous(const char* host, int port, const char* masq_in)
 {
+  char buffer[2000];
   struct sockaddr_in addr;
   const char* herr;
+  int n, sock;
+  char *ptr1 = NULL, *ptr2;
+  char masq[2000];
+  struct hostent* thishost;
+  socklen_t addrlen = sizeof(addr);
 
   /* No rendezvous host means no rendezvousing */
   if (host[0] == '\0')
     return 0;
 
+  sock = MakeSock();
+
   if ((herr = ResolveHost(host, &addr, 0)) != NULL) 
     bprintf(fatal, "Unable to resolve upstream rendezvous server: %s", herr);
+
+  bprintf(info, "Rendezvousing with %s:%i...\n", inet_ntoa(addr.sin_addr),
+      ntohs(addr.sin_port));
+
+  if ((n = connect(sock, (struct sockaddr*)&addr, sizeof(addr))) != 0)
+    berror(fatal, "Rendezvous failed");
+
+  if (masq_in[0] == '\0') {
+    getsockname(sock, (struct sockaddr*)&addr, &addrlen);
+    thishost = gethostbyaddr((const char*)&addr.sin_addr, sizeof(addr.sin_addr),
+        AF_INET);
+    if (thishost == NULL && h_errno) {
+      bprintf(warning, "gethostbyaddr: %s", hstrerror(h_errno));
+      thishost = NULL;
+    }
+    strcpy(masq, thishost ? thishost->h_name : inet_ntoa(addr.sin_addr));
+  }
+
+  n = 0;
+  for (ptr2 = masq; *ptr2 != '\0'; ++ptr2)
+    if (*ptr2 == ':') {
+      n = 1;
+      break;
+    }
+
+  if (!n)
+    sprintf(ptr2, ":%i", port);
+
+  switch(n = GetServerResponse(sock, buffer)) {
+    case -3:
+      bprintf(fatal, "Unexpected disconnect by upstream server.\n");
+    case QUENYA_RESPONSE_SERVICE_READY:
+      for (ptr1 = buffer; *ptr1 != ' '; ++ptr1);
+      *(ptr1++) = 0;
+      for (ptr2 = ptr1; *ptr2 != '/'; ++ptr2);
+      *(ptr2++) = 0;
+      *(strchr(ptr2, ' ')) = 0;
+
+      bprintf(info, "Connected to %s on %s speaking quenya version %s.\n",
+          ptr1, buffer, ptr2);
+
+      hostname = strdup(buffer);
+      break;
+    default:
+      bprintf(fatal, "Unexpected response from server on connect: %i\n", n);
+  }
+
+  strcpy(buffer, "IDEN interloquendi\r\n");
+  write(sock, buffer, strlen(buffer));
+  switch (n = GetServerResponse(sock, buffer)) {
+    case -3:
+      bprintf(fatal, "Unexpected disconnect by upstream server.\n");
+    case QUENYA_RESPONSE_ACCESS_GRANTED:
+      break;
+    default:
+      bprintf(fatal, "Unexpected response from server after IDEN: %i\n", n);
+  }
+
+  /* Negotiate Rendezvous */
+  sprintf(buffer, "RDVS %s\r\n", masq);
+  write(sock, buffer, strlen(buffer));
+  switch (n = GetServerResponse(sock, buffer)) {
+    case -3:
+      bprintf(fatal, "Unexpected disconnect by upstream server.\n");
+    default:
+      bprintf(fatal, "Unexpected response from server after RDVS: %i\n", n);
+  }
 
   return 0;
 }

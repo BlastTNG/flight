@@ -29,17 +29,14 @@
 #include <tcpd.h>
 #include <unistd.h>
 
-#include <sys/socket.h>
 #include <sys/syslog.h>
-#include <sys/types.h>
-
-#include <netinet/in.h>
 
 #include <arpa/inet.h>
 
 #include "blast.h"
 #include "frameread.h"
 #include "quendi.h"
+#include "quendiclient.h"
 
 #define VERSION   "1.2.0"
 #define SOCK_PORT 44144
@@ -372,17 +369,12 @@ void Connection(int csock)
   }
 }
 
-int MakeSock(void)
+int MakeListener(void)
 {
-  int sock, n;
+  int sock;
   struct sockaddr_in addr;
 
-  if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1)
-    berror(fatal, "socket");
-
-  n = 1;
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &n, sizeof(n)) != 0)
-    berror(fatal, "setsockopt");
+  sock = MakeSock();
 
   addr.sin_family = AF_INET;
   addr.sin_port = htons(SOCK_PORT);
@@ -549,7 +541,7 @@ int main(void)
     bputs(fatal, "Unable to rendezvous with upstream host.");
     
   /* initialise listener socket */
-  sock = MakeSock();
+  sock = MakeListener();
 
   /* accept loop */
   for (;;) {
