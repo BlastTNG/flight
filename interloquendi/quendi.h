@@ -135,6 +135,10 @@ int quendi_respond(
     const char*
     );
 
+int quendi_rp_connect(
+    const char*
+    );
+
 void quendi_send_data(
     int,
     unsigned,

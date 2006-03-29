@@ -39,6 +39,7 @@
 #include "crc.h"
 #include "blast.h"
 #include "quendi.h"
+#include "quendiclient.h"
 #include "frameread.h"
 
 #define INPUT_BUF_SIZE 50 /* Frames are big (~1 kb) and we take a big
@@ -278,6 +279,22 @@ int quendi_dp_connect(void)
 
   close(dsock);
   return i;
+}
+
+int quendi_rp_connect(const char* host)
+{
+  int rsock;
+  struct sockaddr_in addr;
+
+  rsock = MakeSock();
+
+  if (ResolveHost(host, &addr, 0) != NULL)
+    return -2;
+
+  if (connect(rsock, (struct sockaddr*)&addr, sizeof(addr)) != 0)
+    return -1;
+
+  return rsock;
 }
 
 char* quendi_make_response(char* buffer, int response_num, const char* message)

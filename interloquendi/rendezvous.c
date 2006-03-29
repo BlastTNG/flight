@@ -30,14 +30,15 @@
 #include "quenya.h"
 #include "blast.h"
 
-static char* hostname;
+/* In interloquendi.c */
+int MakeListener(int);
 
 int InitRendezvous(const char* host, int port, const char* masq_in)
 {
   char buffer[2000];
   struct sockaddr_in addr;
   const char* herr;
-  int n, sock;
+  int n, sock, rsock;
   char *ptr1 = NULL, *ptr2;
   char masq[2000];
   struct hostent* thishost;
@@ -91,8 +92,6 @@ int InitRendezvous(const char* host, int port, const char* masq_in)
 
       bprintf(info, "Connected to %s on %s speaking quenya version %s.\n",
           ptr1, buffer, ptr2);
-
-      hostname = strdup(buffer);
       break;
     default:
       bprintf(fatal, "Unexpected response from server on connect: %i\n", n);
@@ -109,12 +108,17 @@ int InitRendezvous(const char* host, int port, const char* masq_in)
       bprintf(fatal, "Unexpected response from server after IDEN: %i\n", n);
   }
 
+  /* Open Rendezvous Port */
+  rsock = MakeListener(port);
+
   /* Negotiate Rendezvous */
   sprintf(buffer, "RDVS %s\r\n", masq);
   write(sock, buffer, strlen(buffer));
   switch (n = GetServerResponse(sock, buffer)) {
     case -3:
       bprintf(fatal, "Unexpected disconnect by upstream server.\n");
+    case QUENYA_RESPONSE_OPEN_ERROR:
+      bprintf(fatal, "Unable to establish rendezvous with upstream server.\n");
     default:
       bprintf(fatal, "Unexpected response from server after RDVS: %i\n", n);
   }

@@ -1,19 +1,19 @@
 /* interloquendi: copies a mcp frame file to a TCP port
  *
  * This software is copyright (C) 2004 University of Toronto
- * 
+ *
  * This file is part of interloquendi.
- * 
+ *
  * interloquendi is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * interloquendi is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with interloquendi; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -39,7 +39,7 @@
 #include "quendiclient.h"
 
 #define VERSION   "1.2.0"
-#define SOCK_PORT 44144
+#define SERVER_PORT 44144
 #define RENDEZ_PORT 14141
 #define PID_FILE "/var/run/interloquendi.pid"
 #define CONFIG_FILE "/home/dwiebe/cvs/interloquendi/interloquendi.conf"
@@ -220,7 +220,7 @@ void Connection(int csock)
               switch (n) {
                 case FR_DONE:
                   quendi_reader_shutdown(data.fd, 1);
-                  data.sending_data = 0; 
+                  data.sending_data = 0;
                   data.staged = 0;
                   data.port_active = 0;
                   break;
@@ -233,7 +233,7 @@ void Connection(int csock)
                   break;
                 case FR_CURFILE_CHANGED:
                   quendi_reader_shutdown(data.fd, 0);
-                  data.sending_data = 0; 
+                  data.sending_data = 0;
                   data.port_active = 0;
                   if (GetCurFile(data.name, QUENDI_COMMAND_LENGTH) == NULL)
                     quendi_respond(QUENYA_RESPONSE_TRANS_COMPLETE, NULL);
@@ -315,9 +315,22 @@ void Connection(int csock)
           close(csock);
           exit(0);
         case QUENYA_COMMAND_RDVS:
-          QuendiData.rendezvous_name = params[0];
-          printf("Rendezvous = %s\n", QuendiData.rendezvous_name);
-          quendi_respond(QUENYA_RESPONSE_OK, NULL);
+          if (quendi_access_ok(1)) {
+            QuendiData.rendezvous_name = bstrdup(fatal, params[0]);
+            if (data.sock < 0) {
+              data.sock = quendi_rp_connect(QuendiData.rendezvous_name);
+              if (data.sock == -2)
+                quendi_respond(QUENYA_RESPONSE_OPEN_ERROR,
+                    "Unable to Resolve Rendezvous Host");
+              else if (data.sock < 0)
+                quendi_respond(QUENYA_RESPONSE_OPEN_ERROR,
+                    "Error Opening Rendezvous Port");
+              else
+                quendi_respond(QUENYA_RESPONSE_PORT_OPENED,
+                    "Connected to Rendezvous Port");
+            } else
+              quendi_respond(QUENYA_RESPONSE_OPEN_ERROR, "Too Many Open Ports");
+          }
           break;
         case QUENYA_COMMAND_RTBK:
           if (!data.sending_data)
@@ -374,7 +387,7 @@ void Connection(int csock)
   }
 }
 
-int MakeListener(void)
+int MakeListener(int port)
 {
   int sock;
   struct sockaddr_in addr;
@@ -382,7 +395,7 @@ int MakeListener(void)
   sock = MakeSock();
 
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(SOCK_PORT);
+  addr.sin_port = htons(port);
   addr.sin_addr.s_addr = INADDR_ANY;
 
   if (bind(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)) == -1)
@@ -391,7 +404,7 @@ int MakeListener(void)
   if (listen(sock, 10) == -1)
     berror(fatal, "listen");
 
-  bprintf(info, "listening on port %i.", SOCK_PORT);
+  bprintf(info, "listening on port %i.", port);
 
   return sock;
 }
@@ -541,12 +554,12 @@ int main(void)
 
   /* Set up Rendezvous, if necessary */
   if (InitRendezvous(options[CFG_RENDEZ_WITH].value.as_string,
-      options[CFG_RENDEZ_AT].value.as_int,
-      options[CFG_RENDEZ_AS].value.as_string))
+        options[CFG_RENDEZ_AT].value.as_int,
+        options[CFG_RENDEZ_AS].value.as_string))
     bputs(fatal, "Unable to rendezvous with upstream host.");
-    
+
   /* initialise listener socket */
-  sock = MakeListener();
+  sock = MakeListener(SERVER_PORT);
 
   /* accept loop */
   for (;;) {
