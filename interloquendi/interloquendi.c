@@ -45,7 +45,7 @@
 #define SOCK_PORT 44144
 #define RENDEZ_PORT 14141
 #define PID_FILE "/var/run/interloquendi.pid"
-#define CONFIG_FILE "/etc/interloquendi.conf"
+#define CONFIG_FILE "/home/dwiebe/cvs/interloquendi/interloquendi.conf"
 
 #define DEBUG
 
@@ -65,9 +65,9 @@ struct {
   {{NULL}, 's', "LocalNet"},
   {{NULL}, 'i', "MaxConnect"},
   {{NULL}, 's', "PidFile"},
-  {{NULL}, 'i', "RendezvousAs"},
+  {{NULL}, 's', "RendezvousAs"},
   {{NULL}, 'i', "RendezvousAt"},
-  {{NULL}, 'i', "RendezvousWith"},
+  {{NULL}, 's', "RendezvousWith"},
   {{NULL}, 'i', "SuffixLength"},
   {{NULL}, '\0', ""}
 };
@@ -542,15 +542,14 @@ int main(void)
   /* Autoreap children */
   signal(SIGCHLD, SIG_IGN);
 
-  /* initialise listener socket */
-  sock = MakeSock();
-
   /* Set up Rendezvous, if necessary */
   if (InitRendezvous(options[CFG_RENDEZ_WITH].value.as_string,
       options[CFG_RENDEZ_AT].value.as_int,
       options[CFG_RENDEZ_AS].value.as_string))
     bputs(fatal, "Unable to rendezvous with upstream host.");
     
+  /* initialise listener socket */
+  sock = MakeSock();
 
   /* accept loop */
   for (;;) {

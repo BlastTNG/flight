@@ -32,7 +32,7 @@ int InitRendezvous(const char* host, int port, const char* masq)
   if (host[0] == '\0')
     return 0;
 
-  if ((herr = ResolveHost(host, &addr, 1)) != NULL) 
+  if ((herr = ResolveHost(host, &addr, 0)) != NULL) 
     bprintf(fatal, "Unable to resolve upstream rendezvous server: %s", herr);
 
   return 0;
