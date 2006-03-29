@@ -20,6 +20,7 @@
 
 #include <stdlib.h>       /* ANSI C std library (atoi) */
 #include <arpa/inet.h>    /* IP4 specification (inet_aton, inet_ntoa) */
+#include <netinet/tcp.h>  /* TCP specification (SOL_TCP, TCP_NODELAY) */
 #include <netdb.h>        /* DNS queries (gethostbyname, hstrerror, h_errno) */
 #include <string.h>       /* ANSI C strings (strcat, strdup, &c.)  */
 

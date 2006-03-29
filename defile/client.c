@@ -26,7 +26,6 @@
 
 #include <stdlib.h>       /* ANSI C std library (atoi) */
 #include <arpa/inet.h>    /* IP4 specification (inet_aton, inet_ntoa) */
-#include <netinet/tcp.h>  /* TCP specification (SOL_TCP, TCP_NODELAY) */
 #include <errno.h>        /* ANSI C library errors (errno) */
 #include <pthread.h>      /* POSIX threads (pthread_exit) */
 #include <signal.h>       /* ANSI C signals (SIG(FOO), sigemptyset, &c.) */
