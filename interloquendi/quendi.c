@@ -46,10 +46,10 @@
                            * time, so we keep this small */
 
 /* internals */
-const char quendi_version[] = "1.0";
-const struct quendi_server_data_t *quendi_server_data = NULL;
-const struct quendi_data_port_t *quendi_data_port = NULL;
-unsigned short* quendi_input_buffer[INPUT_BUF_SIZE];
+static const char quendi_version[] = "1.1";
+static const struct quendi_server_data_t *quendi_server_data = NULL;
+static const struct quendi_data_port_t *quendi_data_port = NULL;
+static unsigned short* quendi_input_buffer[INPUT_BUF_SIZE];
 
 /* functions */
 int quendi_access_ok(int level) {

@@ -41,8 +41,9 @@
 #include "frameread.h"
 #include "quendi.h"
 
-#define VERSION   "1.1.2"
+#define VERSION   "1.2.0"
 #define SOCK_PORT 44144
+#define RENDEZ_PORT 14141
 #define PID_FILE "/var/run/interloquendi.pid"
 #define CONFIG_FILE "/etc/interloquendi.conf"
 
@@ -56,17 +57,27 @@ struct {
   char type;
   const char name[48];
 } options[] = {
-  {{NULL}, 's', "Directory"},
-  {{NULL}, 's', "PidFile"},
   {{NULL}, 's', "CurFile"},
+  {{NULL}, 's', "Directory"},
+  {{NULL}, 's', "LocalNet"},
+  {{NULL}, 'i', "MaxConnect"},
+  {{NULL}, 's', "PidFile"},
+  {{NULL}, 'i', "RendezvousAs"},
+  {{NULL}, 'i', "RendezvousAt"},
+  {{NULL}, 'i', "RendezvousWith"},
   {{NULL}, 'i', "SuffixLength"},
   {{NULL}, '\0', ""}
 };
 
-#define CFG_DIRECTORY      0
-#define CFG_PID_FILE       1
-#define CFG_CUR_FILE       2
-#define CFG_SUFFIX_LENGTH  3
+#define CFG_CUR_FILE       0
+#define CFG_DIRECTORY      1
+#define CFG_LOCAL_NET      2
+#define CFG_MAX_CONNECT    3
+#define CFG_PID_FILE       4
+#define CFG_RENDEZ_AS      5
+#define CFG_RENDEZ_AT      6
+#define CFG_RENDEZ_WITH    7
+#define CFG_SUFFIX_LENGTH  8
 
 /* for libwrap */
 int allow_severity = LOG_INFO;
@@ -443,15 +454,26 @@ void LoadDefaultConfig(void)
   for (i = 0; options[i].type; ++i)
     if (options[i].value.as_string == NULL)
       switch (i) {
+        case CFG_CUR_FILE:
+          options[i].value.as_string
+            = bstrdup(fatal, "/mnt/decom/etc/decom.cur");
+          break;
         case CFG_DIRECTORY:
           options[i].value.as_string = bstrdup(fatal, "/mnt/decom/rawdir");
+          break;
+        case CFG_LOCAL_NET:
+        case CFG_RENDEZ_AS:
+        case CFG_RENDEZ_WITH:
+          options[i].value.as_string = "";
+          break;
+        case CFG_MAX_CONNECT:
+          options[i].value.as_int = 0;
           break;
         case CFG_PID_FILE:
           options[i].value.as_string = bstrdup(fatal, PID_FILE);
           break;
-        case CFG_CUR_FILE:
-          options[i].value.as_string
-            = bstrdup(fatal, "/mnt/decom/etc/decom.cur");
+        case CFG_RENDEZ_AT:
+          options[i].value.as_int = RENDEZ_PORT;
           break;
         case CFG_SUFFIX_LENGTH:
           options[i].value.as_int = 3;
@@ -519,6 +541,13 @@ int main(void)
 
   /* initialise listener socket */
   sock = MakeSock();
+
+  /* Set up Rendezvous, if necessary */
+  if (InitRendezvous(options[CFG_RENDEZ_WITH].value.as_string,
+      options[CFG_RENDEZ_AT].value.as_int,
+      options[CFG_RENDEZ_AS].value.as_string))
+    bputs(err, "Unable to rendezvous with upstream host.");
+    
 
   /* accept loop */
   for (;;) {
