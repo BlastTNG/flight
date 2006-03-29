@@ -55,24 +55,6 @@ void ClientDone(int signo) {
   ReaderDone(signo);
 }
 
-int MakeSock(void)
-{
-  int sock, n;
-
-  if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1)
-    berror(fatal, "socket");
-
-  n = 1;
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &n, sizeof(n)) != 0)
-    berror(fatal, "setsockopt");
-
-  n = 1;
-  if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &n, sizeof(n)) != 0)
-    berror(fatal, "setsockopt");
-
-  return sock;
-}
-
 int GetServerResponse(char* buffer)
 {
   static char extra[2000] = "";

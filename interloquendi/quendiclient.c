@@ -27,6 +27,24 @@
 
 #define QUENDI_PORT 44144
 
+int MakeSock(void)
+{
+  int sock, n;
+
+  if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1)
+    berror(fatal, "socket");
+
+  n = 1;
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &n, sizeof(n)) != 0)
+    berror(fatal, "setsockopt");
+
+  n = 1;
+  if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &n, sizeof(n)) != 0)
+    berror(fatal, "setsockopt");
+
+  return sock;
+}
+
 const char* ResolveHost(const char* host, struct sockaddr_in* addr, int forced)
 {
   struct hostent* the_host;

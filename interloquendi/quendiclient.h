@@ -20,4 +20,5 @@
 
 #include <netinet/in.h> /* ARPA Internet specification (struct sockaddr_in) */
 
+int MakeSock(void);
 const char* ResolveHost(const char*, struct sockaddr_in*, int forced);
