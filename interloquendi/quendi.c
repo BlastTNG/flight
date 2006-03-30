@@ -51,6 +51,7 @@ static const char quendi_version[] = "1.1";
 static const struct quendi_server_data_t *quendi_server_data = NULL;
 static const struct quendi_data_port_t *quendi_data_port = NULL;
 static unsigned short* quendi_input_buffer[INPUT_BUF_SIZE];
+static unsigned quendi_frame_size;
 
 /* functions */
 int quendi_access_ok(int level) {
@@ -91,6 +92,7 @@ int quendi_cmdnum(char* buffer)
     case 0x71756974: return QUENYA_COMMAND_QUIT;
     case 0x72647673: return QUENYA_COMMAND_RDVS;
     case 0x7274626b: return QUENYA_COMMAND_RTBK;
+    case 0x73697a65: return QUENYA_COMMAND_SIZE;
     case 0x73706563: return QUENYA_COMMAND_SPEC;
     case 0x73796e63: return QUENYA_COMMAND_SYNC;
   }
@@ -344,6 +346,10 @@ char* quendi_make_response(char* buffer, int response_num, const char* message)
       case QUENYA_RESPONSE_ACCESS_GRANTED: /* 230 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
             "%i Access Granted\r\n", response_num);
+        break;
+      case QUENYA_RESPONSE_FRAME_SIZE: /* 242 */
+        size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
+            "%i %u Frame Bytes\r\n", response_num, quendi_frame_size);
         break;
       case QUENYA_RESPONSE_TRANS_COMPLETE: /* 250 */
         size = snprintf(buffer, QUENDI_RESPONSE_LENGTH,
@@ -601,10 +607,12 @@ void quendi_server_shutdown(void)
 }
 
 int quendi_stage_data(const char* file, unsigned long pos, int sufflen,
-    int streamed_here)
+    int streamed_here, unsigned frame_size)
 {
   char buffer[NAME_MAX + 60];
   char source[NAME_MAX];
+
+  quendi_frame_size = frame_size;
 
   PathSplit_r(file, NULL, buffer);
   StaticSourcePart(source, buffer, NULL, sufflen);

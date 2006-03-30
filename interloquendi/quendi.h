@@ -162,7 +162,8 @@ int quendi_stage_data(
     const char*,
     unsigned long,
     int,
-    int
+    int,
+    unsigned
     );
 
 #endif

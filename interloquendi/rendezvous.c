@@ -119,6 +119,8 @@ int InitRendezvous(const char* host, int port, const char* masq_in)
       bprintf(fatal, "Unexpected disconnect by upstream server.\n");
     case QUENYA_RESPONSE_OPEN_ERROR:
       bprintf(fatal, "Unable to establish rendezvous with upstream server.\n");
+    case QUENYA_RESPONSE_PORT_OPENED:
+      break;
     default:
       bprintf(fatal, "Unexpected response from server after RDVS: %i\n", n);
   }

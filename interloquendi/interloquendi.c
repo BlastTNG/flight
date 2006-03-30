@@ -240,7 +240,8 @@ void Connection(int csock)
                   else {
                     data.frame_size = ReconstructChannelLists(data.name, NULL);
                     data.staged = quendi_stage_data(data.name, 0,
-                        options[CFG_SUFFIX_LENGTH].value.as_int, 1);
+                        options[CFG_SUFFIX_LENGTH].value.as_int, 1,
+                        data.frame_size);
                   }
                   break;
                 default:
@@ -306,7 +307,7 @@ void Connection(int csock)
               data.pos = GetFrameFileSize(data.name,
                   options[CFG_SUFFIX_LENGTH].value.as_int) / data.frame_size;
               data.staged = quendi_stage_data(data.name, data.pos,
-                  options[CFG_SUFFIX_LENGTH].value.as_int, 0);
+                  options[CFG_SUFFIX_LENGTH].value.as_int, 0, data.frame_size);
             }
           }
           break;
@@ -339,6 +340,12 @@ void Connection(int csock)
             data.port_active = 1;
             quendi_send_data(data.sock, data.frame_size, data.block_length);
           }
+          break;
+        case QUENYA_COMMAND_SIZE:
+          if (!data.staged)
+            quendi_respond(QUENYA_RESPONSE_NO_DATA_STAGED, NULL);
+          else
+            quendi_respond(QUENYA_RESPONSE_FRAME_SIZE, NULL);
           break;
         case QUENYA_COMMAND_SPEC:
           if (data.sock < 0)
