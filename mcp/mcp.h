@@ -36,7 +36,7 @@ extern unsigned int tdrss_index;
 #define GETREADINDEX(i) ((i+2) % 3)  /* i - 1 modulo 3 */
 #define INC_INDEX(i) ((i + 1) %3)    /* i + 1 modulo 3 */
 
-#define TEMPORAL_OFFSET 25401600
+#define TEMPORAL_OFFSET 0
 
 #define MAX_LINE_LENGTH 1024
 

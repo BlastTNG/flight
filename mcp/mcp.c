@@ -98,11 +98,13 @@ void InitSched();
 
 static FILE* logfile = NULL;
 
+#ifndef BOLOTEST
 static struct {
   int i_in;
   int i_out;
   unsigned short *framelist[BI0_FRAME_BUFLEN];
 } bi0_buffer;
+#endif
 
 unsigned short *tdrss_data[3];
 unsigned int tdrss_index = 0;

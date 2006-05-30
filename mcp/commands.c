@@ -109,6 +109,7 @@ static void WritePrevStatus()
   }
 }
 
+#ifndef USE_FIFO_CMD
 static int bc_setserial(char *input_tty)
 {
   int fd;
@@ -141,6 +142,7 @@ static int bc_setserial(char *input_tty)
 
   return fd;
 }
+#endif
 
 /* calculate the nearest lockable elevation */
 double LockPosition (double elevation)
@@ -157,6 +159,7 @@ double LockPosition (double elevation)
   return position + LOCK_OFFSET;
 }
 
+#ifndef USE_FIFO_CMD
 static float ParseGPS (unsigned char *data)
 {
   char exponent;
@@ -201,6 +204,7 @@ static void SendRequest (int req, char tty_fd)
 
   write(tty_fd, buffer, 3);
 }
+#endif
 
 enum singleCommand SCommand(char *cmd)
 {
@@ -787,7 +791,7 @@ static void SetParameters(enum multiCommand command, unsigned short *dataq,
       rvalues[i] = atof(dataqc[dataqind++]);
       bprintf(info, "Commands: param%02i: 30 bits: %f\n", i, rvalues[i]);
     } else if (type == 's') { /* string */
-      strncpy(svaules[i], dataqc[dataqind++], CMD_STRING_LEN - 1);
+      strncpy(svalues[i], dataqc[dataqind++], CMD_STRING_LEN - 1);
       svalues[i][CMD_STRING_LEN - 1] = 0;
       bprintf(info, "Commands: param%02i: string: %s\n", i, svalues[i]);
     }
@@ -1250,6 +1254,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
   WritePrevStatus();
 }
 
+#ifndef USE_FIFO_CMD
 static void GPSPosition (unsigned char *indata)
 {
   /* Send new information to CommandData */
@@ -1262,6 +1267,7 @@ static void GPSPosition (unsigned char *indata)
 
   WritePrevStatus();
 }
+#endif
 
 const char* CommandName(int is_multi, int command)
 {
@@ -1299,6 +1305,7 @@ void ScheduledCommand(struct ScheduleEvent *event)
   }
 }
 
+#ifndef USE_FIFO_CMD
 static void GPSTime (unsigned char *indata)
 {
   float GPStime, offset;
@@ -1328,7 +1335,6 @@ static void MKSAltitude (unsigned char *indata)
   WritePrevStatus();
 }
 
-#ifndef BOLOTEST
 /* Send TDRSS Low Rate Packet */
 
 static void SendDownData(char tty_fd)
@@ -1426,7 +1432,6 @@ static void SendDownData(char tty_fd)
   }
 #endif
 }
-#endif
 
 /* compute the size of the data queue for the given command */
 static int DataQSize(int index)
@@ -1441,6 +1446,7 @@ static int DataQSize(int index)
 
   return size;
 }
+#endif
 
 void WatchFIFO ()
 {
@@ -1521,9 +1527,9 @@ void WatchFIFO ()
   }
 }
 
+#ifndef USE_FIFO_CMD
 static char *COMM[] = {"/dev/ttyS0", "/dev/ttyS4"};
 
-#ifndef BOLOTEST
 void WatchPort (void* parameter)
 {
   unsigned char buf;
