@@ -581,6 +581,9 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case repoll:
       CommandData.actbus.force_repoll = 1;
       break;
+    case megakill:
+      CommandData.actbus.megakill = 1;
+      break;
 
 #ifndef BOLOTEST
       /***************************************/
@@ -988,6 +991,15 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       copysvalue(CommandData.actbus.command[CommandData.actbus.cindex],
           svalues[1]);
       CommandData.actbus.cindex = INC_INDEX(CommandData.actbus.cindex);
+      break;
+    case raster: /* Raster the xy stage */
+      CommandData.stage.xvel = ivalues[0];
+      CommandData.stage.ydlt = ivalues[1];
+      CommandData.stage.xmin = rvalues[2] * STAGE_X_THROW;
+      CommandData.stage.xmax = rvalues[3] * STAGE_X_THROW;
+      CommandData.stage.ymin = rvalues[4] * STAGE_Y_THROW;
+      CommandData.stage.ymax = rvalues[5] * STAGE_Y_THROW;
+      CommandData.stage.raster_state = RASTER_NEW;
       break;
 
 #ifndef BOLOTEST
@@ -1822,6 +1834,7 @@ void InitCommandData()
   CommandData.pumps.outframe_cool2_on = 0;
   CommandData.pumps.outframe_cool2_off = 0;
 
+  CommandData.actbus.megakill = 0;
   CommandData.actbus.lock_goal = LS_DRIVE_OFF;
   CommandData.actbus.force_repoll = 0;
   CommandData.actbus.cindex = 0;
@@ -1972,6 +1985,8 @@ void InitCommandData()
   CommandData.Bias.bias1 = 40;
   CommandData.Bias.bias2 = 25;
   CommandData.Bias.bias3 = 25;
+
+  CommandData.stage.raster_state = RASTER_DONE;
 
   CommandData.pin_is_in = 1;
 

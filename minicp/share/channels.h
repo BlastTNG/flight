@@ -54,6 +54,9 @@ extern "C" {
 #define ROX_C2V   (5.43736e-07/256.0)
 #define ROX_OFFSET (-1.1403)
 
+#define STAGE_X_THROW 78500
+#define STAGE_Y_THROW 78250
+
 #define FIELD_LEN 20
 
   struct ChannelStruct {

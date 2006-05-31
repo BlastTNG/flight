@@ -71,6 +71,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S'},
   {"lock_pos",     'w', LOOP5, 18,                1.0,             0.0, 'U'},
   {"stage_x",      'w', LOOP5, 28,                1.0,             0.0, 'U'},
+  {"stage_y",      'w', LOOP5, 34,                1.0,             0.0, 'U'},
 
 /* Rox a la Jeff */
   {"t_he3fridge",  'r',  CRYO,  6,    ROX_C2V,   ROX_OFFSET, 'U'},
@@ -540,12 +541,12 @@ struct ChannelStruct SlowChannels[] = {
   {"stage_x_vel",  'w', LOOP5, 30,                1.0,             0.0, 'u'},
   {"stage_x_stp",  'w', LOOP5, 31,                1.0,             0.0, 'u'},
   {"stage_x_str",  'w', LOOP5, 32,                1.0,             0.0, 'u'},
-  {"stage_y",      'w', LOOP5, 33,                1.0,             0.0, 'u'},
-  {"stage_y_lim",  'w', LOOP5, 34,                1.0,             0.0, 'u'},
-  {"stage_y_vel",  'w', LOOP5, 35,                1.0,             0.0, 'u'},
+  {"stage_y_lim",  'w', LOOP5, 33,                1.0,             0.0, 'u'},
+  /* LOOP5 34-35 are wide */
   {"stage_y_stp",  'w', LOOP5, 36,                1.0,             0.0, 'u'},
   {"stage_y_str",  'w', LOOP5, 37,                1.0,             0.0, 'u'},
   {"stage_x_lim",  'w', LOOP5, 38,                1.0,             0.0, 'u'},
+  {"stage_y_vel",  'w', LOOP5, 39,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
