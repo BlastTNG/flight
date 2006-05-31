@@ -394,6 +394,12 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
 #endif
 
+    case biascmd_inh:
+      CommandData.Bias.dont_do_anything = 1;
+      break;
+    case biascmd_ena:
+      CommandData.Bias.dont_do_anything = 0;
+      break;
     case clock_int:   /* Bias settings */
       CommandData.Bias.clockInternal = 1;
       break;
@@ -1063,12 +1069,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 
       /***************************************/
       /*************** Bias  *****************/
-    case biascmd_inh:
-      CommandData.Bias.dont_do_anything = 1;
-      break;
-    case biascmd_ena:
-      CommandData.Bias.dont_do_anything = 0;
-      break;
     case bias1_level:    /* Set bias 1 */
       CommandData.Bias.SetLevel1 = 1;
       CommandData.Bias.bias1 = ivalues[0];
