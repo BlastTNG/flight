@@ -636,12 +636,11 @@ void BiasControl (unsigned short* RxFrame)
   biasout1 |= biaslsbs1;
 
   /******************** set the outputs *********************/
-  if (CommandData.Bias.dont_do_anything)
-    biasout1 = biasout2 = 0;
-
-  WriteData(biasout1Addr, biasout1 & 0xffff, NIOS_QUEUE);
-  WriteData(biasout2Addr, (~biasout2) & 0xff, NIOS_QUEUE);
-  WriteData(biasLev1Addr, CommandData.Bias.bias1, NIOS_QUEUE);
-  WriteData(biasLev2Addr, CommandData.Bias.bias2, NIOS_QUEUE);
-  WriteData(biasLev3Addr, CommandData.Bias.bias3, NIOS_FLUSH);
+  if (!CommandData.Bias.dont_do_anything) {
+    WriteData(biasout1Addr, biasout1 & 0xffff, NIOS_QUEUE);
+    WriteData(biasout2Addr, (~biasout2) & 0xff, NIOS_QUEUE);
+    WriteData(biasLev1Addr, CommandData.Bias.bias1, NIOS_QUEUE);
+    WriteData(biasLev2Addr, CommandData.Bias.bias2, NIOS_QUEUE);
+    WriteData(biasLev3Addr, CommandData.Bias.bias3, NIOS_FLUSH);
+  }
 }

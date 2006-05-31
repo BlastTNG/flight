@@ -70,6 +70,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U'},
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S'},
   {"lock_pos",     'w', LOOP5, 18,                1.0,             0.0, 'U'},
+  {"stage_x",      'w', LOOP5, 28,                1.0,             0.0, 'U'},
 
 /* Rox a la Jeff */
   {"t_he3fridge",  'r',  CRYO,  6,    ROX_C2V,   ROX_OFFSET, 'U'},
@@ -230,7 +231,7 @@ struct ChannelStruct SlowChannels[] = {
   {"i_dpm_10v",    'r',  BIAS, 29,          -0.000625,           20.48, 'u'},
   {"i_rec",        'r',  BIAS, 31,           0.000625,          -20.48, 'u'},
   {"t_rec",        'r',  BIAS, 35,              I2T_M,           I2T_B, 'u'},
-  {"t_in_heatx",   'r',  BIAS, 37,              I2T_M,           I2T_B, 'u'},
+//  {"t_in_heatx",   'r',  BIAS, 37,              I2T_M,           I2T_B, 'u'},
   {"t_dpm_7.5v",   'r',  BIAS, 41,              I2T_M,           I2T_B, 'u'},
   {"t_dpm_10v",    'r',  BIAS, 43,              I2T_M,           I2T_B, 'u'},
   {"t_dpm_5v",     'r',  BIAS, 45,              I2T_M,           I2T_B, 'u'},
@@ -535,6 +536,16 @@ struct ChannelStruct SlowChannels[] = {
   {"lock_state",   'w', LOOP5, 25,                1.0,             0.0, 'u'},
   {"lock_goal",    'w', LOOP5, 26,                1.0,             0.0, 'u'},
   {"seized_bus",   'w', LOOP5, 27,                1.0,             0.0, 'u'},
+  /* LOOP5 29-30 are wide */
+  {"stage_x_vel",  'w', LOOP5, 30,                1.0,             0.0, 'u'},
+  {"stage_x_stp",  'w', LOOP5, 31,                1.0,             0.0, 'u'},
+  {"stage_x_str",  'w', LOOP5, 32,                1.0,             0.0, 'u'},
+  {"stage_y",      'w', LOOP5, 33,                1.0,             0.0, 'u'},
+  {"stage_y_lim",  'w', LOOP5, 34,                1.0,             0.0, 'u'},
+  {"stage_y_vel",  'w', LOOP5, 35,                1.0,             0.0, 'u'},
+  {"stage_y_stp",  'w', LOOP5, 36,                1.0,             0.0, 'u'},
+  {"stage_y_str",  'w', LOOP5, 37,                1.0,             0.0, 'u'},
+  {"stage_x_lim",  'w', LOOP5, 38,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
@@ -633,6 +644,8 @@ struct ChannelStruct FastChannels[] = {
 
   {"mcp_frame",   'w', LOOP2, 34,             1.0,                    0.0, 'u'},
 #endif
+
+  {"chopper",     'r',  BIAS, 37,             1.0,                0.0, 'u'},
 
   /* Read from DAS3 -- cryo commanding */
   {"calstat",      'r',  CRYO, 61,                 1.0,             0.0, 'u'},

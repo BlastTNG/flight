@@ -984,7 +984,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       bprintf(info, "Commands: Lock Mode: %g\n", CommandData.pointing_mode.Y);
       break;
     case general: /* General actuator bus command */
-      CommandData.actbus.caddr[CommandData.actbus.cindex] = ivalues[0];
+      CommandData.actbus.caddr[CommandData.actbus.cindex] = ivalues[0] + 0x30;
       copysvalue(CommandData.actbus.command[CommandData.actbus.cindex],
           svalues[1]);
       CommandData.actbus.cindex = INC_INDEX(CommandData.actbus.cindex);

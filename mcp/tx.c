@@ -1079,11 +1079,11 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     DoSched();
   UpdateAxesMode();
   StoreData(index);
-  StoreActBus();
   ControlGyroHeat(RxFrame, 0);
   ControlGyroHeat(RxFrame, 1);
   WriteMot(index, RxFrame);
 #endif
+  StoreActBus();
   BiasControl(RxFrame);
 
   /*** do slow Controls ***/
