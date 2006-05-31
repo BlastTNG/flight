@@ -617,6 +617,7 @@ int main(int argc, char *argv[])
 
   pthread_t CommandDatacomm1;
   pthread_t disk_id;
+  pthread_t abus_id;
 
 #ifndef USE_FIFO_CMD
   pthread_t CommandDatacomm2;
@@ -628,7 +629,6 @@ int main(int argc, char *argv[])
   pthread_t bi0_id;
   pthread_t sensors_id;
   pthread_t dgps_id;
-  pthread_t abus_id;
   pthread_t isc_id;
   pthread_t osc_id;
 #endif
@@ -734,7 +734,6 @@ int main(int argc, char *argv[])
 
 #ifndef BOLOTEST
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
-  pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
   pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
   pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
 
@@ -744,6 +743,7 @@ int main(int argc, char *argv[])
   pthread_create(&tdrss_id, NULL, (void*)&TDRSSWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
 #endif
+  pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
 
   while (1) {
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0)

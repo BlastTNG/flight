@@ -241,6 +241,7 @@ static void SyncADC (void)
   }
 }
 
+#ifndef BOLOTEST
 static struct NiosStruct* GetSCNiosAddr(char* field, int which)
 {
   char buffer[FIELD_LEN];
@@ -249,7 +250,6 @@ static struct NiosStruct* GetSCNiosAddr(char* field, int which)
   return GetNiosAddr(buffer);
 }
 
-#ifndef BOLOTEST
 static void StoreStarCameraData(int index, int which)
 {
   static int firsttime[2] = {1, 1};

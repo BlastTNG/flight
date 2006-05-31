@@ -38,12 +38,20 @@
 #include "tx.h"
 
 /* Define this symbol to have mcp log all actuator bus traffic */
-#undef ACTBUS_CHATTER
+#define ACTBUS_CHATTER
 
-#define ACT_BUS "/dev/ttyS7"
+#ifdef BOLOTEST
+#  define ACT_BUS "/dev/ttyS0"
+#else
+#  define ACT_BUS "/dev/ttyS7"
+#endif
 
 #define LOCKNUM 3
-#define NACT 4
+#ifdef USE_XY_STAGE
+#  define NACT 6
+#else
+#  define NACT 4
+#endif
 #define POLL_TIMEOUT 30000 /* 5 minutes */
 
 /* EZ Stepper status bits */
@@ -57,7 +65,8 @@
 #define ACTBUS_TIMEOUT  0x0200
 #define ACTBUS_CHECKSUM 0x0400
 
-#define ACT_RECV_ABORT 3000000
+#define ACT_RECV_ABORT 3000000 /* state machine state for general parsing
+                                  abort */
 
 #define LOCK_MOTOR_DATA_TIMER 100
 
@@ -71,8 +80,16 @@ extern short int InCharge; /* tx.c */
 
 static int bus_fd = -1;
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
-  "Lock Motor"};
-static const int id[NACT] = {0x31, 0x32, 0x33, 0x34};
+  "Lock Motor"
+#ifdef USE_XY_STAGE
+  , "XY Stage X", "XY Stage Y"
+#endif
+};
+static const int id[NACT] = {0x31, 0x32, 0x33, 0x34
+#ifdef USE_XY_STAGE
+  , 0x36, 0x37
+#endif
+};
 
 static char gp_buffer[1000];
 static struct stepper_struct {
@@ -315,7 +332,10 @@ static int PollBus(int rescan)
       stepper[i].status = -1;
       all_ok = 0;
     } else if (!strncmp(gp_buffer, "EZHR17EN AllMotion", 18)) {
-      bprintf(info, "ActBus: Found %s at address %i.\n", name[i], i + 1);
+      bprintf(info, "ActBus: Found type 17EN device %s at address %i.\n", name[i], i + 1);
+      stepper[i].status = 0;
+    } else if (!strncmp(gp_buffer, "EZHR23 All Motion", 17)) {
+      bprintf(info, "ActBus: Found type 23 device %s at address %i.\n", name[i], i + 1);
       stepper[i].status = 0;
     } else {
       bprintf(warning,

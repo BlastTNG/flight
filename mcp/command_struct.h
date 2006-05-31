@@ -149,6 +149,7 @@ struct CommandDataStruct {
   double ss_az_trim;
 
   struct {
+    int dont_do_anything;
     int clockInternal;
     int biasAC;
     int biasRamp;

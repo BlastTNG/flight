@@ -550,6 +550,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case outer_spare_off:
       CommandData.pumps.outframe_cool2_off = 40;
       break;
+#endif
 
     /* Lock and Actuators */
     case pin_in:
@@ -575,6 +576,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.actbus.force_repoll = 1;
       break;
 
+#ifndef BOLOTEST
       /***************************************/
       /********* ISC Commanding  *************/
     case isc_run:
@@ -957,6 +959,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.emf_gain = rvalues[0] * 6500;
       CommandData.emf_offset = rvalues[1] * 500;
       break;
+#endif
 
       /***************************************/
       /********** Lock / Actuators  **********/
@@ -981,6 +984,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.cindex = INC_INDEX(CommandData.actbus.cindex);
       break;
 
+#ifndef BOLOTEST
       /***************************************/
       /********** Balance System  ************/
     case setpoints:
@@ -1059,6 +1063,12 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 
       /***************************************/
       /*************** Bias  *****************/
+    case biascmd_inh:
+      CommandData.Bias.dont_do_anything = 1;
+      break;
+    case biascmd_ena:
+      CommandData.Bias.dont_do_anything = 0;
+      break;
     case bias1_level:    /* Set bias 1 */
       CommandData.Bias.SetLevel1 = 1;
       CommandData.Bias.bias1 = ivalues[0];
@@ -1819,6 +1829,7 @@ void InitCommandData()
   CommandData.actbus.caddr[1] = 0;
   CommandData.actbus.caddr[2] = 0;
 
+  CommandData.Bias.dont_do_anything = 0;
   CommandData.Bias.clockInternal = 0;
   CommandData.Bias.biasAC = 1;
   CommandData.Bias.biasRamp = 0;

@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.12 $";
+const char *command_list_serial = "$Revision: 3.13 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -87,6 +87,8 @@ struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(bias_ac), "bias AC", GR_BIAS},
   {COMMAND(bias_dc), "bias DC", GR_BIAS},
+  {COMMAND(biascmd_inh), "inhibit bias commanding", GR_BIAS | CONFIRM},
+  {COMMAND(biascmd_ena), "enable bias commanding", GR_BIAS},
   {COMMAND(clock_int), "bias clock internal", GR_BIAS},
   {COMMAND(clock_ext), "bias clock external", GR_BIAS},
   {COMMAND(fixed), "bias: internal, fixed", GR_BIAS},
