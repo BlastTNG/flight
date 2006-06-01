@@ -70,8 +70,6 @@ struct ChannelStruct WideSlowChannels[] = {
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U'},
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S'},
   {"lock_pos",     'w', LOOP5, 18,                1.0,             0.0, 'U'},
-  {"stage_x",      'w', LOOP5, 28,                1.0,             0.0, 'U'},
-  {"stage_y",      'w', LOOP5, 34,                1.0,             0.0, 'U'},
 
 /* Rox a la Jeff */
   {"t_he3fridge",  'r',  CRYO,  6,    ROX_C2V,   ROX_OFFSET, 'U'},
@@ -570,6 +568,8 @@ struct ChannelStruct WideFastChannels[] = {
   {"el",          'w', LOOP2, 53,          LI2DEG,                    0.0, 'U'},
 
 #endif
+  {"stage_x",      'w', LOOP5, 28,                1.0,             0.0, 'U'},
+  {"stage_y",      'w', LOOP5, 34,                1.0,             0.0, 'U'},
 
   /* BIAS Stuff */
   {"b_amp2",      'r',  BIAS,  0,        B_AMP2_M,               B_AMP2_B, 'U'},

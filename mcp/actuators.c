@@ -412,20 +412,31 @@ int ReadIntFromBus(int who, const char* cmd)
 
 static void ReadStage(void)
 {
+  static int counter = 0;
   if (stepper[STAGEXNUM].status == -1 || stepper[STAGEYNUM].status == -1)
     return;
 
   stage_data.xpos = ReadIntFromBus(STAGEXNUM, "?0");
-  stage_data.xstr = ReadIntFromBus(STAGEXNUM, "?1");
-  stage_data.xstp = ReadIntFromBus(STAGEXNUM, "?3");
-  stage_data.xlim = ReadIntFromBus(STAGEXNUM, "?4");
-  stage_data.xvel = ReadIntFromBus(STAGEXNUM, "?5");
-
   stage_data.ypos = ReadIntFromBus(STAGEYNUM, "?0");
-  stage_data.ystr = ReadIntFromBus(STAGEYNUM, "?1");
-  stage_data.ystp = ReadIntFromBus(STAGEYNUM, "?3");
-  stage_data.yvel = ReadIntFromBus(STAGEYNUM, "?5");
-  stage_data.ylim = ReadIntFromBus(STAGEYNUM, "?4");
+
+  if (counter == 0)
+    stage_data.xstr = ReadIntFromBus(STAGEXNUM, "?1");
+  else if (counter == 1)
+    stage_data.xstp = ReadIntFromBus(STAGEXNUM, "?3");
+  else if (counter == 2)
+    stage_data.xlim = ReadIntFromBus(STAGEXNUM, "?4");
+  else if (counter == 3)
+    stage_data.xvel = ReadIntFromBus(STAGEXNUM, "?5");
+  else if (counter == 4)
+    stage_data.ystr = ReadIntFromBus(STAGEYNUM, "?1");
+  else if (counter == 5)
+    stage_data.ystp = ReadIntFromBus(STAGEYNUM, "?3");
+  else if (counter == 6)
+    stage_data.yvel = ReadIntFromBus(STAGEYNUM, "?5");
+  else if (counter == 7)
+    stage_data.ylim = ReadIntFromBus(STAGEYNUM, "?4");
+
+  counter = (counter + 1) % 8;
 }
 
 static void GetLockData(int mult)
@@ -711,89 +722,6 @@ static void DiscardBusRecv(int flag)
     bprintf(info, "ActBus: Controller response: %s\n", gp_buffer);
 }
 
-static void DoRaster(void)
-{
-  /* Sanity checks */
-  int xmin = CommandData.stage.xmin;
-  int ymin = CommandData.stage.ymin;
-  int xmax = CommandData.stage.xmax;
-  int ymax = CommandData.stage.ymax;
-  int ydlt = CommandData.stage.ydlt;
-  int xvel = CommandData.stage.xvel;
-  int ypos;
-
-  if (xmin >= xmax || ymin >= ymax) {
-    CommandData.stage.raster_state = RASTER_DONE;
-    return;
-  }
-
-  /* go to origin */
-  CommandData.stage.raster_state = RASTER_INIT;
-  sprintf(gp_buffer, "L1m100V2000A%i", xmin);
-  BusSend(STAGEXNUM, gp_buffer);
-  DiscardBusRecv(1);
-  sprintf(gp_buffer, "L1m100V2000A%i", ymin);
-  BusSend(STAGEYNUM, gp_buffer);
-  DiscardBusRecv(1);
-  do {
-    if (MegaKill()) {
-      CommandData.stage.raster_state = RASTER_DONE;
-      return;
-    }
-    usleep(10000);
-    ReadStage();
-  } while(abs(stage_data.xpos - xmin) > 10 && abs(stage_data.ypos - ymin) > 10);
-
-  ypos = ymin;
-  CommandData.stage.raster_state = RASTER_DOWN_LEFT;
-  /* do raster */
-  while (abs(stage_data.ypos - ymax) > 10) {
-    bprintf(info, "State = %i  ypos = %i (%i/%i/%i/%i)\n",
-        CommandData.stage.raster_state, ypos, ymin, ymax, xmin, xmax);
-    if (CommandData.stage.raster_state == RASTER_LEFT_DOWN
-        && abs(stage_data.xpos - xmax) < 10) {
-      CommandData.stage.raster_state = RASTER_DOWN_RIGHT;
-      ypos += ydlt;
-      sprintf(gp_buffer, "L1m100V%iA%i", xvel, ypos);
-      BusSend(STAGEYNUM, gp_buffer);
-      DiscardBusRecv(1);
-    } else if (CommandData.stage.raster_state == RASTER_RIGHT_DOWN
-        && abs(stage_data.xpos - xmin) < 10) {
-      CommandData.stage.raster_state = RASTER_DOWN_LEFT;
-      ypos += ydlt;
-      sprintf(gp_buffer, "L1m100V%iA%i", xvel, ypos);
-      BusSend(STAGEYNUM, gp_buffer);
-      DiscardBusRecv(1);
-    } else if (CommandData.stage.raster_state == RASTER_DOWN_RIGHT
-        && abs(stage_data.ypos - ypos) < 10) {
-      CommandData.stage.raster_state = RASTER_RIGHT_DOWN;
-      sprintf(gp_buffer, "L1m100V%iA%i", xvel, xmin);
-      BusSend(STAGEXNUM, gp_buffer);
-      DiscardBusRecv(1);
-    } else if (CommandData.stage.raster_state == RASTER_DOWN_LEFT
-        && abs(stage_data.ypos - ypos) < 10) {
-      CommandData.stage.raster_state = RASTER_LEFT_DOWN;
-      sprintf(gp_buffer, "L1m100V%iA%i", xvel, xmax);
-      BusSend(STAGEXNUM, gp_buffer);
-      DiscardBusRecv(1);
-    }
-
-    if (ypos >= ymax) {
-      CommandData.stage.raster_state = RASTER_DONE;
-      BusSend(STAGEXNUM, "T");
-      DiscardBusRecv(1);
-      BusSend(STAGEYNUM, "T");
-      DiscardBusRecv(1);
-    }
-
-    if (MegaKill()) {
-      CommandData.stage.raster_state = RASTER_DONE;
-      return;
-    }
-    usleep(10000);
-  }
-}
-
 void ActuatorBus(void)
 {
   int poll_timeout = POLL_TIMEOUT;
@@ -855,15 +783,12 @@ void ActuatorBus(void)
                  the lock motor's state has settled */
 
 #ifdef USE_XY_STAGE
-    if (bus_seized == STAGEXNUM) {
+    if (bus_seized == STAGEXNUM)
       ReadStage();
-      if (CommandData.stage.raster_state == RASTER_NEW)
-        DoRaster();
-    }
 #endif
 
     if (MegaKill())
       return;
-    usleep(10000);
+//    usleep(10000);
   }
 }
