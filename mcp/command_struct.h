@@ -40,14 +40,6 @@
 #define P_VBOX       9
 #define P_QUAD      10
 
-#define RASTER_NEW        0
-#define RASTER_INIT       1
-#define RASTER_LEFT_DOWN  4
-#define RASTER_RIGHT_DOWN 5
-#define RASTER_DOWN_LEFT  4
-#define RASTER_DOWN_RIGHT 5
-#define RASTER_DONE       6
-
 struct GainStruct {
   unsigned short int P;
   unsigned short int I;
@@ -167,11 +159,6 @@ struct CommandDataStruct {
     int SetLevel1, SetLevel2, SetLevel3;
   } Bias;
   
-  struct {
-    int xvel, ydlt, raster_state;
-    int xmin, xmax, ymin, ymax;
-  } stage;
-
   struct {
     unsigned short heliumLevel;
     unsigned short coldPlate;

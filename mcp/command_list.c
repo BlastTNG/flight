@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.15 $";
+const char *command_list_serial = "$Revision: 3.16 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -350,17 +350,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"X Offset (deg)", -5., 5, 'f', "ISC_X_OFF"},
       {"Y Offset (deg)", -5., 5, 'f', "ISC_Y_OFF"}
-    }
-  },
-
-  {COMMAND(raster), "raster the X-Y stage", GR_LOCK, 6,
-    {
-      {"X velocity (50-5000)", 50, 5000, 'i', "NONE"},
-      {"Y step (10-30000)", 10, 30000, 'i', "NONE"},
-      {"X min (0%-100%)", 0, 100, 'f', "NONE"},
-      {"X max (0%-100%)", 0, 100, 'f', "NONE"},
-      {"Y min (0%-100%)", 0, 100, 'f', "NONE"},
-      {"Y max (0%-100%)", 0, 100, 'f', "NONE"},
     }
   },
 

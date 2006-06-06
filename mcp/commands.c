@@ -992,15 +992,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
           svalues[1]);
       CommandData.actbus.cindex = INC_INDEX(CommandData.actbus.cindex);
       break;
-    case raster: /* Raster the xy stage */
-      CommandData.stage.xvel = ivalues[0];
-      CommandData.stage.ydlt = ivalues[1];
-      CommandData.stage.xmin = rvalues[2] * STAGE_X_THROW;
-      CommandData.stage.xmax = rvalues[3] * STAGE_X_THROW;
-      CommandData.stage.ymin = rvalues[4] * STAGE_Y_THROW;
-      CommandData.stage.ymax = rvalues[5] * STAGE_Y_THROW;
-      CommandData.stage.raster_state = RASTER_NEW;
-      break;
 
 #ifndef BOLOTEST
       /***************************************/
@@ -1985,8 +1976,6 @@ void InitCommandData()
   CommandData.Bias.bias1 = 40;
   CommandData.Bias.bias2 = 25;
   CommandData.Bias.bias3 = 25;
-
-  CommandData.stage.raster_state = RASTER_DONE;
 
   CommandData.pin_is_in = 1;
 
