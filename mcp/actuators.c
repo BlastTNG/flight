@@ -38,7 +38,7 @@
 #include "tx.h"
 
 /* Define this symbol to have mcp read and use the translation stage */
-#define USE_XY_STAGE
+#undef USE_XY_STAGE
 
 /* Define this symbol to have mcp log all actuator bus traffic */
 #undef ACTBUS_CHATTER
@@ -48,6 +48,9 @@
 #else
 #  define ACT_BUS "/dev/ttyS7"
 #endif
+
+#define LVDT_RADIUS ACTUATOR_RADIUS
+#define ACTUATOR_RADIUS 144.338 /* in mm */
 
 #define LOCKNUM 3
 #ifdef USE_XY_STAGE
@@ -108,6 +111,16 @@ struct lock_struct {
   unsigned short adc[4];
   unsigned int state;
 } lock_data = { .state = LS_DRIVE_UNK };
+
+struct act_struct {
+  unsigned int pos;
+  unsigned int enc;
+  unsigned short adc[4];
+} act_data[3];
+
+struct sec_struct {
+  double tilt, rotation, offset;
+} sec_data[2];
 
 #ifdef USE_XY_STAGE
 struct stage_struct {
@@ -203,7 +216,6 @@ static inline void RemoveUnderride(void)
   ReleaseBus(i);
 }
 
-#ifdef ACTBUS_CHATTER
 static char hex_buffer[1000];
 static const char* HexDump(const unsigned char* buffer, int len)
 {
@@ -215,7 +227,6 @@ static const char* HexDump(const unsigned char* buffer, int len)
 
   return hex_buffer;
 }
-#endif
 
 static void BusSend(int who, const char* what)
 {
@@ -243,9 +254,9 @@ static void BusSend(int who, const char* what)
 
 static int BusRecv(char* buffer, int nic)
 {
-  int i, fd, status = 0;
+  int fd, status = 0;
   fd_set rfds;
-  struct timeval timeout = {1, 0};
+  struct timeval timeout = {2, 0};
   unsigned char byte;
   unsigned char checksum = 0;
   char* ptr = buffer;
@@ -263,10 +274,11 @@ static int BusRecv(char* buffer, int nic)
     int state = (nic) ? ACT_RECV_ABORT : 0;
     int had_errors = 0;
     int read_tries = 100;
+    int len;
 
     for(;;) {
-      i = read(bus_fd, &byte, 1);
-      if (i <= 0) {
+      len = read(bus_fd, &byte, 1);
+      if (len <= 0) {
         if (state == 6 || state == ACT_RECV_ABORT)
           break;
         if (errno == EAGAIN && read_tries) {
@@ -281,7 +293,7 @@ static int BusRecv(char* buffer, int nic)
       checksum ^= byte;
 
 #if 0
-      bprintf(info, "%02x. (%i/%i)", byte, state, i);
+      bprintf(info, "%02x. (%i/%i)", byte, state, len);
 #endif
 
       /* The following involves a number of semi-hidden fallthroughs which
@@ -310,6 +322,7 @@ static int BusRecv(char* buffer, int nic)
           if (had_errors > 1) {
             bputs(err,
                 "ActBus: Too many errors parsing response string, aborting.");
+            bprintf(err, "ActBus: Response was=%s (%x)\n", HexDump(buffer, len), status);
             state = ACT_RECV_ABORT;
           }
           break;
@@ -368,6 +381,7 @@ static int PollBus(int rescan)
     bputs(info, "ActBus: Polling Actuator Bus.");
 
   for (i = 0; i < NACT; ++i) {
+    bprintf(info, "%i -> %i (%i)\n", i, all_ok, stepper[i].status);
     if (rescan && stepper[i].status != -1)
       continue;
     BusSend(i, "&");
@@ -390,6 +404,7 @@ static int PollBus(int rescan)
       all_ok = 0;
     }
   }
+  bprintf(info, "%i -> %i (%i)\n", i, all_ok, stepper[i].status);
 
   CommandData.actbus.force_repoll = 0;
 
@@ -402,7 +417,7 @@ int ReadIntFromBus(int who, const char* cmd)
 
   BusSend(who, cmd);
   if ((result = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
-    bprintf(warning, "ActBus: Timeout waiting for response from %s", name[who]);
+    bprintf(warning, "ActBus: Timeout waiting for response from %s (RIFB)", name[who]);
     stepper[who].status = -1;
     return 0;
   }
@@ -410,6 +425,26 @@ int ReadIntFromBus(int who, const char* cmd)
   return atoi(gp_buffer);
 }
 
+static void ReadActuator(int who)
+{
+  int result;
+  if (stepper[who].status == -1)
+    return;
+
+  act_data[who].pos = ReadIntFromBus(who, "?0");
+  act_data[who].enc = ReadIntFromBus(who, "?8");
+  BusSend(who, "?aa");
+  if ((result = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
+    bprintf(warning, "ActBus: Timeout waiting for response from Actuator #%i", who);
+    stepper[who].status = -1;
+    return;
+  }
+
+  sscanf(gp_buffer, "%hi,%hi,%hi,%hi", &act_data[who].adc[0], &act_data[who].adc[1],
+      &act_data[who].adc[2], &act_data[who].adc[3]);
+}
+
+#ifdef USE_XY_STAGE
 static void ReadStage(void)
 {
   static int counter = 0;
@@ -438,6 +473,7 @@ static void ReadStage(void)
 
   counter = (counter + 1) % 8;
 }
+#endif
 
 static void GetLockData(int mult)
 {
@@ -625,10 +661,17 @@ static void DoLock(void)
   } while (action != LA_EXIT);
 }
 
+static inline struct NiosStruct* GetActNiosAddr(int i, const char* field)
+{
+  sprintf(gp_buffer, "act%i_%s", i, field);
+
+  return GetNiosAddr(gp_buffer);
+}
+
 /* This function is called by the frame control thread */
 void StoreActBus(void)
 {
-  int i;
+  int i, j;
   static int firsttime = 1;
 
   static struct NiosStruct* lockPosAddr;
@@ -637,6 +680,20 @@ void StoreActBus(void)
   static struct NiosStruct* seizedBusAddr;
   static struct NiosStruct* lockAdcAddr[4];
   static struct NiosStruct* lokmotPinAddr;
+  
+  static struct NiosStruct* actPosAddr[3];
+  static struct NiosStruct* actEncAddr[3];
+#if 0
+  static struct NiosStruct* actAdcAddr[3][4];
+#endif
+
+  static struct NiosStruct* secEtiltAddr;
+  static struct NiosStruct* secErotAddr;
+  static struct NiosStruct* secEoffAddr;
+  static struct NiosStruct* secLtiltAddr;
+  static struct NiosStruct* secLrotAddr;
+  static struct NiosStruct* secLoffAddr;
+
 #ifdef USE_XY_STAGE
   static struct NiosStruct* stageXAddr;
   static struct NiosStruct* stageXLimAddr;
@@ -663,6 +720,24 @@ void StoreActBus(void)
     lockAdcAddr[2] = GetNiosAddr("lock_adc2");
     lockAdcAddr[3] = GetNiosAddr("lock_adc3");
 
+    for (i = 0; i < 3; ++i) {
+      actPosAddr[i] = GetActNiosAddr(i, "pos");
+      actEncAddr[i] = GetActNiosAddr(i, "enc");
+#if 0
+      actAdcAddr[i][0] = GetActNiosAddr(i, "adc0");
+      actAdcAddr[i][1] = GetActNiosAddr(i, "adc1");
+      actAdcAddr[i][2] = GetActNiosAddr(i, "adc2");
+      actAdcAddr[i][3] = GetActNiosAddr(i, "adc3");
+#endif
+    }
+
+    secEtiltAddr = GetNiosAddr("sec_etilt");
+    secErotAddr = GetNiosAddr("sec_erot");
+    secEoffAddr = GetNiosAddr("sec_eoff");
+    secLtiltAddr = GetNiosAddr("sec_ltilt");
+    secLrotAddr = GetNiosAddr("sec_lrot");
+    secLoffAddr = GetNiosAddr("sec_loff");
+
 #ifdef USE_XY_STAGE
     stageXAddr = GetNiosAddr("stage_x");
     stageXLimAddr = GetNiosAddr("stage_x_lim");
@@ -679,12 +754,28 @@ void StoreActBus(void)
 
   WriteData(lokmotPinAddr, CommandData.pin_is_in, NIOS_QUEUE);
 
+  for (j = 0; j < 3; ++j) {
+#if 0
+    for (i = 0; i < 4; ++i)
+      WriteData(actAdcAddr[j][i], act_data[j].adc[i], NIOS_QUEUE);
+#endif
+    WriteData(actPosAddr[j], act_data[j].pos, NIOS_QUEUE);
+    WriteData(actEncAddr[j], act_data[j].enc, NIOS_QUEUE);
+  }
+
   for (i = 0; i < 4; ++i)
     WriteData(lockAdcAddr[i], lock_data.adc[i], NIOS_QUEUE);
   WriteData(lockStateAddr, lock_data.state, NIOS_QUEUE);
   WriteData(seizedBusAddr, bus_seized, NIOS_QUEUE);
   WriteData(lockGoalAddr, CommandData.actbus.lock_goal, NIOS_QUEUE);
   WriteData(lockPosAddr, lock_data.pos, NIOS_FLUSH);
+
+  WriteData(secEtiltAddr, sec_data[0].tilt * RAD2I * 40, NIOS_QUEUE);
+  WriteData(secErotAddr, sec_data[0].rotation * RAD2I, NIOS_QUEUE);
+  WriteData(secEoffAddr, sec_data[0].offset * 400, NIOS_QUEUE);
+  WriteData(secLtiltAddr, sec_data[1].tilt * RAD2I * 40, NIOS_QUEUE);
+  WriteData(secLrotAddr, sec_data[1].rotation * RAD2I, NIOS_QUEUE);
+  WriteData(secLoffAddr, sec_data[1].offset * 400, NIOS_QUEUE);
 
 #ifdef USE_XY_STAGE
   WriteData(stageXAddr, stage_data.xpos, NIOS_QUEUE);
@@ -718,8 +809,50 @@ static void DiscardBusRecv(int flag)
   if ((i = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD))
     bputs(warning,
         "ActBus: Timeout waiting for response after uplinked command.");
+#ifndef ACTBUS_CHATTER
   else if (flag)
     bprintf(info, "ActBus: Controller response: %s\n", gp_buffer);
+#endif
+}
+
+void SolveSecondary(void)
+{
+  static int firsttime = 1;
+
+  static struct BiPhaseStruct* lvdt10Addr;
+  static struct BiPhaseStruct* lvdt11Addr;
+  static struct BiPhaseStruct* lvdt13Addr;
+
+  if (firsttime) {
+    firsttime = 0;
+    lvdt10Addr = GetBiPhaseAddr("lvdt_10");
+    lvdt11Addr = GetBiPhaseAddr("lvdt_11");
+    lvdt13Addr = GetBiPhaseAddr("lvdt_13");
+  }
+
+  double lvdt10 = slow_data[lvdt10Addr->index][lvdt10Addr->channel];
+  double lvdt11 = slow_data[lvdt11Addr->index][lvdt11Addr->channel];
+  double lvdt13 = slow_data[lvdt13Addr->index][lvdt13Addr->channel];
+
+  /* encoder based solution */
+  double alpha = act_data[0].enc * ACTENC_TO_MM;
+  double beta = act_data[1].enc * ACTENC_TO_MM;
+  double gamma = act_data[2].enc * ACTENC_TO_MM;
+  double A = 2 * sqrt(alpha * alpha + beta * beta + gamma * gamma
+      - alpha * beta - beta * gamma - gamma * alpha) / 3;
+  sec_data[0].offset = (alpha + beta + gamma) / 3;
+  sec_data[0].rotation = atan2(sqrt(3) * (alpha - gamma), 2 * beta - gamma + alpha);
+  sec_data[0].tilt = asin(A / ACTUATOR_RADIUS); 
+
+  /* lvdt based solution */
+  alpha = lvdt10 * LVDT10_TO_MM - LVDT10_ZERO;
+  beta = lvdt13 * LVDT13_TO_MM - LVDT13_ZERO;
+  gamma = lvdt11 * LVDT11_TO_MM - LVDT11_ZERO;
+  A = 2 * sqrt(alpha * alpha + beta * beta + gamma * gamma
+      - alpha * beta - beta * gamma - gamma * alpha) / 3;
+  sec_data[1].offset = (alpha + beta + gamma) / 3;
+  sec_data[1].rotation = atan2(sqrt(3) * (alpha - gamma), 2 * beta - gamma + alpha) + M_PI / 6;
+  sec_data[1].tilt = asin(A / LVDT_RADIUS); 
 }
 
 void ActuatorBus(void)
@@ -755,6 +888,8 @@ void ActuatorBus(void)
         stepper[i].status = -1;
     }
 
+    if (poll_timeout % 100 == 0)
+      bprintf(info, ":: %i %i\n", poll_timeout, all_ok);
     if (poll_timeout == 0 && !all_ok) {
       all_ok = PollBus(1);
       poll_timeout = POLL_TIMEOUT;
@@ -767,11 +902,7 @@ void ActuatorBus(void)
       BusSend(CommandData.actbus.caddr[my_cindex],
           CommandData.actbus.command[my_cindex]);
       /* Discard response to get it off the bus */
-      if ((i = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD))
-        bputs(warning,
-            "ActBus: Timeout waiting for response after uplinked command.");
-      else
-        bprintf(info, "ActBus: Controller response: %s\n", gp_buffer);
+      DiscardBusRecv(1);
       CommandData.actbus.caddr[my_cindex] = 0;
     }
 
@@ -787,8 +918,13 @@ void ActuatorBus(void)
       ReadStage();
 #endif
 
+    for (i = 0; i < 3; ++i)
+      ReadActuator(i);
+
+    SolveSecondary();
+
     if (MegaKill())
       return;
-//    usleep(10000);
+    usleep(10000);
   }
 }

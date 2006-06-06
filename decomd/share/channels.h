@@ -57,6 +57,18 @@ extern "C" {
 #define STAGE_X_THROW 78500
 #define STAGE_Y_THROW 78250
 
+#define ACTENC_TO_MM 0.001633 /* mm / ecoder counts */
+#define LVDT_C2V (12.288 / 65536)
+#define LVDT10V_TO_MM 4.00 /* this is mm per volt */
+#define LVDT11V_TO_MM 4.00 /* this is mm per volt */
+#define LVDT13V_TO_MM 4.00 /* this is mm per volt */
+#define LVDT10_TO_MM (LVDT_C2V * LVDT10V_TO_MM)
+#define LVDT11_TO_MM (LVDT_C2V * LVDT10V_TO_MM)
+#define LVDT13_TO_MM (LVDT_C2V * LVDT10V_TO_MM)
+#define LVDT10_ZERO  8.785  /* in mm */
+#define LVDT11_ZERO  9.190  /* in mm */
+#define LVDT13_ZERO  9.014  /* in mm */
+
 #define FIELD_LEN 20
 
   struct ChannelStruct {

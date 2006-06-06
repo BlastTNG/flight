@@ -215,22 +215,24 @@ struct ChannelStruct SlowChannels[] = {
   {"g_p_bdaheat",  'w',  CRYO, 36,                 1.0,              0., 'u'},
   {"sync03",       'w',  CRYO, 56,                 1.0,             0.0, 'u'},
 
+  /* BIAS 0-4 are wide fast */
   {"t_sc_baf",     'r',  BIAS,  5,              I2T_M,           I2T_B, 'u'},
-  {"t_scoop",      'r',  BIAS,  7,              I2T_M,           I2T_B, 'u'},
+  {"t_in_heatx",   'r',  BIAS,  7,              I2T_M,           I2T_B, 'u'},
   {"t_prim",       'r',  BIAS,  9,              I2T_M,           I2T_B, 'u'},
   {"t_cryo",       'r',  BIAS, 11,              I2T_M,           I2T_B, 'u'},
   {"t_cryo_valve", 'r',  BIAS, 13,              I2T_M,           I2T_B, 'u'},
   {"t_bal_bot",    'r',  BIAS, 15,              I2T_M,           I2T_B, 'u'},
   {"t_if_tpb",     'r',  BIAS, 17,              I2T_M,           I2T_B, 'u'},
-  {"t_if_tss",     'r',  BIAS, 19,              I2T_M,           I2T_B, 'u'},
-  {"t_triangle",   'r',  BIAS, 21,              I2T_M,           I2T_B, 'u'},
+  /* BIAS 18-19 is wide fast */
+  {"lvdt_10",      'r',  BIAS, 21,       LVDT10_TO_MM,    -LVDT10_ZERO, 'u'},
   {"i_dpm_28v",    'r',  BIAS, 23,           0.000625,          -20.48, 'u'},
   {"i_dpm_3v",     'r',  BIAS, 25,          -0.000625,           20.48, 'u'},
   {"i_dpm_5v",     'r',  BIAS, 27,          -0.000625,           20.48, 'u'},
   {"i_dpm_10v",    'r',  BIAS, 29,          -0.000625,           20.48, 'u'},
   {"i_rec",        'r',  BIAS, 31,           0.000625,          -20.48, 'u'},
+  {"lvdt_11",      'r',  BIAS, 33,       LVDT11_TO_MM,    -LVDT11_ZERO, 'u'},
   {"t_rec",        'r',  BIAS, 35,              I2T_M,           I2T_B, 'u'},
-//  {"t_in_heatx",   'r',  BIAS, 37,              I2T_M,           I2T_B, 'u'},
+  {"lvdt_13",      'r',  BIAS, 37,       LVDT13_TO_MM,    -LVDT13_ZERO, 'u'},
   {"t_dpm_7.5v",   'r',  BIAS, 41,              I2T_M,           I2T_B, 'u'},
   {"t_dpm_10v",    'r',  BIAS, 43,              I2T_M,           I2T_B, 'u'},
   {"t_dpm_5v",     'r',  BIAS, 45,              I2T_M,           I2T_B, 'u'},
@@ -545,12 +547,25 @@ struct ChannelStruct SlowChannels[] = {
   {"stage_y_str",  'w', LOOP5, 37,                1.0,             0.0, 'u'},
   {"stage_x_lim",  'w', LOOP5, 38,                1.0,             0.0, 'u'},
   {"stage_y_vel",  'w', LOOP5, 39,                1.0,             0.0, 'u'},
+  {"he4_lev_old",  'w', LOOP5, 40, -2.87477e-09*65536,      12.3273561, 'u'},
+  {"act0_pos",     'w', LOOP5, 41,                1.0,             0.0, 'u'},
+  {"act0_enc",     'w', LOOP5, 42,       ACTENC_TO_MM,             0.0, 's'},
+  {"act1_pos",     'w', LOOP5, 43,                1.0,             0.0, 'u'},
+  {"act1_enc",     'w', LOOP5, 44,       ACTENC_TO_MM,             0.0, 's'},
+  {"act2_pos",     'w', LOOP5, 45,                1.0,             0.0, 'u'},
+  {"act2_enc",     'w', LOOP5, 46,       ACTENC_TO_MM,             0.0, 's'},
+  {"sec_etilt",    'w', LOOP5, 47,         I2DEG / 40,             0.0, 'u'},
+  {"sec_erot",     'w', LOOP5, 48,              I2DEG,             0.0, 'u'},
+  {"sec_eoff",     'w', LOOP5, 49,             1./400,             0.0, 's'},
+  {"sec_ltilt",    'w', LOOP5, 50,         I2DEG / 40,             0.0, 'u'},
+  {"sec_lrot",     'w', LOOP5, 51,              I2DEG,             0.0, 'u'},
+  {"sec_loff",     'w', LOOP5, 52,             1./400,             0.0, 's'},
   END_OF_CHANNELS
 };
 
 struct ChannelStruct WideFastChannels[] = {
 #ifndef BOLOTEST
-  {"t_gybox2",    'r',  BIAS, 32,          TGYBOX_M,             TGYBOX_B, 'U'},
+  {"t_gybox2",    'r',  BIAS, 18,          TGYBOX_M,             TGYBOX_B, 'U'},
   {"t_gybox1",    'r',  ACS1, 14,          TGYBOX_M,             TGYBOX_B, 'U'},
   {"raw_gy1",     'r',  ACS1, 26,     -AGY32_TO_DPS,
                                      AGY32_OFFSET * AGY32_TO_DPS + 0.1925, 'U'},
@@ -645,8 +660,6 @@ struct ChannelStruct FastChannels[] = {
 
   {"mcp_frame",   'w', LOOP2, 34,             1.0,                    0.0, 'u'},
 #endif
-
-  {"chopper",     'r',  BIAS, 37,             1.0,                0.0, 'u'},
 
   /* Read from DAS3 -- cryo commanding */
   {"calstat",      'r',  CRYO, 61,                 1.0,             0.0, 'u'},

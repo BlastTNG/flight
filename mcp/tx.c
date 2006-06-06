@@ -110,9 +110,12 @@ static void WriteAux(void)
   static struct NiosStruct* bbcFifoSizeAddr;
   static struct NiosStruct* ploverAddr;
   static struct NiosStruct* scheduleAddr;
+  static struct NiosStruct* he4LevOldAddr;
   static struct BiPhaseStruct* samIAmReadAddr;
+  static struct BiPhaseStruct* he4LevReadAddr;
   static int incharge = -1;
   time_t t;
+  static int he4_lev_old = 0;
   int i_point;
   struct timeval tv;
   struct timezone tz;
@@ -122,6 +125,9 @@ static void WriteAux(void)
     firsttime = 0;
     samIAmAddr = GetNiosAddr("sam_i_am");
     samIAmReadAddr = ExtractBiPhaseAddr(samIAmAddr);
+
+    he4LevOldAddr = GetNiosAddr("he4_lev_old");
+    he4LevReadAddr = GetBiPhaseAddr("he4_lev");
 
     cpuFanAddr = GetNiosAddr("cpu_fan");
     cpuTemp1Addr = GetNiosAddr("cpu_temp1");
@@ -145,6 +151,11 @@ static void WriteAux(void)
     CommandData.actbus.force_repoll = 1;
   } else if (InCharge != incharge)
     bputs(info, "System: I have lost control.\n");
+
+  if (CommandData.Cryo.heliumLevel)
+    he4_lev_old = slow_data[he4LevReadAddr->index][he4LevReadAddr->channel];
+
+  WriteData(he4LevOldAddr, he4_lev_old, NIOS_QUEUE);
 
   incharge = InCharge;
 
