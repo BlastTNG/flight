@@ -385,7 +385,6 @@ static int PollBus(int rescan)
     bputs(info, "ActBus: Polling Actuator Bus.");
 
   for (i = 0; i < NACT; ++i) {
-    bprintf(info, "%i -> %i (%i)\n", i, all_ok, stepper[i].status);
     if (rescan && stepper[i].status != -1)
       continue;
     BusSend(i, "&");
@@ -906,8 +905,6 @@ void ActuatorBus(void)
         stepper[i].status = -1;
     }
 
-    if (poll_timeout % 100 == 0)
-      bprintf(info, ":: %i %i\n", poll_timeout, all_ok);
     if (poll_timeout == 0 && !all_ok) {
       all_ok = PollBus(1);
       poll_timeout = POLL_TIMEOUT;
