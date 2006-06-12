@@ -33,14 +33,14 @@
 --a9@a7       t_apm_5v      @             @             @             @             @             
 --a10@a7      t_apm_10v     @             @             @             @             @             
 --a11@a0      t_sc_baf      @             @             @             @             @             
---a12@a0      t_scoop       @             @             @             @             @             
+--a12@a0      t_pv          @             @             @             @             @             
 --a13@a0      t_prim        @             @             @             @             @             
 --a14@a0      t_cryo        @             @             @             @             @             
 --a15@a0      t_cryo_valve  @             @             @             @             @             
 --a16@a0      t_bal_bot     @             @             @             @             @             
 --a17@a0      t_if_tpb      @             @             @             @             @             
---a18@a0      t_if_tss      @             @             @             @             @             
---a19@a0      t_triangle    @             @             @             @             @             
+--a18@a0      t_pv          @             @             @             @             @             
+--a19@a0      t_pv          @             @             @             @             @             
 --a20@a7      t_dpm_7.5v    @             @             @             @             @             
 --a21@a7      t_dpm_10v     @             @             @             @             @             
 --a22@a7      t_dpm_5v      @             @             @             @             @             
