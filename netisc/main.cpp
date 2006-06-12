@@ -728,8 +728,12 @@ void pointingSolution( void ) {
   // If our last solution was good, use it as the guess for the next solution
   // also use the last solution unless we had POINT_LOST_NBAD bad solutions in
   // a row (added  May 6 / 2004)
+
+  lost = 0; // start assuming we're not lost
+
   if( (pointing_quality == 1) || (pointing_nbad < POINT_LOST_NBAD) ) {
     printf("Using previous solution as the next guess...\n");
+  
     ra_0_guess = ra_0;
     dec_0_guess = dec_0;
     search_radius = norm_radius;
@@ -737,7 +741,7 @@ void pointingSolution( void ) {
   // Otherwise the previous solution failed (or it's the first solution)
   else {
     // Get the map centre and parallactic angle from the telescope orientation
-    if( (az!=0) && (el!=0) && (lat!=0) && (lst!=0) ) {
+    //if( (az!=0) && (el!=0) && (lat!=0) && (lst!=0) ) {
       
       printf("Guess solution is based on az/el/lst/lat...\n");
       calc_ra_dec(az,el,lat,lst,&ra_0_guess,&dec_0_guess);
@@ -747,16 +751,18 @@ void pointingSolution( void ) {
       
       //printf("az=%f el=%f lat=%f lst=%f ra_g=%f dec_g=%f\n",
       //az,el,lat,lst,ra_0_guess,dec_0_guess);
-    }
+    //}
     
-    // If we've had more than one bad pointing, increase the catalogue search 
-    // radius (lost mode)
-    // NOTE: need at least POINT_LOST_BLOBS to be in this mode, and have 
+    // If things are looking hopeless, take drastic measures...
+    // LOST MODE!
+    // Need at least POINT_LOST_BLOBS to be in this mode, and have
     // POINT_LOST_NBAD bad solutions
     
     if( (pointing_nbad >= POINT_LOST_NBAD) && (server_data.n_blobs >= 
-                                               POINT_LOST_BLOBS) ) 
+      POINT_LOST_BLOBS) ) { 
+      lost = 1;
       search_radius = lost_radius;
+    }
     else search_radius = norm_radius;
   }
 
@@ -775,8 +781,8 @@ void pointingSolution( void ) {
     double *y = new double[server_data.n_blobs];
     double *f = new double[server_data.n_blobs];
     
-    // Find the pixel offsets in radians from the map centre 
-    // (increasing to the right and up)
+    // Find the pixel offsets from the map centre increasing to the
+    // right and up
     for(i=0;i<(int)server_data.n_blobs;i++) {
       x[i] = (server_data.blob_x[i]-CCD_X_PIXELS/2); 
       y[i] = (server_data.blob_y[i]-CCD_Y_PIXELS/2); 
@@ -807,7 +813,8 @@ void pointingSolution( void ) {
       
       if( (nMatchBlobs <= 2) ) thismaglim = 7.5;
 
-      nmatch = calc_pointing( ra_0_guess, dec_0_guess, epoch, lat, lst, 
+      nmatch = calc_pointing( ra_0_guess, dec_0_guess, lost,
+			      epoch, lat, lst, 
                               x, y, f, nMatchBlobs, 0, 
                               search_radius, thismaglim, tolerance, 
                               540./206265., 0.03*PI/180., 0.5, 1., rot_tol,
@@ -824,6 +831,7 @@ void pointingSolution( void ) {
     
     // If the return value was > 0, it was successful in finding a solution
     if( nmatch >= minBlobMatch ) {
+
       //printf( "*************Rotation Guess: %lf True: %lf\n",
       // ccdRotation,rot );
       //printf("%i of %i matched (RA: %lfh DEC:%lfd) +/- %lfarcsec\n",
@@ -832,23 +840,26 @@ void pointingSolution( void ) {
       
       // Set the quality flag
       if( sqrt(point_var)*3600*180/PI > POINT_MAX_ERR ) 
-	pointing_quality = -1;
+	    pointing_quality = -1;
+
       else {
-	// Check for large excursion from the previous good solution
-	cel2vec(last_ra_0,last_dec_0,&last_a,&last_b,&last_c);
-	cel2vec(ra_0,dec_0,&a,&b,&c);
-	theta = acos( last_a*a + last_b*b + last_c*c );
-	max_theta = ((double)frame_time - (double)last_time + 1.) * 
-	  POINT_MAX_SLEW*PI/180.;
-	//printf("########theta: %lf max: %lf nbad:%i ltime:%i now:%i\n",
-	// theta, max_theta, pointing_nbad, last_time, frame_time);
+
+	      // Check for large excursion from the previous good solution
+	      cel2vec(last_ra_0,last_dec_0,&last_a,&last_b,&last_c);
+	      cel2vec(ra_0,dec_0,&a,&b,&c);
+	      theta = acos( last_a*a + last_b*b + last_c*c );
+	      max_theta = ((double)frame_time - (double)last_time + 1.) * 
+	                   POINT_MAX_SLEW*PI/180.;
+
+	      //printf("########theta: %lf max: %lf nbad:%i ltime:%i now:%i\n",
+	      // theta, max_theta, pointing_nbad, last_time, frame_time);
         
-	if( (theta < max_theta) || (pointing_nbad >= POINT_EXCUR_NBAD) ) {
-	  last_time = frame_time;
-	  pointing_quality = 1;
-	  last_ra_0 = ra_0;
-	  last_dec_0 = dec_0;
-	} else pointing_quality = -1;
+	      if( (theta < max_theta) || (pointing_nbad >= POINT_EXCUR_NBAD) ) {
+	        last_time = frame_time;
+	        pointing_quality = 1;
+	        last_ra_0 = ra_0;
+	        last_dec_0 = dec_0;
+	      } else pointing_quality = -1;
       }
     }
     else pointing_quality = 0;
@@ -864,6 +875,10 @@ void pointingSolution( void ) {
     pointing_nbad=0;
     server_data.sigma = sqrt(point_var);
     server_data.rot = rot;
+
+    printf("   ^^^ GOOD SOLUTION\n");
+    calc_alt_az( ra_0, dec_0, lat, lst, &el, &az );
+
   } else {
     server_data.rot = ccdRotation;
     for( i=0; i<MAX_ISC_BLOBS; i++ ) {
@@ -890,7 +905,9 @@ void pointingSolution( void ) {
   
   server_data.ra = ra_0;
   server_data.dec = dec_0;
-  
+
+  printf("ooga..... %lf %lf    %lf %lf\n", ra_0, dec_0, az, el );
+
   if( LOUD ) {
     time_stamp( &timebuf[0], 255 ); printf("%s Solution Finished\n",timebuf);
   }
@@ -2517,6 +2534,20 @@ int main( int argc, char **argv ) {
     CCD_X_PIXELS = OSC_CCD_X_PIXELS;
     CCD_Y_PIXELS = OSC_CCD_Y_PIXELS;
   }
+
+  // Set the execCmd client frame to the server defaults
+  execCmd.eyeOn = eyeOn;
+  execCmd.mag_limit = mag_limit;
+  execCmd.norm_radius = norm_radius;
+  execCmd.lost_radius = lost_radius;
+  execCmd.tolerance = tolerance;
+  execCmd.rot_tol = rot_tol;  
+  execCmd.match_tol = match_tol;
+  execCmd.quit_tol = quit_tol;
+  execCmd.maxBlobMatch = maxBlobMatch;
+  execCmd.minBlobMatch = minBlobMatch;
+  execCmd.lst = lst;
+  execCmd.lat = lat;
 
   // Get the start time of the server
   time( &server_start );

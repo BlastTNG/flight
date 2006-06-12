@@ -11,6 +11,7 @@
 
 #include "HTMCatalog.h"
 #include "slalib.h"
+#include "pyramid.h"       // Pyramid star matching code
 
 #ifndef PI
 #define PI 3.14159265358979
@@ -84,7 +85,8 @@ int match_frame_simple( double ra_0_guess, double dec_0_guess,
 double calc_epoch( void );
 
 // Calculate a pointing solution
-int calc_pointing( double ra_0_guess, double dec_0_guess, double epoch,
+int calc_pointing( double ra_0_guess, double dec_0_guess, 
+		   int lost, double epoch,
                    double lat, double lst, double *x, double *y, 
                    double *flux, int nblobs, int minplateblobs,  
                    double radius, double maglimit, 

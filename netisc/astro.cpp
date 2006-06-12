@@ -1273,6 +1273,7 @@ double calc_epoch( void ) {
 //
 // ra_0_guess    = guess for centre of the field in apparent coordinates
 // dec_0_guess   =  "
+// lost          = if set use pyramid frame matching algorithm
 // epoch         = epoch of the field (in years)
 // lat           = latitude of telescope (radians)
 // lst           = local sidereal time (radians)
@@ -1308,7 +1309,8 @@ double calc_epoch( void ) {
 //
 // return: # blobs with matches used in pointing solution, 0 if failed
 
-int calc_pointing( double ra_0_guess, double dec_0_guess, double epoch,
+int calc_pointing( double ra_0_guess, double dec_0_guess, 
+                   int lost, double epoch,
                    double lat, double lst, double *x, double *y, 
                    double *flux, int nblobs, int minplateblobs,  
                    double radius, double maglimit, 
@@ -1320,9 +1322,9 @@ int calc_pointing( double ra_0_guess, double dec_0_guess, double epoch,
                    double *star_dec, double *star_mag, 
                    int *abtflag, int brightStarMode, 
                    double brightRA, double brightDEC ) {
-  int i, matchcount=0;
-  double *temp_x, *temp_y, *temp_flux, *temp_ra, *temp_dec;
 
+  int i, j, matchcount=0;
+  double *temp_x, *temp_y, *temp_flux, *temp_ra, *temp_dec;
   int nsol;
   double sin_theta, cos_theta;
   double blob_az_off, blob_el_off;
@@ -1337,31 +1339,76 @@ int calc_pointing( double ra_0_guess, double dec_0_guess, double epoch,
   //printf("match_tol: %lf quit_tol: %lf rot_tol: %lf \n",match_tol,quit_tol,
   //rot_tol);
 
-  // If we don't have at least one blobs
+  // If we don't have at least one blob
   if( nblobs < 1 ) return 0;
   
-  // precess map centre coordinates to J2000
-  slaPreces ( "FK5", epoch, 2000, &ra_0_guess, &dec_0_guess );
+  // If the lost flag was set & at least 4 blobs use the pyramid algorithm
+  if( lost && (nblobs >= 4) ) {
+    printf( "!!!!!!!!!! LOST IN SPACE!!!!\n");
+
+    Pyramid __astro_pyr;   
+    solution_t *pyrsol=NULL;
+    int pyrnsol;
+
+    temp_x = new double[nblobs];
+    temp_y = new double[nblobs];
+
+    for( i=0; i<nblobs; i++ ) {
+      // convert the pixel offsets into tanplane offsets
+      temp_x[i] = x[i] * (*platescale) / 206265.;
+      temp_y[i] = y[i] * (*platescale) / 206265.;
+
+      // Assume no stars will get matched
+      star_ra[j] = -999;
+      star_dec[j] = -999;
+      matchcount = 0;
+    }
+
+    // Call pyramid frame match
+    if( __astro_pyr.GetSolution( tolerance,
+				 temp_x, temp_y, nblobs,
+				 &pyrsol, &pyrnsol ) >= 4 ) {
+
+      // Extract matched ra/dec if only 1 solution
+      if( pyrnsol == 1 ) {
+        matchcount = pyrsol->n;
+	      for( j=0; j<matchcount; j++ ) {
+	        star_ra[pyrsol->B[j]] = (pyrsol->C)[j]->ra;
+	        star_dec[pyrsol->B[j]] = (pyrsol->C)[j]->dec;
+        }
+      }    
+    }
   
-  // Match the frame. If a match was found, continue with the solution        
-  // printf("POINTING: match frame... %i, %lf\n",nblobs,*rot);
-  
-  matchcount = match_frame( ra_0_guess, dec_0_guess, radius, maglimit, 
-                            tolerance, lst, lat, *rot, *platescale, 
-                            sig_tol, match_tol, quit_tol, rot_tol,
-                            x, y, flux, star_ra, star_dec, star_mag, 
-                            nblobs, abtflag, brightStarMode, brightRA, 
-                            brightDEC);
-  
-  // simple pointing solution for 1 or 2 stars
-  if( (nblobs <= 2) || (matchcount <= 2) ) {
-    matchcount = match_frame_simple( ra_0_guess, dec_0_guess, radius, 
-                                     maglimit, tol_simp, lst, lat, *rot, 
-                                     *platescale, x, y, 
-                                     star_ra, star_dec, 
-                                     star_mag, nblobs, epoch ); 
+    // delete because they get used again later
+    delete[] temp_x;
+    delete[] temp_y;
   } 
+
+  // Otherwise use the old algorithm
+  else {
+    // precess map centre coordinates to J2000
+    slaPreces ( "FK5", epoch, 2000, &ra_0_guess, &dec_0_guess );
+    
+    // Match the frame. If a match was found, continue with the solution
+    // printf("POINTING: match frame... %i, %lf\n",nblobs,*rot);
+    
+    matchcount = match_frame( ra_0_guess, dec_0_guess, radius, maglimit, 
+			      tolerance, lst, lat, *rot, *platescale, 
+			      sig_tol, match_tol, quit_tol, rot_tol,
+			      x, y, flux, star_ra, star_dec, star_mag, 
+			      nblobs, abtflag, brightStarMode, brightRA, 
+			      brightDEC);
   
+    // simple pointing solution for 1 or 2 stars
+    if( (nblobs <= 2) || (matchcount <= 2) ) {
+      matchcount = match_frame_simple( ra_0_guess, dec_0_guess, radius, 
+				       maglimit, tol_simp, lst, lat, *rot, 
+				       *platescale, x, y, 
+				       star_ra, star_dec, 
+				       star_mag, nblobs, epoch ); 
+    }
+  }
+    
   // Pointing solution from matched blobs
   if( matchcount >= 1 ) {
     // Create arrays of subsets of blobs that had good matches
@@ -1371,78 +1418,78 @@ int calc_pointing( double ra_0_guess, double dec_0_guess, double epoch,
     temp_ra = new double[matchcount];
     temp_dec = new double[matchcount];
     int index=0;
-    for( i=0; i<nblobs; i++ ) {
+
+    for( i=0; i<nblobs; i++ ) {	
       if( star_ra[i] != -999 ) {
-        
-        //printf("blob %i: %lf %lf %lf\n",i, star_ra[i]*180./PI/15.,
-        //       star_dec[i]*180./PI, star_mag[i]);
-        
-        // precess the star catalogue positions to apparent coordinates
-        slaPreces ( "FK5", 2000, epoch, &star_ra[i], &star_dec[i] );
-  
-        temp_x[index] = x[i];
-        temp_y[index] = y[i];
-        temp_flux[index] = flux[i];
-        temp_ra[index] = star_ra[i];
-        temp_dec[index] = star_dec[i];
-        index++;
-      }
-      //printf("blob: %i  ra:%lf  dec:%lf mag:%lf\n",i,
-      // star_ra[i]*180./PI/15.,
-      //             star_dec[i]*180./PI,star_mag[i]);  
+	  
+	      //printf("blob %i: %lf %lf %lf\n",i, star_ra[i]*180./PI/15.,
+	      // star_dec[i]*180./PI, star_mag[i]);
+	  
+	      // precess the star catalogue positions to apparent coordinates
+	      slaPreces ( "FK5", 2000, epoch, &star_ra[i], &star_dec[i] );
+	      temp_x[index] = x[i];
+	      temp_y[index] = y[i];
+	      temp_flux[index] = flux[i];
+	      temp_ra[index] = star_ra[i];
+	      temp_dec[index] = star_dec[i];
+	      index++;
+	    }
+	    //printf("blob: %i  ra:%lf  dec:%lf mag:%lf\n",i,
+	    // star_ra[i]*180./PI/15., star_dec[i]*180./PI,star_mag[i]);  
     }
-    
-    // One star case
-    if( matchcount == 1 ) {
-      // assuming a fixed roll calculate the tangent point of the CCD
-      cos_theta = cos(*rot); // in the CCD -> azel direction
-      sin_theta = sin(*rot);  
-      
-      blob_az_off =  (temp_x[0]*cos_theta + temp_y[0]*sin_theta) *
-        (*platescale/3600.*PI/180.);
-      
-      blob_el_off = (-temp_x[0]*sin_theta + temp_y[0]*cos_theta) *
-        (*platescale/3600.*PI/180.);
-      
-      calc_alt_az( temp_ra[0], temp_dec[0], lat, lst,
-                   &el_blob, &az_blob );
-      
-      slaTps2c( blob_az_off, blob_el_off, az_blob, el_blob, 
-                &az_0, &el_0, &az_1, &el_1, &nsol );
-      
-      // !!! I'm not bothering to check for two solutions !!!
-      calc_ra_dec( az_0, el_0, lat, lst, ra_0, dec_0 ); 
-      
-      *var = 10./3600.*PI/180.;  // variance is meaningless in this case
-      *var *= *var;
-    } else if( matchcount == 2 ) {
-      // Just find ra/dec without letting rotation vary
-      map_centre3( temp_x, temp_y, temp_flux, matchcount, 
-                   temp_ra, temp_dec,
-                   lst, lat, ra_0, dec_0, *rot, *platescale, var );
-    } else { 
-      // Find ra/dec AND rotation
-      map_centre( temp_x, temp_y, temp_flux, matchcount, 
-                  temp_ra, temp_dec,
-                  lst, lat, ra_0, dec_0, rot, *platescale, var );
-    }
-    
-    // Clean up
-    
-    delete[] temp_x;
-    delete[] temp_y;
-    delete[] temp_flux;
-    delete[] temp_ra;
-    delete[] temp_dec;              
   }
+    
+  // One star case
+  if( matchcount == 1 ) {
+    // assuming a fixed roll calculate the tangent point of the CCD
+    cos_theta = cos(*rot); // in the CCD -> azel direction
+    sin_theta = sin(*rot);  
+      
+    blob_az_off = (temp_x[0]*cos_theta + temp_y[0]*sin_theta) *
+                  (*platescale/3600.*PI/180.);
+      
+    blob_el_off = (-temp_x[0]*sin_theta + temp_y[0]*cos_theta) *
+                 (*platescale/3600.*PI/180.);
+      
+    calc_alt_az( temp_ra[0], temp_dec[0], lat, lst,
+                 &el_blob, &az_blob );
+      
+    slaTps2c( blob_az_off, blob_el_off, az_blob, el_blob, 
+		          &az_0, &el_0, &az_1, &el_1, &nsol );
+      
+    // !!! I'm not bothering to check for two solutions !!!
+    calc_ra_dec( az_0, el_0, lat, lst, ra_0, dec_0 ); 
+      
+    *var = 10./3600.*PI/180.;  // variance is meaningless in this case
+    *var *= *var;
+  } else if( matchcount == 2 ) {
+    // Just find ra/dec without letting rotation vary
+    map_centre3( temp_x, temp_y, temp_flux, matchcount, 
+                 temp_ra, temp_dec,
+                 lst, lat, ra_0, dec_0, *rot, *platescale, var );
+  } else { 
+    // Find ra/dec AND rotation
+    map_centre( temp_x, temp_y, temp_flux, matchcount, 
+                temp_ra, temp_dec,
+                lst, lat, ra_0, dec_0, rot, *platescale, var );
+  }
+    
+  // Clean up
+  delete[] temp_x;
+  delete[] temp_y;
+  delete[] temp_flux;
+  delete[] temp_ra;
+  delete[] temp_dec;              
   
+  /*
   // return the guess in apparent coordinates if no new solution found
   else {
     *ra_0 = ra_0_guess;
     *dec_0 = dec_0_guess;
     slaPreces ( "FK5", 2000, epoch, ra_0, dec_0 );
   }
-  
+  */
+
   return matchcount;
 }
 

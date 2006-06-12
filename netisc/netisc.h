@@ -26,7 +26,7 @@
 #include "astro.h"         // astrometry
 #include "WinIo.h"         // Allow direct I/O for parallel port
 #include "readTemp.h"      // temp/pressure sensor + heater
-#include "thumbnail.h"
+#include "thumbnail.h"     // Save thumbnail images
 
 // --- Macros ----------------------------------------------------------------
 
@@ -214,8 +214,8 @@ double azBDA;        // az offset of CCD from BDA centre
 double elBDA;        // el offset of CCD from BDA centre
 double az=0;         // azimuth of the field (radians) 
 double el=0;         // elevation   "    "      "
-double lst=0;        // local sidereal time     "
-double lat=0;        // latitude of telescope   "
+double lst=6.07898;  // local sidereal time     "
+double lat=1.190489; // latitude of telescope   "
 int focusOffset=0;   // offset to home position (for lab focusing)
 
 int brightStarMode;  // 1 brightest star in field is at:
@@ -285,6 +285,7 @@ time_t frame_time=0;   // time of most recent frame was taken
 
 time_t refSysTime=0;   // system time last time the LST was set
 double refLST;         // the last LST that was set by the client
+int lost=0;            // set when lost
 
 // Temperature readout
 int tempControl = 1;

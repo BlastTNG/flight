@@ -1,13 +1,26 @@
 #ifndef __PYRAMID__H
 #define __PYRAMID__H
 
-#define CATALOG "D:\\catalog\\gsc_mag08_res22.bin"
-#define KATALOG "D:\\catalog\\k.bin"
+//#ifdef _WINDOWS_
+#define CATALOG "d:\\catalog\\gsc_mag08_res21.bin"
+#define KATALOG "d:\\catalog\\k.bin"
+//#else 
+//#define CATALOG "./catalog/gsc_mag08_res21.bin"
+//#define KATALOG "./catalog/k.bin"
+//#endif
+
+#ifndef M_PI
+#define M_PI       3.14159265358979323846
+#endif
+
+#ifndef M_PI_2
+#define M_PI_2     1.57079632679489661923
+#endif
 
 #define FOV (3.4 * M_PI/180.0)    // SC field of view
 
 #define CSI 1.0E-10
-#define MAXSOLUTION 1000
+#define MAXSOLUTION 200
 #define MAXBLOBS 100
 
 typedef struct {
@@ -23,9 +36,9 @@ typedef struct {
 } rec_t;
 
 typedef struct {
-  unsigned long I[MAXBLOBS];
-  unsigned long B[MAXBLOBS];
-  gsc_t* C[MAXBLOBS];
+  unsigned long I[MAXBLOBS];       // Ignore - index into master catalogue
+  unsigned long B[MAXBLOBS];       // Blob index corresponding to C 
+  gsc_t* C[MAXBLOBS];              // Matched Star catalogue
   int flag;
   unsigned long n;
 } solution_t;
@@ -35,6 +48,7 @@ typedef struct {
   rec_t *r;
   unsigned long flag;
 } match_t;
+
 
 class Pyramid {
  public:
@@ -95,15 +109,6 @@ class Pyramid {
   double m, q;
 
 };
-
-
-
-
-
-
-
-
-
 
 
 #endif
