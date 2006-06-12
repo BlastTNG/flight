@@ -177,14 +177,14 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"t_pv_ext",      SLOWDL_FORCE_INT, 8, 55, -55},
   /* IF GONDOLA THERMOMETRY */
   {"t_sc_baf",      SLOWDL_FORCE_INT, 8, 55, -55},
-  {"t_scoop",       SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_pv",          SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_prim",        SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_cryo",        SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_cryo_valve",  SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_bal_bot",     SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_if_tpb",        SLOWDL_FORCE_INT, 8, 55, -55},
-  {"t_if_tss",        SLOWDL_FORCE_INT, 8, 55, -55},
-  {"t_triangle",        SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_pv",            SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_pv",              SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_rec",         SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_in_heatx",    SLOWDL_FORCE_INT, 8, 55, -55},
   /* DAS */

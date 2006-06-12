@@ -42,6 +42,7 @@
 
 /* Define this symbol to have mcp log all actuator bus traffic */
 #undef ACTBUS_CHATTER
+int __inhibit_chatter = 0;
 
 #ifdef BOLOTEST
 #  define ACT_BUS "/dev/ttyS0"
@@ -78,8 +79,9 @@
 
 #define LOCK_MOTOR_DATA_TIMER 100
 
-#define LOCK_MIN_POT 16000
-#define LOCK_MAX_POT 3000
+#define LOCK_MIN_POT 3000
+#define LOCK_MAX_POT 16365
+#define LOCK_POT_RANGE 1000
 
 /* in commands.c */
 double LockPosition(double elevation);
@@ -244,7 +246,8 @@ static void BusSend(int who, const char* what)
     chk ^= *ptr;
   buffer[len - 1] = chk;
 #ifdef ACTBUS_CHATTER
-  bprintf(info, "ActBus: Request=%s", HexDump(buffer, len));
+  if (!__inhibit_chatter)
+    bprintf(info, "ActBus: Request=%s", HexDump(buffer, len));
 #endif
   if (write(bus_fd, buffer, len) < 0)
     berror(err, "Error writing on bus");
@@ -363,7 +366,8 @@ static int BusRecv(char* buffer, int nic)
     *ptr = '\0';
 
 #ifdef ACTBUS_CHATTER
-    bprintf(info, "ActBus: Response=%s (%x)\n", buffer, status);
+    if (!__inhibit_chatter)
+      bprintf(info, "ActBus: Response=%s (%x)\n", buffer, status);
 #endif
   }
 
@@ -532,8 +536,11 @@ static void SetLockState(int nic)
 
   if (pot < LOCK_MIN_POT)
     state |= LS_CLOSED;
-  else if (pot > LOCK_MAX_POT)
+  else if (pot > LOCK_MAX_POT || ls < 8000)
     state |= LS_OPEN;
+  else if ((pot < LOCK_MIN_POT + LOCK_POT_RANGE)
+      || (pot > LOCK_MAX_POT - LOCK_POT_RANGE))
+    state |= lock_data.state & (LS_OPEN | LS_CLOSED);
 
   if (fabs(ACSData.enc_elev - LockPosition(ACSData.enc_elev)) <= 0.2)
     state |= LS_EL_OK;
@@ -543,6 +550,8 @@ static void SetLockState(int nic)
     CommandData.pin_is_in = 0;
   else
     CommandData.pin_is_in = 1;
+
+  lock_data.state = state;
 }
 
 /************************************************************************/
@@ -565,53 +574,58 @@ static void DoLock(void)
 
   do {
     GetLockData((bus_seized == LOCKNUM) ? 0 : 1);
-    SetLockState(0);
 
     /* Fix weird states */
     if ((lock_data.state & (LS_DRIVE_EXT | LS_DRIVE_RET | LS_DRIVE_UNK)
           && lock_data.state & LS_DRIVE_OFF)
-        || lock_data.state & LS_DRIVE_FORCE) {
+        || CommandData.actbus.lock_goal & LS_DRIVE_FORCE) {
       lock_data.state &= ~LS_DRIVE_MASK | LS_DRIVE_UNK;
+      CommandData.actbus.lock_goal &= ~LS_DRIVE_FORCE;
       bprintf(info, "ActBus: Reset lock motor state.");
     }
 
     /* compare goal to current state -- only 3 goals are supported:
      * open + off, closed + off and off */
-    if (CommandData.actbus.lock_goal & (LS_OPEN | LS_DRIVE_OFF)) {
+    if ((CommandData.actbus.lock_goal & 0x7) == (LS_OPEN | LS_DRIVE_OFF)) {
       /*                                       ORe -.
        * cUe -+-(stp)- cFe -(ext)- cXe -(---)- OXe -+-(stp)- OFe ->
        * cRe -'                                OUe -'
        */
-      if (lock_data.state & (LS_OPEN | LS_DRIVE_OFF))
+      if ((lock_data.state & (LS_OPEN | LS_DRIVE_OFF))
+          == (LS_OPEN | LS_DRIVE_OFF))
         action = LA_EXIT;
       else if (lock_data.state & LS_OPEN)
         action = LA_STOP;
-      else if (lock_data.state & LS_DRIVE_EXT)
+      else if (lock_data.state & LS_DRIVE_RET)
         action = LA_WAIT;
       else if (lock_data.state & LS_DRIVE_OFF)
-        action = LA_EXTEND;
+        action = LA_RETRACT;
       else
         action = LA_STOP;
-    } else if (CommandData.actbus.lock_goal & (LS_CLOSED | LS_DRIVE_OFF)) {
+    } else if ((CommandData.actbus.lock_goal & 0x7) == (LS_CLOSED
+          | LS_DRIVE_OFF)) {
       /* oX -.         oUE -(stp)-.              CRe -(stp)-+
        * oR -+-(stp) - oF  -(---)-+- oFE -(ret)- oRE -(---)-+- CFe ->
        * oU -'         oXE -(stp)-'              CUe -(stp)-+
        *                                         CXe -(stp)-'
        */
-      if (lock_data.state & (LS_CLOSED | LS_DRIVE_OFF)) 
+      if ((lock_data.state & (LS_CLOSED | LS_DRIVE_OFF))
+          == (LS_CLOSED | LS_DRIVE_OFF)) 
         action = LA_EXIT;
       else if (lock_data.state & LS_CLOSED)
         action = LA_STOP;
-      else if (lock_data.state & (LS_EL_OK | LS_IGNORE_EL)) { /* el in range */
-        if (lock_data.state & LS_DRIVE_RET)
+      else if (lock_data.state & LS_EL_OK
+          || CommandData.actbus.lock_goal & LS_IGNORE_EL) { /* el in range */
+        if (lock_data.state & LS_DRIVE_EXT)
           action = LA_WAIT;
         else if (lock_data.state & LS_DRIVE_OFF)
-          action = LA_RETRACT;
+          action = LA_EXTEND;
         else
           action = LA_STOP;
-      } else /* el out of range */
+      } else { /* el out of range */
         action = (lock_data.state & LS_DRIVE_OFF) ? LA_WAIT : LA_STOP;
-    } else if (CommandData.actbus.lock_goal & LS_DRIVE_OFF)
+      }
+    } else if ((CommandData.actbus.lock_goal & 0x7) == LS_DRIVE_OFF)
       /* ocXe -.
        * ocRe -+-(stp)- ocFe ->
        * ocUe -'
@@ -639,11 +653,15 @@ static void DoLock(void)
         break;
       case LA_EXTEND:
         bputs(info, "ActBus: Extending lock motor.");
-        command = "V10000P0R"; /* move out forever */
+        command = "V50000P0R"; /* move out forever */
+        lock_data.state &= ~LS_DRIVE_MASK;
+        lock_data.state |= LS_DRIVE_EXT;
         break;
       case LA_RETRACT:
         bputs(info, "ActBus: Retracting lock motor.");
-        command = "V10000D0R"; /* move in forever */
+        command = "V50000D0R"; /* move in forever */
+        lock_data.state &= ~LS_DRIVE_MASK;
+        lock_data.state |= LS_DRIVE_RET;
         break;
       default:
         command = NULL;
