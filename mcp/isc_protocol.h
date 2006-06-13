@@ -118,6 +118,8 @@ struct ISCSolutionStruct {
   double dec;      // DEC   "        "        "
   double sigma;    // uncertainty of sol. in radians (or 2PI on failure)
   double rot;      // rot. of CCD field (rad) = par. angle + constant
+  double az;       // az derived from ra, dec, lat, lon
+  double el;       // el "
 
   double temp1;         // temperature sensors
   double temp2;
