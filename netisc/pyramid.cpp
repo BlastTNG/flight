@@ -104,7 +104,7 @@ static int J_match(const void *x, const void *y)
    of SIZE bytes each.  The comparisons are done by (*COMPAR)().  */
 void *
 pbsearch (const void *key, const void *base, size_t nmemb, size_t size,
-	  int (*compar) (const void *, const void *))
+          int (*compar) (const void *, const void *))
 {
   size_t l, u, idx;
   const void *p;
@@ -122,11 +122,11 @@ pbsearch (const void *key, const void *base, size_t nmemb, size_t size,
       else if (comparison > 0)
         l = idx + 1;
       else {
-	do {
-	  if(idx == 0) return (void *)p;
-	  p = (void *) (((const char *) base) + (--idx * size));
-	} while((*compar) (key, p) == 0);
-	p = (void *) (((const char *) base) + (++idx * size));
+        do {
+          if(idx == 0) return (void *)p;
+          p = (void *) (((const char *) base) + (--idx * size));
+        } while((*compar) (key, p) == 0);
+        p = (void *) (((const char *) base) + (++idx * size));
         return (void *) p;
       }
     }
@@ -134,16 +134,19 @@ pbsearch (const void *key, const void *base, size_t nmemb, size_t size,
   return NULL;
 }
 
-Pyramid::Pyramid(double fov)
+Pyramid::Pyramid(double fov, char *catalogname, char *katalogname)
 {
   unsigned long k;
   this->fov = fov;
   this->c_fov = cos(this->fov);
 
-  ifstream file(CATALOG, ios::in|ios::binary);
+  this->catalog = catalogname;
+  this->katalog = katalogname;
+
+  ifstream file(this->catalog, ios::in|ios::binary);
  
   if(!file.is_open()) {
-    cerr << "Pyramid: unable to open file catalog " << CATALOG << endl;
+    cerr << "Pyramid: unable to open file catalog " << this->catalog << endl;
     exit(0);
   }
 
@@ -161,11 +164,11 @@ Pyramid::Pyramid(double fov)
   
   
   // load kvector catalog
-  cerr << "Pyramid: load " << KATALOG  << endl;
-  file.open(KATALOG, ios::in|ios::binary);
+  cerr << "Pyramid: load " << this->katalog  << endl;
+  file.open(this->katalog, ios::in|ios::binary);
   
   if(!file.is_open()) {
-    cerr << "Pyramid: unable to open file catalog " << KATALOG << endl;
+    cerr << "Pyramid: unable to open file catalog " << this->katalog << endl;
     exit(0);
   }
   
@@ -332,21 +335,21 @@ int Pyramid::BuildCatalog(double ra0, double dec0, double r0)
 
       d = dist(gsc[i].ra, gsc[j].ra, gsc[i].dec, gsc[j].dec);
       if(d > c_fov) {
-	if(i < j) {
-	  rec_[nrec].I = i;
-	  rec_[nrec].J = j;
-	} else {
-	  rec_[nrec].I = j;
-	  rec_[nrec].J = i;
-	}
- 	rec_[nrec].d = d;
-	if(++nrec == MAXREC) {
-	  cerr << "Pyramid: too many star pairs" << endl;
-	  delete rec_;
-	  return -1;
-	}
+        if(i < j) {
+          rec_[nrec].I = i;
+          rec_[nrec].J = j;
+        } else {
+          rec_[nrec].I = j;
+          rec_[nrec].J = i;
+        }
+        rec_[nrec].d = d;
+        if(++nrec == MAXREC) {
+          cerr << "Pyramid: too many star pairs" << endl;
+          delete rec_;
+          return -1;
+        }
       } else if(cos(gsc[i].dec - gsc[j].dec) < c_fov) {
-      	break;
+        break;
       }
     }
   }
@@ -378,9 +381,9 @@ int Pyramid::BuildCatalog(double ra0, double dec0, double r0)
 
 #define MAXSTARS 10000
 int Pyramid::GetTestStars(double ra0, double dec0,
-			  double *xx, double *yy, 
-			  unsigned long *id,
-			  unsigned long n)
+                          double *xx, double *yy, 
+                          unsigned long *id,
+                          unsigned long n)
 {
   double c_fov_2;
   int star[MAXSTARS];
@@ -407,7 +410,7 @@ int Pyramid::GetTestStars(double ra0, double dec0,
     } while(star[star_idx] == -1 && star_idx < nstar);
     
     s2tp(gsc[star[star_idx]].ra,gsc[star[star_idx]].dec,
-	 ra0, dec0, xx[k], yy[k]);
+         ra0, dec0, xx[k], yy[k]);
 
     id[k] = star[star_idx];
     
@@ -421,7 +424,7 @@ int Pyramid::GetTestStars(double ra0, double dec0,
 
 
 int Pyramid::GetIdx(double val, double ftol, 
-		    unsigned long& id0, unsigned long& id1)
+                    unsigned long& id0, unsigned long& id1)
 {
   double error;
   double val_m, val_M;
@@ -449,7 +452,7 @@ int Pyramid::GetIdx(double val, double ftol,
 }
 
 int Pyramid::GetTriangle(unsigned long& ii, unsigned long& jj, 
-			 unsigned long& kk, unsigned long n) 
+                         unsigned long& kk, unsigned long n) 
 {
   static unsigned long *Ti = NULL;
   static unsigned long *Tj = NULL;
@@ -467,12 +470,12 @@ int Pyramid::GetTriangle(unsigned long& ii, unsigned long& jj,
 
     for(dj = 1; dj <= (n-2); dj++) {
       for(dk = 1; dk <= (n - dj -1); dk++) {
-	for(i = 1; i <= (n - dj - dk); i++) {
-	  Ti[Tidx] = i - 1;
-	  Tj[Tidx] = i + dj - 1;
-	  Tk[Tidx] = Tj[Tidx] + dk;
-	  Tidx++;
-	}
+        for(i = 1; i <= (n - dj - dk); i++) {
+          Ti[Tidx] = i - 1;
+          Tj[Tidx] = i + dj - 1;
+          Tk[Tidx] = Tj[Tidx] + dk;
+          Tidx++;
+        }
       }
     }
     Tidx = 0;
@@ -523,14 +526,14 @@ int Pyramid::CheckSpecularTriangle(double* x, double* y, solution_t* S)
 
 
 int Pyramid::StarPair(double* x, double* y, unsigned long n, double ftol,
-		      solution_t* sol, unsigned long& nsol)
+                      solution_t* sol, unsigned long& nsol)
   
 {
   unsigned long i,j,k;
   unsigned long idx_m, idx_M;
   double d;
   solution_t* S;
-						
+                                                
   nsol = 0;
   for(i = 0; i < n-1; i++) {
     for(j = i+1; j < n; j++) {
@@ -538,14 +541,14 @@ int Pyramid::StarPair(double* x, double* y, unsigned long n, double ftol,
       if(GetIdx(d, ftol, idx_m, idx_M)) continue;
       
       for(k = idx_m; k <= idx_M; k++) {
-	S = &sol[nsol];
-	S->n = 0;
-	S->flag = 1;
-	S->I[S->n] = rec[k].I;
-	S->B[S->n++] = i;
-	S->I[S->n] = rec[k].J;
-	S->B[S->n++] = j;
-	if(++nsol == MAXSOLUTION) return 0;
+        S = &sol[nsol];
+        S->n = 0;
+        S->flag = 1;
+        S->I[S->n] = rec[k].I;
+        S->B[S->n++] = i;
+        S->I[S->n] = rec[k].J;
+        S->B[S->n++] = j;
+        if(++nsol == MAXSOLUTION) return 0;
       }
     }
   }
@@ -554,8 +557,8 @@ int Pyramid::StarPair(double* x, double* y, unsigned long n, double ftol,
 }
 
 int Pyramid::StarTriangle(unsigned long i, unsigned long j, unsigned long k,
-			  double d1, double d2, double d3, double ftol,
-			  solution_t* sol, unsigned long& nsol)
+                          double d1, double d2, double d3, double ftol,
+                          solution_t* sol, unsigned long& nsol)
 {
   unsigned long l, p;
   unsigned long idx1_m, idx1_M, idx2_m, idx2_M, idx3_m, idx3_M;
@@ -565,6 +568,8 @@ int Pyramid::StarTriangle(unsigned long i, unsigned long j, unsigned long k,
   solution_t P;
 
   int retval = -1;
+
+  if( nsol >= MAXSOLUTION ) return 0;
 
   if(GetIdx(d1, ftol, idx1_m, idx1_M)) return retval; 
   if(GetIdx(d2, ftol, idx2_m, idx2_M)) return retval;     
@@ -583,36 +588,36 @@ int Pyramid::StarTriangle(unsigned long i, unsigned long j, unsigned long k,
     // I in I
     if( (R = (rec_t *)pbsearch(&rec[l].I, rec2, nrec2, sizeof(rec_t), I_match)) != NULL) {
       do {
-	P.n    = 3;
-	P.flag = 0;
-	P.I[0] = rec[l].I;
-	P.B[0] = i;
-	P.I[1] = rec[l].J;
-	P.B[1] = j;
-	P.I[2] = R->J;
-	P.B[2] = k;
-	
-	pivot.push_back(P);
-	
-	R++;
+        P.n    = 3;
+        P.flag = 0;
+        P.I[0] = rec[l].I;
+        P.B[0] = i;
+        P.I[1] = rec[l].J;
+        P.B[1] = j;
+        P.I[2] = R->J;
+        P.B[2] = k;
+        
+        pivot.push_back(P);
+        
+        R++;
       } while(rec[l].I == R->I); 
     } 
 
     // J in I
     if( (R = (rec_t *)pbsearch(&rec[l].J, rec2, nrec2, sizeof(rec_t), I_match)) != NULL) {
       do {
-	P.n    = 3;
-	P.flag = 0;
-	P.I[0] = rec[l].J;
-	P.B[0] = i;
-	P.I[1] = rec[l].I;
-	P.B[1] = j;
-	P.I[2] = R->J;
-	P.B[2] = k;
-	
-	pivot.push_back(P);
-	
-	R++;
+        P.n    = 3;
+        P.flag = 0;
+        P.I[0] = rec[l].J;
+        P.B[0] = i;
+        P.I[1] = rec[l].I;
+        P.B[1] = j;
+        P.I[2] = R->J;
+        P.B[2] = k;
+        
+        pivot.push_back(P);
+        
+        R++;
       } while(rec[l].J == R->I); 
     }
   }  // loop on l
@@ -622,35 +627,35 @@ int Pyramid::StarTriangle(unsigned long i, unsigned long j, unsigned long k,
     // I in J
     if( (R = (rec_t *)pbsearch(&rec[l].I, rec2, nrec2, sizeof(rec_t), J_match)) != NULL) {
       do {
-	P.n    = 3;
-	P.flag = 0;
-	P.I[0] = rec[l].I;
-	P.B[0] = i;
-	P.I[1] = rec[l].J;
-	P.B[1] = j;
-	P.I[2] = R->I;
-	P.B[2] = k;
-	
-	pivot.push_back(P);
-	
-	R++;
+        P.n    = 3;
+        P.flag = 0;
+        P.I[0] = rec[l].I;
+        P.B[0] = i;
+        P.I[1] = rec[l].J;
+        P.B[1] = j;
+        P.I[2] = R->I;
+        P.B[2] = k;
+        
+        pivot.push_back(P);
+        
+        R++;
       } while(rec[l].I == R->J); 
     } 
     // J in J
     if( (R = (rec_t *)pbsearch(&rec[l].J, rec2, nrec2, sizeof(rec_t), J_match)) != NULL) {
       do {
-	P.n    = 3;
-	P.flag = 0;
-	P.I[0] = rec[l].J;
-	P.B[0] = i;
-	P.I[1] = rec[l].I;
-	P.B[1] = j;
-	P.I[2] = R->I;
-	P.B[2] = k;
-	
-	pivot.push_back(P);
-	
-	R++;
+        P.n    = 3;
+        P.flag = 0;
+        P.I[0] = rec[l].J;
+        P.B[0] = i;
+        P.I[1] = rec[l].I;
+        P.B[1] = j;
+        P.I[2] = R->I;
+        P.B[2] = k;
+        
+        pivot.push_back(P);
+        
+        R++;
       } while(rec[l].J == R->J); 
     }
   
@@ -674,12 +679,12 @@ int Pyramid::StarTriangle(unsigned long i, unsigned long j, unsigned long k,
   for(i_piv = pivot.begin(); i_piv != pivot.end(); i_piv++) {
     for(p = idx3_m; p <= idx3_M; p++) {
       if( (i_piv->I[2] == rec[p].I && i_piv->I[1] == rec[p].J) || 
-	  (i_piv->I[2] == rec[p].J && i_piv->I[1] == rec[p].I) ) {
-	// Found triangle
-	sol[nsol] = *i_piv;
-	retval = 0;
-	if(++nsol == MAXSOLUTION) return retval;
-	break;
+          (i_piv->I[2] == rec[p].J && i_piv->I[1] == rec[p].I) ) {
+        // Found triangle
+        sol[nsol] = *i_piv;
+        retval = 0;        
+        if(++nsol == MAXSOLUTION) return retval;
+        break;
       }
     }
 
@@ -690,8 +695,8 @@ int Pyramid::StarTriangle(unsigned long i, unsigned long j, unsigned long k,
 
 
 int Pyramid::StarPyramid(unsigned long r, 
-			 double d1, double d2, double d3, double ftol,
-			 solution_t* S)
+                         double d1, double d2, double d3, double ftol,
+                         solution_t* S)
 {
   unsigned long l,m,p;
   unsigned long p1, p2, p3;
@@ -714,28 +719,28 @@ int Pyramid::StarPyramid(unsigned long r,
     }
     for(m = idx2_m; m <= idx2_M; m++) {
       if(rec[m].I == S->I[1]) {
-	p2 = rec[m].J;
+        p2 = rec[m].J;
       } else if(rec[m].J == S->I[1]) {
-	p2 = rec[m].I;
+        p2 = rec[m].I;
       } else {
-	continue;
+        continue;
       }
       for(p = idx3_m; p <= idx3_M; p++) {
-	if(rec[p].I == S->I[2]) {
-	  p3 = rec[p].J;
-	} else if(rec[p].J == S->I[2]) {
-	  p3 = rec[p].I;
-	} else {
-	  continue;
-	}
-	
-	// Candidate triad
-	if(p1 == p2 && p1 == p3) {
-	  S->I[S->n] = p1;
-	  S->B[S->n++] = r;
-	  //cerr << "ULLLALLLAAAAA Match is acieved (" << S->B[0] << " " << S->B[1] << " " << S->B[2] << " " << S->B[3] << " " << S->B[S->n-1]<< "\n";
-	  return 0; // Match achieved: quit here.
-	}
+        if(rec[p].I == S->I[2]) {
+          p3 = rec[p].J;
+        } else if(rec[p].J == S->I[2]) {
+          p3 = rec[p].I;
+        } else {
+          continue;
+        }
+        
+        // Candidate triad
+        if(p1 == p2 && p1 == p3) {
+          S->I[S->n] = p1;
+          S->B[S->n++] = r;
+          //cerr << "ULLLALLLAAAAA Match is acieved (" << S->B[0] << " " << S->B[1] << " " << S->B[2] << " " << S->B[3] << " " << S->B[S->n-1]<< "\n";
+          return 0; // Match achieved: quit here.
+        }
       }
     }
   }
@@ -778,11 +783,11 @@ int Pyramid::Match(double* x, double* y, double ftol, unsigned long n)
     if(StarTriangle(i,j,k,d1,d2,d3, ftol, sol_, nsol_) ) {
       
       for(sol_idx = 0; sol_idx < nsol_; sol_idx++) {
-	S = &sol_[sol_idx];
-	if(CheckSpecularTriangle(x, y, S)) {
-	  S->flag = 1;
-	  nsol++;
-	}
+        S = &sol_[sol_idx];
+        if(CheckSpecularTriangle(x, y, S)) {
+          S->flag = 1;
+          nsol++;
+        }
       }
     }
     
@@ -803,18 +808,18 @@ int Pyramid::Match(double* x, double* y, double ftol, unsigned long n)
       // There are no more triangles to be scanned
       // check if there were some matched triangles and use those
       for(sol_idx = 0; sol_idx < nsol_; sol_idx++) {
-	S = &sol_[sol_idx];
-	if(CheckSpecularTriangle(x, y, S)) {
-	  S->flag = 1;
-	  nsol++;
-	} 
+        S = &sol_[sol_idx];
+        if(CheckSpecularTriangle(x, y, S)) {
+          S->flag = 1;
+          nsol++;
+        } 
       }
       if(nsol == 0) { // no valid solutions found
-	StarPair(x, y, n, ftol, sol_, nsol_);
-	nsol = nsol_;
-	retval = (nsol) ? 2 : 0;
+        StarPair(x, y, n, ftol, sol_, nsol_);
+        nsol = nsol_;
+        retval = (nsol) ? 2 : 0;
       } else {
-	retval = 3;
+        retval = 3;
       }
       break;
     }  
@@ -830,16 +835,16 @@ int Pyramid::Match(double* x, double* y, double ftol, unsigned long n)
     for(sol_idx = sol_start, pyramid = 0; sol_idx < nsol_ && !pyramid; sol_idx++) {
       S = &sol_[sol_idx];
       for(r = 0; r < n; r++) {
-	if( r == i || r == j || r == k) continue;
-	
-	d1 = cdist(x[i], x[r], y[i], y[r]);
-	d2 = cdist(x[j], x[r], y[j], y[r]);
-	d3 = cdist(x[k], x[r], y[k], y[r]);
-	
-	if(StarPyramid(r, d1, d2, d3, ftol, S) == 0) {
-	  pyramid = 1;
-	  S->flag = 1;
-	}
+        if( r == i || r == j || r == k) continue;
+        
+        d1 = cdist(x[i], x[r], y[i], y[r]);
+        d2 = cdist(x[j], x[r], y[j], y[r]);
+        d3 = cdist(x[k], x[r], y[k], y[r]);
+        
+        if(StarPyramid(r, d1, d2, d3, ftol, S) == 0) {
+          pyramid = 1;
+          S->flag = 1;
+        }
 
       } // loop on piramid r star
     } // loop on sol_ 
@@ -859,7 +864,7 @@ int Pyramid::Match(double* x, double* y, double ftol, unsigned long n)
       
       memset(solution[k].C, 0, n*sizeof(gsc_t));
       for(i = 0; i < solution[k].n; i++) {
-	solution[k].C[solution[k].B[i]] = &gsc[solution[k].I[solution[k].B[i]]];
+        solution[k].C[solution[k].B[i]] = &gsc[solution[k].I[solution[k].B[i]]];
       }
       if(++k == nsol) break;
     }
@@ -873,8 +878,8 @@ int Pyramid::Match(double* x, double* y, double ftol, unsigned long n)
 
 
 int Pyramid::GetSolution(double ftol, double* x, double* y,  int nblobs, 
-			 solution_t** sol, int* nsol,
-			 double ra0, double dec0, double r0)
+                         solution_t** sol, int* nsol,
+                         double ra0, double dec0, double r0)
 { 
   int retval = 0;
 
@@ -904,8 +909,8 @@ int Pyramid::GetSolution(double ftol, double* x, double* y,  int nblobs,
 //     double c_r0 = cos(r0);
 //     for(k = 0, nsol_ = 0; k < nsolution; k++) {
 //       if(dist(gsc[solution[k].I[0]].ra, ra0, gsc[solution[k].I[0]].dec, dec0) > c_r0) {
-// 	memcpy(sol_ + nsol_, &solution[k], sizeof(solution_t));
-// 	nsol_++;
+//      memcpy(sol_ + nsol_, &solution[k], sizeof(solution_t));
+//      nsol_++;
 //       }
 //     }
 //     delete solution;

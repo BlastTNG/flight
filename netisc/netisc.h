@@ -57,6 +57,10 @@
 #define HR2RAD 0.26180
 #endif
 
+#ifndef CT2LST
+#define CT2LST 1.0027
+#endif
+
 // Pointing
 #define POINT_MAX_ERR 15    // # arcsec error in pointing to be considered bad
 #define POINT_LOST_BLOBS 5  // # blobs required for lost mode
@@ -238,6 +242,9 @@ double noiseGain;           // noise model gain for default CCD settings
 double noiseOffset;         //  "    offset      "
 
 char catpath[255];          // UNIX-style path to the star catalogue
+char catalogname[255];      // UNIX-style path to alternate star catalogues for
+char katalogname[255];      //   pyramid matching algorithm.
+
 double mag_limit=9.;        // magnitude limit of search catalogue
 double norm_radius=2.*DEG2RAD; // radius of search catalogue in normal mode
 double lost_radius=5.*DEG2RAD; //   "    "    "     "        when lost
@@ -276,7 +283,7 @@ double ra_0_guess=0;   // guess centre of the search region in the catalogue
 double dec_0_guess=0;  //  "             "              "                    "
 double search_radius;  // current search radius in the catalogue
 int pointing_quality=0;// 0=no solution, 1=good, -1=possibly bad
-int pointing_nbad=999; // number of bad solutions in a row
+int pointing_nbad=0;   // number of bad solutions in a row
 double q=0;            // field rotation (same sign parallactic angle)
 double last_ra_0=0;    // last good solution 
 double last_dec_0=0;   //   "
@@ -328,7 +335,7 @@ int update_command( int abort );
 DWORD WINAPI th_doTemp( LPVOID parameter );
 void parse_coordinates( char *str );
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
-			     LPARAM lParam);
+                             LPARAM lParam);
 int initEyeWin();
 
 

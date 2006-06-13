@@ -2,8 +2,8 @@
 #define __PYRAMID__H
 
 //#ifdef _WINDOWS_
-#define CATALOG "d:\\catalog\\gsc_mag08_res21.bin"
-#define KATALOG "d:\\catalog\\k.bin"
+//#define CATALOG "d:\\catalog\\gsc_mag08_res21.bin"
+//#define KATALOG "d:\\catalog\\k.bin"
 //#else 
 //#define CATALOG "./catalog/gsc_mag08_res21.bin"
 //#define KATALOG "./catalog/k.bin"
@@ -17,7 +17,7 @@
 #define M_PI_2     1.57079632679489661923
 #endif
 
-#define FOV (3.4 * M_PI/180.0)    // SC field of view
+//#define FOV (3.4 * M_PI/180.0)    // SC field of view
 
 #define CSI 1.0E-10
 #define MAXSOLUTION 200
@@ -52,7 +52,7 @@ typedef struct {
 
 class Pyramid {
  public:
-  Pyramid(double fov = FOV);
+  Pyramid(double fov, char *catalogname, char *katalogname);
   ~Pyramid();  
   
   int BuildCatalog(double ra0, double dec0, double r0);
@@ -60,10 +60,10 @@ class Pyramid {
 
   int Match(double*, double*, double, unsigned long);
   int GetSolution(double, double*, double*, int, solution_t**, int*, 
-		  double ra0=0.0, double dec0=0.0, double r0=-1.0);
+                  double ra0=0.0, double dec0=0.0, double r0=-1.0);
 
   int GetTestStars(double, double, double *, double *, 
-		   unsigned long *, unsigned long);
+                   unsigned long *, unsigned long);
   
   double Ra(int I) {return gsc[I].ra;}
   double Dec(int I) {return gsc[I].dec;}
@@ -73,14 +73,14 @@ class Pyramid {
   double cdist(double&, double&, double&, double&);
   int    GetIdx(double, double, unsigned long&, unsigned long&);
   int    GetTriangle(unsigned long&, unsigned long&, 
-		     unsigned long&, unsigned long n = 0); 
+                     unsigned long&, unsigned long n = 0); 
   int    s2tp(double, double, double, double, double&, double&);
   void   tp2s(double&, double&, double, double, double, double);
 
   int    StarPair(double* x, double*, unsigned long, double, solution_t*, unsigned long&); 
 
   int    StarTriangle(unsigned long, unsigned long, unsigned long,
-			double, double, double, double, solution_t*, unsigned long&);
+                        double, double, double, double, solution_t*, unsigned long&);
 
   int    Pyramid::StarPyramid(unsigned long , double, double, double, double, solution_t*);
 
@@ -105,8 +105,10 @@ class Pyramid {
   double c_fov;                // cos(fov);
   double fov;
 
-
   double m, q;
+
+  char *catalog;
+  char *katalog;
 
 };
 

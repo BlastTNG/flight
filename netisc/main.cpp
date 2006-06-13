@@ -127,9 +127,12 @@ int read_settings() {
   fgets(thisline,80,settingsfile); sscanf(thisline,"%i",&pause);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%i",&focusOffset);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%s",catpath);
+  fgets(thisline,80,settingsfile); sscanf(thisline,"%s",catalogname);
+  fgets(thisline,80,settingsfile); sscanf(thisline,"%s",katalogname);
   
   printf("Path to star catalogue: *** %s ***\n",catpath);
-  
+  printf("Pyramid catalogue:\n  %s\n  %s\n", catalogname, katalogname );
+
   // Close the file
   fclose(settingsfile);
   
@@ -812,9 +815,9 @@ void pointingSolution( void ) {
         thismaglim = 8.5;
       
       if( (nMatchBlobs <= 2) ) thismaglim = 7.5;
-
+      
       nmatch = calc_pointing( ra_0_guess, dec_0_guess, lost,
-			      epoch, lat, lst, 
+                              epoch, lat, lst, 
                               x, y, f, nMatchBlobs, 0, 
                               search_radius, thismaglim, tolerance, 
                               540./206265., 0.03*PI/180., 0.5, 1., rot_tol,
@@ -825,13 +828,11 @@ void pointingSolution( void ) {
       //for( i=0; i<MAX_ISC_BLOBS; i++ ) printf("%i (%i: %lf)\n ", 
       //nmatch, i, star_mag[i]);
       
-      
-      //q = q + rot;
     }
     
     // If the return value was > 0, it was successful in finding a solution
     if( nmatch >= minBlobMatch ) {
-
+      
       //printf( "*************Rotation Guess: %lf True: %lf\n",
       // ccdRotation,rot );
       //printf("%i of %i matched (RA: %lfh DEC:%lfd) +/- %lfarcsec\n",
@@ -840,30 +841,29 @@ void pointingSolution( void ) {
       
       // Set the quality flag
       if( sqrt(point_var)*3600*180/PI > POINT_MAX_ERR ) 
-	    pointing_quality = -1;
-
+        pointing_quality = -1;
+      
       else {
-
-	      // Check for large excursion from the previous good solution
-	      cel2vec(last_ra_0,last_dec_0,&last_a,&last_b,&last_c);
-	      cel2vec(ra_0,dec_0,&a,&b,&c);
-	      theta = acos( last_a*a + last_b*b + last_c*c );
-	      max_theta = ((double)frame_time - (double)last_time + 1.) * 
-	                   POINT_MAX_SLEW*PI/180.;
-
-	      //printf("########theta: %lf max: %lf nbad:%i ltime:%i now:%i\n",
-	      // theta, max_theta, pointing_nbad, last_time, frame_time);
         
-	      if( (theta < max_theta) || (pointing_nbad >= POINT_EXCUR_NBAD) ) {
-	        last_time = frame_time;
-	        pointing_quality = 1;
-	        last_ra_0 = ra_0;
-	        last_dec_0 = dec_0;
-	      } else pointing_quality = -1;
+        // Check for large excursion from the previous good solution
+        cel2vec(last_ra_0,last_dec_0,&last_a,&last_b,&last_c);
+        cel2vec(ra_0,dec_0,&a,&b,&c);
+        theta = acos( last_a*a + last_b*b + last_c*c );
+        max_theta = ((double)frame_time - (double)last_time + 1.) * 
+          POINT_MAX_SLEW*PI/180.;
+        
+        //printf("########theta: %lf max: %lf nbad:%i ltime:%i now:%i\n",
+        // theta, max_theta, pointing_nbad, last_time, frame_time);
+        
+        if( (theta < max_theta) || (pointing_nbad >= POINT_EXCUR_NBAD) ) {
+          last_time = frame_time;
+          pointing_quality = 1;
+          last_ra_0 = ra_0;
+          last_dec_0 = dec_0;
+        } else pointing_quality = -1;
       }
     }
     else pointing_quality = 0;
-    
     
     delete[] x;
     delete[] y;
@@ -875,10 +875,8 @@ void pointingSolution( void ) {
     pointing_nbad=0;
     server_data.sigma = sqrt(point_var);
     server_data.rot = rot;
-
-    printf("   ^^^ GOOD SOLUTION\n");
     calc_alt_az( ra_0, dec_0, lat, lst, &el, &az );
-
+    
   } else {
     server_data.rot = ccdRotation;
     for( i=0; i<MAX_ISC_BLOBS; i++ ) {
@@ -905,8 +903,8 @@ void pointingSolution( void ) {
   
   server_data.ra = ra_0;
   server_data.dec = dec_0;
-
-  printf("ooga..... %lf %lf    %lf %lf\n", ra_0, dec_0, az, el );
+  server_data.az = az;
+  server_data.el = el;
 
   if( LOUD ) {
     time_stamp( &timebuf[0], 255 ); printf("%s Solution Finished\n",timebuf);
@@ -1665,7 +1663,7 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
   // Update the LST
   time_t now;
   time( &now );
-  lst = HR2RAD*((double)now - (double)refSysTime)/3600. + refLST;
+  lst = CT2LST*HR2RAD*((double)now - (double)refSysTime)/3600. + refLST;
 
   // Update general flags
   pause = execCmd.pause;
@@ -1928,7 +1926,7 @@ int update_command( int abort ) {
       if( LOUD ) {
         time_stamp( &timebuf[0], 255 ); 
         printf("%s Starting processing frame from client %i\n",
-	       timebuf,newCmd);
+               timebuf,newCmd);
       }
 
       // frame containing the most recent command for execution
@@ -2184,7 +2182,7 @@ LRESULT CALLBACK MainWndProc(
       for(i=x_roi_start; i<x_roi_start+EYE_ROI; i++)
         for(j=y_roi_start; j<y_roi_start+EYE_ROI; j++) {
       
-	  // Create ROI image buffer
+          // Create ROI image buffer
           if( (i>=0) && (i<CCD_X_PIXELS) && (j>=0) && (j<CCD_Y_PIXELS) )
             roiBuffer[(j-y_roi_start)*EYE_ROI + i-x_roi_start] = 
               dispBuffer[j*CCD_X_PIXELS+i];
@@ -2388,7 +2386,7 @@ LRESULT CALLBACK MainWndProc(
                 (int)aperturePosition);
       
       TextOut(hdc, client_height/2+FONT_HEIGHT, 
-	      client_height-2*FONT_HEIGHT, afocstr1, (int)strlen(afocstr1));
+              client_height-2*FONT_HEIGHT, afocstr1, (int)strlen(afocstr1));
 
       eyeMotor=0;
     }
@@ -2549,6 +2547,11 @@ int main( int argc, char **argv ) {
   execCmd.lst = lst;
   execCmd.lat = lat;
 
+  // Other server defaults
+
+  pointing_quality = 0;
+  pointing_nbad = POINT_LOST_NBAD+1;
+
   // Get the start time of the server
   time( &server_start );
   last_time = server_start-1000;   // initial value for the last_time
@@ -2634,7 +2637,7 @@ int main( int argc, char **argv ) {
   // Intialize the star catalogue
   
   printf( "Attempting to use star catalogue: %s\n", catpath );
-  astro_init_catalogue(catpath);
+  astro_init_catalogue(catpath, catalogname, katalogname);
   
   // Initialize the temp./pressure/heater routines
   
@@ -2748,7 +2751,7 @@ int main( int argc, char **argv ) {
                          DEFAULT_QUALITY,     // output quality
                          DEFAULT_PITCH | FF_DONTCARE, // pitch and family
                          NULL          // typeface name
-			 );
+                         );
 
   hfntSmall = CreateFont( FONT_HEIGHT*3./4.,// height of font
                           FONT_WIDTH*3./4., // average character width
@@ -2764,7 +2767,7 @@ int main( int argc, char **argv ) {
                           DEFAULT_QUALITY,  // output quality
                           DEFAULT_PITCH | FF_DONTCARE, // pitch and family
                           NULL             // typeface name
-			  );
+                          );
 
 
   xRoi = CCD_X_PIXELS/2; // Set region of interest to centre of CCD by default
@@ -2811,11 +2814,11 @@ int main( int argc, char **argv ) {
     if( eyeOn ) {
       
       if( eyeRefresh) 
-	InvalidateRgn(hwndEye,NULL,(eyeMode!=full)&&(lastMode==full));
+        InvalidateRgn(hwndEye,NULL,(eyeMode!=full)&&(lastMode==full));
       
       if( PeekMessage(&winMsg, (HWND) hwndEye, 0, 0, PM_REMOVE) != 0) {
-	TranslateMessage(&winMsg); 
-	DispatchMessage(&winMsg); 
+        TranslateMessage(&winMsg); 
+        DispatchMessage(&winMsg); 
       }
     }
     
@@ -2840,8 +2843,8 @@ int main( int argc, char **argv ) {
     } else {
       result = WaitForSingleObject(thTemp,0);
       if( result != WAIT_TIMEOUT ) {       // thread is finished
-	CloseHandle(thTemp);
-	thTempState = 0;
+        CloseHandle(thTemp);
+        thTempState = 0;
       }
     }
 
@@ -2866,19 +2869,19 @@ int main( int argc, char **argv ) {
 
     if( thConnectState[i] == 2 ) {
       if( WaitForSingleObject(thConnect[i],2000) == WAIT_TIMEOUT ) 
-	TerminateThread(thConnect[i],0);
+        TerminateThread(thConnect[i],0);
       else CloseHandle(thConnect[i]);
     }
 
     if( thRecvState[i] == 1 ) {
       if( WaitForSingleObject(thRecv[i],2000) == WAIT_TIMEOUT ) 
-	TerminateThread(thRecv[i],0);
+        TerminateThread(thRecv[i],0);
       else CloseHandle(thRecv[i]);
     }
                 
     if( thSendState[i] == 1 ) {
       if( WaitForSingleObject(thSend[i],2000) == WAIT_TIMEOUT ) 
-	TerminateThread(thSend[i],0);
+        TerminateThread(thSend[i],0);
       else CloseHandle(thSend[i]);
     }
   }
@@ -2948,12 +2951,12 @@ int main( int argc, char **argv ) {
     
     // Get the current process token handle...
     if( !OpenProcessToken( GetCurrentProcess(), 
-			   TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token ))
+                           TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token ))
       printf( "ERROR: Unable to open process token.\n" );
 
     // Get the LUID for shutdown privilege...
     LookupPrivilegeValue( NULL, SE_SHUTDOWN_NAME, &privileges.
-			  Privileges[ 0 ].Luid );
+                          Privileges[ 0 ].Luid );
 
     // Set parameters for AdjustTokenPrivileges...
     privileges.PrivilegeCount = 1;
@@ -2961,7 +2964,7 @@ int main( int argc, char **argv ) {
     
     // Enable shutdown privilege...
     AdjustTokenPrivileges( token, FALSE, &privileges, 0, 
-			   (PTOKEN_PRIVILEGES)NULL, 0 );
+                           (PTOKEN_PRIVILEGES)NULL, 0 );
 
     if( GetLastError() != ERROR_SUCCESS ) 
       printf("ERROR: Unable to adjust token privileges.\n" );

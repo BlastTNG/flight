@@ -17,6 +17,9 @@ double __astro_cat_maglimit=0;
 
 HTMCatalog *__astro_catalog=NULL;
 
+Pyramid *__astro_pyr;                 // Make global to avoid re-loading    
+
+
 // Sort array indices by magnitudes in the reduced star catalogie
 int compare( const void *arg1, const void *arg2 ) {
   double diff = __astro_cat_mag[*(int *)arg1] - 
@@ -851,6 +854,8 @@ int match_frame( double ra_0_guess, double dec_0_guess, double size,
             
             rot_temp = rot;
             
+            if( temp_y == NULL ) printf("OOOOOOGA!\n");
+              
             map_centre( temp_x, temp_y, temp_flux, 2,
                         temp_ra, temp_dec, lst, lat,
                         &temp_ra_0, &temp_dec_0, &rot_temp, platescale,  
@@ -1346,7 +1351,6 @@ int calc_pointing( double ra_0_guess, double dec_0_guess,
   if( lost && (nblobs >= 4) ) {
     printf( "!!!!!!!!!! LOST IN SPACE!!!!\n");
 
-    Pyramid __astro_pyr;   
     solution_t *pyrsol=NULL;
     int pyrnsol;
 
@@ -1365,16 +1369,16 @@ int calc_pointing( double ra_0_guess, double dec_0_guess,
     }
 
     // Call pyramid frame match
-    if( __astro_pyr.GetSolution( tolerance,
-				 temp_x, temp_y, nblobs,
-				 &pyrsol, &pyrnsol ) >= 4 ) {
+    if( __astro_pyr->GetSolution( tolerance,
+                                  temp_x, temp_y, nblobs,
+                                  &pyrsol, &pyrnsol ) >= 4 ) {
 
       // Extract matched ra/dec if only 1 solution
       if( pyrnsol == 1 ) {
         matchcount = pyrsol->n;
-	      for( j=0; j<matchcount; j++ ) {
-	        star_ra[pyrsol->B[j]] = (pyrsol->C)[j]->ra;
-	        star_dec[pyrsol->B[j]] = (pyrsol->C)[j]->dec;
+              for( j=0; j<matchcount; j++ ) {
+                star_ra[pyrsol->B[j]] = (pyrsol->C)[j]->ra;
+                star_dec[pyrsol->B[j]] = (pyrsol->C)[j]->dec;
         }
       }    
     }
@@ -1393,19 +1397,19 @@ int calc_pointing( double ra_0_guess, double dec_0_guess,
     // printf("POINTING: match frame... %i, %lf\n",nblobs,*rot);
     
     matchcount = match_frame( ra_0_guess, dec_0_guess, radius, maglimit, 
-			      tolerance, lst, lat, *rot, *platescale, 
-			      sig_tol, match_tol, quit_tol, rot_tol,
-			      x, y, flux, star_ra, star_dec, star_mag, 
-			      nblobs, abtflag, brightStarMode, brightRA, 
-			      brightDEC);
+                              tolerance, lst, lat, *rot, *platescale, 
+                              sig_tol, match_tol, quit_tol, rot_tol,
+                              x, y, flux, star_ra, star_dec, star_mag, 
+                              nblobs, abtflag, brightStarMode, brightRA, 
+                              brightDEC);
   
     // simple pointing solution for 1 or 2 stars
     if( (nblobs <= 2) || (matchcount <= 2) ) {
       matchcount = match_frame_simple( ra_0_guess, dec_0_guess, radius, 
-				       maglimit, tol_simp, lst, lat, *rot, 
-				       *platescale, x, y, 
-				       star_ra, star_dec, 
-				       star_mag, nblobs, epoch ); 
+                                       maglimit, tol_simp, lst, lat, *rot, 
+                                       *platescale, x, y, 
+                                       star_ra, star_dec, 
+                                       star_mag, nblobs, epoch ); 
     }
   }
     
@@ -1419,68 +1423,69 @@ int calc_pointing( double ra_0_guess, double dec_0_guess,
     temp_dec = new double[matchcount];
     int index=0;
 
-    for( i=0; i<nblobs; i++ ) {	
+    for( i=0; i<nblobs; i++ ) { 
       if( star_ra[i] != -999 ) {
-	  
-	      //printf("blob %i: %lf %lf %lf\n",i, star_ra[i]*180./PI/15.,
-	      // star_dec[i]*180./PI, star_mag[i]);
-	  
-	      // precess the star catalogue positions to apparent coordinates
-	      slaPreces ( "FK5", 2000, epoch, &star_ra[i], &star_dec[i] );
-	      temp_x[index] = x[i];
-	      temp_y[index] = y[i];
-	      temp_flux[index] = flux[i];
-	      temp_ra[index] = star_ra[i];
-	      temp_dec[index] = star_dec[i];
-	      index++;
-	    }
-	    //printf("blob: %i  ra:%lf  dec:%lf mag:%lf\n",i,
-	    // star_ra[i]*180./PI/15., star_dec[i]*180./PI,star_mag[i]);  
+          
+        //printf("blob %i: %lf %lf %lf\n",i, star_ra[i]*180./PI/15.,
+        // star_dec[i]*180./PI, star_mag[i]);
+          
+        // precess the star catalogue positions to apparent coordinates
+        slaPreces ( "FK5", 2000, epoch, &star_ra[i], &star_dec[i] );
+        temp_x[index] = x[i];
+        temp_y[index] = y[i];
+        temp_flux[index] = flux[i];
+        temp_ra[index] = star_ra[i];
+        temp_dec[index] = star_dec[i];
+        index++;
+      }
+      //printf("blob: %i  ra:%lf  dec:%lf mag:%lf\n",i,
+      // star_ra[i]*180./PI/15., star_dec[i]*180./PI,star_mag[i]);  
     }
-  }
+     
+    // One star case
+    if( matchcount == 1 ) {
+      // assuming a fixed roll calculate the tangent point of the CCD
+      cos_theta = cos(*rot); // in the CCD -> azel direction
+      sin_theta = sin(*rot);  
+      
+      blob_az_off = (temp_x[0]*cos_theta + temp_y[0]*sin_theta) *
+                    (*platescale/3600.*PI/180.);
+      
+      blob_el_off = (-temp_x[0]*sin_theta + temp_y[0]*cos_theta) *
+                    (*platescale/3600.*PI/180.);
+      
+      calc_alt_az( temp_ra[0], temp_dec[0], lat, lst,
+                   &el_blob, &az_blob );
+      
+      slaTps2c( blob_az_off, blob_el_off, az_blob, el_blob, 
+                            &az_0, &el_0, &az_1, &el_1, &nsol );
+      
+      // !!! I'm not bothering to check for two solutions !!!
+      calc_ra_dec( az_0, el_0, lat, lst, ra_0, dec_0 ); 
+      
+      *var = 10./3600.*PI/180.;  // variance is meaningless in this case
+      *var *= *var;
+    } else if( matchcount == 2 ) {
+      // Just find ra/dec without letting rotation vary
+      map_centre3( temp_x, temp_y, temp_flux, matchcount, 
+                   temp_ra, temp_dec,
+                   lst, lat, ra_0, dec_0, *rot, *platescale, var );
+    } else { 
+      // Find ra/dec AND rotation
+      if( temp_y == NULL ) printf("OOOOOOGA2!\n");            
+      map_centre( temp_x, temp_y, temp_flux, matchcount, 
+                  temp_ra, temp_dec,
+                  lst, lat, ra_0, dec_0, rot, *platescale, var );
+    }
     
-  // One star case
-  if( matchcount == 1 ) {
-    // assuming a fixed roll calculate the tangent point of the CCD
-    cos_theta = cos(*rot); // in the CCD -> azel direction
-    sin_theta = sin(*rot);  
-      
-    blob_az_off = (temp_x[0]*cos_theta + temp_y[0]*sin_theta) *
-                  (*platescale/3600.*PI/180.);
-      
-    blob_el_off = (-temp_x[0]*sin_theta + temp_y[0]*cos_theta) *
-                 (*platescale/3600.*PI/180.);
-      
-    calc_alt_az( temp_ra[0], temp_dec[0], lat, lst,
-                 &el_blob, &az_blob );
-      
-    slaTps2c( blob_az_off, blob_el_off, az_blob, el_blob, 
-		          &az_0, &el_0, &az_1, &el_1, &nsol );
-      
-    // !!! I'm not bothering to check for two solutions !!!
-    calc_ra_dec( az_0, el_0, lat, lst, ra_0, dec_0 ); 
-      
-    *var = 10./3600.*PI/180.;  // variance is meaningless in this case
-    *var *= *var;
-  } else if( matchcount == 2 ) {
-    // Just find ra/dec without letting rotation vary
-    map_centre3( temp_x, temp_y, temp_flux, matchcount, 
-                 temp_ra, temp_dec,
-                 lst, lat, ra_0, dec_0, *rot, *platescale, var );
-  } else { 
-    // Find ra/dec AND rotation
-    map_centre( temp_x, temp_y, temp_flux, matchcount, 
-                temp_ra, temp_dec,
-                lst, lat, ra_0, dec_0, rot, *platescale, var );
+    // Clean up
+    delete[] temp_x;
+    delete[] temp_y;
+    delete[] temp_flux;
+    delete[] temp_ra;
+    delete[] temp_dec;              
   }
-    
-  // Clean up
-  delete[] temp_x;
-  delete[] temp_y;
-  delete[] temp_flux;
-  delete[] temp_ra;
-  delete[] temp_dec;              
-  
+
   /*
   // return the guess in apparent coordinates if no new solution found
   else {
@@ -1496,11 +1501,15 @@ int calc_pointing( double ra_0_guess, double dec_0_guess,
 // These two routines need to be called before and after doing pointing
 // solution calculations respectively
 
-void astro_init_catalogue( const char *pathname ) {
+void astro_init_catalogue( const char *pathname, char *catalogname,
+                           char *katalogname ) {
   __astro_catalog = new HTMCatalog(pathname);
   __astro_catalog->init();
+
+  __astro_pyr = new Pyramid( (3.4 * M_PI/180.0), catalogname, katalogname );
 }
 
 void astro_close_catalogue( void ) {
   delete __astro_catalog;
+  delete __astro_pyr;
 }

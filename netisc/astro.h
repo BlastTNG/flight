@@ -86,7 +86,7 @@ double calc_epoch( void );
 
 // Calculate a pointing solution
 int calc_pointing( double ra_0_guess, double dec_0_guess, 
-		   int lost, double epoch,
+                   int lost, double epoch,
                    double lat, double lst, double *x, double *y, 
                    double *flux, int nblobs, int minplateblobs,  
                    double radius, double maglimit, 
@@ -100,7 +100,8 @@ int calc_pointing( double ra_0_guess, double dec_0_guess,
                    double brightDEC );
 
 // Initialize / close star catalogue
-void astro_init_catalogue( const char *pathname );
+void astro_init_catalogue( const char *pathname, char *catalogname,
+                           char *katalogname );
 void astro_close_catalogue( void );
 
 #endif
