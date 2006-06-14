@@ -1,4 +1,5 @@
-/* netisc.h: Header file for ISC server. Change macros for #s of servers and to swap the aperture and focus motors.
+/* netisc.h: Header file for ISC server. Change macros for #s of servers and to
+            swap the aperture and focus motors.
 */
 
 #ifndef __NETISC_H
@@ -218,8 +219,9 @@ double azBDA;        // az offset of CCD from BDA centre
 double elBDA;        // el offset of CCD from BDA centre
 double az=0;         // azimuth of the field (radians) 
 double el=0;         // elevation   "    "      "
-double lst=6.07898;  // local sidereal time     "
-double lat=1.190489; // latitude of telescope   "
+double lst=0.;       // local sidereal time     "
+double lat=0.8596004;// latitude of telescope   "
+double lon=-2.142462098; // E lon "
 int focusOffset=0;   // offset to home position (for lab focusing)
 
 int brightStarMode;  // 1 brightest star in field is at:
@@ -290,7 +292,7 @@ double last_dec_0=0;   //   "
 time_t last_time=0;    // time of last good solution
 time_t frame_time=0;   // time of most recent frame was taken
 
-time_t refSysTime=0;   // system time last time the LST was set
+SYSTEMTIME refSysTime; // system time last time the LST was set
 double refLST;         // the last LST that was set by the client
 int lost=0;            // set when lost
 

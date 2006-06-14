@@ -489,6 +489,23 @@ DWORD WINAPI camera_grab( LPVOID parameter ) {
   // Record the instant at which the camera returned the image
   GetSystemTime(&exposureFinished);
   
+  // Update the LST
+  lst = get_gst( exposureFinished.wYear,
+		 exposureFinished.wMonth, 
+		 exposureFinished.wDay,
+		 (exposureFinished.wHour*3600 +
+		  exposureFinished.wMinute*60 +
+		  exposureFinished.wSecond +
+		  exposureFinished.wMilliseconds/1000.)/3600./24. ) + lon;
+
+  /*
+    time_t now;
+    time( &now );
+    lst = CT2LST*HR2RAD*((double)now - (double)refSysTime)/3600. + refLST;
+    time( &refSysTime );
+    refLST = lst;
+  */
+
   // update the time last hardware trigger received
   if( triggertype != 0) time( &lastTrigRec );
 
@@ -525,7 +542,19 @@ DWORD WINAPI expose_frame( LPVOID parameter ) {
           ((MAPTYPE *) QCFrame.pBuffer)[i] >> bits;
       }
     }
+    
+    // Record instant when image exposed
     GetSystemTime(&exposureFinished);
+
+    // Update the LST
+    lst = get_gst( exposureFinished.wYear,
+		   exposureFinished.wMonth, 
+		   exposureFinished.wDay,
+		   (exposureFinished.wHour*3600 +
+		    exposureFinished.wMinute*60 +
+		    exposureFinished.wSecond +
+		    exposureFinished.wMilliseconds/1000.)/3600./24. ) + lon;
+
   }
   
   // Otherwise grab a frame from the camera
@@ -622,7 +651,7 @@ DWORD WINAPI expose_frame( LPVOID parameter ) {
                  exposureFinished.wHour*3600L +
                  exposureFinished.wMinute*60L + 
                  exposureFinished.wSecond)*100L + 
-    exposureFinished.wMilliseconds/10;
+   exposureFinished.wMilliseconds/10;
   
   return 1;
 }
@@ -1660,11 +1689,6 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
   if( (execCmd.quit_tol<0) || (execCmd.quit_tol>1) ) 
     execCmd.quit_tol = quit_tol;
   
-  // Update the LST
-  time_t now;
-  time( &now );
-  lst = CT2LST*HR2RAD*((double)now - (double)refSysTime)/3600. + refLST;
-
   // Update general flags
   pause = execCmd.pause;
   saveFrameMode = execCmd.save;
@@ -1707,15 +1731,23 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
   azBDA = execCmd.azBDA;
   elBDA = execCmd.elBDA;
 
-  // pointing info
+  // Pointing info
   az = execCmd.az;
   el = execCmd.el;
-  lst = execCmd.lst;
   lat = execCmd.lat;
 
-  // since we've updated the LST, set reflst and refsystime
-  time( &refSysTime );
-  refLST = lst;
+  // If a new LST has been sent, derive a new longitude
+  if( execCmd.lst != refLST ) {
+    refLST = execCmd.lst;
+    GetSystemTime(&refSysTime);
+    lon = refLST - get_gst( refSysTime.wYear,
+			    refSysTime.wMonth, 
+			    refSysTime.wDay,
+			    (refSysTime.wHour*3600 +
+			     refSysTime.wMinute*60 +
+			     refSysTime.wSecond +
+			     refSysTime.wMilliseconds/1000.)/3600./24. ) + lon;
+  }
 
   // brightest blob is
   brightStarMode = execCmd.brightStarMode;        
@@ -1801,6 +1833,7 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
   }
   
   // poll external trigger if enough time has elapsed
+  time_t now;
   time( &now );
   
   if( (triggertype == 0) && ((now - lastTrigRec) > TRIGGER_RETRY) ) {
@@ -2533,22 +2566,7 @@ int main( int argc, char **argv ) {
     CCD_Y_PIXELS = OSC_CCD_Y_PIXELS;
   }
 
-  // Set the execCmd client frame to the server defaults
-  execCmd.eyeOn = eyeOn;
-  execCmd.mag_limit = mag_limit;
-  execCmd.norm_radius = norm_radius;
-  execCmd.lost_radius = lost_radius;
-  execCmd.tolerance = tolerance;
-  execCmd.rot_tol = rot_tol;  
-  execCmd.match_tol = match_tol;
-  execCmd.quit_tol = quit_tol;
-  execCmd.maxBlobMatch = maxBlobMatch;
-  execCmd.minBlobMatch = minBlobMatch;
-  execCmd.lst = lst;
-  execCmd.lat = lat;
-
-  // Other server defaults
-
+  // Server defaults
   pointing_quality = 0;
   pointing_nbad = POINT_LOST_NBAD+1;
 
@@ -2633,7 +2651,22 @@ int main( int argc, char **argv ) {
     printf("Couldn't read in settings\n\n");
     return -2;
   }
-  
+
+  // Set the execCmd client frame to the server defaults
+  execCmd.eyeOn = eyeOn;
+  execCmd.mag_limit = mag_limit;
+  execCmd.norm_radius = norm_radius;
+  execCmd.lost_radius = lost_radius;
+  execCmd.tolerance = tolerance;
+  execCmd.rot_tol = rot_tol;  
+  execCmd.match_tol = match_tol;
+  execCmd.quit_tol = quit_tol;
+  execCmd.maxBlobMatch = maxBlobMatch;
+  execCmd.minBlobMatch = minBlobMatch;
+  execCmd.lat = lat;
+  execCmd.exposure=ccd_exposure;
+
+
   // Intialize the star catalogue
   
   printf( "Attempting to use star catalogue: %s\n", catpath );

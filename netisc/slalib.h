@@ -18,6 +18,9 @@
 #define dmod(A,B) ((B)!=0.0?((A)*(B)>0.0?(A)-(B)*floor((A)/(B))\
                                         :(A)+(B)*floor(-(A)/(B))):(A))
 
+/* pi/(12*3600):  seconds of time to radians */
+#define DS2R 7.2722052166430399038487115353692196393452995355905e-5
+
 // Normalize angle to range 0-2PI
 double slaDranrm ( double angle );
 float slaRanorm ( float angle );
@@ -65,5 +68,7 @@ void slaDh2e ( double az, double el, double phi, double *ha, double *dec );
 void slaDe2h ( double ha, double dec, double phi, double *az, double *el );
 
 double slaPa ( double ha, double dec, double phi );
+
+double slaGmsta ( double date, double ut );
 
 #endif

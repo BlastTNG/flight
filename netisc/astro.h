@@ -30,6 +30,9 @@ void tan2radec(  double ra_0, double dec_0, double *ra_off,
 void radec2tan(  double ra_0, double dec_0, double *ra, double *dec, 
                  double *ra_off, double *dec_off, int nblobs);
 
+// Calculate GST from UT date
+double get_gst( int year, int month, int day, double dayfrac );
+
 // Solve for map centre + rotation
 int map_centre( double *x, double *y, double *flux, int nblobs, 
                 double *ra, double *dec, double lst, double lat, 

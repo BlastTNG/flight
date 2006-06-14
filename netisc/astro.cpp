@@ -68,6 +68,27 @@ void radec2tan( double ra_0, double dec_0, double *ra, double *dec,
   }
 }
 
+// calculate the greenwich sidereal time given the east longitude and
+// current UT
+//
+// year    = UT year on gregorian calendar
+// month   = "  month
+// day     = "  day
+// dayfrac = "  day fraction
+// lon     = east longitude (radians) 
+// Return: -999 for error, else 
+
+double get_gst( int year, int month, int day, double dayfrac ) {
+  double djm;
+  int status;
+
+  slaCaldj( year, month, day, &djm, &status );
+
+  if( status != 0 ) return -999;
+
+  return slaGmsta( djm, dayfrac );
+}
+
 // Calculate the pixel coordinates of stars in the CCD tangent plane 
 // (offsets from centre pixel) using a pointing model. 
 // All angular quantities in radians.
