@@ -116,6 +116,10 @@ int read_settings() {
   }
   
   fgets(thisline,80,settingsfile); sscanf(thisline,"%i",&NO_CALC_POINTING);
+  fgets(thisline,80,settingsfile); sscanf(thisline,"%lf",&lon);
+  lon = lon * PI/180.;
+  fgets(thisline,80,settingsfile); sscanf(thisline,"%lf",&lat);
+  lat = lat * PI/180.;
   fgets(thisline,80,settingsfile); sscanf(thisline,"%i",&triggertype);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%lf",&threshold);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%u",&disttol);
@@ -889,6 +893,9 @@ void pointingSolution( void ) {
           pointing_quality = 1;
           last_ra_0 = ra_0;
           last_dec_0 = dec_0;
+          if( nmatch >= POINT_LOST_BLOBS ) {
+            ccdRotation = rot; // update rotation if many blobs matched
+          }
         } else pointing_quality = -1;
       }
     }
@@ -1746,7 +1753,7 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
 			    (refSysTime.wHour*3600 +
 			     refSysTime.wMinute*60 +
 			     refSysTime.wSecond +
-			     refSysTime.wMilliseconds/1000.)/3600./24. ) + lon;
+			     refSysTime.wMilliseconds/1000.)/3600./24. );   
   }
 
   // brightest blob is
@@ -2150,6 +2157,7 @@ LRESULT CALLBACK MainWndProc(
   char coordstring[80]; // string for the pixel coordinates of ROI
   char fluxstring[80];  // string for the flux of this object
   char radecstring[80]; // current coordinates
+  char rotstr[80];      // rotation of the CCD
   char afocstr1[80];    // autofocus messages
   char afocstr2[80];
   char frameNumStr[80]; // current frame number message
@@ -2158,6 +2166,7 @@ LRESULT CALLBACK MainWndProc(
   char azstr[80];
   char elstr[80];
   char latstr[80];
+  char lonstr[80];
   char meanstr[80];
   char expstr[80];
   
@@ -2359,8 +2368,13 @@ LRESULT CALLBACK MainWndProc(
         sprintf(radecstring,"X %8.5lfh %8.4lfd",ra_0*180./PI/15.,
                 dec_0*180./PI);
                 
+      sprintf(rotstr,"R %6.4lfd",ccdRotation*180./PI);
+
       TextOut(hdc, FONT_HEIGHT, client_height-2*FONT_HEIGHT, radecstring, 
               (int)strlen(radecstring));
+      TextOut(hdc, FONT_HEIGHT, client_height-1*FONT_HEIGHT, rotstr, 
+              (int)strlen(rotstr));
+
 
       // --- Outline of the BDA ---
       bda_x_cen = (int) floor((CCD_X_PIXELS/2 + 
@@ -2429,18 +2443,22 @@ LRESULT CALLBACK MainWndProc(
     sprintf(azstr, "Az: %8.2lfd",az*180./PI);
     sprintf(elstr, "El: %8.2lfd",el*180./PI);
     sprintf(latstr,"Lat: %8.2lfd",lat*180./PI);
-    
-    TextOut(hdc, client_width*3/4., client_height-FONT_HEIGHT*5., lststr, 
+    sprintf(lonstr,"Lon: %8.2lfd",lon*180./PI);
+
+    TextOut(hdc, client_width*3/4., client_height-FONT_HEIGHT*6., lststr, 
             (int)strlen(lststr));
                 
-    TextOut(hdc, client_width*3/4., client_height-FONT_HEIGHT*4., azstr, 
+    TextOut(hdc, client_width*3/4., client_height-FONT_HEIGHT*5., azstr, 
             (int)strlen(azstr));
                 
-    TextOut(hdc, client_width*3/4., client_height-FONT_HEIGHT*3., elstr, 
+    TextOut(hdc, client_width*3/4., client_height-FONT_HEIGHT*4., elstr, 
             (int)strlen(elstr));
     
-    TextOut(hdc, client_width*3/4., client_height-FONT_HEIGHT*2., latstr, 
+    TextOut(hdc, client_width*3/4., client_height-FONT_HEIGHT*3., latstr, 
             (int)strlen(latstr));
+    
+    TextOut(hdc, client_width*3/4., client_height-FONT_HEIGHT*2., lonstr, 
+            (int)strlen(lonstr));
     
     // Mean value of current frame
     sprintf(meanstr,"Mean: %i",(int)Frameblob.get_mapmean());

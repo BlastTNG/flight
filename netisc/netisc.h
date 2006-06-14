@@ -220,8 +220,8 @@ double elBDA;        // el offset of CCD from BDA centre
 double az=0;         // azimuth of the field (radians) 
 double el=0;         // elevation   "    "      "
 double lst=0.;       // local sidereal time     "
-double lat=0.8596004;// latitude of telescope   "
-double lon=-2.142462098; // E lon "
+double lat=0.0;      // latitude of telescope   "
+double lon=-0.0;     // E lon "
 int focusOffset=0;   // offset to home position (for lab focusing)
 
 int brightStarMode;  // 1 brightest star in field is at:
