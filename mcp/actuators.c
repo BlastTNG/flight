@@ -407,7 +407,6 @@ static int PollBus(int rescan)
       all_ok = 0;
     }
   }
-  bprintf(info, "%i -> %i (%i)\n", i, all_ok, stepper[i].status);
 
   CommandData.actbus.force_repoll = 0;
 
