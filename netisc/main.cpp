@@ -716,6 +716,9 @@ void pointingSolution( void ) {
 
   //printf("Finding blobs...\n");
 
+  // Start assuming bad pointing solution
+  pointing_quality = 0;
+
   if( LOUD ) {
     time_stamp( &timebuf[0], 255 ); 
     printf("%s Start finding blobs in framebyf %i\n",timebuf,
@@ -810,8 +813,6 @@ void pointingSolution( void ) {
   double theta, max_theta;
   double thismaglim;
   
-  pointing_quality = 0;
-  
   if( server_data.n_blobs >= minBlobMatch ) {
     double *x = new double[server_data.n_blobs];
     double *y = new double[server_data.n_blobs];
@@ -865,7 +866,9 @@ void pointingSolution( void ) {
     
     // If the return value was > 0, it was successful in finding a solution
     if( nmatch >= minBlobMatch ) {
-      
+    
+      printf("&&&&&&& ENOUGh BLOBS WERE MATCHED!!!!!\n");
+
       //printf( "*************Rotation Guess: %lf True: %lf\n",
       // ccdRotation,rot );
       //printf("%i of %i matched (RA: %lfh DEC:%lfd) +/- %lfarcsec\n",
@@ -912,6 +915,7 @@ void pointingSolution( void ) {
     server_data.sigma = sqrt(point_var);
     server_data.rot = rot;
     calc_alt_az( ra_0, dec_0, lat, lst, &el, &az );
+    
     
   } else {
     server_data.rot = ccdRotation;

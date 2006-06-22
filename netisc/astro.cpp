@@ -1399,7 +1399,7 @@ int calc_pointing( double ra_0_guess, double dec_0_guess,
         matchcount = pyrsol->n;
               for( j=0; j<matchcount; j++ ) {
                 star_ra[pyrsol->B[j]] = (pyrsol->C)[j]->ra;
-                star_dec[pyrsol->B[j]] = (pyrsol->C)[j]->dec;
+                star_dec[pyrsol->B[j]]= (pyrsol->C)[j]->dec;
         }
       }    
     }

@@ -864,7 +864,8 @@ int Pyramid::Match(double* x, double* y, double ftol, unsigned long n)
       
       memset(solution[k].C, 0, n*sizeof(gsc_t));
       for(i = 0; i < solution[k].n; i++) {
-        solution[k].C[solution[k].B[i]] = &gsc[solution[k].I[solution[k].B[i]]];
+//        solution[k].C[solution[k].B[i]] = &gsc[solution[k].I[solution[k].B[i]]];
+        solution[k].C[i] = &gsc[solution[k].I[i]];
       }
       if(++k == nsol) break;
     }
