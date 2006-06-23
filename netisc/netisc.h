@@ -284,7 +284,7 @@ int hereflag = 0;  // debugging flag
 double ra_0_guess=0;   // guess centre of the search region in the catalogue
 double dec_0_guess=0;  //  "             "              "                    "
 double search_radius;  // current search radius in the catalogue
-int pointing_quality=0;// 0=no solution, 1=good, -1=possibly bad
+int pointing_quality=0;// 0=no solution, 1=good, -1=possibly bad, 2=LIS soln.
 int pointing_nbad=0;   // number of bad solutions in a row
 double q=0;            // field rotation (same sign parallactic angle)
 double last_ra_0=0;    // last good solution 

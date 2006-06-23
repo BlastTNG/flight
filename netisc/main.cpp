@@ -117,15 +117,22 @@ int read_settings() {
   
   fgets(thisline,80,settingsfile); sscanf(thisline,"%i",&NO_CALC_POINTING);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%lf",&lon);
-  lon = lon * PI/180.;
+  lon *= PI/180.;
   fgets(thisline,80,settingsfile); sscanf(thisline,"%lf",&lat);
-  lat = lat * PI/180.;
+  lat *= PI/180.;
   fgets(thisline,80,settingsfile); sscanf(thisline,"%i",&triggertype);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%lf",&threshold);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%u",&disttol);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%u",&grid);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%u",&cenbox);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%u",&apbox);
+
+  fgets(thisline,80,settingsfile); sscanf(thisline,"%u",&minBlobMatch);
+  fgets(thisline,80,settingsfile); sscanf(thisline,"%u",&maxBlobMatch);
+  fgets(thisline,80,settingsfile); sscanf(thisline,"%lf",&mag_limit);
+  fgets(thisline,80,settingsfile); sscanf(thisline,"%lf",&rot_tol);
+  rot_tol *= DEG2RAD;
+
   fgets(thisline,80,settingsfile); sscanf(thisline,"%4s",comport);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%i",&motorSpeed);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%i",&pause);
@@ -294,12 +301,6 @@ void server_log( int mode ) {
     }
     // regular server message
     if( mode == 0 ) {
-      // calculate precise second of the day when the last exposure finished
-      //expSecond = (double) exposureFinished.wHour*3600. + 
-      // (double) exposureFinished.wMinute*60. +
-      // (double) exposureFinished.wSecond + 
-      // (double) exposureFinished.wMilliseconds/1000.;
-      
       // Server state messages
       fprintf(logfile,"%s: p=%i s=%i foc=%i ap=%i abt=%i MCPFr=%i afoc=%i\n",
               timestr, pause, saveFrameMode, focusPosition, aperturePosition, 
@@ -314,9 +315,14 @@ void server_log( int mode ) {
               (int) Frameblob.get_disttol(), 
               Frameblob.get_mapmean() ); //added (float) jk
       
+      fprintf(logfile,"    cenbox=%i apbox=%i minblob=%i maxblob=%i\n",
+              cenbox, apbox, minBlobMatch, maxBlobMatch );
+
       fprintf(logfile,"    mag=%4.1lf rad=%6.2lf tol=%6.2lf mtol=%3.1lf qtol=%3.1lf rtol=%6.2lf\n",
               mag_limit, search_radius*180/PI, tolerance*3600*180/PI, 
               match_tol, quit_tol, rot_tol*180/PI);
+
+
       fprintf(logfile,"    T/P: %s\n",tempstring);
       
       // New pointing information if available
@@ -501,14 +507,6 @@ DWORD WINAPI camera_grab( LPVOID parameter ) {
 		  exposureFinished.wMinute*60 +
 		  exposureFinished.wSecond +
 		  exposureFinished.wMilliseconds/1000.)/3600./24. ) + lon;
-
-  /*
-    time_t now;
-    time( &now );
-    lst = CT2LST*HR2RAD*((double)now - (double)refSysTime)/3600. + refLST;
-    time( &refSysTime );
-    refLST = lst;
-  */
 
   // update the time last hardware trigger received
   if( triggertype != 0) time( &lastTrigRec );
@@ -708,20 +706,13 @@ int reExpose( void ) {
 
 // Calculte a pointing solution from the current frame
 void pointingSolution( void ) {
-  //printf(".........Finding pointing in framebuf %i\n",
-  //(Frameblob.get_map() == (MAPTYPE *)frameBuf2)+1);
-
-  //printf("grid:%i thresh:%lf\n",Frameblob.get_grid(), 
-  //Frameblob.get_threshold());
-
-  //printf("Finding blobs...\n");
 
   // Start assuming bad pointing solution
   pointing_quality = 0;
 
   if( LOUD ) {
     time_stamp( &timebuf[0], 255 ); 
-    printf("%s Start finding blobs in framebyf %i\n",timebuf,
+    printf("%s Start finding blobs in framebuf %i\n",timebuf,
            (Frameblob.get_map() == (MAPTYPE *)frameBuf2)+1);
   }
 
@@ -740,8 +731,6 @@ void pointingSolution( void ) {
   bloblist *blobs = Frameblob.getblobs();
   int numextended = 0;   // count extended objects in the frame
   int numpoint = 0;      // count point-like objects in the frame
-
-  //printf("Found: %i blobs\n",Frameblob.get_numblobs());
 
   while( blobs != NULL ) {        
     if( numextended < MAX_ISC_BLOBS ) {
@@ -770,8 +759,8 @@ void pointingSolution( void ) {
 
   lost = 0; // start assuming we're not lost
 
-  if( (pointing_quality == 1) || (pointing_nbad < POINT_LOST_NBAD) ) {
-    printf("Using previous solution as the next guess...\n");
+  if( (pointing_quality >= 1) || (pointing_nbad < POINT_LOST_NBAD) ) {
+    printf("*** Attempt solution using PREVIOUS SOLUTION as the guess...\n");
   
     ra_0_guess = ra_0;
     dec_0_guess = dec_0;
@@ -779,30 +768,21 @@ void pointingSolution( void ) {
   }
   // Otherwise the previous solution failed (or it's the first solution)
   else {
-    // Get the map centre and parallactic angle from the telescope orientation
-    //if( (az!=0) && (el!=0) && (lat!=0) && (lst!=0) ) {
-      
-      printf("Guess solution is based on az/el/lst/lat...\n");
-      calc_ra_dec(az,el,lat,lst,&ra_0_guess,&dec_0_guess);
-      //q = calc_parallactic(lst,ra_0_guess,dec_0_guess,lat);
-      
-      //q = q + ccdRotation;
-      
-      //printf("az=%f el=%f lat=%f lst=%f ra_g=%f dec_g=%f\n",
-      //az,el,lat,lst,ra_0_guess,dec_0_guess);
-    //}
-    
-    // If things are looking hopeless, take drastic measures...
-    // LOST MODE!
-    // Need at least POINT_LOST_BLOBS to be in this mode, and have
-    // POINT_LOST_NBAD bad solutions
-    
-    if( (pointing_nbad >= POINT_LOST_NBAD) && (server_data.n_blobs >= 
-      POINT_LOST_BLOBS) ) { 
+
+    // If we've had many bad solutions and we have enough blobs try
+    // lost in space mode.
+    if( (pointing_nbad >= POINT_LOST_NBAD) && (server_data.n_blobs>=4) ) { 
+      printf("*** Attempt solution using LOST IN SPACE...\n");
       lost = 1;
       search_radius = lost_radius;
+    } 
+
+    // Otherwise try to use a guess solution from the client
+    else {
+      search_radius = norm_radius;
+      printf("*** Attempt solution using az/el/time GUESS FROM CLIENT...\n");
+      calc_ra_dec(az,el,lat,lst,&ra_0_guess,&dec_0_guess);
     }
-    else search_radius = norm_radius;
   }
 
   double epoch;
@@ -857,49 +837,42 @@ void pointingSolution( void ) {
                               540./206265., 0.03*PI/180., 0.5, 1., rot_tol,
                               &ra_0, &dec_0, &point_var, &rot, &platescale,  
                               star_ra, star_dec, star_mag, &abortFlag, 
-                              brightStarMode, brightRA, brightDEC );
-      
-      //for( i=0; i<MAX_ISC_BLOBS; i++ ) printf("%i (%i: %lf)\n ", 
-      //nmatch, i, star_mag[i]);
-      
+                              brightStarMode, brightRA, brightDEC );      
     }
     
     // If the return value was > 0, it was successful in finding a solution
     if( nmatch >= minBlobMatch ) {
     
-      printf("&&&&&&& ENOUGh BLOBS WERE MATCHED!!!!!\n");
-
-      //printf( "*************Rotation Guess: %lf True: %lf\n",
-      // ccdRotation,rot );
-      //printf("%i of %i matched (RA: %lfh DEC:%lfd) +/- %lfarcsec\n",
-      //           nmatch, server_data.n_blobs, ra_0*180/PI/15,dec_0*180/PI, 
-      // sqrt(point_var)*180/PI*3600);
-      
-      // Set the quality flag
+      // If the chi^2 looked bad then flag solution as bad
       if( sqrt(point_var)*3600*180/PI > POINT_MAX_ERR ) 
         pointing_quality = -1;
       
+      // Otherwise the solution appears to be good...
       else {
         
-        // Check for large excursion from the previous good solution
-        cel2vec(last_ra_0,last_dec_0,&last_a,&last_b,&last_c);
-        cel2vec(ra_0,dec_0,&a,&b,&c);
-        theta = acos( last_a*a + last_b*b + last_c*c );
-        max_theta = ((double)frame_time - (double)last_time + 1.) * 
-          POINT_MAX_SLEW*PI/180.;
+        // if we were lost, solution is definitely good 
+        if( lost ) {
+          pointing_quality = 2;
+        }
+
+        // otherwise check for excursions from the previous good solution
+        else {
+          cel2vec(last_ra_0,last_dec_0,&last_a,&last_b,&last_c);
+          cel2vec(ra_0,dec_0,&a,&b,&c);
+          theta = acos( last_a*a + last_b*b + last_c*c );
+          max_theta = ((double)frame_time - (double)last_time + 1.) * 
+            POINT_MAX_SLEW*PI/180.;
         
-        //printf("########theta: %lf max: %lf nbad:%i ltime:%i now:%i\n",
-        // theta, max_theta, pointing_nbad, last_time, frame_time);
-        
-        if( (theta < max_theta) || (pointing_nbad >= POINT_EXCUR_NBAD) ) {
-          last_time = frame_time;
-          pointing_quality = 1;
-          last_ra_0 = ra_0;
-          last_dec_0 = dec_0;
-          if( nmatch >= POINT_LOST_BLOBS ) {
-            ccdRotation = rot; // update rotation if many blobs matched
-          }
-        } else pointing_quality = -1;
+          if( (theta < max_theta) || (pointing_nbad >= POINT_EXCUR_NBAD) ) {
+            last_time = frame_time;
+            pointing_quality = 1;
+            last_ra_0 = ra_0;
+            last_dec_0 = dec_0;
+            if( nmatch >= POINT_LOST_BLOBS ) {
+              ccdRotation = rot; // update rotation if many blobs matched
+            }
+          } else pointing_quality = -1;
+        }
       }
     }
     else pointing_quality = 0;
@@ -910,7 +883,7 @@ void pointingSolution( void ) {
   }
 
   // If pointing solution was good, reset the number of bad solutions in a row
-  if( pointing_quality == 1 ) {
+  if( pointing_quality >= 1 ) {
     pointing_nbad=0;
     server_data.sigma = sqrt(point_var);
     server_data.rot = rot;
@@ -1609,8 +1582,6 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
   DWORD par;
   par = *((DWORD *)parameter);
   
-  //char cmd[80];
-  
   // Error check the incoming frame - set ridiculous values to
   // to the current settings in the execCmd
         
@@ -1757,7 +1728,10 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
 			    (refSysTime.wHour*3600 +
 			     refSysTime.wMinute*60 +
 			     refSysTime.wSecond +
-			     refSysTime.wMilliseconds/1000.)/3600./24. );   
+			     refSysTime.wMilliseconds/1000.)/3600./24. ); 
+
+    lon = fmod( lon, 2*PI );  
+    if( lon < 0 ) lon += 2*PI;
   }
 
   // brightest blob is
@@ -2133,6 +2107,10 @@ void parse_coordinates( char *str ) {
   case 1: 
     sprintf(quality," "); 
     break;
+
+  case 2: 
+    sprintf(quality,"L"); 
+    break;
   }
 
   sprintf(str,"%s%ih%im%4.1lfs %id%i'%i''",quality,
@@ -2366,8 +2344,9 @@ LRESULT CALLBACK MainWndProc(
 
       // Coordinates at the bottom left of the screen
       //parse_coordinates( radecstring );
-      if( pointing_quality == 1 )
-        sprintf(radecstring," %8.5lfh %6.4lfd",ra_0*180./PI/15.,dec_0*180./PI);
+      if( pointing_quality >= 1 )
+        sprintf(radecstring," %8.5lfh %6.4lfd",
+                ra_0*180./PI/15.,dec_0*180./PI);
       else
         sprintf(radecstring,"X %8.5lfh %8.4lfd",ra_0*180./PI/15.,
                 dec_0*180./PI);
@@ -2675,19 +2654,28 @@ int main( int argc, char **argv ) {
   }
 
   // Set the execCmd client frame to the server defaults
+  execCmd.exposure=ccd_exposure;
+  execCmd.focusOffset = focusOffset;
   execCmd.eyeOn = eyeOn;
+
+  execCmd.sn_threshold = sn_threshold;
+  execCmd.grid = grid;
+  execCmd.mult_dist = (int) Frameblob.get_disttol();
+
+  execCmd.gain = rel_gain;
+  execCmd.offset = rel_offset;
+
+  execCmd.minBlobMatch = minBlobMatch;
+  execCmd.maxBlobMatch = maxBlobMatch;
   execCmd.mag_limit = mag_limit;
   execCmd.norm_radius = norm_radius;
   execCmd.lost_radius = lost_radius;
   execCmd.tolerance = tolerance;
-  execCmd.rot_tol = rot_tol;  
   execCmd.match_tol = match_tol;
   execCmd.quit_tol = quit_tol;
-  execCmd.maxBlobMatch = maxBlobMatch;
-  execCmd.minBlobMatch = minBlobMatch;
-  execCmd.lat = lat;
-  execCmd.exposure=ccd_exposure;
+  execCmd.rot_tol = rot_tol;  
 
+  execCmd.lat = lat;
 
   // Intialize the star catalogue
   

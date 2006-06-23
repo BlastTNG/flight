@@ -1360,17 +1360,13 @@ int calc_pointing( double ra_0_guess, double dec_0_guess,
   //printf("Apparent RA and DEC guess: %lf %lf\n",ra_0_guess*180/PI/15,
   //dec_0_guess*180/PI);  //jk removed comment
 
-  //printf("nblobs: %i radius: %lf maglimit: %lf tolerance: %lf sigtol: %lf\n",
-  //nblobs,radius,maglimit,tolerance,sig_tol);
-  //printf("match_tol: %lf quit_tol: %lf rot_tol: %lf \n",match_tol,quit_tol,
-  //rot_tol);
-
   // If we don't have at least one blob
   if( nblobs < 1 ) return 0;
   
   // If the lost flag was set & at least 4 blobs use the pyramid algorithm
   if( lost && (nblobs >= 4) ) {
-    printf( "!!!!!!!!!! LOST IN SPACE!!!!\n");
+
+    printf("Inside LOST IN SPACE pointing solution code\n");
 
     solution_t *pyrsol=NULL;
     int pyrnsol;
@@ -1493,7 +1489,6 @@ int calc_pointing( double ra_0_guess, double dec_0_guess,
                    lst, lat, ra_0, dec_0, *rot, *platescale, var );
     } else { 
       // Find ra/dec AND rotation
-      if( temp_y == NULL ) printf("OOOOOOGA2!\n");            
       map_centre( temp_x, temp_y, temp_flux, matchcount, 
                   temp_ra, temp_dec,
                   lst, lat, ra_0, dec_0, rot, *platescale, var );
