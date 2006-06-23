@@ -1789,8 +1789,7 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
   rot_tol = execCmd.rot_tol;
   minBlobMatch = execCmd.minBlobMatch;
   maxBlobMatch = execCmd.maxBlobMatch;
-  
-  
+
   // Clients can only change the trigger mode _TO_ self-triggered
   // External triggers are automatically polled every TRIGGER_RETRY seconds
 
