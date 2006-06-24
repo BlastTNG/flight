@@ -305,7 +305,7 @@ void server_log( int mode ) {
       fprintf(logfile,"%s: p=%i s=%i foc=%i ap=%i abt=%i MCPFr=%i afoc=%i\n",
               timestr, pause, saveFrameMode, focusPosition, aperturePosition, 
               abortFlag, MCPFrameNum, mode);
-      fprintf(logfile,"    az=%6.2lf el=%6.2lf lat=%6.2lf lst=%5.2lf afocpos=%i exp=%lu\n", 
+      fprintf(logfile,"    az=%6.4lf el=%6.4lf lat=%6.4lf lst=%5.4lf afocpos=%i exp=%lu\n", 
               az*180/PI, el*180/PI, lat*180/PI, lst*180/PI/15, 
               (int)focusOffset,ccd_exposure);
       
@@ -529,6 +529,9 @@ DWORD WINAPI expose_frame( LPVOID parameter ) {
 
   // If running without a camera, load a test frame
   if( NO_CAMERA > 0 ) {
+   
+    grabbingNow=1;
+    
     CFileTiffRead tiff_file;
     tiff_file.Open(FUDGEFILE);
     if( !tiff_file.Read(&QCFrame) ) printf("TIFF read failed.\n");
@@ -556,6 +559,8 @@ DWORD WINAPI expose_frame( LPVOID parameter ) {
 		    exposureFinished.wMinute*60 +
 		    exposureFinished.wSecond +
 		    exposureFinished.wMilliseconds/1000.)/3600./24. ) + lon;
+
+    grabbingNow=0;
 
   }
   
@@ -853,6 +858,10 @@ void pointingSolution( void ) {
         // if we were lost, solution is definitely good 
         if( lost ) {
           pointing_quality = 2;
+          if( nmatch >= POINT_LOST_BLOBS ) {
+            ccdRotation = rot; // update rotation if many blobs matched
+          }
+            
         }
 
         // otherwise check for excursions from the previous good solution
@@ -868,9 +877,6 @@ void pointingSolution( void ) {
             pointing_quality = 1;
             last_ra_0 = ra_0;
             last_dec_0 = dec_0;
-            if( nmatch >= POINT_LOST_BLOBS ) {
-              ccdRotation = rot; // update rotation if many blobs matched
-            }
           } else pointing_quality = -1;
         }
       }
@@ -2421,25 +2427,25 @@ LRESULT CALLBACK MainWndProc(
     }
     
     // Plot the attitude information
-    sprintf(lststr,"LST: %8.3lfh",lst*180./PI/15.);
-    sprintf(azstr, "Az: %8.2lfd",az*180./PI);
-    sprintf(elstr, "El: %8.2lfd",el*180./PI);
-    sprintf(latstr,"Lat: %8.2lfd",lat*180./PI);
-    sprintf(lonstr,"Lon: %8.2lfd",lon*180./PI);
+    sprintf(lststr,"LST: %8.4lfh",lst*180./PI/15.);
+    sprintf(azstr, "Az: %8.3lfd",az*180./PI);
+    sprintf(elstr, "El: %8.3lfd",el*180./PI);
+    sprintf(latstr,"Lat: %8.3lfd",lat*180./PI);
+    sprintf(lonstr,"Lon: %8.3lfd",lon*180./PI);
 
-    TextOut(hdc, client_width*3/4., client_height-FONT_HEIGHT*6., lststr, 
+    TextOut(hdc, client_width*5/8., client_height-FONT_HEIGHT*6., lststr, 
             (int)strlen(lststr));
                 
-    TextOut(hdc, client_width*3/4., client_height-FONT_HEIGHT*5., azstr, 
+    TextOut(hdc, client_width*5/8., client_height-FONT_HEIGHT*5., azstr, 
             (int)strlen(azstr));
                 
-    TextOut(hdc, client_width*3/4., client_height-FONT_HEIGHT*4., elstr, 
+    TextOut(hdc, client_width*5/8., client_height-FONT_HEIGHT*4., elstr, 
             (int)strlen(elstr));
     
-    TextOut(hdc, client_width*3/4., client_height-FONT_HEIGHT*3., latstr, 
+    TextOut(hdc, client_width*5/8., client_height-FONT_HEIGHT*3., latstr, 
             (int)strlen(latstr));
     
-    TextOut(hdc, client_width*3/4., client_height-FONT_HEIGHT*2., lonstr, 
+    TextOut(hdc, client_width*5/8., client_height-FONT_HEIGHT*2., lonstr, 
             (int)strlen(lonstr));
     
     // Mean value of current frame
