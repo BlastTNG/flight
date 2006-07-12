@@ -424,21 +424,21 @@ void frameblob::calc_searchgrid() {
       
       
       for( k=0; k<xdim; k++ )     
-	for( l=0; l<ydim; l++ ) {
-	  mapindex = (j*grid+l)*xpix + (i*grid+k);
-	  pix = map[mapindex];
+	      for( l=0; l<ydim; l++ ) {
+	        mapindex = (j*grid+l)*xpix + (i*grid+k);
+	        pix = map[mapindex];
 	  
-	  cell[cellindex] = pix;
-	  total += pix;
+	        cell[cellindex] = pix;
+	        total += pix;
 	  
-	  // Check for greatest pixel brightness
-	  if( pix > max ) {
-	    x = (double) (i*grid + k);  // store pixel coordinates
-	    y = (double) (j*grid + l);	// of brightest pixel	 
-	    max = pix; 
-	  }					
-	  cellindex ++;   // end of loop = # pixels in cell
-	}
+	        // Check for greatest pixel brightness
+	        if( pix > max ) {
+	          x = (double) (i*grid + k);  // store pixel coordinates
+	          y = (double) (j*grid + l);	// of brightest pixel	 
+	          max = pix; 
+	        }					
+	        cellindex ++;   // end of loop = # pixels in cell
+      	}
       
       // Get the mean for this cell
       meancell = (double) total / (cellindex);

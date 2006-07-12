@@ -33,6 +33,8 @@
 
 #define LOUD 1         // show millions of time stamps on the server
 
+//#define AUTONOMOUS     // Set if not using client
+
 #define FOCUS_MOTOR 2  // macro for the focus drive motor #
 #define AP_MOTOR 1     //   "   "    "  aperture  "  "    "
 #define NCLIENTS 3     // # of client connections to maintain

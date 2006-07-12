@@ -1380,31 +1380,31 @@ int calc_pointing( double ra_0_guess, double dec_0_guess,
       temp_y[i] = y[i] * (*platescale) / 206265.;
 
       // Assume no stars will get matched
-      star_ra[j] = -999;
-      star_dec[j] = -999;
+      star_ra[i] = -999;
+      star_dec[i] = -999;
       matchcount = 0;
     }
-
+    
     // Call pyramid frame match
     if( __astro_pyr->GetSolution( tolerance,
                                   temp_x, temp_y, nblobs,
                                   &pyrsol, &pyrnsol ) >= 4 ) {
-
+      
       // Extract matched ra/dec if only 1 solution
       if( pyrnsol == 1 ) {
         matchcount = pyrsol->n;
-              for( j=0; j<matchcount; j++ ) {
-                star_ra[pyrsol->B[j]] = (pyrsol->C)[j]->ra;
-                star_dec[pyrsol->B[j]]= (pyrsol->C)[j]->dec;
+        for( j=0; j<matchcount; j++ ) {
+          star_ra[pyrsol->B[j]] = (pyrsol->C)[j]->ra;
+          star_dec[pyrsol->B[j]]= (pyrsol->C)[j]->dec;
         }
       }    
     }
-  
+    
     // delete because they get used again later
     delete[] temp_x;
     delete[] temp_y;
   } 
-
+  
   // Otherwise use the old algorithm
   else {
     // precess map centre coordinates to J2000

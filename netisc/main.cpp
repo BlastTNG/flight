@@ -282,7 +282,7 @@ void server_log( int mode ) {
 
     // autofocus message
     if( mode == 2 ) {
-      fprintf(logfile,"%s: autofoc step=%i frame=%i %i",timestr, 
+      fprintf(logfile,"%s: autofoc step=%i frame=%i %i ",timestr, 
               focusPosition, frameNum, frame_fname);
       
       if( server_data.n_blobs > 0 )
@@ -499,14 +499,16 @@ DWORD WINAPI camera_grab( LPVOID parameter ) {
   // Record the instant at which the camera returned the image
   GetSystemTime(&exposureFinished);
   
+#ifdef AUTONOMOUS
   // Update the LST
   lst = get_gst( exposureFinished.wYear,
-		 exposureFinished.wMonth, 
-		 exposureFinished.wDay,
-		 (exposureFinished.wHour*3600 +
-		  exposureFinished.wMinute*60 +
-		  exposureFinished.wSecond +
-		  exposureFinished.wMilliseconds/1000.)/3600./24. ) + lon;
+                 exposureFinished.wMonth, 
+                 exposureFinished.wDay,
+                 (exposureFinished.wHour*3600 +
+                  exposureFinished.wMinute*60 +
+                  exposureFinished.wSecond +
+                  exposureFinished.wMilliseconds/1000.)/3600./24. ) + lon;
+#endif
 
   // update the time last hardware trigger received
   if( triggertype != 0) time( &lastTrigRec );
@@ -551,14 +553,16 @@ DWORD WINAPI expose_frame( LPVOID parameter ) {
     // Record instant when image exposed
     GetSystemTime(&exposureFinished);
 
+#ifdef AUTONOMOUS
     // Update the LST
     lst = get_gst( exposureFinished.wYear,
-		   exposureFinished.wMonth, 
-		   exposureFinished.wDay,
-		   (exposureFinished.wHour*3600 +
-		    exposureFinished.wMinute*60 +
-		    exposureFinished.wSecond +
-		    exposureFinished.wMilliseconds/1000.)/3600./24. ) + lon;
+                   exposureFinished.wMonth, 
+                   exposureFinished.wDay,
+                   (exposureFinished.wHour*3600 +
+                    exposureFinished.wMinute*60 +
+                    exposureFinished.wSecond +
+                    exposureFinished.wMilliseconds/1000.)/3600./24. ) + lon;
+#endif
 
     grabbingNow=0;
 
@@ -712,9 +716,6 @@ int reExpose( void ) {
 // Calculte a pointing solution from the current frame
 void pointingSolution( void ) {
 
-  // Start assuming bad pointing solution
-  pointing_quality = 0;
-
   if( LOUD ) {
     time_stamp( &timebuf[0], 255 ); 
     printf("%s Start finding blobs in framebuf %i\n",timebuf,
@@ -758,34 +759,43 @@ void pointingSolution( void ) {
     printf("%s Found blobs, start solution calc\n",timebuf);
   }
 
-  // If our last solution was good, use it as the guess for the next solution
-  // also use the last solution unless we had POINT_LOST_NBAD bad solutions in
-  // a row (added  May 6 / 2004)
-
   lost = 0; // start assuming we're not lost
 
-  if( (pointing_quality >= 1) || (pointing_nbad < POINT_LOST_NBAD) ) {
-    printf("*** Attempt solution using PREVIOUS SOLUTION as the guess...\n");
-  
+  if( pointing_quality >= 1 ) {
+    // If our last solution was good, use it as the guess for the next solution
+
+    if( LOUD ) {
+      printf("*** NBLOB=%i NBAD=%i: PREVIOUS SOLUTION guess for old algo\n",
+             server_data.n_blobs, pointing_nbad);
+    }
+
     ra_0_guess = ra_0;
     dec_0_guess = dec_0;
     search_radius = norm_radius;
-  }
-  // Otherwise the previous solution failed (or it's the first solution)
-  else {
+  } else {
+    // Otherwise the previous solution failed (or it's the first solution)
 
     // If we've had many bad solutions and we have enough blobs try
     // lost in space mode.
     if( (pointing_nbad >= POINT_LOST_NBAD) && (server_data.n_blobs>=4) ) { 
-      printf("*** Attempt solution using LOST IN SPACE...\n");
+      
+      if( LOUD ) {
+        printf("*** NBLOB=%i NBAD=%i: LOST IN SPACE algo\n", 
+               server_data.n_blobs, pointing_nbad);
+      }
+
       lost = 1;
       search_radius = lost_radius;
     } 
 
     // Otherwise try to use a guess solution from the client
     else {
+      if( LOUD ) {
+        printf("*** NBLOB=%i NBAD=%i: CLIENT SOLUTION guess for old algo\n",
+               server_data.n_blobs, pointing_nbad);
+      }
+
       search_radius = norm_radius;
-      printf("*** Attempt solution using az/el/time GUESS FROM CLIENT...\n");
       calc_ra_dec(az,el,lat,lst,&ra_0_guess,&dec_0_guess);
     }
   }
@@ -845,25 +855,23 @@ void pointingSolution( void ) {
                               brightStarMode, brightRA, brightDEC );      
     }
     
-    // If the return value was > 0, it was successful in finding a solution
-    if( nmatch >= minBlobMatch ) {
-    
-      // If the chi^2 looked bad then flag solution as bad
-      if( sqrt(point_var)*3600*180/PI > POINT_MAX_ERR ) 
-        pointing_quality = -1;
+    // If enough blobs were matched to be considered successful...
+    if( (nmatch >= minBlobMatch) && (nmatch > 0) ) {
       
+      // If the chi^2 looked bad then flag solution as bad
+      if( sqrt(point_var)*3600*180/PI > POINT_MAX_ERR ) {
+        pointing_quality = -1;
+      }
+
       // Otherwise the solution appears to be good...
       else {
         
         // if we were lost, solution is definitely good 
         if( lost ) {
           pointing_quality = 2;
-          if( nmatch >= POINT_LOST_BLOBS ) {
-            ccdRotation = rot; // update rotation if many blobs matched
-          }
-            
+          ccdRotation = rot; // update rotation if many blobs matched
         }
-
+        
         // otherwise check for excursions from the previous good solution
         else {
           cel2vec(last_ra_0,last_dec_0,&last_a,&last_b,&last_c);
@@ -871,30 +879,40 @@ void pointingSolution( void ) {
           theta = acos( last_a*a + last_b*b + last_c*c );
           max_theta = ((double)frame_time - (double)last_time + 1.) * 
             POINT_MAX_SLEW*PI/180.;
-        
+          
           if( (theta < max_theta) || (pointing_nbad >= POINT_EXCUR_NBAD) ) {
-            last_time = frame_time;
             pointing_quality = 1;
-            last_ra_0 = ra_0;
-            last_dec_0 = dec_0;
-          } else pointing_quality = -1;
+          } else {
+            pointing_quality = -1;
+          }
         }
       }
+    } else {
+      pointing_quality = 0;
+      
+      // If we got a bad solution using LOST IN SPACE reset number of bad
+      // solutions in a row to try using the old pointing solution again
+      
+      if( lost ) pointing_nbad = 0;      
     }
-    else pointing_quality = 0;
     
     delete[] x;
     delete[] y;
     delete[] f;
   }
-
-  // If pointing solution was good, reset the number of bad solutions in a row
-  if( pointing_quality >= 1 ) {
+  
+  if( pointing_quality >= 1 ) {    
+    // If good pointing reset the number of bad solutions in a row
     pointing_nbad=0;
     server_data.sigma = sqrt(point_var);
     server_data.rot = rot;
     calc_alt_az( ra_0, dec_0, lat, lst, &el, &az );
     
+    // Update last_solution / time to current values
+    last_time = frame_time;
+    last_ra_0 = ra_0;
+    last_dec_0 = dec_0;
+
     
   } else {
     server_data.rot = ccdRotation;
@@ -1724,17 +1742,21 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
   el = execCmd.el;
   lat = execCmd.lat;
 
+#ifndef AUTONOMOUS
+  lst = execCmd.lst;
+#endif
+
   // If a new LST has been sent, derive a new longitude
   if( execCmd.lst != refLST ) {
     refLST = execCmd.lst;
     GetSystemTime(&refSysTime);
     lon = refLST - get_gst( refSysTime.wYear,
-			    refSysTime.wMonth, 
-			    refSysTime.wDay,
-			    (refSysTime.wHour*3600 +
-			     refSysTime.wMinute*60 +
-			     refSysTime.wSecond +
-			     refSysTime.wMilliseconds/1000.)/3600./24. ); 
+                            refSysTime.wMonth, 
+                            refSysTime.wDay,
+                            (refSysTime.wHour*3600 +
+                             refSysTime.wMinute*60 +
+                             refSysTime.wSecond +
+                             refSysTime.wMilliseconds/1000.)/3600./24. ); 
 
     lon = fmod( lon, 2*PI );  
     if( lon < 0 ) lon += 2*PI;
