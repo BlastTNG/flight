@@ -394,10 +394,12 @@ static int PollBus(int rescan)
       stepper[i].status = -1;
       all_ok = 0;
     } else if (!strncmp(gp_buffer, "EZHR17EN AllMotion", 18)) {
-      bprintf(info, "ActBus: Found type 17EN device %s at address %i.\n", name[i], i + 1);
+      bprintf(info, "ActBus: Found type 17EN device %s at address %i.\n",
+          name[i], i + 1);
       stepper[i].status = 0;
     } else if (!strncmp(gp_buffer, "EZHR23 All Motion", 17)) {
-      bprintf(info, "ActBus: Found type 23 device %s at address %i.\n", name[i], i + 1);
+      bprintf(info, "ActBus: Found type 23 device %s at address %i.\n", name[i],
+          i + 1);
       stepper[i].status = 0;
     } else {
       bprintf(warning,
@@ -419,7 +421,8 @@ int ReadIntFromBus(int who, const char* cmd)
 
   BusSend(who, cmd);
   if ((result = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
-    bprintf(warning, "ActBus: Timeout waiting for response from %s (RIFB)", name[who]);
+    bprintf(warning, "ActBus: Timeout waiting for response from %s (RIFB)",
+        name[who]);
     stepper[who].status = -1;
     return 0;
   }
@@ -437,7 +440,8 @@ static void ReadActuator(int who)
   act_data[who].enc = ReadIntFromBus(who, "?8");
   BusSend(who, "?aa");
   if ((result = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
-    bprintf(warning, "ActBus: Timeout waiting for response from Actuator #%i", who);
+    bprintf(warning, "ActBus: Timeout waiting for response from Actuator #%i",
+        who);
     stepper[who].status = -1;
     return;
   }
@@ -857,7 +861,8 @@ void SolveSecondary(void)
   double A = 2 * sqrt(alpha * alpha + beta * beta + gamma * gamma
       - alpha * beta - beta * gamma - gamma * alpha) / 3;
   sec_data[0].offset = (alpha + beta + gamma) / 3;
-  sec_data[0].rotation = atan2(sqrt(3) * (alpha - gamma), 2 * beta - gamma + alpha);
+  sec_data[0].rotation = atan2(sqrt(3) * (alpha - gamma), 2 * beta - gamma
+      + alpha);
   sec_data[0].tilt = asin(A / ACTUATOR_RADIUS); 
 
   /* lvdt based solution */
@@ -867,7 +872,8 @@ void SolveSecondary(void)
   A = 2 * sqrt(alpha * alpha + beta * beta + gamma * gamma
       - alpha * beta - beta * gamma - gamma * alpha) / 3;
   sec_data[1].offset = (alpha + beta + gamma) / 3;
-  sec_data[1].rotation = atan2(sqrt(3) * (alpha - gamma), 2 * beta - gamma + alpha) + M_PI / 6;
+  sec_data[1].rotation = atan2(sqrt(3) * (alpha - gamma), 2 * beta - gamma
+      + alpha) + M_PI / 6;
   sec_data[1].tilt = asin(A / LVDT_RADIUS); 
 }
 

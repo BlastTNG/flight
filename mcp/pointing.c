@@ -397,7 +397,7 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
   i_isc = iscpoint_index[which];
   /* in theory, iscpoint_index points to the last ISCSolution with flag set.
    * In cases where we've been having handshaking issues this last solution may
-   * have been overwriten, so we check flag, just as a sanity check */
+   * have been overwritten, so we check flag, just as a sanity check */
   if (ISCSolution[which][i_isc].flag && ISCSolution[which][i_isc].framenum
       != last_isc_framenum[which]) {
     // new solution
