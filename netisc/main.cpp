@@ -738,6 +738,9 @@ void pointingSolution( void ) {
   int numextended = 0;   // count extended objects in the frame
   int numpoint = 0;      // count point-like objects in the frame
 
+  int nmatch;
+  int nMatchBlobs;
+
   while( blobs != NULL ) {        
     if( numextended < MAX_ISC_BLOBS ) {
       server_data.blob_x[numextended] = blobs->getx();
@@ -801,13 +804,16 @@ void pointingSolution( void ) {
   }
 
   double epoch;
-  double rot;
+  double rot = ccdRotation;      
   int i;        
   
   double last_a, last_b, last_c, a, b, c;
   double theta, max_theta;
   double thismaglim;
-  
+
+  // Set pointing quality to bad just before we try to do new solution
+  pointing_quality = 0;
+
   if( server_data.n_blobs >= minBlobMatch ) {
     double *x = new double[server_data.n_blobs];
     double *y = new double[server_data.n_blobs];
@@ -823,16 +829,12 @@ void pointingSolution( void ) {
       //printf("%lf %lf %lf\n",x[i],y[i],f[i]);
     }
     
-    int nmatch;
-    int nMatchBlobs;
     if( NO_CALC_POINTING ) nmatch = 0;
     else {        
       if( server_data.n_blobs > maxBlobMatch ) nMatchBlobs = maxBlobMatch;
       else nMatchBlobs = server_data.n_blobs;
       
       epoch = calc_epoch();
-      
-      rot = ccdRotation;
       
       //printf("ra_g %lf dec_g %lf lst %lf\n",ra_0_guess,dec_0_guess,lst);
       //printf("search %lf mag %lf tol %lf\n",search_radius,mag_limit,
@@ -925,6 +927,11 @@ void pointingSolution( void ) {
     pointing_nbad++;
   }
   
+  //printf("PPP nmatch=%i minblobmatch=%i rot=%lf\n", 
+  //     nmatch, minBlobMatch, server_data.rot*180/PI);
+
+
+
   // Update server data frame with pointing solution offset correctly for 
   // BDA to give the BDA pointing solution        
   //double az_off = -azBDA;     // az tangent plane offset of BDA from CCD
