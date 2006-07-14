@@ -69,7 +69,7 @@
 #define POINT_LOST_BLOBS 5  // # blobs required for lost mode
 #define POINT_LOST_NBAD 5   // # bad solutions required for lost mode
 #define POINT_EXCUR_NBAD 10 //   "        "       "     good despite excursion
-#define POINT_MAX_SLEW 0.1  // max slew rate excursions from solution in deg/s
+#define POINT_MAX_SLEW 0.5  // max slew rate excursions from solution in deg/s
 
 // Controls for the display window
 #define EYE_WIDTH 600       // Display window width in Pixels (evil eye)
