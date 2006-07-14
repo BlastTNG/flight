@@ -1759,7 +1759,9 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
                              refSysTime.wMilliseconds/1000.)/3600./24. ); 
 
     lon = fmod( lon, 2*PI );  
-    if( lon < 0 ) lon += 2*PI;
+    if( lon < -PI ) lon += 2*PI;
+    if( lon > PI ) lon -= 2*PI;
+
   }
 
   // brightest blob is
