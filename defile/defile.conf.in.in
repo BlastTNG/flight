@@ -40,9 +40,9 @@ AutoReconnect
 # ---
 
 # Set InputSource to the default input filename or hostname[:port].  Default:
-# none.
+# decom.
 
-InputSource arwen
+InputSource decom
 
 # ---
 
