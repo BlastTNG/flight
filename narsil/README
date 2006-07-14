@@ -5,6 +5,7 @@
 | Adam Hincks, 9 August 2002
 | D. V. Wiebe, 12 September 2002 -- updated location of commands.h
 | D. V. Wiebe, 21 October 2004   -- automatic command list version checking
+| D. V. Wiebe, 14 July 2006      -- add NARSIL_HOST environment
 |
 ----------------------------------------------------------------------------
 
@@ -15,11 +16,6 @@ Narsil uses the kstfile class written by Barth to look for default values. That
 is, it can look for the current value of a parameter in the most recent files
 in /data/rawdir and use that as the default.
 
-As part of the configure script, it attempts to figure out the revision number
-of blastcmd's command list to see if it maches the one that narsil is using.
-In rare instances this may create problems.  To force configure to skip the test
-entirely, use
-
-  $ ./configure --disable-command-list-test
-
-See `./configure --help' for other potentially useful options.
+By default narsil will attempt to connect to the blastcmd server running on
+the host specified during configure.  This may be overridden at runtime bys
+setting the NARSIL_HOST environmental variable.

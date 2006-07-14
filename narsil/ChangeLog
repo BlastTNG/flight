@@ -1,3 +1,7 @@
+2006-07-14 (2.2.0):
+	* narsil.cpp (MainForm::MainForm): Add hostname to title bar. 
+	* narsil.cpp (main): Read hostname from NARSIL_HOST.
+
 2006-03-14 (2.1.0):
 	* doubleentry.cpp (DoubleEntry::SetStringValue): Add.
 	* doubleentry.cpp (DoubleEntry::SetDefaultValue, DoubleEntry::value): Update
