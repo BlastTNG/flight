@@ -84,6 +84,8 @@
 #define ELOG_HOST "elog.blast"
 #endif
 
+const char* blastcmd_host;
+
 /* Defaults class holds the default parameter values */
 Defaults::Defaults()
 {
@@ -961,9 +963,12 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name,
   numframes = 4;
   dir = 1;
 
+  strcpy(tmp, "Narsil " VERSION " @");
+  strcat(tmp, blastcmd_host);
+
   if ( !name )
     setName("Narsil");
-  setCaption(tr("Narsil " VERSION));
+  setCaption(tmp);
 
   // Lay everything out.  Everything is very carefully positioned -- there are
   // no automatic spacers because with the dynamic properties of the program
@@ -1266,8 +1271,12 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
+  /* Host determination */
+  if ((blastcmd_host = getenv("NARSIL_HOST")) == NULL)
+    blastcmd_host = BLASTCMD_HOST;
+
   /* Client negotiation */
-  NetCmdConnect(BLASTCMD_HOST, 1, 0);
+  NetCmdConnect(blastcmd_host, 1, 0);
   NetCmdGetCmdList();
 
   defaults = new Defaults();
