@@ -95,7 +95,7 @@ static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
   , "XY Stage X", "XY Stage Y"
 #endif
 };
-static const int id[NACT] = {0x31, 0x32, 0x33, 0x34
+static const int id[NACT] = {0x31, 0x32, 0x33, 0x35
 #ifdef USE_XY_STAGE
   , 0x36, 0x37
 #endif
