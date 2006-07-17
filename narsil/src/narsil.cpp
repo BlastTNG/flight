@@ -1,6 +1,6 @@
 /* narsil: GUI commanding front-end
  *
- * This software is copyright (C) 2002-2005 University of Toronto
+ * This software is copyright (C) 2002-2006 University of Toronto
  * 
  * This file is part of narsil.
  * 
@@ -1258,7 +1258,7 @@ int main(int argc, char* argv[]) {
   if (argc > 1) {
     printf(
         "Narsil " VERSION " doesn't take arguments.  It was compiled at "
-        __DATE__ "\nand is copyright (C) 2002-2005 University of Toronto.\n\n"
+        __DATE__ "\nand is copyright (C) 2002-2006 University of Toronto.\n\n"
         "This program comes with NO WARRANTY, not even for MERCHANTABILITY or "
         "FITNESS\n"
         "FOR A PARTICULAR PURPOSE. You may redistribute it under the terms of "
