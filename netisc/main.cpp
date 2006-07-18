@@ -928,7 +928,11 @@ void pointingSolution( void ) {
       star_mag[i] = -999;
     }
     server_data.sigma = 2*PI;
-    pointing_nbad++;
+
+    // Increase the number of bad solutions with >= POINT_LOST_BLOBS blobs
+    if( server_data.n_blobs >= POINT_LOST_BLOBS ) {
+      pointing_nbad++;
+    }
   }
   
   //printf("PPP nmatch=%i minblobmatch=%i rot=%lf\n", 
