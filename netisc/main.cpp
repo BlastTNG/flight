@@ -764,44 +764,48 @@ void pointingSolution( void ) {
 
   lost = 0; // start assuming we're not lost
 
-  if( pointing_quality >= 1 ) {
-    // If our last solution was good, use it as the guess for the next solution
+  /* DON'T USE LAST SOLUTION AS GUESS
+     if( pointing_quality >= 1 ) {
+     // If our last solution was good, use as the guess for the next solution
+     
+     if( LOUD ) {
+     printf("*** NBLOB=%i NBAD=%i: PREVIOUS SOLUTION guess for old algo\n",
+     server_data.n_blobs, pointing_nbad);
+     }
+     
+     ra_0_guess = ra_0;
+     dec_0_guess = dec_0;
+     search_radius = norm_radius;
+     } else {
+     
+     // Otherwise the previous solution failed (or it's the first solution)
+  */
 
+  // If we've had many bad solutions and we have enough blobs try
+  // lost in space mode.
+  if( (pointing_nbad >= POINT_LOST_NBAD) && (server_data.n_blobs>=4) ) { 
+    
     if( LOUD ) {
-      printf("*** NBLOB=%i NBAD=%i: PREVIOUS SOLUTION guess for old algo\n",
-             server_data.n_blobs, pointing_nbad);
+      printf("*** NBLOB=%i NBAD=%i: LOST IN SPACE algo\n", 
+	     server_data.n_blobs, pointing_nbad);
     }
-
-    ra_0_guess = ra_0;
-    dec_0_guess = dec_0;
+    
+    lost = 1;
+    search_radius = lost_radius;
+  } 
+  
+  // Otherwise try to use a guess solution from the client
+  else {
+    if( LOUD ) {
+      printf("*** NBLOB=%i NBAD=%i: CLIENT SOLUTION guess for old algo\n",
+	     server_data.n_blobs, pointing_nbad);
+    }
+    
     search_radius = norm_radius;
-  } else {
-    // Otherwise the previous solution failed (or it's the first solution)
-
-    // If we've had many bad solutions and we have enough blobs try
-    // lost in space mode.
-    if( (pointing_nbad >= POINT_LOST_NBAD) && (server_data.n_blobs>=4) ) { 
-      
-      if( LOUD ) {
-        printf("*** NBLOB=%i NBAD=%i: LOST IN SPACE algo\n", 
-               server_data.n_blobs, pointing_nbad);
-      }
-
-      lost = 1;
-      search_radius = lost_radius;
-    } 
-
-    // Otherwise try to use a guess solution from the client
-    else {
-      if( LOUD ) {
-        printf("*** NBLOB=%i NBAD=%i: CLIENT SOLUTION guess for old algo\n",
-               server_data.n_blobs, pointing_nbad);
-      }
-
-      search_radius = norm_radius;
-      calc_ra_dec(az,el,lat,lst,&ra_0_guess,&dec_0_guess);
-    }
+    calc_ra_dec(az,el,lat,lst,&ra_0_guess,&dec_0_guess);
   }
+
+  //} DON'T USE LAST SOLUTION AS GUESS
 
   double epoch;
   double rot = ccdRotation;      
