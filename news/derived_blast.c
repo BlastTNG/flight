@@ -123,9 +123,10 @@ union DerivedUnion DerivedChannels[] = {
       "ISC_ABORT",
       "ISC_AUTOFOCUS",
       "ISC_SHUTDOWN",
-      "ISC_REBOOT",
       "ISC_EYE_ON",
-      "ISC_HEATER_ON"
+      "ISC_HEATER_ON",
+      "ISC_REBOOT",
+      "ISC_USE_LOST"
       ),
   BITWORD("ISC_SENT_TRIG", "isc_trigger", 0, 14),
 
@@ -137,7 +138,8 @@ union DerivedUnion DerivedChannels[] = {
       "OSC_SHUTDOWN",
       "OSC_REBOOT",
       "OSC_EYE_ON",
-      "OSC_HEATER_ON"
+      "OSC_HEATER_ON",
+      "OSC_USE_LOST"
       ),
   BITWORD("OSC_SENT_TRIG", "osc_trigger", 0, 14),
 

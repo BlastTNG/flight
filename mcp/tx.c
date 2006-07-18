@@ -401,11 +401,15 @@ static void StoreStarCameraData(int index, int which)
   i_isc = iscread_index[which];
 
   /*** State Info ***/
-  WriteData(StateAddr[which], (unsigned int)(ISCSentState[which].pause * 2
-        + ISCSentState[which].abort * 4 + ISCSentState[which].autofocus * 8
-        + ISCSentState[which].shutdown * 16 + ISCSentState[which].eyeOn * 64
-        + ISCSolution[which][i_isc].heaterOn * 128
-        + ISCSentState[which].save), NIOS_QUEUE);
+  WriteData(StateAddr[which], (unsigned int)(ISCSentState[which].save * 0x0001
+        + ISCSentState[which].pause * 0x0002
+        + ISCSentState[which].abort * 0x0004
+        + ISCSentState[which].autofocus * 0x0008
+        + ISCSentState[which].shutdown * 0x0010 /* 2 bits */
+        + ISCSentState[which].eyeOn * 0x0040
+        + ISCSolution[which][i_isc].heaterOn * 0x0080
+        + ISCSentState[which].useLost * 0x0100
+        ), NIOS_QUEUE);
   WriteData(FocusAddr[which], (unsigned int)ISCSentState[which].focus_pos,
       NIOS_QUEUE);
   WriteData(FocOffAddr[which], (unsigned int)ISCSentState[which].focusOffset,

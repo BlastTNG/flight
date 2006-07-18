@@ -61,11 +61,13 @@ struct ChannelStruct WideSlowChannels[] = {
   {"isc_framenum", 'w', LOOP1, 32,                1.0,             0.0, 'U'},
   {"lat",          'w', LOOP1, 38,             LI2DEG,             0.0, 'S'},
   {"lon",          'w', LOOP1, 40,             LI2DEG,             0.0, 'S'},
+  {"isc_state",    'w', LOOP2, 20,                1.0,             0.0, 'U'},
   {"isc_mcpnum",   'w', LOOP2, 60,                1.0,             0.0, 'U'},
   {"ra",           'w', LOOP3,  4,               LI2H,             0.0, 'U'},
   {"osc_ra",       'w', LOOP3, 26,               LI2H,             0.0, 'U'},
   {"osc_dec",      'w', LOOP3, 28,          LI2DEG/2.,            -90., 'U'},
   {"osc_framenum", 'w', LOOP3, 31,                1.0,             0.0, 'U'},
+  {"osc_state",    'w', LOOP3, 44,                1.0,             0.0, 'U'},
   {"osc_mcpnum",   'w', LOOP3, 58,                1.0,             0.0, 'U'},
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U'},
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S'},
@@ -348,8 +350,7 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_nrad",     'w', LOOP2, 17,              I2DEG,             0.0, 'u'},
   {"isc_mtol",     'w', LOOP2, 18,        100./65536.,             0.0, 'u'},
   {"isc_qtol",     'w', LOOP2, 19,        100./65536.,             0.0, 'u'},
-  {"isc_focus",    'w', LOOP2, 20,                1.0,             0.0, 's'},
-  {"isc_state",    'w', LOOP2, 21,                1.0,             0.0, 'u'},
+  /* LOOP2 20-21 is wide */
   {"isc_lrad",     'w', LOOP2, 22,              I2DEG,             0.0, 'u'},
   {"isc_thresh",   'w', LOOP2, 23,             1./10.,             0.0, 'u'},
   {"isc_grid",     'w', LOOP2, 24,                1.0,             0.0, 'u'},
@@ -427,9 +428,8 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_mtol",     'w', LOOP3, 40,        100./65536.,             0.0, 'u'},
   {"osc_qtol",     'w', LOOP3, 41,        100./65536.,             0.0, 'u'},
   {"osc_offset",   'w', LOOP3, 42,                1.0,             0.0, 's'},
-  {"osc_focus",    'w', LOOP3, 43,                1.0,             0.0, 's'},
-  {"osc_state",    'w', LOOP3, 44,                1.0,             0.0, 'u'},
-  {"osc_lrad",     'w', LOOP3, 45,              I2DEG,             0.0, 'u'},
+  {"osc_lrad",     'w', LOOP3, 43,              I2DEG,             0.0, 'u'},
+  /* LOOP3 44-45 are wide */
   {"osc_thresh",   'w', LOOP3, 46,             1./10.,             0.0, 'u'},
   {"osc_grid",     'w', LOOP3, 47,                1.0,             0.0, 'u'},
   {"isc_real_trig",'w', LOOP3, 48,                1.0,             0.0, 's'},
@@ -560,6 +560,8 @@ struct ChannelStruct SlowChannels[] = {
   {"sec_ltilt",    'w', LOOP5, 50,         I2DEG / 40,             0.0, 'u'},
   {"sec_lrot",     'w', LOOP5, 51,              I2DEG,             0.0, 'u'},
   {"sec_loff",     'w', LOOP5, 52,             1./400,             0.0, 's'},
+  {"isc_focus",    'w', LOOP5, 53,                1.0,             0.0, 's'},
+  {"osc_focus",    'w', LOOP5, 54,                1.0,             0.0, 's'},
   END_OF_CHANNELS
 };
 
