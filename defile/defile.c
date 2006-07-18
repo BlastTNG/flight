@@ -46,6 +46,7 @@
 #define SUFF_MAX (2 * sizeof(chunkindex_t))
 
 #define TC  (120.)  /* characteristic time (in seconds) */
+#define FR  (5.)    /* assumed frame rate (in Hertz) for display purposes only*/
 
 /* defaults */
 #define CONFIG_FILE ETC_DIR "/defile.conf"
@@ -895,7 +896,7 @@ int main (int argc, char** argv)
 {
   struct timeval now;
   double delta;
-  double fr = 0;
+  double fr = FR;
   double nf = 0;
   FILE* stream;
   const char* herr = NULL;
@@ -1034,7 +1035,7 @@ int main (int argc, char** argv)
         fr = nf / TC + fr * (1 - delta / TC);
         if (ri.frame_rate_reset) {
           ri.frame_rate_reset = 0;
-          fr = 0;
+          fr = FR;
         }
 #ifndef DEBUG
         if (rc.quenya)
