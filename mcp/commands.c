@@ -632,6 +632,13 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case isc_eye_off:
       CommandData.ISCState[0].eyeOn = 0;
+      break;
+    case isc_no_pyramid:
+      CommandData.ISCState[0].useLost = 0;
+      break;
+    case isc_use_pyramid:
+      CommandData.ISCState[0].useLost = 1;
+      break;
 
       /***************************************/
       /********* OSC Commanding  *************/
@@ -680,6 +687,12 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case osc_eye_off:
       CommandData.ISCState[1].eyeOn = 0;
+      break;
+    case osc_no_pyramid:
+      CommandData.ISCState[0].useLost = 0;
+      break;
+    case osc_use_pyramid:
+      CommandData.ISCState[0].useLost = 1;
       break;
 
     case blast_rocks:
@@ -1993,6 +2006,7 @@ void InitCommandData()
   CommandData.Cryo.JFETSetOn = 120;
   CommandData.Cryo.JFETSetOff = 135;
 
+  CommandData.ISCState[0].useLost = 0;
   CommandData.ISCState[0].abort = 0;
   CommandData.ISCState[0].pause = 0;
   CommandData.ISCState[0].save = 0;
@@ -2026,6 +2040,7 @@ void InitCommandData()
   CommandData.ISCControl[0].pulse_width = 50; /* 500.00 msec */
   CommandData.ISCControl[0].fast_pulse_width = 5; /* 50.00 msec */
 
+  CommandData.ISCState[1].useLost = 0;
   CommandData.ISCState[1].abort = 0;
   CommandData.ISCState[1].pause = 0;
   CommandData.ISCState[1].save = 0;

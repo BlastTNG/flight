@@ -1,4 +1,5 @@
 /* command_list.h: BLAST command specification file definitions
+  isc_use_pyramid,  isc_no_pyramid
  *
  * This software is copyright (C) 2002-2006 University of Toronto
  *
@@ -16,7 +17,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 128        /* total number of single word cmds */
+#define N_SCOMMANDS 132        /* total number of single word cmds */
 #define N_MCOMMANDS 79         /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
@@ -92,7 +93,8 @@ enum singleCommand {
   osc_eye_on,       osc_eye_off,        inner_cool_auto,  outer_cool_auto,
   trim_to_osc,      antisun,            blast_rocks,      blast_sucks,
   fridge_cycle,     at_float,           not_at_float,     el_auto_gyro,
-  repoll,           biascmd_inh,        biascmd_ena,      megakill
+  repoll,           biascmd_inh,        biascmd_ena,      megakill,
+  isc_use_pyramid,  isc_no_pyramid,     osc_use_pyramid,  osc_no_pyramid
 };
 
 struct scom {
