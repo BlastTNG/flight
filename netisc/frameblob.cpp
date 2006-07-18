@@ -1,9 +1,9 @@
 /* 
-	frameblob.cpp
+   frameblob.cpp
 
-	class for locating blobs in a bitmap
+   class for locating blobs in a bitmap
         
-	Depends on bloblist class.
+   Depends on bloblist class.
 */
 
 #include "frameblob.h"
@@ -14,16 +14,16 @@ frameblob::frameblob( void ) {
 }
 
 frameblob::frameblob( MAPTYPE *map_in, unsigned int xpix_in, unsigned 
-		      int ypix_in, unsigned int bits_in, 
-		      double platescale_in ) {
+                      int ypix_in, unsigned int bits_in, 
+                      double platescale_in ) {
   commonconstructor( map_in, xpix_in, ypix_in, bits_in, platescale_in );
 }
 
 void frameblob::commonconstructor( MAPTYPE *map_in, 
-				   unsigned int xpix_in, 
-				   unsigned int ypix_in, 
-				   unsigned int bits_in, 
-				   double platescale_in ) {
+                                   unsigned int xpix_in, 
+                                   unsigned int ypix_in, 
+                                   unsigned int bits_in, 
+                                   double platescale_in ) {
   // set up map parameters
   map = map_in;
   xpix = xpix_in;
@@ -65,7 +65,7 @@ void frameblob::commonconstructor( MAPTYPE *map_in,
 
 // set the pointer to the map
 void frameblob::set_map( MAPTYPE *in_map ) {
-	map = in_map;
+  map = in_map;
 }
 
 
@@ -93,7 +93,7 @@ void frameblob::addblob( int flux, double x, double y ) {
     
     if( lastblob == NULL ) {  // make new starting blob if empty list
       firstblob = thisblob;
-      lastblob = thisblob;		
+      lastblob = thisblob;              
       numblobs = 1;
     } else {                  // otherwise add to the end
       lastblob->setnextblob( thisblob );
@@ -179,28 +179,28 @@ void frameblob::sortblobs() {
       nextblob = thisblob->getnextblob();
       
       while( nextblob != NULL ) {  // Traverse list, swap if out of order
-	if( nextblob->getflux() > thisblob->getflux() ) {   
-	  flag=1;    // list still out of order
-	  
-	  startblob = thisblob->getprevblob();
-	  endblob = nextblob->getnextblob();
-	  
-	  // Change the forward pointers
-	  if( startblob != NULL ) startblob->setnextblob(nextblob);
-	  else firstblob = nextblob;   // since start of list changed
-	  nextblob->setnextblob(thisblob);
-	  thisblob->setnextblob(endblob);
-	  
-	  // Change the backward pointers
-	  if( endblob != NULL ) endblob->setprevblob(thisblob);
-	  else lastblob = thisblob;
-	  thisblob->setprevblob(nextblob);
-	  nextblob->setprevblob(startblob);
-	  
-	  nextblob = endblob;
-	} else thisblob = nextblob;
-	
-	nextblob = thisblob->getnextblob();
+        if( nextblob->getflux() > thisblob->getflux() ) {   
+          flag=1;    // list still out of order
+          
+          startblob = thisblob->getprevblob();
+          endblob = nextblob->getnextblob();
+          
+          // Change the forward pointers
+          if( startblob != NULL ) startblob->setnextblob(nextblob);
+          else firstblob = nextblob;   // since start of list changed
+          nextblob->setnextblob(thisblob);
+          thisblob->setnextblob(endblob);
+          
+          // Change the backward pointers
+          if( endblob != NULL ) endblob->setprevblob(thisblob);
+          else lastblob = thisblob;
+          thisblob->setprevblob(nextblob);
+          nextblob->setprevblob(startblob);
+          
+          nextblob = endblob;
+        } else thisblob = nextblob;
+        
+        nextblob = thisblob->getnextblob();
       }
     }
   }
@@ -242,10 +242,10 @@ int frameblob::load_badpix(char *fname) {
       thisbad = new bloblist(0, (double)x, (double)(ypix - y - 1));
       
       if( firstbad == NULL ) { // If first bad pixel in the list
-	firstbad = thisbad;
+        firstbad = thisbad;
       } else {                 // adding on new bad pixel to list
-	lastbad->setnextblob(thisbad);
-	thisbad->setprevblob(lastbad);
+        lastbad->setnextblob(thisbad);
+        thisbad->setprevblob(lastbad);
       }
       
       lastbad = thisbad;
@@ -273,7 +273,7 @@ int frameblob::load_badpix(char *fname) {
   }
   
   printf("Opened bad pixel file: %s with %i bad pixels.\n",
-	 fname,numbadpix);
+         fname,numbadpix);
 
   return 1;
 }
@@ -333,17 +333,17 @@ void frameblob::calc_mapstat() {
       
       if( map[index] > satval ) satcol[i]++;   // if bad pixel
       else {                // otherwise contributes to mean
-	if( map[index] != satval ) { // pixel isn't bad
-	  mapmean += map[index];
-	  count ++;
-	}
+        if( map[index] != satval ) { // pixel isn't bad
+          mapmean += map[index];
+          count ++;
+        }
       }
       index++;
     }
   }
   
   if( count > 0 ) mapmean = mapmean / (double) count; // prevent  / zero
-  if( mapmean < 1 ) mapmean = 1;		      // prevent 0 means
+  if( mapmean < 1 ) mapmean = 1;                      // prevent 0 means
 }
 
 double frameblob::get_mapmean() {
@@ -364,7 +364,7 @@ void frameblob::calc_searchgrid() {
   unsigned int xfull, yfull, xextra, yextra, xdim, ydim;
   
   xfull  = xpix / grid;       // # of full-sized cells
-  yfull  = ypix / grid;	
+  yfull  = ypix / grid; 
   xextra = xpix % grid;       // # extra pixels in small edge cells
   yextra = ypix % grid;
   
@@ -387,15 +387,15 @@ void frameblob::calc_searchgrid() {
   MAPTYPE *cell;
   cell = new MAPTYPE[grid*grid];
   
-  MAPTYPE pix;		 // current pixel values
-  MAPTYPE max;		 // the maximum value pixel in the cell
+  MAPTYPE pix;           // current pixel values
+  MAPTYPE max;           // the maximum value pixel in the cell
   int total;             // running total elements in cell (big number)
   
   double meancell ;      // cell mean
-  double level;	         // max adjusted by centre value
-  double sn;	         // signal to noise level of brightest pixel
-  double x;	      	 // x and y pixel positions for brightest pixels
-  double y;	       	 //   for the large input map  
+  double level;          // max adjusted by centre value
+  double sn;             // signal to noise level of brightest pixel
+  double x;              // x and y pixel positions for brightest pixels
+  double y;              //   for the large input map  
   
   unsigned int i, j, k, l, mapindex, cellindex;
   int startx, endx, starty, endy;
@@ -424,21 +424,21 @@ void frameblob::calc_searchgrid() {
       
       
       for( k=0; k<xdim; k++ )     
-	      for( l=0; l<ydim; l++ ) {
-	        mapindex = (j*grid+l)*xpix + (i*grid+k);
-	        pix = map[mapindex];
-	  
-	        cell[cellindex] = pix;
-	        total += pix;
-	  
-	        // Check for greatest pixel brightness
-	        if( pix > max ) {
-	          x = (double) (i*grid + k);  // store pixel coordinates
-	          y = (double) (j*grid + l);	// of brightest pixel	 
-	          max = pix; 
-	        }					
-	        cellindex ++;   // end of loop = # pixels in cell
-      	}
+        for( l=0; l<ydim; l++ ) {
+          mapindex = (j*grid+l)*xpix + (i*grid+k);
+          pix = map[mapindex];
+          
+          cell[cellindex] = pix;
+          total += pix;
+          
+          // Check for greatest pixel brightness
+          if( pix > max ) {
+            x = (double) (i*grid + k);  // store pixel coordinates
+            y = (double) (j*grid + l);  // of brightest pixel    
+            max = pix; 
+          }                                     
+          cellindex ++; // end of loop = # pixels in cell
+        }
       
       // Get the mean for this cell
       meancell = (double) total / (cellindex);
@@ -451,7 +451,7 @@ void frameblob::calc_searchgrid() {
       
       if( mapmean < readout_offset ) sigma = readout_noise;
       else sigma = (double)sqrt(gain*(mapmean-readout_offset) + 
-				readout_noise*readout_noise); // Poisson
+                                readout_noise*readout_noise); // Poisson
       if( sigma < 1 ) sigma = 1;   // prevent 0 sigmas
       
       sn = level/sigma;
@@ -462,127 +462,127 @@ void frameblob::calc_searchgrid() {
       
       // If we got a pixel > threshold sigma, possibly a source
       if( sn >= threshold ) {
-	//printf("%i ",count);
-	//count ++;
-	
-	// --------------------------------------------------------------
-	// Decide if this is a single-point spike or a real source
-	
-	startx = (int) x - 1;  // Aperture boundaries
-	starty = (int) y - 1;
-	endx = (int) x + 1;
-	endy = (int) y + 1;
-	
-	if( startx < 0 ) startx = 0;          // clipping map boundaries
-	if( endx >= (int) xpix ) endx = xpix-1;
-	if( starty < 0 ) starty = 0;
-	if( endy >= (int) ypix ) endy = ypix-1;
-	
-	thisflux = 0.;
-	
-	nap = (double) (endx-startx+1)*(endy-starty+1); // pixels in ap.
+        //printf("%i ",count);
+        //count ++;
+        
+        // --------------------------------------------------------------
+        // Decide if this is a single-point spike or a real source
+        
+        startx = (int) x - 1;  // Aperture boundaries
+        starty = (int) y - 1;
+        endx = (int) x + 1;
+        endy = (int) y + 1;
+        
+        if( startx < 0 ) startx = 0;          // clipping map boundaries
+        if( endx >= (int) xpix ) endx = xpix-1;
+        if( starty < 0 ) starty = 0;
+        if( endy >= (int) ypix ) endy = ypix-1;
+        
+        thisflux = 0.;
+        
+        nap = (double) (endx-startx+1)*(endy-starty+1); // pixels in ap.
 
-	// add up flux centred over bright pixel
-	for( k=startx; k<=endx; k++ )
-	  for( l=starty; l<=endy; l++ )
-	    thisflux += (double) map[l*xpix + k];
-	
-	// remove flux centre pixel and check remaining flux 
-	// exceeds the theoretical flux from pure noise 
-	// (check extendedness)
-	thisflux -= max;
+        // add up flux centred over bright pixel
+        for( k=startx; k<=endx; k++ )
+          for( l=starty; l<=endy; l++ )
+            thisflux += (double) map[l*xpix + k];
+        
+        // remove flux centre pixel and check remaining flux 
+        // exceeds the theoretical flux from pure noise 
+        // (check extendedness)
+        thisflux -= max;
 
-	// remove the baseline for the remaining pixels
-	thisflux -= ((nap-1)*meancell);
+        // remove the baseline for the remaining pixels
+        thisflux -= ((nap-1)*meancell);
 
-	// Extended case
-	if( (thisflux/(sqrt(nap-1)*sigma)) >= threshold ) {	  
-	  // ------------------------------------------------------------
-	  // Re-calculate the baseline over perimeter of a larger box
-	  
-	  startx = (int) x - D/2;  // box boundary
-	  starty = (int) y - D/2;
-	  endx = startx + D-1;
-	  endy = starty + D-1;
-	  
-	  if( startx < 0 ) startx = 0;    // clipping for boundaries
-	  if( endx >= (int) xpix ) endx = xpix-1;
-	  if( starty < 0 ) starty = 0;
-	  if( endy >= (int) ypix ) endy = ypix-1;
-	  
-	  meancell = 0;
-	  for( k=startx; k<=endx; k++ )
-	    meancell += (double) map[starty*xpix + k] + 
-	      (double) map[endy*xpix + k];
-	  
-	  for( l=starty+1; l<=endy-1; l++ )
-	    meancell += (double) map[l*xpix + startx] + 
-	      (double) map[l*xpix + endx];
-	  
-	  meancell /= ( 2*(endx-startx) + 2*(endy-starty) );
-	  
+        // Extended case
+        if( (thisflux/(sqrt(nap-1)*sigma)) >= threshold ) {       
           // ------------------------------------------------------------
-	  // Centroid the blob
-	  
-	  startx = (int) x - D/2;  
-	  starty = (int) y - D/2;
-	  endx = startx + D-1;
-	  endy = starty + D-1;
-	  
-	  if( startx < 0 ) clip_startx = 0;  // clipping for boundaries
-	  else clip_startx = startx;
-	 
-	  if( endx >= (int) xpix ) clip_endx = xpix-1;
-	  else clip_endx = endx;
-	  
-	  if( starty < 0 ) clip_starty = 0;
-	  else clip_starty = starty;
-	  
-	  if( endy >= (int) ypix ) clip_endy = ypix-1;
-	  else clip_endy = endy;
-	  
-	  // boundary case
-	  if( (startx != clip_startx) || (starty != clip_starty) ||
-	      (endx != clip_endx) || (endy != clip_endy) ) {
-	  
-	    // fill the sub-map with the mean value
-	    for( k=0; k<D; k++ )
-	      for( l=0; l<D; l++ )
-		M[k][l] = (double) meancell;
-	    
-	    // paste in the useful part of the map
-	    for( k=clip_startx-startx; k<clip_endx-startx; k++ )
-	      for( l=clip_starty-starty; l<clip_endy-starty; l++ )
-		M[k][l] = (double) map[(l+clip_starty)*xpix + 
-				       k+clip_startx];
-	  }
-	  
-	  // normal case
-	  else {
-	    for( k=0; k<D; k++ )
-	      for( l=0; l<D; l++ )
-		M[k][l] = (double) map[(l+starty)*xpix + k+startx];
-	  }
-	  
-	  // Find the centroid in this small map
-	  findCentre( &xcen, &ycen, &thisflux, M );
-	  
-	  // Correct for the baseline and final check realness
-	  thisflux = thisflux - meancell;
-	  
-	  //printf("Flux: %lf Sigma: %lf\n",
-	  //thisflux,sqrt(convweight)*sigma);
+          // Re-calculate the baseline over perimeter of a larger box
+          
+          startx = (int) x - D/2;  // box boundary
+          starty = (int) y - D/2;
+          endx = startx + D-1;
+          endy = starty + D-1;
+          
+          if( startx < 0 ) startx = 0;    // clipping for boundaries
+          if( endx >= (int) xpix ) endx = xpix-1;
+          if( starty < 0 ) starty = 0;
+          if( endy >= (int) ypix ) endy = ypix-1;
+          
+          meancell = 0;
+          for( k=startx; k<=endx; k++ )
+            meancell += (double) map[starty*xpix + k] + 
+              (double) map[endy*xpix + k];
+          
+          for( l=starty+1; l<=endy-1; l++ )
+            meancell += (double) map[l*xpix + startx] + 
+              (double) map[l*xpix + endx];
+          
+          meancell /= ( 2*(endx-startx) + 2*(endy-starty) );
+          
+          // ------------------------------------------------------------
+          // Centroid the blob
+          
+          startx = (int) x - D/2;  
+          starty = (int) y - D/2;
+          endx = startx + D-1;
+          endy = starty + D-1;
+          
+          if( startx < 0 ) clip_startx = 0;  // clipping for boundaries
+          else clip_startx = startx;
+         
+          if( endx >= (int) xpix ) clip_endx = xpix-1;
+          else clip_endx = endx;
+          
+          if( starty < 0 ) clip_starty = 0;
+          else clip_starty = starty;
+          
+          if( endy >= (int) ypix ) clip_endy = ypix-1;
+          else clip_endy = endy;
+          
+          // boundary case
+          if( (startx != clip_startx) || (starty != clip_starty) ||
+              (endx != clip_endx) || (endy != clip_endy) ) {
+          
+            // fill the sub-map with the mean value
+            for( k=0; k<D; k++ )
+              for( l=0; l<D; l++ )
+                M[k][l] = (double) meancell;
+            
+            // paste in the useful part of the map
+            for( k=clip_startx-startx; k<clip_endx-startx; k++ )
+              for( l=clip_starty-starty; l<clip_endy-starty; l++ )
+                M[k][l] = (double) map[(l+clip_starty)*xpix + 
+                                       k+clip_startx];
+          }
+          
+          // normal case
+          else {
+            for( k=0; k<D; k++ )
+              for( l=0; l<D; l++ )
+                M[k][l] = (double) map[(l+starty)*xpix + k+startx];
+          }
+          
+          // Find the centroid in this small map
+          findCentre( &xcen, &ycen, &thisflux, M );
+          
+          // Correct for the baseline and final check realness
+          thisflux = thisflux - meancell;
+          
+          //printf("Flux: %lf Sigma: %lf\n",
+          //thisflux,sqrt(convweight)*sigma);
 
-	  // Add to the list if significant
-	  if( thisflux/(sqrt(convweight)*sigma) >= threshold ) {
-	    addblob( (int)thisflux, x+xcen+0.5, y+ycen+0.5 ); 
-	    thisblob->setmean(meancell);
-	    thisblob->setsnr( (double)thisflux / 
-			      (sqrt(convweight)*sigma) );
-	  }
-	}
-	
-	// --------------------------------------------------------------
+          // Add to the list if significant
+          if( thisflux/(sqrt(convweight)*sigma) >= threshold ) {
+            addblob( (int)thisflux, x+xcen+0.5, y+ycen+0.5 ); 
+            thisblob->setmean(meancell);
+            thisblob->setsnr( (double)thisflux / 
+                              (sqrt(convweight)*sigma) );
+          }
+        }
+        
+        // --------------------------------------------------------------
       }
     }
   
@@ -593,7 +593,7 @@ void frameblob::calc_searchgrid() {
 // ---------- Barth's improved convolution centroid finder --------------
 
 double frameblob::convolve(double x, double y, double *noise, 
-			   double M[D][D]) {
+                           double M[D][D]) {
   int i, j;
   int xi, yi;
   double dx2, dy2, r2;
@@ -638,7 +638,7 @@ double frameblob::convolve(double x, double y, double *noise,
 }
 
 void frameblob::findCentre(double *x, double *y, double *z, 
-			   double M[D][D]) {
+                           double M[D][D]) {
   double z1, z2, z3;
   double C;
   int j;
@@ -744,15 +744,15 @@ void frameblob::fix_multiple() {
     while( compareblob != NULL ) {
       nextcomp = compareblob->getnextblob();
       if( compareblob != refblob ) {
-	ref_dist = (ref_x-(int)compareblob->getx()) *
-	  (ref_x-(int)compareblob->getx()) + 
-	  (ref_y-(int) compareblob->gety()) *
-	  (ref_y-(int)compareblob->gety());
-	
-	// if blob is close to the reference and fainter, delete it
-	if( (ref_dist <= disttol) && (compareblob->getflux() <= 
-				      ref_flux) )
-	  deleteblob(compareblob);
+        ref_dist = (ref_x-(int)compareblob->getx()) *
+          (ref_x-(int)compareblob->getx()) + 
+          (ref_y-(int) compareblob->gety()) *
+          (ref_y-(int)compareblob->gety());
+        
+        // if blob is close to the reference and fainter, delete it
+        if( (ref_dist <= disttol) && (compareblob->getflux() <= 
+                                      ref_flux) )
+          deleteblob(compareblob);
       }
       compareblob = nextcomp;
     }
