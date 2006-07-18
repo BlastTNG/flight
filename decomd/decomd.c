@@ -62,6 +62,7 @@ void ShutdownFrameFile(void);
 void pushDiskFrame(unsigned short *RxFrame);
 int decom;
 int system_idled = 0;
+int needs_join = 0;
 
 sigset_t signals;
 pthread_t framefile_thread;
@@ -220,11 +221,11 @@ void SigAction(int signo) {
 
     ShutdownFrameFile();
     system_idled = 1;
-    pthread_join(framefile_thread, NULL);
+    needs_join = 1;
   }
 
   if (signo == SIGINT) { /* idle */
-    return;
+    ;
   } else if (signo == SIGHUP) { /* cycle */
     bprintf(info, "system idle, bringing system back up");
 
@@ -341,6 +342,11 @@ int main(void) {
 
   /* main loop */
   for (;;) {
+    if (needs_join) {
+      pthread_join(framefile_thread, NULL);
+      needs_join = 0;
+    }
+
     fdwrite = fdread = fdlist;
     FD_CLR(sock, &fdwrite);
     if (reset_lastsock) {

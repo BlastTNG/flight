@@ -1,4 +1,4 @@
-CC = gcc
+CC = gcc -g
 CFLAGS = -O3 -Wall -D__DECOMD__ $(EXTRAFLAGS)
 LDFLAGS = -lpthread $(EXTRAFLAGS)
 
