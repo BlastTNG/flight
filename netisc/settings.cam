@@ -7,10 +7,11 @@
 43.6528          Latitude of telescope on startup (deg)
 3		 Trigger: 0=now, 1=edge, 2=pulse hi, 3=pulse low
 4.5              S/N ratio threshold for source detection 
-900              threshold distance _squared_ for multiple detection rejection
+30               threshold distance _squared_ for multiple detection rejection
 38               Side length of coarse grid for search (38)
 20               Centroiding box side length (20)
 5                Photometry box side length (5)
+1                If 1 we can use the pyramid pointing solution
 3                Min blobs required for pointing solution
 7                Max blobs used in pointing solution
 9.0              Magnitude limit

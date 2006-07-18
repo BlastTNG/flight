@@ -127,6 +127,7 @@ int read_settings() {
   fgets(thisline,80,settingsfile); sscanf(thisline,"%u",&cenbox);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%u",&apbox);
 
+  fgets(thisline,80,settingsfile); sscanf(thisline,"%i",&useLost);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%u",&minBlobMatch);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%u",&maxBlobMatch);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%lf",&mag_limit);
@@ -789,9 +790,11 @@ void pointingSolution( void ) {
       printf("*** NBLOB=%i NBAD=%i: LOST IN SPACE algo\n", 
 	     server_data.n_blobs, pointing_nbad);
     }
-    
-    lost = 1;
+
     search_radius = lost_radius;
+    
+    // Before allowing the pyramid solution check useLost
+    if( useLost ) lost = 1;
   } 
   
   // Otherwise try to use a guess solution from the client
@@ -1683,6 +1686,8 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
         
   if( (execCmd.gain<=0) || (execCmd.gain>100) ) execCmd.gain = rel_gain;
 
+  if( (execCmd.useLost<0) || (execCmd.useLost>1) ) execCmd.useLost = useLost;
+
   if( (execCmd.maxBlobMatch<0) || (execCmd.maxBlobMatch>MAX_ISC_BLOBS) )
     execCmd.maxBlobMatch = 7;
         
@@ -1832,6 +1837,7 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
   match_tol = execCmd.match_tol;
   quit_tol = execCmd.quit_tol;
   rot_tol = execCmd.rot_tol;
+  useLost = execCmd.useLost;
   minBlobMatch = execCmd.minBlobMatch;
   maxBlobMatch = execCmd.maxBlobMatch;
 
@@ -2709,6 +2715,7 @@ int main( int argc, char **argv ) {
   execCmd.gain = rel_gain;
   execCmd.offset = rel_offset;
 
+  execCmd.useLost = useLost;
   execCmd.minBlobMatch = minBlobMatch;
   execCmd.maxBlobMatch = maxBlobMatch;
   execCmd.mag_limit = mag_limit;

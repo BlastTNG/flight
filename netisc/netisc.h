@@ -256,6 +256,7 @@ double tolerance=20./3600.*DEG2RAD; // star-blob association angular tolerance
 double rot_tol=1.*DEG2RAD;  // sky rot. tol. WRT CCD (offset from paral. angle)
 double match_tol=0.5;       // match fraction tolerance for a frame
 double quit_tol=1.0;        // match_tol sufficient to quit
+int useLost=1;              // if set we can use pyramid solution
 int maxBlobMatch=7;         // max blobs used in a match
 int minBlobMatch=3;         // min blobs for match to be considered OK
 double star_ra[MAX_ISC_BLOBS];  // values for the matched stars to each blob

@@ -95,6 +95,7 @@ struct ISCStatusStruct {
   int offset;     // offset to CCD factory default (in digitized units)
 
   // Matching algorithm
+  int useLost;         // if set we can use the pyramid pointing solution
   int minBlobMatch;    // minimum # blobs used in the frame matching
   int maxBlobMatch;    // maximum # blobs used in the frame matching
   double mag_limit;    // size of tires
