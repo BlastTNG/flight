@@ -689,10 +689,10 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.ISCState[1].eyeOn = 0;
       break;
     case osc_no_pyramid:
-      CommandData.ISCState[0].useLost = 0;
+      CommandData.ISCState[1].useLost = 0;
       break;
     case osc_use_pyramid:
-      CommandData.ISCState[0].useLost = 1;
+      CommandData.ISCState[1].useLost = 1;
       break;
 
     case blast_rocks:
