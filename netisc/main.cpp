@@ -769,22 +769,28 @@ void pointingSolution( void ) {
   // lost in space mode.
   if( (pointing_nbad >= POINT_LOST_NBAD) && (server_data.n_blobs>=4) ) { 
     
-    if( LOUD ) {
-      printf("*** NBLOB=%i NBAD=%i: LOST IN SPACE algo\n", 
-	     server_data.n_blobs, pointing_nbad);
+    // Before allowing the pyramid solution check useLost
+    if( useLost ) {
+      lost = 1;
+      if( LOUD ) {
+        printf("*** NBLOB=%i NBAD=%i: LOST IN SPACE algo\n", 
+               server_data.n_blobs, pointing_nbad);
+      }
+    } else {
+      if( LOUD ) {
+        printf("*** NBLOB=%i NBAD=%i: CLIENT SOLUTION guess for old algo, lost radius\n", 
+               server_data.n_blobs, pointing_nbad);
+      }
     }
 
     search_radius = lost_radius;
-    
-    // Before allowing the pyramid solution check useLost
-    if( useLost ) lost = 1;
   } 
   
   // Otherwise try to use a guess solution from the client
   else {
     if( LOUD ) {
-      printf("*** NBLOB=%i NBAD=%i: CLIENT SOLUTION guess for old algo\n",
-	     server_data.n_blobs, pointing_nbad);
+      printf("*** NBLOB=%i NBAD=%i: CLIENT SOLUTION guess for old algo. useLost=%i\n",
+             server_data.n_blobs, pointing_nbad, useLost);
     }
     
     search_radius = norm_radius;
@@ -834,7 +840,7 @@ void pointingSolution( void ) {
         thismaglim = 8.5;
       
       if( (nMatchBlobs <= 2) ) thismaglim = 7.5;
-      
+    
       nmatch = calc_pointing( ra_0_guess, dec_0_guess, lost,
                               epoch, lat, lst, 
                               x, y, f, nMatchBlobs, 0, 
@@ -2433,7 +2439,10 @@ LRESULT CALLBACK MainWndProc(
       //sprintf(afocstr2,"autofoc: %i",(int)autoFocusPosition);
       sprintf(afocstr2,"autofocus: %i",(int)autoFocusStep);
                                 
-      TextOut(hdc, client_height/2+FONT_HEIGHT, client_height-3*FONT_HEIGHT, 
+      //TextOut(hdc, client_height/2+FONT_HEIGHT, client_height-3*FONT_HEIGHT, 
+      //        afocstr2, (int)strlen(afocstr2));
+
+      TextOut(hdc, FONT_HEIGHT, client_height-3*FONT_HEIGHT, 
               afocstr2, (int)strlen(afocstr2));
     }
 
@@ -2446,7 +2455,10 @@ LRESULT CALLBACK MainWndProc(
         sprintf(afocstr1,"set aperture: %i",
                 (int)aperturePosition);
       
-      TextOut(hdc, client_height/2+FONT_HEIGHT, 
+      //TextOut(hdc, client_height/2+FONT_HEIGHT, 
+      //        client_height-2*FONT_HEIGHT, afocstr1, (int)strlen(afocstr1));
+
+      TextOut(hdc, FONT_HEIGHT, 
               client_height-2*FONT_HEIGHT, afocstr1, (int)strlen(afocstr1));
 
       eyeMotor=0;
