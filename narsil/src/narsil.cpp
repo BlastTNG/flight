@@ -1274,7 +1274,7 @@ int main(int argc, char* argv[]) {
   /* Host determination */
   if ((blastcmd_host = getenv("NARSIL_HOST")) == NULL)
   {
-    if (argc = 2)
+    if (argc == 2)
       blastcmd_host = argv[1];
     else
       blastcmd_host = BLASTCMD_HOST;
