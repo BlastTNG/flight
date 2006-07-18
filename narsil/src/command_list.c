@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.17 $";
+const char *command_list_serial = "$Revision: 3.18 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -223,9 +223,9 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(osc_trig_int), "tell OSC to use internal (software) triggers",
     GR_OSC_HOUSE},
   {COMMAND(osc_use_pyramid), "tell OSC to use the pyramid solution finder",
-    GR_ISC_PARAM},
+    GR_OSC_PARAM},
   {COMMAND(osc_no_pyramid), "tell OSC not to use the pyramid solution finder",
-    GR_ISC_PARAM},
+    GR_OSC_PARAM},
 };
 
 /* parameter type:
