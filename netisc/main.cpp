@@ -2600,7 +2600,7 @@ int main( int argc, char **argv ) {
 
   // Server defaults
   pointing_quality = 0;
-  pointing_nbad = POINT_LOST_NBAD+1;
+  pointing_nbad = 0;
 
   // Get the start time of the server
   time( &server_start );
