@@ -41,7 +41,7 @@
 #undef USE_XY_STAGE
 
 /* Define this symbol to have mcp log all actuator bus traffic */
-#undef ACTBUS_CHATTER
+#define ACTBUS_CHATTER
 int __inhibit_chatter = 0;
 
 #ifdef BOLOTEST
@@ -230,7 +230,7 @@ static const char* HexDump(const unsigned char* buffer, int len)
   return hex_buffer;
 }
 
-static void BusSend(int who, const char* what)
+static void BusSend(int who, const char* what, int inhibit_chatter)
 {
   size_t len = strlen(what) + 5;
   char *buffer = malloc(len);
@@ -246,7 +246,7 @@ static void BusSend(int who, const char* what)
     chk ^= *ptr;
   buffer[len - 1] = chk;
 #ifdef ACTBUS_CHATTER
-  if (!__inhibit_chatter)
+  if (!inhibit_chatter)
     bprintf(info, "ActBus: Request=%s", HexDump(buffer, len));
 #endif
   if (write(bus_fd, buffer, len) < 0)
@@ -255,7 +255,7 @@ static void BusSend(int who, const char* what)
   free(buffer);
 }
 
-static int BusRecv(char* buffer, int nic)
+static int BusRecv(char* buffer, int nic, int inhibit_chatter)
 {
   int fd, status = 0;
   fd_set rfds;
@@ -366,7 +366,7 @@ static int BusRecv(char* buffer, int nic)
     *ptr = '\0';
 
 #ifdef ACTBUS_CHATTER
-    if (!__inhibit_chatter)
+    if (!inhibit_chatter)
       bprintf(info, "ActBus: Response=%s (%x)\n", buffer, status);
 #endif
   }
@@ -387,19 +387,20 @@ static int PollBus(int rescan)
   for (i = 0; i < NACT; ++i) {
     if (rescan && stepper[i].status != -1)
       continue;
-    BusSend(i, "&");
-    if ((result = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
+    BusSend(i, "&", __inhibit_chatter);
+    if ((result = BusRecv(gp_buffer, 0, __inhibit_chatter)) & (ACTBUS_TIMEOUT
+          | ACTBUS_OOD)) {
       bprintf(warning, "ActBus: No response from %s, will repoll later.",
           name[i]);
       stepper[i].status = -1;
       all_ok = 0;
     } else if (!strncmp(gp_buffer, "EZHR17EN AllMotion", 18)) {
       bprintf(info, "ActBus: Found type 17EN device %s at address %i.\n",
-          name[i], i + 1);
+          name[i], id[i] - 0x30);
       stepper[i].status = 0;
     } else if (!strncmp(gp_buffer, "EZHR23 All Motion", 17)) {
       bprintf(info, "ActBus: Found type 23 device %s at address %i.\n", name[i],
-          i + 1);
+          id[i] - 0x30);
       stepper[i].status = 0;
     } else {
       bprintf(warning,
@@ -415,12 +416,13 @@ static int PollBus(int rescan)
   return all_ok;
 }
 
-int ReadIntFromBus(int who, const char* cmd)
+int ReadIntFromBus(int who, const char* cmd, int inhibit_chatter)
 {
   int result;
 
-  BusSend(who, cmd);
-  if ((result = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
+  BusSend(who, cmd, inhibit_chatter);
+  if ((result = BusRecv(gp_buffer, 0, inhibit_chatter)) & (ACTBUS_TIMEOUT
+        | ACTBUS_OOD)) {
     bprintf(warning, "ActBus: Timeout waiting for response from %s (RIFB)",
         name[who]);
     stepper[who].status = -1;
@@ -430,24 +432,25 @@ int ReadIntFromBus(int who, const char* cmd)
   return atoi(gp_buffer);
 }
 
-static void ReadActuator(int who)
+static void ReadActuator(int who, int inhibit_chatter)
 {
   int result;
   if (stepper[who].status == -1)
     return;
 
-  act_data[who].pos = ReadIntFromBus(who, "?0");
-  act_data[who].enc = ReadIntFromBus(who, "?8");
-  BusSend(who, "?aa");
-  if ((result = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
+  act_data[who].pos = ReadIntFromBus(who, "?0", inhibit_chatter);
+  act_data[who].enc = ReadIntFromBus(who, "?8", inhibit_chatter);
+  BusSend(who, "?aa", inhibit_chatter);
+  if ((result = BusRecv(gp_buffer, 0, inhibit_chatter)) & (ACTBUS_TIMEOUT
+        | ACTBUS_OOD)) {
     bprintf(warning, "ActBus: Timeout waiting for response from Actuator #%i",
         who);
     stepper[who].status = -1;
     return;
   }
 
-  sscanf(gp_buffer, "%hi,%hi,%hi,%hi", &act_data[who].adc[0], &act_data[who].adc[1],
-      &act_data[who].adc[2], &act_data[who].adc[3]);
+  sscanf(gp_buffer, "%hi,%hi,%hi,%hi", &act_data[who].adc[0],
+      &act_data[who].adc[1], &act_data[who].adc[2], &act_data[who].adc[3]);
 }
 
 #ifdef USE_XY_STAGE
@@ -494,10 +497,10 @@ static void GetLockData(int mult)
 
   counter = 0;
 
-  lock_data.pos = ReadIntFromBus(LOCKNUM, "?0");
+  lock_data.pos = ReadIntFromBus(LOCKNUM, "?0", 1);
 
-  BusSend(LOCKNUM, "?aa");
-  if ((result = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
+  BusSend(LOCKNUM, "?aa", 1);
+  if ((result = BusRecv(gp_buffer, 0, 1)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
     bputs(warning, "ActBus: Timeout waiting for response from lock motor.");
     stepper[LOCKNUM].status = -1;
     return;
@@ -538,9 +541,11 @@ static void SetLockState(int nic)
 
   if (pot < LOCK_MIN_POT)
     state |= LS_CLOSED;
-  else if (pot > LOCK_MAX_POT || ls < 8000)
-    state |= LS_OPEN;
-  else if ((pot < LOCK_MIN_POT + LOCK_POT_RANGE)
+  else if (pot > LOCK_MAX_POT) {
+    state |= LS_POT_RAIL;
+    if (ls < 8000)
+      state |= LS_OPEN;
+  } else if ((pot < LOCK_MIN_POT + LOCK_POT_RANGE)
       || (pot > LOCK_MAX_POT - LOCK_POT_RANGE))
     state |= lock_data.state & (LS_OPEN | LS_CLOSED);
 
@@ -568,6 +573,7 @@ static void SetLockState(int nic)
 #define LA_WAIT    2
 #define LA_EXTEND  3
 #define LA_RETRACT 4
+#define LA_STEP    5
 static void DoLock(void)
 {
   int action = LA_EXIT;
@@ -585,6 +591,8 @@ static void DoLock(void)
       CommandData.actbus.lock_goal &= ~LS_DRIVE_FORCE;
       bprintf(info, "ActBus: Reset lock motor state.");
     }
+
+    SetLockState(0);
 
     /* compare goal to current state -- only 3 goals are supported:
      * open + off, closed + off and off */
@@ -618,10 +626,14 @@ static void DoLock(void)
         action = LA_STOP;
       else if (lock_data.state & LS_EL_OK
           || CommandData.actbus.lock_goal & LS_IGNORE_EL) { /* el in range */
-        if (lock_data.state & LS_DRIVE_EXT)
+        if (lock_data.state & (LS_OPEN | LS_DRIVE_STP))
           action = LA_WAIT;
+        else if (lock_data.state & LS_DRIVE_EXT)
+          action = LA_WAIT;
+        else if (lock_data.state & LS_DRIVE_STP)
+          action = LA_STOP;
         else if (lock_data.state & LS_DRIVE_OFF)
-          action = LA_EXTEND;
+          action = (lock_data.state & LS_OPEN) ? LA_STEP : LA_EXTEND;
         else
           action = LA_STOP;
       } else { /* el out of range */
@@ -630,7 +642,8 @@ static void DoLock(void)
     } else if ((CommandData.actbus.lock_goal & 0x7) == LS_DRIVE_OFF)
       /* ocXe -.
        * ocRe -+-(stp)- ocFe ->
-       * ocUe -'
+       * ocUe -+
+       * ocSe -'
        */
       action = (lock_data.state & LS_DRIVE_OFF) ? LA_EXIT : LA_STOP;
     else {
@@ -665,14 +678,21 @@ static void DoLock(void)
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_RET;
         break;
+      case LA_STEP:
+        bputs(info, "ActBus: Stepping lock motor.");
+        command = "V50000P20000R"; /* move away from the limit switch */
+        lock_data.state &= ~LS_DRIVE_MASK;
+        lock_data.state |= LS_DRIVE_STP;
+        break;
       default:
         command = NULL;
     }
 
     /* ... and do it! */
     if (command != NULL) {
-      BusSend(LOCKNUM, command);
-      if ((result = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD))
+      BusSend(LOCKNUM, command, __inhibit_chatter);
+      if ((result = BusRecv(gp_buffer, 0, __inhibit_chatter)) & (ACTBUS_TIMEOUT
+            | ACTBUS_OOD))
         bputs(warning,
             "ActBus: Timeout waiting for response from lock motor.");
       usleep(SEND_SLEEP); /* wait for a bit */
@@ -814,19 +834,20 @@ void StoreActBus(void)
 static int MegaKill(void)
 {
   if (CommandData.actbus.megakill) {
-    BusSend('_', "T");
+    BusSend('_', "T", __inhibit_chatter);
     return 1;
     CommandData.actbus.megakill = 0;
   }
   return 0;
 }
 
-static void DiscardBusRecv(int flag)
+static void DiscardBusRecv(int flag, int inhibit_chatter)
 {
   int i;
 
   /* Discard response to get it off the bus */
-  if ((i = BusRecv(gp_buffer, 0)) & (ACTBUS_TIMEOUT | ACTBUS_OOD))
+  if ((i = BusRecv(gp_buffer, 0, inhibit_chatter)) & (ACTBUS_TIMEOUT
+        | ACTBUS_OOD))
     bputs(warning,
         "ActBus: Timeout waiting for response after uplinked command.");
 #ifndef ACTBUS_CHATTER
@@ -897,7 +918,7 @@ void ActuatorBus(void)
     while (!InCharge) { /* NiC MCC traps here */
       CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining
                                               control */
-      BusRecv(NULL, 1); /* this is a blocking call -- clear the recv buffer */
+      BusRecv(NULL, 1, 1); /* this is a blocking call - clear the recv buffer */
       SetLockState(1); /* to ensure the NiC MCC knows the pin state */
       /* no need to sleep -- BusRecv does that for us */
     }
@@ -920,9 +941,9 @@ void ActuatorBus(void)
     my_cindex = GETREADINDEX(CommandData.actbus.cindex);
     if (CommandData.actbus.caddr[my_cindex] != 0) {
       BusSend(CommandData.actbus.caddr[my_cindex],
-          CommandData.actbus.command[my_cindex]);
+          CommandData.actbus.command[my_cindex], __inhibit_chatter);
       /* Discard response to get it off the bus */
-      DiscardBusRecv(1);
+      DiscardBusRecv(1, __inhibit_chatter);
       CommandData.actbus.caddr[my_cindex] = 0;
     }
 
@@ -939,7 +960,7 @@ void ActuatorBus(void)
 #endif
 
     for (i = 0; i < 3; ++i)
-      ReadActuator(i);
+      ReadActuator(i, 1);
 
     SolveSecondary();
 

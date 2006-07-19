@@ -357,7 +357,7 @@ static void GetACS(unsigned short *RxFrame)
     gyro3Addr = GetBiPhaseAddr("gyro3");
     magXAddr = GetBiPhaseAddr("mag_x");
     magYAddr = GetBiPhaseAddr("mag_y");
-    magBiasAddr = GetBiPhaseAddr("mag_bias");
+    magBiasAddr = GetBiPhaseAddr("mag_z");
   }
 
   rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
