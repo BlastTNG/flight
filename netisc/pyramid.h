@@ -23,18 +23,21 @@
 #define MAXSOLUTION 200
 #define MAXBLOBS 100
 
+//type for entries in the star catalogue
 typedef struct {
-  double ra;
-  double dec;
-  float mag;
+  double ra;                          //right ascension
+  double dec;                         //declination
+  float mag;                          //(apparent) magnitude
 } gsc_t;
 
+//type for entries in star pair & distance catalogue
 typedef struct {
-  unsigned long I, J;
-  unsigned long K;
-  double d;
+  unsigned long I, J;                //catalog indexes of each star in pair
+  unsigned long K;                   // ?????
+  double d;                          //distance between stars (on focal plane?)
 } rec_t;
 
+//type for pattern matching solutions
 typedef struct {
   unsigned long I[MAXBLOBS];       // Ignore - index into master catalogue
   unsigned long B[MAXBLOBS];       // Blob index corresponding to C 
@@ -43,7 +46,7 @@ typedef struct {
   unsigned long n;
 } solution_t;
 
-
+//type for ???????
 typedef struct {
   rec_t *r;
   unsigned long flag;
@@ -52,11 +55,11 @@ typedef struct {
 
 class Pyramid {
  public:
+  Pyramid();
   Pyramid(double fov, char *catalogname, char *katalogname);
+  void Init(double fov, char *catalogname, char *katalogname);
   ~Pyramid();  
   
-  int BuildCatalog(double ra0, double dec0, double r0);
-
 
   int Match(double*, double*, double, unsigned long);
   int GetSolution(double, double*, double*, int, solution_t**, int*, 
@@ -92,23 +95,23 @@ class Pyramid {
   gsc_t *gsc;                  // pointd to the guide star catalog
                                // sorted in increasing declination
 
-  unsigned long nrec;
-  rec_t *rec;
+  unsigned long nrec;         //size of pair & distance catalogue
+  rec_t *rec;                 // the catalogue itself
 
 
-  solution_t *solution;
-  int nsolution;
+  solution_t *solution;       //array of possible pattern-matching solutions
+  int nsolution;              //number of possible solutions
 
   int nkmap;
   int kidx;
   
   double c_fov;                // cos(fov);
-  double fov;
+  double fov;                  // field of view (longest of length or width) in radians of sky
 
-  double m, q;
+  double m, q;                 //coefficients of a linear distance vs index trend for the rec array (?)
 
-  char *catalog;
-  char *katalog;
+  char *catalog;               //star catalogue filename
+  char *katalog;               //pair & distance catalogue filename
 
 };
 

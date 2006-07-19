@@ -31,25 +31,30 @@
 
 using namespace std;
 
+//flag to activate display of debugging information
+#define PYRAMID_DEBUG 0
 
-static int decl_sort(const void *x, const void *y)
-{
-  gsc_t *gsc_0 = (gsc_t *)x;
-  gsc_t *gsc_1 = (gsc_t *)y;
 
-  int retval;
+//comparison function for sorting pointers to gsc_t (first by dec, then by ra)
+// static int decl_sort(const void *x, const void *y)
+// {
+//   gsc_t *gsc_0 = (gsc_t *)x;
+//   gsc_t *gsc_1 = (gsc_t *)y;
+// 
+//   int retval;
+// 
+//   if(gsc_0->dec < gsc_1->dec) {
+//     retval = -1;
+//   } else if(gsc_0->dec > gsc_1->dec) {
+//     retval = 1;
+//   } else if(gsc_0->ra <= gsc_1->ra) {
+//     retval = -1;
+//   } else retval = 1;
+// 
+//   return retval;
+// }
 
-  if(gsc_0->dec < gsc_1->dec) {
-    retval = -1;
-  } else if(gsc_0->dec > gsc_1->dec) {
-    retval = 1;
-  } else if(gsc_0->ra <= gsc_1->ra) {
-    retval = -1;
-  } else retval = 1;
-
-  return retval;
-}
-
+//comparison function for sorting pointers to rec_t by distance (d)
 static int dist_sort(const void *x, const void *y)
 {
   rec_t *r0 = (rec_t *)x;
@@ -59,6 +64,7 @@ static int dist_sort(const void *x, const void *y)
   return 1;
 }
 
+//comparison function for sorting pointers of type rec_t by I (catalog index of first member of pair?)
 static int rec_I_sort(const void *x, const void *y)
 {
   rec_t *r0 = (rec_t *)x;
@@ -69,6 +75,7 @@ static int rec_I_sort(const void *x, const void *y)
   return 1;
 }
 
+//comparison function for sorting pointers of type rec_t by J (catalog index of second member of pair?)
 static int rec_J_sort(const void *x, const void *y)
 {
   rec_t *r0 = (rec_t *)x;
@@ -79,26 +86,20 @@ static int rec_J_sort(const void *x, const void *y)
   return 1;
 }
 
+//comparison function between pointer to unsigned long (x) and to I member of pointer to rect_t (y)
 static int I_match(const void *x, const void *y)
 {
   const unsigned long *I0    = (unsigned long *)x;
   const rec_t *r1  = (rec_t *)y;
   return (*I0 > r1->I) - (*I0 < r1->I);
 }
+//comparison function between pointer to unsigned long (x) and to J member of pointer to rect_t (y)
 static int J_match(const void *x, const void *y)
 {
   const unsigned long *I0    = (unsigned long *)x;
   const rec_t *r1  = (rec_t *)y;
   return (*I0 > r1->J) - (*I0 < r1->J);
 }
-// static int IJ_match(const void *x, const void *y)
-// {
-//   long long IJ0 = ((const rec_t *)x)->I << 8 |  
-//   const unsigned long *I0    = (unsigned long *)x;
-//   const rec_t *r1  = (rec_t *)y;
-//   return (*I0 > r1->J) - (*I0 < r1->J);
-// }
-  
 
 /* Perform a binary search for KEY in BASE which has NMEMB elements
    of SIZE bytes each.  The comparisons are done by (*COMPAR)().  */
@@ -134,7 +135,29 @@ pbsearch (const void *key, const void *base, size_t nmemb, size_t size,
   return NULL;
 }
 
+//default constructor: must call Init before using the object
+Pyramid::Pyramid()
+{
+	ngsc = nrec = nsolution = 0;
+	gsc = NULL;
+	rec = NULL;
+	solution = NULL;
+	catalog = katalog = "";
+}
+/* alternate constructor: calls Init
+   must specify fov (longest of length or width in radians of sky)
+                catalogname (star catalog filename)
+                katalogname (catalogue of star pairs & distances (?))
+*/
 Pyramid::Pyramid(double fov, char *catalogname, char *katalogname)
+{
+	gsc = NULL;
+	rec = NULL;
+	solution = NULL;
+	Init(fov, catalogname, katalogname);
+}
+
+void Pyramid::Init(double fov, char *catalogname, char *katalogname)
 {
   unsigned long k;
   this->fov = fov;
@@ -143,17 +166,23 @@ Pyramid::Pyramid(double fov, char *catalogname, char *katalogname)
   this->catalog = catalogname;
   this->katalog = katalogname;
 
+#if PYRAMID_DEBUG
+  cerr << "[Pyramid debug]: opening file: " << this->catalog << endl;
+#endif
   ifstream file(this->catalog, ios::in|ios::binary);
  
   if(!file.is_open()) {
-    cerr << "Pyramid: unable to open file catalog " << this->catalog << endl;
+#if PYRAMID_DEBUG
+    cerr << "[Pyramid debug]: unable to open file catalog " << this->catalog << endl;
+#endif
     exit(0);
   }
 
-  cerr << "Pyramid: reading data" << endl;
-
   file.read ((char *)&ngsc, sizeof(ngsc));
-  gsc = new gsc_t [ngsc];  
+#if PYRAMID_DEBUG
+  cerr << "[Pyramid debug]: reading star catalogue data, ngsc = " << ngsc << endl;
+#endif
+  if (gsc) delete[] gsc; gsc = new gsc_t[ngsc];  
   
   for(k = 0; k < ngsc; k++) {
     file.read((char *)&gsc[k].ra, sizeof(gsc[k].ra));
@@ -164,11 +193,15 @@ Pyramid::Pyramid(double fov, char *catalogname, char *katalogname)
   
   
   // load kvector catalog
-  cerr << "Pyramid: load " << this->katalog  << endl;
+#if PYRAMID_DEBUG
+  cerr << "[Pyramid debug]: opening file: " << this->katalog  << endl;
+#endif
   file.open(this->katalog, ios::in|ios::binary);
   
   if(!file.is_open()) {
-    cerr << "Pyramid: unable to open file catalog " << this->katalog << endl;
+#if PYRAMID_DEBUG
+    cerr << "[Pyramid debug]: unable to open file catalog " << this->katalog << endl;
+#endif
     exit(0);
   }
   
@@ -176,9 +209,11 @@ Pyramid::Pyramid(double fov, char *catalogname, char *katalogname)
   file.read ((char *)&this->q, sizeof(double));
   file.read ((char *)&this->nrec, sizeof(unsigned long));
 
-  cerr << "Pyramid: NREC IS NOW " << this->nrec << endl;
+#if PYRAMID_DEBUG
+  cerr << "[Pyramid debug]: reading k-vector catalog, nrec = " << this->nrec << endl;
+#endif
   
-  this->rec = new rec_t [this->nrec];
+  if (rec) delete[] rec; rec = new rec_t[this->nrec];
   
   for(k = 0; k < this->nrec; k++) {
     file.read((char *)&rec[k].I, sizeof(rec[k].I));
@@ -187,24 +222,28 @@ Pyramid::Pyramid(double fov, char *catalogname, char *katalogname)
     file.read((char *)&rec[k].d, sizeof(rec[k].d));
   }
 
-  file.close();  
+  file.close();
 
-  solution = NULL;
+  if (solution) delete[] solution; solution = NULL;
+  nsolution = 0;
+  return;
 }
 
+//destructor: unallocates arrays
 Pyramid::~Pyramid()
 {
   ngsc = 0;
-  delete gsc;
+  if (gsc) delete[] gsc;
 
   nrec = 0;
-  if(rec) delete rec;
+  if(rec) delete[] rec;
 
   nsolution = 0;
-  if(solution != NULL) delete solution;
+  if(solution) delete[] solution;
 }
 
-
+//finds the distance between two points with (RA, dec) in radians of (a0, d0) and (a1, d1)
+//this distance is the cosine of the great-circle distance separating the points
 double Pyramid::dist(double& a0, double& a1, double& d0, double& d1)
 {
   double temp;
@@ -217,6 +256,7 @@ double Pyramid::dist(double& a0, double& a1, double& d0, double& d1)
 }
 
 
+//finds (cosine of) distance between two tangent plane points
 // Note: I cannot use tangent plane coordinates to calculate the inter-star
 // distances; dicrepancies are order of 20" on 3.4 deg fov
 double Pyramid::cdist(double& x0, double& x1, double& y0, double& y1){
@@ -226,12 +266,17 @@ double Pyramid::cdist(double& x0, double& x1, double& y0, double& y1){
   denom  = x0*x0 + y0*y0 + 1.0;
   denom *= x1*x1 + y1*y1 + 1.0;
 
-  temp = (x0*x1 + y0*y1 + 1.0)/sqrt(denom);
+  temp = (x0*x1 + y0*y1 + 1.0);
+  temp /= sqrt(denom);
 
   return temp;
 }
 
+//a small number that is used to avoid division by zero errors
 #define SMALLNUMBER 1.0E-9
+//next two functions convert between spherical coordinates (ra, dec) and tangent plane coordinates (x, y)
+//(raz, decz) is the location of the tangent point in spherical coordinates
+//s2tp returns a status code depending on what denominator rounding might have been necessary
 int Pyramid::s2tp(double ra, double dec, double raz, double decz, double& x, double& y)
 {
   double sdecz, sdec, cdecz, cdec, radif, sradif, cradif, denom;
@@ -285,100 +330,10 @@ void Pyramid::tp2s(double& ra, double& dec, double raz, double decz, double x, d
 #undef SMALLNUMBER
 
 
-
-
-#define MAXREC 8000000UL
-int Pyramid::BuildCatalog(double ra0, double dec0, double r0)
-{
-  unsigned long i, i0, i1; 
-  unsigned long j; 
-  double dec_min, dec_max;
-  double d;
-  double c_r0;
-
-  c_r0 = cos(r0);
-  
-  rec_t *rec_ = new rec_t [MAXREC]; 
-  nrec = 0;
-  
-  dec_max = dec0 + 0.5*r0;
-  dec_min = dec0 - 0.5*r0;
-  if(dec_max > M_PI_2) {
-    dec_max = M_PI_2;
-    dec_min = dec_max - r0;
-  } else if(dec_min < -M_PI_2) {
-    dec_min = -M_PI_2;
-    dec_max = dec_min + r0;
-  }
-//   if(dec_max > M_PI_2) {
-//     dec_max = M_PI_2;
-//   } else if(dec_min < -M_PI_2) {
-//     dec_min = -M_PI_2;
-//   }
-
-  cerr << dec_min*180.0/M_PI << " " << dec_max*180./M_PI << endl;
-
-  i0 = 0;
-  while(gsc[i0].dec < dec_min) 
-    if(++i0 == ngsc) break;
-  
-  i1 = i0;
-  while(gsc[i1].dec <= dec_max) 
-    if(++i1 == ngsc) break;
-
-  cerr << "Pyramid: building distances catalog" << endl;
-  for(i = i0; i < i1-1; i++) {
-    d = dist(gsc[i].ra, ra0, gsc[i].dec, dec0);
-    if(d < c_r0) continue;
-    
-    for(j = i+1; j < i1; j++) {      
-
-      d = dist(gsc[i].ra, gsc[j].ra, gsc[i].dec, gsc[j].dec);
-      if(d > c_fov) {
-        if(i < j) {
-          rec_[nrec].I = i;
-          rec_[nrec].J = j;
-        } else {
-          rec_[nrec].I = j;
-          rec_[nrec].J = i;
-        }
-        rec_[nrec].d = d;
-        if(++nrec == MAXREC) {
-          cerr << "Pyramid: too many star pairs" << endl;
-          delete rec_;
-          return -1;
-        }
-      } else if(cos(gsc[i].dec - gsc[j].dec) < c_fov) {
-        break;
-      }
-    }
-  }
-
-  if(rec != NULL) delete rec;
-  rec = new rec_t [nrec];
-  memcpy(rec, rec_, nrec*sizeof(rec_t));
-  delete rec_;
-  
-  qsort((void *)rec, nrec, sizeof(*rec), dist_sort);
-  
-  cerr << "Pyramid: distance catalog has " << nrec << " elemenst" << endl;
-
-  // Now build K vector
-  this->m = (rec[nrec-1].d - rec[0].d + 2*CSI) / (double)(nrec - 1);
-  this->q = rec[0].d - this->m - CSI;
-
-  rec[0].K = 0;
-  for(i = 1, j=0; i < nrec-1; i++) {
-    while( ((rec[j].d > (m*(i+1) + q)) || (rec[j+1].d  <=  (m*(i+1) + q))) && j < nrec ) j++;
-    rec[i].K = j;
-  }
-  rec[nrec-1].K = nrec-1;
-
-  return 0;
-}
-#undef MAXREC
-
-
+//maximum number of stars to find in GetTestStars function
+//finds the catalogue index (id) and coordinates (xx and yy) in the tagnet plane centered at ra0, dec0
+//of up to n stars within half fov from tangent point (id, xx, and yy must be at least n elements long)
+//when less than n stars are found, randomly chooses which ones to save, returns the number of stars returned
 #define MAXSTARS 10000
 int Pyramid::GetTestStars(double ra0, double dec0,
                           double *xx, double *yy, 
@@ -392,15 +347,17 @@ int Pyramid::GetTestStars(double ra0, double dec0,
   unsigned long star_idx;
   unsigned long k;
   
-  c_fov_2 = cos(0.5*acos(c_fov));
+  c_fov_2 = cos(0.5*fov);
   for(k = 0, nstar = 0; k < ngsc; k++) {
-    if(dist(ra0, gsc[k].ra, dec0, gsc[k].dec) > c_fov_2) {
+    if(dist(ra0, gsc[k].ra, dec0, gsc[k].dec) < c_fov_2) {
       star[nstar] = k;
       if(++nstar == MAXSTARS) break;
     }
   }
   
-  cerr << "Found " << nstar << "/" << n << " stars\n"; 
+#if PYRAMID_DEBUG
+  cerr << "[Pyramid debug]: Found " << nstar << "/" << n << " stars\n"; 
+#endif
   if(nstar < n) n = nstar;
 
   srand((unsigned int)time(NULL));
@@ -423,6 +380,8 @@ int Pyramid::GetTestStars(double ra0, double dec0,
 #undef MAXSTARS
 
 
+//finds the star catalgue indexes (id0 and id1) surrounding the distance val with an error ftol
+//returns -1 on error, or 0 on success
 int Pyramid::GetIdx(double val, double ftol, 
                     unsigned long& id0, unsigned long& id1)
 {
@@ -433,10 +392,20 @@ int Pyramid::GetIdx(double val, double ftol,
 
   val_m = val - error; 
   val_M = val + error; 
-
-  if( val_m < rec[0].d || val_M > rec[nrec-1].d) {
-    cerr << "Pyramid: warning, index out of range" << endl;
-    return -1;
+  
+  if (val_m < rec[0].d) {
+#if PYRAMID_DEBUG
+	  cerr << "[Pyramid debug]: GetIdx has val_m too low" << endl;
+#endif
+	  val_m = rec[0].d;
+	  val_M = val_m + 2*error;
+  }
+  if (val_M > rec[nrec-1].d) {
+#if PYRAMID_DEBUG
+	  cerr << "[Pyramid debug]: GetIdx has val_M too high" << endl;
+#endif
+	  val_M = rec[nrec-1].d;
+	  val_m = val_M - 2*error;
   }
 
   id0 = (unsigned long)floor((val_m - this->q) / this->m) - 1;
@@ -451,8 +420,11 @@ int Pyramid::GetIdx(double val, double ftol,
   return 0;
 }
 
+//when called with n>=3, creates lists of all possible 3-point combinations (n total points)
+//after (n<3), it will return (ii, jj, and kk) one such combination and step to the next (returns 1)
+//when all combinations have been exhausted, returns 0 again
 int Pyramid::GetTriangle(unsigned long& ii, unsigned long& jj, 
-                         unsigned long& kk, unsigned long n) 
+                         unsigned long& kk, unsigned long n/*=0*/) 
 {
   static unsigned long *Ti = NULL;
   static unsigned long *Tj = NULL;
@@ -462,11 +434,11 @@ int Pyramid::GetTriangle(unsigned long& ii, unsigned long& jj,
 
   if(n >= 3) {
     unsigned long dj, dk, i;
-    ntriangles = (n*(n-1)*(n-2)) / 6;
+    ntriangles = (n*(n-1)*(n-2)) / 6;      //n "choose" 3
     Tidx = 0;
-    if(Ti != NULL) delete Ti; Ti = new unsigned long [ntriangles];
-    if(Tj != NULL) delete Tj; Tj = new unsigned long [ntriangles];
-    if(Tk != NULL) delete Tk; Tk = new unsigned long [ntriangles];
+    if(Ti != NULL) delete[] Ti; Ti = new unsigned long [ntriangles];
+    if(Tj != NULL) delete[] Tj; Tj = new unsigned long [ntriangles];
+    if(Tk != NULL) delete[] Tk; Tk = new unsigned long [ntriangles];
 
     for(dj = 1; dj <= (n-2); dj++) {
       for(dk = 1; dk <= (n - dj -1); dk++) {
@@ -525,10 +497,15 @@ int Pyramid::CheckSpecularTriangle(double* x, double* y, solution_t* S)
 }
 
 
+//finds all pairs of stars that might match (within ftol) those in the x and y arrays (of length n)
+//stores matches in sol (length nsol) and returns 0 if there are solutions (-1 if there aren't)
 int Pyramid::StarPair(double* x, double* y, unsigned long n, double ftol,
                       solution_t* sol, unsigned long& nsol)
   
 {
+#if PYRAMID_DEBUG
+  cerr << "[Pyramid debug]: in StarPair function" << endl;
+#endif
   unsigned long i,j,k;
   unsigned long idx_m, idx_M;
   double d;
@@ -556,10 +533,17 @@ int Pyramid::StarPair(double* x, double* y, unsigned long n, double ftol,
   return ( (nsol) ? 0 : -1 );
 }
 
+//checks catalogue for star pairs separated by d1, d2, d3 (within ftol) that form triangle
+//if so, those stars (indexes i, j, and k) are added to sol and nsol is incremented for each
+//returns 0 if a solution is found or if nsol >= MAXSOLUTION, otherwise -1
 int Pyramid::StarTriangle(unsigned long i, unsigned long j, unsigned long k,
                           double d1, double d2, double d3, double ftol,
                           solution_t* sol, unsigned long& nsol)
 {
+#if PYRAMID_DEBUG
+  cerr << "[Pyramid debug]: in StarTriangle function, indexes: (" << i << "," 
+       << j << "," << k << ")" << endl;
+#endif
   unsigned long l, p;
   unsigned long idx1_m, idx1_M, idx2_m, idx2_M, idx3_m, idx3_M;
   
@@ -584,10 +568,12 @@ int Pyramid::StarTriangle(unsigned long i, unsigned long j, unsigned long k,
  
   rec_t *R;
 
+  //search list of pairs separated by d2 (rec2) for an I that matches a star in a pair separated by d1
+  //for all matches found, push the possible solution struct onto pivot
   for(l = idx1_m; l <= idx1_M; l++) {    
     // I in I
     if( (R = (rec_t *)pbsearch(&rec[l].I, rec2, nrec2, sizeof(rec_t), I_match)) != NULL) {
-      do {
+	  do {         //TODO valgrind reports: invalid read of size 4 (0 bytes after block of rec2)
         P.n    = 3;
         P.flag = 0;
         P.I[0] = rec[l].I;
@@ -605,7 +591,7 @@ int Pyramid::StarTriangle(unsigned long i, unsigned long j, unsigned long k,
 
     // J in I
     if( (R = (rec_t *)pbsearch(&rec[l].J, rec2, nrec2, sizeof(rec_t), I_match)) != NULL) {
-      do {
+	  do {         //TODO valgrind reports: invalid read of size 4 (0 bytes after block of rec2)
         P.n    = 3;
         P.flag = 0;
         P.I[0] = rec[l].J;
@@ -622,11 +608,13 @@ int Pyramid::StarTriangle(unsigned long i, unsigned long j, unsigned long k,
     }
   }  // loop on l
 
+  //search list of pairs separated by d2 (rec2) for a J that matches a star in a pair separated by d1
+  //for all matches found, push the possible solution struct onto pivot
   qsort(rec2, nrec2, sizeof(rec_t), rec_J_sort);
   for(l = idx1_m; l <= idx1_M; l++) {    
     // I in J
     if( (R = (rec_t *)pbsearch(&rec[l].I, rec2, nrec2, sizeof(rec_t), J_match)) != NULL) {
-      do {
+	  do {         //TODO valgrind reports: invalid read of size 4 (4 bytes after block of rec2)
         P.n    = 3;
         P.flag = 0;
         P.I[0] = rec[l].I;
@@ -643,7 +631,7 @@ int Pyramid::StarTriangle(unsigned long i, unsigned long j, unsigned long k,
     } 
     // J in J
     if( (R = (rec_t *)pbsearch(&rec[l].J, rec2, nrec2, sizeof(rec_t), J_match)) != NULL) {
-      do {
+	  do {         //TODO valgrind reports: invalid read of size 4 (4 bytes after block of rec2)
         P.n    = 3;
         P.flag = 0;
         P.I[0] = rec[l].J;
@@ -663,19 +651,8 @@ int Pyramid::StarTriangle(unsigned long i, unsigned long j, unsigned long k,
 
   delete[] rec2;
 
-//   unsigned long nrec3 = idx3_M - idx3_m + 1;
-//   rec_t *rec3 = new (rec_t) [nrec3];
-
-//   memcpy(rec3, &rec[idx3_m], nrec3*sizeof(rec_t));
-//   qsort(rec3, nrec3, sizeof(rec_t), rec_I_sort);
-
-//   for(i_piv = pivot.begin(); i_piv != pivot.end(); i_piv++) {
-//     if(pbsearch(i_piv, rec3, nrec3, sizeof(rec_t), IJ_match) == NULL) continue;
-//     sol[nsol] = *i_piv;
-//     retval = 0;
-//     if(++nsol == MAXSOLUTION) return retval;   
-//   }
-
+  //for every solution in the pivot list, check if the two unmatched endpoints separated by d3
+  //if so, then a solution is found and it is added to the array for return
   for(i_piv = pivot.begin(); i_piv != pivot.end(); i_piv++) {
     for(p = idx3_m; p <= idx3_M; p++) {
       if( (i_piv->I[2] == rec[p].I && i_piv->I[1] == rec[p].J) || 
@@ -694,6 +671,8 @@ int Pyramid::StarTriangle(unsigned long i, unsigned long j, unsigned long k,
 }
 
 
+//checks a star of blob index r, that is d1, d2, and d3 away from the 3 stars in S
+//if 4th star fits it is added to the solution and 0 is returned, otherwise -1 is returned
 int Pyramid::StarPyramid(unsigned long r, 
                          double d1, double d2, double d3, double ftol,
                          solution_t* S)
@@ -738,7 +717,6 @@ int Pyramid::StarPyramid(unsigned long r,
         if(p1 == p2 && p1 == p3) {
           S->I[S->n] = p1;
           S->B[S->n++] = r;
-          //cerr << "ULLLALLLAAAAA Match is acieved (" << S->B[0] << " " << S->B[1] << " " << S->B[2] << " " << S->B[3] << " " << S->B[S->n-1]<< "\n";
           return 0; // Match achieved: quit here.
         }
       }
@@ -749,10 +727,14 @@ int Pyramid::StarPyramid(unsigned long r,
 }
 
 
-
+//seraches tangent plane coordinates (x and y with length n) of stars for 
+//pattern matches in star catalog (within tolerance ftol)
 int Pyramid::Match(double* x, double* y, double ftol, unsigned long n)
 
 {
+#if PYRAMID_DEBUG
+  cerr << "[Pyramid debug]: in Match function" << endl;
+#endif
   unsigned long i, j, k, r;
   double d1, d2, d3;
 
@@ -802,10 +784,12 @@ int Pyramid::Match(double* x, double* y, double ftol, unsigned long n)
     break;
     
   default: // More than three candidate stars
-    GetTriangle(i,j,k,n);
+    GetTriangle(i,j,k,n);        //creates a list of possible triangles
   M0: 
-    if(GetTriangle(i,j,k) == 0) {
-      // There are no more triangles to be scanned
+    if(GetTriangle(i,j,k) == 0) {         //steps through list of triangles (assigns i,j,k)
+#if PYRAMID_DEBUG
+		cerr << "[Pyramid debug]: Checked all triangles\n";
+#endif
       // check if there were some matched triangles and use those
       for(sol_idx = 0; sol_idx < nsol_; sol_idx++) {
         S = &sol_[sol_idx];
@@ -822,17 +806,25 @@ int Pyramid::Match(double* x, double* y, double ftol, unsigned long n)
         retval = 3;
       }
       break;
-    }  
-    
+    }
+	//else, this is a possible triangle so try to match to it
+
     d1 = cdist(x[i], x[j], y[i], y[j]);
     d2 = cdist(x[i], x[k], y[i], y[k]);
     d3 = cdist(x[j], x[k], y[j], y[k]);
 
     sol_start = nsol_;
-    if(StarTriangle(i,j,k,d1,d2,d3, ftol, sol_, nsol_) ) goto M0;
-    cerr << "Found " << nsol_ << " triangles" << endl;
+	if(StarTriangle(i,j,k,d1,d2,d3, ftol, sol_, nsol_) ) {
+#if PYRAMID_DEBUG
+		cerr << "[Pyramid debug]: Failed to match triangle\n";
+#endif
+		goto M0;  //pattern matching failed, try next triangle
+	}
+#if PYRAMID_DEBUG
+    cerr << "[Pyramid debug]: Found " << (nsol_ - sol_start) << " triangle matches" << endl;
+#endif
     // Now I have some candidate triangles, look for the pyramid
-    for(sol_idx = sol_start, pyramid = 0; sol_idx < nsol_ && !pyramid; sol_idx++) {
+    for(sol_idx = sol_start, pyramid = 0; sol_idx < nsol_; sol_idx++) {
       S = &sol_[sol_idx];
       for(r = 0; r < n; r++) {
         if( r == i || r == j || r == k) continue;
@@ -842,6 +834,9 @@ int Pyramid::Match(double* x, double* y, double ftol, unsigned long n)
         d3 = cdist(x[k], x[r], y[k], y[r]);
         
         if(StarPyramid(r, d1, d2, d3, ftol, S) == 0) {
+#if PYRAMID_DEBUG
+          cerr << "[Pyramid debug]: Matched a pyramid!!\n";
+#endif
           pyramid = 1;
           S->flag = 1;
         }
@@ -849,22 +844,27 @@ int Pyramid::Match(double* x, double* y, double ftol, unsigned long n)
       } // loop on piramid r star
     } // loop on sol_ 
 
-    if(!pyramid) goto M0; // No matching pyramid found, start over
-    nsol++;
-    retval = S->n;
-    break;
+	if(!pyramid) {
+#if PYRAMID_DEBUG
+		cerr << "[Pyramid debug]: Failed to match pyramid\n";
+#endif
+		goto M0; // No matching pyramid found, start over
+	}
+  nsol++;
+  retval = S->n;
+  break;
   }
   
-  if(solution != NULL) delete solution;
+  
+  if(solution != NULL) delete[] solution;
   solution = new solution_t [nsol];
 
   for(sol_idx = 0, k = 0; sol_idx < nsol_; sol_idx++) {
     if(sol_[sol_idx].flag) {
       memcpy(&solution[k], &sol_[sol_idx], sizeof(solution_t));
       
-      memset(solution[k].C, 0, n*sizeof(gsc_t));
+      //memset(solution[k].C, 0, n*sizeof(gsc_t*));
       for(i = 0; i < solution[k].n; i++) {
-//        solution[k].C[solution[k].B[i]] = &gsc[solution[k].I[solution[k].B[i]]];
         solution[k].C[i] = &gsc[solution[k].I[i]];
       }
       if(++k == nsol) break;
@@ -878,10 +878,18 @@ int Pyramid::Match(double* x, double* y, double ftol, unsigned long n)
 
 
 
+//main function to perform pattern matching
+//finds stars that match those with tangent plane coordinates x and y (nblobs of them), within ftol
+//matches are added to array (sol, length nsol) (these don't need to be allocated before calling)
+//ra0, dec0, and r0 currently do nothing, so this method is more or less a wrapper for the Match function
+//returns 2, 3, or 4 for a pair, triangle, or pyramid match, 0 for no match and -1 for error
 int Pyramid::GetSolution(double ftol, double* x, double* y,  int nblobs, 
                          solution_t** sol, int* nsol,
                          double ra0, double dec0, double r0)
 { 
+#if PYRAMID_DEBUG
+  cerr << "[Pyramid debug]: in GetSolution function" << endl;
+#endif
   int retval = 0;
 
 #ifdef __TIMING__
@@ -889,14 +897,15 @@ int Pyramid::GetSolution(double ftol, double* x, double* y,  int nblobs,
   gettimeofday(&t0, NULL);
 #endif
 
-  cerr << "start\n";
   retval = Match(x, y, ftol, nblobs);
-  cerr << "blaaaa\n";
-  cerr << retval << endl;
+#if PYRAMID_DEBUG
+  cerr << "[Pyramid debug]: pattern matching completed with return value: " << retval << "\n";
+#endif
   
 #ifdef __TIMING__
   gettimeofday(&t1, NULL);
-  cerr << "It took " << ((t1.tv_sec + t1.tv_usec*1.0E-6) -(t0.tv_sec + t0.tv_usec*1.0E-6)) *1.0E3 << endl; 
+  cerr << "[Pyramid debug]: It took " << ((t1.tv_sec + t1.tv_usec*1.0E-6) 
+		  -(t0.tv_sec + t0.tv_usec*1.0E-6)) *1.0E3 << endl; 
 #endif
 
 //   if(retval > 3) lis = 0;
