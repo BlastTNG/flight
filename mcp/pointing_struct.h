@@ -56,8 +56,9 @@
 /*     Used: Main thread;                     */
 /*  Does not need to be a curcular buffer...  */
 struct ACSDataStruct {
-  double mag_x; // counts; bias removed
-  double mag_y; // counts; bias removed
+  double mag_x;    // counts
+  double mag_y;    // counts
+  double mag_z;    // counts
   double enc_elev; // degrees
   double clin_elev;// counts
   double gyro1;    // deg/s

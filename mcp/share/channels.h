@@ -199,6 +199,14 @@ extern "C" {
 /* zero point (in counts) of i_el */
 #define I_EL_ZERO 32638
 
+/* MAG_? conversion from counts to volts */
+#define MAGX_M -1.88297e-4
+#define MAGX_B 6.18095
+#define MAGY_M -1.88124e-4 
+#define MAGY_B 6.17593
+#define MAGZ_M -1.87933e-4
+#define MAGZ_B 6.16957
+  
 /* B_AMP? conversion from counts to bias levels */
 #define B_AMP1_M 3.691518e-5
 #define B_AMP1_B (-67108735.0*3.691518e-5)

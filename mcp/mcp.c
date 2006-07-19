@@ -335,7 +335,7 @@ static void SensorReader(void)
 static void GetACS(unsigned short *RxFrame)
 {
   double enc_elev, gyro1, gyro2, gyro3;
-  double x_comp, y_comp, bias;
+  double x_comp, y_comp, z_comp;
   static struct BiPhaseStruct* gyro1Addr;
   static struct BiPhaseStruct* gyro2Addr;
   static struct BiPhaseStruct* gyro3Addr;
@@ -343,7 +343,8 @@ static void GetACS(unsigned short *RxFrame)
   static struct BiPhaseStruct* clinElevAddr;
   static struct BiPhaseStruct* magXAddr;
   static struct BiPhaseStruct* magYAddr;
-  static struct BiPhaseStruct* magBiasAddr;
+  static struct BiPhaseStruct* magZAddr;
+  
   unsigned int rx_frame_index = 0;
   int i_ss;
 
@@ -357,7 +358,7 @@ static void GetACS(unsigned short *RxFrame)
     gyro3Addr = GetBiPhaseAddr("gyro3");
     magXAddr = GetBiPhaseAddr("mag_x");
     magYAddr = GetBiPhaseAddr("mag_y");
-    magBiasAddr = GetBiPhaseAddr("mag_z");
+    magZAddr = GetBiPhaseAddr("mag_z");
   }
 
   rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
@@ -371,10 +372,10 @@ static void GetACS(unsigned short *RxFrame)
   gyro2 = (double)(RxFrame[gyro2Addr->channel]-GY16_OFFSET) * GY16_TO_DPS;
   gyro3 = (double)(RxFrame[gyro3Addr->channel]-GY16_OFFSET) * GY16_TO_DPS;
 
-  bias = (double)(RxFrame[magBiasAddr->channel]);
   x_comp = (double)(RxFrame[magXAddr->channel]);
   y_comp = (double)(RxFrame[magYAddr->channel]);
-
+  z_comp = (double)(RxFrame[magZAddr->channel]);
+  
   i_ss = ss_index;
 
   ACSData.t = mcp_systime(NULL);
@@ -385,6 +386,7 @@ static void GetACS(unsigned short *RxFrame)
   ACSData.gyro3 = gyro3;
   ACSData.mag_x = x_comp;
   ACSData.mag_y = y_comp;
+  ACSData.mag_z = z_comp;
 
   ACSData.clin_elev = (double)RxFrame[clinElevAddr->channel];
 

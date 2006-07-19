@@ -621,9 +621,9 @@ struct ChannelStruct FastChannels[] = {
   {"clin_elev",   'r',  ACS0, 37,      0.00546739,                -133.78, 'u'},
   {"xel_clin_if", 'r',  ACS0, 39,      0.00546739,             -25.*6.144, 'u'},
 
-  {"mag_z",       'r',  ACS0, 43,     -1.87933e-4,                6.16957, 'u'},
-  {"mag_x",       'r',  ACS0, 45,     -1.88297e-4,                6.18095, 'u'},
-  {"mag_y",       'r',  ACS0, 47,     -1.88124e-4,                6.17593, 'u'},
+  {"mag_x",       'r',  ACS0, 45,          MAGX_M,                 MAGX_B, 'u'},
+  {"mag_y",       'r',  ACS0, 47,          MAGY_M,                 MAGY_B, 'u'},
+  {"mag_z",       'r',  ACS0, 43,          MAGZ_M,                 MAGZ_B, 'u'},
   {"isc_pulse",   'r',  ACS0, 53,             1.0,                    0.0, 'u'},
   {"osc_pulse",   'r',  ACS0, 54,             1.0,                    0.0, 'u'},
   {"piv_enc",     'r',  ACS0, 59,    360.0/8192.0,                    0.0, 'u'},

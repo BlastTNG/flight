@@ -143,6 +143,11 @@ void SunPos(double tt, double *ra, double *dec); // in starpos.c
 #define M2DV(x) ((x / 60.0) * (x / 60.0))
 
 #define MAG_ALIGNMENT 0.0 // 267 //237.0;
+// APS Magentometer Parameters : SN 2242 
+#define MBIAS_X  0.007480
+#define MBIAS_Y  0.007830
+#define MBIAS_Z  0.006930
+
 
 // limit to 0 to 360.0
 void NormalizeAngle(double *A)
@@ -182,6 +187,7 @@ void SetSafeDAz(double ref, double *A)
 static int MagConvert(double *mag_az)
 {
   float year;
+  static double mvx, mvy, mvz;
   static float fdec, dip, ti, gv;
   static double dec;
   static time_t t, oldt;
@@ -236,12 +242,17 @@ static int MagConvert(double *mag_az)
   /* Thus, depending on the sign convention, you have to either add or */
   /* subtract dec from az to get the true bearing. (Adam H.) */
 
+
   // Enzo commented out these two lines
   //raw_mag_az = (180.0 / M_PI) * atan2(ACSData.mag_y, ACSData.mag_x);
   //*mag_az = LutCal(&magLut, raw_mag_az);
 
   // cbn added this line
-  *mag_az = (180.0 / M_PI) * atan2(ACSData.mag_y-43087.0, ACSData.mag_x-44015);
+  mvx = MAGX_M*ACSData.mag_x + MAGX_B + MBIAS_X;
+  mvy = MAGY_M*ACSData.mag_y + MAGY_B + MBIAS_Y;
+  mvz = MAGZ_M*ACSData.mag_z + MAGZ_B + MBIAS_Z;
+  
+  *mag_az = (180.0 / M_PI) * atan2(mvy, mvx);
 
   // Enzo inserted these two lines
   //mag_az_tmp = MagLutCal(&magLut, ACSData.mag_x, ACSData.mag_y, mag_az_tmp);
