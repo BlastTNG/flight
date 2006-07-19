@@ -1,13 +1,9 @@
 #ifndef __PYRAMID__H
 #define __PYRAMID__H
 
-//#ifdef _WINDOWS_
-//#define CATALOG "d:\\catalog\\gsc_mag08_res21.bin"
-//#define KATALOG "d:\\catalog\\k.bin"
-//#else 
-//#define CATALOG "./catalog/gsc_mag08_res21.bin"
-//#define KATALOG "./catalog/k.bin"
-//#endif
+#ifdef _WINDOWS_  // If in windows change packing order of frames to have
+#pragma pack(2)    // same packing as Linux
+#endif
 
 #ifndef M_PI
 #define M_PI       3.14159265358979323846
@@ -16,8 +12,6 @@
 #ifndef M_PI_2
 #define M_PI_2     1.57079632679489661923
 #endif
-
-//#define FOV (3.4 * M_PI/180.0)    // SC field of view
 
 #define CSI 1.0E-10
 #define MAXSOLUTION 200
@@ -60,6 +54,8 @@ class Pyramid {
   void Init(double fov, char *catalogname, char *katalogname);
   ~Pyramid();  
   
+  int BuildCatalog(double ra0, double dec0, double r0);
+
 
   int Match(double*, double*, double, unsigned long);
   int GetSolution(double, double*, double*, int, solution_t**, int*, 
