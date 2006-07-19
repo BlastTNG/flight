@@ -99,7 +99,7 @@ int read_settings() {
   
   unsigned long satval;       // pixel saturation value
   double threshold;           // S/N threshold for bright pixels
-  unsigned int disttol;       // the _SQUARE_ of the source tolerance distance
+  unsigned int disttol;       // the source tolerance distance
   unsigned int grid;          // coarse grid cell size
   unsigned int cenbox;        // centroid box size
   unsigned int apbox;         // aperture photometry box size
