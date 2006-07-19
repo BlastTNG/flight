@@ -626,7 +626,8 @@ static void DoLock(void)
         action = LA_STOP;
       else if (lock_data.state & LS_EL_OK
           || CommandData.actbus.lock_goal & LS_IGNORE_EL) { /* el in range */
-        if (lock_data.state & (LS_OPEN | LS_DRIVE_STP))
+        if ((lock_data.state & (LS_OPEN | LS_DRIVE_STP))
+            == (LS_OPEN | LS_DRIVE_STP))
           action = LA_WAIT;
         else if (lock_data.state & LS_DRIVE_EXT)
           action = LA_WAIT;
