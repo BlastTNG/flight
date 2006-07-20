@@ -2390,7 +2390,7 @@ LRESULT CALLBACK MainWndProc(
         sprintf(radecstring,"X %8.5lfh %8.4lfd",ra_0*180./PI/15.,
                 dec_0*180./PI);
                 
-      sprintf(rotstr," R %6.4lfd",ccdRotation*180./PI);
+      sprintf(rotstr," R %6.4lfd",server_data.rot*180./PI);
 
       TextOut(hdc, FONT_HEIGHT, client_height-3*FONT_HEIGHT, radecstring, 
               (int)strlen(radecstring));
