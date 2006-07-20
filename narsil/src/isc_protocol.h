@@ -129,6 +129,8 @@ struct ISCSolutionStruct {
   double pressure1;     // pressure sensor
   int heaterOn;         // 1 if the heater is on
 
+  double diskspace;     // MB space remaining on hard disk
+
   int n_blobs;
   double blob_x[MAX_ISC_BLOBS];
   double blob_y[MAX_ISC_BLOBS];

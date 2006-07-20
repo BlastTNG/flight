@@ -256,6 +256,9 @@ void server_log( int mode ) {
     printf("Error: disk full (%lfMb remain)\n",diskspace);
   }
   
+  // Update diskspace in server_data
+  server_data.diskspace = diskspace;
+
   // try to open the log file
   else if( (logfile = fopen(serverlogname,"a")) == NULL ) {
     printf("Error opening server log file: %s\n",serverlogname);
@@ -2780,7 +2783,8 @@ int main( int argc, char **argv ) {
   server_data.temp3=0;
   server_data.temp4=0;
   server_data.pressure1=0;
-  
+  server_data.diskspace=-1;
+
   // Initialize sockets and thread variables
   for(i=0;i<NCLIENTS;i++) {
     connected_sockets[i]=NULL; 
