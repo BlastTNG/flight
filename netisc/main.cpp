@@ -867,7 +867,7 @@ void pointingSolution( void ) {
         // if we were lost, solution is definitely good 
         if( lost ) {
           pointing_quality = 2;
-          ccdRotation = rot; // update rotation if many blobs matched
+          //ccdRotation = rot; // update rotation if many blobs matched
         }
         
         // otherwise check for excursions from the previous good solution
