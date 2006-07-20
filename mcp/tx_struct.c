@@ -565,8 +565,8 @@ struct ChannelStruct SlowChannels[] = {
   {"mag_pitch",    'w', LOOP5, 55,              I2DEG,             0.0, 'u'},
   {"isc_diskfree", 'w', LOOP5, 56,                5.0,             0.0, 'u'},
   {"osc_diskfree", 'w', LOOP5, 57,                5.0,             0.0, 'u'},
-  {"cbn1",         'w', LOOP5, 58,                1.0,             0.0, 's'},
-  {"cbn2",         'w', LOOP5, 59,                1.0,             0.0, 's'},
+  {"isc_gy1_off",  'w', LOOP5, 58,        1.0/32768.0,             0.0, 's'},
+  {"osc_gy1_off",  'w', LOOP5, 59,        1.0/32768.0,             0.0, 's'},
   {"cbn3",         'w', LOOP5, 60,                1.0,             0.0, 's'},
   {"cbn4",         'w', LOOP5, 61,                1.0,             0.0, 's'},
   END_OF_CHANNELS
