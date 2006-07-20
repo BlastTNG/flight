@@ -252,13 +252,12 @@ void server_log( int mode ) {
     diskspace = diskspace / 1024. / 1024.;  // in megabytes
   } else diskspace = 0;
   
-  if( diskspace < MIN_LOG_DISKSPACE ) {
-    printf("Error: disk full (%lfMb remain)\n",diskspace);
-  }
-  
   // Update diskspace in server_data
   server_data.diskspace = diskspace;
 
+  if( diskspace < MIN_LOG_DISKSPACE ) {
+    printf("Error: disk full (%lfMb remain)\n",diskspace);
+  }
   // try to open the log file
   else if( (logfile = fopen(serverlogname,"a")) == NULL ) {
     printf("Error opening server log file: %s\n",serverlogname);
