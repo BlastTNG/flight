@@ -849,7 +849,7 @@ static void StoreData(int index)
   WriteData(magAzAddr,
       (unsigned int)((PointingData[i_point].mag_az +
                       CommandData.mag_az_trim) * DEG2I), NIOS_QUEUE);
-  WriteData(magAzAddr,
+  WriteData(magPitchAddr,
       (unsigned int)(ACSData.mag_pitch * DEG2I), NIOS_QUEUE);
   WriteData(magModelAddr,
       (unsigned int)(PointingData[i_point].mag_model * DEG2I), NIOS_QUEUE);

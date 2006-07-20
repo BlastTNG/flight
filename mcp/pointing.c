@@ -188,6 +188,7 @@ static int MagConvert(double *mag_az)
 {
   float year;
   static double mvx, mvy, mvz;
+  static double raw_mag_az, raw_mag_pitch;
   static float fdec, dip, ti, gv;
   static double dec;
   static time_t t, oldt;
@@ -252,7 +253,10 @@ static int MagConvert(double *mag_az)
   mvy = MAGY_M*ACSData.mag_y + MAGY_B + MBIAS_Y;
   mvz = MAGZ_M*ACSData.mag_z + MAGZ_B + MBIAS_Z;
   
-  *mag_az = (180.0 / M_PI) * atan2(mvy, mvx);
+  raw_mag_az = (180.0 / M_PI) * atan2(mvy, mvx);
+  raw_mag_pitch = (180.0/M_PI) * atan(mvz/sqrt(mvx*mvx + mvy*mvy));
+  *mag_az = raw_mag_az;
+  ACSData.mag_pitch = raw_mag_pitch+(double)dip;
 
   // Enzo inserted these two lines
   //mag_az_tmp = MagLutCal(&magLut, ACSData.mag_x, ACSData.mag_y, mag_az_tmp);
