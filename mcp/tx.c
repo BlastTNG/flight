@@ -324,6 +324,7 @@ static void StoreStarCameraData(int index, int which)
   static struct NiosStruct* RealTrigAddr[2];
   static struct NiosStruct* BlobIdxAddr[2];
   static struct NiosStruct* FieldrotAddr[2];
+  static struct NiosStruct* DiskfreeAddr[2];
 
   if (firsttime[which]) {
     firsttime[which] = 0;
@@ -378,6 +379,7 @@ static void StoreStarCameraData(int index, int which)
     FieldrotAddr[which] = GetSCNiosAddr("fieldrot", which);
     RealTrigAddr[which] = GetSCNiosAddr("real_trig", which);
     BlobIdxAddr[which] = GetSCNiosAddr("blob_idx", which);
+    DiskfreeAddr[which] = GetSCNiosAddr("diskfree", which);
 
     Temp1Addr[0] = GetNiosAddr("t_isc_flange");
     Temp2Addr[0] = GetNiosAddr("t_isc_heat");
@@ -554,6 +556,8 @@ static void StoreStarCameraData(int index, int which)
       NIOS_QUEUE);
   WriteData(MapmeanAddr[which], (unsigned int)ISCSolution[which][i_isc].mapMean,
       NIOS_QUEUE);
+  WriteData(DiskfreeAddr[which],
+      (unsigned int)ISCSolution[which][i_isc].diskspace / 5, NIOS_QUEUE);
 }
 
 /************************************************************************/

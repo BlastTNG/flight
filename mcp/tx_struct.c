@@ -563,6 +563,12 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_focus",    'w', LOOP5, 53,                1.0,             0.0, 's'},
   {"osc_focus",    'w', LOOP5, 54,                1.0,             0.0, 's'},
   {"mag_pitch",    'w', LOOP5, 55,              I2DEG,             0.0, 'u'},
+  {"isc_diskfree", 'w', LOOP5, 56,                5.0,             0.0, 'u'},
+  {"osc_diskfree", 'w', LOOP5, 57,                5.0,             0.0, 'u'},
+  {"cbn1",         'w', LOOP5, 58,                1.0,             0.0, 's'},
+  {"cbn2",         'w', LOOP5, 59,                1.0,             0.0, 's'},
+  {"cbn3",         'w', LOOP5, 60,                1.0,             0.0, 's'},
+  {"cbn4",         'w', LOOP5, 61,                1.0,             0.0, 's'},
   END_OF_CHANNELS
 };
 
