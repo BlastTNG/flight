@@ -30,14 +30,14 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include "ss_struct.h"
+#include "sss_struct.h"
 #include "pointing_struct.h"
 #include "mcp.h"
 
 #define ARIEN "192.168.1.7"
 #define ARIEN_PORT 11235
 
-ss_packet_data SunSensorData[3];
+sss_packet_data SunSensorData[3];
 int ss_index = 0;
 
 void SunSensor(void) {
@@ -49,7 +49,7 @@ void SunSensor(void) {
 
   struct sockaddr_in addr;
 
-  ss_packet_data Rx_Data;
+  sss_packet_data Rx_Data;
 
 
   bputs(startup, "Sun Sensor: Startup\n");

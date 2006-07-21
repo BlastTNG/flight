@@ -41,7 +41,7 @@
 #include <time.h>
 #include "isc_protocol.h"   /* required for ISCData; get updates from
                                Ed Chapin and/or the ISC computer */
-#include "ss_struct.h"
+#include "sss_struct.h"
 
 #define RAD2SEC (180. * 3600. / M_PI / 15.)  /* radians to seconds (of time) */
 #define SEC2RAD (1. / RAD2SEC)
@@ -71,7 +71,7 @@ struct ACSDataStruct {
 
 extern struct ACSDataStruct ACSData;
 
-extern ss_packet_data SunSensorData[3];
+extern sss_packet_data SunSensorData[3];
 extern int ss_index;
 
 /**********************************************/

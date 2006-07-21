@@ -45,7 +45,7 @@
 #include "tx.h"
 #include "command_struct.h"
 #include "mcp.h"
-#include "ss_struct.h"
+#include "sss_struct.h"
 
 #define NIOS_BUFFER_SIZE 100
 
@@ -573,14 +573,33 @@ static void StoreData(int index)
 {
   static int firsttime = 1;
 
-  static struct NiosStruct* ssAzCenterAddr;
-  static struct NiosStruct* ssPrinAddr;
-  static struct NiosStruct* ssElCenterAddr;
-  static struct NiosStruct* ssElSnrAddr;
-  static struct NiosStruct* ssAzSnrAddr;
-  static struct NiosStruct* ssPcTempAddr;
+  static struct NiosStruct* ssAzRelSunAddr;
+  static struct NiosStruct* ssAmpAddr;
+  static struct NiosStruct* ssDcOffAddr;
+  static struct NiosStruct* ssPhaseAddr;
+  static struct NiosStruct* ssChiAddr;
+  static struct NiosStruct* ssIterAddr;
+  static struct NiosStruct* ssSunTimeAddr;
   static struct NiosStruct* ssCpuTempAddr;
-  static struct NiosStruct* ssChipTempAddr;
+  static struct NiosStruct* ssHddTempAddr;
+  static struct NiosStruct* ssCaseTempAddr;
+  static struct NiosStruct* ssPortTempAddr;
+  static struct NiosStruct* ssStarTempAddr;
+  static struct NiosStruct* ssV5Addr;
+  static struct NiosStruct* ssV12Addr;
+  static struct NiosStruct* ssVBattAddr;
+  static struct NiosStruct* ssRaw01Addr;
+  static struct NiosStruct* ssRaw02Addr;
+  static struct NiosStruct* ssRaw03Addr;
+  static struct NiosStruct* ssRaw04Addr;
+  static struct NiosStruct* ssRaw05Addr;
+  static struct NiosStruct* ssRaw06Addr;
+  static struct NiosStruct* ssRaw07Addr;
+  static struct NiosStruct* ssRaw08Addr;
+  static struct NiosStruct* ssRaw09Addr;
+  static struct NiosStruct* ssRaw10Addr;
+  static struct NiosStruct* ssRaw11Addr;
+  static struct NiosStruct* ssRaw12Addr;
 
   static struct NiosStruct* sipLatAddr;
   static struct NiosStruct* sipLonAddr;
@@ -685,15 +704,33 @@ static void StoreData(int index)
     elAddr = GetNiosAddr("el");
     mcpFrameAddr = GetNiosAddr("mcp_frame");
 
-    ssPrinAddr = GetNiosAddr("ss_prin");
-    ssAzCenterAddr = GetNiosAddr("ss_az_center");
-    ssElCenterAddr = GetNiosAddr("ss_el_center");
-    ssAzSnrAddr = GetNiosAddr("ss_az_snr");
-    ssElSnrAddr = GetNiosAddr("ss_el_snr");
-    ssPcTempAddr = GetNiosAddr("ss_pc_temp");
+    ssAzRelSunAddr = GetNiosAddr("ss_az_rel_sun");
+    ssAmpAddr = GetNiosAddr("ss_amp");
+    ssDcOffAddr = GetNiosAddr("ss_dc_off");
+    ssPhaseAddr = GetNiosAddr("ss_phase");
+    ssChiAddr = GetNiosAddr("ss_chi");
+    ssIterAddr = GetNiosAddr("ss_iter");
+    ssSunTimeAddr = GetNiosAddr("ss_sun_time");
     ssCpuTempAddr = GetNiosAddr("ss_cpu_temp");
-    ssChipTempAddr = GetNiosAddr("ss_chip_temp");
-
+    ssHddTempAddr = GetNiosAddr("ss_hdd_temp");
+    ssCaseTempAddr = GetNiosAddr("ss_case_temp");
+    ssPortTempAddr = GetNiosAddr("ss_port_temp");
+    ssStarTempAddr = GetNiosAddr("ss_star_temp");
+    ssV5Addr = GetNiosAddr("ss_v_5");
+    ssV12Addr = GetNiosAddr("ss_v_12");
+    ssVBattAddr = GetNiosAddr("ss_v_batt");
+    ssRaw01Addr = GetNiosAddr("ss_raw_01");
+    ssRaw02Addr = GetNiosAddr("ss_raw_02");
+    ssRaw03Addr = GetNiosAddr("ss_raw_03");
+    ssRaw04Addr = GetNiosAddr("ss_raw_04");
+    ssRaw05Addr = GetNiosAddr("ss_raw_05");
+    ssRaw06Addr = GetNiosAddr("ss_raw_06");
+    ssRaw07Addr = GetNiosAddr("ss_raw_07");
+    ssRaw08Addr = GetNiosAddr("ss_raw_08");
+    ssRaw09Addr = GetNiosAddr("ss_raw_09");
+    ssRaw10Addr = GetNiosAddr("ss_raw_10");
+    ssRaw11Addr = GetNiosAddr("ss_raw_11");
+    ssRaw12Addr = GetNiosAddr("ss_raw_12");
 
     sipLatAddr = GetNiosAddr("sip_lat");
     sipLonAddr = GetNiosAddr("sip_lon");
@@ -723,8 +760,6 @@ static void StoreData(int index)
     dgpsPitchAddr = GetNiosAddr("dgps_pitch");
     dgpsRollAddr = GetNiosAddr("dgps_roll");
     dgpsSigmaAddr = GetNiosAddr("dgps_sigma");
-    ssAzAddr = GetNiosAddr("ss_az");
-    ssSigmaAddr = GetNiosAddr("ss_sigma");
     sunAzAddr = GetNiosAddr("sun_az");
     iscAzAddr = GetNiosAddr("isc_az");
     iscElAddr = GetNiosAddr("isc_el");
@@ -801,14 +836,34 @@ static void StoreData(int index)
   WriteData(elVelAddr, axes_mode.el_vel * 6000., NIOS_QUEUE);
 
   /********** Sun Sensor Data **********/
-  WriteData(ssPrinAddr, SunSensorData[i_ss].prin, NIOS_QUEUE);
-  WriteData(ssAzCenterAddr, SunSensorData[i_ss].az_center * 16, NIOS_QUEUE);
-  WriteData(ssElCenterAddr, SunSensorData[i_ss].el_center * 16, NIOS_QUEUE);
-  WriteData(ssAzSnrAddr, SunSensorData[i_ss].az_snr * 500, NIOS_QUEUE);
-  WriteData(ssElSnrAddr, SunSensorData[i_ss].el_snr * 500, NIOS_QUEUE);
-  WriteData(ssPcTempAddr, SunSensorData[i_ss].pc_temp * 100, NIOS_QUEUE);
-  WriteData(ssCpuTempAddr, SunSensorData[i_ss].cpu_temp * 100, NIOS_QUEUE);
-  WriteData(ssChipTempAddr, SunSensorData[i_ss].chipset_temp * 100, NIOS_QUEUE);
+  WriteData(ssAmpAddr, SunSensorData[i_ss].amp, NIOS_QUEUE);
+  WriteData(ssDcOffAddr, SunSensorData[i_ss].dc_off, NIOS_QUEUE);
+  WriteData(ssPhaseAddr, SunSensorData[i_ss].phase * DEG2I, NIOS_QUEUE);
+  WriteData(ssChiAddr, SunSensorData[i_ss].chi, NIOS_QUEUE);
+  WriteData(ssChiAddr, SunSensorData[i_ss].iter, NIOS_QUEUE);
+  WriteData(ssSunTimeAddr, SunSensorData[i_ss].sun_time, NIOS_QUEUE);
+  WriteData(ssCpuTempAddr, SunSensorData[i_ss].t_cpu * 100, NIOS_QUEUE);
+  WriteData(ssHddTempAddr, SunSensorData[i_ss].t_hdd * 100, NIOS_QUEUE);
+  WriteData(ssCaseTempAddr, SunSensorData[i_ss].t_case * 100, NIOS_QUEUE);
+  WriteData(ssPortTempAddr, SunSensorData[i_ss].t_port * 100, NIOS_QUEUE);
+  WriteData(ssStarTempAddr, SunSensorData[i_ss].t_starboard * 100, NIOS_QUEUE);
+  WriteData(ssV5Addr, SunSensorData[i_ss].v5 * 100, NIOS_QUEUE);
+  WriteData(ssV12Addr, SunSensorData[i_ss].v12 * 100, NIOS_QUEUE);
+  WriteData(ssVBattAddr, SunSensorData[i_ss].vbatt * 100, NIOS_QUEUE);
+  WriteData(ssRaw01Addr, SunSensorData[i_ss].m01, NIOS_QUEUE);
+  WriteData(ssRaw02Addr, SunSensorData[i_ss].m02, NIOS_QUEUE);
+  WriteData(ssRaw03Addr, SunSensorData[i_ss].m03, NIOS_QUEUE);
+  WriteData(ssRaw04Addr, SunSensorData[i_ss].m04, NIOS_QUEUE);
+  WriteData(ssRaw05Addr, SunSensorData[i_ss].m05, NIOS_QUEUE);
+  WriteData(ssRaw06Addr, SunSensorData[i_ss].m06, NIOS_QUEUE);
+  WriteData(ssRaw07Addr, SunSensorData[i_ss].m07, NIOS_QUEUE);
+  WriteData(ssRaw08Addr, SunSensorData[i_ss].m08, NIOS_QUEUE);
+  WriteData(ssRaw09Addr, SunSensorData[i_ss].m09, NIOS_QUEUE);
+  WriteData(ssRaw10Addr, SunSensorData[i_ss].m10, NIOS_QUEUE);
+  WriteData(ssRaw11Addr, SunSensorData[i_ss].m11, NIOS_QUEUE);
+  WriteData(ssRaw12Addr, SunSensorData[i_ss].m12, NIOS_QUEUE);
+  WriteData(ssAzRelSunAddr, SunSensorData[i_ss].az_rel_sun * DEG2I, NIOS_QUEUE);
+  WriteData(ssPhaseAddr, SunSensorData[i_ss].phase * DEG2I, NIOS_QUEUE);
   /********** SIP GPS Data **********/
   WriteData(sipLatAddr, (int)(SIPData.GPSpos.lat*DEG2I), NIOS_QUEUE);
   WriteData(sipLonAddr, (int)(SIPData.GPSpos.lon*DEG2I), NIOS_QUEUE);

@@ -303,7 +303,8 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 }
 
 // return 1 if new sun, and 0 otherwise
-#define MIN_SS_AZ_SNR 30
+#define MIN_SS_AMP 30
+#warning "SUN MIN AMP NOT SET CORRECTLY"
 static int SSConvert(double *ss_az)
 {
   static int firsttime = 1;
@@ -339,10 +340,10 @@ static int SSConvert(double *ss_az)
   if (i_ss == last_i_ss)
     return (0);
 
-  if (SunSensorData[i_ss].az_snr < MIN_SS_AZ_SNR)
+  if (SunSensorData[i_ss].amp < MIN_SS_AMP)
     return (0);
 
-  az = LutCal(&ssAzLut, (double)SunSensorData[i_ss].az_center);
+  az = LutCal(&ssAzLut, (double)SunSensorData[i_ss].az_rel_sun);
   *ss_az =  -az;//sun_az - az;
 #warning "SUN AZ DISABLED"
 
