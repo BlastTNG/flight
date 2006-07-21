@@ -54,7 +54,6 @@
 /* If mcp has decided the handshaking isn't working, this is the period of the
  * handshake-less triggers */
 #define ISC_DEFAULT_PERIOD 150   /* in 100Hz frames */
-#define MAX_ISC_SLOW_PULSE_SPEED 0.015
 
 /* limits for the gyrobox thermometer.  If the reading is outside this range,
  * we don't regulate the box at all, since it means the thermometer is probably

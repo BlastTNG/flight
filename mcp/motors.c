@@ -1079,7 +1079,10 @@ void UpdateAxesMode(void)
       axes_mode.el_vel = CommandData.pointing_mode.del;
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = CommandData.pointing_mode.vaz;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast =
+        (sqrt(CommandData.pointing_mode.vaz * CommandData.pointing_mode.vaz
+              + CommandData.pointing_mode.del * CommandData.pointing_mode.del)
+         > MAX_ISC_SLOW_PULSE_SPEED) ? 1 : 0;
       break;
     case P_AZEL_GOTO:
       axes_mode.el_mode = AXIS_POSITION;

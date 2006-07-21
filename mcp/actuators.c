@@ -566,6 +566,7 @@ static void SetLockState(int nic)
 /*    Do Lock Logic: check status, determine if we are locked, etc      */
 /*                                                                      */
 /************************************************************************/
+#define LOCK_VEL   "200000" /* Max torque is 50000 */
 #define SEND_SLEEP 100000 /* .1 seconds */
 #define WAIT_SLEEP 50000 /* .05 seconds */
 #define LA_EXIT    0
@@ -669,19 +670,19 @@ static void DoLock(void)
         break;
       case LA_EXTEND:
         bputs(info, "ActBus: Extending lock motor.");
-        command = "V50000P0R"; /* move out forever */
+        command = "V" LOCK_VEL "P0R"; /* move out forever */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_EXT;
         break;
       case LA_RETRACT:
         bputs(info, "ActBus: Retracting lock motor.");
-        command = "V50000D0R"; /* move in forever */
+        command = "V" LOCK_VEL "D0R"; /* move in forever */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_RET;
         break;
       case LA_STEP:
         bputs(info, "ActBus: Stepping lock motor.");
-        command = "V50000P20000R"; /* move away from the limit switch */
+        command = "V" LOCK_VEL "P20000R"; /* move away from the limit switch */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_STP;
         break;
