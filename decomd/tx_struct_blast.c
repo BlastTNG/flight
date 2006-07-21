@@ -47,6 +47,7 @@
 #define DECOM 22, 0
 #define ACS0  23, 0
 #define LOOP5 24, 0
+#define LOOP6 25, 0
 
 /* read and write channel 56 on all boards reserved for ADC Sync */
 struct ChannelStruct WideSlowChannels[] = {
@@ -567,8 +568,13 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_diskfree", 'w', LOOP5, 57,                5.0,             0.0, 'u'},
   {"isc_gy1_off",  'w', LOOP5, 58,        1.0/32768.0,             0.0, 's'},
   {"osc_gy1_off",  'w', LOOP5, 59,        1.0/32768.0,             0.0, 's'},
-  {"cbn3",         'w', LOOP5, 60,                1.0,             0.0, 's'},
-  {"cbn4",         'w', LOOP5, 61,                1.0,             0.0, 's'},
+  {"isc_gy2_off",  'w', LOOP5, 60,        1.0/32768.0,             0.0, 's'},
+  {"osc_gy2_off",  'w', LOOP5, 61,        1.0/32768.0,             0.0, 's'},
+  {"isc_gy3_off",  'w', LOOP5, 62,        1.0/32768.0,             0.0, 's'},
+  {"osc_gy3_off",  'w', LOOP5, 63,        1.0/32768.0,             0.0, 's'},
+
+  {"isc_maxslew",  'w', LOOP6,  0,              I2DEG,             0.0, 'u'},
+  {"osc_maxslew",  'w', LOOP6,  1,              I2DEG,             0.0, 'u'},
   END_OF_CHANNELS
 };
 

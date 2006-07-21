@@ -148,6 +148,23 @@ static int ISCInit(int which)
   return sock;
 }
 
+static double GetNominalVel(struct PointingDataStruct MyPointData)
+{
+  if (CommandData.pointing_mode.nw) { /* doing slew */
+    return 1.9 * DEG2RAD;
+  } else if (CommandData.pointing_mode.mode == P_AZEL_GOTO ||
+      CommandData.pointing_mode.mode == P_RADEC_GOTO ||
+      CommandData.pointing_mode.mode == P_LOCK) {
+    return 0;
+  } else if (CommandData.pointing_mode.mode == P_DRIFT) { /* drift mode */
+    return sqrt(CommandData.pointing_mode.vaz * CommandData.pointing_mode.vaz
+        + CommandData.pointing_mode.del * CommandData.pointing_mode.del)
+      * DEG2RAD;
+  } else {
+    return CommandData.pointing_mode.vaz * DEG2RAD;
+  }
+}
+
 void IntegratingStarCamera(void* parameter)
 {
   fd_set fdr, fdw;
@@ -286,6 +303,7 @@ void IntegratingStarCamera(void* parameter)
         CommandData.ISCState[which].az = MyPointData.az * DEG2RAD;
         CommandData.ISCState[which].el = MyPointData.el * DEG2RAD;
         CommandData.ISCState[which].lst = MyPointData.lst * SEC2RAD;
+        CommandData.ISCState[which].maxSlew = GetNominalVel(MyPointData);
         CommandData.ISCState[which].MCPFrameNum = RxFrameFastSamp;
 
         /* request for one automaticly saved image */
@@ -316,27 +334,35 @@ void IntegratingStarCamera(void* parameter)
             t = mcp_systime(NULL);
             fprintf(isc_log[which],
                 "%s: %i %i %i %i - %i %i %i %i - %.4lf %.4lf %.4lf %.4lf\n"
-                "%.1lf %i %i %i %i - %.1f %.6f %.4f - %.4f %.4f %.4f %.4f\n\n",
+                "%f %.1lf %i %i %i %i - %.1f %.6f %.4f "
+                "- %.4f %.4f %.4f %.4f\n\n",
                 ctime(&t),
                 CommandData.ISCState[which].pause,
                 CommandData.ISCState[which].save,
                 CommandData.ISCState[which].focus_pos,
                 CommandData.ISCState[which].ap_pos,
+
                 CommandData.ISCState[which].display_mode,
                 CommandData.ISCState[which].roi_x,
                 CommandData.ISCState[which].roi_y,
                 CommandData.ISCState[which].blob_num,
-                CommandData.ISCState[which].az, CommandData.ISCState[which].el,
+
+                CommandData.ISCState[which].az,
+                CommandData.ISCState[which].el,
                 CommandData.ISCState[which].lst,
                 CommandData.ISCState[which].lat,
+
+                CommandData.ISCState[which].maxSlew,
                 CommandData.ISCState[which].sn_threshold,
                 CommandData.ISCState[which].grid,
                 CommandData.ISCState[which].cenbox,
                 CommandData.ISCState[which].apbox,
                 CommandData.ISCState[which].mult_dist,
+
                 CommandData.ISCState[which].mag_limit,
                 CommandData.ISCState[which].norm_radius,
                 CommandData.ISCState[which].lost_radius,
+
                 CommandData.ISCState[which].tolerance,
                 CommandData.ISCState[which].match_tol,
                 CommandData.ISCState[which].quit_tol,
