@@ -75,10 +75,11 @@ struct ISCStatusStruct {
   double elBDA;     // el      "      "     "    "    "    "    "  "
 
   // telescope attitude
-  double az;     // az in radians
-  double el;     // el in radians
-  double lst;    // lst in radians (!!)
-  double lat;    // North Lat in radians
+  double az;        // az in radians
+  double el;        // el in radians
+  double lst;       // lst in radians (!!)
+  double lat;       // North Lat in radians
+  double maxSlew;   // maximum telescope slew vel. in rad/sec
 
   // "brightest star is..." state
   int brightStarMode; // 1 brightest star in field is at:
