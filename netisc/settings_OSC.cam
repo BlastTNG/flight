@@ -1,4 +1,4 @@
-20000            Exposure time in um (only for 0/1 triggers)
+200000           Exposure time in um (only for 0/1 triggers)
 1                Relative CCD gain to factory default
 0                Relative CCD offset "
 0.257            Noise model gain   at factory default (blobfinding)

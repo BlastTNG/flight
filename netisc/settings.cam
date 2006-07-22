@@ -14,7 +14,7 @@
 1                If 1 we can use the pyramid pointing solution
 3                Min blobs required for pointing solution
 7                Max blobs used in pointing solution
-9.0              Magnitude limit
+9.5              Magnitude limit
 2.0              Rotation tolerance (not lost) for pointing solutions
 COM2             Serial port for stepper motor communications	
 50               Velocity for the stepper motors
