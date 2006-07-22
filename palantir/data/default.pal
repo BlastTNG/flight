@@ -816,13 +816,13 @@
         <WORD value="0" caption="Ramp" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
-    <NUMBER caption="Bias Level 1">
+    <NUMBER caption="Bias 1 (250)">
       <DATUM format="%.0f" src="bias_lev1" extrema="bias1"/>
     </NUMBER>
-    <NUMBER caption="Bias Level 2">
+    <NUMBER caption="Bias 2 (350)">
       <DATUM format="%.0f" src="bias_lev2" extrema="bias2"/>
     </NUMBER>
-    <NUMBER caption="Bias Level 3">
+    <NUMBER caption="Bias 3 (500)">
       <DATUM format="%.0f" src="bias_lev3" extrema="bias3"/>
     </NUMBER>
   </BOX>
