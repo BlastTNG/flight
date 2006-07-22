@@ -767,8 +767,8 @@ void pointingSolution( void ) {
 
   lost = 0; // start assuming we're not lost
 
-  // If we've had many bad solutions and we have enough blobs try
-  // lost in space mode.
+  // If we've had many bad solutions, and we have enough blobs,
+  // try lost in space mode.
   if( (pointing_nbad >= POINT_LOST_NBAD) && (server_data.n_blobs>=4) ) { 
     
     // Before allowing the pyramid solution check useLost
@@ -1833,10 +1833,15 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
   match_tol = execCmd.match_tol;
   quit_tol = execCmd.quit_tol;
   rot_tol = execCmd.rot_tol;
-  useLost = execCmd.useLost;
   minBlobMatch = execCmd.minBlobMatch;
   maxBlobMatch = execCmd.maxBlobMatch;
 
+  // If slewing too fast, disable useLost
+  if( maxSlew*RAD2DEG < 1 ) { 
+    useLost = execCmd.useLost;
+  } else {
+    useLost = 0;
+  }
 
   // Clients can only change the trigger mode _TO_ self-triggered
   // External triggers are automatically polled every TRIGGER_RETRY seconds
