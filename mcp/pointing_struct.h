@@ -123,6 +123,12 @@ struct PointingDataStruct {
   double ra;        // hours, aparent
   double dec;       // degrees, aparent
   double gy1_offset;
+  double isc_gy1_offset; 
+  double isc_gy2_offset; 
+  double isc_gy3_offset; 
+  double osc_gy1_offset; 
+  double osc_gy2_offset; 
+  double osc_gy3_offset; 
   double gy2_offset;
   double gy3_offset;
   double gy1_earth;

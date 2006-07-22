@@ -449,7 +449,7 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_save_prd", 'w', LOOP3, 62,               0.01,             0.0, 'u'},
   {"osc_y_off",    'w', LOOP3, 63,              I2DEG,             0.0, 's'},
 
-  {"ss_phase",     'w', LOOP4,  0,              I2DEG,             0.0, 'u'},
+  {"ss_phaseb",     'w', LOOP4,  0,              I2DEG,             0.0, 'u'},
   {"ss_chi",       'w', LOOP4,  1,           1./1000.,             0.0, 'u'},
   {"ss_iter",      'w', LOOP4,  2,                1.0,             0.0, 'u'},
   {"ss_sun_time",  'w', LOOP4,  3,                1.0,             0.0, 'u'},

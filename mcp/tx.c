@@ -626,6 +626,12 @@ static void StoreData(int index)
   /** derived pointing data */
   static struct NiosStruct* mcpFrameAddr;
   static struct NiosStruct* gy1OffsetAddr;
+  static struct NiosStruct* iscGy1OffsetAddr;
+  static struct NiosStruct* iscGy2OffsetAddr;
+  static struct NiosStruct* iscGy3OffsetAddr;
+  static struct NiosStruct* oscGy1OffsetAddr;
+  static struct NiosStruct* oscGy2OffsetAddr;
+  static struct NiosStruct* oscGy3OffsetAddr;
   static struct NiosStruct* gy2OffsetAddr;
   static struct NiosStruct* gy3OffsetAddr;
   static struct NiosStruct* gyRollAmpAddr;
@@ -742,6 +748,12 @@ static void StoreData(int index)
     sipMksHiAddr = GetNiosAddr("sip_mks_hi");
 
     gy1OffsetAddr = GetNiosAddr("gy1_offset");
+    iscGy1OffsetAddr = GetNiosAddr("isc_gy1_off");
+    iscGy2OffsetAddr = GetNiosAddr("isc_gy2_off");
+    iscGy3OffsetAddr = GetNiosAddr("isc_gy3_off");
+    oscGy1OffsetAddr = GetNiosAddr("osc_gy1_off");
+    oscGy2OffsetAddr = GetNiosAddr("osc_gy2_off");
+    oscGy3OffsetAddr = GetNiosAddr("osc_gy3_off");
     gy2OffsetAddr = GetNiosAddr("gy2_offset");
     gy3OffsetAddr = GetNiosAddr("gy3_offset");
     gyRollAmpAddr = GetNiosAddr("gy_roll_amp");
@@ -888,6 +900,18 @@ static void StoreData(int index)
 
   WriteData(gy1OffsetAddr,
       (signed int)(PointingData[i_point].gy1_offset * 32768.), NIOS_QUEUE);
+  WriteData(iscGy1OffsetAddr,
+      (signed int)(PointingData[i_point].isc_gy1_offset * 32768.), NIOS_QUEUE);
+  WriteData(iscGy2OffsetAddr,
+      (signed int)(PointingData[i_point].isc_gy2_offset * 32768.), NIOS_QUEUE);
+  WriteData(iscGy3OffsetAddr,
+      (signed int)(PointingData[i_point].isc_gy3_offset * 32768.), NIOS_QUEUE);
+  WriteData(oscGy1OffsetAddr,
+      (signed int)(PointingData[i_point].osc_gy1_offset * 32768.), NIOS_QUEUE);
+  WriteData(oscGy2OffsetAddr,
+      (signed int)(PointingData[i_point].osc_gy2_offset * 32768.), NIOS_QUEUE);
+  WriteData(oscGy3OffsetAddr,
+      (signed int)(PointingData[i_point].osc_gy3_offset * 32768.), NIOS_QUEUE);
   WriteData(gy2OffsetAddr,
       (signed int)(PointingData[i_point].gy2_offset * 32768.), NIOS_QUEUE);
   WriteData(gy3OffsetAddr,

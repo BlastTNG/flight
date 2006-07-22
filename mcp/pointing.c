@@ -396,19 +396,29 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
   // when we get a new frame, use these to correct for history
   double gy_el_delta = 0;
   double gy_az_delta = 0;
+  double gy_raw_el_delta = 0;
+  double gy2_raw_delta = 0;
+  double gy3_raw_delta = 0;
+  double daz;
   int i,j;
 
   double w1, w2;
+  double new_el_offset = 0;
+  double new_gy2_offset = 0;
+  double new_gy3_offset = 0;
 
   // evolve el
   e->angle += (gy1 + gy1_off) / SR;
   e->varience += GYRO_VAR;
+  e->gy_int += gy1 / SR; // in degrees
 
   // evolve az
   old_el *= M_PI / 180.0;
   gy_az = -(gy2 + gy2_off) * cos(old_el) + -(gy3 + gy3_off) * sin(old_el);
   a->angle += gy_az / SR;
   a->varience += GYRO_VAR;
+  a->gy2_int += gy2 / SR; // in degrees
+  a->gy3_int += gy3 / SR; // in degrees
 
   i_isc = iscpoint_index[which];
   /* in theory, iscpoint_index points to the last ISCSolution with flag set.
@@ -433,15 +443,23 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
       // this solution is isc_pulses.age old: how much have we moved?
       gy_el_delta = 0;
       gy_az_delta = 0;
+      gy_raw_el_delta = 0;
+      gy2_raw_delta = 0;
+      gy3_raw_delta = 0;
+      
       for (i = 0; i < isc_pulses[which].age; i++) {
         j = hs.i_history - i;
         if (j < 0)
           j += GY_HISTORY;
 
         gy_el_delta += (hs.gyro1_history[j] + gy1_off) * (1.0 / SR);
+        gy_raw_el_delta += (hs.gyro1_history[j]) * (1.0 / SR);
+
         gy_az_delta += (-(hs.gyro2_history[j] + gy2_off) *
             cos(hs.elev_history[j]) + -(hs.gyro3_history[j] + gy3_off) *
             sin(hs.elev_history[j])) * (1.0 / SR);
+	gy2_raw_delta += (hs.gyro2_history[j]) * (1.0 / SR);
+	gy3_raw_delta += (hs.gyro3_history[j]) * (1.0 / SR);
       }
 
       // evolve el solution
@@ -456,6 +474,17 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
           w2 = 1 / (w2 * w2);
         else
           w2 = 0; // shouldn't happen
+      }
+
+      if (w2 > 0.0 ) {
+        // Calculate el offset
+        e->since_last -= isc_pulses[which].age;
+        new_el_offset = ((new_el - e->last_input) - e->gy_int+gy_raw_el_delta)/
+  	      ((1.0/SR) * (double)e->since_last);
+        e->last_input = new_el;
+        e->since_last = isc_pulses[which].age;
+        e->gy_offset = new_el_offset;
+	e->gy_int = gy_raw_el_delta;
       }
 
       UnwindDiff(e->angle, &new_el);
@@ -476,11 +505,33 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
       a->angle += gy_az_delta; // add back to now
 
       NormalizeAngle(&(a->angle));
+
+      if (w2 > 0.0 ) {
+        // Calculate az offset
+	daz = remainder(new_az - a->last_input, 360.0);
+	
+        a->since_last -= isc_pulses[which].age;
+        new_gy2_offset = -(daz * cos(new_el) + a->gy2_int-gy2_raw_delta) /
+          ((1.0/SR) * (double)a->since_last);
+
+        /* Do Gyro3 */
+        new_gy3_offset = -(daz * sin(new_el) + a->gy3_int-gy3_raw_delta) /
+          ((1.0/SR) * (double)a->since_last);
+
+        a->last_input = new_az;
+        a->since_last = isc_pulses[which].age;
+        a->gy2_offset = new_gy2_offset;
+        a->gy3_offset = new_gy3_offset;
+	a->gy2_int = gy2_raw_delta;
+	a->gy3_int = gy3_raw_delta;
+      }
     }
 
     last_isc_framenum[which] = ISCSolution[which][i_isc].framenum;
     isc_pulses[which].age = -1; // reset counter.
   }
+  e->since_last++;
+  a->since_last++;
 }
 
 /* Gyro noise: 7' / rt(hour) */
@@ -1072,10 +1123,16 @@ void Pointing(void)
   PointingData[point_index].isc_az = ISCAz.angle;
   PointingData[point_index].isc_el = ISCEl.angle;
   PointingData[point_index].isc_sigma = sqrt(ISCEl.varience + ISCEl.sys_var);
+  PointingData[point_index].isc_gy1_offset = ISCEl.gy_offset;
+  PointingData[point_index].isc_gy2_offset = ISCAz.gy2_offset;
+  PointingData[point_index].isc_gy3_offset = ISCAz.gy3_offset;
 
   PointingData[point_index].osc_az = OSCAz.angle;
   PointingData[point_index].osc_el = OSCEl.angle;
   PointingData[point_index].osc_sigma = sqrt(OSCEl.varience + OSCEl.sys_var);
+  PointingData[point_index].osc_gy1_offset = OSCEl.gy_offset;
+  PointingData[point_index].osc_gy2_offset = OSCAz.gy2_offset;
+  PointingData[point_index].osc_gy3_offset = OSCAz.gy3_offset;
 
   /************************/
   /* set roll damper gain */
