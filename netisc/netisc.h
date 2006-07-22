@@ -68,8 +68,7 @@
 #define POINT_MAX_ERR 15    // # arcsec error in pointing to be considered bad
 #define POINT_LOST_BLOBS 5  // # blobs required for lost mode
 #define POINT_LOST_NBAD 5   // # bad solutions required for lost mode
-#define POINT_EXCUR_NBAD 10 //   "        "       "     good despite excursion
-#define POINT_MAX_SLEW 0.5  // max slew rate excursions from solution in deg/s
+#define POINT_EXCUR_NBAD 5  //   "        "       "     good despite excursion
 
 // Controls for the display window
 #define EYE_WIDTH 600       // Display window width in Pixels (evil eye)
@@ -225,6 +224,7 @@ double lst=0.;       // local sidereal time     "
 double lat=0.0;      // latitude of telescope   "
 double lon=-0.0;     // E lon "
 int focusOffset=0;   // offset to home position (for lab focusing)
+double maxSlew=0.1*DEG2RAD;// max slew vel. of telescope for pointing rejection
 
 int brightStarMode;  // 1 brightest star in field is at:
 double brightRA;     // RA: radians (apparent)

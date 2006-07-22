@@ -875,9 +875,12 @@ void pointingSolution( void ) {
           cel2vec(last_ra_0,last_dec_0,&last_a,&last_b,&last_c);
           cel2vec(ra_0,dec_0,&a,&b,&c);
           theta = acos( last_a*a + last_b*b + last_c*c );
-          max_theta = ((double)frame_time - (double)last_time + 1.) * 
-            POINT_MAX_SLEW*PI/180.;
+          //max_theta = ((double)frame_time - (double)last_time + 1.) * 
+          //  POINT_MAX_SLEW*PI/180.;
           
+          max_theta = ((double)frame_time - (double)last_time + 1.) * 
+            maxSlew*3.;
+
           if( (theta < max_theta) || (pointing_nbad >= POINT_EXCUR_NBAD) ) {
             pointing_quality = 1;
           } else {
@@ -1677,6 +1680,9 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
 
   if( (execCmd.useLost<0) || (execCmd.useLost>1) ) execCmd.useLost = useLost;
 
+  if( execCmd.maxSlew*RAD2DEG <= 0.05 ) execCmd.maxSlew = 0.05*DEG2RAD;
+  if( execCmd.maxSlew*RAD2DEG > 5) execCmd.maxSlew = maxSlew;
+
   if( (execCmd.maxBlobMatch<0) || (execCmd.maxBlobMatch>MAX_ISC_BLOBS) )
     execCmd.maxBlobMatch = 7;
         
@@ -1750,6 +1756,7 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
   az = execCmd.az;
   el = execCmd.el;
   lat = execCmd.lat;
+  maxSlew = execCmd.maxSlew;
 
 #ifndef AUTONOMOUS
   lst = execCmd.lst;
@@ -1829,6 +1836,7 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
   useLost = execCmd.useLost;
   minBlobMatch = execCmd.minBlobMatch;
   maxBlobMatch = execCmd.maxBlobMatch;
+
 
   // Clients can only change the trigger mode _TO_ self-triggered
   // External triggers are automatically polled every TRIGGER_RETRY seconds
@@ -2182,7 +2190,8 @@ LRESULT CALLBACK MainWndProc(
   char afocstr1[80];    // autofocus messages
   char afocstr2[80];
   char frameNumStr[80]; // current frame number message
-  
+  char maxslewstr[80];  // maxSlew
+
   char lststr[80];
   char azstr[80];
   char elstr[80];
@@ -2498,6 +2507,10 @@ LRESULT CALLBACK MainWndProc(
     TextOut(hdc, client_width*3/4., FONT_HEIGHT, expstr, 
             (int)strlen(expstr));                        
 
+    // maxslew 
+    sprintf(maxslewstr,"%5.2lfd/s",maxSlew*RAD2DEG);
+    TextOut(hdc, FONT_HEIGHT, FONT_HEIGHT*3., maxslewstr, 
+            (int)strlen(maxslewstr));
 
     // Plot the current temperature / pressure
     TextOut(hdc, FONT_HEIGHT, FONT_HEIGHT*2., tempstring, 
