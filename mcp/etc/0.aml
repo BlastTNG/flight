@@ -220,7 +220,7 @@
 --u50@u0      biasin        @             @             0             255           @             
 --u51@u0      disk_free     @             @             0             30720         @             
 --u52@u0      cpu_temp3     @             @             0             80            @             
---u53@u0      ss_cpu_temp   @             @             0             80            @             
+--u53@u0      ss_az         @             @             0             80            @             
 --u54@u0      osc_framenum  @             @             @             @             @             
 --u55@u0      osc_mapmean   @             @             0             16384         @             
 --u56@u0      osc_rd_sigma  @             @             @             @             @             
@@ -244,8 +244,8 @@
 --u74@u0      osc_x_off     @             @             -909          910           @             
 --u75@u43     osc_y_off     @             @             @             @             @             
 --u76@u0      mcp_frame     @             @             @             @             20            
---u77@u0      ss_az_snr     @             @             @             @             @             
---u78@u0      ss_az_center  @             @             @             @             @             
+--u77@u0      ss_az         @             @             @             @             @             
+--u78@u0      ss_az         @             @             @             @             @             
 --u79@u0      sip_mks_hi    @             @             @             @             @             
 --u80@u0      p_pv          @             @             @             @             @             
 --u81@u0      p_ra_1        @             @             @             @             @             
@@ -270,7 +270,7 @@
 --m1          cryoin        4             4             0             15            1             
 --m2          lokmot_pin    1             2             0             1             1             
 --m3          isc_fpulse    4             2             0             300           1             
---m4          ss_prin       4             2             0             100           1             
+--m4          ss_az         4             2             0             100           1             
 --m5          sam_i_am      1             2             0             1             1             
 --m6          cryostate     8             4             0             255           1             
 --m7          sensor_veto   8             4             0             255           1             

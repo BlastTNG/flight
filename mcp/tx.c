@@ -772,7 +772,10 @@ static void StoreData(int index)
     dgpsPitchAddr = GetNiosAddr("dgps_pitch");
     dgpsRollAddr = GetNiosAddr("dgps_roll");
     dgpsSigmaAddr = GetNiosAddr("dgps_sigma");
+    ssAzAddr = GetNiosAddr("ss_az");
+    ssSigmaAddr = GetNiosAddr("ss_sigma");
     sunAzAddr = GetNiosAddr("sun_az");
+    ssTrimAddr = GetNiosAddr("ss_trim");
     iscAzAddr = GetNiosAddr("isc_az");
     iscElAddr = GetNiosAddr("isc_el");
     iscSigmaAddr = GetNiosAddr("isc_sigma");
