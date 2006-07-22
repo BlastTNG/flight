@@ -1260,6 +1260,9 @@
     <NUMBER caption="VCS Filter">
       <DATUM format="%.2f" src="T_vcs_filt" extrema="vcstemp"/>
     </NUMBER>
+    <NUMBER caption="VCS Fet">
+      <DATUM format="%.2f" src="T_vcs_fet" extrema="vcsfet"/>
+    </NUMBER>
     <NUMBER caption="LHE Filter">
       <DATUM format="%.2f" src="T_lhe_filt" extrema="lhetemp"/>
     </NUMBER>
@@ -1269,11 +1272,8 @@
     <NUMBER caption="Charcoal">
       <DATUM format="%.2f" src="T_charcoal" extrema="chartemp"/>
     </NUMBER>
-    <NUMBER caption="Heatswitch">
+    <NUMBER caption="3He Fridge Diode">
       <DATUM format="%.2f" src="T_heatswitch" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="VCS Fet">
-      <DATUM format="%.2f" src="T_vcs_fet" extrema="vcsfet"/>
     </NUMBER>
   </BOX>
   <BOX caption="Cold Optics Temps" row="3" col="6">
@@ -1316,7 +1316,7 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="Level Sensor">
-      <DATUM format="%.2f" src="HE4_LEV" extrema="unknown"/>
+      <DATUM format="%.2f" src="HE4_LEV_OLD" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="Charcoal">
       <DATUM src="CHARC_HEATER">
