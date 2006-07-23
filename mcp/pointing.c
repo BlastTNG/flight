@@ -303,7 +303,7 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 }
 
 // return 1 if new sun, and 0 otherwise
-#define MIN_SS_AMP 30
+#define MIN_SS_AMP 8000
 #warning "SUN MIN AMP NOT SET CORRECTLY"
 static int SSConvert(double *ss_az)
 {
