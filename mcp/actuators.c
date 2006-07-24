@@ -42,7 +42,7 @@
 
 /* Define this symbol to have mcp log all actuator bus traffic */
 #define ACTBUS_CHATTER
-int __inhibit_chatter = 0;
+static int __inhibit_chatter = 0;
 
 #ifdef BOLOTEST
 #  define ACT_BUS "/dev/ttyS0"
@@ -108,24 +108,24 @@ static struct stepper_struct {
   int sequence;
 } stepper[NACT];
 
-struct lock_struct {
+static struct lock_struct {
   unsigned int pos;
   unsigned short adc[4];
   unsigned int state;
 } lock_data = { .state = LS_DRIVE_UNK };
 
-struct act_struct {
+static struct act_struct {
   unsigned int pos;
   unsigned int enc;
   unsigned short adc[4];
 } act_data[3];
 
-struct sec_struct {
+static struct sec_struct {
   double tilt, rotation, offset;
 } sec_data[2];
 
 #ifdef USE_XY_STAGE
-struct stage_struct {
+static struct stage_struct {
   unsigned int xpos, ypos;
   unsigned int xlim, ylim;
   unsigned int xstp, ystp;
@@ -134,8 +134,8 @@ struct stage_struct {
 } stage_data;
 #endif
 
-int bus_seized = -1;
-int bus_underride = -1;
+static int bus_seized = -1;
+static int bus_underride = -1;
 
 static int act_setserial(char *input_tty)
 {
@@ -416,7 +416,7 @@ static int PollBus(int rescan)
   return all_ok;
 }
 
-int ReadIntFromBus(int who, const char* cmd, int inhibit_chatter)
+static int ReadIntFromBus(int who, const char* cmd, int inhibit_chatter)
 {
   int result;
 
@@ -552,11 +552,11 @@ static void SetLockState(int nic)
   if (fabs(ACSData.enc_elev - LockPosition(ACSData.enc_elev)) <= 0.2)
     state |= LS_EL_OK;
 
-  /* Assume the pin is in unless we're all the way open */
-  if (state & LS_OPEN)
-    CommandData.pin_is_in = 0;
-  else
+  /* Assume the pin is out unless we're all the way closed */
+  if (state & LS_CLOSED)
     CommandData.pin_is_in = 1;
+  else
+    CommandData.pin_is_in = 0;
 
   lock_data.state = state;
 }
@@ -858,7 +858,7 @@ static void DiscardBusRecv(int flag, int inhibit_chatter)
 #endif
 }
 
-void SolveSecondary(void)
+static void SolveSecondary(void)
 {
   static int firsttime = 1;
 
