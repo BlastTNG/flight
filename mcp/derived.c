@@ -81,7 +81,6 @@ union DerivedUnion DerivedChannels[] = {
   COMMENT("Pointing Stuff"),
   LINCOM("P_X_H", "p_x_deg", 0.0003662109375, 0),
   LINTERP("Clin_Elev", "clin_elev", "/data/etc/clin_elev.lut"),
-  // LINTERP("SS_AzRelSun", "SS_AZ_CENTER", "/data/etc/ss.lut"),
   LINTERP("SS_AzRelSun", "SS_AZ", "/data/etc/ss.lut"),
   BITFIELD("sensor_veto",
       "SUN_VETO",
@@ -163,6 +162,21 @@ union DerivedUnion DerivedChannels[] = {
       "OF_COOL1_OFF",
       ),
 #endif
+
+  COMMENT("Lock Motor/Actuators"),
+  BITFIELD("lock_state",
+      "LS_OPEN",
+      "LS_CLOSED",
+      "LS_DRIVE_OFF",
+      "LS_POT_RAIL",
+      "LS_DRIVE_EXT",
+      "LS_DRIVE_RET",
+      "LS_DRIVE_STP",
+      "LS_DRIVE_UNK",
+      "LS_EL_OK",
+      "LS_IGNORE_EL",
+      "LS_DRIVE_FORCE"
+      ),
 
   /* BIAS */
   COMMENT("Bias Control"),
