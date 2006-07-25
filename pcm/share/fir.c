@@ -78,7 +78,7 @@ int main() {
   struct FirStruct fs;
   int i;
 
-  initFir(&fs, 10000);
+  initFir(&fs, 100.0*30.0*60.0);
 
   for (i=0; i<1000000; i++) {
     x = sin(2.0*M_PI*(double)i/4000) + sin(2.0*M_PI*(double)i/8000); //random()/12345.0;

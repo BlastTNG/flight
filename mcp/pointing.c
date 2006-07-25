@@ -49,7 +49,7 @@
 #define GY3_OFFSET (0)
 
 #define MAX_ISC_AGE 200
-#define FIR_LENGTH (500 * SR)
+#define FIR_LENGTH (60*30 * SR)
 
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
     double *el);
@@ -511,11 +511,11 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
 	daz = remainder(new_az - a->last_input, 360.0);
 	
         a->since_last -= isc_pulses[which].age;
-        new_gy2_offset = -(daz * cos(new_el) + a->gy2_int-gy2_raw_delta) /
+        new_gy2_offset = -(daz * cos(new_el*M_PI/180) + a->gy2_int-gy2_raw_delta) /
           ((1.0/SR) * (double)a->since_last);
 
         /* Do Gyro3 */
-        new_gy3_offset = -(daz * sin(new_el) + a->gy3_int-gy3_raw_delta) /
+        new_gy3_offset = -(daz * sin(new_el*M_PI/180.0) + a->gy3_int-gy3_raw_delta) /
           ((1.0/SR) * (double)a->since_last);
 
         a->last_input = new_az;
