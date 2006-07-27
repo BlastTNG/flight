@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(narsil, 2.2.0, [dwiebe@physics.utoronto.ca])
-AM_INIT_AUTOMAKE(narsil, 2.2.0)
+AC_INIT(narsil, 2.2.1, [dwiebe@physics.utoronto.ca])
+AM_INIT_AUTOMAKE(narsil, 2.2.1)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH(data-etc, AS_HELP_STRING([--with-data-etc=DIR],
@@ -174,6 +174,18 @@ dnl BLASTcmd Host
 AC_ARG_WITH([blastcmd-host], AS_HELP_STRING([--with-blastcmd-host=HOST],
             [connect to the blastcmd daemon running on HOST [[arwen]]]),
             BLASTCMD_HOST="${withval}", BLASTCMD_HOST="arwen")
+
+AC_ARG_ENABLE(cmd-line, AS_HELP_STRING([--enable-cmd-line],
+              [enable the command line pre-processor]),
+              [
+               case ${enableval} in
+                 no) NARSILPP="no";;
+                 *) NARSILPP="yes";;
+               esac
+               ], [NARSILPP="no"])
+AC_MSG_CHECKING([whether to enable the command line preprocessor])
+AC_MSG_RESULT([$NARSILPP])
+AM_CONDITIONAL(NARSILPP, test "$NARSILPP" = "yes")
 
 AC_MSG_CHECKING([for the name of the blastcmd host])
 AC_MSG_RESULT([$BLASTCMD_HOST])

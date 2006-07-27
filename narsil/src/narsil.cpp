@@ -1255,7 +1255,7 @@ Defaults *defaults;
 int main(int argc, char* argv[]) {
   QApplication app(argc, argv);
 
-  if (argc > 2) {
+  if (argc > 1) {
     printf(
         "Narsil " VERSION " doesn't take arguments.  It was compiled at "
         __DATE__ "\nand is copyright (C) 2002-2006 University of Toronto.\n\n"
@@ -1273,12 +1273,7 @@ int main(int argc, char* argv[]) {
 
   /* Host determination */
   if ((blastcmd_host = getenv("NARSIL_HOST")) == NULL)
-  {
-    if (argc == 2)
-      blastcmd_host = argv[1];
-    else
-      blastcmd_host = BLASTCMD_HOST;
-  }
+    blastcmd_host = BLASTCMD_HOST;
 
   /* Client negotiation */
   NetCmdConnect(blastcmd_host, 1, 0);
