@@ -40,6 +40,7 @@
 #define P_VBOX       9
 #define P_QUAD      10
 
+#define MAX_ISC_SLOW_PULSE_SPEED 0.015
 
 struct GainStruct {
   unsigned short int P;
