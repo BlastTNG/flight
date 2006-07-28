@@ -823,9 +823,9 @@ void StoreActBus(void)
   WriteData(gTPrimAddr, CommandData.actbus.g_primary, NIOS_QUEUE);
   WriteData(gTSecAddr, CommandData.actbus.g_secondary, NIOS_QUEUE);
   WriteData(focusVetoAddr, CommandData.actbus.autofocus_vetoed, NIOS_QUEUE);
-  WriteData(secFocusPosAddr, CommandData.actbus.focus, NIOS_QUEUE);
-  WriteData(secTiltGoalAddr, CommandData.actbus.tilt, NIOS_QUEUE);
-  WriteData(secRotGoalAddr, CommandData.actbus.rotation, NIOS_QUEUE);
+  WriteData(secFocusPosAddr, CommandData.actbus.focus * 3000, NIOS_QUEUE);
+  WriteData(secTiltGoalAddr, CommandData.actbus.tilt * 30000, NIOS_QUEUE);
+  WriteData(secRotGoalAddr, CommandData.actbus.rotation * DEG2I, NIOS_QUEUE);
 
 #ifdef USE_XY_STAGE
   WriteData(stageXAddr, stage_data.xpos, NIOS_QUEUE);

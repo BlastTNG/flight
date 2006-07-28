@@ -558,7 +558,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
 #endif
 
-    /* Lock and Actuators */
+    /* Lock */
     case pin_in:
       CommandData.actbus.lock_goal = LS_CLOSED | LS_DRIVE_OFF | LS_IGNORE_EL;
       break;
@@ -580,6 +580,14 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case repoll:
       CommandData.actbus.force_repoll = 1;
+      break;
+
+    /* Actuators */
+    case autofocus_veto:
+      CommandData.actbus.autofocus_vetoed = 1;
+      break;
+    case autofocus_allow:
+      CommandData.actbus.autofocus_vetoed = 0;
       break;
 
 #ifndef BOLOTEST
@@ -1001,6 +1009,17 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       copysvalue(CommandData.actbus.command[CommandData.actbus.cindex],
           svalues[1]);
       CommandData.actbus.cindex = INC_INDEX(CommandData.actbus.cindex);
+      break;
+    case focus:
+      CommandData.actbus.focus = rvalues[0];
+      break;
+    case mirror_gain:
+      CommandData.actbus.g_primary = ivalues[0];
+      CommandData.actbus.g_secondary = ivalues[1];
+      break;
+    case mirror_tilt:
+      CommandData.actbus.tilt = rvalues[0];
+      CommandData.actbus.rotation = rvalues[1];
       break;
 
 #ifndef BOLOTEST
@@ -1841,6 +1860,13 @@ void InitCommandData()
   CommandData.actbus.caddr[0] = 0;
   CommandData.actbus.caddr[1] = 0;
   CommandData.actbus.caddr[2] = 0;
+  
+  CommandData.actbus.autofocus_vetoed = 0;
+  CommandData.actbus.tilt = 0;
+  CommandData.actbus.rotation = 0;
+  CommandData.actbus.focus = 1; /* mm */
+  CommandData.actbus.g_primary = 0;
+  CommandData.actbus.g_secondary = 0;
 
   CommandData.Bias.dont_do_anything = 0;
   CommandData.Bias.clockInternal = 0;
