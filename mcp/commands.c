@@ -581,9 +581,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case repoll:
       CommandData.actbus.force_repoll = 1;
       break;
-    case megakill:
-      CommandData.actbus.megakill = 1;
-      break;
 
 #ifndef BOLOTEST
       /***************************************/
@@ -1838,7 +1835,6 @@ void InitCommandData()
   CommandData.pumps.outframe_cool2_on = 0;
   CommandData.pumps.outframe_cool2_off = 0;
 
-  CommandData.actbus.megakill = 0;
   CommandData.actbus.lock_goal = LS_DRIVE_OFF;
   CommandData.actbus.force_repoll = 0;
   CommandData.actbus.cindex = 0;

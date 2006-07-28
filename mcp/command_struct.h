@@ -40,7 +40,6 @@
 #define P_VBOX       9
 #define P_QUAD      10
 
-#define MAX_ISC_SLOW_PULSE_SPEED 0.015
 
 struct GainStruct {
   unsigned short int P;
@@ -219,8 +218,15 @@ struct CommandDataStruct {
     char command[3][CMD_STRING_LEN];
     int force_repoll;
 
+    double g_primary;
+    double g_secondary;
+    int autofocus_vetoed;
+
+    double focus;
+    double tilt;
+    double rotation;
+
     unsigned int lock_goal;
-    unsigned int megakill;
   } actbus;
 
   int pin_is_in;

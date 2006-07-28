@@ -833,16 +833,6 @@ void StoreActBus(void)
 #endif
 }
 
-static int MegaKill(void)
-{
-  if (CommandData.actbus.megakill) {
-    BusSend('_', "T", __inhibit_chatter);
-    return 1;
-    CommandData.actbus.megakill = 0;
-  }
-  return 0;
-}
-
 static void DiscardBusRecv(int flag, int inhibit_chatter)
 {
   int i;
@@ -966,8 +956,6 @@ void ActuatorBus(void)
 
     SolveSecondary();
 
-    if (MegaKill())
-      return;
     usleep(10000);
   }
 }

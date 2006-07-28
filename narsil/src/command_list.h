@@ -17,8 +17,8 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 132        /* total number of single word cmds */
-#define N_MCOMMANDS 79         /* total number of multiword commands */
+#define N_SCOMMANDS 133        /* total number of single word cmds */
+#define N_MCOMMANDS 82         /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -93,8 +93,9 @@ enum singleCommand {
   osc_eye_on,       osc_eye_off,        inner_cool_auto,  outer_cool_auto,
   trim_to_osc,      antisun,            blast_rocks,      blast_sucks,
   fridge_cycle,     at_float,           not_at_float,     el_auto_gyro,
-  repoll,           biascmd_inh,        biascmd_ena,      megakill,
-  isc_use_pyramid,  isc_no_pyramid,     osc_use_pyramid,  osc_no_pyramid
+  repoll,           biascmd_inh,        biascmd_ena,      autofocus_allow,
+  isc_use_pyramid,  isc_no_pyramid,     osc_use_pyramid,  osc_no_pyramid,
+  autofocus_veto
 };
 
 struct scom {
@@ -128,7 +129,8 @@ enum multiCommand {
   bda_gain,          bda_set,           jfet_set,         isc_foc_off,
   osc_foc_off,       t_gyro2_gain,      t_gyro2_set,      apcu_charge,
   dpcu_charge,       auto_apcu,         auto_dpcu,        quad,
-  el_gyro_offset,    general,           slew_veto
+  el_gyro_offset,    general,           slew_veto,        focus,
+  mirror_gain,       mirror_tilt
 };
 
 struct par {

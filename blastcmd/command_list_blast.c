@@ -22,13 +22,13 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.19 $";
+const char *command_list_serial = "$Revision: 3.20 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
   "Pointing Sensor Trims", "Cooling System",    "Cal Lamp",
   "Pointing Sensor Vetos", "Aux. Electronics",  "Cryo Heat",
-  "Pointing Sensor Power", "Actuators && Lock",  "Cryo Control",
+  "Pointing Sensor Power", "Actuators && Lock", "Cryo Control",
   "Pointing Motor Gains",  "ISC Housekeeping",  "OSC Housekeeping",
   "Telemetry",             "ISC Modes",         "OSC Modes",
   "Miscellaneous",         "ISC Parameters",    "OSC Parameters"
@@ -169,8 +169,10 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(unlock), "unlock the inner frame", GR_LOCK},
   {COMMAND(lock_off), "turn off the lock motor", GR_LOCK},
   {COMMAND(repoll), "force repoll of the actuator bus", GR_LOCK},
-  {COMMAND(megakill), "send abort to all controllers on actuator bus", GR_LOCK |
-    CONFIRM},
+  {COMMAND(autofocus_veto), "veto the secondary actuator system temperature"
+    " correction mode", GR_LOCK},
+  {COMMAND(autofocus_allow), "allow the secondary actuator system temperature"
+    " correction mode", GR_LOCK},
 
   {COMMAND(isc_abort), "abort current solution attempt", GR_ISC_MODE},
   {COMMAND(isc_auto_focus), "autofocus camera", GR_ISC_MODE},
@@ -370,10 +372,32 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(general), "send a general command string to the lock or actuators",
     GR_LOCK, 2,
     {
-        {"Address (1-3,5,33)", 1, 0x2F, 'i', "1.0"},
-        {"Command", 0, 16, 's', ""},
+      {"Address (1-3,5,33)", 1, 0x2F, 'i', "1.0"},
+      {"Command", 0, 16, 's', ""},
     }
   },
+
+  {COMMAND(focus), "servo the secondary mirror to absolute position", GR_LOCK,
+    1,
+    {
+      {"Position (mm)", 0, 20, 'f', "SEC_LPOS"},
+    }
+  },
+
+  {COMMAND(mirror_tilt), "set the secondary mirror tilt", GR_LOCK, 2,
+    {
+      {"Tilt (degrees)", 0, 2, 'f', "SEC_LTILT"},
+      {"Rotation (degrees)", 0, 360, 'f', "SEC_LROT"},
+    }
+  },
+
+  {COMMAND(mirror_gain), "set the secondary actuator system gains", GR_LOCK, 2,
+    {
+      {"T. Primary Gain", 0, 30000, 'i', "G_T_PRIM"},
+      {"T. Secondary Gain", 0, 30000, 'i', "G_T_SEC"},
+    }
+  },
+
 
 
   {COMMAND(osc_offset), "set offset of OSC to primary beam",
