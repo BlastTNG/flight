@@ -725,9 +725,6 @@ void StoreActBus(void)
   
   static struct NiosStruct* actPosAddr[3];
   static struct NiosStruct* actEncAddr[3];
-#if 0
-  static struct NiosStruct* actAdcAddr[3][4];
-#endif
 
   static struct NiosStruct* secEtiltAddr;
   static struct NiosStruct* secErotAddr;
@@ -735,6 +732,13 @@ void StoreActBus(void)
   static struct NiosStruct* secLtiltAddr;
   static struct NiosStruct* secLrotAddr;
   static struct NiosStruct* secLoffAddr;
+
+  static struct NiosStruct* gTPrimAddr;
+  static struct NiosStruct* gTSecAddr;
+  static struct NiosStruct* secFocusPosAddr;
+  static struct NiosStruct* secTiltGoalAddr;
+  static struct NiosStruct* secRotGoalAddr;
+  static struct NiosStruct* focusVetoAddr;
 
 #ifdef USE_XY_STAGE
   static struct NiosStruct* stageXAddr;
@@ -765,12 +769,6 @@ void StoreActBus(void)
     for (i = 0; i < 3; ++i) {
       actPosAddr[i] = GetActNiosAddr(i, "pos");
       actEncAddr[i] = GetActNiosAddr(i, "enc");
-#if 0
-      actAdcAddr[i][0] = GetActNiosAddr(i, "adc0");
-      actAdcAddr[i][1] = GetActNiosAddr(i, "adc1");
-      actAdcAddr[i][2] = GetActNiosAddr(i, "adc2");
-      actAdcAddr[i][3] = GetActNiosAddr(i, "adc3");
-#endif
     }
 
     secEtiltAddr = GetNiosAddr("sec_etilt");
@@ -779,6 +777,13 @@ void StoreActBus(void)
     secLtiltAddr = GetNiosAddr("sec_ltilt");
     secLrotAddr = GetNiosAddr("sec_lrot");
     secLoffAddr = GetNiosAddr("sec_loff");
+
+    gTPrimAddr = GetNiosAddr("g_t_prim");
+    gTSecAddr = GetNiosAddr("g_t_sec");
+    secFocusPosAddr = GetNiosAddr("sec_focus_pos");
+    secTiltGoalAddr = GetNiosAddr("sec_tilt_goal");
+    secRotGoalAddr = GetNiosAddr("sec_rot_goal");
+    focusVetoAddr = GetNiosAddr("focus_veto");
 
 #ifdef USE_XY_STAGE
     stageXAddr = GetNiosAddr("stage_x");
@@ -797,10 +802,6 @@ void StoreActBus(void)
   WriteData(lokmotPinAddr, CommandData.pin_is_in, NIOS_QUEUE);
 
   for (j = 0; j < 3; ++j) {
-#if 0
-    for (i = 0; i < 4; ++i)
-      WriteData(actAdcAddr[j][i], act_data[j].adc[i], NIOS_QUEUE);
-#endif
     WriteData(actPosAddr[j], act_data[j].pos, NIOS_QUEUE);
     WriteData(actEncAddr[j], act_data[j].enc, NIOS_QUEUE);
   }
@@ -818,6 +819,13 @@ void StoreActBus(void)
   WriteData(secLtiltAddr, sec_data[1].tilt * RAD2I * 40, NIOS_QUEUE);
   WriteData(secLrotAddr, sec_data[1].rotation * RAD2I, NIOS_QUEUE);
   WriteData(secLoffAddr, sec_data[1].offset * 400, NIOS_QUEUE);
+
+  WriteData(gTPrimAddr, CommandData.actbus.g_primary, NIOS_QUEUE);
+  WriteData(gTSecAddr, CommandData.actbus.g_secondary, NIOS_QUEUE);
+  WriteData(focusVetoAddr, CommandData.actbus.autofocus_vetoed, NIOS_QUEUE);
+  WriteData(secFocusPosAddr, CommandData.actbus.focus, NIOS_QUEUE);
+  WriteData(secTiltGoalAddr, CommandData.actbus.tilt, NIOS_QUEUE);
+  WriteData(secRotGoalAddr, CommandData.actbus.rotation, NIOS_QUEUE);
 
 #ifdef USE_XY_STAGE
   WriteData(stageXAddr, stage_data.xpos, NIOS_QUEUE);

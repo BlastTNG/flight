@@ -449,7 +449,7 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_save_prd", 'w', LOOP3, 62,               0.01,             0.0, 'u'},
   {"osc_y_off",    'w', LOOP3, 63,              I2DEG,             0.0, 's'},
 
-  {"ss_phaseb",     'w', LOOP4,  0,              I2DEG,             0.0, 'u'},
+  {"ss_phase",     'w', LOOP4,  0,              I2DEG,             0.0, 'u'},
   {"ss_chi",       'w', LOOP4,  1,           1./1000.,             0.0, 'u'},
   {"ss_iter",      'w', LOOP4,  2,                1.0,             0.0, 'u'},
   {"ss_sun_time",  'w', LOOP4,  3,                1.0,             0.0, 'u'},
@@ -593,7 +593,12 @@ struct ChannelStruct SlowChannels[] = {
   {"ss_raw_11",    'w', LOOP6, 17,                1.0,             0.0, 'u'},
   {"ss_raw_12",    'w', LOOP6, 18,                1.0,             0.0, 'u'},
   {"ss_az_rel_sun",'w', LOOP6, 19,              I2DEG,             0.0, 'u'},
-  {"ss_phase",     'w', LOOP6, 20,              I2DEG,             0.0, 'u'},
+  {"g_t_prim",     'w', LOOP6, 20,                1.0,             0.0, 'u'},
+  {"g_t_sec",      'w', LOOP6, 21,                1.0,             0.0, 'u'},
+  {"sec_focus_pos",'w', LOOP6, 22,            1./3000,             0.0, 'u'},
+  {"sec_tilt_goal",'w', LOOP6, 23,           2./65536,             0.0, 'u'},
+  {"sec_rot_goal", 'w', LOOP6, 24,              I2DEG,             0.0, 'u'},
+  {"focus_veto",   'w', LOOP6, 25,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
