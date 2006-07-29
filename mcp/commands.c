@@ -389,6 +389,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case actbus_on:
       CommandData.actbus.off = 0;
+      CommandData.actbus.force_repoll = 1;
       break;
 
     case analogue_gyros:   /* gyro selection */

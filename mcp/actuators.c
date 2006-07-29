@@ -425,7 +425,7 @@ static int ReadIntFromBus(int who, const char* cmd, int inhibit_chatter)
         | ACTBUS_OOD)) {
     bprintf(warning, "ActBus: Timeout waiting for response from %s (RIFB)",
         name[who]);
-    stepper[who].status = -1;
+    CommandData.actbus.force_repoll = 1;
     return 0;
   }
 
@@ -445,7 +445,7 @@ static void ReadActuator(int who, int inhibit_chatter)
         | ACTBUS_OOD)) {
     bprintf(warning, "ActBus: Timeout waiting for response from Actuator #%i",
         who);
-    stepper[who].status = -1;
+    CommandData.actbus.force_repoll = 1;
     return;
   }
 
@@ -502,7 +502,7 @@ static void GetLockData(int mult)
   BusSend(LOCKNUM, "?aa", 1);
   if ((result = BusRecv(gp_buffer, 0, 1)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
     bputs(warning, "ActBus: Timeout waiting for response from lock motor.");
-    stepper[LOCKNUM].status = -1;
+    CommandData.actbus.force_repoll = 1;
     return;
   }
 
@@ -695,8 +695,11 @@ static void DoLock(void)
       BusSend(LOCKNUM, command, __inhibit_chatter);
       if ((result = BusRecv(gp_buffer, 0, __inhibit_chatter)) & (ACTBUS_TIMEOUT
             | ACTBUS_OOD))
+      {
         bputs(warning,
             "ActBus: Timeout waiting for response from lock motor.");
+        CommandData.actbus.force_repoll = 1;
+      }
       usleep(SEND_SLEEP); /* wait for a bit */
     } else if (action == LA_WAIT)
       usleep(WAIT_SLEEP); /* wait for a bit */
@@ -852,8 +855,11 @@ static void DiscardBusRecv(int flag, int inhibit_chatter)
   /* Discard response to get it off the bus */
   if ((i = BusRecv(gp_buffer, 0, inhibit_chatter)) & (ACTBUS_TIMEOUT
         | ACTBUS_OOD))
+  {
     bputs(warning,
         "ActBus: Timeout waiting for response after uplinked command.");
+    CommandData.actbus.force_repoll = 1;
+  }
 #ifndef ACTBUS_CHATTER
   else if (flag)
     bprintf(info, "ActBus: Controller response: %s\n", gp_buffer);

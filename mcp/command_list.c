@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.22 $";
+const char *command_list_serial = "$Revision: 3.23 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -52,8 +52,9 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(ss_off), "turn off the Sun Sensor at the ACS", GR_POWER
     | CONFIRM},
   {COMMAND(ss_on), "turn on the Sun Sensor at the ACS", GR_POWER},
-  {COMMAND(actbus_on), "turn on the Actuators and Lock", GR_POWER},
-  {COMMAND(actbus_off), "turn off the Actuators and Lock", GR_POWER | CONFIRM},
+  {COMMAND(actbus_on), "turn on the Actuators and Lock", GR_POWER | GR_LOCK},
+  {COMMAND(actbus_off), "turn off the Actuators and Lock", GR_POWER | GR_LOCK
+    | CONFIRM},
 
   {COMMAND(az_off), "disable az motors", GR_GAIN},
   {COMMAND(az_on), "enable az motors", GR_GAIN},
