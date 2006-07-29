@@ -64,6 +64,7 @@ static double GetVElev(void)
   double dvel;
   int i_point;
   double max_dv = 1.6;
+  double el_for_limit;
 
   i_point = GETREADINDEX(point_index);
 
@@ -79,10 +80,19 @@ static double GetVElev(void)
   /* correct offset and convert to Gyro Units */
   vel -= (PointingData[i_point].gy1_offset - PointingData[i_point].gy1_earth);
 
-  if (ACSData.enc_elev < MIN_EL)
-    vel = 0.2; // go up
-  if (ACSData.enc_elev > MAX_EL)
-    vel = -0.2; // go down
+  if (CommandData.use_elenc) {
+    el_for_limit = ACSData.enc_elev;
+  } else {
+    el_for_limit = PointingData[i_point].el;
+  }
+
+  if (el_for_limit < MIN_EL) {
+    vel = (MIN_EL - el_for_limit)*0.36; // go to the stop 
+  }
+  if (el_for_limit > MAX_EL) {
+    vel = (MAX_EL - el_for_limit)*0.36; // go to the stop 
+    //vel = -0.2; // go down
+  }
 
   /* Limit Maximim speed to 0.5 dps*/
   if (vel > 0.5)
