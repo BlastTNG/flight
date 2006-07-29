@@ -384,6 +384,12 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case ss_on:
       CommandData.sensors_off.ss = 0;
       break;
+    case actbus_off:
+      CommandData.actbus.off = 1;
+      break;
+    case actbus_on:
+      CommandData.actbus.off = 0;
+      break;
 
     case analogue_gyros:   /* gyro selection */
       CommandData.use_analogue_gyros = 1;
@@ -1862,6 +1868,7 @@ void InitCommandData()
 
   CommandData.actbus.lock_goal = LS_DRIVE_OFF;
   CommandData.actbus.force_repoll = 0;
+  CommandData.actbus.off = 0;
   CommandData.actbus.cindex = 0;
   CommandData.actbus.caddr[0] = 0;
   CommandData.actbus.caddr[1] = 0;

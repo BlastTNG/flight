@@ -716,6 +716,7 @@ void StoreActBus(void)
   int i, j;
   static int firsttime = 1;
 
+  static struct NiosStruct* actbusResetAddr;
   static struct NiosStruct* lockPosAddr;
   static struct NiosStruct* lockStateAddr;
   static struct NiosStruct* lockGoalAddr;
@@ -756,6 +757,7 @@ void StoreActBus(void)
 
   if (firsttime) {
     firsttime = 0;
+    actbusResetAddr = GetNiosAddr("actbus_reset");
     lokmotPinAddr = GetNiosAddr("lokmot_pin");
     lockPosAddr = GetNiosAddr("lock_pos");
     lockStateAddr = GetNiosAddr("lock_state");
@@ -798,6 +800,8 @@ void StoreActBus(void)
     stageYVelAddr = GetNiosAddr("stage_y_vel");
 #endif
   }
+
+  WriteData(actbusResetAddr, CommandData.actbus.off, NIOS_QUEUE);
 
   WriteData(lokmotPinAddr, CommandData.pin_is_in, NIOS_QUEUE);
 

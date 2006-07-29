@@ -214,6 +214,8 @@ struct CommandDataStruct {
   } pumps;
 
   struct {
+    int off;
+
     int cindex;
     int caddr[3];
     char command[3][CMD_STRING_LEN];

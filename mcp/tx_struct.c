@@ -101,6 +101,7 @@ struct ChannelStruct SlowChannels[] = {
   {"status00",     'r',  ACS0, 56,                1.0,             0.0, 'u'},
   {"apcu_reg",     'w',  ACS0,  4,             0.0382,           27.25, 'u'},
   {"dpcu_reg",     'w',  ACS0,  5,             0.0382,           27.25, 'u'},
+  {"actbus_reset", 'w',  ACS0,  6,                1.0,             0.0, 'u'},
   {"sync00",       'w',  ACS0, 56,                1.0,             0.0, 'u'},
 
   {"t_roll",       'r',  ACS1,  9,              I2T_M,           I2T_B, 'u'},
