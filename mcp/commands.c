@@ -77,6 +77,7 @@ void NormalizeAngle(double *A);
 static const char *UnknownCommand = "Unknown Command";
 
 extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
+extern short InCharge; /* tx.c */
 
 extern int doing_schedule; /* sched.c */
 
@@ -719,9 +720,14 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       pthread_cancel(watchdog_id);
 #endif
       break;
+    case icc_halt:
+    case nicc_halt:
+      if ((command == icc_halt && InCharge) || !InCharge)
     case mcc_halt:
-      bputs(warning, "Commands: Halting the MCC\n");
-      system("/sbin/halt");
+      {
+        bputs(warning, "Commands: Halting the MCC\n");
+        system("/sbin/halt");
+      }
     case xyzzy:
       break;
     default:
@@ -1860,7 +1866,7 @@ void InitCommandData()
   CommandData.actbus.caddr[0] = 0;
   CommandData.actbus.caddr[1] = 0;
   CommandData.actbus.caddr[2] = 0;
-  
+
   CommandData.actbus.autofocus_vetoed = 0;
   CommandData.actbus.tilt = 0;
   CommandData.actbus.rotation = 0;

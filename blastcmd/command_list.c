@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.20 $";
+const char *command_list_serial = "$Revision: 3.21 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -139,6 +139,9 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_TELEM},
 
   {COMMAND(mcc_halt), "ask MCP to halt the MCC", GR_MISC | CONFIRM},
+  {COMMAND(icc_halt), "ask MCP to halt the in-charge MCC", GR_MISC | CONFIRM},
+  {COMMAND(nicc_halt), "ask MCP to halt the not-in-charge MCC", GR_MISC
+    | CONFIRM},
   {COMMAND(reap), "ask MCP to reap the watchdog tickle", GR_MISC | CONFIRM},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC},
 
