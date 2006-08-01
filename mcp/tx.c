@@ -1054,7 +1054,7 @@ static void StoreData(int index)
 
   /** Att fields **/
   i_dgps = GETREADINDEX(dgpsatt_index);
-  WriteData(dgpsAzRawAddr, DGPSAtt[i_dgps].az, NIOS_QUEUE);
+  WriteData(dgpsAzRawAddr, DGPSAtt[i_dgps].az * DEG2I, NIOS_QUEUE);
   WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok, NIOS_QUEUE);
   WriteData(dgpsAttIndexAddr, i_dgps, NIOS_QUEUE);
 
