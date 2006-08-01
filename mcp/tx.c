@@ -877,7 +877,8 @@ static void StoreData(int index)
   WriteData(ssRaw10Addr, SunSensorData[i_ss].m10, NIOS_QUEUE);
   WriteData(ssRaw11Addr, SunSensorData[i_ss].m11, NIOS_QUEUE);
   WriteData(ssRaw12Addr, SunSensorData[i_ss].m12, NIOS_QUEUE);
-  WriteData(ssAzRelSunAddr, SunSensorData[i_ss].az_rel_sun * DEG2I, NIOS_QUEUE);
+  WriteData(ssAzRelSunAddr, -SunSensorData[i_ss].az_rel_sun * DEG2I,
+      NIOS_QUEUE);
   WriteData(ssPhaseAddr, SunSensorData[i_ss].phase * DEG2I, NIOS_QUEUE);
   /********** SIP GPS Data **********/
   WriteData(sipLatAddr, (int)(SIPData.GPSpos.lat*DEG2I), NIOS_QUEUE);
