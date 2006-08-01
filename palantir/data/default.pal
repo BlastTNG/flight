@@ -1055,19 +1055,6 @@
     <NUMBER caption="IF Level (%)">
       <DATUM format="%.2f" src="INPUMP_LEV" extrema="unknown"/>
     </NUMBER>
-    <MULTI caption="OF Cooling">
-      <DATUM src="OUTCOOL_STATE">
-        <WORD value="3" caption="Autoveto" textstyle="E_BIT"/>
-        <WORD value="2" caption="Auto On" textstyle="OK_BIT"/>
-        <WORD value="1" caption="Auto Off" textstyle="W_BIT"/>
-        <WORD value="0" caption="Unknown" textstyle="P_BIT"/>
-        <WORD value="-1" caption="Vetoed Off" textstyle="OK_BIT"/>
-        <WORD value="-2" caption="Vetoed On" textstyle="W_BIT"/>
-      </DATUM>
-    </MULTI>
-    <NUMBER caption="OF Level (%)">
-      <DATUM format="%.2f" src="OUTPUMP_LEV" extrema="unknown"/>
-    </NUMBER>
   </BOX>
   <BOX caption="State" colour="#777700" row="0" col="1" colspan="1">
     <CURDIR caption="Dirfile">
