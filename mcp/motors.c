@@ -87,10 +87,14 @@ static double GetVElev(void)
   }
 
   if (el_for_limit < MIN_EL) {
-    vel = (MIN_EL - el_for_limit)*0.36; // go to the stop 
+    if (vel<=0) { // if we are going down
+      vel = (MIN_EL - el_for_limit)*0.36; // go to the stop 
+    }
   }
   if (el_for_limit > MAX_EL) {
-    vel = (MAX_EL - el_for_limit)*0.36; // go to the stop 
+    if (vel>=0) { // if we are going up
+      vel = (MAX_EL - el_for_limit)*0.36; // go to the stop 
+    }
     //vel = -0.2; // go down
   }
 
