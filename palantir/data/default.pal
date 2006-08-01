@@ -281,12 +281,6 @@
         <WORD value="1" caption="Vetoed" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
-    <NUMBER caption="SS Az SNR">
-      <DATUM format="%.0f" src="SS_AZ_SNR" extrema="sssnr"/>
-    </NUMBER>
-    <NUMBER caption="SS Prin">
-      <DATUM format="%.0f" src="SS_PRIN" extrema="unknown"/>
-    </NUMBER>
     <MULTI caption="ISC">
       <DATUM src="ISC_VETO">
         <WORD value="0" caption="Allowed" textstyle="OK_BIT"/>
