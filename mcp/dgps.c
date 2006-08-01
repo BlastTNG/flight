@@ -163,21 +163,17 @@ void WatchDGPS()
   //sleep(10);
 
   /********* Set up array dimention and phase shifts *********/
-  /***** THESE were set by MD/ 8/28/03 ******/
-  // fprintf(fp,"$PASHS,3DF,V12,+000.000,+003.239,-000.000\r\n");
-  // fprintf(fp,"$PASHS,3DF,V13,-001.254,+002.446,-000.024\r\n");
-  // fprintf(fp,"$PASHS,3DF,V14,+001.346,+000.560,-000.015\r\n");
-  // fprintf(fp,"$PASHS,3DF,OFS,-117.14,+00.00,+00.00\r\n"); // array offset p71
-  // fprintf(fp,"$PASHS,SAV,Y\r\n");
 
-  /***** THESE were set by cbn/ Feb 14/05 ******/
-  //fprintf(fp,"$PASHS,3DF,V12,+000.000,+003.762,+000.097\r\n");
-  //fprintf(fp,"$PASHS,3DF,V13,+001.276,+002.786,+000.053\r\n");
-  //fprintf(fp,"$PASHS,3DF,V14,-001.501,+000.355,+000.090\r\n");
-  //fprintf(fp,"$PASHS,3DF,OFS,+000.00,+00.00,+00.00\r\n"); // array offset p71
-  fprintf(fp,"$PASHS,3DF,V12,+000.000,+001.566,+000.089\r\n");
-  fprintf(fp,"$PASHS,3DF,V13,+002.983,-000.691,+000.011\r\n");
-  fprintf(fp,"$PASHS,3DF,V14,+003.696,+000.740,+000.069\r\n");
+  /****** These numbers are for Kiruna ********/
+  //fprintf(fp,"$PASHS,3DF,V12,+000.000,+001.566,+000.089\r\n");
+  //fprintf(fp,"$PASHS,3DF,V13,+002.983,-000.691,+000.011\r\n");
+  //fprintf(fp,"$PASHS,3DF,V14,+003.696,+000.740,+000.069\r\n");
+  //fprintf(fp,"$PASHS,3DF,OFS,-168.70,+00.00,+00.00\r\n"); // array offset p71
+
+  /***** Numbers for palestine, 2006-AUG-01 *********/
+  fprintf(fp,"$PASHS,3DF,V12,+000.000,+001.153,+000.050\r\n");
+  fprintf(fp,"$PASHS,3DF,V13,-001.783,+001.825,+000.014\r\n");
+  fprintf(fp,"$PASHS,3DF,V14,-002.546,+000.958,-000.033\r\n");
   fprintf(fp,"$PASHS,3DF,OFS,-168.70,+00.00,+00.00\r\n"); // array offset p71
   fprintf(fp,"$PASHS,SAV,Y\r\n");
   /**********************************************/
