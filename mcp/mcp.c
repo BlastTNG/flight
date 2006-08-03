@@ -78,6 +78,7 @@ static int RxFrameIndex;
 extern short int InCharge; /* tx.c */
 extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 extern pthread_mutex_t mutex;
+extern short int InCharge;
 
 void Pointing();
 void WatchPort(void*);
@@ -474,7 +475,7 @@ static void write_to_biphase(unsigned short *RxFrame)
 
   nothing[0] = CalculateCRC(0xEB90, RxFrame, BiPhaseFrameWords);
 
-  if (bi0_fp >= 0) {
+  if (bi0_fp >= 0 && InCharge) {
     RxFrame[0] = sync;
     sync = ~sync;
     if (write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short)) < 0)
