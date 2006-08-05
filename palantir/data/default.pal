@@ -697,16 +697,19 @@
       <DATUM format="%.2f" src="T_OUT_HEATX" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Sun Sensor">
-      <DATUM format="%.2f" src="T_SUN_SENSOR" extrema="temp"/>
+      <DATUM format="%.2f" src="SS_CASE_TEMP" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="SS CPU">
       <DATUM format="%.2f" src="SS_CPU_TEMP" extrema="cputemp"/>
     </NUMBER>
-    <NUMBER caption="SS PC">
-      <DATUM format="%.2f" src="SS_PC_TEMP" extrema="temp"/>
+    <NUMBER caption="SS Hard Drive">
+      <DATUM format="%.2f" src="SS_HDD_TEMP" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="SS Chipset">
-      <DATUM format="%.2f" src="SS_CHIP_TEMP" extrema="cputemp"/>
+    <NUMBER caption="SS Port Sensor">
+      <DATUM format="%.2f" src="SS_PORT_TEMP" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="SS Starboard Sensor">
+      <DATUM format="%.2f" src="SS_STAR_TEMP" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Lock Motor">
       <DATUM format="%.2f" src="T_LOCK_MOTOR" extrema="temp"/>
