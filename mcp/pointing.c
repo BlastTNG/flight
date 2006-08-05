@@ -380,8 +380,17 @@ static void RecordHistory(int index)
   hs.elev_history[hs.i_history] = PointingData[index].el * M_PI / 180.0;
 }
 
+int possible_solution(double az, double el) {
+  // test for insanity
+  if (!finite(az)) return(0);
+  if (!finite(el)) return(0);
+  if (el > 70.0) return (0);
+  if (el < 0.0) return(0);
+  return(1);
+}
+
 /* #define GYRO_VAR 3.7808641975309e-08
- (0.02dps/sqrt(100Hz))^2 : gyro offset error dominated */
+   (0.02dps/sqrt(100Hz))^2 : gyro offset error dominated */
 #define GYRO_VAR (2.0E-6)
 static void EvolveSCSolution(struct ElSolutionStruct *e,
     struct AzSolutionStruct *a, double gy1, double gy1_off, double gy2,
@@ -433,7 +442,7 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
     radec2azel(ra, dec, PointingData[i_point].lst, PointingData[i_point].lat,
         &new_az, &new_el);
 
-    if ((new_az == new_az) && (new_el == new_el)) {  // no nans!
+    if (possible_solution(new_az, new_el)) {  // no nans!
 
       // new solution
       if (isc_pulses[which].age < MAX_ISC_AGE) {
@@ -531,8 +540,8 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
 
       last_isc_framenum[which] = ISCSolution[which][i_isc].framenum;
       isc_pulses[which].age = -1; // reset counter.
-    } else {
-      bprintf(err,"EvolveSCSolution detected a NaN !!");
+    } else if (!finite(new_el) || !finite(new_az)) {
+      bprintf(err,"EvolveSCSolution detected a NaN or an INF !!");
     }
   }
   e->since_last++;
