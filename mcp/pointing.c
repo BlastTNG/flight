@@ -426,109 +426,114 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
    * have been overwritten, so we check flag, just as a sanity check */
   if (ISCSolution[which][i_isc].flag && ISCSolution[which][i_isc].framenum
       != last_isc_framenum[which]) {
-    // new solution
-    if (isc_pulses[which].age < MAX_ISC_AGE) {
-      // get az and el for new solution
-      i_point = GETREADINDEX(point_index);
-      ra = ISCSolution[which][i_isc].ra * (12.0 / M_PI);
-      dec = ISCSolution[which][i_isc].dec * (180.0 / M_PI);
-      radec2azel(ra, dec, PointingData[i_point].lst, PointingData[i_point].lat,
-          &new_az, &new_el);
+    // get az and el for new solution
+    i_point = GETREADINDEX(point_index);
+    ra = ISCSolution[which][i_isc].ra * (12.0 / M_PI);
+    dec = ISCSolution[which][i_isc].dec * (180.0 / M_PI);
+    radec2azel(ra, dec, PointingData[i_point].lst, PointingData[i_point].lat,
+        &new_az, &new_el);
 
-      /* Add BDA offset -- there's a pole here at EL = 90 degrees! */
-      new_el += CommandData.ISCState[which].elBDA * RAD2DEG;
-      if (old_el < 80. * M_PI / 180)
-        new_az += CommandData.ISCState[which].azBDA * RAD2DEG / cos(old_el);
+    if ((new_az == new_az) && (new_el == new_el)) {  // no nans!
 
-      // this solution is isc_pulses.age old: how much have we moved?
-      gy_el_delta = 0;
-      gy_az_delta = 0;
-      gy_raw_el_delta = 0;
-      gy2_raw_delta = 0;
-      gy3_raw_delta = 0;
-      
-      for (i = 0; i < isc_pulses[which].age; i++) {
-        j = hs.i_history - i;
-        if (j < 0)
-          j += GY_HISTORY;
+      // new solution
+      if (isc_pulses[which].age < MAX_ISC_AGE) {
+        /* Add BDA offset -- there's a pole here at EL = 90 degrees! */
+        new_el += CommandData.ISCState[which].elBDA * RAD2DEG;
+        if (old_el < 80. * M_PI / 180)
+          new_az += CommandData.ISCState[which].azBDA * RAD2DEG / cos(old_el);
 
-        gy_el_delta += (hs.gyro1_history[j] + gy1_off) * (1.0 / SR);
-        gy_raw_el_delta += (hs.gyro1_history[j]) * (1.0 / SR);
+        // this solution is isc_pulses.age old: how much have we moved?
+        gy_el_delta = 0;
+        gy_az_delta = 0;
+        gy_raw_el_delta = 0;
+        gy2_raw_delta = 0;
+        gy3_raw_delta = 0;
 
-        gy_az_delta += (-(hs.gyro2_history[j] + gy2_off) *
-            cos(hs.elev_history[j]) + -(hs.gyro3_history[j] + gy3_off) *
-            sin(hs.elev_history[j])) * (1.0 / SR);
-	gy2_raw_delta += (hs.gyro2_history[j]) * (1.0 / SR);
-	gy3_raw_delta += (hs.gyro3_history[j]) * (1.0 / SR);
+        for (i = 0; i < isc_pulses[which].age; i++) {
+          j = hs.i_history - i;
+          if (j < 0)
+            j += GY_HISTORY;
+
+          gy_el_delta += (hs.gyro1_history[j] + gy1_off) * (1.0 / SR);
+          gy_raw_el_delta += (hs.gyro1_history[j]) * (1.0 / SR);
+
+          gy_az_delta += (-(hs.gyro2_history[j] + gy2_off) *
+              cos(hs.elev_history[j]) + -(hs.gyro3_history[j] + gy3_off) *
+              sin(hs.elev_history[j])) * (1.0 / SR);
+          gy2_raw_delta += (hs.gyro2_history[j]) * (1.0 / SR);
+          gy3_raw_delta += (hs.gyro3_history[j]) * (1.0 / SR);
+        }
+
+        // evolve el solution
+        e->angle -= gy_el_delta; // rewind to when the frame was grabbed
+        w1 = 1.0 / (e->varience);
+        if (ISCSolution[which][i_isc].sigma > M_PI) {
+          w2 = 0;
+        } else {
+          w2 = 10.0 * ISCSolution[which][i_isc].sigma
+            * (180.0 / M_PI); //e->samp_weight;
+          if (w2 > 0)
+            w2 = 1 / (w2 * w2);
+          else
+            w2 = 0; // shouldn't happen
+        }
+
+        if (w2 > 0.0 ) {
+          // Calculate el offset
+          e->since_last -= isc_pulses[which].age;
+          new_el_offset = ((new_el - e->last_input) - e->gy_int+gy_raw_el_delta)/
+            ((1.0/SR) * (double)e->since_last);
+          e->last_input = new_el;
+          e->since_last = isc_pulses[which].age;
+          e->gy_offset = new_el_offset;
+          e->gy_int = gy_raw_el_delta;
+        }
+
+        UnwindDiff(e->angle, &new_el);
+        e->angle = (w1 * e->angle + new_el * w2) / (w1 + w2);
+        e->varience = 1.0 / (w1 + w2);
+        e->angle += gy_el_delta; // add back to now
+
+        NormalizeAngle(&(e->angle));
+
+        // evolve az solution
+        a->angle -= gy_az_delta; // rewind to when the frame was grabbed
+        w1 = 1.0 / (a->varience);
+        // w2 already set
+
+        UnwindDiff(a->angle, &new_az);
+        a->angle = (w1 * a->angle + new_az * w2) / (w1 + w2);
+        a->varience = 1.0 / (w1 + w2);
+        a->angle += gy_az_delta; // add back to now
+
+        NormalizeAngle(&(a->angle));
+
+        if (w2 > 0.0 ) {
+          // Calculate az offset
+          daz = remainder(new_az - a->last_input, 360.0);
+
+          a->since_last -= isc_pulses[which].age;
+          new_gy2_offset = -(daz * cos(new_el*M_PI/180) + a->gy2_int-gy2_raw_delta) /
+            ((1.0/SR) * (double)a->since_last);
+
+          /* Do Gyro3 */
+          new_gy3_offset = -(daz * sin(new_el*M_PI/180.0) + a->gy3_int-gy3_raw_delta) /
+            ((1.0/SR) * (double)a->since_last);
+
+          a->last_input = new_az;
+          a->since_last = isc_pulses[which].age;
+          a->gy2_offset = new_gy2_offset;
+          a->gy3_offset = new_gy3_offset;
+          a->gy2_int = gy2_raw_delta;
+          a->gy3_int = gy3_raw_delta;
+        }
       }
 
-      // evolve el solution
-      e->angle -= gy_el_delta; // rewind to when the frame was grabbed
-      w1 = 1.0 / (e->varience);
-      if (ISCSolution[which][i_isc].sigma > M_PI) {
-        w2 = 0;
-      } else {
-        w2 = 10.0 * ISCSolution[which][i_isc].sigma
-          * (180.0 / M_PI); //e->samp_weight;
-        if (w2 > 0)
-          w2 = 1 / (w2 * w2);
-        else
-          w2 = 0; // shouldn't happen
-      }
-
-      if (w2 > 0.0 ) {
-        // Calculate el offset
-        e->since_last -= isc_pulses[which].age;
-        new_el_offset = ((new_el - e->last_input) - e->gy_int+gy_raw_el_delta)/
-  	      ((1.0/SR) * (double)e->since_last);
-        e->last_input = new_el;
-        e->since_last = isc_pulses[which].age;
-        e->gy_offset = new_el_offset;
-	e->gy_int = gy_raw_el_delta;
-      }
-
-      UnwindDiff(e->angle, &new_el);
-      e->angle = (w1 * e->angle + new_el * w2) / (w1 + w2);
-      e->varience = 1.0 / (w1 + w2);
-      e->angle += gy_el_delta; // add back to now
-
-      NormalizeAngle(&(e->angle));
-
-      // evolve az solution
-      a->angle -= gy_az_delta; // rewind to when the frame was grabbed
-      w1 = 1.0 / (a->varience);
-      // w2 already set
-
-      UnwindDiff(a->angle, &new_az);
-      a->angle = (w1 * a->angle + new_az * w2) / (w1 + w2);
-      a->varience = 1.0 / (w1 + w2);
-      a->angle += gy_az_delta; // add back to now
-
-      NormalizeAngle(&(a->angle));
-
-      if (w2 > 0.0 ) {
-        // Calculate az offset
-	daz = remainder(new_az - a->last_input, 360.0);
-	
-        a->since_last -= isc_pulses[which].age;
-        new_gy2_offset = -(daz * cos(new_el*M_PI/180) + a->gy2_int-gy2_raw_delta) /
-          ((1.0/SR) * (double)a->since_last);
-
-        /* Do Gyro3 */
-        new_gy3_offset = -(daz * sin(new_el*M_PI/180.0) + a->gy3_int-gy3_raw_delta) /
-          ((1.0/SR) * (double)a->since_last);
-
-        a->last_input = new_az;
-        a->since_last = isc_pulses[which].age;
-        a->gy2_offset = new_gy2_offset;
-        a->gy3_offset = new_gy3_offset;
-	a->gy2_int = gy2_raw_delta;
-	a->gy3_int = gy3_raw_delta;
-      }
+      last_isc_framenum[which] = ISCSolution[which][i_isc].framenum;
+      isc_pulses[which].age = -1; // reset counter.
+    } else {
+      bprintf(err,"EvolveSCSolution detected a NaN !!");
     }
-
-    last_isc_framenum[which] = ISCSolution[which][i_isc].framenum;
-    isc_pulses[which].age = -1; // reset counter.
   }
   e->since_last++;
   a->since_last++;
