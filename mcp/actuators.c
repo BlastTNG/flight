@@ -117,7 +117,6 @@ static struct lock_struct {
 static struct act_struct {
   unsigned int pos;
   unsigned int enc;
-  unsigned short adc[4];
 } act_data[3];
 
 static struct sec_struct {
@@ -434,23 +433,11 @@ static int ReadIntFromBus(int who, const char* cmd, int inhibit_chatter)
 
 static void ReadActuator(int who, int inhibit_chatter)
 {
-  int result;
   if (stepper[who].status == -1)
     return;
 
   act_data[who].pos = ReadIntFromBus(who, "?0", inhibit_chatter);
   act_data[who].enc = ReadIntFromBus(who, "?8", inhibit_chatter);
-  BusSend(who, "?aa", inhibit_chatter);
-  if ((result = BusRecv(gp_buffer, 0, inhibit_chatter)) & (ACTBUS_TIMEOUT
-        | ACTBUS_OOD)) {
-    bprintf(warning, "ActBus: Timeout waiting for response from Actuator #%i",
-        who);
-    CommandData.actbus.force_repoll = 1;
-    return;
-  }
-
-  sscanf(gp_buffer, "%hi,%hi,%hi,%hi", &act_data[who].adc[0],
-      &act_data[who].adc[1], &act_data[who].adc[2], &act_data[who].adc[3]);
 }
 
 #ifdef USE_XY_STAGE
@@ -726,7 +713,7 @@ void StoreActBus(void)
   static struct NiosStruct* seizedBusAddr;
   static struct NiosStruct* lockAdcAddr[4];
   static struct NiosStruct* lokmotPinAddr;
-  
+
   static struct NiosStruct* actPosAddr[3];
   static struct NiosStruct* actEncAddr[3];
 
