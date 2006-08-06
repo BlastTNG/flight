@@ -591,6 +591,9 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
 
     /* Actuators */
+    case actuator_stop:
+      CommandData.actbus.focus_mode = ACTBUS_FM_PANIC;
+      /* fallthrough */
     case autofocus_veto:
       CommandData.actbus.autofocus_vetoed = 1;
       break;
@@ -1025,6 +1028,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case focus:
       CommandData.actbus.focus = rvalues[0];
+      CommandData.actbus.focus_mode = ACTBUS_FM_SOLVE;
       break;
     case mirror_gain:
       CommandData.actbus.g_primary = ivalues[0];
@@ -1033,6 +1037,13 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case mirror_tilt:
       CommandData.actbus.tilt = rvalues[0];
       CommandData.actbus.rotation = rvalues[1];
+      CommandData.actbus.focus_mode = ACTBUS_FM_SOLVE;
+      break;
+    case actuator_servo:
+      CommandData.actbus.goal[0] = ivalues[0];
+      CommandData.actbus.goal[1] = ivalues[1];
+      CommandData.actbus.goal[2] = ivalues[2];
+      CommandData.actbus.focus_mode = ACTBUS_FM_SERVO;
       break;
 
 #ifndef BOLOTEST
@@ -2053,8 +2064,8 @@ void InitCommandData()
   CommandData.ISCState[0].ap_pos = 495;
   CommandData.ISCState[0].display_mode = full;
   /* ISC-BDA offsets per Ed Chapin 2005-05-17 */
-  CommandData.ISCState[0].azBDA = 0.1894;
-  CommandData.ISCState[0].elBDA = -0.2522;
+  CommandData.ISCState[0].azBDA = 0.1894 * DEG2RAD;
+  CommandData.ISCState[0].elBDA = -0.2522 * DEG2RAD;
 
   CommandData.ISCState[0].brightStarMode = 0;
   CommandData.ISCState[0].grid = 38;
@@ -2087,8 +2098,8 @@ void InitCommandData()
   CommandData.ISCState[1].ap_pos = 495;
   CommandData.ISCState[1].display_mode = full;
   /* OSC-BDA offsets per Ed Chapin 2005-05-17 */
-  CommandData.ISCState[1].azBDA = 0.1804;
-  CommandData.ISCState[1].elBDA = 0.4828;
+  CommandData.ISCState[1].azBDA = 0.1804 * DEG2RAD;
+  CommandData.ISCState[1].elBDA = 0.4828 * DEG2RAD;
 
   CommandData.ISCState[1].brightStarMode = 0;
   CommandData.ISCState[1].grid = 38;

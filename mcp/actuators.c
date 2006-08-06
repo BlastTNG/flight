@@ -53,6 +53,8 @@ static int __inhibit_chatter = 0;
 #define LVDT_RADIUS ACTUATOR_RADIUS
 #define ACTUATOR_RADIUS 144.338 /* in mm */
 
+#define ENCODER_TOL 5
+
 #define LOCKNUM 3
 #ifdef USE_XY_STAGE
 #  define STAGEXNUM 4
@@ -88,6 +90,7 @@ double LockPosition(double elevation);
 
 extern short int InCharge; /* tx.c */
 
+#define LAST_ACTUATOR 2
 static int bus_fd = -1;
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
   "Lock Motor"
@@ -118,6 +121,10 @@ static struct act_struct {
   unsigned int pos;
   unsigned int enc;
 } act_data[3];
+
+static struct lvdt_struct {
+  double lvdt10, lvdt11, lvdt13;
+} lvdt_data;
 
 static struct sec_struct {
   double tilt, rotation, offset;
@@ -294,10 +301,6 @@ static int BusRecv(char* buffer, int nic, int inhibit_chatter)
       }
       checksum ^= byte;
 
-#if 0
-      bprintf(info, "%02x. (%i/%i)", byte, state, len);
-#endif
-
       /* The following involves a number of semi-hidden fallthroughs which
        * attempt to recover malformed strings */
       switch (state) {
@@ -324,7 +327,8 @@ static int BusRecv(char* buffer, int nic, int inhibit_chatter)
           if (had_errors > 1) {
             bputs(err,
                 "ActBus: Too many errors parsing response string, aborting.");
-            bprintf(err, "ActBus: Response was=%s (%x)\n", HexDump(buffer, len), status);
+            bprintf(err, "ActBus: Response was=%s (%x)\n", HexDump(buffer, len),
+                status);
             state = ACT_RECV_ABORT;
           }
           break;
@@ -373,6 +377,107 @@ static int BusRecv(char* buffer, int nic, int inhibit_chatter)
   return status;
 }
 
+static int ReadIntFromBus(int who, const char* cmd, int inhibit_chatter)
+{
+  int result;
+
+  BusSend(who, cmd, inhibit_chatter);
+  if ((result = BusRecv(gp_buffer, 0, inhibit_chatter)) & (ACTBUS_TIMEOUT
+        | ACTBUS_OOD)) {
+    bprintf(warning, "ActBus: Timeout waiting for response from %s (RIFB)",
+        name[who]);
+    CommandData.actbus.force_repoll = 1;
+    return 0;
+  }
+
+  return atoi(gp_buffer);
+}
+
+static void ReadActuator(int who, int inhibit_chatter)
+{
+  if (stepper[who].status == -1)
+    return;
+
+  act_data[who].pos = ReadIntFromBus(who, "?0", inhibit_chatter);
+  act_data[who].enc = ReadIntFromBus(who, "?8", inhibit_chatter);
+}
+
+static void DiscardBusRecv(int flag, int who, int inhibit_chatter)
+{
+  int i;
+
+  /* Discard response to get it off the bus */
+  if ((i = BusRecv(gp_buffer, 0, inhibit_chatter)) & (ACTBUS_TIMEOUT
+        | ACTBUS_OOD))
+  {
+    bprintf(warning,
+        "ActBus: Timeout waiting for response from %s.", name[who]);
+    CommandData.actbus.force_repoll = 1;
+  }
+#ifndef ACTBUS_CHATTER
+  else if (flag)
+    bprintf(info, "ActBus: Controller response: %s\n", gp_buffer);
+#endif
+}
+
+static void InitialiseActuator(int who)
+{
+  int enc;
+  double lvdt10 = lvdt_data.lvdt10 * LVDT10_TO_MM - LVDT10_ZERO;
+  double lvdt11 = lvdt_data.lvdt11 * LVDT11_TO_MM - LVDT11_ZERO;
+  double lvdt13 = lvdt_data.lvdt13 * LVDT13_TO_MM - LVDT13_ZERO;
+  char buffer[1000];
+
+  ReadActuator(who, __inhibit_chatter); 
+
+  if (act_data[who].enc < 500000) {
+    /* Calculate nominal encoder position from LVDTs */
+    if (who == 0) 
+      enc = 2 * (int)(((lvdt10 + lvdt13) - lvdt11) / (3 * ACTENC_TO_MM));
+    else if (who == 1)
+      enc = 2 * (int)(((lvdt11 + lvdt10) - lvdt13) / (3 * ACTENC_TO_MM));
+    else
+      enc = 2 * (int)(((lvdt13 + lvdt11) - lvdt10) / (3 * ACTENC_TO_MM));
+
+    bprintf(info, "Initialising Actuator #%i to %i", who, enc);
+
+    /* Add a million */
+    enc += 1000000;
+
+    /* Set the encoder */
+    sprintf(buffer, "z%iR", enc);  
+    BusSend(who, buffer, __inhibit_chatter);
+    DiscardBusRecv(0, who, __inhibit_chatter);
+  }
+}
+
+static void ServoActuators(int* goal)
+{
+  int i;
+  int act_there[3] = {0, 0, 0};
+  char buffer[1000];
+
+  while (!act_there[0] && !act_there[1] && !act_there[2])
+    for (i = 0; i < 3; ++i)
+      if (act_there[i] || stepper[i].status == -1) {
+        act_there[i] = 1;
+        continue;
+      } else if (act_data[i].enc < 500000)
+        InitialiseActuator(i);
+      else {
+        int delta = act_data[i].enc - 1000000 - goal[i];
+        if (abs(delta) <= ENCODER_TOL) {
+          act_there[i] = 1;
+          strcpy(buffer, "T");
+        } else if (delta > 0)
+          sprintf(buffer, "P%iR", delta);
+        else
+          sprintf(buffer, "D%iR", delta);
+        BusSend(i, buffer, __inhibit_chatter);
+        DiscardBusRecv(0, i, __inhibit_chatter);
+      }
+}
+
 static int PollBus(int rescan)
 {
   int i, result;
@@ -408,36 +513,14 @@ static int PollBus(int rescan)
       stepper[i].status = -1;
       all_ok = 0;
     }
+
+    if (stepper[i].status == 0 && i <= LAST_ACTUATOR)
+      InitialiseActuator(i);
   }
 
   CommandData.actbus.force_repoll = 0;
 
   return all_ok;
-}
-
-static int ReadIntFromBus(int who, const char* cmd, int inhibit_chatter)
-{
-  int result;
-
-  BusSend(who, cmd, inhibit_chatter);
-  if ((result = BusRecv(gp_buffer, 0, inhibit_chatter)) & (ACTBUS_TIMEOUT
-        | ACTBUS_OOD)) {
-    bprintf(warning, "ActBus: Timeout waiting for response from %s (RIFB)",
-        name[who]);
-    CommandData.actbus.force_repoll = 1;
-    return 0;
-  }
-
-  return atoi(gp_buffer);
-}
-
-static void ReadActuator(int who, int inhibit_chatter)
-{
-  if (stepper[who].status == -1)
-    return;
-
-  act_data[who].pos = ReadIntFromBus(who, "?0", inhibit_chatter);
-  act_data[who].enc = ReadIntFromBus(who, "?8", inhibit_chatter);
 }
 
 #ifdef USE_XY_STAGE
@@ -565,7 +648,6 @@ static void SetLockState(int nic)
 static void DoLock(void)
 {
   int action = LA_EXIT;
-  int result;
   const char* command = NULL;
 
   do {
@@ -680,13 +762,7 @@ static void DoLock(void)
     /* ... and do it! */
     if (command != NULL) {
       BusSend(LOCKNUM, command, __inhibit_chatter);
-      if ((result = BusRecv(gp_buffer, 0, __inhibit_chatter)) & (ACTBUS_TIMEOUT
-            | ACTBUS_OOD))
-      {
-        bputs(warning,
-            "ActBus: Timeout waiting for response from lock motor.");
-        CommandData.actbus.force_repoll = 1;
-      }
+      DiscardBusRecv(0, LOCKNUM, __inhibit_chatter);
       usleep(SEND_SLEEP); /* wait for a bit */
     } else if (action == LA_WAIT)
       usleep(WAIT_SLEEP); /* wait for a bit */
@@ -835,24 +911,6 @@ void StoreActBus(void)
 #endif
 }
 
-static void DiscardBusRecv(int flag, int inhibit_chatter)
-{
-  int i;
-
-  /* Discard response to get it off the bus */
-  if ((i = BusRecv(gp_buffer, 0, inhibit_chatter)) & (ACTBUS_TIMEOUT
-        | ACTBUS_OOD))
-  {
-    bputs(warning,
-        "ActBus: Timeout waiting for response after uplinked command.");
-    CommandData.actbus.force_repoll = 1;
-  }
-#ifndef ACTBUS_CHATTER
-  else if (flag)
-    bprintf(info, "ActBus: Controller response: %s\n", gp_buffer);
-#endif
-}
-
 static void SolveSecondary(void)
 {
   static int firsttime = 1;
@@ -868,9 +926,9 @@ static void SolveSecondary(void)
     lvdt13Addr = GetBiPhaseAddr("lvdt_13");
   }
 
-  double lvdt10 = slow_data[lvdt10Addr->index][lvdt10Addr->channel];
-  double lvdt11 = slow_data[lvdt11Addr->index][lvdt11Addr->channel];
-  double lvdt13 = slow_data[lvdt13Addr->index][lvdt13Addr->channel];
+  lvdt_data.lvdt10 = slow_data[lvdt10Addr->index][lvdt10Addr->channel];
+  lvdt_data.lvdt11 = slow_data[lvdt11Addr->index][lvdt11Addr->channel];
+  lvdt_data.lvdt13 = slow_data[lvdt13Addr->index][lvdt13Addr->channel];
 
   /* encoder based solution */
   double alpha = act_data[0].enc * ACTENC_TO_MM;
@@ -884,9 +942,9 @@ static void SolveSecondary(void)
   sec_data[0].tilt = asin(A / ACTUATOR_RADIUS); 
 
   /* lvdt based solution */
-  alpha = lvdt10 * LVDT10_TO_MM - LVDT10_ZERO;
-  beta = lvdt13 * LVDT13_TO_MM - LVDT13_ZERO;
-  gamma = lvdt11 * LVDT11_TO_MM - LVDT11_ZERO;
+  alpha = lvdt_data.lvdt10 * LVDT10_TO_MM - LVDT10_ZERO;
+  beta = lvdt_data.lvdt13 * LVDT13_TO_MM - LVDT13_ZERO;
+  gamma = lvdt_data.lvdt11 * LVDT11_TO_MM - LVDT11_ZERO;
   A = 2 * sqrt(alpha * alpha + beta * beta + gamma * gamma
       - alpha * beta - beta * gamma - gamma * alpha) / 3;
   sec_data[1].offset = (alpha + beta + gamma) / 3;
@@ -940,7 +998,9 @@ void ActuatorBus(void)
       BusSend(CommandData.actbus.caddr[my_cindex],
           CommandData.actbus.command[my_cindex], __inhibit_chatter);
       /* Discard response to get it off the bus */
-      DiscardBusRecv(1, __inhibit_chatter);
+      if (CommandData.actbus.caddr[my_cindex] < NACT)
+        DiscardBusRecv(1, CommandData.actbus.caddr[my_cindex],
+            __inhibit_chatter);
       CommandData.actbus.caddr[my_cindex] = 0;
     }
 

@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.23 $";
+const char *command_list_serial = "$Revision: 3.24 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -179,6 +179,7 @@ struct scom scommands[N_SCOMMANDS] = {
     " correction mode", GR_LOCK},
   {COMMAND(autofocus_allow), "allow the secondary actuator system temperature"
     " correction mode", GR_LOCK},
+  {COMMAND(actuator_stop), "stop all secondary actuators immediately", GR_LOCK},
 
   {COMMAND(isc_abort), "abort current solution attempt", GR_ISC_MODE},
   {COMMAND(isc_auto_focus), "autofocus camera", GR_ISC_MODE},
@@ -404,6 +405,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {COMMAND(actuator_servo), "servo the actuators to absolute positions",
+    GR_LOCK, 3,
+    {
+      {"Actuator Alpha", 0, 21000, 'i', "NONE"},
+      {"Actuator Beta",  0, 21000, 'i', "NONE"},
+      {"Actuator Gamma", 0, 21000, 'i', "NONE"}
+    }
+  },
 
 
   {COMMAND(osc_offset), "set offset of OSC to primary beam",
