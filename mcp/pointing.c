@@ -957,6 +957,10 @@ void Pointing(void)
     }
   }
 
+#warning LAT/LON OVERRIDE
+  PointingData[point_index].lat = 31.77795;
+  PointingData[point_index].lon = 95.71289;
+
   /* At float check */
   if (PointingData[point_index].alt < FLOAT_ALT) {
     PointingData[point_index].at_float = 0;
