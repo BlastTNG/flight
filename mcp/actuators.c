@@ -37,11 +37,8 @@
 #include "pointing_struct.h"
 #include "tx.h"
 
-/* Define this symbol to have mcp read and use the translation stage */
-#undef USE_XY_STAGE
-
 /* Define this symbol to have mcp log all actuator bus traffic */
-#define ACTBUS_CHATTER
+#undef ACTBUS_CHATTER
 static int __inhibit_chatter = 0;
 
 #ifdef BOLOTEST
@@ -457,6 +454,8 @@ static void ServoActuators(int* goal)
   int act_there[3] = {0, 0, 0};
   char buffer[1000];
 
+  TakeBus(0);
+
   while (!act_there[0] && !act_there[1] && !act_there[2])
     for (i = 0; i < 3; ++i)
       if (act_there[i] || stepper[i].status == -1) {
@@ -476,6 +475,8 @@ static void ServoActuators(int* goal)
         BusSend(i, buffer, __inhibit_chatter);
         DiscardBusRecv(0, i, __inhibit_chatter);
       }
+
+  ReleaseBus(0);
 }
 
 static int PollBus(int rescan)
@@ -629,6 +630,19 @@ static void SetLockState(int nic)
     CommandData.pin_is_in = 0;
 
   lock_data.state = state;
+}
+
+static void DoActuators(void)
+{
+  if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC) {
+    bputs(warning, "ActBus: Actuator Panic");
+    BusSend(33, "T", __inhibit_chatter);
+    CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
+  } else if (CommandData.actbus.focus_mode == ACTBUS_FM_SERVO) {
+    ServoActuators(CommandData.actbus.goal);
+  } else if (CommandData.actbus.focus_mode != ACTBUS_FM_SLEEP) {
+    bputs(err, "ActBus: Unknown Focus Mode (%i), sleeping");
+  }
 }
 
 /************************************************************************/
@@ -994,7 +1008,12 @@ void ActuatorBus(void)
 
     /* Send the uplinked command, if any */
     my_cindex = GETREADINDEX(CommandData.actbus.cindex);
-    if (CommandData.actbus.caddr[my_cindex] != 0) {
+    if (CommandData.actbus.caddr[my_cindex] != 0
+#ifdef USE_XY_THREAD
+    && CommandData.actbus.caddr[my_cindex] != 0x36
+    && CommandData.actbus.caddr[my_cindex] != 0x37
+#endif
+    ) {
       BusSend(CommandData.actbus.caddr[my_cindex],
           CommandData.actbus.command[my_cindex], __inhibit_chatter);
       /* Discard response to get it off the bus */
@@ -1010,6 +1029,8 @@ void ActuatorBus(void)
 
     DoLock(); /* Lock motor stuff -- this will seize the bus until
                  the lock motor's state has settled */
+
+    DoActuators(); /* Actuator stuff -- this may seize the bus */
 
 #ifdef USE_XY_STAGE
     if (bus_seized == STAGEXNUM)

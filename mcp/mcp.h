@@ -48,4 +48,8 @@ extern unsigned int tdrss_index;
 #warning "Debugging set."
 #endif
 
+/* Only ever define one of these */
+#undef USE_XY_STAGE
+#undef USE_XY_THREAD
+
 #endif

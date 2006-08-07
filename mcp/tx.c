@@ -85,6 +85,9 @@ void DoSched();
 /* in starpos.c */
 double getlst(time_t t, double lon);
 
+/* in xystage.c */
+void StoreStageBus(void);
+
 /* this is provided to let the various controls know that we're doing our
  * initial control writes -- there's no input data yet */
 int mcp_initial_controls = 0;
@@ -1194,6 +1197,9 @@ void UpdateBBCFrame(unsigned short *RxFrame)
   WriteMot(index, RxFrame);
 #endif
   StoreActBus();
+#ifdef USE_XY_THREAD
+  StoreStageBus();
+#endif
   BiasControl(RxFrame);
 
   /*** do slow Controls ***/

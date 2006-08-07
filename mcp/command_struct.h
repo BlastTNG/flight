@@ -62,9 +62,10 @@ struct GainStruct {
 #define LS_DRIVE_FORCE 0x0400
 #define LS_DRIVE_MASK  0x04F4
 
-#define ACTBUS_FM_SERVO 0
-#define ACTBUS_FM_SOLVE 1
-#define ACTBUS_FM_PANIC 2
+#define ACTBUS_FM_SLEEP 0
+#define ACTBUS_FM_SERVO 1
+#define ACTBUS_FM_SOLVE 2
+#define ACTBUS_FM_PANIC 3
 
 // mode        X     Y    vaz   del    w    h
 // LOCK              el

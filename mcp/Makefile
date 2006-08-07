@@ -20,7 +20,7 @@ HEADERS = alice.h bbc_pci.h blast.h channels.h command_list.h command_struct.h \
 
 # These are needed by both bolotest and flight versions
 OBJS = mcp.o actuators.o blast.o channels.o command_list.o commands.o das.o \
-			 derived.o framefile.o lut.o tx.o tx_struct.o
+			 derived.o framefile.o lut.o tx.o tx_struct.o xystage.o
 
 # These are only needed by the flight version
 ifndef BOLOTEST
