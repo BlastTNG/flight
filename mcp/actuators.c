@@ -472,8 +472,8 @@ static void ServoActuators(int* goal)
           sprintf(buffer, "P%iR", delta);
         else
           sprintf(buffer, "D%iR", delta);
-        BusSend(i, buffer, __inhibit_chatter);
-        DiscardBusRecv(0, i, __inhibit_chatter);
+//        BusSend(i, buffer, __inhibit_chatter);
+//        DiscardBusRecv(0, i, __inhibit_chatter);
       }
 
   ReleaseBus(0);
