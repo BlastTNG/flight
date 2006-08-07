@@ -102,10 +102,10 @@ static int act_setserial(char *input_tty)
   struct termios term;
 
   if ((fd = open(input_tty, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0)
-    berror(tfatal, "ActBus: Unable to open serial port");
+    berror(tfatal, "StageBus: Unable to open serial port");
 
   if (tcgetattr(fd, &term))
-    berror(tfatal, "ActBus: Unable to get serial device attributes");
+    berror(tfatal, "StageBus: Unable to get serial device attributes");
 
   /* Clear Character size; set no stop bits; set one parity bit */
   term.c_cflag &= ~(CSTOPB | CSIZE | PARENB);
@@ -123,13 +123,13 @@ static int act_setserial(char *input_tty)
   term.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
 
   if(cfsetospeed(&term, B9600))          /*  <======= SET THE SPEED HERE */
-    berror(tfatal, "ActBus: Error setting serial output speed");
+    berror(tfatal, "StageBus: Error setting serial output speed");
 
   if(cfsetispeed(&term, B9600))          /*  <======= SET THE SPEED HERE */
-    berror(tfatal, "ActBus: Error setting serial input speed");
+    berror(tfatal, "StageBus: Error setting serial input speed");
 
   if( tcsetattr(fd, TCSANOW, &term) )
-    berror(tfatal, "ActBus: Unable to set serial attributes");
+    berror(tfatal, "StageBus: Unable to set serial attributes");
 
   return fd;
 }
@@ -137,12 +137,12 @@ static int act_setserial(char *input_tty)
 static inline void ReleaseBus(int who)
 {
   if (bus_seized == who) {
-    bprintf(info, "ActBus: Bus released by %s.\n", name[who]);
+    bprintf(info, "StageBus: Bus released by %s.\n", name[who]);
     bus_seized = -1;
   }
 
   if (bus_seized == -1 && bus_underride != -1) {
-    bprintf(info, "ActBus: Bus underriden by %s.\n", name[bus_underride]);
+    bprintf(info, "StageBus: Bus underriden by %s.\n", name[bus_underride]);
     bus_seized = bus_underride;
   }
 }
@@ -150,7 +150,7 @@ static inline void ReleaseBus(int who)
 static inline void UnderrideBus(int who)
 {
   if (bus_underride != who)
-    bprintf(info, "ActBus: Bus underride for %s enabled.\n", name[who]);
+    bprintf(info, "StageBus: Bus underride for %s enabled.\n", name[who]);
   bus_underride = who;
   ReleaseBus(-2);
 }
@@ -159,7 +159,7 @@ static inline void RemoveUnderride(void)
 {
   int i = bus_underride;
 
-  bprintf(info, "ActBus: Bus underride for %s disabled.\n", name[i]);
+  bprintf(info, "StageBus: Bus underride for %s disabled.\n", name[i]);
   bus_underride = -1;
   ReleaseBus(i);
 }
@@ -193,7 +193,7 @@ static void BusSend(int who, const char* what, int inhibit_chatter)
   buffer[len - 1] = chk;
 #ifdef ACTBUS_CHATTER
   if (!inhibit_chatter)
-    bprintf(info, "ActBus: Request=%s", HexDump(buffer, len));
+    bprintf(info, "StageBus: Request=%s", HexDump(buffer, len));
 #endif
   if (write(bus_fd, buffer, len) < 0)
     berror(err, "Error writing on bus");
@@ -247,7 +247,7 @@ static int BusRecv(char* buffer, int nic, int inhibit_chatter)
         case 0: /* RS-485 turnaround */
           state++;
           if (byte != 0xFF) { /* RS-485 turnaround */
-            bputs(warning, "ActBus: RS-485 turnaround not found in response");
+            bputs(warning, "StageBus: RS-485 turnaround not found in response");
             had_errors++;
           } else
             break;
@@ -255,19 +255,19 @@ static int BusRecv(char* buffer, int nic, int inhibit_chatter)
           state++;
           if (byte != 0x02) { /* STX */
             had_errors++;
-            bputs(warning, "ActBus: Start byte not found in response");
+            bputs(warning, "StageBus: Start byte not found in response");
           } else
             break;
         case 2: /* address byte */
           state++;
           if (byte != 0x30) { /* Recipient address (should be '0') */
             had_errors++;
-            bputs(warning, "ActBus: Found misaddressed response");
+            bputs(warning, "StageBus: Found misaddressed response");
           }
           if (had_errors > 1) {
             bputs(err,
-                "ActBus: Too many errors parsing response string, aborting.");
-            bprintf(err, "ActBus: Response was=%s (%x)\n", HexDump(buffer, len),
+                "StageBus: Too many errors parsing response string, aborting.");
+            bprintf(err, "StageBus: Response was=%s (%x)\n", HexDump(buffer, len),
                 status);
             state = ACT_RECV_ABORT;
           }
@@ -278,7 +278,7 @@ static int BusRecv(char* buffer, int nic, int inhibit_chatter)
             status = byte & (EZ_ERROR | EZ_READY);
           else {
             bputs(err,
-                "ActBus: Status byte malfomed in response string, aborting.");
+                "StageBus: Status byte malfomed in response string, aborting.");
             state = ACT_RECV_ABORT;
           }
           break;
@@ -293,11 +293,11 @@ static int BusRecv(char* buffer, int nic, int inhibit_chatter)
           /* Remember: the checksum here should be 0xff instead of 0 because
            * we've added the turnaround byte into the checksum */
           if (checksum != 0xff)
-            bprintf(err, "ActBus: Checksum error in response (%02x).",
+            bprintf(err, "StageBus: Checksum error in response (%02x).",
                 checksum);
           break;
         case 6: /* End of string check */
-          bputs(err, "ActBus: Malformed footer in response string, aborting.");
+          bputs(err, "StageBus: Malformed footer in response string, aborting.");
           state = ACT_RECV_ABORT;
         case ACT_RECV_ABORT: /* General abort: flush input */
           break;
@@ -310,7 +310,7 @@ static int BusRecv(char* buffer, int nic, int inhibit_chatter)
 
 #ifdef ACTBUS_CHATTER
     if (!inhibit_chatter)
-      bprintf(info, "ActBus: Response=%s (%x)\n", buffer, status);
+      bprintf(info, "StageBus: Response=%s (%x)\n", buffer, status);
 #endif
   }
 
@@ -324,7 +324,7 @@ static int ReadIntFromBus(int who, const char* cmd, int inhibit_chatter)
   BusSend(who, cmd, inhibit_chatter);
   if ((result = BusRecv(gp_buffer, 0, inhibit_chatter)) & (ACTBUS_TIMEOUT
         | ACTBUS_OOD)) {
-    bprintf(warning, "ActBus: Timeout waiting for response from %s (RIFB)",
+    bprintf(warning, "StageBus: Timeout waiting for response from %s (RIFB)",
         name[who]);
     CommandData.actbus.force_repoll = 1;
     return 0;
@@ -342,12 +342,12 @@ static void DiscardBusRecv(int flag, int who, int inhibit_chatter)
         | ACTBUS_OOD))
   {
     bprintf(warning,
-        "ActBus: Timeout waiting for response from %s.", name[who]);
+        "StageBus: Timeout waiting for response from %s.", name[who]);
     CommandData.actbus.force_repoll = 1;
   }
 #ifndef ACTBUS_CHATTER
   else if (flag)
-    bprintf(info, "ActBus: Controller response: %s\n", gp_buffer);
+    bprintf(info, "StageBus: Controller response: %s\n", gp_buffer);
 #endif
 }
 
@@ -357,9 +357,9 @@ static int PollBus(int rescan)
   int all_ok = 1;
 
   if (rescan)
-    bputs(info, "ActBus: Repolling Actuator Bus.");
+    bputs(info, "StageBus: Repolling Stage Bus.");
   else
-    bputs(info, "ActBus: Polling Actuator Bus.");
+    bputs(info, "StageBus: Polling Stage Bus.");
 
   for (i = 0; i < NACT; ++i) {
     if (rescan && stepper[i].status != -1)
@@ -367,21 +367,21 @@ static int PollBus(int rescan)
     BusSend(i, "&", __inhibit_chatter);
     if ((result = BusRecv(gp_buffer, 0, __inhibit_chatter)) & (ACTBUS_TIMEOUT
           | ACTBUS_OOD)) {
-      bprintf(warning, "ActBus: No response from %s, will repoll later.",
+      bprintf(warning, "StageBus: No response from %s, will repoll later.",
           name[i]);
       stepper[i].status = -1;
       all_ok = 0;
     } else if (!strncmp(gp_buffer, "EZHR17EN AllMotion", 18)) {
-      bprintf(info, "ActBus: Found type 17EN device %s at address %i.\n",
+      bprintf(info, "StageBus: Found type 17EN device %s at address %i.\n",
           name[i], id[i] - 0x30);
       stepper[i].status = 0;
     } else if (!strncmp(gp_buffer, "EZHR23 All Motion", 17)) {
-      bprintf(info, "ActBus: Found type 23 device %s at address %i.\n", name[i],
+      bprintf(info, "StageBus: Found type 23 device %s at address %i.\n", name[i],
           id[i] - 0x30);
       stepper[i].status = 0;
     } else {
       bprintf(warning,
-          "ActBus: Unrecognised response from %s, will repoll later.\n",
+          "StageBus: Unrecognised response from %s, will repoll later.\n",
           name[i]);
       stepper[i].status = -1;
       all_ok = 0;
@@ -473,7 +473,7 @@ void StageBus(void)
   int i;
   int my_cindex = 0;
 
-  bputs(startup, "ActBus: ActuatorBus startup.");
+  bputs(startup, "StageBus: StageBus startup.");
 
   for (i = 0; i < NACT; ++i)
     stepper[i].sequence = 1;
