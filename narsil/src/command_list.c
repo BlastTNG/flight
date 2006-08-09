@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.27 $";
+const char *command_list_serial = "$Revision: 3.28 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -147,6 +147,7 @@ struct scom scommands[N_SCOMMANDS] = {
     | CONFIRM},
   {COMMAND(reap), "ask MCP to reap the watchdog tickle", GR_MISC | CONFIRM},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC},
+  {COMMAND(xy_panic), "stop XY stage motors immediately", GR_MISC},
 
   {COMMAND(balance_veto), "veto balance system", GR_BAL},
   {COMMAND(balance_allow), "unveto balance system", GR_BAL},
@@ -415,12 +416,47 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(xy_stage), "move the X-Y tranlsation stage", GR_LOCK, 4,
+  {COMMAND(xy_goto), "move the X-Y translation stage to absolute position",
+    GR_MISC, 4,
     {
       {"X destination", 0, 80000, 'l', "STAGE_X"},
       {"Y destination", 0, 80000, 'l', "STAGE_Y"},
       {"X speed", 0, 16000, 'i', "STAGE_X_VEL"},
       {"Y speed", 0, 16000, 'i', "STAGE_Y_VEL"}
+    }
+  },
+
+  {COMMAND(xy_jump), "move the X-Y translation stage to relative position",
+    GR_MISC, 4,
+    {
+      {"X delta", -80000, 80000, 'l', "0"},
+      {"Y destination", -80000, 80000, 'l', "0"},
+      {"X speed", 0, 16000, 'i', "STAGE_X_VEL"},
+      {"Y speed", 0, 16000, 'i', "STAGE_Y_VEL"}
+    }
+  },
+
+  {COMMAND(xy_xscan), "scan the X-Y translation stage in X", GR_MISC, 2,
+    {
+      {"delta X", 0, 80000, 'l', "0"},
+      {"X speed", 0, 16000, 'i', "STAGE_X_VEL"},
+    }
+  },
+
+  {COMMAND(xy_yscan), "scan the X-Y translation stage in Y", GR_MISC, 2,
+    {
+      {"delta Y", 0, 80000, 'l', "0"},
+      {"Y speed", 0, 16000, 'i', "STAGE_X_VEL"},
+    }
+  },
+
+  {COMMAND(xy_raster), "raster the X-Y translation stage", GR_MISC, 5,
+    {
+      {"X center", 0, 80000, 'l', "STAGE_X"},
+      {"Y center", 0, 80000, 'l', "STAGE_Y"},
+      {"Map Size", 0, 30000, 'i', ""},
+      {"Step Size", 0, 30000, 'i', ""},
+      {"Velocity", 0, 16000, 'i', ""},
     }
   },
 

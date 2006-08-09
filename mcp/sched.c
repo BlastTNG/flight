@@ -218,9 +218,11 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
           type = mcommands[mindex].params[k].type;
           if (type == 'i')  /* 15 bit unsigned integer */
             S->event[j].ivalues[k] = atoi(token[k + 3]);
+          else if (type == 'l')  /* 30 bit unsigned integer */
+            S->event[j].ivalues[k] = atoi(token[k + 3]);
           else if (type == 'f')  /* 15 bit floating point */
             S->event[j].rvalues[k] = atof(token[k + 3]);
-          else if (type == 'l') /* 30 bit floating point */
+          else if (type == 'd') /* 30 bit floating point */
             S->event[j].rvalues[k] = atof(token[k + 3]);
         }
     }

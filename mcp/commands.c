@@ -738,6 +738,10 @@ static void SingleCommand (enum singleCommand command, int scheduled)
         bputs(warning, "Commands: Halting the MCC\n");
         system("/sbin/halt");
       }
+      break;
+    case xy_panic:
+      CommandData.xystage.mode = XYSTAGE_PANIC;
+      CommandData.xystage.is_new = 1;
     case xyzzy:
       break;
     default:
@@ -1051,6 +1055,16 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.goal[1] = ivalues[1];
       CommandData.actbus.goal[2] = ivalues[2];
       CommandData.actbus.focus_mode = ACTBUS_FM_SERVO;
+      break;
+
+      /* XY Stage */
+    case xy_goto:
+      CommandData.xystage.x1 = ivalues[0];
+      CommandData.xystage.y1 = ivalues[1];
+      CommandData.xystage.xvel = ivalues[2];
+      CommandData.xystage.yvel = ivalues[3];
+      CommandData.xystage.mode = XYSTAGE_GOTO;
+      CommandData.xystage.is_new = 1;
       break;
 
 #ifndef BOLOTEST
@@ -1874,6 +1888,7 @@ void InitCommandData()
 
   /** this overrides prev_status **/
   CommandData.force_el = 0;
+  CommandData.xystage.is_new = 0;
 
   if (CommandData.pumps.bal_veto != -1)
     CommandData.pumps.bal_veto = BAL_VETO_MAX;

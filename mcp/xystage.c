@@ -45,8 +45,7 @@
 #endif
 
 /* Define this symbol to have mcp log all actuator bus traffic */
-#undef ACTBUS_CHATTER
-static int __inhibit_chatter = 0;
+#define ACTBUS_CHATTER
 
 #define ACT_BUS "/dev/ttyS1"
 
@@ -93,9 +92,6 @@ static struct stage_struct {
   unsigned int xvel, yvel;
 } stage_data;
 
-static int bus_seized = -1;
-static int bus_underride = -1;
-
 static int act_setserial(char *input_tty)
 {
   int fd;
@@ -132,36 +128,6 @@ static int act_setserial(char *input_tty)
     berror(tfatal, "StageBus: Unable to set serial attributes");
 
   return fd;
-}
-
-static inline void ReleaseBus(int who)
-{
-  if (bus_seized == who) {
-    bprintf(info, "StageBus: Bus released by %s.\n", name[who]);
-    bus_seized = -1;
-  }
-
-  if (bus_seized == -1 && bus_underride != -1) {
-    bprintf(info, "StageBus: Bus underriden by %s.\n", name[bus_underride]);
-    bus_seized = bus_underride;
-  }
-}
-
-static inline void UnderrideBus(int who)
-{
-  if (bus_underride != who)
-    bprintf(info, "StageBus: Bus underride for %s enabled.\n", name[who]);
-  bus_underride = who;
-  ReleaseBus(-2);
-}
-
-static inline void RemoveUnderride(void)
-{
-  int i = bus_underride;
-
-  bprintf(info, "StageBus: Bus underride for %s disabled.\n", name[i]);
-  bus_underride = -1;
-  ReleaseBus(i);
 }
 
 static char hex_buffer[1000];
@@ -365,8 +331,8 @@ static int PollBus(int rescan)
   for (i = 0; i < NACT; ++i) {
     if (rescan && stepper[i].status != -1)
       continue;
-    BusSend(i, "&", __inhibit_chatter);
-    if ((result = BusRecv(gp_buffer, 0, __inhibit_chatter)) & (ACTBUS_TIMEOUT
+    BusSend(i, "&", 0);
+    if ((result = BusRecv(gp_buffer, 0, 0)) & (ACTBUS_TIMEOUT
           | ACTBUS_OOD)) {
       bprintf(warning, "StageBus: No response from %s, will repoll later.",
           name[i]);
@@ -400,25 +366,25 @@ static void ReadStage(void)
   if (stepper[STAGEXNUM].status == -1 || stepper[STAGEYNUM].status == -1)
     return;
 
-  stage_data.xpos = ReadIntFromBus(STAGEXNUM, "?0", 0);
-  stage_data.ypos = ReadIntFromBus(STAGEYNUM, "?0", 0);
+  stage_data.xpos = ReadIntFromBus(STAGEXNUM, "?0", 1);
+  stage_data.ypos = ReadIntFromBus(STAGEYNUM, "?0", 1);
 
   if (counter == 0)
-    stage_data.xstr = ReadIntFromBus(STAGEXNUM, "?1", 0);
+    stage_data.xstr = ReadIntFromBus(STAGEXNUM, "?1", 1);
   else if (counter == 1)
-    stage_data.xstp = ReadIntFromBus(STAGEXNUM, "?3", 0);
+    stage_data.xstp = ReadIntFromBus(STAGEXNUM, "?3", 1);
   else if (counter == 2)
-    stage_data.xlim = ReadIntFromBus(STAGEXNUM, "?4", 0);
+    stage_data.xlim = ReadIntFromBus(STAGEXNUM, "?4", 1);
   else if (counter == 3)
-    stage_data.xvel = ReadIntFromBus(STAGEXNUM, "?5", 0);
+    stage_data.xvel = ReadIntFromBus(STAGEXNUM, "?5", 1);
   else if (counter == 4)
-    stage_data.ystr = ReadIntFromBus(STAGEYNUM, "?1", 0);
+    stage_data.ystr = ReadIntFromBus(STAGEYNUM, "?1", 1);
   else if (counter == 5)
-    stage_data.ystp = ReadIntFromBus(STAGEYNUM, "?3", 0);
+    stage_data.ystp = ReadIntFromBus(STAGEYNUM, "?3", 1);
   else if (counter == 6)
-    stage_data.yvel = ReadIntFromBus(STAGEYNUM, "?5", 0);
+    stage_data.yvel = ReadIntFromBus(STAGEYNUM, "?5", 1);
   else if (counter == 7)
-    stage_data.ylim = ReadIntFromBus(STAGEYNUM, "?4", 0);
+    stage_data.ylim = ReadIntFromBus(STAGEYNUM, "?4", 1);
 
   counter = (counter + 1) % 8;
 }
@@ -510,17 +476,60 @@ void StageBus(void)
     if (CommandData.actbus.caddr[my_cindex] == 0x36 ||
         CommandData.actbus.caddr[my_cindex] == 0x37) {
       BusSend(CommandData.actbus.caddr[my_cindex],
-          CommandData.actbus.command[my_cindex], __inhibit_chatter);
+          CommandData.actbus.command[my_cindex], 0);
       /* Discard response to get it off the bus */
-      DiscardBusRecv(1, CommandData.actbus.caddr[my_cindex] - 0x30,
-          __inhibit_chatter);
+      DiscardBusRecv(1, CommandData.actbus.caddr[my_cindex] - 0x30, 0);
       CommandData.actbus.caddr[my_cindex] = 0;
     }
 
-    UnderrideBus(STAGEXNUM);
+    if (CommandData.xystage.is_new) {
+      if (CommandData.xystage.mode == XYSTAGE_PANIC) {
+        bputs(info, "StageBus: Panic");
+        BusSend(STAGEXNUM, "T", 0);
+        DiscardBusRecv(0, STAGEXNUM, 0);
+        BusSend(STAGEYNUM, "T", 0);
+        DiscardBusRecv(0, STAGEYNUM, 0);
+      } else if (CommandData.xystage.mode == XYSTAGE_GOTO) {
+        if (CommandData.xystage.xvel > 0) {
+          sprintf(gp_buffer, "L2m30l30V%iA%iR", CommandData.xystage.xvel,
+              CommandData.xystage.x1);
+          bprintf(info, "StageBus: Move X to %i at speed %i",
+              CommandData.xystage.x1, CommandData.xystage.xvel);
+          BusSend(STAGEXNUM, gp_buffer, 0);
+          DiscardBusRecv(0, STAGEXNUM, 0);
+        }
+        if (CommandData.xystage.yvel > 0) {
+          sprintf(gp_buffer, "L2m30l30V%iA%iR", CommandData.xystage.yvel,
+              CommandData.xystage.y1);
+          bprintf(info, "StageBus: Move Y to %i at speed %i",
+              CommandData.xystage.y1, CommandData.xystage.yvel);
+          BusSend(STAGEYNUM, gp_buffer, 0);
+          DiscardBusRecv(0, STAGEYNUM, 0);
+        }
+      } else if (CommandData.xystage.mode == XYSTAGE_JUMP) {
+        if (CommandData.xystage.xvel > 0 && CommandData.xystage.x1 > 0) {
+          bprintf(info, "StageBus: Jump X by %i at speed %i",
+              CommandData.xystage.x1, CommandData.xystage.xvel);
+          sprintf(gp_buffer, "L2m30l30V%i%c%iR", abs(CommandData.xystage.xvel),
+              (CommandData.xystage.xvel > 0) ? 'P' : 'D',
+              CommandData.xystage.x1);
+          BusSend(STAGEXNUM, gp_buffer, 0);
+          DiscardBusRecv(0, STAGEXNUM, 0);
+        }
+        if (CommandData.xystage.yvel > 0 && CommandData.xystage.y1 > 0) {
+          bprintf(info, "StageBus: Jump Y by %i at speed %i",
+              CommandData.xystage.y1, CommandData.xystage.yvel);
+          sprintf(gp_buffer, "L2m30l30V%i%c%iR", abs(CommandData.xystage.yvel),
+              (CommandData.xystage.yvel > 0) ? 'P' : 'D',
+              CommandData.xystage.y1);
+          BusSend(STAGEYNUM, gp_buffer, 0);
+          DiscardBusRecv(0, STAGEYNUM, 0);
+        }
+      }
+      CommandData.xystage.is_new = 0;
+    }
 
-    if (bus_seized == STAGEXNUM)
-      ReadStage();
+    ReadStage();
 
     usleep(10000);
   }

@@ -430,7 +430,7 @@ void Buffer::Stop(void)
           CurrSize() - BUF_POS_DATA_START);
 
     // Send packets
-    bprintf(info, "TDRSS: Emitting %i bytes of high-rate data\n", CurrSize());
+//    bprintf(info, "TDRSS: Emitting %i bytes of high-rate data\n", CurrSize());
     if (write(tty_fd, buf, CurrSize()) != CurrSize())
       bprintf(err, "TDRSS: Error sending through serial port.");
   } else

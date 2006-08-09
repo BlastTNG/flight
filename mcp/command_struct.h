@@ -67,6 +67,12 @@ struct GainStruct {
 #define ACTBUS_FM_SOLVE 2
 #define ACTBUS_FM_PANIC 3
 
+#define XYSTAGE_PANIC  0
+#define XYSTAGE_GOTO   1
+#define XYSTAGE_JUMP   2
+#define XYSTAGE_SCAN   3
+#define XYSTAGE_RASTER 4
+
 // mode        X     Y    vaz   del    w    h
 // LOCK              el
 // AZEL_GOTO   az    el
@@ -238,6 +244,10 @@ struct CommandDataStruct {
 
     unsigned int lock_goal;
   } actbus;
+
+  struct {
+    int x1, y1, x2, y2, xvel, yvel, is_new, mode;
+  } xystage;
 
   int pin_is_in;
 

@@ -17,8 +17,8 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 138        /* total number of single word cmds */
-#define N_MCOMMANDS 84         /* total number of multiword commands */
+#define N_SCOMMANDS 139        /* total number of single word cmds */
+#define N_MCOMMANDS 88         /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -96,7 +96,7 @@ enum singleCommand {
   repoll,           biascmd_inh,        biascmd_ena,      autofocus_allow,
   isc_use_pyramid,  isc_no_pyramid,     osc_use_pyramid,  osc_no_pyramid,
   autofocus_veto,   icc_halt,           nicc_halt,        actbus_on,
-  actbus_off,       actuator_stop
+  actbus_off,       actuator_stop,      xy_panic
 };
 
 struct scom {
@@ -131,7 +131,8 @@ enum multiCommand {
   osc_foc_off,       t_gyro2_gain,      t_gyro2_set,      apcu_charge,
   dpcu_charge,       auto_apcu,         auto_dpcu,        quad,
   el_gyro_offset,    general,           slew_veto,        focus,
-  mirror_gain,       mirror_tilt,       actuator_servo,   xy_stage
+  mirror_gain,       mirror_tilt,       actuator_servo,   xy_goto,
+  xy_jump,           xy_xscan,          xy_yscan,         xy_raster
 };
 
 struct par {
