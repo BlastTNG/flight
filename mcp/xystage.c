@@ -45,7 +45,7 @@
 #endif
 
 /* Define this symbol to have mcp log all actuator bus traffic */
-#define ACTBUS_CHATTER
+#undef ACTBUS_CHATTER
 
 #define ACT_BUS "/dev/ttyS1"
 
@@ -467,7 +467,7 @@ void Raster(int start, int end, int is_y, int y, int ymin, int ymax, int vel,
   int x;
   int step = (start > end) ? -ss : ss;
   bprintf(info, "Raster %i %i %i\n", start, end, step); 
-  for (x = start; x <= end; x += step) {
+  for (x = start; x != end + step; x += step) {
     if (step < 0) {
       if (x < end)
         x = end;
@@ -602,10 +602,12 @@ void StageBus(void)
           GoWait(ycent - size, vel, 1);
           Raster(xcent, xcent + size, 0, ycent + size, ycent - size,
               ycent + size, vel, step);
-          Raster(ycent + size, xcent - size, 1, xcent + size, xcent - size,
+          Raster(ycent + size, ycent - size, 1, xcent + size, xcent - size,
               ycent + size, vel, step);
           Raster(xcent - size, xcent, 0, ycent - size, ycent - size,
               ycent + size, vel, step);
+          GoWait(xcent, vel, 0);
+          GoWait(ycent, vel, 1);
         }
       }
       if (CommandData.xystage.mode != XYSTAGE_PANIC)
