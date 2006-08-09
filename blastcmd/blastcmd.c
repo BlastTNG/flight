@@ -360,6 +360,31 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
         return;
       }
       dataq[dataqsize++] = (unsigned short)(ynt - min);
+    } else if (type == 'l') {
+      /* 30 bit integer parameter */
+      ynt = atoi(parms[i]);
+      if (ynt < min) {
+        sprintf(output, ":::limit:::parameter %d out of range (%i < %g)\r\n",
+            i + 1, ynt, min);
+        *i_ack = 0x103;
+        send(sock, output, sizeof(output), MSG_NOSIGNAL);
+        return;
+      } else if (ynt > MAX_30BIT) {
+        sprintf(output, ":::limit:::parameter %d out of range (%i > %g)\r\n",
+            i + 1, ynt, MAX_30BIT);
+        *i_ack = 0x103;
+        send(sock, output, sizeof(output), MSG_NOSIGNAL);
+        return;
+      } else if (ynt > max) {
+        sprintf(output, ":::limit:::parameter %d out of range (%i > %g)\r\n",
+            i + 1, ynt, max);
+        *i_ack = 0x103;
+        send(sock, output, sizeof(output), MSG_NOSIGNAL);
+        return;
+      }
+      ynt -= min;
+      dataq[dataqsize++] = ynt & 0x00007fff;         /* lower 15 bits */
+      dataq[dataqsize++] = (ynt & 0x3fff8000) >> 15; /* upper 15 bits */
     } else if (type == 'f') {
       /* 15 bit floating point parameter */
       flote = atof(parms[i]);
@@ -377,7 +402,7 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
         return;
       }
       dataq[dataqsize++] = round((flote - min) * MAX_15BIT / (max - min)); 
-    } else if (type == 'l') {
+    } else if (type == 'd') {
       /* 30 bit floating point parameter */
       flote = atof(parms[i]);
       if (flote < min) {
