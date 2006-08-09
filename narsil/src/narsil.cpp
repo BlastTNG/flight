@@ -605,7 +605,8 @@ void MainForm::SendCommand() {
           WriteErr(NLog, 10);
           return;
         }
-        if (client_mcommands[index].params[j].type == 'i')
+        if (client_mcommands[index].params[j].type == 'i'
+            || client_mcommands[index].params[j].type == 'l')
           sprintf(buffer, " %i", defaults->asInt(index, j));
         else if (client_mcommands[index].params[j].type == 's')
           sprintf(buffer, " %s", defaults->asString(index, j));

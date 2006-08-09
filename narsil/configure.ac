@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(narsil, 2.2.1, [dwiebe@physics.utoronto.ca])
-AM_INIT_AUTOMAKE(narsil, 2.2.1)
+AC_INIT(narsil, 2.3.0, [dwiebe@physics.utoronto.ca])
+AM_INIT_AUTOMAKE(narsil, 2.3.0)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH(data-etc, AS_HELP_STRING([--with-data-etc=DIR],
@@ -143,17 +143,34 @@ dnl Look for MOC
 AC_PATH_PROG(MOC, moc,,$PATH:$QT_BIN_DIR)
 
 dnl Look for ELOG
+AC_ARG_WITH(elog, AS_HELP_STRING([--without-elog],
+             [Don't compile in elog support]),
+             [
+              case ${enableval} in
+                no) use_elog=0;;
+                *) use_elog=1;;
+              esac
+              ], [ use_elog=1 ])
+                              
 AC_ARG_WITH(elog-host, AS_HELP_STRING([--with-elog-host=HOST],
             [Send elog queries to the elog server running on HOST [[elog.blast]]]),
             ELOG_HOST="${withval}", ELOG_HOST="elog.blast")
-AC_CHECK_PROG(ELOG, elog, "yes", "no")
-if test "x$ELOG" = "xno"; then
-  result_elog="no"
+AC_MSG_CHECKING(whether to support elog)
+echo ">> $use_elog <<";
+if test "x$use_elog" = "x1"; then
+  AC_MSG_RESULT([yes])
+
+  AC_CHECK_PROG(ELOG, elog, "yes", "no")
+  if test "x$ELOG" = "xno"; then
+    result_elog="no"
+  else
+    result_elog="yes"
+    AC_DEFINE_UNQUOTED(ELOG_HOST, "$ELOG_HOST",
+                       [Define to the name of your elog server])
+    AC_DEFINE(USE_ELOG, 1, [Define to 1 to enable elog support])
+  fi
 else
-  result_elog="yes"
-  AC_DEFINE_UNQUOTED(ELOG_HOST, "$ELOG_HOST",
-                     [Define to the name of your elog server])
-  AC_DEFINE(USE_ELOG, 1, [Define to 1 to enable elog support])
+  AC_MSG_RESULT([no])
 fi
 
 dnl Libraries

@@ -84,7 +84,7 @@ void DoubleEntry::SetMinMax(double mi, double ma) {
 //-------------------------------------------------------------
 
 void DoubleEntry::SetValue(double val) {
-  if (type == 'i') {
+  if (type == 'i' || type == 'l') {
     if (val < iMin) val = iMin;
     if (val > iMax) val = iMax;
     setText(QString::number(val));
@@ -98,7 +98,7 @@ void DoubleEntry::SetValue(double val) {
 void DoubleEntry::SetStringValue(const char* str) { setText(str); }
 
 void DoubleEntry::SetDefaultValue(int i, int j) {
-  if (type == 'i')
+  if (type == 'i' || type == 'l')
     setText(QString::number(defaults->asInt(i, j)));
   else if (type == 's')
     setText(defaults->asString(i, j));
@@ -124,7 +124,7 @@ void DoubleEntry::SetParentField(int com, int par) {
 }
 
 QString DoubleEntry::value() {
-  if (type == 'i') {
+  if (type == 'i' || type == 'l') {
     int v = (int)text().toDouble();
     if (v < iMin) v = iMin;
     if (v > iMax) v = iMax;
