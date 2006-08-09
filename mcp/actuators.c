@@ -443,8 +443,8 @@ static void InitialiseActuator(int who)
 
     /* Set the encoder */
     sprintf(buffer, "z%iR", enc);  
-    BusSend(who, buffer, __inhibit_chatter);
-    DiscardBusRecv(0, who, __inhibit_chatter);
+//    BusSend(who, buffer, __inhibit_chatter);
+//    DiscardBusRecv(0, who, __inhibit_chatter);
   }
 }
 
@@ -1018,7 +1018,7 @@ void ActuatorBus(void)
           CommandData.actbus.command[my_cindex], __inhibit_chatter);
       /* Discard response to get it off the bus */
       if (CommandData.actbus.caddr[my_cindex] < NACT)
-        DiscardBusRecv(1, CommandData.actbus.caddr[my_cindex],
+        DiscardBusRecv(1, CommandData.actbus.caddr[my_cindex] - 0x30,
             __inhibit_chatter);
       CommandData.actbus.caddr[my_cindex] = 0;
     }

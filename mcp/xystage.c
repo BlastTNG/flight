@@ -341,6 +341,7 @@ static void DiscardBusRecv(int flag, int who, int inhibit_chatter)
   if ((i = BusRecv(gp_buffer, 0, inhibit_chatter)) & (ACTBUS_TIMEOUT
         | ACTBUS_OOD))
   {
+    i = who;
     bprintf(warning,
         "StageBus: Timeout waiting for response from %s.", name[who]);
     CommandData.actbus.force_repoll = 1;
@@ -511,9 +512,8 @@ void StageBus(void)
       BusSend(CommandData.actbus.caddr[my_cindex],
           CommandData.actbus.command[my_cindex], __inhibit_chatter);
       /* Discard response to get it off the bus */
-      if (CommandData.actbus.caddr[my_cindex] < NACT)
-        DiscardBusRecv(1, CommandData.actbus.caddr[my_cindex],
-            __inhibit_chatter);
+      DiscardBusRecv(1, CommandData.actbus.caddr[my_cindex] - 0x30,
+          __inhibit_chatter);
       CommandData.actbus.caddr[my_cindex] = 0;
     }
 
