@@ -433,6 +433,55 @@ void StoreStageBus(void)
   WriteData(stageYLimAddr, stage_data.ylim, NIOS_FLUSH);
 }
 
+void GoWait(int dest, int vel, int is_y)
+{
+  int now;
+
+  if (CommandData.xystage.mode == XYSTAGE_PANIC || vel == 0)
+    return;
+
+  if (dest < 0)
+    dest = 0;
+
+  sprintf(gp_buffer, "L2m30l30V%iA%iR", vel, dest);
+  bprintf(info, "StageBus: Move %c to %i at speed %i and wait", (is_y) ? 'Y'
+      : 'X', dest, vel);
+  BusSend((is_y) ? STAGEYNUM : STAGEXNUM, gp_buffer, 0);
+  DiscardBusRecv(0, (is_y) ? STAGEXNUM : STAGEXNUM, 0);
+
+  do {
+//    bprintf(info, "mode=%i\n", CommandData.xystage.mode);
+    if (CommandData.xystage.mode == XYSTAGE_PANIC)
+      return;
+    usleep(10000);
+
+    ReadStage();
+
+    now = (is_y) ? stage_data.ypos : stage_data.xpos;
+  } while (now != dest);
+}
+
+void Raster(int start, int end, int is_y, int y, int ymin, int ymax, int vel,
+    int ss)
+{
+  int x;
+  int step = (start > end) ? -ss : ss;
+  bprintf(info, "Raster %i %i %i\n", start, end, step); 
+  for (x = start; x <= end; x += step) {
+    if (step < 0) {
+      if (x < end)
+        x = end;
+    } else if (x > end)
+      x = end;
+    GoWait(x, vel, is_y);
+    if (y == ymin)
+      y = ymax;
+    else
+      y = ymin;
+    GoWait(y, vel, !is_y);
+  }
+}
+
 void StageBus(void)
 {
   int poll_timeout = POLL_TIMEOUT;
@@ -489,6 +538,7 @@ void StageBus(void)
         DiscardBusRecv(0, STAGEXNUM, 0);
         BusSend(STAGEYNUM, "T", 0);
         DiscardBusRecv(0, STAGEYNUM, 0);
+        CommandData.xystage.is_new = 0;
       } else if (CommandData.xystage.mode == XYSTAGE_GOTO) {
         if (CommandData.xystage.xvel > 0) {
           sprintf(gp_buffer, "L2m30l30V%iA%iR", CommandData.xystage.xvel,
@@ -526,11 +576,40 @@ void StageBus(void)
           DiscardBusRecv(0, STAGEYNUM, 0);
         }
       } else if (CommandData.xystage.mode == XYSTAGE_SCAN) {
-        if (CommandData.xystage.xvel > 0 && CommandData.xystage.x1 > 0) {
-        } else if (CommandData.xystage.yvel > 0 && CommandData.xystage.y1 > 0) {
+        if (CommandData.xystage.xvel > 0 && CommandData.xystage.x2 > 0) {
+          GoWait(CommandData.xystage.x1, CommandData.xystage.xvel, 0);
+          GoWait(CommandData.xystage.x1 + CommandData.xystage.x2,
+              CommandData.xystage.xvel, 0);
+          GoWait(CommandData.xystage.x1 - CommandData.xystage.x2,
+              CommandData.xystage.xvel, 0);
+          GoWait(CommandData.xystage.x1, CommandData.xystage.xvel, 0);
+        } else if (CommandData.xystage.yvel > 0 && CommandData.xystage.y2 > 0) {
+          GoWait(CommandData.xystage.y1, CommandData.xystage.yvel, 1);
+          GoWait(CommandData.xystage.y1 + CommandData.xystage.y2,
+              CommandData.xystage.yvel, 1);
+          GoWait(CommandData.xystage.y1 - CommandData.xystage.y2,
+              CommandData.xystage.yvel, 1);
+          GoWait(CommandData.xystage.y1, CommandData.xystage.yvel, 1);
+        }
+      } else if (CommandData.xystage.mode == XYSTAGE_RASTER) {
+        if (CommandData.xystage.xvel > 0) {
+          int vel = CommandData.xystage.xvel;
+          int xcent = CommandData.xystage.x1;
+          int ycent = CommandData.xystage.y1;
+          int size = CommandData.xystage.x2;
+          int step = CommandData.xystage.y2;
+          GoWait(xcent, vel, 0);
+          GoWait(ycent - size, vel, 1);
+          Raster(xcent, xcent + size, 0, ycent + size, ycent - size,
+              ycent + size, vel, step);
+          Raster(ycent + size, xcent - size, 1, xcent + size, xcent - size,
+              ycent + size, vel, step);
+          Raster(xcent - size, xcent, 0, ycent - size, ycent - size,
+              ycent + size, vel, step);
         }
       }
-      CommandData.xystage.is_new = 0;
+      if (CommandData.xystage.mode != XYSTAGE_PANIC)
+        CommandData.xystage.is_new = 0;
     }
 
     ReadStage();
