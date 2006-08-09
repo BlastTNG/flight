@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.29 $";
+const char *command_list_serial = "$Revision: 3.30 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -438,7 +438,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(xy_xscan), "scan the X-Y translation stage in X", GR_MISC, 2,
     {
-      {"delta X", 0, 80000, 'l', ""},
+      {"delta X", 0, 80000, 'l', "NONE"},
       {"X speed", 0, 16000, 'i', "STAGE_X_VEL"},
     }
   },
