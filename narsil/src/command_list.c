@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.28 $";
+const char *command_list_serial = "$Revision: 3.29 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -438,14 +438,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(xy_xscan), "scan the X-Y translation stage in X", GR_MISC, 2,
     {
-      {"delta X", 0, 80000, 'l', "0"},
+      {"delta X", 0, 80000, 'l', ""},
       {"X speed", 0, 16000, 'i', "STAGE_X_VEL"},
     }
   },
 
   {COMMAND(xy_yscan), "scan the X-Y translation stage in Y", GR_MISC, 2,
     {
-      {"delta Y", 0, 80000, 'l', "0"},
+      {"delta Y", 0, 80000, 'l', "NONE"},
       {"Y speed", 0, 16000, 'i', "STAGE_X_VEL"},
     }
   },
@@ -454,9 +454,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"X center", 0, 80000, 'l', "STAGE_X"},
       {"Y center", 0, 80000, 'l', "STAGE_Y"},
-      {"Map Size", 0, 30000, 'i', ""},
-      {"Step Size", 0, 30000, 'i', ""},
-      {"Velocity", 0, 16000, 'i', ""},
+      {"Map Size", 0, 30000, 'i', "NONE"},
+      {"Step Size", 0, 30000, 'i', "NONE"},
+      {"Velocity", 0, 16000, 'i', "NONE"},
     }
   },
 
