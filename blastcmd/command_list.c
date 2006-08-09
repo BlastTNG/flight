@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.26 $";
+const char *command_list_serial = "$Revision: 3.27 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance System",    "Bias",
@@ -239,8 +239,9 @@ struct scom scommands[N_SCOMMANDS] = {
 
 /* parameter type:
  * i :  parameter is 15 bit unnormalised integer
+ * l :  parameter is 30 bit unnormalised integer
  * f :  parameter is 15 bit renormalised floating point
- * l :  parameter is 30 bit renormalised floating point
+ * d :  parameter is 30 bit renormalised floating point
  * s :  parameter is 7-bit character string
  */
 struct mcom mcommands[N_MCOMMANDS] = {
@@ -303,8 +304,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps",
     GR_POINT, 6,
     {
-      {"RA of Centre (h)",          0, 24, 'l', "NONE"},
-      {"Dec of Centre (deg)",     -90, 90, 'l', "NONE"},
+      {"RA of Centre (h)",          0, 24, 'd', "NONE"},
+      {"Dec of Centre (deg)",     -90, 90, 'd', "NONE"},
       {"Az Width (deg on sky)",     0, 90, 'f', "NONE"},
       {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
@@ -314,8 +315,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(cap), "scan a circle centred on RA/Dec with el steps", GR_POINT, 5,
     {
-      {"RA of Centre (h)",          0, 24, 'l', "NONE"},
-      {"Dec of Centre (deg)",     -90, 90, 'l', "NONE"},
+      {"RA of Centre (h)",          0, 24, 'd', "NONE"},
+      {"Dec of Centre (deg)",     -90, 90, 'd', "NONE"},
       {"Radius (deg on sky)",       0, 90, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"}
@@ -411,6 +412,15 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Actuator Alpha", 0, 21000, 'i', "NONE"},
       {"Actuator Beta",  0, 21000, 'i', "NONE"},
       {"Actuator Gamma", 0, 21000, 'i', "NONE"}
+    }
+  },
+
+  {COMMAND(xy_stage), "move the X-Y tranlsation stage", GR_LOCK, 4,
+    {
+      {"X destination", 0, 80000, 'l', "STAGE_X"},
+      {"Y destination", 0, 80000, 'l', "STAGE_Y"},
+      {"X speed", 0, 16000, 'i', "STAGE_X_VEL"},
+      {"Y speed", 0, 16000, 'i', "STAGE_Y_VEL"}
     }
   },
 

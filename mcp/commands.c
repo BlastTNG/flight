@@ -803,16 +803,20 @@ static void SetParameters(enum multiCommand command, unsigned short *dataq,
     if (type == 'i')  /* 15 bit unsigned integer */ {
       ivalues[i] = dataq[dataqind++] + mcommands[index].params[i].min;
       bprintf(info, "Commands: param%02i: integer: %i\n", i, ivalues[i]);
+    } else if (type == 'l')  /* 30 bit unsigned integer */ {
+      ivalues[i] = dataq[dataqind++] + mcommands[index].params[i].min;
+      ivalues[i] += (dataq[dataqind++] << 15);
+      bprintf(info, "Commands: param%02i: long   : %i\n", i, ivalues[i]);
     } else if (type == 'f')  /* 15 bit floating point */ {
       rvalues[i] = (float)dataq[dataqind++] * (mcommands[index].params[i].max
           - min) / MAX_15BIT + min;
-      bprintf(info, "Commands: param%02i: 15 bits: %f\n", i, rvalues[i]);
-    } else if (type == 'l') { /* 30 bit floating point */
+      bprintf(info, "Commands: param%02i: float  : %f\n", i, rvalues[i]);
+    } else if (type == 'd') { /* 30 bit floating point */
       rvalues[i] = (float)((int)dataq[dataqind++] << 15); /* upper 15 bits */
       rvalues[i] += (float)dataq[dataqind++];             /* lower 15 bits */
       rvalues[i] = rvalues[i] * (mcommands[index].params[i].max - min) /
         MAX_30BIT + min;
-      bprintf(info, "Commands: param%02i: 30 bits: %f\n", i, rvalues[i]);
+      bprintf(info, "Commands: param%02i: double : %f\n", i, rvalues[i]);
     } else if (type == 's') { /* string of 7-bit characters */
       int j;
       for (j = 0; j < mcommands[index].params[i].max; ++j)
@@ -829,12 +833,15 @@ static void SetParameters(enum multiCommand command, unsigned short *dataq,
     if (type == 'i')  /* 15 bit unsigned integer */ {
       ivalues[i] = atoi(dataqc[dataqind++]);
       bprintf(info, "Commands: param%02i: integer: %i\n", i, ivalues[i]);
+    } else if (type == 'l')  /* 30 bit unsigned integer */ {
+      ivalues[i] = atoi(dataqc[dataqind++]);
+      bprintf(info, "Commands: param%02i: long   : %i\n", i, ivalues[i]);
     } else if (type == 'f')  /* 15 bit floating point */ {
       rvalues[i] = atof(dataqc[dataqind++]);
-      bprintf(info, "Commands: param%02i: 15 bits: %f\n", i, rvalues[i]);
-    } else if (type == 'l') { /* 30 bit floating point */
+      bprintf(info, "Commands: param%02i: float  : %f\n", i, rvalues[i]);
+    } else if (type == 'd') { /* 30 bit floating point */
       rvalues[i] = atof(dataqc[dataqind++]);
-      bprintf(info, "Commands: param%02i: 30 bits: %f\n", i, rvalues[i]);
+      bprintf(info, "Commands: param%02i: double : %f\n", i, rvalues[i]);
     } else if (type == 's') { /* string */
       strncpy(svalues[i], dataqc[dataqind++], CMD_STRING_LEN - 1);
       svalues[i][CMD_STRING_LEN - 1] = 0;
@@ -861,8 +868,8 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 #endif
 
   /* Update CommandData struct with new info
-   * If the parameter is type 'i'     set CommandData using ivalues[i]
-   * If the parameter is type 'f'/'l' set CommandData using rvalues[i]
+   * If the parameter is type 'i'/'l' set CommandData using ivalues[i]
+   * If the parameter is type 'f'/'d' set CommandData using rvalues[i]
    */
 
   /* Pointing Modes */
@@ -1354,11 +1361,14 @@ void ScheduledCommand(struct ScheduleEvent *event)
       if (type == 'i') /* 15 bit unsigned integer */
         bprintf(info, "Commands:   param%02i: integer: %i\n", i,
             event->ivalues[i]);
+      if (type == 'l') /* 30 bit unsigned integer */
+        bprintf(info, "Commands:   param%02i: long   : %i\n", i,
+            event->ivalues[i]);
       else if (type == 'f') /* 15 bit floating point */
-        bprintf(info, "Commands:   param%02i: 15 bits: %f\n", i,
+        bprintf(info, "Commands:   param%02i: float  : %f\n", i,
             event->rvalues[i]);
-      else if (type == 'l') /* 30 bit floating point */
-        bprintf(info, "Commands:   param%02i: 30 bits: %f\n", i,
+      else if (type == 'd') /* 30 bit floating point */
+        bprintf(info, "Commands:   param%02i: double : %f\n", i,
             event->rvalues[i]);
     }
     MultiCommand(event->command, event->rvalues, event->ivalues, event->svalues,
@@ -1505,7 +1515,8 @@ static int DataQSize(int index)
   int i, size = mcommands[index].numparams;
 
   for (i = 0; i < mcommands[index].numparams; ++i)
-    if (mcommands[index].params[i].type == 'l')
+    if (mcommands[index].params[i].type == 'd'
+        || mcommands[index].params[i].type == 'l')
       size++;
     else if (mcommands[index].params[i].type == 's')
       size += (mcommands[index].params[i].max - 1) / 2;
