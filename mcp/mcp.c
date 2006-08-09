@@ -72,7 +72,7 @@ pthread_t watchdog_id;
 
 static int bi0_fp = -2;
 static int StartupVeto = STARTUP_VETO_LENGTH + 1;
-static int Death = -STARTUP_VETO_LENGTH;
+static int Death = -STARTUP_VETO_LENGTH * 2;
 static int RxFrameIndex;
 
 extern short int InCharge; /* tx.c */

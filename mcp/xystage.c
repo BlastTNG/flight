@@ -159,7 +159,7 @@ static void BusSend(int who, const char* what, int inhibit_chatter)
   buffer[len - 1] = chk;
 #ifdef ACTBUS_CHATTER
   if (!inhibit_chatter)
-    bprintf(info, "StageBus: Request=%s", HexDump(buffer, len));
+    bprintf(info, "StageBus: Request=%s (%s)", HexDump(buffer, len), what);
 #endif
   if (write(bus_fd, buffer, len) < 0)
     berror(err, "Error writing on bus");
@@ -507,23 +507,27 @@ void StageBus(void)
           DiscardBusRecv(0, STAGEYNUM, 0);
         }
       } else if (CommandData.xystage.mode == XYSTAGE_JUMP) {
-        if (CommandData.xystage.xvel > 0 && CommandData.xystage.x1 > 0) {
+        if (CommandData.xystage.xvel > 0 && CommandData.xystage.x1 != 0) {
           bprintf(info, "StageBus: Jump X by %i at speed %i",
               CommandData.xystage.x1, CommandData.xystage.xvel);
-          sprintf(gp_buffer, "L2m30l30V%i%c%iR", abs(CommandData.xystage.xvel),
-              (CommandData.xystage.xvel > 0) ? 'P' : 'D',
-              CommandData.xystage.x1);
+          sprintf(gp_buffer, "L2m30l30V%i%c%iR", CommandData.xystage.xvel,
+              (CommandData.xystage.x1 > 0) ? 'P' : 'D',
+              abs(CommandData.xystage.x1));
           BusSend(STAGEXNUM, gp_buffer, 0);
           DiscardBusRecv(0, STAGEXNUM, 0);
         }
-        if (CommandData.xystage.yvel > 0 && CommandData.xystage.y1 > 0) {
+        if (CommandData.xystage.yvel > 0 && CommandData.xystage.y1 != 0) {
           bprintf(info, "StageBus: Jump Y by %i at speed %i",
               CommandData.xystage.y1, CommandData.xystage.yvel);
-          sprintf(gp_buffer, "L2m30l30V%i%c%iR", abs(CommandData.xystage.yvel),
-              (CommandData.xystage.yvel > 0) ? 'P' : 'D',
-              CommandData.xystage.y1);
+          sprintf(gp_buffer, "L2m30l30V%i%c%iR", CommandData.xystage.yvel,
+              (CommandData.xystage.y1 > 0) ? 'P' : 'D',
+              abs(CommandData.xystage.y1));
           BusSend(STAGEYNUM, gp_buffer, 0);
           DiscardBusRecv(0, STAGEYNUM, 0);
+        }
+      } else if (CommandData.xystage.mode == XYSTAGE_SCAN) {
+        if (CommandData.xystage.xvel > 0 && CommandData.xystage.x1 > 0) {
+        } else if (CommandData.xystage.yvel > 0 && CommandData.xystage.y1 > 0) {
         }
       }
       CommandData.xystage.is_new = 0;

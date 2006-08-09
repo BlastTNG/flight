@@ -1066,6 +1066,30 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.xystage.mode = XYSTAGE_GOTO;
       CommandData.xystage.is_new = 1;
       break;
+    case xy_jump:
+      CommandData.xystage.x1 = ivalues[0];
+      CommandData.xystage.y1 = ivalues[1];
+      CommandData.xystage.xvel = ivalues[2];
+      CommandData.xystage.yvel = ivalues[3];
+      CommandData.xystage.mode = XYSTAGE_JUMP;
+      CommandData.xystage.is_new = 1;
+      break;
+    case xy_xscan:
+      CommandData.xystage.x1 = ivalues[0];
+      CommandData.xystage.x2 = ivalues[1];
+      CommandData.xystage.xvel = ivalues[2];
+      CommandData.xystage.yvel = 0;
+      CommandData.xystage.mode = XYSTAGE_SCAN;
+      CommandData.xystage.is_new = 1;
+      break;
+    case xy_yscan:
+      CommandData.xystage.y1 = ivalues[0];
+      CommandData.xystage.y2 = ivalues[1];
+      CommandData.xystage.yvel = ivalues[2];
+      CommandData.xystage.xvel = 0;
+      CommandData.xystage.mode = XYSTAGE_SCAN;
+      CommandData.xystage.is_new = 1;
+      break;
 
 #ifndef BOLOTEST
       /***************************************/
