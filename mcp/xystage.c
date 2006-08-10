@@ -450,7 +450,6 @@ void GoWait(int dest, int vel, int is_y)
   DiscardBusRecv(0, (is_y) ? STAGEXNUM : STAGEXNUM, 0);
 
   do {
-//    bprintf(info, "mode=%i\n", CommandData.xystage.mode);
     if (CommandData.xystage.mode == XYSTAGE_PANIC)
       return;
     usleep(10000);
