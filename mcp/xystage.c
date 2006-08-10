@@ -603,7 +603,7 @@ void StageBus(void)
           Raster(xcent, xcent + size, 0, ycent + size, ycent - size,
               ycent + size, vel, step);
           Raster(ycent + size, ycent - size, 1, xcent + size, xcent - size,
-              ycent + size, vel, step);
+              xcent + size, vel, step);
           Raster(xcent - size, xcent, 0, ycent - size, ycent - size,
               ycent + size, vel, step);
           GoWait(xcent, vel, 0);
