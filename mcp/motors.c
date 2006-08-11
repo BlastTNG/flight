@@ -758,7 +758,10 @@ static void DoNewCapMode(void)
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el1;
-    axes_mode.el_dir = -1;
+    //axes_mode.el_dir = -1;
+    if (v_el > 0) {
+      v_el = -v_el;
+    }
     return;
   } else if (el < el2 - EL_BORDER) {
     axes_mode.az_mode = AXIS_POSITION;
@@ -767,7 +770,10 @@ static void DoNewCapMode(void)
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = el2;
-    axes_mode.el_dir = 1;
+    //axes_mode.el_dir = 1;
+    if (v_el < 0) {
+      v_el = -v_el;
+    }
     return;
   }
   /* else if (el > el1) { */
@@ -912,6 +918,9 @@ static void DoNewBoxMode(void)
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = top;
     axes_mode.el_dir = -1;
+    if (v_el > 0) {
+      v_el = -v_el;
+    }
     return;
   } else if (el < bottom - EL_BORDER) {
     axes_mode.az_mode = AXIS_POSITION;
@@ -921,6 +930,9 @@ static void DoNewBoxMode(void)
     axes_mode.el_vel = 0.0;
     axes_mode.el_dest = bottom;
     axes_mode.el_dir = 1;
+    if (v_el < 0) {
+      v_el = -v_el;
+    }
     return;
   }
 
