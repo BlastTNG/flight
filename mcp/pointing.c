@@ -541,7 +541,7 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
       last_isc_framenum[which] = ISCSolution[which][i_isc].framenum;
       isc_pulses[which].age = -1; // reset counter.
     } else if (!finite(new_el) || !finite(new_az)) {
-      bprintf(err,"EvolveSCSolution detected a NaN or an INF !!");
+      bprintf(err, "Pointing: Aphysical star camera solution discarded.");
     }
   }
   e->since_last++;
