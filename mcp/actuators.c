@@ -38,7 +38,7 @@
 #include "tx.h"
 
 /* Define this symbol to have mcp log all actuator bus traffic */
-#undef ACTBUS_CHATTER
+#define ACTBUS_CHATTER
 static int __inhibit_chatter = 0;
 
 #ifdef BOLOTEST
@@ -250,7 +250,7 @@ static void BusSend(int who, const char* what, int inhibit_chatter)
   buffer[len - 1] = chk;
 #ifdef ACTBUS_CHATTER
   if (!inhibit_chatter)
-    bprintf(info, "ActBus: Request=%s", HexDump(buffer, len));
+    bprintf(info, "ActBus: Request=%s (%s)", HexDump(buffer, len), what);
 #endif
   if (write(bus_fd, buffer, len) < 0)
     berror(err, "Error writing on bus");
@@ -420,26 +420,22 @@ static void DiscardBusRecv(int flag, int who, int inhibit_chatter)
 static void InitialiseActuator(int who)
 {
   int enc;
-  double lvdt10 = lvdt_data.lvdt10 * LVDT10_TO_MM - LVDT10_ZERO;
-  double lvdt11 = lvdt_data.lvdt11 * LVDT11_TO_MM - LVDT11_ZERO;
-  double lvdt13 = lvdt_data.lvdt13 * LVDT13_TO_MM - LVDT13_ZERO;
   char buffer[1000];
 
   ReadActuator(who, __inhibit_chatter); 
 
   if (act_data[who].enc < 500000) {
-    /* Calculate nominal encoder position from LVDTs */
-    if (who == 0) 
-      enc = 2 * (int)(((lvdt10 + lvdt13) - lvdt11) / (3 * ACTENC_TO_MM));
-    else if (who == 1)
-      enc = 2 * (int)(((lvdt11 + lvdt10) - lvdt13) / (3 * ACTENC_TO_MM));
-    else
-      enc = 2 * (int)(((lvdt13 + lvdt11) - lvdt10) / (3 * ACTENC_TO_MM));
+    bprintf(info, "Initialising Actuator #%i...", who);
 
-    bprintf(info, "Initialising Actuator #%i to %i", who, enc);
+    /* Bug workaround -- can't set zero after controller boot until
+     * after having moved. */
+//    BusSend(who, "P10R", __inhibit_chatter);
+//    DiscardBusRecv(0, who, __inhibit_chatter);
+
+    ReadActuator(who, __inhibit_chatter); 
 
     /* Add a million */
-    enc += 1000000;
+    enc = 1000000 + act_data[who].enc;
 
     /* Set the encoder */
     sprintf(buffer, "z%iR", enc);  
