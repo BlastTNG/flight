@@ -312,7 +312,7 @@ static int SSConvert(double *ss_az)
   double az;
   double sun_ra, sun_dec, jd;
   static int last_i_ss = -1;
-  static struct LutType ssAzLut = {"/data/etc/ss.lut",0,NULL,NULL,0};
+  static struct LutType ssAzLut = {"/data/etc/sss.lut",0,NULL,NULL,0};
 
   if (firsttime) {
     firsttime = 0;
@@ -343,7 +343,7 @@ static int SSConvert(double *ss_az)
   if (abs(SunSensorData[i_ss].amp) < MIN_SS_AMP)
     return (0);
 
-//  az = LutCal(&ssAzLut, (double)SunSensorData[i_ss].az_rel_sun);
+  az = LutCal(&ssAzLut, (double)SunSensorData[i_ss].az_rel_sun);
   az = -SunSensorData[i_ss].az_rel_sun;
   *ss_az =  sun_az - az;
 
