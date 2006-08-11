@@ -340,7 +340,7 @@ static int SSConvert(double *ss_az)
   if (i_ss == last_i_ss)
     return (0);
 
-  if (SunSensorData[i_ss].amp < MIN_SS_AMP)
+  if (abs(SunSensorData[i_ss].amp) < MIN_SS_AMP)
     return (0);
 
 //  az = LutCal(&ssAzLut, (double)SunSensorData[i_ss].az_rel_sun);
