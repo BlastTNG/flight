@@ -765,6 +765,9 @@ void pointingSolution( void ) {
     printf("%s Found blobs, start solution calc\n",timebuf);
   }
 
+  // Calculate the new ra/dec guesses from MCP
+  calc_ra_dec(az,el,lat,lst,&ra_0_guess,&dec_0_guess);
+
   lost = 0; // start assuming we're not lost
 
   // If we've had many bad solutions, and we have enough blobs,
@@ -796,7 +799,6 @@ void pointingSolution( void ) {
     }
     
     search_radius = norm_radius;
-    calc_ra_dec(az,el,lat,lst,&ra_0_guess,&dec_0_guess);
   }
 
   double epoch;
