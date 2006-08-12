@@ -22,6 +22,8 @@
 #define NP 3 //number of parameters to fit
 #define NOAS 1 //Number of samples On A Side of the fit
 
+#define MIN_AMP_VAL 2000
+
 #define PI180 (3.14159265 / 180.0)
 
 //None of the following #defines should be uncommented for flight mode!
@@ -178,6 +180,7 @@ void calculate_az(unsigned * sensor_uint, sss_packet_data * dat)
   double sensors[N_FAST_CHAN];
   double x;
   double ave;
+  double minimum;
   double offset;
   int i;
   int sens_max = -1;
@@ -205,6 +208,7 @@ void calculate_az(unsigned * sensor_uint, sss_packet_data * dat)
   /* calibrate modules and determine module with max intensity */
   x = 0;  //terrible name for max sensor value.
   ave = 0;
+  minimum = 1e300;
   for (i = 0; i < N_FAST_CHAN; i++)
   {
     sensors[i] = module_calibration[i] * (double)sensor_uint[i];
@@ -213,6 +217,10 @@ void calculate_az(unsigned * sensor_uint, sss_packet_data * dat)
     {
       x = sensors[i];
       sens_max = i;
+    }
+    if (sensors[i] < minimum)
+    {
+      minimum = sensors[i];
     }
   }
   ave /= N_FAST_CHAN;
@@ -224,6 +232,9 @@ void calculate_az(unsigned * sensor_uint, sss_packet_data * dat)
   else
     x = sensors[(sens_max + 12 - 1) % 12];
   
+  if (x < minimum + MIN_AMP_VAL)
+    dat->snr = 0.05;
+
   //if any sensor that isn't one of the 'active' 3 is larger than the active 3,
   //report that we are bunk (by setting snr to zero)
   for (i = 0; i < N_FAST_CHAN; i++)
