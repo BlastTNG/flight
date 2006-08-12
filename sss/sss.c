@@ -218,6 +218,25 @@ void calculate_az(unsigned * sensor_uint, sss_packet_data * dat)
   ave /= N_FAST_CHAN;
   dat->snr = x / ave;
 
+  //Determine the minimum value of the immediate neighbors of the maximum
+  if (sensors[(sens_max + 12 + 1) % 12] < sensors[(sens_max + 12 - 1) % 12])
+    x = sensors[(sens_max + 12 + 1) % 12];
+  else
+    x = sensors[(sens_max + 12 - 1) % 12];
+  
+  //if any sensor that isn't one of the 'active' 3 is larger than the active 3,
+  //report that we are bunk (by setting snr to zero)
+  for (i = 0; i < N_FAST_CHAN; i++)
+  {
+    if (i != sens_max && i != (sens_max + 12 + 1) % 12 && i != (sens_max + 12 - 1) % 12)
+    {
+      if (sensors[i] > x)
+      {
+        dat->snr = 0;
+      }
+    }
+  }
+
   offset = module_offsets[sens_max];
 
   //fill the parameters with the sensor values in question, mindful of the wrap-around
