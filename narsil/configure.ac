@@ -146,7 +146,7 @@ dnl Look for ELOG
 AC_ARG_WITH(elog, AS_HELP_STRING([--without-elog],
              [Don't compile in elog support]),
              [
-              case ${enableval} in
+              case ${withval} in
                 no) use_elog=0;;
                 *) use_elog=1;;
               esac
@@ -156,7 +156,6 @@ AC_ARG_WITH(elog-host, AS_HELP_STRING([--with-elog-host=HOST],
             [Send elog queries to the elog server running on HOST [[elog.blast]]]),
             ELOG_HOST="${withval}", ELOG_HOST="elog.blast")
 AC_MSG_CHECKING(whether to support elog)
-echo ">> $use_elog <<";
 if test "x$use_elog" = "x1"; then
   AC_MSG_RESULT([yes])
 
