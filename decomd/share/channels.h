@@ -57,17 +57,14 @@ extern "C" {
 #define STAGE_X_THROW 78500
 #define STAGE_Y_THROW 78250
 
-#define ACTENC_TO_MM 0.001633 /* mm / ecoder counts */
+#define ACTENC_TO_MM 0.00105833333333 /* mm/enc.counts = 24000 counts/inch */
 #define LVDT_C2V (12.288 / 65536)
-#define LVDT10V_TO_MM 4.00 /* this is mm per volt */
-#define LVDT11V_TO_MM 4.00 /* this is mm per volt */
-#define LVDT13V_TO_MM 4.00 /* this is mm per volt */
-#define LVDT10_TO_MM (LVDT_C2V * LVDT10V_TO_MM)
-#define LVDT11_TO_MM (LVDT_C2V * LVDT10V_TO_MM)
-#define LVDT13_TO_MM (LVDT_C2V * LVDT10V_TO_MM)
-#define LVDT10_ZERO  8.785  /* in mm */
-#define LVDT11_ZERO  9.190  /* in mm */
-#define LVDT13_ZERO  9.014  /* in mm */
+#define LVDT10_ADC_TO_ENC 2.203 /* adc counts to encoder counts */
+#define LVDT11_ADC_TO_ENC 2.199 /* adc counts to encoder counts */
+#define LVDT13_ADC_TO_ENC 2.221 /* adc counts to encoder counts */
+#define LVDT10_ZERO  5241.1  /* in encoder counts */
+#define LVDT11_ZERO  5901.1  /* in encoder counts */
+#define LVDT13_ZERO  7933.9  /* in encoder counts */
 
 #define FIELD_LEN 20
 

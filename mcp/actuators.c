@@ -943,26 +943,26 @@ static void SolveSecondary(void)
   lvdt_data.lvdt13 = slow_data[lvdt13Addr->index][lvdt13Addr->channel];
 
   /* encoder based solution */
-  double alpha = act_data[0].enc * ACTENC_TO_MM;
-  double beta = act_data[1].enc * ACTENC_TO_MM;
-  double gamma = act_data[2].enc * ACTENC_TO_MM;
+  double alpha = act_data[0].enc;
+  double beta = act_data[1].enc;
+  double gamma = act_data[2].enc;
   double A = 2 * sqrt(alpha * alpha + beta * beta + gamma * gamma
       - alpha * beta - beta * gamma - gamma * alpha) / 3;
   sec_data[0].offset = (alpha + beta + gamma) / 3;
   sec_data[0].rotation = atan2(sqrt(3) * (alpha - gamma), 2 * beta - gamma
       + alpha);
-  sec_data[0].tilt = asin(A / ACTUATOR_RADIUS); 
+  sec_data[0].tilt = asin(A * ACTENC_TO_MM / ACTUATOR_RADIUS); 
 
   /* lvdt based solution */
-  alpha = lvdt_data.lvdt10 * LVDT10_TO_MM - LVDT10_ZERO;
-  beta = lvdt_data.lvdt13 * LVDT13_TO_MM - LVDT13_ZERO;
-  gamma = lvdt_data.lvdt11 * LVDT11_TO_MM - LVDT11_ZERO;
+  alpha = lvdt_data.lvdt10 - LVDT10_ZERO;
+  beta = lvdt_data.lvdt13 - LVDT13_ZERO;
+  gamma = lvdt_data.lvdt11 - LVDT11_ZERO;
   A = 2 * sqrt(alpha * alpha + beta * beta + gamma * gamma
       - alpha * beta - beta * gamma - gamma * alpha) / 3;
   sec_data[1].offset = (alpha + beta + gamma) / 3;
   sec_data[1].rotation = atan2(sqrt(3) * (alpha - gamma), 2 * beta - gamma
       + alpha) + M_PI / 6;
-  sec_data[1].tilt = asin(A / LVDT_RADIUS); 
+  sec_data[1].tilt = asin(A * ACTENC_TO_MM / LVDT_RADIUS); 
 }
 
 void ActuatorBus(void)
