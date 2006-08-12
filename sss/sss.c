@@ -24,6 +24,7 @@
 
 #define PI180 (3.14159265 / 180.0)
 
+//None of the following #defines should be uncommented for flight mode!
 //#define VERBOSE     //Print a bunch of crap to the screen
 //#define FAKE_DATA   //Generate fake data instead of reading from the mpc driver
 //#define CALIBRATED_SENSOR_OUT  //Send calibrated module values instead of uncalibrated values
@@ -82,15 +83,6 @@ double renorm90 (double x) //return a number between -45 and 45 degrees.
     return renorm90(x + 90.);
   return x;
 }
-/*double renorm90 (double x) //return a number between -45 and 45 degrees.
-{
-  if (x > 90)
-    return renorm90(x - 180.);
-  if (x <= -90)
-    return renorm90(x + 180.);
-  return x;
-}*/
-
 
 double renorm360 (double x) //return the angle in the range [0,360).
 {
