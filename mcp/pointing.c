@@ -303,8 +303,10 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 }
 
 // return 1 if new sun, and 0 otherwise
-#define MIN_SS_AMP 8000
-#warning "SUN MIN AMP NOT SET CORRECTLY"
+#define MIN_SS_AMP 1000
+#warning "SUN MIN AMP MIGHT NOT BE SET CORRECTLY"
+#define MIN_SS_SNR 1.21
+#warning "SUN MIN SNR HAS BEEN SET WITH NOT ENOUGHT THOUGHT"
 static int SSConvert(double *ss_az)
 {
   static int firsttime = 1;
@@ -341,6 +343,9 @@ static int SSConvert(double *ss_az)
     return (0);
 
   if (abs(SunSensorData[i_ss].amp) < MIN_SS_AMP)
+    return (0);
+  
+  if (SunSensorData[i_ss].snr<MIN_SS_SNR) 
     return (0);
 
  
