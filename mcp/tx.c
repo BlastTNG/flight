@@ -861,7 +861,7 @@ static void StoreData(int index)
   WriteData(ssPhaseAddr, SunSensorData[i_ss].phase * DEG2I, NIOS_QUEUE);
   WriteData(ssChiAddr, SunSensorData[i_ss].chi, NIOS_QUEUE);
   WriteData(ssIterAddr, SunSensorData[i_ss].iter, NIOS_QUEUE);
-  WriteData(ssSnrAddr, SunSensorData[i_ss].snr, NIOS_QUEUE);
+  WriteData(ssSnrAddr, SunSensorData[i_ss].snr * 1000, NIOS_QUEUE);
   WriteData(ssSunTimeAddr, SunSensorData[i_ss].sun_time, NIOS_QUEUE);
   WriteData(ssCpuTempAddr, SunSensorData[i_ss].t_cpu * 100, NIOS_QUEUE);
   WriteData(ssHddTempAddr, SunSensorData[i_ss].t_hdd * 100, NIOS_QUEUE);
