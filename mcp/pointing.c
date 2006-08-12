@@ -343,8 +343,9 @@ static int SSConvert(double *ss_az)
   if (abs(SunSensorData[i_ss].amp) < MIN_SS_AMP)
     return (0);
 
+ 
   az = LutCal(&ssAzLut, (double)SunSensorData[i_ss].az_rel_sun);
-  az = -SunSensorData[i_ss].az_rel_sun;
+  //az = -SunSensorData[i_ss].az_rel_sun;
   *ss_az =  sun_az - az;
 
   NormalizeAngle(ss_az);
