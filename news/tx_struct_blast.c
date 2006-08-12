@@ -600,6 +600,7 @@ struct ChannelStruct SlowChannels[] = {
   {"sec_tilt_goal",'w', LOOP6, 23,           1./30000,             0.0, 'u'},
   {"sec_rot_goal", 'w', LOOP6, 24,              I2DEG,             0.0, 'u'},
   {"focus_veto",   'w', LOOP6, 25,                1.0,             0.0, 'u'},
+  {"ss_snr",       'w', LOOP6, 26,            1/1000.,             0.0, 'u'},
   END_OF_CHANNELS
 };
 

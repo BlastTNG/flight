@@ -22,6 +22,7 @@ typedef struct
   float  phase;        //phase of the fit [degrees]
   float  chi;          //chi^2 of the fit
   unsigned short iter; //number of iterations fitting loop took
+  float snr;           //signal to noise ratio
 
   double sun_time;     //time of measurment (decimal ctime) [seconds]
 
