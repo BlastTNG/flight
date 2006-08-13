@@ -1021,7 +1021,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case focus:
       CommandData.actbus.focus = rvalues[0];
-      CommandData.actbus.focus_mode = ACTBUS_FM_SOLVE;
+      CommandData.actbus.focus_mode = ACTBUS_FM_FOCUS;
       break;
     case mirror_gain:
       CommandData.actbus.g_primary = ivalues[0];
@@ -1033,6 +1033,11 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.goal[2] = ivalues[2];
       CommandData.actbus.focus_mode = ACTBUS_FM_SERVO;
       break;
+    case encoder_offset:
+      CommandData.actbus.offset[0] = ivalues[0];
+      CommandData.actbus.offset[1] = ivalues[1];
+      CommandData.actbus.offset[2] = ivalues[2];
+      CommandData.actbus.focus_mode = ACTBUS_FM_OFFSET;
 
       /* XY Stage */
     case xy_goto:

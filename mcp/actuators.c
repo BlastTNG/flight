@@ -129,14 +129,6 @@ static struct act_struct {
   int enc;
 } act_data[3];
 
-static struct lvdt_struct {
-  double lvdt10, lvdt11, lvdt13;
-} lvdt_data;
-
-static struct sec_struct {
-  double tilt, rotation, offset;
-} sec_data[2];
-
 #ifdef USE_XY_STAGE
 static struct stage_struct {
   unsigned int xpos, ypos;
@@ -686,6 +678,17 @@ static void SetLockState(int nic)
   lock_data.state = state;
 }
 
+static void SetOffsets(int* offset)
+{
+  int i;
+  char buffer[1000];
+
+  for (i = 0; i < 3; ++i) {
+    sprintf(buffer, "z%iR", offset[i] + 1000000);
+    BusComm(i, buffer, 0, __inhibit_chatter);
+  }
+}
+
 static void DoActuators(void)
 {
   if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC) {
@@ -695,8 +698,12 @@ static void DoActuators(void)
   } else if (CommandData.actbus.focus_mode == ACTBUS_FM_SERVO) {
     ServoActuators(CommandData.actbus.goal);
     CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
+  } else if (CommandData.actbus.focus_mode == ACTBUS_FM_OFFSET) {
+    SetOffsets(CommandData.actbus.offset);
+    CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   } else if (CommandData.actbus.focus_mode != ACTBUS_FM_SLEEP) {
     bputs(err, "ActBus: Unknown Focus Mode (%i), sleeping");
+    CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   }
 }
 
@@ -863,13 +870,6 @@ void StoreActBus(void)
   static struct NiosStruct* actPosAddr[3];
   static struct NiosStruct* actEncAddr[3];
 
-  static struct NiosStruct* secEtiltAddr;
-  static struct NiosStruct* secErotAddr;
-  static struct NiosStruct* secEoffAddr;
-  static struct NiosStruct* secLtiltAddr;
-  static struct NiosStruct* secLrotAddr;
-  static struct NiosStruct* secLoffAddr;
-
   static struct NiosStruct* gTPrimAddr;
   static struct NiosStruct* gTSecAddr;
   static struct NiosStruct* secFocusPosAddr;
@@ -907,13 +907,6 @@ void StoreActBus(void)
       actEncAddr[i] = GetActNiosAddr(i, "enc");
     }
 
-    secEtiltAddr = GetNiosAddr("sec_etilt");
-    secErotAddr = GetNiosAddr("sec_erot");
-    secEoffAddr = GetNiosAddr("sec_eoff");
-    secLtiltAddr = GetNiosAddr("sec_ltilt");
-    secLrotAddr = GetNiosAddr("sec_lrot");
-    secLoffAddr = GetNiosAddr("sec_loff");
-
     gTPrimAddr = GetNiosAddr("g_t_prim");
     gTSecAddr = GetNiosAddr("g_t_sec");
     secFocusPosAddr = GetNiosAddr("sec_focus_pos");
@@ -949,13 +942,6 @@ void StoreActBus(void)
   WriteData(lockGoalAddr, CommandData.actbus.lock_goal, NIOS_QUEUE);
   WriteData(lockPosAddr, lock_data.pos, NIOS_FLUSH);
 
-  WriteData(secEtiltAddr, sec_data[0].tilt * RAD2I * 40, NIOS_QUEUE);
-  WriteData(secErotAddr, sec_data[0].rotation * RAD2I, NIOS_QUEUE);
-  WriteData(secEoffAddr, sec_data[0].offset * 400, NIOS_QUEUE);
-  WriteData(secLtiltAddr, sec_data[1].tilt * RAD2I * 40, NIOS_QUEUE);
-  WriteData(secLrotAddr, sec_data[1].rotation * RAD2I, NIOS_QUEUE);
-  WriteData(secLoffAddr, sec_data[1].offset * 400, NIOS_QUEUE);
-
   WriteData(gTPrimAddr, CommandData.actbus.g_primary, NIOS_QUEUE);
   WriteData(gTSecAddr, CommandData.actbus.g_secondary, NIOS_QUEUE);
   WriteData(focusVetoAddr, CommandData.actbus.autofocus_vetoed, NIOS_QUEUE);
@@ -973,48 +959,6 @@ void StoreActBus(void)
   WriteData(stageYVelAddr, stage_data.yvel, NIOS_QUEUE);
   WriteData(stageYLimAddr, stage_data.ylim, NIOS_FLUSH);
 #endif
-}
-
-static void SolveSecondary(void)
-{
-  static int firsttime = 1;
-
-  static struct BiPhaseStruct* lvdt10Addr;
-  static struct BiPhaseStruct* lvdt11Addr;
-  static struct BiPhaseStruct* lvdt13Addr;
-
-  if (firsttime) {
-    firsttime = 0;
-    lvdt10Addr = GetBiPhaseAddr("lvdt_10");
-    lvdt11Addr = GetBiPhaseAddr("lvdt_11");
-    lvdt13Addr = GetBiPhaseAddr("lvdt_13");
-  }
-
-  lvdt_data.lvdt10 = slow_data[lvdt10Addr->index][lvdt10Addr->channel];
-  lvdt_data.lvdt11 = slow_data[lvdt11Addr->index][lvdt11Addr->channel];
-  lvdt_data.lvdt13 = slow_data[lvdt13Addr->index][lvdt13Addr->channel];
-
-  /* encoder based solution */
-  double alpha = act_data[0].enc;
-  double beta = act_data[1].enc;
-  double gamma = act_data[2].enc;
-  double A = 2 * sqrt(alpha * alpha + beta * beta + gamma * gamma
-      - alpha * beta - beta * gamma - gamma * alpha) / 3;
-  sec_data[0].offset = (alpha + beta + gamma) / 3;
-  sec_data[0].rotation = atan2(sqrt(3) * (alpha - gamma), 2 * beta - gamma
-      + alpha);
-  sec_data[0].tilt = asin(A * ACTENC_TO_MM / ACTUATOR_RADIUS); 
-
-  /* lvdt based solution */
-  alpha = lvdt_data.lvdt10 - LVDT10_ZERO;
-  beta = lvdt_data.lvdt13 - LVDT13_ZERO;
-  gamma = lvdt_data.lvdt11 - LVDT11_ZERO;
-  A = 2 * sqrt(alpha * alpha + beta * beta + gamma * gamma
-      - alpha * beta - beta * gamma - gamma * alpha) / 3;
-  sec_data[1].offset = (alpha + beta + gamma) / 3;
-  sec_data[1].rotation = atan2(sqrt(3) * (alpha - gamma), 2 * beta - gamma
-      + alpha) + M_PI / 6;
-  sec_data[1].tilt = asin(A * ACTENC_TO_MM / LVDT_RADIUS); 
 }
 
 void ActuatorBus(void)
@@ -1086,8 +1030,6 @@ void ActuatorBus(void)
 
     for (i = 0; i < 3; ++i)
       ReadActuator(i, 1);
-
-    SolveSecondary();
 
     usleep(10000);
   }

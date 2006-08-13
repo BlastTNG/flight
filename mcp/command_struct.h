@@ -62,10 +62,11 @@ struct GainStruct {
 #define LS_DRIVE_FORCE 0x0400
 #define LS_DRIVE_MASK  0x04F4
 
-#define ACTBUS_FM_SLEEP 0
-#define ACTBUS_FM_SERVO 1
-#define ACTBUS_FM_SOLVE 2
-#define ACTBUS_FM_PANIC 3
+#define ACTBUS_FM_SLEEP  0
+#define ACTBUS_FM_SERVO  1
+#define ACTBUS_FM_FOCUS  2
+#define ACTBUS_FM_OFFSET 3
+#define ACTBUS_FM_PANIC  4
 
 #define XYSTAGE_PANIC  0
 #define XYSTAGE_GOTO   1
@@ -238,6 +239,7 @@ struct CommandDataStruct {
 
     int focus_mode;
     int goal[3];
+    int offset[3];
     double focus;
 
     int lock_vel;

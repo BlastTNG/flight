@@ -18,7 +18,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 134        /* total number of single word cmds */
-#define N_MCOMMANDS 87         /* total number of multiword commands */
+#define N_MCOMMANDS 88         /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -89,13 +89,13 @@ enum singleCommand {
   osc_off,          osc_on,             isc_trig_int,     isc_trig_ext,
   osc_trig_int,     osc_trig_ext,       ln_valve_on,      ln_valve_off,
   osc_veto,         osc_allow,          reap,             isc_eye_on,
-  osc_eye_on,       osc_eye_off,        inner_cool_auto,
+  osc_eye_on,       osc_eye_off,        inner_cool_auto,  xy_panic,
   trim_to_osc,      antisun,            blast_rocks,      blast_sucks,
   fridge_cycle,     at_float,           not_at_float,     el_auto_gyro,
   repoll,           biascmd_inh,        biascmd_ena,      autofocus_allow,
   isc_use_pyramid,  isc_no_pyramid,     osc_use_pyramid,  osc_no_pyramid,
   autofocus_veto,   icc_halt,           nicc_halt,        actbus_on,
-  actbus_off,       actuator_stop,      xy_panic
+  actbus_off,       actuator_stop
 };
 
 struct scom {
@@ -119,7 +119,7 @@ enum multiCommand {
   isc_integrate,     osc_integrate,     osc_det_set,      osc_blobs,
   cryo_heat,         heatsw_heat,       inner_level,      isc_offset,
   jfet_heat,         osc_catalogue,     osc_tolerances,   osc_hold_current,
-  lock,              isc_blobs,         phase,
+  lock,              isc_blobs,         phase,            encoder_offset,
   pivot_gain,        isc_pixel_centre,  ra_dec_goto,      ra_dec_set,
   roll_gain,         isc_set_aperture,  isc_set_focus,    setpoints,
   bda_heat,          spare_level,       t_gyro1_set,      osc_gain,
