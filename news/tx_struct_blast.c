@@ -79,6 +79,9 @@ struct ChannelStruct WideSlowChannels[] = {
   {"act0_enc",     'w', LOOP5, 48,       ACTENC_TO_MM,             0.0, 'S'},
   {"act1_enc",     'w', LOOP5, 50,       ACTENC_TO_MM,             0.0, 'S'},
   {"act2_enc",     'w', LOOP5, 52,       ACTENC_TO_MM,             0.0, 'S'},
+  {"sec_goal",     'w', LOOP6, 30,                1.0,             0.0, 'S'},
+  {"sec_focus",    'w', LOOP6, 32,                1.0,             0.0, 'S'},
+
 
 /* Rox a la Jeff */
   {"t_he3fridge",  'r',  CRYO,  6,    ROX_C2V,   ROX_OFFSET, 'U'},
@@ -591,7 +594,7 @@ struct ChannelStruct SlowChannels[] = {
   {"ss_az_rel_sun",'w', LOOP6, 19,              I2DEG,             0.0, 'u'},
   {"g_t_prim",     'w', LOOP6, 20,                1.0,             0.0, 'u'},
   {"g_t_sec",      'w', LOOP6, 21,                1.0,             0.0, 'u'},
-  {"sec_goal",     'w', LOOP6, 22,                1.0,             0.0, 'u'},
+  {"lock_acc",     'w', LOOP6, 22,                1.0,             0.0, 'u'},
   {"ss_snr",       'w', LOOP6, 23,            1/1000.,             0.0, 'u'},
   {"focus_veto",   'w', LOOP6, 24,                1.0,             0.0, 'u'},
   {"act_move_i",   'w', LOOP6, 25,                1.0,             0.0, 'u'},
@@ -599,10 +602,9 @@ struct ChannelStruct SlowChannels[] = {
   {"act_vel",      'w', LOOP6, 27,                1.0,             0.0, 'u'},
   {"act_acc",      'w', LOOP6, 28,                1.0,             0.0, 'u'},
   {"lock_move_i",  'w', LOOP6, 29,                1.0,             0.0, 'u'},
-  {"lock_hold_i",  'w', LOOP6, 30,                1.0,             0.0, 'u'},
-  {"lock_vel",     'w', LOOP6, 31,                1.0,             0.0, 'u'},
-  {"lock_acc",     'w', LOOP6, 32,                1.0,             0.0, 'u'},
-  {"sec_focus",    'w', LOOP6, 33,                1.0,             0.0, 'u'},
+  /* LOOP6 30-33 are wide */
+  {"lock_hold_i",  'w', LOOP6, 34,                1.0,             0.0, 'u'},
+  {"lock_vel",     'w', LOOP6, 35,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 

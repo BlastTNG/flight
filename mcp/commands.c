@@ -1912,18 +1912,14 @@ void InitCommandData()
   CommandData.pumps.inframe_cool_on = 0;
   CommandData.pumps.inframe_cool_off = 0;
 
+  CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   CommandData.actbus.lock_goal = LS_DRIVE_OFF;
   CommandData.actbus.force_repoll = 0;
-  CommandData.actbus.off = 0;
+  CommandData.actbus.off = 1;
   CommandData.actbus.cindex = 0;
   CommandData.actbus.caddr[0] = 0;
   CommandData.actbus.caddr[1] = 0;
   CommandData.actbus.caddr[2] = 0;
-
-  CommandData.actbus.autofocus_vetoed = 0;
-  CommandData.actbus.focus = 1; /* mm */
-  CommandData.actbus.g_primary = 0;
-  CommandData.actbus.g_secondary = 0;
 
   CommandData.Bias.dont_do_anything = 0;
   CommandData.Bias.clockInternal = 0;
@@ -2067,6 +2063,21 @@ void InitCommandData()
   CommandData.Bias.bias1 = 40;
   CommandData.Bias.bias2 = 25;
   CommandData.Bias.bias3 = 25;
+
+  CommandData.actbus.autofocus_vetoed = 0;
+  CommandData.actbus.focus = 0;
+  CommandData.actbus.g_primary = 0;
+  CommandData.actbus.g_secondary = 0;
+
+  CommandData.actbus.act_vel = 2000;
+  CommandData.actbus.act_acc = 1;
+  CommandData.actbus.act_move_i = 50;
+  CommandData.actbus.act_hold_i = 0;
+
+  CommandData.actbus.lock_vel = 100000;
+  CommandData.actbus.lock_acc = 1;
+  CommandData.actbus.lock_move_i = 50;
+  CommandData.actbus.lock_hold_i = 0;
 
   CommandData.pin_is_in = 1;
 

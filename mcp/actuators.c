@@ -50,8 +50,9 @@ static int __inhibit_chatter = 0;
 #define LVDT_RADIUS ACTUATOR_RADIUS
 #define ACTUATOR_RADIUS 144.338 /* in mm */
 
-#define ENCODER_TOL 1
+#define ENCODER_TOL 0
 
+#define ALL_ACT 0x51 /* All actuators */
 #define LOCKNUM 3
 #ifdef USE_XY_STAGE
 #  define STAGEXNUM 4
@@ -700,7 +701,7 @@ static void SetOffsets(int* offset)
 static void SetNewFocus(void)
 {
   char buffer[1000];
-  int i;
+  int i, j;
   int delta = CommandData.actbus.focus - ((act_data[0].enc +
         act_data[1].enc + act_data[2].enc) / 3 - ACTENC_OFFSET);
 
@@ -711,26 +712,27 @@ static void SetNewFocus(void)
 
   bprintf(info, "Old: %i %i %i -> %i %i\n", act_data[0].enc, act_data[1].enc,
       act_data[2].enc, CommandData.actbus.focus, delta);
-  CommandData.actbus.goal[0] = act_data[0].enc + delta;
-  CommandData.actbus.goal[1] = act_data[1].enc + delta;
-  CommandData.actbus.goal[2] = act_data[2].enc + delta;
+  CommandData.actbus.goal[0] = act_data[0].enc + delta - ACTENC_OFFSET;
+  CommandData.actbus.goal[1] = act_data[1].enc + delta - ACTENC_OFFSET;
+  CommandData.actbus.goal[2] = act_data[2].enc + delta - ACTENC_OFFSET;
 
   if (abs(delta) <= ENCODER_TOL) {
     ;
   } else if (delta > 0) {
     sprintf(buffer, "V2000P%iR", delta);
-    bprintf(info, "Servo: %i => %s\n", 33, buffer);
-//    BusComm(33, buffer, 0, __inhibit_chatter);
+    bprintf(info, "Servo: %i => %s\n", ALL_ACT, buffer);
+    BusComm(ALL_ACT, buffer, 0, __inhibit_chatter);
   } else {
     delta = 10 - delta;
     sprintf(buffer, "V2000D%iR", delta);
-    bprintf(info, "Servo: %i => %s\n", 33, buffer);
-//    BusComm(33, buffer, 0, __inhibit_chatter);
+    bprintf(info, "Servo: %i => %s\n", ALL_ACT, buffer);
+    BusComm(ALL_ACT, buffer, 0, __inhibit_chatter);
   }
   bprintf(info, "New: %i %i %i\n", CommandData.actbus.goal[0],
       CommandData.actbus.goal[1], CommandData.actbus.goal[2]);
-  for (i = 0; i < 1 + delta / 75; ++i) {
-    sleep(1);
+  for (i = 0; i < (1 + abs(delta) / 75) * 6; ++i) {
+    for (j = 0; j < 3; ++j)
+      ReadActuator(j, 1);
     if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
       return;
   }
@@ -741,26 +743,25 @@ static void DoActuators(void)
   switch(CommandData.actbus.focus_mode) {
     case ACTBUS_FM_PANIC:
       bputs(warning, "ActBus: Actuator Panic");
-      BusComm(33, "T", 0, __inhibit_chatter);
+      BusComm(ALL_ACT, "T", 0, __inhibit_chatter);
       CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
       break;
     case ACTBUS_FM_FOCUS:
       SetNewFocus();
       /* fallthrough */
     case ACTBUS_FM_SERVO:
-//      ServoActuators(CommandData.actbus.goal);
-      CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
+      ServoActuators(CommandData.actbus.goal);
       break;
     case ACTBUS_FM_OFFSET:
       SetOffsets(CommandData.actbus.offset);
-      CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
       /* fallthrough */
     case ACTBUS_FM_SLEEP:
       break;
     default:
       bputs(err, "ActBus: Unknown Focus Mode (%i), sleeping");
-      CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   }
+  if (CommandData.actbus.focus_mode != ACTBUS_FM_PANIC)
+    CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
 }
 
 /************************************************************************/
@@ -1012,9 +1013,9 @@ void StoreActBus(void)
   for (j = 0; j < 3; ++j) {
     WriteData(actPosAddr[j], act_data[j].pos, NIOS_QUEUE);
     WriteData(actEncAddr[j], act_data[j].enc - ACTENC_OFFSET, NIOS_QUEUE);
-    focus += act_data[j].enc / 3;
+    focus += act_data[j].enc;
   }
-  WriteData(secFocusAddr, focus - ACTENC_OFFSET, NIOS_FLUSH);
+  WriteData(secFocusAddr, focus / 3 - ACTENC_OFFSET, NIOS_FLUSH);
 
   for (i = 0; i < 4; ++i)
     WriteData(lockAdcAddr[i], lock_data.adc[i], NIOS_QUEUE);
