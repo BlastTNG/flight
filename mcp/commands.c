@@ -1045,11 +1045,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.g_primary = ivalues[0];
       CommandData.actbus.g_secondary = ivalues[1];
       break;
-    case mirror_tilt:
-      CommandData.actbus.tilt = rvalues[0];
-      CommandData.actbus.rotation = rvalues[1];
-      CommandData.actbus.focus_mode = ACTBUS_FM_SOLVE;
-      break;
     case actuator_servo:
       CommandData.actbus.goal[0] = ivalues[0];
       CommandData.actbus.goal[1] = ivalues[1];
@@ -1946,8 +1941,6 @@ void InitCommandData()
   CommandData.actbus.caddr[2] = 0;
 
   CommandData.actbus.autofocus_vetoed = 0;
-  CommandData.actbus.tilt = 0;
-  CommandData.actbus.rotation = 0;
   CommandData.actbus.focus = 1; /* mm */
   CommandData.actbus.g_primary = 0;
   CommandData.actbus.g_secondary = 0;

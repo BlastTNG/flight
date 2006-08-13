@@ -50,7 +50,7 @@ static int __inhibit_chatter = 0;
 #define LVDT_RADIUS ACTUATOR_RADIUS
 #define ACTUATOR_RADIUS 144.338 /* in mm */
 
-#define ENCODER_TOL 5
+#define ENCODER_TOL 1
 
 #define LOCKNUM 3
 #ifdef USE_XY_STAGE
@@ -62,10 +62,21 @@ static int __inhibit_chatter = 0;
 #endif
 #define POLL_TIMEOUT 30000 /* 5 minutes */
 
-/* EZ Stepper status bits */
+/* EZ Stepper status bit masks */
 #define EZ_ERROR  0x0F
 #define EZ_READY  0x20
 #define EZ_STATUS 0x40
+
+/* EZ Stepper error numbers */
+#define EZ_ERR_OK      0 /* No error */
+#define EZ_ERR_INIT    1 /* Initialisation error */
+#define EZ_ERR_BADCMD  2 /* Bad command */
+#define EZ_ERR_BADOP   3 /* Bad operand */
+#define EZ_ERR_COMM    5 /* Communications error */
+#define EZ_ERR_NOINIT  7 /* Not initialised */
+#define EZ_ERR_OVER    9 /* overload error */
+#define EZ_ERR_NOMOVE 11 /* Move Not allowed */
+#define EZ_ERR_BUSY   15 /* Command overflow */
 
 /* ActBus status bits ... these must live in the top byte of the word */
 #define ACTBUS_OK       0x0000
@@ -101,9 +112,8 @@ static const int id[NACT] = {0x31, 0x32, 0x33, 0x35
 #endif
 };
 
-static char gp_buffer[1000];
+static char bus_buffer[1000];
 static struct stepper_struct {
-  unsigned char buffer[1000];
   int status;
   int sequence;
 } stepper[NACT];
@@ -115,8 +125,8 @@ static struct lock_struct {
 } lock_data = { .state = LS_DRIVE_UNK };
 
 static struct act_struct {
-  unsigned int pos;
-  unsigned int enc;
+  int pos;
+  int enc;
 } act_data[3];
 
 static struct lvdt_struct {
@@ -241,7 +251,7 @@ static void BusSend(int who, const char* what, int inhibit_chatter)
   unsigned char *ptr;
 
   buffer[0] = 0x2;
-  buffer[1] = (who >= 0x30) ? who : id[who];
+  buffer[1] = who;
   buffer[2] = '1';
   sprintf(buffer + 3, "%s", what);
   buffer[len - 2] = 0x3;
@@ -253,7 +263,7 @@ static void BusSend(int who, const char* what, int inhibit_chatter)
     bprintf(info, "ActBus: Request=%s (%s)", HexDump(buffer, len), what);
 #endif
   if (write(bus_fd, buffer, len) < 0)
-    berror(err, "Error writing on bus");
+    berror(err, "ActBus: Error writing on bus");
 
   free(buffer);
 }
@@ -329,7 +339,7 @@ static int BusRecv(char* buffer, int nic, int inhibit_chatter)
             state = ACT_RECV_ABORT;
           }
           break;
-        case 3: /* state byte */
+        case 3: /* status byte */
           state++;
           if (byte & EZ_STATUS)
             status = byte & (EZ_ERROR | EZ_READY);
@@ -374,20 +384,74 @@ static int BusRecv(char* buffer, int nic, int inhibit_chatter)
   return status;
 }
 
+static int BusComm(int who, const char* what, int naive, int inhibit_chatter)
+{
+  int result = 0;
+  int ok;
+
+  if (who < 0x30)
+    who = id[who];
+
+  do {
+    ok = 1;
+    BusSend(who, what, inhibit_chatter);
+
+    /* Muliple motors */
+    if (who >= 0x40)
+      break;
+
+    if ((result = BusRecv(bus_buffer, 0, inhibit_chatter)) & (ACTBUS_TIMEOUT
+          | ACTBUS_OOD))
+    {
+      bprintf(warning,
+          "ActBus: Timeout waiting for response from %#x.", who);
+      CommandData.actbus.force_repoll = 1;
+#ifndef ACTBUS_CHATTER
+    } else if (naive) {
+      bprintf(info, "ActBus: Controller response: %s\n", buffer);
+#endif
+    } else {
+      switch (result & EZ_ERROR) {
+        case EZ_ERR_INIT:
+          bprintf(warning, "ActBus: Controller %#x: initialisation error.\n",
+              who);
+          break;
+        case EZ_ERR_BADCMD:
+          bprintf(warning, "ActBus: Controller %#x: bad command.\n", who);
+          break;
+        case EZ_ERR_BADOP:
+          bprintf(warning, "ActBus: Controller %#x: bad operand.\n", who);
+          break;
+        case EZ_ERR_COMM:
+          bprintf(warning, "ActBus: Controller %#x: communications error.\n",
+              who);
+          break;
+        case EZ_ERR_NOINIT:
+          bprintf(warning, "ActBus: Controller %#x: not initialied.\n", who);
+          break;
+        case EZ_ERR_OVER:
+          bprintf(warning, "ActBus: Controller %#x: overload.\n", who);
+          break;
+        case EZ_ERR_NOMOVE:
+          bprintf(warning, "ActBus: Controller %#x: move not allowed.\n", who);
+          break;
+        case EZ_ERR_BUSY:
+          bprintf(warning, "ActBus: Controller %#x: command overflow.\n", who);
+          usleep(10000);
+          ok = 0;
+          break;
+      }
+    }
+  } while (!ok && !naive);
+
+  return result;
+}
+
 static int ReadIntFromBus(int who, const char* cmd, int inhibit_chatter)
 {
-  int result;
+  BusComm(who, cmd, 0, inhibit_chatter);
 
-  BusSend(who, cmd, inhibit_chatter);
-  if ((result = BusRecv(gp_buffer, 0, inhibit_chatter)) & (ACTBUS_TIMEOUT
-        | ACTBUS_OOD)) {
-    bprintf(warning, "ActBus: Timeout waiting for response from %s (RIFB)",
-        name[who]);
-    CommandData.actbus.force_repoll = 1;
-    return 0;
-  }
-
-  return atoi(gp_buffer);
+  return atoi(bus_buffer);
 }
 
 static void ReadActuator(int who, int inhibit_chatter)
@@ -399,78 +463,78 @@ static void ReadActuator(int who, int inhibit_chatter)
   act_data[who].enc = ReadIntFromBus(who, "?8", inhibit_chatter);
 }
 
-static void DiscardBusRecv(int flag, int who, int inhibit_chatter)
-{
-  int i;
-
-  /* Discard response to get it off the bus */
-  if ((i = BusRecv(gp_buffer, 0, inhibit_chatter)) & (ACTBUS_TIMEOUT
-        | ACTBUS_OOD))
-  {
-    bprintf(warning,
-        "ActBus: Timeout waiting for response from %s.", name[who]);
-    CommandData.actbus.force_repoll = 1;
-  }
-#ifndef ACTBUS_CHATTER
-  else if (flag)
-    bprintf(info, "ActBus: Controller response: %s\n", gp_buffer);
-#endif
-}
-
 static void InitialiseActuator(int who)
 {
   int enc;
   char buffer[1000];
 
-  ReadActuator(who, __inhibit_chatter); 
+  ReadActuator(who, 0); 
 
-  if (act_data[who].enc < 500000) {
+  if (act_data[who].enc < ACTENC_OFFSET / 2) {
     bprintf(info, "Initialising Actuator #%i...", who);
 
     /* Bug workaround -- can't set zero after controller boot until
      * after having moved. */
-//    BusSend(who, "P10R", __inhibit_chatter);
-//    DiscardBusRecv(0, who, __inhibit_chatter);
+    BusComm(who, "P10R", 0, __inhibit_chatter);
 
-    ReadActuator(who, __inhibit_chatter); 
+    ReadActuator(who, 0); 
+    sleep(1);
 
-    /* Add a million */
-    enc = 1000000 + act_data[who].enc;
+    /* Add offset */
+    enc = ACTENC_OFFSET + act_data[who].enc;
 
     /* Set the encoder */
     sprintf(buffer, "z%iR", enc);  
-//    BusSend(who, buffer, __inhibit_chatter);
-//    DiscardBusRecv(0, who, __inhibit_chatter);
+    BusComm(who, buffer, 0, __inhibit_chatter);
   }
 }
 
+#define THERE_WAIT 10
 static void ServoActuators(int* goal)
 {
   int i;
   int act_there[3] = {0, 0, 0};
+  int act_wait[3] = {0, 0, 0};
   char buffer[1000];
 
   TakeBus(0);
 
-  while (!act_there[0] && !act_there[1] && !act_there[2])
+  while (
+      act_there[0] < THERE_WAIT &&
+      act_there[1] < THERE_WAIT &&
+      act_there[2] < THERE_WAIT) {
     for (i = 0; i < 3; ++i)
-      if (act_there[i] || stepper[i].status == -1) {
-        act_there[i] = 1;
+      if (act_there[i] >= THERE_WAIT || stepper[i].status == -1) {
+        act_there[i] = THERE_WAIT;
         continue;
-      } else if (act_data[i].enc < 500000)
+      } else if (act_data[i].enc < ACTENC_OFFSET / 2)
         InitialiseActuator(i);
+      else if (act_wait[i] > 0)
+        act_wait[i]--;
       else {
-        int delta = act_data[i].enc - 1000000 - goal[i];
+        int delta = goal[i] - act_data[i].enc + ACTENC_OFFSET;
         if (abs(delta) <= ENCODER_TOL) {
-          act_there[i] = 1;
-          strcpy(buffer, "T");
-        } else if (delta > 0)
-          sprintf(buffer, "P%iR", delta);
-        else
-          sprintf(buffer, "D%iR", delta);
-//        BusSend(i, buffer, __inhibit_chatter);
-//        DiscardBusRecv(0, i, __inhibit_chatter);
+          act_there[i]++;
+        } else if (delta > 0) {
+          sprintf(buffer, "V2000P%iR", delta);
+          bprintf(info, "Servo: %i => %s\n", i, buffer);
+          act_wait[i] = delta * (6. * 26. / 2000.) + 1;
+          BusComm(i, buffer, 0, __inhibit_chatter);
+        } else {
+          delta = 10 - delta;
+          sprintf(buffer, "V2000D%iR", delta);
+          bprintf(info, "Servo: %i => %s\n", i, buffer);
+          act_wait[i] = delta * (6. * 26. / 2000.) + 1;
+          BusComm(i, buffer, 0, __inhibit_chatter);
+        }
       }
+    for (i = 0; i < 3; ++i)
+      ReadActuator(i, 1);
+    bprintf(info, "%i %i %i / %i %i %i", act_wait[0], act_wait[1], act_wait[2],
+        act_there[0], act_there[1], act_there[2]);
+    if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
+      break;
+  }
 
   ReleaseBus(0);
 }
@@ -488,18 +552,18 @@ static int PollBus(int rescan)
   for (i = 0; i < NACT; ++i) {
     if (rescan && stepper[i].status != -1)
       continue;
-    BusSend(i, "&", __inhibit_chatter);
-    if ((result = BusRecv(gp_buffer, 0, __inhibit_chatter)) & (ACTBUS_TIMEOUT
+    BusSend(id[i], "&", __inhibit_chatter);
+    if ((result = BusRecv(bus_buffer, 0, __inhibit_chatter)) & (ACTBUS_TIMEOUT
           | ACTBUS_OOD)) {
       bprintf(warning, "ActBus: No response from %s, will repoll later.",
           name[i]);
       stepper[i].status = -1;
       all_ok = 0;
-    } else if (!strncmp(gp_buffer, "EZHR17EN AllMotion", 18)) {
+    } else if (!strncmp(bus_buffer, "EZHR17EN AllMotion", 18)) {
       bprintf(info, "ActBus: Found type 17EN device %s at address %i.\n",
           name[i], id[i] - 0x30);
       stepper[i].status = 0;
-    } else if (!strncmp(gp_buffer, "EZHR23 All Motion", 17)) {
+    } else if (!strncmp(bus_buffer, "EZHR23 All Motion", 17)) {
       bprintf(info, "ActBus: Found type 23 device %s at address %i.\n", name[i],
           id[i] - 0x30);
       stepper[i].status = 0;
@@ -554,7 +618,6 @@ static void ReadStage(void)
 static void GetLockData(int mult)
 {
   static int counter = 0;
-  int result;
 
   if (stepper[LOCKNUM].status == -1)
     return;
@@ -566,14 +629,9 @@ static void GetLockData(int mult)
 
   lock_data.pos = ReadIntFromBus(LOCKNUM, "?0", 1);
 
-  BusSend(LOCKNUM, "?aa", 1);
-  if ((result = BusRecv(gp_buffer, 0, 1)) & (ACTBUS_TIMEOUT | ACTBUS_OOD)) {
-    bputs(warning, "ActBus: Timeout waiting for response from lock motor.");
-    CommandData.actbus.force_repoll = 1;
-    return;
-  }
+  BusComm(LOCKNUM, "?aa", 0, 1);
 
-  sscanf(gp_buffer, "%hi,%hi,%hi,%hi", &lock_data.adc[0], &lock_data.adc[1],
+  sscanf(bus_buffer, "%hi,%hi,%hi,%hi", &lock_data.adc[0], &lock_data.adc[1],
       &lock_data.adc[2], &lock_data.adc[3]);
 }
 
@@ -632,10 +690,11 @@ static void DoActuators(void)
 {
   if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC) {
     bputs(warning, "ActBus: Actuator Panic");
-    BusSend(33, "T", __inhibit_chatter);
+    BusComm(33, "T", 0, __inhibit_chatter);
     CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   } else if (CommandData.actbus.focus_mode == ACTBUS_FM_SERVO) {
     ServoActuators(CommandData.actbus.goal);
+    CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   } else if (CommandData.actbus.focus_mode != ACTBUS_FM_SLEEP) {
     bputs(err, "ActBus: Unknown Focus Mode (%i), sleeping");
   }
@@ -773,8 +832,7 @@ static void DoLock(void)
 
     /* ... and do it! */
     if (command != NULL) {
-      BusSend(LOCKNUM, command, __inhibit_chatter);
-      DiscardBusRecv(0, LOCKNUM, __inhibit_chatter);
+      BusComm(LOCKNUM, command, 0, __inhibit_chatter);
       usleep(SEND_SLEEP); /* wait for a bit */
     } else if (action == LA_WAIT)
       usleep(WAIT_SLEEP); /* wait for a bit */
@@ -783,9 +841,9 @@ static void DoLock(void)
 
 static inline struct NiosStruct* GetActNiosAddr(int i, const char* field)
 {
-  sprintf(gp_buffer, "act%i_%s", i, field);
+  sprintf(bus_buffer, "act%i_%s", i, field);
 
-  return GetNiosAddr(gp_buffer);
+  return GetNiosAddr(bus_buffer);
 }
 
 /* This function is called by the frame control thread */
@@ -815,8 +873,6 @@ void StoreActBus(void)
   static struct NiosStruct* gTPrimAddr;
   static struct NiosStruct* gTSecAddr;
   static struct NiosStruct* secFocusPosAddr;
-  static struct NiosStruct* secTiltGoalAddr;
-  static struct NiosStruct* secRotGoalAddr;
   static struct NiosStruct* focusVetoAddr;
 
 #ifdef USE_XY_STAGE
@@ -861,8 +917,6 @@ void StoreActBus(void)
     gTPrimAddr = GetNiosAddr("g_t_prim");
     gTSecAddr = GetNiosAddr("g_t_sec");
     secFocusPosAddr = GetNiosAddr("sec_focus_pos");
-    secTiltGoalAddr = GetNiosAddr("sec_tilt_goal");
-    secRotGoalAddr = GetNiosAddr("sec_rot_goal");
     focusVetoAddr = GetNiosAddr("focus_veto");
 
 #ifdef USE_XY_STAGE
@@ -885,7 +939,7 @@ void StoreActBus(void)
 
   for (j = 0; j < 3; ++j) {
     WriteData(actPosAddr[j], act_data[j].pos, NIOS_QUEUE);
-    WriteData(actEncAddr[j], act_data[j].enc, NIOS_QUEUE);
+    WriteData(actEncAddr[j], act_data[j].enc - ACTENC_OFFSET, NIOS_QUEUE);
   }
 
   for (i = 0; i < 4; ++i)
@@ -906,8 +960,6 @@ void StoreActBus(void)
   WriteData(gTSecAddr, CommandData.actbus.g_secondary, NIOS_QUEUE);
   WriteData(focusVetoAddr, CommandData.actbus.autofocus_vetoed, NIOS_QUEUE);
   WriteData(secFocusPosAddr, CommandData.actbus.focus * 3000, NIOS_QUEUE);
-  WriteData(secTiltGoalAddr, CommandData.actbus.tilt * 30000, NIOS_QUEUE);
-  WriteData(secRotGoalAddr, CommandData.actbus.rotation * DEG2I, NIOS_QUEUE);
 
 #ifdef USE_XY_STAGE
   WriteData(stageXAddr, stage_data.xpos, NIOS_QUEUE);
@@ -1009,16 +1061,12 @@ void ActuatorBus(void)
     my_cindex = GETREADINDEX(CommandData.actbus.cindex);
     if (CommandData.actbus.caddr[my_cindex] != 0
 #ifdef USE_XY_THREAD
-    && CommandData.actbus.caddr[my_cindex] != 0x36
-    && CommandData.actbus.caddr[my_cindex] != 0x37
+        && CommandData.actbus.caddr[my_cindex] != 0x36
+        && CommandData.actbus.caddr[my_cindex] != 0x37
 #endif
-    ) {
-      BusSend(CommandData.actbus.caddr[my_cindex],
-          CommandData.actbus.command[my_cindex], __inhibit_chatter);
-      /* Discard response to get it off the bus */
-      if (CommandData.actbus.caddr[my_cindex] < NACT)
-        DiscardBusRecv(1, CommandData.actbus.caddr[my_cindex] - 0x30,
-            __inhibit_chatter);
+       ) {
+      BusComm(CommandData.actbus.caddr[my_cindex],
+          CommandData.actbus.command[my_cindex], 1, __inhibit_chatter);
       CommandData.actbus.caddr[my_cindex] = 0;
     }
 

@@ -236,11 +236,19 @@ struct CommandDataStruct {
     double g_secondary;
     int autofocus_vetoed;
 
+    int act_vel;
+    int act_acc;
+    int act_hold_i;
+    int act_move_i;
+
     int focus_mode;
     int goal[3];
     double focus;
-    double tilt;
-    double rotation;
+
+    int lock_vel;
+    int lock_acc;
+    int lock_hold_i;
+    int lock_move_i;
 
     unsigned int lock_goal;
   } actbus;

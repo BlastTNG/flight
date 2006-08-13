@@ -17,8 +17,8 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 139        /* total number of single word cmds */
-#define N_MCOMMANDS 88         /* total number of multiword commands */
+#define N_SCOMMANDS 134        /* total number of single word cmds */
+#define N_MCOMMANDS 87         /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -36,10 +36,10 @@
 #define GR_BAL          0x00000002
 #define GR_BIAS         0x00000004
 #define GR_TRIM         0x00000008
-#define GR_COOL         0x00000010
+#define GR_ELECT        0x00000010
 #define GR_CALLAMP      0x00000020
 #define GR_VETO         0x00000040
-#define GR_ELECT        0x00000080
+#define GR_ACT          0x00000080
 #define GR_CRYO_HEAT    0x00000100
 #define GR_POWER        0x00000200
 #define GR_LOCK         0x00000400
@@ -73,8 +73,7 @@ enum singleCommand {
   inner_cool_off,   inner_cool_on,      isc_abort,        isc_allow,
   isc_pause,        isc_reconnect,      isc_run,          isc_shutdown,
   isc_veto,         level_off,          level_on,         mag_allow,
-  mag_veto,         outer_cool_off,     outer_cool_on,    osc_auto_focus,
-  outer_spare_off,  outer_spare_on,     pin_in,           pot_valve_close,
+  mag_veto,         osc_auto_focus,     pin_in,           pot_valve_close,
   pot_valve_off,    pot_valve_on,       ss_off,           ss_on,
   pot_valve_open,   balpump_up,         balpump_off,      balpump_on,
   balpump_down,     sprpump_fwd,        sprpump_off,      sprpump_on,
@@ -90,7 +89,7 @@ enum singleCommand {
   osc_off,          osc_on,             isc_trig_int,     isc_trig_ext,
   osc_trig_int,     osc_trig_ext,       ln_valve_on,      ln_valve_off,
   osc_veto,         osc_allow,          reap,             isc_eye_on,
-  osc_eye_on,       osc_eye_off,        inner_cool_auto,  outer_cool_auto,
+  osc_eye_on,       osc_eye_off,        inner_cool_auto,
   trim_to_osc,      antisun,            blast_rocks,      blast_sucks,
   fridge_cycle,     at_float,           not_at_float,     el_auto_gyro,
   repoll,           biascmd_inh,        biascmd_ena,      autofocus_allow,
@@ -120,7 +119,7 @@ enum multiCommand {
   isc_integrate,     osc_integrate,     osc_det_set,      osc_blobs,
   cryo_heat,         heatsw_heat,       inner_level,      isc_offset,
   jfet_heat,         osc_catalogue,     osc_tolerances,   osc_hold_current,
-  lock,              isc_blobs,         outer_level,      phase,
+  lock,              isc_blobs,         phase,
   pivot_gain,        isc_pixel_centre,  ra_dec_goto,      ra_dec_set,
   roll_gain,         isc_set_aperture,  isc_set_focus,    setpoints,
   bda_heat,          spare_level,       t_gyro1_set,      osc_gain,
@@ -131,7 +130,7 @@ enum multiCommand {
   osc_foc_off,       t_gyro2_gain,      t_gyro2_set,      apcu_charge,
   dpcu_charge,       auto_apcu,         auto_dpcu,        quad,
   el_gyro_offset,    general,           slew_veto,        focus,
-  mirror_gain,       mirror_tilt,       actuator_servo,   xy_goto,
+  mirror_gain,       actuator_servo,    xy_goto,
   xy_jump,           xy_xscan,          xy_yscan,         xy_raster
 };
 

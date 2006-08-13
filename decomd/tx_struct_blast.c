@@ -73,6 +73,12 @@ struct ChannelStruct WideSlowChannels[] = {
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U'},
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S'},
   {"lock_pos",     'w', LOOP5, 18,                1.0,             0.0, 'U'},
+  {"act0_pos",     'w', LOOP5, 42,                1.0,             0.0, 'S'},
+  {"act1_pos",     'w', LOOP5, 44,                1.0,             0.0, 'S'},
+  {"act2_pos",     'w', LOOP5, 46,                1.0,             0.0, 'S'},
+  {"act0_enc",     'w', LOOP6, 26,       ACTENC_TO_MM,             0.0, 'S'},
+  {"act1_enc",     'w', LOOP6, 28,       ACTENC_TO_MM,             0.0, 'S'},
+  {"act2_enc",     'w', LOOP6, 30,       ACTENC_TO_MM,             0.0, 'S'},
 
 /* Rox a la Jeff */
   {"t_he3fridge",  'r',  CRYO,  6,    ROX_C2V,   ROX_OFFSET, 'U'},
@@ -550,13 +556,8 @@ struct ChannelStruct SlowChannels[] = {
   {"stage_x_lim",  'w', LOOP5, 38,                1.0,             0.0, 'u'},
   {"stage_y_vel",  'w', LOOP5, 39,                1.0,             0.0, 'u'},
   {"he4_lev_old",  'w', LOOP5, 40, -2.87477e-09*65536,      12.3273561, 'u'},
-  {"act0_pos",     'w', LOOP5, 41,                1.0,             0.0, 'u'},
-  {"act0_enc",     'w', LOOP5, 42,       ACTENC_TO_MM,             0.0, 's'},
-  {"act1_pos",     'w', LOOP5, 43,                1.0,             0.0, 'u'},
-  {"act1_enc",     'w', LOOP5, 44,       ACTENC_TO_MM,             0.0, 's'},
-  {"act2_pos",     'w', LOOP5, 45,                1.0,             0.0, 'u'},
-  {"act2_enc",     'w', LOOP5, 46,       ACTENC_TO_MM,             0.0, 's'},
-  {"sec_etilt",    'w', LOOP5, 47,         I2DEG / 40,             0.0, 'u'},
+  {"sec_etilt",    'w', LOOP5, 41,         I2DEG / 40,             0.0, 'u'},
+  /* LOOP5 42-47 are wide */
   {"sec_erot",     'w', LOOP5, 48,              I2DEG,             0.0, 'u'},
   {"sec_eoff",     'w', LOOP5, 49,             1./400,             0.0, 's'},
   {"sec_ltilt",    'w', LOOP5, 50,         I2DEG / 40,             0.0, 'u'},
@@ -597,10 +598,11 @@ struct ChannelStruct SlowChannels[] = {
   {"g_t_prim",     'w', LOOP6, 20,                1.0,             0.0, 'u'},
   {"g_t_sec",      'w', LOOP6, 21,                1.0,             0.0, 'u'},
   {"sec_focus_pos",'w', LOOP6, 22,            1./3000,             0.0, 'u'},
-  {"sec_tilt_goal",'w', LOOP6, 23,           1./30000,             0.0, 'u'},
-  {"sec_rot_goal", 'w', LOOP6, 24,              I2DEG,             0.0, 'u'},
+  {"a",            'w', LOOP6, 23,                1.0,             0.0, 'u'},
+  {"b",            'w', LOOP6, 24,                1.0,             0.0, 'u'},
   {"focus_veto",   'w', LOOP6, 25,                1.0,             0.0, 'u'},
-  {"ss_snr",       'w', LOOP6, 26,            1/1000.,             0.0, 'u'},
+  /* LOOP6 26-31 are wide */
+  {"ss_snr",       'w', LOOP6, 32,            1/1000.,             0.0, 'u'},
   END_OF_CHANNELS
 };
 

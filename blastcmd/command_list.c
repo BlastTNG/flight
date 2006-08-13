@@ -22,13 +22,13 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.32 $";
+const char *command_list_serial = "$Revision: 3.33 $";
 
 const char *GroupNames[N_GROUPS] = {
-  "Pointing Modes",        "Balance System",    "Bias",
-  "Pointing Sensor Trims", "Cooling System",    "Cal Lamp",
-  "Pointing Sensor Vetos", "Aux. Electronics",  "Cryo Heat",
-  "Subsystem Power",       "Actuators && Lock", "Cryo Control",
+  "Pointing Modes",        "Balance && Cooling","Bias",
+  "Pointing Sensor Trims", "Aux. Electronics",  "Cal Lamp",
+  "Pointing Sensor Vetos", "Actuators",         "Cryo Heat",
+  "Subsystem Power",       "Lock Motor",        "Cryo Control",
   "Pointing Motor Gains",  "ISC Housekeeping",  "OSC Housekeeping",
   "Telemetry",             "ISC Modes",         "OSC Modes",
   "Miscellaneous",         "ISC Parameters",    "OSC Parameters"
@@ -52,9 +52,10 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(ss_off), "turn off the Sun Sensor at the ACS", GR_POWER
     | CONFIRM},
   {COMMAND(ss_on), "turn on the Sun Sensor at the ACS", GR_POWER},
-  {COMMAND(actbus_on), "turn on the Actuators and Lock", GR_POWER | GR_LOCK},
+  {COMMAND(actbus_on), "turn on the Actuators and Lock", GR_POWER | GR_LOCK
+    | GR_ACT},
   {COMMAND(actbus_off), "turn off the Actuators and Lock", GR_POWER | GR_LOCK
-    | CONFIRM},
+    | GR_ACT | CONFIRM},
 
   {COMMAND(az_off), "disable az motors", GR_GAIN},
   {COMMAND(az_on), "enable az motors", GR_GAIN},
@@ -160,27 +161,21 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(sprpump_fwd), "balance pump 2 forward", GR_BAL},
   {COMMAND(sprpump_rev), "balance pump 2 reverse", GR_BAL},
 
-  {COMMAND(inner_cool_on), "inner frame cooling pump on", GR_COOL},
-  {COMMAND(inner_cool_off), "inner frame cooling pump off", GR_COOL},
+  {COMMAND(inner_cool_on), "inner frame cooling pump on", GR_BAL},
+  {COMMAND(inner_cool_off), "inner frame cooling pump off", GR_BAL},
   {COMMAND(inner_cool_auto), "automatically regulate inner frame cooling pump",
-    GR_COOL},
-  {COMMAND(outer_cool_on), "outer frame cooling pump on", GR_COOL},
-  {COMMAND(outer_cool_off), "outer frame cooling pump off", GR_COOL},
-  {COMMAND(outer_cool_auto), "automatically regulate inner frame cooling pump",
-    GR_COOL},
-  {COMMAND(outer_spare_on), "spare cooling pump on", GR_COOL},
-  {COMMAND(outer_spare_off), "spare cooling pump off", GR_COOL},
+    GR_BAL},
 
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},
   {COMMAND(unlock), "unlock the inner frame", GR_LOCK},
   {COMMAND(lock_off), "turn off the lock motor", GR_LOCK},
-  {COMMAND(repoll), "force repoll of the actuator bus", GR_LOCK},
+  {COMMAND(repoll), "force repoll of the actuator bus", GR_LOCK | GR_ACT},
   {COMMAND(autofocus_veto), "veto the secondary actuator system temperature"
-    " correction mode", GR_LOCK},
+    " correction mode", GR_ACT},
   {COMMAND(autofocus_allow), "allow the secondary actuator system temperature"
-    " correction mode", GR_LOCK},
-  {COMMAND(actuator_stop), "stop all secondary actuators immediately", GR_LOCK},
+    " correction mode", GR_ACT},
+  {COMMAND(actuator_stop), "stop all secondary actuators immediately", GR_ACT},
 
   {COMMAND(isc_abort), "abort current solution attempt", GR_ISC_MODE},
   {COMMAND(isc_auto_focus), "autofocus camera", GR_ISC_MODE},
@@ -358,7 +353,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(inner_level), "inner frame cooling pump speed", GR_COOL, 1,
+  {COMMAND(inner_level), "inner frame cooling pump speed", GR_BAL, 1,
     {
       {"Level (%)", 0, 100, 'f', "INPUMP_LEV"}
     }
@@ -379,28 +374,21 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(general), "send a general command string to the lock or actuators",
-    GR_LOCK, 2,
+    GR_LOCK | GR_ACT, 2,
     {
       {"Address (1-3,5,33)", 1, 0x2F, 'i', "1.0"},
       {"Command", 0, 32, 's', ""},
     }
   },
 
-  {COMMAND(focus), "servo the secondary mirror to absolute position", GR_LOCK,
-    1,
+  {COMMAND(focus), "servo the secondary mirror to absolute position",
+    GR_LOCK | GR_ACT, 1,
     {
       {"Position (mm)", 0, 20, 'f', "SEC_LPOS"},
     }
   },
 
-  {COMMAND(mirror_tilt), "set the secondary mirror tilt", GR_LOCK, 2,
-    {
-      {"Tilt (degrees)", 0, 2, 'f', "SEC_LTILT"},
-      {"Rotation (degrees)", 0, 360, 'f', "SEC_LROT"},
-    }
-  },
-
-  {COMMAND(mirror_gain), "set the secondary actuator system gains", GR_LOCK, 2,
+  {COMMAND(mirror_gain), "set the secondary actuator system gains", GR_ACT, 2,
     {
       {"T. Primary Gain", 0, 30000, 'i', "G_T_PRIM"},
       {"T. Secondary Gain", 0, 30000, 'i', "G_T_SEC"},
@@ -408,7 +396,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(actuator_servo), "servo the actuators to absolute positions",
-    GR_LOCK, 3,
+    GR_ACT, 3,
     {
       {"Actuator Alpha", 0, 21000, 'i', "NONE"},
       {"Actuator Beta",  0, 21000, 'i', "NONE"},
@@ -471,12 +459,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(outer_level), "outer frame cooling pump speed", GR_COOL, 1,
-    {
-      {"Level (%)", 0, 100, 'f', "OUTPUMP_LEV"}
-    }
-  },
-
   {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 2,
     {
       {"Set Point (rpm)",   0, 2.5, 'f', "SET_REAC"},
@@ -528,7 +510,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(spare_level), "spare pump pwm level", GR_COOL | GR_BAL, 1,
+  {COMMAND(spare_level), "spare pump pwm level", GR_BAL | GR_BAL, 1,
     {
       {"Level (%)", 0, 100, 'f', "SPRPUMP_LEV"}
     }
