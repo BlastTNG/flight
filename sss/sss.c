@@ -23,6 +23,7 @@
 #define NOAS 1 //Number of samples On A Side of the fit
 
 #define MIN_AMP_VAL 2000
+#define BUNK_FUDGE_FACTOR 400
 
 #define PI180 (3.14159265 / 180.0)
 
@@ -241,7 +242,7 @@ void calculate_az(unsigned * sensor_uint, sss_packet_data * dat)
   {
     if (i != sens_max && i != (sens_max + 12 + 1) % 12 && i != (sens_max + 12 - 1) % 12)
     {
-      if (sensors[i] > x)
+      if (sensors[i] > x + BUNK_FUDGE_FACTOR)
       {
         dat->snr = 0;
       }
