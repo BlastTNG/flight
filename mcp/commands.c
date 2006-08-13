@@ -1020,7 +1020,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.cindex = INC_INDEX(CommandData.actbus.cindex);
       break;
     case focus:
-      CommandData.actbus.focus = rvalues[0];
+      CommandData.actbus.focus = ivalues[0];
       CommandData.actbus.focus_mode = ACTBUS_FM_FOCUS;
       break;
     case mirror_gain:

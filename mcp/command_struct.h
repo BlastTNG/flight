@@ -240,7 +240,7 @@ struct CommandDataStruct {
     int focus_mode;
     int goal[3];
     int offset[3];
-    double focus;
+    int focus;
 
     int lock_vel;
     int lock_acc;

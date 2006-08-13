@@ -491,6 +491,9 @@ static void ServoActuators(int* goal)
   int act_wait[3] = {0, 0, 0};
   char buffer[1000];
 
+  if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
+    return;
+
   TakeBus(0);
 
   while (
@@ -694,21 +697,69 @@ static void SetOffsets(int* offset)
   }
 }
 
+static void SetNewFocus(void)
+{
+  char buffer[1000];
+  int i;
+  int delta = CommandData.actbus.focus - ((act_data[0].enc +
+        act_data[1].enc + act_data[2].enc) / 3 - ACTENC_OFFSET);
+
+  if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
+    return;
+
+  TakeBus(0);
+
+  bprintf(info, "Old: %i %i %i -> %i %i\n", act_data[0].enc, act_data[1].enc,
+      act_data[2].enc, CommandData.actbus.focus, delta);
+  CommandData.actbus.goal[0] = act_data[0].enc + delta;
+  CommandData.actbus.goal[1] = act_data[1].enc + delta;
+  CommandData.actbus.goal[2] = act_data[2].enc + delta;
+
+  if (abs(delta) <= ENCODER_TOL) {
+    ;
+  } else if (delta > 0) {
+    sprintf(buffer, "V2000P%iR", delta);
+    bprintf(info, "Servo: %i => %s\n", 33, buffer);
+    BusComm(33, buffer, 0, __inhibit_chatter);
+  } else {
+    delta = 10 - delta;
+    sprintf(buffer, "V2000D%iR", delta);
+    bprintf(info, "Servo: %i => %s\n", 33, buffer);
+    BusComm(33, buffer, 0, __inhibit_chatter);
+  }
+  bprintf(info, "New: %i %i %i\n", CommandData.actbus.goal[0],
+      CommandData.actbus.goal[1], CommandData.actbus.goal[2]);
+  for (i = 0; i < 1 + delta / 75; ++i) {
+    sleep(1);
+    if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
+      return;
+  }
+}
+
 static void DoActuators(void)
 {
-  if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC) {
-    bputs(warning, "ActBus: Actuator Panic");
-    BusComm(33, "T", 0, __inhibit_chatter);
-    CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
-  } else if (CommandData.actbus.focus_mode == ACTBUS_FM_SERVO) {
-    ServoActuators(CommandData.actbus.goal);
-    CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
-  } else if (CommandData.actbus.focus_mode == ACTBUS_FM_OFFSET) {
-    SetOffsets(CommandData.actbus.offset);
-    CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
-  } else if (CommandData.actbus.focus_mode != ACTBUS_FM_SLEEP) {
-    bputs(err, "ActBus: Unknown Focus Mode (%i), sleeping");
-    CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
+  switch(CommandData.actbus.focus_mode) {
+    case ACTBUS_FM_PANIC:
+      bputs(warning, "ActBus: Actuator Panic");
+      BusComm(33, "T", 0, __inhibit_chatter);
+      CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
+      break;
+    case ACTBUS_FM_FOCUS:
+      SetNewFocus();
+      /* fallthrough */
+    case ACTBUS_FM_SERVO:
+      ServoActuators(CommandData.actbus.goal);
+      CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
+      break;
+    case ACTBUS_FM_OFFSET:
+      SetOffsets(CommandData.actbus.offset);
+      CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
+      /* fallthrough */
+    case ACTBUS_FM_SLEEP:
+      break;
+    default:
+      bputs(err, "ActBus: Unknown Focus Mode (%i), sleeping");
+      CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   }
 }
 
@@ -872,7 +923,7 @@ void StoreActBus(void)
   static struct NiosStruct* seizedBusAddr;
   static struct NiosStruct* lockAdcAddr[4];
   static struct NiosStruct* lokmotPinAddr;
-  
+
   static struct NiosStruct* lockVel;
   static struct NiosStruct* lockAcc;
   static struct NiosStruct* lockMoveI;
@@ -888,7 +939,7 @@ void StoreActBus(void)
 
   static struct NiosStruct* gTPrimAddr;
   static struct NiosStruct* gTSecAddr;
-  static struct NiosStruct* secFocusGoalAddr;
+  static struct NiosStruct* secGoalAddr;
   static struct NiosStruct* secFocusAddr;
   static struct NiosStruct* focusVetoAddr;
 
@@ -926,7 +977,7 @@ void StoreActBus(void)
 
     gTPrimAddr = GetNiosAddr("g_t_prim");
     gTSecAddr = GetNiosAddr("g_t_sec");
-    secFocusGoalAddr = GetNiosAddr("sec_focus_goal");
+    secGoalAddr = GetNiosAddr("sec_goal");
     secFocusAddr = GetNiosAddr("sec_focus");
     focusVetoAddr = GetNiosAddr("focus_veto");
 
@@ -985,7 +1036,7 @@ void StoreActBus(void)
   WriteData(gTPrimAddr, CommandData.actbus.g_primary, NIOS_QUEUE);
   WriteData(gTSecAddr, CommandData.actbus.g_secondary, NIOS_QUEUE);
   WriteData(focusVetoAddr, CommandData.actbus.autofocus_vetoed, NIOS_QUEUE);
-  WriteData(secFocusGoalAddr, CommandData.actbus.focus, NIOS_QUEUE);
+  WriteData(secGoalAddr, CommandData.actbus.focus, NIOS_QUEUE);
 
 #ifdef USE_XY_STAGE
   WriteData(stageXAddr, stage_data.xpos, NIOS_QUEUE);

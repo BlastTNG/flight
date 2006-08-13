@@ -591,7 +591,7 @@ struct ChannelStruct SlowChannels[] = {
   {"ss_az_rel_sun",'w', LOOP6, 19,              I2DEG,             0.0, 'u'},
   {"g_t_prim",     'w', LOOP6, 20,                1.0,             0.0, 'u'},
   {"g_t_sec",      'w', LOOP6, 21,                1.0,             0.0, 'u'},
-  {"sec_focus_pos",'w', LOOP6, 22,            1./3000,             0.0, 'u'},
+  {"sec_goal",     'w', LOOP6, 22,                1.0,             0.0, 'u'},
   {"ss_snr",       'w', LOOP6, 23,            1/1000.,             0.0, 'u'},
   {"focus_veto",   'w', LOOP6, 24,                1.0,             0.0, 'u'},
   {"act_move_i",   'w', LOOP6, 25,                1.0,             0.0, 'u'},
@@ -602,6 +602,7 @@ struct ChannelStruct SlowChannels[] = {
   {"lock_hold_i",  'w', LOOP6, 30,                1.0,             0.0, 'u'},
   {"lock_vel",     'w', LOOP6, 31,                1.0,             0.0, 'u'},
   {"lock_acc",     'w', LOOP6, 32,                1.0,             0.0, 'u'},
+  {"sec_focus",    'w', LOOP6, 33,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
