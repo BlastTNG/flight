@@ -594,6 +594,14 @@ struct ChannelStruct SlowChannels[] = {
   {"sec_focus_pos",'w', LOOP6, 22,            1./3000,             0.0, 'u'},
   {"ss_snr",       'w', LOOP6, 23,            1/1000.,             0.0, 'u'},
   {"focus_veto",   'w', LOOP6, 24,                1.0,             0.0, 'u'},
+  {"act_move_i",   'w', LOOP6, 25,                1.0,             0.0, 'u'},
+  {"act_hold_i",   'w', LOOP6, 26,                1.0,             0.0, 'u'},
+  {"act_vel",      'w', LOOP6, 27,                1.0,             0.0, 'u'},
+  {"act_acc",      'w', LOOP6, 28,                1.0,             0.0, 'u'},
+  {"lock_move_i",  'w', LOOP6, 29,                1.0,             0.0, 'u'},
+  {"lock_hold_i",  'w', LOOP6, 30,                1.0,             0.0, 'u'},
+  {"lock_vel",     'w', LOOP6, 31,                1.0,             0.0, 'u'},
+  {"lock_acc",     'w', LOOP6, 32,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 

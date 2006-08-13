@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.34 $";
+const char *command_list_serial = "$Revision: 3.35 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance && Cooling","Bias",
@@ -381,9 +381,24 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {COMMAND(lock_vel), "set the lock motor velocity and acceleration", GR_LOCK,
+    2,
+    {
+      {"Velocity", 5, 10000, 'i', "ACT_VEL"},
+      {"Acceleration", 1, 20, 'i', "ACT_ACC"},
+    }
+  },
+
+  {COMMAND(lock_i), "set the lock motor currents", GR_LOCK, 2,
+    {
+      {"Move current (%)", 0, 100, 'i', "ACT_MOVE_I"},
+      {"Hold current (%)", 0,  50, 'i', "ACT_HOLD_I"},
+    }
+  },
+
   {COMMAND(focus), "servo the secondary mirror to absolute position", GR_ACT, 1,
     {
-      {"Position (counts)",    0, 20, 'f', "SEC_LPOS"},
+      {"Position (counts)",    0, 20, 'f', "SEC_FOCUS"},
     }
   },
 
@@ -412,6 +427,22 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {COMMAND(actuator_vel), "set the actuator velocity and acceleration", GR_ACT,
+    2,
+    {
+      {"Velocity", 5, 10000, 'i', "ACT_VEL"},
+      {"Acceleration", 1, 20, 'i', "ACT_ACC"},
+    }
+  },
+
+  {COMMAND(actuator_i), "set the actuator motor currents", GR_ACT, 2,
+    {
+      {"Move current (%)", 0, 100, 'i', "ACT_MOVE_I"},
+      {"Hold current (%)", 0,  50, 'i', "ACT_HOLD_I"},
+    }
+  },
+
+  /* XY Stage */
   {COMMAND(xy_goto), "move the X-Y translation stage to absolute position",
     GR_MISC, 4,
     {

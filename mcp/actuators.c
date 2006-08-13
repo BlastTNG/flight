@@ -241,10 +241,12 @@ static void BusSend(int who, const char* what, int inhibit_chatter)
   char *buffer = malloc(len);
   unsigned char chk = 3;
   unsigned char *ptr;
+  static int sequence = 1;
 
+  sequence = (sequence + 1) % 7;
   buffer[0] = 0x2;
   buffer[1] = who;
-  buffer[2] = '1';
+  buffer[2] = 0x30 + sequence;
   sprintf(buffer + 3, "%s", what);
   buffer[len - 2] = 0x3;
   for (ptr = buffer; *ptr != '\03'; ++ptr)
@@ -492,8 +494,8 @@ static void ServoActuators(int* goal)
   TakeBus(0);
 
   while (
-      act_there[0] < THERE_WAIT &&
-      act_there[1] < THERE_WAIT &&
+      act_there[0] < THERE_WAIT ||
+      act_there[1] < THERE_WAIT ||
       act_there[2] < THERE_WAIT) {
     for (i = 0; i < 3; ++i)
       if (act_there[i] >= THERE_WAIT || stepper[i].status == -1) {
@@ -569,6 +571,8 @@ static int PollBus(int rescan)
 
     if (stepper[i].status == 0 && i <= LAST_ACTUATOR)
       InitialiseActuator(i);
+
+    sleep(1);
   }
 
   CommandData.actbus.force_repoll = 0;
@@ -686,6 +690,7 @@ static void SetOffsets(int* offset)
   for (i = 0; i < 3; ++i) {
     sprintf(buffer, "z%iR", offset[i] + 1000000);
     BusComm(i, buffer, 0, __inhibit_chatter);
+    sleep(1);
   }
 }
 
@@ -857,6 +862,7 @@ static inline struct NiosStruct* GetActNiosAddr(int i, const char* field)
 void StoreActBus(void)
 {
   int i, j;
+  int focus = 0;
   static int firsttime = 1;
 
   static struct NiosStruct* actbusResetAddr;
@@ -866,13 +872,24 @@ void StoreActBus(void)
   static struct NiosStruct* seizedBusAddr;
   static struct NiosStruct* lockAdcAddr[4];
   static struct NiosStruct* lokmotPinAddr;
+  
+  static struct NiosStruct* lockVel;
+  static struct NiosStruct* lockAcc;
+  static struct NiosStruct* lockMoveI;
+  static struct NiosStruct* lockHoldI;
+
+  static struct NiosStruct* actVel;
+  static struct NiosStruct* actAcc;
+  static struct NiosStruct* actMoveI;
+  static struct NiosStruct* actHoldI;
 
   static struct NiosStruct* actPosAddr[3];
   static struct NiosStruct* actEncAddr[3];
 
   static struct NiosStruct* gTPrimAddr;
   static struct NiosStruct* gTSecAddr;
-  static struct NiosStruct* secFocusPosAddr;
+  static struct NiosStruct* secFocusGoalAddr;
+  static struct NiosStruct* secFocusAddr;
   static struct NiosStruct* focusVetoAddr;
 
 #ifdef USE_XY_STAGE
@@ -909,8 +926,19 @@ void StoreActBus(void)
 
     gTPrimAddr = GetNiosAddr("g_t_prim");
     gTSecAddr = GetNiosAddr("g_t_sec");
-    secFocusPosAddr = GetNiosAddr("sec_focus_pos");
+    secFocusGoalAddr = GetNiosAddr("sec_focus_goal");
+    secFocusAddr = GetNiosAddr("sec_focus");
     focusVetoAddr = GetNiosAddr("focus_veto");
+
+    actVel = GetNiosAddr("act_vel");
+    actAcc = GetNiosAddr("act_acc");
+    actMoveI = GetNiosAddr("act_move_i");
+    actHoldI = GetNiosAddr("act_hold_i");
+
+    lockVel = GetNiosAddr("lock_vel");
+    lockAcc = GetNiosAddr("lock_acc");
+    lockMoveI = GetNiosAddr("lock_move_i");
+    lockHoldI = GetNiosAddr("lock_hold_i");
 
 #ifdef USE_XY_STAGE
     stageXAddr = GetNiosAddr("stage_x");
@@ -933,7 +961,9 @@ void StoreActBus(void)
   for (j = 0; j < 3; ++j) {
     WriteData(actPosAddr[j], act_data[j].pos, NIOS_QUEUE);
     WriteData(actEncAddr[j], act_data[j].enc - ACTENC_OFFSET, NIOS_QUEUE);
+    focus += act_data[j].enc / 3;
   }
+  WriteData(secFocusAddr, focus - ACTENC_OFFSET, NIOS_FLUSH);
 
   for (i = 0; i < 4; ++i)
     WriteData(lockAdcAddr[i], lock_data.adc[i], NIOS_QUEUE);
@@ -942,10 +972,20 @@ void StoreActBus(void)
   WriteData(lockGoalAddr, CommandData.actbus.lock_goal, NIOS_QUEUE);
   WriteData(lockPosAddr, lock_data.pos, NIOS_FLUSH);
 
+  WriteData(actVel, CommandData.actbus.act_vel, NIOS_QUEUE);
+  WriteData(actAcc, CommandData.actbus.act_acc, NIOS_QUEUE);
+  WriteData(actMoveI, CommandData.actbus.act_move_i, NIOS_QUEUE);
+  WriteData(actHoldI, CommandData.actbus.act_hold_i, NIOS_QUEUE);
+
+  WriteData(lockVel, CommandData.actbus.lock_vel, NIOS_QUEUE);
+  WriteData(lockAcc, CommandData.actbus.lock_acc, NIOS_QUEUE);
+  WriteData(lockMoveI, CommandData.actbus.lock_move_i, NIOS_QUEUE);
+  WriteData(lockHoldI, CommandData.actbus.lock_hold_i, NIOS_QUEUE);
+
   WriteData(gTPrimAddr, CommandData.actbus.g_primary, NIOS_QUEUE);
   WriteData(gTSecAddr, CommandData.actbus.g_secondary, NIOS_QUEUE);
   WriteData(focusVetoAddr, CommandData.actbus.autofocus_vetoed, NIOS_QUEUE);
-  WriteData(secFocusPosAddr, CommandData.actbus.focus * 3000, NIOS_QUEUE);
+  WriteData(secFocusGoalAddr, CommandData.actbus.focus, NIOS_QUEUE);
 
 #ifdef USE_XY_STAGE
   WriteData(stageXAddr, stage_data.xpos, NIOS_QUEUE);
