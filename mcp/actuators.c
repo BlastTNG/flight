@@ -720,12 +720,12 @@ static void SetNewFocus(void)
   } else if (delta > 0) {
     sprintf(buffer, "V2000P%iR", delta);
     bprintf(info, "Servo: %i => %s\n", 33, buffer);
-    BusComm(33, buffer, 0, __inhibit_chatter);
+//    BusComm(33, buffer, 0, __inhibit_chatter);
   } else {
     delta = 10 - delta;
     sprintf(buffer, "V2000D%iR", delta);
     bprintf(info, "Servo: %i => %s\n", 33, buffer);
-    BusComm(33, buffer, 0, __inhibit_chatter);
+//    BusComm(33, buffer, 0, __inhibit_chatter);
   }
   bprintf(info, "New: %i %i %i\n", CommandData.actbus.goal[0],
       CommandData.actbus.goal[1], CommandData.actbus.goal[2]);
@@ -748,7 +748,7 @@ static void DoActuators(void)
       SetNewFocus();
       /* fallthrough */
     case ACTBUS_FM_SERVO:
-      ServoActuators(CommandData.actbus.goal);
+//      ServoActuators(CommandData.actbus.goal);
       CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
       break;
     case ACTBUS_FM_OFFSET:
