@@ -214,13 +214,8 @@ struct CommandDataStruct {
     double bal_gain;
 
     int inframe_auto;
-    int outframe_auto;
     int inframe_cool_on;
     int inframe_cool_off;
-    int outframe_cool1_on;
-    int outframe_cool1_off;
-    int outframe_cool2_on;
-    int outframe_cool2_off;
     int pwm1, pwm2, pwm3, pwm4;
   } pumps;
 

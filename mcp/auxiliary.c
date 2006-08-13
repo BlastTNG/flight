@@ -73,12 +73,6 @@
 #define IF_COOL_DELTA 10
 #define IF_COOL_RANGE 20   /* At a temp of IF_COOL_GOAL + IF_COOL_RANGE,
                               pump on full */
-/* outer cool */
-#define OF_COOL_GOAL 25   /* in deg C */
-#define OF_COOL_DELTA 10
-#define OF_COOL_RANGE 20   /* At a temp of OF_COOL_GOAL + OF_COOL_RANGE,
-                              pump on full */
-
 /* Gybox heater stuff */
 #define GY_HEAT_MAX 40 /* percent */
 #define GY_HEAT_MIN 5  /* percent */
@@ -106,15 +100,6 @@ extern short int InCharge; /* tx.c */
 #define IF_COOL1_ON  0x20  /* ACS3 Group 1 Bit 6 */
 #define BAL2_ON      0x40  /* ACS3 Group 1 Bit 7 */
 #define BAL2_REV     0x80  /* ACS3 Group 1 Bit 8 */
-
-#define OF_COOL2_ON  0x01  /* ACS3 Group 3 Bit 1 - ofpmBits */
-#define OF_COOL2_OFF 0x02  /* ACS3 Group 3 Bit 2 */
-#define OF_COOL1_ON  0x04  /* ACS3 Group 3 Bit 3 */
-#define OF_COOL1_OFF 0x08  /* ACS3 Group 3 Bit 4 */
-#define LOKMOT_ON    0x10  /* ACS3 Group 3 Bit 5 */
-#define LOKMOT_OFF   0x20  /* ACS3 Group 3 Bit 6 */
-#define LOKMOT_OUT   0x40  /* ACS3 Group 3 Bit 7 */
-#define LOKMOT_IN    0x80  /* ACS3 Group 3 Bit 8 */
 
 /* in commands.c */
 double LockPosition(double elevation);
@@ -220,72 +205,6 @@ static int ControlInnerCool(void)
   error = temp - IF_COOL_GOAL;
 
   pwm = 2047. * error / IF_COOL_RANGE;
-
-  if (pwm > PUMP_MAX)
-    pwm = PUMP_MAX;
-  else if (pwm < PUMP_MIN)
-    pwm = PUMP_MIN;
-
-  return 2047 - pwm;
-}
-
-static int ControlOuterCool(void)
-{
-  static struct BiPhaseStruct *tSunSensorAddr;
-  static int firsttime = 1;
-  double temp;
-  double error;
-  short int pwm;
-
-  if (firsttime) {
-    firsttime = 0;
-    tSunSensorAddr = GetBiPhaseAddr("t_sun_sensor");
-  }
-
-  if (CommandData.pumps.outframe_auto == 0) {
-    if (outcool_state > 0) {
-      bprintf(info, "Outer Frame Cooling: Vetoed\n");
-      outcool_state = 0;
-    }
-    return CommandData.pumps.pwm4;
-  }
-
-  temp = slow_data[tSunSensorAddr->index][tSunSensorAddr->channel];
-
-  /* NB: these tests are backwards due to a sign flip in the calibration */
-  if (temp < MAX_TEMP || temp > MIN_TEMP) {
-    if (outcool_state != 3) {
-      bprintf(info, "Outer Frame Cooling: Auto-Vetoed\n");
-      CommandData.pumps.outframe_cool1_on = 40; /* turn on pump */
-      CommandData.pumps.outframe_cool1_off = 0;
-      outcool_state = 3;
-    }
-    return CommandData.pumps.pwm3; /* temp bad -- revert to manual settings */
-  }
-
-  temp = I2T_M * temp + I2T_B;
-
-  if (temp < OF_COOL_GOAL - OF_COOL_DELTA ||
-      (temp < OF_COOL_GOAL && outcool_state == 1)) {
-    if (outcool_state != 1) {
-      bprintf(info, "Outer Frame Cooling: Pump Off\n");
-      CommandData.pumps.outframe_cool1_off = 40;
-      CommandData.pumps.outframe_cool1_on = 0;
-      outcool_state = 1;
-    }
-    return 2047; /* temperature below goal, nothing to do, turn off pump */
-  }
-
-  if (outcool_state != 2) {
-    bprintf(info, "Outer Frame Cooling: Pump On\n");
-    CommandData.pumps.outframe_cool1_on = 40; /* turn on pump */
-    CommandData.pumps.outframe_cool1_off = 0;
-    outcool_state = 2;
-  }
-
-  error = temp - OF_COOL_GOAL;
-
-  pwm = 2047. * error / OF_COOL_RANGE;
 
   if (pwm > PUMP_MAX)
     pwm = PUMP_MAX;
@@ -814,10 +733,9 @@ void ControlAuxMotors(unsigned short *RxFrame)
   static struct NiosStruct* ifpmBitsAddr;
 
   int ifpmBits = 0;
-  int ofpmBits = 0;
 
   int inframe_pwm = ControlInnerCool();
-  int outframe_pwm = ControlOuterCool();
+  int outframe_pwm = 0;
 
   static int firsttime = 1;
   if (firsttime) {
@@ -868,33 +786,6 @@ void ControlAuxMotors(unsigned short *RxFrame)
     }
   }
 
-  /* outer frame box */
-  /* three on, off motors (pulses) */
-  if (CommandData.pumps.outframe_cool1_on > 0) {
-    ofpmBits |= OF_COOL1_ON;
-    CommandData.pumps.outframe_cool1_on--;
-    if (CommandData.pumps.outframe_auto == 0 && outcool_state != -2) {
-      bprintf(info, "Outer Frame Cooling: Pump On\n");
-      outcool_state = -2;
-    }
-  } else if (CommandData.pumps.outframe_cool1_off > 0) {
-    ofpmBits |= OF_COOL1_OFF;
-    CommandData.pumps.outframe_cool1_off--;
-    if (CommandData.pumps.outframe_auto == 0 && outcool_state != -1) {
-      bprintf(info, "Outer Frame Cooling: Pump Off\n");
-      outcool_state = -1;
-    }
-  }
-
-  /* this pump isn't used */
-  if (CommandData.pumps.outframe_cool2_on > 0) {
-    ofpmBits |= OF_COOL2_ON;
-    CommandData.pumps.outframe_cool2_on--;
-  } else if (CommandData.pumps.outframe_cool2_off > 0) {
-    ofpmBits |= OF_COOL2_OFF;
-    CommandData.pumps.outframe_cool2_off--;
-  }
-
   /* Run Balance System, Maybe */
   ifpmBits = Balance(ifpmBits);
 
@@ -908,7 +799,6 @@ void ControlAuxMotors(unsigned short *RxFrame)
 
   WriteData(incoolStateAddr, incool_state, NIOS_QUEUE);
   WriteData(outcoolStateAddr, outcool_state, NIOS_QUEUE);
-  WriteData(ofpmBitsAddr, ofpmBits, NIOS_QUEUE);
   WriteData(sprpumpLevAddr, CommandData.pumps.pwm2 & 0x7ff, NIOS_QUEUE);
   WriteData(inpumpLevAddr, inframe_pwm & 0x7ff, NIOS_QUEUE);
   WriteData(outpumpLevAddr, outframe_pwm & 0x7ff, NIOS_QUEUE);

@@ -546,24 +546,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case inner_cool_auto:
       CommandData.pumps.inframe_auto = 1;
       break;
-
-    case outer_cool_on:
-      CommandData.pumps.outframe_cool1_on = 40;
-      CommandData.pumps.outframe_auto = 0;
-      break;
-    case outer_cool_off:
-      CommandData.pumps.outframe_cool1_off = 40;
-      CommandData.pumps.outframe_auto = 0;
-      break;
-    case outer_cool_auto:
-      CommandData.pumps.outframe_auto = 1;
-      break;
-    case outer_spare_on:
-      CommandData.pumps.outframe_cool2_on = 40;
-      break;
-    case outer_spare_off:
-      CommandData.pumps.outframe_cool2_off = 40;
-      break;
 #endif
 
     /* Lock */
@@ -1117,9 +1099,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case inner_level:
       CommandData.pumps.pwm3 = 2047 - rvalues[0] * 2047. / 100;
-      break;
-    case outer_level:
-      CommandData.pumps.pwm4 = 2047 - rvalues[0] * 2047. / 100;
       break;
 
       /***************************************/
@@ -1927,10 +1906,6 @@ void InitCommandData()
 
   CommandData.pumps.inframe_cool_on = 0;
   CommandData.pumps.inframe_cool_off = 0;
-  CommandData.pumps.outframe_cool1_on = 0;
-  CommandData.pumps.outframe_cool1_off = 0;
-  CommandData.pumps.outframe_cool2_on = 0;
-  CommandData.pumps.outframe_cool2_off = 0;
 
   CommandData.actbus.lock_goal = LS_DRIVE_OFF;
   CommandData.actbus.force_repoll = 0;
@@ -2083,7 +2058,6 @@ void InitCommandData()
   CommandData.pumps.bal_target = 0.0 * 1648.;
   CommandData.pumps.bal_gain = 0.2;
   CommandData.pumps.inframe_auto = 1;
-  CommandData.pumps.outframe_auto = 0;
 
   CommandData.Bias.bias1 = 40;
   CommandData.Bias.bias2 = 25;
