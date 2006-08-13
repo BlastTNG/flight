@@ -1013,6 +1013,14 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.del = 0;
       bprintf(info, "Commands: Lock Mode: %g\n", CommandData.pointing_mode.Y);
       break;
+    case lock_vel:
+      CommandData.actbus.lock_vel = ivalues[0];
+      CommandData.actbus.lock_acc = ivalues[1];
+      break;
+    case lock_i:
+      CommandData.actbus.lock_move_i = ivalues[0];
+      CommandData.actbus.lock_hold_i = ivalues[1];
+      break;
     case general: /* General actuator bus command */
       CommandData.actbus.caddr[CommandData.actbus.cindex] = ivalues[0] + 0x30;
       copysvalue(CommandData.actbus.command[CommandData.actbus.cindex],
@@ -1033,11 +1041,20 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.goal[2] = ivalues[2];
       CommandData.actbus.focus_mode = ACTBUS_FM_SERVO;
       break;
+    case actuator_vel:
+      CommandData.actbus.act_vel = ivalues[0];
+      CommandData.actbus.act_acc = ivalues[1];
+      break;
+    case actuator_i:
+      CommandData.actbus.act_move_i = ivalues[0];
+      CommandData.actbus.act_hold_i = ivalues[1];
+      break;
     case encoder_offset:
       CommandData.actbus.offset[0] = ivalues[0];
       CommandData.actbus.offset[1] = ivalues[1];
       CommandData.actbus.offset[2] = ivalues[2];
       CommandData.actbus.focus_mode = ACTBUS_FM_OFFSET;
+      break;
 
       /* XY Stage */
     case xy_goto:

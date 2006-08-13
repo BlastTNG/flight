@@ -458,28 +458,47 @@ static void ReadActuator(int who, int inhibit_chatter)
   act_data[who].enc = ReadIntFromBus(who, "?8", inhibit_chatter);
 }
 
+static char* __attribute__((format(printf,2,3))) ActCommand(char* buffer,
+    const char* fmt, ...)
+{
+  va_list argptr;
+  char* ptr;
+
+  sprintf(buffer, "aE25600V%iL%im%ih%i", CommandData.actbus.act_vel,
+      CommandData.actbus.act_acc, CommandData.actbus.act_move_i,
+      CommandData.actbus.act_hold_i);
+
+  for(ptr = buffer; *ptr != '\0'; ++ptr);
+
+  va_start(argptr, fmt);
+  vsprintf(ptr, fmt, argptr);
+  va_end(argptr);
+
+  return buffer;
+}
+
 static void InitialiseActuator(int who)
 {
   int enc;
   char buffer[1000];
 
-  ReadActuator(who, 0); 
+  ReadActuator(who, 1); 
 
   if (act_data[who].enc < ACTENC_OFFSET / 2) {
     bprintf(info, "Initialising Actuator #%i...", who);
 
     /* Bug workaround -- can't set zero after controller boot until
      * after having moved. */
-    BusComm(who, "P10R", 0, __inhibit_chatter);
+    BusComm(who, ActCommand(buffer, "%s", "P10R"), 0, __inhibit_chatter);
 
-    ReadActuator(who, 0); 
+    ReadActuator(who, 1); 
     sleep(1);
 
     /* Add offset */
     enc = ACTENC_OFFSET + act_data[who].enc;
 
     /* Set the encoder */
-    sprintf(buffer, "z%iR", enc);  
+    ActCommand(buffer, "z%iR", enc);  
     BusComm(who, buffer, 0, __inhibit_chatter);
   }
 }
@@ -514,13 +533,13 @@ static void ServoActuators(int* goal)
         if (abs(delta) <= ENCODER_TOL) {
           act_there[i]++;
         } else if (delta > 0) {
-          sprintf(buffer, "V2000P%iR", delta);
+          ActCommand(buffer, "P%iR", delta);
           bprintf(info, "Servo: %i => %s\n", i, buffer);
           act_wait[i] = delta * (6. * 26. / 2000.) + 1;
           BusComm(i, buffer, 0, __inhibit_chatter);
         } else {
           delta = 10 - delta;
-          sprintf(buffer, "V2000D%iR", delta);
+          ActCommand(buffer, "D%iR", delta);
           bprintf(info, "Servo: %i => %s\n", i, buffer);
           act_wait[i] = delta * (6. * 26. / 2000.) + 1;
           BusComm(i, buffer, 0, __inhibit_chatter);
@@ -719,12 +738,12 @@ static void SetNewFocus(void)
   if (abs(delta) <= ENCODER_TOL) {
     ;
   } else if (delta > 0) {
-    sprintf(buffer, "V2000P%iR", delta);
+    ActCommand(buffer, "V2000P%iR", delta);
     bprintf(info, "Servo: %i => %s\n", ALL_ACT, buffer);
     BusComm(ALL_ACT, buffer, 0, __inhibit_chatter);
   } else {
     delta = 10 - delta;
-    sprintf(buffer, "V2000D%iR", delta);
+    ActCommand(buffer, "V2000D%iR", delta);
     bprintf(info, "Servo: %i => %s\n", ALL_ACT, buffer);
     BusComm(ALL_ACT, buffer, 0, __inhibit_chatter);
   }
@@ -764,14 +783,20 @@ static void DoActuators(void)
     CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
 }
 
+static inline char* LockCommand(char* buffer, const char* cmd)
+{
+  sprintf(buffer, "V%iL%im%ih%i%s", CommandData.actbus.lock_vel,
+      CommandData.actbus.lock_acc, CommandData.actbus.lock_move_i,
+      CommandData.actbus.lock_hold_i, cmd);
+
+  return buffer;
+}
+
 /************************************************************************/
 /*                                                                      */
 /*    Do Lock Logic: check status, determine if we are locked, etc      */
 /*                                                                      */
 /************************************************************************/
-#define LOCK_VEL   "100000" /* Max torque is 50000 */
-#define LOCK_PREAMBLE "m50V" LOCK_VEL
-
 #define SEND_SLEEP 100000 /* .1 seconds */
 #define WAIT_SLEEP 50000 /* .05 seconds */
 #define LA_EXIT    0
@@ -783,7 +808,7 @@ static void DoActuators(void)
 static void DoLock(void)
 {
   int action = LA_EXIT;
-  const char* command = NULL;
+  char command[2000] = "";
 
   do {
     GetLockData((bus_seized == LOCKNUM) ? 0 : 1);
@@ -868,34 +893,34 @@ static void DoLock(void)
     switch (action) {
       case LA_STOP:
         bputs(info, "ActBus: Stopping lock motor.");
-        command = "T"; /* terminate all strings */
+        LockCommand(command, "T"); /* terminate all strings */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_OFF;
         break;
       case LA_EXTEND:
         bputs(info, "ActBus: Extending lock motor.");
-        command = LOCK_PREAMBLE "P0R"; /* move out forever */
+        LockCommand(command, "P0R"); /* move out forever */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_EXT;
         break;
       case LA_RETRACT:
         bputs(info, "ActBus: Retracting lock motor.");
-        command = LOCK_PREAMBLE "D0R"; /* move in forever */
+        LockCommand(command, "D0R"); /* move in forever */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_RET;
         break;
       case LA_STEP:
         bputs(info, "ActBus: Stepping lock motor.");
-        command = LOCK_PREAMBLE "P50000R"; /* move away from the limit switch */
+        LockCommand(command, "P50000R"); /* move away from the limit switch */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_STP;
         break;
       default:
-        command = NULL;
+        command[0] = 0;
     }
 
     /* ... and do it! */
-    if (command != NULL) {
+    if (command[0] != 0) {
       BusComm(LOCKNUM, command, 0, __inhibit_chatter);
       usleep(SEND_SLEEP); /* wait for a bit */
     } else if (action == LA_WAIT)
