@@ -629,9 +629,15 @@ MODULE_ALIAS_CHARDEV_MAJOR(BBC_MAJOR);
 MODULE_ALIAS("/dev/bbcpci");
 MODULE_ALIAS("/dev/bi0_pci");
 
+#ifdef MODULE_PARM
 MODULE_PARM(bbc_major, "i");
 MODULE_PARM(bbc_minor, "i");
 MODULE_PARM(bi0_minor, "i");
+#else
+module_param(bbc_major, int, BBC_MAJOR);
+module_param(bbc_minor, int, 0);
+module_param(bi0_minor, int, 1);
+#endif
 
 MODULE_PARM_DESC(bbc_major, " bbc major number");
 MODULE_PARM_DESC(bbc_minor, " bbc minor number");
