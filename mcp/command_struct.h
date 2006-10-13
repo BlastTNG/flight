@@ -230,6 +230,8 @@ struct CommandDataStruct {
 
     double g_primary;
     double g_secondary;
+    int g_stepsize;
+    int g_stepwait;
     int autofocus_vetoed;
 
     int act_vel;

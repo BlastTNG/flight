@@ -111,7 +111,7 @@ static void WritePrevStatus()
 }
 
 #ifndef USE_FIFO_CMD
-static int bc_setserial(char *input_tty)
+static int bc_setserial(const char *input_tty)
 {
   int fd;
   struct termios term;
@@ -1032,8 +1032,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.focus_mode = ACTBUS_FM_FOCUS;
       break;
     case mirror_gain:
-      CommandData.actbus.g_primary = ivalues[0];
-      CommandData.actbus.g_secondary = ivalues[1];
+      CommandData.actbus.g_primary = rvalues[0];
+      CommandData.actbus.g_secondary = rvalues[1];
+      CommandData.actbus.g_stepsize = ivalues[2];
+      CommandData.actbus.g_stepwait = ivalues[3];
       break;
     case actuator_servo:
       CommandData.actbus.goal[0] = ivalues[0];
@@ -1568,6 +1570,7 @@ static int DataQSize(int index)
 }
 #endif
 
+#ifdef USE_FIFO_CMD
 void WatchFIFO ()
 {
   unsigned char buf[1];
@@ -1647,11 +1650,11 @@ void WatchFIFO ()
   }
 }
 
-#ifndef USE_FIFO_CMD
-static char *COMM[] = {"/dev/ttyS0", "/dev/ttyS4"};
-
+#else
 void WatchPort (void* parameter)
 {
+  const char *COMM[] = {"/dev/ttyS0", "/dev/ttyS4"};
+
   unsigned char buf;
   unsigned short *indatadumper;
   unsigned char indata[20];

@@ -41,7 +41,7 @@
 #define ACTBUS_CHATTER
 static int __inhibit_chatter = 0;
 
-#ifdef BOLOTEST
+#ifdef USE_FIFOCMD
 #  define ACT_BUS "/dev/ttyS0"
 #else
 #  define ACT_BUS "/dev/ttyS7"
@@ -207,6 +207,7 @@ static inline void ReleaseBus(int who)
   }
 }
 
+#ifdef USE_XY_STAGE
 static inline void UnderrideBus(int who)
 {
   if (bus_underride != who)
@@ -214,15 +215,7 @@ static inline void UnderrideBus(int who)
   bus_underride = who;
   ReleaseBus(-2);
 }
-
-static inline void RemoveUnderride(void)
-{
-  int i = bus_underride;
-
-  bprintf(info, "ActBus: Bus underride for %s disabled.\n", name[i]);
-  bus_underride = -1;
-  ReleaseBus(i);
-}
+#endif
 
 static char hex_buffer[1000];
 static const char* HexDump(const unsigned char* buffer, int len)
