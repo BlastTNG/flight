@@ -17,7 +17,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 134        /* total number of single word cmds */
+#define N_SCOMMANDS 135        /* total number of single word cmds */
 #define N_MCOMMANDS 91         /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
@@ -95,7 +95,7 @@ enum singleCommand {
   repoll,           biascmd_inh,        biascmd_ena,      autofocus_allow,
   isc_use_pyramid,  isc_no_pyramid,     osc_use_pyramid,  osc_no_pyramid,
   autofocus_veto,   icc_halt,           nicc_halt,        actbus_on,
-  actbus_off,       actuator_stop
+  actbus_off,       actuator_stop,      autofocus_ignore
 };
 
 struct scom {

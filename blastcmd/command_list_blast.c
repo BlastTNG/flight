@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.40 $";
+const char *command_list_serial = "$Revision: 3.41 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance && Cooling","Bias",
@@ -171,6 +171,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(unlock), "unlock the inner frame", GR_LOCK},
   {COMMAND(lock_off), "turn off the lock motor", GR_LOCK},
   {COMMAND(repoll), "force repoll of the actuator bus", GR_LOCK | GR_ACT},
+  {COMMAND(autofocus_ignore), "ignore the secondary actuator system temperature"
+    " correction mode", GR_ACT},
   {COMMAND(autofocus_veto), "veto the secondary actuator system temperature"
     " correction mode", GR_ACT},
   {COMMAND(autofocus_allow), "allow the secondary actuator system temperature"

@@ -956,11 +956,13 @@ void StoreActBus(void)
   static struct NiosStruct* actPosAddr[3];
   static struct NiosStruct* actEncAddr[3];
 
-  static struct NiosStruct* gTPrimAddr;
-  static struct NiosStruct* gTSecAddr;
+  static struct NiosStruct* tcGPrimAddr;
+  static struct NiosStruct* tcGSecAddr;
+  static struct NiosStruct* tcStepAddr;
+  static struct NiosStruct* tcWaitAddr;
+  static struct NiosStruct* tcModeAddr;
   static struct NiosStruct* secGoalAddr;
   static struct NiosStruct* secFocusAddr;
-  static struct NiosStruct* focusVetoAddr;
 
 #ifdef USE_XY_STAGE
   static struct NiosStruct* stageXAddr;
@@ -994,11 +996,13 @@ void StoreActBus(void)
       actEncAddr[i] = GetActNiosAddr(i, "enc");
     }
 
-    gTPrimAddr = GetNiosAddr("g_t_prim");
-    gTSecAddr = GetNiosAddr("g_t_sec");
+    tcGPrimAddr = GetNiosAddr("tc_g_prim");
+    tcGSecAddr = GetNiosAddr("tc_g_sec");
+    tcGSecAddr = GetNiosAddr("tc_step");
+    tcGSecAddr = GetNiosAddr("tc_wait");
+    tcGSecAddr = GetNiosAddr("tc_mode");
     secGoalAddr = GetNiosAddr("sec_goal");
     secFocusAddr = GetNiosAddr("sec_focus");
-    focusVetoAddr = GetNiosAddr("focus_veto");
 
     actVelAddr = GetNiosAddr("act_vel");
     actAccAddr = GetNiosAddr("act_acc");
@@ -1052,9 +1056,11 @@ void StoreActBus(void)
   WriteData(lockMoveIAddr, CommandData.actbus.lock_move_i, NIOS_QUEUE);
   WriteData(lockHoldIAddr, CommandData.actbus.lock_hold_i, NIOS_QUEUE);
 
-  WriteData(gTPrimAddr, CommandData.actbus.g_primary, NIOS_QUEUE);
-  WriteData(gTSecAddr, CommandData.actbus.g_secondary, NIOS_QUEUE);
-  WriteData(focusVetoAddr, CommandData.actbus.autofocus_vetoed, NIOS_QUEUE);
+  WriteData(tcGPrimAddr, CommandData.actbus.g_primary, NIOS_QUEUE);
+  WriteData(tcGSecAddr, CommandData.actbus.g_secondary, NIOS_QUEUE);
+  WriteData(tcModeAddr, CommandData.actbus.tc_mode, NIOS_QUEUE);
+  WriteData(tcStepAddr, CommandData.actbus.tc_step, NIOS_QUEUE);
+  WriteData(tcWaitAddr, CommandData.actbus.tc_wait, NIOS_QUEUE);
   WriteData(secGoalAddr, CommandData.actbus.focus, NIOS_QUEUE);
 
 #ifdef USE_XY_STAGE

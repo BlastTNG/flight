@@ -576,11 +576,14 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case actuator_stop:
       CommandData.actbus.focus_mode = ACTBUS_FM_PANIC;
       /* fallthrough */
+    case autofocus_ignore:
+      CommandData.actbus.tc_mode = TC_MODE_IGNORED;
+      break;
     case autofocus_veto:
-      CommandData.actbus.autofocus_vetoed = 1;
+      CommandData.actbus.tc_mode = TC_MODE_VETOED;
       break;
     case autofocus_allow:
-      CommandData.actbus.autofocus_vetoed = 0;
+      CommandData.actbus.tc_mode = TC_MODE_ENABLED;
       break;
 
 #ifndef BOLOTEST
@@ -1034,8 +1037,8 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case mirror_gain:
       CommandData.actbus.g_primary = rvalues[0];
       CommandData.actbus.g_secondary = rvalues[1];
-      CommandData.actbus.g_stepsize = ivalues[2];
-      CommandData.actbus.g_stepwait = ivalues[3];
+      CommandData.actbus.tc_step = ivalues[2];
+      CommandData.actbus.tc_wait = ivalues[3];
       break;
     case actuator_servo:
       CommandData.actbus.goal[0] = ivalues[0];
@@ -2084,10 +2087,12 @@ void InitCommandData()
   CommandData.Bias.bias2 = 25;
   CommandData.Bias.bias3 = 25;
 
-  CommandData.actbus.autofocus_vetoed = 0;
+  CommandData.actbus.tc_mode = TC_MODE_ENABLED;
+  CommandData.actbus.tc_step = 100; /* microns */
+  CommandData.actbus.tc_wait = 600; /* seconds */
+  CommandData.actbus.g_primary = 50.23; /* um/deg */
+  CommandData.actbus.g_secondary = 13.85; /* um/deg */
   CommandData.actbus.focus = 0;
-  CommandData.actbus.g_primary = 0;
-  CommandData.actbus.g_secondary = 0;
 
   CommandData.actbus.act_vel = 2000;
   CommandData.actbus.act_acc = 1;

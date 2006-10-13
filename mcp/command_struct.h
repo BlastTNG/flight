@@ -68,6 +68,10 @@ struct GainStruct {
 #define ACTBUS_FM_OFFSET 3
 #define ACTBUS_FM_PANIC  4
 
+#define TC_MODE_ENABLED 0
+#define TC_MODE_IGNORED 1
+#define TC_MODE_VETOED  2
+
 #define XYSTAGE_PANIC  0
 #define XYSTAGE_GOTO   1
 #define XYSTAGE_JUMP   2
@@ -222,28 +226,33 @@ struct CommandDataStruct {
 
   struct {
     int off;
+    int force_repoll;
 
+    /* arbitrary command */
     int cindex;
     int caddr[3];
     char command[3][CMD_STRING_LEN];
-    int force_repoll;
 
+    /* thermal control */
     double g_primary;
     double g_secondary;
-    int g_stepsize;
-    int g_stepwait;
-    int autofocus_vetoed;
+    int tc_step;
+    int tc_wait;
+    int tc_mode;
 
+    /* actuator control */
     int act_vel;
     int act_acc;
     int act_hold_i;
     int act_move_i;
 
+    /* low-level actuator servo */
     int focus_mode;
     int goal[3];
     int offset[3];
     int focus;
 
+    /* lock control */
     int lock_vel;
     int lock_acc;
     int lock_hold_i;
