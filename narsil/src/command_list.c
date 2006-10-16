@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.41 $";
+const char *command_list_serial = "$Revision: 3.42 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance && Cooling","Bias",
@@ -171,13 +171,12 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(unlock), "unlock the inner frame", GR_LOCK},
   {COMMAND(lock_off), "turn off the lock motor", GR_LOCK},
   {COMMAND(repoll), "force repoll of the actuator bus", GR_LOCK | GR_ACT},
-  {COMMAND(autofocus_ignore), "ignore the secondary actuator system temperature"
-    " correction mode", GR_ACT},
   {COMMAND(autofocus_veto), "veto the secondary actuator system temperature"
     " correction mode", GR_ACT},
   {COMMAND(autofocus_allow), "allow the secondary actuator system temperature"
     " correction mode", GR_ACT},
   {COMMAND(actuator_stop), "stop all secondary actuators immediately", GR_ACT},
+  {COMMAND(in_focus), "the telescope is in focus now, record position", GR_ACT},
 
   {COMMAND(isc_abort), "abort current solution attempt", GR_ISC_MODE},
   {COMMAND(isc_auto_focus), "autofocus camera", GR_ISC_MODE},
@@ -398,7 +397,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(focus), "servo the secondary mirror to absolute position", GR_ACT, 1,
+  {COMMAND(set_focus), "servo the secondary mirror to absolute position",
+    GR_ACT, 1,
     {
       {"Position (counts)", -15000, 15000, 'i', "SEC_FOCUS"},
     }
@@ -408,8 +408,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"T. Primary Gain", 1, 1000, 'f', "G_T_PRIM"},
       {"T. Secondary Gain", 1, 1000, 'f', "G_T_SEC"},
-      {"Step Size (um)", 10, 1000, 'i', "G_T_STEP"},
-      {"Step Wait (s)",   0, 30000, 'i', "G_T_WAIT"},
+      {"Step Size (um)", 10, 1000, 'i', "TC_STEP"},
+      {"Step Wait (s)",   0, 30000, 'i', "TC_WAIT"},
     }
   },
 

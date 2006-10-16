@@ -61,6 +61,7 @@ double round(double x);
 
 /* in actuators.c */
 void StoreActBus(void);
+void SecondaryMirror(void);
 
 /* in auxiliary.c */
 void ChargeController(void);
@@ -1210,6 +1211,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     if (!mcp_initial_controls)
       SyncADC();
     WriteAux();
+    SecondaryMirror();
     CryoControl();
     PhaseControl();
 #ifndef BOLOTEST

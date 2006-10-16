@@ -231,9 +231,9 @@ struct ChannelStruct SlowChannels[] = {
   /* BIAS 0-4 are wide fast */
   {"t_sc_baf",     'r',  BIAS,  5,              I2T_M,           I2T_B, 'u'},
   {"t_in_heatx",   'r',  BIAS,  7,              I2T_M,           I2T_B, 'u'},
-  {"t_prim",       'r',  BIAS,  9,              I2T_M,           I2T_B, 'u'},
+  {"t_primary",    'r',  BIAS,  9,              I2T_M,           I2T_B, 'u'},
   {"t_cryo",       'r',  BIAS, 11,              I2T_M,           I2T_B, 'u'},
-  {"t_cryo_valve", 'r',  BIAS, 13,              I2T_M,           I2T_B, 'u'},
+  {"t_secondary",  'r',  BIAS, 13,              I2T_M,           I2T_B, 'u'},
   {"t_bal_bot",    'r',  BIAS, 15,              I2T_M,           I2T_B, 'u'},
   {"t_if_tpb",     'r',  BIAS, 17,              I2T_M,           I2T_B, 'u'},
   /* BIAS 18-19 is wide fast */
@@ -605,6 +605,16 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP6 30-33 are wide */
   {"lock_hold_i",  'w', LOOP6, 34,                1.0,             0.0, 'u'},
   {"lock_vel",     'w', LOOP6, 35,                1.0,             0.0, 'u'},
+  {"tc_g_prim",    'w', LOOP6, 36,               0.01,             0.0, 's'},
+  {"tc_g_sec",     'w', LOOP6, 37,               0.01,             0.0, 's'},
+  {"tc_step",      'w', LOOP6, 38,                1.0,             0.0, 'u'},
+  {"tc_wait",      'w', LOOP6, 39,                1.0,             0.0, 'u'},
+  {"tc_mode",      'w', LOOP6, 40,                1.0,             0.0, 'u'},
+  {"sf_correction",'w', LOOP6, 41,                1.0,             0.0, 's'},
+  {"sf_age",       'w', LOOP6, 42,                1.0,             0.0, 'u'},
+  {"sf_position",  'w', LOOP6, 43,                1.0,             0.0, 's'},
+  {"sf_t_prim",    'w', LOOP6, 44,               0.01,             0.0, 's'},
+  {"sf_t_sec",     'w', LOOP6, 45,               0.01,             0.0, 's'},
   END_OF_CHANNELS
 };
 

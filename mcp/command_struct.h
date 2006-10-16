@@ -66,11 +66,13 @@ struct GainStruct {
 #define ACTBUS_FM_SERVO  1
 #define ACTBUS_FM_FOCUS  2
 #define ACTBUS_FM_OFFSET 3
-#define ACTBUS_FM_PANIC  4
+#define ACTBUS_FM_THERMO 4
+#define ACTBUS_FM_NOW    5
+#define ACTBUS_FM_PANIC  6
 
-#define TC_MODE_ENABLED 0
-#define TC_MODE_IGNORED 1
-#define TC_MODE_VETOED  2
+#define TC_MODE_ENABLED  0
+#define TC_MODE_AUTOVETO 1
+#define TC_MODE_VETOED   2
 
 #define XYSTAGE_PANIC  0
 #define XYSTAGE_GOTO   1
@@ -239,6 +241,11 @@ struct CommandDataStruct {
     int tc_step;
     int tc_wait;
     int tc_mode;
+    double sf_t_primary;
+    double sf_t_secondary;
+    int sf_position;
+    int sf_time;
+    int sf_in_focus;
 
     /* actuator control */
     int act_vel;

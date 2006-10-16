@@ -41,7 +41,7 @@
 #define ACTBUS_CHATTER
 static int __inhibit_chatter = 0;
 
-#ifdef USE_FIFOCMD
+#ifdef USE_FIFO_CMD
 #  define ACT_BUS "/dev/ttyS0"
 #else
 #  define ACT_BUS "/dev/ttyS7"
@@ -143,13 +143,17 @@ static struct stage_struct {
 static int bus_seized = -1;
 static int bus_underride = -1;
 
+/* Secondary focus crap */
+static double focus = -ACTENC_OFFSET; /* set in ab thread, read in fc thread */
+static double correction = 0;         /* set in fc thread, read in ab thread */
+
 static int act_setserial(char *input_tty)
 {
   int fd;
   struct termios term;
 
   if ((fd = open(input_tty, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0)
-    berror(tfatal, "ActBus: Unable to open serial port");
+    berror(tfatal, "ActBus: Unable to open serial port (%s)", input_tty);
 
   if (tcgetattr(fd, &term))
     berror(tfatal, "ActBus: Unable to get serial device attributes");
@@ -714,8 +718,7 @@ static void SetNewFocus(void)
 {
   char buffer[1000];
   int i, j;
-  int delta = CommandData.actbus.focus - ((act_data[0].enc +
-        act_data[1].enc + act_data[2].enc) / 3 - ACTENC_OFFSET);
+  int delta = CommandData.actbus.focus - focus;
 
   if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
     return;
@@ -750,6 +753,112 @@ static void SetNewFocus(void)
   }
 }
 
+static double CalibrateAD590(int counts)
+{
+  double t = I2T_M * counts + I2T_B + 273.15;
+
+  /* if t < -73C or t > 67C, assume AD590 is broken */
+  if (t < 200)
+    t = -1;
+  else if (t > 340)
+    t = -2;
+  
+  return t;
+}
+
+static int ThermalCompensation(void)
+{
+  focus = (act_data[0].enc + act_data[1].enc + act_data[2].enc) / 3
+    - ACTENC_OFFSET;
+  
+  /* Do nothing if vetoed or autovetoed */
+  if (CommandData.actbus.tc_mode != TC_MODE_ENABLED)
+    return ACTBUS_FM_SLEEP;
+
+  /* Do nothing if we haven't timed out */
+  if (CommandData.actbus.sf_time < CommandData.actbus.tc_wait)
+    return ACTBUS_FM_SLEEP;
+
+  /* Do nothing if the offset is below the threshold */
+  if (correction < CommandData.actbus.tc_step)
+    return ACTBUS_FM_SLEEP;
+
+  /* Do something! */
+  CommandData.actbus.focus = focus + correction; 
+
+  return ACTBUS_FM_THERMO;
+}
+
+/* This function is called by the frame control thread */
+void SecondaryMirror(void)
+{
+  static int firsttime = 1;
+
+  static struct NiosStruct* sfCorrectionAddr;
+  static struct NiosStruct* sfAgeAddr;
+  static struct NiosStruct* sfPositionAddr;
+  static struct NiosStruct* sfTPrimAddr;
+  static struct NiosStruct* sfTSecAddr;
+
+  static struct BiPhaseStruct* tPrimaryAddr;
+  static struct BiPhaseStruct* tSecondaryAddr;
+  double t_primary, t_secondary;
+
+  if (firsttime) {
+    firsttime = 0;
+    tPrimaryAddr = GetBiPhaseAddr("t_primary");
+    tSecondaryAddr = GetBiPhaseAddr("t_secondary");
+    sfCorrectionAddr = GetNiosAddr("sf_correction");
+    sfAgeAddr = GetNiosAddr("sf_age");
+    sfPositionAddr = GetNiosAddr("sf_position");
+    sfTPrimAddr = GetNiosAddr("sf_t_prim");
+    sfTSecAddr = GetNiosAddr("sf_t_sec");
+  }
+
+  /* Do nothing if we haven't heard from the actuators */
+  if (focus < -ACTENC_OFFSET / 2)
+    return;
+
+  t_primary = CalibrateAD590(
+      slow_data[tPrimaryAddr->index][tPrimaryAddr->channel]
+      );
+  t_secondary = CalibrateAD590(
+      slow_data[tSecondaryAddr->index][tSecondaryAddr->channel]
+      );
+
+  if (CommandData.actbus.tc_mode != TC_MODE_VETOED && (t_primary < 0
+        || t_secondary < 0)) {
+    if (CommandData.actbus.tc_mode == TC_MODE_ENABLED)
+      bputs(info, "Thermal Compensation: Autoveto raised.");
+    CommandData.actbus.tc_mode = TC_MODE_AUTOVETO;
+  } else if (CommandData.actbus.tc_mode == TC_MODE_AUTOVETO) {
+    bputs(info, "Thermal Compensation: Autoveto lowered.");
+    CommandData.actbus.tc_mode = TC_MODE_ENABLED;
+  }
+
+  if (CommandData.actbus.sf_in_focus) {
+    CommandData.actbus.sf_position = focus;
+    CommandData.actbus.sf_t_primary = t_primary;
+    CommandData.actbus.sf_t_secondary = t_secondary;
+    CommandData.actbus.sf_time = 0;
+    CommandData.actbus.sf_in_focus = 0;
+    correction = 0;
+  } else {
+    correction = CommandData.actbus.g_primary * (t_primary -
+        CommandData.actbus.sf_t_primary) - CommandData.actbus.g_secondary *
+      (t_secondary - CommandData.actbus.sf_t_secondary) + (focus -
+          CommandData.actbus.sf_position);
+    CommandData.actbus.sf_time++;
+  }
+
+  WriteData(sfCorrectionAddr, correction, NIOS_QUEUE);
+  WriteData(sfAgeAddr, CommandData.actbus.sf_time, NIOS_QUEUE);
+  WriteData(sfPositionAddr, CommandData.actbus.sf_position, NIOS_QUEUE);
+  WriteData(sfTPrimAddr, CommandData.actbus.sf_t_primary, NIOS_QUEUE);
+  WriteData(sfTSecAddr, CommandData.actbus.sf_t_secondary, NIOS_QUEUE);
+}
+
+
 static void DoActuators(void)
 {
   switch(CommandData.actbus.focus_mode) {
@@ -758,6 +867,7 @@ static void DoActuators(void)
       BusComm(ALL_ACT, "T", 0, __inhibit_chatter);
       CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
       break;
+    case ACTBUS_FM_THERMO:
     case ACTBUS_FM_FOCUS:
       SetNewFocus();
       /* fallthrough */
@@ -773,7 +883,7 @@ static void DoActuators(void)
       bputs(err, "ActBus: Unknown Focus Mode (%i), sleeping");
   }
   if (CommandData.actbus.focus_mode != ACTBUS_FM_PANIC)
-    CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
+    CommandData.actbus.focus_mode = ThermalCompensation();
 }
 
 static inline char* LockCommand(char* buffer, const char* cmd)
@@ -998,9 +1108,9 @@ void StoreActBus(void)
 
     tcGPrimAddr = GetNiosAddr("tc_g_prim");
     tcGSecAddr = GetNiosAddr("tc_g_sec");
-    tcGSecAddr = GetNiosAddr("tc_step");
-    tcGSecAddr = GetNiosAddr("tc_wait");
-    tcGSecAddr = GetNiosAddr("tc_mode");
+    tcStepAddr = GetNiosAddr("tc_step");
+    tcWaitAddr = GetNiosAddr("tc_wait");
+    tcModeAddr = GetNiosAddr("tc_mode");
     secGoalAddr = GetNiosAddr("sec_goal");
     secFocusAddr = GetNiosAddr("sec_focus");
 
@@ -1146,6 +1256,9 @@ void ActuatorBus(void)
 
     for (i = 0; i < 3; ++i)
       ReadActuator(i, 1);
+
+    focus = (act_data[0].enc + act_data[1].enc + act_data[2].enc) / 3
+      - ACTENC_OFFSET;
 
     usleep(10000);
   }
