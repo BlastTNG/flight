@@ -1039,7 +1039,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.g_primary = rvalues[0];
       CommandData.actbus.g_secondary = rvalues[1];
       CommandData.actbus.tc_step = ivalues[2];
-      CommandData.actbus.tc_wait = ivalues[3] * 5;
+      CommandData.actbus.tc_wait = ivalues[3] * 300; /* convert min->5Hz */
       break;
     case actuator_servo:
       CommandData.actbus.goal[0] = ivalues[0];
