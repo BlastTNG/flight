@@ -745,7 +745,7 @@ int main(int argc, char *argv[])
   pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
   pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
 
-//  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
+  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
 
   pthread_create(&tdrss_id, NULL, (void*)&TDRSSWriter, NULL);
