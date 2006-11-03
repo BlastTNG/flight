@@ -43,7 +43,7 @@ extern unsigned int tdrss_index;
 #ifdef BOLOTEST
 #  define USE_FIFO_CMD
 #endif
-#define USE_FIFO_CMD
+#undef USE_FIFO_CMD
 
 #ifdef DEBUG
 #warning "Debugging set."
