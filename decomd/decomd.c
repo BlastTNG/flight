@@ -92,6 +92,10 @@ unsigned short polarity = 1;
 int du = 0;
 unsigned long frame_counter = 0;
 
+#ifdef DEBUG
+FILE* dump = NULL;
+#endif
+
 void ReadDecom (void)
 {
   unsigned short crc_ok = 1;
@@ -102,7 +106,7 @@ void ReadDecom (void)
   for (;;) {
     while ((read(decom, &buf, sizeof(unsigned short))) > 0) {
 #ifdef DEBUG
-      printf("%04x ", buf);
+      fwrite(&buf, sizeof(unsigned short), 1, dump);
 #endif
       read_data = 1;
       FrameBuf[i_word] = buf;
@@ -265,6 +269,8 @@ int main(void) {
 
 #ifdef DEBUG
   buos_use_stdio();
+
+  dump = fopen("/data/etc/decomd.dump", "wb");
 #else
   int pid;
   FILE* stream;
