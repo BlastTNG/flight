@@ -216,6 +216,9 @@ static int decom_ioctl(struct inode *inode, struct file *filp,
     case DECOM_IOC_FORCE_UNLOCK:
       writel(DECOM_COMREG_FORCE_UNLOCK, decom_drv.mem_base + DECOM_ADD_COMREG);
       break;
+    case DECOM_IOC_FIONREAD:
+      ret = atomic_read(&decom_wfifo.n);
+      break;
     default:
       break;
   }

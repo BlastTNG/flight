@@ -26,6 +26,7 @@
 #define DECOM_IOC_LOCKED        _IO(BBCPCI_IOC_MAGIC, 4)
 #define DECOM_IOC_NUM_UNLOCKED  _IO(BBCPCI_IOC_MAGIC, 5)
 #define DECOM_IOC_FORCE_UNLOCK  _IO(BBCPCI_IOC_MAGIC, 6)
+#define DECOM_IOC_FIONREAD      _IO(BBCPCI_IOC_MAGIC, 7)
 
 #define DECOM_SIZE_UINT           sizeof(unsigned int)
 
