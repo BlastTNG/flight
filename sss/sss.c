@@ -180,6 +180,7 @@ void calculate_az(unsigned * sensor_uint, sss_packet_data * dat)
 {
   double sensors[N_FAST_CHAN];
   double x;
+  double max_adj;
   double ave;
   double minimum;
   double offset;
@@ -248,6 +249,33 @@ void calculate_az(unsigned * sensor_uint, sss_packet_data * dat)
       }
     }
   }
+
+  //Calculate max of adjacent module to 'active' 3 and use that as another check.
+  //We give a different 'bunk' snr for each case as a debugging tool.  
+  max_adj = 0;
+  for (i = 0; i < N_FAST_CHAN; i++)
+  {
+    if (i == (sens_max + 12 + 2) % 12)
+    {
+      if (sensors[i] > max_adj) max_adj = sensors[i];
+    } 
+    else if (i == (sens_max + 12 - 2) % 12)
+    {
+      if (sensors[i] > max_adj) max_adj = sensors[i];
+    }
+  }
+  for (i = 0; i < N_FAST_CHAN; i++)
+  {
+    if (i != sens_max && i != (sens_max + 12 + 1) % 12 && i != (sens_max + 12 - 1) % 12
+        && i != (sens_max + 12 + 2) % 12 && i != (sens_max + 12 - 2) % 12)
+    {
+      if (sensors[i] > max_adj + BUNK_FUDGE_FACTOR)
+      {
+        dat->snr = 0.1;
+      }
+    }
+  }
+
 
   offset = module_offsets[sens_max];
 
