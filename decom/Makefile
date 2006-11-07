@@ -32,6 +32,7 @@ clean:
 	rm -f .decom* *.ko *.o test_decom decom_pci.mod.c
 
 install: decom_pci.ko
+	[ -e /dev/decompci ] || mknod /dev/decompci c 251 0
 	install -m 644 decom_pci.h /usr/local/include/decom_pci.h
 	install decom_pci.ko -m 644 /usr/local/lib/decom_pci.ko
 
