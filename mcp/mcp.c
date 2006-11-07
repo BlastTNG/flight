@@ -52,7 +52,8 @@
 #define BBC_EOF      (0xffff)
 #define BBC_BAD_DATA (0xfffffff0)
 
-#define STARTUP_VETO_LENGTH 250
+#define STARTUP_VETO_LENGTH 250 /* "frames" */
+#define BI0_VETO_LENGTH 5 /* seconds */
 
 #ifdef BOLOTEST
 #  define FRAME_MARGIN (-12)
@@ -60,7 +61,7 @@
 #  define FRAME_MARGIN (-2)
 #endif
 
-#define BI0_FRAME_BUFLEN (40)
+#define BI0_FRAME_BUFLEN (400)
 /* Define global variables */
 int bbc_fp = -1;
 unsigned int debug = 0;
@@ -110,6 +111,8 @@ static struct {
 
 unsigned short *tdrss_data[3];
 unsigned int tdrss_index = 0;
+time_t biphase_timer;
+int biphase_is_on = 0;
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -459,7 +462,7 @@ static void WatchDog (void)
   }
 }
 
-static void write_to_biphase(unsigned short *RxFrame)
+static void write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
 {
   int i;
   static unsigned short nothing[BI0_FRAME_SIZE];
@@ -479,11 +482,31 @@ static void write_to_biphase(unsigned short *RxFrame)
   if (bi0_fp >= 0 && InCharge) {
     RxFrame[0] = sync;
     sync = ~sync;
-    if (write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short)) < 0)
-      berror(err, "BiPhase Writer: bi-phase write (RxFrame) failed");
-    if (write(bi0_fp, nothing,
-          (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short)) < 0)
-      berror(err, "BiPhase Writer: bi-phase write (padding) failed");
+
+//    unsigned short buffer[BI0_FRAME_SIZE];
+//    static unsigned int fc = 0;
+//    for (i = 0; i < BI0_FRAME_SIZE; ++i) {
+//      buffer[i] = i;
+//    }
+//    *(unsigned int*)(&buffer[1]) = fc++;
+//    buffer[0] = RxFrame[0];
+
+//    i = write(bi0_fp, buffer, BI0_FRAME_SIZE * sizeof(unsigned short));
+    i = write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short));
+    if (i < 0)
+      berror(err, "BiPhase Writer: bi-phase write for RxFrame failed");
+    else if (i != BiPhaseFrameWords * sizeof(unsigned short))
+      bprintf(err, "Short write to bi-phase for RxFrame: %i of %i (%i/%i)", i,
+          BiPhaseFrameWords * sizeof(unsigned short), i_in, i_out);
+
+    i = write(bi0_fp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
+        sizeof(unsigned short));
+    if (i < 0)
+      berror(err, "BiPhase Writer: bi-phase write for padding failed");
+    else if (i != (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short))
+      bprintf(err, "Short write to bi-phase for padding: %i of %i (%i/%i)", i,
+          (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short), i_in,
+          i_out);
     CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
   }
 }
@@ -531,6 +554,11 @@ static void BiPhaseWriter(void)
 
   bputs(startup, "Biphase Writer: Startup\n");
 
+  while (!biphase_is_on)
+    usleep(10000);
+
+  bputs(info, "BiPhase Writer: Veto has ended.  Here we go.\n");
+
   while (1) {
     i_in = bi0_buffer.i_in;
     i_out = bi0_buffer.i_out;
@@ -547,7 +575,7 @@ static void BiPhaseWriter(void)
     } else
       while (i_out != i_in) {
         i_out = (i_out + 1) % BI0_FRAME_BUFLEN;
-        write_to_biphase(bi0_buffer.framelist[i_out]);
+        write_to_biphase(bi0_buffer.framelist[i_out], i_in, i_out);
         if (Death > 0)
           Death = 0;
       }
@@ -654,6 +682,8 @@ int main(int argc, char *argv[])
     berror(err, "System: Can't open log file");
   else
     fputs("----- LOG RESTART -----\n", logfile);
+
+  biphase_timer = mcp_systime(NULL) + BI0_VETO_LENGTH;
 
   /* register the output function */
   buos_use_func(mputs);
@@ -821,7 +851,11 @@ int main(int argc, char *argv[])
            data right */
         pushDiskFrame(RxFrame);
 #ifndef BOLOTEST
-        PushBi0Buffer(RxFrame);
+        if (biphase_is_on)
+          PushBi0Buffer(RxFrame);
+        else if (biphase_timer < mcp_systime(NULL))
+          biphase_is_on = 1;
+
         FillSlowDL(RxFrame);
 #endif
         zero(RxFrame);

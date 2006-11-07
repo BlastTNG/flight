@@ -905,7 +905,7 @@ static void DoActuators(void)
 
 static inline char* LockCommand(char* buffer, const char* cmd)
 {
-  sprintf(buffer, "V%iL%im%ih%i%s", CommandData.actbus.lock_vel,
+  sprintf(buffer, "j256V%iL%im%ih%i%s", CommandData.actbus.lock_vel,
       CommandData.actbus.lock_acc, CommandData.actbus.lock_move_i,
       CommandData.actbus.lock_hold_i, cmd);
 
@@ -1013,7 +1013,8 @@ static void DoLock(void)
     switch (action) {
       case LA_STOP:
         bputs(info, "ActBus: Stopping lock motor.");
-        LockCommand(command, "T"); /* terminate all strings */
+//        LockCommand(command, "T"); /* terminate all strings */
+        strcpy(command, "T"); /* terminate all strings */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_OFF;
         break;
