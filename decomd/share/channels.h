@@ -42,10 +42,10 @@ extern "C" {
 
   /* offset of encoder.  Reset if encoder has been unmounted. */
   /* This is the elevation at which the encoder wraps around */
-#define ENC_ELEV_OFFSET 204.48
+#define ENC_ELEV_OFFSET 114.48
   /* to get proper wrapping in KST, the encoder elevation type should be
    * 'u' for 135 <= ENC_ELEV_OFFSET < 315 and 's' otherwise */
-#define ENC_ELEV_TYPE 'u'
+#define ENC_ELEV_TYPE 's'
 
   /* New Bolo calibrations per Jeff  2005-05-17 */
 #define LOCKIN_C2V (1.5704089784e-6)
