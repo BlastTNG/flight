@@ -360,6 +360,10 @@ MODULE_DESCRIPTION("decom_pci: a driver for the pci dcom card");
 MODULE_ALIAS_CHARDEV_MAJOR(DECOM_MAJOR);
 MODULE_ALIAS("/dev/decom_pci");
 
+#ifdef MODULE_PARM
 MODULE_PARM(decom_major, "i");
+#else
+module_param(decom_major, int, DECOM_MAJOR);
+#endif
 
 MODULE_PARM_DESC(decom_major, " decom major number");
