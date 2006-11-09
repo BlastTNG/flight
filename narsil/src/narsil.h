@@ -96,8 +96,6 @@ class MainForm : public QMainWindow
         WFlags fl = 0);
     ~MainForm();
 
-    QColorGroup *NColorGroup;
-    QColorGroup *NColorGroup2;
     QFrame *NTopFrame;
     QFrame *NBotFrame;
     QLabel *NCurFileCaption;
@@ -119,6 +117,11 @@ class MainForm : public QMainWindow
     QDialog *NSettingsWindow;
     QMultiLineEdit *NLog;
     QPushButton *NCloseSettingsWindow;
+
+    QWidget *centralWidget;
+    QVBoxLayout *theVLayout;
+    QHBoxLayout *theHLayout;
+    QStatusBar *theStatusBar;
 
     void TurnOn(void);
     void TurnOff(void);
@@ -156,8 +159,8 @@ class MainForm : public QMainWindow
     int dir;
     QPixmap *Images[4];
 
-  public slots:
-    void ChangeCommandList();
+    public slots:
+      void ChangeCommandList();
     void ChooseCommand();
     void Quit();
     void SendCommand();

@@ -21,7 +21,7 @@ bin_PROGRAMS = narsil
 narsil_SOURCES = ${narsil_s}
 narsil_LDADD = ${narsil_l}
 endif
-INCLUDES = -Wall -I$(top_srcdir)/include @QT_CXXFLAGS@
+INCLUDES = -g -Wall -I$(top_srcdir)/include @QT_CXXFLAGS@
 MOC = @MOC@
 
 moc_doubleentry.cpp: doubleentry.h

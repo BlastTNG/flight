@@ -942,10 +942,6 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name,
   QPoint point;
   int w1, w2, w3, h1, h2, h3;
   QString default_family = tfont.family();
-  QWidget *centralWidget;
-  QVBoxLayout *theVLayout;
-  QHBoxLayout *theHLayout;
-  QStatusBar *theStatusBar;
 
   centralWidget = new QWidget();
   theHLayout = new QHBoxLayout;
@@ -975,15 +971,6 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name,
   // no automatic spacers because with the dynamic properties of the program
   // (things popping in and out of existence as different commands are
   // chosen) things would mess up.  So the code ain't too pretty . . .
-  NColorGroup = new QColorGroup(QColor("black"), QColor("lightGray"),
-      QColor("white"), QColor(0x3f, 0x3f, 0x3f),
-      QColor("darkGray"), QColor("black"),
-      QColor("red"), QColor("white"), QColor("lightGray"));
-  NColorGroup->setColor(QColorGroup::Highlight, "blue");
-  NColorGroup->setColor(QColorGroup::HighlightedText, "white");
-  NColorGroup2 = new QColorGroup(*NColorGroup);
-  NColorGroup2->setColor(QColorGroup::ButtonText, "darkGray");
-
   NGroupsBox = new QButtonGroup(this, "NGroupsBox");
   NGroupsBox->setColumnLayout(0, Qt::Vertical);
   NGroupsBox->layout()->setSpacing(0);
@@ -1244,7 +1231,16 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name,
 
 MainForm::~MainForm()
 {
-  // no need to delete child widgets, Qt does it all for us
+  delete DataSource;
+  delete Images[3];
+  delete Images[2];
+  delete Images[1];
+  delete Images[0];
+
+  delete theVLayout;
+  delete theHLayout;
+  delete centralWidget;
+  delete theStatusBar;
 }
 
 
