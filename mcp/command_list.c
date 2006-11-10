@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.43 $";
+const char *command_list_serial = "$Revision: 3.44 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance && Cooling","Bias",
@@ -108,7 +108,8 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_CRYO_HEAT},
   {COMMAND(coldplate_on), "cold plate heater on", GR_CRYO_HEAT},
   {COMMAND(coldplate_off), "cold plate heater off", GR_CRYO_HEAT},
-  {COMMAND(auto_cycle), "activate helium fridge autocycle system", GR_CRYO_HEAT},
+  {COMMAND(auto_cycle), "activate helium fridge autocycle system",
+    GR_CRYO_HEAT},
   {COMMAND(fridge_cycle),
     "manually cycle helium fridge now, fridge autocycle on", GR_CRYO_HEAT},
 
@@ -419,6 +420,15 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Actuator Alpha", -15000, 15000, 'i', "act0_enc"},
       {"Actuator Beta",  -15000, 15000, 'i', "act1_enc"},
       {"Actuator Gamma", -15000, 15000, 'i', "act2_enc"}
+    }
+  },
+
+  {COMMAND(actuator_delta), "offset the actuators to from current position",
+    GR_ACT, 3,
+    {
+      {"Actuator Alpha", -1000, 1000, 'i', "0"},
+      {"Actuator Beta",  -1000, 1000, 'i', "0"},
+      {"Actuator Gamma", -1000, 1000, 'i', "0"}
     }
   },
 

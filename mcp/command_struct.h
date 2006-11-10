@@ -68,7 +68,8 @@ struct GainStruct {
 #define ACTBUS_FM_OFFSET 3
 #define ACTBUS_FM_THERMO 4
 #define ACTBUS_FM_NOW    5
-#define ACTBUS_FM_PANIC  6
+#define ACTBUS_FM_DELTA  6
+#define ACTBUS_FM_PANIC  7
 
 #define TC_MODE_ENABLED  0
 #define TC_MODE_AUTOVETO 1
@@ -256,6 +257,7 @@ struct CommandDataStruct {
     /* low-level actuator servo */
     int focus_mode;
     int goal[3];
+    int delta[3];
     int offset[3];
     int focus;
 

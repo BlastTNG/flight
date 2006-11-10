@@ -553,6 +553,16 @@ static void ServoActuators(int* goal)
   ReleaseBus(0);
 }
 
+static void DeltaActuators(void)
+{
+  int i, goal[3];
+  
+  for (i = 0; i < 3; ++i)
+    goal[i] = CommandData.actbus.delta[i] + act_data[i].enc - ACTENC_OFFSET;
+
+  ServoActuators(goal);
+}
+
 static int PollBus(int rescan)
 {
   int i, result;
@@ -883,6 +893,9 @@ static void DoActuators(void)
       bputs(warning, "ActBus: Actuator Panic");
       BusComm(ALL_ACT, "T", 0, __inhibit_chatter);
       CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
+      break;
+    case ACTBUS_FM_DELTA:
+      DeltaActuators();
       break;
     case ACTBUS_FM_THERMO:
     case ACTBUS_FM_FOCUS:

@@ -1047,6 +1047,12 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.goal[2] = ivalues[2];
       CommandData.actbus.focus_mode = ACTBUS_FM_SERVO;
       break;
+    case actuator_delta:
+      CommandData.actbus.delta[0] = ivalues[0];
+      CommandData.actbus.delta[1] = ivalues[1];
+      CommandData.actbus.delta[2] = ivalues[2];
+      CommandData.actbus.focus_mode = ACTBUS_FM_DELTA;
+      break;
     case actuator_vel:
       CommandData.actbus.act_vel = ivalues[0];
       CommandData.actbus.act_acc = ivalues[1];
