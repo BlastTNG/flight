@@ -50,6 +50,6 @@ extern unsigned int tdrss_index;
 
 /* Only ever define one of these */
 #undef USE_XY_STAGE
-#define USE_XY_THREAD
+#undef USE_XY_THREAD
 
 #endif
