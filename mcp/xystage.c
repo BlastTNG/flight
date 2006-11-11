@@ -47,7 +47,11 @@
 /* Define this symbol to have mcp log all actuator bus traffic */
 #undef ACTBUS_CHATTER
 
+#ifdef BOLOTEST
+#define ACT_BUS "/dev/ttyS0"
+#else
 #define ACT_BUS "/dev/ttyS1"
+#endif
 
 #define STAGEXNUM 0
 #define STAGEYNUM 1

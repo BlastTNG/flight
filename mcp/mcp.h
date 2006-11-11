@@ -43,7 +43,6 @@ extern unsigned int tdrss_index;
 #ifdef BOLOTEST
 #  define USE_FIFO_CMD
 #endif
-#undef USE_FIFO_CMD
 
 #ifdef DEBUG
 #warning "Debugging set."
@@ -51,6 +50,6 @@ extern unsigned int tdrss_index;
 
 /* Only ever define one of these */
 #undef USE_XY_STAGE
-#undef USE_XY_THREAD
+#define USE_XY_THREAD
 
 #endif

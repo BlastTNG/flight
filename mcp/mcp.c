@@ -663,6 +663,8 @@ int main(int argc, char *argv[])
   pthread_t dgps_id;
   pthread_t isc_id;
   pthread_t osc_id;
+#elif defined USE_XY_THREAD
+  pthread_t dgps_id;
 #endif
 
   if (argc == 1) {
@@ -766,12 +768,14 @@ int main(int argc, char *argv[])
 
   InitTxFrame(RxFrame);
 
-#ifndef BOLOTEST
 #ifdef USE_XY_THREAD
   pthread_create(&dgps_id, NULL, (void*)&StageBus, NULL);
 #else
+#ifndef BOLOTEST
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
 #endif
+#endif
+#ifndef BOLOTEST
   pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
   pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
 
