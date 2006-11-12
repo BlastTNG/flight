@@ -147,7 +147,7 @@ struct ChannelStruct SlowChannels[] = {
   {"p_pv",         'r',  ACS2, 15,          -0.015432,          507.81, 'u'},
 
   /* AD590 calibrations per Marco 2006-11 */
-  {"t_inframe_1",  'r',  ACS2, 17,              I2T_M,  I2T_B - 0.0000, 'u'},
+  {"t_inframe_1",  'r',  ACS2, 17,              I2T_M,  I2T_B - 2.5680, 'u'},
   {"t_inframe_2",  'r',  ACS2, 19,              I2T_M,  I2T_B + 0.9620, 'u'},
   {"t_inframe_3",  'r',  ACS2, 21,              I2T_M,  I2T_B + 1.5933, 'u'},
   {"t_inframe_4",  'r',  ACS2, 23,              I2T_M,  I2T_B - 0.3505, 'u'},
