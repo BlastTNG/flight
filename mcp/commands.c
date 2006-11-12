@@ -1945,7 +1945,7 @@ void InitCommandData()
   CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   CommandData.actbus.lock_goal = LS_DRIVE_OFF;
   CommandData.actbus.force_repoll = 0;
-  CommandData.actbus.off = 1;
+  CommandData.actbus.off = 0;
   CommandData.actbus.cindex = 0;
   CommandData.actbus.caddr[0] = 0;
   CommandData.actbus.caddr[1] = 0;

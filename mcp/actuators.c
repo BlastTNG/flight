@@ -1045,7 +1045,7 @@ static void DoLock(void)
         break;
       case LA_STEP:
         bputs(info, "ActBus: Stepping lock motor.");
-        LockCommand(command, "P50000R"); /* move away from the limit switch */
+        LockCommand(command, "P100000R"); /* move away from the limit switch */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_STP;
         break;
