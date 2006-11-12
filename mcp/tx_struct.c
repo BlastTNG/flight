@@ -147,10 +147,10 @@ struct ChannelStruct SlowChannels[] = {
   {"p_pv",         'r',  ACS2, 15,          -0.015432,          507.81, 'u'},
 
   /* AD590 calibrations per Marco 2006-11 */
-  {"t_inframe_1",  'r',  ACS2, 17,              I2T_M,  I2T_B - 2.5680, 'u'},
-  {"t_inframe_2",  'r',  ACS2, 19,              I2T_M,  I2T_B + 0.9620, 'u'},
-  {"t_inframe_3",  'r',  ACS2, 21,              I2T_M,  I2T_B + 1.5933, 'u'},
-  {"t_inframe_4",  'r',  ACS2, 23,              I2T_M,  I2T_B - 0.3505, 'u'},
+  {"t_inframe_1",  'r',  ACS2, 17,              I2T_M,  I2T_B + 3.4617, 'u'},
+  {"t_inframe_2",  'r',  ACS2, 19,              I2T_M,  I2T_B + 0.4942, 'u'},
+  {"t_inframe_3",  'r',  ACS2, 21,              I2T_M,  I2T_B - 2.0683, 'u'},
+  {"t_inframe_4",  'r',  ACS2, 23,              I2T_M,  I2T_B + 1.4630, 'u'},
 
   {"t_lock_motor", 'r',  ACS2, 25,              I2T_M,           I2T_B, 'u'},
   {"t_pv_ext",     'r',  ACS2, 27,              I2T_M,           I2T_B, 'u'},
@@ -235,7 +235,7 @@ struct ChannelStruct SlowChannels[] = {
   /* AD590 calibrations from Marco, Nov 2006 */
   {"t_primary_2",  'r',  BIAS,  5,              I2T_M,  I2T_B - 0.9067, 'u'},
   {"t_strut_1",    'r',  BIAS,  7,              I2T_M,  I2T_B - 1.3940, 'u'},
-  {"t_primary_1",  'r',  BIAS,  9,              I2T_M,  I2T_B - 0.0000, 'u'},
+  {"t_primary_1",  'r',  BIAS,  9,              I2T_M,  I2T_B - 2.1875, 'u'},
   {"t_secondary_1",'r',  BIAS, 11,              I2T_M,  I2T_B - 2.2380, 'u'},
   {"t_secondary_2",'r',  BIAS, 13,              I2T_M,  I2T_B - 0.2130, 'u'},
   {"t_strut_2",    'r',  BIAS, 15,              I2T_M,  I2T_B - 1.4440, 'u'},
