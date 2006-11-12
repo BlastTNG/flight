@@ -147,10 +147,10 @@ struct ChannelStruct SlowChannels[] = {
   {"p_pv",         'r',  ACS2, 15,          -0.015432,          507.81, 'u'},
 
   /* AD590 calibrations per Marco 2006-11 */
-  {"t_inframe_1",  'r',  ACS2, 17,              I2T_M,  I2T_B + 3.4617, 'u'},
-  {"t_inframe_2",  'r',  ACS2, 19,              I2T_M,  I2T_B + 0.4942, 'u'},
-  {"t_inframe_3",  'r',  ACS2, 21,              I2T_M,  I2T_B - 2.0683, 'u'},
-  {"t_inframe_4",  'r',  ACS2, 23,              I2T_M,  I2T_B + 1.4630, 'u'},
+  {"t_inframe_1",  'r',  ACS2, 17,              I2T_M,  I2T_B + 0.8750, 'u'},
+  {"t_inframe_2",  'r',  ACS2, 19,              I2T_M,  I2T_B + 1.4700, 'u'},
+  {"t_inframe_3",  'r',  ACS2, 21,              I2T_M,  I2T_B - 0.3300, 'u'},
+  {"t_inframe_4",  'r',  ACS2, 23,              I2T_M,  I2T_B + 1.2000, 'u'},
 
   {"t_lock_motor", 'r',  ACS2, 25,              I2T_M,           I2T_B, 'u'},
   {"t_pv_ext",     'r',  ACS2, 27,              I2T_M,           I2T_B, 'u'},
