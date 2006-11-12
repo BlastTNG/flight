@@ -821,8 +821,8 @@ void SecondaryMirror(void)
 
   if (firsttime) {
     firsttime = 0;
-    tPrimaryAddr = GetBiPhaseAddr("t_primary");
-    tSecondaryAddr = GetBiPhaseAddr("t_secondary");
+    tPrimaryAddr = GetBiPhaseAddr("t_primary_1");
+    tSecondaryAddr = GetBiPhaseAddr("t_secondary_1");
     sfCorrectionAddr = GetNiosAddr("sf_correction");
     sfAgeAddr = GetNiosAddr("sf_age");
     sfPositionAddr = GetNiosAddr("sf_position");
