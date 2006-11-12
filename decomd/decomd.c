@@ -90,6 +90,7 @@ double fs_bad = 0;
 double dq_bad = 0;
 unsigned short polarity = 1;
 int du = 0;
+int wfifo_size = 0;
 unsigned long frame_counter = 0;
 
 #ifdef DEBUG
@@ -113,6 +114,7 @@ void ReadDecom (void)
       AntiFrameBuf[i_word] = ~buf;
       if (i_word % BI0_FRAME_SIZE == 0) { /* begining of frame */
         du = ioctl(decom, DECOM_IOC_NUM_UNLOCKED);
+        wfifo_size = ioctl(decom, DECOM_IOC_FIONREAD);
         if ((buf != FRAME_SYNC_WORD) && ((~buf & 0xffff) != FRAME_SYNC_WORD)) {
           fs_bad = fs_bad * FS_FILTER + (1.0 - FS_FILTER);
           status = 0;
@@ -372,11 +374,13 @@ int main(void) {
 
     memset(buf, 0, 209);
 #ifdef DEBUG
-    printf("%1i %1i %3i %5.3f %5.3f %Lu %lu %s\n", status + system_idled
-        * 0x4, polarity, du, fs_bad, dq_bad, disk_free, frame_counter, ptr + 1);
+    printf("%1i %1i %3i %5.3f %5.3f %Lu %lu %s %i\n", status + system_idled *
+        0x4, polarity, du, fs_bad, dq_bad, disk_free, frame_counter, ptr + 1,
+        wfifo_size);
 #endif
-    sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu %lu %s\n", status + system_idled
-        * 0x4, polarity, du, fs_bad, dq_bad, disk_free, frame_counter, ptr + 1);
+    sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu %lu %s %i\n", status
+        + system_idled * 0x4, polarity, du, fs_bad, dq_bad, disk_free,
+        frame_counter, ptr + 1, wfifo_size);
 
     if (n == -1 && errno == EINTR)
       continue;
