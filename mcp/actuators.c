@@ -814,15 +814,21 @@ void SecondaryMirror(void)
   static struct NiosStruct* tpAddr;
   static struct NiosStruct* tsAddr;
 
-  static struct BiPhaseStruct* tPrimaryAddr;
-  static struct BiPhaseStruct* tSecondaryAddr;
+  static struct BiPhaseStruct* tPrimary1Addr;
+  static struct BiPhaseStruct* tSecondary1Addr;
+  static struct BiPhaseStruct* tPrimary2Addr;
+  static struct BiPhaseStruct* tSecondary2Addr;
   double t_primary, t_secondary;
+  double t_primary1, t_secondary1;
+  double t_primary2, t_secondary2;
   static int ctr = 0;
 
   if (firsttime) {
     firsttime = 0;
-    tPrimaryAddr = GetBiPhaseAddr("t_primary_1");
-    tSecondaryAddr = GetBiPhaseAddr("t_secondary_1");
+    tPrimary1Addr = GetBiPhaseAddr("t_primary_1");
+    tSecondary1Addr = GetBiPhaseAddr("t_secondary_1");
+    tPrimary2Addr = GetBiPhaseAddr("t_primary_2");
+    tSecondary2Addr = GetBiPhaseAddr("t_secondary_2");
     sfCorrectionAddr = GetNiosAddr("sf_correction");
     sfAgeAddr = GetNiosAddr("sf_age");
     sfPositionAddr = GetNiosAddr("sf_position");
@@ -836,14 +842,23 @@ void SecondaryMirror(void)
   if (focus < -ACTENC_OFFSET / 2)
     return;
 
-  t_primary = CalibrateAD590(
-      slow_data[tPrimaryAddr->index][tPrimaryAddr->channel]
+  t_primary1 = CalibrateAD590(
+      slow_data[tPrimary1Addr->index][tPrimary1Addr->channel]
       );
-  t_secondary = CalibrateAD590(
-      slow_data[tSecondaryAddr->index][tSecondaryAddr->channel]
+  t_primary2 = CalibrateAD590(
+      slow_data[tPrimary2Addr->index][tPrimary2Addr->channel]
       );
-  t_primary = sin(ctr / 1000. / M_PI) * 20 - 15 + 273.15;
-  t_secondary = sin(ctr / 700. / M_PI) * 20 - 40 + 273.15;
+  t_secondary1 = CalibrateAD590(
+      slow_data[tSecondary1Addr->index][tSecondary1Addr->channel]
+      );
+
+  t_secondary2 = CalibrateAD590(
+      slow_data[tSecondary2Addr->index][tSecondary2Addr->channel]
+      );
+
+  t_primary = (t_primary1 + t_primary2) / 2;
+  t_secondary = (t_secondary1 + t_secondary2) / 2;
+
   ctr++;
   if (ctr == 280000)
     ctr = 0;
