@@ -79,7 +79,6 @@ static int RxFrameIndex;
 extern short int InCharge; /* tx.c */
 extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 extern pthread_mutex_t mutex;
-extern short int InCharge;
 
 void Pointing();
 void WatchPort(void*);
@@ -490,8 +489,8 @@ static void write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
 //    }
 //    *(unsigned int*)(&buffer[1]) = fc++;
 //    buffer[0] = RxFrame[0];
-
 //    i = write(bi0_fp, buffer, BI0_FRAME_SIZE * sizeof(unsigned short));
+
     i = write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short));
     if (i < 0)
       berror(err, "BiPhase Writer: bi-phase write for RxFrame failed");
