@@ -183,7 +183,7 @@ struct CommandDataStruct {
   } Bias;
   
   struct {
-    unsigned short heliumLevel;
+    short heliumLevel;
     unsigned short coldPlate;
     unsigned short heatSwitch;
     unsigned short CryoSparePWM;

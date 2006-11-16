@@ -364,6 +364,8 @@ void CryoControl (void)
   } else {
     cryoout3 |= CRYO_HELIUMLEVEL_ON;
     cryostate |= CS_HELIUMLEVEL;
+    if (CommandData.Cryo.heliumLevel > 0)
+      CommandData.Cryo.heliumLevel--;
   }
 
   if (CommandData.Cryo.fridgeCycle)

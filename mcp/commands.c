@@ -428,10 +428,13 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
 
     case level_on:   /* Cryo commanding */
-      CommandData.Cryo.heliumLevel = 1;
+      CommandData.Cryo.heliumLevel = -1;
       break;
     case level_off:
       CommandData.Cryo.heliumLevel = 0;
+      break;
+    case level_pulse:
+      CommandData.Cryo.heliumLevel = 18;
       break;
     case charcoal_on:
       CommandData.Cryo.charcoalHeater = 1;
