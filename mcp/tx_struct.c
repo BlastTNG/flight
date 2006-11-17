@@ -545,10 +545,10 @@ struct ChannelStruct SlowChannels[] = {
   {"slew_veto",    'w', LOOP5, 17,           4.0 / SR,             0.0, 'u'},
   /* LOOP5 18-19 are wide */
   {"sveto_len",    'w', LOOP5, 20,           4.0 / SR,             0.0, 'u'},
-  {"lock_adc0",    'w', LOOP5, 21,                1.0,             0.0, 'u'},
-  {"lock_adc1",    'w', LOOP5, 22,          -0.007425,     121.5325215, 'u'},
-  {"lock_adc2",    'w', LOOP5, 23,                1.0,             0.0, 'u'},
-  {"lock_adc3",    'w', LOOP5, 24,                1.0,             0.0, 'u'},
+  {"act1_dead_rec",'w', LOOP5, 21,       ACTENC_TO_MM,             0.0, 'S'},
+  {"lock_pot",     'w', LOOP5, 22,          -0.007425,     121.5325215, 'u'},
+  {"lock_lim_sw",  'w', LOOP5, 23,                1.0,             0.0, 'u'},
+  {"act2_dead_rec",'w', LOOP5, 24,       ACTENC_TO_MM,             0.0, 'S'},
   {"lock_state",   'w', LOOP5, 25,                1.0,             0.0, 'u'},
   {"lock_goal",    'w', LOOP5, 26,                1.0,             0.0, 'u'},
   {"seized_bus",   'w', LOOP5, 27,                1.0,             0.0, 's'},
@@ -619,6 +619,10 @@ struct ChannelStruct SlowChannels[] = {
   {"sf_position",  'w', LOOP6, 43,                1.0,             0.0, 's'},
   {"tp",           'w', LOOP6, 44,             1/500.,             0.0, 's'},
   {"ts",           'w', LOOP6, 45,             1/500.,             0.0, 's'},
+  {"act0_l_good",  'w', LOOP6, 46,       ACTENC_TO_MM,             0.0, 'S'},
+  {"act1_l_good",  'w', LOOP6, 47,       ACTENC_TO_MM,             0.0, 'S'},
+  {"act2_l_good",  'w', LOOP6, 48,       ACTENC_TO_MM,             0.0, 'S'},
+  {"act0_dead_rec",'w', LOOP6, 46,       ACTENC_TO_MM,             0.0, 'S'},
   END_OF_CHANNELS
 };
 

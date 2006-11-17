@@ -419,6 +419,9 @@ static void ReadActuator(int who, int inhibit_chatter)
 
   act_data[who].pos = ReadIntFromBus(who, "?0", inhibit_chatter);
   act_data[who].enc = ReadIntFromBus(who, "?8", inhibit_chatter);
+
+  if (act_data[who].enc > ACTENC_OFFSET / 2)
+    CommandData.actbus.last_good[who] = act_data[who].enc - ACTENC_OFFSET;
 }
 
 static char* __attribute__((format(printf,2,3))) ActCommand(char* buffer,
@@ -458,7 +461,7 @@ static void InitialiseActuator(int who)
     sleep(1);
 
     /* Add offset */
-    enc = ACTENC_OFFSET + act_data[who].enc;
+    enc = ACTENC_OFFSET + CommandData.actbus.last_good[who];
 
     /* Set the encoder */
     ActCommand(buffer, "z%iR", enc);  
@@ -472,6 +475,7 @@ static void ServoActuators(int* goal)
   int i;
   int act_there[3] = {0, 0, 0};
   int act_wait[3] = {0, 0, 0};
+  int lost[3] = {0, 0, 0};
   char buffer[1000];
 
   if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
@@ -487,13 +491,14 @@ static void ServoActuators(int* goal)
       if (act_there[i] >= THERE_WAIT || stepper[i].status == -1) {
         act_there[i] = THERE_WAIT;
         continue;
-      } else if (act_data[i].enc < ACTENC_OFFSET / 2)
-        InitialiseActuator(i);
-      else if (act_wait[i] > 0)
+      } else if (act_data[i].enc < ACTENC_OFFSET / 2) {
+        lost[i] = 1;
+        CommandData.actbus.force_repoll = 1;
+      } else if (act_wait[i] > 0)
         act_wait[i]--;
       else {
         int delta = goal[i] - act_data[i].enc + ACTENC_OFFSET;
-        if (abs(delta) <= ENCODER_TOL) {
+        if (abs(delta) <= ENCODER_TOL || lost[i]) {
           act_there[i]++;
         } else if (delta > 0) {
           ActCommand(buffer, "P%iR", delta);
@@ -517,6 +522,9 @@ static void ServoActuators(int* goal)
     if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
       break;
   }
+
+  for (i = 0; i < 3; ++i)
+    CommandData.actbus.dead_reckon[i] = goal[i];
 
   ReleaseBus(0);
 }
@@ -608,20 +616,20 @@ static void SetLockState(int nic)
   int ls = lock_data.adc[2];
   unsigned int state = lock_data.state; 
 
-  static struct BiPhaseStruct* lockAdc1Addr;
-  static struct BiPhaseStruct* lockAdc2Addr;
+  static struct BiPhaseStruct* lockPotAddr;
+  static struct BiPhaseStruct* lockLimSwAddr;
   static struct BiPhaseStruct* lockStateAddr;
 
   if (firsttime) {
     firsttime = 0;
-    lockAdc1Addr = GetBiPhaseAddr("lock_adc1");
-    lockAdc2Addr = GetBiPhaseAddr("lock_adc2");
+    lockPotAddr = GetBiPhaseAddr("lock_pot");
+    lockLimSwAddr = GetBiPhaseAddr("lock_lim_sw");
     lockStateAddr = GetBiPhaseAddr("lock_state");
   }
 
   if (nic) {
-    pot = slow_data[lockAdc1Addr->index][lockAdc1Addr->channel];
-    ls = slow_data[lockAdc2Addr->index][lockAdc2Addr->channel];
+    pot = slow_data[lockPotAddr->index][lockPotAddr->channel];
+    ls = slow_data[lockLimSwAddr->index][lockLimSwAddr->channel];
     state = slow_data[lockStateAddr->index][lockStateAddr->channel];
   }
 
@@ -1032,7 +1040,8 @@ void StoreActBus(void)
   static struct NiosStruct* lockStateAddr;
   static struct NiosStruct* lockGoalAddr;
   static struct NiosStruct* seizedBusAddr;
-  static struct NiosStruct* lockAdcAddr[4];
+  static struct NiosStruct* lockPotAddr;
+  static struct NiosStruct* lockLimSwAddr;
   static struct NiosStruct* lokmotPinAddr;
 
   static struct NiosStruct* lockVelAddr;
@@ -1047,6 +1056,8 @@ void StoreActBus(void)
 
   static struct NiosStruct* actPosAddr[3];
   static struct NiosStruct* actEncAddr[3];
+  static struct NiosStruct* actDeadRecAddr[3];
+  static struct NiosStruct* actLGoodAddr[3];
 
   static struct NiosStruct* tcGPrimAddr;
   static struct NiosStruct* tcGSecAddr;
@@ -1064,14 +1075,14 @@ void StoreActBus(void)
     lockStateAddr = GetNiosAddr("lock_state");
     seizedBusAddr = GetNiosAddr("seized_bus");
     lockGoalAddr = GetNiosAddr("lock_goal");
-    lockAdcAddr[0] = GetNiosAddr("lock_adc0");
-    lockAdcAddr[1] = GetNiosAddr("lock_adc1");
-    lockAdcAddr[2] = GetNiosAddr("lock_adc2");
-    lockAdcAddr[3] = GetNiosAddr("lock_adc3");
+    lockPotAddr = GetNiosAddr("lock_pot");
+    lockLimSwAddr = GetNiosAddr("lock_lim_sw");
 
     for (i = 0; i < 3; ++i) {
       actPosAddr[i] = GetActNiosAddr(i, "pos");
       actEncAddr[i] = GetActNiosAddr(i, "enc");
+      actLGoodAddr[i] = GetActNiosAddr(i, "l_good");
+      actDeadRecAddr[i] = GetActNiosAddr(i, "dead_rec");
     }
 
     tcGPrimAddr = GetNiosAddr("tc_g_prim");
@@ -1100,11 +1111,13 @@ void StoreActBus(void)
   for (j = 0; j < 3; ++j) {
     WriteData(actPosAddr[j], act_data[j].pos, NIOS_QUEUE);
     WriteData(actEncAddr[j], act_data[j].enc - ACTENC_OFFSET, NIOS_QUEUE);
+    WriteData(actLGoodAddr[j], CommandData.actbus.last_good[i], NIOS_QUEUE);
+    WriteData(actDeadRecAddr[j], CommandData.actbus.dead_reckon[i], NIOS_QUEUE);
   }
   WriteData(secFocusAddr, focus, NIOS_FLUSH);
 
-  for (i = 0; i < 4; ++i)
-    WriteData(lockAdcAddr[i], lock_data.adc[i], NIOS_QUEUE);
+  WriteData(lockPotAddr, lock_data.adc[1], NIOS_QUEUE);
+  WriteData(lockLimSwAddr, lock_data.adc[2], NIOS_QUEUE);
   WriteData(lockStateAddr, lock_data.state, NIOS_QUEUE);
   WriteData(seizedBusAddr, bus_seized, NIOS_QUEUE);
   WriteData(lockGoalAddr, CommandData.actbus.lock_goal, NIOS_QUEUE);
