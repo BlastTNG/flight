@@ -118,6 +118,13 @@ static struct act_struct {
 
 static int bus_seized = -1;
 static int actbus_flags = 0;
+#define ACTBUS_FL_LOST 0x01
+#define ACTBUS_FL_DRPS 0x02
+#define ACTBUS_FL_DRLG 0x04
+#define ACTBUS_FL_LGPS 0x08
+#define ACTBUS_FL_DRLV 0x10
+#define ACTBUS_FL_LGLV 0x20
+#define ACTBUS_FL_PSLV 0x40
 
 /* Secondary focus crap */
 static double focus = -ACTENC_OFFSET; /* set in ab thread, read in fc thread */
@@ -520,6 +527,22 @@ static void ServoActuators(int* goal)
 
   for (i = 0; i < 3; ++i)
     CommandData.actbus.dead_reckon[i] = goal[i];
+
+  /* Update flags */
+  int new_flags = 0;
+
+  if (lost[0] || lost[1] || lost[2])
+    new_flags |= ACTBUS_FL_LOST;
+
+  for (i = 0; i < 3; ++i) {
+    if (CommandData.actbus.dead_reckon[i] != CommandData.actbus.last_good[i])
+      new_flags |= ACTBUS_FL_DRLG;
+    if (CommandData.actbus.dead_reckon[i] != act_data[i].pos)
+      new_flags |= ACTBUS_FL_DRPS;
+    if (CommandData.actbus.last_good[i] != act_data[i].pos)
+      new_flags |= ACTBUS_FL_LGPS;
+  }
+  actbus_flags = new_flags;
 
   ReleaseBus(0);
 }
