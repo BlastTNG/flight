@@ -27,7 +27,7 @@ fi
 set +x
 
 echo ""
-if [ "$FINISHED_OK" == 1 ]; then
+if [ "x$FINISHED_OK" == "x1" ]; then
   echo "good: bootstrap finished.  Now try ./configure"
 else
   echo "oops: bootstrapping errors.  Check your package or try \`cvs update'"
