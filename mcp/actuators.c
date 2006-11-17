@@ -117,7 +117,7 @@ static struct act_struct {
 } act_data[3];
 
 static int bus_seized = -1;
-static int bus_underride = -1;
+static int actbus_flags = 0;
 
 /* Secondary focus crap */
 static double focus = -ACTENC_OFFSET; /* set in ab thread, read in fc thread */
@@ -163,7 +163,7 @@ static int act_setserial(char *input_tty)
 
 static int TakeBus(int who)
 {
-  if (bus_seized != -1 && bus_seized != bus_underride)
+  if (bus_seized != -1)
     return 0;
 
   if (bus_seized != who) {
@@ -179,11 +179,6 @@ static inline void ReleaseBus(int who)
   if (bus_seized == who) {
     bprintf(info, "ActBus: Bus released by %s.\n", name[who]);
     bus_seized = -1;
-  }
-
-  if (bus_seized == -1 && bus_underride != -1) {
-    bprintf(info, "ActBus: Bus underriden by %s.\n", name[bus_underride]);
-    bus_seized = bus_underride;
   }
 }
 
@@ -1053,6 +1048,7 @@ void StoreActBus(void)
   static struct NiosStruct* actAccAddr;
   static struct NiosStruct* actMoveIAddr;
   static struct NiosStruct* actHoldIAddr;
+  static struct NiosStruct* actFlagsAddr;
 
   static struct NiosStruct* actPosAddr[3];
   static struct NiosStruct* actEncAddr[3];
@@ -1097,6 +1093,7 @@ void StoreActBus(void)
     actAccAddr = GetNiosAddr("act_acc");
     actMoveIAddr = GetNiosAddr("act_move_i");
     actHoldIAddr = GetNiosAddr("act_hold_i");
+    actFlagsAddr = GetNiosAddr("act_flags");
 
     lockVelAddr = GetNiosAddr("lock_vel");
     lockAccAddr = GetNiosAddr("lock_acc");
@@ -1127,6 +1124,7 @@ void StoreActBus(void)
   WriteData(actAccAddr, CommandData.actbus.act_acc, NIOS_QUEUE);
   WriteData(actMoveIAddr, CommandData.actbus.act_move_i, NIOS_QUEUE);
   WriteData(actHoldIAddr, CommandData.actbus.act_hold_i, NIOS_QUEUE);
+  WriteData(actFlagsAddr, actbus_flags, NIOS_QUEUE);
 
   WriteData(lockVelAddr, CommandData.actbus.lock_vel, NIOS_QUEUE);
   WriteData(lockAccAddr, CommandData.actbus.lock_acc, NIOS_QUEUE);
