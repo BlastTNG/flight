@@ -1948,7 +1948,6 @@ void InitCommandData()
   CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   CommandData.actbus.lock_goal = LS_DRIVE_OFF;
   CommandData.actbus.force_repoll = 0;
-  CommandData.actbus.off = 0;
   CommandData.actbus.cindex = 0;
   CommandData.actbus.caddr[0] = 0;
   CommandData.actbus.caddr[1] = 0;
@@ -2100,6 +2099,13 @@ void InitCommandData()
   CommandData.actbus.tc_mode = TC_MODE_VETOED;
   CommandData.actbus.tc_step = 100; /* microns */
   CommandData.actbus.tc_wait = 600; /* seconds */
+  CommandData.actbus.off = 0;
+  CommandData.actbus.dead_reckon[0] = 0;
+  CommandData.actbus.dead_reckon[1] = 0;
+  CommandData.actbus.dead_reckon[2] = 0;
+  CommandData.actbus.last_good[0] = 0;
+  CommandData.actbus.last_good[1] = 0;
+  CommandData.actbus.last_good[2] = 0;
 
   /* The first is due to change in radius of curvature, the second due to
    * displacement of the secondary due to the rigid struts */

@@ -535,7 +535,9 @@ static void ServoActuators(int* goal)
           act_wait[i] = delta * (6. * 26. / CommandData.actbus.act_vel) + 1;
           BusComm(i, buffer, 0, __inhibit_chatter);
         } else {
-          delta = 10 - delta;
+          /* Always overshoot on the downswing, so we can come up to the goal
+           * Random to damp oscillations */
+          delta = 8 + (rand() % 10) - delta;
           ActCommand(buffer, "D%iR", delta);
           bprintf(info, "Servo: %i => %s\n", i, buffer);
           act_wait[i] = delta * (6. * 26. / CommandData.actbus.act_vel) + 1;

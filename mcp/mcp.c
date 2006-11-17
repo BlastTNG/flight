@@ -55,6 +55,9 @@
 #define STARTUP_VETO_LENGTH 250 /* "frames" */
 #define BI0_VETO_LENGTH 5 /* seconds */
 
+#define BI0_FIFO_MARGIN 8750 /* bytes = 7 frames */
+#define BI0_FIFO_MINIMUM (BI0_FIFO_MARGIN / 2)
+
 #ifdef BOLOTEST
 #  define FRAME_MARGIN (-12)
 #else
@@ -70,6 +73,9 @@ struct ACSDataStruct ACSData;
 unsigned int RxFrameFastSamp;
 unsigned short* slow_data[FAST_PER_SLOW];
 pthread_t watchdog_id;
+
+unsigned int last_frame = 0;
+time_t last_time;
 
 static int bi0_fp = -2;
 static int StartupVeto = STARTUP_VETO_LENGTH + 1;
@@ -332,7 +338,6 @@ static void SensorReader(void)
        * of 4000kb */
       CommandData.df = vfsbuf.f_bavail / 1000;
     }
-    sleep(1);
   }
 }
 
@@ -461,11 +466,12 @@ static void WatchDog (void)
   }
 }
 
-static void write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
+static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
 {
   int i;
   static unsigned short nothing[BI0_FRAME_SIZE];
   static unsigned short sync = 0xEB90;
+  static unsigned int do_skip = 0;
 
   if (bi0_fp == -2) {
     bi0_fp = open("/dev/bi0_pci", O_RDWR);
@@ -475,6 +481,7 @@ static void write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
     for (i = 0; i < BI0_FRAME_SIZE; i++)
       nothing[i] = 0xEEEE;
   }
+  i_out = (i_out + 1) % BI0_FRAME_BUFLEN;
 
   nothing[0] = CalculateCRC(0xEB90, RxFrame, BiPhaseFrameWords);
 
@@ -491,23 +498,35 @@ static void write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
 //    buffer[0] = RxFrame[0];
 //    i = write(bi0_fp, buffer, BI0_FRAME_SIZE * sizeof(unsigned short));
 
-    i = write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short));
-    if (i < 0)
-      berror(err, "BiPhase Writer: bi-phase write for RxFrame failed");
-    else if (i != BiPhaseFrameWords * sizeof(unsigned short))
-      bprintf(err, "Short write to bi-phase for RxFrame: %i of %i (%i/%i)", i,
-          BiPhaseFrameWords * sizeof(unsigned short), i_in, i_out);
+    if (do_skip) {
+      --do_skip;
+    } else {
+      i = write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short));
+      if (i < 0)
+        berror(err, "BiPhase Writer: bi-phase write for RxFrame failed");
+      else if (i != BiPhaseFrameWords * sizeof(unsigned short))
+        bprintf(err, "BiPhase Writer: Short write for RxFrame: %i of %i", i,
+            BiPhaseFrameWords * sizeof(unsigned short));
 
-    i = write(bi0_fp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
-        sizeof(unsigned short));
-    if (i < 0)
-      berror(err, "BiPhase Writer: bi-phase write for padding failed");
-    else if (i != (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short))
-      bprintf(err, "Short write to bi-phase for padding: %i of %i (%i/%i)", i,
-          (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short), i_in,
-          i_out);
+      i = write(bi0_fp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
+          sizeof(unsigned short));
+      if (i < 0)
+        berror(err, "BiPhase Writer: bi-phase write for padding failed");
+      else if (i != (BI0_FRAME_SIZE - BiPhaseFrameWords)
+          * sizeof(unsigned short))
+        bprintf(err, "BiPhase Writer: Short write for padding: %i of %i", i,
+            (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short));
+    }
+
     CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
+    if (do_skip == 0 && CommandData.bi0FifoSize > BI0_FIFO_MARGIN) {
+      do_skip = (CommandData.bi0FifoSize - BI0_FIFO_MINIMUM) / BI0_FRAME_SIZE;
+      bprintf(warning, "BiPhase Writer: Excess data in FIFO, discarding "
+          "%i frames out of hand.", do_skip);
+    }
   }
+
+  return i_out;
 }
 
 static void InitBi0Buffer()
@@ -534,6 +553,7 @@ static void PushBi0Buffer(unsigned short *RxFrame)
   for (i = 0; i<fw; i++) {
     bi0_buffer.framelist[i_in][i] = RxFrame[i];
   }
+
   bi0_buffer.i_in = i_in;
 }
 #endif
@@ -573,8 +593,7 @@ static void BiPhaseWriter(void)
       }
     } else
       while (i_out != i_in) {
-        i_out = (i_out + 1) % BI0_FRAME_BUFLEN;
-        write_to_biphase(bi0_buffer.framelist[i_out], i_in, i_out);
+        i_out = write_to_biphase(bi0_buffer.framelist[i_out], i_in, i_out);
         if (Death > 0)
           Death = 0;
       }
@@ -786,35 +805,11 @@ int main(int argc, char *argv[])
 #endif
   pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
 
+  last_time = mcp_systime(NULL);
+
   while (1) {
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0)
       berror(err, "System: Error on BBC read");
-
-#if 0
-    static int mycounter = 0;
-    static int mycounter2 = 0;
-
-    if(GET_NODE(in_data) == 6 && GET_CH(in_data) == 6 && GET_STORE(in_data))
-      printf("%08x\n", in_data);
-
-    // DEBUG TOOLS
-    if(GET_NODE(in_data) == 0x27) {
-      if(GET_STORE(in_data) ) {
-        mycounter++;
-      } else {
-        mycounter2++;
-      }
-    }
-    if (in_data == 0xdf80eb90)  {
-      if( (mycounter != 12) || (mycounter2 != 12) ) {
-        printf("++++++++++++++>>>>>> mycounter = %d mycounter2 = %d\n",
-            mycounter, mycounter2);
-      }
-      mycounter  = 0;
-      mycounter2 = 0;
-    }
-    // END DEBUG TOOL
-#endif
 
     if (!fill_Rx_frame(in_data, RxFrame))
       bprintf(err, "System: Unrecognised word received from BBC (%08x)",
@@ -847,11 +842,24 @@ int main(int argc, char *argv[])
         /* Save current fastsamp */
         RxFrameFastSamp = (RxFrame[1] + RxFrame[2] * 0x10000);
 
+        /* Frame rate check */
+        time_t now = mcp_systime(NULL);
+        if ((now % 60) == 0 && last_time != now) {
+          bprintf(info, "System: Frame Rate: %f", (double)(RxFrameFastSamp
+                - last_frame) / (now - last_time));
+          last_frame = RxFrameFastSamp;
+          last_time = now;
+        }
+
         UpdateBBCFrame(RxFrame);
         CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);
 
         /* pushDiskFrame must be called before PushBi0Buffer to get the slow
            data right */
+#warning gy_err* has been subverted
+        RxFrame[60] = bi0_buffer.i_in;
+        RxFrame[61] = bi0_buffer.i_out;
+        RxFrame[62] = Death;
         pushDiskFrame(RxFrame);
 #ifndef BOLOTEST
         if (biphase_is_on)
