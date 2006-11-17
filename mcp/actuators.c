@@ -54,13 +54,7 @@ static int __inhibit_chatter = 0;
 
 #define ALL_ACT 0x51 /* All actuators */
 #define LOCKNUM 3
-#ifdef USE_XY_STAGE
-#  define STAGEXNUM 4
-#  define STAGEYNUM 5
-#  define NACT 6
-#else
-#  define NACT 4
-#endif
+#define NACT 4
 #define POLL_TIMEOUT 30000 /* 5 minutes */
 
 /* EZ Stepper status bit masks */
@@ -102,16 +96,8 @@ extern short int InCharge; /* tx.c */
 #define LAST_ACTUATOR 2
 static int bus_fd = -1;
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
-  "Lock Motor"
-#ifdef USE_XY_STAGE
-  , "XY Stage X", "XY Stage Y"
-#endif
-};
-static const int id[NACT] = {0x31, 0x32, 0x33, 0x35
-#ifdef USE_XY_STAGE
-  , 0x36, 0x37
-#endif
-};
+  "Lock Motor" };
+static const int id[NACT] = {0x31, 0x32, 0x33, 0x35};
 
 static char bus_buffer[1000];
 static struct stepper_struct {
@@ -129,16 +115,6 @@ static struct act_struct {
   int pos;
   int enc;
 } act_data[3];
-
-#ifdef USE_XY_STAGE
-static struct stage_struct {
-  unsigned int xpos, ypos;
-  unsigned int xlim, ylim;
-  unsigned int xstp, ystp;
-  unsigned int xstr, ystr;
-  unsigned int xvel, yvel;
-} stage_data;
-#endif
 
 static int bus_seized = -1;
 static int bus_underride = -1;
@@ -210,16 +186,6 @@ static inline void ReleaseBus(int who)
     bus_seized = bus_underride;
   }
 }
-
-#ifdef USE_XY_STAGE
-static inline void UnderrideBus(int who)
-{
-  if (bus_underride != who)
-    bprintf(info, "ActBus: Bus underride for %s enabled.\n", name[who]);
-  bus_underride = who;
-  ReleaseBus(-2);
-}
-#endif
 
 static char hex_buffer[1000];
 static const char* HexDump(const unsigned char* buffer, int len)
@@ -611,37 +577,6 @@ static int PollBus(int rescan)
 
   return all_ok;
 }
-
-#ifdef USE_XY_STAGE
-static void ReadStage(void)
-{
-  static int counter = 0;
-  if (stepper[STAGEXNUM].status == -1 || stepper[STAGEYNUM].status == -1)
-    return;
-
-  stage_data.xpos = ReadIntFromBus(STAGEXNUM, "?0");
-  stage_data.ypos = ReadIntFromBus(STAGEYNUM, "?0");
-
-  if (counter == 0)
-    stage_data.xstr = ReadIntFromBus(STAGEXNUM, "?1");
-  else if (counter == 1)
-    stage_data.xstp = ReadIntFromBus(STAGEXNUM, "?3");
-  else if (counter == 2)
-    stage_data.xlim = ReadIntFromBus(STAGEXNUM, "?4");
-  else if (counter == 3)
-    stage_data.xvel = ReadIntFromBus(STAGEXNUM, "?5");
-  else if (counter == 4)
-    stage_data.ystr = ReadIntFromBus(STAGEYNUM, "?1");
-  else if (counter == 5)
-    stage_data.ystp = ReadIntFromBus(STAGEYNUM, "?3");
-  else if (counter == 6)
-    stage_data.yvel = ReadIntFromBus(STAGEYNUM, "?5");
-  else if (counter == 7)
-    stage_data.ylim = ReadIntFromBus(STAGEYNUM, "?4");
-
-  counter = (counter + 1) % 8;
-}
-#endif
 
 static void GetLockData(int mult)
 {
@@ -1121,20 +1056,6 @@ void StoreActBus(void)
   static struct NiosStruct* secGoalAddr;
   static struct NiosStruct* secFocusAddr;
 
-#ifdef USE_XY_STAGE
-  static struct NiosStruct* stageXAddr;
-  static struct NiosStruct* stageXLimAddr;
-  static struct NiosStruct* stageXStpAddr;
-  static struct NiosStruct* stageXStrAddr;
-  static struct NiosStruct* stageXVelAddr;
-
-  static struct NiosStruct* stageYAddr;
-  static struct NiosStruct* stageYLimAddr;
-  static struct NiosStruct* stageYStpAddr;
-  static struct NiosStruct* stageYStrAddr;
-  static struct NiosStruct* stageYVelAddr;
-#endif
-
   if (firsttime) {
     firsttime = 0;
     actbusResetAddr = GetNiosAddr("actbus_reset");
@@ -1170,19 +1091,6 @@ void StoreActBus(void)
     lockAccAddr = GetNiosAddr("lock_acc");
     lockMoveIAddr = GetNiosAddr("lock_move_i");
     lockHoldIAddr = GetNiosAddr("lock_hold_i");
-
-#ifdef USE_XY_STAGE
-    stageXAddr = GetNiosAddr("stage_x");
-    stageXLimAddr = GetNiosAddr("stage_x_lim");
-    stageXStrAddr = GetNiosAddr("stage_x_str");
-    stageXStpAddr = GetNiosAddr("stage_x_stp");
-    stageXVelAddr = GetNiosAddr("stage_x_vel");
-    stageYAddr = GetNiosAddr("stage_y");
-    stageYLimAddr = GetNiosAddr("stage_y_lim");
-    stageYStrAddr = GetNiosAddr("stage_y_str");
-    stageYStpAddr = GetNiosAddr("stage_y_stp");
-    stageYVelAddr = GetNiosAddr("stage_y_vel");
-#endif
   }
 
   WriteData(actbusResetAddr, CommandData.actbus.off, NIOS_QUEUE);
@@ -1218,19 +1126,6 @@ void StoreActBus(void)
   WriteData(tcStepAddr, CommandData.actbus.tc_step, NIOS_QUEUE);
   WriteData(tcWaitAddr, CommandData.actbus.tc_wait / 20., NIOS_QUEUE);
   WriteData(secGoalAddr, CommandData.actbus.focus, NIOS_QUEUE);
-
-#ifdef USE_XY_STAGE
-  WriteData(stageXAddr, stage_data.xpos, NIOS_QUEUE);
-  WriteData(stageXLimAddr, stage_data.xlim, NIOS_QUEUE);
-  WriteData(stageXStrAddr, stage_data.xstr, NIOS_QUEUE);
-  WriteData(stageXStpAddr, stage_data.xstp, NIOS_QUEUE);
-  WriteData(stageXVelAddr, stage_data.xvel, NIOS_QUEUE);
-  WriteData(stageYAddr, stage_data.ypos, NIOS_QUEUE);
-  WriteData(stageYStrAddr, stage_data.ystr, NIOS_QUEUE);
-  WriteData(stageYStpAddr, stage_data.ystp, NIOS_QUEUE);
-  WriteData(stageYVelAddr, stage_data.yvel, NIOS_QUEUE);
-  WriteData(stageYLimAddr, stage_data.ylim, NIOS_FLUSH);
-#endif
 }
 
 void ActuatorBus(void)
@@ -1286,19 +1181,10 @@ void ActuatorBus(void)
       CommandData.actbus.caddr[my_cindex] = 0;
     }
 
-#ifdef USE_XY_STAGE
-    UnderrideBus(STAGEXNUM);
-#endif
-
     DoLock(); /* Lock motor stuff -- this will seize the bus until
                  the lock motor's state has settled */
 
     DoActuators(); /* Actuator stuff -- this may seize the bus */
-
-#ifdef USE_XY_STAGE
-    if (bus_seized == STAGEXNUM)
-      ReadStage();
-#endif
 
     for (i = 0; i < 3; ++i)
       ReadActuator(i, 1);
