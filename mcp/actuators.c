@@ -1032,7 +1032,7 @@ static inline struct NiosStruct* GetActNiosAddr(int i, const char* field)
 /* This function is called by the frame control thread */
 void StoreActBus(void)
 {
-  int i, j;
+  int j;
   static int firsttime = 1;
 
   static struct NiosStruct* actbusResetAddr;
@@ -1078,11 +1078,11 @@ void StoreActBus(void)
     lockPotAddr = GetNiosAddr("lock_pot");
     lockLimSwAddr = GetNiosAddr("lock_lim_sw");
 
-    for (i = 0; i < 3; ++i) {
-      actPosAddr[i] = GetActNiosAddr(i, "pos");
-      actEncAddr[i] = GetActNiosAddr(i, "enc");
-      actLGoodAddr[i] = GetActNiosAddr(i, "l_good");
-      actDeadRecAddr[i] = GetActNiosAddr(i, "dead_rec");
+    for (j = 0; j < 3; ++j) {
+      actPosAddr[j] = GetActNiosAddr(j, "pos");
+      actEncAddr[j] = GetActNiosAddr(j, "enc");
+      actLGoodAddr[j] = GetActNiosAddr(j, "l_good");
+      actDeadRecAddr[j] = GetActNiosAddr(j, "dead_rec");
     }
 
     tcGPrimAddr = GetNiosAddr("tc_g_prim");
@@ -1111,8 +1111,8 @@ void StoreActBus(void)
   for (j = 0; j < 3; ++j) {
     WriteData(actPosAddr[j], act_data[j].pos, NIOS_QUEUE);
     WriteData(actEncAddr[j], act_data[j].enc - ACTENC_OFFSET, NIOS_QUEUE);
-    WriteData(actLGoodAddr[j], CommandData.actbus.last_good[i], NIOS_QUEUE);
-    WriteData(actDeadRecAddr[j], CommandData.actbus.dead_reckon[i], NIOS_QUEUE);
+    WriteData(actLGoodAddr[j], CommandData.actbus.last_good[j], NIOS_QUEUE);
+    WriteData(actDeadRecAddr[j], CommandData.actbus.dead_reckon[j], NIOS_QUEUE);
   }
   WriteData(secFocusAddr, focus, NIOS_FLUSH);
 
