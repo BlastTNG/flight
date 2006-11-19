@@ -139,11 +139,11 @@ struct ChannelStruct SlowChannels[] = {
 
   /* ACS2 0-1 is wide fast */
   {"t_sun_shield_1",'r', ACS2,  3,              I2T_M,           I2T_B, 'u'},
-  {"i_gybox",      'r',  ACS2,  5,          -0.000625,           20.48, 'u'},
+  {"i_gybox",      'r',  ACS2,  5,           0.000625,          -20.48, 'u'},
   {"pch_clin_piv", 'r',  ACS2,  7,      4.0/5333.3333,       -4.*6.144, 'u'},
   {"roll_clin_piv",'r',  ACS2,  9,      4.0/5333.3333,       -4.*6.144, 'u'},
   {"t_clin_piv",   'r',  ACS2, 11,            0.01875,          -614.4, 'u'},
-  {"i_sun",        'r',  ACS2, 13,          -0.000625,           20.48, 'u'},
+  {"i_sun",        'r',  ACS2, 13,           0.000625,          -20.48, 'u'},
   {"p_pv",         'r',  ACS2, 15,          -0.015432,          507.81, 'u'},
 
   /* AD590 calibrations per Marco 2006-11 */
