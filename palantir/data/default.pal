@@ -212,14 +212,20 @@
       <XHI value="3.5"/>
     </EXTREMA>
     <EXTREMA name="he3fridge">
-      <XLO value="0.2"/>
+      <XLO value="0.230"/>
       <LO value=".240"/>
       <HI value=".290"/>
-      <XHI value="0.32"/>
+      <XHI value="0.305"/>
+    </EXTREMA>
+    <EXTREMA name="heatstrap">
+      <XLO value="0.27"/>
+      <LO value=".285"/>
+      <HI value=".320"/>
+      <XHI value="0.35"/>
     </EXTREMA>
     <EXTREMA name="horn">
       <XLO value="0.26"/>
-      <LO value=".300"/>
+      <LO value=".280"/>
       <HI value=".350"/>
       <XHI value="0.37"/>
     </EXTREMA>
@@ -1283,7 +1289,7 @@
       <DATUM format="%.3f" src="T_he3fridge" extrema="he3fridge"/>
     </NUMBER>
     <NUMBER caption="300mK Heat Strap">
-      <DATUM format="%.3f" src="T_300mk_strap" extrema="he3fridge"/>
+      <DATUM format="%.3f" src="T_300mk_strap" extrema="heatstrap"/>
     </NUMBER>
     <NUMBER caption="500 um Horn">
       <DATUM format="%.3f" src="T_horn_500" extrema="horn"/>
