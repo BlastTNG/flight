@@ -199,6 +199,12 @@
       <HI value="150"/>
       <XHI value="160"/>
     </EXTREMA>
+    <EXTREMA name="jfetheat">
+      <XLO value="-1"/>
+      <LO value="-0.01"/>
+      <HI value="40"/>
+      <XHI value="75"/>
+    </EXTREMA>
     <EXTREMA name="pottemp-diode">
       <XLO value="1"/>
       <LO value="1.4"/>
@@ -252,6 +258,18 @@
       <LO value="20"/>
       <HI value="80"/>
       <XHI value="127"/>
+    </EXTREMA>
+    <EXTREMA name="levelsens">
+      <XLO value="0.2"/>
+      <LO value="0.5"/>
+      <HI value="7.5"/>
+      <XHI value="9"/>
+    </EXTREMA>
+    <EXTREMA name="hspwm">
+      <XLO value="-1"/>
+      <LO value="-0.5"/>
+      <HI value="0.5"/>
+      <XHI value="99"/>
     </EXTREMA>
     <CURFILE name="/data/etc/defile.cur"/>
     <DECOMD host="arwen.blast" port="11411"/>
@@ -1318,7 +1336,7 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="Level Sensor">
-      <DATUM format="%.2f" src="HE4_LEV_OLD" extrema="unknown"/>
+      <DATUM format="%.2f" src="HE4_LEV_OLD" extrema="levelsens"/>
     </NUMBER>
     <MULTI caption="Charcoal">
       <DATUM src="CHARC_HEATER">
@@ -1348,7 +1366,7 @@
       <DATUM format="%.2f" src="BDAPWM" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Switch (%)">
-      <DATUM format="%.2f" src="HSPWM" extrema="unknown"/>
+      <DATUM format="%.2f" src="HSPWM" extrema="hspwm"/>
     </NUMBER>
     <MULTI caption="Auto JFET Heat">
       <DATUM src="AUTO_JFET_HEAT">
@@ -1357,7 +1375,7 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="JFET Heat (%)">
-      <DATUM format="%.2f" src="JFETPWM" extrema="unknown"/>
+      <DATUM format="%.2f" src="JFETPWM" extrema="jfetheat"/>
     </NUMBER>
     <NUMBER caption="Spare (%)">
       <DATUM format="%.2f" src="CRYOPWM" extrema="unknown"/>
