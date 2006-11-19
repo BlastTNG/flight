@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.46 $";
+const char *command_list_serial = "$Revision: 3.47 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance && Cooling","Bias",
@@ -403,6 +403,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
     GR_ACT, 1,
     {
       {"Position (counts)", -15000, 15000, 'i', "SEC_FOCUS"},
+    }
+  },
+
+  {COMMAND(delta_focus), "servo the secondary mirror by a relative amount",
+    GR_ACT, 1,
+    {
+      {"Position (counts)", -1000, 1000, 'i', "0"},
     }
   },
 

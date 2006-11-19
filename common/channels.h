@@ -195,6 +195,21 @@ extern "C" {
 #define I2T_M (-0.00625)
 #define I2T_B (136.45)
 
+/* AD590 calibrations from Marco, Nov 2006 */
+#define AD590_CALIB_INFRAME_1    1.2250
+#define AD590_CALIB_INFRAME_2    1.8125
+#define AD590_CALIB_INFRAME_3    0.0188
+#define AD590_CALIB_INFRAME_4    1.5125
+#define AD590_CALIB_PRIMARY_2   -0.3750
+#define AD590_CALIB_STRUT_1     -0.8437
+#define AD590_CALIB_PRIMARY_1   -1.5937
+#define AD590_CALIB_SECONDARY_1 -1.6250
+#define AD590_CALIB_SECONDARY_2  0.1563
+#define AD590_CALIB_STRUT_2     -0.8502
+#define AD590_CALIB_PUSH_PLATE   0.4500
+#define AD590_CALIB_ACT_MOTOR   -0.4375
+#define AD590_CALIB_REC         -1.4822
+
 /* zero point (in counts) of i_el */
 #define I_EL_ZERO 32638
 

@@ -18,7 +18,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 136        /* total number of single word cmds */
-#define N_MCOMMANDS 92         /* total number of multiword commands */
+#define N_MCOMMANDS 93         /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -132,7 +132,8 @@ enum multiCommand {
   el_gyro_offset,    general,           slew_veto,        set_focus,
   mirror_gain,       actuator_servo,    xy_goto,          actuator_vel,
   xy_jump,           xy_xscan,          xy_yscan,         xy_raster,
-  actuator_i,        lock_vel,          lock_i,           actuator_delta
+  actuator_i,        lock_vel,          lock_i,           actuator_delta,
+  delta_focus
 };
 
 struct par {

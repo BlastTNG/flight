@@ -462,6 +462,9 @@ static void InitialiseActuator(int who)
     ReadActuator(who, 1); 
     sleep(1);
 
+    /* Go Back */
+    BusComm(who, ActCommand(buffer, "%s", "D10R"), 0, __inhibit_chatter);
+
     /* Add offset */
     enc = ACTENC_OFFSET + CommandData.actbus.last_good[who];
 
@@ -519,6 +522,10 @@ static void ServoActuators(int* goal)
       }
     for (i = 0; i < 3; ++i)
       ReadActuator(i, 1);
+
+    focus = (act_data[0].enc + act_data[1].enc + act_data[2].enc) / 3
+      - ACTENC_OFFSET;
+
     bprintf(info, "%i %i %i / %i %i %i", act_wait[0], act_wait[1], act_wait[2],
         act_there[0], act_there[1], act_there[2]);
     if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
@@ -707,12 +714,12 @@ static void SetNewFocus(void)
   if (abs(delta) <= ENCODER_TOL) {
     ;
   } else if (delta > 0) {
-    ActCommand(buffer, "V2000P%iR", delta);
+    ActCommand(buffer, "P%iR", delta);
     bprintf(info, "Servo: %i => %s\n", ALL_ACT, buffer);
     BusComm(ALL_ACT, buffer, 0, __inhibit_chatter);
   } else {
     delta = 10 - delta;
-    ActCommand(buffer, "V2000D%iR", delta);
+    ActCommand(buffer, "D%iR", delta);
     bprintf(info, "Servo: %i => %s\n", ALL_ACT, buffer);
     BusComm(ALL_ACT, buffer, 0, __inhibit_chatter);
   }
@@ -731,9 +738,9 @@ static double CalibrateAD590(int counts)
   double t = I2T_M * counts + I2T_B + 273.15;
 
   /* if t < -73C or t > 67C, assume AD590 is broken */
-  if (t < 200)
+  if (t < 170)
     t = -1;
-  else if (t > 340)
+  else if (t > 360)
     t = -2;
   
   return t;
@@ -764,6 +771,15 @@ static int ThermalCompensation(void)
   return ACTBUS_FM_THERMO;
 }
 
+/* Some sort of lame tmeperature filter */
+double TFilter(double old, double new, double t)
+{
+  if (old < 0)
+    return new;
+
+  return new / t + (1 - 1 / t) * old;
+}
+
 /* This function is called by the frame control thread */
 void SecondaryMirror(void)
 {
@@ -774,17 +790,16 @@ void SecondaryMirror(void)
   static struct NiosStruct* sfPositionAddr;
   static struct NiosStruct* sfTPrimAddr;
   static struct NiosStruct* sfTSecAddr;
-  static struct NiosStruct* tpAddr;
-  static struct NiosStruct* tsAddr;
+  static struct NiosStruct* tPrimeFidAddr;
+  static struct NiosStruct* tSecondFidAddr;
 
   static struct BiPhaseStruct* tPrimary1Addr;
   static struct BiPhaseStruct* tSecondary1Addr;
   static struct BiPhaseStruct* tPrimary2Addr;
   static struct BiPhaseStruct* tSecondary2Addr;
-  double t_primary, t_secondary;
+  static double t_primary = -1, t_secondary = -1;
   double t_primary1, t_secondary1;
   double t_primary2, t_secondary2;
-  static int ctr = 0;
 
   if (firsttime) {
     firsttime = 0;
@@ -797,8 +812,8 @@ void SecondaryMirror(void)
     sfPositionAddr = GetNiosAddr("sf_position");
     sfTPrimAddr = GetNiosAddr("sf_t_prim");
     sfTSecAddr = GetNiosAddr("sf_t_sec");
-    tpAddr = GetNiosAddr("tp");
-    tsAddr = GetNiosAddr("ts");
+    tPrimeFidAddr = GetNiosAddr("t_prime_fid");
+    tSecondFidAddr = GetNiosAddr("t_second_fid");
   }
 
   /* Do nothing if we haven't heard from the actuators */
@@ -807,24 +822,39 @@ void SecondaryMirror(void)
 
   t_primary1 = CalibrateAD590(
       slow_data[tPrimary1Addr->index][tPrimary1Addr->channel]
-      );
+      ) + AD590_CALIB_PRIMARY_1;
   t_primary2 = CalibrateAD590(
       slow_data[tPrimary2Addr->index][tPrimary2Addr->channel]
-      );
+      ) + AD590_CALIB_PRIMARY_2;
+
   t_secondary1 = CalibrateAD590(
       slow_data[tSecondary1Addr->index][tSecondary1Addr->channel]
-      );
-
+      ) + AD590_CALIB_SECONDARY_1;
   t_secondary2 = CalibrateAD590(
       slow_data[tSecondary2Addr->index][tSecondary2Addr->channel]
-      );
+      ) + AD590_CALIB_SECONDARY_2;
 
-  t_primary = (t_primary1 + t_primary2) / 2;
-  t_secondary = (t_secondary1 + t_secondary2) / 2;
+  if (t_primary1 < 0 && t_primary2 < 0)
+    t_primary = -1; /* autoveto */
+  else if (t_primary1 < 0)
+    t_primary = TFilter(t_primary, t_primary2, CommandData.actbus.tc_wait / 2);
+  else if (t_primary2 < 0)
+    t_primary = TFilter(t_primary, t_primary1, CommandData.actbus.tc_wait / 2);
+  else
+    t_primary = TFilter(t_primary, (t_primary1 + t_primary2) / 2,
+        CommandData.actbus.tc_wait / 2);
 
-  ctr++;
-  if (ctr == 280000)
-    ctr = 0;
+  if (t_secondary1 < 0 && t_secondary2 < 0)
+    t_secondary = -1; /* autoveto */
+  else if (t_secondary1 < 0)
+    t_secondary = TFilter(t_secondary, t_secondary2,
+        CommandData.actbus.tc_wait / 2);
+  else if (t_secondary2 < 0)
+    t_secondary = TFilter(t_secondary, t_secondary1,
+        CommandData.actbus.tc_wait / 2);
+  else
+    t_secondary = TFilter(t_secondary, (t_secondary1 + t_secondary2) / 2,
+        CommandData.actbus.tc_wait / 2);
 
   if (CommandData.actbus.tc_mode != TC_MODE_VETOED && (t_primary < 0
         || t_secondary < 0)) {
@@ -852,8 +882,8 @@ void SecondaryMirror(void)
       CommandData.actbus.sf_time++;
   }
 
-  WriteData(tpAddr, (t_primary - 273.15) * 500, NIOS_QUEUE);
-  WriteData(tsAddr, (t_secondary - 273.15) * 500, NIOS_QUEUE);
+  WriteData(tPrimeFidAddr, (t_primary - 273.15) * 500, NIOS_QUEUE);
+  WriteData(tSecondFidAddr, (t_secondary - 273.15) * 500, NIOS_QUEUE);
   WriteData(sfCorrectionAddr, correction, NIOS_QUEUE);
   WriteData(sfAgeAddr, CommandData.actbus.sf_time / 20., NIOS_QUEUE);
   WriteData(sfPositionAddr, CommandData.actbus.sf_position, NIOS_QUEUE);
@@ -875,6 +905,9 @@ static void DoActuators(void)
     case ACTBUS_FM_DELTA:
       DeltaActuators();
       break;
+    case ACTBUS_FM_DELFOC:
+      CommandData.actbus.focus += focus;
+      /* Fallthough */
     case ACTBUS_FM_THERMO:
     case ACTBUS_FM_FOCUS:
       SetNewFocus();

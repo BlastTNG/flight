@@ -70,6 +70,7 @@ struct GainStruct {
 #define ACTBUS_FM_NOW    5
 #define ACTBUS_FM_DELTA  6
 #define ACTBUS_FM_PANIC  7
+#define ACTBUS_FM_DELFOC 8
 
 #define TC_MODE_ENABLED  0
 #define TC_MODE_AUTOVETO 1

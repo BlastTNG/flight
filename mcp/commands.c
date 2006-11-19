@@ -1034,6 +1034,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
           svalues[1]);
       CommandData.actbus.cindex = INC_INDEX(CommandData.actbus.cindex);
       break;
+    case delta_focus:
+      CommandData.actbus.focus = ivalues[0];
+      CommandData.actbus.focus_mode = ACTBUS_FM_DELFOC;
+      break;
     case set_focus:
       CommandData.actbus.focus = ivalues[0];
       CommandData.actbus.focus_mode = ACTBUS_FM_FOCUS;
