@@ -423,7 +423,7 @@ static void ReadActuator(int who, int inhibit_chatter)
   act_data[who].enc = ReadIntFromBus(who, "?8", inhibit_chatter);
 
   if (act_data[who].enc > ACTENC_OFFSET / 2)
-    CommandData.actbus.last_good[who] = act_data[who].enc - ACTENC_OFFSET;
+    CommandData.actbus.last_good[who] = act_data[who].enc;
 }
 
 static char* __attribute__((format(printf,2,3))) ActCommand(char* buffer,
@@ -466,7 +466,7 @@ static void InitialiseActuator(int who)
     BusComm(who, ActCommand(buffer, "%s", "D10R"), 0, __inhibit_chatter);
 
     /* Add offset */
-    enc = ACTENC_OFFSET + CommandData.actbus.last_good[who];
+    enc = CommandData.actbus.last_good[who];
 
     /* Set the encoder */
     ActCommand(buffer, "z%iR", enc);  
@@ -933,8 +933,9 @@ static void DoActuators(void)
   if (CommandData.actbus.reset_dr) {
     int i;
 
-    for (i = 0; i < 3; ++i)
-      CommandData.actbus.dead_reckon[i] = act_data[i].enc;
+    for (i = 0; i < 3; ++i) {
+      CommandData.actbus.dead_reckon[i] = act_data[i].enc - ACTENC_OFFSET;
+    }
     CommandData.actbus.reset_dr = 0;
   }
 }
@@ -1027,12 +1028,12 @@ static void DoLock(void)
         action = (lock_data.state & LS_DRIVE_OFF) ? LA_WAIT : LA_STOP;
       }
     } else if ((CommandData.actbus.lock_goal & 0x7) == LS_DRIVE_OFF)
-      /* ocXe -.
-       * ocRe -+-(stp)- ocFe ->
-       * ocUe -+
-       * ocSe -'
-       */
-      action = (lock_data.state & LS_DRIVE_OFF) ? LA_EXIT : LA_STOP;
+            /* ocXe -.
+             * ocRe -+-(stp)- ocFe ->
+             * ocUe -+
+             * ocSe -'
+             */
+            action = (lock_data.state & LS_DRIVE_OFF) ? LA_EXIT : LA_STOP;
     else {
       bprintf(warning, "ActBus: Unhandled lock goal (%x) ignored.",
           CommandData.actbus.lock_goal);
@@ -1049,7 +1050,7 @@ static void DoLock(void)
     switch (action) {
       case LA_STOP:
         bputs(info, "ActBus: Stopping lock motor.");
-//        LockCommand(command, "T"); /* terminate all strings */
+        //        LockCommand(command, "T"); /* terminate all strings */
         strcpy(command, "T"); /* terminate all strings */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_OFF;
