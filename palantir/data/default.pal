@@ -475,7 +475,7 @@
       <DATUM format="%.2f" src="T_OSC_COMP" extrema="temp"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Balance/Lock" colour="#880000" row="2" col="3">
+  <BOX caption="Balance" colour="#880000" row="2" col="3">
     <NUMBER caption="Status">
       <DATUM format="%.0f" src="BAL_VETO" extrema="balstatus"/>
     </NUMBER>
@@ -500,12 +500,29 @@
     <NUMBER caption="Gain">
       <DATUM format="%.2f" src="BAL_GAIN" extrema="unknown"/>
     </NUMBER>
-    <MULTI caption="Lock">
+<!--    <MULTI caption="Lock">
       <DATUM src="lokmot_pin">
         <WORD value="0" caption="Unlocked" textstyle="OK_BIT"/>
         <WORD value="1" caption="Locked" textstyle="W_BIT"/>
       </DATUM>
+    </MULTI>-->
+  </BOX>
+  <BOX caption="Lock" colour="#880000" row="2" col="4">
+    <MULTI caption="Lock">
+      <DATUM src="LOCK_NICE_STAT">
+        <WORD value="0" caption="Unknown" textstyle="E_BIT"/>
+        <WORD value="1" caption="Locked" textstyle="W_BIT"/>
+        <WORD value="2" caption="Unlocked" textstyle="OK_BIT"/>
+        <WORD value="3" caption="Locking" textstyle="W_BIT"/>
+        <WORD value="4" caption="Unlocking" textstyle="W_BIT"/>
+      </DATUM>
     </MULTI>
+    <NUMBER caption="Pot">
+      <DATUM format="%.2f" src="LOCK_POT" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Limit Switch">
+      <DATUM format="%.2f" src="LOCK_LIM_SW" extrema="unknown"/>
+    </NUMBER>
   </BOX>
   <BOX caption="Pointing Mode" colour="#880000" row="0" col="3" rowspan="1">
     <MULTI caption="Source">
@@ -754,7 +771,7 @@
       <DATUM format="%.2f" src="T_DPCU" extrema="temp"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Actuators" colour="#002222" row="3" col="8">
+  <BOX caption="Actuators" colour="#002222" row="4" col="8" rowspan="1">
     <NUMBER caption="act0 enc">
       <DATUM format="%.0f" src="act0_enc" extrema="unknown"/>
     </NUMBER>
@@ -790,6 +807,55 @@
     </NUMBER>
     <NUMBER caption="LVDT 13">
       <DATUM format="%.0f" src="LVDT_13" extrema="unknown"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Focus System" colour="#002222" row="3" col="8">
+    <MULTI caption="Actuators">
+      <DATUM src="FOCUS_MODE">
+        <WORD value="0" caption="Idle" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Servoing" textstyle="W_BIT"/>
+        <WORD value="2" caption="Focusing" textstyle="W_BIT"/>
+        <WORD value="3" caption="Offset" textstyle="W_BIT"/>
+        <WORD value="4" caption="Thermo" textstyle="W_BIT"/>
+        <WORD value="5" caption="Now" textstyle="W_BIT"/>
+        <WORD value="6" caption="Delta" textstyle="W_BIT"/>
+        <WORD value="7" caption="Panic Stop" textstyle="E_BIT"/>
+        <WORD value="8" caption="Delfoc" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Auto Focus">
+      <DATUM src="TC_MODE">
+        <WORD value="0" caption="Enabled" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Autovetoed" textstyle="W_BIT"/>
+        <WORD value="2" caption="Vetoed" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="T Primary">
+      <DATUM format="%.2f" src="T_PRIM_FID" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="T Secondary">
+      <DATUM format="%.2f" src="T_SEC_FID" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="TC G PRIM">
+      <DATUM format="%.0f" src="TC_G_PRIM" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="TC G SEC">
+      <DATUM format="%.0f" src="TC_G_SEC" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="TC_MODE">
+      <DATUM format="%.0f" src="TC_MODE" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="TC_STEP">
+      <DATUM format="%.0f" src="TC_STEP" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="TC_WAIT">
+      <DATUM format="%.0f" src="TC_WAIT" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="SF Correction">
+      <DATUM format="%.0f" src="SF_CORRECTION" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="SF Position">
+      <DATUM format="%.0f" src="SF_POSITION" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Motor Temps" colour="#002222" row="2" col="6">
@@ -1102,7 +1168,7 @@
       <DATUM format="%.2f" src="V_SOL_DAS4" extrema="vsolar"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Pressures/Cooling" colour="#777700" row="2" col="4">
+  <BOX caption="Pressures/Cooling" colour="#777700" row="2" col="5">
     <NUMBER caption="P ISC">
       <DATUM format="%.2f" src="ISC_PRESSURE1" extrema="psi"/>
     </NUMBER>
