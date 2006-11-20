@@ -60,13 +60,12 @@ extern "C" {
 #define ACTENC_TO_MM 0.00105833333333 /* mm/enc.counts = 24000 counts/inch */
 #define ACTENC_OFFSET 1000000 /* this number should be arbitrarily larger than
                                  the maximum throw */
-#define LVDT_C2V (12.288 / 65536)
-#define LVDT10_ADC_TO_ENC 2.203 /* adc counts to encoder counts */
-#define LVDT11_ADC_TO_ENC 2.199 /* adc counts to encoder counts */
-#define LVDT13_ADC_TO_ENC 2.221 /* adc counts to encoder counts */
-#define LVDT10_ZERO  5241.1  /* in encoder counts */
-#define LVDT11_ZERO  5901.1  /* in encoder counts */
-#define LVDT13_ZERO  7933.9  /* in encoder counts */
+#define LVDT10_ADC_TO_ENC 0.4568 /* adc counts to encoder counts */
+#define LVDT11_ADC_TO_ENC 0.4576 /* adc counts to encoder counts */
+#define LVDT13_ADC_TO_ENC 0.4556 /* adc counts to encoder counts */
+#define LVDT10_ZERO  -4842  /* in encoder counts */
+#define LVDT11_ZERO  -4064  /* in encoder counts */
+#define LVDT13_ZERO  -4659  /* in encoder counts */
 
 #define FIELD_LEN 20
 

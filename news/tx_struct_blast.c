@@ -636,6 +636,7 @@ struct ChannelStruct SlowChannels[] = {
   {"act2_l_good",  'w', LOOP6, 48,       ACTENC_TO_MM,             0.0, 's'},
   {"act0_dead_rec",'w', LOOP6, 49,       ACTENC_TO_MM,             0.0, 's'},
   {"act_flags",    'w', LOOP6, 50,                1.0,             0.0, 'u'},
+  {"focus_mode",   'w', LOOP6, 51,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
