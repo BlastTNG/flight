@@ -237,6 +237,13 @@ union DerivedUnion DerivedChannels[] = {
   LINCOM2("LHE_STATE", "LHE_IS_CLOSED", 2, 0, "LHE_IS_OPEN",  1, 0),
   LINCOM2("LN_STATE",  "LN_IS_CLOSED", 2, 0, "LN_IS_OPEN", 1, 0),
 
+  COMMENT("Limit Switch Niceties"),
+
+  LINCOM2("LS_EL_STATUS", "LS_EL_OK", 2, 0, "LS_IGNORE_EL", 1, 0),
+  LINCOM2("LS_OPENCLOSE", "LS_OPEN", 2, 0, "LS_CLOSED", 1, 0),
+  LINCOM2("LS_MOTION", "LS_DRIVE_RET", 2, 0, "LS_DRIVE_EXT", 1, 0),
+  LINCOM2("LS_NICE_STAT", "LS_MOTION", 2, 0, "LS_OPENCLOSE", 1, 0),
+
   COMMENT("Cryo Table Lookups"),
   COMMENT("Diodes"),
 
