@@ -481,10 +481,14 @@ static void ServoActuators(int* goal)
   int act_there[3] = {0, 0, 0};
   int act_wait[3] = {0, 0, 0};
   int lost[3] = {0, 0, 0};
+  int delta_dr[3] = {0, 0, 0};
   char buffer[1000];
 
   if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
     return;
+
+  for (i = 0; i < 3; ++i)
+    delta_dr[i] = goal[i] - act_data[i].enc + ACTENC_OFFSET;
 
   TakeBus(0);
 
@@ -533,7 +537,7 @@ static void ServoActuators(int* goal)
   }
 
   for (i = 0; i < 3; ++i)
-    CommandData.actbus.dead_reckon[i] = goal[i];
+    CommandData.actbus.dead_reckon[i] += goal[i];
 
   /* Update flags */
   int new_flags = 0;
@@ -925,6 +929,14 @@ static void DoActuators(void)
   }
   if (CommandData.actbus.focus_mode != ACTBUS_FM_PANIC)
     CommandData.actbus.focus_mode = ThermalCompensation();
+
+  if (CommandData.actbus.reset_dr) {
+    int i;
+
+    for (i = 0; i < 3; ++i)
+      CommandData.actbus.dead_reckon[i] = act_data[i].enc;
+    CommandData.actbus.reset_dr = 0;
+  }
 }
 
 static inline char* LockCommand(char* buffer, const char* cmd)

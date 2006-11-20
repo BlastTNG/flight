@@ -119,7 +119,6 @@ static void WriteAux(void)
   static struct BiPhaseStruct* he4LevReadAddr;
   static int incharge = -1;
   time_t t;
-  static int he4_lev_old = 0;
   int i_point;
   struct timeval tv;
   struct timezone tz;
@@ -157,9 +156,10 @@ static void WriteAux(void)
     bputs(info, "System: I have lost control.\n");
 
   if (CommandData.Cryo.heliumLevel)
-    he4_lev_old = slow_data[he4LevReadAddr->index][he4LevReadAddr->channel];
+    CommandData.Cryo.he4_lev_old
+      = slow_data[he4LevReadAddr->index][he4LevReadAddr->channel];
 
-  WriteData(he4LevOldAddr, he4_lev_old, NIOS_QUEUE);
+  WriteData(he4LevOldAddr, CommandData.Cryo.he4_lev_old, NIOS_QUEUE);
 
   incharge = InCharge;
 

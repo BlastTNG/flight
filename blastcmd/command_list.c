@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.47 $";
+const char *command_list_serial = "$Revision: 3.48 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance && Cooling","Bias",
@@ -179,6 +179,7 @@ struct scom scommands[N_SCOMMANDS] = {
     " correction mode", GR_ACT},
   {COMMAND(actuator_stop), "stop all secondary actuators immediately", GR_ACT},
   {COMMAND(in_focus), "the telescope is in focus now, record position", GR_ACT},
+  {COMMAND(reset_dr), "reset the actuator dead reckoning", GR_ACT},
 
   {COMMAND(isc_abort), "abort current solution attempt", GR_ISC_MODE},
   {COMMAND(isc_auto_focus), "autofocus camera", GR_ISC_MODE},

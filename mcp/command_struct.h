@@ -200,6 +200,7 @@ struct CommandDataStruct {
     unsigned short autoJFETheat;
     unsigned short JFETHeat;
     double JFETSetOn, JFETSetOff;
+    int he4_lev_old;
 
     unsigned short charcoalHeater;
     unsigned short fridgeCycle;
@@ -263,6 +264,7 @@ struct CommandDataStruct {
     int focus;
     int dead_reckon[3];
     int last_good[3];
+    int reset_dr;
 
     /* lock control */
     int lock_vel;

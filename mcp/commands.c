@@ -589,6 +589,9 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.actbus.tc_mode = TC_MODE_VETOED;
       CommandData.actbus.sf_in_focus = 1;
       break;
+    case reset_dr:
+      CommandData.actbus.reset_dr = 1;
+      break;
 
 #ifndef BOLOTEST
       /***************************************/
@@ -1916,8 +1919,8 @@ void WatchPort (void* parameter)
 
 /************************************************************/
 /*                                                          */
-/*  Initialize CommandData: read last valid state: if there is   */
-/*   no previous state file, set to default                 */
+/*  Initialize CommandData: read last valid state: if there */
+/*   is no previous state file, set to default              */
 /*                                                          */
 /************************************************************/
 void InitCommandData()
@@ -2104,6 +2107,7 @@ void InitCommandData()
   CommandData.actbus.tc_step = 100; /* microns */
   CommandData.actbus.tc_wait = 600; /* seconds */
   CommandData.actbus.off = 0;
+  CommandData.actbus.reset_dr = 0;
   CommandData.actbus.dead_reckon[0] = 0;
   CommandData.actbus.dead_reckon[1] = 0;
   CommandData.actbus.dead_reckon[2] = 0;
