@@ -509,13 +509,21 @@
   </BOX>
   <BOX caption="Lock" colour="#880000" row="2" col="4">
     <MULTI caption="Lock">
-      <DATUM src="LOCK_NICE_STAT">
+      <DATUM src="LS_NICE_STAT">
         <WORD value="0" caption="Unknown" textstyle="E_BIT"/>
         <WORD value="1" caption="Locked" textstyle="W_BIT"/>
         <WORD value="2" caption="Unlocked" textstyle="OK_BIT"/>
         <WORD value="3" caption="Locking" textstyle="W_BIT"/>
         <WORD value="4" caption="Unlocking" textstyle="W_BIT"/>
       </DATUM>
+    </MULTI>
+    <MULTI caption="Elevation">
+      <DATUM src="LS_EL_STATUS">
+        <WORD value="0" caption="No Good" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Good" textstyle="OK_BIT"/>
+        <WORD value="2" caption="Ignored" textstyle="E_BIT"/>
+        <WORD value="3" caption="Ignored" textstyle="E_BIT"/>
+       </DATUM>
     </MULTI>
     <NUMBER caption="Pot">
       <DATUM format="%.2f" src="LOCK_POT" extrema="unknown"/>
@@ -831,10 +839,10 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="T Primary">
-      <DATUM format="%.2f" src="T_PRIM_FID" extrema="unknown"/>
+      <DATUM format="%.2f" src="T_PRIME_FID" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Secondary">
-      <DATUM format="%.2f" src="T_SEC_FID" extrema="unknown"/>
+      <DATUM format="%.2f" src="T_SECOND_FID" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="TC G PRIM">
       <DATUM format="%.0f" src="TC_G_PRIM" extrema="unknown"/>
