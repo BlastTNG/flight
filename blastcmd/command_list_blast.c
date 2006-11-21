@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.49 $";
+const char *command_list_serial = "$Revision: 3.50 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance && Cooling","Bias",
@@ -427,9 +427,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(actuator_servo), "servo the actuators to absolute positions",
     GR_ACT, 3,
     {
-      {"Actuator Alpha", -15000, 15000, 'i', "act0_enc"},
-      {"Actuator Beta",  -15000, 15000, 'i', "act1_enc"},
-      {"Actuator Gamma", -15000, 15000, 'i', "act2_enc"}
+      {"Actuator Alpha", -15000, 15000, 'i', "ACT0_ENC"},
+      {"Actuator Beta",  -15000, 15000, 'i', "ACT1_ENC"},
+      {"Actuator Gamma", -15000, 15000, 'i', "ACT2_ENC"}
     }
   },
 
@@ -445,9 +445,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(encoder_offset), "set the current actuator encoder offset",
     GR_ACT, 3,
     {
-      {"Actuator Alpha", 0, 30000, 'i', "act0_enc"},
-      {"Actuator Beta",  0, 30000, 'i', "act1_enc"},
-      {"Actuator Gamma", 0, 30000, 'i', "act2_enc"}
+      {"Actuator Alpha", 0, 30000, 'i', "ACT0_ENC"},
+      {"Actuator Beta",  0, 30000, 'i', "ACT1_ENC"},
+      {"Actuator Gamma", 0, 30000, 'i', "ACT2_ENC"}
     }
   },
 
