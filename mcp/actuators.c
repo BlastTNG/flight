@@ -1177,8 +1177,8 @@ void StoreActBus(void)
   for (j = 0; j < 3; ++j) {
     WriteData(actPosAddr[j], act_data[j].pos, NIOS_QUEUE);
     WriteData(actEncAddr[j], act_data[j].enc - ACTENC_OFFSET, NIOS_QUEUE);
-    WriteData(actLGoodAddr[j], CommandData.actbus.last_good[j], NIOS_QUEUE);
-    WriteData(actDeadRecAddr[j], CommandData.actbus.dead_reckon[j], NIOS_QUEUE);
+    WriteData(actLGoodAddr[j], CommandData.actbus.last_good[j] - ACTENC_OFFSET, NIOS_QUEUE);
+    WriteData(actDeadRecAddr[j], CommandData.actbus.dead_reckon[j] - ACTENC_OFFSET, NIOS_QUEUE);
   }
   WriteData(secFocusAddr, focus, NIOS_FLUSH);
 

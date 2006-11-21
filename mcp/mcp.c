@@ -338,6 +338,8 @@ static void SensorReader(void)
        * of 4000kb */
       CommandData.df = vfsbuf.f_bavail / 1000;
     }
+
+    usleep(100000);
   }
 }
 
@@ -519,11 +521,13 @@ static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
     }
 
     CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
+#if 0
     if (do_skip == 0 && CommandData.bi0FifoSize > BI0_FIFO_MARGIN) {
       do_skip = (CommandData.bi0FifoSize - BI0_FIFO_MINIMUM) / BI0_FRAME_SIZE;
       bprintf(warning, "BiPhase Writer: Excess data in FIFO, discarding "
           "%i frames out of hand.", do_skip);
     }
+#endif
   }
 
   return i_out;
