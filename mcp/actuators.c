@@ -537,7 +537,7 @@ static void ServoActuators(int* goal)
   }
 
   for (i = 0; i < 3; ++i)
-    CommandData.actbus.dead_reckon[i] += goal[i];
+    CommandData.actbus.dead_reckon[i] += delta_dr[i];
 
   /* Update flags */
   int new_flags = 0;
@@ -933,9 +933,9 @@ static void DoActuators(void)
   if (CommandData.actbus.reset_dr) {
     int i;
 
-    for (i = 0; i < 3; ++i) {
-      CommandData.actbus.dead_reckon[i] = act_data[i].enc - ACTENC_OFFSET;
-    }
+    for (i = 0; i < 3; ++i)
+      CommandData.actbus.dead_reckon[i] = act_data[i].enc;
+
     CommandData.actbus.reset_dr = 0;
   }
 }
@@ -1093,6 +1093,15 @@ static inline struct NiosStruct* GetActNiosAddr(int i, const char* field)
   return GetNiosAddr(bus_buffer);
 }
 
+void ActPotTrim(void)
+{
+  int i;
+  
+  for (i = 0; i < 3; ++i)
+    if (act_data[i].enc > ACTENC_OFFSET / 2)
+      CommandData.actbus.pos_trim[i] = act_data[i].enc - act_data[i].pos;
+}
+
 /* This function is called by the frame control thread */
 void StoreActBus(void)
 {
@@ -1120,6 +1129,7 @@ void StoreActBus(void)
   static struct NiosStruct* actFlagsAddr;
 
   static struct NiosStruct* actPosAddr[3];
+  static struct NiosStruct* actPostrimAddr[3];
   static struct NiosStruct* actEncAddr[3];
   static struct NiosStruct* actDeadRecAddr[3];
   static struct NiosStruct* actLGoodAddr[3];
@@ -1145,6 +1155,7 @@ void StoreActBus(void)
 
     for (j = 0; j < 3; ++j) {
       actPosAddr[j] = GetActNiosAddr(j, "pos");
+      actPostrimAddr[j] = GetActNiosAddr(j, "postrim");
       actEncAddr[j] = GetActNiosAddr(j, "enc");
       actLGoodAddr[j] = GetActNiosAddr(j, "l_good");
       actDeadRecAddr[j] = GetActNiosAddr(j, "dead_rec");
@@ -1175,10 +1186,14 @@ void StoreActBus(void)
   WriteData(lokmotPinAddr, CommandData.pin_is_in, NIOS_QUEUE);
 
   for (j = 0; j < 3; ++j) {
-    WriteData(actPosAddr[j], act_data[j].pos, NIOS_QUEUE);
-    WriteData(actEncAddr[j], act_data[j].enc - ACTENC_OFFSET, NIOS_QUEUE);
-    WriteData(actLGoodAddr[j], CommandData.actbus.last_good[j] - ACTENC_OFFSET, NIOS_QUEUE);
-    WriteData(actDeadRecAddr[j], CommandData.actbus.dead_reckon[j] - ACTENC_OFFSET, NIOS_QUEUE);
+    WriteData(actPosAddr[j], act_data[j].pos + CommandData.actbus.pos_trim[j],
+        NIOS_QUEUE);
+    WriteData(actPostrimAddr[j], CommandData.actbus.pos_trim[j], NIOS_QUEUE);
+    WriteData(actEncAddr[j], act_data[j].enc, NIOS_QUEUE);
+    WriteData(actLGoodAddr[j], CommandData.actbus.last_good[j] - ACTENC_OFFSET,
+        NIOS_QUEUE);
+    WriteData(actDeadRecAddr[j], CommandData.actbus.dead_reckon[j]
+        - ACTENC_OFFSET, NIOS_QUEUE);
   }
   WriteData(secFocusAddr, focus, NIOS_FLUSH);
 

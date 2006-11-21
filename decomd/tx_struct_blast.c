@@ -73,12 +73,12 @@ struct ChannelStruct WideSlowChannels[] = {
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U'},
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S'},
   {"lock_pos",     'w', LOOP5, 18,                1.0,             0.0, 'U'},
-  {"act0_pos",     'w', LOOP5, 42,                1.0,             0.0, 'S'},
-  {"act1_pos",     'w', LOOP5, 44,                1.0,             0.0, 'S'},
-  {"act2_pos",     'w', LOOP5, 46,                1.0,             0.0, 'S'},
-  {"act0_enc",     'w', LOOP5, 48,                1.0,             0.0, 'S'},
-  {"act1_enc",     'w', LOOP5, 50,                1.0,             0.0, 'S'},
-  {"act2_enc",     'w', LOOP5, 52,                1.0,             0.0, 'S'},
+  {"act0_pos",     'w', LOOP5, 42,                1.0,  -ACTENC_OFFSET, 'S'},
+  {"act1_pos",     'w', LOOP5, 44,                1.0,  -ACTENC_OFFSET, 'S'},
+  {"act2_pos",     'w', LOOP5, 46,                1.0,  -ACTENC_OFFSET, 'S'},
+  {"act0_enc",     'w', LOOP5, 48,                1.0,  -ACTENC_OFFSET, 'S'},
+  {"act1_enc",     'w', LOOP5, 50,                1.0,  -ACTENC_OFFSET, 'S'},
+  {"act2_enc",     'w', LOOP5, 52,                1.0,  -ACTENC_OFFSET, 'S'},
   {"sec_goal",     'w', LOOP6, 30,                1.0,             0.0, 'S'},
   {"sec_focus",    'w', LOOP6, 32,                1.0,             0.0, 'S'},
 
@@ -637,6 +637,9 @@ struct ChannelStruct SlowChannels[] = {
   {"act0_dead_rec",'w', LOOP6, 49,                1.0,             0.0, 's'},
   {"act_flags",    'w', LOOP6, 50,                1.0,             0.0, 'u'},
   {"focus_mode",   'w', LOOP6, 51,                1.0,             0.0, 'u'},
+  {"act0_postrim", 'w', LOOP6, 52,                1.0,             0.0, 'u'},
+  {"act1_postrim", 'w', LOOP6, 53,                1.0,             0.0, 'u'},
+  {"act2_postrim", 'w', LOOP6, 54,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 

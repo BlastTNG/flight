@@ -264,6 +264,7 @@ struct CommandDataStruct {
     int focus;
     int dead_reckon[3];
     int last_good[3];
+    int pos_trim[3];
     int reset_dr;
 
     /* lock control */

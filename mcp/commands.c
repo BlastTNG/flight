@@ -68,6 +68,8 @@
 #define ISC_TRIGGER_POS  2
 #define ISC_TRIGGER_NEG  3
 
+void ActPotTrim(void); /* actuators.c */
+
 void SetRaDec(double ra, double dec); /* defined in pointing.c */
 void SetTrimToSC(int);
 void ClearTrim();
@@ -591,6 +593,9 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case reset_dr:
       CommandData.actbus.reset_dr = 1;
+      break;
+    case actpos_trim:
+      ActPotTrim();
       break;
 
 #ifndef BOLOTEST
