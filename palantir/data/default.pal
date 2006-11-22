@@ -128,10 +128,10 @@
       <XLO value="22.5"/>
     </EXTREMA>
     <EXTREMA name="pressure">
-      <HI value="100"/>
-      <LO value="70"/>
-      <XHI value="110"/>
-      <XLO value="50"/>
+      <HI value="45"/>
+      <LO value="26"/>
+      <XHI value="55"/>
+      <XLO value="20"/>
     </EXTREMA>
     <EXTREMA name="psi">
       <HI value="15"/>
@@ -271,6 +271,18 @@
       <HI value="0.5"/>
       <XHI value="99"/>
     </EXTREMA>
+    <EXTREMA name="lockpot">
+      <XLO value="-1"/>
+      <LO value="-0.5"/>
+      <HI value="10"/>
+      <XHI value="110"/>
+    </EXTREMA>
+    <EXTREMA name="locklimit">
+      <XLO value="-1"/>
+      <LO value="-0.5"/>
+      <HI value="100"/>
+      <XHI value="16565"/>
+    </EXTREMA>
     <CURFILE name="/data/etc/defile.cur"/>
     <DECOMD host="arwen.blast" port="11411"/>
   </SETTINGS>
@@ -350,8 +362,14 @@
         <WORD value="1" caption="Analogue" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
-    <MULTI caption="Autogyro">
-      <DATUM src="AUTO_GYRO">
+    <MULTI caption="Az Autogyro">
+      <DATUM src="AZ_AUTO_GYRO">
+        <WORD value="1" caption="On" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="El Autogyro">
+      <DATUM src="EL_AUTO_GYRO">
         <WORD value="1" caption="On" textstyle="OK_BIT"/>
         <WORD value="0" caption="Off" textstyle="W_BIT"/>
       </DATUM>
@@ -525,11 +543,11 @@
         <WORD value="3" caption="Ignored" textstyle="E_BIT"/>
        </DATUM>
     </MULTI>
-    <NUMBER caption="Pot">
-      <DATUM format="%.2f" src="LOCK_POT" extrema="unknown"/>
+    <NUMBER caption="Extension (%)">
+      <DATUM format="%.2f" src="LOCK_POT" extrema="lockpot"/>
     </NUMBER>
     <NUMBER caption="Limit Switch">
-      <DATUM format="%.2f" src="LOCK_LIM_SW" extrema="unknown"/>
+      <DATUM format="%.2f" src="LOCK_LIM_SW" extrema="locklimit"/>
     </NUMBER>
   </BOX>
   <BOX caption="Pointing Mode" colour="#880000" row="0" col="3" rowspan="1">
