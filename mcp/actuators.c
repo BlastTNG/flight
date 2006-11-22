@@ -475,7 +475,7 @@ static void InitialiseActuator(int who)
 }
 
 #define THERE_WAIT 10
-static void ServoActuators(int* goal)
+static void ServoActuators(int* goal, int update_dr)
 {
   int i;
   int act_there[3] = {0, 0, 0};
@@ -536,8 +536,9 @@ static void ServoActuators(int* goal)
       break;
   }
 
-  for (i = 0; i < 3; ++i)
-    CommandData.actbus.dead_reckon[i] += delta_dr[i];
+  if (update_dr)
+    for (i = 0; i < 3; ++i)
+      CommandData.actbus.dead_reckon[i] += delta_dr[i];
 
   /* Update flags */
   int new_flags = 0;
@@ -561,11 +562,11 @@ static void ServoActuators(int* goal)
 static void DeltaActuators(void)
 {
   int i, goal[3];
-  
+
   for (i = 0; i < 3; ++i)
     goal[i] = CommandData.actbus.delta[i] + act_data[i].enc - ACTENC_OFFSET;
 
-  ServoActuators(goal);
+  ServoActuators(goal, 1);
 }
 
 static int PollBus(int rescan)
@@ -732,6 +733,13 @@ static void SetNewFocus(void)
   for (i = 0; i < (1 + abs(delta) * 26 / CommandData.actbus.act_vel) * 6; ++i) {
     for (j = 0; j < 3; ++j)
       ReadActuator(j, 1);
+
+    for (i = 0; i < 3; ++i)
+      CommandData.actbus.dead_reckon[i] += delta;
+
+    focus = (act_data[0].enc + act_data[1].enc + act_data[2].enc) / 3
+      - ACTENC_OFFSET;
+
     if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
       return;
   }
@@ -746,7 +754,7 @@ static double CalibrateAD590(int counts)
     t = -1;
   else if (t > 360)
     t = -2;
-  
+
   return t;
 }
 
@@ -754,7 +762,7 @@ static int ThermalCompensation(void)
 {
   focus = (act_data[0].enc + act_data[1].enc + act_data[2].enc) / 3
     - ACTENC_OFFSET;
-  
+
   /* Do nothing if vetoed or autovetoed */
   if (CommandData.actbus.tc_mode != TC_MODE_ENABLED)
     return ACTBUS_FM_SLEEP;
@@ -881,7 +889,7 @@ void SecondaryMirror(void)
     correction = CommandData.actbus.g_primary * (t_primary -
         CommandData.actbus.sf_t_primary) - CommandData.actbus.g_secondary *
       (t_secondary - CommandData.actbus.sf_t_secondary) + (focus -
-          CommandData.actbus.sf_position);
+                                                           CommandData.actbus.sf_position);
     if (CommandData.actbus.sf_time < 1000000)
       CommandData.actbus.sf_time++;
   }
@@ -900,6 +908,8 @@ void SecondaryMirror(void)
 
 static void DoActuators(void)
 {
+  int update_dr = 1;
+
   switch(CommandData.actbus.focus_mode) {
     case ACTBUS_FM_PANIC:
       bputs(warning, "ActBus: Actuator Panic");
@@ -915,9 +925,10 @@ static void DoActuators(void)
     case ACTBUS_FM_THERMO:
     case ACTBUS_FM_FOCUS:
       SetNewFocus();
+      update_dr = 0;
       /* fallthrough */
     case ACTBUS_FM_SERVO:
-      ServoActuators(CommandData.actbus.goal);
+      ServoActuators(CommandData.actbus.goal, update_dr);
       break;
     case ACTBUS_FM_OFFSET:
       SetOffsets(CommandData.actbus.offset);
@@ -1096,7 +1107,7 @@ static inline struct NiosStruct* GetActNiosAddr(int i, const char* field)
 void ActPotTrim(void)
 {
   int i;
-  
+
   for (i = 0; i < 3; ++i)
     if (act_data[i].enc > ACTENC_OFFSET / 2)
       CommandData.actbus.pos_trim[i] = act_data[i].enc - act_data[i].pos;
