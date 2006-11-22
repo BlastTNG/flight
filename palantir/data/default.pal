@@ -128,9 +128,9 @@
       <XLO value="22.5"/>
     </EXTREMA>
     <EXTREMA name="pressure">
-      <HI value="45"/>
+      <HI value="65"/>
       <LO value="26"/>
-      <XHI value="55"/>
+      <XHI value="75"/>
       <XLO value="20"/>
     </EXTREMA>
     <EXTREMA name="psi">
