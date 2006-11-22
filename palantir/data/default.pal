@@ -528,18 +528,19 @@
   <BOX caption="Lock" colour="#880000" row="2" col="4">
     <MULTI caption="Lock">
       <DATUM src="LS_NICE_STAT">
-        <WORD value="0" caption="Unknown" textstyle="E_BIT"/>
+        <WORD value="0" caption="Locking" textstyle="W_BIT"/>
         <WORD value="1" caption="Locked" textstyle="W_BIT"/>
         <WORD value="2" caption="Unlocked" textstyle="OK_BIT"/>
         <WORD value="3" caption="Locking" textstyle="W_BIT"/>
-        <WORD value="4" caption="Unlocking" textstyle="W_BIT"/>
+        <WORD value="6" caption="Unlocking" textstyle="W_BIT"/>
+        <WORD value="7" caption="Unlocking" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Elevation">
       <DATUM src="LS_EL_STATUS">
         <WORD value="0" caption="No Good" textstyle="OK_BIT"/>
-        <WORD value="1" caption="Good" textstyle="OK_BIT"/>
-        <WORD value="2" caption="Ignored" textstyle="E_BIT"/>
+        <WORD value="2" caption="Good" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Ignored" textstyle="E_BIT"/>
         <WORD value="3" caption="Ignored" textstyle="E_BIT"/>
        </DATUM>
     </MULTI>
