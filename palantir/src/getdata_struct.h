@@ -15,13 +15,15 @@
 #ifndef GETDATA_STRUCT_H
 #define GETDATA_STRUCT_H
 
-#define FIELD_LENGTH 16
-#define MAX_FILENAME_LENGTH 180
-#define MAX_LINE_LENGTH 180
+#define FIELD_LENGTH 50
+#define MAX_FILENAME_LENGTH 250
+#define MAX_LINE_LENGTH 250
 #define MAX_LINCOM 3
+#define MAX_IN_COLS 15
 
 struct RawEntryType {
   char field[FIELD_LENGTH+1];
+  char file[MAX_FILENAME_LENGTH + FIELD_LENGTH + 2];
   int fp;
   char type;
   int size;
@@ -45,6 +47,11 @@ struct LinterpEntryType {
   double *y;
 };
 
+struct MultiplyEntryType {
+  char field[FIELD_LENGTH+1];
+  char in_fields[2][FIELD_LENGTH+1];
+};
+
 struct MplexEntryType {
   char field[FIELD_LENGTH+1];
   char cnt_field[FIELD_LENGTH+1];
@@ -60,19 +67,30 @@ struct BitEntryType {
   int numbits;
 };
 
+struct PhaseEntryType {
+  char field[FIELD_LENGTH+1];
+  char raw_field[FIELD_LENGTH+1];
+  int shift;
+};
+
 struct FormatType {
   char FileDirName[MAX_FILENAME_LENGTH];
   int frame_offset;
+  struct RawEntryType first_field;
   struct RawEntryType *rawEntries;
   int n_raw;
   struct LincomEntryType *lincomEntries;
   int n_lincom;
   struct LinterpEntryType *linterpEntries;
   int n_linterp;
+  struct MultiplyEntryType *multiplyEntries;
+  int n_multiply;
   struct MplexEntryType *mplexEntries;
   int n_mplex;
   struct BitEntryType *bitEntries;
   int n_bit;
+  struct PhaseEntryType *phaseEntries;
+  int n_phase;
 };
 
 #endif
