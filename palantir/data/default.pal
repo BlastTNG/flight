@@ -799,22 +799,22 @@
     </NUMBER>
   </BOX>
   <BOX caption="Actuators" colour="#002222" row="4" col="8" rowspan="1">
-    <NUMBER caption="act0 enc">
+    <NUMBER caption="ACT0 ENC">
       <DATUM format="%.0f" src="ACT0_ENC" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="act1 enc">
+    <NUMBER caption="ACT1 ENC">
       <DATUM format="%.0f" src="ACT1_ENC" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="act2 enc">
+    <NUMBER caption="ACT2 ENC">
       <DATUM format="%.0f" src="ACT2_ENC" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="act0 pos">
+    <NUMBER caption="ACT0 POS">
       <DATUM format="%.0f" src="ACT0_POS" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="act1 pos">
+    <NUMBER caption="ACT1 POS">
       <DATUM format="%.0f" src="ACT1_POS" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="act2 pos">
+    <NUMBER caption="ACT2 POS">
       <DATUM format="%.0f" src="ACT2_POS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Move Current">
