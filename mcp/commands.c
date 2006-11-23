@@ -1082,6 +1082,11 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.offset[2] = ivalues[2];
       CommandData.actbus.focus_mode = ACTBUS_FM_OFFSET;
       break;
+    case lvdt_limit:
+      CommandData.actbus.lvdt_num = ivalues[0];
+      CommandData.actbus.lvdt_low = ivalues[1];
+      CommandData.actbus.lvdt_high = ivalues[2];
+      break;
 
       /* XY Stage */
     case xy_goto:
@@ -2119,6 +2124,9 @@ void InitCommandData()
   CommandData.actbus.last_good[0] = 0;
   CommandData.actbus.last_good[1] = 0;
   CommandData.actbus.last_good[2] = 0;
+  CommandData.actbus.lvdt_num = 10;
+  CommandData.actbus.lvdt_low = -3000;
+  CommandData.actbus.lvdt_high = 26000;
 
   /* The first is due to change in radius of curvature, the second due to
    * displacement of the secondary due to the rigid struts */
