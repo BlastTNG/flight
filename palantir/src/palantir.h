@@ -45,7 +45,7 @@
 #include <qvariant.h>
 #include <qdialog.h>
 #include <qmainwindow.h>
-#include <qlist.h>
+#include <qptrlist.h>
 #include <qpixmap.h>
 #include <qcombobox.h>
 #include <qframe.h>

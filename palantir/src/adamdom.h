@@ -25,7 +25,7 @@
 
 #include <qdom.h>
 #include <qfile.h>
-#include <qlist.h>
+#include <qptrlist.h>
 
 class AdamDom
 {
