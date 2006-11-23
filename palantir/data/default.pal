@@ -19,12 +19,12 @@
       <XHI value="32768"/>
       <XLO value="-32768"/>
     </EXTREMA>
-    <EXTREMA name="gains">
+<!--    <EXTREMA name="gains">
       <HI value="32768"/>
       <LO value="0"/>
       <XHI value="32768"/>
       <XLO value="0"/>
-    </EXTREMA>
+    </EXTREMA>-->
     <EXTREMA name="gyheat">
       <HI value="40"/>
       <LO value="5"/>
@@ -61,12 +61,12 @@
       <XHI value="55"/>
       <XLO value="-20"/>
     </EXTREMA>
-    <EXTREMA name="isctemp">
+<!--    <EXTREMA name="isctemp">
       <HI value="35"/>
       <LO value="0"/>
       <XHI value="45"/>
       <XLO value="-10"/>
-    </EXTREMA>
+    </EXTREMA>-->
     <EXTREMA name="rahour">
       <HI value="24.01"/>
       <LO value="-12.0"/>
@@ -109,12 +109,12 @@
       <XHI value="25"/>
       <XLO value="-0.25"/>
     </EXTREMA>
-    <EXTREMA name="cpufan">
+<!--    <EXTREMA name="cpufan">
       <HI value="15000"/>
       <LO value="6000"/>
       <XHI value="20000"/>
       <XLO value="5000"/>
-    </EXTREMA>
+    </EXTREMA>-->
     <EXTREMA name="vsolar">
       <HI value="55"/>
       <LO value="23"/>
@@ -139,12 +139,12 @@
       <XHI value="16"/>
       <XLO value="9"/>
     </EXTREMA>
-    <EXTREMA name="sssnr">
+<!--    <EXTREMA name="sssnr">
       <HI value="150"/>
       <LO value="50"/>
       <XHI value="200"/>
       <XLO value="0"/>
-    </EXTREMA>
+    </EXTREMA>-->
     <EXTREMA name="unknown">
       <HI value="2147483640"/>
       <LO value="-2147483640"/>
@@ -518,12 +518,6 @@
     <NUMBER caption="Gain">
       <DATUM format="%.2f" src="BAL_GAIN" extrema="unknown"/>
     </NUMBER>
-<!--    <MULTI caption="Lock">
-      <DATUM src="lokmot_pin">
-        <WORD value="0" caption="Unlocked" textstyle="OK_BIT"/>
-        <WORD value="1" caption="Locked" textstyle="W_BIT"/>
-      </DATUM>
-    </MULTI>-->
   </BOX>
   <BOX caption="Lock" colour="#880000" row="2" col="4">
     <MULTI caption="Lock">
@@ -691,9 +685,6 @@
     <NUMBER caption="Rec">
       <DATUM format="%.2f" src="T_REC" extrema="temp"/>
     </NUMBER>
-<!--    <NUMBER caption="IF Heat Exchanger">
-      <DATUM format="%.2f" src="T_IN_HEATX" extrema="temp"/>
-    </NUMBER>-->
   </BOX>
   <BOX caption="Ambient Thermometers" colour="#002222" row="3" col="5">
     <NUMBER caption="IF Top Front">
@@ -770,9 +761,6 @@
     <NUMBER caption="PYR Clin">
       <DATUM format="%.2f" src="T_CLIN_PYR" extrema="temp"/>
     </NUMBER>
-<!--    <NUMBER caption="OF HeatX">
-      <DATUM format="%.2f" src="T_OUT_HEATX" extrema="temp"/>
-    </NUMBER>-->
     <NUMBER caption="Sun Sensor">
       <DATUM format="%.2f" src="SS_CASE_TEMP" extrema="temp"/>
     </NUMBER>
@@ -904,9 +892,6 @@
     <NUMBER caption="T Pivot MC">
       <DATUM format="%.2f" src="T_PIV_MC" extrema="temp"/>
     </NUMBER>
-<!--    <NUMBER caption="El Bearing">
-      <DATUM format="%.2f" src="T_EL_BEARING" extrema="temp"/>
-    </NUMBER>-->
   </BOX>
   <BOX caption="Currents" colour="#707" row="0" col="4" rowspan="1">
     <NUMBER caption="I DPM 3V">
@@ -1428,7 +1413,7 @@
   </BOX>
   <BOX caption="Cold Optics Temps" row="3" col="6">
     <NUMBER caption="Opt.Box Filter">
-      <DATUM format="%.2f" src="T_optbox_filt" extrema="pottemp-diode"/>
+      <DATUM format="%.2f" src="T_optbox_filt" extrema="pottemp"/>
     </NUMBER>
     <NUMBER caption="4He Pot Diode">
       <DATUM format="%.2f" src="T_he4pot_d" extrema="pottemp-diode"/>
