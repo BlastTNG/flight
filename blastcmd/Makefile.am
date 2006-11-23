@@ -1,7 +1,7 @@
 buildserial = @CMDVERSION@
 CONFIG_STATUS_DEPENDENCIES = $(top_srcdir)/command_list.c
 
-INCLUDES=-Wall
+INCLUDES=-g -Wall
 
 AUTOMAKE_OPTIONS = foreign
 blastcmd_SOURCES = blastcmd.c command_list.c daemon.c netcmd.c command_list.h \

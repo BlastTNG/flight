@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.51 $";
+const char *command_list_serial = "$Revision: 3.52 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance && Cooling","Bias",
@@ -463,6 +463,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Move current (%)", 0, 100, 'i', "ACT_MOVE_I"},
       {"Hold current (%)", 0,  50, 'i', "ACT_HOLD_I"},
+    }
+  },
+
+  {COMMAND(lvdt_limit), "set the hard LVDT limits on actuator moves", GR_ACT, 3,
+    {
+      {"LVDT number (10,11,13)", 9, 14, 'i', "LVDT_LOOK"},
+      {"Lower Limit", -3000, 26000, 'i', "LVDT_LOW"},
+      {"Upper Limit", -3000, 26000, 'i', "LVDT_HIGH"}
     }
   },
 
