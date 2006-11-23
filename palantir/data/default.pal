@@ -800,31 +800,31 @@
   </BOX>
   <BOX caption="Actuators" colour="#002222" row="4" col="8" rowspan="1">
     <NUMBER caption="act0 enc">
-      <DATUM format="%.0f" src="act0_enc" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT0_ENC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="act1 enc">
-      <DATUM format="%.0f" src="act1_enc" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT1_ENC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="act2 enc">
-      <DATUM format="%.0f" src="act2_enc" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT2_ENC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="act0 pos">
-      <DATUM format="%.0f" src="act0_pos" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT0_POS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="act1 pos">
-      <DATUM format="%.0f" src="act1_pos" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT1_POS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="act2 pos">
-      <DATUM format="%.0f" src="act2_pos" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT2_POS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Move Current">
-      <DATUM format="%.0f" src="act_move_i" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT_MOVE_I" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Hold Current">
-      <DATUM format="%.0f" src="act_hold_i" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT_HOLD_I" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Velocity">
-      <DATUM format="%.0f" src="act_vel" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT_VEL" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="LVDT 10">
       <DATUM format="%.0f" src="LVDT_10" extrema="unknown"/>

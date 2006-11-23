@@ -1,3 +1,6 @@
+2006-06-14 (1.2.14):
+	* src/palantir.h, src/adamdom.h: deprecate qt2, update for qt3.4'
+
 2006-06-13 (1.2.13):
 	* src/decompoll.cpp (DecomPoll::DecomPoll): initialise pollDecomd.
 
