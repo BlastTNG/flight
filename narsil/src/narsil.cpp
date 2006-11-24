@@ -1195,7 +1195,7 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name,
   if (!curfile.isNull())
     strcpy(tmp, curfile);
   else
-    strcpy(tmp, '\0');
+    strcpy(tmp, "\0");
 
   DataSource = new KstFile(tmp, UNKNOWN);
   DataSource->update();

@@ -26,7 +26,6 @@
 #include <fcntl.h>
 #include <iostream>
 
-#include "creaddata.h"
 #include "getdata.h"
 
 #include "kstfile.h"
@@ -107,7 +106,6 @@ KstFile::~KstFile(){
   case ASCII:
     free(RowIndex);
     break;
-  case FRAME:
   case DIRFILE:
   case EMPTY:
   case UNKNOWN:
@@ -132,8 +130,6 @@ int KstFile::readField(double *V, const char *field, const int &s,
   switch (Type) {
   case ASCII:
     return (asciiReadField(V, field, s,n));
-  case FRAME:
-    return (frameReadField(V, field, s,n));
   case DIRFILE:
     return (dirfileReadField(V, field, s,n));
   case EMPTY:
@@ -156,8 +152,6 @@ bool KstFile::isValidField(const char *field) {
   switch (Type) {
   case ASCII:
     return(asciiIsValidField(field));
-  case FRAME:
-    return (frameIsValidField(field));
   case DIRFILE:
     return (dirfileIsValidField(field));
   case EMPTY:
@@ -179,8 +173,6 @@ int KstFile::samplesPerFrame(const char *field){
   switch (Type) {
   case ASCII:
     return(1);
-  case FRAME:
-    return (frameSampsPerFrame(field));
   case DIRFILE:
     return (dirfileSampsPerFrame(field));
   case EMPTY:
@@ -208,8 +200,6 @@ bool KstFile::update(){
   switch (Type) {
   case ASCII:
     return (asciiUpdate());
-  case FRAME:
-    return (frameUpdate());
   case DIRFILE:
     return (dirfileUpdate());
   case EMPTY:
@@ -225,8 +215,6 @@ int KstFile::max_read() {
   switch (Type) {
   case ASCII:
     return (2000);
-  case FRAME:
-    return (1000);
   case DIRFILE:
     return (80000);
   default:
@@ -256,9 +244,6 @@ QString KstFile::fileType() {
   switch (Type) {
   case ASCII:
     strcpy(tmpstr, "ASCII");
-    break;
-  case FRAME:
-    strcpy(tmpstr, "Binary Frame");
     break;
   case DIRFILE:
     strcpy(tmpstr, "Directory of Binary Files");
@@ -338,18 +323,6 @@ int KstFile::determineType(){
     return (EMPTY);
   }
 
-  /******************************************************************/
-  /* test to see if the file is a creaddata recognized binary frame */
-  CReadData(lfilename,"FILEFRAM",
-	    0,0, /* 1st sframe, 1st samp */
-	    1,0, /* num sframes, num samps */
-	    'n',(void*)NULL,
-	    &error_code);
-  if (error_code==E_OK) {
-    Type = FRAME;
-    return (FRAME);
-  }
-
   /********************************************/
   /* test to see if the file is ascii collums */
   /* This is pretty unreliable so do it last  */
@@ -411,9 +384,6 @@ void KstFile::init() {
   switch (Type) {
   case ASCII:
     asciiInitFile();
-    break;
-  case FRAME:
-    frameInitFile();
     break;
   case DIRFILE:
     dirfileInitFile();
@@ -649,168 +619,6 @@ int KstFile::asciiReadField(double *V, const char *field, const int &s,
 
 bool KstFile::asciiIsValidField(const char *field) {
   return (1);
-}
-
-/************************************************************************/
-/*                                                                      */
-/*               Private Methods: Frame Files                           */
-/*                                                                      */
-/************************************************************************/
-
-/** Initialization for Frame Files */
-bool KstFile::frameInitFile(){
-  int buf[4], error_code;
-  int len;
-  char ext[3];
-  char *tmpstr=NULL;
-
-
-  ReadData(Filename,"FFINFO",
-	    0,0, /* 1st sframe, 1st samp */
-	    0,2, /* num sframes, num samps */
-	    'i',(void*)buf,
-	    &error_code);
-
-  if (error_code!=E_OK) {
-    printf("Problem reading FFINFO: don't know why\n");
-    exit(0);
-  }
-
-  BytePerFrame = buf[0];
-  FramePerFile = buf[1];
-  NumFrames=0;
-
-  /* split out file name and extention */
-  len = strlen(Filename);
-  ext[0] = Filename[len-2];
-  ext[1] = Filename[len-1];
-  ext[2] = '\0';
-
-  strcpy(RootFileName, Filename);
-
-  if (isxdigit(ext[0]) && isxdigit(ext[1])) {
-    RootFileName[len-2]='\0';
-    RootExt = strtol(ext, &tmpstr, 16);
-    MaxExt=RootExt;
-  } else {
-    MaxExt = RootExt = -1;
-  }
-  return(frameUpdate());
-}
-
-/** Update Frame Data file: determine length return 1 if new data */
-bool KstFile::frameUpdate(){
-  char tmpfilename[255];
-  struct stat stat_buf;
-  int done = 0;
-  int dec = 0;
-  int newN;
-  bool isnew;
-
-  if (MaxExt<0) { // no hex number extention: only this file
-    if (stat (Filename, &stat_buf) != 0) { // file is gone
-      newN=0;
-    } else {                               // file exists
-      newN = stat_buf.st_size/BytePerFrame;
-    }
-  } else {
-    do {
-      sprintf(tmpfilename,"%s%2.2x",RootFileName, MaxExt);
-      if (stat(tmpfilename, &stat_buf)!=0) { // no file with MaxExt
-	if (MaxExt>RootExt) {  // deleted (?) check the next one down
-	  MaxExt--;
-	  dec = 1;
-	} else {                      // All files have been deleted
-	  stat_buf.st_size = 0;
-	  done=1;
-	}
-      } else {
-	if (stat_buf.st_size == BytePerFrame*FramePerFile) { // Full file
-	  if (dec) { // already checked next one up: it is empty
-	    done = 1;
-	  } else {
-	    MaxExt++;
-	  }
-	} else {
-	  done=1;
-	}
-      }
-    } while (!done);
-    newN = (MaxExt - RootExt)*FramePerFile + stat_buf.st_size/BytePerFrame;
-  }
-
-  isnew = (NumFrames!=newN);
-  NumFrames=newN;
-
-  return(isnew);
-
-}
-
-/** Returns true if the field is valid, or false if it is not */
-bool KstFile::frameIsValidField(const char *field) {
-  int error_code;
-  char tmpstr[128];
-
-  strncpy(tmpstr, field, 10);
-  tmpstr[8]= '\0';
-
-  CReadData(Filename,tmpstr,
-		0,0, /* 1st sframe, 1st samp */
-		1,0, /* num sframes, num samps */
-		'n',(void*)NULL,
-		&error_code);
-
-  if (error_code==0) return(true);
-  else return(false);
-}
-
-/** determine samples per frame by doing a NULL read to the file */
-int KstFile::frameSampsPerFrame(const char *field) {
-  int spf, error_code;
-  char tmpstr[128];
-
-  strncpy(tmpstr, field, 10); // Protect against buffer overflow
-  tmpstr[8]= '\0';
-
-  spf=CReadData(Filename,tmpstr,
-		0,0, /* 1st sframe, 1st samp */
-		1,0, /* num sframes, num samps */
-		'n',(void*)NULL,
-		&error_code);
-
-  return(spf);
-}
-
-
-/** Read a field from a frame file.  The request is for a number of
-frames:  the number of samples is n * SampsPerFrame(field).  if n<0,
-read just one sample, not an entire frame.  The number
-of samples read is returned */
-int KstFile::frameReadField(double *V, const char *field,
-                            const int &s, const int &n){
-  int error_code;
-  int n_read;
-  char tmpstr[128];
-
-  strncpy(tmpstr, field, 10); // Protect against buffer overflow
-  tmpstr[8]= '\0';
-
-  if (n<0) {
-    n_read = CReadData(Filename,tmpstr,
-                       s,0, /* 1st sframe, 1st samp */
-                       0,1, /* num sframes, num samps */
-                       'd',(void*)V,
-                       &error_code);
-  } else {
-    n_read = CReadData(Filename,tmpstr,
-                       s,0, /* 1st sframe, 1st samp */
-                       n,0, /* num sframes, num samps */
-                       'd',(void*)V,
-                       &error_code);
-  }
-
-  return(n_read);
-
 }
 
 /************************************************************************/
