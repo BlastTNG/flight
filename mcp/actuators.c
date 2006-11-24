@@ -484,6 +484,48 @@ static void InitialiseActuator(int who)
   }
 }
 
+/* Barth made this up */
+static int CheckMove(int delta0, int delta1, int delta2)
+{
+  double maxE, minE;
+
+  double lvdt_low = CommandData.actbus.lvdt_low;
+  double lvdt_high = CommandData.actbus.lvdt_high;
+  double lvdt_delta = CommandData.actbus.lvdt_delta;
+
+  double X = (lvdt[0]+lvdt[1]+lvdt[2] + (double)(delta0 + delta1
+        + delta2)) / 3.0;
+
+  double A = (-lvdt[1] + 2 * lvdt[0] + 2 * lvdt[2]) / 3. + (double)delta0;
+  double B = (-lvdt[2] + 2 * lvdt[1] + 2 * lvdt[0]) / 3. + (double)delta1;
+  double C = (-lvdt[0] + 2 * lvdt[2] + 2 * lvdt[1]) / 3. + (double)delta2;
+
+  if (A < B) {
+   maxE = B;
+   minE = A;
+  } else {
+   maxE = A;
+   minE = B;
+  }
+
+  if (C > maxE)
+    maxE = C;
+  else if (C < minE)
+    minE = C;
+
+  bprintf(info, "%i %i %i | %f %f %f %f | %f %f | %f %f | %f %f", delta0,
+      delta1, delta2, X, A, B, C, minE, maxE,
+      lvdt_low, lvdt_high, maxE - minE, lvdt_delta);
+
+  if (X < lvdt_low || X > lvdt_high || maxE - minE > lvdt_delta) {
+    bputs(warning, "ActBus: Move Out of Range.");
+    bad_move = ACTBUS_FL_BDMV;
+  } else
+    bad_move = 0;
+
+  return bad_move;
+}
+
 #define THERE_WAIT 10
 static void ServoActuators(int* goal, int update_dr)
 {
@@ -494,11 +536,14 @@ static void ServoActuators(int* goal, int update_dr)
   int delta_dr[3] = {0, 0, 0};
   char buffer[1000];
 
-  if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
-    return;
-
   for (i = 0; i < 3; ++i)
     delta_dr[i] = goal[i] - act_data[i].enc + ACTENC_OFFSET;
+
+  if (CheckMove(delta_dr[0], delta_dr[1], delta_dr[2]))
+    return;
+
+  if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
+    return;
 
   TakeBus(0);
 
@@ -707,43 +752,6 @@ static void SetOffsets(int* offset)
     BusComm(i, buffer, 0, __inhibit_chatter);
     sleep(1);
   }
-}
-
-/* Barth made this up */
-static int CheckMove(int delta0, int delta1, int delta2)
-{
-  double maxE, minE;
-
-  double lvdt_low = CommandData.actbus.lvdt_low;
-  double lvdt_high = CommandData.actbus.lvdt_high;
-  double lvdt_delta = CommandData.actbus.lvdt_delta;
-
-  double X = (lvdt[0]+lvdt[1]+lvdt[2] + (double)(delta0 + delta1
-        + delta2)) / 3.0;
-
-  double A = (-lvdt[1] + 2 * lvdt[0] + 2 * lvdt[2]) / 3. + (double)delta0;
-  double B = (-lvdt[2] + 2 * lvdt[0] + 2 * lvdt[1]) / 3. + (double)delta1;
-  double C = (-lvdt[0] + 2 * lvdt[2] + 2 * lvdt[1]) / 3. + (double)delta2;
-
-  if (A < B) {
-   maxE = B;
-   minE = A;
-  } else {
-   maxE = A;
-   minE = B;
-  }
-
-  if (C > maxE)
-    maxE = C;
-  else if (C < minE)
-    minE = C;
-
-  if (X < lvdt_low || X > lvdt_high || maxE - minE > lvdt_delta) {
-    bputs(warning, "ActBus: Move Out of Range.");
-    bad_move = ACTBUS_FL_BDMV;
-  }
-  bad_move = 0;
-  return bad_move;
 }
 
 static int SetNewFocus(void)
