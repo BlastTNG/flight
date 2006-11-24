@@ -244,6 +244,9 @@ struct CommandDataStruct {
     int tc_step;
     int tc_wait;
     int tc_mode;
+    int tc_prefp;
+    int tc_prefs;
+    double tc_spread;
     double sf_t_primary;
     double sf_t_secondary;
     int sf_position;

@@ -121,6 +121,8 @@ static double lvdt[3];
 
 static int bus_seized = -1;
 static int actbus_flags = 0;
+static int bad_move = 0;
+
 #define ACTBUS_FL_LOST 0x01
 #define ACTBUS_FL_DRPS 0x02
 #define ACTBUS_FL_DRLG 0x04
@@ -128,6 +130,7 @@ static int actbus_flags = 0;
 #define ACTBUS_FL_DRLV 0x10
 #define ACTBUS_FL_LGLV 0x20
 #define ACTBUS_FL_PSLV 0x40
+#define ACTBUS_FL_BDMV 0x80
 
 /* Secondary focus crap */
 static double focus = -ACTENC_OFFSET; /* set in ab thread, read in fc thread */
@@ -548,7 +551,7 @@ static void ServoActuators(int* goal, int update_dr)
       CommandData.actbus.dead_reckon[i] += delta_dr[i];
 
   /* Update flags */
-  int new_flags = 0;
+  int new_flags = bad_move;
 
   if (lost[0] || lost[1] || lost[2])
     new_flags |= ACTBUS_FL_LOST;
@@ -706,12 +709,8 @@ static void SetOffsets(int* offset)
   }
 }
 
-static int SetNewFocus(void)
+static int CheckMove(int delta0, int delta1, int delta2)
 {
-  char buffer[1000];
-  int i, j;
-  int delta = CommandData.actbus.focus - focus;
-
   int lvdt_num = CommandData.actbus.lvdt_num;
   int lvdt_low = CommandData.actbus.lvdt_low;
   int lvdt_high = CommandData.actbus.lvdt_high;
@@ -720,20 +719,35 @@ static int SetNewFocus(void)
   lvdt_num -= 10;
 
   if (lvdt_num >= 0 && lvdt_num <= 2) {
-    bprintf(info, "%f %i %f %i (%f %i)", lvdt[lvdt_num] + delta, lvdt_high,
-        lvdt[lvdt_num] - delta, lvdt_low, lvdt[lvdt_num], delta);
-    if (lvdt[lvdt_num] + delta > lvdt_high || lvdt[lvdt_num] - delta < lvdt_low)
+    bprintf(info, "LVDT: %f %i %f %i (%f %i)", lvdt[lvdt_num] + delta0,
+        lvdt_high, lvdt[lvdt_num] + delta0, lvdt_low, lvdt[lvdt_num], delta0);
+    if (lvdt[lvdt_num] + delta0 > lvdt_high || lvdt[lvdt_num]
+        + delta0 < lvdt_low)
     {
       bputs(warning, "ActBus: Move Out of Range.");
+      bad_move = ACTBUS_FL_BDMV;
       return 0;
     }
   }
+  bad_move = 0;
 
+  return bad_move;
+}
+
+static int SetNewFocus(void)
+{
+  char buffer[1000];
+  int i, j;
+  int delta = CommandData.actbus.focus - focus;
+  int delta_dr = delta;
+
+  if (CheckMove(delta, delta, delta))
+    return 0;
+  
   if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
     return 0;
 
   TakeBus(0);
-
 
   bprintf(info, "Old: %i %i %i -> %i %i\n", act_data[0].enc, act_data[1].enc,
       act_data[2].enc, CommandData.actbus.focus, delta);
@@ -767,7 +781,7 @@ static int SetNewFocus(void)
   }
 
   for (i = 0; i < 3; ++i)
-    CommandData.actbus.dead_reckon[i] += delta;
+    CommandData.actbus.dead_reckon[i] += delta_dr;
 
   return 1;
 }
@@ -837,6 +851,8 @@ void SecondaryMirror(void)
   static struct BiPhaseStruct* tPrimary2Addr;
   static struct BiPhaseStruct* tSecondary2Addr;
   static double t_primary = -1, t_secondary = -1;
+  int autoveto = 0;
+  const int filter_len = CommandData.actbus.tc_wait / 2;
   double t_primary1, t_secondary1;
   double t_primary2, t_secondary2;
 
@@ -873,30 +889,44 @@ void SecondaryMirror(void)
       slow_data[tSecondary2Addr->index][tSecondary2Addr->channel]
       ) + AD590_CALIB_SECONDARY_2;
 
-  if (t_primary1 < 0 && t_primary2 < 0)
-    t_primary = -1; /* autoveto */
-  else if (t_primary1 < 0)
-    t_primary = TFilter(t_primary, t_primary2, CommandData.actbus.tc_wait / 2);
-  else if (t_primary2 < 0)
-    t_primary = TFilter(t_primary, t_primary1, CommandData.actbus.tc_wait / 2);
-  else
-    t_primary = TFilter(t_primary, (t_primary1 + t_primary2) / 2,
-        CommandData.actbus.tc_wait / 2);
+  if (t_primary1 < 0 || t_primary2 < 0)
+    autoveto = 1;
+  else if (fabs(t_primary1 - t_primary2) > CommandData.actbus.tc_spread) {
+    if (t_primary1 >= 0 && t_primary2 >= 0)
+      t_primary = TFilter(t_primary, (t_primary1 + t_primary2) / 2, filter_len);
+    else if (t_primary1 >= 0)
+      t_primary = TFilter(t_primary, t_primary1, filter_len);
+    else
+      t_primary = TFilter(t_primary, t_primary2, filter_len);
+  } else {
+    if (t_primary1 >= 0 && CommandData.actbus.tc_prefp == 1)
+      t_primary = TFilter(t_primary, t_primary1, filter_len);
+    else if (t_primary2 >= 0 && CommandData.actbus.tc_prefp == 2)
+      t_primary = TFilter(t_primary, t_primary2, filter_len);
+    else
+      autoveto = 1;
+  }
 
-  if (t_secondary1 < 0 && t_secondary2 < 0)
-    t_secondary = -1; /* autoveto */
-  else if (t_secondary1 < 0)
-    t_secondary = TFilter(t_secondary, t_secondary2,
-        CommandData.actbus.tc_wait / 2);
-  else if (t_secondary2 < 0)
-    t_secondary = TFilter(t_secondary, t_secondary1,
-        CommandData.actbus.tc_wait / 2);
-  else
-    t_secondary = TFilter(t_secondary, (t_secondary1 + t_secondary2) / 2,
-        CommandData.actbus.tc_wait / 2);
+  if (t_secondary1 < 0 || t_secondary2 < 0)
+    autoveto = 1;
+  else if (fabs(t_secondary1 - t_secondary2) > CommandData.actbus.tc_spread) {
+    if (t_secondary1 >= 0 && t_secondary2 >= 0)
+      t_secondary = TFilter(t_secondary, (t_secondary1 + t_secondary2) / 2,
+          filter_len);
+    else if (t_secondary1 >= 0)
+      t_secondary = TFilter(t_secondary, t_secondary1, filter_len);
+    else
+      t_secondary = TFilter(t_secondary, t_secondary2, filter_len);
+  } else {
+    if (t_secondary1 >= 0 && CommandData.actbus.tc_prefs == 1)
+      t_secondary = TFilter(t_secondary, t_secondary1, filter_len);
+    else if (t_secondary2 >= 0 && CommandData.actbus.tc_prefs == 2)
+      t_secondary = TFilter(t_secondary, t_secondary2, filter_len);
+    else
+      autoveto = 1;
+  }
 
-  if (CommandData.actbus.tc_mode != TC_MODE_VETOED && (t_primary < 0
-        || t_secondary < 0)) {
+  if (CommandData.actbus.tc_mode != TC_MODE_VETOED && autoveto) {
     if (CommandData.actbus.tc_mode == TC_MODE_ENABLED)
       bputs(info, "Thermal Compensation: Autoveto raised.");
     CommandData.actbus.tc_mode = TC_MODE_AUTOVETO;
@@ -952,7 +982,7 @@ static void DoActuators(void)
     case ACTBUS_FM_THERMO:
     case ACTBUS_FM_FOCUS:
       update_dr = 0;
-      if (!SetNewFocus())
+      if (SetNewFocus())
         /* fallthrough */
     case ACTBUS_FM_SERVO:
         ServoActuators(CommandData.actbus.goal, update_dr);
@@ -1185,6 +1215,9 @@ void StoreActBus(void)
   static struct NiosStruct* tcStepAddr;
   static struct NiosStruct* tcWaitAddr;
   static struct NiosStruct* tcModeAddr;
+  static struct NiosStruct* tcSpreadAddr;
+  static struct NiosStruct* tcPrefTpAddr;
+  static struct NiosStruct* tcPrefTsAddr;
   static struct NiosStruct* secGoalAddr;
   static struct NiosStruct* secFocusAddr;
 
@@ -1217,6 +1250,9 @@ void StoreActBus(void)
     tcStepAddr = GetNiosAddr("tc_step");
     tcWaitAddr = GetNiosAddr("tc_wait");
     tcModeAddr = GetNiosAddr("tc_mode");
+    tcSpreadAddr = GetNiosAddr("tc_spread");
+    tcPrefTpAddr = GetNiosAddr("tc_pref_tp");
+    tcPrefTsAddr = GetNiosAddr("tc_pref_ts");
     secGoalAddr = GetNiosAddr("sec_goal");
     secFocusAddr = GetNiosAddr("sec_focus");
 
@@ -1285,6 +1321,9 @@ void StoreActBus(void)
   WriteData(tcGSecAddr, CommandData.actbus.g_secondary * 100., NIOS_QUEUE);
   WriteData(tcModeAddr, CommandData.actbus.tc_mode, NIOS_QUEUE);
   WriteData(tcStepAddr, CommandData.actbus.tc_step, NIOS_QUEUE);
+  WriteData(tcStepAddr, CommandData.actbus.tc_spread * 500., NIOS_QUEUE);
+  WriteData(tcPrefTpAddr, CommandData.actbus.tc_prefp, NIOS_QUEUE);
+  WriteData(tcPrefTsAddr, CommandData.actbus.tc_prefs, NIOS_QUEUE);
   WriteData(tcWaitAddr, CommandData.actbus.tc_wait / 20., NIOS_QUEUE);
   WriteData(secGoalAddr, CommandData.actbus.focus, NIOS_QUEUE);
 }

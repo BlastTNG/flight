@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.52 $";
+const char *command_list_serial = "$Revision: 3.53 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance && Cooling","Bias",
@@ -471,6 +471,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"LVDT number (10,11,13)", 9, 14, 'i', "LVDT_LOOK"},
       {"Lower Limit", -3000, 26000, 'i', "LVDT_LOW"},
       {"Upper Limit", -3000, 26000, 'i', "LVDT_HIGH"}
+    }
+  },
+
+  {COMMAND(thermo_param), "set the thermal compensation parameters", GR_ACT, 3,
+    {
+      {"Temp. Spread", 0, 100, 'f', "TC_SPREAD"},
+      {"Preferred T Prime", 0, 2, 'i', "TC_PREF_TP"},
+      {"Preferred T Second", 0, 2, 'i', "TC_PREF_TS"}
     }
   },
 

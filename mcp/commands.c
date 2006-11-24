@@ -1092,6 +1092,11 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.actbus.lvdt_high = ivalues[2];
       }
       break;
+    case thermo_param:
+      CommandData.actbus.tc_spread = rvalues[0];
+      CommandData.actbus.tc_prefp = ivalues[1];
+      CommandData.actbus.tc_prefs = ivalues[2];
+      break;
 
       /* XY Stage */
     case xy_goto:
@@ -2121,7 +2126,7 @@ void InitCommandData()
   CommandData.actbus.tc_mode = TC_MODE_VETOED;
   CommandData.actbus.tc_step = 100; /* microns */
   CommandData.actbus.tc_wait = 600; /* seconds */
-  CommandData.actbus.off = 0;
+  CommandData.actbus.tc_spread = 10; /* centigrade degrees */
   CommandData.actbus.reset_dr = 0;
   CommandData.actbus.dead_reckon[0] = 0;
   CommandData.actbus.dead_reckon[1] = 0;
