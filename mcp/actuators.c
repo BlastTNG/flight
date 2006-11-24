@@ -709,28 +709,40 @@ static void SetOffsets(int* offset)
   }
 }
 
+/* Barth made this up */
 static int CheckMove(int delta0, int delta1, int delta2)
 {
-  int lvdt_num = CommandData.actbus.lvdt_num;
-  int lvdt_low = CommandData.actbus.lvdt_low;
-  int lvdt_high = CommandData.actbus.lvdt_high;
-  if (CommandData.actbus.lvdt_num > 12)
-    lvdt_num--;
-  lvdt_num -= 10;
+  double maxE, minE;
 
-  if (lvdt_num >= 0 && lvdt_num <= 2) {
-    bprintf(info, "LVDT: %f %i %f %i (%f %i)", lvdt[lvdt_num] + delta0,
-        lvdt_high, lvdt[lvdt_num] + delta0, lvdt_low, lvdt[lvdt_num], delta0);
-    if (lvdt[lvdt_num] + delta0 > lvdt_high || lvdt[lvdt_num]
-        + delta0 < lvdt_low)
-    {
-      bputs(warning, "ActBus: Move Out of Range.");
-      bad_move = ACTBUS_FL_BDMV;
-      return 0;
-    }
+  double lvdt_low = CommandData.actbus.lvdt_low;
+  double lvdt_high = CommandData.actbus.lvdt_high;
+  double lvdt_delta = CommandData.actbus.lvdt_delta;
+
+  double X = (lvdt[0]+lvdt[1]+lvdt[2] + (double)(delta0 + delta1
+        + delta2)) / 3.0;
+
+  double A = (-lvdt[1] + 2 * lvdt[0] + 2 * lvdt[2]) / 3. + (double)delta0;
+  double B = (-lvdt[2] + 2 * lvdt[0] + 2 * lvdt[1]) / 3. + (double)delta1;
+  double C = (-lvdt[0] + 2 * lvdt[2] + 2 * lvdt[1]) / 3. + (double)delta2;
+
+  if (A < B) {
+   maxE = B;
+   minE = A;
+  } else {
+   maxE = A;
+   minE = B;
+  }
+
+  if (C > maxE)
+    maxE = C;
+  else if (C < minE)
+    minE = C;
+
+  if (X < lvdt_low || X > lvdt_high || maxE - minE > lvdt_delta) {
+    bputs(warning, "ActBus: Move Out of Range.");
+    bad_move = ACTBUS_FL_BDMV;
   }
   bad_move = 0;
-
   return bad_move;
 }
 
@@ -851,7 +863,6 @@ void SecondaryMirror(void)
   static struct BiPhaseStruct* tPrimary2Addr;
   static struct BiPhaseStruct* tSecondary2Addr;
   static double t_primary = -1, t_secondary = -1;
-  int autoveto = 0;
   const int filter_len = CommandData.actbus.tc_wait / 2;
   double t_primary1, t_secondary1;
   double t_primary2, t_secondary2;
@@ -890,8 +901,8 @@ void SecondaryMirror(void)
       ) + AD590_CALIB_SECONDARY_2;
 
   if (t_primary1 < 0 || t_primary2 < 0)
-    autoveto = 1;
-  else if (fabs(t_primary1 - t_primary2) > CommandData.actbus.tc_spread) {
+    t_primary = -1; /* autoveto */
+  else if (fabs(t_primary1 - t_primary2) < CommandData.actbus.tc_spread) {
     if (t_primary1 >= 0 && t_primary2 >= 0)
       t_primary = TFilter(t_primary, (t_primary1 + t_primary2) / 2, filter_len);
     else if (t_primary1 >= 0)
@@ -904,12 +915,12 @@ void SecondaryMirror(void)
     else if (t_primary2 >= 0 && CommandData.actbus.tc_prefp == 2)
       t_primary = TFilter(t_primary, t_primary2, filter_len);
     else
-      autoveto = 1;
+      t_primary = -1; /* autoveto */
   }
 
   if (t_secondary1 < 0 || t_secondary2 < 0)
-    autoveto = 1;
-  else if (fabs(t_secondary1 - t_secondary2) > CommandData.actbus.tc_spread) {
+    t_secondary = -1; /* autoveto */
+  else if (fabs(t_secondary1 - t_secondary2) < CommandData.actbus.tc_spread) {
     if (t_secondary1 >= 0 && t_secondary2 >= 0)
       t_secondary = TFilter(t_secondary, (t_secondary1 + t_secondary2) / 2,
           filter_len);
@@ -923,10 +934,11 @@ void SecondaryMirror(void)
     else if (t_secondary2 >= 0 && CommandData.actbus.tc_prefs == 2)
       t_secondary = TFilter(t_secondary, t_secondary2, filter_len);
     else
-      autoveto = 1;
+      t_secondary = -1; /* autoveto */
   }
 
-  if (CommandData.actbus.tc_mode != TC_MODE_VETOED && autoveto) {
+  if (CommandData.actbus.tc_mode != TC_MODE_VETOED &&
+      (t_primary < 0 || t_secondary < 0)) {
     if (CommandData.actbus.tc_mode == TC_MODE_ENABLED)
       bputs(info, "Thermal Compensation: Autoveto raised.");
     CommandData.actbus.tc_mode = TC_MODE_AUTOVETO;
@@ -945,8 +957,8 @@ void SecondaryMirror(void)
   } else {
     correction = CommandData.actbus.g_primary * (t_primary -
         CommandData.actbus.sf_t_primary) - CommandData.actbus.g_secondary *
-      (t_secondary - CommandData.actbus.sf_t_secondary) + (focus -
-                                                           CommandData.actbus.sf_position);
+      (t_secondary - CommandData.actbus.sf_t_secondary) +
+      (focus - CommandData.actbus.sf_position);
     if (CommandData.actbus.sf_time < 1000000)
       CommandData.actbus.sf_time++;
   }
@@ -1206,7 +1218,7 @@ void StoreActBus(void)
   static struct NiosStruct* actDeadRecAddr[3];
   static struct NiosStruct* actLGoodAddr[3];
 
-  static struct NiosStruct* lvdtNumAddr;
+  static struct NiosStruct* lvdtSpreadAddr;
   static struct NiosStruct* lvdtLowAddr;
   static struct NiosStruct* lvdtHighAddr;
 
@@ -1256,7 +1268,7 @@ void StoreActBus(void)
     secGoalAddr = GetNiosAddr("sec_goal");
     secFocusAddr = GetNiosAddr("sec_focus");
 
-    lvdtNumAddr = GetNiosAddr("lvdt_num");
+    lvdtSpreadAddr = GetNiosAddr("lvdt_spread");
     lvdtLowAddr = GetNiosAddr("lvdt_low");
     lvdtHighAddr = GetNiosAddr("lvdt_high");
 
@@ -1308,7 +1320,7 @@ void StoreActBus(void)
   WriteData(actHoldIAddr, CommandData.actbus.act_hold_i, NIOS_QUEUE);
   WriteData(actFlagsAddr, actbus_flags, NIOS_QUEUE);
 
-  WriteData(lvdtNumAddr, CommandData.actbus.lvdt_num, NIOS_QUEUE);
+  WriteData(lvdtSpreadAddr, CommandData.actbus.lvdt_delta, NIOS_QUEUE);
   WriteData(lvdtLowAddr, CommandData.actbus.lvdt_low, NIOS_QUEUE);
   WriteData(lvdtHighAddr, CommandData.actbus.lvdt_high, NIOS_QUEUE);
 
@@ -1321,7 +1333,7 @@ void StoreActBus(void)
   WriteData(tcGSecAddr, CommandData.actbus.g_secondary * 100., NIOS_QUEUE);
   WriteData(tcModeAddr, CommandData.actbus.tc_mode, NIOS_QUEUE);
   WriteData(tcStepAddr, CommandData.actbus.tc_step, NIOS_QUEUE);
-  WriteData(tcStepAddr, CommandData.actbus.tc_spread * 500., NIOS_QUEUE);
+  WriteData(tcSpreadAddr, CommandData.actbus.tc_spread * 500., NIOS_QUEUE);
   WriteData(tcPrefTpAddr, CommandData.actbus.tc_prefp, NIOS_QUEUE);
   WriteData(tcPrefTsAddr, CommandData.actbus.tc_prefs, NIOS_QUEUE);
   WriteData(tcWaitAddr, CommandData.actbus.tc_wait / 20., NIOS_QUEUE);

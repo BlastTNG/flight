@@ -269,7 +269,7 @@ struct CommandDataStruct {
     int last_good[3];
     int pos_trim[3];
     int reset_dr;
-    int lvdt_num;
+    double lvdt_delta;
     double lvdt_low;
     double lvdt_high;
 
