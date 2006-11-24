@@ -1083,9 +1083,14 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.focus_mode = ACTBUS_FM_OFFSET;
       break;
     case lvdt_limit:
-      CommandData.actbus.lvdt_num = ivalues[0];
-      CommandData.actbus.lvdt_low = ivalues[1];
-      CommandData.actbus.lvdt_high = ivalues[2];
+      CommandData.actbus.lvdt_num = (ivalues[0] == 12) ? 13 : ivalues[0];
+      if (ivalues[1] > ivalues[2]) {
+        CommandData.actbus.lvdt_low = ivalues[2];
+        CommandData.actbus.lvdt_high = ivalues[1];
+      } else {
+        CommandData.actbus.lvdt_low = ivalues[1];
+        CommandData.actbus.lvdt_high = ivalues[2];
+      }
       break;
 
       /* XY Stage */

@@ -117,6 +117,8 @@ static struct act_struct {
   int enc;
 } act_data[3];
 
+static double lvdt[3];
+
 static int bus_seized = -1;
 static int actbus_flags = 0;
 #define ACTBUS_FL_LOST 0x01
@@ -704,16 +706,34 @@ static void SetOffsets(int* offset)
   }
 }
 
-static void SetNewFocus(void)
+static int SetNewFocus(void)
 {
   char buffer[1000];
   int i, j;
   int delta = CommandData.actbus.focus - focus;
 
+  int lvdt_num = CommandData.actbus.lvdt_num;
+  int lvdt_low = CommandData.actbus.lvdt_low;
+  int lvdt_high = CommandData.actbus.lvdt_high;
+  if (CommandData.actbus.lvdt_num > 12)
+    lvdt_num--;
+  lvdt_num -= 10;
+
+  if (lvdt_num >= 0 && lvdt_num <= 2) {
+    bprintf(info, "%f %i %f %i (%f %i)", lvdt[lvdt_num] + delta, lvdt_high,
+        lvdt[lvdt_num] - delta, lvdt_low, lvdt[lvdt_num], delta);
+    if (lvdt[lvdt_num] + delta > lvdt_high || lvdt[lvdt_num] - delta < lvdt_low)
+    {
+      bputs(warning, "ActBus: Move Out of Range.");
+      return 0;
+    }
+  }
+
   if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
-    return;
+    return 0;
 
   TakeBus(0);
+
 
   bprintf(info, "Old: %i %i %i -> %i %i\n", act_data[0].enc, act_data[1].enc,
       act_data[2].enc, CommandData.actbus.focus, delta);
@@ -739,16 +759,17 @@ static void SetNewFocus(void)
     for (j = 0; j < 3; ++j)
       ReadActuator(j, 1);
 
+    focus = (act_data[0].enc + act_data[1].enc + act_data[2].enc) / 3
+      - ACTENC_OFFSET;
+
     if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
-      return;
+      return 0;
   }
 
   for (i = 0; i < 3; ++i)
     CommandData.actbus.dead_reckon[i] += delta;
 
-  focus = (act_data[0].enc + act_data[1].enc + act_data[2].enc) / 3
-    - ACTENC_OFFSET;
-
+  return 1;
 }
 
 static double CalibrateAD590(int counts)
@@ -930,19 +951,19 @@ static void DoActuators(void)
       /* Fallthough */
     case ACTBUS_FM_THERMO:
     case ACTBUS_FM_FOCUS:
-      SetNewFocus();
       update_dr = 0;
-      /* fallthrough */
+      if (!SetNewFocus())
+        /* fallthrough */
     case ACTBUS_FM_SERVO:
-      ServoActuators(CommandData.actbus.goal, update_dr);
-      break;
+        ServoActuators(CommandData.actbus.goal, update_dr);
+        break;
     case ACTBUS_FM_OFFSET:
-      SetOffsets(CommandData.actbus.offset);
-      /* fallthrough */
+        SetOffsets(CommandData.actbus.offset);
+        /* fallthrough */
     case ACTBUS_FM_SLEEP:
-      break;
+        break;
     default:
-      bputs(err, "ActBus: Unknown Focus Mode (%i), sleeping");
+        bputs(err, "ActBus: Unknown Focus Mode (%i), sleeping");
   }
   if (CommandData.actbus.focus_mode != ACTBUS_FM_PANIC)
     CommandData.actbus.focus_mode = ThermalCompensation();
@@ -1125,6 +1146,10 @@ void StoreActBus(void)
   int j;
   static int firsttime = 1;
 
+  static struct BiPhaseStruct* lvdt10Addr;
+  static struct BiPhaseStruct* lvdt11Addr;
+  static struct BiPhaseStruct* lvdt13Addr;
+
   static struct NiosStruct* actbusResetAddr;
   static struct NiosStruct* lockPosAddr;
   static struct NiosStruct* lockStateAddr;
@@ -1151,6 +1176,10 @@ void StoreActBus(void)
   static struct NiosStruct* actDeadRecAddr[3];
   static struct NiosStruct* actLGoodAddr[3];
 
+  static struct NiosStruct* lvdtNumAddr;
+  static struct NiosStruct* lvdtLowAddr;
+  static struct NiosStruct* lvdtHighAddr;
+
   static struct NiosStruct* tcGPrimAddr;
   static struct NiosStruct* tcGSecAddr;
   static struct NiosStruct* tcStepAddr;
@@ -1161,6 +1190,11 @@ void StoreActBus(void)
 
   if (firsttime) {
     firsttime = 0;
+
+    lvdt10Addr = GetBiPhaseAddr("lvdt_10");
+    lvdt11Addr = GetBiPhaseAddr("lvdt_11");
+    lvdt13Addr = GetBiPhaseAddr("lvdt_13");
+
     actbusResetAddr = GetNiosAddr("actbus_reset");
     lokmotPinAddr = GetNiosAddr("lokmot_pin");
     lockPosAddr = GetNiosAddr("lock_pos");
@@ -1186,6 +1220,10 @@ void StoreActBus(void)
     secGoalAddr = GetNiosAddr("sec_goal");
     secFocusAddr = GetNiosAddr("sec_focus");
 
+    lvdtNumAddr = GetNiosAddr("lvdt_num");
+    lvdtLowAddr = GetNiosAddr("lvdt_low");
+    lvdtHighAddr = GetNiosAddr("lvdt_high");
+
     actVelAddr = GetNiosAddr("act_vel");
     actAccAddr = GetNiosAddr("act_acc");
     actMoveIAddr = GetNiosAddr("act_move_i");
@@ -1197,6 +1235,13 @@ void StoreActBus(void)
     lockMoveIAddr = GetNiosAddr("lock_move_i");
     lockHoldIAddr = GetNiosAddr("lock_hold_i");
   }
+
+  lvdt[0] = slow_data[lvdt10Addr->index][lvdt10Addr->channel] *
+    LVDT10_ADC_TO_ENC + LVDT10_ZERO;
+  lvdt[1] = slow_data[lvdt11Addr->index][lvdt11Addr->channel] *
+    LVDT11_ADC_TO_ENC + LVDT11_ZERO;
+  lvdt[2] = slow_data[lvdt13Addr->index][lvdt13Addr->channel] *
+    LVDT13_ADC_TO_ENC + LVDT13_ZERO;
 
   WriteData(actbusResetAddr, CommandData.actbus.off, NIOS_QUEUE);
 
@@ -1226,6 +1271,10 @@ void StoreActBus(void)
   WriteData(actMoveIAddr, CommandData.actbus.act_move_i, NIOS_QUEUE);
   WriteData(actHoldIAddr, CommandData.actbus.act_hold_i, NIOS_QUEUE);
   WriteData(actFlagsAddr, actbus_flags, NIOS_QUEUE);
+
+  WriteData(lvdtNumAddr, CommandData.actbus.lvdt_num, NIOS_QUEUE);
+  WriteData(lvdtLowAddr, CommandData.actbus.lvdt_low, NIOS_QUEUE);
+  WriteData(lvdtHighAddr, CommandData.actbus.lvdt_high, NIOS_QUEUE);
 
   WriteData(lockVelAddr, CommandData.actbus.lock_vel, NIOS_QUEUE);
   WriteData(lockAccAddr, CommandData.actbus.lock_acc, NIOS_QUEUE);
