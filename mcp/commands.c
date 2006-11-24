@@ -824,7 +824,10 @@ static void SetParameters(enum multiCommand command, unsigned short *dataq,
         svalues[i][j] = ((j % 2) ? dataq[dataqind++] : dataq[dataqind] >> 8)
           & 0x7f;
       bprintf(info, "Commands: param%02i: string: %s\n", i, svalues[i]);
-    }
+    } else
+      bprintf(err,
+          "Commands: Unknown parameter type ('%c') param%02i: ignored", type,
+          i);
   }
 #else
   char** dataqc = (char**) dataq;
@@ -847,7 +850,10 @@ static void SetParameters(enum multiCommand command, unsigned short *dataq,
       strncpy(svalues[i], dataqc[dataqind++], CMD_STRING_LEN - 1);
       svalues[i][CMD_STRING_LEN - 1] = 0;
       bprintf(info, "Commands: param%02i: string: %s\n", i, svalues[i]);
-    }
+    } else
+      bprintf(err,
+          "Commands: Unknown parameter type ('%c') param%02i: ignored", type,
+          i);
   }
 
   bprintf(info, "Commands: Multiword Command: %d (%s)\n", command,
@@ -1455,6 +1461,10 @@ void ScheduledCommand(struct ScheduleEvent *event)
       else if (type == 'd') /* 30 bit floating point */
         bprintf(info, "Commands:   param%02i: double : %f\n", i,
             event->rvalues[i]);
+      else
+        bprintf(err,
+            "Commands: Unknown parameter type ('%c') param%02i: ignored", type,
+            i);
     }
     MultiCommand(event->command, event->rvalues, event->ivalues, event->svalues,
         1);
