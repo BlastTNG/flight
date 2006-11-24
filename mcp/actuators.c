@@ -51,6 +51,7 @@ static int __inhibit_chatter = 0;
 #define ACTUATOR_RADIUS 144.338 /* in mm */
 
 #define ENCODER_TOL 0
+#define FOCUS_TOL 30
 
 #define ALL_ACT 0x51 /* All actuators */
 #define LOCKNUM 3
@@ -407,9 +408,11 @@ static int BusComm(int who, const char* what, int naive, int inhibit_chatter)
   return result;
 }
 
-static int ReadIntFromBus(int who, const char* cmd, int inhibit_chatter)
+static int ReadIntFromBus(int who, const char* cmd, int old,
+    int inhibit_chatter)
 {
-  BusComm(who, cmd, 0, inhibit_chatter);
+  if (BusComm(who, cmd, 0, inhibit_chatter) & (ACTBUS_TIMEOUT | ACTBUS_OOD))
+    return old;
 
   return atoi(bus_buffer);
 }
@@ -419,8 +422,10 @@ static void ReadActuator(int who, int inhibit_chatter)
   if (stepper[who].status == -1)
     return;
 
-  act_data[who].pos = ReadIntFromBus(who, "?0", inhibit_chatter);
-  act_data[who].enc = ReadIntFromBus(who, "?8", inhibit_chatter);
+  act_data[who].pos = ReadIntFromBus(who, "?0", act_data[who].pos,
+      inhibit_chatter);
+  act_data[who].enc = ReadIntFromBus(who, "?8", act_data[who].enc,
+      inhibit_chatter);
 
   if (act_data[who].enc > ACTENC_OFFSET / 2)
     CommandData.actbus.last_good[who] = act_data[who].enc;
@@ -628,7 +633,7 @@ static void GetLockData(int mult)
 
   counter = 0;
 
-  lock_data.pos = ReadIntFromBus(LOCKNUM, "?0", 1);
+  lock_data.pos = ReadIntFromBus(LOCKNUM, "?0", lock_data.pos, 1);
 
   BusComm(LOCKNUM, "?aa", 0, 1);
 
@@ -716,7 +721,7 @@ static void SetNewFocus(void)
   CommandData.actbus.goal[1] = act_data[1].enc + delta - ACTENC_OFFSET;
   CommandData.actbus.goal[2] = act_data[2].enc + delta - ACTENC_OFFSET;
 
-  if (abs(delta) <= ENCODER_TOL) {
+  if (abs(delta) <= FOCUS_TOL) {
     ;
   } else if (delta > 0) {
     ActCommand(buffer, "P%iR", delta);
@@ -734,15 +739,16 @@ static void SetNewFocus(void)
     for (j = 0; j < 3; ++j)
       ReadActuator(j, 1);
 
-    for (i = 0; i < 3; ++i)
-      CommandData.actbus.dead_reckon[i] += delta;
-
-    focus = (act_data[0].enc + act_data[1].enc + act_data[2].enc) / 3
-      - ACTENC_OFFSET;
-
     if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
       return;
   }
+
+  for (i = 0; i < 3; ++i)
+    CommandData.actbus.dead_reckon[i] += delta;
+
+  focus = (act_data[0].enc + act_data[1].enc + act_data[2].enc) / 3
+    - ACTENC_OFFSET;
+
 }
 
 static double CalibrateAD590(int counts)
