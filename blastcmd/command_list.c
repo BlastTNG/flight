@@ -22,17 +22,17 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.59 $";
+const char *command_list_serial = "$Revision: 3.60 $";
 
 const char *GroupNames[N_GROUPS] = {
-  "Pointing Modes",        "Balance && Cooling","Bias",
-  "Pointing Sensor Trims", "Aux. Electronics",  "Cal Lamp",
-  "Pointing Sensor Vetos", "Actuators",         "Cryo Heat",
-  "Subsystem Power",       "Lock Motor",        "Cryo Control",
-  "Pointing Motor Gains",  "ISC Housekeeping",  "OSC Housekeeping",
-  "Telemetry",             "ISC Modes",         "OSC Modes",
-  "Miscellaneous",         "ISC Parameters",    "OSC Parameters"
-  "X-Y Stage",             "Cooling",           "Secondary Focus"
+  "Pointing Modes",        "Balance",          "Cooling", 
+  "Pointing Sensor Trims", "Aux. Electronics", "Bias",
+  "Pointing Sensor Vetos", "Actuators",        "Cal Lamp",
+  "Pointing Motor Gains",  "Secondary Focus",  "Cryo Heat",
+  "Subsystem Power",       "Lock Motor",       "Cryo Control",
+  "Telemetry",             "ISC Housekeeping", "OSC Housekeeping",
+  "X-Y Stage",             "ISC Modes",        "OSC Modes",
+  "Miscellaneous",         "ISC Parameters",   "OSC Parameters"
 };
 
 #define COMMAND(x) x, #x
