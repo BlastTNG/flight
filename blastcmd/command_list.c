@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.60 $";
+const char *command_list_serial = "$Revision: 3.61 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Cooling", 
@@ -159,10 +159,10 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(balpump_off), "balance pump 1 off", GR_BAL},
   {COMMAND(balpump_up), "balance pump 1 forward", GR_BAL},
   {COMMAND(balpump_down), "balance pump 1 reverse", GR_BAL},
-  {COMMAND(sprpump_on), "balance pump 2 on", GR_BAL},
-  {COMMAND(sprpump_off), "balance pump 2 off", GR_BAL},
-  {COMMAND(sprpump_fwd), "balance pump 2 forward", GR_BAL},
-  {COMMAND(sprpump_rev), "balance pump 2 reverse", GR_BAL},
+  {COMMAND(sprpump_on), "balance pump 2 on", GR_BAL | GR_COOL},
+  {COMMAND(sprpump_off), "balance pump 2 off", GR_BAL | GR_COOL},
+  {COMMAND(sprpump_fwd), "balance pump 2 forward", GR_BAL | GR_COOL},
+  {COMMAND(sprpump_rev), "balance pump 2 reverse", GR_BAL | GR_COOL},
 
   {COMMAND(inner_cool_on), "inner frame cooling pump on", GR_COOL},
   {COMMAND(inner_cool_off), "inner frame cooling pump off", GR_COOL},
