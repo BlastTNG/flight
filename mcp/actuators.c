@@ -141,6 +141,7 @@ static int bad_move = 0;
 static double focus = -ACTENC_OFFSET; /* set in ab thread, read in fc thread */
 static double correction = 0;         /* set in fc thread, read in ab thread */
 static int fail[3] = {0, 0, 0};
+static int lost[3] = {0, 0, 0};
 
 static int act_setserial(char *input_tty)
 {
@@ -532,20 +533,47 @@ static int CheckMove(int delta0, int delta1, int delta2)
   return bad_move;
 }
 
+/* Update flags */
+static void UpdateFlags(void)
+{
+  int i;
+  int new_flags = bad_move;
+
+  if (fail[0]) 
+    new_flags |= ACTBUS_FL_FAIL0;
+  if (fail[1]) 
+    new_flags |= ACTBUS_FL_FAIL1;
+  if (fail[2]) 
+    new_flags |= ACTBUS_FL_FAIL2;
+
+  for (i = 0; i < 3; ++i) {
+    if (lost[i])
+      new_flags |= ACTBUS_FL_LOST;
+    if (CommandData.actbus.dead_reckon[i] != CommandData.actbus.last_good[i])
+      new_flags |= ACTBUS_FL_DR_LG;
+    if (CommandData.actbus.dead_reckon[i] != act_data[i].pos +
+        CommandData.actbus.pos_trim[i])
+      new_flags |= ACTBUS_FL_DR_PS;
+    if (CommandData.actbus.last_good[i] != act_data[i].pos +
+        CommandData.actbus.pos_trim[i])
+      new_flags |= ACTBUS_FL_LG_PS;
+  }
+  actbus_flags = new_flags;
+}
+
 #define THERE_WAIT 10
 static void ServoActuators(int* goal, int update_dr)
 {
   int i;
   int act_there[3] = {0, 0, 0};
   int act_wait[3] = {0, 0, 0};
-  int lost[3] = {0, 0, 0};
   int delta_dr[3] = {0, 0, 0};
   int delta[3] = {0, 0, 0};
   int start[3] = {0, 0, 0};
   char buffer[1000];
 
   for (i = 0; i < 3; ++i) {
-    fail[i] = 0;
+    fail[i] = lost[i] = 0;
     delta_dr[i] = goal[i] - act_data[i].enc + ACTENC_OFFSET;
   }
 
@@ -581,7 +609,7 @@ static void ServoActuators(int* goal, int update_dr)
             bputs(err, "ActBus: Fully vetoing thermal correction");
             CommandData.actbus.tc_mode = TC_MODE_VETOED;
           }
-          act_there[i] = THERE_WAIT;
+          act_there[0] = act_there[1] = act_there[2] = THERE_WAIT;
           fail[i] = 1;
         }
       } else {
@@ -625,28 +653,6 @@ static void ServoActuators(int* goal, int update_dr)
   if (update_dr)
     for (i = 0; i < 3; ++i)
       CommandData.actbus.dead_reckon[i] += delta_dr[i];
-
-  /* Update flags */
-  int new_flags = bad_move;
-
-  if (fail[0]) 
-    new_flags |= ACTBUS_FL_FAIL0;
-  if (fail[1]) 
-    new_flags |= ACTBUS_FL_FAIL1;
-  if (fail[2]) 
-    new_flags |= ACTBUS_FL_FAIL2;
-
-  for (i = 0; i < 3; ++i) {
-    if (lost[i])
-      new_flags |= ACTBUS_FL_LOST;
-    if (CommandData.actbus.dead_reckon[i] != CommandData.actbus.last_good[i])
-      new_flags |= ACTBUS_FL_DR_LG;
-    if (CommandData.actbus.dead_reckon[i] != act_data[i].pos)
-      new_flags |= ACTBUS_FL_DR_PS;
-    if (CommandData.actbus.last_good[i] != act_data[i].pos)
-      new_flags |= ACTBUS_FL_LG_PS;
-  }
-  actbus_flags = new_flags;
 
   ReleaseBus(0);
 }
@@ -797,7 +803,13 @@ static int SetNewFocus(void)
   int i, j;
   int deferred = CommandData.actbus.focus - focus;
   int delta_dr = deferred;
-  int delta;
+  int delta = 0;
+  int start[3];
+
+  for (i = 0; i < 3; ++i) {
+    fail[i] = 0;
+    start[i] = act_data[i].enc;
+  }
 
   if (CheckMove(deferred, deferred, deferred))
     return 0;
@@ -850,6 +862,19 @@ static int SetNewFocus(void)
         return 0;
     }
   }
+
+  /* Here is the check */
+  if (abs(delta) == MAX_STEP)
+    for (i = 0; i < 3; ++i)
+      if (abs(act_data[i].enc - start[i]) < STEP_MIN) {
+          bprintf(err, "ActBus: Encoder failure detected, actuator %i\n", i);
+          if (CommandData.actbus.tc_mode == TC_MODE_ENABLED) {
+            bputs(err, "ActBus: Fully vetoing thermal correction");
+            CommandData.actbus.tc_mode = TC_MODE_VETOED;
+          }
+          deferred = 0;
+          fail[i] = 1;
+        }
 
   for (i = 0; i < 3; ++i)
     CommandData.actbus.dead_reckon[i] += delta_dr;
@@ -1025,7 +1050,7 @@ void SecondaryMirror(void)
   WriteData(tPrimeFidAddr, (t_primary - 273.15) * 500, NIOS_QUEUE);
   WriteData(tSecondFidAddr, (t_secondary - 273.15) * 500, NIOS_QUEUE);
   WriteData(sfCorrectionAddr, correction, NIOS_QUEUE);
-  WriteData(sfAgeAddr, CommandData.actbus.sf_time / 20., NIOS_QUEUE);
+  WriteData(sfAgeAddr, CommandData.actbus.sf_time, NIOS_QUEUE);
   WriteData(sfPositionAddr, CommandData.actbus.sf_position, NIOS_QUEUE);
   WriteData(sfTPrimAddr, (CommandData.actbus.sf_t_primary - 273.15) * 100.,
       NIOS_QUEUE);
@@ -1066,6 +1091,9 @@ static void DoActuators(void)
     default:
         bputs(err, "ActBus: Unknown Focus Mode (%i), sleeping");
   }
+
+  UpdateFlags();
+
   if (CommandData.actbus.focus_mode != ACTBUS_FM_PANIC)
     CommandData.actbus.focus_mode = ThermalCompensation();
 
