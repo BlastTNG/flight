@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.57 $";
+const char *command_list_serial = "$Revision: 3.58 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance && Cooling","Bias",
@@ -178,7 +178,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(autofocus_allow), "allow the secondary actuator system temperature"
     " correction mode", GR_ACT},
   {COMMAND(actuator_stop), "stop all secondary actuators immediately", GR_ACT},
-  {COMMAND(in_focus), "the telescope is in focus now, record position", GR_ACT},
   {COMMAND(reset_dr), "reset the actuator dead reckoning", GR_ACT},
   {COMMAND(actpos_trim), "trim the actuator positions to the encoders", GR_ACT},
 
@@ -415,7 +414,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(mirror_gain), "set the secondary actuator system gains", GR_ACT, 4,
+  {COMMAND(thermo_gain), "set the secondary actuator system gains", GR_ACT, 4,
     {
       {"T. Primary Gain",   1, 1000, 'f', "TC_G_PRIM"},
       {"T. Secondary Gain", 1, 1000, 'f', "TC_G_SEC"},
@@ -430,6 +429,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Actuator Alpha", -15000, 15000, 'i', "ACT0_ENC"},
       {"Actuator Beta",  -15000, 15000, 'i', "ACT1_ENC"},
       {"Actuator Gamma", -15000, 15000, 'i', "ACT2_ENC"}
+    }
+  },
+
+  {COMMAND(focus_offset), "set the in focus position offset relative the "
+    "nominal focus", GR_ACT, 1,
+    {
+      {"Offset", -5000, 25000, 'i', "SF_OFFSET"}
     }
   },
 

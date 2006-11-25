@@ -587,10 +587,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case autofocus_allow:
       CommandData.actbus.tc_mode = TC_MODE_ENABLED;
       break;
-    case in_focus:
-      CommandData.actbus.tc_mode = TC_MODE_VETOED;
-      CommandData.actbus.sf_in_focus = 1;
-      break;
     case reset_dr:
       CommandData.actbus.reset_dr = 1;
       break;
@@ -1056,11 +1052,14 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.focus = ivalues[0];
       CommandData.actbus.focus_mode = ACTBUS_FM_FOCUS;
       break;
-    case mirror_gain:
+    case thermo_gain:
       CommandData.actbus.g_primary = rvalues[0];
       CommandData.actbus.g_secondary = rvalues[1];
       CommandData.actbus.tc_step = ivalues[2];
       CommandData.actbus.tc_wait = ivalues[3] * 300; /* convert min->5Hz */
+      break;
+    case focus_offset:
+      CommandData.actbus.sf_offset = ivalues[0];
       break;
     case actuator_servo:
       CommandData.actbus.goal[0] = ivalues[0];
@@ -2153,8 +2152,8 @@ void InitCommandData()
   CommandData.actbus.g_primary = 50.23 + 9.9; /* um/deg */
   CommandData.actbus.g_secondary = 13.85 - 2.2; /* um/deg */
   CommandData.actbus.focus = 0;
-  CommandData.actbus.sf_in_focus = 0;
   CommandData.actbus.sf_time = 0;
+  CommandData.actbus.sf_offset = 0;
 
   CommandData.actbus.act_vel = 2000;
   CommandData.actbus.act_acc = 1;

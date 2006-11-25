@@ -17,8 +17,8 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 138        /* total number of single word cmds */
-#define N_MCOMMANDS 95         /* total number of multiword commands */
+#define N_SCOMMANDS 137        /* total number of single word cmds */
+#define N_MCOMMANDS 96         /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -95,7 +95,7 @@ enum singleCommand {
   repoll,           biascmd_inh,        biascmd_ena,      autofocus_allow,
   isc_use_pyramid,  isc_no_pyramid,     osc_use_pyramid,  osc_no_pyramid,
   autofocus_veto,   icc_halt,           nicc_halt,        actbus_on,
-  actbus_off,       actuator_stop,      in_focus,         level_pulse,
+  actbus_off,       actuator_stop,      level_pulse,
   reset_dr,         actpos_trim
 };
 
@@ -131,10 +131,10 @@ enum multiCommand {
   osc_foc_off,       t_gyro2_gain,      t_gyro2_set,      apcu_charge,
   dpcu_charge,       auto_apcu,         auto_dpcu,        quad,
   el_gyro_offset,    general,           slew_veto,        set_focus,
-  mirror_gain,       actuator_servo,    xy_goto,          actuator_vel,
+  thermo_gain,       actuator_servo,    xy_goto,          actuator_vel,
   xy_jump,           xy_xscan,          xy_yscan,         xy_raster,
   actuator_i,        lock_vel,          lock_i,           actuator_delta,
-  delta_focus,       lvdt_limit,        thermo_param
+  delta_focus,       lvdt_limit,        thermo_param,     focus_offset
 };
 
 struct par {

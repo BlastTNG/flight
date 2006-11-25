@@ -247,11 +247,8 @@ struct CommandDataStruct {
     int tc_prefp;
     int tc_prefs;
     double tc_spread;
-    double sf_t_primary;
-    double sf_t_secondary;
-    int sf_position;
+    int sf_offset;
     int sf_time;
-    int sf_in_focus;
 
     /* actuator control */
     int act_vel;

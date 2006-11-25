@@ -608,8 +608,8 @@ struct ChannelStruct SlowChannels[] = {
   {"ss_raw_11",    'w', LOOP6, 17,                1.0,             0.0, 'u'},
   {"ss_raw_12",    'w', LOOP6, 18,                1.0,             0.0, 'u'},
   {"ss_az_rel_sun",'w', LOOP6, 19,              I2DEG,             0.0, 'u'},
-  {"sf_t_prim",    'w', LOOP6, 20,               0.01,             0.0, 's'},
-  {"sf_t_sec",     'w', LOOP6, 21,               0.01,             0.0, 's'},
+  {"tc_pref_ts",   'w', LOOP6, 20,                1.0,             0.0, 'u'},
+  {"tc_spread",    'w', LOOP6, 21,             1/500.,             0.0, 'u'},
   {"lock_acc",     'w', LOOP6, 22,                1.0,             0.0, 'u'},
   {"ss_snr",       'w', LOOP6, 23,            1/1000.,             0.0, 'u'},
   {"focus_veto",   'w', LOOP6, 24,                1.0,             0.0, 'u'},
@@ -628,7 +628,7 @@ struct ChannelStruct SlowChannels[] = {
   {"tc_mode",      'w', LOOP6, 40,                1.0,             0.0, 'u'},
   {"sf_correction",'w', LOOP6, 41,                1.0,             0.0, 's'},
   {"sf_age",       'w', LOOP6, 42,              1/30.,             0.0, 'u'},
-  {"sf_position",  'w', LOOP6, 43,                1.0,             0.0, 's'},
+  {"sf_offset",    'w', LOOP6, 43,                1.0,             0.0, 's'},
   {"t_prime_fid",  'w', LOOP6, 44,             1/500.,             0.0, 's'},
   {"t_second_fid", 'w', LOOP6, 45,             1/500.,             0.0, 's'},
   {"act0_l_good",  'w', LOOP6, 46,                1.0,             0.0, 's'},
@@ -644,8 +644,6 @@ struct ChannelStruct SlowChannels[] = {
   {"lvdt_low",     'w', LOOP6, 56,                1.0,             0.0, 's'},
   {"lvdt_high",    'w', LOOP6, 57,                1.0,             0.0, 's'},
   {"tc_pref_tp",   'w', LOOP6, 58,                1.0,             0.0, 'u'},
-  {"tc_pref_ts",   'w', LOOP6, 59,                1.0,             0.0, 'u'},
-  {"tc_spread",    'w', LOOP6, 60,             1/500.,             0.0, 'u'},
   END_OF_CHANNELS
 };
 

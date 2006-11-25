@@ -47,6 +47,11 @@ static int __inhibit_chatter = 0;
 #  define ACT_BUS "/dev/ttyS7"
 #endif
 
+/* Thermal model numbers */
+#define T_PRIMARY_FOCUS   296.24 /* K */
+#define T_SECONDARY_FOCUS 296.17 /* K */
+#define POSITION_FOCUS    10616 /* absolute counts */
+
 #define LVDT_RADIUS ACTUATOR_RADIUS
 #define ACTUATOR_RADIUS 144.338 /* in mm */
 
@@ -914,7 +919,7 @@ static int ThermalCompensation(void)
     return ACTBUS_FM_SLEEP;
 
   /* Do something! */
-  CommandData.actbus.focus = focus - correction; 
+  CommandData.actbus.focus = focus - correction;
   CommandData.actbus.sf_time = 0;
 
   return ACTBUS_FM_THERMO;
@@ -936,9 +941,7 @@ void SecondaryMirror(void)
 
   static struct NiosStruct* sfCorrectionAddr;
   static struct NiosStruct* sfAgeAddr;
-  static struct NiosStruct* sfPositionAddr;
-  static struct NiosStruct* sfTPrimAddr;
-  static struct NiosStruct* sfTSecAddr;
+  static struct NiosStruct* sfOffsetAddr;
   static struct NiosStruct* tPrimeFidAddr;
   static struct NiosStruct* tSecondFidAddr;
 
@@ -959,9 +962,7 @@ void SecondaryMirror(void)
     tSecondary2Addr = GetBiPhaseAddr("t_secondary_2");
     sfCorrectionAddr = GetNiosAddr("sf_correction");
     sfAgeAddr = GetNiosAddr("sf_age");
-    sfPositionAddr = GetNiosAddr("sf_position");
-    sfTPrimAddr = GetNiosAddr("sf_t_prim");
-    sfTSecAddr = GetNiosAddr("sf_t_sec");
+    sfOffsetAddr = GetNiosAddr("sf_offset");
     tPrimeFidAddr = GetNiosAddr("t_prime_fid");
     tSecondFidAddr = GetNiosAddr("t_second_fid");
   }
@@ -1031,31 +1032,17 @@ void SecondaryMirror(void)
     CommandData.actbus.tc_mode = TC_MODE_ENABLED;
   }
 
-  if (CommandData.actbus.sf_in_focus) {
-    CommandData.actbus.sf_position = focus;
-    CommandData.actbus.sf_t_primary = t_primary;
-    CommandData.actbus.sf_t_secondary = t_secondary;
-    CommandData.actbus.sf_time = 0;
-    CommandData.actbus.sf_in_focus = 0;
-    correction = 0;
-  } else {
-    correction = CommandData.actbus.g_primary * (t_primary -
-        CommandData.actbus.sf_t_primary) - CommandData.actbus.g_secondary *
-      (t_secondary - CommandData.actbus.sf_t_secondary) +
-      (focus - CommandData.actbus.sf_position);
-    if (CommandData.actbus.sf_time < 1000000)
-      CommandData.actbus.sf_time++;
-  }
+  correction = CommandData.actbus.g_primary * (t_primary - T_PRIMARY_FOCUS) -
+    CommandData.actbus.g_secondary * (t_secondary - T_SECONDARY_FOCUS) +
+    focus - POSITION_FOCUS - CommandData.actbus.sf_offset;
+  if (CommandData.actbus.sf_time < CommandData.actbus.tc_wait)
+    CommandData.actbus.sf_time++;
 
   WriteData(tPrimeFidAddr, (t_primary - 273.15) * 500, NIOS_QUEUE);
   WriteData(tSecondFidAddr, (t_secondary - 273.15) * 500, NIOS_QUEUE);
   WriteData(sfCorrectionAddr, correction, NIOS_QUEUE);
   WriteData(sfAgeAddr, CommandData.actbus.sf_time / 10., NIOS_QUEUE);
-  WriteData(sfPositionAddr, CommandData.actbus.sf_position, NIOS_QUEUE);
-  WriteData(sfTPrimAddr, (CommandData.actbus.sf_t_primary - 273.15) * 100.,
-      NIOS_QUEUE);
-  WriteData(sfTSecAddr, (CommandData.actbus.sf_t_secondary - 273.15) * 100.,
-      NIOS_QUEUE);
+  WriteData(sfOffsetAddr, CommandData.actbus.sf_offset, NIOS_FLUSH);
 }
 
 
@@ -1392,14 +1379,14 @@ void StoreActBus(void)
     WriteData(actDeadRecAddr[j], CommandData.actbus.dead_reckon[j]
         - ACTENC_OFFSET, NIOS_QUEUE);
   }
-  WriteData(secFocusAddr, focus, NIOS_FLUSH);
+  WriteData(secFocusAddr, focus, NIOS_QUEUE);
 
   WriteData(lockPotAddr, lock_data.adc[1], NIOS_QUEUE);
   WriteData(lockLimSwAddr, lock_data.adc[2], NIOS_QUEUE);
   WriteData(lockStateAddr, lock_data.state, NIOS_QUEUE);
   WriteData(seizedBusAddr, bus_seized, NIOS_QUEUE);
   WriteData(lockGoalAddr, CommandData.actbus.lock_goal, NIOS_QUEUE);
-  WriteData(lockPosAddr, lock_data.pos, NIOS_FLUSH);
+  WriteData(lockPosAddr, lock_data.pos, NIOS_QUEUE);
 
   WriteData(actVelAddr, CommandData.actbus.act_vel, NIOS_QUEUE);
   WriteData(actAccAddr, CommandData.actbus.act_acc, NIOS_QUEUE);
@@ -1424,7 +1411,7 @@ void StoreActBus(void)
   WriteData(tcPrefTpAddr, CommandData.actbus.tc_prefp, NIOS_QUEUE);
   WriteData(tcPrefTsAddr, CommandData.actbus.tc_prefs, NIOS_QUEUE);
   WriteData(tcWaitAddr, CommandData.actbus.tc_wait / 10., NIOS_QUEUE);
-  WriteData(secGoalAddr, CommandData.actbus.focus, NIOS_QUEUE);
+  WriteData(secGoalAddr, CommandData.actbus.focus, NIOS_FLUSH);
 }
 
 void ActuatorBus(void)
