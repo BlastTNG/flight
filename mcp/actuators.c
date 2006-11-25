@@ -1050,7 +1050,7 @@ void SecondaryMirror(void)
   WriteData(tPrimeFidAddr, (t_primary - 273.15) * 500, NIOS_QUEUE);
   WriteData(tSecondFidAddr, (t_secondary - 273.15) * 500, NIOS_QUEUE);
   WriteData(sfCorrectionAddr, correction, NIOS_QUEUE);
-  WriteData(sfAgeAddr, CommandData.actbus.sf_time, NIOS_QUEUE);
+  WriteData(sfAgeAddr, CommandData.actbus.sf_time / 10., NIOS_QUEUE);
   WriteData(sfPositionAddr, CommandData.actbus.sf_position, NIOS_QUEUE);
   WriteData(sfTPrimAddr, (CommandData.actbus.sf_t_primary - 273.15) * 100.,
       NIOS_QUEUE);
@@ -1423,7 +1423,7 @@ void StoreActBus(void)
   WriteData(tcSpreadAddr, CommandData.actbus.tc_spread * 500., NIOS_QUEUE);
   WriteData(tcPrefTpAddr, CommandData.actbus.tc_prefp, NIOS_QUEUE);
   WriteData(tcPrefTsAddr, CommandData.actbus.tc_prefs, NIOS_QUEUE);
-  WriteData(tcWaitAddr, CommandData.actbus.tc_wait / 20., NIOS_QUEUE);
+  WriteData(tcWaitAddr, CommandData.actbus.tc_wait / 10., NIOS_QUEUE);
   WriteData(secGoalAddr, CommandData.actbus.focus, NIOS_QUEUE);
 }
 

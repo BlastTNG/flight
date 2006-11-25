@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.56 $";
+const char *command_list_serial = "$Revision: 3.57 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance && Cooling","Bias",
@@ -420,7 +420,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"T. Primary Gain",   1, 1000, 'f', "TC_G_PRIM"},
       {"T. Secondary Gain", 1, 1000, 'f', "TC_G_SEC"},
       {"Step Size (um)",   10, 1000, 'i', "TC_STEP"},
-      {"Step Wait (min)"  , 0, 3000, 'i', "TC_WAIT"},
+      {"Step Wait (min)"  , 0, 1500, 'i', "TC_WAIT"},
     }
   },
 
