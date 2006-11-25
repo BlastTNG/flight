@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.58 $";
+const char *command_list_serial = "$Revision: 3.59 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance && Cooling","Bias",
@@ -32,6 +32,7 @@ const char *GroupNames[N_GROUPS] = {
   "Pointing Motor Gains",  "ISC Housekeeping",  "OSC Housekeeping",
   "Telemetry",             "ISC Modes",         "OSC Modes",
   "Miscellaneous",         "ISC Parameters",    "OSC Parameters"
+  "X-Y Stage",             "Cooling",           "Secondary Focus"
 };
 
 #define COMMAND(x) x, #x
@@ -150,7 +151,7 @@ struct scom scommands[N_SCOMMANDS] = {
     | CONFIRM},
   {COMMAND(reap), "ask MCP to reap the watchdog tickle", GR_MISC | CONFIRM},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC},
-  {COMMAND(xy_panic), "stop XY stage motors immediately", GR_MISC},
+  {COMMAND(xy_panic), "stop XY stage motors immediately", GR_STAGE},
 
   {COMMAND(balance_veto), "veto balance system", GR_BAL},
   {COMMAND(balance_allow), "unveto balance system", GR_BAL},
@@ -163,10 +164,10 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(sprpump_fwd), "balance pump 2 forward", GR_BAL},
   {COMMAND(sprpump_rev), "balance pump 2 reverse", GR_BAL},
 
-  {COMMAND(inner_cool_on), "inner frame cooling pump on", GR_BAL},
-  {COMMAND(inner_cool_off), "inner frame cooling pump off", GR_BAL},
+  {COMMAND(inner_cool_on), "inner frame cooling pump on", GR_COOL},
+  {COMMAND(inner_cool_off), "inner frame cooling pump off", GR_COOL},
   {COMMAND(inner_cool_auto), "automatically regulate inner frame cooling pump",
-    GR_BAL},
+    GR_COOL},
 
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},
@@ -174,9 +175,9 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(lock_off), "turn off the lock motor", GR_LOCK},
   {COMMAND(repoll), "force repoll of the actuator bus", GR_LOCK | GR_ACT},
   {COMMAND(autofocus_veto), "veto the secondary actuator system temperature"
-    " correction mode", GR_ACT},
+    " correction mode", GR_FOCUS},
   {COMMAND(autofocus_allow), "allow the secondary actuator system temperature"
-    " correction mode", GR_ACT},
+    " correction mode", GR_FOCUS},
   {COMMAND(actuator_stop), "stop all secondary actuators immediately", GR_ACT},
   {COMMAND(reset_dr), "reset the actuator dead reckoning", GR_ACT},
   {COMMAND(actpos_trim), "trim the actuator positions to the encoders", GR_ACT},
@@ -357,7 +358,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(inner_level), "inner frame cooling pump speed", GR_BAL, 1,
+  {COMMAND(inner_level), "inner frame cooling pump speed", GR_COOL, 1,
     {
       {"Level (%)", 0, 100, 'f', "INPUMP_LEV"}
     }
@@ -378,7 +379,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(general), "send a general command string to the lock or actuators",
-    GR_MISC | GR_ACT | GR_LOCK, 2,
+    GR_STAGE | GR_ACT | GR_LOCK, 2,
     {
       {"Address (1-3,5,33)", 1, 0x2F, 'i', "1.0"},
       {"Command", 0, 32, 's', ""},
@@ -401,20 +402,20 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(set_focus), "servo the secondary mirror to absolute position",
-    GR_ACT, 1,
+    GR_FOCUS, 1,
     {
       {"Position (counts)", -15000, 15000, 'i', "SEC_FOCUS"},
     }
   },
 
   {COMMAND(delta_focus), "servo the secondary mirror by a relative amount",
-    GR_ACT, 1,
+    GR_FOCUS, 1,
     {
       {"Position (counts)", -1000, 1000, 'i', "0"},
     }
   },
 
-  {COMMAND(thermo_gain), "set the secondary actuator system gains", GR_ACT, 4,
+  {COMMAND(thermo_gain), "set the secondary actuator system gains", GR_FOCUS, 4,
     {
       {"T. Primary Gain",   1, 1000, 'f', "TC_G_PRIM"},
       {"T. Secondary Gain", 1, 1000, 'f', "TC_G_SEC"},
@@ -433,7 +434,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(focus_offset), "set the in focus position offset relative the "
-    "nominal focus", GR_ACT, 1,
+    "nominal focus", GR_FOCUS, 1,
     {
       {"Offset", -5000, 25000, 'i', "SF_OFFSET"}
     }
@@ -480,7 +481,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(thermo_param), "set the thermal compensation parameters", GR_ACT, 3,
+  {COMMAND(thermo_param), "set the thermal compensation parameters", GR_FOCUS,
+    3,
     {
       {"Temp. Spread", 0, 100, 'f', "TC_SPREAD"},
       {"Preferred T Prime", 0, 2, 'i', "TC_PREF_TP"},
@@ -490,7 +492,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /* XY Stage */
   {COMMAND(xy_goto), "move the X-Y translation stage to absolute position",
-    GR_MISC, 4,
+    GR_STAGE, 4,
     {
       {"X destination", 0, 80000, 'l', "STAGE_X"},
       {"Y destination", 0, 80000, 'l', "STAGE_Y"},
@@ -500,7 +502,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(xy_jump), "move the X-Y translation stage to relative position",
-    GR_MISC, 4,
+    GR_STAGE, 4,
     {
       {"X delta", -80000, 80000, 'l', "0"},
       {"Y delta", -80000, 80000, 'l', "0"},
@@ -509,7 +511,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(xy_xscan), "scan the X-Y translation stage in X", GR_MISC, 3,
+  {COMMAND(xy_xscan), "scan the X-Y translation stage in X", GR_STAGE, 3,
     {
       {"X center", 0, 80000, 'l', "STAGE_X"},
       {"delta X", 0, 80000, 'l', "NONE"},
@@ -517,7 +519,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(xy_yscan), "scan the X-Y translation stage in Y", GR_MISC, 3,
+  {COMMAND(xy_yscan), "scan the X-Y translation stage in Y", GR_STAGE, 3,
     {
       {"Y center", 0, 80000, 'l', "STAGE_Y"},
       {"delta Y", 0, 80000, 'l', "NONE"},
@@ -525,7 +527,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(xy_raster), "raster the X-Y translation stage", GR_MISC, 5,
+  {COMMAND(xy_raster), "raster the X-Y translation stage", GR_STAGE, 5,
     {
       {"X center", 0, 80000, 'l', "STAGE_X"},
       {"Y center", 0, 80000, 'l', "STAGE_Y"},
@@ -595,7 +597,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(spare_level), "spare pump pwm level", GR_BAL | GR_BAL, 1,
+  {COMMAND(spare_level), "spare pump pwm level", GR_COOL | GR_BAL, 1,
     {
       {"Level (%)", 0, 100, 'f', "SPRPUMP_LEV"}
     }
