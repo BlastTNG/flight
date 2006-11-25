@@ -52,6 +52,8 @@ static int __inhibit_chatter = 0;
 
 #define ENCODER_TOL 0
 #define FOCUS_TOL 30
+#define MAX_STEP 100
+#define STEP_MIN 70
 
 #define ALL_ACT 0x51 /* All actuators */
 #define LOCKNUM 3
@@ -123,18 +125,22 @@ static int bus_seized = -1;
 static int actbus_flags = 0;
 static int bad_move = 0;
 
-#define ACTBUS_FL_LOST 0x01
-#define ACTBUS_FL_DRPS 0x02
-#define ACTBUS_FL_DRLG 0x04
-#define ACTBUS_FL_LGPS 0x08
-#define ACTBUS_FL_DRLV 0x10
-#define ACTBUS_FL_LGLV 0x20
-#define ACTBUS_FL_PSLV 0x40
-#define ACTBUS_FL_BDMV 0x80
+#define ACTBUS_FL_LOST     0x001
+#define ACTBUS_FL_DR_PS    0x002
+#define ACTBUS_FL_DR_LG    0x004
+#define ACTBUS_FL_LG_PS    0x008
+#define ACTBUS_FL_DR_LV    0x010
+#define ACTBUS_FL_LG_LV    0x020
+#define ACTBUS_FL_PS_LV    0x040
+#define ACTBUS_FL_BAD_MOVE 0x080
+#define ACTBUS_FL_FAIL0    0x100
+#define ACTBUS_FL_FAIL1    0x200
+#define ACTBUS_FL_FAIL2    0x400
 
 /* Secondary focus crap */
 static double focus = -ACTENC_OFFSET; /* set in ab thread, read in fc thread */
 static double correction = 0;         /* set in fc thread, read in ab thread */
+static int fail[3] = {0, 0, 0};
 
 static int act_setserial(char *input_tty)
 {
@@ -519,7 +525,7 @@ static int CheckMove(int delta0, int delta1, int delta2)
 
   if (X < lvdt_low || X > lvdt_high || maxE - minE > lvdt_delta) {
     bputs(warning, "ActBus: Move Out of Range.");
-    bad_move = ACTBUS_FL_BDMV;
+    bad_move = ACTBUS_FL_BAD_MOVE;
   } else
     bad_move = 0;
 
@@ -534,10 +540,14 @@ static void ServoActuators(int* goal, int update_dr)
   int act_wait[3] = {0, 0, 0};
   int lost[3] = {0, 0, 0};
   int delta_dr[3] = {0, 0, 0};
+  int delta[3] = {0, 0, 0};
+  int start[3] = {0, 0, 0};
   char buffer[1000];
 
-  for (i = 0; i < 3; ++i)
+  for (i = 0; i < 3; ++i) {
+    fail[i] = 0;
     delta_dr[i] = goal[i] - act_data[i].enc + ACTENC_OFFSET;
+  }
 
   if (CheckMove(delta_dr[0], delta_dr[1], delta_dr[2]))
     return;
@@ -560,22 +570,43 @@ static void ServoActuators(int* goal, int update_dr)
         CommandData.actbus.force_repoll = 1;
       } else if (act_wait[i] > 0)
         act_wait[i]--;
-      else {
-        int delta = goal[i] - act_data[i].enc + ACTENC_OFFSET;
-        if (abs(delta) <= ENCODER_TOL || lost[i]) {
+      else if (act_wait[i] == 0) {
+        act_wait[i]--;
+        /* Here is the check */
+        if (abs(delta[i]) == MAX_STEP && abs(act_data[i].enc - start[i]) <
+            STEP_MIN)
+        {
+          bprintf(err, "ActBus: Encoder failure detected, actuator %i\n", i);
+          if (CommandData.actbus.tc_mode == TC_MODE_ENABLED) {
+            bputs(err, "ActBus: Fully vetoing thermal correction");
+            CommandData.actbus.tc_mode = TC_MODE_VETOED;
+          }
+          act_there[i] = THERE_WAIT;
+          fail[i] = 1;
+        }
+      } else {
+        start[i] = act_data[i].enc - ACTENC_OFFSET;
+        delta[i] = goal[i] - start[i];
+
+        if (delta[i] > MAX_STEP)
+          delta[i] = MAX_STEP;
+        else if (delta[i] < -MAX_STEP)
+          delta[i] = -MAX_STEP;
+
+        if (abs(delta[i]) <= ENCODER_TOL || lost[i]) {
           act_there[i]++;
-        } else if (delta > 0) {
-          ActCommand(buffer, "P%iR", delta);
+        } else if (delta[i] > 0) {
+          ActCommand(buffer, "P%iR", delta[i]);
           bprintf(info, "Servo: %i => %s\n", i, buffer);
-          act_wait[i] = delta * (6. * 26. / CommandData.actbus.act_vel) + 1;
+          act_wait[i] = delta[i] * (6. * 26. / CommandData.actbus.act_vel) + 1;
           BusComm(i, buffer, 0, __inhibit_chatter);
         } else {
           /* Always overshoot on the downswing, so we can come up to the goal
            * Random to damp oscillations */
-          delta = 8 + (rand() % 10) - delta;
-          ActCommand(buffer, "D%iR", delta);
+          delta[i] = 8 + (rand() % 10) - delta[i];
+          ActCommand(buffer, "D%iR", delta[i]);
           bprintf(info, "Servo: %i => %s\n", i, buffer);
-          act_wait[i] = delta * (6. * 26. / CommandData.actbus.act_vel) + 1;
+          act_wait[i] = delta[i] * (6. * 26. / CommandData.actbus.act_vel) + 1;
           BusComm(i, buffer, 0, __inhibit_chatter);
         }
       }
@@ -598,16 +629,22 @@ static void ServoActuators(int* goal, int update_dr)
   /* Update flags */
   int new_flags = bad_move;
 
-  if (lost[0] || lost[1] || lost[2])
-    new_flags |= ACTBUS_FL_LOST;
+  if (fail[0]) 
+    new_flags |= ACTBUS_FL_FAIL0;
+  if (fail[1]) 
+    new_flags |= ACTBUS_FL_FAIL1;
+  if (fail[2]) 
+    new_flags |= ACTBUS_FL_FAIL2;
 
   for (i = 0; i < 3; ++i) {
+    if (lost[i])
+      new_flags |= ACTBUS_FL_LOST;
     if (CommandData.actbus.dead_reckon[i] != CommandData.actbus.last_good[i])
-      new_flags |= ACTBUS_FL_DRLG;
+      new_flags |= ACTBUS_FL_DR_LG;
     if (CommandData.actbus.dead_reckon[i] != act_data[i].pos)
-      new_flags |= ACTBUS_FL_DRPS;
+      new_flags |= ACTBUS_FL_DR_PS;
     if (CommandData.actbus.last_good[i] != act_data[i].pos)
-      new_flags |= ACTBUS_FL_LGPS;
+      new_flags |= ACTBUS_FL_LG_PS;
   }
   actbus_flags = new_flags;
 
@@ -758,10 +795,11 @@ static int SetNewFocus(void)
 {
   char buffer[1000];
   int i, j;
-  int delta = CommandData.actbus.focus - focus;
-  int delta_dr = delta;
+  int deferred = CommandData.actbus.focus - focus;
+  int delta_dr = deferred;
+  int delta;
 
-  if (CheckMove(delta, delta, delta))
+  if (CheckMove(deferred, deferred, deferred))
     return 0;
   
   if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
@@ -770,34 +808,47 @@ static int SetNewFocus(void)
   TakeBus(0);
 
   bprintf(info, "Old: %i %i %i -> %i %i\n", act_data[0].enc, act_data[1].enc,
-      act_data[2].enc, CommandData.actbus.focus, delta);
-  CommandData.actbus.goal[0] = act_data[0].enc + delta - ACTENC_OFFSET;
-  CommandData.actbus.goal[1] = act_data[1].enc + delta - ACTENC_OFFSET;
-  CommandData.actbus.goal[2] = act_data[2].enc + delta - ACTENC_OFFSET;
+      act_data[2].enc, CommandData.actbus.focus, deferred);
+  CommandData.actbus.goal[0] = act_data[0].enc + deferred - ACTENC_OFFSET;
+  CommandData.actbus.goal[1] = act_data[1].enc + deferred - ACTENC_OFFSET;
+  CommandData.actbus.goal[2] = act_data[2].enc + deferred - ACTENC_OFFSET;
 
-  if (abs(delta) <= FOCUS_TOL) {
-    ;
-  } else if (delta > 0) {
-    ActCommand(buffer, "P%iR", delta);
-    bprintf(info, "Servo: %i => %s\n", ALL_ACT, buffer);
-    BusComm(ALL_ACT, buffer, 0, __inhibit_chatter);
-  } else {
-    delta = 10 - delta;
-    ActCommand(buffer, "D%iR", delta);
-    bprintf(info, "Servo: %i => %s\n", ALL_ACT, buffer);
-    BusComm(ALL_ACT, buffer, 0, __inhibit_chatter);
-  }
-  bprintf(info, "New: %i %i %i\n", CommandData.actbus.goal[0],
-      CommandData.actbus.goal[1], CommandData.actbus.goal[2]);
-  for (i = 0; i < (1 + abs(delta) * 26 / CommandData.actbus.act_vel) * 6; ++i) {
-    for (j = 0; j < 3; ++j)
-      ReadActuator(j, 1);
+  while (deferred != 0) {
+    if (deferred > MAX_STEP)
+      delta = MAX_STEP;
+    else if (deferred < -MAX_STEP)
+      delta = -MAX_STEP;
+    else
+      delta = deferred;
+    bprintf(info, "D/d - %i %i", deferred, delta);
 
-    focus = (act_data[0].enc + act_data[1].enc + act_data[2].enc) / 3
-      - ACTENC_OFFSET;
+    deferred -= delta;
 
-    if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
-      return 0;
+    if (abs(delta) <= FOCUS_TOL) {
+      ;
+    } else if (delta > 0) {
+      ActCommand(buffer, "P%iR", delta);
+      bprintf(info, "Servo: %i => %s\n", ALL_ACT, buffer);
+      BusComm(ALL_ACT, buffer, 0, __inhibit_chatter);
+    } else {
+      delta = 10 - delta;
+      ActCommand(buffer, "D%iR", delta);
+      bprintf(info, "Servo: %i => %s\n", ALL_ACT, buffer);
+      BusComm(ALL_ACT, buffer, 0, __inhibit_chatter);
+    }
+    bprintf(info, "New: %i %i %i\n", CommandData.actbus.goal[0],
+        CommandData.actbus.goal[1], CommandData.actbus.goal[2]);
+    for (i = 0; i < (1 + abs(delta) * 26 / CommandData.actbus.act_vel) * 6; ++i)
+    {
+      for (j = 0; j < 3; ++j)
+        ReadActuator(j, 1);
+
+      focus = (act_data[0].enc + act_data[1].enc + act_data[2].enc) / 3
+        - ACTENC_OFFSET;
+
+      if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
+        return 0;
+    }
   }
 
   for (i = 0; i < 3; ++i)

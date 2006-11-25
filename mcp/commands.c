@@ -1090,7 +1090,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case lvdt_limit:
       CommandData.actbus.lvdt_delta = rvalues[0];
-      if (ivalues[1] > ivalues[2]) {
+      if (rvalues[1] > rvalues[2]) {
         CommandData.actbus.lvdt_low = rvalues[2];
         CommandData.actbus.lvdt_high = rvalues[1];
       } else {
