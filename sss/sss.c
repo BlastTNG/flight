@@ -24,6 +24,8 @@
 
 #define MIN_AMP_VAL 2000
 #define BUNK_FUDGE_FACTOR 400
+#define LOW_AZ_LIM 120  //Lower limit of trusted az_rel_sun
+#define HI_AZ_LIM  240  //Higher limit of trusted az_rel_sun
 
 #define PI180 (3.14159265 / 180.0)
 
@@ -396,6 +398,15 @@ int main (void)
 
     calculate_az(sensor, &dat);
     //dat.az_rel_sun = LutCal(&sssAzLut, dat.az_rel_sun);
+
+    if (dat.az_rel_sun < LOW_AZ_LIM)
+    {
+      dat.snr = 0.09;
+    }
+    if (dat.az_rel_sun > HI_AZ_LIM)
+    {
+      dat.snr = 0.08;
+    }
 
 /* From here to #else is non-flight only */
 #ifdef NO_NET
