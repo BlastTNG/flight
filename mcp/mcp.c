@@ -74,9 +74,6 @@ unsigned int RxFrameFastSamp;
 unsigned short* slow_data[FAST_PER_SLOW];
 pthread_t watchdog_id;
 
-unsigned int last_frame = 0;
-time_t last_time;
-
 static int bi0_fp = -2;
 static int StartupVeto = STARTUP_VETO_LENGTH + 1;
 static int Death = -STARTUP_VETO_LENGTH * 2;
@@ -809,8 +806,6 @@ int main(int argc, char *argv[])
 #endif
   pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
 
-  last_time = mcp_systime(NULL);
-
   while (1) {
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0)
       berror(err, "System: Error on BBC read");
@@ -845,15 +840,6 @@ int main(int argc, char *argv[])
 
         /* Save current fastsamp */
         RxFrameFastSamp = (RxFrame[1] + RxFrame[2] * 0x10000);
-
-        /* Frame rate check */
-        time_t now = mcp_systime(NULL);
-        if ((now % 60) == 0 && last_time != now) {
-          bprintf(info, "System: Frame Rate: %f", (double)(RxFrameFastSamp
-                - last_frame) / (now - last_time));
-          last_frame = RxFrameFastSamp;
-          last_time = now;
-        }
 
         UpdateBBCFrame(RxFrame);
         CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);

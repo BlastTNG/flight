@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.61 $";
+const char *command_list_serial = "$Revision: 3.62 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Cooling", 
@@ -415,12 +415,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(thermo_gain), "set the secondary actuator system gains", GR_FOCUS, 4,
+  {COMMAND(thermo_gain), "set the secondary actuator system gains", GR_FOCUS, 5,
     {
       {"T. Primary Gain",   1, 1000, 'f', "TC_G_PRIM"},
       {"T. Secondary Gain", 1, 1000, 'f', "TC_G_SEC"},
       {"Step Size (um)",   10, 1000, 'i', "TC_STEP"},
       {"Step Wait (min)"  , 0, 1500, 'i', "TC_WAIT"},
+      {"Filter Length (s)", 0, 6000, 'i', "TC_FILTER"}
     }
   },
 

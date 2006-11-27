@@ -57,7 +57,7 @@ extern "C" {
 #define STAGE_X_THROW 78500
 #define STAGE_Y_THROW 78250
 
-#define ACTENC_TO_MM 0.00105833333333 /* mm/enc.counts = 24000 counts/inch */
+#define ACTENC_TO_UM 1.05833333333 /* mm/enc.counts = 24000 counts/inch */
 #define ACTENC_OFFSET 1000000 /* this number should be arbitrarily larger than
                                  the maximum throw */
 #define LVDT10_ADC_TO_ENC 0.4568 /* adc counts to encoder counts */

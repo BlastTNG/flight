@@ -950,7 +950,7 @@ void SecondaryMirror(void)
   static struct BiPhaseStruct* tPrimary2Addr;
   static struct BiPhaseStruct* tSecondary2Addr;
   static double t_primary = -1, t_secondary = -1;
-  const int filter_len = CommandData.actbus.tc_wait / 2;
+  const int filter_len = CommandData.actbus.tc_filter;
   double t_primary1, t_secondary1;
   double t_primary2, t_secondary2;
 
@@ -1035,6 +1035,10 @@ void SecondaryMirror(void)
   correction = CommandData.actbus.g_primary * (t_primary - T_PRIMARY_FOCUS) -
     CommandData.actbus.g_secondary * (t_secondary - T_SECONDARY_FOCUS) +
     focus - POSITION_FOCUS - CommandData.actbus.sf_offset;
+
+  /* convert to counts */
+  correction /= ACTENC_TO_UM;
+  
   if (CommandData.actbus.sf_time < CommandData.actbus.tc_wait)
     CommandData.actbus.sf_time++;
 
@@ -1300,6 +1304,7 @@ void StoreActBus(void)
   static struct NiosStruct* tcGSecAddr;
   static struct NiosStruct* tcStepAddr;
   static struct NiosStruct* tcWaitAddr;
+  static struct NiosStruct* tcFilterAddr;
   static struct NiosStruct* tcModeAddr;
   static struct NiosStruct* tcSpreadAddr;
   static struct NiosStruct* tcPrefTpAddr;
@@ -1335,6 +1340,7 @@ void StoreActBus(void)
     tcGSecAddr = GetNiosAddr("tc_g_sec");
     tcStepAddr = GetNiosAddr("tc_step");
     tcWaitAddr = GetNiosAddr("tc_wait");
+    tcFilterAddr = GetNiosAddr("tc_filter");
     tcModeAddr = GetNiosAddr("tc_mode");
     tcSpreadAddr = GetNiosAddr("tc_spread");
     tcPrefTpAddr = GetNiosAddr("tc_pref_tp");
@@ -1411,6 +1417,7 @@ void StoreActBus(void)
   WriteData(tcPrefTpAddr, CommandData.actbus.tc_prefp, NIOS_QUEUE);
   WriteData(tcPrefTsAddr, CommandData.actbus.tc_prefs, NIOS_QUEUE);
   WriteData(tcWaitAddr, CommandData.actbus.tc_wait / 10., NIOS_QUEUE);
+  WriteData(tcFilterAddr, CommandData.actbus.tc_filter, NIOS_QUEUE);
   WriteData(secGoalAddr, CommandData.actbus.focus, NIOS_FLUSH);
 }
 

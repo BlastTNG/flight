@@ -246,6 +246,7 @@ struct CommandDataStruct {
     int tc_mode;
     int tc_prefp;
     int tc_prefs;
+    int tc_filter;
     double tc_spread;
     int sf_offset;
     int sf_time;

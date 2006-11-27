@@ -1057,9 +1057,11 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.g_secondary = rvalues[1];
       CommandData.actbus.tc_step = ivalues[2];
       CommandData.actbus.tc_wait = ivalues[3] * 300; /* convert min->5Hz */
+      CommandData.actbus.tc_filter = ivalues[4] * 5; /* convert sec->5Hz */
       break;
     case focus_offset:
       CommandData.actbus.sf_offset = ivalues[0];
+      CommandData.actbus.sf_time = 0;
       break;
     case actuator_servo:
       CommandData.actbus.goal[0] = ivalues[0];
@@ -2134,7 +2136,8 @@ void InitCommandData()
 
   CommandData.actbus.tc_mode = TC_MODE_VETOED;
   CommandData.actbus.tc_step = 100; /* microns */
-  CommandData.actbus.tc_wait = 600; /* seconds */
+  CommandData.actbus.tc_wait = 600; /* 5-Hz frames */
+  CommandData.actbus.tc_filter = 300; /* 5 Hz frames */
   CommandData.actbus.tc_spread = 10; /* centigrade degrees */
   CommandData.actbus.reset_dr = 0;
   CommandData.actbus.dead_reckon[0] = 0;
@@ -2149,6 +2152,10 @@ void InitCommandData()
 
   /* The first is due to change in radius of curvature, the second due to
    * displacement of the secondary due to the rigid struts */
+
+  /* Don sez:   50.23 + 9.9 and 13.85 - 2.2 */
+  /* Marco sez: 45.97 + 9.9 and  7.36 - 2.2 */
+  
   CommandData.actbus.g_primary = 50.23 + 9.9; /* um/deg */
   CommandData.actbus.g_secondary = 13.85 - 2.2; /* um/deg */
   CommandData.actbus.focus = 0;

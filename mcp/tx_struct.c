@@ -644,6 +644,7 @@ struct ChannelStruct SlowChannels[] = {
   {"lvdt_low",     'w', LOOP6, 56,                1.0,             0.0, 's'},
   {"lvdt_high",    'w', LOOP6, 57,                1.0,             0.0, 's'},
   {"tc_pref_tp",   'w', LOOP6, 58,                1.0,             0.0, 'u'},
+  {"tc_filter",    'w', LOOP6, 59,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
