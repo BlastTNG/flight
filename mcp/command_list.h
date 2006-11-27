@@ -133,11 +133,11 @@ enum multiCommand {
   bda_gain,          bda_set,           jfet_set,         isc_foc_off,
   osc_foc_off,       t_gyro2_gain,      t_gyro2_set,      apcu_charge,
   dpcu_charge,       auto_apcu,         auto_dpcu,        quad,
-  el_gyro_offset,    general,           slew_veto,        set_focus,
+  el_gyro_offset,    general,           slew_veto,        set_secondary,
   thermo_gain,       actuator_servo,    xy_goto,          actuator_vel,
   xy_jump,           xy_xscan,          xy_yscan,         xy_raster,
   actuator_i,        lock_vel,          lock_i,           actuator_delta,
-  delta_focus,       lvdt_limit,        thermo_param,     focus_offset
+  delta_secondary,   lvdt_limit,        thermo_param,     focus_offset
 };
 
 struct par {
