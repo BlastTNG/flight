@@ -171,10 +171,16 @@ void WatchDGPS()
   //fprintf(fp,"$PASHS,3DF,OFS,-168.70,+00.00,+00.00\r\n"); // array offset p71
 
   /***** Numbers for palestine, 2006-AUG-01 *********/
-  fprintf(fp,"$PASHS,3DF,V12,+000.000,+001.153,+000.050\r\n");
-  fprintf(fp,"$PASHS,3DF,V13,-001.783,+001.825,+000.014\r\n");
-  fprintf(fp,"$PASHS,3DF,V14,-002.546,+000.958,-000.033\r\n");
-  fprintf(fp,"$PASHS,3DF,OFS,-168.70,+00.00,+00.00\r\n"); // array offset p71
+  //fprintf(fp,"$PASHS,3DF,V12,+000.000,+001.153,+000.050\r\n");
+  //fprintf(fp,"$PASHS,3DF,V13,-001.783,+001.825,+000.014\r\n");
+  //fprintf(fp,"$PASHS,3DF,V14,-002.546,+000.958,-000.033\r\n");
+  //fprintf(fp,"$PASHS,3DF,OFS,-168.70,+00.00,+00.00\r\n"); // array offset p71
+  //fprintf(fp,"$PASHS,SAV,Y\r\n");
+  /***** Numbers for McMurdo, 2006-Nov-27 *********/
+  fprintf(fp,"$PASHS,3DF,V12,+000.000,+003.130,+000.000\r\n");
+  fprintf(fp,"$PASHS,3DF,V13,-001.237,+000.624,+000.000\r\n");
+  fprintf(fp,"$PASHS,3DF,V14,+001.284,+002.474,+000.009\r\n");
+  fprintf(fp,"$PASHS,3DF,OFS,-147.61,+00.00,+00.00\r\n"); // array offset p71
   fprintf(fp,"$PASHS,SAV,Y\r\n");
   /**********************************************/
   fprintf(fp,"$PASHS,ELM,15\r\n"); // minimum elevation for sattelite p 53
