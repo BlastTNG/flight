@@ -184,7 +184,7 @@ struct ChannelStruct SlowChannels[] = {
   {"i_gond_das",   'r',  ACS3, 19,          -1.875E-3,           61.44, 'u'},
   {"i_batt_acs",   'r',  ACS3, 21,           1.875E-3,          -61.44, 'u'},
   {"i_batt_das",   'r',  ACS3, 23,           1.875E-3,          -61.44, 'u'},
-  {"i_sol_acs",    'r',  ACS3, 25,          -0.625E-3,           20.48, 'u'},
+  {"i_sol_acs",    'r',  ACS3, 25,          -0.625E-3/3.0,   20.48*3.0, 'u'},
   {"i_sol_das",    'r',  ACS3, 27,          -0.625E-3,           20.48, 'u'},
   {"v_sol_acs3",   'r',  ACS3, 29, -0.00141626, 92.8158, 'u'},
   {"v_sol_das4",   'r',  ACS3, 31, -0.00140052, 91.7845, 'u'},
