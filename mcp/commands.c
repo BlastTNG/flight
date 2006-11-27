@@ -69,12 +69,13 @@
 #define ISC_TRIGGER_NEG  3
 
 void ActPotTrim(void); /* actuators.c */
+void RecalcOffset(double, double);
 
-void SetRaDec(double ra, double dec); /* defined in pointing.c */
+void SetRaDec(double, double); /* defined in pointing.c */
 void SetTrimToSC(int);
 void ClearTrim();
-void AzElTrim(double az, double el);
-void NormalizeAngle(double *A);
+void AzElTrim(double, double);
+void NormalizeAngle(double*);
 
 static const char *UnknownCommand = "Unknown Command";
 
@@ -1053,11 +1054,13 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.focus_mode = ACTBUS_FM_FOCUS;
       break;
     case thermo_gain:
-      CommandData.actbus.g_primary = rvalues[0];
-      CommandData.actbus.g_secondary = rvalues[1];
       CommandData.actbus.tc_step = ivalues[2];
       CommandData.actbus.tc_wait = ivalues[3] * 300; /* convert min->5Hz */
       CommandData.actbus.tc_filter = ivalues[4] * 5; /* convert sec->5Hz */
+      CommandData.actbus.sf_time = CommandData.actbus.tc_wait - 5;
+      RecalcOffset(rvalues[0], rvalues[1]);
+      CommandData.actbus.g_primary = rvalues[0];
+      CommandData.actbus.g_secondary = rvalues[1];
       break;
     case focus_offset:
       CommandData.actbus.sf_offset = ivalues[0];

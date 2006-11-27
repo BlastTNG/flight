@@ -143,6 +143,7 @@ static int bad_move = 0;
 #define ACTBUS_FL_FAIL2    0x400
 
 /* Secondary focus crap */
+static double t_primary = -1, t_secondary = -1;
 static double focus = -ACTENC_OFFSET; /* set in ab thread, read in fc thread */
 static double correction = 0;         /* set in fc thread, read in ab thread */
 static int fail[3] = {0, 0, 0};
@@ -925,8 +926,18 @@ static int ThermalCompensation(void)
   return ACTBUS_FM_THERMO;
 }
 
+void RecalcOffset(double new_gp, double new_gs)
+{
+  if (t_primary < 0 || t_secondary < 0)
+    return;
+
+  CommandData.actbus.sf_offset = (new_gp - CommandData.actbus.g_primary) *
+    (t_primary - T_PRIMARY_FOCUS) - (new_gs - CommandData.actbus.g_secondary) *
+    (t_secondary - T_SECONDARY_FOCUS) + CommandData.actbus.sf_offset;
+}
+
 /* Some sort of lame tmeperature filter */
-double TFilter(double old, double new, double t)
+static double TFilter(double old, double new, double t)
 {
   if (old < 0)
     return new;
@@ -949,7 +960,6 @@ void SecondaryMirror(void)
   static struct BiPhaseStruct* tSecondary1Addr;
   static struct BiPhaseStruct* tPrimary2Addr;
   static struct BiPhaseStruct* tSecondary2Addr;
-  static double t_primary = -1, t_secondary = -1;
   const int filter_len = CommandData.actbus.tc_filter;
   double t_primary1, t_secondary1;
   double t_primary2, t_secondary2;
