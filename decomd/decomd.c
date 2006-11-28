@@ -53,7 +53,7 @@
 #define SOCK_PORT 11411
 #define FILE_SUFFIX 'y'
 
-#define FS_FILTER 0.999977
+#define FS_FILTER 0.9
 #define DQ_FILTER 0.9977
 
 void InitialiseFrameFile(char type);
@@ -86,7 +86,7 @@ extern struct file_info {
 unsigned short FrameBuf[BI0_FRAME_SIZE];
 unsigned short AntiFrameBuf[BI0_FRAME_SIZE];
 int status = 0;
-double fs_bad = 0;
+double fs_bad = 1;
 double dq_bad = 0;
 unsigned short polarity = 1;
 int du = 0;
@@ -116,14 +116,12 @@ void ReadDecom (void)
         du = ioctl(decom, DECOM_IOC_NUM_UNLOCKED);
         wfifo_size = ioctl(decom, DECOM_IOC_FIONREAD);
         if ((buf != FRAME_SYNC_WORD) && ((~buf & 0xffff) != FRAME_SYNC_WORD)) {
-          fs_bad = fs_bad * FS_FILTER + (1.0 - FS_FILTER);
           status = 0;
           i_word = 0;
         } else {
           if (status < 2)
             status++;
           else {
-            fs_bad *= FS_FILTER;
             if (polarity) {
               FrameBuf[BiPhaseFrameWords] = crc_ok;
               FrameBuf[BiPhaseFrameWords + 1] = polarity;
@@ -154,9 +152,6 @@ void ReadDecom (void)
         if (++i_word >= BI0_FRAME_SIZE)
           i_word = 0;
 
-        if (i_word % 5 == 0)
-          fs_bad *= FS_FILTER;
-
         if (i_word - 1 == BiPhaseFrameWords) {
           FrameBuf[0] = AntiFrameBuf[0] = 0xEB90;
 
@@ -173,10 +168,9 @@ void ReadDecom (void)
       }
     }
 
-    if (!read_data) {
+    if (!read_data)
       status = 0;
-      fs_bad = fs_bad * FS_FILTER + (1.0 - FS_FILTER);
-    } else
+    else
       read_data = 0;
 
     usleep(1000);
@@ -264,8 +258,14 @@ int main(void) {
   char buf[209];
   struct timeval no_time = {0, 0};
   unsigned long long int disk_free = 0;
+  unsigned long old_fc = 0;
   int i, reset_lastsock = 0;
   char *ptr;
+  struct timeval now;
+  struct timeval then;
+  struct timezone tz;
+  double dt;
+  double dframes;
 
   struct sigaction action;
 
@@ -337,6 +337,8 @@ int main(void) {
   /* block signals */
   pthread_sigmask(SIG_BLOCK, &signals, NULL);
 
+  gettimeofday(&then, &tz);
+
   pthread_create(&framefile_thread, NULL, (void*)&FrameFileWriter, NULL);
   pthread_create(&decom_thread, NULL, (void*)&ReadDecom, NULL);
 
@@ -373,14 +375,23 @@ int main(void) {
     for(ptr = framefile.name + strlen(framefile.name); *ptr != '/'; --ptr);
 
     memset(buf, 0, 209);
+    gettimeofday(&now, &tz);
+    dt = (now.tv_sec + now.tv_usec / 1000000.) -
+      (then.tv_sec + then.tv_usec / 1000000.);
+    dframes = (frame_counter - old_fc) / 100.;
+    fs_bad = fs_bad * FS_FILTER + (1.0 - FS_FILTER) * dframes / dt;
+    if (fs_bad > 1)
+      fs_bad = 1;
 #ifdef DEBUG
-    printf("%1i %1i %3i %5.3f %5.3f %Lu %lu %s %i\n", status + system_idled *
-        0x4, polarity, du, fs_bad, dq_bad, disk_free, frame_counter, ptr + 1,
-        wfifo_size);
-#endif
-    sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu %lu %s %i\n", status
+    printf("%1i %1i %3i %5.3f %5.3f %Lu %lu %s %i %f %f\n", status
         + system_idled * 0x4, polarity, du, fs_bad, dq_bad, disk_free,
-        frame_counter, ptr + 1, wfifo_size);
+        frame_counter, ptr + 1, wfifo_size, dframes, dt);
+#endif
+    sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu %lu %s %i %f %f\n", status
+        + system_idled * 0x4, polarity, du, 1 - fs_bad, dq_bad, disk_free,
+        frame_counter, ptr + 1, wfifo_size, dframes, dt);
+    old_fc = frame_counter;
+    then = now;
 
     if (n == -1 && errno == EINTR)
       continue;
