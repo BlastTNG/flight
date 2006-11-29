@@ -307,6 +307,10 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 #warning "SUN MIN AMP MIGHT NOT BE SET CORRECTLY"
 #define MIN_SS_SNR 1.21
 #warning "SUN MIN SNR HAS BEEN SET WITH NOT ENOUGHT THOUGHT"
+
+#define SS_N_MAX          12
+#define BUNK_FUDGE_FACTOR 400
+#define MIN_AMP_VAL       2000
 static int SSConvert(double *ss_az)
 {
   static int firsttime = 1;
@@ -315,6 +319,31 @@ static int SSConvert(double *ss_az)
   double sun_ra, sun_dec, jd;
   static int last_i_ss = -1;
   static struct LutType ssAzLut = {"/data/etc/sss.lut",0,NULL,NULL,0};
+
+  double x;
+  double ave;
+  double minimum;
+  int i;
+  int sens_max;
+  double max_adj;
+  double sensors[SS_N_MAX];
+  unsigned int sensor_uint[SS_N_MAX];
+
+  double module_calibration[] =
+  { /*Palestine 2006*/ /*Brown 2006    */
+    11788.0 / 11788.0, //5842.0 / 5842.0,
+    11788.0 / 10425.0, //5842.0 / 8816.0,
+    11788.0 / 10242.0, //5842.0 / 7147.0,
+    11788.0 /  8824.0, //5842.0 / 8951.0,
+    11788.0 /  8708.0, //5842.0 / 5914.0,
+    11788.0 / 10097.0, //5842.0 / 5769.0,
+    11788.0 /  8721.0, //5842.0 / 6790.0,
+    11788.0 / 11814.0, //5842.0 / 5761.0,
+    11788.0 /  9981.0, //5842.0 / 8989.0,
+    11788.0 / 11880.0, //5842.0 / 5928.0,
+    11788.0 /  8776.0, //5842.0 / 7140.0,
+    11788.0 /  9974.0  //5842.0 / 6360.0
+  };
 
   if (firsttime) {
     firsttime = 0;
@@ -342,20 +371,107 @@ static int SSConvert(double *ss_az)
   if (i_ss == last_i_ss)
     return (0);
 
-  if (abs(SunSensorData[i_ss].amp) < MIN_SS_AMP)
-    return (0);
-  
-  if (SunSensorData[i_ss].snr<MIN_SS_SNR) 
-    return (0);
+  /* BEGIN NEW SSS RAW CALCULATIONS */
 
- 
+  sensor_uint[0] = SunSensorData[i_ss].m01;
+  sensor_uint[1] = SunSensorData[i_ss].m02;
+  sensor_uint[2] = SunSensorData[i_ss].m03;
+  sensor_uint[3] = SunSensorData[i_ss].m04;
+  sensor_uint[4] = SunSensorData[i_ss].m05;
+  sensor_uint[5] = SunSensorData[i_ss].m06;
+  sensor_uint[6] = SunSensorData[i_ss].m07;
+  sensor_uint[7] = SunSensorData[i_ss].m08;
+  sensor_uint[8] = SunSensorData[i_ss].m09;
+  sensor_uint[9] = SunSensorData[i_ss].m10;
+  sensor_uint[10] = SunSensorData[i_ss].m11;
+  sensor_uint[11] = SunSensorData[i_ss].m12;
+
+  /* calibrate modules and determine module with max intensity */
+  x = 0;  //terrible name for max sensor value.
+  ave = 0;
+  minimum = 1e300;
+  sens_max = -1;
+  for (i = 0; i < SS_N_MAX; i++)
+  {
+    sensors[i] = module_calibration[i] * (double)sensor_uint[i];
+    ave += sensors[i];
+    if (sensors[i] > x)
+    {
+      x = sensors[i];
+      sens_max = i;
+    }
+    if (sensors[i] < minimum)
+    {
+      minimum = sensors[i];
+    }
+  }
+
+  //Determine the minimum value of the immediate neighbors of the maximum
+  if (sensors[(sens_max + 12 + 1) % 12] < sensors[(sens_max + 12 - 1) % 12])
+    x = sensors[(sens_max + 12 + 1) % 12];
+  else
+    x = sensors[(sens_max + 12 - 1) % 12];
+
+  if (x < minimum + MIN_AMP_VAL)  //this is a bunk condition
+    SunSensorData[i_ss].snr = 0.05;
+
+  //if any sensor that isn't one of the 'active' 3 is larger than the active 3,
+  //report that we are bunk (by setting snr to zero)
+  for (i = 0; i < SS_N_MAX; i++)
+  {
+    if (i != sens_max && i != (sens_max + 12 + 1) % 12 && i != (sens_max + 12 - 1) % 12)
+    {
+      if (sensors[i] > x + BUNK_FUDGE_FACTOR)
+      {
+        SunSensorData[i_ss].snr = 0;  //another bunk condition
+        return 0; //We abort here if this is true
+      }
+    }
+  }
+
+  //Calculate max of adjacent module to 'active' 3 and use that as another check.
+  //We give a different 'bunk' snr for each case as a debugging tool.
+  max_adj = 0;
+  for (i = 0; i < SS_N_MAX; i++)
+  {
+    if (i == (sens_max + 12 + 2) % 12)
+    {
+      if (sensors[i] > max_adj) max_adj = sensors[i];
+    }
+    else if (i == (sens_max + 12 - 2) % 12)
+    {
+      if (sensors[i] > max_adj) max_adj = sensors[i];
+    }
+  }
+  for (i = 0; i < SS_N_MAX; i++)
+  {
+    if (i != sens_max && i != (sens_max + 12 + 1) % 12 && i != (sens_max + 12 - 1) % 12
+        && i != (sens_max + 12 + 2) % 12 && i != (sens_max + 12 - 2) % 12)
+    {
+      if (sensors[i] > max_adj + BUNK_FUDGE_FACTOR)
+      {
+        SunSensorData[i_ss].snr = 0.1;
+        return 0; //We abort here if this is true//
+      }
+    }
+  }
+
+  /* END SSS RAW CALCULATIONS */
+
+  if (abs(SunSensorData[i_ss].amp) < MIN_SS_AMP)
+    return 0;
+
+  if (SunSensorData[i_ss].snr<MIN_SS_SNR)
+    return 0;
+
+
   az = LutCal(&ssAzLut, (double)SunSensorData[i_ss].az_rel_sun);
   //az = -SunSensorData[i_ss].az_rel_sun;
   *ss_az =  sun_az - az;
 
   NormalizeAngle(ss_az);
 
-  return (1);
+  return 1;
 }
 
 #define GY_HISTORY 300
