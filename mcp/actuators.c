@@ -53,7 +53,7 @@ static int __inhibit_chatter = 0;
 #define POSITION_FOCUS    10616 /* absolute counts */
 
 #define LVDT_RADIUS ACTUATOR_RADIUS
-#define ACTUATOR_RADIUS 144.338 /* in mm */
+#define ACTUATOR_RADIUS 143.71 /* mm */
 
 #define ENCODER_TOL 0
 #define FOCUS_TOL 30
