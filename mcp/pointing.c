@@ -345,6 +345,22 @@ static int SSConvert(double *ss_az)
     11788.0 /  9974.0  //5842.0 / 6360.0
   };
 
+  double module_offsets[] =
+  {
+    360.,
+    330.,
+    300.,
+    270.,
+    240.,
+    210.,
+    180.,
+    150.,
+    120.,
+    90.,
+    60.,
+    30.,
+  };
+
   if (firsttime) {
     firsttime = 0;
     LutInit(&ssAzLut);
