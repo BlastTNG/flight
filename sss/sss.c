@@ -320,6 +320,7 @@ void calculate_az(unsigned * sensor_uint, sss_packet_data * dat)
   dat->dc_off = gsl_vector_get(s->x, 2);
   dat->chi = size;
   dat->iter = iter;
+  dat->n = sens_max;
 }
 
 int main (void)

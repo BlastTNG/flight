@@ -23,6 +23,7 @@ typedef struct
   float  chi;          //chi^2 of the fit
   unsigned short iter; //number of iterations fitting loop took
   float snr;           //signal to noise ratio
+  unsigned short n;    //index number of max cell
 
   double sun_time;     //time of measurment (decimal ctime) [seconds]
 
