@@ -517,8 +517,8 @@
     </MULTI>
     <MULTI caption="Direction">
       <DATUM src="BAL_REV">
-        <WORD value="1" caption="Down" textstyle="W_BIT"/>
-        <WORD value="0" caption="Up" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Down" textstyle="W_BIT"/>
+        <WORD value="1" caption="Up" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="Gain">
