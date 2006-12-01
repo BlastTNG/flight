@@ -806,6 +806,17 @@
         <WORD value="1" caption="Off" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
+    <MULTI caption="Status">
+      <DATUM src="ACT_FLAGS">
+        <WORD value="0" caption="Ok" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Lost" textstyle="W_BIT"/>
+        <WORD value="4" caption="Bad Move" textstyle="W_BIT"/>
+        <WORD value="128" caption="Move Disallowed" textstyle="W_BIT"/>
+        <WORD value="256" caption="Fault ENC0" textstyle="W_BIT"/>
+        <WORD value="512" caption="Fault ENC1" textstyle="W_BIT"/>
+        <WORD value="1024" caption="Fault ENC2" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
     <NUMBER caption="ACT0 ENC">
       <DATUM format="%.0f" src="ACT0_ENC" extrema="unknown"/>
     </NUMBER>
@@ -866,8 +877,14 @@
     <NUMBER caption="Step Size">
       <DATUM format="%.0f" src="TC_STEP" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="TC WAIT">
+    <NUMBER caption="Veto Time">
+      <DATUM format="%.0f" src="TC_VETO" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Veto Length">
       <DATUM format="%.0f" src="TC_WAIT" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Filter Length">
+      <DATUM format="%.0f" src="TC_FILTER" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="SF Correction">
       <DATUM format="%.0f" src="SF_CORRECTION" extrema="unknown"/>
