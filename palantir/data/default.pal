@@ -729,10 +729,10 @@
     <NUMBER caption="Actuator Motor">
       <DATUM format="%.2f" src="T_ACT_MOTOR" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Sun Shield 1">
+    <NUMBER caption="Sun Shield Back Mid">
       <DATUM format="%.2f" src="T_SUN_SHIELD_1" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Sun Shield 2">
+    <NUMBER caption="Chin Mid">
       <DATUM format="%.2f" src="T_SUN_SHIELD_2" extrema="temp"/>
     </NUMBER>
   </BOX>
