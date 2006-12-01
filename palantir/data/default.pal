@@ -283,6 +283,12 @@
       <HI value="100"/>
       <XHI value="16565"/>
     </EXTREMA>
+    <EXTREMA name="actuator">
+      <XLO value="3000"/>
+      <LO value="6000"/>
+      <HI value="12000"/>
+      <XHI value="15000"/>
+    </EXTREMA>
     <CURFILE name="/data/etc/defile.cur"/>
     <DECOMD host="arwen.blast" port="11411"/>
   </SETTINGS>
@@ -818,13 +824,13 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="ACT0 ENC">
-      <DATUM format="%.0f" src="ACT0_ENC" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT0_ENC" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="ACT1 ENC">
-      <DATUM format="%.0f" src="ACT1_ENC" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT1_ENC" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="ACT2 ENC">
-      <DATUM format="%.0f" src="ACT2_ENC" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT2_ENC" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="ACT0 Com Pos">
       <DATUM format="%.0f" src="ACT0_DEAD_REC" extrema="unknown"/>
@@ -835,14 +841,14 @@
     <NUMBER caption="ACT2 Com Pos">
       <DATUM format="%.0f" src="ACT2_DEAD_REC" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="LVDT 10">
-      <DATUM format="%.0f" src="LVDT_10" extrema="unknown"/>
+    <NUMBER caption="ACT0 Pos">
+      <DATUM format="%.0f" src="ACT0_POS" extrema="actuator"/>
     </NUMBER>
-    <NUMBER caption="LVDT 11">
-      <DATUM format="%.0f" src="LVDT_11" extrema="unknown"/>
+    <NUMBER caption="ACT1 Pos">
+      <DATUM format="%.0f" src="ACT1_POS" extrema="actuator"/>
     </NUMBER>
-    <NUMBER caption="LVDT 13">
-      <DATUM format="%.0f" src="LVDT_13" extrema="unknown"/>
+    <NUMBER caption="ACT2 Pos">
+      <DATUM format="%.0f" src="ACT2_POS" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="Move Current">
       <DATUM format="%.0f" src="ACT_MOVE_I" extrema="unknown"/>
@@ -852,6 +858,26 @@
     </NUMBER>
     <NUMBER caption="Velocity">
       <DATUM format="%.0f" src="ACT_VEL" extrema="unknown"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="LVDTs" colour="#002222" row="2" col="8">
+    <NUMBER caption="LVDT 10">
+      <DATUM format="%.0f" src="LVDT_10" extrema="actuator"/>
+    </NUMBER>
+    <NUMBER caption="LVDT 11">
+      <DATUM format="%.0f" src="LVDT_11" extrema="actuator"/>
+    </NUMBER>
+    <NUMBER caption="LVDT 13">
+      <DATUM format="%.0f" src="LVDT_13" extrema="actuator"/>
+    </NUMBER>
+    <NUMBER caption="LVDT High">
+      <DATUM format="%.0f" src="LVDT_HIGH" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="LVDT Low">
+      <DATUM format="%.0f" src="LVDT_LOW" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="LVDT Spread">
+      <DATUM format="%.0f" src="LVDT_SPREAD" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Focus System" colour="#002222" row="3" col="8">
@@ -890,10 +916,10 @@
       <DATUM format="%.0f" src="SF_CORRECTION" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Absolute Focus">
-      <DATUM format="%.0f" src="ABS_FOCUS" extrema="unknown"/>
+      <DATUM format="%.0f" src="ABS_FOCUS" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="Relative Focus">
-      <DATUM format="%.0f" src="REL_FOCUS" extrema="unknown"/>
+      <DATUM format="%.0f" src="REL_FOCUS" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="Foc Off">
       <DATUM format="%.0f" src="SF_OFFSET" extrema="unknown"/>
