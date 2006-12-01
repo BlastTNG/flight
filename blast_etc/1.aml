@@ -10,8 +10,21 @@
 
 
 +FASTDATA
-++DIFF      src         numbits     overbits    divider     forcediv    perframe    samplefreq
---1         n7ref       4           2           4           false       20          1
+++DIFF        src           numbits       overbits      divider       forcediv      perframe      samplefreq
+--1           n7ref         4             2             4             false         20            1
+--b0          n12c4         7             2             3             false         20            4
+--b1          n14c5         7             2             3             false         20            4
+--b2          n10c11        7             2             3             false         20            4
+--b3          n13c9         7             2             3             false         20            4
+--b4          n9c18         7             2             3             false         20            4
+--b5          n16c10        7             2             3             false         20            4
+--b6          n7c13         7             2             3             false         20            4
+--b7          n8c2          7             2             3             false         20            4
+--b8          n6c18         7             2             3             false         20            4
+--b9          n5c11         7             2             3             false         20            4
+--b10         n11c1         7             2             3             false         20            4
+--b11         n15c22        7             2             3             false         20            4
+
 ++INT       src         numbits     overbits    divider     forcediv    perframe    samplefreq
 --1         raw_gy4     13          1           2           false       20          1
 --2         raw_gy5     7           1           2           false       20          1
