@@ -536,7 +536,7 @@
         <WORD value="2" caption="Good" textstyle="OK_BIT"/>
         <WORD value="1" caption="Ignored" textstyle="E_BIT"/>
         <WORD value="3" caption="Ignored" textstyle="E_BIT"/>
-       </DATUM>
+      </DATUM>
     </MULTI>
     <NUMBER caption="Extension (%)">
       <DATUM format="%.2f" src="LOCK_POT" extrema="lockpot"/>
@@ -787,44 +787,6 @@
     </NUMBER>
   </BOX>
   <BOX caption="Actuators" colour="#002222" row="4" col="8" rowspan="1">
-    <NUMBER caption="ACT0 ENC">
-      <DATUM format="%.0f" src="ACT0_ENC" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="ACT1 ENC">
-      <DATUM format="%.0f" src="ACT1_ENC" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="ACT2 ENC">
-      <DATUM format="%.0f" src="ACT2_ENC" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="ACT0 POS">
-      <DATUM format="%.0f" src="ACT0_POS" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="ACT1 POS">
-      <DATUM format="%.0f" src="ACT1_POS" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="ACT2 POS">
-      <DATUM format="%.0f" src="ACT2_POS" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="Move Current">
-      <DATUM format="%.0f" src="ACT_MOVE_I" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="Hold Current">
-      <DATUM format="%.0f" src="ACT_HOLD_I" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="Velocity">
-      <DATUM format="%.0f" src="ACT_VEL" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="LVDT 10">
-      <DATUM format="%.0f" src="LVDT_10" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="LVDT 11">
-      <DATUM format="%.0f" src="LVDT_11" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="LVDT 13">
-      <DATUM format="%.0f" src="LVDT_13" extrema="unknown"/>
-    </NUMBER>
-  </BOX>
-  <BOX caption="Focus System" colour="#002222" row="3" col="8">
     <MULTI caption="Actuators">
       <DATUM src="FOCUS_MODE">
         <WORD value="0" caption="Idle" textstyle="OK_BIT"/>
@@ -838,6 +800,50 @@
         <WORD value="8" caption="Delfoc" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
+    <MULTI caption="Actuator Power">
+      <DATUM src="ACTBUS_RESET">
+        <WORD value="0" caption="On" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Off" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="ACT0 ENC">
+      <DATUM format="%.0f" src="ACT0_ENC" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="ACT1 ENC">
+      <DATUM format="%.0f" src="ACT1_ENC" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="ACT2 ENC">
+      <DATUM format="%.0f" src="ACT2_ENC" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="ACT0 Com Pos">
+      <DATUM format="%.0f" src="ACT0_DEAD_REC" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="ACT1 Com Pos">
+      <DATUM format="%.0f" src="ACT1_DEAD_REC" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="ACT2 Com Pos">
+      <DATUM format="%.0f" src="ACT2_DEAD_REC" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="LVDT 10">
+      <DATUM format="%.0f" src="LVDT_10" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="LVDT 11">
+      <DATUM format="%.0f" src="LVDT_11" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="LVDT 13">
+      <DATUM format="%.0f" src="LVDT_13" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Move Current">
+      <DATUM format="%.0f" src="ACT_MOVE_I" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Hold Current">
+      <DATUM format="%.0f" src="ACT_HOLD_I" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Velocity">
+      <DATUM format="%.0f" src="ACT_VEL" extrema="unknown"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Focus System" colour="#002222" row="3" col="8">
     <MULTI caption="Auto Focus">
       <DATUM src="TC_MODE">
         <WORD value="0" caption="Enabled" textstyle="OK_BIT"/>
@@ -851,26 +857,29 @@
     <NUMBER caption="T Secondary">
       <DATUM format="%.2f" src="T_SECOND_FID" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="TC G PRIM">
+    <NUMBER caption="Primary Gain">
       <DATUM format="%.0f" src="TC_G_PRIM" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="TC G SEC">
+    <NUMBER caption="Secondary Gain">
       <DATUM format="%.0f" src="TC_G_SEC" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="TC_MODE">
-      <DATUM format="%.0f" src="TC_MODE" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="TC_STEP">
+    <NUMBER caption="Step Size">
       <DATUM format="%.0f" src="TC_STEP" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="TC_WAIT">
+    <NUMBER caption="TC WAIT">
       <DATUM format="%.0f" src="TC_WAIT" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="SF Correction">
       <DATUM format="%.0f" src="SF_CORRECTION" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="SF Position">
-      <DATUM format="%.0f" src="SF_POSITION" extrema="unknown"/>
+    <NUMBER caption="Absolute Focus">
+      <DATUM format="%.0f" src="ABS_FOCUS" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Relative Focus">
+      <DATUM format="%.0f" src="REL_FOCUS" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Foc Off">
+      <DATUM format="%.0f" src="SF_OFFSET" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Motor Temps" colour="#002222" row="2" col="6">
