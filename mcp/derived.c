@@ -178,6 +178,25 @@ union DerivedUnion DerivedChannels[] = {
       "LS_DRIVE_FORCE"
       ),
 
+  /* Secondary Focus */
+  COMMENT("Secondary Focus");
+  LINCOM2("REL_FOCUS", "SF_CORRECTION", 1, 0, "SF_OFFSET", 1, 0);
+  LINCOM2("TC_VETO", "TC_WAIT", 1, 0, "SF_AGE", -1, 0);
+
+  BITFIELD("act_flags",
+      "ACT_LOST",
+      "ACT_DR_POS_BAD",
+      "ACT_DR_ENC_BAD",
+      "ACT_ENC_POS_BAD",
+      "ACT_DR_LVDT_BAD",
+      "ACT_ENC_LVDT_BAD",
+      "ACT_POS_LVDT_BAD",
+      "ACT_BAD_MOVE",
+      "ACT0_FAULT",
+      "ACT1_FAULT",
+      "ACT2_FAULT"
+      ),
+
   /* BIAS */
   COMMENT("Bias Control"),
   BITFIELD("biasin",

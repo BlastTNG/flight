@@ -80,7 +80,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"act1_enc",     'w', LOOP5, 50,                1.0,  -ACTENC_OFFSET, 'S'},
   {"act2_enc",     'w', LOOP5, 52,                1.0,  -ACTENC_OFFSET, 'S'},
   {"sec_goal",     'w', LOOP6, 30,                1.0,             0.0, 'S'},
-  {"sec_focus",    'w', LOOP6, 32,                1.0,             0.0, 'S'},
+  {"abs_focus",    'w', LOOP6, 32,                1.0,             0.0, 'S'},
 
 
 /* Rox a la Jeff */
@@ -138,7 +138,7 @@ struct ChannelStruct SlowChannels[] = {
   {"sync01",       'w',  ACS1, 56,                1.0,             0.0, 'u'},
 
   /* ACS2 0-1 is wide fast */
-  {"t_sun_shield_1",'r', ACS2,  3,              I2T_M,           I2T_B, 'u'},
+  {"t_ss_back_mid",'r',  ACS2,  3,              I2T_M,           I2T_B, 'u'},
   {"i_gybox",      'r',  ACS2,  5,           0.000625,          -20.48, 'u'},
   {"pch_clin_piv", 'r',  ACS2,  7,      4.0/5333.3333,       -4.*6.144, 'u'},
   {"roll_clin_piv",'r',  ACS2,  9,      4.0/5333.3333,       -4.*6.144, 'u'},
@@ -147,19 +147,19 @@ struct ChannelStruct SlowChannels[] = {
   {"p_pv",         'r',  ACS2, 15,          -0.015432,          507.81, 'u'},
 
   /* AD590 calibrations per Marco 2006-11 */
-  {"t_inframe_1",  'r',  ACS2, 17,              I2T_M,  I2T_B +
+  {"t_if_top_frnt",'r',  ACS2, 17,              I2T_M,  I2T_B +
                                                  AD590_CALIB_INFRAME_1, 'u'},
-  {"t_inframe_2",  'r',  ACS2, 19,              I2T_M,  I2T_B +
+  {"t_if_top_back",'r',  ACS2, 19,              I2T_M,  I2T_B +
                                                  AD590_CALIB_INFRAME_2, 'u'},
-  {"t_inframe_3",  'r',  ACS2, 21,              I2T_M,  I2T_B + 
+  {"t_if_bot_frnt",'r',  ACS2, 21,              I2T_M,  I2T_B + 
                                                  AD590_CALIB_INFRAME_3, 'u'},
-  {"t_inframe_4",  'r',  ACS2, 23,              I2T_M,  I2T_B + 
+  {"t_if_bot_back",'r',  ACS2, 23,              I2T_M,  I2T_B + 
                                                  AD590_CALIB_INFRAME_4, 'u'},
 
   {"t_lock_motor", 'r',  ACS2, 25,              I2T_M,           I2T_B, 'u'},
   {"t_pv_ext",     'r',  ACS2, 27,              I2T_M,           I2T_B, 'u'},
   {"t_acs",        'r',  ACS2, 29,              I2T_M,           I2T_B, 'u'},
-  {"t_sun_shield_2",'r', ACS2, 31,              I2T_M,           I2T_B, 'u'},
+  {"t_chin_mid",   'r',  ACS2, 31,              I2T_M,           I2T_B, 'u'},
   {"t_pv",         'r',  ACS2, 33,              I2T_M,           I2T_B, 'u'},
   {"i_pv",         'r',  ACS2, 35,           -0.00625,           204.8, 'u'},
   {"t_apm_3v",     'r',  ACS2, 37,              I2T_M,           I2T_B, 'u'},
@@ -238,7 +238,7 @@ struct ChannelStruct SlowChannels[] = {
   /* BIAS 0-4 are wide fast */
   {"t_primary_2",  'r',  BIAS,  5,              I2T_M,  I2T_B +
                                                  AD590_CALIB_PRIMARY_2, 'u'},
-  {"t_strut_1",    'r',  BIAS,  7,              I2T_M,  I2T_B +
+  {"t_strut_bot",  'r',  BIAS,  7,              I2T_M,  I2T_B +
                                                    AD590_CALIB_STRUT_1, 'u'},
   {"t_primary_1",  'r',  BIAS,  9,              I2T_M,  I2T_B +
                                                  AD590_CALIB_PRIMARY_1, 'u'},
@@ -246,7 +246,7 @@ struct ChannelStruct SlowChannels[] = {
                                                AD590_CALIB_SECONDARY_1, 'u'},
   {"t_secondary_2",'r',  BIAS, 13,              I2T_M,  I2T_B +
                                                AD590_CALIB_SECONDARY_2, 'u'},
-  {"t_strut_2",    'r',  BIAS, 15,              I2T_M,  I2T_B +
+  {"t_strut_side", 'r',  BIAS, 15,              I2T_M,  I2T_B +
                                                    AD590_CALIB_STRUT_2, 'u'},
   {"t_push_plate", 'r',  BIAS, 17,              I2T_M,  I2T_B +
                                                 AD590_CALIB_PUSH_PLATE, 'u'},
@@ -724,7 +724,7 @@ struct ChannelStruct FastChannels[] = {
   {"reac_enc",    'r',  ACS1, 60,    360.0/4000.0,                    0.0, 'u'},
   {"pwm_el",      'r',  ACS1, 51,             1.0,                -4000.0, 'u'},
   {"pwm_roll",    'r',  ACS1, 52,             1.0,                -4000.0, 'u'},
-  //{"r_dt", 'r',  ACS1, 53,  1.0,     -4000.0, 'u'}, // see acs1.c
+  //{"r_dt",      'r',  ACS1, 53,  1.0,     -4000.0, 'u'}, // see acs1.c
 
   {"pwm_reac",    'r',  ACS1, 54,             1.0,                -4000.0, 'u'},
   {"rps_reac",    'r',  ACS1, 55,7.9498291016e-05,                 -2.605, 'u'},

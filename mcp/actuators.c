@@ -1323,7 +1323,7 @@ void StoreActBus(void)
   static struct NiosStruct* tcPrefTpAddr;
   static struct NiosStruct* tcPrefTsAddr;
   static struct NiosStruct* secGoalAddr;
-  static struct NiosStruct* secFocusAddr;
+  static struct NiosStruct* absFocusAddr;
 
   if (firsttime) {
     firsttime = 0;
@@ -1359,7 +1359,7 @@ void StoreActBus(void)
     tcPrefTpAddr = GetNiosAddr("tc_pref_tp");
     tcPrefTsAddr = GetNiosAddr("tc_pref_ts");
     secGoalAddr = GetNiosAddr("sec_goal");
-    secFocusAddr = GetNiosAddr("sec_focus");
+    absFocusAddr = GetNiosAddr("abs_focus");
 
     lvdtSpreadAddr = GetNiosAddr("lvdt_spread");
     lvdtLowAddr = GetNiosAddr("lvdt_low");
@@ -1398,7 +1398,7 @@ void StoreActBus(void)
     WriteData(actDeadRecAddr[j], CommandData.actbus.dead_reckon[j]
         - ACTENC_OFFSET, NIOS_QUEUE);
   }
-  WriteData(secFocusAddr, focus, NIOS_QUEUE);
+  WriteData(absFocusAddr, focus, NIOS_QUEUE);
 
   WriteData(lockPotAddr, lock_data.adc[1], NIOS_QUEUE);
   WriteData(lockLimSwAddr, lock_data.adc[2], NIOS_QUEUE);

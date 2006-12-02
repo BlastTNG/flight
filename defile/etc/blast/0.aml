@@ -57,20 +57,20 @@
 --a50@a7      t_acs         @             @             @             @             @             
 --a51@a0      t_batt_acs    @             @             @             @             @             
 --a52@a0      t_batt_das    @             @             @             @             @             
---a53@a0      t_inframe_1   @             @             @             @             @
---a54@a0      t_inframe_2   @             @             @             @             @
---a55@a0      t_inframe_3   @             @             @             @             @
---a56@a0      t_inframe_4   @             @             @             @             @
+--a53@a0      t_if_top_frnt @             @             @             @             @
+--a54@a0      t_if_top_back @             @             @             @             @
+--a55@a0      t_if_top_frnt @             @             @             @             @
+--a56@a0      t_if_top_back @             @             @             @             @
 --a57@a0      t_primary_1   @             @             @             @             @
 --a58@a0      t_primary_2   @             @             @             @             @
---a59@a0      t_strut_1     @             @             @             @             @
---a60@a0      t_strut_2     @             @             @             @             @
+--a59@a0      t_strut_top   @             @             @             @             @
+--a60@a0      t_strut_bot   @             @             @             @             @
 --a61@a0      t_secondary_1 @             @             @             @             @
 --a62@a0      t_secondary_2 @             @             @             @             @
 --a63@a0      t_push_plate  @             @             @             @             @
 --a64@a0      t_act_motor   @             @             @             @             @
---a65@a0      t_sun_shield_1 @            @             @             @             @
---a66@a0      t_sun_shield_2 @            @             @             @             @
+--a65@a0      t_ss_back_mid @             @             @             @             @
+--a66@a0      t_chin_mid    @             @             @             @             @
 
 
 ### t_gyro ###
