@@ -59,9 +59,12 @@ primary beam like we did in Sweden.
 6. Before launch while we still have TCP/IP to the gondola
    i)   Delete old files with the server (netisc) turned off:
           cd \isc_stable\source_netisc\release
-          reset
+          reset.
 
-   ii)  Re-start the server using the link to master.bat in the startup
+   ii)  Verify that the virus definitions file is up-to-date and turn off
+        windows live updates.
+
+   iii) Re-start the server using the link to master.bat in the startup
         menu.
 
 7. Before launch set default values with Narsil:
