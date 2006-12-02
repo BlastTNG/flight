@@ -354,7 +354,15 @@
 --f9@u0       act_move_i    @             @             @             @             @
 --f10@u0      act_hold_i    @             @             @             @             @
 --f11@u0      act_vel       @             @             @             @             @
-
+--f12         focus_mode    4             1             0             15            1
+--f13         actbus_reset  1             1             0             1             1
+--f14         act_flags     13            1             0             2047          1
+--f15@u0      act0_dead_rec @             @             @             @             @
+--f16@u0      act1_dead_rec @             @             @             @             @
+--f17@u0      act2_dead_rec @             @             @             @             @
+--f18@u0      lvdt_high     @             @             @             @             @
+--f19@u0      lvdt_low      @             @             @             @             @
+--f20@u0      lvdt_spread   @             @             @             @             @
 
 +FASTDATA     
 ++INT         src           numbits       overbits      divider       forcediv      perframe      samplefreq    
