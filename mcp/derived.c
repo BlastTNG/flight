@@ -179,9 +179,9 @@ union DerivedUnion DerivedChannels[] = {
       ),
 
   /* Secondary Focus */
-  COMMENT("Secondary Focus");
-  LINCOM2("REL_FOCUS", "SF_CORRECTION", 1, 0, "SF_OFFSET", 1, 0);
-  LINCOM2("TC_VETO", "TC_WAIT", 1, 0, "SF_AGE", -1, 0);
+  COMMENT("Secondary Focus"),
+  LINCOM2("REL_FOCUS", "SF_CORRECTION", 1, 0, "SF_OFFSET", 1, 0),
+  LINCOM2("TC_VETO", "TC_WAIT", 1, 0, "SF_AGE", -1, 0),
 
   BITFIELD("act_flags",
       "ACT_LOST",
