@@ -694,16 +694,16 @@
   </BOX>
   <BOX caption="Ambient Thermometers" colour="#002222" row="3" col="5">
     <NUMBER caption="IF Top Front">
-      <DATUM format="%.2f" src="T_INFRAME_1" extrema="temp"/>
+      <DATUM format="%.2f" src="T_IF_TOP_FRNT" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="IF Top Back">
-      <DATUM format="%.2f" src="T_INFRAME_2" extrema="temp"/>
+      <DATUM format="%.2f" src="T_IF_TOP_BACK" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="IF Bottom Front">
-      <DATUM format="%.2f" src="T_INFRAME_3" extrema="temp"/>
+      <DATUM format="%.2f" src="T_IF_BOT_FRNT" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="IF Bottom Back">
-      <DATUM format="%.2f" src="T_INFRAME_4" extrema="temp"/>
+      <DATUM format="%.2f" src="T_IF_BOT_BACK" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Primary 1">
       <DATUM format="%.2f" src="T_PRIMARY_1" extrema="temp"/>
@@ -711,11 +711,11 @@
     <NUMBER caption="Primary 2">
       <DATUM format="%.2f" src="T_PRIMARY_2" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Strut 1">
-      <DATUM format="%.2f" src="T_STRUT_1" extrema="temp"/>
+    <NUMBER caption="Top Strut">
+      <DATUM format="%.2f" src="T_STRUT_TOP" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Strut 2">
-      <DATUM format="%.2f" src="T_STRUT_2" extrema="temp"/>
+    <NUMBER caption="Side Strut">
+      <DATUM format="%.2f" src="T_STRUT_SIDE" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Secondary 1">
       <DATUM format="%.2f" src="T_SECONDARY_1" extrema="temp"/>
@@ -730,10 +730,10 @@
       <DATUM format="%.2f" src="T_ACT_MOTOR" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Sun Shield Back Mid">
-      <DATUM format="%.2f" src="T_SUN_SHIELD_1" extrema="temp"/>
+      <DATUM format="%.2f" src="T_SS_BACK_MID" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Chin Mid">
-      <DATUM format="%.2f" src="T_SUN_SHIELD_2" extrema="temp"/>
+      <DATUM format="%.2f" src="T_CHIN_MID" extrema="temp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Outer Frame Electronics" colour="#002222" row="0" col="5" rowspan="1">
