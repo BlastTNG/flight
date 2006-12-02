@@ -257,11 +257,11 @@
 --u94@u0      gy2_h_hist    @             @             @             @             @             
 --u95@u0      enc_el        @             @             @             @             @             
 --u96@u0      calstat       @             @             @             @             20            
---u97@u0      ss_temp_case  @             @             @             @             @
---u98@u0      ss_temp_cpu   @             @             @             @             @
---u99@u0      ss_temp_hdd   @             @             @             @             @
---u100@u0     ss_temp_port  @             @             @             @             @
---u101@u0     ss_temp_star  @             @             @             @             @
+--u97@u0      ss_case_temp  @             @             @             @             @
+--u98@u0      ss_cpu_temp   @             @             @             @             @
+--u99@u0      ss_hdd_temp   @             @             @             @             @
+--u100@u0     ss_port_temp  @             @             @             @             @
+--u101@u0     ss_star_temp  @             @             @             @             @
 
 ### Misc ###
 --m0          lst           20            4             0             311039751     1             
