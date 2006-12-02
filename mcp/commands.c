@@ -1064,7 +1064,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case focus_offset:
       CommandData.actbus.sf_offset = ivalues[0];
-      CommandData.actbus.sf_time = 0;
+      CommandData.actbus.sf_time = CommandData.actbus.tc_wait - 5;
       break;
     case actuator_servo:
       CommandData.actbus.goal[0] = ivalues[0];

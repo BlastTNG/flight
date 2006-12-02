@@ -48,9 +48,9 @@ static int __inhibit_chatter = 0;
 #endif
 
 /* Thermal model numbers */
-#define T_PRIMARY_FOCUS   296.24 /* K */
-#define T_SECONDARY_FOCUS 296.17 /* K */
-#define POSITION_FOCUS    10616 /* absolute counts */
+#define T_PRIMARY_FOCUS   273.15 /* K */
+#define T_SECONDARY_FOCUS 273.15 /* K */
+#define POSITION_FOCUS     9760 /* absolute counts */
 
 #define LVDT_RADIUS ACTUATOR_RADIUS
 #define ACTUATOR_RADIUS 143.71 /* mm */
@@ -1043,11 +1043,14 @@ void SecondaryMirror(void)
   }
 
   correction = CommandData.actbus.g_primary * (t_primary - T_PRIMARY_FOCUS) -
-    CommandData.actbus.g_secondary * (t_secondary - T_SECONDARY_FOCUS) +
-    focus - POSITION_FOCUS - CommandData.actbus.sf_offset;
+    CommandData.actbus.g_secondary * (t_secondary - T_SECONDARY_FOCUS);
 
   /* convert to counts */
   correction /= ACTENC_TO_UM;
+
+  /* re-adjust */
+  correction = correction + focus - POSITION_FOCUS -
+    CommandData.actbus.sf_offset;
   
   if (CommandData.actbus.sf_time < CommandData.actbus.tc_wait)
     CommandData.actbus.sf_time++;
