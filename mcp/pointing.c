@@ -142,12 +142,7 @@ void SunPos(double tt, double *ra, double *dec); // in starpos.c
 
 #define M2DV(x) ((x / 60.0) * (x / 60.0))
 
-#define MAG_ALIGNMENT 0.0 // 267 //237.0;
-// APS Magentometer Parameters : SN 2242 
-#define MBIAS_X  0.007480
-#define MBIAS_Y  0.007830
-#define MBIAS_Z  0.006930
-
+#define MAG_ALIGNMENT 138.5 // 267 //237.0;
 
 // limit to 0 to 360.0
 void NormalizeAngle(double *A)
@@ -249,9 +244,9 @@ static int MagConvert(double *mag_az)
   //*mag_az = LutCal(&magLut, raw_mag_az);
 
   // cbn added this line
-  mvx = MAGX_M*ACSData.mag_x + MAGX_B + MBIAS_X;
-  mvy = MAGY_M*ACSData.mag_y + MAGY_B + MBIAS_Y;
-  mvz = MAGZ_M*ACSData.mag_z + MAGZ_B + MBIAS_Z;
+  mvx = MAGX_M*ACSData.mag_x + MAGX_B;
+  mvy = MAGY_M*ACSData.mag_y + MAGY_B;
+  mvz = MAGZ_M*ACSData.mag_z + MAGZ_B;
   
   raw_mag_az = (180.0 / M_PI) * atan2(mvy, mvx);
   raw_mag_pitch = (180.0/M_PI) * atan(mvz/sqrt(mvx*mvx + mvy*mvy));
