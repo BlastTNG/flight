@@ -846,10 +846,6 @@ int main(int argc, char *argv[])
 
         /* pushDiskFrame must be called before PushBi0Buffer to get the slow
            data right */
-#warning gy_err* has been subverted
-        RxFrame[60] = bi0_buffer.i_in;
-        RxFrame[61] = bi0_buffer.i_out;
-        RxFrame[62] = Death;
         pushDiskFrame(RxFrame);
 #ifndef BOLOTEST
         if (biphase_is_on)

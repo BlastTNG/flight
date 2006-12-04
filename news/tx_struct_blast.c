@@ -318,7 +318,7 @@ struct ChannelStruct SlowChannels[] = {
   {"alice_file",   'w', LOOP1, 19,                1.0,             0.0, 'u'},
   {"timeout",      'w', LOOP1, 20,                1.0,             0.0, 'u'},
   {"sun_az",       'w', LOOP1, 21,              I2DEG,             0.0, 'u'},
-  {"ss_amp",       'w', LOOP1, 22,                1.0,             0.0, 's'},
+  {"lvdt_low",     'w', LOOP1, 22,                1.0,             0.0, 's'},
   {"sam_i_am",     'w', LOOP1, 23,                1.0,             0.0, 'u'},
   {"cryostate",    'w', LOOP1, 24,                1.0,             0.0, 'u'},
   {"cpu_fan",      'w', LOOP1, 25,                1.0,             0.0, 'u'},
@@ -399,7 +399,7 @@ struct ChannelStruct SlowChannels[] = {
   {"mag_sigma",    'w', LOOP2, 40,              I2DEG,             0.0, 'u'},
   {"dgps_az",      'w', LOOP2, 41,              I2DEG,             0.0, 'u'},
   {"dgps_sigma",   'w', LOOP2, 42,              I2DEG,             0.0, 'u'},
-  {"ss_dc_off",    'w', LOOP2, 43,                1.0,             0.0, 's'},
+  {"lvdt_high",    'w', LOOP2, 43,                1.0,             0.0, 's'},
   {"isc_az",       'w', LOOP2, 44,              I2DEG,             0.0, 'u'},
   {"isc_el",       'w', LOOP2, 45,              I2DEG,             0.0, 'u'},
   {"isc_sigma",    'w', LOOP2, 46,              I2DEG,             0.0, 'u'},
@@ -476,8 +476,8 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_y_off",    'w', LOOP3, 63,              I2DEG,             0.0, 's'},
 
   {"ss_phase",     'w', LOOP4,  0,              I2DEG,             0.0, 's'},
-  {"ss_chi",       'w', LOOP4,  1,           1./1000.,             0.0, 'u'},
-  {"ss_iter",      'w', LOOP4,  2,                1.0,             0.0, 'u'},
+  {"tc_pref_tp",   'w', LOOP4,  1,                1.0,             0.0, 'u'},
+  {"tc_filter",    'w', LOOP4,  2,                0.2,             0.0, 'u'},
   {"ss_sun_time",  'w', LOOP4,  3,                1.0,             0.0, 'u'},
   {"ss_cpu_temp",  'w', LOOP4,  4,             1/100.,         -273.15, 'u'},
   {"ss_hdd_temp",  'w', LOOP4,  5,             1/100.,         -273.15, 'u'},
@@ -641,10 +641,6 @@ struct ChannelStruct SlowChannels[] = {
   {"act1_postrim", 'w', LOOP6, 53,                1.0,             0.0, 'u'},
   {"act2_postrim", 'w', LOOP6, 54,                1.0,             0.0, 'u'},
   {"lvdt_spread",  'w', LOOP6, 55,                1.0,             0.0, 's'},
-  {"lvdt_low",     'w', LOOP6, 56,                1.0,             0.0, 's'},
-  {"lvdt_high",    'w', LOOP6, 57,                1.0,             0.0, 's'},
-  {"tc_pref_tp",   'w', LOOP6, 58,                1.0,             0.0, 'u'},
-  {"tc_filter",    'w', LOOP6, 59,                0.2,             0.0, 'u'},
   END_OF_CHANNELS
 };
 

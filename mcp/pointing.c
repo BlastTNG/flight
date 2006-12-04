@@ -8,7 +8,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- *
+ 
  * mcp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -308,22 +308,20 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 #define MIN_AMP_VAL       2000
 static int SSConvert(double *ss_az)
 {
-  static int firsttime = 1;
   int i_point, i_ss;
   double az;
   double sun_ra, sun_dec, jd;
   static int last_i_ss = -1;
-  static struct LutType ssAzLut = {"/data/etc/sss.lut",0,NULL,NULL,0};
 
-  double x;
+  double max, dtmp;
   double ave;
-  double minimum;
+  double min;
   int i;
-  int sens_max;
-  double max_adj;
+  int i_max;
   double sensors[SS_N_MAX];
   unsigned int sensor_uint[SS_N_MAX];
-
+  double nominator, denominator;
+  
   double module_calibration[] =
   { /*Palestine 2006*/ /*Brown 2006    */
     11788.0 / 11788.0, //5842.0 / 5842.0,
@@ -355,12 +353,8 @@ static int SSConvert(double *ss_az)
     60.,
     30.,
   };
-
-  if (firsttime) {
-    firsttime = 0;
-    LutInit(&ssAzLut);
-  }
-
+  
+  
   i_ss = GETREADINDEX(ss_index);
   i_point = GETREADINDEX(point_index);
 
@@ -369,8 +363,6 @@ static int SSConvert(double *ss_az)
   SunPos(jd, &sun_ra, &sun_dec);
   sun_ra *= (12.0 / M_PI);
   sun_dec *= (180.0 / M_PI);
-
-
 
   radec2azel(sun_ra, sun_dec, PointingData[i_point].lst,
       PointingData[i_point].lat, &sun_az, &sun_el);
@@ -398,87 +390,74 @@ static int SSConvert(double *ss_az)
   sensor_uint[11] = SunSensorData[i_ss].m12;
 
   /* calibrate modules and determine module with max intensity */
-  x = 0;  //terrible name for max sensor value.
+  max = 0;  //max sensor value.
   ave = 0;
-  minimum = 1e300;
-  sens_max = -1;
-  for (i = 0; i < SS_N_MAX; i++)
-  {
+  min = 1e300;
+  i_max = -1;
+  for (i = 0; i < SS_N_MAX; i++) {
     sensors[i] = module_calibration[i] * (double)sensor_uint[i];
     ave += sensors[i];
-    if (sensors[i] > x)
-    {
-      x = sensors[i];
-      sens_max = i;
+    if (sensors[i] > max) {
+      max = sensors[i];
+      i_max = i;
     }
-    if (sensors[i] < minimum)
-    {
-      minimum = sensors[i];
+    if (sensors[i] < min) {
+      min= sensors[i];
     }
   }
+  ave/=SS_N_MAX;
 
   //Determine the minimum value of the immediate neighbors of the maximum
-  if (sensors[(sens_max + 12 + 1) % 12] < sensors[(sens_max + 12 - 1) % 12])
-    x = sensors[(sens_max + 12 + 1) % 12];
+  if (sensors[(i_max + 12 + 1) % 12] < sensors[(i_max + 12 - 1) % 12])
+    dtmp = sensors[(i_max + 12 + 1) % 12];
   else
-    x = sensors[(sens_max + 12 - 1) % 12];
+    dtmp = sensors[(i_max + 12 - 1) % 12];
 
-  if (x < minimum + MIN_AMP_VAL)  //this is a bunk condition
-    SunSensorData[i_ss].snr = 0.05;
-
-  //if any sensor that isn't one of the 'active' 3 is larger than the active 3,
-  //report that we are bunk (by setting snr to zero)
-  for (i = 0; i < SS_N_MAX; i++)
-  {
-    if (i != sens_max && i != (sens_max + 12 + 1) % 12 && i != (sens_max + 12 - 1) % 12)
-    {
-      if (sensors[i] > x + BUNK_FUDGE_FACTOR)
-      {
-        SunSensorData[i_ss].snr = 0;  //another bunk condition
-        return 0; //We abort here if this is true
-      }
-    }
+  if (dtmp < min + MIN_AMP_VAL) { //this is a bunk condition
+    PointingData[point_index].ss_snr = 0.05;
+    return 0;
   }
 
-  //Calculate max of adjacent module to 'active' 3 and use that as another check.
-  //We give a different 'bunk' snr for each case as a debugging tool.
-  max_adj = 0;
-  for (i = 0; i < SS_N_MAX; i++)
-  {
-    if (i == (sens_max + 12 + 2) % 12)
-    {
-      if (sensors[i] > max_adj) max_adj = sensors[i];
-    }
-    else if (i == (sens_max + 12 - 2) % 12)
-    {
-      if (sensors[i] > max_adj) max_adj = sensors[i];
-    }
+  // Software tape
+  if(i_max < 4 || i_max > 8) {
+    PointingData[point_index].ss_snr = 0.0;
+    return 0;
   }
-  for (i = 0; i < SS_N_MAX; i++)
-  {
-    if (i != sens_max && i != (sens_max + 12 + 1) % 12 && i != (sens_max + 12 - 1) % 12
-        && i != (sens_max + 12 + 2) % 12 && i != (sens_max + 12 - 2) % 12)
-    {
-      if (sensors[i] > max_adj + BUNK_FUDGE_FACTOR)
-      {
-        SunSensorData[i_ss].snr = 0.1;
-        return 0; //We abort here if this is true//
-      }
-    }
+ 
+  // SNR calculation
+  PointingData[point_index].ss_snr = max/ave;
+  if (PointingData[point_index].ss_snr<MIN_SS_SNR)
+    return 0;
+  
+  bprintf(info, "Sun Sensor says snr = %f %f %i\n", PointingData[point_index].ss_snr,
+		  	sun_el, i_max); 
+  
+  nominator = sensors[(i_max+12+1)%12] - sensors[(i_max+12-1)%12];
+  nominator *= 0.267949192;             //(2 - sqrt(3));
+  denominator = 2.0*sensors[i_max];
+  denominator -= sensors[(i_max+12+1)%12] + sensors[(i_max+12-1)%12];
+  denominator *= cos(sun_el * (M_PI/180.0));
+
+  if (denominator == 0.0) {
+    // unphysical solution;
+    PointingData[point_index].ss_snr = 0.2;
+    return 0;
   }
 
+  az = atan2(nominator, denominator);
+  if(az < -(1.2*M_PI/12.0) || az > 1.2*M_PI/12.0) {
+    // unphysical solution;
+    PointingData[point_index].ss_snr = 0.3;
+    return 0;
+  }
+  
+  az *= 180.0/M_PI;
+  PointingData[point_index].ss_phase = az;
+  PointingData[point_index].ss_az_rel_sun =   az - module_offsets[i_max];
+  
   /* END SSS RAW CALCULATIONS */
 
-  if (abs(SunSensorData[i_ss].amp) < MIN_SS_AMP)
-    return 0;
-
-  if (SunSensorData[i_ss].snr<MIN_SS_SNR)
-    return 0;
-
-
-  az = LutCal(&ssAzLut, (double)SunSensorData[i_ss].az_rel_sun);
-  //az = -SunSensorData[i_ss].az_rel_sun;
-  *ss_az =  sun_az - az;
+  *ss_az =  PointingData[point_index].ss_az_rel_sun + sun_az  ;
 
   NormalizeAngle(ss_az);
 
