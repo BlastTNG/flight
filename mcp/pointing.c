@@ -429,9 +429,6 @@ static int SSConvert(double *ss_az)
   if (PointingData[point_index].ss_snr<MIN_SS_SNR)
     return 0;
   
-  //bprintf(info, "Sun Sensor says snr = %f %f %i\n", PointingData[point_index].ss_snr,
-//		  	sun_el, i_max); 
-  
   nominator = sensors[(i_max+12+1)%12] - sensors[(i_max+12-1)%12];
   nominator *= 0.267949192;             //(2 - sqrt(3));
   denominator = 2.0*sensors[i_max];
