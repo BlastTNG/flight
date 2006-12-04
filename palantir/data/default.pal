@@ -91,10 +91,28 @@
       <XHI value="40"/>
       <XLO value="-40"/>
     </EXTREMA>
+    <EXTREMA name="acscurrent">
+      <HI value="18"/>
+      <LO value="10"/>
+      <XHI value="30"/>
+      <XLO value="-1"/>
+    </EXTREMA>
     <EXTREMA name="compcurrent">
       <HI value="3"/>
       <LO value="1"/>
       <XHI value="4"/>
+      <XLO value="0"/>
+    </EXTREMA>
+    <EXTREMA name="pvcurrent">
+      <HI value="13"/>
+      <LO value="1"/>
+      <XHI value="14"/>
+      <XLO value="0"/>
+    </EXTREMA>
+    <EXTREMA name="sscurrent">
+      <HI value="0.2"/>
+      <LO value="0.08"/>
+      <XHI value="0.3"/>
       <XLO value="0"/>
     </EXTREMA>
     <EXTREMA name="gycurrent">
@@ -974,13 +992,13 @@
       <DATUM format="%.2f" src="I_GYBOX" extrema="gycurrent"/>
     </NUMBER>
     <NUMBER caption="I PV">
-      <DATUM format="%.2f" src="I_PV" extrema="compcurrent"/>
+      <DATUM format="%.2f" src="I_PV" extrema="pvcurrent"/>
     </NUMBER>
     <NUMBER caption="I ISC + OSC">
       <DATUM format="%.2f" src="I_STARCAM" extrema="compcurrent"/>
     </NUMBER>
     <NUMBER caption="I Sun Sensor">
-      <DATUM format="%.2f" src="I_SUN" extrema="compcurrent"/>
+      <DATUM format="%.2f" src="I_SUN" extrema="sscurrent"/>
     </NUMBER>
     <NUMBER caption="I Roll">
       <DATUM format="%.2f" src="I_ROLL" extrema="current"/>
@@ -1155,7 +1173,7 @@
       <DATUM format="%.2f" src="V_BATT_ACS" extrema="vbat"/>
     </NUMBER>
     <NUMBER caption="I ACS Gondola">
-      <DATUM format="%.2f" src="I_GOND_ACS" extrema="current"/>
+      <DATUM format="%.2f" src="I_GOND_ACS" extrema="acscurrent"/>
     </NUMBER>
     <NUMBER caption="I ACS Battery">
       <DATUM format="%.2f" src="I_BATT_ACS" extrema="unknown"/>
