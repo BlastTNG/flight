@@ -48,9 +48,9 @@ static int __inhibit_chatter = 0;
 #endif
 
 /* Thermal model numbers */
-#define T_PRIMARY_FOCUS   273.15 /* K */
-#define T_SECONDARY_FOCUS 273.15 /* K */
-#define POSITION_FOCUS     9760 /* absolute counts */
+#define T_PRIMARY_FOCUS   258.15 /* = -15C */
+#define T_SECONDARY_FOCUS 243.15 /* = -30C */
+#define POSITION_FOCUS     11953 /* absolute counts */
 
 #define LVDT_RADIUS ACTUATOR_RADIUS
 #define ACTUATOR_RADIUS 143.71 /* mm */
