@@ -729,8 +729,8 @@
     <NUMBER caption="Primary 2">
       <DATUM format="%.2f" src="T_PRIMARY_2" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Top Strut">
-      <DATUM format="%.2f" src="T_STRUT_TOP" extrema="temp"/>
+    <NUMBER caption="Bottom Strut">
+      <DATUM format="%.2f" src="T_STRUT_BOT" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Side Strut">
       <DATUM format="%.2f" src="T_STRUT_SIDE" extrema="temp"/>
