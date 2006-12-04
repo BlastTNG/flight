@@ -429,14 +429,14 @@ static int SSConvert(double *ss_az)
   if (PointingData[point_index].ss_snr<MIN_SS_SNR)
     return 0;
   
-  bprintf(info, "Sun Sensor says snr = %f %f %i\n", PointingData[point_index].ss_snr,
-		  	sun_el, i_max); 
+  //bprintf(info, "Sun Sensor says snr = %f %f %i\n", PointingData[point_index].ss_snr,
+//		  	sun_el, i_max); 
   
   nominator = sensors[(i_max+12+1)%12] - sensors[(i_max+12-1)%12];
   nominator *= 0.267949192;             //(2 - sqrt(3));
   denominator = 2.0*sensors[i_max];
   denominator -= sensors[(i_max+12+1)%12] + sensors[(i_max+12-1)%12];
-  denominator *= cos(sun_el * (M_PI/180.0));
+  //denominator *= cos(sun_el * (M_PI/180.0));
 
   if (denominator == 0.0) {
     // unphysical solution;
@@ -492,12 +492,33 @@ static void RecordHistory(int index)
   hs.elev_history[hs.i_history] = PointingData[index].el * M_PI / 180.0;
 }
 
-int possible_solution(double az, double el) {
+int possible_solution(double az, double el, int i_point) {
+  double mag_az, enc_el, d_az;
+  
   // test for insanity
   if (!finite(az)) return(0);
   if (!finite(el)) return(0);
   if (el > 70.0) return (0);
   if (el < 0.0) return(0);
+
+  mag_az = PointingData[i_point].mag_az; 
+
+  if (CommandData.use_elenc) {
+    enc_el = ACSData.enc_elev;
+    if (el - enc_el > 5.0) return (0);
+    if (enc_el - el > 5.0) return (0);
+  }
+  
+  if (CommandData.use_mag) {
+    d_az = az - mag_az;
+
+    if (d_az > 180.0) d_az -= 360;
+    if (d_az < -180.0) d_az += 360;
+  
+    if (d_az > 30.0) return (0);
+    if (d_az < -30.0) return (0);
+  }
+
   return(1);
 }
 
@@ -554,7 +575,7 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
     radec2azel(ra, dec, PointingData[i_point].lst, PointingData[i_point].lat,
         &new_az, &new_el);
 
-    if (possible_solution(new_az, new_el)) {  // no nans!
+    if (possible_solution(new_az, new_el, i_point)) {  // no nans!
 
       // new solution
       if (isc_pulses[which].age < MAX_ISC_AGE) {
