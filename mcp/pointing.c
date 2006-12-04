@@ -430,9 +430,9 @@ static int SSConvert(double *ss_az)
     return 0;
   
   nominator = sensors[(i_max+12+1)%12] - sensors[(i_max+12-1)%12];
-  nominator *= 0.267949192;             //(2 - sqrt(3));
   denominator = 2.0*sensors[i_max];
   denominator -= sensors[(i_max+12+1)%12] + sensors[(i_max+12-1)%12];
+  denominator *= 1.732050808; //sqrt(3)
   //denominator *= cos(sun_el * (M_PI/180.0));
 
   if (denominator == 0.0) {
@@ -441,7 +441,7 @@ static int SSConvert(double *ss_az)
     return 0;
   }
 
-  az = atan2(nominator, denominator);
+  az = 0.5*atan2(nominator, denominator);
   if(az < -(1.2*M_PI/12.0) || az > 1.2*M_PI/12.0) {
     // unphysical solution;
     PointingData[point_index].ss_snr = 0.3;
