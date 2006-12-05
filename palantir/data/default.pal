@@ -19,12 +19,6 @@
       <XHI value="32768"/>
       <XLO value="-32768"/>
     </EXTREMA>
-<!--    <EXTREMA name="gains">
-      <HI value="32768"/>
-      <LO value="0"/>
-      <XHI value="32768"/>
-      <XLO value="0"/>
-    </EXTREMA>-->
     <EXTREMA name="gyheat">
       <HI value="40"/>
       <LO value="5"/>
@@ -61,12 +55,6 @@
       <XHI value="55"/>
       <XLO value="-20"/>
     </EXTREMA>
-<!--    <EXTREMA name="isctemp">
-      <HI value="35"/>
-      <LO value="0"/>
-      <XHI value="45"/>
-      <XLO value="-10"/>
-    </EXTREMA>-->
     <EXTREMA name="rahour">
       <HI value="24.01"/>
       <LO value="-12.0"/>
@@ -133,12 +121,6 @@
       <XHI value="29"/>
       <XLO value="-0.25"/>
     </EXTREMA>
-<!--    <EXTREMA name="cpufan">
-      <HI value="15000"/>
-      <LO value="6000"/>
-      <XHI value="20000"/>
-      <XLO value="5000"/>
-    </EXTREMA>-->
     <EXTREMA name="vsolar">
       <HI value="55"/>
       <LO value="23"/>
@@ -163,12 +145,6 @@
       <XHI value="16"/>
       <XLO value="9"/>
     </EXTREMA>
-<!--    <EXTREMA name="sssnr">
-      <HI value="150"/>
-      <LO value="50"/>
-      <XHI value="200"/>
-      <XLO value="0"/>
-    </EXTREMA>-->
     <EXTREMA name="unknown">
       <HI value="2147483640"/>
       <LO value="-2147483640"/>
@@ -1462,9 +1438,6 @@
     <NUMBER caption="JFET">
       <DATUM format="%.2f" src="T_jfet" extrema="jfettemp"/>
     </NUMBER>
-<!--    <NUMBER caption="LN2 Filter">
-      <DATUM format="%.2f" src="T_ln2_filt" extrema="lnfilttemp"/>
-    </NUMBER> -->
     <NUMBER caption="LN2">
       <DATUM format="%.2f" src="T_ln2" extrema="lntemp"/>
     </NUMBER>
