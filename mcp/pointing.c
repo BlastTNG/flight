@@ -142,7 +142,8 @@ void SunPos(double tt, double *ra, double *dec); // in starpos.c
 
 #define M2DV(x) ((x / 60.0) * (x / 60.0))
 
-#define MAG_ALIGNMENT (4.2681)
+#define MAG_ALIGNMENT 0
+//(4.2681)
 
 // limit to 0 to 360.0
 void NormalizeAngle(double *A)
@@ -245,11 +246,11 @@ static int MagConvert(double *mag_az)
 
   // cbn added this line
   mvx = MAGX_M*ACSData.mag_x + MAGX_B;
-  mvx = (mvx-0.009)/0.38;
+  //mvx = (mvx-0.009)/0.38;
   mvy = MAGY_M*ACSData.mag_y + MAGY_B;
-  mvy = (mvy + 0.018)/0.39;
+  //mvy = (mvy + 0.018)/0.39;
   mvz = MAGZ_M*ACSData.mag_z + MAGZ_B;
-  mvz = mvz/0.385; 
+  //mvz = mvz/0.385; 
 
   raw_mag_az = (180.0 / M_PI) * atan2(mvy, mvx);
   raw_mag_pitch = (180.0/M_PI) * atan(mvz/sqrt(mvx*mvx + mvy*mvy));
