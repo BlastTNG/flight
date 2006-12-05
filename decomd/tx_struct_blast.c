@@ -641,6 +641,7 @@ struct ChannelStruct SlowChannels[] = {
   {"act1_postrim", 'w', LOOP6, 53,                1.0,             0.0, 'u'},
   {"act2_postrim", 'w', LOOP6, 54,                1.0,             0.0, 'u'},
   {"lvdt_spread",  'w', LOOP6, 55,                1.0,             0.0, 's'},
+  {"sun_el",       'w', LOOP1, 56,              I2DEG,             0.0, 's'},
   END_OF_CHANNELS
 };
 
