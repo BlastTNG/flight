@@ -375,7 +375,6 @@
 --f29@u0      tc_filter     6             @             0             299           @
 --f30@u0      sf_correction 8             @             -2000         2000          @
 --f31@f0      abs_focus     @             @             @             @             @
---f32@u0      abs_focus     8             @             -2000         2000          @
 --f33@u0      sf_offset     @             @             -2000         2000          @
 
 +FASTDATA     
