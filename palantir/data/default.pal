@@ -289,6 +289,12 @@
       <HI value="14000"/>
       <XHI value="15000"/>
     </EXTREMA>
+    <EXTREMA name="lvdtspread">
+      <XLO value="-11"/>
+      <LO value="-10"/>
+      <HI value="300"/>
+      <XHI value="500"/>
+    </EXTREMA>
     <CURFILE name="/data/etc/defile.cur"/>
     <DECOMD host="arwen.blast" port="11411"/>
   </SETTINGS>
@@ -840,13 +846,13 @@
       <DATUM format="%.0f" src="ACT2_ENC" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="ACT0 Com Pos">
-      <DATUM format="%.0f" src="ACT0_DEAD_REC" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT0_DEAD_REC" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="ACT1 Com Pos">
-      <DATUM format="%.0f" src="ACT1_DEAD_REC" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT1_DEAD_REC" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="ACT2 Com Pos">
-      <DATUM format="%.0f" src="ACT2_DEAD_REC" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT2_DEAD_REC" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="ACT0 Pos">
       <DATUM format="%.0f" src="ACT0_POS" extrema="actuator"/>
@@ -878,13 +884,13 @@
       <DATUM format="%.0f" src="LVDT_13" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="LVDT High">
-      <DATUM format="%.0f" src="LVDT_HIGH" extrema="unknown"/>
+      <DATUM format="%.0f" src="LVDT_HIGH" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="LVDT Low">
-      <DATUM format="%.0f" src="LVDT_LOW" extrema="unknown"/>
+      <DATUM format="%.0f" src="LVDT_LOW" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="LVDT Spread">
-      <DATUM format="%.0f" src="LVDT_SPREAD" extrema="unknown"/>
+      <DATUM format="%.0f" src="LVDT_SPREAD" extrema="lvdtspread"/>
     </NUMBER>
   </BOX>
   <BOX caption="Focus System" colour="#002222" row="3" col="8">
@@ -926,7 +932,7 @@
       <DATUM format="%.0f" src="ABS_FOCUS" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="Relative Focus">
-      <DATUM format="%.0f" src="REL_FOCUS" extrema="actuator"/>
+      <DATUM format="%.0f" src="REL_FOCUS" extrema="lvdtspread"/>
     </NUMBER>
     <NUMBER caption="Foc Off">
       <DATUM format="%.0f" src="SF_OFFSET" extrema="unknown"/>
