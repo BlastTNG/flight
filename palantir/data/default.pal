@@ -284,9 +284,9 @@
       <XHI value="16565"/>
     </EXTREMA>
     <EXTREMA name="actuator">
-      <XLO value="3000"/>
-      <LO value="6000"/>
-      <HI value="12000"/>
+      <XLO value="9000"/>
+      <LO value="10000"/>
+      <HI value="14000"/>
       <XHI value="15000"/>
     </EXTREMA>
     <CURFILE name="/data/etc/defile.cur"/>
