@@ -774,7 +774,7 @@ static void StoreData(int index)
     ssAzAddr = GetNiosAddr("ss_az");
     ssSigmaAddr = GetNiosAddr("ss_sigma");
     sunAzAddr = GetNiosAddr("sun_az");
-    sunElAddr = GetNiosAddr("sun_az");
+    sunElAddr = GetNiosAddr("sun_el");
     ssTrimAddr = GetNiosAddr("ss_trim");
     iscAzAddr = GetNiosAddr("isc_az");
     iscElAddr = GetNiosAddr("isc_el");
