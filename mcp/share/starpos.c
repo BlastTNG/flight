@@ -372,6 +372,9 @@ void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
   double sin_dec, cos_dec, sin_lat, cos_lat, cos_H;
   double sin_el, cos_el, cos_az;
 
+  if (ra < 0)
+    ra += 24;
+
   /* convert to radians */
   lat *= (M_PI/180.0);
   ra *= (M_PI/12.0);

@@ -364,9 +364,12 @@ static int SSConvert(double *ss_az)
   sun_ra *= (12.0 / M_PI);
   sun_dec *= (180.0 / M_PI);
 
+  if (sun_ra < 0)
+    sun_ra += 24;
+
   radec2azel(sun_ra, sun_dec, PointingData[i_point].lst,
       PointingData[i_point].lat, &sun_az, &sun_el);
-
+  
   NormalizeAngle(&sun_az);
   PointingData[point_index].sun_az = sun_az;
   PointingData[point_index].sun_el = sun_el;
