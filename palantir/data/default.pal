@@ -729,7 +729,7 @@
     <NUMBER caption="Actuator Motor">
       <DATUM format="%.2f" src="T_ACT_MOTOR" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Sun Shield Back Mid">
+    <NUMBER caption="Sun Shield Back">
       <DATUM format="%.2f" src="T_SS_BACK_MID" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Chin Mid">
@@ -817,6 +817,8 @@
         <WORD value="0" caption="Ok" textstyle="OK_BIT"/>
         <WORD value="1" caption="Lost" textstyle="W_BIT"/>
         <WORD value="4" caption="Bad Move" textstyle="W_BIT"/>
+        <WORD value="10" caption="Unknown Pos" textstyle="W_BIT"/>
+        <WORD value="14" caption="Unknown Pos" textstyle="W_BIT"/>
         <WORD value="128" caption="Move Disallowed" textstyle="W_BIT"/>
         <WORD value="256" caption="Fault ENC0" textstyle="W_BIT"/>
         <WORD value="512" caption="Fault ENC1" textstyle="W_BIT"/>
