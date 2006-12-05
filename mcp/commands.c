@@ -50,7 +50,7 @@
  * 90 degrees.  This is the offset to the true lock positions.
  * This number is relative to the elevation encoder reading, NOT
  * true elevation */
-#define LOCK_OFFSET (3.48-0.735)
+#define LOCK_OFFSET (3.48-0.135)
 
 /* Seconds since 0TMG jan 1 1970 */
 #define SUN_JAN_6_1980 315964800L

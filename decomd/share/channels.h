@@ -43,7 +43,7 @@ extern "C" {
   /* offset of encoder.  Reset if encoder has been unmounted. */
   /* This is the elevation at which the encoder wraps around */
 //#define ENC_ELEV_OFFSET 113.48
-#define ENC_ELEV_OFFSET 112.745
+#define ENC_ELEV_OFFSET (112.745+0.6)
   /* to get proper wrapping in KST, the encoder elevation type should be
    * 'u' for 135 <= ENC_ELEV_OFFSET < 315 and 's' otherwise */
 #define ENC_ELEV_TYPE 's'
@@ -214,12 +214,18 @@ extern "C" {
 #define I_EL_ZERO 32638
 
 /* MAG_? conversion from counts to volts */
-#define MAGX_M (-1.88297e-4/0.380)
-#define MAGX_B (6.18095-0.009/0.380+0.007480)
-#define MAGY_M (-1.88124e-4/0.390)
-#define MAGY_B (6.17593+0.018/0.39+0.007830)
-#define MAGZ_M (-1.87933e-4/0.39)
-#define MAGZ_B (6.16957+0.006930)
+//#define MAGX_M (-1.88297e-4/0.380)
+//#define MAGX_B (6.18095-0.009/0.380+0.007480)
+//#define MAGY_M (-1.88124e-4/0.390)
+//#define MAGY_B (6.17593+0.018/0.39+0.007830)
+//#define MAGZ_M (-1.87933e-4/0.39)
+//#define MAGZ_B (6.16957+0.006930)
+#define MAGX_M (-1.88297e-4)
+#define MAGX_B (6.18095)
+#define MAGY_M (-1.88124e-4)
+#define MAGY_B (6.17593)
+#define MAGZ_M (-1.87933e-4)
+#define MAGZ_B (6.16957)
   
 /* B_AMP? conversion from counts to bias levels */
 #define B_AMP1_M 3.691518e-5
