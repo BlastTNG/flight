@@ -19,12 +19,6 @@
       <XHI value="32768"/>
       <XLO value="-32768"/>
     </EXTREMA>
-<!--    <EXTREMA name="gains">
-      <HI value="32768"/>
-      <LO value="0"/>
-      <XHI value="32768"/>
-      <XLO value="0"/>
-    </EXTREMA>-->
     <EXTREMA name="gyheat">
       <HI value="40"/>
       <LO value="5"/>
@@ -61,12 +55,6 @@
       <XHI value="55"/>
       <XLO value="-20"/>
     </EXTREMA>
-<!--    <EXTREMA name="isctemp">
-      <HI value="35"/>
-      <LO value="0"/>
-      <XHI value="45"/>
-      <XLO value="-10"/>
-    </EXTREMA>-->
     <EXTREMA name="rahour">
       <HI value="24.01"/>
       <LO value="-12.0"/>
@@ -127,12 +115,12 @@
       <XHI value="25"/>
       <XLO value="-0.25"/>
     </EXTREMA>
-<!--    <EXTREMA name="cpufan">
-      <HI value="15000"/>
-      <LO value="6000"/>
-      <XHI value="20000"/>
-      <XLO value="5000"/>
-    </EXTREMA>-->
+    <EXTREMA name="acssolcurrent">
+      <HI value="25"/>
+      <LO value="0"/>
+      <XHI value="29"/>
+      <XLO value="-0.25"/>
+    </EXTREMA>
     <EXTREMA name="vsolar">
       <HI value="55"/>
       <LO value="23"/>
@@ -157,12 +145,6 @@
       <XHI value="16"/>
       <XLO value="9"/>
     </EXTREMA>
-<!--    <EXTREMA name="sssnr">
-      <HI value="150"/>
-      <LO value="50"/>
-      <XHI value="200"/>
-      <XLO value="0"/>
-    </EXTREMA>-->
     <EXTREMA name="unknown">
       <HI value="2147483640"/>
       <LO value="-2147483640"/>
@@ -302,10 +284,16 @@
       <XHI value="16565"/>
     </EXTREMA>
     <EXTREMA name="actuator">
-      <XLO value="9010"/>
+      <XLO value="9000"/>
       <LO value="10000"/>
       <HI value="14000"/>
-      <XHI value="14950"/>
+      <XHI value="15000"/>
+    </EXTREMA>
+    <EXTREMA name="lvdtspread">
+      <XLO value="-11"/>
+      <LO value="-10"/>
+      <HI value="300"/>
+      <XHI value="500"/>
     </EXTREMA>
     <CURFILE name="/data/etc/alice.cur"/>
   </SETTINGS>
@@ -746,7 +734,7 @@
     <NUMBER caption="Actuator Motor">
       <DATUM format="%.2f" src="T_ACT_MOTOR" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Sun Shield Back Mid">
+    <NUMBER caption="Sun Shield Back">
       <DATUM format="%.2f" src="T_SS_BACK_MID" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Chin Mid">
@@ -833,8 +821,15 @@
       <DATUM src="ACT_FLAGS">
         <WORD value="0" caption="Ok" textstyle="OK_BIT"/>
         <WORD value="1" caption="Lost" textstyle="W_BIT"/>
-        <WORD value="4" caption="Bad Move" textstyle="W_BIT"/>
-        <WORD value="128" caption="Move Disallowed" textstyle="W_BIT"/>
+        <WORD value="2" caption="Pos Bad" textstyle="W_BIT"/>
+        <WORD value="4" caption="Pos Bad" textstyle="W_BIT"/>
+        <WORD value="6" caption="Pos Bad" textstyle="W_BIT"/>
+        <WORD value="8" caption="Pos Bad" textstyle="W_BIT"/>
+        <WORD value="10" caption="Pos Bad" textstyle="W_BIT"/>
+        <WORD value="12" caption="Pos Bad" textstyle="W_BIT"/>
+        <WORD value="14" caption="Pos Bad" textstyle="W_BIT"/>
+        <WORD value="16" caption="Pos Bad" textstyle="W_BIT"/>
+        <WORD value="128" caption="Move Bad" textstyle="W_BIT"/>
         <WORD value="256" caption="Fault ENC0" textstyle="W_BIT"/>
         <WORD value="512" caption="Fault ENC1" textstyle="W_BIT"/>
         <WORD value="1024" caption="Fault ENC2" textstyle="W_BIT"/>
@@ -850,13 +845,13 @@
       <DATUM format="%.0f" src="ACT2_ENC" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="ACT0 Com Pos">
-      <DATUM format="%.0f" src="ACT0_DEAD_REC" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT0_DEAD_REC" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="ACT1 Com Pos">
-      <DATUM format="%.0f" src="ACT1_DEAD_REC" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT1_DEAD_REC" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="ACT2 Com Pos">
-      <DATUM format="%.0f" src="ACT2_DEAD_REC" extrema="unknown"/>
+      <DATUM format="%.0f" src="ACT2_DEAD_REC" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="ACT0 Pos">
       <DATUM format="%.0f" src="ACT0_POS" extrema="actuator"/>
@@ -888,13 +883,13 @@
       <DATUM format="%.0f" src="LVDT_13" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="LVDT High">
-      <DATUM format="%.0f" src="LVDT_HIGH" extrema="unknown"/>
+      <DATUM format="%.0f" src="LVDT_HIGH" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="LVDT Low">
-      <DATUM format="%.0f" src="LVDT_LOW" extrema="unknown"/>
+      <DATUM format="%.0f" src="LVDT_LOW" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="LVDT Spread">
-      <DATUM format="%.0f" src="LVDT_SPREAD" extrema="unknown"/>
+      <DATUM format="%.0f" src="LVDT_SPREAD" extrema="lvdtspread"/>
     </NUMBER>
   </BOX>
   <BOX caption="Focus System" colour="#002222" row="3" col="8">
@@ -936,7 +931,7 @@
       <DATUM format="%.0f" src="ABS_FOCUS" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="Relative Focus">
-      <DATUM format="%.0f" src="REL_FOCUS" extrema="actuator"/>
+      <DATUM format="%.0f" src="REL_FOCUS" extrema="lvdtspread"/>
     </NUMBER>
     <NUMBER caption="Foc Off">
       <DATUM format="%.0f" src="SF_OFFSET" extrema="unknown"/>
@@ -1041,80 +1036,80 @@
       <DATUM format="%.0f" src="bias_lev3" extrema="bias3"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Bolometers" colour="#707" row="4" col="3" rowspan="1">
-    <NUMBER caption="N12C4 (350)">
-      <DATUM format="%.3f" src="N12C4" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="N14C5 (350)">
-      <DATUM format="%.3f" src="N14C5" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="N10C11 (250)">
-      <DATUM format="%.3f" src="N10C11" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="N13C9 (350)">
-      <DATUM format="%.3f" src="N13C9" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="N9C18 (250)">
-      <DATUM format="%.3f" src="N9C18" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="N16C10 (500)">
-      <DATUM format="%.3f" src="N16C10" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="N7C13 (250)">
-      <DATUM format="%.3f" src="N7C13" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="N8C2 (250)">
-      <DATUM format="%.3f" src="N8C2" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="N6C18 (250)">
-      <DATUM format="%.3f" src="N6C18" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="N5C11 (250)">
-      <DATUM format="%.3f" src="N5C11" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="N11C1 (350)">
-      <DATUM format="%.3f" src="N11C1" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="N15C22 (Dark 500)">
+  <BOX caption="'Slow' Bolometers " colour="#707" row="4" col="3" rowspan="1">
+    <NUMBER caption="N15C22">
       <DATUM format="%.3f" src="N15C22" extrema="unknown"/>
     </NUMBER>
+    <NUMBER caption="N15C14">
+      <DATUM format="%.3f" src="N15C14" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="N15C9">
+      <DATUM format="%.3f" src="N15C9" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="N7C15">
+      <DATUM format="%.3f" src="N7C15" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="N7C14">
+      <DATUM format="%.3f" src="N7C14" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="N10C10">
+      <DATUM format="%.3f" src="N10C10" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="N10C9">
+      <DATUM format="%.3f" src="N10C9" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="N10C8">
+      <DATUM format="%.3f" src="N10C8" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="N7C17">
+      <DATUM format="%.3f" src="N7C17" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="N7C16">
+      <DATUM format="%.3f" src="N7C16" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="N7C18">
+      <DATUM format="%.3f" src="N7C18" extrema="unknown"/>
+    </NUMBER>
   </BOX>
-  <BOX caption="Bolometers" colour="#707" row="4" col="4" rowspan="1">
-    <NUMBER caption="N10C21 (250)">
-      <DATUM format="%.3f" src="N10C21" extrema="unknown"/>
+  <BOX caption="'Fast' Bolometers" colour="#707" row="4" col="4" rowspan="1">
+    <NUMBER caption="N11C2">
+      <DATUM format="%.3f" src="N11C2" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N8C13 (250)">
-      <DATUM format="%.3f" src="N8C13" extrema="unknown"/>
+    <NUMBER caption="N11C3">
+      <DATUM format="%.3f" src="N11C3" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N12C9 (350)">
-      <DATUM format="%.3f" src="N12C9" extrema="unknown"/>
+    <NUMBER caption="N11C7">
+      <DATUM format="%.3f" src="N11C7" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N16C6 (500)">
-      <DATUM format="%.3f" src="N16C6" extrema="unknown"/>
+    <NUMBER caption="N12C0">
+      <DATUM format="%.3f" src="N12C0" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N14C10 (350)">
-      <DATUM format="%.3f" src="N14C10" extrema="unknown"/>
+    <NUMBER caption="N16C10">
+      <DATUM format="%.3f" src="N16C10" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N13C21 (350)">
-      <DATUM format="%.3f" src="N13C21" extrema="unknown"/>
+    <NUMBER caption="N7C13">
+      <DATUM format="%.3f" src="N7C13" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N7C7 (250)">
-      <DATUM format="%.3f" src="N7C7" extrema="unknown"/>
+    <NUMBER caption="N14C22">
+      <DATUM format="%.3f" src="N14C22" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N9C17 (250)">
-      <DATUM format="%.3f" src="N9C17" extrema="unknown"/>
+    <NUMBER caption="N15C13">
+      <DATUM format="%.3f" src="N15C13" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N15C17 (500)">
-      <DATUM format="%.3f" src="N15C17" extrema="unknown"/>
+    <NUMBER caption="N16C15">
+      <DATUM format="%.3f" src="N16C15" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N11C15 (350)">
-      <DATUM format="%.3f" src="N11C15" extrema="unknown"/>
+    <NUMBER caption="N7C12">
+      <DATUM format="%.3f" src="N7C12" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N5C19 (250)">
-      <DATUM format="%.3f" src="N5C19" extrema="unknown"/>
+    <NUMBER caption="N10C11">
+      <DATUM format="%.3f" src="N10C11" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N6C0 (Res 250)">
-      <DATUM format="%.3f" src="N6C0" extrema="unknown"/>
+    <NUMBER caption="N7C14">
+      <DATUM format="%.3f" src="N7C14" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="N10C13">
+      <DATUM format="%.3f" src="N10C13" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Phase" colour="#707" row="4" col="2" rowspan="1">
@@ -1178,7 +1173,7 @@
       <DATUM format="%.2f" src="I_BATT_ACS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="I ACS Solar">
-      <DATUM format="%.2f" src="I_SOL_ACS" extrema="solcurrent"/>
+      <DATUM format="%.2f" src="I_SOL_ACS" extrema="acssolcurrent"/>
     </NUMBER>
     <NUMBER caption="T Solar Port">
       <DATUM format="%.2f" src="T_SOL_PORT" extrema="temp"/>
@@ -1455,9 +1450,6 @@
     <NUMBER caption="JFET">
       <DATUM format="%.2f" src="T_jfet" extrema="jfettemp"/>
     </NUMBER>
-<!--    <NUMBER caption="LN2 Filter">
-      <DATUM format="%.2f" src="T_ln2_filt" extrema="lnfilttemp"/>
-    </NUMBER> -->
     <NUMBER caption="LN2">
       <DATUM format="%.2f" src="T_ln2" extrema="lntemp"/>
     </NUMBER>
