@@ -11,7 +11,7 @@
  *
  */
 
-#define SLOWDL_NUM_DATA     199
+#define SLOWDL_NUM_DATA     202
 
 #define SLOWDL_LEN          255
 
