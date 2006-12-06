@@ -187,7 +187,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"t_strut_side",  SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_push_plate",  SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_act_motor",   SLOWDL_FORCE_INT, 8, 55, -55},
-  {"t_ss_mid_back", SLOWDL_FORCE_INT, 8, 55, -55},
+  {"t_ss_back_mid", SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_chin_mid",    SLOWDL_FORCE_INT, 8, 55, -55},
   /* DAS */
   {"i_dpm_28v",     SLOWDL_FORCE_INT, 8, -2, 10}, /* 78 mA */
