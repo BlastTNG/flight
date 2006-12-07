@@ -693,6 +693,8 @@ static void StoreData(int index)
   static struct NiosStruct *dgpsTrimAddr;
   static struct NiosStruct *ssTrimAddr;
 
+  static struct NiosStruct *calModeAddr;
+
   /* low level scan mode diagnostics */
   static struct NiosStruct *azModeAddr;
   static struct NiosStruct *elModeAddr;
@@ -779,6 +781,7 @@ static void StoreData(int index)
     sunAzAddr = GetNiosAddr("sun_az");
     sunElAddr = GetNiosAddr("sun_el");
     ssTrimAddr = GetNiosAddr("ss_trim");
+    calModeAddr = GetNiosAddr("cal_mode");
     iscAzAddr = GetNiosAddr("isc_az");
     iscElAddr = GetNiosAddr("isc_el");
     iscSigmaAddr = GetNiosAddr("isc_sigma");
@@ -962,6 +965,8 @@ static void StoreData(int index)
       NIOS_QUEUE);
   WriteData(sunElAddr, (int)(PointingData[i_point].sun_el*DEG2I), NIOS_QUEUE);
   WriteData(ssTrimAddr, CommandData.ss_az_trim * DEG2I, NIOS_QUEUE);
+
+  WriteData(calModeAddr, CommandData.Cryo.calibrator, NIOS_QUEUE);
 
   WriteData(iscAzAddr,
       (unsigned int)(PointingData[i_point].isc_az * DEG2I), NIOS_QUEUE);
