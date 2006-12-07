@@ -28,9 +28,8 @@
 #include "command_struct.h"
 #include "mcp.h"
 
-#define MIN_EL 15
-#define MAX_EL 60.0
-#warning CHECK EL LIMITS BEFORE FLIGHT
+#define MIN_EL 22
+#define MAX_EL 59
 
 struct AxesModeStruct axes_mode = {
   .el_dir = 1,

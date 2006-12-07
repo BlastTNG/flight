@@ -1447,6 +1447,28 @@ void StoreActBus(void)
   WriteData(secGoalAddr, CommandData.actbus.focus, NIOS_FLUSH);
 }
 
+void CopyActuators(void)
+{
+  static struct BiPhaseStruct* act0LGoodAddr;
+  static struct BiPhaseStruct* act1LGoodAddr;
+  static struct BiPhaseStruct* act2LGoodAddr;
+  static int firsttime = 1;
+
+  if (firsttime) {
+    firsttime = 0;
+    act0LGoodAddr = GetBiPhaseAddr("act0_l_good");
+    act1LGoodAddr = GetBiPhaseAddr("act1_l_good");
+    act2LGoodAddr = GetBiPhaseAddr("act2_l_good");
+  }
+
+  CommandData.actbus.last_good[0] = CommandData.actbus.dead_reckon[0] =
+    slow_data[act0LGoodAddr->index][act0LGoodAddr->channel];
+  CommandData.actbus.last_good[1] = CommandData.actbus.dead_reckon[1] =
+    slow_data[act1LGoodAddr->index][act1LGoodAddr->channel];
+  CommandData.actbus.last_good[2] = CommandData.actbus.dead_reckon[2] =
+    slow_data[act2LGoodAddr->index][act2LGoodAddr->channel];
+}
+
 void ActuatorBus(void)
 {
   int poll_timeout = POLL_TIMEOUT;
@@ -1469,6 +1491,7 @@ void ActuatorBus(void)
                                               control */
       BusRecv(NULL, 1, 1); /* this is a blocking call - clear the recv buffer */
       SetLockState(1); /* to ensure the NiC MCC knows the pin state */
+      CopyActuators(); /* let the NiC MCC know what's going on */
       /* no need to sleep -- BusRecv does that for us */
       CommandData.actbus.caddr[my_cindex] = 0;
     }
