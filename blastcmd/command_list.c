@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.66 $";
+const char *command_list_serial = "$Revision: 3.67 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Cooling", 
@@ -712,8 +712,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(phase), "set phase shift", GR_BIAS, 2,
     {
-      {"DAS Card", 5,   16, 'i', "NONE"},
-      {"Phase",    0, 2000, 'i', "NONE"}
+      {"DAS Card (0=all)", 0,   16, 'i', "NONE"},
+      {"Phase",            0, 2000, 'i', "NONE"}
     }
   },
 
