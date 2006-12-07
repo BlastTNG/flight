@@ -47,7 +47,7 @@ static int __inhibit_chatter = 0;
 #  define ACT_BUS "/dev/ttyS7"
 #endif
 
-/* Thermal model numbers */
+/* Thermal model numbers, from MD and MV */
 #define T_PRIMARY_FOCUS   258.15 /* = -15C */
 #define T_SECONDARY_FOCUS 243.15 /* = -30C */
 #define POSITION_FOCUS     11953 /* absolute counts */
@@ -60,7 +60,7 @@ static int __inhibit_chatter = 0;
 #define MAX_STEP 100
 #define STEP_MIN 70
 
-#define ALL_ACT 0x51 /* All actuators */
+#define ALL_ACT 0x51 /* 'Q' = All actuators */
 #define LOCKNUM 3
 #define NACT 4
 #define POLL_TIMEOUT 30000 /* 5 minutes */
@@ -91,6 +91,7 @@ static int __inhibit_chatter = 0;
                                   abort */
 
 #define LOCK_MOTOR_DATA_TIMER 100
+#define DRIVE_TIMEOUT 300 /* 1 minute @ 5Hz */
 
 #define LOCK_MIN_POT 3000
 #define LOCK_MAX_POT 16365
@@ -1125,8 +1126,8 @@ static inline char* LockCommand(char* buffer, const char* cmd)
 /*    Do Lock Logic: check status, determine if we are locked, etc      */
 /*                                                                      */
 /************************************************************************/
-#define SEND_SLEEP 100000 /* .1 seconds */
-#define WAIT_SLEEP 50000 /* .05 seconds */
+#define SEND_SLEEP 100000 /* 100 miliseconds */
+#define WAIT_SLEEP 50000 /* 50 miliseconds */
 #define LA_EXIT    0
 #define LA_STOP    1
 #define LA_WAIT    2
@@ -1137,6 +1138,7 @@ static void DoLock(void)
 {
   int action = LA_EXIT;
   char command[2000] = "";
+  static int drive_timeout = 0;
 
   do {
     GetLockData((bus_seized == LOCKNUM) ? 0 : 1);
@@ -1217,30 +1219,41 @@ static void DoLock(void)
     else
       TakeBus(LOCKNUM);
 
+    /* Timeout check */
+    if (drive_timeout == 1) {
+      bputs(warning, "ActBus: Lock Motor drive timeout.");
+      action = LA_STOP;
+    }
+    if (drive_timeout > 0)
+      --drive_timeout;
+
     /* Figure out what to do... */
     switch (action) {
       case LA_STOP:
+        drive_timeout = 0;
         bputs(info, "ActBus: Stopping lock motor.");
-        //        LockCommand(command, "T"); /* terminate all strings */
         strcpy(command, "T"); /* terminate all strings */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_OFF;
         break;
       case LA_EXTEND:
+        drive_timeout = DRIVE_TIMEOUT;
         bputs(info, "ActBus: Extending lock motor.");
         LockCommand(command, "P0R"); /* move out forever */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_EXT;
         break;
       case LA_RETRACT:
+        drive_timeout = DRIVE_TIMEOUT;
         bputs(info, "ActBus: Retracting lock motor.");
         LockCommand(command, "D0R"); /* move in forever */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_RET;
         break;
       case LA_STEP:
+        drive_timeout = DRIVE_TIMEOUT;
         bputs(info, "ActBus: Stepping lock motor.");
-        LockCommand(command, "P100000R"); /* move away from the limit switch */
+        LockCommand(command, "P200000R"); /* move away from the limit switch */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_STP;
         break;

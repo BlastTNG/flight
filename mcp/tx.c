@@ -113,6 +113,7 @@ static void WriteAux(void)
   static struct NiosStruct* bi0FifoSizeAddr;
   static struct NiosStruct* bbcFifoSizeAddr;
   static struct NiosStruct* ploverAddr;
+  static struct NiosStruct* atFloatAddr;
   static struct NiosStruct* scheduleAddr;
   static struct NiosStruct* he4LevOldAddr;
   static struct BiPhaseStruct* samIAmReadAddr;
@@ -144,6 +145,7 @@ static void WriteAux(void)
     bi0FifoSizeAddr = GetNiosAddr("bi0_fifo_size");
     bbcFifoSizeAddr = GetNiosAddr("bbc_fifo_size");
     ploverAddr = GetNiosAddr("plover");
+    atFloatAddr = GetNiosAddr("at_float");
     scheduleAddr = GetNiosAddr("schedule");
   }
 
@@ -189,6 +191,7 @@ static void WriteAux(void)
   WriteData(bi0FifoSizeAddr, CommandData.bi0FifoSize, NIOS_QUEUE);
   WriteData(bbcFifoSizeAddr, CommandData.bbcFifoSize, NIOS_QUEUE);
   WriteData(ploverAddr, CommandData.plover, NIOS_QUEUE);
+  WriteData(atFloatAddr, CommandData.at_float, NIOS_QUEUE);
   WriteData(scheduleAddr, CommandData.sucks + CommandData.lat_range * 2,
       NIOS_FLUSH);
 }
@@ -1025,7 +1028,10 @@ static void StoreData(int index)
     ((!CommandData.use_mag) << 3) |
     ((!CommandData.use_gps) << 4) |
     ((!CommandData.use_elclin) << 5) |
-    ((!CommandData.use_osc) << 6);
+    ((!CommandData.use_osc) << 6) |
+    ((CommandData.disable_el) << 10) |
+    ((CommandData.disable_az) << 11) |
+    ((CommandData.force_el) << 12);
 
   if (PointingData[i_point].t >= CommandData.pointing_mode.t)
     sensor_veto |= (1 << 7);
