@@ -1492,6 +1492,7 @@ void ActuatorBus(void)
       BusRecv(NULL, 1, 1); /* this is a blocking call - clear the recv buffer */
       SetLockState(1); /* to ensure the NiC MCC knows the pin state */
       CopyActuators(); /* let the NiC MCC know what's going on */
+      CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
       /* no need to sleep -- BusRecv does that for us */
       CommandData.actbus.caddr[my_cindex] = 0;
     }
