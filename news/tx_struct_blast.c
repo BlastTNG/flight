@@ -72,7 +72,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"osc_mcpnum",   'w', LOOP3, 58,                1.0,             0.0, 'U'},
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U'},
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S'},
-  {"lock_pos",     'w', LOOP5, 18,                1.0,             0.0, 'U'},
+  {"lock_pos",     'w', LOOP5, 18,                1.0,             0.0, 'S'},
   {"act0_pos",     'w', LOOP5, 42,                1.0,  -ACTENC_OFFSET, 'S'},
   {"act1_pos",     'w', LOOP5, 44,                1.0,  -ACTENC_OFFSET, 'S'},
   {"act2_pos",     'w', LOOP5, 46,                1.0,  -ACTENC_OFFSET, 'S'},
