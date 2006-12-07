@@ -1268,10 +1268,10 @@ static void DoLock(void)
         drive_timeout = DRIVE_TIMEOUT;
         bputs(info, "ActBus: Rejigging lock motor.");
         CommandData.actbus.lock_acc *= 4;
-        CommandData.actbus.lock_vel /= 2;
+        CommandData.actbus.lock_vel /= 4;
         LockCommand(command, "D0R"); /* move away from the limit switch */
         CommandData.actbus.lock_acc /= 4;
-        CommandData.actbus.lock_vel *= 2;
+        CommandData.actbus.lock_vel *= 4;
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_JIG;
         break;
