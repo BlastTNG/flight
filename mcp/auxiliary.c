@@ -471,10 +471,10 @@ void ChargeController(void)
   if (dpcu_control<0) dpcu_control = 0;
 
   WriteData(apcuRegAddr, (int)apcu_control, NIOS_QUEUE);
-  WriteData(apcuTrimAddr, CommandData.apcu_trim, NIOS_QUEUE);
+  WriteData(apcuTrimAddr, CommandData.apcu_trim*100.0, NIOS_QUEUE);
   WriteData(apcuAutoAddr, CommandData.apcu_auto, NIOS_QUEUE);
   WriteData(dpcuRegAddr, (int)dpcu_control, NIOS_QUEUE);
-  WriteData(dpcuTrimAddr, CommandData.dpcu_trim, NIOS_QUEUE);
+  WriteData(dpcuTrimAddr, CommandData.dpcu_trim*100.0, NIOS_QUEUE);
   WriteData(dpcuAutoAddr, CommandData.dpcu_auto, NIOS_FLUSH);
 }
 
