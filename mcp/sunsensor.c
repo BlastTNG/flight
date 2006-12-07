@@ -113,7 +113,9 @@ void SunSensor(void) {
           bprintf(err, "Sun Sensor: Connection to Arien closed");
           n = -1;
         } else {
-          bputs(err, "Sun Sensor: Didn't receive all data from Sun Sensor.\n");
+          bprintf(err, "Sun Sensor: Short read: %i of %i bytes.\n", n,
+              sizeof(Rx_Data));
+          n = -1;
         }
       } else {
         bputs(warning, "Sun Sensor: Connection to Arien timed out.\n");
