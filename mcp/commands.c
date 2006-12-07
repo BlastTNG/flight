@@ -1243,7 +1243,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       if (ivalues[0] >= 5 && ivalues[0] <= 16)
         CommandData.Phase[ivalues[0] - 5] = ivalues[1];
       else if (ivalues[0] == 0)
-        for (i = 0; i < 11; ++i)
+        for (i = 0; i <= 11; ++i)
           CommandData.Phase[i] = ivalues[1];
 
       /***************************************/
