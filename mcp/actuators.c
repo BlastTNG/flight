@@ -94,7 +94,7 @@ static int __inhibit_chatter = 0;
 #define DRIVE_TIMEOUT 300 /* 1 minute @ 5Hz */
 
 #define LOCK_MIN_POT 3000
-#define LOCK_MAX_POT 16365
+#define LOCK_MAX_POT 16360
 #define LOCK_POT_RANGE 1000
 
 /* in commands.c */
@@ -1134,6 +1134,7 @@ static inline char* LockCommand(char* buffer, const char* cmd)
 #define LA_EXTEND  3
 #define LA_RETRACT 4
 #define LA_STEP    5
+#define LA_REJIG   6
 static void DoLock(void)
 {
   int action = LA_EXIT;
@@ -1149,7 +1150,7 @@ static void DoLock(void)
         || CommandData.actbus.lock_goal & LS_DRIVE_FORCE) {
       lock_data.state &= ~LS_DRIVE_MASK | LS_DRIVE_UNK;
       CommandData.actbus.lock_goal &= ~LS_DRIVE_FORCE;
-      bprintf(info, "ActBus: Reset lock motor state.");
+      bprintf(warning, "ActBus: Reset lock motor state.");
     }
 
     SetLockState(0);
@@ -1166,7 +1167,13 @@ static void DoLock(void)
         action = LA_EXIT;
       else if (lock_data.state & LS_OPEN)
         action = LA_STOP;
-      else if (lock_data.state & LS_DRIVE_RET)
+      else if ((lock_data.state & (LS_POT_RAIL | LS_DRIVE_OFF))
+          == (LS_POT_RAIL | LS_DRIVE_OFF))
+        action = LA_REJIG;
+      else if ((lock_data.state & LS_POT_RAIL)
+          && !(lock_data.state & LS_DRIVE_JIG))
+        action = LA_STOP;
+      else if (lock_data.state & (LS_DRIVE_RET | LS_DRIVE_JIG))
         action = LA_WAIT;
       else if (lock_data.state & LS_DRIVE_OFF)
         action = LA_RETRACT;
@@ -1256,6 +1263,17 @@ static void DoLock(void)
         LockCommand(command, "P200000R"); /* move away from the limit switch */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_STP;
+        break;
+      case LA_REJIG:
+        drive_timeout = DRIVE_TIMEOUT;
+        bputs(info, "ActBus: Rejigging lock motor.");
+        CommandData.actbus.lock_acc *= 4;
+        CommandData.actbus.lock_vel /= 2;
+        LockCommand(command, "D0R"); /* move away from the limit switch */
+        CommandData.actbus.lock_acc /= 4;
+        CommandData.actbus.lock_vel *= 2;
+        lock_data.state &= ~LS_DRIVE_MASK;
+        lock_data.state |= LS_DRIVE_JIG;
         break;
       default:
         command[0] = 0;
@@ -1430,7 +1448,7 @@ void StoreActBus(void)
   WriteData(lvdtLowAddr, CommandData.actbus.lvdt_low, NIOS_QUEUE);
   WriteData(lvdtHighAddr, CommandData.actbus.lvdt_high, NIOS_QUEUE);
 
-  WriteData(lockVelAddr, CommandData.actbus.lock_vel, NIOS_QUEUE);
+  WriteData(lockVelAddr, CommandData.actbus.lock_vel / 100, NIOS_QUEUE);
   WriteData(lockAccAddr, CommandData.actbus.lock_acc, NIOS_QUEUE);
   WriteData(lockMoveIAddr, CommandData.actbus.lock_move_i, NIOS_QUEUE);
   WriteData(lockHoldIAddr, CommandData.actbus.lock_hold_i, NIOS_QUEUE);

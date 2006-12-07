@@ -56,11 +56,12 @@ struct GainStruct {
 #define LS_DRIVE_EXT   0x0010
 #define LS_DRIVE_RET   0x0020
 #define LS_DRIVE_STP   0x0040
-#define LS_DRIVE_UNK   0x0080
-#define LS_EL_OK       0x0100
-#define LS_IGNORE_EL   0x0200
-#define LS_DRIVE_FORCE 0x0400
-#define LS_DRIVE_MASK  0x04F4
+#define LS_DRIVE_JIG   0x0080
+#define LS_DRIVE_UNK   0x0100
+#define LS_EL_OK       0x0200
+#define LS_IGNORE_EL   0x0400
+#define LS_DRIVE_FORCE 0x0800
+#define LS_DRIVE_MASK  0x09F4
 
 #define ACTBUS_FM_SLEEP  0
 #define ACTBUS_FM_SERVO  1

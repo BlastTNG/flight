@@ -620,7 +620,7 @@ struct ChannelStruct SlowChannels[] = {
   {"lock_move_i",  'w', LOOP6, 29,                1.0,             0.0, 'u'},
   /* LOOP6 30-33 are wide */
   {"lock_hold_i",  'w', LOOP6, 34,                1.0,             0.0, 'u'},
-  {"lock_vel",     'w', LOOP6, 35,                1.0,             0.0, 'u'},
+  {"lock_vel",     'w', LOOP6, 35,               100.,             0.0, 'u'},
   {"tc_g_prim",    'w', LOOP6, 36,               0.01,             0.0, 's'},
   {"tc_g_sec",     'w', LOOP6, 37,               0.01,             0.0, 's'},
   {"tc_step",      'w', LOOP6, 38,                1.0,             0.0, 'u'},

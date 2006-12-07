@@ -175,6 +175,7 @@ union DerivedUnion DerivedChannels[] = {
       "LS_DRIVE_EXT",
       "LS_DRIVE_RET",
       "LS_DRIVE_STP",
+      "LS_DRIVE_JIG",
       "LS_DRIVE_UNK",
       "LS_EL_OK",
       "LS_IGNORE_EL",
