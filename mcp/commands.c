@@ -1989,6 +1989,7 @@ void InitCommandData()
   CommandData.pumps.inframe_cool_on = 0;
   CommandData.pumps.inframe_cool_off = 0;
 
+  CommandData.actbus.off = 0;
   CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   CommandData.actbus.lock_goal = LS_DRIVE_OFF;
   CommandData.actbus.force_repoll = 0;
@@ -2050,6 +2051,7 @@ void InitCommandData()
   /** prev_status overrides this stuff **/
   CommandData.at_float = 0;
   CommandData.timeout = 3600;
+  CommandData.alice_file = 0;
 
   CommandData.apcu_reg = 28.0;
   CommandData.apcu_trim = 0.0;
@@ -2086,11 +2088,13 @@ void InitCommandData()
   CommandData.emf_offset = 0;
 
   CommandData.gyheat[0].setpoint = 30.0;
+  CommandData.gyheat[0].age = 0;
   CommandData.gyheat[0].gain.P = 30;
   CommandData.gyheat[0].gain.I = 10;
   CommandData.gyheat[0].gain.D = 3;
 
   CommandData.gyheat[1].setpoint = 35.0;
+  CommandData.gyheat[1].age = 0;
   CommandData.gyheat[1].gain.P = 40;
   CommandData.gyheat[1].gain.I = 5;
   CommandData.gyheat[1].gain.D = 0;
@@ -2101,14 +2105,14 @@ void InitCommandData()
   CommandData.use_analogue_gyros = 0;
 
   CommandData.use_elenc = 1;
-  CommandData.use_elclin = 1;
-  CommandData.use_sun = 1;
+  CommandData.use_elclin = 0;
+  CommandData.use_sun = 0;
   CommandData.use_isc = 1;
   CommandData.use_osc = 1;
   CommandData.use_mag = 1;
   CommandData.use_gps = 1;
   CommandData.lat_range = 1;
-  CommandData.sucks = 0;
+  CommandData.sucks = 1;
 
   CommandData.clin_el_trim = 0;
   CommandData.enc_el_trim = 0;
@@ -2126,7 +2130,12 @@ void InitCommandData()
 
   CommandData.az_autogyro = 1;
   CommandData.el_autogyro = 1;
+  CommandData.gy1_offset = 0;
+  CommandData.gy2_offset = 0;
+  CommandData.gy3_offset = 0;
 
+  CommandData.pumps.pwm1 = 1638; /* 20% */
+  CommandData.pumps.pwm2 = 1638; /* 20% */
   CommandData.pumps.pwm3 = 1638; /* inner frame cooling default --  20% */
   CommandData.pumps.pwm4 = 1638; /* outer frame cooling default --  20% */
 
@@ -2136,15 +2145,18 @@ void InitCommandData()
   CommandData.pumps.bal_gain = 0.2;
   CommandData.pumps.inframe_auto = 1;
 
-  CommandData.Bias.bias1 = 40;
-  CommandData.Bias.bias2 = 25;
-  CommandData.Bias.bias3 = 25;
+  CommandData.Bias.bias1 = 15;
+  CommandData.Bias.bias2 = 15;
+  CommandData.Bias.bias3 = 15;
 
   CommandData.actbus.tc_mode = TC_MODE_VETOED;
   CommandData.actbus.tc_step = 100; /* microns */
-  CommandData.actbus.tc_wait = 600; /* 5-Hz frames */
-  CommandData.actbus.tc_filter = 300; /* 5 Hz frames */
-  CommandData.actbus.tc_spread = 10; /* centigrade degrees */
+  CommandData.actbus.tc_wait = 3000; /* = 10 minutes in 5-Hz frames */
+  CommandData.actbus.tc_filter = 300; /* = 60 seconds in 5 Hz frames */
+  CommandData.actbus.tc_spread = 5; /* centigrade degrees */
+  CommandData.actbus.tc_prefp = 1;
+  CommandData.actbus.tc_prefs = 1;
+
   CommandData.actbus.reset_dr = 0;
   CommandData.actbus.dead_reckon[0] = 0;
   CommandData.actbus.dead_reckon[1] = 0;
@@ -2153,29 +2165,29 @@ void InitCommandData()
   CommandData.actbus.last_good[1] = 0;
   CommandData.actbus.last_good[2] = 0;
   CommandData.actbus.lvdt_delta = 1000;
-  CommandData.actbus.lvdt_low = -3000;
-  CommandData.actbus.lvdt_high = 26000;
+  CommandData.actbus.lvdt_low = 4000;
+  CommandData.actbus.lvdt_high = 19000;
 
   /* The first is due to change in radius of curvature, the second due to
    * displacement of the secondary due to the rigid struts */
 
   /* Don sez:   50.23 + 9.9 and 13.85 - 2.2 */
-  /* Marco sez: 45.97 + 9.9 and  7.36 - 2.2 */
+  /* Marco sez: 56          and 10          */
   
-  CommandData.actbus.g_primary = 50.23 + 9.9; /* um/deg */
-  CommandData.actbus.g_secondary = 13.85 - 2.2; /* um/deg */
+  CommandData.actbus.g_primary = 56; /* um/deg */
+  CommandData.actbus.g_secondary = 10; /* um/deg */
   CommandData.actbus.focus = 0;
   CommandData.actbus.sf_time = 0;
   CommandData.actbus.sf_offset = 0;
 
   CommandData.actbus.act_vel = 2000;
   CommandData.actbus.act_acc = 1;
-  CommandData.actbus.act_move_i = 50;
+  CommandData.actbus.act_move_i = 75;
   CommandData.actbus.act_hold_i = 0;
 
-  CommandData.actbus.lock_vel = 60000;
-  CommandData.actbus.lock_acc = 6;
-  CommandData.actbus.lock_move_i = 75;
+  CommandData.actbus.lock_vel = 110000;
+  CommandData.actbus.lock_acc = 100;
+  CommandData.actbus.lock_move_i = 50;
   CommandData.actbus.lock_hold_i = 0;
 
   CommandData.pin_is_in = 1;
@@ -2186,7 +2198,10 @@ void InitCommandData()
   CommandData.Cryo.coldPlate = 0;
   CommandData.Cryo.heatSwitch = 0;
   CommandData.Cryo.CryoSparePWM = 0;
-  CommandData.Cryo.calibrator = off;
+  CommandData.Cryo.calibrator = repeat;
+  CommandData.Cryo.calib_pulse = 13; /* = 130 ms @ 100Hz */
+  CommandData.Cyro.calib_period = 3000; /* = 600 s @ 5Hz */
+  CommandData.Cyro.he4_lev_old = 0;
 
   CommandData.Cryo.JFETHeat = 0;
   CommandData.Cryo.autoJFETheat = 1;
@@ -2194,29 +2209,32 @@ void InitCommandData()
   CommandData.Cryo.JFETSetOn = 120;
   CommandData.Cryo.JFETSetOff = 135;
 
-  CommandData.ISCState[0].useLost = 0;
+  CommandData.ISCState[0].useLost = 1;
   CommandData.ISCState[0].abort = 0;
   CommandData.ISCState[0].pause = 0;
   CommandData.ISCState[0].save = 0;
   CommandData.ISCState[0].eyeOn = 1;
+  CommandData.ISCState[0].hold_current = 0;
   CommandData.ISCState[0].autofocus = 0;
   CommandData.ISCState[0].focus_pos = 0;
+  CommandData.ISCState[0].MCPFrameNum = 0;
   CommandData.ISCState[0].focusOffset = 0;
   CommandData.ISCState[0].ap_pos = 495;
   CommandData.ISCState[0].display_mode = full;
-  /* ISC-BDA offsets per Ed Chapin 2005-05-17 */
-  CommandData.ISCState[0].azBDA = 0.1894 * DEG2RAD;
-  CommandData.ISCState[0].elBDA = -0.2522 * DEG2RAD;
+  /* ISC-BDA offsets per Ed Chapin & Marie Rex 2006-12-09 */
+  CommandData.ISCState[0].azBDA = 0.047 * DEG2RAD;
+  CommandData.ISCState[0].elBDA = -0.169 * DEG2RAD;
 
   CommandData.ISCState[0].brightStarMode = 0;
   CommandData.ISCState[0].grid = 38;
-  CommandData.ISCState[0].maxBlobMatch = 10;
+  CommandData.ISCState[0].minBlobMatch =  3;
+  CommandData.ISCState[0].maxBlobMatch =  7;
   CommandData.ISCState[0].sn_threshold = 4.5;
   CommandData.ISCState[0].mult_dist = 30;
-  CommandData.ISCState[0].mag_limit = 9;
+  CommandData.ISCState[0].mag_limit = 9.5;
   CommandData.ISCState[0].norm_radius = 3. * DEG2RAD;
   CommandData.ISCState[0].lost_radius = 6. * DEG2RAD;
-  CommandData.ISCState[0].tolerance = 20. / 3600. * DEG2RAD; /* 20 arcsec */
+  CommandData.ISCState[0].tolerance = 10. / 3600. * DEG2RAD; /* 10 arcsec */
   CommandData.ISCState[0].match_tol = 0.5;
   CommandData.ISCState[0].quit_tol = 1;
   CommandData.ISCState[0].rot_tol = 10 * DEG2RAD;
@@ -2224,33 +2242,36 @@ void InitCommandData()
   CommandData.ISCState[0].gain = 1;
   CommandData.ISCState[0].offset = 0;
   CommandData.ISCControl[0].autofocus = 0;
-  CommandData.ISCControl[0].save_period = 6000; /* 60 sec */
+  CommandData.ISCControl[0].save_period = 12000; /* 120 sec */
   CommandData.ISCControl[0].pulse_width = 50; /* 500.00 msec */
-  CommandData.ISCControl[0].fast_pulse_width = 5; /* 50.00 msec */
+  CommandData.ISCControl[0].fast_pulse_width = 8; /* 80.00 msec */
 
-  CommandData.ISCState[1].useLost = 0;
+  CommandData.ISCState[1].useLost = 1;
   CommandData.ISCState[1].abort = 0;
   CommandData.ISCState[1].pause = 0;
   CommandData.ISCState[1].save = 0;
   CommandData.ISCState[1].eyeOn = 1;
+  CommandData.ISCState[1].hold_current = 0;
   CommandData.ISCState[1].autofocus = 0;
   CommandData.ISCState[1].focus_pos = 0;
+  CommandData.ISCState[1].MCPFrameNum = 0;
   CommandData.ISCState[1].focusOffset = 0;
   CommandData.ISCState[1].ap_pos = 495;
   CommandData.ISCState[1].display_mode = full;
-  /* OSC-BDA offsets per Ed Chapin 2005-05-17 */
-  CommandData.ISCState[1].azBDA = 0.1804 * DEG2RAD;
-  CommandData.ISCState[1].elBDA = 0.4828 * DEG2RAD;
+  /* OSC-BDA offsets per Ed Chapin & Marie Rex 2006-12-09 */
+  CommandData.ISCState[1].azBDA = 0.525 * DEG2RAD;
+  CommandData.ISCState[1].elBDA = 0.051 * DEG2RAD;
 
   CommandData.ISCState[1].brightStarMode = 0;
   CommandData.ISCState[1].grid = 38;
-  CommandData.ISCState[1].maxBlobMatch = 10;
+  CommandData.ISCState[1].minBlobMatch =  3;
+  CommandData.ISCState[1].maxBlobMatch =  7;
   CommandData.ISCState[1].sn_threshold = 4.5;
   CommandData.ISCState[1].mult_dist = 30;
-  CommandData.ISCState[1].mag_limit = 9;
+  CommandData.ISCState[1].mag_limit = 9.5;
   CommandData.ISCState[1].norm_radius = 3. * DEG2RAD;
   CommandData.ISCState[1].lost_radius = 6. * DEG2RAD;
-  CommandData.ISCState[1].tolerance = 20. / 3600. * DEG2RAD; /* 20 arcsec */
+  CommandData.ISCState[1].tolerance = 10. / 3600. * DEG2RAD; /* 10 arcsec */
   CommandData.ISCState[1].match_tol = 0.5;
   CommandData.ISCState[1].quit_tol = 1;
   CommandData.ISCState[1].rot_tol = 10 * DEG2RAD;
@@ -2258,9 +2279,18 @@ void InitCommandData()
   CommandData.ISCState[1].gain = 1;
   CommandData.ISCState[1].offset = 0;
   CommandData.ISCControl[1].autofocus = 0;
-  CommandData.ISCControl[1].save_period = 6000; /* 60 sec */
-  CommandData.ISCControl[1].pulse_width = 50; /* 500.00 msec */
-  CommandData.ISCControl[1].fast_pulse_width = 5; /* 50.00 msec */
+  CommandData.ISCControl[1].save_period = 12000; /* 120 sec */
+  CommandData.ISCControl[1].pulse_width = 30; /* 300.00 msec */
+  CommandData.ISCControl[1].fast_pulse_width = 6; /* 60.00 msec */
+
+  CommandData.fan = 0;
+  CommandData.temp1 = 0;
+  CommandData.temp2 = 0;
+  CommandData.temp3 = 0;
+  CommandData.df = 0;
+
+  CommandData.lat = 0;
+  CommandData.lon = 0;
 
   for (i = 0; i < DAS_CARDS; ++i)
     CommandData.Phase[i] = 1970;

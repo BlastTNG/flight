@@ -394,9 +394,18 @@ void DoSched(void)
     ScheduledCommand(&event);
     event.command = pot_valve_on;
     ScheduledCommand(&event);
+    /* turn off lock motor hold current */
+    event.command = lock_i;
+    event.is_multi = 1;
+    event.ivalues[0] = 50;
+    event.ivalues[1] = 0;
+    ScheduledCommand(&event);
+
     // out of sched mode for a while
     CommandData.pointing_mode.t = t + 30;
     doing_schedule = 0;
+
+    /* Remember we're at float */
     CommandData.at_float = 1;
     bputs(info, "Scheduler: *** Initial float commands complete. ***\n");
     return;
@@ -406,10 +415,12 @@ void DoSched(void)
   /** find local comoving siderial date (in siderial seconds) **/
   dt = (PointingData[i_point].t - S->t0) * 1.002737909; /*Ref Siderial Time */
   d_lon = PointingData[i_point].lon;
-  while (d_lon < -180)
+
+  while (d_lon < -170)
     d_lon += 360.0;
-  while (d_lon >= 180.0)
+  while (d_lon >= 190.0)
     d_lon -= 360.0;
+
   dt -= ((d_lon) * 3600.00 * 24.00 / 360.0); /* add longitude correction */
 
   /******************/
@@ -430,6 +441,12 @@ void DoSched(void)
     /* bias fixed */
     event.command = fixed;
     event.is_multi = 0;
+    ScheduledCommand(&event);
+    /* cal repeat */
+    event.command = cal_repeat;
+    event.is_multi = 1;
+    event.ivalues[0] = 130; /* ms */
+    event.ivalues[1] = 600; /* s */
     ScheduledCommand(&event);
 
     bputs(info, "Scheduler: *** Searching for current pointing mode. ***\n");
