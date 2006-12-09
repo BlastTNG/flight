@@ -2200,8 +2200,8 @@ void InitCommandData()
   CommandData.Cryo.CryoSparePWM = 0;
   CommandData.Cryo.calibrator = repeat;
   CommandData.Cryo.calib_pulse = 13; /* = 130 ms @ 100Hz */
-  CommandData.Cyro.calib_period = 3000; /* = 600 s @ 5Hz */
-  CommandData.Cyro.he4_lev_old = 0;
+  CommandData.Cryo.calib_period = 3000; /* = 600 s @ 5Hz */
+  CommandData.Cryo.he4_lev_old = 0;
 
   CommandData.Cryo.JFETHeat = 0;
   CommandData.Cryo.autoJFETheat = 1;
