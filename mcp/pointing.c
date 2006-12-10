@@ -303,9 +303,7 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 
 // return 1 if new sun, and 0 otherwise
 #define MIN_SS_AMP 1000
-#warning "SUN MIN AMP MIGHT NOT BE SET CORRECTLY"
 #define MIN_SS_SNR 1.21
-#warning "SUN MIN SNR HAS BEEN SET WITH NOT ENOUGHT THOUGHT"
 
 #define SS_N_MAX          12
 #define BUNK_FUDGE_FACTOR 400
