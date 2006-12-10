@@ -59,8 +59,12 @@
 #define CRYO_CYCLE_ON            0x0002
 #define CRYO_CYCLE_COOL          0x0004
 
-#define CRYO_CYCLE_TIMEOUT       (45*60)
-#define CRYO_CYCLE_COOL_TIMEOUT  (2*60*60)
+// times changed from 45 min to 35 min
+// for charcoal, and from 2hrs to 3hrs 
+// for timout, due to new (lower conduction)
+// charcoal pump tin link.  cbn/md 12_10_06
+#define CRYO_CYCLE_TIMEOUT       (35*60)
+#define CRYO_CYCLE_COOL_TIMEOUT  (3*60*60)
 
 #define T_HE3FRIDGE_TOO_HOT      3.733304    /* 0.391508    K */
 #define T_HE3FRIDGE_COLD         4.34106     /* 0.326861    K */
