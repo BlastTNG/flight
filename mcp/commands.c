@@ -1459,7 +1459,7 @@ void ScheduledCommand(struct ScheduleEvent *event)
       if (type == 'i') /* 15 bit unsigned integer */
         bprintf(info, "Commands:   param%02i: integer: %i\n", i,
             event->ivalues[i]);
-      if (type == 'l') /* 30 bit unsigned integer */
+      else if (type == 'l') /* 30 bit unsigned integer */
         bprintf(info, "Commands:   param%02i: long   : %i\n", i,
             event->ivalues[i]);
       else if (type == 'f') /* 15 bit floating point */
