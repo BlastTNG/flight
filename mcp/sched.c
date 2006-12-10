@@ -32,6 +32,7 @@
 #define MAX_NSCHED 8000
 struct ScheduleType _S[2][3];
 int doing_schedule = 0;
+unsigned int sched_lst = 0;
 
 void StarPos(double t, double ra0, double dec0, double mra, double mdec,
 	     double pi, double rvel, double *ra, double *dec);
@@ -140,6 +141,8 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
   while (d_lon >= 360.0)
     d_lon -= 360.0;
   dt -= (d_lon * 3600.00 * 24.00 / 360.0); /* add longitude correction */
+
+  sched_lst = dt;
 
   dt /= 3600.0;
 

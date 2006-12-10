@@ -55,6 +55,9 @@ short int InCharge;
 extern struct AxesModeStruct axes_mode; /* motors.c */
 
 extern struct ISCStatusStruct ISCSentState[2];  /* isc.c */
+
+extern unsigned int sched_lst; /* sched_lst */
+
 extern int bbc_fp;
 
 double round(double x);
@@ -694,6 +697,7 @@ static void StoreData(int index)
   static struct NiosStruct *ssTrimAddr;
 
   static struct NiosStruct *calModeAddr;
+  static struct NiosStruct *schedLstAddr;
 
   /* low level scan mode diagnostics */
   static struct NiosStruct *azModeAddr;
@@ -825,6 +829,8 @@ static void StoreData(int index)
     dgpsAttOkAddr = GetNiosAddr("dgps_att_ok");
     dgpsAzRawAddr = GetNiosAddr("dgps_az_raw");
     dgpsAttIndexAddr = GetNiosAddr("dgps_att_index");
+
+    schedLstAddr = GetNiosAddr("sched_lst");
 
     clinTrimAddr = GetNiosAddr("clin_trim");
     encTrimAddr = GetNiosAddr("enc_trim");
@@ -1059,6 +1065,8 @@ static void StoreData(int index)
   WriteData(dgpsClimbAddr, (int)(DGPSPos[i_dgps].climb * DEG2I), NIOS_QUEUE);
   WriteData(dgpsNSatAddr, DGPSPos[i_dgps].n_sat, NIOS_QUEUE);
   WriteData(dgpsPosIndexAddr, i_dgps, NIOS_QUEUE);
+
+  WriteData(schedLstAddr, sched_lst, NIOS_QUEUE);
 
   /** Att fields **/
   i_dgps = GETREADINDEX(dgpsatt_index);

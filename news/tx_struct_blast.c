@@ -81,6 +81,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"act2_enc",     'w', LOOP5, 52,                1.0,  -ACTENC_OFFSET, 'S'},
   {"sec_goal",     'w', LOOP6, 30,                1.0,             0.0, 'S'},
   {"abs_focus",    'w', LOOP6, 32,                1.0,             0.0, 'S'},
+  {"sched_lst",    'w', LOOP6, 56,                1.0,             0.0, 'U'},
 
 
 /* Rox a la Jeff */
@@ -641,9 +642,10 @@ struct ChannelStruct SlowChannels[] = {
   {"act1_postrim", 'w', LOOP6, 53,                1.0,             0.0, 'u'},
   {"act2_postrim", 'w', LOOP6, 54,                1.0,             0.0, 'u'},
   {"lvdt_spread",  'w', LOOP6, 55,                1.0,             0.0, 's'},
-  {"sun_el",       'w', LOOP6, 56,              I2DEG,             0.0, 's'},
-  {"at_float",     'w', LOOP6, 57,                1.0,             0.0, 'u'},
-  {"cal_mode",     'w', LOOP6, 58,                1.0,             0.0, 'u'},
+  /* LOOP6 56-57 are wide */
+  {"sun_el",       'w', LOOP6, 58,              I2DEG,             0.0, 's'},
+  {"at_float",     'w', LOOP6, 59,                1.0,             0.0, 'u'},
+  {"cal_mode",     'w', LOOP6, 60,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
