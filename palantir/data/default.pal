@@ -1321,6 +1321,9 @@
     <NUMBER caption="Gondola Siderial Time">
       <DATUM format="%.4f" src="LST" extrema="unknown"/>
     </NUMBER>
+    <DATETIME caption="Schedule LST">
+      <DATUM format="Day %j, %H:%M:%S" src="SCHED_LST"/>
+    </DATETIME>
     <DATETIME caption="Time until Schedule Mode">
       <DATUM format="%H:%M:%S" src="TIMEOUT"/>
     </DATETIME>
@@ -1537,7 +1540,7 @@
       <DATUM format="%.2f" src="I_COLDPLATE" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="300mK Auto Heat">
-      <DATUM src="AUTO_CYCLE_ON">
+      <DATUM src="AUTO_BDA_HEAT_ON">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
