@@ -242,7 +242,7 @@ union DerivedUnion DerivedChannels[] = {
       "",
       "",
       "CAL_LAMP_ON_CMD",
-      "AUTO_CYCLE_ON"
+      "AUTO_BDA_HEAT_ON"
       ),
 
   COMMENT("Cryo Valve Limit Switches"),
