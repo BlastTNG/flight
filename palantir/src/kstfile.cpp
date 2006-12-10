@@ -654,10 +654,10 @@ bool KstFile::dirfileUpdate(){
 /** Returns true if the field is valid, or false if it is not */
 bool KstFile::dirfileIsValidField(const char *field) {
   int error_code;
-  char tmpstr[17];
+  char tmpstr[57];
   int i;
 
-  strncpy(tmpstr, field, 16);
+  strncpy(tmpstr, field, 56);
 
   i = GetSamplesPerFrame(Filename, tmpstr, &error_code);
 
@@ -668,9 +668,9 @@ bool KstFile::dirfileIsValidField(const char *field) {
 /** determine samples per frame */
 int KstFile::dirfileSampsPerFrame(const char *field) {
   int spf, error_code;
-  char tmpstr[17];
+  char tmpstr[57];
 
-  strncpy(tmpstr, field, 16);
+  strncpy(tmpstr, field, 56);
 
   spf=GetSamplesPerFrame(Filename,tmpstr,&error_code);
 
@@ -686,9 +686,9 @@ int KstFile::dirfileReadField(double *V, const char *field,
                               const int &s, const int &n){
   int error_code;
   int n_read;
-  char tmpstr[17];
+  char tmpstr[57];
 
-  strncpy(tmpstr, field, 16);
+  strncpy(tmpstr, field, 56);
 
 
   if (n<0) {
