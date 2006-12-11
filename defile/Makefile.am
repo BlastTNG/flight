@@ -9,7 +9,7 @@ etc_DATA = defile.conf
 endif
 defile_SOURCES = defile.c frameread.c reader.c channels.c writer.c blast.c \
 								 client.c crc.c quendiclient.c blast.h defile.h channels.h \
-								 frameread.h derived.h quenya.h crc.h
+								 frameread.h derived.h quenya.h crc.h quendiclient.h
 INCLUDES = -Wall -O3 -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\"
 DISTCHECK_CONFIGURE_FLAGS = --with-data-etc="$$dc_install_base/data" --with-etc="$$dc_install_base/etc"
 
