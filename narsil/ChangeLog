@@ -1,6 +1,17 @@
+2006-12-10 (2.4.1):
+	* src/kstfile.cpp: Allow field names > 16 characters
+
 2006-11-25 (2.4.0):
-	* Re-arrange some groups
-	* Modernise getdata
+	* Release
+
+2006-11-24 [cbn]:
+	* Makefile.am, src/kstfile.cpp, src/narsil.cpp: compile kstfile and getdata
+	instead of using precompiled objects.
+
+2006-11-23 [cbn]:
+	* src/getdata.c, src/getdata.h, src/getdata_struct.h: read the last frame in
+	the file, not the 3rd last.
+
 
 2006-11-10 (2.3.1):
 	* Fix some memory leaks
