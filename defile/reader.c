@@ -41,9 +41,9 @@
 void ReaderDone(int signo) {
   int i;
 
-  bprintf(warning, "Caught signal %d; exiting...\n", signo);
+  bprintf(warning, "Caught deadly signal %d; exiting...\n", signo);
   ri.reader_done = 1;
-  for (i = 0; i < 60; ++i) {
+  for (i = 0; i < 30; ++i) {
     sleep(1);
     if (ri.writer_done)
       pthread_exit(0);
