@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(narsil, 2.4.1, [dwiebe@physics.utoronto.ca])
-AM_INIT_AUTOMAKE(narsil, 2.4.1)
+AC_INIT(narsil, 2.4.2, [dwiebe@physics.utoronto.ca])
+AM_INIT_AUTOMAKE(narsil, 2.4.2)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH(data-etc, AS_HELP_STRING([--with-data-etc=DIR],
@@ -155,6 +155,9 @@ AC_ARG_WITH(elog, AS_HELP_STRING([--without-elog],
 AC_ARG_WITH(elog-host, AS_HELP_STRING([--with-elog-host=HOST],
             [Send elog queries to the elog server running on HOST [[elog.blast]]]),
             ELOG_HOST="${withval}", ELOG_HOST="elog.blast")
+AC_ARG_WITH(elog-port, AS_HELP_STRING([--with-elog-port=PORT],
+            [Send elog queries to the elog server running on PORT [[8000]]]),
+            ELOG_PORT="${withval}", ELOG_PORT="8000")
 AC_MSG_CHECKING(whether to support elog)
 if test "x$use_elog" = "x1"; then
   AC_MSG_RESULT([yes])
@@ -166,6 +169,8 @@ if test "x$use_elog" = "x1"; then
     result_elog="yes"
     AC_DEFINE_UNQUOTED(ELOG_HOST, "$ELOG_HOST",
                        [Define to the name of your elog server])
+    AC_DEFINE_UNQUOTED(ELOG_PORT, "$ELOG_PORT",
+                       [Define to the port used by your elog server])
     AC_DEFINE(USE_ELOG, 1, [Define to 1 to enable elog support])
   fi
 else

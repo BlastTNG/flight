@@ -805,7 +805,7 @@ void MainForm::WriteLog(const char *request) {
 
 #ifdef USE_ELOG
   QString elog_command = QString(
-      "elog -h " ELOG_HOST " -p 8080 -l blast-narsil "
+      "elog -h " ELOG_HOST " -p " ELOG_PORT " -l blast-narsil "
       "-u narsil submmblast "
       "-a User=%1 -a Source=narsil -a Category=%2 -m %3 > /dev/null")
     .arg(QString((getpwuid(getuid()))->pw_name))

@@ -1,3 +1,6 @@
+2006-12-12 (2.4.2):
+	* src/narsil.cpp, configure.ac: Make elog port configurable.
+
 2006-12-10 (2.4.1):
 	* src/kstfile.cpp: Allow field names > 16 characters
 
