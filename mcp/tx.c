@@ -308,6 +308,7 @@ static void StoreStarCameraData(int index, int which)
   static struct NiosStruct* ThreshAddr[2];
   static struct NiosStruct* GridAddr[2];
   static struct NiosStruct* StateAddr[2];
+  static struct NiosStruct* MinblobsAddr[2];
   static struct NiosStruct* MaxblobsAddr[2];
   static struct NiosStruct* MaglimitAddr[2];
   static struct NiosStruct* NradAddr[2];
@@ -368,6 +369,7 @@ static void StoreStarCameraData(int index, int which)
     ThreshAddr[which] = GetSCNiosAddr("thresh", which);
     GridAddr[which] = GetSCNiosAddr("grid", which);
     MdistAddr[which] = GetSCNiosAddr("mdist", which);
+    MinblobsAddr[which] = GetSCNiosAddr("minblobs", which);
     MaxblobsAddr[which] = GetSCNiosAddr("maxblobs", which);
     MaglimitAddr[which] = GetSCNiosAddr("maglimit", which);
     NradAddr[which] = GetSCNiosAddr("nrad", which);
@@ -435,6 +437,8 @@ static void StoreStarCameraData(int index, int which)
   WriteData(GridAddr[which], (unsigned int)ISCSentState[which].grid,
       NIOS_QUEUE);
   WriteData(MdistAddr[which], (unsigned int)ISCSentState[which].mult_dist,
+      NIOS_QUEUE);
+  WriteData(MinblobsAddr[which], (unsigned int)ISCSentState[which].minBlobMatch,
       NIOS_QUEUE);
   WriteData(MaxblobsAddr[which], (unsigned int)ISCSentState[which].maxBlobMatch,
       NIOS_QUEUE);

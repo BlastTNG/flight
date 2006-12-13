@@ -646,6 +646,8 @@ struct ChannelStruct SlowChannels[] = {
   {"sun_el",       'w', LOOP6, 58,              I2DEG,             0.0, 's'},
   {"at_float",     'w', LOOP6, 59,                1.0,             0.0, 'u'},
   {"cal_mode",     'w', LOOP6, 60,                1.0,             0.0, 'u'},
+  {"isc_minblobs", 'w', LOOP6, 61,                1.0,             0.0, 'u'},
+  {"osc_minblobs", 'w', LOOP6, 62,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
