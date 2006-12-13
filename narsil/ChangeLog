@@ -1,3 +1,7 @@
+2006-12-13 (2.4.3):
+	* src/narsil.cpp: Fork-and-exec elog instead of using system.
+	* configure.ac: Make elog program configurable.
+
 2006-12-12 (2.4.2):
 	* src/narsil.cpp, configure.ac: Make elog port configurable.
 

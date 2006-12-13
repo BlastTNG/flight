@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(narsil, 2.4.2, [dwiebe@physics.utoronto.ca])
-AM_INIT_AUTOMAKE(narsil, 2.4.2)
+AC_INIT(narsil, 2.4.3, [dwiebe@physics.utoronto.ca])
+AM_INIT_AUTOMAKE(narsil, 2.4.3)
 AM_CONFIG_HEADER(config.h)
 
 AC_ARG_WITH(data-etc, AS_HELP_STRING([--with-data-etc=DIR],
@@ -162,11 +162,14 @@ AC_MSG_CHECKING(whether to support elog)
 if test "x$use_elog" = "x1"; then
   AC_MSG_RESULT([yes])
 
-  AC_CHECK_PROG(ELOG, elog, "yes", "no")
+  AC_ARG_VAR(ELOG, [elog client program])
+  AC_PATH_PROGS(ELOG, [elog], "no")
   if test "x$ELOG" = "xno"; then
     result_elog="no"
   else
     result_elog="yes"
+    AC_DEFINE_UNQUOTED(ELOG, "$ELOG",
+                       [Define to the path of your elog program])
     AC_DEFINE_UNQUOTED(ELOG_HOST, "$ELOG_HOST",
                        [Define to the name of your elog server])
     AC_DEFINE_UNQUOTED(ELOG_PORT, "$ELOG_PORT",
