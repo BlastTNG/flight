@@ -295,6 +295,7 @@ static void FridgeCycle(int *cryoout, int *cryostate, int  reset,
       WriteData(cycleStateWAddr, CRYO_CYCLE_COLD, NIOS_QUEUE);
       *cryoout |= CRYO_CHARCOAL_OFF;
       *cryostate &= ~CS_CHARCOAL;
+      *force_cycle = 0; // clear any pending cycle commands...
       bprintf(info, "Auto Cycle: Fridge is now cold!.");
       return;
     }
