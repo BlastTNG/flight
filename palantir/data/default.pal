@@ -512,9 +512,13 @@
     </NUMBER>
   </BOX>
   <BOX caption="Balance" colour="#880000" row="2" col="3">
-    <NUMBER caption="Status">
-      <DATUM format="%.0f" src="BAL_VETO" extrema="balstatus"/>
-    </NUMBER>
+    <MULTI caption="Status">
+      <DATUM src="BAL_VETO">
+        <WORD value="-1" caption="Vetoed" textsyle="E_BIT"/>
+        <WORD value="0" caption="Pumping" textsyle="OK_BIT"/>
+        <WORD min="1" max="32767" caption="Idle" textsyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
     <NUMBER caption="Bal Target">
       <DATUM format="%.2f" src="BAL_TARGET" extrema="unknown"/>
     </NUMBER>
@@ -558,8 +562,17 @@
     <NUMBER caption="Extension (%)">
       <DATUM format="%.2f" src="LOCK_POT" extrema="lockpot"/>
     </NUMBER>
-    <NUMBER caption="Limit Switch">
-      <DATUM format="%.2f" src="LOCK_LIM_SW" extrema="locklimit"/>
+    <MULTI caption="Limit Switch">
+      <DATUM src="LOCK_LIM_SW">
+        <WORD min="9000" max="20000" caption="Disengaged" textstyle="W_BIT"/>
+        <WORD min="-100" max="9000" caption="Engaged" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="Move Current (%)">
+      <DATUM format="%.0f" src="LOCK_MOVE_I" extrema="locklimit"/>
+    </NUMBER>
+    <NUMBER caption="Hold Current (%)">
+      <DATUM format="%.0f" src="LOCK_HOLD_I" extrema="locklimit"/>
     </NUMBER>
   </BOX>
   <BOX caption="Pointing Mode" colour="#880000" row="0" col="3" rowspan="1">
