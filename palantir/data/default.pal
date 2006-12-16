@@ -295,6 +295,12 @@
       <HI value="300"/>
       <XHI value="500"/>
     </EXTREMA>
+    <EXTREMA name="sfcorrection">
+      <XLO value="-300"/>
+      <LO value="-100"/>
+      <HI value="100"/>
+      <XHI value="300"/>
+    </EXTREMA>
     <CURFILE name="/data/etc/defile.cur"/>
     <DECOMD host="arwen.blast" port="11411"/>
   </SETTINGS>
@@ -398,25 +404,25 @@
       <DATUM format="%.3f" src="ISC_RD_SIGMA" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="Autofocus">
-      <DATUM src="OSC_AUTOFOCUS">
+      <DATUM src="ISC_AUTOFOCUS">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Capture">
-      <DATUM src="OSC_PAUSE">
+      <DATUM src="ISC_PAUSE">
         <WORD value="0" caption="Run" textstyle="OK_BIT"/>
         <WORD value="1" caption="Pause" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Evil Eye">
-      <DATUM src="OSC_EYE_ON">
+      <DATUM src="ISC_EYE_ON">
         <WORD value="1" caption="On" textstyle="OK_BIT"/>
         <WORD value="0" caption="Off" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Save Images">
-      <DATUM src="OSC_SAVE_IMAGES">
+      <DATUM src="ISC_SAVE_IMAGES">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
@@ -822,14 +828,14 @@
       <DATUM src="ACT_FLAGS">
         <WORD value="0" caption="Ok" textstyle="OK_BIT"/>
         <WORD value="1" caption="Lost" textstyle="W_BIT"/>
-        <WORD value="2" caption="Pos Bad" textstyle="W_BIT"/>
-        <WORD value="4" caption="Pos Bad" textstyle="W_BIT"/>
-        <WORD value="6" caption="Pos Bad" textstyle="W_BIT"/>
-        <WORD value="8" caption="Pos Bad" textstyle="W_BIT"/>
-        <WORD value="10" caption="Pos Bad" textstyle="W_BIT"/>
-        <WORD value="12" caption="Pos Bad" textstyle="W_BIT"/>
-        <WORD value="14" caption="Pos Bad" textstyle="W_BIT"/>
-        <WORD value="16" caption="Pos Bad" textstyle="W_BIT"/>
+        <WORD value="2" caption="Pos Bad" textstyle="OK_BIT"/>
+        <WORD value="4" caption="Pos Bad" textstyle="OK_BIT"/>
+        <WORD value="6" caption="Pos Bad" textstyle="OK_BIT"/>
+        <WORD value="8" caption="Pos Bad" textstyle="OK_BIT"/>
+        <WORD value="10" caption="Pos Bad" textstyle="OK_BIT"/>
+        <WORD value="12" caption="Pos Bad" textstyle="OK_BIT"/>
+        <WORD value="14" caption="Pos Bad" textstyle="OK_BIT"/>
+        <WORD value="16" caption="Pos Bad" textstyle="OK_BIT"/>
         <WORD value="128" caption="Move Bad" textstyle="W_BIT"/>
         <WORD value="256" caption="Fault ENC0" textstyle="W_BIT"/>
         <WORD value="512" caption="Fault ENC1" textstyle="W_BIT"/>
@@ -926,13 +932,13 @@
       <DATUM format="%.0f" src="TC_FILTER" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="SF Correction">
-      <DATUM format="%.0f" src="SF_CORRECTION" extrema="unknown"/>
+      <DATUM format="%.0f" src="SF_CORRECTION" extrema="sfcorrection"/>
     </NUMBER>
     <NUMBER caption="Absolute Focus">
       <DATUM format="%.0f" src="ABS_FOCUS" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="Relative Focus">
-      <DATUM format="%.0f" src="REL_FOCUS" extrema="lvdtspread"/>
+      <DATUM format="%.0f" src="REL_FOCUS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Foc Off">
       <DATUM format="%.0f" src="SF_OFFSET" extrema="unknown"/>
