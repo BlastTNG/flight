@@ -539,21 +539,20 @@
   </BOX>
   <BOX caption="Lock" colour="#880000" row="2" col="4">
     <MULTI caption="Lock">
-      <DATUM src="LS_NICE_STAT">
-        <WORD value="0" caption="Locking" textstyle="W_BIT"/>
-        <WORD value="1" caption="Locked" textstyle="W_BIT"/>
-        <WORD value="2" caption="Unlocked" textstyle="OK_BIT"/>
-        <WORD value="3" caption="Locking" textstyle="W_BIT"/>
-        <WORD value="6" caption="Unlocking" textstyle="W_BIT"/>
-        <WORD value="7" caption="Unlocking" textstyle="W_BIT"/>
+      <DATUM src="LOCK_STATE">
+        <WORD mask="0x006" value="6" caption="Locked" textstyle="W_BIT"/>
+        <WORD mask="0x005" value="5" caption="Unlocked" textstyle="OK_BIT"/>
+        <WORD mask="0x002" value="2" caption="Locked, On" textstyle="E_BIT"/>
+        <WORD mask="0x001" value="1" caption="Unlocked, On" textstyle="E_BIT"/>
+        <WORD mask="0x0A0" min="1" max="0xA0" caption="Unlocking" textstyle="W_BIT"/>
+        <WORD mask="0x050" min="1" max="0x50" caption="Locking" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Elevation">
-      <DATUM src="LS_EL_STATUS">
-        <WORD value="0" caption="No Good" textstyle="OK_BIT"/>
-        <WORD value="2" caption="Good" textstyle="OK_BIT"/>
-        <WORD value="1" caption="Ignored" textstyle="E_BIT"/>
-        <WORD value="3" caption="Ignored" textstyle="E_BIT"/>
+      <DATUM src="LOCK_STATE">
+        <WORD mask="0x400" value="0x400" caption="Ignored" textstyle="E_BIT"/>
+        <WORD mask="0x200" value="0x200" caption="Good" textstyle="OK_BIT"/>
+        <WORD min="0" max="4096" caption="No Good" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="Extension (%)">
@@ -826,20 +825,13 @@
     </MULTI>
     <MULTI caption="Status">
       <DATUM src="ACT_FLAGS">
+        <WORD mask="0x400" value="1024" caption="Fault ENC2" textstyle="E_BIT"/>
+        <WORD mask="0x200" value="512" caption="Fault ENC1" textstyle="E_BIT"/>
+        <WORD mask="0x100" value="256" caption="Fault ENC0" textstyle="E_BIT"/>
+        <WORD mask="0x080" value="128" caption="Move Bad" textstyle="W_BIT"/>
+        <WORD mask="0x001" value="1" caption="Lost" textstyle="W_BIT"/>
+        <WORD min="2" max="127" caption="Position" textstyle="OK_BIT"/>
         <WORD value="0" caption="Ok" textstyle="OK_BIT"/>
-        <WORD value="1" caption="Lost" textstyle="W_BIT"/>
-        <WORD value="2" caption="Pos Bad" textstyle="OK_BIT"/>
-        <WORD value="4" caption="Pos Bad" textstyle="OK_BIT"/>
-        <WORD value="6" caption="Pos Bad" textstyle="OK_BIT"/>
-        <WORD value="8" caption="Pos Bad" textstyle="OK_BIT"/>
-        <WORD value="10" caption="Pos Bad" textstyle="OK_BIT"/>
-        <WORD value="12" caption="Pos Bad" textstyle="OK_BIT"/>
-        <WORD value="14" caption="Pos Bad" textstyle="OK_BIT"/>
-        <WORD value="16" caption="Pos Bad" textstyle="OK_BIT"/>
-        <WORD value="128" caption="Move Bad" textstyle="W_BIT"/>
-        <WORD value="256" caption="Fault ENC0" textstyle="W_BIT"/>
-        <WORD value="512" caption="Fault ENC1" textstyle="W_BIT"/>
-        <WORD value="1024" caption="Fault ENC2" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="ACT0 ENC">

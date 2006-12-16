@@ -107,7 +107,9 @@ struct Extrema {
 };
 
 struct MultiVal {
-  int value;
+  int min;
+  int max;
+  int mask;
   QString caption;
   QString alarm;
   struct TextStyle textstyle;

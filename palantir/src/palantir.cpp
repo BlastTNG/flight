@@ -124,10 +124,14 @@ void MainForm::WarningMessage(char* title, QString txt) {
 //      possible, otherwise returns 0 or false
 //-------------------------------------------------------------
 int MainForm::QStringToInt(QString str) {
+  bool ok;
+
   if (str == "")
     return 0;
+  else if (str[0] == '0' && (str[1] == 'x' || str[1] == 'X'))
+    return str.remove("0x", false).toInt(&ok, 16);
   else
-    return atoi(str);
+    return str.toInt(&ok, 10);
 }
 
 float MainForm::QStringToFloat(QString str) {
@@ -323,18 +327,40 @@ void MainForm::SetExtrema(struct Extrema *ext, int bookmark) {
 
 void MainForm::GetWords(struct Multi *multi, int bookmark) {
   multi->numwords = 0;
+
   for (XMLInfo->GotoFirstChild(); !XMLInfo->NullEntry();
       XMLInfo->GotoNextSib()) {
+
+    multi->words[multi->numwords].mask = 0xffffffff;
+
     XMLInfo->SetBookMark(BM_RESERVE);
+
     if (XMLInfo->GetAttribute("value") != "")
-      multi->words[multi->numwords].value =
+      multi->words[multi->numwords].min =
+        multi->words[multi->numwords].max =
         QStringToInt(XMLInfo->GetAttribute("value"));
+
+    if (XMLInfo->GetAttribute("mask") != "")
+      multi->words[multi->numwords].mask =
+        QStringToInt(XMLInfo->GetAttribute("mask"));
+
+    if (XMLInfo->GetAttribute("min") != "")
+      multi->words[multi->numwords].min =
+        QStringToInt(XMLInfo->GetAttribute("min"));
+
+    if (XMLInfo->GetAttribute("max") != "")
+      multi->words[multi->numwords].max =
+        QStringToInt(XMLInfo->GetAttribute("max"));
+
     if (XMLInfo->GetAttribute("caption") != "")
       multi->words[multi->numwords].caption = XMLInfo->GetAttribute("caption");
+
     SetTextStyle(&(multi->words[multi->numwords].textstyle), BM_DEF_WORD,
         BM_RESERVE);
+
     multi->numwords++;
   }
+
   XMLInfo->GoBookMark(bookmark);
 }
 
@@ -927,8 +953,11 @@ void MainForm::UpdateData() {
         } else {
           // Determine which word to display based on the value
           j = 0;
-          for (i = 0; i <= currMulti->numwords; i++)
-            if ((char)(*indata) == currMulti->words[i].value) {
+          for (i = 0; i <= currMulti->numwords; i++) {
+            short int val = (short int)(*indata) & currMulti->words[i].mask;
+            if (val >= currMulti->words[i].min &&
+                val <= currMulti->words[i].max)
+            {
               if (currLabel->laststyle != i) {
                 currQtLabel->setPalette(Palette(
                       currMulti->words[i].textstyle));
@@ -939,6 +968,8 @@ void MainForm::UpdateData() {
               j = 1;
               break;
             }
+          }
+
           if (!j) {
             if (currLabel->laststyle != 1002) {
               currQtLabel->setPalette(Palette(ErrorStyle));
