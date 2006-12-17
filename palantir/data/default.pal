@@ -134,10 +134,10 @@
       <XLO value="22.5"/>
     </EXTREMA>
     <EXTREMA name="pressure">
-      <HI value="65"/>
-      <LO value="26"/>
-      <XHI value="75"/>
-      <XLO value="20"/>
+      <HI value="1.1"/>
+      <LO value="0.89"/>
+      <XHI value="1.2"/>
+      <XLO value="0.8"/>
     </EXTREMA>
     <EXTREMA name="psi">
       <HI value="15"/>
@@ -1257,13 +1257,13 @@
     </NUMBER>
   </BOX>
   <BOX caption="Pressures/Cooling" colour="#777700" row="2" col="5">
-    <NUMBER caption="P ISC">
+    <NUMBER caption="P ISC (psi)">
       <DATUM format="%.2f" src="ISC_PRESSURE1" extrema="psi"/>
     </NUMBER>
-    <NUMBER caption="P OSC">
+    <NUMBER caption="P OSC (psi)">
       <DATUM format="%.2f" src="OSC_PRESSURE1" extrema="psi"/>
     </NUMBER>
-    <NUMBER caption="P PV">
+    <NUMBER caption="P PV (atm)">
       <DATUM format="%.2f" src="P_PV" extrema="pressure"/>
     </NUMBER>
     <MULTI caption="IF Cooling">
