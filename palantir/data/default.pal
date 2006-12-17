@@ -289,11 +289,23 @@
       <HI value="14000"/>
       <XHI value="15000"/>
     </EXTREMA>
-    <EXTREMA name="lvdtspread">
-      <XLO value="-11"/>
-      <LO value="-10"/>
-      <HI value="300"/>
-      <XHI value="500"/>
+    <EXTREMA name="LVDTHigh">
+      <XLO value="12000"/>
+      <LO value="14000"/>
+      <HI value="19010"/>
+      <XHI value="22000"/>
+    </EXTREMA>
+    <EXTREMA name="LVDTLow">
+      <XLO value="2000"/>
+      <LO value="3800"/>
+      <HI value="9000"/>
+      <XHI value="10000"/>
+    </EXTREMA>
+    <EXTREMA name="LVDTSpread">
+      <XLO value="0"/>
+      <LO value="5"/>
+      <HI value="1010"/>
+      <XHI value="5000"/>
     </EXTREMA>
     <EXTREMA name="sfcorrection">
       <XLO value="-300"/>
@@ -895,13 +907,13 @@
       <DATUM format="%.0f" src="LVDT_13" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="LVDT High">
-      <DATUM format="%.0f" src="LVDT_HIGH" extrema="actuator"/>
+      <DATUM format="%.0f" src="LVDT_HIGH" extrema="LVDTHigh"/>
     </NUMBER>
     <NUMBER caption="LVDT Low">
-      <DATUM format="%.0f" src="LVDT_LOW" extrema="actuator"/>
+      <DATUM format="%.0f" src="LVDT_LOW" extrema="LVDTLow"/>
     </NUMBER>
     <NUMBER caption="LVDT Spread">
-      <DATUM format="%.0f" src="LVDT_SPREAD" extrema="lvdtspread"/>
+      <DATUM format="%.0f" src="LVDT_SPREAD" extrema="LVDTSpread"/>
     </NUMBER>
   </BOX>
   <BOX caption="Focus System" colour="#002222" row="3" col="8">
