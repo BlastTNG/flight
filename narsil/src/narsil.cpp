@@ -805,30 +805,17 @@ void MainForm::WriteLog(const char *request) {
 
 #ifdef USE_ELOG
   if (fork() == 0) {
-    QString elog_user = QString("User=%1")
-      .arg(QString((getpwuid(getuid()))->pw_name));
-
-    QString elog_category = QString("Category=%1")
-      .arg(Group);
-
     QString elog_command = QString(
-        "elog -h " ELOG_HOST " -p " ELOG_PORT " -l blast-narsil "
+        ELOG " -h " ELOG_HOST " -p " ELOG_PORT " -l blast-narsil "
         "-u narsil submmblast "
-        "-a User=%1 -a Source=narsil -a Category=%2 -m %3")
+        "-a User=%1 -a Source=narsil -a Category=%2 -m %3 > /dev/null 2>&1")
       .arg(QString((getpwuid(getuid()))->pw_name))
       .arg(Group)
       .arg(logfilename);
 
-    freopen("/dev/null", "r", stdin);
-    freopen("/dev/null", "w", stdout);
-    freopen("/dev/null", "w", stderr);
-
-    execl(ELOG, ELOG, "-h", ELOG_HOST, "-p", ELOG_PORT, "-l", "blast-narsil",
-        "-u", "narsil", "submmblast", "-a", elog_user.latin1(), "-a",
-        "Source=narsil", "-a", elog_category.latin1(), "-m",
-        logfilename.latin1());
-    fprintf(stderr, "Unable to exec " ELOG "\n");
-    exit(1);
+    if (system(elog_command))
+      perror("Unable to exec " ELOG);
+    exit(0);
   }
 #endif
 }
