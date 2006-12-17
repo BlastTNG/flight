@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 3.67 $";
+const char *command_list_serial = "$Revision: 3.68 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Cooling", 
@@ -396,8 +396,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(lock_i), "set the lock motor currents", GR_LOCK, 2,
     {
-      {"Move current (%)", 0, 100, 'i', "ACT_MOVE_I"},
-      {"Hold current (%)", 0,  50, 'i', "ACT_HOLD_I"},
+      {"Move current (%)", 0, 100, 'i', "LOCK_MOVE_I"},
+      {"Hold current (%)", 0,  50, 'i', "LOCK_HOLD_I"},
     }
   },
 
