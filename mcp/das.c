@@ -43,7 +43,7 @@
 #define CRYO_LNVALVE_OFF      0x20 /* N3G2 */
 #define CRYO_POTVALVE_OPEN    0x40 /* N3G2 Group two of the cryo card */
 #define CRYO_POTVALVE_CLOSE   0x80 /* N3G2 appears to have its nybbles */
-#define CRYO_LHeVALVE_ON      0x01 /* N3G2 backwards! */
+#define CRYO_LHeVALVE_OFF     0x01 /* N3G2 backwards! */
 #define CRYO_LVALVE_OPEN      0x04 /* N3G2 */
 #define CRYO_LVALVE_CLOSE     0x08 /* N3G2 */
 
@@ -426,11 +426,12 @@ void CryoControl (void)
     cryostate &= 0xFFFF - CS_LVALVE_OPEN;
     CommandData.Cryo.lvalve_close--;
   }
-  if (CommandData.Cryo.lhevalve_on) {
-    cryoout2 |= CRYO_LHeVALVE_ON;
+  if (CommandData.Cryo.lhevalve_on)
     cryostate |= CS_LHeVALVE_ON;
-  } else
+  else {
+    cryoout2 |= CRYO_LHeVALVE_OFF;
     cryostate &= 0xFFFF - CS_LHeVALVE_ON;
+  }
   if (CommandData.Cryo.lnvalve_on)
     cryostate |= CS_LNVALVE_ON;
   else {

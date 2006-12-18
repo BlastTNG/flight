@@ -261,7 +261,7 @@ void InitSlowDL(void) {
     if (SlowDLInfo[i].max < SlowDLInfo[i].min) {
       double foo = SlowDLInfo[i].min;
       SlowDLInfo[i].min = SlowDLInfo[i].max;
-      SlowDLInfo[i].max = SlowDLInfo[i].min;
+      SlowDLInfo[i].max = foo;
     }
   }
 }
