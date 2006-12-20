@@ -125,7 +125,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"i_sun",         SLOWDL_FORCE_INT, 8,   5,  0}, /* 20 mA */
   {"sun_az",        SLOWDL_FORCE_INT, 8,   0, 360},
   {"ss_az",         SLOWDL_FORCE_INT, 8,   0, 360},
-  {"t_pv",     SLOWDL_FORCE_INT, 8,   -55, 80},
+  {"p_y",     SLOWDL_FORCE_INT, 8,   -90.0, 90.0},
   {"t_pv",    SLOWDL_FORCE_INT, 8, -55, 100},
   {"t_pv",   SLOWDL_FORCE_INT, 8, -55, 100},
   /* CINOMETERS */

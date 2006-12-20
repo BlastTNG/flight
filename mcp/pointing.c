@@ -862,11 +862,13 @@ void Pointing(void)
   double dgps_az, dgps_pitch, dgps_roll;
   double gy_roll, gy2, gy3, el_rad, clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0, using_dgps = -1;
+  static double last_good_lat=0, last_good_lon=0;
+  static int since_last_good_dgps_pos=5;
   static int i_at_float = 0;
 
   static int firsttime = 1;
 
-  int i_dgpspos;
+  int i_dgpspos, dgpspos_ok;
   int i_point_read;
 
   static struct LutType elClinLut = {"/data/etc/clin_elev.lut",0,NULL,NULL,0};
@@ -1033,9 +1035,9 @@ void Pointing(void)
     PointingData[GETREADINDEX(point_index)].t = mcp_systime(NULL); // CPU time
 
     /* Load lat/lon from disk */
-    PointingData[0].lon = PointingData[1].lon = PointingData[2].lon
+    last_good_lon = PointingData[0].lon = PointingData[1].lon = PointingData[2].lon
       = CommandData.lon;
-    PointingData[0].lat = PointingData[1].lat = PointingData[2].lat
+    last_good_lat = PointingData[0].lat = PointingData[1].lat = PointingData[2].lat
       = CommandData.lat;
   }
 
@@ -1074,12 +1076,21 @@ void Pointing(void)
   if (i_dgpspos != last_i_dgpspos) {
     if (using_dgps != 0)
       bprintf(info, "Pointing: Using dGPS for positional data");
-    i_dgpspos = last_i_dgpspos;
-    PointingData[point_index].lat = DGPSPos[i_dgpspos].lat;
-    PointingData[point_index].lon = DGPSPos[i_dgpspos].lon;
-    PointingData[point_index].alt = DGPSPos[i_dgpspos].alt;
-    using_dgps = 0;
-    no_dgps_pos = 0;
+    last_i_dgpspos = i_dgpspos;
+    dgpspos_ok = ((fabs(last_good_lat - DGPSPos[i_dgpspos].lat) < 0.5) &&
+                 (fabs(last_good_lon - DGPSPos[i_dgpspos].lon) < 0.5)) ||
+	         (since_last_good_dgps_pos >=5);
+    
+    if (dgpspos_ok) {
+      last_good_lat = PointingData[point_index].lat = DGPSPos[i_dgpspos].lat;
+      last_good_lon = PointingData[point_index].lon = DGPSPos[i_dgpspos].lon;
+      PointingData[point_index].alt = DGPSPos[i_dgpspos].alt;
+      using_dgps = 0;
+      no_dgps_pos = 0;
+      since_last_good_dgps_pos = 0;
+    } else {
+      since_last_good_dgps_pos++;
+    }
   } else {
     no_dgps_pos++;
     if (no_dgps_pos > 3000) { // no dgps for 30 seconds - revert to sip

@@ -1026,16 +1026,16 @@ static void StoreData(int index)
   WriteData(pWAddr, (int)(CommandData.pointing_mode.w * DEG2I), NIOS_QUEUE);
   WriteData(pHAddr, (int)(CommandData.pointing_mode.h * DEG2I), NIOS_QUEUE);
   WriteData(pRa1Addr, (int)(CommandData.pointing_mode.ra[0] * H2I), NIOS_QUEUE);
-  WriteData(pDec1Addr, (int)(CommandData.pointing_mode.dec[0] * H2I),
+  WriteData(pDec1Addr, (int)(CommandData.pointing_mode.dec[0] * DEG2I),
       NIOS_QUEUE);
   WriteData(pRa2Addr, (int)(CommandData.pointing_mode.ra[1] * H2I), NIOS_QUEUE);
-  WriteData(pDec2Addr, (int)(CommandData.pointing_mode.dec[1] * H2I),
+  WriteData(pDec2Addr, (int)(CommandData.pointing_mode.dec[1] * DEG2I),
       NIOS_QUEUE);
   WriteData(pRa3Addr, (int)(CommandData.pointing_mode.ra[2] * H2I), NIOS_QUEUE);
-  WriteData(pDec3Addr, (int)(CommandData.pointing_mode.dec[2] * H2I),
+  WriteData(pDec3Addr, (int)(CommandData.pointing_mode.dec[2] * DEG2I),
       NIOS_QUEUE);
   WriteData(pRa4Addr, (int)(CommandData.pointing_mode.ra[3] * H2I), NIOS_QUEUE);
-  WriteData(pDec4Addr, (int)(CommandData.pointing_mode.dec[3] * H2I),
+  WriteData(pDec4Addr, (int)(CommandData.pointing_mode.dec[3] * DEG2I),
       NIOS_QUEUE);
 
   sensor_veto = (!CommandData.use_sun) | ((!CommandData.use_isc) << 1) |
