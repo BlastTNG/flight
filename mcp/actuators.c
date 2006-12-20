@@ -868,12 +868,11 @@ static int SetNewFocus(void)
       if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
         return 0;
     }
-  }
 
-  /* Here is the check */
-  if (abs(delta) == MAX_STEP)
-    for (i = 0; i < 3; ++i)
-      if (abs(act_data[i].enc - start[i]) < STEP_MIN) {
+    /* Here is the check */
+    if (abs(delta) == MAX_STEP)
+      for (i = 0; i < 3; ++i)
+        if (abs(act_data[i].enc - start[i]) < STEP_MIN) {
           bprintf(err, "ActBus: Encoder failure detected, actuator %i\n", i);
           if (CommandData.actbus.tc_mode == TC_MODE_ENABLED) {
             bputs(err, "ActBus: Fully vetoing thermal correction");
@@ -882,6 +881,7 @@ static int SetNewFocus(void)
           deferred = 0;
           fail[i] = 1;
         }
+  }
 
   for (i = 0; i < 3; ++i)
     CommandData.actbus.dead_reckon[i] += delta_dr;
@@ -1052,7 +1052,7 @@ void SecondaryMirror(void)
   /* re-adjust */
   correction = correction + focus - POSITION_FOCUS -
     CommandData.actbus.sf_offset;
-  
+
   if (CommandData.actbus.sf_time < CommandData.actbus.tc_wait)
     CommandData.actbus.sf_time++;
 
