@@ -49,6 +49,12 @@
       <XHI value="80"/>
       <XLO value="-15"/>
     </EXTREMA>
+    <EXTREMA name="soltemp">
+      <HI value="80"/>
+      <LO value="40"/>
+      <XHI value="95"/>
+      <XLO value="0"/>
+    </EXTREMA>
     <EXTREMA name="powtemp">
       <HI value="55"/>
       <LO value="10"/>
@@ -513,7 +519,7 @@
     <MULTI caption="Evil Eye">
       <DATUM src="ISC_EYE_ON">
         <WORD value="1" caption="On" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Save Images">
@@ -572,7 +578,7 @@
     <MULTI caption="Evil Eye">
       <DATUM src="OSC_EYE_ON">
         <WORD value="1" caption="On" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Save Images">
@@ -1270,7 +1276,7 @@
       <DATUM format="%.2f" src="I_SOL_ACS" extrema="acssolcurrent"/>
     </NUMBER>
     <NUMBER caption="T Solar Port">
-      <DATUM format="%.2f" src="T_SOL_PORT" extrema="temp"/>
+      <DATUM format="%.2f" src="T_SOL_PORT" extrema="soltemp"/>
     </NUMBER>
     <NUMBER caption="T ACS Battery">
       <DATUM format="%.2f" src="T_BATT_ACS" extrema="battemp"/>
@@ -1320,7 +1326,7 @@
       <DATUM format="%.2f" src="I_SOL_DAS" extrema="solcurrent"/>
     </NUMBER>
     <NUMBER caption="T Solar Starboard">
-      <DATUM format="%.2f" src="T_SOL_STBD" extrema="temp"/>
+      <DATUM format="%.2f" src="T_SOL_STBD" extrema="soltemp"/>
     </NUMBER>
     <NUMBER caption="T DAS Battery">
       <DATUM format="%.2f" src="T_BATT_DAS" extrema="battemp"/>
