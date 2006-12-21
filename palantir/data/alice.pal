@@ -135,9 +135,9 @@
     </EXTREMA>
     <EXTREMA name="pressure">
       <HI value="1.1"/>
-      <LO value="0.89"/>
+      <LO value="0.77"/>
       <XHI value="1.2"/>
-      <XLO value="0.8"/>
+      <XLO value="0.65"/>
     </EXTREMA>
     <EXTREMA name="psi">
       <HI value="15"/>
@@ -272,8 +272,8 @@
       <XHI value="99"/>
     </EXTREMA>
     <EXTREMA name="lockpot">
-      <XLO value="-1"/>
-      <LO value="-0.5"/>
+      <XLO value="-3"/>
+      <LO value="-2.2"/>
       <HI value="10"/>
       <XHI value="110"/>
     </EXTREMA>
@@ -312,6 +312,12 @@
       <LO value="-10"/>
       <HI value="300"/>
       <XHI value="500"/>
+    </EXTREMA>
+    <EXTREMA name="sfcorrection">
+      <XLO value="-300"/>
+      <LO value="-100"/>
+      <HI value="100"/>
+      <XHI value="300"/>
     </EXTREMA>
     <CURFILE name="/data/etc/alice.cur"/>
   </SETTINGS>
@@ -415,25 +421,25 @@
       <DATUM format="%.3f" src="ISC_RD_SIGMA" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="Autofocus">
-      <DATUM src="OSC_AUTOFOCUS">
+      <DATUM src="ISC_AUTOFOCUS">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Capture">
-      <DATUM src="OSC_PAUSE">
+      <DATUM src="ISC_PAUSE">
         <WORD value="0" caption="Run" textstyle="OK_BIT"/>
         <WORD value="1" caption="Pause" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Evil Eye">
-      <DATUM src="OSC_EYE_ON">
+      <DATUM src="ISC_EYE_ON">
         <WORD value="1" caption="On" textstyle="OK_BIT"/>
         <WORD value="0" caption="Off" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Save Images">
-      <DATUM src="OSC_SAVE_IMAGES">
+      <DATUM src="ISC_SAVE_IMAGES">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
@@ -550,21 +556,20 @@
   </BOX>
   <BOX caption="Lock" colour="#880000" row="2" col="4">
     <MULTI caption="Lock">
-      <DATUM src="LS_NICE_STAT">
-        <WORD value="0" caption="Locking" textstyle="W_BIT"/>
-        <WORD value="1" caption="Locked" textstyle="W_BIT"/>
-        <WORD value="2" caption="Unlocked" textstyle="OK_BIT"/>
-        <WORD value="3" caption="Locking" textstyle="W_BIT"/>
-        <WORD value="6" caption="Unlocking" textstyle="W_BIT"/>
-        <WORD value="7" caption="Unlocking" textstyle="W_BIT"/>
+      <DATUM src="LOCK_STATE">
+        <WORD mask="0x006" value="6" caption="Locked" textstyle="W_BIT"/>
+        <WORD mask="0x005" value="5" caption="Unlocked" textstyle="OK_BIT"/>
+        <WORD mask="0x002" value="2" caption="Locked, On" textstyle="E_BIT"/>
+        <WORD mask="0x001" value="1" caption="Unlocked, On" textstyle="E_BIT"/>
+        <WORD mask="0x0A0" min="1" max="0xA0" caption="Unlocking" textstyle="W_BIT"/>
+        <WORD mask="0x050" min="1" max="0x50" caption="Locking" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Elevation">
-      <DATUM src="LS_EL_STATUS">
-        <WORD value="0" caption="No Good" textstyle="OK_BIT"/>
-        <WORD value="2" caption="Good" textstyle="OK_BIT"/>
-        <WORD value="1" caption="Ignored" textstyle="E_BIT"/>
-        <WORD value="3" caption="Ignored" textstyle="E_BIT"/>
+      <DATUM src="LOCK_STATE">
+        <WORD mask="0x400" value="0x400" caption="Ignored" textstyle="E_BIT"/>
+        <WORD mask="0x200" value="0x200" caption="Good" textstyle="OK_BIT"/>
+        <WORD min="0" max="4096" caption="No Good" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="Extension (%)">
@@ -837,20 +842,13 @@
     </MULTI>
     <MULTI caption="Status">
       <DATUM src="ACT_FLAGS">
+        <WORD mask="0x400" value="1024" caption="Fault ENC2" textstyle="E_BIT"/>
+        <WORD mask="0x200" value="512" caption="Fault ENC1" textstyle="E_BIT"/>
+        <WORD mask="0x100" value="256" caption="Fault ENC0" textstyle="E_BIT"/>
+        <WORD mask="0x080" value="128" caption="Move Bad" textstyle="W_BIT"/>
+        <WORD mask="0x001" value="1" caption="Lost" textstyle="W_BIT"/>
+        <WORD min="2" max="127" caption="Position" textstyle="OK_BIT"/>
         <WORD value="0" caption="Ok" textstyle="OK_BIT"/>
-        <WORD value="1" caption="Lost" textstyle="W_BIT"/>
-        <WORD value="2" caption="Pos Bad" textstyle="W_BIT"/>
-        <WORD value="4" caption="Pos Bad" textstyle="W_BIT"/>
-        <WORD value="6" caption="Pos Bad" textstyle="W_BIT"/>
-        <WORD value="8" caption="Pos Bad" textstyle="W_BIT"/>
-        <WORD value="10" caption="Pos Bad" textstyle="W_BIT"/>
-        <WORD value="12" caption="Pos Bad" textstyle="W_BIT"/>
-        <WORD value="14" caption="Pos Bad" textstyle="W_BIT"/>
-        <WORD value="16" caption="Pos Bad" textstyle="W_BIT"/>
-        <WORD value="128" caption="Move Bad" textstyle="W_BIT"/>
-        <WORD value="256" caption="Fault ENC0" textstyle="W_BIT"/>
-        <WORD value="512" caption="Fault ENC1" textstyle="W_BIT"/>
-        <WORD value="1024" caption="Fault ENC2" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="ACT0 ENC">
@@ -943,13 +941,13 @@
       <DATUM format="%.0f" src="TC_FILTER" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="SF Correction">
-      <DATUM format="%.0f" src="SF_CORRECTION" extrema="unknown"/>
+      <DATUM format="%.0f" src="SF_CORRECTION" extrema="sfcorrection"/>
     </NUMBER>
     <NUMBER caption="Absolute Focus">
       <DATUM format="%.0f" src="ABS_FOCUS" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="Relative Focus">
-      <DATUM format="%.0f" src="REL_FOCUS" extrema="lvdtspread"/>
+      <DATUM format="%.0f" src="REL_FOCUS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Foc Off">
       <DATUM format="%.0f" src="SF_OFFSET" extrema="unknown"/>
@@ -1302,9 +1300,6 @@
     <NUMBER caption="Disk Space (GB)">
       <DATUM format="%.2f" src="DISK_FREE" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="Fastsamp">
-      <DATUM format="%.0f" src="FASTSAMP" extrema="unknown"/>
-    </NUMBER>
     <MULTI caption="Schedule File">
       <DATUM src="SCHEDULE">
         <WORD value="0" caption="Happy North" textstyle="W_BIT"/>
@@ -1328,12 +1323,6 @@
     </NUMBER>
     <DATETIME caption="CPU Time">
       <DATUM format="%e %b %Y, %H:%M:%S" src="CPU_TIME"/>
-    </DATETIME>
-    <DATETIME caption="dGPS Time">
-      <DATUM format="%e %b %Y, %H:%M:%S" src="DGPS_TIME"/>
-    </DATETIME>
-    <DATETIME caption="SIP Time">
-      <DATUM format="%e %b %Y, %H:%M:%S" src="SIP_TIME"/>
     </DATETIME>
     <NUMBER caption="Gondola Siderial Time">
       <DATUM format="%.4f" src="LST" extrema="unknown"/>
@@ -1486,9 +1475,6 @@
     <NUMBER caption="Charcoal">
       <DATUM format="%.2f" src="T_charcoal" extrema="chartemp"/>
     </NUMBER>
-    <NUMBER caption="3He Fridge Diode">
-      <DATUM format="%.2f" src="T_heatswitch" extrema="unknown"/>
-    </NUMBER>
   </BOX>
   <BOX caption="Cold Optics Temps" row="3" col="6">
     <NUMBER caption="Opt.Box Filter">
@@ -1546,15 +1532,6 @@
     </NUMBER>
     <MULTI caption="Coldplate">
       <DATUM src="COLDP_HEATER">
-        <WORD value="1" caption="On" textstyle="W_BIT"/>
-        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
-      </DATUM>
-    </MULTI>
-    <NUMBER caption="I Cold Plate">
-      <DATUM format="%.2f" src="I_COLDPLATE" extrema="unknown"/>
-    </NUMBER>
-    <MULTI caption="300mK Auto Heat">
-      <DATUM src="AUTO_CYCLE_ON">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
