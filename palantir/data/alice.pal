@@ -248,22 +248,22 @@
       <XHI value="7"/>
     </EXTREMA>
     <EXTREMA name="bias1">
-      <XLO value="-1"/>
+      <XLO value="15"/>
       <LO value="20"/>
-      <HI value="80"/>
-      <XHI value="127"/>
+      <HI value="24"/>
+      <XHI value="35"/>
     </EXTREMA>
     <EXTREMA name="bias2">
-      <XLO value="-1"/>
-      <LO value="20"/>
-      <HI value="80"/>
-      <XHI value="127"/>
+      <XLO value="60"/>
+      <LO value="62"/>
+      <HI value="66"/>
+      <XHI value="70"/>
     </EXTREMA>
     <EXTREMA name="bias3">
-      <XLO value="-1"/>
-      <LO value="20"/>
-      <HI value="80"/>
-      <XHI value="127"/>
+      <XLO value="43"/>
+      <LO value="45"/>
+      <HI value="49"/>
+      <XHI value="53"/>
     </EXTREMA>
     <EXTREMA name="levelsens">
       <XLO value="0.2"/>
@@ -324,6 +324,78 @@
       <LO value="-100"/>
       <HI value="100"/>
       <XHI value="300"/>
+    </EXTREMA>
+    <EXTREMA name="phase5">
+      <XLO value="20"/>
+      <LO value="22"/>
+      <HI value="27"/>
+      <XHI value="30"/>
+    </EXTREMA>
+    <EXTREMA name="phase6">
+      <XLO value="50"/>
+      <LO value="53"/>
+      <HI value="57"/>
+      <XHI value="60"/>
+    </EXTREMA>
+    <EXTREMA name="phase7">
+      <XLO value="45"/>
+      <LO value="28"/>
+      <HI value="52"/>
+      <XHI value="55"/>
+    </EXTREMA>
+    <EXTREMA name="phase8">
+      <XLO value="15"/>
+      <LO value="18"/>
+      <HI value="22"/>
+      <XHI value="25"/>
+    </EXTREMA>
+    <EXTREMA name="phase9">
+      <XLO value="10"/>
+      <LO value="13"/>
+      <HI value="17"/>
+      <XHI value="20"/>
+    </EXTREMA>
+    <EXTREMA name="phase10">
+      <XLO value="-5"/>
+      <LO value="-2"/>
+      <HI value="2"/>
+      <XHI value="5"/>
+    </EXTREMA>
+    <EXTREMA name="phase11">
+      <XLO value="90"/>
+      <LO value="93"/>
+      <HI value="97"/>
+      <XHI value="100"/>
+    </EXTREMA>
+    <EXTREMA name="phase12">
+      <XLO value="115"/>
+      <LO value="118"/>
+      <HI value="122"/>
+      <XHI value="125"/>
+    </EXTREMA>
+    <EXTREMA name="phase13">
+      <XLO value="100"/>
+      <LO value="103"/>
+      <HI value="107"/>
+      <XHI value="110"/>
+    </EXTREMA>
+    <EXTREMA name="phase14">
+      <XLO value="115"/>
+      <LO value="118"/>
+      <HI value="122"/>
+      <XHI value="125"/>
+    </EXTREMA>
+    <EXTREMA name="phase15">
+      <XLO value="95"/>
+      <LO value="98"/>
+      <HI value="103"/>
+      <XHI value="105"/>
+    </EXTREMA>
+    <EXTREMA name="phase16">
+      <XLO value="110"/>
+      <LO value="113"/>
+      <HI value="118"/>
+      <XHI value="120"/>
     </EXTREMA>
     <CURFILE name="/data/etc/alice.cur"/>
   </SETTINGS>
@@ -1136,40 +1208,40 @@
   </BOX>
   <BOX caption="Phase" colour="#707" row="4" col="2" rowspan="1">
     <NUMBER caption="DAS Phase 5">
-      <DATUM format="%.0f" src="phase5" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase5" extrema="phase5"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 6">
-      <DATUM format="%.0f" src="phase6" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase6" extrema="phase6"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 7">
-      <DATUM format="%.0f" src="phase7" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase7" extrema="phase7"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 8">
-      <DATUM format="%.0f" src="phase8" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase8" extrema="phase8"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 9">
-      <DATUM format="%.0f" src="phase9" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase9" extrema="phase9"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 10">
-      <DATUM format="%.0f" src="phase10" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase10" extrema="phase10"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 11">
-      <DATUM format="%.0f" src="phase11" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase11" extrema="phase11"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 12">
-      <DATUM format="%.0f" src="phase12" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase12" extrema="phase12"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 13">
-      <DATUM format="%.0f" src="phase13" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase13" extrema="phase13"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 14">
-      <DATUM format="%.0f" src="phase14" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase14" extrema="phase14"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 15">
-      <DATUM format="%.0f" src="phase15" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase15" extrema="phase15"/>
     </NUMBER>
     <NUMBER caption="DAS Phase 16">
-      <DATUM format="%.0f" src="phase16" extrema="unknown"/>
+      <DATUM format="%.0f" src="phase16" extrema="phase16"/>
     </NUMBER>
   </BOX>
   <BOX caption="ACS Power System" colour="#777700" row="0" col="7" rowspan="1">
