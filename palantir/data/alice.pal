@@ -43,6 +43,12 @@
       <XHI value="75"/>
       <XLO value="0"/>
     </EXTREMA>
+    <EXTREMA name="sstemp">
+      <HI value="65"/>
+      <LO value="0"/>
+      <XHI value="80"/>
+      <XLO value="-15"/>
+    </EXTREMA>
     <EXTREMA name="powtemp">
       <HI value="55"/>
       <LO value="10"/>
@@ -796,19 +802,19 @@
       <DATUM format="%.2f" src="T_CLIN_PYR" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Sun Sensor">
-      <DATUM format="%.2f" src="SS_CASE_TEMP" extrema="temp"/>
+      <DATUM format="%.2f" src="SS_CASE_TEMP" extrema="sstemp"/>
     </NUMBER>
     <NUMBER caption="SS CPU">
       <DATUM format="%.2f" src="SS_CPU_TEMP" extrema="cputemp"/>
     </NUMBER>
     <NUMBER caption="SS Hard Drive">
-      <DATUM format="%.2f" src="SS_HDD_TEMP" extrema="temp"/>
+      <DATUM format="%.2f" src="SS_HDD_TEMP" extrema="sstemp"/>
     </NUMBER>
     <NUMBER caption="SS Port Sensor">
-      <DATUM format="%.2f" src="SS_PORT_TEMP" extrema="temp"/>
+      <DATUM format="%.2f" src="SS_PORT_TEMP" extrema="sstemp"/>
     </NUMBER>
     <NUMBER caption="SS Starboard Sensor">
-      <DATUM format="%.2f" src="SS_STAR_TEMP" extrema="temp"/>
+      <DATUM format="%.2f" src="SS_STAR_TEMP" extrema="sstemp"/>
     </NUMBER>
     <NUMBER caption="Lock Motor">
       <DATUM format="%.2f" src="T_LOCK_MOTOR" extrema="temp"/>
