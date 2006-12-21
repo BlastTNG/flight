@@ -1260,9 +1260,6 @@
     <NUMBER caption="V ACS Trim">
       <DATUM format="%.2f" src="APCU_TRIM" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="V ACS Lid">
-      <DATUM format="%.2f" src="APCU_REG" extrema="unknown"/>
-    </NUMBER>
     <NUMBER caption="V ACS Battery">
       <DATUM format="%.2f" src="V_BATT_ACS" extrema="vbat"/>
     </NUMBER>
@@ -1309,9 +1306,6 @@
     </MULTI>
     <NUMBER caption="V DAS Trim">
       <DATUM format="%.2f" src="DPCU_TRIM" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="V DAS Lid">
-      <DATUM format="%.2f" src="DPCU_REG" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="V DAS Battery">
       <DATUM format="%.2f" src="V_BATT_DAS" extrema="vbat"/>
