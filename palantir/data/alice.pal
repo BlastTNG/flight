@@ -1,18 +1,18 @@
 <?xml version="1.0"?>
 <DOCUMENT>
   <SETTINGS>
-    <TEXTSTYLE name="xhiwarn" colour="#000055" backcolour="#ffaaaa" size="7" bold="true"/>
-    <TEXTSTYLE name="hiwarn" colour="#ff0000" size="7" bold="true"/>
-    <TEXTSTYLE name="lowarn" colour="#00bb00" size="7" bold="true"/>
-    <TEXTSTYLE name="xlowarn" colour="#000033" backcolour="#00ff00" size="7" bold="true"/>
-    <TEXTSTYLE name="increasing" colour="#cc0000" size="7" bold="true"/>
-    <TEXTSTYLE name="decreasing" colour="#0000CC" size="7" bold="true"/>
-    <TEXTSTYLE name="standard" colour="#000000" size="7"/>
+    <TEXTSTYLE name="xhiwarn" colour="#000055" backcolour="#ffaaaa" size="8" bold="true"/>
+    <TEXTSTYLE name="hiwarn" colour="#ff0000" size="8" bold="true"/>
+    <TEXTSTYLE name="lowarn" colour="#00bb00" size="8" bold="true"/>
+    <TEXTSTYLE name="xlowarn" colour="#000033" backcolour="#00ff00" size="8" bold="true"/>
+    <TEXTSTYLE name="increasing" colour="#cc0000" size="8" bold="true"/>
+    <TEXTSTYLE name="decreasing" colour="#0000CC" size="8" bold="true"/>
+    <TEXTSTYLE name="standard" colour="#000000" size="8"/>
     <TEXTSTYLE name="spacer" size="0"/>
-    <TEXTSTYLE name="OK_BIT" colour="#000055" size="7"/>
-    <TEXTSTYLE name="W_BIT" colour="#cc0000" size="7" bold="true"/>
-    <TEXTSTYLE name="E_BIT" backcolour="#faa" colour="#000055" size="7" bold="true"/>
-    <TEXTSTYLE name="P_BIT" backcolour="#ffaaff" colour="#000055" size="7"/>
+    <TEXTSTYLE name="OK_BIT" colour="#000055" size="8"/>
+    <TEXTSTYLE name="W_BIT" colour="#cc0000" size="8" bold="true"/>
+    <TEXTSTYLE name="E_BIT" backcolour="#faa" colour="#000055" size="8" bold="true"/>
+    <TEXTSTYLE name="P_BIT" backcolour="#ffaaff" colour="#000055" size="8"/>
     <EXTREMA name="slope">
       <HI value="0.1" textstyle="increasing"/>
       <LO value="-0.1" textstyle="decreasing"/>
@@ -407,20 +407,20 @@
   </SETTINGS>
   <DEFAULTS>
     <TEXTSTYLE>
-      <BOX colour="#0000cc" size="7" bold="true"/>
+      <BOX colour="#0000cc" size="8" bold="true"/>
       <LABEL textstyle="standard"/>
-      <DATUM colour="#000055" size="7" bold="true">
-        <ERROR colour="#aa4444" size="7" bold="true"/>
+      <DATUM colour="#000055" size="8" bold="true">
+        <ERROR colour="#aa4444" size="8" bold="true"/>
         <WORD textstyle="standard"/>
         <HI textstyle="hiwarn"/>
         <LO textstyle="lowarn"/>
         <XHI textstyle="xhiwarn"/>
         <XLO textstyle="xlowarn"/>
       </DATUM>
-      <INFOCAPTION colour="#000000" size="7" bold="true"/>
-      <INFODATA colour="#000000" size="7" bold="false"/>
-      <INFOCOMBO colour="#000000" size="7" bold="false"/>
-      <INFOBUTTON colour="#000000" size="7" bold="true"/>
+      <INFOCAPTION colour="#000000" size="8" bold="true"/>
+      <INFODATA colour="#000000" size="8" bold="false"/>
+      <INFOCOMBO colour="#000000" size="8" bold="false"/>
+      <INFOBUTTON colour="#000000" size="8" bold="true"/>
     </TEXTSTYLE>
   </DEFAULTS>
   <BOX caption="Sensors" colour="#880000" row="3" col="3">
