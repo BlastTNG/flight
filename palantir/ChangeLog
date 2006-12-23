@@ -1,3 +1,6 @@
+2006-12-23 (1.4.1) [cbn]:
+	* palantir.cpp: Add age to status line
+
 2006-12-18 (1.4.0.2):
 	* data/*.pal: Update.
 
