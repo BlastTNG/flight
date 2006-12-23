@@ -232,6 +232,7 @@ class MainForm : public QMainWindow
     QLabel* DataQuality;
     QLabel* DecomFile;
     QLabel* DiskFree;
+    QLabel* SinceLast;
 
     char decomdHost[MAXPATHLENGTH];
     int decomdPort;
@@ -286,6 +287,8 @@ class MainForm : public QMainWindow
     int firstpderiv;
     int numpderivs;
     char **pderivs;
+
+    int lastUpdate;
 
     AdamDom *XMLInfo;
     DecomPoll *DecomPoller;

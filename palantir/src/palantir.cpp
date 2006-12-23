@@ -790,6 +790,7 @@ void MainForm::UpdateData() {
 
   if (DataSource->update()) {
     updating = true;
+    lastUpdate = time(NULL);
     Picture->TurnOn(ShowPicture);
     if (DecomPoller->pollDecomd)
       PalantirState->setText("PT: RUN");
@@ -871,6 +872,9 @@ void MainForm::UpdateData() {
       DiskFree->setText("DF: ???");
       DecomFile->setText("FN: ???");
     }
+  } else {
+    sprintf(tmp, "Age: %ds", time(NULL)-lastUpdate);
+    SinceLast->setText(tmp);
   }
 
   int i_label = 0;
@@ -1291,7 +1295,16 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
     theStatusBar->addWidget(DataQuality);
     theStatusBar->addWidget(DiskFree);
     theStatusBar->addWidget(DecomFile);
-  }
+  } else {
+    theStatusBar = statusBar();
+    theStatusBar->setSizeGripEnabled(false);
+
+    SinceLast = new QLabel(theStatusBar);
+    SinceLast->setText("Age: ???");
+    lastUpdate = time(NULL);
+
+    theStatusBar->addWidget(SinceLast);
+  }  
 
   // Slots
   connect(timer, SIGNAL(timeout()), this, SLOT(UpdateData()));
