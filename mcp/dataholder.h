@@ -30,6 +30,8 @@
 
 #ifdef __MCP__
 #  include "tdrss.h"
+#elif defined __MOBY__
+#  include "moby.h"
 #else
 #  include "big.h"
 #endif
