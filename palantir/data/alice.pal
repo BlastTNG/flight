@@ -404,6 +404,7 @@
       <XHI value="120"/>
     </EXTREMA>
     <CURFILE name="/data/etc/alice.cur"/>
+<!--    <TIMEOUT wait="17"/>  -->
   </SETTINGS>
   <DEFAULTS>
     <TEXTSTYLE>

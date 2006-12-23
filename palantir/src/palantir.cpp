@@ -59,6 +59,8 @@
 
 #define MAX_N_DIALOGS  3
 
+double timeoutSecs = 0.0;
+
 //***************************************************************************
 //****     CLASS PalImage -- does the cool animation of the palantir
 //***************************************************************************
@@ -670,6 +672,13 @@ void MainForm::GetXMLInfo(char *layoutfile) {
   } else {
     startupDecomd = false;
   }
+
+  XMLInfo->GotoEntry(".SETTINGS.TIMEOUT", 0, false);
+  if (XMLInfo->GetTagName() == "TIMEOUT") {
+    timeoutSecs = atof(FindAttribute("wait", "SETTINGS.TIMEOUT"));
+  } else {
+    timeoutSecs = 0.0;
+  }
 }
 
 //-------------------------------------------------------------
@@ -796,7 +805,8 @@ void MainForm::UpdateData() {
       PalantirState->setText("PT: RUN");
   } else {
     // Blank palantir
-    Picture->TurnOff(ShowPicture);
+    if (time(NULL) - lastUpdate > timeoutSecs)
+      Picture->TurnOff(ShowPicture);
     if (DecomPoller->pollDecomd)
       PalantirState->setText("PT: STP");
     updating = false;
