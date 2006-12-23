@@ -72,6 +72,9 @@ struct DataStruct_glob {
   int mindex;
   int chnum;
   int wide;
+
+  int numsamples;
+  struct ChannelStruct channel;
 };
 
 class AMLParser {
