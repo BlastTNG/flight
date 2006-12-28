@@ -46,7 +46,9 @@
 
 #ifdef USE_AUTHENTICATION
 # define GOOD_ADDR1 "157.132.95.145"
-# define GOOD_ADDR2 "157.132.95.145"
+# define GOOD_ADDR2 "192.168.20.10"
+# define GOOD_ADDR3 "24.219.66.100"
+# define GOOD_ADDR4 "128.148.60.67"
 #endif
 
 int SIPRoute(int sock, int t_link, int t_route, char* buffer)
@@ -271,9 +273,13 @@ void Daemonise(int route, int no_fork)
   /* the addresses we allow connections from */
   struct in_addr good_addr1;
   struct in_addr good_addr2;
+  struct in_addr good_addr3;
+  struct in_addr good_addr4;
   struct in_addr local_addr;
   inet_aton(GOOD_ADDR1, &good_addr1);
   inet_aton(GOOD_ADDR2, &good_addr2);
+  inet_aton(GOOD_ADDR3, &good_addr3);
+  inet_aton(GOOD_ADDR4, &good_addr4);
   inet_aton("127.0.0.1", &local_addr);
 #endif
 
@@ -368,6 +374,16 @@ void Daemonise(int route, int no_fork)
                     sizeof(struct in_addr)))
               {
                 printf("Autentication 2 OK from client.\n");
+                conn[csock].state = 0;
+              } else if (!memcmp(&addr.sin_addr, &good_addr3,
+                    sizeof(struct in_addr)))
+              {
+                printf("Autentication 3 OK from client.\n");
+                conn[csock].state = 0;
+              } else if (!memcmp(&addr.sin_addr, &good_addr4,
+                    sizeof(struct in_addr)))
+              {
+                printf("Autentication 4 OK from client.\n");
                 conn[csock].state = 0;
               } else if (!memcmp(&addr.sin_addr, &local_addr, sizeof(struct
                       in_addr))) {
