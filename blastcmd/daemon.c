@@ -45,8 +45,8 @@
 #include "command_list.h"
 
 #ifdef USE_AUTHENTICATION
-# define GOOD_ADDR1 "193.44.5.11"
-# define GOOD_ADDR2 "194.22.1.2"
+# define GOOD_ADDR1 "157.132.95.145"
+# define GOOD_ADDR2 "157.132.95.145"
 #endif
 
 int SIPRoute(int sock, int t_link, int t_route, char* buffer)
