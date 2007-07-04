@@ -1,0 +1,600 @@
+//
+// C++ Implementation: mycam
+//
+// Description: 
+//
+//
+// Author: Steve Benton <steve.benton@utoronto.ca>, (C) 2006
+//
+// Copyright: See COPYING file that comes with this distribution
+//
+//
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <fstream>
+#include <time.h>
+#include <unistd.h>
+#include <sys/time.h>
+#include "mycam.h"
+#include "sbigudrv.h"
+#include "csbigcam.h"
+#include "clensadapter.h"
+#include "blobimage.h"
+
+#define MYCAM_DEBUG 1
+#define MYCAM_TIMING 1
+
+using namespace std;
+
+//use same constructors as CSBIGCam, make sure proper Init is called though.
+MyCam::MyCam() : CSBIGCam() { Init(); }
+MyCam::MyCam(OpenDeviceParams odp) : CSBIGCam(odp) { Init(); }
+MyCam::MyCam(SBIG_DEVICE_TYPE dev) : CSBIGCam(dev) { Init(); }
+
+
+//perform same operations as the CSBIGCam destructor
+MyCam::~MyCam()
+{
+	CloseDevice();
+	CloseDriver();
+	m_cAdapter.closeConnection();
+}
+
+/*
+  
+ Init:
+	 
+ Initialize the base variables. Most of this is done my parent class.
+ 
+*/
+void MyCam::Init(MyCamConfigParams params/*=defaultCameraParams*/)
+{
+	CSBIGCam::Init(params.SBIGParams);
+	m_cAdapter.Init(params.lensParams);
+	m_nUSBNum = params.USBNum;
+	m_nPictureInterval = params.pictureInterval;
+	m_nFocusResolution = params.focusResolution;
+}
+/* original version has been replaced
+void MyCam::Init()
+{
+	CSBIGCam::Init();
+	m_nUSBNum = INVALID_USB_NUM;
+	m_dPictureInterval = 0;
+}
+*/
+
+/*
+
+ QueryUSB:
+
+ Runs the CC_QUERY_USB command against the universal driver
+ 
+*/
+PAR_ERROR MyCam::QueryUSB(QueryUSBResults &qur)
+{
+	return CSBIGCam::SBIGUnivDrvCommand(CC_QUERY_USB, NULL, &qur);
+}
+
+/*
+
+ OpenUSBDevice:
+ 
+ Opens a device on USB with "port" number num.
+ Num should be the index of a QueryUSBResults.usbInfo with cameraFound == TRUE
+ 
+*/
+PAR_ERROR MyCam::OpenUSBDevice(int num)
+{
+	OpenDeviceParams odp;
+	m_nUSBNum = (num < 0 || num > 3)?INVALID_USB_NUM:num;
+	switch (num) {
+		case 0:		odp.deviceType=DEV_USB1; break;
+		case 1:		odp.deviceType=DEV_USB2; break;
+		case 2:		odp.deviceType=DEV_USB3; break;
+		case 3:		odp.deviceType=DEV_USB4; break;
+		default:	odp.deviceType=DEV_NONE; break;
+	}
+	return CSBIGCam::SBIGUnivDrvCommand(CC_OPEN_DEVICE, &odp, NULL);
+}
+
+/*
+
+ autoFocus:
+ 
+ enter a focus mode that maximizes flux of brightest star in FOV
+ steps down from focus at infinity in steps of (total range / m_nFocusResolution)
+ a BlobImage is passed to avoid time consuming initialization of a new one
+ will stop after decreasing for 3 consecutive measurements, or no longer identifying blob
+ when forced is non-zero (TRUE), stops will be ignored until moving is impossible
+ //TODO can add sub-step interpolation of maximum
+ 
+*/
+LENS_ERROR MyCam::autoFocus(BlobImage *img)
+{
+	frameblob *blob = img->getFrameBlob();
+	if (m_cAdapter.findFocalRange() != LE_NO_ERROR) return m_cAdapter.getLastError();
+	int range = m_cAdapter.getFocalRange();
+	int step = range / m_nFocusResolution;         //number of motor counts between measurements
+#if MYCAM_DEBUG
+	cout << "[MyCam debug]: starting autoFocus with step size: " << step << endl;
+#endif
+	int decrease_cnt = 0;                  //counts consecutive flux decreases for stopping
+	int remaining = 0;                     //distance remainder from preciseMove
+	int thisFlux, lastFlux = 1;            //brightest blob flux in this, last image
+	int toMax = 0, maxFlux = -1;           //distance to max, and max flux
+	
+	while (decrease_cnt < 3) {
+		if (this->GrabImage(img, SBDF_LIGHT_ONLY) != CE_NO_ERROR) {
+#if MYCAM_DEBUG
+			cout << "[MyCam debug]: grabImage failed in autoFocus" << endl;
+#endif
+			return LE_AUTOFOCUS_ERROR;
+		}
+		img->findBlobs();
+		thisFlux =  (blob->get_numblobs())?(blob->getblobs()->getflux()):-1;
+		if (thisFlux == -1 && maxFlux > 0) break;   //no blobs and max found: break
+		
+		//check for decreasing flux
+		if (lastFlux > thisFlux) decrease_cnt++;
+		else decrease_cnt = 0;
+		
+		//move to next location
+		if (m_cAdapter.preciseMove(-step, remaining) != LE_NO_ERROR)
+			return m_cAdapter.getLastError();
+		
+		if (thisFlux > maxFlux) {         //check for new maximum
+			maxFlux = thisFlux;
+			toMax = step + remaining;    //have just moved away from max
+		}
+		else if (maxFlux > 0) toMax += step + remaining;   //if max found, have moved further from it
+#if MYCAM_DEBUG
+			cout << "[MyCam debug]: autoFocus: thisFlux=" << thisFlux << " toMax=" << toMax << endl;
+#endif
+		lastFlux = thisFlux;
+	}
+	
+	//move back to position to max flux
+	if (m_cAdapter.preciseMove(toMax, remaining) != LE_NO_ERROR)
+		return m_cAdapter.getLastError();
+	return LE_NO_ERROR;
+}
+//Original autofocus function: needlessly complicated
+// LENS_ERROR MyCam::autoFocus()
+// {
+// 	if (m_cAdapter.getFocalRange() == -1)    //if focal range isn't defined yet, find it
+// 		if (m_cAdapter.findFocalRange() != LE_NO_ERROR) 
+// 			return m_cAdapter.getLastError();
+// 	
+// 	int totalRange = m_cAdapter.getFocalRange();
+// 	int step_size = totalRange / 16;    //initial size of focus steps
+// 	int move;                           //amount to move by (to improve focus)
+// 	int position = totalRange - step_size;  //position of the lens center spot
+// 	int offset = 0;                     //position of lens relative to center sopt
+// 	int remaining;                      //return value for preciseMove
+// 	string return_str;                  //return value from lens commands
+// 	BlobImage img;
+// 	frameblob *blob = img.getFrameBlob();
+// 	int smaller, center, larger;        //blob flux at three focus positions
+// 	
+// 	//move lens to initial center position
+// 	if (m_cAdapter.runCommand(LC_MOVE_FOCUS_INFINITY, return_str) != LE_NO_ERROR)
+// 		return m_cAdapter.getLastError();
+// 	if (m_cAdapter.preciseMove(-step_size, remaining) != LE_NO_ERROR)
+// 		return m_cAdapter.getLastError();
+// 	offset -= remaining;
+// 	
+// 	for (int i=0; i<10; i++) {         //limit the number of iterations
+// 		//find intensity of brightest blob at center position
+// 		if ( (this->GrabImage(&img, SBDF_LIGHT_ONLY)) != CE_NO_ERROR )
+// 			return LE_AUTOFOCUS_ERROR;
+// 		img.findBlobs();
+// 		if (blob->get_numblobs())
+// 			center = blob->getblobs()->getflux();     //flux of brightest blob
+// 		else
+// 			center = -1;
+// 		
+// 		//find intensity of brightest blob at smaller (closer to zero) position
+// 		if (m_cAdapter.preciseMove(-step_size, remaining) != LE_NO_ERROR)
+// 			return m_cAdapter.getLastError();
+// 		offset += -step_size - remaining;
+// 		if ( (this->GrabImage(&img, SBDF_LIGHT_ONLY)) != CE_NO_ERROR )
+// 			return LE_AUTOFOCUS_ERROR;
+// 		img.findBlobs();
+// 		if (blob->get_numblobs())
+// 			smaller = blob->getblobs()->getflux();
+// 		else
+// 			smaller = -1;
+// 
+// 		//find intensity of brightest blob at larger (closer to infinity) position
+// 		if (m_cAdapter.preciseMove(2*step_size, remaining) != LE_NO_ERROR)
+// 			return m_cAdapter.getLastError();
+// 		offset += 2*step_size - remaining;
+// 		if ( (this->GrabImage(&img, SBDF_LIGHT_ONLY)) != CE_NO_ERROR )
+// 			return LE_AUTOFOCUS_ERROR;
+// 		img.findBlobs();
+// 		if (blob->get_numblobs())
+// 			larger = blob->getblobs()->getflux();
+// 		else
+// 			larger = -1;
+// 		
+// 		//find how far to move (relative to center) the lens to improve focus
+// 		//first check cases where blobs were not found in all the images
+// 		if (center == -1) {
+// 			if (smaller == -1 && larger == -1) //no blobs were found anywhere
+// 				move = step_size;
+// 			else move = (smaller >= larger)?-step_size:step_size;
+// 		} 
+// 		else {       //blob found at center
+// 			if (smaller == -1 && larger == -1) {
+// 				step_size /= 2;
+// 				move = 0;
+// 			}
+// 			else if (smaller == -1 || larger == -1) 
+// 				move = (smaller == -1)?step_size:-step_size;
+// 			else {  //blobs were found at each position (assume they are the same ones)
+// 				//check concavity of flux profile
+// 				if (2*center > smaller + larger) {
+// 					//concave down...use quadratic interpolation
+// 					move = (smaller - larger)/2/(smaller + larger - 2*center) * step_size;
+// 					step_size /= 2;
+// 				}
+// 				//otherwise move toward the largest of the sides
+// 				else move = (smaller >= larger)?-step_size:step_size;
+// 			}
+// 		}
+// 		while (position + move - totalRange > (int)m_cAdapter.getFocusTol()
+// 					 || position + move < (int)m_cAdapter.getFocusTol())
+// 		{ //if position + move exceeds top or bottom of range, only go half as far 
+// 			move /= 2;
+// 			step_size /= 2;
+// 		}
+// 		m_cAdapter.preciseMove(move-offset, remaining);
+// 		offset = move - remaining;
+// 	}
+// 	
+// 	return LE_NO_ERROR;
+// }
+
+/*
+  
+ hex2double:
+	 
+ Convert the passed hex value to double.
+ The hex value is assumed to be in the
+ format: XXXXXX.XX
+	 
+*/
+static double hex2double(unsigned long ul)
+{
+	double res, mult;
+	int i;
+	
+	res = 0.0;
+	mult = 1.0;
+	for (i=0; i<8; i++)
+	{
+		res += mult * (double)(ul & 0x0F);
+		ul >>= 4;
+		mult *= 10.0;
+	}
+	return res / 100.0;
+	
+}
+
+
+/*
+
+ GrabImage:
+ 
+ Overrides the CSBIGCam function to use BlobImage and provide better header information
+ Note: Could get lens information from adapter, but that seems unnecessary unless
+    the aperture will be changing in flight. Otherwise setting correct default is sufficient.
+ 
+*/
+PAR_ERROR MyCam::GrabImage(BlobImage *pImg, SBIG_DARK_FRAME dark)
+{
+#if MYCAM_DEBUG
+	cout << "[MyCam debug]: inside GrabImage." << endl;
+#endif	
+	timeval reference;                                   //used for exposure time, not just debugging
+#if MYCAM_TIMING
+	timeval reference2, grabstart, grabstop;             //structs for retrieving time information
+	unsigned int elapsed;                                //used to hold time in us between timevals
+	gettimeofday(&grabstart, NULL);
+	gettimeofday(&reference, NULL);
+	double expTime, readTime, totalTime;
+#endif
+	int left, top, width, height;
+	GetCCDInfoResults0 gcir;
+	GetCCDInfoParams gcip;
+	double ccdTemp;
+	unsigned short vertNBinning, hBin, vBin;
+	unsigned short rm;
+	string s;
+	unsigned short es;
+	MY_LOGICAL expComp;
+	PAR_ERROR err;
+	StartReadoutParams srp;
+	int i;
+	ReadoutLineParams rlp;
+	int subFrameWidth, subFrameHeight, subFrameTop, subFrameLeft;
+	CSBIGCam::GetSubFrame(subFrameLeft, subFrameTop, subFrameWidth, subFrameHeight);
+
+	// Get the image dimensions
+	vertNBinning = CSBIGCam::GetReadoutMode() >> 8;
+	if ( vertNBinning == 0 )
+		vertNBinning = 1;
+	rm = CSBIGCam::GetReadoutMode() & 0xFF;
+	hBin = vBin = 1;
+	if ( rm < 3 )
+		hBin = vBin = (rm + 1);
+	else if ( rm < 6 ) {
+		hBin = (rm - 5);
+		vBin = vertNBinning;
+	} else if ( rm < 9 )
+		hBin = vBin = (rm - 8);
+	else if ( rm == 9 )
+		hBin = vBin = 9;
+	gcip.request = (CSBIGCam::GetActiveCCD() == CCD_IMAGING ? CCD_INFO_IMAGING : CCD_INFO_TRACKING);
+	if ( SBIGUnivDrvCommand(CC_GET_CCD_INFO, &gcip, &gcir) != CE_NO_ERROR )
+		return CSBIGCam::GetError();
+	if ( rm >= gcir.readoutModes )
+		return CE_BAD_PARAMETER;
+	if ( subFrameWidth == 0 || subFrameHeight == 0 ) {
+		left = top = 0;
+		width = gcir.readoutInfo[rm].width;
+		height = gcir.readoutInfo[rm].height / vertNBinning;
+	} else {
+		left = subFrameLeft;
+		top = subFrameTop;
+		width = subFrameWidth;
+		height = subFrameHeight;
+	}
+
+	// try to allocate the image buffer
+	if ( !pImg->AllocateImageBuffer(height, width) )
+		return CE_MEMORY_ERROR;
+	pImg->SetImageModified(TRUE);
+
+	// initialize some image header params
+	if ( CSBIGCam::GetCCDTemperature(ccdTemp) != CE_NO_ERROR )
+		return CSBIGCam::GetError();
+	pImg->setCameraID(m_nUSBNum);            //USB port number uniquely identifies camera
+	pImg->SetCCDTemperature(ccdTemp);
+	pImg->SetEachExposure(CSBIGCam::GetExposureTime());
+	pImg->SetEGain(hex2double(gcir.readoutInfo[rm].gain));
+	pImg->SetPixelHeight(hex2double(gcir.readoutInfo[rm].pixelHeight) * vertNBinning / 1000.0);
+	pImg->SetPixelWidth(hex2double(gcir.readoutInfo[rm].pixelWidth) / 1000.0);
+	es = ES_DCS_ENABLED | ES_DCR_DISABLED | ES_AUTOBIAS_ENABLED;
+	if ( CSBIGCam::GetCameraType() == ST5C_CAMERA )
+		es |= (ES_ABG_CLOCKED | ES_ABG_RATE_MED);
+	else if ( CSBIGCam::GetCameraType() == ST237_CAMERA )
+		es |= (ES_ABG_CLOCKED | ES_ABG_RATE_FIXED);
+	else if ( CSBIGCam::GetActiveCCD() == CCD_TRACKING )
+		es |= (ES_ABG_CLOCKED | ES_ABG_RATE_MED);
+	else
+		es |= ES_ABG_LOW;
+	pImg->SetExposureState(es);
+	pImg->SetExposureTime(CSBIGCam::GetExposureTime());
+	pImg->SetNumberExposures(1);
+	pImg->SetReadoutMode(CSBIGCam::GetReadoutMode());
+	s = GetCameraTypeString();
+	if ( CSBIGCam::GetCameraType() == ST5C_CAMERA || ( CSBIGCam::GetCameraType() == ST237_CAMERA && s.find("ST-237A", 0) == string::npos) )
+		pImg->SetSaturationLevel(4095);
+	else
+		pImg->SetSaturationLevel(65535);
+	s = gcir.name;
+	//add identifier to camera name (distinguish two cameras)
+	ostringstream sout;
+	sout << s << " #" << m_nUSBNum;
+	pImg->SetCameraModel(sout.str());
+	pImg->SetBinning(hBin, vBin);
+	pImg->SetSubFrame(left, top);
+	
+	// end any exposure in case one in progress
+	CSBIGCam::EndExposure();
+	if ( CSBIGCam::GetError() != CE_NO_ERROR && CSBIGCam::GetError() != CE_NO_EXPOSURE_IN_PROGRESS )
+		return CSBIGCam::GetError();
+	
+	// start the exposure
+#if MYCAM_DEBUG
+	cout << "[MyCam debug]: starting 1st exposure (may not be a 2nd)." << endl;
+#endif	
+#if MYCAM_TIMING
+	gettimeofday(&reference2, NULL);
+	elapsed = (reference2.tv_sec - reference.tv_sec)*1000000 + reference2.tv_usec - reference.tv_usec;
+	cout << "[MyCam timing]: time for all steps up to exposure: " << elapsed/1000.0 << "ms" << endl;
+#endif
+	gettimeofday(&reference, NULL);       //find a reference time before exposure, not part of debugging
+	if ( CSBIGCam::StartExposure(dark == SBDF_LIGHT_ONLY ? SC_OPEN_SHUTTER : SC_CLOSE_SHUTTER) != CE_NO_ERROR )
+		return CSBIGCam::GetError();
+	//it turns out this command will typically be ~300ms after reference is taken
+	pImg->SetImageStartTime(&reference);
+
+	// wait for exposure to complete (sleep for most of the time, allow 5ms leeway)
+// #if MYCAM_DEBUG
+// 	cout << "[MyCam debug]: waiting for exposure, sleeping for: " 
+// 		 << (int)(CSBIGCam::GetExposureTime()*1000000 - 25000)/1000.0 << "ms" << endl;
+// #endif	
+// 	usleep((int)(CSBIGCam::GetExposureTime()*1000000) - 25000);              //sleep for 10ms less than exposure time
+	do {
+	} while ((err = CSBIGCam::IsExposureComplete(expComp)) == CE_NO_ERROR && !expComp );  //spend remainder of exposure testing for end
+	CSBIGCam::EndExposure();
+	if ( err != CE_NO_ERROR )
+		return err;
+	if ( CSBIGCam::GetError() != CE_NO_ERROR )
+		return CSBIGCam::GetError();
+#if MYCAM_TIMING
+	gettimeofday(&reference2, NULL);
+	elapsed = (reference2.tv_sec - reference.tv_sec)*1000000 + reference2.tv_usec - reference.tv_usec;
+	cout << "[MyCam timing]: time for exposure: " << elapsed/1000.0 << "ms" << endl;
+	expTime = elapsed/1000.0;
+	gettimeofday(&reference, NULL);       //reset reference time
+#endif
+	
+	// readout the CCD
+	srp.ccd = CSBIGCam::GetActiveCCD();
+	srp.left = left;
+	srp.top = top;
+	srp.height = height;
+	srp.width = width;
+	srp.readoutMode = CSBIGCam::GetReadoutMode();
+#if MYCAM_DEBUG
+	cout << "[MyCam debug]: starting to read out CCD" << endl;
+#endif	
+	if ( (err = CSBIGCam::StartReadout(srp)) == CE_NO_ERROR ) {
+		rlp.ccd = CSBIGCam::GetActiveCCD();
+		rlp.pixelStart = left;
+		rlp.pixelLength = width;
+		rlp.readoutMode = CSBIGCam::GetReadoutMode();
+		for (i=0; i<height && err==CE_NO_ERROR; i++ )
+			err = CSBIGCam::ReadoutLine(rlp, FALSE, pImg->GetImagePointer() + (long)i * width);
+	}
+	CSBIGCam::EndReadout();
+	if ( err != CE_NO_ERROR )
+		return err;
+	if ( CSBIGCam::GetError() != CE_NO_ERROR )
+		return CSBIGCam::GetError();
+#if MYCAM_TIMING
+	gettimeofday(&reference2, NULL);
+	elapsed = (reference2.tv_sec - reference.tv_sec)*1000000 + reference2.tv_usec - reference.tv_usec;
+	cout << "[MyCam timing]: time for readout: " << elapsed/1000.0 << "ms" << endl;
+	readTime = elapsed/1000.0;
+	gettimeofday(&reference, NULL);       //reset reference time
+#endif
+
+	// we're done unless we wanted a dark also image
+	if ( dark == SBDF_DARK_ALSO ) {
+	// start the light exposure
+#if MYCAM_DEBUG
+		cout << "[MyCam debug]: starting 2nd exposure." << endl;
+#endif	
+		gettimeofday(&reference, NULL);
+		if ( CSBIGCam::StartExposure(SC_OPEN_SHUTTER) != CE_NO_ERROR )
+			return CSBIGCam::GetError();
+		pImg->SetImageStartTime(&reference);
+			
+		// wait for exposure to complete (sleep for most of the time, allow 5ms leeway)
+#if MYCAM_DEBUG
+		cout << "[MyCam debug]: waiting for exposure, sleeping for: " 
+		 	 << (int)(CSBIGCam::GetExposureTime()*1000000 - 10000)/1000.0 << "ms" << endl;
+#endif	
+		usleep((int)(CSBIGCam::GetExposureTime()*1000000) - 10000);
+		do {
+		} while ((err = CSBIGCam::IsExposureComplete(expComp)) == CE_NO_ERROR && !expComp );
+		CSBIGCam::EndExposure();
+		if ( err != CE_NO_ERROR )
+			return err;
+		if ( CSBIGCam::GetError() != CE_NO_ERROR )
+			return CSBIGCam::GetError();
+		// readout the CCD
+			
+		srp.ccd = CSBIGCam::GetActiveCCD();
+		srp.left = left;
+		srp.top = top;
+		srp.height = height;
+		srp.width = width;
+		srp.readoutMode = CSBIGCam::GetReadoutMode();
+		if ( (err = CSBIGCam::StartReadout(srp)) == CE_NO_ERROR ) {
+			rlp.ccd = CSBIGCam::GetActiveCCD();
+			rlp.pixelStart = left;
+			rlp.pixelLength = width;
+			rlp.readoutMode = CSBIGCam::GetReadoutMode();
+			for (i=0; i<height && err==CE_NO_ERROR; i++ )
+				err = CSBIGCam::ReadoutLine(rlp, TRUE, pImg->GetImagePointer() + (long)i * width);
+		}
+		CSBIGCam::EndReadout();
+		if ( err != CE_NO_ERROR )
+			return err;
+		if ( CSBIGCam::GetError() != CE_NO_ERROR )
+			return CSBIGCam::GetError();
+
+		// record dark subtraction in history
+		if ( CSBIGCam::GetCameraType() == ST5C_CAMERA || CSBIGCam::GetCameraType() == ST237_CAMERA )
+			pImg->SetHistory("f");
+		else
+			pImg->SetHistory("R");
+	}
+#if MYCAM_TIMING
+	gettimeofday(&reference2, NULL);
+	gettimeofday(&grabstop, NULL);
+	elapsed = (reference2.tv_sec - reference.tv_sec)*1000000 + reference2.tv_usec - reference.tv_usec;
+	cout << "[MyCam timing]: time for second exposure (as applicable): " << elapsed/1000.0 << "ms" << endl;
+	unsigned int duration = (grabstop.tv_sec - grabstart.tv_sec)*1000000 + grabstop.tv_usec - grabstart.tv_usec;
+	cout << "[MyCam timing]: grab image took total time of " << duration/1000.0 << "ms" << endl;
+	totalTime = duration/1000.0;
+	//don't write timing data to a file any more
+//	ofstream fout("/home/steve/starcam/thesis/sources/timing.txt", ios::out | ios::app);
+//	if (!fout) cerr << "Error: failed to open time recording file";
+//	fout << expTime << "\t\t" << readTime << "\t\t" << totalTime << endl;
+//	fout.close();
+#endif
+
+	return CE_NO_ERROR;	
+	
+}
+
+/*
+  
+	StartExposure:
+		
+	Start an exposure in the camera.  Should be matched
+	with an EndExposure call.
+	overrides CSBIGCam routine to try and add speed improvements
+	
+*/
+PAR_ERROR MyCam::StartExposure(SHUTTER_COMMAND shutterState)
+{
+	StartExposureParams sep;
+	
+//	sep.ccd = CSBIGCam::GetActiveCCD();
+	//adding START_SKIP_VDD should speed up the process, but may result in a glow on the side of the image
+	sep.ccd = CSBIGCam::GetActiveCCD() + START_SKIP_VDD;
+	sep.exposureTime = (unsigned long)(CSBIGCam::GetExposureTime() * 100.0 + 0.5);
+	if ( sep.exposureTime < 1 )
+		sep.exposureTime = 1;
+	sep.abgState = CSBIGCam::GetABGState();
+	
+	sep.openShutter = shutterState;
+	//can try manually opening the shutter, and the leaving the state the same in CC_START_EXPOSURE
+	//this would probably be best if coupled with not closing the shutter diring readout (may screw things up)
+// 	sep.openShutter = SC_LEAVE_SHUTTER;
+// 	MiscellaneousControlParams mcp;
+// 	mcp.fanEnable=TRUE;
+// 	mcp.shutterCommand=SC_OPEN_SHUTTER;
+// 	mcp.ledState=LED_ON;
+// 	if (CSBIGCam::SBIGUnivDrvCommand(CC_MISCELLANEOUS_CONTROL, &mcp, NULL) != CE_NO_ERROR)
+// 		return CSBIGCam::GetError();	
+	
+	if ( CSBIGCam::CheckLink() )
+		return CSBIGCam::SBIGUnivDrvCommand(CC_START_EXPOSURE, &sep, NULL);
+	else
+		return CSBIGCam::GetError();
+}
+
+/*
+  
+	EndExposure:
+		
+	End or abort an exposure in the camera.  Should be
+	matched to a StartExposure but no damage is done
+	by calling it by itself if you don't know if an
+	exposure was started for example.
+	overrides CSBIGCam routine to try and add speed improvements
+	
+*/
+PAR_ERROR MyCam::EndExposure(void)
+{
+	EndExposureParams eep;
+	
+	eep.ccd = CSBIGCam::GetActiveCCD();
+	//can try skipping wait for mottor to stop (should be coupled with manual motor control above)
+// 	eep.ccd = CSBIGCam::GetActiveCCD() + END_SKIP_DELAY;
+	
+	if ( CSBIGCam::CheckLink() )
+		return CSBIGCam::SBIGUnivDrvCommand(CC_END_EXPOSURE, &eep, NULL);
+	else
+		return CSBIGCam::GetError();
+}
