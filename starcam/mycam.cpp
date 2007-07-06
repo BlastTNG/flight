@@ -356,12 +356,13 @@ PAR_ERROR MyCam::GrabImage(BlobImage *pImg, SBIG_DARK_FRAME dark)
 	// try to allocate the image buffer
 	if ( !pImg->AllocateImageBuffer(height, width) )
 		return CE_MEMORY_ERROR;
-	pImg->SetImageModified(TRUE);
+	pImg->SetImageModified(TRUE);         //used by csbigimg in refrence to saving, not viewing
 
 	// initialize some image header params
 	if ( CSBIGCam::GetCCDTemperature(ccdTemp) != CE_NO_ERROR )
 		return CSBIGCam::GetError();
-	pImg->setCameraID(m_nUSBNum);            //USB port number uniquely identifies camera
+	//TODO probably want to have a camera serial number instead
+	pImg->setCameraID(this->getSerialNum());
 	pImg->SetCCDTemperature(ccdTemp);
 	pImg->SetEachExposure(CSBIGCam::GetExposureTime());
 	pImg->SetEGain(hex2double(gcir.readoutInfo[rm].gain));
@@ -457,6 +458,7 @@ PAR_ERROR MyCam::GrabImage(BlobImage *pImg, SBIG_DARK_FRAME dark)
 		return err;
 	if ( CSBIGCam::GetError() != CE_NO_ERROR )
 		return CSBIGCam::GetError();
+	pImg->setChanged(true);
 #if MYCAM_TIMING
 	gettimeofday(&reference2, NULL);
 	elapsed = (reference2.tv_sec - reference.tv_sec)*1000000 + reference2.tv_usec - reference.tv_usec;
@@ -510,6 +512,7 @@ PAR_ERROR MyCam::GrabImage(BlobImage *pImg, SBIG_DARK_FRAME dark)
 			return err;
 		if ( CSBIGCam::GetError() != CE_NO_ERROR )
 			return CSBIGCam::GetError();
+		pImg->setChanged(true);
 
 		// record dark subtraction in history
 		if ( CSBIGCam::GetCameraType() == ST5C_CAMERA || CSBIGCam::GetCameraType() == ST237_CAMERA )
@@ -597,4 +600,16 @@ PAR_ERROR MyCam::EndExposure(void)
 		return CSBIGCam::SBIGUnivDrvCommand(CC_END_EXPOSURE, &eep, NULL);
 	else
 		return CSBIGCam::GetError();
+}
+
+string MyCam::getSerialNum()
+{
+	GetCCDInfoParams gcip;
+	GetCCDInfoResults2 gcir;
+
+	gcip.request = 2;  //extended info
+	
+	if ( CSBIGCam::SBIGUnivDrvCommand(CC_GET_CCD_INFO, &gcip, &gcir) == CE_NO_ERROR )
+		return (string)gcir.serialNumber;
+	else return "unknown";
 }

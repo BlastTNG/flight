@@ -251,7 +251,7 @@ void CommandGUI::showReturnVal(QString &str)
 		StarcamReturn rtn;
 		CamCommunicator::interpretReturn((string)str.ascii(), &rtn);
 		ostringstream sout;
-		sout << "\n\nObtained a picture return signal from camera #" << rtn.cameraID << "\n"
+		sout << "\n\nObtained a picture return signal from camera #" << rtn.camID << "\n"
 			 << "... mapmean =" << rtn.mapmean << "\n"
 			 << "... sigma=" << rtn.sigma << "\n"
 			 << "... exposuretime=" << rtn.exposuretime << "\n"

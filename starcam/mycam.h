@@ -55,6 +55,8 @@ public:
 	void setFocusResolution(unsigned int res) { m_nFocusResolution = res; }
 	unsigned int getFocusResolutoin(void) { return m_nFocusResolution; }
 
+	string getSerialNum();
+
 };
 
 #endif

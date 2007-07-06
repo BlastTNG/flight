@@ -212,7 +212,7 @@ static const BlobImageConfigParams defaultImageParams = {
 		"/home/steve/starcam/programming/pyr/k.bin"                //katalogname
     },
 	{                               //viewer params
-		1000,                          //refreshTime
+		10,                          //refreshTime
 		765, 510                       //width, height
 	},
 	"",                             //badpixFilename
@@ -228,7 +228,7 @@ struct StarcamReturn {
 	double sigma;                   //error level (stnadard deviation) of map
 	double exposuretime;            //exposure duration in seconds
 	timeval imagestarttime;         //time set immediately after exposure started
-	int cameraID;                   //some number to uniquely identify camera
+	string camID;                   //some number to uniquely identify camera
 	double ccdtemperature;          //CCD temperature measured by camera's sensor
 	
 	//blob info (on 15 brightest blobs)

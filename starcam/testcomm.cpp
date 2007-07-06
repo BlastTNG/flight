@@ -93,7 +93,7 @@ string displayReturn(string rtn_str)
 	} else {        //otherwise it is a return struct
 		StarcamReturn rtn;
 		CamCommunicator::interpretReturn(rtn_str, &rtn);
-		cout << "\n\nObtained a picture return signal from camera #" << rtn.cameraID << endl
+		cout << "\n\nObtained a picture return signal from camera #" << rtn.camID << endl
 		 	<< "... mapmean =" << rtn.mapmean << endl
 		 	<< "... sigma=" << rtn.sigma << endl
 		 	<< "... exposuretime=" << rtn.exposuretime << endl

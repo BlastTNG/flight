@@ -25,7 +25,8 @@ private:
 	string m_sBadpixFilename;  //name of file containing coordinates of bad pixels on CCD
 	timeval m_sImageStartTime; //privde higher resolution timestamps than CSBIGImg does
 	unsigned long m_nTimeError;//upper bound on imprecision of image start time (us)
-	int m_nCameraID;           //identifies camera that took picture
+	string m_sCamID;           //identifies camera that took picture
+	bool m_bIsChanged;         //allows viewer to tell if contents have changed
 #if USE_PYRAMID	
 	Pyramid m_cPyramid;        //object for pattern recognition
 	double m_dMatchTol;        //tolerance value (focal plane distance) for pattern matchcing
@@ -59,8 +60,10 @@ public:
 	string getBadpixFilename(void) { return m_sBadpixFilename; }
 	void setBadpixFilename(string name) { m_sBadpixFilename = name; }
 	void setBadpixFilename(const char* name);
-	void setCameraID(int in_id) { m_nCameraID = in_id; }
-	int getCameraID(void) { return m_nCameraID; }
+	void setCameraID(string in_id) { m_sCamID = in_id; }
+	string getCameraID(void) { return m_sCamID; }
+	bool isChanged() { return m_bIsChanged; }
+	void setChanged(bool flag) { m_bIsChanged = flag; }
 #if USE_PYRAMID
 	Pyramid* getPyramid() { return &m_cPyramid; }
 	void setMatchTol(double tol) { m_dMatchTol = tol; }
@@ -72,7 +75,7 @@ public:
 	StarcamReturn* createReturnStruct(StarcamReturn* arg);
 	
 	//functions to help in testing the blob finder
-	void drawBox(double x, double y, double side);
+	void drawBox(double x, double y, double side, bool willChange);
 	string createFilename();
 	string createDirectory(string root, int boxflag);
 	SBIG_FILE_ERROR SaveImageIn(string root="/home/steve/starcam/starcam/pictures/", int boxflag=0);

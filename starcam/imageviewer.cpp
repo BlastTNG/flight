@@ -20,7 +20,7 @@
  parent widget is for Qt purposese, and name used internally only
  
 */
-ImageViewer::ImageViewer(int w, int h, int msec/*=1000*/, QWidget* parent/*=0*/, const char * name/*=0*/)
+ImageViewer::ImageViewer(int w, int h, int msec/*=10*/, QWidget* parent/*=0*/, const char * name/*=0*/)
 	: QWidget(parent, name)
 {
 #if VIEWER_DEBUG
@@ -34,7 +34,7 @@ ImageViewer::ImageViewer(int w, int h, int msec/*=1000*/, QWidget* parent/*=0*/,
 		qimg->setColor(i, qRgb(i, i, i));
 	
 	bimg = NULL;                   //no image has been loaded
-	loadOnRefresh = FALSE;         //by default this is bad
+	needsRepaint = false;          //no need until first load
 	autoBR = FALSE;                //remembers last used value
 	
 	refreshTimer = new QTimer(this, "refresh timer");
@@ -85,6 +85,8 @@ void ImageViewer::load(BlobImage* img, bool in_autoBR/*=FALSE*/)
 		for (int j=0; j<width(); j++)
 			*(qline+j) = conv16to8(*(bline+j),background, range);
 	}
+	bimg->setChanged(false);
+	needsRepaint = true;
 	
 }
 
@@ -127,8 +129,12 @@ void ImageViewer::setRefreshTime(int msec)
 */
 void ImageViewer::refresh()
 {
-	if (loadOnRefresh && bimg) load(bimg, autoBR);
-	repaint();
+	if (bimg && bimg->isChanged()) //check if changed without load
+		load(bimg, autoBR);
+	if (needsRepaint && bimg) {
+		repaint();
+		needsRepaint = 0;
+	}
 }
 
 /*

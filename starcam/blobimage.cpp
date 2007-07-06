@@ -125,6 +125,7 @@ MY_LOGICAL BlobImage::AllocateImageBuffer(int height, int width)
 	if (!CSBIGImg::AllocateImageBuffer(height, width))
 		return FALSE;
 	m_cBlob.set_map(CSBIGImg::GetImagePointer(), height, width);	
+	m_bIsChanged = true;
 	return TRUE;
 }
 
@@ -195,6 +196,7 @@ SBIG_FILE_ERROR BlobImage::OpenImage(const char *pFullPath)
 		CSBIGImg::SetDefaultImageForamt(isCompressed ? SBIF_COMPRESSED : SBIF_UNCOMPRESSED);
 	}
 
+	m_bIsChanged = true;
 	return res;
 }
 
@@ -348,9 +350,10 @@ int BlobImage::findBlobs()
  drawBox:
  
  draws a white square of dimension side around the point x, y
+ when willChange is true, sets the images changed flag
  
 */
-void BlobImage::drawBox(double x, double y, double side)
+void BlobImage::drawBox(double x, double y, double side, bool willChange)
 {
 #if BLOB_IMAGE_DEBUG
 	cout << "[Blob image debug]: In drawBox method." << endl;
@@ -375,6 +378,7 @@ void BlobImage::drawBox(double x, double y, double side)
 				map[i*xdim+j] = sat;
 		}
 	}
+	if (willChange) m_bIsChanged = 1;
 }
 
 /*
@@ -464,7 +468,7 @@ StarcamReturn* BlobImage::createReturnStruct(StarcamReturn* arg)
 	arg->sigma = m_cBlob.get_sigma();
 	arg->exposuretime = CSBIGImg::GetExposureTime();
 	arg->imagestarttime = GetImageStartTime();
-	arg->cameraID = m_nCameraID;
+	arg->camID = m_sCamID;
 	arg->ccdtemperature = CSBIGImg::GetCCDTemperature();
 	
 	//blob info (on 15 brightest blobs)

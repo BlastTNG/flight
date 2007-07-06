@@ -51,6 +51,7 @@ pthread_cond_t cameraTriggerCond = PTHREAD_COND_INITIALIZER;
 #include "imageviewer.h"
 //ImageViewer *viewer;
 void* viewer;       //needs to be cast as ImageViewer*
+bool showBoxes = false;  //TODO make commandable
 #endif
 
 //function declarations
@@ -322,7 +323,7 @@ void* processingLoop(void* arg)
 				while (blobs != NULL) {
 					cout << "[Starcam debug]: processingLoop:       ...(" << blobs->getx() 
 							<< "," << blobs->gety() << ")" << endl;
-					globalImages[imageIndex].drawBox(blobs->getx(), blobs->gety(), 20);
+					globalImages[imageIndex].drawBox(blobs->getx(), blobs->gety(), 20, showBoxes);
 					blobs = blobs->getnextblob();
 				}
 			}
@@ -437,9 +438,7 @@ string interpretCommand(string cmd)
 				BlobImage img;
 #if USE_IMAGE_VIEWER
 				((ImageViewer*)viewer)->load(&img, TRUE);
-				((ImageViewer*)viewer)->setLoadOnRefresh(TRUE); //poor performance, but allows view during focus
 				err = globalCam.autoFocus(&img);
-				((ImageViewer*)viewer)->setLoadOnRefresh(FALSE);
 #else
 				err = globalCam.autoFocus(&img);
 #endif
