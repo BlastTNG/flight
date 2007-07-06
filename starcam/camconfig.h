@@ -221,25 +221,4 @@ static const BlobImageConfigParams defaultImageParams = {
 	4.575e-5                        //platescale
 };
 
-//the type of the information to be returned to flight computer when a picture is taken
-struct StarcamReturn {
-	//image info
-	double mapmean;                 //mean value of image map
-	double sigma;                   //error level (stnadard deviation) of map
-	double exposuretime;            //exposure duration in seconds
-	timeval imagestarttime;         //time set immediately after exposure started
-	string camID;                   //some number to uniquely identify camera
-	double ccdtemperature;          //CCD temperature measured by camera's sensor
-	
-	//blob info (on 15 brightest blobs)
-	int numblobs;                   //number of blobs found (or 15 if larger than 15)
-	int flux[15];                   //flux of blob
-	double mean[15];                //men value around blob
-	double snr[15];                 //SNR of blob
-	double x[15];                   //position of centroid
-	double y[15];                   //...
-	
-	//pointing info won't be included since only coarse pointing needed in flight
-};
-
 #endif   //CAMCONFIG_H

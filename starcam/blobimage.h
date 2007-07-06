@@ -9,6 +9,7 @@
 #include "csbigimgdefs.h"
 #include "frameblob.h"
 #include "camconfig.h"
+#include "camstruct.h"
 #include "pyramid.h"
 
 //flag for compiling with use of lost in space star matching
