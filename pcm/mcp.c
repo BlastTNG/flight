@@ -82,6 +82,8 @@ void openMotors(); //motors.c
 void closeMotors();
 void rotaryTableComm();
 
+void openCamera();  //starcamera.c
+
 void FrameFileWriter(void);  //framefile.c
 void InitialiseFrameFile(char);
 void dirFileWriteFrame(unsigned short *RxFrame);
@@ -531,6 +533,8 @@ int main(int argc, char *argv[])
 
   openMotors();  //open communications with peripherals
   pthread_create(&tablecomm_id, NULL, (void*)&rotaryTableComm, NULL);
+
+  openCamera();  //also creates a thread
 
   bputs(info, "System: Finished Initialisation, waiting for BBC to come up.\n");
 

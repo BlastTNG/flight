@@ -1,6 +1,7 @@
 /* mcp: the Spider master control program
  *
  * motors.cpp: motor control related functions
+ *     this file is a logical part of tx.c
  *     uses cpp to make calling class functions easier
  *
  * This software is copyright (C) 2002-2007 University of Toronto

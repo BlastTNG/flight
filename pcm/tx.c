@@ -20,17 +20,6 @@
  *
  */
 
-/* tx.c */
-
-/* NB: As of 7 Sep 2003 this file has been split up into four pieces:
- *
- * auxiliary.c: Auxiliary controls: Lock Motor, Pumps, Electronics Heat, ISC
- * das.c:       DAS, Bias and Cryo controls
- * motors.c:    Motor commanding and Scan modes
- * tx.c:        Pointing data writeback, ADC sync, and standard Tx frame control
- *
- * -dvw */
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

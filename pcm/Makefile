@@ -16,10 +16,12 @@ ifeq ($(USE_FIFO_CMD), 1)
 endif
 
 HEADERS = bbc_pci.h blast.h channels.h derived.h mcp.h tx.h command_list.h \
-	  drivecommunicator.h motorcommand.h pointing_struct.h command_struct.h
+	  drivecommunicator.h motorcommand.h pointing_struct.h \
+	  command_struct.h camconfig.h camcommunicator.h
 
-OBJS = mcp.o blast.o channels.o derived.o framefile.o tx.o tx_struct.o commands.o \
-       drivecommunicator.o motorcommand.o motors.o pointing.o command_list.o
+OBJS = mcp.o blast.o channels.o derived.o framefile.o tx.o tx_struct.o \
+       commands.o drivecommunicator.o motorcommand.o motors.o pointing.o \
+       command_list.o camcommunicator.o starcamera.o
 
 .PHONEY: fifo install all debug
 
