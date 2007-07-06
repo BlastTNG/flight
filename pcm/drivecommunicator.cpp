@@ -51,19 +51,12 @@ DriveCommunicator::~DriveCommunicator()
 
 /*
 openConnection:
-open a connection to the device /dev/'devicename' at drive default settings and default (9600 baud) speed
-*/
-void DriveCommunicator::openConnection(string deviceName)
-{
-  openConnection(deviceName, false);
-}
-
-/*
-openConnection:
-open a connection to the device /dev/'devicename' at drive default settings
+open a connection to the device /dev/'deviceName' at drive default settings
 if highspeed is true, then use 115200 baud as speed
+should always do this now since speed is set in controller startup
 */
-void DriveCommunicator::openConnection(string deviceName, bool highspeed)
+void DriveCommunicator::openConnection(string deviceName, 
+    bool highspeed/*=true*/)
 {
 #if DRIVE_COMM_DEBUG
   cout << "[DriveComm debug]: opening a connection to the device: " << deviceName << endl;
@@ -102,12 +95,12 @@ void DriveCommunicator::openConnection(string deviceName, bool highspeed)
   //try talking to the drive by sending synchronization character
   synchronize();
 
-  //try seeing controller is already running at high speed
+  //try seeing if controller is running at low speed (shouldn't)
   if (!highspeed && err != DC_NO_ERROR) {
 #if DRIVE_COMM_DEBUG
-    cout << "[DriveComm debug]: synchronize failed, trying high speed" << endl;
+    cout << "[DriveComm debug]: synchronize failed, trying low speed" << endl;
 #endif
-    openConnection(deviceName, true);
+    openConnection(deviceName,false);
   }
 
   this->highspeed = highspeed;
@@ -221,6 +214,7 @@ void DriveCommunicator::synchronize()
 /*
 maxCommSpeed:
 changes the communication baud rate from the default 9600 to the maximum 115200
+now performed by controller in initial program
 */
 void DriveCommunicator::maxCommSpeed(unsigned short dest)
 {
@@ -481,6 +475,7 @@ void DriveCommunicator::sendSpeedCommand(unsigned short dest, double speed)
   cspd.buildCommand();
   upd.buildCommand();
   this->sendCommand(&cspd);
+  if (err != DC_NO_ERROR) return;  //command failed
 
   //if speed is different direction than currently, need to change CPOS
   if (!this->dirForward && speed > 0) {       //currently going backward, forward speed command
@@ -489,6 +484,7 @@ void DriveCommunicator::sendSpeedCommand(unsigned short dest, double speed)
     MotorCommand cpos(dest, 0x249e, pdata, 2);
     cpos.buildCommand();
     this->sendCommand(&cpos);
+    if (err != DC_NO_ERROR) return;  //command failed
     this->dirForward = true;
   }
   else if (this->dirForward && speed < 0) {      //currently going forward, backward speed command
@@ -497,11 +493,13 @@ void DriveCommunicator::sendSpeedCommand(unsigned short dest, double speed)
     MotorCommand cpos(dest, 0x249e, pdata, 2);
     cpos.buildCommand();
     this->sendCommand(&cpos);
+    if (err != DC_NO_ERROR) return;  //command failed
     this->dirForward = false;
   }
 
   //send update
   this->sendCommand(&upd);
+  if (err != DC_NO_ERROR) return;  //command failed
 }
 
 /*

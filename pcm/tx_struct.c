@@ -70,7 +70,7 @@ struct ChannelStruct FastChannels[] = {
   {"gy4_bad",     'r',  ACS1, 61,  1.0,                              0.0, 'u'},
   {"gy5_bad",     'r',  ACS1, 62,  1.0,                              0.0, 'u'},
   {"gy6_bad",     'r',  ACS1, 63,  1.0,                              0.0, 'u'},
-  {"dps_table",   'w', LOOP1,  0,  45.0/32768.0,                     0.0, 's'},
+  {"dps_table",   'w', LOOP1,  0,  70.0/32767.0,                     0.0, 's'},
 
   END_OF_CHANNELS
 };

@@ -56,13 +56,13 @@ extern "C" {
 /* opens communications with motor contorllers */
 void openMotors()
 {
+  bprintf(info, "Motors: connecting to motors");
   tableComm = new DriveCommunicator(TABLE_DEVICE);
   if (tableComm->getError() != DC_NO_ERROR) {
-    bprintf(err, "table initialization gave error code: %d",
+    bprintf(err, "Motors: roary table initialization gave error code: %d",
 	tableComm->getError());
-    berror(err, "Motors: Error connecting to rotary table");
   }
-  tableComm->maxCommSpeed(TABLE_ADDR);
+//  tableComm->maxCommSpeed(TABLE_ADDR);  //done in firmware
   //turn on motor power
   MotorCommand axison(TABLE_ADDR, 0x0102);
   axison.buildCommand();
@@ -75,36 +75,35 @@ void closeMotors()
   delete tableComm;
 }
 
-/* PI loop to figure out rotary table speed
+/* figures out desired rotary table speed
  * result sent to table communication thread with global
+ * control loop performed externally
  */
 void updateTableSpeed()
 {
-  double vel, azVel, error;
+  double vel, azVel;
   static double targVel;
-  double P, I;
   timeval timestruct;
-  static double lastTime, lastPos, integral;
+  static double lastTime, lastPos;
   double thisTime, thisPos;
   static int firsttime = 1;
   static NiosStruct* dpsAddr = NULL;
 
-  //find gondola az rotation rate
-  //TODO replace this naive version once there is a pointing solution
-  azVel = ACSData.gyro4;
-
-  //control loop: compute target speed
+  //initialization
   if (firsttime) {  //initialize history
     lastPos = ACSData.enc_table;
     gettimeofday(&timestruct, NULL);
     lastTime = (double)timestruct.tv_sec + timestruct.tv_usec/1000000.0;
-    integral = 0;
     targVel = 0;
     tableSpeed = 0;
     firsttime = 0;
     dpsAddr = GetNiosAddr("dps_table");
     return;
   }
+
+  //find gondola az rotation rate
+  //TODO replace this naive version once there is a pointing solution
+  azVel = ACSData.gyro4;
 
   //find table velocity
   gettimeofday(&timestruct, NULL);
@@ -120,15 +119,11 @@ void updateTableSpeed()
   lastTime = thisTime;
 
   //write speed to frame
-  int data = (int)((vel/45.0)*32767.0);
+  int data = (int)((vel/70.0)*32767.0); //allow much room to avoid overflow
   WriteData(dpsAddr, data, NIOS_FLUSH);
 
   //set new target velocity
-  P = CommandData.table_gain.P / 1000.0; 
-  I = CommandData.table_gain.I / 1000.0;
-  error = azVel - vel;  //TODO actual setpoint should be -azVel
-  integral = integral*0.999 + 0.001*error;  //exponential weight
-  targVel += P*error + I*integral;
+  targVel = azVel;
   if (targVel > MAX_TABLE_SPEED) targVel = MAX_TABLE_SPEED;
   else if (targVel < -MAX_TABLE_SPEED) targVel = -MAX_TABLE_SPEED;
   tableSpeed = (int)(targVel/MAX_TABLE_SPEED * (INT_MAX-1));
@@ -154,6 +149,16 @@ void rotaryTableComm()
       dTableSpeed = (double) tableSpeed * 
 	MAX_TABLE_SPEED * DPS_TO_TABLE / (INT_MAX - 1);
       tableComm->sendSpeedCommand(TABLE_ADDR,dTableSpeed);
+      if (tableComm->getError() != DC_NO_ERROR) {
+	bprintf(err, "Motors: rotary table comm failure, trying re-synch");
+	while (tableComm->getError() != DC_NO_ERROR) {
+	  //command failed, keep trying to resynchronize communications
+	  usleep(10000);
+	  tableComm->synchronize();	
+	}
+	bprintf(info, "Motors: successful reconnection to rotary table");
+      }
+      
       //TODO can also put queries here for (eg) motor temperature
 
       gettimeofday(&time, NULL);

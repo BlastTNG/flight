@@ -34,11 +34,10 @@ public:
 	bool isGoingForward() { return this->dirForward; }
 	
 	
-	//general command commincation methods
-	void openConnection(string deviceName);    //open connetion to named device and synchronize
-	void openConnection(string deviceName, bool highspeed);  //same as above except when highspeed==true use higher speed
+	void openConnection(string deviceName, bool highspeed=true);  //same as above except when highspeed==true use higher speed
 	void closeConnection();                    //closes connection, turn of drive power stage if possible
 	void synchronize();                        //send synchronization character and check reply
+	//maxCommSpeed now done in controller startup
 	void maxCommSpeed(unsigned short dest);    //changes from default 9600 baud to 115200
 	void sendCommand(MotorCommand *cmd);       //send the command cmd
 	MotorCommand* sendQuery(unsigned short dest, unsigned short dataAddr, bool has32bits); //queries for 16 or 32 bit data from an address

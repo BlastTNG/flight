@@ -354,6 +354,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       /***************************************/
       /********** Pointing Motor Gains *******/
     case table_gain:  /* rotary table gains */
+      //TODO PID loop performed in controller, figure out how to set gains
       CommandData.table_gain.P = ivalues[0];
       CommandData.table_gain.I = ivalues[1];
       break;
@@ -893,7 +894,7 @@ void InitCommandData()
   bputs(warning, "Commands: Regenerating Command Data and prev_status\n");
 
   /** prev_status overrides this stuff **/
-  CommandData.table_gain.I = 302;
+  CommandData.table_gain.I = 302;  //in thousandths
   CommandData.table_gain.P = 834;
 
   WritePrevStatus();
