@@ -45,38 +45,21 @@
 #define REQ_TIME        0x51
 #define REQ_ALTITUDE    0x52
 
-/* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
- * 90 degrees.  This is the offset to the true lock positions.
- * This number is relative to the elevation encoder reading, NOT
- * true elevation */
-#define LOCK_OFFSET (3.34)
-
 /* Seconds since 0TMG jan 1 1970 */
 #define SUN_JAN_6_1980 315964800L
 /* Seconds in a week */
 #define SEC_IN_WEEK  604800L
 
-/* based on isc_protocol.h */
-#define ISC_SHUTDOWN_NONE     0
-#define ISC_SHUTDOWN_HALT     1
-#define ISC_SHUTDOWN_REBOOT   2
-#define ISC_SHUTDOWN_CAMCYCLE 3
-
-#define ISC_TRIGGER_INT  0
-#define ISC_TRIGGER_EDGE 1
-#define ISC_TRIGGER_POS  2
-#define ISC_TRIGGER_NEG  3
-
-void NormalizeAngle(double*);  //pointing.c
+//void NormalizeAngle(double*);  //pointing.c
 
 static const char *UnknownCommand = "Unknown Command";
-
-extern short InCharge; /* tx.c */
 
 pthread_mutex_t mutex; //init'd in mcp.c
 
 struct SIPDataStruct SIPData;
 struct CommandDataStruct CommandData;
+
+int sendCamCommand(const char *cmd); //starcamera.cpp
 
 /** Write the Previous Status: called whenever anything changes */
 static void WritePrevStatus()
@@ -221,6 +204,22 @@ static void SingleCommand (enum singleCommand command, int scheduled)
   /* Update CommandData structure with new info */
 
   switch (command) {
+    case cam_expose:
+      sendCamCommand("CtrigExp");
+      break;
+    case cam_autofocus:
+      //TODO allow forced moves in focus
+      sendCamCommand("CtrigFocus");
+      break;
+    case cam_settrig_ext:
+      sendCamCommand("CsetExpInt=0");
+      break;
+    case cam_force_lens:
+      CommandData.forceLens = 1;
+      break;
+    case cam_unforce_lens:
+      CommandData.forceLens = 0;
+      break;
     case test:
       bputs(info, "This has beeen a succesful single command test");
       break;
@@ -344,6 +343,7 @@ static inline void copysvalue(char* dest, const char* src)
 static void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled)
 {
+  char buf[256];
 
   /* Update CommandData struct with new info
    * If the parameter is type 'i'/'l' set CommandData using ivalues[i]
@@ -351,6 +351,52 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
    */
 
   switch(command) {
+    //starcam commands
+    case cam_any:
+      sendCamCommand(svalues[0]);
+      break;
+    case cam_settrig_timed:
+      sprintf(buf, "CsetExpInt=%d", ivalues[0]);
+      sendCamCommand(buf);
+      break;
+    case cam_exp_params:
+      sprintf(buf, "CsetExpTime=%d", ivalues[0]);
+      sendCamCommand(buf);
+      break;
+    case cam_focus_params:
+      sprintf(buf, "CsetFocRsln=%d", ivalues[0]);
+      sendCamCommand(buf);
+      break;
+    case cam_bad_pix:
+      sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
+      sendCamCommand(buf);
+      break;
+    case cam_blob_params:
+      sprintf(buf, "IsetMaxBlobs=%d", ivalues[0]);
+      sendCamCommand(buf);
+      sprintf(buf, "IsetGrid=%d", ivalues[1]);
+      sendCamCommand(buf);
+      sprintf(buf, "IsetThreshold=%f", rvalues[2]);
+      sendCamCommand(buf);
+      sprintf(buf, "IsetDisttol=%d", ivalues[3]);
+      sendCamCommand(buf);
+      break;
+    case cam_lens_any:
+      sprintf(buf, "L=%s", svalues[0]);
+      sendCamCommand(buf);
+      break;
+    case cam_lens_move:
+      if (CommandData.forceLens)
+	sprintf(buf, "Lforce=%d", ivalues[0]);
+      else sprintf(buf, "Lmove=%d", ivalues[0]);
+      sendCamCommand(buf);
+      break;
+    case cam_lens_params:
+      sprintf(buf, "LsetTol=%d", ivalues[0]);
+      sendCamCommand(buf);
+      break;
+
+      
       /***************************************/
       /********** Pointing Motor Gains *******/
     case table_gain:  /* rotary table gains */

@@ -37,7 +37,7 @@ extern "C" {
 #include "pointing_struct.h"
 #include "mcp.h"
 #include "camcommunicator.h"
-#include "camconfig.h"
+#include "camstruct.h"
 #include "command_struct.h"
 
 //allow any host to be the star camera
@@ -46,8 +46,10 @@ extern "C" {
 static CamCommunicator* camComm;
 static pthread_t camcomm_id;
 
+static void* camReadLoop(void* arg);
+static string parseReturn(string rtnStr);
+
 extern "C" {
-//TODO implement these functions
 
 /*
  * open a connection the the star camera computer
@@ -56,8 +58,16 @@ extern "C" {
 void openCamera()
 {
   camComm = new CamCommunicator();
-  pthread_create(&camcomm_id, NULL, &camReadLoop, NULL)
+  pthread_create(&camcomm_id, NULL, &camReadLoop, NULL);
 }
+
+int sendCamCommand(const char *cmd)
+{
+  //this is okay unless I want to handle link dying during transmission
+  return camComm->sendCommand(cmd);
+}
+
+}       //extern "C"
 
 /*
  * wrapper for the read loop in CamCommunicator
@@ -67,11 +77,11 @@ static void* camReadLoop(void* arg)
 {
   if (camComm->openHost(CAM_SERVERNAME) < 0)
     berror(err, "Starcam: failed to accept star camera connection");
-  else bprintf(info, "Starcam: takling to star camera");
+  else bprintf(startup, "Starcam: talking to star camera");
 
   while(true) {
     camComm->readLoop(&parseReturn);
-    //readLoop returns when something bad happens
+    //readLoop returns when something bad happens; TODO handle
   }
 
   return NULL;
@@ -83,7 +93,8 @@ static void* camReadLoop(void* arg)
  */
 static string parseReturn(string rtnStr)
 {
+  //TODO this is temporary
+  bprintf(info, "Starcam: return string: %s", rtnStr.c_str());
   return "";  //doesn't send a response back to camera
 }
 
-}       //extern "C"

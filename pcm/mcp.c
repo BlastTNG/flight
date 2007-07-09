@@ -72,7 +72,6 @@ static int StartupVeto = STARTUP_VETO_LENGTH + 1;
 static int Death = -STARTUP_VETO_LENGTH * 2;
 static int RxFrameIndex;
 
-extern short int InCharge; /* tx.c */
 extern pthread_mutex_t mutex; //commands.c
 
 void Pointing();    //pointing.c

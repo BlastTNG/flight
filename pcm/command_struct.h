@@ -57,6 +57,9 @@ struct PointingModeStruct {
 };
 
 struct CommandDataStruct {
+  //starcam configuration
+  short int forceLens;  //should lens moves be forced
+  
   struct GainStruct table_gain;
 };
 

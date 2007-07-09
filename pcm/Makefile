@@ -17,7 +17,7 @@ endif
 
 HEADERS = bbc_pci.h blast.h channels.h derived.h mcp.h tx.h command_list.h \
 	  drivecommunicator.h motorcommand.h pointing_struct.h \
-	  command_struct.h camconfig.h camcommunicator.h
+	  command_struct.h camcommunicator.h camstruct.h
 
 OBJS = mcp.o blast.o channels.o derived.o framefile.o tx.o tx_struct.o \
        commands.o drivecommunicator.o motorcommand.o motors.o pointing.o \
