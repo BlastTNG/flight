@@ -20,6 +20,9 @@
  *
  */
 
+#ifndef COMMAND_STRUCT_H
+#define COMMAND_STRUCT_H
+
 #include "command_list.h"
 #include "channels.h"
 #include <time.h>
@@ -56,11 +59,24 @@ struct PointingModeStruct {
   double dec[4]; // the decs for radbox (ie, quad)
 };
 
+struct StarcamCommandData {
+  //camera and lens configuration
+  short int forced;  //are lens moves forced?
+  int expInt;        //exposure interval (ms) (0=triggered)
+  int expTime;       //exposure duration (ms)
+  int focusRes;      //steps to divide lens range into for focus
+  int moveTol;       //precision (ticks) for lens moves
+
+  //image processing configuration
+  int maxBlobs;      //max number of blobs to find
+  int grid;          //search grid cell size (pix)
+  double threshold;  //# sigma threshold for star finding
+  int minBlobDist;   //min dist (pix) between blobs
+};
+
 struct CommandDataStruct {
-  //starcam configuration
-  short int forceLens;  //should lens moves be forced
-  
-  struct GainStruct table_gain;
+  struct StarcamCommandData cam;
+  struct GainStruct tableGain;
 };
 
 struct ScheduleEvent {
@@ -77,6 +93,8 @@ struct ScheduleType {
   time_t t0;
   struct ScheduleEvent* event;
 };
+
+#endif   //COMMAND_STRUCT_H
 
 void InitCommandData();
 int SIndex(enum singleCommand);

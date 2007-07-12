@@ -26,6 +26,7 @@
 #include <limits.h>
 #include <sys/time.h>
 #include <math.h>
+#include <pthread.h>
 
 extern "C" {
 #include "blast.h"
@@ -51,8 +52,11 @@ static int tableSpeed = 0;
 //destination address on IDM controller bus (only one drive)
 #define TABLE_ADDR 0x0ff0
 static DriveCommunicator* tableComm;
+static pthread_t tablecomm_id;
 
 extern "C" {
+
+static void* rotaryTableComm(void *arg);
 
 /* opens communications with motor contorllers */
 void openMotors()
@@ -68,6 +72,7 @@ void openMotors()
   MotorCommand axison(TABLE_ADDR, 0x0102);
   axison.buildCommand();
   tableComm->sendCommand(&axison);
+  pthread_create(&tablecomm_id, NULL, &rotaryTableComm, NULL);
 }
 
 /* closes communications with motor controllers, frees memory */
@@ -91,7 +96,7 @@ void updateTableSpeed()
   static NiosStruct* dpsAddr = NULL;
 
   //initialization
-  if (firsttime) {  //initialize history
+  if (firsttime) {
     lastPos = ACSData.enc_table;
     gettimeofday(&timestruct, NULL);
     lastTime = (double)timestruct.tv_sec + timestruct.tv_usec/1000000.0;
@@ -111,7 +116,7 @@ void updateTableSpeed()
   thisTime = (double)timestruct.tv_sec + timestruct.tv_usec/1000000.0;
   thisPos = ACSData.enc_table;
   if (thisTime == lastTime) {
-    berror(err, "System: time not updating");
+    bprintf(err, "System: time not updating");
     return;
   }
   vel = (thisPos - lastPos) / (thisTime - lastTime);
@@ -134,7 +139,7 @@ void updateTableSpeed()
  * controlled by global integer set in updateTableSpeed (main loop)
  * integer is (?) atomic so needs no access control
  */
-void rotaryTableComm()
+void* rotaryTableComm(void* arg)
 {
   static int currSpeed=0;
   double dTableSpeed;  //speed (global int) converted to double
@@ -168,6 +173,31 @@ void rotaryTableComm()
       lastTime = thisTime;
 //    }
   }
+  return NULL;
+}
+
+/*
+ * updates slow motor fields in bbc frame
+ */
+void slowMotorFields()
+{
+  static bool firsttime = true;
+  static NiosStruct* gPTableAddr = NULL;
+  static NiosStruct* gITableAddr = NULL;
+  static NiosStruct* gDTableAddr = NULL;
+
+  //initialization
+  if (firsttime) {
+    gPTableAddr = GetNiosAddr("g_p_table");
+    gITableAddr = GetNiosAddr("g_i_table");
+    gDTableAddr = GetNiosAddr("g_d_table");
+    firsttime = false;
+  }
+
+  WriteData(gPTableAddr, CommandData.tableGain.P, NIOS_FLUSH);
+  WriteData(gITableAddr, CommandData.tableGain.I, NIOS_FLUSH);
+  WriteData(gDTableAddr, CommandData.tableGain.D, NIOS_FLUSH);
+
 }
 
 }       //extern "C"

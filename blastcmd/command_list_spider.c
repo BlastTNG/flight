@@ -21,16 +21,16 @@
 
 #include "command_list.h"
 
-const char *command_list_serial = "$Revision: 1.2 $";
+const char *command_list_serial = "$Revision: 1.3 $";
 
-//TODO revise this in parallel with defines in the header file
+//these must correspond to #defines in header
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Cooling", 
   "Pointing Sensor Trims", "Aux. Electronics", "Bias",
   "Pointing Sensor Vetos", "Actuators",        "Cal Lamp",
   "Pointing Motor Gains",  "Secondary Focus",  "Cryo Heat",
   "Subsystem Power",       "Lock Motor",       "Cryo Control",
-  "Telemetry",             "SC Housekeeping",  "Free for use 1",
+  "Telemetry",             "SC Miscellaneous", "Free for use 1",
   "X-Y Stage",             "SC Modes",         "Free for use 2",
   "Miscellaneous",         "SC Parameters",    "Free for use 3"
 };
@@ -40,7 +40,7 @@ const char *GroupNames[N_GROUPS] = {
 
 struct scom scommands[N_SCOMMANDS] = {
   //Star Camera commands
-  {COMMAND(cam_expose), "Start cam exposure (in triggered mode)", GR_SC_MODE},
+  {COMMAND(cam_expose), "Start cam exposure (in triggered mode)", GR_SC_MISC},
   {COMMAND(cam_autofocus), "Camera autofocus mode", GR_SC_MODE},
   {COMMAND(cam_settrig_ext), "Set external cam trigger mode", GR_SC_MODE},
   {COMMAND(cam_force_lens), "Forced mode for cam lens moves", GR_SC_MODE},
@@ -58,28 +58,28 @@ struct scom scommands[N_SCOMMANDS] = {
  */
 struct mcom mcommands[N_MCOMMANDS] = {
   //Starcam commands
-  {COMMAND(cam_any), "Execute arbitrary starcam command", GR_SC_HOUSE, 1,
+  {COMMAND(cam_any), "Execute arbitrary starcam command", GR_SC_MISC, 1,
     {
       {"Command String", 0, 32, 's', ""}
     }
   },
-  //TODO add frame fields for suitable parameter values
   {COMMAND(cam_settrig_timed), "Use timed exposure mode", GR_SC_MODE, 1,
     {
-      {"Exposure Interval (ms)", 0, MAX_15BIT, 'i', ""}
+      {"Exposure Interval (ms)", 0, MAX_15BIT, 'i', "sc_exp_int"}
     }
   },
   {COMMAND(cam_exp_params), "set starcam exposure commands", GR_SC_PARAM, 1,
     {
-      {"Exposure duration (ms)", 40, MAX_15BIT, 'i', ""}
+      {"Exposure duration (ms)", 40, MAX_15BIT, 'i', "sc_exp_time"}
     }
   },
   {COMMAND(cam_focus_params), "set camera autofocus params", GR_SC_PARAM, 1,
     {
-      {"Resolution (number possible positions)", 0, MAX_15BIT, 'i', ""}
+      {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "sc_foc_res"}
     }
   },
-  {COMMAND(cam_bad_pix), "Indicate pixel to ignore", GR_SC_HOUSE, 3,
+  {COMMAND(cam_bad_pix), "Indicate pixel to ignore", GR_SC_MISC | 
+    GR_SC_PARAM, 3,
     {
       {"Camera ID (0 or 1)", 0, 1, 'i', ""},
       {"x (0=left)", 0, 765, 'i', ""},
@@ -88,18 +88,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(cam_blob_params), "set blob finder params", GR_SC_PARAM, 4,
     {
-      {"Max number of blobs", 1, MAX_15BIT, 'i', ""},
-      {"Search grid size (pix)", 1, 765, 'i', ""},
-      {"Threshold (# sigma)", 0, 100, 'f', ""},
-      {"Min blob separation ^2 (pix^2)", 1, 765, 'i', ""}
+      {"Max number of blobs", 1, MAX_15BIT, 'i', "sc_maxblob"},
+      {"Search grid size (pix)", 1, 765, 'i', "sc_grid"},
+      {"Threshold (# sigma*1000)", 0, 100, 'f', "sc_thresh"},
+      {"Min blob separation ^2 (pix^2)", 1, 765, 'i', "sc_mdist"}
     }
   },
-  {COMMAND(cam_lens_any), "execute lens command directly", GR_SC_MODE, 1,
+  {COMMAND(cam_lens_any), "execute lens command directly", GR_SC_MISC, 1,
     {
       {"Lens command string", 0, 32, 's', ""}
     }
   },
-  {COMMAND(cam_lens_move), "set camera lens position", GR_SC_PARAM, 1,
+  {COMMAND(cam_lens_move), "move camera lens", GR_SC_MISC, 1,
     {
       {"New position (ticks)", 0, MAX_15BIT, 'i', ""}
     }
@@ -113,7 +113,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(table_gain), "starcam rotary table gains", GR_GAIN, 2,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_table"},
-      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_table"}
+      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_table"},
+      {"Derivative Gain",   0, MAX_15BIT, 'i', "g_d_table"}
     }
   }
 };

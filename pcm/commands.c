@@ -208,17 +208,19 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       sendCamCommand("CtrigExp");
       break;
     case cam_autofocus:
-      //TODO allow forced moves in focus
-      sendCamCommand("CtrigFocus");
+      if (CommandData.cam.forced)
+	sendCamCommand("CtrigFocusF");
+      else sendCamCommand("CtrigFocus");
       break;
     case cam_settrig_ext:
       sendCamCommand("CsetExpInt=0");
+      CommandData.cam.expInt = 0;
       break;
     case cam_force_lens:
-      CommandData.forceLens = 1;
+      CommandData.cam.forced = 1;
       break;
     case cam_unforce_lens:
-      CommandData.forceLens = 0;
+      CommandData.cam.forced = 0;
       break;
     case test:
       bputs(info, "This has beeen a succesful single command test");
@@ -358,14 +360,17 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case cam_settrig_timed:
       sprintf(buf, "CsetExpInt=%d", ivalues[0]);
       sendCamCommand(buf);
+      CommandData.cam.expInt = ivalues[0];
       break;
     case cam_exp_params:
       sprintf(buf, "CsetExpTime=%d", ivalues[0]);
+      CommandData.cam.expTime = ivalues[0];
       sendCamCommand(buf);
       break;
     case cam_focus_params:
       sprintf(buf, "CsetFocRsln=%d", ivalues[0]);
       sendCamCommand(buf);
+      CommandData.cam.focusRes = ivalues[0];
       break;
     case cam_bad_pix:
       sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
@@ -380,13 +385,17 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       sendCamCommand(buf);
       sprintf(buf, "IsetDisttol=%d", ivalues[3]);
       sendCamCommand(buf);
+      CommandData.cam.maxBlobs = ivalues[0];
+      CommandData.cam.grid = ivalues[1];
+      CommandData.cam.threshold = rvalues[2];
+      CommandData.cam.minBlobDist = ivalues[3];
       break;
     case cam_lens_any:
       sprintf(buf, "L=%s", svalues[0]);
       sendCamCommand(buf);
       break;
     case cam_lens_move:
-      if (CommandData.forceLens)
+      if (CommandData.cam.forced)
 	sprintf(buf, "Lforce=%d", ivalues[0]);
       else sprintf(buf, "Lmove=%d", ivalues[0]);
       sendCamCommand(buf);
@@ -394,15 +403,17 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case cam_lens_params:
       sprintf(buf, "LsetTol=%d", ivalues[0]);
       sendCamCommand(buf);
+      CommandData.cam.moveTol = ivalues[0];
       break;
 
       
-      /***************************************/
-      /********** Pointing Motor Gains *******/
+    /***************************************/
+    /********** Pointing Motor Gains *******/
     case table_gain:  /* rotary table gains */
       //TODO PID loop performed in controller, figure out how to set gains
-      CommandData.table_gain.P = ivalues[0];
-      CommandData.table_gain.I = ivalues[1];
+      CommandData.tableGain.P = ivalues[0];
+      CommandData.tableGain.I = ivalues[1];
+      CommandData.tableGain.D = ivalues[2];
       break;
     default:
       bputs(warning, "Commands: ***Invalid Multi Word Command***\n");
@@ -927,6 +938,7 @@ void InitCommandData()
   }
 
   /** stuff here overrides prev_status **/
+  //starcam related parameters initialized in camera startup
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
@@ -940,8 +952,11 @@ void InitCommandData()
   bputs(warning, "Commands: Regenerating Command Data and prev_status\n");
 
   /** prev_status overrides this stuff **/
-  CommandData.table_gain.I = 302;  //in thousandths
-  CommandData.table_gain.P = 834;
+  CommandData.tableGain.P = 6652;  //thousandths
+  CommandData.tableGain.I = 302;   //ten-thousandths
+  CommandData.tableGain.D = 13520; //hundredths
+  
+  CommandData.cam.forced = 0;
 
   WritePrevStatus();
 }

@@ -79,7 +79,6 @@ void WatchFIFO();   //commands.c
 
 void openMotors(); //motors.c
 void closeMotors();
-void rotaryTableComm();
 
 void openCamera();  //starcamera.c
 
@@ -461,7 +460,6 @@ int main(int argc, char *argv[])
   unsigned short* RxFrame;
 
   pthread_t disk_id;
-  pthread_t tablecomm_id;
   pthread_t CommandDatacomm1;
 
   if (argc == 1) {
@@ -530,8 +528,7 @@ int main(int argc, char *argv[])
   else
     bputs(info, "System: I am not Sam.\n");
 
-  openMotors();  //open communications with peripherals
-  pthread_create(&tablecomm_id, NULL, (void*)&rotaryTableComm, NULL);
+  openMotors();  //open communications with peripherals, creates threads
 
   openCamera();  //also creates a thread
 

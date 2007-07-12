@@ -37,7 +37,10 @@
 
 extern int bbc_fp;
 
-void updateTableSpeed();         //motors.c
+void updateTableSpeed();    //motors.cpp
+void slowMotorFields();
+
+void cameraFields();        //starcamera.cpp
 
 double round(double x);
 
@@ -237,6 +240,8 @@ void UpdateBBCFrame(unsigned short *RxFrame)
 
   /*** do slow Controls ***/
   if (index == 0) {
+    cameraFields();
+    slowMotorFields();
     if (!mcp_initial_controls)
       SyncADC();
   }

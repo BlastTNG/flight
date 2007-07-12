@@ -29,7 +29,7 @@
 
 #define N_GROUPS 24
 
-//TODO revise groups as necessary
+//"not yet used" groups leftover from BLAST, can be changed
 #define GR_POINT        0x00000001  //not yet used
 #define GR_BAL          0x00000002  //not yet used
 #define GR_COOL         0x00000004  //not yet used
@@ -46,7 +46,7 @@
 #define GR_LOCK         0x00002000  //not yet used
 #define GR_CRYO_CONTROL 0x00004000  //not yet used
 #define GR_TELEM        0x00008000  //not yet used
-#define GR_SC_HOUSE     0x00010000
+#define GR_SC_MISC      0x00010000
 #define GR_FREE1        0x00020000  //not yet used
 #define GR_STAGE        0x00040000  //not yet used
 #define GR_SC_MODE      0x00080000
