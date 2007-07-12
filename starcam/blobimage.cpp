@@ -464,6 +464,7 @@ SBIG_FILE_ERROR BlobImage::SaveImageIn(string root/*="/home/steve/starcam/pictur
 #include <iostream>
 StarcamReturn* BlobImage::createReturnStruct(StarcamReturn* arg)
 {
+	arg->frameNum = m_iFrame;
 	arg->mapmean = m_cBlob.get_mapmean();
 	arg->sigma = m_cBlob.get_sigma();
 	arg->exposuretime = CSBIGImg::GetExposureTime();

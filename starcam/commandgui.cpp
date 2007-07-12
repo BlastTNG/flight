@@ -45,12 +45,12 @@ const QString LensCmdDescs[] = { "Makes a precise move of the lens (proportional
 };
 
 //descriptions of the value needed for the command
-const QString CameraValDescs[] = { "", "", "(double) Exposure duration in seconds (default: 0.1)",
+const QString CameraValDescs[] = { "", "", "(double) Exposure duration in ms (default: 100)",
 	"(int) interval between exposures in ms, 0 indicates triggered-mode (default: 0)",
 	"(int) number of steps in total focal range during autofocus (default: 100)"
 };
 const QString ImageValDescs[] = { 
-	"(space-separated ints) coordinates of bad pixel (\"0 0\" is top left)",
+	"(space-separated ints) <cam #> <x> <y> (\"0 0\" is top left)",
 	"(int) maximum number of blobs (default: 99)",
 	"(int) size of grid square in pixels (default: 20)",
 	"(double) number of standard deviation above mean flux (default: 5.0)",

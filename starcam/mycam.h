@@ -27,6 +27,7 @@ private:
 	CLensAdapter m_cAdapter;   //the adapter for the lens used on the camera
 	int m_nPictureInterval;    //number of milliseconds between pictures, 0 for triggered
 	unsigned int m_nFocusResolution; //autofocus will step by (totalFocalRange)/m_nFocusResolution
+	unsigned long int m_iFrame;//frame number, increments each grabImage
 	
 public:
 	//constructors/destructor
@@ -46,14 +47,14 @@ public:
 	PAR_ERROR OpenUSBDevice(int num);
 	
 	//lens adapter functions
-	LENS_ERROR autoFocus(BlobImage *img);
+	LENS_ERROR autoFocus(BlobImage *img, int forced = 0);
 	CLensAdapter* getLensAdapter() { return &m_cAdapter; }
 	
 	//accesors
 	void setPictureInterval(int in_interval) { m_nPictureInterval = (in_interval >= 0)?in_interval:0; }
 	int getPictureInterval(void) { return m_nPictureInterval; }
 	void setFocusResolution(unsigned int res) { m_nFocusResolution = res; }
-	unsigned int getFocusResolutoin(void) { return m_nFocusResolution; }
+	unsigned int getFocusResolution(void) { return m_nFocusResolution; }
 
 	string getSerialNum();
 

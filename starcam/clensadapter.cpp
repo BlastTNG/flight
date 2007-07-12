@@ -193,7 +193,7 @@ LENS_ERROR CLensAdapter::findFocalRange()
 }
 
 /*
-	runCommand:LE_CONNECTION_ERROR
+	runCommand:
 		sends the string cmd and records response in return_value
 		should only ever be called by other forms of the runCommand function
 		

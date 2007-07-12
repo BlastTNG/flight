@@ -72,7 +72,8 @@ int maintainInitFile(string cmd, string val);
 const char* initFilename = "/usr/local/starcam/init.txt";
 const char* badpixFilename = "/usr/local/starcam/badpix.txt";
 const string adapterPath = "/dev/ttyACM0";
-const string commTarget = "parker";
+const string commTarget = "nogrod.spider";
+//const string commTarget = "parker.astro.utoronto.ca"
 const string imgPath = "/usr/local/starcam/pictures";     //path to save images in
 
 int main(int argc, char *argv[])
@@ -402,6 +403,7 @@ void* readLoop(void* arg)
  this funciton is passed as a pointer to CamCommunicator::readLoop
  returns a string to be sent back to flight computer
  when unsuccessful, the return string should start with "Error:"
+ when successful, return "<command echo> successful"
  
  any part of the public interface of one of the global objects can be exposed
  to flight computer by adding an entry here
@@ -430,7 +432,7 @@ string interpretCommand(string cmd)
 				globalCameraTriggerFlag = 1;
 				pthread_cond_signal(&cameraTriggerCond);
 			unlock(&cameraTriggerLock, "cameraTriggerLock", "interpretCommand");
-			return "Exposure triggered, data should arrive soon";
+			return (cmd + " successful");
 		}
 		else if (cmd == "CtrigFocus") {     //trigger autofocus
 			LENS_ERROR err;
@@ -438,26 +440,42 @@ string interpretCommand(string cmd)
 				BlobImage img;
 #if USE_IMAGE_VIEWER
 				((ImageViewer*)viewer)->load(&img, TRUE);
-				err = globalCam.autoFocus(&img);
+				err = globalCam.autoFocus(&img, 0);
 #else
-				err = globalCam.autoFocus(&img);
+				err = globalCam.autoFocus(&img, 0);
 #endif
 			unlock(&camLock, "camLock", "interpretCommand");
 			if (err != LE_NO_ERROR)
 				return (string)"Error: Autofocus returned: " + CLensAdapter::getErrorString(err);
-			else return "Autofocus completed successfully";
+			else return (cmd + " successful");
+		}
+		else if (cmd == "CtrigFocusF") {     //trigger forced move autofocus
+			LENS_ERROR err;
+			lock(&camLock, "camLock", "interpretCommand");
+				BlobImage img;
+#if USE_IMAGE_VIEWER
+				((ImageViewer*)viewer)->load(&img, TRUE);
+				err = globalCam.autoFocus(&img, 1);
+#else
+				err = globalCam.autoFocus(&img, 1);
+#endif
+			unlock(&camLock, "camLock", "interpretCommand");
+			if (err != LE_NO_ERROR)
+				return (string)"Error: Autofocus returned: " + CLensAdapter::getErrorString(err);
+			else return (cmd + " successful");
 		}
 		else if (cmd == "CsetExpTime") {           //set exposure time
 			if (valStr == "" || valStr == " ")
 				return (string)"Error: the command " + cmd + " requires a value";
 			double expTime;
 			sin >> expTime;
+			expTime /= 1000.0; //changed to using ms
 			lock(&camLock, "camLock", "interpretCommand");
 				globalCam.SetExposureTime(expTime);
 			unlock(&camLock, "camLock", "interpretCommand");
 			if (maintainInitFile(cmd, valStr) == 0)
-				return cmd + "=" + valStr + " completed successfully";
-			else return (string)"Error: " + cmd + "=" + valStr + " failed";
+				return (cmd + " successful");
+			else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
 		}
 		else if (cmd == "CsetExpInt") {         //set exposure interval (0 for triggered)
 			if (valStr == "" || valStr == " ")
@@ -476,8 +494,8 @@ string interpretCommand(string cmd)
 				globalCam.setPictureInterval(expInt);
 			unlock(&camLock, "camLock", "interpretCommand");
 			if (maintainInitFile(cmd, valStr) == 0)
-				return cmd + "=" + valStr + " completed successfully";
-			else return (string)"Error: " + cmd + "=" + valStr + " failed";
+			        return (cmd + " successful");
+			else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
 		}
 		else if (cmd == "CsetFocRsln") {           //set focus resolution
 			if (valStr == "" || valStr == " ")
@@ -489,8 +507,8 @@ string interpretCommand(string cmd)
 				globalCam.setFocusResolution(resolution);
 			unlock(&camLock, "camLock", "interpretCommand");
 			if (maintainInitFile(cmd, valStr) == 0)
-				return cmd + "=" + valStr + " completed successfully";
-			else return (string)"Error: " + cmd + "=" + valStr + " failed";
+			        return (cmd + " successful");
+			else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
 		}
 		else {
 #if STARCAM_DEBUG
@@ -502,13 +520,15 @@ string interpretCommand(string cmd)
 	}
 	else if (cmd[0] == 'I')       //command is for images
 	{
+	        //TODO this needs to be adapted for two cameras (one file for each camera)
 		if (cmd == "IsetBadpix") {    //set a bad pixel, value should have form "x y"
 			if (valStr == "" || valStr == " ")
 				return (string)"Error: the command " + cmd + " requires a value";
+			int x, y, camnum;
+			sin >> camnum >> x >> y;
 			ofstream fout(badpixFilename, ios::out | ios::app);
 			if (!fout) return "Error: failed to open bad pixel file";
-			valStr += "\n";
-			fout << valStr;          //assumes the same entry won't be made multiple times
+			fout << x << " " << y << "\n";          //assume same entry won't be made multiple times
 			fout.close();
 			//reload bad pixels into map (in frameblob)
 			for (int i=0; i<2; i++) {
@@ -516,7 +536,7 @@ string interpretCommand(string cmd)
 					globalImages[i].getFrameBlob()->load_badpix(badpixFilename);
 				unlock(&imageLock[i], "imageLock", "interpretCommand");
 			}
-			return (string)"Added bad pixel: " + valStr;
+			return (cmd + " successful");
 		}
 		else if (cmd == "IsetMaxBlobs") {        //set maximum number of blobs that will be found
 			if (valStr == "" || valStr == " ")
@@ -529,8 +549,8 @@ string interpretCommand(string cmd)
 				unlock(&imageLock[i], "imageLock", "interpretCommand");
 			}
 			if (maintainInitFile(cmd, valStr) == 0)
-				return cmd + "=" + valStr + " completed successfully";
-			else return (string)"Error: " + cmd + "=" + valStr + " failed";
+			        return (cmd + " successful");
+			else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
 		}
 		else if (cmd == "IsetGrid") {        //set grid size for blob detection
 			if (valStr == "" || valStr == " ")
@@ -543,8 +563,8 @@ string interpretCommand(string cmd)
 				unlock(&imageLock[i], "imageLock", "interpretCommand");
 			}
 			if (maintainInitFile(cmd, valStr) == 0)
-				return cmd + "=" + valStr + " completed successfully";
-			else return (string)"Error: " + cmd + "=" + valStr + " failed";
+			        return (cmd + " successful");
+			else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
 		}
 		else if (cmd == "IsetThreshold") {        //set threshold (in # sigma) for blob detection
 			if (valStr == "" || valStr == " ")
@@ -557,8 +577,8 @@ string interpretCommand(string cmd)
 				unlock(&imageLock[i], "imageLock", "interpretCommand");
 			}
 			if (maintainInitFile(cmd, valStr) == 0)
-				return cmd + "=" + valStr + " completed successfully";
-			else return (string)"Error: " + cmd + "=" + valStr + " failed";
+			        return (cmd + " successful");
+			else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
 		}
 		else if (cmd == "IsetDisttol") {        //set minimum distance squared (pixels) between blobs
 			if (valStr == "" || valStr == " ")
@@ -571,18 +591,18 @@ string interpretCommand(string cmd)
 				unlock(&imageLock[i], "imageLock", "interpretCommand");
 			}
 			if (maintainInitFile(cmd, valStr) == 0)
-				return cmd + "=" + valStr + " completed successfully";
-			else return (string)"Error: " + cmd + "=" + valStr + " failed";
+			        return (cmd + " successful");
+			else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
 		}
 #if USE_IMAGE_VIEWER
+		//this isnt' so needed anymore since now it's only a polling rate, not full refreshes
 		else if (cmd == "IsetRefresh") {        //set viewer refresh period (in ms)
 			if (valStr == "" || valStr == " ")
 				return (string)"Error: the command " + cmd + " requires a value.";
 			int msec;
 			sin >> msec;
-			if (msec < 100) return "Error: refresh period must be at least 100ms";
 			((ImageViewer*)viewer)->setRefreshTime(msec);
-			return "Refresh rate set successfully";
+			return (cmd + " successful");
 		}
 #endif
 		else {
@@ -601,13 +621,13 @@ string interpretCommand(string cmd)
 			int counts, remaining;
 			sin >> counts;
 			lock(&camLock, "camLock", "interpretCommand");
-				LENS_ERROR err = globalCam.getLensAdapter()->preciseMove(counts, remaining);
+				LENS_ERROR err = globalCam.getLensAdapter()->preciseMove(counts, remaining, 0);
 			unlock(&camLock, "camLock", "interpretCommand");
 #if STARCAM_DEBUG
 			cout << "[Starcam debug]: interpretCommand: Lens move of: " << counts
 			 	 << " counts has: " << remaining << " counts left to move" << endl;
 #endif
-			if (err == LE_NO_ERROR) return (string)"Move of " + valStr + " counts successful";
+			if (err == LE_NO_ERROR) return (cmd + " successful");
 			else return (string)"Error: Move returned " + CLensAdapter::getErrorString(err);
 		} 
 		else if (cmd == "Lforce") {       //make a forced move (ignore "false" stops)
@@ -622,7 +642,7 @@ string interpretCommand(string cmd)
 			cout << "[Starcam debug]: interpretCommand: Forced lens move of: " << counts
 			 	 << " counts has: " << remaining << " counts left to move" << endl;
 #endif
-			if (err == LE_NO_ERROR) return (string)"Forced move of " + valStr + " counts successful";
+			if (err == LE_NO_ERROR) return (cmd + " successful");
 			else return (string)"Error: Forced move returned " + CLensAdapter::getErrorString(err);
 		} 
 		else if (cmd == "LsetTol") {     //set tolerance of precise moves
@@ -634,8 +654,8 @@ string interpretCommand(string cmd)
 				globalCam.getLensAdapter()->setFocusTol(tol);
 			unlock(&camLock, "camLock", "interpretCommand");
 			if (maintainInitFile(cmd, valStr) == 0)
-				return cmd + "=" + valStr + " completed successfully";
-			else return (string)"Error: " + cmd + "=" + valStr + " failed";
+			        return (cmd + " successful");
+			else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
 		} 
 		else if (cmd == "L") {                 //try to send arbitrary lens command
 			string returnVal;
@@ -647,7 +667,7 @@ string interpretCommand(string cmd)
 			cout << "[Starcam debug]: interpretCommand: Lens command: \"" << cmd << "\"" 
 			 	 << "Returned: \"" << returnVal << "\"" << endl;
 #endif
-			return (string)"Lens command " + cmd + " returned: " + returnVal;
+			return cmd + " returned: " + returnVal;
 		}
 		else {
 #if STARCAM_DEBUG
@@ -656,6 +676,33 @@ string interpretCommand(string cmd)
 #endif
 			return (string)"Error: failed to parse lens command: " + cmd;
 		}
+	}
+	else if (cmd[0] == 'O')     //overall commands
+	{
+	  if (cmd == "Oconf") {   //send back current operating configuration
+	    ostringstream sout;
+	    sout << "<conf>";
+	    lock(&camLock, "camLock", "interpretCommand");
+	      sout << globalCam.getPictureInterval() << " "
+		   << globalCam.GetExposureTime() << " "
+		   << globalCam.getFocusResolution() << " "
+		   << globalCam.getLensAdapter()->getFocusTol() << " ";
+	    unlock(&camLock, "camLock", "interpretCommand");
+	    lock(&imageLock[0], "imageLock", "interpretCommand");
+	      sout << globalImages[0].getFrameBlob()->get_maxblobs() << " "
+		   << globalImages[0].getFrameBlob()->get_grid() << " "
+		   << globalImages[0].getFrameBlob()->get_threshold() << " "
+		   << globalImages[0].getFrameBlob()->get_disttol();
+	    unlock(&imageLock[0], "imageLock", "interpretCommand");
+	    return sout.str();
+	  }
+	  else {
+#if STARCAM_DEBUG
+	    cout << "[Starcam debug]: interpretCommand: Can't parse overall command: \"" 
+	      << cmd << "\"" << endl;
+#endif
+			return (string)"Error: failed to parse overall command: " + cmd;
+	  }
 	}
 	else {
 #if STARCAM_DEBUG

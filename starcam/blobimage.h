@@ -28,6 +28,7 @@ private:
 	unsigned long m_nTimeError;//upper bound on imprecision of image start time (us)
 	string m_sCamID;           //identifies camera that took picture
 	bool m_bIsChanged;         //allows viewer to tell if contents have changed
+	unsigned long int m_iFrame;//frame number
 #if USE_PYRAMID	
 	Pyramid m_cPyramid;        //object for pattern recognition
 	double m_dMatchTol;        //tolerance value (focal plane distance) for pattern matchcing
@@ -65,6 +66,7 @@ public:
 	string getCameraID(void) { return m_sCamID; }
 	bool isChanged() { return m_bIsChanged; }
 	void setChanged(bool flag) { m_bIsChanged = flag; }
+	void setFrameNum(unsigned long int frameNum) { m_iFrame = frameNum; }
 #if USE_PYRAMID
 	Pyramid* getPyramid() { return &m_cPyramid; }
 	void setMatchTol(double tol) { m_dMatchTol = tol; }

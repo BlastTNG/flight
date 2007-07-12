@@ -59,6 +59,7 @@ class frameblob {
   
   // --- Get search parameters ---
   MAPTYPE get_satval(void) { return satval; };
+  unsigned int get_maxblobs(void) { return maxblobs; }
   unsigned int get_grid(void) { return grid; };
   double get_threshold(void) { return threshold; };
   int get_disttol(void);

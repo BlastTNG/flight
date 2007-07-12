@@ -25,6 +25,9 @@
 #define MYCAM_DEBUG 1
 #define MYCAM_TIMING 1
 
+//minimum step size in autofocus, only used when suspect stickiness
+#define MIN_AUTO_STEP 10
+
 using namespace std;
 
 //use same constructors as CSBIGCam, make sure proper Init is called though.
@@ -55,6 +58,7 @@ void MyCam::Init(MyCamConfigParams params/*=defaultCameraParams*/)
 	m_nUSBNum = params.USBNum;
 	m_nPictureInterval = params.pictureInterval;
 	m_nFocusResolution = params.focusResolution;
+	m_iFrame = 0;
 }
 /* original version has been replaced
 void MyCam::Init()
@@ -111,12 +115,14 @@ PAR_ERROR MyCam::OpenUSBDevice(int num)
  //TODO can add sub-step interpolation of maximum
  
 */
-LENS_ERROR MyCam::autoFocus(BlobImage *img)
+LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/)
 {
 	frameblob *blob = img->getFrameBlob();
 	if (m_cAdapter.findFocalRange() != LE_NO_ERROR) return m_cAdapter.getLastError();
 	int range = m_cAdapter.getFocalRange();
 	int step = range / m_nFocusResolution;         //number of motor counts between measurements
+	//check if motor "stickiness" may have confused things
+	if (forced && step < MIN_AUTO_STEP) step = MIN_AUTO_STEP;
 #if MYCAM_DEBUG
 	cout << "[MyCam debug]: starting autoFocus with step size: " << step << endl;
 #endif
@@ -141,7 +147,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img)
 		else decrease_cnt = 0;
 		
 		//move to next location
-		if (m_cAdapter.preciseMove(-step, remaining) != LE_NO_ERROR)
+		if (m_cAdapter.preciseMove(-step, remaining, forced) != LE_NO_ERROR)
 			return m_cAdapter.getLastError();
 		
 		if (thisFlux > maxFlux) {         //check for new maximum
@@ -156,7 +162,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img)
 	}
 	
 	//move back to position to max flux
-	if (m_cAdapter.preciseMove(toMax, remaining) != LE_NO_ERROR)
+	if (m_cAdapter.preciseMove(toMax, remaining, forced) != LE_NO_ERROR)
 		return m_cAdapter.getLastError();
 	return LE_NO_ERROR;
 }
@@ -361,8 +367,8 @@ PAR_ERROR MyCam::GrabImage(BlobImage *pImg, SBIG_DARK_FRAME dark)
 	// initialize some image header params
 	if ( CSBIGCam::GetCCDTemperature(ccdTemp) != CE_NO_ERROR )
 		return CSBIGCam::GetError();
-	//TODO probably want to have a camera serial number instead
 	pImg->setCameraID(this->getSerialNum());
+	pImg->setFrameNum(m_iFrame++);
 	pImg->SetCCDTemperature(ccdTemp);
 	pImg->SetEachExposure(CSBIGCam::GetExposureTime());
 	pImg->SetEGain(hex2double(gcir.readoutInfo[rm].gain));
