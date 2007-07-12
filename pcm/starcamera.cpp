@@ -74,7 +74,6 @@ void openCamera()
 {
   camComm = new CamCommunicator();
   pthread_create(&camcomm_id, NULL, &camReadLoop, NULL);
-  sendCamCommand("Oconf");  //request configuration data
 }
 
 /*
@@ -84,6 +83,9 @@ void openCamera()
 void cameraFields()
 {
   static bool firsttime = true;
+  StarcamReturn* sc1 = NULL;
+  static bool unrecFlag = false;
+
   static NiosStruct* forceAddr = NULL;
   static NiosStruct* expIntAddr = NULL;
   static NiosStruct* expTimeAddr = NULL;
@@ -135,14 +137,28 @@ void cameraFields()
   WriteData(threshAddr, (int)(CommandData.cam.threshold*1000), NIOS_QUEUE);
   WriteData(blobMdistAddr, CommandData.cam.minBlobDist, NIOS_QUEUE);
 
-  static double mean = 0;
-  //TODO temporary, write stuff to frame here instead
-  if (cam1Rtn[i_cam].mapmean != mean) {
-    bprintf(info, "Starcam: received data from camera %s, mean %g, blobs %d",
-	cam1Rtn[i_cam].camID.c_str(), cam1Rtn[i_cam].mapmean, 
-	cam1Rtn[i_cam].numblobs);
-    mean = cam1Rtn[i_cam].mapmean;
+  //persistently identify cameras by serial number (camID)
+  if (cam1Rtn[i_cam].camID == "060400935") {
+    sc1 = &cam1Rtn[i_cam];
+    unrecFlag = false;
   }
+  else if (!unrecFlag) { //don't keep printing same error
+    bprintf(err, "Starcam: unrecognized camera ID");
+    sc1 = NULL;
+    unrecFlag = true;
+  }
+
+  if (sc1 != NULL) {
+    WriteData(sc1FrameAddr, sc1->frameNum, NIOS_QUEUE);
+    WriteData(sc1MeanAddr, (int)sc1->mapmean, NIOS_QUEUE);
+    WriteData(sc1SigmaAddr, (int)(sc1->sigma*10), NIOS_QUEUE);
+    WriteData(sc1TimeAddr, sc1->imagestarttime.tv_sec, NIOS_QUEUE);
+    WriteData(sc1UsecAddr, sc1->imagestarttime.tv_usec, NIOS_QUEUE);
+    //it looks like this is in deg C. just scale to get better resolution
+    WriteData(sc1CcdTempAddr, (int)(sc1->ccdtemperature*100), NIOS_QUEUE);
+    WriteData(sc1NumBlobsAddr, sc1->numblobs, NIOS_QUEUE);
+  }
+
 }
 
 }       //extern "C"
@@ -156,6 +172,8 @@ static void* camReadLoop(void* arg)
   if (camComm->openHost(CAM_SERVERNAME) < 0)
     bprintf(err, "Starcam: failed to accept star camera connection");
   else bprintf(startup, "Starcam: talking to star camera");
+
+  sendCamCommand("Oconf");  //request configuration data
 
   while(true) {
     camComm->readLoop(&parseReturn);

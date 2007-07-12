@@ -28,9 +28,9 @@
 
 /* read and write channel 56 on all boards reserved for ADC Sync */
 struct ChannelStruct WideSlowChannels[] = {
-  {"sc1_frame",    'w', LOOP1, 13,                1.0,             0.0, 'u'},
-  {"sc1_time",     'w', LOOP1, 15,                1.0,             0.0, 'u'},
-  {"sc1_usec",     'w', LOOP1, 17,                1.0,             0.0, 'u'},
+  {"sc1_frame",    'w', LOOP1, 13,                1.0,             0.0, 'U'},
+  {"sc1_time",     'w', LOOP1, 15,                1.0,             0.0, 'U'},
+  {"sc1_usec",     'w', LOOP1, 17,                1.0,             0.0, 'U'},
   //TODO add a derived field that adds the two times together
  END_OF_CHANNELS
 };
@@ -52,9 +52,8 @@ struct ChannelStruct SlowChannels[] = {
   {"sc_mdist",     'w', LOOP1, 12,                1.0,             0.0, 'u'},
   //LOOP1 13-18 are wide
   {"sc1_mapmean",  'w', LOOP1, 19,                1.0,             0.0, 'u'},
-  //TODO may want to rescale sigma, will have to for temperature
-  {"sc1_mapsigma", 'w', LOOP1, 20,                1.0,             0.0, 'u'},
-  {"sc1_ccd_t",    'w', LOOP1, 21,                1.0,             0.0, 'u'},
+  {"sc1_mapsigma", 'w', LOOP1, 20,           1.0/10.0,             0.0, 'u'},
+  {"sc1_ccd_t",    'w', LOOP1, 21,          1.0/100.0,             0.0, 's'},
   {"sc1_numblobs", 'w', LOOP1, 22,                1.0,             0.0, 'u'},
   //TODO add fields for blob x, y, flux, snr for blobs
   END_OF_CHANNELS

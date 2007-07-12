@@ -162,10 +162,11 @@ void* rotaryTableComm(void* arg)
 	  usleep(10000);
 	  tableComm->synchronize();	
 	}
+	//may also need to resend volatile commands (if I use any)
 	bprintf(info, "Motors: successful reconnection to rotary table");
       }
       
-      //TODO can also put queries here for (eg) motor temperature
+      //can also put queries here for (eg) motor temperature
 
       gettimeofday(&time, NULL);
       thisTime = time.tv_sec + time.tv_usec/1000000.0;

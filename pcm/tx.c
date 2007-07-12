@@ -248,4 +248,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
 
   if (!mcp_initial_controls)
     index = (index + 1) % FAST_PER_SLOW;
+
+  //make sure frame is flushed
+  RawNiosWrite(-1,-1,NIOS_FLUSH);
 }
