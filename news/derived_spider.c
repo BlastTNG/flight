@@ -74,5 +74,6 @@
  */
 
 union DerivedUnion DerivedChannels[] = {
+  LINCOM2("sc1_time", "sc1_sec", 1, 0, "sc1_usec", 1.0E-6, 0),
   END_OF_DERIVED_CHANNELS
 };

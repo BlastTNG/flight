@@ -20,8 +20,9 @@
  */
 
 #include "command_list.h"
+#include "camstruct.h"
 
-const char *command_list_serial = "$Revision: 1.3 $";
+const char *command_list_serial = "$Revision: 1.4 $";
 
 //these must correspond to #defines in header
 const char *GroupNames[N_GROUPS] = {
@@ -82,16 +83,16 @@ struct mcom mcommands[N_MCOMMANDS] = {
     GR_SC_PARAM, 3,
     {
       {"Camera ID (0 or 1)", 0, 1, 'i', ""},
-      {"x (0=left)", 0, 765, 'i', ""},
-      {"y (0=top)", 0, 510, 'i', ""}
+      {"x (0=left)", 0, CAM_WIDTH, 'i', ""},
+      {"y (0=top)", 0, CAM_HEIGHT, 'i', ""}
     }
   },
   {COMMAND(cam_blob_params), "set blob finder params", GR_SC_PARAM, 4,
     {
       {"Max number of blobs", 1, MAX_15BIT, 'i', "sc_maxblob"},
-      {"Search grid size (pix)", 1, 765, 'i', "sc_grid"},
+      {"Search grid size (pix)", 1, CAM_WIDTH, 'i', "sc_grid"},
       {"Threshold (# sigma*1000)", 0, 100, 'f', "sc_thresh"},
-      {"Min blob separation ^2 (pix^2)", 1, 765, 'i', "sc_mdist"}
+      {"Min blob separation ^2 (pix^2)", 1, CAM_WIDTH, 'i', "sc_mdist"}
     }
   },
   {COMMAND(cam_lens_any), "execute lens command directly", GR_SC_MISC, 1,

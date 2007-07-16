@@ -78,7 +78,10 @@ void openMotors()
 /* closes communications with motor controllers, frees memory */
 void closeMotors()
 {
-  if (tableComm != NULL) delete tableComm;
+  if (tableComm != NULL) {
+    tableComm->closeConnection();
+    delete tableComm;  //causes a glibc "free(): invalid pointer" warning
+  }
 }
 
 /* figures out desired rotary table speed

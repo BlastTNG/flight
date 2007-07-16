@@ -104,6 +104,11 @@ void cameraFields()
   static NiosStruct* sc1CcdTempAddr = NULL;
   static NiosStruct* sc1NumBlobsAddr = NULL;
 
+  static NiosStruct* sc1BlobX[15];
+  static NiosStruct* sc1BlobY[15];
+  static NiosStruct* sc1BlobF[15];
+  static NiosStruct* sc1BlobS[15];
+
   //initialization
   if (firsttime) {
     forceAddr = GetNiosAddr("sc_force");
@@ -119,10 +124,22 @@ void cameraFields()
     sc1FrameAddr = GetNiosAddr("sc1_frame");
     sc1MeanAddr = GetNiosAddr("sc1_mapmean");
     sc1SigmaAddr = GetNiosAddr("sc1_mapsigma");
-    sc1TimeAddr = GetNiosAddr("sc1_time");
+    sc1TimeAddr = GetNiosAddr("sc1_sec");
     sc1UsecAddr = GetNiosAddr("sc1_usec");
     sc1CcdTempAddr = GetNiosAddr("sc1_ccd_t");
     sc1NumBlobsAddr = GetNiosAddr("sc1_numblobs");
+
+    for (int i=0; i<15; i++) {
+      char buf[99];
+      sprintf(buf, "sc1_blob%02d_x", i);
+      sc1BlobX[i] = GetNiosAddr(buf);
+      sprintf(buf, "sc1_blob%02d_y", i);
+      sc1BlobY[i] = GetNiosAddr(buf);
+      sprintf(buf, "sc1_blob%02d_f", i);
+      sc1BlobF[i] = GetNiosAddr(buf);
+      sprintf(buf, "sc1_blob%02d_s", i);
+      sc1BlobS[i] = GetNiosAddr(buf);
+    }
 
     firsttime = false;
   }
@@ -157,6 +174,19 @@ void cameraFields()
     //it looks like this is in deg C. just scale to get better resolution
     WriteData(sc1CcdTempAddr, (int)(sc1->ccdtemperature*100), NIOS_QUEUE);
     WriteData(sc1NumBlobsAddr, sc1->numblobs, NIOS_QUEUE);
+
+    for (int i=0; i<sc1->numblobs; i++)
+    {
+      //TODO this needs to be tested in images where there are blobs
+      WriteData(sc1BlobX[i],(unsigned int)(sc1->x[i]/CAM_WIDTH*INT_MAX),
+	  NIOS_QUEUE);
+      WriteData(sc1BlobY[i],(unsigned int)(sc1->y[i]/CAM_WIDTH*INT_MAX),
+	  NIOS_QUEUE);
+      WriteData(sc1BlobF[i], (unsigned int)sc1->flux[i], NIOS_QUEUE);
+      unsigned int snr = (sc1->snr[i] >= INT_MAX / 100.0) ? 
+	INT_MAX : (unsigned int)sc1->snr[i]*100;
+      WriteData(sc1BlobS[i], snr, NIOS_QUEUE);
+    }
   }
 
 }
@@ -189,8 +219,9 @@ static void* camReadLoop(void* arg)
  */
 static string parseReturn(string rtnStr)
 {
-  //TODO this is temporary
+  /* debugging only
   bprintf(info, "Starcam: return string: %s", rtnStr.c_str());
+  */
   if (rtnStr.find("<str>", 0) == 0) //respone is string
   {
     string Rstr = rtnStr.substr(5, rtnStr.size() - 11);
