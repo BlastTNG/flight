@@ -203,14 +203,16 @@ static string parseReturn(string rtnStr)
       Rstr = Rstr.substr(6, Rstr.size()-6);
       istringstream sin;
       sin.str(Rstr);
+      double temp;  //value sent for expTime is a double
       sin >> CommandData.cam.expInt
-	  >> CommandData.cam.expTime
+	  >> temp
 	  >> CommandData.cam.focusRes
 	  >> CommandData.cam.moveTol
 	  >> CommandData.cam.maxBlobs
 	  >> CommandData.cam.grid
 	  >> CommandData.cam.threshold
 	  >> CommandData.cam.minBlobDist;
+      CommandData.cam.expTime = (int)(temp * 1000);
     }
     //otherwise it is success notice for another command
 

@@ -51,7 +51,7 @@ static int tableSpeed = 0;
 #define TABLE_DEVICE "/dev/ttyUSB0"
 //destination address on IDM controller bus (only one drive)
 #define TABLE_ADDR 0x0ff0
-static DriveCommunicator* tableComm;
+static DriveCommunicator* tableComm = NULL;
 static pthread_t tablecomm_id;
 
 extern "C" {
@@ -78,7 +78,7 @@ void openMotors()
 /* closes communications with motor controllers, frees memory */
 void closeMotors()
 {
-  delete tableComm;
+  if (tableComm != NULL) delete tableComm;
 }
 
 /* figures out desired rotary table speed

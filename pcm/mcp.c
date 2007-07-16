@@ -427,9 +427,6 @@ static int AmISam(void)
 /* Signal handler called when we get a hup, int or term */
 static void CloseBBC(int signo)
 {
-  //close peripheral communications
-  closeMotors();
-  
   bprintf(err, "System: Caught signal %i; stopping NIOS", signo);
   RawNiosWrite(0, BBC_ENDWORD, NIOS_FLUSH);
   RawNiosWrite(BBCPCI_MAX_FRAME_SIZE, BBC_ENDWORD, NIOS_FLUSH);
@@ -440,6 +437,9 @@ static void CloseBBC(int signo)
     close(bbc_fp);
 
   /* restore default handler and raise the signal again */
+  //close peripheral communications
+  closeMotors();
+  
   signal(signo, SIG_DFL);
   raise(signo);
 }
