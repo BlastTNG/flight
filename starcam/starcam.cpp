@@ -26,6 +26,8 @@ using namespace std;
 //enable use of image viewer window
 #define USE_IMAGE_VIEWER 1
 
+#define SAVE_SC_IMAGES 0
+
 //global variables
 
 //camera and image objects (and associated mutexes)
@@ -303,7 +305,9 @@ void* processingLoop(void* arg)
 #if USE_IMAGE_VIEWER
 			((ImageViewer*)viewer)->load(&globalImages[imageIndex], FALSE);
 #endif
+#if SAVE_SC_IMAGES
 			err = globalImages[imageIndex].SaveImageIn(imgPath, 0);
+#endif
 			if (err != SBFE_NO_ERROR) {
 #if STARCAM_DEBUG
 				cout << "[Starcam debug]: processingLoop: File error: " << err << endl;
@@ -330,7 +334,9 @@ void* processingLoop(void* arg)
 			}
 			//in debug mode also save a file with boxes
 			cout << "Saving image in: " << imgPath << endl;
+#if SAVE_SC_IMAGES
 			err = globalImages[imageIndex].SaveImageIn(imgPath, 1);
+#endif
 			if (err != SBFE_NO_ERROR) {
 				cout << "[Starcam debug]: processingLoop: File error: " << err << endl;
 				return (void*) &err;
