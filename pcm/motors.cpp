@@ -31,13 +31,13 @@
 extern "C" {
 #include "blast.h"
 #include "tx.h"
+#include "command_struct.h"
 }
 #include "channels.h"
 #include "pointing_struct.h"
 #include "mcp.h"
 #include "drivecommunicator.h"
 #include "motorcommand.h"
-#include "command_struct.h"
 
 //speed limit in dps
 #define MAX_TABLE_SPEED 45.0
@@ -45,6 +45,8 @@ extern "C" {
 #define DPS_TO_TABLE (1.0/2.496)
 //don't update speed unless it changes by this (1000 == 0.08arcsec/sec)
 #define TABLE_SPEED_TOL 1000
+//minimum table move to actaully execute (in deg)
+#define MIN_TABLE_MOVE 0.1
 static int tableSpeed = 0;
 
 //device node for serial port; TODO play with udev to make constant
@@ -90,8 +92,8 @@ void closeMotors()
  */
 void updateTableSpeed()
 {
-  double vel, azVel;
-  static double targVel;
+  double vel, azVel, dt;
+  static double targVel, relVel;
   timeval timestruct;
   static double lastTime, lastPos;
   double thisTime, thisPos;
@@ -114,7 +116,7 @@ void updateTableSpeed()
   //TODO replace this naive version once there is a pointing solution
   azVel = ACSData.gyro4;
 
-  //find table velocity
+  //find table speed
   gettimeofday(&timestruct, NULL);
   thisTime = (double)timestruct.tv_sec + timestruct.tv_usec/1000000.0;
   thisPos = ACSData.enc_table;
@@ -122,17 +124,37 @@ void updateTableSpeed()
     bprintf(err, "System: time not updating");
     return;
   }
-  vel = (thisPos - lastPos) / (thisTime - lastTime);
-//  bprintf(info, "time elapsed: %g", (thisTime-lastTime));
+  dt = (thisTime - lastTime);
+  vel = (thisPos - lastPos) / dt;
   lastPos = thisPos;
   lastTime = thisTime;
 
   //write speed to frame
   int data = (int)((vel/70.0)*32767.0); //allow much room to avoid overflow
-  WriteData(dpsAddr, data, NIOS_FLUSH);
+  WriteData(dpsAddr, data, NIOS_QUEUE);
 
-  //set new target velocity
-  targVel = azVel;
+  //update the remaining relative move, find relVel needed to move it
+  CommandData.tableRelMove -= (vel - azVel) * dt;
+  while (CommandData.tableRelMove > 360) CommandData.tableRelMove -= 360;
+  while (CommandData.tableRelMove < -360) CommandData.tableRelMove += 360;
+  if (fabs(CommandData.tableRelMove) < MIN_TABLE_MOVE)
+    CommandData.tableRelMove = 0;
+  relVel = CommandData.tableRelMove * CommandData.tableMoveGain;
+  if (relVel > MAX_TABLE_SPEED) relVel = MAX_TABLE_SPEED;
+  else if (relVel < -MAX_TABLE_SPEED) relVel = -MAX_TABLE_SPEED;
+  //if going too fast in one direction, reverse direction of move
+  if (CommandData.tableRelMove > 5) { //only do this for large moves
+    if (azVel > MAX_TABLE_SPEED/2 && relVel > azVel) { //too fast +
+      CommandData.tableRelMove -= 360; //go in -'ve direction
+      relVel = 0;   //find new relVel next time
+    } else if (azVel < -MAX_TABLE_SPEED/2 && relVel < azVel) { //too fast -
+      CommandData.tableRelMove += 360; //go in +'ve direction
+      relVel = 0;
+    }
+  }
+
+  //find new target velocity
+  targVel = azVel + relVel;
   if (targVel > MAX_TABLE_SPEED) targVel = MAX_TABLE_SPEED;
   else if (targVel < -MAX_TABLE_SPEED) targVel = -MAX_TABLE_SPEED;
   tableSpeed = (int)(targVel/MAX_TABLE_SPEED * (INT_MAX-1));
@@ -165,7 +187,7 @@ void* rotaryTableComm(void* arg)
 	  usleep(10000);
 	  tableComm->synchronize();	
 	}
-	//may also need to resend volatile commands (if I use any)
+	//may also need to resend volatile memory commands (if I use any)
 	bprintf(info, "Motors: successful reconnection to rotary table");
       }
       
@@ -189,18 +211,26 @@ void slowMotorFields()
   static NiosStruct* gPTableAddr = NULL;
   static NiosStruct* gITableAddr = NULL;
   static NiosStruct* gDTableAddr = NULL;
+  static NiosStruct* tableMoveAddr = NULL;
+  static NiosStruct* gTableMoveAddr = NULL;
 
   //initialization
   if (firsttime) {
     gPTableAddr = GetNiosAddr("g_p_table");
     gITableAddr = GetNiosAddr("g_i_table");
     gDTableAddr = GetNiosAddr("g_d_table");
+    tableMoveAddr = GetNiosAddr("table_move");
+    gTableMoveAddr = GetNiosAddr("g_table_move");
     firsttime = false;
   }
 
-  WriteData(gPTableAddr, CommandData.tableGain.P, NIOS_FLUSH);
-  WriteData(gITableAddr, CommandData.tableGain.I, NIOS_FLUSH);
-  WriteData(gDTableAddr, CommandData.tableGain.D, NIOS_FLUSH);
+  WriteData(gPTableAddr, CommandData.tableGain.P, NIOS_QUEUE);
+  WriteData(gITableAddr, CommandData.tableGain.I, NIOS_QUEUE);
+  WriteData(gDTableAddr, CommandData.tableGain.D, NIOS_QUEUE);
+  WriteData(tableMoveAddr, (unsigned int)
+      (CommandData.tableRelMove*10.0), NIOS_QUEUE);
+  WriteData(gTableMoveAddr, (unsigned int)
+      ((CommandData.tableMoveGain/100.0)*SHRT_MAX), NIOS_QUEUE);
 
 }
 

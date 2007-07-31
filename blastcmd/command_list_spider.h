@@ -15,7 +15,7 @@
 #define COMMAND_LIST_H
 
 #define N_SCOMMANDS 6        /* total number of single word cmds */
-#define N_MCOMMANDS 10       /* total number of multiword commands */
+#define N_MCOMMANDS 12       /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -81,7 +81,7 @@ extern struct scom scommands[N_SCOMMANDS];
 enum multiCommand {
   cam_any, cam_settrig_timed, cam_exp_params, cam_focus_params,
   cam_bad_pix, cam_blob_params, cam_lens_any, cam_lens_move, 
-  cam_lens_params, table_gain
+  cam_lens_params, table_move, table_move_g, table_gain
 };
 
 struct par {

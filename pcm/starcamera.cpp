@@ -178,13 +178,13 @@ void cameraFields()
     for (int i=0; i<sc1->numblobs; i++)
     {
       //TODO this needs to be tested in images where there are blobs
-      WriteData(sc1BlobX[i],(unsigned int)(sc1->x[i]/CAM_WIDTH*INT_MAX),
+      WriteData(sc1BlobX[i],(unsigned int)(sc1->x[i]/CAM_WIDTH*SHRT_MAX),
 	  NIOS_QUEUE);
-      WriteData(sc1BlobY[i],(unsigned int)(sc1->y[i]/CAM_WIDTH*INT_MAX),
+      WriteData(sc1BlobY[i],(unsigned int)(sc1->y[i]/CAM_WIDTH*SHRT_MAX),
 	  NIOS_QUEUE);
       WriteData(sc1BlobF[i], (unsigned int)sc1->flux[i], NIOS_QUEUE);
-      unsigned int snr = (sc1->snr[i] >= INT_MAX / 100.0) ? 
-	INT_MAX : (unsigned int)sc1->snr[i]*100;
+      unsigned int snr = (sc1->snr[i] >= SHRT_MAX / 100.0) ? 
+	SHRT_MAX : (unsigned int)sc1->snr[i]*100;
       WriteData(sc1BlobS[i], snr, NIOS_QUEUE);
     }
   }

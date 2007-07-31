@@ -266,13 +266,21 @@ static void GetACS(unsigned short *RxFrame)
   if (firsttime) {
     firsttime = 0;
     encTableAddr = GetBiPhaseAddr("enc_table");
-    //using raw (4-stage filtered) gyros. adds 0.02s latency
+#if 0
+    //using raw (4-stage filtered) gyros adds 0.02s latency
     gyro1Addr = GetBiPhaseAddr("raw_gy1");
     gyro2Addr = GetBiPhaseAddr("raw_gy2");
     gyro3Addr = GetBiPhaseAddr("raw_gy3");
     gyro4Addr = GetBiPhaseAddr("raw_gy4");
     gyro5Addr = GetBiPhaseAddr("raw_gy5");
     gyro6Addr = GetBiPhaseAddr("raw_gy6");
+#endif
+    gyro1Addr = GetBiPhaseAddr("gyro1");
+    gyro2Addr = GetBiPhaseAddr("gyro2");
+    gyro3Addr = GetBiPhaseAddr("gyro3");
+    gyro4Addr = GetBiPhaseAddr("gyro4");
+    gyro5Addr = GetBiPhaseAddr("gyro5");
+    gyro6Addr = GetBiPhaseAddr("gyro6");
   }
 
   rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
@@ -285,6 +293,7 @@ static void GetACS(unsigned short *RxFrame)
     enc_table += 360;
   else if (enc_table > 360.0) enc_table -= 360;
 
+#if 0
   ugy1 = (RxFrame[gyro1Addr->channel+1] << 16 | RxFrame[gyro1Addr->channel]);
   ugy2 = (RxFrame[gyro2Addr->channel+1] << 16 | RxFrame[gyro2Addr->channel]);
   ugy3 = (RxFrame[gyro3Addr->channel+1] << 16 | RxFrame[gyro3Addr->channel]);
@@ -297,6 +306,19 @@ static void GetACS(unsigned short *RxFrame)
   gyro4 = (double)(ugy4-DGY32_OFFSET) * DGY32_TO_DPS;
   gyro5 = (double)(ugy5-DGY32_OFFSET) * DGY32_TO_DPS;
   gyro6 = (double)(ugy6-DGY32_OFFSET) * DGY32_TO_DPS;
+#endif
+  ugy1 = RxFrame[gyro1Addr->channel];
+  ugy2 = RxFrame[gyro2Addr->channel];
+  ugy3 = RxFrame[gyro3Addr->channel];
+  ugy4 = RxFrame[gyro4Addr->channel];
+  ugy5 = RxFrame[gyro5Addr->channel];
+  ugy6 = RxFrame[gyro6Addr->channel];
+  gyro1 = (double)(ugy1-GY16_OFFSET) * GY16_TO_DPS;
+  gyro2 = (double)(ugy2-GY16_OFFSET) * GY16_TO_DPS;
+  gyro3 = (double)(ugy3-GY16_OFFSET) * GY16_TO_DPS;
+  gyro4 = (double)(ugy4-GY16_OFFSET) * GY16_TO_DPS;
+  gyro5 = (double)(ugy5-GY16_OFFSET) * GY16_TO_DPS;
+  gyro6 = (double)(ugy6-GY16_OFFSET) * GY16_TO_DPS;
 
   ACSData.t = mcp_systime(NULL);
   ACSData.mcp_frame = rx_frame_index;

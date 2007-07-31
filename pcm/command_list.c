@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "camstruct.h"
 
-const char *command_list_serial = "$Revision: 1.4 $";
+const char *command_list_serial = "$Revision: 1.5 $";
 
 //these must correspond to #defines in header
 const char *GroupNames[N_GROUPS] = {
@@ -111,6 +111,17 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {COMMAND(table_move), "move star camera by relative angle", GR_SC_MISC, 1,
+    {
+      {"Relative angle (deg)", -360, 360, 'd', "table_move"}
+    }
+  },
+  {COMMAND(table_move_g), "Gains to find move velocity from length",
+    GR_GAIN, 1,
+    {
+      {"P", 0, 100, 'f', "g_table_move"}
+    }
+  },
   {COMMAND(table_gain), "starcam rotary table gains", GR_GAIN, 2,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_table"},

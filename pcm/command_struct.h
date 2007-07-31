@@ -76,7 +76,9 @@ struct StarcamCommandData {
 
 struct CommandDataStruct {
   struct StarcamCommandData cam;
-  struct GainStruct tableGain;
+  double tableRelMove;     //relative angle to move table by (deg)
+  double tableMoveGain;             //P
+  struct GainStruct tableGain;      //PID
 };
 
 struct ScheduleEvent {

@@ -405,6 +405,12 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       sendCamCommand(buf);
       CommandData.cam.moveTol = ivalues[0];
       break;
+    case table_move:
+      CommandData.tableRelMove += rvalues[0];
+      break;
+    case table_move_g:
+      CommandData.tableMoveGain = rvalues[0];
+      break;
 
       
     /***************************************/
@@ -938,6 +944,7 @@ void InitCommandData()
   }
 
   /** stuff here overrides prev_status **/
+  CommandData.tableRelMove = 0; //don't move on restart
   //starcam related parameters initialized in camera startup
 
   /** return if we succsesfully read the previous status **/
@@ -952,11 +959,13 @@ void InitCommandData()
   bputs(warning, "Commands: Regenerating Command Data and prev_status\n");
 
   /** prev_status overrides this stuff **/
+  CommandData.cam.forced = 0;
+
+  CommandData.tableMoveGain = 10.0;
+
   CommandData.tableGain.P = 6652;  //thousandths
   CommandData.tableGain.I = 302;   //ten-thousandths
   CommandData.tableGain.D = 13520; //hundredths
   
-  CommandData.cam.forced = 0;
-
   WritePrevStatus();
 }
