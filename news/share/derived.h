@@ -1,6 +1,6 @@
 /* derived.h: a list of derived channels
  *
- * This software is copyright (C) 2004 University of Toronto
+ * This software is copyright (C) 2004,2007 University of Toronto
  *
  * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
@@ -12,6 +12,8 @@
  */
 
 #include "channels.h"
+
+#pragma pack(4)
 
 union DerivedUnion {
   struct {                      /* BIT FIELD */
@@ -51,7 +53,7 @@ union DerivedUnion {
   } lincom2;
   struct {
     char type;                  /* Should = '#' for comment */
-    char text[256];             /* comment */
+    char text[343];             /* comment */
   } comment;
 };
 

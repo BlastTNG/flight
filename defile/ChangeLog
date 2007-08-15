@@ -1,6 +1,14 @@
 # This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
 # patches and other updates to <dwiebe@physics.utoronto.ca>
 
+2007-08-15: D. V. Wiebe <dwiebe@physics.utoronto.ca>
+	Release defile-3.3.3
+
+	* derived.h: enforce packing to allow use on 64-bit machines.
+
+	* defile.c (GetFileName): provide a more useful error message for
+		zero-length files.
+
 2006-12-11: D. V. Wiebe <dwiebe@physics.utoronto.ca>
 	Release defile-3.3.2
 

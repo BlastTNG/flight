@@ -354,6 +354,10 @@ char* GetFileName(const char* source, const char* herr)
   /* the stat worked.  Now is this a regular file? */
   if (!S_ISREG(stat_buf.st_mode))
     bprintf(fatal, "`%s' is not a regular file\n", source);
+   
+  /* If this is a null-lengthed file, there's no point in continuing */
+  if (stat_buf.st_blocks == 0)
+    bprintf(fatal, "`%s' has zero size\n", source);
 
   /* attempt to open the file */
   if ((stream = fopen(source, "r")) == NULL)
@@ -493,7 +497,7 @@ void GetDirFile(char* buffer, const char* source, char* parent, int start)
 
 void PrintVersion(void)
 {
-  printf("defile " VERSION "  (C) 2004-2005 D. V. Wiebe\n"
+  printf("defile " VERSION "  (C) 2004-2007 D. V. Wiebe\n"
       "Compiled on " __DATE__ " at " __TIME__ ".\n\n"
       "This program comes with NO WARRANTY, "
       "not even for MERCHANTABILITY or FITNESS\n"
