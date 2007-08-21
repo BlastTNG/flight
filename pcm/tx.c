@@ -235,6 +235,12 @@ void UpdateBBCFrame(unsigned short *RxFrame)
 {
   static int index = 0;
 
+  /* LAURA this is where you call the functions that performmotro logic
+   * (ie control loop). Controls that should run every time UpdateBBCFrame is
+   * called (100Hz) go where updateTableSpeed is, slower controls (5Hz) go in
+   * the if(index==0) block.
+   */
+
   /*** do fast Controls ***/
   updateTableSpeed();
 

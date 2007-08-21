@@ -75,6 +75,12 @@ void openMotors()
   axison.buildCommand();
   tableComm->sendCommand(&axison);
   pthread_create(&tablecomm_id, NULL, &rotaryTableComm, NULL);
+
+  /* LAURA this is where you connect to the motors
+   * you should also make a thread for communucating with each one, that uses
+   * a line like the one above. The function (rotaryTableComm for me) should
+   * send commands in an infinite loop based on some global variable.
+   */
 }
 
 /* closes communications with motor controllers, frees memory */
@@ -84,6 +90,8 @@ void closeMotors()
     tableComm->closeConnection();
     delete tableComm;  //causes a glibc "free(): invalid pointer" warning
   }
+
+  /* LAURA any connection cleanup/closing goes here */
 }
 
 /* figures out desired rotary table speed
@@ -114,7 +122,7 @@ void updateTableSpeed()
 
   //find gondola az rotation rate
   //TODO replace this naive version once there is a pointing solution
-  azVel = ACSData.gyro4;
+  azVel = ACSData.gyro2;
 
   //find table speed
   gettimeofday(&timestruct, NULL);
@@ -143,7 +151,7 @@ void updateTableSpeed()
   if (relVel > MAX_TABLE_SPEED) relVel = MAX_TABLE_SPEED;
   else if (relVel < -MAX_TABLE_SPEED) relVel = -MAX_TABLE_SPEED;
   //if going too fast in one direction, reverse direction of move
-  if (CommandData.tableRelMove > 5) { //only do this for large moves
+  if (fabs(CommandData.tableRelMove) > 20) { //only do this for large moves
     if (azVel > MAX_TABLE_SPEED/2 && relVel > azVel) { //too fast +
       CommandData.tableRelMove -= 360; //go in -'ve direction
       relVel = 0;   //find new relVel next time
@@ -201,6 +209,13 @@ void* rotaryTableComm(void* arg)
   }
   return NULL;
 }
+
+/* LAURA you need (at least) two functions in this file for each motor. Like I
+ * mentioned in an comment above, one is the thread one (similar to 
+ * rotaryTableComm) called in openMotors. The other should handle the control
+ * loop and figure out the command that needs to be sent. This is like my 
+ * updateTableSpeed function. It is called from tx.c.
+ */
 
 /*
  * updates slow motor fields in bbc frame
