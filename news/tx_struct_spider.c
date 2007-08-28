@@ -26,8 +26,10 @@
 
 /* card name to (node number, bus number) mapping */
 #define ACS1   1, 0
-#define LOOP1  2, 0
-#define LOOP2  3, 0
+#define TEST1  2, 1
+#define LOOP1  3, 0
+#define LOOP2  4, 0
+
 
 /* read and write channel 56 on all boards reserved for ADC Sync */
 struct ChannelStruct WideSlowChannels[] = {
@@ -59,15 +61,45 @@ struct ChannelStruct WideSlowChannels[] = {
   {"acs1_a22",     'r',  ACS1, 44,                1.0,             0.0, 'U'},
   {"acs1_a23",     'r',  ACS1, 46,                1.0,             0.0, 'U'},
   {"acs1_a24",     'r',  ACS1, 48,                1.0,             0.0, 'U'},
+
+  {"test1_a00",    'r', TEST1,  0,                1.0,             0.0, 'U'},
+  {"test1_a01",    'r', TEST1,  2,                1.0,             0.0, 'U'},
+  {"test1_a02",    'r', TEST1,  4,                1.0,             0.0, 'U'},
+  {"test1_a03",    'r', TEST1,  6,                1.0,             0.0, 'U'},
  END_OF_CHANNELS
 };
 
 struct ChannelStruct SlowChannels[] = {
-  //analog channels with upper word stolen (or not needed
-  {"acs1_a00",     'r',  ACS1,  0,                1.0,             0.0, 'u'},
-
+  //sync and status channels (1 per card), sync must be on 56
   {"status00",     'r',  ACS1, 60,                1.0,             0.0, 'u'},
   {"sync00",	   'w',  ACS1, 56,                1.0,             0.0, 'u'},
+  {"status01",     'r', TEST1, 60,                1.0,             0.0, 'u'},
+  {"sync01",	   'w', TEST1, 56,                1.0,             0.0, 'u'},
+
+  //padding to help the 2nd bus work without many slow channels
+  {"pad01",        'w', TEST1,  0,                1.0,             0.0, 'u'},
+  {"pad02",        'w', TEST1,  1,                1.0,             0.0, 'u'},
+  {"pad03",        'w', TEST1,  2,                1.0,             0.0, 'u'},
+  {"pad04",        'w', TEST1,  3,                1.0,             0.0, 'u'},
+  {"pad05",        'w', TEST1,  4,                1.0,             0.0, 'u'},
+  {"pad06",        'w', TEST1,  5,                1.0,             0.0, 'u'},
+  {"pad07",        'w', TEST1,  6,                1.0,             0.0, 'u'},
+  {"pad08",        'w', TEST1,  7,                1.0,             0.0, 'u'},
+  {"pad09",        'w', TEST1,  8,                1.0,             0.0, 'u'},
+  {"pad10",        'w', TEST1,  9,                1.0,             0.0, 'u'},
+  {"pad11",        'w', TEST1, 10,                1.0,             0.0, 'u'},
+  {"pad12",        'w', TEST1, 11,                1.0,             0.0, 'u'},
+  {"pad13",        'w', TEST1, 12,                1.0,             0.0, 'u'},
+  {"pad14",        'w', TEST1, 13,                1.0,             0.0, 'u'},
+  {"pad15",        'w', TEST1, 14,                1.0,             0.0, 'u'},
+  {"pad16",        'w', TEST1, 15,                1.0,             0.0, 'u'},
+  {"pad17",        'w', TEST1, 16,                1.0,             0.0, 'u'},
+  {"pad18",        'w', TEST1, 17,                1.0,             0.0, 'u'},
+  {"pad19",        'w', TEST1, 18,                1.0,             0.0, 'u'},
+ 
+  //analog channels with upper word stolen (or not needed)
+  {"acs1_a00",     'r',  ACS1,  0,                1.0,             0.0, 'u'},
+
   {"g_p_table",    'w', LOOP1,  1,         1.0/1000.0,             0.0, 'u'},
   {"g_i_table",    'w', LOOP1,  2,        1.0/10000.0,             0.0, 'u'},
   {"g_d_table",    'w', LOOP1,  3,          1.0/100.0,             0.0, 'u'},

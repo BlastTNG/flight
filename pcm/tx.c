@@ -53,7 +53,7 @@ int mcp_initial_controls = 0;
 /* send the sync bit if they do.  Only one board can be synced   */
 /* in each superframe.                                           */
 /*****************************************************************/
-#define NUM_SYNC 1
+#define NUM_SYNC 2
 #define REBOOT_TIMEOUT 50 /* 10 sec -- in 5Hz Frames */
 static void SyncADC (void)
 {
@@ -81,8 +81,8 @@ static void SyncADC (void)
   }
 
   for (m = 0; m < NUM_SYNC; ++m) {
-    l = (m == 0) ? 1 : m;
     k = slow_data[statusAddr[m]->index][statusAddr[m]->channel];
+    l = m + 1;   //node numbers start at 1 (0 has been sketchy in past)
 
     if ((k & 0x3) == 0x1) {
       /* board is up, but needs to be synced */
@@ -92,7 +92,6 @@ static void SyncADC (void)
     } else {
       if (doingSync[m]) {
         bprintf(info, "ADC Sync: node %i deasserted\n", l);
-//        if (l == 4) ForceBiasCheck();
       }
       doingSync[m] = 0;
     }
