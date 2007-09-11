@@ -29,6 +29,7 @@
 #define TEST1  2, 0
 #define TEST2  3, 0
 #define TEST3  4, 0
+#define DECOM 22, 0
 #define LOOP1 23, 0
 #define LOOP2 24, 0
 
