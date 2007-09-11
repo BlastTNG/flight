@@ -26,9 +26,11 @@
 
 /* card name to (node number, bus number) mapping */
 #define ACS1   1, 0
-#define TEST1  2, 1
-#define LOOP1  3, 0
-#define LOOP2  4, 0
+#define TEST1  2, 0
+#define TEST2  3, 0
+#define TEST3  4, 0
+#define LOOP1 23, 0
+#define LOOP2 24, 0
 
 
 /* read and write channel 56 on all boards reserved for ADC Sync */
@@ -61,11 +63,6 @@ struct ChannelStruct WideSlowChannels[] = {
   {"acs1_a22",     'r',  ACS1, 44,                1.0,             0.0, 'U'},
   {"acs1_a23",     'r',  ACS1, 46,                1.0,             0.0, 'U'},
   {"acs1_a24",     'r',  ACS1, 48,                1.0,             0.0, 'U'},
-
-  {"test1_a00",    'r', TEST1,  0,                1.0,             0.0, 'U'},
-  {"test1_a01",    'r', TEST1,  2,                1.0,             0.0, 'U'},
-  {"test1_a02",    'r', TEST1,  4,                1.0,             0.0, 'U'},
-  {"test1_a03",    'r', TEST1,  6,                1.0,             0.0, 'U'},
  END_OF_CHANNELS
 };
 
@@ -75,6 +72,10 @@ struct ChannelStruct SlowChannels[] = {
   {"sync00",	   'w',  ACS1, 56,                1.0,             0.0, 'u'},
   {"status01",     'r', TEST1, 60,                1.0,             0.0, 'u'},
   {"sync01",	   'w', TEST1, 56,                1.0,             0.0, 'u'},
+  {"status02",     'r', TEST2, 60,                1.0,             0.0, 'u'},
+  {"sync02",	   'w', TEST2, 56,                1.0,             0.0, 'u'},
+  {"status03",     'r', TEST3, 60,                1.0,             0.0, 'u'},
+  {"sync03",	   'w', TEST3, 56,                1.0,             0.0, 'u'},
 
   //padding to help the 2nd bus work without many slow channels
   {"pad01",        'w', TEST1,  0,                1.0,             0.0, 'u'},
@@ -82,20 +83,6 @@ struct ChannelStruct SlowChannels[] = {
   {"pad03",        'w', TEST1,  2,                1.0,             0.0, 'u'},
   {"pad04",        'w', TEST1,  3,                1.0,             0.0, 'u'},
   {"pad05",        'w', TEST1,  4,                1.0,             0.0, 'u'},
-  {"pad06",        'w', TEST1,  5,                1.0,             0.0, 'u'},
-  {"pad07",        'w', TEST1,  6,                1.0,             0.0, 'u'},
-  {"pad08",        'w', TEST1,  7,                1.0,             0.0, 'u'},
-  {"pad09",        'w', TEST1,  8,                1.0,             0.0, 'u'},
-  {"pad10",        'w', TEST1,  9,                1.0,             0.0, 'u'},
-  {"pad11",        'w', TEST1, 10,                1.0,             0.0, 'u'},
-  {"pad12",        'w', TEST1, 11,                1.0,             0.0, 'u'},
-  {"pad13",        'w', TEST1, 12,                1.0,             0.0, 'u'},
-  {"pad14",        'w', TEST1, 13,                1.0,             0.0, 'u'},
-  {"pad15",        'w', TEST1, 14,                1.0,             0.0, 'u'},
-  {"pad16",        'w', TEST1, 15,                1.0,             0.0, 'u'},
-  {"pad17",        'w', TEST1, 16,                1.0,             0.0, 'u'},
-  {"pad18",        'w', TEST1, 17,                1.0,             0.0, 'u'},
-  {"pad19",        'w', TEST1, 18,                1.0,             0.0, 'u'},
  
   //analog channels with upper word stolen (or not needed)
   {"acs1_a00",     'r',  ACS1,  0,                1.0,             0.0, 'u'},
@@ -197,6 +184,82 @@ struct ChannelStruct WideFastChannels[] = {
                                     DGY32_OFFSET * DGY32_TO_DPS - 0.005, 'U'},
   {"enc_table",    'r',  ACS1, 56,     360.0/144000.0,              0.0, 'U'},
 
+
+  {"test1_a00",    'r', TEST1,  0,                1.0,             0.0, 'U'},
+  {"test1_a01",    'r', TEST1,  2,                1.0,             0.0, 'U'},
+  {"test1_a02",    'r', TEST1,  4,                1.0,             0.0, 'U'},
+  {"test1_a03",    'r', TEST1,  6,                1.0,             0.0, 'U'},
+  {"test1_a04",    'r', TEST1,  8,                1.0,             0.0, 'U'},
+  {"test1_a05",    'r', TEST1, 10,                1.0,             0.0, 'U'},
+  {"test1_a06",    'r', TEST1, 12,                1.0,             0.0, 'U'},
+  {"test1_a07",    'r', TEST1, 14,                1.0,             0.0, 'U'},
+  {"test1_a08",    'r', TEST1, 16,                1.0,             0.0, 'U'},
+  {"test1_a09",    'r', TEST1, 18,                1.0,             0.0, 'U'},
+  {"test1_a10",    'r', TEST1, 20,                1.0,             0.0, 'U'},
+  {"test1_a11",    'r', TEST1, 22,                1.0,             0.0, 'U'},
+  {"test1_a12",    'r', TEST1, 24,                1.0,             0.0, 'U'},
+  {"test1_a13",    'r', TEST1, 26,                1.0,             0.0, 'U'},
+  {"test1_a14",    'r', TEST1, 28,                1.0,             0.0, 'U'},
+  {"test1_a15",    'r', TEST1, 30,                1.0,             0.0, 'U'},
+  {"test1_a16",    'r', TEST1, 32,                1.0,             0.0, 'U'},
+  {"test1_a17",    'r', TEST1, 34,                1.0,             0.0, 'U'},
+  {"test1_a18",    'r', TEST1, 36,                1.0,             0.0, 'U'},
+  {"test1_a19",    'r', TEST1, 38,                1.0,             0.0, 'U'},
+  {"test1_a20",    'r', TEST1, 40,                1.0,             0.0, 'U'},
+  {"test1_a21",    'r', TEST1, 42,                1.0,             0.0, 'U'},
+  {"test1_a22",    'r', TEST1, 44,                1.0,             0.0, 'U'},
+  {"test1_a23",    'r', TEST1, 46,                1.0,             0.0, 'U'},
+  {"test1_a24",    'r', TEST1, 48,                1.0,             0.0, 'U'},
+  {"test2_a00",    'r', TEST2,  0,                1.0,             0.0, 'U'},
+  {"test2_a01",    'r', TEST2,  2,                1.0,             0.0, 'U'},
+  {"test2_a02",    'r', TEST2,  4,                1.0,             0.0, 'U'},
+  {"test2_a03",    'r', TEST2,  6,                1.0,             0.0, 'U'},
+  {"test2_a04",    'r', TEST2,  8,                1.0,             0.0, 'U'},
+  {"test2_a05",    'r', TEST2, 10,                1.0,             0.0, 'U'},
+  {"test2_a06",    'r', TEST2, 12,                1.0,             0.0, 'U'},
+  {"test2_a07",    'r', TEST2, 14,                1.0,             0.0, 'U'},
+  {"test2_a08",    'r', TEST2, 16,                1.0,             0.0, 'U'},
+  {"test2_a09",    'r', TEST2, 18,                1.0,             0.0, 'U'},
+  {"test2_a10",    'r', TEST2, 20,                1.0,             0.0, 'U'},
+  {"test2_a11",    'r', TEST2, 22,                1.0,             0.0, 'U'},
+  {"test2_a12",    'r', TEST2, 24,                1.0,             0.0, 'U'},
+  {"test2_a13",    'r', TEST2, 26,                1.0,             0.0, 'U'},
+  {"test2_a14",    'r', TEST2, 28,                1.0,             0.0, 'U'},
+  {"test2_a15",    'r', TEST2, 30,                1.0,             0.0, 'U'},
+  {"test2_a16",    'r', TEST2, 32,                1.0,             0.0, 'U'},
+  {"test2_a17",    'r', TEST2, 34,                1.0,             0.0, 'U'},
+  {"test2_a18",    'r', TEST2, 36,                1.0,             0.0, 'U'},
+  {"test2_a19",    'r', TEST2, 38,                1.0,             0.0, 'U'},
+  {"test2_a20",    'r', TEST2, 40,                1.0,             0.0, 'U'},
+  {"test2_a21",    'r', TEST2, 42,                1.0,             0.0, 'U'},
+  {"test2_a22",    'r', TEST2, 44,                1.0,             0.0, 'U'},
+  {"test2_a23",    'r', TEST2, 46,                1.0,             0.0, 'U'},
+  {"test2_a24",    'r', TEST2, 48,                1.0,             0.0, 'U'},
+  {"test3_a00",    'r', TEST3,  0,                1.0,             0.0, 'U'},
+  {"test3_a01",    'r', TEST3,  2,                1.0,             0.0, 'U'},
+  {"test3_a02",    'r', TEST3,  4,                1.0,             0.0, 'U'},
+  {"test3_a03",    'r', TEST3,  6,                1.0,             0.0, 'U'},
+  {"test3_a04",    'r', TEST3,  8,                1.0,             0.0, 'U'},
+  {"test3_a05",    'r', TEST3, 10,                1.0,             0.0, 'U'},
+  {"test3_a06",    'r', TEST3, 12,                1.0,             0.0, 'U'},
+  {"test3_a07",    'r', TEST3, 14,                1.0,             0.0, 'U'},
+  {"test3_a08",    'r', TEST3, 16,                1.0,             0.0, 'U'},
+  {"test3_a09",    'r', TEST3, 18,                1.0,             0.0, 'U'},
+  {"test3_a10",    'r', TEST3, 20,                1.0,             0.0, 'U'},
+  {"test3_a11",    'r', TEST3, 22,                1.0,             0.0, 'U'},
+  {"test3_a12",    'r', TEST3, 24,                1.0,             0.0, 'U'},
+  {"test3_a13",    'r', TEST3, 26,                1.0,             0.0, 'U'},
+  {"test3_a14",    'r', TEST3, 28,                1.0,             0.0, 'U'},
+  {"test3_a15",    'r', TEST3, 30,                1.0,             0.0, 'U'},
+  {"test3_a16",    'r', TEST3, 32,                1.0,             0.0, 'U'},
+  {"test3_a17",    'r', TEST3, 34,                1.0,             0.0, 'U'},
+  {"test3_a18",    'r', TEST3, 36,                1.0,             0.0, 'U'},
+  {"test3_a19",    'r', TEST3, 38,                1.0,             0.0, 'U'},
+  {"test3_a20",    'r', TEST3, 40,                1.0,             0.0, 'U'},
+  {"test3_a21",    'r', TEST3, 42,                1.0,             0.0, 'U'},
+  {"test3_a22",    'r', TEST3, 44,                1.0,             0.0, 'U'},
+  {"test3_a23",    'r', TEST3, 46,                1.0,             0.0, 'U'},
+  {"test3_a24",    'r', TEST3, 48,                1.0,             0.0, 'U'},
   END_OF_CHANNELS
 };
 
@@ -216,9 +279,24 @@ struct ChannelStruct FastChannels[] = {
   {"sc2_trig_l",   'r',  ACS1,  1,  1.0,                              0.0, 'u'},
   {"dps_table",    'w', LOOP1,  0,  70.0/32767.0,                     0.0, 's'},
 
+  {"test1_d1",	   'r', TEST1, 50,                1.0,             0.0, 'u'},
+  {"test1_d2",	   'r', TEST1, 51,                1.0,             0.0, 'u'},
+  {"test1_d3",	   'r', TEST1, 52,                1.0,             0.0, 'u'},
+  {"test1_cnt",    'r', TEST1, 53,                1.0,             0.0, 'u'},
+  {"test2_d1",	   'r', TEST2, 50,                1.0,             0.0, 'u'},
+  {"test2_d2",	   'r', TEST2, 51,                1.0,             0.0, 'u'},
+  {"test2_d3",	   'r', TEST2, 52,                1.0,             0.0, 'u'},
+  {"test2_cnt",    'r', TEST2, 53,                1.0,             0.0, 'u'},
+  {"test3_d1",	   'r', TEST3, 50,                1.0,             0.0, 'u'},
+  {"test3_d2",	   'r', TEST3, 51,                1.0,             0.0, 'u'},
+  {"test3_d3",	   'r', TEST3, 52,                1.0,             0.0, 'u'},
+  {"test3_cnt",    'r', TEST3, 53,                1.0,             0.0, 'u'},
   END_OF_CHANNELS
 };
 
 struct ChannelStruct DecomChannels[] = {
+  {"crc_ok",      'w', DECOM,  1,             1.0,                    0.0, 'u'},
+  {"polarity",    'w', DECOM,  2,             1.0,                    0.0, 'u'},
+  {"decom_unlock",'w', DECOM,  3,             1.0,                    0.0, 'u'},
   END_OF_CHANNELS
 };

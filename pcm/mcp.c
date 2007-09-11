@@ -563,9 +563,13 @@ int main(int argc, char *argv[])
 
   InitTxFrame(RxFrame);
 
+  FILE* logstream = fopen("/data/etc/bbc_log", "wt");
+
   while (1) {  //main loop
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0)
       berror(err, "System: Error on BBC read");
+
+    fprintf(logstream, "%08x\n", in_data);
 
     if (!fill_Rx_frame(in_data, RxFrame))
       bprintf(err, "System: Unrecognised word received from BBC (%08x)",

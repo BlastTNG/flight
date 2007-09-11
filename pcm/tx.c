@@ -53,7 +53,7 @@ int mcp_initial_controls = 0;
 /* send the sync bit if they do.  Only one board can be synced   */
 /* in each superframe.                                           */
 /*****************************************************************/
-#define NUM_SYNC 2
+#define NUM_SYNC 4
 #define REBOOT_TIMEOUT 50 /* 10 sec -- in 5Hz Frames */
 static void SyncADC (void)
 {
