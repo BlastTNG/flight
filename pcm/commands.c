@@ -966,6 +966,18 @@ void InitCommandData()
   CommandData.tableGain.P = 6652;  //thousandths
   CommandData.tableGain.I = 302;   //ten-thousandths
   CommandData.tableGain.D = 13520; //hundredths
-  
+
+  CommandData.spiderMode=scan;
+  CommandData.spiderScan.C=0.0;
+  CommandData.spiderScan.P=47.0;
+  CommandData.spiderScan.W=45.0;
+  CommandData.spiderScan.Wcrit=5.0;
+  CommandData.spiderSpin.dps=36.0;
+  CommandData.spiderGain.sp_r=0.0;  //TODO: Tune these gains
+  CommandData.spiderGain.sp_p=0.0;
+  CommandData.spiderGain.sc_r=0.0;
+  CommandData.spiderGain.sc_p1=0.0;
+  CommandData.spiderGain.sc_p2=0.0;
+
   WritePrevStatus();
 }

@@ -44,8 +44,6 @@ struct ChannelStruct WideSlowChannels[] = {
   //ACS1 analog channels. update and move as needed
   //analog channel 0 is not wide (upper bit stolen)
   //analog channels 1, 2, 3 are gyros -- wide-fast
-  {"acs1_a04",     'r',  ACS1,  8,                1.0,             0.0, 'U'},
-  {"acs1_a05",     'r',  ACS1, 10,                1.0,             0.0, 'U'},
   {"acs1_a06",     'r',  ACS1, 12,                1.0,             0.0, 'U'},
   {"acs1_a07",     'r',  ACS1, 14,                1.0,             0.0, 'U'},
   {"acs1_a08",     'r',  ACS1, 16,                1.0,             0.0, 'U'},
@@ -167,6 +165,14 @@ struct ChannelStruct SlowChannels[] = {
   {"sc1_blob14_s", 'w', LOOP2, 18,          1.0/100.0,             0.0, 'u'},
   {"g_table_move", 'w', LOOP2, 19,     100.0/SHRT_MAX,             0.0, 'u'},
   {"table_move",   'w', LOOP2, 20,           1.0/10.0,             0.0, 's'},
+  {"dps_gond_req", 'w', LOOP2, 21,       60.0/32767.0,             0.0, 's'},
+  {"gond_az",      'w', LOOP2, 22,      360.0/65535.0,             0.0, 'u'},
+  {"gond_theta",   'w', LOOP2, 23,      360.0/65535.0,             0.0, 'u'},
+  {"dpsps_gond_req",'w',LOOP2, 24,        2.0/32767.0,             0.0, 's'},
+  {"is_gond_accel",'w', LOOP2, 25,                1.0,             0.0, 'u'},
+  {"dps_piv_req",  'w', LOOP2, 26,       60.0/32767.0,             0.0, 's'},
+  {"i_reac_req",   'w', LOOP2, 27,       20.0/32767.0,             0.0, 's'},
+
   END_OF_CHANNELS
 };
 
@@ -279,6 +285,8 @@ struct ChannelStruct FastChannels[] = {
   {"sc2_trig_s",   'r',  ACS1, 63,  1.0,                              0.0, 'u'},
   {"sc2_trig_l",   'r',  ACS1,  1,  1.0,                              0.0, 'u'},
   {"dps_table",    'w', LOOP1,  0,  70.0/32767.0,                     0.0, 's'},
+  {"rwheel_vel",   'r',  ACS1,  8,                0.5,             0.0, 's'},
+  {"rwheel_cur",   'r',  ACS1, 10,                4.0,             0.0, 's'},
 
   {"test1_d1",	   'r', TEST1, 50,                1.0,             0.0, 'u'},
   {"test1_d2",	   'r', TEST1, 51,                1.0,             0.0, 'u'},

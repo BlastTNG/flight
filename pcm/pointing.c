@@ -132,6 +132,10 @@ void Pointing(void)
 //  static double last_good_lat=0, last_good_lon=0;
 
   static int firsttime = 1;
+  static double prevVel,prevTime;
+  double curVel,curTime,avVel;
+  static NiosStruct* gondAz = NULL;
+  timeval timer;
 
   int i_point_read;
 
@@ -139,8 +143,25 @@ void Pointing(void)
     firsttime = 0;
     // the first t about to be read needs to be set
     PointingData[GETREADINDEX(point_index)].t = mcp_systime(NULL); // CPU time
-  }
+    // initialize PointingData.az
+    // lmf: for now assume that the initial position is zero.
+    // TODO: Fix this later!
+    PointingData[GETREADINDEX(point_index)].az = 0.0; 
 
+    prevVel=ACSData.gyro2;
+    gettimeofday(&timer, NULL);
+    prevTime=(double)timer.tv_sec + timer.tv_usec/1000000.0;
+    gondAz = GetNiosAddr("gond_az");
+  }
+  curVel=ACSData.gyro2;
+  gettimeofday(&timer, NULL);
+  curTime=(double)timer.tv_sec + timer.tv_usec/1000000.0;
+  avVel=(curVel+prevVel)/2.0;
+  dt = (curTime - prevTime);
+  PointingData[point_index].az = PointingData[GETREADINDEX(point_index)].az + (avVel * dt); 
+  
+  int data = (int) ((PointingData[GETREADINDEX(point_index)].az/70.0)*65535.0); // if we overflow we go back to zero
+  WriteData(gondAz, data, NIOS_QUEUE);
   i_point_read = GETREADINDEX(point_index);
 }
 

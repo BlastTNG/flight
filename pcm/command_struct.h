@@ -34,6 +34,34 @@ struct GainStruct {
   unsigned short int SP;
 };
 
+struct ModeStruct {
+  enum {scan, spin, point} spider_mode;
+};
+
+struct SpinStruct {
+  unsigned double dps; // Target Gondola Spin Speed
+};
+
+struct ScanStruct {
+  double C; // Azimuth Scan Centre
+  double P; // Scan Period in seconds
+  double W; // Scan Width zero to Peak (degrees)
+  double Wcrit; // Switch to constant accel mode 
+               // when |theta-C| > Wcrit
+};
+
+// Stores the motor gains
+struct MotorGainStruct {
+  // Spin mode gains
+  double sp_r;
+  double sp_p;
+
+  // Scan mode gains
+  double sc_r;
+  double sc_p1; // prop to reaction wheel speed
+  double sc_p2; // prop to velocity error term
+};
+
 enum calmode { on, off, pulse, repeat };
 
 // mode        X     Y    vaz   del    w    h
@@ -44,7 +72,7 @@ enum calmode { on, off, pulse, repeat };
 // RADEC_GOTO  ra    dec
 // VCAP        ra    dec  vaz   vel    r
 // CAP         ra    dec  vaz   elstep r
-// BOX         ra    dec  vaz   elstep w    h
+// BOX         ra    xdec  vaz   elstep w    h
 struct PointingModeStruct {
   int nw; /* used for gy-offset veto during slews */
   int mode;
@@ -57,6 +85,7 @@ struct PointingModeStruct {
   time_t t;
   double ra[4]; // the RAs for radbox (ie, quad)
   double dec[4]; // the decs for radbox (ie, quad)
+  // lmf: Need to add in reaction wheel velocity!  
 };
 
 struct StarcamCommandData {
@@ -79,6 +108,11 @@ struct CommandDataStruct {
   double tableRelMove;     //relative angle to move table by (deg)
   double tableMoveGain;             //P
   struct GainStruct tableGain;      //PID
+  struct ModeStruct spiderMode;     // Are we going to spin, point or scan?
+  struct SpinStruct spiderSpin;     // Stores Spin Speed
+  struct ScanStruct spiderScan;     // Define Scan Centre, period and width 
+  struct MotorGainStruct spiderGain;  // Sets the gain factors for the pivot 
+                                      // and reaction wheel.
 };
 
 struct ScheduleEvent {

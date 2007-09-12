@@ -32,6 +32,7 @@
 #include "channels.h"
 #include "tx.h"
 #include "mcp.h"
+#include "pointing.c"
 
 #define NIOS_BUFFER_SIZE 100
 
@@ -242,6 +243,13 @@ void UpdateBBCFrame(unsigned short *RxFrame)
 
   /*** do fast Controls ***/
   updateTableSpeed();
+
+  Pointing(); // in Pointing.c 
+              // integrates the gyros.  
+              // lmf: Need to write the integrated
+              // gyros to the frame.
+  getTargetVel();
+  updateMotorSpeeds();
 
   /*** do slow Controls ***/
   if (index == 0) {

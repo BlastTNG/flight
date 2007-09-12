@@ -111,6 +111,8 @@ extern struct SIPDataStruct SIPData;
 /*   Source: main thread; pointing.c          */
 /*     Used: Main thread; VSC thread          */
 struct PointingDataStruct {
+  double az; // lmf: For now we are just integrating the 
+             // gyros.
   time_t t;
 };
 
