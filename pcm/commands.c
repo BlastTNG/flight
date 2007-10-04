@@ -40,6 +40,7 @@
 #include "tx.h"
 #include "pointing_struct.h"
 #include "channels.h"
+#include "slow_dl.h"
 
 #define REQ_POSITION    0x50
 #define REQ_TIME        0x51
@@ -53,6 +54,8 @@
 //void NormalizeAngle(double*);  //pointing.c
 
 static const char *UnknownCommand = "Unknown Command";
+
+extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 
 pthread_mutex_t mutex; //init'd in mcp.c
 
@@ -429,6 +432,11 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
   WritePrevStatus();
 }
 
+const char* CommandName(int is_multi, int command)
+{
+  return (is_multi) ? MName(command) : SName(command);
+}
+
 #ifndef USE_FIFO_CMD
 static void GPSPosition (unsigned char *indata)
 {
@@ -442,14 +450,7 @@ static void GPSPosition (unsigned char *indata)
 
   WritePrevStatus();
 }
-#endif
 
-const char* CommandName(int is_multi, int command)
-{
-  return (is_multi) ? MName(command) : SName(command);
-}
-
-#ifndef USE_FIFO_CMD
 static void GPSTime (unsigned char *indata)
 {
   float GPStime, offset;
@@ -479,9 +480,7 @@ static void MKSAltitude (unsigned char *indata)
   WritePrevStatus();
 }
 
-#if 0
 /* Send TDRSS Low Rate Packet */
-
 static void SendDownData(char tty_fd)
 {
   unsigned char buffer[SLOWDL_LEN], data[3 + SLOWDL_LEN + 1];
@@ -577,7 +576,6 @@ static void SendDownData(char tty_fd)
   }
 #endif
 }
-#endif //if 0
 
 /* compute the size of the data queue for the given command */
 static int DataQSize(int index)

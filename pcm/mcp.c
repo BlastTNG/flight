@@ -45,6 +45,7 @@
 #include "pointing_struct.h"
 #include "command_list.h"
 #include "command_struct.h"
+#include "slow_dl.h"
 
 #define BBC_EOF      (0xffff)
 #define BBC_BAD_DATA (0xfffffff0)
@@ -72,10 +73,13 @@ static int StartupVeto = STARTUP_VETO_LENGTH + 1;
 static int Death = -STARTUP_VETO_LENGTH * 2;
 static int RxFrameIndex;
 
+extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
+
 extern pthread_mutex_t mutex; //commands.c
 
 void Pointing();    //pointing.c
 void WatchFIFO();   //commands.c
+void WatchPort(void* param);
 
 void openMotors(); //motors.c
 void closeMotors();
@@ -245,6 +249,31 @@ void mputs(buos_t flag, const char* message) {
     pthread_exit(NULL);
   }
 }
+
+static void FillSlowDL(unsigned short *RxFrame)
+{
+  int i;
+  unsigned short msb, lsb;
+
+  for (i = 0, msb = 0; i < SLOWDL_NUM_DATA; i++) {
+    if (SlowDLInfo[i].mindex == NOT_MULTIPLEXED) {
+      lsb = RxFrame[SlowDLInfo[i].chnum];
+      if (SlowDLInfo[i].wide)
+        msb = RxFrame[SlowDLInfo[i].chnum + 1];
+      else
+        msb = 0;
+      SlowDLInfo[i].value = (double)((msb << 16) | lsb);
+    } else {
+      lsb = slow_data[SlowDLInfo[i].mindex][SlowDLInfo[i].chnum];
+      if (SlowDLInfo[i].wide)
+        msb = slow_data[SlowDLInfo[i].mindex][SlowDLInfo[i].chnum + 1];
+      else
+        msb = 0;
+      SlowDLInfo[i].value = (double)((msb << 16) | lsb);
+    }
+  }
+}
+
 
 /* fills ACSData struct from current frame */
 static void GetACS(unsigned short *RxFrame)
@@ -483,6 +512,7 @@ int main(int argc, char *argv[])
 
   pthread_t disk_id;
   pthread_t CommandDatacomm1;
+  pthread_t CommandDatacomm2;     //2nd needed for SIP, not for FIFO
 
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
@@ -524,7 +554,13 @@ int main(int argc, char *argv[])
 
 #ifdef USE_FIFO_CMD
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, NULL);
+#else
+#warning "Trying to talk with SIP(ulator), do you have it set up?"
+  pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
+  pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
 #endif
+
+  InitSlowDL();
 
   InitBi0Buffer();
 
@@ -606,6 +642,8 @@ int main(int argc, char *argv[])
           PushBi0Buffer(RxFrame);
         else if (biphase_timer < mcp_systime(NULL))
           biphase_is_on = 1;
+
+	FillSlowDL(RxFrame);
 
         zero(RxFrame);
       }

@@ -10,18 +10,18 @@ ifeq ($(DEBUG), 1)
 	LDFLAGS := $(LDFLAGS) -g -DDEBUG
 endif
 
-USE_FIFO_CMD = 1
+USE_FIFO_CMD = 0
 ifeq ($(USE_FIFO_CMD), 1)
 	CPPFLAGS := $(CPPFLAGS) -DUSE_FIFO_CMD
 endif
 
 HEADERS = bbc_pci.h blast.h channels.h derived.h mcp.h tx.h command_list.h \
 	  drivecommunicator.h motorcommand.h pointing_struct.h \
-	  command_struct.h camcommunicator.h camstruct.h
+	  command_struct.h camcommunicator.h camstruct.h slow_dl.h
 
 OBJS = mcp.o blast.o channels.o derived.o framefile.o tx.o tx_struct.o \
        commands.o drivecommunicator.o motorcommand.o motors.o pointing.o \
-       command_list.o camcommunicator.o starcamera.o
+       command_list.o camcommunicator.o starcamera.o slow_dl.o
 
 .PHONEY: fifo install all debug
 
