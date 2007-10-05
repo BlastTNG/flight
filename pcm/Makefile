@@ -3,25 +3,37 @@ include Makefile.config
 CC = gcc
 CPP = g++
 LD = g++
-CPPFLAGS = -g -O3 -Wall -D__MCP__ 
+CPPFLAGS = -g -O3 -Wall -D__MCP__ $(HAVE_ACS) $(HAVE_CRYO) $(USE_FIFO_CMD)
 LDFLAGS = -lpthread -lm -lstdc++
 ifeq ($(DEBUG), 1)
 	CPPFLAGS := $(CPPFLAGS) -g -DDEBUG
 	LDFLAGS := $(LDFLAGS) -g -DDEBUG
 endif
 
-USE_FIFO_CMD = 0
-ifeq ($(USE_FIFO_CMD), 1)
-	CPPFLAGS := $(CPPFLAGS) -DUSE_FIFO_CMD
+#common files
+COM_HEADERS = bbc_pci.h blast.h channels.h derived.h mcp.h tx.h command_list.h \
+	      command_struct.h slow_dl.h pointing_struct.h 
+
+COM_OBJS = mcp.o blast.o channels.o derived.o framefile.o tx.o tx_struct.o \
+	   commands.o command_list.o slow_dl.o
+
+#ACS specific files
+ifdef HAVE_ACS
+ACS_HEADERS = drivecommunicator.h motorcommand.h camcommunicator.h camstruct.h 
+
+ACS_OBJS = drivecommunicator.o motorcommand.o motors.o pointing.o \
+	   camcommunicator.o starcamera.o  
 endif
 
-HEADERS = bbc_pci.h blast.h channels.h derived.h mcp.h tx.h command_list.h \
-	  drivecommunicator.h motorcommand.h pointing_struct.h \
-	  command_struct.h camcommunicator.h camstruct.h slow_dl.h
+#CRYO specific files
+ifdef HAVE_CRYO
+CRYO_HEADERS = 
 
-OBJS = mcp.o blast.o channels.o derived.o framefile.o tx.o tx_struct.o \
-       commands.o drivecommunicator.o motorcommand.o motors.o pointing.o \
-       command_list.o camcommunicator.o starcamera.o slow_dl.o
+CRYO_OBJS = 
+endif
+
+HEADERS = $(COM_HEADERS) $(ACS_HEADERS) $(CRYO_HEADERS)
+OBJS = $(COM_OBJS) $(ACS_OBJS) $(CRYO_OBJS)
 
 .PHONEY: fifo install all debug
 

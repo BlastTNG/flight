@@ -42,10 +42,10 @@
 #include "mcp.h"
 #include "channels.h"
 #include "tx.h"
-#include "pointing_struct.h"
 #include "command_list.h"
 #include "command_struct.h"
 #include "slow_dl.h"
+#include "pointing_struct.h"
 
 #define BBC_EOF      (0xffff)
 #define BBC_BAD_DATA (0xfffffff0)
@@ -63,7 +63,6 @@
 int bbc_fp = -1;
 unsigned int debug = 0;
 short int SamIAm;
-struct ACSDataStruct ACSData;
 unsigned int RxFrameFastSamp;
 unsigned short* slow_data[FAST_PER_SLOW];
 pthread_t watchdog_id;
@@ -77,14 +76,16 @@ extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 
 extern pthread_mutex_t mutex; //commands.c
 
+#ifdef HAVE_ACS
+struct ACSDataStruct ACSData;
 void Pointing();    //pointing.c
-void WatchFIFO();   //commands.c
-void WatchPort(void* param);
-
 void openMotors(); //motors.c
 void closeMotors();
-
 void openCamera();  //starcamera.c
+#endif
+
+void WatchFIFO();   //commands.c
+void WatchPort(void* param);
 
 void FrameFileWriter(void);  //framefile.c
 void InitialiseFrameFile(char);
@@ -275,6 +276,7 @@ static void FillSlowDL(unsigned short *RxFrame)
 }
 
 
+#ifdef HAVE_ACS
 /* fills ACSData struct from current frame */
 static void GetACS(unsigned short *RxFrame)
 {
@@ -360,6 +362,7 @@ static void GetACS(unsigned short *RxFrame)
   ACSData.gyro6 = gyro6;
 
 }
+#endif //HAVE_ACS
 
 /* fill_Rx_frame: places one 32 bit word into the RxFrame. 
  * Returns true on success 
@@ -489,7 +492,9 @@ static void CloseBBC(int signo)
 
   /* restore default handler and raise the signal again */
   //close peripheral communications
+#ifdef HAVE_ACS
   closeMotors();
+#endif
   
   signal(signo, SIG_DFL);
   raise(signo);
@@ -586,9 +591,10 @@ int main(int argc, char *argv[])
   else
     bputs(info, "System: I am not Sam.\n");
 
+#ifdef HAVE_ACS
   openMotors();  //open communications with peripherals, creates threads
-
   openCamera();  //also creates a thread
+#endif
 
   bputs(info, "System: Finished Initialisation, waiting for BBC to come up.\n");
 
@@ -615,8 +621,10 @@ int main(int argc, char *argv[])
       if (StartupVeto > 1) {
         --StartupVeto;
       } else {
+#ifdef HAVE_ACS
         GetACS(RxFrame);
         Pointing();
+#endif
 
         /* Frame sequencing check */
         if (StartupVeto) {

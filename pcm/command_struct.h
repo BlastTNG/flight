@@ -34,12 +34,10 @@ struct GainStruct {
   unsigned short int SP;
 };
 
-struct ModeStruct {
-  enum {scan, spin, point} spider_mode;
-};
+enum PointingMode {point_scan, point_spin, point_point};
 
 struct SpinStruct {
-  unsigned double dps; // Target Gondola Spin Speed
+  double dps; // Target Gondola Spin Speed
 };
 
 struct ScanStruct {
@@ -61,8 +59,6 @@ struct MotorGainStruct {
   double sc_p1; // prop to reaction wheel speed
   double sc_p2; // prop to velocity error term
 };
-
-enum calmode { on, off, pulse, repeat };
 
 // mode        X     Y    vaz   del    w    h
 // LOCK              el
@@ -108,7 +104,9 @@ struct CommandDataStruct {
   double tableRelMove;     //relative angle to move table by (deg)
   double tableMoveGain;             //P
   struct GainStruct tableGain;      //PID
-  struct ModeStruct spiderMode;     // Are we going to spin, point or scan?
+
+  //TODO is this the best way to organize this data?
+  enum PointingMode spiderMode;     // Are we going to spin, point or scan?
   struct SpinStruct spiderSpin;     // Stores Spin Speed
   struct ScanStruct spiderScan;     // Define Scan Centre, period and width 
   struct MotorGainStruct spiderGain;  // Sets the gain factors for the pivot 

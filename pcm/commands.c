@@ -38,9 +38,9 @@
 #include "command_struct.h"
 #include "mcp.h"
 #include "tx.h"
-#include "pointing_struct.h"
 #include "channels.h"
 #include "slow_dl.h"
+#include "pointing_struct.h"
 
 #define REQ_POSITION    0x50
 #define REQ_TIME        0x51
@@ -62,7 +62,9 @@ pthread_mutex_t mutex; //init'd in mcp.c
 struct SIPDataStruct SIPData;
 struct CommandDataStruct CommandData;
 
+#ifdef HAVE_ACS
 int sendCamCommand(const char *cmd); //starcamera.cpp
+#endif
 
 /** Write the Previous Status: called whenever anything changes */
 static void WritePrevStatus()
@@ -207,6 +209,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
   /* Update CommandData structure with new info */
 
   switch (command) {
+#ifdef HAVE_ACS
     case cam_expose:
       sendCamCommand("CtrigExp");
       break;
@@ -225,6 +228,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case cam_unforce_lens:
       CommandData.cam.forced = 0;
       break;
+#endif  //HAVE_ACS
     case test:
       bputs(info, "This has beeen a succesful single command test");
       break;
@@ -356,6 +360,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
    */
 
   switch(command) {
+#ifdef HAVE_ACS
     //starcam commands
     case cam_any:
       sendCamCommand(svalues[0]);
@@ -424,6 +429,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.tableGain.I = ivalues[1];
       CommandData.tableGain.D = ivalues[2];
       break;
+#endif  //HAVE_ACS
     default:
       bputs(warning, "Commands: ***Invalid Multi Word Command***\n");
       return; /* invalid command - don't update */
@@ -965,7 +971,7 @@ void InitCommandData()
   CommandData.tableGain.I = 302;   //ten-thousandths
   CommandData.tableGain.D = 13520; //hundredths
 
-  CommandData.spiderMode=scan;
+  CommandData.spiderMode=point_scan;
   CommandData.spiderScan.C=0.0;
   CommandData.spiderScan.P=47.0;
   CommandData.spiderScan.W=45.0;

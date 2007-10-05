@@ -38,8 +38,11 @@ extern "C" {
 #include "mcp.h"
 #include "drivecommunicator.h"
 #include "motorcommand.h"
+#if 0     //TODO add back in, just removed to make things compile
+//TODO: LAURA you have to "cvs add" these files to mcp
 #include "pivotcommand.h"
 #include "reactcommand.h"
+#endif
 
 //speed limit in dps
 #define MAX_TABLE_SPEED 45.0
@@ -82,7 +85,7 @@ extern "C" {
 
 static void* rotaryTableComm(void *arg);
 
-global float gTargetVel;
+float gTargetVel;     //TODO does this definitely want to be a float?
 
 /* opens communications with motor controllers */
 void openMotors()
@@ -100,15 +103,12 @@ void openMotors()
   tableComm->sendCommand(&axison);
   pthread_create(&tablecomm_id, NULL, &rotaryTableComm, NULL);
 
+#if 0     //TODO add back in, just removed to make things compile
   open_pivot("/dev/ttySI0");
   pthread_create(&pivotcomm_id, NULL, &pivotComm, NULL);
   open_react("/dev/ttySI2");
   pthread_create(&reactcomm_id, NULL, &reactComm, NULL);
-  /* LAURA this is where you connect to the motors
-   * you should also make a thread for communucating with each one, that uses
-   * a line like the one above. The function (rotaryTableComm for me) should
-   * send commands in an infinite loop based on some global variable.
-   */
+#endif
 }
 
 /* closes communications with motor controllers, frees memory */
@@ -118,6 +118,7 @@ void closeMotors()
     tableComm->closeConnection();
     delete tableComm;  //causes a glibc "free(): invalid pointer" warning
   }
+#if 0     //TODO add back in, just removed to make things compile
   if (pivotComm != NULL) {
     close_pivot();
     delete pivotComm;
@@ -126,7 +127,7 @@ void closeMotors()
     close_react();
     delete reactComm;
   }
-  /* LAURA any connection cleanup/closing goes here */
+#endif
 }
 
 /* figures out desired rotary table speed
@@ -266,8 +267,9 @@ void* reactComm(void* arg)
  * and figures out from the sensors what velocity we should be going.
  *
  */
-void* getTargetVel()
+void getTargetVel()
 {
+#if 0     //TODO add back in, just removed to make things compile
   // gTargetVel is a global variable
   double azVel,amp,acrit,per,vswitch,dvdt,tswitch,t1,dt;
   static double vlast,lastTime,vdir;
@@ -327,7 +329,7 @@ void* getTargetVel()
       {
         // What should our abs velocity be?
         gTargetVel=amp*(2*M_PI/per)*cos(asin(theta/amp))*vdir;
-        return NULL;
+        return;
       }
     else
       {
@@ -377,18 +379,20 @@ void* getTargetVel()
   data = (int)((gTargetVel/60.0)*32767.0); //allow much room to avoid overflow
     WriteData(dpsGondReq, data, NIOS_QUEUE);
 
-	return NULL;
+	return;
     break;
   case default:
     berror(err, "getTargetVel: Invalid mode");
     gTargetVel=0.0;
-    return NULL;
+    return;
     break;
   }
+#endif   //0
 }
 // Looks at the target Velocity gTargetVel and sends commands to the motors.
-void* updateMotorSpeeds()
+void updateMotorSpeeds()
 {
+#if 0     //TODO add back in, just removed to make things compile
   double ireq,pvreq;  // Reaction wheel current requested, and Pivot
                       // velocity requested.
   double vcurr = ACSData.gyro2; // Gyro is in dps
@@ -463,13 +467,8 @@ void* updateMotorSpeeds()
   
   // Make the command strings and send them.
   
+#endif     //0
 }
-/* LAURA you need (at least) two functions in this file for each motor. Like I
- * mentioned in an comment above, one is the thread one (similar to 
- * rotaryTableComm) called in openMotors. The other should handle the control
- * loop and figure out the command that needs to be sent. This is like my 
- * updateTableSpeed function. It is called from tx.c.
- */
 
 /*
  * updates slow motor fields in bbc frame

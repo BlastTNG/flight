@@ -28,20 +28,21 @@
 #include <sys/time.h>
 
 #include "bbc_pci.h"
-
 #include "channels.h"
 #include "tx.h"
 #include "mcp.h"
-#include "pointing.c"
 
 #define NIOS_BUFFER_SIZE 100
 
 extern int bbc_fp;
 
+#ifdef HAVE_ACS
 void updateTableSpeed();    //motors.cpp
 void slowMotorFields();
-
+void getTargetVel();
+void updateMotorSpeeds();
 void cameraFields();        //starcamera.cpp
+#endif
 
 double round(double x);
 
@@ -242,19 +243,25 @@ void UpdateBBCFrame(unsigned short *RxFrame)
    */
 
   /*** do fast Controls ***/
+#ifdef HAVE_ACS
   updateTableSpeed();
+  getTargetVel();
+  updateMotorSpeeds();
+#endif
 
+#if 0      //this is called earlier in the main loop!
   Pointing(); // in Pointing.c 
               // integrates the gyros.  
               // lmf: Need to write the integrated
               // gyros to the frame.
-  getTargetVel();
-  updateMotorSpeeds();
+#endif
 
   /*** do slow Controls ***/
   if (index == 0) {
+#if HAVE_ACS
     cameraFields();
     slowMotorFields();
+#endif
     if (!mcp_initial_controls)
       SyncADC();
   }

@@ -32,6 +32,7 @@
 #include <termios.h>
 #include <ctype.h>
 #include <pthread.h>
+#include <sys/time.h>
 
 #include "blast.h"
 #include "mcp.h"
@@ -134,8 +135,9 @@ void Pointing(void)
   static int firsttime = 1;
   static double prevVel,prevTime;
   double curVel,curTime,avVel;
-  static NiosStruct* gondAz = NULL;
-  timeval timer;
+  double dt;
+  static struct NiosStruct* gondAz = NULL;
+  struct timeval timer;
 
   int i_point_read;
 
