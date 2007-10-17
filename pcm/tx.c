@@ -249,13 +249,6 @@ void UpdateBBCFrame(unsigned short *RxFrame)
   updateMotorSpeeds();
 #endif
 
-#if 0      //this is called earlier in the main loop!
-  Pointing(); // in Pointing.c 
-              // integrates the gyros.  
-              // lmf: Need to write the integrated
-              // gyros to the frame.
-#endif
-
   /*** do slow Controls ***/
   if (index == 0) {
 #if HAVE_ACS
