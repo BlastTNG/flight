@@ -355,7 +355,7 @@ void getTargetVel()
             // Am I past the acrit value?
             if(amp-fabs(theta)>acrit)
 	      {
-		accelmode==0;
+		accelmode=0;
 		vdir=vdir*-1.0;
                 wait=0;
 	      }
