@@ -1,8 +1,8 @@
 /****************************************************************************
 ** CommandGUI meta object code from reading C++ file 'commandgui.h'
 **
-** Created: Fri May 4 14:09:30 2007
-**      by: The Qt MOC ($Id: moc_commandgui.cpp,v 1.1.1.1 2007-07-04 21:33:40 steve Exp $)
+** Created: Fri Nov 2 11:34:36 2007
+**      by: The Qt MOC ($Id: moc_commandgui.cpp,v 1.2 2007-11-02 15:37:00 steve Exp $)
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/

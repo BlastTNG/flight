@@ -74,7 +74,7 @@ int maintainInitFile(string cmd, string val);
 const char* initFilename = "/usr/local/starcam/init.txt";
 const char* badpixFilename = "/usr/local/starcam/badpix.txt";
 const string adapterPath = "/dev/ttyACM0";
-const string commTarget = "nogrod.spider";
+const string commTarget = "itsy.spider";
 //const string commTarget = "parker.astro.utoronto.ca"
 const string imgPath = "/usr/local/starcam/pictures";     //path to save images in
 
