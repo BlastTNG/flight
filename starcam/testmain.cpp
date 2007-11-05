@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 		if (cerr != CE_NO_ERROR) break;
 		
 #elif TEST_MODE == 3
-		string path = "/home/steve/starcam/starcam/pictures/16-06/";
+		string path = "/home/steve/starcam/pictures/16-06/";
 		string names[] = {"1153prog.sbig", "1140ops.sbig", "1143prog.sbig", "1144prog.sbig",
 			"1150prog.sbig", "1155prog.sbig", "1159prog.sbig", "1159bprog.sbig", "1200prog.sbig",
 			"1200bprog.sbig", "1211ops.sbig", "1213prog.sbig", "1213bprog.sbig", "1214prog.sbig",
@@ -164,29 +164,35 @@ int main(int argc, char *argv[])
 			//initialize the image viewer window
 			if (firstTime) {                 //only do this on first loop iteration
 				firstTime = 0;
-				cout << "Starting Image viewer application" << endl;
+//				cout << "Starting Image viewer application" << endl;
 				iv = new ImageViewer(img.GetWidth(), img.GetHeight(), 1000, 0, "viewer");
 				a.setMainWidget(iv);
 				iv->show();
 				pthread_create(&app_thread, NULL, &viewerExec, (void*)&a);
 			}
 			
-			cout << "Finding blobs" << endl;
+//			cout << "Finding blobs" << endl;
 			img.findBlobs();
-			cout << "\nFound " << fblob->get_numblobs() << " blobs." << endl;
+			cout << "\nFound " << fblob->get_numblobs() << " blobs, map mean = "
+				<< fblob->get_mapmean() << " sigma = " << fblob->get_sigma() << endl;
 			if (fblob->get_numblobs()) {
-				cout <<"Their locations (x,y) are " << endl;
+				cout <<"Their locations, flux and snr  (x y f s) are " << endl;
 				blobs = fblob->getblobs();
 				while (blobs != NULL) {
 					double x = blobs->getx();
 					double y = blobs->gety();
-					cout << "(" << x << "," << y << ")" << endl;
-					img.drawBox(blobs->getx(), blobs->gety(), 20);
+					double f = blobs->getflux();
+					double s = blobs->getsnr();
+					cout << "\t" << x << " " << y << " " << f << " " << s << endl;
+					img.drawBox(blobs->getx(), blobs->gety(), 20, true);
 					blobs = blobs->getnextblob();
 				}
 			}
 			
 			iv->load(&img, TRUE);
+
+			//wait for a bit and observe image
+//			sleep(5);
 			
 // 			filename = path + "boxes/" + names[i];
 // 			cout << "Saving image with boxes: " << filename << endl;

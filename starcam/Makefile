@@ -1,6 +1,6 @@
-####################################################################################
+################################################################################
 # starcam makefile by Steve Benton
-####################################################################################
+################################################################################
 APP_NAME   = starcam
 TEST_NAME  = testmain
 USE_QT = 1           #change this to 0 to not use qt when its not available
@@ -8,13 +8,12 @@ USE_QT = 1           #change this to 0 to not use qt when its not available
 O_APP      = csbigcam.o csbigimg.o mycam.o clensadapter.o bloblist.o \
 frameblob.o blobimage.o camcommunicator.o pyramid.o
 O_APP_QT = imageviewer.o moc_imageviewer.o commandgui.o moc_commandgui.o
-####################################################################################
+################################################################################
 SRC_DIR    = .
 INCLUDE    = -I $(SRC_DIR)
 LIBRARY    = -L $(SRC_DIR)
-#the second CFLAGS variable is for use with valgrind while debugging
 #CFLAGS = -O2 $(INCLUDE) $(LIBRARY) -Wall
-CFLAGS = -O0 $(INCLUDE) $(LIBRARY) -Wall -g
+CFLAGS = -O0 $(INCLUDE) $(LIBRARY) -Wall -g   #for debugging
 CC = g++
 MOC = moc
 
@@ -33,20 +32,20 @@ QTLIB =
 QTINC =
 QTFLAGS =
 endif
-####################################################################################
+################################################################################
 #targets for building all or part of the main program
 all: cam comm
 cam: $(APP_NAME)
 comm: commtest
-####################################################################################
+view: scviewer
+################################################################################
 # APP_NAME
-####################################################################################
+################################################################################
 
 $(APP_NAME): $(APP_OBJ)
 	  $(CC) $(QTLIB) $(CFLAGS) -o $(APP_NAME) $(APP_OBJ) -lsbigudrv -lm -lpthread
 	  chmod a+x $(APP_NAME)
 
-#main program may not depend on all of the headers
 starcam.o : starcam.cpp csbigcam.h csbigimg.h mycam.h blobimage.h bloblist.h clensadapter.h frameblob.h \
 			camconfig.h clensadapterdefs.h csbigimgdefs.h camcommunicator.h pyramid.h imageviewer.h
 	  $(CC) $(CFLAGS) $(QTFLAGS) -o starcam.o -c starcam.cpp
@@ -78,8 +77,16 @@ camcommunicator.o : camcommunicator.h camcommunicator.cpp mycam.h blobimage.h ca
 pyramid.o : pyramid.h pyramid.cpp
 	  $(CC) $(CFLAGS) -O0 -o pyramid.o -c pyramid.cpp
 	  
-#don't try to compile classes for Qt based object when it isn't available
-ifeq ($(strip $(USE_QT)), 1)
+################################################################################
+#image viewer
+VIEWER_OBJ=scviewer.o blobimage.o imageviewer.o moc_imageviewer.o csbigimg.o frameblob.o bloblist.o
+scviewer: $(VIEWER_OBJ)
+	  $(CC) $(QTLIB) $(CFLAGS) -o scviewer $(VIEWER_OBJ) -lpthread
+	  chmod a+x scviewer
+
+scviewer.o : scviewer.cpp blobimage.h csbigimgdefs.h imageviewer.h
+	  $(CC) $(CFLAGS)  $(QTFLAGS) -o scviewer.o -c scviewer.cpp
+
 imageviewer.o : imageviewer.h imageviewer.cpp
 	  $(CC) $(CFLAGS) $(QTFLAGS) -o imageviewer.o -c imageviewer.cpp
 	  
@@ -89,19 +96,9 @@ moc_imageviewer.cpp : imageviewer.h
 moc_imageviewer.o : imageviewer.h moc_imageviewer.cpp
 	  $(CC) $(CFLAGS) $(QTFLAGS) -o moc_imageviewer.o -c moc_imageviewer.cpp
 
-commandgui.o : commandgui.h commandgui.cpp camcommunicator.h camconfig.h
-	  $(CC) $(CFLAGS) $(QTFLAGS) -o commandgui.o -c commandgui.cpp
 	  
-moc_commandgui.cpp : commandgui.h
-	  $(MOC) commandgui.h -o moc_commandgui.cpp
-	  
-moc_commandgui.o : commandgui.h moc_commandgui.cpp
-	  $(CC) $(CFLAGS) $(QTFLAGS) -o moc_commandgui.o -c moc_commandgui.cpp
-endif
-
-	  
-####################################################################################
-#target for testing
+################################################################################
+#simple test program
 test: testmain commtest
 
 testmain : $(TEST_OBJ)
@@ -112,15 +109,26 @@ testmain.o : testmain.cpp csbigcam.h csbigimg.h mycam.h blobimage.h bloblist.h c
 				camconfig.h clensadapterdefs.h csbigimgdefs.h camcommunicator.h pyramid.h imageviewer.h
 	  $(CC) $(CFLAGS) $(QTFLAGS) -o testmain.o -c testmain.cpp
 	  
-commtest : testcomm.o camcommunicator.o commandgui.o moc_commandgui.o
-	  $(CC) $(CFLAGS) $(QTLIB) -o commtest testcomm.o camcommunicator.o \
-		commandgui.o moc_commandgui.o -lpthread
+################################################################################
+#test communicator app
+COMMTEST_OBJ=testcomm.o camcommunicator.o commandgui.o moc_commandgui.o
+commtest : $(COMMTEST_OBJ)
+	  $(CC) $(CFLAGS) $(QTLIB) -o commtest $(COMMTEST_OBJ) -lpthread
 	  chmod a+x commtest
 	  
 testcomm.o : testcomm.cpp camcommunicator.h camconfig.h commandgui.h
 	  $(CC) $(CFLAGS)  $(QTFLAGS) -o testcomm.o -c testcomm.cpp
 
-####################################################################################
+commandgui.o : commandgui.h commandgui.cpp camcommunicator.h camconfig.h
+	  $(CC) $(CFLAGS) $(QTFLAGS) -o commandgui.o -c commandgui.cpp
+	  
+moc_commandgui.cpp : commandgui.h
+	  $(MOC) commandgui.h -o moc_commandgui.cpp
+	  
+moc_commandgui.o : commandgui.h moc_commandgui.cpp
+	  $(CC) $(CFLAGS) $(QTFLAGS) -o moc_commandgui.o -c moc_commandgui.cpp
+
+################################################################################
 
 clean:
 	rm -f *.o testmain commtest starcam moc_*

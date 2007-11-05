@@ -78,10 +78,10 @@ public:
 	StarcamReturn* createReturnStruct(StarcamReturn* arg);
 	
 	//functions to help in testing the blob finder
-	void drawBox(double x, double y, double side, bool willChange);
+	void drawBox(double x, double y, double side, bool willChange=true);
 	string createFilename();
 	string createDirectory(string root, int boxflag);
-	SBIG_FILE_ERROR SaveImageIn(string root="/home/steve/starcam/starcam/pictures/", int boxflag=0);
+	SBIG_FILE_ERROR SaveImageIn(string root="/usr/local/starcam/pictures/", int boxflag=0);
 	
 };
 

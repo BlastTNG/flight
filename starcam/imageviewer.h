@@ -38,6 +38,7 @@ private:
 	BlobImage *bimg;    //pointer to current blob image
 	bool autoBR;
 	bool needsRepaint;
+	bool loading;
 };
 
 #endif

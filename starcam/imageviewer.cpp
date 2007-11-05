@@ -36,6 +36,7 @@ ImageViewer::ImageViewer(int w, int h, int msec/*=10*/, QWidget* parent/*=0*/, c
 	bimg = NULL;                   //no image has been loaded
 	needsRepaint = false;          //no need until first load
 	autoBR = FALSE;                //remembers last used value
+	loading = false;               //not in the process of loading an image
 	
 	refreshTimer = new QTimer(this, "refresh timer");
 	connect(refreshTimer, SIGNAL(timeout()), this, SLOT(refresh()));
@@ -72,6 +73,7 @@ void ImageViewer::load(BlobImage* img, bool in_autoBR/*=FALSE*/)
 #if VIEWER_DEBUG
 	cerr << "[Viewer debug]: loading an image" << endl;
 #endif
+	loading = true;
 	bimg = img;
 	autoBR = in_autoBR;
 	if (autoBR) img->AutoBackgroundAndRange();
@@ -87,6 +89,7 @@ void ImageViewer::load(BlobImage* img, bool in_autoBR/*=FALSE*/)
 	}
 	bimg->setChanged(false);
 	needsRepaint = true;
+	loading = false;
 	
 }
 
@@ -129,9 +132,17 @@ void ImageViewer::setRefreshTime(int msec)
 */
 void ImageViewer::refresh()
 {
+#if VIEWER_DEBUG
+	static int count = 1;
+#endif
+	if (loading) return;  //do nothing while an image is loading
+
 	if (bimg && bimg->isChanged()) //check if changed without load
 		load(bimg, autoBR);
 	if (needsRepaint && bimg) {
+#if VIEWER_DEBUG
+	  cerr << "[Viewer debug]: " << count++ << " repainting the image. " << endl;
+#endif
 		repaint();
 		needsRepaint = 0;
 	}

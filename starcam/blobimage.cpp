@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include "blobimage.h"
+#include "csbigimg.h"
 #include "frameblob.h"
 #include "bloblist.h"
 #include "pyramid.h"
@@ -353,7 +354,7 @@ int BlobImage::findBlobs()
  when willChange is true, sets the images changed flag
  
 */
-void BlobImage::drawBox(double x, double y, double side, bool willChange)
+void BlobImage::drawBox(double x, double y, double side, bool willChange /*=true*/)
 {
 #if BLOB_IMAGE_DEBUG
 	cout << "[Blob image debug]: In drawBox method." << endl;
