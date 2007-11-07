@@ -65,7 +65,7 @@ const QString LensValDescs[] = { "(int) motor counts to move by (total range ~21
 
 
 
-CommandGUI::CommandGUI(QWidget *parent, const char *name, string commTarget)
+CommandGUI::CommandGUI(QWidget *parent, const char *name, string commTarget /*="aragog.spider"*/)
  : QWidget(parent, name)
 {
 	command = new QLabel(CameraCmdStrs[TrigExp], this, "command");
@@ -164,9 +164,9 @@ CommandGUI::CommandGUI(QWidget *parent, const char *name, string commTarget)
 	
 	vl->addWidget(returnPane, 2);
 	
-	if (comm.openHost(commTarget) < 0) {
+	if (comm.openClient(commTarget) < 0) {
 #if COMMAND_DEBUG
-		cerr << "[CommandGUI debug]: error opening host-side communications" << endl;
+		cerr << "[CommandGUI debug]: error opening communications client" << endl;
 #endif
 	}
 	keepReading = TRUE;

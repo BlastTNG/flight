@@ -1,7 +1,10 @@
 //test program to communicate as the "flight computer" would (can use GUI or terminal)
 
+#include <iostream>
+#include <string>
+
 //these are reversed because the files are named from starcam perspective
-const char* commTarget = "any";
+const char* defaultCommTarget = "aragog.spider";
 
 #define USE_COMMAND_GUI 1
 
@@ -11,6 +14,15 @@ const char* commTarget = "any";
 
 int main(int argc, char *argv[])
 {
+	string commTarget;
+	if (argc == 1) {
+	  cout << "Connecting to default host: " << defaultCommTarget << endl;
+	  commTarget = defaultCommTarget;
+	}
+	else if (argc == 2) {
+	  commTarget = argv[1];
+	  cout << "Connecting to host: " << commTarget << endl;
+	}
 	QApplication a(argc, argv);
 	CommandGUI gui(0, "gui", commTarget);
 	a.setMainWidget(&gui);
@@ -22,8 +34,6 @@ int main(int argc, char *argv[])
 #endif
 
 #if USE_COMMAND_GUI == 0
-#include <iostream>
-#include <string>
 //#include <unistd.h>
 //#include <fcntl.h>
 #include <pthread.h>
@@ -38,11 +48,20 @@ string displayReturn(string rtn);
 int main(int argc, char *argv[])
 		
 {
+	string commTarget;
+	if (argc == 1) {
+	  cout << "Connecting to default host: " << defaultCommTarget << endl;
+	  commTarget = defaultCommTarget;
+	}
+	else if (argc == 2) {
+	  commTarget = argv[1];
+	  cout << "Connecting to host: " << commTarget << endl;
+	}
 	char buf[256];
 	//open communication socket as the host
 	cout << "Opening communications with target: " << commTarget << " (may block)" << endl;
 	CamCommunicator comm;
-	if (comm.openHost(commTarget) < 0) 
+	if (comm.openClient(commTarget) < 0) 
 		cout << "An error occured while opening the communications." << endl;
 		
 	//start thread that constantly waits to read a return value

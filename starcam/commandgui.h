@@ -33,7 +33,7 @@ class CommandGUI : public QWidget
 {
 	Q_OBJECT
 public:
-	CommandGUI(QWidget* parent=0, const char *name = 0, string commTarget="any");
+	CommandGUI(QWidget* parent=0, const char *name = 0, string commTarget="aragog.spider");
 	~CommandGUI();
 	
 	void showReturnVal(QString&);
