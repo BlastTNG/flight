@@ -15,6 +15,7 @@
 #include "frameblob.h"
 #include "bloblist.h"
 #include "camcommunicator.h"
+#include "camcommserver.h"
 #include "sbigudrv.h"
 #include "csbigimgdefs.h"
 #include "camconfig.h"
@@ -60,8 +61,10 @@ bool showBoxes = false;
 //function declarations
 void* pictureLoop(void* arg);
 void* processingLoop(void* arg);
+#if 0
 void* readLoop(void* arg);
-// void* displayLoop(void* arg);
+#endif
+void* startCommunications(void* arg);
 string interpretCommand(string cmd);
 void lock(pthread_mutex_t* mutex, const char* lockname, const char* funcname);
 void unlock(pthread_mutex_t* mutex, const char* lockname, const char* funcname);
@@ -75,8 +78,10 @@ int maintainInitFile(string cmd, string val);
 const char* initFilename = "/usr/local/starcam/init.txt";
 const char* badpixFilename = "/usr/local/starcam/badpix.txt";
 const string adapterPath = "/dev/ttyACM0";
+#if 0
 const string commTarget = "itsy.spider";
 //const string commTarget = "parker.astro.utoronto.ca"
+#endif
 const string imgPath = "/usr/local/starcam/pictures";     //path to save images in
 
 //logging function to clean up a bunch of the messy #ifs
@@ -149,10 +154,13 @@ int main(int argc, char *argv[])
   if (initCommands() < 0) return -1;
 
   //set up communications...will block until other end opens
+#if 0
   sclog(info, "Opening command connection...will block until other end opens.");
   CamCommunicator comm;
   if (comm.openClient(commTarget) < 0) 
     return -1;
+#endif
+  CamCommServer comm;
 
   //start threads for picture taking, image processing, and command reading
   pthread_t threads[3];
@@ -168,11 +176,10 @@ int main(int argc, char *argv[])
   pthread_create(&threads[1], &scheduleAttr, &processingLoop, (void*)&comm);
   scheduleParams.sched_priority += 2;        //run command reading at highest priority
   if (pthread_attr_setschedparam(&scheduleAttr, &scheduleParams) != 0) return -1;
+#if 0
   pthread_create(&threads[2], &scheduleAttr, &readLoop, (void*)&comm);
-
-  // 	pthread_create(&threads[0], NULL, &pictureLoop, NULL);
-  // 	pthread_create(&threads[1], NULL, &processingLoop, (void*)&comm);
-  // 	pthread_create(&threads[2], NULL, &readLoop, (void*)&comm);
+#endif
+  pthread_create(&threads[2], &scheduleAttr, &startCommunications, (void*)&comm);
 
   sclog(info, "Waiting for threads to complete...ie never");
   //wait for threads to return
@@ -271,7 +278,10 @@ void* processingLoop(void* arg)
   sclog(info, "Starting up image processing loop");
   int imageIndex = 0;
   static SBIG_FILE_ERROR err;
+#if 0
   CamCommunicator* comm = (CamCommunicator*)arg;    //enables returns to be sent
+#endif
+  CamCommServer* comm = (CamCommServer*)arg;
 
   while (1) {
     //wait for image to be available for processing
@@ -347,7 +357,10 @@ void* processingLoop(void* arg)
     sclog(debug, "processingLoop: sending image return value.");
     StarcamReturn returnStruct;
     globalImages[imageIndex].createReturnStruct(&returnStruct);
+#if 0
     comm->sendReturn(&returnStruct);
+#endif
+    comm->sendAll(CamCommunicator::buildReturn(&returnStruct));
     unlock(&imageLock[imageIndex], "imageLock", "processingLoop");
 
     //signal that processing is complete
@@ -362,6 +375,7 @@ void* processingLoop(void* arg)
   return NULL;
 }
 
+#if 0
 /*
 
 readLoop:
@@ -382,6 +396,19 @@ void* readLoop(void* arg)
 
     }
     //TODO should think about how errors should be handled
+  }
+  return NULL;
+}
+#endif
+
+void* startCommunications(void* arg)
+{
+  sclog(info, "Starting to listen for communications");
+  CamCommServer* comm = (CamCommServer*)arg;
+  while (1) {
+    comm->startServer(&interpretCommand);
+    sclog(error, "Communications failed to start.");
+    sleep(1);
   }
   return NULL;
 }

@@ -6,7 +6,7 @@ TEST_NAME  = testmain
 USE_QT = 1           #change this to 0 to not use qt when its not available
                  #probably need to change bits of code too
 O_APP      = csbigcam.o csbigimg.o mycam.o clensadapter.o bloblist.o \
-frameblob.o blobimage.o camcommunicator.o pyramid.o
+frameblob.o blobimage.o camcommunicator.o pyramid.o camcommserver.o
 O_APP_QT = imageviewer.o moc_imageviewer.o commandgui.o moc_commandgui.o
 ################################################################################
 SRC_DIR    = .
@@ -47,7 +47,7 @@ $(APP_NAME): $(APP_OBJ)
 	  chmod a+x $(APP_NAME)
 
 starcam.o : starcam.cpp csbigcam.h csbigimg.h mycam.h blobimage.h bloblist.h clensadapter.h frameblob.h \
-			camconfig.h clensadapterdefs.h csbigimgdefs.h camcommunicator.h pyramid.h imageviewer.h
+	camconfig.h clensadapterdefs.h csbigimgdefs.h camcommunicator.h pyramid.h imageviewer.h camcommserver.h
 	  $(CC) $(CFLAGS) $(QTFLAGS) -o starcam.o -c starcam.cpp
 
 csbigcam.o : csbigcam.h csbigcam.cpp csbigimg.h camconfig.h
@@ -73,6 +73,9 @@ blobimage.o : blobimage.h blobimage.cpp frameblob.h bloblist.h camconfig.h pyram
 	  
 camcommunicator.o : camcommunicator.h camcommunicator.cpp mycam.h blobimage.h camconfig.h
 	  $(CC) $(CFLAGS) -o camcommunicator.o -c camcommunicator.cpp
+
+camcommserver.o : camcommserver.h camcommserver.cpp camstruct.h camcommunicator.h
+	  $(CC) $(CFLAGS) -o camcommserver.o -c camcommserver.cpp
 
 pyramid.o : pyramid.h pyramid.cpp
 	  $(CC) $(CFLAGS) -O0 -o pyramid.o -c pyramid.cpp
