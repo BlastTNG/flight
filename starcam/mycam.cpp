@@ -22,8 +22,8 @@
 #include "clensadapter.h"
 #include "blobimage.h"
 
-#define MYCAM_DEBUG 1
-#define MYCAM_TIMING 1
+#define MYCAM_DEBUG 0
+#define MYCAM_TIMING 0
 
 //minimum step size in autofocus, only used when suspect stickiness
 #define MIN_AUTO_STEP 10

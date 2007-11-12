@@ -281,7 +281,8 @@ LENS_ERROR CLensAdapter::runCommand(string cmd, string &return_value)
 		cout << "[Lens Debug]:   read line of output: " << second << endl;
 #endif
 	}
-	return_value = first + second;
+//	return_value = first + second;
+	return_value = second;
 	
 	//check return value for an error code
 	if (second.find("ERR", 0) == 0) {  //an error occured in processing the command
