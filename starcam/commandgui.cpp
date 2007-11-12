@@ -19,15 +19,17 @@ using namespace std;
 //definitions of string arrays for use in the GUI
 
 //command strings as recognized by the star camera
-const QString CameraCmdStrs[] = { "CtrigExp", "CtrigFocus", "CsetExpTime",
+const QString CameraCmdStrs[] = { "CtrigExp", "CtrigFocus", "CtrigFocusF", "CsetExpTime",
 	"CsetExpInt", "CsetFocRsln" };
 const QString ImageCmdStrs[] = { "IsetBadpix", "IsetMaxBlobs", "IsetGrid",
-	"IsetThreshold", "IsetDisttol", "IsetRefresh" };
+	"IsetThreshold", "IsetDisttol" };
 const QString LensCmdStrs[] = { "Lmove", "Lforce", "LsetTol", "L" };
+const QString OverCmdStrs[] = { "Oconf", "OshowBox" };
 	
 //descriptions of star camera commands
 const QString CameraCmdDescs[] = { "Triggers camera exposure (if in triggered mode)",
 	"Triggers camera autofocus (takes a couple of minutes)",
+	"Triggers camera autofocus; forced moves (takes a couple of minutes)",
 	"Sets duration of exposures", "Sets interval between exposures",
 	"Sets the resolution (step size) for autofocus"
 };
@@ -35,17 +37,19 @@ const QString ImageCmdDescs[] = { "Identifies a bad pixel on CCD, will be set to
 	"Sets maximum number of blobs to identify per image",
 	"Sets the grid size for blob finding",
 	"Sets the #-sigma threshold for a blob to be considered a star",
-	"Sets the closest two stars can be together to be identified as distinct",
-	"Sets the refresh rate of the image viewer window"
+	"Sets the closest two stars can be together to be identified as distinct"
 };
 const QString LensCmdDescs[] = { "Makes a precise move of the lens (proportional feedback)",
 	"Similar to move, except ignores lens stops (which may be false when cold)",
 	"Sets allowable miss tolerance of precise moves",
 	"Execute an arbitrary command recognized by the lens adapter"
 };
+const QString OverCmdDescs[] = { "Sends a request for configuration state data",
+	"Toggle whether boxes are drawn in the image viewer images"
+};
 
 //descriptions of the value needed for the command
-const QString CameraValDescs[] = { "", "", "(double) Exposure duration in ms (default: 100)",
+const QString CameraValDescs[] = { "", "", "", "(double) Exposure duration in ms (default: 100)",
 	"(int) interval between exposures in ms, 0 indicates triggered-mode (default: 0)",
 	"(int) number of steps in total focal range during autofocus (default: 100)"
 };
@@ -54,13 +58,15 @@ const QString ImageValDescs[] = {
 	"(int) maximum number of blobs (default: 99)",
 	"(int) size of grid square in pixels (default: 20)",
 	"(double) number of standard deviation above mean flux (default: 5.0)",
-	"(int) square of minimum pixel distance between two blobs (default: 400)",
-	"(int) time in milliseconds between refreshes (default: 1000)"
+	"(int) square of minimum pixel distance between two blobs (default: 400)"
 };
 const QString LensValDescs[] = { "(int) motor counts to move by (total range ~2100)",
 	"(int) motor counts to move by (total range ~2100)",
 	"(int) motor counts away from ideal location allowed (default: 1)",
 	"(string) any command recognized by the lens adapter"
+};
+const QString OverValDescs[] = { "",
+	"(int/bool) evaluates to 'true' means boxes are on"
 };
 
 
@@ -90,6 +96,7 @@ CommandGUI::CommandGUI(QWidget *parent, const char *name, string commTarget /*="
 	deviceBox->insertItem("Camera Commands", Camera);
 	deviceBox->insertItem("Image Commands", Image);
 	deviceBox->insertItem("Lens Commands", Lens);
+	deviceBox->insertItem("Overall Commands", Overall);
 	deviceBox->setSelected(Camera, TRUE);
 	deviceBox->setMinimumSize(150,100);
 	connect(deviceBox, SIGNAL(highlighted(int)), this, SLOT(deviceSelected(int)));
@@ -97,6 +104,7 @@ CommandGUI::CommandGUI(QWidget *parent, const char *name, string commTarget /*="
 	camCmds = new QListBox(this, "camCmds");
 	camCmds->insertItem(CameraCmdStrs[TrigExp], TrigExp);
 	camCmds->insertItem(CameraCmdStrs[TrigFocus], TrigFocus);
+	camCmds->insertItem(CameraCmdStrs[TrigFocusF], TrigFocusF);
 	camCmds->insertItem(CameraCmdStrs[SetExpTime], SetExpTime);
 	camCmds->insertItem(CameraCmdStrs[SetExpInt], SetExpInt);
 	camCmds->insertItem(CameraCmdStrs[SetFocRsln], SetFocRsln);
@@ -110,7 +118,6 @@ CommandGUI::CommandGUI(QWidget *parent, const char *name, string commTarget /*="
 	imgCmds->insertItem(ImageCmdStrs[SetGrid], SetGrid);
 	imgCmds->insertItem(ImageCmdStrs[SetThreshold], SetThreshold);
 	imgCmds->insertItem(ImageCmdStrs[SetDisttol], SetDisttol);
-	imgCmds->insertItem(ImageCmdStrs[SetRefresh], SetRefresh);
 	imgCmds->setSelected(SetBadpix, TRUE);
 	imgCmds->setMinimumSize(150,100);
 	connect(imgCmds, SIGNAL(highlighted(int)), this, SLOT(commandSelected(int)));
@@ -124,6 +131,13 @@ CommandGUI::CommandGUI(QWidget *parent, const char *name, string commTarget /*="
 	lensCmds->setMinimumSize(150,100);
 	connect(lensCmds, SIGNAL(highlighted(int)), this, SLOT(commandSelected(int)));
 	
+	overCmds = new QListBox(this, "overCmds");
+	overCmds->insertItem(OverCmdStrs[Conf], Conf);
+	overCmds->insertItem(OverCmdStrs[showBox], showBox);
+	overCmds->setSelected(Move, TRUE);
+	overCmds->setMinimumSize(150,100);
+	connect(overCmds, SIGNAL(highlighted(int)), this, SLOT(commandSelected(int)));
+	
 	returnPane = new QTextEdit(this, "returnPane");
 	returnPane->setTextFormat(LogText);
 	returnPane->setMinimumHeight(150);
@@ -136,6 +150,7 @@ CommandGUI::CommandGUI(QWidget *parent, const char *name, string commTarget /*="
 	gl->addWidget(camCmds, 0, 0);
 	gl->addWidget(imgCmds, 0, 0);
 	gl->addWidget(lensCmds, 0, 0);
+	gl->addWidget(overCmds, 0, 0);
 	camCmds->raise();                  //show camera commands by default
 	camCmds->setFocus();
 	deviceIndex = (int)Camera;
@@ -182,7 +197,8 @@ void CommandGUI::deviceSelected(int device)
 #endif
 	if (device == deviceIndex) return;       //only do stuff on change
 	deviceIndex = device;
-	currentCmds = (device == Camera)?camCmds:(device == Image)?imgCmds:lensCmds;
+	currentCmds = (device == Camera)?camCmds:(device == Image)?imgCmds:
+	  (device == Lens)?lensCmds:overCmds;
 	currentCmds->raise();
 	currentCmds->setFocus();
 	int idx = currentCmds->index(currentCmds->selectedItem());
@@ -200,10 +216,12 @@ void CommandGUI::commandSelected(int cmd)
 	commandIndex = cmd;
 	command->setText(currentCmds->selectedItem()->text());
 	const QString* cmdDescArray = (deviceIndex == Camera)?CameraCmdDescs:
-			(deviceIndex == Image)?ImageCmdDescs:LensCmdDescs;
+			(deviceIndex == Image)?ImageCmdDescs:
+			(deviceIndex == Lens)?LensCmdDescs:OverCmdDescs;
 	description->setText(cmdDescArray[cmd]);
 	const QString* valDescArray = (deviceIndex == Camera)?CameraValDescs:
-			(deviceIndex == Image)?ImageValDescs:LensValDescs;
+			(deviceIndex == Image)?ImageValDescs:
+			(deviceIndex == Lens)?LensValDescs:OverValDescs;
 	if (valDescArray[cmd][0] == '\0') {  //val with no description means no value
 		valDesc->hide();
 		value->hide();
@@ -267,7 +285,7 @@ void CommandGUI::showReturnVal(QString &str)
 CommandGUI::~CommandGUI()
 {
 	keepReading = FALSE;
-	reader.wait();
+	reader.terminate();
 }
 
 //"infinite" loop to run in another thread and read responses

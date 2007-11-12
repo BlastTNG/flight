@@ -112,10 +112,11 @@ PAR_ERROR MyCam::OpenUSBDevice(int num)
  a BlobImage is passed to avoid time consuming initialization of a new one
  will stop after decreasing for 3 consecutive measurements, or no longer identifying blob
  when forced is non-zero (TRUE), stops will be ignored until moving is impossible
+ path is the location of files used by image viewer
  //TODO can add sub-step interpolation of maximum
  
 */
-LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/)
+LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, const char* path/*=NULL*/)
 {
 	frameblob *blob = img->getFrameBlob();
 	if (m_cAdapter.findFocalRange() != LE_NO_ERROR) return m_cAdapter.getLastError();
@@ -138,6 +139,13 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/)
 #endif
 			return LE_AUTOFOCUS_ERROR;
 		}
+		//if applicable, save image for use by viewer
+		if (img->SaveImage(path) != SBFE_NO_ERROR) {
+#if MYCAM_DEBUG
+			cerr << "[MyCam debug]: autoFocus failed to save viewer image" << endl;
+#endif
+		}
+
 		img->findBlobs();
 		thisFlux =  (blob->get_numblobs())?(blob->getblobs()->getflux()):-1;
 		if (thisFlux == -1 && maxFlux > 0) break;   //no blobs and max found: break

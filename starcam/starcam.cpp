@@ -53,7 +53,6 @@ pthread_cond_t cameraTriggerCond = PTHREAD_COND_INITIALIZER;
 
 //image viewer
 #if USE_IMAGE_VIEWER
-//TODO make viewer parameters commandable
 const char* viewerPath = "/tmp/starcam/current.sbig";
 bool showBoxes = false;
 #endif
@@ -61,9 +60,6 @@ bool showBoxes = false;
 //function declarations
 void* pictureLoop(void* arg);
 void* processingLoop(void* arg);
-#if 0
-void* readLoop(void* arg);
-#endif
 void* startCommunications(void* arg);
 string interpretCommand(string cmd);
 void lock(pthread_mutex_t* mutex, const char* lockname, const char* funcname);
@@ -78,10 +74,6 @@ int maintainInitFile(string cmd, string val);
 const char* initFilename = "/usr/local/starcam/init.txt";
 const char* badpixFilename = "/usr/local/starcam/badpix.txt";
 const string adapterPath = "/dev/ttyACM0";
-#if 0
-const string commTarget = "itsy.spider";
-//const string commTarget = "parker.astro.utoronto.ca"
-#endif
 const string imgPath = "/usr/local/starcam/pictures";     //path to save images in
 
 //logging function to clean up a bunch of the messy #ifs
@@ -153,13 +145,7 @@ int main(int argc, char *argv[])
   //run the stored initialization commands
   if (initCommands() < 0) return -1;
 
-  //set up communications...will block until other end opens
-#if 0
-  sclog(info, "Opening command connection...will block until other end opens.");
-  CamCommunicator comm;
-  if (comm.openClient(commTarget) < 0) 
-    return -1;
-#endif
+  //set up communications...really easy now
   CamCommServer comm;
 
   //start threads for picture taking, image processing, and command reading
@@ -176,9 +162,6 @@ int main(int argc, char *argv[])
   pthread_create(&threads[1], &scheduleAttr, &processingLoop, (void*)&comm);
   scheduleParams.sched_priority += 2;        //run command reading at highest priority
   if (pthread_attr_setschedparam(&scheduleAttr, &scheduleParams) != 0) return -1;
-#if 0
-  pthread_create(&threads[2], &scheduleAttr, &readLoop, (void*)&comm);
-#endif
   pthread_create(&threads[2], &scheduleAttr, &startCommunications, (void*)&comm);
 
   sclog(info, "Waiting for threads to complete...ie never");
@@ -212,6 +195,7 @@ void* pictureLoop(void* arg)
   int imageIndex = 0;                //index in image array to use
   int interval;                      //local storage of picture interval (in us)
   static PAR_ERROR err = CE_NO_ERROR;   //static enum lets a pointer to it be returned
+  int failureCount = 0;
   while (1) {
 
     //depending on picture interval, either sleep or wait for trigger
@@ -246,9 +230,14 @@ void* pictureLoop(void* arg)
     lock(&camLock, "camLock", "pictureLoop");
     err = globalCam.GrabImage(&globalImages[imageIndex], SBDF_LIGHT_ONLY);
     if (err != CE_NO_ERROR) {
-      sclog(error, "pictureLoop: error: %s", globalCam.GetErrorString(err).c_str());
-      return (void*)&err;
+      failureCount++;
+      if (failureCount > 5) {
+	sclog(error, "pictureLoop: too many repeated errors: %s", globalCam.GetErrorString(err).c_str());
+	return (void*)&err;
+      }
+      else sclog(warning, "pictureLoop: error: %s", globalCam.GetErrorString(err).c_str());
     }
+    else failureCount = 0;
     unlock(&camLock, "camLock", "pictureLoop");
 
     //trigger processing of this image
@@ -272,15 +261,11 @@ In an infinito loop processes images as they become available
 Designed to run concurrently with pictureLoop and readLoop
 
 */
-//TODO a lot of the errors here can be downgraded to warnings, handled suitably
 void* processingLoop(void* arg)
 {
   sclog(info, "Starting up image processing loop");
   int imageIndex = 0;
   static SBIG_FILE_ERROR err;
-#if 0
-  CamCommunicator* comm = (CamCommunicator*)arg;    //enables returns to be sent
-#endif
   CamCommServer* comm = (CamCommServer*)arg;
 
   while (1) {
@@ -302,8 +287,7 @@ void* processingLoop(void* arg)
     sclog(debug, "processingLoop: Saving image in: %s", imgPath.c_str());
     err = globalImages[imageIndex].SaveImageIn(imgPath, 0);
     if (err != SBFE_NO_ERROR) {
-      sclog(error, "processingLoop: File error during boxless write: %d", err);
-      return (void *) &err;
+      sclog(warning, "processingLoop: File error during boxless write: %d", err);
     }
 #endif
 #if USE_IMAGE_VIEWER
@@ -311,8 +295,7 @@ void* processingLoop(void* arg)
       sclog(debug, "processingLoop: Saving viewer image in: %s", viewerPath);
       err = globalImages[imageIndex].SaveImage(viewerPath);
       if (err != SBFE_NO_ERROR) {
-	sclog(error, "processingLoop: File error during viewer write: %d", err);
-	return (void *) &err;
+	sclog(warning, "processingLoop: File error during viewer write: %d", err);
       }
     }
 #endif
@@ -338,8 +321,7 @@ void* processingLoop(void* arg)
     sclog(debug, "processignLoop: Saving image with boxes in: %s", imgPath.c_str());
     err = globalImages[imageIndex].SaveImageIn(imgPath, 1);
     if (err != SBFE_NO_ERROR) {
-      sclog(error, "processingLoop: File error during box write: %d", err);
-      return (void*) &err;
+      sclog(warning, "processingLoop: File error during box write: %d", err);
     }
 #endif
 #if USE_IMAGE_VIEWER
@@ -347,8 +329,7 @@ void* processingLoop(void* arg)
       sclog(debug, "processingLoop: Saving viewer image in: %s", viewerPath);
       err = globalImages[imageIndex].SaveImage(viewerPath);
       if (err != SBFE_NO_ERROR) {
-	sclog(error, "processingLoop: File error during boxed viewer write: %d", err);
-	return (void *) &err;
+	sclog(warning, "processingLoop: File error during boxed viewer write: %d", err);
       }
     }
 #endif
@@ -357,9 +338,6 @@ void* processingLoop(void* arg)
     sclog(debug, "processingLoop: sending image return value.");
     StarcamReturn returnStruct;
     globalImages[imageIndex].createReturnStruct(&returnStruct);
-#if 0
-    comm->sendReturn(&returnStruct);
-#endif
     comm->sendAll(CamCommunicator::buildReturn(&returnStruct));
     unlock(&imageLock[imageIndex], "imageLock", "processingLoop");
 
@@ -375,32 +353,13 @@ void* processingLoop(void* arg)
   return NULL;
 }
 
-#if 0
 /*
-
-readLoop:
-
-simply a wrapper function for calling the CamCommunicator::readLoop member in a pthread
-
-*/
-void* readLoop(void* arg)
-{
-  sclog(info, "Starting read loop (handled by CamCommunicator class).");
-  CamCommunicator* comm = (CamCommunicator*)arg;
-  while (true) {     //when something bad happens, should try to start again
-    comm->readLoop(&interpretCommand);
-    sclog(warning, "readLoop: an error occured (and readLoop ended)");
-    if (comm->sendReturnString("Error: readLoop has ended. Trying to restart it") < 0)
-    { //something really bad has happened
-      sclog(error, "readLoop: error is really bad, can't communicate");
-
-    }
-    //TODO should think about how errors should be handled
-  }
-  return NULL;
-}
-#endif
-
+ * startCommunications:
+ *
+ * starts the server that listens for new socket connections
+ * the interpretCommand function is used by the server to interpret any 
+ * received commands
+ */
 void* startCommunications(void* arg)
 {
   sclog(info, "Starting to listen for communications");
@@ -417,8 +376,8 @@ void* startCommunications(void* arg)
 
 interpretCommand:
 
-interprets a command obtained from readLoop
-this funciton is passed as a pointer to CamCommunicator::readLoop
+interprets a command
+this function is passed as a pointer to CamCommServer::startServer
 returns a string to be sent back to flight computer
 when unsuccessful, the return string should start with "Error:"
 when successful, return "<command echo> successful"
@@ -455,10 +414,9 @@ string interpretCommand(string cmd)
       lock(&camLock, "camLock", "interpretCommand");
       BlobImage img;
 #if USE_IMAGE_VIEWER
-      //TODO need to properly handle image viewing during autofocus, add path as argument
-      err = globalCam.autoFocus(&img, 0);
+      err = globalCam.autoFocus(&img, 0, viewerPath);
 #else
-      err = globalCam.autoFocus(&img, 0);
+      err = globalCam.autoFocus(&img, 0, NULL);
 #endif
       unlock(&camLock, "camLock", "interpretCommand");
       if (err != LE_NO_ERROR)
@@ -470,10 +428,9 @@ string interpretCommand(string cmd)
       lock(&camLock, "camLock", "interpretCommand");
       BlobImage img;
 #if USE_IMAGE_VIEWER
-      //TODO need to properly handle image viewing during autofocus, add path as argument
-      err = globalCam.autoFocus(&img, 1);
+      err = globalCam.autoFocus(&img, 1, viewerPath);
 #else
-      err = globalCam.autoFocus(&img, 1);
+      err = globalCam.autoFocus(&img, 1, NULL);
 #endif
       unlock(&camLock, "camLock", "interpretCommand");
       if (err != LE_NO_ERROR)
@@ -684,14 +641,16 @@ string interpretCommand(string cmd)
       return sout.str();
     }
     if (cmd == "OshowBox") {
+#if USE_IMAGE_VIEWER
       if (valStr == "" || valStr == " ")
 	return (string)"Error: the command " + cmd + " requires a value.";
-#if USE_IMAGE_VIEWER
 	sin >> showBoxes;
-#endif
       if (maintainInitFile(cmd, valStr) == 0)
 	return (cmd + " successful");
       else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
+#else
+      return (cmd + "successful, not implemented");
+#endif
     }
     else {
       sclog(warning, "interpretCommand: bad overall command");

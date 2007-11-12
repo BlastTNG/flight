@@ -38,10 +38,11 @@ public:
 	
 	void showReturnVal(QString&);
 	
-	enum Devices { Camera = 0, Image, Lens };
-	enum CameraCmd { TrigExp = 0, TrigFocus, SetExpTime, SetExpInt, SetFocRsln };
-	enum ImageCmd { SetBadpix = 0, SetMaxBlobs, SetGrid, SetThreshold, SetDisttol, SetRefresh };
+	enum Devices { Camera = 0, Image, Lens, Overall };
+	enum CameraCmd { TrigExp = 0, TrigFocus, TrigFocusF, SetExpTime, SetExpInt, SetFocRsln };
+	enum ImageCmd { SetBadpix = 0, SetMaxBlobs, SetGrid, SetThreshold, SetDisttol};
 	enum LensCmd { Move = 0, Force, SetTol, Other };
+	enum OverCmd { Conf = 0, showBox };
 	
 	friend class ReadThread;
 	
@@ -63,6 +64,7 @@ private:
 	QListBox *camCmds;      //list of camera commands
 	QListBox *imgCmds;      //list of image commnads
 	QListBox *lensCmds;     //list of commands for the lens
+	QListBox *overCmds;     //list of overall/general commands
 	QListBox *currentCmds;  //this will be set to whichever of the above boxes is being used
 
 	QTextEdit *returnPane;  //return values are added here

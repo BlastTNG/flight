@@ -47,7 +47,7 @@ public:
 	PAR_ERROR OpenUSBDevice(int num);
 	
 	//lens adapter functions
-	LENS_ERROR autoFocus(BlobImage *img, int forced = 0);
+	LENS_ERROR autoFocus(BlobImage *img, int forced = 0, const char* path = NULL);
 	CLensAdapter* getLensAdapter() { return &m_cAdapter; }
 	
 	//accesors

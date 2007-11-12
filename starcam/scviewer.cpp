@@ -16,8 +16,7 @@
 #define DEFAULT_FILE "/tmp/starcam/current.sbig"
 
 char* filename;
-//TODO is there some way to sue only 1 image and stop segfaulting
-BlobImage* img[2];
+BlobImage* img[2];   //images. Using only 1 caused segfaults...
 int imgindex = 0;
 
 void failure()
