@@ -2,6 +2,7 @@
 #include <sys/select.h>
 #include <string>
 #include <sstream>
+#include <iostream>
 #include <cmath>
 #include <stdio.h>   /* standard input and output */
 #include <unistd.h>  /* UNIX standard function definitions */
@@ -10,11 +11,8 @@
 #include <stdlib.h>
 #include <sys/ioctl.h>
 
-#define LENS_DEBUG 0
+#define LENS_DEBUG 1
 
-#if LENS_DEBUG
-#include <iostream>
-#endif
 
 
 using namespace std;
@@ -180,13 +178,15 @@ LENS_ERROR CLensAdapter::findFocalRange()
 	
 	if ((err = this->runCommand(LC_MOVE_FOCUS_ZERO,lens_return_str)) != LE_NO_ERROR) 
 		return err;
+	cout << "erase me: mz gave: " << lens_return_str << endl;
 	if ((err = this->runCommand(LC_MOVE_FOCUS_INFINITY,lens_return_str)) != LE_NO_ERROR) 
 		return err;
+	cout << "erase me: mi gave: " << lens_return_str << endl;
 	
 	//if no error occured, lens_return_str should be "OK\nDONExxx,1\n" where xxx == focal range
 	end_pos = lens_return_str.find(",",0);
 	if (end_pos == string::npos) return (m_eLastError = LE_BAD_PARAM);
-	range_str = lens_return_str.substr(7, end_pos-7);
+	range_str = lens_return_str.substr(4, end_pos-4);
 	m_nFocalRange = atoi(range_str.c_str());
 	
 	return LE_NO_ERROR;
@@ -337,6 +337,7 @@ LENS_ERROR CLensAdapter::runCommand(LENS_COMMAND cmd, int val, string &return_va
  will allow a miss tolerance of tol
  if the lens reaches a stop, indicates unmoved counts in remaining
  when forced is nonzero (TRUE) will ignore stops until not moving
+ TODO preciseMove is Misbehaving!!
 */
 LENS_ERROR CLensAdapter::preciseMove(int counts, int &remaining, int forced/*=0*/)
 {
@@ -352,9 +353,12 @@ LENS_ERROR CLensAdapter::preciseMove(int counts, int &remaining, int forced/*=0*
 		//move by amount remaining
 		if ((err = runCommand(LC_MOVE_FOCUS_INC,remaining,return_str)) != LE_NO_ERROR)
 			return err;
+#if LENS_DEBUG
+		cout << "[Lens Debug]: preciseMove: moving returned: " << return_str << endl;
+#endif
 		sep_pos = return_str.find(",",0);
 		if (sep_pos == string::npos) return (m_eLastError = LE_BAD_PARAM);
-		counts_str = return_str.substr(7,sep_pos-7);
+		counts_str = return_str.substr(4,sep_pos-4);
 		stop_str = return_str.substr(sep_pos+1,1);
 #if LENS_DEBUG
 		cout << "[Lens Debug]: preciseMove moved by " << counts_str << " counts";

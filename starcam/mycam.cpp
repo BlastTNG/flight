@@ -24,6 +24,7 @@
 
 #define MYCAM_DEBUG 0
 #define MYCAM_TIMING 0
+#define AUTOFOCUS_DEBUG 1
 
 //minimum step size in autofocus, only used when suspect stickiness
 #define MIN_AUTO_STEP 10
@@ -119,30 +120,38 @@ PAR_ERROR MyCam::OpenUSBDevice(int num)
 LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, const char* path/*=NULL*/)
 {
 	frameblob *blob = img->getFrameBlob();
-	if (m_cAdapter.findFocalRange() != LE_NO_ERROR) return m_cAdapter.getLastError();
-	int range = m_cAdapter.getFocalRange();
+	if (!forced)  //can actually measure focal range
+		if (m_cAdapter.findFocalRange() != LE_NO_ERROR) return m_cAdapter.getLastError();
+	int range = (forced)?2105:m_cAdapter.getFocalRange();
 	int step = range / m_nFocusResolution;         //number of motor counts between measurements
 	//check if motor "stickiness" may have confused things
 	if (forced && step < MIN_AUTO_STEP) step = MIN_AUTO_STEP;
-#if MYCAM_DEBUG
-	cout << "[MyCam debug]: starting autoFocus with step size: " << step << endl;
+#if AUTOFOCUS_DEBUG
+	cout << "[autoFocus debug]: range=" << range <<" res=" << m_nFocusResolution << "step=" << step << endl;
 #endif
 	int decrease_cnt = 0;                  //counts consecutive flux decreases for stopping
 	int remaining = 0;                     //distance remainder from preciseMove
 	int thisFlux, lastFlux = 1;            //brightest blob flux in this, last image
 	int toMax = 0, maxFlux = -1;           //distance to max, and max flux
+	int toInf = 0;                         //distance to infinity
 	
 	while (decrease_cnt < 3) {
+#if AUTOFOCUS_DEBUG
+		cout << "[autoFocus debug]: taking exposure" << endl;
+#endif
 		if (this->GrabImage(img, SBDF_LIGHT_ONLY) != CE_NO_ERROR) {
-#if MYCAM_DEBUG
-			cout << "[MyCam debug]: grabImage failed in autoFocus" << endl;
+#if AUTOFOCUS_DEBUG
+			cout << "[autoFocus debug]: grabImage failed in autoFocus" << endl;
 #endif
 			return LE_AUTOFOCUS_ERROR;
 		}
 		//if applicable, save image for use by viewer
+#if AUTOFOCUS_DEBUG
+		cout << "[autoFocus debug]: saving focus image in : " << path << endl;
+#endif
 		if (img->SaveImage(path) != SBFE_NO_ERROR) {
-#if MYCAM_DEBUG
-			cerr << "[MyCam debug]: autoFocus failed to save viewer image" << endl;
+#if AUTOFOCUS_DEBUG
+			cerr << "[autoFocus debug]: autoFocus failed to save viewer image" << endl;
 #endif
 		}
 
@@ -163,8 +172,10 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, const char* path/*
 			toMax = step + remaining;    //have just moved away from max
 		}
 		else if (maxFlux > 0) toMax += step + remaining;   //if max found, have moved further from it
-#if MYCAM_DEBUG
-			cout << "[MyCam debug]: autoFocus: thisFlux=" << thisFlux << " toMax=" << toMax << endl;
+		toInf += step + remaining;
+#if AUTOFOCUS_DEBUG
+		cout << "[autoFocus debug]: thisFlux=" << thisFlux << " toMax=" << toMax << endl;
+		cout << "[autoFocus debug]: location is " << toMax << " from max and " << toInf << " from infinity" << endl;
 #endif
 		lastFlux = thisFlux;
 	}
