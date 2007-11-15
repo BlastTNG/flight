@@ -128,6 +128,13 @@ LENS_ERROR CLensAdapter::openConnection(string deviceName)
 
 
 	tcsetattr(m_nPortFD, TCSANOW, &options);     //apply changes
+
+	//flush the buffer (in case of unclean shutdown)
+	if (tcflush(m_nPortFD, TCIOFLUSH) < 0) {
+#if LENS_DEBUG
+		cout << "[Lens Debug]: failed to flush buffer" << endl;
+#endif
+	}
 	
 	return (m_eLastError = LE_NO_ERROR);
 }
