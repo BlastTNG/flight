@@ -135,6 +135,9 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, const char* path/*
 	int toMax = 0, maxFlux = -1;           //distance to max, and max flux
 	int toInf = 0;                         //distance to infinity
 	
+#if 0
+	int dummy = 0;
+#endif
 	while (decrease_cnt < 3) {
 #if AUTOFOCUS_DEBUG
 		cout << "[autoFocus debug]: taking exposure" << endl;
@@ -153,7 +156,17 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, const char* path/*
 #if AUTOFOCUS_DEBUG
 			cerr << "[autoFocus debug]: autoFocus failed to save viewer image" << endl;
 #endif
+			cerr << "erase me: autofocus failed to save image" << endl;
 		}
+#if 0
+		if (dummy%4 == 0) {
+		  ostringstream sout;
+		  sout << path << (dummy/4);
+		  cout << "erase me: writing backup image to: " << sout.str() << "\n";
+		  img->SaveImage(sout.str().c_str());
+		}
+		dummy++;
+#endif
 
 		img->findBlobs();
 		thisFlux =  (blob->get_numblobs())?(blob->getblobs()->getflux()):-1;

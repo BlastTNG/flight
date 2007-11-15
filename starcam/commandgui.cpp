@@ -17,10 +17,15 @@ using namespace std;
 #endif
 
 //definitions of string arrays for use in the GUI
+//to add a command, it must appear in interpretCommand in starcam.cpp
+//to use it in this GUI, add it to the three lists below, and to the enum in header
+//(NB: it must appear in the same location in all lists)
+//Finally, the list entry must be added in the constructor
+//Yes, I know this is a lot to ask, this system is not perfectly designed
 
 //command strings as recognized by the star camera
 const QString CameraCmdStrs[] = { "CtrigExp", "CtrigFocus", "CtrigFocusF", "CsetExpTime",
-	"CsetExpInt", "CsetFocRsln" };
+	"CsetExpInt", "CsetFocRsln", "Cpower" };
 const QString ImageCmdStrs[] = { "IsetBadpix", "IsetMaxBlobs", "IsetGrid",
 	"IsetThreshold", "IsetDisttol" };
 const QString LensCmdStrs[] = { "Lmove", "Lforce", "LsetTol", "L" };
@@ -31,7 +36,8 @@ const QString CameraCmdDescs[] = { "Triggers camera exposure (if in triggered mo
 	"Triggers camera autofocus (takes a couple of minutes)",
 	"Triggers camera autofocus; forced moves (takes a couple of minutes)",
 	"Sets duration of exposures", "Sets interval between exposures",
-	"Sets the resolution (step size) for autofocus"
+	"Sets the resolution (step size) for autofocus",
+	"Power cycles the star cameras"
 };
 const QString ImageCmdDescs[] = { "Identifies a bad pixel on CCD, will be set to map mean",
 	"Sets maximum number of blobs to identify per image",
@@ -48,10 +54,11 @@ const QString OverCmdDescs[] = { "Sends a request for configuration state data",
 	"Toggle whether boxes are drawn in the image viewer images"
 };
 
-//descriptions of the value needed for the command
+//descriptions of the value needed for the command, "" for no value
 const QString CameraValDescs[] = { "", "", "", "(double) Exposure duration in ms (default: 100)",
 	"(int) interval between exposures in ms, 0 indicates triggered-mode (default: 0)",
-	"(int) number of steps in total focal range during autofocus (default: 100)"
+	"(int) number of steps in total focal range during autofocus (default: 100)",
+	""
 };
 const QString ImageValDescs[] = { 
 	"(space-separated ints) <cam #> <x> <y> (\"0 0\" is top left)",
@@ -108,6 +115,7 @@ CommandGUI::CommandGUI(QWidget *parent, const char *name, string commTarget /*="
 	camCmds->insertItem(CameraCmdStrs[SetExpTime], SetExpTime);
 	camCmds->insertItem(CameraCmdStrs[SetExpInt], SetExpInt);
 	camCmds->insertItem(CameraCmdStrs[SetFocRsln], SetFocRsln);
+	camCmds->insertItem(CameraCmdStrs[Power], Power);
 	camCmds->setSelected(TrigExp, TRUE);
 	camCmds->setMinimumSize(150,100);
 	connect(camCmds, SIGNAL(highlighted(int)), this, SLOT(commandSelected(int)));

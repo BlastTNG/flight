@@ -39,7 +39,7 @@ public:
 	void showReturnVal(QString&);
 	
 	enum Devices { Camera = 0, Image, Lens, Overall };
-	enum CameraCmd { TrigExp = 0, TrigFocus, TrigFocusF, SetExpTime, SetExpInt, SetFocRsln };
+	enum CameraCmd { TrigExp = 0, TrigFocus, TrigFocusF, SetExpTime, SetExpInt, SetFocRsln, Power };
 	enum ImageCmd { SetBadpix = 0, SetMaxBlobs, SetGrid, SetThreshold, SetDisttol};
 	enum LensCmd { Move = 0, Force, SetTol, Other };
 	enum OverCmd { Conf = 0, showBox };

@@ -10,6 +10,7 @@
 #include <iostream>
 #include <pthread.h>
 #include <sched.h>
+#include <sys/io.h>
 #include "mycam.h"
 #include "blobimage.h"
 #include "frameblob.h"
@@ -62,6 +63,7 @@ void* pictureLoop(void* arg);
 void* processingLoop(void* arg);
 void* startCommunications(void* arg);
 string interpretCommand(string cmd);
+void powerCycle();
 void lock(pthread_mutex_t* mutex, const char* lockname, const char* funcname);
 void unlock(pthread_mutex_t* mutex, const char* lockname, const char* funcname);
 void wait(pthread_cond_t* cond, pthread_mutex_t* mutex, const char* condname, 
@@ -236,6 +238,7 @@ void* pictureLoop(void* arg)
 	return (void*)&err;
       }
       else sclog(warning, "pictureLoop: error: %s", globalCam.GetErrorString(err).c_str());
+      //TODO maybe put a camera power cycle in here?
     }
     else failureCount = 0;
     unlock(&camLock, "camLock", "pictureLoop");
@@ -483,6 +486,12 @@ string interpretCommand(string cmd)
 	return (cmd + " successful");
       else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
     }
+    else if (cmd == "Cpower") {
+      lock(&camLock, "camLock", "interpretCommand");
+      powerCycle();
+      unlock(&camLock, "camlock", "interpretCommand");
+      return (cmd + " successful");
+    }
     else {
       sclog(warning, "interpretCommand: bad camera command");
       return (string)"Error: Failed to parse camera command: " + cmd;
@@ -663,6 +672,28 @@ string interpretCommand(string cmd)
   }
 
   return "Error: execution should never reach here!!";
+}
+
+/*
+ * powerCycle:
+ *
+ * uses a switch on the parallel port to power cycle the star cameras
+ */
+void powerCycle()
+{
+  static bool hasperms = false;
+
+  if (!hasperms) {
+    if (ioperm(0x378, 0x0F, 1) != 0) {
+      sclog(warning, "powerCycle couldn't set port permissions...are you root?");
+      return;
+    }
+    else hasperms = true;
+  }
+
+  outb(0xFF, 0x378);
+  usleep(100000);
+  outb(0x00, 0x378);
 }
 
 /*

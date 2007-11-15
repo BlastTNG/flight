@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <sys/ioctl.h>
 
-#define LENS_DEBUG 1
+#define LENS_DEBUG 0
 
 
 
@@ -344,7 +344,6 @@ LENS_ERROR CLensAdapter::runCommand(LENS_COMMAND cmd, int val, string &return_va
  will allow a miss tolerance of tol
  if the lens reaches a stop, indicates unmoved counts in remaining
  when forced is nonzero (TRUE) will ignore stops until not moving
- TODO preciseMove is Misbehaving!!
 */
 LENS_ERROR CLensAdapter::preciseMove(int counts, int &remaining, int forced/*=0*/)
 {
@@ -360,9 +359,6 @@ LENS_ERROR CLensAdapter::preciseMove(int counts, int &remaining, int forced/*=0*
 		//move by amount remaining
 		if ((err = runCommand(LC_MOVE_FOCUS_INC,remaining,return_str)) != LE_NO_ERROR)
 			return err;
-#if LENS_DEBUG
-		cout << "[Lens Debug]: preciseMove: moving returned: " << return_str << endl;
-#endif
 		sep_pos = return_str.find(",",0);
 		if (sep_pos == string::npos) return (m_eLastError = LE_BAD_PARAM);
 		counts_str = return_str.substr(4,sep_pos-4);
