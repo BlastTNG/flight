@@ -107,11 +107,9 @@ void sclog(loglevel level, char* fmt, ...)
   }
 }
 
-int main(int argc, char *argv[])
+PAR_ERROR openCameras()
 {
-  //set up the camera
   PAR_ERROR err;
-  LENS_ERROR lerr;
   sclog(info, "Opening the camera driver.");
   if ((err = globalCam.OpenDriver()) != CE_NO_ERROR)
     return err;
@@ -132,6 +130,18 @@ int main(int argc, char *argv[])
     if ((err = globalCam.EstablishLink()) == CE_NO_ERROR) break;
   }
   if (err != CE_NO_ERROR)
+    return err;
+
+  return CE_NO_ERROR;
+}
+
+int main(int argc, char *argv[])
+{
+  //set up the camera
+  PAR_ERROR err;
+  LENS_ERROR lerr;
+
+  if ((err = openCameras()) != CE_NO_ERROR)
     return err;
 
   sclog(info, "Opening a connection to the lens adapter...");
@@ -233,12 +243,15 @@ void* pictureLoop(void* arg)
     err = globalCam.GrabImage(&globalImages[imageIndex], SBDF_LIGHT_ONLY);
     if (err != CE_NO_ERROR) {
       failureCount++;
-      if (failureCount > 5) {
+      if (failureCount == 3) {
+	sclog(error, "pictureLoop: repeated errors: %s, restarting camera.", globalCam.GetErrorString(err).c_str());
+	powerCycle();
+      }
+      else if (failureCount > 5) {
 	sclog(error, "pictureLoop: too many repeated errors: %s", globalCam.GetErrorString(err).c_str());
-	return (void*)&err;
+	exit(1);
       }
       else sclog(warning, "pictureLoop: error: %s", globalCam.GetErrorString(err).c_str());
-      //TODO maybe put a camera power cycle in here?
     }
     else failureCount = 0;
     unlock(&camLock, "camLock", "pictureLoop");
@@ -369,7 +382,7 @@ void* startCommunications(void* arg)
   CamCommServer* comm = (CamCommServer*)arg;
   while (1) {
     comm->startServer(&interpretCommand);
-    sclog(error, "Communications failed to start.");
+    sclog(error, "Communications server failed to start.");
     sleep(1);
   }
   return NULL;
@@ -691,11 +704,17 @@ void powerCycle()
     else hasperms = true;
   }
 
-  sclog(warning, "Power cycling the cameras!");
+  sclog(info, "Power cycling the cameras!");
+  if (globalCam.CloseDevice() != CE_NO_ERROR || globalCam.CloseDriver() != CE_NO_ERROR)
+    sclog(warning, "Trouble safely shutting down camera, proceeding anyway.");
   outb(0xFF, 0x378);
   usleep(100000);
   outb(0x00, 0x378);
-  //TODO have to do some intelligent reconnecting here
+
+  PAR_ERROR err;
+  if ((err = openCameras()) != CE_NO_ERROR) {
+    sclog(error, "Problem reconnecting to camera: %s", globalCam.GetErrorString(err).c_str());
+  }
 }
 
 /*

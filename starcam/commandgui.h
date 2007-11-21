@@ -9,7 +9,6 @@
 	@author Steve Benton <steve.benton@utoronto.ca>
 	GUI interface for starcam commands
 	when commands are added to starcam.cpp::interpretCommand, they sould be added here too
-	TODO this is out of date. Before use, will need to fix lists of commands
 */
 
 class QLabel;
