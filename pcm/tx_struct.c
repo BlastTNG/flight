@@ -18,7 +18,6 @@
  *
  * !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
  */
-
 #include <limits.h>
 #include "channels.h"
 #include "bbc_pci.h"
@@ -41,27 +40,6 @@ struct ChannelStruct WideSlowChannels[] = {
   {"sc1_usec",     'w', LOOP1, 17,                1.0,             0.0, 'U'},
   //derived channel sc1_time adds these together
 
-  //ACS1 analog channels. update and move as needed
-  //analog channel 0 is not wide (upper bit stolen)
-  //analog channels 1, 2, 3 are gyros -- wide-fast
-  {"acs1_a06",     'r',  ACS1, 12,                1.0,             0.0, 'U'},
-  {"acs1_a07",     'r',  ACS1, 14,                1.0,             0.0, 'U'},
-  {"acs1_a08",     'r',  ACS1, 16,                1.0,             0.0, 'U'},
-  {"acs1_a09",     'r',  ACS1, 18,                1.0,             0.0, 'U'},
-  {"acs1_a10",     'r',  ACS1, 20,                1.0,             0.0, 'U'},
-  {"acs1_a11",     'r',  ACS1, 22,                1.0,             0.0, 'U'},
-  {"acs1_a12",     'r',  ACS1, 24,                1.0,             0.0, 'U'},
-  {"acs1_a13",     'r',  ACS1, 26,                1.0,             0.0, 'U'},
-  {"acs1_a14",     'r',  ACS1, 28,                1.0,             0.0, 'U'},
-  {"acs1_a15",     'r',  ACS1, 30,                1.0,             0.0, 'U'},
-  {"acs1_a16",     'r',  ACS1, 32,                1.0,             0.0, 'U'},
-  //analog channels 17, 18 are gyros -- wide-fast
-  {"acs1_a19",     'r',  ACS1, 38,                1.0,             0.0, 'U'},
-  //analog channel 20 is gyro -- wide fast
-  {"acs1_a21",     'r',  ACS1, 42,                1.0,             0.0, 'U'},
-  {"acs1_a22",     'r',  ACS1, 44,                1.0,             0.0, 'U'},
-  {"acs1_a23",     'r',  ACS1, 46,                1.0,             0.0, 'U'},
-  {"acs1_a24",     'r',  ACS1, 48,                1.0,             0.0, 'U'},
  END_OF_CHANNELS
 };
 
@@ -83,8 +61,35 @@ struct ChannelStruct SlowChannels[] = {
   {"pad04",        'w', TEST1,  3,                1.0,             0.0, 'u'},
   {"pad05",        'w', TEST1,  4,                1.0,             0.0, 'u'},
  
-  //analog channels with upper word stolen (or not needed)
+  //ACS1 analog channels with upper word stolen (or not needed)
+  //making these wide requires a change to DSP code!
   {"acs1_a00",     'r',  ACS1,  0,                1.0,             0.0, 'u'},
+  //analog channels 1, 2, 3 are gyros -- wide-fast
+  {"acs1_a06",     'r',  ACS1, 12,                1.0,             0.0, 'u'},
+  {"acs1_a07",     'r',  ACS1, 14,                1.0,             0.0, 'u'},
+  {"acs1_a08",     'r',  ACS1, 16,                1.0,             0.0, 'u'},
+  {"acs1_a09",     'r',  ACS1, 18,                1.0,             0.0, 'u'},
+  {"acs1_a10",     'r',  ACS1, 20,                1.0,             0.0, 'u'},
+  {"acs1_a11",     'r',  ACS1, 22,                1.0,             0.0, 'u'},
+  {"acs1_a12",     'r',  ACS1, 24,                1.0,             0.0, 'u'},
+  {"acs1_a13",     'r',  ACS1, 26,                1.0,             0.0, 'u'},
+  {"acs1_a14",     'r',  ACS1, 28,                1.0,             0.0, 'u'},
+  {"acs1_a15",     'r',  ACS1, 30,                1.0,             0.0, 'u'},
+  {"acs1_a16",     'r',  ACS1, 32,                1.0,             0.0, 'u'},
+  //analog channels 17, 18 are gyros -- wide-fast
+  {"acs1_a19",     'r',  ACS1, 38,                1.0,             0.0, 'u'},
+  //analog channel 20 is gyro -- wide fast
+  {"acs1_a21",     'r',  ACS1, 42,                1.0,             0.0, 'u'},
+  {"acs1_a22",     'r',  ACS1, 44,                1.0,             0.0, 'u'},
+  {"acs1_a23",     'r',  ACS1, 46,                1.0,             0.0, 'u'},
+  {"acs1_a24",     'r',  ACS1, 48,                1.0,             0.0, 'u'},
+
+  {"gy1_bad",      'r',  ACS1,  9,                1.0,             0.0, 'u'},
+  {"gy2_bad",      'r',  ACS1, 11,                1.0,             0.0, 'u'},
+  {"gy3_bad",      'r',  ACS1, 13,                1.0,             0.0, 'u'},
+  {"gy4_bad",      'r',  ACS1, 15,                1.0,             0.0, 'u'},
+  {"gy5_bad",      'r',  ACS1, 17,                1.0,             0.0, 'u'},
+  {"gy6_bad",      'r',  ACS1, 19,                1.0,             0.0, 'u'},
 
   {"g_p_table",    'w', LOOP1,  1,         1.0/1000.0,             0.0, 'u'},
   {"g_i_table",    'w', LOOP1,  2,        1.0/10000.0,             0.0, 'u'},
@@ -172,6 +177,8 @@ struct ChannelStruct SlowChannels[] = {
   {"is_gond_accel",'w', LOOP2, 25,                1.0,             0.0, 'u'},
   {"dps_piv_req",  'w', LOOP2, 26,       60.0/32767.0,             0.0, 's'},
   {"i_reac_req",   'w', LOOP2, 27,       20.0/32767.0,             0.0, 's'},
+  {"dps_piv",      'w', LOOP2, 28,       70.0/32767.0,             0.0, 's'},
+  
 
   END_OF_CHANNELS
 };
@@ -190,8 +197,6 @@ struct ChannelStruct WideFastChannels[] = {
   {"raw_gy6",      'r',  ACS1, 36,     -DGY32_TO_DPS,
                                     DGY32_OFFSET * DGY32_TO_DPS - 0.005, 'U'},
   {"enc_table",    'r',  ACS1, 56,     360.0/144000.0,              0.0, 'U'},
-
-
   {"test1_a00",    'r', TEST1,  0,                1.0,             0.0, 'U'},
   {"test1_a01",    'r', TEST1,  2,                1.0,             0.0, 'U'},
   {"test1_a02",    'r', TEST1,  4,                1.0,             0.0, 'U'},
@@ -285,8 +290,8 @@ struct ChannelStruct FastChannels[] = {
   {"sc2_trig_s",   'r',  ACS1, 63,  1.0,                              0.0, 'u'},
   {"sc2_trig_l",   'r',  ACS1,  1,  1.0,                              0.0, 'u'},
   {"dps_table",    'w', LOOP1,  0,  70.0/32767.0,                     0.0, 's'},
-  {"rwheel_vel",   'r',  ACS1,  8,                0.5,             0.0, 's'},
-  {"rwheel_cur",   'r',  ACS1, 10,                4.0,             0.0, 's'},
+  {"rwheel_vel",   'r',  ACS1,  8,  RWVEL_TO_DPS,           -RWVEL_OFFSET, 'u'},
+  {"rwheel_cur",   'r',  ACS1, 10,  RWCUR_TO_DPS,           -RWCUR_OFFSET, 'u'},
 
   {"test1_d1",	   'r', TEST1, 50,                1.0,             0.0, 'u'},
   {"test1_d2",	   'r', TEST1, 51,                1.0,             0.0, 'u'},

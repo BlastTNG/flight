@@ -47,6 +47,19 @@
 #define RAD2ARCSEC (180. * 3600. / M_PI)  /* radians to arcseconds */
 
 /**********************************************/
+/*  ReactWheelStruct                          */
+/*  Purpose: Store the RW vel and current     */
+/*           read in from the BLASTBus        */
+/*  Source:                                   */
+/*  Used:                                     */
+struct ReactWheelStruct {
+  double vel; // deg/s
+  double i;   // Amps
+};
+
+extern struct ReactWheelStruct RWData;
+
+/**********************************************/
 /*  ACSDataStruct                             */
 /*  Purpose: Store raw pointing info          */
 /*   Source: main thread; GetACS()            */

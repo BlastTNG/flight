@@ -32,14 +32,14 @@ extern "C" {
 #include "blast.h"
 #include "tx.h"
 #include "command_struct.h"
+#include "pivotcommand.h"
+#include "reactcommand.h"
 }
 #include "channels.h"
 #include "pointing_struct.h"
 #include "mcp.h"
 #include "drivecommunicator.h"
 #include "motorcommand.h"
-#include "pivotcommand.h"
-#include "reactcommand.h"
 
 //speed limit in dps
 #define MAX_TABLE_SPEED 45.0
@@ -61,6 +61,7 @@ static int tableSpeed = 0;
 // Maximum Pivot Speed 
 #define MAX_PIVOT_SPEED 45.0
 
+//#define NO_MOTORS
 
 //device node for serial port; TODO play with udev to make constant
 #define TABLE_DEVICE "/dev/ttyUSB0"
@@ -81,8 +82,13 @@ int write_index=0; //lmf: Following what is done in pointing.c
 extern "C" {
 
 static void* rotaryTableComm(void *arg);
+static void* pivotComm(void *arg);
+static void* reactComm(void *arg);
 
-float gTargetVel;     //TODO does this definitely want to be a float?
+double gTargetVel;  // Gondola Target velocity
+double ireq,pvreq;  // Reaction wheel current requested, and Pivot
+                    // velocity requested.
+unsigned long int vpiv;
 
 /* opens communications with motor controllers */
 void openMotors()
@@ -90,7 +96,7 @@ void openMotors()
   bprintf(info, "Motors: connecting to motors");
   tableComm = new DriveCommunicator(TABLE_DEVICE);
   if (tableComm->getError() != DC_NO_ERROR) {
-    bprintf(err, "Motors: roary table initialization gave error code: %d",
+    bprintf(err, "Motors: rotary table initialization gave error code: %d",
 	tableComm->getError());
   }
 //  tableComm->maxCommSpeed(TABLE_ADDR);  //done in firmware
@@ -100,9 +106,9 @@ void openMotors()
   tableComm->sendCommand(&axison);
   pthread_create(&tablecomm_id, NULL, &rotaryTableComm, NULL);
 
-  open_pivot("/dev/ttySI0");
+  open_pivot(PIVOT_DEVICE);
   pthread_create(&pivotcomm_id, NULL, &pivotComm, NULL);
-  open_react("/dev/ttySI2");
+  open_react(REACT_DEVICE);
   pthread_create(&reactcomm_id, NULL, &reactComm, NULL);
 }
 
@@ -115,11 +121,9 @@ void closeMotors()
   }
   if (pivotComm != NULL) {
     close_pivot();
-    delete pivotComm;
   }
   if (reactComm != NULL) {
     close_react();
-    delete reactComm;
   }
 }
 
@@ -180,7 +184,8 @@ void updateTableSpeed()
   if (relVel > MAX_TABLE_SPEED) relVel = MAX_TABLE_SPEED;
   else if (relVel < -MAX_TABLE_SPEED) relVel = -MAX_TABLE_SPEED;
   //if going too fast in one direction, reverse direction of move
-  if (fabs(CommandData.tableRelMove) > 20) { //only do this for large moves
+#if 0      //this causes annoying spins around...fix or leave out
+  if (fabs(CommandData.tableRelMove) > 40) { //only do this for large moves
     if (azVel > MAX_TABLE_SPEED/2 && relVel > azVel) { //too fast +
       CommandData.tableRelMove -= 360; //go in -'ve direction
       relVel = 0;   //find new relVel next time
@@ -189,6 +194,7 @@ void updateTableSpeed()
       relVel = 0;
     }
   }
+#endif
 
   //find new target velocity
   targVel = azVel + relVel;
@@ -246,12 +252,96 @@ void* rotaryTableComm(void* arg)
  */
 void* pivotComm(void* arg)
 {
+  //  int laststat=0;
+  //  double dps=0.0;
+  //  int data=0;
+  pivotinfo.loop=0;
+  int firsttime = 1;
+  double vlast=0;
+  double vcur=0;
+  // wait until the pivot controller has been initialized.
+  while(pivotinfo.open==0)
+    {
+      sleep(1);
+      if (firsttime) 
+	{
+	  bputs(err,"pivotComm: Pivot controller port is not open. Retrying\n");
+	  //	  firsttime = 0;
+	}
+      open_pivot(PIVOT_DEVICE);
+    }
+  // Configure the serial port.
+  configure_pivot();
+
+  bprintf(info,"pivotComm: Here are the conversion factors for RW.");
+  bprintf(info,"RWVEL_DPS=%d, RWVEL_OFFSET=%d, RWCUR_DPS=%d, RWCUR_");
+  while(1){
+    // Am I ready to send a command?
+    // if
+#ifndef NO_MOTORS // put motor commands below....
+    if(firsttime)
+      { 
+	bputs(info,"pivotComm: NO_MOTORS not defined--Commands will be sent to the pivot.");        
+        vpiv=getquery(QUER_VEL);
+        
+      }
+
+   if(pivotinfo.loop==0) // There is no loop
+      {
+        if(firsttime)
+	  {
+            bputs(info,"pivotComm: Starting loop...");
+	  }
+	//start_loop(pvreq);        
+      }
+   /*    if(pivotinfo.loop==1)
+      {
+        change_piv_vel(pvreq);
+      }
+    */ 
+#endif //NO_MOTORS
+
+#ifdef NO_MOTORS // !!!!DO NOT PUT MOTOR COMMANDS BELOW!!!!
+    if(firsttime)
+      {
+        bputs(info,"pivotComm: NO_MOTORS defined--NO Commands will be sent to the pivot.");
+      }
+#endif //NO_MOTORS
+
+//     bprintf(info,"4: %i, %f, %i",vpiv, dps,motorpos);
+     if(pivotinfo.loop> 0)
+       {
+	 vpiv=getquery(QUER_VEL);
+       }
+     else
+       {
+         vpiv=0; // Otherwise this query returns the max slew speed.
+       }
+
+        firsttime = 0;
+  } 
   
+
   return NULL;  
 }
 
 void* reactComm(void* arg)
 {
+  // Make sure the connection to the reaction wheel controller has been initialized.
+  int firsttime = 1;
+  while(reactinfo.open==0)
+    {
+      sleep(1);
+      if (firsttime)
+	{
+	  bputs(err,"reactComm: Reaction wheel port is not open. Retrying.\n");
+	  firsttime = 0;
+	}
+      open_react(REACT_DEVICE);
+    }
+  // Configure the serial port.
+  //  configure_react();
+
   return NULL;
 }
 
@@ -263,9 +353,8 @@ void* reactComm(void* arg)
 void getTargetVel()
 {
   // gTargetVel is a global variable
-  double azVel,amp,acrit,per,vswitch,dvdt,tswitch,t1,dt;
-  static double vlast,lastTime,vdir;
-  timeval timestruct;
+  double theta,amp,acrit,per,vswitch,dvdt,tswitch,t1;
+  static double vlast,vdir;
   int data;
   static int firsttime = 1;
   static int accelmode,wait;
@@ -273,27 +362,33 @@ void getTargetVel()
   static NiosStruct* isGondAccel  = NULL;
   static NiosStruct* gondTheta    = NULL;
   static NiosStruct* dpspsGondReq = NULL;
+
+  
   if(firsttime==1)
     {
+      bprintf(info,"Motors: Running getTargetVel for the first time.");
       dpsGondReq  =GetNiosAddr("dps_gond_req");
       isGondAccel =GetNiosAddr("is_gond_accel");
       gondTheta   =GetNiosAddr("gond_theta");
       dpspsGondReq=GetNiosAddr("dpsps_gond_req");
     }
-  switch(CommandData.spiderMode.spider_mode){
+
+  switch(CommandData.spiderMode){
   case point:
+if(firsttime==1)    bprintf(info,"Motors: We are Pointing.");
     gTargetVel=0.0;
     // lmf: This just a place holder.  Obviously some day we may
     // want to point at an actual location.
     break;
   case spin:
-    gTargetVel=CommandData.SpinStruct.dps;
+if(firsttime==1)    bprintf(info,"Motors: We are spinning.");
+    gTargetVel=CommandData.spiderSpin.dps;
     break;
   case scan:
+if(firsttime==1)    bprintf(info,"Motors: We are scanning.");
     // Okay where are we?
     if(firsttime==1)
       {
-        firsttime=0;
         accelmode=0;
         vdir=1.0;
         vlast = ACSData.gyro2;
@@ -311,9 +406,9 @@ void getTargetVel()
     if(accelmode==0)
       {
         if(amp-(fabs(theta)) <= acrit)
-	  {
+	    {
             accelmode=1;
-	  }
+	    }
       }
     WriteData(isGondAccel, accelmode, NIOS_QUEUE);
 
@@ -323,7 +418,7 @@ void getTargetVel()
         gTargetVel=amp*(2*M_PI/per)*cos(asin(theta/amp))*vdir;
         return;
       }
-    else
+      else
       {
         // If not we are in constant acceleration mode
         t1=asin((amp-acrit)/amp)/(2*M_PI/per);
@@ -342,73 +437,88 @@ void getTargetVel()
         WriteData(dpspsGondReq, data, NIOS_QUEUE);
 
         // Get the current time and velocities
-        
+      
         // new velocity is previous velocity - dvdt*dt
         if(!wait) // unless we have been told not to change
 	  {
-	    gTargetVel=vlast-dvdt*0.01; // This assumes that we are calling
+	      gTargetVel=vlast-dvdt*0.01; // This assumes that we are calling
           }                         // this function at 100 Hz.
 
         // Check:  Am I going faster than the switch velocity?
         if(gTargetVel*vdir*(-1.0) > vswitch )
-	  {
+	    {
             // Am I past the acrit value?
             if(amp-fabs(theta)>acrit)
-	      {
-		accelmode=0;
-		vdir=vdir*-1.0;
+	        {
+		  accelmode=0;
+		  vdir=vdir*-1.0;
                 wait=0;
-	      }
+	        }
             else
-	      {
+	        {
                 wait=1;
 	      }
-	  }
+	    }
       }        
-      vlast=gTargetVel
+    vlast=gTargetVel;
 
   //write target speed to frame
-  data = (int)((gTargetVel/60.0)*32767.0); //allow much room to avoid overflow
-    WriteData(dpsGondReq, data, NIOS_QUEUE);
-
-	return;
-    break;
-  case default:
+      break;
+    default:
     berror(err, "getTargetVel: Invalid mode");
     gTargetVel=0.0;
     return;
     break;
   }
+  data = (int)((gTargetVel/60.0)*32767.0); //allow much room to avoid overflow
+    WriteData(dpsGondReq, data, NIOS_QUEUE);
+
+  if(firsttime==1)
+    { 
+      bprintf(info,"getTargetVel: gTargetVel is %f",gTargetVel); 
+      firsttime=0;
+    }
+  
 }
 // Looks at the target Velocity gTargetVel and sends commands to the motors.
+
 void updateMotorSpeeds()
 {
-  double ireq,pvreq;  // Reaction wheel current requested, and Pivot
-                      // velocity requested.
+  double dps;
+  int data=0;
   double vcurr = ACSData.gyro2; // Gyro is in dps
   double verr=vcurr-gTargetVel; // Velocity error term.
-  double vreac;
-  int data;
-  static isfirst =1;
+  double vreac= RWData.vel;
+  static int isfirst =1;
   static NiosStruct* dpsPivReq = NULL;
   static NiosStruct* iReacReq  = NULL;
+  static NiosStruct* dpsPiv   = NULL;
+
   if(isfirst==1)
     {
+      dpsPiv  =GetNiosAddr("dps_piv");
       dpsPivReq = GetNiosAddr("dps_piv_req");
       iReacReq  = GetNiosAddr("i_reac_req");
+      vpiv=0;
     }
-  // What mode are we in?
-  switch(CommandData.spiderMode.spider_mode){
-  case point:
-    // lmf: For now use spin gains.
-    // Later we will need to implement pointing gains.
-    ireq=CommandData.spiderGain.sp_r * verr;
-    pvreq=CommandData.spiderGain.sp_p * vreac+ ACSData.gyro2;
-    break;    
-  case spin:
-    ireq=CommandData.spiderGain.sp_r * verr;
-    pvreq=CommandData.spiderGain.sp_p * vreac+ ACSData.gyro2;
-    break;
+    // Update the pivot velocity, which is stored in controller units in vpiv
+    // (set in pivotComm)
+  dps=((double) vpiv)/COUNTS_PER_DEGREE;
+  data=(int) ((dps/70.0)*32767.0);
+  WriteData(dpsPiv, data, NIOS_QUEUE);
+
+// What mode are we in?
+switch(CommandData.spiderMode){
+case point:
+  // lmf: For now use spin gains.
+  // Later we will need to implement pointing gains.
+  ireq=CommandData.spiderGain.sp_r * verr;
+  pvreq=CommandData.spiderGain.sp_p * vreac+ ACSData.gyro2;
+  break;    
+case spin:
+  ireq=CommandData.spiderGain.sp_r * verr;
+  pvreq=CommandData.spiderGain.sp_p * vreac+ ACSData.gyro2;
+  break;
   case scan:
     ireq=CommandData.spiderGain.sc_r * verr;
     pvreq=CommandData.spiderGain.sc_p1 * vreac+ ACSData.gyro2
@@ -428,14 +538,14 @@ void updateMotorSpeeds()
   // direction?
   if (fabs(vreac) > MAX_RWHEEL_SPEED && vreac*ireq > 0)
     {
-      bprintf(warning,"updateMotorSpeeds:Current reaction wheel speed %f is beyond the speed %d.\n Reaction wheel current set to 0.0.\n",vreac,MAX_RWHEEL_SPEED);
+      bprintf(warning,"updateMotorSpeeds:Current reaction wheel speed %f is beyond the speed %f.\n Reaction wheel current set to 0.0.\n",vreac,MAX_RWHEEL_SPEED);
       ireq=0.0;
     }
   // Is the requested reaction wheel current beyond the current limits set?
-  if (fabs(ireac) > MAX_RWHEEL_CURRENT)
+  if (fabs(ireq) > MAX_RWHEEL_CURRENT)
     {
-      ireac=MAX_RWHEEL_CURRENT*ireac/fabs(ireac);
-      bprintf(warning,"updateMotorSpeeds: Requested ireq is above the current limits, setting %f\n",ireac);
+      ireq=MAX_RWHEEL_CURRENT*ireq/fabs(ireq);
+      bprintf(warning,"updateMotorSpeeds: Requested ireq is above the current limits, setting %f\n",ireq);
     }
   // Is the pivot going too fast?
   // lmf: write this one once I figure out how to store the pivot velocity.
@@ -446,13 +556,13 @@ void updateMotorSpeeds()
       
       // lmf: Once we have a better idea of the gains we'll put something
       // more intelligent here.
-      ireac=MAX_RWHEEL_CURRENT*ireac/fabs(ireac);
-      bprintf(warning,"updateMotorSpeeds:Gondola is rotating too fast!\n Setting ireq and pvreq to 0.0.");
+      ireq=MAX_RWHEEL_CURRENT*ireq/fabs(ireq);
+//      bprintf(warning,"updateMotorSpeeds:Gondola is rotating too fast!\n Setting ireq and pvreq to 0.0.");
 
     }
-  data=(int)((dpsPivReq/60.0)*32767.0);
+  data=(int)((pvreq/60.0)*32767.0);
   WriteData(dpsPivReq, data, NIOS_QUEUE);
-  data=(int)((iReacReq/20.0)*32767.0);
+  data=(int)((ireq/20.0)*32767.0);
   WriteData(iReacReq, data, NIOS_QUEUE);
   
   // Make the command strings and send them.

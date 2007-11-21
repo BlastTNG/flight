@@ -34,7 +34,7 @@ struct GainStruct {
   unsigned short int SP;
 };
 
-enum PointingMode {point_scan, point_spin, point_point};
+enum PointingMode {scan, spin, point};
 
 struct SpinStruct {
   double dps; // Target Gondola Spin Speed

@@ -76,6 +76,7 @@ extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 
 extern pthread_mutex_t mutex; //commands.c
 
+struct ReactWheelStruct RWData;
 #ifdef HAVE_ACS
 struct ACSDataStruct ACSData;
 void Pointing();    //pointing.c
@@ -363,6 +364,27 @@ static void GetACS(unsigned short *RxFrame)
 
 }
 #endif //HAVE_ACS
+static void GetRW(unsigned short *RxFrame)
+{
+  double rwCur, rwVel;
+  unsigned int uCur, uVel;
+  static struct BiPhaseStruct* rwCurAddr;
+  static struct BiPhaseStruct* rwVelAddr;
+  static int firsttime = 1;
+  if (firsttime) {
+    firsttime = 0;
+    rwCurAddr = GetBiPhaseAddr("rwheel_cur");
+    rwVelAddr = GetBiPhaseAddr("rwheel_vel");
+  }
+  uCur = RxFrame[rwCurAddr->channel];
+  uVel = RxFrame[rwVelAddr->channel];
+
+  rwCur = (double)(uCur) * 4.0;
+  rwVel = (double)(uVel) * 0.5;
+
+  RWData.vel=rwVel;
+  RWData.i=rwCur;
+}
 
 /* fill_Rx_frame: places one 32 bit word into the RxFrame. 
  * Returns true on success 
@@ -625,6 +647,9 @@ int main(int argc, char *argv[])
         GetACS(RxFrame);
         Pointing();
 #endif
+
+        /* Read in the Reaction Wheel velocity and current */     
+        GetRW(RxFrame);
 
         /* Frame sequencing check */
         if (StartupVeto) {

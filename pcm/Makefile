@@ -4,6 +4,7 @@ CC = gcc
 CPP = g++
 LD = g++
 CPPFLAGS = -g -O3 -Wall -D__MCP__ $(HAVE_ACS) $(HAVE_CRYO) $(USE_FIFO_CMD)
+#CPPFLAGS = $(CPPFLAGS) $(NO_MOTORS)
 LDFLAGS = -lpthread -lm -lstdc++
 ifeq ($(DEBUG), 1)
 	CPPFLAGS := $(CPPFLAGS) -g -DDEBUG
@@ -19,10 +20,11 @@ COM_OBJS = mcp.o blast.o channels.o derived.o framefile.o tx.o tx_struct.o \
 
 #ACS specific files
 ifdef HAVE_ACS
-ACS_HEADERS = drivecommunicator.h motorcommand.h camcommunicator.h camstruct.h 
+ACS_HEADERS = drivecommunicator.h motorcommand.h camcommunicator.h camstruct.h \
+                 reactcommand.h pivotcommand.h              
 
 ACS_OBJS = drivecommunicator.o motorcommand.o motors.o pointing.o \
-	   camcommunicator.o starcamera.o  
+	   camcommunicator.o starcamera.o reactcommand.o pivotcommand.o
 endif
 
 #CRYO specific files

@@ -971,7 +971,7 @@ void InitCommandData()
   CommandData.tableGain.I = 302;   //ten-thousandths
   CommandData.tableGain.D = 13520; //hundredths
 
-  CommandData.spiderMode=point_scan;
+  CommandData.spiderMode=spin;
   CommandData.spiderScan.C=0.0;
   CommandData.spiderScan.P=47.0;
   CommandData.spiderScan.W=45.0;

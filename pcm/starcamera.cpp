@@ -35,6 +35,7 @@ extern "C" {
 #include "tx.h"
 #include "command_struct.h"
 }
+#include "blast.h"
 #include "channels.h"
 #include "pointing_struct.h"
 #include "mcp.h"
@@ -43,7 +44,7 @@ extern "C" {
 #include "command_struct.h"
 
 //allow any host to be the star camera
-#define CAM_SERVERNAME "any"
+#define CAM_SERVERNAME "aragog.spider"
 
 static CamCommunicator* camComm;
 static pthread_t camcomm_id;
@@ -72,6 +73,7 @@ int sendCamCommand(const char *cmd)
  */
 void openCamera()
 {
+  bprintf(startup, "Starcam: connecting to the star camera");
   camComm = new CamCommunicator();
   pthread_create(&camcomm_id, NULL, &camReadLoop, NULL);
 }
@@ -199,7 +201,7 @@ void cameraFields()
  */
 static void* camReadLoop(void* arg)
 {
-  if (camComm->openHost(CAM_SERVERNAME) < 0)
+  if (camComm->openClient(CAM_SERVERNAME) < 0)
     bprintf(err, "Starcam: failed to accept star camera connection");
   else bprintf(startup, "Starcam: talking to star camera");
 
@@ -208,6 +210,7 @@ static void* camReadLoop(void* arg)
   while(true) {
     camComm->readLoop(&parseReturn);
     //readLoop returns when something bad happens; TODO handle
+    bprintf(err, "Starcam: readLoop returned. This is bad. Restarting.");
   }
 
   return NULL;

@@ -35,6 +35,7 @@ extern unsigned int tdrss_index;
 extern pthread_mutex_t tdrss_lock;
 
 #define GETREADINDEX(i) ((i+1) % 2)  /* index other than write index */
+// TODO:  Make this buffer have three entries!
 
 #define TEMPORAL_OFFSET 0
 

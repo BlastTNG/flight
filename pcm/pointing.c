@@ -43,7 +43,7 @@
 #define FRAMES_TO_OK_ATFLOAT 100
 
 #define GY1_OFFSET (0)
-#define GY2_OFFSET (0)
+#define GY2_OFFSET (-0.00358)
 #define GY3_OFFSET (0)
 
 #define MAX_ISC_AGE 200
@@ -131,39 +131,49 @@ void Pointing(void)
 {
 //  double gy_roll, gy2, gy3, el_rad;
 //  static double last_good_lat=0, last_good_lon=0;
+  static int tst;
 
   static int firsttime = 1;
   static double prevVel,prevTime;
   double curVel,curTime,avVel;
-  double dt;
+  double dt,dv;
   static struct NiosStruct* gondAz = NULL;
   struct timeval timer;
 
-  int i_point_read;
+  int i_point_read=GETREADINDEX(point_index);
 
   if (firsttime) {
     firsttime = 0;
     // the first t about to be read needs to be set
-    PointingData[GETREADINDEX(point_index)].t = mcp_systime(NULL); // CPU time
+    PointingData[i_point_read].t = mcp_systime(NULL); // CPU time
     // initialize PointingData.az
     // lmf: for now assume that the initial position is zero.
     // TODO: Fix this later!
-    PointingData[GETREADINDEX(point_index)].az = 0.0; 
+    PointingData[i_point_read].az = 0.0; 
 
-    prevVel=ACSData.gyro2;
+    prevVel=ACSData.gyro2-GY2_OFFSET;
     gettimeofday(&timer, NULL);
     prevTime=(double)timer.tv_sec + timer.tv_usec/1000000.0;
     gondAz = GetNiosAddr("gond_az");
   }
-  curVel=ACSData.gyro2;
+  curVel=ACSData.gyro2-GY2_OFFSET;
   gettimeofday(&timer, NULL);
   curTime=(double)timer.tv_sec + timer.tv_usec/1000000.0;
   avVel=(curVel+prevVel)/2.0;
   dt = (curTime - prevTime);
-  PointingData[point_index].az = PointingData[GETREADINDEX(point_index)].az + (avVel * dt); 
+  dv=avVel * dt;
+  PointingData[point_index].az = PointingData[i_point_read].az+dv; 
   
-  int data = (int) ((PointingData[GETREADINDEX(point_index)].az/70.0)*65535.0); // if we overflow we go back to zero
+  int data = (int) ((PointingData[i_point_read].az/70.0)*65535.0); 
+     // if we overflow we go back to zero
   WriteData(gondAz, data, NIOS_QUEUE);
-  i_point_read = GETREADINDEX(point_index);
+  point_index=(point_index+1)%2;
+  //  if (tst<100) {
+  //     bprintf(info,"Pointing: curVel=%f, prevVel=%f, data=%i",curVel,prevVel,data); 
+  //     bprintf(info,"Pointing: dt=%f, dv=%f, az=%f", dt,dv,PointingData[i_point_read].az);
+  //    }
+  prevVel=curVel;
+  prevTime=curTime;
+  //  tst=tst+1;
 }
 

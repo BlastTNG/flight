@@ -78,6 +78,7 @@ union DerivedUnion DerivedChannels[] = {
   BITFIELD("acs_toggle",
       "ENC_TABLE_Z",
       "SC1_TRIG",
-      "SC2_TRIG"),
+      "SC2_TRIG",
+      "ENC_TABLE_ZC"),
   END_OF_DERIVED_CHANNELS
 };
