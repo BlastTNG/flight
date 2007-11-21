@@ -149,15 +149,17 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, const char* path/*
 			return LE_AUTOFOCUS_ERROR;
 		}
 		//if applicable, save image for use by viewer
+		if (path != NULL) {
 #if AUTOFOCUS_DEBUG
-		cout << "[autoFocus debug]: saving focus image in : " << path << endl;
+		  cout << "[autoFocus debug]: saving focus image in : " << path << endl;
 #endif
-		if (img->SaveImage(path) != SBFE_NO_ERROR) {
+		  //TODO viewing doesn't work, though saved images seem to be good
+		  //upon saving, the image in viewer gets blanked
+		  if (img->SaveImage(path) != SBFE_NO_ERROR) {
 #if AUTOFOCUS_DEBUG
-			cerr << "[autoFocus debug]: autoFocus failed to save viewer image" << endl;
+		    cerr << "[autoFocus debug]: autoFocus failed to save viewer image" << endl;
 #endif
-			cerr << "erase me: autofocus failed to save image" << endl;
-		}
+		  }
 #if 0
 		if (dummy%4 == 0) {
 		  ostringstream sout;
@@ -167,6 +169,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, const char* path/*
 		}
 		dummy++;
 #endif
+		}
 
 		img->findBlobs();
 		thisFlux =  (blob->get_numblobs())?(blob->getblobs()->getflux()):-1;
@@ -198,6 +201,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, const char* path/*
 		return m_cAdapter.getLastError();
 	return LE_NO_ERROR;
 }
+
 //Original autofocus function: needlessly complicated
 // LENS_ERROR MyCam::autoFocus()
 // {

@@ -40,6 +40,7 @@ MyCam globalCam;
 BlobImage globalImages[2];                //one image can be processed while other is obtained
 pthread_mutex_t camLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t imageLock[2] = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
+pthread_mutex_t viewerLock = PTHREAD_MUTEX_INITIALIZER;
 
 //flags, etc. for synchronizing image exposure and processing
 int globalImageReadyFlags[2] = {0, 0};    // 1 when an image is ready, 0 when processing complete
@@ -113,6 +114,7 @@ PAR_ERROR openCameras()
   sclog(info, "Opening the camera driver.");
   if ((err = globalCam.OpenDriver()) != CE_NO_ERROR)
     return err;
+  usleep(1000);
 
   //query the usb bus for possible cameras..for some reason screws up the next step, comment out when not needed
   // 	cout << "[Starcam debug]: Querying the USB bus for usable devices..." << endl;
@@ -426,14 +428,21 @@ string interpretCommand(string cmd)
       return (cmd + " successful");
     }
     else if (cmd == "CtrigFocus") {     //trigger autofocus
+      //TODO can't view images during autoFocus for some reason
       LENS_ERROR err;
       lock(&camLock, "camLock", "interpretCommand");
+      //also don't allow processing to take place
+      lock(&imageLock[0], "imageLock", "interpretCommand");
+      lock(&imageLock[1], "imageLock", "interpretCommand");
       BlobImage img;
 #if USE_IMAGE_VIEWER
-      err = globalCam.autoFocus(&img, 0, viewerPath);
+      //err = globalCam.autoFocus(&img, 0, viewerPath);
+      err = globalCam.autoFocus(&img, 0, "/tmp/starcam/current2.sbig");
 #else
       err = globalCam.autoFocus(&img, 0, NULL);
 #endif
+      unlock(&imageLock[1], "imageLock", "interpretCommand");
+      unlock(&imageLock[0], "imageLock", "interpretCommand");
       unlock(&camLock, "camLock", "interpretCommand");
       if (err != LE_NO_ERROR)
 	return (string)"Error: Autofocus returned: " + CLensAdapter::getErrorString(err);
@@ -442,12 +451,17 @@ string interpretCommand(string cmd)
     else if (cmd == "CtrigFocusF") {     //trigger forced move autofocus
       LENS_ERROR err;
       lock(&camLock, "camLock", "interpretCommand");
+      //also don't allow processing to take place
+      lock(&imageLock[0], "imageLock", "interpretCommand");
+      lock(&imageLock[1], "imageLock", "interpretCommand");
       BlobImage img;
 #if USE_IMAGE_VIEWER
       err = globalCam.autoFocus(&img, 1, viewerPath);
 #else
       err = globalCam.autoFocus(&img, 1, NULL);
 #endif
+      unlock(&imageLock[1], "imageLock", "interpretCommand");
+      unlock(&imageLock[0], "imageLock", "interpretCommand");
       unlock(&camLock, "camLock", "interpretCommand");
       if (err != LE_NO_ERROR)
 	return (string)"Error: Autofocus returned: " + CLensAdapter::getErrorString(err);
@@ -707,13 +721,17 @@ void powerCycle()
   sclog(info, "Power cycling the cameras!");
   if (globalCam.CloseDevice() != CE_NO_ERROR || globalCam.CloseDriver() != CE_NO_ERROR)
     sclog(warning, "Trouble safely shutting down camera, proceeding anyway.");
+
   outb(0xFF, 0x378);
   usleep(100000);
   outb(0x00, 0x378);
 
   PAR_ERROR err;
-  if ((err = openCameras()) != CE_NO_ERROR) {
+  sleep(1);
+  //TODO reconnecting does not seem to work properly
+  while ((err = openCameras()) != CE_NO_ERROR) {
     sclog(error, "Problem reconnecting to camera: %s", globalCam.GetErrorString(err).c_str());
+    sleep(5);
   }
 }
 
