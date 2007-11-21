@@ -691,9 +691,11 @@ void powerCycle()
     else hasperms = true;
   }
 
+  sclog(warning, "Power cycling the cameras!");
   outb(0xFF, 0x378);
   usleep(100000);
   outb(0x00, 0x378);
+  //TODO have to do some intelligent reconnecting here
 }
 
 /*
