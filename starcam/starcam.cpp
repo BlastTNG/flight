@@ -114,7 +114,6 @@ PAR_ERROR openCameras()
   sclog(info, "Opening the camera driver.");
   if ((err = globalCam.OpenDriver()) != CE_NO_ERROR)
     return err;
-  usleep(1000);
 
   //query the usb bus for possible cameras..for some reason screws up the next step, comment out when not needed
   // 	cout << "[Starcam debug]: Querying the USB bus for usable devices..." << endl;
@@ -428,7 +427,6 @@ string interpretCommand(string cmd)
       return (cmd + " successful");
     }
     else if (cmd == "CtrigFocus") {     //trigger autofocus
-      //TODO can't view images during autoFocus for some reason
       LENS_ERROR err;
       lock(&camLock, "camLock", "interpretCommand");
       //also don't allow processing to take place
@@ -437,7 +435,7 @@ string interpretCommand(string cmd)
       BlobImage img;
 #if USE_IMAGE_VIEWER
       //err = globalCam.autoFocus(&img, 0, viewerPath);
-      err = globalCam.autoFocus(&img, 0, "/tmp/starcam/current2.sbig");
+      err = globalCam.autoFocus(&img, 0, viewerPath);
 #else
       err = globalCam.autoFocus(&img, 0, NULL);
 #endif
@@ -719,20 +717,22 @@ void powerCycle()
   }
 
   sclog(info, "Power cycling the cameras!");
-  if (globalCam.CloseDevice() != CE_NO_ERROR || globalCam.CloseDriver() != CE_NO_ERROR)
+  if (globalCam.CloseDevice() != CE_NO_ERROR)
     sclog(warning, "Trouble safely shutting down camera, proceeding anyway.");
+  if (globalCam.CloseDriver() != CE_NO_ERROR)
+    sclog(warning, "Trouble safely shutting down driver");
 
   outb(0xFF, 0x378);
-  usleep(100000);
+  usleep(1000000);
   outb(0x00, 0x378);
 
   PAR_ERROR err;
-  sleep(1);
-  //TODO reconnecting does not seem to work properly
+  sleep(3);
   while ((err = openCameras()) != CE_NO_ERROR) {
     sclog(error, "Problem reconnecting to camera: %s", globalCam.GetErrorString(err).c_str());
     sleep(5);
   }
+  sclog(info, "Star camera reconnected");
 }
 
 /*

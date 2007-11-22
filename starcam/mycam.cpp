@@ -153,22 +153,12 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, const char* path/*
 #if AUTOFOCUS_DEBUG
 		  cout << "[autoFocus debug]: saving focus image in : " << path << endl;
 #endif
-		  //TODO viewing doesn't work, though saved images seem to be good
-		  //upon saving, the image in viewer gets blanked
+		  img->AutoBackgroundAndRange();
 		  if (img->SaveImage(path) != SBFE_NO_ERROR) {
 #if AUTOFOCUS_DEBUG
 		    cerr << "[autoFocus debug]: autoFocus failed to save viewer image" << endl;
 #endif
 		  }
-#if 0
-		if (dummy%4 == 0) {
-		  ostringstream sout;
-		  sout << path << (dummy/4);
-		  cout << "erase me: writing backup image to: " << sout.str() << "\n";
-		  img->SaveImage(sout.str().c_str());
-		}
-		dummy++;
-#endif
 		}
 
 		img->findBlobs();
