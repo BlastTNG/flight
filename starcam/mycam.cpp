@@ -153,7 +153,6 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, const char* path/*
 #if AUTOFOCUS_DEBUG
 		  cout << "[autoFocus debug]: saving focus image in : " << path << endl;
 #endif
-		  img->AutoBackgroundAndRange();
 		  if (img->SaveImage(path) != SBFE_NO_ERROR) {
 #if AUTOFOCUS_DEBUG
 		    cerr << "[autoFocus debug]: autoFocus failed to save viewer image" << endl;

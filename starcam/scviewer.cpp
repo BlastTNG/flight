@@ -60,7 +60,7 @@ void* updateImage(void* arg)
 	usleep(100);
       }
       retries = 0;
-      iv->load(img[nextindex]);
+      iv->load(img[nextindex], TRUE);
       imgindex = nextindex;
     }
     usleep(10000);  //wait 10ms before trying again
