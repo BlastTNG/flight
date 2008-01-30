@@ -51,11 +51,11 @@ struct ScanStruct {
 // Stores the motor gains
 struct MotorGainStruct {
   // Spin mode gains
-  double sp_r;
-  double sp_p;
+  double sp_r; // prop to velocity error term
+  double sp_p; // prop to RW speed
 
   // Scan mode gains
-  double sc_r;
+  double sc_r;  // prop to velocity error term
   double sc_p1; // prop to reaction wheel speed
   double sc_p2; // prop to velocity error term
 };

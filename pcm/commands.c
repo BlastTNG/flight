@@ -980,8 +980,8 @@ void InitCommandData()
   CommandData.spiderGain.sp_r=0.0;  //TODO: Tune these gains
   CommandData.spiderGain.sp_p=0.0;
   CommandData.spiderGain.sc_r=0.0;
-  CommandData.spiderGain.sc_p1=0.0;
-  CommandData.spiderGain.sc_p2=0.0;
+  CommandData.spiderGain.sc_p1=0.0;  // prop to RW velocity
+  CommandData.spiderGain.sc_p2=0.0;  // prop to velocity error term
 
   WritePrevStatus();
 }

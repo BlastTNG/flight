@@ -34,6 +34,7 @@ extern "C" {
 #include "command_struct.h"
 #include "pivotcommand.h"
 #include "reactcommand.h"
+#include "motordefs.h"
 }
 #include "channels.h"
 #include "pointing_struct.h"
@@ -54,14 +55,14 @@ static int tableSpeed = 0;
 //Set limits on gondola speed and motor currents and speed.
 // Maximum reaction wheel speed
 #define MAX_RWHEEL_SPEED (200.0/60.0*360.0)
-// Maximum reaction wheel current
-#define MAX_RWHEEL_CURRENT 17.5
-// Maximum Gondola Speed
+
 #define MAX_GOND_SPEED 45.0
 // Maximum Pivot Speed 
 #define MAX_PIVOT_SPEED 45.0
 
-//#define NO_MOTORS
+
+#define NO_MOTORS // Does not send commands to the pivot motor
+//#define NO_RW_MOTOR
 
 //device node for serial port; TODO play with udev to make constant
 #define TABLE_DEVICE "/dev/ttyUSB0"
@@ -88,7 +89,7 @@ static void* reactComm(void *arg);
 double gTargetVel;  // Gondola Target velocity
 double ireq,pvreq;  // Reaction wheel current requested, and Pivot
                     // velocity requested.
-unsigned long int vpiv;
+  int vpiv;
 
 /* opens communications with motor controllers */
 void openMotors()
@@ -105,25 +106,24 @@ void openMotors()
   axison.buildCommand();
   tableComm->sendCommand(&axison);
   pthread_create(&tablecomm_id, NULL, &rotaryTableComm, NULL);
-
   open_pivot(PIVOT_DEVICE);
   pthread_create(&pivotcomm_id, NULL, &pivotComm, NULL);
   open_react(REACT_DEVICE);
+  ireq=1.0;
   pthread_create(&reactcomm_id, NULL, &reactComm, NULL);
 }
 
 /* closes communications with motor controllers, frees memory */
 void closeMotors()
 {
-  if (tableComm != NULL) {
-    tableComm->closeConnection();
-    delete tableComm;  //causes a glibc "free(): invalid pointer" warning
-  }
-  if (pivotComm != NULL) {
+  if (pivotinfo.fd>0) {
     close_pivot();
   }
-  if (reactComm != NULL) {
+  if (reactinfo.fd>0) {
     close_react();
+  }
+  if (tableComm != NULL) {
+    delete tableComm;  //causes a glibc "free(): invalid pointer" error
   }
 }
 
@@ -222,6 +222,7 @@ void* rotaryTableComm(void* arg)
       currSpeed = tableSpeed;
       dTableSpeed = (double) tableSpeed * 
 	MAX_TABLE_SPEED * DPS_TO_TABLE / (INT_MAX - 1);
+      //dTableSpeed = -0.05*DPS_TO_TABLE;   //TODO erase me!
       tableComm->sendSpeedCommand(TABLE_ADDR,dTableSpeed);
       if (tableComm->getError() != DC_NO_ERROR) {
 	bprintf(err, "Motors: rotary table comm failure, trying re-synch");
@@ -246,59 +247,69 @@ void* rotaryTableComm(void* arg)
 }
 
 /*
- * Looks for updates in the requested velocity, and updates 
- * the known encoder velocity.
+ * Pthread that handles communication with the pivot controller.
+ * 
  *
  */
 void* pivotComm(void* arg)
 {
+  sleep(5); // Give mcp enough time to setup the BLAST Card interface.
   //  int laststat=0;
   //  double dps=0.0;
   //  int data=0;
   pivotinfo.loop=0;
+  pivotinfo.closing=0;
   int firsttime = 1;
+  int first = 1;
   double vlast=0;
   double vcur=0;
+  unsigned long int vmagpiv;
   // wait until the pivot controller has been initialized.
   while(pivotinfo.open==0)
     {
       sleep(1);
-      if (firsttime) 
+      if (first) 
 	{
 	  bputs(err,"pivotComm: Pivot controller port is not open. Retrying\n");
-	  //	  firsttime = 0;
+     	  first = 0;
 	}
       open_pivot(PIVOT_DEVICE);
     }
   // Configure the serial port.
   configure_pivot();
 
-  bprintf(info,"pivotComm: Here are the conversion factors for RW.");
-  bprintf(info,"RWVEL_DPS=%d, RWVEL_OFFSET=%d, RWCUR_DPS=%d, RWCUR_");
+  //  bprintf(info,"pivotComm: Here are the conversion factors for RW.");
+  //  bprintf(info,"RWVEL_DPS=%d, RWVEL_OFFSET=%d, RWCUR_DPS=%d, RWCUR_");
   while(1){
+  if(pivotinfo.closing==0)
+    {
     // Am I ready to send a command?
     // if
 #ifndef NO_MOTORS // put motor commands below....
     if(firsttime)
       { 
 	bputs(info,"pivotComm: NO_MOTORS not defined--Commands will be sent to the pivot.");        
-        vpiv=getquery(QUER_VEL);
-        
+        vmagpiv=getquery(QUER_VEL);
+        vpiv=((int)vmagpiv)*pivotinfo.ldir;
       }
 
    if(pivotinfo.loop==0) // There is no loop
       {
-        if(firsttime)
-	  {
-            bputs(info,"pivotComm: Starting loop...");
-	  }
-	//start_loop(pvreq);        
+	bputs(info,"pivotComm: Starting loop...");
+	start_loop(pvreq);        
       }
-   /*    if(pivotinfo.loop==1)
+   if(pivotinfo.loop==1)
       {
-        change_piv_vel(pvreq);
+#ifdef DEBUG_PIV
+	bprintf(info,"pivotComm:  Changing velocity");
+#endif
+	change_piv_vel(pvreq);
       }
-    */ 
+
+   // TODO: Add checks to my pivotcommand functions and try to send a 
+   //       command to the pivot to reconfigure the port if there was
+   //       a serial port configuration error during the loop.
+     
 #endif //NO_MOTORS
 
 #ifdef NO_MOTORS // !!!!DO NOT PUT MOTOR COMMANDS BELOW!!!!
@@ -308,10 +319,12 @@ void* pivotComm(void* arg)
       }
 #endif //NO_MOTORS
 
+
 //     bprintf(info,"4: %i, %f, %i",vpiv, dps,motorpos);
      if(pivotinfo.loop> 0)
        {
-	 vpiv=getquery(QUER_VEL);
+	 vmagpiv=getquery(QUER_VEL);
+         vpiv=((int)vmagpiv)*pivotinfo.ldir;
        }
      else
        {
@@ -319,7 +332,8 @@ void* pivotComm(void* arg)
        }
 
         firsttime = 0;
-  } 
+      }//pivotcomm.closing==0
+  } //while(1)
   
 
   return NULL;  
@@ -327,21 +341,76 @@ void* pivotComm(void* arg)
 
 void* reactComm(void* arg)
 {
+  sleep(5);
+  int n;
   // Make sure the connection to the reaction wheel controller has been initialized.
   int firsttime = 1;
+  int firsterr=1;
+  double curr=0;
+  // Initialize values in the reactinfo structure.
+  reactinfo.open=0;
+  reactinfo.loop=0;
+  reactinfo.init=0;
+  reactinfo.err=0;
+  reactinfo.closing=0;
+  reactinfo.disabled=10;
+  reactinfo.writeset=0;
   while(reactinfo.open==0)
     {
       sleep(1);
-      if (firsttime)
+      if (firsterr)
 	{
-	  bputs(err,"reactComm: Reaction wheel port is not open. Retrying.\n");
-	  firsttime = 0;
+	  bputs(err,"reactComm: Reaction wheel port is not open. Attempting to open a conection.\n");
+	  firsterr = 0;
 	}
       open_react(REACT_DEVICE);
     }
   // Configure the serial port.
-  //  configure_react();
+    configure_react();
+#ifdef DISABLE_RW
+    bprintf(info,"reactComm: DISABLE_RW defined, RW controller will be kept disabled.");
+#endif
+#ifndef DISABLE_RW
+    bprintf(info,"reactComm: DISABLE_RW defined.  Commands will be sent to the motor.");
+#endif
+  while(1)
+    {
+      curr=ireq;
+      if(firsttime) bprintf(info,"reactComm: Requested current is %f",curr);
+ 
+#ifdef DEBUG_RW
+      bprintf(info,"reactComm: Requested current is %f",curr);
+#endif
+  if(reactinfo.closing==0)
+    {
+      if(reactinfo.loop==0 || (reactinfo.loop==-1 && reactinfo.err==0))
+	{
+#ifndef NO_RW_MOTORS
+          startRWLoop();
+#endif
+	}
+      if(reactinfo.loop==1)
+	{
+#ifndef NO_RW_MOTORS
+	  //          bprintf(info,"reactComm: Requesting the current to be set to %f",curr);
+	  n=setRWCurrent(curr);
+#endif
+	}
+    }//reactinfo.closing==0
+  else
+    {
+#ifndef NO_RW_MOTORS
+      bprintf(info, "reactComm: Setting RW Current to zero for shutdown.");
+      n=setRWCurrent(0.0); 
+      break;
+#endif
+    }//reactinfo.closing==1
 
+      if(firsttime) {firsttime=0;}
+    }
+#ifdef DEBUG_RW
+  bprintf(info,"reactComm: exited loop");
+#endif // DEBUG_RW
   return NULL;
 }
 
@@ -393,10 +462,17 @@ if(firsttime==1)    bprintf(info,"Motors: We are scanning.");
         vdir=1.0;
         vlast = ACSData.gyro2;
         wait=0;
+        bprintf(info,"getTargetVel: Beginning scan mode.  Scan amplitude is %f, critical width is %f, period is %f.",CommandData.spiderScan.W,CommandData.spiderScan.Wcrit,CommandData.spiderScan.P);
+        
       }
     amp=CommandData.spiderScan.W;
     acrit=CommandData.spiderScan.Wcrit;
     per=CommandData.spiderScan.P;
+
+    // Check that our scan amplitudes are all reasonable
+    
+
+    // theta is the angle from the center of the scan
     theta=PointingData[GETREADINDEX(point_index)].az-CommandData.spiderScan.C;
     data=(int) ((theta/360.0)*65535.0);
     WriteData(gondTheta, data, NIOS_QUEUE);
@@ -484,6 +560,7 @@ if(firsttime==1)    bprintf(info,"Motors: We are scanning.");
 
 void updateMotorSpeeds()
 {
+  static int testind=0;
   double dps;
   int data=0;
   double vcurr = ACSData.gyro2; // Gyro is in dps
@@ -505,19 +582,129 @@ void updateMotorSpeeds()
     // (set in pivotComm)
   dps=((double) vpiv)/COUNTS_PER_DEGREE;
   data=(int) ((dps/70.0)*32767.0);
+  //  bprintf(info,"updateMotorSpeeds: vpiv= %d, dps=%f, velocity= %i",vpiv,dps,data );
   WriteData(dpsPiv, data, NIOS_QUEUE);
-
+  //  bprintf(info,"updateMotorSpeeds: vpiv= %d, dps= );
 // What mode are we in?
 switch(CommandData.spiderMode){
 case point:
   // lmf: For now use spin gains.
-  // Later we will need to implement pointing gains.
+  // TODO: implement pointing gains.
   ireq=CommandData.spiderGain.sp_r * verr;
   pvreq=CommandData.spiderGain.sp_p * vreac+ ACSData.gyro2;
   break;    
 case spin:
-  ireq=CommandData.spiderGain.sp_r * verr;
-  pvreq=CommandData.spiderGain.sp_p * vreac+ ACSData.gyro2;
+  ireq=0;
+#if 0
+  switch(testind/1000){
+  case 0:
+    ireq=0.0;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  case 1:
+    ireq=-1;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  case 2:
+    ireq=1;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  case 3:
+    ireq=-1.5;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  case 4:
+    ireq=1.5;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  case 5:
+    ireq=-2;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  case 6:
+    ireq=2;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  case 7:
+    ireq=-3;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  case 8:
+    ireq=3;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  default:
+    if(testind%1000==0) ireq=0.0;
+    break;
+  }
+#endif
+#if 0
+  switch(testind/1000){
+  case 0:
+    ireq=0.0;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  case 1:
+    ireq=0.1;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  case 2:
+    ireq=0.2;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  case 3:
+    ireq=0.3;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  case 4:
+    ireq=0.4;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  case 5:
+    ireq=0.5;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  case 6:
+    ireq=0.75;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  case 7:
+    ireq=1.0;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  case 8:
+    ireq=0.0;
+    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
+    break;
+  default:
+    if(testind%1000==0) ireq=0.0;
+    break;
+  }
+#endif
+  //  ireq=CommandData.spiderGain.sp_r * verr;
+  //  ireq=0.0;
+  /*  if(((testind/1000)% 2)==0)
+    {
+      ireq=-1.0;
+    }
+  else
+    {
+      ireq=1.0;
+    }
+  */
+  if(testind < 4000)
+    {
+  pvreq=-15.0;
+    }
+  if(testind >=4000 && testind < 8000)
+    {
+    pvreq=0;
+    }
+  if(testind >=8000)
+    {
+      pvreq=15;
+    }
+  //  pvreq=CommandData.spiderGain.sp_p * vreac+ ACSData.gyro2;
   break;
   case scan:
     ireq=CommandData.spiderGain.sc_r * verr;
@@ -536,15 +723,18 @@ case spin:
   // Are we going faster than the maximum reaction wheel 
   // speed and did we request current drive us faster in the 
   // direction?
+#if 0 // TODO: Put this back in once we figure out the AO gains & offsets 
   if (fabs(vreac) > MAX_RWHEEL_SPEED && vreac*ireq > 0)
     {
       bprintf(warning,"updateMotorSpeeds:Current reaction wheel speed %f is beyond the speed %f.\n Reaction wheel current set to 0.0.\n",vreac,MAX_RWHEEL_SPEED);
       ireq=0.0;
     }
+#endif //0
   // Is the requested reaction wheel current beyond the current limits set?
   if (fabs(ireq) > MAX_RWHEEL_CURRENT)
     {
-      ireq=MAX_RWHEEL_CURRENT*ireq/fabs(ireq);
+      if(ireq < 0.0) ireq=(-1.0)*MAX_RWHEEL_CURRENT;
+      if(ireq > 0.0) ireq=MAX_RWHEEL_CURRENT;
       bprintf(warning,"updateMotorSpeeds: Requested ireq is above the current limits, setting %f\n",ireq);
     }
   // Is the pivot going too fast?
@@ -556,7 +746,7 @@ case spin:
       
       // lmf: Once we have a better idea of the gains we'll put something
       // more intelligent here.
-      ireq=MAX_RWHEEL_CURRENT*ireq/fabs(ireq);
+      ireq=0.0;
 //      bprintf(warning,"updateMotorSpeeds:Gondola is rotating too fast!\n Setting ireq and pvreq to 0.0.");
 
     }
@@ -566,7 +756,10 @@ case spin:
   WriteData(iReacReq, data, NIOS_QUEUE);
   
   // Make the command strings and send them.
-  
+  testind++;  
+  if(isfirst){
+    isfirst=0;
+  }
 }
 
 /*

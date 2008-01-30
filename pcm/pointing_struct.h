@@ -27,7 +27,7 @@
     is used by a thread to collect raw pointing data from some
     sensor or set of sensors.
     -The data are to be written to the downlinkframe (as needed)
-     in tx.c::StoreData()
+     in tx.c::StoreData() -- or other appropriate main-loop function
     -The data are to be read and collected into PointingData in pointing.c
      unless the raw data is actually what is wanted...
     -Where the data are written and read in different threads, a 3 way
@@ -129,5 +129,5 @@ struct PointingDataStruct {
   time_t t;
 };
 
-extern struct PointingDataStruct PointingData[2];
+extern struct PointingDataStruct PointingData[3];
 extern int point_index;

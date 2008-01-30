@@ -201,16 +201,21 @@ void cameraFields()
  */
 static void* camReadLoop(void* arg)
 {
-  if (camComm->openClient(CAM_SERVERNAME) < 0)
-    bprintf(err, "Starcam: failed to accept star camera connection");
-  else bprintf(startup, "Starcam: talking to star camera");
+  bool errorshown = false;
+  while (camComm->openClient(CAM_SERVERNAME) < 0) {
+    if (!errorshown) {
+      bprintf(err, "Starcam: failed to accept star camera connection");
+      errorshown = true;
+    }
+  }
+  bprintf(startup, "Starcam: talking to star camera");
 
   sendCamCommand("Oconf");  //request configuration data
 
   while(true) {
     camComm->readLoop(&parseReturn);
-    //readLoop returns when something bad happens; TODO handle
-    bprintf(err, "Starcam: readLoop returned. This is bad. Restarting.");
+    berror(err, "Starcam: readLoop returned. Restarting.");
+    //returns on failed syscall in communicating.
   }
 
   return NULL;

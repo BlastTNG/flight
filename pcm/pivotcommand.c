@@ -14,6 +14,10 @@
 
 #include "blast.h"
 #include "pivotcommand.h"
+#include "motordefs.h"
+
+//#define DEBUG_PIV // prints out more information when reforming 
+                  // checks of the pivot response.
 
 /* EZ Servo status bit masks (Copied from mcp/actuators.c) */
 #define EZ_ERROR  0x0F
@@ -36,9 +40,10 @@
 
 #define SELECT_MUS_OUT 200000 // time out for pivot controller
                               // select poll
-
+#define PIVCOM_MUS_WAIT 200000 // wait time after a command is given
+                               // TODO: optimize this wait time
 /*
- * Open_pivot: opens a connection to the address given which 
+ * Open_pivot: opens a connection to the address give which 
  * is hopefully to the pivot controller.  Also sets up the 
  * connection, and tests the baud rate.  
  *
@@ -152,13 +157,13 @@ void configure_pivot(int fd)
   char testcmd[]="/1Q\r\n";
   bprintf(info,"pivotComm: Testing a 38400 baud rate...\n");
   setopts(38400);
-  n = check_ready(resp);
   send_pivotcmd(testcmd);
   n = check_ready(resp);
   if(n >= 0)
     {
       bprintf(info,"pivotComm: Pivot controller responds to a 38400 baud rate.");
       pivotinfo.err=0;
+      check_resp();
       return;
     }
   else
@@ -176,9 +181,9 @@ void configure_pivot(int fd)
       bprintf(info,"pivotComm: Pivot controller responds to a 9600 baud rate.");
       check_resp();
       bprintf(info,"pivotComm: Attempting to set the baud rate to 38400.");
-      run_command("/1T\r\n");
-      run_command("/1ar5073R\r\n");
-      run_command("/1b38400R\r\n");
+      run_command("/1T\r\n","configure_pivot");
+      run_command("/1ar5073R\r\n","configure_pivot");
+      run_command("/1b38400R\r\n","configure_pivot");
     }
   else
     {
@@ -194,9 +199,9 @@ void configure_pivot(int fd)
       bprintf(info,"pivotComm: Pivot controller responds to a 19200 baud rate.");
       check_resp();
       bprintf(info,"pivotComm: Attempting to set the baud rate to 38400.");
-      run_command("/1T\r\n");
-      run_command("/1ar5073R\r\n");
-      run_command("/1b38400R\r\n");
+      run_command("/1T\r\n","configure_pivot");
+      run_command("/1ar5073R\r\n","configure_pivot");
+      run_command("/1b38400R\r\n","configure_pivot");
     }
   else
     {
@@ -221,32 +226,33 @@ void configure_pivot(int fd)
     }
 }
 
-void run_command(char cmd[])
+void run_command(char cmd[],char tag[])
 {
-  int n,m;
-  n=check_ready(both);
+  int n;
+  n=check_ready(resp);
   if(n > 0)
     {
-      if(n/2==1) // there is something to read
-	{
-	  check_resp();
-	}
-      if((n%2)==1) // we are ready to send a command
-	{
-	  send_pivotcmd(cmd);
-	  m=check_ready(resp);
-          if(m==2) check_resp();
-	}
+      check_resp();
     }
+  send_pivotcmd(cmd);
+  n=check_ready(resp);
+  if(n > 0)
+    {
+      check_resp();
+    } 
 }
 
 void send_pivotcmd(char cmd[])
 {
   int l = strlen(cmd);
   int n;
+#ifdef DEBUG_PIV
+  bprintf(info,"pivotComm send_pivotcmd: cmd = %s",cmd);
+#endif // DEBUG_PIV
   n = write(pivotinfo.fd,cmd,l);
   if (n < 0)
     bprintf(err,"pivotComm: send_pivotcmd failed.");
+  usleep(PIVCOM_MUS_WAIT);
 }
 
 void check_resp()
@@ -259,20 +265,40 @@ void check_resp()
       berror(err,"pivotComm: Error reading from the pivot.");
     }
   outs[n]='\0';
-  checkstatus(outs);
+  n=checkstatus(outs,-1,-1);
+}
+int check_sresp(int statcheck1, int statcheck2)
+{
+  char outs[255];
+  int n;
+  n = read(pivotinfo.fd,outs,254);
+    if (n < 0)
+    {
+      berror(err,"pivotComm: Error reading from the pivot.");
+    }
+  outs[253]='\0';
+  n=checkstatus(outs,statcheck1, statcheck2);
+  return n;
 }
 
-void checkstatus(char *respstr)
+
+// Returns 1 if the status character matches the requested byte.
+// Returns 0 if there was no match requested.
+// Returns -1 if the status character does not match the requested response
+int checkstatus(char *respstr, int statcheck1, int statcheck2)
 {
   // 1st check that this string has the correct markers of a response from the controller.
 
   if ((respstr[1] != '/' || respstr[2] != '0') &&(respstr[0] != '/' || respstr[1] != '0') )
     {
       bputs(err,"pivotComm: Response string doesn't have a valid controller form");
-      //      printf("%s\n",respstr);
+      bprintf(err,"pivotComm: Response String= %s\n",respstr);
     }
   int stat= (int) respstr[3];
 
+#ifdef DEBUG_PIV
+  bprintf(err,"pivotComm checkstatus: Response String= %s\n",respstr);
+#endif // DEBUG_PIV
   // Now check for errors 
   int errcheck=stat%16;
   int haserrors=0;
@@ -311,8 +337,26 @@ void checkstatus(char *respstr)
     break;
   }
 
+#ifdef DEBUG_PIV
   int isready=stat & EZ_READY ;
-  printf("checkstatus: isready = %i\n",isready);
+  bprintf(info,"pivotComm: statcheck1 is %i, statcheck2 is %i, errcheck is %i",statcheck1,statcheck2,errcheck);
+  bprintf(info,"checkstatus: isready = %i\n",isready);
+#endif // DEBUG_PIV
+  
+  if((statcheck1 <0) && (statcheck2 <0)){
+    return 0;
+  }
+  else
+    {
+      if(statcheck1==errcheck || statcheck2==errcheck)
+	{
+	  return 1;
+	}
+      else
+	{
+	  return -1;
+	}
+    }
 }
 
 int check_ready(enum CheckType check)
@@ -355,7 +399,9 @@ int check_ready(enum CheckType check)
     }
   else if (n==0)
     {
+#ifdef DEBUG_PIV
       bprintf(warning,"PivotComm: Select call timed out.");
+#endif
       return -1;
     }
   else 
@@ -387,20 +433,14 @@ unsigned long int getquery(char *cmd)
 {
   int i,j,n;
   char outs[20], posstr[20], teststr[20];
-  // clear outs
-  for(i=0;i<20;i++) {outs[i]='\0';}
+  // clear outs & posstr
+  for(i=0;i<20;i++) {
+    outs[i]='\0';
+    posstr[i]='\0';
+  }
   if(cmd[3] != '0' && cmd[3] != '2' && cmd[3] != '8')
     {
       berror(err,"pivotComm:Query command is not recognized.");
-    }
-  n = check_ready(resp);
-  if(n>=0) check_resp();
-    
-  n = check_ready(comm);
-  if (n < 0)
-    {
-      berror(err,"pivotComm getquery: Communication error.");
-      return -1;
     }
   send_pivotcmd(cmd);
   n = check_ready(resp);
@@ -412,7 +452,7 @@ unsigned long int getquery(char *cmd)
   n = read(pivotinfo.fd, &outs, 19);
   j=0;
   outs[19]='\0';
-  //  bprintf(info,"outs: %s",outs);
+  bprintf(info,"outs: %s",outs);
   for(i =0; i<n; i++)
     {
       if(outs[i] <= '9' && outs[i] >= '0')
@@ -428,17 +468,23 @@ unsigned long int getquery(char *cmd)
     {
       bprintf(warning,"pivotComm getquery: Warning, value is either zero or there was an error reading the position from the controller.\n");
     }
+
   return pos;
   
 }
 
 void close_pivot()
 {
-  int n=check_ready(comm);
-  if (n < 0)
-    {
-      berror(err,"pivotComm close_pivot: Communication error. Unable to send terminate command.");
-      return;
+  int n;
+  char tmp[20];
+  pivotinfo.closing=1; // Tells pivotComm that the pivot communcations are closing.
+  bprintf(info,"pivotComm: Closing connection to pivot controller.");
+  n = check_ready(resp);
+  if(n >=0) {
+    n = read(pivotinfo.fd, &tmp, 19);
+#ifdef DEBUG_PIV
+    bprintf(info,"pivotComm close_pivot: tmp= %s",tmp);
+#endif
     }
   send_pivotcmd("/1T\r\n");
   n = check_ready(resp);
@@ -448,13 +494,12 @@ void close_pivot()
       return;
     }
   check_resp();
-  
   close(pivotinfo.fd);
 }
 
 void setvel(double vel)
 {
-  int l,n,i;
+  int l,n;
   l=20;
   int vint= (int) (vel*COUNTS_PER_DEGREE);
   // Check that the value of vel is within the accepted 
@@ -470,12 +515,6 @@ void setvel(double vel)
   n = sprintf(cmd,form,vel);
   //  printf("%s",cmd);
 
-  n = check_ready(comm);
-  if (n < 0)
-    {
-      berror(err,"pivotComm setVel: Communication error.");
-      return;
-    }
   send_pivotcmd(cmd);
   n = check_ready(resp);
   if (n < 0)
@@ -488,16 +527,216 @@ void setvel(double vel)
 
 void start_loop(double v)
 {
+  bprintf(info,"pivotComm start_loop: v=%f",v);
+ int n;
+ char cmd[25];
+ send_pivotcmd("/1Q\r\n");
+ n = check_ready(resp);
+ if (n < 0)
+   {
+     berror(err,"pivotComm start_loop: Communication error.");
+     return;
+   }
+
+ n=check_sresp(EZ_ERR_OK,-1);
+ if(n!=1) // If the response from the pivot was not OK, we might
+         // for some reason still be in a loop.  Send a terminate
+         // command and try again.
+   {
+     bprintf(info,"pivotComm start_loop: n=%i",n);
+     send_pivotcmd("/1T"); // terminate
+     n = check_ready(resp);
+     if(n < 0)
+       {
+	 berror(err,"pivotComm start_loop: Communication error.");
+	 return;
+       }
+     check_resp();
+     send_pivotcmd("/1Q");
+     n = check_ready(resp);
+     if (n < 0)
+       {
+	 berror(err,"pivotComm start_loop: Communication error.");
+	 return;
+       }
+     n=check_sresp(EZ_ERR_OK,-1);
+     if(n!=1)
+       {
+	 berror(err,"pivotComm start_loop: The pivot controller is not responding correctly.  Cannot start the loop.");
+         return;
+       }
+   }
+ 
+char form[]="/1L%iV%i%s0R\r\n";
+char dir[1];
+int vc = (int) fabs(v * COUNTS_PER_DEGREE);
+ static int firsttime=1;
   if(v >= 0)
     {
+      strcpy(dir,"P"); // Forwards 
+      pivotinfo.ldir=1;
     }
+  else
+    {
+      strcpy(dir,"D"); // Backwards
+      pivotinfo.ldir=-1;
+    }
+  if (vc<PIVOT_MIN_VEL)
+    {
+      vc=PIVOT_MIN_VEL;      
+    }
+
+n = sprintf(cmd,form,PIVOT_ACCEL,vc,dir);
+
+if(firsttime)
+  {
+    bprintf(info,"pivotComm start_loop: Command is %s",cmd);
+    firsttime=0;
+  }
+ send_pivotcmd(cmd); // Start the loop.
+ n = check_ready(resp);
+ if(n<0) {
+   bputs(err,"pivotComm start_loop: Communication error.");
+   return;
+ }
+ n = check_sresp(EZ_ERR_BUSY,EZ_ERR_OK);
+ if (n==1)
+   {
+      pivotinfo.loop=1;
+      bprintf(info,"pivotComm start_loop: Velocity loop has been started!");
+   }
+ else
+   {
+     berror(err,"pivotComm start_loop: Attempt to start velocity loop failed.");
+   }
 
 }
 
 void change_piv_vel(double v)
 {
+  static int firsttime=1;
   static double vlast=0; // pivot velocity requested last 
-                         // time start_loop was called
+                         // time start_loop or change_piv_vel was called
+  int dlast=pivotinfo.ldir;   // loop direction the last time 
+  int n;
+  int dcur=pivotinfo.ldir; //unless we find that it should change later in this function...
+  char dir[1];
+  int vc= (int) fabs(v * COUNTS_PER_DEGREE);
+  char cmd[25];
+  char form1[]="/1L%iV%i%s0R\r\n";
+  char form2[]="/1V%iR\r\n";
+  // Check to make sure that the status character is as expected.
+  // If a loop is running we expect to get a response of 15 (command overflow)
+  // we'll also accept 0 (no errors).
+  int i=0;
+  int ilim=3;
 
-  static int dlast=0;    // loop direction the last time 
+#ifdef DEBUG_PIV
+  bprintf(info,"pivotComm change_piv_vel: vlast=%f, v=%f",vlast,v);
+#endif
+
+  while(i<ilim)
+    {
+      send_pivotcmd("/1Q\r\n");
+      n = check_ready(resp);
+      if (n < 0)
+        {
+          berror(err,"pivotComm change_piv_vel: Communication error.");
+          return;
+        }
+      n = check_sresp(EZ_ERR_BUSY,EZ_ERR_OK);
+      if(n==1)
+	{
+	  i=ilim+10; // break out of the loop
+	}
+      else
+	{
+	  i++;
+	}
+    }
+  if(i==ilim)
+    {
+      berror(err,"pivotComm change_piv_vel: The controller response to status queries is unsatisfactory.");
+      return;
+    }
+  // Do we need to change direction?
+  if (v*vlast <0)
+    {
+      i=0;
+      while(i<ilim)
+	{
+	  // Send commands to turn around.
+          send_pivotcmd("/1T\r\n"); // Stop any loop that is currently running.
+          n = check_ready(resp);
+          if (n < 0)
+            {
+              berror(err,"pivotComm change_piv_vel: Communication error.");
+              return;
+	    }
+	  n=check_sresp(EZ_ERR_OK,-1);
+	  if(n==1) 
+	    {
+	      pivotinfo.loop=0;
+              i=ilim+10; // break out of the loop
+	    }
+          if(n==ilim)
+	    {
+	      berror(err, "pivotComm change_piv_vel: Cannot send loop terminate command");
+	    }
+	}                
+      if(dlast ==-1)
+	{
+	  dcur=1;
+	  strcpy(dir,"P"); // Forwards
+          pivotinfo.ldir=1;
+	}
+      if(dlast ==1)
+	{
+	  dcur=-1;
+	  strcpy(dir,"D"); // Backwards
+          pivotinfo.ldir=-1;
+	}
+      if (vc<PIVOT_MIN_VEL)
+        {
+          vc=PIVOT_MIN_VEL;
+        }
+      n = sprintf(cmd,form1,PIVOT_ACCEL,vc,dir);
+    }
+  else
+    {
+      if (vc<PIVOT_MIN_VEL)
+	{
+	  vc=PIVOT_MIN_VEL;
+	}
+      n = sprintf(cmd,form2,vc);
+    }
+i=0;
+while(i<=0) // While loop is to make sure that the pivot command actually is 
+           // actually received and understood by the pivot controller.
+ {
+  send_pivotcmd(cmd);
+      n = check_ready(resp);
+      if (n < 0)
+        {
+          berror(err,"pivotComm change_piv_vel: Communication error.");
+          return;
+        }
+      n = check_sresp(EZ_ERR_BUSY,EZ_ERR_OK);
+       if(n==1)
+	{
+          pivotinfo.loop=1;
+	  i=ilim+10; // break out of the loop
+	}
+      else
+	{
+	  i++;
+	}
+     if(i==ilim)
+       {
+          berror(err,"pivotComm change_piv_vel: Couldn't restart velocity loop.");
+          return;
+       }
+ }//while
+  firsttime=0;
+  vlast=((double) vc) /((double)COUNTS_PER_DEGREE) *((double)dcur);
 }

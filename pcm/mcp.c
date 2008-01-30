@@ -47,6 +47,8 @@
 #include "slow_dl.h"
 #include "pointing_struct.h"
 
+# define NOSTARCAM
+
 #define BBC_EOF      (0xffff)
 #define BBC_BAD_DATA (0xfffffff0)
 

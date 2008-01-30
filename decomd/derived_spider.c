@@ -76,9 +76,12 @@
 union DerivedUnion DerivedChannels[] = {
   LINCOM2("SC1_TIME", "sc1_sec", 1, 0, "sc1_usec", 1.0E-6, 0),
   BITFIELD("acs_toggle",
-      "ENC_TABLE_Z",
+      "REMOVED",
       "SC1_TRIG",
       "SC2_TRIG",
-      "ENC_TABLE_ZC"),
+      "REMOVED2",
+      "ENC_TABLE_Z",
+      "ENC_TABLE_B",
+      "ENC_TABLE_A"),
   END_OF_DERIVED_CHANNELS
 };

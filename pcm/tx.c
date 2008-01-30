@@ -243,8 +243,8 @@ void UpdateBBCFrame(unsigned short *RxFrame)
    */
 
   /*** do fast Controls ***/
-#ifdef HAVE_ACS
-  updateTableSpeed();
+#ifdef HAVE_ACS 
+ updateTableSpeed();
   getTargetVel();
   updateMotorSpeeds();
 #endif

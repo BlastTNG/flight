@@ -59,7 +59,7 @@ double GetJulian(time_t t);
 #endif
 
 int point_index = 0;
-struct PointingDataStruct PointingData[2];
+struct PointingDataStruct PointingData[3];
 pthread_mutex_t point_lock;
 
 #if 0
@@ -120,13 +120,10 @@ static void RecordHistory(int index)
 }
 #endif
 
-//TODO eventually need to reimplement code for finding pointing solution
-
 /*****************************************************************
   do sensor selection;
   update the pointing;
   */
-/* Elevation encoder uncertainty: */
 void Pointing(void)
 {
 //  double gy_roll, gy2, gy3, el_rad;
@@ -167,7 +164,7 @@ void Pointing(void)
   int data = (int) ((PointingData[i_point_read].az/70.0)*65535.0); 
      // if we overflow we go back to zero
   WriteData(gondAz, data, NIOS_QUEUE);
-  point_index=(point_index+1)%2;
+  point_index=INC_INDEX(point_index);
   //  if (tst<100) {
   //     bprintf(info,"Pointing: curVel=%f, prevVel=%f, data=%i",curVel,prevVel,data); 
   //     bprintf(info,"Pointing: dt=%f, dv=%f, az=%f", dt,dv,PointingData[i_point_read].az);

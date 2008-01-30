@@ -9,6 +9,9 @@
 #define PIVOTCOMMAND_H
 
 #include <stdarg.h>  /* ANSI C variable arguments (va_list, va_start, va_end) */
+
+#include "motordefs.h"
+
 struct PivotInfoStruct {
   int fd; // File descriptor for the pivot.
   int open; // 0 is closed, 1 is open
@@ -27,6 +30,7 @@ struct PivotInfoStruct {
   int ldir; // Loop direction:
             // 1 -> forward (i.e. /1P0)
             //-1 -> backward (i.e. /1D0)
+  int closing; // 1 if in the process of closing down.
 };
 
 // TODO lmf: Leave this here for now but if I decide to use the same
@@ -52,7 +56,10 @@ struct MotorCommandStruct {
 //                                 /360 degrees
 #define COUNTS_PER_DEGREE 16065.422
 
-enum CheckType {resp, comm, both};
+#define PIVOT_ACCEL 50000
+#define PIVOT_MIN_VEL 11
+
+//enum CheckType {resp, comm, both}; //Now defined in motordefs.h ...
 
 void open_pivot(char *address);
 
@@ -60,15 +67,16 @@ void close_pivot();
 
 void configure_pivot();
 
-void run_command(char cmd[]);
+void run_command(char cmd[],char tag[]);
 
 int check_ready(enum CheckType check);
 
 void send_pivotcmd(char cmd[]);
 
 void check_resp();
+int check_sresp(int statcheck1, int statcheck2);
 
-void checkstatus(char *respstr);
+int checkstatus(char *respstr, int statcheck1, int statcheck2);
 
 extern struct PivotInfoStruct pivotinfo;
 

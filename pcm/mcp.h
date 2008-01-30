@@ -34,8 +34,8 @@ extern unsigned short* tdrss_data[2];
 extern unsigned int tdrss_index;
 extern pthread_mutex_t tdrss_lock;
 
-#define GETREADINDEX(i) ((i+1) % 2)  /* index other than write index */
-// TODO:  Make this buffer have three entries!
+#define GETREADINDEX(i) ((i+2) % 3)  //before write index
+#define INC_INDEX(i) ((i+1) % 3)     //next write index
 
 #define TEMPORAL_OFFSET 0
 
