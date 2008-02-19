@@ -242,6 +242,10 @@ struct ChannelStruct WideFastChannels[] = {
   {"test1_a22",    'r', TEST1, 44,                1.0,             0.0, 'U'},
   {"test1_a23",    'r', TEST1, 46,                1.0,             0.0, 'U'},
   {"test1_a24",    'r', TEST1, 48,                1.0,             0.0, 'U'},
+<<<<<<< tx_struct.c
+  //TODO for testing only, unfiltered, stage1 ch24
+  {"test1_uf24",   'r', TEST1, 54,                1.0,             0.0, 'U'},
+  {"test1_s124",   'r', TEST1, 56,                1.0,             0.0, 'U'},
   {"test2_a00",    'r', TEST2,  0,                1.0,             0.0, 'U'},
   {"test2_a01",    'r', TEST2,  2,                1.0,             0.0, 'U'},
   {"test2_a02",    'r', TEST2,  4,                1.0,             0.0, 'U'},
@@ -253,6 +257,19 @@ struct ChannelStruct WideFastChannels[] = {
   {"test2_a08",    'r', TEST2, 16,                1.0,             0.0, 'U'},
   {"test2_a09",    'r', TEST2, 18,                1.0,             0.0, 'U'},
   {"test2_a10",    'r', TEST2, 20,                1.0,             0.0, 'U'},
+=======
+  {"test2_a00",    'r', TEST2,  0,                1.0,             0.0, 'U'},
+  {"test2_a01",    'r', TEST2,  2,                1.0,             0.0, 'U'},
+  {"test2_a02",    'r', TEST2,  4,                1.0,             0.0, 'U'},
+  {"test2_a03",    'r', TEST2,  6,                1.0,             0.0, 'U'},
+  {"test2_a04",    'r', TEST2,  8,                1.0,             0.0, 'U'},
+  {"test2_a05",    'r', TEST2, 10,                1.0,             0.0, 'U'},
+  {"test2_a06",    'r', TEST2, 12,                1.0,             0.0, 'U'},
+  {"test2_a07",    'r', TEST2, 14,                1.0,             0.0, 'U'},
+  {"test2_a08",    'r', TEST2, 16,                1.0,             0.0, 'U'},
+  {"test2_a09",    'r', TEST2, 18,                1.0,             0.0, 'U'},
+  {"test2_a10",    'r', TEST2, 20,                1.0,             0.0, 'U'},
+>>>>>>> 1.14
   {"test2_a11",    'r', TEST2, 22,                1.0,             0.0, 'U'},
   {"test2_a12",    'r', TEST2, 24,                1.0,             0.0, 'U'},
   {"test2_a13",    'r', TEST2, 26,                1.0,             0.0, 'U'},
