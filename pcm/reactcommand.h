@@ -1,5 +1,5 @@
 /*
- * reactcommand.h: Header file for commands to be sent to 
+ * Reactcommand.h: Header file for commands to be sent to 
  * the reaction wheel motor controller on SPIDER.
  *
  */
@@ -11,12 +11,21 @@
 #include "motordefs.h"
 
 // Maximum reaction wheel current
-#define MAX_RWHEEL_CURRENT 17.5
+#define MAX_RWHEEL_CURRENT 5.0 // TODO: This is just until I get an idea of the
+                               // spin gains.
+                               // RW controller is rated to 17.5 Amp continuous
+                               // current.
 
-// This is the maximum current that the reaction wheel controller is rated to.
-// Note that we will *never* ask for this much current, but this value is needed
-// for conversion of the requested current to serial format in setRWCurrent.
-#define PEAK_RW_CURRENT 40.0 
+// This is the maximum continuous current for which the reaction wheel 
+// controller is rated to. Note that we will *never* ask for this much 
+// current, but this value is needed for conversion of the requested 
+// current to serial format in setRWCurrent.
+#define PEAK_RW_CURRENT 35.0 
+
+// NOTE: The actual PEAK RW CURRENT IS 40 A, but that gives a lower than 
+// expected current when used by setRWCur.  I have no idea why, maybe
+// some kind of conversion from Peak to RMS?
+
 
 #define DISABLE_RW // Keeps the reaction wheel in disabled mode.
 //#define DEBUG_RW

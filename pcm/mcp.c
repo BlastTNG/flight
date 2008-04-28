@@ -46,6 +46,7 @@
 #include "command_struct.h"
 #include "slow_dl.h"
 #include "pointing_struct.h"
+#include "crc.h"
 
 # define NOSTARCAM
 
@@ -79,6 +80,8 @@ extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 extern pthread_mutex_t mutex; //commands.c
 
 struct ReactWheelStruct RWData;
+#define RW_FILTER_LEN 20
+ 
 #ifdef HAVE_ACS
 struct ACSDataStruct ACSData;
 void Pointing();    //pointing.c
@@ -368,24 +371,36 @@ static void GetACS(unsigned short *RxFrame)
 #endif //HAVE_ACS
 static void GetRW(unsigned short *RxFrame)
 {
-  double rwCur, rwVel;
-  unsigned int uCur, uVel;
+  double rwCur, rwVelD;
+  short int uCur, uVel;
+  static double buf_rwVel[RW_FILTER_LEN]; // Buffer for RW boxcar filter
+  static unsigned int ib_last=0;
+  static double a=0.0; // Boxcar filter accumulator
   static struct BiPhaseStruct* rwCurAddr;
   static struct BiPhaseStruct* rwVelAddr;
   static int firsttime = 1;
+  char fouts[12*(RW_FILTER_LEN+1)+2];
+  int i;
+
   if (firsttime) {
     firsttime = 0;
     rwCurAddr = GetBiPhaseAddr("rwheel_cur");
     rwVelAddr = GetBiPhaseAddr("rwheel_vel");
+    // Initialize the buffer.  Assume all zeros to begin
+    for(i=0;i>(RW_FILTER_LEN-1);i++) buf_rwVel[i]=0.0;
   }
   uCur = RxFrame[rwCurAddr->channel];
   uVel = RxFrame[rwVelAddr->channel];
 
-  rwCur = (double)(uCur) * 4.0;
-  rwVel = (double)(uVel) * 0.5;
-
-  RWData.vel=rwVel;
+  rwCur = ((double)(uCur)) * RWCUR_TO_DPS+RWCUR_OFFSET;
+  rwVelD = ((double)(uVel)) * RWCTS_TO_VEL;
   RWData.i=rwCur;
+
+  //  Boxcar Filter the RW Velocity
+  a+=(rwVelD-buf_rwVel[ib_last]);
+  buf_rwVel[ib_last]=rwVelD;
+  ib_last=(ib_last+RW_FILTER_LEN+1)%RW_FILTER_LEN;
+  RWData.vel=a/((double)RW_FILTER_LEN); 
 }
 
 /* fill_Rx_frame: places one 32 bit word into the RxFrame. 
@@ -433,6 +448,73 @@ static int fill_Rx_frame(unsigned int in_data, unsigned short *RxFrame)
   return(1);
 }
 
+static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
+{
+  int i;
+  static unsigned short nothing[BI0_FRAME_SIZE];
+  static unsigned short sync = 0xEB90;
+  static unsigned int do_skip = 0;
+
+  if (bi0_fp == -2) {
+    bi0_fp = open("/dev/bi0_pci", O_RDWR);
+    if (bi0_fp == -1)
+      berror(tfatal, "BiPhase Writer: Error opening biphase device");
+
+    for (i = 0; i < BI0_FRAME_SIZE; i++)
+      nothing[i] = 0xEEEE;
+  }
+  i_out = (i_out + 1) % BI0_FRAME_BUFLEN;
+
+  nothing[0] = CalculateCRC(0xEB90, RxFrame, BiPhaseFrameWords);
+
+  //  if (bi0_fp >= 0 && InCharge) {
+  if (bi0_fp >= 0) { // lmf: We don't have an in charge computer right now.  Later we'll 
+                     // have to add this in.
+    RxFrame[0] = sync;
+    sync = ~sync;
+
+    //    unsigned short buffer[BI0_FRAME_SIZE];
+    //    static unsigned int fc = 0;
+    //    for (i = 0; i < BI0_FRAME_SIZE; ++i) {
+    //      buffer[i] = i;
+    //    }
+    //    *(unsigned int*)(&buffer[1]) = fc++;
+    //    buffer[0] = RxFrame[0];
+    //    i = write(bi0_fp, buffer, BI0_FRAME_SIZE * sizeof(unsigned short));
+
+    if (do_skip) {
+      --do_skip;
+    } else {
+      i = write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short));
+      if (i < 0)
+        berror(err, "BiPhase Writer: bi-phase write for RxFrame failed");
+      else if (i != BiPhaseFrameWords * sizeof(unsigned short))
+        bprintf(err, "BiPhase Writer: Short write for RxFrame: %i of %i", i,
+		BiPhaseFrameWords * sizeof(unsigned short));
+
+      i = write(bi0_fp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
+		sizeof(unsigned short));
+      if (i < 0)
+        berror(err, "BiPhase Writer: bi-phase write for padding failed");
+      else if (i != (BI0_FRAME_SIZE - BiPhaseFrameWords)
+	       * sizeof(unsigned short))
+        bprintf(err, "BiPhase Writer: Short write for padding: %i of %i", i,
+		(BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short));
+    }
+
+#if 0
+    CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
+    if (do_skip == 0 && CommandData.bi0FifoSize > BI0_FIFO_MARGIN) {
+      do_skip = (CommandData.bi0FifoSize - BI0_FIFO_MINIMUM) / BI0_FRAME_SIZE;
+      bprintf(warning, "BiPhase Writer: Excess data in FIFO, discarding "
+	      "%i frames out of hand.", do_skip);
+    }
+#endif
+  }
+
+  return i_out;
+}
+
 /* initialize the bi0 buffer */
 static void InitBi0Buffer()
 {
@@ -470,6 +552,41 @@ static void zero(unsigned short *RxFrame)
 
   for (i = 0; i < SLOW_OFFSET + slowsPerBi0Frame; i++)
     RxFrame[i] = 0;
+}
+
+static void BiPhaseWriter(void)
+{
+  int i_out, i_in;
+
+  bputs(startup, "Biphase Writer: Startup\n");
+
+  while (!biphase_is_on)
+    usleep(10000);
+
+  bputs(info, "BiPhase Writer: Veto has ended.  Here we go.\n");
+
+  while (1) {
+    i_in = bi0_buffer.i_in;
+    i_out = bi0_buffer.i_out;
+    if (i_out == i_in) {
+      /* Death meausres how long the BiPhaseWriter has gone without receiving
+       * any data -- an indication that we aren't receiving FSYNCs from the
+       * BLASTBus anymore */
+      //      if (InCharge) {
+        if (++Death == 25) {
+          bprintf(err, "BiPhase Writer: Death is reaping the watchdog tickle.");
+          pthread_cancel(watchdog_id);
+        }
+	//      }
+    } else
+      while (i_out != i_in) {
+        i_out = write_to_biphase(bi0_buffer.framelist[i_out], i_in, i_out);
+        if (Death > 0)
+          Death = 0;
+      }
+    bi0_buffer.i_out = i_out;
+    usleep(10000);
+   }
 }
 
 /******************************************************************/
@@ -542,6 +659,7 @@ int main(int argc, char *argv[])
   pthread_t disk_id;
   pthread_t CommandDatacomm1;
   pthread_t CommandDatacomm2;     //2nd needed for SIP, not for FIFO
+  pthread_t bi0_id;
 
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
@@ -628,6 +746,7 @@ int main(int argc, char *argv[])
   bputs(info, "System: BBC is up.\n");
 
   InitTxFrame(RxFrame);
+  pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
 
   FILE* logstream = fopen("/data/etc/bbc_log", "wt");
 

@@ -43,7 +43,7 @@
 #define FRAMES_TO_OK_ATFLOAT 100
 
 #define GY1_OFFSET (0)
-#define GY2_OFFSET (-0.00358)
+#define GY2_OFFSET (-0.0182551)
 #define GY3_OFFSET (0)
 
 #define MAX_ISC_AGE 200

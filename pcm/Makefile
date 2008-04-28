@@ -13,15 +13,15 @@ endif
 
 #common files
 COM_HEADERS = bbc_pci.h blast.h channels.h derived.h mcp.h tx.h command_list.h \
-	      command_struct.h slow_dl.h pointing_struct.h 
+	      command_struct.h slow_dl.h pointing_struct.h crc.h
 
 COM_OBJS = mcp.o blast.o channels.o derived.o framefile.o tx.o tx_struct.o \
-	   commands.o command_list.o slow_dl.o
+	   commands.o command_list.o slow_dl.o crc.o
 
 #ACS specific files
 ifdef HAVE_ACS
 ACS_HEADERS = drivecommunicator.h motorcommand.h camcommunicator.h camstruct.h \
-                 reactcommand.h pivotcommand.h              
+                 reactcommand.h pivotcommand.h motordefs.h             
 
 ACS_OBJS = drivecommunicator.o motorcommand.o motors.o pointing.o \
 	   camcommunicator.o starcamera.o reactcommand.o pivotcommand.o

@@ -447,7 +447,7 @@ void getTargetVel()
 if(firsttime==1)    bprintf(info,"Motors: We are Pointing.");
     gTargetVel=0.0;
     // lmf: This just a place holder.  Obviously some day we may
-    // want to point at an actual location.
+    // wish to point at an actual location.
     break;
   case spin:
 if(firsttime==1)    bprintf(info,"Motors: We are spinning.");
@@ -570,12 +570,14 @@ void updateMotorSpeeds()
   static NiosStruct* dpsPivReq = NULL;
   static NiosStruct* iReacReq  = NULL;
   static NiosStruct* dpsPiv   = NULL;
+  static NiosStruct* dpsRWFilt    = NULL;
 
   if(isfirst==1)
     {
       dpsPiv  =GetNiosAddr("dps_piv");
       dpsPivReq = GetNiosAddr("dps_piv_req");
       iReacReq  = GetNiosAddr("i_reac_req");
+      dpsRWFilt  =GetNiosAddr("dps_rw_filt");
       vpiv=0;
     }
     // Update the pivot velocity, which is stored in controller units in vpiv
@@ -584,18 +586,26 @@ void updateMotorSpeeds()
   data=(int) ((dps/70.0)*32767.0);
   //  bprintf(info,"updateMotorSpeeds: vpiv= %d, dps=%f, velocity= %i",vpiv,dps,data );
   WriteData(dpsPiv, data, NIOS_QUEUE);
-  //  bprintf(info,"updateMotorSpeeds: vpiv= %d, dps= );
+  //  bprintf(info,"updateMotorSpeeds: vpiv= %d, dps=" );
 // What mode are we in?
+  WriteData(dpsRWFilt, ((int) (vreac/3000.0*32767.0)), NIOS_QUEUE);
+
 switch(CommandData.spiderMode){
 case point:
   // lmf: For now use spin gains.
   // TODO: implement pointing gains.
   ireq=CommandData.spiderGain.sp_r * verr;
-  pvreq=CommandData.spiderGain.sp_p * vreac+ ACSData.gyro2;
+  pvreq=CommandData.spiderGain.sp_p * vreac;
   break;    
 case spin:
-  ireq=0;
+  pvreq=CommandData.spiderGain.sp_p * vreac;
+  ireq=CommandData.spiderGain.sp_r * verr;
+  if(testind%100==0)
+    {
+        bprintf(info,"updateMotors: pvreq= %f, ireq= %f",pvreq,ireq);
+    }
 #if 0
+  //  ireq=0;
   switch(testind/1000){
   case 0:
     ireq=0.0;
@@ -637,61 +647,6 @@ case spin:
     if(testind%1000==0) ireq=0.0;
     break;
   }
-#endif
-#if 0
-  switch(testind/1000){
-  case 0:
-    ireq=0.0;
-    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
-    break;
-  case 1:
-    ireq=0.1;
-    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
-    break;
-  case 2:
-    ireq=0.2;
-    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
-    break;
-  case 3:
-    ireq=0.3;
-    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
-    break;
-  case 4:
-    ireq=0.4;
-    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
-    break;
-  case 5:
-    ireq=0.5;
-    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
-    break;
-  case 6:
-    ireq=0.75;
-    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
-    break;
-  case 7:
-    ireq=1.0;
-    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
-    break;
-  case 8:
-    ireq=0.0;
-    if(testind%1000==0) bprintf(info,"updateMotorSpeeds: ireq = %f",ireq);
-    break;
-  default:
-    if(testind%1000==0) ireq=0.0;
-    break;
-  }
-#endif
-  //  ireq=CommandData.spiderGain.sp_r * verr;
-  //  ireq=0.0;
-  /*  if(((testind/1000)% 2)==0)
-    {
-      ireq=-1.0;
-    }
-  else
-    {
-      ireq=1.0;
-    }
-  */
   if(testind < 4000)
     {
   pvreq=-15.0;
@@ -704,7 +659,7 @@ case spin:
     {
       pvreq=15;
     }
-  //  pvreq=CommandData.spiderGain.sp_p * vreac+ ACSData.gyro2;
+#endif
   break;
   case scan:
     ireq=CommandData.spiderGain.sc_r * verr;
@@ -723,22 +678,27 @@ case spin:
   // Are we going faster than the maximum reaction wheel 
   // speed and did we request current drive us faster in the 
   // direction?
-#if 0 // TODO: Put this back in once we figure out the AO gains & offsets 
   if (fabs(vreac) > MAX_RWHEEL_SPEED && vreac*ireq > 0)
     {
-      bprintf(warning,"updateMotorSpeeds:Current reaction wheel speed %f is beyond the speed %f.\n Reaction wheel current set to 0.0.\n",vreac,MAX_RWHEEL_SPEED);
+       bprintf(warning,"updateMotorSpeeds:Current reaction wheel speed %f is beyond the speed %f.\n Reaction wheel current set to 0.0.\n",vreac,MAX_RWHEEL_SPEED);
       ireq=0.0;
     }
-#endif //0
-  // Is the requested reaction wheel current beyond the current limits set?
   if (fabs(ireq) > MAX_RWHEEL_CURRENT)
     {
       if(ireq < 0.0) ireq=(-1.0)*MAX_RWHEEL_CURRENT;
       if(ireq > 0.0) ireq=MAX_RWHEEL_CURRENT;
-      bprintf(warning,"updateMotorSpeeds: Requested ireq is above the current limits, setting %f\n",ireq);
+        bprintf(warning,"updateMotorSpeeds: Requested ireq is above the current limits, setting %f\n",ireq);
     }
   // Is the pivot going too fast?
-  // lmf: write this one once I figure out how to store the pivot velocity.
+  // TODO: It seems that querying the pivot controller only gives the 
+  //       requested pivot velocity.  Might be worth writing code that
+  //       estimates true pivot velocity, by querying the position.
+
+  if (pvreq > MAX_PIVOT_SPEED)
+    {
+        bprintf(warning,"updateMotorSpeeds: Requested pivot Speed %f is above the max pivot speed %f.",pvreq,MAX_PIVOT_SPEED);
+        bprintf(warning,"updateMotorSpeeds: setting pivot speed to maximum pivot speed."); 
+    }
 
   // Is the gondola going too fast?  
   if (fabs(ACSData.gyro2)>MAX_GOND_SPEED)
@@ -747,7 +707,8 @@ case spin:
       // lmf: Once we have a better idea of the gains we'll put something
       // more intelligent here.
       ireq=0.0;
-//      bprintf(warning,"updateMotorSpeeds:Gondola is rotating too fast!\n Setting ireq and pvreq to 0.0.");
+      pvreq=0.0;
+      bprintf(warning,"updateMotorSpeeds:Gondola is rotating too fast!\n Setting ireq and pvreq to 0.0.");
 
     }
   data=(int)((pvreq/60.0)*32767.0);

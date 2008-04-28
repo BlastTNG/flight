@@ -976,9 +976,9 @@ void InitCommandData()
   CommandData.spiderScan.P=47.0;
   CommandData.spiderScan.W=45.0;
   CommandData.spiderScan.Wcrit=5.0;
-  CommandData.spiderSpin.dps=36.0;
-  CommandData.spiderGain.sp_r=0.0;  //TODO: Tune these gains
-  CommandData.spiderGain.sp_p=0.0;
+  CommandData.spiderSpin.dps=0.0;
+  CommandData.spiderGain.sp_r=-10.0;  //TODO: Tune these gains
+  CommandData.spiderGain.sp_p=0.02;
   CommandData.spiderGain.sc_r=0.0;
   CommandData.spiderGain.sc_p1=0.0;  // prop to RW velocity
   CommandData.spiderGain.sc_p2=0.0;  // prop to velocity error term

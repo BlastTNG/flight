@@ -69,10 +69,10 @@ struct ChannelStruct SlowChannels[] = {
   {"acs1_a07",     'r',  ACS1, 14,                1.0,             0.0, 'u'},
   {"acs1_a08",     'r',  ACS1, 16,                1.0,             0.0, 'u'},
   {"acs1_a09",     'r',  ACS1, 18,                1.0,             0.0, 'u'},
-#if 0
-  //TODO these have been made long for testing, change back (DSP too)
   {"acs1_a10",     'r',  ACS1, 20,                1.0,             0.0, 'u'},
   {"acs1_a11",     'r',  ACS1, 22,                1.0,             0.0, 'u'},
+#if 0
+  //TODO these have been made long for testing, change back (DSP too)
   {"acs1_a12",     'r',  ACS1, 24,                1.0,             0.0, 'u'},
   {"acs1_a13",     'r',  ACS1, 26,                1.0,             0.0, 'u'},
   {"acs1_a14",     'r',  ACS1, 28,                1.0,             0.0, 'u'},
@@ -181,8 +181,8 @@ struct ChannelStruct SlowChannels[] = {
   {"dps_piv_req",  'w', LOOP2, 26,       60.0/32767.0,             0.0, 's'},
   {"i_reac_req",   'w', LOOP2, 27,       20.0/32767.0,             0.0, 's'},
   {"dps_piv",      'w', LOOP2, 28,       70.0/32767.0,             0.0, 's'},
+  {"dps_rw_filt",  'w', LOOP2, 29,     3000.0/32767.0,             0.0, 's'},
   
-
   END_OF_CHANNELS
 };
 
@@ -202,8 +202,8 @@ struct ChannelStruct WideFastChannels[] = {
   {"enc_table",    'r',  ACS1, 56,     360.0/144000.0,              0.0, 'U'},
 
   //TODO these don't belong here (they've been moved for testing)
-  {"acs1_a10",     'r',  ACS1, 20,                1.0,             0.0, 'U'},
-  {"acs1_a11",     'r',  ACS1, 22,                1.0,             0.0, 'U'},
+  //  {"acs1_a10",     'r',  ACS1, 20,                1.0,             0.0, 'U'},
+  //  {"acs1_a11",     'r',  ACS1, 22,                1.0,             0.0, 'U'},
   {"acs1_a12",     'r',  ACS1, 24,                1.0,             0.0, 'U'},
   {"acs1_a13",     'r',  ACS1, 26,                1.0,             0.0, 'U'},
   {"acs1_a14",     'r',  ACS1, 28,                1.0,             0.0, 'U'},
@@ -242,10 +242,11 @@ struct ChannelStruct WideFastChannels[] = {
   {"test1_a22",    'r', TEST1, 44,                1.0,             0.0, 'U'},
   {"test1_a23",    'r', TEST1, 46,                1.0,             0.0, 'U'},
   {"test1_a24",    'r', TEST1, 48,                1.0,             0.0, 'U'},
-<<<<<<< tx_struct.c
+  //
   //TODO for testing only, unfiltered, stage1 ch24
   {"test1_uf24",   'r', TEST1, 54,                1.0,             0.0, 'U'},
   {"test1_s124",   'r', TEST1, 56,                1.0,             0.0, 'U'},
+
   {"test2_a00",    'r', TEST2,  0,                1.0,             0.0, 'U'},
   {"test2_a01",    'r', TEST2,  2,                1.0,             0.0, 'U'},
   {"test2_a02",    'r', TEST2,  4,                1.0,             0.0, 'U'},
@@ -257,19 +258,6 @@ struct ChannelStruct WideFastChannels[] = {
   {"test2_a08",    'r', TEST2, 16,                1.0,             0.0, 'U'},
   {"test2_a09",    'r', TEST2, 18,                1.0,             0.0, 'U'},
   {"test2_a10",    'r', TEST2, 20,                1.0,             0.0, 'U'},
-=======
-  {"test2_a00",    'r', TEST2,  0,                1.0,             0.0, 'U'},
-  {"test2_a01",    'r', TEST2,  2,                1.0,             0.0, 'U'},
-  {"test2_a02",    'r', TEST2,  4,                1.0,             0.0, 'U'},
-  {"test2_a03",    'r', TEST2,  6,                1.0,             0.0, 'U'},
-  {"test2_a04",    'r', TEST2,  8,                1.0,             0.0, 'U'},
-  {"test2_a05",    'r', TEST2, 10,                1.0,             0.0, 'U'},
-  {"test2_a06",    'r', TEST2, 12,                1.0,             0.0, 'U'},
-  {"test2_a07",    'r', TEST2, 14,                1.0,             0.0, 'U'},
-  {"test2_a08",    'r', TEST2, 16,                1.0,             0.0, 'U'},
-  {"test2_a09",    'r', TEST2, 18,                1.0,             0.0, 'U'},
-  {"test2_a10",    'r', TEST2, 20,                1.0,             0.0, 'U'},
->>>>>>> 1.14
   {"test2_a11",    'r', TEST2, 22,                1.0,             0.0, 'U'},
   {"test2_a12",    'r', TEST2, 24,                1.0,             0.0, 'U'},
   {"test2_a13",    'r', TEST2, 26,                1.0,             0.0, 'U'},
@@ -327,8 +315,14 @@ struct ChannelStruct FastChannels[] = {
   {"sc2_trig_s",   'r',  ACS1, 63,  1.0,                              0.0, 'u'},
   {"sc2_trig_l",   'r',  ACS1,  1,  1.0,                              0.0, 'u'},
   {"dps_table",    'w', LOOP1,  0,  70.0/32767.0,                     0.0, 's'},
-  {"rwheel_vel",   'r',  ACS1,  8,  RWVEL_TO_DPS,           -RWVEL_OFFSET, 'u'},
-  {"rwheel_cur",   'r',  ACS1, 10,  RWCUR_TO_DPS,           -RWCUR_OFFSET, 'u'},
+
+//  {"rwheel_vel",   'r',  ACS1,  8,  RWVEL_TO_DPS,            RWVEL_OFFSET, 'u'},
+  {"rwheel_phase",   'r',  ACS1,  8,  RWCTS_TO_PHASE,          RWPHASE_OFFSET, 'u\
+'},
+  {"rwheel_cur",   'r',  ACS1, 10,  RWCUR_TO_DPS,            RWCUR_OFFSET, 'u'},
+  // RW Controller outputs calculated on the DSP.
+  {"rwheel_angle",      'r',  ACS1, 21,                1.0,             0.0, 'u'},
+  {"rwheel_vel",        'r',  ACS1, 23,       RWCTS_TO_VEL,         0.0, 's'},
 
   {"test1_d1",	   'r', TEST1, 50,                1.0,             0.0, 'u'},
   {"test1_d2",	   'r', TEST1, 51,                1.0,             0.0, 'u'},
