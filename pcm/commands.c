@@ -682,7 +682,7 @@ void WatchFIFO ()
 #else
 void WatchPort (void* parameter)
 {
-  const char *COMM[] = {"/dev/ttyS0", "/dev/ttyS4"};
+  const char *COMM[] = {"/dev/ttySI12", "/dev/ttySI10"};
 
   unsigned char buf;
   unsigned short *indatadumper;

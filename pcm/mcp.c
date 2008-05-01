@@ -575,7 +575,7 @@ static void BiPhaseWriter(void)
       //      if (InCharge) {
         if (++Death == 25) {
           bprintf(err, "BiPhase Writer: Death is reaping the watchdog tickle.");
-          pthread_cancel(watchdog_id);
+        //  pthread_cancel(watchdog_id);
         }
 	//      }
     } else
@@ -623,6 +623,9 @@ static int AmISam(void)
 static void CloseBBC(int signo)
 {
   bprintf(err, "System: Caught signal %i; stopping NIOS", signo);
+#ifdef HAVE_ACS
+  closeMotors();
+#endif
   RawNiosWrite(0, BBC_ENDWORD, NIOS_FLUSH);
   RawNiosWrite(BBCPCI_MAX_FRAME_SIZE, BBC_ENDWORD, NIOS_FLUSH);
   bprintf(err, "System: Closing BBC and Bi0");
@@ -633,9 +636,6 @@ static void CloseBBC(int signo)
 
   /* restore default handler and raise the signal again */
   //close peripheral communications
-#ifdef HAVE_ACS
-  closeMotors();
-#endif
   
   signal(signo, SIG_DFL);
   raise(signo);
