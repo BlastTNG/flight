@@ -22,18 +22,12 @@
 #include "command_list.h"
 #include "camstruct.h"
 
-const char *command_list_serial = "$Revision: 1.5 $";
+const char *command_list_serial = "$Revision: 1.6 $";
 
 //these must correspond to #defines in header
 const char *GroupNames[N_GROUPS] = {
-  "Pointing Modes",        "Balance",          "Cooling", 
-  "Pointing Sensor Trims", "Aux. Electronics", "Bias",
-  "Pointing Sensor Vetos", "Actuators",        "Cal Lamp",
-  "Pointing Motor Gains",  "Secondary Focus",  "Cryo Heat",
-  "Subsystem Power",       "Lock Motor",       "Cryo Control",
-  "Telemetry",             "SC Miscellaneous", "Free for use 1",
-  "X-Y Stage",             "SC Modes",         "Free for use 2",
-  "Miscellaneous",         "SC Parameters",    "Free for use 3"
+  "Star Camera Table",   "Miscellaneous",  "Motors",
+  "SC Miscellaneous",    "SC Modes",       "SC Parameters", 
 };
 
 //echoes as string; makes enum name the command name string
@@ -117,12 +111,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   {COMMAND(table_move_g), "Gains to find move velocity from length",
-    GR_GAIN, 1,
+    GR_TABLE, 1,
     {
       {"P", 0, 100, 'f', "g_table_move"}
     }
   },
-  {COMMAND(table_gain), "starcam rotary table gains", GR_GAIN, 2,
+  {COMMAND(table_gain), "starcam rotary table gains", GR_TABLE, 2,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_table"},
       {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_table"},
