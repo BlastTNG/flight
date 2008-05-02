@@ -27,7 +27,7 @@
 // some kind of conversion from Peak to RMS?
 
 
-//#define DISABLE_RW // Keeps the reaction wheel in disabled mode.
+#define DISABLE_RW // Keeps the reaction wheel in disabled mode.
 //#define DEBUG_RW
 
 struct ReactInfoStruct {
