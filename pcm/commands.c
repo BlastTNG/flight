@@ -441,6 +441,18 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.tableGain.I = ivalues[1];
       CommandData.tableGain.D = ivalues[2];
       break;
+    case pt_spin_gains: /* set the control loop gains for spin mode*/
+      CommandData.spiderGain.sp_r1 = rvalues[0];
+      CommandData.spiderGain.sp_r2 = rvalues[1];
+      CommandData.spiderGain.sp_p1 = rvalues[2];
+      CommandData.spiderGain.sp_p2 = rvalues[3];
+      break;
+    case pt_scan_gains: /* set the control loop gains for scan mode*/
+      CommandData.spiderGain.sc_r1 = rvalues[0];
+      CommandData.spiderGain.sc_r2 = rvalues[1];
+      CommandData.spiderGain.sc_p1 = rvalues[2];
+      CommandData.spiderGain.sc_p2 = rvalues[3];
+      break;
     case pt_spin_vel: /* set the requested gondola spin speed*/
       CommandData.spiderSpin.dps = rvalues[0];
       break;
@@ -993,11 +1005,14 @@ void InitCommandData()
   CommandData.spiderScan.W=45.0;
   CommandData.spiderScan.Wcrit=5.0;
   CommandData.spiderSpin.dps=0.0;
-  CommandData.spiderGain.sp_r=-10.0;  //TODO: Tune these gains
-  CommandData.spiderGain.sp_p=0.02;
-  CommandData.spiderGain.sc_r=0.0;
-  CommandData.spiderGain.sc_p1=0.0;  // prop to RW velocity
-  CommandData.spiderGain.sc_p2=0.0;  // prop to velocity error term
+  CommandData.spiderGain.sp_r1=-10.0;  // prop to vel error term
+  CommandData.spiderGain.sp_r2=0.0;  // prop to gond accel
+  CommandData.spiderGain.sp_p1=0.00;  // prop to vel error term
+  CommandData.spiderGain.sp_p2=0.02;  // prop to RW speed.
+  CommandData.spiderGain.sc_r1=-10.0;  // prop to vel error term
+  CommandData.spiderGain.sc_r2=0.0;  // prop to gond accel
+  CommandData.spiderGain.sc_p1=0.00;  // prop to vel error term
+  CommandData.spiderGain.sc_p2=0.00;  // prop to RW speed.
 
   WritePrevStatus();
 }

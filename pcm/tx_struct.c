@@ -22,6 +22,7 @@
 #include "channels.h"
 #include "bbc_pci.h"
 #include "camstruct.h"  //for defs
+#include "motordefs.h"  // for scaling factors
 
 /* card name to (node number, bus number) mapping */
 #define ACS1   1, 0
@@ -182,6 +183,15 @@ struct ChannelStruct SlowChannels[] = {
   {"i_reac_req",   'w', LOOP2, 27,       20.0/32767.0,             0.0, 's'},
   {"dps_piv",      'w', LOOP2, 28,       70.0/32767.0,             0.0, 's'},
   {"dps_rw_filt",  'w', LOOP2, 29,     3000.0/32767.0,             0.0, 's'},
+  // Next batch is all gains for spin and scan mode
+  {"spin_gain_r1", 'w', LOOP2, 30,    SPR1_LIM/32767.0,             0.0, 's'},
+  {"spin_gain_r2", 'w', LOOP2, 31,    SPR2_LIM/32767.0,             0.0, 's'},
+  {"spin_gain_p1", 'w', LOOP2, 32,    SPP1_LIM/32767.0,             0.0, 's'},
+  {"spin_gain_p2", 'w', LOOP2, 33,    SPP2_LIM/32767.0,             0.0, 's'},
+  {"scan_gain_r1", 'w', LOOP2, 34,    SCR1_LIM/32767.0,             0.0, 's'},
+  {"scan_gain_r2", 'w', LOOP2, 35,    SCR2_LIM/32767.0,             0.0, 's'},
+  {"scan_gain_p1", 'w', LOOP2, 36,    SCP1_LIM/32767.0,             0.0, 's'},
+  {"scan_gain_p2", 'w', LOOP2, 37,    SCP2_LIM/32767.0,             0.0, 's'},
   
   END_OF_CHANNELS
 };

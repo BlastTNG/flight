@@ -594,12 +594,13 @@ switch(CommandData.spiderMode){
 case point:
   // lmf: For now use spin gains.
   // TODO: implement pointing gains.
-  ireq=CommandData.spiderGain.sp_r * verr;
-  pvreq=CommandData.spiderGain.sp_p * vreac;
+  ireq=CommandData.spiderGain.sp_r1 * verr;
+  pvreq=CommandData.spiderGain.sp_p2 * vreac;
   break;    
 case spin:
-  pvreq=CommandData.spiderGain.sp_p * vreac;
-  ireq=CommandData.spiderGain.sp_r * verr;
+  // TODO: Add new gains into the control loop
+  pvreq=CommandData.spiderGain.sp_p2 * vreac;
+  ireq=CommandData.spiderGain.sp_r1 * verr;
   if(testind%100==0)
     {
         bprintf(info,"updateMotors: pvreq= %f, ireq= %f",pvreq,ireq);
@@ -662,8 +663,8 @@ case spin:
 #endif
   break;
   case scan:
-    ireq=CommandData.spiderGain.sc_r * verr;
-    pvreq=CommandData.spiderGain.sc_p1 * vreac+ ACSData.gyro2
+    ireq=CommandData.spiderGain.sc_r1 * verr;
+    pvreq=CommandData.spiderGain.sc_p2 * vreac+ ACSData.gyro2
                    + CommandData.spiderGain.sc_p1 * verr;
     break;
   default:
@@ -734,7 +735,14 @@ void slowMotorFields()
   static NiosStruct* gDTableAddr = NULL;
   static NiosStruct* tableMoveAddr = NULL;
   static NiosStruct* gTableMoveAddr = NULL;
-
+  static NiosStruct* spinGainR1Addr = NULL;
+  static NiosStruct* spinGainR2Addr = NULL;
+  static NiosStruct* spinGainP1Addr = NULL;
+  static NiosStruct* spinGainP2Addr = NULL;
+  static NiosStruct* scanGainR1Addr = NULL;
+  static NiosStruct* scanGainR2Addr = NULL;
+  static NiosStruct* scanGainP1Addr = NULL;
+  static NiosStruct* scanGainP2Addr = NULL;
   //initialization
   if (firsttime) {
     gPTableAddr = GetNiosAddr("g_p_table");
@@ -742,6 +750,14 @@ void slowMotorFields()
     gDTableAddr = GetNiosAddr("g_d_table");
     tableMoveAddr = GetNiosAddr("table_move");
     gTableMoveAddr = GetNiosAddr("g_table_move");
+    spinGainR1Addr = GetNiosAddr("spin_gain_r1");
+    spinGainR2Addr = GetNiosAddr("spin_gain_r2");
+    spinGainP1Addr = GetNiosAddr("spin_gain_p1");
+    spinGainP2Addr = GetNiosAddr("spin_gain_p2");
+    scanGainR1Addr = GetNiosAddr("scan_gain_r1");
+    scanGainR2Addr = GetNiosAddr("scan_gain_r2");
+    scanGainP1Addr = GetNiosAddr("scan_gain_p1");
+    scanGainP2Addr = GetNiosAddr("scan_gain_p2");
     firsttime = false;
   }
 
@@ -752,7 +768,14 @@ void slowMotorFields()
       (CommandData.tableRelMove*10.0), NIOS_QUEUE);
   WriteData(gTableMoveAddr, (unsigned int)
       ((CommandData.tableMoveGain/100.0)*SHRT_MAX), NIOS_QUEUE);
-
+  WriteData(spinGainR1Addr, ((int)(CommandData.spiderGain.sp_r1/SPR1_LIM*32767.0)), NIOS_QUEUE);
+  WriteData(spinGainR2Addr, ((int)(CommandData.spiderGain.sp_r2/SPR2_LIM*32767.0)), NIOS_QUEUE);
+  WriteData(spinGainP1Addr, ((int)(CommandData.spiderGain.sp_p1/SPP1_LIM*32767.0)), NIOS_QUEUE);
+  WriteData(spinGainP2Addr, ((int)(CommandData.spiderGain.sp_p2/SPP2_LIM*32767.0)), NIOS_QUEUE);
+  WriteData(scanGainR1Addr, ((int)(CommandData.spiderGain.sc_r1/SCR1_LIM*32767.0)), NIOS_QUEUE);
+  WriteData(scanGainR2Addr, ((int)(CommandData.spiderGain.sc_r2/SCR2_LIM*32767.0)), NIOS_QUEUE);
+  WriteData(scanGainP1Addr, ((int)(CommandData.spiderGain.sc_p1/SCP1_LIM*32767.0)), NIOS_QUEUE);
+  WriteData(scanGainP2Addr, ((int)(CommandData.spiderGain.sc_p2/SCP2_LIM*32767.0)), NIOS_QUEUE);
 }
 
 }       //extern "C"

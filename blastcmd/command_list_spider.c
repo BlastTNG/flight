@@ -21,8 +21,9 @@
 
 #include "command_list.h"
 #include "camstruct.h"
+#include "motordefs.h"
 
-const char *command_list_serial = "$Revision: 1.8 $";
+const char *command_list_serial = "$Revision: 1.9 $";
 
 //these must correspond to #defines in header
 const char *GroupNames[N_GROUPS] = {
@@ -127,6 +128,22 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   //Gondola Pointing Commands
+  {COMMAND(pt_spin_gains), "Spin mode gains", GR_PT_GAIN, 4,
+   {
+     {"SP_R1 RW (prop to vel error)",((-1.0)*SPR1_LIM),SPR1_LIM,'f',"spin_gain_r1"},
+     {"SP_R2 RW (prop to gond accel)",((-1.0)*SPR2_LIM),SPR2_LIM,'f',"spin_gain_r2"},
+     {"SP_P1 Pivot (prop to vel error)",((-1.0)*SPP1_LIM),SPP1_LIM,'f',"spin_gain_p1"},
+     {"SP_P2 Pivot (prop to RW Vel)",((-1.0)*SPP2_LIM),SPP2_LIM,'f',"spin_gain_p2"},
+   }
+  },
+  {COMMAND(pt_scan_gains), "Scan mode gains", GR_PT_GAIN, 4,
+   {
+     {"SC_R1 RW (prop to vel error)",((-1.0)*SCR1_LIM),SCR1_LIM,'f',"scan_gain_r1"},
+     {"SC_R2 RW (prop to gond accel)",((-1.0)*SCR2_LIM),SCR2_LIM,'f',"scan_gain_r2"},
+     {"SC_P1 Pivot (prop to vel error)",((-1.0)*SCP1_LIM),SCP1_LIM,'f',"scan_gain_p1"},
+     {"SC_P2 Pivot (prop to RW Vel)",((-1.0)*SCP2_LIM),SCP2_LIM,'f',"scan_gain_p2"},
+   }
+  },
   {COMMAND(pt_spin_vel), "Spin mode velocity", GR_PT_PARAM, 1,
    {
      {"Velocity (dps)",-180,180,'f',"dps_gond_req"},
