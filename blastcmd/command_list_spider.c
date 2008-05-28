@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "camstruct.h"
 
-const char *command_list_serial = "$Revision: 1.7 $";
+const char *command_list_serial = "$Revision: 1.8 $";
 
 //these must correspond to #defines in header
 const char *GroupNames[N_GROUPS] = {
@@ -41,7 +41,9 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(cam_settrig_ext), "Set external cam trigger mode", GR_SC_MODE},
   {COMMAND(cam_force_lens), "Forced mode for cam lens moves", GR_SC_MODE},
   {COMMAND(cam_unforce_lens), "Normal mode for cam lens moves", GR_SC_MODE},
-
+  {COMMAND(pt_set_spin), "Setting pointing mode to spin", GR_PT_MODE},  
+  {COMMAND(pt_set_scan), "Setting pointing mode to scan", GR_PT_MODE},  
+  {COMMAND(pt_set_point), "Setting pointing mode to point", GR_PT_MODE},  
   {COMMAND(test), "just a test of command system", GR_MISC} 
 };
 
@@ -130,4 +132,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
      {"Velocity (dps)",-180,180,'f',"dps_gond_req"},
    }
   }
+#if 0
+  {COMMAND(pt_scan_params), "Scan mode parameters", GR_PT_PARAM, 1,
+   {
+     {"Scan centre (deg)",0,360,'f',"dps_gond_req"},
+     {"Scan period (s)",1,60,'f',"dps_gond_req"},
+     {"Scan width (s)",1,120,'f',"dps_gond_req"},
+     {"Scan width (s)",0,120,'f',"dps_gond_req"},
+   }
+  }
+#endif
 };

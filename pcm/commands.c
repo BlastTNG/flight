@@ -228,6 +228,18 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case cam_unforce_lens:
       CommandData.cam.forced = 0;
       break;
+    case pt_set_spin:
+      bputs(info,"Setting pointing mode to spin.");
+      CommandData.spiderMode=spin;
+      break;
+    case pt_set_scan:
+      bputs(info,"Setting pointing mode to scan.");
+      CommandData.spiderMode=scan;
+      break;
+    case pt_set_point:
+      bputs(info,"Setting pointing mode to point.");
+      CommandData.spiderMode=point;
+      break;
 #endif  //HAVE_ACS
     case test:
       bputs(info, "This has beeen a succesful single command test");

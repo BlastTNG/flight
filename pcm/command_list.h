@@ -14,7 +14,7 @@
 #ifndef COMMAND_LIST_H
 #define COMMAND_LIST_H
 
-#define N_SCOMMANDS 6        /* total number of single word cmds */
+#define N_SCOMMANDS 9        /* total number of single word cmds */
 #define N_MCOMMANDS 13       /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
@@ -49,7 +49,7 @@ extern const char *GroupNames[N_GROUPS];
  * order relative to the command definitions in command_list.c */
 enum singleCommand {
   cam_expose, cam_autofocus, cam_settrig_ext, cam_force_lens, 
-  cam_unforce_lens, test
+  cam_unforce_lens, test, pt_set_spin, pt_set_scan, pt_set_point
 };
 
 struct scom {
@@ -67,7 +67,8 @@ enum multiCommand {
   cam_any, cam_settrig_timed, cam_exp_params, cam_focus_params,
   cam_bad_pix, cam_blob_params, cam_lens_any, cam_lens_move, 
   cam_lens_params, table_move, table_move_g, table_gain,
-  pt_spin_vel
+  pt_spin_vel//, pt_spin_gains, pt_scan_gains, pt_scan_params, 
+  //pt_point_params
 };
 
 struct par {
