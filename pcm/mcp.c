@@ -702,7 +702,6 @@ int main(int argc, char *argv[])
 #ifdef USE_FIFO_CMD
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, NULL);
 #else
-#warning "Trying to talk with SIP(ulator), do you have it set up?"
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
 #endif

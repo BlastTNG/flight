@@ -429,6 +429,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.tableGain.I = ivalues[1];
       CommandData.tableGain.D = ivalues[2];
       break;
+    case pt_spin_vel: /* set the requested gondola spin speed*/
+      CommandData.spiderSpin.dps = rvalues[0];
+      break;
+
 #endif  //HAVE_ACS
     default:
       bputs(warning, "Commands: ***Invalid Multi Word Command***\n");

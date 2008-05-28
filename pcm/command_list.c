@@ -14,7 +14,7 @@
 /* !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
  *
  * IF YOU ADD, MODIFY, OR DELETE *ANY* COMMANDS IN THIS FILE YOU *MUST*
- * RECOMPILE AND REINSTALL BLASTCMD ON ARWEN!
+ * RECOMPILE AND REINSTALL BLASTCMD ON WIDOW!
  *
  * !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
  */
@@ -22,12 +22,13 @@
 #include "command_list.h"
 #include "camstruct.h"
 
-const char *command_list_serial = "$Revision: 1.6 $";
+const char *command_list_serial = "$Revision: 1.7 $";
 
 //these must correspond to #defines in header
 const char *GroupNames[N_GROUPS] = {
   "Star Camera Table",   "Miscellaneous",  "Motors",
   "SC Miscellaneous",    "SC Modes",       "SC Parameters", 
+  "Pointing Modes", "Pointing Gains", "Pointing Parameters"
 };
 
 //echoes as string; makes enum name the command name string
@@ -122,5 +123,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_table"},
       {"Derivative Gain",   0, MAX_15BIT, 'i', "g_d_table"}
     }
+  },
+  //Gondola Pointing Commands
+  {COMMAND(pt_spin_vel), "Spin mode velocity", GR_PT_PARAM, 1,
+   {
+     {"Velocity (dps)",-180,180,'f',"dps_gond_req"},
+   }
   }
 };
