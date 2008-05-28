@@ -15,7 +15,7 @@
 #define COMMAND_LIST_H
 
 #define N_SCOMMANDS 6        /* total number of single word cmds */
-#define N_MCOMMANDS 15       /* total number of multiword commands */
+#define N_MCOMMANDS 13       /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
