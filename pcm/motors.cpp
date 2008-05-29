@@ -431,7 +431,6 @@ void getTargetVel()
   static NiosStruct* isGondAccel  = NULL;
   static NiosStruct* gondTheta    = NULL;
   static NiosStruct* dpspsGondReq = NULL;
-
   
   if(firsttime==1)
     {
@@ -441,7 +440,6 @@ void getTargetVel()
       gondTheta   =GetNiosAddr("gond_theta");
       dpspsGondReq=GetNiosAddr("dpsps_gond_req");
     }
-
   switch(CommandData.spiderMode){
   case point:
 if(firsttime==1)    bprintf(info,"Motors: We are Pointing.");

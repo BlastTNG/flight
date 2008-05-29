@@ -48,6 +48,7 @@
 
 #define MAX_ISC_AGE 200
 
+#define NSGF 11 // Number of points in the Savitsky-Golay polynomial fit.
 #if 0
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
     double *el);
@@ -131,13 +132,23 @@ void Pointing(void)
   static int tst;
 
   static int firsttime = 1;
+  static int initcount = 0;
   static double prevVel,prevTime;
   double curVel,curTime,avVel;
   double dt,dv;
   static struct NiosStruct* gondAz = NULL;
+  static struct NiosStruct* dpspsGond = NULL;
+  static struct NiosStruct* dpspsGondRough = NULL;
   struct timeval timer;
 
+  // 11pt Cubic First Derivative Filter from Table 4 in 
+  // Savitzky and Golay, 1964 
+  double sgfilt[] ={300.0,-294.0,-532.0,-503.0,-296.0,0.0,296.0,503.0,532.0,294.0,-300.0};
+  double sgnorm=5148.0;
+  double sgdata[NSGF];
+  double a1=0.0;
   int i_point_read=GETREADINDEX(point_index);
+  int i;
 
   if (firsttime) {
     firsttime = 0;
@@ -152,6 +163,8 @@ void Pointing(void)
     gettimeofday(&timer, NULL);
     prevTime=(double)timer.tv_sec + timer.tv_usec/1000000.0;
     gondAz = GetNiosAddr("gond_az");
+    dpspsGond=GetNiosAddr("dpsps_gond");      
+    dpspsGondRough=GetNiosAddr("dpsps_gond_rough");      
   }
   curVel=ACSData.gyro2-GY2_OFFSET;
   gettimeofday(&timer, NULL);
@@ -164,7 +177,39 @@ void Pointing(void)
   int data = (int) ((PointingData[i_point_read].az/70.0)*65535.0); 
      // if we overflow we go back to zero
   WriteData(gondAz, data, NIOS_QUEUE);
+  WriteData(dpspsGondRough, ((int)(((curVel-prevVel)/dt)/100.0*32767.0)),NIOS_QUEUE);
+
+  //===================================================
+  // Calculate the azimuth velocity using Savitsky-Golay
+  // Convolution LS Fitting. 
+  //===================================================
+  if(initcount<NSGF)
+    {
+      sgdata[initcount]=ACSData.gyro2-GY2_OFFSET;
+      initcount++;
+      PointingData[point_index].dvdt=0.0;
+    }
+  else
+    {
+      // Increment the SF data vector
+      for(i=0;i<(NSGF-1);i++)
+	{
+	  sgdata[i]=sgdata[i+1];
+	}
+      sgdata[NSGF-1]=ACSData.gyro2-GY2_OFFSET;
+      a1=0.0;
+      // Calculate the a1 factor.
+      for(i=0;i<NSGF;i++)
+	{
+	  a1+=sgdata[i]*sgfilt[i]/sgnorm;
+	} 
+      //Derivative is the a1 factor divided by the step size
+      // h=0.01 seconds.
+      PointingData[point_index].dvdt=a1/0.01; 
+   }
+  WriteData(dpspsGond, ((int)((PointingData[GETREADINDEX(point_index)].dvdt)/100.0*32767.0)), NIOS_QUEUE);
   point_index=INC_INDEX(point_index);
+
   //  if (tst<100) {
   //     bprintf(info,"Pointing: curVel=%f, prevVel=%f, data=%i",curVel,prevVel,data); 
   //     bprintf(info,"Pointing: dt=%f, dv=%f, az=%f", dt,dv,PointingData[i_point_read].az);

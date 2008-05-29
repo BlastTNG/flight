@@ -199,6 +199,7 @@ struct ChannelStruct SlowChannels[] = {
   {"scan_az_wcrit",'w', LOOP2, 41,    120/65535.0,                  0.0, 'u'},
   {"point_az"     ,'w', LOOP2, 42,    360/65535.0,                  0.0, 'u'},
   {"point_tol"    ,'w', LOOP2, 43,    360/65535.0,                  0.0, 'u'},
+  // LOOP2, 44-45 defined in the fast channels. 
   END_OF_CHANNELS
 };
 
@@ -352,6 +353,8 @@ struct ChannelStruct FastChannels[] = {
   {"test3_d2",	   'r', TEST3, 51,                1.0,             0.0, 'u'},
   {"test3_d3",	   'r', TEST3, 52,                1.0,             0.0, 'u'},
   {"test3_cnt",    'r', TEST3, 53,                1.0,             0.0, 'u'},
+  {"dpsps_gond"   ,'w', LOOP2, 44,        100/32767.0,             0.0, 's'},
+  {"dpsps_gond_rough",'w', LOOP2, 45,        100/32767.0,             0.0, 's'},
   END_OF_CHANNELS
 };
 
