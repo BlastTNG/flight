@@ -456,7 +456,16 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case pt_spin_vel: /* set the requested gondola spin speed*/
       CommandData.spiderSpin.dps = rvalues[0];
       break;
-
+    case pt_scan_params:
+      CommandData.spiderScan.C=rvalues[0];
+      CommandData.spiderScan.P=rvalues[1];
+      CommandData.spiderScan.W=rvalues[2];
+      CommandData.spiderScan.Wcrit=rvalues[3]; 
+    break;
+    case pt_point_params:
+      CommandData.spiderPoint.az=rvalues[0];
+      CommandData.spiderPoint.tol=rvalues[1];
+    break;
 #endif  //HAVE_ACS
     default:
       bputs(warning, "Commands: ***Invalid Multi Word Command***\n");
@@ -1013,6 +1022,7 @@ void InitCommandData()
   CommandData.spiderGain.sc_r2=0.0;  // prop to gond accel
   CommandData.spiderGain.sc_p1=0.00;  // prop to vel error term
   CommandData.spiderGain.sc_p2=0.00;  // prop to RW speed.
-
+  CommandData.spiderPoint.az=0.0;
+  CommandData.spiderPoint.tol=10.0;
   WritePrevStatus();
 }

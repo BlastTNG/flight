@@ -40,6 +40,12 @@ struct SpinStruct {
   double dps; // Target Gondola Spin Speed
 };
 
+struct PointStruct {
+  double az; // Target azimuth
+  double tol; // Tolerence (how far can we drift from the 
+              // requested azimuth before action is required?
+};
+
 struct ScanStruct {
   double C; // Azimuth Scan Centre
   double P; // Scan Period in seconds
@@ -112,6 +118,7 @@ struct CommandDataStruct {
   //TODO is this the best way to organize this data?
   enum PointingMode spiderMode;     // Are we going to spin, point or scan?
   struct SpinStruct spiderSpin;     // Stores Spin Speed
+  struct PointStruct spiderPoint;     // Stores Spin Speed
   struct ScanStruct spiderScan;     // Define Scan Centre, period and width 
   struct MotorGainStruct spiderGain;  // Sets the gain factors for the pivot 
                                       // and reaction wheel.

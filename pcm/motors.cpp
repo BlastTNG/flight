@@ -743,6 +743,12 @@ void slowMotorFields()
   static NiosStruct* scanGainR2Addr = NULL;
   static NiosStruct* scanGainP1Addr = NULL;
   static NiosStruct* scanGainP2Addr = NULL;
+  static NiosStruct* scanAzCentreAddr = NULL;
+  static NiosStruct* scanPeriodAddr = NULL;  
+  static NiosStruct* scanAzWidthAddr = NULL; 
+  static NiosStruct* scanAzWCritAddr = NULL;
+  static NiosStruct* pointAzAddr = NULL;
+  static NiosStruct* pointTolAddr = NULL; 
   //initialization
   if (firsttime) {
     gPTableAddr = GetNiosAddr("g_p_table");
@@ -758,6 +764,12 @@ void slowMotorFields()
     scanGainR2Addr = GetNiosAddr("scan_gain_r2");
     scanGainP1Addr = GetNiosAddr("scan_gain_p1");
     scanGainP2Addr = GetNiosAddr("scan_gain_p2");
+    scanAzCentreAddr = GetNiosAddr("scan_az_centre");
+    scanPeriodAddr   = GetNiosAddr("scan_period");
+    scanAzWidthAddr  = GetNiosAddr("scan_az_width");
+    scanAzWCritAddr  = GetNiosAddr("scan_az_wcrit");
+    pointAzAddr    = GetNiosAddr("point_az");
+    pointTolAddr    = GetNiosAddr("point_tol");
     firsttime = false;
   }
 
@@ -776,6 +788,13 @@ void slowMotorFields()
   WriteData(scanGainR2Addr, ((int)(CommandData.spiderGain.sc_r2/SCR2_LIM*32767.0)), NIOS_QUEUE);
   WriteData(scanGainP1Addr, ((int)(CommandData.spiderGain.sc_p1/SCP1_LIM*32767.0)), NIOS_QUEUE);
   WriteData(scanGainP2Addr, ((int)(CommandData.spiderGain.sc_p2/SCP2_LIM*32767.0)), NIOS_QUEUE);
+
+  WriteData(scanAzCentreAddr, ((int)(CommandData.spiderScan.C/360.0*65535.0)), NIOS_QUEUE);
+  WriteData(scanPeriodAddr, ((int)(CommandData.spiderScan.P/60.0*65535.0)), NIOS_QUEUE);
+  WriteData(scanAzWidthAddr, ((int)(CommandData.spiderScan.W/120.0*65535.0)), NIOS_QUEUE);
+  WriteData(scanAzWCritAddr, ((int)(CommandData.spiderScan.Wcrit/120.0*65535.0)), NIOS_QUEUE);
+  WriteData(pointAzAddr, ((int)(CommandData.spiderPoint.az/360.0*65535.0)), NIOS_QUEUE);
+  WriteData(pointTolAddr, ((int)(CommandData.spiderPoint.tol/360.0*65535.0)), NIOS_QUEUE);
 }
 
 }       //extern "C"

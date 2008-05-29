@@ -192,7 +192,13 @@ struct ChannelStruct SlowChannels[] = {
   {"scan_gain_r2", 'w', LOOP2, 35,    SCR2_LIM/32767.0,             0.0, 's'},
   {"scan_gain_p1", 'w', LOOP2, 36,    SCP1_LIM/32767.0,             0.0, 's'},
   {"scan_gain_p2", 'w', LOOP2, 37,    SCP2_LIM/32767.0,             0.0, 's'},
-  
+  // Parameters from the command structure for scan and point mode
+  {"scan_az_centre",'w',LOOP2, 38,    360/65535.0,                  0.0, 'u'},
+  {"scan_period",   'w',LOOP2, 39,    60/65535.0,                   0.0, 'u'},
+  {"scan_az_width",'w', LOOP2, 40,    120/65535.0,                  0.0, 'u'},
+  {"scan_az_wcrit",'w', LOOP2, 41,    120/65535.0,                  0.0, 'u'},
+  {"point_az"     ,'w', LOOP2, 42,    360/65535.0,                  0.0, 'u'},
+  {"point_tol"    ,'w', LOOP2, 43,    360/65535.0,                  0.0, 'u'},
   END_OF_CHANNELS
 };
 
