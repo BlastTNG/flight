@@ -11,6 +11,7 @@
 
 enum CheckType {resp, comm, both};
 
+
 // Limits and scaling ranges for control loop gains.
 #define SPR1_LIM 10000.0
 #define SPR2_LIM 10000.0
@@ -20,5 +21,5 @@ enum CheckType {resp, comm, both};
 #define SCR2_LIM 10000.0
 #define SCP1_LIM 200.0
 #define SCP2_LIM 2.0
-
+// Place holder for more defines.
 #endif
