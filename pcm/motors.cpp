@@ -61,7 +61,7 @@ static int tableSpeed = 0;
 #define MAX_PIVOT_SPEED 45.0
 
 
-#define NO_MOTORS // Does not send commands to the pivot motor
+//#define NO_MOTORS // Does not send commands to the pivot motor
 //#define NO_RW_MOTOR
 
 //device node for serial port; TODO play with udev to make constant
@@ -570,13 +570,15 @@ void updateMotorSpeeds()
   static NiosStruct* iReacReq  = NULL;
   static NiosStruct* dpsPiv   = NULL;
   static NiosStruct* dpsRWFilt    = NULL;
-
+  static NiosStruct* dpsErr    = NULL;
+  
   if(isfirst==1)
     {
       dpsPiv  =GetNiosAddr("dps_piv");
       dpsPivReq = GetNiosAddr("dps_piv_req");
       iReacReq  = GetNiosAddr("i_reac_req");
       dpsRWFilt  =GetNiosAddr("dps_rw_filt");
+      dpsErr=GetNiosAddr("dps_err");
       vpiv=0;
     }
     // Update the pivot velocity, which is stored in controller units in vpiv
@@ -588,7 +590,7 @@ void updateMotorSpeeds()
   //  bprintf(info,"updateMotorSpeeds: vpiv= %d, dps=" );
 // What mode are we in?
   WriteData(dpsRWFilt, ((int) (vreac/3000.0*32767.0)), NIOS_QUEUE);
-
+  WriteData(dpsErr,((int) ((verr/72.0)*32767.0)), NIOS_QUEUE);
 switch(CommandData.spiderMode){
 case point:
   // lmf: For now use spin gains.
