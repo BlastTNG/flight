@@ -564,6 +564,7 @@ void updateMotorSpeeds()
   double vcurr = ACSData.gyro2; // Gyro is in dps
   double verr=vcurr-gTargetVel; // Velocity error term.
   double vreac= RWData.vel;
+  double gaccel = PointingData[GETREADINDEX(point_index)].dvdt;
   static int isfirst =1;
   static NiosStruct* dpsPivReq = NULL;
   static NiosStruct* iReacReq  = NULL;
@@ -597,8 +598,8 @@ case point:
   break;    
 case spin:
   // TODO: Add new gains into the control loop
-  pvreq=CommandData.spiderGain.sp_p2 * vreac;
-  ireq=CommandData.spiderGain.sp_r1 * verr;
+  pvreq=CommandData.spiderGain.sp_p1 * verr + CommandData.spiderGain.sp_p2 * vreac;
+  ireq=CommandData.spiderGain.sp_r1 * verr + CommandData.spiderGain.sp_r2 *gaccel;
   if(testind%100==0)
     {
         bprintf(info,"updateMotors: pvreq= %f, ireq= %f",pvreq,ireq);

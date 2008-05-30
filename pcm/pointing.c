@@ -143,9 +143,9 @@ void Pointing(void)
 
   // 11pt Cubic First Derivative Filter from Table 4 in 
   // Savitzky and Golay, 1964 
-  double sgfilt[] ={300.0,-294.0,-532.0,-503.0,-296.0,0.0,296.0,503.0,532.0,294.0,-300.0};
+  static double sgfilt[] ={300.0,-294.0,-532.0,-503.0,-296.0,0.0,296.0,503.0,532.0,294.0,-300.0};
   double sgnorm=5148.0;
-  double sgdata[NSGF];
+  static double sgdata[NSGF];
   double a1=0.0;
   int i_point_read=GETREADINDEX(point_index);
   int i;
@@ -164,7 +164,10 @@ void Pointing(void)
     prevTime=(double)timer.tv_sec + timer.tv_usec/1000000.0;
     gondAz = GetNiosAddr("gond_az");
     dpspsGond=GetNiosAddr("dpsps_gond");      
-    dpspsGondRough=GetNiosAddr("dpsps_gond_rough");      
+    dpspsGondRough=GetNiosAddr("dpsps_gond_rough");
+    
+    // Initialize sgdata
+    for(i=0;i<NSGF;i++) sgdata[i]=0;      
   }
   curVel=ACSData.gyro2-GY2_OFFSET;
   gettimeofday(&timer, NULL);
@@ -182,6 +185,8 @@ void Pointing(void)
   //===================================================
   // Calculate the azimuth velocity using Savitsky-Golay
   // Convolution LS Fitting. 
+  //
+  // TODO: Replace with a circular buffer.
   //===================================================
   if(initcount<NSGF)
     {
