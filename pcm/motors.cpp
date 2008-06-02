@@ -54,14 +54,16 @@ static int tableSpeed = 0;
 
 //Set limits on gondola speed and motor currents and speed.
 // Maximum reaction wheel speed
-#define MAX_RWHEEL_SPEED (200.0/60.0*360.0)
+// 200 RPM=1200 dps
+// 150 RPM=900 dps
+#define MAX_RWHEEL_SPEED (150.0/60.0*360.0) 
 
 #define MAX_GOND_SPEED 45.0
-// Maximum Pivot Speed 
+// Maximum Pivot Speed (dps)
 #define MAX_PIVOT_SPEED 45.0
 
 
-//#define NO_MOTORS // Does not send commands to the pivot motor
+#define NO_MOTORS // Does not send commands to the pivot motor
 //#define NO_RW_MOTOR
 
 //device node for serial port; TODO play with udev to make constant
@@ -90,7 +92,8 @@ double gTargetVel;  // Gondola Target velocity
 double ireq,pvreq;  // Reaction wheel current requested, and Pivot
                     // velocity requested.
   int vpiv;
-
+  int encpos;
+  int encposShort;
 /* opens communications with motor controllers */
 void openMotors()
 {
@@ -257,14 +260,19 @@ void* pivotComm(void* arg)
   //  int laststat=0;
   //  double dps=0.0;
   //  int data=0;
+  struct NiosStruct* encPos = NULL; 
+  struct NiosStruct* encVel = NULL; 
   pivotinfo.loop=0;
   pivotinfo.closing=0;
   int firsttime = 1;
   int first = 1;
-  double vlast=0;
-  double vcur=0;
-  unsigned long int vmagpiv;
-  // wait until the pivot controller has been initialized.
+  int encposOld;
+  double prevTime, curTime;
+  double encvel=0.0;
+  //  unsigned long int vmagpiv;
+  struct timeval timer;  
+
+// wait until the pivot controller has been initialized.
   while(pivotinfo.open==0)
     {
       sleep(1);
@@ -278,6 +286,9 @@ void* pivotComm(void* arg)
   // Configure the serial port.
   configure_pivot();
 
+  encPos = GetNiosAddr("enc_pos");
+  encVel = GetNiosAddr("enc_vel");
+
   //  bprintf(info,"pivotComm: Here are the conversion factors for RW.");
   //  bprintf(info,"RWVEL_DPS=%d, RWVEL_OFFSET=%d, RWCUR_DPS=%d, RWCUR_");
   while(1){
@@ -289,8 +300,13 @@ void* pivotComm(void* arg)
     if(firsttime)
       { 
 	bputs(info,"pivotComm: NO_MOTORS not defined--Commands will be sent to the pivot.");        
-        vmagpiv=getquery(QUER_VEL);
-        vpiv=((int)vmagpiv)*pivotinfo.ldir;
+	//        vmagpiv=getquery(QUER_VEL);
+        encpos=getquery(QUER_POS);
+        encposShort=encpos%COUNTS_PER_ETURN;
+        encposOld = encpos;
+        gettimeofday(&timer, NULL);
+        prevTime=(double)timer.tv_sec + timer.tv_usec/1000000.0;
+	//        vpiv=((int)vmagpiv)*pivotinfo.ldir;
       }
 
    if(pivotinfo.loop==0) // There is no loop
@@ -319,19 +335,28 @@ void* pivotComm(void* arg)
       }
 #endif //NO_MOTORS
 
-
+    encpos=getquery(QUER_POS);
+    encposShort=encpos%COUNTS_PER_ETURN;
+    gettimeofday(&timer, NULL);
+    curTime=(double)timer.tv_sec + timer.tv_usec/1000000.0;
+    encvel=((int)(((double)(encpos-encposOld))/((curTime-prevTime)*COUNTS_PER_ETURN)*360.0));
+    encposOld=encpos;
+    prevTime=curTime;
+#if 0
 //     bprintf(info,"4: %i, %f, %i",vpiv, dps,motorpos);
      if(pivotinfo.loop> 0)
        {
-	 vmagpiv=getquery(QUER_VEL);
-         vpiv=((int)vmagpiv)*pivotinfo.ldir;
+	 //	 vmagpiv=getquery(QUER_VEL);
+	 //         vpiv=((int)vmagpiv)*pivotinfo.ldir;
        }
      else
        {
-         vpiv=0; // Otherwise this query returns the max slew speed.
+	 //         vpiv=0; // Otherwise this query returns the max slew speed.
        }
-
+#endif
         firsttime = 0;
+      WriteData(encPos, ((int)(((double)(encposShort))/COUNTS_PER_ETURN*65535.0)), NIOS_QUEUE);
+      WriteData(encVel, ((int)(encvel/360.0*32767.0)), NIOS_QUEUE);
       }//pivotcomm.closing==0
   } //while(1)
   
@@ -422,15 +447,23 @@ void* reactComm(void* arg)
 void getTargetVel()
 {
   // gTargetVel is a global variable
-  double theta,amp,acrit,per,vswitch,dvdt,tswitch,t1;
+  double xc,amp,acrit,per;
+  double vg,az,vt,phi,x1,x2;
+  double theta=0.0;
+  double vmax=0.0;
+  double vr=0.0;
+  double a=0.0;
+  int accelmode=0; // A flag to identify when we are in 
+                   // constant accel mode.
   static double vlast,vdir;
   int data;
   static int firsttime = 1;
-  static int accelmode,wait;
   static NiosStruct* dpsGondReq   = NULL;
   static NiosStruct* isGondAccel  = NULL;
   static NiosStruct* gondTheta    = NULL;
   static NiosStruct* dpspsGondReq = NULL;
+  static NiosStruct* scanDVelMax = NULL;
+  static NiosStruct* scanVelMax = NULL;
   
   if(firsttime==1)
     {
@@ -439,6 +472,8 @@ void getTargetVel()
       isGondAccel =GetNiosAddr("is_gond_accel");
       gondTheta   =GetNiosAddr("gond_theta");
       dpspsGondReq=GetNiosAddr("dpsps_gond_req");
+      scanVelMax=GetNiosAddr("scan_vel_max");
+      scanDVelMax=GetNiosAddr("scan_d_vel_max");
     }
   switch(CommandData.spiderMode){
   case point:
@@ -456,25 +491,86 @@ if(firsttime==1)    bprintf(info,"Motors: We are scanning.");
     // Okay where are we?
     if(firsttime==1)
       {
-        accelmode=0;
-        vdir=1.0;
+	//        vdir=1.0;
         vlast = ACSData.gyro2;
-        wait=0;
-        bprintf(info,"getTargetVel: Beginning scan mode.  Scan amplitude is %f, critical width is %f, period is %f.",CommandData.spiderScan.W,CommandData.spiderScan.Wcrit,CommandData.spiderScan.P);
         
       }
+
+    // Calculate the scan parameters. 
     amp=CommandData.spiderScan.W;
-    acrit=CommandData.spiderScan.Wcrit;
     per=CommandData.spiderScan.P;
+    xc=CommandData.spiderScan.C;
+    vt=CommandData.spiderScan.vt1;
+    phi=CommandData.spiderScan.phi; // Phase angle width of the 
+                                    // constant accel portion of 
+                                    // the scan 
 
     // Check that our scan amplitudes are all reasonable
-    
+    // TODO: If one of these parameters is wrong, go into 
+    // a safety mode, like point anti-sun.
+    if(per<0.0)
+      {
+        berror(err,"getTargetVel: Period =%f.",per);
+	return;
+      }
+    if(amp<0.0)
+      {
+        berror(err,"getTargetVel: Scan amplitude is  =%f.",per);
+	return;
+      }
+    if(phi<0.0 || phi>= 90.0)
+      {
+	berror(warning,"getTargetVel: Constant accel phase angle width is out of range");
+        bputs(warning,"Setting phi=15.0 degrees as default.");
+        phi=15.0;
+      }
+    vmax=amp*2.0*M_PI/per;  // TODO: Write this to the frame.
+    x1=xc-amp;
+    x2=xc+amp;
 
+    // a is the maximum change in velocity within a single timestep (0.01 sec)
+    a=amp*(2.0*M_PI)*(2.0*M_PI)*cos(phi/180.0*M_PI)*0.01;
+
+    az = PointingData[GETREADINDEX(point_index)].az;
+    vg = ACSData.gyro2; // Gondola velocity
     // theta is the angle from the center of the scan
-    theta=PointingData[GETREADINDEX(point_index)].az-CommandData.spiderScan.C;
-    data=(int) ((theta/360.0)*65535.0);
-    WriteData(gondTheta, data, NIOS_QUEUE);
+    theta=az-xc;
 
+    if(az<x1)
+      {
+	vr = vt;
+      }
+    else if(az>x2)
+      {
+	vr = vt;
+      }
+    else if(vg>0.0)
+      {
+	vr = vmax*sqrt(1.0-((az-xc)*(az-xc)/(amp*amp)));
+      }
+    else
+      {
+	vr = (-1.0)*vmax*sqrt(1.0-((az-xc)*(az-xc)/(amp*amp)));
+      }
+
+    // If the accel is too high adjust the speed appropriately.
+    // Maybe this should be vgond?... or not, 100 Hz probably 
+    // isn't enough time for the system to respond...
+    if((vr-vlast)>a) 
+      {
+        vr=vlast+a;
+	accelmode=1;
+      } 
+   if((vlast-vr)>a) 
+      {
+	vr=vlast-a;
+        accelmode=1;
+      }   
+    gTargetVel=vr;
+    vlast=vr;
+
+    
+#if 0 // lmf: Old scan mode... that never worked properly ...
     // if we weren't in accel mode are we sure that we shouldn't be in 
     // constant acceleration mode?
     if(accelmode==0)
@@ -535,8 +631,7 @@ if(firsttime==1)    bprintf(info,"Motors: We are scanning.");
 	    }
       }        
     vlast=gTargetVel;
-
-  //write target speed to frame
+#endif 
       break;
     default:
     berror(err, "getTargetVel: Invalid mode");
@@ -544,8 +639,14 @@ if(firsttime==1)    bprintf(info,"Motors: We are scanning.");
     return;
     break;
   }
-  data = (int)((gTargetVel/60.0)*32767.0); //allow much room to avoid overflow
+    // Write stuff to the frame!
+    WriteData(isGondAccel, accelmode, NIOS_QUEUE); 
+    WriteData(scanDVelMax, ((int)(a/0.5*65535.0)), NIOS_QUEUE); 
+    WriteData(scanVelMax, ((int)(vmax/40.0*65535.0)), NIOS_QUEUE); 
+  data = (int)((gTargetVel/60.0)*32767.0); 
     WriteData(dpsGondReq, data, NIOS_QUEUE);
+    data=(int) ((theta/360.0)*65535.0);
+    WriteData(gondTheta, data, NIOS_QUEUE);
 
   if(firsttime==1)
     { 
@@ -600,7 +701,7 @@ case point:
   break;    
 case spin:
   // TODO: Add new gains into the control loop
-  pvreq=CommandData.spiderGain.sp_p1 * verr + CommandData.spiderGain.sp_p2 * vreac;
+  pvreq=CommandData.spiderGain.sp_p1 * verr + CommandData.spiderGain.sp_p2 * vreac-vcurr;
   ireq=CommandData.spiderGain.sp_r1 * verr + CommandData.spiderGain.sp_r2 *gaccel;
   if(testind%100==0)
     {
@@ -696,10 +797,18 @@ case spin:
   //       requested pivot velocity.  Might be worth writing code that
   //       estimates true pivot velocity, by querying the position.
 
-  if (pvreq > MAX_PIVOT_SPEED)
+  if (fabs(pvreq) > MAX_PIVOT_SPEED)
     {
         bprintf(warning,"updateMotorSpeeds: Requested pivot Speed %f is above the max pivot speed %f.",pvreq,MAX_PIVOT_SPEED);
         bprintf(warning,"updateMotorSpeeds: setting pivot speed to maximum pivot speed."); 
+	if(pvreq > 0)
+	  {
+	    pvreq= MAX_PIVOT_SPEED;
+	  }
+	else
+	  {
+	    pvreq=(-1.0)*MAX_PIVOT_SPEED;
+	  }
     }
 
   // Is the gondola going too fast?  
@@ -747,7 +856,10 @@ void slowMotorFields()
   static NiosStruct* scanAzCentreAddr = NULL;
   static NiosStruct* scanPeriodAddr = NULL;  
   static NiosStruct* scanAzWidthAddr = NULL; 
-  static NiosStruct* scanAzWCritAddr = NULL;
+  static NiosStruct* scanAzPhiAddr = NULL;
+  static NiosStruct* scanAzVt2Addr = NULL;
+  static NiosStruct* scanAzVt1Addr = NULL;
+  static NiosStruct* scanAzWindAddr = NULL;
   static NiosStruct* pointAzAddr = NULL;
   static NiosStruct* pointTolAddr = NULL; 
   //initialization
@@ -768,7 +880,10 @@ void slowMotorFields()
     scanAzCentreAddr = GetNiosAddr("scan_az_centre");
     scanPeriodAddr   = GetNiosAddr("scan_period");
     scanAzWidthAddr  = GetNiosAddr("scan_az_width");
-    scanAzWCritAddr  = GetNiosAddr("scan_az_wcrit");
+    scanAzPhiAddr  = GetNiosAddr("scan_az_phi");
+    scanAzVt1Addr  = GetNiosAddr("scan_az_vt1");
+    scanAzVt2Addr  = GetNiosAddr("scan_az_vt2");
+    scanAzWindAddr  = GetNiosAddr("scan_az_wind");
     pointAzAddr    = GetNiosAddr("point_az");
     pointTolAddr    = GetNiosAddr("point_tol");
     firsttime = false;
@@ -793,7 +908,10 @@ void slowMotorFields()
   WriteData(scanAzCentreAddr, ((int)(CommandData.spiderScan.C/360.0*65535.0)), NIOS_QUEUE);
   WriteData(scanPeriodAddr, ((int)(CommandData.spiderScan.P/60.0*65535.0)), NIOS_QUEUE);
   WriteData(scanAzWidthAddr, ((int)(CommandData.spiderScan.W/120.0*65535.0)), NIOS_QUEUE);
-  WriteData(scanAzWCritAddr, ((int)(CommandData.spiderScan.Wcrit/120.0*65535.0)), NIOS_QUEUE);
+  WriteData(scanAzPhiAddr, ((int)(CommandData.spiderScan.phi/90.0*65535.0)), NIOS_QUEUE);
+  WriteData(scanAzVt1Addr, ((int)(CommandData.spiderScan.vt1/10.0*32767.0)), NIOS_QUEUE);
+  WriteData(scanAzVt2Addr, ((int)(CommandData.spiderScan.vt2/10.0*32767.0)), NIOS_QUEUE);
+  WriteData(scanAzWindAddr, ((int)(CommandData.spiderScan.wind/60.0*65535.0)), NIOS_QUEUE);
   WriteData(pointAzAddr, ((int)(CommandData.spiderPoint.az/360.0*65535.0)), NIOS_QUEUE);
   WriteData(pointTolAddr, ((int)(CommandData.spiderPoint.tol/360.0*65535.0)), NIOS_QUEUE);
 }

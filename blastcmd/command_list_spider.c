@@ -23,7 +23,7 @@
 #include "camstruct.h"
 #include "motordefs.h"
 
-const char *command_list_serial = "$Revision: 1.10 $";
+const char *command_list_serial = "$Revision: 1.11 $";
 
 //these must correspond to #defines in header
 const char *GroupNames[N_GROUPS] = {
@@ -149,12 +149,15 @@ struct mcom mcommands[N_MCOMMANDS] = {
      {"Velocity (dps)",-180,180,'f',"dps_gond_req"},
    }
   },
-  {COMMAND(pt_scan_params), "Scan mode parameters", GR_PT_PARAM, 4,
+  {COMMAND(pt_scan_params), "Scan mode parameters", GR_PT_PARAM, 7,
    {
      {"Scan centre (deg)",0,360,'f',"scan_az_centre"},
      {"Scan period (s)",1,60,'f',"scan_az_period"},
      {"Scan width (deg)",0.1,120,'f',"scan_az_width"},
-     {"Edge width (constant accel)(deg)",0,120,'f',"scan_az_wcrit"},
+     {"Phase width for const accel (deg)",0,90,'f',"scan_az_phi"},
+     {"Transition velocity slow (dps)",-10,10,'f',"scan_az_vt1"},
+     {"Transition velocity fast (dps)",-10,10,'f',"scan_az_vt2"},
+     {"Slow vt window (deg)",0,60,'f',"scan_az_wind"},
    }
   },
   {COMMAND(pt_point_params), "Point mode parameters", GR_PT_PARAM, 2,

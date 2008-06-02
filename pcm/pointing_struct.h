@@ -126,7 +126,7 @@ extern struct SIPDataStruct SIPData;
 struct PointingDataStruct {
   double az; // lmf: For now we are just integrating the 
              // gyros.
-  double dvdt; // The derivative of the gyro velocity
+  double dvdt; // The derivative of the gyro velocity.
   time_t t;
 };
 

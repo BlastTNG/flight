@@ -50,8 +50,13 @@ struct ScanStruct {
   double C; // Azimuth Scan Centre
   double P; // Scan Period in seconds
   double W; // Scan Width zero to Peak (degrees)
-  double Wcrit; // Switch to constant accel mode 
-               // when |theta-C| > Wcrit
+  double phi; // Phase angle defining the width
+              // of constant accel mode (degrees) 
+  double vt1; // slow transit speed (when we are 
+              // near scan region) (dps)
+  double vt2;  // fast transit speed (when we are
+               // far from scan region) (dps)
+  double wind; // azimuth window to use the slow vt1
 };
 
 // Stores the motor gains

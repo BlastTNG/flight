@@ -196,10 +196,15 @@ struct ChannelStruct SlowChannels[] = {
   {"scan_az_centre",'w',LOOP2, 38,    360/65535.0,                  0.0, 'u'},
   {"scan_period",   'w',LOOP2, 39,    60/65535.0,                   0.0, 'u'},
   {"scan_az_width",'w', LOOP2, 40,    120/65535.0,                  0.0, 'u'},
-  {"scan_az_wcrit",'w', LOOP2, 41,    120/65535.0,                  0.0, 'u'},
+  {"scan_az_phi",  'w', LOOP2, 41,     90/65535.0,                  0.0, 'u'},
   {"point_az"     ,'w', LOOP2, 42,    360/65535.0,                  0.0, 'u'},
   {"point_tol"    ,'w', LOOP2, 43,    360/65535.0,                  0.0, 'u'},
-  // LOOP2, 44-46 defined in the fast channels. 
+  // LOOP2, 44-48 defined in the fast channels. 
+  {"scan_az_vt1",  'w', LOOP2, 49,     10/32767.0,                  0.0, 's'},
+  {"scan_az_vt2",  'w', LOOP2, 50,     10/32767.0,                  0.0, 's'},
+  {"scan_az_wind", 'w', LOOP2, 51,     60/65535.0,                  0.0, 'u'},
+  {"scan_d_vel_max", 'w',LOOP2, 52,    0.5/65535.0,                 0.0, 'u'},
+  {"scan_vel_max", 'w', LOOP2, 53,    40.0/65535.0,                 0.0, 'u'},
   END_OF_CHANNELS
 };
 
@@ -356,6 +361,8 @@ struct ChannelStruct FastChannels[] = {
   {"dpsps_gond"   ,'w', LOOP2, 44,        100/32767.0,             0.0, 's'},
   {"dpsps_gond_rough",'w', LOOP2, 45,        100/32767.0,             0.0, 's'},
   {"dps_err"      ,'w', LOOP2, 46,        72.0/32767.0,             0.0, 's'},
+  {"enc_pos"      ,'w', LOOP2, 47,       360.0/65355.0,             0.0, 'u'},
+  {"enc_vel"      ,'w', LOOP2, 48,       50.0/32767.0,             0.0, 's'},
   END_OF_CHANNELS
 };
 

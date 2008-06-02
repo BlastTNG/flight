@@ -460,7 +460,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.spiderScan.C=rvalues[0];
       CommandData.spiderScan.P=rvalues[1];
       CommandData.spiderScan.W=rvalues[2];
-      CommandData.spiderScan.Wcrit=rvalues[3]; 
+      CommandData.spiderScan.phi=rvalues[3];
+      CommandData.spiderScan.vt1=rvalues[4];
+      CommandData.spiderScan.vt2=rvalues[5];
+      CommandData.spiderScan.wind=rvalues[6];
     break;
     case pt_point_params:
       CommandData.spiderPoint.az=rvalues[0];
@@ -1012,16 +1015,20 @@ void InitCommandData()
   CommandData.spiderScan.C=0.0;
   CommandData.spiderScan.P=47.0;
   CommandData.spiderScan.W=45.0;
-  CommandData.spiderScan.Wcrit=5.0;
+  CommandData.spiderScan.phi=15.0; 
+  CommandData.spiderScan.vt1=0.2; 
+  CommandData.spiderScan.vt2=2.0; 
+  CommandData.spiderScan.wind=15.0;
+
   CommandData.spiderSpin.dps=0.0;
-  CommandData.spiderGain.sp_r1=-10.0;  // prop to vel error term
+  CommandData.spiderGain.sp_r1=-100.0;  // prop to vel error term
   CommandData.spiderGain.sp_r2=0.0;  // prop to gond accel
   CommandData.spiderGain.sp_p1=0.00;  // prop to vel error term
-  CommandData.spiderGain.sp_p2=0.02;  // prop to RW speed.
-  CommandData.spiderGain.sc_r1=-10.0;  // prop to vel error term
+  CommandData.spiderGain.sp_p2=0.1;  // prop to RW speed.
+  CommandData.spiderGain.sc_r1=-100.0;  // prop to vel error term
   CommandData.spiderGain.sc_r2=0.0;  // prop to gond accel
   CommandData.spiderGain.sc_p1=0.00;  // prop to vel error term
-  CommandData.spiderGain.sc_p2=0.00;  // prop to RW speed.
+  CommandData.spiderGain.sc_p2=0.1;  // prop to RW speed.
   CommandData.spiderPoint.az=0.0;
   CommandData.spiderPoint.tol=10.0;
   WritePrevStatus();

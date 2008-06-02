@@ -11,7 +11,7 @@
 #include "motordefs.h"
 
 // Maximum reaction wheel current
-#define MAX_RWHEEL_CURRENT 5.0 // TODO: This is just until I get an idea of the
+#define MAX_RWHEEL_CURRENT 10.0 // TODO: This is just until I get an idea of the
                                // spin gains.
                                // RW controller is rated to 17.5 Amp continuous
                                // current.
@@ -27,7 +27,7 @@
 // some kind of conversion from Peak to RMS?
 
 
-//#define DISABLE_RW // Keeps the reaction wheel in disabled mode.
+#define DISABLE_RW // Keeps the reaction wheel in disabled mode.
 //#define DEBUG_RW
 
 struct ReactInfoStruct {

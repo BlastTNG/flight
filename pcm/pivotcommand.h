@@ -55,6 +55,7 @@ struct MotorCommandStruct {
 // Pivot encoder counts per degree = 500 (encoder) * 353 (gearbox) * 32.768 ticks/s
 //                                 /360 degrees
 #define COUNTS_PER_DEGREE 16065.422
+#define COUNTS_PER_ETURN 176500
 
 #define PIVOT_ACCEL 50000
 #define PIVOT_MIN_VEL 11
