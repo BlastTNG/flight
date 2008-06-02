@@ -177,7 +177,7 @@ void Pointing(void)
   dv=avVel * dt;
   PointingData[point_index].az = PointingData[i_point_read].az+dv; 
   
-  int data = (int) ((PointingData[i_point_read].az/70.0)*65535.0); 
+  int data = (int) ((PointingData[i_point_read].az/360.0)*65535.0); 
      // if we overflow we go back to zero
   WriteData(gondAz, data, NIOS_QUEUE);
   WriteData(dpspsGondRough, ((int)(((curVel-prevVel)/dt)/100.0*32767.0)),NIOS_QUEUE);

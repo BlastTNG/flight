@@ -63,7 +63,7 @@ static int tableSpeed = 0;
 #define MAX_PIVOT_SPEED 45.0
 
 
-#define NO_MOTORS // Does not send commands to the pivot motor
+//#define NO_MOTORS // Does not send commands to the pivot motor
 //#define NO_RW_MOTOR
 
 //device node for serial port; TODO play with udev to make constant
@@ -447,15 +447,15 @@ void* reactComm(void* arg)
 void getTargetVel()
 {
   // gTargetVel is a global variable
-  double xc,amp,acrit,per;
-  double vg,az,vt,phi,x1,x2;
+  double xc,amp,per;
+  double vg,az,vt1,vt2,wind,phi,x1,x2;
   double theta=0.0;
   double vmax=0.0;
   double vr=0.0;
   double a=0.0;
   int accelmode=0; // A flag to identify when we are in 
                    // constant accel mode.
-  static double vlast,vdir;
+  static double vlast;
   int data;
   static int firsttime = 1;
   static NiosStruct* dpsGondReq   = NULL;
@@ -500,7 +500,9 @@ if(firsttime==1)    bprintf(info,"Motors: We are scanning.");
     amp=CommandData.spiderScan.W;
     per=CommandData.spiderScan.P;
     xc=CommandData.spiderScan.C;
-    vt=CommandData.spiderScan.vt1;
+    vt1=CommandData.spiderScan.vt1;
+    vt2=CommandData.spiderScan.vt2;
+    wind=CommandData.spiderScan.wind;
     phi=CommandData.spiderScan.phi; // Phase angle width of the 
                                     // constant accel portion of 
                                     // the scan 
@@ -529,20 +531,28 @@ if(firsttime==1)    bprintf(info,"Motors: We are scanning.");
     x2=xc+amp;
 
     // a is the maximum change in velocity within a single timestep (0.01 sec)
-    a=amp*(2.0*M_PI)*(2.0*M_PI)*cos(phi/180.0*M_PI)*0.01;
+    a=amp*(2.0*M_PI/per)*(2.0*M_PI/per)*cos(phi/180.0*M_PI)*0.01;
 
     az = PointingData[GETREADINDEX(point_index)].az;
     vg = ACSData.gyro2; // Gondola velocity
     // theta is the angle from the center of the scan
     theta=az-xc;
 
-    if(az<x1)
+    if(az<(x1-wind))
       {
-	vr = vt;
+	vr=vt2-(vt2-vt1)/(x1-wind)*az;
+      }
+    else if(az>=(x2+wind))
+      {
+        vr=(vt2-vt1)/(360-x2-wind)*(az-x2-wind)-vt1;
+      }
+    else if(az<x1)
+      {
+	vr = vt1;
       }
     else if(az>x2)
       {
-	vr = vt;
+	vr = -vt1;
       }
     else if(vg>0.0)
       {
