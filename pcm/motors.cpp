@@ -448,11 +448,14 @@ void getTargetVel()
 {
   // gTargetVel is a global variable
   double xc,amp,per;
-  double vg,az,vt1,vt2,wind,phi,x1,x2;
+  double vg,az,vt2,wind,phi;
   double theta=0.0;
   double vmax=0.0;
   double vr=0.0;
   double a=0.0;
+  double vt1=0.0;
+  double x1=0.0;
+  double x2=0.0;
   int accelmode=0; // A flag to identify when we are in 
                    // constant accel mode.
   static double vlast;
@@ -464,6 +467,9 @@ void getTargetVel()
   static NiosStruct* dpspsGondReq = NULL;
   static NiosStruct* scanDVelMax = NULL;
   static NiosStruct* scanVelMax = NULL;
+  static NiosStruct* scanX1 = NULL;
+  static NiosStruct* scanX2 = NULL;
+  static NiosStruct* scanAzVt1 = NULL;
   
   if(firsttime==1)
     {
@@ -474,6 +480,9 @@ void getTargetVel()
       dpspsGondReq=GetNiosAddr("dpsps_gond_req");
       scanVelMax=GetNiosAddr("scan_vel_max");
       scanDVelMax=GetNiosAddr("scan_d_vel_max");
+      scanAzVt1=GetNiosAddr("scan_az_vt1");
+      scanX1=GetNiosAddr("scan_x1");
+      scanX2=GetNiosAddr("scan_x2");
     }
   switch(CommandData.spiderMode){
   case point:
@@ -526,9 +535,10 @@ if(firsttime==1)    bprintf(info,"Motors: We are scanning.");
         bputs(warning,"Setting phi=15.0 degrees as default.");
         phi=15.0;
       }
-    vmax=amp*2.0*M_PI/per;  // TODO: Write this to the frame.
-    x1=xc-amp;
-    x2=xc+amp;
+    vmax=amp*2.0*M_PI/per;  
+    vt1=vmax*sin(phi*M_PI/180);
+    x1=xc-amp*cos(phi*M_PI/180);
+    x2=xc+amp*cos(phi*M_PI/180);
 
     // a is the maximum change in velocity within a single timestep (0.01 sec)
     a=amp*(2.0*M_PI/per)*(2.0*M_PI/per)*cos(phi/180.0*M_PI)*0.01;
@@ -544,7 +554,7 @@ if(firsttime==1)    bprintf(info,"Motors: We are scanning.");
       }
     else if(az>=(x2+wind))
       {
-        vr=(vt2-vt1)/(360-x2-wind)*(az-x2-wind)-vt1;
+        vr=(vt1-vt2)/(360-x2-wind)*(az-x2-wind)-vt1;
       }
     else if(az<x1)
       {
@@ -553,7 +563,7 @@ if(firsttime==1)    bprintf(info,"Motors: We are scanning.");
     else if(az>x2)
       {
 	vr = -vt1;
-      }
+      } 
     else if(vg>0.0)
       {
 	vr = vmax*sqrt(1.0-((az-xc)*(az-xc)/(amp*amp)));
@@ -566,7 +576,7 @@ if(firsttime==1)    bprintf(info,"Motors: We are scanning.");
     // If the accel is too high adjust the speed appropriately.
     // Maybe this should be vgond?... or not, 100 Hz probably 
     // isn't enough time for the system to respond...
-    if((vr-vlast)>a) 
+   if((vr-vlast)>a) 
       {
         vr=vlast+a;
 	accelmode=1;
@@ -657,7 +667,9 @@ if(firsttime==1)    bprintf(info,"Motors: We are scanning.");
     WriteData(dpsGondReq, data, NIOS_QUEUE);
     data=(int) ((theta/360.0)*65535.0);
     WriteData(gondTheta, data, NIOS_QUEUE);
-
+    WriteData(scanAzVt1, ((int)(vt1/10.0*65535.0)), NIOS_QUEUE); 
+    WriteData(scanX1, ((int)(x1/360.0*65535.0)), NIOS_QUEUE); 
+    WriteData(scanX2, ((int)(x2/360.0*65535.0)), NIOS_QUEUE); 
   if(firsttime==1)
     { 
       bprintf(info,"getTargetVel: gTargetVel is %f",gTargetVel); 

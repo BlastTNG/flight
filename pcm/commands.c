@@ -461,9 +461,8 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.spiderScan.P=rvalues[1];
       CommandData.spiderScan.W=rvalues[2];
       CommandData.spiderScan.phi=rvalues[3];
-      CommandData.spiderScan.vt1=rvalues[4];
-      CommandData.spiderScan.vt2=rvalues[5];
-      CommandData.spiderScan.wind=rvalues[6];
+      CommandData.spiderScan.vt2=rvalues[4];
+      CommandData.spiderScan.wind=rvalues[5];
     break;
     case pt_point_params:
       CommandData.spiderPoint.az=rvalues[0];

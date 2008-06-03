@@ -194,7 +194,7 @@ struct ChannelStruct SlowChannels[] = {
   {"scan_gain_p2", 'w', LOOP2, 37,    SCP2_LIM/32767.0,             0.0, 's'},
   // Parameters from the command structure for scan and point mode
   {"scan_az_centre",'w',LOOP2, 38,    360/65535.0,                  0.0, 'u'},
-  {"scan_period",   'w',LOOP2, 39,    300/65535.0,                   0.0, 'u'},
+  {"scan_period",   'w',LOOP2, 39,    300/65535.0,                  0.0, 'u'},
   {"scan_az_width",'w', LOOP2, 40,    120/65535.0,                  0.0, 'u'},
   {"scan_az_phi",  'w', LOOP2, 41,     90/65535.0,                  0.0, 'u'},
   {"point_az"     ,'w', LOOP2, 42,    360/65535.0,                  0.0, 'u'},
@@ -203,8 +203,10 @@ struct ChannelStruct SlowChannels[] = {
   {"scan_az_vt1",  'w', LOOP2, 49,     10/32767.0,                  0.0, 's'},
   {"scan_az_vt2",  'w', LOOP2, 50,     10/32767.0,                  0.0, 's'},
   {"scan_az_wind", 'w', LOOP2, 51,     60/65535.0,                  0.0, 'u'},
-  {"scan_d_vel_max", 'w',LOOP2, 52,    0.5/65535.0,                 0.0, 'u'},
-  {"scan_vel_max", 'w', LOOP2, 53,    40.0/65535.0,                 0.0, 'u'},
+  {"scan_d_vel_max", 'w',LOOP2, 52,   0.5/65535.0,                  0.0, 'u'},
+  {"scan_vel_max", 'w', LOOP2, 53,   40.0/65535.0,                  0.0, 'u'},
+  {"scan_x1",      'w', LOOP2, 54,  360.0/65535.0,                  0.0, 'u'},
+  {"scan_x2",      'w', LOOP2, 55,  360.0/65535.0,                  0.0, 'u'},
   END_OF_CHANNELS
 };
 
