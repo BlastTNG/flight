@@ -63,7 +63,7 @@ static int tableSpeed = 0;
 #define MAX_PIVOT_SPEED 45.0
 
 
-//#define NO_MOTORS // Does not send commands to the pivot motor
+#define NO_MOTORS // Does not send commands to the pivot motor
 //#define NO_RW_MOTOR
 
 //device node for serial port; TODO play with udev to make constant
@@ -804,14 +804,14 @@ case spin:
   // direction?
   if (fabs(vreac) > MAX_RWHEEL_SPEED && vreac*ireq > 0)
     {
-       bprintf(warning,"updateMotorSpeeds:Current reaction wheel speed %f is beyond the speed %f.\n Reaction wheel current set to 0.0.\n",vreac,MAX_RWHEEL_SPEED);
+      //       bprintf(warning,"updateMotorSpeeds:Current reaction wheel speed %f is beyond the speed %f.\n Reaction wheel current set to 0.0.\n",vreac,MAX_RWHEEL_SPEED);
       ireq=0.0;
     }
   if (fabs(ireq) > MAX_RWHEEL_CURRENT)
     {
       if(ireq < 0.0) ireq=(-1.0)*MAX_RWHEEL_CURRENT;
       if(ireq > 0.0) ireq=MAX_RWHEEL_CURRENT;
-        bprintf(warning,"updateMotorSpeeds: Requested ireq is above the current limits, setting %f\n",ireq);
+      //        bprintf(warning,"updateMotorSpeeds: Requested ireq is above the current limits, setting %f\n",ireq);
     }
   // Is the pivot going too fast?
   // TODO: It seems that querying the pivot controller only gives the 
@@ -820,8 +820,8 @@ case spin:
 
   if (fabs(pvreq) > MAX_PIVOT_SPEED)
     {
-        bprintf(warning,"updateMotorSpeeds: Requested pivot Speed %f is above the max pivot speed %f.",pvreq,MAX_PIVOT_SPEED);
-        bprintf(warning,"updateMotorSpeeds: setting pivot speed to maximum pivot speed."); 
+      //        bprintf(warning,"updateMotorSpeeds: Requested pivot Speed %f is above the max pivot speed %f.",pvreq,MAX_PIVOT_SPEED);
+      //        bprintf(warning,"updateMotorSpeeds: setting pivot speed to maximum pivot speed."); 
 	if(pvreq > 0)
 	  {
 	    pvreq= MAX_PIVOT_SPEED;
@@ -875,11 +875,10 @@ void slowMotorFields()
   static NiosStruct* scanGainP1Addr = NULL;
   static NiosStruct* scanGainP2Addr = NULL;
   static NiosStruct* scanAzCentreAddr = NULL;
-  static NiosStruct* scanPeriodAddr = NULL;  
+  static NiosStruct* scanAzPeriodAddr = NULL;  
   static NiosStruct* scanAzWidthAddr = NULL; 
   static NiosStruct* scanAzPhiAddr = NULL;
   static NiosStruct* scanAzVt2Addr = NULL;
-  static NiosStruct* scanAzVt1Addr = NULL;
   static NiosStruct* scanAzWindAddr = NULL;
   static NiosStruct* pointAzAddr = NULL;
   static NiosStruct* pointTolAddr = NULL; 
@@ -899,7 +898,7 @@ void slowMotorFields()
     scanGainP1Addr = GetNiosAddr("scan_gain_p1");
     scanGainP2Addr = GetNiosAddr("scan_gain_p2");
     scanAzCentreAddr = GetNiosAddr("scan_az_centre");
-    scanPeriodAddr   = GetNiosAddr("scan_period");
+    scanAzPeriodAddr   = GetNiosAddr("scan_az_period");
     scanAzWidthAddr  = GetNiosAddr("scan_az_width");
     scanAzPhiAddr  = GetNiosAddr("scan_az_phi");
     scanAzVt2Addr  = GetNiosAddr("scan_az_vt2");
@@ -926,7 +925,7 @@ void slowMotorFields()
   WriteData(scanGainP2Addr, ((int)(CommandData.spiderGain.sc_p2/SCP2_LIM*32767.0)), NIOS_QUEUE);
 
   WriteData(scanAzCentreAddr, ((int)(CommandData.spiderScan.C/360.0*65535.0)), NIOS_QUEUE);
-  WriteData(scanPeriodAddr, ((int)(CommandData.spiderScan.P/60.0*65535.0)), NIOS_QUEUE);
+  WriteData(scanAzPeriodAddr, ((int)(CommandData.spiderScan.P/300.0*65535.0)), NIOS_QUEUE);
   WriteData(scanAzWidthAddr, ((int)(CommandData.spiderScan.W/120.0*65535.0)), NIOS_QUEUE);
   WriteData(scanAzPhiAddr, ((int)(CommandData.spiderScan.phi/90.0*65535.0)), NIOS_QUEUE);
   WriteData(scanAzVt2Addr, ((int)(CommandData.spiderScan.vt2/10.0*32767.0)), NIOS_QUEUE);
