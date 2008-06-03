@@ -52,10 +52,9 @@ struct ScanStruct {
   double W; // Scan Width zero to Peak (degrees)
   double phi; // Phase angle defining the width
               // of constant accel mode (degrees) 
-  double vt1; // slow transit speed (when we are 
-              // near scan region) (dps)
-  double vt2;  // fast transit speed (when we are
-               // far from scan region) (dps)
+  double vt2;  // fast transit speed (dps)
+               // vt decreases linearly with distance
+               // until it reaches vt1 at az=x1-wind
   double wind; // azimuth window to use the slow vt1
 };
 

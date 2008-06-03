@@ -1015,8 +1015,7 @@ void InitCommandData()
   CommandData.spiderScan.P=47.0;
   CommandData.spiderScan.W=45.0;
   CommandData.spiderScan.phi=15.0; 
-  CommandData.spiderScan.vt1=0.2; 
-  CommandData.spiderScan.vt2=2.0; 
+  CommandData.spiderScan.vt2=4.0; 
   CommandData.spiderScan.wind=15.0;
 
   CommandData.spiderSpin.dps=0.0;

@@ -509,7 +509,6 @@ if(firsttime==1)    bprintf(info,"Motors: We are scanning.");
     amp=CommandData.spiderScan.W;
     per=CommandData.spiderScan.P;
     xc=CommandData.spiderScan.C;
-    vt1=CommandData.spiderScan.vt1;
     vt2=CommandData.spiderScan.vt2;
     wind=CommandData.spiderScan.wind;
     phi=CommandData.spiderScan.phi; // Phase angle width of the 
@@ -903,7 +902,6 @@ void slowMotorFields()
     scanPeriodAddr   = GetNiosAddr("scan_period");
     scanAzWidthAddr  = GetNiosAddr("scan_az_width");
     scanAzPhiAddr  = GetNiosAddr("scan_az_phi");
-    scanAzVt1Addr  = GetNiosAddr("scan_az_vt1");
     scanAzVt2Addr  = GetNiosAddr("scan_az_vt2");
     scanAzWindAddr  = GetNiosAddr("scan_az_wind");
     pointAzAddr    = GetNiosAddr("point_az");
@@ -931,7 +929,6 @@ void slowMotorFields()
   WriteData(scanPeriodAddr, ((int)(CommandData.spiderScan.P/60.0*65535.0)), NIOS_QUEUE);
   WriteData(scanAzWidthAddr, ((int)(CommandData.spiderScan.W/120.0*65535.0)), NIOS_QUEUE);
   WriteData(scanAzPhiAddr, ((int)(CommandData.spiderScan.phi/90.0*65535.0)), NIOS_QUEUE);
-  WriteData(scanAzVt1Addr, ((int)(CommandData.spiderScan.vt1/10.0*32767.0)), NIOS_QUEUE);
   WriteData(scanAzVt2Addr, ((int)(CommandData.spiderScan.vt2/10.0*32767.0)), NIOS_QUEUE);
   WriteData(scanAzWindAddr, ((int)(CommandData.spiderScan.wind/60.0*65535.0)), NIOS_QUEUE);
   WriteData(pointAzAddr, ((int)(CommandData.spiderPoint.az/360.0*65535.0)), NIOS_QUEUE);
