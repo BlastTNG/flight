@@ -1,0 +1,280 @@
+== BLAST DATABASE ==
+The blast database contains 13 tables.  Almost all tables contain a uid and
+utime fields which contain the user id of the last user to update the entry and
+the time at which the table was updated.
+
+component: information on electronics components
+  label       VARCHAR(8) NOT NULL PRIMARY_KEY
+    Component designation
+
+  name        VARCHAR(65)
+    Component long name
+
+  part_of     VARCHAR(8)
+    Designation of the component which contains this one.
+
+  uid         SMALLINT(6) NOT NULL
+  utime       TIMESTAMP
+
+cable: information on cables
+  number      VARCHAR(8)            NOT NULL PRIMARY KEY
+    cable number
+
+  label       VARCHAR(64)
+    cable name
+
+  p2p         ENUM('N','Y')
+    pin-to-pin flag
+
+  length      MEDIUMINT(8) UNSIGNED
+    length of cable (in millimetres)
+
+  uid         SMALLINT(6)           NOT NULL
+  utime       TIMESTAMP
+
+jack: information on electronics jacks
+  number      SMALLINT(5) UNSIGNED NOT NULL PRIMARY_KEY
+    Jack number
+
+  gender      ENUM('M','F')
+    Gender of the box side of the jack
+
+  location    VARCHAR(8)
+    Location (component or cable) of the box side of the jack
+
+  type        VARCHAR(16)
+    Connector type of the box side of the jack
+
+  connect     VARCHAR(8)
+    Location (component or cable) of the cable side of the jack
+
+  label       VARCHAR(32)
+    Label of the jack
+
+  uid         SMALLINT(6) NOT NULL
+  utime       TIMESTAMP
+
+line: information on electronics lines
+  number      INT(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY
+    line serial number
+
+  signal      VARCHAR(64)
+    signal name
+
+  owner       VARCHAR(8)
+    Location (component or cable) of the line.
+
+  uid         SMALLINT(6) NOT NULL
+  utime       TIMESTAMP
+  
+pin: information on pins in jacks
+  number      CHAR(3) NOT NULL PRIMARY KEY
+    pin number/letter
+
+  jack        SMALLINT(5) UNSINGED NOT NULL PRIMARY KEY
+    jack number
+
+  signal      VARCHAR(31)
+    signal name
+
+  bline       MEDIUMINT(8) UNSIGNED
+    line number for box side of jack
+
+  cline       MEDIUMINT(8) UNSIGNED
+    line number for cable side of jack
+
+  source enum('N','Y')
+  sink enum('N',Y')
+    these two field are unused
+
+  uid         SMALLINT(6) NOT NULL
+  utime       TIMESTAMP
+
+--------------------------------------------------------------------------------
+
+connector: gender independant connector information
+  type        VARCHAR(16) NOT NULL PRIMARY KEY
+    Connector type designation
+
+  description VARCHAR(255)
+    Connector description
+
+  count       TINYINT(3) UNSIGNED
+    Contact count for connector, or 0 for variable.
+      
+  alpha       ENUM('N','Y')
+    Flag: pins are alphabetic
+
+  bcd         ENUM('N','Y')
+    Flag: box-mount and cable-mount connectors are distinct
+
+  mate        VARCHAR(16)
+    Connector type designation of mating connector
+
+  uid         SMALLINT(6) NOT NULL
+  utime       TIMESTAMP
+
+congender: gender specific information on a connector
+  type        VARCHAR(16) NOT NULL PRIMARY KEY
+    Connector type designation
+
+  gender      ENUM('M','F') NOT NULL PRIMARY KEY
+    Connector's gender
+
+  mgender     ENUM('M','F')
+    Connector's mate's gender
+
+  box         MEDIUMINT(8) UNSIGNED
+    Connector's box-mount part number
+
+  contact     MEDIUMINT(8) UNSIGNED
+    Connector's contact part number
+
+  cable       MEDIUMINT(8) UNSIGNED
+    Connector's cable-mount part number
+
+  shell       MEDIUMINT(8) UNSIGNED
+    Connector's shell or strain relief part number
+
+  uid         SMALLINT(6) NOT NULL
+  utime       TIMESTAMP
+
+part: information on parts
+  number      MEDIUMINT(8) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY
+    part number
+
+  description VARCHAR(255)
+    part description
+
+  newark      VARCHAR(10)
+    Newark part number
+
+  digikey     VARCHAR(15)
+    Digikey part number
+
+  mcmaster    VARCHAR(15)
+    McMaster-Carr part number
+
+  uid         SMALLINT(6) NOT NULL
+  utime       TIMESTAMP
+
+manupart: information on manufactuers and manufactuerers part numbers
+  number      SMALLINT(5) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY
+    manufactuerer part number serial number
+
+  manu        VARCHAR(31)
+    manufactuerer name
+  
+  mpart       VARCHAR(15)
+    manufactuerer part number
+
+  bpart       MEDIUMINT(8) UNSIGNED
+    BEDthingy part number
+
+  uid         SMALLINT(6) NOT NULL
+  utime       TIMESTAMP
+
+===================================================================================
+
+channel: information on channels
+  id          SMALLINT(6) NOT NULL AUTO_INCREMENT PRIMARY KEY
+    Channel number
+
+  label       VARCHAR(20)
+    Channel software field name
+
+  name        VARCHAR(64)
+    Channel name
+
+  type        ENUM('UNF','SNF','UNS','SNS','UWF','SWF','UWS','SWS','LC','LT','BT','L2','BW')
+    The channel's type:
+      UNF = unsigned normal (16-bit) fast (100Hz) raw field
+      SNF = signed   normal (16-bit) fast (100Hz) raw field
+      UNS = unsigned normal (16-bit) slow (5Hz)   raw field
+      SNS = signed   normal (16-bit) slow (5Hz)   raw field
+      UWF = unsigned wide (32-bit)   fast (100Hz) raw field
+      SWF = signed   wide (32-bit)   fast (100Hz) raw field
+      UWS = unsigned wide (32-bit)   slow (5Hz)   raw field
+      SWS = signed   wide (32-bit)   slow (5Hz)   raw field
+      LC  = LINCOM type   derived field
+      LT  = LINTERP type   derived field
+      BT  = single BIT     derived field
+      L2  = 2 field LINCOM derived field
+      BW  = multiple BIT   derived field
+
+  src         ENUM('MCP','ACS','DAS','DECOM','DERIVED','COMMAND','DGPS','ISC',
+                   'OSC','SIP','SUNS','BIAS','CRYO','DEFILE')
+    The channel's generator:
+      MCP     = master control program
+      ACS     = attitude control system
+      DAS     = data acquisition system
+      DECOM   = decom LOS telemetry data writer
+      DERIVED = a derived channel
+      COMMAND = command uplink
+      DGPS    = differential GPS
+      ISC     = integrating star camera
+      OSC     = other star camera
+      SIP     = support instrument package
+      SUNS    = sun sensor
+      BIAS    = bias generator
+      CRYO    = cryostat electronics
+      DEFILE  = defile writer
+
+  dead        TINYINT(1)
+    Channel is dead (no longer in telemetry).
+
+  created     DATETIME
+    Time of channel creation
+    
+  removed     DATETIME
+    Time of channel removal
+
+  units       VARCHAR(15)
+    Units of the calibrated channel
+
+  node        SMALLINT(6)
+    ADC card number for the channel
+    
+  adc_chan    SMALLINT(6)sub
+    ADC card channel for the channel
+
+  calib       TINYINT(1)
+  command     TINYINT(1)
+  pipeline    TINYINT(1)
+  jumpers     SMALLINT(6)
+    These four fields are currently unused.
+
+  uid         SMALLINT(6) NOT NULL
+  utime       TIMESTAMP
+
+  description TEXTsub
+    Channel description
+
+chanderived: information on source channels for derived channels
+  derived     SMALLINT(6)
+    The derived channel number
+
+  source      SMALLINT(6)
+    The source channel number
+
+channote: notes on the channels
+  id          SMALLINT(6) NOT NULL AUTO_INCREMENT PRIMARY KEY
+    The note serial number
+
+  channel     SMALLINT(6) NOT NULL
+    The channel number
+
+  ndate       DATETIME
+    The date and time of the note
+
+  uid         SMALLINT(6) NOT NULL
+  utime       TIMESTAMP
+
+parsed_cvs: information on the parsing of CVS for channel synchronisation
+  file        VARCHAR(20) NOT NULL PRIMARY KEY
+    CVS filename
+
+  revision    VARCHAR(10) NOT NULL
+    last parsed CVS revision number
+
+

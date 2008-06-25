@@ -1,0 +1,28 @@
+connectors:
+LABEL -> MATE pins "description" alpha bcd (GEN->MGEN)[,(GEN,MGEN)]
+Need to specify at least one gender mating pair
+when the connector list is done, add the line (17 chars is impossible name):
+*ENDCONNECTORLIST
+
+cmp_name "Description of the Component" [< part_of]
+
+JACK "label" conn_type[/gender] -> dest_part [CABLE "description" [len]] 
+leave cable description blank (ie. " ") to defer naming to other end. First 
+declared takes precedence and if both are blank, a description is generated.
+
+LINE "description" (jack#,pin)[,(jack#,pin), ...]
+jack# is number (starting from 0) of jack in order declared
+to account for hydras (if needed), also need destination jack+pin for each line
+
+on destination part, must define corresponding jacks. If lines aren't redefined
+then their desciption and pinout will be inferred from the source part.
+
+non-p2p cables must be made explicitly. declare them like a component with:
+CABLE key "description" [len]
+here "key" is used by parser to identify the cable, it should be a <=7 digit
+number prefaced with 'C' (and components should not be given such names)
+can add jacks and lines as with a component
+
+for jacks declared as part of a pair without a cable in between (as for explicit
+hydras, or in part-to-part connections), the second one declared will be treated
+like a cable (thus it's probably good to declare cables last)
