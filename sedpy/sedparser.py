@@ -18,11 +18,11 @@ def writeInfiles():
     #print "writing", cont.ref
     for line in cont.lines: line.toInfile()
     for jack in cont.jacks:
-      #print "writing", jack, "with dest", jack.dest
+      #print "writing", jack.ref, "with dest", jack.dest.ref
       if not jack.placeholder:
 	for pin in jack.pins: pin.toInfile()
 	jack.toInfile()
-	if jack.cable:  #cable, line classes avoid writing duplicates
+	if jack.cable and jack.cablemaster:
 	  jack.cable.toInfile()
 	  for cline in jack.cable.lines: cline.toInfile()
     cont.toInfile()
@@ -62,6 +62,7 @@ def mateJack(jack):
 	jack.mate.cable.label == "%s-%s"%(jack.mate.location, jack.location)
       else: jack.mate.cable.label = jack.cable.label
     jack.cable = jack.mate.cable #unify cable references
+    jack.mate.cablemaster = True
   else: jack.placeholder = True  #this jack is redundant
 
   #for pins on mate (from previous lines) add autogen lines, etc. as needed
@@ -72,7 +73,7 @@ def mateJack(jack):
     newline.owner = containers[-1]
     containers[-1].lines.append(newline)
     if jack.placeholder: #no cable is used
-      pin.cline = newline
+      pin.lines['cable'] = newline
     else: #cable
       cableline = Line(line.desc, "")
       cableline.autogen = True
@@ -229,12 +230,21 @@ def sedparser(argv=None):
   print "Info: done parsing, found", len(containers), "components and cables:"
   print "%10s%10s%10s"%("Part", "Jacks", "Lines")
   allMated = True
+  cableCount = 1
   for cont in containers:
     print "%10s%10s%10s"%(cont.ref, len(cont.jacks), len(cont.lines))
+    if hasattr(cont, 'number'): #it's a cable
+      cont.number = cableCount
+      cableCount += 1
     for ijack in cont.jacks:
+      if ijack.conn.count > 0 and len(ijack.pins) > ijack.conn.count:
+	raise Failure("Jack %s jas too many pins"%ijack.ref)
       if ijack.mate is None: 
 	print ("\tJack %s unmated"%ijack.ref)
 	allMated = False
+      if ijack.cable and ijack.cablemaster:
+	ijack.cable.number = cableCount
+	cableCount += 1
   if not allMated: 
     raise Failure("Not all jacks mated, check for indistinguishable mates")
 

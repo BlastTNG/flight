@@ -97,7 +97,6 @@ class Cable:
     self.p2p = 'N'  #is this a sensible default?                         #needed
     self.jacks = []                                                      #needed
     self.lines = []                                                      #needed
-    self.written = False #avoiding multiple infile entries
 
   def __str__(self):
     return str(((self.number,self.ref), self.label, self.length, self.p2p))
@@ -107,12 +106,10 @@ class Cable:
     else: return self.ref == other
 
   def toInfile(self):
-    if self.written: return
     if self.length is None or self.length < 0: lenstr = "\\N"
     else: lenstr = self.length.str()
     self.__class__.cabout.write("%s\t%s\t%s\t%s\t%s\n" % (self.number,\
 	self.label, self.p2p, lenstr, UID_UTIME))
-    self.written = True
 
 class Jack:
   """contains information for jack table"""
@@ -139,6 +136,7 @@ class Jack:
     self.pins = []                                                       #needed
     self.mate = None #object reference                                   #needed
     self.placeholder = False #in direct connection, one of pair is placeholder
+    self.cablemaster = False #in cable pair, cable shared but only 1 is master
     
   def canMate(self, other):
     #check cable use and length
@@ -188,7 +186,6 @@ class Line:
     self.owner = None #object reference                                  #needed
     self.autogen = False #set to true for automatically generated lines  #needed
                          #autogen lines will only connect to a single pin
-    self.written = False
 
   def __str__(self):
     return str((self.number, self.desc, zip(self.jacknums, self.pinnums)))
@@ -202,13 +199,11 @@ class Line:
     return False
 
   def toInfile(self):
-    if self.written: return
     if hasattr(self.owner,'p2p'):  #owner is a cable, so use its number
       owner = self.owner.number
     else: owner = self.owner.ref  #it is a component
     self.__class__.lineout.write("%s\t%s\t%s\t%s\n"%(self.number,\
 	self.desc, owner, UID_UTIME))
-    self.written = True
 
 class Pin:
   """info for the pin table, is inferred from lines and jacks"""
