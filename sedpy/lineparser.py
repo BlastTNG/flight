@@ -16,9 +16,9 @@ jackRE = re.compile(r'JACK\s*([a-z0-9]+)\s+"([^"]{1,32})"\s+'\
     r'([A-Z0-9_]{1,16}/[mMfF])\s+->\s+([A-Z0-9_]{1,8})(?:/([a-z0-9]+))?'\
     r'(?:\s+CABLE\s+"([^"]{0,64})(?:\s+(\d+))?)?')
 
-#LINE "description" (jack#,pin#)[,(jack#,pin#),...]
+#LINE "description" (jack#,pin#[,pin#,...])[,(jack#,pin#s),...]
 lineRE = re.compile(r'LINE\s+"([^"]{1,64})"\s+'\
-    r'((?:\([a-z0-9]+,\s*[A-Z0-9]{1,3}\),?\s*)+)')
+    r'((?:\([a-z0-9]+[;,](?:\s*[A-Z0-9]{1,3},?)*\),?\s*)+)')
 
 #CABLE key "description" [len]
 cableRE = re.compile(r'CABLE\s+(C?[0-9]{1,8})\s+"([^"]{1,64})"(?:\s+([0-9]+))?')
@@ -81,5 +81,7 @@ if __name__ == "__main__":
   print "\nLINE tests"
   line1 = 'LINE "this line has one pin" (0,1)'
   line2 = 'LINE "this one has 4 pins" (0,1),(0,2),(1,A),(1,C)'
+  line3 = 'LINE "shortform for above" (0;1,2),(1;A,C)'
   print repr(line1), '\ngives', parse(Line, line1)
   print repr(line2), '\ngives', parse(Line, line2)
+  print repr(line3), '\ngives', parse(Line, line3)

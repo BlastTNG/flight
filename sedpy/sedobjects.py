@@ -169,7 +169,7 @@ class Jack:
 import re
 class Line:
   """contains information on the line table"""
-  pinRE = re.compile(r'\(([a-z0-9]+),\s*([A-Z0-9]{1,3})\)')
+  pinRE = re.compile(r'\(([a-z0-9]+)[;,]((?:\s*[A-Z0-9]{1,3},?)*)\)')
   count = 1
   lineout = open('out/line', 'w')
 
@@ -181,8 +181,9 @@ class Line:
     self.pinnums = [];  #internal reference
     self.jacknums = []; #internal reference, may want to add to JACK lines
     for match in self.__class__.pinRE.finditer(pin_str):
-      self.jacknums.append(match.group(1))
-      self.pinnums.append(match.group(2))
+      for pin in match.group(2).replace(',',' ').split():
+	self.jacknums.append(match.group(1))
+	self.pinnums.append(pin)
     self.owner = None #object reference                                  #needed
     self.autogen = False #set to true for automatically generated lines  #needed
                          #autogen lines will only connect to a single pin
