@@ -218,6 +218,7 @@ class Pin:
     self.lines = {'box': bline, 'cable': cline}
 
   def __eq__(self, other):
+    #should only be used from within a given jack
     if hasattr(other, 'number'): return self.number == other.number
     else: return self.number == other
 

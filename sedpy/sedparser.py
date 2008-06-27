@@ -102,19 +102,23 @@ def addPins(line):
       raise Failure("unexpected non-numeric pin: %s"%pinnum)
 
     if jack.mate is None: #unmated, add a dangling pin (no cline yet)
-      jack.pins.append(Pin(pinnum, line.desc, jack, line, None))
+      newpin = Pin(pinnum, line.desc, jack, line, None)
+      if newpin not in jack.pins: jack.pins.append(newpin)
     else: #already mated, need to add extra stuff
       try:  #see if pin has already been generated
 	pin = jack.pins[jack.pins.index(pinnum)]
       except ValueError:  #pin not yet generated
 	newline = Line(line.desc, "(%s,%s)"%(jack.mate.ref,pinnum))
 	newline.autogen = True
-	newline.owner = jack.mate.location
-	jack.mate.location.lines.append(newline)
 	if jack.cable is None: #no cable
 	  if lineend == 'box': 
 	    newpin = Pin(pinnum, line.desc, jack, line, newline)
-	  else: newpin = Pin(pinnum, line.desc, jack, newline, line) 
+	    newline.owner = jack.mate.location
+	    jack.mate.location.lines.append(newline)
+	  else: 
+	    newpin = Pin(pinnum, line.desc, jack, newline, line) 
+	    newline.owner = jack.location
+	    jack.location.lines.append(newline)
 	else:  #using a cable, make another new line and pin
 	  if lineend == 'cable': raise Failure('inconsistent state')
 	  cableline = Line(line.desc, "")
@@ -123,7 +127,7 @@ def addPins(line):
 	  newpin = Pin(pinnum, line.desc, jack, line, cableline)
 	  newerpin = Pin(pinnum, line.desc, jack.mate, newline, cableline)
 	  jack.cable.lines.append(cableline)
-	  jack.mate.pins.append(newerpin)
+	  if newerpin not in jack.mate.pins: jack.mate.pins.append(newerpin)
 	jack.pins.append(newpin)
 
       else:  #pin exists
