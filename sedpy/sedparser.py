@@ -91,8 +91,9 @@ def addPins(line):
     except ValueError: 
       raise Failure("unrecognized jack: %s"%jacknum)
     lineend = 'box'
+    realjack = jack
     if jack.placeholder: #jack is placeholder in direct-connected pair
-      jack = jack.mate  #use the real jack...its mate
+      realjack = jack.mate  #use the real jack...its mate
       lineend = 'cable'
     try:  #test pin number
       if jack.conn.flags['alpha'] == 'N' and ((int(pinnum) > jack.conn.count \
@@ -103,22 +104,19 @@ def addPins(line):
 
     if jack.mate is None: #unmated, add a dangling pin (no cline yet)
       newpin = Pin(pinnum, line.desc, jack, line, None)
-      if newpin not in jack.pins: jack.pins.append(newpin)
+      if newpin not in realjack.pins: realjack.pins.append(newpin)
     else: #already mated, need to add extra stuff
       try:  #see if pin has already been generated
-	pin = jack.pins[jack.pins.index(pinnum)]
+	pin = realjack.pins[realjack.pins.index(pinnum)]
       except ValueError:  #pin not yet generated
 	newline = Line(line.desc, "(%s,%s)"%(jack.mate.ref,pinnum))
 	newline.autogen = True
+	newline.owner = jack.mate.location
+	jack.mate.location.lines.append(newline)
 	if jack.cable is None: #no cable
 	  if lineend == 'box': 
 	    newpin = Pin(pinnum, line.desc, jack, line, newline)
-	    newline.owner = jack.mate.location
-	    jack.mate.location.lines.append(newline)
-	  else: 
-	    newpin = Pin(pinnum, line.desc, jack, newline, line) 
-	    newline.owner = jack.location
-	    jack.location.lines.append(newline)
+	  else: newpin = Pin(pinnum, line.desc, jack, newline, line) 
 	else:  #using a cable, make another new line and pin
 	  if lineend == 'cable': raise Failure('inconsistent state')
 	  cableline = Line(line.desc, "")
@@ -128,12 +126,12 @@ def addPins(line):
 	  newerpin = Pin(pinnum, line.desc, jack.mate, newline, cableline)
 	  jack.cable.lines.append(cableline)
 	  if newerpin not in jack.mate.pins: jack.mate.pins.append(newerpin)
-	jack.pins.append(newpin)
+	realjack.pins.append(newpin)
 
       else:  #pin exists
 	if not pin.lines[lineend].autogen:
 	  raise Failure("line conflicts for pin (%s,%s)"%(jacknum,pinnum))
-	jack.parent.lines.remove(pin.lines[lineend])
+	jack.location.lines.remove(pin.lines[lineend])
 	pin.desc = line.desc
 	pin.lines[lineend] = line
 	#other lines exist already (?), so this case is done
@@ -156,6 +154,7 @@ def sedparser(argv=None):
   linecount = 0
   for str in f:
     linecount += 1
+    #print "On line", linecount
     str = str.strip()
 
     #CONNECTORS

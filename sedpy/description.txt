@@ -80,7 +80,7 @@ CABLE C7 "Itsy Power"
     JACK 1 "Source" 7W2D/M -> POWBOB
 
 CABLE C8 "Ethernet Hub Power"
-    JACK 0 "Hub" MYSTERY/F -> ETHHUB
+    JACK 0 "Hub" MYSTERY/F -> WSHUB
     JACK 1 "Source" 7W2D/M -> POWBOB
 
 CABLE C9 "RS232 Hub Power"
@@ -90,15 +90,19 @@ CABLE C9 "RS232 Hub Power"
 ACS "Attitude Control System Electronics and Break-out Box" < OF
     JACK 0 "Power" MS_CIRC6/M -> POWBOB CABLE "BLASTbus ADC Rack power"
     JACK 0b "Internal power" MYSTERY/F -> ACSPM
-    JACK 1 "BLASTbus" 15D/F -> C10
+    JACK 1 "BLASTbus" 15D/F -> WSPOUT CABLE "BLASTbus"
     JACK 1b "BLASTbus" 15D/M -> ACSBP
-    LINE "Battery +" (0,A),(0,B),(0b,1)
-    LINE "Battery Ground" (0,D),(0,E),(0b,2)
-
-CABLE C10 "BLASTbus/Snyc PCI hydra"
-    JACK 0 "PCI" 37D/M -> ITSY
-    JACK 1 "BLASTbus" 15D/M -> ACS
-    JACK 2 "Snyc" MYSTERY/F -> MCE
+    LINE "Battery +" (0;A,B),(0b,1)
+    LINE "Battery Ground" (0;D,E),(0b,2)
+    #BLASTbus power comes from the watchdog
+    LINE "BLASTbus +5V" (1;6,13,14),(1b;6,13,14)
+    LINE "BLASTbus Ground" (1;7,8,15),(1b;7,8,15)
+    LINE "BLASTbus Clock+" (1,2),(1b,2)
+    LINE "BLASTbus Clock-" (1,5),(1b,5)
+    LINE "BLASTbus Data+" (1,3),(1b,3)
+    LINE "BLASTbus Data-" (1,4),(1b,4)
+    LINE "BLASTbus Strobe+" (1,9),(1b,9)
+    LINE "BLASTbus Strobe-" (1,1),(1b,1)
 
 ACSPM "ACS Power Module" < ACS
     JACK 0 "Battery In" MYSTERY/F -> ACS
@@ -191,23 +195,39 @@ CRYOBOB "Cryostat Housekeeping Break-out Box" < IF
     JACK 5 "CRYO2 Analog" 50D/F -> CRYO2 CABLE ""
     JACK 6 "CRYO2 Extra" 9D/F -> CRYO2 CABLE ""
 
-ITSY "'Itsy' housekeeping/pointing computer" < OF
+WSPOUT "The Waterspout (Flight Computer Box)" < OF
+    JACK 0 "BLASTbus" 15D/M -> ACS CABLE ""
+    JACK 1 "Snyc" MYSTERY/F -> MCE
+
+ITSY "Master Control Computer: 'Itsy'" < WSPOUT
     JACK 0 "Power" ATX/F -> C7
-    JACK 1 "BBC PCI" 37D/F -> C10
-    JACK 2 "Ethernet" ETH/F -> ETHHUB CABLE "Itsy Ethernet"
+    #some itsy/bitsy things disconnected until proper design complete
+    #JACK 1 "BBC PCI" 37D/F -> C10
+    JACK 2 "Ethernet" ETH/F -> WSHUB CABLE "Itsy Ethernet"
     JACK 3 "GPS1" USB/F -> GPS1 CABLE ""
     JACK 4 "GPS2" USB/F -> GPS2 CABLE ""
 
-ETHHUB "Ethernet Hub/Switch" < OF
+BITSY "Master Control Computer: 'Bitsy'" < WSPOUT
+    #need proper design before connecting these jacks
+    #JACK 0 "Power" ATX/F -> C7
+    #JACK 1 "BBC PCI" 37D/F -> C10
+    JACK 2 "Ethernet" ETH/F -> WSHUB CABLE "Bitsy Ethernet"
+    #JACK 3 "GPS1" USB/F -> GPS1 CABLE ""
+    #JACK 4 "GPS2" USB/F -> GPS2 CABLE ""
+
+WSHUB "Waterspout Ethernet Hub/Switch" < WSPOUT
     JACK 0 "Power" MYSTERY/F -> C8
     JACK 1 "Starcam" ETH/F -> STARCAM CABLE ""
     JACK 2 "Itsy" ETH/F -> ITSY CABLE ""
+    JACK 2b "Bitsy" ETH/F -> BITSY CABLE ""
     JACK 3 "RS232 Hub" ETH/F -> HUB232 CABLE ""
     JACK 4 "MCE" ETH/F -> MCE CABLE ""
 
+WDOG "Watchdog" < WSPOUT
+
 HUB232 "RS232 Serial Hub" < OF
     JACK 0 "Power" MYSTERY/F -> C9
-    JACK 1 "Ethernet" ETH/F -> ETHHUB CABLE "Serial Hub Ethernet"
+    JACK 1 "Ethernet" ETH/F -> WSHUB CABLE "Serial Hub Ethernet"
     JACK 2 "Starcam Table" RS232/M -> SCTAB_C CABLE ""
     JACK 3 "Reaction Wheel" RS232/M -> REAC_C CABLE ""
     JACK 4 "Pivot" RS232/M -> PIVCOMM
@@ -236,7 +256,7 @@ MAG "Analog Magnetometer" < IF
 
 STARCAM "Star Camera" < OF
     JACK 0 "Power" 7W2D/M -> POWBOB CABLE "Starcam Power"
-    JACK 1 "Ethernet" ETH/F -> ETHHUB CABLE "Starcam Ethernet"
+    JACK 1 "Ethernet" ETH/F -> WSHUB CABLE "Starcam Ethernet"
     JACK 2 "Misc" 9D/F -> ACSBOB CABLE "Starcam Misc Signals"
 
 SCTABLE "Star Camera Rotary Table" < STARCAM
@@ -321,8 +341,8 @@ SIP "Support Instrumentation Package" < OF
     #JACK 4 "Check Genders" MYSTERY/F
 
 MCE "Multi-Channel Electornics (Detector Readout)" < IF
-    JACK 0 "Ethernet" ETH/F -> ETHHUB CABLE "MCE Ethernet"
-    JACK 1 "BBC Snyc" MYSTERY/F -> C10
+    JACK 0 "Ethernet" ETH/F -> WSHUB CABLE "MCE Ethernet"
+    JACK 1 "BBC Snyc" MYSTERY/F -> WSPOUT
     JACK 2 "Power" 7W2D/M -> POWBOB CABLE "MCE Power"
 
 SOLAR "Solar Cells" < OF
