@@ -116,8 +116,8 @@ def addPins(line):
 	jack.mate.location.lines.append(newline)
 	if jack.cable is None: #no cable
 	  if lineend == 'box': 
-	    newpin = Pin(pinnum, line.desc, jack, line, newline)
-	  else: newpin = Pin(pinnum, line.desc, jack, newline, line) 
+	    newpin = Pin(pinnum, line.desc, realjack, line, newline)
+	  else: newpin = Pin(pinnum, line.desc, realjack, newline, line) 
 	else:  #using a cable, make another new line and pin
 	  if lineend == 'cable': raise Failure('inconsistent state')
 	  cableline = Line(line.desc, "")

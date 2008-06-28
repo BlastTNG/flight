@@ -45,7 +45,7 @@ POWBOB "Power Break-out Box" < OF
     JACK 10 "MCE" 7W2D/F -> MCE CABLE ""
     JACK 11 "Windows" 7W2D/F -> C5 CABLE ""
     JACK 12 "Waveplates" 7W2D/F -> C6 CABLE ""
-    JACK 13 "Itsy" 7W2D/F -> C7
+    JACK 13 "Computers" 7W2D/F -> WSPOUT CABLE ""
     JACK 14 "Ethernet Hub" 7W2D/F -> C8
     JACK 15 "RS232 Hub" 7W2D/F -> C9
     JACK 16 "Power In" 8W8D/M -> BATT CABLE ""
@@ -74,10 +74,6 @@ CABLE C5 "Deployable Windows Power"
 CABLE C6 "Waveplate Motors Power"
     JACK 0 "Waveplates" BARE/M -> WPCOMM
     JACK 1 "Source" 7W2D/M -> POWBOB CABLE "Waveplate Motors Power Main"
-
-CABLE C7 "Itsy Power"
-    JACK 0 "Itsy" ATX/M -> ITSY
-    JACK 1 "Source" 7W2D/M -> POWBOB
 
 CABLE C8 "Ethernet Hub Power"
     JACK 0 "Hub" MYSTERY/F -> WSHUB
@@ -198,9 +194,12 @@ CRYOBOB "Cryostat Housekeeping Break-out Box" < IF
 WSPOUT "The Waterspout (Flight Computer Box)" < OF
     JACK 0 "BLASTbus" 15D/M -> ACS CABLE ""
     JACK 1 "Snyc" MYSTERY/F -> MCE
+    JACK 2 "Power" 7W2D/M -> POWBOB CABLE "Waterspout Power"
+    JACK 3 "Itsy Power" ATX/M -> ITSY
+    JACK 3b "Bitsy Power" ATX/M -> BITSY
 
 ITSY "Master Control Computer: 'Itsy'" < WSPOUT
-    JACK 0 "Power" ATX/F -> C7
+    JACK 0 "Power" ATX/F -> WSPOUT
     #some itsy/bitsy things disconnected until proper design complete
     #JACK 1 "BBC PCI" 37D/F -> C10
     JACK 2 "Ethernet" ETH/F -> WSHUB CABLE "Itsy Ethernet"
@@ -208,8 +207,8 @@ ITSY "Master Control Computer: 'Itsy'" < WSPOUT
     JACK 4 "GPS2" USB/F -> GPS2 CABLE ""
 
 BITSY "Master Control Computer: 'Bitsy'" < WSPOUT
-    #need proper design before connecting these jacks
-    #JACK 0 "Power" ATX/F -> C7
+    #need proper design before connecting some of these jacks
+    JACK 0 "Power" ATX/F -> WSPOUT
     #JACK 1 "BBC PCI" 37D/F -> C10
     JACK 2 "Ethernet" ETH/F -> WSHUB CABLE "Bitsy Ethernet"
     #JACK 3 "GPS1" USB/F -> GPS1 CABLE ""
