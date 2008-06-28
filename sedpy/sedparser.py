@@ -60,6 +60,7 @@ def mateJack(jack):
       if jack.cable.label == "" or jack.cable.label is None:
 	#make up a name since none is given
 	jack.mate.cable.label == "%s-%s"%(jack.mate.location, jack.location)
+	print "Warning invented cable name: %s"% jack.mate.cable.label
       else: jack.mate.cable.label = jack.cable.label
     jack.cable = jack.mate.cable #unify cable references
     jack.mate.cablemaster = True
