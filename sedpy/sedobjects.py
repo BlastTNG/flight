@@ -145,9 +145,13 @@ class Jack:
 	  self.cable.length != other.cable.length): return False
     elif self.cable is not None or other.cable is not None: return False
     #check that connectors match properly
-    if self.conn.mate == other.conn and other.conn.mate == self.conn and \
-	self.conn.gendersMatch(other.conn): return True
-    else: return False
+    if self.cable is not None: #for cables, ends must be same type or mates
+      if (self.conn.mate == other.conn and other.conn.mate == self.conn) or \
+	  self.conn == other.conn: return True
+    else: #no cable means must be mates, and must have genders match
+      if self.conn.mate == other.conn and other.conn.mate == self.conn and \
+	  self.conn.gendersMatch(other.conn): return True
+    return False
 
   def __str__(self):
     return str(((self.number,self.ref), self.label, self.conn_str, \
