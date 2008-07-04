@@ -400,7 +400,7 @@ LABUSE "Non-part representing connection to computers in lab" < WSPOUT
 
 WSPOUT "The Waterspout (Flight Computer Box)" < OF
     JACK 0 "BLASTbus" 15D/M -> ACS CABLE ""
-    JACK 1 "Snyc" MYSTERY/F -> MCE
+    JACK 1 "Snyc" MYSTERY/F -> MCE CABLE ""
     JACK 2 "Power" 7W2D/M -> POWBOB CABLE "Waterspout Power"
     JACK 3 "Itsy Power" ATX/M -> ITSY
     JACK 3b "Bitsy Power" ATX/M -> BITSY
@@ -408,7 +408,7 @@ WSPOUT "The Waterspout (Flight Computer Box)" < OF
     JACK 4 "Hub Power" MYSTERY/F -> WSHUB
     JACK 5 "Serial1" 9D/M -> WDOG
     JACK 5b "Serial2" 9D/M -> WDOG
-    JACK 6 "IF Ethernet" ETH/F -> IFHUB -> CABLE ""
+    JACK 6 "IF Ethernet" ETH/F -> IFHUB CABLE ""
     JACK 6b "Serial Hub Ethernet" ETH/F -> HUB232 CABLE ""
     JACK 6c "External Ethernet" ETH/F -> LABUSE
     JACK 7a "Internal IF eth" ETH/M -> WSHUB/4
@@ -484,7 +484,7 @@ MAG "Analog Magnetometer" < IF
 
 STARCAM "Star Camera" < OF
     JACK 0 "Power" 7W2D/M -> POWBOB CABLE "Starcam Power"
-    JACK 1 "Ethernet" ETH/F -> WSPOUT CABLE "Starcam Ethernet"
+    JACK 1 "Ethernet" ETH/F -> IFHUB CABLE "Starcam Ethernet"
     JACK 2 "Misc" 9D/F -> ACSBOB CABLE "Starcam Misc Signals"
 
 SCTABLE "Star Camera Rotary Table" < STARCAM
@@ -569,8 +569,8 @@ SIP "Support Instrumentation Package" < OF
     #JACK 4 "Check Genders" MYSTERY/F
 
 MCE "Multi-Channel Electornics (Detector Readout)" < IF
-    JACK 0 "Ethernet" ETH/F -> WSPOUT CABLE "MCE Ethernet"
-    JACK 1 "BBC Snyc" MYSTERY/F -> WSPOUT
+    JACK 0 "Ethernet" ETH/F -> IFHUB CABLE "MCE Ethernet"
+    JACK 1 "BBC Snyc" MYSTERY/F -> WSPOUT CABLE "Snyc"
     JACK 2 "Power" MYSTERY/F -> POWBOB CABLE "MCE Power"
 
 SOLAR "Solar Cells" < OF
