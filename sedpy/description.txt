@@ -7,21 +7,31 @@
 9W4D -> 9W4D 9 "D-Subminiature Combo" Y N M-F F-M
 8W8D -> 8W8D 8 "D-Subminiature Combo" Y N M-F F-M
 17W2D -> 17W2D 17 "D-Subminiature Combo" Y N M-F F-M
+9DR -> 9D 9 "Rear of D-Subminiature" N N M-F F-M
+15DR -> 15D 15 "Rear of D-Subminiature" N N M-F F-M
+25DR -> 25D 25 "Rear of D-Subminiature" N N M-F F-M
+37DR -> 37D 37 "Rear of D-Subminiature" N N M-F F-M
+50DR -> 50D 50 "Rear of D-Subminiature" N N M-F F-M
+7W2DR -> 7W2D 7 "Rear of D-Subminiature Combo" Y N M-F F-M
+9W4DR -> 9W4D 9 "Rear of D-Subminiature Combo" Y N M-F F-M
+8W8DR -> 8W8D 8 "Rear of D-Subminiature Combo" Y N M-F F-M
+17W2DR -> 17W2D 17 "Rear of D-Subminiature Combo" Y N M-F F-M
 15UD -> 15UD 15 "D-Subminiature Micro" N N M-F F-M
 26UD -> 26UD 26 "D-Subminiature Micro" N N M-F F-M
 NX15 -> NX15 15 "Nanonics Dualobe" N N M-F F-M
 MS_CIRC6 -> MS_CIRC6 6 "MS/Standard Series Cylindrical" Y Y M-F F-M
 DIN41612 -> DIN41612 64 "DIN41612 cardmount" N N M-F F-M
+BNC -> BNC 2 "BNC, probably 50ohm" Y N M-F F-M
 HEADER -> HEADER 0 "Cable Header" N N M-F F-M
 ETH -> ETH 0 "Standard RJ45 Ethernet" N Y M-F F-M
 RS232 -> RS232 1 "Standard D9 RS232 serial" N N M-F F-M
 USB -> USB 1 "Flat USB" N N M-F F-M
 ATX -> ATX 1 "Motherboard ATX Power" N N M-F F-M
-SCREW -> LUG 0 "Terminal Screw" N N M-F F-X
-LUG -> SCREW 0 "Terminal Lug" N N M-X F-M
-TERM -> BARE 0 "Screw-down Terminal Block" N N M-X F-M
-BARE -> TERM 0 "Bare wire ends for terminal" N N M-F F-X
-WIRE -> WIRE 0 "Simple wires" N N M-M F-X
+SCREW -> LUG 0 "Terminal Screw" Y N M-F F-X
+LUG -> SCREW 0 "Terminal Lug" Y N M-X F-M
+TERM -> BARE 0 "Screw-down Terminal Block" Y N M-X F-M
+BARE -> TERM 0 "Bare wire ends for terminal" Y N M-F F-X
+WIRE -> WIRE 0 "Simple wires" Y N M-M F-X
 MYSTERY -> MYSTERY 0 "Mystery connector (change sometime)" N N M-X F-F
 *ENDCONNECTORLIST
 
@@ -92,11 +102,14 @@ ACS "Attitude Control System (and Housekeeping) Electronics" < OF
 #Done-ish (eventually want to replace mystery connectors)
 ACSPM "ACS Power Module" < ACS
     JACK 0 "Battery In" MYSTERY/F -> ACS
-    JACK 1 "ADC Out" MYSTERY/F -> ACSBP
-    JACK 2 "DAC Out" MYSTERY/F -> C8
+    JACK 1 "ADC Power" MYSTERY/F -> ACSBP
+    JACK 2 "DAC Power" MYSTERY/F -> C8
+    JACK 3 "Mag Power" MYSTERY/F -> ACSBOB/14i
     #show connections between DAC and ADC power
-    LINE "Ground (appears A, D same)" (1;7,8),(2,1)
+    LINE "Ground (appears A, D same)" (1;7,8),(2,1),(3,1)
     LINE "+5V" (1,4),(2,2)
+    LINE "+10V" (1,1),(3,2)
+    LINE "-10V" (1,6),(3,3)
 
 #Done
 ACSBP "ACS Backplane" < ACS
@@ -129,6 +142,7 @@ ACS1 "Attitude Control System Card #1" < ACS
     JACK 1 "Digital" 37D/F -> ACSBOB CABLE "ACS1 Digital"
     JACK 2 "Analog" 50D/M -> ACSBOB CABLE "ACS1 Analog"
     JACK 3 "Extra" 9D/M -> ACSBOB CABLE "ACS1 Extra"
+    #connect digital ground and gyro/encoder ground (to show they're connected)
 
 CRYO1 "Cryostat Housekeeping Card #1" < ACS
     JACK 0 "Backplane" DIN41612/M -> ACSBP
@@ -164,8 +178,47 @@ ACSBOB "Attitude Control & Housekeeping Break-out Box" < ACS
     JACK 11 "Box Thermometry" 25D/F -> POWBOB CABLE "Thermometry via POWBOB"
     JACK 12 "Power Switching" 37D/F -> POWBOB CABLE "Power Switching"
     JACK 13 "Inclinometer" 7W2D/F -> CLINIF CABLE ""
-    JACK 14 "Magnetometer" 7W2D/F -> MAG CABLE ""
+    JACK 14 "Magnetometer" 9W4D/F -> MAGBOX CABLE ""
+    JACK 14i "Magnetometer Power" MYSTERY/F -> ACSPM
     JACK 15 "Charge Controllers" 50D/F -> CHARGE_C CABLE ""
+    LINE "Gyro1 CLK" (0,12),(8,1)
+    LINE "Gyro1 DAT" (0,11),(8,14)
+    LINE "Gyro1 STR" (0,10),(8,2)
+    LINE "Gyro2 CLK" (0,31),(8,15)
+    LINE "Gyro2 DAT" (0,30),(8,3)
+    LINE "Gyro2 STR" (0,29),(8,16)
+    LINE "Gyro3 CLK" (0,15),(8,4)
+    LINE "Gyro3 DAT" (0,33),(8,17)
+    LINE "Gyro3 STR" (0,9),(8,5)
+    LINE "Gyro4 CLK" (0,36),(8,18)
+    LINE "Gyro4 DAT" (0,35),(8,6)
+    LINE "Gyro4 STR" (0,34),(8,19)
+    LINE "Gyro5 CLK" (0,18),(8,7)
+    LINE "Gyro5 DAT" (0,17),(8,20)
+    LINE "Gyro5 STR" (0,16),(8,8)
+    LINE "Gyro6 CLK" (0,7),(8,21)
+    LINE "Gyro6 DAT" (0,6),(8,9)
+    LINE "Gyro6 STR" (0,5),(8,22)
+    LINE "Gyro Ground (DGND)" (0;37,13),(8;10,23)
+    LINE "Table A/COS" (0,24),(7,1)
+    LINE "Table B/SIN" (0,26),(7,6)
+    LINE "Table Z" (0,25),(7,2)
+    LINE "Table Zbar" (0,28),(7,7)
+    LINE "Table Ground" (0,27),(7,3)
+    LINE "SC1 Trig" (0,23)
+    LINE "SC1 Trig Gnd (DGND)" (0,22)
+    LINE "SC2 Trig" (0,4)
+    LINE "SC2 Trig Gnd (DGND)" (0,3)
+    LINE "RW Phase+" (1,6)
+    LINE "RW Phase-" (1,22)
+    LINE "RW Current+" (1,7)
+    LINE "RW Current-" (1,23)
+    LINE "Mag +10V" (14i,2),(14,A1)
+    LINE "Mag Ground" (14i,1),(14,A2),(1;46,48,50)
+    LINE "Mag -10V" (14i,3),(14,A3)
+    LINE "Mag X" (14,1),(1,45)
+    LINE "Mag Y" (14,2),(1,47)
+    LINE "Mag Z" (14,3),(1,49)
 
 DACTRANS "Transmitter for SPI DAC Bus" < ACSBOB
     JACK 0 "Output" 25D/F -> CRYOBOB CABLE "RS485 DAC Signals"
@@ -415,15 +468,15 @@ WSPOUT "The Waterspout (Flight Computer Box)" < OF
     JACK 7b "Internal 232 eth" ETH/M -> WSHUB/3
     JACK 7c "Internal Ext eth" ETH/M -> WSHUB/5
     JACK 8 "WD Control"	9D/F -> LABUSE
-    JACK 9 "Serial1 (GPS)" 9D/F -> DGPS CABLE ""
-    JACK 9b "Serial2 (GPS)" 9D/F -> DGPS CABLE ""
+    JACK 9 "Serial1 (GPS)" RS232/M -> DGPS CABLE ""
+    JACK 9b "Serial2 (GPS)" RS232/M -> DGPS CABLE ""
     LINE "BATT: Ground" (0;2,15,10);
     LINE "BATT: 28V" (0;1,9),(5;2),(6;2)
 
 CABLE C16 "Large fictitious cable inside the Waterspout"
     JACK 0 "Power" 15D/F -> WDOG
-    JACK 1 "Serial1" 9D/F -> WSPOUT/5
-    JACK 1b "Serial2" 9D/F -> WSPOUT/5b
+    JACK 1 "Serial1" 9D/F -> WSPOUT
+    JACK 1b "Serial2" 9D/F -> WSPOUT
     JACK 2 "Itsy" 25D/F -> WDOG
     JACK 3 "Bitsy" 25D/F -> WDOG
     JACK 4 "Signals" 37D/F -> WDOG
@@ -469,10 +522,10 @@ WSHUB "Waterspout Ethernet Switch" < WSPOUT
     JACK 5 "External" ETH/F -> WSPOUT/7c
 
 WDOG "Watchdog" < WSPOUT
-    JACK 0 "Signals" 37D/M -> C16/4
-    JACK 1 "Itsy" 25D/M -> C16/2
-    JACK 2 "Bitsy" 25D/M -> C16/3
-    JACK 3 "Power" 15D/M -> C16/0
+    JACK 0 "Signals" 37D/M -> C16
+    JACK 1 "Itsy" 25D/M -> C16
+    JACK 2 "Bitsy" 25D/M -> C16
+    JACK 3 "Power" 15D/M -> C16
 
 HUB232 "RS232 Serial Hub" < OF
     JACK 0 "Power" MYSTERY/F -> POWBOB CABLE "Serial Hub Power"
@@ -496,11 +549,21 @@ GYROS "Gyroscope Box" < IF
     JACK 0 "Signals" 25D/F -> ACSBOB CABLE "Gyro Signals"
     JACK 1 "Power" 17W2D/M -> POWBOB CABLE "Gyroscope Power"
 
-GPS1 "GPS receiver #1" < OF
-    JACK 0 "Comm" USB/F -> ITSY CABLE "GPS1 USB"
+DGPS "Differential GPS unit"
+    JACK 0 "GPS 1" BNC/M -> GPS1 CABLE ""
+    JACK 1 "GPS 2" BNC/M -> GPS2 CABLE ""
+    JACK 2 "GPS 3" BNC/M -> GPS3 CABLE ""
+    JACK 3 "GPS Time" RS232/M -> WSPOUT/9 CABLE "GPS Time Data"
+    JACK 4 "GPS Attitude" RS232/M -> WSPOUT/9b CABLE "GPS Time Attitude"
 
-GPS2 "GPS receiver #2" < OF
-    JACK 0 "Comm" USB/F -> ITSY CABLE "GPS2 USB"
+GPS1 "GPS Receiver #1" < DGPS
+    JACK 0 "Data" BNC/M -> DGPS CABLE "GPS1 Data"
+
+GPS2 "GPS Receiver #2" < DGPS
+    JACK 0 "Data" BNC/M -> DGPS CABLE "GPS2 Data"
+
+GPS3 "GPS Receiver #3" < DGPS
+    JACK 0 "Data" BNC/M -> DGPS CABLE "GPS3 Data"
 
 
 CLINIF "Inner Frame Inclinometer" < IF
@@ -508,7 +571,17 @@ CLINIF "Inner Frame Inclinometer" < IF
     #JACK 1 "Want CLINOF too?" MYSTERY/F
 
 MAG "Analog Magnetometer" < IF
-    JACK 0 "Power, Signal" 7W2D/M -> ACSBOB CABLE "Magnetometer Signal, Power"
+    JACK 0 "Magnetometer" WIRE/M -> MAGBOX
+
+MAGBOX "Connector Plate for Magnetometer" < MAG
+    JACK 0 "Power, Signal" 9W4D/M -> ACSBOB CABLE "Magnetometer Signal, Power"
+    JACK 1 "Internal" WIRE/M -> MAG
+    LINE "+10V" (0,A1),(1,RED)
+    LINE "Ground" (0,A2),(1,BLK)
+    LINE "-10V" (0,A3),(1,BLU)
+    LINE "Mag X" (0,1),(1,ORG)
+    LINE "Mag Y" (0,2),(1,YEL)
+    LINE "Mag Z" (0,3),(1,GRN)
 
 STARCAM "Star Camera" < OF
     JACK 0 "Power" 7W2D/M -> POWBOB CABLE "Starcam Power"
@@ -612,6 +685,4 @@ CHARGE_C "Charge Controllers" < OF
 BATT "Batteries" < OF
     JACK 0 "Charge In" 8W8D/M -> CHARGE_C CABLE ""
     JACK 1 "Power Out" 8W8D/F -> POWBOB CABLE "POWBOB Power In"
-    LINE "BATT: Ground" (0;2,15,10);
-    LINE "BATT: 28V" (0;1,9),(5;2),(6;2)
 
