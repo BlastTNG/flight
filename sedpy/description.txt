@@ -406,8 +406,8 @@ WSPOUT "The Waterspout (Flight Computer Box)" < OF
     JACK 3b "Bitsy Power" ATX/M -> BITSY
     #can probably use watchdog power here
     JACK 4 "Hub Power" MYSTERY/F -> WSHUB
-    JACK 5 "Serial1" 9D/M -> C16/1
-    JACK 5b "Serial2" 9D/M -> C16/1b
+    JACK 5 "Serial1 Internal (GPS)" 9D/M -> C16/1
+    JACK 5b "Serial2 Internal (GPS)" 9D/M -> C16/1b
     JACK 6 "IF Ethernet" ETH/F -> IFHUB CABLE ""
     JACK 6b "Serial Hub Ethernet" ETH/F -> HUB232 CABLE ""
     JACK 6c "External Ethernet" ETH/F -> LABUSE
@@ -415,50 +415,50 @@ WSPOUT "The Waterspout (Flight Computer Box)" < OF
     JACK 7b "Internal 232 eth" ETH/M -> WSHUB/3
     JACK 7c "Internal Ext eth" ETH/M -> WSHUB/5
     JACK 8 "WD Control"	9D/F -> LABUSE
+    JACK 9 "Serial1 (GPS)" 9D/F -> DGPS CABLE ""
+    JACK 9b "Serial2 (GPS)" 9D/F -> DGPS CABLE ""
+    LINE "BATT: Ground" (0;2,15,10);
+    LINE "BATT: 28V" (0;1,9),(5;2),(6;2)
 
-CABLE C16 "The large fictitious wire inside the Waterspout"
+CABLE C16 "Large fictitious cable inside the Waterspout"
     JACK 0 "Power" 15D/F -> WDOG
     JACK 1 "Serial1" 9D/F -> WSPOUT/5
     JACK 1b "Serial2" 9D/F -> WSPOUT/5b
     JACK 2 "Itsy" 25D/F -> WDOG
     JACK 3 "Bitsy" 25D/F -> WDOG
     JACK 4 "Signals" 37D/F -> WDOG
-    JACK 5a "Itsy SSR OM" LUG/F -> ITSYSSR/1 
-    JACK 5b "Itsy SSR OP" LUG/F -> ITSYSSR/2
-    JACK 5c "Itsy SSR IP" LUG/F -> ITSYSSR/3 
-    JACK 5d "Itsy SSR IM" LUG/F -> ITSYSSR/4 
-    JACK 6a "Bitsy SSR OM" LUG/F -> BITSYSSR/1 
-    JACK 6b "Bitsy SSR OP" LUG/F -> BITSYSSR/2 
-    JACK 6c "Bitsy SSR IP" LUG/F -> BITSYSSR/3 
-    JACK 6d "Bitsy SSR IM" LUG/F -> BITSYSSR/4 
+    JACK 5 "Itsy Solid State Relay" LUG/F -> ITSYSSR 
+    JACK 6 "Bitsy Solid State Relay" LUG/F -> BITSYSSR
+    JACK 7 "Itsy BBC PCI" 37D/M -> ITSY
+    JACK 8 "Bitsy BBC PCI" 37D/M -> BITSY
 
 ITSY "Master Control Computer: 'Itsy'" < WSPOUT
     JACK 0 "Power" ATX/F -> WSPOUT
-    #some itsy/bitsy things disconnected until proper design complete
-    #JACK 1 "BBC PCI" 37D/F -> C10
+    JACK 1 "BBC PCI" 37D/F -> C16
     JACK 2 "Ethernet" ETH/F -> WSHUB CABLE "Itsy Ethernet"
     JACK 3 "GPS1" USB/F -> GPS1 CABLE ""
     JACK 4 "GPS2" USB/F -> GPS2 CABLE ""
 
 BITSY "Master Control Computer: 'Bitsy'" < WSPOUT
-    #need proper design before connecting some of these jacks
     JACK 0 "Power" ATX/F -> WSPOUT
-    #JACK 1 "BBC PCI" 37D/F -> C10
+    JACK 1 "BBC PCI" 37D/F -> C16
     JACK 2 "Ethernet" ETH/F -> WSHUB CABLE "Bitsy Ethernet"
     #JACK 3 "GPS1" USB/F -> GPS1 CABLE ""
     #JACK 4 "GPS2" USB/F -> GPS2 CABLE ""
 
 ITSYSSR "Itsy's Solid State Relay"
-    JACK 1 "Output Minus" SCREW/M -> C16/5a
-    JACK 2 "Output Plus" SCREW/M -> C16/5b
-    JACK 3 "Input Plus" SCREW/M -> C16/5c
-    JACK 4 "Input Minus" SCREW/M -> C16/5d
+    JACK 0 "Input and Output Screws" SCREW/M -> C16/5
+    LINE "Output -" (0;1)
+    LINE "Output +" (0;2)
+    LINE "Input +" (0;3)
+    LINE "Input -" (0;4)
 
 BITSYSSR "Bitsy's Solid State Relay"
-    JACK 1 "Output Minus" SCREW/M -> C16/6a
-    JACK 2 "Output Plus" SCREW/M -> C16/6b
-    JACK 3 "Input Plus" SCREW/M -> C16/6c
-    JACK 4 "Input Minus" SCREW/M -> C16/6d
+    JACK 0 "Input and Output Screws" SCREW/M -> C16/6
+    LINE "Output -" (0;1)
+    LINE "Output +" (0;2)
+    LINE "Input +" (0;3)
+    LINE "Input -" (0;4)
 
 WSHUB "Waterspout Ethernet Switch" < WSPOUT
     JACK 0 "Power" MYSTERY/F -> WSPOUT
@@ -612,4 +612,6 @@ CHARGE_C "Charge Controllers" < OF
 BATT "Batteries" < OF
     JACK 0 "Charge In" 8W8D/M -> CHARGE_C CABLE ""
     JACK 1 "Power Out" 8W8D/F -> POWBOB CABLE "POWBOB Power In"
+    LINE "BATT: Ground" (0;2,15,10);
+    LINE "BATT: 28V" (0;1,9),(5;2),(6;2)
 
