@@ -24,6 +24,7 @@ DIN41612 -> DIN41612 64 "DIN41612 cardmount" N N M-F F-M
 BNC -> BNC 2 "BNC, probably 50ohm" Y N M-F F-M
 HEADER -> HEADER 0 "Cable Header" N N M-F F-M
 ETH -> ETH 0 "Standard RJ45 Ethernet" N Y M-F F-M
+ETHR -> ETHR 0 "Rear of Standard RJ45 Ethernet" N Y M-F F-M
 RS232 -> RS232 1 "Standard D9 RS232 serial" N N M-F F-M
 USB -> USB 1 "Flat USB" N N M-F F-M
 ATX -> ATX 1 "Motherboard ATX Power" N N M-F F-M
@@ -451,25 +452,29 @@ LABUSE "Non-part representing connection to computers in lab" < WSPOUT
     JACK 0 "Ethernet" ETH/M -> WSPOUT
     JACK 1 "WD Control (normally fed back)" 9D/M -> WSPOUT
 
+# (Rear) means the reverse side of a jack on the front panel
+# (Int) means a jack within the interior of the box
 WSPOUT "The Waterspout (Flight Computer Box)" < OF
     JACK 0 "BLASTbus" 15D/M -> ACS CABLE ""
-    JACK 1 "Snyc" MYSTERY/F -> MCE CABLE ""
+    JACK 0r "BLASTbus (Rear)" 15DR/F -> C16
+    JACK 1 "Sync" MYSTERY/F -> MCE CABLE ""
+    JACK 1r "Sync (Rear)" MYSTERY/F -> C16
     JACK 2 "Power" 7W2D/M -> POWBOB CABLE "Waterspout Power"
-    JACK 3 "Itsy Power" ATX/M -> ITSY
-    JACK 3b "Bitsy Power" ATX/M -> BITSY
-    #can probably use watchdog power here
-    JACK 4 "Hub Power" MYSTERY/F -> WSHUB
-    JACK 5 "Serial1 Internal (GPS)" 9D/M -> C16/1
-    JACK 5b "Serial2 Internal (GPS)" 9D/M -> C16/1b
+    JACK 2r "Power (Rear)" 7W2DR/F -> C16
+    JACK 3 "Itsy Power (Int)" ATX/M -> ITSY
+    JACK 3b "Bitsy Power (Int)" ATX/M -> BITSY
+    JACK 4 "Hub Power (Int)" MYSTERY/F -> WSHUB
+    JACK 5 "Serial GPS1 (Int)" 9D/M -> C16/1
+    JACK 5b "Serial GPS2 (Int)" 9D/M -> C16/1b
     JACK 6 "IF Ethernet" ETH/F -> IFHUB CABLE ""
+    JACK 6r "IF Ethernet (Rear)" ETHR/F -> C16
     JACK 6b "Serial Hub Ethernet" ETH/F -> HUB232 CABLE ""
-    JACK 6c "External Ethernet" ETH/F -> LABUSE
-    JACK 7a "Internal IF eth" ETH/M -> WSHUB/4
-    JACK 7b "Internal 232 eth" ETH/M -> WSHUB/3
-    JACK 7c "Internal Ext eth" ETH/M -> WSHUB/5
-    JACK 8 "WD Control"	9D/F -> LABUSE
-    JACK 9 "Serial1 (GPS)" RS232/M -> DGPS CABLE ""
-    JACK 9b "Serial2 (GPS)" RS232/M -> DGPS CABLE ""
+    JACK 6br "Serial Hub Ethernet (Rear)" ETHR/F -> C16
+    JACK 6c "Lab Use Ethernet" ETH/F -> LABUSE
+    JACJ 6cr "Lab Use Ethernet (Rear)" ETHR/F -> C16
+    JACK 7 "WD Control"	9D/F -> LABUSE
+    JACK 8 "Serial GPS1" RS232/M -> DGPS CABLE ""
+    JACK 8b "Serial GPS2" RS232/M -> DGPS CABLE ""
     LINE "BATT: Ground" (0;2,15,10);
     LINE "BATT: 28V" (0;1,9),(5;2),(6;2)
 
