@@ -7,15 +7,15 @@
 9W4D -> 9W4D 9 "D-Subminiature Combo" Y N M-F F-M
 8W8D -> 8W8D 8 "D-Subminiature Combo" Y N M-F F-M
 17W2D -> 17W2D 17 "D-Subminiature Combo" Y N M-F F-M
-9DR -> 9D 9 "Rear of D-Subminiature" N N M-F F-M
-15DR -> 15D 15 "Rear of D-Subminiature" N N M-F F-M
-25DR -> 25D 25 "Rear of D-Subminiature" N N M-F F-M
-37DR -> 37D 37 "Rear of D-Subminiature" N N M-F F-M
-50DR -> 50D 50 "Rear of D-Subminiature" N N M-F F-M
-7W2DR -> 7W2D 7 "Rear of D-Subminiature Combo" Y N M-F F-M
-9W4DR -> 9W4D 9 "Rear of D-Subminiature Combo" Y N M-F F-M
-8W8DR -> 8W8D 8 "Rear of D-Subminiature Combo" Y N M-F F-M
-17W2DR -> 17W2D 17 "Rear of D-Subminiature Combo" Y N M-F F-M
+9DR -> 9DR 9 "Rear of D-Subminiature" N N M-F F-M
+15DR -> 15DR 15 "Rear of D-Subminiature" N N M-F F-M
+25DR -> 25DR 25 "Rear of D-Subminiature" N N M-F F-M
+37DR -> 37DR 37 "Rear of D-Subminiature" N N M-F F-M
+50DR -> 50DR 50 "Rear of D-Subminiature" N N M-F F-M
+7W2DR -> 7W2DR 7 "Rear of D-Subminiature Combo" Y N M-F F-M
+9W4DR -> 9W4DR 9 "Rear of D-Subminiature Combo" Y N M-F F-M
+8W8DR -> 8W8DR 8 "Rear of D-Subminiature Combo" Y N M-F F-M
+17W2DR -> 17W2DR 17 "Rear of D-Subminiature Combo" Y N M-F F-M
 15UD -> 15UD 15 "D-Subminiature Micro" N N M-F F-M
 26UD -> 26UD 26 "D-Subminiature Micro" N N M-F F-M
 NX15 -> NX15 15 "Nanonics Dualobe" N N M-F F-M
@@ -24,8 +24,8 @@ DIN41612 -> DIN41612 64 "DIN41612 cardmount" N N M-F F-M
 BNC -> BNC 2 "BNC, probably 50ohm" Y N M-F F-M
 HEADER -> HEADER 0 "Cable Header" N N M-F F-M
 ETH -> ETH 0 "Standard RJ45 Ethernet" N Y M-F F-M
-ETHR -> ETHR 0 "Rear of Standard RJ45 Ethernet" N Y M-F F-M
-RS232 -> RS232 1 "Standard D9 RS232 serial" N N M-F F-M
+RS232 -> RS232 1 "Standard 9D RS232 serial" N N M-F F-M
+RS232R -> RS232R 1 "Rear of 9D RS232 serial" N N M-F F-M
 USB -> USB 1 "Flat USB" N N M-F F-M
 ATX -> ATX 1 "Motherboard ATX Power" N N M-F F-M
 SCREW -> LUG 0 "Terminal Screw" Y N M-F F-X
@@ -41,46 +41,6 @@ SPIDER "Spider"
 IF "Inner Frame (cryostat)" < SPIDER
 
 OF "Outer Frame" < SPIDER
-
-POWBOB "Power Break-out Box" < OF
-    JACK 0 "Power In" 8W8D/M -> BATT CABLE ""
-    JACK 1 "BLASTbus ADC Rack" MS_CIRC6/F -> ACS CABLE ""
-    JACK 2 "CRYOBOB" 7W2D/F -> CRYOBOB CABLE ""
-    JACK 3 "Starcam" 7W2D/F -> STARCAM CABLE ""
-    JACK 4 "Starcam Motor" 7W2D/F -> C1 CABLE ""
-    JACK 5 "Gyros" 17W2D/F -> GYROS CABLE ""
-    JACK 6 "Reaction Wheel" 7W2D/F -> C2 CABLE ""
-    JACK 7 "Pivot" 7W2D/F -> C3 CABLE ""
-    JACK 8 "Box Thermometry" 25D/M -> ACSBOB CABLE ""
-    JACK 9 "Power Switching" 37D/M -> ACSBOB CABLE ""
-    JACK 10 "Science Stack" MYSTERY/F -> SIP CABLE ""
-    JACK 11 "MCE" MYSTERY/F -> MCE CABLE ""
-    JACK 12 "Windows" 7W2D/F -> C5 CABLE ""
-    JACK 13 "Waveplates" 7W2D/F -> C6 CABLE ""
-    JACK 14 "Computers" 7W2D/F -> WSPOUT CABLE ""
-    JACK 15 "RS232 Hub" MYSTERY/F -> HUB232 CABLE ""
-    JACK 16 "IF Hub" MYSTERY/F -> IFHUB CABLE ""
-
-CABLE C1 "Starcam Motor Power Hydra"
-    JACK 0 "Controller" BARE/M -> SCTAB_C
-    JACK 1 "Motor" 9W4D/F -> SCTABLE
-    JACK 2 "Source" 7W2D/M -> POWBOB CABLE "Starcam Motor Power, Main"
-
-CABLE C2 "Reaction Wheel Power"
-    JACK 0 "Controller" BARE/M -> REAC_C
-    JACK 1 "Source" 7W2D/M -> POWBOB CABLE "Reaction Wheel Power, Main"
-
-CABLE C3 "Pivot Power"
-    JACK 0 "Controller" BARE/M -> PIVCOMM
-    JACK 1 "Source" 7W2D/M -> POWBOB CABLE "Pivot Power Main"
-
-CABLE C5 "Deployable Windows Power"
-    JACK 0 "Windows" BARE/M -> WINDCOMM
-    JACK 1 "Source" 7W2D/M -> POWBOB CABLE "Deployable Window Power Main"
-
-CABLE C6 "Waveplate Motors Power"
-    JACK 0 "Waveplates" BARE/M -> WPCOMM
-    JACK 1 "Source" 7W2D/M -> POWBOB CABLE "Waveplate Motors Power Main"
 
 #Done
 ACS "Attitude Control System (and Housekeeping) Electronics" < OF
@@ -101,7 +61,7 @@ ACS "Attitude Control System (and Housekeeping) Electronics" < OF
     LINE "BLASTbus Strobe-" (1,1),(1b,1)
 
 #Done-ish (eventually want to replace mystery connectors)
-ACSPM "ACS Power Module" < ACS
+ACSPM "ACS DC-DC Power Module" < ACS
     JACK 0 "Battery In" MYSTERY/F -> ACS
     JACK 1 "ADC Power" MYSTERY/F -> ACSBP
     JACK 2 "DAC Power" MYSTERY/F -> C8
@@ -220,6 +180,46 @@ ACSBOB "Attitude Control & Housekeeping Break-out Box" < ACS
     LINE "Mag X" (14,1),(1,45)
     LINE "Mag Y" (14,2),(1,47)
     LINE "Mag Z" (14,3),(1,49)
+
+POWBOB "Power Break-out on ACSBOB" < ACSBOB
+    JACK 0 "Power In" 8W8D/M -> BATT CABLE ""
+    JACK 1 "BLASTbus ADC Rack" MS_CIRC6/F -> ACS CABLE ""
+    JACK 2 "CRYOBOB" 7W2D/F -> CRYOBOB CABLE ""
+    JACK 3 "Starcam" 7W2D/F -> STARCAM CABLE ""
+    JACK 4 "Starcam Motor" 7W2D/F -> C1 CABLE ""
+    JACK 5 "Gyros" 17W2D/F -> GYROS CABLE ""
+    JACK 6 "Reaction Wheel" 7W2D/F -> C2 CABLE ""
+    JACK 7 "Pivot" 7W2D/F -> C3 CABLE ""
+    JACK 8 "Box Thermometry" 25D/M -> ACSBOB CABLE ""
+    JACK 9 "Power Switching" 37D/M -> ACSBOB CABLE ""
+    JACK 10 "Science Stack" MYSTERY/F -> SIP CABLE ""
+    JACK 11 "MCE" MYSTERY/F -> MCE CABLE ""
+    JACK 12 "Windows" 7W2D/F -> C5 CABLE ""
+    JACK 13 "Waveplates" 7W2D/F -> C6 CABLE ""
+    JACK 14 "Computers" 7W2D/F -> WSPOUT CABLE ""
+    JACK 15 "RS232 Hub" MYSTERY/F -> HUB232 CABLE ""
+    JACK 16 "IF Hub" MYSTERY/F -> IFHUB CABLE ""
+
+CABLE C1 "Starcam Motor Power Hydra"
+    JACK 0 "Controller" BARE/M -> SCTAB_C
+    JACK 1 "Motor" 9W4D/F -> SCTABLE
+    JACK 2 "Source" 7W2D/M -> POWBOB CABLE "Starcam Motor Power, Main"
+
+CABLE C2 "Reaction Wheel Power"
+    JACK 0 "Controller" BARE/M -> REAC_C
+    JACK 1 "Source" 7W2D/M -> POWBOB CABLE "Reaction Wheel Power, Main"
+
+CABLE C3 "Pivot Power"
+    JACK 0 "Controller" BARE/M -> PIVCOMM
+    JACK 1 "Source" 7W2D/M -> POWBOB CABLE "Pivot Power Main"
+
+CABLE C5 "Deployable Windows Power"
+    JACK 0 "Windows" BARE/M -> WINDCOMM
+    JACK 1 "Source" 7W2D/M -> POWBOB CABLE "Deployable Window Power Main"
+
+CABLE C6 "Waveplate Motors Power"
+    JACK 0 "Waveplates" BARE/M -> WPCOMM
+    JACK 1 "Source" 7W2D/M -> POWBOB CABLE "Waveplate Motors Power Main"
 
 DACTRANS "Transmitter for SPI DAC Bus" < ACSBOB
     JACK 0 "Output" 25D/F -> CRYOBOB CABLE "RS485 DAC Signals"
@@ -457,31 +457,29 @@ LABUSE "Non-part representing connection to computers in lab" < WSPOUT
 WSPOUT "The Waterspout (Flight Computer Box)" < OF
     JACK 0 "BLASTbus" 15D/M -> ACS CABLE ""
     JACK 0r "BLASTbus (Rear)" 15DR/F -> C16
-    JACK 1 "Sync" MYSTERY/F -> MCE CABLE ""
-    JACK 1r "Sync (Rear)" MYSTERY/F -> C16
+    JACK 1 "Sync (sic)" 9D/M -> MCE CABLE ""
+    JACK 1r "Sync (sic) (Rear)" 9DR/F -> C16
     JACK 2 "Power" 7W2D/M -> POWBOB CABLE "Waterspout Power"
     JACK 2r "Power (Rear)" 7W2DR/F -> C16
     JACK 3 "Itsy Power (Int)" ATX/M -> ITSY
     JACK 3b "Bitsy Power (Int)" ATX/M -> BITSY
     JACK 4 "Hub Power (Int)" MYSTERY/F -> WSHUB
-    JACK 5 "Serial GPS1 (Int)" 9D/M -> C16/1
-    JACK 5b "Serial GPS2 (Int)" 9D/M -> C16/1b
+    JACK 5 "Serial GPS1 (Int)" RS232R/F -> C16
+    JACK 5b "Serial GPS2 (Int)" RS232R/F -> C16
     JACK 6 "IF Ethernet" ETH/F -> IFHUB CABLE ""
-    JACK 6r "IF Ethernet (Rear)" ETHR/F -> C16
+    JACK 6r "IF Ethernet (Rear)" ETH/M -> WSHUB
     JACK 6b "Serial Hub Ethernet" ETH/F -> HUB232 CABLE ""
-    JACK 6br "Serial Hub Ethernet (Rear)" ETHR/F -> C16
+    JACK 6br "Serial Hub Ethernet (Rear)" ETH/M -> WSHUB
     JACK 6c "Lab Use Ethernet" ETH/F -> LABUSE
-    JACJ 6cr "Lab Use Ethernet (Rear)" ETHR/F -> C16
+    JACK 6cr "Lab Use Ethernet (Rear)" ETH/M -> WSHUB
     JACK 7 "WD Control"	9D/F -> LABUSE
     JACK 8 "Serial GPS1" RS232/M -> DGPS CABLE ""
     JACK 8b "Serial GPS2" RS232/M -> DGPS CABLE ""
-    LINE "BATT: Ground" (0;2,15,10);
-    LINE "BATT: 28V" (0;1,9),(5;2),(6;2)
 
 CABLE C16 "Large fictitious cable inside the Waterspout"
     JACK 0 "Power" 15D/F -> WDOG
-    JACK 1 "Serial1" 9D/F -> WSPOUT
-    JACK 1b "Serial2" 9D/F -> WSPOUT
+    JACK 1 "Serial1" RS232R/M -> WSPOUT/5
+    JACK 1b "Serial2" RS232R/M -> WSPOUT/5b
     JACK 2 "Itsy" 25D/F -> WDOG
     JACK 3 "Bitsy" 25D/F -> WDOG
     JACK 4 "Signals" 37D/F -> WDOG
@@ -489,20 +487,19 @@ CABLE C16 "Large fictitious cable inside the Waterspout"
     JACK 6 "Bitsy Solid State Relay" LUG/F -> BITSYSSR
     JACK 7 "Itsy BBC PCI" 37D/M -> ITSY
     JACK 8 "Bitsy BBC PCI" 37D/M -> BITSY
+    JACK 9 "BLASTbus" 15DR/M -> WSPOUT
+    JACK 10 "Snyc (sic)" 9DR/M -> WSPOUT
+    JACK 11 "Power In" 7W2DR/M -> WSPOUT
 
 ITSY "Master Control Computer: 'Itsy'" < WSPOUT
     JACK 0 "Power" ATX/F -> WSPOUT
     JACK 1 "BBC PCI" 37D/F -> C16
     JACK 2 "Ethernet" ETH/F -> WSHUB CABLE "Itsy Ethernet"
-    JACK 3 "GPS1" USB/F -> GPS1 CABLE ""
-    JACK 4 "GPS2" USB/F -> GPS2 CABLE ""
 
 BITSY "Master Control Computer: 'Bitsy'" < WSPOUT
     JACK 0 "Power" ATX/F -> WSPOUT
     JACK 1 "BBC PCI" 37D/F -> C16
     JACK 2 "Ethernet" ETH/F -> WSHUB CABLE "Bitsy Ethernet"
-    #JACK 3 "GPS1" USB/F -> GPS1 CABLE ""
-    #JACK 4 "GPS2" USB/F -> GPS2 CABLE ""
 
 ITSYSSR "Itsy's Solid State Relay"
     JACK 0 "Input and Output Screws" SCREW/M -> C16/5
@@ -522,14 +519,14 @@ WSHUB "Waterspout Ethernet Switch" < WSPOUT
     JACK 0 "Power" MYSTERY/F -> WSPOUT
     JACK 1 "Itsy" ETH/F -> ITSY CABLE ""
     JACK 2 "Bitsy" ETH/F -> BITSY CABLE ""
-    JACK 3 "RS232 Hub" ETH/F -> WSPOUT/7b
-    JACK 4 "Inner Frame Hub" ETH/F -> WSPOUT/7a
-    JACK 5 "External" ETH/F -> WSPOUT/7c
+    JACK 3 "RS232 Hub" ETH/F -> WSPOUT/6br
+    JACK 4 "Inner Frame Hub" ETH/F -> WSPOUT/6r
+    JACK 5 "External" ETH/F -> WSPOUT/6cr
 
 WDOG "Watchdog" < WSPOUT
     JACK 0 "Signals" 37D/M -> C16
-    JACK 1 "Itsy" 25D/M -> C16
-    JACK 2 "Bitsy" 25D/M -> C16
+    JACK 1 "Itsy" 25D/M -> C16/2
+    JACK 2 "Bitsy" 25D/M -> C16/3
     JACK 3 "Power" 15D/M -> C16
 
 HUB232 "RS232 Serial Hub" < OF
@@ -558,8 +555,8 @@ DGPS "Differential GPS unit"
     JACK 0 "GPS 1" BNC/M -> GPS1 CABLE ""
     JACK 1 "GPS 2" BNC/M -> GPS2 CABLE ""
     JACK 2 "GPS 3" BNC/M -> GPS3 CABLE ""
-    JACK 3 "GPS Time" RS232/M -> WSPOUT/9 CABLE "GPS Time Data"
-    JACK 4 "GPS Attitude" RS232/M -> WSPOUT/9b CABLE "GPS Time Attitude"
+    JACK 3 "GPS Time" RS232/M -> WSPOUT/8 CABLE "GPS Time Data"
+    JACK 4 "GPS Attitude" RS232/M -> WSPOUT/8b CABLE "GPS Time Attitude"
 
 GPS1 "GPS Receiver #1" < DGPS
     JACK 0 "Data" BNC/M -> DGPS CABLE "GPS1 Data"
@@ -676,7 +673,7 @@ SIP "Support Instrumentation Package" < OF
 
 MCE "Multi-Channel Electornics (Detector Readout)" < IF
     JACK 0 "Ethernet" ETH/F -> IFHUB CABLE "MCE Ethernet"
-    JACK 1 "BBC Snyc" MYSTERY/F -> WSPOUT CABLE "Snyc"
+    JACK 1 "BBC Snyc (sic)" 9D/F -> WSPOUT CABLE "Snyc"
     JACK 2 "Power" MYSTERY/F -> POWBOB CABLE "MCE Power"
 
 SOLAR "Solar Cells" < OF
