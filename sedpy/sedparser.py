@@ -68,16 +68,13 @@ def mateJack(jack):
   else: #no cable, determine which should be placeholder
     #if jack or mate is declared internal (but not both) then make it so
     if jack.mate.internal:
-      if jack.internal: raise Failure("Jack and mate both declared internal")
+      if jack.internal: raise Failure("Jack %s and mate %s both internal"\
+	  %(jack.ref, jack.mate.ref))
       jack.mate.placeholder = True
     elif jack.internal: jack.placeholder = True
     #alternately, for mates on a cable, make them placeholders
     elif hasattr(jack.mate.location, 'p2p'): jack.mate.placeholder = True #cable
     else: jack.placeholder = True
-    if jack.mate.placeholder: 
-      print "Mate %s is a placeholder"%jack.mate.label
-    if jack.placeholder: 
-      print "Jack %s is a placeholder"%jack.label
 
   #for pins on mate (from previous lines) add autogen lines, etc. as needed
   for pin in jack.mate.pins:
