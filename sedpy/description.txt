@@ -25,8 +25,8 @@ DIN41612 -> DIN41612 64 "DIN41612 cardmount" N N M-F F-M
 BNC -> BNC 2 "BNC, probably 50ohm" Y N M-F F-M
 HEADER -> HEADER 0 "Cable Header" N N M-F F-M
 ETH -> ETH 0 "Standard RJ45 Ethernet" N Y M-F F-M
-RS232 -> RS232 1 "Standard 9D RS232 serial" N N M-F F-M
-RS232R -> RS232R 1 "Rear of 9D RS232 serial" N N M-F F-M
+RS232 -> RS232 0 "Standard 9D RS232 serial" N N M-F F-M
+RS232R -> RS232R 0 "Rear of 9D RS232 serial" N N M-F F-M
 USB -> USB 1 "Flat USB" N N M-F F-M
 ATX -> ATX 1 "Motherboard ATX Power" N N M-F F-M
 SCREW -> LUG 0 "Terminal Screw" Y N M-F F-X
@@ -468,8 +468,6 @@ LABUSE "Non-part representing connection to computers in lab" < WSPOUT
     JACK 0 "Ethernet" ETH/M -> WSPOUT
     JACK 1 "WD Control (normally fed back)" 9D/M -> WSPOUT
 
-# (Rear) means the reverse side of a jack on the front panel
-# (Int) means a jack within the interior of the box
 WSPOUT "The Waterspout (Flight Computer Box)" < OF
     JACK 0 "BLASTbus" 15D/M -> ACS CABLE ""
     JACK IN 0r "BLASTbus" 15DR/F -> C16
@@ -506,16 +504,43 @@ CABLE C16 "Large fictitious cable inside the Waterspout"
     JACK 9 "BLASTbus" 15DR/M -> WSPOUT
     JACK 10 "Snyc (sic)" 9DR/M -> WSPOUT
     JACK 11 "Power In" 7W2DR/M -> WSPOUT
+    JACK 12 "Itsy Serial1" RS232/F -> ITSY/3
+    JACK 12b "Itsy Serial2" RS232/F -> ITSY/4
+    JACK 12c "Bitsy Serial1" RS232/F -> BITSY/3
+    JACK 12d "Bitsy Serial2" RS232/F -> BITSY/4
+    LINE "GPS Time Gnd" (1,5),(4,32)
+    LINE "GPS Time TxD" (1,2),(4,30)
+    LINE "GPS Time RxD" (1,3),(4,31)
+    LINE "GPS Attitude Gnd" (1b,5),(4,35)
+    LINE "GPS Attitude TxD" (1b,2),(4,33)
+    LINE "GPS Attitude RxD" (1b,3),(4,34)
+    LINE "Itsy GPS Time Gnd" (12,5),(2,20)
+    LINE "Itsy GPS Time TxD" (12,2),(2,18)
+    LINE "Itsy GPS Time RxD" (12,3),(2,19)
+    LINE "Itsy GPS Attitude Gnd" (12b,5),(2,23)
+    LINE "Itsy GPS Attitude TxD" (12b,2),(2,21)
+    LINE "Itsy GPS Attitude RxD" (12b,3),(2,22)
+    LINE "Bitsy GPS Time Gnd" (12c,5),(3,20)
+    LINE "Bitsy GPS Time TxD" (12c,2),(3,18)
+    LINE "Bitsy GPS Time RxD" (12c,3),(3,19)
+    LINE "Bitsy GPS Attitude Gnd" (12d,5),(3,23)
+    LINE "Bitsy GPS Attitude TxD" (12d,2),(3,21)
+    LINE "Bitsy GPS Attitude RxD" (12d,3),(3,22)
+
 
 ITSY "Master Control Computer: 'Itsy'" < WSPOUT
     JACK 0 "Power" ATX/F -> WSPOUT
     JACK 1 "BBC PCI" 37D/F -> C16
     JACK 2 "Ethernet" ETH/F -> WSHUB CABLE "Itsy Ethernet"
+    JACK 3 "Serial1" RS232/M -> C16/12
+    JACK 4 "Serial2" RS232/M -> C16/12b
 
 BITSY "Master Control Computer: 'Bitsy'" < WSPOUT
     JACK 0 "Power" ATX/F -> WSPOUT
     JACK 1 "BBC PCI" 37D/F -> C16
     JACK 2 "Ethernet" ETH/F -> WSHUB CABLE "Bitsy Ethernet"
+    JACK 3 "Serial1" RS232/M -> C16/12c
+    JACK 4 "Serial2" RS232/M -> C16/12d
 
 ITSYSSR "Itsy's Solid State Relay" < WSPOUT
     JACK 0 "Input and Output Screws" SCREW/M -> C16/5
@@ -573,6 +598,12 @@ DGPS "Differential GPS unit" < OF
     JACK 2 "GPS 3" BNC/M -> GPS3 CABLE ""
     JACK 3 "GPS Time" RS232/M -> WSPOUT/8 CABLE "GPS Time Data"
     JACK 4 "GPS Attitude" RS232/M -> WSPOUT/8b CABLE "GPS Time Attitude"
+    LINE "GPS Time Gnd" (3,5)
+    LINE "GPS Time TxD" (3,2)
+    LINE "GPS Time RxD" (3,3)
+    LINE "GPS Attitude Gnd" (4,5)
+    LINE "GPS Attitude TxD" (4,2)
+    LINE "GPS Attitude RxD" (4,3)
 
 GPS1 "GPS Receiver #1" < DGPS
     JACK 0 "Data" BNC/M -> DGPS CABLE "GPS1 Data"
