@@ -59,12 +59,25 @@ def mateJack(jack):
     if jack.mate.cable.label == "" or jack.mate.cable.label is None:
       if jack.cable.label == "" or jack.cable.label is None:
 	#make up a name since none is given
-	jack.mate.cable.label == "%s-%s"%(jack.mate.location, jack.location)
+	jack.mate.cable.label = "%s-%s"%\
+	    (jack.mate.location.ref, jack.location.ref)
 	print "Warning invented cable name: %s"% jack.mate.cable.label
       else: jack.mate.cable.label = jack.cable.label
     jack.cable = jack.mate.cable #unify cable references
     jack.mate.cablemaster = True
-  else: jack.placeholder = True  #this jack is redundant
+  else: #no cable, determine which should be placeholder
+    #if jack or mate is declared internal (but not both) then make it so
+    if jack.mate.internal:
+      if jack.internal: raise Failure("Jack and mate both declared internal")
+      jack.mate.placeholder = True
+    elif jack.internal: jack.placeholder = True
+    #alternately, for mates on a cable, make them placeholders
+    elif hasattr(jack.mate.location, 'p2p'): jack.mate.placeholder = True #cable
+    else: jack.placeholder = True
+    if jack.mate.placeholder: 
+      print "Mate %s is a placeholder"%jack.mate.label
+    if jack.placeholder: 
+      print "Jack %s is a placeholder"%jack.label
 
   #for pins on mate (from previous lines) add autogen lines, etc. as needed
   for pin in jack.mate.pins:
@@ -73,7 +86,7 @@ def mateJack(jack):
     newline.autogen = True
     newline.owner = containers[-1]
     containers[-1].lines.append(newline)
-    if jack.placeholder: #no cable is used
+    if jack.cable is None:
       pin.lines['cable'] = newline
     else: #cable
       cableline = Line(line.desc, "")
@@ -190,6 +203,8 @@ def sedparser(argv=None):
 	if jack.conn.genders[jack.gender] == 'X':
 	  raise Failure("Invalid connector gender", linecount)
       except ValueError: raise Failure("Non-existant connector type", linecount)
+      if jack.internal and hasattr(containers[-1], 'p2p'):
+	raise Failure("Cables can't have internal jacks", linecount)
       jack.location = containers[-1]
       containers[-1].jacks.append(jack)
       try: mateJack(jack)

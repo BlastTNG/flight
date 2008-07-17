@@ -31,7 +31,8 @@ len (optional) is the integer length in mm (negative or omitted means unknown)
   -to add to a less recent one, add a declration containing only its reference
 
 jacks:
-JACK ref "label" conn/g -> dest_part[/jackref] [CABLE "[description]" [len]] 
+JACK [IN] ref "label" conn/g -> dest_part[/jackref] [CABLE "[desc]" [len]] 
+optional IN indicates a connection internal to the box
 ref is a string unique to jacks on the parent part: [a-z0-9]
 label describes the jack and can't contain "
 conn/g specifies the connector type (its label) and gender ([mMfF]) of the jack

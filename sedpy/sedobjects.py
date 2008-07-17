@@ -116,10 +116,12 @@ class Jack:
   count = 1
   jackout = open('out/jack', 'w')
 
-  def __init__(self, ref, label, conn_str, dest_part, dest_jack, c_desc, c_len):
+  def __init__(self, internal, ref, label, conn_str, dest_part, \
+      dest_jack, c_desc, c_len):
     #need to populate pins list, find references to location, destination, conn
     self.number = self.__class__.count
     self.__class__.count+=1
+    self.internal = internal  #either None or 'IN'
     self.ref = ref #internal use only (matched in LINEs)
     self.label = label
     self.conn_str = conn_str  #contains: "conn_type/gender"

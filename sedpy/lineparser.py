@@ -11,8 +11,8 @@ connRE = re.compile(r'([A-Z0-9_]{1,16})\s+->\s+([A-Z0-9_]{1,16})\s+(\d{1,3})'\
 compRE = re.compile(r'([A-Z0-9_]{1,8})\s+"([^"]{1,65})"' \
     r'(?:\s+<\s+([A-Z0-9_]{1,8}))?')
 
-#JACK ref "label" conn/g -> dest_part[/jackref] [CABLE "desc" [len]]
-jackRE = re.compile(r'JACK\s*([a-z0-9]+)\s+"([^"]{1,32})"\s+'\
+#JACK [IN] ref "label" conn/g -> dest_part[/jackref] [CABLE "desc" [len]]
+jackRE = re.compile(r'JACK(?:\s*(IN))?\s*([a-z0-9]+)\s+"([^"]{1,32})"\s+'\
     r'([A-Z0-9_]{1,16}/[mMfF])\s+->\s+([A-Z0-9_]{1,8})(?:/([a-z0-9]+))?'\
     r'(?:\s+CABLE\s+"([^"]{0,64})(?:\s+(\d+))?)?')
 
