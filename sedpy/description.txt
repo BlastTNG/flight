@@ -501,7 +501,6 @@ WSPOUT "The Waterspout (Flight Computer Box)" < OF
     JACK IN 1r "Sync (sic)" 9DR/F -> C16
     JACK 2 "Power" 7W2D/M -> ACSBOB CABLE "Waterspout Power"
     JACK IN 2r "Power" 7W2DR/F -> C16
-    JACK IN 4 "Hub Power" MYSTERY/F -> WSHUB
     JACK IN 5 "Serial GPS1" RS232R/F -> C16
     JACK IN 5b "Serial GPS2" RS232R/F -> C16
     JACK 6 "IF Ethernet" ETH/F -> IFHUB CABLE ""
@@ -511,11 +510,12 @@ WSPOUT "The Waterspout (Flight Computer Box)" < OF
     JACK 6c "Lab Use Ethernet" ETH/F -> LABUSE
     JACK IN 6cr "Lab Use Ethernet" ETH/M -> WSHUB
     JACK 7 "WD Control"	9D/F -> LABUSE
+    JACK IN 7r "WD Control" 9DR/F -> C16/14
     JACK 8 "Serial GPS1" RS232/M -> DGPS CABLE ""
     JACK 8b "Serial GPS2" RS232/M -> DGPS CABLE ""
 
 CABLE C16 "Large fictitious cable inside the Waterspout"
-    JACK 0 "Power" 15D/F -> WDOG
+    JACK 0 "WD Power" 15D/F -> WDOG
     JACK 1 "Serial1" RS232R/M -> WSPOUT/5
     JACK 1b "Serial2" RS232R/M -> WSPOUT/5b
     JACK 2 "Itsy" 25D/F -> WDOG
@@ -534,6 +534,8 @@ CABLE C16 "Large fictitious cable inside the Waterspout"
     JACK 12d "Bitsy Serial2" RS232/F -> BITSY/4
     JACK 13 "Itsy Power" WIRE/M -> ITSYSUP/0
     JACK 13b "Bitsy Power" WIRE/M -> BITSYSUP/0
+    JACK 14 "WD Control" 9DR/M -> WSPOUT/7r
+    JACK 15 "Hub Power" WIRE/M -> WSHUB/0
     LINE "GPS Time Gnd" (1,5),(4,32)
     LINE "GPS Time TxD" (1,2),(4,30)
     LINE "GPS Time RxD" (1,3),(4,31)
@@ -552,8 +554,20 @@ CABLE C16 "Large fictitious cable inside the Waterspout"
     LINE "Bitsy GPS Attitude Gnd" (12d,5),(3,23)
     LINE "Bitsy GPS Attitude TxD" (12d,2),(3,21)
     LINE "Bitsy GPS Attitude RxD" (12d,3),(3,22)
-    LINE "Battery+" (11,A1),(4;1,9),(13,1),(13b,1)
-    LINE "Bat Ground" (11,A2),(4;2,10,15),(13,2),(13b,2)
+    LINE "Battery+" (11,A1),(0;1,9),(5;2,3),(6;2,3)
+    LINE "Bat Ground" (11,A2),(0;2,10,15),(13,2),(13b,2)
+    LINE "Itsy Batt+ Switched" (13,1),(5,1)
+    LINE "Bitsy Batt+ Switched" (13b,1),(6,1)
+    LINE "BLASTbus +5" (14,1),(0;3,4,11,12),(7;8,27),(8;8,27)
+    LINE "BLASTbus Ground" (14,7),(0;5,6,13,14),(7;7,26),(8;7,26)
+    LINE "WD Control In" (14,6),(4,14)
+    LINE "WD Control Out" (14,2),(4,15)
+    LINE "WD Itsy Reboot Inh In" (14,4),(5,4)
+    LINE "WD Itsy Reboot Inh Out" (14,5),(4,16)
+    LINE "WD Bitsy Reboot Inh In" (14,8),(6,4)
+    LINE "WD Bitsy Reboot Inh Out" (14,9),(4,17)
+    LINE "Hub Power +" (11,1),(15,1)
+    LINE "Hub Power -" (11,3),(15,2)
 
 ITSY "Master Control Computer: 'Itsy'" < WSPOUT
     JACK 0 "Power" ATX/F -> ITSYSUP
@@ -592,7 +606,7 @@ BITSYSSR "Bitsy's Solid State Relay" < WSPOUT
     LINE "Input -" (0;4)
 
 WSHUB "Waterspout Ethernet Switch" < WSPOUT
-    JACK 0 "Power" MYSTERY/F -> WSPOUT
+    JACK 0 "Power" WIRE/M -> C16/15
     JACK 1 "Itsy" ETH/F -> ITSY CABLE ""
     JACK 2 "Bitsy" ETH/F -> BITSY CABLE ""
     JACK 3 "RS232 Hub" ETH/F -> WSPOUT/6br
