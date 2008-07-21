@@ -501,6 +501,8 @@ WSPOUT "The Waterspout (Flight Computer Box)" < OF
     JACK IN 1r "Sync (sic)" 9DR/F -> C16
     JACK 2 "Power" 7W2D/M -> ACSBOB CABLE "Waterspout Power"
     JACK IN 2r "Power" 7W2DR/F -> C16
+#    JACK 3 "BiPhase" 9D/M -> Somewhere
+    JACK IN 3r "BiPhase" 9DR/F -> C16/16
     JACK IN 5 "Serial GPS1" RS232R/F -> C16
     JACK IN 5b "Serial GPS2" RS232R/F -> C16
     JACK 6 "IF Ethernet" ETH/F -> IFHUB CABLE ""
@@ -536,6 +538,7 @@ CABLE C16 "Large fictitious cable inside the Waterspout"
     JACK 13b "Bitsy Power" WIRE/M -> BITSYSUP/0
     JACK 14 "WD Control" 9DR/M -> WSPOUT/7r
     JACK 15 "Hub Power" WIRE/M -> WSHUB/0
+    JACK 16 "BiPhase" 9DR/M -> WSPOUT/3r
     LINE "GPS Time Gnd" (1,5),(4,32)
     LINE "GPS Time TxD" (1,2),(4,30)
     LINE "GPS Time RxD" (1,3),(4,31)
@@ -558,8 +561,8 @@ CABLE C16 "Large fictitious cable inside the Waterspout"
     LINE "Bat Ground" (11,A2),(0;2,10,15),(13,2),(13b,2)
     LINE "Itsy Batt+ Switched" (13,1),(5,1)
     LINE "Bitsy Batt+ Switched" (13b,1),(6,1)
-    LINE "BLASTbus +5" (14,1),(0;3,4,11,12),(7;8,27),(8;8,27)
-    LINE "BLASTbus Ground" (14,7),(0;5,6,13,14),(7;7,26),(8;7,26)
+    LINE "BLASTbus +5" (14,1),(0;3,4,11,12),(7;8,27),(8;8,27),(9;15,8)
+    LINE "BLASTbus Ground" (14,7),(0;5,6,13,14),(7;7,26,36,37),(8;7,26,36,37),(9;14,7)
     LINE "WD Control In" (14,6),(4,14)
     LINE "WD Control Out" (14,2),(4,15)
     LINE "WD Itsy Reboot Inh In" (14,4),(5,4)
@@ -568,6 +571,28 @@ CABLE C16 "Large fictitious cable inside the Waterspout"
     LINE "WD Bitsy Reboot Inh Out" (14,9),(4,17)
     LINE "Hub Power +" (11,1),(15,1)
     LINE "Hub Power -" (11,3),(15,2)
+    LINE "Itsy BLASTbus Inh" (2,24),(7,18)
+    LINE "Bitsy BLASTbus Inh" (3,24),(8,18)
+    LINE "BLASTbus Clock+" (7,14),(8,14),(9,3)
+    LINE "BLASTbus Clock-" (7,33),(8,33),(9,11)
+    LINE "BLASTbus Data+" (7,16),(8,16),(9,1)
+    LINE "BLASTbus Data-" (7,35),(8,35),(9,9)
+    LINE "BLASTbus Strobe+" (7,15),(8,15),(9,2)
+    LINE "BLASTbus Strobe-" (7,34),(8,34),(9,10)
+    LINE "Itsy BiPhase Inh" (2,25),(7,19)
+    LINE "Bitsy BiPhase Inh" (3,25),(8,19)
+    LINE "BiPhase +5V" (7,1),(8,1),(16,4)
+    LINE "BuPhase Ground" (7,20),(8,20),(16,9)
+    LINE "BiPhase+" (7,3),(8,3),(16,1)
+    LINE "BiPhase-" (7,21),(8,21),(16,6)
+    LINE "BLASTbus Test1+" (7,5),(8,5),(16,2)
+    LINE "BLASTbus Test1-" (7,24),(8,24),(16,7)
+    LINE "BLASTbus Test2+" (7,4),(8,4),(16,3)
+    LINE "BLASTbus Test2-" (7,23),(8,23),(16,8)
+    LINE "Snyc Clock+" (7,11),(8,11),(10,1)
+    LINE "Snyc Clock-" (7,30),(8,30),(10,6)
+    LINE "Snyc NRZ+" (7,12),(8,12),(10,2)
+    LINE "Snyc NRZ-" (7,31),(8,31),(10,7)
 
 ITSY "Master Control Computer: 'Itsy'" < WSPOUT
     JACK 0 "Power" ATX/F -> ITSYSUP
