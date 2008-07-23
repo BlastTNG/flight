@@ -168,9 +168,10 @@ class Jack:
     if self.cable is not None: dest = self.cable.number #implicit cable
     elif hasattr(self.dest, 'p2p'): dest = self.dest.number #explicit cable
     else: dest = self.dest.ref  #mates directly to component
+    if hasattr(self.location, 'p2p'): location = self.location.number
+    else: location = self.location.ref
     self.__class__.jackout.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(self.number,\
-	self.gender, self.location.ref, self.conn.type, \
-	dest, self.label, UID_UTIME))
+	self.gender, location, self.conn.type, dest, self.label, UID_UTIME))
     
 import re
 class Line:

@@ -245,7 +245,8 @@ def sedparser(argv=None):
       cableCount += 1
     for ijack in cont.jacks:
       if ijack.conn.count > 0 and len(ijack.pins) > ijack.conn.count:
-	raise Failure("Jack %s jas too many pins"%ijack.ref)
+	raise Failure("Jack %s jas too many pins: %d/%d"\
+	    %(ijack.ref,len(ijack.pins),ijack.conn.count))
       if ijack.mate is None: 
 	print ("\tJack %s unmated"%ijack.ref)
 	allMated = False
