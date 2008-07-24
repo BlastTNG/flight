@@ -265,4 +265,5 @@ if __name__ == "__main__":
     sys.exit()
   except Failure, err:
     print >>sys.stderr, err
+    sys.exit(1)
 

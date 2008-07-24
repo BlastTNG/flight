@@ -134,7 +134,6 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     JACK 3 "POW1 Digital" 37D/M -> POW1 CABLE ""
     JACK 4 "POW1 Analog" 50D/F -> POW1 CABLE ""
     JACK 5 "POW1 Extra" 9D/F -> POW1 CABLE ""
-    JACK 7 "Starcam Table" 9D/M -> C11 CABLE ""
     JACK 8 "Gyros Data" 25D/M -> GYROS CABLE ""
     JACK 9 "Reaction Wheel I/O" 9D/M -> C12
     JACK 10 "Assorted Thermometry" 15D/F -> C13
@@ -146,7 +145,7 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     JACK p1 "BLASTbus ADC Rack" MS_CIRC6/F -> ACS CABLE ""
     JACK p2 "CRYOBOB" 7W2D/F -> CRYOBOB CABLE ""
     JACK p3 "Starcam" 17W2D/F -> STARCAM CABLE ""
-    JACK p4 "Starcam Motor" 7W2D/F -> C1 CABLE ""
+    JACK p4 "Starcam Motor" 7W2D/F -> STARCAM CABLE ""
     JACK p5 "Gyros Power" 17W2D/F -> GYROS CABLE ""
     JACK p6 "Reaction Wheel" 7W2D/F -> C2 CABLE ""
     JACK p7 "Pivot" 7W2D/F -> C3 CABLE ""
@@ -190,15 +189,22 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     LINE "Gy6 Switch" (3,30),(p5,10)
     LINE "Gyro Heater" (3,29),(p5,11)
     LINE "Gyros Inhibit" (p5,4)
-    LINE "Table A/COS" (0,24),(7,1)
-    LINE "Table B/SIN" (0,26),(7,6)
-    LINE "Table Z" (0,25),(7,2)
-    LINE "Table Zbar" (0,28),(7,7)
-    LINE "Table Ground" (0,27),(7,3)
-    LINE "SC1 Trig" (0,23)
-    LINE "SC1 Trig Gnd (DGND)" (0,22)
-    LINE "SC2 Trig" (0,4)
-    LINE "SC2 Trig Gnd (DGND)" (0,3)
+    LINE "Starcam Motor Battery+" (p4, A1)
+    LINE "Starcam Motor Ground" (p4, A2)
+    LINE "Starcam A/SIN" (0,26),(p4,1)
+    LINE "Starcam B/COS" (0,24),(p4,3)
+    LINE "Starcam Z" (0,25),(p4,2)
+    LINE "Starcam Zbar" (0,28),(p4,4)
+    LINE "Starcam Encoder Ground" (0,27),(p4,5)
+    LINE "Starcam Battery+" (p3,A1)
+    LINE "Starcam Battery Ground" (p3,A2)
+    LINE "SC1 Trig" (0,23),(p3,1)
+    LINE "SC1 Trig Gnd (DGND)" (0,22),(p3,8)
+    LINE "SC2 Trig" (0,4),(p3,2)
+    LINE "SC2 Trig Gnd (DGND)" (0,3),(p3,9)
+    LINE "Starcam Temp+" (p3,3)
+    LINE "Starcam Temp-" (p3,10)
+    LINE "Starcam Heater" (p3,4)
     LINE "RW Phase+" (1,6)
     LINE "RW Phase-" (1,22)
     LINE "RW Current+" (1,7)
@@ -523,29 +529,45 @@ MAGBOX "Connector Plate for Magnetometer" < MAG
     LINE "Mag Z" (0,5),(1,GRN)
 
 STARCAM "Rotating Star Camera" < OF
-    JACK 0 "Power, signals" 17W2D/M -> ACSBOB CABLE "Starcam Power"
+    JACK 0 "Power, signals" 17W2D/M -> ACSBOB CABLE "Star Camera"
     JACK 1 "Ethernet" ETH/F -> WSPOUT/6d CABLE "Starcam Ethernet"
-    #JACK 2 "Motor" 7W2D/M -> ACSBOB
+    JACK 2 "Motor" 7W2D/M -> ACSBOB CABLE "Starcam Motor"
+    JACK IN 3 "Motor" 7W2DR/F -> C1
 
 SCTABLE "Star Camera Rotary Table" < STARCAM
-    JACK 0 "Motor Feedback" 25D/M -> C11
+    JACK 0 "Motor Feedback" 25D/M -> C1
     JACK 1 "Motor Power" 9W4D/M -> C1
 
 SCTAB_C "Star Camera Rotary Table Controller" < SCTABLE
-    JACK 0 "Motor Feedback" 15UD/F -> C11
+    JACK 0 "Motor Feedback" 15UD/F -> C1
     JACK 1 "Communication" RS232/F -> HUB232 CABLE "Starcam Table Serial"
     #JACK 2 "Control I/O (Not needed?)" 26UD/F
     JACK 3 "Power" TERM/F -> C1
 
-CABLE C1 "Starcam Motor Power Hydra"
-    JACK 0 "Controller" BARE/M -> SCTAB_C
-    JACK 1 "Motor" 9W4D/F -> SCTABLE
-    JACK 2 "Source" 7W2D/M -> ACSBOB CABLE "Starcam Motor Power, Main"
-
-CABLE C11 "Starcam Motor Feedback Hydra"
-    JACK 0 "Feedback Source" 25D/F -> SCTABLE
-    JACK 1 "Controller End" 15UD/M -> SCTAB_C
-    JACK 2 "BLASTbus End" 9D/F -> ACSBOB CABLE "Starcam Table Feedback BB"
+CABLE C1 "Starcam Motor Hydra"
+    JACK 0 "To ACS" 7W2DR/M -> STARCAM
+    JACK 1 "Controller Power" BARE/M -> SCTAB_C
+    JACK 1b "Controller Feedback" 15UD/M -> SCTAB_C
+    JACK 2 "Motor Power" 9W4D/F -> SCTABLE
+    JACK 2b "Motor Feedback" 25D/F -> SCTABLE
+    LINE "Battery+" (0,A1),(1;6,7)
+    LINE "Battery Ground" (0,A2),(1,8),(2,A4)
+    LINE "Motor Phase A" (1,1),(2,A1)
+    LINE "Motor Phase B" (1,2),(2,A2)
+    LINE "Motor Phase C" (1,3),(2,A3)
+    LINE "Motor Shield" (1,5),(2,1)
+    LINE "A/SIN" (0,1),(1b,1),(2b,17)
+    LINE "A/SIN-N" (1b,11),(2b,18)
+    LINE "B/COS" (0,3),(1b,2),(2b,14)
+    LINE "B/COS-N" (1b,12),(2b,15)
+    LINE "Z/MKR" (0,2),(1b,7),(2b,7)
+    LINE "Z/MKR-N" (0,4),(1b,8),(2b,6)
+    LINE "Encoder Gnd" (0,5),(1b,13),(2b;8,20,21)
+    LINE "Encoder +5V" (1b,3),(2b;3,16)
+    LINE "Hall A" (1b,5),(2b,10)
+    LINE "Hall B" (1b,9),(2b,5)
+    LINE "Hall C" (1b,4),(2b,11)
+    LINE "Motor Temp" (1b,6),(2b,2)
 
 BSCAM "Bore-sight Star Camera" < IF
     JACK 0 "Power, Signals" 7W2D/M -> ACSBOB CABLE "Bore-sight Camera"

@@ -170,8 +170,11 @@ class Jack:
     else: dest = self.dest.ref  #mates directly to component
     if hasattr(self.location, 'p2p'): location = self.location.number
     else: location = self.location.ref
-    self.__class__.jackout.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(self.number,\
-	self.gender, location, self.conn.type, dest, self.label, UID_UTIME))
+    if self.internal: internal = 'Y'
+    else: internal = 'N'
+    self.__class__.jackout.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"%(\
+	self.number, self.gender, internal, location, self.conn.type, dest,\
+	self.label, UID_UTIME))
     
 import re
 class Line:
