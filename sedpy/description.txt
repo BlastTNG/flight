@@ -358,6 +358,8 @@ CABLE C16 "Large fictitious cable inside the Waterspout"
     JACK 14 "WD Control" 9DR/M -> WSPOUT/7r
     JACK 15 "Hub Power" WIRE/M -> WSHUB/0
     JACK 16 "BiPhase" 9DR/M -> WSPOUT/3r
+    JACK 17 "Itsy Parallel Port" 25D/M -> ITSY
+    JACK 17b "Itsy Parallel Port" 25D/M -> BITSY
     LINE "GPS Time Gnd" (1,5),(4,32)
     LINE "GPS Time TxD" (1,2),(4,30)
     LINE "GPS Time RxD" (1,3),(4,31)
@@ -415,6 +417,16 @@ CABLE C16 "Large fictitious cable inside the Waterspout"
     LINE "Temp Sensor-" (4,13),(11,4)
     LINE "PV On" (4,10),(11,1)
     LINE "PV Off" (4,9),(11,3)
+    LINE "Itsy Tickle 0" (17,2),(2,1)
+    LINE "Itsy Tickle 1" (17,3),(2,2)
+    LINE "Itsy Tickle 2" (17,4),(2,3)
+    LINE "Itsy Tickle 3" (17,5),(2,4)
+    LINE "Itsy Tickle Gnd" (17,25),(2,5)
+    LINE "Bitsy Tickle 0" (17b,2),(3,1)
+    LINE "Bitsy Tickle 1" (17b,3),(3,2)
+    LINE "Bitsy Tickle 2" (17b,4),(3,3)
+    LINE "Bitsy Tickle 3" (17b,5),(3,4)
+    LINE "Bitsy Tickle Gnd" (17b,25),(3,5)
 
 ITSY "Master Control Computer: 'Itsy'" < WSPOUT
     JACK 0 "Power" ATX/F -> ITSYSUP
@@ -422,6 +434,7 @@ ITSY "Master Control Computer: 'Itsy'" < WSPOUT
     JACK 2 "Ethernet" ETH/F -> WSHUB CABLE "Itsy Ethernet"
     JACK 3 "Serial1" RS232/M -> C16/12
     JACK 4 "Serial2" RS232/M -> C16/12b
+    JACK 5 "Parallel Port" 25D/F -> C16/17
 
 BITSY "Master Control Computer: 'Bitsy'" < WSPOUT
     JACK 0 "Power" ATX/F -> BITSYSUP
@@ -429,6 +442,7 @@ BITSY "Master Control Computer: 'Bitsy'" < WSPOUT
     JACK 2 "Ethernet" ETH/F -> WSHUB CABLE "Bitsy Ethernet"
     JACK 3 "Serial1" RS232/M -> C16/12c
     JACK 4 "Serial2" RS232/M -> C16/12d
+    JACK 5 "Parallel Port" 25D/F -> C16/17b
 
 ITSYSUP "Itsy's ATX Power Supply" < WSPOUT
     JACK 0 "Power In" WIRE/M -> C16/13
