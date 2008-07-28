@@ -18,12 +18,11 @@
 17W2DR -> 17W2DR 17 "Rear of D-Subminiature Combo" Y N M-F F-M
 15UD -> 15UD 15 "D-Subminiature Micro" N N M-F F-M
 26UD -> 26UD 26 "D-Subminiature Micro" N N M-F F-M
-JF4 -> JF4 4 "JF Series Sidemount (JF1#3#B)" Y N M-F F-M
+JF4 -> JF4 4 "JF Series Sidemount (JF1*3*B)" Y N M-F F-M
 NX15 -> NX15 15 "Nanonics Dualobe" N N M-F F-M
 MS_CIRC6 -> MS_CIRC6 6 "MS/Standard Series Cylindrical" Y Y M-F F-M
 DIN41612 -> DIN41612 64 "DIN41612 cardmount" N N M-F F-M
 BNC -> BNC 2 "BNC, probably 50ohm" Y N M-F F-M
-BARREL -> BARREL 2 "Barrel Power Connector" Y N M-F F-M
 HEADER -> HEADER 0 "Cable Header" N N M-F F-M
 ETH -> ETH 0 "Standard RJ45 Ethernet" N Y M-F F-M
 RS232 -> RS232 0 "Standard 9D RS232 serial" N N M-F F-M
@@ -45,7 +44,9 @@ IF "Inner Frame (cryostat)" < SPIDER
 
 OF "Outer Frame" < SPIDER
 
-#Done
+################################################################################
+# ACS
+
 ACS "Attitude Control System (and Housekeeping) Electronics" < OF
     JACK 0 "Power" MS_CIRC6/M -> ACSBOB CABLE "BLASTbus ADC Rack power"
     JACK IN 0b "Internal power" MYSTERY/F -> ACSDCDC
@@ -63,13 +64,11 @@ ACS "Attitude Control System (and Housekeeping) Electronics" < OF
     LINE "BLASTbus Strobe+" (1,9),(1b,9)
     LINE "BLASTbus Strobe-" (1,1),(1b,1)
 
-#Done-ish (eventually want to replace mystery connectors)
 ACSDCDC "ACS DC-DC Power Module" < ACS
     JACK 0 "Battery In" MYSTERY/F -> ACS
     JACK 1 "ADC Power" MYSTERY/F -> ACSBP
     LINE "Ground (A & D the same)" (1;7,8)
 
-#Done
 ACSBP "ACS Backplane" < ACS
     JACK 0 "Power"  MYSTERY/F -> ACSDCDC
     JACK 1 "BLASTbus" 15D/F -> ACS
@@ -135,7 +134,6 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     JACK 4 "POW1 Analog" 50D/F -> POW1 CABLE ""
     JACK 5 "POW1 Extra" 9D/F -> POW1 CABLE ""
     JACK 8 "Gyros Data" 25D/M -> GYROS CABLE ""
-    JACK 9 "Reaction Wheel I/O" 9D/M -> C12
     JACK 10 "Assorted Thermometry" 15D/F -> C13
     JACK 13 "Inclinometer" 9D/F -> CLINIF CABLE ""
     JACK 14 "Magnetometer" 9D/F -> MAGBOX CABLE ""
@@ -147,8 +145,8 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     JACK p3 "Starcam" 17W2D/F -> STARCAM CABLE ""
     JACK p4 "Starcam Motor" 7W2D/F -> STARCAM CABLE ""
     JACK p5 "Gyros Power" 17W2D/F -> GYROS CABLE ""
-    JACK p6 "Reaction Wheel" 7W2D/F -> C2 CABLE ""
-    JACK p7 "Pivot" 7W2D/F -> C3 CABLE ""
+    JACK p6 "Reaction Wheel" 7W2D/F -> REAC CABLE ""
+    JACK p7 "Pivot" 7W2D/F -> PIVOT CABLE ""
     JACK p10 "Science Stack Power" 9D/F -> STACK CABLE ""
     JACK p10b "Science Stack Commands" 37D/F -> STACK CABLE ""
     JACK p11 "MCE" 8W8D/F -> MCE CABLE ""
@@ -158,6 +156,8 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     JACK p16 "IF Hub" MYSTERY/F -> IFHUB CABLE ""
     JACK p17 "BS Cam" 7W2D/F -> BSCAM CABLE ""
     JACK p18 "Sun Sensor" MYSTERY/F -> SUN CABLE ""
+    JACK p19 "Elevation Right" 7W2D/F -> ELE_R CABLE ""
+    JACK p19b "Elevation Left" 7W2D/F -> ELE_L CABLE ""
     LINE "Gyro1 CLK" (0,12),(8,1)
     LINE "Gyro1 DAT" (0,11),(8,14)
     LINE "Gyro1 STR" (0,10),(8,2)
@@ -307,6 +307,9 @@ DACTRANS "Transmitter for SPI DAC Bus" < ACSBOB
     JACK 1 "Raw Signals" HEADER/M -> CRYO1 CABLE ""
     JACK 2 "Power" HEADER/M -> ACSPM
 
+################################################################################
+# Computers, Digital
+
 LABUSE "Non-part representing connection to computers in lab" < WSPOUT
     JACK 0 "Ethernet" ETH/M -> WSPOUT
     JACK 1 "WD Control (normally fed back)" 9D/M -> WSPOUT
@@ -314,8 +317,8 @@ LABUSE "Non-part representing connection to computers in lab" < WSPOUT
 WSPOUT "The Waterspout (Flight Computer Box)" < OF
     JACK 0 "BLASTbus" 15D/M -> ACS CABLE ""
     JACK IN 0r "BLASTbus" 15DR/F -> C16
-    JACK 1 "Sync (sic)" 9D/M -> MCE CABLE ""
-    JACK IN 1r "Sync (sic)" 9DR/F -> C16
+    JACK 1 "Snyc (sic)" 9D/M -> MCE CABLE ""
+    JACK IN 1r "Snyc (sic)" 9DR/F -> C16
     JACK 2 "Power" 7W2D/M -> ACSBOB CABLE "Waterspout Power"
     JACK IN 2r "Power" 7W2DR/F -> C16
 #    JACK 3 "BiPhase" 9D/M -> Somewhere
@@ -334,6 +337,14 @@ WSPOUT "The Waterspout (Flight Computer Box)" < OF
     JACK IN 7r "WD Control" 9DR/F -> C16/14
     JACK 8 "Serial GPS1" RS232/M -> DGPS CABLE ""
     JACK 8b "Serial GPS2" RS232/M -> DGPS CABLE ""
+    LINE "BLASTbus +5V" (0;6,13,14),(0r;6,13,14)
+    LINE "BLASTbus Ground" (0;7,8,15),(0r,7,8,15)
+    LINE "BLASTbus Clock+" (0,2),(0r,2)
+    LINE "BLASTbus Clock-" (0,5),(0r,5)
+    LINE "BLASTbus Data+" (0,3),(0r,3)
+    LINE "BLASTbus Data-" (0,4),(0r,4)
+    LINE "BLASTbus Strobe+" (0,9),(0r,9)
+    LINE "BLASTbus Strobe-" (0,1),(0r,1)
 
 CABLE C16 "Large fictitious cable inside the Waterspout"
     JACK 0 "WD Power" 15D/F -> WDOG
@@ -382,8 +393,8 @@ CABLE C16 "Large fictitious cable inside the Waterspout"
     LINE "Bat Ground" (11,A2),(0;2,10,15),(13,2),(13b,2),(15,2)
     LINE "Itsy Batt+ Switched" (13,1),(5,1)
     LINE "Bitsy Batt+ Switched" (13b,1),(6,1)
-    LINE "BLASTbus +5" (14,1),(0;3,4,11,12),(7;8,27),(8;8,27),(9;15,8)
-    LINE "BLASTbus Ground" (14,7),(0;5,6,13,14),(7;7,26,36,37),(8;7,26,36,37),(9;14,7)
+    LINE "BLASTbus +5V" (14,1),(0;3,4,11,12),(7;8,27),(8;8,27),(9;6,13,14)
+    LINE "BLASTbus Ground" (14,7),(0;5,6,13,14),(7;7,26,36,37),(8;7,26,36,37),(9;7,8,15)
     LINE "WD Control In" (14,6),(4,14)
     LINE "WD Control Out" (14,2),(4,15)
     LINE "WD Itsy Reboot Inh In" (14,4),(5,4)
@@ -393,12 +404,12 @@ CABLE C16 "Large fictitious cable inside the Waterspout"
     LINE "Hub Power (Shares Gnd with Bat Gnd)" (11,5),(15,1)
     LINE "Itsy BLASTbus Inh" (2,24),(7,18)
     LINE "Bitsy BLASTbus Inh" (3,24),(8,18)
-    LINE "BLASTbus Clock+" (7,14),(8,14),(9,3)
-    LINE "BLASTbus Clock-" (7,33),(8,33),(9,11)
-    LINE "BLASTbus Data+" (7,16),(8,16),(9,1)
-    LINE "BLASTbus Data-" (7,35),(8,35),(9,9)
-    LINE "BLASTbus Strobe+" (7,15),(8,15),(9,2)
-    LINE "BLASTbus Strobe-" (7,34),(8,34),(9,10)
+    LINE "BLASTbus Clock+" (7,14),(8,14),(9,2)
+    LINE "BLASTbus Clock-" (7,33),(8,33),(9,5)
+    LINE "BLASTbus Data+" (7,16),(8,16),(9,3)
+    LINE "BLASTbus Data-" (7,35),(8,35),(9,4)
+    LINE "BLASTbus Strobe+" (7,15),(8,15),(9,9)
+    LINE "BLASTbus Strobe-" (7,34),(8,34),(9,1)
     LINE "Itsy BiPhase Inh" (2,25),(7,19)
     LINE "Bitsy BiPhase Inh" (3,25),(8,19)
     LINE "BiPhase +5V" (7,1),(8,1),(16,4)
@@ -486,7 +497,7 @@ HUB232 "RS232 Serial Hub" < OF
     JACK 1 "Ethernet" ETH/F -> WSPOUT CABLE "Serial Hub Ethernet"
     JACK 2 "Starcam Table" RS232/M -> SCTAB_C CABLE ""
     JACK 3 "Reaction Wheel" RS232/M -> REAC_C CABLE ""
-    JACK 4 "Pivot" RS232/M -> PIVCOMM
+    JACK 4 "Pivot" RS232/M -> PIVOT_C CABLE ""
     JACK 5 "SIP Comm1" RS232/M -> SIP/0 CABLE ""
     JACK 6 "SIP Comm2" RS232/M -> SIP/1 CABLE ""
     JACK 7 "SIP TDRSS" RS232/M -> SIP/2 CABLE ""
@@ -498,6 +509,9 @@ IFHUB "Inner Frame Ethernet Switch" < IF
     JACK 1 "BS Cam" ETH/F -> BSCAM CABLE ""
     JACK 2 "MCE1 x2 or x3" ETH/F -> MCE CABLE ""
     JACK 3 "Waterspout" ETH/F -> WSPOUT CABLE "Inner Frame to Waterspout hubs"
+
+################################################################################
+# Pointing Sensors
 
 GYROS "Gyroscope Box" < IF
     JACK 0 "Signals" 25D/F -> ACSBOB CABLE "Gyro Signals"
@@ -525,7 +539,6 @@ GPS2 "GPS Receiver #2" < DGPS
 GPS3 "GPS Receiver #3" < DGPS
     JACK 0 "Data" BNC/M -> DGPS CABLE "GPS3 Data"
 
-
 CLINIF "Inner Frame Inclinometer" < IF
     JACK 0 "Power, signal" 9D/M -> ACSBOB CABLE "Inclinometer"
 
@@ -541,6 +554,9 @@ MAGBOX "Connector Plate for Magnetometer" < MAG
     LINE "Mag X" (0,4),(1,ORG)
     LINE "Mag Y" (0,9),(1,YEL)
     LINE "Mag Z" (0,5),(1,GRN)
+
+SUN "Sun Sensor" < OF
+    JACK 0 "Power, Signals" MYSTERY/F -> ACSBOB CABLE "Sun Sensor"
 
 STARCAM "Rotating Star Camera" < OF
     JACK 0 "Power, signals" 17W2D/M -> ACSBOB CABLE "Star Camera"
@@ -587,51 +603,70 @@ BSCAM "Bore-sight Star Camera" < IF
     JACK 0 "Power, Signals" 7W2D/M -> ACSBOB CABLE "Bore-sight Camera"
     JACK 1 "Ethernet" ETH/F -> IFHUB CABLE "Bore-sight Camera Ethernet"
 
-SUN "Sun Sensor" < OF
-    JACK 0 "Power, Signals" MYSTERY/F -> ACSBOB CABLE "Sun Sensor"
+################################################################################
+# Pointing Motors
 
 REAC "Reaction Wheel" < OF
-    JACK 0 "Feedback" 15UD/M -> REAC_C
-    JACK 1 "Power" BARE/M -> REAC_C
+    JACK 0 "Power, Feedback" 7W2D/M -> ACSBOB CABLE "Reaction Wheel"
+    JACK IN 1 "Power" BARE/M -> REAC_C
+    JACK IN 2 "Feedback" 26UD/M -> REAC_C
+    LINE "Battery+" (0,A1)
+    LINE "Battery Ground" (0,A2)
+    LINE "Current+" (0,1)
+    LINE "Current-" (0,3)
+    LINE "Phase+" (0,2)
+    LINE "Phase-" (0,4)
 
 REAC_C "Reaction Wheel Controller" < REAC
     JACK 0 "Communication" RS232/F -> HUB232 CABLE "Reaction Wheel Serial"
-    JACK 1 "Controller I/O" 26UD/F -> C12
-    JACK 2 "Power" TERM/F -> C2
-    JACK 3 "Feedback" 15UD/F -> REAC
-    JACK 4 "Motor Power" TERM/F -> REAC
+    JACK 1 "Controller I/O" 26UD/F -> REAC
+    JACK 2 "Power" TERM/F -> REAC
+    JACK 3 "Feedback" 15UD/F -> REAC_M
+    JACK 4 "Motor Power" TERM/F -> REAC_M
+
+REAC_M "Reaction Wheel Motor" < REAC
+    JACK 0 "Feedback" 15UD/M -> REAC_C
+    JACK 1 "Power" BARE/M -> REAC_C
 
 PIVOT "Pivot" < OF
-    JACK 0 "Encoder" HEADER/M -> PIVOT_C -> CABLE ""
-    JACK 1 "Motor" HEADER/F -> PIVOT_C
-
-PIVCOMM "Pivot Communications: RS232-485 Converter" < PIVOT
-    JACK 0 "Communication" RS232/F -> HUB232
-    JACK 1 "Power" TERM/F -> C3
-    JACK 2 "RS485" HEADER/M -> PIVOT_C CABLE "Pivot RS485, Power"
+    JACK 0 "Power, Feedback" 7W2D/M -> ACSBOB CABLE "Pivot"
+    JACK IN 1 "Power" BARE/M -> PIVOT_C
+    JACK IN 2 "Feedback" 26UD/M -> PIVOT_C
+    LINE "Battery+" (0,A1)
+    LINE "Battery Ground" (0,A2)
+    LINE "Current+" (0,1)
+    LINE "Current-" (0,3)
+    LINE "Pos+" (0,2)
+    LINE "Pos-" (0,4)
 
 PIVOT_C "Pivot Controller" < PIVOT
-    JACK 0 "RS485" HEADER/M -> PIVCOMM CABLE ""
-    JACK 1 "Encoder" HEADER/M -> PIVOT/0 -> CABLE "Pivot Encoder"
-    JACK 2 "Motor, I/O" HEADER/M -> PIVOT/1
-    LINE "This is for testing" (0,1)
+    JACK 0 "Communication" RS232/F -> HUB232 CABLE "Pivot Serial"
+    JACK 1 "Controller I/O" 26UD/F -> PIVOT
+    JACK 2 "Power" TERM/F -> PIVOT
+    JACK 3 "Feedback" HEADER/F -> PIVOT_M/0
+    JACK 4 "Motor Power" HEADER/F -> PIVOT_M/1
 
-CABLE C2 "Reaction Wheel Power"
-    JACK 0 "Controller" BARE/M -> REAC_C
-    JACK 1 "Source" 7W2D/M -> ACSBOB CABLE "Reaction Wheel Power, Main"
+PIVOT_M "Pivot Motor" < PIVOT
+    JACK 0 "Feedback" HEADER/M -> PIVOT_C/3
+    JACK 1 "Power" HEADER/M -> PIVOT_C/4
 
-CABLE C3 "Pivot Power"
-    JACK 0 "Controller" BARE/M -> PIVCOMM
-    JACK 1 "Source" 7W2D/M -> ACSBOB CABLE "Pivot Power Main"
+ELE_R "Right-Side Elevation Drive" < OF
+    JACK 0 "Power" 7W2D/M -> ACSBOB CABLE "Right Elevation Drive"
 
-CABLE C12 "Reaction Wheel Controller I/O"
-    JACK 0 "Controller" 26UD/M -> REAC_C
-    JACK 1 "BLASTbus" 9D/F -> ACSBOB
+ELE_L "Left-Side Elevation Drive" < OF
+    JACK 0 "Power" 7W2D/M -> ACSBOB CABLE "Left Elevation Drive"
+
+
+################################################################################
+# MCE
 
 MCE "Multi-Channel Electornics (Detector Readout)" < IF
     JACK 0 "Ethernet" ETH/F -> IFHUB CABLE "MCE Ethernet"
     JACK 1 "BBC Snyc (sic)" 9D/F -> WSPOUT CABLE "Snyc"
     JACK 2 "Power" 8W8D/M -> ACSBOB CABLE "MCE Power"
+
+################################################################################
+# Steppers
 
 STEPCOMM "Stepper Bus (Window, Waveplate) Communicators" < HUB232
     JACK 0 "Power" 7W2D/F -> ACSBOB CABLE "Stepper Power"
@@ -652,11 +687,15 @@ WINDCOMM "Deployable Window RS232-485 converter" < STEPCOMM
     JACK 0 "Communication" RS232/F -> HUB232
     JACK 1 "Power" TERM/F -> STEPCOMM
     JACK 2 "RS485" HEADER/M -> STEPCOMM
+    LINE "Battery+" (1,1),(2,1)
+    LINE "Battery Ground" (1,2),(2,2)
 
 WPCOMM "Waveplate RS232-485 converter" < STEPCOMM
     JACK 0 "Communication" RS232/F -> HUB232
     JACK 1 "Power" TERM/F -> STEPCOMM
     JACK 2 "RS485" HEADER/M -> STEPCOMM
+    LINE "Battery+" (1,1),(2,1)
+    LINE "Battery Ground" (1,2),(2,2)
 
 WINDOWS "Deployable Windows" < IF
     JACK 0 "Window Bus In" 7W2D/F -> STEPCOMM CABLE ""
@@ -669,10 +708,15 @@ WINDOWS "Deployable Windows" < IF
 WINDN "Deployable Window #n" < WINDOWS
     JACK 0 "RS485" 7W2D/M -> C14
     JACK IN 1 "Controller" HEADER/F -> WINDN_C
+    LINE "Battery+" (0,A1),(1,1)
+    LINE "Bat Ground" (0,A2),(1,2)
+    LINE "RS485 A" (0,1),(1,4)
+    LINE "RS485 B" (0,3),(1,3)
 
 WINDN_C "Deployable Window #n Controller" < WINDN
     JACK 0 "RS485" HEADER/M -> WINDN
     JACK IN 1 "Motor" HEADER/F -> WINDN_M
+    #need motor lines
 
 WINDN_M "Deployable Window #n Motor" < WINDN
     JACK 0 "Power, Feedback" HEADER/M -> WINDN_C
@@ -703,10 +747,15 @@ WPN "Waveplate #n" < WAVEPLTS
     JACK 0 "RS485" 7W2D/M -> C15
     JACK IN 1 "Controller" HEADER/F -> WPN_C
     JACK 2 "Feedback" JF4/F -> WAVEPLTS CABLE ""
+    LINE "Battery+" (0,A1),(1,1)
+    LINE "Bat Ground" (0,A2),(1,2)
+    LINE "RS485 A" (0,1),(1,4)
+    LINE "RS485 B" (0,3),(1,3)
 
 WPN_C "Waveplate #n Controller" < WPN
     JACK 0 "RS485" HEADER/M -> WPN
     JACK IN 1 "Motor" HEADER/F -> WPN_M
+    #need motor lines
 
 WPN_M "Waveplate #n Motor" < WPN
     JACK 0 "Power" HEADER/F -> WPN_C
@@ -719,6 +768,9 @@ CABLE C15 "Waveplate RS485 Daisy Chain"
     LINE "RS485 A" (0,1),(1,1)
     LINE "RS485 B" (0,3),(1,3)
 
+################################################################################
+# SIP
+
 SIP "Support Instrumentation Package" < OF
     JACK 0 "Comm1" RS232/M -> HUB232/5 CABLE "SIP Comm1"
     JACK 1 "Comm2" RS232/M -> HUB232/6 CABLE "SIP Comm2"
@@ -730,6 +782,9 @@ STACK "SIP Science Stack" < SIP
     JACK 1 "On/Off Commands" 37D/M -> ACSBOB CABLE "Science Stack On/Off Commands"
     JACK 2 "Communications" MYSTERY/F -> SIP CABLE ""
     LINE "Battery Ground" (0,6),(1;30,32,34,36)
+
+################################################################################
+# Power System
 
 SOLAR "Solar Cells" < OF
     JACK 0 "Array Group 1" 8W8D/F -> CHARGE_C/0 CABLE "Solar Power Set 1"
@@ -802,6 +857,9 @@ BATT "Batteries" < OF
     LINE "Battery +" (0;A1,A2,A3,A4),(1;A1,A2,A3,A4)
     LINE "Battery -" (0;A5,A6,A7,A8),(1;A5,A6,A7,A8)
 
+
+################################################################################
+# Cryostat, etc.
 
 CRYOBOB "Cryostat Housekeeping Break-out Box" < IF
     #does the CRYBOB need a beefier power cable?
