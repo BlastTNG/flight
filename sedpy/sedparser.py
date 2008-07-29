@@ -10,6 +10,8 @@ connectors = []  #list of connectors
 containers = []  #list of components and cables
 expected = []    #list of parts that have ben referenced but not declared
 
+countconn = []   #counts how many of each connector
+
 def writeInfiles():
   """from connectors, containers lists creates database infiles"""
   for conn in connectors:
@@ -20,6 +22,7 @@ def writeInfiles():
     for jack in cont.jacks:
       #print "writing", jack.ref, "with dest", jack.dest.ref
       if not jack.placeholder:
+        countconn.append(jack.conn_str)
 	for pin in jack.pins: pin.toInfile()
 	jack.toInfile()
 	if jack.cable and jack.cablemaster:
@@ -261,6 +264,10 @@ if __name__ == "__main__":
   try:
     sedparser()
     writeInfiles()
+    print "\n%10s%10s%10s"%("Jack Type", "# Male", "# Female")    
+    for conn in connectors:
+      if countconn.count(conn.type+"/M") > 0 or countconn.count(conn.type+"/F") > 0:
+        print "%10s%10s%10s"%(conn.type, countconn.count(conn.type+"/M")+countconn.count(conn.type+"/F"), countconn.count(conn.type+"/F")+countconn.count(conn.type+"/M"))
     print "\nAll Done!"
     sys.exit()
   except Failure, err:
