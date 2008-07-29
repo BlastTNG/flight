@@ -151,7 +151,7 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     JACK p10b "Science Stack Commands" 37D/F -> STACK CABLE ""
     JACK p11 "MCE" 8W8D/F -> MCE CABLE ""
     JACK p12 "Steppers" 7W2D/F -> STEPCOMM CABLE ""
-    JACK p14 "Computers" 7W2D/F -> WSPOUT CABLE ""
+    JACK p14 "Computers" 17W2D/F -> WSPOUT CABLE ""
     JACK p15 "RS232 Hub" MYSTERY/F -> HUB232 CABLE ""
     JACK p16 "IF Hub" MYSTERY/F -> IFHUB CABLE ""
     JACK p17 "BS Cam" 7W2D/F -> BSCAM CABLE ""
@@ -161,22 +161,28 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     LINE "Gyro1 CLK" (0,12),(8,1)
     LINE "Gyro1 DAT" (0,11),(8,14)
     LINE "Gyro1 STR" (0,10),(8,2)
-    LINE "Gyro2 CLK" (0,31),(8,15)
-    LINE "Gyro2 DAT" (0,30),(8,3)
-    LINE "Gyro2 STR" (0,29),(8,16)
-    LINE "Gyro3 CLK" (0,15),(8,4)
-    LINE "Gyro3 DAT" (0,33),(8,17)
-    LINE "Gyro3 STR" (0,9),(8,5)
-    LINE "Gyro4 CLK" (0,36),(8,18)
-    LINE "Gyro4 DAT" (0,35),(8,6)
-    LINE "Gyro4 STR" (0,34),(8,19)
-    LINE "Gyro5 CLK" (0,18),(8,7)
-    LINE "Gyro5 DAT" (0,17),(8,20)
-    LINE "Gyro5 STR" (0,16),(8,8)
-    LINE "Gyro6 CLK" (0,7),(8,21)
-    LINE "Gyro6 DAT" (0,6),(8,9)
-    LINE "Gyro6 STR" (0,5),(8,22)
-    LINE "Gyro Ground (DGND)" (0;37,13),(8;10,23)
+    LINE "Gyro1 TST" (8,15)
+    LINE "Gyro2 CLK" (0,31),(8,3)
+    LINE "Gyro2 DAT" (0,30),(8,16)
+    LINE "Gyro2 STR" (0,29),(8,4)
+    LINE "Gyro2 TST" (8,17)
+    LINE "Gyro3 CLK" (0,15),(8,5)
+    LINE "Gyro3 DAT" (0,33),(8,18)
+    LINE "Gyro3 STR" (0,9),(8,6)
+    LINE "Gyro3 TST" (8,19)
+    LINE "Gyro4 CLK" (0,36),(8,7)
+    LINE "Gyro4 DAT" (0,35),(8,20)
+    LINE "Gyro4 STR" (0,34),(8,8)
+    LINE "Gyro4 TST" (8,21)
+    LINE "Gyro5 CLK" (0,18),(8,9)
+    LINE "Gyro5 DAT" (0,17),(8,22)
+    LINE "Gyro5 STR" (0,16),(8,10)
+    LINE "Gyro5 TST" (8,23)
+    LINE "Gyro6 CLK" (0,7),(8,11)
+    LINE "Gyro6 DAT" (0,6),(8,24)
+    LINE "Gyro6 STR" (0,5),(8,12)
+    LINE "Gyro6 TST" (8,25)
+    LINE "Gyro Ground (DGND)" (0;37,13),(8;13)
     LINE "Gyro Battery+" (p5,A1)
     LINE "Gyro Battery-" (p5,A2),(3,32)
     LINE "Gyro Temp+" (1,10),(p5,7)
@@ -319,8 +325,8 @@ WSPOUT "The Waterspout (Flight Computer Box)" < OF
     JACK IN 0r "BLASTbus" 15DR/F -> C16
     JACK 1 "Snyc (sic)" 9D/M -> MCE CABLE ""
     JACK IN 1r "Snyc (sic)" 9DR/F -> C16
-    JACK 2 "Power" 7W2D/M -> ACSBOB CABLE "Waterspout Power"
-    JACK IN 2r "Power" 7W2DR/F -> C16
+    JACK 2 "Power" 17W2D/M -> ACSBOB CABLE "Waterspout Power"
+    JACK IN 2r "Power" 17W2DR/F -> C16
 #    JACK 3 "BiPhase" 9D/M -> Somewhere
     JACK IN 3r "BiPhase" 9DR/F -> C16/16
     JACK IN 5 "Serial GPS1" RS232R/F -> C16
@@ -359,7 +365,7 @@ CABLE C16 "Large fictitious cable inside the Waterspout"
     JACK 8 "Bitsy BBC PCI" 37D/M -> BITSY
     JACK 9 "BLASTbus" 15DR/M -> WSPOUT
     JACK 10 "Snyc (sic)" 9DR/M -> WSPOUT
-    JACK 11 "Power In" 7W2DR/M -> WSPOUT
+    JACK 11 "Power In" 17W2DR/M -> WSPOUT
     JACK 12 "Itsy Serial1" RS232/F -> ITSY/3
     JACK 12b "Itsy Serial2" RS232/F -> ITSY/4
     JACK 12c "Bitsy Serial1" RS232/F -> BITSY/3
@@ -706,12 +712,12 @@ WINDOWS "Deployable Windows" < IF
     LINE "RS485 B" (0,3),(1,3)
 
 WINDN "Deployable Window #n" < WINDOWS
-    JACK 0 "RS485" 7W2D/M -> C14
+    JACK 0 "RS485" 9D/M -> C14
     JACK IN 1 "Controller" HEADER/F -> WINDN_C
-    LINE "Battery+" (0,A1),(1,1)
-    LINE "Bat Ground" (0,A2),(1,2)
-    LINE "RS485 A" (0,1),(1,4)
-    LINE "RS485 B" (0,3),(1,3)
+    LINE "Battery+" (0,1),(1,1)
+    LINE "Bat Ground" (0,6),(1,2)
+    LINE "RS485 A" (0,2),(1,4)
+    LINE "RS485 B" (0,7),(1,3)
 
 WINDN_C "Deployable Window #n Controller" < WINDN
     JACK 0 "RS485" HEADER/M -> WINDN
@@ -723,11 +729,11 @@ WINDN_M "Deployable Window #n Motor" < WINDN
 
 CABLE C14 "Deployable Window RS485 Daisy Chain"
     JACK 0 "RS485 Bus (in middle)" 7W2DR/M -> WINDOWS
-    JACK 1 "Window #n (x6)" 7W2D/F -> WINDN
-    LINE "Battery+" (0,A1),(1,A1)
-    LINE "Bat Ground" (0,A2),(1,A2)
-    LINE "RS485 A" (0,1),(1,1)
-    LINE "RS485 B" (0,3),(1,3)
+    JACK 1 "Window #n (x6)" 9D/F -> WINDN
+    LINE "Battery+" (0,A1),(1,1)
+    LINE "Bat Ground" (0,A2),(1,6)
+    LINE "RS485 A" (0,1),(1,2)
+    LINE "RS485 B" (0,3),(1,7)
 
 WAVEPLTS "Stepping Waveplates" < IF
     JACK 0 "Waveplate Bus In" 7W2D/F -> STEPCOMM CABLE ""
@@ -744,13 +750,13 @@ WAVEPLTS "Stepping Waveplates" < IF
     LINE "RS485 B" (0,3),(1,3)
 
 WPN "Waveplate #n" < WAVEPLTS
-    JACK 0 "RS485" 7W2D/M -> C15
+    JACK 0 "RS485" 9D/M -> C15
     JACK IN 1 "Controller" HEADER/F -> WPN_C
     JACK 2 "Feedback" JF4/F -> WAVEPLTS CABLE ""
-    LINE "Battery+" (0,A1),(1,1)
-    LINE "Bat Ground" (0,A2),(1,2)
-    LINE "RS485 A" (0,1),(1,4)
-    LINE "RS485 B" (0,3),(1,3)
+    LINE "Battery+" (0,1),(1,1)
+    LINE "Bat Ground" (0,6),(1,2)
+    LINE "RS485 A" (0,2),(1,4)
+    LINE "RS485 B" (0,7),(1,3)
 
 WPN_C "Waveplate #n Controller" < WPN
     JACK 0 "RS485" HEADER/M -> WPN
@@ -762,11 +768,11 @@ WPN_M "Waveplate #n Motor" < WPN
 
 CABLE C15 "Waveplate RS485 Daisy Chain"
     JACK 0 "RS485 Bus (in middle)" 7W2DR/M -> WAVEPLTS
-    JACK 1 "Waveplate #n (x6)" 7W2D/F -> WPN
-    LINE "Battery+" (0,A1),(1,A1)
-    LINE "Bat Ground" (0,A2),(1,A2)
-    LINE "RS485 A" (0,1),(1,1)
-    LINE "RS485 B" (0,3),(1,3)
+    JACK 1 "Waveplate #n (x6)" 9D/F -> WPN
+    LINE "Battery+" (0,A1),(1,1)
+    LINE "Bat Ground" (0,A2),(1,6)
+    LINE "RS485 A" (0,1),(1,2)
+    LINE "RS485 B" (0,3),(1,7)
 
 ################################################################################
 # SIP
