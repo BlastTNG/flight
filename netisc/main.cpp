@@ -176,6 +176,9 @@ int read_settings() {
   fgets(thisline,80,settingsfile); sscanf(thisline,"%f",&tempOffset);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%f",&tempPressuregain);
   fgets(thisline,80,settingsfile); sscanf(thisline,"%f",&tempPressureoffset);
+  fgets(thisline,80,settingsfile); sscanf(thisline,"%lu",&coolerActive);
+  fgets(thisline,80,settingsfile); sscanf(thisline,"%lu",&highSensMode);
+  fgets(thisline,80,settingsfile); sscanf(thisline,"%lu",&blackoutMode);
   
   fclose(settingsfile);
   // -------------------------------------------------------------------------
@@ -193,11 +196,12 @@ int read_settings() {
                  (unsigned long)( ((double)default_gain)*rel_gain ) ); 
   QCam_SetParamS32( &settings, qprmS32AbsoluteOffset, 
                     (signed long)(default_offset+rel_offset) );
-  
   //QCam_SetParam( &settings, qprmGain,(unsigned long)gain );
   //QCam_SetParam( &settings, qprmOffset, (unsigned long)offset );
-  
-  
+  QCam_SetParam( &settings, qprmCoolerActive, coolerActive );
+  QCam_SetParam( &settings, qprmHighSensitivityMode, highSensMode );
+  QCam_SetParam( &settings, qprmBlackoutMode, blackoutMode );
+    
   switch(triggertype) {
   case 0: 
     QCam_SetParam( &settings, qprmTriggerType, qcTriggerFreerun ); 
@@ -2663,14 +2667,16 @@ int main( int argc, char **argv ) {
   }
 
   printf("Power cycling the camera...\n");
-  printf("Raising pins on the parallel port... status=");
-  printf("%i\n",SetPortVal(PARALLEL_BASE,255,1));
-  if(NO_CAMERA == 0) Sleep(2000); // off sleep time
-
   printf("Lowering pins on the parallel port... status=");
   printf("%i\n",SetPortVal(PARALLEL_BASE,0,1));
-  if(NO_CAMERA == 0) Sleep(2000); // on sleep time
-
+  if(NO_CAMERA == 0) Sleep(500);
+  printf("Raising Data 1 on the parallel port... status=");
+  printf("%i\n",SetPortVal(PARALLEL_BASE,2,1));
+  if(NO_CAMERA == 0) Sleep(500);
+  printf("Lowering pins on the parallel port... status=");
+  printf("%i\n",SetPortVal(PARALLEL_BASE,0,1));
+  if(NO_CAMERA == 0) Sleep(3000);
+  
   // Initialize the camera driver
   if( NO_CAMERA == 0 ) {
     if( init_camera() == -1 ) return -1;

@@ -244,6 +244,9 @@ double rel_gain;            // relative gain to the default (>0)
 int rel_offset;             // relative offset to the default (+/-)
 double noiseGain;           // noise model gain for default CCD settings
 double noiseOffset;         //  "    offset      "
+unsigned long coolerActive; // non-zero for camera's ccd cooler active
+unsigned long highSensMode; // non-zero for camera's high sensitivity mode
+unsigned long blackoutMode; // non-zero for camera's blackout mode
 
 char catpath[255];          // UNIX-style path to the star catalogue
 char catalogname[255];      // UNIX-style path to alternate star catalogues for
