@@ -4,7 +4,7 @@
  *
  * C/C++ Windows header for Measurement Computing Universal Library
  *
- * (c) Copyright 1996-2003, Measurement Computing Corp.
+ * (c) Copyright 1996-2007, Measurement Computing Corp.
  * All rights reserved.
  *
  * This header file should be included in all C/C++ programs that will
@@ -15,11 +15,12 @@
 
 #if !defined (NT_DRIVER) && !defined (WIN95_DRIVER)
 #include <windows.h>
+#include <time.h>
 #endif
 
 
 /* Current Revision Number */
-#define CURRENTREVNUM      5.50
+#define CURRENTREVNUM      5.85
 
 /* System error code */
 #define NOERRORS           0    /* No error occurred */
@@ -179,12 +180,46 @@
 #define BADINDEX                158   /* Invalid index specified, or reached end of internal connection list. */
 #define NOCONNECTION            159   /* No connection is assigned to specified signal. */
 #define BADBURSTIOCOUNT         160   /* Count cannot be greater than the FIFO size for BURSTIO mode. */
+#define DEADDEV                 161   /* Device has stopped responding. Please check connections. */
+
+#define INVALIDACCESS           163    /* Invalid access or privilege for specified operation */
+#define UNAVAILABLE             164    /* Device unavailable at time of request. Please repeat operation. */
+#define NOTREADY                165   /* Device is not ready to send data. Please repeat operation. */
+#define BITUSEDFORALARM         169    /* The specified bit is used for alarm. */
+#define PORTUSEDFORALARM        170    /* One or more bits on the specified port are used for alarm. */
+#define PACEROVERRUN            171    /* Pacer overrun, external clock rate too fast. */
+#define BADCHANTYPE             172    /* Invalid channel type specified. */
+#define BADTRIGSENSE            173    /* Invalid trigger sensitivity specified. */
+#define BADTRIGCHAN             174    /* Invalid trigger channel specified. */
+#define BADTRIGLEVEL            175    /* Invalid trigger level specified. */
+#define NOPRETRIGMODE           176    /* Pre-trigger mode is not supported for the specified trigger type. */
+#define BADDEBOUNCETIME	        177    /* Invalid debounce time specified. */
+#define BADDEBOUNCETRIGMODE     178    /* Invalid debounce trigger mode specified. */
+#define BADMAPPEDCOUNTER        179    /* Invalid mapped counter specified. */
+#define BADCOUNTERMODE          180    /* This function can not be used with the current mode of the specified counter. */
+#define BADTCCHANMODE           181    /* Single-Ended mode can not be used for temperature input. */
+#define BADFREQUENCY            182    /* Invalid frequency specified. */
+#define BADEVENTPARAM           183    /* Invalid event parameter specified. */
+#define NONETIFC                184		/* No interface devices were found with required PAN ID and/or RF Channel. */
+#define DEADNETIFC              185		/* The interface device(s) with required PAN ID and RF Channel has failed. Please check connection. */
+#define NOREMOTEACK             186		/* The remote device is not responding to commands and queries. Please check device. */
+#define INPUTTIMEOUT            187		/* The device acknowledged the operation, but has not completed before the timeout. */
+#define MISMATCHSETPOINTCOUNT		188		/* Number of Setpoints not equal to number of channels with setpoint flag set */
+#define INVALIDSETPOINTLEVEL		189		/* Setpoint Level is outside channel range */
+#define INVALIDSETPOINTOUTPUTTYPE	190		/* Setpoint Output Type is invalid*/
+#define INVALIDSETPOINTOUTPUTVALUE  	191		/* Setpoint Output Value is outside channel range */
+#define INVALIDSETPOINTLIMITS		192		/* Setpoint Comparison limit B greater than Limit A */
+#define STRINGTOOLONG				193	/* The string entered is too long for the operation and/or device. */
+#define INVALIDLOGIN					194   /* The account name and/or password entered is incorrect. */
+#define SESSIONINUSE					195	/* The device session is already in use. */
 
 #define AIFUNCTION      1    /* Analog Input Function    */
 #define AOFUNCTION      2    /* Analog Output Function   */
 #define DIFUNCTION      3    /* Digital Input Function   */
 #define DOFUNCTION      4    /* Digital Output Function  */
 #define CTRFUNCTION     5    /* Counter Function         */
+#define DAQIFUNCTION    6    /* Daq Input Function       */
+#define DAQOFUNCTION	7    /* Daq Output Function      */
 
 /* Calibration coefficient types */
 #define COARSE_GAIN     0x01
@@ -269,6 +304,12 @@
 #define CANT_GET_PCM_CFG        340     /* IOCTL call failed on VDD_API_GET_PCM_CFG */
 #define CANT_GET_PCM_CCSR		341		/* IOCTL call failed on VDD_API_GET_PCM_CCSR */
 #define CANT_GET_PCI_INFO		342		/* IOCTL call failed on VDD_API_GET_PCI_INFO */
+#define NO_USB_BOARD			343		/* Can't detect specified USB board */
+#define NOMOREFILES				344		/* No more files in the directory */
+#define BADFILENUMBER			345		/* Invalid file number */
+#define INVALIDSTRUCTSIZE		346		/* Invalid structure size */
+#define LOSSOFDATA				347		/* EOF marker not found, possible loss of data */
+#define INVALIDBINARYFILE		348		/* File is not a valid MCC binary file */
 
 /* DOS errors are remapped by adding DOS_ERR_OFFSET to them */
 #define DOS_ERR_OFFSET      		500
@@ -297,7 +338,7 @@
 #define NO_PCM_CARD			630
 
 /* Maximum length of error string */
-#define ERRSTRLEN          80
+#define ERRSTRLEN          256
 
 /* Maximum length of board name */
 #define BOARDNAMELEN       25
@@ -322,6 +363,7 @@
 
 #define NODTCONNECT      0x0000    /* Disable DT Connect */
 #define DTCONNECT        0x0010    /* Enable DT Connect */
+#define SCALEDATA        0x0010    /* Scale scan data to engineering units */
 
 #define DEFAULTIO        0x0000    /* Use whatever makes sense for board */
 #define SINGLEIO         0x0020    /* Interrupt per A/D conversion */
@@ -329,6 +371,9 @@
 #define BLOCKIO          0x0060    /* Interrupt per block of conversions */
 #define BURSTIO         0x10000    /* Transfer upon scan completion */
 #define RETRIGMODE      0x20000    /* Re-arm trigger upon acquiring trigger count samples */
+#define NONSTREAMEDIO  0x040000    /* Non-streamed D/A output */
+#define ADCCLOCKTRIG   0x080000    /* Output operation is triggered on ADC clock */
+#define ADCCLOCK       0x100000    /* Output operation is paced by ADC clock */
 
 #define BYTEXFER         0x0000    /* Digital IN/OUT a byte at a time */
 #define WORDXFER         0x0100    /* Digital IN/OUT a word at a time */
@@ -373,6 +418,70 @@
 #define STOPFATAL        1
 #define STOPALL          2
 
+/* channel types           */
+#define ANALOG			 0      // Analog channel
+#define DIGITAL8		 1		// 8-bit digital port
+#define DIGITAL16		 2      // 16-bit digital port
+#define CTR16			 3      // 16-bit counter
+#define CTR32LOW		 4		// Lower 16-bits of 32-bit counter
+#define CTR32HIGH		 5		// Upper 16-bits of 32-bit counter
+#define CJC			 6      // CJC channel
+#define TC			 7      // Thermocouple channel
+#define ANALOG_SE		 8      // Analog channel, singel-ended mode
+#define ANALOG_DIFF		 9      // Analog channel, Differential mode
+#define SETPOINTSTATUS   	 10     // Setpoint status channel
+
+/* channel type flags*/
+#define SETPOINT_ENABLE  	0x100  // Enable setpoint detection
+
+/* setpoint flags*/
+#define SF_EQUAL_LIMITA					0x00 // Channel = LimitA value 
+#define	SF_LESSTHAN_LIMITA				0x01 // Channel < LimitA value
+#define SF_INSIDE_LIMITS				0x02 // Channel Inside LimitA and LimitB (LimitA < Channel < LimitB)
+#define SF_GREATERTHAN_LIMITB			0x03 // Channel > LimitB
+#define SF_OUTSIDE_LIMITS				0x04 // Channel Outside LimitA and LimitB (LimitA < Channel or Channel > LimitB)
+#define SF_HYSTERESIS					0x05 // Use As Hysteresis
+#define	SF_UPDATEON_TRUEONLY			0x00 // Latch output condition (output = output1 for duration of acquisition)
+#define	SF_UPDATEON_TRUEANDFALSE		0x08 // Do not latch output condition (output = output1 when criteria met else output = output2)
+ 
+/* Setpoint output channels */
+#define SO_NONE			0 // No Output 
+#define SO_FIRSTPORTC	1 // Output to first PortC
+#define	SO_DAC0			2 // Output to DAC0
+#define	SO_DAC1			3 // Output to DAC1
+#define SO_DAC2			4 // Output to DAC2
+#define SO_DAC3			5 // Output to DAC3
+#define SO_TMR0			6 // Output to TMR0
+#define SO_TMR1			7 // Output to TMR1
+
+/* cbDaqSetTrigger trigger sources */
+#define TRIG_IMMEDIATE       0
+#define TRIG_EXTTTL			 1
+#define TRIG_ANALOG_HW		 2
+#define TRIG_ANALOG_SW		 3
+#define TRIG_DIGPATTERN		 4
+#define TRIG_COUNTER		 5
+#define TRIG_SCANCOUNT		 6
+
+/* cbDaqSetTrigger trigger sensitivities */
+#define RISING_EDGE		0
+#define FALLING_EDGE    1
+#define ABOVE_LEVEL		2
+#define BELOW_LEVEL		3
+#define EQ_LEVEL		4
+#define NE_LEVEL		5
+
+/* trigger events */
+#define START_EVENT		0
+#define STOP_EVENT		1
+
+/* settling time settings */
+#define SETTLE_DEFAULT		0
+#define SETTLE_1us		1
+#define SETTLE_5us		2
+#define SETTLE_10us		3
+#define SETTLE_1ms		4
+
 /* Types of digital input ports */
 #define DIGITALOUT       1
 #define DIGITALIN        2
@@ -390,12 +499,18 @@
 #define FAHRENHEIT       1
 #define KELVIN           2
 #define VOLTS			 4		/* special scale for DAS-TC boards */
+#define NOSCALE			 5
+
+/* Default option */
+#define DEFAULTOPTION	 0x0000
+
 
 /* Types of digital I/O Ports */
 #define AUXPORT          1
 #define FIRSTPORTA       10
 #define FIRSTPORTB       11
 #define FIRSTPORTCL      12
+#define FIRSTPORTC		 12
 #define FIRSTPORTCH      13
 #define SECONDPORTA      14
 #define SECONDPORTB      15
@@ -453,6 +568,7 @@
 
 #define UNI10VOLTS       100            /* 0 to 10 Volts*/
 #define UNI5VOLTS        101            /* 0 to 5 Volts */
+#define UNI4VOLTS        114            /* 0 to 4 Volts */
 #define UNI2PT5VOLTS     102            /* 0 to 2.5 Volts */
 #define UNI2VOLTS        103            /* 0 to 2 Volts */
 #define UNI1PT67VOLTS    109            /* 0 to 1.67 Volts */
@@ -484,6 +600,11 @@
 #define GATECTR2            1
 #define TRIGCTR2            2
 #define INCTR2              3
+
+/* 8536 trigger types */
+#define  HW_START_TRIG	0
+#define  HW_RETRIG      1
+#define	 SW_START_TRIG	2
 
 /* Types of 8254 counter configurations */
 #define HIGHONLASTCOUNT     0
@@ -696,6 +817,56 @@
 #define C_UP_DOWN       0x0020
 #define C_INDEX         0x0040
 
+/* 25xx series counter mode constants */
+#define TOTALIZE	0x0000
+#define CLEAR_ON_READ	0x0001
+#define ROLLOVER	0x0000
+#define STOP_AT_MAX	0x0002
+#define DECREMENT_OFF	0x0000
+#define DECREMENT_ON	0x0020
+#define BIT_16		0x0000
+#define BIT_32		0x0004
+#define GATING_OFF	0x0000
+#define GATING_ON	0x0010
+#define LATCH_ON_SOS	0x0000
+#define LATCH_ON_MAP	0x0008
+
+#define ENCODER	        0x0500
+#define ENCODER_MODE_X1	0x0000
+#define ENCODER_MODE_X2	0x0001
+#define ENCODER_MODE_X4	0x0002
+#define LATCH_ON_Z      0x0008
+#define CLEAR_ON_Z_OFF	0x0000
+#define CLEAR_ON_Z_ON	0x0020
+
+
+/* 25xx series counter debounce time constants */
+#define CTR_DEBOUNCE500ns      0
+#define CTR_DEBOUNCE1500ns     1
+#define CTR_DEBOUNCE3500ns     2
+#define CTR_DEBOUNCE7500ns     3
+#define CTR_DEBOUNCE15500ns    4
+#define CTR_DEBOUNCE31500ns    5
+#define CTR_DEBOUNCE63500ns    6   
+#define CTR_DEBOUNCE127500ns   7   
+#define CTR_DEBOUNCE100us      8
+#define CTR_DEBOUNCE300us      9
+#define CTR_DEBOUNCE700us      10
+#define CTR_DEBOUNCE1500us     11
+#define CTR_DEBOUNCE3100us     12
+#define CTR_DEBOUNCE6300us     13
+#define CTR_DEBOUNCE12700us    14
+#define CTR_DEBOUNCE25500us    15
+#define CTR_DEBOUNCE_NONE      16
+
+/* 25xx series counter debounce trigger constants */
+#define CTR_TRIGGER_AFTER_STABLE    0
+#define CTR_TRIGGER_BEFORE_STABLE   1
+
+/* 25xx series counter edge detection constants */
+#define CTR_RISING_EDGE         0
+#define CTR_FALLING_EDGE        1
+
 /* Types of triggers */
 #define TRIGABOVE           0
 #define TRIGBELOW           1
@@ -865,11 +1036,12 @@
 #define BICTR12SRC           163     /* CTR 12 source */
 #define BICTR13SRC           164     /* CTR 13 source */
 #define BICTR14SRC           165     /* CTR 14 source */
-#define BITCGLOBALAVG		 166	 /* DASTC global average */
-#define	BITCCJCSTATE		 167	 /* DASTC CJC State(=ON or OFF) */
-#define BITCCHANRANGE		 168	 /* DASTC Channel Gain */
-#define BITCCHANTYPE		 169	 /* DASTC Channel thermocouple type */
-#define BITCFWVERSION		 170	 /* DASTC Firmware Version */
+#define BITCGLOBALAVG		  166	 /* DASTC global average */
+#define BITCCJCSTATE		     167	 /* DASTC CJC State(=ON or OFF) */
+#define BITCCHANRANGE		  168	 /* DASTC Channel Gain */
+#define BITCCHANTYPE		     169	 /* DASTC Channel thermocouple type */
+#define BITCFWVERSION		  170	 /* DASTC Firmware Version */
+#define BIFWVERSION          BITCFWVERSION /* Firmware Version */
 #define BIPHACFG             180     /* Quad PhaseA config (devNo =ch) */
 #define BIPHBCFG             190     /* Quad PhaseB config (devNo =ch) */
 #define BIINDEXCFG           200     /* Quad Index Ref config (devNo =ch) */
@@ -877,7 +1049,7 @@
 #define BIAIWAVETYPE         202     /* analog input wave type (for demo board) */
 #define BIPWRUPSTATE         203     /* DDA06 pwr up state jumper */
 #define BIIRQCONNECT         204     /* DAS08 pin6 to 24 jumper */
-#define BITRIGPOLARITY		 205 	 /* PCM DAS16xx Trig Polarity */
+#define BITRIGPOLARITY		  205 	 /* PCM DAS16xx Trig Polarity */
 #define BICTLRNUM            206     /* MetraBus controller board number */
 #define BIPWRJMPR            207     /* MetraBus controller board Pwr jumper */
 #define BINUMTEMPCHANS       208     /* Number of Temperature channels */
@@ -893,6 +1065,32 @@
 #define BIADTRIGCOUNT        219    /* Number of samples to acquire per trigger in retrigger mode */
 #define BIADFIFOSIZE         220    /* Set FIFO override size for retrigger mode */
 #define BIADSOURCE           221    /* Set source to internal reference or external connector(-1) */
+#define BICALOUTPUT          222    /* CAL output pin setting */ 
+#define BISRCADPACER         223    /* Source A/D Pacer output */
+#define BIMFGSERIALNUM       224    /* Manufacturers 8-byte serial number */
+#define BIPCIREVID           225    /* Revision Number stored in PCI header */
+#define BIDIALARMMASK        230
+
+#define BINETIOTIMEOUT       247
+
+#define BISYNCMODE           251    /* Sync mode */
+
+#define BIDIDEBOUNCESTATE    255    /* Digital inputs reset state */
+#define BIDIDEBOUNCETIME     256      /* Digital inputs debounce Time */
+
+#define BIPANID               258
+#define BIRFCHANNEL           259
+
+#define BIRSS                 261
+#define BINODEID              262
+#define BIDEVNOTES            263
+
+#define BIADCSETTLETIME		   270
+
+#define BIFACTORYID           272
+#define BIHTTPPORT				273
+#define BIHIDELOGINDLG			274
+
 
 /* Type of digital device information */
 #define DIBASEADR           0       /* Base address */
@@ -953,6 +1151,7 @@
 #define ON_DATA_AVAILABLE			0x0008
 #define ON_END_OF_AI_SCAN			0x0010
 #define ON_END_OF_AO_SCAN			0x0020
+#define ON_CHANGE_DI             0x0040
 #define ALL_EVENT_TYPES          0xffff
 
 #define NUM_EVENT_TYPES		6
@@ -964,6 +1163,33 @@
 #define DATA_AVAILABLE_IDX			3
 #define END_OF_AI_IDX				4
 #define END_OF_AO_IDX				5
+
+/* ON_EXTERNAL_INTERRUPT event parameters*/
+#define LATCH_DI			1
+#define LATCH_DO			2
+
+
+// time zone constants
+#define TIMEZONE_LOCAL		0
+#define TIMEZONE_GMT		1
+
+
+// time format constants
+#define TIMEFORMAT_12HOUR	0
+#define TIMEFORMAT_24HOUR	1
+
+
+// delimiter constants
+#define DELIMITER_COMMA		0
+#define DELIMITER_SEMICOLON	1
+#define DELIMITER_SPACE		2
+#define DELIMITER_TAB		3
+
+
+// AI channel units in binary file
+#define UNITS_TEMPERATURE	0
+#define UNITS_RAW			1
+
 
 #ifndef USHORT
   typedef unsigned short USHORT;
@@ -980,7 +1206,6 @@
  */
 
 #if !defined (NT_DRIVER) && ! defined (WIN95_DRIVER)
-#ifndef _NI_mswin16_
 
 #if defined (__cplusplus)
     extern "C"
@@ -1026,7 +1251,7 @@
                                 int InvertIndex, int FlagPins, int GateEnable);
     int EXTCCONV cbC8254Config (int BoardNum, int CounterNum, int Config);
     int EXTCCONV cbC8536Config (int BoardNum, int CounterNum, int OutputControl,
-                                int RecycleMode, int Retrigger);
+                                int RecycleMode, int TrigType);
     int EXTCCONV cbC9513Config (int BoardNum, int CounterNum, int GateControl,
                                 int CounterEdge, int CountSource, 
 								int SpecialGate, int Reload, int RecycleMode, 
@@ -1045,6 +1270,14 @@
     int EXTCCONV cbCStatus (int BoardNum, int CounterNum, ULONG *StatusBits);
     int EXTCCONV cbCStoreOnInt (int BoardNum, int IntCount, short *CntrControl,
                                 HGLOBAL MemHandle);
+	int EXTCCONV cbCInScan(int BoardNum, int FirstCtr,int LastCtr, LONG Count,
+							LONG *Rate, HGLOBAL MemHandle, ULONG Options);
+	int EXTCCONV cbCConfigScan(int BoardNum, int CounterNum, int Mode,int DebounceTime,
+								int DebounceMode, int EdgeDetection,
+								int TickSize, int MappedChannel);
+    int EXTCCONV cbCClear (int BoardNum, int CounterNum);
+    int EXTCCONV cbTimerOutStart (int BoardNum, int TimerNum, double *Frequency);
+    int EXTCCONV cbTimerOutStop (int BoardNum, int TimerNum);
     int EXTCCONV cbDBitIn (int BoardNum, int PortType, int BitNum, 
                            USHORT *BitValue);
     int EXTCCONV cbDBitOut (int BoardNum, int PortType, int BitNum, USHORT BitValue);
@@ -1089,18 +1322,28 @@
                                    long FirstPoint, long Count);
     int EXTCCONV cbWinBufToArray (HGLOBAL MemHandle, USHORT *DataArray, 
 		                          long StartPt, long Count);
+     int EXTCCONV cbWinBufToArray32 (HGLOBAL MemHandle, ULONG *DataArray, 
+		                          long StartPt, long Count);
     int EXTCCONV cbWinArrayToBuf (USHORT *DataArray, HGLOBAL MemHandle, 
 		                          long StartPt, long Count);
     HGLOBAL EXTCCONV cbWinBufAlloc (long NumPoints);
+    HGLOBAL EXTCCONV cbWinBufAlloc32 (long NumPoints);
     int EXTCCONV cbWinBufFree (HGLOBAL MemHandle);
     int EXTCCONV cbInByte (int BoardNum, int PortNum);
     int EXTCCONV cbOutByte (int BoardNum, int PortNum, int PortVal);
     int EXTCCONV cbInWord (int BoardNum, int PortNum);
     int EXTCCONV cbOutWord (int BoardNum, int PortNum, int PortVal);
+
     int EXTCCONV cbGetConfig (int InfoType, int BoardNum, int DevNum, 
                               int ConfigItem, int *ConfigVal);
+    int EXTCCONV cbGetConfigString (int InfoType, int BoardNum, int DevNum, 
+                              int ConfigItem, char* ConfigVal, int* maxConfigLen);
+
     int EXTCCONV cbSetConfig (int InfoType, int BoardNum, int DevNum, 
 		                      int ConfigItem, int ConfigVal);
+    int EXTCCONV cbSetConfigString (int InfoType, int BoardNum, int DevNum, 
+		                      int ConfigItem, char* ConfigVal, int* configLen);
+
     int EXTCCONV cbToEngUnits (int BoardNum, int Range, USHORT DataVal, 
 		                       float *EngUnits);
     int EXTCCONV cbFromEngUnits (int BoardNum, int Range, float EngUnits, 
@@ -1120,6 +1363,71 @@
    int EXTCCONV cbSetCalCoeff(int BoardNum, int FunctionType, int Channel, int Range, int Item, int Value, int Store);
    int EXTCCONV cbGetCalCoeff(int BoardNum, int FunctionType, int Channel, int Range, int Item, int* Value);
 
+
+	// Get log file name
+
+	// store the preferences
+	int EXTCCONV cbLogSetPreferences(int timeFormat, int timeZone, int units);
+
+	// get the preferences
+	int EXTCCONV cbLogGetPreferences(int* timeFormat, int* timeZone, int* units);
+
+	// Get log file name
+	int EXTCCONV cbLogGetFileName(int fileNumber, char* path, char* filename);
+
+	// Get info for log file
+	int EXTCCONV cbLogGetFileInfo(char* filename, int* version, int* fileSize);
+
+	// Get sample info for log file
+	int EXTCCONV cbLogGetSampleInfo(char* filename, int* sampleInterval, int* sampleCount, 
+									int* startDate, int* startTime);
+
+	// Get the AI channel count for log file
+	int EXTCCONV cbLogGetAIChannelCount(char* filename, int* aiCount);
+
+	// Get AI info for log file
+	int EXTCCONV cbLogGetAIInfo(char* filename, int* channelNumbers, int* units);
+
+	// Get CJC info for log file
+	int EXTCCONV cbLogGetCJCInfo(char* filename, int* cjcCount);
+
+	// Get DIO info for log file
+	int EXTCCONV cbLogGetDIOInfo(char* filename, int* dioCount);
+
+	// read the time tags to an array
+	int EXTCCONV cbLogReadTimeTags(char* filename, int startSample, int count, int* dateTags, int*timeTags);
+
+	// read the analog data to an array
+	int EXTCCONV cbLogReadAIChannels(char* filename, int startSample, int count, float* analog);
+
+	// read the CJC data to an array
+	int EXTCCONV cbLogReadCJCChannels(char* filename, int startSample, int count, float* cjc);
+
+	// read the DIO data to an array
+	int EXTCCONV cbLogReadDIOChannels(char* filename, int startSample, int count, int* dio);
+
+	// convert the log file to a .TXT or .CSV file
+	int EXTCCONV cbLogConvertFile(char* srcFilename, char* destFilename, int startSample, int count, int delimiter);
+
+	int EXTCCONV cbDaqInScan(int BoardNum, short *ChanArray, short *ChanTypeArray, short *GainArray, int ChanCount, long *Rate,
+							long *PretrigCount, long *TotalCount, HGLOBAL MemHandle, int Options);
+	int EXTCCONV cbDaqSetTrigger(int BoardNum, int TrigSource, int TrigSense, int TrigChan, int ChanType, 
+							   int Gain, float Level, float Variance, int TrigEvent);
+	int EXTCCONV cbDaqSetSetpoints (int BoardNum, float *LimitAArray, float *LimitBArray, float *Reserved, int *SetpointFlagsArray,
+		                       int *SetpointOutputArray, float *Output1Array, float *Output2Array, float *OutputMask1Array,
+				       float *OutputMask2Array, int SetpointCount);
+
+	int EXTCCONV cbDaqOutScan(int BoardNum, short *ChanArray, short *ChanTypeArray, short *GainArray, int ChanCount, long *Rate,
+							 long Count, HGLOBAL MemHandle, int Options);
+	int EXTCCONV cbGetTCValues(int BoardNum, short *ChanArray, short *ChanTypeArray, int ChanCount, HGLOBAL MemHandle, int FirstPoint,
+							 long Count, int Scale, float *TempValArray);
+
+	int EXTCCONV cbVIn (int BoardNum, int Chan, int Gain, float *DataValue, int Options);
+	int EXTCCONV cbVOut (int BoardNum, int Chan, int Gain, float DataValue, int Options);
+	
+	int EXTCCONV cbDeviceLogin(int BoardNum, char* AccountName, char* Password);
+	int EXTCCONV cbDeviceLogout(int BoardNum);
+
 //****************************************************************************
 //   Legacy Function Prototypes: to revert to legacy calls, un-comment the
 //          prototypes immediately below.
@@ -1132,219 +1440,10 @@
 #define cbStopBackground cbStopIOBackground
 //****************************************************************************
 
-
-#else   /* WIN32 not defined */ 
-	    /* WIN16 prototypes  */
-    int WINAPI cbAConvertData (int BoardNum, long NumPoints, unsigned FAR *ADData, int FAR *ChanTags);
-    int WINAPI cbACalibrateData (int BoardNum, long NumPoints, int Gain, unsigned FAR *ADData);
-    int WINAPI cbAConvertPretrigData (int BoardNum, long PreTrigCount, long TotalCount,
-                                      unsigned FAR *ADData, int FAR *ChanTags);
-    int WINAPI cbAIn (int BoardNum, int Chan, int Gain, unsigned FAR *DataValue);
-    int WINAPI cbAInScan (int BoardNum, int LowChan, int HighChan, long Count,
-                          long FAR *Rate, int Gain, HGLOBAL MemHandle, int Options);
-    int WINAPI cbALoadQueue (int BoardNum, int FAR *ChanArray, int FAR *GainArray, unsigned NumChans);
-    int WINAPI cbAOut (int BoardNum, int Chan, int Gain, unsigned DataValue);
-    int WINAPI cbAOutScan (int BoardNum, int LowChan, int HighChan, long Count,
-                           long FAR *Rate, int Gain, HGLOBAL MemHandle, int Options);
-    int WINAPI cbAPretrig (int BoardNum, int LowChan, int HighChan,
-                           long FAR *PreTrigCount, long FAR *TotalCount,
-                           long FAR *Rate, int Gain, HGLOBAL MemHandle,
-                           int Options);
-    int WINAPI cbATrig (int BoardNum, int Chan, int TrigType, unsigned TrigValue,
-                        int Gain, unsigned FAR *DataValue);
-    int WINAPI cbC8254Config (int BoardNum, int CounterNum, int Config);
-    int WINAPI cbC8536Config (int BoardNum, int CounterNum, int OutputControl,
-                       int RecycleMode, int Retrigger);
-    int WINAPI cbC9513Config (int BoardNum, int CounterNum, int GateControl,
-                       int CounterEdge, int CountSource, int SpecialGate,
-                       int Reload, int RecycleMode, int BCDMode,
-                       int CountDirection, int OutputControl);
-    int WINAPI cbC8536Init (int BoardNum, int ChipNum, int Ctr1Output);
-    int WINAPI cbC9513Init (int BoardNum, int ChipNum, int FOutDivider, int FOutSource,
-                            int Compare1, int Compare2, int TimeOfDay);
-    int WINAPI cbCFreqIn (int BoardNum, int SigSource, int GateInterval,
-                          unsigned FAR *Count, long FAR *Freq);
-    int WINAPI cbCIn (int BoardNum, int CounterNum, unsigned FAR *Count);
-    int WINAPI cbCStoreOnInt (int BoardNum, int IntCount, int FAR *CntrControl,
-                              HGLOBAL MemHandle);
-    int WINAPI cbCLoad (int BoardNum, int RegNum, unsigned LoadValue);
-    int WINAPI cbDBitIn (int BoardNum, int PortType, int BitNum, int FAR *BitValue);
-    int WINAPI cbDBitOut (int BoardNum, int PortType, int BitNum, int BitValue);
-    int WINAPI cbDConfigPort (int BoardNum, int PortNum, int Direction);
-    int WINAPI cbDeclareRevision (float FAR *RevNum);
-    int WINAPI cbDIn (int BoardNum, int PortNum, unsigned FAR *DataValue);
-    int WINAPI cbDInScan (int BoardNum, int PortNum, long Count, long FAR *Rate,
-                          HGLOBAL MemHandle, int Options);
-    int WINAPI cbDOut(int BoardNum, int PortNum, unsigned DataValue);
-    int WINAPI cbDOutScan (int BoardNum, int PortNum, long Count, long FAR *Rate,
-                           HGLOBAL MemHandle, int Options);
-    int WINAPI cbErrHandling (int ErrReporting, int ErrHandling);
-    int WINAPI cbFileAInScan (int BoardNum, int LowChan, int HighChan,
-                              long Count, long FAR *Rate, int Gain,
-                              char FAR *FileName, int Options);
-    int WINAPI cbFileGetInfo (char FAR *FileName, int FAR *LowChan,
-                              int FAR *HighChan, long FAR *PreTrigCount,
-                              long FAR *TotalCount, long FAR *Rate,
-                              int FAR *Gain);
-    int WINAPI cbFilePretrig (int BoardNum, int LowChan, int HighChan,
-                              long FAR *PreTrigCount, long FAR *TotalCount,
-                              long FAR *Rate, int Gain, char FAR *FileName,
-                              int Options);
-    int WINAPI cbFileRead (char FAR *FileName, long FirstPoint, long FAR *NumPoints,
-                           unsigned FAR *DataBuffer);
-    int WINAPI cbGetErrMsg (int ErrCode, char FAR *ErrMsg);
-    int WINAPI cbGetRevision (float FAR *DLLRevNum, float FAR *VXDRevNum);
-    int WINAPI cbGetStatus (int BoardNum, int FAR *Status, long FAR *CurCount,
-                            long FAR *CurIndex);
-    int WINAPI cbRS485 (int BoardNum, int Transmit, int Receive);
-    int WINAPI cbStopBackground (int BoardNum);
-    int WINAPI cbTIn (int BoardNum, int Chan, int Scale, float FAR *TempValue,
-                      int Options);
-    int WINAPI cbTInScan (int BoardNum, int LowChan, int HighChan, int Scale,
-                   float FAR *DataBuffer, int Options);
-    int WINAPI cbMemSetDTMode (int BoardNum, int Mode);
-    int WINAPI cbMemReset (int BoardNum);
-    int WINAPI cbMemRead (int BoardNum, unsigned FAR *DataBuffer,
-                          long FirstPoint, long Count);
-    int WINAPI cbMemWrite (int BoardNum, unsigned FAR *DataBuffer,
-                           long FirstPoint, long Count);
-    int WINAPI cbMemReadPretrig (int BoardNum, unsigned FAR *DataBuffer,
-                                 long FirstPoint, long Count);
-    int WINAPI cbWinBufToArray (HGLOBAL MemHandle, unsigned FAR *DataArray, long StartPt,
-                                long Count);
-    int WINAPI cbWinArrayToBuf (unsigned FAR *DataArray, HGLOBAL MemHandle, long StartPt,
-                                long Count);
-    HGLOBAL WINAPI cbWinBufAlloc (long NumPoints);
-    int WINAPI cbWinBufFree (HGLOBAL MemHandle);
-    int WINAPI cbInByte (int BoardNum, int PortNum);
-    int WINAPI cbOutByte (int BoardNum, int PortNum, int PortVal);
-    int WINAPI cbInWord (int BoardNum, int PortNum);
-    int WINAPI cbOutWord (int BoardNum, int PortNum, int PortVal);
-    int WINAPI cbGetConfig (int InfoType, int BoardNum, int DevNum, int ConfigItem, int FAR *ConfigVal);
-    int WINAPI cbSetConfig (int InfoType, int BoardNum, int DevNum, int ConfigItem, int ConfigVal);
-    int WINAPI cbToEngUnits (int BoardNum, int Range, unsigned DataVal, float FAR *EngUnits);
-    int WINAPI cbFromEngUnits (int BoardNum, int Range, float EngUnits, unsigned FAR *DataVal);
-    int WINAPI cbGetBoardName (int BoardNum, char FAR *BoardName);
-    int WINAPI cbSetTrigger (int BoardNum, int TrigType, int LowThreshold, int HighThreshold);
-	//int WINAPI cbEnableEvent(int BoardNum, unsigned EventType, unsigned EventSize, 
-	//							void (*CallbackFunc)(int BoardNum, unsigned EventType, unsigned EventData));
-	//int WINAPI cbDisableEvent(int BoardNum, unsigned EventType);
-
 #endif  /* if defined (_WIN32) */
 
 #if defined (__cplusplus)
     }
 #endif
 
-#else   /* _NI_mswin16_ defined */
-        /* 16-bit LabWindows/CVI interface */
-    short _pascal cbAConvertData (short BoardNum, long int NumPoints,
-                                      unsigned short *ADData, short *ChanTags);
-    short _pascal cbACalibrateData (short BoardNum, long int NumPoints,
-                                             short Gain, unsigned int *ADData);
-    short _pascal cbAConvertPretrigData (short BoardNum, long int PreTrigCount,
-                 long int TotalCount, unsigned short *ADData, short *ChanTags);
-    short _pascal cbAIn (short BoardNum, short Chan, short Gain,
-                                                    unsigned short *DataValue);
-    short _pascal cbAInScan (short BoardNum, short LowChan, short HighChan,
-                                    long int Count, long int *Rate, short Gain,
-                                    unsigned short MemHandle, short Options);
-    short _pascal cbALoadQueue (short BoardNum, short *ChanArray,
-                                    short *GainArray, unsigned short NumChans);
-    short _pascal cbAOut (short BoardNum, short Chan, short Gain,
-                                                     unsigned short DataValue);
-    short _pascal cbAOutScan (short BoardNum, short LowChan, short HighChan,
-                                    long int Count, long int *Rate, short Gain,
-                                    unsigned short MemHandle, short Options);
-    short _pascal cbAPretrig (short BoardNum, short LowChan, short HighChan,
-                                  long int *PreTrigCount, long int *TotalCount,
-                                  long int *Rate, short Gain,
-                                  unsigned short MemHandle, short Options);
-    short _pascal cbATrig (short BoardNum, short Chan, short TrigType,
-              unsigned short TrigValue, short Gain, unsigned short *DataValue);
-    short _pascal cbC8254Config (short BoardNum, short CounterNum,
-                                                                 short Config);
-    short _pascal cbC8536Config (short BoardNum, short CounterNum,
-                      short OutputControl, short RecycleMode, short Retrigger);
-    short _pascal cbC9513Config (short BoardNum, short CounterNum,
-                     short GateControl, short CounterEdge, short CountSource,
-                     short SpecialGate, short Reload, short RecycleMode,
-                     short BCDMode, short CountDirection, short OutputControl);
-    short _pascal cbC8536Init (short BoardNum, short ChipNum,short Ctr1Output);
-    short _pascal cbC9513Init (short BoardNum, short ChipNum,short FOutDivider,
-            short FOutSource, short Compare1, short Compare2, short TimeOfDay);
-    short _pascal cbCFreqIn (short BoardNum, short SigSource,
-                    short GateInterval, unsigned short *Count, long int *Freq);
-    short _pascal cbCIn (short BoardNum, short CounterNum,
-                                                        unsigned short *Count);
-    short _pascal cbCStoreOnInt (short BoardNum, short IntCount,
-                                 short *CntrControl, unsigned short MemHandle);
-    short _pascal cbCLoad (short BoardNum, short RegNum,
-                                                     unsigned short LoadValue);
-    short _pascal cbDBitIn (short BoardNum, short PortType, short BitNum,
-                                                              short *BitValue);
-    short _pascal cbDBitOut (short BoardNum, short PortType, short BitNum,
-                                                               short BitValue);
-    short _pascal cbDConfigPort (short BoardNum, short PortNum,
-                                                              short Direction);
-    short _pascal cbDeclareRevision (float *RevNum);
-    short _pascal cbDIn (short BoardNum, short PortNum,
-                                                    unsigned short *DataValue);
-    short _pascal cbDInScan (short BoardNum, short PortNum, long int Count,
-                      long int *Rate, unsigned short MemHandle, short Options);
-    short _pascal cbDOut(short BoardNum, short PortNum,
-                                                     unsigned short DataValue);
-    short _pascal cbDOutScan (short BoardNum, short PortNum, long int Count,
-                      long int *Rate, unsigned short MemHandle, short Options);
-    short _pascal cbErrHandling (short ErrReporting, short ErrHandling);
-    short _pascal cbFileAInScan (short BoardNum, short LowChan, short HighChan,
-                                    long int Count, long int *Rate, short Gain,
-                                    char *FileName, short Options);
-    short _pascal cbFileGetInfo (char *FileName, short *LowChan,
-                            short *HighChan, long int *PreTrigCount,
-                            long int *TotalCount, long int *Rate, short *Gain);
-    short _pascal cbFilePretrig (short BoardNum, short LowChan, short HighChan,
-                    long int *PreTrigCount, long int *TotalCount,
-                    long int *Rate, short Gain, char *FileName, short Options);
-    short _pascal cbFileRead (char *FileName, long int FirstPoint,
-                              long int *NumPoints, unsigned short *DataBuffer);
-    short _pascal cbGetErrMsg (short ErrCode, char *ErrMsg);
-    short _pascal cbGetRevision (float *DLLRevNum, float *VXDRevNum);
-    short _pascal cbGetStatus (short BoardNum, short *Status,
-                                       long int *CurCount, long int *CurIndex);
-    short _pascal cbRS485 (short BoardNum, short Transmit, short Receive);
-    short _pascal cbStopBackground (short BoardNum);
-    short _pascal cbTIn (short BoardNum, short Chan, short Scale,
-                                              float *TempValue, short Options);
-    short _pascal cbTInScan (short BoardNum, short LowChan, short HighChan,
-                                short Scale, float *DataBuffer, short Options);
-    short _pascal cbMemSetDTMode (short BoardNum, short Mode);
-    short _pascal cbMemReset (short BoardNum);
-    short _pascal cbMemRead (short BoardNum, unsigned short *DataBuffer,
-                                          long int FirstPoint, long int Count);
-    short _pascal cbMemWrite (short BoardNum, unsigned short *DataBuffer,
-                                          long int FirstPoint, long int Count);
-    short _pascal cbMemReadPretrig (short BoardNum, unsigned short *DataBuffer,
-                                          long int FirstPoint, long int Count);
-    short _pascal cbWinBufToArray (unsigned short MemHandle,
-                  unsigned short *DataArray, long int StartPt, long int Count);
-    short _pascal cbWinArrayToBuf (unsigned short *DataArray,
-                   unsigned short MemHandle, long int StartPt, long int Count);
-    unsigned short _pascal cbWinBufAlloc (long int NumPoints);
-    short _pascal cbWinBufFree (unsigned short MemHandle);
-    short _pascal cbInByte (short BoardNum, short PortNum);
-    short _pascal cbOutByte (short BoardNum, short PortNum, short PortVal);
-    short _pascal cbInWord (short BoardNum, short PortNum);
-    short _pascal cbOutWord (short BoardNum, short PortNum, short PortVal);
-    short _pascal cbGetConfig (short InfoType, short BoardNum, short DevNum,
-                                           short ConfigItem, short *ConfigVal);
-    short _pascal cbSetConfig (short InfoType, short BoardNum, short DevNum,
-                                            short ConfigItem, short ConfigVal);
-    short _pascal cbToEngUnits (short BoardNum, short Range,
-                                      unsigned short DataVal, float *EngUnits);
-    short _pascal cbFromEngUnits (short BoardNum, short Range, float EngUnits,
-                                                      unsigned short *DataVal);
-    short _pascal cbGetBoardName (short BoardNum, char *BoardName);
-    short _pascal cbSetTrigger (short BoardNum, short TrigType, short LowThreshold, short HighThreshold);
-#endif  /* ifndef _NI_mswin16_ */
 #endif  /* ifndef NT_DRIVER */

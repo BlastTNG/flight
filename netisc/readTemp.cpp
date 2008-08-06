@@ -19,12 +19,11 @@ int __tempULStat = 0;
     
 int __tempHeaterStat = 0;
 
-// Variables for analog out ... control for heater 
-int __tempBoardNum = 1;
-int __tempAGain = UNI5VOLTS;
-int __tempAChan = 1;
-WORD __tempADataValue;
-float __tempAEngUnits = 0; 
+// Variables for digital out to control heater. 
+// Meant to work with Measurement Computing USB-1608FS
+int __tempBoardNum = 0;
+int __tempPortNum = AUXPORT;
+int __tempDataValue = 0;
 
 // set stuff up
 // return 1 for success, 0 for failure
@@ -77,13 +76,12 @@ int tempSetup( int in_tempControl, unsigned int in_tempsleeptime,
      Windows applications, not Console applications. 
   */
   cbErrHandling (DONTPRINT, DONTSTOP);
+
+  // Configure the port for output
+  __tempULStat = cbDConfigPort (__tempBoardNum, __tempPortNum, DIGITALOUT);
   
-  // Turn off relay the controls heater for camera*/
-  __tempULStat = cbFromEngUnits(__tempBoardNum, __tempAGain,__tempAEngUnits, 
-				&__tempADataValue);
-  
-  __tempULStat = cbAOut(__tempBoardNum, __tempAChan, __tempAGain, 
-			__tempADataValue);
+  // Turn off relay that controls heater for camera*/
+  __tempULStat = cbDOut(__tempBoardNum, __tempPortNum, __tempDataValue);
   
   return 1;
 }
@@ -125,10 +123,8 @@ void tempDoStuff( double *temp1, double *temp2, double *temp3, double *temp4, do
   
   if(EngUnits[__tempControl]*__tempgain < __tempSetLimit) {
 
-    /* Turn on relay */
-    __tempAEngUnits = 5.0;
-    __tempULStat = cbFromEngUnits(__tempBoardNum, __tempAGain,__tempAEngUnits,
-				  &__tempADataValue);
+    /* Value to write to digital port to turn on relay */
+    __tempDataValue = 64;
     
     printf("&&&&&&&&&&&&&&&&&&&&&&&&&&&& heater on: %i, %lf < %lf\n",
 	   __tempControl,EngUnits[__tempControl]*__tempgain, __tempSetLimit);
@@ -140,9 +136,7 @@ void tempDoStuff( double *temp1, double *temp2, double *temp3, double *temp4, do
 	     (__tempSetLimit+__tempOffset)) {
 
     /* Turn off relay...if neither condition is met, do nothing */
-    __tempAEngUnits = 0.0;
-    __tempULStat = cbFromEngUnits(__tempBoardNum, __tempAGain,__tempAEngUnits,
-				  &__tempADataValue);
+    __tempDataValue = 0;
     
     printf("&&&&&&&&&&&&&&&&&&&&&&&&&&&& heater off: %i, %lf > %lf\n",
 	   __tempControl,EngUnits[__tempControl]*__tempgain, 
@@ -152,13 +146,11 @@ void tempDoStuff( double *temp1, double *temp2, double *temp3, double *temp4, do
   }
         
   *heaterOn = __tempHeaterStat;
-
-  __tempULStat = cbAOut(__tempBoardNum, __tempAChan, __tempAGain, 
-			__tempADataValue);
-
+  __tempULStat = cbDOut(__tempBoardNum, __tempPortNum, __tempDataValue);
+  
   i=-1;
   curTime=time(NULL);    /* Get timestamp*/                
-    float thegain, theoffset;
+    //float thegain, theoffset;
     
     //while (i++ < HighChannel)     /* Write data*/
     //{
@@ -194,12 +186,9 @@ void tempDoStuff( double *temp1, double *temp2, double *temp3, double *temp4, do
 void tempShutdown( void ) {
   /* Turn off relay */
   
-  __tempAEngUnits = 0.0;
-    __tempULStat = cbFromEngUnits(__tempBoardNum, __tempAGain,__tempAEngUnits,
-				  &__tempADataValue);
+  __tempDataValue = 0;
     
-    printf("&&&&&&&&&&&&&&&&&&&&&&&&&&&& heater off\n");
+  printf("&&&&&&&&&&&&&&&&&&&&&&&&&&&& heater off\n");
     
-    __tempULStat = cbAOut(__tempBoardNum, __tempAChan, __tempAGain, 
-			  __tempADataValue);
+  __tempULStat = cbDOut(__tempBoardNum, __tempPortNum, __tempDataValue);
 }
