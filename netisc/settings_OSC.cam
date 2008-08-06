@@ -12,3 +12,6 @@
 5.               * hysteresis: heater off at temp+hysteresis
 3.22             * Pressure sensor gain (.145/(Vs*.009))psi
 1.53             * Pressure sensor offset (10.55*.145)psi
+1                * non-zero for camera's thermoelectric cooler active
+0                * non-zero for camera's high sensitivity mode
+0                * non-zero for camera's blackout mode
