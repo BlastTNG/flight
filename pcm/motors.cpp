@@ -94,6 +94,7 @@ double ireq,pvreq;  // Reaction wheel current requested, and Pivot
   int vpiv;
   int encpos;
   int encposShort;
+
 /* opens communications with motor controllers */
 void openMotors()
 {
@@ -103,11 +104,6 @@ void openMotors()
     bprintf(err, "Motors: rotary table initialization gave error code: %d",
 	tableComm->getError());
   }
-//  tableComm->maxCommSpeed(TABLE_ADDR);  //done in firmware
-  //turn on motor power
-  MotorCommand axison(TABLE_ADDR, 0x0102);
-  axison.buildCommand();
-  tableComm->sendCommand(&axison);
   pthread_create(&tablecomm_id, NULL, &rotaryTableComm, NULL);
   open_pivot(PIVOT_DEVICE);
   pthread_create(&pivotcomm_id, NULL, &pivotComm, NULL);
@@ -218,6 +214,17 @@ void* rotaryTableComm(void* arg)
   static double lastTime=0;
   double thisTime;
 
+  //perform initialization
+  while (!tableComm->isOpen()) {  //needed when original open fails
+    sleep(1);
+    tableComm->openConnection(tableComm->getDeviceName());
+  }
+    
+  //turn on motor power
+  MotorCommand axison(TABLE_ADDR, 0x0102);
+  axison.buildCommand();
+  tableComm->sendCommand(&axison);
+
   bputs(startup, "Motors: rotary table startup");
   while (1) {
 //    usleep(1000);  //needed with if statement
@@ -266,8 +273,8 @@ void* pivotComm(void* arg)
   pivotinfo.closing=0;
   int firsttime = 1;
   int first = 1;
-  int encposOld;
-  double prevTime, curTime;
+  int encposOld = 0;
+  double prevTime=0.0, curTime;
   double encvel=0.0;
   //  unsigned long int vmagpiv;
   struct timeval timer;  

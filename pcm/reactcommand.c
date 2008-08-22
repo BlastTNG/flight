@@ -461,7 +461,10 @@ int sendThisCommand(int index,int offset,int value,int nwords,enum CmdorQuery ty
   unsigned short *crctable;
   char headersend[8];
   char *command;
-  int n,l,i;
+  int n,l;
+#ifdef DEBUG_RW
+  int i;
+#endif
 
   if((crctable = mk_crctable((unsigned short)CRC_POLY,crchware)) == NULL)
  
@@ -813,8 +816,9 @@ int disableRW()
 
 int enableRW()
 {
-  int count,n;
+  int n;
 #ifndef DISABLE_RW
+  int count;
   count = sendThisCommand(1,0,0,1,cmd); // Enable the reaction wheel controller.
   n = check_rwready(resp);
   if (n < 0)

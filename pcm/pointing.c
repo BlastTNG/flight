@@ -129,7 +129,7 @@ void Pointing(void)
 {
 //  double gy_roll, gy2, gy3, el_rad;
 //  static double last_good_lat=0, last_good_lon=0;
-  static int tst;
+//  static int tst;
 
   static int firsttime = 1;
   static int initcount = 0;

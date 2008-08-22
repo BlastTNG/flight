@@ -32,6 +32,7 @@ public:
 	string getDeviceName() { return this->serialDeviceName; }
 	DRIVE_ERROR getError() { return this->err; }
 	bool isGoingForward() { return this->dirForward; }
+	bool isOpen() { return portFD > 0; }
 	
 	
 	void openConnection(string deviceName, bool highspeed=true);  //same as above except when highspeed==true use higher speed
