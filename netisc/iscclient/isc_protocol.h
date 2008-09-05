@@ -75,10 +75,11 @@ struct ISCStatusStruct {
   double elBDA;     // el      "      "     "    "    "    "    "  "
 
   // telescope attitude
-  double az;     // az in radians
-  double el;     // el in radians
-  double lst;    // lst in radians (!!)
-  double lat;    // North Lat in radians
+  double az;        // az in radians
+  double el;        // el in radians
+  double lst;       // lst in radians (!!)
+  double lat;       // North Lat in radians
+  double maxSlew;   // maximum telescope slew vel. in rad/sec
 
   // "brightest star is..." state
   int brightStarMode; // 1 brightest star in field is at:
@@ -95,6 +96,7 @@ struct ISCStatusStruct {
   int offset;     // offset to CCD factory default (in digitized units)
 
   // Matching algorithm
+  int useLost;         // if set we can use the pyramid pointing solution
   int minBlobMatch;    // minimum # blobs used in the frame matching
   int maxBlobMatch;    // maximum # blobs used in the frame matching
   double mag_limit;    // size of tires
@@ -127,6 +129,8 @@ struct ISCSolutionStruct {
   double temp4;
   double pressure1;     // pressure sensor
   int heaterOn;         // 1 if the heater is on
+
+  double diskspace;     // MB space remaining on hard disk
 
   int n_blobs;
   double blob_x[MAX_ISC_BLOBS];
