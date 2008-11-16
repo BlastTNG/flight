@@ -1,4 +1,4 @@
-/* $Header: /data/cvsd-jail/data/cvs/netisc/tiffio.h,v 1.1.1.1 2006-03-20 23:00:47 echapin Exp $ */
+/* $Header: /data/cvsd-jail/data/cvs/netisc/tiffio.h,v 4.0 2008-11-16 20:35:01 mtruch Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler

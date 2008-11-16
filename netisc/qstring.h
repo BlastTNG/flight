@@ -1,5 +1,5 @@
 /****************************************************************************
-** $Id: qstring.h,v 1.1.1.1 2006-03-20 23:00:47 echapin Exp $
+** $Id: qstring.h,v 4.0 2008-11-16 20:35:01 mtruch Exp $
 **
 ** Definition of the QString class, and related Unicode functions.
 **
