@@ -19,7 +19,7 @@ KDIR	:= /lib/modules/$(shell uname -r)/build
 PWD		:= $(shell pwd)
 CC    := gcc -O2 -g
 
-all: bbc_pci.ko test_bbcpci test_biphase
+all: bbc_pci.ko test_bbcpci test_biphase test_irq
 
 bbc_pci.ko: bbc_pci.c bbc_pci.h
 # invoke kernel build system
@@ -31,11 +31,17 @@ test_bbcpci: test_bbcpci.c
 test_biphase: test_biphase.c
 	$(CC) -o test_biphase test_biphase.c -lm
 
+test_irq: test_irq.c
+	$(CC) -o test_irq test_irq.c -lm
+
 clean: 
-	rm -f .bbc* *.ko *.o test_bbcpci bbc_pci.mod.c
+	rm -f .bbc* *.ko *.o test_bbcpci test_biphase test_irq bbc_pci.mod.c
+
+MODULEDIR ?= /lib/modules/$(shell uname -r)/kernel/drivers/misc
 
 install: bbc_pci.ko
 	install -m 644 bbc_pci.h /usr/local/include/bbc_pci.h
-	install bbc_pci.ko -m 644 /usr/local/lib/bbc_pci.ko
+	install -m 644 15-bbcpci.rules /etc/udev/rules.d/15-bbcpci.rules
+#	install bbc_pci.ko -m 644 -D $(MODULEDIR)/bbc_pci.ko
 
 endif
