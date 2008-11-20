@@ -1,10 +1,10 @@
 /* bbc_pci.h: contains definitions for the PCI BLAST Bus Controller module
  *
  * This software is copyright (C) 2004 University of Toronto
- *
- * This file is part of the BLAST flight code licensed under the GNU
+ * 
+ * This file is part of the BLAST flight code licensed under the GNU 
  * General Public License.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this software; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -29,6 +29,16 @@
 #define BBCPCI_IOC_READBUF_RP   _IO(BBCPCI_IOC_MAGIC, 7)
 #define BBCPCI_IOC_BBC_FIONREAD _IO(BBCPCI_IOC_MAGIC, 8)
 #define BBCPCI_IOC_BI0_FIONREAD _IO(BBCPCI_IOC_MAGIC, 9)
+#define BBCPCI_IOC_ON_IRQ       _IO(BBCPCI_IOC_MAGIC, 10)
+#define BBCPCI_IOC_OFF_IRQ	_IO(BBCPCI_IOC_MAGIC, 11)
+#define BBCPCI_IOC_IRQT_READ	_IO(BBCPCI_IOC_MAGIC, 12)
+#define BBCPCI_IOC_IRQ_RATE	_IO(BBCPCI_IOC_MAGIC, 13)
+#define BBCPCI_IOC_RESET_SERIAL _IO(BBCPCI_IOC_MAGIC, 14)
+#define BBCPCI_IOC_GET_SERIAL	_IO(BBCPCI_IOC_MAGIC, 15)
+#define BBCPCI_IOC_SERIAL_RDY	_IO(BBCPCI_IOC_MAGIC, 16)
+#define BBCPCI_IOC_EXT_SER_ON   _IO(BBCPCI_IOC_MAGIC, 17)
+#define BBCPCI_IOC_EXT_SER_OFF  _IO(BBCPCI_IOC_MAGIC, 18)
+#define BBCPCI_IOC_FRAME_RATE	_IO(BBCPCI_IOC_MAGIC, 19)
 
 #define BBCPCI_SIZE_UINT           sizeof(unsigned int)
 #define BBCPCI_ADD_WRITE_BUF_P     (0x01 * BBCPCI_SIZE_UINT)
@@ -36,8 +46,13 @@
 #define BBCPCI_ADD_IR_WRITE_PRE    0x36
 #define BBCPCI_IR_WRITE_BUF_SIZE   0x100
 #define BBCPCI_ADD_COMREG          (0x03 * BBCPCI_SIZE_UINT)
+#define BBCPCI_ADD_IRQREG          (0x0a * BBCPCI_SIZE_UINT)
+#define BBCPCI_ADD_IRQ_RATE	   (0x0b * BBCPCI_SIZE_UINT)
+#define BBCPCI_ADD_FRAME_RATE      (0x0e * BBCPCI_SIZE_UINT)
 #define BBCPCI_ADD_VERSION         (0x00 * BBCPCI_SIZE_UINT)
 #define BBCPCI_ADD_COUNTER         (0x02 * BBCPCI_SIZE_UINT)
+#define BBCPCI_ADD_SERIAL	   (0x0c * BBCPCI_SIZE_UINT)
+#define BBCPCI_ADD_SERIAL_RDY	   (0x0d * BBCPCI_SIZE_UINT)
 #define BBCPCI_ADD_READ_BUF        0x840
 #define BBCPCI_ADD_READ_BUF_END    0x2ff0
 #define BBCPCI_ADD_READ_BUF_WP     (0x04 * BBCPCI_SIZE_UINT)
@@ -49,15 +64,26 @@
 
 #define BBCPCI_MAX_FRAME_SIZE      0x10000
 
-#define BBCPCI_SD_WFRAME1          0x00
-#define BBCPCI_SD_WFRAME2          (BBCPCI_SD_WFRAME1 + BBCPCI_MAX_FRAME_SIZE)
-#define BI0_SD_BUF                  0x800000
-#define BBCPCI_WFRAME1_ADD(x)      (BBCPCI_SD_WFRAME1 + x)
+#define BBCPCI_SD_WFRAME           0x00
+#define BBCPCI_WFRAME_ADD(x)       (BBCPCI_SD_WFRAME + x)
+
+//compatibility hack for code that's looking for two buses
+#define BBCPCI_WFRAME1_ADD(x)	    BBCPCI_WFRAME_ADD(x)
+#define BBCPCI_SD_WFRAME2          (BBCPCI_SD_WFRAME + BBCPCI_MAX_FRAME_SIZE)
+//NB on new firmware, this is start of NIOS read buffer. Writing on startup is
+//okay (beginning entries skipped anyway). Writing again can corrupt data!!!
 #define BBCPCI_WFRAME2_ADD(x)      (BBCPCI_SD_WFRAME2 + x)
 
 /* Command register bitfield. */
-#define BBCPCI_COMREG_RESET  0x00000001 /* Fully reset all pointers etc. */
-#define BBCPCI_COMREG_SYNC   0x00000002 /* Clear read buffers and start frame */
+#define BBCPCI_COMREG_RESET       0x00000001 // Fully reset all pointers etc.
+#define BBCPCI_COMREG_SYNC        0x00000002 // Clear rx buffers; start frame.
+#define BBCPCI_COMREG_ON_IRQ      0x00000004 // Turn on IRQ generation.
+#define BBCPCI_COMREG_OFF_IRQ     0x00000008 // Turn off IRQ generation.
+#define BBCPCI_COMREG_EXT_SER_ON  0x00000010 // Set serial generation external.
+#define BBCPCI_COMREG_EXT_SER_OFF 0x00000020 // Set serial generation internal.
+
+/* Message register bitfield. */
+#define BBCPCI_MSGREG_IRQ    0x00000001 /* An IRQ was generated. */
 
 /* The BBus bitfield looks like:
  * 1      1       1
@@ -74,8 +100,8 @@
  *      f = frame sync      (1 bit           at bit 31)
  */
 
-#define BBC_NODE(x)     ((unsigned int) x <<23)
-#define BBC_CH(x)       ((unsigned int) x <<16)
+#define BBC_NODE(x)     ((unsigned int) x << 23)
+#define BBC_CH(x)       ((unsigned int) x << 16)
 #define BBC_ADC_SYNC    (0x20000000)
 #define BBC_READ        (0x00400000)
 #define BBC_WRITE       (0x40000000)
