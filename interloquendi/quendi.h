@@ -21,6 +21,8 @@
 #ifndef QUENDI_H
 #define QUENDI_H
 
+#include <linux/limits.h>
+
 /* Protocol definitions */
 #include "quenya.h"
 

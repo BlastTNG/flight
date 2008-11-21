@@ -202,7 +202,7 @@ int quendi_get_next_param(char *buffer, int *nparams,
 int quendi_dp_open(void)
 {
   struct sockaddr_in addr;
-  int addrlen;
+  socklen_t addrlen;
   int dsock;
 
   addrlen = sizeof(addr);
@@ -223,7 +223,7 @@ int quendi_dp_connect(void)
   int i;
   char buffer[QUENDI_RESPONSE_LENGTH];
   struct sockaddr_in addr;
-  int addrlen;
+  socklen_t addrlen;
   struct request_info req;
   fd_set sock_set;
   struct timeval timeout;

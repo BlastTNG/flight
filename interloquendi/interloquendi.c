@@ -106,7 +106,7 @@ char* GetCurFile(char *buffer, int buflen)
 void Connection(int csock)
 {
   struct sockaddr_in addr;
-  int addrlen = sizeof(addr);
+  socklen_t addrlen = sizeof(addr);
   struct hostent* thishost;
   struct request_info req;
   struct quendi_server_data_t QuendiData;
@@ -508,7 +508,8 @@ int main(void)
 {
   int pid;
   FILE* stream;
-  int sock, addrlen, csock;
+  int sock, csock;
+  socklen_t addrlen;
   struct sockaddr_in addr;
 
   /* set up our outputs */
