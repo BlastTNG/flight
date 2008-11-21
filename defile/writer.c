@@ -115,6 +115,7 @@
 #include <dirent.h>     /* POSIX directory IO (DIR, opendir, closedir, &c.) */
 #include <fcntl.h>      /* POSIX file descriptor manipulation (open, creat) */
 #include <sys/stat.h>   /* SYSV stat (stat, struct stat S_IS(FOO)) */
+#include <unistd.h>     /* unlink, &c. */
 #ifdef HAVE_ZLIB_H
 #  include <zlib.h>     /* libz compression library (gzwrite, gzopen, &c.) */
 #endif
