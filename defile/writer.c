@@ -436,9 +436,9 @@ void PreInitialiseDirFile(void)
 
 int OpenField(int fast, int size, const char* filename)
 {
-  char gpb[GPB_LEN];
   int file;
 #ifdef HAVE_LIBZ
+  char gpb[GPB_LEN];
   int gzerrno;
   const char* gze;
 #endif
