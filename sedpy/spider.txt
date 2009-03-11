@@ -27,17 +27,17 @@ WIRE -> WIRE 0 "Simple wires" Y N M-M F-X
 MYSTERY -> MYSTERY 0 "Mystery connector (change sometime)" N N M-X F-F
 *ENDCONNECTORLIST
 
-BLASTPOL "Balloon-borne Large Aperture Submillimetre Telescope...pol"
+SPIDER "Spider"
 
-IF "Inner Frame" < BLASTPOL
+IF "Inner Frame (cryostat)" < SPIDER
 
-OF "Outer Frame" < BLASTPOL
+OF "Outer Frame" < SPIDER
 
 ################################################################################
 # ACS
 
 ACS "Attitude Control System (and Housekeeping) Electronics" < OF
-    JACK 1 "BLASTbus" 15D/M -> NPV CABLE "BLASTbus"
+    JACK 1 "BLASTbus" 15D/M -> WSPOUT CABLE "BLASTbus"
     JACK IN 1b "BLASTbus" 15D/M -> ACSBP
     JACK 2 "BLASTbus out" 15D/F -> DAS CABLE "BLASTbus"
     LINE "BLASTbus +5V" (1;6,13,14),(1b;6,13,14),(2;6,13,14)
@@ -170,9 +170,10 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     JACK 13 "Inclinometer" 9D/F -> CLINOF CABLE ""
     JACK 13b "Inclinometer" 9D/F -> CLINIF CABLE ""
     JACK 14 "Magnetometer" 9D/F -> MAGBOX CABLE ""
-    JACK 15 "Charge Controller" 50D/M -> CHARGE_C CABLE ""
+    #JACK 15 "Charge Controller" 50D/M -> CHARGE_C CABLE ""
     JACK p0 "Power In" 8W8D/M -> BATT CABLE ""
     JACK p3 "Starcam" 17W2D/F -> STARCAM CABLE ""
+    JACK p4 "Starcam Motor" 7W2D/F -> STARCAM CABLE ""
     JACK p5 "Gyros Power" 17W2D/F -> GYROS CABLE ""
     JACK p6 "Reaction Wheel" 7W2D/F -> REAC CABLE ""
     JACK p7 "Pivot" 7W2D/F -> PIVOT CABLE ""
@@ -180,11 +181,16 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     JACK p10 "Science Stack Power" 9D/F -> STACK CABLE ""
     JACK p10b "Science Stack Commands" 37D/F -> STACK CABLE ""
     JACK p12 "Steppers" 7W2D/F -> STEPCOMM CABLE ""
-    JACK p14 "Computers" 17W2D/F -> NPV CABLE ""
+    JACK p14 "Computers" 17W2D/F -> WSPOUT CABLE ""
     JACK p15 "RS232 Hub" 7W2D/F -> HUB232 CABLE ""
+    JACK p16 "IF Hub" 7W2D/F -> IFHUB CABLE ""
+    JACK p17 "BS Cam" 17W2D/F -> BSCAM CABLE ""
     JACK p18 "Sun Sensor" 17W2D/F -> SUN CABLE ""
-    JACK p19 "Elevation" 7W2D/F -> ELE_R CABLE ""
+    JACK p19 "Elevation Right" 7W2D/F -> ELE_R CABLE ""
+    JACK p19b "Elevation Left" 7W2D/F -> ELE_L CABLE ""
     JACK p20 "DAS" 7W2D/F -> DAS CABLE ""
+    JACK p21 "MCE Switch" 9D/F -> MCE CABLE ""
+    JACK p22 "Cryo HK" 7W2D/F -> CRYO CABLE ""
     JACK p23 "DGPS Power" 7W2D/F -> DGPS CABLE ""
     JACK IN rp0 "High Current J3" 8W8D/F -> ACSPM/2
     JACK IN rp1 "High Current J4" 8W8D/M -> ACSPM/3
@@ -256,10 +262,10 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     LINE "Mag Z" (14,5),(4,10)
     LINE "Battery+" (p0;A1),(rp5,A1),(p10,1)
     LINE "Battery Ground" (p0;A5),(rp5,A2),(p10,6),(p10b;30,32,34,36)
-    LINE "Starcam Battery+" (p3,A1),(rp1,A7)
-    LINE "Starcam Battery-" (p3,A2),(rp1,A8)
+    LINE "Starcam Battery+" (p3,A1),(rp1,A7),(p17,A1)
+    LINE "Starcam Battery-" (p3,A2),(rp1,A8),(p17,A2)
     LINE "SC1 Trigger+" (p3,1),(6,3)
-    LINE "SC Triggers-" (p3;8,9)
+    LINE "SC Triggers-" (p3;8,9),(p17,8)
     LINE "SC2 Trigger+" (p3,2),(6,22)
     LINE "SC1 Temp+" (p3,3),(1,3)
     LINE "SC1 Temp-" (p3,10),(1,19)
@@ -269,6 +275,13 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     LINE "SC1 Heater" (p3,5),(2,50)
     LINE "SC2 Heater" (p3,12),(2,49)
     LINE "SC Inhibit" (p3,13),(rp2,24)
+    LINE "Starcam Motor Battery+" (p4, A1)
+    LINE "Starcam Motor Battery-" (p4, A2)
+    LINE "Starcam A/SIN" (p4,1),(6,5)
+    LINE "Starcam B/COS" (p4,3),(6,24)
+    LINE "Starcam Z" (p4,2),(6,6)
+    LINE "Starcam Zbar" (p4,4),(6,25)
+    LINE "Starcam Encoder Ground" (p4,5),(6,20)
     LINE "RW Battery+ In" (p0,A2),(rp8,1)
     LINE "RW Battery+" (p6,A1),(rp8,2)
     LINE "RW Battery-" (p0,A6),(p6,A2)
@@ -372,91 +385,92 @@ DACTRANS "Transmitter for SPI DAC Bus" < ACSBOB
     #JACK 2 "Power" DIN41612/M -> ACSBP
     JACK 3 "DAC1" 15D/F -> REAC CABLE ""
     JACK 4 "DAC2" 15D/F -> PIVOT CABLE ""
-    JACK 5 "DAC3" 15D/F -> ELE CABLE ""
+    #JACK 5 "DAC3" 15D/F
     #JACK 6 "DAC4" 15D/F
     #JACK 7 "DAC5" 15D/F
 
 ################################################################################
 # Computers, Digital
 
-LABUSE "Non-part representing connection to computers in lab" < NPV
-    JACK 0 "Ethernet" ETH/M -> NPV
-    JACK 1 "WD Control (normally fed back)" 9D/M -> NPV
+LABUSE "Non-part representing connection to computers in lab" < WSPOUT
+    JACK 0 "Ethernet" ETH/M -> WSPOUT
+    JACK 1 "WD Control (normally fed back)" 9D/M -> WSPOUT
 
-NPV "Non-Pressure Vessel (Flight Computer Box)" < OF
+WSPOUT "The Waterspout (Flight Computer Box)" < OF
     JACK 0 "BLASTbus" 15D/M -> ACS CABLE ""
     JACK 1 "Snyc (sic)" 9D/M -> MCE CABLE ""
-    JACK 2 "Power" 17W2D/M -> ACSBOB CABLE "Non-Pressure Vessel Power"
+    JACK 2 "Power" 17W2D/M -> ACSBOB CABLE "Waterspout Power"
     JACK 3 "BiPhase" 9D/M -> TRANS CABLE ""
-    JACK IN 6r "IF Ethernet" ETH/M -> NPVHUB
+    JACK 6 "IF Ethernet" ETH/F -> IFHUB CABLE ""
+    JACK IN 6r "IF Ethernet" ETH/M -> WSHUB
     JACK 6b "Serial Hub Ethernet" ETH/F -> HUB232 CABLE ""
-    JACK IN 6br "Serial Hub Ethernet" ETH/M -> NPVHUB
+    JACK IN 6br "Serial Hub Ethernet" ETH/M -> WSHUB
     JACK 6c "Lab Use Ethernet" ETH/F -> LABUSE
-    JACK IN 6cr "Lab Use Ethernet" ETH/M -> NPVHUB
+    JACK IN 6cr "Lab Use Ethernet" ETH/M -> WSHUB
     JACK 6d "Starcam Ethernet" ETH/F -> STARCAM CABLE ""
-    JACK IN 6dr "Starcam Ethernet" ETH/M -> NPVHUB
+    JACK IN 6dr "Starcam Ethernet" ETH/M -> WSHUB
     JACK 7 "WD Control"	9D/F -> LABUSE
     JACK 8 "Serial GPS1" RS232/M -> DGPS CABLE ""
     JACK 8b "Serial GPS2" RS232/M -> DGPS CABLE ""
     JACK IN 0i "WD Power" 15D/F -> WDOG
-    JACK IN 2i "North" 25D/F -> WDOG
-    JACK IN 3i "South" 25D/F -> WDOG
+    JACK IN 2i "Itsy" 25D/F -> WDOG
+    JACK IN 3i "Bitsy" 25D/F -> WDOG
     JACK IN 4i "Signals" 37D/F -> WDOG
-    JACK IN 5i "North Solid State Relay" LUG/F -> NORTHSSR 
-    JACK IN 6i "South Solid State Relay" LUG/F -> SOUTHSSR
-    JACK IN 7i "North BBC PCI" 37D/M -> NORTH
-    JACK IN 8i "South BBC PCI" 37D/M -> SOUTH
-    JACK IN 12i "North Serial1" RS232/F -> NORTH/3
-    JACK IN 12ib "North Serial2" RS232/F -> NORTH/4
-    JACK IN 12ic "South Serial1" RS232/F -> SOUTH/3
-    JACK IN 12id "South Serial2" RS232/F -> SOUTH/4
-    JACK IN 13i "North Power" WIRE/M -> NORTH
-    JACK IN 13ib "South Power" WIRE/M -> SOUTH
-    JACK IN 15i "Hub Power" WIRE/M -> NPVHUB/0
-    JACK IN 17i "North Parallel Port" 25D/M -> NORTH
-    JACK IN 17ib "North Parallel Port" 25D/M -> SOUTH
+    JACK IN 5i "Itsy Solid State Relay" LUG/F -> ITSYSSR 
+    JACK IN 6i "Bitsy Solid State Relay" LUG/F -> BITSYSSR
+    JACK IN 7i "Itsy BBC PCI" 37D/M -> ITSY
+    JACK IN 8i "Bitsy BBC PCI" 37D/M -> BITSY
+    JACK IN 12i "Itsy Serial1" RS232/F -> ITSY/3
+    JACK IN 12ib "Itsy Serial2" RS232/F -> ITSY/4
+    JACK IN 12ic "Bitsy Serial1" RS232/F -> BITSY/3
+    JACK IN 12id "Bitsy Serial2" RS232/F -> BITSY/4
+    JACK IN 13i "Itsy Power" WIRE/M -> ITSY
+    JACK IN 13ib "Bitsy Power" WIRE/M -> BITSY
+    JACK IN 15i "Hub Power" WIRE/M -> WSHUB/0
+    JACK IN 17i "Itsy Parallel Port" 25D/M -> ITSY
+    JACK IN 17ib "Itsy Parallel Port" 25D/M -> BITSY
     LINE "GPS Time Gnd" (8,5),(4i,32)
     LINE "GPS Time TxD" (8,2),(4i,30)
     LINE "GPS Time RxD" (8,3),(4i,31)
     LINE "GPS Attitude Gnd" (8b,5),(4i,35)
     LINE "GPS Attitude TxD" (8b,2),(4i,33)
     LINE "GPS Attitude RxD" (8b,3),(4i,34)
-    LINE "North GPS Time Gnd" (12i,5),(2i,20)
-    LINE "North GPS Time TxD" (12i,2),(2i,18)
-    LINE "North GPS Time RxD" (12i,3),(2i,19)
-    LINE "North GPS Attitude Gnd" (12ib,5),(2i,23)
-    LINE "North GPS Attitude TxD" (12ib,2),(2i,21)
-    LINE "North GPS Attitude RxD" (12ib,3),(2i,22)
-    LINE "South GPS Time Gnd" (12ic,5),(3i,20)
-    LINE "South GPS Time TxD" (12ic,2),(3i,18)
-    LINE "South GPS Time RxD" (12ic,3),(3i,19)
-    LINE "South GPS Attitude Gnd" (12id,5),(3i,23)
-    LINE "South GPS Attitude TxD" (12id,2),(3i,21)
-    LINE "South GPS Attitude RxD" (12id,3),(3i,22)
+    LINE "Itsy GPS Time Gnd" (12i,5),(2i,20)
+    LINE "Itsy GPS Time TxD" (12i,2),(2i,18)
+    LINE "Itsy GPS Time RxD" (12i,3),(2i,19)
+    LINE "Itsy GPS Attitude Gnd" (12ib,5),(2i,23)
+    LINE "Itsy GPS Attitude TxD" (12ib,2),(2i,21)
+    LINE "Itsy GPS Attitude RxD" (12ib,3),(2i,22)
+    LINE "Bitsy GPS Time Gnd" (12ic,5),(3i,20)
+    LINE "Bitsy GPS Time TxD" (12ic,2),(3i,18)
+    LINE "Bitsy GPS Time RxD" (12ic,3),(3i,19)
+    LINE "Bitsy GPS Attitude Gnd" (12id,5),(3i,23)
+    LINE "Bitsy GPS Attitude TxD" (12id,2),(3i,21)
+    LINE "Bitsy GPS Attitude RxD" (12id,3),(3i,22)
     LINE "Battery+" (2,A1),(0i;1,9),(5i;2,3),(6i;2,3)
     LINE "Bat Ground" (2,A2),(0i;2,10,15),(13i,2),(13ib,2)
-    LINE "North Batt+ Switched" (13i,1),(5i,1)
-    LINE "South Batt+ Switched" (13ib,1),(6i,1)
+    LINE "Itsy Batt+ Switched" (13i,1),(5i,1)
+    LINE "Bitsy Batt+ Switched" (13ib,1),(6i,1)
     LINE "BLASTbus +5V" (7,1),(0i;3,4,11,12),(7i;8,27),(8i;8,27),(0;6,13,14)
     LINE "BLASTbus Ground" (7,7),(0i;5,6,13,14),(7i;7,26,36,37),(8i;7,26,36,37),(0;7,8,15)
     LINE "WD Control In" (7,6),(4i,14)
     LINE "WD Control Out" (7,2),(4i,15)
-    LINE "WD North Reboot Inh In" (7,4),(5i,4)
-    LINE "WD North Reboot Inh Out" (7,5),(4i,16)
-    LINE "WD South Reboot Inh In" (7,8),(6i,4)
-    LINE "WD South Reboot Inh Out" (7,9),(4i,17)
+    LINE "WD Itsy Reboot Inh In" (7,4),(5i,4)
+    LINE "WD Itsy Reboot Inh Out" (7,5),(4i,16)
+    LINE "WD Bitsy Reboot Inh In" (7,8),(6i,4)
+    LINE "WD Bitsy Reboot Inh Out" (7,9),(4i,17)
     LINE "Hub Power" (2,1),(15i,1)
     LINE "Hub Ground" (2,8),(15i,2)
-    LINE "North BLASTbus Inh" (2i,24),(7i,18)
-    LINE "South BLASTbus Inh" (3i,24),(8i,18)
+    LINE "Itsy BLASTbus Inh" (2i,24),(7i,18)
+    LINE "Bitsy BLASTbus Inh" (3i,24),(8i,18)
     LINE "BLASTbus Clock+" (7i,14),(8i,14),(0,2)
     LINE "BLASTbus Clock-" (7i,33),(8i,33),(0,5)
     LINE "BLASTbus Data+" (7i,16),(8i,16),(0,3)
     LINE "BLASTbus Data-" (7i,35),(8i,35),(0,4)
     LINE "BLASTbus Strobe+" (7i,15),(8i,15),(0,9)
     LINE "BLASTbus Strobe-" (7i,34),(8i,34),(0,1)
-    LINE "North BiPhase Inh" (2i,25),(7i,19)
-    LINE "South BiPhase Inh" (3i,25),(8i,19)
+    LINE "Itsy BiPhase Inh" (2i,25),(7i,19)
+    LINE "Bitsy BiPhase Inh" (3i,25),(8i,19)
     LINE "BiPhase +5V" (7i,1),(8i,1),(3,4)
     LINE "BiPhase Ground" (7i,20),(8i,20),(3,9)
     LINE "BiPhase+" (7i,3),(8i,3),(3,1)
@@ -473,65 +487,65 @@ NPV "Non-Pressure Vessel (Flight Computer Box)" < OF
     LINE "Temp Sensor-" (4i,13),(2,15)
     LINE "PV On" (4i,10),(2,6)
     LINE "PV Off" (4i,9),(2,14)
-    LINE "North Tickle 0" (17i,2),(2i,1)
-    LINE "North Tickle 1" (17i,3),(2i,2)
-    LINE "North Tickle 2" (17i,4),(2i,3)
-    LINE "North Tickle 3" (17i,5),(2i,4)
-    LINE "North Tickle Gnd" (17i,25),(2i,5)
-    LINE "South Tickle 0" (17ib,2),(3i,1)
-    LINE "South Tickle 1" (17ib,3),(3i,2)
-    LINE "South Tickle 2" (17ib,4),(3i,3)
-    LINE "South Tickle 3" (17ib,5),(3i,4)
-    LINE "South Tickle Gnd" (17ib,25),(3i,5)
+    LINE "Itsy Tickle 0" (17i,2),(2i,1)
+    LINE "Itsy Tickle 1" (17i,3),(2i,2)
+    LINE "Itsy Tickle 2" (17i,4),(2i,3)
+    LINE "Itsy Tickle 3" (17i,5),(2i,4)
+    LINE "Itsy Tickle Gnd" (17i,25),(2i,5)
+    LINE "Bitsy Tickle 0" (17ib,2),(3i,1)
+    LINE "Bitsy Tickle 1" (17ib,3),(3i,2)
+    LINE "Bitsy Tickle 2" (17ib,4),(3i,3)
+    LINE "Bitsy Tickle 3" (17ib,5),(3i,4)
+    LINE "Bitsy Tickle Gnd" (17ib,25),(3i,5)
 
-NORTH "Master Control Computer: 'North'" < NPV
-    JACK 0 "Power" WIRE/M -> NPV
-    JACK 1 "BBC PCI" 37D/F -> NPV
-    JACK 2 "Ethernet" ETH/F -> NPVHUB
-    JACK 3 "Serial1" RS232/M -> NPV/12i
-    JACK 4 "Serial2" RS232/M -> NPV/12ib
-    JACK 5 "Parallel Port" 25D/F -> NPV/17i
+ITSY "Master Control Computer: 'Itsy'" < WSPOUT
+    JACK 0 "Power" WIRE/M -> WSPOUT
+    JACK 1 "BBC PCI" 37D/F -> WSPOUT
+    JACK 2 "Ethernet" ETH/F -> WSHUB
+    JACK 3 "Serial1" RS232/M -> WSPOUT/12i
+    JACK 4 "Serial2" RS232/M -> WSPOUT/12ib
+    JACK 5 "Parallel Port" 25D/F -> WSPOUT/17i
 
-SOUTH "Master Control Computer: 'South'" < NPV
-    JACK 0 "Power" WIRE/M -> NPV
-    JACK 1 "BBC PCI" 37D/F -> NPV
-    JACK 2 "Ethernet" ETH/F -> NPVHUB 
-    JACK 3 "Serial1" RS232/M -> NPV/12ic
-    JACK 4 "Serial2" RS232/M -> NPV/12id
-    JACK 5 "Parallel Port" 25D/F -> NPV/17ib
+BITSY "Master Control Computer: 'Bitsy'" < WSPOUT
+    JACK 0 "Power" WIRE/M -> WSPOUT
+    JACK 1 "BBC PCI" 37D/F -> WSPOUT
+    JACK 2 "Ethernet" ETH/F -> WSHUB 
+    JACK 3 "Serial1" RS232/M -> WSPOUT/12ic
+    JACK 4 "Serial2" RS232/M -> WSPOUT/12id
+    JACK 5 "Parallel Port" 25D/F -> WSPOUT/17ib
 
-NORTHSSR "North's Solid State Relay" < NPV
-    JACK 0 "Input and Output Screws" SCREW/M -> NPV
+ITSYSSR "Itsy's Solid State Relay" < WSPOUT
+    JACK 0 "Input and Output Screws" SCREW/M -> WSPOUT
     LINE "Output -" (0;1)
     LINE "Output +" (0;2)
     LINE "Input +" (0;3)
     LINE "Input -" (0;4)
 
-SOUTHSSR "South's Solid State Relay" < NPV
-    JACK 0 "Input and Output Screws" SCREW/M -> NPV
+BITSYSSR "Bitsy's Solid State Relay" < WSPOUT
+    JACK 0 "Input and Output Screws" SCREW/M -> WSPOUT
     LINE "Output -" (0;1)
     LINE "Output +" (0;2)
     LINE "Input +" (0;3)
     LINE "Input -" (0;4)
 
-NPVHUB "NPV Ethernet Switch" < NPV
-    JACK 0 "Power" WIRE/M -> NPV
-    JACK 1 "North" ETH/F -> NORTH
-    JACK 2 "South" ETH/F -> SOUTH
-    JACK 3 "RS232 Hub" ETH/F -> NPV/6br
-    JACK 4 "Inner Frame Hub" ETH/F -> NPV/6r
-    JACK 5 "External" ETH/F -> NPV/6cr
-    JACK 6 "Starcam" ETH/F -> NPV/6dr
+WSHUB "Waterspout Ethernet Switch" < WSPOUT
+    JACK 0 "Power" WIRE/M -> WSPOUT
+    JACK 1 "Itsy" ETH/F -> ITSY
+    JACK 2 "Bitsy" ETH/F -> BITSY
+    JACK 3 "RS232 Hub" ETH/F -> WSPOUT/6br
+    JACK 4 "Inner Frame Hub" ETH/F -> WSPOUT/6r
+    JACK 5 "External" ETH/F -> WSPOUT/6cr
+    JACK 6 "Starcam" ETH/F -> WSPOUT/6dr
 
-WDOG "Watchdog" < NPV
-    JACK 0 "Signals" 37D/M -> NPV
-    JACK 1 "North" 25D/M -> NPV/2i
-    JACK 2 "South" 25D/M -> NPV/3i
-    JACK 3 "Power" 15D/M -> NPV
+WDOG "Watchdog" < WSPOUT
+    JACK 0 "Signals" 37D/M -> WSPOUT
+    JACK 1 "Itsy" 25D/M -> WSPOUT/2i
+    JACK 2 "Bitsy" 25D/M -> WSPOUT/3i
+    JACK 3 "Power" 15D/M -> WSPOUT
 
 HUB232 "RS232 Serial Hub" < OF
     JACK 0 "Power" 7W2D/M -> ACSBOB CABLE "Serial Hub Power"
-    JACK 1 "Ethernet" ETH/F -> NPV CABLE "Serial Hub Ethernet"
+    JACK 1 "Ethernet" ETH/F -> WSPOUT CABLE "Serial Hub Ethernet"
     JACK 2 "Starcam Table" RS232/M -> SCTAB_C CABLE ""
     JACK 3 "Reaction Wheel" RS232/M -> REAC_C CABLE ""
     JACK 4 "Pivot" RS232/M -> PIVOT_C CABLE ""
@@ -540,6 +554,12 @@ HUB232 "RS232 Serial Hub" < OF
     JACK 7 "SIP TDRSS" RS232/M -> SIP/2 CABLE ""
     JACK 8 "Windows" RS232/M -> WINDCOMM
     JACK 9 "Waveplates" RS232/M -> WPCOMM
+
+IFHUB "Inner Frame Ethernet Switch" < IF
+    JACK 0 "Power" 7W2D/M -> ACSBOB CABLE "IF Hub Power"
+    JACK 1 "BS Cam" ETH/F -> BSCAM CABLE ""
+    JACK 2 "MCE1 x2 or x3" ETH/F -> MCE CABLE ""
+    JACK 3 "Waterspout" ETH/F -> WSPOUT CABLE "Inner Frame to Waterspout hubs"
 
 ################################################################################
 # Pointing Sensors
@@ -553,8 +573,8 @@ DGPS "Differential GPS unit" < OF
     JACK 0 "GPS 1" BNC/M -> GPS1 CABLE ""
     JACK 1 "GPS 2" BNC/M -> GPS2 CABLE ""
     JACK 2 "GPS 3" BNC/M -> GPS3 CABLE ""
-    JACK 3 "GPS Time" RS232/M -> NPV/8 CABLE "GPS Time Data"
-    JACK 4 "GPS Attitude" RS232/M -> NPV/8b CABLE "GPS Time Attitude"
+    JACK 3 "GPS Time" RS232/M -> WSPOUT/8 CABLE "GPS Time Data"
+    JACK 4 "GPS Attitude" RS232/M -> WSPOUT/8b CABLE "GPS Time Attitude"
     LINE "GPS Time Gnd" (3,5)
     LINE "GPS Time TxD" (3,2)
     LINE "GPS Time RxD" (3,3)
@@ -595,10 +615,12 @@ SUN "Sun Sensor" < OF
 
 STARCAM "Rotating Star Camera" < OF
     JACK 0 "Power, signals" 17W2D/M -> ACSBOB CABLE "Star Camera"
-    JACK 1 "Ethernet" ETH/F -> NPV/6d CABLE "Starcam Ethernet"
+    JACK 1 "Ethernet" ETH/F -> WSPOUT/6d CABLE "Starcam Ethernet"
     JACK 2 "Motor" 7W2D/M -> ACSBOB CABLE "Starcam Motor"
     JACK IN 1i "Controller Power" BARE/M -> SCTAB_C
     JACK IN 1ib "Controller Feedback" 15UD/M -> SCTAB_C
+    JACK IN 2i "Motor Power" 9W4D/F -> SCTABLE
+    JACK IN 2ib "Motor Feedback" 25D/F -> SCTABLE
     LINE "Battery+" (2,A1),(1i;6,7)
     LINE "Battery Ground" (2,A2),(1i,8),(2i,A4)
     LINE "Motor Phase A" (1i,1),(2i,A1)
@@ -617,6 +639,20 @@ STARCAM "Rotating Star Camera" < OF
     LINE "Hall B" (1ib,9),(2ib,5)
     LINE "Hall C" (1ib,4),(2ib,11)
     LINE "Motor Temp" (1ib,6),(2ib,2)
+
+SCTABLE "Star Camera Rotary Table" < STARCAM
+    JACK 0 "Motor Feedback" 25D/M -> STARCAM
+    JACK 1 "Motor Power" 9W4D/M -> STARCAM
+
+SCTAB_C "Star Camera Rotary Table Controller" < SCTABLE
+    JACK 0 "Motor Feedback" 15UD/F -> STARCAM
+    JACK 1 "Communication" RS232/F -> HUB232 CABLE "Starcam Table Serial"
+    #JACK 2 "Control I/O (Not needed?)" 26UD/F
+    JACK 3 "Power" TERM/F -> STARCAM
+
+BSCAM "Bore-sight Star Camera" < IF
+    JACK 0 "Power, Signals" 17W2D/M -> ACSBOB CABLE "Bore-sight Camera"
+    JACK 1 "Ethernet" ETH/F -> IFHUB CABLE "Bore-sight Camera Ethernet"
 
 ################################################################################
 # Pointing Motors
@@ -667,9 +703,20 @@ PIVOT_M "Pivot Motor" < PIVOT
     JACK 0 "Feedback" HEADER/M -> PIVOT_C/3
     JACK 1 "Power" HEADER/M -> PIVOT_C/4
 
-ELE "Elevation Drive" < OF
+ELE_R "Right-Side Elevation Drive" < OF
     JACK 0 "Power" 7W2D/M -> ACSBOB CABLE "Right Elevation Drive"
-    JACK 1 "DAC" 15D/M -> DACTRANS CABLE "Elevation Command DAC"
+
+ELE_L "Left-Side Elevation Drive" < OF
+    JACK 0 "Power" 7W2D/M -> ACSBOB CABLE "Left Elevation Drive"
+
+
+################################################################################
+# MCE
+
+MCE "Multi-Channel Electornics (Detector Readout)" < IF
+    JACK 0 "Ethernet" ETH/F -> IFHUB CABLE "MCE Ethernet"
+    JACK 1 "BBC Snyc (sic)" 9D/F -> WSPOUT CABLE "Snyc"
+    JACK 2 "Power Switching" 9D/M -> ACSBOB CABLE "MCE Power Switching"
 
 ################################################################################
 # Steppers
@@ -768,7 +815,7 @@ STACK "SIP Science Stack" < SIP
 
 TRANS "LoS Transmitters" < OF
     JACK 0 "Power" 7W2D/M -> ACSBOB CABLE "Los Transmitters Power"
-    JACK 1 "BiPhase" 9D/F -> NPV CABLE "Biphase"
+    JACK 1 "BiPhase" 9D/F -> WSPOUT CABLE "Biphase"
 
 ################################################################################
 # Cryostat, etc.
