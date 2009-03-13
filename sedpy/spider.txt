@@ -138,7 +138,7 @@ ACSPM "ACS Power Module" < ACS
     JACK 7 "Battery In" 7W2D/M -> ACSBOB
     JACK 8 "Motor Switching" 15D/F -> APMRELAY
 
-APMRELAY "ACS Power Module Motor Relays"
+APMRELAY "ACS Power Module Motor Relays" < ACSPM
     JACK 0 "Motor Switching" 15D/M -> ACSPM
     JACK 2 "Pivot Power" MYSTERY/F -> ACSBOB
     JACK 3 "RW Power" MYSTERY/F -> ACSBOB
@@ -177,7 +177,7 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     JACK p5 "Gyros Power" 17W2D/F -> GYROS CABLE ""
     JACK p6 "Reaction Wheel" 7W2D/F -> REAC CABLE ""
     JACK p7 "Pivot" 7W2D/F -> PIVOT CABLE ""
-    JACK p9 "Transmitters" 7W2D/F -> TRANS CABLE ""
+    JACK p9 "Transmitters" 9W4D/F -> TRANS CABLE ""
     JACK p10 "Science Stack Power" 9D/F -> STACK CABLE ""
     JACK p10b "Science Stack Commands" 37D/F -> STACK CABLE ""
     JACK p12 "Steppers" 7W2D/F -> STEPCOMM CABLE ""
@@ -271,10 +271,11 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     LINE "SC1 Temp-" (p3,10),(1,19)
     LINE "SC2 Temp+" (p3,4),(1,4)
     LINE "SC2 Temp-" (p3,11),(1,20)
-    #emitter of heater goes to bat-
     LINE "SC1 Heater" (p3,5),(2,50)
     LINE "SC2 Heater" (p3,12),(2,49)
-    LINE "SC Inhibit" (p3,13),(rp2,24)
+    LINE "SC Video+" (p3,6),(p9,1)
+    LINE "SC Video-" (p3,13),(p9,3)
+    LINE "SC Inhibit" (p3,15),(rp2,24)
     LINE "Starcam Motor Battery+" (p4, A1)
     LINE "Starcam Motor Battery-" (p4, A2)
     LINE "Starcam A/SIN" (p4,1),(6,5)
@@ -296,10 +297,12 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     LINE "Pivot Pos-" (p7,3),(4,29)
     LINE "Pivot Current+" (p7,2),(4,14)
     LINE "Pivot Current-" (p7,4),(4,30)
-    LINE "Transmitter Battery+" (p9,A1),(rp1,A1)
-    LINE "Transmitter Battery-" (p9,A2),(rp1,A2)
-    LINE "Transmitter SET" (p10b,1),(rp4,19),(3,3)
-    LINE "Transmitter RST" (p10b,2),(rp4,37),(3,22)
+    LINE "Starcam Transmitter Battery+" (p9,A3),(rp1,A1)
+    LINE "Starcam Transmitter Battery-" (p9,A4),(rp1,A2)
+    LINE "Biphase Transmitter Battery+" (p9,A1),(rp2;12,13)
+    LINE "Biphase Transmitter Battery-" (p9,A2),(rp2;31,32)
+    LINE "Starcam Transmitter SET" (p10b,1),(rp4,19),(3,3)
+    LINE "Starcam Transmitter RST" (p10b,2),(rp4,37),(3,22)
     LINE "DAS SET" (p10b,3),(rp4,18),(3,4)
     LINE "DAS RST" (p10b,4),(rp4,36),(3,23)
     LINE "ACS SET" (p10b,5),(rp4,17)
@@ -320,8 +323,8 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     LINE "Waterspout RST" (p10b,20),(p14,14)
     LINE "MCE SET" (p10b,21),(p21,1),(3,16)
     LINE "MCE RST" (p10b,22),(p21,6),(3,35)
-    LINE "Aux SET" (p10b,23),(rp4,12),(3,15)
-    LINE "Aux RST" (p10b,24),(rp4,30),(3,34)
+    LINE "Biphase SET" (p10b,23),(rp4,12),(3,15)
+    LINE "Biphase RST" (p10b,24),(rp4,30),(3,34)
     LINE "Cryo HK Battery+" (rp1,A5),(p22,A1)
     LINE "Cryo HK Battery-" (rp1,A6),(p22,A2)
     LINE "Cryo HK SET" (p10b,25),(p22,1),(3,17)
@@ -342,6 +345,8 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     LINE "BS Cam Temp-" (p17,9),(1,21)
     LINE "BS Cam Heater" (p17,3),(2,48)
     LINE "BS Cam Inhibit" (p17,10),(rp2,5)
+    LINE "BS Cam Video+" (p17,4),(p9,2)
+    LINE "BS Cam Video-" (p17,11),(p9,4)
     LINE "Sunsenor +?V" (p18,A1)
     LINE "Sunsenor Ground" (p18,A2)
     LINE "Elevation Battery+ In" (p0,A4),(rp9,1)
@@ -813,8 +818,8 @@ STACK "SIP Science Stack" < SIP
     JACK 2 "Communications" MYSTERY/F -> SIP CABLE ""
     LINE "Battery Ground" (0,6),(1;30,32,34,36)
 
-TRANS "LoS Transmitters" < OF
-    JACK 0 "Power" 7W2D/M -> ACSBOB CABLE "Los Transmitters Power"
+TRANS "Line-of-Sight Transmitters" < OF
+    JACK 0 "Power" 9W4D/M -> ACSBOB/p9 CABLE "Transmitters Power"
     JACK 1 "BiPhase" 9D/F -> WSPOUT CABLE "Biphase"
 
 ################################################################################
@@ -830,76 +835,8 @@ CRYO "Cryostat Housekeeping Crate" < IF
 ################################################################################
 # Power System
 
-#SOLAR "Solar Cells" < OF
-    #JACK 0 "Array Group 1" 8W8D/F -> CHARGE_C/0 CABLE "Solar Power Set 1"
-    #JACK 1 "Array Group 2" 8W8D/F -> CHARGE_C/0b CABLE "Solar Power Set 2"
-    #JACK 2 "Array Group 3" 8W8D/F -> CHARGE_C/0c CABLE "Solar Power Set 3"
-    #JACK 3 "Array Group 4" 9W4D/F -> CHARGE_C/0d CABLE "Solar Power Set 4"
-#
-#CHARGE_C "Charge Controllers" < OF
-    #JACK 0 "Solar In 1" 8W8D/M -> SOLAR/0 CABLE ""
-    #JACK 0b "Solar In 2" 8W8D/M -> SOLAR/1 CABLE ""
-    #JACK 0c "Solar In 3" 8W8D/M -> SOLAR/2 CABLE ""
-    #JACK 0d "Solar In 4" 9W4D/M -> SOLAR/3 CABLE ""
-    #JACK 1 "Power Out" 8W8D/F -> BATT CABLE "Battery Power In"
-    #JACK 2 "Feedback/Control" 25D/M -> ACSBOB CABLE "Charge Controller"
-    #JACK 4 "Battery Feedback" 15D/M -> BATT CABLE "Battery Feedback"
-    #LINE "Array1 +" (0,A1)
-    #LINE "Array1 -" (0,A2)
-    #LINE "Array2 +" (0,A3)
-    #LINE "Array2 -" (0,A4)
-    #LINE "Array3 +" (0,A5)
-    #LINE "Array3 -" (0,A6)
-    #LINE "Array4 +" (0,A7)
-    #LINE "Array4 -" (0,A8)
-    #LINE "Array5 +" (0b,A1)
-    #LINE "Array5 -" (0b,A2)
-    #LINE "Array6 +" (0b,A3)
-    #LINE "Array6 -" (0b,A4)
-    #LINE "Array7 +" (0b,A5)
-    #LINE "Array7 -" (0b,A6)
-    #LINE "Array8 +" (0b,A7)
-    #LINE "Array8 -" (0b,A8)
-    #LINE "Array9 +" (0c,A1)
-    #LINE "Array9 -" (0c,A2)
-    #LINE "Array10 +" (0c,A3)
-    #LINE "Array10 -" (0c,A4)
-    #LINE "Array11 +" (0c,A5)
-    #LINE "Array11 -" (0c,A6)
-    #LINE "Array12 +" (0c,A7)
-    #LINE "Array12 -" (0c,A8)
-    #LINE "Array13 +" (0d,A1)
-    #LINE "Array13 -" (0d,A2)
-    #LINE "Array14 +" (0d,A3)
-    #LINE "Array14 -" (0d,A4)
-    #LINE "Battery1 Temp+" (2,1),(4,1)
-    #LINE "Battery1 Temp-" (2,14),(4,9)
-    #LINE "Battery2 Temp+" (2,2),(4,2)
-    #LINE "Battery2 Temp-" (2,15),(4,10)
-    #LINE "Battery3 Temp+" (2,3),(4,3)
-    #LINE "Battery3 Temp-" (2,16),(4,11)
-    #LINE "Battery4 Temp+" (2,4),(4,4)
-    #LINE "Battery4 Temp-" (2,17),(4,12)
-    #LINE "Battery5 Temp+" (2,5),(4,5)
-    #LINE "Battery5 Temp-" (2,18),(4,13)
-    #LINE "Battery Current +" (2,6),(4,6)
-    #LINE "Battery Current -" (2,19),(4,14)
-    #LINE "Gondola Current +" (2,7),(4,7)
-    #LINE "Gondola Current -" (2,20),(4,15)
-    #LINE "Array14 Temp+" (0d,1),(2,8)
-    #LINE "Array14 Temp-" (0d,3),(2,21)
-    #LINE "Array14 V+" (2,9)
-    #LINE "Array14 V-" (2,22)
-    #LINE "Battery V+" (2,10)
-    #LINE "Battery V-" (2,23)
-    #LINE "Array Switch" (2,13)
-#
 BATT "Batteries" < OF
-    #JACK 0 "Charge In" 8W8D/M -> CHARGE_C CABLE ""
     JACK 1 "Power Out" 8W8D/F -> ACSBOB CABLE "Gondola Power"
-    #JACK 2 "Feedback" 15D/M -> CHARGE_C CABLE ""
     LINE "Battery +" (1;A1,A2,A3,A4)
     LINE "Battery -" (1;A5,A6,A7,A8)
-    #LINE "Battery +" (0;A1,A2,A3,A4),(1;A1,A2,A3,A4)
-    #LINE "Battery -" (0;A5,A6,A7,A8),(1;A5,A6,A7,A8)
 

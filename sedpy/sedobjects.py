@@ -77,7 +77,7 @@ class Component:
     else: return self.ref == other
 
   def toInfile(self):
-    if self.partOf is None: partOf = ""
+    if self.partOf is None: partOf = "\N"
     else: partOf = self.partOf
     self.__class__.compout.write("%s\t%s\t%s\t%s\n" % (self.ref,\
 	self.name, partOf, UID_UTIME))
