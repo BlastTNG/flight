@@ -18,7 +18,7 @@ jackRE = re.compile(r'JACK(?:\s*(IN))?\s*([a-z0-9]+)\s+"([^"]{1,32})"\s+'\
 
 #LINE "description" (jack#,pin#[,pin#,...])[,(jack#,pin#s),...]
 lineRE = re.compile(r'LINE\s+"([^"]{1,64})"\s+'\
-    r'((?:\([a-z0-9]+[;,](?:\s*[A-Z0-9]{1,3},?)*\),?\s*)+)')
+    r'((?:\([a-z0-9]+[;,](?:\s*[A-Za-z0-9]{1,3},?)*\),?\s*)+)')
 
 #CABLE key "description" [len]
 cableRE = re.compile(r'CABLE\s+(C?[0-9]{1,8})\s+"([^"]{1,64})"(?:\s+([0-9]+))?')

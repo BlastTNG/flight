@@ -602,10 +602,10 @@ CLINOF "Outer Frame Inclinometer" < OF
 CLINIF "Inner Frame Inclinometer" < IF
     JACK 0 "Power, signal" 9D/M -> ACSBOB CABLE "IF Inclinometer"
 
-MAG "Analog Magnetometer" < IF
+MAG "Analog Magnetometer" < MAGBOX
     JACK 0 "Magnetometer" WIRE/M -> MAGBOX
 
-MAGBOX "Connector Plate for Magnetometer" < MAG
+MAGBOX "Connector Plate for Magnetometer" < IF
     JACK 0 "Power, Signal" 9D/M -> ACSBOB CABLE "Magnetometer"
     JACK IN 1 "Internal" WIRE/M -> MAG
     LINE "+10V" (0,1),(1,RED)

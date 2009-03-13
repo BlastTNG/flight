@@ -1,6 +1,7 @@
 #!/usr/bin/env /usr/bin/python
 
-UID_UTIME = "1\t2008-08-08 08:08:08"
+#UID_UTIME = "1\t2008-08-08 08:08:08"    #for spider "sbenton" has UID 1
+UID_UTIME = "23\t2008-08-08 08:08:08"	#for BLASTpol "sbenton" has UID 23
 
 class Failure(Exception):
   """exception to use for failures in parsing and matching"""
@@ -179,7 +180,7 @@ class Jack:
 import re
 class Line:
   """contains information on the line table"""
-  pinRE = re.compile(r'\(([a-z0-9]+)[;,]((?:\s*[A-Z0-9]{1,3},?)*)\)')
+  pinRE = re.compile(r'\(([a-z0-9]+)[;,]((?:\s*[A-Za-z0-9]{1,3},?)*)\)')
   count = 1
   lineout = open('out/line', 'w')
 
