@@ -34,6 +34,7 @@ extern "C" {
 #define DAS_CARDS 12
 
 #define DAS_CHS 24
+#define DAS_START 16  //motherboard node of first DAS card
 
 #define N_FAST_BOLOS (DAS_CARDS * (DAS_CHS + DAS_CHS / 2))
 

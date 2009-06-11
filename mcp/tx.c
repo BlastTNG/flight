@@ -204,7 +204,10 @@ static void WriteAux(void)
 /* send the sync bit if they do.  Only one board can be synced   */
 /* in each superframe.                                           */
 /*****************************************************************/
-#define NUM_SYNC 18
+//list node numbers for sync, which may have gaps
+#define NUM_SYNC 29
+const unsigned short sync_nums[NUM_SYNC] = {0,1,2,3,4,5,7,8,9,10,12,13,14,\
+			16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};
 #define REBOOT_TIMEOUT 50 /* 10 sec -- in 5Hz Frames */
 static void SyncADC (void)
 {
@@ -224,15 +227,16 @@ static void SyncADC (void)
     for (k = 0; k < NUM_SYNC; ++k) {
       doingSync[k] = 0;
       serial[k] = 0xeb90;
-      sprintf(buffer, "sync%02i", k);
+      l = sync_nums[k];
+      sprintf(buffer, "sync%02i", l);
       syncAddr[k] = GetNiosAddr(buffer);
-      sprintf(buffer, "status%02i", k);
+      sprintf(buffer, "status%02i", l);
       statusAddr[k] = GetBiPhaseAddr(buffer);
     }
   }
 
   for (m = 0; m < NUM_SYNC; ++m) {
-    l = (m == 0) ? 23 : (m == 17) ? 21 : m;
+    l = sync_nums[m];
     k = slow_data[statusAddr[m]->index][statusAddr[m]->channel];
 
     if ((k & 0x3) == 0x1) {
@@ -243,7 +247,7 @@ static void SyncADC (void)
     } else {
       if (doingSync[m]) {
         bprintf(info, "ADC Sync: node %i deasserted\n", l);
-        if (l == 4)
+        if (l == 8)
           ForceBiasCheck();
       }
       doingSync[m] = 0;
@@ -257,7 +261,7 @@ static void SyncADC (void)
         serial[m] = 0xeb90;
     }
 
-    RawNiosWrite(syncAddr[m]->niosAddr, BBC_WRITE | BBC_NODE(l) | BBC_CH(56)
+    RawNiosWrite(syncAddr[m]->niosAddr, BBC_WRITE | BBC_NODE(l) | BBC_CH(63)
         | doingSync[m] | (serial[m] & 0xfffc) | 0x3, NIOS_FLUSH);
   }
 }

@@ -23,34 +23,121 @@
 #include "bbc_pci.h"
 
 /* card name to (node number, bus number) mapping */
-#define ACS1   1, 0
-#define ACS2   2, 0
-#define CRYO   3, 1
-#define BIAS   4, 1
-#define DAS5   5, 1
-#define DAS6   6, 1
-#define DAS7   7, 1
-#define DAS8   8, 1
-#define DAS9   9, 1
-#define DAS10 10, 1
-#define DAS11 11, 1
-#define DAS12 12, 1
-#define DAS13 13, 1
-#define DAS14 14, 1
-#define DAS15 15, 1
-#define DAS16 16, 1
-#define LOOP1 17, 0
-#define LOOP2 18, 0
-#define LOOP3 19, 0
-#define LOOP4 20, 0
-#define ACS3  21, 0
-#define DECOM 22, 0
-#define ACS0  23, 0
-#define LOOP5 24, 0
-#define LOOP6 25, 0
+#define ACS1_C	 0, 0  /* C denotes a common motherboard node */
+#define ACS1_A1	 1, 0  /* A deontes a node for analog daughter card */
+#define ACS1_T1	 2, 0  /* T denotes an AD590 thermometry daughter card */
+#define ACS1_D	 3, 0  /* D denotes a digital daughter card */
+#define ACS2_C	 4, 0
+#define ACS2_A1	 5, 0
+//ACS2_unused	 6, 0
+#define ACS2_D	 7, 0
+#define BIAS_C	 8, 0
+#define BIAS_D	 9, 0
+#define BIAS_T1	10, 0
+//BIAS_unused	11, 0
+#define CRYO_C	12, 0
+#define CRYO_A1	13, 0
+#define CRYO_A2	14, 0
+//CRYO_unused	15, 0
+#define DAS1_C	16, 0
+#define DAS1_A1	17, 0
+#define DAS1_A2	18, 0
+#define DAS1_A3	19, 0
+#define DAS2_C	20, 0
+#define DAS2_A1	21, 0
+#define DAS2_A2	22, 0
+#define DAS2_A3	23, 0
+#define DAS3_C	24, 0
+#define DAS3_A1	25, 0
+#define DAS3_A2	26, 0
+#define DAS3_A3	27, 0
+#define DAS4_C	28, 0
+#define DAS4_A1	29, 0
+#define DAS4_A2	30, 0
+#define DAS4_A3	31, 0
+#define LOOP1	32, 0
+#define LOOP2	33, 0
+#define LOOP3	34, 0
+#define LOOP4	35, 0
+#define LOOP5	36, 0
+#define LOOP6	37, 0
+#define DECOM	40, 0
+
+/*******************************************************************************
+ * TODO The channel list needs updating! Most of this is still from BLAST06
+ *
+ * Anything allocated to one of the following TMP nodes must be reassigned
+ * to the correct new node above, or it must be deleted
+ *
+ * LOOP nodes might also need cleanup. Their channels have all been carried
+ * forward, but some may no longer be needed
+ *
+ * TMP nodes are only so mcpol doesn't barf during development.
+ * !!!!!!!!!!!!!!!!!!!!!!!!!! DO NOT FLY WITH TMP NODES !!!!!!!!!!!!!!!!!!!!!!!!
+ ******************************************************************************/
+#define	TMP1	50, 0	//all channels formerly on ACS0
+#define	TMP2	51, 0	//all channels formerly on ACS1
+#define TMP3	52, 0	//all channels formerly on ACS2
+#define TMP4	53, 0	//all channels formerly on ACS3
+#define TMP5	54, 0	//all channels formerly on CRYO
+#define TMP6	55, 0	//all channels formerly on BIAS
 
 /* read and write channel 56 on all boards reserved for ADC Sync */
 struct ChannelStruct WideSlowChannels[] = {
+  /* generic names for analog channels. BE MORE SPECIFIC 
+   * If possible, make it 16 bit. Make it fast if necessary
+   * Also, can maybe get rid on a TMP Channel when you do */
+  {"cryo_a1_00",    'r', CRYO_A1,  0,                1.0,             0.0, 'U'},
+  {"cryo_a1_01",    'r', CRYO_A1,  2,                1.0,             0.0, 'U'},
+  {"cryo_a1_02",    'r', CRYO_A1,  4,                1.0,             0.0, 'U'},
+  {"cryo_a1_03",    'r', CRYO_A1,  6,                1.0,             0.0, 'U'},
+  {"cryo_a1_04",    'r', CRYO_A1,  8,                1.0,             0.0, 'U'},
+  {"cryo_a1_05",    'r', CRYO_A1, 10,                1.0,             0.0, 'U'},
+  {"cryo_a1_06",    'r', CRYO_A1, 12,                1.0,             0.0, 'U'},
+  {"cryo_a1_07",    'r', CRYO_A1, 14,                1.0,             0.0, 'U'},
+  {"cryo_a1_08",    'r', CRYO_A1, 16,                1.0,             0.0, 'U'},
+  {"cryo_a1_09",    'r', CRYO_A1, 18,                1.0,             0.0, 'U'},
+  {"cryo_a1_10",    'r', CRYO_A1, 20,                1.0,             0.0, 'U'},
+  {"cryo_a1_11",    'r', CRYO_A1, 22,                1.0,             0.0, 'U'},
+  {"cryo_a1_12",    'r', CRYO_A1, 24,                1.0,             0.0, 'U'},
+  {"cryo_a1_13",    'r', CRYO_A1, 26,                1.0,             0.0, 'U'},
+  {"cryo_a1_14",    'r', CRYO_A1, 28,                1.0,             0.0, 'U'},
+  {"cryo_a1_15",    'r', CRYO_A1, 30,                1.0,             0.0, 'U'},
+  {"cryo_a1_16",    'r', CRYO_A1, 32,                1.0,             0.0, 'U'},
+  {"cryo_a1_17",    'r', CRYO_A1, 34,                1.0,             0.0, 'U'},
+  {"cryo_a1_18",    'r', CRYO_A1, 36,                1.0,             0.0, 'U'},
+  {"cryo_a1_19",    'r', CRYO_A1, 38,                1.0,             0.0, 'U'},
+  {"cryo_a1_20",    'r', CRYO_A1, 40,                1.0,             0.0, 'U'},
+  {"cryo_a1_21",    'r', CRYO_A1, 42,                1.0,             0.0, 'U'},
+  {"cryo_a1_22",    'r', CRYO_A1, 44,                1.0,             0.0, 'U'},
+  {"cryo_a1_23",    'r', CRYO_A1, 46,                1.0,             0.0, 'U'},
+  {"cryo_a1_24",    'r', CRYO_A1, 48,                1.0,             0.0, 'U'},
+  {"cryo_a2_00",    'r', CRYO_A2,  0,                1.0,             0.0, 'U'},
+  {"cryo_a2_01",    'r', CRYO_A2,  2,                1.0,             0.0, 'U'},
+  {"cryo_a2_02",    'r', CRYO_A2,  4,                1.0,             0.0, 'U'},
+  {"cryo_a2_03",    'r', CRYO_A2,  6,                1.0,             0.0, 'U'},
+  {"cryo_a2_04",    'r', CRYO_A2,  8,                1.0,             0.0, 'U'},
+  {"cryo_a2_05",    'r', CRYO_A2, 10,                1.0,             0.0, 'U'},
+  {"cryo_a2_06",    'r', CRYO_A2, 12,                1.0,             0.0, 'U'},
+  {"cryo_a2_07",    'r', CRYO_A2, 14,                1.0,             0.0, 'U'},
+  {"cryo_a2_08",    'r', CRYO_A2, 16,                1.0,             0.0, 'U'},
+  {"cryo_a2_09",    'r', CRYO_A2, 18,                1.0,             0.0, 'U'},
+  {"cryo_a2_10",    'r', CRYO_A2, 20,                1.0,             0.0, 'U'},
+  {"cryo_a2_11",    'r', CRYO_A2, 22,                1.0,             0.0, 'U'},
+  {"cryo_a2_12",    'r', CRYO_A2, 24,                1.0,             0.0, 'U'},
+  {"cryo_a2_13",    'r', CRYO_A2, 26,                1.0,             0.0, 'U'},
+  {"cryo_a2_14",    'r', CRYO_A2, 28,                1.0,             0.0, 'U'},
+  {"cryo_a2_15",    'r', CRYO_A2, 30,                1.0,             0.0, 'U'},
+  {"cryo_a2_16",    'r', CRYO_A2, 32,                1.0,             0.0, 'U'},
+  {"cryo_a2_17",    'r', CRYO_A2, 34,                1.0,             0.0, 'U'},
+  {"cryo_a2_18",    'r', CRYO_A2, 36,                1.0,             0.0, 'U'},
+  {"cryo_a2_19",    'r', CRYO_A2, 38,                1.0,             0.0, 'U'},
+  {"cryo_a2_20",    'r', CRYO_A2, 40,                1.0,             0.0, 'U'},
+  {"cryo_a2_21",    'r', CRYO_A2, 42,                1.0,             0.0, 'U'},
+  {"cryo_a2_22",    'r', CRYO_A2, 44,                1.0,             0.0, 'U'},
+  {"cryo_a2_23",    'r', CRYO_A2, 46,                1.0,             0.0, 'U'},
+  {"cryo_a2_24",    'r', CRYO_A2, 48,                1.0,             0.0, 'U'},
+
   {"cpu_time",     'w', LOOP1,  0,                1.0,             0.0, 'U'},
   {"cpu_usec",     'w', LOOP4, 58,                1.0,             0.0, 'U'},
   {"sip_time",     'w', LOOP1,  2,                1.0,             0.0, 'U'},
@@ -85,230 +172,133 @@ struct ChannelStruct WideSlowChannels[] = {
 
 
 /* Rox a la Jeff */
-  {"t_he3fridge",  'r',  CRYO,  6,    ROX_C2V,   ROX_OFFSET, 'U'},
-  {"t_m4",         'r',  CRYO,  8,    ROX_C2V,   ROX_OFFSET, 'U'},
-  {"t_m5",         'r',  CRYO, 10,    ROX_C2V,   ROX_OFFSET, 'U'},
-  {"t_horn_250",   'r',  CRYO, 12,    ROX_C2V,   ROX_OFFSET, 'U'},
-  {"t_m3",         'r',  CRYO, 14,    ROX_C2V,   ROX_OFFSET, 'U'},
-  {"t_horn_350",   'r',  CRYO, 38,    ROX_C2V,   ROX_OFFSET, 'U'},
-  {"t_300mk_strap",'r',  CRYO, 40,    ROX_C2V,   ROX_OFFSET, 'U'},
-  {"t_horn_500",   'r',  CRYO, 42,    ROX_C2V,   ROX_OFFSET, 'U'},
-  {"t_he4pot",     'r',  CRYO, 44,    ROX_C2V,   ROX_OFFSET, 'U'},
-  {"t_optbox_filt",'r',  CRYO, 46,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_he3fridge",  'r',  TMP5,  6,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_m4",         'r',  TMP5,  8,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_m5",         'r',  TMP5, 10,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_horn_250",   'r',  TMP5, 12,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_m3",         'r',  TMP5, 14,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_horn_350",   'r',  TMP5, 38,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_300mk_strap",'r',  TMP5, 40,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_horn_500",   'r',  TMP5, 42,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_he4pot",     'r',  TMP5, 44,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_optbox_filt",'r',  TMP5, 46,    ROX_C2V,   ROX_OFFSET, 'U'},
 
   END_OF_CHANNELS
 };
 
 struct ChannelStruct SlowChannels[] = {
-  {"t_el_mc",      'r',  ACS0,  3,              I2T_M,           I2T_B, 'u'},
-  {"t_el_mot",     'r',  ACS0,  5,              I2T_M,           I2T_B, 'u'},
-  {"i_starcam",    'r',  ACS0, 21,           -0.00625,           204.8, 'u'},
-  {"roll_clin_pyr",'r',  ACS0, 33,     -4.0/5333.3333,        4.*6.144, 'u'},
-  {"pch_clin_pyr", 'r',  ACS0, 35,      4.0/5333.3333,       -4.*6.144, 'u'},
-  {"t_clin_pyr",   'r',  ACS0, 23,           -0.01875,           614.4, 'u'},
-  {"t_clin_sip",   'r',  ACS0, 31,           -0.01875,           614.4, 'u'},
-  {"t_clin_if",    'r',  ACS0, 41,           -0.01875,           614.4, 'u'},
-  {"status00",     'r',  ACS0, 56,                1.0,             0.0, 'u'},
-  {"apcu_reg",     'w',  ACS0,  4,             0.0382,           27.25, 'u'},
-  {"dpcu_reg",     'w',  ACS0,  5,             0.0382,           27.25, 'u'},
-  {"actbus_reset", 'w',  ACS0,  6,                1.0,             0.0, 'u'},
-  {"sync00",       'w',  ACS0, 56,                1.0,             0.0, 'u'},
+  //status and sync channels for handshaking with bbus nodes
+  {"status00",     'r',  ACS1_C, 63,                1.0,             0.0, 'u'},
+  {"status01",     'r', ACS1_A1, 63,                1.0,             0.0, 'u'},
+  {"status02",     'r', ACS1_T1, 63,                1.0,             0.0, 'u'},
+  {"status03",     'r',  ACS1_D, 63,                1.0,             0.0, 'u'},
+  {"status04",     'r',  ACS2_C, 63,                1.0,             0.0, 'u'},
+  {"status05",     'r', ACS2_A1, 63,                1.0,             0.0, 'u'},
+  {"status07",     'r',  ACS2_D, 63,                1.0,             0.0, 'u'},
+  {"status08",     'r',  BIAS_C, 63,                1.0,             0.0, 'u'},
+  {"status09",     'r',  BIAS_D, 63,                1.0,             0.0, 'u'},
+  {"status10",     'r', BIAS_T1, 63,                1.0,             0.0, 'u'},
+  {"status12",     'r',  CRYO_C, 63,                1.0,             0.0, 'u'},
+  {"status13",     'r', CRYO_A1, 63,                1.0,             0.0, 'u'},
+  {"status14",     'r', CRYO_A2, 63,                1.0,             0.0, 'u'},
+  {"status16",     'r',  DAS1_C, 63,                1.0,             0.0, 'u'},
+  {"status17",     'r', DAS1_A1, 63,                1.0,             0.0, 'u'},
+  {"status18",     'r', DAS1_A2, 63,                1.0,             0.0, 'u'},
+  {"status19",     'r', DAS1_A3, 63,                1.0,             0.0, 'u'},
+  {"status20",     'r',  DAS2_C, 63,                1.0,             0.0, 'u'},
+  {"status21",     'r', DAS2_A1, 63,                1.0,             0.0, 'u'},
+  {"status22",     'r', DAS2_A2, 63,                1.0,             0.0, 'u'},
+  {"status23",     'r', DAS2_A3, 63,                1.0,             0.0, 'u'},
+  {"status24",     'r',  DAS3_C, 63,                1.0,             0.0, 'u'},
+  {"status25",     'r', DAS3_A1, 63,                1.0,             0.0, 'u'},
+  {"status26",     'r', DAS3_A2, 63,                1.0,             0.0, 'u'},
+  {"status27",     'r', DAS3_A3, 63,                1.0,             0.0, 'u'},
+  {"status28",     'r',  DAS4_C, 63,                1.0,             0.0, 'u'},
+  {"status29",     'r', DAS4_A1, 63,                1.0,             0.0, 'u'},
+  {"status30",     'r', DAS4_A2, 63,                1.0,             0.0, 'u'},
+  {"status31",     'r', DAS4_A3, 63,                1.0,             0.0, 'u'},
+  {"sync00",       'w',  ACS1_C, 63,                1.0,             0.0, 'u'},
+  {"sync01",       'w', ACS1_A1, 63,                1.0,             0.0, 'u'},
+  {"sync02",       'w', ACS1_T1, 63,                1.0,             0.0, 'u'},
+  {"sync03",       'w',  ACS1_D, 63,                1.0,             0.0, 'u'},
+  {"sync04",       'w',  ACS2_C, 63,                1.0,             0.0, 'u'},
+  {"sync05",       'w', ACS2_A1, 63,                1.0,             0.0, 'u'},
+  {"sync07",       'w',  ACS2_D, 63,                1.0,             0.0, 'u'},
+  {"sync08",       'w',  BIAS_C, 63,                1.0,             0.0, 'u'},
+  {"sync09",       'w',  BIAS_D, 63,                1.0,             0.0, 'u'},
+  {"sync10",       'w', BIAS_T1, 63,                1.0,             0.0, 'u'},
+  {"sync12",       'w',  CRYO_C, 63,                1.0,             0.0, 'u'},
+  {"sync13",       'w', CRYO_A1, 63,                1.0,             0.0, 'u'},
+  {"sync14",       'w', CRYO_A2, 63,                1.0,             0.0, 'u'},
+  {"sync16",       'w',  DAS1_C, 63,                1.0,             0.0, 'u'},
+  {"sync17",       'w', DAS1_A1, 63,                1.0,             0.0, 'u'},
+  {"sync18",       'w', DAS1_A2, 63,                1.0,             0.0, 'u'},
+  {"sync19",       'w', DAS1_A3, 63,                1.0,             0.0, 'u'},
+  {"sync20",       'w',  DAS2_C, 63,                1.0,             0.0, 'u'},
+  {"sync21",       'w', DAS2_A1, 63,                1.0,             0.0, 'u'},
+  {"sync22",       'w', DAS2_A2, 63,                1.0,             0.0, 'u'},
+  {"sync23",       'w', DAS2_A3, 63,                1.0,             0.0, 'u'},
+  {"sync24",       'w',  DAS3_C, 63,                1.0,             0.0, 'u'},
+  {"sync25",       'w', DAS3_A1, 63,                1.0,             0.0, 'u'},
+  {"sync26",       'w', DAS3_A2, 63,                1.0,             0.0, 'u'},
+  {"sync27",       'w', DAS3_A3, 63,                1.0,             0.0, 'u'},
+  {"sync28",       'w',  DAS4_C, 63,                1.0,             0.0, 'u'},
+  {"sync29",       'w', DAS4_A1, 63,                1.0,             0.0, 'u'},
+  {"sync30",       'w', DAS4_A2, 63,                1.0,             0.0, 'u'},
+  {"sync31",       'w', DAS4_A3, 63,                1.0,             0.0, 'u'},
 
-  {"t_roll",       'r',  ACS1,  9,              I2T_M,           I2T_B, 'u'},
-  {"i_roll",       'r',  ACS1, 11,      0.00048828125,          -16.09, 'u'},
-  {"t_gyro2",      'r',  ACS1, 17,          -0.003125,            79.8, 'u'},
-  {"t_gyro3",      'r',  ACS1, 19,          -0.003125,            79.8, 'u'},
-  {"t_gyro1",      'r',  ACS1, 21,          -0.003125,            79.8, 'u'},
-  {"t_reac",       'r',  ACS1, 29,              I2T_M,           I2T_B, 'u'},
-  {"t_reac_mc",    'r',  ACS1, 31,              I2T_M,           I2T_B, 'u'},
-  {"i_reac",       'r',  ACS1, 33,         1.0/1648.0, -32768.0/1648.0, 'u'},
-  {"i_el",         'r',  ACS1, 39,           1.0/1648, -I_EL_ZERO/1648, 'u'},
-  {"t_piv_mc",     'r',  ACS1, 45,              I2T_M,           I2T_B, 'u'},
-  {"i_piv",        'r',  ACS1, 47,           1.0/1648,   -32768.0/1648, 'u'},
-  {"status01",     'r',  ACS1, 57,                1.0,             0.0, 'u'},
-  {"g_p_el",       'w',  ACS1,  2,                1.0,             0.0, 'u'},
-  {"g_i_el",       'w',  ACS1,  3,                1.0,             0.0, 'u'},
-  {"g_p_roll",     'w',  ACS1,  5,                1.0,             0.0, 'u'},
-  {"g_p_az",       'w',  ACS1,  7,                1.0,             0.0, 'u'},
-  {"g_i_az",       'w',  ACS1,  8,                1.0,             0.0, 'u'},
-  {"emf_gain",     'w',  ACS1, 11,                1.0,             0.0, 'u'},
-  {"emf_offset",   'w',  ACS1, 12,                1.0,             0.0, 'u'},
-  {"g_p_pivot",    'w',  ACS1, 15,                1.0,             0.0, 'u'},
-  {"set_reac",     'w',  ACS1, 16,    7.9498291016e-5,          -2.605, 'u'},
-  {"use_analogue", 'w',  ACS1, 20,                1.0,             0.0, 'u'},
-  {"sync01",       'w',  ACS1, 56,                1.0,             0.0, 'u'},
+  {"phase17",      'w', DAS1_A1,  8,                1.0,             0.0, 'u'},
+  {"phase18",      'w', DAS1_A2,  8,                1.0,             0.0, 'u'},
+  {"phase19",      'w', DAS1_A3,  8,                1.0,             0.0, 'u'},
+  {"phase21",      'w', DAS2_A1,  8,                1.0,             0.0, 'u'},
+  {"phase22",      'w', DAS2_A2,  8,                1.0,             0.0, 'u'},
+  {"phase23",      'w', DAS2_A3,  8,                1.0,             0.0, 'u'},
+  {"phase25",      'w', DAS3_A1,  8,                1.0,             0.0, 'u'},
+  {"phase26",      'w', DAS3_A2,  8,                1.0,             0.0, 'u'},
+  {"phase27",      'w', DAS3_A3,  8,                1.0,             0.0, 'u'},
+  {"phase29",      'w', DAS4_A1,  8,                1.0,             0.0, 'u'},
+  {"phase30",      'w', DAS4_A2,  8,                1.0,             0.0, 'u'},
+  {"phase31",      'w', DAS4_A3,  8,                1.0,             0.0, 'u'},
 
-  /* ACS2 0-1 is wide fast */
-  {"t_ss_back_mid",'r',  ACS2,  3,              I2T_M,           I2T_B, 'u'},
-  {"i_gybox",      'r',  ACS2,  5,           0.000625,          -20.48, 'u'},
-  {"pch_clin_piv", 'r',  ACS2,  7,      4.0/5333.3333,       -4.*6.144, 'u'},
-  {"roll_clin_piv",'r',  ACS2,  9,      4.0/5333.3333,       -4.*6.144, 'u'},
-  {"t_clin_piv",   'r',  ACS2, 11,            0.01875,          -614.4, 'u'},
-  {"i_sun",        'r',  ACS2, 13,           0.000625,          -20.48, 'u'},
-  {"p_pv",         'r',  ACS2, 15,          -8.289193e-5,       2.8294, 's'},
+  {"bias1_ampl",   'w',  BIAS_D,  0,                1.0,             0.0, 'u'},
+  {"bias2_ampl",   'w',  BIAS_D,  1,                1.0,             0.0, 'u'},
+  {"bias3_ampl",   'w',  BIAS_D,  2,                1.0,             0.0, 'u'},
+  {"bias4_ampl",   'w',  BIAS_D,  3,                1.0,             0.0, 'u'},
+  {"bias5_ampl",   'w',  BIAS_D,  4,                1.0,             0.0, 'u'},
+  {"das_dig21",    'w',  BIAS_D,  5,                1.0,             0.0, 'u'},
+  {"das_dig43",    'w',  BIAS_D,  6,                1.0,             0.0, 'u'},
+  {"das_dig65",    'w',  BIAS_D,  7,                1.0,             0.0, 'u'},
+  {"bias_ramp_ena",'w',  BIAS_D,  8,                1.0,             0.0, 'u'},
+  {"ramp_ampl",    'r',  BIAS_D,  0,                1.0,             0.0, 'u'},
 
-  /* AD590 calibrations per Marco 2006-11 */
-  {"t_if_top_frnt",'r',  ACS2, 17,              I2T_M,  I2T_B +
-                                                 AD590_CALIB_INFRAME_1, 'u'},
-  {"t_if_top_back",'r',  ACS2, 19,              I2T_M,  I2T_B +
-                                                 AD590_CALIB_INFRAME_2, 'u'},
-  {"t_if_bot_frnt",'r',  ACS2, 21,              I2T_M,  I2T_B + 
-                                                 AD590_CALIB_INFRAME_3, 'u'},
-  {"t_if_bot_back",'r',  ACS2, 23,              I2T_M,  I2T_B + 
-                                                 AD590_CALIB_INFRAME_4, 'u'},
+  /* generic names for analog channels. BE MORE SPECIFIC 
+   * Also, can maybe get rid on a TMP Channel when you do */
+  {"das_t00",      'r', BIAS_T1,  0,                1.0,             0.0, 'u'},
+  {"das_t01",      'r', BIAS_T1,  1,                1.0,             0.0, 'u'},
+  {"das_t02",      'r', BIAS_T1,  2,                1.0,             0.0, 'u'},
+  {"das_t03",      'r', BIAS_T1,  3,                1.0,             0.0, 'u'},
+  {"das_t04",      'r', BIAS_T1,  4,                1.0,             0.0, 'u'},
+  {"das_t05",      'r', BIAS_T1,  5,                1.0,             0.0, 'u'},
+  {"das_t06",      'r', BIAS_T1,  6,                1.0,             0.0, 'u'},
+  {"das_t07",      'r', BIAS_T1,  7,                1.0,             0.0, 'u'},
+  {"das_t08",      'r', BIAS_T1,  8,                1.0,             0.0, 'u'},
+  {"das_t09",      'r', BIAS_T1,  9,                1.0,             0.0, 'u'},
+  {"das_t10",      'r', BIAS_T1, 10,                1.0,             0.0, 'u'},
+  {"das_t11",      'r', BIAS_T1, 11,                1.0,             0.0, 'u'},
+  {"das_t12",      'r', BIAS_T1, 12,                1.0,             0.0, 'u'},
+  {"das_t13",      'r', BIAS_T1, 13,                1.0,             0.0, 'u'},
+  {"das_t14",      'r', BIAS_T1, 14,                1.0,             0.0, 'u'},
+  {"das_t15",      'r', BIAS_T1, 15,                1.0,             0.0, 'u'},
+  {"das_t16",      'r', BIAS_T1, 16,                1.0,             0.0, 'u'},
+  {"das_t17",      'r', BIAS_T1, 17,                1.0,             0.0, 'u'},
+  {"das_t18",      'r', BIAS_T1, 18,                1.0,             0.0, 'u'},
+  {"das_t19",      'r', BIAS_T1, 19,                1.0,             0.0, 'u'},
+  {"das_t20",      'r', BIAS_T1, 20,                1.0,             0.0, 'u'},
+  {"das_t21",      'r', BIAS_T1, 21,                1.0,             0.0, 'u'},
+  {"das_t22",      'r', BIAS_T1, 22,                1.0,             0.0, 'u'},
+  {"das_t23",      'r', BIAS_T1, 23,                1.0,             0.0, 'u'},
+  {"das_t24",      'r', BIAS_T1, 24,                1.0,             0.0, 'u'},
 
-  {"t_lock_motor", 'r',  ACS2, 25,              I2T_M,           I2T_B, 'u'},
-  {"t_pv_ext",     'r',  ACS2, 27,              I2T_M,           I2T_B, 'u'},
-  {"t_acs",        'r',  ACS2, 29,              I2T_M,           I2T_B, 'u'},
-  {"t_chin_mid",   'r',  ACS2, 31,              I2T_M,           I2T_B, 'u'},
-  {"t_pv",         'r',  ACS2, 33,              I2T_M,           I2T_B, 'u'},
-  {"i_pv",         'r',  ACS2, 35,           -0.00625,           204.8, 'u'},
-  {"t_apm_3v",     'r',  ACS2, 37,              I2T_M,           I2T_B, 'u'},
-  {"t_apm_5v",     'r',  ACS2, 39,              I2T_M,           I2T_B, 'u'},
-  {"t_apm_10v",    'r',  ACS2, 41,              I2T_M,           I2T_B, 'u'},
-  {"i_apm_3v",     'r',  ACS2, 43,          -0.000625,           20.48, 'u'},
-  {"i_apm_5v",     'r',  ACS2, 45,         -0.0020833,          68.267, 'u'},
-  {"i_apm_10v",    'r',  ACS2, 47,           -0.00625,           204.8, 'u'},
-  {"status02",     'r',  ACS2, 56,                1.0,             0.0, 'u'},
-  {"sensor_reset", 'w',  ACS2,  1,                1.0,             0.0, 'u'},
-  {"sync02",       'w',  ACS2, 56,                1.0,             0.0, 'u'},
-
-  {"v_batt_acs",   'r',  ACS3,  1,    -0.000525352612,      34.4796641, 'u'},
-  {"v_batt_das",   'r',  ACS3,  3,  -0.00052776250894,  34.62735213282, 'u'},
-  {"t_apcu",       'r',  ACS3,  5,              I2T_M,           I2T_B, 'u'},
-  {"t_dpcu",       'r',  ACS3,  7,              I2T_M,           I2T_B, 'u'},
-  {"t_sol_port",   'r',  ACS3,  9,              I2T_M,           I2T_B, 'u'},
-  {"t_sol_stbd",   'r',  ACS3, 11,              I2T_M,           I2T_B, 'u'},
-  {"t_batt_acs",   'r',  ACS3, 13,              I2T_M,           I2T_B, 'u'},
-  {"t_batt_das",   'r',  ACS3, 15,              I2T_M,           I2T_B, 'u'},
-  {"i_gond_acs",   'r',  ACS3, 17,          -1.875E-3,           61.44, 'u'},
-  {"i_gond_das",   'r',  ACS3, 19,          -1.875E-3,           61.44, 'u'},
-  {"i_batt_acs",   'r',  ACS3, 21,           1.875E-3,          -61.44, 'u'},
-  {"i_batt_das",   'r',  ACS3, 23,           1.875E-3,          -61.44, 'u'},
-  {"i_sol_acs",    'r',  ACS3, 25,          -0.625E-3*3.0,   20.48*3.0, 'u'},
-  {"i_sol_das",    'r',  ACS3, 27,          -0.625E-3,           20.48, 'u'},
-  {"v_sol_acs3",   'r',  ACS3, 29, -0.00141626, 92.8158, 'u'},
-  {"v_sol_das4",   'r',  ACS3, 31, -0.00140052, 91.7845, 'u'},
-  {"v_sol_acs5",   'r',  ACS3, 33, -0.00146366, 95.9224, 'u'},
-  {"v_sol_das2",   'r',  ACS3, 35, -0.00139935, 91.7075, 'u'},
-  {"v_sol_acs6",   'r',  ACS3, 37, -0.00138186, 90.5619, 'u'},
-  {"v_sol_acs1",   'r',  ACS3, 39, -0.00139837, 91.6434, 'u'},
-  {"v_sol_acs4",   'r',  ACS3, 41, -0.00140864, 92.3169, 'u'},
-  {"v_sol_das3",   'r',  ACS3, 43, -0.00141534, 92.7559, 'u'},
-  {"v_sol_acs2",   'r',  ACS3, 45, -0.00140361, 91.9873, 'u'},
-  {"v_sol_das1",   'r',  ACS3, 47, -0.00140993, 92.4015, 'u'},
-  {"status17",     'r',  ACS3, 56,                1.0,             0.0, 'u'},
-  {"ifpm_bits",    'w',  ACS3,  1,                1.0,             0.0, 'u'},
-  {"ofpm_bits",    'w',  ACS3,  2,                1.0,             0.0, 'u'},
-  {"balpump_lev",  'w',  ACS3,  3,    -0.048851978505,           100.0, 'u'},
-  {"sprpump_lev",  'w',  ACS3,  4,    -0.048851978505,           100.0, 'u'},
-  {"inpump_lev",   'w',  ACS3,  5,    -0.048851978505,           100.0, 'u'},
-  {"outpump_lev",  'w',  ACS3,  6,    -0.048851978505,           100.0, 'u'},
-  {"sync17",       'w',  ACS3, 56,                1.0,             0.0, 'u'},
-
-  {"he4_lev",      'r',  CRYO,  1,  -2.87477e-09*65536,      12.3273561, 'u'},
-  {"i_charcoal",   'r',  CRYO,  3,     -2.639826420E-6,     0.157988332, 'u'},
-  {"i_coldplate",  'r',  CRYO,  5,      -2.32217573E-5,     1.390309833, 'u'},
-  {"t_lhe",        'r',  CRYO, 17,             T_LHE_M,         T_LHE_B, 'u'},
-  {"t_lhe_filt",   'r',  CRYO, 19, -2.856350e-09*65536,    1.231143e+01, 'u'},
-  {"t_he4pot_d",   'r',  CRYO, 21, -2.869274e-09*65536,    1.236054e+01, 'u'},
-  {"t_vcs_filt",   'r',  CRYO, 23, -2.871969e-09*65536,    1.236866e+01, 'u'},
-  {"t_ln2",        'r',  CRYO, 25, -2.871958e-09*65536,    1.236808e+01, 'u'},
-  {"t_ln2_filt",   'r',  CRYO, 27, -2.873729e-09*65536,    1.238262e+01, 'u'},
-  {"t_charcoal",   'r',  CRYO, 29,        T_CHARCOAL_M,    T_CHARCOAL_B, 'u'},
-  {"t_heatswitch", 'r',  CRYO, 31, -2.864185e-09*65536,    1.233900e+01, 'u'},
-  {"t_jfet",       'r',  CRYO, 33,            T_JFET_M,        T_JFET_B, 'u'},
-  {"t_vcs_fet",    'r',  CRYO, 35, -2.865493e-09*65536,    1.234227e+01, 'u'},
-  {"t_opt_box_ext",'r',  CRYO, 37, -2.863415e-09*65536,    1.232882e+01, 'u'},
-  {"cryoin",       'r',  CRYO, 60,                 1.0,             0.0, 'u'},
-  {"status03",     'r',  CRYO, 57,                 1.0,             0.0, 'u'},
-  {"cryoout2",     'w',  CRYO,  1,                 1.0,             0.0, 'u'},
-  {"cryoout3",     'w',  CRYO,  2,             1.0,                 0.0, 'u'},
-  {"bdapwm",       'w',  CRYO,  3,          100./2047.,              0., 'u'},
-  {"hspwm",        'w',  CRYO,  4,          100./2047.,              0., 'u'},
-  {"cryopwm",      'w',  CRYO,  5,          100./2047.,              0., 'u'},
-  {"jfetpwm",      'w',  CRYO,  6,          100./2047.,              0., 'u'},
-  {"cryoctrl",     'w',  CRYO, 31,                 1.0,              0., 'u'},
-  {"set_bdaheat",  'w',  CRYO, 32,                 1.0,              0., 'u'},
-  {"g_fl_bdaheat", 'w',  CRYO, 33,                 1.0,              0., 'u'},
-  {"g_d_bdaheat",  'w',  CRYO, 34,                 1.0,              0., 'u'},
-  {"g_i_bdaheat",  'w',  CRYO, 35,                 1.0,              0., 'u'},
-  {"g_p_bdaheat",  'w',  CRYO, 36,                 1.0,              0., 'u'},
-  {"sync03",       'w',  CRYO, 56,                 1.0,             0.0, 'u'},
-
-  /* BIAS 0-4 are wide fast */
-  {"t_primary_2",  'r',  BIAS,  5,              I2T_M,  I2T_B +
-                                                 AD590_CALIB_PRIMARY_2, 'u'},
-  {"t_strut_bot",  'r',  BIAS,  7,              I2T_M,  I2T_B +
-                                                   AD590_CALIB_STRUT_1, 'u'},
-  {"t_primary_1",  'r',  BIAS,  9,              I2T_M,  I2T_B +
-                                                 AD590_CALIB_PRIMARY_1, 'u'},
-  {"t_secondary_1",'r',  BIAS, 11,              I2T_M,  I2T_B +
-                                               AD590_CALIB_SECONDARY_1, 'u'},
-  {"t_secondary_2",'r',  BIAS, 13,              I2T_M,  I2T_B +
-                                               AD590_CALIB_SECONDARY_2, 'u'},
-  {"t_strut_side", 'r',  BIAS, 15,              I2T_M,  I2T_B +
-                                                   AD590_CALIB_STRUT_2, 'u'},
-  {"t_push_plate", 'r',  BIAS, 17,              I2T_M,  I2T_B +
-                                                AD590_CALIB_PUSH_PLATE, 'u'},
-  {"t_act_motor",  'r',  BIAS, 19,              I2T_M,  I2T_B +
-                                                 AD590_CALIB_ACT_MOTOR, 'u'},
-  {"lvdt_10",      'r',  BIAS, 21,  LVDT10_ADC_TO_ENC,     LVDT10_ZERO, 'u'},
-  {"i_dpm_28v",    'r',  BIAS, 23,           0.000625,          -20.48, 'u'},
-  {"i_dpm_3v",     'r',  BIAS, 25,          -0.000625,           20.48, 'u'},
-  {"i_dpm_5v",     'r',  BIAS, 27,          -0.000625,           20.48, 'u'},
-  {"i_dpm_10v",    'r',  BIAS, 29,          -0.000625,           20.48, 'u'},
-  {"i_rec",        'r',  BIAS, 31,           0.000625,          -20.48, 'u'},
-  {"lvdt_11",      'r',  BIAS, 33,  LVDT11_ADC_TO_ENC,     LVDT11_ZERO, 'u'},
-  {"t_rec",        'r',  BIAS, 35,              I2T_M, I2T_B +
-                                                       AD590_CALIB_REC, 'u'},
-  {"lvdt_13",      'r',  BIAS, 37,  LVDT13_ADC_TO_ENC,     LVDT13_ZERO, 'u'},
-  {"t_dpm_7.5v",   'r',  BIAS, 41,              I2T_M,           I2T_B, 'u'},
-  {"t_dpm_10v",    'r',  BIAS, 43,              I2T_M,           I2T_B, 'u'},
-  {"t_dpm_5v",     'r',  BIAS, 45,              I2T_M,           I2T_B, 'u'},
-  {"t_das",        'r',  BIAS, 47,              I2T_M,           I2T_B, 'u'},
-  {"biasin",       'r',  BIAS, 50,                1.0,             0.0, 'u'},
-  {"status04",     'r',  BIAS, 57,                1.0,             0.0, 'u'},
-  {"biasout1",     'w',  BIAS,  0,                1.0,             0.0, 'u'},
-  {"biasout2",     'w',  BIAS,  1,                1.0,             0.0, 'u'},
-  {"sync04",       'w',  BIAS, 56,                1.0,             0.0, 'u'},
-
-  {"status05",     'r',  DAS5, 57,                1.0,             0.0, 'u'},
-  {"status06",     'r',  DAS6, 57,                1.0,             0.0, 'u'},
-  {"status07",     'r',  DAS7, 57,                1.0,             0.0, 'u'},
-  {"status08",     'r',  DAS8, 57,                1.0,             0.0, 'u'},
-  {"status09",     'r',  DAS9, 57,                1.0,             0.0, 'u'},
-  {"status10",     'r', DAS10, 57,                1.0,             0.0, 'u'},
-  {"status11",     'r', DAS11, 57,                1.0,             0.0, 'u'},
-  {"status12",     'r', DAS12, 57,                1.0,             0.0, 'u'},
-  {"status13",     'r', DAS13, 57,                1.0,             0.0, 'u'},
-  {"status14",     'r', DAS14, 57,                1.0,             0.0, 'u'},
-  {"status15",     'r', DAS15, 57,                1.0,             0.0, 'u'},
-  {"status16",     'r', DAS16, 57,                1.0,             0.0, 'u'},
-  {"phase5",       'w',  DAS5, 10,                1.0,             0.0, 'u'},
-  {"phase6",       'w',  DAS6, 10,                1.0,             0.0, 'u'},
-  {"phase7",       'w',  DAS7, 10,                1.0,             0.0, 'u'},
-  {"phase8",       'w',  DAS8, 10,                1.0,             0.0, 'u'},
-  {"phase9",       'w',  DAS9, 10,                1.0,             0.0, 'u'},
-  {"phase10",      'w', DAS10, 10,                1.0,             0.0, 'u'},
-  {"phase11",      'w', DAS11, 10,                1.0,             0.0, 'u'},
-  {"phase12",      'w', DAS12, 10,                1.0,             0.0, 'u'},
-  {"phase13",      'w', DAS13, 10,                1.0,             0.0, 'u'},
-  {"phase14",      'w', DAS14, 10,                1.0,             0.0, 'u'},
-  {"phase15",      'w', DAS15, 10,                1.0,             0.0, 'u'},
-  {"phase16",      'w', DAS16, 10,                1.0,             0.0, 'u'},
-  {"sync05",       'w',  DAS5, 56,                1.0,             0.0, 'u'},
-  {"sync06",       'w',  DAS6, 56,                1.0,             0.0, 'u'},
-  {"sync07",       'w',  DAS7, 56,                1.0,             0.0, 'u'},
-  {"sync08",       'w',  DAS8, 56,                1.0,             0.0, 'u'},
-  {"sync09",       'w',  DAS9, 56,                1.0,             0.0, 'u'},
-  {"sync10",       'w', DAS10, 56,                1.0,             0.0, 'u'},
-  {"sync11",       'w', DAS11, 56,                1.0,             0.0, 'u'},
-  {"sync12",       'w', DAS12, 56,                1.0,             0.0, 'u'},
-  {"sync13",       'w', DAS13, 56,                1.0,             0.0, 'u'},
-  {"sync14",       'w', DAS14, 56,                1.0,             0.0, 'u'},
-  {"sync15",       'w', DAS15, 56,                1.0,             0.0, 'u'},
-  {"sync16",       'w', DAS16, 56,                1.0,             0.0, 'u'},
 
   /* LOOP1 0-13 are wide */
   {"g_i_gyheat1",  'w', LOOP1, 14,                1.0,             0.0, 'u'},
@@ -331,8 +321,6 @@ struct ChannelStruct SlowChannels[] = {
   {"bal_target",   'w', LOOP1, 31,           1./1648.,            -5.0, 'u'},
   /* LOOP1 32-33 are wide */
   {"bal_veto",     'w', LOOP1, 34,                1.0,             0.0, 's'},
-  {"bias_lev2",    'w', LOOP1, 35,                1.0,             0.0, 'u'},
-  {"bias_lev3",    'w', LOOP1, 36,                1.0,             0.0, 'u'},
   {"sip_alt",      'w', LOOP1, 37,                1.0,             0.0, 'u'},
   /* LOOP1 38-41 are wide */
   {"isc_mapmean",  'w', LOOP1, 42,                 1.,             0.0, 'u'},
@@ -543,7 +531,6 @@ struct ChannelStruct SlowChannels[] = {
   {"schedule",     'w', LOOP5,  1,                 1.,              0., 'u'},
   {"isc_rd_sigma", 'w', LOOP5,  2,                1.0,             0.0, 'u'},
   {"sip_mks_lo",   'w', LOOP5,  3,           0.327045,       -5.944902, 'u'},
-  {"bias_lev1",    'w', LOOP5,  4,                1.0,             0.0, 'u'},
   {"osc_error",    'w', LOOP5,  5,                 1.,             0.0, 'u'},
   /* LOOP5 6-7 are wide */
   {"alt",          'w', LOOP5,  8,                1.0,             0.0, 'u'},
@@ -648,109 +635,284 @@ struct ChannelStruct SlowChannels[] = {
   {"cal_mode",     'w', LOOP6, 60,                1.0,             0.0, 'u'},
   {"isc_minblobs", 'w', LOOP6, 61,                1.0,             0.0, 'u'},
   {"osc_minblobs", 'w', LOOP6, 62,                1.0,             0.0, 'u'},
-  END_OF_CHANNELS
-};
 
-struct ChannelStruct WideFastChannels[] = {
+/* TODO These TMP channels need to be added to correct new nodes, or deleted */
+  {"t_el_mc",      'r',  TMP1,  3,              I2T_M,           I2T_B, 'u'},
+  {"t_el_mot",     'r',  TMP1,  5,              I2T_M,           I2T_B, 'u'},
+  {"i_starcam",    'r',  TMP1, 21,           -0.00625,           204.8, 'u'},
+  {"roll_clin_pyr",'r',  TMP1, 33,     -4.0/5333.3333,        4.*6.144, 'u'},
+  {"pch_clin_pyr", 'r',  TMP1, 35,      4.0/5333.3333,       -4.*6.144, 'u'},
+  {"t_clin_pyr",   'r',  TMP1, 23,           -0.01875,           614.4, 'u'},
+  {"t_clin_sip",   'r',  TMP1, 31,           -0.01875,           614.4, 'u'},
+  {"t_clin_if",    'r',  TMP1, 41,           -0.01875,           614.4, 'u'},
+  {"apcu_reg",     'w',  TMP1,  4,             0.0382,           27.25, 'u'},
+  {"dpcu_reg",     'w',  TMP1,  5,             0.0382,           27.25, 'u'},
+  {"actbus_reset", 'w',  TMP1,  6,                1.0,             0.0, 'u'},
+
+  {"t_roll",       'r',  TMP2,  9,              I2T_M,           I2T_B, 'u'},
+  {"i_roll",       'r',  TMP2, 11,      0.00048828125,          -16.09, 'u'},
+  {"t_gyro2",      'r',  TMP2, 17,          -0.003125,            79.8, 'u'},
+  {"t_gyro3",      'r',  TMP2, 19,          -0.003125,            79.8, 'u'},
+  {"t_gyro1",      'r',  TMP2, 21,          -0.003125,            79.8, 'u'},
+  {"t_reac",       'r',  TMP2, 29,              I2T_M,           I2T_B, 'u'},
+  {"t_reac_mc",    'r',  TMP2, 31,              I2T_M,           I2T_B, 'u'},
+  {"i_reac",       'r',  TMP2, 33,         1.0/1648.0, -32768.0/1648.0, 'u'},
+  {"i_el",         'r',  TMP2, 39,           1.0/1648, -I_EL_ZERO/1648, 'u'},
+  {"t_piv_mc",     'r',  TMP2, 45,              I2T_M,           I2T_B, 'u'},
+  {"i_piv",        'r',  TMP2, 47,           1.0/1648,   -32768.0/1648, 'u'},
+  {"g_p_el",       'w',  TMP2,  2,                1.0,             0.0, 'u'},
+  {"g_i_el",       'w',  TMP2,  3,                1.0,             0.0, 'u'},
+  {"g_p_roll",     'w',  TMP2,  5,                1.0,             0.0, 'u'},
+  {"g_p_az",       'w',  TMP2,  7,                1.0,             0.0, 'u'},
+  {"g_i_az",       'w',  TMP2,  8,                1.0,             0.0, 'u'},
+  {"emf_gain",     'w',  TMP2, 11,                1.0,             0.0, 'u'},
+  {"emf_offset",   'w',  TMP2, 12,                1.0,             0.0, 'u'},
+  {"g_p_pivot",    'w',  TMP2, 15,                1.0,             0.0, 'u'},
+  {"set_reac",     'w',  TMP2, 16,    7.9498291016e-5,          -2.605, 'u'},
+  {"use_analogue", 'w',  TMP2, 20,                1.0,             0.0, 'u'},
+
+  /* ACS2 0-1 is wide fast */
+  {"t_ss_back_mid",'r',  TMP3,  3,              I2T_M,           I2T_B, 'u'},
+  {"i_gybox",      'r',  TMP3,  5,           0.000625,          -20.48, 'u'},
+  {"pch_clin_piv", 'r',  TMP3,  7,      4.0/5333.3333,       -4.*6.144, 'u'},
+  {"roll_clin_piv",'r',  TMP3,  9,      4.0/5333.3333,       -4.*6.144, 'u'},
+  {"t_clin_piv",   'r',  TMP3, 11,            0.01875,          -614.4, 'u'},
+  {"i_sun",        'r',  TMP3, 13,           0.000625,          -20.48, 'u'},
+  {"p_pv",         'r',  TMP3, 15,          -8.289193e-5,       2.8294, 's'},
+
+  /* AD590 calibrations per Marco 2006-11 */
+  {"t_if_top_frnt",'r',  TMP3, 17,              I2T_M,  I2T_B +
+                                                 AD590_CALIB_INFRAME_1, 'u'},
+  {"t_if_top_back",'r',  TMP3, 19,              I2T_M,  I2T_B +
+                                                 AD590_CALIB_INFRAME_2, 'u'},
+  {"t_if_bot_frnt",'r',  TMP3, 21,              I2T_M,  I2T_B + 
+                                                 AD590_CALIB_INFRAME_3, 'u'},
+  {"t_if_bot_back",'r',  TMP3, 23,              I2T_M,  I2T_B + 
+                                                 AD590_CALIB_INFRAME_4, 'u'},
+
+  {"t_lock_motor", 'r',  TMP3, 25,              I2T_M,           I2T_B, 'u'},
+  {"t_pv_ext",     'r',  TMP3, 27,              I2T_M,           I2T_B, 'u'},
+  {"t_acs",        'r',  TMP3, 29,              I2T_M,           I2T_B, 'u'},
+  {"t_chin_mid",   'r',  TMP3, 31,              I2T_M,           I2T_B, 'u'},
+  {"t_pv",         'r',  TMP3, 33,              I2T_M,           I2T_B, 'u'},
+  {"i_pv",         'r',  TMP3, 35,           -0.00625,           204.8, 'u'},
+  {"t_apm_3v",     'r',  TMP3, 37,              I2T_M,           I2T_B, 'u'},
+  {"t_apm_5v",     'r',  TMP3, 39,              I2T_M,           I2T_B, 'u'},
+  {"t_apm_10v",    'r',  TMP3, 41,              I2T_M,           I2T_B, 'u'},
+  {"i_apm_3v",     'r',  TMP3, 43,          -0.000625,           20.48, 'u'},
+  {"i_apm_5v",     'r',  TMP3, 45,         -0.0020833,          68.267, 'u'},
+  {"i_apm_10v",    'r',  TMP3, 47,           -0.00625,           204.8, 'u'},
+  {"sensor_reset", 'w',  TMP3,  1,                1.0,             0.0, 'u'},
+
+  {"v_batt_acs",   'r',  TMP4,  1,    -0.000525352612,      34.4796641, 'u'},
+  {"v_batt_das",   'r',  TMP4,  3,  -0.00052776250894,  34.62735213282, 'u'},
+  {"t_apcu",       'r',  TMP4,  5,              I2T_M,           I2T_B, 'u'},
+  {"t_dpcu",       'r',  TMP4,  7,              I2T_M,           I2T_B, 'u'},
+  {"t_sol_port",   'r',  TMP4,  9,              I2T_M,           I2T_B, 'u'},
+  {"t_sol_stbd",   'r',  TMP4, 11,              I2T_M,           I2T_B, 'u'},
+  {"t_batt_acs",   'r',  TMP4, 13,              I2T_M,           I2T_B, 'u'},
+  {"t_batt_das",   'r',  TMP4, 15,              I2T_M,           I2T_B, 'u'},
+  {"i_gond_acs",   'r',  TMP4, 17,          -1.875E-3,           61.44, 'u'},
+  {"i_gond_das",   'r',  TMP4, 19,          -1.875E-3,           61.44, 'u'},
+  {"i_batt_acs",   'r',  TMP4, 21,           1.875E-3,          -61.44, 'u'},
+  {"i_batt_das",   'r',  TMP4, 23,           1.875E-3,          -61.44, 'u'},
+  {"i_sol_acs",    'r',  TMP4, 25,          -0.625E-3*3.0,   20.48*3.0, 'u'},
+  {"i_sol_das",    'r',  TMP4, 27,          -0.625E-3,           20.48, 'u'},
+  {"v_sol_acs3",   'r',  TMP4, 29, -0.00141626, 92.8158, 'u'},
+  {"v_sol_das4",   'r',  TMP4, 31, -0.00140052, 91.7845, 'u'},
+  {"v_sol_acs5",   'r',  TMP4, 33, -0.00146366, 95.9224, 'u'},
+  {"v_sol_das2",   'r',  TMP4, 35, -0.00139935, 91.7075, 'u'},
+  {"v_sol_acs6",   'r',  TMP4, 37, -0.00138186, 90.5619, 'u'},
+  {"v_sol_acs1",   'r',  TMP4, 39, -0.00139837, 91.6434, 'u'},
+  {"v_sol_acs4",   'r',  TMP4, 41, -0.00140864, 92.3169, 'u'},
+  {"v_sol_das3",   'r',  TMP4, 43, -0.00141534, 92.7559, 'u'},
+  {"v_sol_acs2",   'r',  TMP4, 45, -0.00140361, 91.9873, 'u'},
+  {"v_sol_das1",   'r',  TMP4, 47, -0.00140993, 92.4015, 'u'},
+  {"ifpm_bits",    'w',  TMP4,  1,                1.0,             0.0, 'u'},
+  {"ofpm_bits",    'w',  TMP4,  2,                1.0,             0.0, 'u'},
+  {"balpump_lev",  'w',  TMP4,  3,    -0.048851978505,           100.0, 'u'},
+  {"sprpump_lev",  'w',  TMP4,  4,    -0.048851978505,           100.0, 'u'},
+  {"inpump_lev",   'w',  TMP4,  5,    -0.048851978505,           100.0, 'u'},
+  {"outpump_lev",  'w',  TMP4,  6,    -0.048851978505,           100.0, 'u'},
+
+  {"he4_lev",      'r',  TMP5,  1,  -2.87477e-09*65536,      12.3273561, 'u'},
+  {"i_charcoal",   'r',  TMP5,  3,     -2.639826420E-6,     0.157988332, 'u'},
+  {"i_coldplate",  'r',  TMP5,  5,      -2.32217573E-5,     1.390309833, 'u'},
+  {"t_lhe",        'r',  TMP5, 17,             T_LHE_M,         T_LHE_B, 'u'},
+  {"t_lhe_filt",   'r',  TMP5, 19, -2.856350e-09*65536,    1.231143e+01, 'u'},
+  {"t_he4pot_d",   'r',  TMP5, 21, -2.869274e-09*65536,    1.236054e+01, 'u'},
+  {"t_vcs_filt",   'r',  TMP5, 23, -2.871969e-09*65536,    1.236866e+01, 'u'},
+  {"t_ln2",        'r',  TMP5, 25, -2.871958e-09*65536,    1.236808e+01, 'u'},
+  {"t_ln2_filt",   'r',  TMP5, 27, -2.873729e-09*65536,    1.238262e+01, 'u'},
+  {"t_charcoal",   'r',  TMP5, 29,        T_CHARCOAL_M,    T_CHARCOAL_B, 'u'},
+  {"t_heatswitch", 'r',  TMP5, 31, -2.864185e-09*65536,    1.233900e+01, 'u'},
+  {"t_jfet",       'r',  TMP5, 33,            T_JFET_M,        T_JFET_B, 'u'},
+  {"t_vcs_fet",    'r',  TMP5, 35, -2.865493e-09*65536,    1.234227e+01, 'u'},
+  {"t_opt_box_ext",'r',  TMP5, 37, -2.863415e-09*65536,    1.232882e+01, 'u'},
+  {"cryoin",       'r',  TMP5, 60,                 1.0,             0.0, 'u'},
+  {"cryoout2",     'w',  TMP5,  1,                 1.0,             0.0, 'u'},
+  {"cryoout3",     'w',  TMP5,  2,             1.0,                 0.0, 'u'},
+  {"bdapwm",       'w',  TMP5,  3,          100./2047.,              0., 'u'},
+  {"hspwm",        'w',  TMP5,  4,          100./2047.,              0., 'u'},
+  {"cryopwm",      'w',  TMP5,  5,          100./2047.,              0., 'u'},
+  {"jfetpwm",      'w',  TMP5,  6,          100./2047.,              0., 'u'},
+  {"cryoctrl",     'w',  TMP5, 31,                 1.0,              0., 'u'},
+  {"set_bdaheat",  'w',  TMP5, 32,                 1.0,              0., 'u'},
+  {"g_fl_bdaheat", 'w',  TMP5, 33,                 1.0,              0., 'u'},
+  {"g_d_bdaheat",  'w',  TMP5, 34,                 1.0,              0., 'u'},
+  {"g_i_bdaheat",  'w',  TMP5, 35,                 1.0,              0., 'u'},
+  {"g_p_bdaheat",  'w',  TMP5, 36,                 1.0,              0., 'u'},
+
+  /* BIAS 0-4 are wide fast */
+  {"t_primary_2",  'r',  TMP6,  5,              I2T_M,  I2T_B +
+                                                 AD590_CALIB_PRIMARY_2, 'u'},
+  {"t_strut_bot",  'r',  TMP6,  7,              I2T_M,  I2T_B +
+                                                   AD590_CALIB_STRUT_1, 'u'},
+  {"t_primary_1",  'r',  TMP6,  9,              I2T_M,  I2T_B +
+                                                 AD590_CALIB_PRIMARY_1, 'u'},
+  {"t_secondary_1",'r',  TMP6, 11,              I2T_M,  I2T_B +
+                                               AD590_CALIB_SECONDARY_1, 'u'},
+  {"t_secondary_2",'r',  TMP6, 13,              I2T_M,  I2T_B +
+                                               AD590_CALIB_SECONDARY_2, 'u'},
+  {"t_strut_side", 'r',  TMP6, 15,              I2T_M,  I2T_B +
+                                                   AD590_CALIB_STRUT_2, 'u'},
+  {"t_push_plate", 'r',  TMP6, 17,              I2T_M,  I2T_B +
+                                                AD590_CALIB_PUSH_PLATE, 'u'},
+  {"t_act_motor",  'r',  TMP6, 19,              I2T_M,  I2T_B +
+                                                 AD590_CALIB_ACT_MOTOR, 'u'},
+  {"lvdt_10",      'r',  TMP6, 21,  LVDT10_ADC_TO_ENC,     LVDT10_ZERO, 'u'},
+  {"i_dpm_28v",    'r',  TMP6, 23,           0.000625,          -20.48, 'u'},
+  {"i_dpm_3v",     'r',  TMP6, 25,          -0.000625,           20.48, 'u'},
+  {"i_dpm_5v",     'r',  TMP6, 27,          -0.000625,           20.48, 'u'},
+  {"i_dpm_10v",    'r',  TMP6, 29,          -0.000625,           20.48, 'u'},
+  {"i_rec",        'r',  TMP6, 31,           0.000625,          -20.48, 'u'},
+  {"lvdt_11",      'r',  TMP6, 33,  LVDT11_ADC_TO_ENC,     LVDT11_ZERO, 'u'},
+  {"t_rec",        'r',  TMP6, 35,              I2T_M, I2T_B +
+                                                       AD590_CALIB_REC, 'u'},
+  {"lvdt_13",      'r',  TMP6, 37,  LVDT13_ADC_TO_ENC,     LVDT13_ZERO, 'u'},
+  {"t_dpm_7.5v",   'r',  TMP6, 41,              I2T_M,           I2T_B, 'u'},
+  {"t_dpm_10v",    'r',  TMP6, 43,              I2T_M,           I2T_B, 'u'},
+  {"t_dpm_5v",     'r',  TMP6, 45,              I2T_M,           I2T_B, 'u'},
+  {"t_das",        'r',  TMP6, 47,              I2T_M,           I2T_B, 'u'},
+
+  /* TODO these TMP channels used to be wide-fast */
 #ifndef BOLOTEST
-  {"t_gybox2",    'r',  ACS2,  0,          TGYBOX_M,             TGYBOX_B, 'U'},
-  {"t_gybox1",    'r',  ACS1, 14,          TGYBOX_M,             TGYBOX_B, 'U'},
-  {"raw_gy1",     'r',  ACS1, 26,     -AGY32_TO_DPS,
-                                     AGY32_OFFSET * AGY32_TO_DPS + 0.1925, 'U'},
-  {"raw_gy2",     'r',  ACS1, 22,      AGY32_TO_DPS,
-                                     -AGY32_OFFSET * AGY32_TO_DPS - 0.138, 'U'},
-  {"raw_gy3",     'r',  ACS1, 24,      AGY32_TO_DPS,
-                                     -AGY32_OFFSET * AGY32_TO_DPS - 0.145, 'U'},
-  {"raw_gy4",     'r',  ACS1,  6,      DGY32_TO_DPS,
-                                     -DGY32_OFFSET * DGY32_TO_DPS + 0.004, 'U'},
-  {"raw_gy5",     'r',  ACS1,  2,      DGY32_TO_DPS,
-                                     -DGY32_OFFSET * DGY32_TO_DPS + 0.010, 'U'},
-  {"raw_gy6",     'r',  ACS1, 36,     -DGY32_TO_DPS,
-                                      DGY32_OFFSET * DGY32_TO_DPS - 0.005, 'U'},
-  {"az",          'w', LOOP2, 51,          LI2DEG,                    0.0, 'U'},
-  {"el",          'w', LOOP2, 53,          LI2DEG,                    0.0, 'U'},
+  {"t_gybox2",    'r',  TMP3,  0,          TGYBOX_M,             TGYBOX_B, 'u'},
+  {"t_gybox1",    'r',  TMP2, 14,          TGYBOX_M,             TGYBOX_B, 'u'},
+  {"raw_gy1",     'r',  TMP2, 26,     -AGY32_TO_DPS,
+                                     AGY32_OFFSET * AGY32_TO_DPS + 0.1925, 'u'},
+  {"raw_gy2",     'r',  TMP2, 22,      AGY32_TO_DPS,
+                                     -AGY32_OFFSET * AGY32_TO_DPS - 0.138, 'u'},
+  {"raw_gy3",     'r',  TMP2, 24,      AGY32_TO_DPS,
+                                     -AGY32_OFFSET * AGY32_TO_DPS - 0.145, 'u'},
+  {"raw_gy4",     'r',  TMP2,  6,      DGY32_TO_DPS,
+                                     -DGY32_OFFSET * DGY32_TO_DPS + 0.004, 'u'},
+  {"raw_gy5",     'r',  TMP2,  2,      DGY32_TO_DPS,
+                                     -DGY32_OFFSET * DGY32_TO_DPS + 0.010, 'u'},
+  {"raw_gy6",     'r',  TMP2, 36,     -DGY32_TO_DPS,
+                                      DGY32_OFFSET * DGY32_TO_DPS - 0.005, 'u'},
+  {"az",          'w', LOOP2, 51,          LI2DEG,                    0.0, 'u'},
+  {"el",          'w', LOOP2, 53,          LI2DEG,                    0.0, 'u'},
 
 #endif
-  {"stage_x",      'w', LOOP5, 28,                1.0,             0.0, 'U'},
-  {"stage_y",      'w', LOOP5, 34,                1.0,             0.0, 'U'},
+  {"stage_x",      'w', LOOP5, 28,                1.0,             0.0, 'u'},
+  {"stage_y",      'w', LOOP5, 34,                1.0,             0.0, 'u'},
 
   /* BIAS Stuff */
-  {"b_amp2",      'r',  BIAS,  0,        B_AMP2_M,               B_AMP2_B, 'U'},
-  {"b_amp1",      'r',  BIAS,  2,        B_AMP1_M,               B_AMP1_B, 'U'},
-  {"b_amp3",      'r',  BIAS, 38,        B_AMP3_M,               B_AMP3_B, 'U'},
+  {"b_amp2",      'r',  TMP6,  0,        B_AMP2_M,               B_AMP2_B, 'u'},
+  {"b_amp1",      'r',  TMP6,  2,        B_AMP1_M,               B_AMP1_B, 'u'},
+  {"b_amp3",      'r',  TMP6, 38,        B_AMP3_M,               B_AMP3_B, 'u'},
 
-  /* Bolometer Bias References */
-
-  {"n3ref",       'r',  CRYO, 48,      0.00390625,             -8388608.0, 'U'},
-  {"n5ref",       'r',  DAS5, 36,      1.19209e-7,                    0.0, 'U'},
-  {"n6ref",       'r',  DAS6, 36,      1.19209e-7,                    0.0, 'U'},
-  {"n7ref",       'r',  DAS7, 36,      1.19209e-7,                    0.0, 'U'},
-  {"n8ref",       'r',  DAS8, 36,      1.19209e-7,                    0.0, 'U'},
-  {"n9ref",       'r',  DAS9, 36,      1.19209e-7,                    0.0, 'U'},
-  {"n10ref",      'r', DAS10, 36,      1.19209e-7,                    0.0, 'U'},
-  {"n11ref",      'r', DAS11, 36,      1.19209e-7,                    0.0, 'U'},
-  {"n12ref",      'r', DAS12, 36,      1.19209e-7,                    0.0, 'U'},
-  {"n13ref",      'r', DAS13, 36,      1.19209e-7,                    0.0, 'U'},
-  {"n14ref",      'r', DAS14, 36,      1.19209e-7,                    0.0, 'U'},
-  {"n15ref",      'r', DAS15, 36,      1.19209e-7,                    0.0, 'U'},
-  {"n16ref",      'r', DAS16, 36,      1.19209e-7,                    0.0, 'U'},
-// end debug
-  END_OF_CHANNELS
-};
-
-struct ChannelStruct FastChannels[] = {
+  /* TODO these TMP channels used to be narrow-fast */
 #ifndef BOLOTEST
   /* read channels from ACS0 */
-  {"pch_clin_sip",'r',  ACS0, 27,   4.0/5333.3333,              -25.91, 'u'},
-  {"roll_clin_sip",'r', ACS0, 29,  -4.0/5333.3333,               24.778, 'u'},
+  {"pch_clin_sip",'r',  TMP1, 27,   4.0/5333.3333,              -25.91, 'u'},
+  {"roll_clin_sip",'r', TMP1, 29,  -4.0/5333.3333,               24.778, 'u'},
 
-  {"clin_elev",   'r',  ACS0, 37,      0.00546739,                -133.78, 'u'},
-  {"xel_clin_if", 'r',  ACS0, 39,      0.00546739,             -25.*6.144, 'u'},
+  {"clin_elev",   'r',  TMP1, 37,      0.00546739,                -133.78, 'u'},
+  {"xel_clin_if", 'r',  TMP1, 39,      0.00546739,             -25.*6.144, 'u'},
 
-  {"mag_x",       'r',  ACS0, 45,          MAGX_M,                 MAGX_B, 'u'},
-  {"mag_y",       'r',  ACS0, 47,          MAGY_M,                 MAGY_B, 'u'},
-  {"mag_z",       'r',  ACS0, 43,          MAGZ_M,                 MAGZ_B, 'u'},
-  {"isc_pulse",   'r',  ACS0, 53,             1.0,                    0.0, 'u'},
-  {"osc_pulse",   'r',  ACS0, 54,             1.0,                    0.0, 'u'},
-  {"piv_enc",     'r',  ACS0, 59,    360.0/8192.0,                    0.0, 'u'},
+  {"mag_x",       'r',  TMP1, 45,          MAGX_M,                 MAGX_B, 'u'},
+  {"mag_y",       'r',  TMP1, 47,          MAGY_M,                 MAGY_B, 'u'},
+  {"mag_z",       'r',  TMP1, 43,          MAGZ_M,                 MAGZ_B, 'u'},
+  {"isc_pulse",   'r',  TMP1, 53,             1.0,                    0.0, 'u'},
+  {"osc_pulse",   'r',  TMP1, 54,             1.0,                    0.0, 'u'},
+  {"piv_enc",     'r',  TMP1, 59,    360.0/8192.0,                    0.0, 'u'},
 
   /* send data to ACS0 */
-  {"isc_trigger", 'w',  ACS0,  1,             1.0,                    0.0, 'u'},
-  {"osc_trigger", 'w',  ACS0,  2,             1.0,                    0.0, 'u'},
-  {"gy2_heat",    'w',  ACS0,  3,             1.0,                    0.0, 'u'},
+  {"isc_trigger", 'w',  TMP1,  1,             1.0,                    0.0, 'u'},
+  {"osc_trigger", 'w',  TMP1,  2,             1.0,                    0.0, 'u'},
+  {"gy2_heat",    'w',  TMP1,  3,             1.0,                    0.0, 'u'},
 
   /* read channels from ACS1 */
-  {"gyro2",       'r',  ACS1, 50,  GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
-  {"gyro3",       'r',  ACS1, 56,  GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
-  {"gyro1",       'r',  ACS1, 59,  GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
+  {"gyro2",       'r',  TMP2, 50,  GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
+  {"gyro3",       'r',  TMP2, 56,  GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
+  {"gyro1",       'r',  TMP2, 59,  GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
 
-  {"reac_enc",    'r',  ACS1, 60,    360.0/4000.0,                    0.0, 'u'},
-  {"pwm_el",      'r',  ACS1, 51,             1.0,                -4000.0, 'u'},
-  {"pwm_roll",    'r',  ACS1, 52,             1.0,                -4000.0, 'u'},
-  //{"r_dt",      'r',  ACS1, 53,  1.0,     -4000.0, 'u'}, // see acs1.c
+  {"reac_enc",    'r',  TMP2, 60,    360.0/4000.0,                    0.0, 'u'},
+  {"pwm_el",      'r',  TMP2, 51,             1.0,                -4000.0, 'u'},
+  {"pwm_roll",    'r',  TMP2, 52,             1.0,                -4000.0, 'u'},
+  //{"r_dt",      'r',  TMP2, 53,  1.0,     -4000.0, 'u'}, // see acs1.c
 
-  {"pwm_reac",    'r',  ACS1, 54,             1.0,                -4000.0, 'u'},
-  {"rps_reac",    'r',  ACS1, 55,7.9498291016e-05,                 -2.605, 'u'},
-  {"pwm_piv",     'r',  ACS1, 61,             1.0,                -4000.0, 'u'},
+  {"pwm_reac",    'r',  TMP2, 54,             1.0,                -4000.0, 'u'},
+  {"rps_reac",    'r',  TMP2, 55,7.9498291016e-05,                 -2.605, 'u'},
+  {"pwm_piv",     'r',  TMP2, 61,             1.0,                -4000.0, 'u'},
 
   /* send data to ACS1 */
-  {"gy1_heat",    'w',  ACS1,  1,             1.0,                    0.0, 'u'},
-  {"el_vreq",     'w',  ACS1,  4,  GY16_TO_DPS/6.,  -32768*GY16_TO_DPS/6., 'u'},
-  {"az_vreq",     'w',  ACS1, 14,  GY16_TO_DPS/6.,  -32768*GY16_TO_DPS/6., 'u'},
-  {"cos_el",      'w',  ACS1,  9,             1.0,                    0.0, 'u'},
-  {"sin_el",      'w',  ACS1, 10,             1.0,                    0.0, 'u'},
-  {"gy4_errs",    'r',  ACS1, 58,             1.0,                    0.0, 'u'},
-  {"gy5_errs",    'r',  ACS1, 62,             1.0,                    0.0, 'u'},
-  {"gy6_errs",    'r',  ACS1, 63,             1.0,                    0.0, 'u'},
+  {"gy1_heat",    'w',  TMP2,  1,             1.0,                    0.0, 'u'},
+  {"el_vreq",     'w',  TMP2,  4,  GY16_TO_DPS/6.,  -32768*GY16_TO_DPS/6., 'u'},
+  {"az_vreq",     'w',  TMP2, 14,  GY16_TO_DPS/6.,  -32768*GY16_TO_DPS/6., 'u'},
+  {"cos_el",      'w',  TMP2,  9,             1.0,                    0.0, 'u'},
+  {"sin_el",      'w',  TMP2, 10,             1.0,                    0.0, 'u'},
+  {"gy4_errs",    'r',  TMP2, 58,             1.0,                    0.0, 'u'},
+  {"gy5_errs",    'r',  TMP2, 62,             1.0,                    0.0, 'u'},
+/* channel 63 has been usurped. presumably this will have to change anyway
+  {"gy6_errs",    'r',  TMP2, 63,             1.0,                    0.0, 'u'},
+*/
 
   /* read from board ACS2 */
-  {"enc_elev",    'r',  ACS2, 50, -360.0/65536.0,ENC_ELEV_OFFSET,ENC_ELEV_TYPE},
+  {"enc_elev",    'r',  TMP3, 50, -360.0/65536.0,ENC_ELEV_OFFSET,ENC_ELEV_TYPE},
 
   {"mcp_frame",   'w', LOOP2, 34,             1.0,                    0.0, 'u'},
 #endif
 
   /* Read from DAS3 -- cryo commanding */
-  {"calstat",      'r',  CRYO, 61,                 1.0,             0.0, 'u'},
+  {"calstat",      'r',  TMP5, 61,                 1.0,             0.0, 'u'},
+
+
+  END_OF_CHANNELS
+};
+
+struct ChannelStruct WideFastChannels[] = {
+  /* 25th channels of all the DAS cards, not currently used */
+  /*
+  {"n17c25",      'r', DAS1_A1, 36,                1.0,             0.0, 'U'},
+  {"n18c25",      'r', DAS1_A2, 36,                1.0,             0.0, 'U'},
+  {"n19c25",      'r', DAS1_A3, 36,                1.0,             0.0, 'U'},
+  {"n21c25",      'r', DAS2_A1, 36,                1.0,             0.0, 'U'},
+  {"n22c25",      'r', DAS2_A2, 36,                1.0,             0.0, 'U'},
+  {"n23c25",      'r', DAS2_A3, 36,                1.0,             0.0, 'U'},
+  {"n25c25",      'r', DAS3_A1, 36,                1.0,             0.0, 'U'},
+  {"n26c25",      'r', DAS3_A2, 36,                1.0,             0.0, 'U'},
+  {"n27c25",      'r', DAS3_A3, 36,                1.0,             0.0, 'U'},
+  {"n29c25",      'r', DAS4_A1, 36,                1.0,             0.0, 'U'},
+  {"n30c25",      'r', DAS4_A2, 36,                1.0,             0.0, 'U'},
+  {"n31c25",      'r', DAS4_A3, 36,                1.0,             0.0, 'U'},
+  */
+
+  END_OF_CHANNELS
+};
+
+struct ChannelStruct FastChannels[] = {
+  //interrupt counters, for debugging
+  /*
+  {"bias_10k",     'r',  BIAS_C,  0,                1.0,             0.0, 'u'},
+  {"bias_100",     'r',  BIAS_C,  1,                1.0,             0.0, 'u'},
+  {"bias_licnt",   'r',  BIAS_C,  2,                1.0,             0.0, 'u'},
+  {"das1_10k",     'r',  DAS1_C,  0,                1.0,             0.0, 'u'},
+  {"das1_100",     'r',  DAS1_C,  1,                1.0,             0.0, 'u'},
+  {"das1_licnt",   'r',  DAS1_C,  2,                1.0,             0.0, 'u'},
+  */
 
   END_OF_CHANNELS
 };

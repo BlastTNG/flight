@@ -124,7 +124,7 @@ struct ChannelStruct *FastChList;
 #endif
 
 /* bus on which the bolometers live */
-#define BOLO_BUS  1
+#define BOLO_BUS  0
 
 static struct ChannelStruct BoloChannels[N_FAST_BOLOS];
 
@@ -235,6 +235,7 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
 /************************************************************************/
 static void MakeBoloTable(void) {
   int i, j, index = 0;
+  int bolo_node = DAS_START;
   struct ChannelStruct channel = {
     "", 'r', 3, BOLO_BUS, 0, LOCKIN_C2V, LOCKIN_OFFSET, 'u'
   };
@@ -244,22 +245,26 @@ static void MakeBoloTable(void) {
 #endif
 
   for (i = 0; i < DAS_CARDS; ++i) {
-    channel.node = i + 5;
+    if (bolo_node%4 == 0) bolo_node++;  //skip motherboard common nodes
+    channel.node = bolo_node++;
     channel.rw = 'r';
+#ifdef VERBOSE
+    bprintf(info, "Channels: Adding bolometer table on node %i\n",channel.node);
+#endif
     for (j = 0; j < DAS_CHS; j += 2) {
       /* lsw channel at j */
       channel.addr = j;
-      sprintf(channel.field, "n%ic%ilo", channel.node, j);
+      sprintf(channel.field, "n%02ic%02ilo", channel.node, j);
       boloIndex[i][j][0] = index;
       memcpy(&BoloChannels[index++], &channel, sizeof(channel));
       /* msw at j and j+1 */
       channel.addr = DAS_CHS + (j >> 1);
-      sprintf(channel.field, "n%ic%ihi", channel.node, j);
+      sprintf(channel.field, "n%02ic%02ihi", channel.node, j);
       boloIndex[i][j + 1][1] = boloIndex[i][j][1] = index;
       memcpy(&BoloChannels[index++], &channel, sizeof(channel));
       /* lsw channel at j+1 */
       channel.addr = j+1;
-      sprintf(channel.field, "n%ic%ilo", channel.node, j+1);
+      sprintf(channel.field, "n%02ic%02ilo", channel.node, j+1);
       boloIndex[i][j + 1][0] = index;
       memcpy(&BoloChannels[index++], &channel, sizeof(channel));
     }
@@ -1059,6 +1064,7 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
   char field[FIELD_LEN];
   char line[1024];
   int i, j;
+  int bolo_node;
 
   if (offset) {
     snprintf(line, 1024, "FRAMEOFFSET      %li\n", offset);
@@ -1144,15 +1150,19 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
   strcpy(line, "\n## BOLOMETER:\n");
   write(fd, line, strlen(line));
 
-  for (i = 0; i < DAS_CARDS; i++)
+  bolo_node = DAS_START;
+  for (i = 0; i < DAS_CARDS; i++) {
+    bolo_node++;
+    if (bolo_node%4 == 0) bolo_node++;
     for (j = 0; j < DAS_CHS; j++) {
-      sprintf(field, "n%dc%d", i + 5, j);
+      sprintf(field, "n%02dc%02d", bolo_node, j);
       snprintf(line, 1024,
           "%-16s RAW    U %d\n%-16s LINCOM 1 %-16s %.12e %.12e\n",
           FieldToLower(field), FAST_PER_SLOW, FieldToUpper(field),
           FieldToLower(field), LOCKIN_C2V, LOCKIN_OFFSET);
       write(fd, line, strlen(line));
     }
+  }
 
   /* derived channels */
   strcpy(line, "\n## DERIVED CHANNELS:\n");

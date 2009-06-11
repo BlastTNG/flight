@@ -104,13 +104,16 @@ void PhaseControl(void)
   static int first_time = 1;
   static struct NiosStruct* NiosAddr[DAS_CARDS];
   char field[20];
-  int i;
+  int i, j;
 
   if (first_time) {
     first_time = 0;
+    j = 16;   //start of DAS node numbers
     for(i = 0; i < DAS_CARDS; i++) {
-      sprintf(field, "phase%d", i+5);
+      if (j%4 == 0) j++;   //skip motherboard common nodes
+      sprintf(field, "phase%02d", j);
       NiosAddr[i] = GetNiosAddr(field);
+      j++;
     }
   }	
 
@@ -475,180 +478,38 @@ void ForceBiasCheck(void) {
 /************************************************************************/
 void BiasControl (unsigned short* RxFrame)
 {
-  static struct BiPhaseStruct* biasinAddr;
-  static struct BiPhaseStruct* bAmp1Addr, *bAmp2Addr, *bAmp3Addr;
-  static struct NiosStruct* biasout1Addr;
-  static struct NiosStruct* biasout2Addr;
-  static struct NiosStruct* biasLev1Addr;
-  static struct NiosStruct* biasLev2Addr;
-  static struct NiosStruct* biasLev3Addr;
-  unsigned short bias_status, biasout1 = 0;
-  static unsigned short biasout2 = 0x70,
-                        biaslsbs1=0; /* biaslsbs1 holds 2 lsbs for bias */
-  int isBiasAC, isBiasRamp, isBiasClockInternal;
-  static int hold = 0, ch = 0, rb_hold = 0;
-  int amp1, amp2, amp3;
+  static struct NiosStruct* biasAmplAddr[5];
+  static struct NiosStruct* rampEnaAddr;
+  static struct BiPhaseStruct* rampAmplAddr;
+  int i;
+  char buf[32];
+  int isBiasRamp;
 
   /******** Obtain correct indexes the first time here ***********/
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    biasinAddr = GetBiPhaseAddr("biasin");
-    bAmp1Addr = GetBiPhaseAddr("b_amp1");
-    bAmp2Addr = GetBiPhaseAddr("b_amp2");
-    bAmp3Addr = GetBiPhaseAddr("b_amp3");
-    biasout1Addr = GetNiosAddr("biasout1");
-    biasout2Addr = GetNiosAddr("biasout2");
-    biasLev1Addr = GetNiosAddr("bias_lev1");
-    biasLev2Addr = GetNiosAddr("bias_lev2");
-    biasLev3Addr = GetNiosAddr("bias_lev3");
+    for (i=0; i<5; i++) {
+      sprintf(buf, "bias%i_ampl", i+1);
+      biasAmplAddr[i] = GetNiosAddr(buf);
+    }
+    rampEnaAddr = GetNiosAddr("bias_ramp_ena");
+    rampAmplAddr = GetBiPhaseAddr("ramp_ampl");
   }
 
-  bias_status = slow_data[biasinAddr->index][biasinAddr->channel];
+  if (CommandData.Bias.dont_do_anything) return;
 
-  amp1 = 0.5 + (double)((unsigned)RxFrame[bAmp1Addr->channel + 1] << 16
-      | RxFrame[bAmp1Addr->channel]) * B_AMP1_M + B_AMP1_B;
-  amp2 = 0.5 + (double)((unsigned)RxFrame[bAmp2Addr->channel + 1] << 16
-      | RxFrame[bAmp2Addr->channel]) * B_AMP2_M + B_AMP2_B;
-  amp3 = 0.5 + (double)((unsigned)RxFrame[bAmp3Addr->channel + 1] << 16
-      | RxFrame[bAmp3Addr->channel]) * B_AMP3_M + B_AMP3_B;
-
-  isBiasAC =            !(bias_status & 0x02);
-  isBiasRamp =          !(bias_status & 0x08);
-  isBiasClockInternal = ((bias_status & 0x04) >> 2);
-
-  biasout1 = 0;
-  /********** set Bias AC/DC *******/
-  if (isBiasAC) { /*  Bias is currently AC */
-    if (CommandData.Bias.biasAC == 0) { /* it should be DC */
-      biasout1 |= 0x01;
-      /*      bprintf(info, "Bias Control: to DC\n"); */
-    }
-  } else { /* Bias is currently DC */
-    if (CommandData.Bias.biasAC == 1) { /* it should be AC */
-      biasout1 |= 0x02;
-      /*      bprintf(info, "Bias Control: to AC\n"); */
-    }
-  }
-
-  /********** set Bias Internal/External (ramp)  *******/
-  if (isBiasRamp) { /* Bias is currently external Ramp */
-    if (CommandData.Bias.biasRamp == 0) { /* it should be internal/fixed */
-      biasout1 |= 0x40;
-      ForceBiasCheck();
-      /*      bprintf(info, "Bias Control: to fixed\n"); */
-    }
-  } else { /* Bias is currently internal (fixed) */
-    if (CommandData.Bias.biasRamp == 1) { /* it should be external/Ramp */
-      biasout1 |= 0x80;
-      /*      bprintf(info, "Bias Control: to ramp\n"); */
-    }
-  }
-
-  /********** set Clock Internal/External *******/
-  if (isBiasClockInternal) { /* Bias is currently internal */
-    if (CommandData.Bias.clockInternal == 0) { /* it should be external */
-      biasout1 |= 0x10;
-      /*      bprintf(info, "Bias Control: to external\n"); */
-    }
-  } else { /* Bias clock is currenly external */
-    if (CommandData.Bias.clockInternal == 1) { /* it should be internal */
-      biasout1 |= 0x20;
-      /*      bprintf(info, "Bias Control: to internal\n"); */
-    }
-  }
-
-  if (CommandData.Bias.SetLevel1 || CommandData.Bias.SetLevel2 ||
-      CommandData.Bias.SetLevel3) {
-    rb_hold = 400;
-  }
-
-  /************* Check Bias Level ReadBack *******/
-  if (CommandData.Bias.biasRamp == 0) { /* Not when ramping */
-    if (hold <= 0) { /* Don't check if we're already sending a level */
-      if (bias_amp1_timeout > 0)
-        bias_amp1_timeout--;
-      else if (fabs(amp1 - CommandData.Bias.bias1) > 3) {
-        bprintf(warning, "Bias Control: Auto Set Level #1 to %i (saw %i)\n",
-            CommandData.Bias.bias1, amp1);
-        CommandData.Bias.SetLevel1 = 1;
-      }
-      if (bias_amp2_timeout > 0)
-        bias_amp2_timeout--;
-      else if (fabs(amp2 - CommandData.Bias.bias2) > 3) {
-        bprintf(warning, "Bias Control: Auto Set Level #2 to %i (saw %i)\n",
-            CommandData.Bias.bias2, amp2);
-        CommandData.Bias.SetLevel2 = 1;
-      }
-      if (bias_amp3_timeout > 0)
-        bias_amp3_timeout--;
-      else if (fabs(amp3 - CommandData.Bias.bias3) > 3) {
-        bprintf(warning, "Bias Control: Auto Set Level #3 to %i (saw %i)\n",
-            CommandData.Bias.bias3, amp3);
-        CommandData.Bias.SetLevel3 = 1;
-      }
-    }
+  /********** set Bias (ramp)  *******/
+  isBiasRamp = slow_data[rampAmplAddr->index][rampAmplAddr->channel];
+  if ( (isBiasRamp && CommandData.Bias.biasRamp == 0) ||
+	  (!isBiasRamp && CommandData.Bias.biasRamp == 1) ) {
+    WriteData(rampEnaAddr, CommandData.Bias.biasRamp, NIOS_QUEUE);
   }
 
   /************* Set the Bias Levels *******/
-  if (hold > FAST_PER_SLOW + 2) { /* hold data with write low */
-    hold--;
-  } else if (hold > 0) {  /* hold data with write high */
-    biasout2 |= 0x07;
-    hold--;
-  } else if (ch == 0) {
-    if (CommandData.Bias.SetLevel1) {
-      biasout2 = ((CommandData.Bias.bias1 << 1) & 0xf8) | 0x03;
-      biaslsbs1 = (~(CommandData.Bias.bias1 << 2) & 0x0c);
-      hold = 2 * FAST_PER_SLOW + 4;
-      rb_hold = 400;
-      CommandData.Bias.SetLevel1 = 0;
-      bias_amp1_timeout = B_AMP_TIMEOUT;
+  for (i=0; i<5; i++)
+    if (CommandData.Bias.setLevel[i]) {
+      WriteData(biasAmplAddr[i], CommandData.Bias.bias[i], NIOS_QUEUE);
+      CommandData.Bias.setLevel[i] = 0;
     }
-    ch++;
-  } else if (ch == 1) {
-    if (CommandData.Bias.SetLevel2) {
-      biasout2 = ((CommandData.Bias.bias2 << 1) & 0xf8) | 0x05;
-      biaslsbs1 = (~(CommandData.Bias.bias2 << 2) & 0x0c);
-      hold = 2 * FAST_PER_SLOW + 4;
-      rb_hold = 400;
-      CommandData.Bias.SetLevel2 = 0;
-      bias_amp2_timeout = B_AMP_TIMEOUT;
-    }
-    ch++;
-  } else if (ch == 2) {
-    if (CommandData.Bias.SetLevel3) {
-      biasout2 = ((CommandData.Bias.bias3 << 1) & 0xf8) | 0x06;
-      biaslsbs1 = (~(CommandData.Bias.bias3 << 2) & 0x0c);
-      hold = 2 * FAST_PER_SLOW + 4;
-      rb_hold = 400;
-      CommandData.Bias.SetLevel3 = 0;
-      bias_amp3_timeout = B_AMP_TIMEOUT;
-    }
-    ch = 0;
-  } else {
-    bprintf(err, "Bias Control: ch is an impossible value (%i)\n", ch);
-    ch = 0;
-  }
-
-  /* Bias readback -- we wait a few seconds after finishing the write */
-  if (rb_hold > 0) {
-    rb_hold--;
-  } else if (!CommandData.Bias.SetLevel3 && !CommandData.Bias.SetLevel3 &&
-      !CommandData.Bias.SetLevel3) {
-    /*     CommandData.Bias.bias1 = slow_data[Bias_lev1Ch][Bias_lev1Ind]; */
-    /*     CommandData.Bias.bias2 = slow_data[Bias_lev2Ch][Bias_lev2Ind]; */
-    /*     CommandData.Bias.bias3 = slow_data[Bias_lev3Ch][Bias_lev3Ind]; */
-  }
-  /*  Add the two lsbs of the bias to biasout1  */
-  biasout1 |= biaslsbs1;
-
-  /******************** set the outputs *********************/
-  if (!CommandData.Bias.dont_do_anything) {
-    WriteData(biasout1Addr, biasout1 & 0xffff, NIOS_QUEUE);
-    WriteData(biasout2Addr, (~biasout2) & 0xff, NIOS_QUEUE);
-    WriteData(biasLev1Addr, CommandData.Bias.bias1, NIOS_QUEUE);
-    WriteData(biasLev2Addr, CommandData.Bias.bias2, NIOS_QUEUE);
-    WriteData(biasLev3Addr, CommandData.Bias.bias3, NIOS_FLUSH);
-  }
 }

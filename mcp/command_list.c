@@ -21,8 +21,9 @@
 
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
+#include "channels.h"      /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.0 $";
+const char *command_list_serial = "$Revision: 4.1 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Cooling", 
@@ -90,12 +91,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(trim_to_isc), "trim coarse sensors to ISC", GR_TRIM},
   {COMMAND(trim_to_osc), "trim coarse sensors to OSC", GR_TRIM},
 
-  {COMMAND(bias_ac), "bias AC", GR_BIAS},
-  {COMMAND(bias_dc), "bias DC", GR_BIAS},
   {COMMAND(biascmd_inh), "inhibit bias commanding", GR_BIAS | CONFIRM},
   {COMMAND(biascmd_ena), "enable bias commanding", GR_BIAS},
-  {COMMAND(clock_int), "bias clock internal", GR_BIAS},
-  {COMMAND(clock_ext), "bias clock external", GR_BIAS},
   {COMMAND(fixed), "bias: internal, fixed", GR_BIAS},
   {COMMAND(ramp), "bias: external, ramp", GR_BIAS},
 
@@ -694,26 +691,38 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /*************** Bias  *****************/
   {COMMAND(bias1_level), "bias 1 level (250 micron)", GR_BIAS, 1,
     {
-      {"Level", 0, 127, 'i', "bias_lev1"}
+      {"Level", 0, 32767, 'i', "bias1_ampl"}
     }
   },
 
   {COMMAND(bias2_level), "bias 2 level (350 micron)", GR_BIAS, 1,
     {
-      {"Level", 0, 127, 'i', "bias_lev2"}
+      {"Level", 0, 32767, 'i', "bias2_ampl"}
     }
   },
 
   {COMMAND(bias3_level), "bias 3 level (500 micron)", GR_BIAS, 1,
     {
-      {"Level", 0, 127, 'i', "bias_lev3"}
+      {"Level", 0, 32767, 'i', "bias3_ampl"}
+    }
+  },
+
+  {COMMAND(bias4_level), "bias 4 level (housekeeping?)", GR_BIAS, 1,
+    {
+      {"Level", 0, 32767, 'i', "bias4_ampl"}
+    }
+  },
+
+  {COMMAND(bias5_level), "bias 5 level (cryo heater?)", GR_BIAS, 1,
+    {
+      {"Level", 0, 32767, 'i', "bias5_ampl"}
     }
   },
 
   {COMMAND(phase), "set phase shift", GR_BIAS, 2,
     {
-      {"DAS Card (0=all)", 0,   16, 'i', "NONE"},
-      {"Phase",            0, 2000, 'i', "NONE"}
+      {"DAS Card (0=all)", 0, DAS_START + DAS_CARDS*4/3, 'i', "NONE"},
+      {"Phase",            0, 32767, 'i', "NONE"}
     }
   },
 

@@ -175,13 +175,9 @@ struct CommandDataStruct {
 
   struct {
     int dont_do_anything;
-    int clockInternal;
-    int biasAC;
     int biasRamp;
-    int bias1;
-    int bias2;
-    int bias3;
-    int SetLevel1, SetLevel2, SetLevel3;
+    int bias[5];
+    int setLevel[5];
   } Bias;
   
   struct {

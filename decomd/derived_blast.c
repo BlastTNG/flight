@@ -201,15 +201,6 @@ union DerivedUnion DerivedChannels[] = {
       "ACT2_FAULT"
       ),
 
-  /* BIAS */
-  COMMENT("Bias Control"),
-  BITFIELD("biasin",
-      "",
-      "BIAS_IS_DC",
-      "BIAS_CLK_IS_INT",
-      "BIAS_IS_INT"
-      ),
-
   /* CRYO */
   COMMENT("Internal (to mcp) reference of the cryo stat"),
   BITFIELD("cryostate",

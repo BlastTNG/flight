@@ -17,8 +17,8 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 137        /* total number of single word cmds */
-#define N_MCOMMANDS 96         /* total number of multiword commands */
+#define N_SCOMMANDS 133        /* total number of single word cmds */
+#define N_MCOMMANDS 98         /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -66,9 +66,8 @@ extern const char *GroupNames[N_GROUPS];
  * order relative to the command definitions in command_list.c */
 enum singleCommand {
   isc_auto_focus,   az_auto_gyro,       az_off,           az_on,
-  balance_allow,    balance_veto,       bias_ac,          bias_dc,
-  cal_off,          cal_on,             auto_bdaheat,     charcoal_off,
-  charcoal_on,      clock_ext,          clock_int,        coldplate_off,
+  balance_allow,    balance_veto,       cal_off,          cal_on,
+  auto_bdaheat,     charcoal_off,       charcoal_on,      coldplate_off,
   coldplate_on,     isc_discard_images, el_off,           el_on,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
   fixed,            isc_full_screen,    gps_allow,        gps_veto,
@@ -116,7 +115,8 @@ extern struct scom scommands[N_SCOMMANDS];
 enum multiCommand {
   az_el_goto,        az_gain,           az_scan,          bal_gain,
   bal_level,         osc_set_focus,     osc_set_aperture, osc_save_period,
-  bias1_level,       bias2_level,       bias3_level,      isc_blob_centre,
+  bias1_level,       bias2_level,       bias3_level,      bias4_level,
+  bias5_level,       isc_blob_centre,
   box,               osc_pixel_centre,  osc_blob_centre,  isc_gain,
   cal_pulse,         cal_repeat,        cap,              isc_catalogue,
   az_el_trim,        isc_det_set,       drift,            el_gain,

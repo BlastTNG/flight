@@ -411,18 +411,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case biascmd_ena:
       CommandData.Bias.dont_do_anything = 0;
       break;
-    case clock_int:   /* Bias settings */
-      CommandData.Bias.clockInternal = 1;
-      break;
-    case clock_ext:
-      CommandData.Bias.clockInternal = 0;
-      break;
-    case bias_ac:
-      CommandData.Bias.biasAC = 1;
-      break;
-    case bias_dc:
-      CommandData.Bias.biasAC = 0;
-      break;
     case ramp:
       CommandData.Bias.biasRamp = 1;
       break;
@@ -867,9 +855,7 @@ static inline void copysvalue(char* dest, const char* src)
 static void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled)
 {
-#ifndef BOLOTEST
   int i;
-#endif
 
   /* Update CommandData struct with new info
    * If the parameter is type 'i'/'l' set CommandData using ivalues[i]
@@ -1228,22 +1214,31 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       /***************************************/
       /*************** Bias  *****************/
     case bias1_level:    /* Set bias 1 */
-      CommandData.Bias.SetLevel1 = 1;
-      CommandData.Bias.bias1 = ivalues[0];
+      CommandData.Bias.bias[0] = ivalues[0] << 1;
+      CommandData.Bias.setLevel[0] = 1;
       break;
     case bias2_level:   /* Set bias 2 */
-      CommandData.Bias.SetLevel2 = 1;
-      CommandData.Bias.bias2 = ivalues[0];
+      CommandData.Bias.bias[1] = ivalues[0] << 1;
+      CommandData.Bias.setLevel[1] = 1;
       break;
     case bias3_level:   /* Set bias 3 */
-      CommandData.Bias.SetLevel3 = 1;
-      CommandData.Bias.bias3 = ivalues[0];
+      CommandData.Bias.bias[2] = ivalues[0] << 1;
+      CommandData.Bias.setLevel[2] = 1;
+      break;
+    case bias4_level:   /* Set bias 4 */
+      CommandData.Bias.bias[3] = ivalues[0] << 1;
+      CommandData.Bias.setLevel[3] = 1;
+      break;
+    case bias5_level:   /* Set bias 5 */
+      CommandData.Bias.bias[4] = ivalues[0] << 1;
+      CommandData.Bias.setLevel[4] = 1;
       break;
     case phase:
-      if (ivalues[0] >= 5 && ivalues[0] <= 16)
-        CommandData.Phase[ivalues[0] - 5] = ivalues[1];
+      if (ivalues[0] >= DAS_START && ivalues[0] <= DAS_START + DAS_CARDS*4/3
+	  && ivalues[0]%4 != 0)
+        CommandData.Phase[(ivalues[0] - DAS_START)*3/4] = ivalues[1] << 1;
       else if (ivalues[0] == 0)
-        for (i = 0; i <= 11; ++i)
+        for (i = 0; i < DAS_CARDS; ++i)
           CommandData.Phase[i] = ivalues[1];
 
       /***************************************/
@@ -1999,12 +1994,14 @@ void InitCommandData()
   CommandData.actbus.caddr[2] = 0;
 
   CommandData.Bias.dont_do_anything = 0;
-  CommandData.Bias.clockInternal = 0;
-  CommandData.Bias.biasAC = 1;
   CommandData.Bias.biasRamp = 0;
-  CommandData.Bias.SetLevel1 = 0;
-  CommandData.Bias.SetLevel2 = 0;
-  CommandData.Bias.SetLevel3 = 0;
+
+  //forces reload of saved bias values
+  CommandData.Bias.setLevel[0] = 1;
+  CommandData.Bias.setLevel[1] = 1;
+  CommandData.Bias.setLevel[2] = 1;
+  CommandData.Bias.setLevel[3] = 1;
+  CommandData.Bias.setLevel[4] = 1;
 
   CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_NONE;
   CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_NONE;
@@ -2145,9 +2142,11 @@ void InitCommandData()
   CommandData.pumps.bal_gain = 0.2;
   CommandData.pumps.inframe_auto = 1;
 
-  CommandData.Bias.bias1 = 15;
-  CommandData.Bias.bias2 = 15;
-  CommandData.Bias.bias3 = 15;
+  CommandData.Bias.bias[0] = 256;
+  CommandData.Bias.bias[1] = 256;
+  CommandData.Bias.bias[2] = 256;
+  CommandData.Bias.bias[3] = 256;
+  CommandData.Bias.bias[4] = 256;
 
   CommandData.actbus.tc_mode = TC_MODE_VETOED;
   CommandData.actbus.tc_step = 100; /* microns */
