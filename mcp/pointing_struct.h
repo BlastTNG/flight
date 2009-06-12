@@ -134,7 +134,6 @@ struct PointingDataStruct {
   double gy1_earth;
   double gy2_earth;
   double gy3_earth;
-  double gy_roll_amp;
   double lat;       // degrees
   double lon;       // degrees
   double alt;       // m

@@ -649,7 +649,6 @@ static void StoreData(int index)
   static struct NiosStruct* oscGy3OffsetAddr;
   static struct NiosStruct* gy2OffsetAddr;
   static struct NiosStruct* gy3OffsetAddr;
-  static struct NiosStruct* gyRollAmpAddr;
   static struct NiosStruct* azAddr;
   static struct NiosStruct* elAddr;
   static struct NiosStruct* raAddr;
@@ -772,7 +771,6 @@ static void StoreData(int index)
     oscGy3OffsetAddr = GetNiosAddr("osc_gy3_off");
     gy2OffsetAddr = GetNiosAddr("gy2_offset");
     gy3OffsetAddr = GetNiosAddr("gy3_offset");
-    gyRollAmpAddr = GetNiosAddr("gy_roll_amp");
     raAddr = GetNiosAddr("ra");
     decAddr = GetNiosAddr("dec");
     latAddr = GetNiosAddr("lat");
@@ -935,9 +933,6 @@ static void StoreData(int index)
       (signed int)(PointingData[i_point].gy2_offset * 32768.), NIOS_QUEUE);
   WriteData(gy3OffsetAddr,
       (signed int)(PointingData[i_point].gy3_offset * 32768.), NIOS_QUEUE);
-  WriteData(gyRollAmpAddr,
-      (unsigned int)(PointingData[i_point].gy_roll_amp * 65536.), NIOS_QUEUE);
-
   WriteData(latAddr, (unsigned int)(PointingData[i_point].lat * DEG2LI),
       NIOS_QUEUE);
   WriteData(lonAddr, (unsigned int)(PointingData[i_point].lon * DEG2LI),

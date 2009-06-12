@@ -184,7 +184,6 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
 
   static struct NiosStruct* gPElAddr;
   static struct NiosStruct* gIElAddr;
-  static struct NiosStruct* gPRollAddr;
   static struct NiosStruct* gPAzAddr;
   static struct NiosStruct* gIAzAddr;
   static struct NiosStruct* gPPivotAddr;
@@ -213,7 +212,6 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
 
     gPElAddr = GetNiosAddr("g_p_el");
     gIElAddr = GetNiosAddr("g_i_el");
-    gPRollAddr = GetNiosAddr("g_p_roll");
     gPAzAddr = GetNiosAddr("g_p_az");
     gIAzAddr = GetNiosAddr("g_i_az");
     gPPivotAddr = GetNiosAddr("g_p_pivot");
@@ -293,23 +291,6 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   WriteData(emfGainAddr, CommandData.emf_gain, NIOS_QUEUE);
   /* reaction wheel back-EMF offset correction */
   WriteData(emfOffsetAddr, CommandData.emf_offset + 32767, NIOS_QUEUE);
-
-  /***************************************************/
-  /**                Roll Drive Motors              **/
-  if (PointingData[i_point].gy_roll_amp > 0.003) {
-    rollGainP = 2200.0 / PointingData[i_point].gy_roll_amp;
-    rollGainP *= (CommandData.roll_gain.P / 32768.0);
-  } else {
-    rollGainP = CommandData.roll_gain.P;
-  }
-  if (rollGainP > CommandData.roll_gain.P)
-    rollGainP = CommandData.roll_gain.P;
-
-  if (wait > 0)
-    rollGainP = 0;
-
-  /* p term for roll motor */
-  WriteData(gPRollAddr, rollGainP, NIOS_QUEUE);
 
   if (wait > 0)
     wait--;

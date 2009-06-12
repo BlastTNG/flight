@@ -23,7 +23,7 @@
 #include "isc_protocol.h"  /* required for constants */
 #include "channels.h"      /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.1 $";
+const char *command_list_serial = "$Revision: 4.2 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Cooling", 
@@ -578,12 +578,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Current RA (h)",      0, 24, 'f', "NONE"},
       {"Current Dec (deg)", -90, 90, 'f', "NONE"}
-    }
-  },
-
-  {COMMAND(roll_gain), "roll reaction wheel gain", GR_GAIN, 1,
-    {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_roll"}
     }
   },
 

@@ -23,6 +23,12 @@
 extern "C" {
 #endif
 
+/* Gains and offsets for preamp card */
+#define M_16PRE (10.0/32768.0)
+#define B_16PRE (-32768.0)
+#define M_16T (4.096E6/2.2E3/32768.0)
+#define B_16T (-32768.0)
+
   /* FAST_PER_SLOW is the number of fast samples for each slow one */
 #define FAST_PER_SLOW   20
 #define NOT_MULTIPLEXED (FAST_PER_SLOW)

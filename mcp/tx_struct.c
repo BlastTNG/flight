@@ -63,6 +63,8 @@
 #define LOOP6	37, 0
 #define DECOM	40, 0
 
+#define CAL16(m,b) ((m)*M_16PRE), ((b) + B_16PRE*(m)*M_16PRE)
+#define CAL16T(m,b) ((m)*M_16T), ((b) + B_16T*(m)*M_16T - 273.15)
 /*******************************************************************************
  * TODO The channel list needs updating! Most of this is still from BLAST06
  *
@@ -273,32 +275,31 @@ struct ChannelStruct SlowChannels[] = {
 
   /* generic names for analog channels. BE MORE SPECIFIC 
    * Also, can maybe get rid on a TMP Channel when you do */
-  {"das_t00",      'r', BIAS_T1,  0,                1.0,             0.0, 'u'},
-  {"das_t01",      'r', BIAS_T1,  1,                1.0,             0.0, 'u'},
-  {"das_t02",      'r', BIAS_T1,  2,                1.0,             0.0, 'u'},
-  {"das_t03",      'r', BIAS_T1,  3,                1.0,             0.0, 'u'},
-  {"das_t04",      'r', BIAS_T1,  4,                1.0,             0.0, 'u'},
-  {"das_t05",      'r', BIAS_T1,  5,                1.0,             0.0, 'u'},
-  {"das_t06",      'r', BIAS_T1,  6,                1.0,             0.0, 'u'},
-  {"das_t07",      'r', BIAS_T1,  7,                1.0,             0.0, 'u'},
-  {"das_t08",      'r', BIAS_T1,  8,                1.0,             0.0, 'u'},
-  {"das_t09",      'r', BIAS_T1,  9,                1.0,             0.0, 'u'},
-  {"das_t10",      'r', BIAS_T1, 10,                1.0,             0.0, 'u'},
-  {"das_t11",      'r', BIAS_T1, 11,                1.0,             0.0, 'u'},
-  {"das_t12",      'r', BIAS_T1, 12,                1.0,             0.0, 'u'},
-  {"das_t13",      'r', BIAS_T1, 13,                1.0,             0.0, 'u'},
-  {"das_t14",      'r', BIAS_T1, 14,                1.0,             0.0, 'u'},
-  {"das_t15",      'r', BIAS_T1, 15,                1.0,             0.0, 'u'},
-  {"das_t16",      'r', BIAS_T1, 16,                1.0,             0.0, 'u'},
-  {"das_t17",      'r', BIAS_T1, 17,                1.0,             0.0, 'u'},
-  {"das_t18",      'r', BIAS_T1, 18,                1.0,             0.0, 'u'},
-  {"das_t19",      'r', BIAS_T1, 19,                1.0,             0.0, 'u'},
-  {"das_t20",      'r', BIAS_T1, 20,                1.0,             0.0, 'u'},
-  {"das_t21",      'r', BIAS_T1, 21,                1.0,             0.0, 'u'},
-  {"das_t22",      'r', BIAS_T1, 22,                1.0,             0.0, 'u'},
-  {"das_t23",      'r', BIAS_T1, 23,                1.0,             0.0, 'u'},
-  {"das_t24",      'r', BIAS_T1, 24,                1.0,             0.0, 'u'},
-
+  {"das_t00",      'r', BIAS_T1,  1,                1.0,             0.0, 'u'},
+  {"das_t01",      'r', BIAS_T1,  3,                1.0,             0.0, 'u'},
+  {"das_t02",      'r', BIAS_T1,  5,                1.0,             0.0, 'u'},
+  {"das_t03",      'r', BIAS_T1,  7,                1.0,             0.0, 'u'},
+  {"das_t04",      'r', BIAS_T1,  9,                1.0,             0.0, 'u'},
+  {"das_t05",      'r', BIAS_T1, 11,                1.0,             0.0, 'u'},
+  {"das_t06",      'r', BIAS_T1, 13,                1.0,             0.0, 'u'},
+  {"das_t07",      'r', BIAS_T1, 15,                1.0,             0.0, 'u'},
+  {"das_t08",      'r', BIAS_T1, 17,                1.0,             0.0, 'u'},
+  {"das_t09",      'r', BIAS_T1, 19,                1.0,             0.0, 'u'},
+  {"das_t10",      'r', BIAS_T1, 21,                1.0,             0.0, 'u'},
+  {"das_t11",      'r', BIAS_T1, 23,                1.0,             0.0, 'u'},
+  {"das_t12",      'r', BIAS_T1, 25,                1.0,             0.0, 'u'},
+  {"das_t13",      'r', BIAS_T1, 27,                1.0,             0.0, 'u'},
+  {"das_t14",      'r', BIAS_T1, 29,                1.0,             0.0, 'u'},
+  {"das_t15",      'r', BIAS_T1, 31,                1.0,             0.0, 'u'},
+  {"das_t16",      'r', BIAS_T1, 33,                1.0,             0.0, 'u'},
+  {"das_t17",      'r', BIAS_T1, 35,                1.0,             0.0, 'u'},
+  {"das_t18",      'r', BIAS_T1, 37,                1.0,             0.0, 'u'},
+  {"das_t19",      'r', BIAS_T1, 39,                1.0,             0.0, 'u'},
+  {"das_t20",      'r', BIAS_T1, 41,                1.0,             0.0, 'u'},
+  {"das_t21",      'r', BIAS_T1, 43,                1.0,             0.0, 'u'},
+  {"das_t22",      'r', BIAS_T1, 45,                1.0,             0.0, 'u'},
+  {"das_t23",      'r', BIAS_T1, 47,                1.0,             0.0, 'u'},
+  {"das_t24",      'r', BIAS_T1, 49,                1.0,             0.0, 'u'},
 
   /* LOOP1 0-13 are wide */
   {"g_i_gyheat1",  'w', LOOP1, 14,                1.0,             0.0, 'u'},
@@ -384,7 +385,6 @@ struct ChannelStruct SlowChannels[] = {
   {"gy1_offset",   'w', LOOP2, 36,        1.0/32768.0,             0.0, 's'},
   {"gy2_offset",   'w', LOOP2, 37,        1.0/32768.0,             0.0, 's'},
   {"gy3_offset",   'w', LOOP2, 38,        1.0/32768.0,             0.0, 's'},
-  {"gy_roll_amp",  'w', LOOP2, 39,          1./65536.,             0.0, 'u'},
   {"mag_sigma",    'w', LOOP2, 40,              I2DEG,             0.0, 'u'},
   {"dgps_az",      'w', LOOP2, 41,              I2DEG,             0.0, 'u'},
   {"dgps_sigma",   'w', LOOP2, 42,              I2DEG,             0.0, 'u'},
@@ -636,10 +636,44 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_minblobs", 'w', LOOP6, 61,                1.0,             0.0, 'u'},
   {"osc_minblobs", 'w', LOOP6, 62,                1.0,             0.0, 'u'},
 
+/* ACS1 Analog card 1 */
+  {"i_trans",      'r',  ACS1_A1, 1,          CAL16(1.0, 0.0), 		'u'},
+  {"i_das",        'r',  ACS1_A1, 3,          CAL16(1.0, 0.0), 		'u'},
+  {"i_acs",        'r',  ACS1_A1, 5,          CAL16(1.0, 0.0), 		'u'},
+  {"i_rec",        'r',  ACS1_A1, 7,          CAL16(1.0, 0.0),		'u'},
+  {"i_starcam",    'r',  ACS1_A1, 9,          CAL16(1.0, 0.0), 		'u'},
+  {"i_dgps",       'r',  ACS1_A1, 11,         CAL16(1.0, 0.0),		'u'},
+  {"i_el",         'r',  ACS1_A1, 13,         CAL16(1.0, 0.0), 		'u'},
+  {"i_piv",        'r',  ACS1_A1, 15,         CAL16(1.0, 0.0), 		'u'},
+  {"i_reac",       'r',  ACS1_A1, 17,         CAL16(1.0, 0.0), 		'u'},
+  {"i_step",       'r',  ACS1_A1, 19,         CAL16(1.0, 0.0),		'u'},
+  {"i_gybox",      'r',  ACS1_A1, 21,         CAL16(1.0, 0.0), 		'u'},
+  {"i_aux",        'r',  ACS1_A1, 23,         CAL16(1.0, 0.0),		'u'},
+  {"v_sol1",       'r',  ACS1_A1, 25,         CAL16(1.0, 0.0), 		'u'},
+  {"v_sol2",       'r',  ACS1_A1, 27,         CAL16(1.0, 0.0), 		'u'},
+  {"v_sol3",       'r',  ACS1_A1, 29,         CAL16(1.0, 0.0), 		'u'},
+  {"v_sol4",       'r',  ACS1_A1, 31,         CAL16(1.0, 0.0), 		'u'},
+  {"v_sol5",       'r',  ACS1_A1, 33,         CAL16(1.0, 0.0), 		'u'},
+  {"v_sol6",       'r',  ACS1_A1, 35,         CAL16(1.0, 0.0), 		'u'},
+  {"v_batt",       'r',  ACS1_A1, 37,         CAL16(1.0, 0.0), 		'u'},
+  {"i_sol",        'r',  ACS1_A1, 39,         CAL16(1.0, 0.0), 		'u'},
+  {"i_batt",       'r',  ACS1_A1, 41,         CAL16(1.0, 0.0), 		'u'},
+
+/* ACS1 Temperature card */
+  {"t_gybox",      'r',  ACS1_T1, 1,          CAL16T(1.0, 0.0),         'u'},
+  {"t_npv",        'r',  ACS1_T1, 9,          CAL16T(1.0, 0.0),         'u'},
+  {"t_charger",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u'},
+  {"t_charger",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u'},
+  {"t_bat1",       'r',  ACS1_T1, 13,         CAL16T(1.0, 0.0),         'u'},
+  {"t_bat2",       'r',  ACS1_T1, 15,         CAL16T(1.0, 0.0),         'u'},
+  {"t_bat3",       'r',  ACS1_T1, 17,         CAL16T(1.0, 0.0),         'u'},
+  {"t_bat4",       'r',  ACS1_T1, 19,         CAL16T(1.0, 0.0),         'u'},
+  {"t_array",      'r',  ACS1_T1, 21,         CAL16T(1.0, 0.0),         'u'},
+
+
 /* TODO These TMP channels need to be added to correct new nodes, or deleted */
   {"t_el_mc",      'r',  TMP1,  3,              I2T_M,           I2T_B, 'u'},
   {"t_el_mot",     'r',  TMP1,  5,              I2T_M,           I2T_B, 'u'},
-  {"i_starcam",    'r',  TMP1, 21,           -0.00625,           204.8, 'u'},
   {"roll_clin_pyr",'r',  TMP1, 33,     -4.0/5333.3333,        4.*6.144, 'u'},
   {"pch_clin_pyr", 'r',  TMP1, 35,      4.0/5333.3333,       -4.*6.144, 'u'},
   {"t_clin_pyr",   'r',  TMP1, 23,           -0.01875,           614.4, 'u'},
@@ -649,20 +683,11 @@ struct ChannelStruct SlowChannels[] = {
   {"dpcu_reg",     'w',  TMP1,  5,             0.0382,           27.25, 'u'},
   {"actbus_reset", 'w',  TMP1,  6,                1.0,             0.0, 'u'},
 
-  {"t_roll",       'r',  TMP2,  9,              I2T_M,           I2T_B, 'u'},
-  {"i_roll",       'r',  TMP2, 11,      0.00048828125,          -16.09, 'u'},
-  {"t_gyro2",      'r',  TMP2, 17,          -0.003125,            79.8, 'u'},
-  {"t_gyro3",      'r',  TMP2, 19,          -0.003125,            79.8, 'u'},
-  {"t_gyro1",      'r',  TMP2, 21,          -0.003125,            79.8, 'u'},
   {"t_reac",       'r',  TMP2, 29,              I2T_M,           I2T_B, 'u'},
   {"t_reac_mc",    'r',  TMP2, 31,              I2T_M,           I2T_B, 'u'},
-  {"i_reac",       'r',  TMP2, 33,         1.0/1648.0, -32768.0/1648.0, 'u'},
-  {"i_el",         'r',  TMP2, 39,           1.0/1648, -I_EL_ZERO/1648, 'u'},
   {"t_piv_mc",     'r',  TMP2, 45,              I2T_M,           I2T_B, 'u'},
-  {"i_piv",        'r',  TMP2, 47,           1.0/1648,   -32768.0/1648, 'u'},
   {"g_p_el",       'w',  TMP2,  2,                1.0,             0.0, 'u'},
   {"g_i_el",       'w',  TMP2,  3,                1.0,             0.0, 'u'},
-  {"g_p_roll",     'w',  TMP2,  5,                1.0,             0.0, 'u'},
   {"g_p_az",       'w',  TMP2,  7,                1.0,             0.0, 'u'},
   {"g_i_az",       'w',  TMP2,  8,                1.0,             0.0, 'u'},
   {"emf_gain",     'w',  TMP2, 11,                1.0,             0.0, 'u'},
@@ -673,12 +698,10 @@ struct ChannelStruct SlowChannels[] = {
 
   /* ACS2 0-1 is wide fast */
   {"t_ss_back_mid",'r',  TMP3,  3,              I2T_M,           I2T_B, 'u'},
-  {"i_gybox",      'r',  TMP3,  5,           0.000625,          -20.48, 'u'},
   {"pch_clin_piv", 'r',  TMP3,  7,      4.0/5333.3333,       -4.*6.144, 'u'},
   {"roll_clin_piv",'r',  TMP3,  9,      4.0/5333.3333,       -4.*6.144, 'u'},
   {"t_clin_piv",   'r',  TMP3, 11,            0.01875,          -614.4, 'u'},
   {"i_sun",        'r',  TMP3, 13,           0.000625,          -20.48, 'u'},
-  {"p_pv",         'r',  TMP3, 15,          -8.289193e-5,       2.8294, 's'},
 
   /* AD590 calibrations per Marco 2006-11 */
   {"t_if_top_frnt",'r',  TMP3, 17,              I2T_M,  I2T_B +
@@ -691,17 +714,8 @@ struct ChannelStruct SlowChannels[] = {
                                                  AD590_CALIB_INFRAME_4, 'u'},
 
   {"t_lock_motor", 'r',  TMP3, 25,              I2T_M,           I2T_B, 'u'},
-  {"t_pv_ext",     'r',  TMP3, 27,              I2T_M,           I2T_B, 'u'},
   {"t_acs",        'r',  TMP3, 29,              I2T_M,           I2T_B, 'u'},
   {"t_chin_mid",   'r',  TMP3, 31,              I2T_M,           I2T_B, 'u'},
-  {"t_pv",         'r',  TMP3, 33,              I2T_M,           I2T_B, 'u'},
-  {"i_pv",         'r',  TMP3, 35,           -0.00625,           204.8, 'u'},
-  {"t_apm_3v",     'r',  TMP3, 37,              I2T_M,           I2T_B, 'u'},
-  {"t_apm_5v",     'r',  TMP3, 39,              I2T_M,           I2T_B, 'u'},
-  {"t_apm_10v",    'r',  TMP3, 41,              I2T_M,           I2T_B, 'u'},
-  {"i_apm_3v",     'r',  TMP3, 43,          -0.000625,           20.48, 'u'},
-  {"i_apm_5v",     'r',  TMP3, 45,         -0.0020833,          68.267, 'u'},
-  {"i_apm_10v",    'r',  TMP3, 47,           -0.00625,           204.8, 'u'},
   {"sensor_reset", 'w',  TMP3,  1,                1.0,             0.0, 'u'},
 
   {"v_batt_acs",   'r',  TMP4,  1,    -0.000525352612,      34.4796641, 'u'},
@@ -714,20 +728,6 @@ struct ChannelStruct SlowChannels[] = {
   {"t_batt_das",   'r',  TMP4, 15,              I2T_M,           I2T_B, 'u'},
   {"i_gond_acs",   'r',  TMP4, 17,          -1.875E-3,           61.44, 'u'},
   {"i_gond_das",   'r',  TMP4, 19,          -1.875E-3,           61.44, 'u'},
-  {"i_batt_acs",   'r',  TMP4, 21,           1.875E-3,          -61.44, 'u'},
-  {"i_batt_das",   'r',  TMP4, 23,           1.875E-3,          -61.44, 'u'},
-  {"i_sol_acs",    'r',  TMP4, 25,          -0.625E-3*3.0,   20.48*3.0, 'u'},
-  {"i_sol_das",    'r',  TMP4, 27,          -0.625E-3,           20.48, 'u'},
-  {"v_sol_acs3",   'r',  TMP4, 29, -0.00141626, 92.8158, 'u'},
-  {"v_sol_das4",   'r',  TMP4, 31, -0.00140052, 91.7845, 'u'},
-  {"v_sol_acs5",   'r',  TMP4, 33, -0.00146366, 95.9224, 'u'},
-  {"v_sol_das2",   'r',  TMP4, 35, -0.00139935, 91.7075, 'u'},
-  {"v_sol_acs6",   'r',  TMP4, 37, -0.00138186, 90.5619, 'u'},
-  {"v_sol_acs1",   'r',  TMP4, 39, -0.00139837, 91.6434, 'u'},
-  {"v_sol_acs4",   'r',  TMP4, 41, -0.00140864, 92.3169, 'u'},
-  {"v_sol_das3",   'r',  TMP4, 43, -0.00141534, 92.7559, 'u'},
-  {"v_sol_acs2",   'r',  TMP4, 45, -0.00140361, 91.9873, 'u'},
-  {"v_sol_das1",   'r',  TMP4, 47, -0.00140993, 92.4015, 'u'},
   {"ifpm_bits",    'w',  TMP4,  1,                1.0,             0.0, 'u'},
   {"ofpm_bits",    'w',  TMP4,  2,                1.0,             0.0, 'u'},
   {"balpump_lev",  'w',  TMP4,  3,    -0.048851978505,           100.0, 'u'},
@@ -781,24 +781,14 @@ struct ChannelStruct SlowChannels[] = {
   {"t_act_motor",  'r',  TMP6, 19,              I2T_M,  I2T_B +
                                                  AD590_CALIB_ACT_MOTOR, 'u'},
   {"lvdt_10",      'r',  TMP6, 21,  LVDT10_ADC_TO_ENC,     LVDT10_ZERO, 'u'},
-  {"i_dpm_28v",    'r',  TMP6, 23,           0.000625,          -20.48, 'u'},
-  {"i_dpm_3v",     'r',  TMP6, 25,          -0.000625,           20.48, 'u'},
-  {"i_dpm_5v",     'r',  TMP6, 27,          -0.000625,           20.48, 'u'},
-  {"i_dpm_10v",    'r',  TMP6, 29,          -0.000625,           20.48, 'u'},
-  {"i_rec",        'r',  TMP6, 31,           0.000625,          -20.48, 'u'},
   {"lvdt_11",      'r',  TMP6, 33,  LVDT11_ADC_TO_ENC,     LVDT11_ZERO, 'u'},
   {"t_rec",        'r',  TMP6, 35,              I2T_M, I2T_B +
                                                        AD590_CALIB_REC, 'u'},
   {"lvdt_13",      'r',  TMP6, 37,  LVDT13_ADC_TO_ENC,     LVDT13_ZERO, 'u'},
-  {"t_dpm_7.5v",   'r',  TMP6, 41,              I2T_M,           I2T_B, 'u'},
-  {"t_dpm_10v",    'r',  TMP6, 43,              I2T_M,           I2T_B, 'u'},
-  {"t_dpm_5v",     'r',  TMP6, 45,              I2T_M,           I2T_B, 'u'},
   {"t_das",        'r',  TMP6, 47,              I2T_M,           I2T_B, 'u'},
 
   /* TODO these TMP channels used to be wide-fast */
 #ifndef BOLOTEST
-  {"t_gybox2",    'r',  TMP3,  0,          TGYBOX_M,             TGYBOX_B, 'u'},
-  {"t_gybox1",    'r',  TMP2, 14,          TGYBOX_M,             TGYBOX_B, 'u'},
   {"raw_gy1",     'r',  TMP2, 26,     -AGY32_TO_DPS,
                                      AGY32_OFFSET * AGY32_TO_DPS + 0.1925, 'u'},
   {"raw_gy2",     'r',  TMP2, 22,      AGY32_TO_DPS,
@@ -851,8 +841,6 @@ struct ChannelStruct SlowChannels[] = {
 
   {"reac_enc",    'r',  TMP2, 60,    360.0/4000.0,                    0.0, 'u'},
   {"pwm_el",      'r',  TMP2, 51,             1.0,                -4000.0, 'u'},
-  {"pwm_roll",    'r',  TMP2, 52,             1.0,                -4000.0, 'u'},
-  //{"r_dt",      'r',  TMP2, 53,  1.0,     -4000.0, 'u'}, // see acs1.c
 
   {"pwm_reac",    'r',  TMP2, 54,             1.0,                -4000.0, 'u'},
   {"rps_reac",    'r',  TMP2, 55,7.9498291016e-05,                 -2.605, 'u'},

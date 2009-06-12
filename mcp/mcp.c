@@ -504,7 +504,7 @@ static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
       if (i < 0)
         berror(err, "BiPhase Writer: bi-phase write for RxFrame failed");
       else if (i != BiPhaseFrameWords * sizeof(unsigned short))
-        bprintf(err, "BiPhase Writer: Short write for RxFrame: %i of %i", i,
+        bprintf(err, "BiPhase Writer: Short write for RxFrame: %i of %lu", i,
             BiPhaseFrameWords * sizeof(unsigned short));
 
       i = write(bi0_fp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
@@ -513,7 +513,7 @@ static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
         berror(err, "BiPhase Writer: bi-phase write for padding failed");
       else if (i != (BI0_FRAME_SIZE - BiPhaseFrameWords)
           * sizeof(unsigned short))
-        bprintf(err, "BiPhase Writer: Short write for padding: %i of %i", i,
+        bprintf(err, "BiPhase Writer: Short write for padding: %i of %lu", i,
             (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short));
     }
 

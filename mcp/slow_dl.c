@@ -48,17 +48,14 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   /* MOTORS */
   {"t_el_mc",       SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_el_mot",      SLOWDL_FORCE_INT, 8, 55, -55},
-  {"t_roll",        SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_reac",        SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_reac_mc",     SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_piv_mc",      SLOWDL_FORCE_INT, 8, 55, -55},
-  {"i_roll",        SLOWDL_FORCE_INT, 8, -10, 10}, /* 78 mA */
   {"i_piv",         SLOWDL_FORCE_INT, 8, -10, 10}, /* 78 mA */
   {"i_reac",        SLOWDL_FORCE_INT, 8, -10, 10}, /* 78 mA */
   {"i_el",          SLOWDL_FORCE_INT, 8, -10, 10}, /* 78 mA */
   {"g_p_el",        SLOWDL_FORCE_INT, 8, 0, 40000}, 
   {"g_i_el",        SLOWDL_FORCE_INT, 8, 0, 40000}, 
-  {"g_p_roll",      SLOWDL_FORCE_INT, 8, 0, 40000}, 
   {"g_p_az",        SLOWDL_FORCE_INT, 8, 0, 40000}, 
   {"g_i_az",        SLOWDL_FORCE_INT, 8, 0, 40000}, 
   {"g_p_pivot",     SLOWDL_FORCE_INT, 8, 0, 40000}, 

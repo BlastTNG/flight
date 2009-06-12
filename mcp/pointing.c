@@ -860,7 +860,7 @@ void Pointing(void)
   static unsigned ss_since_ok = 500;
   double ss_az, mag_az;
   double dgps_az, dgps_pitch, dgps_roll;
-  double gy_roll, gy2, gy3, el_rad, clin_elev;
+  double gy2, gy3, clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0, using_dgps = -1;
   static double last_good_lat=0, last_good_lon=0;
   static int since_last_good_dgps_pos=5;
@@ -872,8 +872,6 @@ void Pointing(void)
   int i_point_read;
 
   static struct LutType elClinLut = {"/data/etc/clin_elev.lut",0,NULL,NULL,0};
-
-  static double gy_roll_amp = 0.0;
 
   struct ElAttStruct ElAtt = {0.0, 0.0, 0.0};
   struct AzAttStruct AzAtt = {0.0, 0.0, 0.0, 0.0};
@@ -1293,20 +1291,6 @@ void Pointing(void)
   PointingData[point_index].osc_gy1_offset = OSCEl.gy_offset;
   PointingData[point_index].osc_gy2_offset = OSCAz.gy2_offset;
   PointingData[point_index].osc_gy3_offset = OSCAz.gy3_offset;
-
-  /************************/
-  /* set roll damper gain */
-  gy2 = RG.gy2;
-  gy3 = RG.gy3;
-  el_rad = PointingData[point_index].el * M_PI / 180.0,
-         gy_roll = fabs(-gy2 * sin(el_rad) + gy3 * cos(el_rad));
-  if (gy_roll > gy_roll_amp)
-    gy_roll_amp = 0.98 * gy_roll_amp + 0.02 * gy_roll;
-  else
-    gy_roll_amp *= 0.9999;
-  if (gy_roll_amp > 1.0)
-    gy_roll_amp *= 0.999; // probably a spike
-  PointingData[point_index].gy_roll_amp = gy_roll_amp;
 
   /********************/
   /* Set Manual Trims */
