@@ -61,18 +61,6 @@
 #define MIN_GYBOX_TEMP ((-50 - TGYBOX_B) / TGYBOX_M)  /* -50 C */
 #define MAX_GYBOX_TEMP ((60 - TGYBOX_B) / TGYBOX_M)   /* +60 C */
 
-/* limits for the inner cooling stuff */
-#define MIN_TEMP ((-50 - I2T_B) / I2T_M)  /* -50 C */
-#define MAX_TEMP ((60 - I2T_B) / I2T_M)   /* +60 C */
-#define BAL_PUMP_MAX 1228 /* 60% */
-#define PUMP_MAX 819 /* 40% */
-#define PUMP_MIN 307  /* 15% */
-
-/* inner cool */
-#define IF_COOL_GOAL 30   /* in deg C */
-#define IF_COOL_DELTA 10
-#define IF_COOL_RANGE 20   /* At a temp of IF_COOL_GOAL + IF_COOL_RANGE,
-                              pump on full */
 /* Gybox heater stuff */
 #define GY_HEAT_MAX 40 /* percent */
 #define GY_HEAT_MIN 5  /* percent */
@@ -96,16 +84,15 @@ extern short int InCharge; /* tx.c */
 /* ACS0 digital signals (G1 and G3 output, G2 input) */
 #define BAL1_ON      0x04  /* ACS3 Group 1 Bit 3 - ifpmBits */
 #define BAL1_REV     0x08  /* ACS3 Group 1 Bit 4 */
-#define IF_COOL1_OFF 0x10  /* ACS3 Group 1 Bit 5 */
-#define IF_COOL1_ON  0x20  /* ACS3 Group 1 Bit 6 */
 #define BAL2_ON      0x40  /* ACS3 Group 1 Bit 7 */
 #define BAL2_REV     0x80  /* ACS3 Group 1 Bit 8 */
 
+#define BAL_PUMP_MAX 1228 /* 60% */
+#define PUMP_MAX 819 /* 40% */
+#define PUMP_MIN 307  /* 15% */
+
 /* in commands.c */
 double LockPosition(double elevation);
-
-static short int incool_state = 0;
-static short int outcool_state = 0;
 
 static int SetGyHeatSetpoint(double history, int age, int box)
 {
@@ -132,86 +119,6 @@ static int SetGyHeatSetpoint(double history, int age, int box)
   }
 
   return age;
-}
-
-static int ControlInnerCool(void)
-{
-  static struct BiPhaseStruct *tDasAddr, *tRecAddr;
-  static int firsttime = 1;
-  unsigned int das, rec;
-  int dg = 1, rg = 1;
-  double temp = 0;
-  double error;
-  short int pwm;
-
-  if (firsttime) {
-    firsttime = 0;
-    tDasAddr = GetBiPhaseAddr("t_das");
-    tRecAddr = GetBiPhaseAddr("t_rec");
-  }
-
-  if (CommandData.pumps.inframe_auto == 0) {
-    if (incool_state > 0) {
-      bprintf(info, "Inner Frame Cooling: Vetoed\n");
-      incool_state = 0;
-    }
-    return CommandData.pumps.pwm3;
-  }
-
-  das = slow_data[tDasAddr->index][tDasAddr->channel];
-  rec = slow_data[tRecAddr->index][tRecAddr->channel];
-
-  /* NB: these tests are backwards due to a sign flip in the calibration */
-  if (das < MAX_TEMP || das > MIN_TEMP)
-    dg = 0;
-  if (rec < MAX_TEMP || rec > MIN_TEMP)
-    rg = 0;
-
-  if (dg && rg)
-    temp = I2T_M * 0.5 * (das + rec) + I2T_B;
-  else if (dg)
-    temp = I2T_M * das + I2T_B;
-  else if (rg)
-    temp = I2T_M * rec + I2T_B;
-  else {
-    if (incool_state != 3) {
-      bprintf(info, "Inner Frame Cooling: Auto-Vetoed\n");
-      CommandData.pumps.inframe_cool_on = 40; /* turn on pump */
-      CommandData.pumps.inframe_cool_off = 0;
-      incool_state = 3;
-    }
-    return CommandData.pumps.pwm3; /* both temps bad --
-                                      revert to manual settings */
-  }
-
-  if (temp < IF_COOL_GOAL - IF_COOL_DELTA ||
-      (temp < IF_COOL_GOAL && incool_state == 1)) {
-    if (incool_state != 1) {
-      bprintf(info, "Inner Frame Cooling: Pump Off\n");
-      CommandData.pumps.inframe_cool_off = 40;
-      CommandData.pumps.inframe_cool_on = 0;
-      incool_state = 1;
-    }
-    return 2047; /* temperature below goal, nothing to do, turn off pump */
-  }
-
-  if (incool_state != 2) {
-    bprintf(info, "Inner Frame Cooling: Pump On\n");
-    CommandData.pumps.inframe_cool_on = 40; /* turn on pump */
-    CommandData.pumps.inframe_cool_off = 0;
-    incool_state = 2;
-  }
-
-  error = temp - IF_COOL_GOAL;
-
-  pwm = 2047. * error / IF_COOL_RANGE;
-
-  if (pwm > PUMP_MAX)
-    pwm = PUMP_MAX;
-  else if (pwm < PUMP_MIN)
-    pwm = PUMP_MIN;
-
-  return 2047 - pwm;
 }
 
 /************************************************************************/
@@ -722,11 +629,8 @@ void CameraTrigger(int which)
 /*****************************************************************/
 void ControlAuxMotors(unsigned short *RxFrame)
 {
-  static struct NiosStruct* ofpmBitsAddr;
   static struct NiosStruct* balpumpLevAddr;
   static struct NiosStruct* sprpumpLevAddr;
-  static struct NiosStruct* inpumpLevAddr, *incoolStateAddr;
-  static struct NiosStruct* outpumpLevAddr, *outcoolStateAddr;
   static struct NiosStruct* balOnAddr, *balOffAddr;
   static struct NiosStruct* balTargetAddr, *balVetoAddr;
   static struct NiosStruct* balGainAddr;
@@ -734,20 +638,12 @@ void ControlAuxMotors(unsigned short *RxFrame)
 
   int ifpmBits = 0;
 
-  int inframe_pwm = ControlInnerCool();
-  int outframe_pwm = 0;
-
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
     ifpmBitsAddr = GetNiosAddr("ifpm_bits");
-    ofpmBitsAddr = GetNiosAddr("ofpm_bits");
     balpumpLevAddr = GetNiosAddr("balpump_lev");
     sprpumpLevAddr = GetNiosAddr("sprpump_lev");
-    incoolStateAddr = GetNiosAddr("incool_state");
-    outcoolStateAddr = GetNiosAddr("outcool_state");
-    inpumpLevAddr = GetNiosAddr("inpump_lev");
-    outpumpLevAddr = GetNiosAddr("outpump_lev");
     balOnAddr = GetNiosAddr("bal_on");
     balOffAddr = GetNiosAddr("bal_off");
     balTargetAddr = GetNiosAddr("bal_target");
@@ -769,23 +665,6 @@ void ControlAuxMotors(unsigned short *RxFrame)
       ifpmBits |= BAL2_REV;
   }
 
-  /* two latching pumps: */
-  if (CommandData.pumps.inframe_cool_on > 0) {
-    ifpmBits |= IF_COOL1_ON;
-    CommandData.pumps.inframe_cool_on--;
-    if (CommandData.pumps.inframe_auto == 0 && incool_state != -2) {
-      bprintf(info, "Inner Frame Cooling: Pump On\n");
-      incool_state = -2;
-    }
-  } else if (CommandData.pumps.inframe_cool_off > 0) {
-    ifpmBits |= IF_COOL1_OFF;
-    CommandData.pumps.inframe_cool_off--;
-    if (CommandData.pumps.inframe_auto == 0 && incool_state != -1) {
-      bprintf(info, "Inner Frame Cooling: Pump Off\n");
-      incool_state = -1;
-    }
-  }
-
   /* Run Balance System, Maybe */
   ifpmBits = Balance(ifpmBits);
 
@@ -797,11 +676,7 @@ void ControlAuxMotors(unsigned short *RxFrame)
     WriteData(balpumpLevAddr, CommandData.pumps.pwm1 & 0x7ff, NIOS_QUEUE);
   }
 
-  WriteData(incoolStateAddr, incool_state, NIOS_QUEUE);
-  WriteData(outcoolStateAddr, outcool_state, NIOS_QUEUE);
   WriteData(sprpumpLevAddr, CommandData.pumps.pwm2 & 0x7ff, NIOS_QUEUE);
-  WriteData(inpumpLevAddr, inframe_pwm & 0x7ff, NIOS_QUEUE);
-  WriteData(outpumpLevAddr, outframe_pwm & 0x7ff, NIOS_QUEUE);
   WriteData(balOnAddr, (int)CommandData.pumps.bal_on, NIOS_QUEUE);
   WriteData(balOffAddr, (int)CommandData.pumps.bal_off, NIOS_QUEUE);
   WriteData(balVetoAddr, (int)CommandData.pumps.bal_veto, NIOS_QUEUE);

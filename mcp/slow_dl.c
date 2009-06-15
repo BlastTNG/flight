@@ -90,9 +90,6 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"dgps_speed",    SLOWDL_FORCE_INT, 8, 0, 100},
   /* ELEVATION ENCODER */
   {"enc_el",        SLOWDL_FORCE_INT, 8, 0, 90},
-  /* PUMPS */
-  {"outcool_state", SLOWDL_U_MASK,8},
-  {"incool_state",  SLOWDL_U_MASK,8},
   /* ISC */
   {"i_starcam",     SLOWDL_FORCE_INT, 8,   5, 0}, /* 20 mA */
   {"isc_fpulse",    SLOWDL_FORCE_INT, 8,   0, 1000},

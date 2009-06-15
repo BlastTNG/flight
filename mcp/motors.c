@@ -197,7 +197,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   unsigned int ucos_el;
   unsigned int usin_el;
 
-  int v_elev, v_az, elGainP, elGainI, rollGainP;
+  int v_elev, v_az, elGainP, elGainI;
   int azGainP, azGainI, pivGainP;
   int i_point;
 

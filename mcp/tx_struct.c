@@ -338,7 +338,7 @@ struct ChannelStruct SlowChannels[] = {
   {"dgps_att_ok",  'w', LOOP1, 53,                1.0,             0.0, 'u'},
   {"dgps_att_index",'w',LOOP1, 54,                1.0,             0.0, 'u'},
   {"dgps_pos_index",'w',LOOP1, 55,                1.0,             0.0, 'u'},
-  {"outcool_state",'w', LOOP1, 56,                1.0,             0.0, 's'},
+  //{"outcool_state",'w', LOOP1, 56,                1.0,             0.0, 's'},
   {"dgps_n_sat",   'w', LOOP1, 57,                1.0,             0.0, 'u'},
   {"disk_free",    'w', LOOP1, 58,             1./250,             0.0, 'u'},
   {"p_mode",       'w', LOOP1, 59,                  1,             0.0, 'u'},
@@ -636,6 +636,7 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_minblobs", 'w', LOOP6, 61,                1.0,             0.0, 'u'},
   {"osc_minblobs", 'w', LOOP6, 62,                1.0,             0.0, 'u'},
 
+#ifndef BOLOTEST
 /* ACS1 Analog card 1 */
   {"i_trans",      'r',  ACS1_A1, 1,          CAL16(1.0, 0.0), 		'u'},
   {"i_das",        'r',  ACS1_A1, 3,          CAL16(1.0, 0.0), 		'u'},
@@ -670,6 +671,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_bat4",       'r',  ACS1_T1, 19,         CAL16T(1.0, 0.0),         'u'},
   {"t_array",      'r',  ACS1_T1, 21,         CAL16T(1.0, 0.0),         'u'},
 
+#endif
 
 /* TODO These TMP channels need to be added to correct new nodes, or deleted */
   {"t_el_mc",      'r',  TMP1,  3,              I2T_M,           I2T_B, 'u'},
@@ -729,7 +731,6 @@ struct ChannelStruct SlowChannels[] = {
   {"i_gond_acs",   'r',  TMP4, 17,          -1.875E-3,           61.44, 'u'},
   {"i_gond_das",   'r',  TMP4, 19,          -1.875E-3,           61.44, 'u'},
   {"ifpm_bits",    'w',  TMP4,  1,                1.0,             0.0, 'u'},
-  {"ofpm_bits",    'w',  TMP4,  2,                1.0,             0.0, 'u'},
   {"balpump_lev",  'w',  TMP4,  3,    -0.048851978505,           100.0, 'u'},
   {"sprpump_lev",  'w',  TMP4,  4,    -0.048851978505,           100.0, 'u'},
   {"inpump_lev",   'w',  TMP4,  5,    -0.048851978505,           100.0, 'u'},
@@ -801,6 +802,7 @@ struct ChannelStruct SlowChannels[] = {
                                      -DGY32_OFFSET * DGY32_TO_DPS + 0.010, 'u'},
   {"raw_gy6",     'r',  TMP2, 36,     -DGY32_TO_DPS,
                                       DGY32_OFFSET * DGY32_TO_DPS - 0.005, 'u'},
+
   {"az",          'w', LOOP2, 51,          LI2DEG,                    0.0, 'u'},
   {"el",          'w', LOOP2, 53,          LI2DEG,                    0.0, 'u'},
 

@@ -23,10 +23,10 @@
 #include "isc_protocol.h"  /* required for constants */
 #include "channels.h"      /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.2 $";
+const char *command_list_serial = "$Revision: 4.3 $";
 
 const char *GroupNames[N_GROUPS] = {
-  "Pointing Modes",        "Balance",          "Cooling", 
+  "Pointing Modes",        "Balance",           
   "Pointing Sensor Trims", "Aux. Electronics", "Bias",
   "Pointing Sensor Vetos", "Actuators",        "Cal Lamp",
   "Pointing Motor Gains",  "Secondary Focus",  "Cryo Heat",
@@ -156,15 +156,10 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(balpump_off), "balance pump 1 off", GR_BAL},
   {COMMAND(balpump_up), "balance pump 1 forward", GR_BAL},
   {COMMAND(balpump_down), "balance pump 1 reverse", GR_BAL},
-  {COMMAND(sprpump_on), "balance pump 2 on", GR_BAL | GR_COOL},
-  {COMMAND(sprpump_off), "balance pump 2 off", GR_BAL | GR_COOL},
-  {COMMAND(sprpump_fwd), "balance pump 2 forward", GR_BAL | GR_COOL},
-  {COMMAND(sprpump_rev), "balance pump 2 reverse", GR_BAL | GR_COOL},
-
-  {COMMAND(inner_cool_on), "inner frame cooling pump on", GR_COOL},
-  {COMMAND(inner_cool_off), "inner frame cooling pump off", GR_COOL},
-  {COMMAND(inner_cool_auto), "automatically regulate inner frame cooling pump",
-    GR_COOL},
+  {COMMAND(sprpump_on), "balance pump 2 on", GR_BAL},
+  {COMMAND(sprpump_off), "balance pump 2 off", GR_BAL},
+  {COMMAND(sprpump_fwd), "balance pump 2 forward", GR_BAL},
+  {COMMAND(sprpump_rev), "balance pump 2 reverse", GR_BAL},
 
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},
@@ -352,12 +347,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
     1,
     {
       {"Slew Veto (s)", 0., 1200., 'f', "SVETO_LEN"},
-    }
-  },
-
-  {COMMAND(inner_level), "inner frame cooling pump speed", GR_COOL, 1,
-    {
-      {"Level (%)", 0, 100, 'f', "INPUMP_LEV"}
     }
   },
 
@@ -589,7 +578,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(spare_level), "spare pump pwm level", GR_COOL | GR_BAL, 1,
+  {COMMAND(spare_level), "spare pump pwm level", GR_BAL, 1,
     {
       {"Level (%)", 0, 100, 'f', "SPRPUMP_LEV"}
     }

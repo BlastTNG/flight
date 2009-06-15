@@ -153,16 +153,8 @@ union DerivedUnion DerivedChannels[] = {
       "",
       "BAL_ON_BIT",
       "BAL_REV",
-      "IF_COOL1_OFF",
-      "IF_COOL1_ON",
       "BAL2_ON",
       "BAL2_REV"
-      ),
-  BITFIELD("ofpm_bits",
-      "OF_COOL2_ON",
-      "OF_COOL2_OFF",
-      "OF_COOL1_ON",
-      "OF_COOL1_OFF",
       ),
 #endif
 

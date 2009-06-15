@@ -17,7 +17,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 133        /* total number of single word cmds */
+#define N_SCOMMANDS 130        /* total number of single word cmds */
 #define N_MCOMMANDS 97         /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
@@ -30,11 +30,11 @@
 #define SIZE_ABOUT 80
 #define SIZE_PARNAME 80
 
-#define N_GROUPS 24
+#define N_GROUPS 23
 
 #define GR_POINT        0x00000001
 #define GR_BAL          0x00000002
-#define GR_COOL         0x00000004
+//#define GR_COOL         0x00000004
 #define GR_TRIM         0x00000008
 #define GR_ELECT        0x00000010
 #define GR_BIAS         0x00000020
@@ -72,7 +72,7 @@ enum singleCommand {
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
   fixed,            isc_full_screen,    gps_allow,        gps_veto,
   l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,
-  inner_cool_off,   inner_cool_on,      isc_abort,        isc_allow,
+  isc_abort,        isc_allow,
   isc_pause,        isc_reconnect,      isc_run,          isc_shutdown,
   isc_veto,         level_off,          level_on,         mag_allow,
   mag_veto,         osc_auto_focus,     pin_in,           pot_valve_close,
@@ -91,7 +91,7 @@ enum singleCommand {
   osc_off,          osc_on,             isc_trig_int,     isc_trig_ext,
   osc_trig_int,     osc_trig_ext,       ln_valve_on,      ln_valve_off,
   osc_veto,         osc_allow,          reap,             isc_eye_on,
-  osc_eye_on,       osc_eye_off,        inner_cool_auto,  xy_panic,
+  osc_eye_on,       osc_eye_off,        xy_panic,
   trim_to_osc,      antisun,            blast_rocks,      blast_sucks,
   fridge_cycle,     at_float,           not_at_float,     el_auto_gyro,
   repoll,           biascmd_inh,        biascmd_ena,      autofocus_allow,

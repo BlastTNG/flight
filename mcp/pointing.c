@@ -860,7 +860,7 @@ void Pointing(void)
   static unsigned ss_since_ok = 500;
   double ss_az, mag_az;
   double dgps_az, dgps_pitch, dgps_roll;
-  double gy2, gy3, clin_elev;
+  double clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0, using_dgps = -1;
   static double last_good_lat=0, last_good_lon=0;
   static int since_last_good_dgps_pos=5;

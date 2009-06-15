@@ -529,17 +529,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.pumps.bal2_reverse = 1;
       break;
 
-    case inner_cool_on:
-      CommandData.pumps.inframe_cool_on = 40;
-      CommandData.pumps.inframe_auto = 0;
-      break;
-    case inner_cool_off:
-      CommandData.pumps.inframe_cool_off = 40;
-      CommandData.pumps.inframe_auto = 0;
-      break;
-    case inner_cool_auto:
-      CommandData.pumps.inframe_auto = 1;
-      break;
 #endif
 
     /* Lock */
@@ -1157,9 +1146,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case spare_level:
       CommandData.pumps.pwm2 = 2047 - rvalues[0] * 2047. / 100;
       break;
-    case inner_level:
-      CommandData.pumps.pwm3 = 2047 - rvalues[0] * 2047. / 100;
-      break;
 
       /***************************************/
       /******** Electronics Heaters  *********/
@@ -1595,7 +1581,7 @@ static void SendDownData(char tty_fd)
   buffer[0] = SLOWDL_DLE;
   buffer[1] = SLOWDL_SYNC;
   buffer[2] = SLOWDL_LEN;
-  memcpy(buffer + 3, data, SLOWDL_LEN);
+  memcpy(buffer +  3, data, SLOWDL_LEN);
   buffer[3 + SLOWDL_LEN] = SLOWDL_ETX;
 
   write(tty_fd, buffer, 3 + SLOWDL_LEN + 1);
@@ -1981,9 +1967,6 @@ void InitCommandData()
   CommandData.pumps.bal2_on = 0;
   CommandData.pumps.bal2_reverse = 0;
 
-  CommandData.pumps.inframe_cool_on = 0;
-  CommandData.pumps.inframe_cool_off = 0;
-
   CommandData.actbus.off = 0;
   CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   CommandData.actbus.lock_goal = LS_DRIVE_OFF;
@@ -2133,8 +2116,6 @@ void InitCommandData()
 
   CommandData.pumps.pwm1 = 1638; /* 20% */
   CommandData.pumps.pwm2 = 1638; /* 20% */
-  CommandData.pumps.pwm3 = 1638; /* inner frame cooling default --  20% */
-  CommandData.pumps.pwm4 = 1638; /* outer frame cooling default --  20% */
 
   CommandData.pumps.bal_on = 0.5 * 1648.;
   CommandData.pumps.bal_off = 0.2 * 1648.;
