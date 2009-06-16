@@ -122,13 +122,9 @@ struct CommandDataStruct {
   double dpcu_trim;
   short int dpcu_auto;
 
-  struct GainStruct roll_gain;
   struct GainStruct ele_gain;
   struct GainStruct azi_gain;
   struct GainStruct pivot_gain;
-
-  int emf_gain;     /* for reaction wheel  */
-  int emf_offset;   /*   back-EMF tweaking */
 
   struct {
     int gps;       /* dgps is off */
@@ -141,7 +137,6 @@ struct CommandDataStruct {
   unsigned short disable_az;
   unsigned short disable_el;
   unsigned short force_el;
-  unsigned short use_analogue_gyros;
 
   int az_autogyro;
   int el_autogyro;

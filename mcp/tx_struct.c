@@ -688,15 +688,13 @@ struct ChannelStruct SlowChannels[] = {
   {"t_reac",       'r',  TMP2, 29,              I2T_M,           I2T_B, 'u'},
   {"t_reac_mc",    'r',  TMP2, 31,              I2T_M,           I2T_B, 'u'},
   {"t_piv_mc",     'r',  TMP2, 45,              I2T_M,           I2T_B, 'u'},
+
   {"g_p_el",       'w',  TMP2,  2,                1.0,             0.0, 'u'},
   {"g_i_el",       'w',  TMP2,  3,                1.0,             0.0, 'u'},
   {"g_p_az",       'w',  TMP2,  7,                1.0,             0.0, 'u'},
   {"g_i_az",       'w',  TMP2,  8,                1.0,             0.0, 'u'},
-  {"emf_gain",     'w',  TMP2, 11,                1.0,             0.0, 'u'},
-  {"emf_offset",   'w',  TMP2, 12,                1.0,             0.0, 'u'},
   {"g_p_pivot",    'w',  TMP2, 15,                1.0,             0.0, 'u'},
   {"set_reac",     'w',  TMP2, 16,    7.9498291016e-5,          -2.605, 'u'},
-  {"use_analogue", 'w',  TMP2, 20,                1.0,             0.0, 'u'},
 
   /* ACS2 0-1 is wide fast */
   {"t_ss_back_mid",'r',  TMP3,  3,              I2T_M,           I2T_B, 'u'},

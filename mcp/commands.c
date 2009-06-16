@@ -395,14 +395,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.actbus.force_repoll = 1;
       break;
 
-    case analogue_gyros:   /* gyro selection */
-      CommandData.use_analogue_gyros = 1;
-      CommandData.fast_gy_offset = 3000;
-      break;
-    case digital_gyros:
-      CommandData.use_analogue_gyros = 0;
-      CommandData.fast_gy_offset = 3000;
-      break;
 #endif
 
     case biascmd_inh:
@@ -969,9 +961,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 
       /***************************************/
       /********** Pointing Motor Gains *******/
-    case roll_gain:/* roll Gains */
-      CommandData.roll_gain.P = ivalues[0];
-      break;
     case el_gain:  /* ele gains */
       CommandData.ele_gain.P = ivalues[0];
       CommandData.ele_gain.I = ivalues[1];
@@ -983,10 +972,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case pivot_gain:  /* pivot gains */
       CommandData.pivot_gain.SP = (rvalues[0] + 2.605) / 7.9498291016e-5;
       CommandData.pivot_gain.P = ivalues[1];
-      break;
-    case back_emf:
-      CommandData.emf_gain = rvalues[0] * 6500;
-      CommandData.emf_offset = rvalues[1] * 500;
       break;
 #endif
 
@@ -2053,8 +2038,6 @@ void InitCommandData()
   CommandData.pointing_mode.h = 0;
   CommandData.pointing_mode.t = mcp_systime(NULL) + CommandData.timeout;
 
-  CommandData.roll_gain.P = 30000;
-
   CommandData.ele_gain.I = 10000; /* was 8000 */
   CommandData.ele_gain.P = 10000; /* was 1200 */
 
@@ -2063,9 +2046,6 @@ void InitCommandData()
 
   CommandData.pivot_gain.SP = 36960;
   CommandData.pivot_gain.P = 200;
-
-  CommandData.emf_gain = 1;
-  CommandData.emf_offset = 0;
 
   CommandData.gyheat[0].setpoint = 30.0;
   CommandData.gyheat[0].age = 0;
@@ -2081,8 +2061,6 @@ void InitCommandData()
 
   CommandData.disable_az = 0;
   CommandData.disable_el = 0;
-
-  CommandData.use_analogue_gyros = 0;
 
   CommandData.use_elenc = 1;
   CommandData.use_elclin = 0;

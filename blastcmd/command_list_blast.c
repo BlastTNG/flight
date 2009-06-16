@@ -23,7 +23,7 @@
 #include "isc_protocol.h"  /* required for constants */
 #include "channels.h"      /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.3 $";
+const char *command_list_serial = "$Revision: 4.4 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",           
@@ -66,10 +66,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(force_el_on), "force enable el motors despite the pin being in",
     CONFIRM | GR_GAIN},
 
-  {COMMAND(analogue_gyros), "use the analogue gyros for in-flight pointing",
-    GR_VETO},
-  {COMMAND(digital_gyros), "use the digital gyros for in-flight pointing",
-    GR_VETO},
   {COMMAND(elclin_veto), "veto elevation clinometer", GR_VETO},
   {COMMAND(elclin_allow), "un-veto elevation clinometer", GR_VETO},
   {COMMAND(elenc_veto), "veto elevation encoder", GR_VETO},
@@ -272,13 +268,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El centre (deg)",         15,  65, 'f', "NONE"},
       {"Width (deg on sky)",       0, 360, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)", 0,   2, 'f', "NONE"}
-    }
-  },
-
-  {COMMAND(back_emf), "tweak reaction wheel back-EMF compensation", GR_GAIN, 2,
-    {
-      {"Gain Correction", 0.1, 10, 'f', "emf_gain"},
-      {"Offset Correction", -100, 100, 'f', "emf_offset"}
     }
   },
 
