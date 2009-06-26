@@ -326,7 +326,9 @@ void SunPos(double tt, double *ra, double *dec)
 
 void ReductionInit()
 {
-  Initialize_Ephemeris(EPHEM_FILE);
+  if( Initialize_Ephemeris(EPHEM_FILE)) {
+    berror(fatal, "System: Unable to open Ephemeris File (%s)",EPHEM_FILE);
+  }
 }
 
 /*********************************************************************/

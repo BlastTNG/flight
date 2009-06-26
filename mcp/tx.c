@@ -98,12 +98,11 @@ int mcp_initial_controls = 0;
 
 /************************************************************************/
 /*                                                                      */
-/*  WriteAux: write aux data, like cpu time, temperature, fan speed     */
+/*  WriteAux: write aux data, like cpu time, temperature                */
 /*                                                                      */
 /************************************************************************/
 static void WriteAux(void)
 {
-  static struct NiosStruct* cpuFanAddr;
   static struct NiosStruct* cpuTimeAddr;
   static struct NiosStruct* cpuTimeuSAddr;
   static struct NiosStruct* diskFreeAddr;
@@ -136,7 +135,6 @@ static void WriteAux(void)
     he4LevOldAddr = GetNiosAddr("he4_lev_old");
     he4LevReadAddr = GetBiPhaseAddr("he4_lev");
 
-    cpuFanAddr = GetNiosAddr("cpu_fan");
     cpuTemp1Addr = GetNiosAddr("cpu_temp1");
     cpuTemp2Addr = GetNiosAddr("cpu_temp2");
     cpuTemp3Addr = GetNiosAddr("cpu_temp3");
@@ -173,7 +171,6 @@ static void WriteAux(void)
   WriteData(cpuTimeAddr, tv.tv_sec + TEMPORAL_OFFSET, NIOS_QUEUE);
   WriteData(cpuTimeuSAddr, tv.tv_usec, NIOS_QUEUE);
 
-  WriteData(cpuFanAddr, CommandData.fan, NIOS_QUEUE);
   WriteData(cpuTemp1Addr, CommandData.temp1, NIOS_QUEUE);
   WriteData(cpuTemp2Addr, CommandData.temp2, NIOS_QUEUE);
   WriteData(cpuTemp3Addr, CommandData.temp3, NIOS_QUEUE);

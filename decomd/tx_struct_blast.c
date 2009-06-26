@@ -313,7 +313,6 @@ struct ChannelStruct SlowChannels[] = {
   {"lvdt_low",     'w', LOOP1, 22,                1.0,             0.0, 's'},
   {"sam_i_am",     'w', LOOP1, 23,                1.0,             0.0, 'u'},
   {"cryostate",    'w', LOOP1, 24,                1.0,             0.0, 'u'},
-  {"cpu_fan",      'w', LOOP1, 25,                1.0,             0.0, 'u'},
   {"cpu_temp1",    'w', LOOP1, 26,               0.01,             0.0, 'u'},
   {"mag_model",    'w', LOOP1, 27,              I2DEG,             0.0, 'u'},
   {"sensor_veto",  'w', LOOP1, 28,                1.0,             0.0, 'u'},

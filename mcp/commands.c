@@ -2225,7 +2225,6 @@ void InitCommandData()
   CommandData.ISCControl[1].pulse_width = 30; /* 300.00 msec */
   CommandData.ISCControl[1].fast_pulse_width = 6; /* 60.00 msec */
 
-  CommandData.fan = 0;
   CommandData.temp1 = 0;
   CommandData.temp2 = 0;
   CommandData.temp3 = 0;

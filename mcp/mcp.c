@@ -296,14 +296,14 @@ static void SensorReader(void)
   bputs(startup, "Sensor Reader: Startup\n");
 
   while (1) {
-    if ((stream = fopen("/sys/bus/i2c/devices/0-0290/temp1_input", "r"))
+    if ((stream = fopen("/sys/bus/i2c/devices/0-002d/temp1_input", "r"))
         != NULL) {
       if ((nr = fscanf(stream, "%i\n", &data)) == 1)
         CommandData.temp1 = data / 10;
       fclose(stream);
     } else
       berror(warning, "Sensor Reader: Cannot read temp1 from I2C bus");
-    if ((stream = fopen("/sys/bus/i2c/devices/0-0290/temp2_input", "r"))
+    if ((stream = fopen("/sys/bus/i2c/devices/0-002d/temp2_input", "r"))
         != NULL) {
       if ((nr = fscanf(stream, "%i\n", &data)) == 1)
         CommandData.temp2 = data / 10;
@@ -311,21 +311,13 @@ static void SensorReader(void)
     } else
       berror(warning, "Sensor Reader: Cannot read temp2 from I2C bus");
 
-    if ((stream = fopen("/sys/bus/i2c/devices/0-0290/temp3_input", "r"))
+    if ((stream = fopen("/sys/bus/i2c/devices/0-002d/temp3_input", "r"))
         != NULL) {
       if ((nr = fscanf(stream, "%i\n", &data)) == 1)
         CommandData.temp3 = data / 10;
       fclose(stream);
     } else
           berror(warning, "Sensor Reader: Cannot read temp3 from I2C bus");
-
-    if ((stream = fopen("/sys/bus/i2c/devices/0-0290/fan3_input", "r"))
-        != NULL) {
-      if ((nr = fscanf(stream, "%i\n", &data)) == 1)
-        CommandData.fan = data;
-      fclose(stream);
-    } else
-          berror(warning, "Sensor Reader: Cannot read fan3 from I2C bus");
 
     if (statvfs("/data", &vfsbuf))
       berror(warning, "Sensor Reader: Cannot stat filesystem");
@@ -504,7 +496,7 @@ static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
       if (i < 0)
         berror(err, "BiPhase Writer: bi-phase write for RxFrame failed");
       else if (i != BiPhaseFrameWords * sizeof(unsigned short))
-        bprintf(err, "BiPhase Writer: Short write for RxFrame: %i of %lu", i,
+        bprintf(err, "BiPhase Writer: Short write for RxFrame: %i of %u", i,
             BiPhaseFrameWords * sizeof(unsigned short));
 
       i = write(bi0_fp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
@@ -513,7 +505,7 @@ static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
         berror(err, "BiPhase Writer: bi-phase write for padding failed");
       else if (i != (BI0_FRAME_SIZE - BiPhaseFrameWords)
           * sizeof(unsigned short))
-        bprintf(err, "BiPhase Writer: Short write for padding: %i of %lu", i,
+        bprintf(err, "BiPhase Writer: Short write for padding: %i of %u", i,
             (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short));
     }
 

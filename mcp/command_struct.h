@@ -279,7 +279,6 @@ struct CommandDataStruct {
   int pin_is_in;
 
   /* sensors output: read in mcp:SensorReader() */
-  unsigned short fan;
   unsigned short temp1, temp2, temp3;
   unsigned short df;
 
