@@ -69,7 +69,7 @@ void SecondaryMirror(void);
 /* in auxiliary.c */
 void ChargeController(void);
 void ControlAuxMotors(unsigned short *RxFrame);
-void ControlGyroHeat(unsigned short *RxFrame, int);
+void ControlGyroHeat(unsigned short *RxFrame);
 void CameraTrigger(int which);
 void SensorResets(void);
 
@@ -1207,8 +1207,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     DoSched();
   UpdateAxesMode();
   StoreData(index);
-  ControlGyroHeat(RxFrame, 0);
-  ControlGyroHeat(RxFrame, 1);
+  ControlGyroHeat(RxFrame);
   WriteMot(index, RxFrame);
 #endif
   StoreActBus();

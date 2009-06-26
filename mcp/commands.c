@@ -1134,23 +1134,14 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 
       /***************************************/
       /******** Electronics Heaters  *********/
-    case t_gyro1_set:  /* gyro heater setpoint */
-      CommandData.gyheat[0].setpoint = rvalues[0];
-      CommandData.gyheat[0].age = 0;
+    case t_gyro_set:  /* gyro heater setpoint */
+      CommandData.gyheat.setpoint = rvalues[0];
+      CommandData.gyheat.age = 0;
       break;
-    case t_gyro2_set:  /* gyro heater setpoint */
-      CommandData.gyheat[1].setpoint = rvalues[0];
-      CommandData.gyheat[1].age = 0;
-      break;
-    case t_gyro1_gain:  /* gyro heater gains */
-      CommandData.gyheat[0].gain.P = ivalues[0];
-      CommandData.gyheat[0].gain.I = ivalues[1];
-      CommandData.gyheat[0].gain.D = ivalues[2];
-      break;
-    case t_gyro2_gain:  /* gyro heater gains */
-      CommandData.gyheat[1].gain.P = ivalues[0];
-      CommandData.gyheat[1].gain.I = ivalues[1];
-      CommandData.gyheat[1].gain.D = ivalues[2];
+    case t_gyro_gain:  /* gyro heater gains */
+      CommandData.gyheat.gain.P = ivalues[0];
+      CommandData.gyheat.gain.I = ivalues[1];
+      CommandData.gyheat.gain.D = ivalues[2];
       break;
 
       /***************************************/
@@ -1980,8 +1971,7 @@ void InitCommandData()
   CommandData.sensors_off.osc = 0;
   CommandData.sensors_off.ss = 0;
 
-  CommandData.gyheat[0].age = 0;
-  CommandData.gyheat[1].age = 0;
+  CommandData.gyheat.age = 0;
 
   CommandData.Cryo.BDAHeat = 0;
   CommandData.Cryo.autoBDAHeat = 0;
@@ -2047,17 +2037,11 @@ void InitCommandData()
   CommandData.pivot_gain.SP = 36960;
   CommandData.pivot_gain.P = 200;
 
-  CommandData.gyheat[0].setpoint = 30.0;
-  CommandData.gyheat[0].age = 0;
-  CommandData.gyheat[0].gain.P = 30;
-  CommandData.gyheat[0].gain.I = 10;
-  CommandData.gyheat[0].gain.D = 3;
-
-  CommandData.gyheat[1].setpoint = 35.0;
-  CommandData.gyheat[1].age = 0;
-  CommandData.gyheat[1].gain.P = 40;
-  CommandData.gyheat[1].gain.I = 5;
-  CommandData.gyheat[1].gain.D = 0;
+  CommandData.gyheat.setpoint = 30.0;
+  CommandData.gyheat.age = 0;
+  CommandData.gyheat.gain.P = 30;
+  CommandData.gyheat.gain.I = 10;
+  CommandData.gyheat.gain.D = 3;
 
   CommandData.disable_az = 0;
   CommandData.disable_el = 0;

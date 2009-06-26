@@ -94,9 +94,9 @@ extern short int InCharge; /* tx.c */
 /* in commands.c */
 double LockPosition(double elevation);
 
-static int SetGyHeatSetpoint(double history, int age, int box)
+static int SetGyHeatSetpoint(double history, int age)
 {
-  double setpoint = CommandData.gyheat[box].setpoint;
+  double setpoint = CommandData.gyheat.setpoint;
 
   if (age < GY_HEAT_TC * 2)
     return age;
@@ -111,135 +111,136 @@ static int SetGyHeatSetpoint(double history, int age, int box)
   else if (setpoint > GY_TEMP_MAX)
     setpoint = GY_TEMP_MAX;
 
-  if (setpoint != CommandData.gyheat[box].setpoint) {
+  if (setpoint != CommandData.gyheat.setpoint) {
     bprintf(info, "Gyrobox Heat: Stepped gybox %i setpoint to %.2f degrees C\n",
         box + 1, setpoint);
     age = 0;
-    CommandData.gyheat[box].setpoint = setpoint;
+    CommandData.gyheat.setpoint = setpoint;
   }
 
   return age;
 }
 
 /************************************************************************/
-/*    ControlGyroHeat:  Controls gyro box temps                         */
+/*    ControlGyroHeat:  Controls gyro box temp                          */
 /************************************************************************/
-void ControlGyroHeat(unsigned short *RxFrame, int box)
+//TODO TEST ME! I've been changed (only 1 gybox to heat)
+void ControlGyroHeat(unsigned short *RxFrame)
 {
-  static struct BiPhaseStruct* tGyboxAddr[2];
-  static struct NiosStruct *gyHeatAddr[2], *tGySetAddr[2], *pGyheatAddr[2];
-  static struct NiosStruct *iGyheatAddr[2];
-  static struct NiosStruct *dGyheatAddr[2], *gyHHistAddr[2], *gyHAgeAddr[2];
+  static struct BiPhaseStruct* tGyboxAddr;
+  static struct NiosStruct *gyHeatAddr, *tGySetAddr, *pGyheatAddr;
+  static struct NiosStruct *iGyheatAddr;
+  static struct NiosStruct *dGyheatAddr, *gyHHistAddr, *gyHAgeAddr;
   static int firsttime = 1;
-  static double history[2] = {0, 0};
+  static double history = 0;
 
   /* the 0x5's in here for gybox 2 are the enable bits for the star camera
    * heaters */
-  int on[2] = {0x40, 0x15}, off[2] = {0x00, 0x05};
-  static int p_on[2] = {0, 0};
-  static int p_off[2] = {-1, -1};
+  //int on[2] = {0x40, 0x15}, off[2] = {0x00, 0x05};
+  //TODO check these values. Also, what's with the starcam heater stuff?
+  int on = 0x01, off =  0x00;
+  static int p_on = 0;
+  static int p_off = -1;
 
   float error = 0, set_point;
   unsigned int temp;
-  static float integral[2] = {0, 0};
-  static float deriv[2] = {0, 0};
-  static float error_last[2] = {0, 0};
+  static float integral = 0;
+  static float deriv = 0;
+  static float error_last = 0;
   float P, I, D;
 
   /******** Obtain correct indexes the first time here ***********/
   if (firsttime) {
     firsttime = 0;
-    tGyboxAddr[0] = GetBiPhaseAddr("t_gybox1");
-    tGyboxAddr[1] = GetBiPhaseAddr("t_gybox2");
+    tGyboxAddr = GetBiPhaseAddr("t_gybox");
 
-    gyHeatAddr[0] = GetNiosAddr("gy1_heat");
-    gyHeatAddr[1] = GetNiosAddr("gy2_heat");
+    gyHeatAddr = GetNiosAddr("gy1_heat");
+    gyHeatAddr = GetNiosAddr("gy2_heat");
 
-    gyHHistAddr[0] = GetNiosAddr("gy1_h_hist");
-    gyHHistAddr[1] = GetNiosAddr("gy2_h_hist");
+    gyHHistAddr = GetNiosAddr("gy1_h_hist");
+    gyHHistAddr = GetNiosAddr("gy2_h_hist");
 
-    gyHAgeAddr[0] = GetNiosAddr("gy1_h_age");
-    gyHAgeAddr[1] = GetNiosAddr("gy2_h_age");
+    gyHAgeAddr = GetNiosAddr("gy1_h_age");
+    gyHAgeAddr = GetNiosAddr("gy2_h_age");
 
-    tGySetAddr[0] = GetNiosAddr("t_gy1_set");
-    tGySetAddr[1] = GetNiosAddr("t_gy2_set");
+    tGySetAddr = GetNiosAddr("t_gy1_set");
+    tGySetAddr = GetNiosAddr("t_gy2_set");
 
-    pGyheatAddr[0] = GetNiosAddr("g_p_gyheat1");
-    iGyheatAddr[0] = GetNiosAddr("g_i_gyheat1");
-    dGyheatAddr[0] = GetNiosAddr("g_d_gyheat1");
+    pGyheatAddr = GetNiosAddr("g_p_gyheat1");
+    iGyheatAddr = GetNiosAddr("g_i_gyheat1");
+    dGyheatAddr = GetNiosAddr("g_d_gyheat1");
 
-    pGyheatAddr[1] = GetNiosAddr("g_p_gyheat2");
-    iGyheatAddr[1] = GetNiosAddr("g_i_gyheat2");
-    dGyheatAddr[1] = GetNiosAddr("g_d_gyheat2");
+    pGyheatAddr = GetNiosAddr("g_p_gyheat2");
+    iGyheatAddr = GetNiosAddr("g_i_gyheat2");
+    dGyheatAddr = GetNiosAddr("g_d_gyheat2");
   }
 
   /* send down the setpoints and gains values */
-  WriteData(tGySetAddr[box], CommandData.gyheat[box].setpoint * 327.68,
+  WriteData(tGySetAddr, CommandData.gyheat.setpoint * 327.68,
       NIOS_QUEUE);
 
-  WriteData(pGyheatAddr[box], CommandData.gyheat[box].gain.P, NIOS_QUEUE);
-  WriteData(iGyheatAddr[box], CommandData.gyheat[box].gain.I, NIOS_QUEUE);
-  WriteData(dGyheatAddr[box], CommandData.gyheat[box].gain.D, NIOS_QUEUE);
+  WriteData(pGyheatAddr, CommandData.gyheat.gain.P, NIOS_QUEUE);
+  WriteData(iGyheatAddr, CommandData.gyheat.gain.I, NIOS_QUEUE);
+  WriteData(dGyheatAddr, CommandData.gyheat.gain.D, NIOS_QUEUE);
 
-  temp = (RxFrame[tGyboxAddr[box]->channel + 1] << 16 |
-      RxFrame[tGyboxAddr[box]->channel]);
+  temp = (RxFrame[tGyboxAddr->channel + 1] << 16 |
+      RxFrame[tGyboxAddr->channel]);
 
   /* Only run these controls if we think the thermometer isn't broken */
   /* NB: these tests are backwards due to a sign flip in the calibration */
   if (temp > MAX_GYBOX_TEMP && temp < MIN_GYBOX_TEMP) {
     /* control the heat */
-    CommandData.gyheat[box].age = SetGyHeatSetpoint(history[box],
-        CommandData.gyheat[box].age, box);
+    CommandData.gyheat.age = SetGyHeatSetpoint(history,
+        CommandData.gyheat.age);
 
-    set_point = (CommandData.gyheat[box].setpoint - TGYBOX_B) / TGYBOX_M;
-    P = CommandData.gyheat[box].gain.P * (-1.0 / 1000000.0);
-    I = CommandData.gyheat[box].gain.I * (-1.0 / 110000.0);
-    D = CommandData.gyheat[box].gain.D * ( 1.0 / 1000.0);
+    set_point = (CommandData.gyheat.setpoint - TGYBOX_B) / TGYBOX_M;
+    P = CommandData.gyheat.gain.P * (-1.0 / 1000000.0);
+    I = CommandData.gyheat.gain.I * (-1.0 / 110000.0);
+    D = CommandData.gyheat.gain.D * ( 1.0 / 1000.0);
 
     /********* if end of pulse, calculate next pulse *********/
-    if (p_off[box] <= 0 && p_on[box] <= 0) {
+    if (p_off <= 0 && p_on <= 0) {
       error = set_point - temp;
 
-      integral[box] = integral[box] * 0.999 + 0.001 * error;
-      if (integral[box] * I > 60)
-        integral[box] = 60.0 / I;
+      integral = integral * 0.999 + 0.001 * error;
+      if (integral * I > 60)
+        integral = 60.0 / I;
 
-      if (integral[box] * I < 0)
-        integral[box] = 0;
+      if (integral * I < 0)
+        integral = 0;
 
-      deriv[box] = error_last[box] - error;
-      error_last[box] = error;
+      deriv = error_last - error;
+      error_last = error;
 
-      p_on[box] = P * error + (deriv[box] / 60.0) * D + integral[box] * I;
+      p_on = P * error + (deriv / 60.0) * D + integral * I;
 
-      if (p_on[box] > 60)
-        p_on[box] = 60;
-      else if (p_on[box] < 0)
-        p_on[box] = 0;
+      if (p_on > 60)
+        p_on = 60;
+      else if (p_on < 0)
+        p_on = 0;
 
-      p_off[box] = 60 - p_on[box];
+      p_off = 60 - p_on;
 
-      history[box] = p_on[box] * 100. / GY_HEAT_TC + (1. - 60. / GY_HEAT_TC)
-        * history[box];
+      history = p_on * 100. / GY_HEAT_TC + (1. - 60. / GY_HEAT_TC) * history;
     }
 
-    if (CommandData.gyheat[box].age <= GY_HEAT_TC * 2)
-      ++CommandData.gyheat[box].age;
+    if (CommandData.gyheat.age <= GY_HEAT_TC * 2)
+      ++CommandData.gyheat.age;
 
     /******** do the pulse *****/
-    if (p_on[box] > 0) {
-      WriteData(gyHeatAddr[box], on[box], NIOS_FLUSH);
-      p_on[box]--;
-    } else if (p_off[box] > 0) {
-      WriteData(gyHeatAddr[box], off[box], NIOS_FLUSH);
-      p_off[box]--;
+    if (p_on > 0) {
+      WriteData(gyHeatAddr, on, NIOS_FLUSH);
+      p_on--;
+    } else if (p_off > 0) {
+      WriteData(gyHeatAddr, off, NIOS_FLUSH);
+      p_off--;
     }
   } else
     /* Turn off heater if thermometer appears broken */
-    WriteData(gyHeatAddr[box], off[box], NIOS_FLUSH);
+    WriteData(gyHeatAddr, off, NIOS_FLUSH);
 
-  WriteData(gyHAgeAddr[box], CommandData.gyheat[box].age, NIOS_QUEUE);
-  WriteData(gyHHistAddr[box], (history[box] * 32768. / 100.), NIOS_QUEUE);
+  WriteData(gyHAgeAddr, CommandData.gyheat.age, NIOS_QUEUE);
+  WriteData(gyHHistAddr, (history * 32768. / 100.), NIOS_QUEUE);
 }
 
 /******************************************************************/

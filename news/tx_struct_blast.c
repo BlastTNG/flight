@@ -664,7 +664,8 @@ struct ChannelStruct SlowChannels[] = {
   {"t_gybox",      'r',  ACS1_T1, 1,          CAL16T(1.0, 0.0),         'u'},
   {"t_npv",        'r',  ACS1_T1, 9,          CAL16T(1.0, 0.0),         'u'},
   {"t_charger",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u'},
-  {"t_charger",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u'},
+  //TODO why two of these? should other be deleted or changed?
+  //{"t_charger",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u'},
   {"t_bat1",       'r',  ACS1_T1, 13,         CAL16T(1.0, 0.0),         'u'},
   {"t_bat2",       'r',  ACS1_T1, 15,         CAL16T(1.0, 0.0),         'u'},
   {"t_bat3",       'r',  ACS1_T1, 17,         CAL16T(1.0, 0.0),         'u'},

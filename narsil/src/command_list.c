@@ -23,7 +23,7 @@
 #include "isc_protocol.h"  /* required for constants */
 #include "channels.h"      /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.4 $";
+const char *command_list_serial = "$Revision: 4.5 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",           
@@ -573,7 +573,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(t_gyro1_gain), "gyro box 1 heater gains", GR_ELECT, 3,
+  {COMMAND(t_gyro_gain), "gyro box heater gains", GR_ELECT, 3,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_gyheat"},
       {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_gyheat"},
@@ -581,21 +581,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(t_gyro1_set), "gyro box 1 temperature set point", GR_ELECT, 1,
-    {
-      {"Set Point (deg C)", 0, 60, 'f', "T_GY_SET"}
-    }
-  },
-
-  {COMMAND(t_gyro2_gain), "gyro box 2 heater gains", GR_ELECT, 3,
-    {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_gyheat"},
-      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_gyheat"},
-      {"Derrivative Gain",  0, MAX_15BIT, 'i', "g_d_gyheat"}
-    }
-  },
-
-  {COMMAND(t_gyro2_set), "gyro box 2 temperature set point", GR_ELECT, 1,
+  {COMMAND(t_gyro_set), "gyro box temperature set point", GR_ELECT, 1,
     {
       {"Set Point (deg C)", 0, 60, 'f', "T_GY_SET"}
     }

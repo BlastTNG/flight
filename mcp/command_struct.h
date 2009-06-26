@@ -148,7 +148,7 @@ struct CommandDataStruct {
     double setpoint;
     int age;
     struct GainStruct gain;
-  } gyheat[2];
+  } gyheat;
 
   unsigned char use_elenc;
   unsigned char use_elclin;

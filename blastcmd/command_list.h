@@ -18,7 +18,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 128        /* total number of single word cmds */
-#define N_MCOMMANDS 96         /* total number of multiword commands */
+#define N_MCOMMANDS 94         /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -126,12 +126,12 @@ enum multiCommand {
   lock,              isc_blobs,         phase,            encoder_offset,
   pivot_gain,        isc_pixel_centre,  ra_dec_goto,      ra_dec_set,
   roll_gain,         isc_set_aperture,  isc_set_focus,    setpoints,
-  bda_heat,          spare_level,       t_gyro1_set,      osc_gain,
-  t_gyro1_gain,      timeout,           isc_tolerances,   vcap,
+  bda_heat,          spare_level,       t_gyro_set,       osc_gain,
+  t_gyro_gain,       timeout,           isc_tolerances,   vcap,
   vbox,              alice_file,        az_gyro_offset,   isc_hold_current,
   isc_save_period,   osc_offset,        plugh,
   bda_gain,          bda_set,           jfet_set,         isc_foc_off,
-  osc_foc_off,       t_gyro2_gain,      t_gyro2_set,      apcu_charge,
+  osc_foc_off,       apcu_charge,
   dpcu_charge,       auto_apcu,         auto_dpcu,        quad,
   el_gyro_offset,    general,           slew_veto,        set_secondary,
   thermo_gain,       actuator_servo,    xy_goto,          actuator_vel,
