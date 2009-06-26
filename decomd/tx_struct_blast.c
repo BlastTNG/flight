@@ -661,7 +661,7 @@ struct ChannelStruct SlowChannels[] = {
 
 /* ACS1 Temperature card */
   {"t_gybox",      'r',  ACS1_T1, 1,          CAL16T(1.0, 0.0),         'u'},
-  {"t_npv",        'r',  ACS1_T1, 9,          CAL16T(1.0, 0.0),         'u'},
+  {"t_mcc",        'r',  ACS1_T1, 9,          CAL16T(1.0, 0.0),         'u'},
   {"t_charger",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u'},
   //TODO why two of these? should other be deleted or changed?
   //{"t_charger",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u'},

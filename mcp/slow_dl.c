@@ -26,9 +26,9 @@
 /* "src", type, numbits, min, max */
 struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   /* PV */
-  {"t_npv",          SLOWDL_FORCE_INT, 8, 65, -10},
+  {"t_mcc",          SLOWDL_FORCE_INT, 8, 65, -10},
   //probably one of the aux currents is alocated to this
-  //{"i_npv",          SLOWDL_FORCE_INT, 8, 10, -10}, /* 78 mA */
+  //{"i_mcc",          SLOWDL_FORCE_INT, 8, 10, -10}, /* 78 mA */
   {"lst",           SLOWDL_FORCE_INT, 8, 0, 24},
   {"sam_i_am",      SLOWDL_FORCE_INT, 8, 0, 255},
   {"lat",           SLOWDL_FORCE_INT, 8, -90.0, -50},
@@ -125,9 +125,6 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   {"sun_az",        SLOWDL_FORCE_INT, 8,   0, 360},
   {"ss_az",         SLOWDL_FORCE_INT, 8,   0, 360},
   {"p_y",     SLOWDL_FORCE_INT, 8,   -90.0, 90.0},
-  //how do these differ from t_(n)pv in the PV section?
-  //{"t_pv",    SLOWDL_FORCE_INT, 8, -55, 100},
-  //{"t_pv",   SLOWDL_FORCE_INT, 8, -55, 100},
   /* CINOMETERS */
   {"roll_clin_piv", SLOWDL_FORCE_INT, 8, -10, 10},
   {"pch_clin_piv",  SLOWDL_FORCE_INT, 8, -10, 10},
@@ -169,7 +166,6 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   //{"t_apm_3v",      SLOWDL_FORCE_INT, 8, 55, -55},
   //{"t_apm_10v",     SLOWDL_FORCE_INT, 8, 55, -55},
   //{"t_apm_5v",      SLOWDL_FORCE_INT, 8, 55, -55},
-  //{"t_pv_ext",      SLOWDL_FORCE_INT, 8, 55, -55},
   {"ss_case_temp",  SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_apcu",        SLOWDL_FORCE_INT, 8, 55, -55},
   {"t_lock_motor",  SLOWDL_FORCE_INT, 8, 55, -55},
