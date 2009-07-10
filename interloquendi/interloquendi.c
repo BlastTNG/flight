@@ -42,7 +42,7 @@
 #define SERVER_PORT 44144
 #define RENDEZ_PORT 14141
 #define PID_FILE "/var/run/interloquendi.pid"
-#define CONFIG_FILE "/home/dwiebe/cvs/interloquendi/interloquendi.conf"
+#define CONFIG_FILE "/etc/interloquendi.conf"
 
 #define DEBUG
 
