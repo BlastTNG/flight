@@ -24,13 +24,13 @@
 
 /* card name to (node number, bus number) mapping */
 #define ACS1_C	 0, 0  /* C denotes a common motherboard node */
-#define ACS1_A1	 1, 0  /* A deontes a node for analog daughter card */
-#define ACS1_T1	 2, 0  /* T denotes an AD590 thermometry daughter card */
-#define ACS1_D	 3, 0  /* D denotes a digital daughter card */
+#define ACS1_D	 1, 0  /* D denotes a digital daughter card */
+#define ACS1_A1	 2, 0  /* A deontes a node for analog daughter card */
+#define ACS1_T1	 3, 0  /* T denotes an AD590 thermometry daughter card */
 #define ACS2_C	 4, 0
-#define ACS2_A1	 5, 0
-//ACS2_unused	 6, 0
-#define ACS2_D	 7, 0
+#define ACS2_D	 5, 0
+#define ACS2_A1	 6, 0
+//ACS2_unused	 7, 0
 #define BIAS_C	 8, 0
 #define BIAS_D	 9, 0
 #define BIAS_T1	10, 0
@@ -185,18 +185,44 @@ struct ChannelStruct WideSlowChannels[] = {
   {"t_he4pot",     'r',  TMP5, 44,    ROX_C2V,   ROX_OFFSET, 'U'},
   {"t_optbox_filt",'r',  TMP5, 46,    ROX_C2V,   ROX_OFFSET, 'U'},
 
+  {"acs2_a00",     'r', ACS2_A1,  0,    1.0,   0.0, 'U'},
+  {"acs2_a01",     'r', ACS2_A1,  2,    1.0,   0.0, 'U'},
+  {"acs2_a02",     'r', ACS2_A1,  4,    1.0,   0.0, 'U'},
+  {"acs2_a03",     'r', ACS2_A1,  6,    1.0,   0.0, 'U'},
+  {"acs2_a04",     'r', ACS2_A1,  8,    1.0,   0.0, 'U'},
+  {"acs2_a05",     'r', ACS2_A1, 10,    1.0,   0.0, 'U'},
+  {"acs2_a06",     'r', ACS2_A1, 12,    1.0,   0.0, 'U'},
+  {"acs2_a07",     'r', ACS2_A1, 14,    1.0,   0.0, 'U'},
+  {"acs2_a08",     'r', ACS2_A1, 16,    1.0,   0.0, 'U'},
+  {"acs2_a09",     'r', ACS2_A1, 18,    1.0,   0.0, 'U'},
+  {"acs2_a10",     'r', ACS2_A1, 20,    1.0,   0.0, 'U'},
+  {"acs2_a11",     'r', ACS2_A1, 22,    1.0,   0.0, 'U'},
+  {"acs2_a12",     'r', ACS2_A1, 24,    1.0,   0.0, 'U'},
+  {"acs2_a13",     'r', ACS2_A1, 26,    1.0,   0.0, 'U'},
+  {"acs2_a14",     'r', ACS2_A1, 28,    1.0,   0.0, 'U'},
+  {"acs2_a15",     'r', ACS2_A1, 30,    1.0,   0.0, 'U'},
+  {"acs2_a16",     'r', ACS2_A1, 32,    1.0,   0.0, 'U'},
+  {"acs2_a17",     'r', ACS2_A1, 34,    1.0,   0.0, 'U'},
+  {"acs2_a18",     'r', ACS2_A1, 36,    1.0,   0.0, 'U'},
+  {"acs2_a19",     'r', ACS2_A1, 38,    1.0,   0.0, 'U'},
+  {"acs2_a20",     'r', ACS2_A1, 40,    1.0,   0.0, 'U'},
+  {"acs2_a21",     'r', ACS2_A1, 42,    1.0,   0.0, 'U'},
+  {"acs2_a22",     'r', ACS2_A1, 44,    1.0,   0.0, 'U'},
+  {"acs2_a23",     'r', ACS2_A1, 46,    1.0,   0.0, 'U'},
+  {"acs2_a24",     'r', ACS2_A1, 48,    1.0,   0.0, 'U'},
+
   END_OF_CHANNELS
 };
 
 struct ChannelStruct SlowChannels[] = {
   //status and sync channels for handshaking with bbus nodes
   {"status00",     'r',  ACS1_C, 63,                1.0,             0.0, 'u'},
-  {"status01",     'r', ACS1_A1, 63,                1.0,             0.0, 'u'},
-  {"status02",     'r', ACS1_T1, 63,                1.0,             0.0, 'u'},
-  {"status03",     'r',  ACS1_D, 63,                1.0,             0.0, 'u'},
+  {"status01",     'r',  ACS1_D, 63,                1.0,             0.0, 'u'},
+  {"status02",     'r', ACS1_A1, 63,                1.0,             0.0, 'u'},
+  {"status03",     'r', ACS1_T1, 63,                1.0,             0.0, 'u'},
   {"status04",     'r',  ACS2_C, 63,                1.0,             0.0, 'u'},
-  {"status05",     'r', ACS2_A1, 63,                1.0,             0.0, 'u'},
-  {"status07",     'r',  ACS2_D, 63,                1.0,             0.0, 'u'},
+  {"status05",     'r',  ACS2_D, 63,                1.0,             0.0, 'u'},
+  {"status06",     'r', ACS2_A1, 63,                1.0,             0.0, 'u'},
   {"status08",     'r',  BIAS_C, 63,                1.0,             0.0, 'u'},
   {"status09",     'r',  BIAS_D, 63,                1.0,             0.0, 'u'},
   {"status10",     'r', BIAS_T1, 63,                1.0,             0.0, 'u'},
@@ -220,12 +246,12 @@ struct ChannelStruct SlowChannels[] = {
   {"status30",     'r', DAS4_A2, 63,                1.0,             0.0, 'u'},
   {"status31",     'r', DAS4_A3, 63,                1.0,             0.0, 'u'},
   {"sync00",       'w',  ACS1_C, 63,                1.0,             0.0, 'u'},
-  {"sync01",       'w', ACS1_A1, 63,                1.0,             0.0, 'u'},
-  {"sync02",       'w', ACS1_T1, 63,                1.0,             0.0, 'u'},
-  {"sync03",       'w',  ACS1_D, 63,                1.0,             0.0, 'u'},
+  {"sync01",       'w',  ACS1_D, 63,                1.0,             0.0, 'u'},
+  {"sync02",       'w', ACS1_A1, 63,                1.0,             0.0, 'u'},
+  {"sync03",       'w', ACS1_T1, 63,                1.0,             0.0, 'u'},
   {"sync04",       'w',  ACS2_C, 63,                1.0,             0.0, 'u'},
-  {"sync05",       'w', ACS2_A1, 63,                1.0,             0.0, 'u'},
-  {"sync07",       'w',  ACS2_D, 63,                1.0,             0.0, 'u'},
+  {"sync05",       'w',  ACS2_D, 63,                1.0,             0.0, 'u'},
+  {"sync06",       'w', ACS2_A1, 63,                1.0,             0.0, 'u'},
   {"sync08",       'w',  BIAS_C, 63,                1.0,             0.0, 'u'},
   {"sync09",       'w',  BIAS_D, 63,                1.0,             0.0, 'u'},
   {"sync10",       'w', BIAS_T1, 63,                1.0,             0.0, 'u'},

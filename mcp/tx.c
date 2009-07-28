@@ -203,7 +203,7 @@ static void WriteAux(void)
 /*****************************************************************/
 //list node numbers for sync, which may have gaps
 #define NUM_SYNC 29
-const unsigned short sync_nums[NUM_SYNC] = {0,1,2,3,4,5,7,8,9,10,12,13,14,\
+const unsigned short sync_nums[NUM_SYNC] = {0,1,2,3,4,5,6,8,9,10,12,13,14,\
 			16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};
 #define REBOOT_TIMEOUT 50 /* 10 sec -- in 5Hz Frames */
 static void SyncADC (void)
