@@ -814,18 +814,6 @@ struct ChannelStruct SlowChannels[] = {
 
   /* TODO these TMP channels used to be wide-fast */
 #ifndef BOLOTEST
-  {"raw_gy1",     'r',  TMP2, 26,     -AGY32_TO_DPS,
-                                     AGY32_OFFSET * AGY32_TO_DPS + 0.1925, 'u'},
-  {"raw_gy2",     'r',  TMP2, 22,      AGY32_TO_DPS,
-                                     -AGY32_OFFSET * AGY32_TO_DPS - 0.138, 'u'},
-  {"raw_gy3",     'r',  TMP2, 24,      AGY32_TO_DPS,
-                                     -AGY32_OFFSET * AGY32_TO_DPS - 0.145, 'u'},
-  {"raw_gy4",     'r',  TMP2,  6,      DGY32_TO_DPS,
-                                     -DGY32_OFFSET * DGY32_TO_DPS + 0.004, 'u'},
-  {"raw_gy5",     'r',  TMP2,  2,      DGY32_TO_DPS,
-                                     -DGY32_OFFSET * DGY32_TO_DPS + 0.010, 'u'},
-  {"raw_gy6",     'r',  TMP2, 36,     -DGY32_TO_DPS,
-                                      DGY32_OFFSET * DGY32_TO_DPS - 0.005, 'u'},
 
   {"az",          'w', LOOP2, 51,          LI2DEG,                    0.0, 'u'},
   {"el",          'w', LOOP2, 53,          LI2DEG,                    0.0, 'u'},
@@ -898,6 +886,14 @@ struct ChannelStruct SlowChannels[] = {
 };
 
 struct ChannelStruct WideFastChannels[] = {
+#ifndef BOLOTEST
+  {"raw_gy1",     'r',  ACS2_D,  0, 1.0, 0.0, 'U'},
+  {"raw_gy2",     'r',  ACS2_D,  2, 1.0, 0.0, 'U'},
+  {"raw_gy3",     'r',  ACS2_D,  4, 1.0, 0.0, 'U'},
+  {"raw_gy4",     'r',  ACS2_D,  6, 1.0, 0.0, 'U'},
+  {"raw_gy5",     'r',  ACS2_D,  8, 1.0, 0.0, 'U'},
+  {"raw_gy6",     'r',  ACS2_D, 10, 1.0, 0.0, 'U'},
+#endif
   /* 25th channels of all the DAS cards, not currently used */
   /*
   {"n17c25",      'r', DAS1_A1, 36,                1.0,             0.0, 'U'},
