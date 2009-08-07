@@ -189,6 +189,9 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   static struct NiosStruct* gPPivotAddr;
   static struct NiosStruct* setReacAddr;
 
+  //TODO temporary
+  static struct NiosStruct* dacAmplAddr[5];
+
   static int wait = 100; /* wait 20 frames before controlling. */
   double el_rad;
   unsigned int ucos_el;
@@ -214,9 +217,22 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     gPPivotAddr = GetNiosAddr("g_p_pivot");
     setReacAddr = GetNiosAddr("set_reac");
 
+    dacAmplAddr[0] = GetNiosAddr("dac1_ampl");
+    dacAmplAddr[1] = GetNiosAddr("dac2_ampl");
+    dacAmplAddr[2] = GetNiosAddr("dac3_ampl");
+    dacAmplAddr[3] = GetNiosAddr("dac4_ampl");
+    dacAmplAddr[4] = GetNiosAddr("dac5_ampl");
   }
 
   i_point = GETREADINDEX(point_index);
+
+  //TODO temporary
+  if (wait <= 0)
+    for (i=0; i<5; i++)
+      if (CommandData.Temporary.setLevel[i]) {
+	WriteData(dacAmplAddr[i], CommandData.Temporary.dac_out[i], NIOS_QUEUE);
+	CommandData.Temporary.setLevel[i] = 0;
+      }
 
   /***************************************************/
   /**           Elevation Drive Motors              **/

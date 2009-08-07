@@ -248,9 +248,6 @@ static void MakeBoloTable(void) {
     if (bolo_node%4 == 0) bolo_node++;  //skip motherboard common nodes
     channel.node = bolo_node++;
     channel.rw = 'r';
-#ifdef VERBOSE
-    bprintf(info, "Channels: Adding bolometer table on node %i\n",channel.node);
-#endif
     for (j = 0; j < DAS_CHS; j += 2) {
       /* lsw channel at j */
       channel.addr = j;

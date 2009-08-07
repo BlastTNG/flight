@@ -23,7 +23,7 @@
 #include "isc_protocol.h"  /* required for constants */
 #include "channels.h"      /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.5 $";
+const char *command_list_serial = "$Revision: 4.6 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",           
@@ -234,6 +234,37 @@ struct scom scommands[N_SCOMMANDS] = {
  * s :  parameter is 7-bit character string
  */
 struct mcom mcommands[N_MCOMMANDS] = {
+  /* TODO delete when done with these. Temporary commands for dac testing */
+  {COMMAND(dac1_level), "DAC1 output level. Temporary", GR_MISC, 1,
+    {
+      {"Level", 0, 32767, 'i', "dac1_ampl"}
+    }
+  },
+
+  {COMMAND(dac2_level), "DAC2 output level. Temporary", GR_MISC, 1,
+    {
+      {"Level", 0, 32767, 'i', "dac2_ampl"}
+    }
+  },
+
+  {COMMAND(dac3_level), "DAC3 output level. Temporary", GR_MISC, 1,
+    {
+      {"Level", 0, 32767, 'i', "dac3_ampl"}
+    }
+  },
+
+  {COMMAND(dac4_level), "DAC4 output level. Temporary", GR_MISC, 1,
+    {
+      {"Level", 0, 32767, 'i', "dac4_ampl"}
+    }
+  },
+
+  {COMMAND(dac5_level), "DAC5 output level. Temporary", GR_MISC, 1,
+    {
+      {"Level", 0, 32767, 'i', "dac5_ampl"}
+    }
+  },
+
   {COMMAND(alice_file), "set XML file for compressed (6kbit) downlink",
     GR_TELEM, 1,
     {

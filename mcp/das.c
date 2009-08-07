@@ -338,6 +338,9 @@ void CryoControl (void)
   static struct NiosStruct* setBdaheatAddr;
   static struct NiosStruct* jfetSetOnAddr;
   static struct NiosStruct* jfetSetOffAddr;
+  static struct NiosStruct* dig21Addr;
+  static struct NiosStruct* dig43Addr;
+  static struct NiosStruct* dig65Addr;
 
   int cryoout3 = 0, cryoout2 = 0;
   static int cryostate = 0;
@@ -363,7 +366,17 @@ void CryoControl (void)
     jfetpwmAddr = GetNiosAddr("jfetpwm");
     jfetSetOnAddr = GetNiosAddr("jfet_set_on");
     jfetSetOffAddr = GetNiosAddr("jfet_set_off");
+    dig21Addr = GetNiosAddr("das_dig21");
+    dig43Addr = GetNiosAddr("das_dig43");
+    dig65Addr = GetNiosAddr("das_dig65");
   }
+
+  // purely for testing, output a count to each digital output group
+  static int count = 0;
+  int nibbcnt = (count&0xf) << 4 | (count++&0xf);
+  WriteData(dig21Addr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
+  WriteData(dig43Addr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
+  WriteData(dig65Addr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
 
   /********** Set Output Bits **********/
   if (CommandData.Cryo.heliumLevel == 0) {

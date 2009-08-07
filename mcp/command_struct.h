@@ -109,6 +109,11 @@ struct PointingModeStruct {
 enum calmode { on, off, pulse, repeat };
 
 struct CommandDataStruct {
+  struct {
+    unsigned short dac_out[5];
+    unsigned char setLevel[5];
+  } Temporary;
+
   unsigned short int timeout;
   unsigned short int alice_file;
   unsigned short int sucks;
@@ -171,8 +176,8 @@ struct CommandDataStruct {
   struct {
     int dont_do_anything;
     int biasRamp;
-    int bias[5];
-    int setLevel[5];
+    unsigned short bias[5];
+    unsigned char setLevel[5];
   } Bias;
   
   struct {

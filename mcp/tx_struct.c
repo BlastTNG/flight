@@ -74,7 +74,7 @@
  * LOOP nodes might also need cleanup. Their channels have all been carried
  * forward, but some may no longer be needed
  *
- * TMP nodes are only so mcpol doesn't barf during development.
+ * TMP nodes are only so mcp doesn't barf during development.
  * !!!!!!!!!!!!!!!!!!!!!!!!!! DO NOT FLY WITH TMP NODES !!!!!!!!!!!!!!!!!!!!!!!!
  ******************************************************************************/
 #define	TMP1	50, 0	//all channels formerly on ACS0
@@ -288,6 +288,13 @@ struct ChannelStruct SlowChannels[] = {
   {"phase30",      'w', DAS4_A2,  8,                1.0,             0.0, 'u'},
   {"phase31",      'w', DAS4_A3,  8,                1.0,             0.0, 'u'},
 
+  {"dac1_ampl",    'w',  ACS2_D,  0,                1.0,             0.0, 'u'},
+  {"dac2_ampl",    'w',  ACS2_D,  1,                1.0,             0.0, 'u'},
+  {"dac3_ampl",    'w',  ACS2_D,  2,                1.0,             0.0, 'u'},
+  {"dac4_ampl",    'w',  ACS2_D,  3,                1.0,             0.0, 'u'},
+  {"dac5_ampl",    'w',  ACS2_D,  4,                1.0,             0.0, 'u'},
+  
+  //generic names should be updated. Also bitfields could be useful for dig outs
   {"bias1_ampl",   'w',  BIAS_D,  0,                1.0,             0.0, 'u'},
   {"bias2_ampl",   'w',  BIAS_D,  1,                1.0,             0.0, 'u'},
   {"bias3_ampl",   'w',  BIAS_D,  2,                1.0,             0.0, 'u'},
@@ -301,31 +308,31 @@ struct ChannelStruct SlowChannels[] = {
 
   /* generic names for analog channels. BE MORE SPECIFIC 
    * Also, can maybe get rid on a TMP Channel when you do */
-  {"das_t00",      'r', BIAS_T1,  1,                1.0,             0.0, 'u'},
-  {"das_t01",      'r', BIAS_T1,  3,                1.0,             0.0, 'u'},
-  {"das_t02",      'r', BIAS_T1,  5,                1.0,             0.0, 'u'},
-  {"das_t03",      'r', BIAS_T1,  7,                1.0,             0.0, 'u'},
-  {"das_t04",      'r', BIAS_T1,  9,                1.0,             0.0, 'u'},
-  {"das_t05",      'r', BIAS_T1, 11,                1.0,             0.0, 'u'},
-  {"das_t06",      'r', BIAS_T1, 13,                1.0,             0.0, 'u'},
-  {"das_t07",      'r', BIAS_T1, 15,                1.0,             0.0, 'u'},
-  {"das_t08",      'r', BIAS_T1, 17,                1.0,             0.0, 'u'},
-  {"das_t09",      'r', BIAS_T1, 19,                1.0,             0.0, 'u'},
-  {"das_t10",      'r', BIAS_T1, 21,                1.0,             0.0, 'u'},
-  {"das_t11",      'r', BIAS_T1, 23,                1.0,             0.0, 'u'},
-  {"das_t12",      'r', BIAS_T1, 25,                1.0,             0.0, 'u'},
-  {"das_t13",      'r', BIAS_T1, 27,                1.0,             0.0, 'u'},
-  {"das_t14",      'r', BIAS_T1, 29,                1.0,             0.0, 'u'},
-  {"das_t15",      'r', BIAS_T1, 31,                1.0,             0.0, 'u'},
-  {"das_t16",      'r', BIAS_T1, 33,                1.0,             0.0, 'u'},
-  {"das_t17",      'r', BIAS_T1, 35,                1.0,             0.0, 'u'},
-  {"das_t18",      'r', BIAS_T1, 37,                1.0,             0.0, 'u'},
-  {"das_t19",      'r', BIAS_T1, 39,                1.0,             0.0, 'u'},
-  {"das_t20",      'r', BIAS_T1, 41,                1.0,             0.0, 'u'},
-  {"das_t21",      'r', BIAS_T1, 43,                1.0,             0.0, 'u'},
-  {"das_t22",      'r', BIAS_T1, 45,                1.0,             0.0, 'u'},
-  {"das_t23",      'r', BIAS_T1, 47,                1.0,             0.0, 'u'},
-  {"das_t24",      'r', BIAS_T1, 49,                1.0,             0.0, 'u'},
+  {"das_t00",      'r', BIAS_T1,  1,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t01",      'r', BIAS_T1,  3,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t02",      'r', BIAS_T1,  5,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t03",      'r', BIAS_T1,  7,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t04",      'r', BIAS_T1,  9,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t05",      'r', BIAS_T1, 11,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t06",      'r', BIAS_T1, 13,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t07",      'r', BIAS_T1, 15,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t08",      'r', BIAS_T1, 17,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t09",      'r', BIAS_T1, 19,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t10",      'r', BIAS_T1, 21,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t11",      'r', BIAS_T1, 23,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t12",      'r', BIAS_T1, 25,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t13",      'r', BIAS_T1, 27,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t14",      'r', BIAS_T1, 29,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t15",      'r', BIAS_T1, 31,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t16",      'r', BIAS_T1, 33,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t17",      'r', BIAS_T1, 35,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t18",      'r', BIAS_T1, 37,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t19",      'r', BIAS_T1, 39,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t20",      'r', BIAS_T1, 41,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t21",      'r', BIAS_T1, 43,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t22",      'r', BIAS_T1, 45,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t23",      'r', BIAS_T1, 47,         CAL16T(1.0,            0.0), 'u'},
+  {"das_t24",      'r', BIAS_T1, 49,         CAL16T(1.0,            0.0), 'u'},
 
   /* LOOP1 0-13 are wide */
   {"g_i_gyheat1",  'w', LOOP1, 14,                1.0,             0.0, 'u'},
@@ -895,7 +902,6 @@ struct ChannelStruct WideFastChannels[] = {
   {"raw_gy6",     'r',  ACS2_D, 10, 1.0, 0.0, 'U'},
 #endif
   /* 25th channels of all the DAS cards, not currently used */
-  /*
   {"n17c25",      'r', DAS1_A1, 36,                1.0,             0.0, 'U'},
   {"n18c25",      'r', DAS1_A2, 36,                1.0,             0.0, 'U'},
   {"n19c25",      'r', DAS1_A3, 36,                1.0,             0.0, 'U'},
@@ -908,21 +914,32 @@ struct ChannelStruct WideFastChannels[] = {
   {"n29c25",      'r', DAS4_A1, 36,                1.0,             0.0, 'U'},
   {"n30c25",      'r', DAS4_A2, 36,                1.0,             0.0, 'U'},
   {"n31c25",      'r', DAS4_A3, 36,                1.0,             0.0, 'U'},
-  */
 
   END_OF_CHANNELS
 };
 
 struct ChannelStruct FastChannels[] = {
+#if 0
   //interrupt counters, for debugging
-  /*
   {"bias_10k",     'r',  BIAS_C,  0,                1.0,             0.0, 'u'},
   {"bias_100",     'r',  BIAS_C,  1,                1.0,             0.0, 'u'},
   {"bias_licnt",   'r',  BIAS_C,  2,                1.0,             0.0, 'u'},
   {"das1_10k",     'r',  DAS1_C,  0,                1.0,             0.0, 'u'},
   {"das1_100",     'r',  DAS1_C,  1,                1.0,             0.0, 'u'},
   {"das1_licnt",   'r',  DAS1_C,  2,                1.0,             0.0, 'u'},
-  */
+  {"das2_10k",     'r',  DAS2_C,  0,                1.0,             0.0, 'u'},
+  {"das2_100",     'r',  DAS2_C,  1,                1.0,             0.0, 'u'},
+  {"das2_licnt",   'r',  DAS2_C,  2,                1.0,             0.0, 'u'},
+  {"das3_10k",     'r',  DAS3_C,  0,                1.0,             0.0, 'u'},
+  {"das3_100",     'r',  DAS3_C,  1,                1.0,             0.0, 'u'},
+  {"das3_licnt",   'r',  DAS3_C,  2,                1.0,             0.0, 'u'},
+  {"das4_10k",     'r',  DAS4_C,  0,                1.0,             0.0, 'u'},
+  {"das4_100",     'r',  DAS4_C,  1,                1.0,             0.0, 'u'},
+  {"das4_licnt",   'r',  DAS4_C,  2,                1.0,             0.0, 'u'},
+  {"cryo_10k",     'r',  CRYO_C,  0,                1.0,             0.0, 'u'},
+  {"cryo_100",     'r',  CRYO_C,  1,                1.0,             0.0, 'u'},
+  {"cryo_licnt",   'r',  CRYO_C,  2,                1.0,             0.0, 'u'},
+#endif
 
   END_OF_CHANNELS
 };

@@ -973,6 +973,30 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pivot_gain.SP = (rvalues[0] + 2.605) / 7.9498291016e-5;
       CommandData.pivot_gain.P = ivalues[1];
       break;
+
+      /***************************************/
+      /***** Temporary test of motor DACs ****/
+      /** TODO erase when done with them *****/
+    case dac1_level:
+      CommandData.Temporary.dac_out[0] = ivalues[0] << 1;
+      CommandData.Temporary.setLevel[0] = 1;
+      break;
+    case dac2_level:
+      CommandData.Temporary.dac_out[1] = ivalues[0] << 1;
+      CommandData.Temporary.setLevel[1] = 1;
+      break;
+    case dac3_level:
+      CommandData.Temporary.dac_out[2] = ivalues[0] << 1;
+      CommandData.Temporary.setLevel[2] = 1;
+      break;
+    case dac4_level:
+      CommandData.Temporary.dac_out[3] = ivalues[0] << 1;
+      CommandData.Temporary.setLevel[3] = 1;
+      break;
+    case dac5_level:
+      CommandData.Temporary.dac_out[4] = ivalues[0] << 1;
+      CommandData.Temporary.setLevel[4] = 1;
+      break;
 #endif
 
       /***************************************/
@@ -1962,6 +1986,12 @@ void InitCommandData()
   CommandData.Bias.setLevel[3] = 1;
   CommandData.Bias.setLevel[4] = 1;
 
+  CommandData.Temporary.setLevel[0] = 1;
+  CommandData.Temporary.setLevel[1] = 1;
+  CommandData.Temporary.setLevel[2] = 1;
+  CommandData.Temporary.setLevel[3] = 1;
+  CommandData.Temporary.setLevel[4] = 1;
+
   CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_NONE;
   CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_NONE;
 
@@ -2084,6 +2114,12 @@ void InitCommandData()
   CommandData.pumps.bal_target = 0.0 * 1648.;
   CommandData.pumps.bal_gain = 0.2;
   CommandData.pumps.inframe_auto = 1;
+
+  CommandData.Temporary.dac_out[0] = 0;
+  CommandData.Temporary.dac_out[1] = 0;
+  CommandData.Temporary.dac_out[2] = 0;
+  CommandData.Temporary.dac_out[3] = 0;
+  CommandData.Temporary.dac_out[4] = 0;
 
   CommandData.Bias.bias[0] = 256;
   CommandData.Bias.bias[1] = 256;

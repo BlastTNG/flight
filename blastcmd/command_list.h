@@ -117,6 +117,9 @@ enum multiCommand {
   bal_level,         osc_set_focus,     osc_set_aperture, osc_save_period,
   bias1_level,       bias2_level,       bias3_level,      bias4_level,
   bias5_level,       isc_blob_centre,
+  /* dac level commands are temporary */
+  dac1_level,        dac2_level,        dac3_level,       dac4_level,
+  dac5_level,
   box,               osc_pixel_centre,  osc_blob_centre,  isc_gain,
   cal_pulse,         cal_repeat,        cap,              isc_catalogue,
   az_el_trim,        isc_det_set,       drift,            el_gain,
