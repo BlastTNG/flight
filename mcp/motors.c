@@ -191,6 +191,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
 
   //TODO temporary
   static struct NiosStruct* dacAmplAddr[5];
+  int i;
 
   static int wait = 100; /* wait 20 frames before controlling. */
   double el_rad;

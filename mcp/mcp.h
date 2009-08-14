@@ -40,8 +40,10 @@ extern unsigned int tdrss_index;
 
 #define MAX_LINE_LENGTH 1024
 
-#ifdef BOLOTEST
-#  define USE_FIFO_CMD
+//TODO permanently enabling FIFO_CMD until proper commanding setup again
+//#ifdef BOLOTEST
+#if 1
+#define USE_FIFO_CMD
 #endif
 
 #ifdef DEBUG
