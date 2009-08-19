@@ -71,7 +71,7 @@ void ChargeController(void);
 void ControlAuxMotors(unsigned short *RxFrame);
 void ControlGyroHeat(unsigned short *RxFrame);
 void CameraTrigger(int which);
-void SensorResets(void);
+void ControlPower(void);
 
 /* in das.c */
 void BiasControl(unsigned short* RxFrame);
@@ -1206,8 +1206,9 @@ void UpdateBBCFrame(unsigned short *RxFrame)
   StoreData(index);
   ControlGyroHeat(RxFrame);
   WriteMot(index, RxFrame);
-#endif
+  ControlPower();
   StoreActBus();
+#endif
 #ifdef USE_XY_THREAD
   StoreStageBus();
 #endif
@@ -1222,7 +1223,6 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     CryoControl();
     PhaseControl();
 #ifndef BOLOTEST
-    SensorResets();
     ChargeController();
 #endif
   }

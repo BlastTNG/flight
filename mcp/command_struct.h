@@ -106,6 +106,12 @@ struct PointingModeStruct {
   double dec[4]; // the decs for radbox (ie, quad)
 };
 
+struct latch_pulse {
+  int set_count;
+  int rst_count;
+};
+
+
 enum calmode { on, off, pulse, repeat };
 
 struct CommandDataStruct {
@@ -132,12 +138,27 @@ struct CommandDataStruct {
   struct GainStruct pivot_gain;
 
   struct {
-    int gps;       /* dgps is off */
-    int gyro;      /* digital gybox is off */
-    int isc;       /* isc is off */
-    int osc;       /* osc is off */
-    int ss;        /* ss is off */
-  } sensors_off;
+    struct latch_pulse sc_tx;
+    struct latch_pulse das;
+    struct latch_pulse isc;
+    struct latch_pulse osc;
+    struct latch_pulse gps;
+    struct latch_pulse reac;
+    struct latch_pulse piv;
+    struct latch_pulse elmot;
+    struct latch_pulse bi0;
+    struct latch_pulse preamp;
+    struct latch_pulse bias;
+    struct latch_pulse hk;
+    struct latch_pulse um250;
+    struct latch_pulse um350;
+    struct latch_pulse um500;
+    struct latch_pulse heat;
+    unsigned char gybox_off;
+    unsigned char gyro_off[6];
+    unsigned char hub232_off;
+    unsigned char ss_off;
+  } power;
 
   unsigned short disable_az;
   unsigned short disable_el;

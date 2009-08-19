@@ -68,6 +68,9 @@
 #define ISC_TRIGGER_POS  2
 #define ISC_TRIGGER_NEG  3
 
+/* latching relay pulse length in 10ms fast frames */
+#define LATCH_PULSE_LEN	 15
+
 void ActPotTrim(void); /* actuators.c */
 void RecalcOffset(double, double);
 
@@ -357,35 +360,151 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.use_elclin = 1;
       break;
 
-    case gps_off:          /* sensor power */
-      CommandData.sensors_off.gps = 1;
+    case gps_off:          /* power switching */
+      CommandData.power.gps.set_count = 0;
+      CommandData.power.gps.rst_count = LATCH_PULSE_LEN;
       break;
     case gps_on:
-      CommandData.sensors_off.gps = 0;
-      break;
-    case gyro_off:
-      CommandData.sensors_off.gyro = 1;
-      break;
-    case gyro_on:
-      CommandData.sensors_off.gyro = 0;
+      CommandData.power.gps.rst_count = 0;
+      CommandData.power.gps.set_count = LATCH_PULSE_LEN;
       break;
     case isc_off:
-      CommandData.sensors_off.isc = 1;
+      CommandData.power.isc.set_count = 0;
+      CommandData.power.isc.rst_count = LATCH_PULSE_LEN;
       break;
     case isc_on:
-      CommandData.sensors_off.isc = 0;
+      CommandData.power.isc.rst_count = 0;
+      CommandData.power.isc.set_count = LATCH_PULSE_LEN;
       break;
     case osc_off:
-      CommandData.sensors_off.osc = 1;
+      CommandData.power.osc.set_count = 0;
+      CommandData.power.osc.rst_count = LATCH_PULSE_LEN;
       break;
     case osc_on:
-      CommandData.sensors_off.osc = 0;
+      CommandData.power.osc.rst_count = 0;
+      CommandData.power.osc.set_count = LATCH_PULSE_LEN;
+      break;
+    case reac_off:
+      CommandData.power.reac.set_count = 0;
+      CommandData.power.reac.rst_count = LATCH_PULSE_LEN;
+      break;
+    case reac_on:
+      CommandData.power.reac.rst_count = 0;
+      CommandData.power.reac.set_count = LATCH_PULSE_LEN;
+      break;
+    case piv_off:
+      CommandData.power.piv.set_count = 0;
+      CommandData.power.piv.rst_count = LATCH_PULSE_LEN;
+      break;
+    case piv_on:
+      CommandData.power.piv.rst_count = 0;
+      CommandData.power.piv.set_count = LATCH_PULSE_LEN;
+      break;
+    case elmot_off:
+      CommandData.power.elmot.set_count = 0;
+      CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
+      break;
+    case elmot_on:
+      CommandData.power.elmot.rst_count = 0;
+      CommandData.power.elmot.set_count = LATCH_PULSE_LEN;
+      break;
+    case sc_tx_off:
+      CommandData.power.sc_tx.set_count = 0;
+      CommandData.power.sc_tx.rst_count = LATCH_PULSE_LEN;
+      break;
+    case sc_tx_on:
+      CommandData.power.sc_tx.rst_count = 0;
+      CommandData.power.sc_tx.set_count = LATCH_PULSE_LEN;
+      break;
+    case bi0_off:
+      CommandData.power.bi0.set_count = 0;
+      CommandData.power.bi0.rst_count = LATCH_PULSE_LEN;
+      break;
+    case bi0_on:
+      CommandData.power.bi0.rst_count = 0;
+      CommandData.power.bi0.set_count = LATCH_PULSE_LEN;
+      break;
+    case das_off:
+      CommandData.power.das.set_count = 0;
+      CommandData.power.das.rst_count = LATCH_PULSE_LEN;
+      break;
+    case das_on:
+      CommandData.power.das.rst_count = 0;
+      CommandData.power.das.set_count = LATCH_PULSE_LEN;
+      break;
+    case preamp_off:
+      CommandData.power.preamp.set_count = 0;
+      CommandData.power.preamp.rst_count = LATCH_PULSE_LEN;
+      break;
+    case preamp_on:
+      CommandData.power.preamp.rst_count = 0;
+      CommandData.power.preamp.set_count = LATCH_PULSE_LEN;
+      break;
+    case bias_off:
+      CommandData.power.bias.set_count = 0;
+      CommandData.power.bias.rst_count = LATCH_PULSE_LEN;
+      break;
+    case bias_on:
+      CommandData.power.bias.rst_count = 0;
+      CommandData.power.bias.set_count = LATCH_PULSE_LEN;
+      break;
+    case heat_off:
+      CommandData.power.heat.set_count = 0;
+      CommandData.power.heat.rst_count = LATCH_PULSE_LEN;
+      break;
+    case heat_on:
+      CommandData.power.heat.rst_count = 0;
+      CommandData.power.heat.set_count = LATCH_PULSE_LEN;
+      break;
+    case hk_off:
+      CommandData.power.hk.set_count = 0;
+      CommandData.power.hk.rst_count = LATCH_PULSE_LEN;
+      break;
+    case hk_on:
+      CommandData.power.hk.rst_count = 0;
+      CommandData.power.hk.set_count = LATCH_PULSE_LEN;
+      break;
+    case um250_off:
+      CommandData.power.um250.set_count = 0;
+      CommandData.power.um250.rst_count = LATCH_PULSE_LEN;
+      break;
+    case um250_on:
+      CommandData.power.um250.rst_count = 0;
+      CommandData.power.um250.set_count = LATCH_PULSE_LEN;
+      break;
+    case um350_off:
+      CommandData.power.um350.set_count = 0;
+      CommandData.power.um350.rst_count = LATCH_PULSE_LEN;
+      break;
+    case um350_on:
+      CommandData.power.um350.rst_count = 0;
+      CommandData.power.um350.set_count = LATCH_PULSE_LEN;
+      break;
+    case um500_off:
+      CommandData.power.um500.set_count = 0;
+      CommandData.power.um500.rst_count = LATCH_PULSE_LEN;
+      break;
+    case um500_on:
+      CommandData.power.um500.rst_count = 0;
+      CommandData.power.um500.set_count = LATCH_PULSE_LEN;
+      break;
+    case gybox_off:
+      CommandData.power.gybox_off = 1;
+      break;
+    case gybox_on:
+      CommandData.power.gybox_off = 0;
+      break;
+    case hub232_off:
+      CommandData.power.hub232_off = 1;
+      break;
+    case hub232_on:
+      CommandData.power.hub232_off = 0;
       break;
     case ss_off:
-      CommandData.sensors_off.ss = 1;
+      CommandData.power.ss_off = 1;
       break;
     case ss_on:
-      CommandData.sensors_off.ss = 0;
+      CommandData.power.ss_off = 0;
       break;
     case actbus_off:
       CommandData.actbus.off = 1;
@@ -687,11 +806,11 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case not_at_float:
       CommandData.at_float = 0;
       break;
+#endif
 
     case reap:  /* Miscellaneous commands */
       bprintf(err, "Commands: Reaping the watchdog tickle on command.");
       pthread_cancel(watchdog_id);
-#endif
       break;
     case icc_halt:
     case nicc_halt:
@@ -1170,6 +1289,12 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 
       /***************************************/
       /*************** Misc  *****************/
+    case gyro_off:
+      CommandData.power.gyro_off[ivalues[0]-1] = 1;
+      break;
+    case gyro_on:
+      CommandData.power.gyro_off[ivalues[0]-1] = 0;
+      break;
     case timeout:       /* Set timeout */
       CommandData.timeout = ivalues[0];
       break;
@@ -1995,11 +2120,47 @@ void InitCommandData()
   CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_NONE;
   CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_NONE;
 
-  CommandData.sensors_off.gps = 0;
-  CommandData.sensors_off.gyro = 0;
-  CommandData.sensors_off.isc = 0;
-  CommandData.sensors_off.osc = 0;
-  CommandData.sensors_off.ss = 0;
+  CommandData.power.sc_tx.rst_count = 0;
+  CommandData.power.sc_tx.set_count = 0;
+  CommandData.power.das.rst_count = 0;
+  CommandData.power.das.set_count = 0;
+  CommandData.power.isc.rst_count = 0;
+  CommandData.power.isc.set_count = 0;
+  CommandData.power.osc.rst_count = 0;
+  CommandData.power.osc.set_count = 0;
+  CommandData.power.gps.rst_count = 0;
+  CommandData.power.gps.set_count = 0;
+  CommandData.power.reac.rst_count = 0;
+  CommandData.power.reac.set_count = 0;
+  CommandData.power.piv.rst_count = 0;
+  CommandData.power.piv.set_count = 0;
+  CommandData.power.elmot.rst_count = 0;
+  CommandData.power.elmot.set_count = 0;
+  CommandData.power.bi0.rst_count = 0;
+  CommandData.power.bi0.set_count = 0;
+  CommandData.power.preamp.rst_count = 0;
+  CommandData.power.preamp.set_count = 0;
+  CommandData.power.bias.rst_count = 0;
+  CommandData.power.bias.set_count = 0;
+  CommandData.power.hk.rst_count = 0;
+  CommandData.power.hk.set_count = 0;
+  CommandData.power.um250.rst_count = 0;
+  CommandData.power.um250.set_count = 0;
+  CommandData.power.um350.rst_count = 0;
+  CommandData.power.um350.set_count = 0;
+  CommandData.power.um500.rst_count = 0;
+  CommandData.power.um500.set_count = 0;
+  CommandData.power.heat.rst_count = 0;
+  CommandData.power.heat.set_count = 0;
+  CommandData.power.gybox_off = 0;
+  CommandData.power.gyro_off[0] = 0;
+  CommandData.power.gyro_off[1] = 0;
+  CommandData.power.gyro_off[2] = 0;
+  CommandData.power.gyro_off[3] = 0;
+  CommandData.power.gyro_off[4] = 0;
+  CommandData.power.gyro_off[5] = 0;
+  CommandData.power.hub232_off = 0;
+  CommandData.power.ss_off = 0;
 
   CommandData.gyheat.age = 0;
 

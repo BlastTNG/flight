@@ -23,7 +23,7 @@
 #include "isc_protocol.h"  /* required for constants */
 #include "channels.h"      /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.6 $";
+const char *command_list_serial = "$Revision: 4.7 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",           
@@ -42,22 +42,49 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
   {COMMAND(antisun), "turn antisolar now", GR_POINT},
 
-  {COMMAND(gps_off), "turn off the dGPS at the ACS", GR_POWER | CONFIRM},
-  {COMMAND(gps_on), "turn on the dGPS at the ACS", GR_POWER},
-  {COMMAND(gyro_off), "turn off the digital gyros at the ACS", GR_POWER
-    | CONFIRM},
-  {COMMAND(gyro_on), "turn on the digital gyros at the ACS", GR_POWER},
-  {COMMAND(isc_off), "turn off the ISC at the ACS", GR_POWER | CONFIRM},
-  {COMMAND(isc_on), "turn on the ISC at the ACS", GR_POWER},
-  {COMMAND(osc_off), "turn off the OSC at the ACS", GR_POWER | CONFIRM},
-  {COMMAND(osc_on), "turn on the OSC at the ACS", GR_POWER},
-  {COMMAND(ss_off), "turn off the Sun Sensor at the ACS", GR_POWER
-    | CONFIRM},
-  {COMMAND(ss_on), "turn on the Sun Sensor at the ACS", GR_POWER},
+  {COMMAND(gps_off), "turn off the dGPS", GR_POWER | CONFIRM},
+  {COMMAND(gps_on), "turn on the dGPS", GR_POWER},
+  {COMMAND(isc_off), "turn off the ISC", GR_POWER | CONFIRM},
+  {COMMAND(isc_on), "turn on the ISC", GR_POWER},
+  {COMMAND(osc_off), "turn off the OSC", GR_POWER | CONFIRM},
+  {COMMAND(osc_on), "turn on the OSC", GR_POWER},
+  {COMMAND(ss_off), "turn off the Sun Sensor", GR_POWER},
+  {COMMAND(ss_on), "turn on the Sun Sensor", GR_POWER},
+  {COMMAND(gybox_off), "turn off the digital gyros' box", GR_POWER},
+  {COMMAND(gybox_on), "turn on the digital gyros' box", GR_POWER},
   {COMMAND(actbus_on), "turn on the Actuators and Lock", GR_POWER | GR_LOCK
     | GR_ACT},
   {COMMAND(actbus_off), "turn off the Actuators and Lock", GR_POWER | GR_LOCK
     | GR_ACT | CONFIRM},
+  {COMMAND(reac_off), "turn off the reaction wheel motor", GR_POWER},
+  {COMMAND(reac_on), "turn on the reaction wheel motor", GR_POWER},
+  {COMMAND(piv_off), "turn off the pivot motor", GR_POWER},
+  {COMMAND(piv_on), "turn on the pivot motor", GR_POWER},
+  {COMMAND(elmot_off), "turn off the elevation motor", GR_POWER},
+  {COMMAND(elmot_on), "turn on the elevation motor", GR_POWER},
+  {COMMAND(sc_tx_off), "turn off the starcam transmitters", GR_POWER},
+  {COMMAND(sc_tx_on), "turn on the starcam transmitters", GR_POWER},
+  {COMMAND(bi0_off), "turn off the biphase transmitters", GR_POWER},
+  {COMMAND(bi0_on), "turn on the biphase transmitters", GR_POWER},
+  {COMMAND(hub232_off), "turn off the RS-232 (serial) hub", GR_POWER},
+  {COMMAND(hub232_on), "turn on the RS-232 (serial) hub", GR_POWER},
+  {COMMAND(das_off), "turn off the DAS", GR_POWER},
+  {COMMAND(das_on), "turn on the DAS", GR_POWER},
+  //TODO do any of these merit requiring CONFIRM ?
+  {COMMAND(preamp_off), "turn off the preamp crate", GR_POWER},
+  {COMMAND(preamp_on), "turn on the preamp crate", GR_POWER},
+  {COMMAND(bias_off), "turn off the bias", GR_POWER},
+  {COMMAND(bias_on), "turn on the bias", GR_POWER},
+  {COMMAND(heat_off), "turn off the cryostat heaters", GR_POWER},
+  {COMMAND(heat_on), "turn on the cryostat heaters", GR_POWER},
+  {COMMAND(hk_off), "turn off the cryostat housekeepng", GR_POWER},
+  {COMMAND(hk_on), "turn on the cryostat housekeepng", GR_POWER},
+  {COMMAND(um250_off), "turn off the 250um array", GR_POWER},
+  {COMMAND(um250_on), "turn on the 250um array", GR_POWER},
+  {COMMAND(um350_off), "turn off the 350um array", GR_POWER},
+  {COMMAND(um350_on), "turn on the 350um array", GR_POWER},
+  {COMMAND(um500_off), "turn off the 500um array", GR_POWER},
+  {COMMAND(um500_on), "turn on the 500um array", GR_POWER},
 
   {COMMAND(az_off), "disable az motors", GR_GAIN},
   {COMMAND(az_on), "enable az motors", GR_GAIN},
@@ -240,25 +267,21 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Level", 0, 32767, 'i', "dac1_ampl"}
     }
   },
-
   {COMMAND(dac2_level), "DAC2 output level. Temporary", GR_MISC, 1,
     {
       {"Level", 0, 32767, 'i', "dac2_ampl"}
     }
   },
-
   {COMMAND(dac3_level), "DAC3 output level. Temporary", GR_MISC, 1,
     {
       {"Level", 0, 32767, 'i', "dac3_ampl"}
     }
   },
-
   {COMMAND(dac4_level), "DAC4 output level. Temporary", GR_MISC, 1,
     {
       {"Level", 0, 32767, 'i', "dac4_ampl"}
     }
   },
-
   {COMMAND(dac5_level), "DAC5 output level. Temporary", GR_MISC, 1,
     {
       {"Level", 0, 32767, 'i', "dac5_ampl"}
@@ -272,27 +295,25 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  /* pointing modes */
   {COMMAND(az_el_goto), "goto point in azimuth and elevation", GR_POINT, 2,
     {
       {"Azimuth (deg)", -360, 360, 'f', "NONE"},
       {"Elevation (deg)", 4.95,  65, 'f', "NONE"}
     }
   },
-
   {COMMAND(az_el_trim), "trim sensors to azimuth and elevation", GR_TRIM, 2,
     {
       {"Azimuth (deg)", 0, 360, 'f', "AZ"},
       {"Elevation (deg)", 0, 90, 'f', "EL"}
     }
   },
-
   {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 2,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_az"},
       {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_az"}
     }
   },
-
   {COMMAND(az_scan), "scan in azimuth", GR_POINT, 4,
     {
       {"Az centre (deg)",       -180, 360, 'f', "NONE"},
@@ -301,19 +322,16 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Az Scan Speed (deg az/s)", 0,   2, 'f', "NONE"}
     }
   },
-
   {COMMAND(bal_gain), "balance system gain", GR_BAL, 1,
     {
       {"Gain",           0.01, 1, 'f', "BAL_GAIN"},
     }
   },
-
   {COMMAND(bal_level), "balance pump pwm level", GR_BAL, 1,
     {
       {"Level (%)", 0, 100, 'f', "BALPUMP_LEV"}
     }
   },
-
   {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps",
     GR_POINT, 6,
     {
@@ -325,7 +343,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"}
     }
   },
-
   {COMMAND(cap), "scan a circle centred on RA/Dec with el steps", GR_POINT, 5,
     {
       {"RA of Centre (h)",          0, 24, 'd', "NONE"},
@@ -335,34 +352,82 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"}
     }
   },
-
   {COMMAND(drift), "move at constant speed in az and el", GR_POINT, 2,
     {
       {"Az Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"},
       {"El Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"}
     }
   },
-
+  {COMMAND(quad), "scan a quadrilateral region in RA/Dec (corners must be "
+    "ordered)", GR_POINT, 10,
+    {
+      {"RA of Corner 1 (h)",        0, 24, 'f', "NONE"},
+      {"Dec of Corner 1 (deg)",   -90, 90, 'f', "NONE"},
+      {"RA of Corner 2 (h)",        0, 24, 'f', "NONE"},
+      {"Dec of Corner 2 (deg)",   -90, 90, 'f', "NONE"},
+      {"RA of Corner 3 (h)",        0, 24, 'f', "NONE"},
+      {"Dec of Corner 3 (deg)",   -90, 90, 'f', "NONE"},
+      {"RA of Corner 4 (h)",        0, 24, 'f', "NONE"},
+      {"Dec of Corner 4 (deg)",   -90, 90, 'f', "NONE"},
+      {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
+      {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"}
+    }
+  },
+  {COMMAND(vbox), "scan an az/el box centred on RA/Dec with el drift",
+    GR_POINT, 6,
+    {
+      {"RA of Centre (h)",          0, 24, 'f', "NONE"},
+      {"Dec of Centre (deg)",     -90, 90, 'f', "NONE"},
+      {"Az Width (deg on sky)",     0, 90, 'f', "NONE"},
+      {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
+      {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
+      {"El Drift Speed (deg el/s)", 0,  2, 'f', "NONE"}
+    }
+  },
+  {COMMAND(vcap), "scan a circle centred on RA/Dec with el drift", GR_POINT, 5,
+    {
+      {"RA of Centre (h)",          0, 24, 'f', "NONE"},
+      {"Dec of Centre (deg)",     -90, 90, 'f', "NONE"},
+      {"Radius (deg on sky)",       0, 90, 'f', "NONE"},
+      {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
+      {"El Drift Speed (deg el/s)", 0,  2, 'f', "NONE"}
+    }
+  },
+  {COMMAND(ra_dec_goto), "track a location RA/Dec", GR_POINT, 2,
+    {
+      {"RA of Centre (h)",      0, 24, 'f', "NONE"},
+      {"Dec of Centre (deg)", -90, 90, 'f', "NONE"}
+    }
+  },
+  {COMMAND(ra_dec_set), "define RA/Dec of current position", GR_TRIM, 2,
+    {
+      {"Current RA (h)",      0, 24, 'f', "NONE"},
+      {"Current Dec (deg)", -90, 90, 'f', "NONE"}
+    }
+  },
+  {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 2,
+    {
+      {"Set Point (rpm)",   0, 2.5, 'f', "SET_REAC"},
+      {"Proportional Gain", 0, MAX_15BIT, 'i', "G_P_PIVOT"}
+    }
+  },
   {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 2,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_el"},
       {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_el"}
     }
   },
-
   {COMMAND(az_gyro_offset), "manually set az gyro offsets", GR_TRIM, 2,
     {
       {"Gyro 2 offset (deg/s)", -0.5, 0.5, 'f', "GY2_OFFSET"},
       {"Gyro 3 offset (deg/s)", -0.5, 0.5, 'f', "GY3_OFFSET"}
     }
   },
-
   {COMMAND(el_gyro_offset), "manually set el gyro offset", GR_TRIM, 1,
     {
       {"Gyro 1 offset (deg/s)", -0.5, 0.5, 'f', "GY1_OFFSET"},
     }
   },
-
   {COMMAND(slew_veto), "set the length of the gyro offset slew veto", GR_TRIM,
     1,
     {
@@ -370,20 +435,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(isc_offset), "set offset of ISC to primary beam",
-    GR_TRIM | GR_ISC_PARAM, 2,
-    {
-      {"X Offset (deg)", -5., 5, 'f', "ISC_X_OFF"},
-      {"Y Offset (deg)", -5., 5, 'f', "ISC_Y_OFF"}
-    }
-  },
-
+  /* actuator bus commands */
   {COMMAND(lock), "lock inner frame", GR_LOCK | GR_POINT, 1,
     {
       {"Lock Elevation (deg)", 5, 90, 'f', "ENC_ELEV"}
     }
   },
-
   {COMMAND(general), "send a general command string to the lock or actuators",
     GR_STAGE | GR_ACT | GR_LOCK, 2,
     {
@@ -391,7 +448,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Command", 0, 32, 's', ""},
     }
   },
-
   {COMMAND(lock_vel), "set the lock motor velocity and acceleration", GR_LOCK,
     2,
     {
@@ -399,28 +455,24 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Acceleration", 1, 1000, 'i', "LOCK_ACC"},
     }
   },
-
   {COMMAND(lock_i), "set the lock motor currents", GR_LOCK, 2,
     {
       {"Move current (%)", 0, 100, 'i', "LOCK_MOVE_I"},
       {"Hold current (%)", 0,  50, 'i', "LOCK_HOLD_I"},
     }
   },
-
   {COMMAND(set_secondary), "servo the secondary mirror to absolute position",
     GR_FOCUS, 1,
     {
       {"Position (counts)", -15000, 15000, 'i', "ABS_FOCUS"},
     }
   },
-
   {COMMAND(delta_secondary), "servo the secondary mirror by a relative amount",
     GR_FOCUS, 1,
     {
       {"Position (counts)", -1000, 1000, 'i', "0"},
     }
   },
-
   {COMMAND(thermo_gain), "set the secondary actuator system gains", GR_FOCUS, 5,
     {
       {"T. Primary Gain",   1, 1000, 'f', "TC_G_PRIM"},
@@ -430,7 +482,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Filter Length (s)", 0, 6000, 'i', "TC_FILTER"}
     }
   },
-
   {COMMAND(actuator_servo), "servo the actuators to absolute positions",
     GR_ACT, 3,
     {
@@ -439,14 +490,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Actuator Gamma", -15000, 15000, 'i', "ACT2_ENC"}
     }
   },
-
   {COMMAND(focus_offset), "set the in focus position offset relative the "
     "nominal focus", GR_FOCUS, 1,
     {
       {"Offset", -5000, 25000, 'i', "SF_OFFSET"}
     }
   },
-
   {COMMAND(actuator_delta), "offset the actuators to from current position",
     GR_ACT, 3,
     {
@@ -455,7 +504,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Actuator Gamma", -1000, 1000, 'i', "0"}
     }
   },
-
   {COMMAND(encoder_offset), "set the current actuator encoder offset",
     GR_ACT, 3,
     {
@@ -464,7 +512,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Actuator Gamma", 0, 30000, 'i', "ACT2_ENC"}
     }
   },
-
   {COMMAND(actuator_vel), "set the actuator velocity and acceleration", GR_ACT,
     2,
     {
@@ -472,14 +519,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Acceleration", 1, 20, 'i', "ACT_ACC"},
     }
   },
-
   {COMMAND(actuator_i), "set the actuator motor currents", GR_ACT, 2,
     {
       {"Move current (%)", 0, 100, 'i', "ACT_MOVE_I"},
       {"Hold current (%)", 0,  50, 'i', "ACT_HOLD_I"},
     }
   },
-
   {COMMAND(lvdt_limit), "set the hard LVDT limits on actuator moves", GR_ACT, 3,
     {
       {"Spread limit", 0, 3000, 'f', "LVDT_SPREAD"},
@@ -487,7 +532,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Upper limit", -6000, 26000, 'f', "LVDT_HIGH"}
     }
   },
-
   {COMMAND(thermo_param), "set the thermal compensation parameters", GR_FOCUS,
     3,
     {
@@ -507,7 +551,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Y speed", 0, 16000, 'i', "STAGE_Y_VEL"}
     }
   },
-
   {COMMAND(xy_jump), "move the X-Y translation stage to relative position",
     GR_STAGE, 4,
     {
@@ -517,7 +560,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Y speed", 0, 16000, 'i', "STAGE_Y_VEL"}
     }
   },
-
   {COMMAND(xy_xscan), "scan the X-Y translation stage in X", GR_STAGE, 3,
     {
       {"X center", 0, 80000, 'l', "STAGE_X"},
@@ -525,7 +567,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"X speed", 0, 16000, 'i', "STAGE_X_VEL"},
     }
   },
-
   {COMMAND(xy_yscan), "scan the X-Y translation stage in Y", GR_STAGE, 3,
     {
       {"Y center", 0, 80000, 'l', "STAGE_Y"},
@@ -533,7 +574,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Y speed", 0, 16000, 'i', "STAGE_Y_VEL"},
     }
   },
-
   {COMMAND(xy_raster), "raster the X-Y translation stage", GR_STAGE, 5,
     {
       {"X center", 0, 80000, 'l', "STAGE_X"},
@@ -544,52 +584,26 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-
-  {COMMAND(osc_offset), "set offset of OSC to primary beam",
-    GR_TRIM | GR_OSC_PARAM, 2,
+  /*******************************************************/
+  /*************** Telemetry/Scheduling  *****************/
+  {COMMAND(timeout), "time until schedule mode", GR_TELEM, 1,
     {
-      {"X Offset (deg)", -5., 5, 'f', "OSC_X_OFF"},
-      {"Y Offset (deg)", -5., 5, 'f', "OSC_Y_OFF"}
+      {"Timeout (s)", 1, 14400, 'i', "TIMEOUT"}
     }
   },
 
-  {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 2,
+  /****************************************/
+  /*************** Misc.  *****************/
+  {COMMAND(gyro_off), "turn off a digital gyro", GR_POWER, 1,
     {
-      {"Set Point (rpm)",   0, 2.5, 'f', "SET_REAC"},
-      {"Proportional Gain", 0, MAX_15BIT, 'i', "G_P_PIVOT"}
+      {"Gyro # (1-6)", 1, 6, 'i', ""}
     }
   },
-
-  {COMMAND(quad), "scan a quadrilateral region in RA/Dec (corners must be "
-    "ordered)", GR_POINT, 10,
+  {COMMAND(gyro_on), "turn on a digital gyro", GR_POWER, 1,
     {
-      {"RA of Corner 1 (h)",        0, 24, 'f', "NONE"},
-      {"Dec of Corner 1 (deg)",   -90, 90, 'f', "NONE"},
-      {"RA of Corner 2 (h)",        0, 24, 'f', "NONE"},
-      {"Dec of Corner 2 (deg)",   -90, 90, 'f', "NONE"},
-      {"RA of Corner 3 (h)",        0, 24, 'f', "NONE"},
-      {"Dec of Corner 3 (deg)",   -90, 90, 'f', "NONE"},
-      {"RA of Corner 4 (h)",        0, 24, 'f', "NONE"},
-      {"Dec of Corner 4 (deg)",   -90, 90, 'f', "NONE"},
-      {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
-      {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"}
+      {"Gyro # (1-6)", 1, 6, 'i', ""}
     }
   },
-
-  {COMMAND(ra_dec_goto), "track a location RA/Dec", GR_POINT, 2,
-    {
-      {"RA of Centre (h)",      0, 24, 'f', "NONE"},
-      {"Dec of Centre (deg)", -90, 90, 'f', "NONE"}
-    }
-  },
-
-  {COMMAND(ra_dec_set), "define RA/Dec of current position", GR_TRIM, 2,
-    {
-      {"Current RA (h)",      0, 24, 'f', "NONE"},
-      {"Current Dec (deg)", -90, 90, 'f', "NONE"}
-    }
-  },
-
   {COMMAND(setpoints), "balance system setpoints", GR_BAL, 3,
     {
       {"Pump On Point (A)",  0, 2, 'f', "BAL_ON"},
@@ -597,13 +611,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Target (A)",        -2, 2, 'f', "BAL_TARGET"}
     }
   },
-
   {COMMAND(spare_level), "spare pump pwm level", GR_BAL, 1,
     {
       {"Level (%)", 0, 100, 'f', "SPRPUMP_LEV"}
     }
   },
-
   {COMMAND(t_gyro_gain), "gyro box heater gains", GR_ELECT, 3,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_gyheat"},
@@ -611,65 +623,28 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Derrivative Gain",  0, MAX_15BIT, 'i', "g_d_gyheat"}
     }
   },
-
   {COMMAND(t_gyro_set), "gyro box temperature set point", GR_ELECT, 1,
     {
       {"Set Point (deg C)", 0, 60, 'f', "T_GY_SET"}
     }
   },
-
-  {COMMAND(timeout), "time until schedule mode", GR_TELEM, 1,
-    {
-      {"Timeout (s)", 1, 14400, 'i', "TIMEOUT"}
-    }
-  },
-
-  {COMMAND(vbox), "scan an az/el box centred on RA/Dec with el drift",
-    GR_POINT, 6,
-    {
-      {"RA of Centre (h)",          0, 24, 'f', "NONE"},
-      {"Dec of Centre (deg)",     -90, 90, 'f', "NONE"},
-      {"Az Width (deg on sky)",     0, 90, 'f', "NONE"},
-      {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
-      {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
-      {"El Drift Speed (deg el/s)", 0,  2, 'f', "NONE"}
-    }
-  },
-
-  {COMMAND(vcap), "scan a circle centred on RA/Dec with el drift", GR_POINT, 5,
-    {
-      {"RA of Centre (h)",          0, 24, 'f', "NONE"},
-      {"Dec of Centre (deg)",     -90, 90, 'f', "NONE"},
-      {"Radius (deg on sky)",       0, 90, 'f', "NONE"},
-      {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
-      {"El Drift Speed (deg el/s)", 0,  2, 'f', "NONE"}
-    }
-  },
-
-  /*******************************************************/
-  /*************** Telemetry/Scheduling  *****************/
-  /****************************************/
-  /*************** Misc.  *****************/
   {COMMAND(auto_apcu), "Automatically control the ACS PCU charge voltage",
     GR_ELECT, 1,
     {
       {"Trim (V)", -1, 1, 'f', "APCU_TRIM"}
     }
   },
-
   {COMMAND(apcu_charge), "Set the ACS PCU battery charge level", GR_ELECT, 1,
     {
       {"Level (V)", 27.25, 31.06, 'f', "APCU_REG"}
     }
   },
-
   {COMMAND(auto_dpcu), "Automatically control the DAS PCU charge voltage",
     GR_ELECT, 1,
     {
       {"Trim (V)", -1, 1, 'f', "DPCU_TRIM"}
     }
   },
-
   {COMMAND(dpcu_charge), "Set the DAS PCU battery charge level", GR_ELECT, 1,
     {
       {"Level (V)", 27.25, 31.09, 'f', "DPCU_REG"}
@@ -683,31 +658,26 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Level", 0, 32767, 'i', "bias1_ampl"}
     }
   },
-
   {COMMAND(bias2_level), "bias 2 level (350 micron)", GR_BIAS, 1,
     {
       {"Level", 0, 32767, 'i', "bias2_ampl"}
     }
   },
-
   {COMMAND(bias3_level), "bias 3 level (500 micron)", GR_BIAS, 1,
     {
       {"Level", 0, 32767, 'i', "bias3_ampl"}
     }
   },
-
   {COMMAND(bias4_level), "bias 4 level (housekeeping?)", GR_BIAS, 1,
     {
       {"Level", 0, 32767, 'i', "bias4_ampl"}
     }
   },
-
   {COMMAND(bias5_level), "bias 5 level (cryo heater?)", GR_BIAS, 1,
     {
       {"Level", 0, 32767, 'i', "bias5_ampl"}
     }
   },
-
   {COMMAND(phase), "set phase shift", GR_BIAS, 2,
     {
       {"DAS Card (0=all)", 0, DAS_START + DAS_CARDS*4/3, 'i', "NONE"},
@@ -722,7 +692,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Pulse Length (ms)", 0, 8000, 'i', "CAL_PULSE"}
     }
   },
-
   {COMMAND(cal_repeat), "pulse calibrator repeatedly", GR_CALLAMP, 2,
     {
       {"Pulse Length (ms)", 10, 8000, 'i', "CAL_PULSE"},
@@ -737,32 +706,27 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Level (%)", 0, 100, 'f', "JFETPWM"}
     }
   },
-
   {COMMAND(jfet_set), "jfet heater setpoints", GR_CRYO_HEAT, 2,
     {
       {"On Point (K)", 0, 400., 'f', "JFET_SET_ON"},
       {"Off Point (K)", 0, 400., 'f', "JFET_SET_OFF"}
     }
   },
-
   {COMMAND(heatsw_heat), "heat switch pwm", GR_CRYO_HEAT, 1,
     {
       {"Level (%)", 0, 100, 'f', "HSPWM"}
     }
   },
-
   {COMMAND(cryo_heat), "spare cryo pwm", GR_CRYO_HEAT, 1,
     {
       {"Level (%)", 0, 100, 'f', "CRYOPWM"}
     }
   },
-
   {COMMAND(bda_heat), "manually set bda heater pwm", GR_CRYO_HEAT, 1,
     {
       {"Level (%)", 0, 100, 'f', "BDAPWM"}
     }
   },
-
   {COMMAND(bda_gain), "set bda heater gains", GR_CRYO_HEAT, 4,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "G_P_BDAHEAT"},
@@ -771,7 +735,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Integral Length", 0, MAX_15BIT, 'i', "G_FL_BDAHEAT"},
     }
   },
-
   {COMMAND(bda_set), "set bda heater setpoint", GR_CRYO_HEAT, 1,
     {
       {"Set Point (Counts)", 0, MAX_15BIT, 'i', "SET_BDAHEAT"}
@@ -780,52 +743,52 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********* ISC Commanding **************/
+  {COMMAND(isc_offset), "set offset of ISC to primary beam",
+    GR_TRIM | GR_ISC_PARAM, 2,
+    {
+      {"X Offset (deg)", -5., 5, 'f', "ISC_X_OFF"},
+      {"Y Offset (deg)", -5., 5, 'f', "ISC_Y_OFF"}
+    }
+  },
   {COMMAND(isc_set_focus), "set focus position", GR_ISC_PARAM, 1,
     {
       {"Focus Position", -1000, 1000, 'i', "ISC_FOCUS"}
     }
   },
-
   {COMMAND(isc_foc_off), "set focus offset relative to the home position",
     GR_ISC_PARAM, 1,
     {
       {"Focus Offset", -500, 2500, 'i', "ISC_FOC_OFF"}
     }
   },
-
   {COMMAND(isc_set_aperture), "set the f-stop", GR_ISC_PARAM, 1,
     {
       {"Aperture Position", 0, AP_RANGE, 'i', "ISC_APERT"}
     }
   },
-
   {COMMAND(isc_save_period), "set the time between automatically saved images",
     GR_ISC_HOUSE, 1,
     {
       {"Period (s):", 0, 1000, 'i', "ISC_SAVE_PRD"}
     }
   },
-
   {COMMAND(isc_pixel_centre), "centre display on pixel", GR_ISC_HOUSE, 2,
     {
       {"Pixel X", 0, ISC_CCD_X_PIXELS - 1, 'i', "NONE"},
       {"Pixel Y", 0, ISC_CCD_Y_PIXELS - 1, 'i', "NONE"}
     }
   },
-
   {COMMAND(isc_blob_centre), "centre display on blob", GR_ISC_HOUSE, 1,
     {
       {"Blob #", 0, MAX_ISC_BLOBS, 'i', "NONE"}
     }
   },
-
   {COMMAND(isc_integrate), "set camera integration times", GR_ISC_PARAM, 2,
     {
       {"fast integration time (ms)", 0, 1572.864, 'f', "ISC_FPULSE"},
       {"slow integration time (ms)", 0, 1572.864, 'f', "ISC_SPULSE"}
     }
   },
-
   {COMMAND(isc_det_set), "set detection parameters", GR_ISC_PARAM, 3,
     {
       {"Search Grid (px/side)",     0, ISC_CCD_Y_PIXELS, 'i', "ISC_GRID"},
@@ -833,7 +796,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Exclusion Distance (px)",   0, ISC_CCD_Y_PIXELS, 'i', "ISC_MDIST"}
     }
   },
-
   {COMMAND(isc_blobs), "number of blobs used in solution",
     GR_ISC_PARAM, 2,
     {
@@ -841,7 +803,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Max Blobs", 0, MAX_ISC_BLOBS, 'i', "ISC_MAXBLOBS"}
     }
   },
-
   {COMMAND(isc_catalogue), "set catalogue retreival parameters",
     GR_ISC_PARAM, 3,
     {
@@ -850,7 +811,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Lost Search Radius (deg)",   0, 50, 'f', "ISC_LRAD"}
     }
   },
-
   {COMMAND(isc_tolerances), "set pointing solution tolerances", GR_ISC_PARAM, 4,
     {
       {"Assoc. Tolerance (arcsec)", 0, 1000, 'f', "ISC_TOL"},
@@ -859,14 +819,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Rot. Tolerance (deg)",      0,   90, 'f', "ISC_RTOL"}
     }
   },
-
   {COMMAND(isc_hold_current), "set ISC stepper motor hold current",
     GR_ISC_HOUSE, 1,
     {
       {"Level (%)", 0, 50, 'i', "ISC_HOLD_I"}
     }
   },
-
   {COMMAND(isc_gain), "set CCD preamp gain and offset", GR_ISC_PARAM, 2,
     {
       {"Gain", 0.1, 100, 'f', "ISC_CCD_GAIN"},
@@ -876,52 +834,52 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********* OSC Commanding **************/
+  {COMMAND(osc_offset), "set offset of OSC to primary beam",
+    GR_TRIM | GR_OSC_PARAM, 2,
+    {
+      {"X Offset (deg)", -5., 5, 'f', "OSC_X_OFF"},
+      {"Y Offset (deg)", -5., 5, 'f', "OSC_Y_OFF"}
+    }
+  },
   {COMMAND(osc_set_focus), "set focus position", GR_OSC_PARAM, 1,
     {
       {"Focus Position", -1000, 1000, 'i', "OSC_FOCUS"}
     }
   },
-
   {COMMAND(osc_foc_off), "set focus offset relative to the home position",
     GR_OSC_PARAM, 1,
     {
       {"Focus Offset", -500, 2500, 'i', "OSC_FOC_OFF"}
     }
   },
-
   {COMMAND(osc_set_aperture), "set the f-stop", GR_OSC_PARAM, 1,
     {
       {"Aperture Position", 0, AP_RANGE, 'i', "OSC_APERT"}
     }
   },
-
   {COMMAND(osc_save_period), "set the time between automatically saved images",
     GR_OSC_HOUSE, 1,
     {
       {"Period (s):", 0, 1000, 'i', "OSC_SAVE_PRD"}
     }
   },
-
   {COMMAND(osc_pixel_centre), "centre display on pixel", GR_OSC_HOUSE, 2,
     {
       {"Pixel X", 0, OSC_CCD_X_PIXELS - 1, 'i', "NONE"},
       {"Pixel Y", 0, OSC_CCD_Y_PIXELS - 1, 'i', "NONE"}
     }
   },
-
   {COMMAND(osc_blob_centre), "centre display on blob", GR_OSC_HOUSE, 1,
     {
       {"Blob #", 0, MAX_ISC_BLOBS, 'i', "NONE"}
     }
   },
-
   {COMMAND(osc_integrate), "set camera integration times", GR_OSC_PARAM, 2,
     {
       {"fast integration time (ms)", 0, 1572.864, 'f', "OSC_FPULSE"},
       {"slow integration time (ms)", 0, 1572.864, 'f', "OSC_SPULSE"}
     }
   },
-
   {COMMAND(osc_det_set), "set detection parameters", GR_OSC_PARAM, 3,
     {
       {"Search Grid (px/side)",     0, OSC_CCD_Y_PIXELS, 'i', "OSC_GRID"},
@@ -929,7 +887,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Exclusion Distance (px)",   0, OSC_CCD_Y_PIXELS, 'i', "OSC_MDIST"}
     }
   },
-
   {COMMAND(osc_blobs), "number of blobs used in solution",
     GR_OSC_PARAM, 2,
     {
@@ -937,7 +894,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Max Blobs", 0, MAX_ISC_BLOBS, 'i', "OSC_MAXBLOBS"}
     }
   },
-
   {COMMAND(osc_catalogue), "set catalogue retreival parameters",
     GR_OSC_PARAM, 3,
     {
@@ -946,7 +902,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Lost Search Radius (deg)",   0, 50, 'f', "OSC_LRAD"}
     }
   },
-
   {COMMAND(osc_tolerances), "set pointing solution tolerances", GR_OSC_PARAM, 4,
     {
       {"Assoc. Tolerance (arcsec)", 0, 1000, 'f', "OSC_TOL"},
@@ -955,21 +910,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Rot. Tolerance (deg)",      0,   90, 'f', "OSC_RTOL"}
     }
   },
-
   {COMMAND(osc_hold_current), "set OSC stepper motor hold current",
     GR_OSC_HOUSE, 1,
     {
       {"Level (%)", 0, 50, 'i', "OSC_HOLD_I"}
     }
   },
-
   {COMMAND(osc_gain), "set CCD preamp gain and offset", GR_OSC_PARAM, 2,
     {
       {"Gain", 0.1, 100, 'f', "OSC_CCD_GAIN"},
       {"Offset", -4096, 4096, 'i', "OSC_CCD_OFFSET"}
     }
   },
-
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
     {
       {"Plover", 0, MAX_15BIT, 'i', "PLOVER"}

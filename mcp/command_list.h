@@ -17,8 +17,8 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 128        /* total number of single word cmds */
-#define N_MCOMMANDS 94         /* total number of multiword commands */
+#define N_SCOMMANDS 156        /* total number of single word cmds */
+#define N_MCOMMANDS 102        /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -72,11 +72,10 @@ enum singleCommand {
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
   fixed,            isc_full_screen,    gps_allow,        gps_veto,
   l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,
-  isc_abort,        isc_allow,
-  isc_pause,        isc_reconnect,      isc_run,          isc_shutdown,
-  isc_veto,         level_off,          level_on,         mag_allow,
-  mag_veto,         osc_auto_focus,     pin_in,           pot_valve_close,
-  pot_valve_off,    pot_valve_on,       ss_off,           ss_on,
+  isc_abort,        isc_allow,          isc_pause,        isc_reconnect,
+  isc_run,          isc_shutdown,       isc_veto,         level_off,
+  level_on,         mag_allow,          mag_veto,         osc_auto_focus,
+  pin_in,           pot_valve_close,    pot_valve_off,    pot_valve_on,       
   pot_valve_open,   balpump_up,         balpump_off,      balpump_on,
   balpump_down,     sprpump_fwd,        sprpump_off,      sprpump_on,
   sprpump_rev,      ramp,               reset_trims,      isc_save_images,
@@ -86,9 +85,16 @@ enum singleCommand {
   osc_shutdown,     osc_reboot,         osc_cam_cycle,    osc_pause,
   osc_abort,        osc_reconnect,      osc_save_images,  osc_discard_images,
   osc_full_screen,  force_el_on,        auto_jfetheat,    auto_cycle,
-  gps_off,          gps_on,
-  gyro_off,         gyro_on,            isc_off,          isc_on,
-  osc_off,          osc_on,             isc_trig_int,     isc_trig_ext,
+  gps_off,          gps_on,             isc_off,          isc_on,
+  osc_off,          osc_on,             reac_off,	  reac_on,
+  piv_off,	    piv_on,		elmot_off,	  elmot_on,
+  sc_tx_off,	    sc_tx_on,		bi0_off,	  bi0_on,
+  das_off,	    das_on,		preamp_off,	  preamp_on,
+  bias_off,	    bias_on,		hk_off,		  hk_on,
+  um250_off,	    um250_on,		um350_off,	  um350_on,
+  um500_off,	    um500_on,		heat_off,	  heat_on,
+  gybox_off,        gybox_on,           ss_off,           ss_on,
+  hub232_off,	    hub232_on,		isc_trig_int,     isc_trig_ext,
   osc_trig_int,     osc_trig_ext,       ln_valve_on,      ln_valve_off,
   osc_veto,         osc_allow,          reap,             isc_eye_on,
   osc_eye_on,       osc_eye_off,        xy_panic,
@@ -134,7 +140,7 @@ enum multiCommand {
   vbox,              alice_file,        az_gyro_offset,   isc_hold_current,
   isc_save_period,   osc_offset,        plugh,
   bda_gain,          bda_set,           jfet_set,         isc_foc_off,
-  osc_foc_off,       apcu_charge,
+  osc_foc_off,       apcu_charge,	gyro_off,	  gyro_on,
   dpcu_charge,       auto_apcu,         auto_dpcu,        quad,
   el_gyro_offset,    general,           slew_veto,        set_secondary,
   thermo_gain,       actuator_servo,    xy_goto,          actuator_vel,

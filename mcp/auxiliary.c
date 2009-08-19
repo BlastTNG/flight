@@ -687,34 +687,161 @@ void ControlAuxMotors(unsigned short *RxFrame)
   WriteData(ifpmBitsAddr, ifpmBits, NIOS_FLUSH);
 }
 
-#define SENS_RST_GYRO 0x08;
-#define SENS_RST_ISC  0x10;
-#define SENS_RST_GPS  0x20;
-#define SENS_RST_SUNS 0x40;
-#define SENS_RST_OSC  0x80;
-
-/* SensorResets: Power veto ISC, OSC, GPS and GYBOX2 */
-void SensorResets(void)
+/* create latching relay pulses, and update enable/disbale levels */
+/* actbus/steppers enable is handled separately in StoreActBus() */
+void ControlPower(void)
 {
   static int firsttime = 1;
-  static struct NiosStruct* sensorResetAddr;
-  int sensor_resets = 0;
+  static struct NiosStruct* latchingAddr[2];
+  static struct NiosStruct* gyboxSwitchAddr;
+  static struct NiosStruct* miscSwitchAddr;
+  int latch0 = 0, latch1 = 0, gybox = 0, misc = 0;
+  int i;
 
   if (firsttime) {
     firsttime = 0;
-    sensorResetAddr = GetNiosAddr("sensor_reset");
+    latchingAddr[0] = GetNiosAddr("latch0");
+    latchingAddr[1] = GetNiosAddr("latch1");
+    gyboxSwitchAddr = GetNiosAddr("gybox_switch");
+    miscSwitchAddr = GetNiosAddr("misc_switch");
   }
 
-  if (CommandData.sensors_off.gps)
-    sensor_resets |= SENS_RST_GPS;
-  if (CommandData.sensors_off.gyro)
-    sensor_resets |= SENS_RST_GYRO;
-  if (CommandData.sensors_off.isc)
-    sensor_resets |= SENS_RST_ISC;
-  if (CommandData.sensors_off.osc)
-    sensor_resets |= SENS_RST_OSC;
-  if (CommandData.sensors_off.ss)
-    sensor_resets |= SENS_RST_SUNS;
+  if (CommandData.power.hub232_off) misc |= 0x08;
+  for (i=0; i<6; i++)
+    if (CommandData.power.gyro_off[i]) gybox |= 0x01 << i;
+  if (CommandData.power.gybox_off) gybox |= 0x80;
 
-  WriteData(sensorResetAddr, sensor_resets, NIOS_QUEUE);
+  if (CommandData.power.sc_tx.set_count > 0) {
+    CommandData.power.sc_tx.set_count--;
+    latch0 |= 0x0001;
+  }
+  if (CommandData.power.sc_tx.rst_count > 0) {
+    CommandData.power.sc_tx.rst_count--;
+    latch0 |= 0x0002;
+  }
+  if (CommandData.power.das.set_count > 0) {
+    CommandData.power.das.set_count--;
+    latch0 |= 0x0004;
+  }
+  if (CommandData.power.das.rst_count > 0) {
+    CommandData.power.das.rst_count--;
+    latch0 |= 0x0008;
+  }
+  if (CommandData.power.isc.set_count > 0) {
+    CommandData.power.isc.set_count--;
+    latch0 |= 0x0010;
+  }
+  if (CommandData.power.isc.rst_count > 0) {
+    CommandData.power.isc.rst_count--;
+    latch0 |= 0x0020;
+  }
+  if (CommandData.power.osc.set_count > 0) {
+    CommandData.power.osc.set_count--;
+    latch0 |= 0x0040;
+  }
+  if (CommandData.power.osc.rst_count > 0) {
+    CommandData.power.osc.rst_count--;
+    latch0 |= 0x0080;
+  }
+  if (CommandData.power.gps.set_count > 0) {
+    CommandData.power.gps.set_count--;
+    latch0 |= 0x0100;
+  }
+  if (CommandData.power.gps.rst_count > 0) {
+    CommandData.power.gps.rst_count--;
+    latch0 |= 0x0200;
+  }
+  if (CommandData.power.reac.set_count > 0) {
+    CommandData.power.reac.set_count--;
+    latch0 |= 0x0400;
+  }
+  if (CommandData.power.reac.rst_count > 0) {
+    CommandData.power.reac.rst_count--;
+    latch0 |= 0x0800;
+  }
+  if (CommandData.power.piv.set_count > 0) {
+    CommandData.power.piv.set_count--;
+    latch0 |= 0x1000;
+  }
+  if (CommandData.power.piv.rst_count > 0) {
+    CommandData.power.piv.rst_count--;
+    latch0 |= 0x2000;
+  }
+  if (CommandData.power.elmot.set_count > 0) {
+    CommandData.power.elmot.set_count--;
+    latch0 |= 0x4000;
+  }
+  if (CommandData.power.elmot.rst_count > 0) {
+    CommandData.power.elmot.rst_count--;
+    latch0 |= 0x8000;
+  }
+  if (CommandData.power.bi0.set_count > 0) {
+    CommandData.power.bi0.set_count--;
+    latch1 |= 0x0001;
+  }
+  if (CommandData.power.bi0.rst_count > 0) {
+    CommandData.power.bi0.rst_count--;
+    latch1 |= 0x0002;
+  }
+  if (CommandData.power.preamp.set_count > 0) {
+    CommandData.power.preamp.set_count--;
+    latch1 |= 0x0004;
+  }
+  if (CommandData.power.preamp.rst_count > 0) {
+    CommandData.power.preamp.rst_count--;
+    latch1 |= 0x0008;
+  }
+  if (CommandData.power.bias.set_count > 0) {
+    CommandData.power.bias.set_count--;
+    latch1 |= 0x0010;
+  }
+  if (CommandData.power.bias.rst_count > 0) {
+    CommandData.power.bias.rst_count--;
+    latch1 |= 0x0020;
+  }
+  if (CommandData.power.hk.set_count > 0) {
+    CommandData.power.hk.set_count--;
+    latch1 |= 0x0040;
+  }
+  if (CommandData.power.hk.rst_count > 0) {
+    CommandData.power.hk.rst_count--;
+    latch1 |= 0x0080;
+  }
+  if (CommandData.power.um250.set_count > 0) {
+    CommandData.power.um250.set_count--;
+    latch1 |= 0x0100;
+  }
+  if (CommandData.power.um250.rst_count > 0) {
+    CommandData.power.um250.rst_count--;
+    latch1 |= 0x0200;
+  }
+  if (CommandData.power.um350.set_count > 0) {
+    CommandData.power.um350.set_count--;
+    latch1 |= 0x0400;
+  }
+  if (CommandData.power.um350.rst_count > 0) {
+    CommandData.power.um350.rst_count--;
+    latch1 |= 0x0800;
+  }
+  if (CommandData.power.um500.set_count > 0) {
+    CommandData.power.um500.set_count--;
+    latch1 |= 0x1000;
+  }
+  if (CommandData.power.um500.rst_count > 0) {
+    CommandData.power.um500.rst_count--;
+    latch1 |= 0x2000;
+  }
+  if (CommandData.power.heat.set_count > 0) {
+    CommandData.power.heat.set_count--;
+    latch1 |= 0x4000;
+  }
+  if (CommandData.power.heat.rst_count > 0) {
+    CommandData.power.heat.rst_count--;
+    latch1 |= 0x8000;
+  }
+
+  WriteData(latchingAddr[0], latch0, NIOS_QUEUE);
+  WriteData(latchingAddr[1], latch1, NIOS_QUEUE);
+  WriteData(gyboxSwitchAddr, gybox, NIOS_QUEUE);
+  WriteData(miscSwitchAddr, misc, NIOS_QUEUE);
 }

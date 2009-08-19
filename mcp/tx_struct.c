@@ -185,32 +185,6 @@ struct ChannelStruct WideSlowChannels[] = {
   {"t_he4pot",     'r',  TMP5, 44,    ROX_C2V,   ROX_OFFSET, 'U'},
   {"t_optbox_filt",'r',  TMP5, 46,    ROX_C2V,   ROX_OFFSET, 'U'},
 
-  {"acs2_a00",     'r', ACS2_A1,  0,    1.0,   0.0, 'U'},
-  {"acs2_a01",     'r', ACS2_A1,  2,    1.0,   0.0, 'U'},
-  {"acs2_a02",     'r', ACS2_A1,  4,    1.0,   0.0, 'U'},
-  {"acs2_a03",     'r', ACS2_A1,  6,    1.0,   0.0, 'U'},
-  {"acs2_a04",     'r', ACS2_A1,  8,    1.0,   0.0, 'U'},
-  {"acs2_a05",     'r', ACS2_A1, 10,    1.0,   0.0, 'U'},
-  {"acs2_a06",     'r', ACS2_A1, 12,    1.0,   0.0, 'U'},
-  {"acs2_a07",     'r', ACS2_A1, 14,    1.0,   0.0, 'U'},
-  {"acs2_a08",     'r', ACS2_A1, 16,    1.0,   0.0, 'U'},
-  {"acs2_a09",     'r', ACS2_A1, 18,    1.0,   0.0, 'U'},
-  {"acs2_a10",     'r', ACS2_A1, 20,    1.0,   0.0, 'U'},
-  {"acs2_a11",     'r', ACS2_A1, 22,    1.0,   0.0, 'U'},
-  {"acs2_a12",     'r', ACS2_A1, 24,    1.0,   0.0, 'U'},
-  {"acs2_a13",     'r', ACS2_A1, 26,    1.0,   0.0, 'U'},
-  {"acs2_a14",     'r', ACS2_A1, 28,    1.0,   0.0, 'U'},
-  {"acs2_a15",     'r', ACS2_A1, 30,    1.0,   0.0, 'U'},
-  {"acs2_a16",     'r', ACS2_A1, 32,    1.0,   0.0, 'U'},
-  {"acs2_a17",     'r', ACS2_A1, 34,    1.0,   0.0, 'U'},
-  {"acs2_a18",     'r', ACS2_A1, 36,    1.0,   0.0, 'U'},
-  {"acs2_a19",     'r', ACS2_A1, 38,    1.0,   0.0, 'U'},
-  {"acs2_a20",     'r', ACS2_A1, 40,    1.0,   0.0, 'U'},
-  {"acs2_a21",     'r', ACS2_A1, 42,    1.0,   0.0, 'U'},
-  {"acs2_a22",     'r', ACS2_A1, 44,    1.0,   0.0, 'U'},
-  {"acs2_a23",     'r', ACS2_A1, 46,    1.0,   0.0, 'U'},
-  {"acs2_a24",     'r', ACS2_A1, 48,    1.0,   0.0, 'U'},
-
   END_OF_CHANNELS
 };
 
@@ -275,6 +249,7 @@ struct ChannelStruct SlowChannels[] = {
   {"sync30",       'w', DAS4_A2, 63,                1.0,             0.0, 'u'},
   {"sync31",       'w', DAS4_A3, 63,                1.0,             0.0, 'u'},
 
+  //set lock-in phase for DAS channels
   {"phase17",      'w', DAS1_A1,  8,                1.0,             0.0, 'u'},
   {"phase18",      'w', DAS1_A2,  8,                1.0,             0.0, 'u'},
   {"phase19",      'w', DAS1_A3,  8,                1.0,             0.0, 'u'},
@@ -287,13 +262,6 @@ struct ChannelStruct SlowChannels[] = {
   {"phase29",      'w', DAS4_A1,  8,                1.0,             0.0, 'u'},
   {"phase30",      'w', DAS4_A2,  8,                1.0,             0.0, 'u'},
   {"phase31",      'w', DAS4_A3,  8,                1.0,             0.0, 'u'},
-
-  {"dac1_ampl",    'w',  ACS2_D,  0,                1.0,             0.0, 'u'},
-  {"dac2_ampl",    'w',  ACS2_D,  1,                1.0,             0.0, 'u'},
-  {"dac3_ampl",    'w',  ACS2_D,  2,                1.0,             0.0, 'u'},
-  {"dac4_ampl",    'w',  ACS2_D,  3,                1.0,             0.0, 'u'},
-  {"dac5_ampl",    'w',  ACS2_D,  4,                1.0,             0.0, 'u'},
-  
   //generic names should be updated. Also bitfields could be useful for dig outs
   {"bias1_ampl",   'w',  BIAS_D,  0,                1.0,             0.0, 'u'},
   {"bias2_ampl",   'w',  BIAS_D,  1,                1.0,             0.0, 'u'},
@@ -669,6 +637,12 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_minblobs", 'w', LOOP6, 62,                1.0,             0.0, 'u'},
 
 #ifndef BOLOTEST
+/* ACS1 Digital I/O card */
+  {"gybox_switch", 'w',  ACS1_D,  2,                1.0,             0.0, 'u'},
+  {"charge_switch",'w',  ACS1_D,  3,                1.0,             0.0, 'u'},
+  {"misc_switch",  'w',  ACS1_D,  4,                1.0,             0.0, 'u'},
+  {"actbus_reset", 'w',  ACS1_D,  5,                1.0,             0.0, 'u'},
+
 /* ACS1 Analog card 1 */
   {"i_trans",      'r',  ACS1_A1, 1,          CAL16(1.0, 0.0), 		'u'},
   {"i_das",        'r',  ACS1_A1, 3,          CAL16(1.0, 0.0), 		'u'},
@@ -696,27 +670,30 @@ struct ChannelStruct SlowChannels[] = {
   {"t_gybox",      'r',  ACS1_T1, 1,          CAL16T(1.0, 0.0),         'u'},
   {"t_mcc",        'r',  ACS1_T1, 9,          CAL16T(1.0, 0.0),         'u'},
   {"t_charger",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u'},
-  //TODO why two of these? should other be deleted or changed?
-  //{"t_charger",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u'},
   {"t_bat1",       'r',  ACS1_T1, 13,         CAL16T(1.0, 0.0),         'u'},
   {"t_bat2",       'r',  ACS1_T1, 15,         CAL16T(1.0, 0.0),         'u'},
   {"t_bat3",       'r',  ACS1_T1, 17,         CAL16T(1.0, 0.0),         'u'},
   {"t_bat4",       'r',  ACS1_T1, 19,         CAL16T(1.0, 0.0),         'u'},
   {"t_array",      'r',  ACS1_T1, 21,         CAL16T(1.0, 0.0),         'u'},
 
+/* ACS2 Digital I/O card */
+  {"dac1_ampl",    'w',  ACS2_D,  0,                1.0,             0.0, 'u'},
+  {"dac2_ampl",    'w',  ACS2_D,  1,                1.0,             0.0, 'u'},
+  {"dac3_ampl",    'w',  ACS2_D,  2,                1.0,             0.0, 'u'},
+  {"dac4_ampl",    'w',  ACS2_D,  3,                1.0,             0.0, 'u'},
+  {"dac5_ampl",    'w',  ACS2_D,  4,                1.0,             0.0, 'u'},
+
+/* ACS2 Analog card */
+  {"t_clin_pyr",   'r',  ACS2_A1,  5,           -0.01875,           614.4, 'u'},
+  {"t_clin_if",    'r',  ACS2_A1, 11,           -0.01875,           614.4, 'u'},
+
 #endif
 
 /* TODO These TMP channels need to be added to correct new nodes, or deleted */
   {"t_el_mc",      'r',  TMP1,  3,              I2T_M,           I2T_B, 'u'},
   {"t_el_mot",     'r',  TMP1,  5,              I2T_M,           I2T_B, 'u'},
-  {"roll_clin_pyr",'r',  TMP1, 33,     -4.0/5333.3333,        4.*6.144, 'u'},
-  {"pch_clin_pyr", 'r',  TMP1, 35,      4.0/5333.3333,       -4.*6.144, 'u'},
-  {"t_clin_pyr",   'r',  TMP1, 23,           -0.01875,           614.4, 'u'},
-  {"t_clin_sip",   'r',  TMP1, 31,           -0.01875,           614.4, 'u'},
-  {"t_clin_if",    'r',  TMP1, 41,           -0.01875,           614.4, 'u'},
   {"apcu_reg",     'w',  TMP1,  4,             0.0382,           27.25, 'u'},
   {"dpcu_reg",     'w',  TMP1,  5,             0.0382,           27.25, 'u'},
-  {"actbus_reset", 'w',  TMP1,  6,                1.0,             0.0, 'u'},
 
   {"t_reac",       'r',  TMP2, 29,              I2T_M,           I2T_B, 'u'},
   {"t_reac_mc",    'r',  TMP2, 31,              I2T_M,           I2T_B, 'u'},
@@ -731,9 +708,6 @@ struct ChannelStruct SlowChannels[] = {
 
   /* ACS2 0-1 is wide fast */
   {"t_ss_back_mid",'r',  TMP3,  3,              I2T_M,           I2T_B, 'u'},
-  {"pch_clin_piv", 'r',  TMP3,  7,      4.0/5333.3333,       -4.*6.144, 'u'},
-  {"roll_clin_piv",'r',  TMP3,  9,      4.0/5333.3333,       -4.*6.144, 'u'},
-  {"t_clin_piv",   'r',  TMP3, 11,            0.01875,          -614.4, 'u'},
   {"i_sun",        'r',  TMP3, 13,           0.000625,          -20.48, 'u'},
 
   /* AD590 calibrations per Marco 2006-11 */
@@ -819,40 +793,12 @@ struct ChannelStruct SlowChannels[] = {
   {"lvdt_13",      'r',  TMP6, 37,  LVDT13_ADC_TO_ENC,     LVDT13_ZERO, 'u'},
   {"t_das",        'r',  TMP6, 47,              I2T_M,           I2T_B, 'u'},
 
-  /* TODO these TMP channels used to be wide-fast */
-#ifndef BOLOTEST
-
-  {"az",          'w', LOOP2, 51,          LI2DEG,                    0.0, 'u'},
-  {"el",          'w', LOOP2, 53,          LI2DEG,                    0.0, 'u'},
-
-#endif
-  {"stage_x",      'w', LOOP5, 28,                1.0,             0.0, 'u'},
-  {"stage_y",      'w', LOOP5, 34,                1.0,             0.0, 'u'},
-
-  /* BIAS Stuff */
-  {"b_amp2",      'r',  TMP6,  0,        B_AMP2_M,               B_AMP2_B, 'u'},
-  {"b_amp1",      'r',  TMP6,  2,        B_AMP1_M,               B_AMP1_B, 'u'},
-  {"b_amp3",      'r',  TMP6, 38,        B_AMP3_M,               B_AMP3_B, 'u'},
-
   /* TODO these TMP channels used to be narrow-fast */
 #ifndef BOLOTEST
   /* read channels from ACS0 */
-  {"pch_clin_sip",'r',  TMP1, 27,   4.0/5333.3333,              -25.91, 'u'},
-  {"roll_clin_sip",'r', TMP1, 29,  -4.0/5333.3333,               24.778, 'u'},
-
-  {"clin_elev",   'r',  TMP1, 37,      0.00546739,                -133.78, 'u'},
-  {"xel_clin_if", 'r',  TMP1, 39,      0.00546739,             -25.*6.144, 'u'},
-
-  {"mag_x",       'r',  TMP1, 45,          MAGX_M,                 MAGX_B, 'u'},
-  {"mag_y",       'r',  TMP1, 47,          MAGY_M,                 MAGY_B, 'u'},
-  {"mag_z",       'r',  TMP1, 43,          MAGZ_M,                 MAGZ_B, 'u'},
-  {"isc_pulse",   'r',  TMP1, 53,             1.0,                    0.0, 'u'},
-  {"osc_pulse",   'r',  TMP1, 54,             1.0,                    0.0, 'u'},
-  {"piv_enc",     'r',  TMP1, 59,    360.0/8192.0,                    0.0, 'u'},
+  {"piv_enc",      'r',  TMP1, 59,        360.0/8192.0,            0.0, 'u'},
 
   /* send data to ACS0 */
-  {"isc_trigger", 'w',  TMP1,  1,             1.0,                    0.0, 'u'},
-  {"osc_trigger", 'w',  TMP1,  2,             1.0,                    0.0, 'u'},
   {"gy2_heat",    'w',  TMP1,  3,             1.0,                    0.0, 'u'},
 
   /* read channels from ACS1 */
@@ -901,7 +847,9 @@ struct ChannelStruct WideFastChannels[] = {
   {"raw_gy5",     'r',  ACS2_D,  8, 1.0, 0.0, 'U'},
   {"raw_gy6",     'r',  ACS2_D, 10, 1.0, 0.0, 'U'},
 #endif
+
   /* 25th channels of all the DAS cards, not currently used */
+#if 0
   {"n17c25",      'r', DAS1_A1, 36,                1.0,             0.0, 'U'},
   {"n18c25",      'r', DAS1_A2, 36,                1.0,             0.0, 'U'},
   {"n19c25",      'r', DAS1_A3, 36,                1.0,             0.0, 'U'},
@@ -914,11 +862,38 @@ struct ChannelStruct WideFastChannels[] = {
   {"n29c25",      'r', DAS4_A1, 36,                1.0,             0.0, 'U'},
   {"n30c25",      'r', DAS4_A2, 36,                1.0,             0.0, 'U'},
   {"n31c25",      'r', DAS4_A3, 36,                1.0,             0.0, 'U'},
+#endif
 
   END_OF_CHANNELS
 };
 
 struct ChannelStruct FastChannels[] = {
+#ifndef BOLOTEST
+/* ACS1 Digital Card */
+  {"latch0",       'w',  ACS1_D,  0,                1.0,             0.0, 'u'},
+  {"latch1",       'w',  ACS1_D,  1,                1.0,             0.0, 'u'},
+
+/* ACS1 Digital Card */
+  {"isc_pulse",    'r',   ACS2_D, 53,                 1.0,            0.0, 'u'},
+  {"osc_pulse",    'r',   ACS2_D, 54,                 1.0,            0.0, 'u'},
+  {"isc_trigger",  'w',   ACS2_D, 11,                 1.0,            0.0, 'u'},
+  {"osc_trigger",  'w',   ACS2_D, 12,                 1.0,            0.0, 'u'},
+
+/* ACS2 Analog card */
+  {"roll_clin_pyr",'r',  ACS2_A1,  1,     -4.0/5333.3333,        4.*6.144, 'u'},
+  {"pch_clin_pyr", 'r',  ACS2_A1,  3,      4.0/5333.3333,       -4.*6.144, 'u'},
+  {"clin_elev",    'r',  ACS2_A1,  7,         0.00546739,         -133.78, 'u'},
+  {"xel_clin_if",  'r',  ACS2_A1,  9,         0.00546739,      -25.*6.144, 'u'},
+  {"mag_x",        'r',  ACS2_A1, 13,              MAGX_M,         MAGX_B, 'u'},
+  {"mag_y",        'r',  ACS2_A1, 15,              MAGY_M,         MAGY_B, 'u'},
+  {"mag_z",        'r',  ACS2_A1, 17,              MAGZ_M,         MAGZ_B, 'u'},
+
+  {"az",          'w', LOOP2, 51,          LI2DEG,                    0.0, 'u'},
+  {"el",          'w', LOOP2, 53,          LI2DEG,                    0.0, 'u'},
+#endif
+
+  {"stage_x",      'w', LOOP5, 28,                1.0,             0.0, 'u'},
+  {"stage_y",      'w', LOOP5, 34,                1.0,             0.0, 'u'},
 #if 0
   //interrupt counters, for debugging
   {"bias_10k",     'r',  BIAS_C,  0,                1.0,             0.0, 'u'},
