@@ -129,6 +129,11 @@ int biphase_is_on = 0;
 #warning TEMPORAL_OFFSET NON-ZERO; FIX FOR FLIGHT
 #endif
 
+#ifndef BOLOTEST
+void openMotors(); //motors.c
+void closeMotors();
+#endif
+
 time_t mcp_systime(time_t *t) {
   time_t the_time = time(NULL) + TEMPORAL_OFFSET;
   if (t)
@@ -630,6 +635,9 @@ static int AmISam(void)
 static void CloseBBC(int signo)
 {
   bprintf(err, "System: Caught signal %i; stopping NIOS", signo);
+#ifndef BOLOTEST
+  closeMotors();
+#endif
   RawNiosWrite(0, BBC_ENDWORD, NIOS_FLUSH);
   RawNiosWrite(BBCPCI_MAX_FRAME_SIZE, BBC_ENDWORD, NIOS_FLUSH);
   bprintf(err, "System: Closing BBC and Bi0");
@@ -768,6 +776,8 @@ int main(int argc, char *argv[])
 
 #ifndef BOLOTEST
   InitSched();
+  openMotors();  //open communications with peripherals, creates threads
+                 // in motors.c
 #endif
 
   bputs(info, "System: Finished Initialisation, waiting for BBC to come up.\n");

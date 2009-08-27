@@ -21,12 +21,15 @@
  */
 
 #include <stdio.h>
+#include <sys/time.h>
+#include <pthread.h>
 
 #include "channels.h"
 #include "tx.h"
 #include "pointing_struct.h"
 #include "command_struct.h"
 #include "mcp.h"
+#include "copleycommand.h"
 
 #define MIN_EL 22
 #define MAX_EL 59
@@ -48,6 +51,25 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
     double *az_left, double *az_right, double *min_el,
     double *max_el, double *az_of_bot );
 
+static pthread_t reactcomm_id;
+
+// device node address for the reaction wheel motor controller
+#define REACT_DEVICE "/dev/ttySI8"
+
+static void* reactComm(void *arg);
+
+/* opens communications with motor controllers */
+void openMotors()
+{
+  bprintf(info, "Motors: connecting to motors");
+  //    open_react(REACT_DEVICE);
+  pthread_create(&reactcomm_id, NULL, &reactComm, NULL);
+}
+
+void closeMotors()
+{
+ 
+}
 
 static int last_mode = -1;
 
@@ -1151,4 +1173,13 @@ void UpdateAxesMode(void)
       break;
   }
   last_mode = CommandData.pointing_mode.mode;
+}
+
+void* reactComm(void* arg)
+{
+  while(1)
+    {
+      sleep(1);
+    }
+  return NULL;
 }
