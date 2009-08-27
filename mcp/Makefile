@@ -16,7 +16,7 @@ endif
 HEADERS = alice.h bbc_pci.h blast.h channels.h command_list.h command_struct.h \
 					crc.h dataholder.h derived.h ephem_read.h ephem_types.h fir.h \
 					isc_protocol.h lut.h mcp.h pointing_struct.h slow_dl.h \
-					sss_struct.h starpos.h tdrss.h tx.h copleycommand.h
+					sss_struct.h starpos.h tdrss.h tx.h copleycommand.h motordefs.h
 
 # These are needed by both bolotest and flight versions
 OBJS = mcp.o actuators.o blast.o channels.o command_list.o commands.o das.o \

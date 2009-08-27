@@ -14,3 +14,28 @@
 
 #include "blast.h"
 #include "copleycommand.h"
+#include "motordefs.h"
+
+#if 0
+void open_copley(char *address)
+{
+  char a[256];
+  strcpy(a, address);
+
+  reactinfo.fd = open(address, O_RDWR | O_NOCTTY | O_NDELAY);
+  if (reactinfo.fd==-1)
+    {
+      /*
+       * Could not open the port.
+       */
+
+      reactinfo.open=0;
+    }
+  else
+    {
+      fcntl(reactinfo.fd, F_SETFL, 0);
+      reactinfo.open=1;
+    }
+  reactinfo.init=0;
+}
+#endif

@@ -30,6 +30,7 @@
 #include "command_struct.h"
 #include "mcp.h"
 #include "copleycommand.h"
+#include "motordefs.h"
 
 #define MIN_EL 22
 #define MAX_EL 59
