@@ -16,26 +16,81 @@
 #include "copleycommand.h"
 #include "motordefs.h"
 
-#if 0
-void open_copley(char *address)
+struct CopleyInfoStruct reactinfo;  
+struct CopleyInfoStruct elevinfo; /* These file descriptors contain the status
+                                     information for each motor and the file descriptor
+				   */
+
+void open_copley(char *address, enum MotorType motor)
 {
   char a[256];
   strcpy(a, address);
 
-  reactinfo.fd = open(address, O_RDWR | O_NOCTTY | O_NDELAY);
-  if (reactinfo.fd==-1)
+  static struct CopleyInfoStruct* copleyinfo;  
+  switch( motor)
+    { 
+    case rw:
+      copleyinfo = &reactinfo;
+      break;
+    case elev:
+      copleyinfo = &elevinfo;
+      break;
+    default:
+      bprintf(err,"CopelyComm open_copley: Invalid motor type.  Motor cannot be opened");
+      return;
+      break;
+    }
+
+  copleyinfo->fd = open(address, O_RDWR | O_NOCTTY | O_NDELAY);
+  if (copleyinfo->fd==-1)
     {
       /*
        * Could not open the port.
        */
 
-      reactinfo.open=0;
+      copleyinfo->open=0;
     }
   else
     {
-      fcntl(reactinfo.fd, F_SETFL, 0);
-      reactinfo.open=1;
+      fcntl(copleyinfo->fd, F_SETFL, 0);
+      copleyinfo->open=1;
     }
-  reactinfo.init=0;
+  copleyinfo->init=0;
 }
-#endif
+
+void close_copley(enum MotorType motor)
+{
+  int n;
+
+  static struct CopleyInfoStruct* copleyinfo;  
+  switch( motor)
+    { 
+    case rw:
+      copleyinfo = &reactinfo;
+      break;
+    case elev:
+      copleyinfo = &elevinfo;
+      break;
+    default:
+      bprintf(err,"CopelyComm open_copley: Invalid motor type.  Motor cannot be opened");
+      return;
+      break;
+    }
+
+  copleyinfo->closing=1; // Tells copleyComm that the motor communcations are closing.                                                                        
+  usleep(500000); // Wait half a second to let reactComm close the current loop.                                                                           
+  bprintf(info,"copleyComm: Closing connection to Copley controller.");
+
+  /*  TODO-LMF:  Write these functions!
+ n = disableRW();
+ if(n>0)
+   {
+     checkRWStatus(n);
+   }
+ else
+   {
+     bprintf(err,"reactComm close_react: Disabling RW controller failed.");
+   }
+  */
+   close(copleyinfo->fd); 
+}

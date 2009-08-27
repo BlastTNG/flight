@@ -63,13 +63,13 @@ static void* reactComm(void *arg);
 void openMotors()
 {
   bprintf(info, "Motors: connecting to motors");
-  //    open_react(REACT_DEVICE);
+  open_copley(REACT_DEVICE,rw);
   pthread_create(&reactcomm_id, NULL, &reactComm, NULL);
 }
 
 void closeMotors()
 {
- 
+  close_copley(rw);
 }
 
 static int last_mode = -1;
