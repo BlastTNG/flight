@@ -1178,6 +1178,30 @@ void UpdateAxesMode(void)
 
 void* reactComm(void* arg)
 {
+  sleep(5);
+  int n;
+  // Make sure the connection to the reaction wheel controller has been initialized.                                                                       
+  int firsttime = 1;
+  int firsterr=1;
+  // Initialize values in the reactinfo structure.                            
+  reactinfo.open=0;
+  reactinfo.loop=0;
+  reactinfo.init=0;
+  reactinfo.err=0;
+  reactinfo.closing=0;
+  reactinfo.disabled=10;
+  while(reactinfo.open==0)
+    {
+      sleep(1);
+      if (firsterr)
+        {
+          bputs(err,"reactComm: Reaction wheel port is not open. Attempting to open a conection.\n");
+          firsterr = 0;
+        }
+      open_copley(REACT_DEVICE,rw);
+    }
+  // Configure the serial port.                                               
+  configure_copley(rw);
   while(1)
     {
       sleep(1);
