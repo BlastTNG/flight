@@ -69,7 +69,9 @@ void openMotors()
 
 void closeMotors()
 {
-  close_copley(rw);
+  if (reactinfo.fd>0) {
+    close_copley(rw);
+  }
 }
 
 static int last_mode = -1;
@@ -1202,6 +1204,13 @@ void* reactComm(void* arg)
     }
   // Configure the serial port.                                               
   configure_copley(rw);
+  bprintf(info,"copleyComm: Attempting to enable the reaction wheel motor.");
+  n=enableCopley(rw);
+  if(n==0)
+    {
+      bprintf(info,"copleyComm: Reaction wheel motor is now enabled.");
+      reactinfo.disabled=0;
+    }
   while(1)
     {
       sleep(1);

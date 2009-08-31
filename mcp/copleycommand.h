@@ -46,8 +46,8 @@ int check_copleyready(enum CheckType check, enum MotorType motor);
 void check_resp(enum MotorType motor);
 int ping_copley(enum MotorType motor);
 int checkCopleyResp(enum MotorType motor);
-
-
+int enableCopley(enum MotorType motor);
+int disableCopley(enum MotorType motor);
 extern struct CopleyInfoStruct reactinfo; /* declared in reactcommand.c        
                                           *                                   
                                           */

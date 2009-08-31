@@ -67,26 +67,24 @@ void open_copley(char *address, enum MotorType motor)
 
 void close_copley(enum MotorType motor)
 {
-  //  int n;
+  int n;
 
   static struct CopleyInfoStruct* copleyinfo;  
   copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
 
   copleyinfo->closing=1; // Tells copleyComm that the motor communcations are closing.                                                                        
-  usleep(500000); // Wait half a second to let reactComm close the current loop.                                                                           
+  usleep(500000); // Wait half a second to let mcp close the current loop.                                                                           
   bprintf(info,"copleyComm: Closing connection to Copley controller.");
 
-  /*  TODO-LMF:  Write these functions!
- n = disableRW();
- if(n>0)
+ n = disableCopley(rw);
+ if(n=0)
    {
-     checkRWStatus(n);
+     //     checkCopleyStatus(n);
    }
  else
    {
-     bprintf(err,"reactComm close_react: Disabling RW controller failed.");
+     bprintf(err,"copleyComm close_copley: Disabling Copley controller failed.");
    }
-  */
    close(copleyinfo->fd); 
 }
 
@@ -379,10 +377,82 @@ int ping_copley(enum MotorType motor)
 int checkCopleyResp(enum MotorType motor)
 {
   char outs[255];
+  int n,m,i,errcode;
+  static struct CopleyInfoStruct* copleyinfo;  
+  char* ptr;
+  copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
+  n = read(copleyinfo->fd,outs,254);
+  if(n<0)
+    {
+      return n;
+    }
+  bprintf(info,"copleyComm checkCopleyResp: Controller response= %s\n",outs);
+  // Did the controller respond ok?
+  if(outs[0]=='o' && outs[1]=='k')
+    {
+      return 0;
+    }
+  else  // This should mean it returned some kind of error code.
+    {
+      if(outs[0]=='e')
+	{
+          m=1;
+	  i=2;
+	  errcode=0;
+          ptr=outs;
+          ptr++;
+	  ptr++;
+	  while(m)
+	    {
+              if(*ptr=='\0'|| i==254 )
+		{
+		  m=0;
+		}
+	      else
+		{
+		  errcode*=10+atoi(ptr);
+		}
+	      i++;
+	    }
+	  bprintf(warning,"copleyComm checkCopleyResp: Controller returned error message %i",errcode);
+	  return errcode;
+	}
+      else // Controller responded with garbage
+	{
+	  return -10;
+	}
+    }
+}
+
+int enableCopley(enum MotorType motor)
+{
   int n;
   static struct CopleyInfoStruct* copleyinfo;  
   copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
-  n = read(copleyinfo->fd,outs,254);
-  bprintf(info,"copleyComm checkCopleyResp: Controller response= %s\n",outs);
-  return 0;
+  //  int count=0;
+  send_copleycmd("s r0x24 3\r",motor);
+  n = check_copleyready(resp,motor);
+  if (n < 0)
+    {
+      berror(err,"copleyComm disableCopley: Communication error.");
+      return -1;
+    }
+  n=checkCopleyResp(motor);
+  return n;
+}
+int disableCopley(enum MotorType motor)
+{
+  int n;
+  static struct CopleyInfoStruct* copleyinfo;  
+  copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
+  //  int count=0;
+  send_copleycmd("s r0x24 0\r",motor);
+  n = check_copleyready(resp,motor);
+  if (n < 0)
+    {
+      berror(err,"copleyComm disableCopley: Communication error.");
+      return -1;
+    }
+  n=checkCopleyResp(motor);
+  return n;
 }
