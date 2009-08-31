@@ -16,6 +16,9 @@
 #include "copleycommand.h"
 #include "motordefs.h"
 
+#define COPLEYCOM_MUS_WAIT 100000 // wait time after a command is given                                                         
+                                  // TODO: optimize this wait time, is it even necessary?        
+#define SELECT_COP_MUS_OUT 200000 // time out for reading from the Copley controller  
 struct CopleyInfoStruct reactinfo;  
 struct CopleyInfoStruct elevinfo; /* These file descriptors contain the status
                                      information for each motor and the file descriptor
@@ -174,12 +177,212 @@ void setopts_copley(int bdrate,enum MotorType motor)
   tcsetattr(copleyinfo->fd, TCSANOW, &options);
 }
 
+void send_copleycmd(char cmd[], enum MotorType motor)
+{
+  int l = strlen(cmd);
+  int n;
+  static struct CopleyInfoStruct* copleyinfo;  
+  copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
+#ifdef DEBUG_COPLEY
+  bprintf(info,"send_copleycmd: cmd = %s",cmd);
+#endif // DEBUG_COPLEY                                                                                                          
+  n = write(copleyinfo->fd,cmd,l);
+  if (n < 0)
+    bprintf(err,"send_copleycmd: failed.");
+  usleep(COPLEYCOM_MUS_WAIT);
+}
 
 void configure_copley(enum MotorType motor)
 {
-  int n,m;
-  bprintf(info,"reactComm configure_react: Testing a 115200 baud rate...\n");
-  setopts_copley(115200,rw);
-  //  n = areWeDisabled();
+  int n,m,i;
+  static struct CopleyInfoStruct* copleyinfo;  
+  copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
+  setopts_copley(9600,motor);
+  bprintf(info, "copleyComm: Setting Baud rate to 9600");
+   n = ping_copley(motor);
+  if(n > 0)
+    {
+      bprintf(info,"copleyComm configure_copley: Controller responds to a 9600 baud rate.");
+      bprintf(info,"copleyComm configure_copley: Attempting to set baud rate to 115200");
+      m = check_copleyready(comm,motor);
+      if(m >= 0)
+	{
+	  send_copleycmd("s r0x90 115200\r",motor);
+	}  
+      m = check_copleyready(resp,motor);
+      if(m >= 0)
+	{
+	  bprintf(info,"Hey it responded!  Wicked!");
+          i=checkCopleyResp(motor);
+	}
+      setopts_copley(115200,motor);
+      //Check to make sure that the motor responds to the new 115200 baud rate.
+      i = ping_copley(motor);
+      if(i > 0)
+	{
+	  bprintf(info, "copleyComm configure_copley: Controller now responds to a 115200 baud rate.");
+          return;
+	}
+      else
+	{
+	  bprintf(err, "copleyComm configure_copley: Controller does not respond to a 115200 baud rate!");
+	  return;
+	}
 
+  //mark
+    }  
+  else
+    {
+      bprintf(info, "copleyComm configure_copley: Controller does not respond to a 9600 baud rate.");
+      bprintf(info, "copleyComm: Setting Baud rate to 115200");
+      setopts_copley(115200,motor);
+      i = ping_copley(motor);
+      if(i > 0)
+	{
+	  bprintf(info, "copleyComm configure_copley: Controller now responds to a 115200 baud rate.");
+          return;
+	}
+      else
+	{
+	  bprintf(err, "copleyComm configure_copley: Controller does not respond to a 115200 baud rate!");
+	  return;
+	}
+    }
+  //TODO-LMF: write some error handling in case configuring the controller fails.
+}
+
+int check_copleyready(enum CheckType check, enum MotorType motor)
+{
+  int n=0;
+  int m;
+  int max_fd;
+  fd_set         input;
+  fd_set         output;
+  struct timeval timeout;
+  static struct CopleyInfoStruct* copleyinfo;  
+  copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
+  max_fd=copleyinfo->fd+1;
+  timeout.tv_sec=0;
+  timeout.tv_usec=SELECT_COP_MUS_OUT;
+  FD_ZERO(&input);
+  FD_ZERO(&output);
+
+  switch(check){
+  case resp:
+    FD_SET(copleyinfo->fd, &input);
+    n = select(max_fd, &input, NULL, NULL, &timeout);
+    break;
+  case comm:
+    FD_SET(copleyinfo->fd, &output);
+    n = select(max_fd, NULL, &output, NULL, &timeout);
+    break;
+  case both:
+    FD_SET(copleyinfo->fd, &input);
+    FD_SET(copleyinfo->fd, &output);
+    n = select(max_fd, &input, &output, NULL, &timeout);
+    break;
+  default:
+    berror(err, "reactComm check_rwready: CheckType is in valid.");
+    return -3;
+    return -3;
+    break;
+  }
+  /* Was there an error? */
+  if (n < 0)
+    {
+      bprintf(err,"reactComm: Select command failed!");
+      return -2;
+    }
+  else if (n==0)
+    {
+#ifdef DEBUG_RW
+      bprintf(warning,"reactComm: Select call timed out.");
+#endif
+      return -1;
+    }
+  else
+    {
+      // Sets a 2 bit integer m.                                                                                            
+      // m=1 ready to be written into                                                                                       
+      // m=2 there is something to be read                                                                                  
+      // m=3 ready to recieve a command and something to be read.                                                           
+      m=0;
+      if (check==resp || check== both)
+	{
+          if (FD_ISSET(copleyinfo->fd, &input))
+            m+=2;
+	}
+      if (check==comm || check==both)
+	{
+          if (FD_ISSET(copleyinfo->fd, &output))
+            m+=1;
+	}
+      if(n==0) 
+	{
+	  berror(fatal,"copleyComm checkready: Serial Poll error!");
+	}
+	//      bprintf(info, "reactComm: checksum returns %i.",m);                                                           
+	return m;
+    }
+}
+
+
+// Can we communciate with the controller?
+// reads the status variable, but only looks to be sure it is getting the correct format
+// in the response.
+//
+//  Returns 1 if the ping was sucessful.
+int ping_copley(enum MotorType motor)
+{
+  char outs[255];
+  int n;
+  static struct CopleyInfoStruct* copleyinfo;  
+  copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
+  n = check_copleyready(comm,motor);
+  if(n >= 0)
+    {
+      //      bprintf(info,"copleyComm configure_copley: Ready to send command!");
+      send_copleycmd("g r0xa0\r",motor);
+    }  
+  else
+    {
+      berror(err,"copleyComm ping_copley: Serial port is not ready to command.");
+      return -5;
+    }
+  n = check_copleyready(resp,motor);
+  if(n >= 0)
+    {
+      n = read(copleyinfo->fd,outs,254);
+            bprintf(info,"copleyComm ping_copley: Controller response= %s\n",outs);
+            bprintf(info,"copleyComm ping_copley: First character= %c\n",outs[0]);
+      if(outs[0]== 'v' || outs[0]== 'e')
+	{
+	  return 1;
+	}
+      else
+	{
+          bprintf(warning,"copleyComm ping_copley: The controller response is incorrect.");
+          bprintf(info,"copleyComm ping_copley: Controller response= %s\n",outs);
+	  return 0;
+	}
+    }
+  else
+    {
+      berror(err,"copleyComm ping_copley: Select failed.");
+      return -1;
+    }
+
+}
+
+// Check the controller response after a command.
+// If the response from the controller is "ok" (i.e. no errors) return 0.
+int checkCopleyResp(enum MotorType motor)
+{
+  char outs[255];
+  int n;
+  static struct CopleyInfoStruct* copleyinfo;  
+  copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
+  n = read(copleyinfo->fd,outs,254);
+  bprintf(info,"copleyComm checkCopleyResp: Controller response= %s\n",outs);
+  return 0;
 }

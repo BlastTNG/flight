@@ -55,7 +55,7 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
 static pthread_t reactcomm_id;
 
 // device node address for the reaction wheel motor controller
-#define REACT_DEVICE "/dev/ttySI8"
+#define REACT_DEVICE "/dev/ttySI9"
 
 static void* reactComm(void *arg);
 

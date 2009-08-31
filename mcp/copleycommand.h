@@ -40,8 +40,12 @@ struct CopleyInfoStruct *get_motor_pointer(enum MotorType motor);
 void open_copley(char *address, enum MotorType motor);
 void close_copley(enum MotorType motor);
 void setopts_copley(int bdrate,enum MotorType motor);
+void send_copleycmd(char cmd[], enum MotorType motor);
 void configure_copley(enum MotorType motor);
-
+int check_copleyready(enum CheckType check, enum MotorType motor);
+void check_resp(enum MotorType motor);
+int ping_copley(enum MotorType motor);
+int checkCopleyResp(enum MotorType motor);
 
 
 extern struct CopleyInfoStruct reactinfo; /* declared in reactcommand.c        
