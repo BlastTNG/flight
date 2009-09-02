@@ -34,3 +34,11 @@ trigger input.
 
 Make sure that parport, or any other driver accessing the parallel
 port, is not loaded into the kernel memory.
+
+TIMING
+the timing of each fast frame in the real pci card is 100Hz.
+The simulator simulate this timing using the linux jiffies. The
+fast frames are sent at the jiffies rate, wich is implementation dependent.
+Look at the HZ definition in /usr/include/asm/param.h to learn what is
+your implementation.
+
