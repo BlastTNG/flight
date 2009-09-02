@@ -6,17 +6,23 @@
 // When including in user-space programs, need time.h for timeval
 #ifndef __KERNEL__
 #  include <sys/time.h>
+#  include <stdint.h>
 #endif
 
-// WARNING: do not change this unless you also change the report in function
-// data_struct_show()
+// WARNING: do not change this unless you also change the report
+// in function data_struct_show().
+// Specify all types and alignment explicitly. -RWO 090430
 struct timing_data {
-  unsigned int serialnumber;
-  struct timeval tv;              //time at which interrupt handled
-  unsigned short workqueue_delay; //delay until worqueue handled (usec)
-  unsigned short status;
-  //USER: add fields here as necessary
-};
+  uint32_t serialnumber;
+  struct __attribute__ ((__packed__))
+  {
+    uint64_t tv_sec;
+    uint64_t tv_usec;
+  } tv;				// time at which interrupt handled
+  uint16_t workqueue_delay;	// delay until workqueue handled (usec)
+  uint16_t status;
+  //USER:add fields here as necessary
+} __attribute__ ((__packed__));
 
 // The timing buffer is long enough to hold 0x800 = 2048 timing_data structs 
 #define BBC_SYNC_BUFSIZE (sizeof(struct timing_data)* 0x800)

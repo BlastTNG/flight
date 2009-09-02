@@ -26,6 +26,7 @@
 #include <linux/sysfs.h>    /* For access to the sysfs */
 #include <linux/string.h>   /* For printing to the sysfs */
 #include <linux/delay.h>    /* For udelay */
+#include <linux/poll.h>     /* For polling support */
 
 #include "bbc_sync.h"
 
@@ -35,11 +36,6 @@
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
 # error "Kernels before 2.6.0 are not supported."
-#endif
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,13)
-#warning "Using old sysfs class interfaces"
-#define __USE_CLASS_SIMPLE
 #endif
 
 struct bbc_sync {
@@ -68,6 +64,7 @@ struct cpu_clock_counters {
 
 static int bbc_sync_open(struct inode *inode, struct file *filp);
 static int bbc_sync_release(struct inode *inode, struct file *filp);
+static unsigned int bbc_sync_poll(struct file *filp, poll_table *wait);
 static ssize_t bbc_sync_read(struct file *filp, char __user *buf, 
 			       size_t count, loff_t *f_pos) ;
 static void bbc_sync_setup_cdev(struct bbc_sync *dev, int index);
@@ -123,6 +120,7 @@ static struct file_operations bbc_sync_fops = {
   .open  =   bbc_sync_open,
   .release = bbc_sync_release,
   .read  =   bbc_sync_read,
+  .poll  =   bbc_sync_poll,
 };
 
 static int bbc_sync_major=BBC_SYNC_MAJOR;
@@ -175,6 +173,18 @@ static int bbc_sync_release(struct inode *inode, struct file *filp)
     atomic_dec(&dev->nreaders);
   up(&dev->sem);
   return 0;
+}
+
+unsigned int bbc_sync_poll(struct file *filp, poll_table *wait)
+{
+  struct bbc_sync *dev = filp->private_data;
+  unsigned int mask = 0;
+
+  poll_wait (filp, &dev->inq, wait);
+
+  if (dev->rp != dev->wp) mask |= POLLIN | POLLRDNORM;
+
+  return mask;
 }
 
 static ssize_t bbc_sync_read(struct file *filp, char __user *buf, 
@@ -280,7 +290,7 @@ static inline int timeval_diff(struct timeval *tv2, struct timeval *tv1)
 
 /* The BBC card interrupt handler "bottom half", which can run 5-500 us
    (or in principle even longer) after the interrupt it caught. */
-void encoder_bottom_half(unsigned long arg) {
+void encoder_bottom_half(struct work_struct * arg) {
   struct timeval tv2;
   static struct timeval old_tv_irq_tophalf;
   int interrupt_deltaT, workqueue_delay;
@@ -348,7 +358,9 @@ void encoder_bottom_half(unsigned long arg) {
 
   // Fill and write struct timing_data to /dev/bbc_sync
   data.serialnumber = serialnumber;
-  data.tv = tv_irq_tophalf;
+  /* data.tv = tv_irq_tophalf; */
+  data.tv.tv_sec = tv_irq_tophalf.tv_sec;
+  data.tv.tv_usec = tv_irq_tophalf.tv_usec;
 #define USHRT_MAX 65535
   data.workqueue_delay = (unsigned short)min(workqueue_delay,USHRT_MAX);
   //USER: populate data fields here
@@ -374,8 +386,7 @@ void encoder_bottom_half(unsigned long arg) {
 }
 
 
-static irqreturn_t bbc_interrupt_handler(int irq, void *dev_id, 
-					 struct pt_regs *regs) {
+static irqreturn_t bbc_interrupt_handler(int irq, void *dev_id) {
   if (!bbcpci_interrupt_test_and_clear())
     return IRQ_NONE;
 
@@ -424,7 +435,7 @@ static int __init bbc_sync_init(void)
   size_t devices_size;
 
   encoder_workqueue = create_singlethread_workqueue("encoders");
-  INIT_WORK(&encoder_work, (void (*)(void *))encoder_bottom_half, NULL);
+  INIT_WORK(&encoder_work, encoder_bottom_half); /* , NULL); */
 
   atomic_set(&cpu_counters.scheduled_work_count, 0);
   cpu_counters.interrupts = 0;
@@ -491,8 +502,9 @@ static int __init bbc_sync_init(void)
   irq = bbcpci_get_irq();
   if (irq) {
     printk(KERN_DEBUG "bbc_sync got irq=%d from BBC PCI driver\n",irq);
-    result= request_irq(irq, bbc_interrupt_handler, SA_SHIRQ, DRV_NAME,
+    result= request_irq(irq, bbc_interrupt_handler, IRQF_SHARED, DRV_NAME,
 			bbc_syncBin);
+    printk(KERN_DEBUG "bbc_sync requested irq, result=%d\n",result);
     if (result) return result;
   }
   bbc_syncBin->bbc_irq = irq;
@@ -517,7 +529,7 @@ static void __exit bbc_sync_exit(void)
   int irq;
 
   // Cancel interrupt handler bottom half work
-  (void)cancel_delayed_work(&encoder_work); //Ign return val=was work canceled b/f run?
+  /* (void)cancel_delayed_work(&encoder_work); //Ign return val=was work canceled b/f run? */
   if (encoder_workqueue) {
     flush_workqueue(encoder_workqueue);
     destroy_workqueue(encoder_workqueue);
@@ -570,11 +582,11 @@ static ssize_t pointers_show(struct class_device *cls, char *buf) {
 
   p0 = dev->buffer;
   count += snprintf(buf+count, PAGE_SIZE-count,
-		    "wp=%5d.  Bytes written: %lld\n",
-		    dev->wp-p0, dev->bytes_written);
+		    "wp=%5ld.  Bytes written: %lld\n",
+		    (unsigned long int)(dev->wp-p0), dev->bytes_written);
   count += snprintf(buf+count, PAGE_SIZE-count,
-		    "rp=%5d.  Bytes read :   %lld\n",
-		    dev->rp-p0, dev->bytes_read);
+		    "rp=%5ld.  Bytes read :   %lld\n",
+		    (unsigned long int)(dev->rp-p0), dev->bytes_read);
   return count;
 }
 
@@ -627,11 +639,11 @@ static ssize_t interrupts_show(struct class_device *cls, char *buf) {
 static ssize_t interrupts_store(struct class_device *cls, const char *buf,
 				size_t count) {
   switch (buf[0]) {
-  case 'g': case 'G':
+  case 'g': case 'G': case '1':
     bbc_interrupts = 1;
     bbcpci_enable_interrupts();
     break;
-  case 's': case 'S':
+  case 's': case 'S': case '0':
     bbcpci_disable_interrupts();
     bbc_interrupts = 0;
     break;
@@ -707,13 +719,18 @@ static ssize_t data_struct_show(struct class_device *cls, char *buf) {
   // in bbc_sync.h
   count += snprintf(buf+count, PAGE_SIZE-count,
 		    "// Raw /dev/bbc_sync data comes from struct timing_data\n"
-		    "// Note that sizeof(struct timing_data) = %d\n"
+		    "// Note that sizeof(struct timing_data) = %ld\n"
 		    "struct timing_data {\n"
-		    "  unsigned int serialnumber;\n"
-		    "  struct timeval tv;\n"
-		    "  unsigned short workqueue_delay;\n"
-		    "  unsigned short status;\n"
-		    "};\n", sizeof(struct timing_data));
+		    "  uint32_t serialnumber;\n"
+		    "  struct __attribute__ ((__packed__))\n"
+                    "  {\n"
+                    "    uint64_t tv_sec;\n"
+                    "    uint64_t tv_usec;\n"
+                    "  } tv;\n"
+                    "  uint16_t workqueue_delay;\n"
+                    "  uint16_t status;\n"
+                    "} __attribute__ ((__packed__));\n",
+                    (unsigned long int) sizeof (struct timing_data));
   return count;
 }
 
@@ -741,28 +758,18 @@ struct class_device_attribute *cda_list_char[]={
   &class_device_attr_pointers,
   NULL};
 
-#ifdef __USE_CLASS_SIMPLE
-#define CLASS_TYPE class_simple
-#else
-#define CLASS_TYPE class
-#endif
-
-static struct CLASS_TYPE *bbc_sync_class;
+static struct class *bbc_sync_class;
 struct class_device *bbc_cl_dev[2];
 
 static struct class_device 
-*start_bbc_class_device(struct CLASS_TYPE *class, struct bbc_sync *dev, 
+*start_bbc_class_device(struct class *class, struct bbc_sync *dev, 
 			struct class_device_attribute **cda_list, const char *name) 
 {
   struct class_device *cd;
   struct class_device_attribute *cdap, **cdapp; 
   dev_t  devnum = dev->cdev.dev;
 
-#ifdef __USE_CLASS_SIMPLE
-  cd = class_simple_device_add(class, devnum, NULL, name);
-#else
   cd = class_device_create(class, NULL, devnum, NULL, "%s", name);
-#endif
   if (IS_ERR(cd))
     return NULL;
   cd->class_data = (void *)dev;
@@ -770,7 +777,8 @@ static struct class_device
   // Loop through class device attributes in the list
   for (cdapp=cda_list; *cdapp; cdapp++) {
     cdap = *cdapp;
-    class_device_create_file(cd, cdap);
+    if (class_device_create_file(cd, cdap))
+      printk(KERN_WARNING "bbc_sync: class_device_create_file failed\n");
   }
   return cd;
 }	   
@@ -779,11 +787,7 @@ static int bbc_sync_start_sysfs()
    /* Register the sysfs class */
 {
 
-#ifdef __USE_CLASS_SIMPLE
-  bbc_sync_class = class_simple_create(THIS_MODULE, "bbc_sync");
-#else
   bbc_sync_class = class_create(THIS_MODULE, "bbc_sync");
-#endif
 
   if (IS_ERR(bbc_sync_class))
     return 0;
@@ -813,15 +817,6 @@ static void bbc_sync_remove_sysfs()
     cdap = *cdapp;
     class_device_remove_file(cd, cdap);
   }
-#ifdef __USE_CLASS_SIMPLE
-  for (i=0; i<2; i++) {
-    devnum = bbc_sync_devices[i].cdev.dev;
-    if (devnum && !IS_ERR(bbc_cl_dev[i]))
-      class_simple_device_remove(devnum);
-  }
-
-  class_simple_destroy(bbc_sync_class);
-#else
   for (i=0; i<2; i++) {
     devnum = bbc_sync_devices[i].cdev.dev;
     if (devnum && !IS_ERR(bbc_cl_dev[i]))
@@ -829,7 +824,6 @@ static void bbc_sync_remove_sysfs()
   }
 
   class_destroy(bbc_sync_class);
-#endif
 }
 
 
