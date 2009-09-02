@@ -22,7 +22,8 @@ The driver inject on the simulated bus few simulated channels:
 lat, lon, gyro1, gyro2, gyro3, starcameras triggers and pulses.
 Have a look at simbbc.h and modify it accordingly. In particular, you
 will want to update lat and lon to reflect your geographical 
-position.
+position. Also, verify the NODE and CHANNEL of the varius fields
+in simbbc.h, they have to reflect tc_struct.c in mcp.
 
 The driver access the paralle port, and output on the data pins:
 data0: ISC trigger
