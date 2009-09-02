@@ -1,0 +1,38 @@
+#!/bin/sh
+module="simbbc"
+device="bbcpci"
+bipdev="bi0_pci"
+
+mode="666"
+
+case "$1" in
+  start)
+	modprobe simbbc || exit 1
+  	major=`cat /proc/devices | awk "\\$2==\"$module\" {print \\$1}"`
+	rm -f /dev/${device}
+	rm -f /dev/${bipdev}
+	mknod /dev/${device} c $major 0
+	ln -s /dev/null /dev/${bipdev}	
+  	chmod ${mode} /dev/${device}
+  ;;
+
+  stop) 
+	modprobe -r simbbc
+	rm -f /dev/${device}
+	rm -f /dev/${bipdev}
+  ;;
+  restart)
+	/etc/init.d/simbbc stop
+	/etc/init.d/simbbc start
+  ;;
+  
+  *)
+    echo "Usage: /etc/init.d/simbbc {start|stop|restart}"
+    exit 1
+    ;;
+	
+
+esac
+
+exit 0
+	
