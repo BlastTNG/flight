@@ -11,6 +11,8 @@
 #include <stdarg.h>  /* ANSI C variable arguments (va_list, va_start, va_end) */
 #include "motordefs.h"
 
+#define RW_ENC_CTS 2097152.0 // Reaction Wheel Encoder Counts per revolution
+
 struct CopleyInfoStruct {
   int fd; // File descriptor for the reaction wheel.                          
   int open; // 0 is closed, 1 is open                                         
@@ -48,6 +50,9 @@ int ping_copley(enum MotorType motor);
 int checkCopleyResp(enum MotorType motor);
 int enableCopley(enum MotorType motor);
 int disableCopley(enum MotorType motor);
+long int getCopleyVel(enum MotorType motor);
+long int getCopleyPos(enum MotorType motor);
+
 extern struct CopleyInfoStruct reactinfo; /* declared in reactcommand.c        
                                           *                                   
                                           */

@@ -1182,6 +1182,11 @@ void* reactComm(void* arg)
 {
   sleep(5);
   int n;
+  long int vel_raw,pos_raw;
+  long int max_pos_raw=0;
+  double pos_deg, vel_dps;
+  struct NiosStruct* RWencPos = NULL;
+  struct NiosStruct* RWencVel = NULL;
   // Make sure the connection to the reaction wheel controller has been initialized.                                                                       
   int firsttime = 1;
   int firsterr=1;
@@ -1204,16 +1209,32 @@ void* reactComm(void* arg)
     }
   // Configure the serial port.                                               
   configure_copley(rw);
+  RWencPos = GetNiosAddr("rw_enc_pos");
+  RWencVel = GetNiosAddr("rw_enc_vel");
   bprintf(info,"copleyComm: Attempting to enable the reaction wheel motor.");
   n=enableCopley(rw);
   if(n==0)
     {
-      bprintf(info,"copleyComm: Reaction wheel motor is now enabled.");
+      bprintf(info,"reactComm: Reaction wheel motor is now enabled.");
       reactinfo.disabled=0;
     }
   while(1)
     {
-      sleep(1);
+      if(reactinfo.init==1)
+	{
+	  vel_raw=getCopleyVel(rw); // Units are 0.1 counts/sec
+	  pos_raw=getCopleyPos(rw); // Units are counts
+                                    // For RW 2097152 cts = 360 deg
+	  vel_dps=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
+	  pos_deg=((double) pos_raw)/RW_ENC_CTS*360.0;
+	  WriteData(RWencPos, ((long int)(pos_deg*DEG2LI)), NIOS_QUEUE); // Should go from 0 to 360 degrees
+	  WriteData(RWencVel, ((long int)(vel_dps/4.0*DEG2LI)), NIOS_QUEUE); // Should from from -720 dps to 720 dps
+          //TODO-LMF Fix this, the position needs to go from 0-360... I need to apply some sort of modulus fn.
+	}
+      else
+	{
+	  sleep(1);
+	}
     }
   return NULL;
 }

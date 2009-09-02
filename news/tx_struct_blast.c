@@ -61,6 +61,7 @@
 #define LOOP4	35, 0
 #define LOOP5	36, 0
 #define LOOP6	37, 0
+#define LOOP7	38, 0
 #define DECOM	40, 0
 
 #define CAL16(m,b) ((m)*M_16PRE), ((b) + B_16PRE*(m)*M_16PRE)
@@ -170,7 +171,9 @@ struct ChannelStruct WideSlowChannels[] = {
   {"act2_enc",     'w', LOOP5, 52,                1.0,  -ACTENC_OFFSET, 'S'},
   {"sec_goal",     'w', LOOP6, 30,                1.0,             0.0, 'S'},
   {"abs_focus",    'w', LOOP6, 32,                1.0,             0.0, 'S'},
-  {"sched_lst",    'w', LOOP6, 56,                1.0,             0.0, 'U'},
+  {"sched_lst",    'w', LOOP6, 56,                1.0,             0.0, 'U'},  
+  {"rw_enc_pos",   'w', LOOP7,  0,             LI2DEG,             0.0, 'U'},
+  {"rw_enc_vel",   'w', LOOP7,  2,         LI2DEG*4.0,             0.0, 'S'},
 
 
 /* Rox a la Jeff */
