@@ -1181,7 +1181,7 @@ void UpdateAxesMode(void)
 void* reactComm(void* arg)
 {
   sleep(5);
-  int n;
+  int n,i;
   long int vel_raw,pos_raw;
   long int max_pos_raw=0;
   double pos_deg, vel_dps;
@@ -1190,6 +1190,7 @@ void* reactComm(void* arg)
   // Make sure the connection to the reaction wheel controller has been initialized.                                                                       
   int firsttime = 1;
   int firsterr=1;
+  bprintf(info,"reactComm: Bringing the reaction wheel online.");
   // Initialize values in the reactinfo structure.                            
   reactinfo.open=0;
   reactinfo.loop=0;
@@ -1197,7 +1198,8 @@ void* reactComm(void* arg)
   reactinfo.err=0;
   reactinfo.closing=0;
   reactinfo.disabled=10;
-  while(reactinfo.open==0)
+  i=0;
+while(reactinfo.open==0)
     {
       sleep(1);
       if (firsterr)
@@ -1206,6 +1208,10 @@ void* reactComm(void* arg)
           firsterr = 0;
         }
       open_copley(REACT_DEVICE,rw);
+      i++;
+      if(i==9){
+          bputs(err,"reactComm: Reaction wheel port could not be opened after 10 attempts.\n");
+      }
     }
   // Configure the serial port.                                               
   configure_copley(rw);

@@ -2276,11 +2276,11 @@ void InitCommandData()
   CommandData.pumps.bal_gain = 0.2;
   CommandData.pumps.inframe_auto = 1;
 
-  CommandData.Temporary.dac_out[0] = 0;
-  CommandData.Temporary.dac_out[1] = 0;
-  CommandData.Temporary.dac_out[2] = 0;
-  CommandData.Temporary.dac_out[3] = 0;
-  CommandData.Temporary.dac_out[4] = 0;
+  CommandData.Temporary.dac_out[0] = 0x8000;
+  CommandData.Temporary.dac_out[1] = 0x8000;
+  CommandData.Temporary.dac_out[2] = 0x8000;
+  CommandData.Temporary.dac_out[3] = 0x8000;
+  CommandData.Temporary.dac_out[4] = 0x8000;
 
   CommandData.Bias.bias[0] = 256;
   CommandData.Bias.bias[1] = 256;
