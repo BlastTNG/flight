@@ -30,8 +30,6 @@
 #define GYRO1_NODE        ACS1        
 #define GYRO2_NODE        ACS1        
 #define GYRO3_NODE        ACS1        
-#define LAT_NODE          LOOP1
-#define LON_NODE          LOOP1
 
 #define CAM0_TRIGGER_CH      1
 #define CAM1_TRIGGER_CH      2
@@ -40,12 +38,8 @@
 #define GYRO1_CH            59
 #define GYRO2_CH            50
 #define GYRO3_CH            56
-#define LAT_CH              38
-#define LON_CH              40
 
 #define GYRO1_DATA       32768
 #define GYRO2_DATA       32768
 #define GYRO3_DATA       32768
 
-#define LAT_DATA         (602299775) // lat * 4294967296.0/360.0
-#define LON_DATA         (37811579) // lon * 4294967296.0/360.0 (w positive)

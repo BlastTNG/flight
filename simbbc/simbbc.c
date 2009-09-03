@@ -106,8 +106,6 @@ static struct {
   struct ChannelStruct gyro1;
   struct ChannelStruct gyro2;
   struct ChannelStruct gyro3;
-  struct ChannelStruct lat;
-  struct ChannelStruct lon;
   /********************************************/
   unsigned int cam0_index, cam0_counter;
   unsigned int cam1_index, cam1_counter;
@@ -166,14 +164,6 @@ static void InitAuxData(void) {
   aux_data.gyro3.node = GYRO3_NODE;
   aux_data.gyro3.addr = GYRO3_CH;
   aux_data.gyro3.data = GYRO3_DATA;
-  //
-  aux_data.lat.node = LAT_NODE;
-  aux_data.lat.addr = LAT_CH;
-  aux_data.lat.data = LAT_DATA;
-  //
-  aux_data.lon.node = LON_NODE;
-  aux_data.lon.addr = LON_CH;
-  aux_data.lon.data = LON_DATA;
 
   /* **************************** */
   aux_data.cam0_index   = aux_data.cam1_index   = 0;
@@ -243,38 +233,6 @@ static void HandleAuxData(unsigned *data)
     auxdata |= BBC_READ | BBC_WRITE;
     PushFifo(data);
     PushFifo(&auxdata);
-  } else if(GET_NODE(*data) == aux_data.lat.node && 
-		GET_CH(*data)   == aux_data.lat.addr) {
-    auxdata  = BBC_DATA(aux_data.lat.data);
-    auxdata |= BBC_NODE(aux_data.lat.node);
-    auxdata |= BBC_CH(aux_data.lat.addr);
-    auxdata |= BBC_WRITE;
-    // this is a loop channel
-    PushFifo(&auxdata);
-  } else if(GET_NODE(*data) == aux_data.lat.node && 
-		GET_CH(*data)   == aux_data.lat.addr+1) {
-    auxdata  = BBC_DATA((aux_data.lat.data >> 16));
-    auxdata |= BBC_NODE(aux_data.lat.node);
-    auxdata |= BBC_CH((aux_data.lat.addr+1));
-    auxdata |= BBC_WRITE;
-    // this is a loop channel
-    PushFifo(&auxdata);
-  } else if(GET_NODE(*data) == aux_data.lon.node && 
-		GET_CH(*data)   == aux_data.lon.addr) {
-    auxdata  = BBC_DATA(aux_data.lon.data);
-    auxdata |= BBC_NODE(aux_data.lon.node);
-    auxdata |= BBC_CH(aux_data.lon.addr);
-    auxdata |= BBC_WRITE;
-    // this is a loop channel
-    PushFifo(&auxdata);
-  } else if(GET_NODE(*data) == aux_data.lon.node && 
-	    GET_CH(*data)   == aux_data.lon.addr+1) {
-    auxdata  = BBC_DATA((aux_data.lon.data >> 16));
-    auxdata |= BBC_NODE(aux_data.lon.node);
-    auxdata |= BBC_CH((aux_data.lon.addr+1));
-    auxdata |= BBC_WRITE;
-    // this is a loop channel
-    PushFifo(&auxdata);
   } else {
     PushFifo(data);
   }
@@ -308,7 +266,7 @@ static void timer_callback(unsigned long dummy)
 
     bout  = aux_data.cam0_pulse.data;
     bout |= aux_data.cam1_pulse.data << 1; 
-    outb(bout, PARALLEL_BASE);
+    outb(~bout, PARALLEL_BASE);
     wmb();
 
 
