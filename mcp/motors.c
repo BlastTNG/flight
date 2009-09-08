@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <math.h>
 
 #include "channels.h"
 #include "tx.h"
@@ -1231,11 +1232,13 @@ while(reactinfo.open==0)
 	  vel_raw=getCopleyVel(rw); // Units are 0.1 counts/sec
 	  pos_raw=getCopleyPos(rw); // Units are counts
                                     // For RW 2097152 cts = 360 deg
-	  vel_dps=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
-	  pos_deg=((double) pos_raw)/RW_ENC_CTS*360.0;
-	  WriteData(RWencPos, ((long int)(pos_deg*DEG2LI)), NIOS_QUEUE); // Should go from 0 to 360 degrees
-	  WriteData(RWencVel, ((long int)(vel_dps/4.0*DEG2LI)), NIOS_QUEUE); // Should from from -720 dps to 720 dps
-          //TODO-LMF Fix this, the position needs to go from 0-360... I need to apply some sort of modulus fn.
+	  if(pos_raw >= 0){
+	    vel_dps=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
+	    bprintf(info,"copleyComm: vel_dps= %f           writ to frame = %d",vel_dps,((long int)(vel_dps/4.0*DEG2I)));
+	    pos_deg=((double) (pos_raw % ((long int) RW_ENC_CTS)))/RW_ENC_CTS*360.0;
+	  WriteData(RWencPos, ((long int)(pos_deg*DEG2I)), NIOS_QUEUE); // Should go from 0 to 360 degrees
+	  WriteData(RWencVel, ((long int)(vel_dps/4.0*DEG2I)), NIOS_QUEUE); // Should from from -720 dps to 720 dps
+	  }
 	}
       else
 	{

@@ -172,8 +172,6 @@ struct ChannelStruct WideSlowChannels[] = {
   {"sec_goal",     'w', LOOP6, 30,                1.0,             0.0, 'S'},
   {"abs_focus",    'w', LOOP6, 32,                1.0,             0.0, 'S'},
   {"sched_lst",    'w', LOOP6, 56,                1.0,             0.0, 'U'},  
-  {"rw_enc_pos",   'w', LOOP7,  0,             LI2DEG,             0.0, 'U'},
-  {"rw_enc_vel",   'w', LOOP7,  2,         LI2DEG*4.0,             0.0, 'S'},
 
 
 /* Rox a la Jeff */
@@ -918,6 +916,8 @@ struct ChannelStruct FastChannels[] = {
   {"cryo_100",     'r',  CRYO_C,  1,                1.0,             0.0, 'u'},
   {"cryo_licnt",   'r',  CRYO_C,  2,                1.0,             0.0, 'u'},
 #endif
+  {"rw_enc_pos",   'w', LOOP7,  0,             I2DEG,             0.0, 'u'},
+  {"rw_enc_vel",   'w', LOOP7,  2,         I2DEG*4.0,             0.0, 's'},
 
   END_OF_CHANNELS
 };
