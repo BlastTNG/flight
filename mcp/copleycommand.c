@@ -16,7 +16,7 @@
 #include "copleycommand.h"
 #include "motordefs.h"
 
-#define COPLEYCOM_MUS_WAIT 10000 // wait time after a command is given                                                         
+#define COPLEYCOM_MUS_WAIT 12000 // wait time after a command is given                                                         
                                   // TODO: optimize this wait time, is it even necessary?        
 #define SELECT_COP_MUS_OUT 200000 // time out for reading from the Copley controller  
 struct CopleyInfoStruct reactinfo;  
@@ -47,7 +47,7 @@ struct CopleyInfoStruct *get_motor_pointer(enum MotorType motor)
       return &elevinfo;
       break;
     default: // Technically this can't happen
-      bprintf(err,"Comm open_copley: Invalid motor type.  Motor cannot be opened");
+      bprintf(err,"Comm get_motor_pointer: Invalid motor type.  Motor cannot be opened");
       return NULL;
       break;
     }

@@ -1194,13 +1194,8 @@ void* reactComm(void* arg)
   int n,i;
   long vel_raw;
   long unsigned pos_raw;
-  long max_pos_raw=0;
-  double pos_deg, vel_dps;
-  struct NiosStruct* RWencPos = NULL;
-  struct NiosStruct* RWencVel = NULL;
-  // Make sure the connection to the reaction wheel controller has been initialized.                                                                       
-  int firsttime = 1;
   int firsterr=1;
+  // Initialize values in the reactinfo structure.                            
   reactinfo.open=0;
   reactinfo.loop=0;
   reactinfo.init=0;
@@ -1209,13 +1204,17 @@ void* reactComm(void* arg)
   reactinfo.disabled=10;
   reactinfo.bdrate=9600;
   strncpy(reactinfo.motorstr,"react",6);
+
+  // Wait to make sure the rest of mcp is up and running before communicating
+  // with the motors.
   sleep(5);
   bprintf(info,"reactComm: Bringing the reaction wheel online.");
-  // Initialize values in the reactinfo structure.                            
   i=0;
   // Initialize structure RWMotorData.  Follows what was done in dgps.c
   RWMotorData[0].rw_enc_pos=0;
   RWMotorData[0].rw_vel_dps=0;
+
+  // Try to open the port.
 while(reactinfo.open==0)
     {
       sleep(1);
@@ -1224,7 +1223,7 @@ while(reactinfo.open==0)
           bputs(err,"reactComm: Reaction wheel port is not open. Attempting to open a conection.\n");
           firsterr = 0;
         }
-      open_copley(REACT_DEVICE,rw);
+      open_copley(REACT_DEVICE,rw); // sets reactinfo.open=1 if sucessful
       i++;
       if(i==9){
           bputs(err,"reactComm: Reaction wheel port could not be opened after 10 attempts.\n");
@@ -1233,7 +1232,7 @@ while(reactinfo.open==0)
 
   // Configure the serial port.                                               
   configure_copley(rw);
-  rw_motor_index = 1;
+  rw_motor_index = 1; // index for writing to the RWMotor data struct
   bprintf(info,"copleyComm: Attempting to enable the reaction wheel motor.");
   n=enableCopley(rw);
   if(n==0)
