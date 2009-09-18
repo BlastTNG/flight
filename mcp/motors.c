@@ -24,6 +24,7 @@
 #include <sys/time.h>
 #include <pthread.h>
 #include <math.h>
+#include <string.h>
 
 #include "channels.h"
 #include "tx.h"
@@ -35,6 +36,9 @@
 
 #define MIN_EL 22
 #define MAX_EL 59
+
+struct RWMotorDataStruct RWMotorData[3]; // defined in point_struct.h
+int rw_motor_index; 
 
 struct AxesModeStruct axes_mode = {
   .el_dir = 1,
@@ -54,24 +58,30 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
     double *max_el, double *az_of_bot );
 
 static pthread_t reactcomm_id;
+static pthread_t elevcomm_id;
 
 // device node address for the reaction wheel motor controller
 #define REACT_DEVICE "/dev/ttySI9"
+#define ELEV_DEVICE "/dev/ttySI11"
 
 static void* reactComm(void *arg);
+static void* elevComm(void *arg);
 
 /* opens communications with motor controllers */
 void openMotors()
 {
   bprintf(info, "Motors: connecting to motors");
-  open_copley(REACT_DEVICE,rw);
   pthread_create(&reactcomm_id, NULL, &reactComm, NULL);
+  pthread_create(&elevcomm_id, NULL, &elevComm, NULL);
 }
 
 void closeMotors()
 {
   if (reactinfo.fd>0) {
     close_copley(rw);
+  }
+  if (elevinfo.fd>0) {
+    close_copley(elev);
   }
 }
 
@@ -1181,25 +1191,31 @@ void UpdateAxesMode(void)
 
 void* reactComm(void* arg)
 {
-  sleep(5);
   int n,i;
-  long int vel_raw,pos_raw;
-  long int max_pos_raw=0;
+  long vel_raw;
+  long unsigned pos_raw;
+  long max_pos_raw=0;
   double pos_deg, vel_dps;
   struct NiosStruct* RWencPos = NULL;
   struct NiosStruct* RWencVel = NULL;
   // Make sure the connection to the reaction wheel controller has been initialized.                                                                       
   int firsttime = 1;
   int firsterr=1;
-  bprintf(info,"reactComm: Bringing the reaction wheel online.");
-  // Initialize values in the reactinfo structure.                            
   reactinfo.open=0;
   reactinfo.loop=0;
   reactinfo.init=0;
   reactinfo.err=0;
   reactinfo.closing=0;
   reactinfo.disabled=10;
+  reactinfo.bdrate=9600;
+  strncpy(reactinfo.motorstr,"react",6);
+  sleep(5);
+  bprintf(info,"reactComm: Bringing the reaction wheel online.");
+  // Initialize values in the reactinfo structure.                            
   i=0;
+  // Initialize structure RWMotorData.  Follows what was done in dgps.c
+  RWMotorData[0].rw_enc_pos=0;
+  RWMotorData[0].rw_vel_dps=0;
 while(reactinfo.open==0)
     {
       sleep(1);
@@ -1214,10 +1230,10 @@ while(reactinfo.open==0)
           bputs(err,"reactComm: Reaction wheel port could not be opened after 10 attempts.\n");
       }
     }
+
   // Configure the serial port.                                               
   configure_copley(rw);
-  RWencPos = GetNiosAddr("rw_enc_pos");
-  RWencVel = GetNiosAddr("rw_enc_vel");
+  rw_motor_index = 1;
   bprintf(info,"copleyComm: Attempting to enable the reaction wheel motor.");
   n=enableCopley(rw);
   if(n==0)
@@ -1227,23 +1243,37 @@ while(reactinfo.open==0)
     }
   while(1)
     {
-      if(reactinfo.init==1)
+      if(reactinfo.init==1 && reactinfo.closing!=1)
 	{
-	  vel_raw=getCopleyVel(rw); // Units are 0.1 counts/sec
+      	  vel_raw=getCopleyVel(rw); // Units are 0.1 counts/sec
 	  pos_raw=getCopleyPos(rw); // Units are counts
                                     // For RW 2097152 cts = 360 deg
+
 	  if(pos_raw >= 0){
-	    vel_dps=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
-	    bprintf(info,"copleyComm: vel_dps= %f           writ to frame = %d",vel_dps,((long int)(vel_dps/4.0*DEG2I)));
-	    pos_deg=((double) (pos_raw % ((long int) RW_ENC_CTS)))/RW_ENC_CTS*360.0;
-	  WriteData(RWencPos, ((long int)(pos_deg*DEG2I)), NIOS_QUEUE); // Should go from 0 to 360 degrees
-	  WriteData(RWencVel, ((long int)(vel_dps/4.0*DEG2I)), NIOS_QUEUE); // Should from from -720 dps to 720 dps
+	    RWMotorData[rw_motor_index].rw_enc_pos=((double) (pos_raw % ((long int) RW_ENC_CTS)))/RW_ENC_CTS*360.0;
+ 	    // TODO-lmf: What happens when the encoder counts saturate?  Is there anyway to 
+            // make the Copley output from 0->RW_ENC_CTS and then reset? 
+	  } else {
+	    RWMotorData[rw_motor_index].rw_enc_pos = 42.0;
 	  }
+          RWMotorData[rw_motor_index].rw_vel_dps=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
+	  
+	  rw_motor_index=INC_INDEX(rw_motor_index);
+	
 	}
       else
 	{
 	  sleep(1);
 	}
+            
+    }
+  return NULL;
+}
+void* elevComm(void* arg)
+{
+  while(1)
+    {
+      sleep(1);
     }
   return NULL;
 }

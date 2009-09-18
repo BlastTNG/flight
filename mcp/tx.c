@@ -713,6 +713,11 @@ static void StoreData(int index)
   static struct NiosStruct *azVelAddr;
   static struct NiosStruct *elVelAddr;
 
+  /* Motor data read out over serial threads in motors.c */
+  static struct NiosStruct *rwEncPos;
+  static struct NiosStruct *rwEncVel;
+
+  int i_rw_motors;
   int i_ss;
   int i_point;
   int i_dgps;
@@ -849,11 +854,15 @@ static void StoreData(int index)
     elVelAddr = GetNiosAddr("el_vel");
     azDirAddr = GetNiosAddr("az_dir");
     elDirAddr = GetNiosAddr("el_dir");
+
+    rwEncPos = GetNiosAddr("rw_enc_pos");
+    rwEncVel = GetNiosAddr("rw_enc_vel");
+
   }
 
   i_point = GETREADINDEX(point_index);
   i_ss = GETREADINDEX(ss_index);
-
+  i_rw_motors = GETREADINDEX(rw_motor_index);
   /* scan modes */
   WriteData(azModeAddr, axes_mode.az_mode, NIOS_QUEUE);
   WriteData(elModeAddr, axes_mode.el_mode, NIOS_QUEUE);
@@ -1073,6 +1082,8 @@ static void StoreData(int index)
   WriteData(dgpsAzRawAddr, DGPSAtt[i_dgps].az * DEG2I, NIOS_QUEUE);
   WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok, NIOS_QUEUE);
   WriteData(dgpsAttIndexAddr, i_dgps, NIOS_QUEUE);
+  WriteData(rwEncPos,((long int)(RWMotorData[i_rw_motors].rw_enc_pos*DEG2I)), NIOS_QUEUE);
+  WriteData(rwEncVel,((long int)(RWMotorData[i_rw_motors].rw_vel_dps/4.0*DEG2I)), NIOS_QUEUE);
 
   StoreStarCameraData(index, 0); /* write ISC data */
   StoreStarCameraData(index, 1); /* write OSC data */

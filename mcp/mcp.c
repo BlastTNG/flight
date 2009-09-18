@@ -70,6 +70,7 @@ int bbc_fp = -1;
 unsigned int debug = 0;
 short int SamIAm;
 struct ACSDataStruct ACSData;
+
 unsigned int RxFrameFastSamp;
 unsigned short* slow_data[FAST_PER_SLOW];
 pthread_t watchdog_id;
@@ -349,7 +350,9 @@ static void GetACS(unsigned short *RxFrame)
   static struct BiPhaseStruct* magXAddr;
   static struct BiPhaseStruct* magYAddr;
   static struct BiPhaseStruct* magZAddr;
-  
+  //  static struct BiPhaseStruct* RWencPos;
+  //  static struct BiPhaseStruct* RWencVol;
+  // TODO-lmf: Not sure if I need this yet.  
   unsigned int rx_frame_index = 0;
   int i_ss;
 
@@ -364,6 +367,10 @@ static void GetACS(unsigned short *RxFrame)
     magXAddr = GetBiPhaseAddr("mag_x");
     magYAddr = GetBiPhaseAddr("mag_y");
     magZAddr = GetBiPhaseAddr("mag_z");
+    //    RWencPos = GetBiPhaseAddr("rw_enc_pos");
+    // RWencVel = GetBiPhaseAddr("rw_enc_vel");
+    // TODO-lmf: Not sure if I need this yet.  
+
   }
 
   rx_frame_index = ((RxFrame[1] & 0x0000ffff) |

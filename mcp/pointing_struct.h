@@ -68,8 +68,22 @@ struct ACSDataStruct {
   int mcp_frame;
   time_t t;
 };
-
 extern struct ACSDataStruct ACSData;
+
+/**********************************************/
+/*  RW Motor Data Struct                      */
+/*  - Stores encoder/velocity information     */
+/*  from the RW                               */
+/*  - Written to struct in the serial thread  */
+/*  reactComm in motors.c                     */
+/*  - Written to the frame in the main thread */
+/*  USE A CIRCULAR BUFFER !!!                 */
+struct RWMotorDataStruct{
+  double rw_enc_pos; // in degrees
+  double rw_vel_dps; // in degrees per second
+};
+extern struct RWMotorDataStruct RWMotorData[3];
+extern int rw_motor_index; // defined in motors.c
 
 extern sss_packet_data SunSensorData[3];
 extern int ss_index;

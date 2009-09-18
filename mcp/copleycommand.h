@@ -32,13 +32,18 @@ struct CopleyInfoStruct {
             //           a power cycle of the controller                      
             // 0 No errors                                                    
   int disabled; // Is the motor controller disabled                           
+  int bdrate; // Baud rate with which we are communicating with the controller
   // 0 if no                                                      
   // 1 in yes                                                     
   // 10 if we aren't sure (because we have just started mcp)      
-  int closing; // 1 if in the process of closing down.                        
+  int closing; // 1 if in the process of closing down.         
+  char motorstr[6];               
 };
 
+void clearCopleyPort(enum MotorType motor);
 struct CopleyInfoStruct *get_motor_pointer(enum MotorType motor);
+void MotorStrOut(char *str,enum MotorType motor);
+void copyouts(char *in, char *out);
 void open_copley(char *address, enum MotorType motor);
 void close_copley(enum MotorType motor);
 void setopts_copley(int bdrate,enum MotorType motor);
@@ -48,12 +53,13 @@ int check_copleyready(enum CheckType check, enum MotorType motor);
 void check_resp(enum MotorType motor);
 int ping_copley(enum MotorType motor);
 int checkCopleyResp(enum MotorType motor);
+void readCopleyResp(enum MotorType motor);
 int enableCopley(enum MotorType motor);
 int disableCopley(enum MotorType motor);
 long int getCopleyVel(enum MotorType motor);
 long int getCopleyPos(enum MotorType motor);
 
-extern struct CopleyInfoStruct reactinfo; /* declared in reactcommand.c        
+extern struct CopleyInfoStruct reactinfo; /* declared in copleycommand.c        
                                           *                                   
                                           */
 extern struct CopleyInfoStruct elevinfo;
