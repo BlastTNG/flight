@@ -40,6 +40,9 @@
 struct RWMotorDataStruct RWMotorData[3]; // defined in point_struct.h
 int rw_motor_index; 
 
+struct ElevMotorDataStruct ElevMotorData[3]; // defined in point_struct.h
+int elev_motor_index; 
+
 struct AxesModeStruct axes_mode = {
   .el_dir = 1,
   .az_dir = 0
@@ -77,6 +80,8 @@ void openMotors()
 
 void closeMotors()
 {
+  reactinfo.closing=1;
+  elevinfo.closing=1; // Tell the serial threads to shut down.
   if (reactinfo.fd>0) {
     close_copley(rw);
   }
@@ -1193,7 +1198,6 @@ void* reactComm(void* arg)
 {
   int n,i;
   long vel_raw;
-  long unsigned pos_raw;
   int firsterr=1;
   // Initialize values in the reactinfo structure.                            
   reactinfo.open=0;
@@ -1211,7 +1215,6 @@ void* reactComm(void* arg)
   bprintf(info,"reactComm: Bringing the reaction wheel online.");
   i=0;
   // Initialize structure RWMotorData.  Follows what was done in dgps.c
-  RWMotorData[0].rw_enc_pos=0;
   RWMotorData[0].rw_vel_dps=0;
 
   // Try to open the port.
@@ -1233,11 +1236,11 @@ while(reactinfo.open==0)
   // Configure the serial port.                                               
   configure_copley(rw);
   rw_motor_index = 1; // index for writing to the RWMotor data struct
-  bprintf(info,"copleyComm: Attempting to enable the reaction wheel motor.");
-  n=enableCopley(rw);
+  bprintf(info,"reactComm: Attempting to enable the reaction wheel motor controller.");
+  //  n=enableCopley(rw);
   if(n==0)
     {
-      bprintf(info,"reactComm: Reaction wheel motor is now enabled.");
+      bprintf(info,"reactComm: Reaction wheel motor controller is now enabled.");
       reactinfo.disabled=0;
     }
   while(1)
@@ -1245,16 +1248,6 @@ while(reactinfo.open==0)
       if(reactinfo.init==1 && reactinfo.closing!=1)
 	{
       	  vel_raw=getCopleyVel(rw); // Units are 0.1 counts/sec
-	  pos_raw=getCopleyPos(rw); // Units are counts
-                                    // For RW 2097152 cts = 360 deg
-
-	  if(pos_raw >= 0){
-	    RWMotorData[rw_motor_index].rw_enc_pos=((double) (pos_raw % ((long int) RW_ENC_CTS)))/RW_ENC_CTS*360.0;
- 	    // TODO-lmf: What happens when the encoder counts saturate?  Is there anyway to 
-            // make the Copley output from 0->RW_ENC_CTS and then reset? 
-	  } else {
-	    RWMotorData[rw_motor_index].rw_enc_pos = 42.0;
-	  }
           RWMotorData[rw_motor_index].rw_vel_dps=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
 	  
 	  rw_motor_index=INC_INDEX(rw_motor_index);
@@ -1268,11 +1261,73 @@ while(reactinfo.open==0)
     }
   return NULL;
 }
+
+
 void* elevComm(void* arg)
 {
-  while(1)
-    {
-      sleep(1);
+  int n,i;
+  long unsigned pos_raw;
+
+  // Initialize values in the elevinfo structure.                            
+  elevinfo.open=0;
+  elevinfo.loop=0;
+  elevinfo.init=0;
+  elevinfo.err=0;
+  elevinfo.closing=0;
+  elevinfo.disabled=10;
+  elevinfo.bdrate=9600;
+  strncpy(elevinfo.motorstr,"elev\0",6);
+
+  // Wait to make sure the rest of mcp is up and running before communicating
+  // with the motors.
+  bprintf(info,"elevComm: Bringing the elevation drive online.");
+  i=0;
+
+  // Initialize structure ElevMotorData.  Follows what was done in dgps.c
+  ElevMotorData[0].elev_enc_pos=0;
+
+  // Try to open the port.
+  while(elevinfo.open==0) {
+    if (i==0) {
+      bputs(info,"elevComm: Elevation drive serial port is not open. Attempting to open a conection.\n");
     }
+    open_copley(ELEV_DEVICE,elev); // sets elevinfo.open=1 if sucessful
+
+    if(i==9) {
+      bputs(err,"elevComm: Elevation drive serial port could not be opened after 10 attempts.\n");
+    }
+    i++;
+
+    if(elevinfo.open==1) bprintf(info,"elevComm: Opened the serial port on attempt number %i",i); 
+    else sleep(1);
+  }
+
+  // Configure the serial port.                                               
+  configure_copley(elev);
+  elev_motor_index = 1; // index for writing to the ElevMotor data struct
+  bprintf(info,"elevComm: Attempting to enable the elevation drive motor controller.");
+  //n=enableCopley(elev);
+
+  if (n==0) {
+    bprintf(info,"elevComm: Elevation Drive motor controller is now enabled.");
+    elevinfo.disabled=0;
+  }
+  while (1) {
+    if (elevinfo.closing==1) {
+      // do your closing stuff here
+      usleep(10000);
+    } else if (elevinfo.init==1) {
+
+      pos_raw=getCopleyPos(elev); // Units are counts
+                                  // For Elev 524288 cts = 360 deg
+      //TODO-lmf: Add in some sort of zeropoint.
+      ElevMotorData[elev_motor_index].elev_enc_pos=((double) (pos_raw % ((long int) ELEV_ENC_CTS)))/ELEV_ENC_CTS*360.0;
+
+      elev_motor_index=INC_INDEX(elev_motor_index);
+      
+    } else {
+      usleep(10000);
+    }
+  }
   return NULL;
 }

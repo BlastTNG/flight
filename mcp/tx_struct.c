@@ -916,8 +916,8 @@ struct ChannelStruct FastChannels[] = {
   {"cryo_100",     'r',  CRYO_C,  1,                1.0,             0.0, 'u'},
   {"cryo_licnt",   'r',  CRYO_C,  2,                1.0,             0.0, 'u'},
 #endif
-  {"rw_enc_pos",   'w', LOOP7,  0,             I2DEG,             0.0, 'u'},
-  {"rw_enc_vel",   'w', LOOP7,  2,         I2DEG*4.0,             0.0, 's'},
+  {"rw_enc_vel",   'w', LOOP7,  0,         I2DEG*4.0,             0.0, 's'},
+  {"elev_enc_pos", 'w', LOOP7,  2,             I2DEG,             0.0, 'u'},
 
   END_OF_CHANNELS
 };

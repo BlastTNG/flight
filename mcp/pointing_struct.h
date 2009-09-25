@@ -79,11 +79,24 @@ extern struct ACSDataStruct ACSData;
 /*  - Written to the frame in the main thread */
 /*  USE A CIRCULAR BUFFER !!!                 */
 struct RWMotorDataStruct{
-  double rw_enc_pos; // in degrees
   double rw_vel_dps; // in degrees per second
 };
 extern struct RWMotorDataStruct RWMotorData[3];
 extern int rw_motor_index; // defined in motors.c
+
+/**********************************************/
+/*  Elev Motor Data Struct                    */
+/*  - Stores encoder/velocity information     */
+/*  from the Elevation Drive                  */
+/*  - Written to struct in the serial thread  */
+/*  reactComm in motors.c                     */
+/*  - Written to the frame in the main thread */
+/*  USE A CIRCULAR BUFFER !!!                 */
+struct ElevMotorDataStruct{
+  double elev_enc_pos; // in degrees
+};
+extern struct ElevMotorDataStruct ElevMotorData[3];
+extern int elev_motor_index; // defined in motors.c
 
 extern sss_packet_data SunSensorData[3];
 extern int ss_index;

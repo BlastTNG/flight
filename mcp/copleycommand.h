@@ -12,6 +12,7 @@
 #include "motordefs.h"
 
 #define RW_ENC_CTS 2097152.0 // Reaction Wheel Encoder Counts per revolution
+#define ELEV_ENC_CTS 524288.0 // Elevation Drive Encoder Counts per revolution
 
 struct CopleyInfoStruct {
   int fd; // File descriptor for the reaction wheel.                          
@@ -53,11 +54,12 @@ int check_copleyready(enum CheckType check, enum MotorType motor);
 void check_resp(enum MotorType motor);
 int ping_copley(enum MotorType motor);
 int checkCopleyResp(enum MotorType motor);
-void readCopleyResp(enum MotorType motor);
+int readCopleyResp(enum MotorType motor);
 int enableCopley(enum MotorType motor);
 int disableCopley(enum MotorType motor);
 long int getCopleyVel(enum MotorType motor);
 long int getCopleyPos(enum MotorType motor);
+int read_line(char *outs,enum MotorType motor);
 
 extern struct CopleyInfoStruct reactinfo; /* declared in copleycommand.c        
                                           *                                   
