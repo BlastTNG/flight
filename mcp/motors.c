@@ -88,10 +88,10 @@ void closeMotors()
   reactinfo.closing=1;
   elevinfo.closing=1; // Tell the serial threads to shut down.
   if (reactinfo.fd>0) {
-    close_copley(rw);
+    close_copley(&reactinfo);
   }
   if (elevinfo.fd>0) {
-    close_copley(elev);
+    close_copley(&elevinfo);
   }
   if (pivotinfo.fd>0) {
     //close command;
@@ -1229,7 +1229,7 @@ void* reactComm(void* arg)
     if (i==0) {
       bputs(info,"reactComm: Reaction wheel controller serial port is not open. Attempting to open a conection.\n");
     }
-    open_copley(REACT_DEVICE,rw); // sets reactinfo.open=1 if sucessful
+    open_copley(REACT_DEVICE,&reactinfo); // sets reactinfo.open=1 if sucessful
     if (reactinfo.open==0) {
         i++;
       if(elevinfo.open==1) bprintf(info,"elevComm: Opened the serial port on attempt number %i",i); 
@@ -1241,10 +1241,10 @@ void* reactComm(void* arg)
   }
 
   // Configure the serial port.                                               
-  configure_copley(rw);
+  configure_copley(&reactinfo);
   rw_motor_index = 1; // index for writing to the RWMotor data struct
   bprintf(info,"reactComm: Attempting to enable the reaction wheel motor controller.");
-  //  n=enableCopley(rw);
+  //  n=enableCopley(&reactinfo);
   if(n==0){    
     bprintf(info,"reactComm: Reaction wheel motor controller is now enabled.");
     reactinfo.disabled=0;
@@ -1255,7 +1255,7 @@ void* reactComm(void* arg)
       usleep(10000);      
     } else if (reactinfo.init==1){
   
-      vel_raw=getCopleyVel(rw); // Units are 0.1 counts/sec
+      vel_raw=getCopleyVel(&reactinfo); // Units are 0.1 counts/sec
       RWMotorData[rw_motor_index].rw_vel_dps=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
 
       rw_motor_index=INC_INDEX(rw_motor_index);
@@ -1301,7 +1301,7 @@ void* elevComm(void* arg)
     if (i==0) {
       bputs(info,"elevComm: Elevation drive serial port is not open. Attempting to open a conection.\n");
     }
-    open_copley(ELEV_DEVICE,elev); // sets elevinfo.open=1 if sucessful
+    open_copley(ELEV_DEVICE,&elevinfo); // sets elevinfo.open=1 if sucessful
 
     if(i==10) {
       bputs(err,"elevComm: Elevation drive serial port could not be opened after 10 attempts.\n");
@@ -1313,10 +1313,10 @@ void* elevComm(void* arg)
   }
 
   // Configure the serial port.                                               
-  configure_copley(elev);
+  configure_copley(&elevinfo);
   elev_motor_index = 1; // index for writing to the ElevMotor data struct
   bprintf(info,"elevComm: Attempting to enable the elevation drive motor controller.");
-  //n=enableCopley(elev);
+  //n=enableCopley(&elevinfo);
   if (n==0) {
     bprintf(info,"elevComm: Elevation Drive motor controller is now enabled.");
     elevinfo.disabled=0;
@@ -1327,7 +1327,7 @@ void* elevComm(void* arg)
       usleep(10000);
     } else if (elevinfo.init==1) {
 
-      pos_raw=getCopleyPos(elev); // Units are counts
+      pos_raw=getCopleyPos(&elevinfo); // Units are counts
                                   // For Elev 524288 cts = 360 deg
       //TODO-lmf: Add in some sort of zeropoint.
       ElevMotorData[elev_motor_index].elev_enc_pos=((double) (pos_raw % ((long int) ELEV_ENC_CTS)))/ELEV_ENC_CTS*360.0;
@@ -1370,7 +1370,7 @@ void* pivotComm(void* arg)
     if (i==0) {
       bputs(info,"pivotComm: Elevation drive serial port is not open. Attempting to open a conection.\n");
     }
-    open_copley(PIVOT_DEVICE,pivot); // sets elevinfo.open=1 if sucessful
+    open_copley(PIVOT_DEVICE,&pivotinfo); // sets elevinfo.open=1 if sucessful
 
     if(i==10) {
       bputs(err,"pivotComm: Pivot controller serial port could not be opened after 10 attempts.\n");
