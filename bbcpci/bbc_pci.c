@@ -3,7 +3,7 @@
  * This software is copyright (C) 2004 University of Toronto
  * Updated 2006 by Adam Hincks, Princeton University, for the ACT experiment.
  * Re-updated 2007 by University of Toronto for Spider
- * Hacked (and copyright) 2008 by Matthew Truch, for the BLAST experiment.
+ * Hacked (and copyright) 2008, 2009 by Matthew Truch, for the BLAST experiment.
  * 
  * This file is part of bbc_pci.
  * 
@@ -37,6 +37,7 @@
 #include <linux/sysfs.h>
 #include <linux/string.h>
 #include <linux/cdev.h>
+#include <linux/poll.h>
 
 #include <asm/atomic.h>
 #include <asm/io.h>
@@ -49,8 +50,6 @@
 #define DRV_VERSION "1.0"
 #define DRV_RELDATE ""
 
-#define BBC_MAJOR 250
-
 #ifndef VERSION_CODE
 #  define VERSION_CODE(vers,rel,seq) ( ((vers)<<16) | ((rel)<<8) | (seq) )
 #endif
@@ -62,10 +61,8 @@
 # error "This kernel version is not supported"
 #endif
 
-static int bbc_major = BBC_MAJOR;
 static int bbc_minor = 0;
 static int bi0_minor = 1;
-int dummydev;
 
 static struct pci_device_id bbc_pci_tbl[] = {
   {0x5045, 0x4243, (PCI_ANY_ID), (PCI_ANY_ID), 0, 0, 0}, 
@@ -141,6 +138,8 @@ static struct class *bbcpci_class;
 struct device *bbcpci_d;
 struct device *bbcbi0_d;
 
+static long int bbc_compat_ioctl(struct file *filp,
+	unsigned int cmd, unsigned long arg);
 static int bbc_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, 
                      unsigned long arg);
 static int bbcpci_start_sysfs(void);
@@ -155,9 +154,9 @@ int bbcpci_get_irq(void) {
 }
 
 int bbcpci_interrupt_test_and_clear(void) {
-  if (readl(bbc_drv.mem_base + BBCPCI_ADD_IRQREG)) {
+  if (ioread32(bbc_drv.mem_base + BBCPCI_ADD_IRQREG)) {
     // Acknowledge receipt of IRQ.
-    writel(0, bbc_drv.mem_base + BBCPCI_ADD_IRQREG);
+    iowrite32(0, bbc_drv.mem_base + BBCPCI_ADD_IRQREG);
     return 1;
   }
   else
@@ -272,19 +271,19 @@ static void timer_callback(unsigned long dummy)
 */
   
   // Check if NIOS is busy resetting itself.
-  if(readl(bbc_drv.mem_base + BBCPCI_ADD_COMREG)) 
+  if(ioread32(bbc_drv.mem_base + BBCPCI_ADD_COMREG)) 
     goto tc_end;
 
   // Read data from NIOS.
   if (bbc_rfifo.status & FIFO_ENABLED) {
     while (atomic_read(&bbc_rfifo.n) < BBC_RFIFO_SIZE)  {
-      wp = readl(bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_WP);
-      rp = readl(bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_RP);      
+      wp = ioread32(bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_WP);
+      rp = ioread32(bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_RP);      
       rp += BBCPCI_SIZE_UINT;
       if(rp >= BBCPCI_ADD_READ_BUF_END) rp = BBCPCI_ADD_READ_BUF;
       if(rp == wp) break;
 
-      bbc_rfifo.data[bbc_rfifo.i_in] = readl(bbc_drv.mem_base + rp);
+      bbc_rfifo.data[bbc_rfifo.i_in] = ioread32(bbc_drv.mem_base + rp);
 
       /*
       // The old method for inserting serial numbers before we added the snyc
@@ -305,7 +304,7 @@ static void timer_callback(unsigned long dummy)
       else
         bbc_rfifo.i_in++;
       
-      writel(rp, bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_RP);
+      iowrite32(rp, bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_RP);
       atomic_inc(&bbc_rfifo.n);
     }
     if (atomic_read(&bbc_rfifo.n))
@@ -314,16 +313,16 @@ static void timer_callback(unsigned long dummy)
 
   // Write Blast data to NIOS.
   if (bbc_wfifo.status & FIFO_ENABLED) {
-    wp = readl(bbc_drv.mem_base + BBCPCI_ADD_WRITE_BUF_P);
+    wp = ioread32(bbc_drv.mem_base + BBCPCI_ADD_WRITE_BUF_P);
     if (wp < BBCPCI_ADD_IR_WRITE_BUF) {
 
       nwritten = 0;
       while ((nwritten < BBCPCI_IR_WRITE_BUF_SIZE) 
              && atomic_read(&bbc_wfifo.n) ) {
         wp += 2 * BBCPCI_SIZE_UINT;
-        writel(bbc_wfifo.data[bbc_wfifo.i_out + 1],
+        iowrite32(bbc_wfifo.data[bbc_wfifo.i_out + 1],
                bbc_drv.mem_base + wp + BBCPCI_SIZE_UINT);
-        writel(bbc_wfifo.data[bbc_wfifo.i_out], bbc_drv.mem_base + wp);
+        iowrite32(bbc_wfifo.data[bbc_wfifo.i_out], bbc_drv.mem_base + wp);
         if (bbc_wfifo.i_out == (BBC_WFIFO_SIZE - 2))
           bbc_wfifo.i_out = 0;
         else
@@ -333,15 +332,15 @@ static void timer_callback(unsigned long dummy)
       }
 
       if (nwritten)
-        writel(wp, bbc_drv.mem_base + BBCPCI_ADD_WRITE_BUF_P);
+        iowrite32(wp, bbc_drv.mem_base + BBCPCI_ADD_WRITE_BUF_P);
     }
   } 
 
   // Write bi-phase data to NIOS.
   if(bi0_wfifo.status & FIFO_ENABLED) {
-    rp = readl(bbc_drv.mem_base + BBCPCI_ADD_BI0_RP);
+    rp = ioread32(bbc_drv.mem_base + BBCPCI_ADD_BI0_RP);
     while( atomic_read(&bi0_wfifo.n) ) {
-      wp = readl(bbc_drv.mem_base + BBCPCI_ADD_BI0_WP);
+      wp = ioread32(bbc_drv.mem_base + BBCPCI_ADD_BI0_WP);
       if(wp == rp) break;
       out_data[--idx] = bi0_wfifo.data[bi0_wfifo.i_out];
       if(bi0_wfifo.i_out == (BI0_WFIFO_SIZE - 1)) {
@@ -351,7 +350,7 @@ static void timer_callback(unsigned long dummy)
       }
       if(idx == 0) {
         idx = 2;
-        writel(*(unsigned *)out_data, bbc_drv.mem_base + wp);
+        iowrite32(*(unsigned *)out_data, bbc_drv.mem_base + wp);
 
         if (wp >= BBCPCI_IR_BI0_BUF_END) {
           wp = BBCPCI_IR_BI0_BUF;
@@ -359,7 +358,7 @@ static void timer_callback(unsigned long dummy)
           wp += BBCPCI_SIZE_UINT;
         }
 
-        writel(wp, bbc_drv.mem_base + BBCPCI_ADD_BI0_WP);
+        iowrite32(wp, bbc_drv.mem_base + BBCPCI_ADD_BI0_WP);
       }
       atomic_dec(&bi0_wfifo.n);
     }
@@ -371,6 +370,23 @@ static void timer_callback(unsigned long dummy)
   add_timer(&bbc_drv.timer);
 }
 
+//--------------------------------------------------------------------------
+// Poll for readability
+//--------------------------------------------------------------------------
+unsigned int bbc_poll(struct file *filp, poll_table *wait)
+{
+  int minor;
+  unsigned int mask = 0;
+
+  minor = *(int *)filp->private_data;
+  if (minor == bbc_minor)
+  {
+    poll_wait (filp, &bbc_read_wq, wait);
+    if (atomic_read(&bbc_rfifo.n) > 0) mask |= POLLIN | POLLRDNORM;
+  }
+
+  return mask;
+}
 
 //------------------------------------------------------------------------------
 // User read.
@@ -515,6 +531,11 @@ static ssize_t bbc_write(struct file *filp, const char __user *buf,
 // Handler for ioctl.
 //------------------------------------------------------------------------------
 
+static long int bbc_compat_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+{
+  return bbc_ioctl (filp->f_dentry->d_inode, filp, cmd, arg);
+}
+
 static int bbc_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, 
                      unsigned long arg) {
   int ret = 0;
@@ -522,29 +543,29 @@ static int bbc_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,
   
   switch(cmd) {
   case BBCPCI_IOC_RESET:    // Reset the BBC board - clear fifo, registers.
-    writel(BBCPCI_COMREG_RESET, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
+    iowrite32(BBCPCI_COMREG_RESET, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
     break;
   case BBCPCI_IOC_SYNC:     // Clear read buffers and restart frame.
-    writel(BBCPCI_COMREG_SYNC, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
+    iowrite32(BBCPCI_COMREG_SYNC, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
     break;
   case BBCPCI_IOC_VERSION:  // Get the current version.
-    ret = readl(bbc_drv.mem_base + BBCPCI_ADD_VERSION);
+    ret = ioread32(bbc_drv.mem_base + BBCPCI_ADD_VERSION);
     break;
   case BBCPCI_IOC_COUNTER:  // Get the counter.
-    ret = readl(bbc_drv.mem_base + BBCPCI_ADD_COUNTER);
+    ret = ioread32(bbc_drv.mem_base + BBCPCI_ADD_COUNTER);
     break;
   case BBCPCI_IOC_WRITEBUF:  // How many words in the NIOS write buf?
-    ret  = readl(bbc_drv.mem_base + BBCPCI_ADD_WRITE_BUF_P);
+    ret  = ioread32(bbc_drv.mem_base + BBCPCI_ADD_WRITE_BUF_P);
     ret -= BBCPCI_ADD_IR_WRITE_BUF;
     break;
   case BBCPCI_IOC_COMREG:  // Return the command register.
-    ret = readl(bbc_drv.mem_base + BBCPCI_ADD_COMREG);
+    ret = ioread32(bbc_drv.mem_base + BBCPCI_ADD_COMREG);
     break;
   case BBCPCI_IOC_READBUF_WP: // Where nios is about to write.
-    ret = readl(bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_WP);
+    ret = ioread32(bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_WP);
     break;
   case BBCPCI_IOC_READBUF_RP: // Where the PC is about to read.
-    ret = readl(bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_RP);
+    ret = ioread32(bbc_drv.mem_base + BBCPCI_ADD_READ_BUF_RP);
     break;
   case BBCPCI_IOC_BBC_FIONREAD:
     ret = atomic_read(&bbc_wfifo.n);
@@ -553,10 +574,10 @@ static int bbc_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,
     ret = atomic_read(&bi0_wfifo.n);
     break;
   case BBCPCI_IOC_ON_IRQ: // Enable IRQ generation.
-    writel(BBCPCI_COMREG_ON_IRQ, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
+    iowrite32(BBCPCI_COMREG_ON_IRQ, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
     break;
   case BBCPCI_IOC_OFF_IRQ: // Disable IRQ generation.
-    writel(BBCPCI_COMREG_OFF_IRQ, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
+    iowrite32(BBCPCI_COMREG_OFF_IRQ, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
     break;
   case BBCPCI_IOC_IRQT_READ:
     if (irq_time_fifo.i_in != irq_time_fifo.i_out)
@@ -572,27 +593,27 @@ static int bbc_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,
     }
     break;  
   case BBCPCI_IOC_IRQ_RATE: // Enable IRQ generation.
-    writel(arg - 1, bbc_drv.mem_base + BBCPCI_ADD_IRQ_RATE);
+    iowrite32(arg - 1, bbc_drv.mem_base + BBCPCI_ADD_IRQ_RATE);
     interrupt_period = arg - 1;
     break;
   case BBCPCI_IOC_FRAME_RATE: // BBC frame rate in external serial mode.
-    writel(arg - 1, bbc_drv.mem_base + BBCPCI_ADD_FRAME_RATE);
+    iowrite32(arg - 1, bbc_drv.mem_base + BBCPCI_ADD_FRAME_RATE);
     break;
   case BBCPCI_IOC_RESET_SERIAL: // Reset serial.
     // Deprecated.
     break;
   case BBCPCI_IOC_GET_SERIAL:   // Get most recent serial number.
-    ret = readl(bbc_drv.mem_base + BBCPCI_ADD_SERIAL);
+    ret = ioread32(bbc_drv.mem_base + BBCPCI_ADD_SERIAL);
     break;
   case BBCPCI_IOC_SERIAL_RDY:   // See if most recent serial number is fresh.
-    ret = readl(bbc_drv.mem_base + BBCPCI_ADD_SERIAL_RDY);
+    ret = ioread32(bbc_drv.mem_base + BBCPCI_ADD_SERIAL_RDY);
     break;
   case BBCPCI_IOC_EXT_SER_ON: // Set serial generation to external source.
-    writel(BBCPCI_COMREG_EXT_SER_ON, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
+    iowrite32(BBCPCI_COMREG_EXT_SER_ON, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
     external_serial_on = 1;
     break;
   case BBCPCI_IOC_EXT_SER_OFF: // Set serial generation to internal source.
-    writel(BBCPCI_COMREG_EXT_SER_OFF, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
+    iowrite32(BBCPCI_COMREG_EXT_SER_OFF, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
     external_serial_on = 0;
     break;
   default:
@@ -644,7 +665,7 @@ static int bbc_open(struct inode *inode, struct file *filp) {
 
   if (bbc_drv.use_count && bbc_drv.timer_on == 0) {
     // Sync bbc.
-    writel(BBCPCI_COMREG_SYNC, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
+    iowrite32(BBCPCI_COMREG_SYNC, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
     // Enable timer.
     bbc_drv.timer_on = 1;
     init_timer(&bbc_drv.timer);
@@ -683,7 +704,7 @@ static int bbc_release(struct inode *inode, struct file *filp)
     del_timer_sync(&bbc_drv.timer);
 
     // Reset BBC. 
-    writel(BBCPCI_COMREG_RESET, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
+    iowrite32(BBCPCI_COMREG_RESET, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
   }
 
   return 0;
@@ -699,8 +720,10 @@ owner:          THIS_MODULE,
 read:           bbc_read,
 write:          bbc_write,
 ioctl:          bbc_ioctl,
+compat_ioctl:	bbc_compat_ioctl,
 open:           bbc_open,
-release:        bbc_release
+release:        bbc_release,
+poll:           bbc_poll
 };
 
 /*
@@ -752,36 +775,24 @@ static int bbcpci_start_sysfs() {
   if (IS_ERR(bbcpci_class)) return 0;
 
   devnum = bbc_drv.bbc_cdev.dev;
-  bbcpci_d = device_create(bbcpci_class, NULL, devnum, "bbc_pci");
-  if (IS_ERR(bbcpci_d)) return 0;
+#if LINUX_VERSION_CODE < VERSION_CODE(2,6,27)
+  bbcpci_d = device_create(bbcpci_class, NULL, devnum, "bbcpci");
   devnum = bbc_drv.bi0_cdev.dev;
   bbcbi0_d = device_create(bbcpci_class, NULL, devnum, "bbc_bi0");
-  if (IS_ERR(bbcbi0_d)) return 0;
-
-#if 0   //busted way of doing things
-  //  bbcpci_class = class_simple_create(THIS_MODULE, "bbcpci");
-  char classname[]="bbcpci", *heap;
-  int len=strlen(classname)+1;
-  heap = kmalloc(len, GFP_KERNEL);
-  if (heap) 
-    strncpy(heap, classname, len);
-  bbcpci_class.name = heap;
-  bbcpci_class.class_attrs=NULL;
-  bbcpci_class.class_dev_attrs=NULL;
-  if (class_register(&bbcpci_class))
-    return 0;
-
-  bbcpci_dev.class = &bbcpci_class;
-  bbcpci_dev.dev=NULL;
-  if (class_device_register(&bbcpci_dev))
-      return 0;
+#else
+  bbcpci_d = device_create(bbcpci_class, NULL, devnum, NULL, "bbcpci");
+  devnum = bbc_drv.bi0_cdev.dev;
+  bbcbi0_d = device_create(bbcpci_class, NULL, devnum, NULL, "bbc_bi0");
 #endif
+  if (IS_ERR(bbcpci_d)) return 0;
+  if (IS_ERR(bbcbi0_d)) return 0;
 
   //loop through device attributes and create files
   //if these are ever used, may need a different set for bi0
   for (dapp = da_list_bbcpci; *dapp; dapp++) {
     dap = *dapp;
-    device_create_file(bbcpci_d, dap);
+    if (device_create_file(bbcpci_d, dap))
+      printk(KERN_ERR "bbc_sync: class_device_create_file failed\n");
   }
   
   return 0;
@@ -803,11 +814,6 @@ static void bbcpci_remove_sysfs() {
   if (devnum && !IS_ERR(bbcbi0_d))
     device_destroy(bbcpci_class, devnum);
   class_destroy(bbcpci_class);
-
-#if 0   //old and busted
-  class_device_unregister(&bbcpci_dev);
-  class_unregister(&bbcpci_class);
-#endif
 }
 
 //------------------------------------------------------------------------------
@@ -827,24 +833,16 @@ static int __devinit bbc_pci_init_one(struct pci_dev *pdev,
   bbc_drv.len          = pci_resource_len(pdev, 0);
   bbc_drv.irq          = pdev->irq;
   
-  // Old way:
-  // ret = pci_read_config_byte(pdev, PCI_INTERRUPT_LINE, &(bbc_drv.irq));
-  // Removed by Adam & Joe 6/7/2006
-
   if (!bbc_drv.mem_base_raw || ((bbc_drv.flags & IORESOURCE_MEM) == 0)) {
     printk(KERN_ERR "%s: no I/O resource at PCI BAR #0\n", DRV_NAME);
     return -ENODEV;
   }
 
-  /* no longer advised, just check return of request_mem_region
-  if (check_mem_region(bbc_drv.mem_base_raw, bbc_drv.len)) {
-    printk(KERN_WARNING "%s: bbc_pci: memory already in use\n", DRV_NAME);
-    return -EBUSY;
-  }
+  /* used only for debugging
+  printk(KERN_WARNING "%s: bbc_pci: base %x len %x \n", DRV_NAME, 
+	  (unsigned int)bbc_drv.mem_base_raw, (unsigned int)bbc_drv.len);
   */
-  
-  printk(KERN_WARNING "%s: bbc_pci: base %x len %x \n", DRV_NAME,
-         (unsigned int)bbc_drv.mem_base_raw, (unsigned int)bbc_drv.len);
+
   if (!request_mem_region(bbc_drv.mem_base_raw, bbc_drv.len, DRV_NAME)) {
     printk(KERN_WARNING "%s: bbc_pci: memory already in use\n", DRV_NAME);
     return -EBUSY;
@@ -853,33 +851,26 @@ static int __devinit bbc_pci_init_one(struct pci_dev *pdev,
   bbc_drv.mem_base = ioremap_nocache(bbc_drv.mem_base_raw, bbc_drv.len);
 
   //create and register character device
-  //devnum = MKDEV(bbc_major, bbc_minor);
-  ret = register_chrdev_region(0, 2, DRV_NAME);  //need 2 minor numbers
+  //request 2 minor device numbers at a dynamically allocated major
+  ret = alloc_chrdev_region(&devnum, bbc_minor, 2, DRV_NAME);
   if (ret < 0) {
-    printk(KERN_WARNING DRV_NAME " can't get major %d\n", bbc_major);
+    printk(KERN_WARNING DRV_NAME " can't allocate major\n");
     return ret;
   }
-  devnum = MKDEV(ret, bbc_minor);
-  printk(KERN_DEBUG DRV_NAME " major: %d minor: %d dev: %d\n", ret, bbc_minor, devnum);
+  printk(KERN_DEBUG DRV_NAME " major: %d minor: %d dev: %d\n", 
+      MAJOR(devnum), bbc_minor, devnum);
   cdev_init(&bbc_drv.bbc_cdev, &bbc_fops);
   bbc_drv.bbc_cdev.owner = THIS_MODULE;
   ret = cdev_add(&bbc_drv.bbc_cdev, devnum, 1);
   if (ret < 0)
     printk(KERN_WARNING DRV_NAME " failed to registed the bbc_pci device");
+
   cdev_init(&bbc_drv.bi0_cdev, &bbc_fops);
   bbc_drv.bi0_cdev.owner = THIS_MODULE;
-  devnum = MKDEV(bbc_major, bi0_minor);
+  devnum = MKDEV(MAJOR(devnum), bi0_minor);
   ret = cdev_add(&bbc_drv.bi0_cdev, devnum, 1);
   if (ret < 0)
     printk(KERN_WARNING DRV_NAME " failed to registed the bbc_bi0 device");
-
-#if 0      //old way, above way works better with sysfs
-  // Register this as a character device
-  if(register_chrdev(bbc_major, DRV_NAME, &bbc_fops) != 0) {
-    printk(KERN_ERR "%s: unable to get major device\n", DRV_NAME);
-    return -EIO;
-  }
-#endif
 
   // Create /proc entry.
   create_proc_read_entry(DRV_NAME, 
@@ -890,22 +881,13 @@ static int __devinit bbc_pci_init_one(struct pci_dev *pdev,
                         );
 
   // Reset BBC.
-  writel(BBCPCI_COMREG_RESET, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
+  iowrite32(BBCPCI_COMREG_RESET, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
 
   bbc_drv.timer_on = 0;
   bbc_drv.use_count = 0;
   bbc_wfifo.status = FIFO_DISABLED;
   bbc_rfifo.status = FIFO_DISABLED;
   bi0_wfifo.status = FIFO_DISABLED;
-
-  // This functionality is now in the act_timing module.
-  // if (request_irq(bbcpci_get_irq(), adaminterrupt, SA_SHIRQ, "bbcpci", 
-  //     &dummydev)) {
-  //   printk(KERN_ERR "Adaminterrupt failed! %d %d %d %d %d\n", EIO,
-  //          EINVAL, EBUSY, ENODEV, ENOMEM);
-  //   return -EIO;
-  // }
-  // bbcpci_enable_interrupts();
 
   bbcpci_start_sysfs();
 
@@ -930,14 +912,8 @@ static void __devexit bbc_pci_remove_one(struct pci_dev *pdev) {
 
   cdev_del(&bbc_drv.bbc_cdev);
   cdev_del(&bbc_drv.bi0_cdev);
-  unregister_chrdev_region(MKDEV(bbc_major, bbc_minor), 2);
-#if 0    //old way
-  unregister_chrdev(bbc_major, DRV_NAME);
-#endif
+  unregister_chrdev_region(bbc_drv.bbc_cdev.dev, 2);
 
-  // This is now in the act_timing module.
-  // free_irq(bbcpci_get_irq(), &dummydev);
-  
   pci_disable_device(pdev);
   printk(KERN_NOTICE "%s: driver removed\n", DRV_NAME); 
 }
@@ -974,17 +950,14 @@ MODULE_ALIAS("/dev/bbcpci");
 MODULE_ALIAS("/dev/bi0_pci");
 
 #ifdef module_param
-module_param(bbc_major, int, S_IRUGO);
 module_param(bbc_minor, int, S_IRUGO);
 module_param(bi0_minor, int, S_IRUGO);
 #else
 #warning "using old crufty MODULE_PARM"
-MODULE_PARM(bbc_major, "i");
 MODULE_PARM(bbc_minor, "i");
 MODULE_PARM(bi0_minor, "i");
 #endif
 
-MODULE_PARM_DESC(bbc_major, " bbc major number");
 MODULE_PARM_DESC(bbc_minor, " bbc minor number");
 MODULE_PARM_DESC(bi0_minor, " bi0 minor number");
 
