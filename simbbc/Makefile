@@ -17,7 +17,7 @@ else
 # First pass: normal build
 KDIR	:= /lib/modules/$(shell uname -r)/build
 PWD	:= $(shell pwd)
-CC    	:= gcc -O2 -g
+CC    	:= gcc -O2 -g 
 
 all: simbbc.ko
 

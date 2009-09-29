@@ -242,7 +242,7 @@ static void timer_callback(unsigned long dummy)
 {
   static unsigned data;
   static unsigned wordcount = 0;
-  static unsigned char bout;
+  static unsigned char bout = 0;
   static int done;
 
   bbc_data.framecounter++;
@@ -266,7 +266,8 @@ static void timer_callback(unsigned long dummy)
 
     bout  = aux_data.cam0_pulse.data;
     bout |= aux_data.cam1_pulse.data << 1; 
-    outb(~bout, PARALLEL_BASE);
+    bout = ~bout & 0x03;
+    outb(bout, PARALLEL_BASE);
     wmb();
 
 
@@ -316,7 +317,7 @@ static void timer_callback(unsigned long dummy)
 
   } 
   
-  bbc_drv.timer.expires = jiffies + 1;
+  bbc_drv.timer.expires = jiffies + TIME_STEP;
   add_timer(&bbc_drv.timer);
 }
 
