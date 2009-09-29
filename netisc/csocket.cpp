@@ -92,7 +92,7 @@ void CSocket::Close() {
  */
 int CSocket::Read( void * pData, unsigned int iLen) {
   int ret;
-  u_long val;
+  
   
   if( !pData || !iLen)
     return( -1);
@@ -101,6 +101,7 @@ int CSocket::Read( void * pData, unsigned int iLen) {
   
   // Debugging purposes - see if anything left in the input buffer
   
+  //u_long val;
   //ioctlsocket( m_Socket, FIONREAD, &val );
   //printf("Remaining bytes in input buffer: %li packet size: %i\n",val,iLen);
   

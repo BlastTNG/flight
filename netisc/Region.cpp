@@ -8,7 +8,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include "qglobal.h"
+#include <qglobal.h>
 
 #include "Region.h"
 

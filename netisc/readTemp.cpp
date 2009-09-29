@@ -7,12 +7,12 @@
 
 int __tempControl = 1;               // thermometer that controls heater
 unsigned int __tempsleeptime = 100;
-float __tempSetLimit = 3.0;
-float __tempOffset = 0.10;
+float __tempSetLimit = 3.0f;
+float __tempOffset = 0.10f;
 float __temppressuregain;
 float __temppressureoffset;
 
-float __tempgain = 103.3;           // gain is not 100 because of filtering
+float __tempgain = 103.3f;           // gain is not 100 because of filtering
 
 int __tempUDStat = 0;
 int __tempULStat = 0;

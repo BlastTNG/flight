@@ -6,10 +6,10 @@
 #include <iostream>
 #include <list>
 
-#include "qdir.h"
-#include "qfile.h"
-#include "qstring.h"
-#include "qapplication.h"
+#include <qdir.h>
+#include <qfile.h>
+#include <qstring.h>
+#include <qapplication.h>
 
 #include "HTMCatalog.h"
 #include "SegmentRegion.h"
@@ -224,7 +224,7 @@ unsigned long HTMCatalog::print() {
     //if (myStars.count() > 0) {
     //    emit(  message( name + " " + QString::number(myStars.count()) )  );
     //}
-    return myStars.count();
+    return (unsigned long)myStars.count();
   }
   
   // Else return the sum of the print of all of the chilren

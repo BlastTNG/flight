@@ -374,10 +374,62 @@ void time_stamp( char *buf, int bufsize ) {
 int init_camera( void ) {
   unsigned long tempCCD_X_PIXELS, tempCCD_Y_PIXELS;
   
-  printf("Inside init_camera...\n");
-  // Initialize the camera
-  QCam_LoadDriver(); // Fire up the QCam driver
-  QCam_ListCameras( list, &listlen ); // listlen = # cameras avail.
+     // Power cycle the camera
+  printf("Power cycling the camera...\n");
+  printf("Lowering pins on the parallel port... status=");
+  printf("%i\n",SetPortVal(PARALLEL_BASE,0,1));
+  Sleep(500);
+  printf("Raising Data 1 on the parallel port... status=");
+  printf("%i\n",SetPortVal(PARALLEL_BASE,2,1));
+  Sleep(500);
+  printf("Lowering pins on the parallel port... status=");
+  printf("%i\n",SetPortVal(PARALLEL_BASE,0,1));
+  Sleep(3000);
+
+  // Initialize the camera driver
+  printf("Inside init_camera driver...\n");
+  if( QCam_LoadDriver() != qerrSuccess) { // Fire up the QCam driver
+    printf("Unable to load QCam Driver\n");
+    return -1;
+  }
+  
+  // Check the list of cameras found after the power cycle
+  if( QCam_ListCameras( list, &listlen ) != qerrSuccess) {
+    QCam_ReleaseDriver();
+    printf("Couldn't open a camera... exiting.\n\n");
+    return -1;
+  }
+  
+  // Kludge to deal with the on/off switch of the camera.
+  // If the camera was on in the first place, the power cycle above will shut it down.
+  // So we just power cycle it again, also to make sure that any previos settings are reset.
+  if (listlen == 0) {
+    QCam_ReleaseDriver();
+    printf("Power cycling the camera, again...\n");
+    printf("Lowering pins on the parallel port... status=");
+    printf("%i\n",SetPortVal(PARALLEL_BASE,0,1));
+    Sleep(500);
+    printf("Raising Data 1 on the parallel port... status=");
+    printf("%i\n",SetPortVal(PARALLEL_BASE,2,1));
+    Sleep(500);
+    printf("Lowering pins on the parallel port... status=");
+    printf("%i\n",SetPortVal(PARALLEL_BASE,0,1));
+    Sleep(3000);
+    listlen = sizeof(list)/sizeof(list[0]); // Re-inizializing listlen is needed
+                                            // otherwise QCam_ListCameras below will take its current
+                                            // value (0) as input and won't find any cameras at all.
+
+    if( QCam_LoadDriver() != qerrSuccess) { // Fire up the QCam driver, again. This is needed after 
+    printf("Unable to load QCam Driver\n"); // the second power cycle, otherwise QCam will give 
+    return -1;                              // camErr = 16, i.e. Driver Fault.
+    }
+    if( QCam_ListCameras( list, &listlen ) != qerrSuccess) {
+      QCam_ReleaseDriver();
+      printf("Couldn't open a camera... exiting.\n\n");
+    return -1;
+    }
+  }
+ 
   if( (listlen > 0) && (list[0].isOpen == false) ) {
     QCam_OpenCamera( list[0].cameraId, &camhandle );
     printf("Camera opened...\n");
@@ -625,7 +677,7 @@ DWORD WINAPI expose_frame( LPVOID parameter ) {
 
       server_log( 3 );  // log the camera error
                         // Restart necessary if camera error was fatal
-
+       
       if( (camErr!=23) && (camErr!=25) && (camErr!=100) ) {
         printf("********* Camera error was fatal - re-starting camera !!!!\n");
         // Only tell the camera to reset if the shutdownFlag wasn't already set
@@ -873,7 +925,7 @@ void pointingSolution( void ) {
         // if we were lost, solution is definitely good 
         if( lost ) {
           pointing_quality = 2;
-          //ccdRotation = rot; // update rotation if many blobs matched
+          ccdRotation = rot; // update rotation if many blobs matched
         }
         
         // otherwise check for excursions from the previous good solution
@@ -1162,8 +1214,9 @@ void doautofocus( void ) {
   printf("Autofocus step =%i",AUTOFOCUS_FINE_DELTA);
   
   focus_home();
+#ifdef LORENZO
   step_motor(FOCUS_MOTOR,-AUTOFOCUS_FINE_DELTA*AUTOFOCUS_FINE_NSAMPLES/2);
-  
+#endif
   double *fine_fluxes = new double[AUTOFOCUS_FINE_NSAMPLES];
   int goodSolution=0;
   
@@ -1300,7 +1353,9 @@ void doautofocus( void ) {
     if( goodSolution ) { /* Move to best soln, the direction matters! */
       autoFocusStep = AUTOFOCUS_FINE_NSAMPLES - bestindex;
       focus_home();
+#ifdef LORENZO
       step_motor(FOCUS_MOTOR,-AUTOFOCUS_FINE_DELTA*AUTOFOCUS_FINE_NSAMPLES/2);
+#endif
       
       //for( i=0; i<=bestindex; i++ )
       //{
@@ -1421,6 +1476,10 @@ DWORD WINAPI receive_frame( LPVOID parameter ) {
   if( LOUD ) {
     time_stamp( &timebuf[0], 255 ); 
     printf("%s Receive Frame client %i\n",timebuf,whichclient);
+    printf("server trigger = %i, trigger = %i\n",server_data.triggertype,triggertype);
+    printf("CCD rotation = %lf deg \n",ccdRotation*180./PI);
+    printf("Az: %8.3lf deg\n",az*180./PI);
+    printf("El: %8.3lf deg\n",el*180./PI);
   }
 
   // update the timer for the last time a command was received
@@ -1890,7 +1949,7 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
   // if we're in autofocus mode
   if( autoFocusMode ) {
     doautofocus();
-    //server_data.autoFocusPosition = (int)autoFocusPosition;
+    //server_data.autoFocusPosition = (int)autoFocusPosition;//this line must be obsolete
   }
   // if we're not paused, calculate a pointing solution
   else if( pause != 1 ) {
@@ -1900,7 +1959,7 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
     //printf("Waiting for expose thread to finish...\n");
     if( LOUD ) {
       time_stamp( &timebuf[0], 255 ); 
-      printf("%s Waiting for expose thread to finish...\n",timebuf);
+      printf("%s ---- Waiting for expose thread to finish...\n",timebuf);
     }
     
     // Sleep to give other processes some time
@@ -1942,7 +2001,7 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
     }
 
     pointingSolution();       // calculate a pointing solution (+save image)
-                
+    
     if( eyeOn ) prep_image(); // prepare the display window buffer
     eyeRefresh=1;
 
@@ -2600,14 +2659,15 @@ int initEyeWin() {
 // --- Entry Point -----------------------------------------------------------
 
 int main( int argc, char **argv ) {
-  DWORD thId,thId2,result,junk;
+  DWORD thId,result;
   FILE *fnumlog;
   FILE *settingsfile;
   char thisline[255];        
   int i;
   
   // a thread for debugging
-
+  
+  // DWORD thId2, junk;
   //thTemp=CreateThread( NULL,0,debugme,&junk,0,&thId2);
   
   // KLUDGE: Although we want to read the settings file _after_ trying to
@@ -2660,24 +2720,15 @@ int main( int argc, char **argv ) {
   // Start entry in the server log
   server_log(1);
   
-  // initialize WinIO and Cycle the camera / thermometer power
+  // initialize WinIO
   if( InitializeWinIo() != 1 ) {
     printf("WinIO didn't initialize.\n");
     return 31;
   }
 
-  printf("Power cycling the camera...\n");
-  printf("Lowering pins on the parallel port... status=");
-  printf("%i\n",SetPortVal(PARALLEL_BASE,0,1));
-  if(NO_CAMERA == 0) Sleep(500);
-  printf("Raising Data 1 on the parallel port... status=");
-  printf("%i\n",SetPortVal(PARALLEL_BASE,2,1));
-  if(NO_CAMERA == 0) Sleep(500);
-  printf("Lowering pins on the parallel port... status=");
-  printf("%i\n",SetPortVal(PARALLEL_BASE,0,1));
-  if(NO_CAMERA == 0) Sleep(3000);
-  
+  // Cycle the camera / thermometer power
   // Initialize the camera driver
+  // Initialize the camera
   if( NO_CAMERA == 0 ) {
     if( init_camera() == -1 ) return -1;
     
@@ -2753,7 +2804,7 @@ int main( int argc, char **argv ) {
   
   printf( "Attempting to use star catalogue: %s\n", catpath );
   astro_init_catalogue(catpath, catalogname, katalogname);
-  
+
   // Initialize the temp./pressure/heater routines
   
   if( tempSetup(tempControl,tempSleeptime,tempSetLimit,tempOffset, 
@@ -2801,6 +2852,11 @@ int main( int argc, char **argv ) {
   motorabort(comport,FOCUS_MOTOR);
   calibrate_motors();
   
+  // We tried to increase the speed of the aperture stepper motor because it was unable to
+  // drive the iris mechanism on one of the two directions. Apparently, this does not help.
+  //motorcmd(comport,AP_MOTOR,"m50");
+  //motorcmd(comport,AP_MOTOR,"l50");
+
   // Initialize the server_data frame
   server_data.n_blobs=0; // start with 0 blobs
   server_data.temp1=0;

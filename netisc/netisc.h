@@ -157,7 +157,7 @@ DWORD thTempParam;  // thread parameter (not used)
 int thTempState=0;  // 0=not running, 1=running
 
 // Camera and frame information
-QCam_CamListItem list[10];  // List of connected cameras
+QCam_CamListItem list[10];  // List of connected cameras  
 unsigned long listlen = sizeof(list)/sizeof(list[0]);   
 long CCD_X_PIXELS;  // dimenions of the CCD
 long CCD_Y_PIXELS;  // "
@@ -305,8 +305,8 @@ int lost=0;            // set when lost
 // Temperature readout
 int tempControl = 1;
 unsigned int tempSleeptime = 100;
-float tempSetLimit = 3.0;
-float tempOffset = 0.10;
+float tempSetLimit = 3.0f;
+float tempOffset = 0.10f;
 float tempPressuregain;
 float tempPressureoffset;
 char tempstring[80];

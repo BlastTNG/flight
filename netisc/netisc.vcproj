@@ -4,6 +4,7 @@
 	Version="7.10"
 	Name="netisc"
 	ProjectGUID="{5D6F6894-B2BE-4885-8E6E-3CC1AE2CD14D}"
+	RootNamespace="netisc"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -19,7 +20,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\qt\3.3.2Evaluation\include"
+				AdditionalIncludeDirectories="C:\Qt\3.3.2Evaluation\include;&quot;C:\Program Files\QImaging\QCam SDK\Headers&quot;;&quot;C:\Program Files\Measurement Computing\DAQ\CWin&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="TRUE"
 				RuntimeLibrary="1"
@@ -32,10 +33,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wsock32.lib libtiff-v3.5.5.lib QCamDriver.lib QCamImgfnc.lib qt-mteval320.lib qtmain.lib WinIo.lib cbw32.lib"
+				AdditionalDependencies="wsock32.lib libtiff-v3.5.5.lib QCamDriver.lib qt-mteval332.lib qtmain.lib WinIo.lib cbw32.lib"
 				OutputFile="$(OutDir)/netisc.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="C:\Program Files\QCamSDK\lib-pc"
+				AdditionalLibraryDirectories="&quot;C:\Program Files\QImaging\QCam SDK\Libs&quot;;C:\Qt\3.3.2Evaluation\lib;&quot;C:\Program Files\Measurement Computing\DAQ\CWin&quot;"
 				IgnoreDefaultLibraryNames="libcmt"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/netisc.pdb"
@@ -161,6 +162,9 @@
 				RelativePath="Point.cpp">
 			</File>
 			<File
+				RelativePath=".\pyramid.cpp">
+			</File>
+			<File
 				RelativePath=".\readTemp.cpp">
 			</File>
 			<File
@@ -207,9 +211,6 @@
 				RelativePath="Catalog.h">
 			</File>
 			<File
-				RelativePath=".\cbw.h">
-			</File>
-			<File
 				RelativePath="csocket.h">
 			</File>
 			<File
@@ -243,10 +244,7 @@
 				RelativePath="Point.h">
 			</File>
 			<File
-				RelativePath="QCamApi.h">
-			</File>
-			<File
-				RelativePath="QCamImgfnc.h">
+				RelativePath=".\pyramid.h">
 			</File>
 			<File
 				RelativePath=".\readTemp.h">
@@ -301,9 +299,6 @@
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
 		</Filter>
-		<File
-			RelativePath="libtiff-v3.5.5.lib">
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

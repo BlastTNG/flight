@@ -8,10 +8,10 @@
 
 #include "Point.h"
 
-#include "qglobal.h"
-#include "qtable.h"
-#include "qapplication.h"
-#include "qmessagebox.h"
+#include <qglobal.h>
+#include <qtable.h>
+#include <qapplication.h>
+#include <qmessagebox.h>
 
 #include <iostream>
 #include <list>

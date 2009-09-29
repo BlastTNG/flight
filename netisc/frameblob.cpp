@@ -602,7 +602,7 @@ double frameblob::convolve(double x, double y, double *noise,
   *noise = 0; // Added by EC - calculate expected noise in the aperture
   
   for (i=-R-1; i<=R+1; i++) {
-    xi = floor(x + i+0.5);
+    xi = (int)floor(x + i+0.5);
     dx2 = x-(double)xi;
     dx2*=dx2;
 
@@ -610,7 +610,7 @@ double frameblob::convolve(double x, double y, double *noise,
     if (xi>D-1) xi = D-1;
 
     for (j=-R-1; j<=R+1; j++) {
-      yi = floor(y + j+0.5);
+      yi = (int)floor(y + j+0.5);
       dy2 = y-(double)yi;
       dy2*=dy2;
       

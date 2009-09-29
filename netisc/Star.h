@@ -13,7 +13,7 @@
 #include <iostream>
 #include <math.h>
 
-#include "qstring.h"
+#include <qstring.h>
 
 #include "Point.h"
 #include "Units.h"

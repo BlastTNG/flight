@@ -107,7 +107,7 @@ int	mode;
 	//printf("Reading in %d header blocks and chucking them.\n", 
 	//	num_header_blocks);
 	for(i=0; i<num_header_blocks; i++) {
-		status = fread(fits, FITS_DATA_SIZE, FITS_READ_SIZE, fp);
+		status = (int)fread(fits, FITS_DATA_SIZE, FITS_READ_SIZE, fp);
 		if (status != FITS_READ_SIZE) {
 			printf("Error reading header in read_table\n");
 			return(-2);
@@ -137,7 +137,7 @@ int	mode;
 	/*  Continue until all records have been read.	*/
 
 		/*  Read in a block of data.	*/
-		status = fread(fits, FITS_DATA_SIZE, FITS_READ_SIZE, fp);
+		status = (int)fread(fits, FITS_DATA_SIZE, FITS_READ_SIZE, fp);
 		if (status != FITS_READ_SIZE) {
 			printf("Error reading table in read_table.\n");
 			printf("%d out of %d read.\n", status, FITS_READ_SIZE);

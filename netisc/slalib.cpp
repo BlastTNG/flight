@@ -294,7 +294,7 @@ void slaDeuler ( char *order, double phi, double theta,
    }
 
 /* Establish length of axis string */
-   l = strlen ( order );
+   l = (int)strlen ( order );
 
 /* Look at each character of axis string until finished */
    for ( n = 0; n < 3; n++ ) {

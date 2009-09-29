@@ -5,8 +5,8 @@
 #include <iostream>
 #include <math.h>
 
-#include "qvaluelist.h"
-#include "qapplication.h"
+#include <qvaluelist.h>
+#include <qapplication.h>
 
 #include "Match.h"
 #include "AnnularRegion.h"

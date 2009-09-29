@@ -12,7 +12,7 @@
 
 #include <iostream>  // Learn how double is printed.
 
-#include "qstring.h"
+#include <qstring.h>
 
 // Helper classes to ensure that coordinates are understood
 class Radian;

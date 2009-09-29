@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 #include <time.h>
-#include "cbw.h"    
+#include <cbw.h>    
 
 // Load in the settings file, set stuff up
 // return 1 for success, 0 for failure

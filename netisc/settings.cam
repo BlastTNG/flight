@@ -3,8 +3,8 @@
 2001             2nd client port (Sam)
 2002             3rd client port (Extra)
 0		 Turn off pointing solution calculation
--79.3833         East longtitude of telescope on startup (deg)
-43.6528          Latitude of telescope on startup (deg)
+-3.178           East longitude of telescope on startup (deg)
+51.478           Latitude of telescope on startup (deg)
 3		 Trigger: 0=now, 1=edge, 2=pulse hi, 3=pulse low
 4.5              S/N ratio threshold for source detection 
 30               threshold distance for multiple detection rejection
@@ -15,7 +15,7 @@
 3                Min blobs required for pointing solution
 7                Max blobs used in pointing solution
 9.5              Magnitude limit
-2.0              Rotation tolerance (not lost) for pointing solutions
+2.0            Rotation tolerance (not lost) for pointing solutions
 COM2             Serial port for stepper motor communications	
 50               Velocity for the stepper motors
 0          	 Set =0 for immediate picture taking, set =1 for PAUSE
