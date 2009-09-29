@@ -19,24 +19,12 @@
 #define COPLEYCOM_MUS_WAIT 12000 // wait time after a command is given                                                         
                                   // TODO: optimize this wait time, is it even necessary?        
 #define SELECT_COP_MUS_OUT 200000 // time out for reading from the Copley controller  
-struct CopleyInfoStruct reactinfo;  
-struct CopleyInfoStruct elevinfo; /* These file descriptors contain the status
+struct MotorInfoStruct reactinfo;  
+struct MotorInfoStruct elevinfo; /* These file descriptors contain the status
                                      information for each motor and the file descriptor
 				   */
-// Check to make sure that there aren't leftover bytes to be read from the serial port.
-void clearCopleyPort(enum MotorType motor){
-  int i,m,n;
-  struct CopleyInfoStruct* copleyinfo;  
-  copleyinfo = get_motor_pointer(motor);
-  for(i=0;i<5;i++){
-  m = check_copleyready(resp,motor);
-   //   bprintf(info,"reactComm: n=%d",n);
-  if(m>=0) n=readCopleyResp(motor);
-  usleep(10000);
-  }
-}
 
-struct CopleyInfoStruct *get_motor_pointer(enum MotorType motor)
+struct MotorInfoStruct *get_motor_pointer(enum MotorType motor)
 {
   switch( motor)
     {
@@ -67,7 +55,7 @@ void open_copley(char *address, enum MotorType motor)
   char a[256];
   strncpy(a, address,254);
 
-  struct CopleyInfoStruct* copleyinfo;  
+  struct MotorInfoStruct* copleyinfo;  
   copleyinfo = get_motor_pointer(motor);
 
   copleyinfo->fd = open(address, O_RDWR | O_NOCTTY | O_NDELAY);
@@ -90,7 +78,7 @@ void open_copley(char *address, enum MotorType motor)
 void close_copley(enum MotorType motor)
 {
   int n;
-  struct CopleyInfoStruct* copleyinfo;  
+  struct MotorInfoStruct* copleyinfo;  
   copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
 
   usleep(1000000); // Wait a second to let mcp close the current loop.                                                                           
@@ -109,7 +97,7 @@ void close_copley(enum MotorType motor)
 void setopts_copley(int bdrate,enum MotorType motor)
 {
   struct termios options;
-  struct CopleyInfoStruct* copleyinfo;  
+  struct MotorInfoStruct* copleyinfo;  
   copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
   /*                                                                          
    * Get the current options for the port...                                  
@@ -196,7 +184,7 @@ void send_copleycmd(char cmd[], enum MotorType motor)
 {
   int l = strlen(cmd);
   int n;
-  struct CopleyInfoStruct* copleyinfo;  
+  struct MotorInfoStruct* copleyinfo;  
 
   copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
 
@@ -227,7 +215,7 @@ void send_copleycmd(char cmd[], enum MotorType motor)
 void configure_copley(enum MotorType motor)
 {
   int n,m,i;
-  struct CopleyInfoStruct* copleyinfo;  
+  struct MotorInfoStruct* copleyinfo;  
   copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
   setopts_copley(9600,motor);
   copleyinfo->bdrate=9600;
@@ -322,7 +310,7 @@ int check_copleyready(enum CheckType check, enum MotorType motor)
   fd_set         input;
   fd_set         output;
   struct timeval timeout;
-  struct CopleyInfoStruct* copleyinfo;  
+  struct MotorInfoStruct* copleyinfo;  
 
   copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
   max_fd=copleyinfo->fd+1;
@@ -387,7 +375,7 @@ int ping_copley(enum MotorType motor)
 {
   char outs[255],outs_noCR[255];
   int n;
-  struct CopleyInfoStruct* copleyinfo;  
+  struct MotorInfoStruct* copleyinfo;  
   copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
   n = check_copleyready(comm,motor);
   if(n >= 0)
@@ -434,7 +422,7 @@ int checkCopleyResp(enum MotorType motor)
 {
   char outs[255],outs_noCR[255];
   int n,m,i,errcode;
-  struct CopleyInfoStruct* copleyinfo;  
+  struct MotorInfoStruct* copleyinfo;  
   char* ptr;
   copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
   n = read_line(outs,motor);
@@ -487,7 +475,7 @@ int readCopleyResp(enum MotorType motor)
 {
   char outs[255],outs2[255];
   int n;
-  struct CopleyInfoStruct* copleyinfo;  
+  struct MotorInfoStruct* copleyinfo;  
   copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct
   n = read_line(outs,motor);
   if(n<0)
@@ -503,7 +491,7 @@ int readCopleyResp(enum MotorType motor)
 int enableCopley(enum MotorType motor)
 {
   int n;
-  struct CopleyInfoStruct* copleyinfo;  
+  struct MotorInfoStruct* copleyinfo;  
   copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
   //  int count=0;
   send_copleycmd("s r0x24 2\r",motor);
@@ -520,7 +508,7 @@ int enableCopley(enum MotorType motor)
 int disableCopley(enum MotorType motor)
 {
   int n=0;
-  struct CopleyInfoStruct* copleyinfo;  
+  struct MotorInfoStruct* copleyinfo;  
   copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
   bprintf(info,"%sComm disableCopley: Attempting to disable Copley motor controller.",copleyinfo->motorstr);
   //  int count=0;
@@ -543,7 +531,7 @@ long int getCopleyVel(enum MotorType motor)
   char outs[255];
   char outs_noCR[255];
   long int vel;
-  struct CopleyInfoStruct* copleyinfo;  
+  struct MotorInfoStruct* copleyinfo;  
   copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
   if(copleyinfo->closing==1) 
     {
@@ -603,7 +591,7 @@ long int getCopleyPos(enum MotorType motor)
   int n;
   char outs[255];
   long int pos;
-  struct CopleyInfoStruct* copleyinfo;  
+  struct MotorInfoStruct* copleyinfo;  
   copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
   if (copleyinfo->closing==1) return 42;// Don't query the serial port if we are 
                                        // closing the connection to the controller.
@@ -647,7 +635,7 @@ int read_line(char *outs,enum MotorType motor)
   int done=0;
   int timeout=0;
   int timeoutlim=3;
-  struct CopleyInfoStruct* copleyinfo;  
+  struct MotorInfoStruct* copleyinfo;  
   copleyinfo = get_motor_pointer(motor); // Point to the right motor info struct.
   while(done==0){
     if(check_copleyready(resp,motor) >= 0){

@@ -32,6 +32,7 @@
 #include "command_struct.h"
 #include "mcp.h"
 #include "copleycommand.h"
+#include "amccommand.h"
 #include "motordefs.h"
 
 #define MIN_EL 22
@@ -62,13 +63,16 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
 
 static pthread_t reactcomm_id;
 static pthread_t elevcomm_id;
+static pthread_t pivotcomm_id;
 
 // device node address for the reaction wheel motor controller
 #define REACT_DEVICE "/dev/ttySI9"
 #define ELEV_DEVICE "/dev/ttySI11"
+#define PIVOT_DEVICE "/dev/ttySI13"
 
 static void* reactComm(void *arg);
 static void* elevComm(void *arg);
+static void* pivotComm(void *arg);
 
 /* opens communications with motor controllers */
 void openMotors()
@@ -76,6 +80,7 @@ void openMotors()
   bprintf(info, "Motors: connecting to motors");
   pthread_create(&reactcomm_id, NULL, &reactComm, NULL);
   pthread_create(&elevcomm_id, NULL, &elevComm, NULL);
+  pthread_create(&pivotcomm_id, NULL, &pivotComm, NULL);
 }
 
 void closeMotors()
@@ -87,6 +92,9 @@ void closeMotors()
   }
   if (elevinfo.fd>0) {
     close_copley(elev);
+  }
+  if (pivotinfo.fd>0) {
+    //close command;
   }
 }
 
@@ -1196,9 +1204,10 @@ void UpdateAxesMode(void)
 
 void* reactComm(void* arg)
 {
-  int n,i;
-  long vel_raw;
-  int firsterr=1;
+  int n=0;
+  int i=0;
+  int firsttime=1;
+  long vel_raw=0;
   // Initialize values in the reactinfo structure.                            
   reactinfo.open=0;
   reactinfo.loop=0;
@@ -1211,62 +1220,65 @@ void* reactComm(void* arg)
 
   // Wait to make sure the rest of mcp is up and running before communicating
   // with the motors.
-  sleep(5);
   bprintf(info,"reactComm: Bringing the reaction wheel online.");
-  i=0;
   // Initialize structure RWMotorData.  Follows what was done in dgps.c
   RWMotorData[0].rw_vel_dps=0;
 
   // Try to open the port.
-while(reactinfo.open==0)
-    {
-      sleep(1);
-      if (firsterr)
-        {
-          bputs(err,"reactComm: Reaction wheel port is not open. Attempting to open a conection.\n");
-          firsterr = 0;
-        }
-      open_copley(REACT_DEVICE,rw); // sets reactinfo.open=1 if sucessful
-      i++;
-      if(i==9){
-          bputs(err,"reactComm: Reaction wheel port could not be opened after 10 attempts.\n");
+  while(reactinfo.open==0) {
+    if (i==0) {
+      bputs(info,"reactComm: Reaction wheel controller serial port is not open. Attempting to open a conection.\n");
+    }
+    open_copley(REACT_DEVICE,rw); // sets reactinfo.open=1 if sucessful
+    if (reactinfo.open==0) {
+        i++;
+      if(elevinfo.open==1) bprintf(info,"elevComm: Opened the serial port on attempt number %i",i); 
+      else sleep(1);  
+    if(i==10){
+	bputs(err,"reactComm: Reaction wheel port could not be opened after 10 attempts.\n");
       }
     }
+  }
 
   // Configure the serial port.                                               
   configure_copley(rw);
   rw_motor_index = 1; // index for writing to the RWMotor data struct
   bprintf(info,"reactComm: Attempting to enable the reaction wheel motor controller.");
   //  n=enableCopley(rw);
-  if(n==0)
-    {
-      bprintf(info,"reactComm: Reaction wheel motor controller is now enabled.");
-      reactinfo.disabled=0;
+  if(n==0){    
+    bprintf(info,"reactComm: Reaction wheel motor controller is now enabled.");
+    reactinfo.disabled=0;
+  }
+  while(1){
+    if(reactinfo.closing==1){
+      // do closing stuff here
+      usleep(10000);      
+    } else if (reactinfo.init==1){
+  
+      vel_raw=getCopleyVel(rw); // Units are 0.1 counts/sec
+      RWMotorData[rw_motor_index].rw_vel_dps=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
+
+      rw_motor_index=INC_INDEX(rw_motor_index);
+      if (firsttime) {
+        bprintf(info,"reactComm: Raw reaction wheel velocity is %i",vel_raw);
+	firsttime=0;
+      }     
+
+    } else {
+      usleep(10000);
     }
-  while(1)
-    {
-      if(reactinfo.init==1 && reactinfo.closing!=1)
-	{
-      	  vel_raw=getCopleyVel(rw); // Units are 0.1 counts/sec
-          RWMotorData[rw_motor_index].rw_vel_dps=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
-	  
-	  rw_motor_index=INC_INDEX(rw_motor_index);
-	
-	}
-      else
-	{
-	  sleep(1);
-	}
-            
-    }
+    
+  }
   return NULL;
 }
 
 
 void* elevComm(void* arg)
 {
-  int n,i;
+  int n=0;
+  int i;
   long unsigned pos_raw;
+  int firsttime=1;
 
   // Initialize values in the elevinfo structure.                            
   elevinfo.open=0;
@@ -1278,8 +1290,6 @@ void* elevComm(void* arg)
   elevinfo.bdrate=9600;
   strncpy(elevinfo.motorstr,"elev\0",6);
 
-  // Wait to make sure the rest of mcp is up and running before communicating
-  // with the motors.
   bprintf(info,"elevComm: Bringing the elevation drive online.");
   i=0;
 
@@ -1293,7 +1303,7 @@ void* elevComm(void* arg)
     }
     open_copley(ELEV_DEVICE,elev); // sets elevinfo.open=1 if sucessful
 
-    if(i==9) {
+    if(i==10) {
       bputs(err,"elevComm: Elevation drive serial port could not be opened after 10 attempts.\n");
     }
     i++;
@@ -1307,7 +1317,6 @@ void* elevComm(void* arg)
   elev_motor_index = 1; // index for writing to the ElevMotor data struct
   bprintf(info,"elevComm: Attempting to enable the elevation drive motor controller.");
   //n=enableCopley(elev);
-
   if (n==0) {
     bprintf(info,"elevComm: Elevation Drive motor controller is now enabled.");
     elevinfo.disabled=0;
@@ -1324,10 +1333,56 @@ void* elevComm(void* arg)
       ElevMotorData[elev_motor_index].elev_enc_pos=((double) (pos_raw % ((long int) ELEV_ENC_CTS)))/ELEV_ENC_CTS*360.0;
 
       elev_motor_index=INC_INDEX(elev_motor_index);
-      
+      if (firsttime) {
+	bprintf(info,"elevComm: Raw elevation encoder position is %i",pos_raw);
+	firsttime=0;
+      }     
     } else {
       usleep(10000);
     }
+  }
+  return NULL;
+}
+
+void* pivotComm(void* arg) 
+{
+  int n=0;
+  int i;
+  long unsigned pos_raw;
+  int firsttime=1;
+
+  // Initialize values in the pivotinfo structure.                            
+  pivotinfo.open=0;
+  pivotinfo.loop=0;
+  pivotinfo.init=0;
+  pivotinfo.err=0;
+  pivotinfo.closing=0;
+  pivotinfo.disabled=10;
+  pivotinfo.bdrate=9600;
+  strncpy(pivotinfo.motorstr,"pivot",6);
+
+  bprintf(info,"pivotComm: Bringing the pivot drive online.");
+  i=0;
+
+  /*
+  // Try to open the port.
+  while(pivotinfo.open==0) {
+    if (i==0) {
+      bputs(info,"pivotComm: Elevation drive serial port is not open. Attempting to open a conection.\n");
+    }
+    open_copley(PIVOT_DEVICE,pivot); // sets elevinfo.open=1 if sucessful
+
+    if(i==10) {
+      bputs(err,"pivotComm: Pivot controller serial port could not be opened after 10 attempts.\n");
+    }
+    i++;
+
+    if(pivotinfo.open==1) bprintf(info,"pivotComm: Opened the serial port on attempt number %i",i); 
+    else sleep(1);
+  }
+  */
+  while(1) {
+    sleep(1);
   }
   return NULL;
 }

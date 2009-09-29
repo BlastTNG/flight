@@ -14,35 +14,7 @@
 #define RW_ENC_CTS 2097152.0 // Reaction Wheel Encoder Counts per revolution
 #define ELEV_ENC_CTS 524288.0 // Elevation Drive Encoder Counts per revolution
 
-struct CopleyInfoStruct {
-  int fd; // File descriptor for the reaction wheel.                          
-  int open; // 0 is closed, 1 is open                                         
-  int loop; // 1 ->there is a current loop running                            
-            // 0 ->there is no current loop running                           
-            // -1 -> there is no current loop running                         
-            //       because of some sort of error.                           
-  int init; // 0 has not yet been initialized                                 
-            // 1 has been initialized with no errors                          
-            // -1 initialization was attempted but failed                     
-
-  int err;  // Gives the communication error status:                          
-            // 1 communication error sending some command.                    
-            // triggers configure_react                                       
-            // 3 running configure_react failed.    
-            // --> TODO: later this condition will trigger                    
-            //           a power cycle of the controller                      
-            // 0 No errors                                                    
-  int disabled; // Is the motor controller disabled                           
-  int bdrate; // Baud rate with which we are communicating with the controller
-  // 0 if no                                                      
-  // 1 in yes                                                     
-  // 10 if we aren't sure (because we have just started mcp)      
-  int closing; // 1 if in the process of closing down.         
-  char motorstr[6];               
-};
-
-void clearCopleyPort(enum MotorType motor);
-struct CopleyInfoStruct *get_motor_pointer(enum MotorType motor);
+struct MotorInfoStruct *get_motor_pointer(enum MotorType motor);
 void MotorStrOut(char *str,enum MotorType motor);
 void copyouts(char *in, char *out);
 void open_copley(char *address, enum MotorType motor);
@@ -61,8 +33,8 @@ long int getCopleyVel(enum MotorType motor);
 long int getCopleyPos(enum MotorType motor);
 int read_line(char *outs,enum MotorType motor);
 
-extern struct CopleyInfoStruct reactinfo; /* declared in copleycommand.c        
+extern struct MotorInfoStruct reactinfo; /* declared in copleycommand.c        
                                           *                                   
                                           */
-extern struct CopleyInfoStruct elevinfo;
+extern struct MotorInfoStruct elevinfo;
 #endif
