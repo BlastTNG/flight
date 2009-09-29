@@ -255,14 +255,14 @@ union DerivedUnion DerivedChannels[] = {
 
   LINTERP("T_charcoal",   "T_CHARCOAL"   , "/data/etc/dt600.txt"),
   LINTERP("T_lhe",        "T_LHE"        , "/data/etc/dt600.txt"),
-  LINTERP("T_ln2",        "T_LN2"        , "/data/etc/dt600.txt"),
+  LINTERP("T_ln",         "T_LN"         , "/data/etc/dt600.txt"),
   LINTERP("T_heatswitch", "T_HEATSWITCH" , "/data/etc/dt600.txt"),
   LINTERP("T_jfet",       "T_JFET"       , "/data/etc/dt600.txt"),
   LINTERP("T_vcs_filt",   "T_VCS_FILT"   , "/data/etc/dt600.txt"),
-  LINTERP("T_ln2_filt",   "T_LN2_FILT"   , "/data/etc/dt600.txt"),
+  LINTERP("T_ln_filt",    "T_LN_FILT"    , "/data/etc/dt600.txt"),
   LINTERP("T_lhe_filt",   "T_LHE_FILT"   , "/data/etc/dt600.txt"),
-  LINTERP("T_he4pot_d",   "T_HE4POT_D"   , "/data/etc/dt600.txt"),
-  LINTERP("T_vcs_fet",    "T_VCS_FET"    , "/data/etc/dt600.txt"),
+  LINTERP("T_vcs_jfet",   "T_VCS_JFET"   , "/data/etc/dt600.txt"),
+  LINTERP("T_vcs",        "T_VCS"        , "/data/etc/dt600.txt"),
 
   COMMENT("GRTs (ROX)"),
   LINTERP("T_he3fridge",   "T_HE3FRIDGE",   "/data/etc/rox102a3.txt"),
