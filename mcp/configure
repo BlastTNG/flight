@@ -2,7 +2,7 @@
 
 [ -x "Makefile.config" ] || rm -rf Makefile.config;
 
-if [ `hostname` = "devlin666" ]
+if [ `hostname` = "devlin666.blast" ]
 then
   echo "BOLOTEST = -DBOLOTEST" > Makefile.config ;
   echo "Configuring BOLOTEST version of mcp.  To compile flight version," ;
