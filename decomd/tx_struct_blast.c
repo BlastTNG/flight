@@ -66,6 +66,11 @@
 
 #define CAL16(m,b) ((m)*M_16PRE), ((b) + B_16PRE*(m)*M_16PRE)
 #define CAL16T(m,b) ((m)*M_16T), ((b) + B_16T*(m)*M_16T - 273.15)
+
+/* Measured by Tristan @ Penn, September 29 2009 */
+#define CRYO_A2_M ( 4.805248E-9)
+#define CRYO_A2_B (-1.032198E1 )
+
 /*******************************************************************************
  * TODO The channel list needs updating! Most of this is still from BLAST06
  *
@@ -115,31 +120,31 @@ struct ChannelStruct WideSlowChannels[] = {
   {"cryo_a1_22",    'r', CRYO_A1, 44,                1.0,             0.0, 'U'},
   {"cryo_a1_23",    'r', CRYO_A1, 46,                1.0,             0.0, 'U'},
   {"cryo_a1_24",    'r', CRYO_A1, 48,                1.0,             0.0, 'U'},
-  {"cryo_a2_00",    'r', CRYO_A2,  0,                1.0,             0.0, 'U'},
-  {"cryo_a2_01",    'r', CRYO_A2,  2,                1.0,             0.0, 'U'},
-  {"cryo_a2_02",    'r', CRYO_A2,  4,                1.0,             0.0, 'U'},
-  {"cryo_a2_03",    'r', CRYO_A2,  6,                1.0,             0.0, 'U'},
-  {"cryo_a2_04",    'r', CRYO_A2,  8,                1.0,             0.0, 'U'},
-  {"cryo_a2_05",    'r', CRYO_A2, 10,                1.0,             0.0, 'U'},
-  {"cryo_a2_06",    'r', CRYO_A2, 12,                1.0,             0.0, 'U'},
-  {"cryo_a2_07",    'r', CRYO_A2, 14,                1.0,             0.0, 'U'},
-  {"cryo_a2_08",    'r', CRYO_A2, 16,                1.0,             0.0, 'U'},
-  {"cryo_a2_09",    'r', CRYO_A2, 18,                1.0,             0.0, 'U'},
-  {"cryo_a2_10",    'r', CRYO_A2, 20,                1.0,             0.0, 'U'},
-  {"cryo_a2_11",    'r', CRYO_A2, 22,                1.0,             0.0, 'U'},
-  {"cryo_a2_12",    'r', CRYO_A2, 24,                1.0,             0.0, 'U'},
-  {"cryo_a2_13",    'r', CRYO_A2, 26,                1.0,             0.0, 'U'},
-  {"cryo_a2_14",    'r', CRYO_A2, 28,                1.0,             0.0, 'U'},
-  {"cryo_a2_15",    'r', CRYO_A2, 30,                1.0,             0.0, 'U'},
-  {"cryo_a2_16",    'r', CRYO_A2, 32,                1.0,             0.0, 'U'},
-  {"cryo_a2_17",    'r', CRYO_A2, 34,                1.0,             0.0, 'U'},
-  {"cryo_a2_18",    'r', CRYO_A2, 36,                1.0,             0.0, 'U'},
-  {"cryo_a2_19",    'r', CRYO_A2, 38,                1.0,             0.0, 'U'},
-  {"cryo_a2_20",    'r', CRYO_A2, 40,                1.0,             0.0, 'U'},
-  {"cryo_a2_21",    'r', CRYO_A2, 42,                1.0,             0.0, 'U'},
-  {"cryo_a2_22",    'r', CRYO_A2, 44,                1.0,             0.0, 'U'},
-  {"cryo_a2_23",    'r', CRYO_A2, 46,                1.0,             0.0, 'U'},
-  {"cryo_a2_24",    'r', CRYO_A2, 48,                1.0,             0.0, 'U'},
+  {"cryo_a2_00",    'r', CRYO_A2,  0,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_01",    'r', CRYO_A2,  2,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_02",    'r', CRYO_A2,  4,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_03",    'r', CRYO_A2,  6,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_04",    'r', CRYO_A2,  8,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_05",    'r', CRYO_A2, 10,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_06",    'r', CRYO_A2, 12,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_07",    'r', CRYO_A2, 14,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_08",    'r', CRYO_A2, 16,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_09",    'r', CRYO_A2, 18,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_10",    'r', CRYO_A2, 20,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_11",    'r', CRYO_A2, 22,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_12",    'r', CRYO_A2, 24,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_13",    'r', CRYO_A2, 26,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_14",    'r', CRYO_A2, 28,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_15",    'r', CRYO_A2, 30,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_16",    'r', CRYO_A2, 32,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_17",    'r', CRYO_A2, 34,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_18",    'r', CRYO_A2, 36,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_19",    'r', CRYO_A2, 38,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_20",    'r', CRYO_A2, 40,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_21",    'r', CRYO_A2, 42,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_22",    'r', CRYO_A2, 44,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_23",    'r', CRYO_A2, 46,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_24",    'r', CRYO_A2, 48,          CRYO_A2_M,       CRYO_A2_B, 'U'},
 
   {"cpu_time",     'w', LOOP1,  0,                1.0,             0.0, 'U'},
   {"cpu_usec",     'w', LOOP4, 58,                1.0,             0.0, 'U'},
