@@ -33,3 +33,15 @@ Edward Chapin
 echapin@alumni.uvic.ca
 
 9 March, 2006
+
+NOTE
+libtiff-v3.5.5.lib and WinIo.lib are not part of CVS, but they have to be in
+the source tree for netisc to compile.
+
+The following files have to be in the Release (or Debug) directory
+settings_ISC.cam
+settings_OSC.cam
+setting.cam
+badpixels_ISC.cam
+badpixels_OSC.cam
+WinIo.dll
