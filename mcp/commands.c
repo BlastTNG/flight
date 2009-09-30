@@ -2266,7 +2266,8 @@ void InitCommandData()
   CommandData.gy1_offset = 0;
   CommandData.gy2_offset = 0;
   CommandData.gy3_offset = 0;
-
+  CommandData.gy_mask = 0x00000000;
+  
   CommandData.pumps.pwm1 = 1638; /* 20% */
   CommandData.pumps.pwm2 = 1638; /* 20% */
 

@@ -115,9 +115,9 @@ struct AzSolutionStruct {
 
 static struct HistoryStruct {
   double *elev_history;
-  double *gyro1_history;
-  double *gyro2_history;
-  double *gyro3_history;
+  double *gy_ifel_history;
+  double *gy_ifroll_history;
+  double *gy_ifyaw_history;
   int i_history;  // points to last valid point.  Not thread safe.
 } hs = {NULL, NULL, NULL, NULL, 0};
 
@@ -471,13 +471,13 @@ static void RecordHistory(int index)
 {
   /*****************************************/
   /*   Allocate Memory                     */
-  if (hs.gyro1_history == NULL) {
-    hs.gyro1_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
-    memset(hs.gyro1_history, 0, GY_HISTORY * sizeof(double));
-    hs.gyro2_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
-    memset(hs.gyro2_history, 0, GY_HISTORY * sizeof(double));
-    hs.gyro3_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
-    memset(hs.gyro3_history, 0, GY_HISTORY * sizeof(double));
+  if (hs.gy_ifel_history == NULL) {
+    hs.gy_ifel_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
+    memset(hs.gy_ifel_history, 0, GY_HISTORY * sizeof(double));
+    hs.gy_ifroll_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
+    memset(hs.gy_ifroll_history, 0, GY_HISTORY * sizeof(double));
+    hs.gy_ifyaw_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
+    memset(hs.gy_ifyaw_history, 0, GY_HISTORY * sizeof(double));
     hs.elev_history  = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
     memset(hs.elev_history, 0, GY_HISTORY * sizeof(double));
   }
@@ -488,9 +488,9 @@ static void RecordHistory(int index)
   if (hs.i_history >= GY_HISTORY)
     hs.i_history = 0;
 
-  hs.gyro1_history[hs.i_history] = RG.gy1;
-  hs.gyro2_history[hs.i_history] = RG.gy2;
-  hs.gyro3_history[hs.i_history] = RG.gy3;
+  hs.gy_ifel_history[hs.i_history] = RG.gy1;
+  hs.gy_ifroll_history[hs.i_history] = RG.gy2;
+  hs.gy_ifyaw_history[hs.i_history] = RG.gy3;
   hs.elev_history[hs.i_history] = PointingData[index].el * M_PI / 180.0;
 }
 
@@ -598,14 +598,14 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
           if (j < 0)
             j += GY_HISTORY;
 
-          gy_el_delta += (hs.gyro1_history[j] + gy1_off) * (1.0 / SR);
-          gy_raw_el_delta += (hs.gyro1_history[j]) * (1.0 / SR);
+          gy_el_delta += (hs.gy_ifel_history[j] + gy1_off) * (1.0 / SR);
+          gy_raw_el_delta += (hs.gy_ifel_history[j]) * (1.0 / SR);
 
-          gy_az_delta += (-(hs.gyro2_history[j] + gy2_off) *
-              cos(hs.elev_history[j]) + -(hs.gyro3_history[j] + gy3_off) *
+          gy_az_delta += (-(hs.gy_ifroll_history[j] + gy2_off) *
+              cos(hs.elev_history[j]) + -(hs.gy_ifyaw_history[j] + gy3_off) *
               sin(hs.elev_history[j])) * (1.0 / SR);
-          gy2_raw_delta += (hs.gyro2_history[j]) * (1.0 / SR);
-          gy3_raw_delta += (hs.gyro3_history[j]) * (1.0 / SR);
+          gy2_raw_delta += (hs.gy_ifroll_history[j]) * (1.0 / SR);
+          gy3_raw_delta += (hs.gy_ifyaw_history[j]) * (1.0 / SR);
         }
 
         // evolve el solution
@@ -1059,9 +1059,9 @@ void Pointing(void)
     (cos_e * sin_l - cos_l * sin_e * cos_a);
   PointingData[point_index].gy3_earth = R *
     (sin_e * sin_l + cos_l * cos_e * cos_a);
-  RG.gy1 = ACSData.gyro1 - PointingData[point_index].gy1_earth;
-  RG.gy2 = ACSData.gyro2 - PointingData[point_index].gy2_earth;
-  RG.gy3 = ACSData.gyro3 - PointingData[point_index].gy3_earth;
+  RG.gy1 = ACSData.gy_ifel - PointingData[point_index].gy1_earth;
+  RG.gy2 = ACSData.gy_ifroll - PointingData[point_index].gy2_earth;
+  RG.gy3 = ACSData.gy_ifyaw - PointingData[point_index].gy3_earth;
 
   /*************************************/
   /** Record history for gyro offsets **/

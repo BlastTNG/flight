@@ -798,11 +798,15 @@ struct ChannelStruct SlowChannels[] = {
 
   /* send data to ACS0 */
   {"gy2_heat",    'w',  TMP1,  3,             1.0,                    0.0, 'u'},
+   
+  {"gyro_mask",   'w',  ACS2_D, 13,           1.0,                    0.0, 'u'},
 
   /* read channels from ACS1 */
-  {"gyro2",       'r',  TMP2, 50,  GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
-  {"gyro3",       'r',  TMP2, 56,  GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
-  {"gyro1",       'r',  TMP2, 59,  GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
+  {"gy_ifroll",   'r',  ACS2_D, 13, GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
+  {"gy_ifyaw",    'r',  ACS2_D, 14, GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
+  {"gy_ifel",     'r',  ACS2_D, 12, GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
+
+  //{"gy_fault",    'r',  ACS2_D, 15,           1.0,                    0.0, 'u'},
 
   {"reac_enc",    'r',  TMP2, 60,    360.0/4000.0,                    0.0, 'u'},
   {"pwm_el",      'r',  TMP2, 51,             1.0,                -4000.0, 'u'},
@@ -839,12 +843,12 @@ struct ChannelStruct SlowChannels[] = {
 
 struct ChannelStruct WideFastChannels[] = {
 #ifndef BOLOTEST
-  {"raw_gy1",     'r',  ACS2_D,  0, 1.0, 0.0, 'U'},
-  {"raw_gy2",     'r',  ACS2_D,  2, 1.0, 0.0, 'U'},
-  {"raw_gy3",     'r',  ACS2_D,  4, 1.0, 0.0, 'U'},
-  {"raw_gy4",     'r',  ACS2_D,  6, 1.0, 0.0, 'U'},
-  {"raw_gy5",     'r',  ACS2_D,  8, 1.0, 0.0, 'U'},
-  {"raw_gy6",     'r',  ACS2_D, 10, 1.0, 0.0, 'U'},
+  {"raw_gy_ifyaw1",  'r',  ACS2_D,  0, 1.0, 0.0, 'U'},
+  {"raw_gy_ifroll1", 'r',  ACS2_D,  2, 1.0, 0.0, 'U'},
+  {"raw_gy_ifyaw2",  'r',  ACS2_D,  4, 1.0, 0.0, 'U'},
+  {"raw_gy_ifel1",'r',  ACS2_D,  6, 1.0, 0.0, 'U'},
+  {"raw_gy_ifel2",'r',  ACS2_D,  8, 1.0, 0.0, 'U'},
+  {"raw_gy_ifroll2", 'r',  ACS2_D, 10, 1.0, 0.0, 'U'},
 #endif
 
   /* 25th channels of all the DAS cards, not currently used */

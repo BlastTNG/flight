@@ -340,11 +340,11 @@ static void SensorReader(void)
 
 static void GetACS(unsigned short *RxFrame)
 {
-  double enc_elev, gyro1, gyro2, gyro3;
+  double enc_elev, gy_ifel, gy_ifroll, gy_ifyaw;
   double x_comp, y_comp, z_comp;
-  static struct BiPhaseStruct* gyro1Addr;
-  static struct BiPhaseStruct* gyro2Addr;
-  static struct BiPhaseStruct* gyro3Addr;
+  static struct BiPhaseStruct* gyifElAddr;
+  static struct BiPhaseStruct* gyifRollAddr;
+  static struct BiPhaseStruct* gyifYawAddr;
   static struct BiPhaseStruct* encElevAddr;
   static struct BiPhaseStruct* clinElevAddr;
   static struct BiPhaseStruct* magXAddr;
@@ -361,9 +361,9 @@ static void GetACS(unsigned short *RxFrame)
     firsttime = 0;
     encElevAddr = GetBiPhaseAddr("enc_elev");
     clinElevAddr = GetBiPhaseAddr("clin_elev");
-    gyro1Addr = GetBiPhaseAddr("gyro1");
-    gyro2Addr = GetBiPhaseAddr("gyro2");
-    gyro3Addr = GetBiPhaseAddr("gyro3");
+    gyifElAddr = GetBiPhaseAddr("gy_ifel");
+    gyifRollAddr = GetBiPhaseAddr("gy_ifroll");
+    gyifYawAddr = GetBiPhaseAddr("gy_ifyaw");
     magXAddr = GetBiPhaseAddr("mag_x");
     magYAddr = GetBiPhaseAddr("mag_y");
     magZAddr = GetBiPhaseAddr("mag_z");
@@ -380,9 +380,9 @@ static void GetACS(unsigned short *RxFrame)
           + ENC_ELEV_OFFSET)) < 0)
     enc_elev += 360;
 
-  gyro1 = (double)(RxFrame[gyro1Addr->channel]-GY16_OFFSET) * GY16_TO_DPS;
-  gyro2 = (double)(RxFrame[gyro2Addr->channel]-GY16_OFFSET) * GY16_TO_DPS;
-  gyro3 = (double)(RxFrame[gyro3Addr->channel]-GY16_OFFSET) * GY16_TO_DPS;
+  gy_ifel = (double)(RxFrame[gyifElAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
+  gy_ifroll = (double)(RxFrame[gyifRollAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
+  gy_ifyaw = (double)(RxFrame[gyifYawAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
 
   x_comp = (double)(RxFrame[magXAddr->channel]);
   y_comp = (double)(RxFrame[magYAddr->channel]);
@@ -393,9 +393,9 @@ static void GetACS(unsigned short *RxFrame)
   ACSData.t = mcp_systime(NULL);
   ACSData.mcp_frame = rx_frame_index;
   ACSData.enc_elev = enc_elev;
-  ACSData.gyro1 = gyro1;
-  ACSData.gyro2 = gyro2;
-  ACSData.gyro3 = gyro3;
+  ACSData.gy_ifel = gy_ifel;
+  ACSData.gy_ifroll = gy_ifroll;
+  ACSData.gy_ifyaw = gy_ifyaw;
   ACSData.mag_x = x_comp;
   ACSData.mag_y = y_comp;
   ACSData.mag_z = z_comp;

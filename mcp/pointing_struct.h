@@ -62,9 +62,9 @@ struct ACSDataStruct {
   double mag_pitch; // degrees
   double enc_elev; // degrees
   double clin_elev;// counts
-  double gyro1;    // deg/s
-  double gyro2;    // deg/s
-  double gyro3;    // deg/s
+  double gy_ifel;    // deg/s
+  double gy_ifroll;    // deg/s
+  double gy_ifyaw;    // deg/s
   int mcp_frame;
   time_t t;
 };

@@ -196,6 +196,19 @@ static void WriteAux(void)
       NIOS_FLUSH);
 }
 
+/***********************************/
+/* SetGyroMask: mask faulty gyros  */
+/*                                 */
+/***********************************/
+void SetGyroMask (void)
+{
+static struct NiosStruct* gymaskAddr;
+gymaskAddr = GetNiosAddr("gyro_mask");
+unsigned int GyroMask;
+GyroMask = 0x0000003f; //all masks off
+WriteData(gymaskAddr, GyroMask, NIOS_QUEUE);
+}
+
 /*****************************************************************/
 /* SyncADC: check to see if any boards need to be synced and     */
 /* send the sync bit if they do.  Only one board can be synced   */
@@ -1236,6 +1249,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     CryoControl();
     PhaseControl();
 #ifndef BOLOTEST
+    SetGyroMask();
     ChargeController();
 #endif
   }

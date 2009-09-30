@@ -1494,7 +1494,7 @@ int FrameBuffer::NumFrames(void)
 int FrameBuffer::ReadField(double *returnbuf, const char *fieldname,
     int framenum_in, int numframes_in)
 {
-  int i, j, k, truenum, wide, mindex, chnum[2];
+  int i, j, k, truenum, wide, mindex, chnum[2]={0,0};
   unsigned short mask;
   struct NiosStruct *address[2];
   unsigned short msb, lsb;
