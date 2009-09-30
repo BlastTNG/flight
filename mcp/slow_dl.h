@@ -12,7 +12,9 @@
  */
 
 //#define SLOWDL_NUM_DATA     209
-#define SLOWDL_NUM_DATA     155
+//#define SLOWDL_NUM_DATA     155 //Changed by lmf to 150 after commenting
+                                  //out 5 entries in slow_dl.c
+#define SLOWDL_NUM_DATA     150
 
 #define SLOWDL_LEN          255
 

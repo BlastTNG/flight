@@ -220,15 +220,18 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
   /* CRYO DIODES */
   {"t_lhe",         SLOWDL_FORCE_INT, 8, 10, 8.98}, /* 0-6 deg / 0.020 deg */
   {"t_lhe_filt",    SLOWDL_FORCE_INT, 8, 10, 8.98}, /* 0-6 deg / 0.020 deg */
-  {"t_he4pot_d",    SLOWDL_FORCE_INT, 8, 10, 8.98}, /* 0-6 deg / 0.020 deg */
+  // *** lmf: commented out the entry for t_he4pot_d because it doesn't exist in 
+  // tx_struct.c and was causing mcp to crash.  
+  //  {"t_he4pot_d",    SLOWDL_FORCE_INT, 8, 10, 8.98}, /* 0-6 deg / 0.020 deg */
   {"t_vcs_filt",    SLOWDL_FORCE_INT, 8, 7.5, 6}, /* 0.024 deg */
-  {"t_ln2",         SLOWDL_FORCE_INT, 8, 7, 5.5}, /* 0.024 deg */
-  {"t_ln2_filt",    SLOWDL_FORCE_INT, 8, 7, 5.5}, /* 0.024 deg */
+  // {"t_ln2",         SLOWDL_FORCE_INT, 8, 7, 5.5}, /* 0.024 deg */
+  //  {"t_ln2_filt",    SLOWDL_FORCE_INT, 8, 7, 5.5}, /* 0.024 deg */
   {"t_charcoal",    SLOWDL_FORCE_INT, 8, 10,  6}, /* 0-6 deg / 0.024 deg */
   {"t_heatswitch",  SLOWDL_FORCE_INT, 8, 10,  6}, /* 0-6 deg / 0.024 deg */
   {"t_jfet",        SLOWDL_FORCE_INT, 8, 6.5, 4.5}, /* 0-6 deg / 0.024 deg */
-  {"t_vcs_fet",     SLOWDL_FORCE_INT, 8, 7.5,  6}, /* 0-6 deg / 0.024 deg */
-  {"t_opt_box_ext", SLOWDL_FORCE_INT, 8, 10,  5}, /* 0-6 deg / 0.024 deg */
+  // *** lmf: ditto
+  //  {"t_vcs_fet",     SLOWDL_FORCE_INT, 8, 7.5,  6}, /* 0-6 deg / 0.024 deg */
+  // {"t_opt_box_ext", SLOWDL_FORCE_INT, 8, 10,  5}, /* 0-6 deg / 0.024 deg */
   /* CRYO ROXES */
   {"t_he3fridge",   SLOWDL_FORCE_INT, 8, 1.25, 5.5},
   {"t_m3",          SLOWDL_FORCE_INT, 8,    1, 2.5},
