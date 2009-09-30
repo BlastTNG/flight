@@ -81,6 +81,9 @@
  * forward, but some may no longer be needed
  *
  * TMP nodes are only so mcp doesn't barf during development.
+ * 
+ * ALSO! If you delete anything from the TMP nodes be sure that there isn't a 
+ * corresponding entry in slow_dl.c
  * !!!!!!!!!!!!!!!!!!!!!!!!!! DO NOT FLY WITH TMP NODES !!!!!!!!!!!!!!!!!!!!!!!!
  ******************************************************************************/
 #define	TMP1	50, 0	//all channels formerly on ACS0
@@ -821,6 +824,7 @@ struct ChannelStruct SlowChannels[] = {
 */
 
   /* read from board ACS2 */
+  /*lmf: but elevation encoder is read out over serial so do why do we need this?*/
   {"enc_elev",    'r',  TMP3, 50, -360.0/65536.0,ENC_ELEV_OFFSET,ENC_ELEV_TYPE},
 
   {"mcp_frame",   'w', LOOP2, 34,             1.0,                    0.0, 'u'},
