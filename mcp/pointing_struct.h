@@ -60,8 +60,9 @@ struct ACSDataStruct {
   double mag_y;    // counts
   double mag_z;    // counts
   double mag_pitch; // degrees
-  double enc_elev; // degrees
+  double enc_el_raw; // degrees
   double clin_elev;// counts
+  double rw_vel_raw; // deg/s
   double gy_ifel;    // deg/s
   double gy_ifroll;    // deg/s
   double gy_ifyaw;    // deg/s
@@ -79,7 +80,7 @@ extern struct ACSDataStruct ACSData;
 /*  - Written to the frame in the main thread */
 /*  USE A CIRCULAR BUFFER !!!                 */
 struct RWMotorDataStruct{
-  double rw_vel_dps; // in degrees per second
+  double rw_vel_raw; // in degrees per second
 };
 extern struct RWMotorDataStruct RWMotorData[3];
 extern int rw_motor_index; // defined in motors.c
@@ -93,7 +94,7 @@ extern int rw_motor_index; // defined in motors.c
 /*  - Written to the frame in the main thread */
 /*  USE A CIRCULAR BUFFER !!!                 */
 struct ElevMotorDataStruct{
-  double elev_enc_pos; // in degrees
+  double enc_el_raw; // in degrees
 };
 extern struct ElevMotorDataStruct ElevMotorData[3];
 extern int elev_motor_index; // defined in motors.c

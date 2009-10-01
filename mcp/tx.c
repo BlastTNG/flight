@@ -869,8 +869,8 @@ static void StoreData(int index)
     azDirAddr = GetNiosAddr("az_dir");
     elDirAddr = GetNiosAddr("el_dir");
 
-    rwEncVel = GetNiosAddr("rw_enc_vel");
-    elevEncPos = GetNiosAddr("elev_enc_pos");
+    rwEncVel = GetNiosAddr("rw_vel_raw");
+    elevEncPos = GetNiosAddr("enc_el_raw");
 
   }
 
@@ -1097,8 +1097,8 @@ static void StoreData(int index)
   WriteData(dgpsAzRawAddr, DGPSAtt[i_dgps].az * DEG2I, NIOS_QUEUE);
   WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok, NIOS_QUEUE);
   WriteData(dgpsAttIndexAddr, i_dgps, NIOS_QUEUE);
-  WriteData(rwEncVel,((long int)(RWMotorData[i_rw_motors].rw_vel_dps/4.0*DEG2I)), NIOS_QUEUE);
-  WriteData(elevEncPos,((long int)(ElevMotorData[i_elev_motors].elev_enc_pos*DEG2I)), NIOS_QUEUE);
+  WriteData(rwEncVel,((long int)(RWMotorData[i_rw_motors].rw_vel_raw/4.0*DEG2I)), NIOS_QUEUE);
+  WriteData(elevEncPos,((long int)(ElevMotorData[i_elev_motors].enc_el_raw*DEG2I)), NIOS_QUEUE);
 
   StoreStarCameraData(index, 0); /* write ISC data */
   StoreStarCameraData(index, 1); /* write OSC data */

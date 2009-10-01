@@ -340,8 +340,9 @@ static void SensorReader(void)
 
 static void GetACS(unsigned short *RxFrame)
 {
-  double enc_elev, gy_ifel, gy_ifroll, gy_ifyaw;
+  double enc_el_raw, gy_ifel, gy_ifroll, gy_ifyaw;
   double x_comp, y_comp, z_comp;
+  double rw_vel_raw;
   static struct BiPhaseStruct* gyifElAddr;
   static struct BiPhaseStruct* gyifRollAddr;
   static struct BiPhaseStruct* gyifYawAddr;
@@ -350,16 +351,15 @@ static void GetACS(unsigned short *RxFrame)
   static struct BiPhaseStruct* magXAddr;
   static struct BiPhaseStruct* magYAddr;
   static struct BiPhaseStruct* magZAddr;
-  //  static struct BiPhaseStruct* RWencPos;
-  //  static struct BiPhaseStruct* RWencVol;
-  // TODO-lmf: Not sure if I need this yet.  
+  static struct BiPhaseStruct* rwVelAddr;
+
   unsigned int rx_frame_index = 0;
   int i_ss;
 
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    encElevAddr = GetBiPhaseAddr("enc_elev");
+    encElevAddr = GetBiPhaseAddr("enc_el_raw");
     clinElevAddr = GetBiPhaseAddr("clin_elev");
     gyifElAddr = GetBiPhaseAddr("gy_ifel");
     gyifRollAddr = GetBiPhaseAddr("gy_ifroll");
@@ -367,19 +367,15 @@ static void GetACS(unsigned short *RxFrame)
     magXAddr = GetBiPhaseAddr("mag_x");
     magYAddr = GetBiPhaseAddr("mag_y");
     magZAddr = GetBiPhaseAddr("mag_z");
-    //    RWencPos = GetBiPhaseAddr("rw_enc_pos");
-    // RWencVel = GetBiPhaseAddr("rw_enc_vel");
-    // TODO-lmf: Not sure if I need this yet.  
+    rwVelAddr = GetBiPhaseAddr("rw_vel_raw");
 
   }
 
   rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
       (RxFrame[2] & 0x0000ffff) << 16);
 
-  if ((enc_elev = ((double)RxFrame[encElevAddr->channel] * (-360.0 / 65536.0)
-          + ENC_ELEV_OFFSET)) < 0)
-    enc_elev += 360;
-
+  enc_el_raw = (((double)RxFrame[encElevAddr->channel])/DEG2I);
+  rw_vel_raw = (((double)((short)RxFrame[rwVelAddr->channel]))*4.0/DEG2I);
   gy_ifel = (double)(RxFrame[gyifElAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
   gy_ifroll = (double)(RxFrame[gyifRollAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
   gy_ifyaw = (double)(RxFrame[gyifYawAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
@@ -392,13 +388,14 @@ static void GetACS(unsigned short *RxFrame)
 
   ACSData.t = mcp_systime(NULL);
   ACSData.mcp_frame = rx_frame_index;
-  ACSData.enc_elev = enc_elev;
+  ACSData.enc_el_raw = enc_el_raw;
   ACSData.gy_ifel = gy_ifel;
   ACSData.gy_ifroll = gy_ifroll;
   ACSData.gy_ifyaw = gy_ifyaw;
   ACSData.mag_x = x_comp;
   ACSData.mag_y = y_comp;
   ACSData.mag_z = z_comp;
+  ACSData.rw_vel_raw = rw_vel_raw;
 
   ACSData.clin_elev = (double)RxFrame[clinElevAddr->channel];
 
@@ -672,7 +669,6 @@ int main(int argc, char *argv[])
 {
   unsigned int in_data, i;
   unsigned short* RxFrame;
-
   pthread_t CommandDatacomm1;
   pthread_t disk_id;
   pthread_t abus_id;

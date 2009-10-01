@@ -506,7 +506,7 @@ int possible_solution(double az, double el, int i_point) {
   mag_az = PointingData[i_point].mag_az; 
 
   if (CommandData.use_elenc) {
-    enc_el = ACSData.enc_elev;
+    enc_el = ACSData.enc_el_raw;
     if (el - enc_el > 5.0) return (0);
     if (enc_el - el > 5.0) return (0);
   }
@@ -1151,7 +1151,7 @@ void Pointing(void)
   EvolveElSolution(&ClinEl, RG.gy1, PointingData[i_point_read].gy1_offset,
       clin_elev, 1);
   EvolveElSolution(&EncEl, RG.gy1, PointingData[i_point_read].gy1_offset,
-      ACSData.enc_elev, 1);
+      ACSData.enc_el_raw, 1);
 
   if (CommandData.use_elenc) {
     AddElSolution(&ElAtt, &EncEl, 1);

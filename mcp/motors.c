@@ -123,14 +123,14 @@ static double GetVElev(void)
     vel = (axes_mode.el_dest - PointingData[i_point].el) * 0.36;
   } else if (axes_mode.el_mode == AXIS_LOCK) {
     /* for the lock, only use the elevation encoder */
-    vel = (axes_mode.el_dest - ACSData.enc_elev) * 0.64;
+    vel = (axes_mode.el_dest - ACSData.enc_el_raw) * 0.64;
   }
 
   /* correct offset and convert to Gyro Units */
   vel -= (PointingData[i_point].gy1_offset - PointingData[i_point].gy1_earth);
 
   if (CommandData.use_elenc) {
-    el_for_limit = ACSData.enc_elev;
+    el_for_limit = ACSData.enc_el_raw;
   } else {
     el_for_limit = PointingData[i_point].el;
   }
@@ -1222,7 +1222,7 @@ void* reactComm(void* arg)
   // with the motors.
   bprintf(info,"reactComm: Bringing the reaction wheel online.");
   // Initialize structure RWMotorData.  Follows what was done in dgps.c
-  RWMotorData[0].rw_vel_dps=0;
+  RWMotorData[0].rw_vel_raw=0;
 
   // Try to open the port.
   while(reactinfo.open==0) {
@@ -1256,7 +1256,7 @@ void* reactComm(void* arg)
     } else if (reactinfo.init==1){
   
       vel_raw=getCopleyVel(&reactinfo); // Units are 0.1 counts/sec
-      RWMotorData[rw_motor_index].rw_vel_dps=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
+      RWMotorData[rw_motor_index].rw_vel_raw=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
 
       rw_motor_index=INC_INDEX(rw_motor_index);
       if (firsttime) {
@@ -1267,7 +1267,7 @@ void* reactComm(void* arg)
     } else {
       usleep(10000);
     }
-    
+    i++;
   }
   return NULL;
 }
@@ -1294,7 +1294,7 @@ void* elevComm(void* arg)
   i=0;
 
   // Initialize structure ElevMotorData.  Follows what was done in dgps.c
-  ElevMotorData[0].elev_enc_pos=0;
+  ElevMotorData[0].enc_el_raw=0;
 
   // Try to open the port.
   while(elevinfo.open==0) {
@@ -1330,8 +1330,7 @@ void* elevComm(void* arg)
       pos_raw=getCopleyPos(&elevinfo); // Units are counts
                                   // For Elev 524288 cts = 360 deg
       //TODO-lmf: Add in some sort of zeropoint.
-      ElevMotorData[elev_motor_index].elev_enc_pos=((double) (pos_raw % ((long int) ELEV_ENC_CTS)))/ELEV_ENC_CTS*360.0;
-
+      ElevMotorData[elev_motor_index].enc_el_raw=((double) (pos_raw % ((long int) ELEV_ENC_CTS)))/ELEV_ENC_CTS*360.0;
       elev_motor_index=INC_INDEX(elev_motor_index);
       if (firsttime) {
 	bprintf(info,"elevComm: Raw elevation encoder position is %i",pos_raw);
