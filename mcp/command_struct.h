@@ -169,7 +169,7 @@ struct CommandDataStruct {
   double gy1_offset;
   double gy2_offset;
   double gy3_offset;
-  unsigned int gy_mask;
+  unsigned int gymask;
 
   struct {
     double setpoint;

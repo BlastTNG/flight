@@ -806,7 +806,7 @@ struct ChannelStruct SlowChannels[] = {
   {"gy_ifyaw",    'r',  ACS2_D, 14, GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
   {"gy_ifel",     'r',  ACS2_D, 12, GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
 
-  //{"gy_fault",    'r',  ACS2_D, 15,           1.0,                    0.0, 'u'},
+  {"gyro_fault",  'r',  ACS2_D, 15,           1.0,                    0.0, 'u'},
 
   {"reac_enc",    'r',  TMP2, 60,    360.0/4000.0,                    0.0, 'u'},
   {"pwm_el",      'r',  TMP2, 51,             1.0,                -4000.0, 'u'},

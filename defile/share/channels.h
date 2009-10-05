@@ -176,7 +176,7 @@ extern "C" {
 // Conversion factors for the rotated/calibrated gyros
 // (GYRO1, GYRO2, GYRO3).  Any correction to these belongs
 // in ACS1, not here
-#define DPS_TO_GY16 1092.8128
+#define DPS_TO_GY16 16.27604167 // 1/(60.0E-6*2^10)
 #define GY16_TO_DPS (1.0/DPS_TO_GY16)
 #define GY16_OFFSET 32768.0
 
