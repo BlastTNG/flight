@@ -801,11 +801,6 @@ struct ChannelStruct SlowChannels[] = {
    
   {"gyro_mask",   'w',  ACS2_D, 13,           1.0,                    0.0, 'u'},
 
-  /* read channels from ACS1 */
-  {"gy_ifroll",   'r',  ACS2_D, 13, GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
-  {"gy_ifyaw",    'r',  ACS2_D, 14, GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
-  {"gy_ifel",     'r',  ACS2_D, 12, GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u'},
-
   {"gyro_fault",  'r',  ACS2_D, 15,           1.0,                    0.0, 'u'},
 
   {"reac_enc",    'r',  TMP2, 60,    360.0/4000.0,                    0.0, 'u'},
@@ -842,8 +837,8 @@ struct ChannelStruct WideFastChannels[] = {
   {"raw_gy_ifyaw1",  'r',  ACS2_D,  0, 1.0, 0.0, 'U'},
   {"raw_gy_ifroll1", 'r',  ACS2_D,  2, 1.0, 0.0, 'U'},
   {"raw_gy_ifyaw2",  'r',  ACS2_D,  4, 1.0, 0.0, 'U'},
-  {"raw_gy_ifel1",'r',  ACS2_D,  6, 1.0, 0.0, 'U'},
-  {"raw_gy_ifel2",'r',  ACS2_D,  8, 1.0, 0.0, 'U'},
+  {"raw_gy_ifel1",   'r',  ACS2_D,  6, 1.0, 0.0, 'U'},
+  {"raw_gy_ifel2",   'r',  ACS2_D,  8, 1.0, 0.0, 'U'},
   {"raw_gy_ifroll2", 'r',  ACS2_D, 10, 1.0, 0.0, 'U'},
 #endif
 
@@ -871,6 +866,11 @@ struct ChannelStruct FastChannels[] = {
 /* ACS1 Digital Card */
   {"latch0",       'w',  ACS1_D,  0,                1.0,             0.0, 'u'},
   {"latch1",       'w',  ACS1_D,  1,                1.0,             0.0, 'u'},
+
+/* read channels from ACS1 */
+  {"gy_ifroll",    'r',  ACS2_D, 13, GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS,'u'},
+  {"gy_ifyaw",     'r',  ACS2_D, 14, GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS,'u'},
+  {"gy_ifel",      'r',  ACS2_D, 12, GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS,'u'},
 
 /* ACS1 Digital Card */
   {"isc_pulse",    'r',   ACS2_D, 53,                 1.0,            0.0, 'u'},
