@@ -166,9 +166,9 @@ struct CommandDataStruct {
 
   int az_autogyro;
   int el_autogyro;
-  double gy1_offset;
-  double gy2_offset;
-  double gy3_offset;
+  double gy_ifel_offset;
+  double gy_ifroll_offset;
+  double gy_ifyaw_offset;
   unsigned int gymask;
 
   struct {

@@ -127,7 +127,7 @@ static double GetVElev(void)
   }
 
   /* correct offset and convert to Gyro Units */
-  vel -= (PointingData[i_point].gy1_offset - PointingData[i_point].gy1_earth);
+  vel -= (PointingData[i_point].gy_ifel_offset - PointingData[i_point].gy_ifel_earth);
 
   if (CommandData.use_elenc) {
     el_for_limit = ACSData.enc_el_raw;
@@ -194,9 +194,9 @@ static int GetVAz(void)
   }
 
   vel_offset =
-    -(PointingData[i_point].gy2_offset- PointingData[i_point].gy2_earth)*
+    -(PointingData[i_point].gy_ifroll_offset- PointingData[i_point].gy_ifroll_earth)*
     cos(PointingData[i_point].el * M_PI / 180.0) -
-    (PointingData[i_point].gy3_offset- PointingData[i_point].gy3_earth)*
+    (PointingData[i_point].gy_ifyaw_offset- PointingData[i_point].gy_ifyaw_earth)*
     sin(PointingData[i_point].el * M_PI / 180.0);
 
   vel -= vel_offset;

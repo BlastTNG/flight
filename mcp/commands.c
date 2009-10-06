@@ -1066,12 +1066,12 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       SetRaDec(rvalues[0], rvalues[1]);
       break;
     case az_gyro_offset:
-      CommandData.gy2_offset = rvalues[0];
-      CommandData.gy3_offset = rvalues[1];
+      CommandData.gy_ifroll_offset = rvalues[0];
+      CommandData.gy_ifyaw_offset = rvalues[1];
       CommandData.az_autogyro = 0;
       break;
     case el_gyro_offset:
-      CommandData.gy1_offset = rvalues[0];
+      CommandData.gy_ifel_offset = rvalues[0];
       CommandData.el_autogyro = 0;
       break;
     case slew_veto:
@@ -2263,9 +2263,9 @@ void InitCommandData()
 
   CommandData.az_autogyro = 1;
   CommandData.el_autogyro = 1;
-  CommandData.gy1_offset = 0;
-  CommandData.gy2_offset = 0;
-  CommandData.gy3_offset = 0;
+  CommandData.gy_ifel_offset = 0;
+  CommandData.gy_ifroll_offset = 0;
+  CommandData.gy_ifyaw_offset = 0;
   CommandData.gymask = 0x00000000;
   
   CommandData.pumps.pwm1 = 1638; /* 20% */

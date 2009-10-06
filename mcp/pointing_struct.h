@@ -150,18 +150,18 @@ struct PointingDataStruct {
   double el;        // degrees
   double ra;        // hours, aparent
   double dec;       // degrees, aparent
-  double gy1_offset;
-  double isc_gy1_offset; 
-  double isc_gy2_offset; 
-  double isc_gy3_offset; 
-  double osc_gy1_offset; 
-  double osc_gy2_offset; 
-  double osc_gy3_offset; 
-  double gy2_offset;
-  double gy3_offset;
-  double gy1_earth;
-  double gy2_earth;
-  double gy3_earth;
+  double gy_ifel_offset;
+  double isc_gy_ifel_offset; 
+  double isc_gy_ifroll_offset; 
+  double isc_gy_ifyaw_offset; 
+  double osc_gy_ifel_offset; 
+  double osc_gy_ifroll_offset; 
+  double osc_gy_ifyaw_offset; 
+  double gy_ifroll_offset;
+  double gy_ifyaw_offset;
+  double gy_ifel_earth;
+  double gy_ifroll_earth;
+  double gy_ifyaw_earth;
   double lat;       // degrees
   double lon;       // degrees
   double alt;       // m
