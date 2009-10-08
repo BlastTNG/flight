@@ -49,11 +49,10 @@ extern "C" {
 
   /* offset of encoder.  Reset if encoder has been unmounted. */
   /* This is the elevation at which the encoder wraps around */
-//#define ENC_ELEV_OFFSET 113.48
-#define ENC_ELEV_OFFSET (112.745+0.6)
+#define ENC_EL_RAW_OFFSET (256.2)
   /* to get proper wrapping in KST, the encoder elevation type should be
-   * 'u' for 135 <= ENC_ELEV_OFFSET < 315 and 's' otherwise */
-#define ENC_ELEV_TYPE 's'
+   * 'u' for 135 <= ENC_EL_RAW_OFFSET < 315 and 's' otherwise */
+#define ENC_ELEV_TYPE 'u'
 
   /* New Bolo calibrations per Jeff  2005-05-17 */
 #define LOCKIN_C2V (1.5704089784e-6)
@@ -176,7 +175,7 @@ extern "C" {
 // Conversion factors for the rotated/calibrated gyros
 // (GYRO1, GYRO2, GYRO3).  Any correction to these belongs
 // in ACS1, not here
-#define DPS_TO_GY16 16.27604167 // 1/(60.0E-6*2^10)
+#define DPS_TO_GY16 16.27604167/(-2.0) // 1/(60.0E-6*2^10)
 #define GY16_TO_DPS (1.0/DPS_TO_GY16)
 #define GY16_OFFSET 32768.0
 

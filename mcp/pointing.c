@@ -691,20 +691,24 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
     double gyro, double gy_off,
     double new_angle, int new_reading)
 {
+  static int i=0;
   double w1, w2;
   double new_offset = 0;
-
+ 
+  //  if (i%500==1) bprintf(info,"EvolveElSolution: #1 Initial angle %f, new angle %f",s->angle, new_angle);
   s->angle += (gyro + gy_off) / SR;
   s->varience += GYRO_VAR;
 
   s->gy_int += gyro / SR; // in degrees
 
+  //  if (i%500==1) bprintf(info,"EvolveElSolution: #2 Angle %f, gyro %f, gy_off %f, varience %f, gy_int %f",s->angle, gyro, gy_off, s->varience, s->gy_int);
   if (new_reading) {
     w1 = 1.0 / (s->varience);
     w2 = s->samp_weight;
 
     s->angle = (w1 * s->angle + new_angle * w2) / (w1 + w2);
     s->varience = 1.0 / (w1 + w2);
+    //    if (i%500==1) bprintf(info,"EvolveElSolution: #2 Angle %f, w1 %f, w2 %f, varience %f",s->angle, w1, w2,s->varience);
 
     if (CommandData.pointing_mode.nw > 0)
       CommandData.pointing_mode.nw--; /* slew veto */
@@ -730,6 +734,7 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
     s->last_input = new_angle;
   }
   s->since_last++;
+  i++;
 }
 
 // Weighted mean of ElAtt and ElSol
@@ -854,6 +859,7 @@ void Pointing(void)
   double R, cos_e, cos_l, cos_a;
   double sin_e, sin_l, sin_a;
   double ra, dec, az, el;
+  static int j=0;
 
   int ss_ok, mag_ok, dgps_ok;
   static unsigned dgps_since_ok = 500;
@@ -861,7 +867,7 @@ void Pointing(void)
   double ss_az, mag_az;
   double dgps_az, dgps_pitch, dgps_roll;
   double clin_elev;
-  static int no_dgps_pos = 0, last_i_dgpspos = 0, using_dgps = -1;
+  static int no_dgps_pos = 0, last_i_dgpspos = 0, using_sip_gps = -1;
   static double last_good_lat=0, last_good_lon=0;
   static int since_last_good_dgps_pos=5;
   static int i_at_float = 0;
@@ -1060,6 +1066,8 @@ void Pointing(void)
   PointingData[point_index].gy_ifyaw_earth = R *
     (sin_e * sin_l + cos_l * cos_e * cos_a);
   RG.gy_ifel = ACSData.gy_ifel - PointingData[point_index].gy_ifel_earth;
+  //  if (j%500==0) bprintf(info,"Pointing: ACSData.enc_el_raw = %f",ACSData.enc_el_raw);
+  //  if (j%500==0) bprintf(info,"Pointing: RG.gy1 = %f, gy1_earth= %f, cos_l =%f sin_a = %f",ACSData.gy_ifel,PointingData[point_index].gy1_earth, cos_a, sin_a);
   RG.gy_ifroll = ACSData.gy_ifroll - PointingData[point_index].gy_ifroll_earth;
   RG.gy_ifyaw = ACSData.gy_ifyaw - PointingData[point_index].gy_ifyaw_earth;
 
@@ -1072,7 +1080,7 @@ void Pointing(void)
   /************************************************/
   /** Set the official Lat and Long: prefer dgps **/
   if (i_dgpspos != last_i_dgpspos) {
-    if (using_dgps != 0)
+    if (using_sip_gps != 0)
       bprintf(info, "Pointing: Using dGPS for positional data");
     last_i_dgpspos = i_dgpspos;
     dgpspos_ok = ((fabs(last_good_lat - DGPSPos[i_dgpspos].lat) < 0.5) &&
@@ -1083,7 +1091,7 @@ void Pointing(void)
       last_good_lat = PointingData[point_index].lat = DGPSPos[i_dgpspos].lat;
       last_good_lon = PointingData[point_index].lon = DGPSPos[i_dgpspos].lon;
       PointingData[point_index].alt = DGPSPos[i_dgpspos].alt;
-      using_dgps = 0;
+      using_sip_gps = 0;
       no_dgps_pos = 0;
       since_last_good_dgps_pos = 0;
     } else {
@@ -1092,12 +1100,12 @@ void Pointing(void)
   } else {
     no_dgps_pos++;
     if (no_dgps_pos > 3000) { // no dgps for 30 seconds - revert to sip
-      if (using_dgps != 1)
+      if (using_sip_gps != 1)
         bprintf(info, "Pointing: Using SIP for positional data");
       PointingData[point_index].lat = SIPData.GPSpos.lat;
       PointingData[point_index].lon = SIPData.GPSpos.lon;
       PointingData[point_index].alt = SIPData.GPSpos.alt;
-      using_dgps = 1;
+      using_sip_gps = 1;
     }
   }
 
@@ -1263,7 +1271,8 @@ void Pointing(void)
   PointingData[point_index].ra = ra;
   PointingData[point_index].dec = dec;
   /** record solutions in pointing data **/
-
+  //  if (j%500==0) bprintf(info,"Pointing: PointingData.enc_el = %f",PointingData[point_index].enc_el);
+  j++;
   PointingData[point_index].enc_el = EncEl.angle;
   PointingData[point_index].enc_sigma = sqrt(EncEl.varience + EncEl.sys_var);
   PointingData[point_index].clin_el = ClinEl.angle;
@@ -1304,7 +1313,7 @@ void Pointing(void)
     NewAzEl.fresh = 0;
   }
 
-  if (NewAzEl.fresh) {
+  if (NewAzEl.fresh==1) {
     ClinEl.trim = NewAzEl.el - ClinEl.angle;	
     EncEl.trim = NewAzEl.el - EncEl.angle;	
     NullAz.trim = NewAzEl.az - NullAz.angle;

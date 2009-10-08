@@ -69,35 +69,35 @@ enum CmdorQuery {cmd, query};
 
 // Function Declarations
 
-void open_amc(char *address);
+void open_amc(char *address, struct MotorInfoStruct* amcinfo);
 
-void close_amc();
+void close_amc(struct MotorInfoStruct* amcinfo);
 
-void setopts_amc(int bdrate);
+void setopts_amc(int bdrate, struct MotorInfoStruct* amcinfo);
 
-void MakeSCHeadStruct(struct DriveIPVStruct *ValuesSend,struct SerialCommandHeadStruct *MessSendHead, unsigned short *crctable, char *header,char **command, int *commsize,enum CmdorQuery type);
+void MakeSCHeadStruct(struct DriveIPVStruct *ValuesSend,struct SerialCommandHeadStruct *MessSendHead, unsigned short *crctable, char *header,char **command, int *commsize,enum CmdorQuery type, struct MotorInfoStruct* amcinfo);
 
-void crccheck(unsigned short data, unsigned short *accumulator, unsigned short *crctable);
+void crccheck(unsigned short data, unsigned short *accumulator, unsigned short *crctable, struct MotorInfoStruct* amcinfo);
 
-unsigned short crchware(unsigned short data, unsigned short genpoly, unsigned short accum);
+unsigned short crchware(unsigned short data, unsigned short genpoly, unsigned short accum, struct MotorInfoStruct* amcinfo);
 
-void configure_amc();
+void configure_amc(struct MotorInfoStruct* amcinfo);
 
-int check_amcready(enum CheckType check);
+int check_amcready(enum CheckType check, struct MotorInfoStruct* amcinfo);
 
-int sendThisCommand(int index,int offset,int value,int nwords,enum CmdorQuery type);
-int queryind(int index, int offset, int nwords);
-int areWeDisabled();
-int readAMCResp(int seq, char *response, int *l);
+int sendThisCommand(int index,int offset,int value,int nwords,enum CmdorQuery type, struct MotorInfoStruct* amcinfo);
+int queryind(int index, int offset, int nwords, struct MotorInfoStruct* amcinfo);
+int areWeDisabled(struct MotorInfoStruct* amcinfo);
+int readAMCResp(int seq, char *response, int *l, struct MotorInfoStruct* amcinfo);
 
-int getAMCResp(int seq, int *val, int *l);
+int getAMCResp(int seq, int *val, int *l, struct MotorInfoStruct* amcinfo);
 
-int checkAMCResp(int seq);
+int checkAMCResp(int seq, struct MotorInfoStruct* amcinfo);
 
-void checkAMCStatus(int stat);
+void checkAMCStatus(int stat, struct MotorInfoStruct* amcinfo);
 
-void setWriteAccess();
-int disableAMC();
-int enableAMC();
+void setWriteAccess(struct MotorInfoStruct* amcinfo);
+int disableAMC(struct MotorInfoStruct* amcinfo);
+int enableAMC(struct MotorInfoStruct* amcinfo);
 
 #endif

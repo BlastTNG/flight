@@ -936,6 +936,8 @@ static void StoreData(int index)
   WriteData(sipMksHiAddr, (int)(SIPData.MKSalt.hi), NIOS_QUEUE);
 
   /************* processed pointing data *************/
+
+  // TODO
   WriteData(azAddr, (unsigned int)(PointingData[i_point].az * DEG2LI),
       NIOS_QUEUE);
   WriteData(elAddr, (unsigned int)(PointingData[i_point].el * DEG2LI),

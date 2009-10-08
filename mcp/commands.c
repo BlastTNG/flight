@@ -2428,8 +2428,10 @@ void InitCommandData()
   CommandData.temp3 = 0;
   CommandData.df = 0;
 
-  CommandData.lat = 0;
-  CommandData.lon = 0;
+  // Coordinates for Toronto AKA the centre of the universe
+  // used for motor tests. 
+  CommandData.lat = 43.39;
+  CommandData.lon = 79.23;
 
   for (i = 0; i < DAS_CARDS; ++i)
     CommandData.Phase[i] = 1970;

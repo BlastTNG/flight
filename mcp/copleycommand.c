@@ -62,7 +62,6 @@ void close_copley(struct MotorInfoStruct* copleyinfo)
 {
   int n;
 
-  usleep(1000000); // Wait a second to let mcp close the current loop.                                                                           
   bprintf(info,"%sComm: Closing connection to Copley controller.",copleyinfo->motorstr);
   n = disableCopley(copleyinfo);
 
@@ -72,6 +71,8 @@ void close_copley(struct MotorInfoStruct* copleyinfo)
 
   bprintf(info,"%sComm close_copley: Closing serial port.",copleyinfo->motorstr);
   close(copleyinfo->fd); 
+  copleyinfo->init=0;
+  copleyinfo->open=0;
 }
 
 void setopts_copley(int bdrate,struct MotorInfoStruct* copleyinfo)

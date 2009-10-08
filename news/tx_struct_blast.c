@@ -401,8 +401,7 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_az",       'w', LOOP2, 44,              I2DEG,             0.0, 'u'},
   {"isc_el",       'w', LOOP2, 45,              I2DEG,             0.0, 'u'},
   {"isc_sigma",    'w', LOOP2, 46,              I2DEG,             0.0, 'u'},
-  {"enc_el",       'w', LOOP2, 47,              I2DEG,             0.0, 'u'},
-  {"enc_sigma",    'w', LOOP2, 48,              I2DEG,             0.0, 'u'},
+  // LOOP2 47-48 are fast
   {"cal_pulse",    'w', LOOP2, 49,               10.0,              0., 'u'},
   {"ss_sigma",     'w', LOOP2, 50,              I2DEG,             0.0, 'u'},
   /* LOOP2 51-54 are wide fast */
@@ -834,13 +833,15 @@ struct ChannelStruct SlowChannels[] = {
 
 struct ChannelStruct WideFastChannels[] = {
 #ifndef BOLOTEST
-  {"gy_ifyaw1",  'r',  ACS2_D,  0, 1.0, 0.0, 'U'},
-  {"gy_ifroll1", 'r',  ACS2_D,  2, 1.0, 0.0, 'U'},
-  {"gy_ifyaw2",  'r',  ACS2_D,  4, 1.0, 0.0, 'U'},
-  {"gy_ifel1",   'r',  ACS2_D,  6, 1.0, 0.0, 'U'},
-  {"gy_ifel2",   'r',  ACS2_D,  8, 1.0, 0.0, 'U'},
-  {"gy_ifroll2", 'r',  ACS2_D, 10, 1.0, 0.0, 'U'},
+  {"gy_ifyaw1",  'r',  ACS2_D,  0, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U'},
+  {"gy_ifroll1", 'r',  ACS2_D,  2, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U'},
+  {"gy_ifyaw2",  'r',  ACS2_D,  4, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U'},
+  {"gy_ifel1",   'r',  ACS2_D,  6, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U'},
+  {"gy_ifel2",   'r',  ACS2_D,  8, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U'},
+  {"gy_ifroll2", 'r',  ACS2_D, 10, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U'},
 #endif
+  {"az",          'w', LOOP2,   51,             LI2DEG,             0.0, 'U'},
+  {"el",          'w', LOOP2,   53,             LI2DEG,             0.0, 'U'},
 
   /* 25th channels of all the DAS cards, not currently used */
 #if 0
@@ -887,8 +888,7 @@ struct ChannelStruct FastChannels[] = {
   {"mag_y",        'r',  ACS2_A1, 15,              MAGY_M,         MAGY_B, 'u'},
   {"mag_z",        'r',  ACS2_A1, 17,              MAGZ_M,         MAGZ_B, 'u'},
 
-  {"az",          'w', LOOP2, 51,          LI2DEG,                    0.0, 'u'},
-  {"el",          'w', LOOP2, 53,          LI2DEG,                    0.0, 'u'},
+  // This is where az and el were before
 #endif
 
   {"stage_x",      'w', LOOP5, 28,                1.0,             0.0, 'u'},
@@ -916,6 +916,8 @@ struct ChannelStruct FastChannels[] = {
 #endif
   {"rw_vel_raw",   'w', LOOP7,  0,         I2DEG*4.0,             0.0, 's'},
   {"enc_el_raw",   'w', LOOP7,  2,             I2DEG,             0.0, 'u'},
+  {"enc_el",       'w', LOOP2, 47,              I2DEG,             0.0, 'u'},
+  {"enc_sigma",    'w', LOOP2, 48,              I2DEG,             0.0, 'u'},
 
   END_OF_CHANNELS
 };
