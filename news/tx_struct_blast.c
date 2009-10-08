@@ -70,9 +70,6 @@
 /* Measured by Tristan @ Penn, September 29 2009 */
 #define CRYO_A2_M ( 4.805248E-9)
 #define CRYO_A2_B (-1.032198E1 )
-/* Modified by Jeff @ Penn, October 6 2009 */
-#define CRYO_D_M ( 4.8023774e-09)
-#define CRYO_D_B (-1.0317770e+01)
 
 /*******************************************************************************
  * TODO The channel list needs updating! Most of this is still from BLAST06
@@ -93,6 +90,7 @@
 #define	TMP2	51, 0	//all channels formerly on ACS1
 #define TMP3	52, 0	//all channels formerly on ACS2
 #define TMP4	53, 0	//all channels formerly on ACS3
+#define TMP5	54, 0	//all channels formerly on CRYO
 #define TMP6	55, 0	//all channels formerly on BIAS
 
 /* read and write channel 56 on all boards reserved for ADC Sync */
@@ -130,26 +128,26 @@ struct ChannelStruct WideSlowChannels[] = {
   {"cryo_a2_02",    'r', CRYO_A2,  4,          CRYO_A2_M,       CRYO_A2_B, 'U'},
   {"cryo_a2_03",    'r', CRYO_A2,  6,          CRYO_A2_M,       CRYO_A2_B, 'U'},
   {"cryo_a2_04",    'r', CRYO_A2,  8,          CRYO_A2_M,       CRYO_A2_B, 'U'},
-  {"td_ln",         'r', CRYO_A2, 10,           CRYO_D_M,        CRYO_D_B, 'U'},
+  {"cryo_a2_05",    'r', CRYO_A2, 10,          CRYO_A2_M,       CRYO_A2_B, 'U'},
   {"cryo_a2_06",    'r', CRYO_A2, 12,          CRYO_A2_M,       CRYO_A2_B, 'U'},
   {"cryo_a2_07",    'r', CRYO_A2, 14,          CRYO_A2_M,       CRYO_A2_B, 'U'},
-  {"td_vcs_filt",   'r', CRYO_A2, 16,           CRYO_D_M,        CRYO_D_B, 'U'},
+  {"cryo_a2_08",    'r', CRYO_A2, 16,          CRYO_A2_M,       CRYO_A2_B, 'U'},
   {"cryo_a2_09",    'r', CRYO_A2, 18,          CRYO_A2_M,       CRYO_A2_B, 'U'},
   {"cryo_a2_10",    'r', CRYO_A2, 20,          CRYO_A2_M,       CRYO_A2_B, 'U'},
   {"cryo_a2_11",    'r', CRYO_A2, 22,          CRYO_A2_M,       CRYO_A2_B, 'U'},
-  {"td_vcs",        'r', CRYO_A2, 24,           CRYO_D_M,        CRYO_D_B, 'U'},
-  {"td_lhe_filt",   'r', CRYO_A2, 26,           CRYO_D_M,        CRYO_D_B, 'U'},
-  {"td_lhe",        'r', CRYO_A2, 28,           CRYO_D_M,        CRYO_D_B, 'U'},
-  {"cryo_a2_15",    'r', CRYO_A2, 30,          CRYO_A2_M,       CRYO_A2_B, 'U'},
-  {"cryo_a2_16",    'r', CRYO_A2, 32,          CRYO_A2_M,       CRYO_A2_B, 'U'},
-  {"cryo_a2_17",    'r', CRYO_A2, 34,          CRYO_A2_M,       CRYO_A2_B, 'U'},
-  {"cryo_a2_18",    'r', CRYO_A2, 36,          CRYO_A2_M,       CRYO_A2_B, 'U'},
-  {"cryo_a2_19",    'r', CRYO_A2, 38,          CRYO_A2_M,       CRYO_A2_B, 'U'},
-  {"td_vcs_jfet",   'r', CRYO_A2, 40,           CRYO_D_M,        CRYO_D_B, 'U'},
-  {"td_jfet",       'r', CRYO_A2, 42,           CRYO_D_M,        CRYO_D_B, 'U'},
-  {"td_heatswitch", 'r', CRYO_A2, 44,           CRYO_D_M,        CRYO_D_B, 'U'},
-  {"td_charcoal",   'r', CRYO_A2, 46,           CRYO_D_M,        CRYO_D_B, 'U'},
-  {"td_ln_filt",    'r', CRYO_A2, 48,           CRYO_D_M,        CRYO_D_B, 'U'},
+  {"t_lhe",         'r', CRYO_A2, 24,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"t_lhe_filt",    'r', CRYO_A2, 26,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"t_vcs",         'r', CRYO_A2, 28,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"t_vcs_filt",    'r', CRYO_A2, 30,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"t_ln",          'r', CRYO_A2, 32,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"t_ln_filt",     'r', CRYO_A2, 34,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"t_charcoal",    'r', CRYO_A2, 36,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"t_heatswitch",  'r', CRYO_A2, 38,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"t_jfet",        'r', CRYO_A2, 40,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"t_vcs_jfet",    'r', CRYO_A2, 42,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_22",    'r', CRYO_A2, 44,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_23",    'r', CRYO_A2, 46,          CRYO_A2_M,       CRYO_A2_B, 'U'},
+  {"cryo_a2_24",    'r', CRYO_A2, 48,          CRYO_A2_M,       CRYO_A2_B, 'U'},
 
   {"cpu_time",     'w', LOOP1,  0,                1.0,             0.0, 'U'},
   {"cpu_usec",     'w', LOOP4, 58,                1.0,             0.0, 'U'},
@@ -182,6 +180,19 @@ struct ChannelStruct WideSlowChannels[] = {
   {"sec_goal",     'w', LOOP6, 30,                1.0,             0.0, 'S'},
   {"abs_focus",    'w', LOOP6, 32,                1.0,             0.0, 'S'},
   {"sched_lst",    'w', LOOP6, 56,                1.0,             0.0, 'U'},  
+
+
+/* Rox a la Jeff */
+  {"t_he3fridge",  'r',  TMP5,  6,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_m4",         'r',  TMP5,  8,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_m5",         'r',  TMP5, 10,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_horn_250",   'r',  TMP5, 12,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_m3",         'r',  TMP5, 14,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_horn_350",   'r',  TMP5, 38,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_300mk_strap",'r',  TMP5, 40,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_horn_500",   'r',  TMP5, 42,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_he4pot",     'r',  TMP5, 44,    ROX_C2V,   ROX_OFFSET, 'U'},
+  {"t_optbox_filt",'r',  TMP5, 46,    ROX_C2V,   ROX_OFFSET, 'U'},
 
   END_OF_CHANNELS
 };
@@ -738,6 +749,23 @@ struct ChannelStruct SlowChannels[] = {
   {"inpump_lev",   'w',  TMP4,  5,    -0.048851978505,           100.0, 'u'},
   {"outpump_lev",  'w',  TMP4,  6,    -0.048851978505,           100.0, 'u'},
 
+  {"he4_lev",      'r',  TMP5,  1,  -2.87477e-09*65536,      12.3273561, 'u'},
+  {"i_charcoal",   'r',  TMP5,  3,     -2.639826420E-6,     0.157988332, 'u'},
+  {"i_coldplate",  'r',  TMP5,  5,      -2.32217573E-5,     1.390309833, 'u'},
+  {"cryoin",       'r',  TMP5, 60,                 1.0,             0.0, 'u'},
+  {"cryoout2",     'w',  TMP5,  1,                 1.0,             0.0, 'u'},
+  {"cryoout3",     'w',  TMP5,  2,             1.0,                 0.0, 'u'},
+  {"bdapwm",       'w',  TMP5,  3,          100./2047.,              0., 'u'},
+  {"hspwm",        'w',  TMP5,  4,          100./2047.,              0., 'u'},
+  {"cryopwm",      'w',  TMP5,  5,          100./2047.,              0., 'u'},
+  {"jfetpwm",      'w',  TMP5,  6,          100./2047.,              0., 'u'},
+  {"cryoctrl",     'w',  TMP5, 31,                 1.0,              0., 'u'},
+  {"set_bdaheat",  'w',  TMP5, 32,                 1.0,              0., 'u'},
+  {"g_fl_bdaheat", 'w',  TMP5, 33,                 1.0,              0., 'u'},
+  {"g_d_bdaheat",  'w',  TMP5, 34,                 1.0,              0., 'u'},
+  {"g_i_bdaheat",  'w',  TMP5, 35,                 1.0,              0., 'u'},
+  {"g_p_bdaheat",  'w',  TMP5, 36,                 1.0,              0., 'u'},
+
   /* BIAS 0-4 are wide fast */
   {"t_primary_2",  'r',  TMP6,  5,              I2T_M,  I2T_B +
                                                  AD590_CALIB_PRIMARY_2, 'u'},
@@ -795,6 +823,9 @@ struct ChannelStruct SlowChannels[] = {
 
   {"mcp_frame",   'w', LOOP2, 34,             1.0,                    0.0, 'u'},
 #endif
+
+  /* Read from DAS3 -- cryo commanding */
+  {"calstat",      'r',  TMP5, 61,                 1.0,             0.0, 'u'},
 
 
   END_OF_CHANNELS

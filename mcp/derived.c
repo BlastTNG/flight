@@ -194,8 +194,6 @@ union DerivedUnion DerivedChannels[] = {
       ),
 
   /* CRYO */
-
-#if 0
   COMMENT("Internal (to mcp) reference of the cryo stat"),
   BITFIELD("cryostate",
       "HE_LEV_SENS",
@@ -251,21 +249,20 @@ union DerivedUnion DerivedChannels[] = {
   LINCOM2("LS_OPENCLOSE", "LS_OPEN", 2, 0, "LS_CLOSED", 1, 0),
   LINCOM2("LS_MOTION", "LS_DRIVE_RET", 2, 0, "LS_DRIVE_EXT", 1, 0),
   LINCOM2("LS_NICE_STAT", "LS_MOTION", 3, 0, "LS_OPENCLOSE", 1, 0),
-#endif
 
   COMMENT("Cryo Table Lookups"),
   COMMENT("Diodes"),
 
-  LINTERP("Td_charcoal",   "TD_CHARCOAL"   , "/data/etc/dt600.txt"),
-  LINTERP("Td_lhe",        "TD_LHE"        , "/data/etc/dt600.txt"),
-  LINTERP("Td_ln",         "TD_LN"         , "/data/etc/dt600.txt"),
-  LINTERP("Td_heatswitch", "TD_HEATSWITCH" , "/data/etc/dt600.txt"),
-  LINTERP("Td_jfet",       "TD_JFET"       , "/data/etc/dt600.txt"),
-  LINTERP("Td_vcs_filt",   "TD_VCS_FILT"   , "/data/etc/dt600.txt"),
-  LINTERP("Td_ln_filt",    "TD_LN_FILT"    , "/data/etc/dt600.txt"),
-  LINTERP("Td_lhe_filt",   "TD_LHE_FILT"   , "/data/etc/dt600.txt"),
-  LINTERP("Td_vcs_jfet",   "TD_VCS_JFET"   , "/data/etc/dt600.txt"),
-  LINTERP("Td_vcs",        "TD_VCS"        , "/data/etc/dt600.txt"),
+  LINTERP("T_charcoal",   "T_CHARCOAL"   , "/data/etc/dt600.txt"),
+  LINTERP("T_lhe",        "T_LHE"        , "/data/etc/dt600.txt"),
+  LINTERP("T_ln",         "T_LN"         , "/data/etc/dt600.txt"),
+  LINTERP("T_heatswitch", "T_HEATSWITCH" , "/data/etc/dt600.txt"),
+  LINTERP("T_jfet",       "T_JFET"       , "/data/etc/dt600.txt"),
+  LINTERP("T_vcs_filt",   "T_VCS_FILT"   , "/data/etc/dt600.txt"),
+  LINTERP("T_ln_filt",    "T_LN_FILT"    , "/data/etc/dt600.txt"),
+  LINTERP("T_lhe_filt",   "T_LHE_FILT"   , "/data/etc/dt600.txt"),
+  LINTERP("T_vcs_jfet",   "T_VCS_JFET"   , "/data/etc/dt600.txt"),
+  LINTERP("T_vcs",        "T_VCS"        , "/data/etc/dt600.txt"),
 
   COMMENT("GRTs (ROX)"),
   LINTERP("T_he3fridge",   "T_HE3FRIDGE",   "/data/etc/rox102a3.txt"),
@@ -279,9 +276,9 @@ union DerivedUnion DerivedChannels[] = {
   LINTERP("T_horn_350",    "T_HORN_350",    "/data/etc/rox102a19.txt"),
   LINTERP("T_horn_500",    "T_HORN_500",    "/data/etc/rox102a21.txt"),
 
-//  COMMENT("Level Sensor"),
-//  LINTERP("HE4_LITRE", "HE4_LEV", "/data/etc/he4_litre.txt"),
-//  LINTERP("HE4_PERCENT", "HE4_LEV", "/data/etc/he4_percent.txt"),
+  COMMENT("Level Sensor"),
+  LINTERP("HE4_LITRE", "HE4_LEV", "/data/etc/he4_litre.txt"),
+  LINTERP("HE4_PERCENT", "HE4_LEV", "/data/etc/he4_percent.txt"),
 
   END_OF_DERIVED_CHANNELS
 };
