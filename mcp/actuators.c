@@ -235,12 +235,12 @@ static void BusSend(int who, const char* what, int inhibit_chatter)
   buffer[2] = 0x30 + sequence;
   sprintf(buffer + 3, "%s", what);
   buffer[len - 2] = 0x3;
-  for (ptr = buffer; *ptr != '\03'; ++ptr)
+  for (ptr = (unsigned char *)buffer; *ptr != '\03'; ++ptr)
     chk ^= *ptr;
   buffer[len - 1] = chk;
 #ifdef ACTBUS_CHATTER
   if (!inhibit_chatter)
-    bprintf(info, "ActBus: Request=%s (%s)", HexDump(buffer, len), what);
+    bprintf(info, "ActBus: Request=%s (%s)", HexDump((unsigned char *)buffer, len), what);
 #endif
   if (write(bus_fd, buffer, len) < 0)
     berror(err, "ActBus: Error writing on bus");
@@ -314,7 +314,7 @@ static int BusRecv(char* buffer, int nic, int inhibit_chatter)
           if (had_errors > 1) {
             bputs(err,
                 "ActBus: Too many errors parsing response string, aborting.");
-            bprintf(err, "ActBus: Response was=%s (%x)\n", HexDump(buffer, len),
+            bprintf(err, "ActBus: Response was=%s (%x)\n", HexDump((unsigned char *)buffer, len),
                 status);
             state = ACT_RECV_ABORT;
           }
