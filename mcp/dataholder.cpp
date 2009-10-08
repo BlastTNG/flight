@@ -617,7 +617,7 @@ const char *AMLParser::Value(const char *valuename)
           for (l = 0; l < 50; l++) {
             for (k = 0; k < aml[currentry].numdata; k++) {
               if (!strcmp(aml[currentry].datum[k].name,
-                    aml[currentry].datum[j].dflt))
+                    aml[currentry].datum[j].dflt)) {
                 if (!strcmp(aml[currentry].value[i].entry[k], "@")) {
                   if (strlen(aml[currentry].datum[k].dflt))
                     j = k;
@@ -630,6 +630,7 @@ const char *AMLParser::Value(const char *valuename)
                   SMALL_RTN("%p", aml[currentry].value[i].entry[k]);
                   return aml[currentry].value[i].entry[k];
                 }
+              }
             }
           }
           SMALL_RTN("\"\"");
