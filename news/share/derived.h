@@ -55,6 +55,12 @@ union DerivedUnion {
     char type;                  /* Should = '#' for comment */
     char text[343];             /* comment */
   } comment;
+  struct {
+    char type;			/* should be 'u' for units */
+    char source[FIELD_LEN];     /* the channel we are adding metadata for */
+    char quantity[155];		/* the quantity -eg, "Temperature" */
+    char units[155];		/* the Units -eg "^oC" */
+  } units;
 };
 
 #define DERIVED_EOC_MARKER '!'
@@ -65,4 +71,5 @@ union DerivedUnion {
 #define BITWORD(f,s,o,l) {.bitword = { 'w' , f , s , o, l }}
 #define BITFIELD(s, ...) {.bitfield = { 'b' , s , { __VA_ARGS__ }}}
 #define COMMENT(c) {.comment = { '#' , c }}
+#define UNITS(s,q,u) {.units = { 'u' , s , q , u}}
 #define END_OF_DERIVED_CHANNELS {.comment = { DERIVED_EOC_MARKER , "" }}

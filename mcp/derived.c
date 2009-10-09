@@ -23,7 +23,7 @@
 
 /* Don's Handy Guide to adding derived channels:
  *
- * There are six types of derived channels which can be added to the format
+ * There are seven types of derived channels which can be added to the format
  * file.  Channel names are, of course, case sensitive.  On start-up, both
  * mcp and decomd run sanity checks on the channel lists, including the derived
  * channel list.  The checks will fail for the derived channel list if either
@@ -66,6 +66,10 @@
  * o COMMENT: A litteral comment to be inserted into the format file
  *   1.  Comment Text (string) -- there is no need to include the comment
  *       delimiter (#).
+ * o UNITS: meta data defining units and quantity for existing fields
+ *   1.  Source Channel Name (string)
+ *   2.  String for the quantity (eg "Temperature")
+ *   3.  String for the Units (eg, "^oC")
  *
  *
  * In addition to the derived channels derived below, defile will add the
@@ -325,6 +329,7 @@ union DerivedUnion DerivedChannels[] = {
   COMMENT("Tr_ are in Kelvin"),
   LINTERP("Tr_3he_fridge",  "RN17C00", "/data/etc/rox102a.txt"),
   LINTERP("Tr_m5",          "RN17C01", "/data/etc/rox102a.txt"),
+  UNITS("Tr_m5", "Temperature", "K"),
   LINTERP("Tr_m4",          "RN17C04", "/data/etc/rox102a.txt"),
   LINTERP("Tr_m3_BROKEN",   "RN17C07", "/data/etc/rox102a.txt"),
   LINTERP("Tr_bda3",        "RN17C11", "/data/etc/rox102a.txt"),

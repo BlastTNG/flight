@@ -705,6 +705,12 @@ static void DoSanityChecks(void)
         /* FALLTHROUGH */
       case '#': /* comment -- they always pass the check */
         break;
+      case 'u': /* Units metadata */
+        if (GetChannelByName(names, nn, DerivedChannels[i].units.source) == -1)
+          bprintf(fatal, "Channels: Derived channel source %s not found.",
+              DerivedChannels[i].units.source);
+	// FIXME: consider adding checks for metadata collisions.
+	break;
       default:
         bprintf(fatal, "Channels: FATAL: Unrecognised Derived Channel Type "
             "`%c'\n", DerivedChannels[i].comment.type);
@@ -1202,9 +1208,15 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
             DerivedChannels[i].bitword.field, DerivedChannels[i].bitword.source,
             DerivedChannels[i].bitword.offset,
             DerivedChannels[i].bitword.length);
+	break;
       case '#': /* comment */
         snprintf(line, 1024, "\n# %s\n", DerivedChannels[i].comment.text);
         break;
+      case 'u': /* units channel */
+	snprintf(line, 1024, "%-16s/units STRING %s\n%-16s/quantity STRING %s\n",
+	    DerivedChannels[i].units.source, DerivedChannels[i].units.units,
+	    DerivedChannels[i].units.source, DerivedChannels[i].units.quantity);
+	break;
     }
     write(fd, line, strlen(line));
   }
