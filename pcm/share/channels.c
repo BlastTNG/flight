@@ -1213,7 +1213,7 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
         snprintf(line, 1024, "\n# %s\n", DerivedChannels[i].comment.text);
         break;
       case 'u': /* units channel */
-	snprintf(line, 1024, "%19s/units STRING %16s\n%s/quantity STRING %s\n",
+	snprintf(line, 1024, "%s/units STRING %s\n%s/quantity STRING %s\n",
 	    DerivedChannels[i].units.source, DerivedChannels[i].units.units,
 	    DerivedChannels[i].units.source, DerivedChannels[i].units.quantity);
 	break;
