@@ -176,7 +176,7 @@ static int JFETthermostat(void)
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    tJfetAddr = GetBiPhaseAddr("t_jfet");
+    tJfetAddr = GetBiPhaseAddr("td_jfet");
     LutInit(&DiodeLut);
   }
 
@@ -216,10 +216,10 @@ static void FridgeCycle(int *cryoout, int *cryostate, int  reset,
 
   if (firsttime) {
     firsttime = 0;
-    t_lhe_Addr = GetBiPhaseAddr("t_lhe");
-    t_he3fridge_Addr = GetBiPhaseAddr("t_he3fridge");
-    t_charcoal_Addr = GetBiPhaseAddr("t_charcoal");
-    t_he4pot_Addr = GetBiPhaseAddr("t_he4pot");
+    t_lhe_Addr = GetBiPhaseAddr("td_lhe");
+    t_he3fridge_Addr = GetBiPhaseAddr("td_charcoal");
+    t_charcoal_Addr = GetBiPhaseAddr("td_charcoal");
+    t_he4pot_Addr = GetBiPhaseAddr("td_charcoal");
     cycleStartWAddr = GetNiosAddr("cycle_start");
     cycleStartRAddr = ExtractBiPhaseAddr(cycleStartWAddr);
     cycleStateWAddr = GetNiosAddr("cycle_state");

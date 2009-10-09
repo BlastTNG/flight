@@ -693,7 +693,7 @@ static void DoSanityChecks(void)
       case 't': /* linterp -- same checks as lincom */
       case 'c': /* lincom */
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom.source) == -1)
-          bprintf(fatal, "Channels: Derived channel source %s not found.",
+          bprintf(warning, "Channels: Derived channel source %s not found.",
               DerivedChannels[i].lincom.source);
 
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom.field) != -1)
