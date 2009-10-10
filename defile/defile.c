@@ -535,6 +535,7 @@ void PrintUsage(void)
       "connection"
       "\n                          is dropped."
       "\n  -c --curfile          write a curfile called `" CUR_FILE "'"
+      "\n                          and a symbolic link called `" CUR_FILE".lnk '"
       "\n                          pointing to the output directory."
       "\n  -d --daemonise        fork to background and daemonise on startup.  "
       "Implies"

@@ -751,6 +751,16 @@ void InitialiseDirFile(int reset, unsigned long offset)
   }
 
   if (rc.write_curfile) {
+    // create the link file
+    char lnkfile[1024];
+    strncpy(lnkfile, rc.output_curfile, 1018);
+    strcat(lnkfile, ".lnk");
+    unlink(lnkfile);
+    if (symlink(rc.dirfile, lnkfile)<0) {
+      berror(fatal, "could not create link from `%s' to `%s'",
+             rc.dirfile, lnkfile);
+    }
+    // create the cur file
     if ((fp = fopen(rc.output_curfile, "w")) == NULL)
       berror(fatal, "cannot create curfile `%s'", rc.output_curfile);
 
