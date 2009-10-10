@@ -81,10 +81,12 @@ union DerivedUnion DerivedChannels[] = {
   /* Pointing */
   COMMENT("Microsecond Resolution Time"),
   LINCOM2("Time", "cpu_time", 1, 0, "cpu_usec",  1.0E-6, 0),
+  UNITS("Time", "Time", "s"),
 #ifndef BOLOTEST
   COMMENT("Pointing Stuff"),
   LINCOM("P_X_H", "p_x_deg", 0.0003662109375, 0),
   LINTERP("Clin_Elev", "clin_elev", "/data/etc/clin_elev.lut"),
+  UNITS("Clin_Elev", "Elevation", "^o"),
   LINTERP("SS_AzRelSun", "SS_AZ", "/data/etc/ss.lut"),
   BITFIELD("sensor_veto",
       "SUN_VETO",
@@ -328,6 +330,7 @@ union DerivedUnion DerivedChannels[] = {
 
   COMMENT("Tr_ are in Kelvin"),
   LINTERP("Tr_3he_fridge",  "RN17C00", "/data/etc/rox102a.txt"),
+  UNITS("Tr_3he_fridge", "Temperature", "K"),
   LINTERP("Tr_m5",          "RN17C01", "/data/etc/rox102a.txt"),
   UNITS("Tr_m5", "Temperature", "K"),
   LINTERP("Tr_m4",          "RN17C04", "/data/etc/rox102a.txt"),
