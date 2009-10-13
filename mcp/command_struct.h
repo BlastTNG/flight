@@ -229,7 +229,7 @@ struct CommandDataStruct {
     unsigned short lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
   } Cryo;
 
-  int Phase[DAS_CARDS];
+  int Phase[DAS_CARDS + 1];
 
   struct {
     int bal_veto;

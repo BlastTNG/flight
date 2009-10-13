@@ -102,7 +102,7 @@ void WritePrevStatus();
 void PhaseControl(void)
 {
   static int first_time = 1;
-  static struct NiosStruct* NiosAddr[DAS_CARDS];
+  static struct NiosStruct* NiosAddr[DAS_CARDS + 1];
   char field[20];
   int i, j;
 
@@ -115,9 +115,11 @@ void PhaseControl(void)
       NiosAddr[i] = GetNiosAddr(field);
       j++;
     }
+    sprintf(field, "phase13"); //Get nios address of cryo phase as well.
+    NiosAddr[DAS_CARDS] = GetNiosAddr(field);
   }	
 
-  for(i = 0; i < DAS_CARDS; i++)
+  for(i = 0; i < (DAS_CARDS + 1); i++)
     WriteData(NiosAddr[i], CommandData.Phase[i], NIOS_FLUSH);
 }
 

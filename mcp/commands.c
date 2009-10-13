@@ -1349,8 +1349,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 	  && ivalues[0]%4 != 0)
         CommandData.Phase[(ivalues[0] - DAS_START)*3/4] = ivalues[1] << 1;
       else if (ivalues[0] == 0)
-        for (i = 0; i < DAS_CARDS; ++i)
-          CommandData.Phase[i] = ivalues[1];
+        for (i = 0; i < (DAS_CARDS + 1); ++i)
+          CommandData.Phase[i] = ivalues[1] << 1;
+      else if (ivalues[0] == 13)
+        CommandData.Phase[DAS_CARDS] = ivalues[1] << 1;
 
       /***************************************/
       /*********** Cal Lamp  *****************/
