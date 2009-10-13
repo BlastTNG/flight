@@ -296,7 +296,7 @@ static void SensorReader(void)
   int data;
   int nr;
   struct statvfs vfsbuf;
-  int firsttime = 1;
+  int sensor_error = 0;
 
   FILE *stream;
 
@@ -309,25 +309,32 @@ static void SensorReader(void)
         CommandData.temp1 = data / 10;
       fclose(stream);
     } else {
-      if (firsttime)
-        berror(tfatal, "Sensor Reader: Cannot read temp1 from I2C bus");
-      berror(warning, "Sensor Reader: Cannot read temp1 from I2C bus");
+      if (!sensor_error)
+        berror(warning, "Sensor Reader: Cannot read temp1 from I2C bus");
+      sensor_error = 5;
     }
+
     if ((stream = fopen("/sys/bus/i2c/devices/0-002d/temp2_input", "r"))
         != NULL) {
       if ((nr = fscanf(stream, "%i\n", &data)) == 1)
         CommandData.temp2 = data / 10;
       fclose(stream);
-    } else
-      berror(warning, "Sensor Reader: Cannot read temp2 from I2C bus");
+    } else {
+      if (!sensor_error)
+        berror(warning, "Sensor Reader: Cannot read temp2 from I2C bus");
+      sensor_error = 5;
+    }
 
     if ((stream = fopen("/sys/bus/i2c/devices/0-002d/temp3_input", "r"))
         != NULL) {
       if ((nr = fscanf(stream, "%i\n", &data)) == 1)
         CommandData.temp3 = data / 10;
       fclose(stream);
-    } else
-          berror(warning, "Sensor Reader: Cannot read temp3 from I2C bus");
+    } else {
+      if (!sensor_error)
+        berror(warning, "Sensor Reader: Cannot read temp3 from I2C bus");
+      sensor_error = 5;
+    }
 
     if (statvfs("/data", &vfsbuf))
       berror(warning, "Sensor Reader: Cannot stat filesystem");
@@ -338,7 +345,9 @@ static void SensorReader(void)
       CommandData.df = vfsbuf.f_bavail / 1000;
     }
 
-    firsttime = 0;
+    if (sensor_error)
+      sensor_error--;
+
     usleep(100000);
   }
 }
