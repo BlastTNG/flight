@@ -667,6 +667,9 @@ struct ChannelStruct SlowChannels[] = {
 
 /* ACS1 Temperature card */
   {"t_gybox",      'r',  ACS1_T1, 1,          CAL16T(1.0, 0.0),         'u'},
+  {"t_serial",     'r',  ACS1_T1, 3,          CAL16T(1.0, 0.0),         'u'},
+  {"t_piv_c",      'r',  ACS1_T1, 5,          CAL16T(1.0, 0.0),         'u'},
+  {"t_piv",        'r',  ACS1_T1, 7,          CAL16T(1.0, 0.0),         'u'},
   {"t_mcc",        'r',  ACS1_T1, 9,          CAL16T(1.0, 0.0),         'u'},
   {"t_charger",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u'},
   {"t_bat1",       'r',  ACS1_T1, 13,         CAL16T(1.0, 0.0),         'u'},
@@ -674,6 +677,16 @@ struct ChannelStruct SlowChannels[] = {
   {"t_bat3",       'r',  ACS1_T1, 17,         CAL16T(1.0, 0.0),         'u'},
   {"t_bat4",       'r',  ACS1_T1, 19,         CAL16T(1.0, 0.0),         'u'},
   {"t_array",      'r',  ACS1_T1, 21,         CAL16T(1.0, 0.0),         'u'},
+  {"t_acs",        'r',  ACS1_T1, 23,         CAL16T(1.0, 0.0),         'u'},
+  {"t_acs_dcdc",   'r',  ACS1_T1, 25,         CAL16T(1.0, 0.0),         'u'},
+  {"t_ext0",       'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u'},
+  {"t_ext1",       'r',  ACS1_T1, 35,         CAL16T(1.0, 0.0),         'u'},
+  {"t_ext2",       'r',  ACS1_T1, 37,         CAL16T(1.0, 0.0),         'u'},
+  {"t_ext3",       'r',  ACS1_T1, 39,         CAL16T(1.0, 0.0),         'u'},
+  {"t_ext4",       'r',  ACS1_T1, 41,         CAL16T(1.0, 0.0),         'u'},
+  {"t_ext5",       'r',  ACS1_T1, 43,         CAL16T(1.0, 0.0),         'u'},
+  {"t_ext6",       'r',  ACS1_T1, 45,         CAL16T(1.0, 0.0),         'u'},
+  {"t_ext7",       'r',  ACS1_T1, 47,         CAL16T(1.0, 0.0),         'u'},
 
 /* ACS2 Digital I/O card */
   {"dac1_ampl",    'w',  ACS2_D,  0,                1.0,             0.0, 'u'},
@@ -696,7 +709,6 @@ struct ChannelStruct SlowChannels[] = {
 
   {"t_reac",       'r',  TMP2, 29,              I2T_M,           I2T_B, 'u'},
   {"t_reac_mc",    'r',  TMP2, 31,              I2T_M,           I2T_B, 'u'},
-  {"t_piv_mc",     'r',  TMP2, 45,              I2T_M,           I2T_B, 'u'},
 
   {"g_p_el",       'w',  TMP2,  2,                1.0,             0.0, 'u'},
   {"g_i_el",       'w',  TMP2,  3,                1.0,             0.0, 'u'},
@@ -720,7 +732,6 @@ struct ChannelStruct SlowChannels[] = {
                                                  AD590_CALIB_INFRAME_4, 'u'},
 
   {"t_lock_motor", 'r',  TMP3, 25,              I2T_M,           I2T_B, 'u'},
-  {"t_acs",        'r',  TMP3, 29,              I2T_M,           I2T_B, 'u'},
   {"t_chin_mid",   'r',  TMP3, 31,              I2T_M,           I2T_B, 'u'},
   {"sensor_reset", 'w',  TMP3,  1,                1.0,             0.0, 'u'},
 
@@ -883,6 +894,10 @@ struct ChannelStruct FastChannels[] = {
   {"stage_y",      'w', LOOP5, 34,                1.0,             0.0, 'u'},
 #if 0
   //interrupt counters, for debugging
+  {"acs1_10k",     'r',  ACS1_C,  0,                1.0,             0.0, 'u'},
+  {"acs1_100",     'r',  ACS1_C,  1,                1.0,             0.0, 'u'},
+  {"acs2_10k",     'r',  ACS2_C,  0,                1.0,             0.0, 'u'},
+  {"acs2_100",     'r',  ACS2_C,  1,                1.0,             0.0, 'u'},
   {"bias_10k",     'r',  BIAS_C,  0,                1.0,             0.0, 'u'},
   {"bias_100",     'r',  BIAS_C,  1,                1.0,             0.0, 'u'},
   {"bias_licnt",   'r',  BIAS_C,  2,                1.0,             0.0, 'u'},
