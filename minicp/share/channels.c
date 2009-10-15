@@ -128,7 +128,7 @@ struct ChannelStruct *FastChList;
 
 static struct ChannelStruct BoloChannels[N_FAST_BOLOS];
 
-#define SPEC_VERSION "11"
+#define SPEC_VERSION "12"
 #ifndef INPUTTER
 #  define FREADORWRITE fwrite
 #  define SPECIFICATIONFILEFUNXION WriteSpecificationFile
@@ -153,10 +153,14 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
     if (version == 10)
       bprintf(fatal, "Unsupported Spec file version %i.\n"
           "To read this file, you will need defile version 2.4\n", version);
-    if (version != 11)
+    if (version == 11)
       bprintf(fatal, "Unsupported Spec file version: %i.  "
-          "Cannot continue.\n", version);
+          "To read this file, you will need defile version 3.3\n", version);
+    if (version != 12)
+      bprintf(fatal, "Unsupported Spec file version: %i.  "
+	  "To read this file you will need a newer version of defile.\n", version);
   }
+
 #endif
 
   FREADORWRITE(&ccWideSlow, sizeof(unsigned short), 1, fp);

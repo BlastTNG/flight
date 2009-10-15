@@ -75,6 +75,7 @@ extern "C" {
 #define LVDT13_ZERO  -4659  /* in encoder counts */
 
 #define FIELD_LEN 20
+#define UNITS_LEN 48
 
   struct ChannelStruct {
     char field[FIELD_LEN]; /* name of channel for FileFormats and CalSpecs */
@@ -86,6 +87,8 @@ extern "C" {
     float b_e2e;    /*   e = c * m_c2e + b_e2e */
     char type;      /* 's' = short, signed o'u' = unsigned short 'i' = 'S'
                        = signed 32 bit int, 'U' = unsigned 32 bit int */
+    char quantity[UNITS_LEN]; /* eg, "Temperature" or "Angular Velocity" */
+    char units[UNITS_LEN]; /* eg, "K" or "^o/s" */
   };
 
   struct NiosStruct {
