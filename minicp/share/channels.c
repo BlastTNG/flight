@@ -1108,6 +1108,18 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
         FieldToLower(SlowChannels[i].field), SlowChannels[i].m_c2e,
         SlowChannels[i].b_e2e);
     write(fd, line, strlen(line));
+    if (strlen(SlowChannels[i].quantity)>0) {
+      snprintf(line, 1024,
+	  "%s/quantity STRING %s\n",
+	  FieldToUpper(SlowChannels[i].field), SlowChannels[i].quantity);
+      write(fd, line, strlen(line));
+    }
+    if (strlen(SlowChannels[i].units)>0) {
+      snprintf(line, 1024,
+	  "%s/units STRING %s\n",
+	  FieldToUpper(SlowChannels[i].field), SlowChannels[i].units);
+      write(fd, line, strlen(line));
+    }
   }
 
   for (i = 0; i < ccWideSlow; ++i) {
@@ -1118,6 +1130,18 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
         FieldToLower(WideSlowChannels[i].field), WideSlowChannels[i].m_c2e,
         WideSlowChannels[i].b_e2e);
     write(fd, line, strlen(line));
+    if (strlen(WideSlowChannels[i].quantity)>0) {
+      snprintf(line, 1024,
+	  "%s/quantity STRING %s\n",
+	  FieldToUpper(WideSlowChannels[i].field), WideSlowChannels[i].quantity);
+      write(fd, line, strlen(line));
+    }
+    if (strlen(WideSlowChannels[i].units)>0) {
+      snprintf(line, 1024,
+	  "%s/units STRING %s\n",
+	  FieldToUpper(WideSlowChannels[i].field), WideSlowChannels[i].units);
+      write(fd, line, strlen(line));
+    }
   }
 
   strcpy(line, "\n## FAST CHANNELS:\n");
@@ -1131,6 +1155,18 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
         FieldToLower(FastChannels[i].field), FastChannels[i].m_c2e,
         FastChannels[i].b_e2e);
     write(fd, line, strlen(line));
+    if (strlen(FastChannels[i].quantity)>0) {
+      snprintf(line, 1024,
+	  "%s/quantity STRING %s\n",
+	  FieldToUpper(FastChannels[i].field), FastChannels[i].quantity);
+      write(fd, line, strlen(line));
+    }
+    if (strlen(FastChannels[i].units)>0) {
+      snprintf(line, 1024,
+	  "%s/units STRING %s\n",
+	  FieldToUpper(FastChannels[i].field), FastChannels[i].units);
+      write(fd, line, strlen(line));
+    }
   }
 
   for (i = 0; i < ccWideFast; i++) {
@@ -1141,6 +1177,18 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
         FieldToLower(WideFastChannels[i].field), WideFastChannels[i].m_c2e,
         WideFastChannels[i].b_e2e);
     write(fd, line, strlen(line));
+    if (strlen(WideFastChannels[i].quantity)>0) {
+      snprintf(line, 1024,
+	  "%s/quantity STRING %s\n",
+	  FieldToUpper(WideFastChannels[i].field), WideFastChannels[i].quantity);
+      write(fd, line, strlen(line));
+    }
+    if (strlen(WideFastChannels[i].units)>0) {
+      snprintf(line, 1024,
+	  "%s/units STRING %s\n",
+	  FieldToUpper(WideFastChannels[i].field), WideFastChannels[i].units);
+      write(fd, line, strlen(line));
+    }
   }
 
   for (i = 0; i < ccDecom; i++) {

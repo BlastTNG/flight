@@ -68,6 +68,7 @@
 #define CAL16T(m,b) ((m)*M_16T), ((b) + B_16T*(m)*M_16T - 273.15)
 
 #define U_NONE "","" 
+#define U_T_C "Temperature","^oC"
 
 /* Measured by Tristan @ Penn, September 29 2009 */
 #define CRYO_A2_M ( 4.805248E-9)
@@ -668,27 +669,27 @@ struct ChannelStruct SlowChannels[] = {
   {"i_batt",       'r',  ACS1_A1, 41,         CAL16(1.0, 0.0), 		'u', U_NONE},
 
 /* ACS1 Temperature card */
-  {"t_gybox",      'r',  ACS1_T1, 1,          CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_serial",     'r',  ACS1_T1, 3,          CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_piv_c",      'r',  ACS1_T1, 5,          CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_piv",        'r',  ACS1_T1, 7,          CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_mcc",        'r',  ACS1_T1, 9,          CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_charger",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_bat1",       'r',  ACS1_T1, 13,         CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_bat2",       'r',  ACS1_T1, 15,         CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_bat3",       'r',  ACS1_T1, 17,         CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_bat4",       'r',  ACS1_T1, 19,         CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_array",      'r',  ACS1_T1, 21,         CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_acs",        'r',  ACS1_T1, 23,         CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_acs_dcdc",   'r',  ACS1_T1, 25,         CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_ext0",       'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_ext1",       'r',  ACS1_T1, 35,         CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_ext2",       'r',  ACS1_T1, 37,         CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_ext3",       'r',  ACS1_T1, 39,         CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_ext4",       'r',  ACS1_T1, 41,         CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_ext5",       'r',  ACS1_T1, 43,         CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_ext6",       'r',  ACS1_T1, 45,         CAL16T(1.0, 0.0),         'u', U_NONE},
-  {"t_ext7",       'r',  ACS1_T1, 47,         CAL16T(1.0, 0.0),         'u', U_NONE},
+  {"t_gybox",      'r',  ACS1_T1, 1,          CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_serial",     'r',  ACS1_T1, 3,          CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_piv_c",      'r',  ACS1_T1, 5,          CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_piv",        'r',  ACS1_T1, 7,          CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_mcc",        'r',  ACS1_T1, 9,          CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_charger",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_bat1",       'r',  ACS1_T1, 13,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_bat2",       'r',  ACS1_T1, 15,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_bat3",       'r',  ACS1_T1, 17,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_bat4",       'r',  ACS1_T1, 19,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_array",      'r',  ACS1_T1, 21,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_acs",        'r',  ACS1_T1, 23,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_acs_dcdc",   'r',  ACS1_T1, 25,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_ext0",       'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_ext1",       'r',  ACS1_T1, 35,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_ext2",       'r',  ACS1_T1, 37,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_ext3",       'r',  ACS1_T1, 39,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_ext4",       'r',  ACS1_T1, 41,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_ext5",       'r',  ACS1_T1, 43,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_ext6",       'r',  ACS1_T1, 45,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_ext7",       'r',  ACS1_T1, 47,         CAL16T(1.0, 0.0),         'u', U_T_C},
 
 /* ACS2 Digital I/O card */
   {"dac1_ampl",    'w',  ACS2_D,  0,                1.0,             0.0, 'u', U_NONE},
