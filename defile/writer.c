@@ -244,7 +244,7 @@ int CheckWriteAllow(int mkdir_err)
   struct stat stat_buf;
   struct dirent* lamb;
   unsigned int i, j, found, n_fast = 0, n_slow = 0, n_bolo = 0;
-  int bolo_node;
+  int bolo_node = 0;
   long int n, min_wrote = 0x7fffffff;
 
   /* if user hasn't told us to try, don't */
