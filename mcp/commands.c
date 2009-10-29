@@ -1290,10 +1290,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       /***************************************/
       /*************** Misc  *****************/
     case gyro_off:
-      CommandData.power.gyro_off[ivalues[0]-1] = 1;
+      CommandData.power.gyro_off[ivalues[0]-1] |= 0x01;
       break;
     case gyro_on:
-      CommandData.power.gyro_off[ivalues[0]-1] = 0;
+      CommandData.power.gyro_off[ivalues[0]-1] |= 0x00;
       break;
     case timeout:       /* Set timeout */
       CommandData.timeout = ivalues[0];

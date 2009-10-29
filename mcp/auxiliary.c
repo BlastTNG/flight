@@ -708,7 +708,7 @@ void ControlPower(void)
 
   if (CommandData.power.hub232_off) misc |= 0x08;
   for (i=0; i<6; i++)
-    if (CommandData.power.gyro_off[i]) gybox |= 0x01 << i;
+    if (CommandData.power.gyro_off[i] & 0x03) gybox |= 0x01 << i;
   if (CommandData.power.gybox_off) gybox |= 0x80;
 
   if (CommandData.power.sc_tx.set_count > 0) {

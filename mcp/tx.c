@@ -203,19 +203,34 @@ static void WriteAux(void)
 void SetGyroMask (void)
 {
 static struct NiosStruct* gymaskAddr;
-//static struct BiPhaseStruct* gyfaultAddr;
 gymaskAddr = GetNiosAddr("gyro_mask");
 unsigned int GyroMask;
-//unsigned int GyroFault;
+GyroMask = 0x3f; //all gyros used (mask=1 -> use gyro)
+//static int pcycle[6] = {0,0,0,0,0,0};
+//static struct BiPhaseStruct* gyfaultAddr;
 //gyfaultAddr = GetBiPhaseAddr("gyro_fault");;
-GyroMask = 0x00000000; //all masks off
-//GyroFault = (gyfaultAddr->channel);
-//if ((CommandData.gymask & 0x00000001) & (GyroFault & 0x00000001)) GyroMask |= 0x0000001;
-//if ((CommandData.gymask & 0x00000002) & (GyroFault & 0x00000002)) GyroMask |= 0x0000002;
-//if ((CommandData.gymask & 0x00000004) & (GyroFault & 0x00000004)) GyroMask |= 0x0000004;
-//if ((CommandData.gymask & 0x00000008) & (GyroFault & 0x00000008)) GyroMask |= 0x0000008;
-//if ((CommandData.gymask & 0x00000010) & (GyroFault & 0x00000010)) GyroMask |= 0x0000010;
-//if ((CommandData.gymask & 0x00000020) & (GyroFault & 0x00000020)) GyroMask |= 0x0000020;
+//unsigned int GyroFault;
+//GyroFault = slow_data[gyfaultAddr->index][gyfaultAddr->channel];
+//for (i=0, i<6, i++) {
+////if it's not changing (faulty) OR CommandData says don't use it --> don't use it
+//  if (GyroFault & (0x01 << i)) { 
+//      GyroMask &= ~0x01 << i;
+//      pcycle[i] +=1;
+//      //if it's been masked for too long, power cycle it
+//      if (pcycle[i] > between 1s and 1min) {
+//	CommandData.power.gyro_off[i] |= 0x01 << i;
+//	pcycle[i] = 0; 
+//      }
+//  }
+//  else if (CommandData.gymask & (0x01 << i)) {
+//      GyroMask &= ~0x01 << i;
+//      pcycle[i] +=1;
+//      //if it's been masked for too long, power cycle it
+//      if (pcycle[i] > between 1s and 1min) {
+//	CommandData.power.gyro_off[i] |= 0x10 << i;
+//	pcycle[i] = 0; 
+//      }
+//  }
 WriteData(gymaskAddr, GyroMask, NIOS_QUEUE);
 }
 
