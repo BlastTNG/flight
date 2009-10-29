@@ -88,7 +88,7 @@ void closeMotors()
   reactinfo.closing=1;
   elevinfo.closing=1; // Tell the serial threads to shut down.
   pivotinfo.closing=1;
-  while(reactinfo.open==1 & elevinfo.open==1) usleep(10000);
+  while(reactinfo.open==1 && elevinfo.open==1) usleep(10000);
 }
 
 static int last_mode = -1;
@@ -280,7 +280,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   /***************************************************/
   /**           Elevation Drive Motors              **/
   /* elevation speed */
-  v_elev = floor(GetVElev() * 6.0 + 0.5);
+  v_elev = floor(GetVElev() + 0.5);
   /* the 6.0 is to improve dynamic range on the elevation speeds. */
   if (v_elev > 32767)
     v_elev = 32767;
@@ -1194,11 +1194,13 @@ void UpdateAxesMode(void)
   }
   last_mode = CommandData.pointing_mode.mode;
 }
-
+// TODO-lmf: Need to add in conditional statements for when MCP is run by the NICC
+//           We don't want the NICC sending 
 void* reactComm(void* arg)
 {
-  int n=0;
+  int n=0, j=0;
   int i=0;
+  int temp_raw,curr_raw,stat_raw,faultreg_raw;
   int firsttime=1;
   long vel_raw=0;
   // Initialize values in the reactinfo structure.                            
@@ -1216,6 +1218,10 @@ void* reactComm(void* arg)
   bprintf(info,"reactComm: Bringing the reaction wheel online.");
   // Initialize structure RWMotorData.  Follows what was done in dgps.c
   RWMotorData[0].rw_vel_raw=0;
+  RWMotorData[0].temp=0;
+  RWMotorData[0].current=0.0;
+  RWMotorData[0].status=0;
+  RWMotorData[0].fault_reg=0;
 
   // Try to open the port.
   while(reactinfo.open==0) {
@@ -1223,34 +1229,61 @@ void* reactComm(void* arg)
       bputs(info,"reactComm: Reaction wheel controller serial port is not open. Attempting to open a conection.\n");
     }
     open_copley(REACT_DEVICE,&reactinfo); // sets reactinfo.open=1 if sucessful
-    if (reactinfo.open==0) {
-        i++;
-      if(elevinfo.open==1) bprintf(info,"elevComm: Opened the serial port on attempt number %i",i); 
-      else sleep(1);  
-    if(i==10){
-	bputs(err,"reactComm: Reaction wheel port could not be opened after 10 attempts.\n");
-      }
-    }
+
+    if(i==10) bputs(err,"reactComm: Reaction wheel port could not be opened after 10 attempts.\n");
+
+    i++;
+    if(reactinfo.open==1) bprintf(info,"reactComm: Opened the serial port on attempt number %i",i); 
+    else sleep(1);  
   }
 
   // Configure the serial port.                                               
   configure_copley(&reactinfo);
   rw_motor_index = 1; // index for writing to the RWMotor data struct
-  bprintf(info,"reactComm: Attempting to enable the reaction wheel motor controller.");
-  n=enableCopley(&reactinfo);
-  if(n==0){    
-    bprintf(info,"reactComm: Reaction wheel motor controller is now enabled.");
-    reactinfo.disabled=0;
-  }
   while(1){
     if(reactinfo.closing==1){
       close_copley(&reactinfo);
       usleep(10000);      
     } else if (reactinfo.init==1){
-  
+      if(CommandData.disable_az==0 && reactinfo.disabled > 0) {
+	bprintf(info,"reactComm: Attempting to enable the reaction wheel motor controller.");
+	n=enableCopley(&reactinfo);
+	if(n==0){    
+	  bprintf(info,"reactComm: Reaction wheel motor controller is now enabled.");
+	  reactinfo.disabled=0;
+	}
+      } 
+      if(CommandData.disable_az==1 && reactinfo.disabled==0) {
+	bprintf(info,"reactComm: Attempting to disable the reaction wheel motor controller.");
+	n=disableCopley(&reactinfo);
+	if(n==0){    
+	  bprintf(info,"reactComm: Reaction wheel motor controller is now disabled.");
+	  reactinfo.disabled=1;
+	}
+      } 
+
       vel_raw=getCopleyVel(&reactinfo); // Units are 0.1 counts/sec
       RWMotorData[rw_motor_index].rw_vel_raw=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
-
+      j=j%4;
+      switch(j) {
+      case 0:
+	temp_raw=queryCopleyInd(COP_IND_TEMP,&reactinfo);
+        RWMotorData[rw_motor_index].temp=temp_raw; // units are deg Cel
+	break;
+      case 1:
+	curr_raw=queryCopleyInd(COP_IND_CURRENT,&reactinfo);
+        RWMotorData[rw_motor_index].current=((double) (curr_raw))/100.0; // units are Amps
+	break;
+      case 2:
+	stat_raw=queryCopleyInd(COP_IND_STATUS,&reactinfo);
+        RWMotorData[rw_motor_index].status=stat_raw; // units are Amps
+	break;
+      case 3:
+	faultreg_raw=queryCopleyInd(COP_IND_FAULTREG,&reactinfo);
+        RWMotorData[rw_motor_index].fault_reg=faultreg_raw; // units are Amps
+	break;
+      }      
+      j++;
       rw_motor_index=INC_INDEX(rw_motor_index);
       if (firsttime) {
         bprintf(info,"reactComm: Raw reaction wheel velocity is %i",vel_raw);
@@ -1268,9 +1301,10 @@ void* reactComm(void* arg)
 
 void* elevComm(void* arg)
 {
-  int n=0;
+  int n=0, j=0;
   int i;
   long unsigned pos_raw;
+  int temp_raw,curr_raw,stat_raw,faultreg_raw;
   int firsttime=1;
 
   // Initialize values in the elevinfo structure.                            
@@ -1288,6 +1322,10 @@ void* elevComm(void* arg)
 
   // Initialize structure ElevMotorData.  Follows what was done in dgps.c
   ElevMotorData[0].enc_el_raw=0;
+  ElevMotorData[0].temp=0;
+  ElevMotorData[0].current=0.0;
+  ElevMotorData[0].status=0;
+  ElevMotorData[0].fault_reg=0;
 
   // Try to open the port.
   while(elevinfo.open==0) {
@@ -1295,40 +1333,72 @@ void* elevComm(void* arg)
       bputs(info,"elevComm: Elevation drive serial port is not open. Attempting to open a conection.\n");
     }
     open_copley(ELEV_DEVICE,&elevinfo); // sets elevinfo.open=1 if sucessful
-
+    
     if(i==10) {
       bputs(err,"elevComm: Elevation drive serial port could not be opened after 10 attempts.\n");
     }
     i++;
-
+    
     if(elevinfo.open==1) bprintf(info,"elevComm: Opened the serial port on attempt number %i",i); 
     else sleep(1);
   }
-
+ 
   // Configure the serial port.                                               
   configure_copley(&elevinfo);
   elev_motor_index = 1; // index for writing to the ElevMotor data struct
-  bprintf(info,"elevComm: Attempting to enable the elevation drive motor controller.");
-  n=enableCopley(&elevinfo);
-  if (n==0) {
-    bprintf(info,"elevComm: Elevation Drive motor controller is now enabled.");
-    elevinfo.disabled=0;
-  }
   while (1) {
     if (elevinfo.closing==1) {
       close_copley(&elevinfo);
       usleep(10000);
     } else if (elevinfo.init==1) {
+      if((CommandData.disable_el==0 || CommandData.force_el==1 ) && elevinfo.disabled > 0) {
+	bprintf(info,"elevComm: Attempting to enable the elevation motor controller.");
+	n=enableCopley(&elevinfo);
+	if(n==0){    
+	  bprintf(info,"elevComm: Elevation motor controller is now enabled.");
+	  elevinfo.disabled=0;
+	}
+      } 
+      if((CommandData.disable_el==1 && CommandData.force_el==0 ) && elevinfo.disabled==0) {
+	bprintf(info,"elevComm: Attempting to disable the elevation motor controller.");
+	n=disableCopley(&elevinfo);
+	if(n==0){    
+	  bprintf(info,"elevComm: Elevation motor controller is now disabled.");
+	  elevinfo.disabled=1;
+	}
+      } 
 
       pos_raw=getCopleyPos(&elevinfo); // Units are counts
                                   // For Elev 524288 cts = 360 deg
       //TODO-lmf: Add in some sort of zeropoint.
       ElevMotorData[elev_motor_index].enc_el_raw=((double) (pos_raw % ((long int) ELEV_ENC_CTS)))/ELEV_ENC_CTS*360.0-ENC_EL_RAW_OFFSET;
-      elev_motor_index=INC_INDEX(elev_motor_index);
+      //   getCopleySlowInfo(j,elev_motor_index,&ElevMotorData,&elevinfo); // Reads one of temperature, current, status and fault register and
+                           // writes to the appropriate frame
       if (firsttime) {
 	bprintf(info,"elevComm: Raw elevation encoder position is %i",pos_raw);
 	firsttime=0;
       }     
+      j=j%4;
+      switch(j) {
+      case 0:
+	temp_raw=queryCopleyInd(COP_IND_TEMP,&elevinfo);
+        ElevMotorData[elev_motor_index].temp=temp_raw; // units are deg Cel
+	break;
+      case 1:
+	curr_raw=queryCopleyInd(COP_IND_CURRENT,&elevinfo);
+        ElevMotorData[elev_motor_index].current=((double) (curr_raw))/100.0; // units are Amps
+	break;
+      case 2:
+	stat_raw=queryCopleyInd(COP_IND_STATUS,&elevinfo);
+        ElevMotorData[elev_motor_index].status=stat_raw; // units are Amps
+	break;
+      case 3:
+	faultreg_raw=queryCopleyInd(COP_IND_FAULTREG,&elevinfo);
+        ElevMotorData[elev_motor_index].fault_reg=faultreg_raw; // units are Amps
+	break;
+      }      
+      j++;
+      elev_motor_index=INC_INDEX(elev_motor_index);
     } else {
       usleep(10000);
     }

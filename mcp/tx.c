@@ -738,7 +738,16 @@ static void StoreData(int index)
 
   /* Motor data read out over serial threads in motors.c */
   static struct NiosStruct *rwEncVel;
+  static struct NiosStruct *rwTempAddr;
+  static struct NiosStruct *rwIRawAddr;
+  static struct NiosStruct *rwStatAddr;
+  static struct NiosStruct *rwFaultAddr;
   static struct NiosStruct *elevEncPos;
+  static struct NiosStruct *elTempAddr;
+  static struct NiosStruct *elIRawAddr;
+  static struct NiosStruct *elStatAddr;
+  static struct NiosStruct *elFaultAddr;
+
 
   int i_rw_motors;
   int i_elev_motors;
@@ -881,6 +890,14 @@ static void StoreData(int index)
 
     rwEncVel = GetNiosAddr("rw_vel_raw");
     elevEncPos = GetNiosAddr("enc_el_raw");
+    rwTempAddr = GetNiosAddr("rw_temp");
+    rwIRawAddr = GetNiosAddr("rw_i_raw");
+    rwStatAddr = GetNiosAddr("rw_stat");
+    rwFaultAddr = GetNiosAddr("rw_fault");
+    elTempAddr = GetNiosAddr("el_temp");
+    elIRawAddr = GetNiosAddr("el_i_raw");
+    elStatAddr = GetNiosAddr("el_stat");
+    elFaultAddr = GetNiosAddr("el_fault");
 
   }
 
@@ -1111,6 +1128,14 @@ static void StoreData(int index)
   WriteData(dgpsAttIndexAddr, i_dgps, NIOS_QUEUE);
   WriteData(rwEncVel,((long int)(RWMotorData[i_rw_motors].rw_vel_raw/4.0*DEG2I)), NIOS_QUEUE);
   WriteData(elevEncPos,((long int)(ElevMotorData[i_elev_motors].enc_el_raw*DEG2I)), NIOS_QUEUE);
+  WriteData(rwTempAddr,RWMotorData[i_rw_motors].temp,NIOS_QUEUE);
+  WriteData(rwIRawAddr,((int)(RWMotorData[i_rw_motors].current/30.0*32768.0)),NIOS_QUEUE);
+  WriteData(rwStatAddr,RWMotorData[i_rw_motors].status,NIOS_QUEUE);
+  WriteData(rwFaultAddr,RWMotorData[i_rw_motors].fault_reg,NIOS_QUEUE);
+  WriteData(elTempAddr,ElevMotorData[i_elev_motors].temp,NIOS_QUEUE);
+  WriteData(elIRawAddr,((int)(ElevMotorData[i_elev_motors].current/30.0*32768.0)),NIOS_QUEUE);
+  WriteData(elStatAddr,ElevMotorData[i_elev_motors].status,NIOS_QUEUE);
+  WriteData(elFaultAddr,ElevMotorData[i_elev_motors].fault_reg,NIOS_QUEUE);
 
   StoreStarCameraData(index, 0); /* write ISC data */
   StoreStarCameraData(index, 1); /* write OSC data */

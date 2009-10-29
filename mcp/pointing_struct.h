@@ -81,6 +81,10 @@ extern struct ACSDataStruct ACSData;
 /*  USE A CIRCULAR BUFFER !!!                 */
 struct RWMotorDataStruct{
   double rw_vel_raw; // in degrees per second
+  int temp; // drive temperature in deg Celcius
+  double current; // drive current read from controller
+  unsigned int status;  // drive status
+  unsigned int fault_reg; // drive fault register
 };
 extern struct RWMotorDataStruct RWMotorData[3];
 extern int rw_motor_index; // defined in motors.c
@@ -95,6 +99,10 @@ extern int rw_motor_index; // defined in motors.c
 /*  USE A CIRCULAR BUFFER !!!                 */
 struct ElevMotorDataStruct{
   double enc_el_raw; // in degrees
+  int temp; // drive temperature in deg Celcius
+  double current; // drive current read from controller
+  unsigned int status;  // drive status
+  unsigned int fault_reg; // drive fault register
 };
 extern struct ElevMotorDataStruct ElevMotorData[3];
 extern int elev_motor_index; // defined in motors.c

@@ -14,6 +14,12 @@
 #define RW_ENC_CTS 2097152.0 // Reaction Wheel Encoder Counts per revolution
 #define ELEV_ENC_CTS 524288.0 // Elevation Drive Encoder Counts per revolution
 
+// Indices for various Copley Controller Run time variables
+#define COP_IND_TEMP "0x20"
+#define COP_IND_CURRENT "0x0c"
+#define COP_IND_STATUS "0xa0"
+#define COP_IND_FAULTREG "0xa4"
+
 //struct MotorInfoStruct *get_motor_pointer(enum MotorType motor);
 void MotorStrOut(char *str,struct MotorInfoStruct* copleyinfo);
 void copyouts(char *in, char *out);
@@ -29,6 +35,7 @@ int checkCopleyResp(struct MotorInfoStruct* copleyinfo);
 int readCopleyResp(struct MotorInfoStruct* copleyinfo);
 int enableCopley(struct MotorInfoStruct* copleyinfo);
 int disableCopley(struct MotorInfoStruct* copleyinfo);
+long int queryCopleyInd(char ind[],struct MotorInfoStruct* copleyinfo);
 long int getCopleyVel(struct MotorInfoStruct* copleyinfo);
 long int getCopleyPos(struct MotorInfoStruct* copleyinfo);
 int read_line(char *outs,struct MotorInfoStruct* copleyinfo);
