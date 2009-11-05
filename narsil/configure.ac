@@ -196,8 +196,8 @@ AM_CONDITIONAL(INSTALL_LOG_TXT, test "$HAVE_LOG_TXT" = "no")
 
 dnl BLASTcmd Host
 AC_ARG_WITH([blastcmd-host], AS_HELP_STRING([--with-blastcmd-host=HOST],
-            [connect to the blastcmd daemon running on HOST [[arwen]]]),
-            BLASTCMD_HOST="${withval}", BLASTCMD_HOST="arwen")
+            [connect to the blastcmd daemon running on HOST [[widow]]]),
+            BLASTCMD_HOST="${withval}", BLASTCMD_HOST="widow")
 
 AC_ARG_ENABLE(cmd-line, AS_HELP_STRING([--enable-cmd-line],
               [enable the command line pre-processor]),

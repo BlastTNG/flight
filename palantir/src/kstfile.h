@@ -32,7 +32,6 @@ class KstFile {
 public:
   KstFile(const char *filename_in,
           const KstFileType &newType = UNKNOWN);
-  KstFile(QDomElement &e);
   ~KstFile();
 
   /** Updates number of samples.
@@ -62,26 +61,6 @@ public:
       to this are ignored.  It is updated each time the fn is called */
   char *fileName();
 
-  /** Returns the file type or an error message in a static string
-      The string is stored in a separate static variable, so changes
-      to this are ignored.  It is updated each time the fn is called */
-  QString fileType();
-
-  /** Increments rvector useage for this file */
-  void incUsage();
-
-  /** Decrements rvector useage for this file */
-  void decUsage();
-
-  /** Returns useage for this file */
-  int getUsage();
-
-  /** Save file description info into stream ts */
-  void save(QTextStream &ts);
-
-  /** return the suggested frames to read between updates */
-  int max_read();
-
 private: // Private methods
   /** common part of the constructor: */
   void commonConstructor(const char *filename_in,
@@ -110,22 +89,6 @@ private: // Private methods
   /** Returns true if the field is valid, or false if it is not */
   bool asciiIsValidField(const char *field);
 
-  /** Read a field from a frame file */
-  int frameReadField(double *V, const char *field, const int &s,
-                     const int &n);
-
-  /** Update Frame Data file: determine length */
-  bool frameUpdate();
-
-  /** Initialization for Frame Files */
-  bool frameInitFile();
-
-  /** Returns true if the field is valid, or false if it is not */
-  bool frameIsValidField(const char *field);
-
-  /** Determine samples per frame for Frame Files */
-  int frameSampsPerFrame(const char *);
-
   /** Read a field from a dirfile file */
   int dirfileReadField(double *V, const char *field,
                        const int &s, const int &n);
@@ -142,9 +105,6 @@ private: // Private methods
   /** Determine samples per Frame for Dirfile Files */
   int dirfileSampsPerFrame(const char *);
 
-  /** Update stdin temp file - true if more data is read */
-  bool UpdateStdin();
-
 private: // Private attributes
   /** Name of current file file */
   char IndirectFilename[255];
@@ -156,15 +116,8 @@ private: // Private attributes
   /** File Type */
   KstFileType Type;
 
-  /** How many RVectors are using this file */
-  int NumUsed;
-
   /** Number of Frames availible */
   int NumFrames;
-
-  /** Used by stdin files */
-  bool IsStdin;
-  char StdinFilename[64];
 
   /** used by ASCII files */
   int ByteLength;

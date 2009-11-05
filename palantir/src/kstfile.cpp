@@ -26,7 +26,8 @@
 #include <fcntl.h>
 #include <iostream>
 
-#include "getdata.h"
+#include <getdata.h>
+
 
 #include "kstfile.h"
 
@@ -41,30 +42,11 @@ KstFile::KstFile(const char *filename_in,
   commonConstructor(filename_in, newType);
 }
 
-KstFile::KstFile(QDomElement &e) {
-  char filename_in[256] = "not_set";
-
-  /* parse the DOM tree */
-  QDomNode n = e.firstChild();
-  while( !n.isNull() ) {
-    QDomElement e = n.toElement(); // try to convert the node to an element.
-    if( !e.isNull() ) { // the node was really an element.
-      if (e.tagName() == "filename") strncpy(filename_in,
-					     e.text().latin1(), 254);
-    }
-    n = n.nextSibling();
-  }
-
-  /* Call the common constructor */
-  commonConstructor(filename_in, UNKNOWN);
-}
-
 void KstFile::commonConstructor(const char *filename_in,
                                 const KstFileType &newType) {
   int len;
 
-  NumUsed = NumFrames = 0;
-  IsStdin = false;
+  NumFrames = 0;
   IsIndirect = false;
   ByteLength = NumLinesAlloc = 0;
   BytePerFrame = FramePerFile = 0;
@@ -84,24 +66,12 @@ void KstFile::commonConstructor(const char *filename_in,
     Filename[255]='\0';
   }
 
-  if (strcmp(filename_in,"stdin")==0) {
-    strncpy(Filename, "stdin", 254);
-    strcpy(StdinFilename, "/tmp/kst_tmp.XXXXXX");
-    close(mkstemp(StdinFilename));
-    IsStdin=true;
-    UpdateStdin();
-  }
-
   Type = newType;
   init();
 }
 
 
 KstFile::~KstFile(){
-  if (IsStdin) {
-    unlink(StdinFilename);
-  }
-
   switch (Type) {
   case ASCII:
     free(RowIndex);
@@ -193,8 +163,6 @@ bool KstFile::update(){
     if (readIFile()==1) init();
   }
 
-  if (IsStdin) UpdateStdin();
-
   if (Type==EMPTY) init();
 
   switch (Type) {
@@ -211,18 +179,6 @@ bool KstFile::update(){
   }
 }
 
-int KstFile::max_read() {
-  switch (Type) {
-  case ASCII:
-    return (2000);
-  case DIRFILE:
-    return (80000);
-  default:
-    return (0);
-  }
-}
-
-
 /** Returns the file name.  It is stored in a separate static variable,
     so changes to this are ignored */
 char *KstFile::fileName() {
@@ -235,57 +191,6 @@ char *KstFile::fileName() {
   }
 
   return (tmpstr);
-}
-
-/** Returns the file type or an error message in a static string */
-QString KstFile::fileType() {
-  static char tmpstr[64];
-
-  switch (Type) {
-  case ASCII:
-    strcpy(tmpstr, "ASCII");
-    break;
-  case DIRFILE:
-    strcpy(tmpstr, "Directory of Binary Files");
-    break;
-  case EMPTY:
-    strcpy(tmpstr, "Empty");
-    break;
-  case UNKNOWN:
-    strcpy(tmpstr, "Unknown Type");
-    break;
-  default:
-    strcpy(tmpstr, "???");
-    fprintf(stderr,"kst internal error: unknown type in FileType\n");
-    break;
-  }
-
-  return (tmpstr);
-}
-
-/** Increments Rvector usage of this file */
-void KstFile::incUsage() {
-  NumUsed++;
-}
-
-/** Decrements Rvector usage of this file */
-void KstFile::decUsage() {
-  NumUsed--;
-}
-
-/** Returns usage of this file */
-int KstFile::getUsage() {
-  return (NumUsed);
-}
-
-/** Save file description info into stream ts */
-void KstFile::save(QTextStream &ts) {
-
-  ts << "  <filename>";
-  if (IsIndirect) ts << IndirectFilename;
-  else ts << Filename;
-  ts << "</filename>\n";
-
 }
 
 /************************************************************************/
@@ -302,9 +207,7 @@ int KstFile::determineType(){
   struct stat stat_buf;
   char *lfilename;
 
-
-  if (IsStdin) lfilename = StdinFilename;
-  else lfilename = Filename;
+  lfilename = Filename;
 
   /**********************************************************/
   /* check to see if the file is a dirfile file (directory) */
@@ -398,44 +301,6 @@ void KstFile::init() {
 
 }
 
-bool KstFile::UpdateStdin() {
-  fd_set rfds;
-  struct timeval tv;
-  int retval;
-  char instr[4097];
-  int i=0;
-  char *fgs=NULL;
-  bool new_data = false;
-  FILE *fp = NULL;
-
-  do {
-    /* Watch stdin (fd 0) to see when it has input. */
-    FD_ZERO(&rfds);
-    FD_SET(0, &rfds);
-    /* Wait up to 1 second. */
-    tv.tv_sec = 1;
-    tv.tv_usec = 0;
-
-    retval = select(1, &rfds, NULL, NULL, &tv);
-    /* Don't rely on the value of tv now! */
-
-    if (retval) {
-      fgs = fgets(instr, 4096, stdin);
-      if ((fgs!=NULL) && (fp ==NULL)) {
-	fp = fopen(StdinFilename, "a");
-      }
-      if ((fgs!=NULL) && (fp > 0)) {
-	fputs(instr, fp);
-	new_data = true;
-      }
-    }
-  } while ((++i<10000) && (new_data=true));
-
-  if (fp!=NULL) fclose(fp);
-
-  return (new_data);
-}
-
 /************************************************************************/
 /*                                                                      */
 /*               Private Methods: ASCII Files                           */
@@ -474,8 +339,7 @@ bool KstFile::asciiUpdate(){
   char *lfilename;
   int repeat=0;
 
-  if (IsStdin) lfilename = StdinFilename;
-  else lfilename = Filename;
+  lfilename = Filename;
 
   if (stat(lfilename, &stat_buf)==0) { /* file exists */
     ByteLength=stat_buf.st_size;
@@ -550,8 +414,7 @@ int KstFile::asciiReadField(double *V, const char *field, const int &s,
 
   n = in_n;
 
-  if (IsStdin) lfilename = StdinFilename;
-  else lfilename = Filename;
+  lfilename = Filename;
 
   if (n<0) n=1; /* n<0 means read one sample, not frame.... */
   if ((strcmp(field, "FILEFRAM") == 0) ||
