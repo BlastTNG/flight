@@ -69,7 +69,7 @@
 #define ISC_TRIGGER_NEG  3
 
 /* latching relay pulse length in 10ms fast frames */
-#define LATCH_PULSE_LEN	 15
+#define LATCH_PULSE_LEN	 100
 
 void ActPotTrim(void); /* actuators.c */
 void RecalcOffset(double, double);

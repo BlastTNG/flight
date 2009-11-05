@@ -891,7 +891,7 @@ static int SetNewFocus(void)
 
 static double CalibrateAD590(int counts)
 {
-  double t = I2T_M * counts + I2T_B + 273.15;
+  double t = M_16T * (counts + B_16T);
 
   /* if t < -73C or t > 67C, assume AD590 is broken */
   if (t < 170)

@@ -114,16 +114,6 @@ union DerivedUnion DerivedChannels[] = {
       "OSC_RESET"
       ),
 
-  /* bits to acs 0 */
-  COMMENT("Auxiliary heaters"),
-  BITFIELD("gy2_heat",
-      "ISC_HEAT_ENABLE",
-      "",
-      "OSC_HEAT_ENABLE",
-      "",
-      "GYBOX2_HEAT"
-      ),
-
   /* ISC and OSC */
   COMMENT("Star Camera State"),
   BITFIELD("isc_state",

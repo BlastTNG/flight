@@ -58,8 +58,8 @@
 /* limits for the gyrobox thermometer.  If the reading is outside this range,
  * we don't regulate the box at all, since it means the thermometer is probably
  * broken */
-#define MIN_GYBOX_TEMP ((-50 - TGYBOX_B) / TGYBOX_M)  /* -50 C */
-#define MAX_GYBOX_TEMP ((60 - TGYBOX_B) / TGYBOX_M)   /* +60 C */
+#define MIN_GYBOX_TEMP ((223.15 / M_16T) - B_16T)   /* -50 C */
+#define MAX_GYBOX_TEMP ((333.15 / M_16T) - B_16T)   /* +60 C */
 
 /* Gybox heater stuff */
 #define GY_HEAT_MAX 40 /* percent */
@@ -112,8 +112,7 @@ static int SetGyHeatSetpoint(double history, int age)
     setpoint = GY_TEMP_MAX;
 
   if (setpoint != CommandData.gyheat.setpoint) {
-    bprintf(info, "Gyrobox Heat: Stepped gybox %i setpoint to %.2f degrees C\n",
-        box + 1, setpoint);
+    bprintf(info, "Gyrobox Heat: Stepped setpoint to %.2f deg C\n", setpoint);
     age = 0;
     CommandData.gyheat.setpoint = setpoint;
   }
@@ -124,7 +123,7 @@ static int SetGyHeatSetpoint(double history, int age)
 /************************************************************************/
 /*    ControlGyroHeat:  Controls gyro box temp                          */
 /************************************************************************/
-//TODO TEST ME! I've been changed (only 1 gybox to heat)
+//TODO TEST ME! I've been changed (only 1 gybox to heat and 16-bit temp)
 void ControlGyroHeat(unsigned short *RxFrame)
 {
   static struct BiPhaseStruct* tGyboxAddr;
@@ -134,11 +133,6 @@ void ControlGyroHeat(unsigned short *RxFrame)
   static int firsttime = 1;
   static double history = 0;
 
-  /* the 0x5's in here for gybox 2 are the enable bits for the star camera
-   * heaters */
-  //int on[2] = {0x40, 0x15}, off[2] = {0x00, 0x05};
-  //TODO check these values. Also, what's with the starcam heater stuff?
-  int on = 0x01, off =  0x00;
   static int p_on = 0;
   static int p_off = -1;
 
@@ -154,46 +148,31 @@ void ControlGyroHeat(unsigned short *RxFrame)
     firsttime = 0;
     tGyboxAddr = GetBiPhaseAddr("t_gybox");
 
-    gyHeatAddr = GetNiosAddr("gy1_heat");
-    gyHeatAddr = GetNiosAddr("gy2_heat");
+    gyHeatAddr = GetNiosAddr("gy_heat");
+    gyHHistAddr = GetNiosAddr("gy_h_hist");
+    gyHAgeAddr = GetNiosAddr("gy_h_age");
+    tGySetAddr = GetNiosAddr("t_gy_set");
 
-    gyHHistAddr = GetNiosAddr("gy1_h_hist");
-    gyHHistAddr = GetNiosAddr("gy2_h_hist");
-
-    gyHAgeAddr = GetNiosAddr("gy1_h_age");
-    gyHAgeAddr = GetNiosAddr("gy2_h_age");
-
-    tGySetAddr = GetNiosAddr("t_gy1_set");
-    tGySetAddr = GetNiosAddr("t_gy2_set");
-
-    pGyheatAddr = GetNiosAddr("g_p_gyheat1");
-    iGyheatAddr = GetNiosAddr("g_i_gyheat1");
-    dGyheatAddr = GetNiosAddr("g_d_gyheat1");
-
-    pGyheatAddr = GetNiosAddr("g_p_gyheat2");
-    iGyheatAddr = GetNiosAddr("g_i_gyheat2");
-    dGyheatAddr = GetNiosAddr("g_d_gyheat2");
+    pGyheatAddr = GetNiosAddr("g_p_gyheat");
+    iGyheatAddr = GetNiosAddr("g_i_gyheat");
+    dGyheatAddr = GetNiosAddr("g_d_gyheat");
   }
 
   /* send down the setpoints and gains values */
-  WriteData(tGySetAddr, CommandData.gyheat.setpoint * 327.68,
-      NIOS_QUEUE);
-
+  WriteData(tGySetAddr, CommandData.gyheat.setpoint * 327.68, NIOS_QUEUE);
   WriteData(pGyheatAddr, CommandData.gyheat.gain.P, NIOS_QUEUE);
   WriteData(iGyheatAddr, CommandData.gyheat.gain.I, NIOS_QUEUE);
   WriteData(dGyheatAddr, CommandData.gyheat.gain.D, NIOS_QUEUE);
 
-  temp = (RxFrame[tGyboxAddr->channel + 1] << 16 |
-      RxFrame[tGyboxAddr->channel]);
+  temp = RxFrame[tGyboxAddr->channel];
 
   /* Only run these controls if we think the thermometer isn't broken */
-  /* NB: these tests are backwards due to a sign flip in the calibration */
-  if (temp > MAX_GYBOX_TEMP && temp < MIN_GYBOX_TEMP) {
+  if (temp < MAX_GYBOX_TEMP && temp > MIN_GYBOX_TEMP) {
     /* control the heat */
     CommandData.gyheat.age = SetGyHeatSetpoint(history,
         CommandData.gyheat.age);
 
-    set_point = (CommandData.gyheat.setpoint - TGYBOX_B) / TGYBOX_M;
+    set_point = ((CommandData.gyheat.setpoint + 273.15) / M_16T) - B_16T;
     P = CommandData.gyheat.gain.P * (-1.0 / 1000000.0);
     I = CommandData.gyheat.gain.I * (-1.0 / 110000.0);
     D = CommandData.gyheat.gain.D * ( 1.0 / 1000.0);
@@ -229,15 +208,15 @@ void ControlGyroHeat(unsigned short *RxFrame)
 
     /******** do the pulse *****/
     if (p_on > 0) {
-      WriteData(gyHeatAddr, on, NIOS_FLUSH);
+      WriteData(gyHeatAddr, 0x1, NIOS_FLUSH);
       p_on--;
     } else if (p_off > 0) {
-      WriteData(gyHeatAddr, off, NIOS_FLUSH);
+      WriteData(gyHeatAddr, 0x0, NIOS_FLUSH);
       p_off--;
     }
   } else
     /* Turn off heater if thermometer appears broken */
-    WriteData(gyHeatAddr, off, NIOS_FLUSH);
+    WriteData(gyHeatAddr, 0x0, NIOS_FLUSH);
 
   WriteData(gyHAgeAddr, CommandData.gyheat.age, NIOS_QUEUE);
   WriteData(gyHHistAddr, (history * 32768. / 100.), NIOS_QUEUE);
@@ -352,7 +331,8 @@ void ChargeController(void)
   }
 
   if (CommandData.apcu_auto) {
-    T = I2T_M*slow_data[tAcsBatAddr->index][tAcsBatAddr->channel] + I2T_B;
+    T = M_16T*( slow_data[tAcsBatAddr->index][tAcsBatAddr->channel] 
+	+ B_16T ) - 273.15;
     if (T<-60) T = 50; // if disconnected, assume hot.
     V = 30.18 - 0.0436*T - exp((T-29.0)*0.25) + CommandData.apcu_trim;
     //apcu_control = (V - 28.0209)/0.02402664;
@@ -363,7 +343,8 @@ void ChargeController(void)
   }
 
   if (CommandData.dpcu_auto) {
-    T = I2T_M*slow_data[tDasBatAddr->index][tDasBatAddr->channel] + I2T_B;
+    T = M_16T*( slow_data[tDasBatAddr->index][tDasBatAddr->channel] 
+	+ B_16T ) - 273.15;
     if (T<-60) T = 50; // if disconnected, assume hot.
     V = 30.18 - 0.0436*T - exp((T-29.0)*0.25) + CommandData.dpcu_trim;
     //dpcu_control = (V - 28.0209)/0.02402664;
@@ -707,6 +688,7 @@ void ControlPower(void)
   }
 
   if (CommandData.power.hub232_off) misc |= 0x08;
+  if (CommandData.power.ss_off) misc |= 0x20;
   for (i=0; i<6; i++)
     if (CommandData.power.gyro_off[i] & 0x03) gybox |= 0x01 << i;
   if (CommandData.power.gybox_off) gybox |= 0x80;

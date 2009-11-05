@@ -23,11 +23,11 @@
 extern "C" {
 #endif
 
-/* Gains and offsets for preamp card */
+/* Gains and offsets for ideal analog cards: cal = (counts + B)*M */
 #define M_16PRE (10.24/32768.0)
 #define B_16PRE (-32768.0)
-#define M_16T (4.096E6/2.2E3/32768.0/8.0)  //factor of 8 from rescaling range
-#define B_16T (0.0)
+#define M_16T	(4.096E6/2.2E3/32768.0/8.0)  //factor of 8 from maximizing range
+#define B_16T	(0.0)
 
   /* FAST_PER_SLOW is the number of fast samples for each slow one */
 #define FAST_PER_SLOW   20
@@ -200,14 +200,6 @@ extern "C" {
 #define DPS_TO_DGY32 (1.0/DGY32_TO_DPS)
 #define DGY32_OFFSET (32768.0*65536.0)
 
-/* Gyrobox thermometer conversion -- this is the 32bit AD590 conversion */
-#define TGYBOX_B (I2T_B)
-#define TGYBOX_M (-9.5367431641e-08)
-
-/* Gondola thermometry conversions -- this is the 16bit AD590 conversion */
-#define I2T_M (-0.00625)
-#define I2T_B (136.45)
-
 /* AD590 calibrations from Marco, Nov 2006 */
 #define AD590_CALIB_INFRAME_1    1.2250
 #define AD590_CALIB_INFRAME_2    1.8125
@@ -248,14 +240,6 @@ extern "C" {
 #define B_AMP3_M 4.076398e-5
 #define B_AMP3_B (-67108833.0*4.076398e-5)
 
-  // Kiruna Bias card/code (weird jumpers + code)
-// #define B_AMP1_M -4.646408E-7
-// #define B_AMP1_B 997.8
-// #define B_AMP2_M 5.068218E-7
-// #define B_AMP2_B -1088.4
-// #define B_AMP3_M -5.145595E-7
-// #define B_AMP3_B 1105.
-//
 #ifdef __cplusplus
 
 }
