@@ -42,8 +42,8 @@ static struct {
   char who[4];
   char where[16];
 } isc_which[2] = {
-  {"Isc", "192.168.1.5"},
-  {"Osc", "192.168.1.6"}
+  {"Isc", "192.168.1.8"},
+  {"Osc", "192.168.1.9"}
 };
 
 extern short int SamIAm;   /* mcp.c */
