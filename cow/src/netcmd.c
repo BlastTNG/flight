@@ -219,8 +219,10 @@ int NetCmdGetCmdList(void)
       client_command_list_serial[i] = c;
   }
 
-  read(sock, &client_n_scommands, sizeof(client_n_scommands));
-  read(sock, &client_n_mcommands, sizeof(client_n_mcommands));
+  if (read(sock, &client_n_scommands, sizeof(client_n_scommands)) < 0)
+    printf("Warning: NetCmdGetCmdList failed to read n_scommands\n");
+  if (read(sock, &client_n_mcommands, sizeof(client_n_mcommands)) < 0)
+    printf("Warning: NetCmdGetCmdList failed to read n_mcommands\n");
 
   if (client_n_scommands > 255 || client_n_mcommands > 255 ||
       client_n_scommands * client_n_mcommands == 0) {

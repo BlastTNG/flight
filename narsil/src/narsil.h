@@ -96,7 +96,7 @@ class MainForm : public QMainWindow
   Q_OBJECT
 
   public:
-    MainForm(char *cf, QWidget* parent = 0, const char* name = 0,
+    MainForm(const char *cf, QWidget* parent = 0, const char* name = 0,
         WFlags fl = 0);
     ~MainForm();
 

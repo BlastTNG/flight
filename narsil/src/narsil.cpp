@@ -133,10 +133,13 @@ void Defaults::Save() {
     printf("Warning: could not open prev_status file\n");
   else {
     for (i = 0; i < MAX_N_PARAMS; ++i) {
-      write(fp, rdefaults[i], sizeof(double) * client_n_mcommands);
-      write(fp, idefaults[i], sizeof(int) * client_n_mcommands);
-      write(fp, sdefaults[i], sizeof(char) * CMD_STRING_LEN
-          * client_n_mcommands);
+      if (write(fp, rdefaults[i], sizeof(double) * client_n_mcommands) < 0)
+        printf("Warning: could not write rdefults to prev_status file\n");
+      if (write(fp, idefaults[i], sizeof(int) * client_n_mcommands) < 0)
+        printf("Warning: could not write idefults to prev_status file\n");
+      if (write(fp, sdefaults[i], sizeof(char) * CMD_STRING_LEN
+          * client_n_mcommands) < 0)
+        printf("Warning: could not write sdefults to prev_status file\n");
     }
     close(fp);
   }
@@ -715,14 +718,13 @@ void MainForm::WriteCmd(QMultiLineEdit *dest, const char *request) {
   }
 
   sprintf(txt, "%s", ctime(&t));
-  fprintf(f, txt);
+  fprintf(f, "%s", ctime(&t));
   txt[strlen(txt) - 1] = '\0';        // Get rid of the \n character
   dest->insertLine(txt);
   dest->setCursorPosition(dest->numLines() - 1, 0);
 
   sprintf(txt, "  %s\n", request);
-
-  fprintf(f, txt);
+  fprintf(f, "  %s\n", request);
   txt[strlen(txt) - 1] = '\0';        // Get rid of the \n character
   dest->insertLine(txt);
   dest->setCursorPosition(dest->numLines() - 1, 0);
@@ -939,7 +941,7 @@ void MainForm::ReadLog(QMultiLineEdit *dest) {
 //
 //-------------------------------------------------------------
 
-MainForm::MainForm(char *cf, QWidget* parent,  const char* name,
+MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     WFlags fl) : QMainWindow( parent, name, fl )
 {
   QFont tfont;

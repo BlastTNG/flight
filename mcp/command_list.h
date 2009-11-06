@@ -30,7 +30,7 @@
 #define SIZE_ABOUT 80
 #define SIZE_PARNAME 80
 
-#define N_GROUPS 23
+#define N_GROUPS 24
 
 #define GR_POINT        0x00000001
 #define GR_BAL          0x00000002
