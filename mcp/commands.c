@@ -21,7 +21,7 @@
  */
 
 /* Define this symbol to have mcp log all SIP traffic */
-#undef SIP_CHATTER
+#define SIP_CHATTER
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1818,7 +1818,7 @@ void WatchFIFO ()
 #else
 void WatchPort (void* parameter)
 {
-  const char *COMM[] = {"/dev/ttyS0", "/dev/ttyS4"};
+  const char *COMM[] = {"/dev/ttySI0", "/dev/ttySI2"};
 
   unsigned char buf;
   unsigned short *indatadumper;

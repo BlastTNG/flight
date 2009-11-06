@@ -65,7 +65,7 @@ extern "C" {
 
 #define MULTIPLEX_WORD  3
 
-#define INPUT_TTY "/dev/ttyS5"
+#define INPUT_TTY "/dev/ttySI4"
 
 static int tty_fd;
 extern unsigned short* slow_data[FAST_PER_SLOW];
