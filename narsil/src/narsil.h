@@ -46,6 +46,10 @@ extern "C" {
 
 #include <sys/types.h>
 
+#include <getdata/dirfile.h>
+
+using namespace GetData;
+
 #define SMALL_POINT_SIZE 10
 #define LARGE_POINT_SIZE 12
 
@@ -149,7 +153,9 @@ class MainForm : public QMainWindow
 
     int lastmcmd;
     QString curfile;
-    KstFile *DataSource;
+    //KstFile *DataSource;
+    Dirfile *_dirfile;
+
     int fid;
     bool sending;
 
@@ -169,3 +175,5 @@ class MainForm : public QMainWindow
     void ShowSettings();
 };
 #endif
+
+// vim: ts=2 sw=2 et

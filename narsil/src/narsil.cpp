@@ -66,7 +66,6 @@
 #define FIXEDFONT "courier"
 
 #include "narsil.h"
-#include "kstfile.h"
 #include "doubleentry.h"
 
 #include <iostream>
@@ -74,7 +73,7 @@
 #define PADDING 3
 #define SPACING 3
 
-#define DEF_CURFILE CUR_DIR "/defile.cur"
+#define DEF_CURFILE CUR_DIR "/defile.cur.lnk"
 #define LOGFILE DATA_ETC_NARSIL_DIR "/log.txt"
 #define LOGFILEDIR DATA_ETC_NARSIL_DIR "/log/"
 
@@ -259,7 +258,7 @@ void MainForm::ChooseCommand() {
       NAboutLabel->setText(client_mcommands[index].about);
       lastmcmd = index;
 
-      bool IsData = DataSource->update();
+      //bool IsData = DataSource->update();
 
       for (i = 0; i < MAX_N_PARAMS; i++) {
         if (i < client_mcommands[index].numparams) {
@@ -268,19 +267,22 @@ void MainForm::ChooseCommand() {
           NParamFields[i]->show();
           NParamFields[i]->SetParentField(index, i);
           NParamFields[i]->SetType(client_mcommands[index].params[i].type);
-          if (client_mcommands[index].params[i].type == 's')
+          if (client_mcommands[index].params[i].type == 's') {
             NParamFields[i]->SetStringValue(
                 client_mcommands[index].params[i].field);
-          else {
-            if (IsData) {
-              if (DataSource->readField(&indata,
-                    client_mcommands[index].params[i].field,
-                    DataSource->numFrames() - 2, -1) == 0)
+          } else {
+            int nf;
+            if ((nf = _dirfile->NFrames())>0) {
+              if (_dirfile->GetData( client_mcommands[index].params[i].field,
+                  nf-1, 0, 0, 1, // 1 sample from frame nf-1
+                  Float64, (void*)(&indata))==0) {
                 NParamFields[i]->SetDefaultValue(index, i);
-              else
+              } else {
                 NParamFields[i]->SetValue(indata);
-            } else 
+              }
+            } else {
               NParamFields[i]->SetDefaultValue(index, i);
+            }
           }
         } else {
           NParamLabels[i]->hide();
@@ -666,8 +668,10 @@ void MainForm::ChangeCurFile() {
   char txt[50], info[255];
 
   strcpy(txt, NCurFile->text());
-  DataSource->~KstFile();
-  DataSource = new KstFile(txt, UNKNOWN);
+  delete _dirfile;
+  _dirfile = new Dirfile(txt, GD_RDONLY);
+  //DataSource->~KstFile();
+  //DataSource = new KstFile(txt, UNKNOWN);
   sprintf(info, "Narsil will now read from %s.", txt);
   QMessageBox::information(this, "Acknowledgement", info,
       QMessageBox::Ok | QMessageBox::Default);
@@ -784,8 +788,8 @@ void MainForm::WriteLog(const char *request) {
     .arg("narsil",-10)
     .arg(Group, -10)
     .arg((getpwuid(getuid()))->pw_name, -10)
-    .arg(DataSource->numFrames(),-10)
-    .arg(DataSource->fileName());
+    .arg(_dirfile->NFrames(),-10)
+    .arg(_dirfile->Name());
 
   LogEntry+="--------------------------------------------------\n\n";
 
@@ -1201,9 +1205,9 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name,
   else
     strcpy(tmp, "\0");
 
-  DataSource = new KstFile(tmp, UNKNOWN);
-  DataSource->update();
-
+  //DataSource = new KstFile(tmp, UNKNOWN);
+  //DataSource->update();
+  _dirfile = new Dirfile(tmp, GD_RDONLY);
   timer = new QTimer(this, "image_timer");
   timer->start(300);
 
@@ -1235,7 +1239,8 @@ MainForm::MainForm(char *cf, QWidget* parent,  const char* name,
 
 MainForm::~MainForm()
 {
-  delete DataSource;
+  //delete DataSource;
+  delete _dirfile;
   delete Images[3];
   delete Images[2];
   delete Images[1];
@@ -1296,3 +1301,5 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
+
+// vim: ts=2 sw=2 et

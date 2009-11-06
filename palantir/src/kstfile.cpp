@@ -506,6 +506,7 @@ bool KstFile::dirfileUpdate(){
 
   newNF = GetNFrames(Filename, &error_code, NULL);
 
+
   if (newNF == NumFrames) isnew = false;
   else isnew = true;
 
