@@ -107,15 +107,6 @@ enum singleCommand {
   reset_dr,         actpos_trim
 };
 
-struct scom {
-  enum singleCommand command;
-  char name[SIZE_NAME];
-  char about[SIZE_ABOUT];
-  unsigned int group;
-};
-
-extern struct scom scommands[N_SCOMMANDS];
-
 /* multiCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
 enum multiCommand {
@@ -149,6 +140,16 @@ enum multiCommand {
   delta_secondary,   lvdt_limit,        thermo_param,     focus_offset
 };
 
+//32-bit and 64-bit sytems disagree on packing
+#pragma pack(4)
+
+struct scom {
+  enum singleCommand command;
+  char name[SIZE_NAME];
+  char about[SIZE_ABOUT];
+  unsigned int group;
+};
+
 struct par {
   char name[SIZE_PARNAME];
   double min;
@@ -165,6 +166,10 @@ struct mcom {
   char numparams;
   struct par params[MAX_N_PARAMS];
 };
+
+#pragma pack()   //return to default packing
+
+extern struct scom scommands[N_SCOMMANDS];
 
 /* parameter type:
  * i :  parameter is 15 bit unnormalised integer

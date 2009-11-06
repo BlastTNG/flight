@@ -22,10 +22,10 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.8 $";
+const char *command_list_serial = "$Revision: 4.9 $";
 
 const char *GroupNames[N_GROUPS] = {
-  "Pointing Modes",        "Balance",           
+  "Pointing Modes",        "Balance",          "Cool (empty)",
   "Pointing Sensor Trims", "Aux. Electronics", "Bias",
   "Pointing Sensor Vetos", "Actuators",        "Cal Lamp",
   "Pointing Motor Gains",  "Secondary Focus",  "Cryo Heat",
