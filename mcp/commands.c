@@ -488,6 +488,42 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.um500.rst_count = 0;
       CommandData.power.um500.set_count = LATCH_PULSE_LEN;
       break;
+    case enable_gy_ifroll1:
+      CommandData.gymask |= 0x01;
+      break;
+    case disable_gy_ifroll1:
+      CommandData.gymask &= ~0x01;
+      break;
+    case enable_gy_ifroll2:
+      CommandData.gymask |= 0x02;
+      break;
+    case disable_gy_ifroll2:
+      CommandData.gymask &= ~0x02;
+      break;
+    case enable_gy_ifyaw1:
+      CommandData.gymask |= 0x04;
+      break;
+    case disable_gy_ifyaw1:
+      CommandData.gymask &= ~0x04;
+      break;
+    case enable_gy_ifyaw2:
+      CommandData.gymask |= 0x08;
+      break;
+    case disable_gy_ifyaw2:
+      CommandData.gymask &= ~0x08;
+      break;
+    case enable_gy_ifel1:
+      CommandData.gymask |= 0x10;
+      break;
+    case disable_gy_ifel1:
+      CommandData.gymask &= ~0x10;
+      break;
+    case enable_gy_ifel2:
+      CommandData.gymask |= 0x20;
+      break;
+    case disable_gy_ifel2:
+      CommandData.gymask &= ~0x20;
+      break;
     case gybox_off:
       CommandData.power.gybox_off = 1;
       break;
@@ -1290,10 +1326,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       /***************************************/
       /*************** Misc  *****************/
     case gyro_off:
-      CommandData.power.gyro_off[ivalues[0]-1] |= 0x01;
+      CommandData.power.gyro_off[ivalues[0]-1] |= 0x10;
       break;
     case gyro_on:
-      CommandData.power.gyro_off[ivalues[0]-1] |= 0x00;
+      CommandData.power.gyro_off[ivalues[0]-1] &= ~0x10;
       break;
     case timeout:       /* Set timeout */
       CommandData.timeout = ivalues[0];
@@ -2268,7 +2304,7 @@ void InitCommandData()
   CommandData.gy_ifel_offset = 0;
   CommandData.gy_ifroll_offset = 0;
   CommandData.gy_ifyaw_offset = 0;
-  CommandData.gymask = 0x00000000;
+  CommandData.gymask = 0x3f;
   
   CommandData.pumps.pwm1 = 1638; /* 20% */
   CommandData.pumps.pwm2 = 1638; /* 20% */

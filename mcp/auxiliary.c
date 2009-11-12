@@ -147,7 +147,6 @@ void ControlGyroHeat(unsigned short *RxFrame)
   if (firsttime) {
     firsttime = 0;
     tGyboxAddr = GetBiPhaseAddr("t_gybox");
-
     gyHeatAddr = GetNiosAddr("gy_heat");
     gyHHistAddr = GetNiosAddr("gy_h_hist");
     gyHAgeAddr = GetNiosAddr("gy_h_age");
@@ -164,8 +163,8 @@ void ControlGyroHeat(unsigned short *RxFrame)
   WriteData(iGyheatAddr, CommandData.gyheat.gain.I, NIOS_QUEUE);
   WriteData(dGyheatAddr, CommandData.gyheat.gain.D, NIOS_QUEUE);
 
-  temp = RxFrame[tGyboxAddr->channel];
-
+  temp = slow_data[tGyboxAddr->index][tGyboxAddr->channel];
+  
   /* Only run these controls if we think the thermometer isn't broken */
   if (temp < MAX_GYBOX_TEMP && temp > MIN_GYBOX_TEMP) {
     /* control the heat */
@@ -173,6 +172,9 @@ void ControlGyroHeat(unsigned short *RxFrame)
         CommandData.gyheat.age);
 
     set_point = ((CommandData.gyheat.setpoint + 273.15) / M_16T) - B_16T;
+    //P = CommandData.gyheat.gain.P * (1.0 / 10.0);
+    //I = CommandData.gyheat.gain.I * (1.0 / 110000.0);
+    //D = CommandData.gyheat.gain.D * ( 1.0 / 1000.0);
     P = CommandData.gyheat.gain.P * (-1.0 / 1000000.0);
     I = CommandData.gyheat.gain.I * (-1.0 / 110000.0);
     D = CommandData.gyheat.gain.D * ( 1.0 / 1000.0);

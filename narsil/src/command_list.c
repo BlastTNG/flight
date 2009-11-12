@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.9 $";
+const char *command_list_serial = "$Revision: 4.10 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Cool (empty)",
@@ -51,6 +51,18 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(ss_on), "turn on the Sun Sensor", GR_POWER},
   {COMMAND(gybox_off), "turn off the digital gyros' box", GR_POWER},
   {COMMAND(gybox_on), "turn on the digital gyros' box", GR_POWER},
+  {COMMAND(enable_gy_ifel1), "enable gy_ifel1", GR_MISC},
+  {COMMAND(disable_gy_ifel1), "disable gy_ifel1", GR_MISC},
+  {COMMAND(enable_gy_ifel2), "enable gy_ifel2", GR_MISC},
+  {COMMAND(disable_gy_ifel2), "disable gy_ifel2", GR_MISC},
+  {COMMAND(enable_gy_ifyaw1), "enable gy_ifyaw1", GR_MISC},
+  {COMMAND(disable_gy_ifyaw1), "disable gy_ifyaw1", GR_MISC},
+  {COMMAND(enable_gy_ifyaw2), "enable gy_ifyaw2", GR_MISC},
+  {COMMAND(disable_gy_ifyaw2), "disable gy_ifyaw2", GR_MISC},
+  {COMMAND(enable_gy_ifroll1), "enable gy_ifroll1", GR_MISC},
+  {COMMAND(disable_gy_ifroll1), "disable gy_ifroll1", GR_MISC},
+  {COMMAND(enable_gy_ifroll2), "enable gy_ifroll2", GR_MISC},
+  {COMMAND(disable_gy_ifroll2), "disable gy_ifroll2", GR_MISC},
   {COMMAND(actbus_on), "turn on the Actuators and Lock", GR_POWER | GR_LOCK
     | GR_ACT},
   {COMMAND(actbus_off), "turn off the Actuators and Lock", GR_POWER | GR_LOCK

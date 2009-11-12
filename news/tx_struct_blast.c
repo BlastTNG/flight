@@ -386,17 +386,17 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_foc_off",  'w', LOOP2, 31,                1.0,             0.0, 's', U_NONE},
   {"isc_tol",      'w', LOOP2, 33,                1.0,             0.0, 'u', U_NONE},
   /* LOOP2 34 is fast */
-  {"ss_az",        'w', LOOP2, 35,              I2DEG,             0.0, 'u', U_NONE},
-  {"gy_ifel_offset",'w',LOOP2, 36,        1.0/32768.0,             0.0, 's', U_NONE},
-  {"gy_ifroll_offset",'w',LOOP2,37,       1.0/32768.0,             0.0, 's', U_NONE},
-  {"gy_ifyaw_offset",'w',LOOP2,38,        1.0/32768.0,             0.0, 's', U_NONE},
-  {"mag_sigma",    'w', LOOP2, 40,              I2DEG,             0.0, 'u', U_NONE},
-  {"dgps_az",      'w', LOOP2, 41,              I2DEG,             0.0, 'u', U_NONE},
-  {"dgps_sigma",   'w', LOOP2, 42,              I2DEG,             0.0, 'u', U_NONE},
-  {"lvdt_high",    'w', LOOP2, 43,                1.0,             0.0, 's', U_NONE},
-  {"isc_az",       'w', LOOP2, 44,              I2DEG,             0.0, 'u', U_NONE},
-  {"isc_el",       'w', LOOP2, 45,              I2DEG,             0.0, 'u', U_NONE},
-  {"isc_sigma",    'w', LOOP2, 46,              I2DEG,             0.0, 'u', U_NONE},
+  {"ss_az",           'w',LOOP2, 35,            I2DEG,             0.0, 'u', U_NONE},
+  {"gy_ifel_offset",  'w',LOOP2, 36,      1.0/32768.0,             0.0, 's', U_NONE},
+  {"gy_ifroll_offset",'w',LOOP2, 37,      1.0/32768.0,             0.0, 's', U_NONE},
+  {"gy_ifyaw_offset", 'w',LOOP2, 38,      1.0/32768.0,             0.0, 's', U_NONE},
+  {"mag_sigma",       'w',LOOP2, 40,            I2DEG,             0.0, 'u', U_NONE},
+  {"dgps_az",         'w',LOOP2, 41,            I2DEG,             0.0, 'u', U_NONE},
+  {"dgps_sigma",      'w',LOOP2, 42,            I2DEG,             0.0, 'u', U_NONE},
+  {"lvdt_high",       'w',LOOP2, 43,              1.0,             0.0, 's', U_NONE},
+  {"isc_az",          'w',LOOP2, 44,            I2DEG,             0.0, 'u', U_NONE},
+  {"isc_el",          'w',LOOP2, 45,            I2DEG,             0.0, 'u', U_NONE},
+  {"isc_sigma",       'w',LOOP2, 46,            I2DEG,             0.0, 'u', U_NONE},
   // LOOP2 47-48 are fast
   {"cal_pulse",    'w', LOOP2, 49,               10.0,              0., 'u', U_NONE},
   {"ss_sigma",     'w', LOOP2, 50,              I2DEG,             0.0, 'u', U_NONE},
@@ -569,16 +569,16 @@ struct ChannelStruct SlowChannels[] = {
   {"he4_lev_old",  'w', LOOP5, 40, -2.87477e-09*65536,      12.3273561, 'u', U_NONE},
   {"isc_focus",    'w', LOOP5, 41,                1.0,             0.0, 's', U_NONE},
   /* LOOP5 42-53 are wide */
-  {"osc_focus",    'w', LOOP5, 54,                1.0,             0.0, 's', U_NONE},
-  {"mag_pitch",    'w', LOOP5, 55,              I2DEG,             0.0, 'u', U_NONE},
-  {"isc_diskfree", 'w', LOOP5, 56,                5.0,             0.0, 'u', U_NONE},
-  {"osc_diskfree", 'w', LOOP5, 57,                5.0,             0.0, 'u', U_NONE},
-  {"isc_gy_ifel_off",'w',LOOP5, 58,       1.0/32768.0,             0.0, 's', U_NONE},
-  {"osc_gy_ifel_off",'w',LOOP5, 59,       1.0/32768.0,             0.0, 's', U_NONE},
-  {"isc_gy_ifroll_off",'w',LOOP5,60,      1.0/32768.0,             0.0, 's', U_NONE},
-  {"osc_gy_ifroll_off",'w',LOOP5,61,      1.0/32768.0,             0.0, 's', U_NONE},
-  {"isc_gy_ifyaw_off",'w', LOOP5,62,      1.0/32768.0,             0.0, 's', U_NONE},
-  {"osc_gy_ifyaw_off",'w', LOOP5,63,      1.0/32768.0,             0.0, 's', U_NONE},
+  {"osc_focus",        'w',LOOP5, 54,             1.0,             0.0, 's', U_NONE},
+  {"mag_pitch",        'w',LOOP5, 55,           I2DEG,             0.0, 'u', U_NONE},
+  {"isc_diskfree",     'w',LOOP5, 56,             5.0,             0.0, 'u', U_NONE},
+  {"osc_diskfree",     'w',LOOP5, 57,             5.0,             0.0, 'u', U_NONE},
+  {"isc_gy_ifel_off",  'w',LOOP5, 58,     1.0/32768.0,             0.0, 's', U_NONE},
+  {"osc_gy_ifel_off",  'w',LOOP5, 59,     1.0/32768.0,             0.0, 's', U_NONE},
+  {"isc_gy_ifroll_off",'w',LOOP5, 60,     1.0/32768.0,             0.0, 's', U_NONE},
+  {"osc_gy_ifroll_off",'w',LOOP5, 61,     1.0/32768.0,             0.0, 's', U_NONE},
+  {"isc_gy_ifyaw_off", 'w',LOOP5, 62,     1.0/32768.0,             0.0, 's', U_NONE},
+  {"osc_gy_ifyaw_off", 'w',LOOP5, 63,     1.0/32768.0,             0.0, 's', U_NONE},
 
   {"isc_maxslew",  'w', LOOP6,  0,              I2DEG,             0.0, 'u', U_NONE},
   {"osc_maxslew",  'w', LOOP6,  1,              I2DEG,             0.0, 'u', U_NONE},
@@ -800,9 +800,6 @@ struct ChannelStruct SlowChannels[] = {
   /* read channels from ACS0 */
   {"piv_enc",      'r',  TMP1, 59,        360.0/8192.0,            0.0, 'u', U_NONE},
 
-  /* send data to ACS0 */
-  {"gy2_heat",     'w', TMP1,  3,             1.0,                    0.0, 'u', U_NONE},
-   
   {"reac_enc",    'r',  TMP2, 60,    360.0/4000.0,                    0.0, 'u', U_NONE},
   {"pwm_el",      'r',  TMP2, 51,             1.0,                -4000.0, 'u', U_NONE},
 
@@ -811,7 +808,6 @@ struct ChannelStruct SlowChannels[] = {
   {"pwm_piv",     'r',  TMP2, 61,             1.0,                -4000.0, 'u', U_NONE},
 
   /* send data to ACS1 */
-  {"gy1_heat",'w',      TMP2,  1,             1.0,                    0.0, 'u', U_NONE},
   {"az_vreq",     'w',  TMP2, 14,  GY16_TO_DPS/6.,  -32768*GY16_TO_DPS/6., 'u', U_NONE},
   {"cos_el",      'w',  TMP2,  9,             1.0,                    0.0, 'u', U_NONE},
   {"sin_el",      'w',  TMP2, 10,             1.0,                    0.0, 'u', U_NONE},

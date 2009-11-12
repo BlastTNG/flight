@@ -196,41 +196,55 @@ static void WriteAux(void)
       NIOS_FLUSH);
 }
 
-/***********************************/
-/* SetGyroMask: mask faulty gyros  */
-/*                                 */
-/***********************************/
+/***************************************************************/
+/* SetGyroMask:                                                */
+/* mask gyros - automatic masking (if the gyro is faulty)      */
+/*           or- commanded masking                             */
+/* power cycle gyros - if masked for 1s                        */
+/*                and- hasn't been power cycled in the last 5s */
+/***************************************************************/
+#define GYRO_TIMEOUT 5 /* 1 sec -- in 5Hz Frames */ 
+#define GYRO_PCYCLE 25 /* 5 sec */
 void SetGyroMask (void)
 {
 static struct NiosStruct* gymaskAddr;
 gymaskAddr = GetNiosAddr("gyro_mask");
-unsigned int GyroMask;
-GyroMask = 0x3f; //all gyros used (mask=1 -> use gyro)
-//static int pcycle[6] = {0,0,0,0,0,0};
-//static struct BiPhaseStruct* gyfaultAddr;
-//gyfaultAddr = GetBiPhaseAddr("gyro_fault");;
-//unsigned int GyroFault;
-//GyroFault = slow_data[gyfaultAddr->index][gyfaultAddr->channel];
-//for (i=0, i<6, i++) {
-////if it's not changing (faulty) OR CommandData says don't use it --> don't use it
-//  if (GyroFault & (0x01 << i)) { 
-//      GyroMask &= ~0x01 << i;
-//      pcycle[i] +=1;
-//      //if it's been masked for too long, power cycle it
-//      if (pcycle[i] > between 1s and 1min) {
-//	CommandData.power.gyro_off[i] |= 0x01 << i;
-//	pcycle[i] = 0; 
-//      }
-//  }
-//  else if (CommandData.gymask & (0x01 << i)) {
-//      GyroMask &= ~0x01 << i;
-//      pcycle[i] +=1;
-//      //if it's been masked for too long, power cycle it
-//      if (pcycle[i] > between 1s and 1min) {
-//	CommandData.power.gyro_off[i] |= 0x10 << i;
-//	pcycle[i] = 0; 
-//      }
-//  }
+unsigned int GyroMask = 0x3f; //all gyros enabled
+static int faulty[6] = {0,0,0,0,0,0};//how long gyro has been faulty
+static int pcycle[6] = {0,0,0,0,0,0};//how long since gyro's last power cycle
+static struct BiPhaseStruct* gyfaultAddr;
+gyfaultAddr = GetBiPhaseAddr("gyro_fault");;
+unsigned int GyroFault;
+GyroFault = slow_data[gyfaultAddr->index][gyfaultAddr->channel];
+int i;
+for (i=0; i<6; i++) {
+  if (GyroFault & (0x01 << i)) {
+      GyroMask &= ~(0x01 << i);
+      faulty[i] +=1;
+      if (faulty[i] > GYRO_TIMEOUT) {
+	if (pcycle[i] > GYRO_PCYCLE) {
+	  CommandData.power.gyro_off[i] |= 0x01;
+	  pcycle[i] = 0;
+	}
+	pcycle[i] +=1;
+      }
+  }
+  else if (CommandData.gymask & ~(0x01 << i)) {
+      GyroMask &= ~(0x01 << i);
+      faulty[i] +=1;
+      if (faulty[i] > GYRO_TIMEOUT) {
+	if (pcycle[i] > GYRO_PCYCLE) {
+	  CommandData.power.gyro_off[i] |= 0x10;
+	  pcycle[i] = 0;
+	}
+	pcycle[i] +=1;
+      }
+  }
+  else {
+      GyroMask |= 0x01 << i;	
+      faulty[i] = 0;
+	}
+}
 WriteData(gymaskAddr, GyroMask, NIOS_QUEUE);
 }
 
