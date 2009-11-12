@@ -210,6 +210,7 @@ void SetGyroMask (void)
 static struct NiosStruct* gymaskAddr;
 gymaskAddr = GetNiosAddr("gyro_mask");
 unsigned int GyroMask = 0x3f; //all gyros enabled
+int convert[6] = {2,0,3,4,5,1};
 static int faulty[6] = {0,0,0,0,0,0};//how long gyro has been faulty
 static int pcycle[6] = {0,0,0,0,0,0};//how long since gyro's last power cycle
 static struct BiPhaseStruct* gyfaultAddr;
@@ -219,7 +220,7 @@ GyroFault = slow_data[gyfaultAddr->index][gyfaultAddr->channel];
 int i;
 for (i=0; i<6; i++) {
   if (GyroFault & (0x01 << i)) {
-      GyroMask &= ~(0x01 << i);
+      GyroMask &= ~(0x01 << convert[i]);
       faulty[i] +=1;
       if (faulty[i] > GYRO_TIMEOUT) {
 	if (pcycle[i] > GYRO_PCYCLE) {
@@ -229,12 +230,12 @@ for (i=0; i<6; i++) {
 	pcycle[i] +=1;
       }
   }
-  else if (CommandData.gymask & ~(0x01 << i)) {
-      GyroMask &= ~(0x01 << i);
+  else if ((CommandData.gymask & (0x01 << i)) == 0 ) {
+    GyroMask &= ~(0x01 << i);
       faulty[i] +=1;
       if (faulty[i] > GYRO_TIMEOUT) {
 	if (pcycle[i] > GYRO_PCYCLE) {
-	  CommandData.power.gyro_off[i] |= 0x10;
+	  CommandData.power.gyro_off[i] |= 0x01;
 	  pcycle[i] = 0;
 	}
 	pcycle[i] +=1;

@@ -17,7 +17,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 168        /* total number of single word cmds */
+#define N_SCOMMANDS 180        /* total number of single word cmds */
 #define N_MCOMMANDS 102        /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
@@ -93,9 +93,12 @@ enum singleCommand {
   bias_off,	    bias_on,		hk_off,		  hk_on,
   um250_off,	    um250_on,		um350_off,	  um350_on,
   um500_off,	    um500_on,		heat_off,	  heat_on,
-  enable_gy_ifel1,  disable_gy_ifel1,	enable_gy_ifel2,  disable_gy_ifel2,
   enable_gy_ifroll1,disable_gy_ifroll1, enable_gy_ifroll2,disable_gy_ifroll2,
   enable_gy_ifyaw1, disable_gy_ifyaw1,  enable_gy_ifyaw2, disable_gy_ifyaw2,
+  enable_gy_ifel1,  disable_gy_ifel1,	enable_gy_ifel2,  disable_gy_ifel2,
+  gy_ifroll1_off,   gy_ifroll1_on,	gy_ifroll2_off,	  gy_ifroll2_on,
+  gy_ifyaw1_off,    gy_ifyaw1_on,	gy_ifyaw2_off,	  gy_ifyaw2_on,
+  gy_ifel1_off,	    gy_ifel1_on,	gy_ifel2_off,	  gy_ifel2_on,
   gybox_off,        gybox_on,           ss_off,           ss_on,
   hub232_off,	    hub232_on,		isc_trig_int,     isc_trig_ext,
   osc_trig_int,     osc_trig_ext,       ln_valve_on,      ln_valve_off,

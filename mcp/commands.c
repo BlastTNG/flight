@@ -524,6 +524,42 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case disable_gy_ifel2:
       CommandData.gymask &= ~0x20;
       break;
+    case gy_ifroll1_off:
+      CommandData.power.gyro_off[1] |= 0x01;
+      break;
+    case gy_ifroll1_on:
+      CommandData.power.gyro_off[1] &= ~0x01;
+      break;
+    case gy_ifroll2_off:
+      CommandData.power.gyro_off[5] |= 0x01;
+      break;
+    case gy_ifroll2_on:
+      CommandData.power.gyro_off[5] &= ~0x01;
+      break;
+    case gy_ifyaw1_off:
+      CommandData.power.gyro_off[0] |= 0x01;
+      break;
+    case gy_ifyaw1_on:
+      CommandData.power.gyro_off[0] &= ~0x01;
+      break;
+    case gy_ifyaw2_off:
+      CommandData.power.gyro_off[2] |= 0x01;
+      break;
+    case gy_ifyaw2_on:
+      CommandData.power.gyro_off[2] &= ~0x01;
+      break;
+    case gy_ifel1_off:
+      CommandData.power.gyro_off[3] |= 0x01;
+      break;
+    case gy_ifel1_on:
+      CommandData.power.gyro_off[3] &= ~0x01;
+      break;
+    case gy_ifel2_off:
+      CommandData.power.gyro_off[4] |= 0x01;
+      break;
+    case gy_ifel2_on:
+      CommandData.power.gyro_off[4] &= ~0x01;
+      break;
     case gybox_off:
       CommandData.power.gybox_off = 1;
       break;
@@ -1325,12 +1361,12 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 
       /***************************************/
       /*************** Misc  *****************/
-    case gyro_off:
-      CommandData.power.gyro_off[ivalues[0]-1] |= 0x10;
-      break;
-    case gyro_on:
-      CommandData.power.gyro_off[ivalues[0]-1] &= ~0x10;
-      break;
+//    case gyro_off:
+//      CommandData.power.gyro_off[ivalues[0]-1] |= 0x01;
+//      break;
+//    case gyro_on:
+//      CommandData.power.gyro_off[ivalues[0]-1] &= ~0x01;
+//      break;
     case timeout:       /* Set timeout */
       CommandData.timeout = ivalues[0];
       break;
