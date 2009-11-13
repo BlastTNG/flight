@@ -1697,7 +1697,7 @@ static void MKSAltitude (unsigned char *indata)
 
 static void SendDownData(char tty_fd)
 {
-  unsigned char buffer[SLOWDL_LEN], data[3 + SLOWDL_LEN + 1];
+  unsigned char buffer[3 + SLOWDL_LEN + 1], data[3 + SLOWDL_LEN + 1];
   int i, temp;
   int bitpos, bytepos, numbits;
   double slowM, slowB;
