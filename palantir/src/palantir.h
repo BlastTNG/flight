@@ -53,6 +53,9 @@
 #include <qmultilineedit.h>
 #include <qstatusbar.h>
 #include <unistd.h>
+#include <getdata/dirfile.h>
+
+using namespace GetData;
 
 #include "decompoll.h"
 
@@ -189,7 +192,6 @@ class QListBox;
 class QMultiLineEdit;
 class QThread;
 
-class KstFile;
 class AdamDom;
 
 class PalImage
@@ -217,6 +219,7 @@ class MainForm : public QMainWindow
     QList<QLabel> QtLabels;
     QList<QLabel> QtData;
     QLabel *ShowPicture;
+    void resetDirFile(char *filename);
 
   protected:
     QGridLayout* InfoLayout;
@@ -225,6 +228,9 @@ class MainForm : public QMainWindow
     QGridLayout* ContentLayout;
 
   private:
+    Dirfile *_dirfile;
+    int _lastNFrames;
+
     QLabel* DecomState;
     QLabel* PalantirState;
     QLabel* LockState;
@@ -297,7 +303,6 @@ class MainForm : public QMainWindow
 
     PalImage *Picture;
     QPixmap *Icon;
-    KstFile *DataSource;
 
     QList<bool> DisabledIndex;
 

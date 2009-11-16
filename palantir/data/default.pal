@@ -313,8 +313,8 @@
       <HI value="100"/>
       <XHI value="300"/>
     </EXTREMA>
-    <CURFILE name="/data/etc/defile.cur"/>
-    <DECOMD host="arwen.blast" port="11411"/>
+    <CURFILE name="/data/etc/defile.cur.lnk"/>
+    <DECOMD host="north" port="11411"/>
   </SETTINGS>
   <DEFAULTS>
     <TEXTSTYLE>

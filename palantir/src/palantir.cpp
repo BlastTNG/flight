@@ -38,7 +38,6 @@
 
 #include <qtimer.h>
 
-#include "kstfile.h"
 #include "palantir.h"
 #include "adamdom.h"
 
@@ -797,7 +796,9 @@ void MainForm::UpdateData() {
     startupDecomd = false;
   }
 
-  if (DataSource->update()) {
+  //if (DataSource->update()) {
+  if (_dirfile->NFrames() != _lastNFrames) {
+    _lastNFrames = _dirfile->NFrames();
     updating = true;
     lastUpdate = time(NULL);
     Picture->TurnOn(ShowPicture);
@@ -899,8 +900,11 @@ void MainForm::UpdateData() {
         currNumber = NumberInfo.at(currLabel->index);
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in from disk
-        if (DataSource->readField(indata, currLabel->src,
-              DataSource->numFrames() - 1, -1) == 0) {
+//        if (DataSource->readField(indata, currLabel->src,
+//              DataSource->numFrames() - 1, -1) == 0) {
+	if (_dirfile->GetData(currLabel->src,
+                              _lastNFrames-1, 0, 0, 1, // 1 sample from frame nf-1
+                              Float64, (void*)(indata))==0) {
           if (currLabel->laststyle != 1) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
@@ -956,8 +960,11 @@ void MainForm::UpdateData() {
         currMulti = MultiInfo.at(currLabel->index);
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in value from disk
-        if (DataSource->readField(indata, currLabel->src,
-              DataSource->numFrames() - 1, -1) == 0) {
+        //if (DataSource->readField(indata, currLabel->src,
+        //      DataSource->numFrames() - 1, -1) == 0) {
+	if (_dirfile->GetData(currLabel->src,
+                              _lastNFrames-1, 0, 0, 1, // 1 sample from frame nf-1
+                              Float64, (void*)(indata))==0) {
           if (currLabel->laststyle != 1001) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
@@ -999,8 +1006,11 @@ void MainForm::UpdateData() {
         currDateTime = DateTimeInfo.at(currLabel->index);
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in value from disk
-        if (DataSource->readField(indata, currLabel->src,
-              DataSource->numFrames() - 1, -1) == 0) {
+        // if (DataSource->readField(indata, currLabel->src,
+        //       DataSource->numFrames() - 1, -1) == 0) {
+	if (_dirfile->GetData(currLabel->src,
+                              _lastNFrames-1, 0, 0, 1, // 1 sample from frame nf-1
+                              Float64, (void*)(indata))==0) {
           if (currLabel->laststyle != 1) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
@@ -1022,7 +1032,8 @@ void MainForm::UpdateData() {
       case CURDIR:
         currCurDir = CurDirInfo.at(currLabel->index);
         currQtLabel = QtData.at(currLabel->labelindex);
-        strncpy (tmp, DataSource->fileName(), 254);
+        //strncpy (tmp, DataSource->fileName(), 254);
+        strncpy (tmp, _dirfile->Name(), 254);
         if ((curf = fopen(tmp, "r")) == 0){
           if (currLabel->laststyle != 1) {
             currQtLabel->setPalette(Palette(ErrorStyle));
@@ -1045,8 +1056,11 @@ void MainForm::UpdateData() {
         currDeriv = DerivInfo.at(currLabel->index);
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in from disk
-        if (DataSource->readField(indata, currLabel->src,
-              DataSource->numFrames() - 1, -1) == 0) {
+        //if (DataSource->readField(indata, currLabel->src,
+        ////      DataSource->numFrames() - 1, -1) == 0) {
+	if (_dirfile->GetData(currLabel->src,
+                              _lastNFrames-1, 0, 0, 1, // 1 sample from frame nf-1
+                              Float64, (void*)(indata))==0) {
           if (currLabel->laststyle != 1) {
             currQtLabel->setPalette(Palette(ErrorStyle));
             currQtLabel->setFont(Font(ErrorStyle));
@@ -1173,6 +1187,9 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
   QWidget *centralWidget;
 
   QFont font;
+
+  _dirfile = 0;
+  _lastNFrames = 0;
 
   DecomPoller = new DecomPoll();
 
@@ -1327,8 +1344,15 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
   strncpy(tmp, *CurFile, MAXPATHLENGTH);
 
   // Initialise KstFile object
-  DataSource = new KstFile(tmp, UNKNOWN);
+  //DataSource = new KstFile(tmp, UNKNOWN);
+  resetDirFile(tmp);
 }
+
+void MainForm::resetDirFile(char *filename) {
+  delete _dirfile;
+  _dirfile = new Dirfile(filename, GD_RDONLY);
+}
+
 
 MainForm::~MainForm()
 {
