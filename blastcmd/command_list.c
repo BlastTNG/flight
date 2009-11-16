@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.11 $";
+const char *command_list_serial = "$Revision: 4.12 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Cool (empty)",
@@ -64,17 +64,17 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(enable_gy_ifel2), "enable gy_ifel2", GR_MISC},
   {COMMAND(disable_gy_ifel2), "disable gy_ifel2", GR_MISC},
   {COMMAND(gy_ifroll1_off), "turn off gy_ifroll1", GR_POWER},
-  {COMMAND(gy_ifroll1_on), "turn off gy_ifroll1", GR_POWER},
+  {COMMAND(gy_ifroll1_on), "turn on gy_ifroll1", GR_POWER},
   {COMMAND(gy_ifroll2_off), "turn off gy_ifroll2", GR_POWER},
-  {COMMAND(gy_ifroll2_on), "turn off gy_ifroll2", GR_POWER},
+  {COMMAND(gy_ifroll2_on), "turn on gy_ifroll2", GR_POWER},
   {COMMAND(gy_ifyaw1_off), "turn off gy_ifyaw1", GR_POWER},
-  {COMMAND(gy_ifyaw1_on), "turn off gy_ifyaw1", GR_POWER},
+  {COMMAND(gy_ifyaw1_on), "turn on gy_ifyaw1", GR_POWER},
   {COMMAND(gy_ifyaw2_off), "turn off gy_ifyaw2", GR_POWER},
-  {COMMAND(gy_ifyaw2_on), "turn off gy_ifyaw2", GR_POWER},
+  {COMMAND(gy_ifyaw2_on), "turn on gy_ifyaw2", GR_POWER},
   {COMMAND(gy_ifel1_off), "turn off gy_ifel1", GR_POWER},
-  {COMMAND(gy_ifel1_on), "turn off gy_ifel1", GR_POWER},
+  {COMMAND(gy_ifel1_on), "turn on gy_ifel1", GR_POWER},
   {COMMAND(gy_ifel2_off), "turn off gy_ifel2", GR_POWER},
-  {COMMAND(gy_ifel2_on), "turn off gy_ifel2", GR_POWER},
+  {COMMAND(gy_ifel2_on), "turn on gy_ifel2", GR_POWER},
   {COMMAND(actbus_on), "turn on the Actuators and Lock", GR_POWER | GR_LOCK
     | GR_ACT},
   {COMMAND(actbus_off), "turn off the Actuators and Lock", GR_POWER | GR_LOCK

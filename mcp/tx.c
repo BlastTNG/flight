@@ -203,49 +203,51 @@ static void WriteAux(void)
 /* power cycle gyros - if masked for 1s                        */
 /*                and- hasn't been power cycled in the last 5s */
 /***************************************************************/
-#define GYRO_TIMEOUT 5 /* 1 sec -- in 5Hz Frames */ 
-#define GYRO_PCYCLE 25 /* 5 sec */
+#define MASK_TIMEOUT 5 /* 1 sec -- in 5Hz Frames */ 
+#define GYRO_ON 25 /* 5 sec */
+#define PCYCLE_TIMEOUT 125 /* 25 sec */
 void SetGyroMask (void)
 {
 static struct NiosStruct* gymaskAddr;
 gymaskAddr = GetNiosAddr("gyro_mask");
 unsigned int GyroMask = 0x3f; //all gyros enabled
-int convert[6] = {2,0,3,4,5,1};
-static int faulty[6] = {0,0,0,0,0,0};//how long gyro has been faulty
-static int pcycle[6] = {0,0,0,0,0,0};//how long since gyro's last power cycle
+int convert[6] = {1,5,0,6,3,4};//order of gyros in power switching
+static int t_mask[6] = {0,0,0,0,0,0};
+static int wait[6] = {0,0,0,0,0,0};
+static int off[6] = {0,0,0,0,0,0};//1=gyro is off, 0=gyro is on
 static struct BiPhaseStruct* gyfaultAddr;
 gyfaultAddr = GetBiPhaseAddr("gyro_fault");;
 unsigned int GyroFault;
 GyroFault = slow_data[gyfaultAddr->index][gyfaultAddr->channel];
 int i;
 for (i=0; i<6; i++) {
+  int j = convert[i];
   if (GyroFault & (0x01 << i)) {
-      GyroMask &= ~(0x01 << convert[i]);
-      faulty[i] +=1;
-      if (faulty[i] > GYRO_TIMEOUT) {
-	if (pcycle[i] > GYRO_PCYCLE) {
-	  CommandData.power.gyro_off[i] |= 0x01;
-	  pcycle[i] = 0;
-	}
-	pcycle[i] +=1;
+    GyroMask &= ~(0x01 << i);
+    t_mask[i] +=1;
+    if (t_mask[i] > MASK_TIMEOUT) {
+      if (wait[i] == 0) {
+	CommandData.power.gyro_off[j] |= 0x01;
+	off[i] = 1;
       }
+    }
   }
   else if ((CommandData.gymask & (0x01 << i)) == 0 ) {
     GyroMask &= ~(0x01 << i);
-      faulty[i] +=1;
-      if (faulty[i] > GYRO_TIMEOUT) {
-	if (pcycle[i] > GYRO_PCYCLE) {
-	  CommandData.power.gyro_off[i] |= 0x01;
-	  pcycle[i] = 0;
-	}
-	pcycle[i] +=1;
-      }
   }
   else {
-      GyroMask |= 0x01 << i;	
-      faulty[i] = 0;
-	}
+    GyroMask |= 0x01 << i;	
+    t_mask[i] = 0;
+  }
+  
+  if (off[i]) wait[i] +=1;
+  if (wait[i] == GYRO_ON) CommandData.power.gyro_off[j] &= ~0x01;
+  if (wait[i] > PCYCLE_TIMEOUT) {
+    wait[i] = 0;
+    off[i] = 0;
+  }
 }
+
 WriteData(gymaskAddr, GyroMask, NIOS_QUEUE);
 }
 
@@ -1269,9 +1271,9 @@ void WriteData(struct NiosStruct* addr, unsigned int data, int flush_flag)
 
   if (addr->fast)
     for (i = 0; i < FAST_PER_SLOW; ++i) {
-      RawNiosWrite(addr->niosAddr + i * TxFrameWords[addr->bus],
-          addr->bbcAddr | (data & 0xffff),
-          flush_flag && !addr->wide && i == FAST_PER_SLOW - 1);
+	RawNiosWrite(addr->niosAddr + i * TxFrameWords[addr->bus],
+	    addr->bbcAddr | (data & 0xffff),
+	    flush_flag && !addr->wide && i == FAST_PER_SLOW - 1);
       if (addr->wide)
         RawNiosWrite(addr->niosAddr + 1 + i * TxFrameWords[addr->bus],
             BBC_NEXT_CHANNEL(addr->bbcAddr) | (data >> 16),
