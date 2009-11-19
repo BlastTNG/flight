@@ -492,7 +492,7 @@ static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
   static unsigned int do_skip = 0;
 
   if (bi0_fp == -2) {
-    bi0_fp = open("/dev/bi0_pci", O_RDWR);
+    bi0_fp = open("/dev/bbc_bi0", O_RDWR);
     if (bi0_fp == -1)
       berror(tfatal, "BiPhase Writer: Error opening biphase device");
 

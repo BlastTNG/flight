@@ -48,7 +48,6 @@
 #define GY_IFROLL_OFFSET (0)
 #define GY_IFYAW_OFFSET  (0)
 
-#define MAX_ISC_AGE 200
 #define FIR_LENGTH (60*30 * SR)
 
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
@@ -466,7 +465,8 @@ static int SSConvert(double *ss_az)
   return 1;
 }
 
-#define GY_HISTORY 300
+//make history 30s long so that nobody ever exceeds it (with sc_max_age)
+#define GY_HISTORY 3000
 static void RecordHistory(int index)
 {
   /*****************************************/
@@ -521,6 +521,7 @@ int possible_solution(double az, double el, int i_point) {
     if (d_az < -30.0) return (0);
   }
 
+
   return(1);
 }
 
@@ -528,8 +529,9 @@ int possible_solution(double az, double el, int i_point) {
    (0.02dps/sqrt(100Hz))^2 : gyro offset error dominated */
 #define GYRO_VAR (2.0E-6)
 static void EvolveSCSolution(struct ElSolutionStruct *e,
-    struct AzSolutionStruct *a, double gy_ifel, double gy_ifel_off, double gy_ifroll,
-    double gy_ifroll_off, double gy_ifyaw, double gy_ifyaw_off, double old_el, int which)
+    struct AzSolutionStruct *a, double gy_ifel, double gy_ifel_off, 
+    double gy_ifroll, double gy_ifroll_off, double gy_ifyaw, 
+    double gy_ifyaw_off, double old_el, int which)
 {
 
   double gy_az;
@@ -578,9 +580,8 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
         &new_az, &new_el);
 
     if (possible_solution(new_az, new_el, i_point)) {  // no nans!
-
       // new solution
-      if (isc_pulses[which].age < MAX_ISC_AGE) {
+      if (isc_pulses[which].age < CommandData.ISCControl[which].max_age) {
         /* Add BDA offset -- there's a pole here at EL = 90 degrees! */
         new_el += CommandData.ISCState[which].elBDA * RAD2DEG;
         if (old_el < 80. * M_PI / 180)

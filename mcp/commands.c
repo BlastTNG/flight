@@ -21,7 +21,8 @@
  */
 
 /* Define this symbol to have mcp log all SIP traffic */
-#define SIP_CHATTER
+#undef SIP_CHATTER
+#undef VERBOSE_SIP_CHATTER
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -208,6 +209,11 @@ static void SendRequest (int req, char tty_fd)
   buffer[0] = 0x10;
   buffer[1] = req;
   buffer[2] = 0x03;
+  
+#ifdef VERBOSE_SIP_CHATTER
+  bprintf(info,"Commands: sending to SIP %02x %02x %02x\n",
+      buffer[0],buffer[1],buffer[2]);
+#endif
 
   write(tty_fd, buffer, 3);
 }
@@ -1528,6 +1534,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.ISCState[0].gain = rvalues[0];
       CommandData.ISCState[0].offset = ivalues[1];
       break;
+    case isc_maxage:
+      CommandData.ISCControl[0].max_age = ivalues[0]/10; //convert from ms to frames
+      break;
 
       /***************************************/
       /********* OSC Commanding  *************/
@@ -1586,6 +1595,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case osc_gain:
       CommandData.ISCState[1].gain = rvalues[0];
       CommandData.ISCState[1].offset = ivalues[1];
+      break;
+    case osc_maxage:
+      CommandData.ISCControl[1].max_age = ivalues[0]/10; //convert from ms to frames
       break;
 #endif
     default:
@@ -1947,6 +1959,9 @@ void WatchPort (void* parameter)
       }
       usleep(10000); /* sleep for 10ms */
     }
+#ifdef VERBOSE_SIP_CHATTER
+    bprintf(info, "Commands: COMM%i: read SIP byte %02x\n", port+1, buf);
+#endif
 
     /* Take control of memory */
     pthread_mutex_lock(&mutex);
@@ -2438,6 +2453,7 @@ void InitCommandData()
   /* ISC-BDA offsets per Ed Chapin & Marie Rex 2006-12-09 */
   CommandData.ISCState[0].azBDA = 0.047 * DEG2RAD;
   CommandData.ISCState[0].elBDA = -0.169 * DEG2RAD;
+  CommandData.ISCControl[0].max_age = 200;
 
   CommandData.ISCState[0].brightStarMode = 0;
   CommandData.ISCState[0].grid = 38;
@@ -2475,6 +2491,7 @@ void InitCommandData()
   /* OSC-BDA offsets per Ed Chapin & Marie Rex 2006-12-09 */
   CommandData.ISCState[1].azBDA = 0.525 * DEG2RAD;
   CommandData.ISCState[1].elBDA = 0.051 * DEG2RAD;
+  CommandData.ISCControl[1].max_age = 200;
 
   CommandData.ISCState[1].brightStarMode = 0;
   CommandData.ISCState[1].grid = 38;

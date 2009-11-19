@@ -73,6 +73,7 @@
 #define U_P_DEG "Position","^o"
 #define U_V_V	"Voltage","V"
 #define U_I_A	"Current","A"
+#define U_T_MS	"Time","ms"
 
 /* Measured by Tristan @ Penn, September 29 2009 */
 #define CRYO_A2_M ( 4.805248E-9)
@@ -678,6 +679,8 @@ struct ChannelStruct SlowChannels[] = {
   //lmf: rw_i_raw and el_i_raw are read out from the Copley Controllers over serial.
   {"piv_i_raw",    'w', LOOP7, 17,       20.0/32768.0,             0.0, 's', U_I_A},
   /* LOOP7 16 is fast narrow*/
+  {"isc_max_age",    'w', LOOP7, 18,       1.0,             0.0, 'u', U_T_MS},
+  {"osc_max_age",    'w', LOOP7, 19,       1.0,             0.0, 'u', U_T_MS},
 
  
 #ifndef BOLOTEST

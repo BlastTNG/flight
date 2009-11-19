@@ -328,6 +328,7 @@ struct CommandDataStruct {
     int autofocus;
     int save_period;
     int auto_save;
+    int max_age;
   } ISCControl[2];
 };
 
