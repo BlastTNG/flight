@@ -63,6 +63,7 @@ struct ACSDataStruct {
   double enc_el_raw; // degrees
   double clin_elev;// counts
   double rw_vel_raw; // deg/s
+  double res_piv_raw; // deg/s
   double gy_ifel;    // deg/s
   double gy_ifroll;    // deg/s
   double gy_ifyaw;    // deg/s
@@ -106,6 +107,23 @@ struct ElevMotorDataStruct{
 };
 extern struct ElevMotorDataStruct ElevMotorData[3];
 extern int elev_motor_index; // defined in motors.c
+/**********************************************/
+/*  Pivot Motor Data Struct                   */
+/*  - Stores information read from serial     */
+/*  from the Pivot                  */
+/*  - Written to struct in the serial thread  */
+/*  reactComm in motors.c                     */
+/*  - Written to the frame in the main thread */
+/*  USE A CIRCULAR BUFFER !!!                 */
+struct PivotMotorDataStruct{
+  double res_piv_raw; // in degrees
+  double current; // drive current read from controller
+  unsigned int db_stat;  // drive bridge status
+  unsigned int dp_stat;  // drive protection status
+  unsigned int ds1_stat;  // drive system 1 status
+};
+extern struct PivotMotorDataStruct PivotMotorData[3];
+extern int pivot_motor_index; // defined in motors.c
 
 extern sss_packet_data SunSensorData[3];
 extern int ss_index;

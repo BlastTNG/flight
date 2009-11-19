@@ -32,13 +32,13 @@ int check_copleyready(enum CheckType check, struct MotorInfoStruct* copleyinfo);
 void check_resp(struct MotorInfoStruct* copleyinfo);
 int ping_copley(struct MotorInfoStruct* copleyinfo);
 int checkCopleyResp(struct MotorInfoStruct* copleyinfo);
-int readCopleyResp(struct MotorInfoStruct* copleyinfo);
+//int readCopleyResp(struct MotorInfoStruct* copleyinfo); // Not used for anything.  I think...
 int enableCopley(struct MotorInfoStruct* copleyinfo);
 int disableCopley(struct MotorInfoStruct* copleyinfo);
 long int queryCopleyInd(char ind[],struct MotorInfoStruct* copleyinfo);
 long int getCopleyVel(struct MotorInfoStruct* copleyinfo);
 long int getCopleyPos(struct MotorInfoStruct* copleyinfo);
-int read_line(char *outs,struct MotorInfoStruct* copleyinfo);
+int readCopleyResp(char *outs, int *l, struct MotorInfoStruct* copleyinfo);
 
 extern struct MotorInfoStruct reactinfo; /* declared in copleycommand.c        
                                           *                                   

@@ -1250,7 +1250,7 @@ void Pointing(void)
     AddAzSolution(&AzAtt, &OSCAz, 0);
   }
 
-
+  if(j==500) bprintf(info, "Pointing use_mag = %i, use_sun = %i, use_gps = %i, use_isc = %i, use_osc = %i",CommandData.use_mag,CommandData.use_sun, CommandData.use_gps, CommandData.use_isc, CommandData.use_osc);
   PointingData[point_index].az = AzAtt.az;
   if (CommandData.az_autogyro) {
     PointingData[point_index].gy_ifroll_offset = AzAtt.gy_ifroll_offset;
@@ -1272,7 +1272,6 @@ void Pointing(void)
   PointingData[point_index].dec = dec;
   /** record solutions in pointing data **/
   //  if (j%500==0) bprintf(info,"Pointing: PointingData.enc_el = %f",PointingData[point_index].enc_el);
-  j++;
   PointingData[point_index].enc_el = EncEl.angle;
   PointingData[point_index].enc_sigma = sqrt(EncEl.varience + EncEl.sys_var);
   PointingData[point_index].clin_el = ClinEl.angle;
@@ -1335,6 +1334,7 @@ void Pointing(void)
   CommandData.mag_az_trim = MagAz.trim;
   CommandData.dgps_az_trim = DGPSAz.trim;
   CommandData.ss_az_trim = SSAz.trim;
+  j++;
 
 }
 

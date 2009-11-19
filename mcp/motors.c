@@ -44,6 +44,9 @@ int rw_motor_index;
 struct ElevMotorDataStruct ElevMotorData[3]; // defined in point_struct.h
 int elev_motor_index; 
 
+struct PivotMotorDataStruct PivotMotorData[3]; // defined in point_struct.h
+int pivot_motor_index; 
+
 struct AxesModeStruct axes_mode = {
   .el_dir = 1,
   .az_dir = 0
@@ -88,7 +91,7 @@ void closeMotors()
   reactinfo.closing=1;
   elevinfo.closing=1; // Tell the serial threads to shut down.
   pivotinfo.closing=1;
-  while(reactinfo.open==1 && elevinfo.open==1) usleep(10000);
+  while(reactinfo.open==1 && elevinfo.open==1 && pivotinfo.open==1) usleep(10000);
 }
 
 static int last_mode = -1;
@@ -262,16 +265,19 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
 
     dacAmplAddr[0] = GetNiosAddr("dac1_ampl");
     dacAmplAddr[1] = GetNiosAddr("dac2_ampl");
-    dacAmplAddr[2] = GetNiosAddr("dac3_ampl");
-    dacAmplAddr[3] = GetNiosAddr("dac4_ampl");
-    dacAmplAddr[4] = GetNiosAddr("dac5_ampl");
+    dacAmplAddr[2] = GetNiosAddr("dac3_ampl"); 
+    //    dacAmplAddr[3] = GetNiosAddr("dac4_ampl"); // is now dac_el
+    //    dacAmplAddr[4] = GetNiosAddr("dac5_ampl"); // is now dac_rw
   }
 
   i_point = GETREADINDEX(point_index);
 
+  //TODO need to change the write to the BLASTbus here and in the DSP
+  // code so that it writes a 15 bit number.  Otherwise Narsil shows 
+  // twice the current value and it is rather confusing. 
   //TODO temporary
   if (wait <= 0)
-    for (i=0; i<5; i++)
+    for (i=0; i<3; i++)
       if (CommandData.Temporary.setLevel[i]) {
 	WriteData(dacAmplAddr[i], CommandData.Temporary.dac_out[i], NIOS_QUEUE);
 	CommandData.Temporary.setLevel[i] = 0;
@@ -1408,10 +1414,12 @@ void* elevComm(void* arg)
 
 void* pivotComm(void* arg) 
 {
-  int n=0;
+  int n=0, j=0;
   int i;
   long unsigned pos_raw;
   int firsttime=1;
+  unsigned int dp_stat_raw=0, db_stat_raw=0, ds1_stat_raw=0;
+  short int current_raw=0;
 
   // Initialize values in the pivotinfo structure.                            
   pivotinfo.open=0;
@@ -1421,15 +1429,27 @@ void* pivotComm(void* arg)
   pivotinfo.closing=0;
   pivotinfo.disabled=10;
   pivotinfo.bdrate=9600;
+  pivotinfo.writeset=0;
   strncpy(pivotinfo.motorstr,"pivot",6);
+
+  // Initialize structure PivotMotorData.  Follows what was done in dgps.c
+  PivotMotorData[0].res_piv_raw=0;
+  PivotMotorData[0].current=0;
+  PivotMotorData[0].db_stat=0;
+  PivotMotorData[0].dp_stat=0;
+  PivotMotorData[0].ds1_stat=0;
+
 
   bprintf(info,"pivotComm: Bringing the pivot drive online.");
   i=0;
 
+  // Initialize structure PivotMotorData.  Follows what was done in dgps.c
+  //  PivotMotorData[0].res_piv_raw=0.0;
+
   // Try to open the port.
   while(pivotinfo.open==0) {
     if (i==0) {
-      bputs(info,"pivotComm: Elevation drive serial port is not open. Attempting to open a conection.\n");
+      bputs(info,"pivotComm: Pivot serial port is not open. Attempting to open a conection.\n");
     }
     open_amc(PIVOT_DEVICE,&pivotinfo); // sets pivotinfo.open=1 if sucessful
 
@@ -1441,8 +1461,62 @@ void* pivotComm(void* arg)
     if(pivotinfo.open==1) bprintf(info,"pivotComm: Opened the serial port on attempt number %i",i); 
     else sleep(1);
   }
+
+  // Configure the serial port.                                               
+  configure_amc(&pivotinfo);
+
   while(1) {
-    sleep(1);
+    if (pivotinfo.closing==1){
+      close_amc(&pivotinfo);
+      usleep(10000);
+    } else if (pivotinfo.init==1) {
+      if(CommandData.disable_az==0 && pivotinfo.disabled == 1) {
+	bprintf(info,"pivotComm: Attempting to enable the pivot motor contoller.");
+	n=enableAMC(&pivotinfo);
+	if(n==0) {
+	  bprintf(info,"pivotComm: Pivot motor is now enabled");
+	  pivotinfo.disabled=0;
+	}
+      }
+      if(CommandData.disable_az==1 && pivotinfo.disabled==0) {
+	bprintf(info,"pivotComm: Attempting to disable the pivot motor controller.");
+	n=disableAMC(&pivotinfo);
+	if(n==0){    
+	  bprintf(info,"pivotComm: Pivot motor controller is now disabled.");
+	  pivotinfo.disabled=1;
+	}
+      } 
+
+      pos_raw=getAMCResolver(&pivotinfo);
+      //      bprintf(info,"pivotComm: Resolver Position is: %i",pos_raw);
+      PivotMotorData[pivot_motor_index].res_piv_raw=((double) pos_raw)/PIV_RES_CTS*360.0; 
+
+      j=j%4;
+      switch(j) {
+      case 0:
+	current_raw=queryAMCInd(16,3,1,&pivotinfo);
+        PivotMotorData[pivot_motor_index].current=((double)current_raw)/8192.0*20.0; // *2^13 / peak drive current
+	                                                                             // Units are Amps
+	//        bprintf(info,"pivotComm: current_raw= %i, current= %f",current_raw,PivotMotorData[pivot_motor_index].current);
+	break;
+      case 1:
+	db_stat_raw=queryAMCInd(2,0,1,&pivotinfo);
+        PivotMotorData[pivot_motor_index].db_stat=db_stat_raw;
+	break;
+      case 2:
+	dp_stat_raw=queryAMCInd(2,1,1,&pivotinfo);
+        PivotMotorData[pivot_motor_index].dp_stat=dp_stat_raw;
+	break;
+      case 3:
+	ds1_stat_raw=queryAMCInd(2,3,1,&pivotinfo);
+        PivotMotorData[pivot_motor_index].ds1_stat=ds1_stat_raw;
+	break;
+      }
+      j++;
+      pivot_motor_index=INC_INDEX(pivot_motor_index);
+    } else {
+      usleep(10000);
+    }
   }
   return NULL;
 }

@@ -772,17 +772,24 @@ static void StoreData(int index)
   static struct NiosStruct *rwEncVel;
   static struct NiosStruct *rwTempAddr;
   static struct NiosStruct *rwIRawAddr;
-  static struct NiosStruct *rwStatAddr;
+  static struct NiosStruct *rwStat1Addr;
+  static struct NiosStruct *rwStat2Addr;
   static struct NiosStruct *rwFaultAddr;
   static struct NiosStruct *elevEncPos;
   static struct NiosStruct *elTempAddr;
   static struct NiosStruct *elIRawAddr;
-  static struct NiosStruct *elStatAddr;
+  static struct NiosStruct *elStat1Addr;
+  static struct NiosStruct *elStat2Addr;
   static struct NiosStruct *elFaultAddr;
+  static struct NiosStruct *resPivRawAddr;
+  static struct NiosStruct *pivIRawAddr;
+  static struct NiosStruct *pivDStatAddr;
+  static struct NiosStruct *pivS1StatAddr;
 
 
   int i_rw_motors;
   int i_elev_motors;
+  int i_pivot_motors;
   int i_ss;
   int i_point;
   int i_dgps;
@@ -924,12 +931,18 @@ static void StoreData(int index)
     elevEncPos = GetNiosAddr("enc_el_raw");
     rwTempAddr = GetNiosAddr("rw_temp");
     rwIRawAddr = GetNiosAddr("rw_i_raw");
-    rwStatAddr = GetNiosAddr("rw_stat");
+    rwStat1Addr = GetNiosAddr("rw_stat_1");
+    rwStat2Addr = GetNiosAddr("rw_stat_2");
     rwFaultAddr = GetNiosAddr("rw_fault");
     elTempAddr = GetNiosAddr("el_temp");
     elIRawAddr = GetNiosAddr("el_i_raw");
-    elStatAddr = GetNiosAddr("el_stat");
+    elStat1Addr = GetNiosAddr("el_stat_1");
+    elStat2Addr = GetNiosAddr("el_stat_2");
     elFaultAddr = GetNiosAddr("el_fault");
+    resPivRawAddr = GetNiosAddr("res_piv_raw");
+    pivIRawAddr = GetNiosAddr("piv_i_raw");
+    pivDStatAddr = GetNiosAddr("piv_d_stat");
+    pivS1StatAddr = GetNiosAddr("piv_s1_stat");
 
   }
 
@@ -937,6 +950,7 @@ static void StoreData(int index)
   i_ss = GETREADINDEX(ss_index);
   i_rw_motors = GETREADINDEX(rw_motor_index);
   i_elev_motors = GETREADINDEX(elev_motor_index);
+  i_pivot_motors = GETREADINDEX(pivot_motor_index);
   /* scan modes */
   WriteData(azModeAddr, axes_mode.az_mode, NIOS_QUEUE);
   WriteData(elModeAddr, axes_mode.el_mode, NIOS_QUEUE);
@@ -1162,13 +1176,19 @@ static void StoreData(int index)
   WriteData(elevEncPos,((long int)(ElevMotorData[i_elev_motors].enc_el_raw*DEG2I)), NIOS_QUEUE);
   WriteData(rwTempAddr,RWMotorData[i_rw_motors].temp,NIOS_QUEUE);
   WriteData(rwIRawAddr,((int)(RWMotorData[i_rw_motors].current/30.0*32768.0)),NIOS_QUEUE);
-  WriteData(rwStatAddr,RWMotorData[i_rw_motors].status,NIOS_QUEUE);
+  WriteData(rwStat1Addr,(RWMotorData[i_rw_motors].status & 0xffff),NIOS_QUEUE);
+  WriteData(rwStat2Addr,((RWMotorData[i_rw_motors].status & 0xffff0000)>> 16),NIOS_QUEUE);
   WriteData(rwFaultAddr,RWMotorData[i_rw_motors].fault_reg,NIOS_QUEUE);
   WriteData(elTempAddr,ElevMotorData[i_elev_motors].temp,NIOS_QUEUE);
   WriteData(elIRawAddr,((int)(ElevMotorData[i_elev_motors].current/30.0*32768.0)),NIOS_QUEUE);
-  WriteData(elStatAddr,ElevMotorData[i_elev_motors].status,NIOS_QUEUE);
+  WriteData(elStat1Addr,(ElevMotorData[i_elev_motors].status & 0xffff),NIOS_QUEUE);
+  WriteData(elStat2Addr,((ElevMotorData[i_elev_motors].status & 0xffff0000)>> 16),NIOS_QUEUE);
   WriteData(elFaultAddr,ElevMotorData[i_elev_motors].fault_reg,NIOS_QUEUE);
-
+  WriteData(resPivRawAddr,PivotMotorData[i_pivot_motors].res_piv_raw*DEG2I,NIOS_QUEUE);
+  WriteData(pivIRawAddr,PivotMotorData[i_pivot_motors].current*32768.0/20.0,NIOS_QUEUE);
+  WriteData(pivDStatAddr,(PivotMotorData[i_pivot_motors].db_stat & 0xff)
+                 +((PivotMotorData[i_pivot_motors].dp_stat & 0xff)<< 8),NIOS_QUEUE);
+  WriteData(pivS1StatAddr,PivotMotorData[i_pivot_motors].ds1_stat,NIOS_QUEUE);
   StoreStarCameraData(index, 0); /* write ISC data */
   StoreStarCameraData(index, 1); /* write OSC data */
 }

@@ -103,6 +103,8 @@ union DerivedUnion DerivedChannels[] = {
       "DISABLE_AZ",
       "FORCE_EL"
       ),
+
+#if 0
   BITFIELD("sensor_reset",
       "",
       "",
@@ -113,6 +115,7 @@ union DerivedUnion DerivedChannels[] = {
       "SS_RESET",
       "OSC_RESET"
       ),
+#endif
 
   /* ISC and OSC */
   COMMENT("Star Camera State"),
@@ -144,6 +147,7 @@ union DerivedUnion DerivedChannels[] = {
 
   COMMENT("ACS Digital Signals"),
 
+#if 0 
   BITFIELD("ifpm_bits",
       "",
       "",
@@ -152,6 +156,7 @@ union DerivedUnion DerivedChannels[] = {
       "BAL2_ON",
       "BAL2_REV"
       ),
+#endif
 #endif
 
   COMMENT("Lock Motor/Actuators"),
@@ -189,6 +194,122 @@ union DerivedUnion DerivedChannels[] = {
       "ACT2_FAULT"
       ),
 
+  BITFIELD("el_stat_1",
+	   "EL_SHORT_CIRCUIT",
+	   "EL_AMP_OVER_TEMP",
+	   "EL_OVER_VOLT",
+	   "EL_UNDER_VOLT",
+	   "",
+	   "EL_FEEDBACK_ERR",
+	   "EL_MOT_PHASE_ERR",
+	   "EL_I_LIMITED",
+	   "EL_VOLT_LIM",
+	   "",
+           "",
+	   "EL_AMP_DISAB_HWARE",
+	   "EL_AMP_DISAB_SWARE",	
+	   "EL_ATTEMPT_STOP",
+	   "EL_MOT_BREAK_ACTIVE",
+	   "EL_PWM_OUT_DISABLED"
+	   ),
+  BITFIELD("el_stat_2",
+	   "EL_POS_SOFT_LIM",
+	   "EL_NEG_SOFT_LIM",
+	   "EL_FOLLOW_ERR",
+	   "EL_FOLLOW_WARN",
+	   "EL_AMP_HAS_RESET",
+	   "EL_ENCODER_WRAP",
+	   "EL_AMP_FAULT",
+	   "EL_VEL_LIMITED",
+	   "EL_ACCEL_LIMITED",
+	   "",
+	   "",
+	   "EL_IN_MOTION",
+	   "EL_VEL_OUT_TRACK_W",
+	   "EL_PHASE_NOT_INIT",
+	   "",
+	   ""
+   ),
+  BITFIELD("rw_stat_1",
+	   "RW_SHORT_CIRCUIT",
+	   "RW_AMP_OVER_TEMP",
+	   "RW_OVER_VOLT",
+	   "RW_UNDER_VOLT",
+	   "",
+	   "RW_FEEDBACK_ERR",
+	   "RW_MOT_PHASE_ERR",
+	   "RW_I_LIMITED",
+	   "RW_VOLT_LIM",
+	   "",
+           "",
+	   "RW_AMP_DISAB_HWARE",
+	   "RW_AMP_DISAB_SWARE",	
+	   "RW_ATTEMPT_STOP",
+	   "RW_MOT_BREAK_ACTIVE",
+	   "RW_PWM_OUT_DISABLED"
+   ),
+  BITFIELD("rw_stat_2",
+	   "RW_POS_SOFT_LIM",
+	   "RW_NEG_SOFT_LIM",
+	   "RW_FOLLOW_ERR",
+	   "RW_FOLLOW_WARN",
+	   "RW_AMP_HAS_RESET",
+	   "RW_ENCODER_WRAP",
+	   "RW_AMP_FAULT",
+	   "RW_VEL_LIMITED",
+	   "RW_ACCEL_LIMITED",
+	   "",
+	   "",
+	   "RW_IN_MOTION",
+	   "RW_VEL_OUT_TRACK_W",
+	   "RW_PHASE_NOT_INIT",
+	   "",
+	   ""
+   ),
+  BITFIELD("el_fault",
+	   "EL_F_CRC",
+	   "EL_F_AD_OFF_RANGE",
+	   "EL_F_SHORT_CIRC",
+	   "EL_F_AMP_OVER_TEMP",
+	   "",
+	   "EL_F_OVER_VOLT",
+	   "EL_F_UNDER_VOLT",
+	   "EL_F_FEEDBACK_ERR",
+	   "EL_F_MOT_PHASE_ERR",
+	   "EL_F_FOLL_ERR",
+	   "EL_F_OVER_CURR"
+	   ),
+  BITFIELD("rw_fault",
+	   "RW_F_CRC",
+	   "RW_F_AD_OFF_RANGE",
+	   "RW_F_SHORT_CIRC",
+	   "RW_F_AMP_OVER_TEMP",
+	   "",
+	   "RW_F_OVER_VOLT",
+	   "RW_F_UNDER_VOLT",
+	   "RW_F_FEEDBACK_ERR",
+	   "RW_F_MOT_PHASE_ERR",
+	   "RW_F_FOLL_ERR",
+	   "RW_F_OVER_CURR"
+	   ),
+  BITFIELD("piv_d_stat",
+	   "PIV_BRIDGE_ENAB",
+	   "PIV_DYN_BRAKE_ENAB",
+	   "PIV_SHUNT_EN",
+	   "PIV_POS_STOP_ENAB",
+	   "PIV_NEG_STOP_ENAB",
+	   "PIV_POS_TORQ_INHIB",
+	   "PIV_NEG_TORQ_INHIB",
+	   "PIV_EXT_BRAKE",
+	   "PIV_DR_RESET",
+	   "PIV_DR_INTER_ERR",
+	   "PIV_DR_SHORT_CIRC",
+	   "PIV_DR_I_OVERSHOOT",
+	   "PIV_DR_UNDER_V",
+	   "PIV_DR_OVER_V",
+	   "PIV_DR_OVER_TEMP",
+	   ""
+	   ),
   /* CRYO */
 
 #if 0

@@ -169,22 +169,8 @@ void send_copleycmd(char cmd[], struct MotorInfoStruct* copleyinfo)
 #endif // DEBUG_COPLEY
 
   n = write(copleyinfo->fd,cmd,l);
-  if (n < 0)
+  if (n < 0) {
     bprintf(err,"%sComm send_copleycmd: failed.",copleyinfo->motorstr);
-
-  switch( copleyinfo->bdrate) {
-  case 9600:
-    usleep((12*COPLEYCOM_MUS_WAIT));
-    break;
-  case 38400:
-    //usleep((3*COPLEYCOM_MUS_WAIT));
-    break;
-  case 115200:
-    usleep(COPLEYCOM_MUS_WAIT);
-    break;
-  default:
-    usleep((12*COPLEYCOM_MUS_WAIT));
-    break;
   }
 }
 
@@ -241,12 +227,11 @@ void configure_copley(struct MotorInfoStruct* copleyinfo)
       bprintf(info, "%sComm configure_copley: Controller does not respond to a 9600 baud rate.",copleyinfo->motorstr);
       bprintf(info, "%sComm configure_copley: Setting Baud rate to 38400",copleyinfo->motorstr);
       setopts_copley(38400,copleyinfo);
-      setopts_copley(38400,copleyinfo);
       copleyinfo->bdrate=38400;
       i = ping_copley(copleyinfo);
       if(i > 0)
 	{
-	  bprintf(info, "%sComm configure_copley: Controller now responds to a 115200 baud rate.",copleyinfo->motorstr);
+	  bprintf(info, "%sComm configure_copley: Controller now responds to a 38400 baud rate.",copleyinfo->motorstr);
           copleyinfo->init=1;
           copleyinfo->err=0;
           return;
@@ -307,7 +292,6 @@ int check_copleyready(enum CheckType check, struct MotorInfoStruct* copleyinfo)
   default:
     berror(err, "%sComm check_rwready: CheckType is in valid.",copleyinfo->motorstr);
     return -3;
-    return -3;
     break;
   }
   /* Was there an error? */
@@ -345,7 +329,7 @@ int check_copleyready(enum CheckType check, struct MotorInfoStruct* copleyinfo)
 int ping_copley(struct MotorInfoStruct* copleyinfo)
 {
   char outs[255],outs_noCR[255];
-  int n;
+  int n,l=0;
   memset(outs,'\0',255);
   n = check_copleyready(comm,copleyinfo);
   if(n >= 0)
@@ -359,15 +343,16 @@ int ping_copley(struct MotorInfoStruct* copleyinfo)
       return -5;
     }
   // mark
-  n = read_line(outs,copleyinfo);
+  n = readCopleyResp(outs,&l,copleyinfo);
   if(n >= 0){
     copyouts(outs, outs_noCR);  
     bprintf(info,"%sComm ping_copley: Controller response= %s\n",copleyinfo->motorstr,outs_noCR);
     bprintf(info,"%sComm ping_copley: First character= %c\n",copleyinfo->motorstr,outs_noCR[0]);
-    if(outs[0]== 'v' || outs[0]== 'e')
-      {
-	return 1;
-      }
+    if(outs[0]== 'v')  {
+      return 1;
+    } else if(outs[0]== 'e') {
+      return 1;
+    }
     else
       {
 	bprintf(warning,"%sComm ping_copley: The controller response is incorrect.",copleyinfo->motorstr);
@@ -392,10 +377,10 @@ int ping_copley(struct MotorInfoStruct* copleyinfo)
 int checkCopleyResp(struct MotorInfoStruct* copleyinfo)
 {
   char outs[255],outs_noCR[255]; 
-  int n,m,i,errcode;
+  int n,m,i,errcode,l=0;
   char* ptr;
   memset(outs,'\0',255);
-  n = read_line(outs,copleyinfo);
+  n = readCopleyResp(outs,&l,copleyinfo);
   copyouts(outs, outs_noCR);
   if(n<0)
     {
@@ -441,21 +426,6 @@ int checkCopleyResp(struct MotorInfoStruct* copleyinfo)
 
 // Read from the controller.
 // Print the controller output
-int readCopleyResp(struct MotorInfoStruct* copleyinfo)
-{
-  char outs[255],outs2[255];
-  int n;
-  memset(outs,'\0',255);
-  n = read_line(outs,copleyinfo);
-  if(n<0)
-    {
-      berror(warning,"%sComm readCopleyResp: Reading controller response failed!",copleyinfo->motorstr);
-      return n;
-    }
-  copyouts(outs, outs2);
-  bprintf(info,"%sComm readCopleyResp: Controller response= %s\n",copleyinfo->motorstr,outs2);
-  return n;
-}
 
 int enableCopley(struct MotorInfoStruct* copleyinfo)
 {
@@ -493,7 +463,7 @@ int disableCopley(struct MotorInfoStruct* copleyinfo)
 
 long int getCopleyVel(struct MotorInfoStruct* copleyinfo)
 {
-  int n;
+  int n,l=0;
   char outs[255];
   char outs_noCR[255];
   long int vel;
@@ -517,12 +487,12 @@ long int getCopleyVel(struct MotorInfoStruct* copleyinfo)
       return -5;
     }
 
-  n = read_line(outs,copleyinfo);
-  if(n >= 0)
+  n = readCopleyResp(outs,&l,copleyinfo);
+  if(n == 0)
     {
       //      bprintf(info,"getCopleyVel n=%i",n);
       //      n = read(copleyinfo->fd,outs,254);
-      outs[n] = '\0';
+      outs[l] = '\0';
                   copyouts(outs, outs_noCR);
 		  //                  bprintf(info,"%sComm getCopleyVel: Controller response= %s\n",copleyinfo->motorstr,outs_noCR);
 		  //             bprintf(info,"copleyComm getCopleyVel: First character= %c\n",outs[0]);
@@ -552,7 +522,7 @@ long int getCopleyVel(struct MotorInfoStruct* copleyinfo)
 }
 long int queryCopleyInd(char ind[],struct MotorInfoStruct* copleyinfo)
 {
-  int n,m,i=0;
+  int n,m,i=0,l=0;
   char outs[255];
   char cmd[255];
   char outs_noCR[255];
@@ -566,33 +536,30 @@ long int queryCopleyInd(char ind[],struct MotorInfoStruct* copleyinfo)
     }
   n = check_copleyready(comm,copleyinfo);
 
-  if(n >= 0)
-    {
-      //      bprintf(info,"copleyComm configure_copley: Ready to send command!");
-      m = strnlen(ind,254);
-      if(m != 0 && m!= 254) {
-	strncpy(cmd, "g r",3);
-	strncpy(cmd+3, ind,m);
-	strncpy(cmd+3+m, "\r\0",2);
-	send_copleycmd(cmd,copleyinfo);
-	//		berror(err,"%sComm queryCopleyInd: cmd= %s.",copleyinfo->motorstr,cmd);        
-      } else {
-	berror(err,"%sComm queryCopleyInd: Invalid index to query.",copleyinfo->motorstr);
-	return -4;
-      }
-    }  
-  else
-    {
-      berror(err,"%sComm queryCopleyInd: Serial port is not ready to command.",copleyinfo->motorstr);
-      return -5;
+  if(n >= 0) {
+    //      bprintf(info,"copleyComm configure_copley: Ready to send command!");
+    m = strnlen(ind,254);
+    if(m != 0 && m!= 254) {
+      strncpy(cmd, "g r",3);
+      strncpy(cmd+3, ind,m);
+      strncpy(cmd+3+m, "\r\0",2);
+      send_copleycmd(cmd,copleyinfo);
+      //		berror(err,"%sComm queryCopleyInd: cmd= %s.",copleyinfo->motorstr,cmd);        
+    } else {
+      berror(err,"%sComm queryCopleyInd: Invalid index to query.",copleyinfo->motorstr);
+      return -4;
     }
+  } else {
+    berror(err,"%sComm queryCopleyInd: Serial port is not ready to command.",copleyinfo->motorstr);
+    return -5;
+  }
 
-  n = read_line(outs,copleyinfo);
-  if(n >= 0)
+  n = readCopleyResp(outs,&l,copleyinfo);
+  if(n == 0)
     {
       //      bprintf(info,"queryCopleyInd n=%i",n);
       //      n = read(copleyinfo->fd,outs,254);
-      outs[n] = '\0';
+      outs[l] = '\0';
       copyouts(outs, outs_noCR);
       //                  bprintf(info,"%sComm queryCopleyInd: Controller response= %s\n",copleyinfo->motorstr,outs_noCR);
       //             bprintf(info,"copleyComm queryCopleyInd: First character= %c\n",outs[0]);
@@ -623,7 +590,7 @@ long int queryCopleyInd(char ind[],struct MotorInfoStruct* copleyinfo)
 
 long int getCopleyPos(struct MotorInfoStruct* copleyinfo)
 {
-  int n;
+  int n,l=0;
   char outs[255];
   long int pos;
   memset(outs,'\0',255);
@@ -638,9 +605,9 @@ long int getCopleyPos(struct MotorInfoStruct* copleyinfo)
     berror(err,"%sComm getCopleyPos: Serial port is not ready to command.",copleyinfo->motorstr);
     return -5;
   }
-  n = read_line(outs,copleyinfo);
-  if(n >= 0) {
-    outs[n] = '\0';
+  n = readCopleyResp(outs,&l,copleyinfo);
+  if(n == 0) {
+    outs[l] = '\0';
     //     bprintf(info,"%sComm getCopleyPos: Controller response= %s\n",copleyinfo->motorstr,outs);
     //            bprintf(info,"copleyComm getCopleyPos: First character= %c\n",outs[0]);
     if(outs[0]== 'v') {
@@ -661,7 +628,7 @@ long int getCopleyPos(struct MotorInfoStruct* copleyinfo)
   }
 }
 
-int read_line(char *outs,struct MotorInfoStruct* copleyinfo)
+int readCopleyResp(char *outs,int *l,struct MotorInfoStruct* copleyinfo)
 {
   int n;
   int i=0;
@@ -680,10 +647,10 @@ int read_line(char *outs,struct MotorInfoStruct* copleyinfo)
     } else {
       if(timeout==timeoutlim){ // If there is no data after two tries return an.
 	if(j==timeoutlim) {// The controller never responded.
-	  bprintf(err,"%sComm read_line: The controller did not respond.",copleyinfo->motorstr);
+	  bprintf(err,"%sComm readCopleyResp: The controller did not respond.",copleyinfo->motorstr);
 	  return -1;
 	} else {
- 	  bprintf(err,"%sComm read_line: Did not find the appropriate response end character.",copleyinfo->motorstr);
+ 	  bprintf(err,"%sComm readCopleyResp: Did not find the appropriate response end character.",copleyinfo->motorstr);
 	  return -2; // For some reason the controller never found the end character.
 	             // which means the response was probably garbage. 
 
@@ -694,7 +661,8 @@ int read_line(char *outs,struct MotorInfoStruct* copleyinfo)
     }
     j++;
   }
-  if(i==0) bprintf(warning,"%sComm read_line: Read 0 characters!!!",copleyinfo->motorstr);
-  return i;
+  if(i==0) bprintf(warning,"%sComm readCopleyResp: Read 0 characters!!!",copleyinfo->motorstr);
+  *l=i;
+  return 0;
 }
 

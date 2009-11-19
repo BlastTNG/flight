@@ -21,14 +21,14 @@
 // controller is rated to. Note that we will *never* ask for this much 
 // current, but this value is needed for conversion of the requested 
 // current to serial format in setRWCurrent.
-#define PEAK_AMC_CURRENT 20.0 
+#define PEAK_AMC_CURRENT 10.0 
 
 // NOTE: The actual PEAK RW CURRENT IS 20 A, but that gives a lower than 
 // expected current when used by setRWCur.  I have no idea why, maybe
 // some kind of conversion from Peak to RMS?
 
+#define PIV_RES_CTS 16384.0
 
-#define DISABLE_AMC // Keeps the reaction wheel in disabled mode.
 //#define DEBUG_AMC
 
 struct SerialCommandHeadStruct {
@@ -85,10 +85,10 @@ void configure_amc(struct MotorInfoStruct* amcinfo);
 
 int check_amcready(enum CheckType check, struct MotorInfoStruct* amcinfo);
 
-int sendThisCommand(int index,int offset,int value,int nwords,enum CmdorQuery type, struct MotorInfoStruct* amcinfo);
-int queryind(int index, int offset, int nwords, struct MotorInfoStruct* amcinfo);
+int send_amccmd(int index,int offset,int value,int nwords,enum CmdorQuery type, struct MotorInfoStruct* amcinfo);
+int queryAMCInd(int index, int offset, int nwords, struct MotorInfoStruct* amcinfo);
 int areWeDisabled(struct MotorInfoStruct* amcinfo);
-int readAMCResp(int seq, char *response, int *l, struct MotorInfoStruct* amcinfo);
+int readAMCResp(int seq, unsigned char *outs, int *l, struct MotorInfoStruct* amcinfo);
 
 int getAMCResp(int seq, int *val, int *l, struct MotorInfoStruct* amcinfo);
 
@@ -99,5 +99,5 @@ void checkAMCStatus(int stat, struct MotorInfoStruct* amcinfo);
 void setWriteAccess(struct MotorInfoStruct* amcinfo);
 int disableAMC(struct MotorInfoStruct* amcinfo);
 int enableAMC(struct MotorInfoStruct* amcinfo);
-
+int getAMCResolver(struct MotorInfoStruct* amcinfo);
 #endif
