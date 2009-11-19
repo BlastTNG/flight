@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.13 $";
+const char *command_list_serial = "$Revision: 4.14 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Cool (empty)",
@@ -951,7 +951,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Offset", -4096, 4096, 'i', "OSC_CCD_OFFSET"}
     }
   },
-  {COMMAND(osc_maxage), "set maximum delay between trigger and solution (ms)", GR_ISC_PARAM, 1,
+  {COMMAND(osc_maxage), "set maximum delay between trigger and solution (ms)", GR_OSC_PARAM, 1,
     {
       {"Max Age", 0, 10000, 'i', "OSC_MAX_AGE"},
     }
