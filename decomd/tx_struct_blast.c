@@ -160,8 +160,8 @@ struct ChannelStruct WideSlowChannels[] = {
   {"td_charcoal",   'r', CRYO_A2, 46,           CRYO_D_M,        CRYO_D_B, 'U', U_NONE},
   {"td_ln_filt",    'r', CRYO_A2, 48,           CRYO_D_M,        CRYO_D_B, 'U', U_NONE},
 
-  {"cpu_time",     'w', LOOP1,  0,                1.0,             0.0, 'U', U_NONE},
-  {"cpu_usec",     'w', LOOP4, 58,                1.0,             0.0, 'U', U_NONE},
+  {"cpu_time",     'w', LOOP1,  0,                1.0,             0.0, 'U', U_NONE}, // could delete and rename cpu_usec to time_usec,
+  {"cpu_usec",     'w', LOOP4, 58,                1.0,             0.0, 'U', U_NONE}, // but look in derived.c at Time...
   {"sip_time",     'w', LOOP1,  2,                1.0,             0.0, 'U', U_NONE},
   {"dgps_time",    'w', LOOP1,  4,                1.0,             0.0, 'U', U_NONE},
   {"lst",          'w', LOOP1,  6,         1.0/3600.0,             0.0, 'U', U_NONE},
@@ -190,7 +190,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"act2_enc",     'w', LOOP5, 52,                1.0,  -ACTENC_OFFSET, 'S', U_NONE},
   {"sec_goal",     'w', LOOP6, 30,                1.0,             0.0, 'S', U_NONE},
   {"abs_focus",    'w', LOOP6, 32,                1.0,             0.0, 'S', U_NONE},
-  {"sched_lst",    'w', LOOP6, 56,                1.0,             0.0, 'U', U_NONE},  
+  {"sched_lst",    'w', LOOP6, 56,                1.0,             0.0, 'U', U_NONE},  // ls day
 
   END_OF_CHANNELS
 };
@@ -338,16 +338,16 @@ struct ChannelStruct SlowChannels[] = {
 
   /* LOOP1 0-13 are wide */
   {"lokmot_pin",   'w', LOOP1, 16,                1.0,             0.0, 'u', U_NONE},
-  {"isc_fpulse",   'w', LOOP1, 17,                10.,             0.0, 'u', U_NONE},
+  {"isc_fpulse",   'w', LOOP1, 17,                10.,             0.0, 'u', U_NONE}, // apparently not used
   {"cal_repeat",   'w', LOOP1, 18,                .20,             0.0, 'u', U_NONE},
-  {"alice_file",   'w', LOOP1, 19,                1.0,             0.0, 'u', U_NONE},
+  {"alice_file",   'w', LOOP1, 19,                1.0,             0.0, 'u', U_NONE}, // which compressed dl description file
   {"timeout",      'w', LOOP1, 20,                1.0,             0.0, 'u', U_NONE},
   {"sun_az",       'w', LOOP1, 21,              I2DEG,             0.0, 'u', U_NONE},
   {"lvdt_low",     'w', LOOP1, 22,                1.0,             0.0, 's', U_NONE},
   {"sam_i_am",     'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE},
   {"cryostate",    'w', LOOP1, 24,                1.0,             0.0, 'u', U_NONE},
   {"cpu_temp1",    'w', LOOP1, 26,               0.01,             0.0, 'u', U_NONE},
-  {"mag_model",    'w', LOOP1, 27,              I2DEG,             0.0, 'u', U_NONE},
+  {"mag_model",    'w', LOOP1, 27,              I2DEG,             0.0, 'u', U_NONE}, // magnetic declination
   {"sensor_veto",  'w', LOOP1, 28,                1.0,             0.0, 'u', U_NONE},
   {"bal_on",       'w', LOOP1, 29,           1./1648.,             0.0, 'u', U_NONE},
   {"bal_off",      'w', LOOP1, 30,           1./1648.,             0.0, 'u', U_NONE},
@@ -373,7 +373,7 @@ struct ChannelStruct SlowChannels[] = {
   //{"outcool_state",'w', LOOP1, 56,                1.0,             0.0, 's', U_NONE},
   {"dgps_n_sat",   'w', LOOP1, 57,                1.0,             0.0, 'u', U_NONE},
   {"disk_free",    'w', LOOP1, 58,             1./250,             0.0, 'u', U_NONE},
-  {"p_mode",       'w', LOOP1, 59,                  1,             0.0, 'u', U_NONE},
+  {"p_mode",       'w', LOOP1, 59,                  1,             0.0, 'u', U_NONE}, // pointing mode
   {"p_x_deg",      'w', LOOP1, 60,              I2DEG,             0.0, 'u', U_NONE},
   {"p_y",          'w', LOOP1, 61,              I2DEG,             0.0, 's', U_NONE},
   {"p_vaz",        'w', LOOP1, 62,              I2VEL,             0.0, 'u', U_NONE},
@@ -392,7 +392,7 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_blob02_y", 'w', LOOP2, 10,             1./40.,             0.0, 'u', U_NONE},
   {"isc_blob02_f", 'w', LOOP2, 11,                1.0,             0.0, 'u', U_NONE},
   {"isc_blob02_s", 'w', LOOP2, 12,       1000./65536.,             0.0, 'u', U_NONE},
-  {"p_w",          'w', LOOP2, 13,              I2DEG,             0.0, 'u', U_NONE},
+  {"p_w",          'w', LOOP2, 13,              I2DEG,             0.0, 'u', U_NONE}, // pointing scan width
   {"isc_rtol",     'w', LOOP2, 14,              I2DEG,             0.0, 'u', U_NONE},
   {"isc_apert",    'w', LOOP2, 15,                1.0,             0.0, 'u', U_NONE},
   {"isc_maglimit", 'w', LOOP2, 16,           1./1000.,             0.0, 'u', U_NONE},
@@ -459,7 +459,7 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_blob02_s", 'w', LOOP3, 24,             1./40.,             0.0, 'u', U_NONE},
   {"osc_mapmean",  'w', LOOP3, 25,                 1.,             0.0, 'u', U_NONE},
   /* LOOP3 26-29 are wide */
-  {"osc_fpulse",   'w', LOOP3, 30,                10.,             0.0, 'u', U_NONE},
+  {"osc_fpulse",   'w', LOOP3, 30,                10.,             0.0, 'u', U_NONE}, //apparently not used
   /* LOOP3 31-32 are wide */
   {"osc_az",       'w', LOOP3, 33,              I2DEG,             0.0, 'u', U_NONE},
   {"osc_el",       'w', LOOP3, 34,              I2DEG,             0.0, 'u', U_NONE},
@@ -529,12 +529,12 @@ struct ChannelStruct SlowChannels[] = {
   {"t_gy_set",     'w', LOOP4, 36,    (100.0/32768.0),             0.0, 'u', U_NONE},
   {"gy_h_age",     'w', LOOP4, 37,                1.0,             0.0, 'u', U_NONE},
   {"gy_h_hist",    'w', LOOP4, 38,    (100.0/32768.0),             0.0, 'u', U_NONE},
-  {"incool_state", 'w', LOOP4, 39,                1.0,             0.0, 's', U_NONE},
-  {"apcu_trim",    'w', LOOP4, 40,               0.01,             0.0, 's', U_NONE},
-  {"dpcu_trim",    'w', LOOP4, 41,               0.01,             0.0, 's', U_NONE},
-  {"apcu_auto",    'w', LOOP4, 42,                1.0,             0.0, 'u', U_NONE},
-  {"dpcu_auto",    'w', LOOP4, 43,                1.0,             0.0, 'u', U_NONE},
-  {"p_ra_1",       'w', LOOP4, 44,                I2H,             0.0, 'u', U_NONE},
+  //{"incool_state", 'w', LOOP4, 39,                1.0,             0.0, 's', U_NONE}, // not used any more
+  {"apcu_trim",    'w', LOOP4, 40,               0.01,             0.0, 's', U_NONE}, // to be depricated
+  {"dpcu_trim",    'w', LOOP4, 41,               0.01,             0.0, 's', U_NONE}, // to be depricated
+  {"apcu_auto",    'w', LOOP4, 42,                1.0,             0.0, 'u', U_NONE}, // to be depricated
+  {"dpcu_auto",    'w', LOOP4, 43,                1.0,             0.0, 'u', U_NONE}, // to be depricated
+  {"p_ra_1",       'w', LOOP4, 44,                I2H,             0.0, 'u', U_NONE}, // pointing mode coordinates
   {"p_dec_1",      'w', LOOP4, 45,              I2DEG,             0.0, 's', U_NONE},
   {"p_ra_2",       'w', LOOP4, 46,                I2H,             0.0, 'u', U_NONE},
   {"p_dec_2",      'w', LOOP4, 47,              I2DEG,             0.0, 's', U_NONE},
@@ -552,7 +552,7 @@ struct ChannelStruct SlowChannels[] = {
   {"dgps_az_raw",  'w', LOOP4, 60,              I2DEG,             0.0, 'u', U_NONE},
   {"bal_gain",     'w', LOOP4, 61,            1/1000.,             0.0, 'u', U_NONE},
   {"clin_el",      'w', LOOP4, 62,              I2DEG,             0.0, 'u', U_NONE},
-  {"p_h",          'w', LOOP4, 63,              I2DEG,             0.0, 'u', U_NONE},
+  {"p_h",          'w', LOOP4, 63,              I2DEG,             0.0, 'u', U_NONE}, // scan height
 
   {"isc_error",    'w', LOOP5,  0,                 1.,             0.0, 'u', U_NONE},
   {"schedule",     'w', LOOP5,  1,                 1.,              0., 'u', U_NONE},
@@ -580,7 +580,7 @@ struct ChannelStruct SlowChannels[] = {
   {"lock_goal",    'w', LOOP5, 26,                1.0,             0.0, 'u', U_NONE},
   {"seized_bus",   'w', LOOP5, 27,                1.0,             0.0, 's', U_NONE},
   /* LOOP5 29-30 are wide */
-  {"stage_x_vel",  'w', LOOP5, 30,                1.0,             0.0, 'u', U_NONE},
+  {"stage_x_vel",  'w', LOOP5, 30,                1.0,             0.0, 'u', U_NONE}, // not used in flight...
   {"stage_x_stp",  'w', LOOP5, 31,                1.0,             0.0, 'u', U_NONE},
   {"stage_x_str",  'w', LOOP5, 32,                1.0,             0.0, 'u', U_NONE},
   {"stage_y_lim",  'w', LOOP5, 33,                1.0,             0.0, 'u', U_NONE},
@@ -589,7 +589,7 @@ struct ChannelStruct SlowChannels[] = {
   {"stage_y_str",  'w', LOOP5, 37,                1.0,             0.0, 'u', U_NONE},
   {"stage_x_lim",  'w', LOOP5, 38,                1.0,             0.0, 'u', U_NONE},
   {"stage_y_vel",  'w', LOOP5, 39,                1.0,             0.0, 'u', U_NONE},
-  {"he4_lev_old",  'w', LOOP5, 40, -2.87477e-09*65536,      12.3273561, 'u', U_NONE},
+  {"he4_lev_old",  'w', LOOP5, 40, -2.87477e-09*65536,      12.3273561, 'u', U_NONE}, // should be deleted
   {"isc_focus",    'w', LOOP5, 41,                1.0,             0.0, 's', U_NONE},
   /* LOOP5 42-53 are wide */
   {"osc_focus",        'w',LOOP5, 54,             1.0,             0.0, 's', U_NONE},
@@ -681,6 +681,7 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP7 16 is fast narrow*/
   {"isc_max_age",    'w', LOOP7, 18,       1.0,             0.0, 'u', U_T_MS},
   {"osc_max_age",    'w', LOOP7, 19,       1.0,             0.0, 'u', U_T_MS},
+  {"set_reac",       'w', LOOP7, 22,    7.9498291016e-5, -2.605, 'u', U_NONE},
 
  
 #ifndef BOLOTEST
@@ -766,15 +767,14 @@ struct ChannelStruct SlowChannels[] = {
 /* TODO These TMP channels need to be added to correct new nodes, or deleted */
 //  {"t_el_mc",      'r',  TMP1,  3,                    CAL16T(1.0, 0.0), 'u', U_NONE},
 //  {"t_el_mot",     'r',  TMP1,  5,                    CAL16T(1.0, 0.0), 'u', U_NONE},
-  {"apcu_reg",     'w',  TMP1,  4,             0.0382,           27.25, 'u', U_NONE},
-  {"dpcu_reg",     'w',  TMP1,  5,             0.0382,           27.25, 'u', U_NONE},
+  {"apcu_reg",     'w',  TMP1,  4,             0.0382,           27.25, 'u', U_NONE}, // to be deprecated
+  {"dpcu_reg",     'w',  TMP1,  5,             0.0382,           27.25, 'u', U_NONE}, // to be deprecated
 
 //  {"t_reac",       'r',  TMP2, 29,                    CAL16T(1.0, 0.0), 'u', U_NONE},
 //  {"t_reac_mc",    'r',  TMP2, 31,                    CAL16T(1.0, 0.0), 'u', U_NONE},
 
 // TODO: See if these are legacy and can be deleted.
-  {"g_p_pivot",    'w',  TMP2, 15,                1.0,             0.0, 'u', U_NONE},
-  {"set_reac",     'w',  TMP2, 16,    7.9498291016e-5,          -2.605, 'u', U_NONE},
+  {"g_p_pivot",    'w',  TMP2, 15,                1.0,             0.0, 'u', U_NONE}, // laura should fix
 
   /* ACS2 0-1 is wide fast */
   //  {"t_ss_back_mid",'r',  TMP3,  3,                    CAL16T(1.0, 0.0), 'u', U_NONE},
@@ -796,15 +796,15 @@ struct ChannelStruct SlowChannels[] = {
   //  {"t_dpcu",       'r',  TMP4,  7,                    CAL16T(1.0, 0.0), 'u', U_NONE},
   //  {"t_sol_port",   'r',  TMP4,  9,                    CAL16T(1.0, 0.0), 'u', U_NONE},
   //  {"t_sol_stbd",   'r',  TMP4, 11,                    CAL16T(1.0, 0.0), 'u', U_NONE},
-  {"t_batt_acs",   'r',  TMP4, 13,                    CAL16T(1.0, 0.0), 'u', U_NONE},
-  {"t_batt_das",   'r',  TMP4, 15,                    CAL16T(1.0, 0.0), 'u', U_NONE},
+  {"t_batt_acs",   'r',  TMP4, 13,                    CAL16T(1.0, 0.0), 'u', U_NONE}, // to be changed/deprecated
+  {"t_batt_das",   'r',  TMP4, 15,                    CAL16T(1.0, 0.0), 'u', U_NONE}, // to be changed/deprecated
   //  {"i_gond_acs",   'r',  TMP4, 17,          -1.875E-3,           61.44, 'u', U_NONE},
   //  {"i_gond_das",   'r',  TMP4, 19,          -1.875E-3,           61.44, 'u', U_NONE},
-  {"ifpm_bits",    'w',  TMP4,  1,                1.0,             0.0, 'u', U_NONE},
-  {"balpump_lev",  'w',  TMP4,  3,    -0.048851978505,           100.0, 'u', U_NONE},
-  {"sprpump_lev",  'w',  TMP4,  4,    -0.048851978505,           100.0, 'u', U_NONE},
-  {"inpump_lev",   'w',  TMP4,  5,    -0.048851978505,           100.0, 'u', U_NONE},
-  {"outpump_lev",  'w',  TMP4,  6,    -0.048851978505,           100.0, 'u', U_NONE},
+  {"ifpm_bits",    'w',  TMP4,  1,                1.0,             0.0, 'u', U_NONE}, // to be revived
+  {"balpump_lev",  'w',  TMP4,  3,    -0.048851978505,           100.0, 'u', U_NONE}, // to be revived
+  {"sprpump_lev",  'w',  TMP4,  4,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
+  {"inpump_lev",   'w',  TMP4,  5,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
+  {"outpump_lev",  'w',  TMP4,  6,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
 
   {"he4_lev",      'r',  TMP5,  1,  -2.87477e-09*65536,      12.3273561, 'u', U_NONE},
   {"i_charcoal",   'r',  TMP5,  3,     -2.639826420E-6,     0.157988332, 'u', U_NONE},
@@ -825,7 +825,7 @@ struct ChannelStruct SlowChannels[] = {
 
   /* BIAS 0-4 are wide fast */
   /* the following 9 AD590s, except t_das all had calibrated offsets */
-  {"t_primary_2",  'r',  TMP6,  5,   CAL16T(1.0, AD590_CALIB_PRIMARY_2),   'u', U_NONE},
+  {"t_primary_2",  'r',  TMP6,  5,   CAL16T(1.0, AD590_CALIB_PRIMARY_2),   'u', U_NONE}, // need to be associates w/ t_dasX channel
   {"t_strut_bot",  'r',  TMP6,  7,   CAL16T(1.0, AD590_CALIB_STRUT_1),     'u', U_NONE},
   {"t_primary_1",  'r',  TMP6,  9,   CAL16T(1.0, AD590_CALIB_PRIMARY_1),   'u', U_NONE},
   {"t_secondary_1",'r',  TMP6, 11,   CAL16T(1.0, AD590_CALIB_SECONDARY_1), 'u', U_NONE},
