@@ -752,11 +752,11 @@ struct ChannelStruct SlowChannels[] = {
   {"el_dac",       'r',   ACS2_D, 20,                 1.0,            0.0, 'u', U_NONE},
   {"p_term_el",    'r',   ACS2_D, 21,                1.0,        -32768.0, 'u', U_NONE},
   {"i_term_el",    'r',   ACS2_D, 22,                1.0,        -32768.0, 'u', U_NONE},
-  {"error_el",     'r',   ACS2_D, 23,	    61.44e-6, 61.44*(-32768.0e-6), 'u', U_NONE},
+  {"error_el",     'r',   ACS2_D, 23,	    614.4e-6, 614.4*(-32768.0e-6), 'u', U_NONE},
   {"rw_dac",       'r',   ACS2_D, 24,                 1.0,            0.0, 'u', U_NONE},
   {"p_term_az",    'r',   ACS2_D, 25,                1.0,        -32768.0, 'u', U_NONE},
   {"i_term_az",    'r',   ACS2_D, 26,                1.0,        -32768.0, 'u', U_NONE},
-  {"error_az",     'r',   ACS2_D, 27,	    61.44e-6, 61.44*(-32768.0e-6), 'u', U_NONE},
+  {"error_az",     'r',   ACS2_D, 27,	    614.4e-6, 614.4*(-32768.0e-6), 'u', U_NONE},
 
 /* ACS2 Analog card */
   {"t_clin_pyr",   'r',  ACS2_A1,  5,           -0.01875,           614.4, 'u', U_NONE},
@@ -903,10 +903,10 @@ struct ChannelStruct FastChannels[] = {
 /* ACS1 Digital Card */
   {"isc_trigger",  'w',   ACS2_D, 11,                 1.0,            0.0, 'u', U_NONE},
   {"osc_trigger",  'w',   ACS2_D, 12,                 1.0,            0.0, 'u', U_NONE},
-  {"el_vreq",      'w',   ACS2_D, 22,   GY16_TO_DPS,  -32768*GY16_TO_DPS, 'u', U_V_DPS},
+  {"el_vreq",      'w',   ACS2_D, 22, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
   {"cos_el",       'w',   ACS2_D, 25,         1.0/32768.0,           -1.0, 'u', U_NONE},
   {"sin_el",       'w',   ACS2_D, 26,         1.0/32768.0,           -1.0, 'u', U_NONE},
-  {"az_vreq",      'w',   ACS2_D, 27,   GY16_TO_DPS,  -32768*GY16_TO_DPS, 'u', U_V_DPS},
+  {"az_vreq",      'w',   ACS2_D, 27, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
   {"isc_pulse",    'r',   ACS2_D, 53,                 1.0,            0.0, 'u', U_NONE},
   {"osc_pulse",    'r',   ACS2_D, 54,                 1.0,            0.0, 'u', U_NONE},
 

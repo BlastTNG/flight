@@ -222,7 +222,7 @@ GyroFault = slow_data[gyfaultAddr->index][gyfaultAddr->channel];
 int i;
 for (i=0; i<6; i++) {
   int j = convert[i];
-  if (GyroFault & (0x01 << i)) {
+  if (GyroFault & (0x01 << i)) {  // LMF Note: valgrind complains about this line
     GyroMask &= ~(0x01 << i);
     t_mask[i] +=1;
     if (t_mask[i] > MASK_TIMEOUT) {

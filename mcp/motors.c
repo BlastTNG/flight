@@ -101,6 +101,7 @@ static int last_mode = -1;
 /*   GetVElev: get the current elevation velocity, given current        */
 /*   pointing mode, etc..                                               */
 /*                                                                      */
+/*   Units are 0.1*gyro unit                                            */
 /************************************************************************/
 static double GetVElev(void)
 {
@@ -159,7 +160,7 @@ static double GetVElev(void)
     vel = last_vel - max_dv;
   last_vel = vel;
 
-  return (vel);
+  return (vel*10.0); // Factor of 10.0 is to improve the dynamic range
 }
 
 /************************************************************************/
@@ -167,12 +168,13 @@ static double GetVElev(void)
 /*   GetVAz: get the current az velocity, given current                 */
 /*   pointing mode, etc..                                               */
 /*                                                                      */
+/*   Units are in 0.1*gyro units                                        */
 /************************************************************************/
-static int GetVAz(void)
+static double GetVAz(void)
 {
-  double vel = 0;
-  static int last_vel = 0;
-  int dvel;
+  double vel = 0.0;
+  static double last_vel = 0;
+  double dvel;
   int i_point;
   double vel_offset;
   double az, az_dest;
@@ -199,10 +201,10 @@ static int GetVAz(void)
   vel *= DPS_TO_GY16;
 
   /* Limit Maximim speed */
-  if (vel > 2000)
-    vel = 2000;
-  if (vel < -2000)
-    vel = -2000;
+  if (vel > 2000.0)
+    vel = 2000.0;
+  if (vel < -2000.0)
+    vel = -2000.0;
 
   /* limit Maximum acceleration */
   dvel = vel - last_vel;
@@ -212,7 +214,7 @@ static int GetVAz(void)
     vel = last_vel - max_dv;
   last_vel = vel;
 
-  return (vel);
+  return (vel*10.0); // Factor of 10 is to increase dynamic range
 }
 
 /************************************************************************/
@@ -287,7 +289,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   /**           Elevation Drive Motors              **/
   /* elevation speed */
   v_elev = floor(GetVElev() + 0.5);
-  /* the 6.0 is to improve dynamic range on the elevation speeds. */
+  /* Unit of v_elev are 0.1 gyro units */
   if (v_elev > 32767)
     v_elev = 32767;
   if (v_elev < -32768)
@@ -320,7 +322,8 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
 
   /***************************************************/
   /**            Azimuth Drive Motors              **/
-  v_az = GetVAz() * 6.0; /* the 6.0 is to improve dynamic range. */
+  v_az = floor(GetVAz() + 0.5);
+  /* Units for v_az are 0.1*(16 bit gyro units)*/
   if (v_az > 32767)
     v_az = 32767;
   if (v_az < -32768)
