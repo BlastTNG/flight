@@ -289,7 +289,7 @@ void server_log( int mode ) {
 
     // autofocus message
     if( mode == 2 ) {
-      fprintf(logfile,"%s: autofoc step=%i frame=%i %i ",timestr, 
+      fprintf(logfile,"%s: autofoc step=%i frame=%i %ld ",timestr, 
               focusPosition, frameNum, frame_fname);
       
       if( server_data.n_blobs > 0 )
@@ -335,7 +335,7 @@ void server_log( int mode ) {
       // New pointing information if available
       if( newpointinglog ) {
         fprintf(logfile,
-                "    frame=%i %i ra=%lf dec=%lf +/- %lf rot=%8.3lf qual=%i\n",
+                "    frame=%i %ld ra=%lf dec=%lf +/- %lf rot=%8.3lf qual=%i\n",
                 frameNum, frame_fname, ra_0*180/PI/15, dec_0*180/PI, 
                 sqrt(point_var)*3600*180/PI, server_data.rot*180/PI,  
                 pointing_quality);
@@ -481,13 +481,13 @@ void framewrite( int mode ) {
   if( diskspace < MIN_IMAGE_DISKSPACE ) {
     printf("Error: disk full (%lfMb remain)\n",diskspace);
     //sprintf(tiffFilename,"NOT SAVED: %6i",frameNum);
-    sprintf(tiffFilename,"NOT SAVED: %i",frame_fname);
+    sprintf(tiffFilename,"NOT SAVED: %ld",frame_fname);
   }
 
   // Save entire image
   else if( mode == 1 ) {
     //sprintf(tiffFilename,"%s%06i.tif",imagePrefix,frameNum);
-    sprintf(tiffFilename,"%s%i.tif",imagePrefix,frame_fname);
+    sprintf(tiffFilename,"%s%ld.tif",imagePrefix,frame_fname);
                 
     CFileTiffWrite tiff_file;
     tiff_file.Open(tiffFilename);
@@ -506,7 +506,7 @@ void framewrite( int mode ) {
         yblob[i] = CCD_Y_PIXELS - ((int) server_data.blob_y[i]) - 1;
       }
 
-      sprintf(tiffFilename,"%s%i.thu",imagePrefix,frame_fname);
+      sprintf(tiffFilename,"%s%ld.thu",imagePrefix,frame_fname);
                 
       thumbnail( (unsigned short *) Frameblob.get_map(), 
                  (int) CCD_X_PIXELS, (int) CCD_Y_PIXELS, 32,
@@ -716,12 +716,12 @@ DWORD WINAPI expose_frame( LPVOID parameter ) {
   // only needed for decade
   //frame_fname = frame_fname*10;
   
-  frame_fname = ((exposureFinished.wMonth-1)*31L*24L*3600L + 
-                 exposureFinished.wDay*24L*3600L + 
+  frame_fname = ((exposureFinished.wMonth-1L)*31L*24L*3600L + 
+                 (exposureFinished.wDay-1L)*24L*3600L + 
                  exposureFinished.wHour*3600L +
                  exposureFinished.wMinute*60L + 
-                 exposureFinished.wSecond)*100L + 
-   exposureFinished.wMilliseconds/10;
+                 exposureFinished.wSecond)*10L + 
+   exposureFinished.wMilliseconds/100L;
   
   return 1;
 }
@@ -1214,9 +1214,8 @@ void doautofocus( void ) {
   printf("Autofocus step =%i",AUTOFOCUS_FINE_DELTA);
   
   focus_home();
-#ifdef LORENZO
-  step_motor(FOCUS_MOTOR,-AUTOFOCUS_FINE_DELTA*AUTOFOCUS_FINE_NSAMPLES/2);
-#endif
+  //step_motor(FOCUS_MOTOR,-AUTOFOCUS_FINE_DELTA*AUTOFOCUS_FINE_NSAMPLES/2);
+
   double *fine_fluxes = new double[AUTOFOCUS_FINE_NSAMPLES];
   int goodSolution=0;
   
@@ -1353,9 +1352,7 @@ void doautofocus( void ) {
     if( goodSolution ) { /* Move to best soln, the direction matters! */
       autoFocusStep = AUTOFOCUS_FINE_NSAMPLES - bestindex;
       focus_home();
-#ifdef LORENZO
-      step_motor(FOCUS_MOTOR,-AUTOFOCUS_FINE_DELTA*AUTOFOCUS_FINE_NSAMPLES/2);
-#endif
+      //step_motor(FOCUS_MOTOR,-AUTOFOCUS_FINE_DELTA*AUTOFOCUS_FINE_NSAMPLES/2);
       
       //for( i=0; i<=bestindex; i++ )
       //{
@@ -1476,7 +1473,7 @@ DWORD WINAPI receive_frame( LPVOID parameter ) {
   if( LOUD ) {
     time_stamp( &timebuf[0], 255 ); 
     printf("%s Receive Frame client %i\n",timebuf,whichclient);
-    printf("server trigger = %i, trigger = %i\n",server_data.triggertype,triggertype);
+    printf("Trigger type = %i\n",triggertype);
     printf("CCD rotation = %lf deg \n",ccdRotation*180./PI);
     printf("Az: %8.3lf deg\n",az*180./PI);
     printf("El: %8.3lf deg\n",el*180./PI);
@@ -2852,10 +2849,13 @@ int main( int argc, char **argv ) {
   motorabort(comport,FOCUS_MOTOR);
   calibrate_motors();
   
-  // We tried to increase the speed of the aperture stepper motor because it was unable to
-  // drive the iris mechanism on one of the two directions. Apparently, this does not help.
-  //motorcmd(comport,AP_MOTOR,"m50");
-  //motorcmd(comport,AP_MOTOR,"l50");
+  // We tried to increase the current/acceleration and decrease the velocity of the focus stepper
+  // motor because it was unable to drive the focus mechanism. Apparently, this does not help.
+  //motorcmd(comport,FOCUS_MOTOR,"m80");
+  //motorcmd(comport,FOCUS_MOTOR,"l80");
+  //motorcmd(comport,FOCUS_MOTOR,"L20");
+  //motorcmd(comport,FOCUS_MOTOR,"V5");
+  //motorcmd(comport,FOCUS_MOTOR,"v50");
 
   // Initialize the server_data frame
   server_data.n_blobs=0; // start with 0 blobs

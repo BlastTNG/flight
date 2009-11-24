@@ -184,7 +184,7 @@ ISCDisplayModeType lastMode=full; // previous display mode
 
 // Time keeping
 time_t server_start;  // at what time did this server start
-time_t frame_fname=0; // use time_t as file names for the frames
+long int frame_fname=0; // use time_t as file names for the frames
 clock_t t1,t2,t3,t4,t5,t6,t7,t8;  // extra timers
 SYSTEMTIME f1,f2,f3;  // fast timers
 char timebuf[255];
