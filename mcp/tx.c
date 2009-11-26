@@ -789,6 +789,7 @@ static void StoreData(int index)
   static struct NiosStruct *pivIRawAddr;
   static struct NiosStruct *pivDStatAddr;
   static struct NiosStruct *pivS1StatAddr;
+  static struct NiosStruct *vAzAddr;
 
 
   int i_rw_motors;
@@ -947,6 +948,7 @@ static void StoreData(int index)
     pivIRawAddr = GetNiosAddr("piv_i_raw");
     pivDStatAddr = GetNiosAddr("piv_d_stat");
     pivS1StatAddr = GetNiosAddr("piv_s1_stat");
+    vAzAddr = GetNiosAddr("v_az");
 
   }
 
@@ -1106,6 +1108,9 @@ static void StoreData(int index)
   WriteData(clinTrimAddr, CommandData.clin_el_trim * DEG2I, NIOS_QUEUE);
 
   WriteData(nullTrimAddr, CommandData.null_az_trim * DEG2I, NIOS_QUEUE);
+
+  WriteData(vAzAddr,
+      (int)(PointingData[i_point].v_az * 32768.0/20.0), NIOS_QUEUE);
 
   /************* Pointing mode fields *************/
   WriteData(slewVetoAddr, (int)(CommandData.pointing_mode.nw) / 4.,

@@ -1167,8 +1167,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.azi_gain.I = ivalues[1];
       break;
     case pivot_gain:  /* pivot gains */
-      CommandData.pivot_gain.SP = (rvalues[0] + 2.605) / 7.9498291016e-5;
-      CommandData.pivot_gain.P = ivalues[1];
+      CommandData.pivot_gain.SP = rvalues[0];
+      //      CommandData.pivot_gain.SP = (rvalues[0] + 2.605) / 7.9498291016e-5;
+      CommandData.pivot_gain.PE = ivalues[1];
+      CommandData.pivot_gain.PV = ivalues[2];
       break;
 
       /***************************************/
@@ -2272,6 +2274,11 @@ void InitCommandData()
   /* don't use the fast gy offset calculator */
   CommandData.fast_gy_offset = 0;
 
+  // Motors are disabled on start-up of mcp
+  // TODO-lmf: not sure if we want this for flight...
+  CommandData.disable_az = 1; 
+  CommandData.disable_el = 1;
+
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
     bprintf(warning, "Commands: prev_status: Wanted %i bytes but got %i.\n",
@@ -2314,17 +2321,15 @@ void InitCommandData()
   CommandData.azi_gain.P = 20000;
   CommandData.azi_gain.I = 5000;
 
-  CommandData.pivot_gain.SP = 36960;
-  CommandData.pivot_gain.P = 200;
+  CommandData.pivot_gain.SP = 0.2; // dps
+  CommandData.pivot_gain.PE = 0;
+  CommandData.pivot_gain.PV = 0;
 
   CommandData.gyheat.setpoint = 30.0;
   CommandData.gyheat.age = 0;
   CommandData.gyheat.gain.P = 30;
   CommandData.gyheat.gain.I = 10;
   CommandData.gyheat.gain.D = 3;
-
-  CommandData.disable_az = 0;
-  CommandData.disable_el = 0;
 
   CommandData.use_elenc = 1;
   CommandData.use_elclin = 0;

@@ -878,9 +878,6 @@ void Pointing(void)
   int i_dgpspos, dgpspos_ok;
   int i_point_read;
 
-  //  double v_az_temp=0.0; // Written to frame for debugging purposes.  Not used by mcp calcs.  
-  //  static struct NiosStruct* vAzTempAddr; 
-
   static struct LutType elClinLut = {"/data/etc/clin_elev.lut",0,NULL,NULL,0};
 
   struct ElAttStruct ElAtt = {0.0, 0.0, 0.0};
@@ -1047,7 +1044,6 @@ void Pointing(void)
       = CommandData.lon;
     last_good_lat = PointingData[0].lat = PointingData[1].lat = PointingData[2].lat
       = CommandData.lat;
-    //vAzTempAddr=GetNiosAddr("v_az_temp");  // Temporary, delete later...
   }
 
   if (elClinLut.n == 0)
@@ -1075,8 +1071,7 @@ void Pointing(void)
   //  if (j%500==0) bprintf(info,"Pointing: RG.gy1 = %f, gy1_earth= %f, cos_l =%f sin_a = %f",ACSData.gy_ifel,PointingData[point_index].gy1_earth, cos_a, sin_a);
   RG.gy_ifroll = ACSData.gy_ifroll - PointingData[point_index].gy_ifroll_earth;
   RG.gy_ifyaw = ACSData.gy_ifyaw - PointingData[point_index].gy_ifyaw_earth;
-  //  v_az_temp = (-1.0)*RG.gy_ifroll*cos_el-RG.gy_ifyaw*sin_el;
-  //  WriteData(vAzTempAddr,v_az_temp*10.0/32768.0,NIOS_QUEUE);
+  PointingData[point_index].v_az = (-1.0)*RG.gy_ifroll*cos_e-RG.gy_ifyaw*sin_e;
   /*************************************/
   /** Record history for gyro offsets **/
   RecordHistory(i_point_read);

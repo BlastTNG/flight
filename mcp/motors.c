@@ -38,6 +38,8 @@
 #define MIN_EL 22
 #define MAX_EL 59
 
+#define PIV_DPS_TO_DAC 91.02222222222  // 16384.0 (cts/5V) * 1/(180.0 dps/5V)
+#define DAC_TO_PIV_DPS 1.0/PIV_DPS_TO_DAC
 struct RWMotorDataStruct RWMotorData[3]; // defined in point_struct.h
 int rw_motor_index; 
 
@@ -219,6 +221,32 @@ static double GetVAz(void)
 
 /************************************************************************/
 /*                                                                      */
+/*   Get: get the requested pivot velocity, given current               */
+/*   pointing mode, and resquested azimuth velocity, etc..              */
+/*                                                                      */
+/************************************************************************/
+static double GetVPivot(int v_az_req, unsigned int gpe, unsigned int gpv)
+{
+  double v_req = 0.0;
+  double v_err = 0.0;
+  double pe, pv;
+  static unsigned int firsttime = 1;
+  int i_point;
+  double v_az;
+
+  v_az = ((double) v_az_req) * GY16_TO_DPS/10.0; // Convert to dps 
+  pe=((double) gpe)/1000000.0;
+  pv=((double) gpv)/1000000.0;
+  if(firsttime) {
+  }
+  i_point = GETREADINDEX(point_index);
+  v_err=v_az_req-PointingData[point_index].v_az;
+  v_req = pe*v_err + pv*(ACSData.rw_vel_raw-CommandData.pivot_gain.SP) - v_az_req;
+  return v_req*PIV_DPS_TO_DAC;
+}
+
+/************************************************************************/
+/*                                                                      */
 /*    WriteMot: motors, and, for convenience, the inner frame lock      */
 /*                                                                      */
 /************************************************************************/
@@ -233,9 +261,10 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   static struct NiosStruct* gIElAddr;
   static struct NiosStruct* gPAzAddr;
   static struct NiosStruct* gIAzAddr;
-  static struct NiosStruct* gPPivotAddr;
+  static struct NiosStruct* gPEPivotAddr;
+  static struct NiosStruct* gPVPivotAddr;
   static struct NiosStruct* setReacAddr;
-
+ 
   //TODO temporary
   static struct NiosStruct* dacAmplAddr[5];
   int i;
@@ -245,8 +274,8 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   unsigned int ucos_el;
   unsigned int usin_el;
 
-  int v_elev, v_az, elGainP, elGainI;
-  int azGainP, azGainI, pivGainP;
+  int v_elev, v_az, v_piv, elGainP, elGainI;
+  int azGainP, azGainI, pivGainErr, pivGainRW;
   int i_point;
 
   /******** Obtain correct indexes the first time here ***********/
@@ -262,7 +291,8 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     gIElAddr = GetNiosAddr("g_i_el");
     gPAzAddr = GetNiosAddr("g_p_az");
     gIAzAddr = GetNiosAddr("g_i_az");
-    gPPivotAddr = GetNiosAddr("g_p_pivot");
+    gPEPivotAddr = GetNiosAddr("g_pe_pivot");
+    gPVPivotAddr = GetNiosAddr("g_pv_pivot");
     setReacAddr = GetNiosAddr("set_reac");
 
     dacAmplAddr[0] = GetNiosAddr("dac1_ampl");
@@ -330,22 +360,29 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     v_az = -32768;
   WriteData(azVreqAddr, 32768 + v_az, NIOS_QUEUE);
 
+
   if ((CommandData.disable_az) || (wait > 0)) {
     azGainP = 0;
     azGainI = 0;
-    pivGainP = 0;
+    pivGainErr = 0;
+    pivGainRW = 0;
+    v_piv=GetVPivot(0,pivGainErr,pivGainRW);
   } else {
     azGainP = CommandData.azi_gain.P;
     azGainI = CommandData.azi_gain.I;
-    pivGainP = CommandData.pivot_gain.P;
+    pivGainErr = CommandData.pivot_gain.PE;
+    pivGainRW = CommandData.pivot_gain.PV;
+    v_piv=GetVPivot(v_az,pivGainErr,pivGainRW);
   }
 
   /* p term for az motor */
   WriteData(gPAzAddr, azGainP, NIOS_QUEUE);
   /* I term for az motor */
   WriteData(gIAzAddr, azGainI, NIOS_QUEUE);
-  /* p term for pivot motor */
-  WriteData(gPPivotAddr, pivGainP, NIOS_QUEUE);
+  /* p term to vel err for pivot motor */
+  WriteData(gPEPivotAddr, pivGainErr, NIOS_QUEUE);
+  /* p term to rw vel for pivot motor */
+  WriteData(gPVPivotAddr, pivGainRW, NIOS_QUEUE);
   /* setpoint for reaction wheel */
   WriteData(setReacAddr, CommandData.pivot_gain.SP, NIOS_QUEUE);
 

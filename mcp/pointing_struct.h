@@ -219,6 +219,7 @@ struct PointingDataStruct {
   double enc_sigma;
   double clin_el;
   double clin_sigma;
+  double v_az; // dps
 };
 
 extern struct PointingDataStruct PointingData[3];

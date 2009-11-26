@@ -679,10 +679,13 @@ struct ChannelStruct SlowChannels[] = {
   //lmf: rw_i_raw and el_i_raw are read out from the Copley Controllers over serial.
   {"piv_i_raw",    'w', LOOP7, 17,       20.0/32768.0,             0.0, 's', U_I_A},
   /* LOOP7 16 is fast narrow*/
-  {"isc_max_age",    'w', LOOP7, 18,       1.0,             0.0, 'u', U_T_MS},
-  {"osc_max_age",    'w', LOOP7, 19,       1.0,             0.0, 'u', U_T_MS},
-  {"set_reac",       'w', LOOP7, 22,    7.9498291016e-5, -2.605, 'u', U_NONE},
-
+  {"isc_max_age",  'w', LOOP7, 18,                1.0,             0.0, 'u', U_T_MS},
+  {"osc_max_age",  'w', LOOP7, 19,                1.0,             0.0, 'u', U_T_MS},
+  {"g_pe_pivot",   'w', LOOP7, 20,                1.0,             0.0, 'u', U_NONE},
+  {"g_pv_pivot",   'w', LOOP7, 21,                1.0,             0.0, 'u', U_NONE},
+  {"set_reac",     'w', LOOP7, 22,        0.000038147,             0.0, 'u', U_NONE},
+  {"v_az",         'w', LOOP7, 23,       20.0/32768.0,             0.0, 's', U_V_DPS},
+  // MARK
  
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
@@ -774,7 +777,6 @@ struct ChannelStruct SlowChannels[] = {
 //  {"t_reac_mc",    'r',  TMP2, 31,                    CAL16T(1.0, 0.0), 'u', U_NONE},
 
 // TODO: See if these are legacy and can be deleted.
-  {"g_p_pivot",    'w',  TMP2, 15,                1.0,             0.0, 'u', U_NONE}, // laura should fix
 
   /* ACS2 0-1 is wide fast */
   //  {"t_ss_back_mid",'r',  TMP3,  3,                    CAL16T(1.0, 0.0), 'u', U_NONE},

@@ -371,7 +371,7 @@ void WatchDGPS()
 		/* Time */
 		if (((VoidBlock_t*)SBFBlock)->ID == SBFID_RECEIVERTIME) {
 			ReceiverTimeBlock_t* RXTIME = (ReceiverTimeBlock_t*) SBFBlock;
-			printf("%-2i %13.1f %3i %3i %3i %3i %3i %3i "
+			/*printf("%-2i %13.1f %3i %3i %3i %3i %3i %3i "
 				"0 0 0 0 0 0 0 0 0 0 0\n",
 				-5,
 				RXTIME->WNc*86400.0*7.0+RXTIME->TOW/1000.0,
@@ -381,7 +381,7 @@ void WatchDGPS()
 				RXTIME->UTCHour,
 				RXTIME->UTCMin,
 				RXTIME->UTCSec
-				);
+				);*/
 			ts.tm_year=RXTIME->UTCYear;
 			ts.tm_mon=RXTIME->UTCMonth;
 			ts.tm_mday=RXTIME->UTCDay;
@@ -397,7 +397,7 @@ void WatchDGPS()
 		/* Position & Velocity */
 		else if (((VoidBlock_t*)SBFBlock)->ID == SBFID_PVTGEODETIC) {
 			PVTGeodeticBlock_t* PVT = (PVTGeodeticBlock_t*)SBFBlock;
-			printf("%-2i %13.1f %21.10f %21.10f %14.3f %10.3f"
+			/*printf("%-2i %13.1f %21.10f %21.10f %14.3f %10.3f"
 				" %10.3f %15.8f %13.6e %14.3e %3i %3u 0 0\n",
 				-1,
 				PVT->WNc*86400.0*7.0+PVT->TOW/1000.0,	       
@@ -411,7 +411,7 @@ void WatchDGPS()
 				PVT->RxClkDrift,
 				(int)(PVT->NrSV),
 				(unsigned int)(PVT->Mode)
-				);
+				);*/
 			pos_ok = 1;
 			lat = PVT->Lat; // Latitude in radians
 			DGPSPos[dgpspos_index].lat = lat*180/pi; // Latitude in degrees
@@ -432,7 +432,7 @@ void WatchDGPS()
 		/* Attitude */
 		else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_ATTEULER) {
 			AttitudeEulerBlock_t* ATTEULER = (AttitudeEulerBlock_t*) SBFBlock;
-			printf("%-2i %13.1f %14.5f %14.5f %14.5f"
+			/*printf("%-2i %13.1f %14.5f %14.5f %14.5f"
 				" %3u %3u %3u 0 0 0 0 0 0\n",
 				-3,
 				ATTEULER->WNc*86400.0*7.0+ATTEULER->TOW/1000.0,
@@ -442,7 +442,7 @@ void WatchDGPS()
 				(unsigned int)(ATTEULER->Error),
 				ATTEULER->Mode,
 				(unsigned int)(ATTEULER->NrSV)
-			    );
+				);*/
 			DGPSAtt[dgpsatt_index].az = ATTEULER->Heading;
 			DGPSAtt[dgpsatt_index].pitch = ATTEULER->Pitch;
 			DGPSAtt[dgpsatt_index].roll = ATTEULER->Roll;
