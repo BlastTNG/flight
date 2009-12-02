@@ -206,49 +206,51 @@ static void WriteAux(void)
 #define MASK_TIMEOUT 5 /* 1 sec -- in 5Hz Frames */ 
 #define GYRO_ON 25 /* 5 sec */
 #define PCYCLE_TIMEOUT 125 /* 25 sec */
-void SetGyroMask (void)
-{
-static struct NiosStruct* gymaskAddr;
-gymaskAddr = GetNiosAddr("gyro_mask");
-unsigned int GyroMask = 0x3f; //all gyros enabled
-int convert[6] = {1,5,0,6,3,4};//order of gyros in power switching
-static int t_mask[6] = {0,0,0,0,0,0};
-static int wait[6] = {0,0,0,0,0,0};
-static int off[6] = {0,0,0,0,0,0};//1=gyro is off, 0=gyro is on
-static struct BiPhaseStruct* gyfaultAddr;
-gyfaultAddr = GetBiPhaseAddr("gyro_fault");;
-unsigned int GyroFault;
-GyroFault = slow_data[gyfaultAddr->index][gyfaultAddr->channel];
-int i;
-for (i=0; i<6; i++) {
-  int j = convert[i];
-  if (GyroFault & (0x01 << i)) {  // LMF Note: valgrind complains about this line
-    GyroMask &= ~(0x01 << i);
-    t_mask[i] +=1;
-    if (t_mask[i] > MASK_TIMEOUT) {
-      if (wait[i] == 0) {
-	CommandData.power.gyro_off[j] |= 0x01;
-	off[i] = 1;
+void SetGyroMask (void) {
+  static struct NiosStruct* gymaskAddr;
+  gymaskAddr = GetNiosAddr("gyro_mask");
+  unsigned int GyroMask = 0x3f; //all gyros enabled
+  //FIXME: convert is almost certainly wrong.  Check and fix!!!!
+  int convert[6] = {1,5,0,2,3,4};//order of gyros in power switching
+  static int t_mask[6] = {0,0,0,0,0,0};
+  static int wait[6] = {0,0,0,0,0,0};
+  static int off[6] = {0,0,0,0,0,0};//1=gyro is off, 0=gyro is on
+  static struct BiPhaseStruct* gyfaultAddr;
+
+  gyfaultAddr = GetBiPhaseAddr("gyro_fault");;
+  unsigned int GyroFault;
+
+  GyroFault = slow_data[gyfaultAddr->index][gyfaultAddr->channel];
+
+  int i;
+  for (i=0; i<6; i++) {
+    int j = convert[i];
+    if (GyroFault & (0x01 << i)) {  // LMF Note: valgrind complains about this line
+      GyroMask &= ~(0x01 << i);
+      t_mask[i] +=1;
+      if (t_mask[i] > MASK_TIMEOUT) {
+	if (wait[i] == 0) {
+	  CommandData.power.gyro_off[j] |= 0x01;
+	  off[i] = 1;
+	}
       }
     }
-  }
-  else if ((CommandData.gymask & (0x01 << i)) == 0 ) {
-    GyroMask &= ~(0x01 << i);
-  }
-  else {
-    GyroMask |= 0x01 << i;	
-    t_mask[i] = 0;
-  }
-  
-  if (off[i]) wait[i] +=1;
-  if (wait[i] == GYRO_ON) CommandData.power.gyro_off[j] &= ~0x01;
-  if (wait[i] > PCYCLE_TIMEOUT) {
-    wait[i] = 0;
-    off[i] = 0;
-  }
-}
+    else if ((CommandData.gymask & (0x01 << i)) == 0 ) {
+      GyroMask &= ~(0x01 << i);
+    } else {
+      GyroMask |= 0x01 << i;	
+      t_mask[i] = 0;
+    }
 
-WriteData(gymaskAddr, GyroMask, NIOS_QUEUE);
+    if (off[i]) wait[i] +=1;
+    if (wait[i] == GYRO_ON) CommandData.power.gyro_off[j] &= ~0x01;
+    if (wait[i] > PCYCLE_TIMEOUT) {
+      wait[i] = 0;
+      off[i] = 0;
+    }
+  }
+
+  WriteData(gymaskAddr, GyroMask, NIOS_QUEUE);
 }
 
 /*****************************************************************/
@@ -790,7 +792,7 @@ static void StoreData(int index)
   static struct NiosStruct *pivDStatAddr;
   static struct NiosStruct *pivS1StatAddr;
   static struct NiosStruct *vAzAddr;
-
+  static struct NiosStruct *pivDPSRawAddr;
 
   int i_rw_motors;
   int i_elev_motors;
@@ -949,7 +951,7 @@ static void StoreData(int index)
     pivDStatAddr = GetNiosAddr("piv_d_stat");
     pivS1StatAddr = GetNiosAddr("piv_s1_stat");
     vAzAddr = GetNiosAddr("v_az");
-
+    pivDPSRawAddr = GetNiosAddr("piv_dps_raw");
   }
 
   i_point = GETREADINDEX(point_index);
@@ -1198,6 +1200,7 @@ static void StoreData(int index)
   WriteData(pivDStatAddr,(PivotMotorData[i_pivot_motors].db_stat & 0xff)
                  +((PivotMotorData[i_pivot_motors].dp_stat & 0xff)<< 8),NIOS_QUEUE);
   WriteData(pivS1StatAddr,PivotMotorData[i_pivot_motors].ds1_stat,NIOS_QUEUE);
+  WriteData(pivDPSRawAddr,PivotMotorData[i_pivot_motors].dps_piv,NIOS_QUEUE);
   StoreStarCameraData(index, 0); /* write ISC data */
   StoreStarCameraData(index, 1); /* write OSC data */
 }

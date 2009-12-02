@@ -685,7 +685,11 @@ struct ChannelStruct SlowChannels[] = {
   {"g_pv_pivot",   'w', LOOP7, 21,                1.0,             0.0, 'u', U_NONE},
   {"set_reac",     'w', LOOP7, 22,        0.000038147,             0.0, 'u', U_NONE},
   {"v_az",         'w', LOOP7, 23,       20.0/32768.0,             0.0, 's', U_V_DPS},
-  // MARK
+  /* LOOP7 24 is fast narrow */
+  {"v_piv_err_t",  'w', LOOP7, 25,  DAC_TO_PIV_DPS/2.0,             0.0, 's', U_V_DPS},
+  {"v_piv_vrw_t",  'w', LOOP7, 26,  DAC_TO_PIV_DPS/2.0,             0.0, 's', U_V_DPS},
+  {"piv_dps_raw",  'w', LOOP7, 27,                 1.0,             0.0, 's', U_NONE},
+  {"piv_dps_calc", 'w', LOOP7, 28,       20.0/32768.0,             0.0, 's', U_V_DPS},
  
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
@@ -903,6 +907,7 @@ struct ChannelStruct FastChannels[] = {
   {"gy_ifel",      'r',  ACS2_D, 12, GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS,'u', U_V_DPS},
 
 /* ACS1 Digital Card */
+//  {"piv_vreq",     'w',   ACS2_D,  2,                 1.0,            0.0, 'u', U_NONE},
   {"isc_trigger",  'w',   ACS2_D, 11,                 1.0,            0.0, 'u', U_NONE},
   {"osc_trigger",  'w',   ACS2_D, 12,                 1.0,            0.0, 'u', U_NONE},
   {"el_vreq",      'w',   ACS2_D, 22, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
@@ -931,6 +936,7 @@ struct ChannelStruct FastChannels[] = {
   {"enc_el",       'w', LOOP2, 47,              I2DEG,             0.0, 'u', U_P_DEG},
   {"enc_sigma",    'w', LOOP2, 48,              I2DEG,             0.0, 'u', U_NONE},
   {"res_piv_raw",  'w', LOOP7, 16,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"piv_v_req",    'w', LOOP7, 24, DAC_TO_PIV_DPS/2.0,             0.0, 's', U_V_DPS},
 
   END_OF_CHANNELS
 };

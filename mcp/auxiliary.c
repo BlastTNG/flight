@@ -672,8 +672,8 @@ void ControlAuxMotors(unsigned short *RxFrame)
 
 /* create latching relay pulses, and update enable/disbale levels */
 /* actbus/steppers enable is handled separately in StoreActBus() */
-void ControlPower(void)
-{
+void ControlPower(void) {
+
   static int firsttime = 1;
   static struct NiosStruct* latchingAddr[2];
   static struct NiosStruct* gyboxSwitchAddr;
@@ -689,11 +689,23 @@ void ControlPower(void)
     miscSwitchAddr = GetNiosAddr("misc_switch");
   }
 
-  if (CommandData.power.hub232_off) misc |= 0x08;
-  if (CommandData.power.ss_off) misc |= 0x20;
-  for (i=0; i<6; i++)
-    if (CommandData.power.gyro_off[i] & 0x03) gybox |= 0x01 << i;
-  if (CommandData.power.gybox_off) gybox |= 0x80;
+  if (CommandData.power.hub232_off) {
+    misc |= 0x08;
+  }
+
+  if (CommandData.power.ss_off) {
+    misc |= 0x20;
+  }
+
+  for (i=0; i<6; i++) {
+    if (CommandData.power.gyro_off[i] & 0x03) {
+      gybox |= 0x01 << i;
+    }
+  }
+
+  if (CommandData.power.gybox_off) {
+    gybox |= 0x80;
+  }
 
   if (CommandData.power.sc_tx.set_count > 0) {
     CommandData.power.sc_tx.set_count--;
