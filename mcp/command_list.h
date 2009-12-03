@@ -144,7 +144,7 @@ enum multiCommand {
   xy_jump,           xy_xscan,          xy_yscan,         xy_raster,
   actuator_i,        lock_vel,          lock_i,           actuator_delta,
   delta_secondary,   lvdt_limit,        thermo_param,     focus_offset,
-  isc_maxage,	     osc_maxage
+  isc_max_age,	     osc_max_age
 };
 
 //32-bit and 64-bit sytems disagree on packing

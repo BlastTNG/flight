@@ -334,7 +334,8 @@ struct CommandDataStruct {
     int autofocus;
     int save_period;
     int auto_save;
-    int max_age;
+    int max_age;    //maximum allowed time between trigger and solution
+    int age;	    //last measured time between trigger and solution
   } ISCControl[2];
 };
 

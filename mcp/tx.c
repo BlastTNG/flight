@@ -396,6 +396,7 @@ static void StoreStarCameraData(int index, int which)
   static struct NiosStruct* DiskfreeAddr[2];
   static struct NiosStruct* MaxslewAddr[2];
   static struct NiosStruct* MaxAgeAddr[2];
+  static struct NiosStruct* AgeAddr[2];
 
   if (firsttime[which]) {
     firsttime[which] = 0;
@@ -454,6 +455,7 @@ static void StoreStarCameraData(int index, int which)
     DiskfreeAddr[which] = GetSCNiosAddr("diskfree", which);
     MaxslewAddr[which] = GetSCNiosAddr("maxslew", which);
     MaxAgeAddr[which] = GetSCNiosAddr("max_age", which);
+    AgeAddr[which] = GetSCNiosAddr("age", which);
 
     Temp1Addr[0] = GetNiosAddr("t_isc_flange");
     Temp2Addr[0] = GetNiosAddr("t_isc_heat");
@@ -548,6 +550,8 @@ static void StoreStarCameraData(int index, int which)
       (unsigned int)(CommandData.ISCControl[which].pulse_width), NIOS_QUEUE);
   WriteData(MaxAgeAddr[which], 
       (unsigned int)(CommandData.ISCControl[which].max_age*10), NIOS_QUEUE);
+  WriteData(AgeAddr[which], 
+      (unsigned int)(CommandData.ISCControl[which].age*10), NIOS_QUEUE);
   WriteData(SavePrdAddr[which],
       (unsigned int)(CommandData.ISCControl[which].save_period), NIOS_FLUSH);
 
@@ -1333,7 +1337,6 @@ void UpdateBBCFrame(unsigned short *RxFrame)
   StoreData(index);
   ControlGyroHeat(RxFrame);
   WriteMot(index, RxFrame);
-  ControlPower();
   StoreActBus();
 #endif
 #ifdef USE_XY_THREAD
@@ -1349,6 +1352,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     SecondaryMirror();
     CryoControl();
     PhaseControl();
+    ControlPower();
 #ifndef BOLOTEST
     SetGyroMask();
     ChargeController();

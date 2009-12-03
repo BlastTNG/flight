@@ -176,19 +176,11 @@ extern "C" {
 #define T_CHARCOAL_B (1.235145e+01)
 
 // Conversion factors for the rotated/calibrated gyros
-// (GYRO1, GYRO2, GYRO3).  Any correction to these belongs
-// in ACS1, not here
+// (GY_IFEL, GY_IFYAW, GY_IFROLL).
+// Any correction to these belongs in ACS1, not here
 #define DPS_TO_GY16 1000.0      // 1 gyro bit == 0.001 dps 
-
 #define GY16_TO_DPS (1.0/DPS_TO_GY16)
 #define GY16_OFFSET 32768.0
-
-// Conversion factors for raw 32 bit analog gyro chanels
-// put any correction to these directly in tx_struct.c
-// these should only appear in tx_struct.c
-#define DPS_TO_AGY32 (1092.8128*65536.0)
-#define AGY32_TO_DPS (1.0/DPS_TO_AGY32)
-#define AGY32_OFFSET (25600.0*65536.0)
 
 // Conversion factors for raw 32 bit digital gyro chanels
 // put any correction to these directly in tx_struct.c

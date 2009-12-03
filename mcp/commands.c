@@ -69,8 +69,8 @@
 #define ISC_TRIGGER_POS  2
 #define ISC_TRIGGER_NEG  3
 
-/* latching relay pulse length in 10ms fast frames */
-#define LATCH_PULSE_LEN	 100
+/* latching relay pulse length in 200ms slow frames */
+#define LATCH_PULSE_LEN	 2
 
 void ActPotTrim(void); /* actuators.c */
 void RecalcOffset(double, double);
@@ -1536,7 +1536,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.ISCState[0].gain = rvalues[0];
       CommandData.ISCState[0].offset = ivalues[1];
       break;
-    case isc_maxage:
+    case isc_max_age:
       CommandData.ISCControl[0].max_age = ivalues[0]/10; //convert from ms to frames
       break;
 
@@ -1598,7 +1598,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.ISCState[1].gain = rvalues[0];
       CommandData.ISCState[1].offset = ivalues[1];
       break;
-    case osc_maxage:
+    case osc_max_age:
       CommandData.ISCControl[1].max_age = ivalues[0]/10; //convert from ms to frames
       break;
 #endif

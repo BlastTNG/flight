@@ -579,9 +579,13 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
     radec2azel(ra, dec, PointingData[i_point].lst, PointingData[i_point].lat,
         &new_az, &new_el);
 
+    //bprintf(info, "found possible solution az=%g el=%g\n", new_az, new_el);
     if (possible_solution(new_az, new_el, i_point)) {  // no nans!
+      //bprintf(info, "age=%d max_age=%d\n", isc_pulses[which].age, CommandData.ISCControl[which].max_age);
+      CommandData.ISCControl[which].age = isc_pulses[which].age;  //write current age
       // new solution
       if (isc_pulses[which].age < CommandData.ISCControl[which].max_age) {
+	//bprintf(info, "solution accepted!\n");
         /* Add BDA offset -- there's a pole here at EL = 90 degrees! */
         new_el += CommandData.ISCState[which].elBDA * RAD2DEG;
         if (old_el < 80. * M_PI / 180)

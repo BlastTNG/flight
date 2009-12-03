@@ -689,10 +689,14 @@ struct ChannelStruct SlowChannels[] = {
   {"v_piv_err_t",  'w', LOOP7, 25,  DAC_TO_PIV_DPS/2.0,             0.0, 's', U_V_DPS},
   {"v_piv_vrw_t",  'w', LOOP7, 26,  DAC_TO_PIV_DPS/2.0,             0.0, 's', U_V_DPS},
   {"piv_dps_raw",  'w', LOOP7, 27,                 1.0,             0.0, 's', U_NONE},
-  {"piv_dps_calc", 'w', LOOP7, 28,       20.0/32768.0,             0.0, 's', U_V_DPS},
+  {"piv_dps_calc", 'w', LOOP7, 28,        20.0/32768.0,             0.0, 's', U_V_DPS},
+  {"isc_age",      'w', LOOP7, 29,                 1.0,             0.0, 'u', U_T_MS},
+  {"osc_age",      'w', LOOP7, 30,                 1.0,             0.0, 'u', U_T_MS},
  
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
+  {"latch0",       'w',  ACS1_D,  0,                1.0,             0.0, 'u', U_NONE},
+  {"latch1",       'w',  ACS1_D,  1,                1.0,             0.0, 'u', U_NONE},
   {"gybox_switch", 'w',  ACS1_D,  2,                1.0,             0.0, 'u', U_NONE},
   {"charge_switch",'w',  ACS1_D,  3,                1.0,             0.0, 'u', U_NONE},
   {"misc_switch",  'w',  ACS1_D,  4,                1.0,             0.0, 'u', U_NONE},
@@ -897,8 +901,7 @@ struct ChannelStruct WideFastChannels[] = {
 struct ChannelStruct FastChannels[] = {
 #ifndef BOLOTEST
 /* ACS1 Digital Card */
-  {"latch0",       'w',  ACS1_D,  0,                1.0,             0.0, 'u', U_NONE},
-  {"latch1",       'w',  ACS1_D,  1,                1.0,             0.0, 'u', U_NONE},
+  //TODO can gy_heat be made slow?
   {"gy_heat",      'w',  ACS1_D,  6,                1.0,             0.0, 'u', U_NONE},
 
 /* read channels from ACS1 */
