@@ -197,6 +197,11 @@ extern "C" {
 #define DPS_TO_DGY32 (1.0/DGY32_TO_DPS)
 #define DGY32_OFFSET (32768.0*65536.0)
 
+// Conversion factors for the Pivot motor control loop.
+// Used in motors.c and tx_struct.c
+#define PIV_DPS_TO_DAC 91.02222222222  // 16384.0 (cts/5V) * 1/(180.0 dps/5V)
+#define DAC_TO_PIV_DPS 1.0/PIV_DPS_TO_DAC
+
 /* AD590 calibrations from Marco, Nov 2006 */
 #define AD590_CALIB_INFRAME_1    1.2250
 #define AD590_CALIB_INFRAME_2    1.8125

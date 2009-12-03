@@ -118,6 +118,7 @@ extern int elev_motor_index; // defined in motors.c
 struct PivotMotorDataStruct{
   double res_piv_raw; // in degrees
   double current; // drive current read from controller
+  int dps_piv; // filtered pivot velocity
   unsigned int db_stat;  // drive bridge status
   unsigned int dp_stat;  // drive protection status
   unsigned int ds1_stat;  // drive system 1 status

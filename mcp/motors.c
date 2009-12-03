@@ -38,8 +38,7 @@
 #define MIN_EL 22
 #define MAX_EL 59
 
-#define PIV_DPS_TO_DAC 91.02222222222  // 16384.0 (cts/5V) * 1/(180.0 dps/5V)
-#define DAC_TO_PIV_DPS 1.0/PIV_DPS_TO_DAC
+#define VPIV_FILTER_LEN 20
 struct RWMotorDataStruct RWMotorData[3]; // defined in point_struct.h
 int rw_motor_index; 
 
@@ -98,6 +97,39 @@ void closeMotors()
 
 static int last_mode = -1;
 
+static double calcVPiv(void)
+{
+  double vpiv=0.0;
+  static double buf_vPiv[VPIV_FILTER_LEN]; // Buffer for Piv boxcar filter.
+  static time_t buf_t[VPIV_FILTER_LEN]; 
+  static double a=0.0,alast=0.0; 
+  static unsigned int ib_last=0;
+  static int firsttime = 1;
+  int i_point;
+  int i;
+  int k;
+  double dt=1.0e6,dtheta=0.0;
+  static int j=0;
+  i_point = GETREADINDEX(point_index);
+  if (firsttime) {
+    firsttime = 0;
+    // Initialize the buffer.  Assume all zeros to begin
+    for(i=0;i>(VPIV_FILTER_LEN-1);i++) buf_vPiv[i]=0.0;
+    for(i=0;i>(VPIV_FILTER_LEN-1);i++) buf_t[i]=0.0;
+  }
+  a+=(ACSData.res_piv_raw-buf_vPiv[ib_last]);
+  //  dt=((double)(gettimeofday-buf_t[ib_last]));
+  buf_vPiv[ib_last]=ACSData.res_piv_raw;
+  //  dummy=PointingData[i_point].t
+    //  buf_t[ib_last]=PointingData[i_point].t;
+  ib_last=(ib_last+VPIV_FILTER_LEN+1)%VPIV_FILTER_LEN;
+  dtheta=(a-alast)/VPIV_FILTER_LEN;
+  alast=a;
+  vpiv=dtheta/0.010016; 
+  //  if (j%100 == 1) bprintf(info,"CalcVPiv vpiv = %f, res_piv_raw = %f, a = %f, alast = %f, dtheta = %f ",vpiv,ACSData.res_piv_raw,a/VPIV_FILTER_LEN,alast/VPIV_FILTER_LEN,dtheta);
+  j++;
+  return vpiv;
+}
 /************************************************************************/
 /*                                                                      */
 /*   GetVElev: get the current elevation velocity, given current        */
@@ -229,19 +261,30 @@ static double GetVPivot(int v_az_req, unsigned int gpe, unsigned int gpv)
 {
   double v_req = 0.0;
   double v_err = 0.0;
-  double pe, pv;
+  double pe, pv, v1, v2;
   static unsigned int firsttime = 1;
   int i_point;
   double v_az;
+  static struct NiosStruct* vPivErrAddr;
+  static struct NiosStruct* vPivVRWAddr;
 
   v_az = ((double) v_az_req) * GY16_TO_DPS/10.0; // Convert to dps 
   pe=((double) gpe)/1000000.0;
   pv=((double) gpv)/1000000.0;
   if(firsttime) {
+    vPivErrAddr = GetNiosAddr("v_piv_err_t");
+    vPivVRWAddr = GetNiosAddr("v_piv_vrw_t");
   }
   i_point = GETREADINDEX(point_index);
   v_err=v_az_req-PointingData[point_index].v_az;
-  v_req = pe*v_err + pv*(ACSData.rw_vel_raw-CommandData.pivot_gain.SP) - v_az_req;
+  v1 = pe*v_err;
+  v2 = pv*(ACSData.rw_vel_raw-CommandData.pivot_gain.SP); 
+  v_req = v1 + v2 - v_az_req;
+
+  /* Error term */
+  WriteData(vPivErrAddr, ((int) v1*PIV_DPS_TO_DAC*2.0), NIOS_QUEUE);
+  WriteData(vPivVRWAddr, ((int) v2*PIV_DPS_TO_DAC*2.0), NIOS_QUEUE);
+  
   return v_req*PIV_DPS_TO_DAC;
 }
 
@@ -264,11 +307,13 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   static struct NiosStruct* gPEPivotAddr;
   static struct NiosStruct* gPVPivotAddr;
   static struct NiosStruct* setReacAddr;
+  static struct NiosStruct* pivVReqAddr;
+  static struct NiosStruct* pivVCalcAddr;
  
   //TODO temporary
   static struct NiosStruct* dacAmplAddr[5];
   int i;
-
+  static int j=0;
   static int wait = 100; /* wait 20 frames before controlling. */
   double el_rad;
   unsigned int ucos_el;
@@ -294,7 +339,8 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     gPEPivotAddr = GetNiosAddr("g_pe_pivot");
     gPVPivotAddr = GetNiosAddr("g_pv_pivot");
     setReacAddr = GetNiosAddr("set_reac");
-
+    pivVReqAddr = GetNiosAddr("piv_v_req");
+    pivVCalcAddr = GetNiosAddr("piv_dps_calc");
     dacAmplAddr[0] = GetNiosAddr("dac1_ampl");
     dacAmplAddr[1] = GetNiosAddr("dac2_ampl");
     dacAmplAddr[2] = GetNiosAddr("dac3_ampl"); 
@@ -374,7 +420,10 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     pivGainRW = CommandData.pivot_gain.PV;
     v_piv=GetVPivot(v_az,pivGainErr,pivGainRW);
   }
-
+  //  if (j%100 == 1) bprintf(info,"WriteMot: v_piv = %i",v_piv);
+  j++;
+  /* requested pivot velocity*/
+  WriteData(pivVReqAddr, v_piv*2, NIOS_QUEUE);
   /* p term for az motor */
   WriteData(gPAzAddr, azGainP, NIOS_QUEUE);
   /* I term for az motor */
@@ -385,10 +434,11 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   WriteData(gPVPivotAddr, pivGainRW, NIOS_QUEUE);
   /* setpoint for reaction wheel */
   WriteData(setReacAddr, CommandData.pivot_gain.SP, NIOS_QUEUE);
+  /* Pivot velocity */
+  WriteData(pivVCalcAddr, (calcVPiv()/20.0*32768.0), NIOS_QUEUE);
 
   if (wait > 0)
     wait--;
-
 }
 
 /****************************************************************/
@@ -1460,7 +1510,8 @@ void* pivotComm(void* arg)
   int firsttime=1;
   unsigned int dp_stat_raw=0, db_stat_raw=0, ds1_stat_raw=0;
   short int current_raw=0;
-
+  int piv_vel_raw=0;
+  int tmp=0;
   // Initialize values in the pivotinfo structure.                            
   pivotinfo.open=0;
   pivotinfo.loop=0;
@@ -1478,6 +1529,7 @@ void* pivotComm(void* arg)
   PivotMotorData[0].db_stat=0;
   PivotMotorData[0].dp_stat=0;
   PivotMotorData[0].ds1_stat=0;
+  PivotMotorData[0].dps_piv=0;
 
 
   bprintf(info,"pivotComm: Bringing the pivot drive online.");
@@ -1526,12 +1578,18 @@ void* pivotComm(void* arg)
 	  pivotinfo.disabled=1;
 	}
       } 
-
+      if(firsttime){
+	firsttime=0;
+	tmp = queryAMCInd(0x32,8,1,&pivotinfo);
+	bprintf(info,"pivotComm: Ki = %i",tmp);
+	tmp = queryAMCInd(0xd8,0x24,1,&pivotinfo);
+	bprintf(info,"pivotComm: Ks = %i",tmp);
+      }
       pos_raw=getAMCResolver(&pivotinfo);
       //      bprintf(info,"pivotComm: Resolver Position is: %i",pos_raw);
       PivotMotorData[pivot_motor_index].res_piv_raw=((double) pos_raw)/PIV_RES_CTS*360.0; 
 
-      j=j%4;
+      j=j%5;
       switch(j) {
       case 0:
 	current_raw=queryAMCInd(16,3,1,&pivotinfo);
@@ -1550,6 +1608,10 @@ void* pivotComm(void* arg)
       case 3:
 	ds1_stat_raw=queryAMCInd(2,3,1,&pivotinfo);
         PivotMotorData[pivot_motor_index].ds1_stat=ds1_stat_raw;
+	break;
+      case 4:
+	piv_vel_raw=((int) queryAMCInd(17,2,2,&pivotinfo));
+        PivotMotorData[pivot_motor_index].dps_piv=piv_vel_raw;
 	break;
       }
       j++;

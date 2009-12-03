@@ -573,7 +573,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.gybox_off = 0;
       break;
     case hub232_off:
-      CommandData.power.hub232_off = 1;
+      CommandData.power.hub232_off = 3;
       break;
     case hub232_on:
       CommandData.power.hub232_off = 0;
@@ -2318,8 +2318,8 @@ void InitCommandData()
   CommandData.ele_gain.I = 10000; /* was 8000 */
   CommandData.ele_gain.P = 10000; /* was 1200 */
 
-  CommandData.azi_gain.P = 20000;
-  CommandData.azi_gain.I = 5000;
+  CommandData.azi_gain.P = 1000;
+  CommandData.azi_gain.I = 0;
 
   CommandData.pivot_gain.SP = 0.2; // dps
   CommandData.pivot_gain.PE = 0;

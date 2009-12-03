@@ -392,7 +392,7 @@ static void GetACS(unsigned short *RxFrame)
 
   enc_el_raw = (((double)RxFrame[encElevAddr->channel])/DEG2I);
   rw_vel_raw = (((double)((short)RxFrame[rwVelAddr->channel]))*4.0/DEG2I);
-  res_piv_raw = (((double)((short)RxFrame[resPivAddr->channel]))*20.0/32768.0);
+  res_piv_raw = (((double)((short)RxFrame[resPivAddr->channel]))/DEG2I);
   gy_ifel = (double)((RxFrame[gyifElAddr->channel])-GY16_OFFSET) * GY16_TO_DPS;
   gy_ifroll = (double)(RxFrame[gyifRollAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
   gy_ifyaw = (double)(RxFrame[gyifYawAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
