@@ -54,7 +54,8 @@ typedef signed char    htChar_t;
 #define htTrue         ((htBool_t)1)
 #define htFalse        ((htBool_t)0)
 
-#define GPSCOM "/dev/ttyS1"
+//TODO: This may be (is likely) wrong!
+#define GPSCOM "/dev/ttySI1"
 
 /* min and max SBF IDs */
 #define MIN_CMDID      128

@@ -38,7 +38,7 @@
 #define MIN_EL 22
 #define MAX_EL 59
 
-#define VPIV_FILTER_LEN 20
+#define VPIV_FILTER_LEN 40
 struct RWMotorDataStruct RWMotorData[3]; // defined in point_struct.h
 int rw_motor_index; 
 
