@@ -191,8 +191,11 @@ extern "C" {
 
 // Conversion factors for the Pivot motor control loop.
 // Used in motors.c and tx_struct.c
-#define PIV_DPS_TO_DAC 91.02222222222  // 16384.0 (cts/5V) * 1/(180.0 dps/5V)
+#define PIV_DPS_TO_DAC 542.5048  // 3255.029 (cts/V) * 1V/rpm*1rpm/(6 dps)
 #define DAC_TO_PIV_DPS 1.0/PIV_DPS_TO_DAC
+#define PIV_DAC_OFF (-1)*102 // 31mV Analog Input voltage offset
+                        // as measured by the pivot controller
+#define PIV_DEAD_BAND 162.75 // 50mV*3.255029 DAC cts/mV
 
 /* AD590 calibrations from Marco, Nov 2006 */
 #define AD590_CALIB_INFRAME_1    1.2250

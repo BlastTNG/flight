@@ -683,11 +683,11 @@ struct ChannelStruct SlowChannels[] = {
   {"osc_max_age",  'w', LOOP7, 19,                1.0,             0.0, 'u', U_T_MS},
   {"g_pe_pivot",   'w', LOOP7, 20,                1.0,             0.0, 'u', U_NONE},
   {"g_pv_pivot",   'w', LOOP7, 21,                1.0,             0.0, 'u', U_NONE},
-  {"set_reac",     'w', LOOP7, 22,        0.000038147,             0.0, 'u', U_NONE},
+  {"set_reac",     'w', LOOP7, 22,      200.0/32768.0,             0.0, 's', U_V_DPS},
   {"v_az",         'w', LOOP7, 23,       20.0/32768.0,             0.0, 's', U_V_DPS},
   /* LOOP7 24 is fast narrow */
-  {"v_piv_err_t",  'w', LOOP7, 25,  DAC_TO_PIV_DPS/2.0,             0.0, 's', U_V_DPS},
-  {"v_piv_vrw_t",  'w', LOOP7, 26,  DAC_TO_PIV_DPS/2.0,             0.0, 's', U_V_DPS},
+  {"v_piv_err_t",  'w', LOOP7, 25,               0.001,             0.0, 's', U_V_DPS},
+  {"v_piv_vrw_t",  'w', LOOP7, 26,               0.001,             0.0, 's', U_V_DPS},
   {"piv_dps_raw",  'w', LOOP7, 27,                 1.0,             0.0, 's', U_NONE},
   {"piv_dps_calc", 'w', LOOP7, 28,        20.0/32768.0,             0.0, 's', U_V_DPS},
   {"isc_age",      'w', LOOP7, 29,                 1.0,             0.0, 'u', U_T_MS},
@@ -751,7 +751,8 @@ struct ChannelStruct SlowChannels[] = {
 /* ACS2 Digital I/O card */
   {"dac1_ampl",    'w',  ACS2_D,  0,                1.0,             0.0, 'u', U_NONE},
   {"dac2_ampl",    'w',  ACS2_D,  1,                1.0,             0.0, 'u', U_NONE},
-  {"dac3_ampl",    'w',  ACS2_D,  2,                1.0,             0.0, 'u', U_NONE},
+  {"piv_vreq",     'w',  ACS2_D,  2,                1.0,             0.0, 'u', U_NONE},
+  //  {"dac3_ampl",    'w',  ACS2_D,  2,                1.0,             0.0, 'u', U_NONE},
   //  {"dac4_ampl",    'w',  ACS2_D,  3,                1.0,             0.0, 'u', U_NONE},
   //  {"dac5_ampl",    'w',  ACS2_D,  4,                1.0,             0.0, 'u', U_NONE},
   {"gyro_mask",    'w',  ACS2_D, 13,                1.0,             0.0, 'u', U_NONE},
@@ -939,7 +940,8 @@ struct ChannelStruct FastChannels[] = {
   {"enc_el",       'w', LOOP2, 47,              I2DEG,             0.0, 'u', U_P_DEG},
   {"enc_sigma",    'w', LOOP2, 48,              I2DEG,             0.0, 'u', U_NONE},
   {"res_piv_raw",  'w', LOOP7, 16,              I2DEG,             0.0, 'u', U_P_DEG},
-  {"piv_v_req",    'w', LOOP7, 24, DAC_TO_PIV_DPS/2.0,             0.0, 's', U_V_DPS},
+  {"piv_v_req",    'w', LOOP7, 24,              0.001,             0.0, 's', U_V_DPS},
+  {"piv_v_req_dac",'w', LOOP7, 31,                1.0,             0.0, 's', U_V_DPS},
 
   END_OF_CHANNELS
 };

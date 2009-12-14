@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.16 $";
+const char *command_list_serial = "$Revision: 4.17 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Cool (empty)",
@@ -430,7 +430,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 3,
     {
-      {"Set Point (dps)",   0, 2.5, 'f', "SET_REAC"},
+      {"Set Point (dps)",   -200, 200, 'f', "SET_REAC"},
       {"V_err Gain (prop)", 0, MAX_15BIT, 'i', "G_PE_PIVOT"},
       {"V_reac Gain (prop)", 0, MAX_15BIT, 'i', "G_PV_PIVOT"}
     }

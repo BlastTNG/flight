@@ -807,7 +807,7 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double gy_ifroll,
   double new_offset, daz;
 
   el *= M_PI / 180.0; // want el in radians
-  gy_az = -(gy_ifroll + gy_ifroll_offset) * cos(el) + -(gy_ifyaw + gy_ifyaw_offset) * sin(el);
+  gy_az = -(gy_ifroll + gy_ifroll_offset) * sin(el) + -(gy_ifyaw + gy_ifyaw_offset) * cos(el);
 
   s->angle += gy_az / SR;
   s->varience += GYRO_VAR;
@@ -1075,7 +1075,7 @@ void Pointing(void)
   //  if (j%500==0) bprintf(info,"Pointing: RG.gy1 = %f, gy1_earth= %f, cos_l =%f sin_a = %f",ACSData.gy_ifel,PointingData[point_index].gy1_earth, cos_a, sin_a);
   RG.gy_ifroll = ACSData.gy_ifroll - PointingData[point_index].gy_ifroll_earth;
   RG.gy_ifyaw = ACSData.gy_ifyaw - PointingData[point_index].gy_ifyaw_earth;
-  PointingData[point_index].v_az = (-1.0)*RG.gy_ifroll*cos_e-RG.gy_ifyaw*sin_e;
+  PointingData[point_index].v_az = (-1.0)*RG.gy_ifroll*sin_e-RG.gy_ifyaw*cos_e;
   /*************************************/
   /** Record history for gyro offsets **/
   RecordHistory(i_point_read);

@@ -53,7 +53,7 @@ struct GainStruct {
 struct VelGainStruct { 
   unsigned short int PE; // prop to velocity error
   unsigned short int PV; // prop to RW velocity
-  unsigned short int SP; // RW velocity Set Point 
+  double SP; // RW velocity Set Point 
 };
 #define LS_OPEN        0x0001
 #define LS_CLOSED      0x0002

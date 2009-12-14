@@ -257,35 +257,64 @@ static double GetVAz(void)
 /*   pointing mode, and resquested azimuth velocity, etc..              */
 /*                                                                      */
 /************************************************************************/
-static double GetVPivot(int v_az_req, unsigned int gpe, unsigned int gpv)
+static double GetVPivot(int v_az_req_gy, unsigned int gpe, unsigned int gpv,unsigned int disabled)
 {
   double v_req = 0.0;
+  int v_req_dac= 0;
   double v_err = 0.0;
   double pe, pv, v1, v2;
   static unsigned int firsttime = 1;
   int i_point;
-  double v_az;
+  double v_az_req;
   static struct NiosStruct* vPivErrAddr;
   static struct NiosStruct* vPivVRWAddr;
-
-  v_az = ((double) v_az_req) * GY16_TO_DPS/10.0; // Convert to dps 
-  pe=((double) gpe)/1000000.0;
+  static struct NiosStruct* pivVReqAddr;
+  static int i;
+  v_az_req = ((double) v_az_req_gy) * GY16_TO_DPS/10.0; // Convert to dps 
+  pe=((double) gpe)/100.0;
   pv=((double) gpv)/1000000.0;
   if(firsttime) {
     vPivErrAddr = GetNiosAddr("v_piv_err_t");
     vPivVRWAddr = GetNiosAddr("v_piv_vrw_t");
+    pivVReqAddr = GetNiosAddr("piv_v_req");
   }
   i_point = GETREADINDEX(point_index);
   v_err=v_az_req-PointingData[point_index].v_az;
   v1 = pe*v_err;
-  v2 = pv*(ACSData.rw_vel_raw-CommandData.pivot_gain.SP); 
-  v_req = v1 + v2 - v_az_req;
+  v2 = (-1.0)*pv*(ACSData.rw_vel_raw-CommandData.pivot_gain.SP); 
+  v_req = v1 + v2 + PointingData[point_index].v_az;
+  //  v_req = v1 + v2 + v_az_req; // This is dangerous to use if your velocity look does not work.
+  //  if(i%500==1) bprintf(info,"GetVPivot: SP = %f",CommandData.pivot_gain.SP);
 
+  if(disabled) { // Don't attempt to send current to the motors if we are disabled.
+    v_req=0.0;
+  }
   /* Error term */
-  WriteData(vPivErrAddr, ((int) v1*PIV_DPS_TO_DAC*2.0), NIOS_QUEUE);
-  WriteData(vPivVRWAddr, ((int) v2*PIV_DPS_TO_DAC*2.0), NIOS_QUEUE);
-  
-  return v_req*PIV_DPS_TO_DAC;
+  WriteData(vPivErrAddr, ((int) (v1*1000.0)), NIOS_QUEUE);
+  WriteData(vPivVRWAddr, ((int) (v2*1000.0)), NIOS_QUEUE);
+  WriteData(pivVReqAddr, ((int) (v_req*1000.0)), NIOS_QUEUE);
+
+  /* Convert to DAC Units*/
+  if(fabs(v_req)<0.02) {
+    v_req_dac=16384+PIV_DAC_OFF;
+  } else {
+    if(v_req>0.0) {
+      v_req_dac=v_req*PIV_DPS_TO_DAC+16384+PIV_DAC_OFF+PIV_DEAD_BAND;
+    } else {
+      v_req_dac=v_req*PIV_DPS_TO_DAC+16384+PIV_DAC_OFF-PIV_DEAD_BAND;
+    }
+  }
+  //  if(i%500==1) bprintf(info,"GetVPivot: v1=%f, v2=%f, v_az_req=%f, v_req=%f, v_err=%f, v_req_dac=%i, SP = %f",v1,v2,v_az_req,v_req,v_err,v_req_dac,CommandData.pivot_gain.SP);
+  i++;
+
+  // Check to make sure the DAC value is in the proper range
+  if(v_req_dac <= 0) {
+    v_req_dac=1;
+  }
+  if(v_req_dac >  32767) {
+    v_req_dac=32767;
+  }
+  return v_req_dac;
 }
 
 /************************************************************************/
@@ -307,7 +336,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   static struct NiosStruct* gPEPivotAddr;
   static struct NiosStruct* gPVPivotAddr;
   static struct NiosStruct* setReacAddr;
-  static struct NiosStruct* pivVReqAddr;
+  static struct NiosStruct* pivVReqDACAddr;
   static struct NiosStruct* pivVCalcAddr;
  
   //TODO temporary
@@ -331,7 +360,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     azVreqAddr = GetNiosAddr("az_vreq");
     cosElAddr = GetNiosAddr("cos_el");
     sinElAddr = GetNiosAddr("sin_el");
-
+    pivVReqDACAddr = GetNiosAddr("piv_vreq");
     gPElAddr = GetNiosAddr("g_p_el");
     gIElAddr = GetNiosAddr("g_i_el");
     gPAzAddr = GetNiosAddr("g_p_az");
@@ -339,11 +368,10 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     gPEPivotAddr = GetNiosAddr("g_pe_pivot");
     gPVPivotAddr = GetNiosAddr("g_pv_pivot");
     setReacAddr = GetNiosAddr("set_reac");
-    pivVReqAddr = GetNiosAddr("piv_v_req");
     pivVCalcAddr = GetNiosAddr("piv_dps_calc");
     dacAmplAddr[0] = GetNiosAddr("dac1_ampl");
     dacAmplAddr[1] = GetNiosAddr("dac2_ampl");
-    dacAmplAddr[2] = GetNiosAddr("dac3_ampl"); 
+    //    dacAmplAddr[2] = GetNiosAddr("dac3_ampl"); // is now piv_vreq
     //    dacAmplAddr[3] = GetNiosAddr("dac4_ampl"); // is now dac_el
     //    dacAmplAddr[4] = GetNiosAddr("dac5_ampl"); // is now dac_rw
   }
@@ -355,7 +383,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   // twice the current value and it is rather confusing. 
   //TODO temporary
   if (wait <= 0)
-    for (i=0; i<3; i++)
+    for (i=0; i<2; i++)
       if (CommandData.Temporary.setLevel[i]) {
 	WriteData(dacAmplAddr[i], CommandData.Temporary.dac_out[i], NIOS_QUEUE);
 	CommandData.Temporary.setLevel[i] = 0;
@@ -412,18 +440,18 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     azGainI = 0;
     pivGainErr = 0;
     pivGainRW = 0;
-    v_piv=GetVPivot(0,pivGainErr,pivGainRW);
+    v_piv=GetVPivot(0,pivGainErr,pivGainRW,1);
   } else {
     azGainP = CommandData.azi_gain.P;
     azGainI = CommandData.azi_gain.I;
     pivGainErr = CommandData.pivot_gain.PE;
     pivGainRW = CommandData.pivot_gain.PV;
-    v_piv=GetVPivot(v_az,pivGainErr,pivGainRW);
+    v_piv=GetVPivot(v_az,pivGainErr,pivGainRW,0);
   }
   //  if (j%100 == 1) bprintf(info,"WriteMot: v_piv = %i",v_piv);
   j++;
   /* requested pivot velocity*/
-  WriteData(pivVReqAddr, v_piv*2, NIOS_QUEUE);
+  WriteData(pivVReqDACAddr, v_piv*2, NIOS_QUEUE);
   /* p term for az motor */
   WriteData(gPAzAddr, azGainP, NIOS_QUEUE);
   /* I term for az motor */
@@ -433,7 +461,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   /* p term to rw vel for pivot motor */
   WriteData(gPVPivotAddr, pivGainRW, NIOS_QUEUE);
   /* setpoint for reaction wheel */
-  WriteData(setReacAddr, CommandData.pivot_gain.SP, NIOS_QUEUE);
+  WriteData(setReacAddr, CommandData.pivot_gain.SP*65536.0/2.5, NIOS_QUEUE);
   /* Pivot velocity */
   WriteData(pivVCalcAddr, (calcVPiv()/20.0*32768.0), NIOS_QUEUE);
 
