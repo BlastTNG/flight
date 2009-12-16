@@ -42,14 +42,16 @@ int GetLine(FILE *fp, char *line)
   char buffer[MAX_LINE_LENGTH];
   char *ret_val;
   int first_char;
-
+  
   do {
     ret_val = fgets(buffer, MAX_LINE_LENGTH, fp);
-    first_char = 0;
-    while ((buffer[first_char] == ' ') || (buffer[first_char] == '\t'))
-      first_char++;
-    strncpy(line, &buffer[first_char], MAX_LINE_LENGTH);
-  } while (((line[0] == '#') || (strlen(line) < 2)) && (ret_val != NULL));
+    if (ret_val != NULL) {
+      first_char = 0;
+      while ((buffer[first_char] == ' ') || (buffer[first_char] == '\t'))
+	first_char++;
+      strncpy(line, &buffer[first_char], MAX_LINE_LENGTH);
+    }
+  } while ((ret_val != NULL) && ((line[0] == '#') || (strlen(line) < 2)));
 
   if (ret_val != NULL)
     return 1; /* a line was read */
@@ -110,7 +112,7 @@ double LutCal(struct LutType *L, double x)
 
   /* find index */
   i = L->last_n;
-  while ((i < n - 1) && (x > L->x[i]))
+  while ((i < n - 2) && (x > L->x[i]))	//i can't be over n-2 since i+1 is used
     i++;
   while ((i > 0) && (x < L->x[i]))
     i--;
@@ -123,6 +125,8 @@ double LutCal(struct LutType *L, double x)
   return(y);
 }
 
+#if 0	//this appears unused
+	//if revived, check for array overflows on interpolation (like above)
 double MagLutCal(struct LutType *L, double mag_x, double mag_y, double x)
 {
   int i, n, iter;
@@ -167,3 +171,5 @@ double MagLutCal(struct LutType *L, double mag_x, double mag_y, double x)
 
   return 0.0;
 }
+#endif
+

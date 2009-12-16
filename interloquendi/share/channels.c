@@ -664,7 +664,7 @@ static void DoSanityChecks(void)
 
   slowsPerBi0Frame = slowsPerBusFrame[0] + slowsPerBusFrame[1];
 
-  DiskFrameWords = SLOW_OFFSET + ccFast + slowsPerBi0Frame + ccWideFast;
+  DiskFrameWords = SLOW_OFFSET + ccFast + slowsPerBi0Frame + 2*ccWideFast;
   DiskFrameSize = DiskFrameWords * 2;
   BiPhaseFrameWords = DiskFrameWords - ccDecom;
   BiPhaseFrameSize = BiPhaseFrameWords * 2;
@@ -895,7 +895,7 @@ void MakeAddressLookups(void)
         BiPhaseLookup[BI0_MAGIC(BBCSpares[spare_count])].index = mplex;
         BiPhaseLookup[BI0_MAGIC(BBCSpares[spare_count])].channel
           = slowIndex[bus][mplex] + bus * (slowsPerBusFrame[0]
-              + SLOW_OFFSET - 1);
+              + SLOW_OFFSET - 1) - SLOW_OFFSET;
         i = mplex * TxFrameWords[bus] + slowIndex[bus][mplex];
         NiosSpares[spare_count] = bus ? BBCPCI_WFRAME2_ADD(i)
           : BBCPCI_WFRAME1_ADD(i);

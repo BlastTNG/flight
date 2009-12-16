@@ -501,7 +501,7 @@ static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
   }
   i_out = (i_out + 1) % BI0_FRAME_BUFLEN;
 
-  nothing[0] = CalculateCRC(0xEB90, RxFrame, BiPhaseFrameWords);
+  nothing[0] = CalculateCRC(0xEB90, RxFrame, BiPhaseFrameSize);
 
   if (bi0_fp >= 0 && InCharge) {
     RxFrame[0] = sync;
@@ -555,9 +555,14 @@ static void InitBi0Buffer()
 
   bi0_buffer.i_in = 10; /* preload the fifo */
   bi0_buffer.i_out = 0;
-  for (i = 0; i<BI0_FRAME_BUFLEN; i++)
+  for (i = 0; i<BI0_FRAME_BUFLEN; i++) {
     bi0_buffer.framelist[i] = balloc(fatal, BiPhaseFrameWords *
         sizeof(unsigned short));
+    ///*
+    //TODO this initialization does not appear to resolve valgrind errors
+    memset(bi0_buffer.framelist[i],0,BiPhaseFrameWords*sizeof(unsigned short));
+    //*/
+  }
 }
 
 static void PushBi0Buffer(unsigned short *RxFrame)
@@ -784,8 +789,11 @@ int main(int argc, char *argv[])
   for (i = 0; i < 3; ++i)
     tdrss_data[i] = (unsigned short *)balloc(fatal, BiPhaseFrameSize);
 
-  for (i = 0; i < FAST_PER_SLOW; ++i)
+  for (i = 0; i < FAST_PER_SLOW; ++i) {
     slow_data[i] = balloc(fatal, slowsPerBi0Frame * sizeof(unsigned short));
+    //TODO fix "uninitialised value" valgrind errors. Ensure not more serious.
+    memset(slow_data[i], 0, slowsPerBi0Frame * sizeof(unsigned short));
+  }
 
   /* Find out whether I'm frodo or sam */
   SamIAm = AmISam();

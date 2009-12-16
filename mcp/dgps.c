@@ -256,7 +256,7 @@ htI32_t GetNextBlock(int fd, void* SBFBlock)
 		int n = read(fd,&c[0],1);
 		if (n<0)
 		  berror(err,"dGPS: read GPSblock failed!");
-		if (c[0]==SYNC_STRING[0]) {
+		if (n>0 && c[0]==SYNC_STRING[0]) {
 			Buffer[0] = (htUI08_t)c[0];
 			//printf("\nDGPS:Checking Block\n\n");	
 			if (CheckBlock(fd, Buffer) == 0) //&&
