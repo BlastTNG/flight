@@ -53,7 +53,8 @@
 
 int SIPRoute(int sock, int t_link, int t_route, char* buffer)
 {
-  int i_cmd, i_ack;
+  int i_cmd;
+  unsigned int i_ack;
   int count = 0;
   char* token[1024];
   char* ptr = buffer;
@@ -266,7 +267,8 @@ void Daemonise(int route, int no_fork)
   int fd, n, i, size, pid, reset_lastsock = 0;
   int report = 0;
   struct sockaddr_in addr;
-  int addrlen, sock, csock, lastsock;
+  int sock, csock, lastsock;
+  socklen_t addrlen;
   fd_set fdlist, fdread, fdwrite;
 
 #ifdef USE_AUTHENTICATION
