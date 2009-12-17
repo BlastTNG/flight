@@ -285,7 +285,7 @@ void Daemonise(int route, int no_fork)
 
   /* open our output before daemonising just in case it fails. */
   if (route == 1) /* fifo */
-    fd = open("/tmp/SIPSS.FIFO", O_WRONLY);
+    fd = open("/tmp/SIPSS.FIFO", O_RDWR); 
   else if (route == 2) /* null */
     fd = open("/dev/null", O_WRONLY);
   else
