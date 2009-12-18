@@ -72,6 +72,9 @@
 /* latching relay pulse length in 200ms slow frames */
 #define LATCH_PULSE_LEN	 2
 
+/* time (in slow frames) to suppress ADC card watchdog, to induce reset */
+#define	RESET_ADC_LEN	 80
+
 void ActPotTrim(void); /* actuators.c */
 void RecalcOffset(double, double);
 
@@ -1377,7 +1380,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 //      break;
     case reset_adc:
       if (ivalues[0] < 64)
-	CommandData.power.adc_reset[ivalues[0]/4] = 1;
+	CommandData.power.adc_reset[ivalues[0]/4] = RESET_ADC_LEN;
       break;
     case timeout:       /* Set timeout */
       CommandData.timeout = ivalues[0];

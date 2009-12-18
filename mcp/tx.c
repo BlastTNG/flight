@@ -293,12 +293,11 @@ static void SyncADC (void)
     l = sync_nums[m];	    //node number
     k = slow_data[statusAddr[m]->index][statusAddr[m]->channel];
 
-    if ((k & 0x3) == 0x1) {
+    if ((k & 0x3) == 0x1 && CommandData.power.adc_reset[l/4] == 0) {
       /* board is up, but needs to be synced */
       if (!doingSync[m])
         bprintf(info, "ADC Sync: node %i asserted\n", l);
       doingSync[m] = BBC_ADC_SYNC | 0x3;
-      CommandData.power.adc_reset[l/4] = 0;
     } else if ((k & 0x3) == 0x3) {
       /* board is up and synced */
       if (doingSync[m] & BBC_ADC_SYNC) {
@@ -309,12 +308,17 @@ static void SyncADC (void)
     } else {
       /* board is not yet alive */
       doingSync[m] = 0;
-      CommandData.power.adc_reset[l/4] = 0;
+    }
+
+    /* count down reset pulse, if asserted, and force resync */
+    if (CommandData.power.adc_reset[l/4] > 0) {
+      if (l%4 == 0) CommandData.power.adc_reset[l/4]--;
+      doingSync[m] = 0x0;
     }
 
     /* update the serial if we got a good response last time */
-    /* stop toggling status when trying to reset the card */
-    if (!CommandData.power.adc_reset[l/4] && (k & 0xfffc) == serial[m]) {
+    /* only toggle while not trying to reset card */
+    if (CommandData.power.adc_reset[l/4] == 0 && (k & 0xfffc) == serial[m]) {
       if (serial[m] == 0xeb90)
         serial[m] = (~0xeb90) & 0xfffc;
       else
