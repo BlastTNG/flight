@@ -224,7 +224,7 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   }
 
   slowsPerBi0Frame = slowsPerBusFrame[0] + slowsPerBusFrame[1];
-  DiskFrameWords = SLOW_OFFSET + ccFast + slowsPerBi0Frame + ccWideFast;
+  DiskFrameWords = SLOW_OFFSET + ccFast + slowsPerBi0Frame + 2*ccWideFast;
   DiskFrameSize = 2 * DiskFrameWords;
 
 #elif defined VERBOSE
