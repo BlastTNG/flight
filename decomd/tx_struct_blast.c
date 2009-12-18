@@ -344,7 +344,7 @@ struct ChannelStruct SlowChannels[] = {
   {"timeout",      'w', LOOP1, 20,                1.0,             0.0, 'u', U_NONE},
   {"sun_az",       'w', LOOP1, 21,              I2DEG,             0.0, 'u', U_NONE},
   {"lvdt_low",     'w', LOOP1, 22,                1.0,             0.0, 's', U_NONE},
-  {"sam_i_am",     'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE},
+  {"south_i_am",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE},
   {"cryostate",    'w', LOOP1, 24,                1.0,             0.0, 'u', U_NONE},
   {"cpu_temp1",    'w', LOOP1, 26,               0.01,             0.0, 'u', U_NONE},
   {"mag_model",    'w', LOOP1, 27,              I2DEG,             0.0, 'u', U_NONE}, // magnetic declination

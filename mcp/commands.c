@@ -1375,6 +1375,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 //    case gyro_on:
 //      CommandData.power.gyro_off[ivalues[0]-1] &= ~0x01;
 //      break;
+    case reset_adc:
+      if (ivalues[0] < 64)
+	CommandData.power.adc_reset[ivalues[0]/4] = 1;
+      break;
     case timeout:       /* Set timeout */
       CommandData.timeout = ivalues[0];
       break;
@@ -2252,6 +2256,8 @@ void InitCommandData()
   CommandData.power.gyro_off[5] = 0;
   CommandData.power.hub232_off = 0;
   CommandData.power.ss_off = 0;
+  for (i=0; i<16; i++)
+    CommandData.power.adc_reset[i] = 0;
 
   CommandData.gyheat.age = 0;
 

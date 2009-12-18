@@ -49,7 +49,7 @@
 
 #define NIOS_BUFFER_SIZE 100
 
-extern short int SamIAm;
+extern short int SouthIAm;
 short int InCharge;
 
 extern struct AxesModeStruct axes_mode; /* motors.c */
@@ -111,14 +111,14 @@ static void WriteAux(void)
   static struct NiosStruct* cpuTemp1Addr;
   static struct NiosStruct* cpuTemp2Addr;
   static struct NiosStruct* cpuTemp3Addr;
-  static struct NiosStruct* samIAmAddr;
+  static struct NiosStruct* southIAmAddr;
   static struct NiosStruct* bi0FifoSizeAddr;
   static struct NiosStruct* bbcFifoSizeAddr;
   static struct NiosStruct* ploverAddr;
   static struct NiosStruct* atFloatAddr;
   static struct NiosStruct* scheduleAddr;
   static struct NiosStruct* he4LevOldAddr;
-  static struct BiPhaseStruct* samIAmReadAddr;
+  static struct BiPhaseStruct* southIAmReadAddr;
   static struct BiPhaseStruct* he4LevReadAddr;
   static int incharge = -1;
   time_t t;
@@ -129,8 +129,8 @@ static void WriteAux(void)
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    samIAmAddr = GetNiosAddr("sam_i_am");
-    samIAmReadAddr = ExtractBiPhaseAddr(samIAmAddr);
+    southIAmAddr = GetNiosAddr("south_i_am");
+    southIAmReadAddr = ExtractBiPhaseAddr(southIAmAddr);
 
     he4LevOldAddr = GetNiosAddr("he4_lev_old");
     he4LevReadAddr = GetBiPhaseAddr("he4_lev");
@@ -150,8 +150,8 @@ static void WriteAux(void)
     scheduleAddr = GetNiosAddr("schedule");
   }
 
-  InCharge = !(SamIAm
-      ^ slow_data[samIAmReadAddr->index][samIAmReadAddr->channel]);
+  InCharge = !(SouthIAm
+      ^ slow_data[southIAmReadAddr->index][southIAmReadAddr->channel]);
   if (InCharge != incharge && InCharge) {
     bputs(info, "System: I have gained control.\n");
     CommandData.actbus.force_repoll = 1;
@@ -175,7 +175,7 @@ static void WriteAux(void)
   WriteData(cpuTemp2Addr, CommandData.temp2, NIOS_QUEUE);
   WriteData(cpuTemp3Addr, CommandData.temp3, NIOS_QUEUE);
 
-  WriteData(samIAmAddr, SamIAm, NIOS_QUEUE);
+  WriteData(southIAmAddr, SouthIAm, NIOS_QUEUE);
   WriteData(diskFreeAddr, CommandData.df, NIOS_QUEUE);
 
   i_point = GETREADINDEX(point_index);
@@ -290,25 +290,31 @@ static void SyncADC (void)
   }
 
   for (m = 0; m < NUM_SYNC; ++m) {
-    l = sync_nums[m];
+    l = sync_nums[m];	    //node number
     k = slow_data[statusAddr[m]->index][statusAddr[m]->channel];
 
     if ((k & 0x3) == 0x1) {
       /* board is up, but needs to be synced */
       if (!doingSync[m])
         bprintf(info, "ADC Sync: node %i asserted\n", l);
-      doingSync[m] = BBC_ADC_SYNC;
-    } else {
-      if (doingSync[m]) {
+      doingSync[m] = BBC_ADC_SYNC | 0x3;
+      CommandData.power.adc_reset[l/4] = 0;
+    } else if ((k & 0x3) == 0x3) {
+      /* board is up and synced */
+      if (doingSync[m] & BBC_ADC_SYNC) {
         bprintf(info, "ADC Sync: node %i deasserted\n", l);
-        if (l == 8)
-          ForceBiasCheck();
+        if (l == 8) ForceBiasCheck();
       }
+      doingSync[m] = 0x3;
+    } else {
+      /* board is not yet alive */
       doingSync[m] = 0;
+      CommandData.power.adc_reset[l/4] = 0;
     }
 
     /* update the serial if we got a good response last time */
-    if ((k & 0xfffc) == serial[m]) {
+    /* stop toggling status when trying to reset the card */
+    if (!CommandData.power.adc_reset[l/4] && (k & 0xfffc) == serial[m]) {
       if (serial[m] == 0xeb90)
         serial[m] = (~0xeb90) & 0xfffc;
       else
@@ -316,7 +322,7 @@ static void SyncADC (void)
     }
 
     RawNiosWrite(syncAddr[m]->niosAddr, BBC_WRITE | BBC_NODE(l) | BBC_CH(63)
-        | doingSync[m] | (serial[m] & 0xfffc) | 0x3, NIOS_FLUSH);
+        | doingSync[m] | (serial[m] & 0xfffc), NIOS_FLUSH);
   }
 }
 

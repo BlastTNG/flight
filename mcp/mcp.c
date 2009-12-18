@@ -68,7 +68,7 @@
 /* Define global variables */
 int bbc_fp = -1;
 unsigned int debug = 0;
-short int SamIAm;
+short int SouthIAm;
 struct ACSDataStruct ACSData;
 
 unsigned int RxFrameFastSamp;
@@ -647,7 +647,7 @@ static int IsNewFrame(unsigned int d)
 }
 
 /* Identity crisis: am I frodo or sam? */
-static int AmISam(void)
+static int AmISouth(void)
 {
   char buffer[2];
 
@@ -796,12 +796,12 @@ int main(int argc, char *argv[])
   }
 
   /* Find out whether I'm frodo or sam */
-  SamIAm = AmISam();
+  SouthIAm = AmISouth();
 
-  if (SamIAm)
-    bputs(info, "System: I am Sam.\n");
+  if (SouthIAm)
+    bputs(info, "System: I am South.\n");
   else
-    bputs(info, "System: I am not Sam.\n");
+    bputs(info, "System: I am not South.\n");
 
 #ifndef BOLOTEST
   InitSched();

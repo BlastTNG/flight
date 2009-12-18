@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.17 $";
+const char *command_list_serial = "$Revision: 4.18 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Cool (empty)",
@@ -628,6 +628,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
 //      {"Gyro # (1-6)", 1, 6, 'i', ""}
 //    }
 //  },
+  {COMMAND(reset_adc), "Reset an ADC motherboard", GR_POWER, 1,
+    {
+      {"Node number",  0, 64, 'i', ""}
+    }
+  },
   {COMMAND(setpoints), "balance system setpoints", GR_BAL, 3,
     {
       {"Pump On Point (A)",  0, 2, 'f', "BAL_ON"},

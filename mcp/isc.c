@@ -46,7 +46,7 @@ static struct {
   {"Osc", "192.168.1.9"}
 };
 
-extern short int SamIAm;   /* mcp.c */
+extern short int SouthIAm;   /* mcp.c */
 extern short int InCharge; /* tx.c */
 
 /*---- ISC semaphores ----*/
@@ -120,7 +120,7 @@ static int ISCInit(int which)
 
   inet_aton(isc_which[which].where, &addr.sin_addr);
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(BASE_PORT + SamIAm);
+  addr.sin_port = htons(BASE_PORT + SouthIAm);
 
   if ((n = connect(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)))
       < 0) {

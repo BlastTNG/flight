@@ -164,6 +164,7 @@ struct CommandDataStruct {
     unsigned char gyro_off[6];
     unsigned char hub232_off;
     unsigned char ss_off;
+    unsigned char adc_reset[16];
   } power;
 
   unsigned short disable_az;

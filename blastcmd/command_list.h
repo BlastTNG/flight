@@ -18,7 +18,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 180        /* total number of single word cmds */
-#define N_MCOMMANDS 104        /* total number of multiword commands */
+#define N_MCOMMANDS 105        /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -144,7 +144,7 @@ enum multiCommand {
   xy_jump,           xy_xscan,          xy_yscan,         xy_raster,
   actuator_i,        lock_vel,          lock_i,           actuator_delta,
   delta_secondary,   lvdt_limit,        thermo_param,     focus_offset,
-  isc_max_age,	     osc_max_age
+  isc_max_age,	     osc_max_age,	reset_adc
 };
 
 //32-bit and 64-bit sytems disagree on packing
