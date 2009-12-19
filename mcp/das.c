@@ -83,15 +83,6 @@
 #define CS_LNVALVE_ON     0x0100
 #define CS_AUTO_JFET      0x0200
 
-/* The length of time to wait between successive auto-bias level sets */
-#define B_AMP_TIMEOUT      6000 /* = 60 seconds in 100Hz Frames */
-/* The length of time to wait after starting up before auto-bias level check */
-#define B_AMP_STARTUP      3000 /* = 30 seconds in 100Hz Frames */
-
-static int bias_amp1_timeout = B_AMP_STARTUP;
-static int bias_amp2_timeout = B_AMP_STARTUP;
-static int bias_amp3_timeout = B_AMP_STARTUP;
-
 void WritePrevStatus();
 
 /************************************************************************/
@@ -482,10 +473,6 @@ void CryoControl (void)
   WriteData(cryoctrlAddr, cryoctrl, NIOS_FLUSH);
 }
 
-void ForceBiasCheck(void) {
-  bias_amp1_timeout = bias_amp2_timeout = bias_amp3_timeout = 10;
-}
-
 /************************************************************************/
 /*                                                                      */
 /*   BiasControl: Digital IO with the Bias Generator Card               */
@@ -497,17 +484,17 @@ void BiasControl (unsigned short* RxFrame)
   static struct NiosStruct* rampEnaAddr;
   static struct BiPhaseStruct* rampAmplAddr;
   int i;
-  char buf[32];
   int isBiasRamp;
 
   /******** Obtain correct indexes the first time here ***********/
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    for (i=0; i<5; i++) {
-      sprintf(buf, "bias%i_ampl", i+1);
-      biasAmplAddr[i] = GetNiosAddr(buf);
-    }
+    biasAmplAddr[0] = GetNiosAddr("bias_ampl_500");
+    biasAmplAddr[1] = GetNiosAddr("bias_ampl_350");
+    biasAmplAddr[2] = GetNiosAddr("bias_ampl_250");
+    biasAmplAddr[3] = GetNiosAddr("bias_ampl_rox");
+    biasAmplAddr[4] = GetNiosAddr("bias_ampl_x");
     rampEnaAddr = GetNiosAddr("bias_ramp_ena");
     rampAmplAddr = GetBiPhaseAddr("ramp_ampl");
   }

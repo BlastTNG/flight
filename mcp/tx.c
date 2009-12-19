@@ -76,7 +76,6 @@ void ControlPower(void);
 /* in das.c */
 void BiasControl(unsigned short* RxFrame);
 void CryoControl(void);
-void ForceBiasCheck(void);
 void PhaseControl(void);
 
 /* in motors.c */
@@ -302,7 +301,6 @@ static void SyncADC (void)
       /* board is up and synced */
       if (doingSync[m] & BBC_ADC_SYNC) {
         bprintf(info, "ADC Sync: node %i deasserted\n", l);
-        if (l == 8) ForceBiasCheck();
       }
       doingSync[m] = 0x3;
     } else {
