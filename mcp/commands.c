@@ -1411,23 +1411,23 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 
       /***************************************/
       /*************** Bias  *****************/
-    case bias1_level:    /* Set bias 1 */
+    case bias_level_500:    /* Set bias 1 (500) */
       CommandData.Bias.bias[0] = ivalues[0] << 1;
       CommandData.Bias.setLevel[0] = 1;
       break;
-    case bias2_level:   /* Set bias 2 */
+    case bias_level_350:   /* Set bias 2 (350) */
       CommandData.Bias.bias[1] = ivalues[0] << 1;
       CommandData.Bias.setLevel[1] = 1;
       break;
-    case bias3_level:   /* Set bias 3 */
+    case bias_level_250:   /* Set bias 3 (250) */
       CommandData.Bias.bias[2] = ivalues[0] << 1;
       CommandData.Bias.setLevel[2] = 1;
       break;
-    case bias4_level:   /* Set bias 4 */
+    case bias_level_rox:   /* Set bias 4 (ROX) */
       CommandData.Bias.bias[3] = ivalues[0] << 1;
       CommandData.Bias.setLevel[3] = 1;
       break;
-    case bias5_level:   /* Set bias 5 */
+    case bias_level_x:   /* Set bias 5 (spare) */
       CommandData.Bias.bias[4] = ivalues[0] << 1;
       CommandData.Bias.setLevel[4] = 1;
       break;

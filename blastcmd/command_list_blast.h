@@ -118,8 +118,8 @@ enum singleCommand {
 enum multiCommand {
   az_el_goto,        az_gain,           az_scan,          bal_gain,
   bal_level,         osc_set_focus,     osc_set_aperture, osc_save_period,
-  bias1_level,       bias2_level,       bias3_level,      bias4_level,
-  bias5_level,       isc_blob_centre,
+  bias_level_500,    bias_level_350,    bias_level_250,   bias_level_rox,
+  bias_level_x,      isc_blob_centre,
   /* dac level commands are temporary */
   dac1_level,        dac2_level,        dac3_level,       dac4_level,
   dac5_level,

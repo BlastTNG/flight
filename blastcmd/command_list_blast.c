@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.18 $";
+const char *command_list_serial = "$Revision: 4.19 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Cool (empty)",
@@ -682,29 +682,29 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /*************** Bias  *****************/
-  {COMMAND(bias1_level), "bias 1 level (250 micron)", GR_BIAS, 1,
+  {COMMAND(bias_level_250), "bias level 250 micron", GR_BIAS, 1,
     {
-      {"Level", 0, 32767, 'i', "bias1_ampl"}
+      {"Level", 0, 32767, 'i', "bias_ampl_250"}
     }
   },
-  {COMMAND(bias2_level), "bias 2 level (350 micron)", GR_BIAS, 1,
+  {COMMAND(bias_level_350), "bias level 350 micron", GR_BIAS, 1,
     {
-      {"Level", 0, 32767, 'i', "bias2_ampl"}
+      {"Level", 0, 32767, 'i', "bias_ampl_350"}
     }
   },
-  {COMMAND(bias3_level), "bias 3 level (500 micron)", GR_BIAS, 1,
+  {COMMAND(bias_level_500), "bias level 500 micron", GR_BIAS, 1,
     {
-      {"Level", 0, 32767, 'i', "bias3_ampl"}
+      {"Level", 0, 32767, 'i', "bias_ampl_500"}
     }
   },
-  {COMMAND(bias4_level), "bias 4 level (housekeeping?)", GR_BIAS, 1,
+  {COMMAND(bias_level_rox), "bias level ROX", GR_BIAS, 1,
     {
-      {"Level", 0, 32767, 'i', "bias4_ampl"}
+      {"Level", 0, 32767, 'i', "bias_ampl_rox"}
     }
   },
-  {COMMAND(bias5_level), "bias 5 level (cryo heater?)", GR_BIAS, 1,
+  {COMMAND(bias_level_x), "bias level X (unused)", GR_BIAS, 1,
     {
-      {"Level", 0, 32767, 'i', "bias5_ampl"}
+      {"Level", 0, 32767, 'i', "bias_ampl_x"}
     }
   },
   {COMMAND(phase), "set phase shift", GR_BIAS, 2,
