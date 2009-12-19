@@ -67,13 +67,14 @@
 #define CAL16(m,b) ((m)*M_16PRE), ((b) + B_16PRE*(m)*M_16PRE)
 #define CAL16T(m,b) ((m)*M_16T), ((b) + B_16T*(m)*M_16T - 273.15)
 
-#define U_NONE "","" 
-#define U_T_C "Temperature","^oC"
+#define U_NONE  "","" 
+#define U_T_C   "Temperature","^oC"
 #define U_V_DPS "Speed","^o/s"
 #define U_P_DEG "Position","^o"
 #define U_V_V	"Voltage","V"
-#define U_I_A	"Current","A"
-#define U_T_MS	"Time","ms"
+#define U_I_A   "Current","A"
+#define U_T_MS  "Time","ms"
+#define U_R_O   "Resistance","Ohms"
 
 /* Measured by Tristan @ Penn, September 29 2009 */
 #define CRYO_A2_M ( 4.805248E-9)
@@ -81,9 +82,12 @@
 /* Modified by Jeff @ Penn, October 6 2009 */
 #define CRYO_D_M ( 4.8023774e-09)
 #define CRYO_D_B (-1.0317770e+01)
+/* Estimated by Truch @ Penn, December 18 2009 */
+#define CRYO_A1_M ( 1.7475937e-05)
+#define CRYO_A1_B (-3.7530959e+04)
 
 /*******************************************************************************
- * TODO The channel list needs updating! Most of this is still from BLAST06
+ * TODO The channel list needs updating! Some of this is still from BLAST06
  *
  * Anything allocated to one of the following TMP nodes must be reassigned
  * to the correct new node above, or it must be deleted
@@ -105,60 +109,58 @@
 #define TMP6	55, 0	//all channels formerly on BIAS
 
 /* read and write channel 56 on all boards reserved for ADC Sync */
+
 struct ChannelStruct WideSlowChannels[] = {
-  /* generic names for analog channels. BE MORE SPECIFIC 
-   * If possible, make it 16 bit. Make it fast if necessary
-   * Also, can maybe get rid on a TMP Channel when you do */
-  {"cryo_a1_00",    'r', CRYO_A1,  0,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_01",    'r', CRYO_A1,  2,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_02",    'r', CRYO_A1,  4,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_03",    'r', CRYO_A1,  6,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_04",    'r', CRYO_A1,  8,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_05",    'r', CRYO_A1, 10,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_06",    'r', CRYO_A1, 12,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_07",    'r', CRYO_A1, 14,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_08",    'r', CRYO_A1, 16,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_09",    'r', CRYO_A1, 18,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_10",    'r', CRYO_A1, 20,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_11",    'r', CRYO_A1, 22,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_12",    'r', CRYO_A1, 24,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_13",    'r', CRYO_A1, 26,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_14",    'r', CRYO_A1, 28,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_15",    'r', CRYO_A1, 30,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_16",    'r', CRYO_A1, 32,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_17",    'r', CRYO_A1, 34,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_18",    'r', CRYO_A1, 36,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_19",    'r', CRYO_A1, 38,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_20",    'r', CRYO_A1, 40,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_21",    'r', CRYO_A1, 42,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_22",    'r', CRYO_A1, 44,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_23",    'r', CRYO_A1, 46,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a1_24",    'r', CRYO_A1, 48,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a2_00",    'r', CRYO_A2,  0,          CRYO_A2_M,       CRYO_A2_B, 'U', U_NONE},
-  {"cryo_a2_01",    'r', CRYO_A2,  2,          CRYO_A2_M,       CRYO_A2_B, 'U', U_NONE},
-  {"cryo_a2_02",    'r', CRYO_A2,  4,          CRYO_A2_M,       CRYO_A2_B, 'U', U_NONE},
-  {"cryo_a2_03",    'r', CRYO_A2,  6,          CRYO_A2_M,       CRYO_A2_B, 'U', U_NONE},
-  {"cryo_a2_04",    'r', CRYO_A2,  8,          CRYO_A2_M,       CRYO_A2_B, 'U', U_NONE},
-  {"td_ln",         'r', CRYO_A2, 10,           CRYO_D_M,        CRYO_D_B, 'U', U_NONE},
-  {"cryo_a2_06",    'r', CRYO_A2, 12,          CRYO_A2_M,       CRYO_A2_B, 'U', U_NONE},
-  {"cryo_a2_07",    'r', CRYO_A2, 14,          CRYO_A2_M,       CRYO_A2_B, 'U', U_NONE},
-  {"td_vcs_filt",   'r', CRYO_A2, 16,           CRYO_D_M,        CRYO_D_B, 'U', U_NONE},
-  {"cryo_a2_09",    'r', CRYO_A2, 18,          CRYO_A2_M,       CRYO_A2_B, 'U', U_NONE},
-  {"cryo_a2_10",    'r', CRYO_A2, 20,          CRYO_A2_M,       CRYO_A2_B, 'U', U_NONE},
-  {"cryo_a2_11",    'r', CRYO_A2, 22,          CRYO_A2_M,       CRYO_A2_B, 'U', U_NONE},
-  {"td_hs_charcoal",'r', CRYO_A2, 24,           CRYO_D_M,        CRYO_D_B, 'U', U_NONE},
-  {"td_lhe_filt",   'r', CRYO_A2, 26,           CRYO_D_M,        CRYO_D_B, 'U', U_NONE},
-  {"td_lhe",        'r', CRYO_A2, 28,           CRYO_D_M,        CRYO_D_B, 'U', U_NONE},
-  {"cryo_a2_15",    'r', CRYO_A2, 30,          CRYO_A2_M,       CRYO_A2_B, 'U', U_NONE},
-  {"cryo_a2_16",    'r', CRYO_A2, 32,          CRYO_A2_M,       CRYO_A2_B, 'U', U_NONE},
-  {"cryo_a2_17",    'r', CRYO_A2, 34,          CRYO_A2_M,       CRYO_A2_B, 'U', U_NONE},
-  {"cryo_a2_18",    'r', CRYO_A2, 36,          CRYO_A2_M,       CRYO_A2_B, 'U', U_NONE},
-  {"cryo_a2_19",    'r', CRYO_A2, 38,          CRYO_A2_M,       CRYO_A2_B, 'U', U_NONE},
-  {"td_vcs_jfet",   'r', CRYO_A2, 40,           CRYO_D_M,        CRYO_D_B, 'U', U_NONE},
-  {"td_jfet",       'r', CRYO_A2, 42,           CRYO_D_M,        CRYO_D_B, 'U', U_NONE},
-  {"td_hs_pot",     'r', CRYO_A2, 44,           CRYO_D_M,        CRYO_D_B, 'U', U_NONE},
-  {"td_charcoal",   'r', CRYO_A2, 46,           CRYO_D_M,        CRYO_D_B, 'U', U_NONE},
-  {"td_ln_filt",    'r', CRYO_A2, 48,           CRYO_D_M,        CRYO_D_B, 'U', U_NONE},
+  {"tr_he3_fridge", 'r', CRYO_A1,  0,          CRYO_A1_M,       CRYO_A1_B, 'U', U_R_O},
+  {"tr_m5",         'r', CRYO_A1,  2,          CRYO_A1_M,       CRYO_A1_B, 'U', U_R_O},
+//{"cryo_a1_02",    'r', CRYO_A1,  4,                1.0,             0.0, 'U', U_NONE},
+//{"cryo_a1_03",    'r', CRYO_A1,  6,                1.0,             0.0, 'U', U_NONE},
+  {"tr_m4",         'r', CRYO_A1,  8,          CRYO_A1_M,       CRYO_A1_B, 'U', U_R_O},
+//{"cryo_a1_05",    'r', CRYO_A1, 10,                1.0,             0.0, 'U', U_NONE},
+//{"cryo_a1_06",    'r', CRYO_A1, 12,                1.0,             0.0, 'U', U_NONE},
+//{"cryo_a1_07",    'r', CRYO_A1, 14,                1.0,             0.0, 'U', U_NONE},
+//{"cryo_a1_08",    'r', CRYO_A1, 16,                1.0,             0.0, 'U', U_NONE},
+//{"cryo_a1_09",    'r', CRYO_A1, 18,                1.0,             0.0, 'U', U_NONE},
+  {"tr_hwpr",       'r', CRYO_A1, 20,          CRYO_A1_M,       CRYO_A1_B, 'U', U_R_O},
+  {"tr_horn_500",   'r', CRYO_A1, 22,          CRYO_A1_M,       CRYO_A1_B, 'U', U_R_O},
+//{"cryo_a1_12",    'r', CRYO_A1, 24,                1.0,             0.0, 'U', U_NONE},
+//{"cryo_a1_13",    'r', CRYO_A1, 26,                1.0,             0.0, 'U', U_NONE},
+  {"tr_horn_350",   'r', CRYO_A1, 28,          CRYO_A1_M,       CRYO_A1_B, 'U', U_R_O},
+//{"cryo_a1_15",    'r', CRYO_A1, 30,                1.0,             0.0, 'U', U_NONE},
+//{"cryo_a1_16",    'r', CRYO_A1, 32,                1.0,             0.0, 'U', U_NONE},
+  {"tr_horn_250",   'r', CRYO_A1, 34,          CRYO_A1_M,       CRYO_A1_B, 'U', U_R_O},
+//{"cryo_a1_18",    'r', CRYO_A1, 36,                1.0,             0.0, 'U', U_NONE},
+//{"cryo_a1_19",    'r', CRYO_A1, 38,                1.0,             0.0, 'U', U_NONE},
+  {"tr_300mk_strap",'r', CRYO_A1, 40,          CRYO_A1_M,       CRYO_A1_B, 'U', U_R_O},
+//{"cryo_a1_21",    'r', CRYO_A1, 42,                1.0,             0.0, 'U', U_NONE},
+  {"tr_he4_pot",    'r', CRYO_A1, 44,          CRYO_A1_M,       CRYO_A1_B, 'U', U_R_O},
+  {"tr_optbox_filt",'r', CRYO_A1, 46,          CRYO_A1_M,       CRYO_A1_B, 'U', U_R_O},
+//{"cryo_a1_24",    'r', CRYO_A1, 48,                1.0,             0.0, 'U', U_NONE},
+  {"cryo_a2_00",    'r', CRYO_A2,  0,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"cryo_a2_01",    'r', CRYO_A2,  2,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"cryo_a2_02",    'r', CRYO_A2,  4,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"cryo_a2_03",    'r', CRYO_A2,  6,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"cryo_a2_04",    'r', CRYO_A2,  8,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"td_ln",         'r', CRYO_A2, 10,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
+  {"cryo_a2_06",    'r', CRYO_A2, 12,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"cryo_a2_07",    'r', CRYO_A2, 14,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"td_vcs_filt",   'r', CRYO_A2, 16,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
+  {"cryo_a2_09",    'r', CRYO_A2, 18,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"cryo_a2_10",    'r', CRYO_A2, 20,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"cryo_a2_11",    'r', CRYO_A2, 22,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"td_hs_charcoal",'r', CRYO_A2, 24,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
+  {"td_lhe_filt",   'r', CRYO_A2, 26,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
+  {"td_lhe",        'r', CRYO_A2, 28,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
+  {"cryo_a2_15",    'r', CRYO_A2, 30,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"cryo_a2_16",    'r', CRYO_A2, 32,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"cryo_a2_17",    'r', CRYO_A2, 34,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"cryo_a2_18",    'r', CRYO_A2, 36,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"cryo_a2_19",    'r', CRYO_A2, 38,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"td_vcs_jfet",   'r', CRYO_A2, 40,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
+  {"td_jfet",       'r', CRYO_A2, 42,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
+  {"td_hs_pot",     'r', CRYO_A2, 44,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
+  {"td_charcoal",   'r', CRYO_A2, 46,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
+  {"td_ln_filt",    'r', CRYO_A2, 48,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
 
   {"cpu_time",     'w', LOOP1,  0,                1.0,             0.0, 'U', U_NONE}, // could delete and rename cpu_usec to time_usec,
   {"cpu_usec",     'w', LOOP4, 58,                1.0,             0.0, 'U', U_NONE}, // but look in derived.c at Time...
