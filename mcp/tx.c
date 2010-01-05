@@ -134,9 +134,9 @@ static void WriteAux(void)
     he4LevOldAddr = GetNiosAddr("he4_lev_old");
     he4LevReadAddr = GetBiPhaseAddr("he4_lev");
 
-    cpuTemp1Addr = GetNiosAddr("cpu_temp1");
-    cpuTemp2Addr = GetNiosAddr("cpu_temp2");
-    cpuTemp3Addr = GetNiosAddr("cpu_temp3");
+    cpuTemp1Addr = GetNiosAddr("t_cpu1");
+    cpuTemp2Addr = GetNiosAddr("t_cpu2");
+    cpuTemp3Addr = GetNiosAddr("t_cpu3");
     cpuTimeAddr = GetNiosAddr("cpu_time");
     cpuTimeuSAddr = GetNiosAddr("cpu_usec");
     diskFreeAddr = GetNiosAddr("disk_free");
@@ -948,12 +948,12 @@ static void StoreData(int index)
 
     rwEncVel = GetNiosAddr("rw_vel_raw");
     elevEncPos = GetNiosAddr("enc_el_raw");
-    rwTempAddr = GetNiosAddr("rw_temp");
+    rwTempAddr = GetNiosAddr("t_reac_mc");
     rwIRawAddr = GetNiosAddr("rw_i_raw");
     rwStat1Addr = GetNiosAddr("rw_stat_1");
     rwStat2Addr = GetNiosAddr("rw_stat_2");
     rwFaultAddr = GetNiosAddr("rw_fault");
-    elTempAddr = GetNiosAddr("el_temp");
+    elTempAddr = GetNiosAddr("t_el_mc");
     elIRawAddr = GetNiosAddr("el_i_raw");
     elStat1Addr = GetNiosAddr("el_stat_1");
     elStat2Addr = GetNiosAddr("el_stat_2");

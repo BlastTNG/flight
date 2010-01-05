@@ -348,7 +348,7 @@ struct ChannelStruct SlowChannels[] = {
   {"lvdt_low",     'w', LOOP1, 22,                1.0,             0.0, 's', U_NONE},
   {"south_i_am",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE},
   {"cryostate",    'w', LOOP1, 24,                1.0,             0.0, 'u', U_NONE},
-  {"cpu_temp1",    'w', LOOP1, 26,               0.01,             0.0, 'u', U_NONE},
+  {"t_cpu1",    'w', LOOP1, 26,               0.01,             0.0, 'u', U_NONE},
   {"mag_model",    'w', LOOP1, 27,              I2DEG,             0.0, 'u', U_NONE}, // magnetic declination
   {"sensor_veto",  'w', LOOP1, 28,                1.0,             0.0, 'u', U_NONE},
   {"bal_on",       'w', LOOP1, 29,           1./1648.,             0.0, 'u', U_NONE},
@@ -442,8 +442,8 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP2 4-5 are wide */
   {"isc_offset",   'w', LOOP3,  6,                1.0,             0.0, 's', U_NONE},
   {"bbc_fifo_size",'w', LOOP3,  7,             1./624,             0.0, 'u', U_NONE},
-  {"cpu_temp2",    'w', LOOP3,  8,               0.01,             0.0, 'u', U_NONE},
-  {"cpu_temp3",    'w', LOOP3,  9,               0.01,             0.0, 'u', U_NONE},
+  {"t_cpu2",    'w', LOOP3,  8,               0.01,             0.0, 'u', U_NONE},
+  {"t_cpu3",    'w', LOOP3,  9,               0.01,             0.0, 'u', U_NONE},
   {"sip_mks_hi",   'w', LOOP3, 10,           0.003256,       -0.226858, 'u', U_NONE},
   {"sip_mks_med",  'w', LOOP3, 11,           0.032614,       -0.072580, 'u', U_NONE},
   {"osc_blob_idx", 'w', LOOP3, 12,                1.0,             0.0, 'u', U_NONE},
@@ -674,9 +674,9 @@ struct ChannelStruct SlowChannels[] = {
   {"el_fault",     'w', LOOP7,  9,                1.0,             0.0, 'u', U_NONE},  
   {"piv_d_stat",   'w', LOOP7, 10,                1.0,             0.0, 'u', U_NONE},  
   {"piv_s1_stat",  'w', LOOP7, 11,                1.0,             0.0, 'u', U_NONE},  
-  {"rw_temp",      'w', LOOP7, 12,                1.0,             0.0, 's', U_T_C},
+  {"t_reac_mc",      'w', LOOP7, 12,                1.0,             0.0, 's', U_T_C},
   {"rw_i_raw",     'w', LOOP7, 13,       30.0/32768.0,             0.0, 's', U_I_A},
-  {"el_temp",      'w', LOOP7, 14,                1.0,             0.0, 's', U_T_C},
+  {"t_el_mc",      'w', LOOP7, 14,                1.0,             0.0, 's', U_T_C},
   {"el_i_raw",     'w', LOOP7, 15,       30.0/32768.0,             0.0, 's', U_I_A},
   //lmf: rw_i_raw and el_i_raw are read out from the Copley Controllers over serial.
   {"piv_i_raw",    'w', LOOP7, 17,       20.0/32768.0,             0.0, 's', U_I_A},
