@@ -50,7 +50,7 @@
 
 /* defaults */
 #define CONFIG_FILE ETC_DIR "/defile.conf"
-#define CUR_FILE "/data/etc/defile.cur"
+#define CUR_FILE "/data/etc/defile"
 #define OUTPUT_DIR "/data/rawdir"
 #define PID_FILE LOCALSTATEDIR "/run/defile.pid"
 #define REMOUNT_PATH "../rawdir"

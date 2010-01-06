@@ -62,8 +62,10 @@ InputSource decom
 
 # Set OutpuCurFileName to the default output curfile name.  Only used if
 # WriteCurFile is also specified. Default: @DATA_ETC_DIR@/defile.cur
+# Note: .cur will be appended to old curfile names, and .lnk to the link
+# style curfile
 
-OutputCurFileName /data/etc/defile.cur
+OutputCurFileName /data/etc/defile
 
 # ---
 

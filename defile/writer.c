@@ -753,6 +753,11 @@ void InitialiseDirFile(int reset, unsigned long offset)
   if (rc.write_curfile) {
     // create the link file
     char lnkfile[1024];
+    char curfile[1024];
+
+    strncpy(curfile, rc.output_curfile, 1018);
+    strcat(curfile, ".cur");
+
     strncpy(lnkfile, rc.output_curfile, 1018);
     strcat(lnkfile, ".lnk");
     unlink(lnkfile);
@@ -761,14 +766,14 @@ void InitialiseDirFile(int reset, unsigned long offset)
              rc.dirfile, lnkfile);
     }
     // create the cur file
-    if ((fp = fopen(rc.output_curfile, "w")) == NULL)
-      berror(fatal, "cannot create curfile `%s'", rc.output_curfile);
+    if ((fp = fopen(curfile, "w")) == NULL)
+      berror(fatal, "cannot create curfile `%s'", curfile);
 
     fprintf(fp, rc.dirfile);
     fprintf(fp, "\n");
 
     if (fclose(fp) < 0)
-      berror(fatal, "cannot close curfile `%s'", rc.output_curfile);
+      berror(fatal, "cannot close curfile `%s'", curfile);
   }
 
   ri.dirfile_init = 1;
