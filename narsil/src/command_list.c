@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.19 $";
+const char *command_list_serial = "$Revision: 4.20 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Cool (empty)",
@@ -188,11 +188,12 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(not_at_float), "tell the scheduler that we're not at float",
     GR_TELEM},
 
-  {COMMAND(mcc_halt), "ask MCP to halt the MCC", GR_MISC | CONFIRM},
-  {COMMAND(icc_halt), "ask MCP to halt the in-charge MCC", GR_MISC | CONFIRM},
-  {COMMAND(nicc_halt), "ask MCP to halt the not-in-charge MCC", GR_MISC
-    | CONFIRM},
-  {COMMAND(reap), "ask MCP to reap the watchdog tickle", GR_MISC | CONFIRM},
+  {COMMAND(north_halt), "ask MCP to halt north MCC", GR_MISC | CONFIRM},
+  {COMMAND(south_halt), "ask MCP to halt south MCC", GR_MISC | CONFIRM},
+  {COMMAND(reap_north), "ask MCP to reap the north watchdog tickle", 
+    GR_MISC | CONFIRM},
+  {COMMAND(reap_south), "ask MCP to reap the south watchdog tickle", 
+    GR_MISC | CONFIRM},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC},
   {COMMAND(xy_panic), "stop XY stage motors immediately", GR_STAGE},
 

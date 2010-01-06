@@ -92,6 +92,7 @@ extern short InCharge; /* tx.c */
 extern int doing_schedule; /* sched.c */
 
 extern pthread_t watchdog_id;  /* mcp.c */
+extern short int SouthIAm;
 pthread_mutex_t mutex;
 
 struct SIPDataStruct SIPData;
@@ -889,15 +890,18 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
 #endif
 
-    case reap:  /* Miscellaneous commands */
-      bprintf(err, "Commands: Reaping the watchdog tickle on command.");
-      pthread_cancel(watchdog_id);
+    case reap_north:  /* Miscellaneous commands */
+    case reap_south:
+      if ((command == reap_north && !SouthIAm) || 
+	  (command == reap_south && SouthIAm)) {
+	bprintf(err, "Commands: Reaping the watchdog tickle on command.");
+	pthread_cancel(watchdog_id);
+      }
       break;
-    case icc_halt:
-    case nicc_halt:
-      if ((command == icc_halt && InCharge) || !InCharge)
-    case mcc_halt:
-      {
+    case north_halt:
+    case south_halt:
+      if ((command == reap_north && !SouthIAm) || 
+	  (command == reap_south && SouthIAm)) {
         bputs(warning, "Commands: Halting the MCC\n");
         system("/sbin/halt");
       }
