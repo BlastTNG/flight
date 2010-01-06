@@ -900,10 +900,10 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case north_halt:
     case south_halt:
-      if ((command == reap_north && !SouthIAm) || 
-	  (command == reap_south && SouthIAm)) {
+      if ((command == north_halt && !SouthIAm) || 
+	  (command == south_halt && SouthIAm)) {
         bputs(warning, "Commands: Halting the MCC\n");
-        system("/sbin/halt");
+        system("/sbin/reboot");
       }
       break;
     case xy_panic:
