@@ -200,7 +200,7 @@ static void WriteAux(void)
 /* mask gyros - automatic masking (if the gyro is faulty)      */
 /*           or- commanded masking                             */
 /* power cycle gyros - if masked for 1s                        */
-/*                and- hasn't been power cycled in the last 5s */
+/*                and- hasn't been power cycled in the last 25s */
 /***************************************************************/
 #define MASK_TIMEOUT 5 /* 1 sec -- in 5Hz Frames */ 
 #define GYRO_ON 25 /* 5 sec */
@@ -209,7 +209,6 @@ void SetGyroMask (void) {
   static struct NiosStruct* gymaskAddr;
   gymaskAddr = GetNiosAddr("gyro_mask");
   unsigned int GyroMask = 0x3f; //all gyros enabled
-  //FIXME: convert is almost certainly wrong.  Check and fix!!!!
   int convert[6] = {1,5,0,2,3,4};//order of gyros in power switching
   static int t_mask[6] = {0,0,0,0,0,0};
   static int wait[6] = {0,0,0,0,0,0};
@@ -224,7 +223,7 @@ void SetGyroMask (void) {
   int i;
   for (i=0; i<6; i++) {
     int j = convert[i];
-    if (GyroFault & (0x01 << i)) {  // LMF Note: valgrind complains about this line
+    if (GyroFault & (0x01 << i)) {
       GyroMask &= ~(0x01 << i);
       t_mask[i] +=1;
       if (t_mask[i] > MASK_TIMEOUT) {
@@ -876,8 +875,8 @@ static void StoreData(int index)
     magModelAddr = GetNiosAddr("mag_model");
     magSigmaAddr = GetNiosAddr("mag_sigma");
     dgpsAzAddr = GetNiosAddr("dgps_az");
-    dgpsPitchAddr = GetNiosAddr("dgps_pitch");
-    dgpsRollAddr = GetNiosAddr("dgps_roll");
+    dgpsPitchAddr = GetNiosAddr("dgps_pitch_raw");
+    dgpsRollAddr = GetNiosAddr("dgps_roll_raw");
     dgpsSigmaAddr = GetNiosAddr("dgps_sigma");
     ssAzAddr = GetNiosAddr("ss_az");
     ssSigmaAddr = GetNiosAddr("ss_sigma");

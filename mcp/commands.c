@@ -535,40 +535,40 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.gymask &= ~0x20;
       break;
     case gy_ifroll1_off:
-      CommandData.power.gyro_off[1] |= 0x01;
+      CommandData.power.gyro_off[1] |= 0x02;
       break;
     case gy_ifroll1_on:
-      CommandData.power.gyro_off[1] &= ~0x01;
+      CommandData.power.gyro_off[1] &= ~0x02;
       break;
     case gy_ifroll2_off:
-      CommandData.power.gyro_off[5] |= 0x01;
+      CommandData.power.gyro_off[5] |= 0x02;
       break;
     case gy_ifroll2_on:
-      CommandData.power.gyro_off[5] &= ~0x01;
+      CommandData.power.gyro_off[5] &= ~0x02;
       break;
     case gy_ifyaw1_off:
-      CommandData.power.gyro_off[0] |= 0x01;
+      CommandData.power.gyro_off[0] |= 0x02;
       break;
     case gy_ifyaw1_on:
-      CommandData.power.gyro_off[0] &= ~0x01;
+      CommandData.power.gyro_off[0] &= ~0x02;
       break;
     case gy_ifyaw2_off:
-      CommandData.power.gyro_off[2] |= 0x01;
+      CommandData.power.gyro_off[2] |= 0x02;
       break;
     case gy_ifyaw2_on:
-      CommandData.power.gyro_off[2] &= ~0x01;
+      CommandData.power.gyro_off[2] &= ~0x02;
       break;
     case gy_ifel1_off:
-      CommandData.power.gyro_off[3] |= 0x01;
+      CommandData.power.gyro_off[3] |= 0x02;
       break;
     case gy_ifel1_on:
-      CommandData.power.gyro_off[3] &= ~0x01;
+      CommandData.power.gyro_off[3] &= ~0x02;
       break;
     case gy_ifel2_off:
-      CommandData.power.gyro_off[4] |= 0x01;
+      CommandData.power.gyro_off[4] |= 0x02;
       break;
     case gy_ifel2_on:
-      CommandData.power.gyro_off[4] &= ~0x01;
+      CommandData.power.gyro_off[4] &= ~0x02;
       break;
     case gybox_off:
       CommandData.power.gybox_off = 1;

@@ -359,8 +359,8 @@ struct ChannelStruct SlowChannels[] = {
   {"sip_alt",      'w', LOOP1, 37,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 38-41 are wide */
   {"isc_mapmean",  'w', LOOP1, 42,                 1.,             0.0, 'u', U_NONE},
-  {"dgps_pitch",   'w', LOOP1, 43,              I2DEG,             0.0, 's', U_NONE},
-  {"dgps_roll",    'w', LOOP1, 44,              I2DEG,             0.0, 's', U_NONE},
+  {"dgps_pitch_raw",'w',LOOP1, 43,              I2DEG,             0.0, 's', U_NONE},
+  {"dgps_roll_raw",'w', LOOP1, 44,              I2DEG,             0.0, 's', U_NONE},
   {"sip_lat",      'w', LOOP1, 45,              I2DEG,             0.0, 's', U_NONE},
   {"sip_lon",      'w', LOOP1, 46,              I2DEG,             0.0, 's', U_NONE},
   {"dgps_lat",     'w', LOOP1, 47,              I2DEG,             0.0, 's', U_NONE},

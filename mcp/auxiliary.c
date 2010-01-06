@@ -123,7 +123,6 @@ static int SetGyHeatSetpoint(double history, int age)
 /************************************************************************/
 /*    ControlGyroHeat:  Controls gyro box temp                          */
 /************************************************************************/
-//TODO TEST ME! I've been changed (only 1 gybox to heat and 16-bit temp)
 void ControlGyroHeat(unsigned short *RxFrame)
 {
   static struct BiPhaseStruct* tGyboxAddr;
@@ -172,12 +171,12 @@ void ControlGyroHeat(unsigned short *RxFrame)
         CommandData.gyheat.age);
 
     set_point = ((CommandData.gyheat.setpoint + 273.15) / M_16T) - B_16T;
-    //P = CommandData.gyheat.gain.P * (1.0 / 10.0);
-    //I = CommandData.gyheat.gain.I * (1.0 / 110000.0);
-    //D = CommandData.gyheat.gain.D * ( 1.0 / 1000.0);
-    P = CommandData.gyheat.gain.P * (-1.0 / 1000000.0);
-    I = CommandData.gyheat.gain.I * (-1.0 / 110000.0);
+    P = CommandData.gyheat.gain.P * (1.0 / 10.0);
+    I = CommandData.gyheat.gain.I * (1.0 / 110000.0);
     D = CommandData.gyheat.gain.D * ( 1.0 / 1000.0);
+    //P = CommandData.gyheat.gain.P * (-1.0 / 1000000.0);
+    //I = CommandData.gyheat.gain.I * (-1.0 / 110000.0);
+    //D = CommandData.gyheat.gain.D * ( 1.0 / 1000.0);
 
     /********* if end of pulse, calculate next pulse *********/
     if (p_off <= 0 && p_on <= 0) {
