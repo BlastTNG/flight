@@ -40,6 +40,7 @@
 
 #include "palantir.h"
 #include "adamdom.h"
+#include <stdio.h>
 
 // Define bookmark numbers
 #define BM_FIRST       0
@@ -667,6 +668,7 @@ void MainForm::GetXMLInfo(char *layoutfile) {
     strncpy(decomdHost, FindAttribute("host", "SETTINGS.DECOMD"),
         MAXPATHLENGTH);
     decomdPort = atoi(FindAttribute("port", "SETTINGS.DECOMD"));
+printf("decomdHost set to %s\n", decomdHost);
     startupDecomd = true;
   } else {
     startupDecomd = false;
@@ -794,6 +796,7 @@ void MainForm::UpdateData() {
   if (startupDecomd) {
     DecomPoller->start(decomdHost, decomdPort);
     startupDecomd = false;
+printf("Starting up decomPoller: host: %s\n", decomdHost);
   }
 
   //if (DataSource->update()) {
@@ -811,11 +814,6 @@ void MainForm::UpdateData() {
     if (DecomPoller->pollDecomd)
       PalantirState->setText("PT: STP");
     updating = false;
-    if (NoIncomingOn) {
-      if (++NoIncoming == 3) {
-        NoIncoming = 0;
-      }
-    }
   }
 
   if (DecomPoller->pollDecomd) {
@@ -1292,9 +1290,6 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
   setCentralWidget(centralWidget);
 
   timer = new QTimer();
-  NoIncoming = 0;
-  NoIncomingOn = true;
-  NoIncomingDialogUp = false;
 
   if (startupDecomd) {
     theStatusBar = statusBar();

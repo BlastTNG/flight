@@ -65,7 +65,7 @@ using namespace GetData;
 #define DERIV        3
 #define CURDIR       4
 
-// Update palantir every 750 milliseconds
+// Update palantir every 500 milliseconds
 #define UPDATETIME 500
 
 #ifndef DATA_ETC_PALANTIR_DIR
@@ -306,9 +306,6 @@ class MainForm : public QMainWindow
 
     QList<bool> DisabledIndex;
 
-    char NoIncoming;
-    bool NoIncomingOn;
-    bool NoIncomingDialogUp;
     bool DialogsUp;
     int AlarmScroll;
 

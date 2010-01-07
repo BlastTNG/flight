@@ -96,15 +96,14 @@ void DecomPoll::start(const char* h, int p)
 {
   strncpy(decomdHost, h, MAXPATHLENGTH);
   decomdPort = p;
-
+printf("poller started with host: %s\n", decomdHost);
   QThread::start();
   pollDecomd = true;
 }
 
 void DecomPoll::run()
 {
-  struct hostent* result;
-  struct hostent theHost;
+  struct hostent *theHost;
   char buf[256];
   int i;
   int sock;
@@ -113,24 +112,11 @@ void DecomPoll::run()
 
   connectState = 1;
 
-  gethostbyname_r(decomdHost, &theHost, buf, 256, &result, &i);
+  theHost = gethostbyname(decomdHost);
+  printf("tmpHost name: %s tmpHost len: %d\n", theHost->h_name, theHost->h_length);
 
-  if (!result) {
-    fprintf(stderr, "gethostbyname failed: ");
-    if (i == HOST_NOT_FOUND)
-      fprintf(stderr, "host not found\n");
-    else if (i == NO_ADDRESS || i == NO_DATA)
-      fprintf(stderr, "host not bound to an IP address\n");
-    else if (i == NO_RECOVERY)
-      fprintf(stderr, "non-recoverable error in domain resolution\n");
-    else if (i ==  TRY_AGAIN)
-      fprintf(stderr, "temporary failure in domain resolution\n");
-    else
-      fprintf(stderr, "unspecified error in gethostbyname_r\n");
+  // FIXME: error handling 
 
-    connectState = 3;
-    return;
-  }
   connectState = 2;
 
   for (;;) {
@@ -145,7 +131,7 @@ void DecomPoll::run()
       return;
     }
 
-    addr.sin_addr.s_addr=*((unsigned long*)theHost.h_addr);
+    addr.sin_addr.s_addr=*((unsigned long*)theHost->h_addr);
     addr.sin_family = AF_INET;
     addr.sin_port = htons(decomdPort);
 

@@ -49,7 +49,7 @@
       <XHI value="65"/>
       <XLO value="-20"/>
     </EXTREMA>
-    <EXTREMA name="pvtemp">
+    <EXTREMA name="mcctemp">
       <HI value="45"/>
       <LO value="10"/>
       <XHI value="55"/>
@@ -313,8 +313,8 @@
       <HI value="100"/>
       <XHI value="300"/>
     </EXTREMA>
-    <CURFILE name="/data/etc/defile.cur.lnk"/>
-    <DECOMD host="north" port="11411"/>
+    <CURFILE name="/data/etc/defile.lnk"/>
+    <DECOMD host="widow" port="11411"/>
   </SETTINGS>
   <DEFAULTS>
     <TEXTSTYLE>
@@ -694,14 +694,14 @@
     <NUMBER caption="DAS">
       <DATUM format="%.2f" src="T_DAS" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Gybox 1">
-      <DATUM format="%.2f" src="T_GYBOX1" extrema="temp"/>
+    <NUMBER caption="Gybox">
+      <DATUM format="%.2f" src="T_GYBOX" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Gybox 1 Set">
-      <DATUM format="%.2f" src="T_GY1_SET" extrema="temp"/>
+    <NUMBER caption="Gybox Set">
+      <DATUM format="%.2f" src="T_GY_SET" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Gybox 1 Heater %">
-      <DATUM format="%.2f" src="GY1_H_HIST" extrema="gyheat"/>
+    <NUMBER caption="Gybox Heater %">
+      <DATUM format="%.2f" src="GY_H_HIST" extrema="gyheat"/>
     </NUMBER>
     <NUMBER caption="Gyro 1">
       <DATUM format="%.2f" src="T_GYRO1" extrema="temp"/>
@@ -773,35 +773,23 @@
     </NUMBER>
   </BOX>
   <BOX caption="Outer Frame Electronics" colour="#002222" row="0" col="5" rowspan="1">
-    <NUMBER caption="APM 3V">
-      <DATUM format="%.2f" src="T_APM_3V" extrema="powtemp"/>
-    </NUMBER>
-    <NUMBER caption="APM 5V">
-      <DATUM format="%.2f" src="T_APM_5V" extrema="powtemp"/>
-    </NUMBER>
-    <NUMBER caption="APM 10V">
-      <DATUM format="%.2f" src="T_APM_10V" extrema="powtemp"/>
+    <NUMBER caption="Serial Box">
+      <DATUM format="%.2f" src="T_SERIAL" extrema="powtemp"/>
     </NUMBER>
     <NUMBER caption="ACS">
       <DATUM format="%.2f" src="T_ACS" extrema="powtemp"/>
     </NUMBER>
-    <NUMBER caption="PV">
-      <DATUM format="%.2f" src="T_PV" extrema="pvtemp"/>
+    <NUMBER caption="ACS DCDC">
+      <DATUM format="%.2f" src="T_ACS_DCDC" extrema="powtemp"/>
     </NUMBER>
-    <NUMBER caption="PV Shell">
-      <DATUM format="%.2f" src="T_PV_EXT" extrema="pvtemp"/>
+    <NUMBER caption="MCC">
+      <DATUM format="%.2f" src="T_MCC" extrema="mcctemp"/>
     </NUMBER>
-    <NUMBER caption="PV CPU">
-      <DATUM format="%.2f" src="CPU_TEMP1" extrema="cputemp"/>
+    <NUMBER caption="MCC CPU">
+      <DATUM format="%.2f" src="T_CPU1" extrema="cputemp"/>
     </NUMBER>
-    <NUMBER caption="PV Motherboard">
-      <DATUM format="%.2f" src="CPU_TEMP3" extrema="cputemp"/>
-    </NUMBER>
-    <NUMBER caption="SIP Clin">
-      <DATUM format="%.2f" src="T_CLIN_SIP" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="PYR Clin">
-      <DATUM format="%.2f" src="T_CLIN_PYR" extrema="temp"/>
+    <NUMBER caption="MCC Motherboard">
+      <DATUM format="%.2f" src="T_CPU3" extrema="cputemp"/>
     </NUMBER>
     <NUMBER caption="Sun Sensor">
       <DATUM format="%.2f" src="SS_CASE_TEMP" extrema="temp"/>
@@ -809,23 +797,35 @@
     <NUMBER caption="SS CPU">
       <DATUM format="%.2f" src="SS_CPU_TEMP" extrema="cputemp"/>
     </NUMBER>
-    <NUMBER caption="SS Hard Drive">
-      <DATUM format="%.2f" src="SS_HDD_TEMP" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="SS Port Sensor">
-      <DATUM format="%.2f" src="SS_PORT_TEMP" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="SS Starboard Sensor">
-      <DATUM format="%.2f" src="SS_STAR_TEMP" extrema="temp"/>
-    </NUMBER>
     <NUMBER caption="Lock Motor">
       <DATUM format="%.2f" src="T_LOCK_MOTOR" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T APCU">
-      <DATUM format="%.2f" src="T_APCU" extrema="temp"/>
+    <NUMBER caption="Charger">
+      <DATUM format="%.2f" src="T_CHARGER" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T DPCU">
-      <DATUM format="%.2f" src="T_DPCU" extrema="temp"/>
+    <NUMBER caption="ext0">
+      <DATUM format="%.2f" src="T_EXT0" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="ext1">
+      <DATUM format="%.2f" src="T_EXT1" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="ext2">
+      <DATUM format="%.2f" src="T_EXT2" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="ext3">
+      <DATUM format="%.2f" src="T_EXT3" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="ext4">
+      <DATUM format="%.2f" src="T_EXT4" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="ext5">
+      <DATUM format="%.2f" src="T_EXT5" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="ext6">
+      <DATUM format="%.2f" src="T_EXT6" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="ext7">
+      <DATUM format="%.2f" src="T_EXT7" extrema="temp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Actuators" colour="#002222" row="4" col="8" rowspan="1">
@@ -962,9 +962,6 @@
     </NUMBER>
   </BOX>
   <BOX caption="Motor Temps" colour="#002222" row="2" col="6">
-    <NUMBER caption="T Roll MC">
-      <DATUM format="%.2f" src="T_ROLL" extrema="temp"/>
-    </NUMBER>
     <NUMBER caption="T Reac">
       <DATUM format="%.2f" src="T_REAC" extrema="temp"/>
     </NUMBER>
@@ -972,54 +969,48 @@
       <DATUM format="%.2f" src="T_REAC_MC" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T El">
-      <DATUM format="%.2f" src="T_EL_MOT" extrema="temp"/>
+      <DATUM format="%.2f" src="T_EL" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T El MC">
       <DATUM format="%.2f" src="T_EL_MC" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T Pivot MC">
-      <DATUM format="%.2f" src="T_PIV_MC" extrema="temp"/>
+    <NUMBER caption="Pivot">
+      <DATUM format="%.2f" src="T_PIV" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="Pivot MC">
+      <DATUM format="%.2f" src="T_PIV_C" extrema="temp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Currents" colour="#707" row="0" col="4" rowspan="1">
-    <NUMBER caption="I DPM 3V">
-      <DATUM format="%.2f" src="I_DPM_3V" extrema="current"/>
+    <NUMBER caption="Transmitter">
+      <DATUM format="%.2f" src="I_TRANS" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I DPM 5V">
-      <DATUM format="%.2f" src="I_DPM_5V" extrema="current"/>
+    <NUMBER caption="DAS">
+      <DATUM format="%.2f" src="I_DAS" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I DPM 10V">
-      <DATUM format="%.2f" src="I_DPM_10V" extrema="current"/>
+    <NUMBER caption="ACS">
+      <DATUM format="%.2f" src="I_ACS" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I DPM 28V">
-      <DATUM format="%.2f" src="I_DPM_28V" extrema="current"/>
-    </NUMBER>
-    <NUMBER caption="I REC">
+    <NUMBER caption="Preamps">
       <DATUM format="%.2f" src="I_REC" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I APM 3V">
-      <DATUM format="%.2f" src="I_APM_3V" extrema="current"/>
+    <NUMBER caption="Star Cams">
+      <DATUM format="%.2f" src="I_STARCAM" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I APM 5V">
-      <DATUM format="%.2f" src="I_APM_5V" extrema="current"/>
+    <NUMBER caption="dGPS">
+      <DATUM format="%.2f" src="I_DGPS" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I APM 10V">
-      <DATUM format="%.2f" src="I_APM_10V" extrema="current"/>
+    <NUMBER caption="Steppers">
+      <DATUM format="%.2f" src="I_STEP" extrema="current"/>
+    </NUMBER>
+    <NUMBER caption="MCC">
+      <DATUM format="%.2f" src="I_MCC" extrema="current"/>
     </NUMBER>
     <NUMBER caption="I Gyro Box">
       <DATUM format="%.2f" src="I_GYBOX" extrema="gycurrent"/>
     </NUMBER>
-    <NUMBER caption="I PV">
-      <DATUM format="%.2f" src="I_PV" extrema="pvcurrent"/>
-    </NUMBER>
-    <NUMBER caption="I ISC + OSC">
-      <DATUM format="%.2f" src="I_STARCAM" extrema="compcurrent"/>
-    </NUMBER>
     <NUMBER caption="I Sun Sensor">
       <DATUM format="%.2f" src="I_SUN" extrema="sscurrent"/>
-    </NUMBER>
-    <NUMBER caption="I Roll">
-      <DATUM format="%.2f" src="I_ROLL" extrema="current"/>
     </NUMBER>
     <NUMBER caption="I Reac">
       <DATUM format="%.2f" src="I_REAC" extrema="current"/>
@@ -1199,11 +1190,20 @@
     <NUMBER caption="I ACS Solar">
       <DATUM format="%.2f" src="I_SOL_ACS" extrema="acssolcurrent"/>
     </NUMBER>
-    <NUMBER caption="T Solar Port">
-      <DATUM format="%.2f" src="T_SOL_PORT" extrema="temp"/>
+    <NUMBER caption="T Solar Array">
+      <DATUM format="%.2f" src="T_ARRAY" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T ACS Battery">
-      <DATUM format="%.2f" src="T_BATT_ACS" extrema="battemp"/>
+    <NUMBER caption="T Battery 1">
+      <DATUM format="%.2f" src="T_BAT1" extrema="battemp"/>
+    </NUMBER>
+    <NUMBER caption="T Battery 2">
+      <DATUM format="%.2f" src="T_BAT2" extrema="battemp"/>
+    </NUMBER>
+    <NUMBER caption="T Battery 3">
+      <DATUM format="%.2f" src="T_BAT3" extrema="battemp"/>
+    </NUMBER>
+    <NUMBER caption="T Battery 4">
+      <DATUM format="%.2f" src="T_BAT4" extrema="battemp"/>
     </NUMBER>
     <NUMBER caption="V Solar ACS 1">
       <DATUM format="%.2f" src="V_SOL_ACS1" extrema="vsolar"/>
@@ -1222,50 +1222,6 @@
     </NUMBER>
     <NUMBER caption="V Solar ACS 6">
       <DATUM format="%.2f" src="V_SOL_ACS6" extrema="vsolar"/>
-    </NUMBER>
-  </BOX>
-  <BOX caption="DAS Power System" colour="#777700" row="0" col="8" rowspan="1">
-    <MULTI caption="DPCU Auto">
-      <DATUM src="DPCU_AUTO">
-        <WORD value="0" caption="Manual" textstyle="W_BIT"/>
-        <WORD value="1" caption="Auto" textstyle="OK_BIT"/>
-      </DATUM>
-    </MULTI>
-    <NUMBER caption="V DAS Trim">
-      <DATUM format="%.2f" src="DPCU_TRIM" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="V DAS Lid">
-      <DATUM format="%.2f" src="DPCU_REG" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="V DAS Battery">
-      <DATUM format="%.2f" src="V_BATT_DAS" extrema="vbat"/>
-    </NUMBER>
-    <NUMBER caption="I DAS Gondola">
-      <DATUM format="%.2f" src="I_GOND_DAS" extrema="current"/>
-    </NUMBER>
-    <NUMBER caption="I DAS Battery">
-      <DATUM format="%.2f" src="I_BATT_DAS" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="I DAS Solar">
-      <DATUM format="%.2f" src="I_SOL_DAS" extrema="solcurrent"/>
-    </NUMBER>
-    <NUMBER caption="T Solar Starboard">
-      <DATUM format="%.2f" src="T_SOL_STBD" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="T DAS Battery">
-      <DATUM format="%.2f" src="T_BATT_DAS" extrema="battemp"/>
-    </NUMBER>
-    <NUMBER caption="V Solar DAS 1">
-      <DATUM format="%.2f" src="V_SOL_DAS1" extrema="vsolar"/>
-    </NUMBER>
-    <NUMBER caption="V Solar DAS 2">
-      <DATUM format="%.2f" src="V_SOL_DAS2" extrema="vsolar"/>
-    </NUMBER>
-    <NUMBER caption="V Solar DAS 3">
-      <DATUM format="%.2f" src="V_SOL_DAS3" extrema="vsolar"/>
-    </NUMBER>
-    <NUMBER caption="V Solar DAS 4">
-      <DATUM format="%.2f" src="V_SOL_DAS4" extrema="vsolar"/>
     </NUMBER>
   </BOX>
   <BOX caption="Pressures/Cooling" colour="#777700" row="2" col="5">
