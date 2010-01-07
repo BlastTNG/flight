@@ -202,21 +202,23 @@ static void WriteAux(void)
 /* power cycle gyros - if masked for 1s                        */
 /*                and- hasn't been power cycled in the last 25s */
 /***************************************************************/
-#define MASK_TIMEOUT 5 /* 1 sec -- in 5Hz Frames */ 
-#define GYRO_ON 25 /* 5 sec */
-#define PCYCLE_TIMEOUT 125 /* 25 sec */
+#define MASK_TIMEOUT 5 /* 1 sec -- in 5Hz Slow Frames */ 
+#define GYRO_PCYCLE_TIMEOUT 125 /* 25 sec */
 void SetGyroMask (void) {
   static struct NiosStruct* gymaskAddr;
-  gymaskAddr = GetNiosAddr("gyro_mask");
   unsigned int GyroMask = 0x3f; //all gyros enabled
   int convert[6] = {1,5,0,2,3,4};//order of gyros in power switching
   static int t_mask[6] = {0,0,0,0,0,0};
   static int wait[6] = {0,0,0,0,0,0};
-  static int off[6] = {0,0,0,0,0,0};//1=gyro is off, 0=gyro is on
   static struct BiPhaseStruct* gyfaultAddr;
-
-  gyfaultAddr = GetBiPhaseAddr("gyro_fault");;
+  static int firsttime = 1;
   unsigned int GyroFault;
+
+  if (firsttime) {
+    firsttime = 0;
+    gymaskAddr = GetNiosAddr("gyro_mask");
+    gyfaultAddr = GetBiPhaseAddr("gyro_fault");;
+  }
 
   GyroFault = slow_data[gyfaultAddr->index][gyfaultAddr->channel];
 
@@ -228,8 +230,8 @@ void SetGyroMask (void) {
       t_mask[i] +=1;
       if (t_mask[i] > MASK_TIMEOUT) {
 	if (wait[i] == 0) {
-	  CommandData.power.gyro_off[j] |= 0x01;
-	  off[i] = 1;
+	  CommandData.power.gyro_off_auto[j] = PCYCLE_HOLD_LEN;
+	  wait[i] = GYRO_PCYCLE_TIMEOUT;
 	}
       }
     }
@@ -240,12 +242,7 @@ void SetGyroMask (void) {
       t_mask[i] = 0;
     }
 
-    if (off[i]) wait[i] +=1;
-    if (wait[i] == GYRO_ON) CommandData.power.gyro_off[j] &= ~0x01;
-    if (wait[i] > PCYCLE_TIMEOUT) {
-      wait[i] = 0;
-      off[i] = 0;
-    }
+    if (wait[i] > 0) wait[i]--;
   }
 
   WriteData(gymaskAddr, GyroMask, NIOS_QUEUE);
@@ -1359,11 +1356,11 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     SecondaryMirror();
     CryoControl();
     PhaseControl();
-    ControlPower();
 #ifndef BOLOTEST
     SetGyroMask();
     ChargeController();
 #endif
+    ControlPower();
   }
 
   if (!mcp_initial_controls)

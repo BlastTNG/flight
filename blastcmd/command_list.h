@@ -17,7 +17,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 180        /* total number of single word cmds */
+#define N_SCOMMANDS 197        /* total number of single word cmds */
 #define N_MCOMMANDS 105        /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
@@ -81,10 +81,12 @@ enum singleCommand {
   sprpump_rev,      ramp,               reset_trims,      isc_save_images,
   stop,             sun_veto,           sun_allow,        isc_eye_off,
   trim_to_isc,      unlock,             lock_off,         xyzzy,
-  isc_reboot,       isc_cam_cycle,      osc_run,
-  osc_shutdown,     osc_reboot,         osc_cam_cycle,    osc_pause,
-  osc_abort,        osc_reconnect,      osc_save_images,  osc_discard_images,
-  osc_full_screen,  force_el_on,        auto_jfetheat,    auto_cycle,
+  isc_reboot,       isc_cam_cycle,      osc_run,          osc_shutdown,
+  osc_reboot,       osc_cam_cycle,      osc_pause,        osc_abort,
+  osc_reconnect,    osc_save_images,    osc_discard_images, osc_full_screen,  
+  force_el_on,      auto_jfetheat,      auto_cycle,       gps_cycle,
+  isc_cycle,        osc_cycle,          actbus_cycle,     reac_cycle,
+  piv_cycle,        elmot_cycle,        hub232_cycle,     das_cycle,
   gps_off,          gps_on,             isc_off,          isc_on,
   osc_off,          osc_on,             reac_off,	  reac_on,
   piv_off,	    piv_on,		elmot_off,	  elmot_on,
@@ -99,8 +101,10 @@ enum singleCommand {
   gy_ifroll1_off,   gy_ifroll1_on,	gy_ifroll2_off,	  gy_ifroll2_on,
   gy_ifyaw1_off,    gy_ifyaw1_on,	gy_ifyaw2_off,	  gy_ifyaw2_on,
   gy_ifel1_off,	    gy_ifel1_on,	gy_ifel2_off,	  gy_ifel2_on,
-  gybox_off,        gybox_on,           ss_off,           ss_on,
-  hub232_off,	    hub232_on,		isc_trig_int,     isc_trig_ext,
+  gy_ifroll1_cycle, gy_ifroll2_cycle,   gy_ifyaw1_cycle,  gy_ifyaw2_cycle,
+  gy_ifel1_cycle,   gy_ifel2_cycle,     gybox_off,        gybox_on,
+  ss_off,           ss_on,              hub232_off,	  hub232_on,
+  ss_cycle,         gybox_cycle,        isc_trig_int,     isc_trig_ext,
   osc_trig_int,     osc_trig_ext,       ln_valve_on,      ln_valve_off,
   osc_veto,         osc_allow,          reap_north,       reap_south,
   isc_eye_on,       osc_eye_on,         osc_eye_off,      xy_panic,

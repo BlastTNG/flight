@@ -689,150 +689,157 @@ void ControlPower(void) {
   }
 
   if (CommandData.power.hub232_off) {
+    if (CommandData.power.hub232_off > 0) CommandData.power.hub232_off--;
     misc |= 0x08;
   }
 
   if (CommandData.power.ss_off) {
+    if (CommandData.power.ss_off > 0) CommandData.power.ss_off--;
     misc |= 0x20;
   }
 
   for (i=0; i<6; i++) {
-    if (CommandData.power.gyro_off[i] & 0x03) {
+    if (CommandData.power.gyro_off[i] || CommandData.power.gyro_off_auto[i]) {
+      if (CommandData.power.gyro_off[i] > 0) 
+	CommandData.power.gyro_off[i]--;
+      if (CommandData.power.gyro_off_auto[i] > 0) 
+	CommandData.power.gyro_off_auto[i]--;
       gybox |= 0x01 << i;
     }
   }
 
   if (CommandData.power.gybox_off) {
+    if (CommandData.power.gybox_off > 0) CommandData.power.gybox_off--;
     gybox |= 0x80;
   }
 
   if (CommandData.power.sc_tx.set_count > 0) {
     CommandData.power.sc_tx.set_count--;
-    latch0 |= 0x0001;
+    if (CommandData.power.sc_tx.set_count < LATCH_PULSE_LEN) latch0 |= 0x0001;
   }
   if (CommandData.power.sc_tx.rst_count > 0) {
     CommandData.power.sc_tx.rst_count--;
-    latch0 |= 0x0002;
+    if (CommandData.power.sc_tx.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0002;
   }
   if (CommandData.power.das.set_count > 0) {
     CommandData.power.das.set_count--;
-    latch0 |= 0x0004;
+    if (CommandData.power.das.set_count < LATCH_PULSE_LEN) latch0 |= 0x0004;
   }
   if (CommandData.power.das.rst_count > 0) {
     CommandData.power.das.rst_count--;
-    latch0 |= 0x0008;
+    if (CommandData.power.das.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0008;
   }
   if (CommandData.power.isc.set_count > 0) {
     CommandData.power.isc.set_count--;
-    latch0 |= 0x0010;
+    if (CommandData.power.isc.set_count < LATCH_PULSE_LEN) latch0 |= 0x0010;
   }
   if (CommandData.power.isc.rst_count > 0) {
     CommandData.power.isc.rst_count--;
-    latch0 |= 0x0020;
+    if (CommandData.power.isc.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0020;
   }
   if (CommandData.power.osc.set_count > 0) {
     CommandData.power.osc.set_count--;
-    latch0 |= 0x0040;
+    if (CommandData.power.osc.set_count < LATCH_PULSE_LEN) latch0 |= 0x0040;
   }
   if (CommandData.power.osc.rst_count > 0) {
     CommandData.power.osc.rst_count--;
-    latch0 |= 0x0080;
+    if (CommandData.power.osc.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0080;
   }
   if (CommandData.power.gps.set_count > 0) {
     CommandData.power.gps.set_count--;
-    latch0 |= 0x0100;
+    if (CommandData.power.gps.set_count < LATCH_PULSE_LEN) latch0 |= 0x0100;
   }
   if (CommandData.power.gps.rst_count > 0) {
     CommandData.power.gps.rst_count--;
-    latch0 |= 0x0200;
+    if (CommandData.power.gps.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0200;
   }
   if (CommandData.power.reac.set_count > 0) {
     CommandData.power.reac.set_count--;
-    latch0 |= 0x0400;
+    if (CommandData.power.reac.set_count < LATCH_PULSE_LEN) latch0 |= 0x0400;
   }
   if (CommandData.power.reac.rst_count > 0) {
     CommandData.power.reac.rst_count--;
-    latch0 |= 0x0800;
+    if (CommandData.power.reac.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0800;
   }
   if (CommandData.power.piv.set_count > 0) {
     CommandData.power.piv.set_count--;
-    latch0 |= 0x1000;
+    if (CommandData.power.piv.set_count < LATCH_PULSE_LEN) latch0 |= 0x1000;
   }
   if (CommandData.power.piv.rst_count > 0) {
     CommandData.power.piv.rst_count--;
-    latch0 |= 0x2000;
+    if (CommandData.power.piv.rst_count < LATCH_PULSE_LEN) latch0 |= 0x2000;
   }
   if (CommandData.power.elmot.set_count > 0) {
     CommandData.power.elmot.set_count--;
-    latch0 |= 0x4000;
+    if (CommandData.power.elmot.set_count < LATCH_PULSE_LEN) latch0 |= 0x4000;
   }
   if (CommandData.power.elmot.rst_count > 0) {
     CommandData.power.elmot.rst_count--;
-    latch0 |= 0x8000;
+    if (CommandData.power.elmot.rst_count < LATCH_PULSE_LEN) latch0 |= 0x8000;
   }
   if (CommandData.power.bi0.set_count > 0) {
     CommandData.power.bi0.set_count--;
-    latch1 |= 0x0001;
+    if (CommandData.power.bi0.set_count < LATCH_PULSE_LEN) latch1 |= 0x0001;
   }
   if (CommandData.power.bi0.rst_count > 0) {
     CommandData.power.bi0.rst_count--;
-    latch1 |= 0x0002;
+    if (CommandData.power.bi0.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0002;
   }
   if (CommandData.power.preamp.set_count > 0) {
     CommandData.power.preamp.set_count--;
-    latch1 |= 0x0004;
+    if (CommandData.power.preamp.set_count < LATCH_PULSE_LEN) latch1 |= 0x0004;
   }
   if (CommandData.power.preamp.rst_count > 0) {
     CommandData.power.preamp.rst_count--;
-    latch1 |= 0x0008;
+    if (CommandData.power.preamp.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0008;
   }
   if (CommandData.power.bias.set_count > 0) {
     CommandData.power.bias.set_count--;
-    latch1 |= 0x0010;
+    if (CommandData.power.bias.set_count < LATCH_PULSE_LEN) latch1 |= 0x0010;
   }
   if (CommandData.power.bias.rst_count > 0) {
     CommandData.power.bias.rst_count--;
-    latch1 |= 0x0020;
+    if (CommandData.power.bias.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0020;
   }
   if (CommandData.power.hk.set_count > 0) {
     CommandData.power.hk.set_count--;
-    latch1 |= 0x0040;
+    if (CommandData.power.hk.set_count < LATCH_PULSE_LEN) latch1 |= 0x0040;
   }
   if (CommandData.power.hk.rst_count > 0) {
     CommandData.power.hk.rst_count--;
-    latch1 |= 0x0080;
+    if (CommandData.power.hk.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0080;
   }
   if (CommandData.power.um250.set_count > 0) {
     CommandData.power.um250.set_count--;
-    latch1 |= 0x0100;
+    if (CommandData.power.um250.set_count < LATCH_PULSE_LEN) latch1 |= 0x0100;
   }
   if (CommandData.power.um250.rst_count > 0) {
     CommandData.power.um250.rst_count--;
-    latch1 |= 0x0200;
+    if (CommandData.power.um250.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0200;
   }
   if (CommandData.power.um350.set_count > 0) {
     CommandData.power.um350.set_count--;
-    latch1 |= 0x0400;
+    if (CommandData.power.um350.set_count < LATCH_PULSE_LEN) latch1 |= 0x0400;
   }
   if (CommandData.power.um350.rst_count > 0) {
     CommandData.power.um350.rst_count--;
-    latch1 |= 0x0800;
+    if (CommandData.power.um350.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0800;
   }
   if (CommandData.power.um500.set_count > 0) {
     CommandData.power.um500.set_count--;
-    latch1 |= 0x1000;
+    if (CommandData.power.um500.set_count < LATCH_PULSE_LEN) latch1 |= 0x1000;
   }
   if (CommandData.power.um500.rst_count > 0) {
     CommandData.power.um500.rst_count--;
-    latch1 |= 0x2000;
+    if (CommandData.power.um500.rst_count < LATCH_PULSE_LEN) latch1 |= 0x2000;
   }
   if (CommandData.power.heat.set_count > 0) {
     CommandData.power.heat.set_count--;
-    latch1 |= 0x4000;
+    if (CommandData.power.heat.set_count < LATCH_PULSE_LEN) latch1 |= 0x4000;
   }
   if (CommandData.power.heat.rst_count > 0) {
     CommandData.power.heat.rst_count--;
-    latch1 |= 0x8000;
+    if (CommandData.power.heat.rst_count < LATCH_PULSE_LEN) latch1 |= 0x8000;
   }
 
   WriteData(latchingAddr[0], latch0, NIOS_QUEUE);

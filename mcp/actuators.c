@@ -1309,6 +1309,7 @@ void StoreActBus(void)
 {
   int j;
   static int firsttime = 1;
+  int actbus_reset = 0;
 
   static struct BiPhaseStruct* lvdt10Addr;
   static struct BiPhaseStruct* lvdt11Addr;
@@ -1415,7 +1416,11 @@ void StoreActBus(void)
   lvdt[2] = slow_data[lvdt13Addr->index][lvdt13Addr->channel] *
     LVDT13_ADC_TO_ENC + LVDT13_ZERO;
 
-  WriteData(actbusResetAddr, CommandData.actbus.off, NIOS_QUEUE);
+  if (CommandData.actbus.off) {
+    if (CommandData.actbus.off > 0) CommandData.actbus.off--;
+    actbus_reset = 1;
+  }
+  WriteData(actbusResetAddr, actbus_reset, NIOS_QUEUE);
 
   WriteData(lokmotPinAddr, CommandData.pin_is_in, NIOS_QUEUE);
 

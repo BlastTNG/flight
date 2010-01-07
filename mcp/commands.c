@@ -69,12 +69,6 @@
 #define ISC_TRIGGER_POS  2
 #define ISC_TRIGGER_NEG  3
 
-/* latching relay pulse length in 200ms slow frames */
-#define LATCH_PULSE_LEN	 2
-
-/* time (in slow frames) to suppress ADC card watchdog, to induce reset */
-#define	RESET_ADC_LEN	 80
-
 void ActPotTrim(void); /* actuators.c */
 void RecalcOffset(double, double);
 
@@ -378,6 +372,10 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.gps.rst_count = 0;
       CommandData.power.gps.set_count = LATCH_PULSE_LEN;
       break;
+    case gps_cycle:
+      CommandData.power.gps.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.gps.rst_count = LATCH_PULSE_LEN;
+      break;
     case isc_off:
       CommandData.power.isc.set_count = 0;
       CommandData.power.isc.rst_count = LATCH_PULSE_LEN;
@@ -385,6 +383,10 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case isc_on:
       CommandData.power.isc.rst_count = 0;
       CommandData.power.isc.set_count = LATCH_PULSE_LEN;
+      break;
+    case isc_cycle:
+      CommandData.power.isc.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.isc.rst_count = LATCH_PULSE_LEN;
       break;
     case osc_off:
       CommandData.power.osc.set_count = 0;
@@ -394,6 +396,10 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.osc.rst_count = 0;
       CommandData.power.osc.set_count = LATCH_PULSE_LEN;
       break;
+    case osc_cycle:
+      CommandData.power.osc.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.osc.rst_count = LATCH_PULSE_LEN;
+      break;
     case reac_off:
       CommandData.power.reac.set_count = 0;
       CommandData.power.reac.rst_count = LATCH_PULSE_LEN;
@@ -401,6 +407,10 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case reac_on:
       CommandData.power.reac.rst_count = 0;
       CommandData.power.reac.set_count = LATCH_PULSE_LEN;
+      break;
+    case reac_cycle:
+      CommandData.power.reac.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.reac.rst_count = LATCH_PULSE_LEN;
       break;
     case piv_off:
       CommandData.power.piv.set_count = 0;
@@ -410,6 +420,10 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.piv.rst_count = 0;
       CommandData.power.piv.set_count = LATCH_PULSE_LEN;
       break;
+    case piv_cycle:
+      CommandData.power.piv.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.piv.rst_count = LATCH_PULSE_LEN;
+      break;
     case elmot_off:
       CommandData.power.elmot.set_count = 0;
       CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
@@ -417,6 +431,10 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case elmot_on:
       CommandData.power.elmot.rst_count = 0;
       CommandData.power.elmot.set_count = LATCH_PULSE_LEN;
+      break;
+    case elmot_cycle:
+      CommandData.power.elmot.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
       break;
     case sc_tx_off:
       CommandData.power.sc_tx.set_count = 0;
@@ -441,6 +459,10 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case das_on:
       CommandData.power.das.rst_count = 0;
       CommandData.power.das.set_count = LATCH_PULSE_LEN;
+      break;
+    case das_cycle:
+      CommandData.power.das.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.das.rst_count = LATCH_PULSE_LEN;
       break;
     case preamp_off:
       CommandData.power.preamp.set_count = 0;
@@ -535,64 +557,96 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.gymask &= ~0x20;
       break;
     case gy_ifroll1_off:
-      CommandData.power.gyro_off[1] |= 0x02;
+      CommandData.power.gyro_off[1] = -1;
       break;
     case gy_ifroll1_on:
-      CommandData.power.gyro_off[1] &= ~0x02;
+      CommandData.power.gyro_off[1] = 0;
+      break;
+    case gy_ifroll1_cycle:
+      CommandData.power.gyro_off[1] = PCYCLE_HOLD_LEN;
       break;
     case gy_ifroll2_off:
-      CommandData.power.gyro_off[5] |= 0x02;
+      CommandData.power.gyro_off[5] = -1;
       break;
     case gy_ifroll2_on:
-      CommandData.power.gyro_off[5] &= ~0x02;
+      CommandData.power.gyro_off[5] = 0;
+      break;
+    case gy_ifroll2_cycle:
+      CommandData.power.gyro_off[5] = PCYCLE_HOLD_LEN;
       break;
     case gy_ifyaw1_off:
-      CommandData.power.gyro_off[0] |= 0x02;
+      CommandData.power.gyro_off[0] = -1;
       break;
     case gy_ifyaw1_on:
-      CommandData.power.gyro_off[0] &= ~0x02;
+      CommandData.power.gyro_off[0] = 0;
+      break;
+    case gy_ifyaw1_cycle:
+      CommandData.power.gyro_off[0] = PCYCLE_HOLD_LEN;
       break;
     case gy_ifyaw2_off:
-      CommandData.power.gyro_off[2] |= 0x02;
+      CommandData.power.gyro_off[2] = -1;
       break;
     case gy_ifyaw2_on:
-      CommandData.power.gyro_off[2] &= ~0x02;
+      CommandData.power.gyro_off[2] = 0;
+      break;
+    case gy_ifyaw2_cycle:
+      CommandData.power.gyro_off[2] = PCYCLE_HOLD_LEN;
       break;
     case gy_ifel1_off:
-      CommandData.power.gyro_off[3] |= 0x02;
+      CommandData.power.gyro_off[3] = -1;
       break;
     case gy_ifel1_on:
-      CommandData.power.gyro_off[3] &= ~0x02;
+      CommandData.power.gyro_off[3] = 0;
+      break;
+    case gy_ifel1_cycle:
+      CommandData.power.gyro_off[3] = PCYCLE_HOLD_LEN;
       break;
     case gy_ifel2_off:
-      CommandData.power.gyro_off[4] |= 0x02;
+      CommandData.power.gyro_off[4] = -1;
       break;
     case gy_ifel2_on:
-      CommandData.power.gyro_off[4] &= ~0x02;
+      CommandData.power.gyro_off[4] = 0;
+      break;
+    case gy_ifel2_cycle:
+      CommandData.power.gyro_off[4] = PCYCLE_HOLD_LEN;
       break;
     case gybox_off:
-      CommandData.power.gybox_off = 1;
+      CommandData.power.gybox_off = -1;
       break;
     case gybox_on:
       CommandData.power.gybox_off = 0;
       break;
+    case gybox_cycle:
+      CommandData.power.gybox_off = PCYCLE_HOLD_LEN;
+      break;
     case hub232_off:
-      CommandData.power.hub232_off = 3;
+      CommandData.power.hub232_off = -1;
       break;
     case hub232_on:
       CommandData.power.hub232_off = 0;
       break;
+    case hub232_cycle:
+      CommandData.power.hub232_off = PCYCLE_HOLD_LEN;
+      break;
     case ss_off:
-      CommandData.power.ss_off = 1;
+      CommandData.power.ss_off = -1;
       break;
     case ss_on:
       CommandData.power.ss_off = 0;
       break;
+    case ss_cycle:
+      CommandData.power.ss_off = PCYCLE_HOLD_LEN;
+      break;
     case actbus_off:
-      CommandData.actbus.off = 1;
+      CommandData.actbus.off = -1;
       break;
     case actbus_on:
       CommandData.actbus.off = 0;
+      CommandData.actbus.force_repoll = 1;
+      break;
+    case actbus_cycle:
+      CommandData.actbus.off = PCYCLE_HOLD_LEN * FAST_PER_SLOW;
+      //TODO check that repoll occurs after restart (not during)
       CommandData.actbus.force_repoll = 1;
       break;
 

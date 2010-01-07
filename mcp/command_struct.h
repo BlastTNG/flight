@@ -42,6 +42,14 @@
 
 #define MAX_ISC_SLOW_PULSE_SPEED 0.015
 
+/* latching relay pulse length in 200ms slow frames */
+#define LATCH_PULSE_LEN	 2
+/* time (slow frames) to keep power off when power cycling devices */
+#define PCYCLE_HOLD_LEN	 20
+/* time (in slow frames) to suppress ADC card watchdog, to induce reset */
+#define	RESET_ADC_LEN	 80
+
+
 struct GainStruct {
   unsigned short int P;
   unsigned short int I;
@@ -160,10 +168,11 @@ struct CommandDataStruct {
     struct latch_pulse um350;
     struct latch_pulse um500;
     struct latch_pulse heat;
-    unsigned char gybox_off;
-    unsigned char gyro_off[6];
-    unsigned char hub232_off;
-    unsigned char ss_off;
+    int gybox_off;
+    int gyro_off[6];
+    int gyro_off_auto[6];
+    int hub232_off;
+    int ss_off;
     unsigned char adc_reset[16];
   } power;
 

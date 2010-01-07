@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.20 $";
+const char *command_list_serial = "$Revision: 4.21 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Cool (empty)",
@@ -43,56 +43,62 @@ struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(gps_off), "turn off the dGPS", GR_POWER | CONFIRM},
   {COMMAND(gps_on), "turn on the dGPS", GR_POWER},
+  {COMMAND(gps_cycle), "power cycle the dGPS", GR_POWER | CONFIRM},
   {COMMAND(isc_off), "turn off the ISC", GR_POWER | CONFIRM},
   {COMMAND(isc_on), "turn on the ISC", GR_POWER},
+  {COMMAND(isc_cycle), "power cycle the ISC", GR_POWER | CONFIRM},
   {COMMAND(osc_off), "turn off the OSC", GR_POWER | CONFIRM},
   {COMMAND(osc_on), "turn on the OSC", GR_POWER},
+  {COMMAND(osc_cycle), "power cycle the OSC", GR_POWER | CONFIRM},
   {COMMAND(ss_off), "turn off the Sun Sensor", GR_POWER},
   {COMMAND(ss_on), "turn on the Sun Sensor", GR_POWER},
+  {COMMAND(ss_cycle), "power cycle the Sun Sensor", GR_POWER},
   {COMMAND(gybox_off), "turn off the digital gyros' box", GR_POWER},
   {COMMAND(gybox_on), "turn on the digital gyros' box", GR_POWER},
-  {COMMAND(enable_gy_ifroll1), "enable gy_ifroll1", GR_MISC},
-  {COMMAND(disable_gy_ifroll1), "disable gy_ifroll1", GR_MISC},
-  {COMMAND(enable_gy_ifroll2), "enable gy_ifroll2", GR_MISC},
-  {COMMAND(disable_gy_ifroll2), "disable gy_ifroll2", GR_MISC},
-  {COMMAND(enable_gy_ifyaw1), "enable gy_ifyaw1", GR_MISC},
-  {COMMAND(disable_gy_ifyaw1), "disable gy_ifyaw1", GR_MISC},
-  {COMMAND(enable_gy_ifyaw2), "enable gy_ifyaw2", GR_MISC},
-  {COMMAND(disable_gy_ifyaw2), "disable gy_ifyaw2", GR_MISC},
-  {COMMAND(enable_gy_ifel1), "enable gy_ifel1", GR_MISC},
-  {COMMAND(disable_gy_ifel1), "disable gy_ifel1", GR_MISC},
-  {COMMAND(enable_gy_ifel2), "enable gy_ifel2", GR_MISC},
-  {COMMAND(disable_gy_ifel2), "disable gy_ifel2", GR_MISC},
+  {COMMAND(gybox_cycle), "power cycle the digital gyros' box", GR_POWER},
   {COMMAND(gy_ifroll1_off), "turn off gy_ifroll1", GR_POWER},
   {COMMAND(gy_ifroll1_on), "turn on gy_ifroll1", GR_POWER},
+  {COMMAND(gy_ifroll1_cycle), "power cycle gy_ifroll1", GR_POWER},
   {COMMAND(gy_ifroll2_off), "turn off gy_ifroll2", GR_POWER},
   {COMMAND(gy_ifroll2_on), "turn on gy_ifroll2", GR_POWER},
+  {COMMAND(gy_ifroll2_cycle), "power cycle gy_ifroll2", GR_POWER},
   {COMMAND(gy_ifyaw1_off), "turn off gy_ifyaw1", GR_POWER},
   {COMMAND(gy_ifyaw1_on), "turn on gy_ifyaw1", GR_POWER},
+  {COMMAND(gy_ifyaw1_cycle), "power cycle gy_ifyaw1", GR_POWER},
   {COMMAND(gy_ifyaw2_off), "turn off gy_ifyaw2", GR_POWER},
   {COMMAND(gy_ifyaw2_on), "turn on gy_ifyaw2", GR_POWER},
+  {COMMAND(gy_ifyaw2_cycle), "power cycle gy_ifyaw2", GR_POWER},
   {COMMAND(gy_ifel1_off), "turn off gy_ifel1", GR_POWER},
   {COMMAND(gy_ifel1_on), "turn on gy_ifel1", GR_POWER},
+  {COMMAND(gy_ifel1_cycle), "power cycle gy_ifel1", GR_POWER},
   {COMMAND(gy_ifel2_off), "turn off gy_ifel2", GR_POWER},
   {COMMAND(gy_ifel2_on), "turn on gy_ifel2", GR_POWER},
+  {COMMAND(gy_ifel2_cycle), "power cycle gy_ifel2", GR_POWER},
+  {COMMAND(actbus_off), "turn off the Actuators and Lock", GR_POWER | GR_LOCK
+    | GR_ACT | CONFIRM},
   {COMMAND(actbus_on), "turn on the Actuators and Lock", GR_POWER | GR_LOCK
     | GR_ACT},
-  {COMMAND(actbus_off), "turn off the Actuators and Lock", GR_POWER | GR_LOCK
+  {COMMAND(actbus_cycle), "power cycle the Actuators and Lock", GR_POWER | GR_LOCK
     | GR_ACT | CONFIRM},
   {COMMAND(reac_off), "turn off the reaction wheel motor", GR_POWER},
   {COMMAND(reac_on), "turn on the reaction wheel motor", GR_POWER},
+  {COMMAND(reac_cycle), "power cycle the reaction wheel motor", GR_POWER},
   {COMMAND(piv_off), "turn off the pivot motor", GR_POWER},
   {COMMAND(piv_on), "turn on the pivot motor", GR_POWER},
+  {COMMAND(piv_cycle), "power cycle the pivot motor", GR_POWER},
   {COMMAND(elmot_off), "turn off the elevation motor", GR_POWER},
   {COMMAND(elmot_on), "turn on the elevation motor", GR_POWER},
+  {COMMAND(elmot_cycle), "power cycle the elevation motor", GR_POWER},
   {COMMAND(sc_tx_off), "turn off the starcam transmitters", GR_POWER},
   {COMMAND(sc_tx_on), "turn on the starcam transmitters", GR_POWER},
   {COMMAND(bi0_off), "turn off the biphase transmitters", GR_POWER},
   {COMMAND(bi0_on), "turn on the biphase transmitters", GR_POWER},
   {COMMAND(hub232_off), "turn off the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_on), "turn on the RS-232 (serial) hub", GR_POWER},
+  {COMMAND(hub232_cycle), "power cycle the RS-232 (serial) hub", GR_POWER},
   {COMMAND(das_off), "turn off the DAS", GR_POWER},
   {COMMAND(das_on), "turn on the DAS", GR_POWER},
+  {COMMAND(das_cycle), "power cycle the DAS", GR_POWER},
   //TODO do any of these merit requiring CONFIRM ?
   {COMMAND(preamp_off), "turn off the preamp crate", GR_POWER},
   {COMMAND(preamp_on), "turn on the preamp crate", GR_POWER},
@@ -130,6 +136,18 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(mag_allow), "un-veto magnetometer", GR_VETO},
   {COMMAND(sun_veto), "veto sun sensor", GR_VETO},
   {COMMAND(sun_allow), "un-veto sun sensor", GR_VETO},
+  {COMMAND(enable_gy_ifroll1), "enable gy_ifroll1", GR_VETO},
+  {COMMAND(disable_gy_ifroll1), "disable gy_ifroll1", GR_VETO},
+  {COMMAND(enable_gy_ifroll2), "enable gy_ifroll2", GR_VETO},
+  {COMMAND(disable_gy_ifroll2), "disable gy_ifroll2", GR_VETO},
+  {COMMAND(enable_gy_ifyaw1), "enable gy_ifyaw1", GR_VETO},
+  {COMMAND(disable_gy_ifyaw1), "disable gy_ifyaw1", GR_VETO},
+  {COMMAND(enable_gy_ifyaw2), "enable gy_ifyaw2", GR_VETO},
+  {COMMAND(disable_gy_ifyaw2), "disable gy_ifyaw2", GR_VETO},
+  {COMMAND(enable_gy_ifel1), "enable gy_ifel1", GR_VETO},
+  {COMMAND(disable_gy_ifel1), "disable gy_ifel1", GR_VETO},
+  {COMMAND(enable_gy_ifel2), "enable gy_ifel2", GR_VETO},
+  {COMMAND(disable_gy_ifel2), "disable gy_ifel2", GR_VETO},
 
   {COMMAND(az_auto_gyro), "automatically calculate az gyro offsets", GR_TRIM},
   {COMMAND(el_auto_gyro), "automatically calculate el gyro offset", GR_TRIM},
@@ -619,16 +637,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /****************************************/
   /*************** Misc.  *****************/
-//  {COMMAND(gyro_off), "turn off a digital gyro", GR_POWER, 1,
-//    {
-//      {"Gyro # (1-6)", 1, 6, 'i', ""}
-//    }
-//  },
-//  {COMMAND(gyro_on), "turn on a digital gyro", GR_POWER, 1,
-//    {
-//      {"Gyro # (1-6)", 1, 6, 'i', ""}
-//    }
-//  },
   {COMMAND(reset_adc), "Reset an ADC motherboard", GR_POWER, 1,
     {
       {"Node number",  0, 64, 'i', ""}
