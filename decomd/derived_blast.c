@@ -384,6 +384,18 @@ union DerivedUnion DerivedChannels[] = {
   LINTERP("Td_vcs_jfet",   "TD_VCS_JFET"   , "/data/etc/dt600.txt"),
   LINTERP("Td_hs_charcoal","TD_HS_CHARCOAL", "/data/etc/dt600.txt"),
 
+  COMMENT("ROXes"), // raw calibration only -- warning!
+  LINTERP("Tr_300mk_strap","TR_300MK_STRAP", "/data/etc/rox-raw.txt"),
+  LINTERP("Tr_he3_fridge", "TR_HE3_FRIDGE" , "/data/etc/rox-raw.txt"),
+  LINTERP("Tr_m5",	   "TR_M5"         , "/data/etc/rox-raw.txt"),
+  LINTERP("Tr_m4",         "TR_M4"         , "/data/etc/rox-raw.txt"),
+  LINTERP("Tr_hwpr",       "TR_HWPR"       , "/data/etc/rox-raw.txt"),
+  LINTERP("Tr_horn_500",   "TR_HORN_500"   , "/data/etc/rox-raw.txt"),
+  LINTERP("Tr_horn_350",   "TR_HORN_350"   , "/data/etc/rox-raw.txt"),
+  LINTERP("Tr_horn_250",   "TR_HORN_250"   , "/data/etc/rox-raw.txt"),
+  LINTERP("Tr_he4_pot",    "TR_HE4_POT"    , "/data/etc/rox-raw.txt"),
+  LINTERP("Tr_optbox_filt","TR_OPTBOX_FILT", "/data/etc/rox-raw.txt"),
+
 //  COMMENT("Level Sensor"),
 //  LINTERP("HE4_LITRE", "HE4_LEV", "/data/etc/he4_litre.txt"),
 //  LINTERP("HE4_PERCENT", "HE4_LEV", "/data/etc/he4_percent.txt"),
