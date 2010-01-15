@@ -89,25 +89,35 @@ void setopts_amc(int bdrate, struct MotorInfoStruct* amcinfo)
     case 9600:
       cfsetispeed(&options, B9600);               //input speed
       cfsetospeed(&options, B9600);               //output speed
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm setopts_amc:Setting baud rate to 9600\n",amcinfo->motorstr);
+#endif
       break;
     case 19200:
       cfsetispeed(&options, B19200);               //input speed
       cfsetospeed(&options, B19200);              //output speed
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm setopts_amc:Setting baud rate to 19200\n",amcinfo->motorstr);
+#endif
       break;
     case 38400:
       cfsetispeed(&options, B38400);               //input speed
       cfsetospeed(&options, B38400);               //output speed
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm setopts_amc:Setting baud rate to 38400\n",amcinfo->motorstr);
+#endif
       break;
     case 115200:
       cfsetispeed(&options, B115200);               //input speed
       cfsetospeed(&options, B115200);               //output speed
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm setopts_amc:Setting baud rate to 115200\n",amcinfo->motorstr);
+#endif
       break;
     default:
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm setopts_amc: Invalid baud rate %i. Using the default 115200.\n",amcinfo->motorstr,bdrate);
+#endif
       cfsetispeed(&options, B115200);               //input speed
       cfsetospeed(&options, B115200);               //output speed
       break;
@@ -318,18 +328,21 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
 {
   int n,m;
 //  char testcmd[]="/1Q\r\n";
+#ifdef MOTORS_VERBOSE
   bprintf(info,"%sComm configure_amc: Testing a 38400 baud rate...\n",amcinfo->motorstr);
+#endif
   setopts_amc(38400,amcinfo);
 
   n = areWeDisabled(amcinfo);
   if(n >= 0)
     {
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm configure_amc: AMC controller responds to a 38400 baud rate.",amcinfo->motorstr);
+#endif
       amcinfo->err=0;
       if(amcinfo->writeset!=1)
 	{
 	  setWriteAccess(amcinfo);
-          m=disableAMC(amcinfo); // Make sure the AMC is disabled
 	}
       amcinfo->init=1;
       amcinfo->err=0;
@@ -337,16 +350,22 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
     }
   else
     {
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm configure_amc: No controller response for a baud rate of 38400.",amcinfo->motorstr);
+#endif
     }
 
+#ifdef MOTORS_VERBOSE
   bprintf(info,"%sComm configure_amc: Testing a 9600 baud rate...\n",amcinfo->motorstr);
+#endif
   setopts_amc(9600,amcinfo);
   n = areWeDisabled(amcinfo);
   if(n >= 0)
     {
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm configure_amc: AMC controller responds to a 9600 baud rate.",amcinfo->motorstr);
       bprintf(info,"%sComm configure_amc: Attempting to set the baud rate to 38400.",amcinfo->motorstr);
+#endif
 
       if(amcinfo->writeset!=1)
 	{
@@ -364,14 +383,20 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
     }
   else
     {
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm configure_amc: No controller response for a baud rate of 9600.",amcinfo->motorstr);
+#endif
     }
+#ifdef MOTORS_VERBOSE
   bprintf(info,"%sComm configure_amc: Testing a 38400 baud rate...\n",amcinfo->motorstr);
+#endif
   setopts_amc(38400, amcinfo);
   n = areWeDisabled(amcinfo);
   if(n >= 0)
     {
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm configure_amc: AMC controller responds to a 38400 baud rate.",amcinfo->motorstr);
+#endif
       if(amcinfo->writeset!=1)
 	{
 	  setWriteAccess(amcinfo);
@@ -419,13 +444,17 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
      n = select(max_fd, &input, &output, NULL, &timeout);
      break;
    default:
+#ifdef MOTORS_VERBOSE
      berror(err, "%sComm check_amcready: CheckType is in valid.",amcinfo->motorstr);
+#endif
      return -3;
      break;
    }
    /* Was there an error? */
    if (n < 0) {
+#ifdef MOTORS_VERBOSE
      bprintf(err,"%sComm: Select command failed!",amcinfo->motorstr);
+#endif
      return -2;
    } else if (n==0) {
 #ifdef DEBUG_AMC
@@ -543,7 +572,9 @@ int queryAMCInd(int index, int offset, int nwords, struct MotorInfoStruct* amcin
     return val;
     
   } else {
+#ifdef MOTORS_VERBOSE
     bprintf(err,"%sComm queryAMCInd: Error querying index.",amcinfo->motorstr);
+#endif
     return -1;
   }
   // mark1
@@ -560,7 +591,9 @@ int areWeDisabled(struct MotorInfoStruct* amcinfo)
   int n= queryAMCInd(1,0,1,amcinfo);
   if(n<0)
     {
+#ifdef MOTORS_VERBOSE
       bprintf(warning,"%sComm areWeDisabled: Couldn't send the query.",amcinfo->motorstr);
+#endif
       return -1;
     }
   else
@@ -832,7 +865,9 @@ void close_amc(struct MotorInfoStruct* amcinfo)
 {
   int n;
 
-  bprintf(info,"%sComm: Closing connection to AMC controller.",amcinfo->motorstr);
+#ifdef MOTORS_VERBOSE
+  bprintf(info,"%sComm close_amc: Closing connection to AMC controller.",amcinfo->motorstr);
+#endif
 
   n = disableAMC(amcinfo);
   if(n>0)
@@ -844,16 +879,21 @@ void close_amc(struct MotorInfoStruct* amcinfo)
       bprintf(err,"%sComm close_amc: Disabling AMC controller failed.",amcinfo->motorstr);
     }
 
+#ifdef MOTORS_VERBOSE
   bprintf(info,"%sComm close_amc: Closing serial port.",amcinfo->motorstr);
+#endif
 
   close(amcinfo->fd);
   amcinfo->init=0;
   amcinfo->open=0;
+  bprintf(info,"%sComm close_amc: Connection to motor serial port is closed.",amcinfo->motorstr);
 }
 
 void setWriteAccess(struct MotorInfoStruct* amcinfo)
 {
+#ifdef MOTORS_VERBOSE
   bprintf(info,"%sComm setWriteAccess: Setting write access",amcinfo->motorstr);  
+#endif
   int n, count;
   count = send_amccmd(7,0,15,1,cmd,amcinfo); // ???
   n = check_amcready(resp,amcinfo);
@@ -875,7 +915,9 @@ void setWriteAccess(struct MotorInfoStruct* amcinfo)
 int disableAMC(struct MotorInfoStruct* amcinfo)
 {
   int count,n;
+#ifdef MOTORS_VERBOSE
   bprintf(info,"%sComm disableAMC: Attempting to disable motor controller.",amcinfo->motorstr);
+#endif
   count = send_amccmd(1,0,1,1,cmd,amcinfo); // Disable the AMC controller.
   n = check_amcready(resp,amcinfo);
   if (n < 0)

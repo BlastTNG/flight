@@ -9,6 +9,9 @@
 
 #include <stdarg.h>  /* ANSI C variable arguments (va_list, va_start, va_end) */
 
+//#define MOTORS_VERBOSE /*** Motors output more information that is only 
+//                           interesting to those working on motor code ***/
+
 enum CheckType {resp, comm, both};
 
 enum MotorType {pivot, rw, elev};
@@ -32,10 +35,10 @@ struct MotorInfoStruct {
             //           a power cycle of the controller                      
             // 0 No errors                                                    
   int disabled; // Is the motor controller disabled                           
+                // 0 if no                                                      
+                // 1 in yes                                                     
+                // 10 if we aren't sure (because we have just started mcp)      
   int bdrate; // Baud rate with which we are communicating with the controller
-  // 0 if no                                                      
-  // 1 in yes                                                     
-  // 10 if we aren't sure (because we have just started mcp)      
   int closing; // 1 if in the process of closing down.     
   int writeset; // 1 if write access has been set.
                 // 0 if it has not yet been set

@@ -62,17 +62,22 @@ void close_copley(struct MotorInfoStruct* copleyinfo)
 {
   int n;
 
+#ifdef MOTORS_VERBOSE
   bprintf(info,"%sComm: Closing connection to Copley controller.",copleyinfo->motorstr);
+#endif
   n = disableCopley(copleyinfo);
 
   if(n!=0) {
     bprintf(err,"%sComm close_copley: Disabling Copley controller failed.",copleyinfo->motorstr);
   }
 
+#ifdef MOTORS_VERBOSE
   bprintf(info,"%sComm close_copley: Closing serial port.",copleyinfo->motorstr);
+#endif
   close(copleyinfo->fd); 
   copleyinfo->init=0;
   copleyinfo->open=0;
+  bprintf(info,"%sComm close_copley: Connection to motor serial port is closed.",copleyinfo->motorstr);
 }
 
 void setopts_copley(int bdrate,struct MotorInfoStruct* copleyinfo)
@@ -92,25 +97,35 @@ void setopts_copley(int bdrate,struct MotorInfoStruct* copleyinfo)
     case 9600:
       cfsetispeed(&options, B9600);               //input speed               
       cfsetospeed(&options, B9600);               //output speed              
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%s setopts_copley:Setting baud rate to 9600\n",copleyinfo->motorstr);
+#endif
       break;
     case 19200:
       cfsetispeed(&options, B19200);               //input speed              
       cfsetospeed(&options, B19200);              //output speed              
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm setopts_copley:Setting baud rate to 19200\n",copleyinfo->motorstr);
+#endif
       break;
     case 38400:
       cfsetispeed(&options, B38400);               //input speed              
       cfsetospeed(&options, B38400);               //output speed             
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm setopts_copley:Setting baud rate to 38400\n",copleyinfo->motorstr);
+#endif
       break;
     case 115200:
       cfsetispeed(&options, B115200);               //input speed             
       cfsetospeed(&options, B115200);               //output speed            
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm setopts_copley:Setting baud rate to 115200\n",copleyinfo->motorstr);
+#endif
       break;
     default:
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm setopts_copley: Invalid baud rate %i. Using the default 115200.\n",copleyinfo->motorstr,bdrate);
+#endif
       cfsetispeed(&options, B115200);               //input speed             
       cfsetospeed(&options, B115200);               //output speed            
       break;
@@ -179,13 +194,19 @@ void configure_copley(struct MotorInfoStruct* copleyinfo)
   int n,m,i;
   setopts_copley(9600,copleyinfo);
   copleyinfo->bdrate=9600;
+#ifdef MOTORS_VERBOSE
   bprintf(info, "%sComm configure_copley: Try communicating at 9600 baud rate",copleyinfo->motorstr);
+#endif
   n = ping_copley(copleyinfo);
   if(n > 0)
     {
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm configure_copley: Controller responds to a 9600 baud rate.",copleyinfo->motorstr);
+#endif
       //
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm configure_copley: Attempting to set baud rate to 38400",copleyinfo->motorstr);
+#endif
       m = check_copleyready(comm,copleyinfo);
       if(m >= 0)
 	{
@@ -194,7 +215,9 @@ void configure_copley(struct MotorInfoStruct* copleyinfo)
       m = check_copleyready(resp,copleyinfo);
       if(m >= 0)
 	{
+#ifdef MOTORS_VERBOSE
 	  bprintf(info,"%sComm configure_copley: Hey it responded!  Wicked!",copleyinfo->motorstr);
+#endif
           i=checkCopleyResp(copleyinfo);
 	}
       setopts_copley(38400,copleyinfo);
@@ -207,14 +230,18 @@ void configure_copley(struct MotorInfoStruct* copleyinfo)
       i = ping_copley(copleyinfo);
       if(i > 0)
 	{
+#ifdef MOTORS_VERBOSE
 	  bprintf(info, "%sComm configure_copley: Controller now responds to a 38400 baud rate.",copleyinfo->motorstr);
+#endif
           copleyinfo->init=1;
           copleyinfo->err=0;
           return;
 	}
       else
 	{
+#ifdef MOTORS_VERBOSE
 	  bprintf(err, "%sComm configure_copley: Controller does not respond to a 38400 baud rate!",copleyinfo->motorstr);
+#endif
           copleyinfo->init=0;
           copleyinfo->err=3;
 	  return;
@@ -224,34 +251,44 @@ void configure_copley(struct MotorInfoStruct* copleyinfo)
     }  
   else
     {
+#ifdef MOTORS_VERBOSE
       bprintf(info, "%sComm configure_copley: Controller does not respond to a 9600 baud rate.",copleyinfo->motorstr);
       bprintf(info, "%sComm configure_copley: Setting Baud rate to 38400",copleyinfo->motorstr);
+#endif
       setopts_copley(38400,copleyinfo);
       copleyinfo->bdrate=38400;
       i = ping_copley(copleyinfo);
       if(i > 0)
 	{
+#ifdef MOTORS_VERBOSE
 	  bprintf(info, "%sComm configure_copley: Controller now responds to a 38400 baud rate.",copleyinfo->motorstr);
+#endif
           copleyinfo->init=1;
           copleyinfo->err=0;
           return;
 	}
       else
 	{
+#ifdef MOTORS_VERBOSE
 	  bprintf(info, "%sComm configure_copley: Setting Baud rate to 115200",copleyinfo->motorstr);
+#endif
 	  setopts_copley(115200,copleyinfo);
           copleyinfo->bdrate=38400;
           i = ping_copley(copleyinfo);
           if(i > 0)
 	    {
+#ifdef MOTORS_VERBOSE
 	  bprintf(info, "%sComm configure_copley: Controller now responds to a 115200 baud rate.",copleyinfo->motorstr);
+#endif
           copleyinfo->init=1;
           copleyinfo->err=0;
           return;
 	    }
 	  else
 	    {
+#ifdef MOTORS_VERBOSE
 	      bprintf(err, "%sComm configure_copley: Controller does not respond to a 115200 baud rate!",copleyinfo->motorstr);
+#endif
 	      copleyinfo->init=0;
 	      copleyinfo->err=3;
 	    }
@@ -296,10 +333,14 @@ int check_copleyready(enum CheckType check, struct MotorInfoStruct* copleyinfo)
   }
   /* Was there an error? */
   if (n < 0) {
+#ifdef MOTORS_VERBOSE
     bprintf(err,"%sComm: Select command failed!",copleyinfo->motorstr);
+#endif
     return -2;
   } else if (n==0) {
+#ifdef MOTORS_VERBOSE
     bprintf(warning,"%sComm: Select call timed out.",copleyinfo->motorstr);
+#endif
     return -1;
   } else {
     // Sets a 2 bit integer m.                                                                                            
@@ -346,8 +387,10 @@ int ping_copley(struct MotorInfoStruct* copleyinfo)
   n = readCopleyResp(outs,&l,copleyinfo);
   if(n >= 0){
     copyouts(outs, outs_noCR);  
+#ifdef MOTORS_VERBOSE
     bprintf(info,"%sComm ping_copley: Controller response= %s\n",copleyinfo->motorstr,outs_noCR);
     bprintf(info,"%sComm ping_copley: First character= %c\n",copleyinfo->motorstr,outs_noCR[0]);
+#endif
     if(outs[0]== 'v')  {
       return 1;
     } else if(outs[0]== 'e') {
@@ -361,7 +404,9 @@ int ping_copley(struct MotorInfoStruct* copleyinfo)
       }
     }
   else if (n==-1){
+#ifdef MOTORS_VERBOSE
     berror(err,"%sComm ping_copley: Select failed.",copleyinfo->motorstr);
+#endif
     return -1;
   }
   else {
@@ -386,7 +431,9 @@ int checkCopleyResp(struct MotorInfoStruct* copleyinfo)
     {
       return n;
     }
+#ifdef MOTORS_VERBOSE
   bprintf(info,"%sComm checkCopleyResp: Controller response= %s\n",copleyinfo->motorstr,outs_noCR);
+#endif
   // Did the controller respond ok?
   if(outs_noCR[0]=='o' && outs_noCR[1]=='k')
     {
@@ -445,7 +492,9 @@ int enableCopley(struct MotorInfoStruct* copleyinfo)
 int disableCopley(struct MotorInfoStruct* copleyinfo)
 {
   int n=0;
+#ifdef MOTORS_VERBOSE
   bprintf(info,"%sComm disableCopley: Attempting to disable Copley motor controller.",copleyinfo->motorstr);
+#endif
   //  int count=0;
   send_copleycmd("s r0x24 0\r",copleyinfo);
   n = check_copleyready(resp,copleyinfo);
@@ -647,10 +696,14 @@ int readCopleyResp(char *outs,int *l,struct MotorInfoStruct* copleyinfo)
     } else {
       if(timeout==timeoutlim){ // If there is no data after two tries return an.
 	if(j==timeoutlim) {// The controller never responded.
+#ifdef MOTORS_VERBOSE
 	  bprintf(err,"%sComm readCopleyResp: The controller did not respond.",copleyinfo->motorstr);
+#endif
 	  return -1;
 	} else {
+#ifdef MOTORS_VERBOSE
  	  bprintf(err,"%sComm readCopleyResp: Did not find the appropriate response end character.",copleyinfo->motorstr);
+#endif
 	  return -2; // For some reason the controller never found the end character.
 	             // which means the response was probably garbage. 
 

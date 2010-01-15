@@ -11,6 +11,8 @@
 #include <stdarg.h>  /* ANSI C variable arguments (va_list, va_start, va_end) */
 #include "motordefs.h"
 
+//#define DEBUG_COPLEY
+
 #define RW_ENC_CTS 2097152.0 // Reaction Wheel Encoder Counts per revolution
 #define ELEV_ENC_CTS 524288.0 // Elevation Drive Encoder Counts per revolution
 
