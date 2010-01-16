@@ -44,7 +44,7 @@ static int __inhibit_chatter = 1;
 #if defined USE_FIFO_CMD && ! defined USE_XY_THREAD
 #  define ACT_BUS "/dev/ttyS0"
 #else
-#  define ACT_BUS "/dev/ttyS7"
+#  define ACT_BUS "/dev/ttySI15"
 #endif
 
 /* Thermal model numbers, from MD and MV */
@@ -694,6 +694,11 @@ static int PollBus(int rescan)
           name[i]);
       stepper[i].status = -1;
       all_ok = 0;
+    } else if (!strncmp(bus_buffer, "EZStepper AllMotion", 19)) {
+      bprintf(info, "ActBus: Found EZStepper device %s at address %i.\n",
+          name[i], id[i] - 0x30);
+      stepper[i].status = 0;
+    /* EZHR17EN and EZHR23 types leftover from BLAST06 */
     } else if (!strncmp(bus_buffer, "EZHR17EN AllMotion", 18)) {
       bprintf(info, "ActBus: Found type 17EN device %s at address %i.\n",
           name[i], id[i] - 0x30);
@@ -965,6 +970,8 @@ void SecondaryMirror(void)
   double t_primary1, t_secondary1;
   double t_primary2, t_secondary2;
 
+  double correction_temp = 0;
+
   if (firsttime) {
     firsttime = 0;
     tPrimary1Addr = GetBiPhaseAddr("t_primary_1");
@@ -1043,15 +1050,17 @@ void SecondaryMirror(void)
     CommandData.actbus.tc_mode = TC_MODE_ENABLED;
   }
 
-  correction = CommandData.actbus.g_primary * (t_primary - T_PRIMARY_FOCUS) -
+  correction_temp = CommandData.actbus.g_primary * (t_primary - T_PRIMARY_FOCUS) -
     CommandData.actbus.g_secondary * (t_secondary - T_SECONDARY_FOCUS);
 
   /* convert to counts */
-  correction /= ACTENC_TO_UM;
+  correction_temp /= ACTENC_TO_UM;
 
   /* re-adjust */
-  correction = correction + focus - POSITION_FOCUS -
+  correction_temp = correction_temp + focus - POSITION_FOCUS -
     CommandData.actbus.sf_offset;
+
+  correction = correction_temp;  //slightly more thread safe
 
   if (CommandData.actbus.sf_time < CommandData.actbus.tc_wait)
     CommandData.actbus.sf_time++;
@@ -1220,12 +1229,6 @@ static void DoLock(void)
       CommandData.actbus.lock_goal = LS_DRIVE_OFF;
     }
 
-    /* Seize the bus */
-    if (action == LA_EXIT)
-      ReleaseBus(LOCKNUM);
-    else
-      TakeBus(LOCKNUM);
-
     /* Timeout check */
     if (drive_timeout == 1) {
       bputs(warning, "ActBus: Lock Motor drive timeout.");
@@ -1233,6 +1236,12 @@ static void DoLock(void)
     }
     if (drive_timeout > 0)
       --drive_timeout;
+
+    /* Seize the bus */
+    if (action == LA_EXIT)
+      ReleaseBus(LOCKNUM);
+    else
+      TakeBus(LOCKNUM);
 
     /* Figure out what to do... */
     switch (action) {
@@ -1309,7 +1318,7 @@ void StoreActBus(void)
 {
   int j;
   static int firsttime = 1;
-  int actbus_reset = 0;
+  int actbus_reset = 1;   //1 means actbus is on
 
   static struct BiPhaseStruct* lvdt10Addr;
   static struct BiPhaseStruct* lvdt11Addr;
@@ -1418,7 +1427,7 @@ void StoreActBus(void)
 
   if (CommandData.actbus.off) {
     if (CommandData.actbus.off > 0) CommandData.actbus.off--;
-    actbus_reset = 1;
+    actbus_reset = 0;   //turn actbus off
   }
   WriteData(actbusResetAddr, actbus_reset, NIOS_QUEUE);
 
