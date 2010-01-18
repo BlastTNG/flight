@@ -180,6 +180,10 @@ struct CommandDataStruct {
   unsigned short disable_el;
   unsigned short force_el;
 
+  unsigned short reset_reac;
+  unsigned short reset_piv;
+  unsigned short reset_elev;
+
   int az_autogyro;
   int el_autogyro;
   double gy_ifel_offset;

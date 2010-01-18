@@ -40,6 +40,7 @@ struct MotorInfoStruct {
                 // 10 if we aren't sure (because we have just started mcp)      
   int bdrate; // Baud rate with which we are communicating with the controller
   int closing; // 1 if in the process of closing down.     
+  int reset; // 1 to reset the drive.     
   int writeset; // 1 if write access has been set.
                 // 0 if it has not yet been set
                 // -1 if there is an error while sending the 

@@ -319,7 +319,15 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.disable_el = 0;
       CommandData.force_el = 1;
       break;
-
+    case reset_reac:
+      CommandData.reset_reac=1;
+      break;
+    case reset_piv:
+      CommandData.reset_piv=1;
+      break;
+    case reset_elev:
+      CommandData.reset_elev=1;
+      break;
     case sun_veto:      /* Veto sensors */
       CommandData.use_sun = 0;
       break;
@@ -2345,6 +2353,10 @@ void InitCommandData()
   // TODO-lmf: not sure if we want this for flight...
   CommandData.disable_az = 1; 
   CommandData.disable_el = 1;
+
+  CommandData.reset_reac = 0;
+  CommandData.reset_piv = 0;
+  CommandData.reset_elev = 0;
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))

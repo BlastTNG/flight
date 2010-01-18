@@ -41,6 +41,8 @@ long int queryCopleyInd(char ind[],struct MotorInfoStruct* copleyinfo);
 long int getCopleyVel(struct MotorInfoStruct* copleyinfo);
 long int getCopleyPos(struct MotorInfoStruct* copleyinfo);
 int readCopleyResp(char *outs, int *l, struct MotorInfoStruct* copleyinfo);
+void resetCopley(char *address, struct MotorInfoStruct* copleyinfo);
+void restartCopley(char *address, struct MotorInfoStruct* copleyinfo);
 
 extern struct MotorInfoStruct reactinfo; /* declared in copleycommand.c        
                                           *                                   

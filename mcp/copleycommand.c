@@ -74,7 +74,9 @@ void close_copley(struct MotorInfoStruct* copleyinfo)
 #ifdef MOTORS_VERBOSE
   bprintf(info,"%sComm close_copley: Closing serial port.",copleyinfo->motorstr);
 #endif
-  close(copleyinfo->fd); 
+  if(copleyinfo->fd >=0) {
+    close(copleyinfo->fd); 
+  }
   copleyinfo->init=0;
   copleyinfo->open=0;
   bprintf(info,"%sComm close_copley: Connection to motor serial port is closed.",copleyinfo->motorstr);
@@ -719,3 +721,38 @@ int readCopleyResp(char *outs,int *l,struct MotorInfoStruct* copleyinfo)
   return 0;
 }
 
+void resetCopley(char *address, struct MotorInfoStruct* copleyinfo)
+{
+  int count = 10;
+  close_copley(copleyinfo);
+  while(copleyinfo->open==0 && count > 0) {
+    open_copley(address,copleyinfo);
+    count--;
+  }
+
+  if(copleyinfo->open==0) {
+    bprintf(warning,"%sComm resetCopley: Failed to open serial port after %d attempts!",copleyinfo->motorstr,count);
+    bprintf(warning,"%sComm resetCopley: Attempt to reset controller failed.",copleyinfo->motorstr);
+    return;
+  }
+
+  count = 10;
+  while(copleyinfo->init==0  && count > 0 ) {
+    configure_copley(copleyinfo);
+    count--;
+  }
+  if(copleyinfo->init==0) {
+    bprintf(warning,"%sComm resetCopley: Failed to configure the drive after %d attempts!",copleyinfo->motorstr,count);
+    bprintf(warning,"%sComm resetCopley: Attempt to reset controller failed.",copleyinfo->motorstr);
+    return;
+  } else {
+    bprintf(info,"%sComm resetCopley: Controller reset was successful!",copleyinfo->motorstr);
+  }
+
+}
+
+void restartCopley(char *address, struct MotorInfoStruct* copleyinfo)
+{
+  close_copley(copleyinfo);
+  open_copley(address,copleyinfo);
+}

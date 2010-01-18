@@ -1333,6 +1333,7 @@ void* reactComm(void* arg)
   reactinfo.init=0;
   reactinfo.err=0;
   reactinfo.closing=0;
+  reactinfo.reset=0;
   reactinfo.disabled=10;
   reactinfo.bdrate=9600;
   strncpy(reactinfo.motorstr,"react",6);
@@ -1363,13 +1364,25 @@ void* reactComm(void* arg)
   }
 
   // Configure the serial port.                                               
-  configure_copley(&reactinfo);
+  i=0;
+  while(reactinfo.init==0) {
+    configure_copley(&reactinfo);
+    i++;
+#ifdef MOTORS_VERBOSE
+      bprintf(info,"reactComm: Initialized the controller on attempt number %i",i); 
+#endif
+  }
   rw_motor_index = 1; // index for writing to the RWMotor data struct
   while(1){
     if(reactinfo.closing==1){
       close_copley(&reactinfo);
       usleep(10000);      
-    } else if (reactinfo.init==1){
+    } else if (CommandData.reset_reac==1){
+      bprintf(warning,"reactComm: Resetting connection to reaction wheel controller.");
+      resetCopley(REACT_DEVICE,&reactinfo); 
+      CommandData.reset_reac=0;
+    }
+    else if(reactinfo.init==1){
       if(CommandData.disable_az==0 && reactinfo.disabled > 0) {
 #ifdef MOTORS_VERBOSE
 	bprintf(info,"reactComm: Attempting to enable the reaction wheel motor controller.");

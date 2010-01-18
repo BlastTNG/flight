@@ -17,7 +17,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 197        /* total number of single word cmds */
+#define N_SCOMMANDS 200        /* total number of single word cmds */
 #define N_MCOMMANDS 105        /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
@@ -114,7 +114,8 @@ enum singleCommand {
   isc_use_pyramid,  isc_no_pyramid,     osc_use_pyramid,  osc_no_pyramid,
   autofocus_veto,   north_halt,         south_halt,       actbus_on,
   actbus_off,       actuator_stop,      level_pulse,
-  reset_dr,         actpos_trim
+  reset_dr,         actpos_trim,        reset_reac,       reset_piv,
+  reset_elev
 };
 
 /* multiCommand enumeration.  The command list here does NOT have to be in
