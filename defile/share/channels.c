@@ -1075,11 +1075,13 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
 
   if (offset) {
     snprintf(line, 1024, "FRAMEOFFSET      %li\n", offset);
-    write(fd, line, strlen(line));
+    if (write(fd, line, strlen(line)) < 0)
+      berror(err, "Error writing to format file\n");
   }
 
   sprintf(line, "FASTSAMP         RAW    U %i\n", FAST_PER_SLOW);
-  write(fd, line, strlen(line));
+  if (write(fd, line, strlen(line)) < 0)
+    berror(err, "Error writing to format file\n");
 
 
 #ifdef __DEFILE__
@@ -1094,11 +1096,13 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
       "# Defile found a single frame error in the stream and replaced it with "
       "old datax\n"
       "DEFILE_SINGLE    BIT  DEFILE_FLAGS 3\n", FAST_PER_SLOW);
-  write(fd, line, strlen(line));
+  if (write(fd, line, strlen(line)) < 0)
+    berror(err, "Error writing to format file\n");
 #endif
 
   strcpy(line, "\n## SLOW CHANNELS:\n");
-  write(fd, line, strlen(line));
+  if (write(fd, line, strlen(line)) < 0)
+    berror(err, "Error writing to format file\n");
 
   for (i = 0; i < ccNarrowSlow; ++i) {
     snprintf(line, 1024,
@@ -1107,18 +1111,21 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
         FieldToUpper(SlowChannels[i].field),
         FieldToLower(SlowChannels[i].field), SlowChannels[i].m_c2e,
         SlowChannels[i].b_e2e);
-    write(fd, line, strlen(line));
+    if (write(fd, line, strlen(line)) < 0)
+      berror(err, "Error writing to format file\n");
     if (strlen(SlowChannels[i].quantity)>0) {
       snprintf(line, 1024,
 	  "%s/quantity STRING %s\n",
 	  FieldToUpper(SlowChannels[i].field), SlowChannels[i].quantity);
-      write(fd, line, strlen(line));
+      if (write(fd, line, strlen(line)) < 0)
+	berror(err, "Error writing to format file\n");
     }
     if (strlen(SlowChannels[i].units)>0) {
       snprintf(line, 1024,
 	  "%s/units STRING %s\n",
 	  FieldToUpper(SlowChannels[i].field), SlowChannels[i].units);
-      write(fd, line, strlen(line));
+      if (write(fd, line, strlen(line)) < 0)
+	berror(err, "Error writing to format file\n");
     }
   }
 
@@ -1129,23 +1136,27 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
         FieldToUpper(WideSlowChannels[i].field),
         FieldToLower(WideSlowChannels[i].field), WideSlowChannels[i].m_c2e,
         WideSlowChannels[i].b_e2e);
-    write(fd, line, strlen(line));
+    if (write(fd, line, strlen(line)) < 0)
+      berror(err, "Error writing to format file\n");
     if (strlen(WideSlowChannels[i].quantity)>0) {
       snprintf(line, 1024,
 	  "%s/quantity STRING %s\n",
 	  FieldToUpper(WideSlowChannels[i].field), WideSlowChannels[i].quantity);
-      write(fd, line, strlen(line));
+      if (write(fd, line, strlen(line)) < 0)
+	berror(err, "Error writing to format file\n");
     }
     if (strlen(WideSlowChannels[i].units)>0) {
       snprintf(line, 1024,
 	  "%s/units STRING %s\n",
 	  FieldToUpper(WideSlowChannels[i].field), WideSlowChannels[i].units);
-      write(fd, line, strlen(line));
+      if (write(fd, line, strlen(line)) < 0)
+	berror(err, "Error writing to format file\n");
     }
   }
 
   strcpy(line, "\n## FAST CHANNELS:\n");
-  write(fd, line, strlen(line));
+  if (write(fd, line, strlen(line)) < 0)
+    berror(err, "Error writing to format file\n");
 
   for (i = 0; i < ccNarrowFast; i++) {
     snprintf(line, 1024,
@@ -1154,18 +1165,21 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
         FAST_PER_SLOW, FieldToUpper(FastChannels[i].field),
         FieldToLower(FastChannels[i].field), FastChannels[i].m_c2e,
         FastChannels[i].b_e2e);
-    write(fd, line, strlen(line));
+    if (write(fd, line, strlen(line)) < 0)
+      berror(err, "Error writing to format file\n");
     if (strlen(FastChannels[i].quantity)>0) {
       snprintf(line, 1024,
 	  "%s/quantity STRING %s\n",
 	  FieldToUpper(FastChannels[i].field), FastChannels[i].quantity);
-      write(fd, line, strlen(line));
+      if (write(fd, line, strlen(line)) < 0)
+	berror(err, "Error writing to format file\n");
     }
     if (strlen(FastChannels[i].units)>0) {
       snprintf(line, 1024,
 	  "%s/units STRING %s\n",
 	  FieldToUpper(FastChannels[i].field), FastChannels[i].units);
-      write(fd, line, strlen(line));
+      if (write(fd, line, strlen(line)) < 0)
+	berror(err, "Error writing to format file\n");
     }
   }
 
@@ -1176,18 +1190,21 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
         FAST_PER_SLOW, FieldToUpper(WideFastChannels[i].field),
         FieldToLower(WideFastChannels[i].field), WideFastChannels[i].m_c2e,
         WideFastChannels[i].b_e2e);
-    write(fd, line, strlen(line));
+    if (write(fd, line, strlen(line)) < 0)
+      berror(err, "Error writing to format file\n");
     if (strlen(WideFastChannels[i].quantity)>0) {
       snprintf(line, 1024,
 	  "%s/quantity STRING %s\n",
 	  FieldToUpper(WideFastChannels[i].field), WideFastChannels[i].quantity);
-      write(fd, line, strlen(line));
+      if (write(fd, line, strlen(line)) < 0)
+	berror(err, "Error writing to format file\n");
     }
     if (strlen(WideFastChannels[i].units)>0) {
       snprintf(line, 1024,
 	  "%s/units STRING %s\n",
 	  FieldToUpper(WideFastChannels[i].field), WideFastChannels[i].units);
-      write(fd, line, strlen(line));
+      if (write(fd, line, strlen(line)) < 0)
+	berror(err, "Error writing to format file\n");
     }
   }
 
@@ -1198,12 +1215,14 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
         FAST_PER_SLOW, FieldToUpper(DecomChannels[i].field),
         FieldToLower(DecomChannels[i].field), DecomChannels[i].m_c2e,
         DecomChannels[i].b_e2e);
-    write(fd, line, strlen(line));
+    if (write(fd, line, strlen(line)) < 0)
+      berror(err, "Error writing to format file\n");
   }
 
   /* bolo channels */
   strcpy(line, "\n## BOLOMETER:\n");
-  write(fd, line, strlen(line));
+  if (write(fd, line, strlen(line)) < 0)
+    berror(err, "Error writing to format file\n");
 
   bolo_node = DAS_START;
   for (i = 0; i < DAS_CARDS; i++) {
@@ -1215,13 +1234,15 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
           "%-16s RAW    U %d\n%-16s LINCOM 1 %-16s %.12e %.12e\n",
           FieldToLower(field), FAST_PER_SLOW, FieldToUpper(field),
           FieldToLower(field), LOCKIN_C2V, LOCKIN_OFFSET);
-      write(fd, line, strlen(line));
+      if (write(fd, line, strlen(line)) < 0)
+	berror(err, "Error writing to format file\n");
     }
   }
 
   /* derived channels */
   strcpy(line, "\n## DERIVED CHANNELS:\n");
-  write(fd, line, strlen(line));
+  if (write(fd, line, strlen(line)) < 0)
+    berror(err, "Error writing to format file\n");
 
   for (i = 0; i < ccDerived; ++i) {
     switch (DerivedChannels[i].comment.type) {
@@ -1230,7 +1251,8 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
             DerivedChannels[i].bitfield.source);
         for (j = 0; j < 16; ++j)
           if (DerivedChannels[i].bitfield.field[j][0]) {
-            write(fd, line, strlen(line));
+            if (write(fd, line, strlen(line)) < 0)
+	      berror(err, "Error writing to format file\n");
             snprintf(line, 1024, "%-16s BIT %-16s %i\n",
                 DerivedChannels[i].bitfield.field[j],
                 DerivedChannels[i].bitfield.source, j);
@@ -1270,7 +1292,8 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
 	    DerivedChannels[i].units.source, DerivedChannels[i].units.quantity);
 	break;
     }
-    write(fd, line, strlen(line));
+    if (write(fd, line, strlen(line)) < 0)
+      berror(err, "Error writing to format file\n");
   }
 
   snprintf(line, 1024, "\n# Nice CPU Values\n"
@@ -1282,5 +1305,6 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
     "CPU_MONTH LINCOM 1      CPU_SEC 3.85803E-7  0\n"
     "CPU_YEAR LINCOM 1       CPU_SEC 3.17099E-8  0\n", start_time
     );
-  write(fd, line, strlen(line));
+  if (write(fd, line, strlen(line)) < 0)
+    berror(err, "Error writing to format file\n");
 }
