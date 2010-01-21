@@ -213,7 +213,8 @@ static void SendRequest (int req, char tty_fd)
       buffer[0],buffer[1],buffer[2]);
 #endif
 
-  write(tty_fd, buffer, 3);
+  if (write(tty_fd, buffer, 3) < 0)
+    berror(warning, "Commands: error sending SIP request\n");
 }
 #endif
 
@@ -965,7 +966,8 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       if ((command == north_halt && !SouthIAm) || 
 	  (command == south_halt && SouthIAm)) {
         bputs(warning, "Commands: Halting the MCC\n");
-        system("/sbin/reboot");
+        if (system("/sbin/reboot") < 0)
+	  berror(fatal, "Commands: failed to reboot, dying\n");
       }
       break;
     case xy_panic:
@@ -1870,7 +1872,8 @@ static void SendDownData(char tty_fd)
   memcpy(buffer +  3, data, SLOWDL_LEN);
   buffer[3 + SLOWDL_LEN] = SLOWDL_ETX;
 
-  write(tty_fd, buffer, 3 + SLOWDL_LEN + 1);
+  if (write(tty_fd, buffer, 3 + SLOWDL_LEN + 1) < 0)
+    berror(warning, "Error writing to SlowDL\n");
 #if 0
   for (i=0; i<3 + SLOWDL_LEN + 1; i++) {
     bprintf(info, "%d %2x", i, buffer[i]);

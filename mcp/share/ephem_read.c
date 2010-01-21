@@ -90,7 +90,8 @@ void Read_Coefficients( double Time )
   /*--------------------------------------------------------------------------*/
 
   fseek(Ephemeris_File,(Offset-1)*ARRAY_SIZE*sizeof(double),SEEK_CUR);
-  fread(&Coeff_Array,sizeof(double),ARRAY_SIZE,Ephemeris_File);
+  if (fread(&Coeff_Array,sizeof(double),ARRAY_SIZE,Ephemeris_File) < ARRAY_SIZE)
+    printf("Warning: Short read from ephemeris file\n");
 
   T_beg  = Coeff_Array[0];
   T_end  = Coeff_Array[1];
@@ -149,9 +150,12 @@ int Initialize_Ephemeris( char *fileName )
   else
   { /*.................Read first three header records from ephemeris file */
 
-    fread(&H1,sizeof(double),ARRAY_SIZE,Ephemeris_File);
-    fread(&H2,sizeof(double),ARRAY_SIZE,Ephemeris_File);
-    fread(&Coeff_Array,sizeof(double),ARRAY_SIZE,Ephemeris_File);
+    if (fread(&H1,sizeof(double),ARRAY_SIZE,Ephemeris_File) < ARRAY_SIZE)
+      printf("Warning: Short read while initializing ephemeris\n");
+    if (fread(&H2,sizeof(double),ARRAY_SIZE,Ephemeris_File) < ARRAY_SIZE)
+      printf("Warning: Short read while initializing ephemeris\n");
+    if (fread(&Coeff_Array,sizeof(double),ARRAY_SIZE,Ephemeris_File)<ARRAY_SIZE)
+      printf("Warning: Short read while initializing ephemeris\n");
 
     /*...............................Store header data in global variables */
 
