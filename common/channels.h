@@ -54,9 +54,9 @@ extern "C" {
    * 'u' for 135 <= ENC_EL_RAW_OFFSET < 315 and 's' otherwise */
 #define ENC_ELEV_TYPE 'u'
 
-  /* New Bolo calibrations per Jeff  2005-05-17 */
-#define LOCKIN_C2V (1.5704089784e-6)
-#define LOCKIN_OFFSET (-1.3178421494e+1)
+  /* Bolo calibrations per Tristan and Matt for new DAS 2010-01-21 */
+#define LOCKIN_C2V (6.90336327e-7)
+#define LOCKIN_OFFSET (-5.78715355)
 
 #define ROX_C2V   (5.43736e-07/256.0)
 #define ROX_OFFSET (-1.1403)
