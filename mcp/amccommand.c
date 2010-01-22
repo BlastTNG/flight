@@ -410,6 +410,7 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
       bprintf(err,"%sComm configure_amc: Cannot communicate with the AMC controller at any baud rate.",amcinfo->motorstr);
       amcinfo->err=3; // Sets comm_error to level 3
                        // which should trigger a power cycle
+      amcinfo->init=2;
     }
 }
 
@@ -900,14 +901,14 @@ void setWriteAccess(struct MotorInfoStruct* amcinfo)
   if (n < 0)
     {
       berror(err,"%sComm setWriteAccess: Communication error.",amcinfo->motorstr);
-      amcinfo->writeset=-1;
+      amcinfo->writeset=2;
       return;
     }
   n=checkAMCResp(count,amcinfo);
   if(n>0)
     {
       checkAMCStatus(n,amcinfo);
-      if(n!=1) amcinfo->writeset=-1;
+      if(n!=1) amcinfo->writeset=2;
 
     }
 }

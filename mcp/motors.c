@@ -78,6 +78,8 @@ static void* reactComm(void *arg);
 static void* elevComm(void *arg);
 static void* pivotComm(void *arg);
 
+extern short int InCharge; /* tx.c */
+
 /* opens communications with motor controllers */
 void openMotors()
 {
@@ -89,10 +91,12 @@ void openMotors()
 
 void closeMotors()
 {
+  int i=0;
   reactinfo.closing=1;
   elevinfo.closing=1; // Tell the serial threads to shut down.
   pivotinfo.closing=1;
-  while(reactinfo.open==1 && elevinfo.open==1 && pivotinfo.open==1) usleep(10000);
+
+  while(reactinfo.open==1 && elevinfo.open==1 && pivotinfo.open==1 && i++<100) usleep(10000);
 }
 
 static int last_mode = -1;
@@ -1318,10 +1322,44 @@ void UpdateAxesMode(void)
   }
   last_mode = CommandData.pointing_mode.mode;
 }
+
+// Makes a motor info bit field
+unsigned short int makeMotorField(struct MotorInfoStruct* copleyinfo)
+{
+  unsigned short int b = 0; 
+  b |= (copleyinfo->open) & 0x0001;
+
+  if (copleyinfo->reset) {
+    b|= 0x02;
+    bprintf(info, "reset set");
+  }
+ 
+  //b |= ((copleyinfo->reset) & 0x0001)<<1; 
+  b |= ((copleyinfo->init) & 0x0003)<<2; 
+  b |= ((copleyinfo->disabled) & 0x0003)<<4; 
+  switch(copleyinfo->bdrate) {
+  case 9600:
+    b |= 0x0000<<6;
+    break;
+  case 38400:
+    b |= 0x0001<<6;
+    break;
+  case 112500:
+    b |= 0x0002<<6;
+    break;
+  default:
+    b |= 0x0003;
+  }
+  b |= ((copleyinfo->writeset) & 0x0003)<<8 ; 
+  b |= ((copleyinfo->err) & 0x001f)<<10 ; 
+  b |= ((copleyinfo->closing) & 0x0001)<<15 ; 
+  return b;
+}
 // TODO-lmf: Need to add in conditional statements for when MCP is run by the NICC
 //           We don't want the NICC sending 
 void* reactComm(void* arg)
 {
+  //mark1
   int n=0, j=0;
   int i=0;
   int temp_raw,curr_raw,stat_raw,faultreg_raw;
@@ -1329,17 +1367,26 @@ void* reactComm(void* arg)
   long vel_raw=0;
   // Initialize values in the reactinfo structure.                            
   reactinfo.open=0;
-  reactinfo.loop=0;
   reactinfo.init=0;
   reactinfo.err=0;
+  reactinfo.err_count=0;
   reactinfo.closing=0;
   reactinfo.reset=0;
-  reactinfo.disabled=10;
+  reactinfo.disabled=2;
   reactinfo.bdrate=9600;
+  reactinfo.writeset=0;
   strncpy(reactinfo.motorstr,"react",6);
 
-  // Wait to make sure the rest of mcp is up and running before communicating
-  // with the motors.
+
+  while(!InCharge) {
+    if(firsttime==1) {
+      bprintf(info,"reactComm: I am not incharge thus I will not communicate with the RW motor.");
+      firsttime=0;
+    }
+    usleep(20000);
+  }
+
+  firsttime=1;
   bprintf(info,"reactComm: Bringing the reaction wheel online.");
   // Initialize structure RWMotorData.  Follows what was done in dgps.c
   RWMotorData[0].rw_vel_raw=0;
@@ -1347,6 +1394,8 @@ void* reactComm(void* arg)
   RWMotorData[0].current=0.0;
   RWMotorData[0].status=0;
   RWMotorData[0].fault_reg=0;
+  RWMotorData[0].drive_info=0;
+  RWMotorData[0].err_count=0;
 
   // Try to open the port.
   while(reactinfo.open==0) {
@@ -1359,30 +1408,54 @@ void* reactComm(void* arg)
 #ifdef MOTORS_VERBOSE
       bprintf(info,"reactComm: Opened the serial port on attempt number %i",i); 
 #endif
-    }
-    else sleep(1);  
+    } else sleep(1);  
   }
 
-  // Configure the serial port.                                               
+  // Configure the serial port.  If after 10 attempts the port is not initialized it enters 
+  // the main loop where it will trigger a reset command.                                             
   i=0;
-  while(reactinfo.init==0) {
+  while(reactinfo.init==0 && i <=9) {
     configure_copley(&reactinfo);
-    i++;
-#ifdef MOTORS_VERBOSE
+    if(reactinfo.init==1) {
       bprintf(info,"reactComm: Initialized the controller on attempt number %i",i); 
-#endif
+    } else if (i==9) {
+      bprintf(info,"reactComm: Could not initialize the controller after %i attempts.",i); 
+    } else {
+      sleep(1);
+    }
+    i++;
   }
   rw_motor_index = 1; // index for writing to the RWMotor data struct
   while(1){
-    if(reactinfo.closing==1){
-      close_copley(&reactinfo);
-      usleep(10000);      
-    } else if (CommandData.reset_reac==1){
-      bprintf(warning,"reactComm: Resetting connection to reaction wheel controller.");
-      resetCopley(REACT_DEVICE,&reactinfo); 
+
+    //    if(reactinfo.err_count >= COPLEY_ERR_TIMEOUT && ( ((short unsigned int)reactinfo.err) & ((short unsigned int) COP_ERR_MASK) )> 0 ){
+    if((reactinfo.err & COP_ERR_MASK) > 0 ) {
+      reactinfo.err_count+=1;
+      if(reactinfo.err_count >= COPLEY_ERR_TIMEOUT) {
+	reactinfo.reset=1;
+      }
+    }
+    if(CommandData.reset_reac==1 ) {
+      reactinfo.reset=1;
       CommandData.reset_reac=0;
     }
-    else if(reactinfo.init==1){
+
+    RWMotorData[rw_motor_index].drive_info=makeMotorField(&reactinfo); // Make bitfield of controller info structure.
+    RWMotorData[rw_motor_index].err_count=(reactinfo.err_count > 65535) ? 65535: reactinfo.err_count;
+
+    if(reactinfo.closing==1){
+      rw_motor_index=INC_INDEX(rw_motor_index);
+      close_copley(&reactinfo);
+      usleep(10000);      
+    } else if (reactinfo.reset==1){
+      bprintf(warning,"reactComm: Resetting connection to reaction wheel controller.");
+
+      rw_motor_index=INC_INDEX(rw_motor_index);
+      resetCopley(REACT_DEVICE,&reactinfo); // if successful sets reactinfo.reset=0
+      usleep(10000);  // give time for motor bits to get written
+
+
+    } else if(reactinfo.init==1){
       if(CommandData.disable_az==0 && reactinfo.disabled > 0) {
 #ifdef MOTORS_VERBOSE
 	bprintf(info,"reactComm: Attempting to enable the reaction wheel motor controller.");
@@ -1393,7 +1466,7 @@ void* reactComm(void* arg)
 	  reactinfo.disabled=0;
 	}
       } 
-      if(CommandData.disable_az==1 && (reactinfo.disabled==0 || reactinfo.disabled==10)) {
+      if(CommandData.disable_az==1 && (reactinfo.disabled==0 || reactinfo.disabled==2)) {
 #ifdef MOTORS_VERBOSE
 	bprintf(info,"reactComm: Attempting to disable the reaction wheel motor controller.");
 #endif
@@ -1404,7 +1477,7 @@ void* reactComm(void* arg)
 	}
       } 
 
-      vel_raw=getCopleyVel(&reactinfo); // Units are 0.1 counts/sec
+      vel_raw=queryCopleyInd(COP_IND_VEL,&reactinfo); // Units are 0.1 counts/sec
       RWMotorData[rw_motor_index].rw_vel_raw=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
       j=j%4;
       switch(j) {
@@ -1418,21 +1491,21 @@ void* reactComm(void* arg)
 	break;
       case 2:
 	stat_raw=queryCopleyInd(COP_IND_STATUS,&reactinfo);
-        RWMotorData[rw_motor_index].status=stat_raw; // units are Amps
+        RWMotorData[rw_motor_index].status=stat_raw; 
 	break;
       case 3:
 	faultreg_raw=queryCopleyInd(COP_IND_FAULTREG,&reactinfo);
-        RWMotorData[rw_motor_index].fault_reg=faultreg_raw; // units are Amps
+        RWMotorData[rw_motor_index].fault_reg=faultreg_raw; 
 	break;
       }      
       j++;
-      rw_motor_index=INC_INDEX(rw_motor_index);
       if (firsttime) {
 #ifdef MOTORS_VERBOSE
         bprintf(info,"reactComm: Raw reaction wheel velocity is %i",vel_raw);
 #endif
 	firsttime=0;
-      }     
+      }
+      rw_motor_index=INC_INDEX(rw_motor_index);
 
     } else {
       usleep(10000);
@@ -1445,24 +1518,37 @@ void* reactComm(void* arg)
 
 void* elevComm(void* arg)
 {
+
   int n=0, j=0;
-  int i;
+  int i=0;
   long unsigned pos_raw;
   int temp_raw,curr_raw,stat_raw,faultreg_raw;
   int firsttime=1;
 
+
   // Initialize values in the elevinfo structure.                            
   elevinfo.open=0;
-  elevinfo.loop=0;
   elevinfo.init=0;
   elevinfo.err=0;
+  elevinfo.err_count=0;
   elevinfo.closing=0;
-  elevinfo.disabled=10;
+  elevinfo.reset=0;
+  elevinfo.disabled=2;
   elevinfo.bdrate=9600;
+  elevinfo.writeset=0;
   strncpy(elevinfo.motorstr,"elev\0",6);
+
+  while(!InCharge) {
+    if(firsttime==1) {
+      bprintf(info,"elevComm: I am not incharge thus I will not communicate with the elevation drive.");
+      firsttime=0;
+    }
+    usleep(20000);
+  }
 
   bprintf(info,"elevComm: Bringing the elevation drive online.");
   i=0;
+  firsttime=1;
 
   // Initialize structure ElevMotorData.  Follows what was done in dgps.c
   ElevMotorData[0].enc_el_raw=0;
@@ -1506,7 +1592,7 @@ void* elevComm(void* arg)
 	  elevinfo.disabled=0;
 	}
       } 
-      if((CommandData.disable_el==1 && CommandData.force_el==0 ) && (elevinfo.disabled==0 || elevinfo.disabled==10)) {
+      if((CommandData.disable_el==1 && CommandData.force_el==0 ) && (elevinfo.disabled==0 || elevinfo.disabled==2)) {
 #ifdef MOTORS_VERBOSE
 	bprintf(info,"elevComm: Attempting to disable the elevation motor controller.");
 #endif
@@ -1517,8 +1603,8 @@ void* elevComm(void* arg)
 	}
       } 
 
-      pos_raw=getCopleyPos(&elevinfo); // Units are counts
-                                  // For Elev 524288 cts = 360 deg
+      pos_raw=queryCopleyInd(COP_IND_POS,&elevinfo); // Units are counts
+                                                     // For Elev 524288 cts = 360 deg
       //TODO-lmf: Add in some sort of zeropoint.
       ElevMotorData[elev_motor_index].enc_el_raw=((double) (pos_raw % ((long int) ELEV_ENC_CTS)))/ELEV_ENC_CTS*360.0-ENC_EL_RAW_OFFSET;
       //   getCopleySlowInfo(j,elev_motor_index,&ElevMotorData,&elevinfo); // Reads one of temperature, current, status and fault register and
@@ -1561,20 +1647,20 @@ void* elevComm(void* arg)
 void* pivotComm(void* arg) 
 {
   int n=0, j=0;
-  int i;
-  long unsigned pos_raw;
+  int i=0;
+  long unsigned pos_raw=0;
   int firsttime=1;
   unsigned int dp_stat_raw=0, db_stat_raw=0, ds1_stat_raw=0;
   short int current_raw=0;
   int piv_vel_raw=0;
-  int tmp=0;
   // Initialize values in the pivotinfo structure.                            
   pivotinfo.open=0;
-  pivotinfo.loop=0;
   pivotinfo.init=0;
   pivotinfo.err=0;
+  pivotinfo.err_count=0;
   pivotinfo.closing=0;
-  pivotinfo.disabled=10;
+  pivotinfo.reset=0;
+  pivotinfo.disabled=2;
   pivotinfo.bdrate=9600;
   pivotinfo.writeset=0;
   strncpy(pivotinfo.motorstr,"pivot",6);
@@ -1587,7 +1673,16 @@ void* pivotComm(void* arg)
   PivotMotorData[0].ds1_stat=0;
   PivotMotorData[0].dps_piv=0;
 
+  while(!InCharge) {
+    if(firsttime==1) {
+      bprintf(info,"pivotComm: I am not incharge thus I will not communicate with the pivot motor.");
+      firsttime=0;
+    }
+    usleep(20000);
+  }
+
   bprintf(info,"pivotComm: Bringing the pivot drive online.");
+  firsttime=1;
 
   i=0;
 
@@ -1629,7 +1724,7 @@ void* pivotComm(void* arg)
 	  pivotinfo.disabled=0;
 	}
       }
-      if(CommandData.disable_az==1 && (pivotinfo.disabled==0 || pivotinfo.disabled==10)) {
+      if(CommandData.disable_az==1 && (pivotinfo.disabled==0 || pivotinfo.disabled==2)) {
 #ifdef MOTORS_VERBOSE
 	bprintf(info,"pivotComm: Attempting to disable the pivot motor controller.");
 #endif
@@ -1639,15 +1734,15 @@ void* pivotComm(void* arg)
 	  pivotinfo.disabled=1;
 	}
       } 
-#if 0
-      if(firsttime){
-	firsttime=0;
-	tmp = queryAMCInd(0x32,8,1,&pivotinfo);
-	bprintf(info,"pivotComm: Ki = %i",tmp);
-	tmp = queryAMCInd(0xd8,0x24,1,&pivotinfo);
-	bprintf(info,"pivotComm: Ks = %i",tmp);
-      }
-#endif // 0
+
+      //      if(firsttime){
+      //	firsttime=0;
+      //	tmp = queryAMCInd(0x32,8,1,&pivotinfo);
+      //	bprintf(info,"pivotComm: Ki = %i",tmp);
+      //	tmp = queryAMCInd(0xd8,0x24,1,&pivotinfo);
+      //	bprintf(info,"pivotComm: Ks = %i",tmp);
+      //      }
+
       pos_raw=getAMCResolver(&pivotinfo);
       //      bprintf(info,"pivotComm: Resolver Position is: %i",pos_raw);
       PivotMotorData[pivot_motor_index].res_piv_raw=((double) pos_raw)/PIV_RES_CTS*360.0; 

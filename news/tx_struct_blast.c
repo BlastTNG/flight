@@ -695,7 +695,7 @@ struct ChannelStruct SlowChannels[] = {
   {"piv_dps_calc", 'w', LOOP7, 28,        20.0/32768.0,             0.0, 's', U_V_DPS},
   {"isc_age",      'w', LOOP7, 29,                 1.0,             0.0, 'u', U_T_MS},
   {"osc_age",      'w', LOOP7, 30,                 1.0,             0.0, 'u', U_T_MS},
- 
+  /* LOOP7 32 and 33 are temporarily fast narrow*/ 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
   {"latch0",       'w',  ACS1_D,  0,                1.0,             0.0, 'u', U_NONE},
@@ -945,6 +945,8 @@ struct ChannelStruct FastChannels[] = {
   {"res_piv_raw",  'w', LOOP7, 16,              I2DEG,             0.0, 'u', U_P_DEG},
   {"piv_v_req",    'w', LOOP7, 24,              0.001,             0.0, 's', U_V_DPS},
   {"piv_v_req_dac",'w', LOOP7, 31,                1.0,             0.0, 's', U_V_DPS},
+  {"rw_drive_info",'w', LOOP7, 32,                 1.0,             0.0, 'u', U_NONE},
+  {"rw_drive_err_cts",'w', LOOP7, 33,              1.0,             0.0, 'u', U_NONE},
 
   END_OF_CHANNELS
 };

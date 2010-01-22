@@ -246,6 +246,8 @@ static htI32_t CheckBlock(int fd, htUI08_t* Buffer)
 
 htI32_t GetNextBlock(int fd, void* SBFBlock)
 {
+  static int errcount=0; // Added by laura so that the dgps doesn't flood the 
+                       // mcp output with error messages.
 	htBool_t     BlockFound;
 	htUI08_t     Buffer[MAX_SBFSIZE];
 		
@@ -256,7 +258,13 @@ htI32_t GetNextBlock(int fd, void* SBFBlock)
 		int n = read(fd,&c[0],1);
 		if (n<0) {
 		//TODO dgps code needs updates to handle serial errors
-		  berror(err,"dGPS: read GPSblock failed!");
+                  if(errcount==0) {
+		    berror(err,"dGPS: read GPSblock failed!");
+		  } else if((errcount%1000000)==0){
+		    berror(err,"dGPS: read GPSblock failed for the %tdh time!",errcount);
+		    usleep(20000);// LMF-temporary!
+		  }
+		  errcount++;
 		}
 		if (n>0 && c[0]==SYNC_STRING[0]) {
 			Buffer[0] = (htUI08_t)c[0];
@@ -271,6 +279,7 @@ htI32_t GetNextBlock(int fd, void* SBFBlock)
 				memcpy(SBFBlock, Buffer, (size_t)((VoidBlock_t*)Buffer)->Length);	
 			}
 			//printf("\nDGPS: no find block\n\n");
+			errcount=0;
 		}
 		
 	} while (BlockFound == htFalse);

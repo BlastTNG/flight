@@ -16,13 +16,21 @@
 #define RW_ENC_CTS 2097152.0 // Reaction Wheel Encoder Counts per revolution
 #define ELEV_ENC_CTS 524288.0 // Elevation Drive Encoder Counts per revolution
 
+#define COPLEY_ERR_TIMEOUT 2
+
 // Indices for various Copley Controller Run time variables
 #define COP_IND_TEMP "0x20"
 #define COP_IND_CURRENT "0x0c"
 #define COP_IND_STATUS "0xa0"
 #define COP_IND_FAULTREG "0xa4"
+#define COP_IND_VEL "0x18"
+#define COP_IND_POS "0x32"
 
-//struct MotorInfoStruct *get_motor_pointer(enum MotorType motor);
+// Error masks.  Tells the controller which bits set in the copleyinfo->err
+// variable should count towards triggering a reset.
+#define COP_ERR_MASK 0x001e // Bit #2 (send command failed) implying that the 
+                              // serial hub not powered.
+
 void MotorStrOut(char *str,struct MotorInfoStruct* copleyinfo);
 void copyouts(char *in, char *out);
 void open_copley(char *address, struct MotorInfoStruct* copleyinfo);
@@ -38,8 +46,6 @@ int checkCopleyResp(struct MotorInfoStruct* copleyinfo);
 int enableCopley(struct MotorInfoStruct* copleyinfo);
 int disableCopley(struct MotorInfoStruct* copleyinfo);
 long int queryCopleyInd(char ind[],struct MotorInfoStruct* copleyinfo);
-long int getCopleyVel(struct MotorInfoStruct* copleyinfo);
-long int getCopleyPos(struct MotorInfoStruct* copleyinfo);
 int readCopleyResp(char *outs, int *l, struct MotorInfoStruct* copleyinfo);
 void resetCopley(char *address, struct MotorInfoStruct* copleyinfo);
 void restartCopley(char *address, struct MotorInfoStruct* copleyinfo);

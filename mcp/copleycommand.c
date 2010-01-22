@@ -65,17 +65,24 @@ void close_copley(struct MotorInfoStruct* copleyinfo)
 #ifdef MOTORS_VERBOSE
   bprintf(info,"%sComm: Closing connection to Copley controller.",copleyinfo->motorstr);
 #endif
-  n = disableCopley(copleyinfo);
-
-  if(n!=0) {
-    bprintf(err,"%sComm close_copley: Disabling Copley controller failed.",copleyinfo->motorstr);
-  }
-
+  if(copleyinfo->open==0) {
 #ifdef MOTORS_VERBOSE
-  bprintf(info,"%sComm close_copley: Closing serial port.",copleyinfo->motorstr);
+  bprintf(info,"%sComm: Controller is already closed!",copleyinfo->motorstr);
 #endif
-  if(copleyinfo->fd >=0) {
-    close(copleyinfo->fd); 
+  } else {
+
+    n = disableCopley(copleyinfo);
+    
+    if(n!=0) {
+      bprintf(err,"%sComm close_copley: Disabling Copley controller failed.",copleyinfo->motorstr);
+    }
+    
+#ifdef MOTORS_VERBOSE
+    bprintf(info,"%sComm close_copley: Closing serial port.",copleyinfo->motorstr);
+#endif
+    if(copleyinfo->fd >=0) {
+      close(copleyinfo->fd); 
+    }
   }
   copleyinfo->init=0;
   copleyinfo->open=0;
@@ -187,117 +194,110 @@ void send_copleycmd(char cmd[], struct MotorInfoStruct* copleyinfo)
 
   n = write(copleyinfo->fd,cmd,l);
   if (n < 0) {
+#ifdef MOTORS_VERBOSE
     bprintf(err,"%sComm send_copleycmd: failed.",copleyinfo->motorstr);
+#endif
+    copleyinfo->err |= 0x0002;
+  } else {
+    copleyinfo->err &= ~0x0002;
   }
 }
 
 void configure_copley(struct MotorInfoStruct* copleyinfo)
 {
-  int n,m,i;
-  setopts_copley(9600,copleyinfo);
-  copleyinfo->bdrate=9600;
+  int n,m,i=0;
+
+  do {
+    setopts_copley(9600,copleyinfo);
+    copleyinfo->bdrate=9600;
 #ifdef MOTORS_VERBOSE
-  bprintf(info, "%sComm configure_copley: Try communicating at 9600 baud rate",copleyinfo->motorstr);
+    bprintf(info, "%sComm configure_copley: Try communicating at 9600 baud rate",copleyinfo->motorstr);
 #endif
-  n = ping_copley(copleyinfo);
-  if(n > 0)
-    {
+    n = ping_copley(copleyinfo);
+  } while ((n<=0) && (++i < 10));
+
+  if(n > 0) {
 #ifdef MOTORS_VERBOSE
-      bprintf(info,"%sComm configure_copley: Controller responds to a 9600 baud rate.",copleyinfo->motorstr);
+    bprintf(info,"%sComm configure_copley: Controller responds to a 9600 baud rate.",copleyinfo->motorstr);
 #endif
       //
 #ifdef MOTORS_VERBOSE
-      bprintf(info,"%sComm configure_copley: Attempting to set baud rate to 38400",copleyinfo->motorstr);
+    bprintf(info,"%sComm configure_copley: Attempting to set baud rate to 38400",copleyinfo->motorstr);
 #endif
-      m = check_copleyready(comm,copleyinfo);
-      if(m >= 0)
-	{
-	  send_copleycmd("s r0x90 38400\r",copleyinfo);
-	}  
-      m = check_copleyready(resp,copleyinfo);
-      if(m >= 0)
-	{
+    m = check_copleyready(comm,copleyinfo);
+    if (m >= 0) {
+      send_copleycmd("s r0x90 38400\r",copleyinfo);
+    }  
+    m = check_copleyready(resp,copleyinfo);
+    if (m >= 0) {
 #ifdef MOTORS_VERBOSE
-	  bprintf(info,"%sComm configure_copley: Hey it responded!  Wicked!",copleyinfo->motorstr);
+      bprintf(info,"%sComm configure_copley: Hey it responded!  Wicked!",copleyinfo->motorstr);
 #endif
-          i=checkCopleyResp(copleyinfo);
-	}
-      setopts_copley(38400,copleyinfo);
-      copleyinfo->bdrate=38400;
+      i=checkCopleyResp(copleyinfo);
+    }
+    setopts_copley(38400,copleyinfo);
+    copleyinfo->bdrate=38400;
 
 // Check to make sure that there aren't leftover bytes to be read from the serial port.
 //      clearCopleyPort(copleyinfo);
 
       //Check to make sure that the motor responds to the new 38400 baud rate.
-      i = ping_copley(copleyinfo);
-      if(i > 0)
-	{
+    i = ping_copley(copleyinfo);
+    if (i > 0) {
 #ifdef MOTORS_VERBOSE
-	  bprintf(info, "%sComm configure_copley: Controller now responds to a 38400 baud rate.",copleyinfo->motorstr);
+      bprintf(info, "%sComm configure_copley: Controller now responds to a 38400 baud rate.",copleyinfo->motorstr);
 #endif
-          copleyinfo->init=1;
-          copleyinfo->err=0;
-          return;
-	}
-      else
-	{
+      copleyinfo->init=1;
+      copleyinfo->err=0;
+      return;
+    } else {
 #ifdef MOTORS_VERBOSE
-	  bprintf(err, "%sComm configure_copley: Controller does not respond to a 38400 baud rate!",copleyinfo->motorstr);
+      bprintf(err, "%sComm configure_copley: Controller does not respond to a 38400 baud rate!",copleyinfo->motorstr);
 #endif
-          copleyinfo->init=0;
-          copleyinfo->err=3;
-	  return;
-	}
-
-  //mark
-    }  
-  else
-    {
+      copleyinfo->init=2;
+      return;
+    }
+    
+    //mark
+  } else {
 #ifdef MOTORS_VERBOSE
-      bprintf(info, "%sComm configure_copley: Controller does not respond to a 9600 baud rate.",copleyinfo->motorstr);
-      bprintf(info, "%sComm configure_copley: Setting Baud rate to 38400",copleyinfo->motorstr);
+    bprintf(info, "%sComm configure_copley: Controller does not respond to a 9600 baud rate.",copleyinfo->motorstr);
+    bprintf(info, "%sComm configure_copley: Setting Baud rate to 38400",copleyinfo->motorstr);
 #endif
-      setopts_copley(38400,copleyinfo);
+    setopts_copley(38400,copleyinfo);
+    copleyinfo->bdrate=38400;
+    i = ping_copley(copleyinfo);
+    if(i > 0) {
+#ifdef MOTORS_VERBOSE
+      bprintf(info, "%sComm configure_copley: Controller now responds to a 38400 baud rate.",copleyinfo->motorstr);
+#endif
+      copleyinfo->init=1;
+      copleyinfo->err=0;
+      return;
+    } else {
+#ifdef MOTORS_VERBOSE
+      bprintf(info, "%sComm configure_copley: Setting Baud rate to 115200",copleyinfo->motorstr);
+#endif
+      setopts_copley(115200,copleyinfo);
       copleyinfo->bdrate=38400;
       i = ping_copley(copleyinfo);
-      if(i > 0)
-	{
+      if (i > 0) {
 #ifdef MOTORS_VERBOSE
-	  bprintf(info, "%sComm configure_copley: Controller now responds to a 38400 baud rate.",copleyinfo->motorstr);
+	bprintf(info, "%sComm configure_copley: Controller now responds to a 115200 baud rate.",copleyinfo->motorstr);
 #endif
-          copleyinfo->init=1;
-          copleyinfo->err=0;
-          return;
-	}
-      else
-	{
+	copleyinfo->init=1;
+	copleyinfo->err=0;
+	return;
+      } else {
 #ifdef MOTORS_VERBOSE
-	  bprintf(info, "%sComm configure_copley: Setting Baud rate to 115200",copleyinfo->motorstr);
+	bprintf(err, "%sComm configure_copley: Controller does not respond to a 115200 baud rate!",copleyinfo->motorstr);
+	bprintf(err, "%sComm configure_copley: Controller does not respond to any baud rate!",copleyinfo->motorstr);
 #endif
-	  setopts_copley(115200,copleyinfo);
-          copleyinfo->bdrate=38400;
-          i = ping_copley(copleyinfo);
-          if(i > 0)
-	    {
-#ifdef MOTORS_VERBOSE
-	  bprintf(info, "%sComm configure_copley: Controller now responds to a 115200 baud rate.",copleyinfo->motorstr);
-#endif
-          copleyinfo->init=1;
-          copleyinfo->err=0;
-          return;
-	    }
-	  else
-	    {
-#ifdef MOTORS_VERBOSE
-	      bprintf(err, "%sComm configure_copley: Controller does not respond to a 115200 baud rate!",copleyinfo->motorstr);
-#endif
-	      copleyinfo->init=0;
-	      copleyinfo->err=3;
-	    }
-	  return;
-	}
+	copleyinfo->init=2;
+      }
+      return;
     }
-  //TODO-LMF: write some error handling in case configuring the controller fails.
+  }
 }
 
 int check_copleyready(enum CheckType check, struct MotorInfoStruct* copleyinfo)
@@ -337,6 +337,7 @@ int check_copleyready(enum CheckType check, struct MotorInfoStruct* copleyinfo)
   if (n < 0) {
 #ifdef MOTORS_VERBOSE
     bprintf(err,"%sComm: Select command failed!",copleyinfo->motorstr);
+    copleyinfo->err |= 0x0001;
 #endif
     return -2;
   } else if (n==0) {
@@ -359,10 +360,22 @@ int check_copleyready(enum CheckType check, struct MotorInfoStruct* copleyinfo)
 	m|=1;
     }
 
+    copleyinfo->err &= ~0x0001;
     return m;
   }
 }
 
+void flushCopley(struct MotorInfoStruct* copleyinfo) {
+  int i,n,total=0;
+  char outs[2];
+  for (i=0; (i<65536) && (check_copleyready(resp,copleyinfo)>0); ++i) {
+    n=read(copleyinfo->fd,outs,1);
+    total+=n;
+  }
+#ifdef MOTORS_VERBOSE
+  bprintf(info,"%sComm flushCopley: read %i characters total.",copleyinfo->motorstr,total);
+#endif
+}
 
 // Can we communciate with the controller?
 // reads the status variable, but only looks to be sure it is getting the correct format
@@ -372,55 +385,61 @@ int check_copleyready(enum CheckType check, struct MotorInfoStruct* copleyinfo)
 int ping_copley(struct MotorInfoStruct* copleyinfo)
 {
   char outs[255],outs_noCR[255];
-  int n,l=0;
+  int n=0,l=0;
   memset(outs,'\0',255);
+
+  //flushCopley(copleyinfo);
+
   n = check_copleyready(comm,copleyinfo);
-  if(n >= 0)
-    {
-      //      bprintf(info,"copleyComm configure_copley: Ready to send command!");
-      send_copleycmd("g r0xa0\r",copleyinfo);
-    }  
-  else
-    {
-      berror(err,"%sComm ping_copley: Serial port is not ready to command.",copleyinfo->motorstr);
-      return -5;
-    }
+  if(n >= 0) {
+    //      bprintf(info,"copleyComm configure_copley: Ready to send command!");
+    send_copleycmd("g r0xa0\r",copleyinfo);
+  } else {
+#ifdef MOTORS_VERBOSE
+    berror(err,"%sComm ping_copley: Serial port is not ready to command.",copleyinfo->motorstr);
+#endif
+    return -5;
+  }
+
   // mark
   n = readCopleyResp(outs,&l,copleyinfo);
-  if(n >= 0){
+  if (n >= 0) {
     copyouts(outs, outs_noCR);  
 #ifdef MOTORS_VERBOSE
     bprintf(info,"%sComm ping_copley: Controller response= %s\n",copleyinfo->motorstr,outs_noCR);
     bprintf(info,"%sComm ping_copley: First character= %c\n",copleyinfo->motorstr,outs_noCR[0]);
 #endif
-    if(outs[0]== 'v')  {
+    if (outs[0]== 'v')  {
+      copleyinfo->err &= ~0x0004;      
       return 1;
     } else if(outs[0]== 'e') {
+      copleyinfo->err &= ~0x0004;      
       return 1;
+    } else {
+#ifdef MOTORS_VERBOSE
+      bprintf(warning,"%sComm ping_copley: The controller response is incorrect.",copleyinfo->motorstr);
+      bprintf(info,"%sComm ping_copley: Controller response= %s\n",copleyinfo->motorstr,outs_noCR);
+#endif
+      copleyinfo->err |= 0x0004;      
+      return 0;
     }
-    else
-      {
-	bprintf(warning,"%sComm ping_copley: The controller response is incorrect.",copleyinfo->motorstr);
-	bprintf(info,"%sComm ping_copley: Controller response= %s\n",copleyinfo->motorstr,outs_noCR);
-	return 0;
-      }
-    }
-  else if (n==-1){
+  } else if (n==-1) {
 #ifdef MOTORS_VERBOSE
     berror(err,"%sComm ping_copley: Select failed.",copleyinfo->motorstr);
 #endif
     return -1;
-  }
-  else {
+  } else {
     outs[10]='\0';
     bprintf(warning,"%sComm ping_copley: Controller responded with garbage. outs=%s",copleyinfo->motorstr,outs);
+    copleyinfo->err |= 0x0004;      
     return 0;
   }
-
+  
 }
 
 // Check the controller response after a command.
 // If the response from the controller is "ok" (i.e. no errors) return 0.
+// TODO: Add error parsing when controller returns error message
 int checkCopleyResp(struct MotorInfoStruct* copleyinfo)
 {
   char outs[255],outs_noCR[255]; 
@@ -439,12 +458,14 @@ int checkCopleyResp(struct MotorInfoStruct* copleyinfo)
   // Did the controller respond ok?
   if(outs_noCR[0]=='o' && outs_noCR[1]=='k')
     {
+      copleyinfo->err &= ~0x0012;      
       return 0;
     }
   else  // This should mean it returned some kind of error code.
     {
       if(outs_noCR[0]=='e')
 	{
+	  copleyinfo->err |= 0x0008;      
           m=1;
 	  i=2;
 	  errcode=0;
@@ -468,6 +489,7 @@ int checkCopleyResp(struct MotorInfoStruct* copleyinfo)
 	}
       else // Controller responded with garbage
 	{
+	  copleyinfo->err &= ~0x0004;      
 	  return -10;
 	}
     }
@@ -479,15 +501,23 @@ int checkCopleyResp(struct MotorInfoStruct* copleyinfo)
 int enableCopley(struct MotorInfoStruct* copleyinfo)
 {
   int n;
+#ifdef MOTORS_VERBOSE
+  bprintf(info,"%sComm enableCopley: Attempting to enable Copley motor controller.",copleyinfo->motorstr);
+#endif
   //  int count=0;
   send_copleycmd("s r0x24 2\r",copleyinfo);
   n = check_copleyready(resp,copleyinfo);
   if (n < 0)
     {
+#ifdef MOTORS_VERBOSE
       berror(err,"%sComm enableCopley: Communication error.",copleyinfo->motorstr);
+#endif
       return -1;
     }
   n=checkCopleyResp(copleyinfo);
+  if(n==0) {
+    copleyinfo->disabled=0;
+  }
   return n;
 }
 
@@ -501,96 +531,40 @@ int disableCopley(struct MotorInfoStruct* copleyinfo)
   send_copleycmd("s r0x24 0\r",copleyinfo);
   n = check_copleyready(resp,copleyinfo);
   if (n < 0){
+#ifdef MOTORS_VERBOSE
     berror(err,"%sComm disableCopley: Communication error.",copleyinfo->motorstr);
+#endif
     return -1;
-  }
-  else {
-    bprintf(info,"%sComm disableCopley: Copley controller disabled.",copleyinfo->motorstr);
-  }
+  } 
   n=checkCopleyResp(copleyinfo);
+  if(n==0) {
+    bprintf(info,"%sComm disableCopley: Copley controller disabled.",copleyinfo->motorstr);
+    copleyinfo->disabled=1;  
+  }
+ 
   return n;
 }
 
 
-long int getCopleyVel(struct MotorInfoStruct* copleyinfo)
-{
-  int n,l=0;
-  char outs[255];
-  char outs_noCR[255];
-  long int vel;
-  memset(outs,'\0',255);
-  if(copleyinfo->closing==1) 
-    {
-      //      bprintf(info,"%sComm getCopleyVel: We are closing so I'm returning 42",copleyinfo->motorstr);
-      return 42;// Don't query the serial port if we are 
-                // closing the connection to the controller.
-    }
-  n = check_copleyready(comm,copleyinfo);
-
-  if(n >= 0)
-    {
-      //      bprintf(info,"copleyComm configure_copley: Ready to send command!");
-      send_copleycmd("g r0x18\r",copleyinfo);
-    }  
-  else
-    {
-      berror(err,"%sComm getCopleyVel: Serial port is not ready to command.",copleyinfo->motorstr);
-      return -5;
-    }
-
-  n = readCopleyResp(outs,&l,copleyinfo);
-  if(n == 0)
-    {
-      //      bprintf(info,"getCopleyVel n=%i",n);
-      //      n = read(copleyinfo->fd,outs,254);
-      outs[l] = '\0';
-                  copyouts(outs, outs_noCR);
-		  //                  bprintf(info,"%sComm getCopleyVel: Controller response= %s\n",copleyinfo->motorstr,outs_noCR);
-		  //             bprintf(info,"copleyComm getCopleyVel: First character= %c\n",outs[0]);
-      if(outs[0]== 'v')	{
-        vel=atoi(outs+2);
-	//	  bprintf(warning,"copleyComm getCopleyVel: Velocity= %ld",vel);
-	return vel;
-	}
-      else {
-	if(outs[0]== 'e')
-	  {
-	    bprintf(warning,"%sComm getCopleyVel: Controller returned error.",copleyinfo->motorstr);
-	    return -1;  // TODO-LMF parse this error!
-	  }
-	else
-	  {
-	    bprintf(warning,"%sComm getCopleyVel: The controller response is incorrect.",copleyinfo->motorstr);
-	    //bprintf(info,"copleyComm getCopleyVel: Controller response= %s\n",outs);
-	    return 0;
-	  }
-      }
-    } else {
-    berror(err,"%sComm getCopleyVel: No useful response.",copleyinfo->motorstr);
-    return -1;
-  }
-
-}
 long int queryCopleyInd(char ind[],struct MotorInfoStruct* copleyinfo)
 {
-  int n,m,i=0,l=0;
+  int n,m,l=0;
   char outs[255];
   char cmd[255];
   char outs_noCR[255];
   long int val;
   memset(outs,'\0',255);
-  if(copleyinfo->closing==1) 
-    {
-      //      bprintf(info,"%sComm queryCopleyInd: We are closing so I'm returning 42",copleyinfo->motorstr);
-      return 42;// Don't query the serial port if we are 
-                // closing the connection to the controller.
-    }
+  if (copleyinfo->closing==1) {
+    //      bprintf(info,"%sComm queryCopleyInd: We are closing so I'm returning 42",copleyinfo->motorstr);
+    return 42;// Don't query the serial port if we are 
+    // closing the connection to the controller.
+  }
   n = check_copleyready(comm,copleyinfo);
-
-  if(n >= 0) {
+  
+  if (n >= 0) {
     //      bprintf(info,"copleyComm configure_copley: Ready to send command!");
     m = strnlen(ind,254);
-    if(m != 0 && m!= 254) {
+    if (m != 0 && m!= 254) {
       strncpy(cmd, "g r",3);
       strncpy(cmd+3, ind,m);
       strncpy(cmd+3+m, "\r\0",2);
@@ -601,34 +575,49 @@ long int queryCopleyInd(char ind[],struct MotorInfoStruct* copleyinfo)
       return -4;
     }
   } else {
+#ifdef MOTORS_VERBOSE
     berror(err,"%sComm queryCopleyInd: Serial port is not ready to command.",copleyinfo->motorstr);
+#endif
     return -5;
   }
 
   n = readCopleyResp(outs,&l,copleyinfo);
-  if(n == 0)
+  if (n == 0)
     {
       //      bprintf(info,"queryCopleyInd n=%i",n);
       //      n = read(copleyinfo->fd,outs,254);
       outs[l] = '\0';
       copyouts(outs, outs_noCR);
-      //                  bprintf(info,"%sComm queryCopleyInd: Controller response= %s\n",copleyinfo->motorstr,outs_noCR);
       //             bprintf(info,"copleyComm queryCopleyInd: First character= %c\n",outs[0]);
-      if(outs[0]== 'v')	{
+      if (outs[0]== 'v')	{
         val=atoi(outs+2);
 	//	  bprintf(warning,"copleyComm queryCopleyInd: Value= %ld",vel);
-	return val;
-	}
+	copleyinfo->err_count=0;
+	return val;        
+      }
       else {
 	if(outs[0]== 'e')
 	  {
-	    bprintf(warning,"%sComm queryCopleyInd: Controller returned error.",copleyinfo->motorstr);
-	    return -1;  // TODO-LMF parse this error!
+	    copleyinfo->err |= 0x0008;
+            if((copleyinfo->err_count)%500==1) {
+#ifdef MOTORS_VERBOSE
+	      bprintf(warning,"%sComm queryCopleyInd: Controller returned error for the %dth time succesively.",copleyinfo->motorstr,copleyinfo->err_count);
+              bprintf(warning,"%sComm queryCopleyInd: cmd= %s.",copleyinfo->motorstr,cmd);        
+	      bprintf(warning,"%sComm queryCopleyInd: Controller response was = %s\n",copleyinfo->motorstr,outs_noCR);
+#endif
+	    }
+	    return -1;  
 	  }
 	else
 	  {
-	    bprintf(warning,"%sComm queryCopleyInd: The controller response is incorrect.",copleyinfo->motorstr);
-	    //bprintf(info,"copleyComm queryCopleyInd: Controller response= %s\n",outs);
+	    copleyinfo->err |= 0x0004;
+            if((copleyinfo->err_count)%500==1) {
+#ifdef MOTORS_VERBOSE
+	      bprintf(warning,"%sComm queryCopleyInd: Controller response was incorrect for the %dth time succesively.",copleyinfo->motorstr,copleyinfo->err_count);
+              bprintf(warning,"%sComm queryCopleyInd: cmd= %s.",copleyinfo->motorstr,cmd);        
+	      bprintf(warning,"%sComm queryCopleyInd: Controller response was = %s\n",copleyinfo->motorstr,outs_noCR);
+#endif
+	    }
 	    return 0;
 	  }
       }
@@ -639,45 +628,6 @@ long int queryCopleyInd(char ind[],struct MotorInfoStruct* copleyinfo)
 
 }
 
-long int getCopleyPos(struct MotorInfoStruct* copleyinfo)
-{
-  int n,l=0;
-  char outs[255];
-  long int pos;
-  memset(outs,'\0',255);
-  if (copleyinfo->closing==1) return 42;// Don't query the serial port if we are 
-                                       // closing the connection to the controller.
-
-  n = check_copleyready(comm,copleyinfo);
-  if(n >= 0) {
-    //      bprintf(info,"copleyComm configure_copley: Ready to send command!");
-    send_copleycmd("g r0x32\r",copleyinfo);
-  } else {
-    berror(err,"%sComm getCopleyPos: Serial port is not ready to command.",copleyinfo->motorstr);
-    return -5;
-  }
-  n = readCopleyResp(outs,&l,copleyinfo);
-  if(n == 0) {
-    outs[l] = '\0';
-    //     bprintf(info,"%sComm getCopleyPos: Controller response= %s\n",copleyinfo->motorstr,outs);
-    //            bprintf(info,"copleyComm getCopleyPos: First character= %c\n",outs[0]);
-    if(outs[0]== 'v') {
-      pos=atoi(outs+2);
-      //	  bprintf(warning,"copleyComm getCopleyPos: Position= %ld",pos);
-      return pos;
-    } else if (outs[0]== 'e') {
-      bprintf(warning,"%sComm getCopleyPos: Controller returned error.",copleyinfo->motorstr);
-      return -1;  // TODO-LMF parse this error!
-    } else {
-      bprintf(warning,"%sComm getCopleyPos: The controller response is incorrect.",copleyinfo->motorstr);
-      //bprintf(info,"copleyComm getCopleyPos: Controller response= %s\n",outs);
-      return 0;
-    }
-  } else {
-    berror(err,"%sComm getCopleyPos: No useful response.",copleyinfo->motorstr);
-    return -1;
-  }
-}
 
 int readCopleyResp(char *outs,int *l,struct MotorInfoStruct* copleyinfo)
 {
@@ -701,11 +651,13 @@ int readCopleyResp(char *outs,int *l,struct MotorInfoStruct* copleyinfo)
 #ifdef MOTORS_VERBOSE
 	  bprintf(err,"%sComm readCopleyResp: The controller did not respond.",copleyinfo->motorstr);
 #endif
+	  copleyinfo->err |= 0x0010;
 	  return -1;
 	} else {
 #ifdef MOTORS_VERBOSE
  	  bprintf(err,"%sComm readCopleyResp: Did not find the appropriate response end character.",copleyinfo->motorstr);
 #endif
+          copleyinfo->err |= 0x0004;
 	  return -2; // For some reason the controller never found the end character.
 	             // which means the response was probably garbage. 
 
@@ -716,41 +668,51 @@ int readCopleyResp(char *outs,int *l,struct MotorInfoStruct* copleyinfo)
     }
     j++;
   }
+#ifdef MOTORS_VERBOSE
   if(i==0) bprintf(warning,"%sComm readCopleyResp: Read 0 characters!!!",copleyinfo->motorstr);
+#endif
   *l=i;
+  copleyinfo->err &= ~0x0004;
+  copleyinfo->err &= ~0x0010;
   return 0;
 }
 
 void resetCopley(char *address, struct MotorInfoStruct* copleyinfo)
 {
-  int count = 10;
+  //  int count = 10;
   close_copley(copleyinfo);
-  while(copleyinfo->open==0 && count > 0) {
-    open_copley(address,copleyinfo);
-    count--;
-  }
+  //  while(copleyinfo->open==0 && count > 0) {
+  open_copley(address,copleyinfo);
+    //    count--;
+    //  }
 
   if(copleyinfo->open==0) {
-    bprintf(warning,"%sComm resetCopley: Failed to open serial port after %d attempts!",copleyinfo->motorstr,count);
+#ifdef MOTORS_VERBOSE
+    bprintf(warning,"%sComm resetCopley: Failed to open serial port!",copleyinfo->motorstr);
     bprintf(warning,"%sComm resetCopley: Attempt to reset controller failed.",copleyinfo->motorstr);
+#endif
     return;
   }
 
-  count = 10;
-  while(copleyinfo->init==0  && count > 0 ) {
+  //  count = 10;
+  //  while(copleyinfo->init==0  && count > 0 ) {
     configure_copley(copleyinfo);
-    count--;
-  }
+    //    count--;
+    //  }
   if(copleyinfo->init==0) {
-    bprintf(warning,"%sComm resetCopley: Failed to configure the drive after %d attempts!",copleyinfo->motorstr,count);
+#ifdef MOTORS_VERBOSE
+    bprintf(warning,"%sComm resetCopley: Failed to configure the drive!",copleyinfo->motorstr);
     bprintf(warning,"%sComm resetCopley: Attempt to reset controller failed.",copleyinfo->motorstr);
+#endif
     return;
   } else {
     bprintf(info,"%sComm resetCopley: Controller reset was successful!",copleyinfo->motorstr);
+    copleyinfo->reset=0;
   }
 
 }
 
+// Not sure if we need this command.
 void restartCopley(char *address, struct MotorInfoStruct* copleyinfo)
 {
   close_copley(copleyinfo);

@@ -86,6 +86,8 @@ struct RWMotorDataStruct{
   double current; // drive current read from controller
   unsigned int status;  // drive status
   unsigned int fault_reg; // drive fault register
+  unsigned short int drive_info; // motorinfo struct
+  unsigned int err_count; // motorinfo struct
 };
 extern struct RWMotorDataStruct RWMotorData[3];
 extern int rw_motor_index; // defined in motors.c

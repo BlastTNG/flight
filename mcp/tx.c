@@ -789,6 +789,8 @@ static void StoreData(int index)
   static struct NiosStruct *rwStat1Addr;
   static struct NiosStruct *rwStat2Addr;
   static struct NiosStruct *rwFaultAddr;
+  static struct NiosStruct *rwInfoAddr;
+  static struct NiosStruct *rwDriveErrCtsAddr;
   static struct NiosStruct *elevEncPos;
   static struct NiosStruct *elTempAddr;
   static struct NiosStruct *elIRawAddr;
@@ -949,6 +951,8 @@ static void StoreData(int index)
     rwStat1Addr = GetNiosAddr("rw_stat_1");
     rwStat2Addr = GetNiosAddr("rw_stat_2");
     rwFaultAddr = GetNiosAddr("rw_fault");
+    rwInfoAddr = GetNiosAddr("rw_drive_info");
+    rwDriveErrCtsAddr = GetNiosAddr("rw_drive_err_cts");
     elTempAddr = GetNiosAddr("t_el_mc");
     elIRawAddr = GetNiosAddr("el_i_raw");
     elStat1Addr = GetNiosAddr("el_stat_1");
@@ -1198,6 +1202,9 @@ static void StoreData(int index)
   WriteData(rwStat1Addr,(RWMotorData[i_rw_motors].status & 0xffff),NIOS_QUEUE);
   WriteData(rwStat2Addr,((RWMotorData[i_rw_motors].status & 0xffff0000)>> 16),NIOS_QUEUE);
   WriteData(rwFaultAddr,RWMotorData[i_rw_motors].fault_reg,NIOS_QUEUE);
+  WriteData(rwInfoAddr,RWMotorData[i_rw_motors].drive_info,NIOS_QUEUE);
+
+  WriteData(rwDriveErrCtsAddr,RWMotorData[i_rw_motors].err_count,NIOS_QUEUE);
   WriteData(elTempAddr,ElevMotorData[i_elev_motors].temp,NIOS_QUEUE);
   WriteData(elIRawAddr,((int)(ElevMotorData[i_elev_motors].current/30.0*32768.0)),NIOS_QUEUE);
   WriteData(elStat1Addr,(ElevMotorData[i_elev_motors].status & 0xffff),NIOS_QUEUE);
