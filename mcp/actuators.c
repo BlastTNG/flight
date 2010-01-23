@@ -93,9 +93,9 @@ static int __inhibit_chatter = 1;
 #define LOCK_MOTOR_DATA_TIMER 100
 #define DRIVE_TIMEOUT 300 /* 1 minute @ 5Hz */
 
-#define LOCK_MIN_POT 3000
-#define LOCK_MAX_POT 16360
-#define LOCK_POT_RANGE 1000
+#define LOCK_MIN_POT 800
+#define LOCK_MAX_POT 3750
+#define LOCK_POT_RANGE 100
 
 /* in commands.c */
 double LockPosition(double elevation);
@@ -778,9 +778,7 @@ static void SetLockState(int nic)
   if (pot < LOCK_MIN_POT)
     state |= LS_CLOSED;
   else if (pot > LOCK_MAX_POT) {
-    state |= LS_POT_RAIL;
-    if (ls < 8000)
-      state |= LS_OPEN;
+    state |= LS_OPEN;
   } else if ((pot < LOCK_MIN_POT + LOCK_POT_RANGE)
       || (pot > LOCK_MAX_POT - LOCK_POT_RANGE))
     state |= lock_data.state & (LS_OPEN | LS_CLOSED);
@@ -1143,7 +1141,6 @@ static inline char* LockCommand(char* buffer, const char* cmd)
 #define LA_EXTEND  3
 #define LA_RETRACT 4
 #define LA_STEP    5
-#define LA_REJIG   6
 static void DoLock(void)
 {
   int action = LA_EXIT;
@@ -1176,13 +1173,7 @@ static void DoLock(void)
         action = LA_EXIT;
       else if (lock_data.state & LS_OPEN)
         action = LA_STOP;
-      else if ((lock_data.state & (LS_POT_RAIL | LS_DRIVE_OFF))
-          == (LS_POT_RAIL | LS_DRIVE_OFF))
-        action = LA_REJIG;
-      else if ((lock_data.state & LS_POT_RAIL)
-          && !(lock_data.state & LS_DRIVE_JIG))
-        action = LA_STOP;
-      else if (lock_data.state & (LS_DRIVE_RET | LS_DRIVE_JIG))
+      else if (lock_data.state & (LS_DRIVE_RET))
         action = LA_WAIT;
       else if (lock_data.state & LS_DRIVE_OFF)
         action = LA_RETRACT;
@@ -1272,17 +1263,6 @@ static void DoLock(void)
         LockCommand(command, "P200000R"); /* move away from the limit switch */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_STP;
-        break;
-      case LA_REJIG:
-        drive_timeout = DRIVE_TIMEOUT;
-        bputs(info, "ActBus: Rejigging lock motor.");
-        CommandData.actbus.lock_acc *= 4;
-        CommandData.actbus.lock_vel /= 4;
-        LockCommand(command, "D0R"); /* move away from the limit switch */
-        CommandData.actbus.lock_acc /= 4;
-        CommandData.actbus.lock_vel *= 4;
-        lock_data.state &= ~LS_DRIVE_MASK;
-        lock_data.state |= LS_DRIVE_JIG;
         break;
       default:
         command[0] = 0;
