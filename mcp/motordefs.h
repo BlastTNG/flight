@@ -9,7 +9,7 @@
 
 #include <stdarg.h>  /* ANSI C variable arguments (va_list, va_start, va_end) */
 
-#define MOTORS_VERBOSE /*** Motors output more information that is only 
+//#define MOTORS_VERBOSE /*** Motors output more information that is only 
 //                           interesting to those working on motor code ***/
 
 enum CheckType {resp, comm, both};

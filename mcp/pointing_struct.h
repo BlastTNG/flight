@@ -87,7 +87,7 @@ struct RWMotorDataStruct{
   unsigned int status;  // drive status
   unsigned int fault_reg; // drive fault register
   unsigned short int drive_info; // motorinfo struct
-  unsigned int err_count; // motorinfo struct
+  unsigned int err_count; // count of serious serial errors
 };
 extern struct RWMotorDataStruct RWMotorData[3];
 extern int rw_motor_index; // defined in motors.c
@@ -106,6 +106,8 @@ struct ElevMotorDataStruct{
   double current; // drive current read from controller
   unsigned int status;  // drive status
   unsigned int fault_reg; // drive fault register
+  unsigned short int drive_info; // motorinfo struct
+  unsigned int err_count; // count of serious serial errors
 };
 extern struct ElevMotorDataStruct ElevMotorData[3];
 extern int elev_motor_index; // defined in motors.c
@@ -124,6 +126,8 @@ struct PivotMotorDataStruct{
   unsigned int db_stat;  // drive bridge status
   unsigned int dp_stat;  // drive protection status
   unsigned int ds1_stat;  // drive system 1 status
+  unsigned short int drive_info; // motorinfo struct
+  unsigned int err_count; // count of serious serial errors
 };
 extern struct PivotMotorDataStruct PivotMotorData[3];
 extern int pivot_motor_index; // defined in motors.c

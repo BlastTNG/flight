@@ -1324,20 +1324,20 @@ void UpdateAxesMode(void)
 }
 
 // Makes a motor info bit field
-unsigned short int makeMotorField(struct MotorInfoStruct* copleyinfo)
+unsigned short int makeMotorField(struct MotorInfoStruct* motorinfo)
 {
   unsigned short int b = 0; 
-  b |= (copleyinfo->open) & 0x0001;
+  b |= (motorinfo->open) & 0x0001;
 
-  if (copleyinfo->reset) {
+  if (motorinfo->reset) {
     b|= 0x02;
-    bprintf(info, "reset set");
+    bprintf(info, "%sComm makeMotorField: reset set",motorinfo->motorstr);
   }
  
-  //b |= ((copleyinfo->reset) & 0x0001)<<1; 
-  b |= ((copleyinfo->init) & 0x0003)<<2; 
-  b |= ((copleyinfo->disabled) & 0x0003)<<4; 
-  switch(copleyinfo->bdrate) {
+  //b |= ((motorinfo->reset) & 0x0001)<<1; 
+  b |= ((motorinfo->init) & 0x0003)<<2; 
+  b |= ((motorinfo->disabled) & 0x0003)<<4; 
+  switch(motorinfo->bdrate) {
   case 9600:
     b |= 0x0000<<6;
     break;
@@ -1350,9 +1350,9 @@ unsigned short int makeMotorField(struct MotorInfoStruct* copleyinfo)
   default:
     b |= 0x0003;
   }
-  b |= ((copleyinfo->writeset) & 0x0003)<<8 ; 
-  b |= ((copleyinfo->err) & 0x001f)<<10 ; 
-  b |= ((copleyinfo->closing) & 0x0001)<<15 ; 
+  b |= ((motorinfo->writeset) & 0x0003)<<8 ; 
+  b |= ((motorinfo->err) & 0x001f)<<10 ; 
+  b |= ((motorinfo->closing) & 0x0001)<<15 ; 
   return b;
 }
 // TODO-lmf: Need to add in conditional statements for when MCP is run by the NICC
@@ -1398,13 +1398,13 @@ void* reactComm(void* arg)
   RWMotorData[0].err_count=0;
 
   // Try to open the port.
-  while(reactinfo.open==0) {
+  while (reactinfo.open==0) {
     open_copley(REACT_DEVICE,&reactinfo); // sets reactinfo.open=1 if sucessful
 
-    if(i==10) bputs(err,"reactComm: Reaction wheel port could not be opened after 10 attempts.\n");
+    if (i==10) bputs(err,"reactComm: Reaction wheel port could not be opened after 10 attempts.\n");
 
     i++;
-    if(reactinfo.open==1) {
+    if (reactinfo.open==1) {
 #ifdef MOTORS_VERBOSE
       bprintf(info,"reactComm: Opened the serial port on attempt number %i",i); 
 #endif
@@ -1414,9 +1414,9 @@ void* reactComm(void* arg)
   // Configure the serial port.  If after 10 attempts the port is not initialized it enters 
   // the main loop where it will trigger a reset command.                                             
   i=0;
-  while(reactinfo.init==0 && i <=9) {
+  while (reactinfo.init==0 && i <=9) {
     configure_copley(&reactinfo);
-    if(reactinfo.init==1) {
+    if (reactinfo.init==1) {
       bprintf(info,"reactComm: Initialized the controller on attempt number %i",i); 
     } else if (i==9) {
       bprintf(info,"reactComm: Could not initialize the controller after %i attempts.",i); 
@@ -1426,9 +1426,8 @@ void* reactComm(void* arg)
     i++;
   }
   rw_motor_index = 1; // index for writing to the RWMotor data struct
-  while(1){
+  while (1){
 
-    //    if(reactinfo.err_count >= COPLEY_ERR_TIMEOUT && ( ((short unsigned int)reactinfo.err) & ((short unsigned int) COP_ERR_MASK) )> 0 ){
     if((reactinfo.err & COP_ERR_MASK) > 0 ) {
       reactinfo.err_count+=1;
       if(reactinfo.err_count >= COPLEY_ERR_TIMEOUT) {
@@ -1556,6 +1555,8 @@ void* elevComm(void* arg)
   ElevMotorData[0].current=0.0;
   ElevMotorData[0].status=0;
   ElevMotorData[0].fault_reg=0;
+  ElevMotorData[0].drive_info=0;
+  ElevMotorData[0].err_count=0;
 
   // Try to open the port.
   while(elevinfo.open==0) {
@@ -1574,13 +1575,51 @@ void* elevComm(void* arg)
     else sleep(1);
   }
  
-  // Configure the serial port.                                               
-  configure_copley(&elevinfo);
+  // Configure the serial port.  If after 10 attempts the port is not initialized it enters 
+  // the main loop where it will trigger a reset command.                                             
+  i=0;
+  while (elevinfo.init==0 && i <=9) {
+    configure_copley(&elevinfo);
+    if(elevinfo.init==1) {
+      bprintf(info,"elevComm: Initialized the controller on attempt number %i",i); 
+    } else if (i==9) {
+      bprintf(info,"elevComm: Could not initialize the controller after %i attempts.",i); 
+    } else {
+      sleep(1);
+    }
+    i++;
+  }
+
   elev_motor_index = 1; // index for writing to the ElevMotor data struct
   while (1) {
-    if (elevinfo.closing==1) {
+
+    if ((elevinfo.err & COP_ERR_MASK) > 0 ) {
+      elevinfo.err_count+=1;
+      if (elevinfo.err_count >= COPLEY_ERR_TIMEOUT) {
+	elevinfo.reset=1;
+      }
+    }
+
+    if (CommandData.reset_elev==1 ) {
+      elevinfo.reset=1;
+      CommandData.reset_elev=0;
+    }
+
+    ElevMotorData[elev_motor_index].drive_info=makeMotorField(&elevinfo); // Make bitfield of controller info structure.
+    ElevMotorData[elev_motor_index].err_count=(elevinfo.err_count > 65535) ? 65535: elevinfo.err_count;
+
+    if(elevinfo.closing==1){
+      elev_motor_index=INC_INDEX(elev_motor_index);
       close_copley(&elevinfo);
-      usleep(10000);
+      usleep(10000);      
+    } else if (elevinfo.reset==1){
+      bprintf(warning,"elevComm: Resetting connection to elevation drive controller.");
+
+      elev_motor_index=INC_INDEX(elev_motor_index);
+      resetCopley(ELEV_DEVICE,&elevinfo); // if successful sets elevinfo.reset=0
+      usleep(10000);  // give time for motor bits to get written
+
+
     } else if (elevinfo.init==1) {
       if((CommandData.disable_el==0 || CommandData.force_el==1 ) && elevinfo.disabled > 0) {
 #ifdef MOTORS_VERBOSE
@@ -1665,16 +1704,8 @@ void* pivotComm(void* arg)
   pivotinfo.writeset=0;
   strncpy(pivotinfo.motorstr,"pivot",6);
 
-  // Initialize structure PivotMotorData.  Follows what was done in dgps.c
-  PivotMotorData[0].res_piv_raw=0;
-  PivotMotorData[0].current=0;
-  PivotMotorData[0].db_stat=0;
-  PivotMotorData[0].dp_stat=0;
-  PivotMotorData[0].ds1_stat=0;
-  PivotMotorData[0].dps_piv=0;
-
-  while(!InCharge) {
-    if(firsttime==1) {
+  while (!InCharge) {
+    if (firsttime==1) {
       bprintf(info,"pivotComm: I am not incharge thus I will not communicate with the pivot motor.");
       firsttime=0;
     }
@@ -1687,18 +1718,25 @@ void* pivotComm(void* arg)
   i=0;
 
   // Initialize structure PivotMotorData.  Follows what was done in dgps.c
-  //  PivotMotorData[0].res_piv_raw=0.0;
+  PivotMotorData[0].res_piv_raw=0;
+  PivotMotorData[0].current=0;
+  PivotMotorData[0].db_stat=0;
+  PivotMotorData[0].dp_stat=0;
+  PivotMotorData[0].ds1_stat=0;
+  PivotMotorData[0].dps_piv=0;
+  PivotMotorData[0].drive_info=0;
+  PivotMotorData[0].err_count=0;
 
   // Try to open the port.
-  while(pivotinfo.open==0) {
+  while (pivotinfo.open==0) {
     open_amc(PIVOT_DEVICE,&pivotinfo); // sets pivotinfo.open=1 if sucessful
 
-    if(i==10) {
+    if (i==10) {
       bputs(err,"pivotComm: Pivot controller serial port could not be opened after 10 attempts.\n");
     }
     i++;
 
-    if(pivotinfo.open==1) {
+    if (pivotinfo.open==1) {
 #ifdef MOTORS_VERBOSE
       bprintf(info,"pivotComm: Opened the serial port on attempt number %i",i);
 #endif
@@ -1706,13 +1744,48 @@ void* pivotComm(void* arg)
     else sleep(1);
   }
 
-  // Configure the serial port.                                               
-  configure_amc(&pivotinfo);
+  // Configure the serial port.  If after 10 attempts the port is not initialized it enters 
+  // the main loop where it will trigger a reset command.                                             
+  i=0;
+  while (pivotinfo.init==0 && i <=9) {
+    configure_amc(&pivotinfo);
+    if (pivotinfo.init==1) {
+      bprintf(info,"pivotComm: Initialized the controller on attempt number %i",i); 
+    } else if (i==9) {
+      bprintf(info,"pivotComm: Could not initialize the controller after %i attempts.",i); 
+    } else {
+      sleep(1);
+    }
+    i++;
+  }
 
-  while(1) {
-    if (pivotinfo.closing==1){
+  while (1) {
+
+    if((pivotinfo.err & AMC_ERR_MASK) > 0 ) {
+      pivotinfo.err_count+=1;
+      if(pivotinfo.err_count >= AMC_ERR_TIMEOUT) {
+	pivotinfo.reset=1;
+      }
+    }
+    if(CommandData.reset_piv==1 ) {
+      pivotinfo.reset=1;
+      CommandData.reset_piv=0;
+    }
+
+    PivotMotorData[pivot_motor_index].drive_info=makeMotorField(&pivotinfo); // Make bitfield of controller info structure.
+    PivotMotorData[pivot_motor_index].err_count=(pivotinfo.err_count > 65535) ? 65535: pivotinfo.err_count;
+
+    if(pivotinfo.closing==1){
+      pivot_motor_index=INC_INDEX(pivot_motor_index);
       close_amc(&pivotinfo);
-      usleep(10000);
+      usleep(10000);      
+    } else if (pivotinfo.reset==1){
+      bprintf(warning,"pivotComm: Resetting connection to pivot controller.");
+
+      pivot_motor_index=INC_INDEX(pivot_motor_index);
+      resetAMC(PIVOT_DEVICE,&pivotinfo); // if successful sets pivotinfo.reset=0
+      usleep(10000);  // give time for motor bits to get written
+
     } else if (pivotinfo.init==1) {
       if(CommandData.disable_az==0 && pivotinfo.disabled == 1) {
 #ifdef MOTORS_VERBOSE

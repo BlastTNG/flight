@@ -65,7 +65,7 @@ void close_copley(struct MotorInfoStruct* copleyinfo)
 #ifdef MOTORS_VERBOSE
   bprintf(info,"%sComm: Closing connection to Copley controller.",copleyinfo->motorstr);
 #endif
-  if(copleyinfo->open==0) {
+  if (copleyinfo->open==0) {
 #ifdef MOTORS_VERBOSE
   bprintf(info,"%sComm: Controller is already closed!",copleyinfo->motorstr);
 #endif
@@ -440,6 +440,8 @@ int ping_copley(struct MotorInfoStruct* copleyinfo)
 // Check the controller response after a command.
 // If the response from the controller is "ok" (i.e. no errors) return 0.
 // TODO: Add error parsing when controller returns error message
+// Returns -10 if the controller returned garbage.
+// Returns the error code if the contoller responded with an error message.
 int checkCopleyResp(struct MotorInfoStruct* copleyinfo)
 {
   char outs[255],outs_noCR[255]; 
@@ -521,6 +523,10 @@ int enableCopley(struct MotorInfoStruct* copleyinfo)
   return n;
 }
 
+// Disable the Copley controller
+// Returns:
+// -1 Communication Error
+//  0 Controller was disabled
 int disableCopley(struct MotorInfoStruct* copleyinfo)
 {
   int n=0;
@@ -708,6 +714,8 @@ void resetCopley(char *address, struct MotorInfoStruct* copleyinfo)
   } else {
     bprintf(info,"%sComm resetCopley: Controller reset was successful!",copleyinfo->motorstr);
     copleyinfo->reset=0;
+    copleyinfo->err_count=0;
+    copleyinfo->disabled=2;
   }
 
 }

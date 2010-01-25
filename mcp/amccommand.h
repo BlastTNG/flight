@@ -29,6 +29,17 @@
 
 #define PIV_RES_CTS 16384.0
 
+#define AMC_ERR_TIMEOUT 5 // Number of consecutive serious errors before the
+                             // thread attempts to reset the controller.
+
+// Error masks.  Tells the controller which bits set in the amcinfo->err
+// variable should count towards triggering a reset.
+#define AMC_ERR_MASK 0x001e // Bit #2 (send command failed, implying that the 
+                              // serial hub not powered.)
+                            // Bit #3 (Controller response is incorrect)
+                            // Bit #4 (Controller returns error)
+                            // Bit #5 (Controller did not respond)
+
 //#define DEBUG_AMC
 
 struct SerialCommandHeadStruct {
@@ -100,4 +111,5 @@ void setWriteAccess(struct MotorInfoStruct* amcinfo);
 int disableAMC(struct MotorInfoStruct* amcinfo);
 int enableAMC(struct MotorInfoStruct* amcinfo);
 int getAMCResolver(struct MotorInfoStruct* amcinfo);
+void resetAMC(char *address, struct MotorInfoStruct* amcinfo);
 #endif

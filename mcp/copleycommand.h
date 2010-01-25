@@ -16,7 +16,8 @@
 #define RW_ENC_CTS 2097152.0 // Reaction Wheel Encoder Counts per revolution
 #define ELEV_ENC_CTS 524288.0 // Elevation Drive Encoder Counts per revolution
 
-#define COPLEY_ERR_TIMEOUT 2
+#define COPLEY_ERR_TIMEOUT 2 // Number of consecutive serious errors before the
+                              // thread attempts to reset the controller.
 
 // Indices for various Copley Controller Run time variables
 #define COP_IND_TEMP "0x20"
@@ -30,6 +31,18 @@
 // variable should count towards triggering a reset.
 #define COP_ERR_MASK 0x001e // Bit #2 (send command failed) implying that the 
                               // serial hub not powered.
+
+//  Copley Error codes
+# define COP_ERR_2MUCH_DATA 1
+# define COP_ERR_UNKNOWN_CMD 3
+# define COP_ERR_NOT_ENOUGH_DATA 4
+# define COP_ERR_TOO_MUCH_DATA 5
+# define COP_ERR_UNKNOWN_ID 9
+# define COP_ERR_OUT_RANGE 10
+# define COP_ERR_READ_ONLY 11
+# define COP_ERR_CAN_FAIL 32
+# define COP_ERR_PARSE 33
+
 
 void MotorStrOut(char *str,struct MotorInfoStruct* copleyinfo);
 void copyouts(char *in, char *out);

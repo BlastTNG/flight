@@ -797,12 +797,16 @@ static void StoreData(int index)
   static struct NiosStruct *elStat1Addr;
   static struct NiosStruct *elStat2Addr;
   static struct NiosStruct *elFaultAddr;
+  static struct NiosStruct *elInfoAddr;
+  static struct NiosStruct *elDriveErrCtsAddr;
   static struct NiosStruct *resPivRawAddr;
   static struct NiosStruct *pivIRawAddr;
   static struct NiosStruct *pivDStatAddr;
   static struct NiosStruct *pivS1StatAddr;
   static struct NiosStruct *vAzAddr;
   static struct NiosStruct *pivDPSRawAddr;
+  static struct NiosStruct *pivInfoAddr;
+  static struct NiosStruct *pivDriveErrCtsAddr;
 
   int i_rw_motors;
   int i_elev_motors;
@@ -964,6 +968,10 @@ static void StoreData(int index)
     pivS1StatAddr = GetNiosAddr("piv_s1_stat");
     vAzAddr = GetNiosAddr("v_az");
     pivDPSRawAddr = GetNiosAddr("piv_dps_raw");
+    pivInfoAddr = GetNiosAddr("piv_drive_info");
+    pivDriveErrCtsAddr = GetNiosAddr("piv_drive_err_cts");
+    elInfoAddr = GetNiosAddr("el_drive_info");
+    elDriveErrCtsAddr = GetNiosAddr("el_drive_err_cts");
   }
 
   i_point = GETREADINDEX(point_index);
@@ -1203,7 +1211,6 @@ static void StoreData(int index)
   WriteData(rwStat2Addr,((RWMotorData[i_rw_motors].status & 0xffff0000)>> 16),NIOS_QUEUE);
   WriteData(rwFaultAddr,RWMotorData[i_rw_motors].fault_reg,NIOS_QUEUE);
   WriteData(rwInfoAddr,RWMotorData[i_rw_motors].drive_info,NIOS_QUEUE);
-
   WriteData(rwDriveErrCtsAddr,RWMotorData[i_rw_motors].err_count,NIOS_QUEUE);
   WriteData(elTempAddr,ElevMotorData[i_elev_motors].temp,NIOS_QUEUE);
   WriteData(elIRawAddr,((int)(ElevMotorData[i_elev_motors].current/30.0*32768.0)),NIOS_QUEUE);
@@ -1216,6 +1223,12 @@ static void StoreData(int index)
                  +((PivotMotorData[i_pivot_motors].dp_stat & 0xff)<< 8),NIOS_QUEUE);
   WriteData(pivS1StatAddr,PivotMotorData[i_pivot_motors].ds1_stat,NIOS_QUEUE);
   WriteData(pivDPSRawAddr,PivotMotorData[i_pivot_motors].dps_piv,NIOS_QUEUE);
+
+  WriteData(elInfoAddr,ElevMotorData[i_elev_motors].drive_info,NIOS_QUEUE);
+  WriteData(elDriveErrCtsAddr,ElevMotorData[i_elev_motors].err_count,NIOS_QUEUE);
+  WriteData(pivInfoAddr,PivotMotorData[i_pivot_motors].drive_info,NIOS_QUEUE);
+  WriteData(pivDriveErrCtsAddr,PivotMotorData[i_pivot_motors].err_count,NIOS_QUEUE);
+
   StoreStarCameraData(index, 0); /* write ISC data */
   StoreStarCameraData(index, 1); /* write OSC data */
 }

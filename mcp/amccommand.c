@@ -71,6 +71,38 @@ void open_amc(char *address, struct MotorInfoStruct* amcinfo)
   amcinfo->init=0;
 }
 
+void close_amc(struct MotorInfoStruct* amcinfo)
+{
+  int n;
+
+#ifdef MOTORS_VERBOSE
+  bprintf(info,"%sComm close_amc: Closing connection to AMC controller.",amcinfo->motorstr);
+#endif
+
+  if (amcinfo->open==0) {
+#ifdef MOTORS_VERBOSE
+    bprintf(info,"%sComm: Controller is already closed!",amcinfo->motorstr);
+#endif
+  } else {
+
+    n = disableAMC(amcinfo);
+
+    if (n>0) {
+      checkAMCStatus(n,amcinfo);
+    } else {
+      bprintf(err,"%sComm close_amc: Disabling AMC controller failed.",amcinfo->motorstr);
+    }
+    
+  }
+#ifdef MOTORS_VERBOSE
+  bprintf(info,"%sComm close_amc: Closing serial port.",amcinfo->motorstr);
+#endif
+
+  close(amcinfo->fd);
+  amcinfo->init=0;
+  amcinfo->open=0;
+  bprintf(info,"%sComm close_amc: Connection to motor serial port is closed.",amcinfo->motorstr);
+}
 
 void setopts_amc(int bdrate, struct MotorInfoStruct* amcinfo)
 {
@@ -324,6 +356,113 @@ unsigned short crchware(unsigned short data, unsigned short genpoly, unsigned sh
   return accum;
 }
 
+int send_amccmd(int index,int offset,int value,int nwords,enum CmdorQuery type, struct MotorInfoStruct* amcinfo)
+{
+
+  static int count=0;
+  struct SerialCommandHeadStruct MessSendHead;
+  struct DriveIPVStruct ValuesSend;
+  unsigned short *crctable;
+  char headersend[8];
+  char *command;
+  int n,l;
+#ifdef DEBUG_AMC
+  int i;
+#endif
+
+  if((crctable = mk_crctable((unsigned short)CRC_POLY,crchware,amcinfo)) == NULL)
+ 
+    {
+      printf("mk_crctable() memory allocation failed\n");
+      exit(1);
+    }
+  ValuesSend.index=index;
+  ValuesSend.offset=offset;
+  ValuesSend.value=value;
+  ValuesSend.readwrite=1;
+  ValuesSend.nwords=nwords;
+  count=(count+1)%16;
+  ValuesSend.counter=count;
+  MakeSCHeadStruct(&ValuesSend,&MessSendHead, crctable,headersend,&command,&l,type,amcinfo);
+  // mark2
+#ifdef DEBUG_AMC
+  char fouts[512];
+  for(i=0;i<l;i++)
+    {
+      //     bprintf(info)
+      sprintf(fouts+2*i,"%2x",((unsigned char) (*(command+i))));
+    }
+  bprintf(info,"%sComm send_amccmd: Command being sent: %s",amcinfo->motorstr,fouts);
+#endif // DEBUG_AMC
+
+  n = write(amcinfo->fd, command, l);
+  if (n<0)
+    {
+      berror(err,"%sComm send_amccmd: Send command failed!",amcinfo->motorstr);
+      amcinfo->err |= 0x0002;
+      return -1;
+    } else {
+    amcinfo->err &= ~0x0002;
+    return count;
+  }
+}
+
+int queryAMCInd(int index, int offset, int nwords, struct MotorInfoStruct* amcinfo)
+{
+  int n,stat=0;
+  int val=0;
+  int l=0;
+  int count=0;
+#ifdef DEBUG_AMC
+  bprintf(info,"%sComm queryAMCInd: Querying index %d, offset %d, which has %d words.",amcinfo->motorstr,index,offset,nwords);
+#endif 
+  if(amcinfo->closing==1) {
+    return 42;// Don't query the serial port if we are 
+                // closing the connection to the controller.
+  }
+
+  n = check_amcready(comm,amcinfo);
+#ifdef DEBUG_AMC
+  bprintf(info,"PIVOT DEBUG TMP: check_amcready(comm,amcinfo) response is %i",n);
+#endif
+  
+  if(n>=0) {
+    if(nwords!= 0) {
+      count=send_amccmd(index,offset,0,nwords,query,amcinfo);
+    } else {
+      berror(err,"%sComm queryAMCInd: Improper index (nwords=0).",amcinfo->motorstr);
+      return -4;
+    }
+  } else {
+    berror(err,"%sComm queryAMCInd: Serial port is not ready to command. n=%i",amcinfo->motorstr,n);
+    amcinfo->err |=0x0002;
+    return -5;
+  }
+
+#ifdef DEBUG_AMC
+  bprintf(info,"%sComm queryAMCInd: Count returned by send_amccmd is %d.",amcinfo->motorstr,count);
+#endif
+
+  n = check_amcready(resp,amcinfo);  
+  if(n >= 0) {
+    stat=getAMCResp(count,&val,&l,amcinfo);
+  }
+  if(stat == 1) {
+#ifdef DEBUG_AMC
+    bprintf(info,"%sComm queryAMCInd: Query returns %d.  Sequence number is %d",amcinfo->motorstr,val,count);
+#endif
+    
+    return val;
+    
+  } else {
+#ifdef MOTORS_VERBOSE
+    bprintf(err,"%sComm queryAMCInd: Error querying index: stat=%i",amcinfo->motorstr,stat);
+#endif
+    return -1;
+  }
+  // mark1
+}
+
 void configure_amc(struct MotorInfoStruct* amcinfo)
 {
   int n,m;
@@ -408,9 +547,7 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
   else
     {
       bprintf(err,"%sComm configure_amc: Cannot communicate with the AMC controller at any baud rate.",amcinfo->motorstr);
-      amcinfo->err=3; // Sets comm_error to level 3
-                       // which should trigger a power cycle
-      amcinfo->init=2;
+      amcinfo->init=2; 
     }
 }
 
@@ -455,6 +592,7 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
    if (n < 0) {
 #ifdef MOTORS_VERBOSE
      bprintf(err,"%sComm: Select command failed!",amcinfo->motorstr);
+     amcinfo->err |= 0x0001;
 #endif
      return -2;
    } else if (n==0) {
@@ -477,109 +615,10 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
 	m|=1;
     }
        //      bprintf(info, "%sComm: checksum returns %i.",m);
-       return m;
+    amcinfo->err &= ~0x0001;
+    return m;
    }
  }
-int send_amccmd(int index,int offset,int value,int nwords,enum CmdorQuery type, struct MotorInfoStruct* amcinfo)
-{
-
-  static int count=0;
-  struct SerialCommandHeadStruct MessSendHead;
-  struct DriveIPVStruct ValuesSend;
-  unsigned short *crctable;
-  char headersend[8];
-  char *command;
-  int n,l;
-#ifdef DEBUG_AMC
-  int i;
-#endif
-
-  if((crctable = mk_crctable((unsigned short)CRC_POLY,crchware,amcinfo)) == NULL)
- 
-    {
-      printf("mk_crctable() memory allocation failed\n");
-      exit(1);
-    }
-  ValuesSend.index=index;
-  ValuesSend.offset=offset;
-  ValuesSend.value=value;
-  ValuesSend.readwrite=1;
-  ValuesSend.nwords=nwords;
-  count=(count+1)%16;
-  ValuesSend.counter=count;
-  MakeSCHeadStruct(&ValuesSend,&MessSendHead, crctable,headersend,&command,&l,type,amcinfo);
-  // mark2
-#ifdef DEBUG_AMC
-  char fouts[512];
-  for(i=0;i<l;i++)
-    {
-      //     bprintf(info)
-      sprintf(fouts+2*i,"%2x",((unsigned char) (*(command+i))));
-    }
-  bprintf(info,"%sComm send_amccmd: Command being sent: %s",amcinfo->motorstr,fouts);
-#endif // DEBUG_AMC
-
-  n = write(amcinfo->fd, command, l);
-  if(n<0)
-    {
-      berror(err,"%sComm send_amccmd: Send command failed!",amcinfo->motorstr);
-      return -1;
-    }
-  return count;
-}
-
-int queryAMCInd(int index, int offset, int nwords, struct MotorInfoStruct* amcinfo)
-{
-  int n,stat=0;
-  int val=0;
-  int l=0;
-  int count=0;
-#ifdef DEBUG_AMC
-  bprintf(info,"%sComm queryAMCInd: Querying index %d, offset %d, which has %d words.",amcinfo->motorstr,index,offset,nwords);
-#endif 
-  if(amcinfo->closing==1) {
-    return 42;// Don't query the serial port if we are 
-                // closing the connection to the controller.
-  }
-
-  n = check_amcready(comm,amcinfo);
-  //  bprintf(info,"PIVOT DEBUG TMP: check_amcready(comm,amcinfo) response is %i",n);
-  
-  if(n>=0) {
-    if(nwords!= 0) {
-      count=send_amccmd(index,offset,0,nwords,query,amcinfo);
-    } else {
-      berror(err,"%sComm queryAMCInd: Improper index (nwords=0).",amcinfo->motorstr);
-      return -4;
-    }
-  } else {
-    berror(err,"%sComm queryAMCInd: Serial port is not ready to command.",amcinfo->motorstr);
-    return -5;
-  }
-
-#ifdef DEBUG_AMC
-  bprintf(info,"%sComm queryAMCInd: Count returned by send_amccmd is %d.",amcinfo->motorstr,count);
-#endif
-
-  n = check_amcready(resp,amcinfo);  
-  if(n >= 0) {
-    stat=getAMCResp(count,&val,&l,amcinfo);
-  }
-  if(stat == 1) {
-#ifdef DEBUG_AMC
-    bprintf(info,"%sComm queryAMCInd: Query returns %d.  Sequence number is %d",amcinfo->motorstr,val,count);
-#endif
-    
-    return val;
-    
-  } else {
-#ifdef MOTORS_VERBOSE
-    bprintf(err,"%sComm queryAMCInd: Error querying index.",amcinfo->motorstr);
-#endif
-    return -1;
-  }
-  // mark1
-}
 
 // Check to see whether the amcion wheel controller is enabled or
 // disabled.  
@@ -656,9 +695,11 @@ int readAMCResp(int seq, unsigned char *outs, int *l, struct MotorInfoStruct* am
       if(timeout==timeoutlim){ // If there is no data after two tries return an.
 	if(j==timeoutlim) {// The controller never responded.
 	  bprintf(err,"%sComm read_line: The controller did not respond.",amcinfo->motorstr);
+	  amcinfo->err |= 0x0010;
 	  return -1;
 	} else {
  	  bprintf(err,"%sComm read_line: Did not find the appropriate response end character.",amcinfo->motorstr);
+          amcinfo->err |= 0x0004;
 	  return -2; // For some reason the controller never found the end character.
 	             // which means the response was probably garbage. 
 	  
@@ -672,6 +713,8 @@ int readAMCResp(int seq, unsigned char *outs, int *l, struct MotorInfoStruct* am
 
   if(i==0) bprintf(warning,"%sComm read_line: Read 0 characters!!!",amcinfo->motorstr);
   *l = i;
+  amcinfo->err &= ~0x0004;
+  amcinfo->err &= ~0x0010;
   
   return 0;
 }
@@ -843,51 +886,31 @@ void checkAMCStatus(int stat, struct MotorInfoStruct* amcinfo)
     case AMC_COMPLETE:
 #ifdef DEBUG_AMC
       bprintf(info,"%sComm checkAMCStatus: Command was completed.",amcinfo->motorstr);
+      amcinfo->err=0;
+      amcinfo->err_count=0;
+
 #endif
       break;
     case AMC_INCOMPLETE:
+      amcinfo->err |= 0x0008;
       bprintf(warning,"%sComm checkAMCStatus: Command was not completed.",amcinfo->motorstr);
     case AMC_INVALID:
+      amcinfo->err |= 0x0008;
       bprintf(warning,"%sComm checkAMCStatus: Invalid Command.",amcinfo->motorstr);
       break;
     case AMC_NOACCESS:
+      amcinfo->err |= 0x0008;
       bprintf(warning,"%sComm checkAMCStatus: Do not have write access.",amcinfo->motorstr);
       break;
     case AMC_FRAMECRC:
+      amcinfo->err |= 0x0008;
       bprintf(warning,"%sComm checkAMCStatus: Frame or CRC error.",amcinfo->motorstr);
       break;
     default:
+      amcinfo->err |= 0x0004;
       bprintf(warning,"%sComm checkAMCStatus: Invalid status byte.",amcinfo->motorstr);
       break;
     }
-}
-
-void close_amc(struct MotorInfoStruct* amcinfo)
-{
-  int n;
-
-#ifdef MOTORS_VERBOSE
-  bprintf(info,"%sComm close_amc: Closing connection to AMC controller.",amcinfo->motorstr);
-#endif
-
-  n = disableAMC(amcinfo);
-  if(n>0)
-    {
-      checkAMCStatus(n,amcinfo);
-    }
-  else
-    {
-      bprintf(err,"%sComm close_amc: Disabling AMC controller failed.",amcinfo->motorstr);
-    }
-
-#ifdef MOTORS_VERBOSE
-  bprintf(info,"%sComm close_amc: Closing serial port.",amcinfo->motorstr);
-#endif
-
-  close(amcinfo->fd);
-  amcinfo->init=0;
-  amcinfo->open=0;
-  bprintf(info,"%sComm close_amc: Connection to motor serial port is closed.",amcinfo->motorstr);
 }
 
 void setWriteAccess(struct MotorInfoStruct* amcinfo)
@@ -896,7 +919,7 @@ void setWriteAccess(struct MotorInfoStruct* amcinfo)
   bprintf(info,"%sComm setWriteAccess: Setting write access",amcinfo->motorstr);  
 #endif
   int n, count;
-  count = send_amccmd(7,0,15,1,cmd,amcinfo); // ???
+  count = send_amccmd(7,0,15,1,cmd,amcinfo);
   n = check_amcready(resp,amcinfo);
   if (n < 0)
     {
@@ -964,4 +987,41 @@ int getAMCResolver(struct MotorInfoStruct* amcinfo)
 #endif
   return queryAMCInd(18, 0, 2, amcinfo) & 0x3fff; // queryAMCInd returns a 32 bit number
                                                   // but the resolver wraps after 2^14 bits.
+}
+
+void resetAMC(char *address, struct MotorInfoStruct* amcinfo)
+{
+  //  int count = 10;
+  close_amc(amcinfo);
+  //  while(amcinfo->open==0 && count > 0) {
+  open_amc(address,amcinfo);
+    //    count--;
+    //  }
+
+  if(amcinfo->open==0) {
+#ifdef MOTORS_VERBOSE
+    bprintf(warning,"%sComm resetAMC: Failed to open serial port!",amcinfo->motorstr);
+    bprintf(warning,"%sComm resetAMC: Attempt to reset controller failed.",amcinfo->motorstr);
+#endif
+    return;
+  }
+
+  //  count = 10;
+  //  while(amcinfo->init==0  && count > 0 ) {
+    configure_amc(amcinfo);
+    //    count--;
+    //  }
+  if(amcinfo->init==0) {
+#ifdef MOTORS_VERBOSE
+    bprintf(warning,"%sComm resetAMC: Failed to configure the drive!",amcinfo->motorstr);
+    bprintf(warning,"%sComm resetAMC: Attempt to reset controller failed.",amcinfo->motorstr);
+#endif
+    return;
+  } else {
+    bprintf(info,"%sComm resetAMC: Controller reset was successful!",amcinfo->motorstr);
+    amcinfo->reset=0;
+    amcinfo->err_count=0;
+
+  }
+
 }
