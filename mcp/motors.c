@@ -35,7 +35,7 @@
 #include "amccommand.h"
 #include "motordefs.h"
 
-#define MIN_EL 22
+#define MIN_EL 10
 #define MAX_EL 59
 
 #define VPIV_FILTER_LEN 40
@@ -198,6 +198,7 @@ static double GetVElev(void)
     vel = last_vel - max_dv;
   last_vel = vel;
 
+  //bprintf(info, "GetVEl: vel=%f", vel);
   return (vel*10.0); // Factor of 10.0 is to improve the dynamic range
 }
 

@@ -51,7 +51,7 @@
  * 90 degrees.  This is the offset to the true lock positions.
  * This number is relative to the elevation encoder reading, NOT
  * true elevation */
-#define LOCK_OFFSET (3.34)
+#define LOCK_OFFSET (-2.24)
 
 /* Seconds since 0TMG jan 1 1970 */
 #define SUN_JAN_6_1980 315964800L
@@ -430,7 +430,8 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.piv.set_count = LATCH_PULSE_LEN;
       break;
     case piv_cycle:
-      CommandData.power.piv.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      // Pivot takes a long time to properly power cycle.
+      CommandData.power.piv.set_count = 2*PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.piv.rst_count = LATCH_PULSE_LEN;
       break;
     case elmot_off:
