@@ -392,18 +392,6 @@
         <WORD value="1" caption="Analogue" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
-    <MULTI caption="Az Autogyro">
-      <DATUM src="AZ_AUTO_GYRO">
-        <WORD value="1" caption="On" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Off" textstyle="W_BIT"/>
-      </DATUM>
-    </MULTI>
-    <MULTI caption="El Autogyro">
-      <DATUM src="EL_AUTO_GYRO">
-        <WORD value="1" caption="On" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Off" textstyle="W_BIT"/>
-      </DATUM>
-    </MULTI>
   </BOX>
   <BOX caption="ISC" colour="#707" row="4" col="5" rowspan="1">
     <NUMBER caption="RA">
@@ -786,10 +774,10 @@
       <DATUM format="%.2f" src="T_MCC" extrema="mcctemp"/>
     </NUMBER>
     <NUMBER caption="MCC CPU">
-      <DATUM format="%.2f" src="T_CPU1" extrema="cputemp"/>
+      <DATUM format="%.2f" src="T_CPU2" extrema="cputemp"/>
     </NUMBER>
-    <NUMBER caption="MCC Motherboard">
-      <DATUM format="%.2f" src="T_CPU3" extrema="cputemp"/>
+    <NUMBER caption="MCC Chipset">
+      <DATUM format="%.2f" src="T_CPU1" extrema="cputemp"/>
     </NUMBER>
     <NUMBER caption="Sun Sensor">
       <DATUM format="%.2f" src="SS_CASE_TEMP" extrema="temp"/>
@@ -1023,32 +1011,14 @@
     </NUMBER>
   </BOX>
   <BOX caption="Bias" colour="#707" row="4" col="1">
-    <MULTI caption="Type">
-      <DATUM src="BIAS_IS_DC">
-        <WORD value="1" caption="DC" textstyle="W_BIT"/>
-        <WORD value="0" caption="AC" textstyle="OK_BIT"/>
-      </DATUM>
-    </MULTI>
-    <MULTI caption="Bias Clock">
-      <DATUM src="BIAS_CLK_IS_INT">
-        <WORD value="1" caption="Internal" textstyle="W_BIT"/>
-        <WORD value="0" caption="External" textstyle="OK_BIT"/>
-      </DATUM>
-    </MULTI>
-    <MULTI caption="Source">
-      <DATUM src="BIAS_IS_INT">
-        <WORD value="1" caption="Normal" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Ramp" textstyle="W_BIT"/>
-      </DATUM>
-    </MULTI>
-    <NUMBER caption="Bias 1 (250)">
-      <DATUM format="%.0f" src="bias_lev1" extrema="bias1"/>
+    <NUMBER caption="Bias 250">
+      <DATUM format="%.0f" src="bias_ampl_250" extrema="bias1"/>
     </NUMBER>
-    <NUMBER caption="Bias 2 (350)">
-      <DATUM format="%.0f" src="bias_lev2" extrema="bias2"/>
+    <NUMBER caption="Bias 350">
+      <DATUM format="%.0f" src="bias_ampl_350" extrema="bias2"/>
     </NUMBER>
-    <NUMBER caption="Bias 3 (500)">
-      <DATUM format="%.0f" src="bias_lev3" extrema="bias3"/>
+    <NUMBER caption="Bias 500">
+      <DATUM format="%.0f" src="bias_ampl_500" extrema="bias3"/>
     </NUMBER>
   </BOX>
   <BOX caption="'Slow' Bolometers " colour="#707" row="4" col="3" rowspan="1">
@@ -1128,41 +1098,41 @@
     </NUMBER>
   </BOX>
   <BOX caption="Phase" colour="#707" row="4" col="2" rowspan="1">
-    <NUMBER caption="DAS Phase 5">
-      <DATUM format="%.0f" src="phase5" extrema="unknown"/>
+    <NUMBER caption="Phase 17">
+      <DATUM format="%.0f" src="phase17" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="DAS Phase 6">
-      <DATUM format="%.0f" src="phase6" extrema="unknown"/>
+    <NUMBER caption="Phase 18">
+      <DATUM format="%.0f" src="phase18" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="DAS Phase 7">
-      <DATUM format="%.0f" src="phase7" extrema="unknown"/>
+    <NUMBER caption="Phase 19">
+      <DATUM format="%.0f" src="phase19" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="DAS Phase 8">
-      <DATUM format="%.0f" src="phase8" extrema="unknown"/>
+    <NUMBER caption="Phase 21">
+      <DATUM format="%.0f" src="phase21" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="DAS Phase 9">
-      <DATUM format="%.0f" src="phase9" extrema="unknown"/>
+    <NUMBER caption="Phase 22">
+      <DATUM format="%.0f" src="phase22" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="DAS Phase 10">
-      <DATUM format="%.0f" src="phase10" extrema="unknown"/>
+    <NUMBER caption="Phase 23">
+      <DATUM format="%.0f" src="phase23" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="DAS Phase 11">
-      <DATUM format="%.0f" src="phase11" extrema="unknown"/>
+    <NUMBER caption="Phase 25">
+      <DATUM format="%.0f" src="phase25" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="DAS Phase 12">
-      <DATUM format="%.0f" src="phase12" extrema="unknown"/>
+    <NUMBER caption="Phase 26">
+      <DATUM format="%.0f" src="phase26" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="DAS Phase 13">
+    <NUMBER caption="Phase 27">
+      <DATUM format="%.0f" src="phase27" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Phase 29">
+      <DATUM format="%.0f" src="phase29" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Phase 30">
+      <DATUM format="%.0f" src="phase30" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Phase 13">
       <DATUM format="%.0f" src="phase13" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="DAS Phase 14">
-      <DATUM format="%.0f" src="phase14" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="DAS Phase 15">
-      <DATUM format="%.0f" src="phase15" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="DAS Phase 16">
-      <DATUM format="%.0f" src="phase16" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="ACS Power System" colour="#777700" row="0" col="7" rowspan="1">
@@ -1255,10 +1225,10 @@
     <NUMBER caption="Index">
       <DATUM format="%.0f" src="INDEX" extrema="unknown"/>
     </NUMBER>
-    <MULTI caption="Ring Bearer">
-      <DATUM src="SAM_I_AM">
-        <WORD value="1" caption="Sam" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Frodo" textstyle="OK_BIT"/>
+    <MULTI caption="MCC Pole">
+      <DATUM src="south_i_am">
+        <WORD value="1" caption="South" textstyle="OK_BIT"/>
+        <WORD value="0" caption="North" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="Disk Space (GB)">
@@ -1361,10 +1331,10 @@
       <DATUM format="%.2f" src="OSC_EL" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="Encoder">
-      <DATUM format="%.2f" src="ENC_ELEV" extrema="angle"/>
-    </NUMBER>
-    <NUMBER caption="Enc El">
       <DATUM format="%.2f" src="ENC_EL" extrema="angle"/>
+    </NUMBER>
+    <NUMBER caption="Enc Raw">
+      <DATUM format="%.2f" src="ENC_EL_RAW" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="Clinometer">
       <DATUM format="%.2f" src="CLIN_ELEV" extrema="angle"/>
@@ -1384,9 +1354,15 @@
     <NUMBER caption="Clin Sigma">
       <DATUM format="%.2f" src="CLIN_SIGMA" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="Gy1 Offset">
-      <DATUM format="%.4f" src="GY1_OFFSET" extrema="unknown"/>
+    <NUMBER caption="Gy El Offset">
+      <DATUM format="%.4f" src="GY_IFEL_OFFSET" extrema="unknown"/>
     </NUMBER>
+    <MULTI caption="El Autogyro">
+      <DATUM src="EL_AUTO_GYRO">
+        <WORD value="1" caption="On" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
   </BOX>
   <BOX caption="Azimuth" colour="#009911" row="3" col="1">
     <NUMBER caption="Azimuth">
@@ -1422,12 +1398,18 @@
     <NUMBER caption="SS Sigma">
       <DATUM format="%.2f" src="SS_SIGMA" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="Gy2 Offset">
-      <DATUM format="%.4f" src="GY2_OFFSET" extrema="unknown"/>
+    <NUMBER caption="Gy Roll Offset">
+      <DATUM format="%.4f" src="GY_IFROLL_OFFSET" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="Gy3 Offset">
-      <DATUM format="%.4f" src="GY3_OFFSET" extrema="unknown"/>
+    <NUMBER caption="Gy Yaw Offset">
+      <DATUM format="%.4f" src="GY_IFYAW_OFFSET" extrema="unknown"/>
     </NUMBER>
+    <MULTI caption="Az Autogyro">
+      <DATUM src="AZ_AUTO_GYRO">
+        <WORD value="1" caption="On" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
   </BOX>
   <BOX caption="Cryostat Temps" row="3" col="7">
     <NUMBER caption="JFET">
