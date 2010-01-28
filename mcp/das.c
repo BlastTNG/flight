@@ -111,7 +111,7 @@ void PhaseControl(void)
   }	
 
   for(i = 0; i < (DAS_CARDS + 1); i++)
-    WriteData(NiosAddr[i], CommandData.Phase[i], NIOS_FLUSH);
+    WriteData(NiosAddr[i], CommandData.Phase[i]<<1, NIOS_FLUSH);
 }
 
 /***********************************************************************/
@@ -511,7 +511,7 @@ void BiasControl (unsigned short* RxFrame)
   /************* Set the Bias Levels *******/
   for (i=0; i<5; i++)
     if (CommandData.Bias.setLevel[i]) {
-      WriteData(biasAmplAddr[i], CommandData.Bias.bias[i], NIOS_QUEUE);
+      WriteData(biasAmplAddr[i], CommandData.Bias.bias[i]<<1, NIOS_QUEUE);
       CommandData.Bias.setLevel[i] = 0;
     }
 }

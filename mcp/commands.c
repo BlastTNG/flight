@@ -1480,35 +1480,37 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 
       /***************************************/
       /*************** Bias  *****************/
+      /* used to be multiplied by 2 here, but screw up prev_satus */
+      /* need to multiply later instead */
     case bias_level_500:    /* Set bias 1 (500) */
-      CommandData.Bias.bias[0] = ivalues[0] << 1;
+      CommandData.Bias.bias[0] = ivalues[0];
       CommandData.Bias.setLevel[0] = 1;
       break;
     case bias_level_350:   /* Set bias 2 (350) */
-      CommandData.Bias.bias[1] = ivalues[0] << 1;
+      CommandData.Bias.bias[1] = ivalues[0];
       CommandData.Bias.setLevel[1] = 1;
       break;
     case bias_level_250:   /* Set bias 3 (250) */
-      CommandData.Bias.bias[2] = ivalues[0] << 1;
+      CommandData.Bias.bias[2] = ivalues[0];
       CommandData.Bias.setLevel[2] = 1;
       break;
     case bias_level_rox:   /* Set bias 4 (ROX) */
-      CommandData.Bias.bias[3] = ivalues[0] << 1;
+      CommandData.Bias.bias[3] = ivalues[0];
       CommandData.Bias.setLevel[3] = 1;
       break;
     case bias_level_x:   /* Set bias 5 (spare) */
-      CommandData.Bias.bias[4] = ivalues[0] << 1;
+      CommandData.Bias.bias[4] = ivalues[0];
       CommandData.Bias.setLevel[4] = 1;
       break;
     case phase:
       if (ivalues[0] >= DAS_START && ivalues[0] <= DAS_START + DAS_CARDS*4/3
 	  && ivalues[0]%4 != 0)
-        CommandData.Phase[(ivalues[0] - DAS_START)*3/4] = ivalues[1] << 1;
+        CommandData.Phase[(ivalues[0] - DAS_START)*3/4] = ivalues[1];
       else if (ivalues[0] == 0)
         for (i = 0; i < (DAS_CARDS + 1); ++i)
-          CommandData.Phase[i] = ivalues[1] << 1;
+          CommandData.Phase[i] = ivalues[1];
       else if (ivalues[0] == 13)
-        CommandData.Phase[DAS_CARDS] = ivalues[1] << 1;
+        CommandData.Phase[DAS_CARDS] = ivalues[1];
 
       /***************************************/
       /*********** Cal Lamp  *****************/
@@ -2463,7 +2465,7 @@ void InitCommandData()
   CommandData.Bias.bias[0] = 256;
   CommandData.Bias.bias[1] = 256;
   CommandData.Bias.bias[2] = 256;
-  CommandData.Bias.bias[3] = 256;
+  CommandData.Bias.bias[3] = 13120;
   CommandData.Bias.bias[4] = 256;
 
   CommandData.actbus.tc_mode = TC_MODE_VETOED;
@@ -2612,8 +2614,19 @@ void InitCommandData()
   CommandData.lat = 43.39;
   CommandData.lon = 79.23;
 
-  for (i = 0; i < DAS_CARDS; ++i)
-    CommandData.Phase[i] = 1970;
+  CommandData.Phase[0] = 13200;
+  CommandData.Phase[1] = 13200;
+  CommandData.Phase[2] = 13200;
+  CommandData.Phase[3] = 13200;
+  CommandData.Phase[4] = 13200;
+  CommandData.Phase[5] = 13200;
+  CommandData.Phase[6] = 13200;
+  CommandData.Phase[7] = 13200;
+  CommandData.Phase[8] = 13200;
+  CommandData.Phase[9] = 13200;
+  CommandData.Phase[10] = 13200;
+  CommandData.Phase[11] = 13200;
+  CommandData.Phase[12] = 13200;
 
   WritePrevStatus();
 }
