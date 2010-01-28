@@ -113,9 +113,9 @@ void DecomPoll::run()
   connectState = 1;
 
   theHost = gethostbyname(decomdHost);
+  // FIXME: better error handling 
+  if(!theHost) return;
   printf("tmpHost name: %s tmpHost len: %d\n", theHost->h_name, theHost->h_length);
-
-  // FIXME: error handling 
 
   connectState = 2;
 
