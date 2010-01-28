@@ -47,11 +47,7 @@
 /* Define this symbol to have mcp log all actuator bus traffic */
 #undef ACTBUS_CHATTER
 
-#ifdef BOLOTEST
-#define ACT_BUS "/dev/ttyS0"
-#else
-#define ACT_BUS "/dev/ttyS1"
-#endif
+#define ACT_BUS "/dev/ttyUSB0"
 
 #define STAGEXNUM 0
 #define STAGEYNUM 1
@@ -394,7 +390,7 @@ static void ReadStage(void)
 }
 
 /* This function is called by the frame control thread */
-void StoreStageBus(void)
+void StoreStageBus(int index)
 {
   static int firsttime = 1;
 
@@ -426,15 +422,17 @@ void StoreStageBus(void)
   }
 
   WriteData(stageXAddr, stage_data.xpos, NIOS_QUEUE);
-  WriteData(stageXLimAddr, stage_data.xlim, NIOS_QUEUE);
-  WriteData(stageXStrAddr, stage_data.xstr, NIOS_QUEUE);
-  WriteData(stageXStpAddr, stage_data.xstp, NIOS_QUEUE);
-  WriteData(stageXVelAddr, stage_data.xvel, NIOS_QUEUE);
   WriteData(stageYAddr, stage_data.ypos, NIOS_QUEUE);
-  WriteData(stageYStrAddr, stage_data.ystr, NIOS_QUEUE);
-  WriteData(stageYStpAddr, stage_data.ystp, NIOS_QUEUE);
-  WriteData(stageYVelAddr, stage_data.yvel, NIOS_QUEUE);
-  WriteData(stageYLimAddr, stage_data.ylim, NIOS_FLUSH);
+  if (index == 0) {
+    WriteData(stageXLimAddr, stage_data.xlim, NIOS_QUEUE);
+    WriteData(stageXStrAddr, stage_data.xstr, NIOS_QUEUE);
+    WriteData(stageXStpAddr, stage_data.xstp, NIOS_QUEUE);
+    WriteData(stageXVelAddr, stage_data.xvel, NIOS_QUEUE);
+    WriteData(stageYStrAddr, stage_data.ystr, NIOS_QUEUE);
+    WriteData(stageYStpAddr, stage_data.ystp, NIOS_QUEUE);
+    WriteData(stageYVelAddr, stage_data.yvel, NIOS_QUEUE);
+    WriteData(stageYLimAddr, stage_data.ylim, NIOS_FLUSH);
+  }
 }
 
 void GoWait(int dest, int vel, int is_y)

@@ -89,7 +89,7 @@ void DoSched();
 double getlst(time_t t, double lon);
 
 /* in xystage.c */
-void StoreStageBus(void);
+void StoreStageBus(int index);
 
 /* this is provided to let the various controls know that we're doing our
  * initial control writes -- there's no input data yet */
@@ -757,8 +757,6 @@ static void StoreData(int index)
   static struct NiosStruct* dgpsClimbAddr;
   static struct NiosStruct* dgpsAttOkAddr;
   static struct NiosStruct* dgpsAzRawAddr;
-  static struct NiosStruct* dgpsAttIndexAddr;
-  static struct NiosStruct* dgpsPosIndexAddr;
   static struct NiosStruct* dgpsNSatAddr;
 
   /* trim fields */
@@ -926,10 +924,8 @@ static void StoreData(int index)
     dgpsDirAddr = GetNiosAddr("dgps_dir");
     dgpsClimbAddr = GetNiosAddr("dgps_climb");
     dgpsNSatAddr = GetNiosAddr("dgps_n_sat");
-    dgpsPosIndexAddr = GetNiosAddr("dgps_pos_index");
     dgpsAttOkAddr = GetNiosAddr("dgps_att_ok");
     dgpsAzRawAddr = GetNiosAddr("dgps_az_raw");
-    dgpsAttIndexAddr = GetNiosAddr("dgps_att_index");
 
     schedLstAddr = GetNiosAddr("sched_lst");
 
@@ -1194,7 +1190,6 @@ static void StoreData(int index)
   WriteData(dgpsDirAddr, (int)(DGPSPos[i_dgps].direction * DEG2I), NIOS_QUEUE);
   WriteData(dgpsClimbAddr, (int)(DGPSPos[i_dgps].climb * DEG2I), NIOS_QUEUE);
   WriteData(dgpsNSatAddr, DGPSPos[i_dgps].n_sat, NIOS_QUEUE);
-  WriteData(dgpsPosIndexAddr, i_dgps, NIOS_QUEUE);
 
   WriteData(schedLstAddr, sched_lst, NIOS_QUEUE);
 
@@ -1202,7 +1197,6 @@ static void StoreData(int index)
   i_dgps = GETREADINDEX(dgpsatt_index);
   WriteData(dgpsAzRawAddr, DGPSAtt[i_dgps].az * DEG2I, NIOS_QUEUE);
   WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok, NIOS_QUEUE);
-  WriteData(dgpsAttIndexAddr, i_dgps, NIOS_QUEUE);
   WriteData(rwEncVel,((long int)(RWMotorData[i_rw_motors].rw_vel_raw/4.0*DEG2I)), NIOS_QUEUE);
   WriteData(elevEncPos,((long int)(ElevMotorData[i_elev_motors].enc_el_raw*DEG2I)), NIOS_QUEUE);
   WriteData(rwTempAddr,RWMotorData[i_rw_motors].temp,NIOS_QUEUE);
@@ -1364,7 +1358,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
   StoreActBus();
 #endif
 #ifdef USE_XY_THREAD
-  StoreStageBus();
+  StoreStageBus(index);
 #endif
   BiasControl(RxFrame);
 
