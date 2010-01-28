@@ -753,23 +753,19 @@ static void SetLockState(int nic)
 {
   static int firsttime = 1;
   int pot = lock_data.adc[1];
-  int ls = lock_data.adc[2];
   unsigned int state = lock_data.state; 
 
   static struct BiPhaseStruct* lockPotAddr;
-  static struct BiPhaseStruct* lockLimSwAddr;
   static struct BiPhaseStruct* lockStateAddr;
 
   if (firsttime) {
     firsttime = 0;
     lockPotAddr = GetBiPhaseAddr("lock_pot");
-    lockLimSwAddr = GetBiPhaseAddr("lock_lim_sw");
     lockStateAddr = GetBiPhaseAddr("lock_state");
   }
 
   if (nic) {
     pot = slow_data[lockPotAddr->index][lockPotAddr->channel];
-    ls = slow_data[lockLimSwAddr->index][lockLimSwAddr->channel];
     state = slow_data[lockStateAddr->index][lockStateAddr->channel];
   }
 
@@ -1310,7 +1306,6 @@ void StoreActBus(void)
   static struct NiosStruct* lockGoalAddr;
   static struct NiosStruct* seizedBusAddr;
   static struct NiosStruct* lockPotAddr;
-  static struct NiosStruct* lockLimSwAddr;
   static struct NiosStruct* lokmotPinAddr;
 
   static struct NiosStruct* lockVelAddr;
@@ -1360,7 +1355,6 @@ void StoreActBus(void)
     seizedBusAddr = GetNiosAddr("seized_bus");
     lockGoalAddr = GetNiosAddr("lock_goal");
     lockPotAddr = GetNiosAddr("lock_pot");
-    lockLimSwAddr = GetNiosAddr("lock_lim_sw");
 
     for (j = 0; j < 3; ++j) {
       actPosAddr[j] = GetActNiosAddr(j, "pos");
@@ -1426,7 +1420,6 @@ void StoreActBus(void)
   WriteData(absFocusAddr, focus, NIOS_QUEUE);
 
   WriteData(lockPotAddr, lock_data.adc[1], NIOS_QUEUE);
-  WriteData(lockLimSwAddr, lock_data.adc[2], NIOS_QUEUE);
   WriteData(lockStateAddr, lock_data.state, NIOS_QUEUE);
   WriteData(seizedBusAddr, bus_seized, NIOS_QUEUE);
   WriteData(lockGoalAddr, CommandData.actbus.lock_goal, NIOS_QUEUE);
