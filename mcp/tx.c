@@ -75,7 +75,8 @@ void ControlPower(void);
 
 /* in das.c */
 void BiasControl(unsigned short* RxFrame);
-void CryoControl(void);
+void tempCryoControl(void);
+//void CryoControl(void);
 void PhaseControl(void);
 
 /* in motors.c */
@@ -653,6 +654,7 @@ static void StoreStarCameraData(int index, int which)
 /*    Store derived acs and pointing data in frame                      */
 /*                                                                      */
 /************************************************************************/
+//TODO can use index to write slow fields slowly
 static void StoreData(int index)
 {
   static int firsttime = 1;
@@ -1368,7 +1370,8 @@ void UpdateBBCFrame(unsigned short *RxFrame)
       SyncADC();
     WriteAux();
     SecondaryMirror();
-    CryoControl();
+    //CryoControl();
+    tempCryoControl();
     PhaseControl();
 #ifndef BOLOTEST
     SetGyroMask();

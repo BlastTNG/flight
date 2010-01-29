@@ -29,6 +29,16 @@
 #include "tx.h"
 #include "command_struct.h"
 
+/* Cryostat digital signals (BIAS_D G4) */
+#define CRYO_HELIUM_LEVEL    0x01
+#define CRYO_CHARCOAL_HEAT   0x02
+#define CRYO_CHARCOAL_HS     0x04
+#define CRYO_POT_HS          0x08
+#define CRYO_JFET_HEAT       0x10
+#define CRYO_BDA_HEAT        0x20
+#define CRYO_CALIBRATOR      0x40
+#define CRYO_HWPR_POS        0x80
+
 /* Cryostat digital signals (G2 and G3 outputs) */
 #define CRYO_COLDPLATE_ON    0x10 /* N3G3 - cryoout3 */
 #define CRYO_COLDPLATE_OFF   0x20 /* N3G3 */
@@ -114,6 +124,7 @@ void PhaseControl(void)
     WriteData(NiosAddr[i], CommandData.Phase[i]<<1, NIOS_FLUSH);
 }
 
+#if 0
 /***********************************************************************/
 /* CalLamp: Flash calibrator                                           */
 /***********************************************************************/
@@ -332,7 +343,8 @@ void CryoControl (void)
   static struct NiosStruct* jfetSetOnAddr;
   static struct NiosStruct* jfetSetOffAddr;
   static struct NiosStruct* dig21Addr;
-  static struct NiosStruct* dig43Addr;
+  //temporarily usurped by fast kludge
+  //static struct NiosStruct* dig43Addr;
   static struct NiosStruct* dig65Addr;
 
   int cryoout3 = 0, cryoout2 = 0;
@@ -360,16 +372,18 @@ void CryoControl (void)
     jfetSetOnAddr = GetNiosAddr("jfet_set_on");
     jfetSetOffAddr = GetNiosAddr("jfet_set_off");
     dig21Addr = GetNiosAddr("das_dig21");
-    dig43Addr = GetNiosAddr("das_dig43");
+    //dig43Addr = GetNiosAddr("das_dig43");
     dig65Addr = GetNiosAddr("das_dig65");
   }
 
   // purely for testing, output a count to each digital output group
+/*
   static int count = 0;
   int nibbcnt = (count&0xf) << 4 | (count++&0xf);
   WriteData(dig21Addr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
   WriteData(dig43Addr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
   WriteData(dig65Addr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
+*/
 
   /********** Set Output Bits **********/
   if (CommandData.Cryo.heliumLevel == 0) {
@@ -472,6 +486,7 @@ void CryoControl (void)
   WriteData(jfetSetOffAddr, CommandData.Cryo.JFETSetOff * 100, NIOS_QUEUE);
   WriteData(cryoctrlAddr, cryoctrl, NIOS_FLUSH);
 }
+#endif
 
 /************************************************************************/
 /*                                                                      */
@@ -514,4 +529,27 @@ void BiasControl (unsigned short* RxFrame)
       WriteData(biasAmplAddr[i], CommandData.Bias.bias[i]<<1, NIOS_QUEUE);
       CommandData.Bias.setLevel[i] = 0;
     }
+}
+
+void tempCryoControl()
+{
+  static struct NiosStruct* dig43Addr;
+  static int firsttime = 1;
+  unsigned int grp4 = 0;
+
+  if (firsttime) {
+    firsttime = 0;
+    dig43Addr = GetNiosAddr("das_dig43");
+  }
+
+  if (CommandData.Cryo.heliumLevel) grp4 |= CRYO_HELIUM_LEVEL;
+  if (CommandData.Cryo.charcoalHeater) grp4 |= CRYO_CHARCOAL_HEAT;
+  if (CommandData.Cryo.hsCharcoal) grp4 |= CRYO_CHARCOAL_HS;
+  if (CommandData.Cryo.hsPot) grp4 |= CRYO_POT_HS;
+  if (CommandData.Cryo.JFETHeat) grp4 |= CRYO_JFET_HEAT;
+  if (CommandData.Cryo.BDAHeat) grp4 |= CRYO_BDA_HEAT;
+  if (CommandData.Cryo.calibrator == on) grp4 |= CRYO_CALIBRATOR;
+  if (CommandData.Cryo.hwprPos) grp4 |= CRYO_HWPR_POS;
+
+  WriteData(dig43Addr, grp4, NIOS_QUEUE);
 }
