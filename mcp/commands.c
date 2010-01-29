@@ -684,12 +684,29 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case level_pulse:
       CommandData.Cryo.heliumLevel = 18;
       break;
+    case hwpr_on:
+      CommandData.Cryo.hwprPos = -1;
+      break;
+    case hwpr_off:
+      CommandData.Cryo.hwprPos = 0;
+      break;
+    case hwpr_pulse:
+      CommandData.Cryo.hwprPos = 18;
+      break;
     case charcoal_on:
       CommandData.Cryo.charcoalHeater = 1;
       CommandData.Cryo.fridgeCycle = 0;
       break;
     case charcoal_off:
       CommandData.Cryo.charcoalHeater = 0;
+      CommandData.Cryo.fridgeCycle = 0;
+      break;
+    case hs_charcoal_on:
+      CommandData.Cryo.hsCharcoal= 1;
+      CommandData.Cryo.fridgeCycle = 0;
+      break;
+    case hs_charcoal_off:
+      CommandData.Cryo.hsCharcoal= 0;
       CommandData.Cryo.fridgeCycle = 0;
       break;
     case auto_cycle:
@@ -700,17 +717,31 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.Cryo.fridgeCycle = 1;
       CommandData.Cryo.force_cycle = 1;
       break;
-    case coldplate_on:
-      CommandData.Cryo.coldPlate = 1;
-      break;
-    case coldplate_off:
-      CommandData.Cryo.coldPlate = 0;
-      break;
     case cal_on:
       CommandData.Cryo.calibrator = on;
       break;
     case cal_off:
       CommandData.Cryo.calibrator = off;
+      break;
+    case jfet_on:
+      CommandData.Cryo.JFETHeat = 1;
+      CommandData.Cryo.autoJFETheat = 0;
+      break;
+    case jfet_off:
+      CommandData.Cryo.JFETHeat = 0;
+      CommandData.Cryo.autoJFETheat = 0;
+      break;
+    case hs_pot_on:
+      CommandData.Cryo.hsPot = 1;
+      break;
+    case hs_pot_off:
+      CommandData.Cryo.hsPot = 0;
+      break;
+    case bda_on:
+      CommandData.Cryo.BDAHeat = 1;
+      break;
+    case bda_off:
+      CommandData.Cryo.BDAHeat = 0;
       break;
     case pot_valve_open:
       CommandData.Cryo.potvalve_open = 40;
@@ -745,9 +776,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case ln_valve_off:
       CommandData.Cryo.lnvalve_on = 0;
-      break;
-    case auto_bdaheat:
-      CommandData.Cryo.autoBDAHeat = 1;
       break;
     case auto_jfetheat:
       CommandData.Cryo.autoJFETheat = 1;
@@ -1527,32 +1555,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 
       /***************************************/
       /********* Cryo heat   *****************/
-    case jfet_heat:
-      CommandData.Cryo.JFETHeat = rvalues[0] * 2047./100.;
-      CommandData.Cryo.autoJFETheat = 0;
-      break;
     case jfet_set:
       CommandData.Cryo.JFETSetOn = rvalues[0];
       CommandData.Cryo.JFETSetOff = rvalues[1];
-      break;
-    case heatsw_heat:
-      CommandData.Cryo.heatSwitch = rvalues[0] * 2047./100.;
-      break;
-    case cryo_heat:
-      CommandData.Cryo.CryoSparePWM = rvalues[0] * 2047./100.;
-      break;
-    case bda_heat:
-      CommandData.Cryo.BDAHeat = rvalues[0] * 2047./100.;
-      CommandData.Cryo.autoBDAHeat = 0;
-      break;
-    case bda_gain:
-      CommandData.Cryo.BDAGain.P = ivalues[0];
-      CommandData.Cryo.BDAGain.I = ivalues[1];
-      CommandData.Cryo.BDAGain.D = ivalues[2];
-      CommandData.Cryo.BDAFiltLen = ivalues[3];
-      break;
-    case bda_set:
-      CommandData.Cryo.BDAGain.SP = ivalues[0];
       break;
 
 #ifndef BOLOTEST
@@ -2337,12 +2342,6 @@ void InitCommandData()
   CommandData.gyheat.age = 0;
 
   CommandData.Cryo.BDAHeat = 0;
-  CommandData.Cryo.autoBDAHeat = 0;
-  CommandData.Cryo.BDAGain.P = 600;
-  CommandData.Cryo.BDAGain.I = 1;
-  CommandData.Cryo.BDAGain.D = 20;
-  CommandData.Cryo.BDAGain.SP = 21750;
-  CommandData.Cryo.BDAFiltLen = 500;
 
   CommandData.Cryo.potvalve_on = 0;
   CommandData.Cryo.potvalve_open = 0;
@@ -2511,22 +2510,22 @@ void InitCommandData()
 
   CommandData.pin_is_in = 1;
 
-  CommandData.Cryo.heliumLevel = 0;
   CommandData.Cryo.charcoalHeater = 0;
+  CommandData.Cryo.hsCharcoal = 0;
   CommandData.Cryo.fridgeCycle = 1;
-  CommandData.Cryo.coldPlate = 0;
-  CommandData.Cryo.heatSwitch = 0;
-  CommandData.Cryo.CryoSparePWM = 0;
+  CommandData.Cryo.force_cycle = 0;
+  CommandData.Cryo.hsPot = 0;
+  CommandData.Cryo.heliumLevel = 0;
+  CommandData.Cryo.he4_lev_old = 0;
+  CommandData.Cryo.hwprPos = 0;
+  CommandData.Cryo.hwpr_pos_old = 0;
+  CommandData.Cryo.JFETHeat = 0;
+  CommandData.Cryo.autoJFETheat = 1;
+  CommandData.Cryo.JFETSetOn = 120;
+  CommandData.Cryo.JFETSetOff = 135;
   CommandData.Cryo.calibrator = repeat;
   CommandData.Cryo.calib_pulse = 13; /* = 130 ms @ 100Hz */
   CommandData.Cryo.calib_period = 3000; /* = 600 s @ 5Hz */
-  CommandData.Cryo.he4_lev_old = 0;
-
-  CommandData.Cryo.JFETHeat = 0;
-  CommandData.Cryo.autoJFETheat = 1;
-  CommandData.Cryo.force_cycle = 0;
-  CommandData.Cryo.JFETSetOn = 120;
-  CommandData.Cryo.JFETSetOff = 135;
 
   CommandData.ISCState[0].useLost = 1;
   CommandData.ISCState[0].abort = 0;

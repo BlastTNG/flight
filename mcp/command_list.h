@@ -17,8 +17,8 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 200        /* total number of single word cmds */
-#define N_MCOMMANDS 105        /* total number of multiword commands */
+#define N_SCOMMANDS 208        /* total number of single word cmds */
+#define N_MCOMMANDS 99         /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -67,8 +67,8 @@ extern const char *GroupNames[N_GROUPS];
 enum singleCommand {
   isc_auto_focus,   az_auto_gyro,       az_off,           az_on,
   balance_allow,    balance_veto,       cal_off,          cal_on,
-  auto_bdaheat,     charcoal_off,       charcoal_on,      coldplate_off,
-  coldplate_on,     isc_discard_images, el_off,           el_on,
+  charcoal_off,     charcoal_on,        hs_charcoal_off,
+  hs_charcoal_on,   isc_discard_images, el_off,           el_on,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
   fixed,            isc_full_screen,    gps_allow,        gps_veto,
   l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,
@@ -115,7 +115,9 @@ enum singleCommand {
   autofocus_veto,   north_halt,         south_halt,       actbus_on,
   actbus_off,       actuator_stop,      level_pulse,
   reset_dr,         actpos_trim,        reset_reac,       reset_piv,
-  reset_elev
+  reset_elev,       jfet_on,            jfet_off,         hs_pot_on,
+  hs_pot_off,       bda_on,             bda_off,          hwpr_on,
+  hwpr_off,         hwpr_pulse
 };
 
 /* multiCommand enumeration.  The command list here does NOT have to be in
@@ -132,16 +134,16 @@ enum multiCommand {
   cal_pulse,         cal_repeat,        cap,              isc_catalogue,
   az_el_trim,        isc_det_set,       drift,            el_gain,
   isc_integrate,     osc_integrate,     osc_det_set,      osc_blobs,
-  cryo_heat,         heatsw_heat,       inner_level,      isc_offset,
-  jfet_heat,         osc_catalogue,     osc_tolerances,   osc_hold_current,
+  inner_level,       isc_offset,
+  osc_catalogue,     osc_tolerances,    osc_hold_current,
   lock,              isc_blobs,         phase,            encoder_offset,
   pivot_gain,        isc_pixel_centre,  ra_dec_goto,      ra_dec_set,
   roll_gain,         isc_set_aperture,  isc_set_focus,    setpoints,
-  bda_heat,          spare_level,       t_gyro_set,       osc_gain,
+  spare_level,       t_gyro_set,        osc_gain,
   t_gyro_gain,       timeout,           isc_tolerances,   vcap,
   vbox,              alice_file,        az_gyro_offset,   isc_hold_current,
   isc_save_period,   osc_offset,        plugh,		  
-  bda_gain,          bda_set,           jfet_set,         isc_foc_off,
+  jfet_set,          isc_foc_off,
   osc_foc_off,       apcu_charge,	gyro_off,	  gyro_on,
   dpcu_charge,       auto_apcu,         auto_dpcu,        quad,
   el_gyro_offset,    general,           slew_veto,        set_secondary,

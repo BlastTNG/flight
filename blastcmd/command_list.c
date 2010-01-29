@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.22 $";
+const char *command_list_serial = "$Revision: 4.23 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Cool (empty)",
@@ -163,20 +163,28 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(fixed), "bias: internal, fixed", GR_BIAS},
   {COMMAND(ramp), "bias: external, ramp", GR_BIAS},
 
-  {COMMAND(auto_bdaheat), "automatically reguate bda heater level",
-    GR_CRYO_HEAT},
   {COMMAND(auto_jfetheat), "automatically reguate jfet heater level",
     GR_CRYO_HEAT},
   {COMMAND(charcoal_on), "charcoal heater on, helium fridge autocycle off",
     GR_CRYO_HEAT},
   {COMMAND(charcoal_off), "charcoal heater off, helium fridge autocycle off",
     GR_CRYO_HEAT},
-  {COMMAND(coldplate_on), "cold plate heater on", GR_CRYO_HEAT},
-  {COMMAND(coldplate_off), "cold plate heater off", GR_CRYO_HEAT},
+  {COMMAND(hs_charcoal_on), "charcoal heat switch on, fridge autocycle off",
+    GR_CRYO_HEAT},
+  {COMMAND(hs_charcoal_off), "charcoal heat switch off, fridge autocycle off",
+    GR_CRYO_HEAT},
   {COMMAND(auto_cycle), "activate helium fridge autocycle system",
     GR_CRYO_HEAT},
   {COMMAND(fridge_cycle),
     "manually cycle helium fridge now, fridge autocycle on", GR_CRYO_HEAT},
+  {COMMAND(jfet_on), "manually turn JFET heater on, auto control off",
+    GR_CRYO_HEAT},
+  {COMMAND(jfet_off), "manually turn JFET heater off, auto control off",
+    GR_CRYO_HEAT},
+  {COMMAND(bda_on), "manually turn 300mK BDA heater on", GR_CRYO_HEAT},
+  {COMMAND(bda_off), "manually turn 300mK BDA heater off", GR_CRYO_HEAT},
+  {COMMAND(hs_pot_on), "pot heat switch on", GR_CRYO_HEAT},
+  {COMMAND(hs_pot_off), "pot heat switch off", GR_CRYO_HEAT},
 
   {COMMAND(cal_on), "calibrator on", GR_CALLAMP},
   {COMMAND(cal_off), "calibrator off", GR_CALLAMP},
@@ -184,6 +192,9 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(level_on), "helium level sensor on", GR_CRYO_CONTROL},
   {COMMAND(level_off), "helium level sensor off", GR_CRYO_CONTROL},
   {COMMAND(level_pulse), "helium level sensor pulse", GR_CRYO_CONTROL},
+  {COMMAND(hwpr_on), "HWP rotation sensor on", GR_CRYO_CONTROL},
+  {COMMAND(hwpr_off), "HWP rotation sensor off", GR_CRYO_CONTROL},
+  {COMMAND(hwpr_pulse), "HWP rotation sensor pulse", GR_CRYO_CONTROL},
   {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO_CONTROL},
   {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO_CONTROL},
   {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open",
@@ -742,43 +753,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********* Cryo heat   *****************/
-  {COMMAND(jfet_heat), "manually set jfet heater pwm", GR_CRYO_HEAT, 1,
-    {
-      {"Level (%)", 0, 100, 'f', "JFETPWM"}
-    }
-  },
   {COMMAND(jfet_set), "jfet heater setpoints", GR_CRYO_HEAT, 2,
     {
       {"On Point (K)", 0, 400., 'f', "JFET_SET_ON"},
       {"Off Point (K)", 0, 400., 'f', "JFET_SET_OFF"}
-    }
-  },
-  {COMMAND(heatsw_heat), "heat switch pwm", GR_CRYO_HEAT, 1,
-    {
-      {"Level (%)", 0, 100, 'f', "HSPWM"}
-    }
-  },
-  {COMMAND(cryo_heat), "spare cryo pwm", GR_CRYO_HEAT, 1,
-    {
-      {"Level (%)", 0, 100, 'f', "CRYOPWM"}
-    }
-  },
-  {COMMAND(bda_heat), "manually set bda heater pwm", GR_CRYO_HEAT, 1,
-    {
-      {"Level (%)", 0, 100, 'f', "BDAPWM"}
-    }
-  },
-  {COMMAND(bda_gain), "set bda heater gains", GR_CRYO_HEAT, 4,
-    {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', "G_P_BDAHEAT"},
-      {"Integral Gain", 0, MAX_15BIT, 'i', "G_I_BDAHEAT"},
-      {"Derivative Gain", 0, MAX_15BIT, 'i', "G_D_BDAHEAT"},
-      {"Integral Length", 0, MAX_15BIT, 'i', "G_FL_BDAHEAT"},
-    }
-  },
-  {COMMAND(bda_set), "set bda heater setpoint", GR_CRYO_HEAT, 1,
-    {
-      {"Set Point (Counts)", 0, MAX_15BIT, 'i', "SET_BDAHEAT"}
     }
   },
 

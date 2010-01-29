@@ -223,27 +223,24 @@ struct CommandDataStruct {
   } Bias;
   
   struct {
+    unsigned short charcoalHeater;
+    unsigned short hsCharcoal;
+    unsigned short fridgeCycle;
+    unsigned short force_cycle;
+
+    unsigned short BDAHeat;
+    unsigned short hsPot;
     short heliumLevel;
-    unsigned short coldPlate;
-    unsigned short heatSwitch;
-    unsigned short CryoSparePWM;
+    int he4_lev_old;
+    short hwprPos;
+    int hwpr_pos_old;
+
+    unsigned short JFETHeat;
+    unsigned short autoJFETheat;
+    double JFETSetOn, JFETSetOff;
 
     enum calmode calibrator;
     unsigned short calib_pulse, calib_period;
-
-    unsigned short autoBDAHeat;
-    unsigned short BDAHeat;
-    struct GainStruct BDAGain;
-    unsigned short BDAFiltLen;
-
-    unsigned short autoJFETheat;
-    unsigned short JFETHeat;
-    double JFETSetOn, JFETSetOff;
-    int he4_lev_old;
-
-    unsigned short charcoalHeater;
-    unsigned short fridgeCycle;
-    unsigned short force_cycle;
 
     unsigned short potvalve_open, potvalve_on, potvalve_close;
     unsigned short lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
