@@ -40,7 +40,7 @@
 #define GR_BIAS         0x00000020
 #define GR_VETO         0x00000040
 #define GR_ACT          0x00000080
-#define GR_CALLAMP      0x00000100
+//#define GR_CALLAMP      0x00000100
 #define GR_GAIN         0x00000200
 #define GR_FOCUS        0x00000400
 #define GR_CRYO_HEAT    0x00000800
@@ -95,9 +95,9 @@ enum singleCommand {
   bias_off,	    bias_on,		hk_off,		  hk_on,
   um250_off,	    um250_on,		um350_off,	  um350_on,
   um500_off,	    um500_on,		heat_off,	  heat_on,
-  enable_gy_ifroll1,disable_gy_ifroll1, enable_gy_ifroll2,disable_gy_ifroll2,
-  enable_gy_ifyaw1, disable_gy_ifyaw1,  enable_gy_ifyaw2, disable_gy_ifyaw2,
-  enable_gy_ifel1,  disable_gy_ifel1,	enable_gy_ifel2,  disable_gy_ifel2,
+  gy_ifroll1_allow, gy_ifroll1_veto,    gy_ifroll2_allow, gy_ifroll2_veto,
+  gy_ifyaw1_allow,  gy_ifyaw1_veto,     gy_ifyaw2_allow,  gy_ifyaw2_veto,
+  gy_ifel1_allow,   gy_ifel1_veto,	gy_ifel2_allow,   gy_ifel2_veto,
   gy_ifroll1_off,   gy_ifroll1_on,	gy_ifroll2_off,	  gy_ifroll2_on,
   gy_ifyaw1_off,    gy_ifyaw1_on,	gy_ifyaw2_off,	  gy_ifyaw2_on,
   gy_ifel1_off,	    gy_ifel1_on,	gy_ifel2_off,	  gy_ifel2_on,
@@ -116,8 +116,8 @@ enum singleCommand {
   actbus_off,       actuator_stop,      level_pulse,
   reset_dr,         actpos_trim,        reset_reac,       reset_piv,
   reset_elev,       jfet_on,            jfet_off,         hs_pot_on,
-  hs_pot_off,       bda_on,             bda_off,          hwpr_on,
-  hwpr_off,         hwpr_pulse
+  hs_pot_off,       bda_on,             bda_off,          hwpr_enc_on,
+  hwpr_enc_off,     hwpr_enc_pulse
 };
 
 /* multiCommand enumeration.  The command list here does NOT have to be in

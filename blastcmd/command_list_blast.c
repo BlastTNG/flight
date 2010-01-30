@@ -22,12 +22,12 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.23 $";
+const char *command_list_serial = "$Revision: 4.24 $";
 
 const char *GroupNames[N_GROUPS] = {
-  "Pointing Modes",        "Balance",          "Cool (empty)",
+  "Pointing Modes",        "Balance",          "Unused (Cool)",
   "Pointing Sensor Trims", "Aux. Electronics", "Bias",
-  "Pointing Sensor Vetos", "Actuators",        "Cal Lamp",
+  "Pointing Sensor Vetos", "Actuators",        "Unused (Cal Lamp)",
   "Pointing Motor Gains",  "Secondary Focus",  "Cryo Heat",
   "Subsystem Power",       "Lock Motor",       "Cryo Control",
   "Telemetry",             "ISC Housekeeping", "OSC Housekeeping",
@@ -139,18 +139,18 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(mag_allow), "un-veto magnetometer", GR_VETO},
   {COMMAND(sun_veto), "veto sun sensor", GR_VETO},
   {COMMAND(sun_allow), "un-veto sun sensor", GR_VETO},
-  {COMMAND(enable_gy_ifroll1), "enable gy_ifroll1", GR_VETO},
-  {COMMAND(disable_gy_ifroll1), "disable gy_ifroll1", GR_VETO},
-  {COMMAND(enable_gy_ifroll2), "enable gy_ifroll2", GR_VETO},
-  {COMMAND(disable_gy_ifroll2), "disable gy_ifroll2", GR_VETO},
-  {COMMAND(enable_gy_ifyaw1), "enable gy_ifyaw1", GR_VETO},
-  {COMMAND(disable_gy_ifyaw1), "disable gy_ifyaw1", GR_VETO},
-  {COMMAND(enable_gy_ifyaw2), "enable gy_ifyaw2", GR_VETO},
-  {COMMAND(disable_gy_ifyaw2), "disable gy_ifyaw2", GR_VETO},
-  {COMMAND(enable_gy_ifel1), "enable gy_ifel1", GR_VETO},
-  {COMMAND(disable_gy_ifel1), "disable gy_ifel1", GR_VETO},
-  {COMMAND(enable_gy_ifel2), "enable gy_ifel2", GR_VETO},
-  {COMMAND(disable_gy_ifel2), "disable gy_ifel2", GR_VETO},
+  {COMMAND(gy_ifroll1_allow), "enable gy_ifroll1", GR_VETO},
+  {COMMAND(gy_ifroll1_veto), "disable gy_ifroll1", GR_VETO},
+  {COMMAND(gy_ifroll2_allow), "enable gy_ifroll2", GR_VETO},
+  {COMMAND(gy_ifroll2_veto), "disable gy_ifroll2", GR_VETO},
+  {COMMAND(gy_ifyaw1_allow), "enable gy_ifyaw1", GR_VETO},
+  {COMMAND(gy_ifyaw1_veto), "disable gy_ifyaw1", GR_VETO},
+  {COMMAND(gy_ifyaw2_allow), "enable gy_ifyaw2", GR_VETO},
+  {COMMAND(gy_ifyaw2_veto), "disable gy_ifyaw2", GR_VETO},
+  {COMMAND(gy_ifel1_allow), "enable gy_ifel1", GR_VETO},
+  {COMMAND(gy_ifel1_veto), "disable gy_ifel1", GR_VETO},
+  {COMMAND(gy_ifel2_allow), "enable gy_ifel2", GR_VETO},
+  {COMMAND(gy_ifel2_veto), "disable gy_ifel2", GR_VETO},
 
   {COMMAND(az_auto_gyro), "automatically calculate az gyro offsets", GR_TRIM},
   {COMMAND(el_auto_gyro), "automatically calculate el gyro offset", GR_TRIM},
@@ -186,15 +186,15 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(hs_pot_on), "pot heat switch on", GR_CRYO_HEAT},
   {COMMAND(hs_pot_off), "pot heat switch off", GR_CRYO_HEAT},
 
-  {COMMAND(cal_on), "calibrator on", GR_CALLAMP},
-  {COMMAND(cal_off), "calibrator off", GR_CALLAMP},
+  {COMMAND(cal_on), "calibrator on", GR_CRYO_HEAT},
+  {COMMAND(cal_off), "calibrator off", GR_CRYO_HEAT},
 
   {COMMAND(level_on), "helium level sensor on", GR_CRYO_CONTROL},
   {COMMAND(level_off), "helium level sensor off", GR_CRYO_CONTROL},
   {COMMAND(level_pulse), "helium level sensor pulse", GR_CRYO_CONTROL},
-  {COMMAND(hwpr_on), "HWP rotation sensor on", GR_CRYO_CONTROL},
-  {COMMAND(hwpr_off), "HWP rotation sensor off", GR_CRYO_CONTROL},
-  {COMMAND(hwpr_pulse), "HWP rotation sensor pulse", GR_CRYO_CONTROL},
+  {COMMAND(hwpr_enc_on), "HWP rotation sensor on", GR_CRYO_CONTROL},
+  {COMMAND(hwpr_enc_off), "HWP rotation sensor off", GR_CRYO_CONTROL},
+  {COMMAND(hwpr_enc_pulse), "HWP rotation sensor pulse", GR_CRYO_CONTROL},
   {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO_CONTROL},
   {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO_CONTROL},
   {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open",
@@ -739,12 +739,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /*********** Cal Lamp  *****************/
-  {COMMAND(cal_pulse), "calibrator single pulse", GR_CALLAMP, 1,
+  {COMMAND(cal_pulse), "calibrator single pulse", GR_CRYO_HEAT, 1,
     {
       {"Pulse Length (ms)", 0, 8000, 'i', "CAL_PULSE"}
     }
   },
-  {COMMAND(cal_repeat), "pulse calibrator repeatedly", GR_CALLAMP, 2,
+  {COMMAND(cal_repeat), "pulse calibrator repeatedly", GR_CRYO_HEAT, 2,
     {
       {"Pulse Length (ms)", 10, 8000, 'i', "CAL_PULSE"},
       {"Repeat Delay (s)",  1, 32767, 'i', "CAL_REPEAT"}

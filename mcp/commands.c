@@ -530,40 +530,40 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.um500.rst_count = 0;
       CommandData.power.um500.set_count = LATCH_PULSE_LEN;
       break;
-    case enable_gy_ifroll1:
+    case gy_ifroll1_allow:
       CommandData.gymask |= 0x01;
       break;
-    case disable_gy_ifroll1:
+    case gy_ifroll1_veto:
       CommandData.gymask &= ~0x01;
       break;
-    case enable_gy_ifroll2:
+    case gy_ifroll2_allow:
       CommandData.gymask |= 0x02;
       break;
-    case disable_gy_ifroll2:
+    case gy_ifroll2_veto:
       CommandData.gymask &= ~0x02;
       break;
-    case enable_gy_ifyaw1:
+    case gy_ifyaw1_allow:
       CommandData.gymask |= 0x04;
       break;
-    case disable_gy_ifyaw1:
+    case gy_ifyaw1_veto:
       CommandData.gymask &= ~0x04;
       break;
-    case enable_gy_ifyaw2:
+    case gy_ifyaw2_allow:
       CommandData.gymask |= 0x08;
       break;
-    case disable_gy_ifyaw2:
+    case gy_ifyaw2_veto:
       CommandData.gymask &= ~0x08;
       break;
-    case enable_gy_ifel1:
+    case gy_ifel1_allow:
       CommandData.gymask |= 0x10;
       break;
-    case disable_gy_ifel1:
+    case gy_ifel1_veto:
       CommandData.gymask &= ~0x10;
       break;
-    case enable_gy_ifel2:
+    case gy_ifel2_allow:
       CommandData.gymask |= 0x20;
       break;
-    case disable_gy_ifel2:
+    case gy_ifel2_veto:
       CommandData.gymask &= ~0x20;
       break;
     case gy_ifroll1_off:
@@ -684,13 +684,13 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case level_pulse:
       CommandData.Cryo.heliumLevel = 18;
       break;
-    case hwpr_on:
+    case hwpr_enc_on:
       CommandData.Cryo.hwprPos = -1;
       break;
-    case hwpr_off:
+    case hwpr_enc_off:
       CommandData.Cryo.hwprPos = 0;
       break;
-    case hwpr_pulse:
+    case hwpr_enc_pulse:
       CommandData.Cryo.hwprPos = 18;
       break;
     case charcoal_on:
