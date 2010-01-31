@@ -374,7 +374,7 @@ int send_amccmd(int index,int offset,int value,int nwords,enum CmdorQuery type, 
  
     {
       printf("mk_crctable() memory allocation failed\n");
-      exit(1);
+      exit(1);  //TODO: Do we really want this memory allocation to bring down all of mcp?
     }
   ValuesSend.index=index;
   ValuesSend.offset=offset;
