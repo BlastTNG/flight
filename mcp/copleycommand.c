@@ -1,3 +1,4 @@
+#define _GNU_SOURCE  /* Needed for strnlen function in string.h */
 #include <sys/select.h>
 #include <stdio.h>   /* Standard input/output definitions */
 #include <string.h>  /* String function definitions */
