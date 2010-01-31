@@ -25,6 +25,7 @@
 #include <pthread.h>
 #include <math.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "channels.h"
 #include "tx.h"
@@ -111,8 +112,7 @@ static double calcVPiv(void)
   static int firsttime = 1;
   int i_point;
   int i;
-  int k;
-  double dt=1.0e6,dtheta=0.0;
+  double dtheta=0.0;
   static int j=0;
   i_point = GETREADINDEX(point_index);
   if (firsttime) {
