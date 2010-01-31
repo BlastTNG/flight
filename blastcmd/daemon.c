@@ -271,6 +271,10 @@ void Daemonise(int route, int no_fork)
   socklen_t addrlen;
   fd_set fdlist, fdread, fdwrite;
 
+  struct timespec sleep_time;
+  sleep_time.tv_sec = 0;
+  sleep_time.tv_nsec = 10000000;  /* 10ms */
+
 #ifdef USE_AUTHENTICATION
   /* the addresses we allow connections from */
   struct in_addr good_addr1;
@@ -533,6 +537,6 @@ void Daemonise(int route, int no_fork)
           } /* n != sock */
       } /* socket loop */
 
-    usleep(50);
+    nanosleep(&sleep_time, NULL);
   } /* main loop */
 }
