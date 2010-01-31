@@ -36,6 +36,7 @@
 #include <math.h>
 #include <time.h>
 #include <sys/time.h>
+#include <sys/syscall.h>
 #include "bbc_pci.h"
 
 #include "blast.h"
@@ -207,7 +208,7 @@ void mputs(buos_t flag, const char* message) {
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
-  sprintf(bufstart, "[%5i] ", getpid());
+  sprintf(bufstart, "[%5u] ", (unsigned)syscall(SYS_gettid));
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
