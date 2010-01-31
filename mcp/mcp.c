@@ -646,7 +646,7 @@ static int IsNewFrame(unsigned int d)
   return is_bof;
 }
 
-/* Identity crisis: am I frodo or sam? */
+/* Polarity crisis: am I north or south? */
 static int AmISouth(void)
 {
   char buffer[2];
@@ -795,7 +795,7 @@ int main(int argc, char *argv[])
     memset(slow_data[i], 0, slowsPerBi0Frame * sizeof(unsigned short));
   }
 
-  /* Find out whether I'm frodo or sam */
+  /* Find out whether I'm north or south */
   SouthIAm = AmISouth();
 
   if (SouthIAm)
