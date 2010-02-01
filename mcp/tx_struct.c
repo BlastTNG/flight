@@ -152,7 +152,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"td_lhe_filt",   'r', CRYO_A2, 26,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
   {"td_lhe",        'r', CRYO_A2, 28,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
   {"cryo_a2_15",    'r', CRYO_A2, 30,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
-  {"chopper",       'r', CRYO_A2, 32,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  //CRYO_A2 CH16 is narrow fast
   {"cryo_a2_17",    'r', CRYO_A2, 34,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
   {"cryo_a2_18",    'r', CRYO_A2, 36,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
   {"cryo_a2_19",    'r', CRYO_A2, 38,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
@@ -934,6 +934,7 @@ struct ChannelStruct FastChannels[] = {
   {"mag_z",        'r',  ACS2_A1, 17,              MAGZ_M,         MAGZ_B, 'u', U_NONE},
 
 #endif
+  {"chopper",      'r',  CRYO_A2, 33,           CRYO_A2_M,      CRYO_A2_B, 'u',  U_V_V},
 
   {"stage_x",      'w', LOOP5, 28,                1.0,             0.0, 'u', U_NONE},
   {"stage_y",      'w', LOOP5, 34,                1.0,             0.0, 'u', U_NONE},

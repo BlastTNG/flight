@@ -542,14 +542,30 @@ void tempCryoControl()
     dig43Addr = GetNiosAddr("das_dig43");
   }
 
-  if (CommandData.Cryo.heliumLevel) grp4 |= CRYO_HELIUM_LEVEL;
-  if (CommandData.Cryo.charcoalHeater) grp4 |= CRYO_CHARCOAL_HEAT;
-  if (CommandData.Cryo.hsCharcoal) grp4 |= CRYO_CHARCOAL_HS;
-  if (CommandData.Cryo.hsPot) grp4 |= CRYO_POT_HS;
-  if (CommandData.Cryo.JFETHeat) grp4 |= CRYO_JFET_HEAT;
-  if (CommandData.Cryo.BDAHeat) grp4 |= CRYO_BDA_HEAT;
-  if (CommandData.Cryo.calibrator == on) grp4 |= CRYO_CALIBRATOR;
-  if (CommandData.Cryo.hwprPos) grp4 |= CRYO_HWPR_POS;
+  if (CommandData.Cryo.heliumLevel) {
+    grp4 |= CRYO_HELIUM_LEVEL;
+  }
+  if (CommandData.Cryo.charcoalHeater) {
+    grp4 |= CRYO_CHARCOAL_HEAT;
+  }
+  if (CommandData.Cryo.hsCharcoal) {
+    grp4 |= CRYO_CHARCOAL_HS;
+  }
+  if (CommandData.Cryo.hsPot) {
+    grp4 |= CRYO_POT_HS;
+  }
+  if (CommandData.Cryo.JFETHeat) {
+    grp4 |= CRYO_JFET_HEAT;
+  }
+  if (CommandData.Cryo.BDAHeat) {
+    grp4 |= CRYO_BDA_HEAT;
+  }
+  if (CommandData.Cryo.calibrator == on) {
+    grp4 |= CRYO_CALIBRATOR;
+  }
+  if (CommandData.Cryo.hwprPos) {
+    grp4 |= CRYO_HWPR_POS;
+  }
 
-  WriteData(dig43Addr, grp4, NIOS_QUEUE);
+  WriteData(dig43Addr, grp4<<8, NIOS_QUEUE);
 }
