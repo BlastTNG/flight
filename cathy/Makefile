@@ -1,2 +1,2 @@
 cathy: cathy.c
-	gcc -o cathy -lgetdata cathy.c
+	gcc -std=c99 -o cathy -lgetdata cathy.c
