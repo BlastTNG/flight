@@ -60,6 +60,8 @@ extern unsigned int sched_lst; /* sched_lst */
 
 extern int bbc_fp;
 
+extern struct chat_buf chatter_buffer;  /* mcp.c */
+
 double round(double x);
 
 /* in actuators.c */
@@ -194,6 +196,29 @@ static void WriteAux(void)
   WriteData(atFloatAddr, CommandData.at_float, NIOS_QUEUE);
   WriteData(scheduleAddr, CommandData.sucks + CommandData.lat_range * 2,
       NIOS_FLUSH);
+}
+
+void WriteChatter (int index)
+{
+  static struct NiosStruct* chatterAddr;
+  static int firsttime = 1;
+  unsigned int chat;
+
+  if (firsttime)
+  {
+    firsttime = 0;
+    chatterAddr = GetNiosAddr("chatter");
+  }
+
+  chat = (unsigned int)(chatter_buffer.msg[chatter_buffer.reading][index * 2 + 1]);
+  chat += (unsigned int)(chatter_buffer.msg[chatter_buffer.reading][index * 2]) << 8;
+
+  if (index == (FAST_PER_SLOW - 1))
+  {
+    chatter_buffer.reading = (chatter_buffer.reading + 1) & 0x3;
+  }
+
+  WriteData(chatterAddr, chat, NIOS_FLUSH);
 }
 
 /***************************************************************/
@@ -1363,6 +1388,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
   StoreStageBus(index);
 #endif
   BiasControl(RxFrame);
+  WriteChatter(index);
 
   /*** do slow Controls ***/
   if (index == 0) {

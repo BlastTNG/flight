@@ -696,6 +696,7 @@ struct ChannelStruct SlowChannels[] = {
   {"el_drive_err_cts",'w', LOOP7, 35,              1.0,             0.0, 'u', U_NONE},
   {"piv_drive_info",'w', LOOP7, 36,                1.0,             0.0, 'u', U_NONE},
   {"piv_drive_err_cts",'w', LOOP7, 37,             1.0,             0.0, 'u', U_NONE},
+    /* LOOP7 38 is fast narrow */
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
   {"latch0",       'w',  ACS1_D,  0,                1.0,             0.0, 'u', U_NONE},
@@ -944,6 +945,7 @@ struct ChannelStruct FastChannels[] = {
   {"enc_sigma",    'w', LOOP2, 48,              I2DEG,             0.0, 'u', U_NONE},
   {"res_piv_raw",  'w', LOOP7, 16,              I2DEG,             0.0, 'u', U_P_DEG},
   {"piv_v_req",    'w', LOOP7, 24,              0.001,             0.0, 's', U_V_DPS},
+  {"chatter",      'w', LOOP7, 38,              1.0,               0.0, 'u', U_NONE},
 
   END_OF_CHANNELS
 };

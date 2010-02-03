@@ -118,6 +118,8 @@ unsigned int tdrss_index = 0;
 time_t biphase_timer;
 int biphase_is_on = 0;
 
+struct chat_buf chatter_buffer;
+
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
 ( \
@@ -352,6 +354,53 @@ static void SensorReader(void)
     usleep(100000);
   }
 }
+
+static void Chatter(void)
+{
+  int fd;
+  char ch;
+  ssize_t ch_got;
+
+  bprintf(startup, "Chatter: Thread startup\n");
+
+  fd = open("/data/etc/mcp.log", O_RDONLY|O_NONBLOCK);
+
+  if (fd == -1)
+  {
+    bprintf(tfatal, "Chatter: Failed to open /data/etc/mcp.log for reading (%d)\n", errno);
+  }
+
+  if (lseek(fd, -200, SEEK_END) == -1)
+  {
+    bprintf(tfatal, "Chatter: Failed to seek /data/etc/mcp.log (%d)\n", errno);
+  }
+
+  while (read(fd, &ch, 1) == 1 && ch != '\n'); /* Find start of next message */
+
+  chatter_buffer.reading = chatter_buffer.writing = 0;
+      /* decimal 22 is "Synchronous Idle" in ascii */
+  memset(chatter_buffer.msg, 22, sizeof(char) * FAST_PER_SLOW * 2);
+
+  while (1)
+  {
+    if (chatter_buffer.writing != ((chatter_buffer.reading - 1) & 0x3))
+    {
+      ch_got = read(fd, chatter_buffer.msg[chatter_buffer.writing], 2 * FAST_PER_SLOW * sizeof(char));
+      if (ch_got == -1)
+      {
+        bprintf(tfatal, "Chatter: Error reading from /data/etc/mcp.log (%d)\n", errno);
+      }
+      if (ch_got < 2 * FAST_PER_SLOW)
+      {
+        memset(&(chatter_buffer.msg[chatter_buffer.writing][ch_got]), 22, sizeof(char) * ((2 * FAST_PER_SLOW) - ch_got));
+      }
+      chatter_buffer.writing = ((chatter_buffer.writing + 1) & 0x3);
+    }
+    usleep(100000);
+  }
+
+}
+
 
 static void GetACS(unsigned short *RxFrame)
 {
@@ -712,6 +761,7 @@ int main(int argc, char *argv[])
 #elif defined USE_XY_THREAD
   pthread_t dgps_id;
 #endif
+  pthread_t chatter_id;
 
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
@@ -818,6 +868,8 @@ int main(int argc, char *argv[])
   bputs(info, "System: BBC is up.\n");
 
   InitTxFrame(RxFrame);
+
+  pthread_create(&chatter_id, NULL, (void*)&Chatter, NULL);
 
 #ifdef USE_XY_THREAD
   pthread_create(&dgps_id, NULL, (void*)&StageBus, NULL);
