@@ -379,7 +379,7 @@ static void Chatter(void)
 
   chatter_buffer.reading = chatter_buffer.writing = 0;
       /* decimal 22 is "Synchronous Idle" in ascii */
-  memset(chatter_buffer.msg, 22, sizeof(char) * FAST_PER_SLOW * 2);
+  memset(chatter_buffer.msg, 22, sizeof(char) * FAST_PER_SLOW * 2 * 4);
 
   while (1)
   {
