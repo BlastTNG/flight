@@ -1386,6 +1386,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
 #ifdef USE_XY_THREAD
   StoreStageBus(index);
 #endif
+  CryoControl(index);
   BiasControl(RxFrame);
   WriteChatter(index);
 
@@ -1395,7 +1396,6 @@ void UpdateBBCFrame(unsigned short *RxFrame)
       SyncADC();
     WriteAux();
     SecondaryMirror();
-    CryoControl(index);
     PhaseControl();
 #ifndef BOLOTEST
     SetGyroMask();
