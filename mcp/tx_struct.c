@@ -935,8 +935,8 @@ struct ChannelStruct FastChannels[] = {
 #endif
   {"chopper",      'r',  CRYO_A2, 33,           CRYO_A2_M,      CRYO_A2_B, 'u',  U_V_V},
 
-  {"stage_x",      'w', LOOP5, 28,                1.0,             0.0, 'u', U_NONE},
-  {"stage_y",      'w', LOOP5, 34,                1.0,             0.0, 'u', U_NONE},
+  {"stage_x",      'w', LOOP5, 28,                2.0,             0.0, 'u', U_NONE},
+  {"stage_y",      'w', LOOP5, 34,                2.0,             0.0, 'u', U_NONE},
   {"rw_vel_raw",   'w', LOOP7,  0,         I2DEG*4.0,             0.0, 's', U_V_DPS},
   {"enc_el_raw",   'w', LOOP7,  2,             I2DEG,             0.0, 'u', U_P_DEG},
   {"enc_el",       'w', LOOP2, 47,              I2DEG,             0.0, 'u', U_P_DEG},

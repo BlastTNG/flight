@@ -421,8 +421,8 @@ void StoreStageBus(int index)
     stageYVelAddr = GetNiosAddr("stage_y_vel");
   }
 
-  WriteData(stageXAddr, stage_data.xpos, NIOS_QUEUE);
-  WriteData(stageYAddr, stage_data.ypos, NIOS_QUEUE);
+  WriteData(stageXAddr, stage_data.xpos/2, NIOS_QUEUE);
+  WriteData(stageYAddr, stage_data.ypos/2, NIOS_QUEUE);
   if (index == 0) {
     WriteData(stageXLimAddr, stage_data.xlim, NIOS_QUEUE);
     WriteData(stageXStrAddr, stage_data.xstr, NIOS_QUEUE);
