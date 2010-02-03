@@ -1,1 +1,2 @@
-cathy: gcc -o cathy -lgetdata cathy.c
+cathy: cathy.c
+	gcc -o cathy -lgetdata cathy.c
