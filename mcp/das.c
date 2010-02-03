@@ -315,7 +315,7 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
 void CryoControl (void)
 {
   static struct NiosStruct* cryostateAddr;
-  static struct NiosStruct* callampAddr;
+  static struct NiosStruct* calpulseAddr;
   static struct NiosStruct* jfetSetOnAddr;
   static struct NiosStruct* jfetSetOffAddr;
   //static struct NiosStruct* dig21Addr;
@@ -323,13 +323,13 @@ void CryoControl (void)
   //static struct NiosStruct* dig65Addr;
 
   static int cryostate = 0;
-  int callamp, heatctrl = 0, valvectrl = 0;
+  int calpulse, heatctrl = 0, valvectrl = 0;
 
   /************** Set indices first time around *************/
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    callampAddr = GetNiosAddr("callamp");
+    calpulseAddr = GetNiosAddr("calpulse");
     cryostateAddr = GetNiosAddr("cryostate");
     jfetSetOnAddr = GetNiosAddr("jfet_set_on");
     jfetSetOffAddr = GetNiosAddr("jfet_set_off");
@@ -380,7 +380,7 @@ void CryoControl (void)
     if (CommandData.Cryo.hsCharcoal) heatctrl |= HEAT_CHARCOAL_HS;
   }
 
-  callamp = CalLamp();
+  calpulse = CalLamp();
 
   /* Control motorised valves -- latching relays */
   valvectrl = VALVE_POT_OPEN | VALVE_POT_CLOSE |
@@ -428,7 +428,7 @@ void CryoControl (void)
   WriteData(cryostateAddr, cryostate, NIOS_QUEUE);
   WriteData(jfetSetOnAddr, CommandData.Cryo.JFETSetOn * 100, NIOS_QUEUE);
   WriteData(jfetSetOffAddr, CommandData.Cryo.JFETSetOff * 100, NIOS_QUEUE);
-  WriteData(callampAddr, callamp, NIOS_FLUSH);
+  WriteData(calpulseAddr, calpulse, NIOS_FLUSH);
 }
 
 /************************************************************************/
