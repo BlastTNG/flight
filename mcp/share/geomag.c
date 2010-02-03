@@ -146,9 +146,8 @@ GEOMG1:
   dt = time - epoch;
   if (otime < 0.0 && (dt < 0.0 || dt > 5.0))
   {
-    //TODO update model and reenable this message
-    //bprintf(err, "World Magnetic Model: !!!! Mag. model needs a year between "
-        //"%f and %f !!!!\n", epoch, epoch + 5.0);
+    bprintf(err, "World Magnetic Model: !!!! Mag. model needs a year between "
+        "%f and %f !!!!\n", epoch, epoch + 5.0);
     return;
   }
 
