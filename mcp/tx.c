@@ -210,8 +210,8 @@ void WriteChatter (int index)
     chatterAddr = GetNiosAddr("chatter");
   }
 
-  chat = (unsigned int)(chatter_buffer.msg[chatter_buffer.reading][index * 2 + 1]);
-  chat += (unsigned int)(chatter_buffer.msg[chatter_buffer.reading][index * 2]) << 8;
+  chat = (unsigned int)(chatter_buffer.msg[chatter_buffer.reading][index * 2] & 0xFF);
+  chat += (unsigned int)((chatter_buffer.msg[chatter_buffer.reading][(index * 2) + 1]) & 0xFF) << 8;
 
   if (index == (FAST_PER_SLOW - 1))
   {
