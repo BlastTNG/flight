@@ -279,10 +279,9 @@ struct ChannelStruct SlowChannels[] = {
   {"bias_ampl_rox",'w',  BIAS_D,  3,                0.5,             0.0, 'u', U_NONE},
   {"bias_ampl_x",  'w',  BIAS_D,  4,                1.0,             0.0, 'u', U_NONE},
   {"das_dig21",    'w',  BIAS_D,  5,                1.0,             0.0, 'u', U_NONE},
-  {"das_dig43",    'w',  BIAS_D,  6,                1.0,             0.0, 'u', U_NONE},
+  //das_dig43 is fast, for calibration pulse
   {"das_dig65",    'w',  BIAS_D,  7,                1.0,             0.0, 'u', U_NONE},
   {"bias_ramp_ena",'w',  BIAS_D,  8,                1.0,             0.0, 'u', U_NONE},
-  {"calpulse",     'w',  BIAS_D,  9,                1.0,             0.0, 'u', U_NONE},
   {"ramp_ampl",    'r',  BIAS_D,  0,                1.0,             0.0, 'u', U_NONE},
 
   /* generic names for analog channels. BE MORE SPECIFIC 
@@ -933,6 +932,7 @@ struct ChannelStruct FastChannels[] = {
   {"mag_z",        'r',  ACS2_A1, 17,              MAGZ_M,         MAGZ_B, 'u', U_NONE},
 
 #endif
+  {"das_dig43",    'w',   BIAS_D,  6,                1.0,             0.0, 'u', U_NONE},
   {"chopper",      'r',  CRYO_A2, 33,           CRYO_A2_M,      CRYO_A2_B, 'u',  U_V_V},
 
   {"stage_x",      'w', LOOP5, 28,                2.0,             0.0, 'u', U_NONE},

@@ -36,7 +36,7 @@
 #define HEAT_POT_HS          0x08
 #define HEAT_JFET            0x10
 #define HEAT_BDA             0x20
-#define HEAT_CALIBRATOR      0x40   //use callamp field instead (below)
+#define HEAT_CALIBRATOR      0x40
 #define HEAT_HWPR_POS        0x80
 
 /* Valve control bits (BIAS_D G3) */
@@ -48,11 +48,6 @@
 #define VALVE_LN_OFF      0x20
 #define VALVE_POT_OPEN    0x40
 #define VALVE_POT_CLOSE   0x80
-
-/* Calibrator lamp pulse field (BIAS_D G4-6) */
-#define CALLAMP_CALON		0x4000
-#define CALLAMP_PULSE_INDEX(x)	((x & 0x3) << 12)
-#define CALLAMP_PULSE_LEN(x)    (x & 0x00FF)
 
 /* he3 cycle */
 #define CRYO_CYCLE_OUT_OF_HELIUM 0x0000
@@ -118,11 +113,11 @@ void PhaseControl(void)
 /***********************************************************************/
 /* CalLamp: Flash calibrator                                           */
 /***********************************************************************/
-static int CalLamp (void)
+static int CalLamp (int index)
 {
   static struct NiosStruct* calPulseAddr;
-  static int update_counter = 0;
-  static unsigned int elapsed = 0;
+  static int pulse_cnt = 0;             //count of pulse length
+  static unsigned int elapsed = 0;  //count for wait between pulses
   static enum calmode last_mode = off;
 
   static int firsttime = 1;
@@ -132,31 +127,33 @@ static int CalLamp (void)
   }
 
   /* Save the current pulse length */
-  WriteData(calPulseAddr, CommandData.Cryo.calib_pulse, NIOS_QUEUE);
+  if (index == 0)
+    WriteData(calPulseAddr, CommandData.Cryo.calib_pulse, NIOS_QUEUE);
 
   if (CommandData.Cryo.calibrator == on) {
-    if (last_mode != on) {
-      update_counter = (update_counter + 1) & 3;
-      last_mode = on;
-    }
-    return (CALLAMP_PULSE_INDEX(update_counter) | CALLAMP_CALON
-        | CALLAMP_PULSE_LEN(CommandData.Cryo.calib_pulse));
+    last_mode = on;
+    return 1;
   } else if (CommandData.Cryo.calibrator == repeat) {
     if (last_mode != repeat || elapsed >= CommandData.Cryo.calib_period) {
       /* end of cycle -- send a new pulse */
       elapsed = 0;
-      update_counter = (update_counter + 1) & 3;
-    } else
-      elapsed++;
+      pulse_cnt = CommandData.Cryo.calib_pulse;
+    } else if (index == 0) elapsed++;  //period measured in slow frames
     last_mode = repeat;
-  } else { /* off or single pulse mode */
-    if (CommandData.Cryo.calibrator == pulse)
-      update_counter = (update_counter + 1) & 3;
-    last_mode = CommandData.Cryo.calibrator = off;
+  } else if (CommandData.Cryo.calibrator == pulse) {
+      if (last_mode != pulse) pulse_cnt = CommandData.Cryo.calib_pulse;
+      last_mode = pulse;
+      if (pulse_cnt <= 0) last_mode = CommandData.Cryo.calibrator = off;
+  } else {    //off mode
+    pulse_cnt = 0;
+    last_mode = off;
   }
 
-  return (CALLAMP_PULSE_INDEX(update_counter)
-      | CALLAMP_PULSE_LEN(CommandData.Cryo.calib_pulse));
+  if (pulse_cnt > 0) {
+    pulse_cnt--;
+    return 1;
+  }
+  return 0;
 }
 
 /* Automatic conrol of JFET heater */
@@ -312,10 +309,9 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
 /***********************************************************************/
 /* CryoControl: Control heaters and calibrator (a slow control)        */
 /***********************************************************************/
-void CryoControl (void)
+void CryoControl (int index)
 {
   static struct NiosStruct* cryostateAddr;
-  static struct NiosStruct* calpulseAddr;
   static struct NiosStruct* jfetSetOnAddr;
   static struct NiosStruct* jfetSetOffAddr;
   //static struct NiosStruct* dig21Addr;
@@ -323,13 +319,12 @@ void CryoControl (void)
   //static struct NiosStruct* dig65Addr;
 
   static int cryostate = 0;
-  int calpulse, heatctrl = 0, valvectrl = 0;
+  int heatctrl = 0, valvectrl = 0;
 
   /************** Set indices first time around *************/
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    calpulseAddr = GetNiosAddr("calpulse");
     cryostateAddr = GetNiosAddr("cryostate");
     jfetSetOnAddr = GetNiosAddr("jfet_set_on");
     jfetSetOffAddr = GetNiosAddr("jfet_set_off");
@@ -380,7 +375,7 @@ void CryoControl (void)
     if (CommandData.Cryo.hsCharcoal) heatctrl |= HEAT_CHARCOAL_HS;
   }
 
-  calpulse = CalLamp();
+  if (CalLamp(index)) heatctrl |= HEAT_CALIBRATOR;
 
   /* Control motorised valves -- latching relays */
   valvectrl = VALVE_POT_OPEN | VALVE_POT_CLOSE |
@@ -424,11 +419,12 @@ void CryoControl (void)
     cryostate &= 0xFFFF - CS_LNVALVE_ON;
   }
 
-  WriteData(dig43Addr, (heatctrl<<8) | valvectrl, NIOS_QUEUE);
+  if (index == 0) {
   WriteData(cryostateAddr, cryostate, NIOS_QUEUE);
   WriteData(jfetSetOnAddr, CommandData.Cryo.JFETSetOn * 100, NIOS_QUEUE);
   WriteData(jfetSetOffAddr, CommandData.Cryo.JFETSetOff * 100, NIOS_QUEUE);
-  WriteData(calpulseAddr, calpulse, NIOS_FLUSH);
+  }
+  WriteData(dig43Addr, (heatctrl<<8) | valvectrl, NIOS_FLUSH);
 }
 
 /************************************************************************/
