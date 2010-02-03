@@ -29,39 +29,30 @@
 #include "tx.h"
 #include "command_struct.h"
 
-/* Cryostat digital signals (BIAS_D G4) */
-#define CRYO_HELIUM_LEVEL    0x01
-#define CRYO_CHARCOAL_HEAT   0x02
-#define CRYO_CHARCOAL_HS     0x04
-#define CRYO_POT_HS          0x08
-#define CRYO_JFET_HEAT       0x10
-#define CRYO_BDA_HEAT        0x20
-#define CRYO_CALIBRATOR      0x40
-#define CRYO_HWPR_POS        0x80
+/* Heater control bits (BIAS_D G4) */
+#define HEAT_HELIUM_LEVEL    0x01
+#define HEAT_CHARCOAL        0x02
+#define HEAT_CHARCOAL_HS     0x04
+#define HEAT_POT_HS          0x08
+#define HEAT_JFET            0x10
+#define HEAT_BDA             0x20
+#define HEAT_CALIBRATOR      0x40   //use callamp field instead (below)
+#define HEAT_HWPR_POS        0x80
 
-/* Cryostat digital signals (G2 and G3 outputs) */
-#define CRYO_COLDPLATE_ON    0x10 /* N3G3 - cryoout3 */
-#define CRYO_COLDPLATE_OFF   0x20 /* N3G3 */
-#define CRYO_CALIBRATOR_ON   0x40 /* N3G3 */
-#define CRYO_CALIBRATOR_OFF  0x80 /* N3G3 */
-#define CRYO_HELIUMLEVEL_ON  0x01 /* N3G3 */
-#define CRYO_HELIUMLEVEL_OFF 0x02 /* N3G3 */
-#define CRYO_CHARCOAL_ON     0x04 /* N3G3 */
-#define CRYO_CHARCOAL_OFF    0x08 /* N3G3 */
+/* Valve control bits (BIAS_D G3) */
+//TODO update valve bit defines
+#define VALVE_LHe_OFF     0x01
+#define VALVE_L_OPEN      0x04
+#define VALVE_L_CLOSE     0x08
+#define VALVE_POT_OFF     0x10
+#define VALVE_LN_OFF      0x20
+#define VALVE_POT_OPEN    0x40
+#define VALVE_POT_CLOSE   0x80
 
-#define CRYO_POTVALVE_OFF     0x10 /* N3G2 - cryoout2 */
-#define CRYO_LNVALVE_OFF      0x20 /* N3G2 */
-#define CRYO_POTVALVE_OPEN    0x40 /* N3G2 Group two of the cryo card */
-#define CRYO_POTVALVE_CLOSE   0x80 /* N3G2 appears to have its nybbles */
-#define CRYO_LHeVALVE_OFF     0x01 /* N3G2 backwards! */
-#define CRYO_LVALVE_OPEN      0x04 /* N3G2 */
-#define CRYO_LVALVE_CLOSE     0x08 /* N3G2 */
-
-/* CryoControl bits */
-#define CRYOCTRL_CALON     0x4000
-#define CRYOCTRL_BDAHEATON 0x8000
-#define CRYOCTRL_PULSE_INDEX(x) ((x & 0x3) << 12)
-#define CRYOCTRL_PULSE_LEN(x) (x & 0x00FF)
+/* Calibrator lamp pulse field (BIAS_D G4-6) */
+#define CALLAMP_CALON		0x4000
+#define CALLAMP_PULSE_INDEX(x)	((x & 0x3) << 12)
+#define CALLAMP_PULSE_LEN(x)    (x & 0x00FF)
 
 /* he3 cycle */
 #define CRYO_CYCLE_OUT_OF_HELIUM 0x0000
@@ -83,9 +74,9 @@
 #define T_LHE_SET                9.39198     /* 4.4         K */
 
 /* CryoState bitfield */
-#define CS_HELIUMLEVEL    0x0001
-#define CS_CHARCOAL       0x0002
-#define CS_COLDPLATE      0x0004
+//#define CS_HELIUMLEVEL    0x0001
+//#define CS_CHARCOAL       0x0002
+//#define CS_HWPR_POS       0x0004
 #define CS_POTVALVE_ON    0x0010
 #define CS_POTVALVE_OPEN  0x0020
 #define CS_LHeVALVE_ON    0x0040
@@ -124,7 +115,6 @@ void PhaseControl(void)
     WriteData(NiosAddr[i], CommandData.Phase[i]<<1, NIOS_FLUSH);
 }
 
-#if 0
 /***********************************************************************/
 /* CalLamp: Flash calibrator                                           */
 /***********************************************************************/
@@ -149,8 +139,8 @@ static int CalLamp (void)
       update_counter = (update_counter + 1) & 3;
       last_mode = on;
     }
-    return (CRYOCTRL_PULSE_INDEX(update_counter) | CRYOCTRL_CALON
-        | CRYOCTRL_PULSE_LEN(CommandData.Cryo.calib_pulse));
+    return (CALLAMP_PULSE_INDEX(update_counter) | CALLAMP_CALON
+        | CALLAMP_PULSE_LEN(CommandData.Cryo.calib_pulse));
   } else if (CommandData.Cryo.calibrator == repeat) {
     if (last_mode != repeat || elapsed >= CommandData.Cryo.calib_period) {
       /* end of cycle -- send a new pulse */
@@ -165,8 +155,8 @@ static int CalLamp (void)
     last_mode = CommandData.Cryo.calibrator = off;
   }
 
-  return (CRYOCTRL_PULSE_INDEX(update_counter)
-      | CRYOCTRL_PULSE_LEN(CommandData.Cryo.calib_pulse));
+  return (CALLAMP_PULSE_INDEX(update_counter)
+      | CALLAMP_PULSE_LEN(CommandData.Cryo.calib_pulse));
 }
 
 /* Automatic conrol of JFET heater */
@@ -193,13 +183,14 @@ static int JFETthermostat(void)
   else if (jfet_temp > CommandData.Cryo.JFETSetOff)
     return 0;
   else if (jfet_temp < CommandData.Cryo.JFETSetOn)
-    return 2047;
+    return 1;
   else
-    return 2047 * (CommandData.Cryo.JFETSetOff - jfet_temp) /
+    //TODO probably want to set up a slow PWM here, with this duty cycle
+    return (CommandData.Cryo.JFETSetOff - jfet_temp) /
       (CommandData.Cryo.JFETSetOff - CommandData.Cryo.JFETSetOn);
 }
 
-static void FridgeCycle(int *cryoout, int *cryostate, int  reset,
+static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
     unsigned short *force_cycle)
 {
   static int firsttime = 1;
@@ -241,6 +232,11 @@ static void FridgeCycle(int *cryoout, int *cryostate, int  reset,
   if(iterator++ % 10)  /* Run this loop at 0.5 Hz */
     return;
 
+  //TODO rewrite fridge cycle code
+  bprintf(warning, "Auto Cycle not implemented."
+      " You should be in manual mode.\n");
+  return;
+
   start_time = slow_data[cycleStartRAddr->index][cycleStartRAddr->channel];
   start_time |=
     (unsigned long)slow_data[cycleStartRAddr->index][cycleStartRAddr->channel
@@ -265,8 +261,7 @@ static void FridgeCycle(int *cryoout, int *cryostate, int  reset,
   t_he4pot    = (ROX_C2V)*t_he4pot    + ROX_OFFSET;
 
   if (t_lhe < T_LHE_SET) {
-    *cryoout |= CRYO_CHARCOAL_OFF;
-    *cryostate &= ~CS_CHARCOAL;
+    *heatctrl &= ~HEAT_CHARCOAL;
     WriteData(cycleStateWAddr, CRYO_CYCLE_OUT_OF_HELIUM, NIOS_QUEUE);
     return;
   }
@@ -277,46 +272,38 @@ static void FridgeCycle(int *cryoout, int *cryostate, int  reset,
       *force_cycle = 0;
       WriteData(cycleStateWAddr, CRYO_CYCLE_ON, NIOS_QUEUE);
       WriteData(cycleStartWAddr, mcp_systime(NULL), NIOS_QUEUE);
-      *cryoout |= CRYO_CHARCOAL_ON;
-      *cryostate |= CS_CHARCOAL;
+      *heatctrl |= HEAT_CHARCOAL;
       bprintf(info, "Auto Cycle: Turning charcoal heat on.");
       return;
     }
-    *cryoout |= CRYO_CHARCOAL_OFF;
-    *cryostate &= ~CS_CHARCOAL;
+    *heatctrl &= ~HEAT_CHARCOAL;
   } else if (cycle_state == CRYO_CYCLE_ON) {
     if (((mcp_systime(NULL) - start_time) > CRYO_CYCLE_TIMEOUT) ||
         t_charcoal < T_CHARCOAL_SET ||
         t_he4pot < T_HE4POT_SET) {
       WriteData(cycleStateWAddr, CRYO_CYCLE_COOL, NIOS_QUEUE);
-      *cryoout |= CRYO_CHARCOAL_OFF;
-      *cryostate &= ~CS_CHARCOAL;
+      *heatctrl &= ~HEAT_CHARCOAL;
       bprintf(info, "Auto Cycle: Turning charcoal heat off.");
       return;
     }
-    *cryoout |= CRYO_CHARCOAL_ON;
-    *cryostate |= CS_CHARCOAL;
+    *heatctrl |= HEAT_CHARCOAL;
   } else if ( cycle_state == CRYO_CYCLE_COOL) {
     if ((t_he3fridge > T_HE3FRIDGE_COLD)
         || ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_COOL_TIMEOUT) ) {
       WriteData(cycleStateWAddr, CRYO_CYCLE_COLD, NIOS_QUEUE);
-      *cryoout |= CRYO_CHARCOAL_OFF;
-      *cryostate &= ~CS_CHARCOAL;
+      *heatctrl &= ~HEAT_CHARCOAL;
       *force_cycle = 0; // clear any pending cycle commands...
       bprintf(info, "Auto Cycle: Fridge is now cold!.");
       return;
     }
-    *cryoout |= CRYO_CHARCOAL_OFF;
-    *cryostate &= ~CS_CHARCOAL;
+    *heatctrl &= ~HEAT_CHARCOAL;
   } else if (cycle_state == CRYO_CYCLE_OUT_OF_HELIUM) {
     WriteData(cycleStateWAddr, CRYO_CYCLE_COLD, NIOS_QUEUE);
-    *cryoout |= CRYO_CHARCOAL_OFF;
-    *cryostate &= ~CS_CHARCOAL;
+    *heatctrl &= ~HEAT_CHARCOAL;
     bprintf(info, "Auto Cycle: Everything A-OK.");
   } else {
     bprintf(err, "Auto Cycle: cycle_state: %i unknown!", cycle_state);
-    *cryoout |= CRYO_CHARCOAL_OFF;
-    *cryostate &= ~CS_CHARCOAL;
+    *heatctrl &= ~HEAT_CHARCOAL;
     return;
   }
   return;
@@ -327,166 +314,122 @@ static void FridgeCycle(int *cryoout, int *cryostate, int  reset,
 /***********************************************************************/
 void CryoControl (void)
 {
-  static struct NiosStruct* cryoout2Addr;
-  static struct NiosStruct* cryoout3Addr;
   static struct NiosStruct* cryostateAddr;
-  static struct NiosStruct* cryopwmAddr;
-  static struct NiosStruct* jfetpwmAddr;
-  static struct NiosStruct* hspwmAddr;
-  static struct NiosStruct* bdapwmAddr;
-  static struct NiosStruct* cryoctrlAddr;
-  static struct NiosStruct* gPBdaheatAddr;
-  static struct NiosStruct* gIBdaheatAddr;
-  static struct NiosStruct* gDBdaheatAddr;
-  static struct NiosStruct* gFlBdaheatAddr;
-  static struct NiosStruct* setBdaheatAddr;
+  static struct NiosStruct* callampAddr;
   static struct NiosStruct* jfetSetOnAddr;
   static struct NiosStruct* jfetSetOffAddr;
-  static struct NiosStruct* dig21Addr;
-  //temporarily usurped by fast kludge
-  //static struct NiosStruct* dig43Addr;
-  static struct NiosStruct* dig65Addr;
+  //static struct NiosStruct* dig21Addr;
+  static struct NiosStruct* dig43Addr;
+  //static struct NiosStruct* dig65Addr;
 
-  int cryoout3 = 0, cryoout2 = 0;
   static int cryostate = 0;
-  int cryoctrl;
-  int jfetHeat;
+  int callamp, heatctrl = 0, valvectrl = 0;
 
   /************** Set indices first time around *************/
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    bdapwmAddr = GetNiosAddr("bdapwm");
-    cryoctrlAddr = GetNiosAddr("cryoctrl");
-    cryoout2Addr = GetNiosAddr("cryoout2");
-    cryoout3Addr = GetNiosAddr("cryoout3");
+    callampAddr = GetNiosAddr("callamp");
     cryostateAddr = GetNiosAddr("cryostate");
-    gPBdaheatAddr = GetNiosAddr("g_p_bdaheat");
-    gIBdaheatAddr = GetNiosAddr("g_i_bdaheat");
-    gDBdaheatAddr = GetNiosAddr("g_d_bdaheat");
-    gFlBdaheatAddr = GetNiosAddr("g_fl_bdaheat");
-    setBdaheatAddr = GetNiosAddr("set_bdaheat");
-    cryopwmAddr = GetNiosAddr("cryopwm");
-    hspwmAddr = GetNiosAddr("hspwm");
-    jfetpwmAddr = GetNiosAddr("jfetpwm");
     jfetSetOnAddr = GetNiosAddr("jfet_set_on");
     jfetSetOffAddr = GetNiosAddr("jfet_set_off");
-    dig21Addr = GetNiosAddr("das_dig21");
-    //dig43Addr = GetNiosAddr("das_dig43");
-    dig65Addr = GetNiosAddr("das_dig65");
+    //dig21Addr = GetNiosAddr("das_dig21");
+    dig43Addr = GetNiosAddr("das_dig43");
+    //dig65Addr = GetNiosAddr("das_dig65");
   }
 
+#if 0
   // purely for testing, output a count to each digital output group
-/*
   static int count = 0;
   int nibbcnt = (count&0xf) << 4 | (count++&0xf);
   WriteData(dig21Addr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
   WriteData(dig43Addr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
   WriteData(dig65Addr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
-*/
+#endif
 
   /********** Set Output Bits **********/
-  if (CommandData.Cryo.heliumLevel == 0) {
-    cryoout3 |= CRYO_HELIUMLEVEL_OFF;
-    cryostate &= 0xFFFF - CS_HELIUMLEVEL;
-  } else {
-    cryoout3 |= CRYO_HELIUMLEVEL_ON;
-    cryostate |= CS_HELIUMLEVEL;
+  if (CommandData.Cryo.heliumLevel) {
+    heatctrl |= HEAT_HELIUM_LEVEL;
     if (CommandData.Cryo.heliumLevel > 0)
       CommandData.Cryo.heliumLevel--;
   }
 
-  if (CommandData.Cryo.fridgeCycle)
-    FridgeCycle(&cryoout3, &cryostate, 0, &CommandData.Cryo.force_cycle);
-  else {
-    FridgeCycle(&cryoout3, &cryostate, 1, NULL);
-    if (CommandData.Cryo.charcoalHeater == 0) {
-      cryoout3 |= CRYO_CHARCOAL_OFF;
-      cryostate &= 0xFFFF - CS_CHARCOAL;
-    } else {
-      cryoout3 |= CRYO_CHARCOAL_ON;
-      cryostate |= CS_CHARCOAL;
-    }
+  if (CommandData.Cryo.hwprPos) {
+    heatctrl |= HEAT_HWPR_POS;
+    if (CommandData.Cryo.hwprPos > 0)
+      CommandData.Cryo.hwprPos--;
   }
-  if (CommandData.Cryo.coldPlate == 0) {
-    cryoout3 |= CRYO_COLDPLATE_OFF;
-    cryostate &= 0xFFFF - CS_COLDPLATE;
+
+  if (CommandData.Cryo.autoJFETheat) {
+    if (JFETthermostat()) heatctrl |= HEAT_JFET;
+    cryostate |= CS_AUTO_JFET;
   } else {
-    cryoout3 |= CRYO_COLDPLATE_ON;
-    cryostate |= CS_COLDPLATE;
+    if (CommandData.Cryo.JFETHeat) heatctrl |= HEAT_JFET;
+    cryostate &= 0xFFFF - CS_AUTO_JFET;
   }
 
-  cryoctrl = CalLamp();
-  if (CommandData.Cryo.autoBDAHeat)
-    cryoctrl |= CRYOCTRL_BDAHEATON;
+  if(CommandData.Cryo.hsPot) heatctrl |= HEAT_POT_HS;
 
-  cryoout2 = CRYO_POTVALVE_OPEN | CRYO_POTVALVE_CLOSE |
-    CRYO_LVALVE_OPEN | CRYO_LVALVE_CLOSE;
+  if(CommandData.Cryo.BDAHeat) heatctrl |= HEAT_BDA;
+
+  if (CommandData.Cryo.fridgeCycle)
+    FridgeCycle(&heatctrl, &cryostate, 0, &CommandData.Cryo.force_cycle);
+  else {
+    FridgeCycle(&heatctrl, &cryostate, 1, NULL);
+    if (CommandData.Cryo.charcoalHeater) heatctrl |= HEAT_CHARCOAL;
+    if (CommandData.Cryo.hsCharcoal) heatctrl |= HEAT_CHARCOAL_HS;
+  }
+
+  callamp = CalLamp();
 
   /* Control motorised valves -- latching relays */
+  valvectrl = VALVE_POT_OPEN | VALVE_POT_CLOSE |
+    VALVE_L_OPEN | VALVE_L_CLOSE;
+
   if (CommandData.Cryo.potvalve_open > 0) {
-    cryoout2 &= ~CRYO_POTVALVE_OPEN;
+    valvectrl &= ~VALVE_POT_OPEN;
     cryostate |= CS_POTVALVE_OPEN;
     CommandData.Cryo.potvalve_open--;
   } else if (CommandData.Cryo.potvalve_close > 0) {
-    cryoout2 &= ~CRYO_POTVALVE_CLOSE;
+    valvectrl &= ~VALVE_POT_CLOSE;
     cryostate &= 0xFFFF - CS_POTVALVE_OPEN;
     CommandData.Cryo.potvalve_close--;
   }
   if (CommandData.Cryo.potvalve_on)
     cryostate |= CS_POTVALVE_ON;
   else {
-    cryoout2 |= CRYO_POTVALVE_OFF;
+    valvectrl |= VALVE_POT_OFF;
     cryostate &= 0xFFFF - CS_POTVALVE_ON;
   }
 
   if (CommandData.Cryo.lvalve_open > 0) {
-    cryoout2 &= ~CRYO_LVALVE_OPEN;
+    valvectrl &= ~VALVE_L_OPEN;
     cryostate |= CS_LVALVE_OPEN;
     CommandData.Cryo.lvalve_open--;
   } else if (CommandData.Cryo.lvalve_close > 0) {
-    cryoout2 &= ~CRYO_LVALVE_CLOSE;
+    valvectrl &= ~VALVE_L_CLOSE;
     cryostate &= 0xFFFF - CS_LVALVE_OPEN;
     CommandData.Cryo.lvalve_close--;
   }
   if (CommandData.Cryo.lhevalve_on)
     cryostate |= CS_LHeVALVE_ON;
   else {
-    cryoout2 |= CRYO_LHeVALVE_OFF;
+    valvectrl |= VALVE_LHe_OFF;
     cryostate &= 0xFFFF - CS_LHeVALVE_ON;
   }
   if (CommandData.Cryo.lnvalve_on)
     cryostate |= CS_LNVALVE_ON;
   else {
-    cryoout2 |= CRYO_LNVALVE_OFF;
+    valvectrl |= VALVE_LN_OFF;
     cryostate &= 0xFFFF - CS_LNVALVE_ON;
   }
 
-  if (CommandData.Cryo.autoJFETheat) {
-    jfetHeat = JFETthermostat();
-    cryostate |= CS_AUTO_JFET;
-  } else {
-    jfetHeat = CommandData.Cryo.JFETHeat;
-    cryostate &= 0xFFFF - CS_AUTO_JFET;
-  }
-
-  WriteData(cryoout3Addr, cryoout3, NIOS_QUEUE);
-  WriteData(cryoout2Addr, cryoout2, NIOS_QUEUE);
+  WriteData(dig43Addr, (heatctrl<<8) | valvectrl, NIOS_QUEUE);
   WriteData(cryostateAddr, cryostate, NIOS_QUEUE);
-  WriteData(cryopwmAddr, CommandData.Cryo.CryoSparePWM, NIOS_QUEUE);
-  WriteData(hspwmAddr, CommandData.Cryo.heatSwitch, NIOS_QUEUE);
-  WriteData(jfetpwmAddr, jfetHeat, NIOS_QUEUE);
-  WriteData(setBdaheatAddr, CommandData.Cryo.BDAGain.SP, NIOS_QUEUE);
-  WriteData(gPBdaheatAddr, CommandData.Cryo.BDAGain.P, NIOS_QUEUE);
-  WriteData(gIBdaheatAddr, CommandData.Cryo.BDAGain.I, NIOS_QUEUE);
-  WriteData(gDBdaheatAddr, CommandData.Cryo.BDAGain.D, NIOS_QUEUE);
-  WriteData(gFlBdaheatAddr, CommandData.Cryo.BDAFiltLen, NIOS_QUEUE);
-  WriteData(bdapwmAddr, CommandData.Cryo.BDAHeat, NIOS_QUEUE);
   WriteData(jfetSetOnAddr, CommandData.Cryo.JFETSetOn * 100, NIOS_QUEUE);
   WriteData(jfetSetOffAddr, CommandData.Cryo.JFETSetOff * 100, NIOS_QUEUE);
-  WriteData(cryoctrlAddr, cryoctrl, NIOS_FLUSH);
+  WriteData(callampAddr, callamp, NIOS_FLUSH);
 }
-#endif
 
 /************************************************************************/
 /*                                                                      */
@@ -531,41 +474,3 @@ void BiasControl (unsigned short* RxFrame)
     }
 }
 
-void tempCryoControl()
-{
-  static struct NiosStruct* dig43Addr;
-  static int firsttime = 1;
-  unsigned int grp4 = 0;
-
-  if (firsttime) {
-    firsttime = 0;
-    dig43Addr = GetNiosAddr("das_dig43");
-  }
-
-  if (CommandData.Cryo.heliumLevel) {
-    grp4 |= CRYO_HELIUM_LEVEL;
-  }
-  if (CommandData.Cryo.charcoalHeater) {
-    grp4 |= CRYO_CHARCOAL_HEAT;
-  }
-  if (CommandData.Cryo.hsCharcoal) {
-    grp4 |= CRYO_CHARCOAL_HS;
-  }
-  if (CommandData.Cryo.hsPot) {
-    grp4 |= CRYO_POT_HS;
-  }
-  if (CommandData.Cryo.JFETHeat) {
-    grp4 |= CRYO_JFET_HEAT;
-  }
-  if (CommandData.Cryo.BDAHeat) {
-    grp4 |= CRYO_BDA_HEAT;
-  }
-  if (CommandData.Cryo.calibrator == on) {
-    grp4 |= CRYO_CALIBRATOR;
-  }
-  if (CommandData.Cryo.hwprPos) {
-    grp4 |= CRYO_HWPR_POS;
-  }
-
-  WriteData(dig43Addr, grp4<<8, NIOS_QUEUE);
-}

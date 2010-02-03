@@ -77,8 +77,7 @@ void ControlPower(void);
 
 /* in das.c */
 void BiasControl(unsigned short* RxFrame);
-void tempCryoControl(void);
-//void CryoControl(void);
+void CryoControl(void);
 void PhaseControl(void);
 
 /* in motors.c */
@@ -1396,8 +1395,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
       SyncADC();
     WriteAux();
     SecondaryMirror();
-    //CryoControl();
-    tempCryoControl();
+    CryoControl();
     PhaseControl();
 #ifndef BOLOTEST
     SetGyroMask();

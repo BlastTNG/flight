@@ -282,6 +282,7 @@ struct ChannelStruct SlowChannels[] = {
   {"das_dig43",    'w',  BIAS_D,  6,                1.0,             0.0, 'u', U_NONE},
   {"das_dig65",    'w',  BIAS_D,  7,                1.0,             0.0, 'u', U_NONE},
   {"bias_ramp_ena",'w',  BIAS_D,  8,                1.0,             0.0, 'u', U_NONE},
+  {"calpulse",     'w',  BIAS_D,  9,                1.0,             0.0, 'u', U_NONE},
   {"ramp_ampl",    'r',  BIAS_D,  0,                1.0,             0.0, 'u', U_NONE},
 
   /* generic names for analog channels. BE MORE SPECIFIC 
@@ -824,6 +825,7 @@ struct ChannelStruct SlowChannels[] = {
   {"he4_lev",      'r',  TMP5,  1,  -2.87477e-09*65536,      12.3273561, 'u', U_NONE},
   {"i_charcoal",   'r',  TMP5,  3,     -2.639826420E-6,     0.157988332, 'u', U_NONE},
   {"i_coldplate",  'r',  TMP5,  5,      -2.32217573E-5,     1.390309833, 'u', U_NONE},
+/*
   {"cryoin",       'r',  TMP5, 60,                 1.0,             0.0, 'u', U_NONE},
   {"cryoout2",     'w',  TMP5,  1,                 1.0,             0.0, 'u', U_NONE},
   {"cryoout3",     'w',  TMP5,  2,             1.0,                 0.0, 'u', U_NONE},
@@ -832,11 +834,7 @@ struct ChannelStruct SlowChannels[] = {
   {"cryopwm",      'w',  TMP5,  5,          100./2047.,              0., 'u', U_NONE},
   {"jfetpwm",      'w',  TMP5,  6,          100./2047.,              0., 'u', U_NONE},
   {"cryoctrl",     'w',  TMP5, 31,                 1.0,              0., 'u', U_NONE},
-  {"set_bdaheat",  'w',  TMP5, 32,                 1.0,              0., 'u', U_NONE},
-  {"g_fl_bdaheat", 'w',  TMP5, 33,                 1.0,              0., 'u', U_NONE},
-  {"g_d_bdaheat",  'w',  TMP5, 34,                 1.0,              0., 'u', U_NONE},
-  {"g_i_bdaheat",  'w',  TMP5, 35,                 1.0,              0., 'u', U_NONE},
-  {"g_p_bdaheat",  'w',  TMP5, 36,                 1.0,              0., 'u', U_NONE},
+*/
 
   /* BIAS 0-4 are wide fast */
   /* the following 9 AD590s, except t_das all had calibrated offsets */
