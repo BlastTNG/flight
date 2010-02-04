@@ -259,6 +259,15 @@ void Daemonise(int route, int no_fork)
     int report;
     char user[1024];
   } conn[1024];
+  /* state list
+   *  0 = client just connected
+   *  1 = client user known
+   *  2 = client has taken/given/knows conn
+   *  4 = client requested command list
+   *  5 = client request denied
+   *  8 = client unauthorized
+   * 0x100 bit set = ping
+   */ 
 
   int owner = 0;
 
@@ -446,15 +455,17 @@ void Daemonise(int route, int no_fork)
                   owner = 0;
                 }
               }
+            } else if (strncmp(buffer, "::ping::", 8) == 0) {
+              conn[n].state |= 0x100;
+            } else if (strncmp(buffer, "::list::", 8) == 0) {
+              conn[n].state = 4;
             } else if (owner != n) { /* no conn */
               if (strncmp(buffer, "::take::", 8) == 0) {
                 printf("Socket %i has taken the conn.\n", n);
                 report = 1;
                 owner = n;
                 conn[n].state = 2;
-              } else if (strncmp(buffer, "::list::", 8) == 0)
-                conn[n].state = 4;
-              else
+              } else
                 conn[n].state = 5;
             } else if (owner == n) { /* has conn */
               if (strncmp(buffer, "::give::", 8) == 0) {
@@ -462,9 +473,7 @@ void Daemonise(int route, int no_fork)
                 report = 1;
                 owner = 0;
                 conn[n].state = 2;
-              } else if (strncmp(buffer, "::list::", 8) == 0)
-                conn[n].state = 4;
-              else if (buffer[0] != ':')
+              } else if (buffer[0] != ':')
                 ExecuteCommand(n, fd, route, buffer);
             }
           }
@@ -491,6 +500,9 @@ void Daemonise(int route, int no_fork)
             } else if (conn[n].state == 5) { /* request with no conn */
               strcpy(buffer, ":::noconn:::\r\n");
               conn[n].state = 1;
+            } else if (conn[n].state & 0x100) { /* ping pong */
+              strcpy(buffer, ":::pong:::\r\n");
+              conn[n].state &= ~0x100;
             } else if (conn[n].state == 8) /* authentication failed */
               strcpy(buffer, ":::nope:::\r\n");
 
