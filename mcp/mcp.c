@@ -370,9 +370,17 @@ static void Chatter(void)
     bprintf(tfatal, "Chatter: Failed to open /data/etc/mcp.log for reading (%d)\n", errno);
   }
 
-  if (lseek(fd, -200, SEEK_END) == -1)
+  if (lseek(fd, -500, SEEK_END) == -1)
   {
-    bprintf(tfatal, "Chatter: Failed to seek /data/etc/mcp.log (%d)\n", errno);
+    if (errno == EINVAL)
+    {
+      if (lseek(fd, 0, 0) == -1)
+      {
+        bprintf(tfatal, "Chatter: Failed to rewind /data/etc/mcp.log (%d)\n", errno);
+      }
+    } else {
+      bprintf(tfatal, "Chatter: Failed to seek /data/etc/mcp.log (%d)\n", errno);
+    }
   }
 
   while (read(fd, &ch, 1) == 1 && ch != '\n'); /* Find start of next message */
@@ -390,15 +398,14 @@ static void Chatter(void)
       {
         bprintf(tfatal, "Chatter: Error reading from /data/etc/mcp.log (%d)\n", errno);
       }
-      if (ch_got < 2 * FAST_PER_SLOW)
+      if (ch_got < (2 * FAST_PER_SLOW * sizeof(char)))
       {
-        memset(&(chatter_buffer.msg[chatter_buffer.writing][ch_got]), 22, sizeof(char) * ((2 * FAST_PER_SLOW) - ch_got));
+        memset(&(chatter_buffer.msg[chatter_buffer.writing][ch_got]), 22, (2 * FAST_PER_SLOW * sizeof(char)) - ch_got);
       }
       chatter_buffer.writing = ((chatter_buffer.writing + 1) & 0x3);
     }
     usleep(100000);
   }
-
 }
 
 
