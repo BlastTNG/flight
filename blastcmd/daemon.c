@@ -35,6 +35,7 @@
 #include <sys/syslog.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <sys/select.h>
 
 #include <netinet/in.h>
 
@@ -144,12 +145,12 @@ int SIPRoute(int sock, int t_link, int t_route, char* buffer)
 
 int SimpleRoute(int sock, int fd, char* buffer)
 {
-  strcat(buffer, "\n");
   write(fd, buffer, strlen(buffer));
+  write(fd, "\n", 1);
   return 0;
 }
 
-void ExecuteCommand(int sock, int fd, int route, char* buffer)
+int ExecuteCommand(int sock, int fd, int route, char* buffer)
 {
   int t_link = LINK_DEFAULT;
   int t_route = ROUTING_DEFAULT;
@@ -194,6 +195,7 @@ void ExecuteCommand(int sock, int fd, int route, char* buffer)
   sprintf(output, ":::ack:::%i\r\n", result);
   printf("%i<--%s", sock, output);
   send(sock, output, strlen(output), MSG_NOSIGNAL);
+  return result;
 }
 
 void SendCommandList(int sock)
@@ -257,6 +259,7 @@ void Daemonise(int route, int no_fork)
   struct {
     int state;
     int report;
+    int lurk; /* 0 = off, 1 = on, 2 = request, 3 = cmd_announce */
     char user[1024];
   } conn[1024];
   /* state list
@@ -272,6 +275,9 @@ void Daemonise(int route, int no_fork)
   int owner = 0;
 
   char buffer[1025];
+  char cmd[512];
+  int cmd_from = 0;
+  int ack = 0;
 
   int fd, n, i, size, pid, reset_lastsock = 0;
   int report = 0;
@@ -282,7 +288,7 @@ void Daemonise(int route, int no_fork)
 
   struct timespec sleep_time;
   sleep_time.tv_sec = 0;
-  sleep_time.tv_nsec = 10000000;  /* 10ms */
+  sleep_time.tv_nsec = 10000000; /* 10ms */
 
 #ifdef USE_AUTHENTICATION
   /* the addresses we allow connections from */
@@ -358,7 +364,7 @@ void Daemonise(int route, int no_fork)
       report = 0;
     }
 
-    n = select(lastsock + 1, &fdread, &fdwrite, NULL, NULL);
+    n = pselect(lastsock + 1, &fdread, &fdwrite, NULL, &sleep_time, NULL);
 
     if (n == -1 && errno == EINTR)
       continue; /* timeout on select */
@@ -384,32 +390,32 @@ void Daemonise(int route, int no_fork)
               if (!memcmp(&addr.sin_addr, &good_addr1, sizeof(struct in_addr)))
               {
                 printf("Autentication 1 OK from client.\n");
-                conn[csock].state = 0;
+                conn[csock].lurk = conn[csock].state = 0;
               } else if (!memcmp(&addr.sin_addr, &good_addr2,
                     sizeof(struct in_addr)))
               {
                 printf("Autentication 2 OK from client.\n");
-                conn[csock].state = 0;
+                conn[csock].lurk = conn[csock].state = 0;
               } else if (!memcmp(&addr.sin_addr, &good_addr3,
                     sizeof(struct in_addr)))
               {
                 printf("Autentication 3 OK from client.\n");
-                conn[csock].state = 0;
+                conn[csock].lurk = conn[csock].state = 0;
               } else if (!memcmp(&addr.sin_addr, &good_addr4,
                     sizeof(struct in_addr)))
               {
                 printf("Autentication 4 OK from client.\n");
-                conn[csock].state = 0;
+                conn[csock].lurk = conn[csock].state = 0;
               } else if (!memcmp(&addr.sin_addr, &local_addr, sizeof(struct
                       in_addr))) {
                 printf("Autentication OK from local client.\n");
-                conn[csock].state = 0;
+                conn[csock].lurk = conn[csock].state = 0;
               } else {
                 printf("Failed authentication from client.\n");
                 conn[csock].state = 8;
               }
 #else
-              conn[csock].state = 0;
+              conn[csock].lurk = conn[csock].state = 0;
 #endif
             }
           } else if (conn[n].state != 8) { /* read from authorised client */
@@ -457,6 +463,8 @@ void Daemonise(int route, int no_fork)
               }
             } else if (strncmp(buffer, "::ping::", 8) == 0) {
               conn[n].state |= 0x100;
+            } else if (strncmp(buffer, "::lurk::", 8) == 0) {
+              conn[n].lurk = 2;
             } else if (strncmp(buffer, "::list::", 8) == 0) {
               conn[n].state = 4;
             } else if (owner != n) { /* no conn */
@@ -473,8 +481,15 @@ void Daemonise(int route, int no_fork)
                 report = 1;
                 owner = 0;
                 conn[n].state = 2;
-              } else if (buffer[0] != ':')
-                ExecuteCommand(n, fd, route, buffer);
+              } else if (buffer[0] != ':') {
+                ack = ExecuteCommand(n, fd, route, buffer);
+                cmd_from = n;
+                strncpy(cmd, buffer, 512);
+                cmd[511] = 0;
+                for (i = 0; i < 1024; i++)
+                  if (conn[i].lurk)
+                    conn[i].lurk = 3;
+              }
             }
           }
         } /* read */
@@ -500,9 +515,17 @@ void Daemonise(int route, int no_fork)
             } else if (conn[n].state == 5) { /* request with no conn */
               strcpy(buffer, ":::noconn:::\r\n");
               conn[n].state = 1;
+            } else if (conn[n].lurk == 2) { /* request for lurking */
+              strcpy(buffer, ":::slink:::\r\n");
+              conn[n].lurk = 1;
             } else if (conn[n].state & 0x100) { /* ping pong */
               strcpy(buffer, ":::pong:::\r\n");
               conn[n].state &= ~0x100;
+            } else if (conn[n].lurk == 3) { /* report command */
+              snprintf(buffer, 1024, ":::sender:::%s\r\n:::cmd:::%s\r\n:::rep:::%d\r\n", 
+                       conn[cmd_from].user, cmd, ack);
+              conn[n].lurk = 1;
+              buffer[1023] = 0;
             } else if (conn[n].state == 8) /* authentication failed */
               strcpy(buffer, ":::nope:::\r\n");
 
