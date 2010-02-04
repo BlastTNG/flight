@@ -450,6 +450,19 @@ union DerivedUnion DerivedChannels[] = {
   LINTERP("Tr_he4_pot",    "TR_HE4_POT"    , "/data/etc/rox-raw.txt"),
   LINTERP("Tr_optbox_filt","TR_OPTBOX_FILT", "/data/etc/rox-raw.txt"),
 
+  COMMENT("ROX Voltage Calibrations for noise tests"),
+  LINCOM("Vr_HE3_FRIDGE" , "tr_he3_fridge"  , 2.7351E-9, -5.8625),
+  LINCOM("Vr_M5"         , "tr_m5"          , 2.7351E-9, -5.8625),
+  LINCOM("Vr_M4"         , "tr_m4"          , 2.7351E-9, -5.8625),
+  LINCOM("Vr_HWPR"       , "tr_hwpr"        , 2.7351E-9, -5.8625),
+  LINCOM("Vr_HORN_500"   , "tr_horn_500"    , 2.7351E-9, -5.8625),
+  LINCOM("Vr_HORN_350"   , "tr_horn_350"    , 2.7351E-9, -5.8625),
+  LINCOM("Vr_HORN_250"   , "tr_horn_250"    , 2.7351E-9, -5.8625),
+  LINCOM("Vr_300MK_STRAP", "tr_300mk_strap" , 2.7351E-9, -5.8625),
+  LINCOM("Vr_HE4_POT"    , "tr_he4_pot"     , 2.7351E-9, -5.8625),
+  LINCOM("Vr_OPTBOX_FILT", "tr_optbox_filt" , 2.7351E-9, -5.8625),
+
+
 //  COMMENT("Level Sensor"),
 //  LINTERP("HE4_LITRE", "HE4_LEV", "/data/etc/he4_litre.txt"),
 //  LINTERP("HE4_PERCENT", "HE4_LEV", "/data/etc/he4_percent.txt"),
