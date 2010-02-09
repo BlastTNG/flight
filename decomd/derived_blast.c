@@ -433,7 +433,7 @@ union DerivedUnion DerivedChannels[] = {
     UNITS("Td_lhe", "Temperature", "K"),
   LINTERP("Td_ln",         "TD_LN"         , "/data/etc/dt600.txt"),
     UNITS("Td_ln", "Temperature", "K"),
-  LINTERP("Td_hs_pot",     "TD_HS_POT"     , "/data/etc/dt600.txt"),
+  LINTERP("Td_hs_pot",     "TD_HS_POT"     , "/data/etc/dt-simonchase.txt"),
     UNITS("Td_hs_pot", "Temperature", "K"),
   LINTERP("Td_jfet",       "TD_JFET"       , "/data/etc/dt600.txt"),
     UNITS("Td_jfet", "Temperature", "K"),
@@ -445,7 +445,7 @@ union DerivedUnion DerivedChannels[] = {
     UNITS("Td_lhe_filt", "Temperature", "K"),
   LINTERP("Td_vcs_jfet",   "TD_VCS_JFET"   , "/data/etc/dt600.txt"),
     UNITS("Td_vcs_jfet", "Temperature", "K"),
-  LINTERP("Td_hs_charcoal","TD_HS_CHARCOAL", "/data/etc/dt600.txt"),
+  LINTERP("Td_hs_charcoal","TD_HS_CHARCOAL", "/data/etc/dt-simonchase.txt"),
     UNITS("Td_hs_charcoal", "Temperature", "K"),
 
   COMMENT("ROXes"), // raw calibration only -- warning!
