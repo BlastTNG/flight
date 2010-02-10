@@ -4,15 +4,30 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <getdata.h>
+#include <getopt.h>
 
 #define DIRFILE_DEFAULT "/data/etc/defile.lnk"
-#define CHATTER "chatter"
+#define CHATTER_DEFAULT "chatter"
+#define OLD_DATA_LIMIT 50
 
 #define BUF_LEN 1024
+
+void usage(char *exe)
+{
+  fprintf(stderr, "%s [-d DIRFILE] [-c CHAR_FIELD] [-r|-s] [-v|-q]\n", exe);
+  fprintf(stderr, "Translate CHAR_FIELD from DIRFILE into ASCII on stdout.\n");
+  fprintf(stderr, "-d PATH_TO_DIRFILE [%s]\n", DIRFILE_DEFAULT);
+  fprintf(stderr, "-c CHAR_FIELD      [%s]\n", CHATTER_DEFAULT);
+  fprintf(stderr, "-r (reconnect) | -s (single shot) [-r]\n");
+  fprintf(stderr, "-v (verbose) | -q (quiet) [-v]\n");
+  exit(-1);
+}
 
 int main (int argc, char **argv)
 {
   char char_buffer[BUF_LEN];
+  char dirfile_name[BUF_LEN];
+  char chatter_name[BUF_LEN];
   DIRFILE *dirfile;
   off_t nf;
   off_t nf_old = 0;
@@ -20,65 +35,116 @@ int main (int argc, char **argv)
   uint16_t *data;
   off_t i;
   char a, b;
+  int c;
 
-  snprintf(char_buffer, BUF_LEN, "%s", DIRFILE_DEFAULT);
+  unsigned int old_data = 0;
+  int reload = 1;
+  int verbose = 1;
 
-  if (argc == 2)
+  snprintf(dirfile_name, BUF_LEN, "%s", DIRFILE_DEFAULT);
+  snprintf(chatter_name, BUF_LEN, "%s", CHATTER_DEFAULT);
+
+  while ((c = getopt(argc, argv, "d:c:rqvsh?")) != -1)
   {
-    snprintf(char_buffer, BUF_LEN, "%s", argv[1]);
+    switch (c)
+    {
+      case 'd':
+        snprintf(dirfile_name, BUF_LEN, "%s", optarg);
+        break;
+      case 'c':
+        snprintf(chatter_name, BUF_LEN, "%s", optarg);
+        break;
+      case 'r':
+        reload = 1;
+        break;
+      case 's':
+        reload = 0;
+        break;
+      case 'v':
+        verbose = 1;
+        break;
+      case 'q':
+        verbose = 0;
+      case 'h':
+      case '?':
+      default:
+        usage(argv[0]);
+        break;
+    }
   }
 
-  dirfile = dirfile_open(char_buffer, GD_RDONLY);
-  if (get_error(dirfile))
+  while (1) /* Main Loop */
   {
-    fprintf(stderr, "GetData error: %s\n", get_error_string(dirfile, char_buffer, BUF_LEN));
-    dirfile_close(dirfile);
-    exit(-1);
-  }
-
-  unsigned int spf = get_spf(dirfile, CHATTER);
-  if (get_error(dirfile))
-  {
-    fprintf(stderr, "GetData error: %s\n", get_error_string(dirfile, char_buffer, BUF_LEN));
-    dirfile_close(dirfile);
-    exit(-1);
-  }
-
-  data = malloc(BUF_LEN * spf * sizeof(uint16_t));
-  if (data == NULL)
-  {
-    fprintf(stderr, "malloc error!\n");
-    exit(-2);
-  }
-
-  while (1)
-  {
-    nf = get_nframes(dirfile);
+    if (verbose)
+    {
+      fprintf(stderr, "Reading %s from %s\n", chatter_name, dirfile_name);
+    }
+ 
+    dirfile = dirfile_open(dirfile_name, GD_RDONLY);
     if (get_error(dirfile))
     {
       fprintf(stderr, "GetData error: %s\n", get_error_string(dirfile, char_buffer, BUF_LEN));
       dirfile_close(dirfile);
       exit(-1);
     }
-
-    if (nf > nf_old)
+ 
+    unsigned int spf = get_spf(dirfile, chatter_name);
+    if (get_error(dirfile))
     {
-      n_read = getdata(dirfile, CHATTER, nf_old, 0, BUF_LEN, 0, GD_UINT16, data);
-      nf_old += n_read / spf;
-      for (i = 0; i < n_read; i++)
-      {
-        a = data[i] & 0xFF;
-        b = data[i] >> 8;
-        if (a != 0x16 && a != 0x00)
-          putchar(a);
-        if (b != 0x16 && b != 0x00)
-          putchar(b);
-      }
-      fflush(stdout);
-    } else {
-      usleep(100000);
+      fprintf(stderr, "GetData error: %s\n", get_error_string(dirfile, char_buffer, BUF_LEN));
+      dirfile_close(dirfile);
+      exit(-1);
     }
-  }
+ 
+    data = malloc(BUF_LEN * spf * sizeof(uint16_t));
+    if (data == NULL)
+    {
+      fprintf(stderr, "malloc error!\n");
+      exit(-2);
+    }
   
+    while (1) /* Data reading loop */
+    {
+      nf = get_nframes(dirfile);
+      if (get_error(dirfile))
+      {
+        fprintf(stderr, "GetData error: %s\n", get_error_string(dirfile, char_buffer, BUF_LEN));
+        dirfile_close(dirfile);
+        if (reload)
+          break;
+        else
+          exit(-2);
+      }
+  
+      if (nf > nf_old)
+      {
+        old_data = 0;
+        n_read = getdata(dirfile, chatter_name, nf_old, 0, BUF_LEN, 0, GD_UINT16, data);
+        nf_old += n_read / spf;
+        for (i = 0; i < n_read; i++)
+        {
+          a = data[i] & 0xFF;
+          b = data[i] >> 8;
+          if (a != 0x16 && a != 0x00)
+            putchar(a);
+          if (b != 0x16 && b != 0x00)
+            putchar(b);
+        }
+        fflush(stdout);
+      } else {
+        usleep(100000);
+        old_data++;
+
+        if (reload)
+        {
+          if (old_data > OLD_DATA_LIMIT)
+          {
+            dirfile_close(dirfile);
+            break;
+          }
+        }
+      }
+    }
+  } 
   return 0;
 }
