@@ -135,7 +135,7 @@ static int CalLamp (int index)
     last_mode = on;
     return 1;
   } else if (CommandData.Cryo.calibrator == repeat) {
-    if (last_mode != repeat || elapsed >= CommandData.Cryo.calib_period) {
+    if (elapsed >= CommandData.Cryo.calib_period || last_mode != repeat) {
       /* end of cycle -- send a new pulse */
       elapsed = 0;
       pulse_cnt = CommandData.Cryo.calib_pulse;
@@ -460,6 +460,8 @@ void BiasControl (unsigned short* RxFrame)
     rampAmplAddr = GetBiPhaseAddr("ramp_ampl");
   }
 
+  //TODO This command can be comletely removed since our biases are
+  //     all digital now.  
   if (CommandData.Bias.dont_do_anything) return;
 
   /********** set Bias (ramp)  *******/
