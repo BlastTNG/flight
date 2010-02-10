@@ -106,8 +106,9 @@ void PhaseControl(void)
     NiosAddr[DAS_CARDS] = GetNiosAddr(field);
   }	
 
-  for(i = 0; i < (DAS_CARDS + 1); i++)
-    WriteData(NiosAddr[i], CommandData.Phase[i]<<1, NIOS_FLUSH);
+  for(i = 0; i < DAS_CARDS; i++)
+    WriteData(NiosAddr[i], CommandData.Phase[i]<<1, NIOS_QUEUE);
+  WriteData(NiosAddr[DAS_CARDS], CommandData.Phase[DAS_CARDS]<<1, NIOS_FLUSH);
 }
 
 /***********************************************************************/
