@@ -229,14 +229,6 @@ extern "C" {
 #define MAGZ_M (-1.87933e-4)
 #define MAGZ_B (6.16957)
   
-/* B_AMP? conversion from counts to bias levels */
-#define B_AMP1_M 3.691518e-5
-#define B_AMP1_B (-67108735.0*3.691518e-5)
-#define B_AMP2_M 4.027081e-5
-#define B_AMP2_B (-67108823.0*4.027081e-5)
-#define B_AMP3_M 4.076398e-5
-#define B_AMP3_B (-67108833.0*4.076398e-5)
-
 #ifdef __cplusplus
 
 }
