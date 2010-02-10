@@ -164,6 +164,8 @@ static int JFETthermostat(void)
 
   static struct LutType DiodeLut = {"/data/etc/dt600.txt", 0, NULL, NULL, 0};
 
+  static int lasttime = 0;
+
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
@@ -178,13 +180,17 @@ static int JFETthermostat(void)
   if (jfet_temp < 0 || jfet_temp > 400)
     return CommandData.Cryo.JFETHeat;
   else if (jfet_temp > CommandData.Cryo.JFETSetOff)
+  {
+    lasttime = 0;
     return 0;
+  }
   else if (jfet_temp < CommandData.Cryo.JFETSetOn)
+  {
+    lasttime = 1;
     return 1;
-  else
-    //TODO probably want to set up a slow PWM here, with this duty cycle
-    return (CommandData.Cryo.JFETSetOff - jfet_temp) /
-      (CommandData.Cryo.JFETSetOff - CommandData.Cryo.JFETSetOn);
+  }
+  else //We're inbetween the setpoints, so keep doin' what we were doin'
+    return lasttime;
 }
 
 static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
