@@ -166,14 +166,15 @@ extern "C" {
 #define VEL2I (65536.0/10.0)
 #define I2VEL (1.0/VEL2I)
 
-#define T_JFET_M (-2.860308e-09*65536.0)
-#define T_JFET_B (1.232735e+01)
-
-#define T_LHE_M (-2.859373e-09*65536.0)
-#define T_LHE_B (1.232225e+01)
-
-#define T_CHARCOAL_M (-2.865098e-09*65536.0)
-#define T_CHARCOAL_B (1.235145e+01)
+/* Measured by Tristan @ Penn, September 29 2009 */
+#define CRYO_A2_M ( 4.805248E-9)
+#define CRYO_A2_B (-1.032198E1 )
+/* Modified by Jeff @ Penn, October 6 2009 */
+#define CRYO_D_M ( 4.8023774e-09)
+#define CRYO_D_B (-1.0317770e+01)
+/* Estimated by Truch @ Penn, December 18 2009 */
+#define CRYO_A1_M ( 1.7475937e-05)
+#define CRYO_A1_B (-3.7530959e+04)
 
 // Conversion factors for the rotated/calibrated gyros
 // (GY_IFEL, GY_IFYAW, GY_IFROLL).

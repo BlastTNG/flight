@@ -76,16 +76,6 @@
 #define U_T_MS  "Time","ms"
 #define U_R_O   "Resistance","Ohms"
 
-/* Measured by Tristan @ Penn, September 29 2009 */
-#define CRYO_A2_M ( 4.805248E-9)
-#define CRYO_A2_B (-1.032198E1 )
-/* Modified by Jeff @ Penn, October 6 2009 */
-#define CRYO_D_M ( 4.8023774e-09)
-#define CRYO_D_B (-1.0317770e+01)
-/* Estimated by Truch @ Penn, December 18 2009 */
-#define CRYO_A1_M ( 1.7475937e-05)
-#define CRYO_A1_B (-3.7530959e+04)
-
 /*******************************************************************************
  * TODO The channel list needs updating! Some of this is still from BLAST06
  *

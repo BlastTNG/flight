@@ -172,7 +172,7 @@ static int JFETthermostat(void)
   }
 
   jfet_temp = (double)slow_data[tJfetAddr->index][tJfetAddr->channel]
-    * T_JFET_M + T_JFET_B;
+    * CRYO_D_M + CRYO_D_B;
   jfet_temp = LutCal(&DiodeLut, jfet_temp);
 
   if (jfet_temp < 0 || jfet_temp > 400)
@@ -252,8 +252,8 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
         ((unsigned long)slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel
          + 1] << 16));	
 
-  t_lhe       = T_LHE_M*t_lhe + T_LHE_B;
-  t_charcoal  = T_CHARCOAL_M*t_charcoal + T_CHARCOAL_B;
+  t_lhe       = CRYO_D_M*t_lhe + CRYO_D_B;
+  t_charcoal  = CRYO_D_M*t_charcoal + CRYO_D_B;
   t_he3fridge = (ROX_C2V)*t_he3fridge + ROX_OFFSET;
   t_he4pot    = (ROX_C2V)*t_he4pot    + ROX_OFFSET;
 
