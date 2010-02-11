@@ -22,10 +22,10 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.24 $";
+const char *command_list_serial = "$Revision: 4.25 $";
 
 const char *GroupNames[N_GROUPS] = {
-  "Pointing Modes",        "Balance",          "Unused (Cool)",
+  "Pointing Modes",        "Balance",          "Waveplate Rotator",
   "Pointing Sensor Trims", "Aux. Electronics", "Bias",
   "Pointing Sensor Vetos", "Actuators",        "Unused (Cal Lamp)",
   "Pointing Motor Gains",  "Secondary Focus",  "Cryo Heat",
@@ -74,12 +74,12 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(gy_ifel2_off), "turn off gy_ifel2", GR_POWER},
   {COMMAND(gy_ifel2_on), "turn on gy_ifel2", GR_POWER},
   {COMMAND(gy_ifel2_cycle), "power cycle gy_ifel2", GR_POWER},
-  {COMMAND(actbus_off), "turn off the Actuators and Lock", GR_POWER | GR_LOCK
-    | GR_ACT | CONFIRM},
-  {COMMAND(actbus_on), "turn on the Actuators and Lock", GR_POWER | GR_LOCK
-    | GR_ACT},
-  {COMMAND(actbus_cycle), "power cycle the Actuators and Lock", GR_POWER | GR_LOCK
-    | GR_ACT | CONFIRM},
+  {COMMAND(actbus_off), "turn off the Actuators, Lock, and HWPR", GR_POWER 
+    | GR_LOCK | GR_ACT | GR_HWPR | CONFIRM},
+  {COMMAND(actbus_on), "turn on the Actuators, Lock, and HWPR", GR_POWER 
+    | GR_LOCK | GR_ACT | GR_HWPR},
+  {COMMAND(actbus_cycle), "power cycle the Actuators, Lock, and HWPR", GR_POWER 
+    | GR_LOCK | GR_ACT | GR_HWPR | CONFIRM},
   {COMMAND(reac_off), "turn off the reaction wheel motor", GR_POWER},
   {COMMAND(reac_on), "turn on the reaction wheel motor", GR_POWER},
   {COMMAND(reac_cycle), "power cycle the reaction wheel motor", GR_POWER},
@@ -244,7 +244,8 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_LOCK | CONFIRM},
   {COMMAND(unlock), "unlock the inner frame", GR_LOCK},
   {COMMAND(lock_off), "turn off the lock motor", GR_LOCK},
-  {COMMAND(repoll), "force repoll of the actuator bus", GR_LOCK | GR_ACT},
+  {COMMAND(repoll), "force repoll of the stepper busses (act, lock, HWPR, XY)",
+    GR_STAGE | GR_LOCK | GR_ACT | GR_HWPR},
   {COMMAND(autofocus_veto), "veto the secondary actuator system temperature"
     " correction mode", GR_FOCUS},
   {COMMAND(autofocus_allow), "allow the secondary actuator system temperature"
@@ -252,6 +253,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(actuator_stop), "stop all secondary actuators immediately", GR_ACT},
   {COMMAND(reset_dr), "reset the actuator dead reckoning", GR_ACT},
   {COMMAND(actpos_trim), "trim the actuator positions to the encoders", GR_ACT},
+  {COMMAND(hwpr_panic), "stop the HWPR rotator immediately", GR_HWPR},
 
   {COMMAND(isc_abort), "abort current solution attempt", GR_ISC_MODE},
   {COMMAND(isc_auto_focus), "autofocus camera", GR_ISC_MODE},
@@ -499,7 +501,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   {COMMAND(general), "send a general command string to the lock or actuators",
-    GR_STAGE | GR_ACT | GR_LOCK, 2,
+    GR_STAGE | GR_ACT | GR_LOCK | GR_HWPR, 2,
     {
       {"Address (1-3,5,33)", 1, 0x2F, 'i', "1.0"},
       {"Command", 0, 32, 's', ""},
@@ -595,6 +597,32 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Temp. Spread", 0, 100, 'f', "TC_SPREAD"},
       {"Preferred T Prime", 0, 2, 'i', "TC_PREF_TP"},
       {"Preferred T Second", 0, 2, 'i', "TC_PREF_TS"}
+    }
+  },
+  {COMMAND(hwpr_vel), "set the wavepalte rotator velocity and acceleration", 
+    GR_HWPR, 2,
+    {
+      {"Velocity", 5, 500000, 'l', "HWPR_VEL"},
+      {"Acceleration", 1, 1000, 'i', "HWPR_ACC"},
+    }
+  },
+  {COMMAND(hwpr_i), "set the wavepalte rotator currents", GR_HWPR, 2,
+    {
+      {"Move current (%)", 0, 100, 'i', "HWPR_MOVE_I"},
+      {"Hold current (%)", 0,  50, 'i', "HWPR_HOLD_I"},
+    }
+  },
+  {COMMAND(hwpr_goto), "move the waveplate rotator to absolute position",
+    GR_HWPR, 1,
+    {
+      //TODO calibrate hwpr move units
+      {"destination", 0, 80000, 'l', "STAGE_X"}
+    }
+  },
+  {COMMAND(hwpr_jump), "move the waveplate rotator to relative position",
+    GR_HWPR, 1,
+    {
+      {"delta", -80000, 80000, 'l', "0"}
     }
   },
 

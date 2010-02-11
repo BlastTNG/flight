@@ -653,11 +653,13 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case actbus_on:
       CommandData.actbus.off = 0;
       CommandData.actbus.force_repoll = 1;
+      CommandData.hwpr.force_repoll = 1;
       break;
     case actbus_cycle:
       CommandData.actbus.off = PCYCLE_HOLD_LEN * FAST_PER_SLOW;
       //TODO check that repoll occurs after restart (not during)
       CommandData.actbus.force_repoll = 1;
+      CommandData.hwpr.force_repoll = 1;
       break;
 
 #endif
@@ -838,6 +840,8 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case repoll:
       CommandData.actbus.force_repoll = 1;
+      CommandData.hwpr.force_repoll = 1;
+      CommandData.xystage.force_repoll = 1;
       break;
 
     /* Actuators */
@@ -855,6 +859,11 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case actpos_trim:
       ActPotTrim();
+      break;
+
+    case hwpr_panic:
+      CommandData.hwpr.mode = HWPR_PANIC;
+      CommandData.hwpr.is_new = 1;
       break;
 
 #ifndef BOLOTEST
@@ -1389,6 +1398,26 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.tc_spread = rvalues[0];
       CommandData.actbus.tc_prefp = ivalues[1];
       CommandData.actbus.tc_prefs = ivalues[2];
+      break;
+
+    case hwpr_vel:
+      CommandData.hwpr.vel = ivalues[0];
+      CommandData.hwpr.acc = ivalues[1];
+      break;
+    case hwpr_i:
+      CommandData.hwpr.move_i = ivalues[0];
+      CommandData.hwpr.hold_i = ivalues[1];
+      break;
+    //TODO probably want hwpr moves calibrated into degrees
+    case hwpr_goto:
+      CommandData.hwpr.target = ivalues[0];
+      CommandData.hwpr.mode = HWPR_GOTO;
+      CommandData.hwpr.is_new = 1;
+      break;
+    case hwpr_jump:
+      CommandData.hwpr.target = ivalues[0];
+      CommandData.hwpr.mode = HWPR_JUMP;
+      CommandData.hwpr.is_new = 1;
       break;
 
       /* XY Stage */
@@ -2258,7 +2287,6 @@ void InitCommandData()
 
   /** this overrides prev_status **/
   CommandData.force_el = 0;
-  CommandData.xystage.is_new = 0;
 
   if (CommandData.pumps.bal_veto != -1)
     CommandData.pumps.bal_veto = BAL_VETO_MAX;
@@ -2275,6 +2303,11 @@ void InitCommandData()
   CommandData.actbus.caddr[0] = 0;
   CommandData.actbus.caddr[1] = 0;
   CommandData.actbus.caddr[2] = 0;
+
+  CommandData.xystage.is_new = 0;
+  CommandData.xystage.force_repoll = 0;
+  CommandData.hwpr.is_new = 0;
+  CommandData.hwpr.force_repoll = 0;
 
   CommandData.Bias.dont_do_anything = 0;
   CommandData.Bias.biasRamp = 0;
@@ -2507,6 +2540,11 @@ void InitCommandData()
   CommandData.actbus.lock_acc = 100;
   CommandData.actbus.lock_move_i = 50;
   CommandData.actbus.lock_hold_i = 0;
+
+  CommandData.hwpr.vel = 10000;
+  CommandData.hwpr.acc = 1000;
+  CommandData.hwpr.move_i = 20;
+  CommandData.hwpr.hold_i = 0;
 
   CommandData.pin_is_in = 1;
 

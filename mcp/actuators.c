@@ -1313,6 +1313,11 @@ void StoreActBus(void)
   static struct NiosStruct* lockMoveIAddr;
   static struct NiosStruct* lockHoldIAddr;
 
+  static struct NiosStruct* hwprVelAddr;
+  static struct NiosStruct* hwprAccAddr;
+  static struct NiosStruct* hwprMoveIAddr;
+  static struct NiosStruct* hwprHoldIAddr;
+
   static struct NiosStruct* actVelAddr;
   static struct NiosStruct* actAccAddr;
   static struct NiosStruct* actMoveIAddr;
@@ -1390,6 +1395,11 @@ void StoreActBus(void)
     lockAccAddr = GetNiosAddr("lock_acc");
     lockMoveIAddr = GetNiosAddr("lock_move_i");
     lockHoldIAddr = GetNiosAddr("lock_hold_i");
+
+    hwprVelAddr = GetNiosAddr("hwpr_vel");
+    hwprAccAddr = GetNiosAddr("hwpr_acc");
+    hwprMoveIAddr = GetNiosAddr("hwpr_move_i");
+    hwprHoldIAddr = GetNiosAddr("hwpr_hold_i");
   }
 
   lvdt[0] = slow_data[lvdt10Addr->index][lvdt10Addr->channel] *
@@ -1439,6 +1449,11 @@ void StoreActBus(void)
   WriteData(lockAccAddr, CommandData.actbus.lock_acc, NIOS_QUEUE);
   WriteData(lockMoveIAddr, CommandData.actbus.lock_move_i, NIOS_QUEUE);
   WriteData(lockHoldIAddr, CommandData.actbus.lock_hold_i, NIOS_QUEUE);
+
+  WriteData(hwprVelAddr, CommandData.hwpr.vel / 100, NIOS_QUEUE);
+  WriteData(hwprAccAddr, CommandData.hwpr.acc, NIOS_QUEUE);
+  WriteData(hwprMoveIAddr, CommandData.hwpr.move_i, NIOS_QUEUE);
+  WriteData(hwprHoldIAddr, CommandData.hwpr.hold_i, NIOS_QUEUE);
 
   WriteData(tcGPrimAddr, CommandData.actbus.g_primary * 100., NIOS_QUEUE);
   WriteData(tcGSecAddr, CommandData.actbus.g_secondary * 100., NIOS_QUEUE);

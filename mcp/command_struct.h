@@ -97,6 +97,10 @@ struct VelGainStruct {
 #define XYSTAGE_SCAN   3
 #define XYSTAGE_RASTER 4
 
+#define HWPR_PANIC    0
+#define HWPR_GOTO     1
+#define HWPR_JUMP     2
+
 // mode        X     Y    vaz   del    w    h
 // LOCK              el
 // AZEL_GOTO   az    el
@@ -317,7 +321,14 @@ struct CommandDataStruct {
   } actbus;
 
   struct {
+    int vel, acc, hold_i, move_i;
+    int force_repoll;
+    int mode, is_new, target;
+  } hwpr;
+
+  struct {
     int x1, y1, x2, y2, xvel, yvel, is_new, mode;
+    int force_repoll;
   } xystage;
 
   int pin_is_in;
