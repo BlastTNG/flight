@@ -292,7 +292,7 @@ static int ReadIntFromBus(int who, const char* cmd, int inhibit_chatter)
         | ACTBUS_OOD)) {
     bprintf(warning, "StageBus: Timeout waiting for response from %s (RIFB)",
         name[who]);
-    CommandData.actbus.force_repoll = 1;
+    CommandData.xystage.force_repoll = 1;
     return 0;
   }
 
@@ -310,7 +310,7 @@ static void DiscardBusRecv(int flag, int who, int inhibit_chatter)
     i = who;
     bprintf(warning,
         "StageBus: Timeout waiting for response from %s.", name[who]);
-    CommandData.actbus.force_repoll = 1;
+    CommandData.xystage.force_repoll = 1;
   }
 #ifndef ACTBUS_CHATTER
   else if (flag)
@@ -355,7 +355,7 @@ static int PollBus(int rescan)
     }
   }
 
-  CommandData.actbus.force_repoll = 0;
+  CommandData.xystage.force_repoll = 0;
 
   return all_ok;
 }
@@ -501,14 +501,14 @@ void StageBus(void)
 
   for (;;) {
     while (!InCharge) { /* NiC MCC traps here */
-      CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining
+      CommandData.xystage.force_repoll = 1; /* repoll bus as soon as gaining
                                               control */
       BusRecv(NULL, 1, 1); /* this is a blocking call - clear the recv buffer */
       /* no need to sleep -- BusRecv does that for us */
     }
 
     /* Repoll bus if necessary */
-    if (CommandData.actbus.force_repoll) {
+    if (CommandData.xystage.force_repoll) {
       poll_timeout = 0;
       all_ok = 0;
       for (i = 0; i < NACT; ++i)
