@@ -1,6 +1,8 @@
 /* defile: converts BLAST-type framefiles into dirfiles
  *
  * This file is copyright (C) 2004-2005 D. V. Wiebe
+ * Also (C) 2005-2010 Matthew Truch.
+ * And I'm sure many others....
  * 
  * This file is part of defile.
  * 
@@ -964,7 +966,7 @@ int main (int argc, char** argv)
     setsid();
   }
 
-  bprintf(info, "defile " VERSION " (C) 2004-2005 D. V. Wiebe\n"
+  bprintf(info, "defile " VERSION " (C) 2004-2010 D. V. Wiebe and others\n"
       "Compiled on " __DATE__ " at " __TIME__ ".\n\n");
 
   if (!rc.force_quenya || rc.quenya) {
