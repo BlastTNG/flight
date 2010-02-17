@@ -25,6 +25,7 @@
 #  include "config.h"
 #endif
 
+#define _GNU_SOURCE     /* Make string.h give us the "nice" basename() */
 #include <stdlib.h>     /* ANSI C std library (atoi, exit, realpath) */
 #include <pthread.h>    /* POSIX threads (pthread_create, pthread_join) */
 #include <signal.h>     /* ANSI C signals (SIG(FOO), sigemptyset, sigaddset) */
@@ -1029,6 +1030,8 @@ int main (int argc, char** argv)
   /* Main status loop -- if we're in silent mode we skip this entirely and
    * just wait for the read and write threads to exit */
   if (!rc.silent)
+  rc.dirname = strdup(rc.dirfile);
+  snprintf(rc.dirname, strlen(rc.dirfile), "%s", basename(rc.dirfile));
     do {
       if (!ri.tty) {
         gettimeofday(&now, &rc.tz);
@@ -1044,10 +1047,10 @@ int main (int argc, char** argv)
         }
 #ifndef DEBUG
         if (rc.quenya)
-          printf("R:[%i] W:[%i] %.*f Hz\r", ri.read / 20, ri.wrote / 20, (fr
+          printf("%s R:[%i] W:[%i] %.*f Hz\r", rc.dirname, ri.read / 20, ri.wrote / 20, (fr
                 > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
         else 
-          printf("R:[%i of %i] W:[%i] %.*f Hz\r", ri.read / 20, (ri.old_total
+          printf("%s R:[%i of %i] W:[%i] %.*f Hz\r", rc.dirname, ri.read / 20, (ri.old_total
                 + ri.chunk_total) / 20, ri.wrote / 20, (fr > 100) ? 1 : (fr > 10)
               ? 2 : 3, fr);
         fflush(stdout);
@@ -1059,10 +1062,10 @@ int main (int argc, char** argv)
   pthread_join(write_thread, NULL);
   if (!rc.silent) {
     if (rc.quenya)
-      bprintf(info, "R:[%i] W:[%i] %.*f Hz", ri.read / 20, ri.wrote / 20,
+      bprintf(info, "%s R:[%i] W:[%i] %.*f Hz", rc.dirname, ri.read / 20, ri.wrote / 20,
           (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
     else
-      bprintf(info, "R:[%i of %i] W:[%i] %.*f Hz", ri.read / 20, (ri.old_total
+      bprintf(info, "%s R:[%i of %i] W:[%i] %.*f Hz", rc.dirname, ri.read / 20, (ri.old_total
             + ri.chunk_total) / 20, ri.wrote / 20, (fr > 100) ? 1 : (fr > 10)
           ? 2 : 3, fr);
   }
