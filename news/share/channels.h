@@ -166,15 +166,40 @@ extern "C" {
 #define VEL2I (65536.0/10.0)
 #define I2VEL (1.0/VEL2I)
 
+/* Cryo preamp channel Voltage calibration */
 /* Measured by Tristan @ Penn, September 29 2009 */
 #define CRYO_A2_M ( 4.805248E-9)
 #define CRYO_A2_B (-1.032198E1 )
+/* Cryo Diode Voltage Calibration */
 /* Modified by Jeff @ Penn, October 6 2009 */
 #define CRYO_D_M ( 4.8023774e-09)
 #define CRYO_D_B (-1.0317770e+01)
-/* Estimated by Truch @ Penn, December 18 2009 */
-#define CRYO_A1_M ( 1.7475937e-05)
-#define CRYO_A1_B (-3.7530959e+04)
+/* Cryo ROX resistance calibrations */
+/* Measured Feb 17 2010 */
+#define CRYO_HE3_FRIDGE_M    (1.1603658e-05)
+#define CRYO_HE3_FRIDGE_B    (-24984.612)
+/* Pot was not measured so is an estimate */
+#define CRYO_HE4_POT_M       (1.1603658e-05)
+#define CRYO_HE4_POT_B       (-24984.612)
+#define CRYO_OPTBOX_FILT_M   (1.2159514e-05)
+#define CRYO_OPTBOX_FILT_B   (-26161.286)
+#define CRYO_HWPR_M          (1.1906168e-05)
+#define CRYO_HWPR_B          (-25691.008)
+#define CRYO_300MK_STRAP_M   (1.1802677e-05)
+#define CRYO_300MK_STRAP_B   (-25412.004)
+#define CRYO_HORN_500_M      (1.1844124e-05)
+#define CRYO_HORN_500_B      (-25514.187)
+#define CRYO_HORN_350_M      (1.1645635e-05)
+#define CRYO_HORN_350_B      (-25066.185)
+#define CRYO_HORN_250_M      (1.1925447e-05)
+#define CRYO_HORN_250_B      (-25672.736)
+#define CRYO_M5_M            (1.1319609e-05)
+#define CRYO_M5_B            (-24293.822)
+/* M4 and M3 were not measured so are estimates */
+#define CRYO_M4_M            (1.1319609e-05)
+#define CRYO_M4_B            (-24293.822)
+#define CRYO_M3_M            (1.1319609e-05)
+#define CRYO_M3_B            (-24293.822)
 
 // Conversion factors for the rotated/calibrated gyros
 // (GY_IFEL, GY_IFYAW, GY_IFROLL).
