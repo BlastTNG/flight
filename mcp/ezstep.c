@@ -113,6 +113,9 @@ static char* stepName(struct ezbus* bus, int who)
       return hidden_buffer;
     }
   }
+  bprintf(err, "EZ-Stepper: stepName(): Unexpected Trap!\n");
+  sprintf(hidden_buffer, "Invalid Stepper");
+  return hidden_buffer;
 }
 
 int EZBus_Init(struct ezbus* bus,const char* tty,const char* name,int chatter)
