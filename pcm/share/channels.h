@@ -195,9 +195,9 @@ extern "C" {
 #define CRYO_HORN_250_B      (-25672.736)
 #define CRYO_M5_M            (1.1319609e-05)
 #define CRYO_M5_B            (-24293.822)
-/* M4 and M3 were not measured so are estimates */
-#define CRYO_M4_M            (1.1319609e-05)
-#define CRYO_M4_B            (-24293.822)
+#define CRYO_M4_M            (1.1743625e-05)
+#define CRYO_M4_B            (-25283.507)
+/* M3 was not measured so is an estimate */
 #define CRYO_M3_M            (1.1319609e-05)
 #define CRYO_M3_B            (-24293.822)
 
