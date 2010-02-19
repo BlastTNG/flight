@@ -1400,8 +1400,8 @@ void UpdateBBCFrame(unsigned short *RxFrame)
 #ifndef BOLOTEST
     SetGyroMask();
     ChargeController();
-#endif
     ControlPower();
+#endif
   }
 
   if (!mcp_initial_controls)

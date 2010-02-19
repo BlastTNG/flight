@@ -876,7 +876,9 @@ int main(int argc, char *argv[])
 
   InitTxFrame(RxFrame);
 
+#ifndef BOLOTEST
   pthread_create(&chatter_id, NULL, (void*)&Chatter, NULL);
+#endif
 
 #ifdef USE_XY_THREAD
   pthread_create(&dgps_id, NULL, (void*)&StageBus, NULL);
