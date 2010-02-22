@@ -50,23 +50,23 @@
 #define VALVE_POT_CLOSE   0x80
 
 /* he3 cycle */
-#define CRYO_CYCLE_OUT_OF_HELIUM 0x0000
-#define CRYO_CYCLE_COLD          0x0001
-#define CRYO_CYCLE_ON            0x0002
-#define CRYO_CYCLE_COOL          0x0004
+#define CRYO_CYCLE_OUT    0x0000
+#define CRYO_CYCLE_COLD   0x0001
+#define CRYO_CYCLE_ON     0x0002
+#define CRYO_CYCLE_COOL   0x0004
+#define CRYO_CYCLE_HS_OFF 0x0008
 
-// times changed from 45 min to 35 min
-// for charcoal, and from 2hrs to 3hrs 
-// for timout, due to new (lower conduction)
-// charcoal pump tin link.  cbn/md 12_10_06
-#define CRYO_CYCLE_TIMEOUT       (35*60)
+#define CRYO_CYCLE_HEAT_TIMEOUT  (35*60)
 #define CRYO_CYCLE_COOL_TIMEOUT  (3*60*60)
+#define CRYO_CYCLE_HS_TIMEOUT    (2*60)
 
-#define T_HE3FRIDGE_TOO_HOT      3.733304    /* 0.391508    K */
-#define T_HE3FRIDGE_COLD         4.34106     /* 0.326861    K */
-#define T_HE4POT_SET             1.368951538 /* 2.312414576 K */
-#define T_CHARCOAL_SET           6.693948    /* 25          K */
-#define T_LHE_SET                9.39198     /* 4.4         K */
+#define T_HE3FRIDGE_HOT   0.400
+#define T_HE3FRIDGE_COLD  0.350
+#define T_HE4POT_MAX      2.500
+#define T_CHARCOAL_MIN   25.000
+#define T_CHARCOAL_MAX   35.000
+#define T_LHE_MAX         4.600
+#define T_CHAR_HS_COLD   10.000
 
 /* CryoState bitfield */
 //#define CS_HELIUMLEVEL    0x0001
@@ -202,114 +202,163 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
   static struct BiPhaseStruct* t_he3fridge_Addr;
   static struct BiPhaseStruct* t_charcoal_Addr;
   static struct BiPhaseStruct* t_he4pot_Addr;
+  static struct BiPhaseStruct* t_char_hs_Addr;
   static struct NiosStruct*    cycleStartWAddr;
   static struct BiPhaseStruct* cycleStartRAddr;
   static struct NiosStruct*    cycleStateWAddr;
   static struct BiPhaseStruct* cycleStateRAddr;
 
-  double t_lhe, t_he3fridge, t_charcoal, t_he4pot;
+  static struct LutType DiodeLut = {"/data/etc/dt600.txt", 0, NULL, NULL, 0};
+  static struct LutType HSLut = {"/data/etc/dt-simonchase.txt", 0, NULL, NULL, 0};
+  static struct LutType ROXLut = {"/data/etc/rox-raw.txt", 0, NULL, NULL, 0};
+
+  double t_lhe, t_he3fridge, t_charcoal, t_he4pot, t_char_hs;
 
   time_t start_time;
   unsigned short cycle_state;
   static unsigned short iterator = 1;
+  static unsigned short heat_char = 0;
+  static unsigned short heat_hs = 0;
 
   if (firsttime) {
     firsttime = 0;
     t_lhe_Addr = GetBiPhaseAddr("td_lhe");
-    t_he3fridge_Addr = GetBiPhaseAddr("td_charcoal");
+    t_he3fridge_Addr = GetBiPhaseAddr("tr_he3_fridge");
     t_charcoal_Addr = GetBiPhaseAddr("td_charcoal");
-    t_he4pot_Addr = GetBiPhaseAddr("td_charcoal");
+    t_he4pot_Addr = GetBiPhaseAddr("tr_he4_pot");
+    t_char_hs_Addr = GetBiPhaseAddr("td_hs_charcoal");
     cycleStartWAddr = GetNiosAddr("cycle_start");
     cycleStartRAddr = ExtractBiPhaseAddr(cycleStartWAddr);
     cycleStateWAddr = GetNiosAddr("cycle_state");
     cycleStateRAddr = ExtractBiPhaseAddr(cycleStateWAddr);
-    WriteData(cycleStateWAddr, CRYO_CYCLE_OUT_OF_HELIUM, NIOS_QUEUE);
-    return;
+    WriteData(cycleStateWAddr, CRYO_CYCLE_OUT, NIOS_QUEUE);
+
+    LutInit(&DiodeLut);
+    LutInit(&HSLut);
+    LutInit(&ROXLut);
   }
 
   if (reset || force_cycle == NULL) {
-   WriteData(cycleStateWAddr, CRYO_CYCLE_OUT_OF_HELIUM, NIOS_QUEUE);
+   WriteData(cycleStateWAddr, CRYO_CYCLE_OUT, NIOS_QUEUE);
    iterator = 1;
-   return;
+   heat_char = 0;
+   heat_hs = 0;
   }
 
-  if(iterator++ % 10)  /* Run this loop at 0.5 Hz */
-    return;
+  if(!(iterator++ % 10))  /* Run this loop at 0.5 Hz */
+  {
 
-  //TODO rewrite fridge cycle code
-  bprintf(warning, "Auto Cycle not implemented."
-      " You should be in manual mode.\n");
-  return;
+    start_time = slow_data[cycleStartRAddr->index][cycleStartRAddr->channel];
+    start_time |= (unsigned long)slow_data[cycleStartRAddr->index][cycleStartRAddr->channel + 1] << 16;
+    cycle_state = slow_data[cycleStateRAddr->index][cycleStateRAddr->channel];
 
-  start_time = slow_data[cycleStartRAddr->index][cycleStartRAddr->channel];
-  start_time |=
-    (unsigned long)slow_data[cycleStartRAddr->index][cycleStartRAddr->channel
-    + 1] << 16;
-  cycle_state = slow_data[cycleStateRAddr->index][cycleStateRAddr->channel];
+    /* Extract and calculate all the temperatures of interest */
+    t_lhe = (double)(slow_data[t_lhe_Addr->index][t_lhe_Addr->channel] +
+        ((unsigned long)slow_data[t_lhe_Addr->index][t_lhe_Addr->channel + 1] << 16));
+    t_charcoal = (double)(slow_data[t_charcoal_Addr->index][t_charcoal_Addr->channel] +
+        ((unsigned long)slow_data[t_charcoal_Addr->index][t_charcoal_Addr->channel + 1] << 16));
+    t_he3fridge = (double)(slow_data[t_he3fridge_Addr->index][t_he3fridge_Addr->channel] +
+        ((unsigned long)slow_data[t_he3fridge_Addr->index][1 + t_he3fridge_Addr->channel] << 16));
+    t_he4pot = (double)(slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel] +
+        ((unsigned long)slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel + 1] << 16));	
+    t_char_hs = (double)(slow_data[t_char_hs_Addr->index][t_char_hs_Addr->channel] +
+        ((unsigned long)slow_data[t_char_hs_Addr->index][t_char_hs_Addr->channel + 1] << 16));
 
-  t_lhe = (double)slow_data[t_lhe_Addr->index][t_lhe_Addr->channel];
-  t_charcoal
-    = (double)slow_data[t_charcoal_Addr->index][t_charcoal_Addr->channel];
-  t_he3fridge
-    = (double)(slow_data[t_he3fridge_Addr->index][t_he3fridge_Addr->channel] +
-		    ((unsigned long)slow_data[t_he3fridge_Addr->index][1 +
-         t_he3fridge_Addr->channel] << 16));
-  t_he4pot
-    = (double)(slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel] +
-        ((unsigned long)slow_data[t_he4pot_Addr->index][t_he4pot_Addr->channel
-         + 1] << 16));	
-
-  t_lhe       = CRYO_D_M*t_lhe + CRYO_D_B;
-  t_charcoal  = CRYO_D_M*t_charcoal + CRYO_D_B;
-  t_he3fridge = (ROX_C2V)*t_he3fridge + ROX_OFFSET;
-  t_he4pot    = (ROX_C2V)*t_he4pot    + ROX_OFFSET;
-
-  if (t_lhe < T_LHE_SET) {
-    *heatctrl &= ~HEAT_CHARCOAL;
-    WriteData(cycleStateWAddr, CRYO_CYCLE_OUT_OF_HELIUM, NIOS_QUEUE);
-    return;
-  }
-
-  if (cycle_state == CRYO_CYCLE_COLD) {
-    if((t_he3fridge < T_HE3FRIDGE_TOO_HOT && t_he4pot > T_HE4POT_SET)
-        || *force_cycle) {
-      *force_cycle = 0;
-      WriteData(cycleStateWAddr, CRYO_CYCLE_ON, NIOS_QUEUE);
-      WriteData(cycleStartWAddr, mcp_systime(NULL), NIOS_QUEUE);
-      *heatctrl |= HEAT_CHARCOAL;
-      bprintf(info, "Auto Cycle: Turning charcoal heat on.");
-      return;
-    }
-    *heatctrl &= ~HEAT_CHARCOAL;
-  } else if (cycle_state == CRYO_CYCLE_ON) {
-    if (((mcp_systime(NULL) - start_time) > CRYO_CYCLE_TIMEOUT) ||
-        t_charcoal < T_CHARCOAL_SET ||
-        t_he4pot < T_HE4POT_SET) {
-      WriteData(cycleStateWAddr, CRYO_CYCLE_COOL, NIOS_QUEUE);
-      *heatctrl &= ~HEAT_CHARCOAL;
-      bprintf(info, "Auto Cycle: Turning charcoal heat off.");
-      return;
-    }
-    *heatctrl |= HEAT_CHARCOAL;
-  } else if ( cycle_state == CRYO_CYCLE_COOL) {
-    if ((t_he3fridge > T_HE3FRIDGE_COLD)
-        || ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_COOL_TIMEOUT) ) {
+    t_lhe       = CRYO_D_M          * t_lhe       + CRYO_D_B;
+    t_charcoal  = CRYO_D_M          * t_charcoal  + CRYO_D_B;
+    t_char_hs   = CRYO_D_M          * t_char_hs   + CRYO_D_B;
+    t_he3fridge = CRYO_HE3_FRIDGE_M * t_he3fridge + CRYO_HE3_FRIDGE_B;
+    t_he4pot    = CRYO_HE4_POT_M    * t_he4pot    + CRYO_HE4_POT_B;
+  
+    t_lhe       = LutCal(&DiodeLut, t_lhe);
+    t_charcoal  = LutCal(&DiodeLut, t_charcoal);
+    t_char_hs   = LutCal(&HSLut,    t_char_hs);
+    t_he3fridge = LutCal(&ROXLut,   t_he3fridge);
+    t_he4pot    = LutCal(&ROXLut,   t_he4pot);
+  
+  
+    if (t_lhe > T_LHE_MAX) {
+      heat_char = 0;
+      heat_hs = 1;
+      WriteData(cycleStateWAddr, CRYO_CYCLE_OUT, NIOS_QUEUE);
+    } else if (cycle_state == CRYO_CYCLE_COLD) {
+      if((t_he3fridge > T_HE3FRIDGE_HOT && t_he4pot < T_HE4POT_MAX)
+          || *force_cycle) {
+        *force_cycle = 0;
+        WriteData(cycleStateWAddr, CRYO_CYCLE_HS_OFF, NIOS_QUEUE);
+        WriteData(cycleStartWAddr, mcp_systime(NULL), NIOS_QUEUE);
+        heat_char = heat_hs = 0;
+        bprintf(info, "Auto Cycle: Turning charcoal heatswitch off.");
+      } else {
+        heat_char = 0;
+        heat_hs = 1;
+      }
+    } else if (cycle_state == CRYO_CYCLE_HS_OFF) {
+      if (((mcp_systime(NULL) - start_time) > CRYO_CYCLE_HS_TIMEOUT) ||
+          t_char_hs < T_CHAR_HS_COLD) {
+        WriteData(cycleStateWAddr, CRYO_CYCLE_ON, NIOS_QUEUE);
+        heat_char = 1;
+        heat_hs = 0;
+        bprintf(info, "Auto Cycle: Turning charcoal heat on.");
+      } else {
+        heat_char = heat_hs = 0;
+      }
+    } else if (cycle_state == CRYO_CYCLE_ON) {
+      if (((mcp_systime(NULL) - start_time) > CRYO_CYCLE_HEAT_TIMEOUT) ||
+          t_he4pot > T_HE4POT_MAX) {
+        WriteData(cycleStateWAddr, CRYO_CYCLE_COOL, NIOS_QUEUE);
+        heat_char = 0;
+        heat_hs = 1;
+        bprintf(info, "Auto Cycle: Charcoal heat off; charcoal heatswitch on.");
+      } else {
+        heat_hs = 0;
+        if (t_charcoal > T_CHARCOAL_MAX) {
+          if (heat_char)
+            bprintf(info, "Auto Cycle: Turning charcoal heat off.");
+          heat_char = 0;
+        } else if (t_charcoal < T_CHARCOAL_MIN) {
+          if (!heat_char)
+            bprintf(info, "Auto Cycle: Turning charcoal heat on.");
+          heat_char = 1;
+        }
+      } //else we're inbetween the setpoints so we keep doin' what we're doin'.
+    } else if ( cycle_state == CRYO_CYCLE_COOL) {
+      if ((t_he3fridge < T_HE3FRIDGE_COLD)
+          || ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_COOL_TIMEOUT) ) {
+        WriteData(cycleStateWAddr, CRYO_CYCLE_COLD, NIOS_QUEUE);
+        heat_char = 0;
+        heat_hs = 1;
+        *force_cycle = 0; // clear any pending cycle commands...
+        bprintf(info, "Auto Cycle: Fridge is now cold!.");
+      } else {
+        heat_char = 0;
+        heat_hs = 1;
+      }
+    } else if (cycle_state == CRYO_CYCLE_OUT) {
+      if (t_lhe < T_LHE_MAX) {
+        WriteData(cycleStateWAddr, CRYO_CYCLE_COLD, NIOS_QUEUE);
+        heat_char = 0;
+        heat_hs = 1;
+        bprintf(info, "Auto Cycle: Activated.");
+      }
+    } else {
+      bprintf(err, "Auto Cycle: cycle_state: %i unknown!", cycle_state);
       WriteData(cycleStateWAddr, CRYO_CYCLE_COLD, NIOS_QUEUE);
-      *heatctrl &= ~HEAT_CHARCOAL;
-      *force_cycle = 0; // clear any pending cycle commands...
-      bprintf(info, "Auto Cycle: Fridge is now cold!.");
-      return;
+      heat_char = 0;
+      heat_hs = 1;
     }
-    *heatctrl &= ~HEAT_CHARCOAL;
-  } else if (cycle_state == CRYO_CYCLE_OUT_OF_HELIUM) {
-    WriteData(cycleStateWAddr, CRYO_CYCLE_COLD, NIOS_QUEUE);
-    *heatctrl &= ~HEAT_CHARCOAL;
-    bprintf(info, "Auto Cycle: Everything A-OK.");
-  } else {
-    bprintf(err, "Auto Cycle: cycle_state: %i unknown!", cycle_state);
-    *heatctrl &= ~HEAT_CHARCOAL;
-    return;
   }
+
+  if (heat_char)
+    *heatctrl |= HEAT_CHARCOAL;
+  else
+    *heatctrl &= ~HEAT_CHARCOAL;
+
+  if (heat_hs)
+    *heatctrl |= HEAT_CHARCOAL_HS;
+  else
+    *heatctrl &= ~HEAT_CHARCOAL_HS;
+
   return;
 }
 
