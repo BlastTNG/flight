@@ -41,8 +41,8 @@
 #define ACTBUS_CHATTER
 static int __inhibit_chatter = 1;
 
-#if defined USE_FIFO_CMD && ! defined USE_XY_THREAD
-#  define ACT_BUS "/dev/ttyS0"
+#if defined USE_FIFO_CMD
+#  define ACT_BUS "/dev/ttyUSB0"
 #else
 #  define ACT_BUS "/dev/ttySI15"
 #endif
