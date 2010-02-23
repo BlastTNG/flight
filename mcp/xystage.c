@@ -47,7 +47,7 @@
 /* Define this symbol to have mcp log all actuator bus traffic */
 #undef ACTBUS_CHATTER
 
-#define ACT_BUS "/dev/ttyUSB0"
+#define ACT_BUS "/dev/ttyXYSTAGE"
 
 #define STAGEXNUM 0
 #define STAGEYNUM 1

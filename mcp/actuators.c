@@ -41,11 +41,7 @@
 #define ACTBUS_CHATTER
 static int __inhibit_chatter = 1;
 
-#if defined USE_FIFO_CMD
-#  define ACT_BUS "/dev/ttyUSB0"
-#else
-#  define ACT_BUS "/dev/ttySI15"
-#endif
+#define ACT_BUS "/dev/ttySI15"
 
 /* Thermal model numbers, from MD and MV */
 #define T_PRIMARY_FOCUS   258.15 /* = -15C */
@@ -62,7 +58,8 @@ static int __inhibit_chatter = 1;
 
 #define ALL_ACT 0x51 /* 'Q' = All actuators */
 #define LOCKNUM 3
-#define NACT 4
+#define HWPRNUM 4
+#define NACT 5
 #define POLL_TIMEOUT 30000 /* 5 minutes */
 
 /* EZ Stepper status bit masks */
@@ -105,8 +102,8 @@ extern short int InCharge; /* tx.c */
 #define LAST_ACTUATOR 2
 static int bus_fd = -1;
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
-  "Lock Motor" };
-static const int id[NACT] = {0x31, 0x32, 0x33, 0x35};
+  "Lock Motor", "HWPR"};
+static const int id[NACT] = {0x31, 0x32, 0x33, 0x35, 0x3d};
 
 static char bus_buffer[1000];
 static struct stepper_struct {
