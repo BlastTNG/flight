@@ -996,11 +996,42 @@ static void StoreData(int index)
     elDriveErrCtsAddr = GetNiosAddr("el_drive_err_cts");
   }
 
+  /*************************************************
+   *             Fast Controls                     *
+   ************************************************/
   i_point = GETREADINDEX(point_index);
   i_ss = GETREADINDEX(ss_index);
   i_rw_motors = GETREADINDEX(rw_motor_index);
   i_elev_motors = GETREADINDEX(elev_motor_index);
   i_pivot_motors = GETREADINDEX(pivot_motor_index);
+
+  WriteData(azAddr, (unsigned int)(PointingData[i_point].az * DEG2LI),
+      NIOS_QUEUE);
+  WriteData(elAddr, (unsigned int)(PointingData[i_point].el * DEG2LI),
+      NIOS_QUEUE);
+
+  WriteData(encElAddr, (unsigned int)((PointingData[i_point].enc_el
+                      + CommandData.enc_el_trim)* DEG2I), NIOS_QUEUE);
+  WriteData(encSigmaAddr,
+      (unsigned int)(PointingData[i_point].enc_sigma * DEG2I), NIOS_QUEUE);
+
+  WriteData(rwEncVel,
+      ((long int)(RWMotorData[i_rw_motors].rw_vel_raw/4.0*DEG2I)), NIOS_QUEUE);
+  WriteData(elevEncPos,
+      ((long int)(ElevMotorData[i_elev_motors].enc_el_raw*DEG2I)), NIOS_QUEUE);
+
+  WriteData(resPivRawAddr,
+      PivotMotorData[i_pivot_motors].res_piv_raw*DEG2I, NIOS_QUEUE);
+
+  /*************************************************
+   *             Slow Controls                     *
+   ************************************************/
+  if (index != 0) return;
+
+  /************ star cameras ************************/
+  StoreStarCameraData(index, 0); /* write ISC data */
+  StoreStarCameraData(index, 1); /* write OSC data */
+
   /* scan modes */
   WriteData(azModeAddr, axes_mode.az_mode, NIOS_QUEUE);
   WriteData(elModeAddr, axes_mode.el_mode, NIOS_QUEUE);
@@ -1049,13 +1080,6 @@ static void StoreData(int index)
   WriteData(sipMksHiAddr, (int)(SIPData.MKSalt.hi), NIOS_QUEUE);
 
   /************* processed pointing data *************/
-
-  // TODO
-  WriteData(azAddr, (unsigned int)(PointingData[i_point].az * DEG2LI),
-      NIOS_QUEUE);
-  WriteData(elAddr, (unsigned int)(PointingData[i_point].el * DEG2LI),
-      NIOS_QUEUE);
-
   WriteData(raAddr, (unsigned int)(PointingData[i_point].ra * H2LI),
       NIOS_QUEUE);
   WriteData(decAddr, (unsigned int)(PointingData[i_point].dec * DEG2LI),
@@ -1137,11 +1161,6 @@ static void StoreData(int index)
   WriteData(oscSigmaAddr,
       (unsigned int)(PointingData[i_point].osc_sigma * DEG2I), NIOS_QUEUE);
 
-  WriteData(encElAddr,
-      (unsigned int)((PointingData[i_point].enc_el
-                      +CommandData.enc_el_trim)* DEG2I), NIOS_QUEUE);
-  WriteData(encSigmaAddr,
-      (unsigned int)(PointingData[i_point].enc_sigma * DEG2I), NIOS_QUEUE);
   WriteData(encTrimAddr, CommandData.enc_el_trim * DEG2I, NIOS_QUEUE);
 
   WriteData(clinElAddr,
@@ -1223,8 +1242,6 @@ static void StoreData(int index)
   i_dgps = GETREADINDEX(dgpsatt_index);
   WriteData(dgpsAzRawAddr, DGPSAtt[i_dgps].az * DEG2I, NIOS_QUEUE);
   WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok, NIOS_QUEUE);
-  WriteData(rwEncVel,((long int)(RWMotorData[i_rw_motors].rw_vel_raw/4.0*DEG2I)), NIOS_QUEUE);
-  WriteData(elevEncPos,((long int)(ElevMotorData[i_elev_motors].enc_el_raw*DEG2I)), NIOS_QUEUE);
   WriteData(rwTempAddr,RWMotorData[i_rw_motors].temp,NIOS_QUEUE);
   WriteData(rwIRawAddr,((int)(RWMotorData[i_rw_motors].current/30.0*32768.0)),NIOS_QUEUE);
   WriteData(rwStat1Addr,(RWMotorData[i_rw_motors].status & 0xffff),NIOS_QUEUE);
@@ -1237,7 +1254,6 @@ static void StoreData(int index)
   WriteData(elStat1Addr,(ElevMotorData[i_elev_motors].status & 0xffff),NIOS_QUEUE);
   WriteData(elStat2Addr,((ElevMotorData[i_elev_motors].status & 0xffff0000)>> 16),NIOS_QUEUE);
   WriteData(elFaultAddr,ElevMotorData[i_elev_motors].fault_reg,NIOS_QUEUE);
-  WriteData(resPivRawAddr,PivotMotorData[i_pivot_motors].res_piv_raw*DEG2I,NIOS_QUEUE);
   WriteData(pivIRawAddr,PivotMotorData[i_pivot_motors].current*32768.0/20.0,NIOS_QUEUE);
   WriteData(pivDStatAddr,(PivotMotorData[i_pivot_motors].db_stat & 0xff)
                  +((PivotMotorData[i_pivot_motors].dp_stat & 0xff)<< 8),NIOS_QUEUE);
@@ -1248,9 +1264,6 @@ static void StoreData(int index)
   WriteData(elDriveErrCtsAddr,ElevMotorData[i_elev_motors].err_count,NIOS_QUEUE);
   WriteData(pivInfoAddr,PivotMotorData[i_pivot_motors].drive_info,NIOS_QUEUE);
   WriteData(pivDriveErrCtsAddr,PivotMotorData[i_pivot_motors].err_count,NIOS_QUEUE);
-
-  StoreStarCameraData(index, 0); /* write ISC data */
-  StoreStarCameraData(index, 1); /* write OSC data */
 }
 #endif
 
