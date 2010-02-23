@@ -2002,9 +2002,13 @@ void WatchFIFO ()
     } else {
       mcommand = MCommand(command);
       bputs(info, "Commands:  Multi word command received\n");
-      SetParameters(mcommand, (unsigned short*)mcommand_data, rvalues, ivalues,
-          svalues);
-      MultiCommand(mcommand, rvalues, ivalues, svalues, 0);
+      if (mcommand_count == mcommands[MIndex(mcommand)].numparams) {
+        SetParameters(mcommand, (unsigned short*)mcommand_data, rvalues, ivalues,
+            svalues);
+        MultiCommand(mcommand, rvalues, ivalues, svalues, 0);
+      } else {
+        bputs(warning, "Commands: Ignoring mal-formed command!\n");
+      }
       mcommand = -1;
     }
 
