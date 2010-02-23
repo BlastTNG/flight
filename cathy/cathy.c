@@ -31,6 +31,7 @@ int main (int argc, char **argv)
   DIRFILE *dirfile;
   off_t nf;
   off_t nf_old = 0;
+  off_t ff = -1;
   size_t n_read;
   uint16_t *data;
   off_t i;
@@ -44,7 +45,7 @@ int main (int argc, char **argv)
   snprintf(dirfile_name, BUF_LEN, "%s", DIRFILE_DEFAULT);
   snprintf(chatter_name, BUF_LEN, "%s", CHATTER_DEFAULT);
 
-  while ((c = getopt(argc, argv, "d:c:rqvsh?")) != -1)
+  while ((c = getopt(argc, argv, "d:c:rqvsh?f:")) != -1)
   {
     switch (c)
     {
@@ -65,6 +66,10 @@ int main (int argc, char **argv)
         break;
       case 'q':
         verbose = 0;
+        break;
+      case 'f':
+        ff = (off_t)strtoll(optarg, NULL, 0);
+        break;
       case 'h':
       case '?':
       default:
@@ -93,14 +98,27 @@ int main (int argc, char **argv)
     {
       fprintf(stderr, "GetData error: %s\n", get_error_string(dirfile, char_buffer, BUF_LEN));
       dirfile_close(dirfile);
-      exit(-1);
+      exit(-2);
     }
  
     data = malloc(BUF_LEN * spf * sizeof(uint16_t));
     if (data == NULL)
     {
       fprintf(stderr, "malloc error!\n");
-      exit(-2);
+      exit(-3);
+    }
+
+    if (ff < 0)
+    {
+      nf_old = get_nframes(dirfile);
+      if (get_error(dirfile))
+      {
+        fprintf(stderr, "GetData error: %s\n", get_error_string(dirfile, char_buffer, BUF_LEN));
+        dirfile_close(dirfile);
+        exit(-4);
+      }
+    } else {
+      nf_old = ff;
     }
   
     while (1) /* Data reading loop */
@@ -113,7 +131,7 @@ int main (int argc, char **argv)
         if (reload)
           break;
         else
-          exit(-2);
+          exit(-5);
       }
   
       if (nf > nf_old)
@@ -139,6 +157,8 @@ int main (int argc, char **argv)
         {
           if (old_data > OLD_DATA_LIMIT)
           {
+            old_data = 0;
+            nf_old = 0;
             dirfile_close(dirfile);
             break;
           }
