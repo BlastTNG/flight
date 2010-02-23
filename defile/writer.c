@@ -466,7 +466,7 @@ int OpenField(int fast, int size, const char* filename)
         == 0) {
       snprintf(gpb, GPB_LEN, "cannot create file `%s'", filename);
       if (errno)
-        berror(fatal, gpb);
+        berror(fatal, "%s\n", gpb);
       else  {
         gze = gzerror((gzFile)file, &gzerrno);
         bprintf(fatal, "%s: %s", gpb, gze);
@@ -769,8 +769,7 @@ void InitialiseDirFile(int reset, unsigned long offset)
     if ((fp = fopen(curfile, "w")) == NULL)
       berror(fatal, "cannot create curfile `%s'", curfile);
 
-    fprintf(fp, rc.dirfile);
-    fprintf(fp, "\n");
+    fprintf(fp, "%s\n", rc.dirfile);
 
     if (fclose(fp) < 0)
       berror(fatal, "cannot close curfile `%s'", curfile);
