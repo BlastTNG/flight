@@ -686,11 +686,11 @@ struct ChannelStruct SlowChannels[] = {
   {"el_drive_err_cts",'w', LOOP7, 35,              1.0,             0.0, 'u', U_NONE},
   {"piv_drive_info",'w', LOOP7, 36,                1.0,             0.0, 'u', U_NONE},
   {"piv_drive_err_cts",'w', LOOP7, 37,             1.0,             0.0, 'u', U_NONE},
+    /* LOOP7 38 is fast narrow */
   {"hwpr_vel",         'w', LOOP7, 39,           100.0,             0.0, 'u', U_NONE},
   {"hwpr_acc",         'w', LOOP7, 40,             1.0,             0.0, 'u', U_NONE},
   {"hwpr_move_i",      'w', LOOP7, 41,             1.0,             0.0, 'u', U_NONE},
   {"hwpr_hold_i",      'w', LOOP7, 42,             1.0,             0.0, 'u', U_NONE},
-    /* LOOP7 38 is fast narrow */
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
   {"latch0",       'w',  ACS1_D,  0,                1.0,             0.0, 'u', U_NONE},
