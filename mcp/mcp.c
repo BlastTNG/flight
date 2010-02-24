@@ -94,6 +94,7 @@ void WatchFIFO(void);
 void FrameFileWriter(void);
 void TDRSSWriter(void);
 void StageBus(void);
+void HWPRBus(void);
 
 void InitialiseFrameFile(char);
 void dirFileWriteFrame(unsigned short *RxFrame);
@@ -769,6 +770,7 @@ int main(int argc, char *argv[])
   pthread_t dgps_id;
 #endif
   pthread_t chatter_id;
+  pthread_t hwpr_id;
 
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
@@ -898,6 +900,7 @@ int main(int argc, char *argv[])
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
 #endif
   pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
+  pthread_create(&hwpr_id, NULL, (void*)&HWPRBus, NULL);
 
   while (1) {
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0)

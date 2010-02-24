@@ -68,6 +68,9 @@ double round(double x);
 void StoreActBus(void);
 void SecondaryMirror(void);
 
+/* in hwpr.c */
+void StoreHWPRBus(void);
+
 /* in auxiliary.c */
 void ChargeController(void);
 void ControlAuxMotors(unsigned short *RxFrame);
@@ -1410,6 +1413,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     WriteAux();
     SecondaryMirror();
     PhaseControl();
+    StoreHWPRBus();
 #ifndef BOLOTEST
     SetGyroMask();
     ChargeController();

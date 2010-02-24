@@ -691,6 +691,8 @@ struct ChannelStruct SlowChannels[] = {
   {"hwpr_acc",         'w', LOOP7, 40,             1.0,             0.0, 'u', U_NONE},
   {"hwpr_move_i",      'w', LOOP7, 41,             1.0,             0.0, 'u', U_NONE},
   {"hwpr_hold_i",      'w', LOOP7, 42,             1.0,             0.0, 'u', U_NONE},
+  {"hwpr_pos",         'w', LOOP7, 43,             1.0,             0.0, 'u', U_NONE},
+  {"hwpr_enc",         'w', LOOP7, 44,             1.0,             0.0, 'u', U_NONE},
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
   {"latch0",       'w',  ACS1_D,  0,                1.0,             0.0, 'u', U_NONE},
