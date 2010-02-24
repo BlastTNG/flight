@@ -97,7 +97,7 @@ int EZBus_ReadInt(struct ezbus* bus, int who, const char* what, int old);
 /* poll the bus for all steppers on poll list
  * rescan: if true, will skip steppers that are already okay
  */
-int EZBus_Poll(struct ezbus* bus);
+int EZBus_Poll(struct ezbus* bus, const int rescan);
 
 #endif
 

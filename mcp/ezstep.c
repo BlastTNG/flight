@@ -400,18 +400,18 @@ int EZBus_ReadInt(struct ezbus* bus, int who, const char* what, int old)
   return atoi(bus->buffer);
 }
 
-int EZBus_Poll(struct ezbus* bus)
+int EZBus_Poll(struct ezbus* bus, const int rescan)
 {
   int i, result;
   int all_ok = 1;
 
   if (bus->chatter > 0) {
-      bprintf(info, "%sPolling EZStepper Bus.", bus->name);
+      bprintf(info, "%s%sPolling EZStepper Bus.", bus->name, rescan ? "Re-" : "");
   }
 
   for (i = 0; i < EZ_BUS_NACT; ++i) {
-    if ( !(bus->step[i].status & EZ_STEP_USED)   //skip if unused or okay
-	|| (bus->step[i].status & EZ_STEP_OKAY) )
+    if ( !(bus->step[i].status & EZ_STEP_USED)   //skip if unused
+	|| (!rescan && (bus->step[i].status & EZ_STEP_OKAY)) ) //skip if not-rescan & ok
       continue;
     EZBus_Send(bus, i+1, "&");
     if ((result = EZBus_Recv(bus)) & (EZ_BUS_TIMEOUT | EZ_BUS_OOD)) {
@@ -420,16 +420,16 @@ int EZBus_Poll(struct ezbus* bus)
       bus->step[i].status &= ~EZ_STEP_OKAY;
       all_ok = 0;
     } else if (!strncmp(bus->buffer, "EZStepper AllMotion", 19)) {
-      bprintf(info, "%sFound EZStepper device %s at address %c.\n", bus->name,
-          stepName(bus,i+1), cWho(i+1));
+      bprintf(info, "%sFound EZStepper device %s at address %c (0x%x).\n", bus->name,
+          stepName(bus,i+1), cWho(i+1), cWho(i+1));
       bus->step[i].status |= EZ_STEP_OKAY;
     } else if (!strncmp(bus->buffer, "EZHR17EN AllMotion", 18)) {
-      bprintf(info, "%sFound type 17EN device %s at address %c.\n", bus->name,
-          stepName(bus,i+1), cWho(i+1));
+      bprintf(info, "%sFound type 17EN device %s at address %c (0x%x).\n", bus->name,
+          stepName(bus,i+1), cWho(i+1), cWho(i+1));
       bus->step[i].status |= EZ_STEP_OKAY;
     } else if (!strncmp(bus->buffer, "EZHR23 All Motion", 17)) {
-      bprintf(info, "%sFound type 23 device %s at address %c.\n", bus->name, 
-	  stepName(bus,i+1), cWho(i+1));
+      bprintf(info, "%sFound type 23 device %s at address %c (0x%x).\n", bus->name, 
+	  stepName(bus,i+1), cWho(i+1), cWho(i+1));
       bus->step[i].status |= EZ_STEP_OKAY;
     } else {
       bprintf(warning, "%sUnrecognised response from %s, will repoll later.\n",
