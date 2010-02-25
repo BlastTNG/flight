@@ -684,7 +684,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.Cryo.heliumLevel = 0;
       break;
     case level_pulse:
-      CommandData.Cryo.heliumLevel = 18;
+      CommandData.Cryo.heliumLevel = 350;  /* unit is 100Hz frames */
       break;
     case hwpr_enc_on:
       CommandData.Cryo.hwprPos = -1;
