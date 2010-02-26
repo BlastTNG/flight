@@ -56,6 +56,7 @@
 #define CRYO_CYCLE_COOL   0x0004
 #define CRYO_CYCLE_HS_OFF 0x0008
 
+/* he3 cycle timeouts (all in seconds) */
 #define CRYO_CYCLE_HEAT_TIMEOUT  (35*60)
 #define CRYO_CYCLE_COOL_TIMEOUT  (3*60*60)
 #define CRYO_CYCLE_HS_TIMEOUT    (2*60)
