@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#include "hwpr.h"
 #include "ezstep.h"
 #include "command_struct.h"
 #include "tx.h" /* InCharge */
@@ -49,7 +50,7 @@ static struct hwpr_struct {
 
 void MonitorHWPR(struct ezbus *bus)
 {
-  hwpr_data.pos  = EZBus_ReadInt(bus, HWPR_ADDR, "?0", 0);
+  hwpr_data.pos  = EZBus_ReadInt(bus, HWPR_ADDR, "?0", 0) / HWPR_STEPS_PER_MOTENC;
   hwpr_data.enc  = EZBus_ReadInt(bus, HWPR_ADDR, "?8", 0);
 #if 0
   hwpr_data.vel  = EZBus_ReadInt(bus, HWPR_ADDR, "?V", 0);
@@ -114,7 +115,7 @@ void ControlHWPR(struct ezbus *bus)
       snprintf(gp_buffer, GP_LEN, "V%dL%dm%dh%dA%dR",
           CommandData.hwpr.vel, CommandData.hwpr.acc,
           CommandData.hwpr.move_i, CommandData.hwpr.hold_i,
-          CommandData.hwpr.target);
+          CommandData.hwpr.target * HWPR_STEPS_PER_MOTENC);
       EZBus_Comm(bus, HWPR_ADDR, gp_buffer, 0);
       CommandData.hwpr.is_new = 0;
       EZBus_Release(bus, HWPR_ADDR);
@@ -124,7 +125,7 @@ void ControlHWPR(struct ezbus *bus)
           CommandData.hwpr.vel, CommandData.hwpr.acc,
           CommandData.hwpr.move_i, CommandData.hwpr.hold_i,
           (CommandData.hwpr.target > 0) ? 'P' : 'D', 
-          abs(CommandData.hwpr.target));
+          abs(CommandData.hwpr.target * HWPR_STEPS_PER_MOTENC));
       EZBus_Comm(bus, HWPR_ADDR, gp_buffer, 0);
       CommandData.hwpr.is_new = 0;
       EZBus_Release(bus, HWPR_ADDR);
