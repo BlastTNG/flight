@@ -929,7 +929,7 @@ struct ChannelStruct FastChannels[] = {
 
 #endif
   {"das_dig43",    'w',   BIAS_D,  6,                1.0,             0.0, 'u', U_NONE},
-  {"chopper",      'r',  CRYO_A2, 33,           CRYO_A2_M,      CRYO_A2_B, 'u',  U_V_V},
+  {"chopper",      'r',  CRYO_A2, 33,          CAL16(1.0,            0.0), 'u',  U_V_V},
 
   {"stage_x",      'w', LOOP5, 28,                2.0,             0.0, 'u', U_NONE},
   {"stage_y",      'w', LOOP5, 34,                2.0,             0.0, 'u', U_NONE},
