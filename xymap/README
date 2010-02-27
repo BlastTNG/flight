@@ -1,0 +1,41 @@
+xymap package (pronounced zy-map)
+============================================
+Created by Steven J. Benton, 2010
+
+You are free to use this in any way you like, but do so at your own peril. I 
+can't guarantee that it won't eat your files, your computer, and/or your pets.
+If you don't already know what it's for, you probably don't want to use it.
+
+xymap is based on code from Enzo Pascale. If his did not have several
+hard-to-install dependencies, I never would have reimplemented it.
+
+
+BUILD INSTRUCTIONS
+============================================
+The only remaining dependencies are GetData (http://getdata.sourceforge.net), a
+reasonably current C++ compiler (I curently use g++ 4.4.1), and gnuplot.
+
+1. GetData must be downloaded and installed from source. Follow its directions.
+2. Compilers and gnuplot have precompiled binaries you can install.
+  On Ubuntu:
+    $sudo apt-get install build-essential gnuplot
+3. Compile
+    $make
+
+
+PACKAGE CONTENTS
+============================================
+lockinmap.cc - heart of xymap package. Given detector response to a chopped
+  source, a chopper reference, and source position (all in dirfile format), it
+  will output a filtered/normalized/locked-in ASCII stream of X, Y, signal.
+
+iirfilter.h - implements a framework for IIR filter function-classes. Can only
+  actually use a few Bessel fitler cases that I've solved analytically.
+  TODO: this framework would become actually useful if combined with numeric
+    filter design code, rather than relying on specific analytic solutions.
+
+doplot - gnuplot mapping script
+
+domaps - helper script to put everything together. With a bit of customization,
+  you will probably find this useful.
+
