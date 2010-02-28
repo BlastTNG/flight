@@ -27,7 +27,6 @@
 #  include "config.h"
 #endif
 
-#define _GNU_SOURCE     /* Make string.h give us the "nice" basename() */
 #include <stdlib.h>     /* ANSI C std library (atoi, exit, realpath) */
 #include <pthread.h>    /* POSIX threads (pthread_create, pthread_join) */
 #include <signal.h>     /* ANSI C signals (SIG(FOO), sigemptyset, sigaddset) */
@@ -1032,8 +1031,6 @@ int main (int argc, char** argv)
   /* Main status loop -- if we're in silent mode we skip this entirely and
    * just wait for the read and write threads to exit */
   if (!rc.silent)
-  rc.dirname = strdup(rc.dirfile);
-  snprintf(rc.dirname, strlen(rc.dirfile), "%s", basename(rc.dirfile));
     do {
       if (!ri.tty) {
         gettimeofday(&now, &rc.tz);

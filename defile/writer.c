@@ -1,6 +1,6 @@
 /* defile: converts BLAST-type framefiles into dirfiles
  *
- * This software is copyright (C) 2003-2005 University of Toronto
+ * This software is copyright (C) 2003-2010 University of Toronto
  *
  * This file is part of defile.
  *
@@ -109,6 +109,7 @@
 #  include "config.h"
 #endif
 
+#define _GNU_SOURCE     /* Make string.h give us the "nice" basename() */
 #include <stdlib.h>     /* ANSI C std library (atoi, exit) */
 #include <errno.h>      /* ANSI C library errors (errno) */
 #include <string.h>     /* ANSI C strings (strcpy, strcat, strlen, strcmp)  */
@@ -605,6 +606,9 @@ void InitialiseDirFile(int reset, unsigned long offset)
       berror(fatal, "cannot create dirfile `%s'", rc.dirfile);
 
   bprintf(info, "\nWriting to dirfile `%s'\n", rc.dirfile);
+
+  rc.dirname = strdup(rc.dirfile);
+  snprintf(rc.dirname, strlen(rc.dirfile), "%s", basename(rc.dirfile));
 
   for (i = 0; i < FAST_PER_SLOW + 10; ++i) {
     pre_buffer[i] = balloc(fatal, DiskFrameSize);
