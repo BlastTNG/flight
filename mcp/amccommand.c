@@ -446,6 +446,12 @@ int queryAMCInd(int index, int offset, int nwords, struct MotorInfoStruct* amcin
   n = check_amcready(resp,amcinfo);  
   if(n >= 0) {
     stat=getAMCResp(count,&val,&l,amcinfo);
+  } else {
+#ifdef MOTORS_VERBOSE
+    bprintf(warning,"%sComm queryAMCInd: Did not find a response.",amcinfo->motorstr);
+#endif
+    amcinfo->err |= 0x0010;
+    return -2;
   }
   if(stat == 1) {
 #ifdef DEBUG_AMC
@@ -458,7 +464,8 @@ int queryAMCInd(int index, int offset, int nwords, struct MotorInfoStruct* amcin
 #ifdef MOTORS_VERBOSE
     bprintf(err,"%sComm queryAMCInd: Error querying index: stat=%i",amcinfo->motorstr,stat);
 #endif
-    return -1;
+    
+    return -2;
   }
   // mark1
 }
@@ -471,6 +478,7 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
   bprintf(info,"%sComm configure_amc: Testing a 38400 baud rate...\n",amcinfo->motorstr);
 #endif
   setopts_amc(38400,amcinfo);
+  amcinfo->bdrate=38400;
 
   n = areWeDisabled(amcinfo);
   if(n >= 0)
@@ -498,6 +506,7 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
   bprintf(info,"%sComm configure_amc: Testing a 9600 baud rate...\n",amcinfo->motorstr);
 #endif
   setopts_amc(9600,amcinfo);
+  amcinfo->bdrate=9600;
   n = areWeDisabled(amcinfo);
   if(n >= 0)
     {
@@ -530,6 +539,7 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
   bprintf(info,"%sComm configure_amc: Testing a 38400 baud rate...\n",amcinfo->motorstr);
 #endif
   setopts_amc(38400, amcinfo);
+  amcinfo->bdrate=38400;
   n = areWeDisabled(amcinfo);
   if(n >= 0)
     {
@@ -548,6 +558,7 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
     {
       bprintf(err,"%sComm configure_amc: Cannot communicate with the AMC controller at any baud rate.",amcinfo->motorstr);
       amcinfo->init=2; 
+      amcinfo->bdrate=1;
     }
 }
 
@@ -830,11 +841,8 @@ int getAMCResp(int seq, int *val, int *l, struct MotorInfoStruct* amcinfo)
 
 #ifdef DEBUG_AMC
   bprintf(info,"%sComm getAMCResp: Results status: %d , length %d, value %d",amcinfo->motorstr,rstat,*l,*val);
-
-  checkAMCStatus(rstat,amcinfo);
-
-
 #endif //DEBUG_AMC
+  checkAMCStatus(rstat,amcinfo);
 
 
   // Returns the status byte
@@ -886,29 +894,38 @@ void checkAMCStatus(int stat, struct MotorInfoStruct* amcinfo)
     case AMC_COMPLETE:
 #ifdef DEBUG_AMC
       bprintf(info,"%sComm checkAMCStatus: Command was completed.",amcinfo->motorstr);
+#endif
       amcinfo->err=0;
       amcinfo->err_count=0;
-
-#endif
       break;
     case AMC_INCOMPLETE:
       amcinfo->err |= 0x0008;
+#ifdef MOTORS_VERBOSE
       bprintf(warning,"%sComm checkAMCStatus: Command was not completed.",amcinfo->motorstr);
+#endif
     case AMC_INVALID:
       amcinfo->err |= 0x0008;
+#ifdef MOTORS_VERBOSE
       bprintf(warning,"%sComm checkAMCStatus: Invalid Command.",amcinfo->motorstr);
+#endif
       break;
     case AMC_NOACCESS:
       amcinfo->err |= 0x0008;
+#ifdef MOTORS_VERBOSE
       bprintf(warning,"%sComm checkAMCStatus: Do not have write access.",amcinfo->motorstr);
+#endif
       break;
     case AMC_FRAMECRC:
       amcinfo->err |= 0x0008;
+#ifdef MOTORS_VERBOSE
       bprintf(warning,"%sComm checkAMCStatus: Frame or CRC error.",amcinfo->motorstr);
+#endif
       break;
     default:
       amcinfo->err |= 0x0004;
+#ifdef MOTORS_VERBOSE
       bprintf(warning,"%sComm checkAMCStatus: Invalid status byte.",amcinfo->motorstr);
+#endif
       break;
     }
 }
@@ -931,8 +948,11 @@ void setWriteAccess(struct MotorInfoStruct* amcinfo)
   if(n>0)
     {
       checkAMCStatus(n,amcinfo);
-      if(n!=1) amcinfo->writeset=2;
-
+      if(n!=1) {
+	amcinfo->writeset=2;
+      } else {
+	amcinfo->writeset=1;
+      }
     }
 }
 
@@ -991,6 +1011,8 @@ int getAMCResolver(struct MotorInfoStruct* amcinfo)
 
 void resetAMC(char *address, struct MotorInfoStruct* amcinfo)
 {
+  amcinfo->disabled=2;
+  amcinfo->init=2;
   //  int count = 10;
   close_amc(amcinfo);
   //  while(amcinfo->open==0 && count > 0) {
@@ -1011,7 +1033,7 @@ void resetAMC(char *address, struct MotorInfoStruct* amcinfo)
     configure_amc(amcinfo);
     //    count--;
     //  }
-  if(amcinfo->init==0) {
+  if(amcinfo->init!=1) {
 #ifdef MOTORS_VERBOSE
     bprintf(warning,"%sComm resetAMC: Failed to configure the drive!",amcinfo->motorstr);
     bprintf(warning,"%sComm resetAMC: Attempt to reset controller failed.",amcinfo->motorstr);

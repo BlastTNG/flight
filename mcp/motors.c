@@ -218,6 +218,7 @@ static double GetVAz(void)
   double vel_offset;
   double az, az_dest;
   double max_dv = 20;
+  double dx;
 
   i_point = GETREADINDEX(point_index);
 
@@ -227,7 +228,14 @@ static double GetVAz(void)
     az = PointingData[i_point].az;
     az_dest = axes_mode.az_dest;
     SetSafeDAz(az, &az_dest);
-    vel = -(az - az_dest) * 0.36;
+    dx = az_dest - az;
+    if (dx<0) {
+      vel = -sqrt(-dx);
+    } else {
+      vel = sqrt(dx);
+    }
+    vel *= 0.3;
+    //vel = -(az - az_dest) * 0.36;
   }
 
   vel_offset =
@@ -258,68 +266,42 @@ static double GetVAz(void)
 
 /************************************************************************/
 /*                                                                      */
-/*   Get: get the requested pivot velocity, given current               */
-/*   pointing mode, and resquested azimuth velocity, etc..              */
+/*     GetIPivot: get the current request for the pivot in DAC units    */
+/*       Proportional to the reaction wheel speed error                 */
 /*                                                                      */
 /************************************************************************/
-static double GetVPivot(int v_az_req_gy, unsigned int gpe, unsigned int gpv,unsigned int disabled)
+static double GetIPivot(unsigned int g_piv, unsigned int disabled)
 {
-  double v_req = 0.0;
-  int v_req_dac= 0;
-  double v_err = 0.0;
-  double pe, pv, v1, v2;
-  static unsigned int firsttime = 1;
+  double I_req = 0.0;
+  int I_req_dac= 0;
   int i_point;
-  double v_az_req;
-  static struct NiosStruct* vPivErrAddr;
-  static struct NiosStruct* vPivVRWAddr;
-  static struct NiosStruct* pivVReqAddr;
-  static int i;
-  v_az_req = ((double) v_az_req_gy) * GY16_TO_DPS/10.0; // Convert to dps 
-  pe=((double) gpe)/100.0;
-  pv=((double) gpv)/1000000.0;
-  if(firsttime) {
-    vPivErrAddr = GetNiosAddr("v_piv_err_t");
-    vPivVRWAddr = GetNiosAddr("v_piv_vrw_t");
-    pivVReqAddr = GetNiosAddr("piv_v_req");
-  }
+ 
   i_point = GETREADINDEX(point_index);
-  v_err=v_az_req-PointingData[point_index].v_az;
-  v1 = pe*v_err;
-  v2 = (-1.0)*pv*(ACSData.rw_vel_raw-CommandData.pivot_gain.SP); 
-  v_req = v1 + v2 + PointingData[point_index].v_az;
-  //  v_req = v1 + v2 + v_az_req; // This is dangerous to use if your velocity look does not work.
-  //  if(i%500==1) bprintf(info,"GetVPivot: SP = %f",CommandData.pivot_gain.SP);
+  I_req = (-1.0)*(double)g_piv*(ACSData.rw_vel_raw-CommandData.pivot_gain.SP); 
 
   if(disabled) { // Don't attempt to send current to the motors if we are disabled.
-    v_req=0.0;
+    I_req=0.0;
   }
-  /* Error term */
-  WriteData(vPivErrAddr, ((int) (v1*1000.0)), NIOS_QUEUE);
-  WriteData(vPivVRWAddr, ((int) (v2*1000.0)), NIOS_QUEUE);
-  WriteData(pivVReqAddr, ((int) (v_req*1000.0)), NIOS_QUEUE);
 
   /* Convert to DAC Units*/
-  if(fabs(v_req)<0.02) {
-    v_req_dac=16384+PIV_DAC_OFF;
+  if(fabs(I_req)<0.02) {
+    I_req_dac=16384+PIV_DAC_OFF;
   } else {
-    if(v_req>0.0) {
-      v_req_dac=v_req*PIV_DPS_TO_DAC+16384+PIV_DAC_OFF+PIV_DEAD_BAND;
+    if(I_req>0.0) {
+      I_req_dac=I_req+16384+PIV_DAC_OFF+PIV_DEAD_BAND;
     } else {
-      v_req_dac=v_req*PIV_DPS_TO_DAC+16384+PIV_DAC_OFF-PIV_DEAD_BAND;
+      I_req_dac=I_req+16384+PIV_DAC_OFF-PIV_DEAD_BAND;
     }
   }
-  //  if(i%500==1) bprintf(info,"GetVPivot: v1=%f, v2=%f, v_az_req=%f, v_req=%f, v_err=%f, v_req_dac=%i, SP = %f",v1,v2,v_az_req,v_req,v_err,v_req_dac,CommandData.pivot_gain.SP);
-  i++;
 
   // Check to make sure the DAC value is in the proper range
-  if(v_req_dac <= 0) {
-    v_req_dac=1;
+  if(I_req_dac <= 0) {
+    I_req_dac=1;
   }
-  if(v_req_dac >  32767) {
-    v_req_dac=32767;
+  if(I_req_dac >  32767) {
+    I_req_dac=32767;
   }
-  return v_req_dac;
+  return I_req_dac;
 }
 
 /************************************************************************/
@@ -338,7 +320,6 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   static struct NiosStruct* gIElAddr;
   static struct NiosStruct* gPAzAddr;
   static struct NiosStruct* gIAzAddr;
-  static struct NiosStruct* gPEPivotAddr;
   static struct NiosStruct* gPVPivotAddr;
   static struct NiosStruct* setReacAddr;
   static struct NiosStruct* pivVReqDACAddr;
@@ -354,7 +335,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   unsigned int usin_el;
 
   int v_elev, v_az, v_piv, elGainP, elGainI;
-  int azGainP, azGainI, pivGainErr, pivGainRW;
+  int azGainP, azGainI, pivGainRW;
   int i_point;
 
   /******** Obtain correct indexes the first time here ***********/
@@ -365,20 +346,19 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     azVreqAddr = GetNiosAddr("az_vreq");
     cosElAddr = GetNiosAddr("cos_el");
     sinElAddr = GetNiosAddr("sin_el");
-    pivVReqDACAddr = GetNiosAddr("piv_vreq");
+    pivVReqDACAddr = GetNiosAddr("piv_dac");
     gPElAddr = GetNiosAddr("g_p_el");
     gIElAddr = GetNiosAddr("g_i_el");
     gPAzAddr = GetNiosAddr("g_p_az");
     gIAzAddr = GetNiosAddr("g_i_az");
-    gPEPivotAddr = GetNiosAddr("g_pe_pivot");
     gPVPivotAddr = GetNiosAddr("g_pv_pivot");
     setReacAddr = GetNiosAddr("set_reac");
     pivVCalcAddr = GetNiosAddr("piv_dps_calc");
     dacAmplAddr[0] = GetNiosAddr("dac1_ampl");
     dacAmplAddr[1] = GetNiosAddr("dac2_ampl");
-    //    dacAmplAddr[2] = GetNiosAddr("dac3_ampl"); // is now piv_vreq
+    //    dacAmplAddr[2] = GetNiosAddr("dac3_ampl"); // is now piv_dac
     //    dacAmplAddr[3] = GetNiosAddr("dac4_ampl"); // is now dac_el
-    //    dacAmplAddr[4] = GetNiosAddr("dac5_ampl"); // is now dac_rw
+    //    dacAmplAddr[4] = GetNiosAddr("dac5_ampl"); // is now rw_dac 
   }
 
   i_point = GETREADINDEX(point_index);
@@ -443,26 +423,22 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   if ((CommandData.disable_az) || (wait > 0)) {
     azGainP = 0;
     azGainI = 0;
-    pivGainErr = 0;
     pivGainRW = 0;
-    v_piv=GetVPivot(0,pivGainErr,pivGainRW,1);
+    v_piv=GetIPivot(pivGainRW,1);
   } else {
     azGainP = CommandData.azi_gain.P;
     azGainI = CommandData.azi_gain.I;
-    pivGainErr = CommandData.pivot_gain.PE;
     pivGainRW = CommandData.pivot_gain.PV;
-    v_piv=GetVPivot(v_az,pivGainErr,pivGainRW,0);
+    v_piv=GetIPivot(pivGainRW,0);
   }
-  //  if (j%100 == 1) bprintf(info,"WriteMot: v_piv = %i",v_piv);
-  j++;
+  //if (j%100 == 1) bprintf(info,"WriteMot: v_piv = %i",v_piv);
+  //j++;
   /* requested pivot velocity*/
   WriteData(pivVReqDACAddr, v_piv*2, NIOS_QUEUE);
   /* p term for az motor */
   WriteData(gPAzAddr, azGainP, NIOS_QUEUE);
   /* I term for az motor */
   WriteData(gIAzAddr, azGainI, NIOS_QUEUE);
-  /* p term to vel err for pivot motor */
-  WriteData(gPEPivotAddr, pivGainErr, NIOS_QUEUE);
   /* p term to rw vel for pivot motor */
   WriteData(gPVPivotAddr, pivGainRW, NIOS_QUEUE);
   /* setpoint for reaction wheel */
@@ -1693,6 +1669,7 @@ void* pivotComm(void* arg)
   unsigned int dp_stat_raw=0, db_stat_raw=0, ds1_stat_raw=0;
   short int current_raw=0;
   int piv_vel_raw=0;
+  unsigned int tmp=0;
   // Initialize values in the pivotinfo structure.                            
   pivotinfo.open=0;
   pivotinfo.init=0;
@@ -1809,13 +1786,25 @@ void* pivotComm(void* arg)
 	}
       } 
 
-      //      if(firsttime){
-      //	firsttime=0;
-      //	tmp = queryAMCInd(0x32,8,1,&pivotinfo);
-      //	bprintf(info,"pivotComm: Ki = %i",tmp);
-      //	tmp = queryAMCInd(0xd8,0x24,1,&pivotinfo);
-      //	bprintf(info,"pivotComm: Ks = %i",tmp);
-      //      }
+      if(firsttime){
+	firsttime=0;
+	tmp = queryAMCInd(0x32,8,1,&pivotinfo);
+	bprintf(info,"pivotComm: Ki = %i",tmp);
+	tmp = queryAMCInd(0xd8,0x24,1,&pivotinfo);
+	bprintf(info,"pivotComm: Ks = %i",tmp);
+	tmp = queryAMCInd(0xd8,0x0c,1,&pivotinfo);
+	bprintf(info,"pivotComm: d8.0ch = %i",tmp);
+	tmp = queryAMCInd(216,12,1,&pivotinfo);
+	bprintf(info,"pivotComm: v2 d8.0ch = %i",tmp);
+	tmp = queryAMCInd(0xd8,0x12,1,&pivotinfo);
+	bprintf(info,"pivotComm: d8.12h = %i",tmp);
+	tmp = queryAMCInd(216,18,1,&pivotinfo);
+	bprintf(info,"pivotComm: v2 d8.12h = %i",tmp);
+	tmp = queryAMCInd(0xd8,0x13,1,&pivotinfo);
+	bprintf(info,"pivotComm: d8.13h = %i",tmp);
+	tmp = queryAMCInd(216,19,1,&pivotinfo);
+	bprintf(info,"pivotComm: v2 d8.13h = %i",tmp);
+      }
 
       pos_raw=getAMCResolver(&pivotinfo);
       //      bprintf(info,"pivotComm: Resolver Position is: %i",pos_raw);
@@ -1843,7 +1832,7 @@ void* pivotComm(void* arg)
 	break;
       case 4:
 	piv_vel_raw=((int) queryAMCInd(17,2,2,&pivotinfo));
-        PivotMotorData[pivot_motor_index].dps_piv=piv_vel_raw;
+        PivotMotorData[pivot_motor_index].dps_piv=piv_vel_raw*0.144;
 	break;
       }
       j++;

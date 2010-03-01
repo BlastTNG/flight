@@ -249,7 +249,6 @@ void SetGyroMask (void) {
   }
 
   GyroFault = slow_data[gyfaultAddr->index][gyfaultAddr->channel];
-
   int i;
   for (i=0; i<6; i++) {
     int j = convert[i];
@@ -1355,8 +1354,9 @@ void RawNiosWrite(unsigned int addr, unsigned int data, int flush_flag)
 
   if (flush_flag || counter == 2 * NIOS_BUFFER_SIZE) {
     n = write(bbc_fp, niosData, counter * sizeof(unsigned int));
-    if (n < counter * sizeof(unsigned int))
-      bprintf(warning, "Frame Control: Short write to Nios");
+    if (n < counter * sizeof(unsigned int)) {
+      bprintf(warning, "Frame Control: Short write to Nios.");
+    } 
     counter = 0;
   }
 }

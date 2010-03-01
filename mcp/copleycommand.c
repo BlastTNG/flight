@@ -295,6 +295,8 @@ void configure_copley(struct MotorInfoStruct* copleyinfo)
 	bprintf(err, "%sComm configure_copley: Controller does not respond to any baud rate!",copleyinfo->motorstr);
 #endif
 	copleyinfo->init=2;
+        copleyinfo->bdrate=1; //i.e. there is no meaningful baud rate
+ 
       }
       return;
     }
@@ -722,6 +724,9 @@ int readCopleyResp(char *outs,int *l,struct MotorInfoStruct* copleyinfo)
 
 void resetCopley(char *address, struct MotorInfoStruct* copleyinfo)
 {
+  copleyinfo->disabled=2;
+  copleyinfo->init=2;
+
   //  int count = 10;
   close_copley(copleyinfo);
   //  while(copleyinfo->open==0 && count > 0) {
@@ -742,11 +747,13 @@ void resetCopley(char *address, struct MotorInfoStruct* copleyinfo)
     configure_copley(copleyinfo);
     //    count--;
     //  }
-  if(copleyinfo->init==0) {
+  if(copleyinfo->init!=1) {
 #ifdef MOTORS_VERBOSE
     bprintf(warning,"%sComm resetCopley: Failed to configure the drive!",copleyinfo->motorstr);
     bprintf(warning,"%sComm resetCopley: Attempt to reset controller failed.",copleyinfo->motorstr);
 #endif
+    copleyinfo->disabled=2;
+    copleyinfo->init=2;
     return;
   } else {
     bprintf(info,"%sComm resetCopley: Controller reset was successful!",copleyinfo->motorstr);
@@ -757,9 +764,3 @@ void resetCopley(char *address, struct MotorInfoStruct* copleyinfo)
 
 }
 
-// Not sure if we need this command.
-void restartCopley(char *address, struct MotorInfoStruct* copleyinfo)
-{
-  close_copley(copleyinfo);
-  open_copley(address,copleyinfo);
-}

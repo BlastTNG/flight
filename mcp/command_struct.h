@@ -59,7 +59,6 @@ struct GainStruct {
 
 // used for pivot loop gains
 struct VelGainStruct { 
-  unsigned short int PE; // prop to velocity error
   unsigned short int PV; // prop to RW velocity
   double SP; // RW velocity Set Point 
 };

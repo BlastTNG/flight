@@ -567,15 +567,18 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.gymask &= ~0x20;
       break;
     case gy_ifroll1_off:
+      bprintf(info,"turning gy_ifroll1 off\n");
       CommandData.power.gyro_off[1] = -1;
       break;
     case gy_ifroll1_on:
+      bprintf(info,"turning gy_ifroll1 on\n");
       CommandData.power.gyro_off[1] = 0;
       break;
     case gy_ifroll1_cycle:
       CommandData.power.gyro_off[1] = PCYCLE_HOLD_LEN;
       break;
     case gy_ifroll2_off:
+      bprintf(info,"turning gy_ifroll2 off\n");
       CommandData.power.gyro_off[5] = -1;
       break;
     case gy_ifroll2_on:
@@ -1277,8 +1280,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case pivot_gain:  /* pivot gains */
       CommandData.pivot_gain.SP = rvalues[0];
-      //      CommandData.pivot_gain.SP = (rvalues[0] + 2.605) / 7.9498291016e-5;
-      CommandData.pivot_gain.PE = ivalues[1];
+      //CommandData.pivot_gain.PE = ivalues[1]; FIXME: fix command
       CommandData.pivot_gain.PV = ivalues[2];
       break;
 
@@ -2442,11 +2444,10 @@ void InitCommandData()
   CommandData.azi_gain.P = 1000;
   CommandData.azi_gain.I = 0;
 
-  CommandData.pivot_gain.SP = 0.2; // dps
-  CommandData.pivot_gain.PE = 0;
+  CommandData.pivot_gain.SP = 50; // dps
   CommandData.pivot_gain.PV = 0;
 
-  CommandData.gyheat.setpoint = 30.0;
+  CommandData.gyheat.setpoint = 15.0;
   CommandData.gyheat.age = 0;
   CommandData.gyheat.gain.P = 30;
   CommandData.gyheat.gain.I = 10;
