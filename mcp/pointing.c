@@ -879,7 +879,7 @@ void Pointing(void)
 
   static int firsttime = 1;
 
-  int i_dgpspos, dgpspos_ok;
+  int i_dgpspos, dgpspos_ok = 0;
   int i_point_read;
 
   static struct LutType elClinLut = {"/data/etc/clin_elev.lut",0,NULL,NULL,0};
@@ -1048,6 +1048,7 @@ void Pointing(void)
       = CommandData.lon;
     last_good_lat = PointingData[0].lat = PointingData[1].lat = PointingData[2].lat
       = CommandData.lat;
+    last_i_dgpspos = GETREADINDEX(dgpspos_index);
   }
 
   if (elClinLut.n == 0)
@@ -1084,15 +1085,17 @@ void Pointing(void)
 
   /************************************************/
   /** Set the official Lat and Long: prefer dgps **/
-  if (i_dgpspos != last_i_dgpspos) {
+  if (i_dgpspos != last_i_dgpspos) { // there has been a new solution
     if (using_sip_gps != 0)
       bprintf(info, "Pointing: Using dGPS for positional data");
     last_i_dgpspos = i_dgpspos;
+    // check for spikes or crazy steps...  
     dgpspos_ok = ((fabs(last_good_lat - DGPSPos[i_dgpspos].lat) < 0.5) &&
                  (fabs(last_good_lon - DGPSPos[i_dgpspos].lon) < 0.5)) ||
-	         (since_last_good_dgps_pos >=5);
+	         (since_last_good_dgps_pos >=5); // 5 in a row = ok...
     
-    if (dgpspos_ok) {
+
+    if (dgpspos_ok) { 
       last_good_lat = PointingData[point_index].lat = DGPSPos[i_dgpspos].lat;
       last_good_lon = PointingData[point_index].lon = DGPSPos[i_dgpspos].lon;
       PointingData[point_index].alt = DGPSPos[i_dgpspos].alt;

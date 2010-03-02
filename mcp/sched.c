@@ -327,25 +327,25 @@ void DoSched(void)
   /* check our latitude band */
   if (CommandData.lat_range == 2) { /* southern band */
     if (d_lat > -(LATITUDE_BAND / 2) + LATITUDE_OVERLAP) {
-      //bprintf(info, "Scheduler: Entering middle latitude band.\n");
+      bprintf(info, "Scheduler: Entering middle latitude band. (%g)\n", d_lat);
       CommandData.lat_range = 1;
     }
   } else if (CommandData.lat_range == 1) { /* middle band */
     if (d_lat < -(LATITUDE_BAND / 2)) {
-      //bprintf(info, "Scheduler: Entering southern latitude band.\n");
+      bprintf(info, "Scheduler: Entering southern latitude band. (%g)\n", d_lat);
       CommandData.lat_range = 2;
     } else if (d_lat > (LATITUDE_BAND / 2)) {
-      //bprintf(info, "Scheduler: Entering northern latitude band.\n");
+      bprintf(info, "Scheduler: Entering northern latitude band. (%g)\n", d_lat);
       CommandData.lat_range = 0;
     }
   } else if (CommandData.lat_range == 0) { /* norhtern band */
     if (d_lat < (LATITUDE_BAND / 2) - LATITUDE_OVERLAP) {
-      //bprintf(info, "Scheduler: Entering middle latitude band.\n");
+      bprintf(info, "Scheduler: Entering middle latitude band. (%g)\n", d_lat);
       CommandData.lat_range = 1;
     }
   } else {
-    //bprintf(warning, "Scheduler: Unexpected latitude band: %i\n",
-    //    CommandData.lat_range);
+    bprintf(warning, "Scheduler: Unexpected latitude band: %i\n",
+        CommandData.lat_range);
     CommandData.lat_range = 1;
   }
 

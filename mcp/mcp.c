@@ -559,9 +559,11 @@ static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
   }
   i_out = (i_out + 1) % BI0_FRAME_BUFLEN;
 
-  nothing[0] = CalculateCRC(0xEB90, RxFrame, BiPhaseFrameSize);
-
   if (bi0_fp >= 0 && InCharge) {
+
+    RxFrame[0] = 0xEB90;
+    nothing[0] = CalculateCRC(0xEB90, RxFrame, BiPhaseFrameWords);
+
     RxFrame[0] = sync;
     sync = ~sync;
 
