@@ -1292,9 +1292,9 @@ void StoreActBus(void)
   static int firsttime = 1;
   int actbus_reset = 1;   //1 means actbus is on
 
-  static struct BiPhaseStruct* lvdt10Addr;
-  static struct BiPhaseStruct* lvdt11Addr;
-  static struct BiPhaseStruct* lvdt13Addr;
+  static struct BiPhaseStruct* lvdt65Addr;    //used to be 10
+  static struct BiPhaseStruct* lvdt63Addr;    //used to be 11
+  static struct BiPhaseStruct* lvdt64Addr;    //used to be 13
 
   static struct NiosStruct* actbusResetAddr;
   static struct NiosStruct* lockPosAddr;
@@ -1340,9 +1340,9 @@ void StoreActBus(void)
   if (firsttime) {
     firsttime = 0;
 
-    lvdt10Addr = GetBiPhaseAddr("lvdt_10");
-    lvdt11Addr = GetBiPhaseAddr("lvdt_11");
-    lvdt13Addr = GetBiPhaseAddr("lvdt_13");
+    lvdt63Addr = GetBiPhaseAddr("lvdt_63");
+    lvdt64Addr = GetBiPhaseAddr("lvdt_64");
+    lvdt65Addr = GetBiPhaseAddr("lvdt_65");
 
     actbusResetAddr = GetNiosAddr("actbus_reset");
     lokmotPinAddr = GetNiosAddr("lokmot_pin");
@@ -1388,12 +1388,13 @@ void StoreActBus(void)
     lockHoldIAddr = GetNiosAddr("lock_hold_i");
   }
 
-  lvdt[0] = slow_data[lvdt10Addr->index][lvdt10Addr->channel] *
-    LVDT10_ADC_TO_ENC + LVDT10_ZERO;
-  lvdt[1] = slow_data[lvdt11Addr->index][lvdt11Addr->channel] *
-    LVDT11_ADC_TO_ENC + LVDT11_ZERO;
-  lvdt[2] = slow_data[lvdt13Addr->index][lvdt13Addr->channel] *
-    LVDT13_ADC_TO_ENC + LVDT13_ZERO;
+  //old naming: lvdt[0] = lvdt_10, lvdt[1] = lvdt_11, lvdt[2] = lvdt_13;
+  lvdt[0] = slow_data[lvdt63Addr->index][lvdt63Addr->channel] *
+    LVDT63_ADC_TO_ENC + LVDT63_ZERO;
+  lvdt[1] = slow_data[lvdt64Addr->index][lvdt64Addr->channel] *
+    LVDT64_ADC_TO_ENC + LVDT64_ZERO;
+  lvdt[2] = slow_data[lvdt65Addr->index][lvdt65Addr->channel] *
+    LVDT65_ADC_TO_ENC + LVDT65_ZERO;
 
   if (CommandData.actbus.off) {
     if (CommandData.actbus.off > 0) CommandData.actbus.off--;

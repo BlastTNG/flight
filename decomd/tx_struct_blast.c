@@ -771,6 +771,9 @@ struct ChannelStruct SlowChannels[] = {
 /* ACS2 Analog card */
   {"t_clin_pyr",   'r',  ACS2_A1,  5,           -0.01875,           614.4, 'u', U_NONE},
   {"t_clin_if",    'r',  ACS2_A1, 11,           -0.01875,           614.4, 'u', U_NONE},
+  {"lvdt_65",      'r',  ACS2_A1, 21,   LVDT65_ADC_TO_ENC,     LVDT65_ZERO,   'u', U_NONE},
+  {"lvdt_63",      'r',  ACS2_A1, 23,   LVDT63_ADC_TO_ENC,     LVDT63_ZERO,   'u', U_NONE},
+  {"lvdt_64",      'r',  ACS2_A1, 25,   LVDT64_ADC_TO_ENC,     LVDT64_ZERO,   'u', U_NONE},
 
 #endif
 
@@ -839,10 +842,7 @@ struct ChannelStruct SlowChannels[] = {
   //  {"t_strut_side", 'r',  TMP6, 15,   CAL16T(1.0, AD590_CALIB_STRUT_2),     'u', U_NONE},
   //  {"t_push_plate", 'r',  TMP6, 17,   CAL16T(1.0, AD590_CALIB_PUSH_PLATE),  'u', U_NONE},
   //  {"t_act_motor",  'r',  TMP6, 19,   CAL16T(1.0, AD590_CALIB_ACT_MOTOR),   'u', U_NONE},
-  {"lvdt_10",      'r',  TMP6, 21,   LVDT10_ADC_TO_ENC,     LVDT10_ZERO,   'u', U_NONE},
-  {"lvdt_11",      'r',  TMP6, 33,   LVDT11_ADC_TO_ENC,     LVDT11_ZERO,   'u', U_NONE},
   //  {"t_rec",        'r',  TMP6, 35,   CAL16T(1.0, AD590_CALIB_REC),         'u', U_NONE},
-  {"lvdt_13",      'r',  TMP6, 37,   LVDT13_ADC_TO_ENC,     LVDT13_ZERO,   'u', U_NONE},
   //  {"t_das",        'r',  TMP6, 47,   CAL16T(1.0, 0.0),                     'u', U_NONE},
 
   /* TODO these TMP channels used to be narrow-fast */
