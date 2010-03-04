@@ -887,12 +887,9 @@ int main(int argc, char *argv[])
 
 #ifdef USE_XY_THREAD
   pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
-#else
+#endif
 #ifndef BOLOTEST
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
-#endif
-#endif
-#ifndef BOLOTEST
   pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
   pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
 
