@@ -768,8 +768,9 @@ int main(int argc, char *argv[])
   pthread_t dgps_id;
   pthread_t isc_id;
   pthread_t osc_id;
-#elif defined USE_XY_THREAD
-  pthread_t dgps_id;
+#endif
+#ifdef USE_XY_THREAD
+  pthread_t xy_id;
 #endif
   pthread_t chatter_id;
   pthread_t hwpr_id;
@@ -885,7 +886,7 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef USE_XY_THREAD
-  pthread_create(&dgps_id, NULL, (void*)&StageBus, NULL);
+  pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
 #else
 #ifndef BOLOTEST
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
