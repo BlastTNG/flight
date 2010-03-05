@@ -1280,7 +1280,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case pivot_gain:  /* pivot gains */
       CommandData.pivot_gain.SP = rvalues[0];
-      //CommandData.pivot_gain.PE = ivalues[1]; FIXME: fix command
+      CommandData.pivot_gain.PE = ivalues[1]; 
       CommandData.pivot_gain.PV = ivalues[2];
       break;
 
@@ -2441,11 +2441,12 @@ void InitCommandData()
   CommandData.ele_gain.I = 10000; /* was 8000 */
   CommandData.ele_gain.P = 10000; /* was 1200 */
 
-  CommandData.azi_gain.P = 1000;
+  CommandData.azi_gain.P = 3277;
   CommandData.azi_gain.I = 0;
 
   CommandData.pivot_gain.SP = 50; // dps
-  CommandData.pivot_gain.PV = 0;
+  CommandData.pivot_gain.PV = 100;
+  CommandData.pivot_gain.PE = 0;
 
   CommandData.gyheat.setpoint = 15.0;
   CommandData.gyheat.age = 0;

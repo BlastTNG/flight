@@ -58,8 +58,9 @@ struct GainStruct {
 };
 
 // used for pivot loop gains
-struct VelGainStruct { 
+struct PivGainStruct { 
   unsigned short int PV; // prop to RW velocity
+  unsigned short int PE; // prop to velocity error
   double SP; // RW velocity Set Point 
 };
 #define LS_OPEN        0x0001
@@ -152,7 +153,7 @@ struct CommandDataStruct {
 
   struct GainStruct ele_gain;
   struct GainStruct azi_gain;
-  struct VelGainStruct pivot_gain;
+  struct PivGainStruct pivot_gain;
 
   struct {
     struct latch_pulse sc_tx;

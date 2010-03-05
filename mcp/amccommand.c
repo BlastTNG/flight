@@ -90,7 +90,9 @@ void close_amc(struct MotorInfoStruct* amcinfo)
     if (n>0) {
       checkAMCStatus(n,amcinfo);
     } else {
+#ifdef MOTORS_VERBOSE
       bprintf(err,"%sComm close_amc: Disabling AMC controller failed.",amcinfo->motorstr);
+#endif
     }
     
   }
@@ -101,7 +103,9 @@ void close_amc(struct MotorInfoStruct* amcinfo)
   close(amcinfo->fd);
   amcinfo->init=0;
   amcinfo->open=0;
+#ifdef MOTORS_VERBOSE
   bprintf(info,"%sComm close_amc: Connection to motor serial port is closed.",amcinfo->motorstr);
+#endif
 }
 
 void setopts_amc(int bdrate, struct MotorInfoStruct* amcinfo)
@@ -556,7 +560,9 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
     }
   else
     {
+#ifdef MOTORS_VERBOSE
       bprintf(err,"%sComm configure_amc: Cannot communicate with the AMC controller at any baud rate.",amcinfo->motorstr);
+#endif
       amcinfo->init=2; 
       amcinfo->bdrate=1;
     }
@@ -966,7 +972,9 @@ int disableAMC(struct MotorInfoStruct* amcinfo)
   n = check_amcready(resp,amcinfo);
   if (n < 0)
     {
+#ifdef MOTORS_VERBOSE
       berror(err,"%sComm disableAMC: Communication error.",amcinfo->motorstr);
+#endif
       return -1;
     }  
   n=checkAMCResp(count,amcinfo);

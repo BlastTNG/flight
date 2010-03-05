@@ -148,18 +148,27 @@ static double GetVElev(void)
   double dvel;
   int i_point;
   double max_dv = 1.6;
-  double el_for_limit;
-
+  double el_for_limit, el, el_dest;
+  double dy;
   i_point = GETREADINDEX(point_index);
 
   if (axes_mode.el_mode == AXIS_VEL) {
     vel = axes_mode.el_vel;
   } else if (axes_mode.el_mode == AXIS_POSITION) {
-    vel = (axes_mode.el_dest - PointingData[i_point].el) * 0.36;
+    el = PointingData[i_point].el;
+    el_dest = axes_mode.el_dest;
+    dy = el_dest - el;
+    if (dy<0) {
+      vel = -sqrt(-dy);
+    } else {
+      vel = sqrt(dy);
+    }
+    vel *= 0.3;
+    //    vel = (axes_mode.el_dest - PointingData[i_point].el) * 0.36;
   } else if (axes_mode.el_mode == AXIS_LOCK) {
     /* for the lock, only use the elevation encoder */
     vel = (axes_mode.el_dest - ACSData.enc_el_raw) * 0.64;
-  }
+ }
 
   /* correct offset and convert to Gyro Units */
   vel -= (PointingData[i_point].gy_ifel_offset - PointingData[i_point].gy_ifel_earth);
@@ -279,6 +288,7 @@ static double GetIPivot(unsigned int g_piv, unsigned int disabled)
   i_point = GETREADINDEX(point_index);
   I_req = (-1.0)*(double)g_piv*(ACSData.rw_vel_raw-CommandData.pivot_gain.SP); 
 
+  // TODO: Add in term proportional to velocity error.
   if(disabled) { // Don't attempt to send current to the motors if we are disabled.
     I_req=0.0;
   }
@@ -1308,7 +1318,9 @@ unsigned short int makeMotorField(struct MotorInfoStruct* motorinfo)
 
   if (motorinfo->reset) {
     b|= 0x02;
+#ifdef MOTORS_VERBOSE
     bprintf(info, "%sComm makeMotorField: reset set",motorinfo->motorstr);
+#endif
   }
  
   //b |= ((motorinfo->reset) & 0x0001)<<1; 
@@ -1340,7 +1352,7 @@ void* reactComm(void* arg)
   int n=0, j=0;
   int i=0;
   int temp_raw,curr_raw,stat_raw,faultreg_raw;
-  int firsttime=1;
+  int firsttime=1,resetcount=0;
   long vel_raw=0;
   // Initialize values in the reactinfo structure.                            
   reactinfo.open=0;
@@ -1424,12 +1436,19 @@ void* reactComm(void* arg)
       close_copley(&reactinfo);
       usleep(10000);      
     } else if (reactinfo.reset==1){
-      bprintf(warning,"reactComm: Resetting connection to reaction wheel controller.");
+      if(resetcount==0) {
+	bprintf(warning,"reactComm: Resetting connection to Reaction Wheel controller.");
+      } else if ((resetcount % 10)==0) {
+	bprintf(warning,"reactComm: reset-> Unable to connect to Reaction Wheel after %i attempts.",resetcount);
+      }
 
+      resetcount++;
       rw_motor_index=INC_INDEX(rw_motor_index);
       resetCopley(REACT_DEVICE,&reactinfo); // if successful sets reactinfo.reset=0
       usleep(10000);  // give time for motor bits to get written
-
+      if (reactinfo.reset==0) {
+	resetcount=0;
+      }
 
     } else if(reactinfo.init==1){
       if(CommandData.disable_az==0 && reactinfo.disabled > 0) {
@@ -1499,7 +1518,7 @@ void* elevComm(void* arg)
   int i=0;
   long unsigned pos_raw;
   int temp_raw,curr_raw,stat_raw,faultreg_raw;
-  int firsttime=1;
+  int firsttime=1,resetcount=0;
 
 
   // Initialize values in the elevinfo structure.                            
@@ -1590,12 +1609,21 @@ void* elevComm(void* arg)
       close_copley(&elevinfo);
       usleep(10000);      
     } else if (elevinfo.reset==1){
-      bprintf(warning,"elevComm: Resetting connection to elevation drive controller.");
+      if(resetcount==0) {
+	bprintf(warning,"elevComm: Resetting connection to elevation drive controller.");
+      } else if ((resetcount % 10)==0) {
+	bprintf(warning,"elevComm: reset-> Unable to connect to elevation drive after %i attempts.",resetcount);
+      }
 
+      resetcount++;
       elev_motor_index=INC_INDEX(elev_motor_index);
       resetCopley(ELEV_DEVICE,&elevinfo); // if successful sets elevinfo.reset=0
-      usleep(10000);  // give time for motor bits to get written
 
+      usleep(10000);  // give time for motor bits to get written
+      if (elevinfo.reset==0) {
+	resetcount=0;
+	bprintf(info,"elevinfo: PING! elevinfo.init=%i, elevinfo.open=%i, elevinfo.err=%i",elevinfo.init, elevinfo.open,elevinfo.err);
+      }
 
     } else if (elevinfo.init==1) {
       if((CommandData.disable_el==0 || CommandData.force_el==1 ) && elevinfo.disabled > 0) {
@@ -1665,7 +1693,7 @@ void* pivotComm(void* arg)
   int n=0, j=0;
   int i=0;
   long unsigned pos_raw=0;
-  int firsttime=1;
+  int firsttime=1,resetcount=0;
   unsigned int dp_stat_raw=0, db_stat_raw=0, ds1_stat_raw=0;
   short int current_raw=0;
   int piv_vel_raw=0;
@@ -1758,10 +1786,18 @@ void* pivotComm(void* arg)
       close_amc(&pivotinfo);
       usleep(10000);      
     } else if (pivotinfo.reset==1){
-      bprintf(warning,"pivotComm: Resetting connection to pivot controller.");
+      if(resetcount==0) {
+	bprintf(warning,"pivotComm: Resetting connection to pivot controller.");
+      } else if ((resetcount % 50)==0) {
+	bprintf(warning,"pivotComm: reset->Unable to connect to pivot after %i attempts.",resetcount);
+      }
 
+      resetcount++;
       pivot_motor_index=INC_INDEX(pivot_motor_index);
       resetAMC(PIVOT_DEVICE,&pivotinfo); // if successful sets pivotinfo.reset=0
+
+      if (pivotinfo.reset==0) resetcount=0;
+
       usleep(10000);  // give time for motor bits to get written
 
     } else if (pivotinfo.init==1) {

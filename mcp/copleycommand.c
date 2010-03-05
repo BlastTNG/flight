@@ -73,10 +73,12 @@ void close_copley(struct MotorInfoStruct* copleyinfo)
   } else {
 
     n = disableCopley(copleyinfo);
-    
+
+#ifdef MOTORS_VERBOSE    
     if(n!=0) {
       bprintf(err,"%sComm close_copley: Disabling Copley controller failed.",copleyinfo->motorstr);
     }
+#endif
     
 #ifdef MOTORS_VERBOSE
     bprintf(info,"%sComm close_copley: Closing serial port.",copleyinfo->motorstr);
@@ -87,7 +89,9 @@ void close_copley(struct MotorInfoStruct* copleyinfo)
   }
   copleyinfo->init=0;
   copleyinfo->open=0;
+#ifdef MOTORS_VERBOSE
   bprintf(info,"%sComm close_copley: Connection to motor serial port is closed.",copleyinfo->motorstr);
+#endif
 }
 
 void setopts_copley(int bdrate,struct MotorInfoStruct* copleyinfo)
