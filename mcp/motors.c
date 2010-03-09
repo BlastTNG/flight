@@ -1379,7 +1379,7 @@ void* reactComm(void* arg)
   firsttime=1;
   bprintf(info,"reactComm: Bringing the reaction wheel online.");
   // Initialize structure RWMotorData.  Follows what was done in dgps.c
-  RWMotorData[0].rw_vel_raw=0;
+  //  RWMotorData[0].rw_vel_raw=0;
   RWMotorData[0].temp=0;
   RWMotorData[0].current=0.0;
   RWMotorData[0].status=0;
@@ -1552,7 +1552,7 @@ void* elevComm(void* arg)
   firsttime=1;
 
   // Initialize structure ElevMotorData.  Follows what was done in dgps.c
-  ElevMotorData[0].enc_el_raw=0;
+  //  ElevMotorData[0].enc_el_raw=0;
   ElevMotorData[0].temp=0;
   ElevMotorData[0].current=0.0;
   ElevMotorData[0].status=0;
