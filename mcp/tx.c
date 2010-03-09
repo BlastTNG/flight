@@ -50,7 +50,10 @@
 #define NIOS_BUFFER_SIZE 100
 
 extern short int SouthIAm;
-short int InCharge;
+
+extern int StartupVeto;
+
+short int InCharge = 0;
 
 extern struct AxesModeStruct axes_mode; /* motors.c */
 
@@ -154,13 +157,18 @@ static void WriteAux(void)
     scheduleAddr = GetNiosAddr("schedule");
   }
 
-  InCharge = !(SouthIAm
-      ^ slow_data[southIAmReadAddr->index][southIAmReadAddr->channel]);
+  if (StartupVeto>0) {
+    InCharge = 0;
+  } else {
+    InCharge = !(SouthIAm
+	^ slow_data[southIAmReadAddr->index][southIAmReadAddr->channel]);
+  }
   if (InCharge != incharge && InCharge) {
     bputs(info, "System: I have gained control.\n");
     CommandData.actbus.force_repoll = 1;
-  } else if (InCharge != incharge)
+  } else if (InCharge != incharge) {
     bputs(info, "System: I have lost control.\n");
+  }
 
   if (CommandData.Cryo.heliumLevel)
     CommandData.Cryo.he4_lev_old

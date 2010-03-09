@@ -76,8 +76,9 @@ unsigned int RxFrameFastSamp;
 unsigned short* slow_data[FAST_PER_SLOW];
 pthread_t watchdog_id;
 
+int StartupVeto = STARTUP_VETO_LENGTH + 1;
+
 static int bi0_fp = -2;
-static int StartupVeto = STARTUP_VETO_LENGTH + 1;
 static int Death = -STARTUP_VETO_LENGTH * 2;
 static int RxFrameIndex;
 
@@ -929,9 +930,10 @@ int main(int argc, char *argv[])
           StartupVeto = 0;
           Death = 0;
         } else if (RxFrame[3] != (RxFrameIndex + 1) % FAST_PER_SLOW
-            && RxFrameIndex >= 0)
+            && RxFrameIndex >= 0) {
           bprintf(err, "System: Frame sequencing error detected: wanted %i, "
               "got %i\n", RxFrameIndex + 1, RxFrame[3]);
+	}
         RxFrameIndex = RxFrame[3];
 
         /* Save current fastsamp */
