@@ -68,6 +68,7 @@ $(OBJS): $(HEADERS)
 install: mcp
 	install -d -m 777 /data/rawdir
 	install -m 755 mcp /usr/local/bin
+	install -m 755 mcp_inf_loop /usr/local/bin
 	install -m 666 etc/WMM.COF etc/*.aml etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 /data/etc
 ifeq ($(BOLOTEST),-DBOLOTEST)
 	$(MAKE) fifo

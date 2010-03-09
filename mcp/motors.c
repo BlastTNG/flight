@@ -338,7 +338,6 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   //TODO temporary
   static struct NiosStruct* dacAmplAddr[5];
   int i;
-  static int j=0;
   static int wait = 100; /* wait 20 frames before controlling. */
   double el_rad;
   unsigned int ucos_el;
@@ -441,8 +440,6 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     pivGainRW = CommandData.pivot_gain.PV;
     v_piv=GetIPivot(pivGainRW,0);
   }
-  //if (j%100 == 1) bprintf(info,"WriteMot: v_piv = %i",v_piv);
-  //j++;
   /* requested pivot velocity*/
   WriteData(pivVReqDACAddr, v_piv*2, NIOS_QUEUE);
   /* p term for az motor */
