@@ -1368,6 +1368,7 @@ void* reactComm(void* arg)
     if(firsttime==1) {
       bprintf(info,"reactComm: I am not incharge thus I will not communicate with the RW motor.");
       firsttime=0;
+      //FIXME: initialize ReacMotorData from the blast bus here.  Remove the initialization that is elsewhere.
     }
     usleep(20000);
   }
@@ -1534,6 +1535,7 @@ void* elevComm(void* arg)
     if(firsttime==1) {
       bprintf(info,"elevComm: I am not incharge thus I will not communicate with the elevation drive.");
       firsttime=0;
+      //FIXME: initialize ElevMotorData from the blast bus here.  Remove the initialization that is elsewhere.
     }
     usleep(20000);
   }
@@ -1711,6 +1713,7 @@ void* pivotComm(void* arg)
     if (firsttime==1) {
       bprintf(info,"pivotComm: I am not incharge thus I will not communicate with the pivot motor.");
       firsttime=0;
+      //FIXME: initialize PivotMotorData from the blast bus here.  Remove the initialization that is elsewhere.
     }
     usleep(20000);
   }
