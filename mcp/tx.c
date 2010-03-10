@@ -253,7 +253,7 @@ void SetGyroMask (void) {
   if (firsttime) {
     firsttime = 0;
     gymaskAddr = GetNiosAddr("gyro_mask");
-    gyfaultAddr = GetBiPhaseAddr("gyro_fault");;
+    gyfaultAddr = GetBiPhaseAddr("gyro_fault");
   }
 
   GyroFault = slow_data[gyfaultAddr->index][gyfaultAddr->channel];
