@@ -846,19 +846,6 @@ struct ChannelStruct SlowChannels[] = {
   //  {"t_rec",        'r',  TMP6, 35,   CAL16T(1.0, AD590_CALIB_REC),         'u', U_NONE},
   //  {"t_das",        'r',  TMP6, 47,   CAL16T(1.0, 0.0),                     'u', U_NONE},
 
-  /* TODO these TMP channels used to be narrow-fast */
-#ifndef BOLOTEST
-  /* read channels from ACS0 */
-
-  /* send data to ACS1 */
-  //  {"gy4_errs",    'r',  TMP2, 58,             1.0,                    0.0, 'u', U_NONE},
-  //  {"gy5_errs",    'r',  TMP2, 62,             1.0,                    0.0, 'u', U_NONE},
-/* channel 63 has been usurped. presumably this will have to change anyway
-  {"gy6_errs",    'r',  TMP2, 63,             1.0,                    0.0, 'u', U_NONE},
-*/
-
-  {"mcp_frame",   'w', LOOP2, 34,             1.0,                    0.0, 'u', U_NONE},
-#endif
 
 
   END_OF_CHANNELS
@@ -938,6 +925,7 @@ struct ChannelStruct FastChannels[] = {
   {"res_piv_raw",  'w', LOOP7, 16,              I2DEG,             0.0, 'u', U_P_DEG},
   {"piv_v_req",    'w', LOOP7, 24,              0.001,             0.0, 's', U_V_DPS},
   {"chatter",      'w', LOOP7, 38,              1.0,               0.0, 'u', U_NONE},
+  {"mcp_frame",    'w', LOOP2, 34,              1.0,               0.0, 'u', U_NONE},
 
   END_OF_CHANNELS
 };
