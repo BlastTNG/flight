@@ -345,18 +345,17 @@ unsigned short *mk_crctable(unsigned short poly, unsigned short (*crcfn)
   return crctable;
 }
 
-unsigned short crchware(unsigned short data, unsigned short genpoly, unsigned short accum, struct MotorInfoStruct* amcinfo)
-{
+//unsigned short crchware(unsigned short data, unsigned short genpoly, unsigned short accum, struct MotorInfoStruct* amcinfo)
+unsigned short crchware(unsigned short data, unsigned short genpoly, unsigned short accum) {
   static int i;
   data <<= 8;
-  for(i = 8; i > 0; i--)
-    {
-      if((data ^ accum) & 0x8000)
-	accum = (accum << 1 ) ^ genpoly;
-      else
-	accum <<=1;
-      data <<=1;
-    }
+  for(i = 8; i > 0; i--) {
+    if((data ^ accum) & 0x8000)
+      accum = (accum << 1 ) ^ genpoly;
+    else
+      accum <<=1;
+    data <<=1;
+  }
   return accum;
 }
 
@@ -374,12 +373,11 @@ int send_amccmd(int index,int offset,int value,int nwords,enum CmdorQuery type, 
   int i;
 #endif
 
-  if((crctable = mk_crctable((unsigned short)CRC_POLY,crchware,amcinfo)) == NULL)
- 
-    {
-      printf("mk_crctable() memory allocation failed\n");
-      exit(1);  //TODO: Do we really want this memory allocation to bring down all of mcp?
-    }
+  if((crctable = mk_crctable((unsigned short)CRC_POLY,crchware,amcinfo)) == NULL) {
+    printf("mk_crctable() memory allocation failed\n");
+    exit(1);  //TODO: Do we really want this memory allocation to bring down all of mcp?
+  }
+
   ValuesSend.index=index;
   ValuesSend.offset=offset;
   ValuesSend.value=value;
@@ -388,6 +386,9 @@ int send_amccmd(int index,int offset,int value,int nwords,enum CmdorQuery type, 
   count=(count+1)%16;
   ValuesSend.counter=count;
   MakeSCHeadStruct(&ValuesSend,&MessSendHead, crctable,headersend,&command,&l,type,amcinfo);
+
+  free(crctable);
+
   // mark2
 #ifdef DEBUG_AMC
   char fouts[512];

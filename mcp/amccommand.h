@@ -90,7 +90,7 @@ void MakeSCHeadStruct(struct DriveIPVStruct *ValuesSend,struct SerialCommandHead
 
 void crccheck(unsigned short data, unsigned short *accumulator, unsigned short *crctable, struct MotorInfoStruct* amcinfo);
 
-unsigned short crchware(unsigned short data, unsigned short genpoly, unsigned short accum, struct MotorInfoStruct* amcinfo);
+unsigned short crchware(unsigned short data, unsigned short genpoly, unsigned short accum);
 
 void configure_amc(struct MotorInfoStruct* amcinfo);
 
