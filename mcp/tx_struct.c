@@ -738,8 +738,8 @@ struct ChannelStruct SlowChannels[] = {
   {"t_array",      'r',  ACS1_T1, 21,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_acs",        'r',  ACS1_T1, 23,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_acs_dcdc",   'r',  ACS1_T1, 25,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_ext0",       'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_ext1",       'r',  ACS1_T1, 35,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_ifpm1",       'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_ifpm2",       'r',  ACS1_T1, 35,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_ext2",       'r',  ACS1_T1, 37,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_ext3",       'r',  ACS1_T1, 39,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_ext4",       'r',  ACS1_T1, 41,         CAL16T(1.0, 0.0),         'u', U_T_C},
@@ -748,7 +748,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_ext7",       'r',  ACS1_T1, 47,         CAL16T(1.0, 0.0),         'u', U_T_C},
 
 /* ACS2 Digital I/O card */
-  {"dac1_ampl",    'w',  ACS2_D,  0,                1.0,             0.0, 'u', U_NONE},
+  {"ifpm_ampl",    'w',  ACS2_D,  0,                1.0,             0.0, 'u', U_NONE},
   {"dac2_ampl",    'w',  ACS2_D,  1,                1.0,             0.0, 'u', U_NONE},
   {"piv_dac",      'w',  ACS2_D,  2,                1.0,             0.0, 'u', U_NONE},
   //  {"dac3_ampl",    'w',  ACS2_D,  2,                1.0,             0.0, 'u', U_NONE},
@@ -768,10 +768,12 @@ struct ChannelStruct SlowChannels[] = {
   {"p_term_az",    'r',   ACS2_D, 25,                1.0,        -32768.0, 'u', U_NONE},
   {"i_term_az",    'r',   ACS2_D, 26,                1.0,        -32768.0, 'u', U_NONE},
   {"error_az",     'r',   ACS2_D, 27,	    614.4e-6, 614.4*(-32768.0e-6), 'u', U_NONE},
+  {"ifpm_bits",    'w',   ACS2_D, 28,                1.0,             0.0, 'u', U_NONE},
 
 /* ACS2 Analog card */
   {"t_clin_pyr",   'r',  ACS2_A1,  5,           -0.01875,           614.4, 'u', U_NONE},
   {"t_clin_if",    'r',  ACS2_A1, 11,           -0.01875,           614.4, 'u', U_NONE},
+  {"ifpm_hall",    'r',  ACS2_A1, 19,                1.0,             0.0, 'u', U_NONE},
   {"lvdt_65",      'r',  ACS2_A1, 21,   LVDT65_ADC_TO_ENC,     LVDT65_ZERO,   'u', U_NONE},
   {"lvdt_63",      'r',  ACS2_A1, 23,   LVDT63_ADC_TO_ENC,     LVDT63_ZERO,   'u', U_NONE},
   {"lvdt_64",      'r',  ACS2_A1, 25,   LVDT64_ADC_TO_ENC,     LVDT64_ZERO,   'u', U_NONE},
@@ -813,7 +815,6 @@ struct ChannelStruct SlowChannels[] = {
   {"t_batt_das",   'r',  TMP4, 15,                    CAL16T(1.0, 0.0), 'u', U_NONE}, // to be changed/deprecated
   //  {"i_gond_acs",   'r',  TMP4, 17,          -1.875E-3,           61.44, 'u', U_NONE},
   //  {"i_gond_das",   'r',  TMP4, 19,          -1.875E-3,           61.44, 'u', U_NONE},
-  {"ifpm_bits",    'w',  TMP4,  1,                1.0,             0.0, 'u', U_NONE}, // to be revived
   {"balpump_lev",  'w',  TMP4,  3,    -0.048851978505,           100.0, 'u', U_NONE}, // to be revived
   {"sprpump_lev",  'w',  TMP4,  4,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
   {"inpump_lev",   'w',  TMP4,  5,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
