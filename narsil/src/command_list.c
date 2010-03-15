@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.25 $";
+const char *command_list_serial = "$Revision: 4.26 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -320,11 +320,13 @@ struct scom scommands[N_SCOMMANDS] = {
  */
 struct mcom mcommands[N_MCOMMANDS] = {
   /* TODO delete when done with these. Temporary commands for dac testing */
+  /*
   {COMMAND(dac1_level), "DAC1 output level. Temporary", GR_MISC, 1,
     {
       {"Level", 0, 32767, 'i', "dac1_ampl"}
     }
   },
+  */
   {COMMAND(dac2_level), "DAC2 output level. Temporary", GR_MISC, 1,
     {
       {"Level", 0, 32767, 'i', "dac2_ampl"}
