@@ -363,7 +363,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     gPVPivotAddr = GetNiosAddr("g_pv_pivot");
     setReacAddr = GetNiosAddr("set_reac");
     pivVCalcAddr = GetNiosAddr("piv_dps_calc");
-    //dacAmplAddr[0] = GetNiosAddr("dac1_ampl");
+    //    dacAmplAddr[0] = GetNiosAddr("dac1_ampl"); // is now ifpm_ampl
     dacAmplAddr[1] = GetNiosAddr("dac2_ampl");
     //    dacAmplAddr[2] = GetNiosAddr("dac3_ampl"); // is now piv_dac
     //    dacAmplAddr[3] = GetNiosAddr("dac4_ampl"); // is now dac_el

@@ -112,4 +112,5 @@ int disableAMC(struct MotorInfoStruct* amcinfo);
 int enableAMC(struct MotorInfoStruct* amcinfo);
 int getAMCResolver(struct MotorInfoStruct* amcinfo);
 void resetAMC(char *address, struct MotorInfoStruct* amcinfo);
+int restoreAMC(struct MotorInfoStruct* amcinfo);
 #endif

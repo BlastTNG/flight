@@ -712,11 +712,15 @@ int readAMCResp(int seq, unsigned char *outs, int *l, struct MotorInfoStruct* am
     } else {
       if(timeout==timeoutlim){ // If there is no data after two tries return an.
 	if(j==timeoutlim) {// The controller never responded.
+#ifdef MOTORS_VERBOSE
 	  bprintf(err,"%sComm read_line: The controller did not respond.",amcinfo->motorstr);
+#endif
 	  amcinfo->err |= 0x0010;
 	  return -1;
 	} else {
+#ifdef MOTORS_VERBOSE
  	  bprintf(err,"%sComm read_line: Did not find the appropriate response end character.",amcinfo->motorstr);
+#endif
           amcinfo->err |= 0x0004;
 	  return -2; // For some reason the controller never found the end character.
 	             // which means the response was probably garbage. 
@@ -1056,3 +1060,27 @@ void resetAMC(char *address, struct MotorInfoStruct* amcinfo)
   }
 
 }
+
+#if 0
+int restoreAMC(struct MotorInfoStruct* amcinfo)
+{
+  int count,n;
+  bprintf(info,"%sComm restoreAMC: Attempting to restore the RS232 serial parameters.",amcinfo->motorstr);
+  count = send_amccmd(9,0,0x1cae,1,cmd, amcinfo);
+  n = check_amcready(resp,amcinfo);
+  if (n < 0)
+    {
+#ifdef MOTORS_VERBOSE
+      berror(err,"%sComm restoreAMC: Communication error.",amcinfo->motorstr);
+#endif
+      return -1;
+    }  
+  n=checkAMCResp(count,amcinfo);
+  if(n==1) 
+    {
+      bprintf(info,"%sComm restoreAMC: Restoration was successful,",amcinfo->motorstr);
+      amcinfo->init=0;
+    }
+  return n;
+}
+#endif
