@@ -1453,7 +1453,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pumps.bal_gain = rvalues[3];
       break;
     case balance_manual:
-      CommandData.pumps.level = rvalues[0] * 13107.0;
+      CommandData.pumps.level = rvalues[0];
       CommandData.pumps.mode = bal_manual;
       break;
 
