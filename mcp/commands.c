@@ -790,38 +790,13 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
 
 #ifndef BOLOTEST
-    case balance_veto:/* Balance/pump commanding */
-      CommandData.pumps.bal_veto = -1;
+    case balance_off:/* Balance/pump commanding */
+      CommandData.pumps.mode = bal_rest;
+      CommandData.pumps.level = 0;
       break;
-    case balance_allow:
-      CommandData.pumps.bal_veto = 1;
+    case balance_auto:
+      CommandData.pumps.mode= bal_auto;
       break;
-
-    case balpump_on:
-      CommandData.pumps.bal1_on = 1;
-      break;
-    case balpump_off:
-      CommandData.pumps.bal1_on = 0;
-      break;
-    case balpump_up:
-      CommandData.pumps.bal1_reverse = 1;
-      break;
-    case balpump_down:
-      CommandData.pumps.bal1_reverse = 0;
-      break;
-    case sprpump_on:
-      CommandData.pumps.bal2_on = 1;
-      break;
-    case sprpump_off:
-      CommandData.pumps.bal2_on = 0;
-      break;
-    case sprpump_fwd:
-      CommandData.pumps.bal2_reverse = 0;
-      break;
-    case sprpump_rev:
-      CommandData.pumps.bal2_reverse = 1;
-      break;
-
 #endif
 
     /* Lock */
@@ -1283,7 +1258,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case pivot_gain:  /* pivot gains */
       CommandData.pivot_gain.SP = rvalues[0];
-      CommandData.pivot_gain.PE = ivalues[1]; 
+      //CommandData.pivot_gain.PE = ivalues[1]; FIXME: fix command
       CommandData.pivot_gain.PV = ivalues[2];
       break;
 
@@ -1471,22 +1446,15 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 #ifndef BOLOTEST
       /***************************************/
       /********** Balance System  ************/
-    case setpoints:
-      CommandData.pumps.bal_on = rvalues[0] * 1648.;
-      CommandData.pumps.bal_off = rvalues[1] * 1648.;
-      CommandData.pumps.bal_target = rvalues[2] * 1648.;
+    case balance_gain:
+      CommandData.pumps.bal_on = rvalues[0] * 1990.13; /* 1990.13 DAC/Amp*/
+      CommandData.pumps.bal_off = rvalues[1] * 1990.13;
+      CommandData.pumps.bal_target = rvalues[2] * 1990.13;
+      CommandData.pumps.bal_gain = rvalues[3];
       break;
-    case bal_level:
-      CommandData.pumps.pwm1 = 2047 - rvalues[0] * 2047. / 100;
-      break;
-    case bal_gain:
-      CommandData.pumps.bal_gain = rvalues[0];
-      break;
-
-      /***************************************/
-      /********** Cooling System  ************/
-    case spare_level:
-      CommandData.pumps.pwm2 = 2047 - rvalues[0] * 2047. / 100;
+    case balance_manual:
+      CommandData.pumps.level = rvalues[0] * 13107.0;
+      CommandData.pumps.mode = bal_manual;
       break;
 
       /***************************************/
@@ -2297,12 +2265,7 @@ void InitCommandData()
   /** this overrides prev_status **/
   CommandData.force_el = 0;
 
-  if (CommandData.pumps.bal_veto != -1)
-    CommandData.pumps.bal_veto = BAL_VETO_MAX;
-  CommandData.pumps.bal1_on = 0;
-  CommandData.pumps.bal1_reverse = 0;
-  CommandData.pumps.bal2_on = 0;
-  CommandData.pumps.bal2_reverse = 0;
+  CommandData.pumps.bal_veto = BAL_VETO_MAX;
 
   CommandData.actbus.off = 0;
   CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
@@ -2445,12 +2408,11 @@ void InitCommandData()
   CommandData.ele_gain.I = 10000; /* was 8000 */
   CommandData.ele_gain.P = 10000; /* was 1200 */
 
-  CommandData.azi_gain.P = 3277;
+  CommandData.azi_gain.P = 1000;
   CommandData.azi_gain.I = 0;
 
   CommandData.pivot_gain.SP = 50; // dps
-  CommandData.pivot_gain.PV = 100;
-  CommandData.pivot_gain.PE = 0;
+  CommandData.pivot_gain.PV = 0;
 
   CommandData.gyheat.setpoint = 15.0;
   CommandData.gyheat.age = 0;
@@ -2489,14 +2451,11 @@ void InitCommandData()
   CommandData.gy_ifyaw_offset = 0;
   CommandData.gymask = 0x3f;
   
-  CommandData.pumps.pwm1 = 1638; /* 20% */
-  CommandData.pumps.pwm2 = 1638; /* 20% */
-
-  CommandData.pumps.bal_on = 0.5 * 1648.;
-  CommandData.pumps.bal_off = 0.2 * 1648.;
-  CommandData.pumps.bal_target = 0.0 * 1648.;
+  CommandData.pumps.bal_on = 0.2 * 1990.13;  
+  CommandData.pumps.bal_off = 0.1 * 1900.13;
+  CommandData.pumps.bal_target = 0.0 * 1990.13;
   CommandData.pumps.bal_gain = 0.2;
-  CommandData.pumps.inframe_auto = 1;
+  CommandData.pumps.mode = bal_rest; // TODO: change for flight
 
   CommandData.Temporary.dac_out[0] = 0x8000;
   CommandData.Temporary.dac_out[1] = 0x8000;

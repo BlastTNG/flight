@@ -254,20 +254,15 @@ struct CommandDataStruct {
   int Phase[DAS_CARDS + 1];
 
   struct {
+    enum {bal_rest, bal_manual, bal_auto} mode;
+    int level;
     int bal_veto;
-    int bal1_on;
-    int bal1_reverse;
-    int bal2_on;
-    int bal2_reverse;
+
+    // servo parameters
     double bal_on;
     double bal_off;
     double bal_target;
     double bal_gain;
-
-    int inframe_auto;
-    int inframe_cool_on;
-    int inframe_cool_off;
-    int pwm1, pwm2, pwm3, pwm4;
   } pumps;
 
   struct {

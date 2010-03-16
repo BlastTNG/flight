@@ -14,7 +14,7 @@
 /* !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
  *
  * IF YOU ADD, MODIFY, OR DELETE *ANY* COMMANDS IN THIS FILE YOU *MUST*
- * RECOMPILE AND REINSTALL BLASTCMD ON ARWEN!
+ * RECOMPILE AND REINSTALL BLASTCMD ON ARWEN/WIDOW/!
  *
  * !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
  */
@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.27 $";
+const char *command_list_serial = "$Revision: 4.28 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -230,16 +230,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(xyzzy), "nothing happens here", GR_MISC},
   {COMMAND(xy_panic), "stop XY stage motors immediately", GR_STAGE},
 
-  {COMMAND(balance_veto), "veto balance system", GR_BAL},
-  {COMMAND(balance_allow), "unveto balance system", GR_BAL},
-  {COMMAND(balpump_on), "balance pump 1 on", GR_BAL},
-  {COMMAND(balpump_off), "balance pump 1 off", GR_BAL},
-  {COMMAND(balpump_up), "balance pump 1 forward", GR_BAL},
-  {COMMAND(balpump_down), "balance pump 1 reverse", GR_BAL},
-  {COMMAND(sprpump_on), "balance pump 2 on", GR_BAL},
-  {COMMAND(sprpump_off), "balance pump 2 off", GR_BAL},
-  {COMMAND(sprpump_fwd), "balance pump 2 forward", GR_BAL},
-  {COMMAND(sprpump_rev), "balance pump 2 reverse", GR_BAL},
+  {COMMAND(balance_auto), "Put balance system into auto mode", GR_BAL},
+  {COMMAND(balance_off),  "Turn off the balance pumps", GR_BAL},
 
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},
@@ -324,7 +316,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /*
   {COMMAND(dac1_level), "DAC1 output level. Temporary", GR_MISC, 1,
     {
-      {"Level", 0, 32767, 'i', "dac1_ampl"}
+      {"Level", 0, 32767, 'i', "ifpm_ampl"}
     }
   },
   */
@@ -383,14 +375,17 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Az Scan Speed (deg az/s)", 0,   2, 'f', "NONE"}
     }
   },
-  {COMMAND(bal_gain), "balance system gain", GR_BAL, 1,
+  {COMMAND(balance_manual), "Manually set balance pump rate", GR_BAL, 1,
     {
-      {"Gain",           0.01, 1, 'f', "BAL_GAIN"},
+      {"level",           -1.0, 1.0, 'f', "NONE"},
     }
   },
-  {COMMAND(bal_level), "balance pump pwm level", GR_BAL, 1,
+  {COMMAND(balance_gain), "balance system setpoints", GR_BAL, 4,
     {
-      {"Level (%)", 0, 100, 'f', "BALPUMP_LEV"}
+      {"Pump On Point (A)",  0, 2, 'f', "BAL_ON"},
+      {"Pump Off Point (A)", 0, 2, 'f', "BAL_OFF"},
+      {"Target (A)",        -2, 2, 'f', "BAL_TARGET"},
+      {"Gain",            0.01, 1, 'f', "BAL_GAIN"},
     }
   },
   {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps",
@@ -685,18 +680,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(reset_adc), "Reset an ADC motherboard", GR_POWER, 1,
     {
       {"Node number",  0, 64, 'i', ""}
-    }
-  },
-  {COMMAND(setpoints), "balance system setpoints", GR_BAL, 3,
-    {
-      {"Pump On Point (A)",  0, 2, 'f', "BAL_ON"},
-      {"Pump Off Point (A)", 0, 2, 'f', "BAL_OFF"},
-      {"Target (A)",        -2, 2, 'f', "BAL_TARGET"}
-    }
-  },
-  {COMMAND(spare_level), "spare pump pwm level", GR_BAL, 1,
-    {
-      {"Level (%)", 0, 100, 'f', "SPRPUMP_LEV"}
     }
   },
   {COMMAND(t_gyro_gain), "gyro box heater gains", GR_ELECT, 3,

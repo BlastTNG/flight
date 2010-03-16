@@ -20,6 +20,7 @@
  *
  */
 
+#include <stdlib.h>
 #include <math.h>
 #include <time.h>
 #include <stdio.h>
@@ -81,15 +82,17 @@ extern short int start_ISC_cycle[2];
 
 extern short int InCharge; /* tx.c */
 
-/* ACS0 digital signals (G1 and G3 output, G2 input) */
-#define BAL1_ON      0x04  /* ACS3 Group 1 Bit 3 - ifpmBits */
-#define BAL1_REV     0x08  /* ACS3 Group 1 Bit 4 */
-#define BAL2_ON      0x40  /* ACS3 Group 1 Bit 7 */
-#define BAL2_REV     0x80  /* ACS3 Group 1 Bit 8 */
+/* ACS2 digital signals */
+#define BAL_DIRE     0x01  /* ACS2 Group 2 Bit 1 */
+#define BAL_VALV     0x02  /* ACS2 Group 2 Bit 2 */
+#define BAL_HEAT     0x04  /* ACS2 Group 2 Bit 3 - DAC */
 
-#define BAL_PUMP_MAX 1228 /* 60% */
-#define PUMP_MAX 819 /* 40% */
-#define PUMP_MIN 307  /* 15% */
+#define PUMP_MAX 13107       /*  1.00V   */
+#define PUMP_MIN 1310        /*  0.10V   */
+
+#define PUMP_ZERO 32820
+
+#define EL_DAC_LIM 800    /* 0.45Amps  */ 
 
 /* in commands.c */
 double LockPosition(double elevation);
@@ -230,80 +233,111 @@ void ControlGyroHeat(unsigned short *RxFrame)
 /******************************************************************/
 static int Balance(int ifpmBits)
 {
-  static struct BiPhaseStruct *iElAddr;
-  static struct NiosStruct *balPwm1Addr;
+  static struct BiPhaseStruct *elDacAddr;
+  static struct NiosStruct *ifpmAmplAddr;
   static int pumpon = 0;
-  int pumppwm;
+  int level;
   int error;
   static int pump_is_on = -2;
   static double smoothed_i = I_EL_ZERO;
-
+  
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    iElAddr = GetBiPhaseAddr("i_el");
-    balPwm1Addr = GetNiosAddr("balpump_lev");
+    elDacAddr = GetBiPhaseAddr("el_dac");
+    ifpmAmplAddr = GetNiosAddr("ifpm_ampl");
+  }
+ 
+  // if vetoed {
+  if (CommandData.pumps.bal_veto > 0) {
+    CommandData.pumps.bal_veto--;
   }
 
-  /* don't turn on pump if we're reading very small numbers */
-  if (slow_data[iElAddr->index][iElAddr->channel] < 8000)
-    error = 0;
-  else {
-    smoothed_i = slow_data[iElAddr->index][iElAddr->channel] / 500. +
-      smoothed_i * (499. / 500.);
-    error = smoothed_i - I_EL_ZERO - CommandData.pumps.bal_target;
-  }
+  if ((CommandData.pumps.mode == bal_rest) || (CommandData.pumps.bal_veto > 0)) {
+ 
+    // set direction
+    ifpmBits &= (0xFF - BAL_DIRE); /* Clear reverse bit */ 
 
-  /* Don't do anything else if we're vetoed */
-  if (CommandData.pumps.bal_veto == -1) {
-    if (pump_is_on != -1) {
-      bprintf(info, "Balance System: Vetoed\n");
-      pump_is_on = -1;
+    // close valve
+    ifpmBits &= (0xFF - BAL_VALV); /* Close the valve */ 
+
+    level = 0;
+
+  } else if (CommandData.pumps.mode == bal_manual) {
+
+    //   set direction and valve bits
+    //   set speed
+
+    ifpmBits |= BAL_VALV; /* Open valve */
+
+    if (CommandData.pumps.level > 0) {
+      ifpmBits &= (0xFF - BAL_DIRE); /* clear reverse bit */
+      level = CommandData.pumps.level;
+    } else if (CommandData.pumps.level < 0) {
+      ifpmBits |= BAL_DIRE; /* set reverse bit */
+      level = -CommandData.pumps.level;
+    } else {
+      ifpmBits &= (0xFF - BAL_VALV); /* Close valve */
+      level = 0;
     }
-    return ifpmBits;
-  } else if (CommandData.pumps.bal_veto > 1)
-    return ifpmBits;
-
-  if (error > 0)
-    ifpmBits &= (0xFF - BAL1_REV);  /* clear reverse bit */
-  else {
-    ifpmBits |= BAL1_REV;  /* set reverse bit */
-    error = -error;
-  }
-
-  pumppwm = error * CommandData.pumps.bal_gain;
-
-  if (pumppwm < PUMP_MIN)
-    pumppwm = PUMP_MIN;
-  else if (pumppwm > BAL_PUMP_MAX)
-    pumppwm = BAL_PUMP_MAX;
-
-  if (error > CommandData.pumps.bal_on) {
-    pumpon = 1;
-    CommandData.pumps.bal_veto = 0;
-  } else if (error < CommandData.pumps.bal_off) {
-    pumpon = 0;
-    if (CommandData.pumps.bal_veto > 1)
-      CommandData.pumps.bal_veto = BAL_VETO_MAX;
-  }
-
-  if (pumpon) {
-    if (pump_is_on != 1) {
-      bprintf(info, "Balance System: Pump On\n");
-      pump_is_on = 1;
-    }
-    ifpmBits |= BAL1_ON; /* turn on pump */
+ 
   } else {
-    if (pump_is_on != 0) {
-      bprintf(info, "Balance System: Pump Off\n");
-      pump_is_on = 0;
+
+    //   calculate speed and direction
+    smoothed_i = slow_data[elDacAddr->index][elDacAddr->channel] / 500. +
+          smoothed_i * (499. / 500.);
+    error = smoothed_i - I_EL_ZERO - CommandData.pumps.bal_target;
+
+    //   set direction and valve bits
+    if (error > 0) {
+      ifpmBits &= (0xFF - BAL_DIRE);  /* clear reverse bit */
+    } else {
+      ifpmBits |= BAL_DIRE;  /* set reverse bit */
+      error = -error;
     }
-    ifpmBits &= (0xFF - BAL1_ON); /* turn off pump */
+
+    //   set gain
+    level = error * CommandData.pumps.bal_gain;
+
+    //   compare to preset values
+
+    if (level < PUMP_MIN) {
+       level = PUMP_MIN;
+    } else if (level > PUMP_MAX) {
+       level = PUMP_MAX;
+    }
+
+    if (error > CommandData.pumps.bal_on) {
+      pumpon = 1;
+      CommandData.pumps.bal_veto = 0;
+    } else if (error < CommandData.pumps.bal_off) {
+      pumpon = 0;
+      if(CommandData.pumps.bal_veto > 1) {
+	CommandData.pumps.bal_veto = BAL_VETO_MAX;
+      }
+    }
+
+    if (pumpon) {
+      if (pump_is_on != 1) {
+	bprintf(info, "Balance System: Pump On\n");
+	pump_is_on = 1;
+      }
+      ifpmBits |= BAL_VALV; /* open valve pump */
+      } else {
+	if (pump_is_on != 0) {
+	bprintf(info, "Balance System: Pump Off\n");
+	pump_is_on = 0;
+	}
+	ifpmBits &= (0xFF - BAL_VALV); /* close valve pump */
+	level = 0;
+      }
+
   }
 
-  WriteData(balPwm1Addr, 2047 - pumppwm, NIOS_QUEUE);
-
+  // write direction and valve bits
+  WriteData(ifpmAmplAddr, (int) PUMP_ZERO + level, NIOS_QUEUE);
   return ifpmBits;
+
 }
 
 void ChargeController(void)
@@ -637,29 +671,31 @@ void ControlAuxMotors(unsigned short *RxFrame)
   /* inner frame box */
   /* two latching pumps 3/4 */
   /* two non latching: on/off, fwd/rev */
-  if (CommandData.pumps.bal_veto) {
-    if (CommandData.pumps.bal1_on)
-      ifpmBits |= BAL1_ON;
-    if (CommandData.pumps.bal1_reverse)
-      ifpmBits |= BAL1_REV;
-    if (CommandData.pumps.bal2_on)
-      ifpmBits |= BAL2_ON;
-    if (CommandData.pumps.bal2_reverse)
-      ifpmBits |= BAL2_REV;
-  }
+  //if (CommandData.pumps.bal_veto) {
+  //  if (CommandData.pumps.bal1_on)
+  //    ifpmBits |= BAL_VALV;
+  //  if (CommandData.pumps.bal1_reverse)
+  //    ifpmBits |= BAL_DIRE;
+    //if (CommandData.pumps.bal2_on)
+      //ifpmBits |= BAL2_ON;
+    //if (CommandData.pumps.bal2_reverse)
+      //ifpmBits |= BAL2_REV;
+  //}
 
   /* Run Balance System, Maybe */
   ifpmBits = Balance(ifpmBits);
+ 
+  //bprintf(info, "MotorControl: (%i)\n", ifpmBits);
 
   if (CommandData.pumps.bal_veto) {
     /* if we're in timeout mode, decrement the timer */
     if (CommandData.pumps.bal_veto > 1)
       CommandData.pumps.bal_veto--;
-
-    WriteData(balpumpLevAddr, CommandData.pumps.pwm1 & 0x7ff, NIOS_QUEUE);
+    //  FIX THIS
+    //WriteData(balpumpLevAddr, CommandData.pumps.pwm1 & 0x7ff, NIOS_QUEUE);
   }
-
-  WriteData(sprpumpLevAddr, CommandData.pumps.pwm2 & 0x7ff, NIOS_QUEUE);
+  //  FIX THIS
+  //WriteData(sprpumpLevAddr, CommandData.pumps.pwm2 & 0x7ff, NIOS_QUEUE);
   WriteData(balOnAddr, (int)CommandData.pumps.bal_on, NIOS_QUEUE);
   WriteData(balOffAddr, (int)CommandData.pumps.bal_off, NIOS_QUEUE);
   WriteData(balVetoAddr, (int)CommandData.pumps.bal_veto, NIOS_QUEUE);

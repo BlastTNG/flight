@@ -17,8 +17,8 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 210        /* total number of single word cmds */
-#define N_MCOMMANDS 103        /* total number of multiword commands */
+#define N_SCOMMANDS 202        /* total number of single word cmds */
+#define N_MCOMMANDS 101        /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -66,7 +66,7 @@ extern const char *GroupNames[N_GROUPS];
  * order relative to the command definitions in command_list.c */
 enum singleCommand {
   isc_auto_focus,   az_auto_gyro,       az_off,           az_on,
-  balance_allow,    balance_veto,       cal_off,          cal_on,
+  balance_auto,     balance_off,        cal_off,          cal_on,
   charcoal_off,     charcoal_on,        hs_charcoal_off,  hwpr_panic,
   hs_charcoal_on,   isc_discard_images, el_off,           el_on,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
@@ -76,9 +76,7 @@ enum singleCommand {
   isc_run,          isc_shutdown,       isc_veto,         level_off,
   level_on,         mag_allow,          mag_veto,         osc_auto_focus,
   pin_in,           pot_valve_close,    pot_valve_off,    pot_valve_on,       
-  pot_valve_open,   balpump_up,         balpump_off,      balpump_on,
-  balpump_down,     sprpump_fwd,        sprpump_off,      sprpump_on,
-  sprpump_rev,      ramp,               reset_trims,      isc_save_images,
+  pot_valve_open,   ramp,               reset_trims,      isc_save_images,
   stop,             sun_veto,           sun_allow,        isc_eye_off,
   trim_to_isc,      unlock,             lock_off,         xyzzy,
   isc_reboot,       isc_cam_cycle,      osc_run,          osc_shutdown,
@@ -123,8 +121,8 @@ enum singleCommand {
 /* multiCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
 enum multiCommand {
-  az_el_goto,        az_gain,           az_scan,          bal_gain,
-  bal_level,         osc_set_focus,     osc_set_aperture, osc_save_period,
+  az_el_goto,        az_gain,           az_scan,          balance_gain,
+  balance_manual,    osc_set_focus,     osc_set_aperture, osc_save_period,
   bias_level_500,    bias_level_350,    bias_level_250,   bias_level_rox,
   bias_level_x,      isc_blob_centre,
   /* dac level commands are temporary */
@@ -138,8 +136,8 @@ enum multiCommand {
   osc_catalogue,     osc_tolerances,    osc_hold_current,
   lock,              isc_blobs,         phase,            encoder_offset,
   pivot_gain,        isc_pixel_centre,  ra_dec_goto,      ra_dec_set,
-  roll_gain,         isc_set_aperture,  isc_set_focus,    setpoints,
-  spare_level,       t_gyro_set,        osc_gain,
+  roll_gain,         isc_set_aperture,  isc_set_focus,  
+  t_gyro_set,        osc_gain,
   t_gyro_gain,       timeout,           isc_tolerances,   vcap,
   vbox,              alice_file,        az_gyro_offset,   isc_hold_current,
   isc_save_period,   osc_offset,        plugh,		  
