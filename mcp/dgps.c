@@ -293,7 +293,7 @@ static htI32_t CheckBlock(int fd, htUI08_t* Buffer)
 	if (VoidBlock->ID == SBFID_PVTGEODETIC || VoidBlock->ID ==  SBFID_ATTEULER) {
 	  /* Check the CRC field */
 	  if (CRCIsValid(Buffer) == htFalse){
-	    bprintf(err,"DGPS: CRC invalid");
+	    //	    bprintf(err,"DGPS: CRC invalid");
 	    return -1;
 	  }
 	}

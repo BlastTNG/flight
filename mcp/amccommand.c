@@ -1076,12 +1076,10 @@ void restoreAMC(struct MotorInfoStruct* amcinfo)
 #ifdef MOTORS_VERBOSE
       berror(err,"%sComm restoreAMC: Communication error.",amcinfo->motorstr);
 #endif
-      return -1;
     }  
   n=checkAMCResp(count,amcinfo);
   if(n==1) 
     {
       bprintf(info,"%sComm restoreAMC: Restoration was successful,",amcinfo->motorstr);
     }
-  return n;
 }

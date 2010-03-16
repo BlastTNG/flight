@@ -1506,6 +1506,8 @@ void* reactComm(void* arg)
       rw_motor_index=INC_INDEX(rw_motor_index);
 
     } else {
+      rw_motor_index=INC_INDEX(rw_motor_index);
+      reactinfo.reset=1;
       usleep(10000);
     }
     i++;
@@ -1690,6 +1692,8 @@ void* elevComm(void* arg)
       j++;
       elev_motor_index=INC_INDEX(elev_motor_index);
     } else {
+      elevinfo.reset=1;
+      elev_motor_index=INC_INDEX(elev_motor_index);
       usleep(10000);
     }
   }
@@ -1886,6 +1890,8 @@ void* pivotComm(void* arg)
       j++;
       pivot_motor_index=INC_INDEX(pivot_motor_index);
     } else {
+      pivotinfo.reset=1;
+      pivot_motor_index=INC_INDEX(pivot_motor_index);
       usleep(10000);
     }
   }
