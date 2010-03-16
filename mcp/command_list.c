@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.26 $";
+const char *command_list_serial = "$Revision: 4.27 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -118,6 +118,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(reset_reac), "reset the serial connection to the RW controller", GR_GAIN},
   {COMMAND(reset_piv), "reset the serial connection to the pivot controller", GR_GAIN},
   {COMMAND(reset_elev), "reset the serial connection to the elev controller", GR_GAIN},
+  {COMMAND(restore_piv), "restore the serial settings for the pivot controller", GR_GAIN},
   {COMMAND(az_off), "disable az motors", GR_GAIN},
   {COMMAND(az_on), "enable az motors", GR_GAIN},
   {COMMAND(el_off), "disable el motors", GR_GAIN},

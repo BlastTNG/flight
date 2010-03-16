@@ -17,7 +17,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 209        /* total number of single word cmds */
+#define N_SCOMMANDS 210        /* total number of single word cmds */
 #define N_MCOMMANDS 103        /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
@@ -113,7 +113,7 @@ enum singleCommand {
   repoll,           biascmd_inh,        biascmd_ena,      autofocus_allow,
   isc_use_pyramid,  isc_no_pyramid,     osc_use_pyramid,  osc_no_pyramid,
   autofocus_veto,   north_halt,         south_halt,       actbus_on,
-  actbus_off,       actuator_stop,      level_pulse,
+  actbus_off,       actuator_stop,      level_pulse,      restore_piv,
   reset_dr,         actpos_trim,        reset_reac,       reset_piv,
   reset_elev,       jfet_on,            jfet_off,         hs_pot_on,
   hs_pot_off,       bda_on,             bda_off,          hwpr_enc_on,

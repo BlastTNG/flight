@@ -1061,11 +1061,14 @@ void resetAMC(char *address, struct MotorInfoStruct* amcinfo)
 
 }
 
-#if 0
-int restoreAMC(struct MotorInfoStruct* amcinfo)
+// Sends a command to restore the RS232 communication parameters.
+void restoreAMC(struct MotorInfoStruct* amcinfo)
 {
   int count,n;
   bprintf(info,"%sComm restoreAMC: Attempting to restore the RS232 serial parameters.",amcinfo->motorstr);
+  amcinfo->init=2;
+  amcinfo->disabled=2;
+
   count = send_amccmd(9,0,0x1cae,1,cmd, amcinfo);
   n = check_amcready(resp,amcinfo);
   if (n < 0)
@@ -1079,8 +1082,6 @@ int restoreAMC(struct MotorInfoStruct* amcinfo)
   if(n==1) 
     {
       bprintf(info,"%sComm restoreAMC: Restoration was successful,",amcinfo->motorstr);
-      amcinfo->init=0;
     }
   return n;
 }
-#endif

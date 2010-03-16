@@ -187,6 +187,7 @@ struct CommandDataStruct {
   unsigned short reset_reac;
   unsigned short reset_piv;
   unsigned short reset_elev;
+  unsigned short restore_piv;
 
   int az_autogyro;
   int el_autogyro;

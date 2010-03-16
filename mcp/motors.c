@@ -1783,6 +1783,10 @@ void* pivotComm(void* arg)
       pivotinfo.reset=1;
       CommandData.reset_piv=0;
     }
+    if(CommandData.restore_piv==1 ) {
+      restoreAMC(&pivotinfo);
+      CommandData.restore_piv=0;
+    }
 
     PivotMotorData[pivot_motor_index].drive_info=makeMotorField(&pivotinfo); // Make bitfield of controller info structure.
     PivotMotorData[pivot_motor_index].err_count=(pivotinfo.err_count > 65535) ? 65535: pivotinfo.err_count;

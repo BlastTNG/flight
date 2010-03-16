@@ -329,6 +329,9 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case reset_elev:
       CommandData.reset_elev=1;
       break;
+    case restore_piv:
+      CommandData.restore_piv=1;
+      break;
     case sun_veto:      /* Veto sensors */
       CommandData.use_sun = 0;
       break;
@@ -2401,6 +2404,7 @@ void InitCommandData()
   CommandData.reset_reac = 0;
   CommandData.reset_piv = 0;
   CommandData.reset_elev = 0;
+  CommandData.restore_piv = 0;
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
