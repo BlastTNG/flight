@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.28 $";
+const char *command_list_serial = "$Revision: 4.29 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -385,7 +385,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Pump On Point (A)",  0, 2, 'f', "BAL_ON"},
       {"Pump Off Point (A)", 0, 2, 'f', "BAL_OFF"},
       {"Target (A)",        -2, 2, 'f', "BAL_TARGET"},
-      {"Gain",            0.01, 1, 'f', "BAL_GAIN"},
+      {"Gain",            0.01, 10, 'f', "BAL_GAIN"},
     }
   },
   {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps",
