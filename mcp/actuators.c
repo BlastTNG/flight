@@ -364,6 +364,7 @@ static int BusComm(int who, const char* what, int naive, int inhibit_chatter)
 {
   int result = 0;
   int ok;
+  int retry_count = 0;
 
   if (who < 0x30)
     who = id[who];
@@ -413,7 +414,14 @@ static int BusComm(int who, const char* what, int naive, int inhibit_chatter)
           break;
         case EZ_ERR_BUSY:
           bprintf(warning, "ActBus: Controller %#x: command overflow.\n", who);
-          usleep(10000);
+	  if (!naive) {
+#ifdef ACTBUS_CHATTER
+	    if (!inhibit_chatter)
+	      bprintf(info, "ActBus: retrying (%d) command: \"%s\"\n",
+		  ++retry_count, what);
+#endif
+	    usleep(10000);
+	  }
           ok = 0;
           break;
       }
@@ -484,6 +492,7 @@ static void InitialiseActuator(int who)
 
     /* Go Back */
     BusComm(who, ActCommand(buffer, "%s", "D10R"), 0, __inhibit_chatter);
+    sleep(1);
 
     /* Add offset */
     enc = CommandData.actbus.last_good[who];
@@ -1483,6 +1492,7 @@ void ActuatorBus(void)
   for (i = 0; i < NACT; ++i)
     stepper[i].sequence = 1;
 
+  //TODO needs to not run from NICC, resume, etc
   bus_fd = act_setserial(ACT_BUS);
 
   all_ok = PollBus(0);
