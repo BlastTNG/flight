@@ -60,6 +60,7 @@ typedef signed char    htChar_t;
 #define htFalse        ((htBool_t)0)
 
 #define GPSCOM1 "/dev/ttySI5" // Time, Position, Attitude in SBF
+extern short int InCharge; /* tx.c */
 
 /* min and max SBF IDs */
 #define MIN_CMDID      128
@@ -71,8 +72,6 @@ typedef signed char    htChar_t;
 #define MAX_SBFSIZE    4096   /* maximum size of a SBF block in bytes */
 #define MIN_SBFSIZE    8      /* minimum size of a SBF block in bytes */
 
-#define pi    3.14159265358979323846 /* Pi */
-
 #define HEADER_SIZE    8 /* size of the SBF header in bytes */
 
 #define SBFID_PVTGEODETIC       5904
@@ -80,7 +79,7 @@ typedef signed char    htChar_t;
 #define SBFID_ATTEULER          5938
 
 #define BDRATE B115200
-#define SELECT_GPS_MUS_OUT  200000
+// #define SELECT_GPS_MUS_OUT  200000
 
 struct shmTime {
   int	  mode;
@@ -97,81 +96,81 @@ struct shmTime {
 };
 
 typedef struct {
-	htUI16_t            Sync;
-	htUI16_t            CRC;
-	htUI16_t            ID;
-	htUI16_t            Length;
+  htUI16_t            Sync;
+  htUI16_t            CRC;
+  htUI16_t            ID;
+  htUI16_t            Length;
 } VoidBlock_t;
 
 typedef struct {
-	htUI16_t            Sync;
-	htUI16_t            CRC;
-	htUI16_t            ID;
-	htUI16_t            Length;
-	
-	htUI32_t            TOW;
-	htUI16_t            WNc;
-	
-	htI08_t             UTCYear;
-	htI08_t             UTCMonth;
-	htI08_t             UTCDay;
-	htI08_t             UTCHour;
-	htI08_t             UTCMin;
-	htI08_t             UTCSec;
-	htI08_t             DeltaLS;
-	htUI08_t            SyncLevel;
-	
+  htUI16_t            Sync;
+  htUI16_t            CRC;
+  htUI16_t            ID;
+  htUI16_t            Length;
+
+  htUI32_t            TOW;
+  htUI16_t            WNc;
+
+  htI08_t             UTCYear;
+  htI08_t             UTCMonth;
+  htI08_t             UTCDay;
+  htI08_t             UTCHour;
+  htI08_t             UTCMin;
+  htI08_t             UTCSec;
+  htI08_t             DeltaLS;
+  htUI08_t            SyncLevel;
+
 } ReceiverTimeBlock_t;
 
 typedef struct {
-	htUI16_t            Sync;
-	htUI16_t            CRC;
-	htUI16_t            ID;
-	htUI16_t            Length;
-	
-	htUI32_t            TOW;
-	htUI16_t            WNc;
-	htUI08_t            NrSV;
-	htUI08_t            Error;
-	htUI08_t            Mode;
-	htUI08_t            System;
-	htUI08_t            Info;
-	htUI08_t            SBASprn;
-	htF64_t             Lat;
-	htF64_t             Lon;
-	htF64_t             Alt;
-	htF32_t             Vn;
-	htF32_t             Ve;
-	htF32_t             Vu;
-	htF64_t             RxClkBias;
-	htF32_t             RxClkDrift;
-	htF32_t             GeoidHeight;
-	htUI16_t            MeanCorrAge;
-	htUI16_t            BaseStationID;
-	htF32_t             Cog;
+  htUI16_t            Sync;
+  htUI16_t            CRC;
+  htUI16_t            ID;
+  htUI16_t            Length;
+
+  htUI32_t            TOW;
+  htUI16_t            WNc;
+  htUI08_t            NrSV;
+  htUI08_t            Error;
+  htUI08_t            Mode;
+  htUI08_t            System;
+  htUI08_t            Info;
+  htUI08_t            SBASprn;
+  htF64_t             Lat;
+  htF64_t             Lon;
+  htF64_t             Alt;
+  htF32_t             Vn;
+  htF32_t             Ve;
+  htF32_t             Vu;
+  htF64_t             RxClkBias;
+  htF32_t             RxClkDrift;
+  htF32_t             GeoidHeight;
+  htUI16_t            MeanCorrAge;
+  htUI16_t            BaseStationID;
+  htF32_t             Cog;
 } PVTGeodeticBlock_t;
 
 typedef struct {
-	htUI16_t            Sync;
-	htUI16_t            CRC;
-	htUI16_t            ID;
-	htUI16_t            Length;
-	
-	htUI32_t            TOW;
-	htUI16_t            WNc;
-	htUI08_t            NrSV;
-	htUI08_t            Error;
-	
-	htUI16_t            Mode;
-	htUI16_t            Reserved;
-	
-	htF32_t             Heading;
-	htF32_t             Pitch;
-	htF32_t             Roll;
-	
-	htF32_t             omega_x;
-	htF32_t             omega_y;
-	htF32_t             omega_z;
+  htUI16_t            Sync;
+  htUI16_t            CRC;
+  htUI16_t            ID;
+  htUI16_t            Length;
+
+  htUI32_t            TOW;
+  htUI16_t            WNc;
+  htUI08_t            NrSV;
+  htUI08_t            Error;
+
+  htUI16_t            Mode;
+  htUI16_t            Reserved;
+
+  htF32_t             Heading;
+  htF32_t             Pitch;
+  htF32_t             Roll;
+
+  htF32_t             omega_x;
+  htF32_t             omega_y;
+  htF32_t             omega_z;
 } AttitudeEulerBlock_t;
 
 /* SBF sync bytes */
@@ -185,71 +184,128 @@ int dgpspos_index = 0;
 
 time_t DGPSTime;
 
+struct DgpsInfoStruct {
+  int open; // 0 is closed, 1 is open
+  int init; // 0 has not yet been initialized
+  // 1 has been initialized with no errors
+  // 2 initialization was attempted but failed
+} dgpsinfo;
+
 #define LEAP_SECONDS 0		
 
 static const htUI16_t CRCLookUp[256] = {
 
-    0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
-    0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
-    0x1231, 0x0210, 0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,
-    0x9339, 0x8318, 0xb37b, 0xa35a, 0xd3bd, 0xc39c, 0xf3ff, 0xe3de,
-    0x2462, 0x3443, 0x0420, 0x1401, 0x64e6, 0x74c7, 0x44a4, 0x5485,
-    0xa56a, 0xb54b, 0x8528, 0x9509, 0xe5ee, 0xf5cf, 0xc5ac, 0xd58d,
-    0x3653, 0x2672, 0x1611, 0x0630, 0x76d7, 0x66f6, 0x5695, 0x46b4,
-    0xb75b, 0xa77a, 0x9719, 0x8738, 0xf7df, 0xe7fe, 0xd79d, 0xc7bc,
-    0x48c4, 0x58e5, 0x6886, 0x78a7, 0x0840, 0x1861, 0x2802, 0x3823,
-    0xc9cc, 0xd9ed, 0xe98e, 0xf9af, 0x8948, 0x9969, 0xa90a, 0xb92b,
-    0x5af5, 0x4ad4, 0x7ab7, 0x6a96, 0x1a71, 0x0a50, 0x3a33, 0x2a12,
-    0xdbfd, 0xcbdc, 0xfbbf, 0xeb9e, 0x9b79, 0x8b58, 0xbb3b, 0xab1a,
-    0x6ca6, 0x7c87, 0x4ce4, 0x5cc5, 0x2c22, 0x3c03, 0x0c60, 0x1c41,
-    0xedae, 0xfd8f, 0xcdec, 0xddcd, 0xad2a, 0xbd0b, 0x8d68, 0x9d49,
-    0x7e97, 0x6eb6, 0x5ed5, 0x4ef4, 0x3e13, 0x2e32, 0x1e51, 0x0e70,
-    0xff9f, 0xefbe, 0xdfdd, 0xcffc, 0xbf1b, 0xaf3a, 0x9f59, 0x8f78,
-    0x9188, 0x81a9, 0xb1ca, 0xa1eb, 0xd10c, 0xc12d, 0xf14e, 0xe16f,
-    0x1080, 0x00a1, 0x30c2, 0x20e3, 0x5004, 0x4025, 0x7046, 0x6067,
-    0x83b9, 0x9398, 0xa3fb, 0xb3da, 0xc33d, 0xd31c, 0xe37f, 0xf35e,
-    0x02b1, 0x1290, 0x22f3, 0x32d2, 0x4235, 0x5214, 0x6277, 0x7256,
-    0xb5ea, 0xa5cb, 0x95a8, 0x8589, 0xf56e, 0xe54f, 0xd52c, 0xc50d,
-    0x34e2, 0x24c3, 0x14a0, 0x0481, 0x7466, 0x6447, 0x5424, 0x4405,
-    0xa7db, 0xb7fa, 0x8799, 0x97b8, 0xe75f, 0xf77e, 0xc71d, 0xd73c,
-    0x26d3, 0x36f2, 0x0691, 0x16b0, 0x6657, 0x7676, 0x4615, 0x5634,
-    0xd94c, 0xc96d, 0xf90e, 0xe92f, 0x99c8, 0x89e9, 0xb98a, 0xa9ab,
-    0x5844, 0x4865, 0x7806, 0x6827, 0x18c0, 0x08e1, 0x3882, 0x28a3,
-    0xcb7d, 0xdb5c, 0xeb3f, 0xfb1e, 0x8bf9, 0x9bd8, 0xabbb, 0xbb9a,
-    0x4a75, 0x5a54, 0x6a37, 0x7a16, 0x0af1, 0x1ad0, 0x2ab3, 0x3a92,
-    0xfd2e, 0xed0f, 0xdd6c, 0xcd4d, 0xbdaa, 0xad8b, 0x9de8, 0x8dc9,
-    0x7c26, 0x6c07, 0x5c64, 0x4c45, 0x3ca2, 0x2c83, 0x1ce0, 0x0cc1,
-    0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
-    0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
+  0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
+  0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
+  0x1231, 0x0210, 0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,
+  0x9339, 0x8318, 0xb37b, 0xa35a, 0xd3bd, 0xc39c, 0xf3ff, 0xe3de,
+  0x2462, 0x3443, 0x0420, 0x1401, 0x64e6, 0x74c7, 0x44a4, 0x5485,
+  0xa56a, 0xb54b, 0x8528, 0x9509, 0xe5ee, 0xf5cf, 0xc5ac, 0xd58d,
+  0x3653, 0x2672, 0x1611, 0x0630, 0x76d7, 0x66f6, 0x5695, 0x46b4,
+  0xb75b, 0xa77a, 0x9719, 0x8738, 0xf7df, 0xe7fe, 0xd79d, 0xc7bc,
+  0x48c4, 0x58e5, 0x6886, 0x78a7, 0x0840, 0x1861, 0x2802, 0x3823,
+  0xc9cc, 0xd9ed, 0xe98e, 0xf9af, 0x8948, 0x9969, 0xa90a, 0xb92b,
+  0x5af5, 0x4ad4, 0x7ab7, 0x6a96, 0x1a71, 0x0a50, 0x3a33, 0x2a12,
+  0xdbfd, 0xcbdc, 0xfbbf, 0xeb9e, 0x9b79, 0x8b58, 0xbb3b, 0xab1a,
+  0x6ca6, 0x7c87, 0x4ce4, 0x5cc5, 0x2c22, 0x3c03, 0x0c60, 0x1c41,
+  0xedae, 0xfd8f, 0xcdec, 0xddcd, 0xad2a, 0xbd0b, 0x8d68, 0x9d49,
+  0x7e97, 0x6eb6, 0x5ed5, 0x4ef4, 0x3e13, 0x2e32, 0x1e51, 0x0e70,
+  0xff9f, 0xefbe, 0xdfdd, 0xcffc, 0xbf1b, 0xaf3a, 0x9f59, 0x8f78,
+  0x9188, 0x81a9, 0xb1ca, 0xa1eb, 0xd10c, 0xc12d, 0xf14e, 0xe16f,
+  0x1080, 0x00a1, 0x30c2, 0x20e3, 0x5004, 0x4025, 0x7046, 0x6067,
+  0x83b9, 0x9398, 0xa3fb, 0xb3da, 0xc33d, 0xd31c, 0xe37f, 0xf35e,
+  0x02b1, 0x1290, 0x22f3, 0x32d2, 0x4235, 0x5214, 0x6277, 0x7256,
+  0xb5ea, 0xa5cb, 0x95a8, 0x8589, 0xf56e, 0xe54f, 0xd52c, 0xc50d,
+  0x34e2, 0x24c3, 0x14a0, 0x0481, 0x7466, 0x6447, 0x5424, 0x4405,
+  0xa7db, 0xb7fa, 0x8799, 0x97b8, 0xe75f, 0xf77e, 0xc71d, 0xd73c,
+  0x26d3, 0x36f2, 0x0691, 0x16b0, 0x6657, 0x7676, 0x4615, 0x5634,
+  0xd94c, 0xc96d, 0xf90e, 0xe92f, 0x99c8, 0x89e9, 0xb98a, 0xa9ab,
+  0x5844, 0x4865, 0x7806, 0x6827, 0x18c0, 0x08e1, 0x3882, 0x28a3,
+  0xcb7d, 0xdb5c, 0xeb3f, 0xfb1e, 0x8bf9, 0x9bd8, 0xabbb, 0xbb9a,
+  0x4a75, 0x5a54, 0x6a37, 0x7a16, 0x0af1, 0x1ad0, 0x2ab3, 0x3a92,
+  0xfd2e, 0xed0f, 0xdd6c, 0xcd4d, 0xbdaa, 0xad8b, 0x9de8, 0x8dc9,
+  0x7c26, 0x6c07, 0x5c64, 0x4c45, 0x3ca2, 0x2c83, 0x1ce0, 0x0cc1,
+  0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
+  0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
 };
 
 htUI16_t ComputeCRC(void * buf, size_t buf_length)
 {
-    htUI32_t  i;
-      htUI16_t  crc = 0;
-        htUI08_t *buf8 = buf;
+  htUI32_t  i;
+  htUI16_t  crc = 0;
+  htUI08_t *buf8 = buf;
 
-	  for (i=0; i<buf_length; i++) {
-	        crc = (crc << 8) ^ CRCLookUp[ (crc >> 8) ^ buf8[i] ];
-		  }
+  for (i=0; i<buf_length; i++) {
+    crc = (crc << 8) ^ CRCLookUp[ (crc >> 8) ^ buf8[i] ];
+  }
 
-	    return crc;
+  return crc;
 }
 
 htBool_t CRCIsValid(void *Mess)
 {
-    VoidBlock_t * Mess2 = Mess;
-      htUI16_t crc;
+  VoidBlock_t * Mess2 = Mess;
+  htUI16_t crc;
 
-        crc = ComputeCRC( &(Mess2->ID), Mess2->Length-2*sizeof(htUI16_t) );
+  crc = ComputeCRC( &(Mess2->ID), Mess2->Length-2*sizeof(htUI16_t) );
 
-	  return (crc ==  Mess2->CRC) ? htTrue:htFalse;
+  return (crc ==  Mess2->CRC) ? htTrue:htFalse;
 }
 
 
 
 static htI32_t CheckBlock(int fd, htUI08_t* Buffer)
 {
+<<<<<<< dgps.c
+  VoidBlock_t* VoidBlock = (VoidBlock_t*)Buffer;
+
+  /* Read the block header, remember that the first '$' is already present in Buffer[0]. */
+  int hdrexp=HEADER_SIZE-1;
+  int cnt=0;
+  do {
+    int retn=read(fd,&Buffer[1+cnt],1);
+    if (retn<0) {
+      return -1;
+      bprintf(err,"DGPS: no response");
+    }
+    cnt +=retn;
+  } while (cnt < hdrexp);
+
+  //printf("\nBuffer: %3u %3u %3u %3u\n",Buffer[0],Buffer[1],Buffer[2],Buffer[3]);
+  //printf("Header: %3u %3u %3u\n\n",VoidBlock->Sync, VoidBlock->ID, VoidBlock->Length);
+  /*Check block header*/
+  if ((VoidBlock->Sync !=
+	((htUI16_t)SYNC_STRING[0] | (htUI16_t)SYNC_STRING[1]<<8))        ||
+      (VoidBlock->ID       < MIN_CMDID)                                ||
+      ((VoidBlock->ID      > MAX_CMDID) & (VoidBlock->ID < MIN_SBFID)) ||
+      (VoidBlock->ID       > MAX_SBFID)                                ||
+      (VoidBlock->Length   > MAX_SBFSIZE)                              ||
+      (VoidBlock->Length   < MIN_SBFSIZE)) {
+    //bprintf(err,"DGPS: Something wrong with block header");
+    return -1;
+  }
+
+  /* Read one at a time */
+  int expected=VoidBlock->Length-HEADER_SIZE;
+  int count=0; 
+  do { 
+    int ret=read(fd,&Buffer[HEADER_SIZE+count],1); 
+    if (ret<0) { 
+      //	      bprintf(err,"DGPS: no response");
+      return -1; 
+    } 
+    count +=ret; 
+  } while (count < expected); 
+
+  if (VoidBlock->ID == SBFID_PVTGEODETIC || VoidBlock->ID ==  SBFID_ATTEULER) {
+    /* Check the CRC field */
+    if (CRCIsValid(Buffer) == htFalse){
+      bprintf(err,"DGPS: CRC invalid");
+      return -1;
+    }
+  }
+  return 0;
+=======
 	VoidBlock_t* VoidBlock = (VoidBlock_t*)Buffer;
 	
 	/* Read the block header, remember that the first '$' is already present in Buffer[0]. */
@@ -298,53 +354,51 @@ static htI32_t CheckBlock(int fd, htUI08_t* Buffer)
 	  }
 	}
 	return 0;
+>>>>>>> 4.8
 }
 
 htI32_t GetNextBlock(int fd, void* SBFBlock)
 {
-	htBool_t     BlockFound;
-	htUI08_t     Buffer[MAX_SBFSIZE];
-		
-	struct timeval timeout;
+  htBool_t     BlockFound;
+  htUI08_t     Buffer[MAX_SBFSIZE];
+
+  /*	struct timeval timeout;
 	timeout.tv_sec =0;
 	timeout.tv_usec = SELECT_GPS_MUS_OUT;
 	int maxfd = fd+1;
-      	fd_set output;
+	fd_set output;
 	FD_ZERO(&output);
 	FD_SET(fd,&output);
 	select(maxfd, &output, NULL, NULL, &timeout);
+	*/
+  BlockFound = htFalse;
+  //	if (FD_ISSET(fd,&output)) {
+  do {
+    char c[1];
+    int n = read(fd,&c[0],1);
+    if (n<0) {
+      //TODO dgps code needs updates to handle serial errors
+      bprintf(err,"dGPS: read GPSblock failed!");
+    }
 
-	BlockFound = htFalse;
-	if (FD_ISSET(fd,&output)) {
-	  do {
-	    char c[1];
-	    int n = read(fd,&c[0],1);
-	    if (n<0) {
-	    //TODO dgps code needs updates to handle serial errors
-//	      bprintf(err,"dGPS: read GPSblock failed!");
-	    }
+    if (n>0 && c[0]==SYNC_STRING[0]) {
+      Buffer[0] = (htUI08_t)c[0];
+      if (CheckBlock(fd, Buffer) == 0) {
+	BlockFound = htTrue;	
+	memcpy(SBFBlock, Buffer, (size_t)((VoidBlock_t*)Buffer)->Length);	
+      }
+    }
+  } while (BlockFound == htFalse);
+  //	}
+  return (BlockFound == htTrue) ? 0 : -1;
 
-	    if (n>0 && c[0]==SYNC_STRING[0]) {
-	      Buffer[0] = (htUI08_t)c[0];
-	      if (CheckBlock(fd, Buffer) == 0) {
-		BlockFound = htTrue;	
-		memcpy(SBFBlock, Buffer, (size_t)((VoidBlock_t*)Buffer)->Length);	
-	      }
-	    }
-	  } while (BlockFound == htFalse);
-	}
-	//else printf("fd not set\n");
-	return (BlockFound == htTrue) ? 0 : -1;
-	
 }
 
 struct shmTime *getShmTime() {
   int shmid;
-  if ((shmid = shmget (NTPD_BASE, sizeof (struct shmTime), IPC_CREAT|0660))== -1)
-  {
+  if ((shmid = shmget (NTPD_BASE, sizeof (struct shmTime), IPC_CREAT|0660))== -1) {
     return 0;
-  }
-  else {
+  } else {
     struct shmTime *p=(struct shmTime *)shmat (shmid, 0, 0);
     if ((int)(long)p==-1) {
       return 0;
@@ -370,180 +424,269 @@ int ntpshm_put(double fixtime) {
   shmTime->receiveTimeStampUsec = (int)tv.tv_usec;
   shmTime->count++;
   shmTime->valid = 1;
-  
+
   return 1;
 
 }
 
 void WatchDGPS()
 {
-	htUI08_t SBFBlock[MAX_SBFSIZE];
-	int k,l,m,n;
-	double lat,lon;
-	struct tm ts;
-	int pos_ok;
-	bputs(startup, "dGPS: WatchDGPS startup\n");
-	
-	DGPSAtt[0].az = 0;
-	DGPSAtt[0].pitch = 0;
-	DGPSAtt[0].roll = 0;
-	DGPSAtt[0].att_ok = 0;
-	dgpsatt_index = 1;
-	
-	DGPSPos[0].lat = 0;
-	DGPSPos[0].lon = 0;
-	DGPSPos[0].alt = 0;
-	DGPSPos[0].speed = 0;
-	DGPSPos[0].direction = 0;
-	DGPSPos[0].climb = 0;
-	DGPSPos[0].n_sat = 0;
-	dgpspos_index = 1;
-	
-	DGPSTime = 0;
+  htUI08_t SBFBlock[MAX_SBFSIZE];
+  int k,l,m,n;
+  double lat=0,lon=0;
+  struct tm ts;
+  int pos_ok;
+  static int firsttime = 1;
+  static struct BiPhaseStruct* dgpsAzAddr;
+  static struct BiPhaseStruct* dgpsPitchAddr;
+  static struct BiPhaseStruct* dgpsRollAddr;
+  static struct BiPhaseStruct* dgpsAttOkAddr;
+  static struct BiPhaseStruct* dgpsLatAddr;
+  static struct BiPhaseStruct* dgpsLonAddr;
+  static struct BiPhaseStruct* dgpsAltAddr;
+  static struct BiPhaseStruct* dgpsSpeedAddr;
+  static struct BiPhaseStruct* dgpsDirAddr;
+  static struct BiPhaseStruct* dgpsClimbAddr;
+  static struct BiPhaseStruct* dgpsNsatAddr;
+  static struct BiPhaseStruct* dgpsTimeAddr;
+  bputs(startup, "dGPS: WatchDGPS startup\n");
 
-	int fd;
-	struct termios term;
-	//Open the ports
-	if ((fd = open(GPSCOM1, O_RDWR | O_NOCTTY | O_NDELAY)) < 0)
-	  berror(tfatal, "dGPS: Unable to open serial port");
-	//Set options
-	
-	tcgetattr(fd,&term);
-	cfsetispeed(&term,BDRATE);
-	cfsetospeed(&term,BDRATE);
+  /* initialize values in dgpsinfo structure */
+  dgpsinfo.init = 0;
 
-	/*Control Modes*/
-	term.c_cflag |= (CLOCAL | CREAD); //local connection, no modem control; enable receiving characters   
-	term.c_cflag &= ~PARENB;   // No Parity
-	term.c_cflag &= ~CSTOPB;   // 1 Stop Bit 
-	term.c_cflag &= ~CSIZE;    // Mask the character size bits
-	term.c_cflag |= CS8;       // 8 data bits
-	term.c_cflag &= ~CRTSCTS;  //flow control off (no RTS/CTS)
-	/*Local Modes*/
-	term.c_lflag =0;
-	term.c_cc[VTIME]=0;
-	term.c_cc[VMIN]=0;
-	//term.c_lflag |= ICANON;    // enable canonical (line-based) input
-	//term.c_lflag &= ~ICANON;    // disable canonical (line-based) input
-	/*Input Modes*/
-	//term.c_iflag = 0;
-	//term.c_iflag = ICRNL;      // map CR to NL on input
-	/*Output Modes*/
-	term.c_oflag = 0;
+  if (firsttime) {
+    firsttime = 0;
+    dgpsAzAddr = GetBiPhaseAddr("dgps_az_raw");     
+    dgpsPitchAddr = GetBiPhaseAddr("dgps_pitch_raw");
+    dgpsRollAddr = GetBiPhaseAddr("dgps_roll_raw"); 
+    dgpsAttOkAddr = GetBiPhaseAddr("dgps_att_ok");
+    dgpsLatAddr = GetBiPhaseAddr("dgps_lat");       
+    dgpsLonAddr = GetBiPhaseAddr("dgps_lon");      
+    dgpsAltAddr = GetBiPhaseAddr("dgps_alt");
+    dgpsSpeedAddr = GetBiPhaseAddr("dgps_speed");   
+    dgpsDirAddr = GetBiPhaseAddr("dgps_dir");       
+    dgpsClimbAddr = GetBiPhaseAddr("dgps_climb");   
+    dgpsNsatAddr = GetBiPhaseAddr("dgps_n_sat");
+    dgpsTimeAddr = GetBiPhaseAddr("dgps_time");
+  } 
 
-	/*Activate settings for the port*/
-	tcsetattr(fd,TCSANOW,&term);
-	
-	/* Set interval at which receiver outputs data to 0.1s (10Hz) */
-	char cmd1[] = "spi 0.1\n";
-	k = strlen(cmd1);
-	m = write(fd,cmd1,k);
-	if (m<0)
-	  berror(err,"dGPS: send command failed!");
-	
-	/* Set COM1 to output data blocks in Septentrio Binary Format (see p.129 of manual)
-	 *		Status(includes receiver time) =    32768 (0x0008000)
-	 *		PVTGeo(position,velocity,time) =      512 (0x0000200)
-	 *		AttEule(attitude)	       = 16777216 (0x1000000)
-	 *					total  = 16810496
-	 */
-	char cmd2[] = "sso com1 16810496";
-	l = strlen(cmd2);
-	n = write(fd,cmd2,l);
-	if (n<0)
-	  berror(err,"dGPS: send command failed!");
+  /* Initialize values in DGPSAtt and DGPSPos structures */
+  DGPSAtt[0].az = 0;
+  DGPSAtt[0].pitch = 0;
+  DGPSAtt[0].roll = 0;
+  DGPSAtt[0].att_ok = 0;
+  dgpsatt_index = 1;
 
-	/*Read in SBF data blocks*/
-	while (GetNextBlock(fd, SBFBlock) == 0) {
-		
-		usleep(100000);
-		/* Time */
-		if (((VoidBlock_t*)SBFBlock)->ID == SBFID_RECEIVERTIME) {
-			ReceiverTimeBlock_t* RXTIME = (ReceiverTimeBlock_t*) SBFBlock;
-			/*printf("%-2i %13.1f %3i %3i %3i %3i %3i %3i %3i"
-			    "0 0 0 0 0 0 0 0 0 0\n",
-			    -5,
-			    RXTIME->WNc*86400.0*7.0+RXTIME->TOW/1000.0,
-			    RXTIME->UTCYear,
-			    RXTIME->UTCMonth,
-			    RXTIME->UTCDay,
-			    RXTIME->UTCHour,
-			    RXTIME->UTCMin,
-			    RXTIME->UTCSec,
-			    RXTIME->DeltaLS
-			    );*/
-		      	ts.tm_year=RXTIME->UTCYear;
-			ts.tm_mon=RXTIME->UTCMonth;
-			ts.tm_mday=RXTIME->UTCDay;
-			ts.tm_hour=RXTIME->UTCHour;
-			ts.tm_min=RXTIME->UTCMin;
-			ts.tm_sec=RXTIME->UTCSec;
-			ts.tm_isdst = 0;
-			ts.tm_year += 100; //converts from year in 2-digit UTC
-			ts.tm_mon--; // Jan is 1 in UTC, 0 in Unix time
-				
-			DGPSTime = mktime(&ts) - timezone + LEAP_SECONDS;
-			//ntpshm_put(double(DGPSTime)); //segmentation fault unless run mcp as sudo
-		}
-		/* Position & Velocity */
-		else if (((VoidBlock_t*)SBFBlock)->ID == SBFID_PVTGEODETIC) {
-			PVTGeodeticBlock_t* PVT = (PVTGeodeticBlock_t*)SBFBlock;
-			/*printf("%-2i %13.1f %21.10f %21.10f %14.3f %10.3f"
-			    " %10.3f %15.8f %13.6e %14.3e %3i %3u 0 0\n",
-			    -1,
-			    PVT->WNc*86400.0*7.0+PVT->TOW/1000.0,
-			    PVT->Lat,
-			    PVT->Lon,
-			    PVT->Alt,
-			    PVT->Vn,
-			    PVT->Ve,
-			    PVT->Vu,
-			    PVT->RxClkBias,
-			    PVT->RxClkDrift,
-			    (int)(PVT->NrSV),
-			    (unsigned int)(PVT->Mode)
-			    );*/
-			pos_ok = 1;
-			lat = PVT->Lat; // Latitude in radians
-			DGPSPos[dgpspos_index].lat = lat*180/pi; // Latitude in degrees
-			lon = PVT->Lon; // Longitude in radians
-			DGPSPos[dgpspos_index].lon = lon*180/pi; // Longitude in degrees
-			DGPSPos[dgpspos_index].alt = PVT->Alt - PVT->GeoidHeight; // Altitude above geoid in metres
-			DGPSPos[dgpspos_index].n_sat = (int)(PVT->NrSV); // # Satellites
-			if (DGPSPos[dgpspos_index].n_sat < 4) {
-			    pos_ok = 0;
-			}
-			DGPSPos[dgpspos_index].direction = PVT->Cog; //true track/course over ground in degrees (0 to 359.9)
-			DGPSPos[dgpspos_index].speed = (PVT->Vn+PVT->Ve)*60*60/1000;// speed over ground in km/hr (0 to 999.9)
-			DGPSPos[dgpspos_index].climb = PVT->Vu; // vertical velocity in m/s (-999.9 to 999.9)
-			
-			if (pos_ok) {
-			    dgpspos_index = INC_INDEX(dgpspos_index);
-			}
-		}
-		/* Attitude */
-		else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_ATTEULER) {
-			AttitudeEulerBlock_t* ATTEULER = (AttitudeEulerBlock_t*) SBFBlock;
-			/*printf("%-2i %13.1f %14.5f %14.5f %14.5f"
-			    " %3u %3u %3u 0 0 0 0 0 0\n",
-			    -3,
-			    ATTEULER->WNc*86400.0*7.0+ATTEULER->TOW/1000.0,
-			    ATTEULER->Heading,
-			    ATTEULER->Pitch,
-			    ATTEULER->Roll,
-			    (unsigned int)(ATTEULER->Error),
-			    ATTEULER->Mode,
-			    (unsigned int)(ATTEULER->NrSV)
-			    );*/
-			DGPSAtt[dgpsatt_index].az = ATTEULER->Heading;
-			DGPSAtt[dgpsatt_index].pitch = ATTEULER->Pitch;
-			DGPSAtt[dgpsatt_index].roll = ATTEULER->Roll;	
-			DGPSAtt[dgpsatt_index].att_ok = 1;
-				
-			dgpsatt_index = INC_INDEX(dgpsatt_index);
-		}
+  DGPSPos[0].lat = 0;
+  DGPSPos[0].lon = 0;
+  DGPSPos[0].alt = 0;
+  DGPSPos[0].speed = 0;
+  DGPSPos[0].direction = 0;
+  DGPSPos[0].climb = 0;
+  DGPSPos[0].n_sat = 0;
+  dgpspos_index = 1;
 
-	}	
-	return;
-		
+  DGPSTime = 0;
+
+  while(!InCharge) {
+    DGPSAtt[0].az = (((double)slow_data[dgpsAzAddr->index][dgpsAzAddr->channel])/DEG2I);
+    DGPSAtt[1].az = (((double)slow_data[dgpsAzAddr->index][dgpsAzAddr->channel])/DEG2I);
+    DGPSAtt[2].az = (((double)slow_data[dgpsAzAddr->index][dgpsAzAddr->channel])/DEG2I);
+    DGPSAtt[0].pitch = (((double)slow_data[dgpsPitchAddr->index][dgpsPitchAddr->channel])/DEG2I);
+    DGPSAtt[1].pitch = (((double)slow_data[dgpsPitchAddr->index][dgpsPitchAddr->channel])/DEG2I);
+    DGPSAtt[2].pitch = (((double)slow_data[dgpsPitchAddr->index][dgpsPitchAddr->channel])/DEG2I);
+    DGPSAtt[0].roll = (((double)slow_data[dgpsRollAddr->index][dgpsRollAddr->channel])/DEG2I);
+    DGPSAtt[1].roll = (((double)slow_data[dgpsRollAddr->index][dgpsRollAddr->channel])/DEG2I);
+    DGPSAtt[2].roll = (((double)slow_data[dgpsRollAddr->index][dgpsRollAddr->channel])/DEG2I);
+    DGPSAtt[0].att_ok = (slow_data[dgpsAttOkAddr->index][dgpsAttOkAddr->channel]);
+    DGPSAtt[1].att_ok = (slow_data[dgpsAttOkAddr->index][dgpsAttOkAddr->channel]);
+    DGPSAtt[2].att_ok = (slow_data[dgpsAttOkAddr->index][dgpsAttOkAddr->channel]);
+    DGPSPos[0].lat = (((double)slow_data[dgpsLatAddr->index][dgpsLatAddr->channel])/DEG2I);
+    DGPSPos[1].lat = (((double)slow_data[dgpsLatAddr->index][dgpsLatAddr->channel])/DEG2I);
+    DGPSPos[2].lat = (((double)slow_data[dgpsLatAddr->index][dgpsLatAddr->channel])/DEG2I);
+    DGPSPos[0].lon = (((double)slow_data[dgpsLonAddr->index][dgpsLonAddr->channel])/DEG2I);
+    DGPSPos[1].lon = (((double)slow_data[dgpsLonAddr->index][dgpsLonAddr->channel])/DEG2I);
+    DGPSPos[2].lon = (((double)slow_data[dgpsLonAddr->index][dgpsLonAddr->channel])/DEG2I);
+    DGPSPos[0].alt = ((double)slow_data[dgpsAltAddr->index][dgpsAltAddr->channel]);
+    DGPSPos[1].alt = ((double)slow_data[dgpsAltAddr->index][dgpsAltAddr->channel]);
+    DGPSPos[2].alt = ((double)slow_data[dgpsAltAddr->index][dgpsAltAddr->channel]);
+    DGPSPos[0].speed = (((double)slow_data[dgpsSpeedAddr->index][dgpsSpeedAddr->channel])/DEG2I);
+    DGPSPos[1].speed = (((double)slow_data[dgpsSpeedAddr->index][dgpsSpeedAddr->channel])/DEG2I);
+    DGPSPos[2].speed = (((double)slow_data[dgpsSpeedAddr->index][dgpsSpeedAddr->channel])/DEG2I);
+    DGPSPos[0].direction = (((double)slow_data[dgpsDirAddr->index][dgpsDirAddr->channel])/DEG2I);
+    DGPSPos[1].direction = (((double)slow_data[dgpsDirAddr->index][dgpsDirAddr->channel])/DEG2I);
+    DGPSPos[2].direction = (((double)slow_data[dgpsDirAddr->index][dgpsDirAddr->channel])/DEG2I);
+    DGPSPos[0].climb = (((double)slow_data[dgpsClimbAddr->index][dgpsClimbAddr->channel])/DEG2I);
+    DGPSPos[1].climb = (((double)slow_data[dgpsClimbAddr->index][dgpsClimbAddr->channel])/DEG2I);
+    DGPSPos[2].climb = (((double)slow_data[dgpsClimbAddr->index][dgpsClimbAddr->channel])/DEG2I);
+    DGPSPos[0].n_sat = (slow_data[dgpsNsatAddr->index][dgpsNsatAddr->channel]);
+    DGPSPos[1].n_sat = (slow_data[dgpsNsatAddr->index][dgpsNsatAddr->channel]);
+    DGPSPos[2].n_sat = (slow_data[dgpsNsatAddr->index][dgpsNsatAddr->channel]);
+    DGPSTime = (slow_data[dgpsTimeAddr->index][dgpsTimeAddr->channel]); 
+    usleep(20000);
+  }
+
+  int fd;
+  struct termios term;
+
+  //try to open the port
+  dgpsinfo.open = 0;
+  while (dgpsinfo.open == 0) {
+    if ((fd = open(GPSCOM1, O_RDWR | O_NOCTTY | O_NDELAY)) < 0) {
+      usleep(20000);
+      // FIXME: reboot device master if this goes on for too long?
+      // open fails only if the devicemaster is having troubles
+      // rebooting devicemaster deprives us of elevation control though...
+    } else {
+      dgpsinfo.open = 1;
+    }
+  }
+
+  //Set options
+  tcgetattr(fd,&term);
+  cfsetispeed(&term,BDRATE);
+  cfsetospeed(&term,BDRATE);
+
+  /*Control Modes*/
+  term.c_cflag |= (CLOCAL | CREAD); //local connection, no modem control; enable receiving characters   
+  term.c_cflag &= ~PARENB;   // No Parity
+  term.c_cflag &= ~CSTOPB;   // 1 Stop Bit 
+  term.c_cflag &= ~CSIZE;    // Mask the character size bits
+  term.c_cflag |= CS8;       // 8 data bits
+  term.c_cflag &= ~CRTSCTS;  //flow control off (no RTS/CTS)
+  /*Local Modes*/
+  term.c_lflag =0;
+  term.c_cc[VTIME]=0;
+  term.c_cc[VMIN]=0;
+  //term.c_lflag |= ICANON;    // enable canonical (line-based) input
+  //term.c_lflag &= ~ICANON;    // disable canonical (line-based) input
+  /*Input Modes*/
+  //term.c_iflag = 0;
+  //term.c_iflag = ICRNL;      // map CR to NL on input
+  /*Output Modes*/
+  term.c_oflag = 0;
+
+  /*Activate settings for the port*/
+  tcsetattr(fd,TCSANOW,&term);
+
+  /* Send commands */
+  /* Set interval at which receiver outputs data to 0.1s (10Hz) */
+  char cmd1[] = "spi 0.1\n";
+  k = strlen(cmd1);
+  m = write(fd,cmd1,k);
+  if (m<0) {
+    berror(err,"dGPS: send command failed!");
+  }
+
+  /* Set COM1 to output data blocks in Septentrio Binary Format (see p.129 of manual)
+   *		Status(includes receiver time) =    32768 (0x0008000)
+   *		PVTGeo(position,velocity,time) =      512 (0x0000200)
+   *		AttEule(attitude)	       = 16777216 (0x1000000)
+   *					total  = 16810496
+   */
+  char cmd2[] = "sso com1 16810496";
+  l = strlen(cmd2);
+  n = write(fd,cmd2,l);
+  if (n<0) {
+    berror(err,"dGPS: send command failed!");
+  }
+
+  // FIXME maybe: should we be allowed to proceed if we have had write errors?
+  // Can this even happen?  If not, should we care?
+  
+  /*Read in SBF data blocks*/
+  while (GetNextBlock(fd, SBFBlock) == 0) {
+
+    /* Time */
+    if (((VoidBlock_t*)SBFBlock)->ID == SBFID_RECEIVERTIME) {
+      ReceiverTimeBlock_t* RXTIME = (ReceiverTimeBlock_t*) SBFBlock;
+      /*printf("%-2i %13.1f %3i %3i %3i %3i %3i %3i %3i"
+	"0 0 0 0 0 0 0 0 0 0\n",
+	-5,
+	RXTIME->WNc*86400.0*7.0+RXTIME->TOW/1000.0,
+	RXTIME->UTCYear,
+	RXTIME->UTCMonth,
+	RXTIME->UTCDay,
+	RXTIME->UTCHour,
+	RXTIME->UTCMin,
+	RXTIME->UTCSec,
+	RXTIME->DeltaLS
+	);*/
+      ts.tm_year=RXTIME->UTCYear;
+      ts.tm_mon=RXTIME->UTCMonth;
+      ts.tm_mday=RXTIME->UTCDay;
+      ts.tm_hour=RXTIME->UTCHour;
+      ts.tm_min=RXTIME->UTCMin;
+      ts.tm_sec=RXTIME->UTCSec;
+      ts.tm_isdst = 0;
+      ts.tm_year += 100; //converts from year in 2-digit UTC
+      ts.tm_mon--; // Jan is 1 in UTC, 0 in Unix time
+
+      if (RXTIME->UTCSec != -128)  {
+	DGPSTime = mktime(&ts) - timezone + LEAP_SECONDS;
+	ntpshm_put((double)DGPSTime); //segmentation fault unless run mcp as sudo
+      }
+
+    } else if (((VoidBlock_t*)SBFBlock)->ID == SBFID_PVTGEODETIC) {
+
+      /* Position & Velocity */
+      PVTGeodeticBlock_t* PVT = (PVTGeodeticBlock_t*)SBFBlock;
+      /*printf("%-2i %13.1f %21.10f %21.10f %14.3f %10.3f"
+	" %10.3f %15.8f %13.6e %14.3e %3i %3u 0 0\n",
+	-1,
+	PVT->WNc*86400.0*7.0+PVT->TOW/1000.0,
+	PVT->Lat,
+	PVT->Lon,
+	PVT->Alt,
+	PVT->Vn,
+	PVT->Ve,
+	PVT->Vu,
+	PVT->RxClkBias,
+	PVT->RxClkDrift,
+	(int)(PVT->NrSV),
+	(unsigned int)(PVT->Mode)
+	);*/
+      pos_ok = 1;
+      if (PVT->Lat != -2e10) lat = PVT->Lat; // Latitude in radians
+      DGPSPos[dgpspos_index].lat = lat*180/M_PI; // Latitude in degrees
+      if (PVT->Lon != -2e10) lon = PVT->Lon; // Longitude in radians
+      DGPSPos[dgpspos_index].lon = lon*180/M_PI; // Longitude in degrees
+      if ((PVT->Alt != -2e10) && (PVT->GeoidHeight != -2e10)) DGPSPos[dgpspos_index].alt = PVT->Alt - PVT->GeoidHeight; // Altitude above geoid in metres
+      DGPSPos[dgpspos_index].n_sat = (int)(PVT->NrSV); // # Satellites
+      if (DGPSPos[dgpspos_index].n_sat < 4) {
+	pos_ok = 0;
+      }
+      if (PVT->Cog != -2e10) DGPSPos[dgpspos_index].direction = PVT->Cog; //true track/course over ground in degrees (0 to 359.9)
+      if ((PVT->Vn != -2e10) && (PVT->Ve != -2e10))DGPSPos[dgpspos_index].speed = (PVT->Vn+PVT->Ve)*60*60/1000;// speed over ground in km/hr (0 to 999.9)
+      if (PVT->Vu != -2e10) DGPSPos[dgpspos_index].climb = PVT->Vu; // vertical velocity in m/s (-999.9 to 999.9)
+
+      if (pos_ok) {
+	dgpspos_index = INC_INDEX(dgpspos_index);
+      }
+    }
+    /* Attitude */
+    else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_ATTEULER) {
+      AttitudeEulerBlock_t* ATTEULER = (AttitudeEulerBlock_t*) SBFBlock;
+      /*printf("%-2i %13.1f %14.5f %14.5f %14.5f"
+	" %3u %3u %3u 0 0 0 0 0 0\n",
+	-3,
+	ATTEULER->WNc*86400.0*7.0+ATTEULER->TOW/1000.0,
+	ATTEULER->Heading,
+	ATTEULER->Pitch,
+	ATTEULER->Roll,
+	(unsigned int)(ATTEULER->Error),
+	ATTEULER->Mode,
+	(unsigned int)(ATTEULER->NrSV)
+	);*/
+      if (ATTEULER->Heading != -2e10) DGPSAtt[dgpsatt_index].az = ATTEULER->Heading;
+      if (ATTEULER->Pitch != -2e10) DGPSAtt[dgpsatt_index].pitch = ATTEULER->Pitch;
+      if (ATTEULER->Roll != -2e10) DGPSAtt[dgpsatt_index].roll = ATTEULER->Roll;	
+      DGPSAtt[dgpsatt_index].att_ok = 1;
+
+      dgpsatt_index = INC_INDEX(dgpsatt_index);
+    }
+    usleep(100000);
+  }	
+  return;
+
 }

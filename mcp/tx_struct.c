@@ -70,7 +70,13 @@
 #define U_NONE  "","" 
 #define U_T_C   "Temperature","^oC"
 #define U_V_DPS "Rate","^o/s"
+#define U_V_MPS "Speed","m/s"
+#define U_V_KPH "Speed","km/hr"
+#define U_ALT_M "Altitude","m"
 #define U_P_DEG "Position","^o"
+#define U_LA_DEG "Latitude","^o"
+#define U_LO_DEG "Longitude","^o"
+#define U_D_DEG "Direction","^o"
 #define U_V_V	"Voltage","V"
 #define U_I_A   "Current","A"
 #define U_T_MS  "Time","ms"
@@ -338,7 +344,7 @@ struct ChannelStruct SlowChannels[] = {
   {"lvdt_low",     'w', LOOP1, 22,                1.0,             0.0, 's', U_NONE},
   {"south_i_am",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE},
   {"cryostate",    'w', LOOP1, 24,                1.0,             0.0, 'u', U_NONE},
-  {"t_cpu1",    'w', LOOP1, 26,               0.01,             0.0, 'u', U_NONE},
+  {"t_cpu1",       'w', LOOP1, 26,               0.01,             0.0, 'u', U_NONE},
   {"mag_model",    'w', LOOP1, 27,              I2DEG,             0.0, 'u', U_NONE}, // magnetic declination
   {"sensor_veto",  'w', LOOP1, 28,                1.0,             0.0, 'u', U_NONE},
   {"bal_on",       'w', LOOP1, 29,           1./1648.,             0.0, 'u', U_I_A},
@@ -349,16 +355,16 @@ struct ChannelStruct SlowChannels[] = {
   {"sip_alt",      'w', LOOP1, 37,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 38-41 are wide */
   {"isc_mapmean",  'w', LOOP1, 42,                 1.,             0.0, 'u', U_NONE},
-  {"dgps_pitch_raw",'w',LOOP1, 43,              I2DEG,             0.0, 's', U_NONE},
-  {"dgps_roll_raw",'w', LOOP1, 44,              I2DEG,             0.0, 's', U_NONE},
+  {"dgps_pitch_raw",'w',LOOP1, 43,              I2DEG,             0.0, 's', U_P_DEG},
+  {"dgps_roll_raw",'w', LOOP1, 44,              I2DEG,             0.0, 's', U_P_DEG},
   {"sip_lat",      'w', LOOP1, 45,              I2DEG,             0.0, 's', U_NONE},
   {"sip_lon",      'w', LOOP1, 46,              I2DEG,             0.0, 's', U_NONE},
-  {"dgps_lat",     'w', LOOP1, 47,              I2DEG,             0.0, 's', U_NONE},
-  {"dgps_lon",     'w', LOOP1, 48,              I2DEG,             0.0, 's', U_NONE},
-  {"dgps_alt",     'w', LOOP1, 49,                1.0,             0.0, 'u', U_NONE},
-  {"dgps_speed",   'w', LOOP1, 50,              I2DEG,             0.0, 'u', U_NONE},
-  {"dgps_dir",     'w', LOOP1, 51,              I2DEG,             0.0, 'u', U_NONE},
-  {"dgps_climb",   'w', LOOP1, 52,              I2DEG,             0.0, 's', U_NONE},
+  {"dgps_lat",     'w', LOOP1, 47,              I2DEG,             0.0, 's', U_LA_DEG},
+  {"dgps_lon",     'w', LOOP1, 48,              I2DEG,             0.0, 's', U_LO_DEG},
+  {"dgps_alt",     'w', LOOP1, 49,                1.0,             0.0, 'u', U_ALT_M},
+  {"dgps_speed",   'w', LOOP1, 50,                1.0,             0.0, 'u', U_V_KPH},
+  {"dgps_dir",     'w', LOOP1, 51,              I2DEG,             0.0, 'u', U_D_DEG},
+  {"dgps_climb",   'w', LOOP1, 52,                1.0,             0.0, 's', U_V_MPS},
   {"dgps_att_ok",  'w', LOOP1, 53,                1.0,             0.0, 'u', U_NONE},
   {"dgps_n_sat",   'w', LOOP1, 57,                1.0,             0.0, 'u', U_NONE},
   {"disk_free",    'w', LOOP1, 58,             1./250,             0.0, 'u', U_NONE},
@@ -403,7 +409,7 @@ struct ChannelStruct SlowChannels[] = {
   {"gy_ifroll_offset",'w',LOOP2, 37,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"gy_ifyaw_offset", 'w',LOOP2, 38,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"mag_sigma",       'w',LOOP2, 40,            I2DEG,             0.0, 'u', U_NONE},
-  {"dgps_az",         'w',LOOP2, 41,            I2DEG,             0.0, 'u', U_NONE},
+  {"dgps_az",         'w',LOOP2, 41,            I2DEG,             0.0, 'u', U_P_DEG},
   {"dgps_sigma",      'w',LOOP2, 42,            I2DEG,             0.0, 'u', U_NONE},
   {"lvdt_high",       'w',LOOP2, 43,              1.0,             0.0, 's', U_NONE},
   {"isc_az",          'w',LOOP2, 44,            I2DEG,             0.0, 'u', U_NONE},
@@ -537,7 +543,7 @@ struct ChannelStruct SlowChannels[] = {
   {"dgps_trim",    'w', LOOP4, 56,              I2DEG,             0.0, 's', U_NONE},
   {"ss_trim",      'w', LOOP4, 57,              I2DEG,             0.0, 's', U_NONE},
   /* LOOP4 58-59 are wide */
-  {"dgps_az_raw",  'w', LOOP4, 60,              I2DEG,             0.0, 'u', U_NONE},
+  {"dgps_az_raw",  'w', LOOP4, 60,              I2DEG,             0.0, 'u', U_P_DEG},
   {"bal_gain",     'w', LOOP4, 61,            1/1000.,             0.0, 'u', U_NONE},
   {"clin_el",      'w', LOOP4, 62,              I2DEG,             0.0, 'u', U_NONE},
   {"p_h",          'w', LOOP4, 63,              I2DEG,             0.0, 'u', U_NONE}, // scan height
