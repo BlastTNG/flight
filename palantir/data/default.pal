@@ -313,6 +313,18 @@
       <HI value="100"/>
       <XHI value="300"/>
     </EXTREMA>
+    <EXTREMA name="errcheck">
+      <XLO value="-1"/>
+      <LO value="-1"/>
+      <HI value="0.9"/>
+      <XHI value="5000"/>
+    </EXTREMA>
+    <EXTREMA name="riocheck">
+      <XLO value="-1"/>
+      <LO value="10.5"/>
+      <HI value="11.5"/>
+      <XHI value="1000"/>
+    </EXTREMA>
     <CURFILE name="/data/etc/defile.lnk"/>
     <DECOMD host="widow" port="11411"/>
   </SETTINGS>
@@ -658,28 +670,25 @@
   </BOX>
   <BOX caption="Motor Gains" colour="#880000" row="3" col="4">
     <NUMBER caption="P Elev">
-      <DATUM format="%.0f" src="g_p_el" extrema="unknown"/>
+      <DATUM format="%5.0f" src="g_p_el" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="I Elev">
-      <DATUM format="%.0f" src="g_i_el" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="P Roll">
-      <DATUM format="%.0f" src="g_p_roll" extrema="unknown"/>
+      <DATUM format="%5.0f" src="g_i_el" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="P Reac">
-      <DATUM format="%.0f" src="g_p_az" extrema="unknown"/>
+      <DATUM format="%5.0f" src="g_p_az" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="I Reac">
-      <DATUM format="%.0f" src="g_i_az" extrema="unknown"/>
+      <DATUM format="%5.0f" src="g_i_az" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="P Pivot">
-      <DATUM format="%.0f" src="g_p_pivot" extrema="unknown"/>
+      <DATUM format="%5.0f" src="g_pv_pivot" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Set Reac">
-      <DATUM format="%.2f" src="SET_REAC" extrema="unknown"/>
+      <DATUM format="%+5.2f" src="SET_REAC" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="Reac RPS">
-      <DATUM format="%.2f" src="RPS_REAC" extrema="unknown"/>
+    <NUMBER caption="Reac DPS">
+      <DATUM format="%+5.2f" src="RW_VEL_RAW" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Inner Frame Electronics" colour="#002222" row="0" col="6" rowspan="1">
@@ -1146,6 +1155,47 @@
     </NUMBER>
     <NUMBER caption="Phase 13">
       <DATUM format="%.0f" src="phase13" extrema="unknown"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Motor Contollers" colour="#880000" row="0" col="8" rowspan="1">
+    <MULTI caption="El Enab">
+      <DATUM src="EL_INFO_DISAB">
+        <WORD value="0" caption="Enabled" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Disabled" textstyle="W_BIT"/>
+        <WORD value="2" caption="???" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI> 
+    <NUMBER caption="El Err">
+      <DATUM format="%.0f" src="EL_INFO_ERR" extrema="errcheck"/>
+    </NUMBER>
+    <NUMBER caption="El RIO">
+      <DATUM format="%.0f" src="EL_INFO_RIO" extrema="riocheck"/>
+    </NUMBER>
+    <MULTI caption="RW Enab">
+      <DATUM src="RW_INFO_DISAB">
+        <WORD value="0" caption="Enabled" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Disabled" textstyle="W_BIT"/>
+        <WORD value="2" caption="???" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI> 
+    <NUMBER caption="RW Err">
+      <DATUM format="%.0f" src="RW_INFO_ERR" extrema="errcheck"/>
+    </NUMBER>
+    <NUMBER caption="RW RIO">
+      <DATUM format="%.0f" src="RW_INFO_RIO" extrema="riocheck"/>
+    </NUMBER>
+    <MULTI caption="Pivot Enab">
+      <DATUM src="PIV_INFO_DISAB">
+        <WORD value="0" caption="Enabled" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Disabled" textstyle="W_BIT"/>
+        <WORD value="2" caption="???" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI> 
+    <NUMBER caption="Piv Err">
+      <DATUM format="%.0f" src="PIV_INFO_ERR" extrema="errcheck"/>
+    </NUMBER>
+    <NUMBER caption="Piv RIO">
+      <DATUM format="%.0f" src="PIV_INFO_RIO" extrema="riocheck"/>
     </NUMBER>
   </BOX>
   <BOX caption="ACS Power System" colour="#777700" row="0" col="7" rowspan="1">
