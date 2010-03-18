@@ -256,56 +256,6 @@ htBool_t CRCIsValid(void *Mess)
 
 static htI32_t CheckBlock(int fd, htUI08_t* Buffer)
 {
-<<<<<<< dgps.c
-  VoidBlock_t* VoidBlock = (VoidBlock_t*)Buffer;
-
-  /* Read the block header, remember that the first '$' is already present in Buffer[0]. */
-  int hdrexp=HEADER_SIZE-1;
-  int cnt=0;
-  do {
-    int retn=read(fd,&Buffer[1+cnt],1);
-    if (retn<0) {
-      return -1;
-      bprintf(err,"DGPS: no response");
-    }
-    cnt +=retn;
-  } while (cnt < hdrexp);
-
-  //printf("\nBuffer: %3u %3u %3u %3u\n",Buffer[0],Buffer[1],Buffer[2],Buffer[3]);
-  //printf("Header: %3u %3u %3u\n\n",VoidBlock->Sync, VoidBlock->ID, VoidBlock->Length);
-  /*Check block header*/
-  if ((VoidBlock->Sync !=
-	((htUI16_t)SYNC_STRING[0] | (htUI16_t)SYNC_STRING[1]<<8))        ||
-      (VoidBlock->ID       < MIN_CMDID)                                ||
-      ((VoidBlock->ID      > MAX_CMDID) & (VoidBlock->ID < MIN_SBFID)) ||
-      (VoidBlock->ID       > MAX_SBFID)                                ||
-      (VoidBlock->Length   > MAX_SBFSIZE)                              ||
-      (VoidBlock->Length   < MIN_SBFSIZE)) {
-    //bprintf(err,"DGPS: Something wrong with block header");
-    return -1;
-  }
-
-  /* Read one at a time */
-  int expected=VoidBlock->Length-HEADER_SIZE;
-  int count=0; 
-  do { 
-    int ret=read(fd,&Buffer[HEADER_SIZE+count],1); 
-    if (ret<0) { 
-      //	      bprintf(err,"DGPS: no response");
-      return -1; 
-    } 
-    count +=ret; 
-  } while (count < expected); 
-
-  if (VoidBlock->ID == SBFID_PVTGEODETIC || VoidBlock->ID ==  SBFID_ATTEULER) {
-    /* Check the CRC field */
-    if (CRCIsValid(Buffer) == htFalse){
-      bprintf(err,"DGPS: CRC invalid");
-      return -1;
-    }
-  }
-  return 0;
-=======
 	VoidBlock_t* VoidBlock = (VoidBlock_t*)Buffer;
 	
 	/* Read the block header, remember that the first '$' is already present in Buffer[0]. */
@@ -354,7 +304,6 @@ static htI32_t CheckBlock(int fd, htUI08_t* Buffer)
 	  }
 	}
 	return 0;
->>>>>>> 4.8
 }
 
 htI32_t GetNextBlock(int fd, void* SBFBlock)
@@ -374,15 +323,21 @@ htI32_t GetNextBlock(int fd, void* SBFBlock)
   BlockFound = htFalse;
   //	if (FD_ISSET(fd,&output)) {
   do {
-    char c[1];
-    int n = read(fd,&c[0],1);
+    //char c[1];
+    //int n = read(fd,&c[0],1);
+    char c;
+    int n = read(fd,&c,1);
+    if (n==0) usleep(10000);
+
     if (n<0) {
       //TODO dgps code needs updates to handle serial errors
       bprintf(err,"dGPS: read GPSblock failed!");
     }
 
-    if (n>0 && c[0]==SYNC_STRING[0]) {
-      Buffer[0] = (htUI08_t)c[0];
+    //if (n>0 && c[0]==SYNC_STRING[0]) {
+      //Buffer[0] = (htUI08_t)c[0];
+    if (n>0 && c==SYNC_STRING[0]) {
+      Buffer[0] = (htUI08_t)c;
       if (CheckBlock(fd, Buffer) == 0) {
 	BlockFound = htTrue;	
 	memcpy(SBFBlock, Buffer, (size_t)((VoidBlock_t*)Buffer)->Length);	
@@ -600,8 +555,8 @@ void WatchDGPS()
     /* Time */
     if (((VoidBlock_t*)SBFBlock)->ID == SBFID_RECEIVERTIME) {
       ReceiverTimeBlock_t* RXTIME = (ReceiverTimeBlock_t*) SBFBlock;
-      /*printf("%-2i %13.1f %3i %3i %3i %3i %3i %3i %3i"
-	"0 0 0 0 0 0 0 0 0 0\n",
+      bprintf(info,"%-2i %13.1f %3i %3i %3i %3i %3i %3i "
+	"0 0 0 0 0 0 0 0 0\n",
 	-5,
 	RXTIME->WNc*86400.0*7.0+RXTIME->TOW/1000.0,
 	RXTIME->UTCYear,
@@ -609,9 +564,9 @@ void WatchDGPS()
 	RXTIME->UTCDay,
 	RXTIME->UTCHour,
 	RXTIME->UTCMin,
-	RXTIME->UTCSec,
-	RXTIME->DeltaLS
-	);*/
+	RXTIME->UTCSec
+	//RXTIME->SyncLevel
+	);
       ts.tm_year=RXTIME->UTCYear;
       ts.tm_mon=RXTIME->UTCMonth;
       ts.tm_mday=RXTIME->UTCDay;
@@ -631,7 +586,7 @@ void WatchDGPS()
 
       /* Position & Velocity */
       PVTGeodeticBlock_t* PVT = (PVTGeodeticBlock_t*)SBFBlock;
-      /*printf("%-2i %13.1f %21.10f %21.10f %14.3f %10.3f"
+      /*bprintf(info,"%-2i %13.1f %21.10f %21.10f %14.3f %10.3f"
 	" %10.3f %15.8f %13.6e %14.3e %3i %3u 0 0\n",
 	-1,
 	PVT->WNc*86400.0*7.0+PVT->TOW/1000.0,
@@ -685,7 +640,6 @@ void WatchDGPS()
 
       dgpsatt_index = INC_INDEX(dgpsatt_index);
     }
-    usleep(100000);
   }	
   return;
 
