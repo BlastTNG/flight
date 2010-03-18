@@ -39,352 +39,65 @@
 #include "command_struct.h"
 #include "pointing_struct.h"
 #include "tx.h"
+#include "ezstep.h"
 
 #ifdef USE_XY_STAGE
 #  error Both USE_XY_STAGE and USE_XY_THREAD defined.
 #endif
 
-/* Define this symbol to have mcp log all actuator bus traffic */
-#undef ACTBUS_CHATTER
+/* EZBus setup parameters */
+#define STAGE_BUS_TTY "/dev/ttyXYSTAGE"
+#define STAGE_BUS_CHATTER EZ_CHAT_ACT
+#define BUS_NAME "StageBus"
+#define STAGEX_NAME "XY Stage X"
+#define STAGEY_NAME "XY Stage Y"
+#define STAGEX_ID EZ_WHO_S6
+#define STAGEY_ID EZ_WHO_S7
 
-#define ACT_BUS "/dev/ttyXYSTAGE"
+#define STAGE_BUS_ACCEL 2
+#define STAGE_BUS_IHOLD 20
+#define STAGE_BUS_IMOVE 30
 
 #define STAGEXNUM 0
 #define STAGEYNUM 1
-#define NACT 2
 #define POLL_TIMEOUT 30000 /* 5 minutes */
-
-/* EZ Stepper status bits */
-#define EZ_ERROR  0x0F
-#define EZ_READY  0x20
-#define EZ_STATUS 0x40
-
-/* ActBus status bits ... these must live in the top byte of the word */
-#define ACTBUS_OK       0x0000
-#define ACTBUS_OOD      0x0100
-#define ACTBUS_TIMEOUT  0x0200
-#define ACTBUS_CHECKSUM 0x0400
-
-#define ACT_RECV_ABORT 3000000 /* state machine state for general parsing
-                                  abort */
-
-/* in commands.c */
-double LockPosition(double elevation);
 
 extern short int InCharge; /* tx.c */
 
-static int bus_fd = -1;
-static const char *name[NACT] = {"XY Stage X", "XY Stage Y"};
-static const int id[NACT] = {0x36, 0x37};
-
-static char gp_buffer[1000];
-static struct stepper_struct {
-  unsigned char buffer[1000];
-  int status;
-  int sequence;
-} stepper[NACT];
-
 static struct stage_struct {
-  unsigned int xpos, ypos;
-  unsigned int xlim, ylim;
-  unsigned int xstp, ystp;
-  unsigned int xstr, ystr;
-  unsigned int xvel, yvel;
+  int xpos, ypos;
+  int xlim, ylim;
+  int xstp, ystp;
+  int xstr, ystr;
+  int xvel, yvel;
 } stage_data;
 
-static int act_setserial(char *input_tty)
-{
-  int fd;
-  struct termios term;
 
-  if ((fd = open(input_tty, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0)
-    berror(tfatal, "StageBus: Unable to open serial port");
-
-  if (tcgetattr(fd, &term))
-    berror(tfatal, "StageBus: Unable to get serial device attributes");
-
-  /* Clear Character size; set no stop bits; set one parity bit */
-  term.c_cflag &= ~(CSTOPB | CSIZE | PARENB);
-
-  /* Set 8 data bits; set local port; enable receiver */
-  term.c_cflag |= (CS8 | CLOCAL | CREAD);
-
-  /* Disable all software flow control */
-  term.c_iflag &= ~(IXON | IXOFF | IXANY);
-
-  /* disable output processing (raw output) */
-  term.c_oflag &= ~OPOST;
-
-  /* disable input processing (raw input) */
-  term.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-
-  if(cfsetospeed(&term, B9600))          /*  <======= SET THE SPEED HERE */
-    berror(tfatal, "StageBus: Error setting serial output speed");
-
-  if(cfsetispeed(&term, B9600))          /*  <======= SET THE SPEED HERE */
-    berror(tfatal, "StageBus: Error setting serial input speed");
-
-  if( tcsetattr(fd, TCSANOW, &term) )
-    berror(tfatal, "StageBus: Unable to set serial attributes");
-
-  return fd;
-}
-
-static char hex_buffer[1000];
-static const char* HexDump(const unsigned char* buffer, int len)
-{
-  int i;
-
-  sprintf(hex_buffer, "%02x", buffer[0]);
-  for (i = 1; i < len; ++i)
-    sprintf(hex_buffer + i * 3 - 1, ".%02x", buffer[i]);
-
-  return hex_buffer;
-}
-
-static void BusSend(int who, const char* what, int inhibit_chatter)
-{
-  size_t len = strlen(what) + 5;
-  char *buffer = malloc(len);
-  unsigned char chk = 3;
-  unsigned char *ptr;
-
-  buffer[0] = 0x2;
-  buffer[1] = (who >= 0x30) ? who : id[who];
-  buffer[2] = '1';
-  sprintf(buffer + 3, "%s", what);
-  buffer[len - 2] = 0x3;
-  for (ptr = buffer; *ptr != '\03'; ++ptr)
-    chk ^= *ptr;
-  buffer[len - 1] = chk;
-#ifdef ACTBUS_CHATTER
-  if (!inhibit_chatter)
-    bprintf(info, "StageBus: Request=%s (%s)", HexDump(buffer, len), what);
-#endif
-  if (write(bus_fd, buffer, len) < 0)
-    berror(err, "Error writing on bus");
-
-  free(buffer);
-}
-
-static int BusRecv(char* buffer, int nic, int inhibit_chatter)
-{
-  int fd, status = 0;
-  fd_set rfds;
-  struct timeval timeout = {2, 0};
-  unsigned char byte;
-  unsigned char checksum = 0;
-  char* ptr = buffer;
-
-  FD_ZERO(&rfds);
-  FD_SET(bus_fd, &rfds);
-
-  fd = select(bus_fd + 1, &rfds, NULL, NULL, &timeout);
-
-  if (fd == -1)
-    berror(err, "Error waiting for input on bus");
-  else if (!fd) /* Timeout */
-    return ACTBUS_TIMEOUT;
-  else {
-    int state = (nic) ? ACT_RECV_ABORT : 0;
-    int had_errors = 0;
-    int read_tries = 100;
-    int len;
-
-    for(;;) {
-      len = read(bus_fd, &byte, 1);
-      if (len <= 0) {
-        if (state == 6 || state == ACT_RECV_ABORT)
-          break;
-        if (errno == EAGAIN && read_tries) {
-          read_tries--;
-          usleep(1000);
-          continue;
-        } else {
-          berror(warning, "Unexpected out-of-data reading bus (%i)", state);
-          return ACTBUS_OOD;
-        }
-      }
-      checksum ^= byte;
-
-      /* The following involves a number of semi-hidden fallthroughs which
-       * attempt to recover malformed strings */
-      switch (state) {
-        case 0: /* RS-485 turnaround */
-          state++;
-          if (byte != 0xFF) { /* RS-485 turnaround */
-            bputs(warning, "StageBus: RS-485 turnaround not found in response");
-            had_errors++;
-          } else
-            break;
-        case 1: /* start byte */
-          state++;
-          if (byte != 0x02) { /* STX */
-            had_errors++;
-            bputs(warning, "StageBus: Start byte not found in response");
-          } else
-            break;
-        case 2: /* address byte */
-          state++;
-          if (byte != 0x30) { /* Recipient address (should be '0') */
-            had_errors++;
-            bputs(warning, "StageBus: Found misaddressed response");
-          }
-          if (had_errors > 1) {
-            bputs(err,
-                "StageBus: Too many errors parsing response string, aborting.");
-            bprintf(err, "StageBus: Response was=%s (%x)\n", HexDump(buffer, len),
-                status);
-            state = ACT_RECV_ABORT;
-          }
-          break;
-        case 3: /* state byte */
-          state++;
-          if (byte & EZ_STATUS)
-            status = byte & (EZ_ERROR | EZ_READY);
-          else {
-            bputs(err,
-                "StageBus: Status byte malfomed in response string, aborting.");
-            state = ACT_RECV_ABORT;
-          }
-          break;
-        case 4: /* response */
-          if (byte == 0x3) /* ETX */
-            state++;
-          else
-            *(ptr++) = byte;
-          break;
-        case 5: /* checksum */
-          state++;
-          /* Remember: the checksum here should be 0xff instead of 0 because
-           * we've added the turnaround byte into the checksum */
-          if (checksum != 0xff)
-            bprintf(err, "StageBus: Checksum error in response (%02x).",
-                checksum);
-          break;
-        case 6: /* End of string check */
-          bputs(err, "StageBus: Malformed footer in response string, aborting.");
-          state = ACT_RECV_ABORT;
-        case ACT_RECV_ABORT: /* General abort: flush input */
-          break;
-      }
-    }
-  }
-
-  if (!nic) {
-    *ptr = '\0';
-
-#ifdef ACTBUS_CHATTER
-    if (!inhibit_chatter)
-      bprintf(info, "StageBus: Response=%s (%x)\n", buffer, status);
-#endif
-  }
-
-  return status;
-}
-
-static int ReadIntFromBus(int who, const char* cmd, int inhibit_chatter)
-{
-  int result;
-
-  BusSend(who, cmd, inhibit_chatter);
-  if ((result = BusRecv(gp_buffer, 0, inhibit_chatter)) & (ACTBUS_TIMEOUT
-        | ACTBUS_OOD)) {
-    bprintf(warning, "StageBus: Timeout waiting for response from %s (RIFB)",
-        name[who]);
-    CommandData.xystage.force_repoll = 1;
-    return 0;
-  }
-
-  return atoi(gp_buffer);
-}
-
-static void DiscardBusRecv(int flag, int who, int inhibit_chatter)
-{
-  int i;
-
-  /* Discard response to get it off the bus */
-  if ((i = BusRecv(gp_buffer, 0, inhibit_chatter)) & (ACTBUS_TIMEOUT
-        | ACTBUS_OOD))
-  {
-    i = who;
-    bprintf(warning,
-        "StageBus: Timeout waiting for response from %s.", name[who]);
-    CommandData.xystage.force_repoll = 1;
-  }
-#ifndef ACTBUS_CHATTER
-  else if (flag)
-    bprintf(info, "StageBus: Controller response: %s\n", gp_buffer);
-#endif
-}
-
-static int PollBus(int rescan)
-{
-  int i, result;
-  int all_ok = 1;
-
-  if (rescan)
-    bputs(info, "StageBus: Repolling Stage Bus.");
-  else
-    bputs(info, "StageBus: Polling Stage Bus.");
-
-  for (i = 0; i < NACT; ++i) {
-    if (rescan && stepper[i].status != -1)
-      continue;
-    BusSend(i, "&", 0);
-    if ((result = BusRecv(gp_buffer, 0, 0)) & (ACTBUS_TIMEOUT
-          | ACTBUS_OOD)) {
-      bprintf(warning, "StageBus: No response from %s, will repoll later.",
-          name[i]);
-      stepper[i].status = -1;
-      all_ok = 0;
-    } else if (!strncmp(gp_buffer, "EZHR17EN AllMotion", 18)) {
-      bprintf(info, "StageBus: Found type 17EN device %s at address %i.\n",
-          name[i], id[i] - 0x30);
-      stepper[i].status = 0;
-    } else if (!strncmp(gp_buffer, "EZHR23 All Motion", 17)) {
-      bprintf(info, "StageBus: Found type 23 device %s at address %i.\n", name[i],
-          id[i] - 0x30);
-      stepper[i].status = 0;
-    } else {
-      bprintf(warning,
-          "StageBus: Unrecognised response from %s, will repoll later.\n",
-          name[i]);
-      stepper[i].status = -1;
-      all_ok = 0;
-    }
-  }
-
-  CommandData.xystage.force_repoll = 0;
-
-  return all_ok;
-}
-
-static void ReadStage(void)
+static void ReadStage(struct ezbus* bus)
 {
   static int counter = 0;
-  if (stepper[STAGEXNUM].status == -1 || stepper[STAGEYNUM].status == -1)
+  if (!EZBus_IsUsable(bus, STAGEX_ID) || !EZBus_IsUsable(bus, STAGEY_ID))
     return;
 
-  stage_data.xpos = ReadIntFromBus(STAGEXNUM, "?0", 1);
-  stage_data.ypos = ReadIntFromBus(STAGEYNUM, "?0", 1);
+  EZBus_ReadInt(bus, STAGEX_ID, "?0", &stage_data.xpos);
+  EZBus_ReadInt(bus, STAGEY_ID, "?0", &stage_data.ypos);
 
   if (counter == 0)
-    stage_data.xstr = ReadIntFromBus(STAGEXNUM, "?1", 1);
+    EZBus_ReadInt(bus, STAGEX_ID, "?1", &stage_data.xstr);
   else if (counter == 1)
-    stage_data.xstp = ReadIntFromBus(STAGEXNUM, "?3", 1);
+    EZBus_ReadInt(bus, STAGEX_ID, "?3", &stage_data.xstp);
   else if (counter == 2)
-    stage_data.xlim = ReadIntFromBus(STAGEXNUM, "?4", 1);
+    EZBus_ReadInt(bus, STAGEX_ID, "?4", &stage_data.xlim);
   else if (counter == 3)
-    stage_data.xvel = ReadIntFromBus(STAGEXNUM, "?5", 1);
+    EZBus_ReadInt(bus, STAGEX_ID, "?5", &stage_data.xvel);
   else if (counter == 4)
-    stage_data.ystr = ReadIntFromBus(STAGEYNUM, "?1", 1);
+    EZBus_ReadInt(bus, STAGEY_ID, "?1", &stage_data.ystr);
   else if (counter == 5)
-    stage_data.ystp = ReadIntFromBus(STAGEYNUM, "?3", 1);
+    EZBus_ReadInt(bus, STAGEY_ID, "?3", &stage_data.ystp);
   else if (counter == 6)
-    stage_data.yvel = ReadIntFromBus(STAGEYNUM, "?5", 1);
+    EZBus_ReadInt(bus, STAGEY_ID, "?5", &stage_data.yvel);
   else if (counter == 7)
-    stage_data.ylim = ReadIntFromBus(STAGEYNUM, "?4", 1);
+    EZBus_ReadInt(bus, STAGEY_ID, "?4", &stage_data.ylim);
 
   counter = (counter + 1) % 8;
 }
@@ -435,9 +148,10 @@ void StoreStageBus(int index)
   }
 }
 
-void GoWait(int dest, int vel, int is_y)
+void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
 {
   int now;
+  char who = (is_y) ? STAGEY_ID : STAGEX_ID;
 
   if (CommandData.xystage.mode == XYSTAGE_PANIC || vel == 0)
     return;
@@ -445,25 +159,23 @@ void GoWait(int dest, int vel, int is_y)
   if (dest < 0)
     dest = 0;
 
-  sprintf(gp_buffer, "L2m30l30V%iA%iR", vel, dest);
-  bprintf(info, "StageBus: Move %c to %i at speed %i and wait", (is_y) ? 'Y'
-      : 'X', dest, vel);
-  BusSend((is_y) ? STAGEYNUM : STAGEXNUM, gp_buffer, 0);
-  DiscardBusRecv(0, (is_y) ? STAGEXNUM : STAGEXNUM, 0);
+  bprintf(info, "StageBus: Move %c to %i at speed %i and wait", 
+      (is_y) ? 'Y' : 'X', dest, vel);
+  EZBus_GotoVel(bus, who, dest, vel);
 
   do {
     if (CommandData.xystage.mode == XYSTAGE_PANIC)
       return;
     usleep(10000);
 
-    ReadStage();
+    ReadStage(bus);
 
     now = (is_y) ? stage_data.ypos : stage_data.xpos;
   } while (now != dest);
 }
 
-void Raster(int start, int end, int is_y, int y, int ymin, int ymax, int vel,
-    int ss)
+void Raster(struct ezbus *bus, int start, int end, int is_y, int y, 
+    int ymin, int ymax, int vel, int ss)
 {
   int x;
   int step = (start > end) ? -ss : ss;
@@ -474,148 +186,158 @@ void Raster(int start, int end, int is_y, int y, int ymin, int ymax, int vel,
         x = end;
     } else if (x > end)
       x = end;
-    GoWait(x, vel, is_y);
+    GoWait(bus, x, vel, is_y);
     if (y == ymin)
       y = ymax;
     else
       y = ymin;
-    GoWait(y, vel, !is_y);
+    GoWait(bus, y, vel, !is_y);
   }
+}
+
+void ControlXYStage(struct ezbus* bus)
+{
+  int my_cindex = 0;
+
+  /* Send the uplinked command, if any */
+  my_cindex = GETREADINDEX(CommandData.actbus.cindex);
+  if (CommandData.actbus.caddr[my_cindex] == STAGEX_ID 
+      || CommandData.actbus.caddr[my_cindex] == STAGEY_ID) {
+    EZBus_Comm(bus, CommandData.actbus.caddr[my_cindex],
+	CommandData.actbus.command[my_cindex], 0);
+    CommandData.actbus.caddr[my_cindex] = 0;
+  }
+
+  /* respond to normal movement commands */
+  if (CommandData.xystage.is_new) {
+    /* PANIC! */
+    if (CommandData.xystage.mode == XYSTAGE_PANIC) {
+      bputs(info, "StageBus: Panic");
+      EZBus_Comm(bus, STAGEX_ID, "T", 0);
+      EZBus_Comm(bus, STAGEY_ID, "T", 0);
+      CommandData.xystage.is_new = 0;
+    /* GOTO */
+    } else if (CommandData.xystage.mode == XYSTAGE_GOTO) {
+      if (CommandData.xystage.xvel > 0) {
+	bprintf(info, "StageBus: Move X to %i at speed %i",
+	    CommandData.xystage.x1, CommandData.xystage.xvel);
+	EZBus_GotoVel(bus, STAGEX_ID, CommandData.xystage.x1, 
+	    CommandData.xystage.xvel);
+      }
+      if (CommandData.xystage.yvel > 0) {
+	bprintf(info, "StageBus: Move Y to %i at speed %i",
+	    CommandData.xystage.y1, CommandData.xystage.yvel);
+	EZBus_GotoVel(bus, STAGEY_ID, CommandData.xystage.y1,
+	    CommandData.xystage.yvel);
+      }
+    /* JUMP */
+    } else if (CommandData.xystage.mode == XYSTAGE_JUMP) {
+      if (CommandData.xystage.xvel > 0 && CommandData.xystage.x1 != 0) {
+	bprintf(info, "StageBus: Jump X by %i at speed %i",
+	    CommandData.xystage.x1, CommandData.xystage.xvel);
+	EZBus_RelMoveVel(bus, STAGEX_ID, CommandData.xystage.x1,
+	    CommandData.xystage.xvel);
+      }
+      if (CommandData.xystage.yvel > 0 && CommandData.xystage.y1 != 0) {
+	bprintf(info, "StageBus: Jump Y by %i at speed %i",
+	    CommandData.xystage.y1, CommandData.xystage.yvel);
+	EZBus_RelMoveVel(bus, STAGEY_ID, CommandData.xystage.y1,
+	    CommandData.xystage.yvel);
+      }
+    /* SCAN */
+    } else if (CommandData.xystage.mode == XYSTAGE_SCAN) {
+      if (CommandData.xystage.xvel > 0 && CommandData.xystage.x2 > 0) {
+	GoWait(bus, CommandData.xystage.x1, CommandData.xystage.xvel, 0);
+	GoWait(bus, CommandData.xystage.x1 + CommandData.xystage.x2,
+	    CommandData.xystage.xvel, 0);
+	GoWait(bus, CommandData.xystage.x1 - CommandData.xystage.x2,
+	    CommandData.xystage.xvel, 0);
+	GoWait(bus, CommandData.xystage.x1, CommandData.xystage.xvel, 0);
+      } else if (CommandData.xystage.yvel > 0 && CommandData.xystage.y2 > 0) {
+	GoWait(bus, CommandData.xystage.y1, CommandData.xystage.yvel, 1);
+	GoWait(bus, CommandData.xystage.y1 + CommandData.xystage.y2,
+	    CommandData.xystage.yvel, 1);
+	GoWait(bus, CommandData.xystage.y1 - CommandData.xystage.y2,
+	    CommandData.xystage.yvel, 1);
+	GoWait(bus, CommandData.xystage.y1, CommandData.xystage.yvel, 1);
+      }
+    /* RASTER */
+    } else if (CommandData.xystage.mode == XYSTAGE_RASTER) {
+      if (CommandData.xystage.xvel > 0) {
+	int vel = CommandData.xystage.xvel;
+	int xcent = CommandData.xystage.x1;
+	int ycent = CommandData.xystage.y1;
+	int size = CommandData.xystage.x2;
+	int step = CommandData.xystage.y2;
+	GoWait(bus, xcent, vel, 0);
+	GoWait(bus, ycent - size, vel, 1);
+	Raster(bus, xcent, xcent + size, 0, ycent + size, ycent - size,
+	    ycent + size, vel, step);
+	Raster(bus, ycent + size, ycent - size, 1, xcent + size, xcent - size,
+	    xcent + size, vel, step);
+	Raster(bus, xcent - size, xcent, 0, ycent - size, ycent - size,
+	    ycent + size, vel, step);
+	GoWait(bus, xcent, vel, 0);
+	GoWait(bus, ycent, vel, 1);
+      }
+    }
+    if (CommandData.xystage.mode != XYSTAGE_PANIC)
+      CommandData.xystage.is_new = 0;
+  }
+
 }
 
 void StageBus(void)
 {
   int poll_timeout = POLL_TIMEOUT;
   int all_ok = 0;
-  int i;
-  int my_cindex = 0;
+  struct ezbus bus;
 
-  bputs(startup, "StageBus: StageBus startup.");
+  bputs(startup, BUS_NAME ": StageBus startup.");
 
-  for (i = 0; i < NACT; ++i)
-    stepper[i].sequence = 1;
+  //TODO need to make steppers serial port safe on nicc
+  if (EZBus_Init(&bus, STAGE_BUS_TTY, BUS_NAME, STAGE_BUS_CHATTER) != EZ_ERR_OK)
+    //TODO should EZBus_Init fail be tfatal??
+    berror(tfatal, BUS_NAME ": failed to connect");
 
-  bus_fd = act_setserial(ACT_BUS);
+  EZBus_Add(&bus, STAGEX_ID, STAGEX_NAME);
+  EZBus_Add(&bus, STAGEY_ID, STAGEY_NAME);
 
-  all_ok = PollBus(0);
+  EZBus_SetAccel(&bus, STAGEX_ID, STAGE_BUS_ACCEL);
+  EZBus_SetAccel(&bus, STAGEY_ID, STAGE_BUS_ACCEL);
+  EZBus_SetIHold(&bus, STAGEX_ID, STAGE_BUS_IHOLD);
+  EZBus_SetIHold(&bus, STAGEY_ID, STAGE_BUS_IHOLD);
+  EZBus_SetIMove(&bus, STAGEX_ID, STAGE_BUS_IMOVE);
+  EZBus_SetIMove(&bus, STAGEY_ID, STAGE_BUS_IMOVE);
+
+  all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
 
   for (;;) {
     while (!InCharge) { /* NiC MCC traps here */
-      CommandData.xystage.force_repoll = 1; /* repoll bus as soon as gaining
-                                              control */
-      BusRecv(NULL, 1, 1); /* this is a blocking call - clear the recv buffer */
-      /* no need to sleep -- BusRecv does that for us */
+      EZBus_ForceRepoll(&bus, STAGEX_ID);
+      EZBus_ForceRepoll(&bus, STAGEY_ID);
+      EZBus_Recv(&bus); /* this is a blocking call - clear the recv buffer */
+      /* no need to sleep -- EZBus_Recv does that for us */
     }
 
     /* Repoll bus if necessary */
     if (CommandData.xystage.force_repoll) {
+      EZBus_ForceRepoll(&bus, STAGEX_ID);
+      EZBus_ForceRepoll(&bus, STAGEY_ID);
       poll_timeout = 0;
       all_ok = 0;
-      for (i = 0; i < NACT; ++i)
-        stepper[i].status = -1;
+      CommandData.xystage.force_repoll = 0;
     }
 
     if (poll_timeout == 0 && !all_ok) {
-      all_ok = PollBus(1);
+      all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
       poll_timeout = POLL_TIMEOUT;
     } else if (poll_timeout > 0)
       poll_timeout--;
 
-    /* Send the uplinked command, if any */
-    my_cindex = GETREADINDEX(CommandData.actbus.cindex);
-    if (CommandData.actbus.caddr[my_cindex] == 0x36 ||
-        CommandData.actbus.caddr[my_cindex] == 0x37) {
-      BusSend(CommandData.actbus.caddr[my_cindex],
-          CommandData.actbus.command[my_cindex], 0);
-      /* Discard response to get it off the bus */
-      DiscardBusRecv(1, CommandData.actbus.caddr[my_cindex] - 0x30, 0);
-      CommandData.actbus.caddr[my_cindex] = 0;
-    }
+    ControlXYStage(&bus);
 
-    if (CommandData.xystage.is_new) {
-      if (CommandData.xystage.mode == XYSTAGE_PANIC) {
-        bputs(info, "StageBus: Panic");
-        BusSend(STAGEXNUM, "T", 0);
-        DiscardBusRecv(0, STAGEXNUM, 0);
-        BusSend(STAGEYNUM, "T", 0);
-        DiscardBusRecv(0, STAGEYNUM, 0);
-        CommandData.xystage.is_new = 0;
-      } else if (CommandData.xystage.mode == XYSTAGE_GOTO) {
-        if (CommandData.xystage.xvel > 0) {
-          sprintf(gp_buffer, "L2m30l30V%iA%iR", CommandData.xystage.xvel,
-              CommandData.xystage.x1);
-          bprintf(info, "StageBus: Move X to %i at speed %i",
-              CommandData.xystage.x1, CommandData.xystage.xvel);
-          BusSend(STAGEXNUM, gp_buffer, 0);
-          DiscardBusRecv(0, STAGEXNUM, 0);
-        }
-        if (CommandData.xystage.yvel > 0) {
-          sprintf(gp_buffer, "L2m30l30V%iA%iR", CommandData.xystage.yvel,
-              CommandData.xystage.y1);
-          bprintf(info, "StageBus: Move Y to %i at speed %i",
-              CommandData.xystage.y1, CommandData.xystage.yvel);
-          BusSend(STAGEYNUM, gp_buffer, 0);
-          DiscardBusRecv(0, STAGEYNUM, 0);
-        }
-      } else if (CommandData.xystage.mode == XYSTAGE_JUMP) {
-        if (CommandData.xystage.xvel > 0 && CommandData.xystage.x1 != 0) {
-          bprintf(info, "StageBus: Jump X by %i at speed %i",
-              CommandData.xystage.x1, CommandData.xystage.xvel);
-          sprintf(gp_buffer, "L2m30l30V%i%c%iR", CommandData.xystage.xvel,
-              (CommandData.xystage.x1 > 0) ? 'P' : 'D',
-              abs(CommandData.xystage.x1));
-          BusSend(STAGEXNUM, gp_buffer, 0);
-          DiscardBusRecv(0, STAGEXNUM, 0);
-        }
-        if (CommandData.xystage.yvel > 0 && CommandData.xystage.y1 != 0) {
-          bprintf(info, "StageBus: Jump Y by %i at speed %i",
-              CommandData.xystage.y1, CommandData.xystage.yvel);
-          sprintf(gp_buffer, "L2m30l30V%i%c%iR", CommandData.xystage.yvel,
-              (CommandData.xystage.y1 > 0) ? 'P' : 'D',
-              abs(CommandData.xystage.y1));
-          BusSend(STAGEYNUM, gp_buffer, 0);
-          DiscardBusRecv(0, STAGEYNUM, 0);
-        }
-      } else if (CommandData.xystage.mode == XYSTAGE_SCAN) {
-        if (CommandData.xystage.xvel > 0 && CommandData.xystage.x2 > 0) {
-          GoWait(CommandData.xystage.x1, CommandData.xystage.xvel, 0);
-          GoWait(CommandData.xystage.x1 + CommandData.xystage.x2,
-              CommandData.xystage.xvel, 0);
-          GoWait(CommandData.xystage.x1 - CommandData.xystage.x2,
-              CommandData.xystage.xvel, 0);
-          GoWait(CommandData.xystage.x1, CommandData.xystage.xvel, 0);
-        } else if (CommandData.xystage.yvel > 0 && CommandData.xystage.y2 > 0) {
-          GoWait(CommandData.xystage.y1, CommandData.xystage.yvel, 1);
-          GoWait(CommandData.xystage.y1 + CommandData.xystage.y2,
-              CommandData.xystage.yvel, 1);
-          GoWait(CommandData.xystage.y1 - CommandData.xystage.y2,
-              CommandData.xystage.yvel, 1);
-          GoWait(CommandData.xystage.y1, CommandData.xystage.yvel, 1);
-        }
-      } else if (CommandData.xystage.mode == XYSTAGE_RASTER) {
-        if (CommandData.xystage.xvel > 0) {
-          int vel = CommandData.xystage.xvel;
-          int xcent = CommandData.xystage.x1;
-          int ycent = CommandData.xystage.y1;
-          int size = CommandData.xystage.x2;
-          int step = CommandData.xystage.y2;
-          GoWait(xcent, vel, 0);
-          GoWait(ycent - size, vel, 1);
-          Raster(xcent, xcent + size, 0, ycent + size, ycent - size,
-              ycent + size, vel, step);
-          Raster(ycent + size, ycent - size, 1, xcent + size, xcent - size,
-              xcent + size, vel, step);
-          Raster(xcent - size, xcent, 0, ycent - size, ycent - size,
-              ycent + size, vel, step);
-          GoWait(xcent, vel, 0);
-          GoWait(ycent, vel, 1);
-        }
-      }
-      if (CommandData.xystage.mode != XYSTAGE_PANIC)
-        CommandData.xystage.is_new = 0;
-    }
-
-    ReadStage();
+    ReadStage(&bus);
 
     usleep(10000);
   }
