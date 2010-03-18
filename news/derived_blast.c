@@ -147,16 +147,11 @@ union DerivedUnion DerivedChannels[] = {
 
   COMMENT("ACS Digital Signals"),
 
-#if 0 
   BITFIELD("ifpm_bits",
-      "",
-      "",
-      "BAL_ON_BIT",
-      "BAL_REV",
-      "BAL2_ON",
-      "BAL2_REV"
+      "BAL_DIR",
+      "BAL_VALVE",
+      "BAL_HEAT",
       ),
-#endif
 #endif
 
   COMMENT("Lock Motor/Actuators"),

@@ -87,12 +87,10 @@ extern short int InCharge; /* tx.c */
 #define BAL_VALV     0x02  /* ACS2 Group 2 Bit 2 */
 #define BAL_HEAT     0x04  /* ACS2 Group 2 Bit 3 - DAC */
 
-#define PUMP_MAX 13107       /*  1.00V   */
-#define PUMP_MIN 1310        /*  0.10V   */
+#define PUMP_MAX 32714       /*  2.50V   */
+#define PUMP_MIN 13107       /*  1.00V   */
 
 #define PUMP_ZERO 32820
-
-#define EL_DAC_LIM 800    /* 0.45Amps  */ 
 
 /* in commands.c */
 double LockPosition(double elevation);
@@ -272,10 +270,10 @@ static int Balance(int ifpmBits)
 
     if (CommandData.pumps.level > 0) {
       ifpmBits &= (0xFF - BAL_DIRE); /* clear reverse bit */
-      level = CommandData.pumps.level;
+      level = CommandData.pumps.level * PUMP_MAX;
     } else if (CommandData.pumps.level < 0) {
       ifpmBits |= BAL_DIRE; /* set reverse bit */
-      level = -CommandData.pumps.level;
+      level = -CommandData.pumps.level * PUMP_MAX;
     } else {
       ifpmBits &= (0xFF - BAL_VALV); /* Close valve */
       level = 0;
@@ -297,7 +295,8 @@ static int Balance(int ifpmBits)
     }
 
     //   set gain
-    level = error * CommandData.pumps.bal_gain;
+    // level = error * CommandData.pumps.bal_gain;
+    level = PUMP_MAX*CommandData.pumps.bal_gain;
 
     //   compare to preset values
 
@@ -323,19 +322,53 @@ static int Balance(int ifpmBits)
 	pump_is_on = 1;
       }
       ifpmBits |= BAL_VALV; /* open valve pump */
-      } else {
-	if (pump_is_on != 0) {
+    } else {
+      if (pump_is_on != 0) {
 	bprintf(info, "Balance System: Pump Off\n");
 	pump_is_on = 0;
-	}
-	ifpmBits &= (0xFF - BAL_VALV); /* close valve pump */
-	level = 0;
       }
+      ifpmBits &= (0xFF - BAL_VALV); /* close valve pump */
+      level = 0;
+    }
 
   }
 
   // write direction and valve bits
   WriteData(ifpmAmplAddr, (int) PUMP_ZERO + level, NIOS_QUEUE);
+  return ifpmBits;
+
+}
+
+/************************************************************************/
+/*    ControlPumpHeat:  Controls balance system pump temp               */
+/************************************************************************/
+
+//void ControlPumpHeat(unsigned short *RxFrame)
+static int ControlPumpHeat(int ifpmBits)
+{
+
+  static struct BiPhaseStruct *tIfpm1Addr, *tIfpm2Addr;
+  static int firsttime = 1;
+
+  unsigned int temp1, temp2;
+
+  if (firsttime) {
+    firsttime = 0;
+    tIfpm1Addr = GetBiPhaseAddr("t_ifpm1");
+    tIfpm2Addr = GetBiPhaseAddr("t_ifpm2");  
+  }
+
+  temp1 = slow_data[tIfpm1Addr->index][tIfpm1Addr->channel];
+  temp2 = slow_data[tIfpm2Addr->index][tIfpm2Addr->channel];
+
+  /* Only run these controls if we think the thermometer isn't broken */
+  if (temp1 < MAX_GYBOX_TEMP && temp1 > MIN_GYBOX_TEMP) {
+    /* control the heat */
+    ifpmBits |= BAL_DIRE;  /* set heat bit */
+  } else {
+    ifpmBits &= (0xFF - BAL_DIRE); /* clear heat bit */ 
+  }
+
   return ifpmBits;
 
 }
