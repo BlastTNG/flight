@@ -898,8 +898,6 @@ printf("Starting up decomPoller: host: %s\n", decomdHost);
         currNumber = NumberInfo.at(currLabel->index);
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in from disk
-//        if (DataSource->readField(indata, currLabel->src,
-//              DataSource->numFrames() - 1, -1) == 0) {
 	if (_dirfile->GetData(currLabel->src,
                               _lastNFrames-1, 0, 0, 1, // 1 sample from frame nf-1
                               Float64, (void*)(indata))==0) {
@@ -946,7 +944,24 @@ printf("Starting up decomPoller: host: %s\n", decomdHost);
               currLabel->laststyle = 0;
             }
           }
-          sprintf(displayer, currNumber->format, *indata);
+	  int is_int = 0;
+	  for (int i=0; currNumber->format[i]!='\0'; i++) {
+	    char c = currNumber->format[i];
+	    switch (c) {
+	      case 'x':
+	      case 'X':
+	      case 'd':
+		is_int = 1;
+		break;
+	      default:
+		break;
+	    }
+	  }
+	  if (is_int) {
+	    sprintf(displayer, currNumber->format, (int)*indata);
+	  } else {
+	    sprintf(displayer, currNumber->format, *indata);
+	  }
           if (strlen(displayer)==1) {
             displayer[1] = ' ';
             displayer[2] = '\0';

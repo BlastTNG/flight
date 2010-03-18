@@ -1034,13 +1034,13 @@
   </BOX>
   <BOX caption="Bias" colour="#707" row="4" col="1">
     <NUMBER caption="Bias 250">
-      <DATUM format="%.0f" src="bias_ampl_250" extrema="bias1"/>
+      <DATUM format="%d" src="bias_ampl_250" extrema="bias1"/>
     </NUMBER>
     <NUMBER caption="Bias 350">
-      <DATUM format="%.0f" src="bias_ampl_350" extrema="bias2"/>
+      <DATUM format="%d" src="bias_ampl_350" extrema="bias2"/>
     </NUMBER>
     <NUMBER caption="Bias 500">
-      <DATUM format="%.0f" src="bias_ampl_500" extrema="bias3"/>
+      <DATUM format="%d" src="bias_ampl_500" extrema="bias3"/>
     </NUMBER>
   </BOX>
   <BOX caption="'Slow' Bolometers " colour="#707" row="4" col="3" rowspan="1">
