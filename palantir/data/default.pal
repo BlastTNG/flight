@@ -515,26 +515,39 @@
     <MULTI caption="Status">
       <DATUM src="BAL_VETO">
         <WORD value="-1" caption="Vetoed" textsyle="E_BIT"/>
-        <WORD value="0" caption="Pumping" textsyle="OK_BIT"/>
+        <WORD value="0" caption="Allowed" textsyle="OK_BIT"/>
         <WORD min="1" max="32767" caption="Idle" textsyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Mode">
+      <DATUM src="BAL_MODE">
+        <WORD value="0" caption="Off" textsyle="W_BIT"/>
+        <WORD value="1" caption="Auto" textsyle="OK_BIT"/>
+        <WORD value="2" caption="Manual" textsyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="Bal Target">
       <DATUM format="%.2f" src="BAL_TARGET" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Balance %">
-      <DATUM format="%.2f" src="BALPUMP_LEV" extrema="unknown"/>
+      <DATUM format="%.2f" src="IFPM_AMPL" extrema="unknown"/>
     </NUMBER>
-    <MULTI caption="Pump">
-      <DATUM src="BAL_ON_BIT">
-        <WORD value="1" caption="On" textstyle="W_BIT"/>
-        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+    <MULTI caption="Valve">
+      <DATUM src="BAL_VALVE">
+        <WORD value="0" caption="Closed" textstyle="OK_BIT"/>
+    	<WORD value="1" caption="Open" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Direction">
-      <DATUM src="BAL_REV">
-        <WORD value="0" caption="Down" textstyle="W_BIT"/>
-        <WORD value="1" caption="Up" textstyle="OK_BIT"/>
+      <DATUM src="BAL_DIR">
+        <WORD value="0" caption="Up" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Down" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Heat">
+      <DATUM src="BAL_HEAT">
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+        <WORD value="1" caption="On" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="Gain">
