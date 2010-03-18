@@ -31,32 +31,33 @@
 #include "tx.h" /* InCharge */
 
 /* Define this symbol to have mcp log all hwpr bus traffic */
-#define HWPRBUS_CHATTER 1
+#define HWPRBUS_CHATTER EZ_CHAT_ACT
 
 #define HWPR_BUS "/dev/ttyHWPR"
-#define HWPR_ADDR 0x3d
+#define HWPR_ADDR EZ_WHO_S13
 #define POLL_TIMEOUT 30000 /* 5 minutes */
 
 #define GP_LEN 255
 
 static struct hwpr_struct {
-  unsigned int pos;
-  unsigned int enc;
-  unsigned int vel;
-  unsigned int acc;
-  unsigned int move;
-  unsigned int hold;
+  int pos;
+  int enc;
+  int vel;
+  int acc;
+  int move;
+  int hold;
 } hwpr_data;
 
 void MonitorHWPR(struct ezbus *bus)
 {
-  hwpr_data.pos  = EZBus_ReadInt(bus, HWPR_ADDR, "?0", 0) / HWPR_STEPS_PER_MOTENC;
-  hwpr_data.enc  = EZBus_ReadInt(bus, HWPR_ADDR, "?8", 0);
+  EZBus_ReadInt(bus, HWPR_ADDR, "?0", &hwpr_data.pos);
+  hwpr_data.pos /= HWPR_STEPS_PER_MOTENC;
+  EZBus_ReadInt(bus, HWPR_ADDR, "?8", &hwpr_data.enc);
 #if 0
-  hwpr_data.vel  = EZBus_ReadInt(bus, HWPR_ADDR, "?V", 0);
-  hwpr_data.acc  = EZBus_ReadInt(bus, HWPR_ADDR, "?L", 0);
-  hwpr_data.move = EZBus_ReadInt(bus, HWPR_ADDR, "?m", 0);
-  hwpr_data.hold = EZBus_ReadInt(bus, HWPR_ADDR, "?h", 0);
+  EZBus_ReadInt(bus, HWPR_ADDR, "?V", hwpr_data.vel);
+  EZBus_ReadInt(bus, HWPR_ADDR, "?L", hwpr_data.acc);
+  EZBus_ReadInt(bus, HWPR_ADDR, "?m", hwpr_data.move);
+  EZBus_ReadInt(bus, HWPR_ADDR, "?h", hwpr_data.hold);
 #endif
 }
 
@@ -99,7 +100,7 @@ void ControlHWPR(struct ezbus *bus)
   /* Send the uplinked (general) command, if any */
   my_cindex = GETREADINDEX(CommandData.actbus.cindex);
   if ((CommandData.actbus.caddr[my_cindex] == HWPR_ADDR) &&
-      (EZBus_Take(bus, HWPR_ADDR))) {
+      (EZBus_Take(bus, HWPR_ADDR) != EZ_ERR_OK) ) {
     EZBus_Comm(bus, CommandData.actbus.caddr[my_cindex],
         CommandData.actbus.command[my_cindex], 0);
     CommandData.actbus.caddr[my_cindex] = 0;
@@ -109,24 +110,17 @@ void ControlHWPR(struct ezbus *bus)
   if (CommandData.hwpr.is_new) {
     if (CommandData.hwpr.mode == HWPR_PANIC) {
       bputs(info, "HWPRBus: Panic");
-      EZBus_Comm(bus, HWPR_ADDR, "T", 0);
+      EZBus_Stop(bus, HWPR_ADDR);
     } else if ((CommandData.hwpr.mode == HWPR_GOTO) &&
-               ((EZBus_Take(bus, HWPR_ADDR)))) {
-      snprintf(gp_buffer, GP_LEN, "V%dL%dm%dh%dA%dR",
-          CommandData.hwpr.vel, CommandData.hwpr.acc,
-          CommandData.hwpr.move_i, CommandData.hwpr.hold_i,
-          CommandData.hwpr.target * HWPR_STEPS_PER_MOTENC);
-      EZBus_Comm(bus, HWPR_ADDR, gp_buffer, 0);
+               ((EZBus_Take(bus, HWPR_ADDR)) != EZ_ERR_OK) ) {
+      EZBus_Goto(bus, HWPR_ADDR, 
+	  CommandData.hwpr.target * HWPR_STEPS_PER_MOTENC);
       CommandData.hwpr.is_new = 0;
       EZBus_Release(bus, HWPR_ADDR);
     } else if ((CommandData.hwpr.mode == HWPR_JUMP) &&
-               ((EZBus_Take(bus, HWPR_ADDR)))) {
-      snprintf(gp_buffer, GP_LEN, "V%dL%dm%dh%d%c%dR",
-          CommandData.hwpr.vel, CommandData.hwpr.acc,
-          CommandData.hwpr.move_i, CommandData.hwpr.hold_i,
-          (CommandData.hwpr.target > 0) ? 'P' : 'D', 
-          abs(CommandData.hwpr.target * HWPR_STEPS_PER_MOTENC));
-      EZBus_Comm(bus, HWPR_ADDR, gp_buffer, 0);
+               ((EZBus_Take(bus, HWPR_ADDR)) != EZ_ERR_OK) ) {
+      EZBus_RelMove(bus, HWPR_ADDR, 
+	  CommandData.hwpr.target * HWPR_STEPS_PER_MOTENC);
       CommandData.hwpr.is_new = 0;
       EZBus_Release(bus, HWPR_ADDR);
     }
@@ -144,11 +138,16 @@ void HWPRBus(void)
 
   bputs(startup, "HWPRBus: HWPRBus startup.");
 
-  EZBus_Init(&bus, HWPR_BUS, "HWPRBus", HWPRBUS_CHATTER);
+  if (EZBus_Init(&bus, HWPR_BUS, "HWPRBus", HWPRBUS_CHATTER) != EZ_ERR_OK)
+    berror(tfatal, "HWPRBus: failed to connect");
 
   EZBus_Add(&bus, HWPR_ADDR, "HWPR");
 
-  all_ok = EZBus_Poll(&bus, 0);
+  all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
+
+  /* initialize hwpr_data */
+  hwpr_data.pos = 0;
+  hwpr_data.enc = 0;
 
   for (;;) {
     while (!InCharge) { /* NiC MCC traps here */
@@ -159,15 +158,22 @@ void HWPRBus(void)
     }
 
     if (CommandData.hwpr.force_repoll) {
+      EZBus_ForceRepoll(&bus, HWPR_ADDR);
       poll_timeout = POLL_TIMEOUT;
-      all_ok = EZBus_Poll(&bus, 1);;
+      all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
     }
 
     if (poll_timeout == 0 && !all_ok) {
-      all_ok = EZBus_Poll(&bus, 0);
+      all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
       poll_timeout = POLL_TIMEOUT;
     } else if (poll_timeout > 0)
       poll_timeout--;
+
+    /* update the HWPR move parameters */
+    EZBus_SetVel(&bus, HWPR_ADDR, CommandData.hwpr.vel);
+    EZBus_SetAccel(&bus, HWPR_ADDR, CommandData.hwpr.acc);
+    EZBus_SetIMove(&bus, HWPR_ADDR, CommandData.hwpr.move_i);
+    EZBus_SetIHold(&bus, HWPR_ADDR, CommandData.hwpr.hold_i);
 
     ControlHWPR(&bus);
 

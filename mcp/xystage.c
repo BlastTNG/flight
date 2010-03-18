@@ -213,8 +213,8 @@ void ControlXYStage(struct ezbus* bus)
     /* PANIC! */
     if (CommandData.xystage.mode == XYSTAGE_PANIC) {
       bputs(info, "StageBus: Panic");
-      EZBus_Comm(bus, STAGEX_ID, "T", 0);
-      EZBus_Comm(bus, STAGEY_ID, "T", 0);
+      EZBus_Stop(bus, STAGEX_ID);
+      EZBus_Stop(bus, STAGEY_ID);
       CommandData.xystage.is_new = 0;
     /* GOTO */
     } else if (CommandData.xystage.mode == XYSTAGE_GOTO) {
