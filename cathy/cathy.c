@@ -10,6 +10,15 @@
 #define CHATTER_DEFAULT "chatter"
 #define OLD_DATA_LIMIT 50
 
+#define NOR "\[[0m"
+#define RED "\[[31;1m"
+#define GRN "\[[32;1m"
+#define YLW "\[[33;1m"
+#define BLU "\[[34;1m"
+#define MAG "\[[35;1m"
+#define CYN "\[[36;1m"
+
+
 #define BUF_LEN 1024
 
 void usage(char *exe)
@@ -20,6 +29,7 @@ void usage(char *exe)
   fprintf(stderr, "-c CHAR_FIELD      [%s]\n", CHATTER_DEFAULT);
   fprintf(stderr, "-r (reconnect) | -s (single shot) [-r]\n");
   fprintf(stderr, "-v (verbose) | -q (quiet) [-v]\n");
+  fprintf(stderr, "-b (b&w) | -k (color) [auto-detect]\n");
   exit(-1);
 }
 
@@ -36,16 +46,19 @@ int main (int argc, char **argv)
   uint16_t *data;
   off_t i;
   char a, b;
+  char prev_b = '\0';
   int c;
 
   unsigned int old_data = 0;
   int reload = 1;
   int verbose = 1;
+  int color = isatty(fileno(stdout));
+      color = 0;
 
   snprintf(dirfile_name, BUF_LEN, "%s", DIRFILE_DEFAULT);
   snprintf(chatter_name, BUF_LEN, "%s", CHATTER_DEFAULT);
 
-  while ((c = getopt(argc, argv, "d:c:rqvsh?f:")) != -1)
+  while ((c = getopt(argc, argv, "d:c:rqvsh?f:bk")) != -1)
   {
     switch (c)
     {
@@ -69,6 +82,12 @@ int main (int argc, char **argv)
         break;
       case 'f':
         ff = (off_t)strtoll(optarg, NULL, 0);
+        break;
+      case 'b':
+        color = 0;
+        break;
+      case 'k':
+        color = 1;
         break;
       case 'h':
       case '?':
@@ -143,10 +162,23 @@ int main (int argc, char **argv)
         {
           a = data[i] & 0xFF;
           b = data[i] >> 8;
+
+          if (color && prev_b == '\n')
+            if (a == '*' || a == '!' || a == '$')
+              printf(RED);
           if (a != 0x16 && a != 0x00)
             putchar(a);
+          if (color && a == '\n')
+            printf(NOR);
+
+          if (color && a == '\n')
+            if (b == '*' || b == '!' || b == '$')
+              printf(RED);
           if (b != 0x16 && b != 0x00)
             putchar(b);
+          if (color && b == '\n')
+            printf(NOR);
+          prev_b = b;
         }
         fflush(stdout);
       } else {
