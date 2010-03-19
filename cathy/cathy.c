@@ -138,7 +138,7 @@ int main (int argc, char **argv)
       {
         old_data = 0;
         n_read = getdata(dirfile, chatter_name, nf_old, 0, BUF_LEN, 0, GD_UINT16, data);
-        nf_old += n_read / spf;
+        nf_old += (n_read / spf);
         for (i = 0; i < n_read; i++)
         {
           a = data[i] & 0xFF;
