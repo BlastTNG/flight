@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.29 $";
+const char *command_list_serial = "$Revision: 4.30 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -671,7 +671,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /*************** Telemetry/Scheduling  *****************/
   {COMMAND(timeout), "time until schedule mode", GR_TELEM, 1,
     {
-      {"Timeout (s)", 1, 14400, 'i', "TIMEOUT"}
+      {"Timeout (s)", 3, 24*3600, 'f', "TIMEOUT"}
     }
   },
 
