@@ -1482,7 +1482,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 	CommandData.power.adc_reset[ivalues[0]/4] = RESET_ADC_LEN;
       break;
     case timeout:       /* Set timeout */
-      CommandData.timeout = ivalues[0];
+      CommandData.timeout = rvalues[0];
       break;
     case alice_file: /* change downlink XML file */
       CommandData.alice_file = ivalues[0];
