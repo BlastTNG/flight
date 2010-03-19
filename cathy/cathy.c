@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <getdata.h>
 #include <getopt.h>
+#include <signal.h>
 
 #define DIRFILE_DEFAULT "/data/etc/defile.lnk"
 #define CHATTER_DEFAULT "chatter"
@@ -34,6 +35,13 @@ void usage(char *exe)
   fprintf(stderr, "-v (verbose) | -q (quiet) [-v]\n");
   fprintf(stderr, "-b (b&w) | -k (color) [auto-detect]\n");
   exit(-1);
+}
+
+void clear_colors(int sig)
+{
+  printf("%s%s\n", NOR, CUR);
+  signal(SIGINT, SIG_DFL);
+  exit(1);
 }
 
 int main (int argc, char **argv)
@@ -98,6 +106,9 @@ int main (int argc, char **argv)
         break;
     }
   }
+
+  if (color)
+    signal(SIGINT, clear_colors);
 
   while (1) /* Main Loop */
   {
