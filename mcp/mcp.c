@@ -127,8 +127,8 @@ struct chat_buf chatter_buffer;
 ( \
   MPRINT_BUFFER_SIZE /* buffer length */ \
   - 3                /* start-of-line marker */ \
-  - 31               /* date "YYYY-MM-DD HH:MM:SS.mmmmmm GMT " */ \
-  - 4                /* marker again plus NUL */ \
+  - 24               /* date "YYYY-MM-DD HH:MM:SS.mmm " */ \
+  - 2                /* Newline and NUL */ \
 )
 
 #if (TEMPORAL_OFFSET != 0)
@@ -207,8 +207,7 @@ void mputs(buos_t flag, const char* message) {
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
-  sprintf(bufstart, ".%06li GMT ", t.tv_usec);
-  strcat(buffer, marker);
+  sprintf(bufstart, ".%03li ", t.tv_usec / 1000);
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
@@ -261,10 +260,10 @@ void mputs(buos_t flag, const char* message) {
   if (flag == tfatal) {
     if (logfile != NULL) {
       fprintf(logfile,
-          "$$ Last error is THREAD FATAL.  Thread [%5i] exits.\n", getpid());
+          "$$ Last error is THREAD FATAL.  Thread [%5u] exits.\n", (unsigned)syscall(SYS_gettid));
       fflush(logfile);
     }
-    printf("$$ Last error is THREAD FATAL.  Thread [%5i] exits.\n", getpid());
+    printf("$$ Last error is THREAD FATAL.  Thread [%5u] exits.\n", (unsigned)syscall(SYS_gettid));
     fflush(stdout);
 
     pthread_exit(NULL);
