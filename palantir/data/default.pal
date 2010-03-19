@@ -1249,9 +1249,6 @@
     <NUMBER caption="P OSC (psi)">
       <DATUM format="%.2f" src="OSC_PRESSURE1" extrema="psi"/>
     </NUMBER>
-    <NUMBER caption="P PV (atm)">
-      <DATUM format="%.2f" src="P_PV" extrema="pressure"/>
-    </NUMBER>
   </BOX>
   <BOX caption="State" colour="#777700" row="0" col="1" colspan="1">
     <CURDIR caption="Dirfile">
