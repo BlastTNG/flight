@@ -945,6 +945,7 @@ printf("Starting up decomPoller: host: %s\n", decomdHost);
             }
           }
 	  int is_int = 0;
+	  int is_binary = 0;
 	  for (int i=0; currNumber->format[i]!='\0'; i++) {
 	    char c = currNumber->format[i];
 	    switch (c) {
@@ -953,12 +954,26 @@ printf("Starting up decomPoller: host: %s\n", decomdHost);
 	      case 'd':
 		is_int = 1;
 		break;
+	      case 'b':
+		is_binary = 1;
+		break;
 	      default:
 		break;
 	    }
 	  }
 	  if (is_int) {
 	    sprintf(displayer, currNumber->format, (int)*indata);
+	  } else if (is_binary) {
+	    int idata = (int)*indata;
+	    sprintf(displayer, "%d%d%d%d%d%d%d%d",
+		(idata & 0x80)!=0, 
+		(idata & 0x40)!=0, 
+		(idata & 0x20)!=0, 
+		(idata & 0x10)!=0, 
+		(idata & 0x08)!=0, 
+		(idata & 0x04)!=0, 
+		(idata & 0x02)!=0, 
+		(idata & 0x01)!=0); 
 	  } else {
 	    sprintf(displayer, currNumber->format, *indata);
 	  }

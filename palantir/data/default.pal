@@ -75,13 +75,13 @@
     </EXTREMA>
     <EXTREMA name="current">
       <HI value="15"/>
-      <LO value="0"/>
+      <LO value="-0.05"/>
       <XHI value="40"/>
       <XLO value="-40"/>
     </EXTREMA>
     <EXTREMA name="acscurrent">
-      <HI value="18"/>
-      <LO value="10"/>
+      <HI value="1.5"/>
+      <LO value="0.90"/>
       <XHI value="30"/>
       <XLO value="-1"/>
     </EXTREMA>
@@ -91,12 +91,6 @@
       <XHI value="4"/>
       <XLO value="0"/>
     </EXTREMA>
-    <EXTREMA name="pvcurrent">
-      <HI value="13"/>
-      <LO value="1"/>
-      <XHI value="14"/>
-      <XLO value="0"/>
-    </EXTREMA>
     <EXTREMA name="sscurrent">
       <HI value="0.2"/>
       <LO value="0.08"/>
@@ -104,10 +98,10 @@
       <XLO value="0"/>
     </EXTREMA>
     <EXTREMA name="gycurrent">
-      <HI value="4"/>
-      <LO value="1"/>
+      <HI value="3"/>
+      <LO value="0.65"/>
       <XHI value="4.5"/>
-      <XLO value="0"/>
+      <XLO value="0.1"/>
     </EXTREMA>
     <EXTREMA name="solcurrent">
       <HI value="20"/>
@@ -398,12 +392,9 @@
     <NUMBER caption="dGPS # Sat">
       <DATUM format="%.0f" src="dgps_n_sat" extrema="unknown"/>
     </NUMBER>
-    <MULTI caption="Gyros">
-      <DATUM src="USE_ANALOGUE">
-        <WORD value="0" caption="Digital" textstyle="OK_BIT"/>
-        <WORD value="1" caption="Analogue" textstyle="W_BIT"/>
-      </DATUM>
-    </MULTI>
+    <NUMBER caption="Gyros">
+      <DATUM format="%b" src="gyro_mask" extrema="unknown"/>
+    </NUMBER>
   </BOX>
   <BOX caption="ISC" colour="#707" row="4" col="5" rowspan="1">
     <NUMBER caption="RA">
@@ -587,12 +578,6 @@
     <NUMBER caption="Extension (%)">
       <DATUM format="%.2f" src="LOCK_POT" extrema="lockpot"/>
     </NUMBER>
-    <MULTI caption="Limit Switch">
-      <DATUM src="LOCK_LIM_SW">
-        <WORD min="9000" max="20000" caption="Disengaged" textstyle="W_BIT"/>
-        <WORD min="-100" max="9000" caption="Engaged" textstyle="OK_BIT"/>
-      </DATUM>
-    </MULTI>
     <NUMBER caption="Move Current (%)">
       <DATUM format="%.0f" src="LOCK_MOVE_I" extrema="locklimit"/>
     </NUMBER>
@@ -999,7 +984,7 @@
       <DATUM format="%.2f" src="I_DAS" extrema="current"/>
     </NUMBER>
     <NUMBER caption="ACS">
-      <DATUM format="%.2f" src="I_ACS" extrema="current"/>
+      <DATUM format="%.2f" src="I_ACS" extrema="acscurrent"/>
     </NUMBER>
     <NUMBER caption="Preamps">
       <DATUM format="%.2f" src="I_REC" extrema="current"/>
@@ -1014,7 +999,7 @@
       <DATUM format="%.2f" src="I_STEP" extrema="current"/>
     </NUMBER>
     <NUMBER caption="MCC">
-      <DATUM format="%.2f" src="I_MCC" extrema="current"/>
+      <DATUM format="%.2f" src="I_MCC" extrema="compcurrent"/>
     </NUMBER>
     <NUMBER caption="I Gyro Box">
       <DATUM format="%.2f" src="I_GYBOX" extrema="gycurrent"/>
@@ -1034,7 +1019,7 @@
   </BOX>
   <BOX caption="Bias" colour="#707" row="4" col="1">
     <NUMBER caption="Bias 250">
-      <DATUM format="%d" src="bias_ampl_250" extrema="bias1"/>
+      <DATUM format="%.0f" src="bias_ampl_250" extrema="bias1"/>
     </NUMBER>
     <NUMBER caption="Bias 350">
       <DATUM format="%d" src="bias_ampl_350" extrema="bias2"/>
@@ -1215,7 +1200,7 @@
       <DATUM format="%.2f" src="V_BATT_ACS" extrema="vbat"/>
     </NUMBER>
     <NUMBER caption="I ACS Gondola">
-      <DATUM format="%.2f" src="I_GOND_ACS" extrema="acscurrent"/>
+      <DATUM format="%.2f" src="I_GOND_ACS" extrema="current"/>
     </NUMBER>
     <NUMBER caption="I ACS Battery">
       <DATUM format="%.2f" src="I_BATT_ACS" extrema="unknown"/>
@@ -1266,19 +1251,6 @@
     </NUMBER>
     <NUMBER caption="P PV (atm)">
       <DATUM format="%.2f" src="P_PV" extrema="pressure"/>
-    </NUMBER>
-    <MULTI caption="IF Cooling">
-      <DATUM src="INCOOL_STATE">
-        <WORD value="3" caption="Autoveto" textstyle="E_BIT"/>
-        <WORD value="2" caption="Auto On" textstyle="OK_BIT"/>
-        <WORD value="1" caption="Auto Off" textstyle="W_BIT"/>
-        <WORD value="0" caption="Unknown" textstyle="P_BIT"/>
-        <WORD value="-1" caption="Vetoed Off" textstyle="OK_BIT"/>
-        <WORD value="-2" caption="Vetoed On" textstyle="W_BIT"/>
-      </DATUM>
-    </MULTI>
-    <NUMBER caption="IF Level (%)">
-      <DATUM format="%.2f" src="INPUMP_LEV" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="State" colour="#777700" row="0" col="1" colspan="1">
