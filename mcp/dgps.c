@@ -81,6 +81,8 @@ extern short int InCharge; /* tx.c */
 #define BDRATE B115200
 // #define SELECT_GPS_MUS_OUT  200000
 
+void nameThread(const char*);	/* mcp.c */
+
 struct shmTime {
   int	  mode;
   int	  count;
@@ -331,7 +333,7 @@ htI32_t GetNextBlock(int fd, void* SBFBlock)
 
     if (n<0) {
       //TODO dgps code needs updates to handle serial errors
-      bprintf(err,"dGPS: read GPSblock failed!");
+      bprintf(err,"read GPSblock failed!");
     }
 
     //if (n>0 && c[0]==SYNC_STRING[0]) {
@@ -404,7 +406,8 @@ void WatchDGPS()
   static struct BiPhaseStruct* dgpsClimbAddr;
   static struct BiPhaseStruct* dgpsNsatAddr;
   static struct BiPhaseStruct* dgpsTimeAddr;
-  bputs(startup, "dGPS: WatchDGPS startup\n");
+  nameThread("dGPS");
+  bputs(startup, "WatchDGPS startup\n");
 
   /* initialize values in dgpsinfo structure */
   dgpsinfo.init = 0;
@@ -530,7 +533,7 @@ void WatchDGPS()
   k = strlen(cmd1);
   m = write(fd,cmd1,k);
   if (m<0) {
-    berror(err,"dGPS: send command failed!");
+    berror(err,"send command failed!");
   }
 
   /* Set COM1 to output data blocks in Septentrio Binary Format (see p.129 of manual)
@@ -543,7 +546,7 @@ void WatchDGPS()
   l = strlen(cmd2);
   n = write(fd,cmd2,l);
   if (n<0) {
-    berror(err,"dGPS: send command failed!");
+    berror(err,"send command failed!");
   }
 
   // FIXME maybe: should we be allowed to proceed if we have had write errors?

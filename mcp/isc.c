@@ -42,11 +42,12 @@ static struct {
   char who[4];
   char where[16];
 } isc_which[2] = {
-  {"Isc", "192.168.1.8"},
-  {"Osc", "192.168.1.9"}
+  {"ISC", "192.168.1.8"},
+  {"OSC", "192.168.1.9"}
 };
 
 extern short int SouthIAm;   /* mcp.c */
+void nameThread(const char*);
 extern short int InCharge; /* tx.c */
 
 /*---- ISC semaphores ----*/
@@ -94,27 +95,27 @@ static int ISCInit(int which)
   if (which) {
     if (isc_log[which] == NULL)
       if ((isc_log[which] = fopen("/tmp/isc.1.log", "a")) == NULL)
-        berror(err, "%s: log fopen()", isc_which[which].who);
+        berror(err, "log fopen()");
   } else {
     if (isc_log[which] == NULL)
       if ((isc_log[which] = fopen("/tmp/isc.0.log", "a")) == NULL)
-        berror(err, "%s: log fopen()", isc_which[which].who);
+        berror(err, "log fopen()");
   }
   fprintf(isc_log[which], "This is %s.\n", isc_which[which].who);
 #endif
 
   sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (sock == -1) {
-    berror(err, "%s: socket()", isc_which[which].who);
+    berror(err, "socket()");
     return -1;
   }
 
   n = 1;
   if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &n, sizeof(n)) != 0) {
-    berror(err, "%s: setsockopt()", isc_which[which].who);
+    berror(err, "setsockopt()");
     if (sock != -1)
       if (close(sock) < 0)
-        berror(err, "%s: close()", isc_which[which].who);
+        berror(err, "close()");
     return -1;
   }
 
@@ -124,14 +125,14 @@ static int ISCInit(int which)
 
   if ((n = connect(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)))
       < 0) {
-    berror(err, "%s: connect()", isc_which[which].who);
+    berror(err, "connect()");
     if (sock != -1)
       if (close(sock) < 0)
-        berror(err, "%s: close()", isc_which[which].who);
+        berror(err, "close()");
     return -1;
   }
 
-  bprintf(info, "%s: Connected in %s mode\n", isc_which[which].who,
+  bprintf(info, "Connected in %s mode\n",
       (InCharge) ? "active" : "passive");
   CommandData.ISCState[which].shutdown = 0;
 
@@ -180,13 +181,14 @@ void IntegratingStarCamera(void* parameter)
 
   int n, save_image_state = 0;
 
-  bprintf(startup, "%s: Startup\n", isc_which[which].who);
+  nameThread(isc_which[which].who);
+  bprintf(startup, "Startup\n");
 
   for (;;) {
     do {
       if (sock != -1)
         if (close(sock) < 0)
-          berror(err, "%s: close()", isc_which[which].who);
+          berror(err, "close()");
 
       sock = ISCInit(which);
       if (sock == -1) {
@@ -216,7 +218,7 @@ void IntegratingStarCamera(void* parameter)
       if (n == -1 && errno == EINTR)
         continue;
       if (n == -1) {
-        berror(err, "%s: select()", isc_which[which].who);
+        berror(err, "select()");
         continue;
       }
 
@@ -226,11 +228,11 @@ void IntegratingStarCamera(void* parameter)
         n = recv(sock, &ISCSolution[which][iscwrite_index[which]],
             sizeof(struct ISCSolutionStruct), 0);
         if (n == -1) {
-          berror(err, "%s: recv()", isc_which[which].who);
+          berror(err, "recv()");
           break;
         } else if (n < sizeof(struct ISCSolutionStruct)) {
-          bprintf(err, "%s: Expected %i but received %i bytes.\n",
-              isc_which[which].who, sizeof(struct ISCSolutionStruct), n);
+          bprintf(err, "Expected %i but received %i bytes.\n",
+              sizeof(struct ISCSolutionStruct), n);
           break;
         }
 #ifdef USE_ISC_LOG
@@ -247,7 +249,7 @@ void IntegratingStarCamera(void* parameter)
 #endif
         /* Flag link as good, if necesary */
         if (!ISC_link_ok[which]) {
-          bprintf(info, "%s: Network link OK.\n", isc_which[which].who);
+          bprintf(info, "Network link OK.\n");
           ISC_link_ok[which] = 1;
         }
 
@@ -317,11 +319,11 @@ void IntegratingStarCamera(void* parameter)
           n = send(sock, &CommandData.ISCState[which],
               sizeof(CommandData.ISCState[which]), 0);
           if (n == -1) {
-            berror(err, "%s: send()", isc_which[which].who);
+            berror(err, "send()");
             break;
           } else if (n < sizeof(struct ISCStatusStruct)) {
-            bprintf(err, "%s: Expected %i but sent %i bytes.\n",
-                isc_which[which].who, sizeof(struct ISCStatusStruct), n);
+            bprintf(err, "Expected %i but sent %i bytes.\n",
+                sizeof(struct ISCStatusStruct), n);
             break;
           }
           if (WHICH)

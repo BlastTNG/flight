@@ -40,6 +40,9 @@
 #define MAX_EL 59
 
 #define VPIV_FILTER_LEN 40
+
+void nameThread(const char*);	/* mcp.c */
+
 struct RWMotorDataStruct RWMotorData[3]; // defined in point_struct.h
 int rw_motor_index; 
 
@@ -1365,10 +1368,11 @@ void* reactComm(void* arg)
   reactinfo.writeset=0;
   strncpy(reactinfo.motorstr,"react",6);
 
+  nameThread("RWCom");
 
   while(!InCharge) {
     if(firsttime==1) {
-      bprintf(info,"reactComm: I am not incharge thus I will not communicate with the RW motor.");
+      bprintf(info,"I am not incharge thus I will not communicate with the RW motor.");
       firsttime=0;
     }
     //in case we switch to ICC when serial communications aren't working
@@ -1379,7 +1383,7 @@ void* reactComm(void* arg)
   }
 
   firsttime=1;
-  bprintf(info,"reactComm: Bringing the reaction wheel online.");
+  bprintf(info,"Bringing the reaction wheel online.");
   // Initialize structure RWMotorData.  Follows what was done in dgps.c
   //  RWMotorData[0].rw_vel_raw=0;
   RWMotorData[0].temp=0;
@@ -1393,12 +1397,12 @@ void* reactComm(void* arg)
   while (reactinfo.open==0) {
     open_copley(REACT_DEVICE,&reactinfo); // sets reactinfo.open=1 if sucessful
 
-    if (i==10) bputs(err,"reactComm: Reaction wheel port could not be opened after 10 attempts.\n");
+    if (i==10) bputs(err,"Reaction wheel port could not be opened after 10 attempts.\n");
 
     i++;
     if (reactinfo.open==1) {
 #ifdef MOTORS_VERBOSE
-      bprintf(info,"reactComm: Opened the serial port on attempt number %i",i); 
+      bprintf(info,"Opened the serial port on attempt number %i",i); 
 #endif
     } else sleep(1);  
   }
@@ -1409,9 +1413,9 @@ void* reactComm(void* arg)
   while (reactinfo.init==0 && i <=9) {
     configure_copley(&reactinfo);
     if (reactinfo.init==1) {
-      bprintf(info,"reactComm: Initialized the controller on attempt number %i",i); 
+      bprintf(info,"Initialized the controller on attempt number %i",i); 
     } else if (i==9) {
-      bprintf(info,"reactComm: Could not initialize the controller after %i attempts.",i); 
+      bprintf(info,"Could not initialize the controller after %i attempts.",i); 
     } else {
       sleep(1);
     }
@@ -1440,9 +1444,9 @@ void* reactComm(void* arg)
       usleep(10000);      
     } else if (reactinfo.reset==1){
       if(resetcount==0) {
-	bprintf(warning,"reactComm: Resetting connection to Reaction Wheel controller.");
+	bprintf(warning,"Resetting connection to Reaction Wheel controller.");
       } else if ((resetcount % 10)==0) {
-	bprintf(warning,"reactComm: reset-> Unable to connect to Reaction Wheel after %i attempts.",resetcount);
+	bprintf(warning,"reset-> Unable to connect to Reaction Wheel after %i attempts.",resetcount);
       }
 
       resetcount++;
@@ -1456,21 +1460,21 @@ void* reactComm(void* arg)
     } else if(reactinfo.init==1){
       if(CommandData.disable_az==0 && reactinfo.disabled > 0) {
 #ifdef MOTORS_VERBOSE
-	bprintf(info,"reactComm: Attempting to enable the reaction wheel motor controller.");
+	bprintf(info,"Attempting to enable the reaction wheel motor controller.");
 #endif
 	n=enableCopley(&reactinfo);
 	if(n==0){    
-	  bprintf(info,"reactComm: Reaction wheel motor controller is now enabled.");
+	  bprintf(info,"Reaction wheel motor controller is now enabled.");
 	  reactinfo.disabled=0;
 	}
       } 
       if(CommandData.disable_az==1 && (reactinfo.disabled==0 || reactinfo.disabled==2)) {
 #ifdef MOTORS_VERBOSE
-	bprintf(info,"reactComm: Attempting to disable the reaction wheel motor controller.");
+	bprintf(info,"Attempting to disable the reaction wheel motor controller.");
 #endif
 	n=disableCopley(&reactinfo);
 	if(n==0){    
-	  bprintf(info,"reactComm: Reaction wheel motor controller is now disabled.");
+	  bprintf(info,"Reaction wheel motor controller is now disabled.");
 	  reactinfo.disabled=1;
 	}
       } 
@@ -1499,7 +1503,7 @@ void* reactComm(void* arg)
       j++;
       if (firsttime) {
 #ifdef MOTORS_VERBOSE
-        bprintf(info,"reactComm: Raw reaction wheel velocity is %i",vel_raw);
+        bprintf(info,"Raw reaction wheel velocity is %i",vel_raw);
 #endif
 	firsttime=0;
       }
@@ -1538,9 +1542,11 @@ void* elevComm(void* arg)
   elevinfo.writeset=0;
   strncpy(elevinfo.motorstr,"elev\0",6);
 
+  nameThread("ElCom");
+
   while(!InCharge) {
     if(firsttime==1) {
-      bprintf(info,"elevComm: I am not incharge thus I will not communicate with the elevation drive.");
+      bprintf(info,"I am not incharge thus I will not communicate with the elevation drive.");
       firsttime=0;
     }
 
@@ -1551,7 +1557,7 @@ void* elevComm(void* arg)
     usleep(20000);
   }
 
-  bprintf(info,"elevComm: Bringing the elevation drive online.");
+  bprintf(info,"Bringing the elevation drive online.");
   i=0;
   firsttime=1;
 
@@ -1569,13 +1575,13 @@ void* elevComm(void* arg)
     open_copley(ELEV_DEVICE,&elevinfo); // sets elevinfo.open=1 if sucessful
     
     if(i==10) {
-      bputs(err,"elevComm: Elevation drive serial port could not be opened after 10 attempts.\n");
+      bputs(err,"Elevation drive serial port could not be opened after 10 attempts.\n");
     }
     i++;
     
     if(elevinfo.open==1) {
 #ifdef MOTORS_VERBOSE
-      bprintf(info,"elevComm: Opened the serial port on attempt number %i",i); 
+      bprintf(info,"Opened the serial port on attempt number %i",i); 
 #endif
     }
     else sleep(1);
@@ -1587,9 +1593,9 @@ void* elevComm(void* arg)
   while (elevinfo.init==0 && i <=9) {
     configure_copley(&elevinfo);
     if(elevinfo.init==1) {
-      bprintf(info,"elevComm: Initialized the controller on attempt number %i",i); 
+      bprintf(info,"Initialized the controller on attempt number %i",i); 
     } else if (i==9) {
-      bprintf(info,"elevComm: Could not initialize the controller after %i attempts.",i); 
+      bprintf(info,"Could not initialize the controller after %i attempts.",i); 
     } else {
       sleep(1);
     }
@@ -1620,9 +1626,9 @@ void* elevComm(void* arg)
       usleep(10000);      
     } else if (elevinfo.reset==1){
       if(resetcount==0) {
-	bprintf(warning,"elevComm: Resetting connection to elevation drive controller.");
+	bprintf(warning,"Resetting connection to elevation drive controller.");
       } else if ((resetcount % 10)==0) {
-	bprintf(warning,"elevComm: reset-> Unable to connect to elevation drive after %i attempts.",resetcount);
+	bprintf(warning,"reset-> Unable to connect to elevation drive after %i attempts.",resetcount);
       }
 
       resetcount++;
@@ -1638,21 +1644,21 @@ void* elevComm(void* arg)
     } else if (elevinfo.init==1) {
       if((CommandData.disable_el==0 || CommandData.force_el==1 ) && elevinfo.disabled > 0) {
 #ifdef MOTORS_VERBOSE
-	bprintf(info,"elevComm: Attempting to enable the elevation motor controller.");
+	bprintf(info,"Attempting to enable the elevation motor controller.");
 #endif
 	n=enableCopley(&elevinfo);
 	if(n==0){    
-	  bprintf(info,"elevComm: Elevation motor controller is now enabled.");
+	  bprintf(info,"Elevation motor controller is now enabled.");
 	  elevinfo.disabled=0;
 	}
       } 
       if((CommandData.disable_el==1 && CommandData.force_el==0 ) && (elevinfo.disabled==0 || elevinfo.disabled==2)) {
 #ifdef MOTORS_VERBOSE
-	bprintf(info,"elevComm: Attempting to disable the elevation motor controller.");
+	bprintf(info,"Attempting to disable the elevation motor controller.");
 #endif
 	n=disableCopley(&elevinfo);
 	if(n==0){    
-	  bprintf(info,"elevComm: Elevation motor controller is now disabled.");
+	  bprintf(info,"Elevation motor controller is now disabled.");
 	  elevinfo.disabled=1;
 	}
       } 
@@ -1666,7 +1672,7 @@ void* elevComm(void* arg)
 
       if (firsttime) {
 #ifdef MOTORS_VERBOSE
-	bprintf(info,"elevComm: Raw elevation encoder position is %i",pos_raw);
+	bprintf(info,"Raw elevation encoder position is %i",pos_raw);
 #endif
 	firsttime=0;
       }     
@@ -1722,15 +1728,17 @@ void* pivotComm(void* arg)
   pivotinfo.writeset=0;
   strncpy(pivotinfo.motorstr,"pivot",6);
 
+  nameThread("PivCom");
+
   while (!InCharge) {
     if (firsttime==1) {
-      bprintf(info,"pivotComm: I am not incharge thus I will not communicate with the pivot motor.");
+      bprintf(info,"I am not incharge thus I will not communicate with the pivot motor.");
       firsttime=0;
     }
     usleep(20000);
   }
 
-  bprintf(info,"pivotComm: Bringing the pivot drive online.");
+  bprintf(info,"Bringing the pivot drive online.");
   firsttime=1;
 
   i=0;
@@ -1750,13 +1758,13 @@ void* pivotComm(void* arg)
     open_amc(PIVOT_DEVICE,&pivotinfo); // sets pivotinfo.open=1 if sucessful
 
     if (i==10) {
-      bputs(err,"pivotComm: Pivot controller serial port could not be opened after 10 attempts.\n");
+      bputs(err,"Pivot controller serial port could not be opened after 10 attempts.\n");
     }
     i++;
 
     if (pivotinfo.open==1) {
 #ifdef MOTORS_VERBOSE
-      bprintf(info,"pivotComm: Opened the serial port on attempt number %i",i);
+      bprintf(info,"Opened the serial port on attempt number %i",i);
 #endif
     }
     else sleep(1);
@@ -1768,9 +1776,9 @@ void* pivotComm(void* arg)
   while (pivotinfo.init==0 && i <=9) {
     configure_amc(&pivotinfo);
     if (pivotinfo.init==1) {
-      bprintf(info,"pivotComm: Initialized the controller on attempt number %i",i); 
+      bprintf(info,"Initialized the controller on attempt number %i",i); 
     } else if (i==9) {
-      bprintf(info,"pivotComm: Could not initialize the controller after %i attempts.",i); 
+      bprintf(info,"Could not initialize the controller after %i attempts.",i); 
     } else {
       sleep(1);
     }
@@ -1803,9 +1811,9 @@ void* pivotComm(void* arg)
       usleep(10000);      
     } else if (pivotinfo.reset==1){
       if(resetcount==0) {
-	bprintf(warning,"pivotComm: Resetting connection to pivot controller.");
+	bprintf(warning,"Resetting connection to pivot controller.");
       } else if ((resetcount % 50)==0) {
-	bprintf(warning,"pivotComm: reset->Unable to connect to pivot after %i attempts.",resetcount);
+	bprintf(warning,"reset->Unable to connect to pivot after %i attempts.",resetcount);
       }
 
       resetcount++;
@@ -1819,21 +1827,21 @@ void* pivotComm(void* arg)
     } else if (pivotinfo.init==1) {
       if(CommandData.disable_az==0 && pivotinfo.disabled == 1) {
 #ifdef MOTORS_VERBOSE
-	bprintf(info,"pivotComm: Attempting to enable the pivot motor contoller.");
+	bprintf(info,"Attempting to enable the pivot motor contoller.");
 #endif
 	n=enableAMC(&pivotinfo);
 	if(n==0) {
-	  bprintf(info,"pivotComm: Pivot motor is now enabled");
+	  bprintf(info,"Pivot motor is now enabled");
 	  pivotinfo.disabled=0;
 	}
       }
       if(CommandData.disable_az==1 && (pivotinfo.disabled==0 || pivotinfo.disabled==2)) {
 #ifdef MOTORS_VERBOSE
-	bprintf(info,"pivotComm: Attempting to disable the pivot motor controller.");
+	bprintf(info,"Attempting to disable the pivot motor controller.");
 #endif
 	n=disableAMC(&pivotinfo);
 	if(n==0){    
-	  bprintf(info,"pivotComm: Pivot motor controller is now disabled.");
+	  bprintf(info,"Pivot motor controller is now disabled.");
 	  pivotinfo.disabled=1;
 	}
       } 
@@ -1841,25 +1849,25 @@ void* pivotComm(void* arg)
       if(firsttime){
 	firsttime=0;
 	tmp = queryAMCInd(0x32,8,1,&pivotinfo);
-	bprintf(info,"pivotComm: Ki = %i",tmp);
+	bprintf(info,"Ki = %i",tmp);
 	tmp = queryAMCInd(0xd8,0x24,1,&pivotinfo);
-	bprintf(info,"pivotComm: Ks = %i",tmp);
+	bprintf(info,"Ks = %i",tmp);
 	tmp = queryAMCInd(0xd8,0x0c,1,&pivotinfo);
-	bprintf(info,"pivotComm: d8.0ch = %i",tmp);
+	bprintf(info,"d8.0ch = %i",tmp);
 	tmp = queryAMCInd(216,12,1,&pivotinfo);
-	bprintf(info,"pivotComm: v2 d8.0ch = %i",tmp);
+	bprintf(info,"v2 d8.0ch = %i",tmp);
 	tmp = queryAMCInd(0xd8,0x12,1,&pivotinfo);
-	bprintf(info,"pivotComm: d8.12h = %i",tmp);
+	bprintf(info,"d8.12h = %i",tmp);
 	tmp = queryAMCInd(216,18,1,&pivotinfo);
-	bprintf(info,"pivotComm: v2 d8.12h = %i",tmp);
+	bprintf(info,"v2 d8.12h = %i",tmp);
 	tmp = queryAMCInd(0xd8,0x13,1,&pivotinfo);
-	bprintf(info,"pivotComm: d8.13h = %i",tmp);
+	bprintf(info,"d8.13h = %i",tmp);
 	tmp = queryAMCInd(216,19,1,&pivotinfo);
-	bprintf(info,"pivotComm: v2 d8.13h = %i",tmp);
+	bprintf(info,"v2 d8.13h = %i",tmp);
       }
 
       pos_raw=getAMCResolver(&pivotinfo);
-      //      bprintf(info,"pivotComm: Resolver Position is: %i",pos_raw);
+      //      bprintf(info,"Resolver Position is: %i",pos_raw);
       PivotMotorData[pivot_motor_index].res_piv_raw=((double) pos_raw)/PIV_RES_CTS*360.0; 
 
       j=j%5;
@@ -1868,7 +1876,7 @@ void* pivotComm(void* arg)
 	current_raw=queryAMCInd(16,3,1,&pivotinfo);
         PivotMotorData[pivot_motor_index].current=((double)current_raw)/8192.0*20.0; // *2^13 / peak drive current
 	                                                                             // Units are Amps
-	//        bprintf(info,"pivotComm: current_raw= %i, current= %f",current_raw,PivotMotorData[pivot_motor_index].current);
+	//        bprintf(info,"current_raw= %i, current= %f",current_raw,PivotMotorData[pivot_motor_index].current);
 	break;
       case 1:
 	db_stat_raw=queryAMCInd(2,0,1,&pivotinfo);

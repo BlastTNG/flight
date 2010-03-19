@@ -148,6 +148,41 @@ time_t mcp_systime(time_t *t) {
   return the_time;
 }
 
+/* tid to name lookup list */
+/* TODO setting/reading tid names not quite thread safe. is this a problem? */
+#define TID_NAME_LEN  6	      //always change with TID_NAME_FMT
+#define TID_NAME_FMT  "%6s"   //always change with TID_NAME_LEN
+struct tid_name {
+  int tid;
+  char name[TID_NAME_LEN+1];
+  struct tid_name* next;
+};
+
+struct tid_name* threadNames = NULL;
+
+void nameThread(const char* name)
+{
+  struct tid_name* new_node = (struct tid_name*)malloc(sizeof(struct tid_name));
+  new_node->tid = syscall(SYS_gettid);
+  strncpy(new_node->name, name, TID_NAME_LEN);
+  new_node->name[TID_NAME_LEN] = '\0';
+  new_node->next = threadNames;
+  threadNames = new_node;
+}
+
+char failed_lookup_buffer[TID_NAME_LEN+1];
+char* threadNameLookup(int tid)
+{
+  struct tid_name* p;
+  for(p=threadNames; p->next != NULL; p = p->next)
+    if (p->tid == tid) return p->name;
+  //not found, just print tid
+  snprintf(failed_lookup_buffer, TID_NAME_LEN, "%u", (unsigned)tid);
+  failed_lookup_buffer[TID_NAME_LEN] = '\0';
+  return failed_lookup_buffer;
+}
+  
+
 void mputs(buos_t flag, const char* message) {
   char buffer[MPRINT_BUFFER_SIZE];
   struct timeval t;
@@ -165,32 +200,32 @@ void mputs(buos_t flag, const char* message) {
 
   switch(flag) {
     case err:
-      strcpy(marker, "** ");
+      strcpy(marker, "* ");
       break;
     case fatal:
-      strcpy(marker, "!! ");
+      strcpy(marker, "! ");
       break;
     case info:
-      strcpy(marker, "-- ");
+      strcpy(marker, "- ");
       break;
     case sched:
-      strcpy(marker, "## ");
+      strcpy(marker, "# ");
       break;
     case startup:
-      strcpy(marker, ">> ");
+      strcpy(marker, "> ");
       break;
     case tfatal:
-      strcpy(marker, "$$ ");
+      strcpy(marker, "$ ");
       break;
     case warning:
-      strcpy(marker, "== ");
+      strcpy(marker, "= ");
       break;
     case mem:
       return;  /* don't record mem messages at all */
-      strcpy(marker, "mm ");
+      strcpy(marker, "m ");
       break;
     default:
-      strcpy(marker, "?? ");
+      strcpy(marker, "? ");
       break;
   }
   strcpy(buffer, marker);
@@ -207,11 +242,12 @@ void mputs(buos_t flag, const char* message) {
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
-  sprintf(bufstart, ".%03li ", t.tv_usec / 1000);
+  sprintf(bufstart, ".%03li ", t.tv_usec/1000);
+  strcat(buffer, marker);
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
-  sprintf(bufstart, "[%5u] ", (unsigned)syscall(SYS_gettid));
+  sprintf(bufstart, TID_NAME_FMT ": ", threadNameLookup(syscall(SYS_gettid)));
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
@@ -304,7 +340,8 @@ static void SensorReader(void)
 
   FILE *stream;
 
-  bputs(startup, "Sensor Reader: Startup\n");
+  nameThread("Sensor");
+  bputs(startup, "Startup\n");
 
   while (1) {
     if ((stream = fopen("/sys/bus/i2c/devices/0-002d/temp1_input", "r"))
@@ -314,7 +351,7 @@ static void SensorReader(void)
       fclose(stream);
     } else {
       if (!sensor_error)
-        berror(warning, "Sensor Reader: Cannot read temp1 from I2C bus");
+        berror(warning, "Cannot read temp1 from I2C bus");
       sensor_error = 5;
     }
 
@@ -325,7 +362,7 @@ static void SensorReader(void)
       fclose(stream);
     } else {
       if (!sensor_error)
-        berror(warning, "Sensor Reader: Cannot read temp2 from I2C bus");
+        berror(warning, "Cannot read temp2 from I2C bus");
       sensor_error = 5;
     }
 
@@ -336,12 +373,12 @@ static void SensorReader(void)
       fclose(stream);
     } else {
       if (!sensor_error)
-        berror(warning, "Sensor Reader: Cannot read temp3 from I2C bus");
+        berror(warning, "Cannot read temp3 from I2C bus");
       sensor_error = 5;
     }
 
     if (statvfs("/data", &vfsbuf))
-      berror(warning, "Sensor Reader: Cannot stat filesystem");
+      berror(warning, "Cannot stat filesystem");
     else {
       /* vfsbuf.f_bavail is the # of blocks, the blocksize is vfsbuf.f_bsize
        * which, in this case is 4096 bytes, so CommandData.df ends up in units
@@ -362,13 +399,15 @@ static void Chatter(void)
   char ch;
   ssize_t ch_got;
 
-  bprintf(startup, "Chatter: Thread startup\n");
+  nameThread("Chat");
+
+  bprintf(startup, "Thread startup\n");
 
   fd = open("/data/etc/mcp.log", O_RDONLY|O_NONBLOCK);
 
   if (fd == -1)
   {
-    bprintf(tfatal, "Chatter: Failed to open /data/etc/mcp.log for reading (%d)\n", errno);
+    bprintf(tfatal, "Failed to open /data/etc/mcp.log for reading (%d)\n", errno);
   }
 
   if (lseek(fd, -500, SEEK_END) == -1)
@@ -377,10 +416,10 @@ static void Chatter(void)
     {
       if (lseek(fd, 0, 0) == -1)
       {
-        bprintf(tfatal, "Chatter: Failed to rewind /data/etc/mcp.log (%d)\n", errno);
+        bprintf(tfatal, "Failed to rewind /data/etc/mcp.log (%d)\n", errno);
       }
     } else {
-      bprintf(tfatal, "Chatter: Failed to seek /data/etc/mcp.log (%d)\n", errno);
+      bprintf(tfatal, "Failed to seek /data/etc/mcp.log (%d)\n", errno);
     }
   }
 
@@ -397,7 +436,7 @@ static void Chatter(void)
       ch_got = read(fd, chatter_buffer.msg[chatter_buffer.writing], 2 * FAST_PER_SLOW * sizeof(char));
       if (ch_got == -1)
       {
-        bprintf(tfatal, "Chatter: Error reading from /data/etc/mcp.log (%d)\n", errno);
+        bprintf(tfatal, "Error reading from /data/etc/mcp.log (%d)\n", errno);
       }
       if (ch_got < (2 * FAST_PER_SLOW * sizeof(char)))
       {
@@ -525,13 +564,14 @@ static int fill_Rx_frame(unsigned int in_data, unsigned short *RxFrame)
 #ifndef BOLOTEST
 static void WatchDog (void)
 {
-  bputs(startup, "Watchdog: Startup\n");
+  nameThread("WDog");
+  bputs(startup, "Startup\n");
 
   /* Allow other threads to kill this one at any time */
   pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
   if (ioperm(0x378, 0x0F, 1) != 0)
-    berror(tfatal, "Watchdog: Error setting watchdog permissions");
+    berror(tfatal, "Error setting watchdog permissions");
   ioperm(0x80, 1, 1);
 
   for (;;) {
@@ -552,7 +592,7 @@ static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
   if (bi0_fp == -2) {
     bi0_fp = open("/dev/bbc_bi0", O_RDWR);
     if (bi0_fp == -1)
-      berror(tfatal, "BiPhase Writer: Error opening biphase device");
+      berror(tfatal, "Error opening biphase device");
 
     for (i = 0; i < BI0_FRAME_SIZE; i++)
       nothing[i] = 0xEEEE;
@@ -581,18 +621,18 @@ static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
     } else {
       i = write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short));
       if (i < 0)
-        berror(err, "BiPhase Writer: bi-phase write for RxFrame failed");
+        berror(err, "bi-phase write for RxFrame failed");
       else if (i != BiPhaseFrameWords * sizeof(unsigned short))
-        bprintf(err, "BiPhase Writer: Short write for RxFrame: %i of %u", i,
+        bprintf(err, "Short write for RxFrame: %i of %u", i,
             BiPhaseFrameWords * sizeof(unsigned short));
 
       i = write(bi0_fp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
           sizeof(unsigned short));
       if (i < 0)
-        berror(err, "BiPhase Writer: bi-phase write for padding failed");
+        berror(err, "bi-phase write for padding failed");
       else if (i != (BI0_FRAME_SIZE - BiPhaseFrameWords)
           * sizeof(unsigned short))
-        bprintf(err, "BiPhase Writer: Short write for padding: %i of %u", i,
+        bprintf(err, "Short write for padding: %i of %u", i,
             (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short));
     }
 
@@ -600,7 +640,7 @@ static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
 #if 0
     if (do_skip == 0 && CommandData.bi0FifoSize > BI0_FIFO_MARGIN) {
       do_skip = (CommandData.bi0FifoSize - BI0_FIFO_MINIMUM) / BI0_FRAME_SIZE;
-      bprintf(warning, "BiPhase Writer: Excess data in FIFO, discarding "
+      bprintf(warning, "Excess data in FIFO, discarding "
           "%i frames out of hand.", do_skip);
     }
 #endif
@@ -656,12 +696,13 @@ static void BiPhaseWriter(void)
 {
   int i_out, i_in;
 
-  bputs(startup, "Biphase Writer: Startup\n");
+  nameThread("Bi0");
+  bputs(startup, "Startup\n");
 
   while (!biphase_is_on)
     usleep(10000);
 
-  bputs(info, "BiPhase Writer: Veto has ended.  Here we go.\n");
+  bputs(info, "Veto has ended.  Here we go.\n");
 
   while (1) {
     i_in = bi0_buffer.i_in;
@@ -672,7 +713,7 @@ static void BiPhaseWriter(void)
        * BLASTBus anymore */
       if (InCharge) {
         if (++Death == 25) {
-          bprintf(err, "BiPhase Writer: Death is reaping the watchdog tickle.");
+          bprintf(err, "Death is reaping the watchdog tickle.");
           pthread_cancel(watchdog_id);
         }
       }
@@ -796,6 +837,8 @@ int main(int argc, char *argv[])
   biphase_timer = mcp_systime(NULL) + BI0_VETO_LENGTH;
 
   /* register the output function */
+  nameThread("Dummy"); //insert dummy sentinel node first
+  nameThread("Main");
   buos_use_func(mputs);
 
 #if (TEMPORAL_OFFSET > 0)

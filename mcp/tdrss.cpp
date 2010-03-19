@@ -52,6 +52,7 @@
 #include "alice.h"
 
 extern "C" void rdft(int, int, double *); /* in fftsg_h.c */
+extern "C" void nameThread(const char*);  /* in mcp.c */
 
 extern "C" {
 #include "crc.h"
@@ -89,10 +90,10 @@ static int OpenSerial(void)
   SMALL_TRACE("");
 
   if ((fd = open(INPUT_TTY, O_RDWR)) < 0)
-    berror(tfatal, "TDRSS: Unable to open serial port");
+    berror(tfatal, "Unable to open serial port");
 
   if (tcgetattr(fd, &term))
-    berror(tfatal, "TDRSS: Unable to get serial device attributes");
+    berror(tfatal, "Unable to get serial device attributes");
 
   term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
   term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
@@ -105,13 +106,13 @@ static int OpenSerial(void)
   term.c_cflag |= CS8;
 
   if (cfsetospeed(&term, B19200))
-    berror(tfatal, "TDRSS: Error setting serial output speed");
+    berror(tfatal, "Error setting serial output speed");
 
   if (cfsetispeed(&term, B19200))
-    berror(tfatal, "TDRSS: Error setting serial input speed");
+    berror(tfatal, "Error setting serial input speed");
 
   if (tcsetattr(fd, TCSANOW, &term))
-    berror(tfatal, "TDRSS: Unable to set serial attributes");
+    berror(tfatal, "Unable to set serial attributes");
 
   SMALL_RTN("%i", fd);
 
@@ -252,7 +253,7 @@ void Buffer::CheckBytePosRange(int num)
 
   if (bytepos >= safeallocsize) {
     bprintf(err,
-        "TDRSS: serious error (%i)!  Class BUFFER was not properly allocated.  "
+        "serious error (%i)!  Class BUFFER was not properly allocated.  "
         "Size was set to %d; tried to write to %d.  Make sure the size is "
         "being set correctly with the Buffer::SetSize function.  Resetting "
         "bytepos to %d (compression will not work).", num, size, bytepos - 1,
@@ -430,11 +431,11 @@ void Buffer::Stop(void)
           CurrSize() - BUF_POS_DATA_START);
 
     // Send packets
-//    bprintf(info, "TDRSS: Emitting %i bytes of high-rate data\n", CurrSize());
+//    bprintf(info, "Emitting %i bytes of high-rate data\n", CurrSize());
     if (write(tty_fd, buf, CurrSize()) != CurrSize())
-      bprintf(err, "TDRSS: Error sending through serial port.");
+      bprintf(err, "Error sending through serial port.");
   } else
-    bprintf(err, "TDRSS: CurSize is bogus in Buffer::Stop\n");
+    bprintf(err, "CurSize is bogus in Buffer::Stop\n");
 
   SMALL_RTN("");
 }
@@ -604,7 +605,7 @@ bool Alice::GetCurrentAML(void)
     if (DataInfo->LoadFromAML(tmp)) {
       AMLsrc = newxml;
       sendbuf->SetSize(DataInfo->maxbitrate / 10 * DataInfo->looplength);
-      bprintf(info, "TDRSS: Alice now using %s.", tmp);
+      bprintf(info, "Alice now using %s.", tmp);
       ret = true;
     }
   }
@@ -1119,7 +1120,7 @@ void Alice::CompressionLoop(void)
           case COMP_SINGLE:
             if ((numread = DataSource->ReadField(rawdata, currInfo->src,
                     framepos - readrightpad, 1)) != currInfo->framefreq) {
-              bprintf(err, "TDRSS: Error accessing correct number of data "
+              bprintf(err, "Error accessing correct number of data "
                   "from frames (%s, %d, %d).", currInfo->src, numread,
                   currInfo->framefreq);
               rawdata[0] = 0;
@@ -1133,7 +1134,7 @@ void Alice::CompressionLoop(void)
             if ((numread = DataSource->ReadField(rawdata, currInfo->src,
                     framepos - readrightpad, numframes))
                 != rawsize) {
-              bprintf(err, "TDRSS: Error accessing correct number of data "
+              bprintf(err, "Error accessing correct number of data "
                   "from frames (%d, %d).", numread, currInfo->framefreq);
               rawdata[0] = 0;
               SendSingle(rawdata, currInfo);  // Send down a zero
@@ -1173,7 +1174,7 @@ void Alice::CompressionLoop(void)
               numframes + rightpad + leftpad))
           != rawsize + currInfo->framefreq * (rightpad + leftpad)) {
 
-        bprintf(err, "TDRSS: Error accessing correct number of data from "
+        bprintf(err, "Error accessing correct number of data from "
             "frames (%d, %d).", numread, rawsize + currInfo->framefreq *
             (rightpad + leftpad));
         sendbuf->NoDataMarker();
@@ -1209,7 +1210,7 @@ void Alice::CompressionLoop(void)
         // Check the overall size
         if (sendbuf->CurrSize() > sendbuf->MaxSize()) {
           sendbuf->EraseLastSection();
-          bputs(warning, "TDRSS: Frame Truncated.");
+          bputs(warning, "Frame Truncated.");
 #ifdef USE_SMALL_LOG
           if (smalllog != NULL) {
             fprintf(smalllog, "WARNING: frame truncated!\n");
@@ -1430,12 +1431,12 @@ void FrameBuffer::Update(void)
       multiplexsynced = true;
 
       if (multiplexindex < 0 || multiplexindex >= FAST_PER_SLOW) {
-        bprintf(err, "TDRSS: Multiplex index out of range (= %d)",
+        bprintf(err, "Multiplex index out of range (= %d)",
             multiplexindex);
         continue;
       }
       if (i < 0 || i >= 3) {
-        bprintf(err, "TDRSS: Biphase buffer index out of range (= %d)", i);
+        bprintf(err, "Biphase buffer index out of range (= %d)", i);
         continue;
       }
 
@@ -1640,15 +1641,17 @@ FrameBuffer::~FrameBuffer(void)
 extern "C" void TDRSSWriter(void) {
   Alice *drinkme;
 
+  nameThread("TDRSS");
+
 #ifdef USE_SMALL_LOG
   if ((smalllog = fopen(SMALL_LOG_FILE, "w")) == NULL)
-    bprintf(warning, "TDRSS: Could not open tdrss log file (%s).",
+    bprintf(warning, "Could not open tdrss log file (%s).",
         SMALL_LOG_FILE);
 #endif
 
   SMALL_TRACE("");
 
-  bputs(startup, "TDRSS: Startup.\n");
+  bputs(startup, "Startup.\n");
 
   tty_fd = OpenSerial();
 

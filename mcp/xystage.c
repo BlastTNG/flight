@@ -48,7 +48,7 @@
 /* EZBus setup parameters */
 #define STAGE_BUS_TTY "/dev/ttyXYSTAGE"
 #define STAGE_BUS_CHATTER EZ_CHAT_ACT
-#define BUS_NAME "StageBus"
+#define BUS_NAME " XYBus"
 #define STAGEX_NAME "XY Stage X"
 #define STAGEY_NAME "XY Stage Y"
 #define STAGEX_ID EZ_WHO_S6
@@ -63,6 +63,7 @@
 #define POLL_TIMEOUT 30000 /* 5 minutes */
 
 extern short int InCharge; /* tx.c */
+void nameThread(const char*);	/* mcp.c */
 
 static struct stage_struct {
   int xpos, ypos;
@@ -159,7 +160,7 @@ void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
   if (dest < 0)
     dest = 0;
 
-  bprintf(info, "StageBus: Move %c to %i at speed %i and wait", 
+  bprintf(info, "Move %c to %i at speed %i and wait", 
       (is_y) ? 'Y' : 'X', dest, vel);
   EZBus_GotoVel(bus, who, dest, vel);
 
@@ -212,20 +213,20 @@ void ControlXYStage(struct ezbus* bus)
   if (CommandData.xystage.is_new) {
     /* PANIC! */
     if (CommandData.xystage.mode == XYSTAGE_PANIC) {
-      bputs(info, "StageBus: Panic");
+      bputs(info, "Panic");
       EZBus_Stop(bus, STAGEX_ID);
       EZBus_Stop(bus, STAGEY_ID);
       CommandData.xystage.is_new = 0;
     /* GOTO */
     } else if (CommandData.xystage.mode == XYSTAGE_GOTO) {
       if (CommandData.xystage.xvel > 0) {
-	bprintf(info, "StageBus: Move X to %i at speed %i",
+	bprintf(info, "Move X to %i at speed %i",
 	    CommandData.xystage.x1, CommandData.xystage.xvel);
 	EZBus_GotoVel(bus, STAGEX_ID, CommandData.xystage.x1, 
 	    CommandData.xystage.xvel);
       }
       if (CommandData.xystage.yvel > 0) {
-	bprintf(info, "StageBus: Move Y to %i at speed %i",
+	bprintf(info, "Move Y to %i at speed %i",
 	    CommandData.xystage.y1, CommandData.xystage.yvel);
 	EZBus_GotoVel(bus, STAGEY_ID, CommandData.xystage.y1,
 	    CommandData.xystage.yvel);
@@ -233,13 +234,13 @@ void ControlXYStage(struct ezbus* bus)
     /* JUMP */
     } else if (CommandData.xystage.mode == XYSTAGE_JUMP) {
       if (CommandData.xystage.xvel > 0 && CommandData.xystage.x1 != 0) {
-	bprintf(info, "StageBus: Jump X by %i at speed %i",
+	bprintf(info, "Jump X by %i at speed %i",
 	    CommandData.xystage.x1, CommandData.xystage.xvel);
 	EZBus_RelMoveVel(bus, STAGEX_ID, CommandData.xystage.x1,
 	    CommandData.xystage.xvel);
       }
       if (CommandData.xystage.yvel > 0 && CommandData.xystage.y1 != 0) {
-	bprintf(info, "StageBus: Jump Y by %i at speed %i",
+	bprintf(info, "Jump Y by %i at speed %i",
 	    CommandData.xystage.y1, CommandData.xystage.yvel);
 	EZBus_RelMoveVel(bus, STAGEY_ID, CommandData.xystage.y1,
 	    CommandData.xystage.yvel);
@@ -293,12 +294,13 @@ void StageBus(void)
   int all_ok = 0;
   struct ezbus bus;
 
-  bputs(startup, BUS_NAME ": StageBus startup.");
+  nameThread("XYBus");
+  bputs(startup, "startup.");
 
   //TODO need to make steppers serial port safe on nicc
   if (EZBus_Init(&bus, STAGE_BUS_TTY, BUS_NAME, STAGE_BUS_CHATTER) != EZ_ERR_OK)
     //TODO should EZBus_Init fail be tfatal??
-    berror(tfatal, BUS_NAME ": failed to connect");
+    berror(tfatal, "failed to connect");
 
   EZBus_Add(&bus, STAGEX_ID, STAGEX_NAME);
   EZBus_Add(&bus, STAGEY_ID, STAGEY_NAME);

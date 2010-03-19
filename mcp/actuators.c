@@ -93,6 +93,7 @@ static int __inhibit_chatter = 1;
 #define LOCK_MAX_POT 3750
 #define LOCK_POT_RANGE 100
 
+void nameThread(const char*);	/* mcp.c */
 /* in commands.c */
 double LockPosition(double elevation);
 
@@ -152,10 +153,10 @@ static int act_setserial(char *input_tty)
   struct termios term;
 
   if ((fd = open(input_tty, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0)
-    berror(tfatal, "ActBus: Unable to open serial port (%s)", input_tty);
+    berror(tfatal, "Unable to open serial port (%s)", input_tty);
 
   if (tcgetattr(fd, &term))
-    berror(tfatal, "ActBus: Unable to get serial device attributes");
+    berror(tfatal, "Unable to get serial device attributes");
 
   /* Clear Character size; set no stop bits; set one parity bit */
   term.c_cflag &= ~(CSTOPB | CSIZE | PARENB);
@@ -173,13 +174,13 @@ static int act_setserial(char *input_tty)
   term.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
 
   if(cfsetospeed(&term, B9600))          /*  <======= SET THE SPEED HERE */
-    berror(tfatal, "ActBus: Error setting serial output speed");
+    berror(tfatal, "Error setting serial output speed");
 
   if(cfsetispeed(&term, B9600))          /*  <======= SET THE SPEED HERE */
-    berror(tfatal, "ActBus: Error setting serial input speed");
+    berror(tfatal, "Error setting serial input speed");
 
   if( tcsetattr(fd, TCSANOW, &term) )
-    berror(tfatal, "ActBus: Unable to set serial attributes");
+    berror(tfatal, "Unable to set serial attributes");
 
   return fd;
 }
@@ -190,7 +191,7 @@ static int TakeBus(int who)
     return 0;
 
   if (bus_seized != who) {
-    bprintf(info, "ActBus: Bus seized by %s.\n", name[who]);
+    bprintf(info, "Bus seized by %s.\n", name[who]);
     bus_seized = who;
   }
 
@@ -200,7 +201,7 @@ static int TakeBus(int who)
 static inline void ReleaseBus(int who)
 {
   if (bus_seized == who) {
-    bprintf(info, "ActBus: Bus released by %s.\n", name[who]);
+    bprintf(info, "Bus released by %s.\n", name[who]);
     bus_seized = -1;
   }
 }
@@ -236,10 +237,10 @@ static void BusSend(int who, const char* what, int inhibit_chatter)
   buffer[len - 1] = chk;
 #ifdef ACTBUS_CHATTER
   if (!inhibit_chatter)
-    bprintf(info, "ActBus: Request=%s (%s)", HexDump((unsigned char *)buffer, len), what);
+    bprintf(info, "Request=%s (%s)", HexDump((unsigned char *)buffer, len), what);
 #endif
   if (write(bus_fd, buffer, len) < 0)
-    berror(err, "ActBus: Error writing on bus");
+    berror(err, "Error writing on bus");
 
   free(buffer);
 }
@@ -290,7 +291,7 @@ static int BusRecv(char* buffer, int nic, int inhibit_chatter)
         case 0: /* RS-485 turnaround */
           state++;
           if (byte != 0xFF) { /* RS-485 turnaround */
-            bputs(warning, "ActBus: RS-485 turnaround not found in response");
+            bputs(warning, "RS-485 turnaround not found in response");
             had_errors++;
           } else
             break;
@@ -298,19 +299,19 @@ static int BusRecv(char* buffer, int nic, int inhibit_chatter)
           state++;
           if (byte != 0x02) { /* STX */
             had_errors++;
-            bputs(warning, "ActBus: Start byte not found in response");
+            bputs(warning, "Start byte not found in response");
           } else
             break;
         case 2: /* address byte */
           state++;
           if (byte != 0x30) { /* Recipient address (should be '0') */
             had_errors++;
-            bputs(warning, "ActBus: Found misaddressed response");
+            bputs(warning, "Found misaddressed response");
           }
           if (had_errors > 1) {
             bputs(err,
-                "ActBus: Too many errors parsing response string, aborting.");
-            bprintf(err, "ActBus: Response was=%s (%x)\n", HexDump((unsigned char *)buffer, len),
+                "Too many errors parsing response string, aborting.");
+            bprintf(err, "Response was=%s (%x)\n", HexDump((unsigned char *)buffer, len),
                 status);
             state = ACT_RECV_ABORT;
           }
@@ -321,7 +322,7 @@ static int BusRecv(char* buffer, int nic, int inhibit_chatter)
             status = byte & (EZ_ERROR | EZ_READY);
           else {
             bputs(err,
-                "ActBus: Status byte malfomed in response string, aborting.");
+                "Status byte malfomed in response string, aborting.");
             state = ACT_RECV_ABORT;
           }
           break;
@@ -336,11 +337,11 @@ static int BusRecv(char* buffer, int nic, int inhibit_chatter)
           /* Remember: the checksum here should be 0xff instead of 0 because
            * we've added the turnaround byte into the checksum */
           if (checksum != 0xff)
-            bprintf(err, "ActBus: Checksum error in response (%02x).",
+            bprintf(err, "Checksum error in response (%02x).",
                 checksum);
           break;
         case 6: /* End of string check */
-          bputs(err, "ActBus: Malformed footer in response string, aborting.");
+          bputs(err, "Malformed footer in response string, aborting.");
           state = ACT_RECV_ABORT;
         case ACT_RECV_ABORT: /* General abort: flush input */
           break;
@@ -353,7 +354,7 @@ static int BusRecv(char* buffer, int nic, int inhibit_chatter)
 
 #ifdef ACTBUS_CHATTER
     if (!inhibit_chatter)
-      bprintf(info, "ActBus: Response=%s (%x)\n", buffer, status);
+      bprintf(info, "Response=%s (%x)\n", buffer, status);
 #endif
   }
 
@@ -381,43 +382,43 @@ static int BusComm(int who, const char* what, int naive, int inhibit_chatter)
           | ACTBUS_OOD))
     {
       bprintf(warning,
-          "ActBus: Timeout waiting for response from %#x.", who);
+          "Timeout waiting for response from %#x.", who);
       CommandData.actbus.force_repoll = 1;
 #ifndef ACTBUS_CHATTER
     } else if (naive) {
-      bprintf(info, "ActBus: Controller response: %s\n", buffer);
+      bprintf(info, "Controller response: %s\n", buffer);
 #endif
     } else {
       switch (result & EZ_ERROR) {
         case EZ_ERR_INIT:
-          bprintf(warning, "ActBus: Controller %#x: initialisation error.\n",
+          bprintf(warning, "Controller %#x: initialisation error.\n",
               who);
           break;
         case EZ_ERR_BADCMD:
-          bprintf(warning, "ActBus: Controller %#x: bad command.\n", who);
+          bprintf(warning, "Controller %#x: bad command.\n", who);
           break;
         case EZ_ERR_BADOP:
-          bprintf(warning, "ActBus: Controller %#x: bad operand.\n", who);
+          bprintf(warning, "Controller %#x: bad operand.\n", who);
           break;
         case EZ_ERR_COMM:
-          bprintf(warning, "ActBus: Controller %#x: communications error.\n",
+          bprintf(warning, "Controller %#x: communications error.\n",
               who);
           break;
         case EZ_ERR_NOINIT:
-          bprintf(warning, "ActBus: Controller %#x: not initialied.\n", who);
+          bprintf(warning, "Controller %#x: not initialied.\n", who);
           break;
         case EZ_ERR_OVER:
-          bprintf(warning, "ActBus: Controller %#x: overload.\n", who);
+          bprintf(warning, "Controller %#x: overload.\n", who);
           break;
         case EZ_ERR_NOMOVE:
-          bprintf(warning, "ActBus: Controller %#x: move not allowed.\n", who);
+          bprintf(warning, "Controller %#x: move not allowed.\n", who);
           break;
         case EZ_ERR_BUSY:
-          bprintf(warning, "ActBus: Controller %#x: command overflow.\n", who);
+          bprintf(warning, "Controller %#x: command overflow.\n", who);
 	  if (!naive) {
 #ifdef ACTBUS_CHATTER
 	    if (!inhibit_chatter)
-	      bprintf(info, "ActBus: retrying (%d) command: \"%s\"\n",
+	      bprintf(info, "retrying (%d) command: \"%s\"\n",
 		  ++retry_count, what);
 #endif
 	    usleep(10000);
@@ -537,7 +538,7 @@ static int CheckMove(int delta0, int delta1, int delta2)
       lvdt_low, lvdt_high, maxE - minE, lvdt_delta);
 
   if (X < lvdt_low || X > lvdt_high || maxE - minE > lvdt_delta) {
-    bputs(warning, "ActBus: Move Out of Range.");
+    bputs(warning, "Move Out of Range.");
     bad_move = ACTBUS_FL_BAD_MOVE;
   } else
     bad_move = 0;
@@ -616,9 +617,9 @@ static void ServoActuators(int* goal, int update_dr)
         if (abs(delta[i]) == MAX_STEP && abs(act_data[i].enc - start[i]) <
             STEP_MIN)
         {
-          bprintf(err, "ActBus: Encoder failure detected, actuator %i\n", i);
+          bprintf(err, "Encoder failure detected, actuator %i\n", i);
           if (CommandData.actbus.tc_mode == TC_MODE_ENABLED) {
-            bputs(err, "ActBus: Fully vetoing thermal correction");
+            bputs(err, "Fully vetoing thermal correction");
             CommandData.actbus.tc_mode = TC_MODE_VETOED;
           }
           act_there[0] = act_there[1] = act_there[2] = THERE_WAIT;
@@ -685,9 +686,9 @@ static int PollBus(int rescan)
   int all_ok = 1;
 
   if (rescan)
-    bputs(info, "ActBus: Repolling Actuator Bus.");
+    bputs(info, "Repolling Actuator Bus.");
   else
-    bputs(info, "ActBus: Polling Actuator Bus.");
+    bputs(info, "Polling Actuator Bus.");
 
   for (i = 0; i < NACT; ++i) {
     if (rescan && stepper[i].status != -1)
@@ -695,26 +696,26 @@ static int PollBus(int rescan)
     BusSend(id[i], "&", __inhibit_chatter);
     if ((result = BusRecv(bus_buffer, 0, __inhibit_chatter)) & (ACTBUS_TIMEOUT
           | ACTBUS_OOD)) {
-      bprintf(warning, "ActBus: No response from %s, will repoll later.",
+      bprintf(warning, "No response from %s, will repoll later.",
           name[i]);
       stepper[i].status = -1;
       all_ok = 0;
     } else if (!strncmp(bus_buffer, "EZStepper AllMotion", 19)) {
-      bprintf(info, "ActBus: Found EZStepper device %s at address %i.\n",
+      bprintf(info, "Found EZStepper device %s at address %i.\n",
           name[i], id[i] - 0x30);
       stepper[i].status = 0;
     /* EZHR17EN and EZHR23 types leftover from BLAST06 */
     } else if (!strncmp(bus_buffer, "EZHR17EN AllMotion", 18)) {
-      bprintf(info, "ActBus: Found type 17EN device %s at address %i.\n",
+      bprintf(info, "Found type 17EN device %s at address %i.\n",
           name[i], id[i] - 0x30);
       stepper[i].status = 0;
     } else if (!strncmp(bus_buffer, "EZHR23 All Motion", 17)) {
-      bprintf(info, "ActBus: Found type 23 device %s at address %i.\n", name[i],
+      bprintf(info, "Found type 23 device %s at address %i.\n", name[i],
           id[i] - 0x30);
       stepper[i].status = 0;
     } else {
       bprintf(warning,
-          "ActBus: Unrecognised response from %s, will repoll later.\n",
+          "Unrecognised response from %s, will repoll later.\n",
           name[i]);
       stepper[i].status = -1;
       all_ok = 0;
@@ -877,9 +878,9 @@ static int SetNewFocus(void)
     if (abs(delta) == MAX_STEP)
       for (i = 0; i < 3; ++i)
         if (abs(act_data[i].enc - start[i]) < STEP_MIN) {
-          bprintf(err, "ActBus: Encoder failure detected, actuator %i\n", i);
+          bprintf(err, "Encoder failure detected, actuator %i\n", i);
           if (CommandData.actbus.tc_mode == TC_MODE_ENABLED) {
-            bputs(err, "ActBus: Fully vetoing thermal correction");
+            bputs(err, "Fully vetoing thermal correction");
             CommandData.actbus.tc_mode = TC_MODE_VETOED;
           }
           deferred = 0;
@@ -1078,7 +1079,7 @@ static void DoActuators(void)
 
   switch(CommandData.actbus.focus_mode) {
     case ACTBUS_FM_PANIC:
-      bputs(warning, "ActBus: Actuator Panic");
+      bputs(warning, "Actuator Panic");
       BusComm(ALL_ACT, "T", 0, __inhibit_chatter);
       CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
       break;
@@ -1102,7 +1103,7 @@ static void DoActuators(void)
     case ACTBUS_FM_SLEEP:
         break;
     default:
-        bputs(err, "ActBus: Unknown Focus Mode (%i), sleeping");
+        bputs(err, "Unknown Focus Mode (%i), sleeping");
   }
 
   UpdateFlags();
@@ -1157,7 +1158,7 @@ static void DoLock(void)
         || CommandData.actbus.lock_goal & LS_DRIVE_FORCE) {
       lock_data.state &= ~LS_DRIVE_MASK | LS_DRIVE_UNK;
       CommandData.actbus.lock_goal &= ~LS_DRIVE_FORCE;
-      bprintf(warning, "ActBus: Reset lock motor state.");
+      bprintf(warning, "Reset lock motor state.");
     }
 
     SetLockState(0);
@@ -1216,14 +1217,14 @@ static void DoLock(void)
              */
             action = (lock_data.state & LS_DRIVE_OFF) ? LA_EXIT : LA_STOP;
     else {
-      bprintf(warning, "ActBus: Unhandled lock goal (%x) ignored.",
+      bprintf(warning, "Unhandled lock goal (%x) ignored.",
           CommandData.actbus.lock_goal);
       CommandData.actbus.lock_goal = LS_DRIVE_OFF;
     }
 
     /* Timeout check */
     if (drive_timeout == 1) {
-      bputs(warning, "ActBus: Lock Motor drive timeout.");
+      bputs(warning, "Lock Motor drive timeout.");
       action = LA_STOP;
     }
     if (drive_timeout > 0)
@@ -1239,28 +1240,28 @@ static void DoLock(void)
     switch (action) {
       case LA_STOP:
         drive_timeout = 0;
-        bputs(info, "ActBus: Stopping lock motor.");
+        bputs(info, "Stopping lock motor.");
         strcpy(command, "T"); /* terminate all strings */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_OFF;
         break;
       case LA_EXTEND:
         drive_timeout = DRIVE_TIMEOUT;
-        bputs(info, "ActBus: Extending lock motor.");
+        bputs(info, "Extending lock motor.");
         LockCommand(command, "P0R"); /* move out forever */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_EXT;
         break;
       case LA_RETRACT:
         drive_timeout = DRIVE_TIMEOUT;
-        bputs(info, "ActBus: Retracting lock motor.");
+        bputs(info, "Retracting lock motor.");
         LockCommand(command, "D0R"); /* move in forever */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_RET;
         break;
       case LA_STEP:
         drive_timeout = DRIVE_TIMEOUT;
-        bputs(info, "ActBus: Stepping lock motor.");
+        bputs(info, "Stepping lock motor.");
         LockCommand(command, "P200000R"); /* move away from the limit switch */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_STP;
@@ -1487,7 +1488,8 @@ void ActuatorBus(void)
   int i;
   int my_cindex = 0;
 
-  bputs(startup, "ActBus: ActuatorBus startup.");
+  nameThread("ActBus");
+  bputs(startup, "ActuatorBus startup.");
 
   for (i = 0; i < NACT; ++i)
     stepper[i].sequence = 1;

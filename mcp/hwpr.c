@@ -39,6 +39,8 @@
 
 #define GP_LEN 255
 
+void nameThread(const char*);	/* mcp.c */
+
 static struct hwpr_struct {
   int pos;
   int enc;
@@ -109,7 +111,7 @@ void ControlHWPR(struct ezbus *bus)
 
   if (CommandData.hwpr.is_new) {
     if (CommandData.hwpr.mode == HWPR_PANIC) {
-      bputs(info, "HWPRBus: Panic");
+      bputs(info, "Panic");
       EZBus_Stop(bus, HWPR_ADDR);
     } else if ((CommandData.hwpr.mode == HWPR_GOTO) &&
                ((EZBus_Take(bus, HWPR_ADDR)) != EZ_ERR_OK) ) {
@@ -136,10 +138,11 @@ void HWPRBus(void)
   int all_ok;
   struct ezbus bus;
 
-  bputs(startup, "HWPRBus: HWPRBus startup.");
+  nameThread("HWPR");
+  bputs(startup, "HWPRBus startup.");
 
-  if (EZBus_Init(&bus, HWPR_BUS, "HWPRBus", HWPRBUS_CHATTER) != EZ_ERR_OK)
-    berror(tfatal, "HWPRBus: failed to connect");
+  if (EZBus_Init(&bus, HWPR_BUS, "  HWPR", HWPRBUS_CHATTER) != EZ_ERR_OK)
+    berror(tfatal, "failed to connect");
 
   EZBus_Add(&bus, HWPR_ADDR, "HWPR");
 

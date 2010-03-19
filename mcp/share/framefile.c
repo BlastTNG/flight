@@ -40,6 +40,7 @@ unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
 static int shutdown_now = 0;
 
+void nameThread(const char*);	/* mcp.c */
 void WriteSpecificationFile(FILE*); /* in tx_struct.c */
 
 struct file_info {
@@ -184,8 +185,10 @@ void FrameFileWriter(void)
   void* b_write_to;
   int write_len;
 
+  nameThread("FFWrit");
+
 #ifdef __MCP__
-  bputs(startup, "FrameFile Writer: Startup\n");
+  bputs(startup, "Startup\n");
 #endif
 
   /* alloc output_buffer */
@@ -208,7 +211,7 @@ void FrameFileWriter(void)
       if (++framefile.frames >= FRAMES_PER_FILE) {
         if (framefile.fd >= 0)
           if (write(framefile.fd, writeout_buffer, write_len) < 0)
-            berror(err, "FrameFile Writer: Error while writing frame");
+            berror(err, "Error while writing frame");
 
         OpenNextChunk();
         write_len = 0;
@@ -222,7 +225,7 @@ void FrameFileWriter(void)
     if (shutdown_now) {
       if (framefile.fd > -1)
         if (close(framefile.fd) == -1)
-          berror(err, "FrameFile Writer: Error closing chunk");
+          berror(err, "Error closing chunk");
       framefile.fd = -1;
 
       bfree(fatal, framefile.buffer);
@@ -234,7 +237,7 @@ void FrameFileWriter(void)
 
     if ((write_len > 0) && (framefile.fd >= 0))
       if (write(framefile.fd, writeout_buffer, write_len) < 0)
-        berror(err, "FrameFile Writer: Error while writing frame");
+        berror(err, "Error while writing frame");
 
     usleep(400000);
   }

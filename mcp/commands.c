@@ -78,6 +78,8 @@ void ClearTrim();
 void AzElTrim(double, double);
 void NormalizeAngle(double*);
 
+void nameThread(const char*);  /* mcp.c */
+
 static const char *UnknownCommand = "Unknown Command";
 
 extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
@@ -1920,6 +1922,7 @@ void WatchFIFO ()
   char *mcommand_data[DATA_Q_SIZE];
 
   int i;
+  nameThread("SIPSS");
   for (i = 0; i < DATA_Q_SIZE; ++i) {
     mcommand_data[i] = NULL;
   }
@@ -1930,10 +1933,10 @@ void WatchFIFO ()
 
   int index, pindex = 0;
 
-  bputs(startup, "Commands: WatchFIFO startup\n");
+  bputs(startup, "WatchFIFO startup\n");
 
   if ((fifo = open("/tmp/SIPSS.FIFO", O_RDONLY | O_NONBLOCK)) == -1)
-    berror(tfatal, "Commands: Unable to open FIFO");
+    berror(tfatal, "Unable to open FIFO");
 
   for (;;) {
     index = 0;
@@ -1944,7 +1947,7 @@ void WatchFIFO ()
       command[index++] = buf[0];
     } while (buf[0] != '\n');
     command[index - 1] = command[index] = 0;
-    bprintf(info, "Commands: Command received: %s\n", command);
+    bprintf(info, "Command received: %s\n", command);
     index = -1;
     while((command[++index] != ' ') && command[index]);
     command[index++] = 0;
@@ -1963,7 +1966,7 @@ void WatchFIFO ()
         pbuf[pindex++] = command[index];
       }
     } while (command[index++] != 0);
-    bprintf(info, "Commands: %i parameters found.\n", mcommand_count);
+    bprintf(info, "%i parameters found.\n", mcommand_count);
 
     pthread_mutex_lock(&mutex);
 
@@ -1974,13 +1977,13 @@ void WatchFIFO ()
       mcommand = -1;
     } else {
       mcommand = MCommand(command);
-      bputs(info, "Commands:  Multi word command received\n");
+      bputs(info, "Multi word command received\n");
       if (mcommand_count == mcommands[MIndex(mcommand)].numparams) {
         SetParameters(mcommand, (unsigned short*)mcommand_data, rvalues, ivalues,
             svalues);
         MultiCommand(mcommand, rvalues, ivalues, svalues, 0);
       } else {
-        bputs(warning, "Commands: Ignoring mal-formed command!\n");
+        bputs(warning, "Ignoring mal-formed command!\n");
       }
       mcommand = -1;
     }
@@ -2017,7 +2020,10 @@ void WatchPort (void* parameter)
   int timer = 0;
   int bytecount = 0;
 
-  bprintf(startup, "Commands: WatchPort(%i) startup\n", port);
+  char tname[6];
+  sprintf(tname, "COMM%1d", port+1);
+  nameThread(tname);
+  bprintf(startup, "WatchPort startup\n");
 
   tty_fd = bc_setserial(COMM[port]);
 
@@ -2030,21 +2036,21 @@ void WatchPort (void* parameter)
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_POSITION, tty_fd);
 #ifdef SIP_CHATTER
-        bprintf(info, "Commands: COMM%i: Request SIP Position\n", port + 1);
+        bprintf(info, "Request SIP Position\n");
 #endif
         pthread_mutex_unlock(&mutex);
       } else if (timer == 1700) {
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_TIME, tty_fd);
 #ifdef SIP_CHATTER
-        bprintf(info, "Commands: COMM%i: Request SIP Time\n", port + 1);
+        bprintf(info, "Request SIP Time\n");
 #endif
         pthread_mutex_unlock(&mutex);	
       } else if (timer > 2500) {
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_ALTITUDE, tty_fd);
 #ifdef SIP_CHATTER
-        bprintf(info, "Commands: COMM%i: Request SIP Altitude\n", port + 1);
+        bprintf(info, "Request SIP Altitude\n");
 #endif
         pthread_mutex_unlock(&mutex);
         timer = 0;
@@ -2052,7 +2058,7 @@ void WatchPort (void* parameter)
       usleep(10000); /* sleep for 10ms */
     }
 #ifdef VERBOSE_SIP_CHATTER
-    bprintf(info, "Commands: COMM%i: read SIP byte %02x\n", port+1, buf);
+    bprintf(info, "read SIP byte %02x\n", buf);
 #endif
 
     /* Take control of memory */
@@ -2076,31 +2082,31 @@ void WatchPort (void* parameter)
         if (buf == 0x13) { /* Send data request */
           readstage = 3;
 #ifdef SIP_CHATTER
-          bprintf(info, "Commands: COMM%i: Data request\n", port + 1);
+          bprintf(info, "Data request\n");
 #endif
         } else if (buf == 0x14) { /* Command */
           readstage = 2;
 #ifdef SIP_CHATTER
-          bprintf(info, "Commands: COMM%i: Command\n", port + 1);
+          bprintf(info, "Command\n");
 #endif
         } else if (buf == 0x10) { /* GPS Position */
           readstage = 4;
 #ifdef SIP_CHATTER
-          bprintf(info, "Commands: COMM%i: GPS Position\n", port + 1);
+          bprintf(info, "GPS Position\n");
 #endif
         } else if (buf == 0x11) { /* GPS Time */
           readstage = 5;
 #ifdef SIP_CHATTER
-          bprintf(info, "Commands: COMM%i: GPS Time\n", port + 1);
+          bprintf(info, "GPS Time\n");
 #endif
         } else if (buf == 0x12) { /* MKS Altitude */
           readstage = 6;
 #ifdef SIP_CHATTER
-          bprintf(info, "Commands: COMM%i: MKS Altitude\n", port + 1);
+          bprintf(info, "MKS Altitude\n");
 #endif
         } else {
-          bprintf(warning, "Commands: COMM%i: Bad packet received: "
-              "Unrecognised Packet Type: %02X\n", port + 1, buf);
+          bprintf(warning, "Bad packet received: "
+              "Unrecognised Packet Type: %02X\n", buf);
           readstage = 0;
         }
         break;
@@ -2110,8 +2116,8 @@ void WatchPort (void* parameter)
             bytecount = 1;
           else {
             readstage = 0;
-            bprintf(warning, "Commands: COMM%i: Bad command packet: "
-                "Unsupported Length: %02X\n", port + 1, buf);
+            bprintf(warning, "Bad command packet: Unsupported Length: %02X\n", 
+		buf);
           }
         } else if (bytecount >= 1 && bytecount <= 2) {
           /* Read the two data bytes of the command packet */
@@ -2132,8 +2138,7 @@ void WatchPort (void* parameter)
 
             if ((indata[1] & 0xE0) == 0xA0) {
               /*** Single command ***/
-              bprintf(info, "Commands: COMM%i:  Single command received\n",
-                  port + 1);
+              bprintf(info, "Single command received\n");
               SingleCommand(indata[0], 0);
               mcommand = -1;
             } else if ((indata[1] & 0xE0) == 0x80) {
@@ -2142,9 +2147,8 @@ void WatchPort (void* parameter)
               mcommand = indata[0];
               mcommand_count = 0;
               dataqsize = DataQSize(MIndex(mcommand));
-              bprintf(info,
-                  "Commands: COMM%i:  Multi word command %d (%s) started\n",
-                  port + 1, mcommand, MName(mcommand));
+              bprintf(info, "Multi word command %d (%s) started\n",
+                  mcommand, MName(mcommand));
 
               /* The time of sending, a "unique" number shared by the first */
               /* and last packed of a multi-command */
@@ -2154,15 +2158,13 @@ void WatchPort (void* parameter)
               /*** Parameter values in multi-command ***/
               indatadumper = (unsigned short *) indata;
               mcommand_data[mcommand_count] = *indatadumper;
-              bprintf(info, "Commands: COMM%i:  Multi word command "
-                  "continues...\n", port + 1);
+              bprintf(info, "Multi word command continues...\n");
               mcommand_count++;
             } else if (((indata[1] & 0xE0) == 0xC0) && (mcommand == indata[0])
                 && ((indata[1] & 0x1F) == mcommand_time) &&
                 (mcommand_count == dataqsize)) {
               /*** End of multi-command ***/
-              bprintf(info, "Commands: COMM%i:  Multi word command ends \n",
-                  port + 1);
+              bprintf(info, "Multi word command ends \n");
               SetParameters(mcommand, (unsigned short*)mcommand_data, rvalues,
                   ivalues, svalues);
               MultiCommand(mcommand, rvalues, ivalues, svalues, 0);
@@ -2172,8 +2174,8 @@ void WatchPort (void* parameter)
             } else {
               mcommand = -1;
               mcommand_count = 0;
-              bprintf(warning, "Commands: COMM%i: Command packet discarded: "
-                  "Bad Encoding: %04X\n", port + 1, indata[1]);
+              bprintf(warning, "Command packet discarded: Bad Encoding: %04X\n",
+		  indata[1]);
               mcommand_time = 0;
             }
           }
@@ -2184,9 +2186,7 @@ void WatchPort (void* parameter)
         if (buf == 0x03) {
           SendDownData(tty_fd);
         } else {
-          bprintf(warning,
-              "Commands: COMM%i: Bad encoding: Bad packet terminator: %02X\n",
-              port + 1, buf);
+          bprintf(warning, "Bad encoding: Bad packet terminator: %02X\n", buf);
         }
         break;
       case 4: /* waiting for GPS position datum */
@@ -2199,8 +2199,8 @@ void WatchPort (void* parameter)
           if (buf == 0x03) {
             GPSPosition((unsigned char *) indata);
           } else {
-            bprintf(warning, "Commands: COMM%i: Bad encoding in GPS Position: "
-                "Bad packet terminator: %02X\n", port + 1, buf);
+            bprintf(warning, "Bad encoding in GPS Position: "
+                "Bad packet terminator: %02X\n", buf);
           }
         }
         break;
@@ -2214,8 +2214,8 @@ void WatchPort (void* parameter)
           if (buf == 0x03) {
             GPSTime((unsigned char *) indata);
           } else {
-            bprintf(warning, "Commands: COMM%i: Bad encoding in GPS Time: "
-                "Bad packet terminator: %02X\n", port + 1, buf);
+            bprintf(warning, "Bad encoding in GPS Time: "
+                "Bad packet terminator: %02X\n", buf);
           }
         }
         break;
@@ -2229,8 +2229,8 @@ void WatchPort (void* parameter)
           if (buf == 0x03) {
             MKSAltitude((unsigned char *) indata);
           } else {
-            bprintf(warning, "Commands: COMM%i: Bad encoding in MKS Altitude: "
-                "Bad packet terminator: %02X\n", port + 1, buf);
+            bprintf(warning, "Bad encoding in MKS Altitude: "
+                "Bad packet terminator: %02X\n", buf);
           }
         }
     }
