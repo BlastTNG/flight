@@ -10,20 +10,20 @@
 #define CHATTER_DEFAULT "chatter"
 #define OLD_DATA_LIMIT 50
 
-#define NOR "\[[0m"
-#define RED "\[[31;1m"
-#define GRN "\[[32;1m"
-#define YLW "\[[33;1m"
-#define BLU "\[[34;1m"
-#define MAG "\[[35;1m"
-#define CYN "\[[36;1m"
+#define NOR "\x1B[0m"
+#define RED "\x1B[31;1m"
+#define GRN "\x1B[32;1m"
+#define YLW "\x1B[33;1m"
+#define BLU "\x1B[34;1m"
+#define MAG "\x1B[35;1m"
+#define CYN "\x1B[36;1m"
 
 
 #define BUF_LEN 1024
 
 void usage(char *exe)
 {
-  fprintf(stderr, "%s [-d DIRFILE] [-c CHAR_FIELD] [-r|-s] [-v|-q]\n", exe);
+  fprintf(stderr, "%s [-d DIRFILE] [-c CHAR_FIELD] [-r|-s] [-v|-q] [-b|-k]\n", exe);
   fprintf(stderr, "Translate CHAR_FIELD from DIRFILE into ASCII on stdout.\n");
   fprintf(stderr, "-d PATH_TO_DIRFILE [%s]\n", DIRFILE_DEFAULT);
   fprintf(stderr, "-c CHAR_FIELD      [%s]\n", CHATTER_DEFAULT);
@@ -45,15 +45,13 @@ int main (int argc, char **argv)
   size_t n_read;
   uint16_t *data;
   off_t i;
-  char a, b;
-  char prev_b = '\0';
+  char a, b, prev_char;
   int c;
 
   unsigned int old_data = 0;
   int reload = 1;
   int verbose = 1;
   int color = isatty(fileno(stdout));
-      color = 0;
 
   snprintf(dirfile_name, BUF_LEN, "%s", DIRFILE_DEFAULT);
   snprintf(chatter_name, BUF_LEN, "%s", CHATTER_DEFAULT);
@@ -139,6 +137,8 @@ int main (int argc, char **argv)
     } else {
       nf_old = ff;
     }
+
+    prev_char = '\n';
   
     while (1) /* Data reading loop */
     {
@@ -163,22 +163,31 @@ int main (int argc, char **argv)
           a = data[i] & 0xFF;
           b = data[i] >> 8;
 
-          if (color && prev_b == '\n')
-            if (a == '*' || a == '!' || a == '$')
+          if (color)
+          {
+            if (prev_char == '\n' && (a == '*' || a == '!' || a == '$'))
               printf(RED);
+            if (a == '\n')
+              printf(NOR);
+          }
           if (a != 0x16 && a != 0x00)
+          {
             putchar(a);
-          if (color && a == '\n')
-            printf(NOR);
+            prev_char = a;
+          }
 
-          if (color && a == '\n')
-            if (b == '*' || b == '!' || b == '$')
+          if (color)
+          {
+            if (prev_char == '\n' && (b == '*' || b == '!' || b == '$'))
               printf(RED);
+            if (b == '\n')
+              printf(NOR);
+          }
           if (b != 0x16 && b != 0x00)
+          {
             putchar(b);
-          if (color && b == '\n')
-            printf(NOR);
-          prev_b = b;
+            prev_char = b;
+          }
         }
         fflush(stdout);
       } else {
