@@ -792,13 +792,22 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
 
 #ifndef BOLOTEST
-    case balance_off:/* Balance/pump commanding */
+    case balance_off:/* Balance pump commanding */
       CommandData.pumps.mode = bal_rest;
       CommandData.pumps.level = 0;
       break;
     case balance_auto:
       CommandData.pumps.mode= bal_auto;
       break;
+    case bal_heat_on:/* Balance pump heating card commanding */
+      CommandData.pumps.heat_on = 1;
+      break;
+    case bal_heat_off:
+      CommandData.pumps.heat_on = 0;
+      break;
+
+
+
 #endif
 
     /* Lock */
@@ -1458,6 +1467,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pumps.level = rvalues[0];
       CommandData.pumps.mode = bal_manual;
       break;
+    case bal_tset:
+      CommandData.pumps.heat_tset = rvalues[0];
+      break;
+
 
       /***************************************/
       /******** Electronics Heaters  *********/
@@ -2456,6 +2469,9 @@ void InitCommandData()
   CommandData.pumps.bal_target = 0.0 * 1990.13;
   CommandData.pumps.bal_gain = 0.2;
   CommandData.pumps.mode = bal_rest; // TODO: change for flight
+  CommandData.pumps.heat_on = 1;
+  CommandData.pumps.heat_tset = 20;
+
 
   CommandData.Temporary.dac_out[0] = 0x8000;
   CommandData.Temporary.dac_out[1] = 0x8000;

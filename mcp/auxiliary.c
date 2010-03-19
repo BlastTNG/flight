@@ -229,10 +229,10 @@ void ControlGyroHeat(unsigned short *RxFrame)
 /* Balance: control balance system                                */
 /*                                                                */
 /******************************************************************/
-static int Balance(int ifpmBits)
+static int Balance(int bits_bal)
 {
   static struct BiPhaseStruct *elDacAddr;
-  static struct NiosStruct *ifpmAmplAddr;
+  static struct NiosStruct *vPumpBalAddr;
   static int pumpon = 0;
   int level;
   int error;
@@ -243,7 +243,7 @@ static int Balance(int ifpmBits)
   if (firsttime) {
     firsttime = 0;
     elDacAddr = GetBiPhaseAddr("el_dac");
-    ifpmAmplAddr = GetNiosAddr("ifpm_ampl");
+    vPumpBalAddr = GetNiosAddr("v_pump_bal");
   }
  
   // if vetoed {
@@ -254,10 +254,10 @@ static int Balance(int ifpmBits)
   if ((CommandData.pumps.mode == bal_rest) || (CommandData.pumps.bal_veto > 0)) {
  
     // set direction
-    ifpmBits &= (0xFF - BAL_DIRE); /* Clear reverse bit */ 
+    bits_bal &= (0xFF - BAL_DIRE); /* Clear reverse bit */ 
 
     // close valve
-    ifpmBits &= (0xFF - BAL_VALV); /* Close the valve */ 
+    bits_bal &= (0xFF - BAL_VALV); /* Close the valve */ 
 
     level = 0;
 
@@ -266,16 +266,16 @@ static int Balance(int ifpmBits)
     //   set direction and valve bits
     //   set speed
 
-    ifpmBits |= BAL_VALV; /* Open valve */
+    bits_bal |= BAL_VALV; /* Open valve */
 
     if (CommandData.pumps.level > 0) {
-      ifpmBits &= (0xFF - BAL_DIRE); /* clear reverse bit */
+      bits_bal &= (0xFF - BAL_DIRE); /* clear reverse bit */
       level = CommandData.pumps.level * PUMP_MAX;
     } else if (CommandData.pumps.level < 0) {
-      ifpmBits |= BAL_DIRE; /* set reverse bit */
+      bits_bal |= BAL_DIRE; /* set reverse bit */
       level = -CommandData.pumps.level * PUMP_MAX;
     } else {
-      ifpmBits &= (0xFF - BAL_VALV); /* Close valve */
+      bits_bal &= (0xFF - BAL_VALV); /* Close valve */
       level = 0;
     }
  
@@ -288,9 +288,9 @@ static int Balance(int ifpmBits)
 
     //   set direction and valve bits
     if (error > 0) {
-      ifpmBits &= (0xFF - BAL_DIRE);  /* clear reverse bit */
+      bits_bal &= (0xFF - BAL_DIRE);  /* clear reverse bit */
     } else {
-      ifpmBits |= BAL_DIRE;  /* set reverse bit */
+      bits_bal |= BAL_DIRE;  /* set reverse bit */
       error = -error;
     }
 
@@ -321,21 +321,21 @@ static int Balance(int ifpmBits)
 	bprintf(info, "Balance System: Pump On\n");
 	pump_is_on = 1;
       }
-      ifpmBits |= BAL_VALV; /* open valve pump */
+      bits_bal |= BAL_VALV; /* open valve pump */
     } else {
       if (pump_is_on != 0) {
 	bprintf(info, "Balance System: Pump Off\n");
 	pump_is_on = 0;
       }
-      ifpmBits &= (0xFF - BAL_VALV); /* close valve pump */
+      bits_bal &= (0xFF - BAL_VALV); /* close valve pump */
       level = 0;
     }
 
   }
 
   // write direction and valve bits
-  WriteData(ifpmAmplAddr, (int) PUMP_ZERO + level, NIOS_QUEUE);
-  return ifpmBits;
+  WriteData(vPumpBalAddr, (int) PUMP_ZERO + level, NIOS_QUEUE);
+  return bits_bal;
 
 }
 
@@ -343,33 +343,36 @@ static int Balance(int ifpmBits)
 /*    ControlPumpHeat:  Controls balance system pump temp               */
 /************************************************************************/
 
-//void ControlPumpHeat(unsigned short *RxFrame)
-static int ControlPumpHeat(int ifpmBits)
+static int ControlPumpHeat(int bits_bal)
 {
 
-  static struct BiPhaseStruct *tIfpm1Addr, *tIfpm2Addr;
+  static struct BiPhaseStruct *t1BalAddr, *t2BalAddr;
   static int firsttime = 1;
 
   unsigned int temp1, temp2;
 
   if (firsttime) {
     firsttime = 0;
-    tIfpm1Addr = GetBiPhaseAddr("t_ifpm1");
-    tIfpm2Addr = GetBiPhaseAddr("t_ifpm2");  
+    t1BalAddr = GetBiPhaseAddr("t_1bal");
+    t2BalAddr = GetBiPhaseAddr("t_2bal");  
   }
 
-  temp1 = slow_data[tIfpm1Addr->index][tIfpm1Addr->channel];
-  temp2 = slow_data[tIfpm2Addr->index][tIfpm2Addr->channel];
+  temp1 = slow_data[t1BalAddr->index][t1BalAddr->channel];
+  temp2 = slow_data[t2BalAddr->index][t2BalAddr->channel];
 
-  /* Only run these controls if we think the thermometer isn't broken */
-  if (temp1 < MAX_GYBOX_TEMP && temp1 > MIN_GYBOX_TEMP) {
-    /* control the heat */
-    ifpmBits |= BAL_DIRE;  /* set heat bit */
-  } else {
-    ifpmBits &= (0xFF - BAL_DIRE); /* clear heat bit */ 
-  }
+//  if (CommandData.pumps.heat_on) {
+//      temp1 > CommandData.pumps.heat_tset
+    if (temp1 < MAX_GYBOX_TEMP && temp1 > MIN_GYBOX_TEMP) {
+      bits_bal |= BAL_DIRE;  /* set heat bit */
+    } else {
+      bits_bal &= (0xFF - BAL_DIRE); /* clear heat bit */
+    }
+//  }
 
-  return ifpmBits;
+ // CommandData.pumps.heat_tset
+ // CommandData.pump.heat_on
+
+  return bits_bal;
 
 }
 
@@ -679,21 +682,19 @@ void CameraTrigger(int which)
 /*****************************************************************/
 void ControlAuxMotors(unsigned short *RxFrame)
 {
-  static struct NiosStruct* balpumpLevAddr;
-  static struct NiosStruct* sprpumpLevAddr;
+  static struct NiosStruct* levPumpBalAddr;
   static struct NiosStruct* balOnAddr, *balOffAddr;
   static struct NiosStruct* balTargetAddr, *balVetoAddr;
   static struct NiosStruct* balGainAddr;
-  static struct NiosStruct* ifpmBitsAddr;
+  static struct NiosStruct* bitsBalAddr;
 
-  int ifpmBits = 0;
+  int bits_bal = 0;
 
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    ifpmBitsAddr = GetNiosAddr("ifpm_bits");
-    balpumpLevAddr = GetNiosAddr("balpump_lev");
-    sprpumpLevAddr = GetNiosAddr("sprpump_lev");
+    bitsBalAddr = GetNiosAddr("bits_bal");
+    levPumpBalAddr = GetNiosAddr("lev_pump_bal");
     balOnAddr = GetNiosAddr("bal_on");
     balOffAddr = GetNiosAddr("bal_off");
     balTargetAddr = GetNiosAddr("bal_target");
@@ -704,38 +705,31 @@ void ControlAuxMotors(unsigned short *RxFrame)
   /* inner frame box */
   /* two latching pumps 3/4 */
   /* two non latching: on/off, fwd/rev */
-  //if (CommandData.pumps.bal_veto) {
-  //  if (CommandData.pumps.bal1_on)
-  //    ifpmBits |= BAL_VALV;
-  //  if (CommandData.pumps.bal1_reverse)
-  //    ifpmBits |= BAL_DIRE;
-    //if (CommandData.pumps.bal2_on)
-      //ifpmBits |= BAL2_ON;
-    //if (CommandData.pumps.bal2_reverse)
-      //ifpmBits |= BAL2_REV;
-  //}
 
-  /* Run Balance System, Maybe */
-  ifpmBits = Balance(ifpmBits);
- 
+  /* Run Balance System, maybe */
+  bits_bal = Balance(bits_bal);
+
+  /* Run Heating card, maybe */
+  bits_bal = ControlPumpHeat(bits_bal);
+
   //bprintf(info, "MotorControl: (%i)\n", ifpmBits);
 
   if (CommandData.pumps.bal_veto) {
     /* if we're in timeout mode, decrement the timer */
     if (CommandData.pumps.bal_veto > 1)
       CommandData.pumps.bal_veto--;
-    //  FIX THIS
-    //WriteData(balpumpLevAddr, CommandData.pumps.pwm1 & 0x7ff, NIOS_QUEUE);
+    //FIX THIS
+    //WriteData(levPumpBalAddr, CommandData.pumps.pwm1 & 0x7ff, NIOS_QUEUE);
   }
-  //  FIX THIS
+  
   //WriteData(sprpumpLevAddr, CommandData.pumps.pwm2 & 0x7ff, NIOS_QUEUE);
   WriteData(balOnAddr, (int)CommandData.pumps.bal_on, NIOS_QUEUE);
   WriteData(balOffAddr, (int)CommandData.pumps.bal_off, NIOS_QUEUE);
   WriteData(balVetoAddr, (int)CommandData.pumps.bal_veto, NIOS_QUEUE);
-  WriteData(balTargetAddr, (int)(CommandData.pumps.bal_target + 1648. * 5.),
+  WriteData(balTargetAddr, (int)(CommandData.pumps.bal_target + 1990.13 * 5.),
       NIOS_QUEUE);
   WriteData(balGainAddr, (int)(CommandData.pumps.bal_gain * 1000.), NIOS_QUEUE);
-  WriteData(ifpmBitsAddr, ifpmBits, NIOS_FLUSH);
+  WriteData(bitsBalAddr, bits_bal, NIOS_FLUSH);
 }
 
 /* create latching relay pulses, and update enable/disbale levels */

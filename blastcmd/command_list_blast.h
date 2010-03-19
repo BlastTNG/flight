@@ -17,8 +17,8 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 202        /* total number of single word cmds */
-#define N_MCOMMANDS 101        /* total number of multiword commands */
+#define N_SCOMMANDS 204        /* total number of single word cmds */
+#define N_MCOMMANDS 102        /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -115,7 +115,7 @@ enum singleCommand {
   reset_dr,         actpos_trim,        reset_reac,       reset_piv,
   reset_elev,       jfet_on,            jfet_off,         hs_pot_on,
   hs_pot_off,       bda_on,             bda_off,          hwpr_enc_on,
-  hwpr_enc_off,     hwpr_enc_pulse
+  hwpr_enc_off,     hwpr_enc_pulse,     bal_heat_on,      bal_heat_off
 };
 
 /* multiCommand enumeration.  The command list here does NOT have to be in
@@ -149,7 +149,7 @@ enum multiCommand {
   xy_jump,           xy_xscan,          xy_yscan,         xy_raster,
   actuator_i,        lock_vel,          lock_i,           actuator_delta,
   delta_secondary,   lvdt_limit,        thermo_param,     focus_offset,
-  isc_max_age,	     osc_max_age,	reset_adc
+  isc_max_age,	     osc_max_age,	reset_adc,        bal_tset
 };
 
 //32-bit and 64-bit sytems disagree on packing

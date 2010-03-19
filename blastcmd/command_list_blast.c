@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.31 $";
+const char *command_list_serial = "$Revision: 4.32 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -232,6 +232,8 @@ struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(balance_auto), "Put balance system into auto mode", GR_BAL},
   {COMMAND(balance_off),  "Turn off the balance pumps", GR_BAL},
+  {COMMAND(bal_heat_on),  "Turn on the balance pump heating card", GR_BAL},
+  {COMMAND(bal_heat_off), "Turn off the balance pump heating card", GR_BAL},
 
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},
@@ -380,13 +382,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"level",           -1.0, 1.0, 'f', "NONE"},
     }
   },
-  {COMMAND(balance_gain), "balance system setpoints", GR_BAL, 4,
+  {COMMAND(balance_gain), "Set balance system setpoints", GR_BAL, 4,
     {
       {"Pump On Point (A)",  0, 2, 'f', "BAL_ON"},
       {"Pump Off Point (A)", 0, 2, 'f', "BAL_OFF"},
       {"Target (A)",        -2, 2, 'f', "BAL_TARGET"},
       {"Gain",            0.01, 10, 'f', "BAL_GAIN"},
     }
+  },
+  {COMMAND(bal_tset), "Set balance pump minumum temperature", GR_BAL, 1,
+     {
+       {"Temperature (C)",  -40, 40, 'f', "BAL_TSET"},
+     }
   },
   {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps",
     GR_POINT, 6,

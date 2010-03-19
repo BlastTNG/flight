@@ -263,6 +263,11 @@ struct CommandDataStruct {
     double bal_off;
     double bal_target;
     double bal_gain;
+
+    // heating card parameters
+    double heat_on;
+    double heat_tset;
+
   } pumps;
 
   struct {
