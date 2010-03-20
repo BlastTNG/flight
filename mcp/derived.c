@@ -80,7 +80,7 @@
 union DerivedUnion DerivedChannels[] = {
   /* Pointing */
   COMMENT("Microsecond Resolution Time"),
-  LINCOM2("Time", "cpu_time", 1, 0, "cpu_usec",  1.0E-6, 0),
+  LINCOM2("Time", "cpu_usec", 1.0E-6, 0, "cpu_time",  1, 0),
   UNITS("Time", "Time", "s"),
 #ifndef BOLOTEST
   COMMENT("Pointing Stuff"),
