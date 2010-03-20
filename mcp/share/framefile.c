@@ -40,7 +40,9 @@ unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
 
 static int shutdown_now = 0;
 
+#ifdef __MCP__
 void nameThread(const char*);	/* mcp.c */
+#endif
 void WriteSpecificationFile(FILE*); /* in tx_struct.c */
 
 struct file_info {
@@ -185,7 +187,9 @@ void FrameFileWriter(void)
   void* b_write_to;
   int write_len;
 
+#ifdef __MCP__
   nameThread("FFWrit");
+#endif
 
 #ifdef __MCP__
   bputs(startup, "Startup\n");
