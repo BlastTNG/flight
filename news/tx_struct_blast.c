@@ -935,6 +935,9 @@ struct ChannelStruct FastChannels[] = {
   {"chatter",      'w', LOOP7, 38,              1.0,               0.0, 'u', U_NONE},
   {"mcp_frame",    'w', LOOP2, 34,              1.0,               0.0, 'u', U_NONE},
 
+  {"upbbc_index",  'w', LOOP7, 50,              1.0,               0.0, 'u', U_NONE},
+  {"upbbc_dt",     'w', LOOP7, 51,           1.0e-4,               0.0, 'u', U_NONE},
+
   END_OF_CHANNELS
 };
 
