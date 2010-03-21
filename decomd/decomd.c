@@ -21,7 +21,7 @@
  *
  */
 
-#undef DEBUG
+//#define DEBUG
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -278,9 +278,23 @@ int main(void) {
 
   struct sigaction action;
 
-#ifdef DEBUG
   buos_use_stdio();
 
+  /* Open Decom */
+  if ((decom = open(DEV, O_RDONLY | O_NONBLOCK)) == -1)
+    berror(fatal, "fatal error opening " DEV);
+
+  /* Initialise Channel Lists */
+  MakeAddressLookups();
+
+  /* Initialise Decom */
+  ioctl(decom, DECOM_IOC_RESET);
+  ioctl(decom, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE);
+
+  /* Initialise Frame File Writer */
+  InitialiseFrameFile(FILE_SUFFIX);
+
+#ifdef DEBUG
   dump = fopen("/data/etc/decomd.dump", "wb");
 #else
   int pid;
@@ -315,20 +329,6 @@ int main(void) {
   freopen("/dev/null", "w", stderr);
   setsid();
 #endif
-
-  /* Open Decom */
-  if ((decom = open(DEV, O_RDONLY | O_NONBLOCK)) == -1)
-    berror(fatal, "fatal error opening " DEV);
-
-  /* Initialise Channel Lists */
-  MakeAddressLookups();
-
-  /* Initialise Decom */
-  ioctl(decom, DECOM_IOC_RESET);
-  ioctl(decom, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE);
-
-  /* Initialise Frame File Writer */
-  InitialiseFrameFile(FILE_SUFFIX);
 
   /* set up signal masks */
   sigemptyset(&signals);
