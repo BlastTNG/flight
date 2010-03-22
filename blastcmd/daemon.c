@@ -541,9 +541,6 @@ void Daemonise(int route, int no_fork)
             } else if (conn[n].lurk == 2) { /* request for lurking */
               strcpy(buffer, ":::slink:::\r\n");
               conn[n].lurk = 1;
-            } else if (conn[n].spy == 2) { /* request for spying */
-              strcpy(buffer, ":::mole:::\r\n");
-              conn[n].spy = 1;
             } else if (conn[n].state & 0x100) { /* ping pong */
               strcpy(buffer, ":::pong:::\r\n");
               conn[n].state &= ~0x100;
@@ -560,6 +557,9 @@ void Daemonise(int route, int no_fork)
                 }
               }
               conn[n].spy = 1;
+            } else if (conn[n].spy == 2) { /* request for spying */
+              strcpy(buffer, ":::mole:::\r\n");
+              conn[n].spy = 3;
             } else if (conn[n].state == 8) /* authentication failed */
               strcpy(buffer, ":::nope:::\r\n");
 
