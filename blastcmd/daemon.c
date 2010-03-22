@@ -532,7 +532,7 @@ void Daemonise(int route, int no_fork)
             /* send */
             if (buffer[0]) {
               printf("%i<--%s", n, buffer);
-              if ((size = send(n, buffer, 1 + strlen(buffer), MSG_NOSIGNAL))
+              if ((size = send(n, buffer, strlen(buffer), MSG_NOSIGNAL))
                   == -1) {
                 if (errno == EPIPE) {
                   printf("connexion dropped on socket %i\n", n);
