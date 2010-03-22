@@ -1,15 +1,15 @@
-/* blastcmd: groundstation BLAST command software
+/* narsil: groundstation BLAST command software
  *
  * This software is copyright (C) 2005 University of Toronto
  * 
- * This file is part of blastcmd.
+ * This file is part of narsil.
  * 
- * blastcmd is free software; you can redistribute it and/or modify
+ * narsil is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  * 
- * blastcmd is distributed in the hope that it will be useful,
+ * narsil is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.

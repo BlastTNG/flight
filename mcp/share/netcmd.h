@@ -1,4 +1,4 @@
-/* netcmd: groundstation BLAST command protocol
+/* narsil: groundstation BLAST command software
  *
  * This software is copyright (C) 2005 University of Toronto
  * 
