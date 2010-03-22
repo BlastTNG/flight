@@ -260,6 +260,7 @@ void Daemonise(int route, int no_fork)
     int state;
     int report;
     int lurk; /* 0 = off, 1 = on, 2 = request, 3 = cmd_announce */
+    int spy;  /* 0 = off, 1 = on, 2 = request, 3 = client_announce */
     char user[1024];
   } conn[1024];
   /* state list
@@ -274,7 +275,8 @@ void Daemonise(int route, int no_fork)
 
   int owner = 0;
 
-  char buffer[1025];
+  char *buffer;
+  char tmp_buf[512];
   char cmd[512];
   int cmd_from = 0;
   int ack = 0;
@@ -317,6 +319,12 @@ void Daemonise(int route, int no_fork)
     exit(2);
   }
 
+  buffer = malloc(30 * 1024 * sizeof(char));
+  if (buffer == NULL) {
+    perror("Unable to malloc send buffer");
+    exit(3);
+  }
+
   /* start the listener. */
   lastsock = sock = MakeSock();
 
@@ -338,6 +346,12 @@ void Daemonise(int route, int no_fork)
     freopen("/dev/null", "w", stdout);
     freopen("/dev/null", "w", stderr);
     setsid();
+  }
+
+  /* Zero everything */
+  for (i = 0; i < 1024; i++)
+  {
+    conn[i].state = conn[i].report = conn[i].lurk = conn[i].spy = 0;
   }
 
   /* select */
@@ -390,36 +404,36 @@ void Daemonise(int route, int no_fork)
               if (!memcmp(&addr.sin_addr, &good_addr1, sizeof(struct in_addr)))
               {
                 printf("Autentication 1 OK from client.\n");
-                conn[csock].lurk = conn[csock].state = 0;
+                conn[csock].spy = conn[csock].lurk = conn[csock].state = 0;
               } else if (!memcmp(&addr.sin_addr, &good_addr2,
                     sizeof(struct in_addr)))
               {
                 printf("Autentication 2 OK from client.\n");
-                conn[csock].lurk = conn[csock].state = 0;
+                conn[csock].spy = conn[csock].lurk = conn[csock].state = 0;
               } else if (!memcmp(&addr.sin_addr, &good_addr3,
                     sizeof(struct in_addr)))
               {
                 printf("Autentication 3 OK from client.\n");
-                conn[csock].lurk = conn[csock].state = 0;
+                conn[csock].spy = conn[csock].lurk = conn[csock].state = 0;
               } else if (!memcmp(&addr.sin_addr, &good_addr4,
                     sizeof(struct in_addr)))
               {
                 printf("Autentication 4 OK from client.\n");
-                conn[csock].lurk = conn[csock].state = 0;
+                conn[csock].spy = conn[csock].lurk = conn[csock].state = 0;
               } else if (!memcmp(&addr.sin_addr, &local_addr, sizeof(struct
                       in_addr))) {
                 printf("Autentication OK from local client.\n");
-                conn[csock].lurk = conn[csock].state = 0;
+                conn[csock].spy = conn[csock].lurk = conn[csock].state = 0;
               } else {
                 printf("Failed authentication from client.\n");
                 conn[csock].state = 8;
               }
 #else
-              conn[csock].lurk = conn[csock].state = 0;
+              conn[csock].spy = conn[csock].lurk = conn[csock].state = 0;
 #endif
             }
           } else if (conn[n].state != 8) { /* read from authorised client */
-            if ((size = recv(n, &buffer, 1024, 0)) == -1)
+            if ((size = recv(n, buffer, 1024, 0)) == -1)
               perror("recv");
             else if (size == 0) { /* connection closed */
               printf("connexion dropped on socket %i\n", n);
@@ -433,12 +447,16 @@ void Daemonise(int route, int no_fork)
                 report = 1;
                 owner = 0;
               }
+              conn[n].state = 0; /* Note that the connection is closed */
+              for (i = 0; i < 1024; i++)
+                if (conn[i].spy == 1)
+                  conn[i].spy = 3;
               continue;
             } else {
-              buffer[1023] = 0;
+              buffer[1023] = '\0';
               for (i = 0; i < 1023; ++i)
                 if (buffer[i] == '\n' || buffer[i] == '\r')
-                  buffer[i] = 0;
+                  buffer[i] = '\0';
             }
 
             printf("%i-->%s\n", n, buffer);
@@ -446,8 +464,11 @@ void Daemonise(int route, int no_fork)
             if (conn[n].state == 0) { /* authentication */
               if (strncmp(buffer, "::user::", 8) == 0) {
                 conn[n].state = 1;
-                strcpy(conn[n].user, &buffer[8]);
+                strcpy(conn[n].user, buffer + 8);
                 printf("Authentication on socket %i by %s.\n", n, conn[n].user);
+                for (i = 0; i < 1024; i++) /* Remember to tell moles about new user */
+                  if (conn[i].spy == 1)
+                    conn[i].spy = 3;
               } else { /* failed authentication */
                 printf("Failed authentication on socket %i.  Closing "
                     "connection.\n", n);
@@ -465,6 +486,8 @@ void Daemonise(int route, int no_fork)
               conn[n].state |= 0x100;
             } else if (strncmp(buffer, "::lurk::", 8) == 0) {
               conn[n].lurk = 2;
+            } else if (strncmp(buffer, "::spy::", 7) == 0) {
+              conn[n].spy = 2;
             } else if (strncmp(buffer, "::list::", 8) == 0) {
               conn[n].state = 4;
             } else if (owner != n) { /* no conn */
@@ -518,6 +541,9 @@ void Daemonise(int route, int no_fork)
             } else if (conn[n].lurk == 2) { /* request for lurking */
               strcpy(buffer, ":::slink:::\r\n");
               conn[n].lurk = 1;
+            } else if (conn[n].spy == 2) { /* request for spying */
+              strcpy(buffer, ":::mole:::\r\n");
+              conn[n].spy = 1;
             } else if (conn[n].state & 0x100) { /* ping pong */
               strcpy(buffer, ":::pong:::\r\n");
               conn[n].state &= ~0x100;
@@ -526,6 +552,14 @@ void Daemonise(int route, int no_fork)
                        conn[cmd_from].user, cmd, ack);
               conn[n].lurk = 1;
               buffer[1023] = 0;
+            } else if (conn[n].spy == 3) { /* report clients */
+              for (i = 0; i < 1024; i++) {
+                if (conn[i].state) {
+                  snprintf(tmp_buf, 100, ":::here:::%s\r\n", conn[i].user);
+                  strncat(buffer + strlen(buffer), tmp_buf, 30*1024 - strlen(buffer));
+                }
+              }
+              conn[n].spy = 1;
             } else if (conn[n].state == 8) /* authentication failed */
               strcpy(buffer, ":::nope:::\r\n");
 
