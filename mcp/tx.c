@@ -792,6 +792,8 @@ static void StoreData(int index)
   static struct NiosStruct* dgpsClimbAddr;
   static struct NiosStruct* dgpsAttOkAddr;
   static struct NiosStruct* dgpsAzRawAddr;
+  static struct NiosStruct* dgpsPitchRawAddr;
+  static struct NiosStruct* dgpsRollRawAddr;
   static struct NiosStruct* dgpsNSatAddr;
 
   /* trim fields */
@@ -910,10 +912,10 @@ static void StoreData(int index)
     magPitchAddr = GetNiosAddr("mag_pitch");
     magModelAddr = GetNiosAddr("mag_model");
     magSigmaAddr = GetNiosAddr("mag_sigma");
-    dgpsAzAddr = GetNiosAddr("dgps_az");
-    dgpsPitchAddr = GetNiosAddr("dgps_pitch_raw");
-    dgpsRollAddr = GetNiosAddr("dgps_roll_raw");
-    dgpsSigmaAddr = GetNiosAddr("dgps_sigma");
+    dgpsAzAddr = GetNiosAddr("az_dgps");
+    dgpsPitchAddr = GetNiosAddr("pitch_dgps");
+    dgpsRollAddr = GetNiosAddr("roll_dgps");
+    dgpsSigmaAddr = GetNiosAddr("sigma_dgps");
     ssAzAddr = GetNiosAddr("ss_az");
     ssSigmaAddr = GetNiosAddr("ss_sigma");
     sunAzAddr = GetNiosAddr("sun_az");
@@ -951,16 +953,18 @@ static void StoreData(int index)
 
     sensorVetoAddr = GetNiosAddr("sensor_veto");
 
-    dgpsTimeAddr = GetNiosAddr("dgps_time");
-    dgpsLatAddr = GetNiosAddr("dgps_lat");
-    dgpsLonAddr = GetNiosAddr("dgps_lon");
-    dgpsAltAddr = GetNiosAddr("dgps_alt");
-    dgpsSpeedAddr = GetNiosAddr("dgps_speed");
-    dgpsDirAddr = GetNiosAddr("dgps_dir");
-    dgpsClimbAddr = GetNiosAddr("dgps_climb");
-    dgpsNSatAddr = GetNiosAddr("dgps_n_sat");
-    dgpsAttOkAddr = GetNiosAddr("dgps_att_ok");
-    dgpsAzRawAddr = GetNiosAddr("dgps_az_raw");
+    dgpsTimeAddr = GetNiosAddr("time_dgps");
+    dgpsLatAddr = GetNiosAddr("lat_dgps");
+    dgpsLonAddr = GetNiosAddr("lon_dgps");
+    dgpsAltAddr = GetNiosAddr("alt_dgps");
+    dgpsSpeedAddr = GetNiosAddr("speed_dgps");
+    dgpsDirAddr = GetNiosAddr("dir_dgps");
+    dgpsClimbAddr = GetNiosAddr("climb_dgps");
+    dgpsNSatAddr = GetNiosAddr("n_sat_dgps");
+    dgpsAttOkAddr = GetNiosAddr("att_ok_dgps");
+    dgpsAzRawAddr = GetNiosAddr("az_raw_dgps");
+    dgpsPitchRawAddr = GetNiosAddr("pitch_raw_dgps");
+    dgpsRollRawAddr = GetNiosAddr("roll_raw_dgps");
 
     schedLstAddr = GetNiosAddr("sched_lst");
 
@@ -968,7 +972,7 @@ static void StoreData(int index)
     encTrimAddr = GetNiosAddr("enc_trim");
     nullTrimAddr = GetNiosAddr("null_trim");
     magTrimAddr = GetNiosAddr("mag_trim");
-    dgpsTrimAddr = GetNiosAddr("dgps_trim");
+    dgpsTrimAddr = GetNiosAddr("trim_dgps");
 
     azModeAddr = GetNiosAddr("az_mode");
     elModeAddr = GetNiosAddr("el_mode");
@@ -1250,6 +1254,8 @@ static void StoreData(int index)
   /** Att fields **/
   i_dgps = GETREADINDEX(dgpsatt_index);
   WriteData(dgpsAzRawAddr, DGPSAtt[i_dgps].az * DEG2I, NIOS_QUEUE);
+  WriteData(dgpsPitchRawAddr, DGPSAtt[i_dgps].pitch * DEG2I, NIOS_QUEUE);
+  WriteData(dgpsRollRawAddr, DGPSAtt[i_dgps].roll * DEG2I, NIOS_QUEUE);
   WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok, NIOS_QUEUE);
   WriteData(rwTempAddr,RWMotorData[i_rw_motors].temp,NIOS_QUEUE);
   WriteData(rwIRawAddr,((int)(RWMotorData[i_rw_motors].current/30.0*32768.0)),NIOS_QUEUE);

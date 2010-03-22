@@ -77,6 +77,7 @@ extern short int InCharge; /* tx.c */
 #define SBFID_PVTGEODETIC       5904
 #define SBFID_RECEIVERTIME      5914
 #define SBFID_ATTEULER          5938
+#define SBFID_ATTCOVEULER	5939
 
 #define BDRATE B115200
 // #define SELECT_GPS_MUS_OUT  200000
@@ -175,6 +176,25 @@ typedef struct {
   htF32_t             omega_z;
 } AttitudeEulerBlock_t;
 
+typedef struct {
+  htUI16_t            Sync;
+  htUI16_t            CRC;
+  htUI16_t            ID;
+  htUI16_t            Length;
+
+  htUI32_t            TOW;
+  htUI16_t            WNc;
+  htUI08_t            Reserved;
+  htUI08_t            Error;
+
+  htF32_t             Cov_HeadHead;
+  htF32_t             Cov_PitchPitch;
+  htF32_t             Cov_RollRoll;
+  htF32_t             Cov_HeadPitch;
+  htF32_t             Cov_HeadRoll;
+  htF32_t             Cov_PitchRoll;
+} AttitudeCovEulerBlock_t;
+
 /* SBF sync bytes */
 static const char SYNC_STRING[3]="$@";
 
@@ -258,54 +278,54 @@ htBool_t CRCIsValid(void *Mess)
 
 static htI32_t CheckBlock(int fd, htUI08_t* Buffer)
 {
-	VoidBlock_t* VoidBlock = (VoidBlock_t*)Buffer;
-	
-	/* Read the block header, remember that the first '$' is already present in Buffer[0]. */
-	int hdrexp=HEADER_SIZE-1;
-	int cnt=0;
-	do {
-	  int retn=read(fd,&Buffer[1+cnt],1);
-	  if (retn<0) {
-	    return -1;
-	    bprintf(err,"DGPS: no response");
-	  }
-	  cnt +=retn;
-	} while (cnt < hdrexp);
-	
-	//printf("\nBuffer: %3u %3u %3u %3u\n",Buffer[0],Buffer[1],Buffer[2],Buffer[3]);
-	//printf("Header: %3u %3u %3u\n\n",VoidBlock->Sync, VoidBlock->ID, VoidBlock->Length);
-	/*Check block header*/
-	if ((VoidBlock->Sync !=
-		((htUI16_t)SYNC_STRING[0] | (htUI16_t)SYNC_STRING[1]<<8))        ||
-		(VoidBlock->ID       < MIN_CMDID)                                ||
-		((VoidBlock->ID      > MAX_CMDID) & (VoidBlock->ID < MIN_SBFID)) ||
-		(VoidBlock->ID       > MAX_SBFID)                                ||
-		(VoidBlock->Length   > MAX_SBFSIZE)                              ||
-		(VoidBlock->Length   < MIN_SBFSIZE)) {
-		//bprintf(err,"DGPS: Something wrong with block header");
-		return -1;
-	}
-	
-	/* Read one at a time */
-	int expected=VoidBlock->Length-HEADER_SIZE;
-	int count=0; 
-	do { 
-	    int ret=read(fd,&Buffer[HEADER_SIZE+count],1); 
-	    if (ret<0) { 
-//	      bprintf(err,"DGPS: no response");
-	      return -1; 
-	    } 
-	    count +=ret; 
-	} while (count < expected); 
-	
-	if (VoidBlock->ID == SBFID_PVTGEODETIC || VoidBlock->ID ==  SBFID_ATTEULER) {
-	  /* Check the CRC field */
-	  if (CRCIsValid(Buffer) == htFalse){
-	    //	    bprintf(err,"DGPS: CRC invalid");
-	    return -1;
-	  }
-	}
-	return 0;
+  VoidBlock_t* VoidBlock = (VoidBlock_t*)Buffer;
+
+  /* Read the block header, remember that the first '$' is already present in Buffer[0]. */
+  int hdrexp=HEADER_SIZE-1;
+  int cnt=0;
+  do {
+    int retn=read(fd,&Buffer[1+cnt],1);
+    if (retn<0) {
+      return -1;
+      //bprintf(err,"DGPS: no response");
+    }
+    cnt +=retn;
+  } while (cnt < hdrexp);
+
+  //printf("\nBuffer: %3u %3u %3u %3u\n",Buffer[0],Buffer[1],Buffer[2],Buffer[3]);
+  //printf("Header: %3u %3u %3u\n\n",VoidBlock->Sync, VoidBlock->ID, VoidBlock->Length);
+  /*Check block header*/
+  if ((VoidBlock->Sync !=
+	((htUI16_t)SYNC_STRING[0] | (htUI16_t)SYNC_STRING[1]<<8))        ||
+      (VoidBlock->ID       < MIN_CMDID)                                ||
+      ((VoidBlock->ID      > MAX_CMDID) & (VoidBlock->ID < MIN_SBFID)) ||
+      (VoidBlock->ID       > MAX_SBFID)                                ||
+      (VoidBlock->Length   > MAX_SBFSIZE)                              ||
+      (VoidBlock->Length   < MIN_SBFSIZE)) {
+    //bprintf(err,"DGPS: Something wrong with block header");
+    return -1;
+  }
+
+  /* Read one at a time */
+  int expected=VoidBlock->Length-HEADER_SIZE;
+  int count=0; 
+  do { 
+    int ret=read(fd,&Buffer[HEADER_SIZE+count],1); 
+    if (ret<0) { 
+      //	      bprintf(err,"DGPS: no response");
+      return -1; 
+    } 
+    count +=ret; 
+  } while (count < expected); 
+
+  //if (VoidBlock->ID == SBFID_PVTGEODETIC || VoidBlock->ID ==  SBFID_ATTEULER) {
+  /* Check the CRC field */
+  if (CRCIsValid(Buffer) == htFalse){
+    //	    bprintf(err,"DGPS: CRC invalid");
+    return -1;
+  }
+  //}
+  return 0;
 }
 
 htI32_t GetNextBlock(int fd, void* SBFBlock)
@@ -333,11 +353,11 @@ htI32_t GetNextBlock(int fd, void* SBFBlock)
 
     if (n<0) {
       //TODO dgps code needs updates to handle serial errors
-      bprintf(err,"read GPSblock failed!");
+      //bprintf(err,"read GPSblock failed!");
     }
 
     //if (n>0 && c[0]==SYNC_STRING[0]) {
-      //Buffer[0] = (htUI08_t)c[0];
+    //Buffer[0] = (htUI08_t)c[0];
     if (n>0 && c==SYNC_STRING[0]) {
       Buffer[0] = (htUI08_t)c;
       if (CheckBlock(fd, Buffer) == 0) {
@@ -414,24 +434,27 @@ void WatchDGPS()
 
   if (firsttime) {
     firsttime = 0;
-    dgpsAzAddr = GetBiPhaseAddr("dgps_az_raw");     
-    dgpsPitchAddr = GetBiPhaseAddr("dgps_pitch_raw");
-    dgpsRollAddr = GetBiPhaseAddr("dgps_roll_raw"); 
-    dgpsAttOkAddr = GetBiPhaseAddr("dgps_att_ok");
-    dgpsLatAddr = GetBiPhaseAddr("dgps_lat");       
-    dgpsLonAddr = GetBiPhaseAddr("dgps_lon");      
-    dgpsAltAddr = GetBiPhaseAddr("dgps_alt");
-    dgpsSpeedAddr = GetBiPhaseAddr("dgps_speed");   
-    dgpsDirAddr = GetBiPhaseAddr("dgps_dir");       
-    dgpsClimbAddr = GetBiPhaseAddr("dgps_climb");   
-    dgpsNsatAddr = GetBiPhaseAddr("dgps_n_sat");
-    dgpsTimeAddr = GetBiPhaseAddr("dgps_time");
+    dgpsAzAddr = GetBiPhaseAddr("az_raw_dgps");     
+    dgpsPitchAddr = GetBiPhaseAddr("pitch_raw_dgps");
+    dgpsRollAddr = GetBiPhaseAddr("roll_raw_dgps"); 
+    dgpsAttOkAddr = GetBiPhaseAddr("att_ok_dgps");
+    dgpsLatAddr = GetBiPhaseAddr("lat_dgps");       
+    dgpsLonAddr = GetBiPhaseAddr("lon_dgps");      
+    dgpsAltAddr = GetBiPhaseAddr("alt_dgps");
+    dgpsSpeedAddr = GetBiPhaseAddr("speed_dgps");   
+    dgpsDirAddr = GetBiPhaseAddr("dir_dgps");       
+    dgpsClimbAddr = GetBiPhaseAddr("climb_dgps");   
+    dgpsNsatAddr = GetBiPhaseAddr("n_sat_dgps");
+    dgpsTimeAddr = GetBiPhaseAddr("time_dgps");
   } 
 
   /* Initialize values in DGPSAtt and DGPSPos structures */
   DGPSAtt[0].az = 0;
   DGPSAtt[0].pitch = 0;
   DGPSAtt[0].roll = 0;
+  DGPSAtt[0].az_cov = 0;
+  DGPSAtt[0].pitch_cov = 0;
+  DGPSAtt[0].roll_cov = 0;
   DGPSAtt[0].att_ok = 0;
   dgpsatt_index = 1;
 
@@ -490,7 +513,8 @@ void WatchDGPS()
   //try to open the port
   dgpsinfo.open = 0;
   while (dgpsinfo.open == 0) {
-    if ((fd = open(GPSCOM1, O_RDWR | O_NOCTTY | O_NDELAY)) < 0) {
+    //if ((fd = open(GPSCOM1, O_RDWR | O_NOCTTY | O_NDELAY)) < 0) {
+    if ((fd = open(GPSCOM1, O_RDWR | O_NOCTTY)) < 0) {
       usleep(20000);
       // FIXME: reboot device master if this goes on for too long?
       // open fails only if the devicemaster is having troubles
@@ -514,15 +538,17 @@ void WatchDGPS()
   term.c_cflag &= ~CRTSCTS;  //flow control off (no RTS/CTS)
   /*Local Modes*/
   term.c_lflag =0;
-  term.c_cc[VTIME]=0;
-  term.c_cc[VMIN]=0;
+  //term.c_cc[VTIME]=0;
+  //term.c_cc[VMIN]=0;
   //term.c_lflag |= ICANON;    // enable canonical (line-based) input
-  //term.c_lflag &= ~ICANON;    // disable canonical (line-based) input
+  term.c_lflag &= ~ICANON;    // disable canonical (line-based) input
   /*Input Modes*/
   //term.c_iflag = 0;
   //term.c_iflag = ICRNL;      // map CR to NL on input
   /*Output Modes*/
   term.c_oflag = 0;
+
+  cfmakeraw(&term);
 
   /*Activate settings for the port*/
   tcsetattr(fd,TCSANOW,&term);
@@ -558,7 +584,7 @@ void WatchDGPS()
     /* Time */
     if (((VoidBlock_t*)SBFBlock)->ID == SBFID_RECEIVERTIME) {
       ReceiverTimeBlock_t* RXTIME = (ReceiverTimeBlock_t*) SBFBlock;
-      bprintf(info,"%-2i %13.1f %3i %3i %3i %3i %3i %3i "
+      /*bprintf(info,"%-2i %13.1f %3i %3i %3i %3i %3i %3i "
 	"0 0 0 0 0 0 0 0 0\n",
 	-5,
 	RXTIME->WNc*86400.0*7.0+RXTIME->TOW/1000.0,
@@ -569,7 +595,7 @@ void WatchDGPS()
 	RXTIME->UTCMin,
 	RXTIME->UTCSec
 	//RXTIME->SyncLevel
-	);
+	);*/
       ts.tm_year=RXTIME->UTCYear;
       ts.tm_mon=RXTIME->UTCMonth;
       ts.tm_mday=RXTIME->UTCDay;
@@ -581,7 +607,8 @@ void WatchDGPS()
       ts.tm_mon--; // Jan is 1 in UTC, 0 in Unix time
 
       if (RXTIME->UTCSec != -128)  {
-	DGPSTime = mktime(&ts) - timezone + LEAP_SECONDS;
+	//DGPSTime = mktime(&ts) - timezone + LEAP_SECONDS;
+	DGPSTime = timegm(&ts) + LEAP_SECONDS;
 	ntpshm_put((double)DGPSTime); //segmentation fault unless run mcp as sudo
       }
 
@@ -621,11 +648,11 @@ void WatchDGPS()
       if (pos_ok) {
 	dgpspos_index = INC_INDEX(dgpspos_index);
       }
-    }
-    /* Attitude */
-    else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_ATTEULER) {
+    } else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_ATTEULER) {
+    
+      /* Attitude */
       AttitudeEulerBlock_t* ATTEULER = (AttitudeEulerBlock_t*) SBFBlock;
-      /*printf("%-2i %13.1f %14.5f %14.5f %14.5f"
+      /*bprintf(info,"%-2i %13.1f %14.5f %14.5f %14.5f"
 	" %3u %3u %3u 0 0 0 0 0 0\n",
 	-3,
 	ATTEULER->WNc*86400.0*7.0+ATTEULER->TOW/1000.0,
@@ -639,10 +666,22 @@ void WatchDGPS()
       if (ATTEULER->Heading != -2e10) DGPSAtt[dgpsatt_index].az = ATTEULER->Heading;
       if (ATTEULER->Pitch != -2e10) DGPSAtt[dgpsatt_index].pitch = ATTEULER->Pitch;
       if (ATTEULER->Roll != -2e10) DGPSAtt[dgpsatt_index].roll = ATTEULER->Roll;	
-      DGPSAtt[dgpsatt_index].att_ok = 1;
+      if ((ATTEULER->Heading == -2e10)			  || 
+	  (ATTEULER->Pitch == -2e10)			  || 
+	  (ATTEULER->Roll == -2e10)) {
+	DGPSAtt[dgpsatt_index].att_ok = 0;
+      } else {
+	DGPSAtt[dgpsatt_index].att_ok = 1;
+	dgpsatt_index = INC_INDEX(dgpsatt_index);
+      }	
+    } else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_ATTCOVEULER) {
 
-      dgpsatt_index = INC_INDEX(dgpsatt_index);
-    }
+      /* Attitude Covariance*/
+      AttitudeCovEulerBlock_t* ATTCOVEULER = (AttitudeCovEulerBlock_t*) SBFBlock;
+      DGPSAtt[dgpsatt_index].az_cov = ATTCOVEULER->Cov_HeadHead;
+      DGPSAtt[dgpsatt_index].pitch_cov = ATTCOVEULER->Cov_PitchPitch;
+      DGPSAtt[dgpsatt_index].roll_cov = ATTCOVEULER->Cov_RollRoll;
+    } 
   }	
   return;
 
