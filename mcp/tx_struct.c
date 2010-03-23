@@ -349,11 +349,11 @@ struct ChannelStruct SlowChannels[] = {
   {"t_cpu1",       'w', LOOP1, 26,               0.01,             0.0, 'u', U_NONE},
   {"mag_model",    'w', LOOP1, 27,              I2DEG,             0.0, 'u', U_NONE}, // magnetic declination
   {"sensor_veto",  'w', LOOP1, 28,                1.0,             0.0, 'u', U_NONE},
-  {"bal_on",       'w', LOOP1, 29,           1./1648.,             0.0, 'u', U_I_A},
-  {"bal_off",      'w', LOOP1, 30,           1./1648.,             0.0, 'u', U_I_A},
-  {"bal_target",   'w', LOOP1, 31,           1./1648.,            -5.0, 'u', U_I_A},
+  {"level_on_bal", 'w', LOOP1, 29,           1./1990.13,             0.0, 'u', U_I_A},
+  {"level_off_bal",'w', LOOP1, 30,           1./1990.13,             0.0, 'u', U_I_A},
+  {"level_target_bal",'w', LOOP1, 31,           1./1990.13,            -5.0, 'u', U_I_A},
   /* LOOP1 32-33 are wide */
-  {"bal_veto",     'w', LOOP1, 34,                1.0,             0.0, 's', U_NONE},
+  {"veto_bal",     'w', LOOP1, 34,                1.0,             0.0, 's', U_NONE},
   {"sip_alt",      'w', LOOP1, 37,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 38-41 are wide */
   {"isc_mapmean",  'w', LOOP1, 42,                 1.,             0.0, 'u', U_NONE},
@@ -546,7 +546,7 @@ struct ChannelStruct SlowChannels[] = {
   {"ss_trim",      'w', LOOP4, 57,              I2DEG,             0.0, 's', U_NONE},
   /* LOOP4 58-59 are wide */
   {"az_raw_dgps",  'w', LOOP4, 60,              I2DEG,             0.0, 'u', U_P_DEG},
-  {"bal_gain",     'w', LOOP4, 61,            1/1000.,             0.0, 'u', U_NONE},
+  {"gain_bal",     'w', LOOP4, 61,            1/1000.,             0.0, 'u', U_NONE},
   {"clin_el",      'w', LOOP4, 62,              I2DEG,             0.0, 'u', U_NONE},
   {"p_h",          'w', LOOP4, 63,              I2DEG,             0.0, 'u', U_NONE}, // scan height
 
@@ -749,8 +749,8 @@ struct ChannelStruct SlowChannels[] = {
   {"t_array",      'r',  ACS1_T1, 21,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_acs",        'r',  ACS1_T1, 23,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_acs_dcdc",   'r',  ACS1_T1, 25,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_1bal",       'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_2bal",       'r',  ACS1_T1, 35,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_box_bal",       'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_pump_bal",       'r',  ACS1_T1, 35,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_ext2",       'r',  ACS1_T1, 37,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_ext3",       'r',  ACS1_T1, 39,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_ext4",       'r',  ACS1_T1, 41,         CAL16T(1.0, 0.0),         'u', U_T_C},
@@ -759,7 +759,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_ext7",       'r',  ACS1_T1, 47,         CAL16T(1.0, 0.0),         'u', U_T_C},
 
 /* ACS2 Digital I/O card */
-  {"v_pump_bal",    'w',  ACS2_D,  0,                1.0,             0.0, 'u', U_NONE},
+  {"v_pump_bal",    'w',  ACS2_D,  0,                1990.13,             0.0, 'u', U_NONE},
   {"dac2_ampl",    'w',  ACS2_D,  1,                1.0,             0.0, 'u', U_NONE},
   {"piv_dac",      'w',  ACS2_D,  2,                1.0,             0.0, 'u', U_NONE},
   //  {"dac3_ampl",    'w',  ACS2_D,  2,                1.0,             0.0, 'u', U_NONE},

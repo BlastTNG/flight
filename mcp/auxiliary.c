@@ -247,11 +247,11 @@ static int Balance(int bits_bal)
   }
  
   // if vetoed {
-  if (CommandData.pumps.bal_veto > 0) {
-    CommandData.pumps.bal_veto--;
+  if (CommandData.pumps.veto_bal > 0) {
+    CommandData.pumps.veto_bal--;
   }
 
-  if ((CommandData.pumps.mode == bal_rest) || (CommandData.pumps.bal_veto > 0)) {
+  if ((CommandData.pumps.mode == bal_rest) || (CommandData.pumps.veto_bal > 0)) {
  
     // set direction
     bits_bal &= (0xFF - BAL_DIRE); /* Clear reverse bit */ 
@@ -284,7 +284,7 @@ static int Balance(int bits_bal)
     //   calculate speed and direction
     smoothed_i = slow_data[elDacAddr->index][elDacAddr->channel] / 500. +
           smoothed_i * (499. / 500.);
-    error = smoothed_i - I_EL_ZERO - CommandData.pumps.bal_target;
+    error = smoothed_i - I_EL_ZERO - CommandData.pumps.level_target_bal;
 
     //   set direction and valve bits
     if (error > 0) {
@@ -295,8 +295,8 @@ static int Balance(int bits_bal)
     }
 
     //   set gain
-    // level = error * CommandData.pumps.bal_gain;
-    level = PUMP_MAX*CommandData.pumps.bal_gain;
+    // level = error * CommandData.pumps.gain_bal;
+    level = PUMP_MAX*CommandData.pumps.gain_bal;
 
     //   compare to preset values
 
@@ -306,13 +306,13 @@ static int Balance(int bits_bal)
        level = PUMP_MAX;
     }
 
-    if (error > CommandData.pumps.bal_on) {
+    if (error > CommandData.pumps.level_on_bal) {
       pumpon = 1;
-      CommandData.pumps.bal_veto = 0;
-    } else if (error < CommandData.pumps.bal_off) {
+      CommandData.pumps.veto_bal = 0;
+    } else if (error < CommandData.pumps.level_off_bal) {
       pumpon = 0;
-      if(CommandData.pumps.bal_veto > 1) {
-	CommandData.pumps.bal_veto = BAL_VETO_MAX;
+      if(CommandData.pumps.veto_bal > 1) {
+	CommandData.pumps.veto_bal = BAL_VETO_MAX;
       }
     }
 
@@ -346,31 +346,27 @@ static int Balance(int bits_bal)
 static int ControlPumpHeat(int bits_bal)
 {
 
-  static struct BiPhaseStruct *t1BalAddr, *t2BalAddr;
+  static struct BiPhaseStruct *tBoxBalAddr, *tPumpBalAddr;
   static int firsttime = 1;
 
   unsigned int temp1, temp2;
 
   if (firsttime) {
     firsttime = 0;
-    t1BalAddr = GetBiPhaseAddr("t_1bal");
-    t2BalAddr = GetBiPhaseAddr("t_2bal");  
+    tBoxBalAddr = GetBiPhaseAddr("t_box_bal");
+    tPumpBalAddr = GetBiPhaseAddr("t_pump_bal");  
   }
 
-  temp1 = slow_data[t1BalAddr->index][t1BalAddr->channel];
-  temp2 = slow_data[t2BalAddr->index][t2BalAddr->channel];
+  temp1 = slow_data[tBoxBalAddr->index][tBoxBalAddr->channel];
+  temp2 = slow_data[tPumpBalAddr->index][tPumpBalAddr->channel];
 
-//  if (CommandData.pumps.heat_on) {
-//      temp1 > CommandData.pumps.heat_tset
-    if (temp1 < MAX_GYBOX_TEMP && temp1 > MIN_GYBOX_TEMP) {
+  if (CommandData.pumps.heat_on) {
+    if (temp1 > CommandData.pumps.heat_tset) {
       bits_bal |= BAL_DIRE;  /* set heat bit */
     } else {
       bits_bal &= (0xFF - BAL_DIRE); /* clear heat bit */
     }
-//  }
-
- // CommandData.pumps.heat_tset
- // CommandData.pump.heat_on
+  }
 
   return bits_bal;
 
@@ -682,10 +678,10 @@ void CameraTrigger(int which)
 /*****************************************************************/
 void ControlAuxMotors(unsigned short *RxFrame)
 {
-  //static struct NiosStruct* levPumpBalAddr;
-  static struct NiosStruct* balOnAddr, *balOffAddr;
-  static struct NiosStruct* balTargetAddr, *balVetoAddr;
-  static struct NiosStruct* balGainAddr;
+  static struct NiosStruct* vPumpBalAddr;
+  static struct NiosStruct* levelOnBalAddr, *levelOffBalAddr;
+  static struct NiosStruct* levelTargetBalAddr, *vetoBalAddr;
+  static struct NiosStruct* gainBalAddr;
   static struct NiosStruct* bitsBalAddr;
 
   int bits_bal = 0;
@@ -694,12 +690,12 @@ void ControlAuxMotors(unsigned short *RxFrame)
   if (firsttime) {
     firsttime = 0;
     bitsBalAddr = GetNiosAddr("bits_bal");
-    //levPumpBalAddr = GetNiosAddr("lev_pump_bal");
-    balOnAddr = GetNiosAddr("bal_on");
-    balOffAddr = GetNiosAddr("bal_off");
-    balTargetAddr = GetNiosAddr("bal_target");
-    balGainAddr = GetNiosAddr("bal_gain");
-    balVetoAddr = GetNiosAddr("bal_veto");
+    vPumpBalAddr = GetNiosAddr("v_pump_bal");
+    levelOnBalAddr = GetNiosAddr("level_on_bal");
+    levelOffBalAddr = GetNiosAddr("level_off_bal");
+    levelTargetBalAddr = GetNiosAddr("level_target_bal");
+    gainBalAddr = GetNiosAddr("gain_bal");
+    vetoBalAddr = GetNiosAddr("veto_bal");
   }
 
   /* inner frame box */
@@ -714,21 +710,20 @@ void ControlAuxMotors(unsigned short *RxFrame)
 
   //bprintf(info, "MotorControl: (%i)\n", ifpmBits);
 
-  if (CommandData.pumps.bal_veto) {
+  /* Already done in Balance(bits_bal) */
+  //if (CommandData.pumps.veto_bal) {
     /* if we're in timeout mode, decrement the timer */
-    if (CommandData.pumps.bal_veto > 1)
-      CommandData.pumps.bal_veto--;
-    //FIX THIS
-    //WriteData(levPumpBalAddr, CommandData.pumps.pwm1 & 0x7ff, NIOS_QUEUE);
-  }
+    //if (CommandData.pumps.veto_bal > 1)
+    //  CommandData.pumps.veto_bal--;
+    //WriteData(vPumpBalAddr, CommandData.pumps.level & 0x7ff, NIOS_QUEUE);
+  //}
   
-  //WriteData(sprpumpLevAddr, CommandData.pumps.pwm2 & 0x7ff, NIOS_QUEUE);
-  WriteData(balOnAddr, (int)CommandData.pumps.bal_on, NIOS_QUEUE);
-  WriteData(balOffAddr, (int)CommandData.pumps.bal_off, NIOS_QUEUE);
-  WriteData(balVetoAddr, (int)CommandData.pumps.bal_veto, NIOS_QUEUE);
-  WriteData(balTargetAddr, (int)(CommandData.pumps.bal_target + 1990.13 * 5.),
+  WriteData(levelOnBalAddr, (int)CommandData.pumps.level_on_bal, NIOS_QUEUE);
+  WriteData(levelOffBalAddr, (int)CommandData.pumps.level_off_bal, NIOS_QUEUE);
+  WriteData(vetoBalAddr, (int)CommandData.pumps.veto_bal, NIOS_QUEUE);
+  WriteData(levelTargetBalAddr, (int)(CommandData.pumps.level_target_bal + 1990.13*5.),
       NIOS_QUEUE);
-  WriteData(balGainAddr, (int)(CommandData.pumps.bal_gain * 1000.), NIOS_QUEUE);
+  WriteData(gainBalAddr, (int)(CommandData.pumps.gain_bal * 1000.), NIOS_QUEUE);
   WriteData(bitsBalAddr, bits_bal, NIOS_FLUSH);
 }
 

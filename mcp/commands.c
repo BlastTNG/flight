@@ -1301,8 +1301,8 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       /***************************************/
       /********** Lock / Actuators  **********/
     case lock:  /* Lock Inner Frame */
-      if (CommandData.pumps.bal_veto >= 0)
-        CommandData.pumps.bal_veto = BAL_VETO_MAX;
+      if (CommandData.pumps.veto_bal >= 0)
+        CommandData.pumps.veto_bal = BAL_VETO_MAX;
       CommandData.actbus.lock_goal = LS_CLOSED | LS_DRIVE_OFF;
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_LOCK;
@@ -1458,10 +1458,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       /***************************************/
       /********** Balance System  ************/
     case balance_gain:
-      CommandData.pumps.bal_on = rvalues[0] * 1990.13; /* 1990.13 DAC/Amp*/
-      CommandData.pumps.bal_off = rvalues[1] * 1990.13;
-      CommandData.pumps.bal_target = rvalues[2] * 1990.13;
-      CommandData.pumps.bal_gain = rvalues[3];
+      CommandData.pumps.level_on_bal = rvalues[0] * 1990.13; /* 1990.13 DAC/Amp*/
+      CommandData.pumps.level_off_bal = rvalues[1] * 1990.13;
+      CommandData.pumps.level_target_bal = rvalues[2] * 1990.13;
+      CommandData.pumps.gain_bal = rvalues[3];
       break;
     case balance_manual:
       CommandData.pumps.level = rvalues[0];
@@ -2278,7 +2278,7 @@ void InitCommandData()
   /** this overrides prev_status **/
   CommandData.force_el = 0;
 
-  CommandData.pumps.bal_veto = BAL_VETO_MAX;
+  CommandData.pumps.veto_bal = BAL_VETO_MAX;
 
   CommandData.actbus.off = 0;
   CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
@@ -2464,10 +2464,10 @@ void InitCommandData()
   CommandData.gy_ifyaw_offset = 0;
   CommandData.gymask = 0x3f;
   
-  CommandData.pumps.bal_on = 0.2 * 1990.13;  
-  CommandData.pumps.bal_off = 0.1 * 1900.13;
-  CommandData.pumps.bal_target = 0.0 * 1990.13;
-  CommandData.pumps.bal_gain = 0.2;
+  CommandData.pumps.level_on_bal = 0.2 * 1990.13;  
+  CommandData.pumps.level_off_bal = 0.1 * 1900.13;
+  CommandData.pumps.level_target_bal = 0.0 * 1990.13;
+  CommandData.pumps.gain_bal = 0.2;
   CommandData.pumps.mode = bal_rest; // TODO: change for flight
   CommandData.pumps.heat_on = 1;
   CommandData.pumps.heat_tset = 20;
