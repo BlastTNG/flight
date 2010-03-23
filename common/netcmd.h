@@ -24,6 +24,17 @@
 
 #define SOCK_PORT 41414
 
+#define CMD_NONE 0
+#define CMD_ERRR 1
+#define CMD_USER 2
+#define CMD_PING 3
+#define CMD_LURK 4
+#define CMD_LIST 5
+#define CMD_CONN 6
+#define CMD_BCMD 7
+#define CMD_LIMT 8
+#define CMD_SENT 9
+
 extern unsigned short client_n_scommands;
 extern unsigned short client_n_mcommands;
 extern struct scom *client_scommands;
@@ -33,10 +44,9 @@ extern char client_command_list_serial[1024];
 const char* NetCmdBanner(void);
 void NetCmdConnect(const char*, int, int);
 void NetCmdDrop(void);
-int  NetCmdGetAck(int*, int);
+int  NetCmdReceive(int);
 int  NetCmdGetCmdList(void);
 void NetCmdSend(const char*);
-int  NetCmdSubmitCommand(char, char, int, char *[], int);
-int  NetCmdTakeConn(void);
-void NetCmdUpdateConn(void);
+int  NetCmdRequestConn(void);
+int  NetCmdPing(void);
 #endif

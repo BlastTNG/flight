@@ -1,6 +1,7 @@
 /* narsil: GUI commanding front-end
  *
  * This software is copyright (C) 2002-2006 University of Toronto
+ * Parts of this software are copyright 2010 Matthew Truch
  * 
  * This file is part of narsil.
  * 
@@ -24,7 +25,10 @@
 // *  Programmed by Adam Hincks                      *
 // *  Later poked at a bit by D.V.Wiebe              *
 // *  further desecrated by cbn                      *
+// *  Commanding hacked to hell by M.D.P.Truch       *
 // ***************************************************
+
+#define _XOPEN_SOURCE 501
 
 #include <qapplication.h>
 #include <qbuttongroup.h>
@@ -82,6 +86,9 @@
 #ifndef ELOG_HOST
 #define ELOG_HOST "elog.blast"
 #endif
+
+#define PING_TIME 59000
+#define WAIT_TIME 200
 
 const char* blastcmd_host;
 
@@ -443,14 +450,13 @@ void MainForm::Quit() {
 
 //-------------------------------------------------------------
 //
-// Tick (slot): triggered by timer.  Animate the cool picture
-//      of Strider; update conn info; wait for BlastCmd to
-//      finish running and return result.
+// Tick (slot): triggered by timer.  
+//      Animate the cool picture of Strider; 
+//      Check for incoming messages and do as appropriate.
 //
 //-------------------------------------------------------------
 
 void MainForm::Tick() {
-  int returnstatus;
   timer->stop();
 
   if (sending) {
@@ -463,25 +469,43 @@ void MainForm::Tick() {
       dir = 1;
     NWaitImage->setPixmap(*Images[framenum]);
   } else {
-    NetCmdUpdateConn();
-    ConnBanner->setText(NetCmdBanner());
-
     if (framenum != 0) {
       framenum = 0;
       NWaitImage->setPixmap(*Images[framenum]);
     }
   }
 
-  if (sending) {
-    if (NetCmdGetAck(&returnstatus, !verbose)) {
-      if (returnstatus == 12)
-        returnstatus = -1;
-      WriteErr(NLog, returnstatus);
+  ReceivePackets(!verbose, CMD_NONE);
+  
+  ConnBanner->setText(NetCmdBanner());
+  timer->start(WAIT_TIME);
+}
+
+int MainForm::ReceivePackets(int silent, int wait_for)
+{
+  int returnstatus;
+
+  do {
+    returnstatus = NetCmdReceive(!verbose);
+    if (sending && ((returnstatus & 0xFF) == CMD_BCMD))
+    {
+      if ((returnstatus >> 8) == 12)
+        returnstatus = (99 << 8);
+      WriteErr(NLog, returnstatus >> 8);
       TurnOff();
     }
-  }
+  } while (returnstatus != CMD_NONE && returnstatus != wait_for);
+  return returnstatus;
+}
 
-  timer->start(300);
+void MainForm::Ping(void) {
+
+  ping_timer->stop();
+  if (!NetCmdPing())
+  {
+    printf("Error Sending Ping!\n");
+  }
+  ping_timer->start(PING_TIME);
 }
 
 
@@ -546,7 +570,6 @@ void MainForm::TurnOff(void) {
 //-------------------------------------------------------------
 //
 // SendCommand (slot): triggered when user presses send button.
-//    Forks off a process which runs blastcmd.
 //
 //-------------------------------------------------------------
 
@@ -639,10 +662,17 @@ void MainForm::SendCommand() {
     }
 
     /* Take the conn */
-    if (!NetCmdTakeConn()) {
-      WriteCmd(NLog, request);
-      WriteErr(NLog, 12);
-      return;
+    int times = 0;
+    if (!NetCmdRequestConn()) {
+      do {
+        usleep(WAIT_TIME / 2 * 1000); //Half the normal wait time
+        times++;
+      } while (times < 25 && ReceivePackets(!verbose, CMD_CONN) != CMD_CONN);
+      if (!NetCmdRequestConn()) { //Never got the conn.
+        WriteCmd(NLog, request);
+        WriteErr(NLog, 12);
+        return;
+      }
     }
 
     TurnOn();
@@ -840,7 +870,7 @@ void MainForm::WriteErr(QMultiLineEdit *dest, int retstatus) {
   QString txt;
 
   switch (retstatus) {
-    case -1:
+    case 99:
       txt = "  COMMAND NOT SENT:  Cancelled by user.\n";
       break;
     case 0:
@@ -1211,7 +1241,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
   //DataSource->update();
   _dirfile = new Dirfile(tmp, GD_RDONLY);
   timer = new QTimer(this, "image_timer");
-  timer->start(300);
+  timer->start(WAIT_TIME);
 
   ChangeCommandList();
   ChooseCommand();
@@ -1231,12 +1261,16 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
   setMinimumSize(w1, h1);
   setMaximumSize(w1, h1);
 
+  ping_timer = new QTimer(this, "ping_timer");
+  ping_timer->start(PING_TIME);
+
   connect(NSendButton, SIGNAL(clicked()), this, SLOT(SendCommand()));
   connect(NCurFileButton, SIGNAL(clicked()), this, SLOT(ChangeCurFile()));
   connect(NSettingsButton, SIGNAL(clicked()), this, SLOT(ShowSettings()));
   connect(NCloseSettingsWindow, SIGNAL(clicked()), NSettingsWindow,
       SLOT(accept()));
   connect(timer, SIGNAL(timeout()), this, SLOT(Tick()));
+  connect(ping_timer, SIGNAL(timeout()), this, SLOT(Ping()));
 }
 
 MainForm::~MainForm()

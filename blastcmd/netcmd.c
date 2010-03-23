@@ -1,6 +1,7 @@
 /* narsil: groundstation BLAST command software
  *
  * This software is copyright (C) 2005 University of Toronto
+ * Parts of this software are copyright 2010 Matthew Truch
  * 
  * This file is part of narsil.
  * 
@@ -74,13 +75,14 @@ int ReadLine(int sock, char* buffer, int bufflen)
 
   prebuffer_size += i;
 
-  buffer[bufflen - 1] = 0;
+  buffer[bufflen - 1] = '\0';
   for (i = 0; i < bufflen - 1; ++i) {
     if (prebuffer[i] == '\r' || prebuffer[i] == '\n' || prebuffer[i] == '\0') {
-      buffer[i] = 0;
+      buffer[i] = '\0';
       break;
-    } else
+    } else {
       buffer[i] = prebuffer[i];
+    }
   }
 
   while ((prebuffer[i] == '\r' || prebuffer[i] == '\n') && i < 2048)
@@ -121,34 +123,71 @@ void NetCmdDrop(void)
   close(sock);
 }
 
-int NetCmdGetAck(int *ack, int silent)
+/* Does all non-blocking receiving.                           *
+ * Returns integer: lower byte is which command it received.  *
+ *                  upper bytes are optional status.          */
+int NetCmdReceive(int silent)
 {
   char buffer[1024] = "\0";
   int i;
+  int ret_val = 0;
 
   i = ReadLine(sock, buffer, 1024);
+  buffer[1023] = '\0';
 
   if (i < 0) {
     if (errno == EAGAIN)
-      return 0;
+      return CMD_NONE;
     else {
       perror("Unable to receive");
-      *ack = 14;
-      return 1;
+      return CMD_ERRR;
     }
   } else if (strncmp(buffer, ":::ack:::", 9) == 0) {
-    *ack = atoi(buffer + 9);
-    return 1;
+    ret_val = CMD_BCMD + (atoi(buffer + 9) << 8);
   } else if (strncmp(buffer, ":::limit:::", 11) == 0) {
     if (!silent)
       puts(buffer + 11);
+    ret_val = CMD_LIMT;
   } else if (strncmp(buffer, ":::sent:::", 10) == 0) {
     if (!silent)
       printf("Packet: %s\n", buffer + 10);
-  } else
-    printf("%s\n", buffer);
+    ret_val = CMD_SENT;
+  } else if (strncmp(buffer, ":::pong:::", 10) == 0) {
+    if (!silent)
+      printf("Pong received: %s\n", buffer);
+    ret_val = CMD_PING;
+  } else if (strncmp(buffer, ":::slink:::", 11) == 0) {
+    if (!silent)
+      printf("Slinking: %s\n", buffer);
+    ret_val = CMD_LURK;
+  } else if (strncmp(buffer, ":::sender:::", 12) == 0) {
+    if (!silent)
+      printf("Sender received: %s\n", buffer);
+    ret_val = CMD_LURK;
+  } else if (strncmp(buffer, ":::cmd:::", 9) == 0) {
+    if (!silent)
+      printf("Sent Command received: %s\n", buffer);
+    ret_val = CMD_LURK;
+  } else if (strncmp(buffer, ":::rep:::", 9) == 0) {
+    if (!silent)
+      printf("Sent Command Response received: %s\n", buffer);
+    ret_val = CMD_LURK + (atoi(buffer + 9) << 8);
+  } else if (strncmp(buffer, ":::free:::", 10) == 0) {
+    if (!silent)
+      printf("Free received: %s\n", buffer);
+    ret_val = CMD_CONN;
+    SetOwner(buffer);
+  } else if (strncmp(buffer, ":::conn:::", 10) == 0) {
+    if (!silent)
+      printf("Conn received: %s\n", buffer);
+    ret_val = CMD_CONN;
+    SetOwner(buffer);
+  } else {
+    buffer[1023] = '\0';
+    printf("Unknown Reponse: %s\n", buffer);
+  }
 
-  return 0;
+  return ret_val;
 }
 
 void NetCmdSend(const char* buffer)
@@ -156,34 +195,44 @@ void NetCmdSend(const char* buffer)
   send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
 }
 
-int NetCmdSubmitCommand(char t_link, char t_route, int nc, char *command[],
-    int silent)
+const char* NetCmdBanner(void)
 {
-  int i;
-  int ack;
-  char buffer[1024] = {t_link, t_route, ' ', 0};
-
-  for (i = 0; i < nc; ++i) {
-    strcat(buffer, command[i]);
-    strcat(buffer, " ");
+  if (is_free)
+    return "The conn is free.";
+  else if (strncmp(owner, me, strlen(me)) == 0)
+    return "I have the conn.";
+  else {
+    snprintf(banner, 1000, "%s has the conn.", owner);
+    return banner;
   }
-
-  if (!silent)
-    printf("Submitting %s\n\n", buffer);
-
-  strcat(buffer, "\r\n");
-
-  send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
-
-  do {
-    if (NetCmdGetAck(&ack, silent))
-      return ack;
-  } while (1);
-
-  fprintf(stderr, "Unexpected trap in NetCmdSubmitCommand. Stop.\n");
-  exit(-1);
 }
 
+int NetCmdPing(void)
+{
+  char buffer[1024] = "::ping::\r\n";
+  ssize_t sent;
+
+  sent = send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
+
+  if (sent == -1)
+    return 0;
+
+  return 1;
+}
+
+int NetCmdRequestConn(void)
+{
+  char buffer[1024] = "::take::\r\n";
+
+  /* don't request it if we already have it */
+  if (is_free == 0 && strncmp(owner, me, strlen(me)) == 0)
+    return 1;
+
+  send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
+  return 0;
+}
+
+//Blocks on reading until list comes through.
 int NetCmdGetCmdList(void)
 {
   int i, n, c = 0;
@@ -242,63 +291,7 @@ int NetCmdGetCmdList(void)
   return 0;
 }
 
-void NetCmdUpdateConn(void)
-{
-  char buffer[1024] = "";
-  int i;
-
-  do {
-    i = ReadLine(sock, buffer, 1024);
-
-    if (i == -1 && errno == EAGAIN) {
-      break;
-    } else if (i == -1) {
-      perror("Error on network read");
-      exit(1);
-    } else if (i == 0) {
-      fprintf(stderr, "Connection reset by peer.\n");
-      exit(1);
-    } else
-      SetOwner(buffer);
-  } while (1);
-}
-
-const char* NetCmdBanner(void)
-{
-  if (is_free)
-    return "The conn is free.";
-  else if (strncmp(owner, me, strlen(me)) == 0)
-    return "I have the conn.";
-  else {
-    sprintf(banner, "%s has the conn.", owner);
-    return banner;
-  }
-}
-
-int NetCmdTakeConn(void)
-{
-  int i;
-  char buffer[1024] = "::take::\r\n";
-
-  /* don't take it if we already have it */
-  if (is_free == 0 && strncmp(owner, me, strlen(me)) == 0)
-    return 1;
-
-  send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
-
-  if ((i = recv(sock, buffer, 1024, 0)) <= 0) {
-    perror("Unable to receive");
-    exit(14);
-  } else if (buffer[0] != ':' || buffer[1] != ':' || buffer[2] != ':') {
-    fprintf(stderr, "Protocol error from daemon.\n");
-    exit(14);
-  }
-
-  SetOwner(buffer);
-
-  return (is_free == 0 && strncmp(owner, me, strlen(me)) == 0);
-}
-
+// Initialization Function... All blocking network i/o.
 void NetCmdConnect(const char* host, int silent, int silenter)
 {
   int i;

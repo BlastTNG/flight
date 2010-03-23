@@ -130,6 +130,7 @@ class MainForm : public QMainWindow
     void TurnOn(void);
     void TurnOff(void);
     QTimer *timer;
+    QTimer *ping_timer;
 
   protected:
     QGridLayout *NGroupsLayout;
@@ -150,6 +151,8 @@ class MainForm : public QMainWindow
     void WriteErr(QMultiLineEdit *dest, int retstatus);
     void WriteLog(const char *request);
     QLabel* ConnBanner;
+
+    int ReceivePackets(int, int);
 
     int lastmcmd;
     QString curfile;
@@ -173,6 +176,7 @@ class MainForm : public QMainWindow
     void Tick();
     void ChangeCurFile();
     void ShowSettings();
+    void Ping();
 };
 #endif
 
