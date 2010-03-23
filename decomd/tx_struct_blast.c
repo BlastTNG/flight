@@ -759,7 +759,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_ext7",       'r',  ACS1_T1, 47,         CAL16T(1.0, 0.0),         'u', U_T_C},
 
 /* ACS2 Digital I/O card */
-  {"v_pump_bal",    'w',  ACS2_D,  0,       1.0/13107.0,           2.504, 'u', U_NONE},
+  {"v_pump_bal",    'w',  ACS2_D,  0,       1.0/13107.0,          -2.504, 'u', U_NONE},
   {"dac2_ampl",    'w',  ACS2_D,  1,                1.0,             0.0, 'u', U_NONE},
   {"piv_dac",      'w',  ACS2_D,  2,                1.0,             0.0, 'u', U_NONE},
   //  {"dac3_ampl",    'w',  ACS2_D,  2,                1.0,             0.0, 'u', U_NONE},
