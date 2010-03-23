@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 FINISHED_OK=0
 rm -f configure.in
@@ -27,7 +27,7 @@ fi
 set +x
 
 echo ""
-if [ "x$FINISHED_OK" == "x1" ]; then
+if [ "$FINISHED_OK" == "1" ]; then
   echo "good: bootstrap finished.  Now try ./configure"
 else
   echo "oops: bootstrapping errors.  Check your package or try \`cvs update'"
