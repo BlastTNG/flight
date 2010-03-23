@@ -682,7 +682,7 @@ void CameraTrigger(int which)
 /*****************************************************************/
 void ControlAuxMotors(unsigned short *RxFrame)
 {
-  static struct NiosStruct* levPumpBalAddr;
+  //static struct NiosStruct* levPumpBalAddr;
   static struct NiosStruct* balOnAddr, *balOffAddr;
   static struct NiosStruct* balTargetAddr, *balVetoAddr;
   static struct NiosStruct* balGainAddr;
@@ -694,7 +694,7 @@ void ControlAuxMotors(unsigned short *RxFrame)
   if (firsttime) {
     firsttime = 0;
     bitsBalAddr = GetNiosAddr("bits_bal");
-    levPumpBalAddr = GetNiosAddr("lev_pump_bal");
+    //levPumpBalAddr = GetNiosAddr("lev_pump_bal");
     balOnAddr = GetNiosAddr("bal_on");
     balOffAddr = GetNiosAddr("bal_off");
     balTargetAddr = GetNiosAddr("bal_target");

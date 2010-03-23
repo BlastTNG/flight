@@ -97,12 +97,12 @@
  * corresponding entry in slow_dl.c
  * !!!!!!!!!!!!!!!!!!!!!!!!!! DO NOT FLY WITH TMP NODES !!!!!!!!!!!!!!!!!!!!!!!!
  ******************************************************************************/
-#define	TMP1	50, 0	//all channels formerly on ACS0
-#define	TMP2	51, 0	//all channels formerly on ACS1
-#define TMP3	52, 0	//all channels formerly on ACS2
-#define TMP4	53, 0	//all channels formerly on ACS3
-#define TMP5    54, 0   //all channels formerly on CRYO
-#define TMP6	55, 0	//all channels formerly on BIAS
+//#define	TMP1	50, 0	//all channels formerly on ACS0
+//#define	TMP2	51, 0	//all channels formerly on ACS1
+//#define TMP3	52, 0	//all channels formerly on ACS2
+//#define TMP4	53, 0	//all channels formerly on ACS3
+//#define TMP5    54, 0   //all channels formerly on CRYO
+//#define TMP6	55, 0	//all channels formerly on BIAS
 
 /* read and write channel 56 on all boards reserved for ADC Sync */
 
@@ -280,22 +280,24 @@ struct ChannelStruct SlowChannels[] = {
   {"bias_ramp_ena",'w',  BIAS_D,  8,                1.0,             0.0, 'u', U_NONE},
   {"ramp_ampl",    'r',  BIAS_D,  0,                1.0,             0.0, 'u', U_NONE},
 
-  /* generic names for analog channels. BE MORE SPECIFIC 
-   * Also, can maybe get rid on a TMP Channel when you do */
-  {"das_t00",      'r', BIAS_T1,  1,         CAL16T(1.0,            0.0), 'u', U_NONE},
-  {"das_t01",      'r', BIAS_T1,  3,         CAL16T(1.0,            0.0), 'u', U_NONE},
-  {"das_t02",      'r', BIAS_T1,  5,         CAL16T(1.0,            0.0), 'u', U_NONE},
-  {"das_t03",      'r', BIAS_T1,  7,         CAL16T(1.0,            0.0), 'u', U_NONE},
-  {"das_t04",      'r', BIAS_T1,  9,         CAL16T(1.0,            0.0), 'u', U_NONE},
-  {"das_t05",      'r', BIAS_T1, 11,         CAL16T(1.0,            0.0), 'u', U_NONE},
-  {"das_t06",      'r', BIAS_T1, 13,         CAL16T(1.0,            0.0), 'u', U_NONE},
-  {"das_t07",      'r', BIAS_T1, 15,         CAL16T(1.0,            0.0), 'u', U_NONE},
-  {"das_t08",      'r', BIAS_T1, 17,         CAL16T(1.0,            0.0), 'u', U_NONE},
-  {"das_t09",      'r', BIAS_T1, 19,         CAL16T(1.0,            0.0), 'u', U_NONE},
-  {"das_t10",      'r', BIAS_T1, 21,         CAL16T(1.0,            0.0), 'u', U_NONE},
-  {"das_t11",      'r', BIAS_T1, 23,         CAL16T(1.0,            0.0), 'u', U_NONE},
-  {"das_t12",      'r', BIAS_T1, 25,         CAL16T(1.0,            0.0), 'u', U_NONE},
-  {"das_t13",      'r', BIAS_T1, 27,         CAL16T(1.0,            0.0), 'u', U_NONE},
+  /* the following 9 AD590s, except t_das all had calibrated offsets */
+  /* these are all carry dover from the previous BIAS card (TMP6) */
+  {"t_primary_2",  'r', BIAS_T1,  1, CAL16T(1.0, AD590_CALIB_PRIMARY_2),  'u', U_NONE},
+  {"t_strut_bot",  'r', BIAS_T1,  3, CAL16T(1.0, AD590_CALIB_STRUT_1),    'u', U_NONE},
+  {"t_primary_1",  'r', BIAS_T1,  5, CAL16T(1.0, AD590_CALIB_PRIMARY_1),  'u', U_NONE},
+  {"t_secondary_1",'r', BIAS_T1,  7, CAL16T(1.0, AD590_CALIB_SECONDARY_1),'u', U_NONE},
+  {"t_secondary_2",'r', BIAS_T1,  9, CAL16T(1.0, AD590_CALIB_SECONDARY_2),'u', U_NONE},
+  {"t_strut_side", 'r', BIAS_T1, 11, CAL16T(1.0, AD590_CALIB_STRUT_2),    'u', U_NONE},
+  {"t_push_plate", 'r', BIAS_T1, 13, CAL16T(1.0, AD590_CALIB_PUSH_PLATE), 'u', U_NONE},
+  {"t_act_motor",  'r', BIAS_T1, 15, CAL16T(1.0, AD590_CALIB_ACT_MOTOR),  'u', U_NONE},
+  {"t_rec",        'r', BIAS_T1, 17, CAL16T(1.0, AD590_CALIB_REC),        'u', U_NONE},
+  {"t_das",        'r', BIAS_T1, 19, CAL16T(1.0, 0.0),                    'u', U_NONE},
+  /* AD590 calibrations per Marco 2006-11 */
+  {"t_if_top_frnt",'r', BIAS_T1, 21, CAL16T(1.0, AD590_CALIB_INFRAME_1),  'u', U_NONE},
+  {"t_if_top_back",'r', BIAS_T1, 23, CAL16T(1.0, AD590_CALIB_INFRAME_2),  'u', U_NONE},
+  {"t_if_bot_frnt",'r', BIAS_T1, 25, CAL16T(1.0, AD590_CALIB_INFRAME_3),  'u', U_NONE},
+  {"t_if_bot_back",'r', BIAS_T1, 27, CAL16T(1.0, AD590_CALIB_INFRAME_4),  'u', U_NONE},
+  /* generic names for remaining analog channels. BE MORE SPECIFIC */
   {"das_t14",      'r', BIAS_T1, 29,         CAL16T(1.0,            0.0), 'u', U_NONE},
   {"das_t15",      'r', BIAS_T1, 31,         CAL16T(1.0,            0.0), 'u', U_NONE},
   {"das_t16",      'r', BIAS_T1, 33,         CAL16T(1.0,            0.0), 'u', U_NONE},
@@ -792,8 +794,8 @@ struct ChannelStruct SlowChannels[] = {
 /* TODO These TMP channels need to be added to correct new nodes, or deleted */
 //  {"t_el_mc",      'r',  TMP1,  3,                    CAL16T(1.0, 0.0), 'u', U_NONE},
 //  {"t_el_mot",     'r',  TMP1,  5,                    CAL16T(1.0, 0.0), 'u', U_NONE},
-  {"apcu_reg",     'w',  TMP1,  4,             0.0382,           27.25, 'u', U_NONE}, // to be deprecated
-  {"dpcu_reg",     'w',  TMP1,  5,             0.0382,           27.25, 'u', U_NONE}, // to be deprecated
+  //{"apcu_reg",     'w',  TMP1,  4,             0.0382,           27.25, 'u', U_NONE}, // to be deprecated
+  //{"dpcu_reg",     'w',  TMP1,  5,             0.0382,           27.25, 'u', U_NONE}, // to be deprecated
 
 //  {"t_reac",       'r',  TMP2, 29,                    CAL16T(1.0, 0.0), 'u', U_NONE},
 //  {"t_reac_mc",    'r',  TMP2, 31,                    CAL16T(1.0, 0.0), 'u', U_NONE},
@@ -804,11 +806,6 @@ struct ChannelStruct SlowChannels[] = {
   //  {"t_ss_back_mid",'r',  TMP3,  3,                    CAL16T(1.0, 0.0), 'u', U_NONE},
   //  {"i_sun",        'r',  TMP3, 13,           0.000625,          -20.48, 'u', U_NONE},
 
-  /* AD590 calibrations per Marco 2006-11 */
-  //  {"t_if_top_frnt",'r',  TMP3, 17,  CAL16T(1.0, AD590_CALIB_INFRAME_1), 'u', U_NONE},
-  //  {"t_if_top_back",'r',  TMP3, 19,  CAL16T(1.0, AD590_CALIB_INFRAME_2), 'u', U_NONE},
-  //  {"t_if_bot_frnt",'r',  TMP3, 21,  CAL16T(1.0, AD590_CALIB_INFRAME_3), 'u', U_NONE},
-  //  {"t_if_bot_back",'r',  TMP3, 23,  CAL16T(1.0, AD590_CALIB_INFRAME_4), 'u', U_NONE},
 
   //  {"t_lock_motor", 'r',  TMP3, 25,                    CAL16T(1.0, 0.0), 'u', U_NONE},
   //  {"t_chin_mid",   'r',  TMP3, 31,                    CAL16T(1.0, 0.0), 'u', U_NONE},
@@ -820,18 +817,18 @@ struct ChannelStruct SlowChannels[] = {
   //  {"t_dpcu",       'r',  TMP4,  7,                    CAL16T(1.0, 0.0), 'u', U_NONE},
   //  {"t_sol_port",   'r',  TMP4,  9,                    CAL16T(1.0, 0.0), 'u', U_NONE},
   //  {"t_sol_stbd",   'r',  TMP4, 11,                    CAL16T(1.0, 0.0), 'u', U_NONE},
-  {"t_batt_acs",   'r',  TMP4, 13,                    CAL16T(1.0, 0.0), 'u', U_NONE}, // to be changed/deprecated
-  {"t_batt_das",   'r',  TMP4, 15,                    CAL16T(1.0, 0.0), 'u', U_NONE}, // to be changed/deprecated
+  //{"t_batt_acs",   'r',  TMP4, 13,                    CAL16T(1.0, 0.0), 'u', U_NONE}, // to be changed/deprecated
+  //{"t_batt_das",   'r',  TMP4, 15,                    CAL16T(1.0, 0.0), 'u', U_NONE}, // to be changed/deprecated
   //  {"i_gond_acs",   'r',  TMP4, 17,          -1.875E-3,           61.44, 'u', U_NONE},
   //  {"i_gond_das",   'r',  TMP4, 19,          -1.875E-3,           61.44, 'u', U_NONE},
-  {"lev_pump_bal",  'w',  TMP4,  3,    -0.048851978505,           100.0, 'u', U_NONE}, 
+  //{"lev_pump_bal",  'w',  TMP4,  3,    -0.048851978505,           100.0, 'u', U_NONE}, 
   //{"sprpump_lev",  'w',  TMP4,  4,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
   //{"inpump_lev",   'w',  TMP4,  5,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
   //{"outpump_lev",  'w',  TMP4,  6,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
 
-  {"he4_lev",      'r',  TMP5,  1,  -2.87477e-09*65536,      12.3273561, 'u', U_NONE},
-  {"i_charcoal",   'r',  TMP5,  3,     -2.639826420E-6,     0.157988332, 'u', U_NONE},
-  {"i_coldplate",  'r',  TMP5,  5,      -2.32217573E-5,     1.390309833, 'u', U_NONE},
+  //{"he4_lev",      'r',  TMP5,  1,  -2.87477e-09*65536,      12.3273561, 'u', U_NONE},
+  //{"i_charcoal",   'r',  TMP5,  3,     -2.639826420E-6,     0.157988332, 'u', U_NONE},
+  //{"i_coldplate",  'r',  TMP5,  5,      -2.32217573E-5,     1.390309833, 'u', U_NONE},
 /*
   {"cryoin",       'r',  TMP5, 60,                 1.0,             0.0, 'u', U_NONE},
   {"cryoout2",     'w',  TMP5,  1,                 1.0,             0.0, 'u', U_NONE},
@@ -842,21 +839,6 @@ struct ChannelStruct SlowChannels[] = {
   {"jfetpwm",      'w',  TMP5,  6,          100./2047.,              0., 'u', U_NONE},
   {"cryoctrl",     'w',  TMP5, 31,                 1.0,              0., 'u', U_NONE},
 */
-
-  /* BIAS 0-4 are wide fast */
-  /* the following 9 AD590s, except t_das all had calibrated offsets */
-  {"t_primary_2",  'r',  TMP6,  5,   CAL16T(1.0, AD590_CALIB_PRIMARY_2),   'u', U_NONE}, // need to be associates w/ t_dasX channel
-  {"t_strut_bot",  'r',  TMP6,  7,   CAL16T(1.0, AD590_CALIB_STRUT_1),     'u', U_NONE},
-  {"t_primary_1",  'r',  TMP6,  9,   CAL16T(1.0, AD590_CALIB_PRIMARY_1),   'u', U_NONE},
-  {"t_secondary_1",'r',  TMP6, 11,   CAL16T(1.0, AD590_CALIB_SECONDARY_1), 'u', U_NONE},
-  {"t_secondary_2",'r',  TMP6, 13,   CAL16T(1.0, AD590_CALIB_SECONDARY_2), 'u', U_NONE},
-  //  {"t_strut_side", 'r',  TMP6, 15,   CAL16T(1.0, AD590_CALIB_STRUT_2),     'u', U_NONE},
-  //  {"t_push_plate", 'r',  TMP6, 17,   CAL16T(1.0, AD590_CALIB_PUSH_PLATE),  'u', U_NONE},
-  //  {"t_act_motor",  'r',  TMP6, 19,   CAL16T(1.0, AD590_CALIB_ACT_MOTOR),   'u', U_NONE},
-  //  {"t_rec",        'r',  TMP6, 35,   CAL16T(1.0, AD590_CALIB_REC),         'u', U_NONE},
-  //  {"t_das",        'r',  TMP6, 47,   CAL16T(1.0, 0.0),                     'u', U_NONE},
-
-
 
   END_OF_CHANNELS
 };

@@ -140,7 +140,7 @@ static void WriteAux(void)
     southIAmReadAddr = ExtractBiPhaseAddr(southIAmAddr);
 
     he4LevOldAddr = GetNiosAddr("he4_lev_old");
-    he4LevReadAddr = GetBiPhaseAddr("he4_lev");
+    //he4LevReadAddr = GetBiPhaseAddr("he4_lev");
 
     cpuTemp1Addr = GetNiosAddr("t_cpu1");
     cpuTemp2Addr = GetNiosAddr("t_cpu2");
@@ -170,11 +170,13 @@ static void WriteAux(void)
     bputs(info, "System: I have lost control.\n");
   }
 
+  /* TODO reenable this, but make sure he4_lev corresopnds to a non-TMP field
   if (CommandData.Cryo.heliumLevel)
     CommandData.Cryo.he4_lev_old
       = slow_data[he4LevReadAddr->index][he4LevReadAddr->channel];
 
   WriteData(he4LevOldAddr, CommandData.Cryo.he4_lev_old, NIOS_QUEUE);
+  */
 
   incharge = InCharge;
 
@@ -1443,7 +1445,8 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     StoreHWPRBus();
 #ifndef BOLOTEST
     SetGyroMask();
-    ChargeController();
+    //TODO reenable ChargeController() call when it's reimplemented
+    //ChargeController();
     ControlPower();
 #endif
   }
