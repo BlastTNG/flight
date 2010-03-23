@@ -510,7 +510,7 @@ void Daemonise(int route, int no_fork)
                 strncpy(cmd, buffer, 512);
                 cmd[511] = 0;
                 for (i = 0; i < 1024; i++)
-                  if (conn[i].lurk)
+                  if (i != n && conn[i].lurk)
                     conn[i].lurk = 3;
               }
             }
