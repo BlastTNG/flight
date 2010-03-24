@@ -516,14 +516,14 @@
   </BOX>
   <BOX caption="Balance" colour="#880000" row="2" col="3">
     <MULTI caption="Status">
-      <DATUM src="BAL_VETO">
+      <DATUM src="VETO_BAL">
         <WORD value="-1" caption="Vetoed" textsyle="E_BIT"/>
         <WORD value="0" caption="Allowed" textsyle="OK_BIT"/>
         <WORD min="1" max="32767" caption="Idle" textsyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Mode">
-      <DATUM src="BAL_MODE">
+      <DATUM src="MODE_BAL">
         <WORD value="0" caption="Off" textsyle="W_BIT"/>
         <WORD value="1" caption="Auto" textsyle="OK_BIT"/>
         <WORD value="2" caption="Manual" textsyle="W_BIT"/>
@@ -533,22 +533,22 @@
       <DATUM format="%.2f" src="LEVEL_TARGET_BAL" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Balance %">
-      <DATUM format="%.2f" src="V_PUMP_BAL" extrema="unknown"/>
+      <DATUM format="%.4f" src="V_PUMP_BAL" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="Valve">
-      <DATUM src="BAL_VALVE">
+      <DATUM src="VALVE_BAL">
         <WORD value="0" caption="Closed" textstyle="OK_BIT"/>
     	<WORD value="1" caption="Open" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Direction">
-      <DATUM src="BAL_DIR">
+      <DATUM src="DIR_BAL">
         <WORD value="0" caption="Up" textstyle="OK_BIT"/>
         <WORD value="1" caption="Down" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Heat">
-      <DATUM src="BAL_HEAT">
+      <DATUM src="HEAT_BAL">
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
         <WORD value="1" caption="On" textstyle="OK_BIT"/>
       </DATUM>
