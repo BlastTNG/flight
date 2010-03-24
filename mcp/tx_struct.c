@@ -699,7 +699,7 @@ struct ChannelStruct SlowChannels[] = {
   {"hwpr_hold_i",      'w', LOOP7, 42,             1.0,             0.0, 'u', U_NONE},
   {"hwpr_pos",         'w', LOOP7, 43,             1.0,             0.0, 'u', U_NONE},
   {"hwpr_enc",         'w', LOOP7, 44,             1.0,             0.0, 'u', U_NONE},
-  {"bal_mode",         'w', LOOP7, 45,             1.0,             0.0, 'u', U_NONE},
+  {"mode_bal",         'w', LOOP7, 45,             1.0,             0.0, 'u', U_NONE},
   {"pitch_raw_dgps",   'w', LOOP7, 46,           I2DEG,             0.0, 'u', U_P_DEG},
   {"roll_raw_dgps",    'w', LOOP7, 47,           I2DEG,             0.0, 'u', U_P_DEG},
 #ifndef BOLOTEST

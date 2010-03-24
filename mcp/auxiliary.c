@@ -83,7 +83,7 @@ extern short int start_ISC_cycle[2];
 extern short int InCharge; /* tx.c */
 
 /* ACS2 digital signals */
-#define BAL_DIRE     0x01  /* ACS2 Group 2 Bit 1 */
+#define BAL_DIR      0x01  /* ACS2 Group 2 Bit 1 */
 #define BAL_VALV     0x02  /* ACS2 Group 2 Bit 2 */
 #define BAL_HEAT     0x04  /* ACS2 Group 2 Bit 3 - DAC */
 
@@ -233,6 +233,7 @@ static int Balance(int bits_bal)
 {
   static struct BiPhaseStruct *elDacAddr;
   static struct NiosStruct *vPumpBalAddr;
+  static struct NiosStruct *modeBalAddr;
   static int pumpon = 0;
   int level;
   int error;
@@ -244,6 +245,7 @@ static int Balance(int bits_bal)
     firsttime = 0;
     elDacAddr = GetBiPhaseAddr("el_dac");
     vPumpBalAddr = GetNiosAddr("v_pump_bal");
+    modeBalAddr = GetNiosAddr("mode_bal");
   }
  
   // if vetoed {
@@ -254,7 +256,7 @@ static int Balance(int bits_bal)
   if ((CommandData.pumps.mode == bal_rest) || (CommandData.pumps.veto_bal > 0)) {
  
     // set direction
-    bits_bal &= (0xFF - BAL_DIRE); /* Clear reverse bit */ 
+    bits_bal &= (0xFF - BAL_DIR); /* Clear reverse bit */ 
 
     // close valve
     bits_bal &= (0xFF - BAL_VALV); /* Close the valve */ 
@@ -269,10 +271,10 @@ static int Balance(int bits_bal)
     bits_bal |= BAL_VALV; /* Open valve */
 
     if (CommandData.pumps.level > 0) {
-      bits_bal &= (0xFF - BAL_DIRE); /* clear reverse bit */
+      bits_bal &= (0xFF - BAL_DIR); /* clear reverse bit */
       level = CommandData.pumps.level * PUMP_MAX;
     } else if (CommandData.pumps.level < 0) {
-      bits_bal |= BAL_DIRE; /* set reverse bit */
+      bits_bal |= BAL_DIR; /* set reverse bit */
       level = -CommandData.pumps.level * PUMP_MAX;
     } else {
       bits_bal &= (0xFF - BAL_VALV); /* Close valve */
@@ -288,9 +290,9 @@ static int Balance(int bits_bal)
 
     //   set direction and valve bits
     if (error > 0) {
-      bits_bal &= (0xFF - BAL_DIRE);  /* clear reverse bit */
+      bits_bal &= (0xFF - BAL_DIR);  /* clear reverse bit */
     } else {
-      bits_bal |= BAL_DIRE;  /* set reverse bit */
+      bits_bal |= BAL_DIR;  /* set reverse bit */
       error = -error;
     }
 
@@ -361,10 +363,10 @@ static int ControlPumpHeat(int bits_bal)
   temp2 = slow_data[tPumpBalAddr->index][tPumpBalAddr->channel];
 
   if (CommandData.pumps.heat_on) {
-    if (temp1 > CommandData.pumps.heat_tset) {
-      bits_bal |= BAL_DIRE;  /* set heat bit */
+    if (temp1 < CommandData.pumps.heat_tset) {
+      bits_bal |= BAL_DIR;  /* set heat bit */
     } else {
-      bits_bal &= (0xFF - BAL_DIRE); /* clear heat bit */
+      bits_bal &= (0xFF - BAL_DIR); /* clear heat bit */
     }
   }
 

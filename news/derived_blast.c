@@ -148,9 +148,9 @@ union DerivedUnion DerivedChannels[] = {
   COMMENT("ACS Digital Signals"),
 
   BITFIELD("bits_bal",
-      "BAL_DIR",
-      "BAL_VALVE",
-      "BAL_HEAT",
+      "DIR_BAL",
+      "VALVE_BAL",
+      "HEAT_BAL",
       ),
 #endif
 
