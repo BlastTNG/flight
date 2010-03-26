@@ -1418,6 +1418,12 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     upbbcDtAddr = GetNiosAddr("upbbc_dt");
   }
 
+  gettimeofday(&tv, &tz);
+  time = (double)tv.tv_sec + (double)tv.tv_usec/1.0e6;
+  WriteData(upbbcIndexAddr, index, NIOS_QUEUE);
+  WriteData(upbbcDtAddr, (time-oldtime)*1.0e4, NIOS_FLUSH);
+  oldtime = time;
+
   /*** do Controls ***/
 #ifndef BOLOTEST
   if (!mcp_initial_controls)
@@ -1459,10 +1465,4 @@ void UpdateBBCFrame(unsigned short *RxFrame)
   CameraTrigger(0); /* isc */
   CameraTrigger(1); /* osc */
 #endif
-
-  gettimeofday(&tv, &tz);
-  time = (double)tv.tv_sec + (double)tv.tv_usec/1.0e6;
-  WriteData(upbbcIndexAddr, index, NIOS_QUEUE);
-  WriteData(upbbcDtAddr, (time-oldtime)*1.0e4, NIOS_FLUSH);
-  oldtime = time;
 }
