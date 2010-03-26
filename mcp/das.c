@@ -240,13 +240,14 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
   }
 
   if (reset || force_cycle == NULL) {
-   WriteData(cycleStateWAddr, CRYO_CYCLE_OUT, NIOS_QUEUE);
-   iterator = 1;
-   heat_char = 0;
-   heat_hs = 0;
+    WriteData(cycleStateWAddr, CRYO_CYCLE_OUT, NIOS_QUEUE);
+    iterator = 1;
+    heat_char = 0;
+    heat_hs = 0;
+    return;
   }
 
-  if(!(iterator++ % 10))  /* Run this loop at 0.5 Hz */
+  if(!(iterator++ % 200))  /* Run this loop at 0.5 Hz */
   {
 
     start_time = slow_data[cycleStartRAddr->index][cycleStartRAddr->channel];
@@ -279,6 +280,8 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
   
   
     if (t_lhe > T_LHE_MAX) {
+      if (cycle_state != CRYO_CYCLE_OUT)
+        bprintf(info, "Auto Cycle: LHe is DRY!\n");
       heat_char = 0;
       heat_hs = 1;
       WriteData(cycleStateWAddr, CRYO_CYCLE_OUT, NIOS_QUEUE);
@@ -364,7 +367,7 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
 }
 
 /***********************************************************************/
-/* CryoControl: Control heaters and calibrator (a slow control)        */
+/* CryoControl: Control heaters and calibrator (a fast control)        */
 /***********************************************************************/
 void CryoControl (int index)
 {
