@@ -27,13 +27,14 @@
 
 void usage(char *exe)
 {
-  fprintf(stderr, "%s [-d DIRFILE] [-c CHAR_FIELD] [-r|-s] [-v|-q] [-b|-k]\n", exe);
+  fprintf(stderr, "%s [-d DIRFILE] [-c CHAR_FIELD] [-r|-s] [-v|-q] [-b|-k] [-7|-8]\n", exe);
   fprintf(stderr, "Translate CHAR_FIELD from DIRFILE into ASCII on stdout.\n");
   fprintf(stderr, "-d PATH_TO_DIRFILE [%s]\n", DIRFILE_DEFAULT);
   fprintf(stderr, "-c CHAR_FIELD      [%s]\n", CHATTER_DEFAULT);
   fprintf(stderr, "-r (reconnect) | -s (single shot) [-r]\n");
   fprintf(stderr, "-v (verbose) | -q (quiet) [-v]\n");
   fprintf(stderr, "-b (b&w) | -k (color) [auto-detect]\n");
+  fprintf(stderr, "-7 (7-bit ascii) | -8 (UTF-8) [-7]\n");
   exit(-1);
 }
 
@@ -64,11 +65,12 @@ int main (int argc, char **argv)
   int reload = 1;
   int verbose = 1;
   int color = isatty(fileno(stdout));
+  int utf8 = 0;
 
   snprintf(dirfile_name, BUF_LEN, "%s", DIRFILE_DEFAULT);
   snprintf(chatter_name, BUF_LEN, "%s", CHATTER_DEFAULT);
 
-  while ((c = getopt(argc, argv, "d:c:rqvsh?f:bk")) != -1)
+  while ((c = getopt(argc, argv, "d:c:rqvsh?f:bk78")) != -1)
   {
     switch (c)
     {
@@ -98,6 +100,12 @@ int main (int argc, char **argv)
         break;
       case 'k':
         color = 1;
+        break;
+      case '7':
+        utf8 = 0;
+        break;
+      case '8':
+        utf8 = 1;
         break;
       case 'h':
       case '?':
@@ -176,8 +184,14 @@ int main (int argc, char **argv)
         nf_old += (n_read / spf);
         for (i = 0; i < n_read; i++)
         {
-          a = data[i] & 0x7F;
-          b = (data[i] >> 8) & 0x7F;
+          if (utf8)
+          {
+            a = data[i] & 0xFF;
+            b = data[i] >> 8;
+          } else {
+            a = data[i] & 0x7F;
+            b = (data[i] >> 8) & 0x7F;
+          }
 
           if (color)
           {
