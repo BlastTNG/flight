@@ -222,8 +222,27 @@ void WriteChatter (int index)
     chatterAddr = GetNiosAddr("chatter");
   }
 
-  chat = (unsigned int)(chatter_buffer.msg[chatter_buffer.reading][index * 2] & 0xFF);
-  chat += (unsigned int)((chatter_buffer.msg[chatter_buffer.reading][(index * 2) + 1]) & 0xFF) << 8;
+  switch (index & 0x03)
+  {
+    case 0x00:
+      chat = 0x0000;
+      break;
+    case 0x01:
+      chat = 0x0080;
+      break;
+    case 0x02:
+      chat = 0x8000;
+      break;
+    case 0x03:
+      chat = 0x8080;
+      break;
+    default:
+      chat = 0x0000;
+      break;
+  }
+
+  chat += (unsigned int)(chatter_buffer.msg[chatter_buffer.reading][index * 2] & 0x7F);
+  chat += (unsigned int)((chatter_buffer.msg[chatter_buffer.reading][(index * 2) + 1]) & 0x7F) << 8;
 
   if (index == (FAST_PER_SLOW - 1))
   {
