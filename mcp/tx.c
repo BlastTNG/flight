@@ -164,10 +164,10 @@ static void WriteAux(void)
 	^ slow_data[southIAmReadAddr->index][southIAmReadAddr->channel]);
   }
   if (InCharge != incharge && InCharge) {
-    bputs(info, "System: I have gained control.\n");
+    bprintf(info, "System: I, %s, have gained control.\n", SouthIAm ? "South" : "North");
     CommandData.actbus.force_repoll = 1;
   } else if (InCharge != incharge) {
-    bputs(info, "System: I have lost control.\n");
+    bprintf(info, "System: I, %s, have lost control.\n", SouthIAm ? "South" : "North");
   }
 
   /* TODO reenable this, but make sure he4_lev corresopnds to a non-TMP field
