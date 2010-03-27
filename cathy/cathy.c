@@ -66,6 +66,8 @@ int main (int argc, char **argv)
   int verbose = 1;
   int color = isatty(fileno(stdout));
   int utf8 = 0;
+  int index;
+  int old_index = -1;
 
   snprintf(dirfile_name, BUF_LEN, "%s", DIRFILE_DEFAULT);
   snprintf(chatter_name, BUF_LEN, "%s", CHATTER_DEFAULT);
@@ -191,6 +193,19 @@ int main (int argc, char **argv)
           } else {
             a = data[i] & 0x7F;
             b = (data[i] >> 8) & 0x7F;
+            index = ((data[i] & 0x80) >> 7) + ((data[i] & 0x8000) >> 14);
+            if (old_index == -1 && index > 0)
+              old_index = index - 1;
+            if (old_index > -1) //Check that the index is sequential.
+            {
+              if (index == old_index)
+                continue;
+              else if (index == (old_index + 2) % 0x3)
+                printf("__");
+              else if (index == (old_index + 3) % 0x3)
+                printf("____");
+              old_index = index;
+            }
           }
 
           if (color)
