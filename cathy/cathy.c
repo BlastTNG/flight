@@ -176,8 +176,8 @@ int main (int argc, char **argv)
         nf_old += (n_read / spf);
         for (i = 0; i < n_read; i++)
         {
-          a = data[i] & 0xFF;
-          b = data[i] >> 8;
+          a = data[i] & 0x7F;
+          b = (data[i] >> 8) & 0x7F;
 
           if (color)
           {
