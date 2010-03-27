@@ -132,7 +132,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"tr_he4_pot",    'r', CRYO_A1, 44,     CRYO_HE4_POT_M,  CRYO_HE4_POT_B, 'U', U_R_O},
   {"tr_optbox_filt",'r', CRYO_A1, 46, CRYO_OPTBOX_FILT_M,CRYO_OPTBOX_FILT_B,'U',U_R_O},
 //{"cryo_a1_24",    'r', CRYO_A1, 48,                1.0,             0.0, 'U', U_NONE},
-  {"cryo_a2_00",    'r', CRYO_A2,  0,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"he4_lev",       'r', CRYO_A2,  0,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
   {"cryo_a2_01",    'r', CRYO_A2,  2,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
   {"cryo_a2_02",    'r', CRYO_A2,  4,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
   {"cryo_a2_03",    'r', CRYO_A2,  6,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
@@ -585,7 +585,7 @@ struct ChannelStruct SlowChannels[] = {
   {"stage_y_str",  'w', LOOP5, 37,                1.0,             0.0, 'u', U_NONE},
   {"stage_x_lim",  'w', LOOP5, 38,                1.0,             0.0, 'u', U_NONE},
   {"stage_y_vel",  'w', LOOP5, 39,                1.0,             0.0, 'u', U_NONE},
-  {"he4_lev_old",  'w', LOOP5, 40, -2.87477e-09*65536,      12.3273561, 'u', U_NONE},
+  {"he4_lev_old",  'w', LOOP5, 40,          CRYO_A2_M,       CRYO_A2_B, 'u', U_NONE},
   {"isc_focus",    'w', LOOP5, 41,                1.0,             0.0, 's', U_NONE},
   /* LOOP5 42-53 are wide */
   {"osc_focus",        'w',LOOP5, 54,             1.0,             0.0, 's', U_NONE},
@@ -826,9 +826,6 @@ struct ChannelStruct SlowChannels[] = {
   //{"inpump_lev",   'w',  TMP4,  5,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
   //{"outpump_lev",  'w',  TMP4,  6,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
 
-  //{"he4_lev",      'r',  TMP5,  1,  -2.87477e-09*65536,      12.3273561, 'u', U_NONE},
-  //{"i_charcoal",   'r',  TMP5,  3,     -2.639826420E-6,     0.157988332, 'u', U_NONE},
-  //{"i_coldplate",  'r',  TMP5,  5,      -2.32217573E-5,     1.390309833, 'u', U_NONE},
 /*
   {"cryoin",       'r',  TMP5, 60,                 1.0,             0.0, 'u', U_NONE},
   {"cryoout2",     'w',  TMP5,  1,                 1.0,             0.0, 'u', U_NONE},
