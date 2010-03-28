@@ -340,12 +340,13 @@ struct ChannelStruct SlowChannels[] = {
   {"lokmot_pin",   'w', LOOP1, 16,                1.0,             0.0, 'u', U_NONE},
   {"isc_fpulse",   'w', LOOP1, 17,                10.,             0.0, 'u', U_NONE},
   {"cal_repeat",   'w', LOOP1, 18,                .20,             0.0, 'u', U_NONE},
-  {"alice_file",   'w', LOOP1, 19,                1.0,             0.0, 'u', U_NONE}, // which compressed dl description file
+  /* LOOP1 19 is unused */
   {"timeout",      'w', LOOP1, 20,                1.0,             0.0, 'u', U_NONE},
   {"sun_az",       'w', LOOP1, 21,              I2DEG,             0.0, 'u', U_NONE},
   {"lvdt_low",     'w', LOOP1, 22,                1.0,             0.0, 's', U_NONE},
-  {"south_i_am",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE},
+  {"status_mcc",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE}, //south_i_am, at_float, schedule, alice_file
   {"cryostate",    'w', LOOP1, 24,                1.0,             0.0, 'u', U_NONE},
+  /* LOOP1 25 is unused */
   {"t_cpu1",       'w', LOOP1, 26,               0.01,             0.0, 'u', U_NONE},
   {"mag_model",    'w', LOOP1, 27,              I2DEG,             0.0, 'u', U_NONE}, // magnetic declination
   {"sensor_veto",  'w', LOOP1, 28,                1.0,             0.0, 'u', U_NONE},
@@ -354,6 +355,7 @@ struct ChannelStruct SlowChannels[] = {
   {"level_target_bal",'w', LOOP1, 31,           1./1990.13,            -5.0, 'u', U_I_A},
   /* LOOP1 32-33 are wide */
   {"veto_bal",     'w', LOOP1, 34,                1.0,             0.0, 's', U_NONE},
+  /* LOOP1 35-36 are unused */
   {"sip_alt",      'w', LOOP1, 37,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 38-41 are wide */
   {"isc_mapmean",  'w', LOOP1, 42,                 1.,             0.0, 'u', U_NONE},
@@ -368,9 +370,10 @@ struct ChannelStruct SlowChannels[] = {
   {"dir_dgps",     'w', LOOP1, 51,              I2DEG,             0.0, 'u', U_D_DEG},
   {"climb_dgps",   'w', LOOP1, 52,                1.0,             0.0, 's', U_V_MPS},
   {"att_ok_dgps",  'w', LOOP1, 53,                1.0,             0.0, 'u', U_NONE},
+  /* LOOP1 54-56 are unused */
   {"n_sat_dgps",   'w', LOOP1, 57,                1.0,             0.0, 'u', U_NONE},
   {"disk_free",    'w', LOOP1, 58,             1./250,             0.0, 'u', U_NONE},
-  {"p_mode",       'w', LOOP1, 59,                  1,             0.0, 'u', U_NONE}, // pointing mode
+  {"p_mode",       'w', LOOP1, 59,                  1,             0.0, 'u', U_NONE},
   {"p_x_deg",      'w', LOOP1, 60,              I2DEG,             0.0, 'u', U_NONE},
   {"p_y",          'w', LOOP1, 61,              I2DEG,             0.0, 's', U_NONE},
   {"p_vaz",        'w', LOOP1, 62,              I2VEL,             0.0, 'u', U_NONE},
@@ -400,16 +403,20 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_lrad",     'w', LOOP2, 22,              I2DEG,             0.0, 'u', U_NONE},
   {"isc_thresh",   'w', LOOP2, 23,             1./10.,             0.0, 'u', U_NONE},
   {"isc_grid",     'w', LOOP2, 24,                1.0,             0.0, 'u', U_NONE},
+  /* LOOP2 25 is unused */
   {"osc_real_trig",'w', LOOP2, 26,                1.0,             0.0, 's', U_NONE},
   {"isc_mdist",    'w', LOOP2, 27,                1.0,             0.0, 'u', U_NONE},
   {"isc_nblobs",   'w', LOOP2, 28,                1.0,             0.0, 'u', U_NONE},
+  /* LOOP2 29-30 are unused */
   {"osc_foc_off",  'w', LOOP2, 31,                1.0,             0.0, 's', U_NONE},
+  /* LOOP2 32 is unused */
   {"isc_tol",      'w', LOOP2, 33,                1.0,             0.0, 'u', U_NONE},
   /* LOOP2 34 is fast */
   {"ss_az",           'w',LOOP2, 35,            I2DEG,             0.0, 'u', U_NONE},
   {"gy_ifel_offset",  'w',LOOP2, 36,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"gy_ifroll_offset",'w',LOOP2, 37,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"gy_ifyaw_offset", 'w',LOOP2, 38,      1.0/32768.0,             0.0, 's', U_V_DPS},
+  /* LOOP2 39 is unused */
   {"mag_sigma",       'w',LOOP2, 40,            I2DEG,             0.0, 'u', U_NONE},
   {"az_dgps",         'w',LOOP2, 41,            I2DEG,             0.0, 'u', U_P_DEG},
   {"sigma_dgps",      'w',LOOP2, 42,            I2DEG,             0.0, 'u', U_NONE},
@@ -434,11 +441,11 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_hold_i",   'w', LOOP3,  1,                1.0,             0.0, 'u', U_NONE},
   {"isc_save_prd", 'w', LOOP3,  2,               0.01,             0.0, 'u', U_NONE},
   {"isc_y_off",    'w', LOOP3,  3,              I2DEG,             0.0, 's', U_NONE},
-  /* LOOP2 4-5 are wide */
+  /* LOOP3 4-5 are wide */
   {"isc_offset",   'w', LOOP3,  6,                1.0,             0.0, 's', U_NONE},
   {"bbc_fifo_size",'w', LOOP3,  7,             1./624,             0.0, 'u', U_NONE},
-  {"t_cpu2",    'w', LOOP3,  8,               0.01,             0.0, 'u', U_NONE},
-  {"t_cpu3",    'w', LOOP3,  9,               0.01,             0.0, 'u', U_NONE},
+  {"t_cpu2",       'w', LOOP3,  8,               0.01,             0.0, 'u', U_NONE},
+  {"t_cpu3",       'w', LOOP3,  9,               0.01,             0.0, 'u', U_NONE},
   {"sip_mks_hi",   'w', LOOP3, 10,           0.003256,       -0.226858, 'u', U_NONE},
   {"sip_mks_med",  'w', LOOP3, 11,           0.032614,       -0.072580, 'u', U_NONE},
   {"osc_blob_idx", 'w', LOOP3, 12,                1.0,             0.0, 'u', U_NONE},
@@ -526,6 +533,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_gy_set",     'w', LOOP4, 36,    (100.0/32768.0),             0.0, 'u', U_NONE},
   {"gy_h_age",     'w', LOOP4, 37,                1.0,             0.0, 'u', U_NONE},
   {"gy_h_hist",    'w', LOOP4, 38,    (100.0/32768.0),             0.0, 'u', U_NONE},
+  /* LOOP4 39 is unused */
   {"apcu_trim",    'w', LOOP4, 40,               0.01,             0.0, 's', U_NONE}, // to be depricated
   {"dpcu_trim",    'w', LOOP4, 41,               0.01,             0.0, 's', U_NONE}, // to be depricated
   {"apcu_auto",    'w', LOOP4, 42,                1.0,             0.0, 'u', U_NONE}, // to be depricated
@@ -551,9 +559,10 @@ struct ChannelStruct SlowChannels[] = {
   {"p_h",          'w', LOOP4, 63,              I2DEG,             0.0, 'u', U_NONE}, // scan height
 
   {"isc_error",    'w', LOOP5,  0,                 1.,             0.0, 'u', U_NONE},
-  {"schedule",     'w', LOOP5,  1,                 1.,              0., 'u', U_NONE},
+  /* LOOP5 1 is unused */
   {"isc_rd_sigma", 'w', LOOP5,  2,                1.0,             0.0, 'u', U_NONE},
   {"sip_mks_lo",   'w', LOOP5,  3,           0.327045,       -5.944902, 'u', U_NONE},
+  /* LOOP5 4 is unused */
   {"osc_error",    'w', LOOP5,  5,                 1.,             0.0, 'u', U_NONE},
   /* LOOP5 6-7 are wide */
   {"alt",          'w', LOOP5,  8,                1.0,             0.0, 'u', U_NONE},
@@ -569,18 +578,20 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP5 18-19 are wide */
   {"sveto_len",    'w', LOOP5, 20,           4.0 / SR,             0.0, 'u', U_NONE},
   {"act1_dead_rec",'w', LOOP5, 21,                1.0,             0.0, 's', U_NONE},
-  //{"lock_pot",     'w', LOOP5, 22,          -0.007425,     121.5325215, 'u', U_NONE},
   {"lock_pot",     'w', LOOP5, 22,                1.0,             0.0, 'u', U_NONE},
+  /* LOOP5 23 is unused */
   {"act2_dead_rec",'w', LOOP5, 24,                1.0,             0.0, 's', U_NONE},
   {"lock_state",   'w', LOOP5, 25,                1.0,             0.0, 'u', U_NONE},
   {"lock_goal",    'w', LOOP5, 26,                1.0,             0.0, 'u', U_NONE},
   {"seized_bus",   'w', LOOP5, 27,                1.0,             0.0, 's', U_NONE},
-  /* LOOP5 29-30 are wide */
+  /* LOOP5 28 is fast */
+  /* LOOP5 29 is unused */
   {"stage_x_vel",  'w', LOOP5, 30,                1.0,             0.0, 'u', U_NONE}, // not used in flight...
   {"stage_x_stp",  'w', LOOP5, 31,                1.0,             0.0, 'u', U_NONE},
   {"stage_x_str",  'w', LOOP5, 32,                1.0,             0.0, 'u', U_NONE},
   {"stage_y_lim",  'w', LOOP5, 33,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP5 34-35 are wide */
+  /* LOOP5 34 is fast */
+  /* LOOP5 35 is unused */
   {"stage_y_stp",  'w', LOOP5, 36,                1.0,             0.0, 'u', U_NONE},
   {"stage_y_str",  'w', LOOP5, 37,                1.0,             0.0, 'u', U_NONE},
   {"stage_x_lim",  'w', LOOP5, 38,                1.0,             0.0, 'u', U_NONE},
@@ -654,27 +665,28 @@ struct ChannelStruct SlowChannels[] = {
   {"lvdt_spread",  'w', LOOP6, 55,                1.0,             0.0, 's', U_NONE},
   /* LOOP6 56-57 are wide */
   {"sun_el",       'w', LOOP6, 58,              I2DEG,             0.0, 's', U_NONE},
-  {"at_float",     'w', LOOP6, 59,                1.0,             0.0, 'u', U_NONE},
+  /* LOOP6 59 unused */
   {"cal_mode",     'w', LOOP6, 60,                1.0,             0.0, 'u', U_NONE},
   {"isc_minblobs", 'w', LOOP6, 61,                1.0,             0.0, 'u', U_NONE},
   {"osc_minblobs", 'w', LOOP6, 62,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP7 0-3 are fast narrow*/
+
+  /* LOOP7 0-1 are fast narrow */
+  /* LOOP7 2-3 are unused */
   {"rw_stat_1",    'w', LOOP7,  4,                1.0,             0.0, 'u', U_NONE},  
   {"rw_stat_2",    'w', LOOP7,  5,                1.0,             0.0, 'u', U_NONE},  
   {"rw_fault",     'w', LOOP7,  6,                1.0,             0.0, 'u', U_NONE},  
-  /* LOOP7 0-3 are slow wide0*/
   {"el_stat_1",    'w', LOOP7,  7,                1.0,             0.0, 'u', U_NONE},  
   {"el_stat_2",    'w', LOOP7,  8,                1.0,             0.0, 'u', U_NONE},  
   {"el_fault",     'w', LOOP7,  9,                1.0,             0.0, 'u', U_NONE},  
   {"piv_d_stat",   'w', LOOP7, 10,                1.0,             0.0, 'u', U_NONE},  
   {"piv_s1_stat",  'w', LOOP7, 11,                1.0,             0.0, 'u', U_NONE},  
-  {"t_reac_mc",      'w', LOOP7, 12,                1.0,             0.0, 's', U_T_C},
+  {"t_reac_mc",    'w', LOOP7, 12,                1.0,             0.0, 's', U_T_C},
   {"rw_i_raw",     'w', LOOP7, 13,       30.0/32768.0,             0.0, 's', U_I_A},
   {"t_el_mc",      'w', LOOP7, 14,                1.0,             0.0, 's', U_T_C},
   {"el_i_raw",     'w', LOOP7, 15,       30.0/32768.0,             0.0, 's', U_I_A},
+  /* LOOP7 16 is fast narrow */
   //lmf: rw_i_raw and el_i_raw are read out from the Copley Controllers over serial.
   {"piv_i_raw",    'w', LOOP7, 17,       20.0/32768.0,             0.0, 's', U_I_A},
-  /* LOOP7 16 is fast narrow*/
   {"isc_max_age",  'w', LOOP7, 18,                1.0,             0.0, 'u', U_T_MS},
   {"osc_max_age",  'w', LOOP7, 19,                1.0,             0.0, 'u', U_T_MS},
   //{"g_pe_pivot",   'w', LOOP7, 20,                1.0,             0.0, 'u', U_NONE},
@@ -682,15 +694,17 @@ struct ChannelStruct SlowChannels[] = {
   {"set_reac",     'w', LOOP7, 22,      200.0/32768.0,             0.0, 's', U_V_DPS},
   {"v_az",         'w', LOOP7, 23,       20.0/32768.0,             0.0, 's', U_V_DPS},
   /* LOOP7 24 is fast narrow */
+  /* LOOP7 25-26 are unused */
   {"piv_dps_raw",  'w', LOOP7, 27,           1.0/0.144,             0.0, 's', U_NONE},
   {"piv_dps_calc", 'w', LOOP7, 28,        20.0/32768.0,             0.0, 's', U_V_DPS},
   {"isc_age",      'w', LOOP7, 29,                 1.0,             0.0, 'u', U_T_MS},
   {"osc_age",      'w', LOOP7, 30,                 1.0,             0.0, 'u', U_T_MS},
-  {"rw_drive_info",'w', LOOP7, 32,                 1.0,             0.0, 'u', U_NONE},
-  {"rw_drive_err_cts",'w', LOOP7, 33,              1.0,             0.0, 'u', U_NONE},
-  {"el_drive_info",'w', LOOP7, 34,                 1.0,             0.0, 'u', U_NONE},
-  {"el_drive_err_cts",'w', LOOP7, 35,              1.0,             0.0, 'u', U_NONE},
-  {"piv_drive_info",'w', LOOP7, 36,                1.0,             0.0, 'u', U_NONE},
+  /* LOOP7 31 is unused */
+  {"rw_drive_info",    'w', LOOP7, 32,             1.0,             0.0, 'u', U_NONE},
+  {"rw_drive_err_cts", 'w', LOOP7, 33,             1.0,             0.0, 'u', U_NONE},
+  {"el_drive_info",    'w', LOOP7, 34,             1.0,             0.0, 'u', U_NONE},
+  {"el_drive_err_cts", 'w', LOOP7, 35,             1.0,             0.0, 'u', U_NONE},
+  {"piv_drive_info",   'w', LOOP7, 36,             1.0,             0.0, 'u', U_NONE},
   {"piv_drive_err_cts",'w', LOOP7, 37,             1.0,             0.0, 'u', U_NONE},
     /* LOOP7 38 is fast narrow */
   {"hwpr_vel",         'w', LOOP7, 39,           100.0,             0.0, 'u', U_NONE},
@@ -702,6 +716,8 @@ struct ChannelStruct SlowChannels[] = {
   {"mode_bal",         'w', LOOP7, 45,             1.0,             0.0, 'u', U_NONE},
   {"pitch_raw_dgps",   'w', LOOP7, 46,           I2DEG,             0.0, 'u', U_P_DEG},
   {"roll_raw_dgps",    'w', LOOP7, 47,           I2DEG,             0.0, 'u', U_P_DEG},
+  /* LOOP7 48-63 are unused */
+
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
   {"latch0",       'w',  ACS1_D,  0,                1.0,             0.0, 'u', U_NONE},
@@ -713,12 +729,12 @@ struct ChannelStruct SlowChannels[] = {
 
 /* ACS1 Analog card 1 */
 /* default current cal is 12.5, 0.0 */
-  {"i_trans",      'r',  ACS1_A1, 1,          CAL16(11.32, -0.02),       'u', U_I_A},
-  {"i_das",        'r',  ACS1_A1, 3,          CAL16(11.03, -0.09),       'u', U_I_A},
+  {"i_trans",      'r',  ACS1_A1, 1,          CAL16(11.32, -0.02),      'u', U_I_A},
+  {"i_das",        'r',  ACS1_A1, 3,          CAL16(11.03, -0.09),      'u', U_I_A},
   {"i_acs",        'r',  ACS1_A1, 5,          CAL16(12.5,  0.0),        'u', U_I_A},
-  {"i_rec",        'r',  ACS1_A1, 7,          CAL16(10.75, -0.09),       'u', U_I_A},
-  {"i_starcam",    'r',  ACS1_A1, 9,          CAL16(10.89, -0.17),       'u', U_I_A},
-  {"i_dgps",       'r',  ACS1_A1, 11,         CAL16(11.03, -0.22),       'u', U_I_A},
+  {"i_rec",        'r',  ACS1_A1, 7,          CAL16(10.75, -0.09),      'u', U_I_A},
+  {"i_starcam",    'r',  ACS1_A1, 9,          CAL16(10.89, -0.17),      'u', U_I_A},
+  {"i_dgps",       'r',  ACS1_A1, 11,         CAL16(11.03, -0.22),      'u', U_I_A},
   {"i_el",         'r',  ACS1_A1, 13,         CAL16(12.5,  -0.02),      'u', U_I_A},
   {"i_piv",        'r',  ACS1_A1, 15,         CAL16(12.5, -0.05),       'u', U_I_A},
   {"i_reac",       'r',  ACS1_A1, 17,         CAL16(12.5, -0.09),       'u', U_I_A},
@@ -749,8 +765,8 @@ struct ChannelStruct SlowChannels[] = {
   {"t_array",      'r',  ACS1_T1, 21,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_acs",        'r',  ACS1_T1, 23,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_acs_dcdc",   'r',  ACS1_T1, 25,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_box_bal",       'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_pump_bal",       'r',  ACS1_T1, 35,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_box_bal",    'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_pump_bal",   'r',  ACS1_T1, 35,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_ext2",       'r',  ACS1_T1, 37,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_ext3",       'r',  ACS1_T1, 39,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_ext4",       'r',  ACS1_T1, 41,         CAL16T(1.0, 0.0),         'u', U_T_C},
@@ -826,17 +842,6 @@ struct ChannelStruct SlowChannels[] = {
   //{"inpump_lev",   'w',  TMP4,  5,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
   //{"outpump_lev",  'w',  TMP4,  6,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
 
-/*
-  {"cryoin",       'r',  TMP5, 60,                 1.0,             0.0, 'u', U_NONE},
-  {"cryoout2",     'w',  TMP5,  1,                 1.0,             0.0, 'u', U_NONE},
-  {"cryoout3",     'w',  TMP5,  2,             1.0,                 0.0, 'u', U_NONE},
-  {"bdapwm",       'w',  TMP5,  3,          100./2047.,              0., 'u', U_NONE},
-  {"hspwm",        'w',  TMP5,  4,          100./2047.,              0., 'u', U_NONE},
-  {"cryopwm",      'w',  TMP5,  5,          100./2047.,              0., 'u', U_NONE},
-  {"jfetpwm",      'w',  TMP5,  6,          100./2047.,              0., 'u', U_NONE},
-  {"cryoctrl",     'w',  TMP5, 31,                 1.0,              0., 'u', U_NONE},
-*/
-
   END_OF_CHANNELS
 };
 
@@ -908,7 +913,7 @@ struct ChannelStruct FastChannels[] = {
   {"stage_x",      'w', LOOP5, 28,                2.0,             0.0, 'u', U_NONE},
   {"stage_y",      'w', LOOP5, 34,                2.0,             0.0, 'u', U_NONE},
   {"rw_vel_raw",   'w', LOOP7,  0,         I2DEG*4.0,             0.0, 's', U_V_DPS},
-  {"enc_el_raw",   'w', LOOP7,  2,             I2DEG,             0.0, 'u', U_P_DEG},
+  {"enc_el_raw",   'w', LOOP7,  1,             I2DEG,             0.0, 'u', U_P_DEG},
   {"enc_el",       'w', LOOP2, 47,              I2DEG,             0.0, 'u', U_P_DEG},
   {"enc_sigma",    'w', LOOP2, 48,              I2DEG,             0.0, 'u', U_NONE},
   {"res_piv_raw",  'w', LOOP7, 16,              I2DEG,             0.0, 'u', U_P_DEG},

@@ -82,6 +82,17 @@ union DerivedUnion DerivedChannels[] = {
   COMMENT("Microsecond Resolution Time"),
   LINCOM2("Time", "cpu_usec", 1.0E-6, 0, "cpu_time",  1, 0),
   UNITS("Time", "Time", "s"),
+
+  COMMENT("General BLAST Status"),
+  BITFIELD("status_mcc",
+      "SOUTH_I_AM",
+      "AT_FLOAT",
+      "",
+      "",
+      "BLAST_SUCKS"),
+  BITWORD("SCHEDULE", "status_mcc", 4, 3),
+  BITWORD("ALICE_FILE", "status_mcc", 8, 8),
+
 #ifndef BOLOTEST
   COMMENT("Pointing Stuff"),
   LINCOM("P_X_H", "p_x_deg", 0.0003662109375, 0),

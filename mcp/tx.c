@@ -113,19 +113,16 @@ static void WriteAux(void)
   static struct NiosStruct* cpuTimeAddr;
   static struct NiosStruct* cpuTimeuSAddr;
   static struct NiosStruct* diskFreeAddr;
-  static struct NiosStruct* aliceFileAddr;
   static struct NiosStruct* timeoutAddr;
   static struct NiosStruct* cpuTemp1Addr;
   static struct NiosStruct* cpuTemp2Addr;
   static struct NiosStruct* cpuTemp3Addr;
-  static struct NiosStruct* southIAmAddr;
+  static struct NiosStruct* statusMCCAddr;
+  static struct BiPhaseStruct* statusMCCReadAddr;
   static struct NiosStruct* bi0FifoSizeAddr;
   static struct NiosStruct* bbcFifoSizeAddr;
   static struct NiosStruct* ploverAddr;
-  static struct NiosStruct* atFloatAddr;
-  static struct NiosStruct* scheduleAddr;
   static struct NiosStruct* he4LevOldAddr;
-  static struct BiPhaseStruct* southIAmReadAddr;
   static struct BiPhaseStruct* he4LevReadAddr;
   static int incharge = -1;
   time_t t;
@@ -136,8 +133,8 @@ static void WriteAux(void)
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    southIAmAddr = GetNiosAddr("south_i_am");
-    southIAmReadAddr = ExtractBiPhaseAddr(southIAmAddr);
+    statusMCCAddr = GetNiosAddr("status_mcc");
+    statusMCCReadAddr = ExtractBiPhaseAddr(statusMCCAddr);
 
     he4LevOldAddr = GetNiosAddr("he4_lev_old");
     he4LevReadAddr = GetBiPhaseAddr("he4_lev");
@@ -148,20 +145,17 @@ static void WriteAux(void)
     cpuTimeAddr = GetNiosAddr("cpu_time");
     cpuTimeuSAddr = GetNiosAddr("cpu_usec");
     diskFreeAddr = GetNiosAddr("disk_free");
-    aliceFileAddr = GetNiosAddr("alice_file");
     timeoutAddr = GetNiosAddr("timeout");
     bi0FifoSizeAddr = GetNiosAddr("bi0_fifo_size");
     bbcFifoSizeAddr = GetNiosAddr("bbc_fifo_size");
     ploverAddr = GetNiosAddr("plover");
-    atFloatAddr = GetNiosAddr("at_float");
-    scheduleAddr = GetNiosAddr("schedule");
   }
 
   if (StartupVeto>0) {
     InCharge = 0;
   } else {
     InCharge = !(SouthIAm
-	^ slow_data[southIAmReadAddr->index][southIAmReadAddr->channel]);
+	^ (slow_data[statusMCCReadAddr->index][statusMCCReadAddr->channel] & 0x1));
   }
   if (InCharge != incharge && InCharge) {
     bprintf(info, "System: I, %s, have gained control.\n", SouthIAm ? "South" : "North");
@@ -187,7 +181,6 @@ static void WriteAux(void)
   WriteData(cpuTemp2Addr, CommandData.temp2, NIOS_QUEUE);
   WriteData(cpuTemp3Addr, CommandData.temp3, NIOS_QUEUE);
 
-  WriteData(southIAmAddr, SouthIAm, NIOS_QUEUE);
   WriteData(diskFreeAddr, CommandData.df, NIOS_QUEUE);
 
   i_point = GETREADINDEX(point_index);
@@ -198,14 +191,18 @@ static void WriteAux(void)
   t = PointingData[i_point].t;
 #endif
 
-  WriteData(aliceFileAddr, CommandData.alice_file, NIOS_QUEUE);
   WriteData(timeoutAddr, CommandData.pointing_mode.t - t, NIOS_QUEUE);
   WriteData(bi0FifoSizeAddr, CommandData.bi0FifoSize, NIOS_QUEUE);
   WriteData(bbcFifoSizeAddr, CommandData.bbcFifoSize, NIOS_QUEUE);
   WriteData(ploverAddr, CommandData.plover, NIOS_QUEUE);
-  WriteData(atFloatAddr, CommandData.at_float, NIOS_QUEUE);
-  WriteData(scheduleAddr, CommandData.sucks + CommandData.lat_range * 2,
-      NIOS_FLUSH);
+
+  WriteData(statusMCCAddr, 
+       (SouthIAm ? 0x1 : 0x0) +                 //0x01
+       (CommandData.at_float ? 0x2 : 0x0) +     //0x02
+       (CommandData.sucks ? 0x10 : 0x00) +      //0x10
+       ((CommandData.lat_range & 0x3) << 5) +   //0x60
+       ((CommandData.alice_file & 0xFF) << 8),  //0xFF00
+       NIOS_FLUSH);
 }
 
 void WriteChatter (int index)
