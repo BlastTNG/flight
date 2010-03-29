@@ -77,3 +77,23 @@ endif
 
 fifo:
 	[ -e /tmp/SIPSS.FIFO ] || mkfifo -m 0777 /tmp/SIPSS.FIFO
+
+restart: install
+	killall mcp
+ifeq ($(shell hostname),south)
+	@echo "I am south"
+	scp /usr/local/bin/mcp north.blast:/tmp/mcp
+	ssh north.blast 'install -m 755 /tmp/mcp /usr/local/bin'
+	ssh north.blast 'killall mcp'
+else
+ifeq ($(shell hostname),north)
+	@echo "I am north"
+	scp /usr/local/bin/mcp south.blast:/tmp/mcp
+	ssh south.blast 'install -m 755 /tmp/mcp /usr/local/bin'
+	ssh south.blast 'killall mcp'
+else
+	@echo "I am neither north nor south"
+	@echo "This target should not be run on other systems"
+endif
+endif
+
