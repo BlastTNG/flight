@@ -15,6 +15,10 @@ been tested on Linux 2.6.
 
    250 is the major number for the BBC card, defined in bbc_pci.c
 
+   For those using systems with udev, this step is done in the rules file 
+   15-bbcpci.rules.  It is installed in a default location (/etc/udev/rules.d) 
+   on make install, and takes effect after module insertion (step 4)
+
 2) make the drivers
 
      [frodo]# make 

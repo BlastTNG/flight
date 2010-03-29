@@ -25,81 +25,107 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h> 
+#include <time.h>
+#include <errno.h>
 
 #include "bbc_pci.h"
 
-#define FRAMELEN  0x0
+//define to use external serial numbers and interrupt generation
+//#define USE_EXT_SERIAL
+
+#define FRAMELEN  64
 
 int main(int argc, char *argv[]) {
-  int fp, l, serial_signed;
-  unsigned int i[0x1000 * 2], serial, frame_serial;
+  int fp;
+  unsigned int i[0x1000 * 2];
   unsigned int j, k, numerrs, secret[2], oldsecret; 
-  unsigned long long cputime;
+  unsigned int serial;
+  unsigned int num;
+  struct timeval tv_frame;
+  double frametime, old_frametime = 0.0;
+  char frate_str[11] = "";
   
   fp = open("/dev/bbcpci", O_RDWR);
   if (fp < 0) {
-    fprintf(stderr, "Error opening BBCPCI (code %d).\n", fp);
+    perror("Error opening BBCPCI\n");
     exit(0);
   }
   system("clear");
   fprintf(stderr, "NIOS program version %8x.\n", ioctl(fp, BBCPCI_IOC_VERSION));
-  ioctl(fp, BBCPCI_IOC_RESET);
   
   i[0] = BBCPCI_WFRAME_ADD(0); 
   i[1] = BBC_FSYNC | 1;
-  i[2] = BBCPCI_WFRAME_ADD(1); 
-  i[3] = BBC_DATA((0xb000 | 1)) | BBC_NODE(63) | BBC_CH(0) | BBC_WRITE;
-  i[4] = BBCPCI_WFRAME_ADD(2); 
-  i[5] = BBC_DATA((0xb000 | 2)) | BBC_NODE(63) | BBC_CH(1) | BBC_WRITE;
-  i[6] = BBCPCI_WFRAME_ADD(3);
-  i[7] = BBC_DATA((0xb000 | 2)) | BBC_NODE(0) | BBC_CH(1) | BBC_WRITE;
-  i[8] = BBCPCI_WFRAME_ADD(3);
-  i[9] = BBC_ENDWORD;
-  for (k = 0; k < 5; k++) {
-    fprintf(stderr, "2: %02x  ", write(fp, (void *)(i + k * 2), 
-                                 2 * BBCPCI_SIZE_UINT));
-    fprintf(stderr, "%08x %08x\n", i[k * 2], i[k * 2 + 1]);
+  i[2] = BBCPCI_WFRAME_ADD(1);
+  i[3] = 1;
+  i[4] = BBCPCI_WFRAME_ADD(2);
+  i[5] = 1;
+  for(k = 3; k < FRAMELEN+3; k++) {
+      i[2*k] = BBCPCI_WFRAME_ADD(k);
+      num = k - 3;
+      //num = (num*2) % 64;
+      i[2*k+1] = BBC_DATA((0xc000+num)) | BBC_NODE(num) | BBC_CH(0) | BBC_READ;
   }
+  for(k = FRAMELEN+3; k < 2*FRAMELEN+3; k++) {
+      i[2*k] = BBCPCI_WFRAME_ADD(k);
+      num = k - 3 - FRAMELEN;
+      //num = (num*2) % 64;
+      i[2*k+1] = BBC_DATA((0x8000+num)) | BBC_NODE(num) | BBC_CH(0) | BBC_WRITE;
+  }
+  i[2*k] = BBCPCI_WFRAME_ADD(2*FRAMELEN+3);
+  i[2*k+1] = BBC_ENDWORD;
+  k++;
+  
+  for (j = 0; j < k; j++)  {
+    fprintf(stderr, "1: %02x ", write(fp, (void *)(i + 2 * j), 2 * BBCPCI_SIZE_UINT));
+    fprintf(stderr, "%08x %08x\n", i[j * 2], i[j * 2 + 1]);
+  }
+
+  //usleep(6000000); 
+  //for (oldsecret = 0xabcdabcd, k = 0; k < 100000; k++) {
+  //  ioctl(fp, BBCPCI_IOC_SECRET, &secret);
+  //  if (oldsecret != secret[0])
+  //    printf("===> %08x %08x\n", secret[0], secret[1]);
+  //  oldsecret = secret[0];
+ // }
+#ifdef USE_EXT_SERIAL
+  printf("\nUsing external serial number generation\n");
+#else
+  printf("\nUsing internal serial number generation\n");
+#endif
+
   getchar();
   
   usleep(100000);
+  ioctl(fp, BBCPCI_IOC_ON_IRQ);
   ioctl(fp, BBCPCI_IOC_SYNC);
   usleep(100000);
-
-  ioctl(fp, BBCPCI_IOC_ON_IRQ);
-//  ioctl(fp, BBCPCI_IOC_EXT_SER_ON);
-//  ioctl(fp, BBCPCI_IOC_IRQ_RATE, 1);
-//  ioctl(fp, BBCPCI_IOC_FRAME_RATE, 1);
+  
+#ifdef USE_EXT_SERIAL
+  ioctl(fp, BBCPCI_IOC_EXT_SER_ON);
+  ioctl(fp, BBCPCI_IOC_IRQ_RATE, 1);
+  ioctl(fp, BBCPCI_IOC_FRAME_RATE, 1);
+#else
   ioctl(fp, BBCPCI_IOC_EXT_SER_OFF);
   ioctl(fp, BBCPCI_IOC_IRQ_RATE, 320000);
+#endif
   
   numerrs = 0;
   
   while (1) {
     for (k = 0; read(fp, (void *)(&j), sizeof(unsigned int)) == 4; k++) {
-      if (GET_STORE(j)) {
-        char serial_string[40]="xxxx xxxx xxxx xxxx xxxx xxxx xxxx xxxx";
-        int ibit, ipos;
-        serial = ioctl(fp, BBCPCI_IOC_GET_SERIAL);
-        ioctl(fp, BBCPCI_IOC_IRQT_READ, &cputime);
-        if (GET_NODE(j) == 63) {
-          if (GET_CH(j) == 0)
-            frame_serial = (frame_serial & 0xffff0000) | (j & 0xffff);
-          if (GET_CH(j) == 1)
-            frame_serial |= (j & 0xffff) << 16;
-        }
-      
-        for (ibit=31; ibit >= 0; ibit--) {
-          ipos = 31-ibit + 7-(ibit/4);
-          serial_string[ipos] = (serial & (1<<ibit)) ? '*' : '.';
-        }
-        printf("%03x %08x %01x %08x %s %08x\n", k, j,
-               ioctl(fp, BBCPCI_IOC_SERIAL_RDY), serial, serial_string,
-               frame_serial);
-        write(fp, (void *)&i[2], 2 * BBCPCI_SIZE_UINT);
-        usleep(100);
+      serial = ioctl(fp, BBCPCI_IOC_GET_SERIAL);
+      if (j & BBC_FSYNC) {
+	gettimeofday(&tv_frame, NULL);
+	frametime = tv_frame.tv_sec + (double)(tv_frame.tv_usec)/1.0e6;
+	snprintf(frate_str, 10, " %8g", 1.0/(frametime-old_frametime));
+	old_frametime = frametime;
       }
+      else frate_str[0] = '\0';
+      printf("%03x %08x %08x%s\n", k, j, serial, frate_str);  
+      //printf("%03x %08x\n", k, j);  
+      write(fp, (void *)&i[2], 2 * BBCPCI_SIZE_UINT);
     }
+    usleep(100);
   }
   
   return 0;

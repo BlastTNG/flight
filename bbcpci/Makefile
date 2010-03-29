@@ -41,7 +41,6 @@ MODULEDIR ?= /lib/modules/$(shell uname -r)/kernel/drivers/misc
 
 install: bbc_pci.ko
 	install -m 644 bbc_pci.h /usr/local/include/bbc_pci.h
-	install -m 644 15-bbcpci.rules /etc/udev/rules.d/15-bbcpci.rules
-#	install bbc_pci.ko -m 644 -D $(MODULEDIR)/bbc_pci.ko
+	install bbc_pci.ko -m 644 -D $(MODULEDIR)/bbc_pci.ko
 
 endif

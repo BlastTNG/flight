@@ -3,7 +3,7 @@
  * This software is copyright (C) 2004 University of Toronto
  * Updated 2006 by Adam Hincks, Princeton University, for the ACT experiment.
  * Re-updated 2007 by University of Toronto for Spider
- * Hacked (and copyright) 2008, 2009 by Matthew Truch, for the BLAST experiment.
+ * Hacked (and copyright) 2008-2010 by Matthew Truch, for the BLAST experiment.
  * 
  * This file is part of bbc_pci.
  * 
@@ -19,7 +19,8 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with bbc_pci; if not, write to the Free Software Foundation, Inc.,
- * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA 
+ * Or visit http://www.gnu.org/licenses/
  *
  */
 
@@ -59,6 +60,10 @@
 #endif
 #if LINUX_VERSION_CODE >= VERSION_CODE(2,7,0)
 # error "This kernel version is not supported"
+#endif
+//incompatible API change, may have changed before 2.6.27
+#if LINUX_VERSION_CODE >= VERSION_CODE(2,6,27)
+#define USE_NEWER_DEVICE_CREATE
 #endif
 
 static int bbc_minor = 0;
@@ -775,16 +780,18 @@ static int bbcpci_start_sysfs() {
   if (IS_ERR(bbcpci_class)) return 0;
 
   devnum = bbc_drv.bbc_cdev.dev;
-#if LINUX_VERSION_CODE < VERSION_CODE(2,6,27)
+#ifndef USE_NEWER_DEVICE_CREATE
   bbcpci_d = device_create(bbcpci_class, NULL, devnum, "bbcpci");
-  devnum = bbc_drv.bi0_cdev.dev;
-  bbcbi0_d = device_create(bbcpci_class, NULL, devnum, "bbc_bi0");
 #else
   bbcpci_d = device_create(bbcpci_class, NULL, devnum, NULL, "bbcpci");
-  devnum = bbc_drv.bi0_cdev.dev;
-  bbcbi0_d = device_create(bbcpci_class, NULL, devnum, NULL, "bbc_bi0");
 #endif
   if (IS_ERR(bbcpci_d)) return 0;
+  devnum = bbc_drv.bi0_cdev.dev;
+#ifndef USE_NEWER_DEVICE_CREATE
+  bbcbi0_d = device_create(bbcpci_class, NULL, devnum, "bbc_bi0");
+#else
+  bbcbi0_d = device_create(bbcpci_class, NULL, devnum, NULL, "bbc_bi0");
+#endif
   if (IS_ERR(bbcbi0_d)) return 0;
 
   //loop through device attributes and create files
