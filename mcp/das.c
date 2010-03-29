@@ -224,9 +224,9 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
   if (firsttime) {
     firsttime = 0;
     t_lhe_Addr = GetBiPhaseAddr("td_lhe");
-    t_he3fridge_Addr = GetBiPhaseAddr("tr_he3_fridge");
+    t_he3fridge_Addr = GetBiPhaseAddr("tr_300mk_strap"); //TODO Use tr_he3_fridge when fixed.
     t_charcoal_Addr = GetBiPhaseAddr("td_charcoal");
-    t_he4pot_Addr = GetBiPhaseAddr("tr_he4_pot");
+    t_he4pot_Addr = GetBiPhaseAddr("tr_m4"); //TODO Use tr_he4_pot when fixed.
     t_char_hs_Addr = GetBiPhaseAddr("td_hs_charcoal");
     cycleStartWAddr = GetNiosAddr("cycle_start");
     cycleStartRAddr = ExtractBiPhaseAddr(cycleStartWAddr);
@@ -277,7 +277,6 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
     t_char_hs   = LutCal(&HSLut,    t_char_hs);
     t_he3fridge = LutCal(&ROXLut,   t_he3fridge);
     t_he4pot    = LutCal(&ROXLut,   t_he4pot);
-  
   
     if (t_lhe > T_LHE_MAX) {
       if (cycle_state != CRYO_CYCLE_OUT)
