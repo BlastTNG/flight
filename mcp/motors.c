@@ -1446,7 +1446,7 @@ void* reactComm(void* arg)
       if(resetcount==0) {
 	bprintf(warning,"Resetting connection to Reaction Wheel controller.");
       } else if ((resetcount % 10)==0) {
-	bprintf(warning,"reset-> Unable to connect to Reaction Wheel after %i attempts.",resetcount);
+	//	bprintf(warning,"reset-> Unable to connect to Reaction Wheel after %i attempts.",resetcount);
       }
 
       resetcount++;
@@ -1628,7 +1628,7 @@ void* elevComm(void* arg)
       if(resetcount==0) {
 	bprintf(warning,"Resetting connection to elevation drive controller.");
       } else if ((resetcount % 10)==0) {
-	bprintf(warning,"reset-> Unable to connect to elevation drive after %i attempts.",resetcount);
+	//	bprintf(warning,"reset-> Unable to connect to elevation drive after %i attempts.",resetcount);
       }
 
       resetcount++;
@@ -1813,7 +1813,7 @@ void* pivotComm(void* arg)
       if(resetcount==0) {
 	bprintf(warning,"Resetting connection to pivot controller.");
       } else if ((resetcount % 50)==0) {
-	bprintf(warning,"reset->Unable to connect to pivot after %i attempts.",resetcount);
+	//	bprintf(warning,"reset->Unable to connect to pivot after %i attempts.",resetcount);
       }
 
       resetcount++;
