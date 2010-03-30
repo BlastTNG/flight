@@ -384,13 +384,13 @@
       </DATUM>
     </MULTI>
     <MULTI caption="dGPS OK">
-      <DATUM src="DGPS_ATT_OK">
+      <DATUM src="ATT_OK_DGPS">
         <WORD value="1" caption="OK" textstyle="OK_BIT"/>
         <WORD value="0" caption="Pissy" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="dGPS # Sat">
-      <DATUM format="%.0f" src="dgps_n_sat" extrema="unknown"/>
+      <DATUM format="%.0f" src="n_sat_dgps" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Gyros">
       <DATUM format="%b" src="gyro_mask" extrema="unknown"/>
@@ -667,13 +667,13 @@
       <DATUM format="%5.0f" src="g_i_az" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="P Pivot">
-      <DATUM format="%5.0f" src="g_pv_pivot" extrema="unknown"/>
+      <DATUM format="%5.0f" src="g_pv_piv" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Set Reac">
-      <DATUM format="%+5.2f" src="SET_REAC" extrema="unknown"/>
+      <DATUM format="%+5.2f" src="SET_RW" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Reac DPS">
-      <DATUM format="%+5.2f" src="RW_VEL_RAW" extrema="unknown"/>
+      <DATUM format="%+5.2f" src="VEL_RAW_RW" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Inner Frame Electronics" colour="#002222" row="0" col="6" rowspan="1">
@@ -958,16 +958,16 @@
   </BOX>
   <BOX caption="Motor Temps" colour="#002222" row="2" col="6">
     <NUMBER caption="T Reac">
-      <DATUM format="%.2f" src="T_REAC" extrema="temp"/>
+      <DATUM format="%.2f" src="T_RW" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Reac MC">
-      <DATUM format="%.2f" src="T_REAC_MC" extrema="temp"/>
+      <DATUM format="%.2f" src="T_MC_RAW_RW" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T El">
       <DATUM format="%.2f" src="T_EL" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T El MC">
-      <DATUM format="%.2f" src="T_EL_MC" extrema="temp"/>
+      <DATUM format="%.2f" src="T_MC_RAW_EL" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Pivot">
       <DATUM format="%.2f" src="T_PIV" extrema="temp"/>
@@ -1008,7 +1008,7 @@
       <DATUM format="%.2f" src="I_SUN" extrema="sscurrent"/>
     </NUMBER>
     <NUMBER caption="I Reac">
-      <DATUM format="%.2f" src="I_REAC" extrema="current"/>
+      <DATUM format="%.2f" src="I_RW" extrema="current"/>
     </NUMBER>
     <NUMBER caption="I EL">
       <DATUM format="%.2f" src="I_EL" extrema="current"/>
@@ -1144,43 +1144,43 @@
   </BOX>
   <BOX caption="Motor Contollers" colour="#880000" row="0" col="8" rowspan="1">
     <MULTI caption="El Enab">
-      <DATUM src="EL_INFO_DISAB">
+      <DATUM src="DR_INFO_DISAB_EL">
         <WORD value="0" caption="Enabled" textstyle="OK_BIT"/>
         <WORD value="1" caption="Disabled" textstyle="W_BIT"/>
         <WORD value="2" caption="???" textstyle="W_BIT"/>
       </DATUM>
     </MULTI> 
     <NUMBER caption="El Err">
-      <DATUM format="%.0f" src="EL_INFO_ERR" extrema="errcheck"/>
+      <DATUM format="%b" src="DR_INFO_ERR_EL" extrema="errcheck"/>
     </NUMBER>
     <NUMBER caption="El RIO">
-      <DATUM format="%.0f" src="EL_INFO_RIO" extrema="riocheck"/>
+      <DATUM format="%.0f" src="DR_INFO_RIO_EL" extrema="riocheck"/>
     </NUMBER>
     <MULTI caption="RW Enab">
-      <DATUM src="RW_INFO_DISAB">
+      <DATUM src="DR_INFO_DISAB_RW">
         <WORD value="0" caption="Enabled" textstyle="OK_BIT"/>
         <WORD value="1" caption="Disabled" textstyle="W_BIT"/>
         <WORD value="2" caption="???" textstyle="W_BIT"/>
       </DATUM>
     </MULTI> 
     <NUMBER caption="RW Err">
-      <DATUM format="%.0f" src="RW_INFO_ERR" extrema="errcheck"/>
+      <DATUM format="%b" src="DR_INFO_ERR_RW" extrema="errcheck"/>
     </NUMBER>
     <NUMBER caption="RW RIO">
-      <DATUM format="%.0f" src="RW_INFO_RIO" extrema="riocheck"/>
+      <DATUM format="%.0f" src="DR_INFO_RIO_RW" extrema="riocheck"/>
     </NUMBER>
     <MULTI caption="Pivot Enab">
-      <DATUM src="PIV_INFO_DISAB">
+      <DATUM src="DR_INFO_DISAB_PIV">
         <WORD value="0" caption="Enabled" textstyle="OK_BIT"/>
         <WORD value="1" caption="Disabled" textstyle="W_BIT"/>
         <WORD value="2" caption="???" textstyle="W_BIT"/>
       </DATUM>
     </MULTI> 
     <NUMBER caption="Piv Err">
-      <DATUM format="%.0f" src="PIV_INFO_ERR" extrema="errcheck"/>
+      <DATUM format="%b" src="DR_INFO_ERR_PIV" extrema="errcheck"/>
     </NUMBER>
     <NUMBER caption="Piv RIO">
-      <DATUM format="%.0f" src="PIV_INFO_RIO" extrema="riocheck"/>
+      <DATUM format="%.0f" src="DR_INFO_RIO_PIV" extrema="riocheck"/>
     </NUMBER>
   </BOX>
   <BOX caption="ACS Power System" colour="#777700" row="0" col="7" rowspan="1">
@@ -1258,7 +1258,7 @@
       <DATUM format="%.0f" src="INDEX" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="MCC Pole">
-      <DATUM src="south_i_am">
+      <DATUM src="SOUTH_I_AM">
         <WORD value="1" caption="South" textstyle="OK_BIT"/>
         <WORD value="0" caption="North" textstyle="OK_BIT"/>
       </DATUM>
@@ -1294,7 +1294,7 @@
       <DATUM format="%e %b %Y, %H:%M:%S" src="CPU_TIME"/>
     </DATETIME>
     <DATETIME caption="dGPS Time">
-      <DATUM format="%e %b %Y, %H:%M:%S" src="DGPS_TIME"/>
+      <DATUM format="%e %b %Y, %H:%M:%S" src="TIME_DGPS"/>
     </DATETIME>
     <DATETIME caption="SIP Time">
       <DATUM format="%e %b %Y, %H:%M:%S" src="SIP_TIME"/>
@@ -1317,16 +1317,16 @@
       <DATUM format="%.4f" src="LON" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Altitude (m)">
-      <DATUM format="%.0f" src="DGPS_ALT" extrema="unknown"/>
+      <DATUM format="%.0f" src="ALT_DGPS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Speed (Knots)">
-      <DATUM format="%.2f" src="DGPS_SPEED" extrema="unknown"/>
+      <DATUM format="%.2f" src="SPEED_DGPS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Bearing">
-      <DATUM format="%5.1f" src="DGPS_DIR" extrema="unknown"/>
+      <DATUM format="%5.1f" src="DIR_DGPS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Climb (m/s)">
-      <DATUM format="% 6.2f" src="DGPS_CLIMB" extrema="unknown"/>
+      <DATUM format="% 6.2f" src="CLIMB_DGPS" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Attitude" colour="#009911" row="2" col="2">
@@ -1366,7 +1366,7 @@
       <DATUM format="%.2f" src="ENC_EL" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="Enc Raw">
-      <DATUM format="%.2f" src="ENC_EL_RAW" extrema="angle"/>
+      <DATUM format="%.2f" src="ENC_RAW_EL" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="Clinometer">
       <DATUM format="%.2f" src="CLIN_ELEV" extrema="angle"/>
@@ -1407,7 +1407,7 @@
       <DATUM format="%.2f" src="OSC_AZ" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="dGPS">
-      <DATUM format="%.2f" src="DGPS_AZ" extrema="angle"/>
+      <DATUM format="%.2f" src="AZ_DGPS" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="Mag">
       <DATUM format="%.2f" src="MAG_AZ" extrema="angle"/>
@@ -1422,7 +1422,7 @@
       <DATUM format="%.2f" src="OSC_SIGMA" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="dGPS Sigma">
-      <DATUM format="%.2f" src="DGPS_SIGMA" extrema="unknown"/>
+      <DATUM format="%.2f" src="SIGMA_DGPS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Mag Sigma">
       <DATUM format="%.2f" src="MAG_SIGMA" extrema="unknown"/>
