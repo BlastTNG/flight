@@ -451,10 +451,10 @@ static void Chatter(void)
 
 static void GetACS(unsigned short *RxFrame)
 {
-  double enc_el_raw, gy_ifel, gy_ifroll, gy_ifyaw;
+  double enc_raw_el, gy_ifel, gy_ifroll, gy_ifyaw;
   double x_comp, y_comp, z_comp;
-  double rw_vel_raw;
-  double res_piv_raw;
+  double vel_raw_rw;
+  double res_raw_piv;
   static struct BiPhaseStruct* gyifElAddr;
   static struct BiPhaseStruct* gyifRollAddr;
   static struct BiPhaseStruct* gyifYawAddr;
@@ -463,8 +463,8 @@ static void GetACS(unsigned short *RxFrame)
   static struct BiPhaseStruct* magXAddr;
   static struct BiPhaseStruct* magYAddr;
   static struct BiPhaseStruct* magZAddr;
-  static struct BiPhaseStruct* rwVelAddr;
-  static struct BiPhaseStruct* resPivAddr;
+  static struct BiPhaseStruct* velRawRWAddr;
+  static struct BiPhaseStruct* resRawPivAddr;
 
   unsigned int rx_frame_index = 0;
   int i_ss;
@@ -472,7 +472,7 @@ static void GetACS(unsigned short *RxFrame)
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    encElevAddr = GetBiPhaseAddr("enc_el_raw");
+    encElevAddr = GetBiPhaseAddr("enc_raw_el");
     clinElevAddr = GetBiPhaseAddr("clin_elev");
     gyifElAddr = GetBiPhaseAddr("gy_ifel");
     gyifRollAddr = GetBiPhaseAddr("gy_ifroll");
@@ -480,16 +480,16 @@ static void GetACS(unsigned short *RxFrame)
     magXAddr = GetBiPhaseAddr("mag_x");
     magYAddr = GetBiPhaseAddr("mag_y");
     magZAddr = GetBiPhaseAddr("mag_z");
-    rwVelAddr = GetBiPhaseAddr("rw_vel_raw");
-    resPivAddr = GetBiPhaseAddr("res_piv_raw");
+    velRawRWAddr = GetBiPhaseAddr("vel_raw_rw");
+    resRawPivAddr = GetBiPhaseAddr("res_raw_piv");
   }
 
   rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
       (RxFrame[2] & 0x0000ffff) << 16);
 
-  enc_el_raw = (((double)RxFrame[encElevAddr->channel])/DEG2I);
-  rw_vel_raw = (((double)((short)RxFrame[rwVelAddr->channel]))*4.0/DEG2I);
-  res_piv_raw = (((double)((short)RxFrame[resPivAddr->channel]))/DEG2I);
+  enc_raw_el = (((double)RxFrame[encElevAddr->channel])/DEG2I);
+  vel_raw_rw = (((double)((short)RxFrame[velRawRWAddr->channel]))*4.0/DEG2I);
+  res_raw_piv = (((double)((short)RxFrame[resRawPivAddr->channel]))/DEG2I);
   gy_ifel = (double)((RxFrame[gyifElAddr->channel])-GY16_OFFSET) * GY16_TO_DPS;
   gy_ifroll = (double)(RxFrame[gyifRollAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
   gy_ifyaw = (double)(RxFrame[gyifYawAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
@@ -502,15 +502,15 @@ static void GetACS(unsigned short *RxFrame)
 
   ACSData.t = mcp_systime(NULL);
   ACSData.mcp_frame = rx_frame_index;
-  ACSData.enc_el_raw = enc_el_raw;
+  ACSData.enc_raw_el = enc_raw_el;
   ACSData.gy_ifel = gy_ifel;
   ACSData.gy_ifroll = gy_ifroll;
   ACSData.gy_ifyaw = gy_ifyaw;
   ACSData.mag_x = x_comp;
   ACSData.mag_y = y_comp;
   ACSData.mag_z = z_comp;
-  ACSData.rw_vel_raw = rw_vel_raw;
-  ACSData.res_piv_raw = res_piv_raw;
+  ACSData.vel_raw_rw = vel_raw_rw;
+  ACSData.res_raw_piv = res_raw_piv;
 
   ACSData.clin_elev = (double)RxFrame[clinElevAddr->channel];
 

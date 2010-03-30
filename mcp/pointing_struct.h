@@ -60,10 +60,10 @@ struct ACSDataStruct {
   double mag_y;    // counts
   double mag_z;    // counts
   double mag_pitch; // degrees
-  double enc_el_raw; // degrees
+  double enc_raw_el; // degrees
   double clin_elev;// counts
-  double rw_vel_raw; // deg/s
-  double res_piv_raw; // deg/s
+  double vel_raw_rw; // deg/s
+  double res_raw_piv; // deg/s
   double gy_ifel;    // deg/s
   double gy_ifroll;    // deg/s
   double gy_ifyaw;    // deg/s
@@ -81,7 +81,7 @@ extern struct ACSDataStruct ACSData;
 /*  - Written to the frame in the main thread */
 /*  USE A CIRCULAR BUFFER !!!                 */
 struct RWMotorDataStruct{
-  double rw_vel_raw; // in degrees per second
+  double vel_raw_rw; // in degrees per second
   int temp; // drive temperature in deg Celcius
   double current; // drive current read from controller
   unsigned int status;  // drive status
@@ -101,7 +101,7 @@ extern int rw_motor_index; // defined in motors.c
 /*  - Written to the frame in the main thread */
 /*  USE A CIRCULAR BUFFER !!!                 */
 struct ElevMotorDataStruct{
-  double enc_el_raw; // in degrees
+  double enc_raw_el; // in degrees
   int temp; // drive temperature in deg Celcius
   double current; // drive current read from controller
   unsigned int status;  // drive status
@@ -120,7 +120,7 @@ extern int elev_motor_index; // defined in motors.c
 /*  - Written to the frame in the main thread */
 /*  USE A CIRCULAR BUFFER !!!                 */
 struct PivotMotorDataStruct{
-  double res_piv_raw; // in degrees
+  double res_raw_piv; // in degrees
   double current; // drive current read from controller
   int dps_piv; // filtered pivot velocity
   unsigned int db_stat;  // drive bridge status

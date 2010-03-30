@@ -231,7 +231,7 @@ void ControlGyroHeat(unsigned short *RxFrame)
 /******************************************************************/
 static int Balance(int bits_bal)
 {
-  static struct BiPhaseStruct *elDacAddr;
+  static struct BiPhaseStruct *dacElAddr;
   static struct NiosStruct *vPumpBalAddr;
   static struct NiosStruct *modeBalAddr;
   static int pumpon = 0;
@@ -243,7 +243,7 @@ static int Balance(int bits_bal)
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    elDacAddr = GetBiPhaseAddr("el_dac");
+    dacElAddr = GetBiPhaseAddr("dac_el");
     vPumpBalAddr = GetNiosAddr("v_pump_bal");
     modeBalAddr = GetNiosAddr("mode_bal");
   }
@@ -284,7 +284,7 @@ static int Balance(int bits_bal)
   } else {
 
     //   calculate speed and direction
-    smoothed_i = slow_data[elDacAddr->index][elDacAddr->channel] / 500. +
+    smoothed_i = slow_data[dacElAddr->index][dacElAddr->channel] / 500. +
           smoothed_i * (499. / 500.);
     error = smoothed_i - I_EL_ZERO - CommandData.pumps.level_target_bal;
 
@@ -813,13 +813,13 @@ void ControlPower(void) {
     CommandData.power.gps.rst_count--;
     if (CommandData.power.gps.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0200;
   }
-  if (CommandData.power.reac.set_count > 0) {
-    CommandData.power.reac.set_count--;
-    if (CommandData.power.reac.set_count < LATCH_PULSE_LEN) latch0 |= 0x0400;
+  if (CommandData.power.rw.set_count > 0) {
+    CommandData.power.rw.set_count--;
+    if (CommandData.power.rw.set_count < LATCH_PULSE_LEN) latch0 |= 0x0400;
   }
-  if (CommandData.power.reac.rst_count > 0) {
-    CommandData.power.reac.rst_count--;
-    if (CommandData.power.reac.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0800;
+  if (CommandData.power.rw.rst_count > 0) {
+    CommandData.power.rw.rst_count--;
+    if (CommandData.power.rw.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0800;
   }
   if (CommandData.power.piv.set_count > 0) {
     CommandData.power.piv.set_count--;

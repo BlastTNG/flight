@@ -785,7 +785,7 @@ static void SetLockState(int nic)
       || (pot > LOCK_MAX_POT - LOCK_POT_RANGE))
     state |= lock_data.state & (LS_OPEN | LS_CLOSED);
 
-  if (fabs(ACSData.enc_el_raw - LockPosition(CommandData.pointing_mode.Y)) <= 0.5)
+  if (fabs(ACSData.enc_raw_el - LockPosition(CommandData.pointing_mode.Y)) <= 0.5)
     state |= LS_EL_OK;
 
   /* Assume the pin is out unless we're all the way closed */

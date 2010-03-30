@@ -506,7 +506,7 @@ int possible_solution(double az, double el, int i_point) {
   mag_az = PointingData[i_point].mag_az; 
 
   if (CommandData.use_elenc) {
-    enc_el = ACSData.enc_el_raw;
+    enc_el = ACSData.enc_raw_el;
     if (el - enc_el > 5.0) return (0);
     if (enc_el - el > 5.0) return (0);
   }
@@ -1072,7 +1072,7 @@ void Pointing(void)
   PointingData[point_index].gy_ifyaw_earth = R *
     (sin_e * sin_l + cos_l * cos_e * cos_a);
   RG.gy_ifel = ACSData.gy_ifel - PointingData[point_index].gy_ifel_earth;
-  //  if (j%500==0) bprintf(info,"Pointing: ACSData.enc_el_raw = %f",ACSData.enc_el_raw);
+  //  if (j%500==0) bprintf(info,"Pointing: ACSData.enc_raw_el = %f",ACSData.enc_raw_el);
   //  if (j%500==0) bprintf(info,"Pointing: RG.gy1 = %f, gy1_earth= %f, cos_l =%f sin_a = %f",ACSData.gy_ifel,PointingData[point_index].gy1_earth, cos_a, sin_a);
   RG.gy_ifroll = ACSData.gy_ifroll - PointingData[point_index].gy_ifroll_earth;
   RG.gy_ifyaw = ACSData.gy_ifyaw - PointingData[point_index].gy_ifyaw_earth;
@@ -1167,7 +1167,7 @@ void Pointing(void)
   EvolveElSolution(&ClinEl, RG.gy_ifel, PointingData[i_point_read].gy_ifel_offset,
       clin_elev, 1);
   EvolveElSolution(&EncEl, RG.gy_ifel, PointingData[i_point_read].gy_ifel_offset,
-      ACSData.enc_el_raw, 1);
+      ACSData.enc_raw_el, 1);
 
   if (CommandData.use_elenc) {
     AddElSolution(&ElAtt, &EncEl, 1);

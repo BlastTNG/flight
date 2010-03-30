@@ -124,16 +124,16 @@ static double calcVPiv(void)
     for(i=0;i>(VPIV_FILTER_LEN-1);i++) buf_vPiv[i]=0.0;
     for(i=0;i>(VPIV_FILTER_LEN-1);i++) buf_t[i]=0.0;
   }
-  a+=(ACSData.res_piv_raw-buf_vPiv[ib_last]);
+  a+=(ACSData.res_raw_piv-buf_vPiv[ib_last]);
   //  dt=((double)(gettimeofday-buf_t[ib_last]));
-  buf_vPiv[ib_last]=ACSData.res_piv_raw;
+  buf_vPiv[ib_last]=ACSData.res_raw_piv;
   //  dummy=PointingData[i_point].t
     //  buf_t[ib_last]=PointingData[i_point].t;
   ib_last=(ib_last+VPIV_FILTER_LEN+1)%VPIV_FILTER_LEN;
   dtheta=(a-alast)/VPIV_FILTER_LEN;
   alast=a;
   vpiv=dtheta/0.010016; 
-  //  if (j%100 == 1) bprintf(info,"CalcVPiv vpiv = %f, res_piv_raw = %f, a = %f, alast = %f, dtheta = %f ",vpiv,ACSData.res_piv_raw,a/VPIV_FILTER_LEN,alast/VPIV_FILTER_LEN,dtheta);
+  //  if (j%100 == 1) bprintf(info,"CalcVPiv vpiv = %f, res_raw_piv = %f, a = %f, alast = %f, dtheta = %f ",vpiv,ACSData.res_raw_piv,a/VPIV_FILTER_LEN,alast/VPIV_FILTER_LEN,dtheta);
   j++;
   return vpiv;
 }
@@ -170,14 +170,14 @@ static double GetVElev(void)
     //    vel = (axes_mode.el_dest - PointingData[i_point].el) * 0.36;
   } else if (axes_mode.el_mode == AXIS_LOCK) {
     /* for the lock, only use the elevation encoder */
-    vel = (axes_mode.el_dest - ACSData.enc_el_raw) * 0.64;
+    vel = (axes_mode.el_dest - ACSData.enc_raw_el) * 0.64;
  }
 
   /* correct offset and convert to Gyro Units */
   vel -= (PointingData[i_point].gy_ifel_offset - PointingData[i_point].gy_ifel_earth);
 
   if (CommandData.use_elenc) {
-    el_for_limit = ACSData.enc_el_raw;
+    el_for_limit = ACSData.enc_raw_el;
   } else {
     el_for_limit = PointingData[i_point].el;
   }
@@ -289,7 +289,7 @@ static double GetIPivot(unsigned int g_piv, unsigned int disabled)
   int i_point;
  
   i_point = GETREADINDEX(point_index);
-  I_req = (-1.0)*(double)g_piv*(ACSData.rw_vel_raw-CommandData.pivot_gain.SP); 
+  I_req = (-1.0)*(double)g_piv*(ACSData.vel_raw_rw-CommandData.pivot_gain.SP); 
 
   // TODO: Add in term proportional to velocity error.
   if(disabled) { // Don't attempt to send current to the motors if we are disabled.
@@ -324,8 +324,8 @@ static double GetIPivot(unsigned int g_piv, unsigned int disabled)
 /************************************************************************/
 void WriteMot(int TxIndex, unsigned short *RxFrame)
 {
-  static struct NiosStruct* elVreqAddr;
-  static struct NiosStruct* azVreqAddr;
+  static struct NiosStruct* velReqElAddr;
+  static struct NiosStruct* velReqAzAddr;
   static struct NiosStruct* cosElAddr;
   static struct NiosStruct* sinElAddr;
 
@@ -333,10 +333,10 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   static struct NiosStruct* gIElAddr;
   static struct NiosStruct* gPAzAddr;
   static struct NiosStruct* gIAzAddr;
-  static struct NiosStruct* gPVPivotAddr;
-  static struct NiosStruct* setReacAddr;
-  static struct NiosStruct* pivVReqDACAddr;
-  static struct NiosStruct* pivVCalcAddr;
+  static struct NiosStruct* gPVPivAddr;
+  static struct NiosStruct* setRWAddr;
+  static struct NiosStruct* dacPivAddr;
+  static struct NiosStruct* velCalcPivAddr;
  
   //TODO temporary
   static struct NiosStruct* dacAmplAddr[5];
@@ -354,25 +354,25 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    elVreqAddr = GetNiosAddr("el_vreq");
-    azVreqAddr = GetNiosAddr("az_vreq");
+    velReqElAddr = GetNiosAddr("vel_req_el");
+    velReqAzAddr = GetNiosAddr("vel_req_az");
     cosElAddr = GetNiosAddr("cos_el");
     sinElAddr = GetNiosAddr("sin_el");
-    pivVReqDACAddr = GetNiosAddr("piv_dac");
+    dacPivAddr = GetNiosAddr("dac_piv");
     gPElAddr = GetNiosAddr("g_p_el");
     gIElAddr = GetNiosAddr("g_i_el");
     gPAzAddr = GetNiosAddr("g_p_az");
     gIAzAddr = GetNiosAddr("g_i_az");
-    gPVPivotAddr = GetNiosAddr("g_pv_pivot");
-    setReacAddr = GetNiosAddr("set_reac");
-    pivVCalcAddr = GetNiosAddr("piv_dps_calc");
+    gPVPivAddr = GetNiosAddr("g_pv_piv");
+    setRWAddr = GetNiosAddr("set_rw");
+    velCalcPivAddr = GetNiosAddr("vel_calc_piv");
 
     dacAmplAddr[0] = GetNiosAddr("v_pump_bal");    // is now ifpm_ampl
     //    dacAmplAddr[0] = GetNiosAddr("dac1_ampl"); // is now ifpm_ampl
     dacAmplAddr[1] = GetNiosAddr("dac2_ampl");
-    //    dacAmplAddr[2] = GetNiosAddr("dac3_ampl"); // is now piv_dac
+    //    dacAmplAddr[2] = GetNiosAddr("dac3_ampl"); // is now dac_piv
     //    dacAmplAddr[3] = GetNiosAddr("dac4_ampl"); // is now dac_el
-    //    dacAmplAddr[4] = GetNiosAddr("dac5_ampl"); // is now rw_dac 
+    //    dacAmplAddr[4] = GetNiosAddr("dac5_ampl"); // is now dac_rw 
   }
 
   i_point = GETREADINDEX(point_index);
@@ -397,7 +397,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     v_elev = 32767;
   if (v_elev < -32768)
     v_elev = -32768;
-  WriteData(elVreqAddr, 32768 + v_elev, NIOS_QUEUE);
+  WriteData(velReqElAddr, 32768 + v_elev, NIOS_QUEUE);
 
   /* zero motor gains if the pin is in */
   if ((CommandData.pin_is_in && !CommandData.force_el)
@@ -431,7 +431,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     v_az = 32767;
   if (v_az < -32768)
     v_az = -32768;
-  WriteData(azVreqAddr, 32768 + v_az, NIOS_QUEUE);
+  WriteData(velReqAzAddr, 32768 + v_az, NIOS_QUEUE);
 
 
   if ((CommandData.disable_az) || (wait > 0)) {
@@ -446,17 +446,17 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     v_piv=GetIPivot(pivGainRW,0);
   }
   /* requested pivot velocity*/
-  WriteData(pivVReqDACAddr, v_piv*2, NIOS_QUEUE);
+  WriteData(dacPivAddr, v_piv*2, NIOS_QUEUE);
   /* p term for az motor */
   WriteData(gPAzAddr, azGainP, NIOS_QUEUE);
   /* I term for az motor */
   WriteData(gIAzAddr, azGainI, NIOS_QUEUE);
   /* p term to rw vel for pivot motor */
-  WriteData(gPVPivotAddr, pivGainRW, NIOS_QUEUE);
+  WriteData(gPVPivAddr, pivGainRW, NIOS_QUEUE);
   /* setpoint for reaction wheel */
-  WriteData(setReacAddr, CommandData.pivot_gain.SP*65536.0/2.5, NIOS_QUEUE);
+  WriteData(setRWAddr, CommandData.pivot_gain.SP*65536.0/2.5, NIOS_QUEUE);
   /* Pivot velocity */
-  WriteData(pivVCalcAddr, (calcVPiv()/20.0*32768.0), NIOS_QUEUE);
+  WriteData(velCalcPivAddr, (calcVPiv()/20.0*32768.0), NIOS_QUEUE);
 
   if (wait > 0)
     wait--;
@@ -1376,16 +1376,16 @@ void* reactComm(void* arg)
       firsttime=0;
     }
     //in case we switch to ICC when serial communications aren't working
-    RWMotorData[0].rw_vel_raw=ACSData.rw_vel_raw;
-    RWMotorData[1].rw_vel_raw=ACSData.rw_vel_raw;
-    RWMotorData[2].rw_vel_raw=ACSData.rw_vel_raw;
+    RWMotorData[0].vel_raw_rw=ACSData.vel_raw_rw;
+    RWMotorData[1].vel_raw_rw=ACSData.vel_raw_rw;
+    RWMotorData[2].vel_raw_rw=ACSData.vel_raw_rw;
     usleep(20000);
   }
 
   firsttime=1;
   bprintf(info,"Bringing the reaction wheel online.");
   // Initialize structure RWMotorData.  Follows what was done in dgps.c
-  //  RWMotorData[0].rw_vel_raw=0;
+  //  RWMotorData[0].vel_raw_rw=0;
   RWMotorData[0].temp=0;
   RWMotorData[0].current=0.0;
   RWMotorData[0].status=0;
@@ -1430,9 +1430,9 @@ void* reactComm(void* arg)
 	reactinfo.reset=1;
       }
     }
-    if(CommandData.reset_reac==1 ) {
+    if(CommandData.reset_rw==1 ) {
       reactinfo.reset=1;
-      CommandData.reset_reac=0;
+      CommandData.reset_rw=0;
     }
 
     RWMotorData[rw_motor_index].drive_info=makeMotorField(&reactinfo); // Make bitfield of controller info structure.
@@ -1480,7 +1480,7 @@ void* reactComm(void* arg)
       } 
 
       vel_raw=queryCopleyInd(COP_IND_VEL,&reactinfo); // Units are 0.1 counts/sec
-      RWMotorData[rw_motor_index].rw_vel_raw=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
+      RWMotorData[rw_motor_index].vel_raw_rw=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
       j=j%4;
       switch(j) {
       case 0:
@@ -1551,9 +1551,9 @@ void* elevComm(void* arg)
     }
 
     //in case we switch to ICC when serial communications aren't working
-    ElevMotorData[0].enc_el_raw=ACSData.enc_el_raw;
-    ElevMotorData[1].enc_el_raw=ACSData.enc_el_raw;
-    ElevMotorData[2].enc_el_raw=ACSData.enc_el_raw;
+    ElevMotorData[0].enc_raw_el=ACSData.enc_raw_el;
+    ElevMotorData[1].enc_raw_el=ACSData.enc_raw_el;
+    ElevMotorData[2].enc_raw_el=ACSData.enc_raw_el;
     usleep(20000);
   }
 
@@ -1562,7 +1562,7 @@ void* elevComm(void* arg)
   firsttime=1;
 
   // Initialize structure ElevMotorData.  Follows what was done in dgps.c
-  //  ElevMotorData[0].enc_el_raw=0;
+  //  ElevMotorData[0].enc_raw_el=0;
   ElevMotorData[0].temp=0;
   ElevMotorData[0].current=0.0;
   ElevMotorData[0].status=0;
@@ -1666,7 +1666,7 @@ void* elevComm(void* arg)
       pos_raw=queryCopleyInd(COP_IND_POS,&elevinfo); // Units are counts
                                                      // For Elev 524288 cts = 360 deg
       //TODO-lmf: Add in some sort of zeropoint.
-      ElevMotorData[elev_motor_index].enc_el_raw=((double) (pos_raw % ((long int) ELEV_ENC_CTS)))/ELEV_ENC_CTS*360.0-ENC_EL_RAW_OFFSET;
+      ElevMotorData[elev_motor_index].enc_raw_el=((double) (pos_raw % ((long int) ELEV_ENC_CTS)))/ELEV_ENC_CTS*360.0-ENC_RAW_EL_OFFSET;
       //   getCopleySlowInfo(j,elev_motor_index,&ElevMotorData,&elevinfo); // Reads one of temperature, current, status and fault register and
                            // writes to the appropriate frame 
 
@@ -1744,7 +1744,7 @@ void* pivotComm(void* arg)
   i=0;
 
   // Initialize structure PivotMotorData.  Follows what was done in dgps.c
-  PivotMotorData[0].res_piv_raw=0;
+  PivotMotorData[0].res_raw_piv=0;
   PivotMotorData[0].current=0;
   PivotMotorData[0].db_stat=0;
   PivotMotorData[0].dp_stat=0;
@@ -1868,7 +1868,7 @@ void* pivotComm(void* arg)
 
       pos_raw=getAMCResolver(&pivotinfo);
       //      bprintf(info,"Resolver Position is: %i",pos_raw);
-      PivotMotorData[pivot_motor_index].res_piv_raw=((double) pos_raw)/PIV_RES_CTS*360.0; 
+      PivotMotorData[pivot_motor_index].res_raw_piv=((double) pos_raw)/PIV_RES_CTS*360.0; 
 
       j=j%5;
       switch(j) {

@@ -161,7 +161,7 @@ struct CommandDataStruct {
     struct latch_pulse isc;
     struct latch_pulse osc;
     struct latch_pulse gps;
-    struct latch_pulse reac;
+    struct latch_pulse rw;
     struct latch_pulse piv;
     struct latch_pulse elmot;
     struct latch_pulse bi0;
@@ -184,7 +184,7 @@ struct CommandDataStruct {
   unsigned short disable_el;
   unsigned short force_el;
 
-  unsigned short reset_reac;
+  unsigned short reset_rw;
   unsigned short reset_piv;
   unsigned short reset_elev;
   unsigned short restore_piv;

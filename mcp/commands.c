@@ -322,8 +322,8 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.disable_el = 0;
       CommandData.force_el = 1;
       break;
-    case reset_reac:
-      CommandData.reset_reac=1;
+    case reset_rw:
+      CommandData.reset_rw=1;
       break;
     case reset_piv:
       CommandData.reset_piv=1;
@@ -414,17 +414,17 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.osc.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.osc.rst_count = LATCH_PULSE_LEN;
       break;
-    case reac_off:
-      CommandData.power.reac.set_count = 0;
-      CommandData.power.reac.rst_count = LATCH_PULSE_LEN;
+    case rw_off:
+      CommandData.power.rw.set_count = 0;
+      CommandData.power.rw.rst_count = LATCH_PULSE_LEN;
       break;
-    case reac_on:
-      CommandData.power.reac.rst_count = 0;
-      CommandData.power.reac.set_count = LATCH_PULSE_LEN;
+    case rw_on:
+      CommandData.power.rw.rst_count = 0;
+      CommandData.power.rw.set_count = LATCH_PULSE_LEN;
       break;
-    case reac_cycle:
-      CommandData.power.reac.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
-      CommandData.power.reac.rst_count = LATCH_PULSE_LEN;
+    case rw_cycle:
+      CommandData.power.rw.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.rw.rst_count = LATCH_PULSE_LEN;
       break;
     case piv_off:
       CommandData.power.piv.set_count = 0;
@@ -2323,8 +2323,8 @@ void InitCommandData()
   CommandData.power.osc.set_count = 0;
   CommandData.power.gps.rst_count = 0;
   CommandData.power.gps.set_count = 0;
-  CommandData.power.reac.rst_count = 0;
-  CommandData.power.reac.set_count = 0;
+  CommandData.power.rw.rst_count = 0;
+  CommandData.power.rw.set_count = 0;
   CommandData.power.piv.rst_count = 0;
   CommandData.power.piv.set_count = 0;
   CommandData.power.elmot.rst_count = 0;
@@ -2377,7 +2377,7 @@ void InitCommandData()
   CommandData.disable_az = 1; 
   CommandData.disable_el = 1;
 
-  CommandData.reset_reac = 0;
+  CommandData.reset_rw = 0;
   CommandData.reset_piv = 0;
   CommandData.reset_elev = 0;
   CommandData.restore_piv = 0;

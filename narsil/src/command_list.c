@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.33 $";
+const char *command_list_serial = "$Revision: 4.34 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -80,9 +80,9 @@ struct scom scommands[N_SCOMMANDS] = {
     | GR_LOCK | GR_ACT | GR_HWPR},
   {COMMAND(actbus_cycle), "power cycle the Actuators, Lock, and HWPR", GR_POWER 
     | GR_LOCK | GR_ACT | GR_HWPR | CONFIRM},
-  {COMMAND(reac_off), "turn off the reaction wheel motor", GR_POWER},
-  {COMMAND(reac_on), "turn on the reaction wheel motor", GR_POWER},
-  {COMMAND(reac_cycle), "power cycle the reaction wheel motor", GR_POWER},
+  {COMMAND(rw_off), "turn off the reaction wheel motor", GR_POWER},
+  {COMMAND(rw_on), "turn on the reaction wheel motor", GR_POWER},
+  {COMMAND(rw_cycle), "power cycle the reaction wheel motor", GR_POWER},
   {COMMAND(piv_off), "turn off the pivot motor", GR_POWER},
   {COMMAND(piv_on), "turn on the pivot motor", GR_POWER},
   {COMMAND(piv_cycle), "power cycle the pivot motor", GR_POWER},
@@ -115,7 +115,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(um500_off), "turn off the 500um array", GR_POWER},
   {COMMAND(um500_on), "turn on the 500um array", GR_POWER},
 
-  {COMMAND(reset_reac), "reset the serial connection to the RW controller", GR_GAIN},
+  {COMMAND(reset_rw), "reset the serial connection to the RW controller", GR_GAIN},
   {COMMAND(reset_piv), "reset the serial connection to the pivot controller", GR_GAIN},
   {COMMAND(reset_elev), "reset the serial connection to the elev controller", GR_GAIN},
   {COMMAND(restore_piv), "restore the serial settings for the pivot controller", GR_GAIN},
@@ -470,9 +470,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 3,
     {
-      {"Set Point (dps)",   -200, 200, 'f', "SET_REAC"},
+      {"Set Point (dps)",   -200, 200, 'f', "SET_RW"},
       {"V_err Gain (prop)", 0, MAX_15BIT, 'i', "G_PE_PIVOT"},
-      {"V_reac Gain (prop)", 0, MAX_15BIT, 'i', "G_PV_PIVOT"}
+      {"V_RW Gain (prop)", 0, MAX_15BIT, 'i', "G_PV_PIVOT"}
     }
   },
   {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 2,
