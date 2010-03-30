@@ -87,10 +87,10 @@ extern short int InCharge; /* tx.c */
 #define BAL_VALV     0x02  /* ACS2 Group 2 Bit 2 */
 #define BAL_HEAT     0x04  /* ACS2 Group 2 Bit 3 - DAC */
 
-#define PUMP_MAX 32714       /*  2.50V   */
-#define PUMP_MIN 13107       /*  1.00V   */
+#define PUMP_MAX 26214      /*  3.97*2.0V   */
+#define PUMP_MIN  3277      /*  3.97*0.25V   */
 
-#define PUMP_ZERO 32820
+#define PUMP_ZERO 32773
 
 /* in commands.c */
 double LockPosition(double elevation);
@@ -247,11 +247,16 @@ static int Balance(int bits_bal)
     vPumpBalAddr = GetNiosAddr("v_pump_bal");
     modeBalAddr = GetNiosAddr("mode_bal");
   }
- 
-  // if vetoed {
+
+  // enable slew mode
+  if (CommandData.pumps.veto_bal == 0){ 
+     CommandData.pumps.veto_bal = CommandData.pointing_mode.nw;
+  }
+
+  // if vetoed 
   if (CommandData.pumps.veto_bal > 0) {
     CommandData.pumps.veto_bal--;
-  }
+  } 
 
   if ((CommandData.pumps.mode == bal_rest) || (CommandData.pumps.veto_bal > 0)) {
  
@@ -275,12 +280,12 @@ static int Balance(int bits_bal)
       level = CommandData.pumps.level * PUMP_MAX;
     } else if (CommandData.pumps.level < 0) {
       bits_bal |= BAL_DIR; /* set reverse bit */
-      level = -CommandData.pumps.level * PUMP_MAX;
+      level = - CommandData.pumps.level * PUMP_MAX;
     } else {
       bits_bal &= (0xFF - BAL_VALV); /* Close valve */
       level = 0;
     }
- 
+
   } else {
 
     //   calculate speed and direction
