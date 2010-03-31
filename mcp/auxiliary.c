@@ -239,7 +239,9 @@ static int Balance(int bits_bal)
   int error;
   static int pump_is_on = -2;
   static double smoothed_i = I_EL_ZERO;
-  
+
+  static int k=0;
+
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
@@ -248,8 +250,16 @@ static int Balance(int bits_bal)
     modeBalAddr = GetNiosAddr("mode_bal");
   }
 
+  /*
+  if(k%100==0){
+  bprintf(info,"BALANCE: veto_val=%d",CommandData.pumps.veto_bal);
+  bprintf(info,"BALANCE: nw      =%d",CommandData.pointing_mode.nw);
+  }
+  k++;
+  */
+  
   // enable slew mode
-  if (CommandData.pumps.veto_bal == 0){ 
+  if (CommandData.pumps.veto_bal == 0){
      CommandData.pumps.veto_bal = CommandData.pointing_mode.nw;
   }
 
@@ -275,12 +285,12 @@ static int Balance(int bits_bal)
 
     bits_bal |= BAL_VALV; /* Open valve */
 
-    if (CommandData.pumps.level > 0) {
+    if (CommandData.pumps.level > 0.) {
       bits_bal &= (0xFF - BAL_DIR); /* clear reverse bit */
       level = CommandData.pumps.level * PUMP_MAX;
-    } else if (CommandData.pumps.level < 0) {
+    } else if (CommandData.pumps.level < 0.) {
       bits_bal |= BAL_DIR; /* set reverse bit */
-      level = - CommandData.pumps.level * PUMP_MAX;
+      level = -CommandData.pumps.level * PUMP_MAX;
     } else {
       bits_bal &= (0xFF - BAL_VALV); /* Close valve */
       level = 0;
@@ -342,6 +352,7 @@ static int Balance(int bits_bal)
 
   // write direction and valve bits
   WriteData(vPumpBalAddr, (int) PUMP_ZERO + level, NIOS_QUEUE);
+  WriteData(modeBalAddr, CommandData.pumps.mode, NIOS_QUEUE);
   return bits_bal;
 
 }
@@ -369,10 +380,12 @@ static int ControlPumpHeat(int bits_bal)
 
   if (CommandData.pumps.heat_on) {
     if (temp1 < CommandData.pumps.heat_tset) {
-      bits_bal |= BAL_DIR;  /* set heat bit */
+      bits_bal |= BAL_HEAT;  /* set heat bit */
     } else {
-      bits_bal &= (0xFF - BAL_DIR); /* clear heat bit */
+      bits_bal &= (0xFF - BAL_HEAT); /* clear heat bit */
     }
+  } else {
+      bits_bal &= (0xFF - BAL_HEAT); /* clear heat bit */
   }
 
   return bits_bal;
@@ -727,7 +740,7 @@ void ControlAuxMotors(unsigned short *RxFrame)
   
   WriteData(levelOnBalAddr, (int)CommandData.pumps.level_on_bal, NIOS_QUEUE);
   WriteData(levelOffBalAddr, (int)CommandData.pumps.level_off_bal, NIOS_QUEUE);
-  WriteData(vetoBalAddr, (int)CommandData.pumps.veto_bal, NIOS_QUEUE);
+  WriteData(vetoBalAddr, (int)CommandData.pumps.veto_bal/4.0, NIOS_QUEUE);
   WriteData(levelTargetBalAddr, (int)(CommandData.pumps.level_target_bal + 1990.13*5.),
       NIOS_QUEUE);
   WriteData(gainBalAddr, (int)(CommandData.pumps.gain_bal * 1000.), NIOS_QUEUE);

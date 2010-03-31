@@ -354,7 +354,7 @@ struct ChannelStruct SlowChannels[] = {
   {"level_off_bal",'w', LOOP1, 30,           1./1990.13,             0.0, 'u', U_I_A},
   {"level_target_bal",'w', LOOP1, 31,           1./1990.13,            -5.0, 'u', U_I_A},
   /* LOOP1 32-33 are wide */
-  {"veto_bal",     'w', LOOP1, 34,                1.0,             0.0, 's', U_NONE},
+  {"veto_bal",     'w', LOOP1, 34,                4.0,             0.0, 's', U_NONE},
   /* LOOP1 35-36 are unused */
   {"sip_alt",      'w', LOOP1, 37,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 38-41 are wide */
@@ -774,9 +774,9 @@ struct ChannelStruct SlowChannels[] = {
   {"t_ext7",       'r',  ACS1_T1, 47,         CAL16T(1.0, 0.0),         'u', U_T_C},
 
 /* ACS2 Digital I/O card */
-  {"v_pump_bal",    'w',  ACS2_D,  0,       1.0/13107.0,          -2.504, 'u', U_NONE},
-  {"dac2_ampl",    'w',  ACS2_D,  1,                1.0,             0.0, 'u', U_NONE},
-  {"dac_piv",      'w',  ACS2_D,  2,                1.0,             0.0, 'u', U_NONE},
+  {"v_pump_bal",    'w',  ACS2_D,  0,       3.91/13107.0,          -9.775, 'u', U_NONE},
+  {"dac2_ampl",    'w',  ACS2_D,  1,                 1.0,             0.0, 'u', U_NONE},
+  {"dac_piv",      'w',  ACS2_D,  2,                 1.0,             0.0, 'u', U_NONE},
   //  {"dac3_ampl",    'w',  ACS2_D,  2,                1.0,             0.0, 'u', U_NONE},
   //  {"dac4_ampl",    'w',  ACS2_D,  3,                1.0,             0.0, 'u', U_NONE},
   //  {"dac5_ampl",    'w',  ACS2_D,  4,                1.0,             0.0, 'u', U_NONE},
