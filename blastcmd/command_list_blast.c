@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.34 $";
+const char *command_list_serial = "$Revision: 4.35 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -232,8 +232,8 @@ struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(balance_auto), "Put balance system into auto mode", GR_BAL},
   {COMMAND(balance_off),  "Turn off the balance pumps", GR_BAL},
-  {COMMAND(bal_heat_on),  "Turn on the balance pump heating card", GR_BAL},
-  {COMMAND(bal_heat_off), "Turn off the balance pump heating card", GR_BAL},
+  {COMMAND(balance_heat_on),  "Turn on the balance pump heating card", GR_BAL},
+  {COMMAND(balance_heat_off), "Turn off the balance pump heating card", GR_BAL},
 
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},
@@ -390,7 +390,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Gain",            0.01, 10, 'f', "BAL_GAIN"},
     }
   },
-  {COMMAND(bal_tset), "Set balance pump minumum temperature", GR_BAL, 1,
+  {COMMAND(balance_veto), "Set veto for the balance system", GR_BAL, 1,
+    {
+      {"Balance veto (s)",  0, 60000, 'f', "BAL_VETO"},
+    }
+  },
+  {COMMAND(balance_tset), "Set balance pump minumum temperature", GR_BAL, 1,
      {
        {"Temperature (C)",  -40, 40, 'f', "BAL_TSET"},
      }

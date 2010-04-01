@@ -240,8 +240,6 @@ static int Balance(int bits_bal)
   static int pump_is_on = -2;
   static double smoothed_i = I_EL_ZERO;
 
-  static int k=0;
-
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
@@ -249,13 +247,7 @@ static int Balance(int bits_bal)
     vPumpBalAddr = GetNiosAddr("v_pump_bal");
     modeBalAddr = GetNiosAddr("mode_bal");
   }
-  /*
-  if(k%100==0){
-    bprintf(info,"BALANCE: veto_val=%d",CommandData.pumps.veto_bal);
-    bprintf(info,"BALANCE: nw      =%d",CommandData.pointing_mode.nw);
-  }
-  k++;
-  */ 
+  
   // enable slew mode
   if (CommandData.pumps.veto_bal == 0){
      CommandData.pumps.veto_bal = CommandData.pointing_mode.nw;

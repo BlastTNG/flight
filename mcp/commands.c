@@ -799,14 +799,12 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case balance_auto:
       CommandData.pumps.mode= bal_auto;
       break;
-    case bal_heat_on:/* Balance pump heating card commanding */
+    case balance_heat_on:/* Balance pump heating card commanding */
       CommandData.pumps.heat_on = 1;
       break;
-    case bal_heat_off:
+    case balance_heat_off:
       CommandData.pumps.heat_on = 0;
       break;
-
-
 
 #endif
 
@@ -821,7 +819,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.actbus.lock_goal = LS_OPEN | LS_DRIVE_OFF;
       if (CommandData.pointing_mode.mode == P_LOCK) {
         CommandData.pointing_mode.nw = CommandData.slew_veto;
-        CommandData.pointing_mode.mode = P_DRIFT;
+	CommandData.pointing_mode.mode = P_DRIFT;
         CommandData.pointing_mode.X = 0;
         CommandData.pointing_mode.Y = 0;
         CommandData.pointing_mode.vaz = 0.0;
@@ -1467,9 +1465,13 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pumps.level = rvalues[0];
       CommandData.pumps.mode = bal_manual;
       break;
-    case bal_tset:
+    case balance_tset:
       CommandData.pumps.heat_tset = rvalues[0];
       break;
+    case balance_veto:
+      CommandData.pumps.veto_bal = rvalues[0];
+      break;
+
 
 
       /***************************************/
@@ -2471,7 +2473,6 @@ void InitCommandData()
   CommandData.pumps.mode = bal_rest; // TODO: change for flight
   CommandData.pumps.heat_on = 1;
   CommandData.pumps.heat_tset = 20;
-
 
   CommandData.Temporary.dac_out[0] = 0x8000;
   CommandData.Temporary.dac_out[1] = 0x8000;

@@ -1141,6 +1141,7 @@ void Pointing(void)
   PointingData[point_index].lst = getlst(PointingData[point_index].t,
       PointingData[point_index].lon);
 
+  /* TODO CommandsData.pointing_mode.nw decremented more than once per frame */
   /*************************************/
   /**      do ISC Solution            **/
   EvolveSCSolution(&ISCEl, &ISCAz,
