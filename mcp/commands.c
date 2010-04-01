@@ -2280,8 +2280,6 @@ void InitCommandData()
   /** this overrides prev_status **/
   CommandData.force_el = 0;
 
-  CommandData.pumps.veto_bal = BAL_VETO_MAX;
-
   CommandData.actbus.off = 0;
   CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   CommandData.actbus.lock_goal = LS_DRIVE_OFF;
@@ -2473,6 +2471,7 @@ void InitCommandData()
   CommandData.pumps.mode = bal_rest; // TODO: change for flight
   CommandData.pumps.heat_on = 1;
   CommandData.pumps.heat_tset = 20;
+  CommandData.pumps.veto_bal = BAL_VETO_MAX;
 
   CommandData.Temporary.dac_out[0] = 0x8000;
   CommandData.Temporary.dac_out[1] = 0x8000;

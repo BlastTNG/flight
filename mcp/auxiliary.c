@@ -717,16 +717,6 @@ void ControlAuxMotors(unsigned short *RxFrame)
 
   /* Run Heating card, maybe */
   bits_bal = ControlPumpHeat(bits_bal);
-
-  //bprintf(info, "MotorControl: (%i)\n", ifpmBits);
-
-  /* Already done in Balance(bits_bal) */
-  //if (CommandData.pumps.veto_bal) {
-    /* if we're in timeout mode, decrement the timer */
-    //if (CommandData.pumps.veto_bal > 1)
-    //  CommandData.pumps.veto_bal--;
-    //WriteData(vPumpBalAddr, CommandData.pumps.level & 0x7ff, NIOS_QUEUE);
-  //}
   
   WriteData(levelOnBalAddr, (int)CommandData.pumps.level_on_bal, NIOS_QUEUE);
   WriteData(levelOffBalAddr, (int)CommandData.pumps.level_off_bal, NIOS_QUEUE);
@@ -735,6 +725,7 @@ void ControlAuxMotors(unsigned short *RxFrame)
       NIOS_QUEUE);
   WriteData(gainBalAddr, (int)(CommandData.pumps.gain_bal * 1000.), NIOS_QUEUE);
   WriteData(bitsBalAddr, bits_bal, NIOS_FLUSH);
+
 }
 
 /* create latching relay pulses, and update enable/disbale levels */
