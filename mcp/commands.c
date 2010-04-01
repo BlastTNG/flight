@@ -69,6 +69,8 @@
 #define ISC_TRIGGER_POS  2
 #define ISC_TRIGGER_NEG  3
 
+#define VETO_MAX 60000
+
 void ActPotTrim(void); /* actuators.c */
 void RecalcOffset(double, double);
 
@@ -1300,7 +1302,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       /********** Lock / Actuators  **********/
     case lock:  /* Lock Inner Frame */
       if (CommandData.pumps.veto_bal >= 0)
-        CommandData.pumps.veto_bal = BAL_VETO_MAX;
+        CommandData.pumps.veto_bal = VETO_MAX;
       CommandData.actbus.lock_goal = LS_CLOSED | LS_DRIVE_OFF;
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_LOCK;
@@ -2406,7 +2408,7 @@ void InitCommandData()
   CommandData.dpcu_trim = 0.0;
   CommandData.dpcu_auto = 1;
 
-  CommandData.slew_veto = 60000; /* 10 minutes */
+  CommandData.slew_veto = VETO_MAX; /* 10 minutes */
 
   CommandData.pointing_mode.nw = 0;
   CommandData.pointing_mode.mode = P_DRIFT;
@@ -2464,14 +2466,14 @@ void InitCommandData()
   CommandData.gy_ifyaw_offset = 0;
   CommandData.gymask = 0x3f;
   
-  CommandData.pumps.level_on_bal = 0.2 * 1990.13;  
-  CommandData.pumps.level_off_bal = 0.1 * 1900.13;
+  CommandData.pumps.level_on_bal = 2.0 * 1990.13;  
+  CommandData.pumps.level_off_bal = 0.5 * 1900.13;
   CommandData.pumps.level_target_bal = 0.0 * 1990.13;
   CommandData.pumps.gain_bal = 0.2;
   CommandData.pumps.mode = bal_rest; // TODO: change for flight
   CommandData.pumps.heat_on = 1;
   CommandData.pumps.heat_tset = 20;
-  CommandData.pumps.veto_bal = BAL_VETO_MAX;
+  CommandData.pumps.veto_bal = VETO_MAX;
 
   CommandData.Temporary.dac_out[0] = 0x8000;
   CommandData.Temporary.dac_out[1] = 0x8000;

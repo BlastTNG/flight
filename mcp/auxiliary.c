@@ -342,7 +342,7 @@ static int Balance(int bits_bal)
 
   // write direction and valve bits
   WriteData(vPumpBalAddr, (int) PUMP_ZERO + level, NIOS_QUEUE);
-  WriteData(modeBalAddr, CommandData.pumps.mode, NIOS_QUEUE);
+  WriteData(modeBalAddr, CommandData.pumps.mode, NIOS_FLUSH);
   return bits_bal;
 
 }
@@ -718,10 +718,10 @@ void ControlAuxMotors(unsigned short *RxFrame)
   /* Run Heating card, maybe */
   bits_bal = ControlPumpHeat(bits_bal);
   
-  WriteData(levelOnBalAddr, (int)CommandData.pumps.level_on_bal, NIOS_QUEUE);
-  WriteData(levelOffBalAddr, (int)CommandData.pumps.level_off_bal, NIOS_QUEUE);
+  WriteData(levelOnBalAddr, CommandData.pumps.level_on_bal, NIOS_QUEUE);
+  WriteData(levelOffBalAddr, CommandData.pumps.level_off_bal, NIOS_QUEUE);
   WriteData(vetoBalAddr, (int)CommandData.pumps.veto_bal/4.0, NIOS_QUEUE);
-  WriteData(levelTargetBalAddr, (int)(CommandData.pumps.level_target_bal + 1990.13*5.),
+  WriteData(levelTargetBalAddr, (CommandData.pumps.level_target_bal + 1990.13*5.),
       NIOS_QUEUE);
   WriteData(gainBalAddr, (int)(CommandData.pumps.gain_bal * 1000.), NIOS_QUEUE);
   WriteData(bitsBalAddr, bits_bal, NIOS_FLUSH);
