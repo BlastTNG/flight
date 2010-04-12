@@ -684,8 +684,7 @@ struct ChannelStruct SlowChannels[] = {
   {"i_raw_rw",     'w', LOOP7, 13,       30.0/32768.0,             0.0, 's', U_I_A},
   {"t_mc_raw_el",  'w', LOOP7, 14,                1.0,             0.0, 's', U_T_C},
   {"i_raw_el",     'w', LOOP7, 15,       30.0/32768.0,             0.0, 's', U_I_A},
-  {"i_raw_piv",    'w', LOOP7, 17,       20.0/32768.0,             0.0, 's', U_I_A},
-  /* LOOP7 16 is fast narrow*/
+  /* LOOP7 16-17 is fast narrow*/
   {"isc_max_age",  'w', LOOP7, 18,                1.0,             0.0, 'u', U_T_MS},
   {"osc_max_age",  'w', LOOP7, 19,                1.0,             0.0, 'u', U_T_MS},
   //{"g_pe_piv",   'w', LOOP7, 20,                1.0,             0.0, 'u', U_NONE},
@@ -916,6 +915,7 @@ struct ChannelStruct FastChannels[] = {
   {"enc_el",       'w', LOOP2, 47,              I2DEG,             0.0, 'u', U_P_DEG},
   {"enc_sigma",    'w', LOOP2, 48,              I2DEG,             0.0, 'u', U_NONE},
   {"res_raw_piv",  'w', LOOP7, 16,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"i_raw_piv",    'w', LOOP7, 17,       20.0/32768.0,             0.0, 's', U_I_A},
   {"chatter",      'w', LOOP7, 38,              1.0,               0.0, 'u', U_NONE},
   {"mcp_frame",    'w', LOOP2, 34,              1.0,               0.0, 'u', U_NONE},
 

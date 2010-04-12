@@ -1455,6 +1455,7 @@ void* reactComm(void* arg)
       usleep(10000);  // give time for motor bits to get written
       if (reactinfo.reset==0) {
 	resetcount=0;
+        bprintf(info,"Controller successfuly reset!");
       }
 
     } else if(reactinfo.init==1){
@@ -1583,8 +1584,9 @@ void* elevComm(void* arg)
 #ifdef MOTORS_VERBOSE
       bprintf(info,"Opened the serial port on attempt number %i",i); 
 #endif
+    } else { 
+      sleep(1);
     }
-    else sleep(1);
   }
  
   // Configure the serial port.  If after 10 attempts the port is not initialized it enters 
@@ -1638,7 +1640,7 @@ void* elevComm(void* arg)
       usleep(10000);  // give time for motor bits to get written
       if (elevinfo.reset==0) {
 	resetcount=0;
-	bprintf(info,"elevinfo: PING! elevinfo.init=%i, elevinfo.open=%i, elevinfo.err=%i",elevinfo.init, elevinfo.open,elevinfo.err);
+        bprintf(info,"Controller successfuly reset!");
       }
 
     } else if (elevinfo.init==1) {
@@ -1820,8 +1822,10 @@ void* pivotComm(void* arg)
       pivot_motor_index=INC_INDEX(pivot_motor_index);
       resetAMC(PIVOT_DEVICE,&pivotinfo); // if successful sets pivotinfo.reset=0
 
-      if (pivotinfo.reset==0) resetcount=0;
-
+      if (pivotinfo.reset==0) {
+	resetcount=0;
+        bprintf(info,"Controller successfuly reset!");
+      }
       usleep(10000);  // give time for motor bits to get written
 
     } else if (pivotinfo.init==1) {

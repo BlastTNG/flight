@@ -986,7 +986,9 @@ int disableAMC(struct MotorInfoStruct* amcinfo)
   if(n==1) 
     {
       amcinfo->disabled=1;
+#ifdef MOTORS_VERBOSE
       bprintf(info,"%sComm disableAMC: Controller is now disabled.,",amcinfo->motorstr);
+#endif
     }
   return n;
 }

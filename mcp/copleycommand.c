@@ -671,7 +671,9 @@ long int queryCopleyInd(char ind[],struct MotorInfoStruct* copleyinfo)
 	  }
       }
     } else {
+#ifdef MOTORS_VERBOSE
     berror(err,"%sComm queryCopleyInd: No useful response.",copleyinfo->motorstr);
+#endif
     return -1;
   }
 
@@ -760,7 +762,9 @@ void resetCopley(char *address, struct MotorInfoStruct* copleyinfo)
     copleyinfo->init=2;
     return;
   } else {
+#ifdef MOTORS_VERBOSE
     bprintf(info,"%sComm resetCopley: Controller reset was successful!",copleyinfo->motorstr);
+#endif
     copleyinfo->reset=0;
     copleyinfo->err_count=0;
     copleyinfo->disabled=2;

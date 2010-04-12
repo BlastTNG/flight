@@ -2427,7 +2427,7 @@ void InitCommandData()
   CommandData.azi_gain.I = 0;
 
   CommandData.pivot_gain.SP = 50; // dps
-  CommandData.pivot_gain.PV = 0;
+  CommandData.pivot_gain.PV = 100;
 
   CommandData.gyheat.setpoint = 15.0;
   CommandData.gyheat.age = 0;
