@@ -41,8 +41,8 @@
 #define ISC_CCD_X_PIXELS 1312 // pixel dimenions of the ISC CCD
 #define ISC_CCD_Y_PIXELS 1024 //   "        "     "   "   "
 
-#define OSC_CCD_X_PIXELS 1360 // pixel dimenions of the OSC CCD
-#define OSC_CCD_Y_PIXELS 1036 //   "        "     "   "   "
+#define OSC_CCD_X_PIXELS 1392 // pixel dimenions of the OSC CCD
+#define OSC_CCD_Y_PIXELS 1040 //   "        "     "   "   "
 
 #define FOCUS_RANGE 2550      // # steps range for focus stepper
 #define AP_RANGE 495          // # steps range for aperture stepper
@@ -75,11 +75,19 @@ struct ISCStatusStruct {
   double elBDA;     // el      "      "     "    "    "    "    "  "
 
   // telescope attitude
+<<<<<<< isc_protocol.h
+  double az;     // az in radians
+  double el;     // el in radians
+  double lst;    // lst in radians (!!)
+  double lat;    // North Lat in radians
+  double maxSlew;   // maximum telescope slew vel. in rad/sec
+=======
   double az;        // az in radians
   double el;        // el in radians
   double lst;       // lst in radians (!!)
   double lat;       // North Lat in radians
   double maxSlew;   // maximum telescope slew vel. in rad/sec
+>>>>>>> 4.0
 
   // "brightest star is..." state
   int brightStarMode; // 1 brightest star in field is at:

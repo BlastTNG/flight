@@ -41,8 +41,8 @@
 #define ISC_CCD_X_PIXELS 1312 // pixel dimenions of the ISC CCD
 #define ISC_CCD_Y_PIXELS 1024 //   "        "     "   "   "
 
-#define OSC_CCD_X_PIXELS 1360 // pixel dimenions of the OSC CCD
-#define OSC_CCD_Y_PIXELS 1036 //   "        "     "   "   "
+#define OSC_CCD_X_PIXELS 1392 // pixel dimenions of the OSC CCD
+#define OSC_CCD_Y_PIXELS 1040 //   "        "     "   "   "
 
 #define FOCUS_RANGE 2550      // # steps range for focus stepper
 #define AP_RANGE 495          // # steps range for aperture stepper

@@ -47,7 +47,7 @@ void frameblob::commonconstructor( MAPTYPE *map_in,
   // Map statistics defaults
   mapmean=0;
   sigma=1;
-  satval = 65535;             // numerical value of a saturated pixel
+  satval = 16383;             // numerical value of a saturated pixel
   satcol = new int[xpix];     // array contains # sat pixels each column
   
   gain=1;
@@ -236,7 +236,7 @@ int frameblob::load_badpix(char *fname) {
   
   while( fgets(thisline,80,badfile) != NULL ) {
     count = sscanf(thisline,"%i %i",&x, &y);
-    
+    //printf("badpix: %i %i\n",x, y);
     if( count == 2 ) { // If we read in a coordinate pair
       numbadpix ++;
       thisbad = new bloblist(0, (double)x, (double)(ypix - y - 1));
