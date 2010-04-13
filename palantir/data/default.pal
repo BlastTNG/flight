@@ -1451,63 +1451,66 @@
   </BOX>
   <BOX caption="Cryostat Temps" row="3" col="7">
     <NUMBER caption="JFET">
-      <DATUM format="%.2f" src="T_jfet" extrema="jfettemp"/>
+      <DATUM format="%.2f" src="Td_jfet" extrema="jfettemp"/>
     </NUMBER>
     <NUMBER caption="LN2">
-      <DATUM format="%.2f" src="T_ln2" extrema="lntemp"/>
+      <DATUM format="%.2f" src="Td_ln" extrema="lntemp"/>
+    </NUMBER>
+    <NUMBER caption="LN2 Filter">
+      <DATUM format="%.2f" src="Td_ln_filt" extrema="lntemp"/>
     </NUMBER>
     <NUMBER caption="VCS Filter">
-      <DATUM format="%.2f" src="T_vcs_filt" extrema="vcstemp"/>
+      <DATUM format="%.2f" src="Td_vcs_filt" extrema="vcstemp"/>
     </NUMBER>
-    <NUMBER caption="VCS Fet">
-      <DATUM format="%.2f" src="T_vcs_fet" extrema="vcsfet"/>
+    <NUMBER caption="VCS JFET">
+      <DATUM format="%.2f" src="Td_vcs_jfet" extrema="vcsfet"/>
     </NUMBER>
     <NUMBER caption="LHE Filter">
-      <DATUM format="%.2f" src="T_lhe_filt" extrema="lhetemp"/>
+      <DATUM format="%.2f" src="Td_lhe_filt" extrema="lhetemp"/>
     </NUMBER>
     <NUMBER caption="LHe">
-      <DATUM format="%.2f" src="T_lhe" extrema="lhetemp"/>
+      <DATUM format="%.2f" src="Td_lhe" extrema="lhetemp"/>
     </NUMBER>
     <NUMBER caption="Charcoal">
-      <DATUM format="%.2f" src="T_charcoal" extrema="chartemp"/>
+      <DATUM format="%.2f" src="Td_charcoal" extrema="chartemp"/>
     </NUMBER>
-    <NUMBER caption="3He Fridge Diode">
-      <DATUM format="%.2f" src="T_heatswitch" extrema="unknown"/>
+    <NUMBER caption="HS Charcoal">
+      <DATUM format="%.2f" src="Td_hs_charcoal" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="HS Pot">
+      <DATUM format="%.2f" src="Td_hs_pot" extrema="lhetemp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Cold Optics Temps" row="3" col="6">
-    <NUMBER caption="Opt.Box Filter">
-      <DATUM format="%.2f" src="T_optbox_filt" extrema="pottemp"/>
+    <NUMBER caption="HWPR">
+      <DATUM format="%.2f" src="Tr_hwpr" extrema="lhetemp"/>
     </NUMBER>
-    <NUMBER caption="4He Pot Diode">
-      <DATUM format="%.2f" src="T_he4pot_d" extrema="pottemp-diode"/>
+    <NUMBER caption="He4 Pot">
+      <DATUM format="%.2f" src="Tr_he4_pot" extrema="pottemp"/>
     </NUMBER>
-    <NUMBER caption="He4 Pot ROx">
-      <DATUM format="%.3f" src="T_he4pot" extrema="pottemp"/>
-    </NUMBER>
-    <NUMBER caption="He3 Fridge">
-      <DATUM format="%.3f" src="T_he3fridge" extrema="he3fridge"/>
-    </NUMBER>
-    <NUMBER caption="300mK Heat Strap">
-      <DATUM format="%.3f" src="T_300mk_strap" extrema="heatstrap"/>
-    </NUMBER>
-    <NUMBER caption="500 um Horn">
-      <DATUM format="%.3f" src="T_horn_500" extrema="horn"/>
-    </NUMBER>
-    <NUMBER caption="350 um Horn">
-      <DATUM format="%.3f" src="T_horn_350" extrema="horn"/>
-    </NUMBER>
-    <NUMBER caption="250 um Horn">
-      <DATUM format="%.3f" src="T_horn_250" extrema="horn"/>
-    </NUMBER>
-    <NUMBER caption="Mirror 3">
-      <DATUM format="%.3f" src="T_m3" extrema="pottemp"/>
+    <NUMBER caption="Opt. Box Filter">
+      <DATUM format="%.2f" src="Tr_optbox_filt" extrema="pottemp"/>
     </NUMBER>
     <NUMBER caption="Mirror 4">
-      <DATUM format="%.3f" src="T_m4" extrema="pottemp"/>
+      <DATUM format="%.2f" src="Tr_m4" extrema="pottemp"/>
     </NUMBER>
     <NUMBER caption="Mirror 5">
-      <DATUM format="%.3f" src="T_m5" extrema="pottemp"/>
+      <DATUM format="%.2f" src="Tr_m5" extrema="pottemp"/>
+    </NUMBER>
+    <NUMBER caption="He3 Fridge">
+      <DATUM format="%.3f" src="Tr_he3_fridge" extrema="he3fridge"/>
+    </NUMBER>
+    <NUMBER caption="300mK Heat Strap">
+      <DATUM format="%.3f" src="Tr_300mk_strap" extrema="heatstrap"/>
+    </NUMBER>
+    <NUMBER caption="500 um Horn">
+      <DATUM format="%.3f" src="Tr_horn_500" extrema="horn"/>
+    </NUMBER>
+    <NUMBER caption="350 um Horn">
+      <DATUM format="%.3f" src="Tr_horn_350" extrema="horn"/>
+    </NUMBER>
+    <NUMBER caption="250 um Horn">
+      <DATUM format="%.3f" src="Tr_horn_250" extrema="horn"/>
     </NUMBER>
   </BOX>
   <BOX caption="Cryo Heaters" row="4" col="7" rowspan="1">
