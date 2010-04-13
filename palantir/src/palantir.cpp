@@ -870,7 +870,7 @@ printf("Starting up decomPoller: host: %s\n", decomdHost);
       FrameLoss->setText(tmp);
       sprintf(tmp, "DQ: %5.1f%%", DecomPoller->theDecom->DataQuality());
       DataQuality->setText(tmp);
-      sprintf(tmp, "FN: %s%", DecomPoller->theDecom->DecomFile());
+      sprintf(tmp, "FN: %s%%", DecomPoller->theDecom->DecomFile());
       DecomFile->setText(tmp);
       sprintf(tmp, "DF: %5.2f GB", DecomPoller->theDecom->DiskFree());
       DiskFree->setText(tmp);
@@ -882,7 +882,7 @@ printf("Starting up decomPoller: host: %s\n", decomdHost);
       DecomFile->setText("FN: ???");
     }
   } else {
-    sprintf(tmp, "Age: %ds", time(NULL)-lastUpdate);
+    sprintf(tmp, "Age: %ds", (int)(time(NULL)-lastUpdate));
     SinceLast->setText(tmp);
   }
 
@@ -965,15 +965,14 @@ printf("Starting up decomPoller: host: %s\n", decomdHost);
 	    sprintf(displayer, currNumber->format, (int)*indata);
 	  } else if (is_binary) {
 	    int idata = (int)*indata;
-	    sprintf(displayer, "%d%d%d%d%d%d%d%d",
-		(idata & 0x80)!=0, 
-		(idata & 0x40)!=0, 
-		(idata & 0x20)!=0, 
-		(idata & 0x10)!=0, 
-		(idata & 0x08)!=0, 
-		(idata & 0x04)!=0, 
-		(idata & 0x02)!=0, 
-		(idata & 0x01)!=0); 
+            long int num_bits = strtol((currNumber->format)+1, NULL, 0);
+            if (num_bits < 1 || num_bits > 32) {
+                num_bits = 8;
+            }
+            for (int z = 0; z < num_bits; z++) {
+                displayer[z] = (idata & (1 << ((num_bits - 1) - z))) ? '1' : '0';
+            }
+            displayer[num_bits] = '\0';
 	  } else {
 	    sprintf(displayer, currNumber->format, *indata);
 	  }
@@ -1075,8 +1074,8 @@ printf("Starting up decomPoller: host: %s\n", decomdHost);
             currQtLabel->setFont(Font(currCurDir->textstyle));
             currLabel->laststyle = 0;
           }
-          fscanf(curf, "%s", tmp);
-          currQtLabel->setText(tr(basename(tmp)));
+          if (fscanf(curf, "%s", tmp) == 1)
+            currQtLabel->setText(tr(basename(tmp)));
           fclose(curf);
         }
         break;

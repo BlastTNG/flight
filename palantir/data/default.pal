@@ -393,7 +393,7 @@
       <DATUM format="%.0f" src="n_sat_dgps" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Gyros">
-      <DATUM format="%b" src="gyro_mask" extrema="unknown"/>
+      <DATUM format="%6b" src="gyro_mask" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="ISC" colour="#707" row="4" col="5" rowspan="1">
