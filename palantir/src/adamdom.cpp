@@ -123,7 +123,7 @@ QDomElement AdamDom::NextElement(QDomNode *n) {
 //  Returns: the value of "attrib"
 //-------------------------------------------------------------
 
-QString AdamDom::GetAttribute(char *attrib) {
+QString AdamDom::GetAttribute(const char *attrib) {
   if (currElem.hasAttribute(attrib))
     return currElem.attribute(attrib);
   else

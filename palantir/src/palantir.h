@@ -242,13 +242,13 @@ class MainForm : public QMainWindow
 
     char decomdHost[MAXPATHLENGTH];
     int decomdPort;
-    void WarningMessage(char* title, char* txt);
-    void WarningMessage(char* title, QString txt);
+    void WarningMessage(const char* title, const char* txt);
+    void WarningMessage(const char* title, QString txt);
     float QStringToFloat(QString str);
     int QStringToInt(QString str);
     bool QStringToBool(QString str);
     void GetXMLInfo(char *layoutfile);
-    QString FindAttribute(char *attrib, char *tagname);
+    QString FindAttribute(const char *attrib, const char *tagname);
     void GetTextStyle(struct TextStyle *tstyle);
     void SetTextStyle(struct TextStyle *tstyle, int typebm, int bookmark);
     void GetExtrema(struct Extrema *ext, int bookmark);

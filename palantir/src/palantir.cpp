@@ -109,12 +109,12 @@ void PalImage::TurnOff(QLabel *label) {
 //   title: window title
 //   txt: the warning message
 //-------------------------------------------------------------
-void MainForm::WarningMessage(char* title, char* txt) {
+void MainForm::WarningMessage(const char* title, const char* txt) {
   QMessageBox::information(this, title, txt, QMessageBox::Ok |
       QMessageBox::Default);
 }
 
-void MainForm::WarningMessage(char* title, QString txt) {
+void MainForm::WarningMessage(const char* title, QString txt) {
   QMessageBox::information(this, title, txt, QMessageBox::Ok |
       QMessageBox::Default);
 }
@@ -190,7 +190,7 @@ void MainForm::LabelInit(struct Label *lab) {
 //   Returns: the value of the attribute or "" if not found
 //-------------------------------------------------------------
 
-QString MainForm::FindAttribute(char *attrib, char *tagname) {
+QString MainForm::FindAttribute(const char *attrib, const char *tagname) {
   char tmp[255];
 
   if (XMLInfo->GetAttribute(attrib) == "") {

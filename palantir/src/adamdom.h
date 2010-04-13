@@ -45,7 +45,7 @@ public:
 	bool GotoEntry(QString entrylist, int num, bool StartChild);
   bool GotoEntry(QString *entrylist, int numentries, int num, bool StartChild);
   bool GotoTag(QString entrylist, char *attrib, char *val, bool StartChild);
-  QString GetAttribute(char *attrib);
+  QString GetAttribute(const char *attrib);
   QString GetTagName();
 
 private:
