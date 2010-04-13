@@ -1060,7 +1060,9 @@ printf("Starting up decomPoller: host: %s\n", decomdHost);
         currCurDir = CurDirInfo.at(currLabel->index);
         currQtLabel = QtData.at(currLabel->labelindex);
         //strncpy (tmp, DataSource->fileName(), 254);
-        strncpy (tmp, _dirfile->Name(), 254);
+        memset(tmp, 0, 255);
+        if (readlink(_dirfile->Name(), tmp, 254) == -1)
+          strncpy (tmp, _dirfile->Name(), 254);
         if ((curf = fopen(tmp, "r")) == 0){
           if (currLabel->laststyle != 1) {
             currQtLabel->setPalette(Palette(ErrorStyle));
@@ -1074,8 +1076,7 @@ printf("Starting up decomPoller: host: %s\n", decomdHost);
             currQtLabel->setFont(Font(currCurDir->textstyle));
             currLabel->laststyle = 0;
           }
-          if (fscanf(curf, "%s", tmp) == 1)
-            currQtLabel->setText(tr(basename(tmp)));
+          currQtLabel->setText(tr(basename(tmp)));
           fclose(curf);
         }
         break;
