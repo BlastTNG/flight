@@ -193,8 +193,7 @@ int main (int argc, char **argv)
           } else {
             a = data[i] & 0x7F;
             b = (data[i] >> 8) & 0x7F;
-	    //NB: bytes are backward!
-            index = ((data[i] & 0x80) >> 7) + ((data[i] & 0x8000) >> 14);
+            index = ((data[i] & 0x80) >> 6) + ((data[i] & 0x8000) >> 15);
             if (old_index == -1 && index > 0)
               old_index = index - 1;
             if (old_index > -1) //Check that the index is sequential.
