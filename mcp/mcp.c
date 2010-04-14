@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -393,11 +394,14 @@ static void SensorReader(void)
   }
 }
 
-static void Chatter(void)
+static void Chatter(void* arg)
 {
   int fd;
   char ch;
   ssize_t ch_got;
+  off_t fpos;
+
+  fpos = *(off_t*)arg;
 
   nameThread("Chat");
 
@@ -410,16 +414,26 @@ static void Chatter(void)
     bprintf(tfatal, "Failed to open /data/etc/mcp.log for reading (%d)\n", errno);
   }
 
-  if (lseek(fd, -500, SEEK_END) == -1)
-  {
-    if (errno == EINVAL)
+  if (fpos == -1) {
+    if (lseek(fd, -500, SEEK_END) == -1)
     {
-      if (lseek(fd, 0, 0) == -1)
+      if (errno == EINVAL)
       {
-        bprintf(tfatal, "Failed to rewind /data/etc/mcp.log (%d)\n", errno);
+	if (lseek(fd, 0, SEEK_SET) == -1)
+	{
+	  bprintf(tfatal, "Failed to rewind /data/etc/mcp.log (%d)\n", errno);
+	}
+      } else {
+	bprintf(tfatal, "Failed to seek /data/etc/mcp.log (%d)\n", errno);
       }
-    } else {
-      bprintf(tfatal, "Failed to seek /data/etc/mcp.log (%d)\n", errno);
+    }
+  } else {
+    if (lseek(fd, fpos, SEEK_SET) == -1)
+    {
+      if (lseek(fd, 0, SEEK_END) == -1)
+      {
+	bprintf(tfatal, "Failed to rewind /data/etc/mcp.log (%d)\n", errno);
+      }
     }
   }
 
@@ -815,6 +829,7 @@ int main(int argc, char *argv[])
 #endif
   pthread_t chatter_id;
   pthread_t hwpr_id;
+  struct stat fstats;
 
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
@@ -829,10 +844,14 @@ int main(int argc, char *argv[])
 
   umask(0);  /* clear umask */
 
-  if ((logfile = fopen("/data/etc/mcp.log", "a")) == NULL)
+  if ((logfile = fopen("/data/etc/mcp.log", "a")) == NULL) {
     berror(err, "System: Can't open log file");
-  else
-    fputs("----- LOG RESTART -----\n", logfile);
+    fstats.st_size = -1;
+  } else {
+    if (fstat(fileno(logfile), &fstats) < 0)
+      fstats.st_size = -1;
+    fputs("!!!!!! LOG RESTART !!!!!!\n", logfile);
+  }
 
   biphase_timer = mcp_systime(NULL) + BI0_VETO_LENGTH;
 
@@ -925,7 +944,7 @@ int main(int argc, char *argv[])
   InitTxFrame(RxFrame);
 
 #ifndef BOLOTEST
-  pthread_create(&chatter_id, NULL, (void*)&Chatter, NULL);
+  pthread_create(&chatter_id, NULL, (void*)&Chatter, (void*)&(fstats.st_size));
 #endif
 
 #ifdef USE_XY_THREAD

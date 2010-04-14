@@ -223,10 +223,10 @@ void WriteChatter (int index)
       chat = 0x0000;
       break;
     case 0x01:
-      chat = 0x0080;
+      chat = 0x8000;
       break;
     case 0x02:
-      chat = 0x8000;
+      chat = 0x0080;
       break;
     case 0x03:
       chat = 0x8080;
