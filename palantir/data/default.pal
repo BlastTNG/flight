@@ -698,24 +698,6 @@
     <NUMBER caption="Gybox Heater %">
       <DATUM format="%.2f" src="GY_H_HIST" extrema="gyheat"/>
     </NUMBER>
-    <NUMBER caption="Gyro 1">
-      <DATUM format="%.2f" src="T_GYRO1" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="Gyro 2">
-      <DATUM format="%.2f" src="T_GYRO2" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="Gyro 3">
-      <DATUM format="%.2f" src="T_GYRO3" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="Gybox 2">
-      <DATUM format="%.2f" src="T_GYBOX2" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="Gybox 2 Set">
-      <DATUM format="%.2f" src="T_GY2_SET" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="Gybox 2 Heater %">
-      <DATUM format="%.2f" src="GY2_H_HIST" extrema="gyheat"/>
-    </NUMBER>
     <NUMBER caption="IF Clin">
       <DATUM format="%.2f" src="T_CLIN_IF" extrema="temp"/>
     </NUMBER>
