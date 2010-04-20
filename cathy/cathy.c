@@ -1,3 +1,17 @@
+/* cathy.c: Converts a dirfile field to a text stream on stdout
+ *
+ * This software is copyright (C) 2010 Matthew Truch
+ *
+ * This file is part of cathy licensed under the GNU
+ * General Public License.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this software; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+#define CATHY_VERSION "1.0.0"
+
 #define _XOPEN_SOURCE 1000
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,6 +49,8 @@ void usage(char *exe)
   fprintf(stderr, "-v (verbose) | -q (quiet) [-v]\n");
   fprintf(stderr, "-b (b&w) | -k (color) [auto-detect]\n");
   fprintf(stderr, "-7 (7-bit ascii) | -8 (UTF-8) [-7]\n");
+  fprintf(stderr, "This is cathy version %s\n", CATHY_VERSION);
+  fprintf(stderr, "This is FREE software (GPL) with NO WARRANTY\n");
   exit(-1);
 }
 
