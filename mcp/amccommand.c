@@ -25,6 +25,7 @@
 #include "blast.h"
 #include "amccommand.h"
 #include "motordefs.h"
+#include "command_struct.h" 
 
 #define CRC_POLY 0x1021
 
@@ -75,14 +76,10 @@ void close_amc(struct MotorInfoStruct* amcinfo)
 {
   int n;
 
-#ifdef MOTORS_VERBOSE
-  bprintf(info,"%sComm close_amc: Closing connection to AMC controller.",amcinfo->motorstr);
-#endif
+  bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm close_amc: Closing connection to AMC controller.",amcinfo->motorstr);
 
   if (amcinfo->open==0) {
-#ifdef MOTORS_VERBOSE
-    bprintf(info,"%sComm: Controller is already closed!",amcinfo->motorstr);
-#endif
+    bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm: Controller is already closed!",amcinfo->motorstr);
   } else {
 
     n = disableAMC(amcinfo);
@@ -90,22 +87,16 @@ void close_amc(struct MotorInfoStruct* amcinfo)
     if (n>0) {
       checkAMCStatus(n,amcinfo);
     } else {
-#ifdef MOTORS_VERBOSE
-      bprintf(err,"%sComm close_amc: Disabling AMC controller failed.",amcinfo->motorstr);
-#endif
+      bprintfverb(err,CommandData.verbose_amc,MC_VERBOSE,"%sComm close_amc: Disabling AMC controller failed.",amcinfo->motorstr);
     }
     
   }
-#ifdef MOTORS_VERBOSE
-  bprintf(info,"%sComm close_amc: Closing serial port.",amcinfo->motorstr);
-#endif
+  bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm close_amc: Closing serial port.",amcinfo->motorstr);
 
   close(amcinfo->fd);
   amcinfo->init=0;
   amcinfo->open=0;
-#ifdef MOTORS_VERBOSE
-  bprintf(info,"%sComm close_amc: Connection to motor serial port is closed.",amcinfo->motorstr);
-#endif
+  bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm close_amc: Connection to motor serial port is closed.",amcinfo->motorstr);
 }
 
 void setopts_amc(int bdrate, struct MotorInfoStruct* amcinfo)
@@ -125,35 +116,25 @@ void setopts_amc(int bdrate, struct MotorInfoStruct* amcinfo)
     case 9600:
       cfsetispeed(&options, B9600);               //input speed
       cfsetospeed(&options, B9600);               //output speed
-#ifdef MOTORS_VERBOSE
-      bprintf(info,"%sComm setopts_amc:Setting baud rate to 9600\n",amcinfo->motorstr);
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm setopts_amc:Setting baud rate to 9600\n",amcinfo->motorstr);
       break;
     case 19200:
       cfsetispeed(&options, B19200);               //input speed
       cfsetospeed(&options, B19200);              //output speed
-#ifdef MOTORS_VERBOSE
-      bprintf(info,"%sComm setopts_amc:Setting baud rate to 19200\n",amcinfo->motorstr);
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm setopts_amc:Setting baud rate to 19200\n",amcinfo->motorstr);
       break;
     case 38400:
       cfsetispeed(&options, B38400);               //input speed
       cfsetospeed(&options, B38400);               //output speed
-#ifdef MOTORS_VERBOSE
-      bprintf(info,"%sComm setopts_amc:Setting baud rate to 38400\n",amcinfo->motorstr);
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm setopts_amc:Setting baud rate to 38400\n",amcinfo->motorstr);
       break;
     case 115200:
       cfsetispeed(&options, B115200);               //input speed
       cfsetospeed(&options, B115200);               //output speed
-#ifdef MOTORS_VERBOSE
-      bprintf(info,"%sComm setopts_amc:Setting baud rate to 115200\n",amcinfo->motorstr);
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm setopts_amc:Setting baud rate to 115200\n",amcinfo->motorstr);
       break;
     default:
-#ifdef MOTORS_VERBOSE
-      bprintf(info,"%sComm setopts_amc: Invalid baud rate %i. Using the default 115200.\n",amcinfo->motorstr,bdrate);
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm setopts_amc: Invalid baud rate %i. Using the default 115200.\n",amcinfo->motorstr,bdrate);
       cfsetispeed(&options, B115200);               //input speed
       cfsetospeed(&options, B115200);               //output speed
       break;
@@ -275,10 +256,8 @@ void MakeSCHeadStruct(struct DriveIPVStruct *ValuesSend,struct SerialCommandHead
       (*command)++;
     }  
   //  printf("\n");
-#ifdef DEBUG_AMC
-  bprintf(info,"%sComm MakeSCHeadStruct: value we are sending %ld",amcinfo->motorstr,ValuesSend->value);
-#endif
-
+  bprintfverb(info,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"%sComm MakeSCHeadStruct: value we are sending %ld",amcinfo->motorstr,ValuesSend->value);
+  
   if(type==cmd)
     {
       comm0=*command;  // Remember where the beginning of the command array is...
@@ -318,9 +297,7 @@ for(i=0;i<*commsize;i++)
      //     bprintf(info)
      sprintf(fouts+2*i,"%2x",((unsigned char) (*((*command)+i))));
    }
-#ifdef DEBUG_AMC
- bprintf(info,"%sComm MakeSCHeadStruct: Command being sent: %s",amcinfo->motorstr,fouts);
-#endif // DEBUG_AMC
+ bprintfverb(info,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"%sComm MakeSCHeadStruct: Command being sent: %s",amcinfo->motorstr,fouts);
 }
 
 void crccheck(unsigned short data, unsigned short *accumulator, unsigned short *crctable, struct MotorInfoStruct* amcinfo)
@@ -369,9 +346,7 @@ int send_amccmd(int index,int offset,int value,int nwords,enum CmdorQuery type, 
   char headersend[8];
   char *command;
   int n,l;
-#ifdef DEBUG_AMC
   int i;
-#endif
 
   if((crctable = mk_crctable((unsigned short)CRC_POLY,crchware,amcinfo)) == NULL) {
     printf("mk_crctable() memory allocation failed\n");
@@ -390,20 +365,20 @@ int send_amccmd(int index,int offset,int value,int nwords,enum CmdorQuery type, 
   free(crctable);
 
   // mark2
-#ifdef DEBUG_AMC
-  char fouts[512];
-  for(i=0;i<l;i++)
-    {
-      //     bprintf(info)
-      sprintf(fouts+2*i,"%2x",((unsigned char) (*(command+i))));
-    }
-  bprintf(info,"%sComm send_amccmd: Command being sent: %s",amcinfo->motorstr,fouts);
-#endif // DEBUG_AMC
+  if (CommandData.verbose_amc >= MC_EXTRA_VERBOSE) {
+    char fouts[512];
+    for(i=0;i<l;i++)
+      {
+	//     bprintf(info)
+	sprintf(fouts+2*i,"%2x",((unsigned char) (*(command+i))));
+      }
+    bprintf(info,"%sComm send_amccmd: Command being sent: %s",amcinfo->motorstr,fouts);
+  }
 
   n = write(amcinfo->fd, command, l);
   if (n<0)
     {
-      berror(err,"%sComm send_amccmd: Send command failed!",amcinfo->motorstr);
+      bprintfverb(err,CommandData.verbose_amc,MC_VERBOSE,"%sComm send_amccmd: Send command failed!",amcinfo->motorstr);
       amcinfo->err |= 0x0002;
       return -1;
     } else {
@@ -418,18 +393,14 @@ int queryAMCInd(int index, int offset, int nwords, struct MotorInfoStruct* amcin
   int val=0;
   int l=0;
   int count=0;
-#ifdef DEBUG_AMC
-  bprintf(info,"%sComm queryAMCInd: Querying index %d, offset %d, which has %d words.",amcinfo->motorstr,index,offset,nwords);
-#endif 
+  bprintfverb(info,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"%sComm queryAMCInd: Querying index %d, offset %d, which has %d words.",amcinfo->motorstr,index,offset,nwords);
   if(amcinfo->closing==1) {
     return 42;// Don't query the serial port if we are 
                 // closing the connection to the controller.
   }
 
   n = check_amcready(comm,amcinfo);
-#ifdef DEBUG_AMC
-  bprintf(info,"PIVOT DEBUG TMP: check_amcready(comm,amcinfo) response is %i",n);
-#endif
+  bprintfverb(info,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"PIVOT DEBUG TMP: check_amcready(comm,amcinfo) response is %i",n);
   
   if(n>=0) {
     if(nwords!= 0) {
@@ -444,31 +415,24 @@ int queryAMCInd(int index, int offset, int nwords, struct MotorInfoStruct* amcin
     return -5;
   }
 
-#ifdef DEBUG_AMC
-  bprintf(info,"%sComm queryAMCInd: Count returned by send_amccmd is %d.",amcinfo->motorstr,count);
-#endif
+  bprintfverb(info,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"%sComm queryAMCInd: Count returned by send_amccmd is %d.",amcinfo->motorstr,count);
 
   n = check_amcready(resp,amcinfo);  
   if(n >= 0) {
     stat=getAMCResp(count,&val,&l,amcinfo);
   } else {
-#ifdef MOTORS_VERBOSE
-    bprintf(warning,"%sComm queryAMCInd: Did not find a response.",amcinfo->motorstr);
-#endif
+    bprintfverb(warning,CommandData.verbose_amc,MC_VERBOSE,"%sComm queryAMCInd: Did not find a response.",amcinfo->motorstr);
     amcinfo->err |= 0x0010;
     return -2;
   }
   if(stat == 1) {
-#ifdef DEBUG_AMC
-    bprintf(info,"%sComm queryAMCInd: Query returns %d.  Sequence number is %d",amcinfo->motorstr,val,count);
-#endif
+    bprintfverb(info,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"%sComm queryAMCInd: Query returns %d.  Sequence number is %d",amcinfo->motorstr,val,count);
     
     return val;
     
   } else {
-#ifdef MOTORS_VERBOSE
-    bprintf(err,"%sComm queryAMCInd: Error querying index: stat=%i",amcinfo->motorstr,stat);
-#endif
+
+    bprintfverb(err,CommandData.verbose_amc,MC_VERBOSE,"%sComm queryAMCInd: Error querying index: stat=%i",amcinfo->motorstr,stat);
     
     return -2;
   }
@@ -478,19 +442,14 @@ int queryAMCInd(int index, int offset, int nwords, struct MotorInfoStruct* amcin
 void configure_amc(struct MotorInfoStruct* amcinfo)
 {
   int n,m;
-//  char testcmd[]="/1Q\r\n";
-#ifdef MOTORS_VERBOSE
-  bprintf(info,"%sComm configure_amc: Testing a 38400 baud rate...\n",amcinfo->motorstr);
-#endif
+  bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm configure_amc: Testing a 38400 baud rate...\n",amcinfo->motorstr);
   setopts_amc(38400,amcinfo);
   amcinfo->bdrate=38400;
 
   n = areWeDisabled(amcinfo);
   if(n >= 0)
     {
-#ifdef MOTORS_VERBOSE
-      bprintf(info,"%sComm configure_amc: AMC controller responds to a 38400 baud rate.",amcinfo->motorstr);
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm configure_amc: AMC controller responds to a 38400 baud rate.",amcinfo->motorstr);
       amcinfo->err=0;
       if(amcinfo->writeset!=1)
 	{
@@ -502,23 +461,17 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
     }
   else
     {
-#ifdef MOTORS_VERBOSE
-      bprintf(info,"%sComm configure_amc: No controller response for a baud rate of 38400.",amcinfo->motorstr);
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm configure_amc: No controller response for a baud rate of 38400.",amcinfo->motorstr);
     }
 
-#ifdef MOTORS_VERBOSE
-  bprintf(info,"%sComm configure_amc: Testing a 9600 baud rate...\n",amcinfo->motorstr);
-#endif
+  bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm configure_amc: Testing a 9600 baud rate...\n",amcinfo->motorstr);
   setopts_amc(9600,amcinfo);
   amcinfo->bdrate=9600;
   n = areWeDisabled(amcinfo);
   if(n >= 0)
     {
-#ifdef MOTORS_VERBOSE
-      bprintf(info,"%sComm configure_amc: AMC controller responds to a 9600 baud rate.",amcinfo->motorstr);
-      bprintf(info,"%sComm configure_amc: Attempting to set the baud rate to 38400.",amcinfo->motorstr);
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm configure_amc: AMC controller responds to a 9600 baud rate.",amcinfo->motorstr);
+      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm configure_amc: Attempting to set the baud rate to 38400.",amcinfo->motorstr);
 
       if(amcinfo->writeset!=1)
 	{
@@ -536,21 +489,15 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
     }
   else
     {
-#ifdef MOTORS_VERBOSE
-      bprintf(info,"%sComm configure_amc: No controller response for a baud rate of 9600.",amcinfo->motorstr);
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm configure_amc: No controller response for a baud rate of 9600.",amcinfo->motorstr);
     }
-#ifdef MOTORS_VERBOSE
-  bprintf(info,"%sComm configure_amc: Testing a 38400 baud rate...\n",amcinfo->motorstr);
-#endif
+  bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm configure_amc: Testing a 38400 baud rate...\n",amcinfo->motorstr);
   setopts_amc(38400, amcinfo);
   amcinfo->bdrate=38400;
   n = areWeDisabled(amcinfo);
   if(n >= 0)
     {
-#ifdef MOTORS_VERBOSE
-      bprintf(info,"%sComm configure_amc: AMC controller responds to a 38400 baud rate.",amcinfo->motorstr);
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm configure_amc: AMC controller responds to a 38400 baud rate.",amcinfo->motorstr);
       if(amcinfo->writeset!=1)
 	{
 	  setWriteAccess(amcinfo);
@@ -561,9 +508,7 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
     }
   else
     {
-#ifdef MOTORS_VERBOSE
-      bprintf(err,"%sComm configure_amc: Cannot communicate with the AMC controller at any baud rate.",amcinfo->motorstr);
-#endif
+      bprintfverb(warning,CommandData.verbose_amc,MC_VERBOSE,"%sComm configure_amc: Cannot communicate with the AMC controller at any baud rate.",amcinfo->motorstr);
       amcinfo->init=2; 
       amcinfo->bdrate=1;
     }
@@ -600,23 +545,17 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
      n = select(max_fd, &input, &output, NULL, &timeout);
      break;
    default:
-#ifdef MOTORS_VERBOSE
-     berror(err, "%sComm check_amcready: CheckType is in valid.",amcinfo->motorstr);
-#endif
+     bprintfverb(warning,CommandData.verbose_amc,MC_VERBOSE,"%sComm check_amcready: CheckType is in valid.",amcinfo->motorstr);
      return -3;
      break;
    }
    /* Was there an error? */
    if (n < 0) {
-#ifdef MOTORS_VERBOSE
-     bprintf(err,"%sComm: Select command failed!",amcinfo->motorstr);
+     bprintfverb(err,CommandData.verbose_amc,MC_VERBOSE,"%sComm: Select command failed!",amcinfo->motorstr);
      amcinfo->err |= 0x0001;
-#endif
      return -2;
    } else if (n==0) {
-#ifdef DEBUG_AMC
-     bprintf(warning,"%sComm: Select call timed out.",amcinfo->motorstr);
-#endif
+     bprintfverb(warning,CommandData.verbose_amc,MC_VERBOSE,"%sComm: Select call timed out.",amcinfo->motorstr);
      return -1;
    } else {
        // Sets a 2 bit integer m.
@@ -649,25 +588,19 @@ int areWeDisabled(struct MotorInfoStruct* amcinfo)
   int n= queryAMCInd(1,0,1,amcinfo);
   if(n<0)
     {
-#ifdef MOTORS_VERBOSE
-      bprintf(warning,"%sComm areWeDisabled: Couldn't send the query.",amcinfo->motorstr);
-#endif
+      bprintfverb(err,CommandData.verbose_amc,MC_VERBOSE,"%sComm areWeDisabled: Couldn't send the query.",amcinfo->motorstr);
       return -1;
     }
   else
     {
       if(n==1)
 	{
-#ifdef DEBUG_AMC
-	  bprintf(info,"%sComm areWeDisabled: We are disabled",amcinfo->motorstr);
-#endif
+	  bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm areWeDisabled: We are disabled",amcinfo->motorstr);
           amcinfo->disabled=1;
 	}
       if(n==0)
         {
-#ifdef DEBUG_AMC
-          bprintf(info,"%sComm areWeDisabled: We are enabled",amcinfo->motorstr);
-#endif
+	  bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm areWeDisabled: We are enabled",amcinfo->motorstr);
           amcinfo->disabled=0;
         }
 
@@ -692,9 +625,7 @@ int readAMCResp(int seq, unsigned char *outs, int *l, struct MotorInfoStruct* am
   while(done==0) {
     if(check_amcready(resp,amcinfo) >= 0){ 
       n = read(amcinfo->fd,outs,1);
-#ifdef DEBUG_AMC
-      bprintf(info,"Sweetness and light! n=%i, outs[i]=%2x  %i",n,((unsigned char)*outs),((unsigned int)*outs));
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"Sweetness and light! n=%i, outs[i]=%2x  %i",n,((unsigned char)*outs),((unsigned int)*outs));
       if(*outs == 0xa5) firstchar_found=0; 
       if(firstchar_found == 0) {
 	if(i >= 254 || i >= nchars-1) done=1;
@@ -702,9 +633,7 @@ int readAMCResp(int seq, unsigned char *outs, int *l, struct MotorInfoStruct* am
 	if(i==6) {
           ndatawords=((unsigned int) *outs);
 	  if(ndatawords!=0) nchars+=ndatawords*2+2;
-#ifdef DEBUG_AMC
-          bprintf(info,"OK i==6, outs[i]=%i, nchars=%i",(unsigned int) *outs, nchars);
-#endif
+	  bprintfverb(info,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"OK i==6, outs[i]=%i, nchars=%i",(unsigned int) *outs, nchars);
 	}
 	outs+=n;
 	timeout=0;
@@ -712,15 +641,11 @@ int readAMCResp(int seq, unsigned char *outs, int *l, struct MotorInfoStruct* am
     } else {
       if(timeout==timeoutlim){ // If there is no data after two tries return an.
 	if(j==timeoutlim) {// The controller never responded.
-#ifdef MOTORS_VERBOSE
-	  bprintf(err,"%sComm read_line: The controller did not respond.",amcinfo->motorstr);
-#endif
+	  bprintfverb(err,CommandData.verbose_amc,MC_VERBOSE,"%sComm read_line: The controller did not respond.",amcinfo->motorstr);
 	  amcinfo->err |= 0x0010;
 	  return -1;
 	} else {
-#ifdef MOTORS_VERBOSE
- 	  bprintf(err,"%sComm read_line: Did not find the appropriate response end character.",amcinfo->motorstr);
-#endif
+	  bprintfverb(err,CommandData.verbose_amc,MC_VERBOSE,"%sComm read_line: Did not find the appropriate response end character.",amcinfo->motorstr);
           amcinfo->err |= 0x0004;
 	  return -2; // For some reason the controller never found the end character.
 	             // which means the response was probably garbage. 
@@ -739,75 +664,6 @@ int readAMCResp(int seq, unsigned char *outs, int *l, struct MotorInfoStruct* am
   amcinfo->err &= ~0x0010;
   
   return 0;
-}
-
-int oldreadAMCResp(int seq, char *response, int *l, struct MotorInfoStruct* amcinfo)
-{
-  int n,i;
-  char outs[255],fouts[510];
-  int rseq;
-  for(i=0;i<255;i++)
-    {
-      outs[i]='\0';
-      fouts[i]='\0';
-    }
-  n=check_amcready(resp,amcinfo);
-  if(n<0)
-    {
-      berror(err,"%sComm readAMCResp: Select failed.",amcinfo->motorstr);
-      return -1;
-    }
-  n = read(amcinfo->fd, &outs, 254);
-  if (n < 0)
-    {
-      berror(err,"%sComm readAMCResp: Couldn't read from the device.",amcinfo->motorstr);
-      return -2;
-    }
-  // Is this the right sequence number?
-  rseq=((int) outs[2])/4;
- for(i=0;i<255;i++)
-   {
-     sprintf((fouts+2*i),"%2x",((unsigned char) outs[i]));
-   }
-#ifdef DEBUG_AMC
- bprintf(info,"%sComm readAMCResp: Controller response: %s",amcinfo->motorstr,fouts);
-#endif // DEBUG_AMC
-
-#ifdef DEBUG_AMC
- bprintf(info,"%sComm readAMCResp: Our sequence number is %d, Response sequence number is %d",amcinfo->motorstr,seq,rseq);
-#endif // DEBUG_AMC
-  if(rseq != seq)
-    {
-      usleep(20000); // try agin
-      n=check_amcready(resp,amcinfo);
-      if(n<0)
-	{
-	  berror(err,"%sComm readAMCResp: Select failed.",amcinfo->motorstr);
-	  return -3;
-	}
-      usleep(20000);
-      n = read(amcinfo->fd, &outs, 254);
-      if (n < 0)
-	{
-	  berror(err,"%sComm readAMCResp: Couldn't read from the device.",amcinfo->motorstr);
-	  return -3;
-	}
-      rseq=((int) outs[2])/4;
-      if(rseq != seq)
-	{
-	  berror(err,"%sComm readAMCResp: After two tries no response from the controller with the correct sequence number rseq=%d, seq=%d",amcinfo->motorstr,rseq, seq);
-	  return -3;
-	}
-    }
- *l = 2*((int) outs[5])+8+2;
- int length= *l;
-
- for(i=0;i<length;i++)
-   {
-     *(response+i)= outs[i];
-   }
-
- return 0;
 }
 
 // Gets the response corresponding to a particular control sequence number
@@ -834,25 +690,19 @@ int getAMCResp(int seq, int *val, int *l, struct MotorInfoStruct* amcinfo)
   rseq=((int) response[2])/4;
   rval=0;
   rl=((int) response[5]); // Gives the number of words
-#ifdef DEBUG_AMC
-  bprintf(info,"%sComm getAMCResp: response[2]: %x, [3]: %x, [4]: %x",amcinfo->motorstr,(unsigned char) response[2],(unsigned char) response[3],(unsigned char) response[4]);
-  bprintf(info,"%sComm getAMCResp: Number of words: %i",amcinfo->motorstr, rl);
-#endif
+  bprintfverb(info,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"%sComm getAMCResp: response[2]: %x, [3]: %x, [4]: %x",amcinfo->motorstr,(unsigned char) response[2],(unsigned char) response[3],(unsigned char) response[4]);
+  bprintfverb(info,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"%sComm getAMCResp: Number of words: %i",amcinfo->motorstr, rl);
   for(i=0;i<rl;i++)
     {
       rval+=((int)response[8+2*i]) <<(8*(2*i));
       rval+=((int)response[8+2*i+1]) <<(8*(2*i+1));
-#ifdef DEBUG_AMC
-      bprintf(info,"%sComm getAMCResp: %i: %i-> %i,%i: %i-> %i,",amcinfo->motorstr, 2*i,((int)response[8+2*i]),((int)response[8+2*i]) <<(8*2*i),2*i+1,((int)response[8+2*i+1]),((int)response[8+2*i+1]) <<(8*(2*i+1)));
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"%sComm getAMCResp: %i: %i-> %i,%i: %i-> %i,",amcinfo->motorstr, 2*i,((int)response[8+2*i]),((int)response[8+2*i]) <<(8*2*i),2*i+1,((int)response[8+2*i+1]),((int)response[8+2*i+1]) <<(8*(2*i+1)));
     }  
   *val=rval;
 
   rstat=((int) response[3]);
 
-#ifdef DEBUG_AMC
-  bprintf(info,"%sComm getAMCResp: Results status: %d , length %d, value %d",amcinfo->motorstr,rstat,*l,*val);
-#endif //DEBUG_AMC
+  bprintfverb(info,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"%sComm getAMCResp: Results status: %d , length %d, value %d",amcinfo->motorstr,rstat,*l,*val);
   checkAMCStatus(rstat,amcinfo);
 
 
@@ -890,62 +740,47 @@ int checkAMCResp(int seq, struct MotorInfoStruct* amcinfo)
 
   rstat=((int) response[3]);
 
-#ifdef DEBUG_AMC
   checkAMCStatus(rstat,amcinfo);
-#endif //DEBUG_AMC
 
   // Returns the status byte
   return rstat;
 }
 
+// Only prints to the log if CommandData.verbose_amc>=2
 void checkAMCStatus(int stat, struct MotorInfoStruct* amcinfo)
 {
   switch(stat)
     {
     case AMC_COMPLETE:
-#ifdef DEBUG_AMC
-      bprintf(info,"%sComm checkAMCStatus: Command was completed.",amcinfo->motorstr);
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"%sComm checkAMCStatus: Command was completed.",amcinfo->motorstr);
       amcinfo->err=0;
       amcinfo->err_count=0;
       break;
     case AMC_INCOMPLETE:
       amcinfo->err |= 0x0008;
-#ifdef MOTORS_VERBOSE
-      bprintf(warning,"%sComm checkAMCStatus: Command was not completed.",amcinfo->motorstr);
-#endif
+      bprintfverb(warning,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"%sComm checkAMCStatus: Command was not completed.",amcinfo->motorstr);
     case AMC_INVALID:
       amcinfo->err |= 0x0008;
-#ifdef MOTORS_VERBOSE
-      bprintf(warning,"%sComm checkAMCStatus: Invalid Command.",amcinfo->motorstr);
-#endif
+      bprintfverb(warning,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"%sComm checkAMCStatus: Invalid Command.",amcinfo->motorstr);
       break;
     case AMC_NOACCESS:
       amcinfo->err |= 0x0008;
-#ifdef MOTORS_VERBOSE
-      bprintf(warning,"%sComm checkAMCStatus: Do not have write access.",amcinfo->motorstr);
-#endif
+      bprintfverb(warning,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"%sComm checkAMCStatus: Do not have write access.",amcinfo->motorstr);
       break;
     case AMC_FRAMECRC:
       amcinfo->err |= 0x0008;
-#ifdef MOTORS_VERBOSE
-      bprintf(warning,"%sComm checkAMCStatus: Frame or CRC error.",amcinfo->motorstr);
-#endif
+      bprintfverb(warning,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"%sComm checkAMCStatus: Frame or CRC error.",amcinfo->motorstr);
       break;
     default:
       amcinfo->err |= 0x0004;
-#ifdef MOTORS_VERBOSE
-      bprintf(warning,"%sComm checkAMCStatus: Invalid status byte.",amcinfo->motorstr);
-#endif
+      bprintfverb(warning,CommandData.verbose_amc,MC_EXTRA_VERBOSE,"%sComm checkAMCStatus: Invalid status byte.",amcinfo->motorstr);
       break;
     }
 }
 
 void setWriteAccess(struct MotorInfoStruct* amcinfo)
 {
-#ifdef MOTORS_VERBOSE
-  bprintf(info,"%sComm setWriteAccess: Setting write access",amcinfo->motorstr);  
-#endif
+  bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm setWriteAccess: Setting write access",amcinfo->motorstr);  
   int n, count;
   count = send_amccmd(7,0,15,1,cmd,amcinfo);
   n = check_amcready(resp,amcinfo);
@@ -970,25 +805,19 @@ void setWriteAccess(struct MotorInfoStruct* amcinfo)
 int disableAMC(struct MotorInfoStruct* amcinfo)
 {
   int count,n;
-#ifdef MOTORS_VERBOSE
-  bprintf(info,"%sComm disableAMC: Attempting to disable motor controller.",amcinfo->motorstr);
-#endif
+  bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm disableAMC: Attempting to disable motor controller.",amcinfo->motorstr);
   count = send_amccmd(1,0,1,1,cmd,amcinfo); // Disable the AMC controller.
   n = check_amcready(resp,amcinfo);
   if (n < 0)
     {
-#ifdef MOTORS_VERBOSE
-      berror(err,"%sComm disableAMC: Communication error.",amcinfo->motorstr);
-#endif
+      bprintfverb(err,CommandData.verbose_amc,MC_VERBOSE,"%sComm disableAMC: Communication error.",amcinfo->motorstr);
       return -1;
     }  
   n=checkAMCResp(count,amcinfo);
   if(n==1) 
     {
       amcinfo->disabled=1;
-#ifdef MOTORS_VERBOSE
-      bprintf(info,"%sComm disableAMC: Controller is now disabled.,",amcinfo->motorstr);
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm disableAMC: Controller is now disabled.,",amcinfo->motorstr);
     }
   return n;
 }
@@ -997,12 +826,12 @@ int enableAMC(struct MotorInfoStruct* amcinfo)
 {
   int n;
   int count;
-  bprintf(info,"%sComm enableAMC: Attempting to disable motor controller.",amcinfo->motorstr);
+  bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm enableAMC: Attempting to disable motor controller.",amcinfo->motorstr);
   count = send_amccmd(1,0,0,1,cmd,amcinfo); // Enable the AMC controller.
   n = check_amcready(resp,amcinfo);
   if (n < 0)
     {
-      berror(err,"%sComm enableAMC: Communication error.",amcinfo->motorstr);
+      bprintfverb(err,CommandData.verbose_amc,MC_VERBOSE,"%sComm enableAMC: Communication error.",amcinfo->motorstr);
       return -1;
     }  
   n=checkAMCResp(count,amcinfo);
@@ -1017,9 +846,7 @@ int enableAMC(struct MotorInfoStruct* amcinfo)
 
 int getAMCResolver(struct MotorInfoStruct* amcinfo)
 {
-#ifdef DEBUG_AMC
-  bprintf(info,"%sComm getAMCResolver: Querying resolver position.",amcinfo->motorstr);
-#endif
+  bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm getAMCResolver: Querying resolver position.",amcinfo->motorstr);
   return queryAMCInd(18, 0, 2, amcinfo) & 0x3fff; // queryAMCInd returns a 32 bit number
                                                   // but the resolver wraps after 2^14 bits.
 }
@@ -1036,10 +863,8 @@ void resetAMC(char *address, struct MotorInfoStruct* amcinfo)
     //  }
 
   if(amcinfo->open==0) {
-#ifdef MOTORS_VERBOSE
-    bprintf(warning,"%sComm resetAMC: Failed to open serial port!",amcinfo->motorstr);
-    bprintf(warning,"%sComm resetAMC: Attempt to reset controller failed.",amcinfo->motorstr);
-#endif
+    bprintfverb(warning,CommandData.verbose_amc,MC_VERBOSE,"%sComm resetAMC: Failed to open serial port!",amcinfo->motorstr);
+    bprintfverb(warning,CommandData.verbose_amc,MC_VERBOSE,"%sComm resetAMC: Attempt to reset controller failed.",amcinfo->motorstr);
     return;
   }
 
@@ -1049,13 +874,11 @@ void resetAMC(char *address, struct MotorInfoStruct* amcinfo)
     //    count--;
     //  }
   if(amcinfo->init!=1) {
-#ifdef MOTORS_VERBOSE
-    bprintf(warning,"%sComm resetAMC: Failed to configure the drive!",amcinfo->motorstr);
-    bprintf(warning,"%sComm resetAMC: Attempt to reset controller failed.",amcinfo->motorstr);
-#endif
+    bprintfverb(warning,CommandData.verbose_amc,MC_VERBOSE,"%sComm resetAMC: Failed to configure the drive!",amcinfo->motorstr);
+    bprintfverb(warning,CommandData.verbose_amc,MC_VERBOSE,"%sComm resetAMC: Attempt to reset controller failed.",amcinfo->motorstr);
     return;
   } else {
-    bprintf(info,"%sComm resetAMC: Controller reset was successful!",amcinfo->motorstr);
+    bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"%sComm resetAMC: Controller reset was successful!",amcinfo->motorstr);
     amcinfo->reset=0;
     amcinfo->err_count=0;
 
@@ -1075,9 +898,7 @@ void restoreAMC(struct MotorInfoStruct* amcinfo)
   n = check_amcready(resp,amcinfo);
   if (n < 0)
     {
-#ifdef MOTORS_VERBOSE
-      berror(err,"%sComm restoreAMC: Communication error.",amcinfo->motorstr);
-#endif
+      bprintf(err,"%sComm restoreAMC: Communication error.",amcinfo->motorstr);
     }  
   n=checkAMCResp(count,amcinfo);
   if(n==1) 

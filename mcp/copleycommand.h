@@ -67,4 +67,7 @@ extern struct MotorInfoStruct reactinfo; /* declared in copleycommand.c
                                           *                                   
                                           */
 extern struct MotorInfoStruct elevinfo;
+
+/* Defined in motors.c*/
+void bprintfverb(buos_t l, unsigned short int verb_level_req, unsigned short int verb_level_comp, const char* fmt, ...);
 #endif

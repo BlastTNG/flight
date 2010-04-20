@@ -1312,6 +1312,20 @@ void UpdateAxesMode(void)
   last_mode = CommandData.pointing_mode.mode;
 }
 
+// Only prints if verb_level_req >= verb_level_comp
+void bprintfverb(buos_t l, unsigned short int verb_level_req, unsigned short int verb_level_comp, const char* fmt, ...) {
+  char message[BUOS_MAX];
+  va_list argptr;
+
+  if(verb_level_req >= verb_level_comp) {
+    va_start(argptr, fmt);
+    vsnprintf(message, BUOS_MAX, fmt, argptr);
+    va_end(argptr);   
+
+    bputs(l,message);
+  }                                                                                                    
+}
+
 // Makes a motor info bit field
 unsigned short int makeMotorField(struct MotorInfoStruct* motorinfo)
 {
@@ -1401,9 +1415,7 @@ void* reactComm(void* arg)
 
     i++;
     if (reactinfo.open==1) {
-#ifdef MOTORS_VERBOSE
-      bprintf(info,"Opened the serial port on attempt number %i",i); 
-#endif
+      bprintfverb(info,CommandData.verbose_copley,MC_VERBOSE,"Opened the serial port on attempt number %i",i); 
     } else sleep(1);  
   }
 
@@ -1460,9 +1472,7 @@ void* reactComm(void* arg)
 
     } else if(reactinfo.init==1){
       if(CommandData.disable_az==0 && reactinfo.disabled > 0) {
-#ifdef MOTORS_VERBOSE
-	bprintf(info,"Attempting to enable the reaction wheel motor controller.");
-#endif
+	bprintfverb(info,CommandData.verbose_copley,MC_VERBOSE,"Attempting to enable the reaction wheel motor controller.");
 	n=enableCopley(&reactinfo);
 	if(n==0){    
 	  bprintf(info,"Reaction wheel motor controller is now enabled.");
@@ -1470,9 +1480,7 @@ void* reactComm(void* arg)
 	}
       } 
       if(CommandData.disable_az==1 && (reactinfo.disabled==0 || reactinfo.disabled==2)) {
-#ifdef MOTORS_VERBOSE
-	bprintf(info,"Attempting to disable the reaction wheel motor controller.");
-#endif
+	bprintfverb(info,CommandData.verbose_copley,MC_VERBOSE,"Attempting to disable the reaction wheel motor controller.");
 	n=disableCopley(&reactinfo);
 	if(n==0){    
 	  bprintf(info,"Reaction wheel motor controller is now disabled.");
@@ -1503,9 +1511,7 @@ void* reactComm(void* arg)
       }      
       j++;
       if (firsttime) {
-#ifdef MOTORS_VERBOSE
-        bprintf(info,"Raw reaction wheel velocity is %i",vel_raw);
-#endif
+	bprintfverb(info,CommandData.verbose_copley,MC_VERBOSE,"Raw reaction wheel velocity is %i",vel_raw);
 	firsttime=0;
       }
       rw_motor_index=INC_INDEX(rw_motor_index);
@@ -1581,9 +1587,7 @@ void* elevComm(void* arg)
     i++;
     
     if(elevinfo.open==1) {
-#ifdef MOTORS_VERBOSE
-      bprintf(info,"Opened the serial port on attempt number %i",i); 
-#endif
+	bprintfverb(info,CommandData.verbose_copley,MC_VERBOSE,"Opened the serial port on attempt number %i",i); 
     } else { 
       sleep(1);
     }
@@ -1645,9 +1649,7 @@ void* elevComm(void* arg)
 
     } else if (elevinfo.init==1) {
       if((CommandData.disable_el==0 || CommandData.force_el==1 ) && elevinfo.disabled > 0) {
-#ifdef MOTORS_VERBOSE
-	bprintf(info,"Attempting to enable the elevation motor controller.");
-#endif
+	bprintfverb(info,CommandData.verbose_copley,MC_VERBOSE,"Attempting to enable the elevation motor controller.");
 	n=enableCopley(&elevinfo);
 	if(n==0){    
 	  bprintf(info,"Elevation motor controller is now enabled.");
@@ -1655,9 +1657,7 @@ void* elevComm(void* arg)
 	}
       } 
       if((CommandData.disable_el==1 && CommandData.force_el==0 ) && (elevinfo.disabled==0 || elevinfo.disabled==2)) {
-#ifdef MOTORS_VERBOSE
-	bprintf(info,"Attempting to disable the elevation motor controller.");
-#endif
+	bprintfverb(info,CommandData.verbose_copley,MC_VERBOSE,"Attempting to disable the elevation motor controller.");
 	n=disableCopley(&elevinfo);
 	if(n==0){    
 	  bprintf(info,"Elevation motor controller is now disabled.");
@@ -1673,9 +1673,7 @@ void* elevComm(void* arg)
                            // writes to the appropriate frame 
 
       if (firsttime) {
-#ifdef MOTORS_VERBOSE
-	bprintf(info,"Raw elevation encoder position is %i",pos_raw);
-#endif
+	bprintfverb(info,CommandData.verbose_copley,MC_VERBOSE,"Raw elevation encoder position is %i",pos_raw);
 	firsttime=0;
       }     
       j=j%4;
@@ -1765,9 +1763,7 @@ void* pivotComm(void* arg)
     i++;
 
     if (pivotinfo.open==1) {
-#ifdef MOTORS_VERBOSE
-      bprintf(info,"Opened the serial port on attempt number %i",i);
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"Opened the serial port on attempt number %i",i);
     }
     else sleep(1);
   }
@@ -1830,9 +1826,7 @@ void* pivotComm(void* arg)
 
     } else if (pivotinfo.init==1) {
       if(CommandData.disable_az==0 && pivotinfo.disabled == 1) {
-#ifdef MOTORS_VERBOSE
-	bprintf(info,"Attempting to enable the pivot motor contoller.");
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"Attempting to enable the pivot motor contoller.");
 	n=enableAMC(&pivotinfo);
 	if(n==0) {
 	  bprintf(info,"Pivot motor is now enabled");
@@ -1840,9 +1834,7 @@ void* pivotComm(void* arg)
 	}
       }
       if(CommandData.disable_az==1 && (pivotinfo.disabled==0 || pivotinfo.disabled==2)) {
-#ifdef MOTORS_VERBOSE
-	bprintf(info,"Attempting to disable the pivot motor controller.");
-#endif
+      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"Attempting to disable the pivot motor controller.");
 	n=disableAMC(&pivotinfo);
 	if(n==0){    
 	  bprintf(info,"Pivot motor controller is now disabled.");
@@ -1875,15 +1867,12 @@ void* pivotComm(void* arg)
       PivotMotorData[pivot_motor_index].res_raw_piv=((double) pos_raw)/PIV_RES_CTS*360.0; 
 
       j=j%5;
-#if 0
       switch(j) {
       case 0:
-#endif
 	current_raw=queryAMCInd(16,3,1,&pivotinfo);
         PivotMotorData[pivot_motor_index].current=((double)current_raw)/8192.0*20.0; // *2^13 / peak drive current
 	                                                                             // Units are Amps
 	//        bprintf(info,"current_raw= %i, current= %f",current_raw,PivotMotorData[pivot_motor_index].current);
-#if 0 
 	break;
       case 1:
 	db_stat_raw=queryAMCInd(2,0,1,&pivotinfo);
@@ -1902,7 +1891,6 @@ void* pivotComm(void* arg)
         PivotMotorData[pivot_motor_index].dps_piv=piv_vel_raw*0.144;
 	break;
       }
-#endif
       j++;
       pivot_motor_index=INC_INDEX(pivot_motor_index);
     } else {

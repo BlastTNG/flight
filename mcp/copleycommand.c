@@ -16,6 +16,7 @@
 #include "blast.h"
 #include "copleycommand.h"
 #include "motordefs.h"
+#include "command_struct.h"
 
 #define COPLEYCOM_MUS_WAIT 12000 // wait time after a command is given                                                         
                                   // TODO: optimize this wait time, is it even necessary?        

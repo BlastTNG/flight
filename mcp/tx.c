@@ -1300,7 +1300,7 @@ static void StoreData(int index)
   WriteData(infoPivAddr,PivotMotorData[i_pivot_motors].drive_info,NIOS_QUEUE);
   WriteData(driveErrCtsPivAddr,PivotMotorData[i_pivot_motors].err_count,NIOS_QUEUE);
   WriteData(verboseCopleyAddr,CommandData.verbose_copley,NIOS_QUEUE);
-  WriteData(verboseAMCAddr,CommandData.verbose_copley,NIOS_QUEUE);
+  WriteData(verboseAMCAddr,CommandData.verbose_amc,NIOS_QUEUE);
 
 }
 #endif

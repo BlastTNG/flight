@@ -113,4 +113,7 @@ int enableAMC(struct MotorInfoStruct* amcinfo);
 int getAMCResolver(struct MotorInfoStruct* amcinfo);
 void resetAMC(char *address, struct MotorInfoStruct* amcinfo);
 void restoreAMC(struct MotorInfoStruct* amcinfo);
+
+/* Defined in motors.c*/
+void bprintfverb(buos_t l, unsigned short int verb_level_req, unsigned short int verb_level_comp, const char* fmt, ...);
 #endif
