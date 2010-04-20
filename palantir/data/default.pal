@@ -780,11 +780,11 @@
     <NUMBER caption="Charger">
       <DATUM format="%.2f" src="T_CHARGER" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="ext0">
-      <DATUM format="%.2f" src="T_EXT0" extrema="temp"/>
+    <NUMBER caption="Balance Control">
+      <DATUM format="%.2f" src="T_BOX_BAL" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="ext1">
-      <DATUM format="%.2f" src="T_EXT1" extrema="temp"/>
+    <NUMBER caption="Balance Motor">
+      <DATUM format="%.2f" src="T_PUMP_BAL" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="ext2">
       <DATUM format="%.2f" src="T_EXT2" extrema="temp"/>
