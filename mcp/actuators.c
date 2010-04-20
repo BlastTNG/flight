@@ -1494,6 +1494,8 @@ void ActuatorBus(void)
   for (i = 0; i < NACT; ++i)
     stepper[i].sequence = 1;
 
+  //temporary partian fix to NIC problems
+  while (!InCharge) usleep(1000000);
   //TODO needs to not run from NICC, resume, etc
   bus_fd = act_setserial(ACT_BUS);
 
