@@ -454,7 +454,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   /* p term to rw vel for pivot motor */
   WriteData(gPVPivAddr, pivGainRW, NIOS_QUEUE);
   /* setpoint for reaction wheel */
-  WriteData(setRWAddr, CommandData.pivot_gain.SP*65536.0/2.5, NIOS_QUEUE);
+  WriteData(setRWAddr, CommandData.pivot_gain.SP*32768.0/200.0, NIOS_QUEUE);
   /* Pivot velocity */
   WriteData(velCalcPivAddr, (calcVPiv()/20.0*32768.0), NIOS_QUEUE);
 
@@ -1875,12 +1875,15 @@ void* pivotComm(void* arg)
       PivotMotorData[pivot_motor_index].res_raw_piv=((double) pos_raw)/PIV_RES_CTS*360.0; 
 
       j=j%5;
+#if 0
       switch(j) {
       case 0:
+#endif
 	current_raw=queryAMCInd(16,3,1,&pivotinfo);
         PivotMotorData[pivot_motor_index].current=((double)current_raw)/8192.0*20.0; // *2^13 / peak drive current
 	                                                                             // Units are Amps
 	//        bprintf(info,"current_raw= %i, current= %f",current_raw,PivotMotorData[pivot_motor_index].current);
+#if 0 
 	break;
       case 1:
 	db_stat_raw=queryAMCInd(2,0,1,&pivotinfo);
@@ -1899,6 +1902,7 @@ void* pivotComm(void* arg)
         PivotMotorData[pivot_motor_index].dps_piv=piv_vel_raw*0.144;
 	break;
       }
+#endif
       j++;
       pivot_motor_index=INC_INDEX(pivot_motor_index);
     } else {

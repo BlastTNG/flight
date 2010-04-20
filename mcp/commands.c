@@ -1293,6 +1293,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Temporary.dac_out[4] = ivalues[0] << 1;
       CommandData.Temporary.setLevel[4] = 1;
       break;
+    case motors_verbose:
+      CommandData.verbose_copley = ivalues[0];
+      CommandData.verbose_amc = ivalues[1];
+      break;
 #endif
 
       /***************************************/
@@ -2425,6 +2429,9 @@ void InitCommandData()
 
   CommandData.pivot_gain.SP = 50; // dps
   CommandData.pivot_gain.PV = 100;
+
+  CommandData.verbose_copley = 0;
+  CommandData.verbose_amc = 0;
 
   CommandData.gyheat.setpoint = 15.0;
   CommandData.gyheat.age = 0;

@@ -50,4 +50,9 @@ struct MotorInfoStruct {
   char motorstr[6]; // A character array containing the name of the motor.               
 };
 
+// Used in the serial threads to decide whether output should be printed.
+#define MC_NOT_VERBOSE 0
+#define MC_VERBOSE 1
+#define MC_EXTRA_VERBOSE 2
+
 #endif
