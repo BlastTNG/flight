@@ -95,31 +95,6 @@ extern short int InCharge; /* tx.c */
 /* in commands.c */
 double LockPosition(double elevation);
 
-static int SetGyHeatSetpoint(double history, int age)
-{
-  double setpoint = CommandData.gyheat.setpoint;
-
-  if (age < GY_HEAT_TC * 2)
-    return age;
-
-  if (history < GY_HEAT_MIN)
-    setpoint += GY_TEMP_STEP;
-  else if (history > GY_HEAT_MAX)
-    setpoint -= GY_TEMP_STEP;
-
-  if (setpoint < GY_TEMP_MIN)
-    setpoint = GY_TEMP_MIN;
-  else if (setpoint > GY_TEMP_MAX)
-    setpoint = GY_TEMP_MAX;
-
-  if (setpoint != CommandData.gyheat.setpoint) {
-    bprintf(info, "Gyrobox Heat: Stepped setpoint to %.2f deg C\n", setpoint);
-    age = 0;
-    CommandData.gyheat.setpoint = setpoint;
-  }
-
-  return age;
-}
 
 /************************************************************************/
 /*    ControlGyroHeat:  Controls gyro box temp                          */
@@ -167,10 +142,6 @@ void ControlGyroHeat(unsigned short *RxFrame)
   
   /* Only run these controls if we think the thermometer isn't broken */
   if (temp < MAX_GYBOX_TEMP && temp > MIN_GYBOX_TEMP) {
-    /* control the heat */
-    CommandData.gyheat.age = SetGyHeatSetpoint(history,
-        CommandData.gyheat.age);
-
     set_point = ((CommandData.gyheat.setpoint + 273.15) / M_16T) - B_16T;
     P = CommandData.gyheat.gain.P * (1.0 / 10.0);
     I = CommandData.gyheat.gain.I * (1.0 / 110000.0);
