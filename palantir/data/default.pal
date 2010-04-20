@@ -1375,7 +1375,7 @@
       <DATUM format="%.2f" src="CLIN_SIGMA" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Gy El Offset">
-      <DATUM format="%.4f" src="GY_IFEL_OFFSET" extrema="unknown"/>
+      <DATUM format="%.4f" src="OFFSET_IFEL_GY" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="El Autogyro">
       <DATUM src="EL_AUTO_GYRO">
@@ -1419,10 +1419,10 @@
       <DATUM format="%.2f" src="SS_SIGMA" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Gy Roll Offset">
-      <DATUM format="%.4f" src="GY_IFROLL_OFFSET" extrema="unknown"/>
+      <DATUM format="%.4f" src="OFFSET_IFROLL_GY" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Gy Yaw Offset">
-      <DATUM format="%.4f" src="GY_IFYAW_OFFSET" extrema="unknown"/>
+      <DATUM format="%.4f" src="OFFSET_IFYAW_GY" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="Az Autogyro">
       <DATUM src="AZ_AUTO_GYRO">
