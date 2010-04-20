@@ -64,8 +64,8 @@
 #define T_HE3FRIDGE_HOT   0.400
 #define T_HE3FRIDGE_COLD  0.350
 #define T_HE4POT_MAX      2.500
-#define T_CHARCOAL_MIN   25.000
-#define T_CHARCOAL_MAX   35.000
+#define T_CHARCOAL_MIN   35.000
+#define T_CHARCOAL_MAX   45.000
 #define T_LHE_MAX         4.600
 #define T_CHAR_HS_COLD   10.000
 
