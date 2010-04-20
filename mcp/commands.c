@@ -537,97 +537,94 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.um500.rst_count = 0;
       CommandData.power.um500.set_count = LATCH_PULSE_LEN;
       break;
-    case gy_ifroll1_allow:
+    case ifroll_1_gy_allow:
       CommandData.gymask |= 0x01;
       break;
-    case gy_ifroll1_veto:
+    case ifroll_1_gy_veto:
       CommandData.gymask &= ~0x01;
       break;
-    case gy_ifroll2_allow:
+    case ifroll_2_gy_allow:
       CommandData.gymask |= 0x02;
       break;
-    case gy_ifroll2_veto:
+    case ifroll_2_gy_veto:
       CommandData.gymask &= ~0x02;
       break;
-    case gy_ifyaw1_allow:
+    case ifyaw_1_gy_allow:
       CommandData.gymask |= 0x04;
       break;
-    case gy_ifyaw1_veto:
+    case ifyaw_1_gy_veto:
       CommandData.gymask &= ~0x04;
       break;
-    case gy_ifyaw2_allow:
+    case ifyaw_2_gy_allow:
       CommandData.gymask |= 0x08;
       break;
-    case gy_ifyaw2_veto:
+    case ifyaw_2_gy_veto:
       CommandData.gymask &= ~0x08;
       break;
-    case gy_ifel1_allow:
+    case ifel_1_gy_allow:
       CommandData.gymask |= 0x10;
       break;
-    case gy_ifel1_veto:
+    case ifel_1_gy_veto:
       CommandData.gymask &= ~0x10;
       break;
-    case gy_ifel2_allow:
+    case ifel_2_gy_allow:
       CommandData.gymask |= 0x20;
       break;
-    case gy_ifel2_veto:
+    case ifel_2_gy_veto:
       CommandData.gymask &= ~0x20;
       break;
-    case gy_ifroll1_off:
-      bprintf(info,"turning gy_ifroll1 off\n");
+    case ifroll_1_gy_off:
       CommandData.power.gyro_off[1] = -1;
       break;
-    case gy_ifroll1_on:
-      bprintf(info,"turning gy_ifroll1 on\n");
+    case ifroll_1_gy_on:
       CommandData.power.gyro_off[1] = 0;
       break;
-    case gy_ifroll1_cycle:
+    case ifroll_1_gy_cycle:
       CommandData.power.gyro_off[1] = PCYCLE_HOLD_LEN;
       break;
-    case gy_ifroll2_off:
-      bprintf(info,"turning gy_ifroll2 off\n");
+    case ifroll_2_gy_off:
       CommandData.power.gyro_off[5] = -1;
       break;
-    case gy_ifroll2_on:
+    case ifroll_2_gy_on:
       CommandData.power.gyro_off[5] = 0;
       break;
-    case gy_ifroll2_cycle:
+    case ifroll_2_gy_cycle:
       CommandData.power.gyro_off[5] = PCYCLE_HOLD_LEN;
       break;
-    case gy_ifyaw1_off:
+    case ifyaw_1_gy_off:
       CommandData.power.gyro_off[0] = -1;
       break;
-    case gy_ifyaw1_on:
+    case ifyaw_1_gy_on:
       CommandData.power.gyro_off[0] = 0;
       break;
-    case gy_ifyaw1_cycle:
+    case ifyaw_1_gy_cycle:
       CommandData.power.gyro_off[0] = PCYCLE_HOLD_LEN;
       break;
-    case gy_ifyaw2_off:
+    case ifyaw_2_gy_off:
       CommandData.power.gyro_off[2] = -1;
       break;
-    case gy_ifyaw2_on:
+    case ifyaw_2_gy_on:
       CommandData.power.gyro_off[2] = 0;
       break;
-    case gy_ifyaw2_cycle:
+    case ifyaw_2_gy_cycle:
       CommandData.power.gyro_off[2] = PCYCLE_HOLD_LEN;
       break;
-    case gy_ifel1_off:
+    case ifel_1_gy_off:
       CommandData.power.gyro_off[3] = -1;
       break;
-    case gy_ifel1_on:
+    case ifel_1_gy_on:
       CommandData.power.gyro_off[3] = 0;
       break;
-    case gy_ifel1_cycle:
+    case ifel_1_gy_cycle:
       CommandData.power.gyro_off[3] = PCYCLE_HOLD_LEN;
       break;
-    case gy_ifel2_off:
+    case ifel_2_gy_off:
       CommandData.power.gyro_off[4] = -1;
       break;
-    case gy_ifel2_on:
+    case ifel_2_gy_on:
       CommandData.power.gyro_off[4] = 0;
       break;
-    case gy_ifel2_cycle:
+    case ifel_2_gy_cycle:
       CommandData.power.gyro_off[4] = PCYCLE_HOLD_LEN;
       break;
     case gybox_off:
@@ -1245,12 +1242,12 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       SetRaDec(rvalues[0], rvalues[1]);
       break;
     case az_gyro_offset:
-      CommandData.gy_ifroll_offset = rvalues[0];
-      CommandData.gy_ifyaw_offset = rvalues[1];
+      CommandData.offset_ifroll_gy = rvalues[0];
+      CommandData.offset_ifyaw_gy = rvalues[1];
       CommandData.az_autogyro = 0;
       break;
     case el_gyro_offset:
-      CommandData.gy_ifel_offset = rvalues[0];
+      CommandData.offset_ifel_gy = rvalues[0];
       CommandData.el_autogyro = 0;
       break;
     case slew_veto:
@@ -2372,7 +2369,7 @@ void InitCommandData()
   CommandData.Cryo.lnvalve_on = 0;
 
   /* don't use the fast gy offset calculator */
-  CommandData.fast_gy_offset = 0;
+  CommandData.fast_offset_gy = 0;
 
   // Motors are disabled on start-up of mcp
   // TODO-lmf: not sure if we want this for flight...
@@ -2461,9 +2458,9 @@ void InitCommandData()
 
   CommandData.az_autogyro = 1;
   CommandData.el_autogyro = 1;
-  CommandData.gy_ifel_offset = 0;
-  CommandData.gy_ifroll_offset = 0;
-  CommandData.gy_ifyaw_offset = 0;
+  CommandData.offset_ifel_gy = 0;
+  CommandData.offset_ifroll_gy = 0;
+  CommandData.offset_ifyaw_gy = 0;
   CommandData.gymask = 0x3f;
   
   CommandData.pumps.level_on_bal = 2.0 * 1990.13;  

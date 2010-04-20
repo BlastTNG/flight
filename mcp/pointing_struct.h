@@ -64,9 +64,9 @@ struct ACSDataStruct {
   double clin_elev;// counts
   double vel_raw_rw; // deg/s
   double res_raw_piv; // deg/s
-  double gy_ifel;    // deg/s
-  double gy_ifroll;    // deg/s
-  double gy_ifyaw;    // deg/s
+  double ifel_gy;    // deg/s
+  double ifroll_gy;    // deg/s
+  double ifyaw_gy;    // deg/s
   int mcp_frame;
   time_t t;
 };
@@ -183,18 +183,18 @@ struct PointingDataStruct {
   double el;        // degrees
   double ra;        // hours, aparent
   double dec;       // degrees, aparent
-  double gy_ifel_offset;
-  double isc_gy_ifel_offset; 
-  double isc_gy_ifroll_offset; 
-  double isc_gy_ifyaw_offset; 
-  double osc_gy_ifel_offset; 
-  double osc_gy_ifroll_offset; 
-  double osc_gy_ifyaw_offset; 
-  double gy_ifroll_offset;
-  double gy_ifyaw_offset;
-  double gy_ifel_earth;
-  double gy_ifroll_earth;
-  double gy_ifyaw_earth;
+  double offset_ifel_gy;
+  double offset_ifel_gy_isc; 
+  double offset_ifroll_gy_isc; 
+  double offset_ifyaw_gy_isc; 
+  double offset_ifel_gy_osc; 
+  double offset_ifroll_gy_osc; 
+  double offset_ifyaw_gy_osc; 
+  double offset_ifroll_gy;
+  double offset_ifyaw_gy;
+  double ifel_earth_gy;
+  double ifroll_earth_gy;
+  double ifyaw_earth_gy;
   double lat;       // degrees
   double lon;       // degrees
   double alt;       // m

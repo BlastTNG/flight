@@ -465,13 +465,13 @@ static void Chatter(void* arg)
 
 static void GetACS(unsigned short *RxFrame)
 {
-  double enc_raw_el, gy_ifel, gy_ifroll, gy_ifyaw;
+  double enc_raw_el, ifel_gy, ifroll_gy, ifyaw_gy;
   double x_comp, y_comp, z_comp;
   double vel_raw_rw;
   double res_raw_piv;
-  static struct BiPhaseStruct* gyifElAddr;
-  static struct BiPhaseStruct* gyifRollAddr;
-  static struct BiPhaseStruct* gyifYawAddr;
+  static struct BiPhaseStruct* ifElgyAddr;
+  static struct BiPhaseStruct* ifRollgyAddr;
+  static struct BiPhaseStruct* ifYawgyAddr;
   static struct BiPhaseStruct* encElevAddr;
   static struct BiPhaseStruct* clinElevAddr;
   static struct BiPhaseStruct* magXAddr;
@@ -488,9 +488,9 @@ static void GetACS(unsigned short *RxFrame)
     firsttime = 0;
     encElevAddr = GetBiPhaseAddr("enc_raw_el");
     clinElevAddr = GetBiPhaseAddr("clin_elev");
-    gyifElAddr = GetBiPhaseAddr("gy_ifel");
-    gyifRollAddr = GetBiPhaseAddr("gy_ifroll");
-    gyifYawAddr = GetBiPhaseAddr("gy_ifyaw");
+    ifElgyAddr = GetBiPhaseAddr("ifel_gy");
+    ifRollgyAddr = GetBiPhaseAddr("ifroll_gy");
+    ifYawgyAddr = GetBiPhaseAddr("ifyaw_gy");
     magXAddr = GetBiPhaseAddr("mag_x");
     magYAddr = GetBiPhaseAddr("mag_y");
     magZAddr = GetBiPhaseAddr("mag_z");
@@ -504,9 +504,9 @@ static void GetACS(unsigned short *RxFrame)
   enc_raw_el = (((double)RxFrame[encElevAddr->channel])/DEG2I);
   vel_raw_rw = (((double)((short)RxFrame[velRawRWAddr->channel]))*4.0/DEG2I);
   res_raw_piv = (((double)((short)RxFrame[resRawPivAddr->channel]))/DEG2I);
-  gy_ifel = (double)((RxFrame[gyifElAddr->channel])-GY16_OFFSET) * GY16_TO_DPS;
-  gy_ifroll = (double)(RxFrame[gyifRollAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
-  gy_ifyaw = (double)(RxFrame[gyifYawAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
+  ifel_gy = (double)((RxFrame[ifElgyAddr->channel])-GY16_OFFSET) * GY16_TO_DPS;
+  ifroll_gy = (double)(RxFrame[ifRollgyAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
+  ifyaw_gy = (double)(RxFrame[ifYawgyAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
 
   x_comp = (double)(RxFrame[magXAddr->channel]);
   y_comp = (double)(RxFrame[magYAddr->channel]);
@@ -517,9 +517,9 @@ static void GetACS(unsigned short *RxFrame)
   ACSData.t = mcp_systime(NULL);
   ACSData.mcp_frame = rx_frame_index;
   ACSData.enc_raw_el = enc_raw_el;
-  ACSData.gy_ifel = gy_ifel;
-  ACSData.gy_ifroll = gy_ifroll;
-  ACSData.gy_ifyaw = gy_ifyaw;
+  ACSData.ifel_gy = ifel_gy;
+  ACSData.ifroll_gy = ifroll_gy;
+  ACSData.ifyaw_gy = ifyaw_gy;
   ACSData.mag_x = x_comp;
   ACSData.mag_y = y_comp;
   ACSData.mag_z = z_comp;

@@ -209,8 +209,8 @@ time_t DGPSTime;
 struct DgpsInfoStruct {
   int open; // 0 is closed, 1 is open
   int init; // 0 has not yet been initialized
-  // 1 has been initialized with no errors
-  // 2 initialization was attempted but failed
+	    // 1 has been initialized with no errors
+	    // 2 initialization was attempted but failed
 } dgpsinfo;
 
 #define LEAP_SECONDS 0		
@@ -584,8 +584,7 @@ void WatchDGPS()
     /* Time */
     if (((VoidBlock_t*)SBFBlock)->ID == SBFID_RECEIVERTIME) {
       ReceiverTimeBlock_t* RXTIME = (ReceiverTimeBlock_t*) SBFBlock;
-      /*bprintf(info,"%-2i %13.1f %3i %3i %3i %3i %3i %3i "
-	"0 0 0 0 0 0 0 0 0\n",
+      /*bprintf(info,"%-2i %13.1f %3i %3i %3i %3i %3i %3i\n",
 	-5,
 	RXTIME->WNc*86400.0*7.0+RXTIME->TOW/1000.0,
 	RXTIME->UTCYear,
@@ -617,7 +616,7 @@ void WatchDGPS()
       /* Position & Velocity */
       PVTGeodeticBlock_t* PVT = (PVTGeodeticBlock_t*)SBFBlock;
       /*bprintf(info,"%-2i %13.1f %21.10f %21.10f %14.3f %10.3f"
-	" %10.3f %15.8f %13.6e %14.3e %3i %3u 0 0\n",
+	" %10.3f %15.8f %13.6e %14.3e %3i %3u\n",
 	-1,
 	PVT->WNc*86400.0*7.0+PVT->TOW/1000.0,
 	PVT->Lat,
@@ -653,7 +652,7 @@ void WatchDGPS()
       /* Attitude */
       AttitudeEulerBlock_t* ATTEULER = (AttitudeEulerBlock_t*) SBFBlock;
       /*bprintf(info,"%-2i %13.1f %14.5f %14.5f %14.5f"
-	" %3u %3u %3u 0 0 0 0 0 0\n",
+	" %3u %3u %3u\n",
 	-3,
 	ATTEULER->WNc*86400.0*7.0+ATTEULER->TOW/1000.0,
 	ATTEULER->Heading,

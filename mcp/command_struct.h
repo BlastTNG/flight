@@ -191,9 +191,9 @@ struct CommandDataStruct {
 
   int az_autogyro;
   int el_autogyro;
-  double gy_ifel_offset;
-  double gy_ifroll_offset;
-  double gy_ifyaw_offset;
+  double offset_ifel_gy;
+  double offset_ifroll_gy;
+  double offset_ifyaw_gy;
   unsigned int gymask;
 
   struct {
@@ -210,7 +210,7 @@ struct CommandDataStruct {
   unsigned char use_mag;
   unsigned char use_gps;
 
-  unsigned short fast_gy_offset;
+  unsigned short fast_offset_gy;
   unsigned int slew_veto;
 
   double clin_el_trim;

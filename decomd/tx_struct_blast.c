@@ -413,9 +413,9 @@ struct ChannelStruct SlowChannels[] = {
   {"isc_tol",      'w', LOOP2, 33,                1.0,             0.0, 'u', U_NONE},
   /* LOOP2 34 is fast */
   {"ss_az",           'w',LOOP2, 35,            I2DEG,             0.0, 'u', U_NONE},
-  {"gy_ifel_offset",  'w',LOOP2, 36,      1.0/32768.0,             0.0, 's', U_V_DPS},
-  {"gy_ifroll_offset",'w',LOOP2, 37,      1.0/32768.0,             0.0, 's', U_V_DPS},
-  {"gy_ifyaw_offset", 'w',LOOP2, 38,      1.0/32768.0,             0.0, 's', U_V_DPS},
+  {"offset_ifel_gy",  'w',LOOP2, 36,      1.0/32768.0,             0.0, 's', U_V_DPS},
+  {"offset_ifroll_gy",'w',LOOP2, 37,      1.0/32768.0,             0.0, 's', U_V_DPS},
+  {"offset_ifyaw_gy", 'w',LOOP2, 38,      1.0/32768.0,             0.0, 's', U_V_DPS},
   /* LOOP2 39 is unused */
   {"mag_sigma",       'w',LOOP2, 40,            I2DEG,             0.0, 'u', U_NONE},
   {"az_dgps",         'w',LOOP2, 41,            I2DEG,             0.0, 'u', U_P_DEG},
@@ -603,12 +603,12 @@ struct ChannelStruct SlowChannels[] = {
   {"mag_pitch",        'w',LOOP5, 55,           I2DEG,             0.0, 'u', U_NONE},
   {"isc_diskfree",     'w',LOOP5, 56,             5.0,             0.0, 'u', U_NONE},
   {"osc_diskfree",     'w',LOOP5, 57,             5.0,             0.0, 'u', U_NONE},
-  {"isc_gy_ifel_off",  'w',LOOP5, 58,     1.0/32768.0,             0.0, 's', U_NONE},
-  {"osc_gy_ifel_off",  'w',LOOP5, 59,     1.0/32768.0,             0.0, 's', U_NONE},
-  {"isc_gy_ifroll_off",'w',LOOP5, 60,     1.0/32768.0,             0.0, 's', U_NONE},
-  {"osc_gy_ifroll_off",'w',LOOP5, 61,     1.0/32768.0,             0.0, 's', U_NONE},
-  {"isc_gy_ifyaw_off", 'w',LOOP5, 62,     1.0/32768.0,             0.0, 's', U_NONE},
-  {"osc_gy_ifyaw_off", 'w',LOOP5, 63,     1.0/32768.0,             0.0, 's', U_NONE},
+  {"off_ifel_gy_isc",  'w',LOOP5, 58,     1.0/32768.0,             0.0, 's', U_NONE},
+  {"off_ifel_gy_osc",  'w',LOOP5, 59,     1.0/32768.0,             0.0, 's', U_NONE},
+  {"off_ifroll_gy_isc",'w',LOOP5, 60,     1.0/32768.0,             0.0, 's', U_NONE},
+  {"off_ifroll_gy_osc",'w',LOOP5, 61,     1.0/32768.0,             0.0, 's', U_NONE},
+  {"off_ifyaw_gy_isc", 'w',LOOP5, 62,     1.0/32768.0,             0.0, 's', U_NONE},
+  {"off_ifyaw_gy_osc", 'w',LOOP5, 63,     1.0/32768.0,             0.0, 's', U_NONE},
 
   {"isc_maxslew",  'w', LOOP6,  0,              I2DEG,             0.0, 'u', U_NONE},
   {"osc_maxslew",  'w', LOOP6,  1,              I2DEG,             0.0, 'u', U_NONE},
@@ -845,12 +845,12 @@ struct ChannelStruct SlowChannels[] = {
 
 struct ChannelStruct WideFastChannels[] = {
 #ifndef BOLOTEST
-  {"gy_ifyaw1",  'r',  ACS2_D,  0, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"gy_ifroll1", 'r',  ACS2_D,  2, -DGY32_TO_DPS, 1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"gy_ifyaw2",  'r',  ACS2_D,  4, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"gy_ifel1",   'r',  ACS2_D,  6, -DGY32_TO_DPS, 1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"gy_ifel2",   'r',  ACS2_D,  8, -DGY32_TO_DPS, 1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"gy_ifroll2", 'r',  ACS2_D, 10, -DGY32_TO_DPS, 1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifyaw_1_gy",  'r',  ACS2_D,  0, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifroll_1_gy", 'r',  ACS2_D,  2, -DGY32_TO_DPS, 1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifyaw_2_gy",  'r',  ACS2_D,  4, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifel_1_gy",   'r',  ACS2_D,  6, -DGY32_TO_DPS, 1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifel_2_gy",   'r',  ACS2_D,  8, -DGY32_TO_DPS, 1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifroll_2_gy", 'r',  ACS2_D, 10, -DGY32_TO_DPS, 1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
 #endif
   {"az",          'w', LOOP2,   51,             LI2DEG,             0.0, 'U', U_P_DEG},
   {"el",          'w', LOOP2,   53,             LI2DEG,             0.0, 'U', U_P_DEG},
@@ -881,9 +881,9 @@ struct ChannelStruct FastChannels[] = {
   {"gy_heat",      'w',  ACS1_D,  6,                1.0,             0.0, 'u', U_NONE},
 
 /* read channels from ACS1 */
-  {"gy_ifroll",    'r',  ACS2_D, 13, GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS,'u', U_V_DPS},
-  {"gy_ifyaw",     'r',  ACS2_D, 14, GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS,'u', U_V_DPS},
-  {"gy_ifel",      'r',  ACS2_D, 12, GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS,'u', U_V_DPS},
+  {"ifroll_gy",    'r',  ACS2_D, 13, GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS,'u', U_V_DPS},
+  {"ifyaw_gy",     'r',  ACS2_D, 14, GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS,'u', U_V_DPS},
+  {"ifel_gy",      'r',  ACS2_D, 12, GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS,'u', U_V_DPS},
 
 /* ACS1 Digital Card */
   {"isc_trigger",  'w',   ACS2_D, 11,                 1.0,            0.0, 'u', U_NONE},
