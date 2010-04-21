@@ -688,9 +688,9 @@ struct ChannelStruct SlowChannels[] = {
   {"i_raw_piv",    'w', LOOP7, 17,       20.0/32768.0,             0.0, 's', U_I_A},
   {"isc_max_age",  'w', LOOP7, 18,                1.0,             0.0, 'u', U_T_MS},
   {"osc_max_age",  'w', LOOP7, 19,                1.0,             0.0, 'u', U_T_MS},
-  //{"g_pe_piv",   'w', LOOP7, 20,                1.0,             0.0, 'u', U_NONE},
-  {"g_pv_piv",    'w', LOOP7, 21,                1.0,             0.0, 'u', U_NONE},
-  {"set_rw",      'w', LOOP7, 22,      200.0/32768.0,             0.0, 's', U_V_DPS},
+  {"g_pe_piv",     'w', LOOP7, 20,                1.0,             0.0, 'u', U_NONE},
+  {"g_pv_piv",     'w', LOOP7, 21,                1.0,             0.0, 'u', U_NONE},
+  {"set_rw",       'w', LOOP7, 22,      200.0/32768.0,             0.0, 's', U_V_DPS},
   {"vel_dps_az",   'w', LOOP7, 23,       20.0/32768.0,             0.0, 's', U_V_DPS},
   /* LOOP7 24 unassigned */
   /* LOOP7 25-26 are unused */
@@ -718,7 +718,9 @@ struct ChannelStruct SlowChannels[] = {
   {"verbose_rw",       'w', LOOP7, 48,             1.0,             0.0, 'u', U_NONE},
   {"verbose_el",       'w', LOOP7, 49,             1.0,             0.0, 'u', U_NONE},
   {"verbose_piv",      'w', LOOP7, 52,             1.0,             0.0, 'u', U_NONE},
-  /* LOOP7 53-63 are unused */
+  {"p_rw_term_piv",    'w', LOOP7, 53,             1.0,             0.0, 'u', U_NONE},
+  {"p_err_term_piv",   'w', LOOP7, 54,             1.0,             0.0, 'u', U_NONE},
+  /* LOOP7 55-63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

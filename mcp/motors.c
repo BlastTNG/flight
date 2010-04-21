@@ -282,14 +282,34 @@ static double GetVAz(void)
 /*       Proportional to the reaction wheel speed error                 */
 /*                                                                      */
 /************************************************************************/
-static double GetIPivot(unsigned int g_piv, unsigned int disabled)
+static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_err_piv, unsigned int disabled)
 {
+  static struct NiosStruct* pRWTermPivAddr;
+  static struct NiosStruct* pErrTermPivAddr;
   double I_req = 0.0;
   int I_req_dac= 0;
   int i_point;
- 
+  double v_az_req;
+  double p_rw_term, p_err_term;
+  int p_rw_term_dac, p_err_term_dac;
+
+  static int i=0;
+  static unsigned int firsttime = 1;
+
+  if(firsttime) {
+    pRWTermPivAddr = GetNiosAddr("p_rw_term_piv");
+    pErrTermPivAddr = GetNiosAddr("p_err_term_piv");
+  }
+
+  v_az_req = ((double) v_az_req_gy) * GY16_TO_DPS/10.0; // Convert to dps 
+
   i_point = GETREADINDEX(point_index);
-  I_req = (-1.0)*(double)g_piv*(ACSData.vel_raw_rw-CommandData.pivot_gain.SP); 
+  p_rw_term = (-1.0)*(double)g_rw_piv*(ACSData.vel_raw_rw-CommandData.pivot_gain.SP);
+  p_err_term = (double)g_err_piv*(v_az_req-PointingData[point_index].v_az);
+  I_req = p_rw_term+p_err_term;
+
+  // Some debugging print statements.
+  //  if (i%100==1) bprintf(info,"GetIPivot: v_az_req = %f, v_az = %f, p_rw_term = %f, p_err_term = %f, I_req = %f",v_az_req,PointingData[point_index].v_az,p_rw_term,p_err_term,I_req);
 
   // TODO: Add in term proportional to velocity error.
   if(disabled) { // Don't attempt to send current to the motors if we are disabled.
@@ -307,6 +327,27 @@ static double GetIPivot(unsigned int g_piv, unsigned int disabled)
     }
   }
 
+  if(fabs(p_rw_term)<0.02) {
+    p_rw_term_dac=16384+PIV_DAC_OFF;
+  } else {
+    if(p_rw_term>0.0) {
+      p_rw_term_dac=p_rw_term+16384+PIV_DAC_OFF+PIV_DEAD_BAND;
+    } else {
+      p_rw_term_dac=p_rw_term+16384+PIV_DAC_OFF-PIV_DEAD_BAND;
+    }
+  }
+
+  if(fabs(p_err_term)<0.02) {
+    p_err_term_dac=16384+PIV_DAC_OFF;
+  } else {
+    if(p_err_term>0.0) {
+      p_err_term_dac=p_err_term+16384+PIV_DAC_OFF+PIV_DEAD_BAND;
+    } else {
+      p_err_term_dac=p_err_term+16384+PIV_DAC_OFF-PIV_DEAD_BAND;
+    }
+  }
+
+
   // Check to make sure the DAC value is in the proper range
   if(I_req_dac <= 0) {
     I_req_dac=1;
@@ -314,6 +355,24 @@ static double GetIPivot(unsigned int g_piv, unsigned int disabled)
   if(I_req_dac >  32767) {
     I_req_dac=32767;
   }
+  // Check to make sure the P-terms are in the proper range
+  if(p_rw_term_dac <= 0) {
+    p_rw_term_dac=1;
+  }
+  if(p_rw_term_dac >  32767) {
+    p_rw_term_dac=32767;
+  }
+  if(p_err_term_dac <= 0) {
+    p_err_term_dac=1;
+  }
+  if(p_err_term_dac >  32767) {
+    p_err_term_dac=32767;
+  }
+
+  i++;
+
+  WriteData(pRWTermPivAddr,p_rw_term,NIOS_QUEUE);
+  WriteData(pRWTermPivAddr,p_err_term,NIOS_QUEUE);
   return I_req_dac;
 }
 
@@ -334,6 +393,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   static struct NiosStruct* gPAzAddr;
   static struct NiosStruct* gIAzAddr;
   static struct NiosStruct* gPVPivAddr;
+  static struct NiosStruct* gPEPivAddr;
   static struct NiosStruct* setRWAddr;
   static struct NiosStruct* dacPivAddr;
   static struct NiosStruct* velCalcPivAddr;
@@ -346,8 +406,8 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   unsigned int ucos_el;
   unsigned int usin_el;
 
-  int v_elev, v_az, v_piv, elGainP, elGainI;
-  int azGainP, azGainI, pivGainRW;
+  int v_elev, v_az, i_piv, elGainP, elGainI;
+  int azGainP, azGainI, pivGainRW, pivGainErr;
   int i_point;
 
   /******** Obtain correct indexes the first time here ***********/
@@ -364,6 +424,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     gPAzAddr = GetNiosAddr("g_p_az");
     gIAzAddr = GetNiosAddr("g_i_az");
     gPVPivAddr = GetNiosAddr("g_pv_piv");
+    gPEPivAddr = GetNiosAddr("g_pe_piv");
     setRWAddr = GetNiosAddr("set_rw");
     velCalcPivAddr = GetNiosAddr("vel_calc_piv");
 
@@ -438,21 +499,25 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     azGainP = 0;
     azGainI = 0;
     pivGainRW = 0;
-    v_piv=GetIPivot(pivGainRW,1);
+    pivGainErr = 0;
+    i_piv=GetIPivot(0,pivGainRW,pivGainErr,1);
   } else {
     azGainP = CommandData.azi_gain.P;
     azGainI = CommandData.azi_gain.I;
     pivGainRW = CommandData.pivot_gain.PV;
-    v_piv=GetIPivot(pivGainRW,0);
+    pivGainErr = CommandData.pivot_gain.PE;
+    i_piv=GetIPivot(v_az,pivGainRW,pivGainErr,0);
   }
-  /* requested pivot velocity*/
-  WriteData(dacPivAddr, v_piv*2, NIOS_QUEUE);
+  /* requested pivot current*/
+  WriteData(dacPivAddr, i_piv*2, NIOS_QUEUE);
   /* p term for az motor */
   WriteData(gPAzAddr, azGainP, NIOS_QUEUE);
   /* I term for az motor */
   WriteData(gIAzAddr, azGainI, NIOS_QUEUE);
   /* p term to rw vel for pivot motor */
   WriteData(gPVPivAddr, pivGainRW, NIOS_QUEUE);
+  /* p term to vel error for pivot motor */
+  WriteData(gPEPivAddr, pivGainErr, NIOS_QUEUE);
   /* setpoint for reaction wheel */
   WriteData(setRWAddr, CommandData.pivot_gain.SP*32768.0/200.0, NIOS_QUEUE);
   /* Pivot velocity */
@@ -1317,6 +1382,7 @@ void bprintfverb(buos_t l, unsigned short int verb_level_req, unsigned short int
   char message[BUOS_MAX];
   va_list argptr;
 
+  //  bprintf(info,"DEBUG: verb_level_req = %i, verb_level_comp = %i",verb_level_req,verb_level_comp);
   if(verb_level_req >= verb_level_comp) {
     va_start(argptr, fmt);
     vsnprintf(message, BUOS_MAX, fmt, argptr);
