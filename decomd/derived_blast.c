@@ -449,6 +449,25 @@ union DerivedUnion DerivedChannels[] = {
   LINCOM2("LS_NICE_STAT", "LS_MOTION", 3, 0, "LS_OPENCLOSE", 1, 0),
 #endif
 
+  COMMENT("DAS Digital Controls"),
+  BITFIELD("das_dig43",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "HEAT_HELIUM_LEVEL",
+      "HEAT_CHARCOAL",
+      "HEAT_CHARCOAL_HS",
+      "HEAT_POT_HS",
+      "HEAT_JFET",
+      "HEAT_BDA",
+      "HEAT_CALIBRATOR",
+      "HEAT_HWPR_POS"),
+
   COMMENT("Cryo Table Lookups"),
   COMMENT("Diodes"),
 
