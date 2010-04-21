@@ -10,7 +10,7 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define CATHY_VERSION "1.0.0"
+#define CATHY_VERSION "1.1.0"
 
 #define _XOPEN_SOURCE 1000
 #include <stdio.h>
@@ -219,9 +219,11 @@ int main (int argc, char **argv)
                 continue;
               }
               else if (index == (old_index + 2) % 0x4)
-                printf("__");
+                if (a != 0x16 && a != 0x00 && b != 0x16 && b != 0x00)
+                  printf("__");
               else if (index == (old_index + 3) % 0x4)
-                printf("____");
+                if (a != 0x16 && a != 0x00 && b != 0x16 && b != 0x00)
+                  printf("____");
               old_index = index;
             }
           }
