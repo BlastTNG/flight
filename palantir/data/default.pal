@@ -1497,7 +1497,7 @@
   </BOX>
   <BOX caption="Cryo Heaters" row="4" col="7" rowspan="1">
     <MULTI caption="He Level">
-      <DATUM src="HE_LEV_SENS">
+      <DATUM src="HEAT_HELIUM_LEVEL">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
@@ -1506,7 +1506,7 @@
       <DATUM format="%.2f" src="HE4_LEV_OLD" extrema="levelsens"/>
     </NUMBER>
     <MULTI caption="Charcoal">
-      <DATUM src="CHARC_HEATER">
+      <DATUM src="HEAT_CHARCOAL">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
@@ -1514,26 +1514,32 @@
     <NUMBER caption="I Charcoal">
       <DATUM format="%.2f" src="I_CHARCOAL" extrema="unknown"/>
     </NUMBER>
-    <MULTI caption="Coldplate">
-      <DATUM src="COLDP_HEATER">
+    <MULTI caption="HS Charcoal">
+      <DATUM src="HEAT_CHARCOAL_HS">
+        <WORD value="1" caption="On" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="I HS Charcoal">
+      <DATUM format="%.2f" src="I_CHARCOAL_HS" extrema="unknown"/>
+    </NUMBER>
+    <MULTI caption="HS Pot">
+      <DATUM src="HEAT_POT_HS">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
-    <NUMBER caption="I Cold Plate">
-      <DATUM format="%.2f" src="I_COLDPLATE" extrema="unknown"/>
+    <NUMBER caption="I HS Pot">
+      <DATUM format="%.2f" src="I_POT_HS" extrema="unknown"/>
     </NUMBER>
-    <MULTI caption="300mK Auto Heat">
-      <DATUM src="AUTO_BDA_HEAT_ON">
+    <MULTI caption="JFET">
+      <DATUM src="HEAT_JFET">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
-    <NUMBER caption="BDA Heat (%)">
-      <DATUM format="%.2f" src="BDAPWM" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="Switch (%)">
-      <DATUM format="%.2f" src="HSPWM" extrema="hspwm"/>
+    <NUMBER caption="I JFET">
+      <DATUM format="%.2f" src="I_JFET" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="Auto JFET Heat">
       <DATUM src="AUTO_JFET_HEAT">
@@ -1541,20 +1547,24 @@
         <WORD value="0" caption="Off" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
-    <NUMBER caption="JFET Heat (%)">
-      <DATUM format="%.2f" src="JFETPWM" extrema="jfetheat"/>
-    </NUMBER>
-    <NUMBER caption="Spare (%)">
-      <DATUM format="%.2f" src="CRYOPWM" extrema="unknown"/>
-    </NUMBER>
     <MULTI caption="Calibrator">
-      <DATUM src="CALSTAT">
+      <DATUM src="HEAT_CALIBRATOR">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
+    <MULTI caption="HWPR">
+      <DATUM src="HEAT_HWPR_POS">
+        <WORD value="1" caption="On" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="HWPR Pos">
+      <DATUM format="%.2f" src="HWPR_POS" extrema="unknown"/>
+    </NUMBER>
     <MULTI caption="Autocycle">
       <DATUM src="cycle_state">
+        <WORD value="8" caption="HS Off" textstyle="W_BIT"/>
         <WORD value="4" caption="Cooling" textstyle="W_BIT"/>
         <WORD value="2" caption="Heating" textstyle="W_BIT"/>
         <WORD value="1" caption="Idle" textstyle="OK_BIT"/>
