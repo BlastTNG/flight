@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.40 $";
+const char *command_list_serial = "$Revision: 4.41 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -158,11 +158,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(reset_trims), "reset coarse pointing trims to zero", GR_TRIM},
   {COMMAND(trim_to_isc), "trim coarse sensors to ISC", GR_TRIM},
   {COMMAND(trim_to_osc), "trim coarse sensors to OSC", GR_TRIM},
-
-  {COMMAND(biascmd_inh), "inhibit bias commanding", GR_BIAS | CONFIRM},
-  {COMMAND(biascmd_ena), "enable bias commanding", GR_BIAS},
-  {COMMAND(fixed), "bias: internal, fixed", GR_BIAS},
-  {COMMAND(ramp), "bias: external, ramp", GR_BIAS},
+  {COMMAND(fixed), "fixed level bias", GR_BIAS},
+  {COMMAND(ramp), "ramp bias with triangular waveform", GR_BIAS},
 
   {COMMAND(auto_jfetheat), "automatically reguate jfet heater level",
     GR_CRYO_HEAT},

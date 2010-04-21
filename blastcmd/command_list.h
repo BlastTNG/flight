@@ -17,7 +17,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 204        /* total number of single word cmds */
+#define N_SCOMMANDS 202        /* total number of single word cmds */
 #define N_MCOMMANDS 104        /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
@@ -108,7 +108,7 @@ enum singleCommand {
   isc_eye_on,       osc_eye_on,         osc_eye_off,      xy_panic,
   trim_to_osc,      antisun,            blast_rocks,      blast_sucks,
   fridge_cycle,     at_float,           not_at_float,     el_auto_gyro,
-  repoll,           biascmd_inh,        biascmd_ena,      autofocus_allow,
+  repoll,           autofocus_allow,
   isc_use_pyramid,  isc_no_pyramid,     osc_use_pyramid,  osc_no_pyramid,
   autofocus_veto,   north_halt,         south_halt,       actbus_on,
   actbus_off,       actuator_stop,      level_pulse,      restore_piv,

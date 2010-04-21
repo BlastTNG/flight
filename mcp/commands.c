@@ -671,12 +671,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
 
 #endif
 
-    case biascmd_inh:
-      CommandData.Bias.dont_do_anything = 1;
-      break;
-    case biascmd_ena:
-      CommandData.Bias.dont_do_anything = 0;
-      break;
     case ramp:
       CommandData.Bias.biasRamp = 1;
       break;

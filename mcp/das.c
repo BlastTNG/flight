@@ -513,9 +513,6 @@ void BiasControl (unsigned short* RxFrame)
     rampAmplAddr = GetBiPhaseAddr("ramp_ampl");
   }
 
-  //TODO This command can be comletely removed since our biases are
-  //     all digital now.  
-  if (CommandData.Bias.dont_do_anything) return;
 
   /********** set Bias (ramp)  *******/
   isBiasRamp = slow_data[rampAmplAddr->index][rampAmplAddr->channel];
