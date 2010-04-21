@@ -858,8 +858,9 @@ static void StoreData(int index)
   static struct NiosStruct *velRawPivAddr;
   static struct NiosStruct *infoPivAddr;
   static struct NiosStruct *driveErrCtsPivAddr;
-  static struct NiosStruct *verboseCopleyAddr;
-  static struct NiosStruct *verboseAMCAddr;
+  static struct NiosStruct *verboseRWAddr;
+  static struct NiosStruct *verboseElAddr;
+  static struct NiosStruct *verbosePivAddr;
 
   int i_rw_motors;
   int i_elev_motors;
@@ -1025,8 +1026,9 @@ static void StoreData(int index)
     driveErrCtsPivAddr = GetNiosAddr("drive_err_cts_piv");
     infoElAddr = GetNiosAddr("drive_info_el");
     driveErrCtsElAddr = GetNiosAddr("drive_err_cts_el");
-    verboseCopleyAddr = GetNiosAddr("verbose_copley");
-    verboseAMCAddr = GetNiosAddr("verbose_amc");
+    verboseRWAddr = GetNiosAddr("verbose_rw");
+    verboseElAddr = GetNiosAddr("verbose_el");
+    verbosePivAddr = GetNiosAddr("verbose_piv");
   }
 
   /*************************************************
@@ -1299,8 +1301,9 @@ static void StoreData(int index)
   WriteData(driveErrCtsElAddr,ElevMotorData[i_elev_motors].err_count,NIOS_QUEUE);
   WriteData(infoPivAddr,PivotMotorData[i_pivot_motors].drive_info,NIOS_QUEUE);
   WriteData(driveErrCtsPivAddr,PivotMotorData[i_pivot_motors].err_count,NIOS_QUEUE);
-  WriteData(verboseCopleyAddr,CommandData.verbose_copley,NIOS_QUEUE);
-  WriteData(verboseAMCAddr,CommandData.verbose_amc,NIOS_QUEUE);
+  WriteData(verboseRWAddr,CommandData.verbose_rw,NIOS_QUEUE);
+  WriteData(verboseElAddr,CommandData.verbose_el,NIOS_QUEUE);
+  WriteData(verbosePivAddr,CommandData.verbose_piv,NIOS_QUEUE);
 
 }
 #endif

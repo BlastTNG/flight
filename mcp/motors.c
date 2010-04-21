@@ -1380,6 +1380,7 @@ void* reactComm(void* arg)
   reactinfo.disabled=2;
   reactinfo.bdrate=9600;
   reactinfo.writeset=0;
+  reactinfo.verbose=0;
   strncpy(reactinfo.motorstr,"react",6);
 
   nameThread("RWCom");
@@ -1409,13 +1410,14 @@ void* reactComm(void* arg)
 
   // Try to open the port.
   while (reactinfo.open==0) {
+    reactinfo.verbose=CommandData.verbose_rw;
     open_copley(REACT_DEVICE,&reactinfo); // sets reactinfo.open=1 if sucessful
 
     if (i==10) bputs(err,"Reaction wheel port could not be opened after 10 attempts.\n");
 
     i++;
     if (reactinfo.open==1) {
-      bprintfverb(info,CommandData.verbose_copley,MC_VERBOSE,"Opened the serial port on attempt number %i",i); 
+      bprintfverb(info,reactinfo.verbose,MC_VERBOSE,"Opened the serial port on attempt number %i",i); 
     } else sleep(1);  
   }
 
@@ -1423,6 +1425,7 @@ void* reactComm(void* arg)
   // the main loop where it will trigger a reset command.                                             
   i=0;
   while (reactinfo.init==0 && i <=9) {
+    reactinfo.verbose=CommandData.verbose_rw;
     configure_copley(&reactinfo);
     if (reactinfo.init==1) {
       bprintf(info,"Initialized the controller on attempt number %i",i); 
@@ -1435,7 +1438,7 @@ void* reactComm(void* arg)
   }
   rw_motor_index = 1; // index for writing to the RWMotor data struct
   while (1){
-
+    reactinfo.verbose=CommandData.verbose_rw;
     if((reactinfo.err & COP_ERR_MASK) > 0 ) {
       reactinfo.err_count+=1;
       if(reactinfo.err_count >= COPLEY_ERR_TIMEOUT) {
@@ -1472,7 +1475,7 @@ void* reactComm(void* arg)
 
     } else if(reactinfo.init==1){
       if(CommandData.disable_az==0 && reactinfo.disabled > 0) {
-	bprintfverb(info,CommandData.verbose_copley,MC_VERBOSE,"Attempting to enable the reaction wheel motor controller.");
+	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,"Attempting to enable the reaction wheel motor controller.");
 	n=enableCopley(&reactinfo);
 	if(n==0){    
 	  bprintf(info,"Reaction wheel motor controller is now enabled.");
@@ -1480,7 +1483,7 @@ void* reactComm(void* arg)
 	}
       } 
       if(CommandData.disable_az==1 && (reactinfo.disabled==0 || reactinfo.disabled==2)) {
-	bprintfverb(info,CommandData.verbose_copley,MC_VERBOSE,"Attempting to disable the reaction wheel motor controller.");
+	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,"Attempting to disable the reaction wheel motor controller.");
 	n=disableCopley(&reactinfo);
 	if(n==0){    
 	  bprintf(info,"Reaction wheel motor controller is now disabled.");
@@ -1511,7 +1514,7 @@ void* reactComm(void* arg)
       }      
       j++;
       if (firsttime) {
-	bprintfverb(info,CommandData.verbose_copley,MC_VERBOSE,"Raw reaction wheel velocity is %i",vel_raw);
+	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,"Raw reaction wheel velocity is %i",vel_raw);
 	firsttime=0;
       }
       rw_motor_index=INC_INDEX(rw_motor_index);
@@ -1548,6 +1551,7 @@ void* elevComm(void* arg)
   elevinfo.bdrate=9600;
   elevinfo.writeset=0;
   strncpy(elevinfo.motorstr,"elev\0",6);
+  elevinfo.verbose=1;
 
   nameThread("ElCom");
 
@@ -1579,6 +1583,7 @@ void* elevComm(void* arg)
 
   // Try to open the port.
   while(elevinfo.open==0) {
+    elevinfo.verbose=CommandData.verbose_el;
     open_copley(ELEV_DEVICE,&elevinfo); // sets elevinfo.open=1 if sucessful
     
     if(i==10) {
@@ -1587,7 +1592,7 @@ void* elevComm(void* arg)
     i++;
     
     if(elevinfo.open==1) {
-	bprintfverb(info,CommandData.verbose_copley,MC_VERBOSE,"Opened the serial port on attempt number %i",i); 
+	bprintfverb(info,elevinfo.verbose,MC_VERBOSE,"Opened the serial port on attempt number %i",i); 
     } else { 
       sleep(1);
     }
@@ -1597,6 +1602,7 @@ void* elevComm(void* arg)
   // the main loop where it will trigger a reset command.                                             
   i=0;
   while (elevinfo.init==0 && i <=9) {
+    elevinfo.verbose=CommandData.verbose_el;
     configure_copley(&elevinfo);
     if(elevinfo.init==1) {
       bprintf(info,"Initialized the controller on attempt number %i",i); 
@@ -1610,7 +1616,7 @@ void* elevComm(void* arg)
 
   elev_motor_index = 1; // index for writing to the ElevMotor data struct
   while (1) {
-
+    elevinfo.verbose=CommandData.verbose_el;
     if ((elevinfo.err & COP_ERR_MASK) > 0 ) {
       elevinfo.err_count+=1;
       if (elevinfo.err_count >= COPLEY_ERR_TIMEOUT) {
@@ -1649,7 +1655,7 @@ void* elevComm(void* arg)
 
     } else if (elevinfo.init==1) {
       if((CommandData.disable_el==0 || CommandData.force_el==1 ) && elevinfo.disabled > 0) {
-	bprintfverb(info,CommandData.verbose_copley,MC_VERBOSE,"Attempting to enable the elevation motor controller.");
+	bprintfverb(info,elevinfo.verbose,MC_VERBOSE,"Attempting to enable the elevation motor controller.");
 	n=enableCopley(&elevinfo);
 	if(n==0){    
 	  bprintf(info,"Elevation motor controller is now enabled.");
@@ -1657,7 +1663,7 @@ void* elevComm(void* arg)
 	}
       } 
       if((CommandData.disable_el==1 && CommandData.force_el==0 ) && (elevinfo.disabled==0 || elevinfo.disabled==2)) {
-	bprintfverb(info,CommandData.verbose_copley,MC_VERBOSE,"Attempting to disable the elevation motor controller.");
+	bprintfverb(info,elevinfo.verbose,MC_VERBOSE,"Attempting to disable the elevation motor controller.");
 	n=disableCopley(&elevinfo);
 	if(n==0){    
 	  bprintf(info,"Elevation motor controller is now disabled.");
@@ -1673,7 +1679,7 @@ void* elevComm(void* arg)
                            // writes to the appropriate frame 
 
       if (firsttime) {
-	bprintfverb(info,CommandData.verbose_copley,MC_VERBOSE,"Raw elevation encoder position is %i",pos_raw);
+	bprintfverb(info,elevinfo.verbose,MC_VERBOSE,"Raw elevation encoder position is %i",pos_raw);
 	firsttime=0;
       }     
       j=j%4;
@@ -1727,6 +1733,7 @@ void* pivotComm(void* arg)
   pivotinfo.bdrate=9600;
   pivotinfo.writeset=0;
   strncpy(pivotinfo.motorstr,"pivot",6);
+  pivotinfo.verbose=0;
 
   nameThread("PivCom");
 
@@ -1755,6 +1762,7 @@ void* pivotComm(void* arg)
 
   // Try to open the port.
   while (pivotinfo.open==0) {
+    pivotinfo.verbose=CommandData.verbose_piv;
     open_amc(PIVOT_DEVICE,&pivotinfo); // sets pivotinfo.open=1 if sucessful
 
     if (i==10) {
@@ -1763,7 +1771,7 @@ void* pivotComm(void* arg)
     i++;
 
     if (pivotinfo.open==1) {
-      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"Opened the serial port on attempt number %i",i);
+      bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"Opened the serial port on attempt number %i",i);
     }
     else sleep(1);
   }
@@ -1772,6 +1780,7 @@ void* pivotComm(void* arg)
   // the main loop where it will trigger a reset command.                                             
   i=0;
   while (pivotinfo.init==0 && i <=9) {
+    pivotinfo.verbose=CommandData.verbose_piv;
     configure_amc(&pivotinfo);
     if (pivotinfo.init==1) {
       bprintf(info,"Initialized the controller on attempt number %i",i); 
@@ -1784,7 +1793,7 @@ void* pivotComm(void* arg)
   }
 
   while (1) {
-
+    pivotinfo.verbose=CommandData.verbose_piv;
     if((pivotinfo.err & AMC_ERR_MASK) > 0 ) {
       pivotinfo.err_count+=1;
       if(pivotinfo.err_count >= AMC_ERR_TIMEOUT) {
@@ -1826,7 +1835,7 @@ void* pivotComm(void* arg)
 
     } else if (pivotinfo.init==1) {
       if(CommandData.disable_az==0 && pivotinfo.disabled == 1) {
-      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"Attempting to enable the pivot motor contoller.");
+      bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"Attempting to enable the pivot motor contoller.");
 	n=enableAMC(&pivotinfo);
 	if(n==0) {
 	  bprintf(info,"Pivot motor is now enabled");
@@ -1834,7 +1843,7 @@ void* pivotComm(void* arg)
 	}
       }
       if(CommandData.disable_az==1 && (pivotinfo.disabled==0 || pivotinfo.disabled==2)) {
-      bprintfverb(info,CommandData.verbose_amc,MC_VERBOSE,"Attempting to disable the pivot motor controller.");
+      bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"Attempting to disable the pivot motor controller.");
 	n=disableAMC(&pivotinfo);
 	if(n==0){    
 	  bprintf(info,"Pivot motor controller is now disabled.");

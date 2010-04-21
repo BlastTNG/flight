@@ -189,8 +189,9 @@ struct CommandDataStruct {
   unsigned short reset_elev;
   unsigned short restore_piv;
 
-  unsigned short verbose_copley;
-  unsigned short verbose_amc;
+  unsigned short verbose_rw;
+  unsigned short verbose_el;
+  unsigned short verbose_piv;
   int az_autogyro;
   int el_autogyro;
   double offset_ifel_gy;

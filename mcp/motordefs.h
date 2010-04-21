@@ -48,6 +48,8 @@ struct MotorInfoStruct {
                 // For copley controllers set to 1 because we
                 // should always be able to set variables.   
   char motorstr[6]; // A character array containing the name of the motor.               
+  unsigned int verbose; // Used to tell the motor threads how much chatter they should output.
+                        // set to CommandData.verbose_[motor] 
 };
 
 // Used in the serial threads to decide whether output should be printed.
