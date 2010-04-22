@@ -283,9 +283,9 @@ struct ChannelStruct SlowChannels[] = {
 
   /* the following 9 AD590s, except t_das all had calibrated offsets */
   /* these are all carry dover from the previous BIAS card (TMP6) */
-  {"t_dcdc1_rec",  'r', BIAS_T1,  1, CAL16T(1.0,                    0.0), 'u', U_T_C},
-  {"t_dcdc2_rec",  'r', BIAS_T1,  3, CAL16T(1.0,                    0.0), 'u', U_T_C},
-  {"t_dcdc3_rec",  'r', BIAS_T1,  5, CAL16T(1.0,                    0.0), 'u', U_T_C},
+  {"t_padcdc_rec", 'r', BIAS_T1,  1, CAL16T(1.0,                    0.0), 'u', U_T_C},
+  {"t_pauram_rec", 'r', BIAS_T1,  3, CAL16T(1.0,                    0.0), 'u', U_T_C},
+  {"t_hkdcdc_rec", 'r', BIAS_T1,  5, CAL16T(1.0,                    0.0), 'u', U_T_C},
   {"t_primary_2",  'r', BIAS_T1,  7, CAL16T(1.0, AD590_CALIB_PRIMARY_2),  'u', U_NONE},
   {"t_strut_bot",  'r', BIAS_T1,  9, CAL16T(1.0, AD590_CALIB_STRUT_1),    'u', U_NONE},
   {"t_primary_1",  'r', BIAS_T1, 11, CAL16T(1.0, AD590_CALIB_PRIMARY_1),  'u', U_NONE},
