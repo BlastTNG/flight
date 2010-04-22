@@ -569,6 +569,13 @@ void BiasControl (unsigned short* RxFrame)
   static struct NiosStruct* biasStepTimeAddr;
   static struct NiosStruct* biasStepPulLenAddr;
   static struct NiosStruct* biasStepArrayAddr;
+  static int i_arr=3;
+  static int k=0;
+  static int step_size=1;
+  static int dk=1;
+  static int end=0;
+  static int start=0;
+  int bias=0;
 
   int i;
   int isBiasRamp;
@@ -593,19 +600,98 @@ void BiasControl (unsigned short* RxFrame)
     biasStepArrayAddr = GetNiosAddr("bias_step_array");
   }
 
+  /* Check to make sure that the user selected an array.  0 means step all arrays.*/
+  if (CommandData.Bias.biasStep.do_step) {
+      switch (CommandData.Bias.biasStep.arr_ind) {
+      case 250:
+	i_arr = 2;
+	break;
+      case 350:
+	i_arr = 1;
+	break;
+      case 500:
+	i_arr = 0;
+	break;
+      case 0:
+	i_arr = 3; // i.e. all wavelengths
+	break;
+      default:
+	CommandData.Bias.biasStep.do_step = 0; // don't step
+	break;
+      }
+  } 
 
-  /********** set Bias (ramp)  *******/
-  isBiasRamp = slow_data[rampAmplAddr->index][rampAmplAddr->channel];
-  if ( (isBiasRamp && CommandData.Bias.biasRamp == 0) ||
-	  (!isBiasRamp && CommandData.Bias.biasRamp == 1) ) {
-    WriteData(rampEnaAddr, CommandData.Bias.biasRamp, NIOS_QUEUE);
-  }
+  if (CommandData.Bias.biasStep.do_step) {
+    if (k==0) {
+      start = CommandData.Bias.biasStep.start;
+      end = CommandData.Bias.biasStep.end;
+      step_size=(end-start)/CommandData.Bias.biasStep.nsteps;
 
-  /************* Set the Bias Levels *******/
-  for (i=0; i<5; i++)
-    if (CommandData.Bias.setLevel[i]) {
-      WriteData(biasAmplAddr[i], CommandData.Bias.bias[i]<<1, NIOS_QUEUE);
-      CommandData.Bias.setLevel[i] = 0;
+      if(step_size==0) { // minimum step size is 1
+	if (end >= start) {
+	  step_size=1;
+	}
+	if (end < start) {
+	  step_size=-1;
+	}
+      }
+      end +=step_size;
+      dk = (unsigned int)(CommandData.Bias.biasStep.dt*SR/1000);
+      //      bprintf(info,"Debug 1: k = %i, dk = %i, start = %i, end = %i, step_size = %i",k,dk,start,end,step_size);
     }
+
+    bias = start+(k/dk)*step_size;
+
+    //    bprintf(info,"Debug 2: k = %i, bias = %i",k,bias);
+
+    if (step_size > 0) {
+      if (bias >= end) CommandData.Bias.biasStep.do_step=0;
+      if (bias > 32767) { 
+	bias = 32767;
+	CommandData.Bias.biasStep.do_step=0;
+      }
+      //      bprintf(info,"Debug 3a: k = %i, bias = %i, end = %i, do_step = %i",k,bias,end,CommandData.Bias.biasStep.do_step);
+
+    } else {
+      if (bias <= end) {
+	CommandData.Bias.biasStep.do_step=0; 
+      }
+      if (bias < 1) { 
+	bias = 1;
+	CommandData.Bias.biasStep.do_step=0;
+      }
+      //      bprintf(info,"Debug 3a: k = %i, bias = %i, end = %i, do_step = %i",k,bias,end,CommandData.Bias.biasStep.do_step);
+    }
+
+    WriteData(biasStepEnaAddr,CommandData.Bias.biasStep.do_step, NIOS_QUEUE);
+    WriteData(biasStepStartAddr,CommandData.Bias.biasStep.start<<1, NIOS_QUEUE);
+    WriteData(biasStepEndAddr,CommandData.Bias.biasStep.end<<1, NIOS_QUEUE);
+    WriteData(biasStepNstepsAddr,CommandData.Bias.biasStep.nsteps, NIOS_QUEUE);
+    WriteData(biasStepTimeAddr,CommandData.Bias.biasStep.dt, NIOS_QUEUE);
+    WriteData(biasStepPulLenAddr,CommandData.Bias.biasStep.pulse_len, NIOS_QUEUE);
+    WriteData(biasStepArrayAddr,CommandData.Bias.biasStep.arr_ind, NIOS_QUEUE);
+    if (i_arr >= 0 && i_arr < 3) {
+      WriteData(biasAmplAddr[i_arr], bias<<1, NIOS_QUEUE);
+    } else {
+    for(i = 0; i <= 2; i++)
+      WriteData(biasAmplAddr[i], bias<<1, NIOS_QUEUE);
+    }
+    k++;
+  } else {
+  
+    /********** set Bias (ramp)  *******/
+    isBiasRamp = slow_data[rampAmplAddr->index][rampAmplAddr->channel];
+    if ( (isBiasRamp && CommandData.Bias.biasRamp == 0) ||
+	 (!isBiasRamp && CommandData.Bias.biasRamp == 1) ) {
+      WriteData(rampEnaAddr, CommandData.Bias.biasRamp, NIOS_QUEUE);
+    }
+    
+    /************* Set the Bias Levels *******/
+    for (i=0; i<5; i++)
+      if (CommandData.Bias.setLevel[i]) {
+	WriteData(biasAmplAddr[i], CommandData.Bias.bias[i]<<1, NIOS_QUEUE);
+	CommandData.Bias.setLevel[i] = 0;
+      }
+  }
 }
 

@@ -1573,26 +1573,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Bias.biasStep.dt = ivalues[3];
       CommandData.Bias.biasStep.pulse_len = ivalues[4];
       CommandData.Bias.biasStep.arr_ind = ivalues[5];
-
-#if 0
-      switch (ivalues[5]) {
-      case 250:
-	CommandData.Bias.biasStep.arr_ind = 2;
-	break;
-      case 350:
-	CommandData.Bias.biasStep.arr_ind = 1;
-	break;
-      case 500:
-	CommandData.Bias.biasStep.arr_ind = 0;
-	break;
-      case 0:
-	CommandData.Bias.biasStep.arr_ind = 3; // i.e. all wavelengths
-	break;
-      default:
-	CommandData.Bias.biasStep.do_step = 0; // don't step
-	break;
-      }
-#endif
       break;
       /***************************************/
       /*********** Cal Lamp  *****************/
