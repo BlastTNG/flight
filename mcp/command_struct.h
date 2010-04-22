@@ -224,7 +224,6 @@ struct CommandDataStruct {
   double ss_az_trim;
 
   struct {
-    int dont_do_anything;
     int biasRamp;
     unsigned short bias[5];
     unsigned char setLevel[5];

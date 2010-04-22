@@ -1556,10 +1556,13 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.Phase[i] = ivalues[1];
       else if (ivalues[0] == 13)
         CommandData.Phase[DAS_CARDS] = ivalues[1];
-
+      break;
+    case phase_step:
+      break;
+    case bias_step:
+      break;
       /***************************************/
       /*********** Cal Lamp  *****************/
-      break;
     case cal_pulse:
       CommandData.Cryo.calibrator = pulse;
       CommandData.Cryo.calib_pulse = ivalues[0] / 10;
@@ -2292,7 +2295,6 @@ void InitCommandData()
   CommandData.hwpr.is_new = 0;
   CommandData.hwpr.force_repoll = 0;
 
-  CommandData.Bias.dont_do_anything = 0;
   CommandData.Bias.biasRamp = 0;
 
   //forces reload of saved bias values
