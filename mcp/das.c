@@ -105,7 +105,7 @@ void PhaseControl(void)
   static int dk=1;
   static int end=0;
   static int start=0;
-  unsigned int phase=0;
+  int phase=0;
 
   if (first_time) {
     first_time = 0;
@@ -128,24 +128,40 @@ void PhaseControl(void)
 
   if(CommandData.phaseStep.do_step) {
     if (k==0) {
-      end = CommandData.phaseStep.end;
       start = CommandData.phaseStep.start;
+      end = CommandData.phaseStep.end;
       step_size=(end-start)/CommandData.phaseStep.nsteps;
-      if(step_size<=0) {
-	bprintf(err,"PhaseControl: Requested step parameters imply a negative step size.");
+
+      if(step_size==0) { // minimum step size is 1
+	if (end >= start) {
+	  step_size=1;
+	}
+	if (end < start) {
+	  step_size=-1;
+	}
+      }
+      end +=step_size;
+      dk = (unsigned int)(CommandData.phaseStep.dt*SR/1000/20);
+    }
+
+    phase = start+(k/dk)*step_size;
+
+    if (step_size > 0) {
+      if (phase >= end) CommandData.phaseStep.do_step=0;
+      if (phase > 32767) { 
+	phase = 32767;
 	CommandData.phaseStep.do_step=0;
       }
-      dk = (unsigned int)(CommandData.phaseStep.dt*SR/1000);
+    } else {
+      if (phase <= end) {
+	CommandData.phaseStep.do_step=0; 
+      }
+      if (phase < 1) { 
+	phase = 1;
+	CommandData.phaseStep.do_step=0;
+      }
     }
 
-    phase = CommandData.phaseStep.start+(k/dk)*step_size;
-
-    if (phase >= CommandData.phaseStep.end) CommandData.phaseStep.do_step=0;
-
-    if (phase > 65535) { 
-      phase = 65535;
-      CommandData.phaseStep.do_step=0;
-    }
     WriteData(phaseStepEnaAddr,CommandData.phaseStep.do_step, NIOS_QUEUE);
     WriteData(phaseStepStartAddr,CommandData.phaseStep.start<<1, NIOS_QUEUE);
     WriteData(phaseStepEndAddr,CommandData.phaseStep.end<<1, NIOS_QUEUE);
@@ -546,6 +562,14 @@ void BiasControl (unsigned short* RxFrame)
   static struct NiosStruct* biasAmplAddr[5];
   static struct NiosStruct* rampEnaAddr;
   static struct BiPhaseStruct* rampAmplAddr;
+  static struct NiosStruct* biasStepEnaAddr;
+  static struct NiosStruct* biasStepStartAddr;
+  static struct NiosStruct* biasStepEndAddr;
+  static struct NiosStruct* biasStepNstepsAddr;
+  static struct NiosStruct* biasStepTimeAddr;
+  static struct NiosStruct* biasStepPulLenAddr;
+  static struct NiosStruct* biasStepArrayAddr;
+
   int i;
   int isBiasRamp;
 
@@ -560,6 +584,13 @@ void BiasControl (unsigned short* RxFrame)
     biasAmplAddr[4] = GetNiosAddr("bias_ampl_x");
     rampEnaAddr = GetNiosAddr("bias_ramp_ena");
     rampAmplAddr = GetBiPhaseAddr("ramp_ampl");
+    biasStepEnaAddr = GetNiosAddr("bias_step_ena");
+    biasStepStartAddr = GetNiosAddr("bias_step_start");
+    biasStepEndAddr = GetNiosAddr("bias_step_end");
+    biasStepNstepsAddr = GetNiosAddr("bias_step_nsteps");
+    biasStepTimeAddr = GetNiosAddr("bias_step_time");
+    biasStepPulLenAddr = GetNiosAddr("bias_step_pul_len");
+    biasStepArrayAddr = GetNiosAddr("bias_step_array");
   }
 
 
