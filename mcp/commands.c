@@ -1548,6 +1548,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Bias.setLevel[4] = 1;
       break;
     case phase:
+      CommandData.phaseStep.do_step=0;
       if (ivalues[0] >= DAS_START && ivalues[0] <= DAS_START + DAS_CARDS*4/3
 	  && ivalues[0]%4 != 0)
         CommandData.Phase[(ivalues[0] - DAS_START)*3/4] = ivalues[1];
@@ -1558,6 +1559,11 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.Phase[DAS_CARDS] = ivalues[1];
       break;
     case phase_step:
+      CommandData.phaseStep.do_step=1;
+      CommandData.phaseStep.start=ivalues[0];
+      CommandData.phaseStep.end=ivalues[1];
+      CommandData.phaseStep.nsteps=ivalues[2];
+      CommandData.phaseStep.dt=ivalues[3];
       break;
     case bias_step:
       break;
@@ -2296,6 +2302,19 @@ void InitCommandData()
   CommandData.hwpr.force_repoll = 0;
 
   CommandData.Bias.biasRamp = 0;
+  CommandData.Bias.biasStep.do_step = 0;
+  CommandData.Bias.biasStep.start = 1;
+  CommandData.Bias.biasStep.end = 32767;
+  CommandData.Bias.biasStep.nsteps = 1000;
+  CommandData.Bias.biasStep.pulse_len = 10;
+  CommandData.Bias.biasStep.dt = 1000;
+  CommandData.Bias.biasStep.arr_ind = 0;
+
+  CommandData.phaseStep.do_step = 0;
+  CommandData.phaseStep.start = 1;
+  CommandData.phaseStep.end = 32767;
+  CommandData.phaseStep.nsteps = 1000;
+  CommandData.phaseStep.dt = 1000;
 
   //forces reload of saved bias values
   CommandData.Bias.setLevel[0] = 1;

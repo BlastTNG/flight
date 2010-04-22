@@ -721,17 +721,20 @@ struct ChannelStruct SlowChannels[] = {
   {"verbose_piv",      'w', LOOP7, 52,             1.0,             0.0, 'u', U_NONE},
   {"p_rw_term_piv",    'w', LOOP7, 53,             1.0,             0.0, 'u', U_NONE},
   {"p_err_term_piv",   'w', LOOP7, 54,             1.0,             0.0, 'u', U_NONE},
-  {"bias_step_start",  'w', LOOP7, 55,             1.0,             0.0, 'u', U_NONE},
-  {"bias_step_end",    'w', LOOP7, 56,             1.0,             0.0, 'u', U_NONE},
+  {"bias_step_start",  'w', LOOP7, 55,             0.5,             0.0, 'u', U_NONE},
+  {"bias_step_end",    'w', LOOP7, 56,             0.5,             0.0, 'u', U_NONE},
   {"bias_step_nsteps", 'w', LOOP7, 57,             1.0,             0.0, 'u', U_NONE},
   {"bias_step_time",   'w', LOOP7, 58,             1.0,             0.0, 'u', U_NONE},
   {"bias_step_pul_len",'w', LOOP7, 59,             1.0,             0.0, 'u', U_NONE},
   {"bias_step_array",  'w', LOOP7, 60,             1.0,             0.0, 'u', U_NONE},
-  {"phase_step_start", 'w', LOOP7, 61,             1.0,             0.0, 'u', U_NONE},
-  {"phase_step_end",   'w', LOOP7, 62,             1.0,             0.0, 'u', U_NONE},
+  {"phase_step_start", 'w', LOOP7, 61,             0.5,             0.0, 'u', U_NONE},
+  {"phase_step_end",   'w', LOOP7, 62,             0.5,             0.0, 'u', U_NONE},
   {"phase_step_nsteps",'w', LOOP7, 63,             1.0,             0.0, 'u', U_NONE},
+
   {"phase_step_time",  'w', LOOP8,  0,             1.0,             0.0, 'u', U_NONE},
-  /* LOOP8 1-63 are unused */
+  {"bias_step_ena",    'w', LOOP8,  1,             1.0,             0.0, 'u', U_NONE},
+  {"phase_step_ena",   'w', LOOP8,  2,             1.0,             0.0, 'u', U_NONE},
+  /* LOOP8 3-63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

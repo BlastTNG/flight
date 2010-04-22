@@ -132,6 +132,17 @@ struct latch_pulse {
 
 enum calmode { on, off, pulse, repeat };
 
+struct Step {
+  unsigned short do_step;
+  unsigned short start;
+  unsigned short end;
+  unsigned short nsteps;
+  unsigned short arr_ind; // only used for bias
+  unsigned short dt;
+  unsigned short pulse_len;  // only used for bias
+};
+
+
 struct CommandDataStruct {
   struct {
     unsigned short dac_out[5];
@@ -227,6 +238,7 @@ struct CommandDataStruct {
     int biasRamp;
     unsigned short bias[5];
     unsigned char setLevel[5];
+    struct Step biasStep;
   } Bias;
   
   struct {
@@ -254,6 +266,7 @@ struct CommandDataStruct {
   } Cryo;
 
   int Phase[DAS_CARDS + 1];
+  struct Step phaseStep;
 
   struct {
     enum {bal_rest, bal_manual, bal_auto} mode;

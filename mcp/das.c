@@ -92,8 +92,20 @@ void PhaseControl(void)
 {
   static int first_time = 1;
   static struct NiosStruct* NiosAddr[DAS_CARDS + 1];
+  static struct NiosStruct* phaseStepEnaAddr;
+  static struct NiosStruct* phaseStepStartAddr;
+  static struct NiosStruct* phaseStepEndAddr;
+  static struct NiosStruct* phaseStepNstepsAddr;
+  static struct NiosStruct* phaseStepTimeAddr;
+
   char field[20];
   int i, j;
+  static int k=0;
+  static int step_size=1;
+  static int dk=1;
+  static int end=0;
+  static int start=0;
+  unsigned int phase=0;
 
   if (first_time) {
     first_time = 0;
@@ -106,11 +118,48 @@ void PhaseControl(void)
     }
     sprintf(field, "phase13"); //Get nios address of cryo phase as well.
     NiosAddr[DAS_CARDS] = GetNiosAddr(field);
+    phaseStepEnaAddr = GetNiosAddr("phase_step_ena");
+    phaseStepStartAddr = GetNiosAddr("phase_step_start");
+    phaseStepEndAddr = GetNiosAddr("phase_step_end");
+    phaseStepNstepsAddr = GetNiosAddr("phase_step_nsteps");
+    phaseStepTimeAddr = GetNiosAddr("phase_step_time");
+   
   }	
 
-  for(i = 0; i < DAS_CARDS; i++)
-    WriteData(NiosAddr[i], CommandData.Phase[i]<<1, NIOS_QUEUE);
-  WriteData(NiosAddr[DAS_CARDS], CommandData.Phase[DAS_CARDS]<<1, NIOS_FLUSH);
+  if(CommandData.phaseStep.do_step) {
+    if (k==0) {
+      end = CommandData.phaseStep.end;
+      start = CommandData.phaseStep.start;
+      step_size=(end-start)/CommandData.phaseStep.nsteps;
+      if(step_size<=0) {
+	bprintf(err,"PhaseControl: Requested step parameters imply a negative step size.");
+	CommandData.phaseStep.do_step=0;
+      }
+      dk = (unsigned int)(CommandData.phaseStep.dt*SR/1000);
+    }
+
+    phase = CommandData.phaseStep.start+(k/dk)*step_size;
+
+    if (phase >= CommandData.phaseStep.end) CommandData.phaseStep.do_step=0;
+
+    if (phase > 65535) { 
+      phase = 65535;
+      CommandData.phaseStep.do_step=0;
+    }
+    WriteData(phaseStepEnaAddr,CommandData.phaseStep.do_step, NIOS_QUEUE);
+    WriteData(phaseStepStartAddr,CommandData.phaseStep.start<<1, NIOS_QUEUE);
+    WriteData(phaseStepEndAddr,CommandData.phaseStep.end<<1, NIOS_QUEUE);
+    WriteData(phaseStepNstepsAddr,CommandData.phaseStep.nsteps, NIOS_QUEUE);
+    WriteData(phaseStepTimeAddr,CommandData.phaseStep.dt, NIOS_QUEUE);
+    for(i = 0; i < DAS_CARDS; i++)
+      WriteData(NiosAddr[i], phase<<1, NIOS_QUEUE);
+    k++;
+  } else {
+    k=0;
+    for(i = 0; i < DAS_CARDS; i++)
+      WriteData(NiosAddr[i], CommandData.Phase[i]<<1, NIOS_QUEUE);
+    WriteData(NiosAddr[DAS_CARDS], CommandData.Phase[DAS_CARDS]<<1, NIOS_FLUSH);
+  }
 }
 
 /***********************************************************************/
