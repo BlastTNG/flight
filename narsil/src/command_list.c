@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.43 $";
+const char *command_list_serial = "$Revision: 4.44 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -748,7 +748,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Start", 0, 32767, 'i', "bias_step_start"},
       {"End", 0, 32767, 'i', "bias_step_end"},
       {"N steps", 1, 32767, 'i', "bias_step_nsteps"},
-      {"Time per step (ms)", 1, 32767, 'i', "bias_step_time"},
+      {"Time per step (ms)", 10, 32767, 'i', "bias_step_time"},
       {"Cal pulse length (ms)", 0, 32767, 'i', "bias_step_pul_len"},
       {"Array (250,350,500,0=all)", 0, 32767, 'i', "bias_step_array"},
     }

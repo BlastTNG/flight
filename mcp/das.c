@@ -575,6 +575,8 @@ void BiasControl (unsigned short* RxFrame)
   static int dk=1;
   static int end=0;
   static int start=0;
+  static int kp=0;
+  static int pulse_len_k=0;
   int bias=0;
 
   int i;
@@ -637,12 +639,16 @@ void BiasControl (unsigned short* RxFrame)
       }
       end +=step_size;
       dk = (unsigned int)(CommandData.Bias.biasStep.dt*SR/1000);
-      //      bprintf(info,"Debug 1: k = %i, dk = %i, start = %i, end = %i, step_size = %i",k,dk,start,end,step_size);
+      pulse_len_k = (unsigned int)(CommandData.Bias.biasStep.pulse_len*SR/1000);
+
+      /* kp sets when in the step the cal pulse will be sent */
+      /* NOTE: if pulse_len= 0, no pulse is sent. */
+      kp=dk-4*pulse_len_k; 
+      
+      if (kp < 0) kp = 1;
     }
 
     bias = start+(k/dk)*step_size;
-
-    //    bprintf(info,"Debug 2: k = %i, bias = %i",k,bias);
 
     if (step_size > 0) {
       if (bias >= end) CommandData.Bias.biasStep.do_step=0;
@@ -650,7 +656,6 @@ void BiasControl (unsigned short* RxFrame)
 	bias = 32767;
 	CommandData.Bias.biasStep.do_step=0;
       }
-      //      bprintf(info,"Debug 3a: k = %i, bias = %i, end = %i, do_step = %i",k,bias,end,CommandData.Bias.biasStep.do_step);
 
     } else {
       if (bias <= end) {
@@ -660,7 +665,6 @@ void BiasControl (unsigned short* RxFrame)
 	bias = 1;
 	CommandData.Bias.biasStep.do_step=0;
       }
-      //      bprintf(info,"Debug 3a: k = %i, bias = %i, end = %i, do_step = %i",k,bias,end,CommandData.Bias.biasStep.do_step);
     }
 
     WriteData(biasStepEnaAddr,CommandData.Bias.biasStep.do_step, NIOS_QUEUE);
@@ -676,9 +680,16 @@ void BiasControl (unsigned short* RxFrame)
     for(i = 0; i <= 2; i++)
       WriteData(biasAmplAddr[i], bias<<1, NIOS_QUEUE);
     }
+
+    /* Send a cal pulse at 4x the width of the cal pulse before the next step.*/
+    /* pulse_len = 0 means don't send a cal pulse */
+    if (k%dk==kp && pulse_len_k >0) {
+      CommandData.Cryo.calibrator = pulse;
+      CommandData.Cryo.calib_pulse = pulse_len_k;
+    }
     k++;
   } else {
-  
+    k=0;
     /********** set Bias (ramp)  *******/
     isBiasRamp = slow_data[rampAmplAddr->index][rampAmplAddr->channel];
     if ( (isBiasRamp && CommandData.Bias.biasRamp == 0) ||
