@@ -101,30 +101,24 @@ void ControlHWPR(struct ezbus *bus)
 
   /* Send the uplinked (general) command, if any */
   my_cindex = GETREADINDEX(CommandData.actbus.cindex);
-  if ((CommandData.actbus.caddr[my_cindex] == HWPR_ADDR) &&
-      (EZBus_Take(bus, HWPR_ADDR) != EZ_ERR_OK) ) {
+  if ((CommandData.actbus.caddr[my_cindex] == HWPR_ADDR)) {
     EZBus_Comm(bus, CommandData.actbus.caddr[my_cindex],
         CommandData.actbus.command[my_cindex], 0);
     CommandData.actbus.caddr[my_cindex] = 0;
-    EZBus_Release(bus, HWPR_ADDR);
   }
 
   if (CommandData.hwpr.is_new) {
     if (CommandData.hwpr.mode == HWPR_PANIC) {
       bputs(info, "Panic");
       EZBus_Stop(bus, HWPR_ADDR);
-    } else if ((CommandData.hwpr.mode == HWPR_GOTO) &&
-               ((EZBus_Take(bus, HWPR_ADDR)) != EZ_ERR_OK) ) {
+    } else if ((CommandData.hwpr.mode == HWPR_GOTO)) {
       EZBus_Goto(bus, HWPR_ADDR, 
 	  CommandData.hwpr.target * HWPR_STEPS_PER_MOTENC);
       CommandData.hwpr.is_new = 0;
-      EZBus_Release(bus, HWPR_ADDR);
-    } else if ((CommandData.hwpr.mode == HWPR_JUMP) &&
-               ((EZBus_Take(bus, HWPR_ADDR)) != EZ_ERR_OK) ) {
+    } else if ((CommandData.hwpr.mode == HWPR_JUMP)) {
       EZBus_RelMove(bus, HWPR_ADDR, 
 	  CommandData.hwpr.target * HWPR_STEPS_PER_MOTENC);
       CommandData.hwpr.is_new = 0;
-      EZBus_Release(bus, HWPR_ADDR);
     }
   }
 }
@@ -141,7 +135,7 @@ void HWPRBus(void)
   nameThread("HWPR");
   bputs(startup, "HWPRBus startup.");
 
-  if (EZBus_Init(&bus, HWPR_BUS, "  HWPR", HWPRBUS_CHATTER) != EZ_ERR_OK)
+  if (EZBus_Init(&bus, HWPR_BUS, "", HWPRBUS_CHATTER) != EZ_ERR_OK)
     berror(tfatal, "failed to connect");
 
   EZBus_Add(&bus, HWPR_ADDR, "HWPR");
@@ -164,6 +158,7 @@ void HWPRBus(void)
       EZBus_ForceRepoll(&bus, HWPR_ADDR);
       poll_timeout = POLL_TIMEOUT;
       all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
+      CommandData.hwpr.force_repoll = 0;
     }
 
     if (poll_timeout == 0 && !all_ok) {
