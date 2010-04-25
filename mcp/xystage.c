@@ -48,7 +48,6 @@
 /* EZBus setup parameters */
 #define STAGE_BUS_TTY "/dev/ttyXYSTAGE"
 #define STAGE_BUS_CHATTER EZ_CHAT_ACT
-#define BUS_NAME " XYBus"
 #define STAGEX_NAME "XY Stage X"
 #define STAGEY_NAME "XY Stage Y"
 #define STAGEX_ID EZ_WHO_S6
@@ -298,7 +297,7 @@ void StageBus(void)
   bputs(startup, "startup.");
 
   //TODO need to make steppers serial port safe on nicc
-  if (EZBus_Init(&bus, STAGE_BUS_TTY, BUS_NAME, STAGE_BUS_CHATTER) != EZ_ERR_OK)
+  if (EZBus_Init(&bus, STAGE_BUS_TTY, "", STAGE_BUS_CHATTER) != EZ_ERR_OK)
     //TODO should EZBus_Init fail be tfatal??
     berror(tfatal, "failed to connect");
 
@@ -326,8 +325,8 @@ void StageBus(void)
     if (CommandData.xystage.force_repoll) {
       EZBus_ForceRepoll(&bus, STAGEX_ID);
       EZBus_ForceRepoll(&bus, STAGEY_ID);
-      poll_timeout = 0;
-      all_ok = 0;
+      poll_timeout = POLL_TIMEOUT;
+      all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
       CommandData.xystage.force_repoll = 0;
     }
 
