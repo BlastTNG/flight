@@ -27,6 +27,7 @@
 #include <termios.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <limits.h>
 #include "ezstep.h"
 #include "blast.h"
 
@@ -136,13 +137,13 @@ static int ez_setserial(struct ezbus* bus, const char* input_tty)
 
   if ((fd = open(input_tty, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0) {
     if (bus->chatter >= EZ_CHAT_ERR)
-      berror(err, "%s: Unable to open serial port (%s)", bus->name, input_tty);
+      berror(err, "%sUnable to open serial port (%s)", bus->name, input_tty);
     return -1;
   }
 
   if (tcgetattr(fd, &term)) {
     if (bus->chatter >= EZ_CHAT_ERR)
-      berror(err, "%s: Unable to get serial device attributes", bus->name);
+      berror(err, "%sUnable to get serial device attributes", bus->name);
     return -1;
   }
 
@@ -163,19 +164,19 @@ static int ez_setserial(struct ezbus* bus, const char* input_tty)
 
   if(cfsetospeed(&term, B9600)) {        /*  <======= SET THE SPEED HERE */
     if (bus->chatter >= EZ_CHAT_ERR)
-      berror(err, "%s: Error setting serial output speed", bus->name);
+      berror(err, "%sError setting serial output speed", bus->name);
     return -1;
   }
 
   if(cfsetispeed(&term, B9600)) {        /*  <======= SET THE SPEED HERE */
     if (bus->chatter >= EZ_CHAT_ERR)
-      berror(err, "%s: Error setting serial input speed", bus->name);
+      berror(err, "%sError setting serial input speed", bus->name);
     return -1;
   }
 
   if( tcsetattr(fd, TCSANOW, &term) ) {
     if (bus->chatter >= EZ_CHAT_ERR)
-      berror(err, "%s: Unable to set serial attributes", bus->name);
+      berror(err, "%sUnable to set serial attributes", bus->name);
     return -1;
   }
 
@@ -187,9 +188,9 @@ int EZBus_Init(struct ezbus* bus,const char* tty,const char* name,int chatter)
   char i;
   int retval = EZ_ERR_OK;
   if (name[0] != '\0') {
-    strncpy(bus->name, name, EZ_BUS_NAME_LEN);
+    snprintf(bus->name, EZ_BUS_NAME_LEN, "%s: ", name);
     bus->name[EZ_BUS_NAME_LEN-1] = '\0';
-  } else strncpy(bus->name, "EZBus", 6);
+  } else bus->name[0] = '\0';
   bus->seized = -1;
   bus->chatter = chatter;
   if ( (bus->fd = ez_setserial(bus, tty)) < 0)
@@ -201,6 +202,7 @@ int EZBus_Init(struct ezbus* bus,const char* tty,const char* name,int chatter)
     bus->stepper[iWho(i)].acc = 0;
     bus->stepper[iWho(i)].ihold = 0;
     bus->stepper[iWho(i)].imove = 0;
+    bus->stepper[iWho(i)].preamble[0] = '\0';
   }
   return retval;
 }
@@ -210,7 +212,7 @@ int EZBus_Add(struct ezbus* bus, char who, const char* name)
   int iwho = iWho(who);
   if (iwho >= EZ_BUS_NACT) {
     if (bus->chatter >= EZ_CHAT_ERR) 
-      bprintf(err, "%s: Failed to add stepper \'%c\'\n", bus->name, who);
+      bprintf(err, "%sFailed to add stepper \'%c\'\n", bus->name, who);
     return EZ_ERR_BAD_WHO;
   }
   bus->stepper[iwho].status |= EZ_STEP_USED;
@@ -221,12 +223,15 @@ int EZBus_Add(struct ezbus* bus, char who, const char* name)
 
 int EZBus_Take(struct ezbus* bus, char who)
 {
-  if (bus->seized != -1)
+  if (bus->seized != -1 && bus->seized != who)
     return EZ_ERR_BUSY;
 
+  if (!EZBus_IsUsable(bus, who))
+    return EZ_ERR_POLL;
+
   if (bus->seized != who) {
-    if (bus->chatter >= EZ_CHAT_ACT) 
-      bprintf(info, "%s: Bus seized by %s.\n", bus->name, stepName(bus,who));
+    if (bus->chatter >= EZ_CHAT_SEIZE) 
+      bprintf(info, "%sBus seized by %s.\n", bus->name, stepName(bus,who));
     bus->seized = who;
   }
 
@@ -236,11 +241,22 @@ int EZBus_Take(struct ezbus* bus, char who)
 int EZBus_Release(struct ezbus* bus, char who)
 {
   if (bus->seized == who) {
-    if (bus->chatter >= EZ_CHAT_ACT)
-      bprintf(info, "%s: Bus released by %s.\n", bus->name, stepName(bus,who));
+    if (bus->chatter >= EZ_CHAT_SEIZE)
+      bprintf(info, "%sBus released by %s.\n", bus->name, stepName(bus,who));
     bus->seized = -1;
   }
   return EZ_ERR_OK;
+}
+
+int EZBus_IsTaken(struct ezbus* bus, char who)
+{
+  int c;
+  if (!EZBus_IsUsable(bus, who)) return EZ_ERR_POLL;
+  if (bus->seized == who) return EZ_ERR_OK;
+  for (c=whoLoopMin(who); c<=whoLoopMax(who); c++) {
+    if (bus->seized == c) return EZ_ERR_OK;
+  }
+  return EZ_ERR_BUSY;
 }
 
 //fills string to with stringified hex values of the string from
@@ -274,13 +290,13 @@ int EZBus_Send(struct ezbus *bus, char who, const char* what)
   buffer[len - 1] = chk;
   if (bus->chatter >= EZ_CHAT_BUS) {
     hex_buffer = malloc(2*len+1);
-    bprintf(info, "%s: Request=%s (%s)", bus->name, 
+    bprintf(info, "%sRequest=%s (%s)", bus->name, 
 	HexDump((unsigned char *)buffer, hex_buffer, len), what);
     free(hex_buffer);
   }
   if (write(bus->fd, buffer, len) < 0) {
     if (bus->chatter >= EZ_CHAT_ERR)
-      berror(err, "%s: Error writing on bus", bus->name);
+      berror(err, "%sError writing on bus", bus->name);
     retval |= EZ_ERR_TTY;
   }
 
@@ -310,7 +326,7 @@ int EZBus_Recv(struct ezbus* bus)
   if (fd == -1) {
     //on error, don't return immediately, allow response to be terminated
     if (bus->chatter >= EZ_CHAT_ERR)
-      berror(err, "%s: Error waiting for input on bus",bus->name);
+      berror(err, "%sError waiting for input on bus",bus->name);
     retval |= EZ_ERR_TTY;
   } else if (!fd) { /* Timeout */
     retval |= EZ_ERR_TIMEOUT;
@@ -331,7 +347,7 @@ int EZBus_Recv(struct ezbus* bus)
           continue;
         } else {
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    berror(warning, "%s: Unexpected out-of-data reading bus (%i)", 
+	    berror(warning, "%sUnexpected out-of-data reading bus (%i)", 
 		bus->name, state);
           return EZ_ERR_OOD;
         }
@@ -345,7 +361,7 @@ int EZBus_Recv(struct ezbus* bus)
           state++;
           if (byte != 0xFF) { /* RS-485 turnaround */
 	    if (bus->chatter >= EZ_CHAT_ERR)
-	      bprintf(warning, "%s: RS-485 turnaround not found in response", 
+	      bprintf(warning, "%sRS-485 turnaround not found in response", 
 		bus->name);
             had_errors++;
           } else
@@ -355,7 +371,7 @@ int EZBus_Recv(struct ezbus* bus)
           if (byte != 0x02) { /* STX */
             had_errors++;
 	    if (bus->chatter >= EZ_CHAT_ERR)
-	      bprintf(warning, "%s: Start byte not found in response", 
+	      bprintf(warning, "%sStart byte not found in response", 
 		  bus->name);
           } else
             break;
@@ -364,11 +380,11 @@ int EZBus_Recv(struct ezbus* bus)
           if (byte != 0x30) { /* Recipient address (should be '0') */
             had_errors++;
 	    if (bus->chatter >= EZ_CHAT_ERR)
-	      bprintf(warning, "%s: Found misaddressed response", bus->name);
+	      bprintf(warning, "%sFound misaddressed response", bus->name);
           }
           if (had_errors > 1) {
 	    if (bus->chatter >= EZ_CHAT_ERR)
-	      bprintf(err, "%s: Too many errors parsing response, aborting.",
+	      bprintf(err, "%sToo many errors parsing response, aborting.",
 	       	bus->name);
 	    retval|= EZ_ERR_RESPONSE;
             state = EZ_BUS_RECV_ABORT;
@@ -380,7 +396,7 @@ int EZBus_Recv(struct ezbus* bus)
             retval |= byte & (EZ_ERROR | EZ_READY);
           else {
 	    if (bus->chatter >= EZ_CHAT_ERR)
-	      bprintf(err, "%s: Status byte malfomed in response, aborting.",
+	      bprintf(err, "%sStatus byte malfomed in response, aborting.",
 	       	bus->name);
 	    retval|= EZ_ERR_RESPONSE;
             state = EZ_BUS_RECV_ABORT;
@@ -398,14 +414,14 @@ int EZBus_Recv(struct ezbus* bus)
            * we've added the turnaround byte into the checksum */
           if (checksum != 0xff) {
 	    if (bus->chatter >= EZ_CHAT_ERR)
-	      bprintf(err, "%s: Checksum error in response (%02x).", bus->name,
+	      bprintf(err, "%sChecksum error in response (%02x).", bus->name,
                 checksum);
 	    retval|= EZ_ERR_RESPONSE;
 	  }
           break;
         case 6: /* End of string check */
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(err, "%s: Malformed footer in response string, aborting.",
+	    bprintf(err, "%sMalformed footer in response string, aborting.",
 		bus->name);
 	  retval|= EZ_ERR_RESPONSE;
           state = EZ_BUS_RECV_ABORT;
@@ -421,7 +437,7 @@ int EZBus_Recv(struct ezbus* bus)
     size_t len;
     len = strlen(bus->buffer);
     hex_buffer = malloc(2*len+1);
-    bprintf(info, "%s: Response=%s (%s) Status=%x\n", bus->name, 
+    bprintf(info, "%sResponse=%s (%s) Status=%x\n", bus->name, 
 	HexDump((unsigned char *)bus->buffer, hex_buffer, len), 
 	bus->buffer, retval&0xff);
     free(hex_buffer);
@@ -439,7 +455,7 @@ int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive)
     ok = 1;
     if ( (retval = EZBus_Send(bus, who, what)) != EZ_ERR_OK) {
       if (bus->chatter >= EZ_CHAT_ERR)
-	berror(warning, "%s: Failed to send command\n", bus->name);
+	berror(warning, "%sFailed to send command\n", bus->name);
       return retval;
     }
 
@@ -447,7 +463,7 @@ int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive)
     {
       //communication error
       if (bus->chatter >= EZ_CHAT_ERR)
-	bprintf(warning, "%s: Timeout waiting for response from %s\n.", 
+	bprintf(warning, "%sTimeout waiting for response from %s\n.", 
 	    bus->name, stepName(bus,who));
       EZBus_ForceRepoll(bus, who);
       return retval;
@@ -455,42 +471,42 @@ int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive)
       switch (retval & EZ_ERROR) {
 	case EZ_SERR_INIT:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s: %s: initialisation error.\n", 
+	    bprintf(warning, "%s%s: initialisation error.\n", 
 		bus->name, stepName(bus,who));
 	  break;
 	case EZ_SERR_BADCMD:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s: %s: bad command.\n", 
+	    bprintf(warning, "%s%s: bad command.\n", 
 		bus->name, stepName(bus,who));
 	  break;
 	case EZ_SERR_BADOP:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s: %s: bad operand.\n", 
+	    bprintf(warning, "%s%s: bad operand.\n", 
 		bus->name, stepName(bus,who));
 	  break;
 	case EZ_SERR_COMM:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s: %s: communications error.\n", 
+	    bprintf(warning, "%s%s: communications error.\n", 
 		bus->name, stepName(bus,who));
 	  break;
 	case EZ_SERR_NOINIT:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s: %s: not initialied.\n", 
+	    bprintf(warning, "%s%s: not initialied.\n", 
 		bus->name, stepName(bus,who));
 	  break;
 	case EZ_SERR_OVER:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s: %s: overload.\n", bus->name, 
+	    bprintf(warning, "%s%s: overload.\n", bus->name, 
 		stepName(bus,who));
 	  break;
 	case EZ_SERR_NOMOVE:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s: %s: move not allowed.\n", 
+	    bprintf(warning, "%s%s: move not allowed.\n", 
 		bus->name, stepName(bus,who));
 	  break;
 	case EZ_SERR_BUSY:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s: %s: command overflow.\n", 
+	    bprintf(warning, "%s%s: command overflow.\n", 
 		bus->name, stepName(bus,who));
 	  usleep(10000);
 	  ok = 0;
@@ -537,7 +553,7 @@ int EZBus_PollInit(struct ezbus* bus, void (*ezinit)(struct ezbus*,char) )
   int retval = EZ_ERR_OK;
 
   if (bus->chatter >= EZ_CHAT_ACT) {
-      bprintf(info, "%s: Polling EZStepper Bus.", bus->name);
+      bprintf(info, "%sPolling EZStepper Bus.", bus->name);
   }
 
   for (i = whoLoopMin(EZ_WHO_ALL); i <= whoLoopMax(EZ_WHO_ALL); ++i) {
@@ -547,29 +563,29 @@ int EZBus_PollInit(struct ezbus* bus, void (*ezinit)(struct ezbus*,char) )
     EZBus_Send(bus, i, "&");
     if ((result = EZBus_Recv(bus)) & (EZ_ERR_TIMEOUT | EZ_ERR_OOD)) {
       if (bus->chatter >= EZ_CHAT_ERR)
-	bprintf(warning, "%s: No response from %s, will repoll later.", 
+	bprintf(warning, "%sNo response from %s, will repoll later.", 
 	    bus->name, stepName(bus,i));
       bus->stepper[iWho(i)].status &= ~EZ_STEP_OK;
       retval |= result;	  //include in retval results from Recv
       retval |= EZ_ERR_POLL;
     } else if (!strncmp(bus->buffer, "EZStepper AllMotion", 19)) {
       if (bus->chatter >= EZ_CHAT_ERR)
-	bprintf(info, "%s: Found EZStepper device %s at address %c (0x%x).\n", 
+	bprintf(info, "%sFound EZStepper device %s at address %c (0x%x).\n", 
 	    bus->name, stepName(bus,i), i, i);
       bus->stepper[iWho(i)].status |= EZ_STEP_OK;
     } else if (!strncmp(bus->buffer, "EZHR17EN AllMotion", 18)) {
       if (bus->chatter >= EZ_CHAT_ERR)
-	bprintf(info, "%s: Found type 17EN device %s at address %c (0x%x).\n", 
+	bprintf(info, "%sFound type 17EN device %s at address %c (0x%x).\n", 
 	    bus->name, stepName(bus,i), i, i);
       bus->stepper[iWho(i)].status |= EZ_STEP_OK;
     } else if (!strncmp(bus->buffer, "EZHR23 All Motion", 17)) {
       if (bus->chatter >= EZ_CHAT_ERR)
-	bprintf(info, "%s: Found type 23 device %s at address %c (0x%x).\n", 
+	bprintf(info, "%sFound type 23 device %s at address %c (0x%x).\n", 
 	    bus->name, stepName(bus,i), i, i);
       bus->stepper[iWho(i)].status |= EZ_STEP_OK;
     } else {
       if (bus->chatter >= EZ_CHAT_ERR)
-	bprintf(warning, "%s: Unrecognised response from %s, "
+	bprintf(warning, "%sUnrecognised response from %s, "
 	    "will repoll later.\n", bus->name, stepName(bus,i));
       bus->stepper[iWho(i)].status &= ~EZ_STEP_OK;
       retval |= EZ_ERR_POLL;
@@ -634,6 +650,16 @@ int EZBus_SetAccel(struct ezbus* bus, char who, int acc)
   return EZ_ERR_OK;
 }
 
+int EZBus_SetPreamble(struct ezbus* bus, char who, const char* preamble)
+{
+  char i;
+  for (i=whoLoopMin(who); i<=whoLoopMax(who); ++i) {
+    strncpy(bus->stepper[iWho(i)].preamble, preamble, EZ_BUS_BUF_LEN);
+    bus->stepper[iWho(i)].preamble[EZ_BUS_BUF_LEN-1] = '\0';
+  }
+  return EZ_ERR_OK;
+}
+
 int EZBus_Stop(struct ezbus* bus, char who)
 {
   return EZBus_Comm(bus, who, "T", 0);
@@ -658,10 +684,14 @@ int EZBus_RelMove(struct ezbus* bus, char who, int delta)
 {
   char comm_buf[EZ_BUS_BUF_LEN];
   char comm = 'P';
+  if (delta == 0) return EZ_ERR_OK;	  //move nowhere
+  else if (delta == INT_MAX) delta = 0;	  //move forever
   if (delta < 0) {
     comm = 'D';
-    delta = -delta;
+    if (delta == INT_MIN) delta = 0;	  //move forever
+    else delta = -delta;
   }
+  
   sprintf(comm_buf, "V%dL%dm%dh%d%c%dR", bus->stepper[iWho(who)].vel,
       bus->stepper[iWho(who)].acc, bus->stepper[iWho(who)].imove,
       bus->stepper[iWho(who)].ihold, comm, delta);

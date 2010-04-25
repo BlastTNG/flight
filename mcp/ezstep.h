@@ -92,7 +92,8 @@
 #define	EZ_CHAT_NONE	0   //print absolutely nothing
 #define	EZ_CHAT_ERR	1   //print only errors and warnings
 #define	EZ_CHAT_ACT	2   //also print bus actions
-#define EZ_CHAT_BUS	3   //also print all bus chatter
+#define	EZ_CHAT_SEIZE	3   //indicate when the bus is seized
+#define EZ_CHAT_BUS	4   //also print all bus chatter
 
 /* Status:
  * The status of each stepper is by its status bitfield
@@ -114,6 +115,7 @@ struct ezstep {
   int acc;			//acceleration (steps/s/s)
   int ihold;			//hold current (0-50, % of max)
   int imove;			//move current (0-100, % of max)
+  char preamble[EZ_BUS_BUF_LEN];//command preamble. Set resolution, etc.
 };
 
 struct ezbus {
@@ -140,9 +142,12 @@ int EZBus_Init(struct ezbus* bus,const char *tty,const char* name,int chatter);
 int EZBus_Add(struct ezbus* bus, char who, const char* name);
 
 /* simple blocking mechanism for device 'who' to take and release bus
+ * if a call to EZBus_IsUsable fails, Take and IsTaken will return EZ_ERR_POLL;
+ * IsTaken returns EZ_ERR_OK when who has the bus
  */
 int EZBus_Take(struct ezbus* bus, char who);
 int EZBus_Release(struct ezbus* bus, char who);
+int EZBus_IsTaken(struct ezbus* bus, char who);
 
 /* send command string 'what' to device 'who'
  * For multi-stepper who values, will just use who, rather than looping over
@@ -203,6 +208,11 @@ int EZBus_SetIMove(struct ezbus* bus, char who, int current);
  */
 int EZBus_SetVel(struct ezbus* bus, char who, int vel);
 
+/* sets preamble string for simple motion moves
+ * This is primarily for setting microstep resolution, or encoder counts
+ */
+int EZBus_SetPreamble(struct ezbus* bus, char who, const char* preamble);
+
 /* sets acceleration for simple motion moves (in steps/s)
  */
 int EZBus_SetAccel(struct ezbus* bus, char who, int acc);
@@ -221,6 +231,7 @@ int EZBus_GotoVel(struct ezbus* bus, char who, int pos, int vel);
 
 /* Relative move by 'delta' (in steps from current location)
  * delta can be positive or negative
+ * for infinite moves, send INT_MIN or INT_MAX
  */
 int EZBus_RelMove(struct ezbus* bus, char who, int delta);
 
