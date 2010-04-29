@@ -46,6 +46,7 @@
 #include "command_struct.h"
 #include "mcp.h"
 #include "sss_struct.h"
+#include "chrgctrl.h"
 
 #define NIOS_BUFFER_SIZE 100
 

@@ -30,6 +30,7 @@
 #include "tx.h"
 #include "command_struct.h"
 #include "pointing_struct.h"
+#include "chrgctrl.h"
 
 /* Define to 1 to send synchronous star camera triggers based on ISC
  * handshaking */
@@ -355,7 +356,51 @@ static int ControlPumpHeat(int bits_bal)
 
 void ChargeController(void)
 {
-  static struct NiosStruct *apcuRegAddr;
+
+  static struct NiosStruct *VBattAddr;
+  static struct NiosStruct *VArrAddr;
+  static struct NiosStruct *IBattAddr;
+  static struct NiosStruct *IArrAddr;
+  static struct NiosStruct *VTargAddr;
+  static struct NiosStruct *ThsAddr;
+  static struct NiosStruct *FaultAddr;
+  static struct NiosStruct *AlarmHiAddr;
+  static struct NiosStruct *AlarmLoAddr;
+  static struct NiosStruct *ChargeAddr;
+
+  static int firsttime = 1;
+  
+  if (firsttime) {
+
+    firsttime = 0;
+
+    VBattAddr = GetNiosAddr("v_batt_chrgctrl");
+    VArrAddr = GetNiosAddr("v_arr_chrgctrl");
+    IBattAddr = GetNiosAddr("i_batt_chrgctrl");
+    IArrAddr  = GetNiosAddr("i_arr_chrgctrl");
+    VTargAddr = GetNiosAddr("v_targ_chrgctrl");
+    ThsAddr = GetNiosAddr("t_hs_chrgctrl");
+    FaultAddr = GetNiosAddr("fault_chrgctrl");
+    AlarmHiAddr = GetNiosAddr("alarm_hi_chrgctrl");
+    AlarmLoAddr = GetNiosAddr("alarm_lo_chrgctrl");
+    ChargeAddr = GetNiosAddr("state_chrgctrl");
+
+  }
+
+  WriteData(VBattAddr, 1000.0*ChrgCtrlData.V_batt, NIOS_QUEUE);
+  WriteData(VArrAddr, 1000.0*ChrgCtrlData.V_arr, NIOS_QUEUE);
+  WriteData(IBattAddr, 1000.0*ChrgCtrlData.I_batt, NIOS_QUEUE);
+  WriteData(IArrAddr, 1000.0*ChrgCtrlData.I_arr, NIOS_QUEUE);
+  WriteData(VTargAddr, 1000.0*ChrgCtrlData.V_targ, NIOS_QUEUE);
+  WriteData(ThsAddr, ChrgCtrlData.T_hs, NIOS_QUEUE);
+  WriteData(FaultAddr, ChrgCtrlData.fault_field, NIOS_QUEUE);
+  WriteData(AlarmHiAddr, ChrgCtrlData.alarm_field_hi, NIOS_QUEUE);
+  WriteData(AlarmLoAddr, ChrgCtrlData.alarm_field_lo, NIOS_QUEUE);
+  WriteData(ChargeAddr, ChrgCtrlData.charge_state, NIOS_QUEUE); // OR NIOS_FLUSH?
+
+  /* original code for BLAST06 MEER charge controller follows */
+
+  /*  static struct NiosStruct *apcuRegAddr;
   static struct NiosStruct *apcuTrimAddr;
   static struct NiosStruct *apcuAutoAddr;
   static struct NiosStruct *dpcuRegAddr;
@@ -412,7 +457,8 @@ void ChargeController(void)
   WriteData(apcuAutoAddr, CommandData.apcu_auto, NIOS_QUEUE);
   WriteData(dpcuRegAddr, (int)dpcu_control, NIOS_QUEUE);
   WriteData(dpcuTrimAddr, CommandData.dpcu_trim*100.0, NIOS_QUEUE);
-  WriteData(dpcuAutoAddr, CommandData.dpcu_auto, NIOS_FLUSH);
+  WriteData(dpcuAutoAddr, CommandData.dpcu_auto, NIOS_FLUSH);*/
+
 }
 
 /*********************/

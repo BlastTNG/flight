@@ -534,11 +534,11 @@ struct ChannelStruct SlowChannels[] = {
   {"t_gy_set",     'w', LOOP4, 36,    (100.0/32768.0),             0.0, 'u', U_NONE},
   {"gy_h_age",     'w', LOOP4, 37,                1.0,             0.0, 'u', U_NONE},
   {"gy_h_hist",    'w', LOOP4, 38,    (100.0/32768.0),             0.0, 'u', U_NONE},
+  // {"apcu_trim",    'w', LOOP4, 40,               0.01,             0.0, 's', U_NONE}, // to be deprecated
+  // {"dpcu_trim",    'w', LOOP4, 41,               0.01,             0.0, 's', U_NONE}, // to be deprecated
+  // {"apcu_auto",    'w', LOOP4, 42,                1.0,             0.0, 'u', U_NONE}, // to be deprecated
+  // {"dpcu_auto",    'w', LOOP4, 43,                1.0,             0.0, 'u', U_NONE}, // to be deprecated
   /* LOOP4 39 is unused */
-  {"apcu_trim",    'w', LOOP4, 40,               0.01,             0.0, 's', U_NONE}, // to be depricated
-  {"dpcu_trim",    'w', LOOP4, 41,               0.01,             0.0, 's', U_NONE}, // to be depricated
-  {"apcu_auto",    'w', LOOP4, 42,                1.0,             0.0, 'u', U_NONE}, // to be depricated
-  {"dpcu_auto",    'w', LOOP4, 43,                1.0,             0.0, 'u', U_NONE}, // to be depricated
   {"p_ra_1",       'w', LOOP4, 44,                I2H,             0.0, 'u', U_NONE}, // pointing mode coordinates
   {"p_dec_1",      'w', LOOP4, 45,              I2DEG,             0.0, 's', U_NONE},
   {"p_ra_2",       'w', LOOP4, 46,                I2H,             0.0, 'u', U_NONE},
@@ -734,7 +734,21 @@ struct ChannelStruct SlowChannels[] = {
   {"phase_step_time",  'w', LOOP8,  0,             1.0,             0.0, 'u', U_NONE},
   {"bias_step_ena",    'w', LOOP8,  1,             1.0,             0.0, 'u', U_NONE},
   {"phase_step_ena",   'w', LOOP8,  2,             1.0,             0.0, 'u', U_NONE},
-  /* LOOP8 3-63 are unused */
+  
+  /* charge controller related channels */
+  
+  {"v_batt_chrgctrl",  'w',  LOOP8,  3,   1.0e-3,  0.0,  'u',  U_V_V},
+  {"v_arr_chrgctrl",   'w',  LOOP8,  4,   1.0e-3,  0.0,  'u',  U_V_V},
+  {"i_batt_chrgctrl",  'w',  LOOP8,  5,   1.0e-3,  0.0,  'u',  U_I_A},
+  {"i_arr_chrgctrl",   'w',  LOOP8,  6,   1.0e-3,  0.0,  'u',  U_I_A},
+  { "t_hs_chrgctrl",   'w',  LOOP8,  7,   1.0,     0.0,  's',  U_T_C},
+  {"fault_chrgctrl",   'w',  LOOP8,  8,   1.0,     0.0,  'u',  U_NONE},   // fault bitfield
+  {"alarm_hi_chrgctrl",'w',  LOOP8,  9,   1.0,     0.0,  'u',  U_NONE},   // alarm high bitfield
+  {"alarm_lo_chrgctrl",'w',  LOOP8,  10,  1.0,     0.0,  'u',  U_NONE},  // alarm low bitfield
+  {"v_targ_chrgctrl",  'w',  LOOP8,  11,  1.0e-3,  0.0,  'u',  U_V_V},
+  {"state_chrgctrl",   'w',  LOOP8,  12,  1.0,     0.0,  'u',  U_NONE},   
+
+  /* LOOP8 13-63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
@@ -859,6 +873,7 @@ struct ChannelStruct SlowChannels[] = {
   //{"sprpump_lev",  'w',  TMP4,  4,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
   //{"inpump_lev",   'w',  TMP4,  5,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
   //{"outpump_lev",  'w',  TMP4,  6,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
+
 
   END_OF_CHANNELS
 };

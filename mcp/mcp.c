@@ -137,8 +137,11 @@ struct chat_buf chatter_buffer;
 #endif
 
 #ifndef BOLOTEST
-void openMotors(); //motors.c
+void openMotors();    // motors.c
 void closeMotors();
+
+void startChrgCtrl(); // chrgctrl.c
+void endChrgCtrl();
 #endif
 
 time_t mcp_systime(time_t *t) {
@@ -779,6 +782,8 @@ static void CloseBBC(int signo)
   bprintf(err, "System: Caught signal %i; stopping NIOS", signo);
 #ifndef BOLOTEST
   closeMotors();
+
+  endChrgCtrl();  // is this needed?
 #endif
   RawNiosWrite(0, BBC_ENDWORD, NIOS_FLUSH);
   RawNiosWrite(BBCPCI_MAX_FRAME_SIZE, BBC_ENDWORD, NIOS_FLUSH);
@@ -932,6 +937,9 @@ int main(int argc, char *argv[])
   InitSched();
   openMotors();  //open communications with peripherals, creates threads
                  // in motors.c
+
+  startChrgCtrl(); // create charge controller serial thread
+                   // defined in chrgctrl.c
 #endif
 
   bputs(info, "System: Finished Initialisation, waiting for BBC to come up.\n");

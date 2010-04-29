@@ -163,6 +163,49 @@ union DerivedUnion DerivedChannels[] = {
       "VALVE_BAL",
       "HEAT_BAL",
       ),
+
+  /* charge controller (CC) faults and alarms */
+
+  BITFIELD("fault_chrgctrl",
+      "CC_F_OVERCURRENT", 
+      "CC_F_FET_SHORT", 
+      "CC_F_SOFTWARE_BUG", 
+      "CC_F_BATT_HVD", 
+      "CC_F_ARR_HVD", 
+      "CC_F_DIP_CHANGED", 
+      "CC_F_SETTINGS_CHANGE", 
+      "CC_F_RTS_SHORT", 
+      "CC_F_RTS_DISCONN",
+      "CC_F_EEPROM_LIM",
+      "CC_F_SLAVE_TO" 
+      ),
+
+  BITFIELD("alarm_lo_chrgctrl",
+      "CC_A_RTS_OPEN", 
+      "CC_A_RTS_SHORT", 
+      "CC_A_RTS_DISCONN", 
+      "CC_A_TSENSE_OPEN", 
+      "CC_A_TSENSE_SHORT", 
+      "CC_A_HITEMP_LIM", 
+      "CC_A_CURRENT_LIM", 
+      "CC_A_CURRENT_OFFSET", 
+      "CC_A_BATTSENSE_RANGE",
+      "CC_A_BATTSENSE_DISC",
+      "CC_A_UNCALIB",
+      "CC_A_RTS_MISWIRE",
+      "CC_A_HVD",
+      "",
+      "CC_A_SYS_MISWIRE",
+      "CC_A_FET_OPEN",
+      ),
+
+ BITFIELD("alarm_hi_chrgctrl",
+      "CC_A_VP12_OFF",  
+      "CC_A_HI_INPUT_LIM", 
+      "CC_A_ADC_MAX_IN", 
+      "CC_A_RESET", 
+      ),
+
 #endif
 
   COMMENT("Lock Motor/Actuators"),
