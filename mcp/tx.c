@@ -1476,8 +1476,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     StoreHWPRBus();
 #ifndef BOLOTEST
     SetGyroMask();
-    //TODO reenable ChargeController() call when it's reimplemented
-    //ChargeController();
+    ChargeController();
     ControlPower();
 #endif
   }
