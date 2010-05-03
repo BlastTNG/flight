@@ -1427,27 +1427,7 @@ void WriteData(struct NiosStruct* addr, unsigned int data, int flush_flag)
 
 void UpdateBBCFrame(unsigned short *RxFrame)
 {
-  static struct NiosStruct* upbbcIndexAddr;
-  static struct NiosStruct* upbbcDtAddr;
-  struct timeval tv;
-  struct timezone tz;
-  static double oldtime = 0;
-  double time;
-  static int firsttime = 1;
-
   static int index = 0;
-
-  if (firsttime) {
-    firsttime = 0;
-    upbbcIndexAddr = GetNiosAddr("upbbc_index");
-    upbbcDtAddr = GetNiosAddr("upbbc_dt");
-  }
-
-  gettimeofday(&tv, &tz);
-  time = (double)tv.tv_sec + (double)tv.tv_usec/1.0e6;
-  WriteData(upbbcIndexAddr, index, NIOS_QUEUE);
-  WriteData(upbbcDtAddr, (time-oldtime)*1.0e4, NIOS_FLUSH);
-  oldtime = time;
 
   /*** do Controls ***/
 #ifndef BOLOTEST
