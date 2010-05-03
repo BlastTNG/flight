@@ -749,9 +749,9 @@ struct ChannelStruct SlowChannels[] = {
   {"state_chrgctrl",   'w',  LOOP8,  12,  1.0,     0.0,  'u',  U_NONE},   
   
   /* filtered LVDTs */
-  {"lvdt_63",  'r',  LOOP8, 13,   1.0,     0.0,   'u', U_NONE},
-  {"lvdt_64",  'r',  LOOP8, 14,   1.0,     0.0,   'u', U_NONE},
-  {"lvdt_65",  'r',  LOOP8, 15,   1.0,     0.0,   'u', U_NONE},
+  {"lvdt_65",  'w',  LOOP8, 13,   LVDT65_ADC_TO_ENC,     LVDT65_ZERO,   'u', U_NONE},
+  {"lvdt_63",  'w',  LOOP8, 14,   LVDT63_ADC_TO_ENC,     LVDT63_ZERO,   'u', U_NONE},
+  {"lvdt_64",  'w',  LOOP8, 15,   LVDT64_ADC_TO_ENC,     LVDT64_ZERO,   'u', U_NONE},
 
   /* LOOP8 16-63 are unused */
 
