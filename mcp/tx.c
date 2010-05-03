@@ -1457,7 +1457,6 @@ void UpdateBBCFrame(unsigned short *RxFrame)
   StoreData(index);
   ControlGyroHeat(RxFrame);
   WriteMot(index, RxFrame);
-  StoreActBus();
 #endif
 #ifdef USE_XY_THREAD
   StoreStageBus(index);
@@ -1471,6 +1470,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     if (!mcp_initial_controls)
       SyncADC();
     WriteAux();
+    StoreActBus();
     SecondaryMirror();
     PhaseControl();
     StoreHWPRBus();

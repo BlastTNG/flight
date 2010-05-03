@@ -747,8 +747,13 @@ struct ChannelStruct SlowChannels[] = {
   {"alarm_lo_chrgctrl",'w',  LOOP8,  10,  1.0,     0.0,  'u',  U_NONE},  // alarm low bitfield
   {"v_targ_chrgctrl",  'w',  LOOP8,  11,  1.0e-3,  0.0,  'u',  U_V_V},
   {"state_chrgctrl",   'w',  LOOP8,  12,  1.0,     0.0,  'u',  U_NONE},   
+  
+  /* filtered LVDTs */
+  {"lvdt_63",  'r',  LOOP8, 13,   1.0,     0.0,   'u', U_NONE},
+  {"lvdt_64",  'r',  LOOP8, 14,   1.0,     0.0,   'u', U_NONE},
+  {"lvdt_65",  'r',  LOOP8, 15,   1.0,     0.0,   'u', U_NONE},
 
-  /* LOOP8 13-63 are unused */
+  /* LOOP8 16-63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
@@ -833,9 +838,9 @@ struct ChannelStruct SlowChannels[] = {
   {"t_clin_pyr",   'r',  ACS2_A1,  5,           -0.01875,           614.4, 'u', U_NONE},
   {"t_clin_if",    'r',  ACS2_A1, 11,           -0.01875,           614.4, 'u', U_NONE},
   {"ifpm_hall",    'r',  ACS2_A1, 19,                1.0,             0.0, 'u', U_NONE},
-  {"lvdt_65",      'r',  ACS2_A1, 21,   LVDT65_ADC_TO_ENC,     LVDT65_ZERO,   'u', U_NONE},
-  {"lvdt_63",      'r',  ACS2_A1, 23,   LVDT63_ADC_TO_ENC,     LVDT63_ZERO,   'u', U_NONE},
-  {"lvdt_64",      'r',  ACS2_A1, 25,   LVDT64_ADC_TO_ENC,     LVDT64_ZERO,   'u', U_NONE},
+  {"lvdt_65_raw",  'r',  ACS2_A1, 21,   LVDT65_ADC_TO_ENC,     LVDT65_ZERO,   'u', U_NONE},
+  {"lvdt_63_raw",  'r',  ACS2_A1, 23,   LVDT63_ADC_TO_ENC,     LVDT63_ZERO,   'u', U_NONE},
+  {"lvdt_64_raw",  'r',  ACS2_A1, 25,   LVDT64_ADC_TO_ENC,     LVDT64_ZERO,   'u', U_NONE},
 
 #endif
 
@@ -951,9 +956,6 @@ struct ChannelStruct FastChannels[] = {
   {"enc_sigma",    'w', LOOP2, 48,              I2DEG,             0.0, 'u', U_NONE},
   {"chatter",      'w', LOOP7, 38,              1.0,               0.0, 'u', U_NONE},
   {"mcp_frame",    'w', LOOP2, 34,              1.0,               0.0, 'u', U_NONE},
-
-  {"upbbc_index",  'w', LOOP7, 50,              1.0,               0.0, 'u', U_NONE},
-  {"upbbc_dt",     'w', LOOP7, 51,           1.0e-4,               0.0, 'u', U_NONE},
 
   END_OF_CHANNELS
 };

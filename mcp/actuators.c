@@ -359,15 +359,32 @@ static inline struct NiosStruct* GetActNiosAddr(int i, const char* field)
   return GetNiosAddr(name_buffer);
 }
 
+#define LVDT_FILT_LEN 25   //5s @ 5Hz
+static int filterLVDT(int num, int data)
+{
+  static int lvdt_buf[3][LVDT_FILT_LEN] = {}; //init to 0
+  static int lvdt_sum[3] = {0, 0, 0};
+  static int ibuf = 0;
+
+  lvdt_sum[num] += (data - lvdt_buf[num][ibuf]);
+  lvdt_buf[num][ibuf] = data;
+  ibuf = (ibuf + 1) % LVDT_FILT_LEN;
+  return lvdt_sum[num]/LVDT_FILT_LEN;
+}
+
 void StoreActBus(void)
 {
   int j;
   static int firsttime = 1;
   int actbus_reset = 1;   //1 means actbus is on
 
-  static struct BiPhaseStruct* lvdt65Addr;    //used to be 10
-  static struct BiPhaseStruct* lvdt63Addr;    //used to be 11
-  static struct BiPhaseStruct* lvdt64Addr;    //used to be 13
+  static struct BiPhaseStruct* lvdt63RawAddr;    //used to be 11
+  static struct BiPhaseStruct* lvdt64RawAddr;    //used to be 13
+  static struct BiPhaseStruct* lvdt65RawAddr;    //used to be 10
+
+  static struct NiosStruct* lvdt63Addr;
+  static struct NiosStruct* lvdt64Addr;
+  static struct NiosStruct* lvdt65Addr;
 
   static struct NiosStruct* actbusResetAddr;
   static struct NiosStruct* lockPosAddr;
@@ -413,9 +430,13 @@ void StoreActBus(void)
   if (firsttime) {
     firsttime = 0;
 
-    lvdt63Addr = GetBiPhaseAddr("lvdt_63");
-    lvdt64Addr = GetBiPhaseAddr("lvdt_64");
-    lvdt65Addr = GetBiPhaseAddr("lvdt_65");
+    lvdt63RawAddr = GetBiPhaseAddr("lvdt_63_raw");
+    lvdt64RawAddr = GetBiPhaseAddr("lvdt_64_raw");
+    lvdt65RawAddr = GetBiPhaseAddr("lvdt_65_raw");
+
+    lvdt63Addr = GetNiosAddr("lvdt_63");
+    lvdt64Addr = GetNiosAddr("lvdt_64");
+    lvdt65Addr = GetNiosAddr("lvdt_65");
 
     actbusResetAddr = GetNiosAddr("actbus_reset");
     lokmotPinAddr = GetNiosAddr("lokmot_pin");
@@ -461,13 +482,16 @@ void StoreActBus(void)
     lockHoldIAddr = GetNiosAddr("lock_hold_i");
   }
 
-  //old naming: lvdt[0] = lvdt_10, lvdt[1] = lvdt_11, lvdt[2] = lvdt_13;
-  lvdt[0] = slow_data[lvdt63Addr->index][lvdt63Addr->channel] *
-    LVDT63_ADC_TO_ENC + LVDT63_ZERO;
-  lvdt[1] = slow_data[lvdt64Addr->index][lvdt64Addr->channel] *
-    LVDT64_ADC_TO_ENC + LVDT64_ZERO;
-  lvdt[2] = slow_data[lvdt65Addr->index][lvdt65Addr->channel] *
-    LVDT65_ADC_TO_ENC + LVDT65_ZERO;
+  lvdt[0]=filterLVDT(0,slow_data[lvdt63RawAddr->index][lvdt63RawAddr->channel]
+      * LVDT63_ADC_TO_ENC + LVDT63_ZERO);
+  lvdt[1]=filterLVDT(1,slow_data[lvdt64RawAddr->index][lvdt64RawAddr->channel]
+      * LVDT64_ADC_TO_ENC + LVDT64_ZERO);
+  lvdt[2]=filterLVDT(2,slow_data[lvdt65RawAddr->index][lvdt65RawAddr->channel]
+      * LVDT65_ADC_TO_ENC + LVDT65_ZERO);
+
+  WriteData(lvdt63Addr, lvdt[0], NIOS_QUEUE);
+  WriteData(lvdt64Addr, lvdt[1], NIOS_QUEUE);
+  WriteData(lvdt65Addr, lvdt[2], NIOS_QUEUE);
 
   if (CommandData.actbus.off) {
     if (CommandData.actbus.off > 0) CommandData.actbus.off--;

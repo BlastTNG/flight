@@ -68,12 +68,21 @@ extern "C" {
 #define ACTENC_OFFSET 1000000 /* this number should be arbitrarily larger than
                                  the maximum throw */
 //TODO LVDTs have not been calibrated, these numbers are old
+#if 0  //temporarily make calibrations naive
 #define LVDT63_ADC_TO_ENC 0.4568 /* adc counts to encoder counts */
 #define LVDT64_ADC_TO_ENC 0.4576 /* adc counts to encoder counts */
 #define LVDT65_ADC_TO_ENC 0.4556 /* adc counts to encoder counts */
 #define LVDT63_ZERO  -4842  /* in encoder counts */
 #define LVDT64_ZERO  -4064  /* in encoder counts */
 #define LVDT65_ZERO  -4659  /* in encoder counts */
+#else
+#define LVDT63_ADC_TO_ENC 1.0 /* adc counts to encoder counts */
+#define LVDT64_ADC_TO_ENC 1.0 /* adc counts to encoder counts */
+#define LVDT65_ADC_TO_ENC 1.0 /* adc counts to encoder counts */
+#define LVDT63_ZERO  0  /* in encoder counts */
+#define LVDT64_ZERO  0  /* in encoder counts */
+#define LVDT65_ZERO  0  /* in encoder counts */
+#endif
 
 #define FIELD_LEN 20
 #define UNITS_LEN 48
