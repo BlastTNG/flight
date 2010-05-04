@@ -753,7 +753,9 @@ struct ChannelStruct SlowChannels[] = {
   {"lvdt_63",  'w',  LOOP8, 14,   LVDT63_ADC_TO_ENC,     LVDT63_ZERO,   'u', U_NONE},
   {"lvdt_64",  'w',  LOOP8, 15,   LVDT64_ADC_TO_ENC,     LVDT64_ZERO,   'u', U_NONE},
 
-  /* LOOP8 16-63 are unused */
+  {"frict_off_piv",'w', LOOP8,  16,      2.0/65535.0,              0.0,   'u', U_NONE},
+
+  /* LOOP8 17-63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

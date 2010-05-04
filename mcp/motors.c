@@ -282,7 +282,7 @@ static double GetVAz(void)
 /*       Proportional to the reaction wheel speed error                 */
 /*                                                                      */
 /************************************************************************/
-static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_err_piv, unsigned int disabled)
+static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_err_piv, double frict_off_piv, unsigned int disabled)
 {
   static struct NiosStruct* pRWTermPivAddr;
   static struct NiosStruct* pErrTermPivAddr;
@@ -304,9 +304,16 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   v_az_req = ((double) v_az_req_gy) * GY16_TO_DPS/10.0; // Convert to dps 
 
   i_point = GETREADINDEX(point_index);
-  p_rw_term = (-1.0)*(double)g_rw_piv*(ACSData.vel_raw_rw-CommandData.pivot_gain.SP);
+  p_rw_term = (-1.0)*((double)g_rw_piv/10.0)*(ACSData.vel_raw_rw-CommandData.pivot_gain.SP);
   p_err_term = (double)g_err_piv*(v_az_req-PointingData[point_index].v_az);
   I_req = p_rw_term+p_err_term;
+
+  // Apply an offset current to overcome static friction.
+  if (I_req > 0.0) {
+    I_req+=frict_off_piv;
+  } else if (I_req < 0.0) {
+    I_req-=frict_off_piv;
+  }
 
   // Some debugging print statements.
   //  if (i%100==1) bprintf(info,"GetIPivot: v_az_req = %f, v_az = %f, p_rw_term = %f, p_err_term = %f, I_req = %f",v_az_req,PointingData[point_index].v_az,p_rw_term,p_err_term,I_req);
@@ -372,7 +379,7 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   i++;
 
   WriteData(pRWTermPivAddr,p_rw_term,NIOS_QUEUE);
-  WriteData(pRWTermPivAddr,p_err_term,NIOS_QUEUE);
+  WriteData(pErrTermPivAddr,p_err_term,NIOS_QUEUE);
   return I_req_dac;
 }
 
@@ -395,6 +402,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   static struct NiosStruct* gPVPivAddr;
   static struct NiosStruct* gPEPivAddr;
   static struct NiosStruct* setRWAddr;
+  static struct NiosStruct* frictOffPivAddr;
   static struct NiosStruct* dacPivAddr;
   static struct NiosStruct* velCalcPivAddr;
  
@@ -407,7 +415,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   unsigned int usin_el;
 
   int v_elev, v_az, i_piv, elGainP, elGainI;
-  int azGainP, azGainI, pivGainRW, pivGainErr;
+  int azGainP, azGainI, pivGainRW, pivGainErr,pivFrictOff;
   int i_point;
 
   /******** Obtain correct indexes the first time here ***********/
@@ -426,6 +434,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     gPVPivAddr = GetNiosAddr("g_pv_piv");
     gPEPivAddr = GetNiosAddr("g_pe_piv");
     setRWAddr = GetNiosAddr("set_rw");
+    frictOffPivAddr = GetNiosAddr("frict_off_piv");
     velCalcPivAddr = GetNiosAddr("vel_calc_piv");
 
     dacAmplAddr[0] = GetNiosAddr("v_pump_bal");    // is now ifpm_ampl
@@ -500,13 +509,15 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     azGainI = 0;
     pivGainRW = 0;
     pivGainErr = 0;
-    i_piv=GetIPivot(0,pivGainRW,pivGainErr,1);
+    pivFrictOff = 0.0;
+    i_piv=GetIPivot(0,pivGainRW,pivGainErr,pivFrictOff,1);
   } else {
     azGainP = CommandData.azi_gain.P;
     azGainI = CommandData.azi_gain.I;
     pivGainRW = CommandData.pivot_gain.PV;
     pivGainErr = CommandData.pivot_gain.PE;
-    i_piv=GetIPivot(v_az,pivGainRW,pivGainErr,0);
+    pivFrictOff = CommandData.pivot_gain.F;
+    i_piv=GetIPivot(v_az,pivGainRW,pivGainErr,pivFrictOff,0);
   }
   /* requested pivot current*/
   WriteData(dacPivAddr, i_piv*2, NIOS_QUEUE);
@@ -520,6 +531,8 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   WriteData(gPEPivAddr, pivGainErr, NIOS_QUEUE);
   /* setpoint for reaction wheel */
   WriteData(setRWAddr, CommandData.pivot_gain.SP*32768.0/200.0, NIOS_QUEUE);
+  /* Pivot current offset to compensate for static friction. */
+  WriteData(frictOffPivAddr, pivFrictOff, NIOS_QUEUE);
   /* Pivot velocity */
   WriteData(velCalcPivAddr, (calcVPiv()/20.0*32768.0), NIOS_QUEUE);
 

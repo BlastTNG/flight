@@ -62,6 +62,7 @@ struct PivGainStruct {
   unsigned short int PV; // prop to RW velocity
   unsigned short int PE; // prop to velocity error
   double SP; // RW velocity Set Point 
+  double F; // Current offset to overcome static friction. 
 };
 #define LS_OPEN        0x0001
 #define LS_CLOSED      0x0002

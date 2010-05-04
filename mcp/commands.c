@@ -1260,6 +1260,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case pivot_gain:  /* pivot gains */
       CommandData.pivot_gain.SP = rvalues[0];
+      CommandData.pivot_gain.F = rvalues[3];
       CommandData.pivot_gain.PE = ivalues[1];
       CommandData.pivot_gain.PV = ivalues[2];
       break;
@@ -2398,10 +2399,6 @@ void InitCommandData()
   /* don't use the fast gy offset calculator */
   CommandData.fast_offset_gy = 0;
 
-  // Motors are disabled on start-up of mcp
-  // TODO-lmf: not sure if we want this for flight...
-  CommandData.disable_az = 1; 
-  CommandData.disable_el = 1;
 
   CommandData.reset_rw = 0;
   CommandData.reset_piv = 0;
@@ -2451,7 +2448,12 @@ void InitCommandData()
   CommandData.azi_gain.I = 0;
 
   CommandData.pivot_gain.SP = 50; // dps
-  CommandData.pivot_gain.PV = 100;
+  CommandData.pivot_gain.PV = 500;
+  CommandData.pivot_gain.PE = 100;
+  CommandData.pivot_gain.F = 0;
+
+  CommandData.disable_az = 1; 
+  CommandData.disable_el = 1;
 
   CommandData.verbose_rw = 0;
   CommandData.verbose_el = 0;
