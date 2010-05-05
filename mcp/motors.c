@@ -40,6 +40,7 @@
 #define MAX_EL 59
 
 #define VPIV_FILTER_LEN 40
+#define FPIV_FILTER_LEN 200
 
 void nameThread(const char*);	/* mcp.c */
 
@@ -123,8 +124,8 @@ static double calcVPiv(void)
   if (firsttime) {
     firsttime = 0;
     // Initialize the buffer.  Assume all zeros to begin
-    for(i=0;i>(VPIV_FILTER_LEN-1);i++) buf_vPiv[i]=0.0;
-    for(i=0;i>(VPIV_FILTER_LEN-1);i++) buf_t[i]=0.0;
+    for(i=0;i<(VPIV_FILTER_LEN-1);i++) buf_vPiv[i]=0.0;
+    for(i=0;i<(VPIV_FILTER_LEN-1);i++) buf_t[i]=0.0;
   }
   a+=(ACSData.res_raw_piv-buf_vPiv[ib_last]);
   //  dt=((double)(gettimeofday-buf_t[ib_last]));
@@ -288,19 +289,27 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
 {
   static struct NiosStruct* pRWTermPivAddr;
   static struct NiosStruct* pErrTermPivAddr;
+  static struct NiosStruct* frictTermPivAddr;
+  static double buf_frictPiv[FPIV_FILTER_LEN]; // Buffer for Piv friction term boxcar filter.
+  static double a=0.0; 
+  static unsigned int ib_last=0;
   double I_req = 0.0;
   int I_req_dac= 0;
   int i_point;
-  double v_az_req;
+  double v_az_req,i_frict,i_frict_filt;
   double p_rw_term, p_err_term;
   int p_rw_term_dac, p_err_term_dac;
-
+ 
   static int i=0;
   static unsigned int firsttime = 1;
 
   if(firsttime) {
     pRWTermPivAddr = GetNiosAddr("p_rw_term_piv");
     pErrTermPivAddr = GetNiosAddr("p_err_term_piv");
+    frictTermPivAddr = GetNiosAddr("frict_term_piv");
+    // Initialize the buffer.  Assume all zeros to begin
+    for(i=0;i<(FPIV_FILTER_LEN-1);i++) buf_frictPiv[i]=0.0;
+    firsttime = 0;
   }
 
   v_az_req = ((double) v_az_req_gy) * GY16_TO_DPS/10.0; // Convert to dps 
@@ -319,6 +328,24 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
     I_req=0.0;
   }
 
+  // Calculate static friction offset term
+  if(fabs(I_req)<0.05) {
+    i_frict=0.0;
+  } else {
+    if(I_req>0.0) {
+      i_frict=frict_off_piv*PIV_I_TO_DAC;
+    } else {
+      i_frict=(-1.0)*frict_off_piv*PIV_I_TO_DAC;
+    }
+  }
+
+  a+=(frict_off_piv-buf_frictPiv[ib_last]);
+  buf_frictPiv[ib_last]=frict_off_piv;
+  //  dummy=PointingData[i_point].t
+    //  buf_t[ib_last]=PointingData[i_point].t;
+  ib_last=(ib_last+FPIV_FILTER_LEN+1)%FPIV_FILTER_LEN;
+  i_frict_filt=a/((double) FPIV_FILTER_LEN);
+
   /* Convert to DAC Units*/
   if(fabs(I_req)<0.05) {
     I_req_dac=16384+PIV_DAC_OFF;
@@ -329,6 +356,8 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
       I_req_dac=I_req+16384+PIV_DAC_OFF-PIV_DEAD_BAND-frict_off_piv*PIV_I_TO_DAC;
     }
   }
+
+  I_req_dac += i_frict_filt;
 
   if(fabs(p_rw_term)<0.05) {
     p_rw_term_dac=16384+PIV_DAC_OFF;
@@ -376,6 +405,7 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
 
   WriteData(pRWTermPivAddr,p_rw_term,NIOS_QUEUE);
   WriteData(pErrTermPivAddr,p_err_term,NIOS_QUEUE);
+  WriteData(frictTermPivAddr,i_frict_filt,NIOS_QUEUE);
   return I_req_dac;
 }
 
