@@ -84,6 +84,8 @@ static void* pivotComm(void *arg);
 
 extern short int InCharge; /* tx.c */
 
+extern int StartupVeto; /* mcp.c */
+
 /* opens communications with motor controllers */
 void openMotors()
 {
@@ -308,12 +310,6 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   p_err_term = (double)g_err_piv*(v_az_req-PointingData[point_index].v_az);
   I_req = p_rw_term+p_err_term;
 
-  // Apply an offset current to overcome static friction.
-  if (I_req > 0.0) {
-    I_req+=frict_off_piv;
-  } else if (I_req < 0.0) {
-    I_req-=frict_off_piv;
-  }
 
   // Some debugging print statements.
   //  if (i%100==1) bprintf(info,"GetIPivot: v_az_req = %f, v_az = %f, p_rw_term = %f, p_err_term = %f, I_req = %f",v_az_req,PointingData[point_index].v_az,p_rw_term,p_err_term,I_req);
@@ -324,17 +320,17 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   }
 
   /* Convert to DAC Units*/
-  if(fabs(I_req)<0.02) {
+  if(fabs(I_req)<0.05) {
     I_req_dac=16384+PIV_DAC_OFF;
   } else {
     if(I_req>0.0) {
-      I_req_dac=I_req+16384+PIV_DAC_OFF+PIV_DEAD_BAND;
+      I_req_dac=I_req+16384+PIV_DAC_OFF+PIV_DEAD_BAND+frict_off_piv*PIV_I_TO_DAC;
     } else {
-      I_req_dac=I_req+16384+PIV_DAC_OFF-PIV_DEAD_BAND;
+      I_req_dac=I_req+16384+PIV_DAC_OFF-PIV_DEAD_BAND-frict_off_piv*PIV_I_TO_DAC;
     }
   }
 
-  if(fabs(p_rw_term)<0.02) {
+  if(fabs(p_rw_term)<0.05) {
     p_rw_term_dac=16384+PIV_DAC_OFF;
   } else {
     if(p_rw_term>0.0) {
@@ -344,7 +340,7 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
     }
   }
 
-  if(fabs(p_err_term)<0.02) {
+  if(fabs(p_err_term)<0.05) {
     p_err_term_dac=16384+PIV_DAC_OFF;
   } else {
     if(p_err_term>0.0) {
@@ -415,7 +411,8 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   unsigned int usin_el;
 
   int v_elev, v_az, i_piv, elGainP, elGainI;
-  int azGainP, azGainI, pivGainRW, pivGainErr,pivFrictOff;
+  int azGainP, azGainI, pivGainRW, pivGainErr;
+  double pivFrictOff;
   int i_point;
 
   /******** Obtain correct indexes the first time here ***********/
@@ -519,6 +516,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     pivFrictOff = CommandData.pivot_gain.F;
     i_piv=GetIPivot(v_az,pivGainRW,pivGainErr,pivFrictOff,0);
   }
+  //  bprintf(info,"Motors: pivFrictOff= %f, CommandData.pivot_gain.F = %f",pivFrictOff,CommandData.pivot_gain.F);
   /* requested pivot current*/
   WriteData(dacPivAddr, i_piv*2, NIOS_QUEUE);
   /* p term for az motor */
@@ -532,7 +530,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   /* setpoint for reaction wheel */
   WriteData(setRWAddr, CommandData.pivot_gain.SP*32768.0/200.0, NIOS_QUEUE);
   /* Pivot current offset to compensate for static friction. */
-  WriteData(frictOffPivAddr, pivFrictOff, NIOS_QUEUE);
+  WriteData(frictOffPivAddr, pivFrictOff/2.0*65535, NIOS_QUEUE);
   /* Pivot velocity */
   WriteData(velCalcPivAddr, (calcVPiv()/20.0*32768.0), NIOS_QUEUE);
 
@@ -1532,6 +1530,11 @@ void* reactComm(void* arg)
     RWMotorData[rw_motor_index].drive_info=makeMotorField(&reactinfo); // Make bitfield of controller info structure.
     RWMotorData[rw_motor_index].err_count=(reactinfo.err_count > 65535) ? 65535: reactinfo.err_count;
 
+    // If we are still in the start up veto make sure the drive is disabled.
+    if(StartupVeto > 0) {
+      CommandData.disable_az=1;
+    }
+
     if(reactinfo.closing==1){
       rw_motor_index=INC_INDEX(rw_motor_index);
       close_copley(&reactinfo);
@@ -1710,6 +1713,11 @@ void* elevComm(void* arg)
 
     ElevMotorData[elev_motor_index].drive_info=makeMotorField(&elevinfo); // Make bitfield of controller info structure.
     ElevMotorData[elev_motor_index].err_count=(elevinfo.err_count > 65535) ? 65535: elevinfo.err_count;
+
+    // If we are still in the start up veto make sure the drive is disabled.
+    if(StartupVeto > 0) {
+      CommandData.disable_el=1;
+    }
 
     if(elevinfo.closing==1){
       elev_motor_index=INC_INDEX(elev_motor_index);
@@ -1890,6 +1898,10 @@ void* pivotComm(void* arg)
 
     PivotMotorData[pivot_motor_index].drive_info=makeMotorField(&pivotinfo); // Make bitfield of controller info structure.
     PivotMotorData[pivot_motor_index].err_count=(pivotinfo.err_count > 65535) ? 65535: pivotinfo.err_count;
+    // If we are still in the start up veto make sure the drive is disabled.
+    if(StartupVeto > 0) {
+      CommandData.disable_az=1;
+    }
 
     if(pivotinfo.closing==1){
       pivot_motor_index=INC_INDEX(pivot_motor_index);

@@ -1260,9 +1260,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case pivot_gain:  /* pivot gains */
       CommandData.pivot_gain.SP = rvalues[0];
-      CommandData.pivot_gain.F = rvalues[3];
       CommandData.pivot_gain.PE = ivalues[1];
       CommandData.pivot_gain.PV = ivalues[2];
+      CommandData.pivot_gain.F = rvalues[3];
       break;
 
       /***************************************/
