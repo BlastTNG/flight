@@ -40,7 +40,7 @@
 #define MAX_EL 59
 
 #define VPIV_FILTER_LEN 40
-#define FPIV_FILTER_LEN 200
+#define FPIV_FILTER_LEN 1000
 
 void nameThread(const char*);	/* mcp.c */
 
@@ -290,6 +290,7 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   static struct NiosStruct* pRWTermPivAddr;
   static struct NiosStruct* pErrTermPivAddr;
   static struct NiosStruct* frictTermPivAddr;
+  static struct NiosStruct* frictTermUnfiltPivAddr; // For debugging only.  Remove later!
   static double buf_frictPiv[FPIV_FILTER_LEN]; // Buffer for Piv friction term boxcar filter.
   static double a=0.0; 
   static unsigned int ib_last=0;
@@ -307,6 +308,7 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
     pRWTermPivAddr = GetNiosAddr("p_rw_term_piv");
     pErrTermPivAddr = GetNiosAddr("p_err_term_piv");
     frictTermPivAddr = GetNiosAddr("frict_term_piv");
+    frictTermUnfiltPivAddr = GetNiosAddr("frict_term_uf_piv");
     // Initialize the buffer.  Assume all zeros to begin
     for(i=0;i<(FPIV_FILTER_LEN-1);i++) buf_frictPiv[i]=0.0;
     firsttime = 0;
@@ -333,19 +335,18 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
     i_frict=0.0;
   } else {
     if(I_req>0.0) {
-      i_frict=frict_off_piv*PIV_I_TO_DAC;
+      i_frict=frict_off_piv;
     } else {
-      i_frict=(-1.0)*frict_off_piv*PIV_I_TO_DAC;
+      i_frict=(-1.0)*frict_off_piv;
     }
   }
 
-  a+=(frict_off_piv-buf_frictPiv[ib_last]);
-  buf_frictPiv[ib_last]=frict_off_piv;
-  //  dummy=PointingData[i_point].t
-    //  buf_t[ib_last]=PointingData[i_point].t;
+  a+=(i_frict-buf_frictPiv[ib_last]);
+  buf_frictPiv[ib_last]=i_frict;
   ib_last=(ib_last+FPIV_FILTER_LEN+1)%FPIV_FILTER_LEN;
   i_frict_filt=a/((double) FPIV_FILTER_LEN);
 
+  //  if(i%100==1) bprintf(info,"Motors: a=%f,ib_last=%i,i_frict=%f,i_frict_filt=%f",a,ib_last,i_frict,i_frict_filt);
   /* Convert to DAC Units*/
   if(fabs(I_req)<0.05) {
     I_req_dac=16384+PIV_DAC_OFF;
@@ -357,7 +358,7 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
     }
   }
 
-  I_req_dac += i_frict_filt;
+  I_req_dac += i_frict_filt*PIV_I_TO_DAC;
 
   if(fabs(p_rw_term)<0.05) {
     p_rw_term_dac=16384+PIV_DAC_OFF;
@@ -405,7 +406,8 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
 
   WriteData(pRWTermPivAddr,p_rw_term,NIOS_QUEUE);
   WriteData(pErrTermPivAddr,p_err_term,NIOS_QUEUE);
-  WriteData(frictTermPivAddr,i_frict_filt,NIOS_QUEUE);
+  WriteData(frictTermPivAddr,i_frict_filt*32767.0/2.0,NIOS_QUEUE);
+  WriteData(frictTermPivAddr,i_frict*32767.0/2.0,NIOS_QUEUE);
   return I_req_dac;
 }
 
