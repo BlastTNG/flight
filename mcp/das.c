@@ -41,7 +41,6 @@
 #define HEAT_HWPR_POS        0x80
 
 /* Valve control bits (BIAS_D G3) */
-//TODO update valve bit defines
 #define VALVE_LHe_OFF     0x01
 #define VALVE_L_OPEN      0x02
 #define VALVE_L_CLOSE     0x04
@@ -431,9 +430,9 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
   return;
 }
 
-/***********************************************************************/
-/* CryoControl: Control heaters and calibrator (a fast control)        */
-/***********************************************************************/
+/*************************************************************************/
+/* CryoControl: Control valves, heaters, and calibrator (a fast control) */
+/*************************************************************************/
 void CryoControl (int index)
 {
   static struct NiosStruct* cryostateAddr;

@@ -747,11 +747,11 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.Cryo.BDAHeat = 0;
       break;
     case pot_valve_open:
-      CommandData.Cryo.potvalve_open = 40;
+      CommandData.Cryo.potvalve_open = 100;
       CommandData.Cryo.potvalve_close = 0;
       break;
     case pot_valve_close:
-      CommandData.Cryo.potvalve_close = 40;
+      CommandData.Cryo.potvalve_close = 100;
       CommandData.Cryo.potvalve_open = 0;
       break;
     case pot_valve_on:
@@ -761,11 +761,11 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.Cryo.potvalve_on = 0;
       break;
     case l_valve_open:
-      CommandData.Cryo.lvalve_open = 40;
+      CommandData.Cryo.lvalve_open = 100;
       CommandData.Cryo.lvalve_close = 0;
       break;
     case l_valve_close:
-      CommandData.Cryo.lvalve_close = 40;
+      CommandData.Cryo.lvalve_close = 100;
       CommandData.Cryo.lvalve_open = 0;
       break;
     case he_valve_on:
