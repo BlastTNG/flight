@@ -295,7 +295,8 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   static double a=0.0; 
   static unsigned int ib_last=0;
   double I_req = 0.0;
-  int I_req_dac= 0;
+  int I_req_dac = 0;
+  int I_req_dac_init = 0;
   int i_point;
   double v_az_req,i_frict,i_frict_filt;
   double p_rw_term, p_err_term;
@@ -331,7 +332,7 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   }
 
   // Calculate static friction offset term
-  if(fabs(I_req)<0.05) {
+  if(fabs(I_req)<100) {
     i_frict=0.0;
   } else {
     if(I_req>0.0) {
@@ -341,26 +342,28 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
     }
   }
 
+  /* Convert to DAC Units*/
+
+  if(fabs(I_req)<100) {
+    I_req_dac=16384+PIV_DAC_OFF;
+  } else {
+    if(I_req>0.0) {
+      I_req_dac=I_req+16384+PIV_DAC_OFF+PIV_DEAD_BAND;
+    } else {
+      I_req_dac=I_req+16384+PIV_DAC_OFF-PIV_DEAD_BAND;
+    }
+  }
+  I_req_dac_init=I_req_dac;
+
   a+=(i_frict-buf_frictPiv[ib_last]);
   buf_frictPiv[ib_last]=i_frict;
   ib_last=(ib_last+FPIV_FILTER_LEN+1)%FPIV_FILTER_LEN;
   i_frict_filt=a/((double) FPIV_FILTER_LEN);
 
-  //  if(i%100==1) bprintf(info,"Motors: a=%f,ib_last=%i,i_frict=%f,i_frict_filt=%f",a,ib_last,i_frict,i_frict_filt);
-  /* Convert to DAC Units*/
-  if(fabs(I_req)<0.05) {
-    I_req_dac=16384+PIV_DAC_OFF;
-  } else {
-    if(I_req>0.0) {
-      I_req_dac=I_req+16384+PIV_DAC_OFF+PIV_DEAD_BAND+frict_off_piv*PIV_I_TO_DAC;
-    } else {
-      I_req_dac=I_req+16384+PIV_DAC_OFF-PIV_DEAD_BAND-frict_off_piv*PIV_I_TO_DAC;
-    }
-  }
-
   I_req_dac += i_frict_filt*PIV_I_TO_DAC;
+  //  if(i%20==1) bprintf(info,"Motors: a=%f,ib_last=%i,i_frict=%f,i_frict_filt=%f,I_req=%f,I_req_dac_init=%i,I_req_dac=%i",a,ib_last,i_frict,i_frict_filt,I_req,I_req_dac_init,I_req_dac);
 
-  if(fabs(p_rw_term)<0.05) {
+  if(fabs(p_rw_term)<100) {
     p_rw_term_dac=16384+PIV_DAC_OFF;
   } else {
     if(p_rw_term>0.0) {
@@ -370,7 +373,7 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
     }
   }
 
-  if(fabs(p_err_term)<0.05) {
+  if(fabs(p_err_term)<100) {
     p_err_term_dac=16384+PIV_DAC_OFF;
   } else {
     if(p_err_term>0.0) {
@@ -407,7 +410,7 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   WriteData(pRWTermPivAddr,p_rw_term,NIOS_QUEUE);
   WriteData(pErrTermPivAddr,p_err_term,NIOS_QUEUE);
   WriteData(frictTermPivAddr,i_frict_filt*32767.0/2.0,NIOS_QUEUE);
-  WriteData(frictTermPivAddr,i_frict*32767.0/2.0,NIOS_QUEUE);
+  WriteData(frictTermUnfiltPivAddr,i_frict*32767.0/2.0,NIOS_QUEUE);
   return I_req_dac;
 }
 

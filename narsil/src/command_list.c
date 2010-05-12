@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.46 $";
+const char *command_list_serial = "$Revision: 4.47 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -486,13 +486,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(az_gyro_offset), "manually set az gyro offsets", GR_TRIM, 2,
     {
-      {"Gyro 2 offset (deg/s)", -0.5, 0.5, 'f', "GY2_OFFSET"},
-      {"Gyro 3 offset (deg/s)", -0.5, 0.5, 'f', "GY3_OFFSET"}
+      {"IF Roll Gyro offset (deg/s)", -0.5, 0.5, 'f', "GY2_OFFSET"},
+      {"IF Yaw Gyro offset (deg/s)", -0.5, 0.5, 'f', "GY3_OFFSET"}
     }
   },
   {COMMAND(el_gyro_offset), "manually set el gyro offset", GR_TRIM, 1,
     {
-      {"Gyro 1 offset (deg/s)", -0.5, 0.5, 'f', "GY1_OFFSET"},
+      {"IF Elev Gyro offset (deg/s)", -0.5, 0.5, 'f', "GY1_OFFSET"},
     }
   },
   {COMMAND(slew_veto), "set the length of the gyro offset slew veto", GR_TRIM,
