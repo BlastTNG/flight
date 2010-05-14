@@ -805,6 +805,9 @@ struct ChannelStruct SlowChannels[] = {
   {"t_array",      'r',  ACS1_T1, 21,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_acs",        'r',  ACS1_T1, 23,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_acs_dcdc",   'r',  ACS1_T1, 25,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_ext0",       'r',  ACS1_T1, 27,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_ext1",       'r',  ACS1_T1, 27,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_ext9",       'r',  ACS1_T1, 27,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_box_bal",    'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_pump_bal",   'r',  ACS1_T1, 35,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_ext2",       'r',  ACS1_T1, 37,         CAL16T(1.0, 0.0),         'u', U_T_C},
@@ -813,6 +816,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_ext5",       'r',  ACS1_T1, 43,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_ext6",       'r',  ACS1_T1, 45,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_ext7",       'r',  ACS1_T1, 47,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_ext8",       'r',  ACS1_T1, 49,         CAL16T(1.0, 0.0),         'u', U_T_C},
 
 /* ACS2 Digital I/O card */
   {"v_pump_bal",    'w',  ACS2_D,  0,       3.91/13107.0,          -9.775, 'u', U_NONE},
