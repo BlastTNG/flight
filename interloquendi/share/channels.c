@@ -1291,6 +1291,11 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
 	    DerivedChannels[i].units.source, DerivedChannels[i].units.units,
 	    DerivedChannels[i].units.source, DerivedChannels[i].units.quantity);
 	break;
+       case 'p': /* phase */
+         snprintf(line, 1024, "%-16s PHASE %-16s %i\n",
+            DerivedChannels[i].phase.field, DerivedChannels[i].phase.source,
+            DerivedChannels[i].phase.shift);
+         break;
     }
     if (write(fd, line, strlen(line)) < 0)
       berror(err, "Error writing to format file\n");

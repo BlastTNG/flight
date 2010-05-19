@@ -61,6 +61,12 @@ union DerivedUnion {
     char quantity[155];		/* the quantity -eg, "Temperature" */
     char units[155];		/* the Units -eg "^oC" */
   } units;
+  struct {
+    char type;                  /* should be 'p' for phase */
+    char field[FIELD_LEN];      /* Derived Channel Name */
+    char source[FIELD_LEN];     /* Source Channel Name */
+    int shift;                  /* Phase shift in frames */
+  } phase;
 };
 
 #define DERIVED_EOC_MARKER '!'
@@ -72,4 +78,5 @@ union DerivedUnion {
 #define BITFIELD(s, ...) {.bitfield = { 'b' , s , { __VA_ARGS__ }}}
 #define COMMENT(c) {.comment = { '#' , c }}
 #define UNITS(s,q,u) {.units = { 'u' , s , q , u}}
+#define PHASE(f,s,p) {.phase = { 'p', f, s, p }}
 #define END_OF_DERIVED_CHANNELS {.comment = { DERIVED_EOC_MARKER , "" }}
