@@ -315,9 +315,15 @@
     </EXTREMA>
     <EXTREMA name="riocheck">
       <XLO value="-1"/>
-      <LO value="10.5"/>
-      <HI value="11.5"/>
+      <LO value="2.5"/>
+      <HI value="3.5"/>
       <XHI value="1000"/>
+    </EXTREMA>
+    <EXTREMA name="vrwcheck">
+      <XLO value="-300.0"/>
+      <LO value="-170.0"/>
+      <HI value="170.0"/>
+      <XHI value="300.0"/>
     </EXTREMA>
     <CURFILE name="/data/etc/defile.lnk"/>
     <DECOMD host="widow" port="11411"/>
@@ -660,20 +666,29 @@
     <NUMBER caption="I Elev">
       <DATUM format="%5.0f" src="g_i_el" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="P Reac">
+    <NUMBER caption="P RW">
       <DATUM format="%5.0f" src="g_p_az" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="I Reac">
+    <NUMBER caption="I RW">
       <DATUM format="%5.0f" src="g_i_az" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="P Pivot">
+    <NUMBER caption="P RW Pivot">
       <DATUM format="%5.0f" src="g_pv_piv" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="Set Reac">
+    <NUMBER caption="P Err Pivot">
+      <DATUM format="%5.0f" src="g_pe_piv" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Set RW">
       <DATUM format="%+5.2f" src="SET_RW" extrema="unknown"/>
     </NUMBER>
+    <NUMBER caption="Frict Off Piv">
+      <DATUM format="%+5.3f" src="FRICT_OFF_PIV" extrema="unknown"/>
+    </NUMBER>
     <NUMBER caption="Reac DPS">
-      <DATUM format="%+5.2f" src="VEL_RAW_RW" extrema="unknown"/>
+      <DATUM format="%+5.2f" src="VEL_RAW_RW" extrema="vrwcheck"/>
+    </NUMBER>
+    <NUMBER caption="Piv Res">
+      <DATUM format="%+5.2f" src="RES_RAW_PIV" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Inner Frame Electronics" colour="#002222" row="0" col="6" rowspan="1">
@@ -1139,10 +1154,10 @@
       </DATUM>
     </MULTI> 
     <NUMBER caption="El Err">
-      <DATUM format="%b" src="DR_INFO_ERR_EL" extrema="errcheck"/>
+      <DATUM format="%5b" src="DR_INFO_ERR_EL" extrema="errcheck"/>
     </NUMBER>
     <NUMBER caption="El RIO">
-      <DATUM format="%.0f" src="DR_INFO_RIO_EL" extrema="riocheck"/>
+      <DATUM format="%3b" src="DR_INFO_RIO_EL" extrema="riocheck"/>
     </NUMBER>
     <MULTI caption="RW Enab">
       <DATUM src="DR_INFO_DISAB_RW">
@@ -1152,10 +1167,10 @@
       </DATUM>
     </MULTI> 
     <NUMBER caption="RW Err">
-      <DATUM format="%b" src="DR_INFO_ERR_RW" extrema="errcheck"/>
+      <DATUM format="%5b" src="DR_INFO_ERR_RW" extrema="errcheck"/>
     </NUMBER>
     <NUMBER caption="RW RIO">
-      <DATUM format="%.0f" src="DR_INFO_RIO_RW" extrema="riocheck"/>
+      <DATUM format="%3b" src="DR_INFO_RIO_RW" extrema="riocheck"/>
     </NUMBER>
     <MULTI caption="Pivot Enab">
       <DATUM src="DR_INFO_DISAB_PIV">
@@ -1165,10 +1180,10 @@
       </DATUM>
     </MULTI> 
     <NUMBER caption="Piv Err">
-      <DATUM format="%b" src="DR_INFO_ERR_PIV" extrema="errcheck"/>
+      <DATUM format="%5b" src="DR_INFO_ERR_PIV" extrema="errcheck"/>
     </NUMBER>
     <NUMBER caption="Piv RIO">
-      <DATUM format="%.0f" src="DR_INFO_RIO_PIV" extrema="riocheck"/>
+      <DATUM format="%3b" src="DR_INFO_RIO_PIV" extrema="riocheck"/>
     </NUMBER>
   </BOX>
   <BOX caption="ACS Power System" colour="#777700" row="0" col="7" rowspan="1">
