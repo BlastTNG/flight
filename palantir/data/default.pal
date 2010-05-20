@@ -1186,63 +1186,71 @@
       <DATUM format="%3b" src="DR_INFO_RIO_PIV" extrema="riocheck"/>
     </NUMBER>
   </BOX>
-  <BOX caption="ACS Power System" colour="#777700" row="0" col="7" rowspan="1">
-    <MULTI caption="APCU Auto">
-      <DATUM src="APCU_AUTO">
-        <WORD value="0" caption="Manual" textstyle="W_BIT"/>
-        <WORD value="1" caption="Auto" textstyle="OK_BIT"/>
+  <BOX caption="Charge Controller" colour="#777700" row="0" col="7" rowspan="1">
+    <MULTI caption="CC State">
+      <DATUM src="STATE_CHRGCTRL">
+        <WORD value="0" caption="Start" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Night Check" textstyle="W_BIT"/>
+        <WORD value="2" caption="Disconnect" textstyle="W_BIT"/>
+        <WORD value="3" caption="Night" textstyle="W_BIT"/>
+        <WORD value="4" caption="Fault" textstyle="W_BIT"/>
+        <WORD value="5" caption="MPPT" textstyle="W_BIT"/>
+        <WORD value="6" caption="Absorp" textstyle="OK_BIT"/>
+        <WORD value="7" caption="Float" textstyle="OK_BIT"/>
+        <WORD value="8" caption="Equalize" textstyle="W_BIT"/>
+        <WORD value="9" caption="Slave" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
-    <NUMBER caption="V ACS Trim">
-      <DATUM format="%.2f" src="APCU_TRIM" extrema="unknown"/>
+    <NUMBER caption="V Batt">
+      <DATUM format="%.2f" src="V_BATT_CHRGCTRL" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="V ACS Lid">
-      <DATUM format="%.2f" src="APCU_REG" extrema="unknown"/>
+    <NUMBER caption="V Arr">
+      <DATUM format="%.2f" src="V_ARR_CHRGCTRL" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="V ACS Battery">
-      <DATUM format="%.2f" src="V_BATT_ACS" extrema="vbat"/>
+    <NUMBER caption="I Batt">
+      <DATUM format="%.2f" src="I_BATT_CHRGCTRL" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="I ACS Gondola">
-      <DATUM format="%.2f" src="I_GOND_ACS" extrema="current"/>
+    <NUMBER caption="I Arr">
+      <DATUM format="%.2f" src="I_ARR_CHRGCTRL" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="I ACS Battery">
-      <DATUM format="%.2f" src="I_BATT_ACS" extrema="unknown"/>
+    <NUMBER caption="T HS CC">
+      <DATUM format="%.2f" src="T_HS_CHRGCTRL" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="I ACS Solar">
-      <DATUM format="%.2f" src="I_SOL_ACS" extrema="acssolcurrent"/>
+    <NUMBER caption="V TARGET">
+      <DATUM format="%.2f" src="T_HS_CHRGCTRL" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="T Solar Array">
+    <NUMBER caption="T Sol Arr">
       <DATUM format="%.2f" src="T_ARRAY" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T Battery 1">
+    <NUMBER caption="T Batt 1">
       <DATUM format="%.2f" src="T_BAT1" extrema="battemp"/>
     </NUMBER>
-    <NUMBER caption="T Battery 2">
+    <NUMBER caption="T Batt 2">
       <DATUM format="%.2f" src="T_BAT2" extrema="battemp"/>
     </NUMBER>
-    <NUMBER caption="T Battery 3">
+    <NUMBER caption="T Batt 3">
       <DATUM format="%.2f" src="T_BAT3" extrema="battemp"/>
     </NUMBER>
-    <NUMBER caption="T Battery 4">
+    <NUMBER caption="T Batt 4">
       <DATUM format="%.2f" src="T_BAT4" extrema="battemp"/>
     </NUMBER>
-    <NUMBER caption="V Solar ACS 1">
-      <DATUM format="%.2f" src="V_SOL_ACS1" extrema="vsolar"/>
+    <NUMBER caption="V Sol 1">
+      <DATUM format="%.2f" src="V_SOL1" extrema="vsolar"/>
     </NUMBER>
-    <NUMBER caption="V Solar ACS 2">
-      <DATUM format="%.2f" src="V_SOL_ACS2" extrema="vsolar"/>
+    <NUMBER caption="V Sol 2">
+      <DATUM format="%.2f" src="V_SOL2" extrema="vsolar"/>
     </NUMBER>
-    <NUMBER caption="V Solar ACS 3">
-      <DATUM format="%.2f" src="V_SOL_ACS3" extrema="vsolar"/>
+    <NUMBER caption="V Sol 3">
+      <DATUM format="%.2f" src="V_SOL3" extrema="vsolar"/>
     </NUMBER>
-    <NUMBER caption="V Solar ACS 4">
-      <DATUM format="%.2f" src="V_SOL_ACS4" extrema="vsolar"/>
+    <NUMBER caption="V Sol 4">
+      <DATUM format="%.2f" src="V_SOL4" extrema="vsolar"/>
     </NUMBER>
-    <NUMBER caption="V Solar ACS 5">
-      <DATUM format="%.2f" src="V_SOL_ACS5" extrema="vsolar"/>
+    <NUMBER caption="V Sol 5">
+      <DATUM format="%.2f" src="V_SOL5" extrema="vsolar"/>
     </NUMBER>
-    <NUMBER caption="V Solar ACS 6">
-      <DATUM format="%.2f" src="V_SOL_ACS6" extrema="vsolar"/>
+    <NUMBER caption="V Sol 6">
+      <DATUM format="%.2f" src="V_SOL6" extrema="vsolar"/>
     </NUMBER>
   </BOX>
   <BOX caption="Pressures/Cooling" colour="#777700" row="2" col="5">
