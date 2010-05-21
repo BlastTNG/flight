@@ -83,7 +83,7 @@ struct PivGainStruct {
 #define ACTBUS_FM_FOCUS  2
 #define ACTBUS_FM_OFFSET 3
 #define ACTBUS_FM_THERMO 4
-#define ACTBUS_FM_NOW    5
+#define ACTBUS_FM_NOW    5  //unused
 #define ACTBUS_FM_DELTA  6
 #define ACTBUS_FM_PANIC  7
 #define ACTBUS_FM_DELFOC 8
@@ -303,7 +303,6 @@ struct CommandDataStruct {
     int tc_mode;
     int tc_prefp;
     int tc_prefs;
-    int tc_filter;
     double tc_spread;
     int sf_offset;
     int sf_time;

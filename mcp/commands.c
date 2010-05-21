@@ -1336,7 +1336,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case thermo_gain:
       CommandData.actbus.tc_step = ivalues[2];
       CommandData.actbus.tc_wait = ivalues[3] * 300; /* convert min->5Hz */
-      CommandData.actbus.tc_filter = ivalues[4] * 5; /* convert sec->5Hz */
       CommandData.actbus.sf_time = CommandData.actbus.tc_wait - 5;
       RecalcOffset(rvalues[0], rvalues[1]);
       CommandData.actbus.g_primary = rvalues[0];
@@ -2520,7 +2519,6 @@ void InitCommandData()
   CommandData.actbus.tc_mode = TC_MODE_VETOED;
   CommandData.actbus.tc_step = 100; /* microns */
   CommandData.actbus.tc_wait = 3000; /* = 10 minutes in 5-Hz frames */
-  CommandData.actbus.tc_filter = 300; /* = 60 seconds in 5 Hz frames */
   CommandData.actbus.tc_spread = 5; /* centigrade degrees */
   CommandData.actbus.tc_prefp = 1;
   CommandData.actbus.tc_prefs = 1;
