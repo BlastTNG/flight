@@ -40,6 +40,10 @@
 #include "pointing_struct.h"
 #include "tx.h"
 
+void nameThread(const char*);		/* mcp.c */
+double LockPosition(double elevation);	/* commands.c */
+extern short int InCharge;		/* tx.c */
+
 /* actuator bus setup paramters */
 #define ACTBUS_CHATTER	EZ_CHAT_ACT
 #define ACT_BUS "/dev/ttySI15"
@@ -49,28 +53,28 @@ static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
   "Lock Motor"};
 static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3, EZ_WHO_S5};
 static struct ezbus bus;
-
 #define POLL_TIMEOUT 30000	    /* 5 minutes */
+
+/* Lock motor parameters and data */
 #define LOCK_MOTOR_DATA_TIMER 100   /* 1 second */
 #define DRIVE_TIMEOUT 3000	    /* 30 seconds */
 
-/* Lock motor thresholds */
 #define LOCK_MIN_POT 800
 #define LOCK_MAX_POT 3750
 #define LOCK_POT_RANGE 100
 
-void nameThread(const char*);		/* mcp.c */
-double LockPosition(double elevation);	/* commands.c */
-extern short int InCharge;		/* tx.c */
-
-
 static struct lock_struct {
-  int pos;
-  unsigned short adc[4];
+  int pos;		  //raw step count
+  unsigned short adc[4];  //ADC readout (including pot_
   unsigned int state;
 } lock_data = { .state = LS_DRIVE_UNK };
 
-static double lvdt[3];
+/* Secondary actuator data and parameters */
+static struct act_struct {
+  int pos;	//raw step count
+  int enc;	//encoder reading
+  double lvdt;	//lvdt-inferred position of this motor
+} act_data[3];
 
 static int actbus_flags = 0;
 
@@ -85,6 +89,16 @@ static int actbus_flags = 0;
 #define ACTBUS_FL_FAIL0    0x100
 #define ACTBUS_FL_FAIL1    0x200
 #define ACTBUS_FL_FAIL2    0x400
+
+/* Secondary focus crap */
+static double t_primary = -1, t_secondary = -1;
+static double focus = -1;	  /* set in ab thread, read in fc thread */
+static double correction = 0;     /* set in fc thread, read in ab thread */
+
+/* Thermal model numbers, from MD and MV */
+#define T_PRIMARY_FOCUS   258.15 /* = -15C */
+#define T_SECONDARY_FOCUS 243.15 /* = -30C */
+#define POSITION_FOCUS     11953 /* absolute counts */
 
 /************************************************************************/
 /*                                                                      */
@@ -104,14 +118,14 @@ void ActPotTrim(void)
 
 void RecalcOffset(double new_gp, double new_gs)
 {
-  /* TODO removed until actuators reimplemented
   if (t_primary < 0 || t_secondary < 0)
     return;
 
+  //TODO if new offset is to ensure correction doesn't change with gain change
+  //then it's missing a scaling factor 1.0/ACTENC_TO_UM
   CommandData.actbus.sf_offset = (new_gp - CommandData.actbus.g_primary) *
     (t_primary - T_PRIMARY_FOCUS) - (new_gs - CommandData.actbus.g_secondary) *
     (t_secondary - T_SECONDARY_FOCUS) + CommandData.actbus.sf_offset;
-  */
 }
 
 void CopyActuators(void)
@@ -346,9 +360,152 @@ static void DoLock(void)
 /*    Frame Logic: Write data to the frame, called from main thread     */
 /*                                                                      */
 /************************************************************************/
+static double CalibrateAD590(int counts)
+{
+  double t = M_16T * (counts + B_16T);
+
+  /* if t < -73C or t > 67C, assume AD590 is broken */
+  if (t < 170)
+    t = -1;
+  else if (t > 360)
+    t = -2;
+
+  return t;
+}
+
+#define N_FILT_TEMP 2	    //number of temperatures to filter
+#define TEMP_FILT_LEN 300   //60s @ 5Hz
+static int filterTemp(int num, int data)
+{
+  static int temp_buf[N_FILT_TEMP][TEMP_FILT_LEN] = {}; //init to 0
+  static int temp_sum[N_FILT_TEMP] = {};
+  static int ibuf = 0;
+
+  temp_sum[num] += (data - temp_buf[num][ibuf]);
+  temp_buf[num][ibuf] = data;
+  ibuf = (ibuf + 1) % TEMP_FILT_LEN;
+  return temp_sum[num]/TEMP_FILT_LEN;
+}
+
+/* decide on primary and secondary temperature, write focus-related fields */
 void SecondaryMirror(void)
 {
-  return;
+  static int firsttime = 1;
+
+  static struct NiosStruct* sfCorrectionAddr;
+  static struct NiosStruct* sfAgeAddr;
+  static struct NiosStruct* sfOffsetAddr;
+  static struct NiosStruct* tPrimeFidAddr;
+  static struct NiosStruct* tSecondFidAddr;
+
+  static struct BiPhaseStruct* tPrimary1Addr;
+  static struct BiPhaseStruct* tSecondary1Addr;
+  static struct BiPhaseStruct* tPrimary2Addr;
+  static struct BiPhaseStruct* tSecondary2Addr;
+  double t_primary1, t_secondary1;
+  double t_primary2, t_secondary2;
+
+  double correction_temp = 0;
+
+  if (firsttime) {
+    firsttime = 0;
+    tPrimary1Addr = GetBiPhaseAddr("t_primary_1");
+    tSecondary1Addr = GetBiPhaseAddr("t_secondary_1");
+    tPrimary2Addr = GetBiPhaseAddr("t_primary_2");
+    tSecondary2Addr = GetBiPhaseAddr("t_secondary_2");
+    sfCorrectionAddr = GetNiosAddr("sf_correction");
+    sfAgeAddr = GetNiosAddr("sf_age");
+    sfOffsetAddr = GetNiosAddr("sf_offset");
+    tPrimeFidAddr = GetNiosAddr("t_prime_fid");
+    tSecondFidAddr = GetNiosAddr("t_second_fid");
+  }
+
+#if 0 //TODO will need to change or remove this check for haven't heard from act
+  /* Do nothing if we haven't heard from the actuators */
+  if (focus < -ACTENC_OFFSET / 2)
+    return;
+#endif
+
+  t_primary1 = CalibrateAD590(
+      slow_data[tPrimary1Addr->index][tPrimary1Addr->channel]
+      ) + AD590_CALIB_PRIMARY_1;
+  t_primary2 = CalibrateAD590(
+      slow_data[tPrimary2Addr->index][tPrimary2Addr->channel]
+      ) + AD590_CALIB_PRIMARY_2;
+
+  t_secondary1 = CalibrateAD590(
+      slow_data[tSecondary1Addr->index][tSecondary1Addr->channel]
+      ) + AD590_CALIB_SECONDARY_1;
+  t_secondary2 = CalibrateAD590(
+      slow_data[tSecondary2Addr->index][tSecondary2Addr->channel]
+      ) + AD590_CALIB_SECONDARY_2;
+
+  if (t_primary1 < 0 || t_primary2 < 0)
+    t_primary = -1; /* autoveto */
+  else if (fabs(t_primary1 - t_primary2) < CommandData.actbus.tc_spread) {
+    if (t_primary1 >= 0 && t_primary2 >= 0)
+      t_primary = filterTemp(0, (t_primary1 + t_primary2)/2);
+    else if (t_primary1 >= 0)
+      t_primary = filterTemp(0, t_primary1);
+    else
+      t_primary = filterTemp(0, t_primary2);
+  } else {
+    if (t_primary1 >= 0 && CommandData.actbus.tc_prefp == 1)
+      t_primary = filterTemp(0, t_primary1);
+    else if (t_primary2 >= 0 && CommandData.actbus.tc_prefp == 2)
+      t_primary = filterTemp(0, t_primary2);
+    else
+      t_primary = -1; /* autoveto */
+  }
+
+  if (t_secondary1 < 0 || t_secondary2 < 0)
+    t_secondary = -1; /* autoveto */
+  else if (fabs(t_secondary1 - t_secondary2) < CommandData.actbus.tc_spread) {
+    if (t_secondary1 >= 0 && t_secondary2 >= 0)
+      t_secondary = filterTemp(1, (t_secondary1 + t_secondary2)/2);
+    else if (t_secondary1 >= 0)
+      t_secondary = filterTemp(1, t_secondary1);
+    else
+      t_secondary = filterTemp(1, t_secondary2);
+  } else {
+    if (t_secondary1 >= 0 && CommandData.actbus.tc_prefs == 1)
+      t_secondary = filterTemp(1, t_secondary1);
+    else if (t_secondary2 >= 0 && CommandData.actbus.tc_prefs == 2)
+      t_secondary = filterTemp(1, t_secondary2);
+    else
+      t_secondary = -1; /* autoveto */
+  }
+
+  if (CommandData.actbus.tc_mode != TC_MODE_VETOED &&
+      (t_primary < 0 || t_secondary < 0)) {
+    if (CommandData.actbus.tc_mode == TC_MODE_ENABLED)
+      bputs(info, "Thermal Compensation: Autoveto raised.");
+    CommandData.actbus.tc_mode = TC_MODE_AUTOVETO;
+  } else if (CommandData.actbus.tc_mode == TC_MODE_AUTOVETO) {
+    bputs(info, "Thermal Compensation: Autoveto lowered.");
+    CommandData.actbus.tc_mode = TC_MODE_ENABLED;
+  }
+
+  correction_temp = CommandData.actbus.g_primary * (t_primary - T_PRIMARY_FOCUS)
+    - CommandData.actbus.g_secondary * (t_secondary - T_SECONDARY_FOCUS);
+
+  /* convert to counts */
+  correction_temp /= ACTENC_TO_UM;
+
+  /* re-adjust */
+  correction_temp = correction_temp + focus - POSITION_FOCUS -
+    CommandData.actbus.sf_offset;
+
+  correction = correction_temp;  //slightly more thread safe
+
+  if (CommandData.actbus.sf_time < CommandData.actbus.tc_wait)
+    CommandData.actbus.sf_time++;
+
+  WriteData(tPrimeFidAddr, (t_primary - 273.15) * 500, NIOS_QUEUE);
+  WriteData(tSecondFidAddr, (t_secondary - 273.15) * 500, NIOS_QUEUE);
+  WriteData(sfCorrectionAddr, correction, NIOS_QUEUE);
+  WriteData(sfAgeAddr, CommandData.actbus.sf_time / 10., NIOS_QUEUE);
+  WriteData(sfOffsetAddr, CommandData.actbus.sf_offset, NIOS_FLUSH);
 }
 
 static char name_buffer[100];
@@ -377,15 +534,11 @@ void StoreActBus(void)
   int j;
   static int firsttime = 1;
   int actbus_reset = 1;   //1 means actbus is on
-  int lvdt_filtered[3];
+  int lvdt_filt[3];
 
   static struct BiPhaseStruct* lvdt63RawAddr;    //used to be 11
   static struct BiPhaseStruct* lvdt64RawAddr;    //used to be 13
   static struct BiPhaseStruct* lvdt65RawAddr;    //used to be 10
-
-  static struct NiosStruct* lvdt63Addr;
-  static struct NiosStruct* lvdt64Addr;
-  static struct NiosStruct* lvdt65Addr;
 
   static struct NiosStruct* actbusResetAddr;
   static struct NiosStruct* lockPosAddr;
@@ -411,6 +564,7 @@ void StoreActBus(void)
   static struct NiosStruct* actEncAddr[3];
   static struct NiosStruct* actDeadRecAddr[3];
   static struct NiosStruct* actLGoodAddr[3];
+  static struct NiosStruct* actLVDTAddr[3];
 
   static struct NiosStruct* lvdtSpreadAddr;
   static struct NiosStruct* lvdtLowAddr;
@@ -420,7 +574,6 @@ void StoreActBus(void)
   static struct NiosStruct* tcGSecAddr;
   static struct NiosStruct* tcStepAddr;
   static struct NiosStruct* tcWaitAddr;
-  static struct NiosStruct* tcFilterAddr;
   static struct NiosStruct* tcModeAddr;
   static struct NiosStruct* tcSpreadAddr;
   static struct NiosStruct* tcPrefTpAddr;
@@ -434,10 +587,6 @@ void StoreActBus(void)
     lvdt63RawAddr = GetBiPhaseAddr("lvdt_63_raw");
     lvdt64RawAddr = GetBiPhaseAddr("lvdt_64_raw");
     lvdt65RawAddr = GetBiPhaseAddr("lvdt_65_raw");
-
-    lvdt63Addr = GetNiosAddr("lvdt_63");
-    lvdt64Addr = GetNiosAddr("lvdt_64");
-    lvdt65Addr = GetNiosAddr("lvdt_65");
 
     actbusResetAddr = GetNiosAddr("actbus_reset");
     lokmotPinAddr = GetNiosAddr("lokmot_pin");
@@ -453,13 +602,13 @@ void StoreActBus(void)
       actEncAddr[j] = GetActNiosAddr(j, "enc");
       actLGoodAddr[j] = GetActNiosAddr(j, "l_good");
       actDeadRecAddr[j] = GetActNiosAddr(j, "dead_rec");
+      actLVDTAddr[j] = GetActNiosAddr(j, "lvdt");
     }
 
     tcGPrimAddr = GetNiosAddr("tc_g_prim");
     tcGSecAddr = GetNiosAddr("tc_g_sec");
     tcStepAddr = GetNiosAddr("tc_step");
     tcWaitAddr = GetNiosAddr("tc_wait");
-    tcFilterAddr = GetNiosAddr("tc_filter");
     tcModeAddr = GetNiosAddr("tc_mode");
     tcSpreadAddr = GetNiosAddr("tc_spread");
     tcPrefTpAddr = GetNiosAddr("tc_pref_tp");
@@ -483,19 +632,19 @@ void StoreActBus(void)
     lockHoldIAddr = GetNiosAddr("lock_hold_i");
   }
 
-  lvdt_filtered[0] = filterLVDT(0, 
+  //filter the LVDTs, scale into encoder units, rotate to motor positions
+  lvdt_filt[0] = filterLVDT(0, 
       slow_data[lvdt63RawAddr->index][lvdt63RawAddr->channel]);
-  lvdt_filtered[1] = filterLVDT(1, 
+  lvdt_filt[1] = filterLVDT(1, 
       slow_data[lvdt64RawAddr->index][lvdt64RawAddr->channel]);
-  lvdt_filtered[2] = filterLVDT(2, 
+  lvdt_filt[2] = filterLVDT(2, 
       slow_data[lvdt65RawAddr->index][lvdt65RawAddr->channel]);
-  //bprintf(info, "%d %d %d\n", lvdt_filtered[0], lvdt_filtered[1], lvdt_filtered[2]);
-  WriteData(lvdt63Addr, lvdt_filtered[0], NIOS_QUEUE);
-  WriteData(lvdt64Addr, lvdt_filtered[1], NIOS_QUEUE);
-  WriteData(lvdt65Addr, lvdt_filtered[2], NIOS_QUEUE);
-  lvdt[0] = lvdt_filtered[0] * LVDT63_ADC_TO_ENC + LVDT63_ZERO;
-  lvdt[1] = lvdt_filtered[1] * LVDT64_ADC_TO_ENC + LVDT64_ZERO;
-  lvdt[2] = lvdt_filtered[2] * LVDT65_ADC_TO_ENC + LVDT65_ZERO;
+  lvdt_filt[0] = lvdt_filt[0] * LVDT63_ADC_TO_ENC + LVDT63_ZERO;
+  lvdt_filt[1] = lvdt_filt[1] * LVDT64_ADC_TO_ENC + LVDT64_ZERO;
+  lvdt_filt[2] = lvdt_filt[2] * LVDT65_ADC_TO_ENC + LVDT65_ZERO;
+  act_data[0].lvdt = (-lvdt_filt[2] + 2 * lvdt_filt[0] + 2 * lvdt_filt[1]) / 3.;
+  act_data[1].lvdt = (-lvdt_filt[0] + 2 * lvdt_filt[1] + 2 * lvdt_filt[2]) / 3.;
+  act_data[2].lvdt = (-lvdt_filt[1] + 2 * lvdt_filt[2] + 2 * lvdt_filt[0]) / 3.;
 
   if (CommandData.actbus.off) {
     if (CommandData.actbus.off > 0) CommandData.actbus.off--;
@@ -505,19 +654,19 @@ void StoreActBus(void)
 
   WriteData(lokmotPinAddr, CommandData.pin_is_in, NIOS_QUEUE);
 
-  /* TODO removed until actbus code rewritten
   for (j = 0; j < 3; ++j) {
+    //TODO may want to get rid of pos_trim last_good, and dead_reckon
     WriteData(actPosAddr[j], act_data[j].pos + CommandData.actbus.pos_trim[j],
         NIOS_QUEUE);
     WriteData(actPostrimAddr[j], CommandData.actbus.pos_trim[j], NIOS_QUEUE);
     WriteData(actEncAddr[j], act_data[j].enc, NIOS_QUEUE);
-    WriteData(actLGoodAddr[j], CommandData.actbus.last_good[j] - ACTENC_OFFSET,
-        NIOS_QUEUE);
+    WriteData(actLGoodAddr[j], CommandData.actbus.last_good[j]
+	/* - ACTENC_OFFSET*/, NIOS_QUEUE);
     WriteData(actDeadRecAddr[j], CommandData.actbus.dead_reckon[j]
-        - ACTENC_OFFSET, NIOS_QUEUE);
+        /* - ACTENC_OFFSET*/, NIOS_QUEUE);
+    WriteData(actLVDTAddr[j], act_data[j].lvdt, NIOS_QUEUE);
   }
   WriteData(absFocusAddr, focus, NIOS_QUEUE);
-  */
 
   WriteData(lockPotAddr, lock_data.adc[1], NIOS_QUEUE);
   WriteData(lockStateAddr, lock_data.state, NIOS_QUEUE);
@@ -548,7 +697,6 @@ void StoreActBus(void)
   WriteData(tcPrefTpAddr, CommandData.actbus.tc_prefp, NIOS_QUEUE);
   WriteData(tcPrefTsAddr, CommandData.actbus.tc_prefs, NIOS_QUEUE);
   WriteData(tcWaitAddr, CommandData.actbus.tc_wait / 10., NIOS_QUEUE);
-  WriteData(tcFilterAddr, CommandData.actbus.tc_filter, NIOS_QUEUE);
   WriteData(secGoalAddr, CommandData.actbus.focus, NIOS_FLUSH);
 }
 
