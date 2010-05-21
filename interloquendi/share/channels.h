@@ -65,8 +65,8 @@ extern "C" {
 #define STAGE_Y_THROW 78250
 
 #define ACTENC_TO_UM 1.05833333333 /* mm/enc.counts = 24000 counts/inch */
-#define ACTENC_OFFSET 1000000 /* this number should be arbitrarily larger than
-                                 the maximum throw */
+//#define ACTENC_OFFSET 1000000 /* this number should be arbitrarily larger than
+                                 //the maximum throw */
 //TODO LVDTs have not been calibrated, these numbers are old
 #if 0  //temporarily make calibrations naive
 #define LVDT63_ADC_TO_ENC 0.4568 /* adc counts to encoder counts */
