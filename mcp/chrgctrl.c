@@ -64,6 +64,7 @@ struct CCData ChrgCtrlData;           // data from device -- see chrgctrl.h
 static void* chrgctrlComm(void* arg);
 static unsigned int modbus_crc(unsigned char *buf, int start, int cnt);
 
+void nameThread(const char*);	      // in mcp.c
 extern short int InCharge;            // in tx.c
 
 
