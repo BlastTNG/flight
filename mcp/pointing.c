@@ -560,7 +560,7 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
 
   // evolve az
   old_el *= M_PI / 180.0;
-  gy_az = -(ifroll_gy + off_ifroll_gy) * cos(old_el) + -(ifyaw_gy + off_ifyaw_gy) * sin(old_el);
+  gy_az = -(ifroll_gy + off_ifroll_gy) * sin(old_el) + -(ifyaw_gy + off_ifyaw_gy) * cos(old_el);
   a->angle += gy_az / SR;
   a->varience += GYRO_VAR;
   a->ifroll_gy_int += ifroll_gy / SR; // in degrees
