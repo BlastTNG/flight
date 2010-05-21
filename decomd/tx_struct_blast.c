@@ -181,12 +181,12 @@ struct ChannelStruct WideSlowChannels[] = {
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U', U_NONE},
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S', U_NONE},
   {"lock_pos",     'w', LOOP5, 18,                1.0,             0.0, 'S', U_NONE},
-  {"act0_pos",     'w', LOOP5, 42,                1.0,  -ACTENC_OFFSET, 'S', U_NONE},
-  {"act1_pos",     'w', LOOP5, 44,                1.0,  -ACTENC_OFFSET, 'S', U_NONE},
-  {"act2_pos",     'w', LOOP5, 46,                1.0,  -ACTENC_OFFSET, 'S', U_NONE},
-  {"act0_enc",     'w', LOOP5, 48,                1.0,  -ACTENC_OFFSET, 'S', U_NONE},
-  {"act1_enc",     'w', LOOP5, 50,                1.0,  -ACTENC_OFFSET, 'S', U_NONE},
-  {"act2_enc",     'w', LOOP5, 52,                1.0,  -ACTENC_OFFSET, 'S', U_NONE},
+  {"act0_pos",     'w', LOOP5, 42,                1.0,  /*-ACTENC_OFFSET*/0.0, 'S', U_NONE},
+  {"act1_pos",     'w', LOOP5, 44,                1.0,  /*-ACTENC_OFFSET*/0.0, 'S', U_NONE},
+  {"act2_pos",     'w', LOOP5, 46,                1.0,  /*-ACTENC_OFFSET*/0.0, 'S', U_NONE},
+  {"act0_enc",     'w', LOOP5, 48,                1.0,  /*-ACTENC_OFFSET*/0.0, 'S', U_NONE},
+  {"act1_enc",     'w', LOOP5, 50,                1.0,  /*-ACTENC_OFFSET*/0.0, 'S', U_NONE},
+  {"act2_enc",     'w', LOOP5, 52,                1.0,  /*-ACTENC_OFFSET*/0.0, 'S', U_NONE},
   {"sec_goal",     'w', LOOP6, 30,                1.0,             0.0, 'S', U_NONE},
   {"abs_focus",    'w', LOOP6, 32,                1.0,             0.0, 'S', U_NONE},
   {"sched_lst",    'w', LOOP6, 56,                1.0,             0.0, 'U', U_NONE},  // ls day
@@ -498,7 +498,6 @@ struct ChannelStruct SlowChannels[] = {
 
   {"ss_phase",     'w', LOOP4,  0,              I2DEG,             0.0, 's', U_NONE},
   {"tc_pref_tp",   'w', LOOP4,  1,                1.0,             0.0, 'u', U_NONE},
-  {"tc_filter",    'w', LOOP4,  2,                0.2,             0.0, 'u', U_NONE},
   {"ss_sun_time",  'w', LOOP4,  3,                1.0,             0.0, 'u', U_NONE},
   {"ss_cpu_temp",  'w', LOOP4,  4,             1/100.,         -273.15, 'u', U_NONE},
   {"ss_hdd_temp",  'w', LOOP4,  5,             1/100.,         -273.15, 'u', U_NONE},
@@ -748,10 +747,10 @@ struct ChannelStruct SlowChannels[] = {
   {"v_targ_chrgctrl",  'w',  LOOP8,  11,  1.0e-3,  0.0,  'u',  U_V_V},
   {"state_chrgctrl",   'w',  LOOP8,  12,  1.0,     0.0,  'u',  U_NONE},   
   
-  /* filtered LVDTs */
-  {"lvdt_65",  'w',  LOOP8, 13,   LVDT65_ADC_TO_ENC,     LVDT65_ZERO,   'u', U_NONE},
-  {"lvdt_63",  'w',  LOOP8, 14,   LVDT63_ADC_TO_ENC,     LVDT63_ZERO,   'u', U_NONE},
-  {"lvdt_64",  'w',  LOOP8, 15,   LVDT64_ADC_TO_ENC,     LVDT64_ZERO,   'u', U_NONE},
+  /* filtered LVDTs, rotated to motor positions */
+  {"act0_lvdt",  'w',  LOOP8, 13,   1.0,     0.0,   'u', U_NONE},
+  {"act1_lvdt",  'w',  LOOP8, 14,   1.0,     0.0,   'u', U_NONE},
+  {"act2_lvdt",  'w',  LOOP8, 15,   1.0,     0.0,   'u', U_NONE},
 
   {"frict_off_piv",'w', LOOP8,  16,      2.0/65535.0,              0.0,   'u', U_NONE},
   {"frict_term_piv",'w',LOOP8,  17,      2.0/32767.0,              0.0,   's', U_NONE},
