@@ -111,6 +111,7 @@ void setWriteAccess(struct MotorInfoStruct* amcinfo);
 int disableAMC(struct MotorInfoStruct* amcinfo);
 int enableAMC(struct MotorInfoStruct* amcinfo);
 int getAMCResolver(struct MotorInfoStruct* amcinfo);
+int checkAMCAccess(struct MotorInfoStruct* amcinfo);
 void resetAMC(char *address, struct MotorInfoStruct* amcinfo);
 void restoreAMC(struct MotorInfoStruct* amcinfo);
 

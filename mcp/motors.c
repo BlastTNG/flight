@@ -1946,9 +1946,10 @@ void* pivotComm(void* arg)
       if(resetcount==0) {
 	bprintf(warning,"Resetting connection to pivot controller.");
       } else if ((resetcount % 50)==0) {
-	//	bprintf(warning,"reset->Unable to connect to pivot after %i attempts.",resetcount);
+	bprintfverb(warning,pivotinfo.verbose,MC_VERBOSE,"reset->Unable to connect to pivot after %i attempts.",resetcount);
       }
 
+      bprintfverb(warning,pivotinfo.verbose,MC_EXTRA_VERBOSE,"Attempting to reset the pivot controller.",resetcount);
       resetcount++;
       pivot_motor_index=INC_INDEX(pivot_motor_index);
       resetAMC(PIVOT_DEVICE,&pivotinfo); // if successful sets pivotinfo.reset=0
@@ -1998,7 +1999,7 @@ void* pivotComm(void* arg)
       }
 
       pos_raw=getAMCResolver(&pivotinfo);
-      //      bprintf(info,"Resolver Position is: %i",pos_raw);
+      bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"Resolver Position is: %i",pos_raw);
       PivotMotorData[pivot_motor_index].res_raw_piv=((double) pos_raw)/PIV_RES_CTS*360.0; 
 
       j=j%5;

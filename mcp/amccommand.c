@@ -376,6 +376,7 @@ int send_amccmd(int index,int offset,int value,int nwords,enum CmdorQuery type, 
   }
 
   n = write(amcinfo->fd, command, l);
+  free(command);
   if (n<0)
     {
       bprintfverb(err,amcinfo->verbose,MC_VERBOSE,"%sComm send_amccmd: Send command failed!",amcinfo->motorstr);
@@ -441,7 +442,7 @@ int queryAMCInd(int index, int offset, int nwords, struct MotorInfoStruct* amcin
 
 void configure_amc(struct MotorInfoStruct* amcinfo)
 {
-  int n,m;
+  int n,m,wrset;
   bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm configure_amc: Testing a 38400 baud rate...\n",amcinfo->motorstr);
   setopts_amc(38400,amcinfo);
   amcinfo->bdrate=38400;
@@ -451,9 +452,11 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
     {
       bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm configure_amc: AMC controller responds to a 38400 baud rate.",amcinfo->motorstr);
       amcinfo->err=0;
+      wrset=checkAMCAccess(amcinfo);
       if(amcinfo->writeset!=1)
 	{
 	  setWriteAccess(amcinfo);
+	  wrset=checkAMCAccess(amcinfo);
 	}
       amcinfo->init=1;
       amcinfo->err=0;
@@ -473,9 +476,11 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
       bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm configure_amc: AMC controller responds to a 9600 baud rate.",amcinfo->motorstr);
       bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm configure_amc: Attempting to set the baud rate to 38400.",amcinfo->motorstr);
 
+      wrset=checkAMCAccess(amcinfo);
       if(amcinfo->writeset!=1)
 	{
 	  setWriteAccess(amcinfo);
+	  wrset=checkAMCAccess(amcinfo);
           m=disableAMC(amcinfo); // Make sure the AMC is disabled
 	}
       n=send_amccmd(5,1,2,1,cmd,amcinfo); // Right now sending this command generates 
@@ -498,9 +503,11 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
   if(n >= 0)
     {
       bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm configure_amc: AMC controller responds to a 38400 baud rate.",amcinfo->motorstr);
+      wrset=checkAMCAccess(amcinfo);
       if(amcinfo->writeset!=1)
 	{
 	  setWriteAccess(amcinfo);
+	  wrset=checkAMCAccess(amcinfo);
           m=disableAMC(amcinfo); // Make sure the AMC is disabled
 	}
       amcinfo->err=0;
@@ -755,6 +762,7 @@ void checkAMCStatus(int stat, struct MotorInfoStruct* amcinfo)
       bprintfverb(info,amcinfo->verbose,MC_EXTRA_VERBOSE,"%sComm checkAMCStatus: Command was completed.",amcinfo->motorstr);
       amcinfo->err=0;
       amcinfo->err_count=0;
+      bprintfverb(info,amcinfo->verbose,MC_EXTRA_VERBOSE,"%sComm checkAMCStatus: amcinfo->err=%i, amcinfo->err_count=%i.",amcinfo->motorstr,amcinfo->err,amcinfo->err_count);
       break;
     case AMC_INCOMPLETE:
       amcinfo->err |= 0x0008;
@@ -795,8 +803,10 @@ void setWriteAccess(struct MotorInfoStruct* amcinfo)
     {
       checkAMCStatus(n,amcinfo);
       if(n!=1) {
+	bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm setWriteAccess: Write access not set",amcinfo->motorstr);  
 	amcinfo->writeset=2;
       } else {
+	bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm setWriteAccess: Write access not set",amcinfo->motorstr);  
 	amcinfo->writeset=1;
       }
     }
@@ -851,10 +861,20 @@ int getAMCResolver(struct MotorInfoStruct* amcinfo)
                                                   // but the resolver wraps after 2^14 bits.
 }
 
+int checkAMCAccess(struct MotorInfoStruct* amcinfo)
+{
+  int n;
+  bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"checkAMCAccess: Checking write access.");
+  n = queryAMCInd(7, 0, 1, amcinfo);                                                
+  bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"checkAMCAccess: Result=%i",n);
+  return n;
+}
+
 void resetAMC(char *address, struct MotorInfoStruct* amcinfo)
 {
   amcinfo->disabled=2;
   amcinfo->init=2;
+  amcinfo->writeset=2;
   //  int count = 10;
   close_amc(amcinfo);
   //  while(amcinfo->open==0 && count > 0) {
