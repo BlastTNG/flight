@@ -1234,24 +1234,6 @@
     <NUMBER caption="T Batt 4">
       <DATUM format="%.2f" src="T_BAT4" extrema="battemp"/>
     </NUMBER>
-    <NUMBER caption="V Sol 1">
-      <DATUM format="%.2f" src="V_SOL1" extrema="vsolar"/>
-    </NUMBER>
-    <NUMBER caption="V Sol 2">
-      <DATUM format="%.2f" src="V_SOL2" extrema="vsolar"/>
-    </NUMBER>
-    <NUMBER caption="V Sol 3">
-      <DATUM format="%.2f" src="V_SOL3" extrema="vsolar"/>
-    </NUMBER>
-    <NUMBER caption="V Sol 4">
-      <DATUM format="%.2f" src="V_SOL4" extrema="vsolar"/>
-    </NUMBER>
-    <NUMBER caption="V Sol 5">
-      <DATUM format="%.2f" src="V_SOL5" extrema="vsolar"/>
-    </NUMBER>
-    <NUMBER caption="V Sol 6">
-      <DATUM format="%.2f" src="V_SOL6" extrema="vsolar"/>
-    </NUMBER>
   </BOX>
   <BOX caption="Pressures/Cooling" colour="#777700" row="2" col="5">
     <NUMBER caption="P ISC (psi)">
