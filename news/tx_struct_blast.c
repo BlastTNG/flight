@@ -809,12 +809,12 @@ struct ChannelStruct SlowChannels[] = {
   {"t_ext9",       'r',  ACS1_T1, 31,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_box_bal",    'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_pump_bal",   'r',  ACS1_T1, 35,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_ext2",       'r',  ACS1_T1, 37,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_ext3",       'r',  ACS1_T1, 39,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_ext4",       'r',  ACS1_T1, 41,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_ext5",       'r',  ACS1_T1, 43,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_ext6",       'r',  ACS1_T1, 45,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_ext7",       'r',  ACS1_T1, 47,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_el_mot",     'r',  ACS1_T1, 37,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_shade",      'r',  ACS1_T1, 39,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_sun",        'r',  ACS1_T1, 41,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_rw_mot",     'r',  ACS1_T1, 43,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_earth",      'r',  ACS1_T1, 45,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_scoop",      'r',  ACS1_T1, 47,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_ext8",       'r',  ACS1_T1, 49,         CAL16T(1.0, 0.0),         'u', U_T_C},
 
 /* ACS2 Digital I/O card */
