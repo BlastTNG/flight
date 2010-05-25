@@ -801,23 +801,23 @@
     <NUMBER caption="Balance Motor">
       <DATUM format="%.2f" src="T_PUMP_BAL" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="ext2">
-      <DATUM format="%.2f" src="T_EXT2" extrema="temp"/>
+    <NUMBER caption="Elevation Motor">
+      <DATUM format="%.2f" src="T_EL_MOT" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="ext3">
-      <DATUM format="%.2f" src="T_EXT3" extrema="temp"/>
+    <NUMBER caption="RW motor">
+      <DATUM format="%.2f" src="T_RW_MOT" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="ext4">
-      <DATUM format="%.2f" src="T_EXT4" extrema="temp"/>
+    <NUMBER caption="Shaded Ambient">
+      <DATUM format="%.2f" src="T_SHADE" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="ext5">
-      <DATUM format="%.2f" src="T_EXT5" extrema="temp"/>
+    <NUMBER caption="Sun Ambient">
+      <DATUM format="%.2f" src="T_SUN" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="ext6">
-      <DATUM format="%.2f" src="T_EXT6" extrema="temp"/>
+    <NUMBER caption="Earth Ambient">
+      <DATUM format="%.2f" src="T_EARTH" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="ext7">
-      <DATUM format="%.2f" src="T_EXT7" extrema="temp"/>
+    <NUMBER caption="Scoop Ambient">
+      <DATUM format="%.2f" src="T_SCOOP" extrema="temp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Actuators" colour="#002222" row="4" col="8" rowspan="1">
