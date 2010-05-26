@@ -26,6 +26,7 @@
 #include "channels.h"
 #ifdef __MCP__
 #  include "mcp.h"
+#include "command_struct.h"
 #endif
 
 #ifdef __DECOMD__
@@ -189,9 +190,6 @@ void FrameFileWriter(void)
 
 #ifdef __MCP__
   nameThread("FFWrit");
-#endif
-
-#ifdef __MCP__
   bputs(startup, "Startup\n");
 #endif
 
@@ -199,6 +197,11 @@ void FrameFileWriter(void)
   writeout_buffer = balloc(tfatal, BUFFER_SIZE * DiskFrameSize);
 
   while (1) {
+#ifdef __MCP__
+    //Stop writing framefile with less than 200MB of disk space
+    if (CommandData.df < 50 && CommandData.df > 0)
+      bputs(tfatal, "Insufficient disk space to write frame file, exiting");
+#endif
     write_len = 0;
     b_write_to = framefile.b_write_to;
 
