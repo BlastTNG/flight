@@ -71,8 +71,7 @@
 
 #define VETO_MAX 60000
 
-void ActPotTrim(void); /* actuators.c */
-void RecalcOffset(double, double);
+void RecalcOffset(double, double);  /* actuators.c */
 
 void SetRaDec(double, double); /* defined in pointing.c */
 void SetTrimToSC(int);
@@ -836,12 +835,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case autofocus_allow:
       CommandData.actbus.tc_mode = TC_MODE_ENABLED;
-      break;
-    case reset_dr:
-      CommandData.actbus.reset_dr = 1;
-      break;
-    case actpos_trim:
-      ActPotTrim();
       break;
 
     case hwpr_panic:
@@ -2523,13 +2516,6 @@ void InitCommandData()
   CommandData.actbus.tc_prefp = 1;
   CommandData.actbus.tc_prefs = 1;
 
-  CommandData.actbus.reset_dr = 0;
-  CommandData.actbus.dead_reckon[0] = 0;
-  CommandData.actbus.dead_reckon[1] = 0;
-  CommandData.actbus.dead_reckon[2] = 0;
-  CommandData.actbus.last_good[0] = 0;
-  CommandData.actbus.last_good[1] = 0;
-  CommandData.actbus.last_good[2] = 0;
   CommandData.actbus.lvdt_delta = 1000;
   CommandData.actbus.lvdt_low = 4000;
   CommandData.actbus.lvdt_high = 19000;

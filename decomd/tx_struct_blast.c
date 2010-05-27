@@ -181,6 +181,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U', U_NONE},
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S', U_NONE},
   {"lock_pos",     'w', LOOP5, 18,                1.0,             0.0, 'S', U_NONE},
+  //TODO when synced to LVDT, may not need act_pos or act_enc to be wide
   {"act0_pos",     'w', LOOP5, 42,                1.0,  /*-ACTENC_OFFSET*/0.0, 'S', U_NONE},
   {"act1_pos",     'w', LOOP5, 44,                1.0,  /*-ACTENC_OFFSET*/0.0, 'S', U_NONE},
   {"act2_pos",     'w', LOOP5, 46,                1.0,  /*-ACTENC_OFFSET*/0.0, 'S', U_NONE},
@@ -577,10 +578,8 @@ struct ChannelStruct SlowChannels[] = {
   {"slew_veto",    'w', LOOP5, 17,           4.0 / SR,             0.0, 'u', U_NONE},
   /* LOOP5 18-19 are wide */
   {"sveto_len",    'w', LOOP5, 20,           4.0 / SR,             0.0, 'u', U_NONE},
-  {"act1_dead_rec",'w', LOOP5, 21,                1.0,             0.0, 's', U_NONE},
   {"lock_pot",     'w', LOOP5, 22,                1.0,             0.0, 'u', U_NONE},
   /* LOOP5 23 is unused */
-  {"act2_dead_rec",'w', LOOP5, 24,                1.0,             0.0, 's', U_NONE},
   {"lock_state",   'w', LOOP5, 25,                1.0,             0.0, 'u', U_NONE},
   {"lock_goal",    'w', LOOP5, 26,                1.0,             0.0, 'u', U_NONE},
   {"seized_bus",   'w', LOOP5, 27,                1.0,             0.0, 's', U_NONE},
@@ -653,15 +652,8 @@ struct ChannelStruct SlowChannels[] = {
   {"sf_offset",    'w', LOOP6, 43,                1.0,             0.0, 's', U_NONE},
   {"t_prime_fid",  'w', LOOP6, 44,             1/500.,             0.0, 's', U_NONE},
   {"t_second_fid", 'w', LOOP6, 45,             1/500.,             0.0, 's', U_NONE},
-  {"act0_l_good",  'w', LOOP6, 46,                1.0,             0.0, 's', U_NONE},
-  {"act1_l_good",  'w', LOOP6, 47,                1.0,             0.0, 's', U_NONE},
-  {"act2_l_good",  'w', LOOP6, 48,                1.0,             0.0, 's', U_NONE},
-  {"act0_dead_rec",'w', LOOP6, 49,                1.0,             0.0, 's', U_NONE},
   {"act_flags",    'w', LOOP6, 50,                1.0,             0.0, 'u', U_NONE},
   {"focus_mode",   'w', LOOP6, 51,                1.0,             0.0, 'u', U_NONE},
-  {"act0_postrim", 'w', LOOP6, 52,                1.0,             0.0, 'u', U_NONE},
-  {"act1_postrim", 'w', LOOP6, 53,                1.0,             0.0, 'u', U_NONE},
-  {"act2_postrim", 'w', LOOP6, 54,                1.0,             0.0, 'u', U_NONE},
   {"lvdt_spread",  'w', LOOP6, 55,                1.0,             0.0, 's', U_NONE},
   /* LOOP6 56-57 are wide */
   {"sun_el",       'w', LOOP6, 58,              I2DEG,             0.0, 's', U_NONE},

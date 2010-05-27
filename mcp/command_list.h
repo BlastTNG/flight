@@ -112,7 +112,7 @@ enum singleCommand {
   isc_use_pyramid,  isc_no_pyramid,     osc_use_pyramid,  osc_no_pyramid,
   autofocus_veto,   north_halt,         south_halt,       actbus_on,
   actbus_off,       actuator_stop,      level_pulse,      restore_piv,
-  reset_dr,         actpos_trim,        reset_rw,         reset_piv,
+  reset_rw,         reset_piv,
   reset_elev,       jfet_on,            jfet_off,         hs_pot_on,
   hs_pot_off,       bda_on,             bda_off,          hwpr_enc_on,
   hwpr_enc_off,     hwpr_enc_pulse,     balance_heat_on,  balance_heat_off

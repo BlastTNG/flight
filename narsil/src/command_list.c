@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.48 $";
+const char *command_list_serial = "$Revision: 4.49 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -243,8 +243,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(autofocus_allow), "allow the secondary actuator system temperature"
     " correction mode", GR_FOCUS},
   {COMMAND(actuator_stop), "stop all secondary actuators immediately", GR_ACT},
-  {COMMAND(reset_dr), "reset the actuator dead reckoning", GR_ACT},
-  {COMMAND(actpos_trim), "trim the actuator positions to the encoders", GR_ACT},
   {COMMAND(hwpr_panic), "stop the HWPR rotator immediately", GR_HWPR},
 
   {COMMAND(isc_abort), "abort current solution attempt", GR_ISC_MODE},
