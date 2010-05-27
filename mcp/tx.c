@@ -111,8 +111,8 @@ int mcp_initial_controls = 0;
 /************************************************************************/
 static void WriteAux(void)
 {
-  static struct NiosStruct* cpuTimeAddr;
-  static struct NiosStruct* cpuTimeuSAddr;
+  static struct NiosStruct* timeAddr;
+  static struct NiosStruct* timeUSecAddr;
   static struct NiosStruct* diskFreeAddr;
   static struct NiosStruct* timeoutAddr;
   static struct NiosStruct* cpuTemp1Addr;
@@ -143,8 +143,8 @@ static void WriteAux(void)
     cpuTemp1Addr = GetNiosAddr("t_cpu1");
     cpuTemp2Addr = GetNiosAddr("t_cpu2");
     cpuTemp3Addr = GetNiosAddr("t_cpu3");
-    cpuTimeAddr = GetNiosAddr("cpu_time");
-    cpuTimeuSAddr = GetNiosAddr("cpu_usec");
+    timeAddr = GetNiosAddr("time");
+    timeUSecAddr = GetNiosAddr("time_usec");
     diskFreeAddr = GetNiosAddr("disk_free");
     timeoutAddr = GetNiosAddr("timeout");
     bi0FifoSizeAddr = GetNiosAddr("bi0_fifo_size");
@@ -175,8 +175,8 @@ static void WriteAux(void)
 
   gettimeofday(&tv, &tz);
 
-  WriteData(cpuTimeAddr, tv.tv_sec + TEMPORAL_OFFSET, NIOS_QUEUE);
-  WriteData(cpuTimeuSAddr, tv.tv_usec, NIOS_QUEUE);
+  WriteData(timeAddr, tv.tv_sec + TEMPORAL_OFFSET, NIOS_QUEUE);
+  WriteData(timeUSecAddr, tv.tv_usec, NIOS_QUEUE);
 
   WriteData(cpuTemp1Addr, CommandData.temp1, NIOS_QUEUE);
   WriteData(cpuTemp2Addr, CommandData.temp2, NIOS_QUEUE);
@@ -737,7 +737,7 @@ static void StoreData(int index)
   static struct NiosStruct* sipLatAddr;
   static struct NiosStruct* sipLonAddr;
   static struct NiosStruct* sipAltAddr;
-  static struct NiosStruct* sipTimeAddr;
+  static struct NiosStruct* timeSipAddr;
   static struct NiosStruct* sipMksLoAddr;
   static struct NiosStruct* sipMksMedAddr;
   static struct NiosStruct* sipMksHiAddr;
@@ -774,7 +774,6 @@ static void StoreData(int index)
   static struct NiosStruct* altAddr;
   static struct NiosStruct* latAddr;
   static struct NiosStruct* lonAddr;
-  static struct NiosStruct* timeAddr;
   static struct NiosStruct* lstAddr;
   static struct NiosStruct* magAzAddr;
   static struct NiosStruct* magPitchAddr;
@@ -906,7 +905,7 @@ static void StoreData(int index)
     sipLatAddr = GetNiosAddr("sip_lat");
     sipLonAddr = GetNiosAddr("sip_lon");
     sipAltAddr = GetNiosAddr("sip_alt");
-    sipTimeAddr = GetNiosAddr("sip_time");
+    timeSipAddr = GetNiosAddr("time_sip");
 
     sipMksLoAddr = GetNiosAddr("sip_mks_lo");
     sipMksMedAddr = GetNiosAddr("sip_mks_med");
@@ -926,7 +925,6 @@ static void StoreData(int index)
     latAddr = GetNiosAddr("lat");
     altAddr = GetNiosAddr("alt");
     lonAddr = GetNiosAddr("lon");
-    timeAddr = GetNiosAddr("time");
     lstAddr = GetNiosAddr("lst");
     magAzAddr = GetNiosAddr("mag_az");
     magPitchAddr = GetNiosAddr("mag_pitch");
@@ -1108,7 +1106,7 @@ static void StoreData(int index)
   WriteData(sipLatAddr, (int)(SIPData.GPSpos.lat*DEG2I), NIOS_QUEUE);
   WriteData(sipLonAddr, (int)(SIPData.GPSpos.lon*DEG2I), NIOS_QUEUE);
   WriteData(sipAltAddr, (int)(SIPData.GPSpos.alt), NIOS_QUEUE);
-  WriteData(sipTimeAddr, SIPData.GPStime.UTC, NIOS_QUEUE);
+  WriteData(timeSipAddr, SIPData.GPStime.UTC, NIOS_QUEUE);
 
   /********** SIP MKS Altitude ************/
   WriteData(sipMksLoAddr, (int)(SIPData.MKSalt.lo), NIOS_QUEUE);
@@ -1146,7 +1144,6 @@ static void StoreData(int index)
   WriteData(altAddr, (unsigned int)(PointingData[i_point].alt), NIOS_QUEUE);
 
   WriteData(mcpFrameAddr, PointingData[i_point].mcp_frame, NIOS_QUEUE);
-  WriteData(timeAddr, PointingData[i_point].t, NIOS_QUEUE);
   WriteData(lstAddr, PointingData[i_point].lst, NIOS_QUEUE);
 
   WriteData(magAzAddr,

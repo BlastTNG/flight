@@ -159,14 +159,14 @@ struct ChannelStruct WideSlowChannels[] = {
   {"td_charcoal",   'r', CRYO_A2, 46,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
   {"td_ln_filt",    'r', CRYO_A2, 48,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
 
-  {"cpu_time",     'w', LOOP1,  0,                1.0,             0.0, 'U', U_NONE}, // could delete and rename cpu_usec to time_usec,
-  {"cpu_usec",     'w', LOOP4, 58,                1.0,             0.0, 'U', U_NONE}, // but look in derived.c at Time...
-  {"sip_time",     'w', LOOP1,  2,                1.0,             0.0, 'U', U_NONE},
+  {"time",         'w', LOOP1,  0,                1.0,             0.0, 'U', U_NONE}, // could delete and rename cpu_usec to time_usec,
+  {"time_usec",     'w', LOOP4, 58,                1.0,             0.0, 'U', U_NONE}, // but look in derived.c at Time...
+  {"time_sip",     'w', LOOP1,  2,                1.0,             0.0, 'U', U_NONE},
   {"time_dgps",    'w', LOOP1,  4,                1.0,             0.0, 'U', U_NONE},
   {"lst",          'w', LOOP1,  6,         1.0/3600.0,             0.0, 'U', U_NONE},
   {"isc_ra",       'w', LOOP1,  8,              LI2H,              0.0, 'U', U_NONE},
   {"isc_dec",      'w', LOOP1, 10,          LI2DEG/2.,            -90., 'U', U_NONE},
-  {"time",         'w', LOOP1, 12,                1.0,             0.0, 'U', U_NONE},
+  //{"FREEFIELD",    'w', LOOP1, 12,                1.0,             0.0, 'U', U_NONE}, // free field... use me
   {"isc_framenum", 'w', LOOP1, 32,                1.0,             0.0, 'U', U_NONE},
   {"lat",          'w', LOOP1, 38,             LI2DEG,             0.0, 'S', U_NONE},
   {"lon",          'w', LOOP1, 40,             LI2DEG,             0.0, 'S', U_NONE},
