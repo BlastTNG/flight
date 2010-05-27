@@ -319,13 +319,9 @@ struct CommandDataStruct {
     int delta[3];
     int offset[3];
     int focus;
-    int dead_reckon[3];
-    int last_good[3];
-    int pos_trim[3];
-    int reset_dr;
-    double lvdt_delta;
-    double lvdt_low;
-    double lvdt_high;
+    int lvdt_delta;
+    int lvdt_low;
+    int lvdt_high;
 
     /* lock control */
     int lock_vel;
