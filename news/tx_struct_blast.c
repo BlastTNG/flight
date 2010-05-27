@@ -345,7 +345,7 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP1 19 is unused */
   {"timeout",      'w', LOOP1, 20,                1.0,             0.0, 'u', U_NONE},
   {"sun_az",       'w', LOOP1, 21,              I2DEG,             0.0, 'u', U_NONE},
-  {"lvdt_low",     'w', LOOP1, 22,                1.0,             0.0, 's', U_NONE},
+  {"lvdt_low",     'w', LOOP1, 22,                1.0,         -5000.0, 'u', U_NONE},
   {"status_mcc",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE}, //south_i_am, at_float, schedule, alice_file
   {"cryostate",    'w', LOOP1, 24,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 25 is unused */
@@ -422,7 +422,7 @@ struct ChannelStruct SlowChannels[] = {
   {"mag_sigma",       'w',LOOP2, 40,            I2DEG,             0.0, 'u', U_NONE},
   {"az_dgps",         'w',LOOP2, 41,            I2DEG,             0.0, 'u', U_P_DEG},
   {"sigma_dgps",      'w',LOOP2, 42,            I2DEG,             0.0, 'u', U_NONE},
-  {"lvdt_high",       'w',LOOP2, 43,              1.0,             0.0, 's', U_NONE},
+  {"lvdt_high",       'w',LOOP2, 43,              1.0,         -5000.0, 'u', U_NONE},
   {"isc_az",          'w',LOOP2, 44,            I2DEG,             0.0, 'u', U_NONE},
   {"isc_el",          'w',LOOP2, 45,            I2DEG,             0.0, 'u', U_NONE},
   {"isc_sigma",       'w',LOOP2, 46,            I2DEG,             0.0, 'u', U_NONE},
