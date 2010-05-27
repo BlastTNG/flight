@@ -1302,7 +1302,7 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
   }
 
   snprintf(line, 1024, "\n# Nice CPU Values\n"
-    "CPU_SEC LINCOM  1       cpu_time 1 -%lu\n"
+    "CPU_SEC LINCOM  1       time 1 -%lu\n"
     "CPU_MIN LINCOM  1       CPU_SEC 0.016666666 0\n"
     "CPU_HOUR LINCOM 1       CPU_SEC 0.000277777 0\n"
     "CPU_DAY LINCOM  1       CPU_SEC 1.15741E-5  0\n"
