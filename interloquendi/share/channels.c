@@ -1302,13 +1302,9 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
   }
 
   snprintf(line, 1024, "\n# Nice CPU Values\n"
-    "CPU_SEC LINCOM  1       time 1 -%lu\n"
-    "CPU_MIN LINCOM  1       CPU_SEC 0.016666666 0\n"
-    "CPU_HOUR LINCOM 1       CPU_SEC 0.000277777 0\n"
-    "CPU_DAY LINCOM  1       CPU_SEC 1.15741E-5  0\n"
-    "CPU_WEEK LINCOM 1       CPU_SEC 1.65344E-6  0\n"
-    "CPU_MONTH LINCOM 1      CPU_SEC 3.85803E-7  0\n"
-    "CPU_YEAR LINCOM 1       CPU_SEC 3.17099E-8  0\n", start_time
+    "TIME_SEC_DIRFILE  LINCOM  1       time 1 -%lu\n"
+    "TIME_HOUR_DIRFILE LINCOM 1       TIME_SEC_DIRFILE 0.000277777 0\n"
+    "TIME_DAY_DIRFILE  LINCOM  1      TIME_SEC_DIRFILE 1.15741E-5  0\n", start_time
     );
   if (write(fd, line, strlen(line)) < 0)
     berror(err, "Error writing to format file\n");
