@@ -2517,8 +2517,8 @@ void InitCommandData()
   CommandData.actbus.tc_prefs = 1;
 
   CommandData.actbus.lvdt_delta = 1000;
-  CommandData.actbus.lvdt_low = 4000;
-  CommandData.actbus.lvdt_high = 19000;
+  CommandData.actbus.lvdt_low = 25000;
+  CommandData.actbus.lvdt_high = 35000;
 
   /* The first is due to change in radius of curvature, the second due to
    * displacement of the secondary due to the rigid struts */
@@ -2532,7 +2532,7 @@ void InitCommandData()
   CommandData.actbus.sf_time = 0;
   CommandData.actbus.sf_offset = 0;
 
-  CommandData.actbus.act_vel = 2000;
+  CommandData.actbus.act_vel = 200;
   CommandData.actbus.act_acc = 1;
   CommandData.actbus.act_move_i = 75;
   CommandData.actbus.act_hold_i = 0;
