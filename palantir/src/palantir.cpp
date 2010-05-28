@@ -796,10 +796,8 @@ void MainForm::UpdateData() {
   if (startupDecomd) {
     DecomPoller->start(decomdHost, decomdPort);
     startupDecomd = false;
-printf("Starting up decomPoller: host: %s\n", decomdHost);
   }
 
-  //if (DataSource->update()) {
   if (_dirfile->NFrames() != _lastNFrames) {
     _lastNFrames = _dirfile->NFrames();
     updating = true;
@@ -1369,7 +1367,6 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
   strncpy(tmp, *CurFile, MAXPATHLENGTH);
 
   // Initialise KstFile object
-  //DataSource = new KstFile(tmp, UNKNOWN);
   resetDirFile(tmp);
 }
 

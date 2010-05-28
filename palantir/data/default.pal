@@ -1280,17 +1280,17 @@
     </NUMBER>
   </BOX>
   <BOX caption="Time" colour="#777700" row="1" col="1" colspan="1">
-    <NUMBER caption="Hours">
-      <DATUM format="%.4f" src="CPU_HOUR" extrema="hours"/>
+    <NUMBER caption="Dirfile Hours">
+      <DATUM format="%.4f" src="TIME_HOUR_DIRFILE" extrema="hours"/>
     </NUMBER>
     <DATETIME caption="CPU Time">
-      <DATUM format="%e %b %Y, %H:%M:%S" src="CPU_TIME"/>
+      <DATUM format="%e %b %Y, %H:%M:%S" src="TIME"/>
     </DATETIME>
     <DATETIME caption="dGPS Time">
       <DATUM format="%e %b %Y, %H:%M:%S" src="TIME_DGPS"/>
     </DATETIME>
     <DATETIME caption="SIP Time">
-      <DATUM format="%e %b %Y, %H:%M:%S" src="SIP_TIME"/>
+      <DATUM format="%e %b %Y, %H:%M:%S" src="TIME_SIP"/>
     </DATETIME>
     <NUMBER caption="Gondola Siderial Time">
       <DATUM format="%.4f" src="LST" extrema="unknown"/>
@@ -1336,7 +1336,7 @@
       <DATUM format="%.4f" src="DEC" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="Az of Sun">
-      <DATUM format="%.2f" src="SUN_AZ" extrema="unknown"/>
+      <DATUM format="%.2f" src="AZ_SUN_MODEL" extrema="unknown"/>
     </NUMBER>
     <DERIV caption="dAz/dt (dps)">
       <DATUM format="%.2f" src="AZ" length="100" tunit="s" extrema="angle"/>
@@ -1403,7 +1403,7 @@
       <DATUM format="%.2f" src="AZ_DGPS" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="Mag">
-      <DATUM format="%.2f" src="MAG_AZ" extrema="angle"/>
+      <DATUM format="%.2f" src="AZ_MAG" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="SS">
       <DATUM format="%.2f" src="SS_AZ" extrema="angle"/>
@@ -1418,7 +1418,7 @@
       <DATUM format="%.2f" src="SIGMA_DGPS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Mag Sigma">
-      <DATUM format="%.2f" src="MAG_SIGMA" extrema="unknown"/>
+      <DATUM format="%.2f" src="SIGMA_MAG" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="SS Sigma">
       <DATUM format="%.2f" src="SS_SIGMA" extrema="unknown"/>
