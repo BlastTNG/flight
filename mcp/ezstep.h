@@ -190,6 +190,13 @@ int EZBus_PollInit(struct ezbus* bus, void (*ezinit)(struct ezbus*,char) );
  */
 int EZBus_IsUsable(struct ezbus* bus, char who);
 
+/* sends a status query to a stepper to see if it will accept commands
+ * EZ_READY will be set if busy (NB: usually that bit means the opposite)
+ * other error codes are returned as usual, with EZ_READY also set on error
+ * (meaning is reversed so that error states make IsBusy report true)
+ */
+int EZBus_IsBusy(struct ezbus* bus, char who);
+
 
 /* Simple motion:
  * Handles basic, generically useful movement commands.
@@ -220,6 +227,12 @@ int EZBus_SetAccel(struct ezbus* bus, char who, int acc);
 /* Terminate movement
  */
 int EZBus_Stop(struct ezbus* bus, char who);
+
+/* Generic function for sending movement commands. 
+ * This will prepend the configuration parameters for the steppers involved, and
+ * will loop properly over stepper groups.
+ */
+int EZBus_MoveComm(struct ezbus* bus, char who, const char* what);
 
 /* Absolute move to 'pos' (measured in steps from "zero")
  */

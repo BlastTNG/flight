@@ -41,6 +41,8 @@
  * cWho: ensures that who is a character value accepted by the EZbus
  *    cWho is deprecated: who values should always be the ASCII character
  *
+ *  isWhoGroup: returns true if who commands more than one stepper
+ *
  * to handle all who values, use the whoLoopMin and whoLoopMax which yield cWho
  * values to loop over (NB: loop should include Max value):
  *  for(c=whoLoopMin(who); c<=whoLoopMax(who); c++) { //do stuff... }
@@ -55,6 +57,11 @@ static inline int iWho(char who)
 static inline char cWho(char who)
 {
   return (who <= EZ_BUS_NACT) ? (who+0x30) : who;
+}
+
+static inline int isWhoGroup(char who)
+{
+  return (who > EZ_WHO_S16);
 }
 
 static inline char whoLoopMin(char who)
@@ -289,7 +296,7 @@ int EZBus_Send(struct ezbus *bus, char who, const char* what)
     chk ^= *ptr;
   buffer[len - 1] = chk;
   if (bus->chatter >= EZ_CHAT_BUS) {
-    hex_buffer = malloc(2*len+1);
+    hex_buffer = malloc(3*len+1);
     bprintf(info, "%sRequest=%s (%s)", bus->name, 
 	HexDump((unsigned char *)buffer, hex_buffer, len), what);
     free(hex_buffer);
@@ -314,7 +321,9 @@ int EZBus_Recv(struct ezbus* bus)
   struct timeval timeout = {.tv_sec = 2, .tv_usec = 0};
   unsigned char byte;
   unsigned char checksum = 0;
+  char full_response[EZ_BUS_BUF_LEN];
   char* ptr = bus->buffer;
+  char* fullptr = full_response;
   char* hex_buffer;
   int retval = EZ_ERR_OK;
 
@@ -352,6 +361,7 @@ int EZBus_Recv(struct ezbus* bus)
           return EZ_ERR_OOD;
         }
       }
+      *(fullptr++) = byte;
       checksum ^= byte;
 
       /* The following involves a number of semi-hidden fallthroughs which
@@ -432,13 +442,14 @@ int EZBus_Recv(struct ezbus* bus)
   }
 
   *ptr = '\0';  //terminate response string
+  *fullptr = '\0';
 
   if (bus->chatter >= EZ_CHAT_BUS) {
     size_t len;
-    len = strlen(bus->buffer);
-    hex_buffer = malloc(2*len+1);
+    len = strlen(full_response);
+    hex_buffer = malloc(3*len+1);
     bprintf(info, "%sResponse=%s (%s) Status=%x\n", bus->name, 
-	HexDump((unsigned char *)bus->buffer, hex_buffer, len), 
+	HexDump((unsigned char *)full_response, hex_buffer, len), 
 	bus->buffer, retval&0xff);
     free(hex_buffer);
   }
@@ -450,6 +461,7 @@ int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive)
 {
   int ok;
   int retval = EZ_ERR_OK;
+  int overflown = 0;
 
   do {
     ok = 1;
@@ -458,6 +470,9 @@ int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive)
 	berror(warning, "%sFailed to send command\n", bus->name);
       return retval;
     }
+
+    //commands to stepper groups don't send responses
+    if (isWhoGroup(who)) return retval;
 
     if ((retval = EZBus_Recv(bus)) & (EZ_ERR_TIMEOUT | EZ_ERR_OOD))
     {
@@ -505,9 +520,11 @@ int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive)
 		bus->name, stepName(bus,who));
 	  break;
 	case EZ_SERR_BUSY:
-	  if (bus->chatter >= EZ_CHAT_ERR)
+	  if (bus->chatter >= EZ_CHAT_ERR && !overflown) {
 	    bprintf(warning, "%s%s: command overflow.\n", 
 		bus->name, stepName(bus,who));
+	    overflown = 1;
+	  }
 	  usleep(10000);
 	  ok = 0;
 	  break;
@@ -532,7 +549,7 @@ int EZBus_ForceRepoll(struct ezbus* bus, char who)
 {
   int c;
   for (c=whoLoopMin(who); c<=whoLoopMax(who); c++)
-    bus->stepper[iWho(c)].status &= ~EZ_STEP_OK;
+    bus->stepper[iWho(c)].status &= ~(EZ_STEP_OK | EZ_STEP_INIT);
   return EZ_ERR_OK;
 }
 
@@ -591,7 +608,8 @@ int EZBus_PollInit(struct ezbus* bus, void (*ezinit)(struct ezbus*,char) )
       retval |= EZ_ERR_POLL;
     }
 
-    if ( !(bus->stepper[iWho(i)].status & EZ_STEP_INIT) ) {
+    if ( bus->stepper[iWho(i)].status & EZ_STEP_OK &&
+	!(bus->stepper[iWho(i)].status & EZ_STEP_INIT) ) {
       ezinit(bus,i);
       bus->stepper[iWho(i)].status |= EZ_STEP_INIT;
       sleep(1); //TODO belongs in library? may prevent many-init problems
@@ -612,6 +630,22 @@ int EZBus_IsUsable(struct ezbus* bus, char who)
       return 0;
   }
   return 1;
+}
+
+int EZBus_IsBusy(struct ezbus* bus, char who)
+{
+  int retval;
+  if (isWhoGroup(who)) return EZ_ERR_BAD_WHO | EZ_READY;
+  if (!EZBus_IsUsable(bus, who)) return EZ_ERR_POLL | EZ_READY;
+  
+  retval = EZBus_Comm(bus, who, "Q", 1);
+  if ( (retval & ~EZ_READY) != EZ_ERR_OK ) {
+    //on error return code with busy bit set
+    return retval | EZ_READY;
+  }
+
+  //otherwise just flip busy bit which usually means the opposite
+  return retval ^ EZ_READY;
 }
 
 /*******************************************************************************
@@ -665,13 +699,42 @@ int EZBus_Stop(struct ezbus* bus, char who)
   return EZBus_Comm(bus, who, "T", 0);
 }
 
-int EZBus_Goto(struct ezbus* bus, char who, int pos)
+static char* commParams(struct ezbus* bus, char who, char* buffer)
+{
+  if (isWhoGroup(who)) buffer[0] = '\0'; //do nothing for steppper groups
+  else sprintf(buffer, "%sV%dL%dm%dh%d", bus->stepper[iWho(who)].preamble,
+      bus->stepper[iWho(who)].vel, bus->stepper[iWho(who)].acc, 
+      bus->stepper[iWho(who)].imove, bus->stepper[iWho(who)].ihold);
+  return buffer;
+}
+
+int EZBus_MoveComm(struct ezbus* bus, char who, const char* what)
 {
   char comm_buf[EZ_BUS_BUF_LEN];
-  sprintf(comm_buf, "V%dL%dm%dh%dA%dR", bus->stepper[iWho(who)].vel,
-      bus->stepper[iWho(who)].acc, bus->stepper[iWho(who)].imove,
-      bus->stepper[iWho(who)].ihold, pos);
-  return EZBus_Comm(bus, who, comm_buf, 0);
+  char pre_buf[EZ_BUS_BUF_LEN];
+  int i;
+  int retval;
+  if (!isWhoGroup(who)) {     //single stepper
+    sprintf(comm_buf, "%s%sR", commParams(bus, who, pre_buf), what);
+    return EZBus_Comm(bus, who, comm_buf, 0);
+  } else {		      //multiple steppers
+    for (i=whoLoopMin(who); i<=whoLoopMax(who); ++i) {
+      sprintf(comm_buf, "%s%s", commParams(bus, who, pre_buf), what);
+      retval = EZBus_Comm(bus, who, comm_buf, 0);
+      if (retval != EZ_ERR_OK) {
+	EZBus_Stop(bus, who);
+	return retval;
+      }
+    }
+    return EZBus_Comm(bus, who, "R", 0);
+  }
+}
+
+int EZBus_Goto(struct ezbus* bus, char who, int pos)
+{
+  char buf[EZ_BUS_BUF_LEN];
+  sprintf(buf, "A%d", pos);
+  return EZBus_MoveComm(bus, who, buf);
 }
 
 int EZBus_GotoVel(struct ezbus* bus, char who, int pos, int vel)
@@ -682,7 +745,7 @@ int EZBus_GotoVel(struct ezbus* bus, char who, int pos, int vel)
 
 int EZBus_RelMove(struct ezbus* bus, char who, int delta)
 {
-  char comm_buf[EZ_BUS_BUF_LEN];
+  char buf[EZ_BUS_BUF_LEN];
   char comm = 'P';
   if (delta == 0) return EZ_ERR_OK;	  //move nowhere
   else if (delta == INT_MAX) delta = 0;	  //move forever
@@ -691,11 +754,8 @@ int EZBus_RelMove(struct ezbus* bus, char who, int delta)
     if (delta == INT_MIN) delta = 0;	  //move forever
     else delta = -delta;
   }
-  
-  sprintf(comm_buf, "V%dL%dm%dh%d%c%dR", bus->stepper[iWho(who)].vel,
-      bus->stepper[iWho(who)].acc, bus->stepper[iWho(who)].imove,
-      bus->stepper[iWho(who)].ihold, comm, delta);
-  return EZBus_Comm(bus, who, comm_buf, 0);
+  sprintf(buf, "%c%d", comm, delta);
+  return EZBus_MoveComm(bus, who, buf);
 }
 
 int EZBus_RelMoveVel(struct ezbus* bus, char who, int delta, int vel)
@@ -706,7 +766,7 @@ int EZBus_RelMoveVel(struct ezbus* bus, char who, int delta, int vel)
 
 int EZBus_MoveVel(struct ezbus* bus, char who, int vel)
 {
-  char comm_buf[EZ_BUS_BUF_LEN];
+  char buf[EZ_BUS_BUF_LEN];
   char comm = 'P';
   int v = vel;
   if (vel < 0) {
@@ -714,9 +774,7 @@ int EZBus_MoveVel(struct ezbus* bus, char who, int vel)
     v = -vel;
   }
   EZBus_SetVel(bus, who, v);
-  sprintf(comm_buf, "V%dL%dm%dh%d%c0R", bus->stepper[iWho(who)].vel,
-      bus->stepper[iWho(who)].acc, bus->stepper[iWho(who)].imove,
-      bus->stepper[iWho(who)].ihold, comm);
-  return EZBus_Comm(bus, who, comm_buf, 0);
+  sprintf(buf, "%c0", comm);
+  return EZBus_MoveComm(bus, who, buf);
 }
 
