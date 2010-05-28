@@ -73,8 +73,10 @@ static struct lock_struct {
 } lock_data = { .state = LS_DRIVE_UNK };
 
 /* Secondary actuator data and parameters */
+#define LVDT_FILT_LEN 25   //5s @ 5Hz
 #define ACTBUS_MAX_ENC_ERR  50	  //maximum difference between enc and lvdt
-#define ACTBUS_TRIM_WAIT    100  //(1s) min wait between encoder trims
+#define ACTBUS_TRIM_WAIT    20*2*LVDT_FILT_LEN  //twice LVDT_FILT_LEN, @ 100Hz
+					  //wait between trims, and after moves
 static struct act_struct {
   int pos;	//raw step count
   int enc;	//encoder reading
@@ -151,19 +153,28 @@ static void trimActEnc()
   int i, do_trim = 0;
   char buf[EZ_BUS_BUF_LEN];
 
+  for (i=0; i<3; i++) {
+    //TODO should make business a global flag, and write to frame
+    if (EZBus_IsBusy(&bus, id[i])) {
+      wait = ACTBUS_TRIM_WAIT;
+      return;
+    }
+  }
   if (wait-- > 0) return;
 
   for (i=0; i<3; i++) {
-    if (EZBus_IsUsable(&bus, id[i]) && 
+    if (!EZBus_IsBusy(&bus, id[i]) && 
 	abs(act_data[i].enc - act_data[i].lvdt) > ACTBUS_MAX_ENC_ERR) {
-      do_trim = 1;
+      do_trim |= 1<<i;
     }
   }
   if (do_trim) {
     bputs(info, "Trimming actuator encoders to LVDTs");
     for (i=0; i<3; i++) {
-      sprintf(buf, "z%dR", act_data[i].lvdt);
-      EZBus_Comm(&bus, id[i], buf, 0);
+      if (do_trim & 1<<i) {
+	sprintf(buf, "z%dR", act_data[i].lvdt);
+	EZBus_Comm(&bus, id[i], buf, 0);
+      }
     }
     wait = ACTBUS_TRIM_WAIT;
   }
@@ -180,8 +191,8 @@ static void ReadActuator(int num)
 //TODO probably want to add back some of the checks from old ServoActuators
 //TODO ServoActuators with aE25600n8 results in lots of command overflows (busy)
 //  could maybe add a business check before other commands
-//TODO ServoActuators should use several small moves so that it doesn't occupy
-//  the bus too much. Need a chance for ReadActuators, Panic, etc.
+//TODO should maybe add calls to EZBus_Stop before trying various commands
+//TODO servo_actuators command needs bounds fixed
 static void ServoActuators(int* goal)
 {
   int i;
@@ -211,8 +222,34 @@ static void DeltaActuators(void)
   ServoActuators(goal);
 }
 
+static int ThermalCompensation(void)
+{
+  //TODO for now always just go to sleep
+  return ACTBUS_FM_SLEEP;
+
+  /* Do nothing if vetoed or autovetoed */
+  if (CommandData.actbus.tc_mode != TC_MODE_ENABLED)
+    return ACTBUS_FM_SLEEP;
+
+  /* Do nothing if we haven't timed out */
+  if (CommandData.actbus.sf_time < CommandData.actbus.tc_wait)
+    return ACTBUS_FM_SLEEP;
+
+  /* Do nothing if the offset is below the threshold */
+  if (correction < CommandData.actbus.tc_step
+      && -correction < CommandData.actbus.tc_step)
+    return ACTBUS_FM_SLEEP;
+
+  /* Do something! */
+  CommandData.actbus.focus = focus - correction;
+  CommandData.actbus.sf_time = 0;
+
+  return ACTBUS_FM_THERMO;
+}
+
 static void DoActuators(void)
 {
+  int i;
   //int update_dr = 1;
 
   trimActEnc();
@@ -229,6 +266,8 @@ static void DoActuators(void)
       break;
     case ACTBUS_FM_DELTA:
       DeltaActuators();
+      if (CommandData.actbus.focus_mode != ACTBUS_FM_PANIC)
+	CommandData.actbus.focus_mode = ThermalCompensation();
       break;
 #if 0
     case ACTBUS_FM_DELFOC:
@@ -238,28 +277,37 @@ static void DoActuators(void)
     case ACTBUS_FM_FOCUS:
       update_dr = 0;
       if (SetNewFocus())
-        /* fallthrough */
+	/* fallthrough */
 #endif
     case ACTBUS_FM_SERVO:
-        ServoActuators(CommandData.actbus.goal/*, update_dr*/);
-        break;
+	ServoActuators(CommandData.actbus.goal/*, update_dr*/);
+	if (CommandData.actbus.focus_mode != ACTBUS_FM_PANIC)
+	  CommandData.actbus.focus_mode = ThermalCompensation();
+	break;
 #if 0
     case ACTBUS_FM_OFFSET:
-        SetOffsets(CommandData.actbus.offset);
-        /* fallthrough */
+	SetOffsets(CommandData.actbus.offset);
+	/* fallthrough */
 #endif
     case ACTBUS_FM_SLEEP:
-        break;
+	if (CommandData.actbus.focus_mode != ACTBUS_FM_PANIC)
+	  CommandData.actbus.focus_mode = ThermalCompensation();
+	break;
     default:
-        bputs(err, "Unknown Focus Mode (%i), sleeping");
+	bputs(err, "Unknown Focus Mode (%i), sleeping");
   }
 
 #if 0
   UpdateFlags();
+#endif
 
-  if (CommandData.actbus.focus_mode != ACTBUS_FM_PANIC)
-    CommandData.actbus.focus_mode = ThermalCompensation();
+  for (i = 0; i < 3; ++i)
+    ReadActuator(i);
 
+  focus = (act_data[0].lvdt + act_data[1].lvdt + act_data[2].lvdt) / 3;
+
+
+#if 0
   if (CommandData.actbus.reset_dr) {
     int i;
 
@@ -291,8 +339,6 @@ static void InitialiseActuator(struct ezbus* thebus, char who)
   for (i=0; i<3; i++) {
     if (id[i] == who) {	  //only operate on actautors
       bprintf(info, "Initialising %s...", name[i]);
-
-      ReadActuator(i); 
 
       /* Set the encoder */
       sprintf(buffer, ACT_PREAMBLE "z%iR", act_data[i].lvdt);  
@@ -667,7 +713,6 @@ static inline struct NiosStruct* GetActNiosAddr(int i, const char* field)
   return GetNiosAddr(name_buffer);
 }
 
-#define LVDT_FILT_LEN 25   //5s @ 5Hz
 static int filterLVDT(int num, int data)
 {
   static int lvdt_buf[3][LVDT_FILT_LEN] = {}; //init to 0
@@ -904,7 +949,7 @@ void ActuatorBus(void)
       bprintf(info, "Sending command %s to Act %c\n",
 	  CommandData.actbus.command[my_cindex], 
 	  CommandData.actbus.caddr[my_cindex]);
-      //TODO temporarily increasing print level here
+      //increase print level for uplinked manual commands
       bus.chatter = EZ_CHAT_BUS;
       EZBus_Comm(&bus, CommandData.actbus.caddr[my_cindex],
 	  CommandData.actbus.command[my_cindex], 0);
@@ -916,11 +961,6 @@ void ActuatorBus(void)
                  the lock motor's state has settled */
 
     DoActuators(); /* Actuator stuff -- this may seize the bus */
-
-    for (i = 0; i < 3; ++i)
-      ReadActuator(i);
-
-    focus = (act_data[0].lvdt + act_data[1].lvdt + act_data[2].lvdt) / 3;
 
     usleep(10000);
   }
