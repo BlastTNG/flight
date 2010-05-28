@@ -734,9 +734,9 @@ static void StoreData(int index)
   static struct NiosStruct* ssRaw11Addr;
   static struct NiosStruct* ssRaw12Addr;
 
-  static struct NiosStruct* sipLatAddr;
-  static struct NiosStruct* sipLonAddr;
-  static struct NiosStruct* sipAltAddr;
+  static struct NiosStruct* latSipAddr;
+  static struct NiosStruct* lonSipAddr;
+  static struct NiosStruct* altSipAddr;
   static struct NiosStruct* timeSipAddr;
   static struct NiosStruct* sipMksLoAddr;
   static struct NiosStruct* sipMksMedAddr;
@@ -775,17 +775,17 @@ static void StoreData(int index)
   static struct NiosStruct* latAddr;
   static struct NiosStruct* lonAddr;
   static struct NiosStruct* lstAddr;
-  static struct NiosStruct* magAzAddr;
+  static struct NiosStruct* azMagAddr;
   static struct NiosStruct* magPitchAddr;
-  static struct NiosStruct* magModelAddr;
-  static struct NiosStruct* magSigmaAddr;
+  static struct NiosStruct* azMagModelAddr;
+  static struct NiosStruct* sigmaMagAddr;
   static struct NiosStruct* dgpsAzAddr;
   static struct NiosStruct* dgpsPitchAddr;
   static struct NiosStruct* dgpsRollAddr;
   static struct NiosStruct* dgpsSigmaAddr;
   static struct NiosStruct* ssAzAddr;
   static struct NiosStruct* ssSigmaAddr;
-  static struct NiosStruct* sunAzAddr;
+  static struct NiosStruct* azSunModelAddr;
   static struct NiosStruct* sunElAddr;
   static struct NiosStruct* iscAzAddr;
   static struct NiosStruct* iscElAddr;
@@ -902,9 +902,9 @@ static void StoreData(int index)
     ssRaw11Addr = GetNiosAddr("ss_raw_11");
     ssRaw12Addr = GetNiosAddr("ss_raw_12");
 
-    sipLatAddr = GetNiosAddr("sip_lat");
-    sipLonAddr = GetNiosAddr("sip_lon");
-    sipAltAddr = GetNiosAddr("sip_alt");
+    latSipAddr = GetNiosAddr("lat_sip");
+    lonSipAddr = GetNiosAddr("lon_sip");
+    altSipAddr = GetNiosAddr("alt_sip");
     timeSipAddr = GetNiosAddr("time_sip");
 
     sipMksLoAddr = GetNiosAddr("sip_mks_lo");
@@ -926,17 +926,17 @@ static void StoreData(int index)
     altAddr = GetNiosAddr("alt");
     lonAddr = GetNiosAddr("lon");
     lstAddr = GetNiosAddr("lst");
-    magAzAddr = GetNiosAddr("mag_az");
+    azMagAddr = GetNiosAddr("az_mag");
     magPitchAddr = GetNiosAddr("mag_pitch");
-    magModelAddr = GetNiosAddr("mag_model");
-    magSigmaAddr = GetNiosAddr("mag_sigma");
+    azMagModelAddr = GetNiosAddr("az_mag_model");
+    sigmaMagAddr = GetNiosAddr("sigma_mag");
     dgpsAzAddr = GetNiosAddr("az_dgps");
     dgpsPitchAddr = GetNiosAddr("pitch_dgps");
     dgpsRollAddr = GetNiosAddr("roll_dgps");
     dgpsSigmaAddr = GetNiosAddr("sigma_dgps");
     ssAzAddr = GetNiosAddr("ss_az");
     ssSigmaAddr = GetNiosAddr("ss_sigma");
-    sunAzAddr = GetNiosAddr("sun_az");
+    azSunModelAddr = GetNiosAddr("az_sun_model");
     sunElAddr = GetNiosAddr("sun_el");
     ssTrimAddr = GetNiosAddr("ss_trim");
     calModeAddr = GetNiosAddr("cal_mode");
@@ -1103,9 +1103,9 @@ static void StoreData(int index)
   WriteData(ssAzRelSunAddr, PointingData[i_point].ss_az_rel_sun * DEG2I,
       NIOS_QUEUE);
   /********** SIP GPS Data **********/
-  WriteData(sipLatAddr, (int)(SIPData.GPSpos.lat*DEG2I), NIOS_QUEUE);
-  WriteData(sipLonAddr, (int)(SIPData.GPSpos.lon*DEG2I), NIOS_QUEUE);
-  WriteData(sipAltAddr, (int)(SIPData.GPSpos.alt), NIOS_QUEUE);
+  WriteData(latSipAddr, (int)(SIPData.GPSpos.lat*DEG2I), NIOS_QUEUE);
+  WriteData(lonSipAddr, (int)(SIPData.GPSpos.lon*DEG2I), NIOS_QUEUE);
+  WriteData(altSipAddr, (int)(SIPData.GPSpos.alt), NIOS_QUEUE);
   WriteData(timeSipAddr, SIPData.GPStime.UTC, NIOS_QUEUE);
 
   /********** SIP MKS Altitude ************/
@@ -1146,14 +1146,14 @@ static void StoreData(int index)
   WriteData(mcpFrameAddr, PointingData[i_point].mcp_frame, NIOS_QUEUE);
   WriteData(lstAddr, PointingData[i_point].lst, NIOS_QUEUE);
 
-  WriteData(magAzAddr,
+  WriteData(azMagAddr,
       (unsigned int)((PointingData[i_point].mag_az +
                       CommandData.mag_az_trim) * DEG2I), NIOS_QUEUE);
   WriteData(magPitchAddr,
       (unsigned int)(ACSData.mag_pitch * DEG2I), NIOS_QUEUE);
-  WriteData(magModelAddr,
+  WriteData(azMagModelAddr,
       (unsigned int)(PointingData[i_point].mag_model * DEG2I), NIOS_QUEUE);
-  WriteData(magSigmaAddr,
+  WriteData(sigmaMagAddr,
       (unsigned int)(PointingData[i_point].mag_sigma * DEG2I), NIOS_QUEUE);
   WriteData(magTrimAddr, CommandData.mag_az_trim * DEG2I, NIOS_QUEUE);
 
@@ -1173,7 +1173,7 @@ static void StoreData(int index)
       NIOS_QUEUE);
   WriteData(ssSigmaAddr,
       (unsigned int)(PointingData[i_point].ss_sigma * DEG2I), NIOS_QUEUE);
-  WriteData(sunAzAddr, (unsigned int)(PointingData[i_point].sun_az*DEG2I),
+  WriteData(azSunModelAddr, (unsigned int)(PointingData[i_point].sun_az*DEG2I),
       NIOS_QUEUE);
   WriteData(sunElAddr, (int)(PointingData[i_point].sun_el*DEG2I), NIOS_QUEUE);
   WriteData(ssTrimAddr, CommandData.ss_az_trim * DEG2I, NIOS_QUEUE);

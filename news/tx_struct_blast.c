@@ -344,13 +344,13 @@ struct ChannelStruct SlowChannels[] = {
   {"cal_repeat",   'w', LOOP1, 18,                .20,             0.0, 'u', U_NONE},
   /* LOOP1 19 is unused */
   {"timeout",      'w', LOOP1, 20,                1.0,             0.0, 'u', U_NONE},
-  {"sun_az",       'w', LOOP1, 21,              I2DEG,             0.0, 'u', U_NONE},
+  {"az_sun_model",       'w', LOOP1, 21,              I2DEG,             0.0, 'u', U_D_DEG},
   {"lvdt_low",     'w', LOOP1, 22,                1.0,         -5000.0, 'u', U_NONE},
   {"status_mcc",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE}, //south_i_am, at_float, schedule, alice_file
   {"cryostate",    'w', LOOP1, 24,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 25 is unused */
   {"t_cpu1",       'w', LOOP1, 26,               0.01,             0.0, 'u', U_NONE},
-  {"mag_model",    'w', LOOP1, 27,              I2DEG,             0.0, 'u', U_NONE}, // magnetic declination
+  {"az_mag_model",    'w', LOOP1, 27,              I2DEG,             0.0, 'u', U_D_DEG}, // magnetic declination
   {"sensor_veto",  'w', LOOP1, 28,                1.0,             0.0, 'u', U_NONE},
   {"level_on_bal", 'w', LOOP1, 29,           1./1990.13,             0.0, 'u', U_I_A},
   {"level_off_bal",'w', LOOP1, 30,           1./1990.13,             0.0, 'u', U_I_A},
@@ -358,13 +358,13 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP1 32-33 are wide */
   {"veto_bal",     'w', LOOP1, 34,           4.0 / SR,             0.0, 's', U_NONE},
   /* LOOP1 35-36 are unused */
-  {"sip_alt",      'w', LOOP1, 37,                1.0,             0.0, 'u', U_NONE},
+  {"alt_sip",      'w', LOOP1, 37,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 38-41 are wide */
   {"isc_mapmean",  'w', LOOP1, 42,                 1.,             0.0, 'u', U_NONE},
   {"pitch_dgps",   'w', LOOP1, 43,              I2DEG,             0.0, 's', U_P_DEG},
   {"roll_dgps",    'w', LOOP1, 44,              I2DEG,             0.0, 's', U_P_DEG},
-  {"sip_lat",      'w', LOOP1, 45,              I2DEG,             0.0, 's', U_NONE},
-  {"sip_lon",      'w', LOOP1, 46,              I2DEG,             0.0, 's', U_NONE},
+  {"lat_sip",      'w', LOOP1, 45,              I2DEG,             0.0, 's', U_LA_DEG},
+  {"lon_sip",      'w', LOOP1, 46,              I2DEG,             0.0, 's', U_LO_DEG},
   {"lat_dgps",     'w', LOOP1, 47,              I2DEG,             0.0, 's', U_LA_DEG},
   {"lon_dgps",     'w', LOOP1, 48,              I2DEG,             0.0, 's', U_LO_DEG},
   {"alt_dgps",     'w', LOOP1, 49,                1.0,             0.0, 'u', U_ALT_M},
@@ -419,8 +419,8 @@ struct ChannelStruct SlowChannels[] = {
   {"offset_ifroll_gy",'w',LOOP2, 37,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifyaw_gy", 'w',LOOP2, 38,      1.0/32768.0,             0.0, 's', U_V_DPS},
   /* LOOP2 39 is unused */
-  {"mag_sigma",       'w',LOOP2, 40,            I2DEG,             0.0, 'u', U_NONE},
-  {"az_dgps",         'w',LOOP2, 41,            I2DEG,             0.0, 'u', U_P_DEG},
+  {"sigma_mag",       'w',LOOP2, 40,            I2DEG,             0.0, 'u', U_NONE},
+  {"az_dgps",         'w',LOOP2, 41,            I2DEG,             0.0, 'u', U_D_DEG},
   {"sigma_dgps",      'w',LOOP2, 42,            I2DEG,             0.0, 'u', U_NONE},
   {"lvdt_high",       'w',LOOP2, 43,              1.0,         -5000.0, 'u', U_NONE},
   {"isc_az",          'w',LOOP2, 44,            I2DEG,             0.0, 'u', U_NONE},
@@ -431,7 +431,7 @@ struct ChannelStruct SlowChannels[] = {
   {"ss_sigma",     'w', LOOP2, 50,              I2DEG,             0.0, 'u', U_NONE},
   /* LOOP2 51-54 are wide fast */
   {"clin_sigma",   'w', LOOP2, 55,              I2DEG,             0.0, 'u', U_NONE},
-  {"mag_az",       'w', LOOP2, 56,              I2DEG,             0.0, 'u', U_NONE},
+  {"az_mag",       'w', LOOP2, 56,              I2DEG,             0.0, 'u', U_D_DEG},
   {"isc_spulse",   'w', LOOP2, 57,               10.0,             0.0, 'u', U_NONE},
   {"isc_hx_flag",  'w', LOOP2, 58,                1.0,             0.0, 'u', U_NONE},
   {"isc_brra",     'w', LOOP2, 59,              I2DEG,             0.0, 'u', U_NONE},
@@ -554,7 +554,7 @@ struct ChannelStruct SlowChannels[] = {
   {"trim_dgps",    'w', LOOP4, 56,              I2DEG,             0.0, 's', U_NONE},
   {"ss_trim",      'w', LOOP4, 57,              I2DEG,             0.0, 's', U_NONE},
   /* LOOP4 58-59 are wide */
-  {"az_raw_dgps",  'w', LOOP4, 60,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"az_raw_dgps",  'w', LOOP4, 60,              I2DEG,             0.0, 'u', U_D_DEG},
   {"gain_bal",     'w', LOOP4, 61,            1/1000.,             0.0, 'u', U_NONE},
   {"clin_el",      'w', LOOP4, 62,              I2DEG,             0.0, 'u', U_NONE},
   {"p_h",          'w', LOOP4, 63,              I2DEG,             0.0, 'u', U_NONE}, // scan height
