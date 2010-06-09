@@ -700,6 +700,8 @@ static void DoSanityChecks(void)
           bprintf(warning, "Channels: Derived channel source %s not found.",
               DerivedChannels[i].lincom.source);
 
+      /* FALLTHROUGH */
+      case 'p': /* phase -- we check for duplicates, but not source -- FIXME */
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom.field) != -1)
           bprintf(fatal, "Channels: Namespace Collision: Duplicate channel "
               "name %s found in derived channels",
