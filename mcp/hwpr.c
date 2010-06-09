@@ -131,12 +131,18 @@ void HWPRBus(void)
   int poll_timeout = POLL_TIMEOUT;
   int all_ok;
   struct ezbus bus;
+  int firsttime = 1;
 
   nameThread("HWPR");
   bputs(startup, "HWPRBus startup.");
 
-  if (EZBus_Init(&bus, HWPR_BUS, "", HWPRBUS_CHATTER) != EZ_ERR_OK)
-    berror(tfatal, "failed to connect");
+  while (EZBus_Init(&bus, HWPR_BUS, "", HWPRBUS_CHATTER) != EZ_ERR_OK) {
+    if (firsttime) {
+      bprintf(warning, "Cannot connect to %s.  Will retry indefinitely.\n", HWPR_BUS);
+      firsttime = 0;
+    }
+    sleep(10);
+  }
 
   EZBus_Add(&bus, HWPR_ADDR, "HWPR");
 
