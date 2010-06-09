@@ -695,13 +695,21 @@ static void DoSanityChecks(void)
         /* FALLTHROUGH */
       case 'w': /* bitword -- same checks as lincom */
       case 't': /* linterp -- same checks as lincom */
+      case 'p': /* phase   -- same checks as lincom */
       case 'c': /* lincom */
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom.source) == -1)
-          bprintf(warning, "Channels: Derived channel source %s not found.",
-              DerivedChannels[i].lincom.source);
+          if ((DerivedChannels[i].lincom.source[0] != 'n' &&
+              DerivedChannels[i].lincom.source[0] != 'N') ||
+              (DerivedChannels[i].lincom.source[3] != 'c' &&
+              DerivedChannels[i].lincom.source[3] != 'C') ||
+              !isdigit(DerivedChannels[i].lincom.source[1]) ||
+              !isdigit(DerivedChannels[i].lincom.source[2]) ||
+              !isdigit(DerivedChannels[i].lincom.source[4]) ||
+              !isdigit(DerivedChannels[i].lincom.source[5]) ||
+              DerivedChannels[i].lincom.source[6] != '\0')
+            bprintf(warning, "Channels: Derived channel source %s not found.",
+                DerivedChannels[i].lincom.source);
 
-      /* FALLTHROUGH */
-      case 'p': /* phase -- we check for duplicates, but not source -- FIXME */
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom.field) != -1)
           bprintf(fatal, "Channels: Namespace Collision: Duplicate channel "
               "name %s found in derived channels",
