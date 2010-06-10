@@ -603,25 +603,36 @@ void BiasControl (unsigned short* RxFrame)
 
   /* Check to make sure that the user selected an array.  0 means step all arrays.*/
   if (CommandData.Bias.biasStep.do_step) {
-      switch (CommandData.Bias.biasStep.arr_ind) {
-      case 250:
-	i_arr = 2;
-	break;
-      case 350:
-	i_arr = 1;
-	break;
-      case 500:
-	i_arr = 0;
-	break;
-      case 0:
-	i_arr = 3; // i.e. all wavelengths
-	break;
-      default:
-	CommandData.Bias.biasStep.do_step = 0; // don't step
-	break;
-      }
+    switch (CommandData.Bias.biasStep.arr_ind) {
+    case 250:
+      i_arr = 2;
+      break;
+    case 350:
+      i_arr = 1;
+      break;
+    case 500:
+      i_arr = 0;
+      break;
+    case 0:
+      i_arr = 3; // i.e. all wavelengths
+      break;
+    default:
+      CommandData.Bias.biasStep.do_step = 0; // don't step
+      break;
+    }
   } 
 
+
+    /************* Set the Bias Levels *******/
+ 
+  
+  for (i=0; i<5; i++) {
+    if (CommandData.Bias.setLevel[i]) {
+      WriteData(biasAmplAddr[i], CommandData.Bias.bias[i]<<1, NIOS_QUEUE);
+      CommandData.Bias.setLevel[i] = 0;
+      CommandData.Bias.biasStep.do_step = 0;
+    }
+  }
   if (CommandData.Bias.biasStep.do_step) {
     if (k==0) {
       start = CommandData.Bias.biasStep.start;
@@ -696,12 +707,5 @@ void BiasControl (unsigned short* RxFrame)
       WriteData(rampEnaAddr, CommandData.Bias.biasRamp, NIOS_QUEUE);
     }
     
-    /************* Set the Bias Levels *******/
-    for (i=0; i<5; i++)
-      if (CommandData.Bias.setLevel[i]) {
-	WriteData(biasAmplAddr[i], CommandData.Bias.bias[i]<<1, NIOS_QUEUE);
-	CommandData.Bias.setLevel[i] = 0;
-      }
   }
 }
-
