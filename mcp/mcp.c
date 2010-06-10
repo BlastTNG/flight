@@ -470,8 +470,8 @@ static void GetACS(unsigned short *RxFrame)
 {
   double enc_raw_el, ifel_gy, ifroll_gy, ifyaw_gy;
   double x_comp, y_comp, z_comp;
-  double vel_raw_rw;
-  double res_raw_piv;
+  double vel_rw;
+  double res_piv;
   static struct BiPhaseStruct* ifElgyAddr;
   static struct BiPhaseStruct* ifRollgyAddr;
   static struct BiPhaseStruct* ifYawgyAddr;
@@ -480,8 +480,8 @@ static void GetACS(unsigned short *RxFrame)
   static struct BiPhaseStruct* magXAddr;
   static struct BiPhaseStruct* magYAddr;
   static struct BiPhaseStruct* magZAddr;
-  static struct BiPhaseStruct* velRawRWAddr;
-  static struct BiPhaseStruct* resRawPivAddr;
+  static struct BiPhaseStruct* velRWAddr;
+  static struct BiPhaseStruct* resPivAddr;
 
   unsigned int rx_frame_index = 0;
   int i_ss;
@@ -497,16 +497,16 @@ static void GetACS(unsigned short *RxFrame)
     magXAddr = GetBiPhaseAddr("mag_x");
     magYAddr = GetBiPhaseAddr("mag_y");
     magZAddr = GetBiPhaseAddr("mag_z");
-    velRawRWAddr = GetBiPhaseAddr("vel_raw_rw");
-    resRawPivAddr = GetBiPhaseAddr("res_raw_piv");
+    velRWAddr = GetBiPhaseAddr("vel_rw");
+    resPivAddr = GetBiPhaseAddr("res_piv");
   }
 
   rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
       (RxFrame[2] & 0x0000ffff) << 16);
 
   enc_raw_el = (((double)RxFrame[encElevAddr->channel])/DEG2I);
-  vel_raw_rw = (((double)((short)RxFrame[velRawRWAddr->channel]))*4.0/DEG2I);
-  res_raw_piv = (((double)((short)RxFrame[resRawPivAddr->channel]))/DEG2I);
+  vel_rw = (((double)((short)RxFrame[velRWAddr->channel]))*4.0/DEG2I);
+  res_piv = (((double)((short)RxFrame[resPivAddr->channel]))/DEG2I);
   ifel_gy = (double)((RxFrame[ifElgyAddr->channel])-GY16_OFFSET) * GY16_TO_DPS;
   ifroll_gy = (double)(RxFrame[ifRollgyAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
   ifyaw_gy = (double)(RxFrame[ifYawgyAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
@@ -526,8 +526,8 @@ static void GetACS(unsigned short *RxFrame)
   ACSData.mag_x = x_comp;
   ACSData.mag_y = y_comp;
   ACSData.mag_z = z_comp;
-  ACSData.vel_raw_rw = vel_raw_rw;
-  ACSData.res_raw_piv = res_raw_piv;
+  ACSData.vel_rw = vel_rw;
+  ACSData.res_piv = res_piv;
 
   ACSData.clin_elev = (double)RxFrame[clinElevAddr->channel];
 

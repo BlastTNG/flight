@@ -834,28 +834,28 @@ static void StoreData(int index)
   static struct NiosStruct *velElAddr;
 
   /* Motor data read out over serial threads in motors.c */
-  static struct NiosStruct *velRawRWAddr;
-  static struct NiosStruct *tMCRawRWAddr;
-  static struct NiosStruct *iRawRWAddr;
+  static struct NiosStruct *velRWAddr;
+  static struct NiosStruct *tMCRWAddr;
+  static struct NiosStruct *iSerRWAddr;
   static struct NiosStruct *stat1RWAddr;
   static struct NiosStruct *stat2RWAddr;
   static struct NiosStruct *faultRWAddr;
   static struct NiosStruct *infoRWAddr;
   static struct NiosStruct *driveErrCtsRWAddr;
   static struct NiosStruct *encRawElAddr;
-  static struct NiosStruct *tMCRawElAddr;
-  static struct NiosStruct *iRawElAddr;
+  static struct NiosStruct *tMCElAddr;
+  static struct NiosStruct *iSerElAddr;
   static struct NiosStruct *stat1ElAddr;
   static struct NiosStruct *stat2ElAddr;
   static struct NiosStruct *faultElAddr;
   static struct NiosStruct *infoElAddr;
   static struct NiosStruct *driveErrCtsElAddr;
-  static struct NiosStruct *resRawPivAddr;
-  static struct NiosStruct *iRawPivAddr;
+  static struct NiosStruct *resPivAddr;
+  static struct NiosStruct *iSerPivAddr;
   static struct NiosStruct *statDrPivAddr;
   static struct NiosStruct *statS1PivAddr;
   static struct NiosStruct *velDPSAzAddr;
-  static struct NiosStruct *velRawPivAddr;
+  static struct NiosStruct *velSerPivAddr;
   static struct NiosStruct *infoPivAddr;
   static struct NiosStruct *driveErrCtsPivAddr;
   static struct NiosStruct *verboseRWAddr;
@@ -1001,26 +1001,26 @@ static void StoreData(int index)
     dirAzAddr = GetNiosAddr("dir_az");
     dirElAddr = GetNiosAddr("dir_el");
 
-    velRawRWAddr = GetNiosAddr("vel_raw_rw");
+    velRWAddr = GetNiosAddr("vel_rw");
     encRawElAddr = GetNiosAddr("enc_raw_el");
-    tMCRawRWAddr = GetNiosAddr("t_mc_raw_rw");
-    iRawRWAddr = GetNiosAddr("i_raw_rw");
+    tMCRWAddr = GetNiosAddr("t_mc_rw");
+    iSerRWAddr = GetNiosAddr("i_ser_rw");
     stat1RWAddr = GetNiosAddr("stat_1_rw");
     stat2RWAddr = GetNiosAddr("stat_2_rw");
     faultRWAddr = GetNiosAddr("fault_rw");
     infoRWAddr = GetNiosAddr("drive_info_rw");
     driveErrCtsRWAddr = GetNiosAddr("drive_err_cts_rw");
-    tMCRawElAddr = GetNiosAddr("t_mc_raw_el");
-    iRawElAddr = GetNiosAddr("i_raw_el");
+    tMCElAddr = GetNiosAddr("t_mc_el");
+    iSerElAddr = GetNiosAddr("i_ser_el");
     stat1ElAddr = GetNiosAddr("stat_1_el");
     stat2ElAddr = GetNiosAddr("stat_2_el");
     faultElAddr = GetNiosAddr("fault_el");
-    resRawPivAddr = GetNiosAddr("res_raw_piv");
-    iRawPivAddr = GetNiosAddr("i_raw_piv");
+    resPivAddr = GetNiosAddr("res_piv");
+    iSerPivAddr = GetNiosAddr("i_ser_piv");
     statDrPivAddr = GetNiosAddr("stat_dr_piv");
     statS1PivAddr = GetNiosAddr("stat_s1_piv");
     velDPSAzAddr = GetNiosAddr("vel_az");
-    velRawPivAddr = GetNiosAddr("vel_raw_piv");
+    velSerPivAddr = GetNiosAddr("vel_ser_piv");
     infoPivAddr = GetNiosAddr("drive_info_piv");
     driveErrCtsPivAddr = GetNiosAddr("drive_err_cts_piv");
     infoElAddr = GetNiosAddr("drive_info_el");
@@ -1049,13 +1049,13 @@ static void StoreData(int index)
   WriteData(encSigmaAddr,
       (unsigned int)(PointingData[i_point].enc_sigma * DEG2I), NIOS_QUEUE);
 
-  WriteData(velRawRWAddr,
-      ((long int)(RWMotorData[i_rw_motors].vel_raw_rw/4.0*DEG2I)), NIOS_QUEUE);
+  WriteData(velRWAddr,
+      ((long int)(RWMotorData[i_rw_motors].vel_rw/4.0*DEG2I)), NIOS_QUEUE);
   WriteData(encRawElAddr,
       ((long int)(ElevMotorData[i_elev_motors].enc_raw_el*DEG2I)), NIOS_QUEUE);
 
-  WriteData(resRawPivAddr,
-      PivotMotorData[i_pivot_motors].res_raw_piv*DEG2I, NIOS_QUEUE);
+  WriteData(resPivAddr,
+      PivotMotorData[i_pivot_motors].res_piv*DEG2I, NIOS_QUEUE);
 
   /*************************************************
    *             Slow Controls                     *
@@ -1277,23 +1277,23 @@ static void StoreData(int index)
   WriteData(dgpsPitchRawAddr, DGPSAtt[i_dgps].pitch * DEG2I, NIOS_QUEUE);
   WriteData(dgpsRollRawAddr, DGPSAtt[i_dgps].roll * DEG2I, NIOS_QUEUE);
   WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok, NIOS_QUEUE);
-  WriteData(tMCRawRWAddr,RWMotorData[i_rw_motors].temp,NIOS_QUEUE);
-  WriteData(iRawRWAddr,((int)(RWMotorData[i_rw_motors].current/30.0*32768.0)),NIOS_QUEUE);
+  WriteData(tMCRWAddr,RWMotorData[i_rw_motors].temp,NIOS_QUEUE);
+  WriteData(iSerRWAddr,((int)(RWMotorData[i_rw_motors].current/30.0*32768.0)),NIOS_QUEUE);
   WriteData(stat1RWAddr,(RWMotorData[i_rw_motors].status & 0xffff),NIOS_QUEUE);
   WriteData(stat2RWAddr,((RWMotorData[i_rw_motors].status & 0xffff0000)>> 16),NIOS_QUEUE);
   WriteData(faultRWAddr,RWMotorData[i_rw_motors].fault_reg,NIOS_QUEUE);
   WriteData(infoRWAddr,RWMotorData[i_rw_motors].drive_info,NIOS_QUEUE);
   WriteData(driveErrCtsRWAddr,RWMotorData[i_rw_motors].err_count,NIOS_QUEUE);
-  WriteData(tMCRawElAddr,ElevMotorData[i_elev_motors].temp,NIOS_QUEUE);
-  WriteData(iRawElAddr,((int)(ElevMotorData[i_elev_motors].current/30.0*32768.0)),NIOS_QUEUE);
+  WriteData(tMCElAddr,ElevMotorData[i_elev_motors].temp,NIOS_QUEUE);
+  WriteData(iSerElAddr,((int)(ElevMotorData[i_elev_motors].current/30.0*32768.0)),NIOS_QUEUE);
   WriteData(stat1ElAddr,(ElevMotorData[i_elev_motors].status & 0xffff),NIOS_QUEUE);
   WriteData(stat2ElAddr,((ElevMotorData[i_elev_motors].status & 0xffff0000)>> 16),NIOS_QUEUE);
   WriteData(faultElAddr,ElevMotorData[i_elev_motors].fault_reg,NIOS_QUEUE);
-  WriteData(iRawPivAddr,PivotMotorData[i_pivot_motors].current*32768.0/20.0,NIOS_QUEUE);
+  WriteData(iSerPivAddr,PivotMotorData[i_pivot_motors].current*32768.0/20.0,NIOS_QUEUE);
   WriteData(statDrPivAddr,(PivotMotorData[i_pivot_motors].db_stat & 0xff)
                  +((PivotMotorData[i_pivot_motors].dp_stat & 0xff)<< 8),NIOS_QUEUE);
   WriteData(statS1PivAddr,PivotMotorData[i_pivot_motors].ds1_stat,NIOS_QUEUE);
-  WriteData(velRawPivAddr,PivotMotorData[i_pivot_motors].dps_piv,NIOS_QUEUE);
+  WriteData(velSerPivAddr,PivotMotorData[i_pivot_motors].dps_piv,NIOS_QUEUE);
 
   WriteData(infoElAddr,ElevMotorData[i_elev_motors].drive_info,NIOS_QUEUE);
   WriteData(driveErrCtsElAddr,ElevMotorData[i_elev_motors].err_count,NIOS_QUEUE);

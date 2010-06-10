@@ -127,16 +127,16 @@ static double calcVPiv(void)
     for(i=0;i<(VPIV_FILTER_LEN-1);i++) buf_vPiv[i]=0.0;
     for(i=0;i<(VPIV_FILTER_LEN-1);i++) buf_t[i]=0.0;
   }
-  a+=(ACSData.res_raw_piv-buf_vPiv[ib_last]);
+  a+=(ACSData.res_piv-buf_vPiv[ib_last]);
   //  dt=((double)(gettimeofday-buf_t[ib_last]));
-  buf_vPiv[ib_last]=ACSData.res_raw_piv;
+  buf_vPiv[ib_last]=ACSData.res_piv;
   //  dummy=PointingData[i_point].t
     //  buf_t[ib_last]=PointingData[i_point].t;
   ib_last=(ib_last+VPIV_FILTER_LEN+1)%VPIV_FILTER_LEN;
   dtheta=(a-alast)/VPIV_FILTER_LEN;
   alast=a;
   vpiv=dtheta/0.010016; 
-  //  if (j%100 == 1) bprintf(info,"CalcVPiv vpiv = %f, res_raw_piv = %f, a = %f, alast = %f, dtheta = %f ",vpiv,ACSData.res_raw_piv,a/VPIV_FILTER_LEN,alast/VPIV_FILTER_LEN,dtheta);
+  //  if (j%100 == 1) bprintf(info,"CalcVPiv vpiv = %f, res_piv = %f, a = %f, alast = %f, dtheta = %f ",vpiv,ACSData.res_piv,a/VPIV_FILTER_LEN,alast/VPIV_FILTER_LEN,dtheta);
   j++;
   return vpiv;
 }
@@ -318,7 +318,7 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   v_az_req = ((double) v_az_req_gy) * GY16_TO_DPS/10.0; // Convert to dps 
 
   i_point = GETREADINDEX(point_index);
-  p_rw_term = (-1.0)*((double)g_rw_piv/10.0)*(ACSData.vel_raw_rw-CommandData.pivot_gain.SP);
+  p_rw_term = (-1.0)*((double)g_rw_piv/10.0)*(ACSData.vel_rw-CommandData.pivot_gain.SP);
   p_err_term = (double)g_err_piv*(v_az_req-PointingData[point_index].v_az);
   I_req = p_rw_term+p_err_term;
 
@@ -1503,16 +1503,16 @@ void* reactComm(void* arg)
       firsttime=0;
     }
     //in case we switch to ICC when serial communications aren't working
-    RWMotorData[0].vel_raw_rw=ACSData.vel_raw_rw;
-    RWMotorData[1].vel_raw_rw=ACSData.vel_raw_rw;
-    RWMotorData[2].vel_raw_rw=ACSData.vel_raw_rw;
+    RWMotorData[0].vel_rw=ACSData.vel_rw;
+    RWMotorData[1].vel_rw=ACSData.vel_rw;
+    RWMotorData[2].vel_rw=ACSData.vel_rw;
     usleep(20000);
   }
 
   firsttime=1;
   bprintf(info,"Bringing the reaction wheel online.");
   // Initialize structure RWMotorData.  Follows what was done in dgps.c
-  //  RWMotorData[0].vel_raw_rw=0;
+  //  RWMotorData[0].vel_rw=0;
   RWMotorData[0].temp=0;
   RWMotorData[0].current=0.0;
   RWMotorData[0].status=0;
@@ -1609,7 +1609,7 @@ void* reactComm(void* arg)
       } 
 
       vel_raw=queryCopleyInd(COP_IND_VEL,&reactinfo); // Units are 0.1 counts/sec
-      RWMotorData[rw_motor_index].vel_raw_rw=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
+      RWMotorData[rw_motor_index].vel_rw=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
       j=j%4;
       switch(j) {
       case 0:
@@ -1873,7 +1873,7 @@ void* pivotComm(void* arg)
   i=0;
 
   // Initialize structure PivotMotorData.  Follows what was done in dgps.c
-  PivotMotorData[0].res_raw_piv=0;
+  PivotMotorData[0].res_piv=0;
   PivotMotorData[0].current=0;
   PivotMotorData[0].db_stat=0;
   PivotMotorData[0].dp_stat=0;
@@ -2000,7 +2000,7 @@ void* pivotComm(void* arg)
 
       pos_raw=getAMCResolver(&pivotinfo);
       bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"Resolver Position is: %i",pos_raw);
-      PivotMotorData[pivot_motor_index].res_raw_piv=((double) pos_raw)/PIV_RES_CTS*360.0; 
+      PivotMotorData[pivot_motor_index].res_piv=((double) pos_raw)/PIV_RES_CTS*360.0; 
 
       j=j%5;
       switch(j) {
