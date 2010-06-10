@@ -35,7 +35,7 @@
 #include "mcp.h"
 
 #define ARIEN "192.168.1.7"
-#define ARIEN_PORT 11235
+#define ARIEN_PORT 54321
 
 void nameThread(const char*);	/* mcp.c */
 
