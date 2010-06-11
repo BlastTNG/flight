@@ -102,10 +102,10 @@ double LockPosition(double elevation);
 /************************************************************************/
 void ControlGyroHeat(unsigned short *RxFrame)
 {
-  static struct BiPhaseStruct* tGyboxAddr;
-  static struct NiosStruct *gyHeatAddr, *tGySetAddr, *pGyheatAddr;
-  static struct NiosStruct *iGyheatAddr;
-  static struct NiosStruct *dGyheatAddr, *gyHHistAddr, *gyHAgeAddr;
+  static struct BiPhaseStruct* tGyAddr;
+  static struct NiosStruct *heatGyAddr, *tSetGyAddr, *gPHeatGyAddr;
+  static struct NiosStruct *gIHeatGyAddr;
+  static struct NiosStruct *gDHeatGyAddr, *hHistGyAddr, *hAgeGyAddr;
   static int firsttime = 1;
   static double history = 0;
 
@@ -122,24 +122,24 @@ void ControlGyroHeat(unsigned short *RxFrame)
   /******** Obtain correct indexes the first time here ***********/
   if (firsttime) {
     firsttime = 0;
-    tGyboxAddr = GetBiPhaseAddr("t_gybox");
-    gyHeatAddr = GetNiosAddr("gy_heat");
-    gyHHistAddr = GetNiosAddr("gy_h_hist");
-    gyHAgeAddr = GetNiosAddr("gy_h_age");
-    tGySetAddr = GetNiosAddr("t_gy_set");
+    tGyAddr = GetBiPhaseAddr("t_gy");
+    heatGyAddr = GetNiosAddr("heat_gy");
+    hHistGyAddr = GetNiosAddr("h_hist_gy");
+    hAgeGyAddr = GetNiosAddr("h_age_gy");
+    tSetGyAddr = GetNiosAddr("t_set_gy");
 
-    pGyheatAddr = GetNiosAddr("g_p_gyheat");
-    iGyheatAddr = GetNiosAddr("g_i_gyheat");
-    dGyheatAddr = GetNiosAddr("g_d_gyheat");
+    gPHeatGyAddr = GetNiosAddr("g_p_heat_gy");
+    gIHeatGyAddr = GetNiosAddr("g_i_heat_gy");
+    gDHeatGyAddr = GetNiosAddr("g_d_heat_gy");
   }
 
   /* send down the setpoints and gains values */
-  WriteData(tGySetAddr, CommandData.gyheat.setpoint * 327.68, NIOS_QUEUE);
-  WriteData(pGyheatAddr, CommandData.gyheat.gain.P, NIOS_QUEUE);
-  WriteData(iGyheatAddr, CommandData.gyheat.gain.I, NIOS_QUEUE);
-  WriteData(dGyheatAddr, CommandData.gyheat.gain.D, NIOS_QUEUE);
+  WriteData(tSetGyAddr, CommandData.gyheat.setpoint * 327.68, NIOS_QUEUE);
+  WriteData(gPHeatGyAddr, CommandData.gyheat.gain.P, NIOS_QUEUE);
+  WriteData(gIHeatGyAddr, CommandData.gyheat.gain.I, NIOS_QUEUE);
+  WriteData(gDHeatGyAddr, CommandData.gyheat.gain.D, NIOS_QUEUE);
 
-  temp = slow_data[tGyboxAddr->index][tGyboxAddr->channel];
+  temp = slow_data[tGyAddr->index][tGyAddr->channel];
   
   /* Only run these controls if we think the thermometer isn't broken */
   if (temp < MAX_GYBOX_TEMP && temp > MIN_GYBOX_TEMP) {
@@ -182,18 +182,18 @@ void ControlGyroHeat(unsigned short *RxFrame)
 
     /******** do the pulse *****/
     if (p_on > 0) {
-      WriteData(gyHeatAddr, 0x1, NIOS_FLUSH);
+      WriteData(heatGyAddr, 0x1, NIOS_FLUSH);
       p_on--;
     } else if (p_off > 0) {
-      WriteData(gyHeatAddr, 0x0, NIOS_FLUSH);
+      WriteData(heatGyAddr, 0x0, NIOS_FLUSH);
       p_off--;
     }
   } else
     /* Turn off heater if thermometer appears broken */
-    WriteData(gyHeatAddr, 0x0, NIOS_FLUSH);
+    WriteData(heatGyAddr, 0x0, NIOS_FLUSH);
 
-  WriteData(gyHAgeAddr, CommandData.gyheat.age, NIOS_QUEUE);
-  WriteData(gyHHistAddr, (history * 32768. / 100.), NIOS_QUEUE);
+  WriteData(hAgeGyAddr, CommandData.gyheat.age, NIOS_QUEUE);
+  WriteData(hHistGyAddr, (history * 32768. / 100.), NIOS_QUEUE);
 }
 
 /******************************************************************/
@@ -357,16 +357,16 @@ static int ControlPumpHeat(int bits_bal)
 void ChargeController(void)
 {
 
-  static struct NiosStruct *VBattAddr;
-  static struct NiosStruct *VArrAddr;
-  static struct NiosStruct *IBattAddr;
-  static struct NiosStruct *IArrAddr;
-  static struct NiosStruct *VTargAddr;
-  static struct NiosStruct *ThsAddr;
-  static struct NiosStruct *FaultAddr;
-  static struct NiosStruct *AlarmHiAddr;
-  static struct NiosStruct *AlarmLoAddr;
-  static struct NiosStruct *ChargeAddr;
+  static struct NiosStruct *VBattCCAddr;
+  static struct NiosStruct *VArrCCAddr;
+  static struct NiosStruct *IBattCCAddr;
+  static struct NiosStruct *IArrCCAddr;
+  static struct NiosStruct *VTargCCAddr;
+  static struct NiosStruct *ThsCCAddr;
+  static struct NiosStruct *FaultCCAddr;
+  static struct NiosStruct *AlarmHiCCAddr;
+  static struct NiosStruct *AlarmLoCCAddr;
+  static struct NiosStruct *ChargeCCAddr;
 
   static int firsttime = 1;
   
@@ -374,29 +374,29 @@ void ChargeController(void)
 
     firsttime = 0;
 
-    VBattAddr = GetNiosAddr("v_batt_chrgctrl");
-    VArrAddr = GetNiosAddr("v_arr_chrgctrl");
-    IBattAddr = GetNiosAddr("i_batt_chrgctrl");
-    IArrAddr  = GetNiosAddr("i_arr_chrgctrl");
-    VTargAddr = GetNiosAddr("v_targ_chrgctrl");
-    ThsAddr = GetNiosAddr("t_hs_chrgctrl");
-    FaultAddr = GetNiosAddr("fault_chrgctrl");
-    AlarmHiAddr = GetNiosAddr("alarm_hi_chrgctrl");
-    AlarmLoAddr = GetNiosAddr("alarm_lo_chrgctrl");
-    ChargeAddr = GetNiosAddr("state_chrgctrl");
+    VBattCCAddr = GetNiosAddr("v_batt_cc");
+    VArrCCAddr = GetNiosAddr("v_arr_cc");
+    IBattCCAddr = GetNiosAddr("i_batt_cc");
+    IArrCCAddr  = GetNiosAddr("i_arr_cc");
+    VTargCCAddr = GetNiosAddr("v_targ_cc");
+    ThsCCAddr = GetNiosAddr("t_hs_cc");
+    FaultCCAddr = GetNiosAddr("fault_cc");
+    AlarmHiCCAddr = GetNiosAddr("alarm_hi_cc");
+    AlarmLoCCAddr = GetNiosAddr("alarm_lo_cc");
+    ChargeCCAddr = GetNiosAddr("state_cc");
 
   }
 
-  WriteData(VBattAddr, 1000.0*ChrgCtrlData.V_batt, NIOS_QUEUE);
-  WriteData(VArrAddr, 1000.0*ChrgCtrlData.V_arr, NIOS_QUEUE);
-  WriteData(IBattAddr, 1000.0*ChrgCtrlData.I_batt, NIOS_QUEUE);
-  WriteData(IArrAddr, 1000.0*ChrgCtrlData.I_arr, NIOS_QUEUE);
-  WriteData(VTargAddr, 1000.0*ChrgCtrlData.V_targ, NIOS_QUEUE);
-  WriteData(ThsAddr, ChrgCtrlData.T_hs, NIOS_QUEUE);
-  WriteData(FaultAddr, ChrgCtrlData.fault_field, NIOS_QUEUE);
-  WriteData(AlarmHiAddr, ChrgCtrlData.alarm_field_hi, NIOS_QUEUE);
-  WriteData(AlarmLoAddr, ChrgCtrlData.alarm_field_lo, NIOS_QUEUE);
-  WriteData(ChargeAddr, ChrgCtrlData.charge_state, NIOS_QUEUE); // OR NIOS_FLUSH?
+  WriteData(VBattCCAddr, 1000.0*ChrgCtrlData.V_batt, NIOS_QUEUE);
+  WriteData(VArrCCAddr, 1000.0*ChrgCtrlData.V_arr, NIOS_QUEUE);
+  WriteData(IBattCCAddr, 1000.0*ChrgCtrlData.I_batt, NIOS_QUEUE);
+  WriteData(IArrCCAddr, 1000.0*ChrgCtrlData.I_arr, NIOS_QUEUE);
+  WriteData(VTargCCAddr, 1000.0*ChrgCtrlData.V_targ, NIOS_QUEUE);
+  WriteData(ThsCCAddr, ChrgCtrlData.T_hs, NIOS_QUEUE);
+  WriteData(FaultCCAddr, ChrgCtrlData.fault_field, NIOS_QUEUE);
+  WriteData(AlarmHiCCAddr, ChrgCtrlData.alarm_field_hi, NIOS_QUEUE);
+  WriteData(AlarmLoCCAddr, ChrgCtrlData.alarm_field_lo, NIOS_QUEUE);
+  WriteData(ChargeCCAddr, ChrgCtrlData.charge_state, NIOS_QUEUE);
 
   /* original code for BLAST06 MEER charge controller follows */
 
@@ -475,8 +475,8 @@ void CameraTrigger(int which)
 
   if (firsttime) {
     firsttime = 0;
-    TriggerAddr[0] = GetNiosAddr("isc_trigger");
-    TriggerAddr[1] = GetNiosAddr("osc_trigger");
+    TriggerAddr[0] = GetNiosAddr("trigger_osc");
+    TriggerAddr[1] = GetNiosAddr("trigger_osc");
   }
 
   /* age is needed by pointing.c to tell it how old the solution is */
@@ -751,8 +751,8 @@ void ControlPower(void) {
 
   static int firsttime = 1;
   static struct NiosStruct* latchingAddr[2];
-  static struct NiosStruct* gyboxSwitchAddr;
-  static struct NiosStruct* miscSwitchAddr;
+  static struct NiosStruct* switchGyAddr;
+  static struct NiosStruct* switchMiscAddr;
   int latch0 = 0, latch1 = 0, gybox = 0, misc = 0;
   int i;
 
@@ -760,8 +760,8 @@ void ControlPower(void) {
     firsttime = 0;
     latchingAddr[0] = GetNiosAddr("latch0");
     latchingAddr[1] = GetNiosAddr("latch1");
-    gyboxSwitchAddr = GetNiosAddr("gybox_switch");
-    miscSwitchAddr = GetNiosAddr("misc_switch");
+    switchGyAddr = GetNiosAddr("switch_gy");
+    switchMiscAddr = GetNiosAddr("switch_misc");
   }
 
   if (CommandData.power.hub232_off) {
@@ -920,6 +920,6 @@ void ControlPower(void) {
 
   WriteData(latchingAddr[0], latch0, NIOS_QUEUE);
   WriteData(latchingAddr[1], latch1, NIOS_QUEUE);
-  WriteData(gyboxSwitchAddr, gybox, NIOS_QUEUE);
-  WriteData(miscSwitchAddr, misc, NIOS_QUEUE);
+  WriteData(switchGyAddr, gybox, NIOS_QUEUE);
+  WriteData(switchMiscAddr, misc, NIOS_QUEUE);
 }

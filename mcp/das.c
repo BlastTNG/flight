@@ -111,17 +111,17 @@ void PhaseControl(void)
     j = 16;   //start of DAS node numbers
     for(i = 0; i < DAS_CARDS; i++) {
       if (j%4 == 0) j++;   //skip motherboard common nodes
-      sprintf(field, "phase%02d", j);
+      sprintf(field, "n%02d_phase", j);
       NiosAddr[i] = GetNiosAddr(field);
       j++;
     }
-    sprintf(field, "phase13"); //Get nios address of cryo phase as well.
+    sprintf(field, "n13_phase"); //Get nios address of cryo phase as well.
     NiosAddr[DAS_CARDS] = GetNiosAddr(field);
-    phaseStepEnaAddr = GetNiosAddr("phase_step_ena");
-    phaseStepStartAddr = GetNiosAddr("phase_step_start");
-    phaseStepEndAddr = GetNiosAddr("phase_step_end");
-    phaseStepNstepsAddr = GetNiosAddr("phase_step_nsteps");
-    phaseStepTimeAddr = GetNiosAddr("phase_step_time");
+    phaseStepEnaAddr = GetNiosAddr("step_ena_phase");
+    phaseStepStartAddr = GetNiosAddr("step_start_phase");
+    phaseStepEndAddr = GetNiosAddr("step_end_phase");
+    phaseStepNstepsAddr = GetNiosAddr("step_nsteps_phase");
+    phaseStepTimeAddr = GetNiosAddr("step_time_phase");
    
   }	
 
@@ -182,7 +182,7 @@ void PhaseControl(void)
 /***********************************************************************/
 static int CalLamp (int index)
 {
-  static struct NiosStruct* calPulseAddr;
+  static struct NiosStruct* pulseCalAddr;
   static int pulse_cnt = 0;             //count of pulse length
   static unsigned int elapsed = 0;  //count for wait between pulses
   static enum calmode last_mode = off;
@@ -190,12 +190,12 @@ static int CalLamp (int index)
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    calPulseAddr = GetNiosAddr("cal_pulse");
+    pulseCalAddr = GetNiosAddr("pulse_cal");
   }
 
   /* Save the current pulse length */
   if (index == 0)
-    WriteData(calPulseAddr, CommandData.Cryo.calib_pulse, NIOS_QUEUE);
+    WriteData(pulseCalAddr, CommandData.Cryo.calib_pulse, NIOS_QUEUE);
 
   if (CommandData.Cryo.calibrator == on) {
     last_mode = on;
@@ -438,9 +438,9 @@ void CryoControl (int index)
   static struct NiosStruct* cryostateAddr;
   static struct NiosStruct* jfetSetOnAddr;
   static struct NiosStruct* jfetSetOffAddr;
-  //static struct NiosStruct* dig21Addr;
-  static struct NiosStruct* dig43Addr;
-  //static struct NiosStruct* dig65Addr;
+  //static struct NiosStruct* dig21DasAddr;
+  static struct NiosStruct* dig43DasAddr;
+  //static struct NiosStruct* dig65DasAddr;
 
   static int cryostate = 0;
   int heatctrl = 0, valvectrl = 0;
@@ -452,18 +452,18 @@ void CryoControl (int index)
     cryostateAddr = GetNiosAddr("cryostate");
     jfetSetOnAddr = GetNiosAddr("jfet_set_on");
     jfetSetOffAddr = GetNiosAddr("jfet_set_off");
-    //dig21Addr = GetNiosAddr("das_dig21");
-    dig43Addr = GetNiosAddr("das_dig43");
-    //dig65Addr = GetNiosAddr("das_dig65");
+    //dig21DasAddr = GetNiosAddr("dig21_das");
+    dig43DasAddr = GetNiosAddr("dig43_das");
+    //dig65DasAddr = GetNiosAddr("dig65_das");
   }
 
 #if 0
   // purely for testing, output a count to each digital output group
   static int count = 0;
   int nibbcnt = (count&0xf) << 4 | (count++&0xf);
-  WriteData(dig21Addr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
-  WriteData(dig43Addr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
-  WriteData(dig65Addr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
+  WriteData(dig21DasAddr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
+  WriteData(dig43DasAddr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
+  WriteData(dig65DasAddr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
 #endif
 
   /********** Set Output Bits **********/
@@ -548,7 +548,7 @@ void CryoControl (int index)
   WriteData(jfetSetOnAddr, CommandData.Cryo.JFETSetOn * 100, NIOS_QUEUE);
   WriteData(jfetSetOffAddr, CommandData.Cryo.JFETSetOff * 100, NIOS_QUEUE);
   }
-  WriteData(dig43Addr, (heatctrl<<8) | valvectrl, NIOS_FLUSH);
+  WriteData(dig43DasAddr, (heatctrl<<8) | valvectrl, NIOS_FLUSH);
 }
 
 /************************************************************************/
@@ -558,16 +558,16 @@ void CryoControl (int index)
 /************************************************************************/
 void BiasControl (unsigned short* RxFrame)
 {
-  static struct NiosStruct* biasAmplAddr[5];
-  static struct NiosStruct* rampEnaAddr;
-  static struct BiPhaseStruct* rampAmplAddr;
-  static struct NiosStruct* biasStepEnaAddr;
-  static struct NiosStruct* biasStepStartAddr;
-  static struct NiosStruct* biasStepEndAddr;
-  static struct NiosStruct* biasStepNstepsAddr;
-  static struct NiosStruct* biasStepTimeAddr;
-  static struct NiosStruct* biasStepPulLenAddr;
-  static struct NiosStruct* biasStepArrayAddr;
+  static struct NiosStruct* amplBiasAddr[5];
+  static struct NiosStruct* rampEnaBiasAddr;
+  static struct BiPhaseStruct* rampAmplBiasAddr;
+  static struct NiosStruct* stepEnaBiasAddr;
+  static struct NiosStruct* stepStartBiasAddr;
+  static struct NiosStruct* stepEndBiasAddr;
+  static struct NiosStruct* stepNBiasAddr;
+  static struct NiosStruct* stepTimeBiasAddr;
+  static struct NiosStruct* stepPulLenBiasAddr;
+  static struct NiosStruct* stepArrayBiasAddr;
   static int i_arr=3;
   static int k=0;
   static int step_size=1;
@@ -585,20 +585,20 @@ void BiasControl (unsigned short* RxFrame)
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    biasAmplAddr[0] = GetNiosAddr("bias_ampl_500");
-    biasAmplAddr[1] = GetNiosAddr("bias_ampl_350");
-    biasAmplAddr[2] = GetNiosAddr("bias_ampl_250");
-    biasAmplAddr[3] = GetNiosAddr("bias_ampl_rox");
-    biasAmplAddr[4] = GetNiosAddr("bias_ampl_x");
-    rampEnaAddr = GetNiosAddr("bias_ramp_ena");
-    rampAmplAddr = GetBiPhaseAddr("ramp_ampl");
-    biasStepEnaAddr = GetNiosAddr("bias_step_ena");
-    biasStepStartAddr = GetNiosAddr("bias_step_start");
-    biasStepEndAddr = GetNiosAddr("bias_step_end");
-    biasStepNstepsAddr = GetNiosAddr("bias_step_nsteps");
-    biasStepTimeAddr = GetNiosAddr("bias_step_time");
-    biasStepPulLenAddr = GetNiosAddr("bias_step_pul_len");
-    biasStepArrayAddr = GetNiosAddr("bias_step_array");
+    amplBiasAddr[0] = GetNiosAddr("ampl_500_bias");
+    amplBiasAddr[1] = GetNiosAddr("ampl_350_bias");
+    amplBiasAddr[2] = GetNiosAddr("ampl_250_bias");
+    amplBiasAddr[3] = GetNiosAddr("ampl_rox_bias");
+    amplBiasAddr[4] = GetNiosAddr("ampl_x_bias");
+    rampEnaBiasAddr = GetNiosAddr("ramp_ena_bias");
+    rampAmplBiasAddr = GetBiPhaseAddr("ramp_ampl_bias");
+    stepEnaBiasAddr = GetNiosAddr("step_ena_bias");
+    stepStartBiasAddr = GetNiosAddr("step_start_bias");
+    stepEndBiasAddr = GetNiosAddr("step_end_bias");
+    stepNBiasAddr = GetNiosAddr("step_n_bias");
+    stepTimeBiasAddr = GetNiosAddr("step_time_bias");
+    stepPulLenBiasAddr = GetNiosAddr("step_pul_len_bias");
+    stepArrayBiasAddr = GetNiosAddr("step_array_bias");
   }
 
   /* Check to make sure that the user selected an array.  0 means step all arrays.*/
@@ -624,11 +624,9 @@ void BiasControl (unsigned short* RxFrame)
 
 
     /************* Set the Bias Levels *******/
- 
-  
   for (i=0; i<5; i++) {
     if (CommandData.Bias.setLevel[i]) {
-      WriteData(biasAmplAddr[i], CommandData.Bias.bias[i]<<1, NIOS_QUEUE);
+      WriteData(amplBiasAddr[i], CommandData.Bias.bias[i]<<1, NIOS_QUEUE);
       CommandData.Bias.setLevel[i] = 0;
       CommandData.Bias.biasStep.do_step = 0;
     }
@@ -677,18 +675,18 @@ void BiasControl (unsigned short* RxFrame)
       }
     }
 
-    WriteData(biasStepEnaAddr,CommandData.Bias.biasStep.do_step, NIOS_QUEUE);
-    WriteData(biasStepStartAddr,CommandData.Bias.biasStep.start<<1, NIOS_QUEUE);
-    WriteData(biasStepEndAddr,CommandData.Bias.biasStep.end<<1, NIOS_QUEUE);
-    WriteData(biasStepNstepsAddr,CommandData.Bias.biasStep.nsteps, NIOS_QUEUE);
-    WriteData(biasStepTimeAddr,CommandData.Bias.biasStep.dt, NIOS_QUEUE);
-    WriteData(biasStepPulLenAddr,CommandData.Bias.biasStep.pulse_len, NIOS_QUEUE);
-    WriteData(biasStepArrayAddr,CommandData.Bias.biasStep.arr_ind, NIOS_QUEUE);
+    WriteData(stepEnaBiasAddr,CommandData.Bias.biasStep.do_step, NIOS_QUEUE);
+    WriteData(stepStartBiasAddr,CommandData.Bias.biasStep.start<<1, NIOS_QUEUE);
+    WriteData(stepEndBiasAddr,CommandData.Bias.biasStep.end<<1, NIOS_QUEUE);
+    WriteData(stepNBiasAddr,CommandData.Bias.biasStep.nsteps, NIOS_QUEUE);
+    WriteData(stepTimeBiasAddr,CommandData.Bias.biasStep.dt, NIOS_QUEUE);
+    WriteData(stepPulLenBiasAddr,CommandData.Bias.biasStep.pulse_len, NIOS_QUEUE);
+    WriteData(stepArrayBiasAddr,CommandData.Bias.biasStep.arr_ind, NIOS_QUEUE);
     if (i_arr >= 0 && i_arr < 3) {
-      WriteData(biasAmplAddr[i_arr], bias<<1, NIOS_QUEUE);
+      WriteData(amplBiasAddr[i_arr], bias<<1, NIOS_QUEUE);
     } else {
     for(i = 0; i <= 2; i++)
-      WriteData(biasAmplAddr[i], bias<<1, NIOS_QUEUE);
+      WriteData(amplBiasAddr[i], bias<<1, NIOS_QUEUE);
     }
 
     /* Send a cal pulse at 4x the width of the cal pulse before the next step.*/
@@ -701,10 +699,10 @@ void BiasControl (unsigned short* RxFrame)
   } else {
     k=0;
     /********** set Bias (ramp)  *******/
-    isBiasRamp = slow_data[rampAmplAddr->index][rampAmplAddr->channel];
+    isBiasRamp = slow_data[rampAmplBiasAddr->index][rampAmplBiasAddr->channel];
     if ( (isBiasRamp && CommandData.Bias.biasRamp == 0) ||
 	 (!isBiasRamp && CommandData.Bias.biasRamp == 1) ) {
-      WriteData(rampEnaAddr, CommandData.Bias.biasRamp, NIOS_QUEUE);
+      WriteData(rampEnaBiasAddr, CommandData.Bias.biasRamp, NIOS_QUEUE);
     }
     
   }

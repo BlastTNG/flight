@@ -67,30 +67,30 @@ void MonitorHWPR(struct ezbus *bus)
 void StoreHWPRBus(void)
 {
   static int firsttime = 1;
-  static struct NiosStruct* hwprVelAddr;
-  static struct NiosStruct* hwprAccAddr;
-  static struct NiosStruct* hwprMoveIAddr;
-  static struct NiosStruct* hwprHoldIAddr;
-  static struct NiosStruct* hwprPosAddr;
-  static struct NiosStruct* hwprEncAddr;
+  static struct NiosStruct* velHwprAddr;
+  static struct NiosStruct* accHwprAddr;
+  static struct NiosStruct* iMoveHwprAddr;
+  static struct NiosStruct* iHoldHwprAddr;
+  static struct NiosStruct* posHwprAddr;
+  static struct NiosStruct* encHwprAddr;
 
   if (firsttime)
   {
     firsttime = 0;
-    hwprVelAddr = GetNiosAddr("hwpr_vel");
-    hwprAccAddr = GetNiosAddr("hwpr_acc");
-    hwprMoveIAddr = GetNiosAddr("hwpr_move_i");
-    hwprHoldIAddr = GetNiosAddr("hwpr_hold_i");
-    hwprPosAddr = GetNiosAddr("hwpr_pos");
-    hwprEncAddr = GetNiosAddr("hwpr_enc");
+    velHwprAddr = GetNiosAddr("vel_hwpr");
+    accHwprAddr = GetNiosAddr("acc_hwpr");
+    iMoveHwprAddr = GetNiosAddr("i_move_hwpr");
+    iHoldHwprAddr = GetNiosAddr("i_hold_hwpr");
+    posHwprAddr = GetNiosAddr("pos_hwpr");
+    encHwprAddr = GetNiosAddr("enc_hwpr");
   }
 
-  WriteData(hwprVelAddr, CommandData.hwpr.vel / 100, NIOS_QUEUE);
-  WriteData(hwprAccAddr, CommandData.hwpr.acc, NIOS_QUEUE);
-  WriteData(hwprMoveIAddr, CommandData.hwpr.move_i, NIOS_QUEUE);
-  WriteData(hwprHoldIAddr, CommandData.hwpr.hold_i, NIOS_QUEUE);
-  WriteData(hwprPosAddr, hwpr_data.pos, NIOS_QUEUE);
-  WriteData(hwprEncAddr, hwpr_data.enc, NIOS_FLUSH);
+  WriteData(velHwprAddr, CommandData.hwpr.vel / 100, NIOS_QUEUE);
+  WriteData(accHwprAddr, CommandData.hwpr.acc, NIOS_QUEUE);
+  WriteData(iMoveHwprAddr, CommandData.hwpr.move_i, NIOS_QUEUE);
+  WriteData(iHoldHwprAddr, CommandData.hwpr.hold_i, NIOS_QUEUE);
+  WriteData(posHwprAddr, hwpr_data.pos, NIOS_QUEUE);
+  WriteData(encHwprAddr, hwpr_data.enc, NIOS_FLUSH);
 }
 
 void ControlHWPR(struct ezbus *bus)
