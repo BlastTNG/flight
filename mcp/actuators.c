@@ -62,9 +62,9 @@ static struct ezbus bus;
 #define LOCK_MOTOR_DATA_TIMER 100   /* 1 second */
 #define DRIVE_TIMEOUT 3000	    /* 30 seconds */
 
-#define LOCK_MIN_POT 800
-#define LOCK_MAX_POT 3750
-#define LOCK_POT_RANGE 100
+#define LOCK_MIN_POT 3000	//actual min stop: ~2530
+#define LOCK_MAX_POT 16368	//max stop at saturation: 16384
+#define LOCK_POT_RANGE 300
 
 static struct lock_struct {
   int pos;		  //raw step count
