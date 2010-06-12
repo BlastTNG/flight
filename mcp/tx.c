@@ -794,9 +794,9 @@ static void StoreData(int index)
   static struct NiosStruct* elOscAddr;
   static struct NiosStruct* sigmaOscAddr;
   static struct NiosStruct* elEncAddr;
-  static struct NiosStruct* encSigmaAddr;
-  static struct NiosStruct* clinElAddr;
-  static struct NiosStruct* clinSigmaAddr;
+  static struct NiosStruct* sigmaEncAddr;
+  static struct NiosStruct* elClinAddr;
+  static struct NiosStruct* sigmaClinAddr;
 
   /** dgps fields **/
   static struct NiosStruct* dgpsTimeAddr;
@@ -949,9 +949,9 @@ static void StoreData(int index)
     elOscAddr = GetNiosAddr("el_osc");
     sigmaOscAddr = GetNiosAddr("sigma_osc");
     elEncAddr = GetNiosAddr("el_enc");
-    encSigmaAddr = GetNiosAddr("enc_sigma");
-    clinElAddr = GetNiosAddr("clin_el");
-    clinSigmaAddr = GetNiosAddr("clin_sigma");
+    sigmaEncAddr = GetNiosAddr("sigma_enc");
+    elClinAddr = GetNiosAddr("el_clin");
+    sigmaClinAddr = GetNiosAddr("sigma_clin");
 
     svetoLenAddr = GetNiosAddr("sveto_len");
     slewVetoAddr = GetNiosAddr("slew_veto");
@@ -1048,7 +1048,7 @@ static void StoreData(int index)
 
   WriteData(elEncAddr, (unsigned int)((PointingData[i_point].enc_el
                       + CommandData.enc_el_trim)* DEG2I), NIOS_QUEUE);
-  WriteData(encSigmaAddr,
+  WriteData(sigmaEncAddr,
       (unsigned int)(PointingData[i_point].enc_sigma * DEG2I), NIOS_QUEUE);
 
   WriteData(velRWAddr,
@@ -1199,10 +1199,10 @@ static void StoreData(int index)
 
   WriteData(trimEncAddr, CommandData.enc_el_trim * DEG2I, NIOS_QUEUE);
 
-  WriteData(clinElAddr,
+  WriteData(elClinAddr,
       (unsigned int)((PointingData[i_point].clin_el +
                       CommandData.clin_el_trim) * DEG2I), NIOS_QUEUE);
-  WriteData(clinSigmaAddr,
+  WriteData(sigmaClinAddr,
       (unsigned int)(PointingData[i_point].clin_sigma * DEG2I), NIOS_QUEUE);
   WriteData(trimClinAddr, CommandData.clin_el_trim * DEG2I, NIOS_QUEUE);
 

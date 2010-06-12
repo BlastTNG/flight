@@ -404,7 +404,7 @@ struct ChannelStruct SlowChannels[] = {
   {"pulse_cal",    'w', LOOP2, 49,               10.0,              0., 'u', U_NONE},
   {"sigma_ss",     'w', LOOP2, 50,              I2DEG,             0.0, 'u', U_NONE},
   /* LOOP2 51-54 are wide fast */
-  {"clin_sigma",   'w', LOOP2, 55,              I2DEG,             0.0, 'u', U_NONE},
+  {"sigma_clin",   'w', LOOP2, 55,              I2DEG,             0.0, 'u', U_NONE},
   {"az_mag",       'w', LOOP2, 56,              I2DEG,             0.0, 'u', U_D_DEG},
   {"spulse_isc",   'w', LOOP2, 57,               10.0,             0.0, 'u', U_NONE},
   {"hx_flag_isc",  'w', LOOP2, 58,                1.0,             0.0, 'u', U_NONE},
@@ -526,7 +526,7 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP4 58-59 are wide */
   {"az_raw_dgps",  'w', LOOP4, 60,              I2DEG,             0.0, 'u', U_D_DEG},
   {"gain_bal",     'w', LOOP4, 61,            1/1000.,             0.0, 'u', U_NONE},
-  {"clin_el",      'w', LOOP4, 62,              I2DEG,             0.0, 'u', U_NONE},
+  {"el_clin",      'w', LOOP4, 62,              I2DEG,             0.0, 'u', U_NONE},
   {"h_p",          'w', LOOP4, 63,              I2DEG,             0.0, 'u', U_NONE}, // scan height
 
   {"error_isc",    'w', LOOP5,  0,                 1.,             0.0, 'u', U_NONE},
@@ -926,7 +926,7 @@ struct ChannelStruct FastChannels[] = {
   {"vel_rw",       'w', LOOP7,  0,         I2DEG*4.0,             0.0, 's', U_V_DPS},
   {"el_raw_enc",   'w', LOOP7,  2,             I2DEG,             0.0, 'u', U_P_DEG},
   {"el_enc",       'w', LOOP2, 47,              I2DEG,             0.0, 'u', U_P_DEG},
-  {"enc_sigma",    'w', LOOP2, 48,              I2DEG,             0.0, 'u', U_NONE},
+  {"sigma_enc",    'w', LOOP2, 48,              I2DEG,             0.0, 'u', U_NONE},
   {"chatter",      'w', LOOP7, 38,              1.0,               0.0, 'u', U_NONE},
   {"mcp_frame",    'w', LOOP2, 34,              1.0,               0.0, 'u', U_NONE},
 
