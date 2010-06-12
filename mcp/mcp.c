@@ -95,6 +95,7 @@ void ActuatorBus(void);
 void WatchFIFO(void);
 void FrameFileWriter(void);
 void TDRSSWriter(void);
+void CompressionWriter(void);
 void StageBus(void);
 void HWPRBus(void);
 
@@ -823,6 +824,7 @@ int main(int argc, char *argv[])
 #ifndef BOLOTEST
   pthread_t sunsensor_id;
   pthread_t tdrss_id;
+  pthread_t compression_id;
   pthread_t bi0_id;
   pthread_t sensors_id;
   pthread_t dgps_id;
@@ -967,6 +969,7 @@ int main(int argc, char *argv[])
   pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
 
   pthread_create(&tdrss_id, NULL, (void*)&TDRSSWriter, NULL);
+  pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
 #endif
   pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);

@@ -17,7 +17,7 @@ HEADERS = alice.h bbc_pci.h blast.h channels.h command_list.h command_struct.h h
 					crc.h dataholder.h derived.h ephem_read.h ephem_types.h fir.h \
 					isc_protocol.h lut.h mcp.h pointing_struct.h slow_dl.h \
 					sss_struct.h starpos.h tdrss.h tx.h copleycommand.h motordefs.h \
-                                        amccommand.h ezstep.h chrgctrl.h
+                                        amccommand.h ezstep.h chrgctrl.h compressstruct.h
 
 # These are needed by both bolotest and flight versions
 OBJS = mcp.o actuators.o blast.o channels.o command_list.o commands.o das.o hwpr.o \
@@ -27,8 +27,8 @@ OBJS = mcp.o actuators.o blast.o channels.o command_list.o commands.o das.o hwpr
 ifndef BOLOTEST
 OBJS := $(OBJS) auxiliary.o crc.o dataholder.o dgps.o ephem_read.o \
 		    fftsg_h.o fir.o geomag.o isc.o motors.o pointing.o radbox.o sched.o \
-			  slow_dl.o starpos.o sunsensor.o tdrss.o copleycommand.o \
-                               chrgctrl.o amccommand.o
+		    slow_dl.o starpos.o sunsensor.o tdrss.o compressionwriter.o copleycommand.o \
+                    chrgctrl.o amccommand.o compressstruct.o
 
 endif
 
