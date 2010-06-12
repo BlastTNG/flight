@@ -100,14 +100,15 @@ union DerivedUnion DerivedChannels[] = {
   UNITS("EL_IF_CLIN", "Elevation", "^o"),
 #if 0  //TODO we probably aren't using a LUT for AZ_SS anymore
   LINTERP("AZ_LUT_SS", "AZ_SS", "/data/etc/ss.lut"),
-  BITFIELD("sensor_veto",
-      "SUN_VETO",
-      "ISC_VETO",
-      "ELENC_VETO",
-      "MAG_VETO",
-      "GPS_VETO",
-      "ELCLIN_VETO",
-      "OSC_VETO",
+#endif
+  BITFIELD("veto_sensor",
+      "VETO_SS",
+      "VETO_ISC",
+      "VETO_EL_ENC",
+      "VETO_MAG",
+      "VETO_GPS",
+      "VETO_EL_CLIN",
+      "VETO_OSC",
       "IS_SCHED",
       "AZ_AUTO_GYRO",
       "EL_AUTO_GYRO",
@@ -115,7 +116,6 @@ union DerivedUnion DerivedChannels[] = {
       "DISABLE_AZ",
       "FORCE_EL"
       ),
-#endif
 
 #if 0
   BITFIELD("sensor_reset",

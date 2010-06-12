@@ -62,8 +62,8 @@ static struct ezbus bus;
 #define LOCK_MOTOR_DATA_TIMER 100   /* 1 second */
 #define DRIVE_TIMEOUT 3000	    /* 30 seconds */
 
-#define LOCK_MIN_POT 3000	//actual min stop: ~2530
-#define LOCK_MAX_POT 16368	//max stop at saturation: 16384
+#define LOCK_MIN_POT 3000     //actual min stop: ~2530 (fully extended)
+#define LOCK_MAX_POT 16368    //max stop at saturation: 16368 (fully retracted)
 #define LOCK_POT_RANGE 300
 
 static struct lock_struct {
@@ -589,16 +589,16 @@ void SecondaryMirror(void)
 {
   static int firsttime = 1;
 
-  static struct NiosStruct* correctionSFAddr;
-  static struct NiosStruct* ageSFAddr;
-  static struct NiosStruct* offsetSFAddr;
-  static struct NiosStruct* tPrimeSFAddr;
-  static struct NiosStruct* tSecondSFAddr;
+  static struct NiosStruct* correctionSfAddr;
+  static struct NiosStruct* ageSfAddr;
+  static struct NiosStruct* offsetSfAddr;
+  static struct NiosStruct* tPrimeSfAddr;
+  static struct NiosStruct* tSecondSfAddr;
 
-  static struct BiPhaseStruct* tPrime1Addr;
-  static struct BiPhaseStruct* tSecond1Addr;
-  static struct BiPhaseStruct* tPrime2Addr;
-  static struct BiPhaseStruct* tSecond2Addr;
+  static struct BiPhaseStruct* t1PrimeAddr;
+  static struct BiPhaseStruct* t1SecondAddr;
+  static struct BiPhaseStruct* t2PrimeAddr;
+  static struct BiPhaseStruct* t2SecondAddr;
   double t_primary1, t_secondary1;
   double t_primary2, t_secondary2;
 
@@ -606,15 +606,15 @@ void SecondaryMirror(void)
 
   if (firsttime) {
     firsttime = 0;
-    tPrime1Addr = GetBiPhaseAddr("t_prime_1");
-    tSecond1Addr = GetBiPhaseAddr("t_second_1");
-    tPrime2Addr = GetBiPhaseAddr("t_prime_2");
-    tSecond2Addr = GetBiPhaseAddr("t_second_2");
-    correctionSFAddr = GetNiosAddr("correction_sf");
-    ageSFAddr = GetNiosAddr("age_sf");
-    offsetSFAddr = GetNiosAddr("offset_sf");
-    tPrimeSFAddr = GetNiosAddr("t_prime_sf");
-    tSecondSFAddr = GetNiosAddr("t_second_sf");
+    t1PrimeAddr = GetBiPhaseAddr("t_1_prime");
+    t1SecondAddr = GetBiPhaseAddr("t_1_second");
+    t2PrimeAddr = GetBiPhaseAddr("t_2_prime");
+    t2SecondAddr = GetBiPhaseAddr("t_2_second");
+    correctionSfAddr = GetNiosAddr("correction_sf");
+    ageSfAddr = GetNiosAddr("age_sf");
+    offsetSfAddr = GetNiosAddr("offset_sf");
+    tPrimeSfAddr = GetNiosAddr("t_prime_sf");
+    tSecondSfAddr = GetNiosAddr("t_second_sf");
   }
 
 #if 0 //TODO will need to change or remove this check for haven't heard from act
@@ -624,17 +624,17 @@ void SecondaryMirror(void)
 #endif
 
   t_primary1 = CalibrateAD590(
-      slow_data[tPrime1Addr->index][tPrime1Addr->channel]
+      slow_data[t1PrimeAddr->index][t1PrimeAddr->channel]
       ) + AD590_CALIB_PRIMARY_1;
   t_primary2 = CalibrateAD590(
-      slow_data[tPrime2Addr->index][tPrime2Addr->channel]
+      slow_data[t2PrimeAddr->index][t2PrimeAddr->channel]
       ) + AD590_CALIB_PRIMARY_2;
 
   t_secondary1 = CalibrateAD590(
-      slow_data[tSecond1Addr->index][tSecond1Addr->channel]
+      slow_data[t1SecondAddr->index][t1SecondAddr->channel]
       ) + AD590_CALIB_SECONDARY_1;
   t_secondary2 = CalibrateAD590(
-      slow_data[tSecond2Addr->index][tSecond2Addr->channel]
+      slow_data[t2SecondAddr->index][t2SecondAddr->channel]
       ) + AD590_CALIB_SECONDARY_2;
 
   if (t_primary1 < 0 || t_primary2 < 0)
@@ -698,11 +698,11 @@ void SecondaryMirror(void)
   if (CommandData.actbus.sf_time < CommandData.actbus.tc_wait)
     CommandData.actbus.sf_time++;
 
-  WriteData(tPrimeSFAddr, (t_primary - 273.15) * 500, NIOS_QUEUE);
-  WriteData(tSecondSFAddr, (t_secondary - 273.15) * 500, NIOS_QUEUE);
-  WriteData(correctionSFAddr, correction, NIOS_QUEUE);
-  WriteData(ageSFAddr, CommandData.actbus.sf_time / 10., NIOS_QUEUE);
-  WriteData(offsetSFAddr, CommandData.actbus.sf_offset, NIOS_FLUSH);
+  WriteData(tPrimeSfAddr, (t_primary - 273.15) * 500, NIOS_QUEUE);
+  WriteData(tSecondSfAddr, (t_secondary - 273.15) * 500, NIOS_QUEUE);
+  WriteData(correctionSfAddr, correction, NIOS_QUEUE);
+  WriteData(ageSfAddr, CommandData.actbus.sf_time / 10., NIOS_QUEUE);
+  WriteData(offsetSfAddr, CommandData.actbus.sf_offset, NIOS_FLUSH);
 }
 
 static char name_buffer[100];
@@ -763,16 +763,16 @@ void StoreActBus(void)
   static struct NiosStruct* lvdtLowActAddr;
   static struct NiosStruct* lvdtHighActAddr;
 
-  static struct NiosStruct* gPrimSFAddr;
-  static struct NiosStruct* gSecSFAddr;
-  static struct NiosStruct* stepSFAddr;
-  static struct NiosStruct* waitSFAddr;
-  static struct NiosStruct* modeSFAddr;
-  static struct NiosStruct* spreadSFAddr;
-  static struct NiosStruct* prefTpSFAddr;
-  static struct NiosStruct* prefTsSFAddr;
-  static struct NiosStruct* goalSFAddr;
-  static struct NiosStruct* focusSFAddr;
+  static struct NiosStruct* gPrimeSfAddr;
+  static struct NiosStruct* gSecondSfAddr;
+  static struct NiosStruct* stepSfAddr;
+  static struct NiosStruct* waitSfAddr;
+  static struct NiosStruct* modeSfAddr;
+  static struct NiosStruct* spreadSfAddr;
+  static struct NiosStruct* prefTpSfAddr;
+  static struct NiosStruct* prefTsSfAddr;
+  static struct NiosStruct* goalSfAddr;
+  static struct NiosStruct* focusSfAddr;
 
   if (firsttime) {
     firsttime = 0;
@@ -795,16 +795,16 @@ void StoreActBus(void)
       lvdtActAddr[j] = GetActNiosAddr(j, "lvdt");
     }
 
-    gPrimSFAddr = GetNiosAddr("g_prim_sf");
-    gSecSFAddr = GetNiosAddr("g_sec_sf");
-    stepSFAddr = GetNiosAddr("step_sf");
-    waitSFAddr = GetNiosAddr("wait_sf");
-    modeSFAddr = GetNiosAddr("mode_sf");
-    spreadSFAddr = GetNiosAddr("spread_sf");
-    prefTpSFAddr = GetNiosAddr("pref_tp_sf");
-    prefTsSFAddr = GetNiosAddr("pref_ts_sf");
-    goalSFAddr = GetNiosAddr("goal_sf");
-    focusSFAddr = GetNiosAddr("focus_sf");
+    gPrimeSfAddr = GetNiosAddr("g_prime_sf");
+    gSecondSfAddr = GetNiosAddr("g_second_sf");
+    stepSfAddr = GetNiosAddr("step_sf");
+    waitSfAddr = GetNiosAddr("wait_sf");
+    modeSfAddr = GetNiosAddr("mode_sf");
+    spreadSfAddr = GetNiosAddr("spread_sf");
+    prefTpSfAddr = GetNiosAddr("pref_tp_sf");
+    prefTsSfAddr = GetNiosAddr("pref_ts_sf");
+    goalSfAddr = GetNiosAddr("goal_sf");
+    focusSfAddr = GetNiosAddr("focus_sf");
 
     lvdtSpreadActAddr = GetNiosAddr("lvdt_spread_act");
     lvdtLowActAddr = GetNiosAddr("lvdt_low_act");
@@ -849,7 +849,7 @@ void StoreActBus(void)
     WriteData(encActAddr[j], act_data[j].enc, NIOS_QUEUE);
     WriteData(lvdtActAddr[j], act_data[j].lvdt, NIOS_QUEUE);
   }
-  WriteData(focusSFAddr, focus, NIOS_QUEUE);
+  WriteData(focusSfAddr, focus, NIOS_QUEUE);
 
   WriteData(potLockAddr, lock_data.adc[1], NIOS_QUEUE);
   WriteData(stateLockAddr, lock_data.state, NIOS_QUEUE);
@@ -872,15 +872,15 @@ void StoreActBus(void)
   WriteData(iMoveLockAddr, CommandData.actbus.lock_move_i, NIOS_QUEUE);
   WriteData(iLockHoldAddr, CommandData.actbus.lock_hold_i, NIOS_QUEUE);
 
-  WriteData(gPrimSFAddr, CommandData.actbus.g_primary * 100., NIOS_QUEUE);
-  WriteData(gSecSFAddr, CommandData.actbus.g_secondary * 100., NIOS_QUEUE);
-  WriteData(modeSFAddr, CommandData.actbus.tc_mode, NIOS_QUEUE);
-  WriteData(stepSFAddr, CommandData.actbus.tc_step, NIOS_QUEUE);
-  WriteData(spreadSFAddr, CommandData.actbus.tc_spread * 500., NIOS_QUEUE);
-  WriteData(prefTpSFAddr, CommandData.actbus.tc_prefp, NIOS_QUEUE);
-  WriteData(prefTsSFAddr, CommandData.actbus.tc_prefs, NIOS_QUEUE);
-  WriteData(waitSFAddr, CommandData.actbus.tc_wait / 10., NIOS_QUEUE);
-  WriteData(goalSFAddr, CommandData.actbus.focus, NIOS_FLUSH);
+  WriteData(gPrimeSfAddr, CommandData.actbus.g_primary * 100., NIOS_QUEUE);
+  WriteData(gSecondSfAddr, CommandData.actbus.g_secondary*100., NIOS_QUEUE);
+  WriteData(modeSfAddr, CommandData.actbus.tc_mode, NIOS_QUEUE);
+  WriteData(stepSfAddr, CommandData.actbus.tc_step, NIOS_QUEUE);
+  WriteData(spreadSfAddr, CommandData.actbus.tc_spread * 500., NIOS_QUEUE);
+  WriteData(prefTpSfAddr, CommandData.actbus.tc_prefp, NIOS_QUEUE);
+  WriteData(prefTsSfAddr, CommandData.actbus.tc_prefs, NIOS_QUEUE);
+  WriteData(waitSfAddr, CommandData.actbus.tc_wait / 10., NIOS_QUEUE);
+  WriteData(goalSfAddr, CommandData.actbus.focus, NIOS_FLUSH);
 }
 
 /************************************************************************/
