@@ -15,7 +15,7 @@ clean:
 	rm -f decomd
 	rm -f *.o
 
-install:
+install: decomd
 	install -m 700 -o root -g root decomd /usr/local/sbin
 	install -m 755 -o root -g root decomctl /usr/local/sbin
 	install -m 644 decomd.8 decomctl.8 /usr/local/man/man8
