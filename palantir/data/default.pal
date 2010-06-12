@@ -348,43 +348,43 @@
   </DEFAULTS>
   <BOX caption="Sensors" colour="#880000" row="3" col="3">
     <MULTI caption="El Encoder">
-      <DATUM src="ELENC_VETO">
+      <DATUM src="VETO_EL_ENC">
         <WORD value="0" caption="Allowed" textstyle="OK_BIT"/>
         <WORD value="1" caption="Vetoed" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="El Clin">
-      <DATUM src="ELCLIN_VETO">
+      <DATUM src="VETO_EL_CLIN">
         <WORD value="0" caption="Allowed" textstyle="OK_BIT"/>
         <WORD value="1" caption="Vetoed" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Sun">
-      <DATUM src="SUN_VETO">
+      <DATUM src="VETO_SS">
         <WORD value="0" caption="Allowed" textstyle="OK_BIT"/>
         <WORD value="1" caption="Vetoed" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="ISC">
-      <DATUM src="ISC_VETO">
+      <DATUM src="VETO_ISC">
         <WORD value="0" caption="Allowed" textstyle="OK_BIT"/>
         <WORD value="1" caption="Vetoed" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="OSC">
-      <DATUM src="OSC_VETO">
+      <DATUM src="VETO_OSC">
         <WORD value="0" caption="Allowed" textstyle="OK_BIT"/>
         <WORD value="1" caption="Vetoed" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Mag">
-      <DATUM src="MAG_VETO">
+      <DATUM src="VETO_MAG">
         <WORD value="0" caption="Allowed" textstyle="OK_BIT"/>
         <WORD value="1" caption="Vetoed" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="dGPS">
-      <DATUM src="GPS_VETO">
+      <DATUM src="VETO_GPS">
         <WORD value="0" caption="Allowed" textstyle="OK_BIT"/>
         <WORD value="1" caption="Vetoed" textstyle="W_BIT"/>
       </DATUM>
@@ -396,128 +396,128 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="dGPS # Sat">
-      <DATUM format="%.0f" src="n_sat_dgps" extrema="unknown"/>
+      <DATUM format="%.0f" src="N_SAT_DGPS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Gyros">
-      <DATUM format="%6b" src="gyro_mask" extrema="unknown"/>
+      <DATUM format="%6b" src="MASK_GY" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="ISC" colour="#707" row="4" col="5" rowspan="1">
     <NUMBER caption="RA">
-      <DATUM format="%.4f" src="ISC_RA" extrema="unknown"/>
+      <DATUM format="%.4f" src="RA_ISC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="DEC">
-      <DATUM format="%.4f" src="ISC_DEC" extrema="unknown"/>
+      <DATUM format="%.4f" src="DEC_ISC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Sigma">
-      <DATUM format="%.3f" src="ISC_RD_SIGMA" extrema="unknown"/>
+      <DATUM format="%.3f" src="RD_SIGMA_ISC" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="Autofocus">
-      <DATUM src="ISC_AUTOFOCUS">
+      <DATUM src="AUTOFOCUS_ISC">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Capture">
-      <DATUM src="ISC_PAUSE">
+      <DATUM src="PAUSE_ISC">
         <WORD value="0" caption="Run" textstyle="OK_BIT"/>
         <WORD value="1" caption="Pause" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Evil Eye">
-      <DATUM src="ISC_EYE_ON">
+      <DATUM src="EYE_ON_ISC">
         <WORD value="1" caption="On" textstyle="OK_BIT"/>
         <WORD value="0" caption="Off" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Save Images">
-      <DATUM src="ISC_SAVE_IMAGES">
+      <DATUM src="SAVE_IMAGES_ISC">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="# blobs">
-      <DATUM format="%.0f" src="ISC_NBLOBS" extrema="unknown"/>
+      <DATUM format="%.0f" src="NBLOBS_ISC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Frame #">
-      <DATUM format="%.0f" src="ISC_FRAMENUM" extrema="unknown"/>
+      <DATUM format="%.0f" src="FRAMENUM_ISC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Map Mean">
-      <DATUM format="%.0f" src="ISC_MAPMEAN" extrema="unknown"/>
+      <DATUM format="%.0f" src="MAPMEAN_ISC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Error Code">
-      <DATUM format="%.0f" src="ISC_ERROR" extrema="unknown"/>
+      <DATUM format="%.0f" src="ERROR_ISC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="T Front Flange">
-      <DATUM format="%.2f" src="T_ISC_FLANGE" extrema="temp"/>
+      <DATUM format="%.2f" src="T_FLANGE_ISC" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Heater Ring">
-      <DATUM format="%.2f" src="T_ISC_HEAT" extrema="temp"/>
+      <DATUM format="%.2f" src="T_HEAT_ISC" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Lens">
-      <DATUM format="%.2f" src="T_ISC_LENS" extrema="temp"/>
+      <DATUM format="%.2f" src="T_LENS_ISC" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T ISC PC">
-      <DATUM format="%.2f" src="T_ISC_COMP" extrema="temp"/>
+      <DATUM format="%.2f" src="T_COMP_ISC" extrema="temp"/>
     </NUMBER>
   </BOX>
   <BOX caption="OSC" colour="#707" row="4" col="6" rowspan="1">
     <NUMBER caption="RA">
-      <DATUM format="%.4f" src="OSC_RA" extrema="unknown"/>
+      <DATUM format="%.4f" src="RA_OSC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="DEC">
-      <DATUM format="%.4f" src="OSC_DEC" extrema="unknown"/>
+      <DATUM format="%.4f" src="DEC_OSC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Sigma">
-      <DATUM format="%.3f" src="OSC_RD_SIGMA" extrema="unknown"/>
+      <DATUM format="%.3f" src="RD_SIGMA_OSC" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="Autofocus">
-      <DATUM src="OSC_AUTOFOCUS">
+      <DATUM src="AUTOFOCUS_OSC">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Capture">
-      <DATUM src="OSC_PAUSE">
+      <DATUM src="PAUSE_OSC">
         <WORD value="0" caption="Run" textstyle="OK_BIT"/>
         <WORD value="1" caption="Pause" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Evil Eye">
-      <DATUM src="OSC_EYE_ON">
+      <DATUM src="EYE_ON_OSC">
         <WORD value="1" caption="On" textstyle="OK_BIT"/>
         <WORD value="0" caption="Off" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Save Images">
-      <DATUM src="OSC_SAVE_IMAGES">
+      <DATUM src="SAVE_IMAGES_OSC">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="# blobs">
-      <DATUM format="%.0f" src="OSC_NBLOBS" extrema="unknown"/>
+      <DATUM format="%.0f" src="NBLOBS_OSC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Frame #">
-      <DATUM format="%.0f" src="OSC_FRAMENUM" extrema="unknown"/>
+      <DATUM format="%.0f" src="FRAMENUM_OSC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Map Mean">
-      <DATUM format="%.0f" src="OSC_MAPMEAN" extrema="unknown"/>
+      <DATUM format="%.0f" src="MAPMEAN_OSC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Error Code">
-      <DATUM format="%.0f" src="OSC_ERROR" extrema="unknown"/>
+      <DATUM format="%.0f" src="ERROR_OSC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="T Front Flange">
-      <DATUM format="%.2f" src="T_OSC_FLANGE" extrema="temp"/>
+      <DATUM format="%.2f" src="T_FLANGE_OSC" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Heater Ring">
-      <DATUM format="%.2f" src="T_OSC_HEAT" extrema="temp"/>
+      <DATUM format="%.2f" src="T_HEAT_OSC" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Lens">
-      <DATUM format="%.2f" src="T_OSC_LENS" extrema="temp"/>
+      <DATUM format="%.2f" src="T_LENS_OSC" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T OSC PC">
-      <DATUM format="%.2f" src="T_OSC_COMP" extrema="temp"/>
+      <DATUM format="%.2f" src="T_COMP_OSC" extrema="temp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Balance" colour="#880000" row="2" col="3">
@@ -565,7 +565,7 @@
   </BOX>
   <BOX caption="Lock" colour="#880000" row="2" col="4">
     <MULTI caption="Lock">
-      <DATUM src="LOCK_STATE">
+      <DATUM src="STATE_LOCK">
         <WORD mask="0x006" value="6" caption="Locked" textstyle="W_BIT"/>
         <WORD mask="0x005" value="5" caption="Unlocked" textstyle="OK_BIT"/>
         <WORD mask="0x002" value="2" caption="Locked, On" textstyle="E_BIT"/>
@@ -575,20 +575,20 @@
       </DATUM>
     </MULTI>
     <MULTI caption="Elevation">
-      <DATUM src="LOCK_STATE">
+      <DATUM src="STATE_LOCK">
         <WORD mask="0x400" value="0x400" caption="Ignored" textstyle="E_BIT"/>
         <WORD mask="0x200" value="0x200" caption="Good" textstyle="OK_BIT"/>
         <WORD min="0" max="4096" caption="No Good" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="Extension (%)">
-      <DATUM format="%.2f" src="LOCK_POT" extrema="lockpot"/>
+      <DATUM format="%.2f" src="POT_LOCK" extrema="lockpot"/>
     </NUMBER>
     <NUMBER caption="Move Current (%)">
-      <DATUM format="%.0f" src="LOCK_MOVE_I" extrema="locklimit"/>
+      <DATUM format="%.0f" src="I_MOVE_LOCK" extrema="locklimit"/>
     </NUMBER>
     <NUMBER caption="Hold Current (%)">
-      <DATUM format="%.0f" src="LOCK_HOLD_I" extrema="locklimit"/>
+      <DATUM format="%.0f" src="I_HOLD_LOCK" extrema="locklimit"/>
     </NUMBER>
   </BOX>
   <BOX caption="Pointing Mode" colour="#880000" row="0" col="3" rowspan="1">
@@ -599,7 +599,7 @@
       </DATUM>
     </MULTI>
     <MULTI caption="Mode">
-      <DATUM src="P_MODE">
+      <DATUM src="MODE_P">
         <WORD value="0" caption="Not Set" textstyle="E_BIT"/>
         <WORD value="1" caption="Az El Goto" textstyle="W_BIT"/>
         <WORD value="2" caption="Az Scan" textstyle="W_BIT"/>
@@ -614,69 +614,69 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="X (deg)">
-      <DATUM format="%.2f" src="P_X_DEG" extrema="angle"/>
+      <DATUM format="%.2f" src="X_P" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="X (h)">
-      <DATUM format="%.4f" src="P_X_H" extrema="rahour"/>
+      <DATUM format="%.4f" src="X_H_P" extrema="rahour"/>
     </NUMBER>
     <NUMBER caption="Y ">
-      <DATUM format="%.2f" src="P_Y" extrema="angle"/>
+      <DATUM format="%.2f" src="Y_P" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="Az Vel">
-      <DATUM format="%.4f" src="P_VAZ" extrema="dps"/>
+      <DATUM format="%.4f" src="VEL_AZ_P" extrema="dps"/>
     </NUMBER>
     <NUMBER caption="dEl">
-      <DATUM format="%.2f" src="P_DEL" extrema="angle"/>
+      <DATUM format="%.2f" src="DEL_P" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="W ">
-      <DATUM format="%.2f" src="P_W" extrema="angle"/>
+      <DATUM format="%.2f" src="W_P" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="H ">
-      <DATUM format="%.4f" src="P_H" extrema="dps"/>
+      <DATUM format="%.4f" src="H_P" extrema="dps"/>
     </NUMBER>
     <NUMBER caption="RA 1">
-      <DATUM format="%.4f" src="P_RA_1" extrema="rahour"/>
+      <DATUM format="%.4f" src="RA_1_P" extrema="rahour"/>
     </NUMBER>
     <NUMBER caption="Dec 1">
-      <DATUM format="%.2f" src="P_DEC_1" extrema="angle"/>
+      <DATUM format="%.2f" src="DEC_1_P" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="RA 2">
-      <DATUM format="%.4f" src="P_RA_2" extrema="rahour"/>
+      <DATUM format="%.4f" src="RA_2_P" extrema="rahour"/>
     </NUMBER>
     <NUMBER caption="Dec 2">
-      <DATUM format="%.2f" src="P_DEC_2" extrema="angle"/>
+      <DATUM format="%.2f" src="DEC_2_P" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="RA 3">
-      <DATUM format="%.4f" src="P_RA_3" extrema="rahour"/>
+      <DATUM format="%.4f" src="RA_3_P" extrema="rahour"/>
     </NUMBER>
     <NUMBER caption="Dec 3">
-      <DATUM format="%.2f" src="P_DEC_3" extrema="angle"/>
+      <DATUM format="%.2f" src="DEC_3_P" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="RA 4">
-      <DATUM format="%.4f" src="P_RA_4" extrema="rahour"/>
+      <DATUM format="%.4f" src="RA_4_P" extrema="rahour"/>
     </NUMBER>
     <NUMBER caption="Dec 4">
-      <DATUM format="%.2f" src="P_DEC_4" extrema="angle"/>
+      <DATUM format="%.2f" src="DEC_4_P" extrema="angle"/>
     </NUMBER>
   </BOX>
   <BOX caption="Motor Gains" colour="#880000" row="3" col="4">
     <NUMBER caption="P Elev">
-      <DATUM format="%5.0f" src="g_p_el" extrema="unknown"/>
+      <DATUM format="%5.0f" src="G_P_EL" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="I Elev">
-      <DATUM format="%5.0f" src="g_i_el" extrema="unknown"/>
+      <DATUM format="%5.0f" src="G_I_EL" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="P RW">
-      <DATUM format="%5.0f" src="g_p_az" extrema="unknown"/>
+      <DATUM format="%5.0f" src="G_P_AZ" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="I RW">
-      <DATUM format="%5.0f" src="g_i_az" extrema="unknown"/>
+      <DATUM format="%5.0f" src="G_I_AZ" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="P RW Pivot">
-      <DATUM format="%5.0f" src="g_pv_piv" extrema="unknown"/>
+      <DATUM format="%5.0f" src="G_PV_PIV" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="P Err Pivot">
-      <DATUM format="%5.0f" src="g_pe_piv" extrema="unknown"/>
+      <DATUM format="%5.0f" src="G_PE_PIV" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Set RW">
       <DATUM format="%+5.2f" src="SET_RW" extrema="unknown"/>
@@ -685,13 +685,14 @@
       <DATUM format="%+5.3f" src="FRICT_OFF_PIV" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Reac DPS">
-      <DATUM format="%+5.2f" src="VEL_RAW_RW" extrema="vrwcheck"/>
+      <DATUM format="%+5.2f" src="VEL_RW" extrema="vrwcheck"/>
     </NUMBER>
     <NUMBER caption="Piv Res">
-      <DATUM format="%+5.2f" src="RES_RAW_PIV" extrema="unknown"/>
+      <DATUM format="%+5.2f" src="RES_PIV" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Inner Frame Electronics" colour="#002222" row="0" col="6" rowspan="1">
+    <!-- TODO once there are thermometers in the DAS, put them here
     <NUMBER caption="DPM 5V">
       <DATUM format="%.2f" src="T_DPM_5V" extrema="powtemp"/>
     </NUMBER>
@@ -701,20 +702,21 @@
     <NUMBER caption="DPM 10V">
       <DATUM format="%.2f" src="T_DPM_10V" extrema="powtemp"/>
     </NUMBER>
+    -->
     <NUMBER caption="DAS">
       <DATUM format="%.2f" src="T_DAS" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Gybox">
-      <DATUM format="%.2f" src="T_GYBOX" extrema="temp"/>
+      <DATUM format="%.2f" src="T_GY" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Gybox Set">
-      <DATUM format="%.2f" src="T_GY_SET" extrema="temp"/>
+      <DATUM format="%.2f" src="T_SET_GY" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Gybox Heater %">
-      <DATUM format="%.2f" src="GY_H_HIST" extrema="gyheat"/>
+      <DATUM format="%.2f" src="H_HIST_GY" extrema="gyheat"/>
     </NUMBER>
     <NUMBER caption="IF Clin">
-      <DATUM format="%.2f" src="T_CLIN_IF" extrema="temp"/>
+      <DATUM format="%.2f" src="T_IF_CLIN" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Rec">
       <DATUM format="%.2f" src="T_REC" extrema="temp"/>
@@ -734,10 +736,10 @@
       <DATUM format="%.2f" src="T_IF_BOT_BACK" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Primary 1">
-      <DATUM format="%.2f" src="T_PRIMARY_1" extrema="temp"/>
+      <DATUM format="%.2f" src="T_1_PRIME" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Primary 2">
-      <DATUM format="%.2f" src="T_PRIMARY_2" extrema="temp"/>
+      <DATUM format="%.2f" src="T_2_PRIME" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Bottom Strut">
       <DATUM format="%.2f" src="T_STRUT_BOT" extrema="temp"/>
@@ -746,22 +748,28 @@
       <DATUM format="%.2f" src="T_STRUT_SIDE" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Secondary 1">
-      <DATUM format="%.2f" src="T_SECONDARY_1" extrema="temp"/>
+      <DATUM format="%.2f" src="T_1_SECOND" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Secondary 2">
-      <DATUM format="%.2f" src="T_SECONDARY_2" extrema="temp"/>
+      <DATUM format="%.2f" src="T_2_SECOND" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Push Plate">
       <DATUM format="%.2f" src="T_PUSH_PLATE" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Actuator Motor">
-      <DATUM format="%.2f" src="T_ACT_MOTOR" extrema="temp"/>
+      <DATUM format="%.2f" src="T_MOT_ACT" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Sun Shield Back">
-      <DATUM format="%.2f" src="T_SS_BACK_MID" extrema="temp"/>
+      <DATUM format="%.2f" src="T_SUN" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Chin Mid">
-      <DATUM format="%.2f" src="T_CHIN_MID" extrema="temp"/>
+      <DATUM format="%.2f" src="T_CHIN" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="Shaded Ambient">
+      <DATUM format="%.2f" src="T_SHADE" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="Earth Ambient">
+      <DATUM format="%.2f" src="T_EARTH" extrema="temp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Outer Frame Electronics" colour="#002222" row="0" col="5" rowspan="1">
@@ -772,25 +780,28 @@
       <DATUM format="%.2f" src="T_ACS" extrema="powtemp"/>
     </NUMBER>
     <NUMBER caption="ACS DCDC">
-      <DATUM format="%.2f" src="T_ACS_DCDC" extrema="powtemp"/>
+      <DATUM format="%.2f" src="T_DCDC_ACS" extrema="powtemp"/>
     </NUMBER>
     <NUMBER caption="MCC">
       <DATUM format="%.2f" src="T_MCC" extrema="mcctemp"/>
     </NUMBER>
     <NUMBER caption="MCC CPU">
-      <DATUM format="%.2f" src="T_CPU2" extrema="cputemp"/>
+      <DATUM format="%.2f" src="T_CPU_FLC" extrema="cputemp"/>
     </NUMBER>
     <NUMBER caption="MCC Chipset">
-      <DATUM format="%.2f" src="T_CPU1" extrema="cputemp"/>
+      <DATUM format="%.2f" src="T_CHIP_FLC" extrema="cputemp"/>
     </NUMBER>
     <NUMBER caption="Sun Sensor">
-      <DATUM format="%.2f" src="SS_CASE_TEMP" extrema="temp"/>
+      <DATUM format="%.2f" src="T_CASE_SS" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="SS CPU">
-      <DATUM format="%.2f" src="SS_CPU_TEMP" extrema="cputemp"/>
+      <DATUM format="%.2f" src="T_CPU_SS" extrema="cputemp"/>
     </NUMBER>
     <NUMBER caption="Lock Motor">
-      <DATUM format="%.2f" src="T_LOCK_MOTOR" extrema="temp"/>
+      <DATUM format="%.2f" src="T_LOCK" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="Lock Controller">
+      <DATUM format="%.2f" src="T_MC_LOCK" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Charger">
       <DATUM format="%.2f" src="T_CHARGER" extrema="temp"/>
@@ -801,28 +812,10 @@
     <NUMBER caption="Balance Motor">
       <DATUM format="%.2f" src="T_PUMP_BAL" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Elevation Motor">
-      <DATUM format="%.2f" src="T_EL_MOT" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="RW motor">
-      <DATUM format="%.2f" src="T_RW_MOT" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="Shaded Ambient">
-      <DATUM format="%.2f" src="T_SHADE" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="Sun Ambient">
-      <DATUM format="%.2f" src="T_SUN" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="Earth Ambient">
-      <DATUM format="%.2f" src="T_EARTH" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="Scoop Ambient">
-      <DATUM format="%.2f" src="T_SCOOP" extrema="temp"/>
-    </NUMBER>
   </BOX>
   <BOX caption="Actuators" colour="#002222" row="4" col="8" rowspan="1">
     <MULTI caption="Actuators">
-      <DATUM src="FOCUS_MODE">
+      <DATUM src="MODE_SF">
         <WORD value="0" caption="Idle" textstyle="OK_BIT"/>
         <WORD value="1" caption="Servoing" textstyle="W_BIT"/>
         <WORD value="2" caption="Focusing" textstyle="W_BIT"/>
@@ -835,13 +828,13 @@
       </DATUM>
     </MULTI>
     <MULTI caption="Actuator Power">
-      <DATUM src="ACTBUS_RESET">
+      <DATUM src="BUS_RESET_ACT">
         <WORD value="0" caption="On" textstyle="OK_BIT"/>
         <WORD value="1" caption="Off" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Status">
-      <DATUM src="ACT_FLAGS">
+      <DATUM src="FLAGS_ACT">
         <WORD mask="0x400" value="1024" caption="Fault ENC2" textstyle="E_BIT"/>
         <WORD mask="0x200" value="512" caption="Fault ENC1" textstyle="E_BIT"/>
         <WORD mask="0x100" value="256" caption="Fault ENC0" textstyle="E_BIT"/>
@@ -852,105 +845,107 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="ACT0 ENC">
-      <DATUM format="%.0f" src="ACT0_ENC" extrema="actuator"/>
+      <DATUM format="%.0f" src="ENC_0_ACT" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="ACT1 ENC">
-      <DATUM format="%.0f" src="ACT1_ENC" extrema="actuator"/>
+      <DATUM format="%.0f" src="ENC_1_ACT" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="ACT2 ENC">
-      <DATUM format="%.0f" src="ACT2_ENC" extrema="actuator"/>
+      <DATUM format="%.0f" src="ENC_2_ACT" extrema="actuator"/>
     </NUMBER>
-    <NUMBER caption="ACT0 Com Pos">
-      <DATUM format="%.0f" src="ACT0_DEAD_REC" extrema="actuator"/>
+    <NUMBER caption="ACT0 LVDT">
+      <DATUM format="%.0f" src="LVDT_0_ACT" extrema="actuator"/>
     </NUMBER>
-    <NUMBER caption="ACT1 Com Pos">
-      <DATUM format="%.0f" src="ACT1_DEAD_REC" extrema="actuator"/>
+    <NUMBER caption="ACT1 LVDT">
+      <DATUM format="%.0f" src="LVDT_1_ACT" extrema="actuator"/>
     </NUMBER>
-    <NUMBER caption="ACT2 Com Pos">
-      <DATUM format="%.0f" src="ACT2_DEAD_REC" extrema="actuator"/>
+    <NUMBER caption="ACT2 LVDT">
+      <DATUM format="%.0f" src="LVDT_2_ACT" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="ACT0 Pos">
-      <DATUM format="%.0f" src="ACT0_POS" extrema="actuator"/>
+      <DATUM format="%.0f" src="POS_0_ACT" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="ACT1 Pos">
-      <DATUM format="%.0f" src="ACT1_POS" extrema="actuator"/>
+      <DATUM format="%.0f" src="POS_1_ACT" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="ACT2 Pos">
-      <DATUM format="%.0f" src="ACT2_POS" extrema="actuator"/>
+      <DATUM format="%.0f" src="POS_2_ACT" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="Move Current">
-      <DATUM format="%.0f" src="ACT_MOVE_I" extrema="unknown"/>
+      <DATUM format="%.0f" src="I_MOVE_ACT" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Hold Current">
-      <DATUM format="%.0f" src="ACT_HOLD_I" extrema="unknown"/>
+      <DATUM format="%.0f" src="I_HOLD_ACT" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Velocity">
-      <DATUM format="%.0f" src="ACT_VEL" extrema="unknown"/>
+      <DATUM format="%.0f" src="VEL_ACT" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Acceleration">
+      <DATUM format="%.0f" src="ACC_ACT" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="LVDTs" colour="#002222" row="2" col="8">
-    <NUMBER caption="LVDT 10">
-      <DATUM format="%.0f" src="LVDT_10" extrema="actuator"/>
+    <NUMBER caption="LVDT 63">
+      <DATUM format="%.0f" src="LVDT_63_ACT" extrema="actuator"/>
     </NUMBER>
-    <NUMBER caption="LVDT 11">
-      <DATUM format="%.0f" src="LVDT_11" extrema="actuator"/>
+    <NUMBER caption="LVDT 64">
+      <DATUM format="%.0f" src="LVDT_64_ACT" extrema="actuator"/>
     </NUMBER>
-    <NUMBER caption="LVDT 13">
-      <DATUM format="%.0f" src="LVDT_13" extrema="actuator"/>
+    <NUMBER caption="LVDT 65">
+      <DATUM format="%.0f" src="LVDT_65_ACT" extrema="actuator"/>
     </NUMBER>
     <NUMBER caption="LVDT High">
-      <DATUM format="%.0f" src="LVDT_HIGH" extrema="LVDTHigh"/>
+      <DATUM format="%.0f" src="LVDT_HIGH_ACT" extrema="LVDTHigh"/>
     </NUMBER>
     <NUMBER caption="LVDT Low">
-      <DATUM format="%.0f" src="LVDT_LOW" extrema="LVDTLow"/>
+      <DATUM format="%.0f" src="LVDT_LOW_ACT" extrema="LVDTLow"/>
     </NUMBER>
     <NUMBER caption="LVDT Spread">
-      <DATUM format="%.0f" src="LVDT_SPREAD" extrema="LVDTSpread"/>
+      <DATUM format="%.0f" src="LVDT_SPREAD_ACT" extrema="LVDTSpread"/>
     </NUMBER>
   </BOX>
   <BOX caption="Focus System" colour="#002222" row="3" col="8">
     <MULTI caption="Auto Focus">
-      <DATUM src="TC_MODE">
+      <DATUM src="MODE_SF">
         <WORD value="0" caption="Enabled" textstyle="OK_BIT"/>
         <WORD value="1" caption="Autovetoed" textstyle="W_BIT"/>
         <WORD value="2" caption="Vetoed" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="T Primary">
-      <DATUM format="%.2f" src="T_PRIME_FID" extrema="temp"/>
+      <DATUM format="%.2f" src="T_PRIME_SF" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Secondary">
-      <DATUM format="%.2f" src="T_SECOND_FID" extrema="temp"/>
+      <DATUM format="%.2f" src="T_SECOND_SF" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Primary Gain">
-      <DATUM format="%.0f" src="TC_G_PRIM" extrema="unknown"/>
+      <DATUM format="%.0f" src="G_PRIME_SF" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Secondary Gain">
-      <DATUM format="%.0f" src="TC_G_SEC" extrema="unknown"/>
+      <DATUM format="%.0f" src="G_SECOND_SF" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Step Size">
-      <DATUM format="%.0f" src="TC_STEP" extrema="unknown"/>
+      <DATUM format="%.0f" src="STEP_SF" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Veto Time">
-      <DATUM format="%.0f" src="TC_VETO" extrema="unknown"/>
+      <DATUM format="%.0f" src="VETO_SF" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Veto Length">
-      <DATUM format="%.0f" src="TC_WAIT" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="Filter Length">
-      <DATUM format="%.0f" src="TC_FILTER" extrema="unknown"/>
+      <DATUM format="%.0f" src="WAIT_SF" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="SF Correction">
-      <DATUM format="%.0f" src="SF_CORRECTION" extrema="sfcorrection"/>
+      <DATUM format="%.0f" src="CORRECTION_SF" extrema="sfcorrection"/>
     </NUMBER>
     <NUMBER caption="Absolute Focus">
-      <DATUM format="%.0f" src="ABS_FOCUS" extrema="actuator"/>
+      <DATUM format="%.0f" src="FOCUS_SF" extrema="actuator"/>
     </NUMBER>
+    <!-- TODO is relative focus still around?
     <NUMBER caption="Relative Focus">
       <DATUM format="%.0f" src="REL_FOCUS" extrema="unknown"/>
     </NUMBER>
+    -->
     <NUMBER caption="Foc Off">
-      <DATUM format="%.0f" src="SF_OFFSET" extrema="unknown"/>
+      <DATUM format="%.0f" src="OFFSET_SF" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Motor Temps" colour="#002222" row="2" col="6">
@@ -958,19 +953,19 @@
       <DATUM format="%.2f" src="T_RW" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Reac MC">
-      <DATUM format="%.2f" src="T_MC_RAW_RW" extrema="temp"/>
+      <DATUM format="%.2f" src="T_MC_RW" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T El">
       <DATUM format="%.2f" src="T_EL" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T El MC">
-      <DATUM format="%.2f" src="T_MC_RAW_EL" extrema="temp"/>
+      <DATUM format="%.2f" src="T_MC_EL" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Pivot">
       <DATUM format="%.2f" src="T_PIV" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Pivot MC">
-      <DATUM format="%.2f" src="T_PIV_C" extrema="temp"/>
+      <DATUM format="%.2f" src="T_MC_PIV" extrema="temp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Currents" colour="#707" row="0" col="4" rowspan="1">
@@ -987,9 +982,9 @@
       <DATUM format="%.2f" src="I_REC" extrema="current"/>
     </NUMBER>
     <NUMBER caption="Star Cams">
-      <DATUM format="%.2f" src="I_STARCAM" extrema="current"/>
+      <DATUM format="%.2f" src="I_SC" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="dGPS">
+    <NUMBER caption="dGPS + Sun Sensor">
       <DATUM format="%.2f" src="I_DGPS" extrema="current"/>
     </NUMBER>
     <NUMBER caption="Steppers">
@@ -999,10 +994,7 @@
       <DATUM format="%.2f" src="I_MCC" extrema="compcurrent"/>
     </NUMBER>
     <NUMBER caption="I Gyro Box">
-      <DATUM format="%.2f" src="I_GYBOX" extrema="gycurrent"/>
-    </NUMBER>
-    <NUMBER caption="I Sun Sensor">
-      <DATUM format="%.2f" src="I_SUN" extrema="sscurrent"/>
+      <DATUM format="%.2f" src="I_GY" extrema="gycurrent"/>
     </NUMBER>
     <NUMBER caption="I Reac">
       <DATUM format="%.2f" src="I_RW" extrema="current"/>
@@ -1016,19 +1008,19 @@
   </BOX>
   <BOX caption="Bias" colour="#707" row="4" col="1">
     <NUMBER caption="Bias 250">
-      <DATUM format="%.0f" src="BIAS_AMPL_250" extrema="bias1"/>
+      <DATUM format="%.0f" src="AMPL_250_BIAS" extrema="bias1"/>
     </NUMBER>
     <NUMBER caption="Bias 350">
-      <DATUM format="%d" src="BIAS_AMPL_350" extrema="bias2"/>
+      <DATUM format="%d" src="AMPL_350_BIAS" extrema="bias2"/>
     </NUMBER>
     <NUMBER caption="Bias 500">
-      <DATUM format="%d" src="BIAS_AMPL_500" extrema="bias3"/>
+      <DATUM format="%d" src="AMPL_500_BIAS" extrema="bias3"/>
     </NUMBER>
     <NUMBER caption="ROX Bias">
-      <DATUM format="%d" src="BIAS_AMPL_ROX" extrema="unknown"/>
+      <DATUM format="%d" src="AMPL_ROX_BIAS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Bias X">
-      <DATUM format="%d" src="BIAS_AMPL_X" extrema="unknown"/>
+      <DATUM format="%d" src="AMPL_X_BIAS" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="'Slow' Bolometers " colour="#707" row="4" col="3" rowspan="1">
@@ -1109,40 +1101,40 @@
   </BOX>
   <BOX caption="Phase" colour="#707" row="4" col="2" rowspan="1">
     <NUMBER caption="Phase 17">
-      <DATUM format="%.0f" src="PHASE17" extrema="unknown"/>
+      <DATUM format="%.0f" src="N17_PHASE" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Phase 18">
-      <DATUM format="%.0f" src="PHASE18" extrema="unknown"/>
+      <DATUM format="%.0f" src="N18_PHASE" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Phase 19">
-      <DATUM format="%.0f" src="PHASE19" extrema="unknown"/>
+      <DATUM format="%.0f" src="N19_PHASE" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Phase 21">
-      <DATUM format="%.0f" src="PHASE21" extrema="unknown"/>
+      <DATUM format="%.0f" src="N21_PHASE" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Phase 22">
-      <DATUM format="%.0f" src="PHASE22" extrema="unknown"/>
+      <DATUM format="%.0f" src="N22_PHASE" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Phase 23">
-      <DATUM format="%.0f" src="PHASE23" extrema="unknown"/>
+      <DATUM format="%.0f" src="N23_PHASE" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Phase 25">
-      <DATUM format="%.0f" src="PHASE25" extrema="unknown"/>
+      <DATUM format="%.0f" src="N25_PHASE" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Phase 26">
-      <DATUM format="%.0f" src="PHASE26" extrema="unknown"/>
+      <DATUM format="%.0f" src="N26_PHASE" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Phase 27">
-      <DATUM format="%.0f" src="PHASE27" extrema="unknown"/>
+      <DATUM format="%.0f" src="N27_PHASE" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Phase 29">
-      <DATUM format="%.0f" src="PHASE29" extrema="unknown"/>
+      <DATUM format="%.0f" src="N29_PHASE" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Phase 30">
-      <DATUM format="%.0f" src="PHASE30" extrema="unknown"/>
+      <DATUM format="%.0f" src="N30_PHASE" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Phase 13">
-      <DATUM format="%.0f" src="PHASE13" extrema="unknown"/>
+      <DATUM format="%.0f" src="N13_PHASE" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Motor Contollers" colour="#880000" row="0" col="8" rowspan="1">
@@ -1188,7 +1180,7 @@
   </BOX>
   <BOX caption="Charge Controller" colour="#777700" row="0" col="7" rowspan="1">
     <MULTI caption="CC State">
-      <DATUM src="STATE_CHRGCTRL">
+      <DATUM src="STATE_CC">
         <WORD value="0" caption="Start" textstyle="OK_BIT"/>
         <WORD value="1" caption="Night Check" textstyle="W_BIT"/>
         <WORD value="2" caption="Disconnect" textstyle="W_BIT"/>
@@ -1202,45 +1194,45 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="V Batt">
-      <DATUM format="%.2f" src="V_BATT_CHRGCTRL" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_BATT_CC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="V Arr">
-      <DATUM format="%.2f" src="V_ARR_CHRGCTRL" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_ARR_CC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="I Batt">
-      <DATUM format="%.2f" src="I_BATT_CHRGCTRL" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_BATT_CC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="I Arr">
-      <DATUM format="%.2f" src="I_ARR_CHRGCTRL" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_ARR_CC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="T HS CC">
-      <DATUM format="%.2f" src="T_HS_CHRGCTRL" extrema="unknown"/>
+      <DATUM format="%.2f" src="T_HS_CC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="V TARGET">
-      <DATUM format="%.2f" src="T_HS_CHRGCTRL" extrema="unknown"/>
+      <DATUM format="%.2f" src="T_HS_CC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="T Sol Arr">
       <DATUM format="%.2f" src="T_ARRAY" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Batt 1">
-      <DATUM format="%.2f" src="T_BAT1" extrema="battemp"/>
+      <DATUM format="%.2f" src="T_1_BAT" extrema="battemp"/>
     </NUMBER>
     <NUMBER caption="T Batt 2">
-      <DATUM format="%.2f" src="T_BAT2" extrema="battemp"/>
+      <DATUM format="%.2f" src="T_2_BAT" extrema="battemp"/>
     </NUMBER>
     <NUMBER caption="T Batt 3">
-      <DATUM format="%.2f" src="T_BAT3" extrema="battemp"/>
+      <DATUM format="%.2f" src="T_3_BAT" extrema="battemp"/>
     </NUMBER>
     <NUMBER caption="T Batt 4">
-      <DATUM format="%.2f" src="T_BAT4" extrema="battemp"/>
+      <DATUM format="%.2f" src="T_4_BAT" extrema="battemp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Pressures/Cooling" colour="#777700" row="2" col="5">
     <NUMBER caption="P ISC (psi)">
-      <DATUM format="%.2f" src="ISC_PRESSURE1" extrema="psi"/>
+      <DATUM format="%.2f" src="PRESSURE1_ISC" extrema="psi"/>
     </NUMBER>
     <NUMBER caption="P OSC (psi)">
-      <DATUM format="%.2f" src="OSC_PRESSURE1" extrema="psi"/>
+      <DATUM format="%.2f" src="PRESSURE1_ISC" extrema="psi"/>
     </NUMBER>
   </BOX>
   <BOX caption="State" colour="#777700" row="0" col="1" colspan="1">
@@ -1296,7 +1288,7 @@
       <DATUM format="%.4f" src="LST" extrema="unknown"/>
     </NUMBER>
     <DATETIME caption="Schedule LST">
-      <DATUM format="Day %j, %H:%M:%S" src="SCHED_LST"/>
+      <DATUM format="Day %j, %H:%M:%S" src="LST_SCHED"/>
     </DATETIME>
     <DATETIME caption="Time until Schedule Mode">
       <DATUM format="%H:%M:%S" src="TIMEOUT"/>
@@ -1336,7 +1328,7 @@
       <DATUM format="%.4f" src="DEC" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="Az of Sun">
-      <DATUM format="%.2f" src="AZ_SUN_MODEL" extrema="unknown"/>
+      <DATUM format="%.2f" src="AZ_SUN" extrema="unknown"/>
     </NUMBER>
     <DERIV caption="dAz/dt (dps)">
       <DATUM format="%.2f" src="AZ" length="100" tunit="s" extrema="angle"/>
@@ -1350,34 +1342,34 @@
       <DATUM format="%.2f" src="EL" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="ISC">
-      <DATUM format="%.2f" src="ISC_EL" extrema="angle"/>
+      <DATUM format="%.2f" src="EL_ISC" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="OSC">
-      <DATUM format="%.2f" src="OSC_EL" extrema="angle"/>
+      <DATUM format="%.2f" src="EL_OSC" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="Encoder">
-      <DATUM format="%.2f" src="ENC_EL" extrema="angle"/>
+      <DATUM format="%.2f" src="EL_ENC" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="Enc Raw">
-      <DATUM format="%.2f" src="ENC_RAW_EL" extrema="angle"/>
+      <DATUM format="%.2f" src="EL_RAW_ENC" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="Clinometer">
-      <DATUM format="%.2f" src="CLIN_ELEV" extrema="angle"/>
+      <DATUM format="%.2f" src="EL_IF_CLIN" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="Clin El">
-      <DATUM format="%.2f" src="CLIN_EL" extrema="unknown"/>
+      <DATUM format="%.2f" src="EL_CLIN" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="ISC Sigma">
-      <DATUM format="%.2f" src="ISC_SIGMA" extrema="unknown"/>
+      <DATUM format="%.2f" src="SIGMA_ISC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="OSC Sigma">
-      <DATUM format="%.2f" src="OSC_SIGMA" extrema="unknown"/>
+      <DATUM format="%.2f" src="SIGMA_OSC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Enc Sigma">
-      <DATUM format="%.2f" src="ENC_SIGMA" extrema="unknown"/>
+      <DATUM format="%.2f" src="SIGMA_ENC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Clin Sigma">
-      <DATUM format="%.2f" src="CLIN_SIGMA" extrema="unknown"/>
+      <DATUM format="%.2f" src="SIGMA_CLIN" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Gy El Offset">
       <DATUM format="%.4f" src="OFFSET_IFEL_GY" extrema="unknown"/>
@@ -1394,10 +1386,10 @@
       <DATUM format="%.2f" src="AZ" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="ISC">
-      <DATUM format="%.2f" src="ISC_AZ" extrema="angle"/>
+      <DATUM format="%.2f" src="AZ_ISC" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="OSC">
-      <DATUM format="%.2f" src="OSC_AZ" extrema="angle"/>
+      <DATUM format="%.2f" src="AZ_OSC" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="dGPS">
       <DATUM format="%.2f" src="AZ_DGPS" extrema="angle"/>
@@ -1406,13 +1398,13 @@
       <DATUM format="%.2f" src="AZ_MAG" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="SS">
-      <DATUM format="%.2f" src="SS_AZ" extrema="angle"/>
+      <DATUM format="%.2f" src="AZ_SS" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="ISC Sigma">
-      <DATUM format="%.2f" src="ISC_SIGMA" extrema="unknown"/>
+      <DATUM format="%.2f" src="SIGMA_ISC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="OSC Sigma">
-      <DATUM format="%.2f" src="OSC_SIGMA" extrema="unknown"/>
+      <DATUM format="%.2f" src="SIGMA_OSC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="dGPS Sigma">
       <DATUM format="%.2f" src="SIGMA_DGPS" extrema="unknown"/>
@@ -1421,7 +1413,7 @@
       <DATUM format="%.2f" src="SIGMA_MAG" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="SS Sigma">
-      <DATUM format="%.2f" src="SS_SIGMA" extrema="unknown"/>
+      <DATUM format="%.2f" src="SIGMA_SS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Gy Roll Offset">
       <DATUM format="%.4f" src="OFFSET_IFROLL_GY" extrema="unknown"/>
@@ -1502,7 +1494,7 @@
   </BOX>
   <BOX caption="Cryo Heaters" row="4" col="7" rowspan="1">
     <MULTI caption="He Level">
-      <DATUM src="HEAT_HELIUM_LEVEL">
+      <DATUM src="HELIUM_LEVEL_HEAT">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
@@ -1511,7 +1503,7 @@
       <DATUM format="%.2f" src="HE4_LEV_OLD" extrema="levelsens"/>
     </NUMBER>
     <MULTI caption="Charcoal">
-      <DATUM src="HEAT_CHARCOAL">
+      <DATUM src="CHARCOAL_HEAT">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
@@ -1553,13 +1545,13 @@
       </DATUM>
     </MULTI>
     <MULTI caption="Calibrator">
-      <DATUM src="HEAT_CALIBRATOR">
+      <DATUM src="CALIBRATOR_HEAT">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="HWPR">
-      <DATUM src="HEAT_HWPR_POS">
+      <DATUM src="HWPR_POS_HEAT">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
