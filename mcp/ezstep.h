@@ -228,9 +228,16 @@ int EZBus_SetAccel(struct ezbus* bus, char who, int acc);
  */
 int EZBus_Stop(struct ezbus* bus, char who);
 
+/* Generic function for creating commands strings
+ * Creates a command string (in buffer) from printf-style fmt
+ * prepends correct preamble parameters for the stepper 
+ * Will return empty string for stepper groups
+ */
+char* __attribute__((format(printf,4,5))) EZBus_StrComm(struct ezbus* bus,
+    char who, char* buffer, const char* fmt, ...);
+
 /* Generic function for sending movement commands. 
- * This will prepend the configuration parameters for the steppers involved, and
- * will loop properly over stepper groups.
+ * This will loop properly over stepper groups.
  */
 int EZBus_MoveComm(struct ezbus* bus, char who, const char* what);
 

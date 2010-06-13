@@ -699,28 +699,39 @@ int EZBus_Stop(struct ezbus* bus, char who)
   return EZBus_Comm(bus, who, "T", 0);
 }
 
-static char* commParams(struct ezbus* bus, char who, char* buffer)
+char* __attribute__((format(printf,4,5))) EZBus_StrComm(struct ezbus* bus,
+    char who, char* buffer, const char* fmt, ...)
 {
-  if (isWhoGroup(who)) buffer[0] = '\0'; //do nothing for steppper groups
+  va_list argptr;
+  char* ptr;
+
+  if (isWhoGroup(who)) {
+    buffer[0] = '\0'; //do nothing for steppper groups
+    return buffer;
+  }
   else sprintf(buffer, "%sV%dL%dm%dh%d", bus->stepper[iWho(who)].preamble,
       bus->stepper[iWho(who)].vel, bus->stepper[iWho(who)].acc, 
       bus->stepper[iWho(who)].imove, bus->stepper[iWho(who)].ihold);
+
+  for(ptr = buffer; *ptr != '\0'; ++ptr);
+
+  va_start(argptr, fmt);
+  vsprintf(ptr, fmt, argptr);
+  va_end(argptr);
+
   return buffer;
 }
 
 int EZBus_MoveComm(struct ezbus* bus, char who, const char* what)
 {
-  char comm_buf[EZ_BUS_BUF_LEN];
-  char pre_buf[EZ_BUS_BUF_LEN];
-  int i;
+  char buf[EZ_BUS_BUF_LEN];
+  char i;
   int retval;
   if (!isWhoGroup(who)) {     //single stepper
-    sprintf(comm_buf, "%s%sR", commParams(bus, who, pre_buf), what);
-    return EZBus_Comm(bus, who, comm_buf, 0);
+    return EZBus_Comm(bus, who, EZBus_StrComm(bus, who, buf, "%sR", what), 0);
   } else {		      //multiple steppers
     for (i=whoLoopMin(who); i<=whoLoopMax(who); ++i) {
-      sprintf(comm_buf, "%s%s", commParams(bus, who, pre_buf), what);
-      retval = EZBus_Comm(bus, who, comm_buf, 0);
+      retval = EZBus_Comm(bus, i, EZBus_StrComm(bus, i, buf, "%s", what), 0);
       if (retval != EZ_ERR_OK) {
 	EZBus_Stop(bus, who);
 	return retval;
