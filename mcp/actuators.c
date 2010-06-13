@@ -68,14 +68,14 @@ static struct ezbus bus;
 
 static struct lock_struct {
   int pos;		  //raw step count
-  unsigned short adc[4];  //ADC readout (including pot_
+  unsigned short adc[4];  //ADC readout (including pot)
   unsigned int state;
 } lock_data = { .state = LS_DRIVE_UNK };
 
 /* Secondary actuator data and parameters */
 #define LVDT_FILT_LEN 25   //5s @ 5Hz
 #define ACTBUS_MAX_ENC_ERR  50	  //maximum difference between enc and lvdt
-#define ACTBUS_TRIM_WAIT    20*2*LVDT_FILT_LEN  //twice LVDT_FILT_LEN, @ 100Hz
+#define ACTBUS_TRIM_WAIT    20*3*LVDT_FILT_LEN  //thrice LVDT_FILT_LEN, @ 100Hz
 					  //wait between trims, and after moves
 static struct act_struct {
   int pos;	//raw step count
@@ -196,6 +196,7 @@ static void ReadActuator(int num)
 static void ServoActuators(int* goal)
 {
   int i;
+  char buf[EZ_BUS_BUF_LEN];
 
   if (CheckMove(goal[0], goal[1], goal[2]))
     return;
@@ -206,8 +207,10 @@ static void ServoActuators(int* goal)
   EZBus_Take(&bus, ID_ALL_ACT);
 
   for (i = 0; i < 3; ++i) {
-    EZBus_Goto(&bus, id[i], goal[i]);
+    //send command to each actuator, but don't run yet
+    EZBus_Comm(&bus, id[i], EZBus_StrComm(&bus, id[i], buf, "A%d", goal[i]), 0);
   }
+  EZBus_Comm(&bus, ID_ALL_ACT, "R", 0);	  //run all act commands at once
 
   EZBus_Release(&bus, ID_ALL_ACT);
 }
@@ -224,6 +227,10 @@ static void DeltaActuators(void)
 
 static int ThermalCompensation(void)
 {
+  /* if panicking, continue to do so */
+  if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
+    return ACTBUS_FM_PANIC;
+
   //TODO for now always just go to sleep
   return ACTBUS_FM_SLEEP;
 
@@ -250,7 +257,6 @@ static int ThermalCompensation(void)
 static void DoActuators(void)
 {
   int i;
-  //int update_dr = 1;
 
   trimActEnc();
   EZBus_SetVel(&bus, ID_ALL_ACT, CommandData.actbus.act_vel);
@@ -266,8 +272,6 @@ static void DoActuators(void)
       break;
     case ACTBUS_FM_DELTA:
       DeltaActuators();
-      if (CommandData.actbus.focus_mode != ACTBUS_FM_PANIC)
-	CommandData.actbus.focus_mode = ThermalCompensation();
       break;
 #if 0
     case ACTBUS_FM_DELFOC:
@@ -275,14 +279,11 @@ static void DoActuators(void)
       /* Fallthough */
     case ACTBUS_FM_THERMO:
     case ACTBUS_FM_FOCUS:
-      update_dr = 0;
       if (SetNewFocus())
 	/* fallthrough */
 #endif
     case ACTBUS_FM_SERVO:
-	ServoActuators(CommandData.actbus.goal/*, update_dr*/);
-	if (CommandData.actbus.focus_mode != ACTBUS_FM_PANIC)
-	  CommandData.actbus.focus_mode = ThermalCompensation();
+	ServoActuators(CommandData.actbus.goal);
 	break;
 #if 0
     case ACTBUS_FM_OFFSET:
@@ -290,8 +291,6 @@ static void DoActuators(void)
 	/* fallthrough */
 #endif
     case ACTBUS_FM_SLEEP:
-	if (CommandData.actbus.focus_mode != ACTBUS_FM_PANIC)
-	  CommandData.actbus.focus_mode = ThermalCompensation();
 	break;
     default:
 	bputs(err, "Unknown Focus Mode (%i), sleeping");
@@ -301,22 +300,13 @@ static void DoActuators(void)
   UpdateFlags();
 #endif
 
+  CommandData.actbus.focus_mode = ThermalCompensation();
+
   for (i = 0; i < 3; ++i)
     ReadActuator(i);
 
-  focus = (act_data[0].lvdt + act_data[1].lvdt + act_data[2].lvdt) / 3;
-
-
-#if 0
-  if (CommandData.actbus.reset_dr) {
-    int i;
-
-    for (i = 0; i < 3; ++i)
-      CommandData.actbus.dead_reckon[i] = act_data[i].enc;
-
-    CommandData.actbus.reset_dr = 0;
-  }
-#endif
+  //tilt doesn't change with focus, so use one position rather than avg
+  focus = act_data[0].lvdt;
 }
 
 void RecalcOffset(double new_gp, double new_gs)
