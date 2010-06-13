@@ -49,10 +49,10 @@ extern "C" {
 
   /* offset of encoder.  Reset if encoder has been unmounted. */
   /* This is the elevation at which the encoder wraps around */
-#define ENC_RAW_EL_OFFSET (256.2)
+#define ENC_RAW_EL_OFFSET (74.8)
   /* to get proper wrapping in KST, the encoder elevation type should be
    * 'u' for 135 <= ENC_EL_RAW_OFFSET < 315 and 's' otherwise */
-#define ENC_ELEV_TYPE 'u'
+#define ENC_ELEV_TYPE 's'
 
   /* Bolo calibrations per Tristan and Matt for new DAS 2010-01-21 */
 #define LOCKIN_C2V (6.90336327e-7)
