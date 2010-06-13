@@ -50,8 +50,6 @@ struct chat_buf {
 #define USE_FIFO_CMD
 #endif
 
-#define USE_FIFO_CMD
-
 #ifdef DEBUG
 #warning "Debugging set."
 #endif
