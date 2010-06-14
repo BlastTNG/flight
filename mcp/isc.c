@@ -49,6 +49,8 @@ static struct {
 extern short int SouthIAm;   /* mcp.c */
 void nameThread(const char*);
 extern short int InCharge; /* tx.c */
+extern int EthernetIsc; /* tx.c */
+extern int EthernetOsc; /* tx.c */
 
 /*---- ISC semaphores ----*/
 
@@ -88,6 +90,7 @@ static int ISCInit(int which)
 {
   int sock;
   struct sockaddr_in addr;
+  static int firsttime = 1;
 
   int n;
 
@@ -125,7 +128,16 @@ static int ISCInit(int which)
 
   if ((n = connect(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)))
       < 0) {
-    berror(err, "connect()");
+    if (firsttime) {
+      berror(err, "connect()");
+      firsttime = 0;
+    }
+    if (errno == ENETUNREACH)
+      which ? (EthernetIsc = 1) : (EthernetOsc = 1);
+    else if (errno == ECONNREFUSED)
+      which ? (EthernetIsc = 2) : (EthernetOsc = 2);
+    else
+      which ? (EthernetIsc = 3) : (EthernetOsc = 3);
     if (sock != -1)
       if (close(sock) < 0)
         berror(err, "close()");
@@ -135,6 +147,8 @@ static int ISCInit(int which)
   bprintf(info, "Connected in %s mode\n",
       (InCharge) ? "active" : "passive");
   CommandData.ISCState[which].shutdown = 0;
+
+  which ? (EthernetIsc = 0) : (EthernetOsc = 0);
 
   if (WHICH)
     bprintf(info, "%iSC (i): Lowered write_ISC_pointing semaphore on connect\n",
@@ -146,6 +160,7 @@ static int ISCInit(int which)
 
   ISCSentState[which] = CommandData.ISCState[which];
 
+  firsttime = 1; /* reset firsttime as we made a good connection */
   return sock;
 }
 
@@ -185,6 +200,7 @@ void IntegratingStarCamera(void* parameter)
   bprintf(startup, "Startup\n");
 
   for (;;) {
+    which ? (EthernetIsc = 3) : (EthernetOsc = 3);
     do {
       if (sock != -1)
         if (close(sock) < 0)

@@ -316,7 +316,7 @@ struct ChannelStruct SlowChannels[] = {
   {"pin_in_lock",  'w', LOOP1, 16,                1.0,             0.0, 'u', U_NONE},
   {"fpulse_isc",   'w', LOOP1, 17,                10.,             0.0, 'u', U_NONE},
   {"period_cal",   'w', LOOP1, 18,                .20,             0.0, 'u', U_NONE},
-  /* LOOP1 19 is unused */
+  {"status_net",   'w', LOOP1, 19,                1.0,             0.0, 'u', U_NONE}, //Sun, ISC, OSC net status
   {"timeout",      'w', LOOP1, 20,                1.0,             0.0, 'u', U_NONE},
   {"az_sun",       'w', LOOP1, 21,              I2DEG,             0.0, 'u', U_D_DEG},
   {"lvdt_low_act", 'w', LOOP1, 22,                1.0,         -5000.0, 'u', U_NONE},

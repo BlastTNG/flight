@@ -39,12 +39,13 @@
 
 void nameThread(const char*);	/* mcp.c */
 
+extern int EthernetSun;      /* tx.c */
+
 sss_packet_data SunSensorData[3];
 int ss_index = 0;
 
 void SunSensor(void) {
   int sock = -1, n;
-
 
   fd_set fdr;
   struct timeval timeout;
@@ -53,10 +54,16 @@ void SunSensor(void) {
 
   sss_packet_data Rx_Data;
 
+  int firsttime = 1;
+
+  EthernetSun = 3; /* Unknown state */
+
   nameThread("Sun");
   bputs(startup, "Startup\n");
 
   while (1) {
+    EthernetSun = 3;
+
     if (sock != -1)
       if (close(sock) == -1)
         berror(err, "close()");
@@ -77,11 +84,22 @@ void SunSensor(void) {
     addr.sin_port = htons(ARIEN_PORT);
     while ((n = connect(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)))
         < 0) {
-      berror(err, "connect()");
+      if (firsttime) {
+        firsttime = 0;
+        berror(err, "connect()");
+      }
+      if (errno == ENETUNREACH) /* No route to host */
+        EthernetSun = 1;
+      else if (errno == ECONNREFUSED) /* Connection refused */
+        EthernetSun = 2;
+      else /* Other error */
+        EthernetSun = 3;
       sleep(10);
     };
 
     bputs(info, "Connected to Arien\n");
+    firsttime = 1;
+    EthernetSun = 0;
     n = 0;
 
     while (n != -1) {

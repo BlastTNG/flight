@@ -56,6 +56,10 @@ extern int StartupVeto;
 
 short int InCharge = 0;
 
+int EthernetSun = 3;
+int EthernetIsc = 3;
+int EthernetOsc = 3;
+
 extern struct AxesModeStruct axes_mode; /* motors.c */
 
 extern struct ISCStatusStruct ISCSentState[2];  /* isc.c */
@@ -124,6 +128,7 @@ static void WriteAux(void)
   static struct NiosStruct* bbcFifoSizeAddr;
   static struct NiosStruct* ploverAddr;
   static struct NiosStruct* he4LevOldAddr;
+  static struct NiosStruct* statusNetAddr;
   static struct BiPhaseStruct* he4LevReadAddr;
   static int incharge = -1;
   time_t t;
@@ -150,6 +155,7 @@ static void WriteAux(void)
     bi0FifoSizeAddr = GetNiosAddr("bi0_fifo_size");
     bbcFifoSizeAddr = GetNiosAddr("bbc_fifo_size");
     ploverAddr = GetNiosAddr("plover");
+    statusNetAddr = GetNiosAddr("status_net");
   }
 
   if (StartupVeto>0) {
@@ -196,6 +202,12 @@ static void WriteAux(void)
   WriteData(bi0FifoSizeAddr, CommandData.bi0FifoSize, NIOS_QUEUE);
   WriteData(bbcFifoSizeAddr, CommandData.bbcFifoSize, NIOS_QUEUE);
   WriteData(ploverAddr, CommandData.plover, NIOS_QUEUE);
+
+  WriteData(statusNetAddr, 
+       (EthernetSun & 0x3) + 
+       ((EthernetIsc & 0x3) << 2) + 
+       ((EthernetOsc & 0x3) << 4), 
+       NIOS_QUEUE);
 
   WriteData(statusMCCAddr, 
        (SouthIAm ? 0x1 : 0x0) +                 //0x01
