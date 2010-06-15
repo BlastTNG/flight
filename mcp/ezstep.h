@@ -162,6 +162,7 @@ int EZBus_Recv(struct ezbus* bus);
 /* send command 'what' to 'who' and recieve response
  * if 'naive' is false, communications will retry under certain error conditions
  */
+//TODO instead of naive, EZBus_Comm should take a number of retry attemtps
 int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive);
 
 /* send query command 'what' to 'who' to get integer response

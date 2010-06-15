@@ -180,16 +180,6 @@ struct ChannelStruct WideSlowChannels[] = {
   {"mcpnum_osc",   'w', LOOP3, 58,                1.0,             0.0, 'U', U_NONE},
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U', U_NONE},
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S', U_NONE},
-  {"pos_lock",     'w', LOOP5, 18,                1.0,             0.0, 'S', U_NONE},
-  //TODO when synced to LVDT, may not need enc_act to be wide
-  {"pos_0_act",     'w', LOOP5, 42,                1.0,		   0.0, 'S', U_NONE},
-  {"pos_1_act",     'w', LOOP5, 44,                1.0,             0.0, 'S', U_NONE},
-  {"pos_2_act",     'w', LOOP5, 46,                1.0,             0.0, 'S', U_NONE},
-  {"enc_0_act",     'w', LOOP5, 48,                1.0,		   0.0, 'S', U_NONE},
-  {"enc_1_act",     'w', LOOP5, 50,                1.0,             0.0, 'S', U_NONE},
-  {"enc_2_act",     'w', LOOP5, 52,                1.0,             0.0, 'S', U_NONE},
-  {"goal_sf",      'w', LOOP6, 30,                1.0,             0.0, 'S', U_NONE},
-  {"focus_sf",     'w', LOOP6, 32,                1.0,             0.0, 'S', U_NONE},
   {"lst_sched",    'w', LOOP6, 56,                1.0,             0.0, 'U', U_NONE},  // ls day
 
   END_OF_CHANNELS
@@ -581,6 +571,17 @@ struct ChannelStruct SlowChannels[] = {
   {"off_ifyaw_gy_isc", 'w',LOOP5, 62,     1.0/32768.0,             0.0, 's', U_NONE},
   {"off_ifyaw_gy_osc", 'w',LOOP5, 63,     1.0/32768.0,             0.0, 's', U_NONE},
 
+  //this set of actuator channels used to be wide
+  {"pos_lock",     'w', LOOP5, 18,                1.0,             0.0, 's', U_NONE},
+  {"pos_0_act",    'w', LOOP5, 42,                1.0,		   0.0, 's', U_NONE},
+  {"pos_1_act",    'w', LOOP5, 44,                1.0,             0.0, 's', U_NONE},
+  {"pos_2_act",    'w', LOOP5, 46,                1.0,             0.0, 's', U_NONE},
+  {"enc_0_act",    'w', LOOP5, 48,                1.0,		   0.0, 's', U_NONE},
+  {"enc_1_act",    'w', LOOP5, 50,                1.0,             0.0, 's', U_NONE},
+  {"enc_2_act",    'w', LOOP5, 52,                1.0,             0.0, 's', U_NONE},
+  {"goal_sf",      'w', LOOP6, 30,                1.0,             0.0, 's', U_NONE},
+  {"focus_sf",     'w', LOOP6, 32,                1.0,             0.0, 's', U_NONE},
+
   {"maxslew_isc",  'w', LOOP6,  0,              I2DEG,             0.0, 'u', U_NONE},
   {"maxslew_osc",  'w', LOOP6,  1,              I2DEG,             0.0, 'u', U_NONE},
   {"t_port_ss",    'w', LOOP6,  2,             1/100.,         -273.15, 'u', U_NONE},
@@ -722,7 +723,13 @@ struct ChannelStruct SlowChannels[] = {
   {"frict_term_uf_piv",'w',LOOP8,18,     2.0/32767.0,              0.0,   's', U_NONE}, // For debugging remove later
 
   {"az_gy",        'w',   LOOP8, 19,       20.0/32768.0,             0.0, 's', U_V_DPS},
-  /* LOOP8 20-63 are unused */
+  {"offset_0_act", 'w',   LOOP8, 20,                1.0,             0.0, 's', U_NONE},
+  {"offset_1_act", 'w',   LOOP8, 21,                1.0,             0.0, 's', U_NONE},
+  {"offset_2_act", 'w',   LOOP8, 22,                1.0,             0.0, 's', U_NONE},
+  {"goal_0_act",   'w',   LOOP8, 23,                1.0,             0.0, 's', U_NONE},
+  {"goal_1_act",   'w',   LOOP8, 24,                1.0,             0.0, 's', U_NONE},
+  {"goal_2_act",   'w',   LOOP8, 25,                1.0,             0.0, 's', U_NONE},
+  /* LOOP8 26-63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

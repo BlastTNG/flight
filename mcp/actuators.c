@@ -147,6 +147,7 @@ static int CheckMove(int goal0, int goal1, int goal2)
 }
 
 //if encoder values disagree with LVDTs, trim encoders to LVDT
+//TODO double check about when encoders are reset, and if they happen together
 static void trimActEnc()
 {
   static int wait = ACTBUS_TRIM_WAIT;
@@ -257,6 +258,7 @@ static int ThermalCompensation(void)
 static void DoActuators(void)
 {
   int i;
+  int delta;
 
   trimActEnc();
   EZBus_SetVel(&bus, ID_ALL_ACT, CommandData.actbus.act_vel);
@@ -273,23 +275,19 @@ static void DoActuators(void)
     case ACTBUS_FM_DELTA:
       DeltaActuators();
       break;
-#if 0
     case ACTBUS_FM_DELFOC:
       CommandData.actbus.focus += focus;
       /* Fallthough */
     case ACTBUS_FM_THERMO:
     case ACTBUS_FM_FOCUS:
-      if (SetNewFocus())
-	/* fallthrough */
-#endif
+      delta = CommandData.actbus.focus - focus;
+      CommandData.actbus.goal[0] = act_data[0].enc + delta;
+      CommandData.actbus.goal[1] = act_data[1].enc + delta;
+      CommandData.actbus.goal[2] = act_data[2].enc + delta;
+      /* fallthrough */
     case ACTBUS_FM_SERVO:
 	ServoActuators(CommandData.actbus.goal);
 	break;
-#if 0
-    case ACTBUS_FM_OFFSET:
-	SetOffsets(CommandData.actbus.offset);
-	/* fallthrough */
-#endif
     case ACTBUS_FM_SLEEP:
 	break;
     default:
@@ -748,6 +746,8 @@ void StoreActBus(void)
   static struct NiosStruct* posActAddr[3];
   static struct NiosStruct* encActAddr[3];
   static struct NiosStruct* lvdtActAddr[3];
+  static struct NiosStruct* offsetActAddr[3];
+  static struct NiosStruct* goalActAddr[3];
 
   static struct NiosStruct* lvdtSpreadActAddr;
   static struct NiosStruct* lvdtLowActAddr;
@@ -783,6 +783,8 @@ void StoreActBus(void)
       posActAddr[j] = GetActNiosAddr(j, "pos");
       encActAddr[j] = GetActNiosAddr(j, "enc");
       lvdtActAddr[j] = GetActNiosAddr(j, "lvdt");
+      offsetActAddr[j] = GetActNiosAddr(j, "offset");
+      goalActAddr[j] = GetActNiosAddr(j, "goal");
     }
 
     gPrimeSfAddr = GetNiosAddr("g_prime_sf");
@@ -835,9 +837,15 @@ void StoreActBus(void)
   WriteData(pinInLockAddr, CommandData.pin_is_in, NIOS_QUEUE);
 
   for (j = 0; j < 3; ++j) {
-    WriteData(posActAddr[j], act_data[j].pos, NIOS_QUEUE);
-    WriteData(encActAddr[j], act_data[j].enc, NIOS_QUEUE);
-    WriteData(lvdtActAddr[j], act_data[j].lvdt, NIOS_QUEUE);
+    WriteData(posActAddr[j], 
+	act_data[j].pos - CommandData.actbus.offset[j], NIOS_QUEUE);
+    WriteData(encActAddr[j], 
+	act_data[j].enc - CommandData.actbus.offset[j], NIOS_QUEUE);
+    WriteData(lvdtActAddr[j], 
+	act_data[j].lvdt - CommandData.actbus.offset[j], NIOS_QUEUE);
+    WriteData(offsetActAddr[j], CommandData.actbus.offset[j], NIOS_QUEUE);
+    WriteData(goalActAddr[j], 
+	CommandData.actbus.goal[j] - CommandData.actbus.offset[j], NIOS_QUEUE);
   }
   WriteData(focusSfAddr, focus, NIOS_QUEUE);
 

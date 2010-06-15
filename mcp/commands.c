@@ -1339,9 +1339,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.sf_time = CommandData.actbus.tc_wait - 5;
       break;
     case actuator_servo:
-      CommandData.actbus.goal[0] = ivalues[0];
-      CommandData.actbus.goal[1] = ivalues[1];
-      CommandData.actbus.goal[2] = ivalues[2];
+      CommandData.actbus.goal[0] = ivalues[0] + CommandData.actbus.offset[0];
+      CommandData.actbus.goal[1] = ivalues[1] + CommandData.actbus.offset[1];
+      CommandData.actbus.goal[2] = ivalues[2] + CommandData.actbus.offset[2];
       CommandData.actbus.focus_mode = ACTBUS_FM_SERVO;
       break;
     case actuator_delta:
@@ -1358,10 +1358,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.act_move_i = ivalues[0];
       CommandData.actbus.act_hold_i = ivalues[1];
       break;
-    case encoder_offset:
-      CommandData.actbus.offset[0] = ivalues[0];
-      CommandData.actbus.offset[1] = ivalues[1];
-      CommandData.actbus.offset[2] = ivalues[2];
+    case act_offset:
+      CommandData.actbus.offset[0] = (int)rvalues[0];
+      CommandData.actbus.offset[1] = (int)rvalues[1];
+      CommandData.actbus.offset[2] = (int)rvalues[2];
       CommandData.actbus.focus_mode = ACTBUS_FM_OFFSET;
       break;
     case lvdt_limit:
@@ -2519,6 +2519,10 @@ void InitCommandData()
   CommandData.actbus.lvdt_delta = 1000;
   CommandData.actbus.lvdt_low = 25000;
   CommandData.actbus.lvdt_high = 35000;
+
+  CommandData.actbus.offset[0] = 0;
+  CommandData.actbus.offset[1] = 0;
+  CommandData.actbus.offset[2] = 0;
 
   /* The first is due to change in radius of curvature, the second due to
    * displacement of the secondary due to the rigid struts */

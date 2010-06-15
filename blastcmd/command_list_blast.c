@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.50 $";
+const char *command_list_serial = "$Revision: 4.51 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -301,6 +301,8 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_OSC_PARAM},
 };
 
+//TODO field sources for command parameters need updating
+
 /* parameter type:
  * i :  parameter is 15 bit unnormalised integer
  * l :  parameter is 30 bit unnormalised integer
@@ -549,9 +551,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(actuator_servo), "servo the actuators to absolute positions",
     GR_ACT, 3,
     {
-      {"Actuator Alpha", -15000, 15000, 'i', "ACT0_ENC"},
-      {"Actuator Beta",  -15000, 15000, 'i', "ACT1_ENC"},
-      {"Actuator Gamma", -15000, 15000, 'i', "ACT2_ENC"}
+      {"Actuator Alpha", -15000, 15000, 'i', "ENC_0_ACT"},
+      {"Actuator Beta",  -15000, 15000, 'i', "ENC_1_ACT"},
+      {"Actuator Gamma", -15000, 15000, 'i', "ENC_2_ACT"}
     }
   },
   {COMMAND(focus_offset), "set the in focus position offset relative the "
@@ -563,17 +565,16 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(actuator_delta), "offset the actuators to from current position",
     GR_ACT, 3,
     {
-      {"Actuator Alpha", -1000, 1000, 'i', "0"},
-      {"Actuator Beta",  -1000, 1000, 'i', "0"},
-      {"Actuator Gamma", -1000, 1000, 'i', "0"}
+      {"Actuator Alpha", -5000, 5000, 'i', "0"},
+      {"Actuator Beta",  -5000, 5000, 'i', "0"},
+      {"Actuator Gamma", -5000, 5000, 'i', "0"}
     }
   },
-  {COMMAND(encoder_offset), "set the current actuator encoder offset",
-    GR_ACT, 3,
+  {COMMAND(act_offset), "set the actuator encoder/lvdt offsets", GR_ACT, 3,
     {
-      {"Actuator Alpha", 0, 30000, 'i', "ACT0_ENC"},
-      {"Actuator Beta",  0, 30000, 'i', "ACT1_ENC"},
-      {"Actuator Gamma", 0, 30000, 'i', "ACT2_ENC"}
+      {"Actuator Alpha", 0, 65536, 'f', "ENC_0_ACT"},
+      {"Actuator Beta",  0, 65536, 'f', "ENC_1_ACT"},
+      {"Actuator Gamma", 0, 65536, 'f', "ENC_2_ACT"}
     }
   },
   {COMMAND(actuator_vel), "set the actuator velocity and acceleration", GR_ACT,

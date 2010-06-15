@@ -134,7 +134,7 @@ enum multiCommand {
   isc_integrate,     osc_integrate,     osc_det_set,      osc_blobs,
   inner_level,       isc_offset,        hwpr_jump,        hwpr_goto,
   osc_catalogue,     osc_tolerances,    osc_hold_current,
-  lock,              isc_blobs,         phase,            encoder_offset,
+  lock,              isc_blobs,         phase,            act_offset,
   pivot_gain,        isc_pixel_centre,  ra_dec_goto,      ra_dec_set,
   roll_gain,         isc_set_aperture,  isc_set_focus,  
   t_gyro_set,        osc_gain,
