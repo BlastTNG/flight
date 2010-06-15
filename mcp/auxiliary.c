@@ -472,10 +472,13 @@ void CameraTrigger(int which)
 #if SYNCHRONOUS_CAMERAS
   static int cameras_ready = 0;
 #endif
+  char swhich[4] = "ISC";
+  if (which) swhich[0] = 'O';
 
   if (firsttime) {
     firsttime = 0;
-    TriggerAddr[0] = GetNiosAddr("trigger_osc");
+    //NB before renaming, 0 was osc, 1 was isc. I think that was wrong
+    TriggerAddr[0] = GetNiosAddr("trigger_isc");
     TriggerAddr[1] = GetNiosAddr("trigger_osc");
   }
 
@@ -488,12 +491,12 @@ void CameraTrigger(int which)
   if (isc_pulses[which].start_wait == 0) { /* start of new pulse */
     if (!isc_pulses[which].ack_wait) { /* not waiting for ack: send new data */
       if (WHICH && delay[which] == 0)
-        bprintf(info, "%iSC (t): Start new pulse (%i/%i)\n", which,
+        bprintf(info, "%s (t): Start new pulse (%i/%i)\n", swhich,
             isc_pulses[which].pulse_index, isc_pulses[which].is_fast);
 
       start_ISC_cycle[which] = 0;
       if (WHICH && delay[which] == 0)
-        bprintf(info, "%iSC (t): Lowering start_ISC_cycle\n", which);
+        bprintf(info, "%s (t): Lowering start_ISC_cycle\n", swhich);
 
       if (!isc_pulses[which].is_fast) {  /* slow pulse */
         /* autosave next image -- we only do this on long pulses */
@@ -522,25 +525,25 @@ void CameraTrigger(int which)
         /* Signal isc thread to send new pointing data */
         if (WHICH && write_ISC_trigger[which])
           bprintf(info,
-              "%iSC (t): Unexpectedly lowered write_ISC_trigger Semaphore\n",
-              which);
+              "%s (t): Unexpectedly lowered write_ISC_trigger Semaphore\n",
+              swhich);
 
         write_ISC_trigger[which] = 0;
         write_ISC_pointing[which] = 1;
 
         if (WHICH)
-          bprintf(info, "%iSC (t): Raised write_ISC_pointing Semaphore\n",
-              which);
+          bprintf(info, "%s (t): Raised write_ISC_pointing Semaphore\n",
+              swhich);
       } else {
         isc_pulses[which].force_sync = 0;
         bprintf(warning,
             "%s: out-of-sync condition detected, attempting to resync",
-            (which) ? "Osc" : "Isc");
+            swhich);
 
         if (WHICH)
           bprintf(info,
-              "%iSC (t): Lowered force_sync Semaphore ++++++++++++++++++\n",
-              which);
+              "%s (t): Lowered force_sync Semaphore ++++++++++++++++++\n",
+              swhich);
       }
 
       /* Start waiting for ACK from star camera */
@@ -548,8 +551,8 @@ void CameraTrigger(int which)
       isc_pulses[which].ack_timeout =
         (ISC_link_ok[which]) ? ISC_ACK_TIMEOUT : 10;
       if (WHICH)
-        bprintf(info, "%iSC (t): ackwait starts with timeout = %i\n", which,
-            isc_pulses[which].ack_timeout);
+        bprintf(info, "%s (t): ackwait starts with timeout = %i\n", 
+	    swhich, isc_pulses[which].ack_timeout);
     } else { /* ACK wait state */
       if (isc_pulses[which].ack_wait > isc_pulses[which].ack_timeout
           || write_ISC_trigger[which]) {
@@ -564,18 +567,18 @@ void CameraTrigger(int which)
           if (ISC_link_ok[which] && isc_pulses[which].ack_wait
               > isc_pulses[which].ack_timeout) {
             if (InCharge) {
-              bprintf(warning,
-                  "%s: timeout on ACK, flagging link as bad\n",
-                  (which) ? "Osc" : "Isc");
+              bprintf(warning, "%s: timeout on ACK, flagging link as bad\n",
+                  swhich);
               ISC_link_ok[which] = 0;
             } else if (WHICH)
-              bprintf(warning, "%iSC (t): timeout on ACK while NiC\n", which);
+              bprintf(warning, "%s (t): timeout on ACK while NiC\n", 
+		  swhich);
           }
 
           delay[which] = ISC_TRIGGER_DELAY;
           if (WHICH)
-            bprintf(info, "%iSC (t): Trigger Delay Starts: %i\n", which,
-                delay[which]);
+            bprintf(info, "%s (t): Trigger Delay Starts: %i\n", 
+		swhich, delay[which]);
         } else if (delay[which] > 1)
           delay[which]--;
         else {
@@ -586,15 +589,16 @@ void CameraTrigger(int which)
             if (fabs(axes_mode.az_vel) >= MAX_ISC_SLOW_PULSE_SPEED) {
               if (!waiting[which] && WHICH)
                 bprintf(info,
-                    "%iSC (t): Velocity wait starts (%.3f %.3f) <----- v\n",
-                    which, fabs(axes_mode.az_vel), MAX_ISC_SLOW_PULSE_SPEED);
+                    "%s (t): Velocity wait starts (%.3f %.3f) <----- v\n",
+                    swhich, 
+		    fabs(axes_mode.az_vel), MAX_ISC_SLOW_PULSE_SPEED);
               waiting[which] = 1;
               return;
             }
 
             if (WHICH)
-              bprintf(info, "%iSC (t): Velocity wait ends. -------> v\n",
-                  which);
+              bprintf(info, "%s (t): Velocity wait ends. -------> v\n",
+                  swhich);
 
             /* use slow (long) pulse length */
             isc_pulses[which].pulse_req
@@ -617,7 +621,7 @@ void CameraTrigger(int which)
 
           /* write the pulse */
           if (WHICH)
-            bprintf(info, "%iSC (t): Writing trigger (%04x)\n", which,
+            bprintf(info, "%s (t): Writing trigger (%04x)\n", swhich,
                 isc_pulses[which].pulse_req);
 #if SYNCHRONOUS_CAMERAS
           if (which)
@@ -636,7 +640,7 @@ void CameraTrigger(int which)
 #endif
 
           if (WHICH)
-            bprintf(info, "%iSC (t): Lowering write_ISC_trigger\n", which);
+            bprintf(info, "%s (t): Lowering write_ISC_trigger\n", swhich);
           write_ISC_trigger[which] = 0;
           isc_pulses[which].ack_wait = 0;
 
@@ -652,8 +656,8 @@ void CameraTrigger(int which)
             ISC_DATA_TIMEOUT : ISC_DEFAULT_PERIOD - ISC_TRIGGER_DELAY - 2;
 
           if (WHICH)
-            bprintf(info, "%iSC (t): startwait starts with timeout = %i\n",
-                which, isc_pulses[which].start_timeout);
+            bprintf(info, "%s (t): startwait starts with timeout = %i\n",
+                swhich, isc_pulses[which].start_timeout);
 
           /* re-zero age, if needed */
           if (isc_pulses[which].age < 0)
@@ -670,11 +674,11 @@ void CameraTrigger(int which)
           isc_pulses[which].start_timeout) {
         if (InCharge) {
           bprintf(warning, "%s: Timeout while waiting for solution.\n",
-              (which) ? "Osc" : "Isc");
+              swhich);
         } else if (WHICH)
           bprintf(warning,
-              "%iSC (t): Timeout while waiting for solution and NiC.\n",
-              which);
+              "%s (t): Timeout while waiting for solution and NiC.\n",
+              swhich);
       }
 
       isc_pulses[which].start_wait = 0;
@@ -692,8 +696,8 @@ void CameraTrigger(int which)
 
       if (WHICH)
         bprintf(info,
-            "%iSC (t): Raised force_sync Semaphore +++++++++++++++++++\n",
-            which);
+            "%s (t): Raised force_sync Semaphore +++++++++++++++++++\n",
+            swhich);
     }
   }
 }
