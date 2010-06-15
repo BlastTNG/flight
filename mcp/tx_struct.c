@@ -714,9 +714,9 @@ struct ChannelStruct SlowChannels[] = {
   {"state_cc",   'w',  LOOP8,  12,  1.0,     0.0,  'u',  U_NONE},   
   
   /* filtered LVDTs, rotated to motor positions */
-  {"lvdt_0_act",  'w',  LOOP8, 13,   1.0,     0.0,   'u', U_NONE},
-  {"lvdt_1_act",  'w',  LOOP8, 14,   1.0,     0.0,   'u', U_NONE},
-  {"lvdt_2_act",  'w',  LOOP8, 15,   1.0,     0.0,   'u', U_NONE},
+  {"lvdt_0_act",  'w',  LOOP8, 13,   1.0,     0.0,   's', U_NONE},
+  {"lvdt_1_act",  'w',  LOOP8, 14,   1.0,     0.0,   's', U_NONE},
+  {"lvdt_2_act",  'w',  LOOP8, 15,   1.0,     0.0,   's', U_NONE},
 
   {"frict_off_piv",'w', LOOP8,  16,      2.0/65535.0,              0.0,   'u', U_NONE},
   {"frict_term_piv",'w',LOOP8,  17,      2.0/32767.0,              0.0,   's', U_NONE},
