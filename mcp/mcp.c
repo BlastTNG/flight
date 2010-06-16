@@ -471,6 +471,8 @@ static void GetACS(unsigned short *RxFrame)
 {
   double enc_raw_el, ifel_gy, ifroll_gy, ifyaw_gy;
   double x_comp, y_comp, z_comp;
+  double pss1_i1, pss1_i2, pss1_i3, pss1_i4;
+  //double pss2_i1, pss2_i2, pss2_i3, pss2_i4;
   double vel_rw;
   double res_piv;
   static struct BiPhaseStruct* ifElgyAddr;
@@ -483,6 +485,14 @@ static void GetACS(unsigned short *RxFrame)
   static struct BiPhaseStruct* zMagAddr;
   static struct BiPhaseStruct* velRWAddr;
   static struct BiPhaseStruct* resPivAddr;
+  static struct BiPhaseStruct* v11PssAddr;
+  static struct BiPhaseStruct* v21PssAddr;
+  static struct BiPhaseStruct* v31PssAddr;
+  static struct BiPhaseStruct* v41PssAddr;
+  //static struct BiPhaseStruct* v12PssAddr;
+  //static struct BiPhaseStruct* v22PssAddr;
+  //static struct BiPhaseStruct* v32PssAddr;
+  //static struct BiPhaseStruct* v42PssAddr;
 
   unsigned int rx_frame_index = 0;
   int i_ss;
@@ -500,6 +510,14 @@ static void GetACS(unsigned short *RxFrame)
     zMagAddr = GetBiPhaseAddr("z_mag");
     velRWAddr = GetBiPhaseAddr("vel_rw");
     resPivAddr = GetBiPhaseAddr("res_piv");
+    v11PssAddr = GetBiPhaseAddr("v1_1_pss");
+    v21PssAddr = GetBiPhaseAddr("v2_1_pss");
+    v31PssAddr = GetBiPhaseAddr("v3_1_pss");
+    v41PssAddr = GetBiPhaseAddr("v4_1_pss");
+    //v12PssAddr = GetBiPhaseAddr("v1_2_pss");
+    //v22PssAddr = GetBiPhaseAddr("v2_2_pss");
+    //v32PssAddr = GetBiPhaseAddr("v3_2_pss");
+    //v42PssAddr = GetBiPhaseAddr("v4_2_pss");
   }
 
   rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
@@ -515,6 +533,15 @@ static void GetACS(unsigned short *RxFrame)
   x_comp = (double)(RxFrame[xMagAddr->channel]);
   y_comp = (double)(RxFrame[yMagAddr->channel]);
   z_comp = (double)(RxFrame[zMagAddr->channel]);
+
+  pss1_i1 = (double)(RxFrame[v11PssAddr->channel]);
+  pss1_i2 = (double)(RxFrame[v21PssAddr->channel]);
+  pss1_i3 = (double)(RxFrame[v31PssAddr->channel]);
+  pss1_i4 = (double)(RxFrame[v41PssAddr->channel]);
+  //pss2_i1 = (double)(RxFrame[v12PssAddr->channel]);
+  //pss2_i2 = (double)(RxFrame[v22PssAddr->channel]);
+  //pss2_i3 = (double)(RxFrame[v32PssAddr->channel]);
+  //pss2_i4 = (double)(RxFrame[v42PssAddr->channel]);
   
   i_ss = ss_index;
 
@@ -529,6 +556,14 @@ static void GetACS(unsigned short *RxFrame)
   ACSData.mag_z = z_comp;
   ACSData.vel_rw = vel_rw;
   ACSData.res_piv = res_piv;
+  ACSData.pss1_i1 = pss1_i1;
+  ACSData.pss1_i2 = pss1_i2;
+  ACSData.pss1_i3 = pss1_i3;
+  ACSData.pss1_i4 = pss1_i4;
+  //ACSData.pss2_i1 = pss2_i1;
+  //ACSData.pss2_i2 = pss2_i2;
+  //ACSData.pss2_i3 = pss2_i3;
+  //ACSData.pss2_i4 = pss2_i4;
 
   ACSData.clin_elev = (double)RxFrame[elRawIfClinAddr->channel];
 

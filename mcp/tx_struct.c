@@ -916,6 +916,7 @@ struct ChannelStruct FastChannels[] = {
   {"pulse_osc",    'r',   ACS2_D, 54,                 1.0,            0.0, 'u', U_NONE},
 
 /* ACS2 Analog card */
+
   {"roll_pyr_clin",'r',  ACS2_A1,  1,     -4.0/5333.3333,        4.*6.144, 'u', U_NONE},
   {"pch_pyr_clin", 'r',  ACS2_A1,  3,      4.0/5333.3333,       -4.*6.144, 'u', U_NONE},
   {"el_raw_if_clin",'r',  ACS2_A1,  7,         0.00546739,         -133.78, 'u', U_NONE},
@@ -923,6 +924,14 @@ struct ChannelStruct FastChannels[] = {
   {"x_mag",        'r',  ACS2_A1, 13,              MAGX_M,         MAGX_B, 'u', U_NONE},
   {"y_mag",        'r',  ACS2_A1, 15,              MAGY_M,         MAGY_B, 'u', U_NONE},
   {"z_mag",        'r',  ACS2_A1, 17,              MAGZ_M,         MAGZ_B, 'u', U_NONE},
+  {"v1_1_pss",     'r',  ACS2_A1, 29,                  1.,            0.,  'u', U_NONE},
+  {"v2_1_pss",     'r',  ACS2_A1, 31,                  1.,            0.,  'u', U_NONE},
+  {"v3_1_pss",     'r',  ACS2_A1, 33,                  1.,            0.,  'u', U_NONE},
+  {"v4_1_pss",     'r',  ACS2_A1, 35,                  1.,            0.,  'u', U_NONE},
+  //{"v1_2_pss",     'r',  ACS2_A1, 37,                  1.,            0.,  'u', U_NONE},
+  //{"v2_2_pss",     'r',  ACS2_A1, 39,                  1.,            0.,  'u', U_NONE},
+  //{"v3_2_pss",     'r',  ACS2_A1, 41,                  1.,            0.,  'u', U_NONE},
+  //{"v4_2_pss",     'r',  ACS2_A1, 43,                  1.,            0.,  'u', U_NONE},
 
 #endif
   {"dig43_das",    'w',   BIAS_D,  6,                1.0,             0.0, 'u', U_NONE},

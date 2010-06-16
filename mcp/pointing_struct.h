@@ -60,6 +60,14 @@ struct ACSDataStruct {
   double mag_y;    // counts
   double mag_z;    // counts
   double mag_pitch; // degrees
+  double pss1_i1;   //counts
+  double pss1_i2;   //counts
+  double pss1_i3;   //counts
+  double pss1_i4;   //counts
+  double pss2_i1;   //counts
+  double pss2_i2;   //counts
+  double pss2_i3;   //counts
+  double pss2_i4;   //counts
   double enc_raw_el; // degrees
   double clin_elev;// counts
   double vel_rw; // deg/s
@@ -216,6 +224,12 @@ struct PointingDataStruct {
   double ss_az_rel_sun;
   double sun_az; // degrees current calculated az of sun
   double sun_el; // degrees current calculated el of sun
+  double pss1_az; //degrees
+  double pss1_el; //degrees
+  double pss1_snr; //degrees
+  double pss2_az; //degrees
+  double pss2_el; //degrees
+  double pss2_snr; //degrees
   double isc_az; // degrees
   double isc_el; // degrees
   double isc_sigma; // degrees
