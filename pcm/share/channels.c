@@ -745,6 +745,17 @@ static void DoSanityChecks(void)
 #endif
 
   for (i = 0; i < 2; ++i) {
+#ifdef __DECOMD__
+//in decomd, add extra space for decom channels
+#ifdef VERBOSE
+    bprintf(info, "Channels: BBC Bus %i: Frame Bytes: %4i  Allowed: %4i "
+        "(%.2f%% full)\n", i, 4 * TxFrameWords[i], 4 * BBC_FRAME_SIZE,
+        100. * TxFrameWords[i] / (BBC_FRAME_SIZE+3));
+#endif
+    if (TxFrameWords[i] > BBC_FRAME_SIZE+3)
+      bprintf(fatal, "Channels: FATAL: BBC Bus %i frame too big.\n", i);
+#else  //__DECOMD__
+//outside decomd, enforce unaltered limits
 #ifdef VERBOSE
     bprintf(info, "Channels: BBC Bus %i: Frame Bytes: %4i  Allowed: %4i "
         "(%.2f%% full)\n", i, 4 * TxFrameWords[i], 4 * BBC_FRAME_SIZE,
@@ -752,6 +763,7 @@ static void DoSanityChecks(void)
 #endif
     if (TxFrameWords[i] > BBC_FRAME_SIZE)
       bprintf(fatal, "Channels: FATAL: BBC Bus %i frame too big.\n", i);
+#endif  //__DECOMD__
   }
 
 #ifdef VERBOSE
