@@ -971,6 +971,8 @@ int main(int argc, char *argv[])
     bputs(info, "System: I am not South.\n");
 
 #ifndef BOLOTEST
+  pthread_create(&chatter_id, NULL, (void*)&Chatter, (void*)&(fstats.st_size));
+
   InitSched();
   openMotors();  //open communications with peripherals, creates threads
                  // in motors.c
@@ -987,10 +989,6 @@ int main(int argc, char *argv[])
   bputs(info, "System: BBC is up.\n");
 
   InitTxFrame(RxFrame);
-
-#ifndef BOLOTEST
-  pthread_create(&chatter_id, NULL, (void*)&Chatter, (void*)&(fstats.st_size));
-#endif
 
 #ifdef USE_XY_THREAD
   pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
