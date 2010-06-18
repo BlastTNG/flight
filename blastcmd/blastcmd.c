@@ -84,7 +84,7 @@ void USAGE(int flag) {
   printf("blastcmd [@host] [-v] [-f] [-s] [-los|-tdrss|-hf|-iridium] "
       "[-com1|-com2] \\\n"
       "         command [param00 [param01 [param02 [ ... ]]]]\n"
-      "blastcmd -l\n"
+      "blastcmd [-l|-lg|-lc group_num]\n"
       "blastcmd -d [-nf] [-fifo|-null]\n"
       "blastcmd --version\n\n"
       "Options:\n"
@@ -100,6 +100,8 @@ void USAGE(int flag) {
       "    -com1   Set routing to COMM1.\n"
       "    -com2   Set routing to COMM2.\n"
       "       -l   List valid commands and parameters and exit.\n"
+      "      -lg   List all command groups in order.\n"
+      "      -lc   List all commands in group number given.\n"
       "       -d   Start the blastcmd daemon.\n"
       "      -nf   Don't fork into the background when daemonizing.\n"
       "    -fifo   Route all commands through the local fifo.\n"
@@ -629,9 +631,11 @@ int main(int argc, char *argv[]) {
       nc = 1;
     } else if (strcmp(argv[i], "-lc") == 0) {
       command[0] = "-lc";
-      group = strtol (argv[i+1], NULL, 0);
-      i++;
-      nc = 1;
+      if (i < (argc - 1)) {
+        group = strtol (argv[i+1], NULL, 0);
+        i++;
+        nc = 1;
+      }
     } else if (strcmp(argv[i], "-d") == 0)
       daemonise = 1;
     else if (strcmp(argv[i], "-fifo") == 0)
