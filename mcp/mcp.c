@@ -801,12 +801,16 @@ static int IsNewFrame(unsigned int d)
 }
 
 /* Polarity crisis: am I north or south? */
-static int AmISouth(void)
+static int AmISouth(int *not_cryo_corner)
 {
   char buffer[2];
+  *not_cryo_corner = 1;
 
   if (gethostname(buffer, 1) == -1 && errno != ENAMETOOLONG) {
     berror(err, "System: Unable to get hostname");
+  } else if (buffer[0] == 'p') {
+    *not_cryo_corner = 0;
+    bprintf(info, "System: Cryo Corner Mode Activated\n");
   }
 
   return (buffer[0] == 's') ? 1 : 0;
@@ -851,6 +855,7 @@ int main(int argc, char *argv[])
   pthread_t CommandDatacomm1;
   pthread_t disk_id;
   pthread_t abus_id;
+  int use_starcams = 1;
 
 #ifndef USE_FIFO_CMD
   pthread_t CommandDatacomm2;
@@ -963,7 +968,7 @@ int main(int argc, char *argv[])
   }
 
   /* Find out whether I'm north or south */
-  SouthIAm = AmISouth();
+  SouthIAm = AmISouth(&use_starcams);
 
   if (SouthIAm)
     bputs(info, "System: I am South.\n");
@@ -995,8 +1000,10 @@ int main(int argc, char *argv[])
 #endif
 #ifndef BOLOTEST
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
-  pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
-  pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
+  if (use_starcams) {
+    pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
+    pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
+  }
 
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
