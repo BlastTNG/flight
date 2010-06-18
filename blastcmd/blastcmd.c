@@ -143,6 +143,55 @@ void CommandList(void)
   exit(1);
 }
 
+void CommandGroupList(void)
+{
+  int i;
+
+  NetCmdGetCmdList();
+
+  printf("Valid (and ordered) group names:\n");
+
+  for (i = 0; i < N_GROUPS; i++)
+  {
+    printf("%s\n", GroupNames[i]);
+  }
+
+  exit(1);
+}
+
+void CommandGroupListCommands(int groupnum)
+{
+  int i, j;
+
+  if (groupnum >= N_GROUPS || groupnum < 0)
+  {
+    fprintf(stderr, "Invalid group number requested\n");
+    exit(-1);
+  }
+
+  NetCmdGetCmdList();
+
+  printf("Valid mcommands in group %d (%s):\n", groupnum, GroupNames[groupnum]);
+  for (i = 0; i < client_n_mcommands; i++) {
+    if (client_mcommands[i].group & (1 << groupnum))
+    {
+      printf("  %s - %s\n", client_mcommands[i].name, client_mcommands[i].about);
+      for (j = 0; j < client_mcommands[i].numparams; j++)
+        printf("    param%02i: %s\n", j, client_mcommands[i].params[j].name);
+      printf("\n");
+    }
+  }
+
+  printf("Valid scommands in group %d (%s):\n", groupnum, GroupNames[groupnum]);
+  for (i = 0; i < client_n_scommands; i++) {
+    if (client_scommands[i].group & (1 << groupnum))
+    {
+    printf("  %s - %s\n", client_scommands[i].name, client_scommands[i].about);
+    }
+  }
+  exit(1);
+}
+
 int bc_setserial(void) {
   int fd;
   struct termios term; 
@@ -547,6 +596,7 @@ int main(int argc, char *argv[]) {
   int daemonise = 0;
   char* command[200];
   int nc = 0;
+  int group = -1;
 
   t_link = LINK_DEFAULT_CHAR;
   t_route = ROUTING_DEFAULT_CHAR;
@@ -573,6 +623,14 @@ int main(int argc, char *argv[]) {
       silent = 1;
     else if (strcmp(argv[i], "-l") == 0) {
       command[0] = "-l";
+      nc = 1;
+    } else if (strcmp(argv[i], "-lg") == 0) {
+      command[0] = "-lg";
+      nc = 1;
+    } else if (strcmp(argv[i], "-lc") == 0) {
+      command[0] = "-lc";
+      group = strtol (argv[i+1], NULL, 0);
+      i++;
       nc = 1;
     } else if (strcmp(argv[i], "-d") == 0)
       daemonise = 1;
@@ -605,6 +663,12 @@ int main(int argc, char *argv[]) {
 
     if (strcmp(command[0], "-l") == 0)
       CommandList();
+
+    if (strcmp(command[0], "-lg") == 0)
+      CommandGroupList();
+
+    if (strcmp(command[0], "-lc") == 0)
+      CommandGroupListCommands(group);
 
     if (NetCmdTakeConn()) {
       if (!silent)
