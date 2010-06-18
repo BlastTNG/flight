@@ -33,8 +33,8 @@
 /* Heater control bits (BIAS_D G4) */
 #define HEAT_HELIUM_LEVEL    0x01
 #define HEAT_CHARCOAL        0x02
-#define HEAT_CHARCOAL_HS     0x04
-#define HEAT_POT_HS          0x08
+#define HEAT_POT_HS          0x04
+#define HEAT_CHARCOAL_HS     0x08
 #define HEAT_JFET            0x10
 #define HEAT_BDA             0x20
 #define HEAT_CALIBRATOR      0x40
