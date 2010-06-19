@@ -39,6 +39,7 @@
 #include "command_struct.h"
 #include "pointing_struct.h"
 #include "tx.h"
+#include "hwpr.h"
 
 void nameThread(const char*);		/* mcp.c */
 double LockPosition(double elevation);	/* commands.c */
@@ -47,14 +48,18 @@ extern short int InCharge;		/* tx.c */
 /* actuator bus setup paramters */
 #define ACTBUS_CHATTER	EZ_CHAT_ACT
 #define ACT_BUS "/dev/ttySI15"
-#define NACT 4
+#define NACT 5
 #define LOCKNUM 3
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
-  "Lock Motor"};
-static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3, EZ_WHO_S5};
+  "Lock Motor", HWPR_NAME};
+static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3, 
+  EZ_WHO_S5, HWPR_ADDR};
 #define ID_ALL_ACT  EZ_WHO_G1_4
+//set microstep resolution
 #define LOCK_PREAMBLE "j256"
-#define ACT_PREAMBLE  "aE25600n8"
+//set encoder/microstep ratio (aE25600), coarse correction band (aC50),
+//fine correction band (ac1), enable encoder feedback mode (n8), 
+#define ACT_PREAMBLE  "aE25600aC50ac1n8"
 static struct ezbus bus;
 #define POLL_TIMEOUT 30000	    /* 5 minutes */
 
@@ -329,8 +334,8 @@ static void InitialiseActuator(struct ezbus* thebus, char who)
       bprintf(info, "Initialising %s...", name[i]);
 
       /* Set the encoder */
-      sprintf(buffer, ACT_PREAMBLE "z%iR", act_data[i].lvdt);  
-      EZBus_Comm(thebus, who, buffer, 0);
+      EZBus_Comm(thebus, who, 
+	  EZBus_StrComm(thebus, who, buffer, "z%iR", act_data[i].lvdt), 0);
       return;
     }
   }
@@ -906,6 +911,7 @@ void ActuatorBus(void)
   for (i=0; i<NACT; i++) {
     EZBus_Add(&bus, id[i], name[i]);
     if (i == LOCKNUM) EZBus_SetPreamble(&bus, id[i], LOCK_PREAMBLE);
+    else if (id[i] == HWPR_ADDR) EZBus_SetPreamble(&bus, id[i], HWPR_PREAMBLE);
     else EZBus_SetPreamble(&bus, id[i], ACT_PREAMBLE);
   }
 

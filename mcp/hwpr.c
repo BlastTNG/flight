@@ -30,24 +30,9 @@
 #include "command_struct.h"
 #include "tx.h" /* InCharge */
 
-/* Define this symbol to have mcp log all hwpr bus traffic */
-#define HWPRBUS_CHATTER EZ_CHAT_ACT
-
-#define HWPR_BUS "/dev/ttyHWPR"
-#define HWPR_ADDR EZ_WHO_S13
-#define POLL_TIMEOUT 30000 /* 5 minutes */
-
-#define GP_LEN 255
-
-void nameThread(const char*);	/* mcp.c */
-
 static struct hwpr_struct {
   int pos;
   int enc;
-  int vel;
-  int acc;
-  int move;
-  int hold;
 } hwpr_data;
 
 void MonitorHWPR(struct ezbus *bus)
@@ -55,12 +40,6 @@ void MonitorHWPR(struct ezbus *bus)
   EZBus_ReadInt(bus, HWPR_ADDR, "?0", &hwpr_data.pos);
   hwpr_data.pos /= HWPR_STEPS_PER_MOTENC;
   EZBus_ReadInt(bus, HWPR_ADDR, "?8", &hwpr_data.enc);
-#if 0
-  EZBus_ReadInt(bus, HWPR_ADDR, "?V", hwpr_data.vel);
-  EZBus_ReadInt(bus, HWPR_ADDR, "?L", hwpr_data.acc);
-  EZBus_ReadInt(bus, HWPR_ADDR, "?m", hwpr_data.move);
-  EZBus_ReadInt(bus, HWPR_ADDR, "?h", hwpr_data.hold);
-#endif
 }
 
 /* Called by frame writer in tx.c */
@@ -95,18 +74,6 @@ void StoreHWPRBus(void)
 
 void ControlHWPR(struct ezbus *bus)
 {
-  int my_cindex = 0;
-  char gp_buffer[GP_LEN+1];
-  gp_buffer[GP_LEN] = '\0';
-
-  /* Send the uplinked (general) command, if any */
-  my_cindex = GETREADINDEX(CommandData.actbus.cindex);
-  if ((CommandData.actbus.caddr[my_cindex] == HWPR_ADDR)) {
-    EZBus_Comm(bus, CommandData.actbus.caddr[my_cindex],
-        CommandData.actbus.command[my_cindex], 0);
-    CommandData.actbus.caddr[my_cindex] = 0;
-  }
-
   if (CommandData.hwpr.is_new) {
     if (CommandData.hwpr.mode == HWPR_PANIC) {
       bputs(info, "Panic");
@@ -123,67 +90,23 @@ void ControlHWPR(struct ezbus *bus)
   }
 }
 
-
-extern short int InCharge; /* tx.c */
-
-void HWPRBus(void)
+void DoHWPR(struct ezbus* bus)
 {
-  int poll_timeout = POLL_TIMEOUT;
-  int all_ok;
-  struct ezbus bus;
-  int firsttime = 1;
-
-  nameThread("HWPR");
-  bputs(startup, "HWPRBus startup.");
-
-  while (EZBus_Init(&bus, HWPR_BUS, "", HWPRBUS_CHATTER) != EZ_ERR_OK) {
-    if (firsttime) {
-      bprintf(warning, "Cannot connect to %s.  Will retry indefinitely.\n", HWPR_BUS);
-      firsttime = 0;
-    }
-    sleep(10);
+  static int firsttime = 1;
+  if (firsttime) {
+    firsttime = 0;
+    /* initialize hwpr_data */
+    hwpr_data.pos = 0;
+    hwpr_data.enc = 0;
   }
 
-  EZBus_Add(&bus, HWPR_ADDR, "HWPR");
+  /* update the HWPR move parameters */
+  EZBus_SetVel(bus, HWPR_ADDR, CommandData.hwpr.vel);
+  EZBus_SetAccel(bus, HWPR_ADDR, CommandData.hwpr.acc);
+  EZBus_SetIMove(bus, HWPR_ADDR, CommandData.hwpr.move_i);
+  EZBus_SetIHold(bus, HWPR_ADDR, CommandData.hwpr.hold_i);
 
-  all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
+  ControlHWPR(bus);
 
-  /* initialize hwpr_data */
-  hwpr_data.pos = 0;
-  hwpr_data.enc = 0;
-
-  for (;;) {
-    while (!InCharge) { /* NiC MCC traps here */
-      CommandData.hwpr.force_repoll = 1; /* repoll bus as soon as gaining
-                                              control */
-      EZBus_Recv(&bus); /* this is a blocking call - clear the recv buffer */
-      /* no need to sleep -- EZBus_Recv does that for us */
-    }
-
-    if (CommandData.hwpr.force_repoll) {
-      EZBus_ForceRepoll(&bus, HWPR_ADDR);
-      poll_timeout = POLL_TIMEOUT;
-      all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
-      CommandData.hwpr.force_repoll = 0;
-    }
-
-    if (poll_timeout == 0 && !all_ok) {
-      all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
-      poll_timeout = POLL_TIMEOUT;
-    } else if (poll_timeout > 0)
-      poll_timeout--;
-
-    /* update the HWPR move parameters */
-    EZBus_SetVel(&bus, HWPR_ADDR, CommandData.hwpr.vel);
-    EZBus_SetAccel(&bus, HWPR_ADDR, CommandData.hwpr.acc);
-    EZBus_SetIMove(&bus, HWPR_ADDR, CommandData.hwpr.move_i);
-    EZBus_SetIHold(&bus, HWPR_ADDR, CommandData.hwpr.hold_i);
-
-    ControlHWPR(&bus);
-
-    MonitorHWPR(&bus);
-
-    usleep(10000);
-  }
-
+  MonitorHWPR(bus);
 }
