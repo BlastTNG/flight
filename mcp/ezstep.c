@@ -478,51 +478,51 @@ int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive)
     {
       //communication error
       if (bus->chatter >= EZ_CHAT_ERR)
-	bprintf(warning, "%sTimeout waiting for response from %s\n.", 
-	    bus->name, stepName(bus,who));
+	bprintf(warning, "%sTimeout waiting for response from %s (%s)\n.", 
+	    bus->name, stepName(bus,who), what);
       EZBus_ForceRepoll(bus, who);
       return retval;
     } else {
       switch (retval & EZ_ERROR) {
 	case EZ_SERR_INIT:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s%s: initialisation error.\n", 
-		bus->name, stepName(bus,who));
+	    bprintf(warning, "%s%s: initialisation error (on %s).\n", 
+		bus->name, stepName(bus,who), what);
 	  break;
 	case EZ_SERR_BADCMD:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s%s: bad command.\n", 
-		bus->name, stepName(bus,who));
+	    bprintf(warning, "%s%s: bad command (on %s).\n", 
+		bus->name, stepName(bus,who), what);
 	  break;
 	case EZ_SERR_BADOP:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s%s: bad operand.\n", 
-		bus->name, stepName(bus,who));
+	    bprintf(warning, "%s%s: bad operand (on %s).\n", 
+		bus->name, stepName(bus,who), what);
 	  break;
 	case EZ_SERR_COMM:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s%s: communications error.\n", 
-		bus->name, stepName(bus,who));
+	    bprintf(warning, "%s%s: communications error (on %s).\n", 
+		bus->name, stepName(bus,who), what);
 	  break;
 	case EZ_SERR_NOINIT:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s%s: not initialied.\n", 
-		bus->name, stepName(bus,who));
+	    bprintf(warning, "%s%s: not initialied (on %s).\n", 
+		bus->name, stepName(bus,who), what);
 	  break;
 	case EZ_SERR_OVER:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s%s: overload.\n", bus->name, 
-		stepName(bus,who));
+	    bprintf(warning, "%s%s: overload (on %s).\n", bus->name, 
+		stepName(bus,who), what);
 	  break;
 	case EZ_SERR_NOMOVE:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s%s: move not allowed.\n", 
-		bus->name, stepName(bus,who));
+	    bprintf(warning, "%s%s: move not allowed (on %s).\n", 
+		bus->name, stepName(bus,who), what);
 	  break;
 	case EZ_SERR_BUSY:
 	  if (bus->chatter >= EZ_CHAT_ERR && !overflown) {
-	    bprintf(warning, "%s%s: command overflow.\n", 
-		bus->name, stepName(bus,who));
+	    bprintf(warning, "%s%s: command overflow (on %s).\n", 
+		bus->name, stepName(bus,who), what);
 	    overflown = 1;
 	  }
 	  usleep(10000);
