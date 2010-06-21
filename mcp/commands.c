@@ -1577,6 +1577,11 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.calibrator = repeat;
       CommandData.Cryo.calib_pulse = ivalues[0] / 10;
       CommandData.Cryo.calib_period = ivalues[1] * 5;
+      if (ivalues[2] > 0)
+	CommandData.Cryo.calib_repeats = ivalues[2];
+      else
+	CommandData.Cryo.calib_repeats = -1;
+      
       break;
 
       /***************************************/
@@ -2570,6 +2575,7 @@ void InitCommandData()
   CommandData.Cryo.calibrator = repeat;
   CommandData.Cryo.calib_pulse = 13; /* = 130 ms @ 100Hz */
   CommandData.Cryo.calib_period = 3000; /* = 600 s @ 5Hz */
+  CommandData.Cryo.calib_repeats = -1;  //indefinitely
 
   CommandData.ISCState[0].useLost = 1;
   CommandData.ISCState[0].abort = 0;

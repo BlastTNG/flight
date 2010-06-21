@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.51 $";
+const char *command_list_serial = "$Revision: 4.52 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -784,10 +784,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Pulse Length (ms)", 0, 8000, 'i', "CAL_PULSE"}
     }
   },
-  {COMMAND(cal_repeat), "pulse calibrator repeatedly", GR_CRYO_HEAT, 2,
+  {COMMAND(cal_repeat), "pulse calibrator repeatedly", GR_CRYO_HEAT, 3,
     {
       {"Pulse Length (ms)", 10, 8000, 'i', "CAL_PULSE"},
-      {"Repeat Delay (s)",  1, 32767, 'i', "CAL_REPEAT"}
+      {"Repeat Delay (s)",  1, 32767, 'i', "CAL_REPEAT"},
+      {"Number of repeats (0=infinity)",  0, 32767, 'i', ""}
     }
   },
 

@@ -202,9 +202,12 @@ static int CalLamp (int index)
     return 1;
   } else if (CommandData.Cryo.calibrator == repeat) {
     if (elapsed >= CommandData.Cryo.calib_period || last_mode != repeat) {
-      /* end of cycle -- send a new pulse */
-      elapsed = 0;
-      pulse_cnt = CommandData.Cryo.calib_pulse;
+      if (CommandData.Cryo.calib_repeats < 0 
+	  || --CommandData.Cryo.calib_repeats > 0) {
+	/* end of cycle -- send a new pulse */
+	elapsed = 0;
+	pulse_cnt = CommandData.Cryo.calib_pulse;
+      }
     } else if (index == 0) elapsed++;  //period measured in slow frames
     last_mode = repeat;
   } else if (CommandData.Cryo.calibrator == pulse) {

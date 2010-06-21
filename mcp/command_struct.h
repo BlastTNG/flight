@@ -261,6 +261,7 @@ struct CommandDataStruct {
 
     enum calmode calibrator;
     unsigned short calib_pulse, calib_period;
+    int calib_repeats;
 
     unsigned short potvalve_open, potvalve_on, potvalve_close;
     unsigned short lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
