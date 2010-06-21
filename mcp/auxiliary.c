@@ -879,7 +879,7 @@ void ControlPower(void) {
   }
   if (CommandData.power.rx_hk.rst_count > 0) {
     CommandData.power.rx_hk.rst_count--;
-    if (CommandData.power.rx_hk.rst_count < LATCH_PULSE_LEN) latch1 |= 0x50a0;
+    if (CommandData.power.rx_hk.rst_count < LATCH_PULSE_LEN) latch1 |= 0xa0a0;
   }
   if (CommandData.power.rx_amps.set_count > 0) {
     CommandData.power.rx_amps.set_count--;
