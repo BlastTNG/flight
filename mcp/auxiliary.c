@@ -865,61 +865,29 @@ void ControlPower(void) {
     CommandData.power.bi0.rst_count--;
     if (CommandData.power.bi0.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0002;
   }
-  if (CommandData.power.preamp.set_count > 0) {
-    CommandData.power.preamp.set_count--;
-    if (CommandData.power.preamp.set_count < LATCH_PULSE_LEN) latch1 |= 0x0004;
+  if (CommandData.power.rx_main.set_count > 0) {
+    CommandData.power.rx_main.set_count--;
+    if (CommandData.power.rx_main.set_count < LATCH_PULSE_LEN) latch1 |= 0x0004;
   }
-  if (CommandData.power.preamp.rst_count > 0) {
-    CommandData.power.preamp.rst_count--;
-    if (CommandData.power.preamp.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0008;
+  if (CommandData.power.rx_main.rst_count > 0) {
+    CommandData.power.rx_main.rst_count--;
+    if (CommandData.power.rx_main.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0008;
   }
-  if (CommandData.power.bias.set_count > 0) {
-    CommandData.power.bias.set_count--;
-    if (CommandData.power.bias.set_count < LATCH_PULSE_LEN) latch1 |= 0x0010;
+  if (CommandData.power.rx_hk.set_count > 0) {
+    CommandData.power.rx_hk.set_count--;
+    if (CommandData.power.rx_hk.set_count < LATCH_PULSE_LEN) latch1 |= 0x5050;
   }
-  if (CommandData.power.bias.rst_count > 0) {
-    CommandData.power.bias.rst_count--;
-    if (CommandData.power.bias.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0020;
+  if (CommandData.power.rx_hk.rst_count > 0) {
+    CommandData.power.rx_hk.rst_count--;
+    if (CommandData.power.rx_hk.rst_count < LATCH_PULSE_LEN) latch1 |= 0x50a0;
   }
-  if (CommandData.power.hk.set_count > 0) {
-    CommandData.power.hk.set_count--;
-    if (CommandData.power.hk.set_count < LATCH_PULSE_LEN) latch1 |= 0x0040;
+  if (CommandData.power.rx_amps.set_count > 0) {
+    CommandData.power.rx_amps.set_count--;
+    if (CommandData.power.rx_amps.set_count < LATCH_PULSE_LEN) latch1 |= 0x0500;
   }
-  if (CommandData.power.hk.rst_count > 0) {
-    CommandData.power.hk.rst_count--;
-    if (CommandData.power.hk.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0080;
-  }
-  if (CommandData.power.um250.set_count > 0) {
-    CommandData.power.um250.set_count--;
-    if (CommandData.power.um250.set_count < LATCH_PULSE_LEN) latch1 |= 0x0100;
-  }
-  if (CommandData.power.um250.rst_count > 0) {
-    CommandData.power.um250.rst_count--;
-    if (CommandData.power.um250.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0200;
-  }
-  if (CommandData.power.um350.set_count > 0) {
-    CommandData.power.um350.set_count--;
-    if (CommandData.power.um350.set_count < LATCH_PULSE_LEN) latch1 |= 0x0400;
-  }
-  if (CommandData.power.um350.rst_count > 0) {
-    CommandData.power.um350.rst_count--;
-    if (CommandData.power.um350.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0800;
-  }
-  if (CommandData.power.um500.set_count > 0) {
-    CommandData.power.um500.set_count--;
-    if (CommandData.power.um500.set_count < LATCH_PULSE_LEN) latch1 |= 0x1000;
-  }
-  if (CommandData.power.um500.rst_count > 0) {
-    CommandData.power.um500.rst_count--;
-    if (CommandData.power.um500.rst_count < LATCH_PULSE_LEN) latch1 |= 0x2000;
-  }
-  if (CommandData.power.heat.set_count > 0) {
-    CommandData.power.heat.set_count--;
-    if (CommandData.power.heat.set_count < LATCH_PULSE_LEN) latch1 |= 0x4000;
-  }
-  if (CommandData.power.heat.rst_count > 0) {
-    CommandData.power.heat.rst_count--;
-    if (CommandData.power.heat.rst_count < LATCH_PULSE_LEN) latch1 |= 0x8000;
+  if (CommandData.power.rx_amps.rst_count > 0) {
+    CommandData.power.rx_amps.rst_count--;
+    if (CommandData.power.rx_amps.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0a00;
   }
 
   WriteData(latchingAddr[0], latch0, NIOS_QUEUE);

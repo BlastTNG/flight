@@ -480,61 +480,29 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.das.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.das.rst_count = LATCH_PULSE_LEN;
       break;
-    case preamp_off:
-      CommandData.power.preamp.set_count = 0;
-      CommandData.power.preamp.rst_count = LATCH_PULSE_LEN;
+    case rx_off:
+      CommandData.power.rx_main.set_count = 0;
+      CommandData.power.rx_main.rst_count = LATCH_PULSE_LEN;
       break;
-    case preamp_on:
-      CommandData.power.preamp.rst_count = 0;
-      CommandData.power.preamp.set_count = LATCH_PULSE_LEN;
+    case rx_on:
+      CommandData.power.rx_main.rst_count = 0;
+      CommandData.power.rx_main.set_count = LATCH_PULSE_LEN;
       break;
-    case bias_off:
-      CommandData.power.bias.set_count = 0;
-      CommandData.power.bias.rst_count = LATCH_PULSE_LEN;
+    case rx_hk_off:
+      CommandData.power.rx_hk.set_count = 0;
+      CommandData.power.rx_hk.rst_count = LATCH_PULSE_LEN;
       break;
-    case bias_on:
-      CommandData.power.bias.rst_count = 0;
-      CommandData.power.bias.set_count = LATCH_PULSE_LEN;
+    case rx_hk_on:
+      CommandData.power.rx_hk.rst_count = 0;
+      CommandData.power.rx_hk.set_count = LATCH_PULSE_LEN;
       break;
-    case heat_off:
-      CommandData.power.heat.set_count = 0;
-      CommandData.power.heat.rst_count = LATCH_PULSE_LEN;
+    case rx_amps_off:
+      CommandData.power.rx_amps.set_count = 0;
+      CommandData.power.rx_amps.rst_count = LATCH_PULSE_LEN;
       break;
-    case heat_on:
-      CommandData.power.heat.rst_count = 0;
-      CommandData.power.heat.set_count = LATCH_PULSE_LEN;
-      break;
-    case hk_off:
-      CommandData.power.hk.set_count = 0;
-      CommandData.power.hk.rst_count = LATCH_PULSE_LEN;
-      break;
-    case hk_on:
-      CommandData.power.hk.rst_count = 0;
-      CommandData.power.hk.set_count = LATCH_PULSE_LEN;
-      break;
-    case um250_off:
-      CommandData.power.um250.set_count = 0;
-      CommandData.power.um250.rst_count = LATCH_PULSE_LEN;
-      break;
-    case um250_on:
-      CommandData.power.um250.rst_count = 0;
-      CommandData.power.um250.set_count = LATCH_PULSE_LEN;
-      break;
-    case um350_off:
-      CommandData.power.um350.set_count = 0;
-      CommandData.power.um350.rst_count = LATCH_PULSE_LEN;
-      break;
-    case um350_on:
-      CommandData.power.um350.rst_count = 0;
-      CommandData.power.um350.set_count = LATCH_PULSE_LEN;
-      break;
-    case um500_off:
-      CommandData.power.um500.set_count = 0;
-      CommandData.power.um500.rst_count = LATCH_PULSE_LEN;
-      break;
-    case um500_on:
-      CommandData.power.um500.rst_count = 0;
-      CommandData.power.um500.set_count = LATCH_PULSE_LEN;
+    case rx_amps_on:
+      CommandData.power.rx_amps.rst_count = 0;
+      CommandData.power.rx_amps.set_count = LATCH_PULSE_LEN;
       break;
     case ifroll_1_gy_allow:
       CommandData.gymask |= 0x01;
@@ -2355,20 +2323,12 @@ void InitCommandData()
   CommandData.power.elmot.set_count = 0;
   CommandData.power.bi0.rst_count = 0;
   CommandData.power.bi0.set_count = 0;
-  CommandData.power.preamp.rst_count = 0;
-  CommandData.power.preamp.set_count = 0;
-  CommandData.power.bias.rst_count = 0;
-  CommandData.power.bias.set_count = 0;
-  CommandData.power.hk.rst_count = 0;
-  CommandData.power.hk.set_count = 0;
-  CommandData.power.um250.rst_count = 0;
-  CommandData.power.um250.set_count = 0;
-  CommandData.power.um350.rst_count = 0;
-  CommandData.power.um350.set_count = 0;
-  CommandData.power.um500.rst_count = 0;
-  CommandData.power.um500.set_count = 0;
-  CommandData.power.heat.rst_count = 0;
-  CommandData.power.heat.set_count = 0;
+  CommandData.power.rx_main.rst_count = 0;
+  CommandData.power.rx_main.set_count = 0;
+  CommandData.power.rx_hk.rst_count = 0;
+  CommandData.power.rx_hk.set_count = 0;
+  CommandData.power.rx_amps.rst_count = 0;
+  CommandData.power.rx_amps.set_count = 0;
   CommandData.power.gybox_off = 0;
   CommandData.power.gyro_off[0] = 0;
   CommandData.power.gyro_off[1] = 0;

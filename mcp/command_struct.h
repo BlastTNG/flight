@@ -177,13 +177,9 @@ struct CommandDataStruct {
     struct latch_pulse piv;
     struct latch_pulse elmot;
     struct latch_pulse bi0;
-    struct latch_pulse preamp;
-    struct latch_pulse bias;
-    struct latch_pulse hk;
-    struct latch_pulse um250;
-    struct latch_pulse um350;
-    struct latch_pulse um500;
-    struct latch_pulse heat;
+    struct latch_pulse rx_main;
+    struct latch_pulse rx_hk;
+    struct latch_pulse rx_amps;
     int gybox_off;
     int gyro_off[6];
     int gyro_off_auto[6];

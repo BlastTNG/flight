@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.52 $";
+const char *command_list_serial = "$Revision: 4.53 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -99,21 +99,12 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(das_off), "turn off the DAS", GR_POWER},
   {COMMAND(das_on), "turn on the DAS", GR_POWER},
   {COMMAND(das_cycle), "power cycle the DAS", GR_POWER},
-  //TODO do any of these merit requiring CONFIRM ?
-  {COMMAND(preamp_off), "turn off the preamp crate", GR_POWER},
-  {COMMAND(preamp_on), "turn on the preamp crate", GR_POWER},
-  {COMMAND(bias_off), "turn off the bias", GR_POWER},
-  {COMMAND(bias_on), "turn on the bias", GR_POWER},
-  {COMMAND(heat_off), "turn off the cryostat heaters", GR_POWER},
-  {COMMAND(heat_on), "turn on the cryostat heaters", GR_POWER},
-  {COMMAND(hk_off), "turn off the cryostat housekeepng", GR_POWER},
-  {COMMAND(hk_on), "turn on the cryostat housekeepng", GR_POWER},
-  {COMMAND(um250_off), "turn off the 250um array", GR_POWER},
-  {COMMAND(um250_on), "turn on the 250um array", GR_POWER},
-  {COMMAND(um350_off), "turn off the 350um array", GR_POWER},
-  {COMMAND(um350_on), "turn on the 350um array", GR_POWER},
-  {COMMAND(um500_off), "turn off the 500um array", GR_POWER},
-  {COMMAND(um500_on), "turn on the 500um array", GR_POWER},
+  {COMMAND(rx_off), "receiver/preamp crate Make it Not-So!", GR_POWER},
+  {COMMAND(rx_on), "receiver/preamp crate Make it So!", GR_POWER},
+  {COMMAND(rx_hk_off), "cryostat housekeepng Make it Not-So!", GR_POWER},
+  {COMMAND(rx_hk_on), "cryostat housekeepng Make it So!", GR_POWER},
+  {COMMAND(rx_amps_off), "receiver amplifiers Make it Not-So!", GR_POWER},
+  {COMMAND(rx_amps_on), "receiver amplifiers Make it So!", GR_POWER},
 
   {COMMAND(reset_rw), "reset the serial connection to the RW controller", GR_GAIN},
   {COMMAND(reset_piv), "reset the serial connection to the pivot controller", GR_GAIN},
