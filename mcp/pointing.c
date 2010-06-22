@@ -1767,11 +1767,12 @@ void Pointing(void)
       ss_az, ss_ok);
 
   /** PSS1 **/
-  /*EvolveAzSolution(&PSS1Az,
+  /*  EvolveAzSolution(&PSS1Az,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
       PointingData[point_index].el,
-      pss1_az, pss1_ok);*/
+      pss1_az, pss1_ok);
+  */
 
   /** PSS2 **/
   /*  EvolveAzSolution(&PSS2Az,

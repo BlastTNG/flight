@@ -17,7 +17,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 202        /* total number of single word cmds */
+#define N_SCOMMANDS 206        /* total number of single word cmds */
 #define N_MCOMMANDS 106        /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
