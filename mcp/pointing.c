@@ -515,10 +515,10 @@ static int PSS2Convert(double *pss2_az, double *pss2_el) {
     return(0);
   }
 
-  norm = sqrt(x*x + y*y + PSS1_D*PSS1_D);
+  norm = sqrt(x*x + y*y + PSS2_D*PSS2_D);
   usun[0] = -x / norm;
   usun[1] = -y / norm;
-  usun[2] = PSS1_D / norm;
+  usun[2] = PSS2_D / norm;
 
   /* get current sun az, el */
   jd = GetJulian(PointingData[i_point].t);
@@ -537,11 +537,11 @@ static int PSS2Convert(double *pss2_az, double *pss2_el) {
   PointingData[point_index].sun_el = sun_el;
 
   // Define beta (az rotation)
-  beta = (M_PI/180.)*PSS1_BETA;
+  beta = (M_PI/180.)*PSS2_BETA;
   // Define alpha (el rotation)
-  alpha = (M_PI/180.)*PSS1_ALPHA;
+  alpha = (M_PI/180.)*PSS2_ALPHA;
   // Define psi (roll)
-  psi = (M_PI/180.)*PSS1_PSI;
+  psi = (M_PI/180.)*PSS2_PSI;
 
   rot = gsl_matrix_alloc(3,3);
   rot2 = gsl_matrix_alloc(3,3);
@@ -1781,11 +1781,11 @@ void Pointing(void)
       ss_az, ss_ok);
 
   /** PSS1 **/
-  EvolveAzSolution(&PSS1Az,
+  /*EvolveAzSolution(&PSS1Az,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
       PointingData[point_index].el,
-      pss1_az, pss1_ok);
+      pss1_az, pss1_ok);*/
 
   /** PSS2 **/
   /*  EvolveAzSolution(&PSS2Az,
@@ -1808,9 +1808,9 @@ void Pointing(void)
   if (CommandData.use_sun) {
     AddAzSolution(&AzAtt, &SSAz, 1);
   }
-  /*if (CommandData.use_pss1) {
+  if (CommandData.use_pss1) {
     AddAzSolution(&AzAtt, &PSS1Az, 1);
-    }*/
+  }
   /*if (CommandData.use_pss2) {
     AddAzSolution(&AzAtt, &PSS2Az, 1);
     }*/
