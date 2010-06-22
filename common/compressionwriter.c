@@ -11,7 +11,7 @@
 #include "mcp.h"
 #include "compressstruct.h"
 
-#define FASTFRAME_PER_FRAME 100
+#define FASTFRAME_PER_FRAME 1000
 #define N_PORTS 1
 #define DIALUP_BYTES_PER_FRAME (2000/9 * FASTFRAME_PER_FRAME/SR)
 #define OMNI_BYTES_PER_FRAME (6000/9 * FASTFRAME_PER_FRAME/SR)
@@ -94,7 +94,7 @@ void CompressionWriter() {
   
   //int bytesPerFrame[N_PORTS] = {OMNI_BYTES_PER_FRAME};
   
-  nameThread("compress");
+  nameThread("COMP");
 
   bputs(startup, "Startup.\n");
 

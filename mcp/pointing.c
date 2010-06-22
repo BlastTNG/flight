@@ -1545,7 +1545,8 @@ void Pointing(void)
     MagAz.trim = CommandData.mag_az_trim;
     DGPSAz.trim = CommandData.dgps_az_trim;
     SSAz.trim = CommandData.ss_az_trim;
-
+    //FIXME: add pss1 and pss2 trim
+    
     ClinEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(ClinEl.fs, FIR_LENGTH);
     EncEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
@@ -1570,6 +1571,16 @@ void Pointing(void)
     SSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(SSAz.fs2, FIR_LENGTH);
     initFir(SSAz.fs3, FIR_LENGTH);
+
+    PSS1Az.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
+    PSS1Az.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
+    initFir(PSS1Az.fs2, FIR_LENGTH);
+    initFir(PSS1Az.fs3, FIR_LENGTH);
+
+    PSS2Az.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
+    PSS2Az.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
+    initFir(PSS2Az.fs2, FIR_LENGTH);
+    initFir(PSS2Az.fs3, FIR_LENGTH);
 
     // the first t about to be read needs to be set
     PointingData[GETREADINDEX(point_index)].t = mcp_systime(NULL); // CPU time
@@ -1781,11 +1792,11 @@ void Pointing(void)
       ss_az, ss_ok);
 
   /** PSS1 **/
-  /*EvolveAzSolution(&PSS1Az,
+  EvolveAzSolution(&PSS1Az,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
       PointingData[point_index].el,
-      pss1_az, pss1_ok);*/
+      pss1_az, pss1_ok);
 
   /** PSS2 **/
   /*  EvolveAzSolution(&PSS2Az,
