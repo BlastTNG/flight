@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.54 $";
+const char *command_list_serial = "$Revision: 4.55 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -34,6 +34,12 @@ const char *GroupNames[N_GROUPS] = {
   "X-Y Stage",             "ISC Modes",        "OSC Modes",
   "Miscellaneous",         "ISC Parameters",   "OSC Parameters"
 };
+
+/*  {COMMAND(pss1_veto), "veto pss1 sensor", GR_VETO},
+  {COMMAND(pss1_allow), "un-veto pss1 sensor", GR_VETO},
+  {COMMAND(pss2_veto), "veto pss2 sensor", GR_VETO},
+  {COMMAND(pss2_allow), "un-veto pss2 sensor", GR_VETO},
+*/
 
 #define COMMAND(x) x, #x
 
@@ -131,10 +137,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(mag_allow), "un-veto magnetometer", GR_VETO},
   {COMMAND(sun_veto), "veto sun sensor", GR_VETO},
   {COMMAND(sun_allow), "un-veto sun sensor", GR_VETO},
-  {COMMAND(pss1_veto), "veto pss1 sensor", GR_VETO},
-  {COMMAND(pss1_allow), "un-veto pss1 sensor", GR_VETO},
-  {COMMAND(pss2_veto), "veto pss2 sensor", GR_VETO},
-  {COMMAND(pss2_allow), "un-veto pss2 sensor", GR_VETO},
   {COMMAND(ifroll_1_gy_allow), "enable ifroll_1_gy", GR_VETO},
   {COMMAND(ifroll_1_gy_veto), "disable ifroll_1_gy", GR_VETO},
   {COMMAND(ifroll_2_gy_allow), "enable ifroll_2_gy", GR_VETO},
