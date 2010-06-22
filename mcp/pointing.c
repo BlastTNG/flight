@@ -331,7 +331,7 @@ static int PSS1Convert(double *pss1_az, double *pss1_el) {
   double        itot;
   double        x, y;
   double        usun[3], u3[3], u4[3];
-  gsl_matrix    *rot;
+  gsl_matrix    *rot, *rot2;
   gsl_matrix    *rybeta, *rxalpha, *rzpsi;
   gsl_matrix    *ryaz;
 
@@ -389,28 +389,34 @@ static int PSS1Convert(double *pss1_az, double *pss1_el) {
   psi = (M_PI/180.)*PSS1_PSI;
 
   rot = gsl_matrix_alloc(3,3);
+  rot2 = gsl_matrix_alloc(3,3);
   rybeta = gsl_matrix_alloc(3,3);
   rxalpha = gsl_matrix_alloc(3,3);
   rzpsi = gsl_matrix_alloc(3,3);
   ryaz = gsl_matrix_alloc(3,3);
 
 
-  gsl_matrix_set(rybeta, 0, 1, cos(-beta));  gsl_matrix_set(rybeta, 0, 1, 0.);  gsl_matrix_set(rybeta, 0, 2, sin(-beta));
+  gsl_matrix_set(rybeta, 0, 0, cos(-beta));  gsl_matrix_set(rybeta, 0, 1, 0.);  gsl_matrix_set(rybeta, 0, 2, sin(-beta));
   gsl_matrix_set(rybeta, 1, 0, 0);           gsl_matrix_set(rybeta, 1, 1, 1.);  gsl_matrix_set(rybeta, 1, 2, 0.);
   gsl_matrix_set(rybeta, 2, 0, -sin(-beta)); gsl_matrix_set(rybeta, 2, 1, 0.);  gsl_matrix_set(rybeta, 2, 2, cos(-beta));
 
-  gsl_matrix_set(rxalpha, 0, 1, 1.); gsl_matrix_set(rxalpha, 0, 1, 0.);          gsl_matrix_set(rxalpha, 0, 2, 0.);
+  gsl_matrix_set(rxalpha, 0, 0, 1.); gsl_matrix_set(rxalpha, 0, 1, 0.);          gsl_matrix_set(rxalpha, 0, 2, 0.);
   gsl_matrix_set(rxalpha, 1, 0, 0.); gsl_matrix_set(rxalpha, 1, 1, cos(-alpha)); gsl_matrix_set(rxalpha, 1, 2, -sin(-alpha));
   gsl_matrix_set(rxalpha, 2, 0, 0.); gsl_matrix_set(rxalpha, 2, 1, sin(-alpha)); gsl_matrix_set(rxalpha, 2, 2, cos(-alpha));
 
-  gsl_matrix_set(rzpsi, 0, 1, cos(psi));  gsl_matrix_set(rzpsi, 0, 1, -sin(psi)); gsl_matrix_set(rzpsi, 0, 2, 0.);
+  gsl_matrix_set(rzpsi, 0, 0, cos(psi));  gsl_matrix_set(rzpsi, 0, 1, -sin(psi)); gsl_matrix_set(rzpsi, 0, 2, 0.);
   gsl_matrix_set(rzpsi, 1, 0, sin(psi));  gsl_matrix_set(rzpsi, 1, 1, cos(psi));  gsl_matrix_set(rzpsi, 1, 2, 0.);
   gsl_matrix_set(rzpsi, 2, 0, 0.);        gsl_matrix_set(rzpsi, 2, 1, 0.);        gsl_matrix_set(rzpsi, 2, 2, 1.);
 
-  gsl_matrix_set_identity(rot);
-  gsl_matrix_mul_elements(rot, rybeta);
-  gsl_matrix_mul_elements(rot, rxalpha);
-  gsl_matrix_mul_elements(rot, rzpsi);
+  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans,
+                 1.0, rybeta, rxalpha,
+                 0.0, rot);
+
+  gsl_matrix_memcpy(rot2, rot);
+
+  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans,
+                 1.0, rot2, rzpsi,
+                 0.0, rot);
 
   // identity is the inverse of the rotation matrix
   u3[0] = gsl_matrix_get(rot, 0, 0)*usun[0]
@@ -425,7 +431,7 @@ static int PSS1Convert(double *pss1_az, double *pss1_el) {
 
   az = -atan(u3[0]/u3[2]);                // az is in radians
 
-  *pss1_az = -(180./M_PI)*az + sun_az;
+  *pss1_az = sun_az - (180./M_PI)*az;
 
   gsl_matrix_set(ryaz, 0, 1, cos(az));  gsl_matrix_set(ryaz, 0, 1, 0.);  gsl_matrix_set(ryaz, 0, 2, sin(az));
   gsl_matrix_set(ryaz, 1, 0, 0);        gsl_matrix_set(ryaz, 1, 1, 1.);  gsl_matrix_set(ryaz, 1, 2, 0.);
@@ -447,6 +453,7 @@ static int PSS1Convert(double *pss1_az, double *pss1_el) {
   NormalizeAngle(pss1_el);
 
   gsl_matrix_free(rot);
+  gsl_matrix_free(rot2);
   gsl_matrix_free(rybeta);
   gsl_matrix_free(rxalpha);
   gsl_matrix_free(rzpsi);
@@ -478,7 +485,7 @@ static int PSS2Convert(double *pss2_az, double *pss2_el) {
   double        itot;
   double        x, y;
   double        usun[3], u3[3], u4[3];
-  gsl_matrix    *rot;
+  gsl_matrix    *rot, *rot2;
   gsl_matrix    *rybeta, *rxalpha, *rzpsi;
   gsl_matrix    *ryaz;
 
@@ -537,28 +544,34 @@ static int PSS2Convert(double *pss2_az, double *pss2_el) {
   psi = (M_PI/180.)*PSS1_PSI;
 
   rot = gsl_matrix_alloc(3,3);
+  rot2 = gsl_matrix_alloc(3,3);
   rybeta = gsl_matrix_alloc(3,3);
   rxalpha = gsl_matrix_alloc(3,3);
   rzpsi = gsl_matrix_alloc(3,3);
   ryaz = gsl_matrix_alloc(3,3);
 
 
-  gsl_matrix_set(rybeta, 0, 1, cos(-beta));  gsl_matrix_set(rybeta, 0, 1, 0.);  gsl_matrix_set(rybeta, 0, 2, sin(-beta));
+  gsl_matrix_set(rybeta, 0, 0, cos(-beta));  gsl_matrix_set(rybeta, 0, 1, 0.);  gsl_matrix_set(rybeta, 0, 2, sin(-beta));
   gsl_matrix_set(rybeta, 1, 0, 0);           gsl_matrix_set(rybeta, 1, 1, 1.);  gsl_matrix_set(rybeta, 1, 2, 0.);
   gsl_matrix_set(rybeta, 2, 0, -sin(-beta)); gsl_matrix_set(rybeta, 2, 1, 0.);  gsl_matrix_set(rybeta, 2, 2, cos(-beta));
 
-  gsl_matrix_set(rxalpha, 0, 1, 1.); gsl_matrix_set(rxalpha, 0, 1, 0.);          gsl_matrix_set(rxalpha, 0, 2, 0.);
+  gsl_matrix_set(rxalpha, 0, 0, 1.); gsl_matrix_set(rxalpha, 0, 1, 0.);          gsl_matrix_set(rxalpha, 0, 2, 0.);
   gsl_matrix_set(rxalpha, 1, 0, 0.); gsl_matrix_set(rxalpha, 1, 1, cos(-alpha)); gsl_matrix_set(rxalpha, 1, 2, -sin(-alpha));
   gsl_matrix_set(rxalpha, 2, 0, 0.); gsl_matrix_set(rxalpha, 2, 1, sin(-alpha)); gsl_matrix_set(rxalpha, 2, 2, cos(-alpha));
 
-  gsl_matrix_set(rzpsi, 0, 1, cos(psi));  gsl_matrix_set(rzpsi, 0, 1, -sin(psi)); gsl_matrix_set(rzpsi, 0, 2, 0.);
+  gsl_matrix_set(rzpsi, 0, 0, cos(psi));  gsl_matrix_set(rzpsi, 0, 1, -sin(psi)); gsl_matrix_set(rzpsi, 0, 2, 0.);
   gsl_matrix_set(rzpsi, 1, 0, sin(psi));  gsl_matrix_set(rzpsi, 1, 1, cos(psi));  gsl_matrix_set(rzpsi, 1, 2, 0.);
   gsl_matrix_set(rzpsi, 2, 0, 0.);        gsl_matrix_set(rzpsi, 2, 1, 0.);        gsl_matrix_set(rzpsi, 2, 2, 1.);
 
-  gsl_matrix_set_identity(rot);
-  gsl_matrix_mul_elements(rot, rybeta);
-  gsl_matrix_mul_elements(rot, rxalpha);
-  gsl_matrix_mul_elements(rot, rzpsi);
+  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans,
+                 1.0, rybeta, rxalpha,
+                 0.0, rot);
+
+  gsl_matrix_memcpy(rot2, rot);
+
+  gsl_blas_dgemm(CblasNoTrans, CblasNoTrans,
+                 1.0, rot2, rzpsi,
+                 0.0, rot);
 
   // identity is the inverse of the rotation matrix
   u3[0] = gsl_matrix_get(rot, 0, 0)*usun[0]
@@ -571,9 +584,9 @@ static int PSS2Convert(double *pss2_az, double *pss2_el) {
         + gsl_matrix_get(rot, 2, 1)*usun[1]
         + gsl_matrix_get(rot, 2, 2)*usun[2];
 
-  az = -atan(u3[0]/u3[2]);
+  az = -atan(u3[0]/u3[2]) - M_PI;
 
-  *pss2_az = -(180./M_PI)*az + sun_az;    // az is in radians
+  *pss2_az = sun_az - (180./M_PI)*az;    // az is in radians
 
   gsl_matrix_set(ryaz, 0, 1, cos(az));  gsl_matrix_set(ryaz, 0, 1, 0.);  gsl_matrix_set(ryaz, 0, 2, sin(az));
   gsl_matrix_set(ryaz, 1, 0, 0);        gsl_matrix_set(ryaz, 1, 1, 1.);  gsl_matrix_set(ryaz, 1, 2, 0.);
@@ -595,6 +608,7 @@ static int PSS2Convert(double *pss2_az, double *pss2_el) {
   NormalizeAngle(pss2_el);
 
   gsl_matrix_free(rot);
+  gsl_matrix_free(rot2);
   gsl_matrix_free(rybeta);
   gsl_matrix_free(rxalpha);
   gsl_matrix_free(rzpsi);
@@ -1767,12 +1781,11 @@ void Pointing(void)
       ss_az, ss_ok);
 
   /** PSS1 **/
-  /*  EvolveAzSolution(&PSS1Az,
+  EvolveAzSolution(&PSS1Az,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
       PointingData[point_index].el,
       pss1_az, pss1_ok);
-  */
 
   /** PSS2 **/
   /*  EvolveAzSolution(&PSS2Az,
