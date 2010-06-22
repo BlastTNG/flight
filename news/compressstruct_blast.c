@@ -1,5 +1,11 @@
 #include "compressstruct.h"
 
+char *frameList[] = {
+  "time",
+  "t_cpu_flc",
+  "t_gy",
+"" };
+
 
 struct fieldStreamStruct streamList[] = {
   {"gy_ifel", 0, 10, AVG, DX, 4},
@@ -7,11 +13,6 @@ struct fieldStreamStruct streamList[] = {
   END_OF_STREAM
 };
 
-char *frameList[] = {
-  "time",
-  "t_cpu_flc",
-  "t_gy",
-"" };
 /*
 "n13_phase",
 "n17_phase",
