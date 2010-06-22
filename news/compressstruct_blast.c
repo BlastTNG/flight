@@ -9,10 +9,12 @@ struct fieldStreamStruct streamList[] = {
 
 char *frameList[] = {
   "time",
-"n13_phase",
-"n17_phase",
+  "t_cpu_flc",
+  "t_gy",
 "" };
 /*
+"n13_phase",
+"n17_phase",
 "n18_phase",
 "n19_phase",
 "n21_phase",
