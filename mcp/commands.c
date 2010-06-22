@@ -338,12 +338,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case sun_veto:      /* Veto sensors */
       CommandData.use_sun = 0;
       break;
-    case pss1_veto:
-      CommandData.use_pss1 = 0;
-      break;
-    case pss2_veto:
-      CommandData.use_pss2 = 0;
-      break;
     case isc_veto:
       CommandData.use_isc = 0;
       break;
@@ -365,12 +359,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
 
     case sun_allow:      /* Un-veto sensors */
       CommandData.use_sun = 1;
-      break;
-    case pss1_allow:
-      CommandData.use_pss1 = 1;
-      break;
-    case pss2_allow:
-      CommandData.use_pss2 = 1;
       break;
     case isc_allow:
       CommandData.use_isc = 1;
@@ -2437,8 +2425,6 @@ void InitCommandData()
   CommandData.use_elenc = 1;
   CommandData.use_elclin = 0;
   CommandData.use_sun = 0;
-  CommandData.use_pss1 = 0;
-  CommandData.use_pss2 = 0;
   CommandData.use_isc = 1;
   CommandData.use_osc = 1;
   CommandData.use_mag = 1;

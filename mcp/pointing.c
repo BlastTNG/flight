@@ -315,28 +315,23 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 
 #define  PSS1_L  10.    // 10 mm = effective length of active area
 #define  PSS1_D  10.    // 10 mm = Distance between pinhole and sensor
-#define  PSS1_IMAX  6.  // Maximum current (place holder for now)
-#define  PSS1_XSTRETCH  1.  // 0.995
-#define  PSS1_YSTRETCH  1.  // 1.008
-#define  PSS1_BETA  60.
-#define  PSS1_ALPHA 25.
-#define  PSS1_PSI   0.
+#define  PSS1_IMAX  1.  // Maximum current (place holder for now)
+#define  PSS1_XSTRETCH  0.995
+#define  PSS1_YSTRETCH  1.008
 
-static int PSS1Convert(double *pss1_az, double *pss1_el) {
+static int PSS1Convert(double *pss1_az) {
 
   int           i_point;
   double        sun_ra, sun_dec, jd;
-  double        az;
 
   static double i1, i2, i3, i4;
   double        itot;
   double        x, y;
-  double        usun[3], u3[3], u4[3];
-  gsl_matrix    *rot;
-  gsl_matrix    *rybeta, *rxalpha, *rzpsi;
-  gsl_matrix    *ryaz;
+  double        u0sun[3], uhsun[3];
+  gsl_matrix    *rzpsi, *rxtheta, *rzgamma, *ryphi, *rxsun;
+  gsl_matrix    *rot, *identity;
 
-  double        beta, alpha, psi;
+  double        psi, theta, gamma, phi, phi_sun, phi0, theta_sun;
   double        norm;
 
   i1 = ACSData.pss1_i1;
@@ -346,8 +341,6 @@ static int PSS1Convert(double *pss1_az, double *pss1_el) {
 
   itot = i1+i2+i3+i4;
 
-  i_point = GETREADINDEX(point_index);
-
   if (itot < PSS1_IMAX) {
     PointingData[point_index].pss1_snr = 0.1;
     return(0);
@@ -356,16 +349,6 @@ static int PSS1Convert(double *pss1_az, double *pss1_el) {
   x = PSS1_XSTRETCH*(PSS1_L/2.)*((i2+i3)-(i1+i4))/itot;
   y = PSS1_YSTRETCH*(PSS1_L/2.)*((i2+i4)-(i1+i3))/itot;
 
-  if ((fabs(x) > 4.) | (fabs(y) > 4.)) {
-    PointingData[point_index].pss1_snr = 0.1;
-    return(0);
-  }
-
-  norm = sqrt(x*x + y*y + PSS1_D*PSS1_D);
-  usun[0] = -x / norm;
-  usun[1] = -y / norm;
-  usun[2] = PSS1_D / norm;
-
   /* get current sun az, el */
   jd = GetJulian(PointingData[i_point].t);
   SunPos(jd, &sun_ra, &sun_dec);
@@ -382,78 +365,91 @@ static int PSS1Convert(double *pss1_az, double *pss1_el) {
   PointingData[point_index].sun_az = sun_az;
   PointingData[point_index].sun_el = sun_el;
 
-  // Define beta (az rotation)
-  beta = (M_PI/180.)*PSS1_BETA;
-  // Define alpha (el rotation)
-  alpha = (M_PI/180.)*PSS1_ALPHA;
   // Define psi (roll)
-  psi = (M_PI/180.)*PSS1_PSI;
+  psi = (M_PI/180.)*0.;
+  // Define theta (elevation)
+  theta = (M_PI/180.)*25.;
+  // Define gamma (tilt)
+  gamma = (M_PI/180.)*0.;
+  // Define phi_sun (azimuth of sun)
+  phi_sun = (M_PI/180.)*sun_az;
+  // Define phi0 (azimuth of PSS?)
+  phi0 = (M_PI/180.)*60.;
+  // Define theta_sun (elevation of sun)
+  theta_sun = (M_PI/180.)*sun_el;
 
-  rot = gsl_matrix_alloc(3,3);
-  rybeta = gsl_matrix_alloc(3,3);
-  rxalpha = gsl_matrix_alloc(3,3);
   rzpsi = gsl_matrix_alloc(3,3);
-  ryaz = gsl_matrix_alloc(3,3);
+  rxtheta = gsl_matrix_alloc(3,3);
+  rzgamma = gsl_matrix_alloc(3,3);
+  ryphi = gsl_matrix_alloc(3,3);
+  rxsun = gsl_matrix_alloc(3,3);
+  rot = gsl_matrix_alloc(3,3);
+  identity = gsl_matrix_alloc(3,3);
 
+  gsl_matrix_set(rzpsi, 0, 1, cos(psi));  gsl_matrix_set(rzpsi, 0, 1, -sin(psi));  gsl_matrix_set(rzpsi, 0, 2, 0.);
+  gsl_matrix_set(rzpsi, 1, 0, sin(psi));  gsl_matrix_set(rzpsi, 1, 1, cos(psi));   gsl_matrix_set(rzpsi, 1, 2, 0.);
+  gsl_matrix_set(rzpsi, 2, 0, 0.);        gsl_matrix_set(rzpsi, 2, 1, 0.);         gsl_matrix_set(rzpsi, 2, 2, 1.);
 
-  gsl_matrix_set(rybeta, 0, 1, cos(-beta));  gsl_matrix_set(rybeta, 0, 1, 0.);  gsl_matrix_set(rybeta, 0, 2, sin(-beta));
-  gsl_matrix_set(rybeta, 1, 0, 0);           gsl_matrix_set(rybeta, 1, 1, 1.);  gsl_matrix_set(rybeta, 1, 2, 0.);
-  gsl_matrix_set(rybeta, 2, 0, -sin(-beta)); gsl_matrix_set(rybeta, 2, 1, 0.);  gsl_matrix_set(rybeta, 2, 2, cos(-beta));
+  gsl_matrix_set(rxtheta, 0, 1, 1.);  gsl_matrix_set(rxtheta, 0, 1, 0.);           gsl_matrix_set(rxtheta, 0, 2, 0.);
+  gsl_matrix_set(rxtheta, 1, 0, 0.);  gsl_matrix_set(rxtheta, 1, 1, cos(-theta));  gsl_matrix_set(rxtheta, 1, 2, -sin(-theta));
+  gsl_matrix_set(rxtheta, 2, 0, 0.);  gsl_matrix_set(rxtheta, 2, 1, sin(-theta));  gsl_matrix_set(rxtheta, 2, 2, cos(-theta));
 
-  gsl_matrix_set(rxalpha, 0, 1, 1.); gsl_matrix_set(rxalpha, 0, 1, 0.);          gsl_matrix_set(rxalpha, 0, 2, 0.);
-  gsl_matrix_set(rxalpha, 1, 0, 0.); gsl_matrix_set(rxalpha, 1, 1, cos(-alpha)); gsl_matrix_set(rxalpha, 1, 2, -sin(-alpha));
-  gsl_matrix_set(rxalpha, 2, 0, 0.); gsl_matrix_set(rxalpha, 2, 1, sin(-alpha)); gsl_matrix_set(rxalpha, 2, 2, cos(-alpha));
+  gsl_matrix_set(rzgamma, 0, 1, cos(gamma));  gsl_matrix_set(rzgamma, 0, 1, -sin(gamma));  gsl_matrix_set(rzgamma, 0, 2, 0.);
+  gsl_matrix_set(rzgamma, 1, 0, sin(gamma));  gsl_matrix_set(rzgamma, 1, 1, cos(gamma));   gsl_matrix_set(rzgamma, 1, 2, 0.);
+  gsl_matrix_set(rzgamma, 2, 0, 0.);          gsl_matrix_set(rzgamma, 2, 1, 0.);           gsl_matrix_set(rzgamma, 2, 2, 1.);
 
-  gsl_matrix_set(rzpsi, 0, 1, cos(psi));  gsl_matrix_set(rzpsi, 0, 1, -sin(psi)); gsl_matrix_set(rzpsi, 0, 2, 0.);
-  gsl_matrix_set(rzpsi, 1, 0, sin(psi));  gsl_matrix_set(rzpsi, 1, 1, cos(psi));  gsl_matrix_set(rzpsi, 1, 2, 0.);
-  gsl_matrix_set(rzpsi, 2, 0, 0.);        gsl_matrix_set(rzpsi, 2, 1, 0.);        gsl_matrix_set(rzpsi, 2, 2, 1.);
+  phi = phi_sun - phi0;
+  gsl_matrix_set(ryphi, 0, 1, cos(phi));   gsl_matrix_set(ryphi, 0, 1, 0.);  gsl_matrix_set(ryphi, 0, 2, sin(phi));
+  gsl_matrix_set(ryphi, 1, 0, 0.);         gsl_matrix_set(ryphi, 1, 1, 1.);  gsl_matrix_set(ryphi, 1, 2, 0.);
+  gsl_matrix_set(ryphi, 2, 0, -sin(phi));  gsl_matrix_set(ryphi, 2, 1, 0.);  gsl_matrix_set(ryphi, 2, 2, cos(phi));
+
+  gsl_matrix_set(rxsun, 0, 1, 1.);  gsl_matrix_set(rxsun, 0, 1, 0.);              gsl_matrix_set(rxsun, 0, 2, 0.);
+  gsl_matrix_set(rxsun, 1, 0, 0.);  gsl_matrix_set(rxsun, 1, 1, cos(theta_sun));  gsl_matrix_set(rxsun, 1, 2, -sin(theta_sun));
+  gsl_matrix_set(rxsun, 2, 0, 0.);  gsl_matrix_set(rxsun, 2, 1, sin(theta_sun));  gsl_matrix_set(rxsun, 2, 2, cos(theta_sun));
+
 
   gsl_matrix_set_identity(rot);
-  gsl_matrix_mul_elements(rot, rybeta);
-  gsl_matrix_mul_elements(rot, rxalpha);
   gsl_matrix_mul_elements(rot, rzpsi);
+  gsl_matrix_mul_elements(rot, rxtheta);
+  gsl_matrix_mul_elements(rot, rzgamma);
+  gsl_matrix_mul_elements(rot, ryphi);
+  gsl_matrix_mul_elements(rot, rxsun);
+  // Find the inverse of rot
+  gsl_matrix_set_identity(identity);
+  gsl_matrix_div_elements(identity, rot);
+  // identity is now the inverse of the rotation matrix !!
+
+  norm = sqrt(x*x + y*y + PSS1_D*PSS1_D);
+
+  uhsun[0] = x/norm;
+  uhsun[1] = y/norm;
+  uhsun[2] = PSS1_D/norm;
 
   // identity is the inverse of the rotation matrix
-  u3[0] = gsl_matrix_get(rot, 0, 0)*usun[0]
-        + gsl_matrix_get(rot, 0, 1)*usun[1]
-        + gsl_matrix_get(rot, 0, 2)*usun[2];
-  u3[1] = gsl_matrix_get(rot, 1, 0)*usun[0]
-        + gsl_matrix_get(rot, 1, 1)*usun[1]
-        + gsl_matrix_get(rot, 1, 2)*usun[2];
-  u3[2] = gsl_matrix_get(rot, 2, 0)*usun[0]
-        + gsl_matrix_get(rot, 2, 1)*usun[1]
-        + gsl_matrix_get(rot, 2, 2)*usun[2];
+  u0sun[0] = gsl_matrix_get(identity, 0, 0)*uhsun[0]
+           + gsl_matrix_get(identity, 0, 1)*uhsun[1]
+           + gsl_matrix_get(identity, 0, 2)*uhsun[2];
+  u0sun[1] = gsl_matrix_get(identity, 1, 0)*uhsun[0]
+           + gsl_matrix_get(identity, 1, 1)*uhsun[1]
+           + gsl_matrix_get(identity, 1, 2)*uhsun[2];
+  u0sun[2] = gsl_matrix_get(identity, 2, 0)*uhsun[0]
+           + gsl_matrix_get(identity, 2, 1)*uhsun[1]
+           + gsl_matrix_get(identity, 2, 2)*uhsun[2];
 
-  az = -atan(u3[0]/u3[2]);                // az is in radians
+  // The components of u0sun contain the answer we want
 
-  *pss1_az = -(180./M_PI)*az + sun_az;
-
-  gsl_matrix_set(ryaz, 0, 1, cos(az));  gsl_matrix_set(ryaz, 0, 1, 0.);  gsl_matrix_set(ryaz, 0, 2, sin(az));
-  gsl_matrix_set(ryaz, 1, 0, 0);        gsl_matrix_set(ryaz, 1, 1, 1.);  gsl_matrix_set(ryaz, 1, 2, 0.);
-  gsl_matrix_set(ryaz, 2, 0, -sin(az)); gsl_matrix_set(ryaz, 2, 1, 0.);  gsl_matrix_set(ryaz, 2, 2, cos(az));
-
-  u4[0] = gsl_matrix_get(ryaz, 0, 0)*u3[0]
-        + gsl_matrix_get(ryaz, 0, 1)*u3[1]
-        + gsl_matrix_get(ryaz, 0, 2)*u3[2];
-  u4[1] = gsl_matrix_get(ryaz, 1, 0)*u3[0]
-        + gsl_matrix_get(ryaz, 1, 1)*u3[1]
-        + gsl_matrix_get(ryaz, 1, 2)*u3[2];
-  u4[2] = gsl_matrix_get(ryaz, 2, 0)*u3[0]
-        + gsl_matrix_get(ryaz, 2, 1)*u3[1]
-        + gsl_matrix_get(ryaz, 2, 2)*u3[2];
-
-  *pss1_el = (180./M_PI)*atan(u4[1]/u4[2]);
+  phi_sun = (180./M_PI)*asin(u0sun[0]);
+  *pss1_az = phi_sun + phi0;
 
   NormalizeAngle(pss1_az);
-  NormalizeAngle(pss1_el);
 
-  gsl_matrix_free(rot);
-  gsl_matrix_free(rybeta);
-  gsl_matrix_free(rxalpha);
   gsl_matrix_free(rzpsi);
-  gsl_matrix_free(ryaz);
-
-  return 1;
+  gsl_matrix_free(rxtheta);
+  gsl_matrix_free(rzgamma);
+  gsl_matrix_free(ryphi);
+  gsl_matrix_free(rxsun);
+  gsl_matrix_free(rot);
+  gsl_matrix_free(identity);
 
 }
 
@@ -462,30 +458,15 @@ static int PSS1Convert(double *pss1_az, double *pss1_el) {
 
 #define  PSS2_L     10.    // 10 mm = effective length of active area
 #define  PSS2_D     10.    // 10 mm = Distance between pinhole and sensor
-#define  PSS2_IMAX  6.     // Maximum current (place holder for now)
+#define  PSS2_IMAX  1.     // Maximum current (place holder for now)
 #define  PSS2_XSTRETCH  1.
 #define  PSS2_YSTRETCH  1.
-#define  PSS2_BETA  -135.
-#define  PSS2_ALPHA   25.
-#define  PSS2_PSI    -10.
 
-static int PSS2Convert(double *pss2_az, double *pss2_el) {
-
-  int           i_point;
-  double        sun_ra, sun_dec, jd;
-  double        az;
+static int PSS2Convert(double *pss2_az) {
 
   static double i1, i2, i3, i4;
-  double        itot;
-  double        x, y;
-  double        usun[3], u3[3], u4[3];
-  gsl_matrix    *rot;
-  gsl_matrix    *rybeta, *rxalpha, *rzpsi;
-  gsl_matrix    *ryaz;
-
-  double        beta, alpha, psi;
-  double        norm;
-
+  double itot;
+  double x, y;
 
   i1 = ACSData.pss2_i1;
   i2 = ACSData.pss2_i2;
@@ -494,8 +475,6 @@ static int PSS2Convert(double *pss2_az, double *pss2_el) {
 
   itot = i1+i2+i3+i4;
 
-  i_point = GETREADINDEX(point_index);
-
   if (itot < PSS2_IMAX) {
     PointingData[point_index].pss2_snr = 0.1;
     return(0);
@@ -503,105 +482,6 @@ static int PSS2Convert(double *pss2_az, double *pss2_el) {
 
   x = PSS2_XSTRETCH*(PSS2_L/2.)*((i2+i3)-(i1+i4))/itot;
   y = PSS2_YSTRETCH*(PSS2_L/2.)*((i2+i4)-(i1+i3))/itot;
-
-  if ((fabs(x) > 4.) | (fabs(y) > 4.)) {
-    PointingData[point_index].pss1_snr = 0.1;
-    return(0);
-  }
-
-  norm = sqrt(x*x + y*y + PSS1_D*PSS1_D);
-  usun[0] = -x / norm;
-  usun[1] = -y / norm;
-  usun[2] = PSS1_D / norm;
-
-  /* get current sun az, el */
-  jd = GetJulian(PointingData[i_point].t);
-  SunPos(jd, &sun_ra, &sun_dec);
-  sun_ra *= (12.0 / M_PI);
-  sun_dec *= (180.0 / M_PI);
-
-  if (sun_ra < 0)
-    sun_ra += 24;
-
-  radec2azel(sun_ra, sun_dec, PointingData[i_point].lst,
-             PointingData[i_point].lat, &sun_az, &sun_el);
-  
-  NormalizeAngle(&sun_az);
-  PointingData[point_index].sun_az = sun_az;
-  PointingData[point_index].sun_el = sun_el;
-
-  // Define beta (az rotation)
-  beta = (M_PI/180.)*PSS1_BETA;
-  // Define alpha (el rotation)
-  alpha = (M_PI/180.)*PSS1_ALPHA;
-  // Define psi (roll)
-  psi = (M_PI/180.)*PSS1_PSI;
-
-  rot = gsl_matrix_alloc(3,3);
-  rybeta = gsl_matrix_alloc(3,3);
-  rxalpha = gsl_matrix_alloc(3,3);
-  rzpsi = gsl_matrix_alloc(3,3);
-  ryaz = gsl_matrix_alloc(3,3);
-
-
-  gsl_matrix_set(rybeta, 0, 1, cos(-beta));  gsl_matrix_set(rybeta, 0, 1, 0.);  gsl_matrix_set(rybeta, 0, 2, sin(-beta));
-  gsl_matrix_set(rybeta, 1, 0, 0);           gsl_matrix_set(rybeta, 1, 1, 1.);  gsl_matrix_set(rybeta, 1, 2, 0.);
-  gsl_matrix_set(rybeta, 2, 0, -sin(-beta)); gsl_matrix_set(rybeta, 2, 1, 0.);  gsl_matrix_set(rybeta, 2, 2, cos(-beta));
-
-  gsl_matrix_set(rxalpha, 0, 1, 1.); gsl_matrix_set(rxalpha, 0, 1, 0.);          gsl_matrix_set(rxalpha, 0, 2, 0.);
-  gsl_matrix_set(rxalpha, 1, 0, 0.); gsl_matrix_set(rxalpha, 1, 1, cos(-alpha)); gsl_matrix_set(rxalpha, 1, 2, -sin(-alpha));
-  gsl_matrix_set(rxalpha, 2, 0, 0.); gsl_matrix_set(rxalpha, 2, 1, sin(-alpha)); gsl_matrix_set(rxalpha, 2, 2, cos(-alpha));
-
-  gsl_matrix_set(rzpsi, 0, 1, cos(psi));  gsl_matrix_set(rzpsi, 0, 1, -sin(psi)); gsl_matrix_set(rzpsi, 0, 2, 0.);
-  gsl_matrix_set(rzpsi, 1, 0, sin(psi));  gsl_matrix_set(rzpsi, 1, 1, cos(psi));  gsl_matrix_set(rzpsi, 1, 2, 0.);
-  gsl_matrix_set(rzpsi, 2, 0, 0.);        gsl_matrix_set(rzpsi, 2, 1, 0.);        gsl_matrix_set(rzpsi, 2, 2, 1.);
-
-  gsl_matrix_set_identity(rot);
-  gsl_matrix_mul_elements(rot, rybeta);
-  gsl_matrix_mul_elements(rot, rxalpha);
-  gsl_matrix_mul_elements(rot, rzpsi);
-
-  // identity is the inverse of the rotation matrix
-  u3[0] = gsl_matrix_get(rot, 0, 0)*usun[0]
-        + gsl_matrix_get(rot, 0, 1)*usun[1]
-        + gsl_matrix_get(rot, 0, 2)*usun[2];
-  u3[1] = gsl_matrix_get(rot, 1, 0)*usun[0]
-        + gsl_matrix_get(rot, 1, 1)*usun[1]
-        + gsl_matrix_get(rot, 1, 2)*usun[2];
-  u3[2] = gsl_matrix_get(rot, 2, 0)*usun[0]
-        + gsl_matrix_get(rot, 2, 1)*usun[1]
-        + gsl_matrix_get(rot, 2, 2)*usun[2];
-
-  az = -atan(u3[0]/u3[2]);
-
-  *pss2_az = -(180./M_PI)*az + sun_az;    // az is in radians
-
-  gsl_matrix_set(ryaz, 0, 1, cos(az));  gsl_matrix_set(ryaz, 0, 1, 0.);  gsl_matrix_set(ryaz, 0, 2, sin(az));
-  gsl_matrix_set(ryaz, 1, 0, 0);        gsl_matrix_set(ryaz, 1, 1, 1.);  gsl_matrix_set(ryaz, 1, 2, 0.);
-  gsl_matrix_set(ryaz, 2, 0, -sin(az)); gsl_matrix_set(ryaz, 2, 1, 0.);  gsl_matrix_set(ryaz, 2, 2, cos(az));
-
-  u4[0] = gsl_matrix_get(ryaz, 0, 0)*u3[0]
-        + gsl_matrix_get(ryaz, 0, 1)*u3[1]
-        + gsl_matrix_get(ryaz, 0, 2)*u3[2];
-  u4[1] = gsl_matrix_get(ryaz, 1, 0)*u3[0]
-        + gsl_matrix_get(ryaz, 1, 1)*u3[1]
-        + gsl_matrix_get(ryaz, 1, 2)*u3[2];
-  u4[2] = gsl_matrix_get(ryaz, 2, 0)*u3[0]
-        + gsl_matrix_get(ryaz, 2, 1)*u3[1]
-        + gsl_matrix_get(ryaz, 2, 2)*u3[2];
-
-  *pss2_el = (180./M_PI)*atan(u4[1]/u4[2]);
-
-  NormalizeAngle(pss2_az);
-  NormalizeAngle(pss2_el);
-
-  gsl_matrix_free(rot);
-  gsl_matrix_free(rybeta);
-  gsl_matrix_free(rxalpha);
-  gsl_matrix_free(rzpsi);
-  gsl_matrix_free(ryaz);
-
-  return 1;
 
 }
 
@@ -1356,14 +1236,9 @@ void Pointing(void)
   static int j=0;
 
   int ss_ok, mag_ok, dgps_ok;
-  int pss1_ok, pss2_ok;
   static unsigned dgps_since_ok = 500;
   static unsigned ss_since_ok = 500;
-  static unsigned pss1_since_ok = 500;
-  static unsigned pss2_since_ok = 500;
   double ss_az, mag_az;
-  double pss1_az, pss1_el;
-  double pss2_az, pss2_el;
   double dgps_az, dgps_pitch, dgps_roll;
   double clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0, using_sip_gps = -1;
@@ -1464,30 +1339,6 @@ void Pointing(void)
     NULL, NULL
   };
   static struct AzSolutionStruct SSAz =  {0.0, // starting angle
-    360.0 * 360.0, // starting varience
-    1.0 / M2DV(30), //sample weight
-    M2DV(60), // systemamatic varience
-    0.0, // trim
-    0.0, // last input
-    0.0, 0.0, // gy integrals
-    OFFSET_GY_IFROLL, OFFSET_GY_IFYAW, // gy offsets
-    0.0001, // filter constant
-    0, 0, // n_solutions, since_last
-    NULL, NULL
-  };
-  static struct AzSolutionStruct PSS1Az =  {0.0, // starting angle
-    360.0 * 360.0, // starting varience
-    1.0 / M2DV(30), //sample weight
-    M2DV(60), // systemamatic varience
-    0.0, // trim
-    0.0, // last input
-    0.0, 0.0, // gy integrals
-    OFFSET_GY_IFROLL, OFFSET_GY_IFYAW, // gy offsets
-    0.0001, // filter constant
-    0, 0, // n_solutions, since_last
-    NULL, NULL
-  };
-  static struct AzSolutionStruct PSS2Az =  {0.0, // starting angle
     360.0 * 360.0, // starting varience
     1.0 / M2DV(30), //sample weight
     M2DV(60), // systemamatic varience
@@ -1719,20 +1570,6 @@ void Pointing(void)
     ss_since_ok++;
   }
 
-  pss1_ok = PSS1Convert(&pss1_az, &pss1_el);
-  if (pss1_ok) {
-    pss1_since_ok = 0;
-  } else {
-    pss1_since_ok++;
-  }
-
-  pss2_ok = PSS2Convert(&pss2_az, &pss2_el);
-  if (pss2_ok) {
-    pss2_since_ok = 0;
-  } else {
-    pss2_since_ok++;
-  }
-
   dgps_ok = DGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
   if (dgps_ok) {
     dgps_since_ok = 0;
@@ -1760,26 +1597,12 @@ void Pointing(void)
       PointingData[point_index].el,
       dgps_az, dgps_ok);
 
-  /** Old Sun Sensor **/
+  /** Sun Sensor **/
   EvolveAzSolution(&SSAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
       PointingData[point_index].el,
       ss_az, ss_ok);
-
-  /** PSS1 **/
-  EvolveAzSolution(&PSS1Az,
-      RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-      RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      PointingData[point_index].el,
-      pss1_az, pss1_ok);
-
-  /** PSS2 **/
-  EvolveAzSolution(&PSS2Az,
-      RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-      RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      PointingData[point_index].el,
-      pss2_az, pss2_ok);
 
   if (CommandData.fast_offset_gy>0) {
     CommandData.fast_offset_gy--;
@@ -1794,12 +1617,6 @@ void Pointing(void)
   }
   if (CommandData.use_sun) {
     AddAzSolution(&AzAtt, &SSAz, 1);
-  }
-  if (CommandData.use_pss1) {
-    AddAzSolution(&AzAtt, &PSS1Az, 1);
-  }
-  if (CommandData.use_pss2) {
-    AddAzSolution(&AzAtt, &PSS2Az, 1);
   }
   if (CommandData.use_gps) {
     AddAzSolution(&AzAtt, &DGPSAz, 1);
