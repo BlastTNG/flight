@@ -156,13 +156,14 @@ struct CommandDataStruct {
   unsigned short int lat_range;
   unsigned short int at_float;
 
+  /*
   double apcu_reg;
   double  apcu_trim;
   short int apcu_auto;
   double dpcu_reg;
   double dpcu_trim;
   short int dpcu_auto;
-
+  */
   struct GainStruct ele_gain;
   struct GainStruct azi_gain;
   struct PivGainStruct pivot_gain;

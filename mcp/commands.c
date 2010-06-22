@@ -1241,15 +1241,15 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       /***************************************/
       /***** Temporary test of motor DACs ****/
       /** TODO erase when done with them *****/
-    case dac1_level:
+      /*    case dac1_level:
       CommandData.Temporary.dac_out[0] = ivalues[0] << 1;
       CommandData.Temporary.setLevel[0] = 1;
-      break;
+      break; */
     case dac2_level:
       CommandData.Temporary.dac_out[1] = ivalues[0] << 1;
       CommandData.Temporary.setLevel[1] = 1;
       break;
-    case dac3_level:
+      /*    case dac3_level:
       CommandData.Temporary.dac_out[2] = ivalues[0] << 1;
       CommandData.Temporary.setLevel[2] = 1;
       break;
@@ -1260,7 +1260,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case dac5_level:
       CommandData.Temporary.dac_out[4] = ivalues[0] << 1;
       CommandData.Temporary.setLevel[4] = 1;
-      break;
+      break; */
     case motors_verbose:
       CommandData.verbose_rw = ivalues[0];
       CommandData.verbose_el = ivalues[1];
@@ -1477,22 +1477,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case plugh:/* A hollow voice says "Plugh". */
       CommandData.plover = ivalues[0];
-      break;
-    case apcu_charge:
-      CommandData.apcu_reg = rvalues[0]; // v_topoff, in V
-      CommandData.apcu_auto = 0;
-      break;
-    case dpcu_charge:
-      CommandData.dpcu_reg = rvalues[0]; // v_topoff, in V
-      CommandData.dpcu_auto = 0;
-      break;
-    case auto_apcu:
-      CommandData.apcu_trim = rvalues[0];
-      CommandData.apcu_auto = 1;
-      break;
-    case auto_dpcu:
-      CommandData.dpcu_trim = rvalues[0];
-      CommandData.dpcu_auto = 1;
       break;
 #endif
 
@@ -2389,14 +2373,6 @@ void InitCommandData()
   CommandData.at_float = 0;
   CommandData.timeout = 3600;
   CommandData.alice_file = 0;
-
-  CommandData.apcu_reg = 28.0;
-  CommandData.apcu_trim = 0.0;
-  CommandData.apcu_auto = 1;
-
-  CommandData.dpcu_reg = 28.0;
-  CommandData.dpcu_trim = 0.0;
-  CommandData.dpcu_auto = 1;
 
   CommandData.slew_veto = VETO_MAX; /* 10 minutes */
 

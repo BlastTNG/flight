@@ -18,7 +18,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 206        /* total number of single word cmds */
-#define N_MCOMMANDS 106        /* total number of multiword commands */
+#define N_MCOMMANDS  98        /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -123,10 +123,10 @@ enum multiCommand {
   az_el_goto,        az_gain,           az_scan,          balance_gain,
   balance_manual,    osc_set_focus,     osc_set_aperture, osc_save_period,
   bias_level_500,    bias_level_350,    bias_level_250,   bias_level_rox,
-  bias_level_x,      isc_blob_centre,
+  bias_level_x,      isc_blob_centre,   
   /* dac level commands are temporary */
-  dac1_level,        dac2_level,        dac3_level,       dac4_level,
-  dac5_level,
+  dac2_level,  
+  /*  dac1_level,              dac3_level,       dac4_level,  dac5_level,*/
   box,               osc_pixel_centre,  osc_blob_centre,  isc_gain,
   cal_pulse,         cal_repeat,        cap,              isc_catalogue,
   az_el_trim,        isc_det_set,       drift,            el_gain,
@@ -139,17 +139,17 @@ enum multiCommand {
   t_gyro_set,        osc_gain,
   t_gyro_gain,       timeout,           isc_tolerances,   vcap,
   vbox,              alice_file,        az_gyro_offset,   isc_hold_current,
-  isc_save_period,   osc_offset,        plugh,		  
+  isc_save_period,   osc_offset,        
   jfet_set,          isc_foc_off,       hwpr_vel,         hwpr_i,
-  osc_foc_off,       apcu_charge,	gyro_off,	  gyro_on,
-  dpcu_charge,       auto_apcu,         auto_dpcu,        quad,
+  osc_foc_off,       gyro_off,	        gyro_on,          quad,
   el_gyro_offset,    general,           slew_veto,        set_secondary,
   thermo_gain,       actuator_servo,    xy_goto,          actuator_vel,
   xy_jump,           xy_xscan,          xy_yscan,         xy_raster,
   actuator_i,        lock_vel,          lock_i,           actuator_delta,
   delta_secondary,   lvdt_limit,        thermo_param,     focus_offset,
   isc_max_age,	     osc_max_age,	reset_adc,        balance_tset,
-  balance_veto,      motors_verbose,    bias_step,        phase_step
+  balance_veto,      motors_verbose,    bias_step,        phase_step,
+  plugh		  
 };
 
 //32-bit and 64-bit sytems disagree on packing

@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.56 $";
+const char *command_list_serial = "$Revision: 4.57 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -320,7 +320,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Level", 0, 32767, 'i', "dac2_ampl"}
     }
   },
-  {COMMAND(dac3_level), "DAC3 output level. Temporary", GR_MISC, 1,
+  /*  {COMMAND(dac3_level), "DAC3 output level. Temporary", GR_MISC, 1,
     {
       {"Level", 0, 32767, 'i', "dac3_ampl"}
     }
@@ -334,7 +334,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Level", 0, 32767, 'i', "dac5_ampl"}
     }
-  },
+    }, */
 
   {COMMAND(alice_file), "set XML file for compressed (6kbit) downlink",
     GR_TELEM, 1,
@@ -482,13 +482,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(az_gyro_offset), "manually set az gyro offsets", GR_TRIM, 2,
     {
-      {"IF Roll Gyro offset (deg/s)", -0.5, 0.5, 'f', "GY2_OFFSET"},
-      {"IF Yaw Gyro offset (deg/s)", -0.5, 0.5, 'f', "GY3_OFFSET"}
+      {"IF Roll Gyro offset (deg/s)", -0.5, 0.5, 'f', "OFFSET_IFROLL_GY"},
+      {"IF Yaw Gyro offset (deg/s)", -0.5, 0.5, 'f', "OFFSET_IFYAW_GY"}
     }
   },
   {COMMAND(el_gyro_offset), "manually set el gyro offset", GR_TRIM, 1,
     {
-      {"IF Elev Gyro offset (deg/s)", -0.5, 0.5, 'f', "GY1_OFFSET"},
+      {"IF Elev Gyro offset (deg/s)", -0.5, 0.5, 'f', "OFFSET_IFEL_GY"},
     }
   },
   {COMMAND(slew_veto), "set the length of the gyro offset slew veto", GR_TRIM,
@@ -501,7 +501,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /* actuator bus commands */
   {COMMAND(lock), "lock inner frame", GR_LOCK | GR_POINT, 1,
     {
-      {"Lock Elevation (deg)", 5, 90, 'f', "ENC_ELEV"}
+      {"Lock Elevation (deg)", 5, 90, 'f', "EL_ENC"}
     }
   },
   {COMMAND(general), "send a general command string to the lock or actuators",
@@ -514,20 +514,20 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(lock_vel), "set the lock motor velocity and acceleration", GR_LOCK,
     2,
     {
-      {"Velocity", 5, 500000, 'l', "LOCK_VEL"},
-      {"Acceleration", 1, 1000, 'i', "LOCK_ACC"},
+      {"Velocity", 5, 500000, 'l', "VEL_LOCK"},
+      {"Acceleration", 1, 1000, 'i', "ACC_LOCK"},
     }
   },
   {COMMAND(lock_i), "set the lock motor currents", GR_LOCK, 2,
     {
-      {"Move current (%)", 0, 100, 'i', "LOCK_MOVE_I"},
-      {"Hold current (%)", 0,  50, 'i', "LOCK_HOLD_I"},
+      {"Move current (%)", 0, 100, 'i', "I_MOVE_LOCK"},
+      {"Hold current (%)", 0,  50, 'i', "I_HOLD_LOCK"},
     }
   },
   {COMMAND(set_secondary), "servo the secondary mirror to absolute position",
     GR_FOCUS, 1,
     {
-      {"Position (counts)", -15000, 15000, 'i', "ABS_FOCUS"},
+      {"Position (counts)", -15000, 15000, 'i', "GOAL_SF"},
     }
   },
   {COMMAND(delta_secondary), "servo the secondary mirror by a relative amount",
@@ -538,10 +538,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(thermo_gain), "set the secondary actuator system gains", GR_FOCUS, 4,
     {
-      {"T. Primary Gain",   1, 1000, 'f', "TC_G_PRIM"},
-      {"T. Secondary Gain", 1, 1000, 'f', "TC_G_SEC"},
-      {"Step Size (um)",   10, 1000, 'i', "TC_STEP"},
-      {"Step Wait (min)"  , 0, 1500, 'i', "TC_WAIT"},
+      {"T. Primary Gain",   1, 1000, 'f', "G_PRIME_SF"},
+      {"T. Secondary Gain", 1, 1000, 'f', "G_SECOND_SF"},
+      {"Step Size (um)",   10, 1000, 'i', "STEP_SF"},
+      {"Step Wait (min)"  , 0, 1500, 'i', "WAIT_SF"},
     }
   },
   {COMMAND(actuator_servo), "servo the actuators to absolute positions",
@@ -555,7 +555,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(focus_offset), "set the in focus position offset relative the "
     "nominal focus", GR_FOCUS, 1,
     {
-      {"Offset", -5000, 25000, 'i', "SF_OFFSET"}
+      {"Offset", -5000, 25000, 'i', "OFFSET_SF"}
     }
   },
   {COMMAND(actuator_delta), "offset the actuators to from current position",
@@ -576,49 +576,49 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(actuator_vel), "set the actuator velocity and acceleration", GR_ACT,
     2,
     {
-      {"Velocity", 5, 20000, 'i', "ACT_VEL"},
-      {"Acceleration", 1, 20, 'i', "ACT_ACC"},
+      {"Velocity", 5, 20000, 'i', "VEL_ACT"},
+      {"Acceleration", 1, 20, 'i', "ACC_ACT"},
     }
   },
   {COMMAND(actuator_i), "set the actuator motor currents", GR_ACT, 2,
     {
-      {"Move current (%)", 0, 100, 'i', "ACT_MOVE_I"},
-      {"Hold current (%)", 0,  50, 'i', "ACT_HOLD_I"},
+      {"Move current (%)", 0, 100, 'i', "I_MOVE_ACT"},
+      {"Hold current (%)", 0,  50, 'i', "I_HOLD_ACT"},
     }
   },
   {COMMAND(lvdt_limit), "set the hard LVDT limits on actuator moves", GR_ACT, 3,
     {
-      {"Spread limit", 0, 5000, 'f', "LVDT_SPREAD"},
-      {"Lower limit", -5000, 60000, 'f', "LVDT_LOW"},
-      {"Upper limit", -5000, 60000, 'f', "LVDT_HIGH"}
+      {"Spread limit", 0, 5000, 'f', "LVDT_SPREAD_ACT"},
+      {"Lower limit", -5000, 60000, 'f', "LVDT_LOW_ACT"},
+      {"Upper limit", -5000, 60000, 'f', "LVDT_HIGH_ACT"}
     }
   },
   {COMMAND(thermo_param), "set the thermal compensation parameters", GR_FOCUS,
     3,
     {
-      {"Temp. Spread", 0, 100, 'f', "TC_SPREAD"},
-      {"Preferred T Prime", 0, 2, 'i', "TC_PREF_TP"},
-      {"Preferred T Second", 0, 2, 'i', "TC_PREF_TS"}
+      {"Temp. Spread", 0, 100, 'f', "SPREAD_SF"},
+      {"Preferred T Prime", 0, 2, 'i', "PREF_TP_SF"},
+      {"Preferred T Second", 0, 2, 'i', "PREF_TS_SF"}
     }
   },
   {COMMAND(hwpr_vel), "set the wavepalte rotator velocity and acceleration", 
     GR_HWPR, 2,
     {
-      {"Velocity", 5, 500000, 'l', "HWPR_VEL"},
-      {"Acceleration", 1, 1000, 'i', "HWPR_ACC"},
+      {"Velocity", 5, 500000, 'l', "VEL_HWPR"},
+      {"Acceleration", 1, 1000, 'i', "ACC_HWPR"},
     }
   },
   {COMMAND(hwpr_i), "set the wavepalte rotator currents", GR_HWPR, 2,
     {
-      {"Move current (%)", 0, 100, 'i', "HWPR_MOVE_I"},
-      {"Hold current (%)", 0,  50, 'i', "HWPR_HOLD_I"},
+      {"Move current (%)", 0, 100, 'i', "I_MOVE_HWPR"},
+      {"Hold current (%)", 0,  50, 'i', "I_HOLD_HWPR"},
     }
   },
   {COMMAND(hwpr_goto), "move the waveplate rotator to absolute position",
     GR_HWPR, 1,
     {
       //TODO calibrate hwpr move units
-      {"destination", 0, 80000, 'l', "STAGE_X"}
+      {"destination", 0, 80000, 'l', "X_STAGE"}
     }
   },
   {COMMAND(hwpr_jump), "move the waveplate rotator to relative position",
@@ -632,10 +632,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(xy_goto), "move the X-Y translation stage to absolute position",
     GR_STAGE, 4,
     {
-      {"X destination", 0, 80000, 'l', "STAGE_X"},
-      {"Y destination", 0, 80000, 'l', "STAGE_Y"},
-      {"X speed", 0, 16000, 'i', "STAGE_X_VEL"},
-      {"Y speed", 0, 16000, 'i', "STAGE_Y_VEL"}
+      {"X destination", 0, 80000, 'l', "X_STAGE"},
+      {"Y destination", 0, 80000, 'l', "Y_STAGE"},
+      {"X speed", 0, 16000, 'i', "X_VEL_STAGE"},
+      {"Y speed", 0, 16000, 'i', "Y_VEL_STAGE"}
     }
   },
   {COMMAND(xy_jump), "move the X-Y translation stage to relative position",
@@ -643,31 +643,31 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"X delta", -80000, 80000, 'l', "0"},
       {"Y delta", -80000, 80000, 'l', "0"},
-      {"X speed", 0, 16000, 'i', "STAGE_X_VEL"},
-      {"Y speed", 0, 16000, 'i', "STAGE_Y_VEL"}
+      {"X speed", 0, 16000, 'i', "X_VEL_STAGE"},
+      {"Y speed", 0, 16000, 'i', "Y_VEL_STAGE"}
     }
   },
   {COMMAND(xy_xscan), "scan the X-Y translation stage in X", GR_STAGE, 3,
     {
-      {"X center", 0, 80000, 'l', "STAGE_X"},
+      {"X center", 0, 80000, 'l', "X_STAGE"},
       {"delta X", 0, 80000, 'l', "NONE"},
-      {"X speed", 0, 16000, 'i', "STAGE_X_VEL"},
+      {"X speed", 0, 16000, 'i', "X_VEL_STAGE"},
     }
   },
   {COMMAND(xy_yscan), "scan the X-Y translation stage in Y", GR_STAGE, 3,
     {
-      {"Y center", 0, 80000, 'l', "STAGE_Y"},
+      {"Y center", 0, 80000, 'l', "Y_STAGE"},
       {"delta Y", 0, 80000, 'l', "NONE"},
-      {"Y speed", 0, 16000, 'i', "STAGE_Y_VEL"},
+      {"Y speed", 0, 16000, 'i', "Y_VEL_STAGE"},
     }
   },
   {COMMAND(xy_raster), "raster the X-Y translation stage", GR_STAGE, 5,
     {
-      {"X center", 0, 80000, 'l', "STAGE_X"},
-      {"Y center", 0, 80000, 'l', "STAGE_Y"},
+      {"X center", 0, 80000, 'l', "X_STAGE"},
+      {"Y center", 0, 80000, 'l', "Y_STAGE"},
       {"Map Size", 0, 30000, 'i', "NONE"},
       {"Step Size", 0, 30000, 'i', "NONE"},
-      {"Velocity", 0, 16000, 'i', "STAGE_X_VEL"},
+      {"Velocity", 0, 16000, 'i', "X_VEL_STAGE"},
     }
   },
 
@@ -688,36 +688,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(t_gyro_gain), "gyro box heater gains", GR_ELECT, 3,
     {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_gyheat"},
-      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_gyheat"},
-      {"Derrivative Gain",  0, MAX_15BIT, 'i', "g_d_gyheat"}
+      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_heat_gy"},
+      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_heat_gy"},
+      {"Derrivative Gain",  0, MAX_15BIT, 'i', "g_d_heat_gy"}
     }
   },
   {COMMAND(t_gyro_set), "gyro box temperature set point", GR_ELECT, 1,
     {
-      {"Set Point (deg C)", 0, 60, 'f', "T_GY_SET"}
-    }
-  },
-  {COMMAND(auto_apcu), "Automatically control the ACS PCU charge voltage",
-    GR_ELECT, 1,
-    {
-      {"Trim (V)", -1, 1, 'f', "APCU_TRIM"}
-    }
-  },
-  {COMMAND(apcu_charge), "Set the ACS PCU battery charge level", GR_ELECT, 1,
-    {
-      {"Level (V)", 27.25, 31.06, 'f', "APCU_REG"}
-    }
-  },
-  {COMMAND(auto_dpcu), "Automatically control the DAS PCU charge voltage",
-    GR_ELECT, 1,
-    {
-      {"Trim (V)", -1, 1, 'f', "DPCU_TRIM"}
-    }
-  },
-  {COMMAND(dpcu_charge), "Set the DAS PCU battery charge level", GR_ELECT, 1,
-    {
-      {"Level (V)", 27.25, 31.09, 'f', "DPCU_REG"}
+      {"Set Point (deg C)", 0, 60, 'f', "T_SET_GY"}
     }
   },
 
@@ -725,45 +703,45 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /*************** Bias  *****************/
   {COMMAND(bias_level_250), "bias level 250 micron", GR_BIAS, 1,
     {
-      {"Level", 0, 32767, 'i', "bias_ampl_250"}
+      {"Level", 0, 32767, 'i', "ampl_250_bias"}
     }
   },
   {COMMAND(bias_level_350), "bias level 350 micron", GR_BIAS, 1,
     {
-      {"Level", 0, 32767, 'i', "bias_ampl_350"}
+      {"Level", 0, 32767, 'i', "ampl_350_bias"}
     }
   },
   {COMMAND(bias_level_500), "bias level 500 micron", GR_BIAS, 1,
     {
-      {"Level", 0, 32767, 'i', "bias_ampl_500"}
+      {"Level", 0, 32767, 'i', "ampl_500_bias"}
     }
   },
   {COMMAND(bias_step), "step through different bias levels", GR_BIAS, 6,
     {
-      {"Start", 0, 32767, 'i', "bias_step_start"},
-      {"End", 0, 32767, 'i', "bias_step_end"},
-      {"N steps", 1, 32767, 'i', "bias_step_nsteps"},
-      {"Time per step (ms)", 10, 32767, 'i', "bias_step_time"},
-      {"Cal pulse length (ms)", 0, 32767, 'i', "bias_step_pul_len"},
-      {"Array (250,350,500,0=all)", 0, 32767, 'i', "bias_step_array"},
+      {"Start", 0, 32767, 'i', "step_start_bias"},
+      {"End", 0, 32767, 'i', "step_end_bias"},
+      {"N steps", 1, 32767, 'i', "step_nsteps_bias"},
+      {"Time per step (ms)", 10, 32767, 'i', "step_time_bias"},
+      {"Cal pulse length (ms)", 0, 32767, 'i', "step_pul_len_bias"},
+      {"Array (250,350,500,0=all)", 0, 32767, 'i', "step_array_bias"},
     }
   },
   {COMMAND(phase_step), "step through different phases", GR_BIAS, 4,
     {
-      {"Start", 0, 32767, 'i', "phase_step_start"},
-      {"End", 0, 32767, 'i', "phase_step_end"},
-      {"N steps", 1, 32767, 'i', "phase_step_nsteps"},
-      {"Time per step (ms)", 1, 32767, 'i', "phase_step_time"},
+      {"Start", 0, 32767, 'i', "step_start_phase"},
+      {"End", 0, 32767, 'i', "step_end_phase"},
+      {"N steps", 1, 32767, 'i', "step_nsteps_phase"},
+      {"Time per step (ms)", 1, 32767, 'i', "step_time_phase"},
     }
   },
   {COMMAND(bias_level_rox), "bias level ROX", GR_BIAS, 1,
     {
-      {"Level", 0, 32767, 'i', "bias_ampl_rox"}
+      {"Level", 0, 32767, 'i', "ampl_rox_bias"}
     }
   },
   {COMMAND(bias_level_x), "bias level X (unused)", GR_BIAS, 1,
     {
-      {"Level", 0, 32767, 'i', "bias_ampl_x"}
+      {"Level", 0, 32767, 'i', "ampl_x_bias"}
     }
   },
   {COMMAND(phase), "set phase shift", GR_BIAS, 2,
@@ -777,13 +755,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /*********** Cal Lamp  *****************/
   {COMMAND(cal_pulse), "calibrator single pulse", GR_CRYO_HEAT, 1,
     {
-      {"Pulse Length (ms)", 0, 8000, 'i', "CAL_PULSE"}
+      {"Pulse Length (ms)", 0, 8000, 'i', "PULSE_CAL"}
     }
   },
   {COMMAND(cal_repeat), "pulse calibrator repeatedly", GR_CRYO_HEAT, 3,
     {
-      {"Pulse Length (ms)", 10, 8000, 'i', "CAL_PULSE"},
-      {"Repeat Delay (s)",  1, 32767, 'i', "CAL_REPEAT"},
+      {"Pulse Length (ms)", 10, 8000, 'i', "PULSE_CAL"},
+      {"Repeat Delay (s)",  1, 32767, 'i', "REPEAT_CAL"},
       {"Number of repeats (0=infinity)",  0, 32767, 'i', ""}
     }
   },
@@ -802,30 +780,30 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(isc_offset), "set offset of ISC to primary beam",
     GR_TRIM | GR_ISC_PARAM, 2,
     {
-      {"X Offset (deg)", -5., 5, 'f', "ISC_X_OFF"},
-      {"Y Offset (deg)", -5., 5, 'f', "ISC_Y_OFF"}
+      {"X Offset (deg)", -5., 5, 'f', "X_OFF_ISC"},
+      {"Y Offset (deg)", -5., 5, 'f', "Y_OFF_ISC"}
     }
   },
   {COMMAND(isc_set_focus), "set focus position", GR_ISC_PARAM, 1,
     {
-      {"Focus Position", -1000, 1000, 'i', "ISC_FOCUS"}
+      {"Focus Position", -1000, 1000, 'i', "FOCUS_ISC"}
     }
   },
   {COMMAND(isc_foc_off), "set focus offset relative to the home position",
     GR_ISC_PARAM, 1,
     {
-      {"Focus Offset", -500, 2500, 'i', "ISC_FOC_OFF"}
+      {"Focus Offset", -500, 2500, 'i', "FOC_OFF_ISC"}
     }
   },
   {COMMAND(isc_set_aperture), "set the f-stop", GR_ISC_PARAM, 1,
     {
-      {"Aperture Position", 0, AP_RANGE, 'i', "ISC_APERT"}
+      {"Aperture Position", 0, AP_RANGE, 'i', "APERT_ISC"}
     }
   },
   {COMMAND(isc_save_period), "set the time between automatically saved images",
     GR_ISC_HOUSE, 1,
     {
-      {"Period (s):", 0, 1000, 'i', "ISC_SAVE_PRD"}
+      {"Period (s):", 0, 1000, 'i', "SAVE_PRD_ISC"}
     }
   },
   {COMMAND(isc_pixel_centre), "centre display on pixel", GR_ISC_HOUSE, 2,
@@ -841,56 +819,56 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(isc_integrate), "set camera integration times", GR_ISC_PARAM, 2,
     {
-      {"fast integration time (ms)", 0, 1572.864, 'f', "ISC_FPULSE"},
-      {"slow integration time (ms)", 0, 1572.864, 'f', "ISC_SPULSE"}
+      {"fast integration time (ms)", 0, 1572.864, 'f', "FPULSE_ISC"},
+      {"slow integration time (ms)", 0, 1572.864, 'f', "SPULSE_ISC"}
     }
   },
   {COMMAND(isc_det_set), "set detection parameters", GR_ISC_PARAM, 3,
     {
-      {"Search Grid (px/side)",     0, ISC_CCD_Y_PIXELS, 'i', "ISC_GRID"},
-      {"S/N Threshold",           0.1,       3276.7, 'f', "ISC_THRESH"},
-      {"Exclusion Distance (px)",   0, ISC_CCD_Y_PIXELS, 'i', "ISC_MDIST"}
+      {"Search Grid (px/side)",     0, ISC_CCD_Y_PIXELS, 'i', "GRID_ISC"},
+      {"S/N Threshold",           0.1,       3276.7, 'f', "THRESH_ISC"},
+      {"Exclusion Distance (px)",   0, ISC_CCD_Y_PIXELS, 'i', "MDIST_ISC"}
     }
   },
   {COMMAND(isc_blobs), "number of blobs used in solution",
     GR_ISC_PARAM, 2,
     {
-      {"Min Blobs", 0, MAX_ISC_BLOBS, 'i', "ISC_MINBLOBS"},
-      {"Max Blobs", 0, MAX_ISC_BLOBS, 'i', "ISC_MAXBLOBS"}
+      {"Min Blobs", 0, MAX_ISC_BLOBS, 'i', "MINBLOBS_ISC"},
+      {"Max Blobs", 0, MAX_ISC_BLOBS, 'i', "MAXBLOBS_ISC"}
     }
   },
   {COMMAND(isc_catalogue), "set catalogue retreival parameters",
     GR_ISC_PARAM, 3,
     {
-      {"Magnitude Limit",            0, 12, 'f', "ISC_MAGLIMIT"},
-      {"Normal Search Radius (deg)", 0, 50, 'f', "ISC_NRAD"},
-      {"Lost Search Radius (deg)",   0, 50, 'f', "ISC_LRAD"}
+      {"Magnitude Limit",            0, 12, 'f', "MAGLIMIT_ISC"},
+      {"Normal Search Radius (deg)", 0, 50, 'f', "NRAD_ISC"},
+      {"Lost Search Radius (deg)",   0, 50, 'f', "LRAD_ISC"}
     }
   },
   {COMMAND(isc_tolerances), "set pointing solution tolerances", GR_ISC_PARAM, 4,
     {
-      {"Assoc. Tolerance (arcsec)", 0, 1000, 'f', "ISC_TOL"},
-      {"Match Tolerance (%)",       0,  100, 'f', "ISC_MTOL"},
-      {"Quit Tolerance (%)",        0,  100, 'f', "ISC_QTOL"},
-      {"Rot. Tolerance (deg)",      0,   90, 'f', "ISC_RTOL"}
+      {"Assoc. Tolerance (arcsec)", 0, 1000, 'f', "TOL_ISC"},
+      {"Match Tolerance (%)",       0,  100, 'f', "MTOL_ISC"},
+      {"Quit Tolerance (%)",        0,  100, 'f', "QTOL_ISC"},
+      {"Rot. Tolerance (deg)",      0,   90, 'f', "RTOL_ISC"}
     }
   },
   {COMMAND(isc_hold_current), "set ISC stepper motor hold current",
     GR_ISC_HOUSE, 1,
     {
-      {"Level (%)", 0, 50, 'i', "ISC_HOLD_I"}
+      {"Level (%)", 0, 50, 'i', "I_HOLD_ISC"}
     }
   },
   {COMMAND(isc_gain), "set CCD preamp gain and offset", GR_ISC_PARAM, 2,
     {
-      {"Gain", 0.1, 100, 'f', "ISC_CCD_GAIN"},
-      {"Offset", -4096, 4096, 'i', "ISC_CCD_OFFSET"}
+      {"Gain", 0.1, 100, 'f', "GAIN_ISC"},
+      {"Offset", -4096, 4096, 'i', "OFFSET_ISC"}
     }
   },
 
   {COMMAND(isc_max_age), "set maximum delay between trigger and solution (ms)", GR_ISC_PARAM, 1,
     {
-      {"Max Age", 0, MAX_15BIT, 'i', "ISC_MAX_AGE"},
+      {"Max Age", 0, MAX_15BIT, 'i', "MAX_AGE_ISC"},
     }
   },
 
@@ -899,30 +877,30 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(osc_offset), "set offset of OSC to primary beam",
     GR_TRIM | GR_OSC_PARAM, 2,
     {
-      {"X Offset (deg)", -5., 5, 'f', "OSC_X_OFF"},
-      {"Y Offset (deg)", -5., 5, 'f', "OSC_Y_OFF"}
+      {"X Offset (deg)", -5., 5, 'f', "X_OFF_OSC"},
+      {"Y Offset (deg)", -5., 5, 'f', "Y_OFF_OSC"}
     }
   },
   {COMMAND(osc_set_focus), "set focus position", GR_OSC_PARAM, 1,
     {
-      {"Focus Position", -1000, 1000, 'i', "OSC_FOCUS"}
+      {"Focus Position", -1000, 1000, 'i', "FOCUS_OSC"}
     }
   },
   {COMMAND(osc_foc_off), "set focus offset relative to the home position",
     GR_OSC_PARAM, 1,
     {
-      {"Focus Offset", -500, 2500, 'i', "OSC_FOC_OFF"}
+      {"Focus Offset", -500, 2500, 'i', "FOC_OFF_OSC"}
     }
   },
   {COMMAND(osc_set_aperture), "set the f-stop", GR_OSC_PARAM, 1,
     {
-      {"Aperture Position", 0, AP_RANGE, 'i', "OSC_APERT"}
+      {"Aperture Position", 0, AP_RANGE, 'i', "APERT_OSC"}
     }
   },
   {COMMAND(osc_save_period), "set the time between automatically saved images",
     GR_OSC_HOUSE, 1,
     {
-      {"Period (s):", 0, 1000, 'i', "OSC_SAVE_PRD"}
+      {"Period (s):", 0, 1000, 'i', "SAVE_PRD_OSC"}
     }
   },
   {COMMAND(osc_pixel_centre), "centre display on pixel", GR_OSC_HOUSE, 2,
@@ -938,55 +916,55 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(osc_integrate), "set camera integration times", GR_OSC_PARAM, 2,
     {
-      {"fast integration time (ms)", 0, 1572.864, 'f', "OSC_FPULSE"},
-      {"slow integration time (ms)", 0, 1572.864, 'f', "OSC_SPULSE"}
+      {"fast integration time (ms)", 0, 1572.864, 'f', "FPULSE_OSC"},
+      {"slow integration time (ms)", 0, 1572.864, 'f', "SPULSE_OSC"}
     }
   },
   {COMMAND(osc_det_set), "set detection parameters", GR_OSC_PARAM, 3,
     {
-      {"Search Grid (px/side)",     0, OSC_CCD_Y_PIXELS, 'i', "OSC_GRID"},
-      {"S/N Threshold",           0.1,       3276.7, 'f', "OSC_THRESH"},
-      {"Exclusion Distance (px)",   0, OSC_CCD_Y_PIXELS, 'i', "OSC_MDIST"}
+      {"Search Grid (px/side)",     0, OSC_CCD_Y_PIXELS, 'i', "GRID_OSC"},
+      {"S/N Threshold",           0.1,       3276.7, 'f', "THRESH_OSC"},
+      {"Exclusion Distance (px)",   0, OSC_CCD_Y_PIXELS, 'i', "MDIST_OSC"}
     }
   },
   {COMMAND(osc_blobs), "number of blobs used in solution",
     GR_OSC_PARAM, 2,
     {
-      {"Min Blobs", 0, MAX_ISC_BLOBS, 'i', "OSC_MINBLOBS"},
-      {"Max Blobs", 0, MAX_ISC_BLOBS, 'i', "OSC_MAXBLOBS"}
+      {"Min Blobs", 0, MAX_ISC_BLOBS, 'i', "MINBLOBS_OSC"},
+      {"Max Blobs", 0, MAX_ISC_BLOBS, 'i', "MAXBLOBS_OSC"}
     }
   },
   {COMMAND(osc_catalogue), "set catalogue retreival parameters",
     GR_OSC_PARAM, 3,
     {
-      {"Magnitude Limit",            0, 12, 'f', "OSC_MAGLIMIT"},
-      {"Normal Search Radius (deg)", 0, 50, 'f', "OSC_NRAD"},
-      {"Lost Search Radius (deg)",   0, 50, 'f', "OSC_LRAD"}
+      {"Magnitude Limit",            0, 12, 'f', "MAGLIMIT_OSC"},
+      {"Normal Search Radius (deg)", 0, 50, 'f', "NRAD_OSC"},
+      {"Lost Search Radius (deg)",   0, 50, 'f', "LRAD_OSC"}
     }
   },
   {COMMAND(osc_tolerances), "set pointing solution tolerances", GR_OSC_PARAM, 4,
     {
-      {"Assoc. Tolerance (arcsec)", 0, 1000, 'f', "OSC_TOL"},
-      {"Match Tolerance (%)",       0,  100, 'f', "OSC_MTOL"},
-      {"Quit Tolerance (%)",        0,  100, 'f', "OSC_QTOL"},
-      {"Rot. Tolerance (deg)",      0,   90, 'f', "OSC_RTOL"}
+      {"Assoc. Tolerance (arcsec)", 0, 1000, 'f', "TOL_OSC"},
+      {"Match Tolerance (%)",       0,  100, 'f', "MTOL_OSC"},
+      {"Quit Tolerance (%)",        0,  100, 'f', "QTOL_OSC"},
+      {"Rot. Tolerance (deg)",      0,   90, 'f', "RTOL_OSC"}
     }
   },
   {COMMAND(osc_hold_current), "set OSC stepper motor hold current",
     GR_OSC_HOUSE, 1,
     {
-      {"Level (%)", 0, 50, 'i', "OSC_HOLD_I"}
+      {"Level (%)", 0, 50, 'i', "I_HOLD_OSC"}
     }
   },
   {COMMAND(osc_gain), "set CCD preamp gain and offset", GR_OSC_PARAM, 2,
     {
-      {"Gain", 0.1, 100, 'f', "OSC_CCD_GAIN"},
-      {"Offset", -4096, 4096, 'i', "OSC_CCD_OFFSET"}
+      {"Gain", 0.1, 100, 'f', "GAIN_OSC"},
+      {"Offset", -4096, 4096, 'i', "OFFSET_OSC"}
     }
   },
   {COMMAND(osc_max_age), "set maximum delay between trigger and solution (ms)", GR_OSC_PARAM, 1,
     {
-      {"Max Age", 0, MAX_15BIT, 'i', "OSC_MAX_AGE"},
+      {"Max Age", 0, MAX_15BIT, 'i', "MAX_AGE_OSC"},
     }
   },
   {COMMAND(motors_verbose), "Set verbosity of motor serial threads (0=norm, 1=verbose, 2= superverbose )", GR_MISC, 3,

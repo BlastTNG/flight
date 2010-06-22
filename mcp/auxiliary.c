@@ -398,67 +398,6 @@ void ChargeController(void)
   WriteData(AlarmLoCCAddr, ChrgCtrlData.alarm_field_lo, NIOS_QUEUE);
   WriteData(ChargeCCAddr, ChrgCtrlData.charge_state, NIOS_QUEUE);
 
-  /* original code for BLAST06 MEER charge controller follows */
-
-  /*  static struct NiosStruct *apcuRegAddr;
-  static struct NiosStruct *apcuTrimAddr;
-  static struct NiosStruct *apcuAutoAddr;
-  static struct NiosStruct *dpcuRegAddr;
-  static struct NiosStruct *dpcuTrimAddr;
-  static struct NiosStruct *dpcuAutoAddr;
-  static struct BiPhaseStruct *tDasBatAddr, *tAcsBatAddr;
-  double apcu_control, T, V;
-  double dpcu_control;
-
-  static int firsttime = 1;
-  if (firsttime) {
-    firsttime = 0;
-    apcuRegAddr = GetNiosAddr("apcu_reg");
-    apcuTrimAddr = GetNiosAddr("apcu_trim");
-    apcuAutoAddr = GetNiosAddr("apcu_auto");
-    dpcuRegAddr = GetNiosAddr("dpcu_reg");
-    dpcuTrimAddr = GetNiosAddr("dpcu_trim");
-    dpcuAutoAddr = GetNiosAddr("dpcu_auto");
-    tDasBatAddr = GetBiPhaseAddr("t_batt_das");
-    tAcsBatAddr = GetBiPhaseAddr("t_batt_acs");
-  }
-
-  if (CommandData.apcu_auto) {
-    T = M_16T*( slow_data[tAcsBatAddr->index][tAcsBatAddr->channel] 
-	+ B_16T ) - 273.15;
-    if (T<-60) T = 50; // if disconnected, assume hot.
-    V = 30.18 - 0.0436*T - exp((T-29.0)*0.25) + CommandData.apcu_trim;
-    //apcu_control = (V - 28.0209)/0.02402664;
-    apcu_control = (V - 27.25)/0.0382;
-  } else {
-    //apcu_control = (CommandData.apcu_reg - 28.0209)/0.02402664;
-    apcu_control = (CommandData.apcu_reg - 27.25)/0.0382;
-  }
-
-  if (CommandData.dpcu_auto) {
-    T = M_16T*( slow_data[tDasBatAddr->index][tDasBatAddr->channel] 
-	+ B_16T ) - 273.15;
-    if (T<-60) T = 50; // if disconnected, assume hot.
-    V = 30.18 - 0.0436*T - exp((T-29.0)*0.25) + CommandData.dpcu_trim;
-    //dpcu_control = (V - 28.0209)/0.02402664;
-    dpcu_control = (V - 27.25)/0.0382;
-  } else {
-    //dpcu_control = (CommandData.dpcu_reg - 28.0209)/0.02402664;
-    dpcu_control = (CommandData.dpcu_reg - 27.25)/0.0382;
-  }
-
-  if (apcu_control>100) apcu_control = 100;
-  if (apcu_control<0) apcu_control = 0;
-  if (dpcu_control>100) dpcu_control = 100;
-  if (dpcu_control<0) dpcu_control = 0;
-
-  WriteData(apcuRegAddr, (int)apcu_control, NIOS_QUEUE);
-  WriteData(apcuTrimAddr, CommandData.apcu_trim*100.0, NIOS_QUEUE);
-  WriteData(apcuAutoAddr, CommandData.apcu_auto, NIOS_QUEUE);
-  WriteData(dpcuRegAddr, (int)dpcu_control, NIOS_QUEUE);
-  WriteData(dpcuTrimAddr, CommandData.dpcu_trim*100.0, NIOS_QUEUE);
-  WriteData(dpcuAutoAddr, CommandData.dpcu_auto, NIOS_FLUSH);*/
-
 }
 
 /*********************/
