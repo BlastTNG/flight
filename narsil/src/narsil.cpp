@@ -77,7 +77,7 @@
 #define PADDING 3
 #define SPACING 3
 
-#define DEF_CURFILE CUR_DIR "/defile.cur.lnk"
+#define DEF_CURFILE CUR_DIR "/defile.lnk"
 #define LOGFILE DATA_ETC_NARSIL_DIR "/log.txt"
 #define LOGFILEDIR DATA_ETC_NARSIL_DIR "/log/"
 
@@ -282,7 +282,7 @@ void MainForm::ChooseCommand() {
                 client_mcommands[index].params[i].field);
           } else {
             int nf;
-            if ((nf = _dirfile->NFrames())>0) {
+            if ((nf = _dirfile->NFrames())>0) {	      
               if (_dirfile->GetData( client_mcommands[index].params[i].field,
                   nf-1, 0, 0, 1, // 1 sample from frame nf-1
                   Float64, (void*)(&indata))==0) {
