@@ -224,12 +224,14 @@ struct PointingDataStruct {
   double ss_az_rel_sun;
   double sun_az; // degrees current calculated az of sun
   double sun_el; // degrees current calculated el of sun
-  double pss1_az; //degrees
-  double pss1_el; //degrees
-  double pss1_snr; //degrees
-  double pss2_az; //degrees
-  double pss2_el; //degrees
-  double pss2_snr; //degrees
+  double pss1_azraw; //degrees
+  double pss1_elraw; //degrees
+  double pss1_snr;
+  double pss1_az;  //degrees
+  double pss2_azraw; //degrees
+  double pss2_elraw; //degrees
+  double pss2_snr;
+  double pss2_az;   //degrees
   double isc_az; // degrees
   double isc_el; // degrees
   double isc_sigma; // degrees

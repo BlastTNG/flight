@@ -321,7 +321,7 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 #define  PSS1_ALPHA 25.
 #define  PSS1_PSI   0.
 
-static int PSS1Convert(double *pss1_az, double *pss1_el) {
+static int PSS1Convert(double *azraw_pss1, double *elraw_pss1) {
 
   int           i_point;
   double        sun_ra, sun_dec, jd;
@@ -431,7 +431,7 @@ static int PSS1Convert(double *pss1_az, double *pss1_el) {
 
   az = -atan(u3[0]/u3[2]);                // az is in radians
 
-  *pss1_az = sun_az - (180./M_PI)*az;
+  *azraw_pss1 = sun_az - (180./M_PI)*az;
 
   gsl_matrix_set(ryaz, 0, 1, cos(az));  gsl_matrix_set(ryaz, 0, 1, 0.);  gsl_matrix_set(ryaz, 0, 2, sin(az));
   gsl_matrix_set(ryaz, 1, 0, 0);        gsl_matrix_set(ryaz, 1, 1, 1.);  gsl_matrix_set(ryaz, 1, 2, 0.);
@@ -447,10 +447,13 @@ static int PSS1Convert(double *pss1_az, double *pss1_el) {
         + gsl_matrix_get(ryaz, 2, 1)*u3[1]
         + gsl_matrix_get(ryaz, 2, 2)*u3[2];
 
-  *pss1_el = (180./M_PI)*atan(u4[1]/u4[2]);
+  *elraw_pss1 = (180./M_PI)*atan(u4[1]/u4[2]);
 
-  NormalizeAngle(pss1_az);
-  NormalizeAngle(pss1_el);
+  NormalizeAngle(azraw_pss1);
+  NormalizeAngle(elraw_pss1);
+
+  PointingData[point_index].pss1_azraw = *azraw_pss1;
+  PointingData[point_index].pss1_elraw = *elraw_pss1;
 
   gsl_matrix_free(rot);
   gsl_matrix_free(rot2);
@@ -475,7 +478,7 @@ static int PSS1Convert(double *pss1_az, double *pss1_el) {
 #define  PSS2_ALPHA   25.
 #define  PSS2_PSI    -10.
 
-static int PSS2Convert(double *pss2_az, double *pss2_el) {
+static int PSS2Convert(double *azraw_pss2, double *elraw_pss2) {
 
   int           i_point;
   double        sun_ra, sun_dec, jd;
@@ -511,7 +514,7 @@ static int PSS2Convert(double *pss2_az, double *pss2_el) {
   y = PSS2_YSTRETCH*(PSS2_L/2.)*((i2+i4)-(i1+i3))/itot;
 
   if ((fabs(x) > 4.) | (fabs(y) > 4.)) {
-    PointingData[point_index].pss1_snr = 0.1;
+    PointingData[point_index].pss2_snr = 0.1;
     return(0);
   }
 
@@ -586,7 +589,7 @@ static int PSS2Convert(double *pss2_az, double *pss2_el) {
 
   az = -atan(u3[0]/u3[2]) - M_PI;
 
-  *pss2_az = sun_az - (180./M_PI)*az;    // az is in radians
+  *azraw_pss2 = sun_az - (180./M_PI)*az;    // az is in radians
 
   gsl_matrix_set(ryaz, 0, 1, cos(az));  gsl_matrix_set(ryaz, 0, 1, 0.);  gsl_matrix_set(ryaz, 0, 2, sin(az));
   gsl_matrix_set(ryaz, 1, 0, 0);        gsl_matrix_set(ryaz, 1, 1, 1.);  gsl_matrix_set(ryaz, 1, 2, 0.);
@@ -602,10 +605,13 @@ static int PSS2Convert(double *pss2_az, double *pss2_el) {
         + gsl_matrix_get(ryaz, 2, 1)*u3[1]
         + gsl_matrix_get(ryaz, 2, 2)*u3[2];
 
-  *pss2_el = (180./M_PI)*atan(u4[1]/u4[2]);
+  *elraw_pss2 = (180./M_PI)*atan(u4[1]/u4[2]);
 
-  NormalizeAngle(pss2_az);
-  NormalizeAngle(pss2_el);
+  NormalizeAngle(azraw_pss2);
+  NormalizeAngle(elraw_pss2);
+
+  PointingData[point_index].pss2_azraw = *azraw_pss2;
+  PointingData[point_index].pss2_elraw = *elraw_pss2;
 
   gsl_matrix_free(rot);
   gsl_matrix_free(rot2);
@@ -1879,6 +1885,7 @@ void Pointing(void)
   // Added 22 June 2010 GT
   PointingData[point_index].pss1_az = PSS1Az.angle;
   //PointingData[point_index].pss2_az = PSS2Az.angle;
+
 
   PointingData[point_index].isc_az = ISCAz.angle;
   PointingData[point_index].isc_el = ISCEl.angle;

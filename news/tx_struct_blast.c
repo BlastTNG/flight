@@ -730,8 +730,15 @@ struct ChannelStruct SlowChannels[] = {
   {"goal_1_act",   'w',   LOOP8, 24,                1.0,             0.0, 's', U_NONE},
   {"goal_2_act",   'w',   LOOP8, 25,                1.0,             0.0, 's', U_NONE},
 
-  {"az_pss1",      'w',   LOOP8, 26,              I2DEG,             0.0, 'u', U_P_DEG},
-  /* LOOP8 26-63 are unused */
+  {"azraw_pss1",   'w',   LOOP8, 26,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"elraw_pss1",   'w',   LOOP8, 27,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"snr_pss1",     'w',   LOOP8, 28,              1/1000.,             0.0, 'u', U_NONE},
+  {"az_pss1",      'w',   LOOP8, 29,              I2DEG,             0.0, 'u', U_P_DEG},
+  //{"azraw_pss2",   'w',   LOOP8, 30,              I2DEG,             0.0, 'u', U_P_DEG},
+  //{"elraw_pss2",   'w',   LOOP8, 31,              I2DEG,             0.0, 'u', U_P_DEG},
+  //{"snr_pss2",     'w',   LOOP8, 32,            1/1000.,             0.0, 'u', U_NONE},
+  //{"az_pss2",      'w',   LOOP8, 33,              I2DEG,             0.0, 'u', U_P_DEG},
+  /* LOOP8 34-63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
