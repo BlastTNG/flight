@@ -647,7 +647,7 @@ int cosa_f (const gsl_vector *x, void *sss_fit_data, gsl_vector *f) {
   double  C;
   double  phi0;
   int     i;
-  double  Yi;
+  double  yy, Yi;
 
   t = ((struct sss_fit_data *)sss_fit_data)->t;
   y = ((struct sss_fit_data *)sss_fit_data)->y;
@@ -657,7 +657,9 @@ int cosa_f (const gsl_vector *x, void *sss_fit_data, gsl_vector *f) {
   phi0 = gsl_vector_get(x,1);
 
   for (i = 0; i < 3; i++) {
-    Yi = C * pow(cos(phi0 - t[i]), SSS_ALPHA);
+    yy = cos(t[i]-phi0);
+    if (yy < 0.) return((int)GSL_ERANGE);
+    Yi = C * pow(yy, SSS_ALPHA);
     gsl_vector_set (f, i, (Yi - y[i])/sigma[i]);
   }
 
@@ -673,7 +675,7 @@ int cosa_df (const gsl_vector *x, void *sss_fit_data, gsl_matrix *J) {
   double  phi0;
   int     i;
   double  s;
-  double  e, f;
+  double  e, f, g;
 
   t = ((struct sss_fit_data *)sss_fit_data)->t;
   sigma = ((struct sss_fit_data *)sss_fit_data)->sigma;
@@ -688,9 +690,10 @@ int cosa_df (const gsl_vector *x, void *sss_fit_data, gsl_matrix *J) {
      // and the xj parameters are (C, phi0)
      s = sigma[i];
      f = cos(phi0-t[i]);
-     e = pow(f, SSS_ALPHA);
+     e = pow(f, SSS_ALPHA-1.);
+     g = sin(t[i]-phi0);
      gsl_matrix_set (J, i, 0, e/s);
-     gsl_matrix_set (J, i, 1, C*e*log(f)/s );   
+     gsl_matrix_set (J, i, 1, C*SSS_ALPHA*e*g/s );   
   }
 
 return((int)GSL_SUCCESS);
@@ -830,9 +833,9 @@ static int SSConvert(double *ss_az)
   sensor_uint[11] = SunSensorData[i_ss].m12;
 
   /* calibrate modules and determine module with max intensity */
-  max = 0;  //max sensor value.
-  ave = 0;
-  min = 1e300;
+  max = 0.;  //max sensor value.
+  ave = 0.;
+  min = 1.e300;
   i_max = -1;
   for (i = 0; i < SS_N_MAX; i++) {
     sensors[i] = module_calibration[i] * (double)sensor_uint[i];
@@ -860,12 +863,15 @@ static int SSConvert(double *ss_az)
 
   // Start to set up fit to cos^alpha function
   // Not "t" is really "x, but we are following a gsl prototype which uses "t"
-  d.t[0] = -module_correction[(i_max + 12 - 1) % 12] - M_PI / 6.;
-  d.t[1] = -module_correction[i_max];
-  d.t[2] = -module_correction[(i_max + 12 + 1) % 12] + M_PI / 6.;
+  d.t[0] = (M_PI/180.)*(module_correction[(i_max + 12 - 1) % 12] - 30.);
+  d.t[1] = (M_PI/180.)*module_correction[i_max];
+  d.t[2] = (M_PI/180.)*(module_correction[(i_max + 12 + 1) % 12] + 30.);
   d.y[0] = sensors[(i_max + 12 - 1) % 12];
   d.y[1] = sensors[i_max];
   d.y[2] = sensors[(i_max + 12 + 1) % 12];
+  d.sigma[0] = 1.;
+  d.sigma[1] = 1.;
+  d.sigma[2] = 1.;
 
   // Software tape
   // This takes cares of discarding signal when sun is in the gondola shadow
@@ -903,9 +909,9 @@ static int SSConvert(double *ss_az)
   //}
 
   // Fit the data to the cos fitting function using gsl library
-  covar = gsl_matrix_alloc(3, 3);
+  covar = gsl_matrix_alloc(2, 2);
   x_init[0] = sensors[i_max];  // initial guess for C
-  x_init[1] = PointingData[i_point].mag_model;  // initial guess of phi0.  Note: This is not quite right
+  x_init[1] = 0.;  // 0 is a good initial guess for the angle
   x = gsl_vector_view_array (x_init, 2);
   gsl_rng_env_setup();
   type = gsl_rng_default;
@@ -1870,6 +1876,9 @@ void Pointing(void)
   PointingData[point_index].dgps_sigma = sqrt(DGPSAz.varience + DGPSAz.sys_var);
   PointingData[point_index].ss_az = SSAz.angle;
   PointingData[point_index].ss_sigma = sqrt(SSAz.varience + SSAz.sys_var);
+  // Added 22 June 2010 GT
+  PointingData[point_index].pss1_az = PSS1Az.angle;
+  //PointingData[point_index].pss2_az = PSS2Az.angle;
 
   PointingData[point_index].isc_az = ISCAz.angle;
   PointingData[point_index].isc_el = ISCEl.angle;

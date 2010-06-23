@@ -796,6 +796,8 @@ static void StoreData(int index)
   static struct NiosStruct* dgpsRollAddr;
   static struct NiosStruct* dgpsSigmaAddr;
   static struct NiosStruct* azSsAddr;
+  //static struct NiosStruct* azPss1Addr;
+  //static struct NiosStruct* azPss2Addr;
   static struct NiosStruct* sigmaSsAddr;
   static struct NiosStruct* azSunAddr;
   static struct NiosStruct* elSunAddr;
@@ -952,6 +954,8 @@ static void StoreData(int index)
     azSunAddr = GetNiosAddr("az_sun");
     elSunAddr = GetNiosAddr("el_sun");
     trimSsAddr = GetNiosAddr("trim_ss");
+    //azPss1Addr = GetNiosAddr("az_pss1");
+    //azPss2Addr = GetNiodAddr("az_pss2");
     modeCalAddr = GetNiosAddr("mode_cal");
     periodCalAddr = GetNiosAddr("period_cal");
     azIscAddr = GetNiosAddr("az_isc");
