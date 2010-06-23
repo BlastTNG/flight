@@ -729,6 +729,8 @@ struct ChannelStruct SlowChannels[] = {
   {"goal_0_act",   'w',   LOOP8, 23,                1.0,             0.0, 's', U_NONE},
   {"goal_1_act",   'w',   LOOP8, 24,                1.0,             0.0, 's', U_NONE},
   {"goal_2_act",   'w',   LOOP8, 25,                1.0,             0.0, 's', U_NONE},
+
+  {"az_pss1",      'w',   LOOP8, 26,              I2DEG,             0.0, 'u', U_P_DEG},
   /* LOOP8 26-63 are unused */
 
 #ifndef BOLOTEST

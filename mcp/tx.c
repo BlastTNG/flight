@@ -796,7 +796,7 @@ static void StoreData(int index)
   static struct NiosStruct* dgpsRollAddr;
   static struct NiosStruct* dgpsSigmaAddr;
   static struct NiosStruct* azSsAddr;
-  //static struct NiosStruct* azPss1Addr;
+  static struct NiosStruct* azPss1Addr;
   //static struct NiosStruct* azPss2Addr;
   static struct NiosStruct* sigmaSsAddr;
   static struct NiosStruct* azSunAddr;
@@ -954,7 +954,7 @@ static void StoreData(int index)
     azSunAddr = GetNiosAddr("az_sun");
     elSunAddr = GetNiosAddr("el_sun");
     trimSsAddr = GetNiosAddr("trim_ss");
-    //azPss1Addr = GetNiosAddr("az_pss1");
+    azPss1Addr = GetNiosAddr("az_pss1");
     //azPss2Addr = GetNiodAddr("az_pss2");
     modeCalAddr = GetNiosAddr("mode_cal");
     periodCalAddr = GetNiosAddr("period_cal");
@@ -1120,6 +1120,8 @@ static void StoreData(int index)
   WriteData(Raw12SsAddr, SunSensorData[i_ss].m12, NIOS_QUEUE);
   WriteData(azRelSunSsAddr, PointingData[i_point].ss_az_rel_sun * DEG2I,
       NIOS_QUEUE);
+  /********* PSS data *************/
+  WriteData(azPss1Addr, PointingData[i_point].pss1_az * DEG2I, NIOS_QUEUE);
   /********** SIP GPS Data **********/
   WriteData(latSipAddr, (int)(SIPData.GPSpos.lat*DEG2I), NIOS_QUEUE);
   WriteData(lonSipAddr, (int)(SIPData.GPSpos.lon*DEG2I), NIOS_QUEUE);
