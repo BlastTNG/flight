@@ -896,17 +896,46 @@ void ActuatorBus(void)
   int poll_timeout = POLL_TIMEOUT;
   int all_ok = 0;
   int i;
+  int j=0; // Used for debugging print statements.  Delete later.
   int my_cindex = 0;
   int caddr_match = 0;
+  int is_init = 0;
+  int first_time=1;
+
 
   nameThread("ActBus");
   bputs(startup, "ActuatorBus startup.");
 
-  //temporary partian fix to NIC problems
-  while (!InCharge) usleep(1000000);
-
-  if (EZBus_Init(&bus, ACT_BUS, "", ACTBUS_CHATTER) != EZ_ERR_OK)
-    berror(tfatal, "failed to connect");
+  while (!InCharge) {
+    if (first_time) {
+      bprintf(info,"Not in charge.  Waiting.");
+      first_time = 0;
+    }
+    usleep(1000000);
+    CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining
+                                              control */
+    SetLockState(1); /* to ensure the NiC MCC knows the pin state */
+      //CopyActuators(); /* let the NiC MCC know what's going on */
+    CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
+    CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing 
+                                                twice if we switch to ICC */
+  }
+  first_time = 1;
+  while (!is_init) {
+    if (first_time) {
+      bprintf(info,"In Charge! Attempting to initalize.");
+      first_time = 0;
+    }
+    if (EZBus_Init(&bus, ACT_BUS, "", ACTBUS_CHATTER) == EZ_ERR_OK)
+      is_init = 1;
+    usleep(10000);
+    if(j%10==0 && is_init==0) {
+      bprintf(info,"Attempt to initial # %i failed.",j);
+    } else if (is_init) {
+      bprintf(info,"Bus initialized on %ith attempt",j);
+    }
+    j++;
+  }
 
   for (i=0; i<NACT; i++) {
     EZBus_Add(&bus, id[i], name[i]);
@@ -918,32 +947,22 @@ void ActuatorBus(void)
   all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
 
   for (;;) {
-    while (!InCharge) { /* NiC MCC traps here */
-      CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining
-                                              control */
-      EZBus_Recv(&bus);
-      SetLockState(1); /* to ensure the NiC MCC knows the pin state */
-      //CopyActuators(); /* let the NiC MCC know what's going on */
-      CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
-      /* no need to sleep -- BusRecv does that for us */
-      CommandData.actbus.caddr[my_cindex] = 0;
-    }
-
     /* Repoll bus if necessary */
     if (CommandData.actbus.force_repoll) {
+      //      bprintf(info,"I'm going to repoll!");
       for (i=0; i<NACT; i++)
 	EZBus_ForceRepoll(&bus, id[i]);
       poll_timeout = POLL_TIMEOUT;
       all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
       CommandData.actbus.force_repoll = 0;
     }
-
+    
     if (poll_timeout == 0 && !all_ok) {
       all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
       poll_timeout = POLL_TIMEOUT;
     } else if (poll_timeout > 0)
       poll_timeout--;
-
+    
     /* Send the uplinked command, if any */
     my_cindex = GETREADINDEX(CommandData.actbus.cindex);
     caddr_match = 0;
@@ -951,21 +970,22 @@ void ActuatorBus(void)
       if (CommandData.actbus.caddr[my_cindex] == id[i]) caddr_match = 1;
     if (caddr_match) {
       bprintf(info, "Sending command %s to Act %c\n",
-	  CommandData.actbus.command[my_cindex], 
-	  CommandData.actbus.caddr[my_cindex]);
+	      CommandData.actbus.command[my_cindex], 
+	      CommandData.actbus.caddr[my_cindex]);
       //increase print level for uplinked manual commands
       bus.chatter = EZ_CHAT_BUS;
       EZBus_Comm(&bus, CommandData.actbus.caddr[my_cindex],
-	  CommandData.actbus.command[my_cindex], 0);
+		 CommandData.actbus.command[my_cindex], 0);
       CommandData.actbus.caddr[my_cindex] = 0;
       bus.chatter = ACTBUS_CHATTER;
     }
-
+    
     DoLock(); /* Lock motor stuff -- this will seize the bus until
-                 the lock motor's state has settled */
-
+		 the lock motor's state has settled */
+    
     DoActuators(); /* Actuator stuff -- this may seize the bus */
-
+    
     usleep(10000);
+    
   }
 }

@@ -107,6 +107,12 @@
 #define EZ_BUS_BUF_LEN	0x100
 #define EZ_BUS_NACT	16
 
+/* Number of Communication Errors before triggering a reconnect to the serial port */
+#define EZ_ERR_MAX  5
+
+/* These error bits set in ezstep->error increment the error count */
+#define EZ_ERR_MASK     0x0600    // EZ_ERR_TIMEOUT and EZ_ERR_TTY
+
 struct ezstep {
   unsigned short status;        //status field for each stepper
   char name[EZ_BUS_NAME_LEN];   //name of the stepper
@@ -127,6 +133,8 @@ struct ezbus {
   int chatter;			//verbosity of ezstep functions
   //TODO need to actually use this ezbus.error
   int error;			//most recent error code
+  int err_count;		//number of errors since we last successfully communicated 
+                                //with ezbus 
 };
 
 /* initialize a struct ezbus. Needed for all other EZbus funuctions
@@ -136,6 +144,12 @@ struct ezbus {
  * inhibit_chatter: chatter level
  */
 int EZBus_Init(struct ezbus* bus,const char *tty,const char* name,int chatter);
+
+/* Attempt to reset the serial connection to the stepper.
+ * Closes and re-opens the port, attempt to reinitialize.
+ * Returns 1 if it successfully reset or 0 if the reset failed.
+ */
+int EZBus_Reset(struct ezbus* bus, const char* tty);
 
 /* add a stepper at address 'who', called 'name' to poll list
  */

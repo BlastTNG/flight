@@ -141,16 +141,19 @@ static int ez_setserial(struct ezbus* bus, const char* input_tty)
 {
   int fd;
   struct termios term;
+  static int err_flag = 0;
 
   if ((fd = open(input_tty, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0) {
-    if (bus->chatter >= EZ_CHAT_ERR)
+    if (bus->chatter >= EZ_CHAT_ERR && err_flag == 0)
       berror(err, "%sUnable to open serial port (%s)", bus->name, input_tty);
+    err_flag = 1;
     return -1;
   }
 
   if (tcgetattr(fd, &term)) {
-    if (bus->chatter >= EZ_CHAT_ERR)
+    if (bus->chatter >= EZ_CHAT_ERR && err_flag == 0)
       berror(err, "%sUnable to get serial device attributes", bus->name);
+    err_flag = 1;
     return -1;
   }
 
@@ -170,23 +173,26 @@ static int ez_setserial(struct ezbus* bus, const char* input_tty)
   term.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
 
   if(cfsetospeed(&term, B9600)) {        /*  <======= SET THE SPEED HERE */
-    if (bus->chatter >= EZ_CHAT_ERR)
+    if (bus->chatter >= EZ_CHAT_ERR && err_flag == 0)
       berror(err, "%sError setting serial output speed", bus->name);
+    err_flag = 1;
     return -1;
   }
 
   if(cfsetispeed(&term, B9600)) {        /*  <======= SET THE SPEED HERE */
-    if (bus->chatter >= EZ_CHAT_ERR)
+    if (bus->chatter >= EZ_CHAT_ERR && err_flag == 0)
       berror(err, "%sError setting serial input speed", bus->name);
+    err_flag = 1;
     return -1;
   }
 
   if( tcsetattr(fd, TCSANOW, &term) ) {
-    if (bus->chatter >= EZ_CHAT_ERR)
+    if (bus->chatter >= EZ_CHAT_ERR && err_flag == 0)
       berror(err, "%sUnable to set serial attributes", bus->name);
+    err_flag = 1;
     return -1;
   }
-
+  err_flag = 0;
   return fd;
 }
 
@@ -303,13 +309,22 @@ int EZBus_Send(struct ezbus *bus, char who, const char* what)
   }
   if (write(bus->fd, buffer, len) < 0) {
     if (bus->chatter >= EZ_CHAT_ERR)
-      berror(err, "%sError writing on bus", bus->name);
+      berror(err, "%sError writing on bus. File descriptor = %i", bus->name,bus->fd);
     retval |= EZ_ERR_TTY;
   }
 
   free(buffer);
 
-  return retval;
+  // Was there a serial error?  If so increment err_count.
+  if((retval & EZ_ERR_MASK) > 0) {
+    bus->err_count++;
+    if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Send: Serial error madness! err_count=%i",bus->err_count);
+  } else {
+    bus->err_count = 0;
+    if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Send: No serial error! Resetting error count to 0.");
+  }
+
+  return (bus->error=retval);
 }
 
 #define EZ_BUS_RECV_ABORT 3000000 /* state for general parsing abort */
@@ -454,7 +469,16 @@ int EZBus_Recv(struct ezbus* bus)
     free(hex_buffer);
   }
 
-  return retval;
+  // Was there a serial error?  If so increment err_count.
+  if((retval & EZ_ERR_MASK) > 0) {
+    bus->err_count++;
+    if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Recv: Serial error madness! err_count=%i",bus->err_count);
+  } else {
+    bus->err_count = 0;
+    if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Recv: No serial error! Resetting error count to 0.");
+  }
+
+  return (bus->error=retval);
 }
 
 int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive)
@@ -531,8 +555,18 @@ int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive)
       }
     }
   } while (!ok && !naive);
+  
 
-  return retval;
+  // Was there a serial error?  If so increment err_count.
+  if((retval & EZ_ERR_MASK) > 0) {
+    bus->err_count++;
+    if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Comm: Serial error madness! err_count=%i",bus->err_count);
+  } else {
+    bus->err_count = 0;
+    if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Comm: No serial error! Resetting error count to 0.");
+  }
+
+  return (bus->error=retval);
 }
 
 int EZBus_ReadInt(struct ezbus* bus, char who, const char* what, int* val)
