@@ -929,9 +929,7 @@ void ActuatorBus(void)
     if (EZBus_Init(&bus, ACT_BUS, "", ACTBUS_CHATTER) == EZ_ERR_OK)
       is_init = 1;
     usleep(10000);
-    if(j%10==0 && is_init==0) {
-      bprintf(info,"Attempt to initial # %i failed.",j);
-    } else if (is_init) {
+    if (is_init) {
       bprintf(info,"Bus initialized on %ith attempt",j);
     }
     j++;
