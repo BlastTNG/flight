@@ -17,7 +17,7 @@
 #define OMNI_BYTES_PER_FRAME (6000/9 * FASTFRAME_PER_FRAME/SR)
 #define HIGAIN_BYTES_PER_FRAME (93000/8 * FASTFRAME_PER_FRAME/SR)
 
-#define OMNI_TTY "/dev/ttySI2"
+#define HIGAIN_TTY "/dev/ttySI2"
 
 
 void nameThread(const char*);               /* mcp.c */
@@ -26,16 +26,21 @@ extern char *frameList[];
 extern struct fieldStreamStruct streamList[];
 extern short int InCharge;
 
-static int OpenOmniSerial(void)
-{
+static int OpenHiGainSerial(void) {
+  static int report_state = -1; // -1 = no reports.  0 == reported error.  1 == reported success
   int fd;
   struct termios term;
 
-  if ((fd = open(OMNI_TTY, O_RDWR | O_NOCTTY)) < 0)
-    berror(tfatal, "Unable to open omni tdrss serial port");
+  if ((fd = open(HIGAIN_TTY, O_RDWR | O_NOCTTY)) < 0) {
+    if (report_state!=0) {
+      bprintf(err, "Could not open tdrss higaini serial port.  Retrying...");
+      report_state = 0;
+    }
+    return (fd);
+  }
 
   if (tcgetattr(fd, &term))
-    berror(tfatal, "Unable to get omni tdrss serial device attributes");
+    berror(tfatal, "Unable to get higain tdrss serial device attributes");
 
   term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
   term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
@@ -49,32 +54,34 @@ static int OpenOmniSerial(void)
 
   cfmakeraw(&term);
    
-  if (cfsetospeed(&term, B19200))
-    berror(tfatal, "Error setting omni tdrss serial output speed");
+  if (cfsetospeed(&term, B115200))
+    berror(tfatal, "Error setting higain tdrss serial output speed");
 
-  if (cfsetispeed(&term, B19200))
-    berror(tfatal, "Error setting omni tdrss serial input speed");
+  if (cfsetispeed(&term, B115200))
+    berror(tfatal, "Error setting higain tdrss serial input speed");
 
   if (tcsetattr(fd, TCSANOW, &term))
-    berror(tfatal, "Unable to set omni tdrss serial attributes");
+    berror(tfatal, "Unable to set higain tdrss serial attributes");
 
+  if (report_state!=1) {
+    bprintf(info, "TDRSS higain serial port opened");
+    report_state = 1;
+  }
+  
   return fd;
 }
 
-void writeOmniData(char *x, int size) {
-  static int first_time = 1;
-  static int fp;
+void writeHiGainData(char *x, int size) {
+  static int fp = -1;
   
-  if (first_time) {
-    first_time = 0;
-    fp = OpenOmniSerial();
-    //fp = open("/tmp/tmp.dat", O_RDWR | O_CREAT | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO );
+  if (fp < 0) {
+    fp = OpenHiGainSerial();
   }
 
-  if (write(fp, x, size)!=size) {
-    close(fp);
-    first_time = 1;
-    bprintf(err, "incomplete write...");
+  if (fp>=0) {
+    if (write(fp, x, size)!=size) {
+      close(fp);
+    }
   }
 }
 
@@ -92,9 +99,7 @@ void CompressionWriter() {
   struct NiosStruct **frameNiosList;
   struct BiPhaseStruct **frameBi0List;
   
-  //int bytesPerFrame[N_PORTS] = {OMNI_BYTES_PER_FRAME};
-  
-  nameThread("COMP");
+  nameThread("DOWN");
 
   bputs(startup, "Startup.\n");
 
@@ -126,7 +131,7 @@ void CompressionWriter() {
         frame_bytes_written = 0;
        
         x=SYNCWORD;
-       writeOmniData((char *)(&x), 4);
+        writeHiGainData((char *)(&x), 4);
        
         // write static frame
         for (i_field = 0; i_field<n_framelist; i_field++) {
@@ -150,7 +155,7 @@ void CompressionWriter() {
               }
             }
             size = (1 + isWide)*sizeof(unsigned short);
-            writeOmniData((char*)&x, size);
+            writeHiGainData((char*)&x, size);
             
             frame_bytes_written += size;
         }
