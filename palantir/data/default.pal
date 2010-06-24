@@ -1220,12 +1220,6 @@
     <NUMBER caption="T Batt 2">
       <DATUM format="%.2f" src="T_2_BAT" extrema="battemp"/>
     </NUMBER>
-    <NUMBER caption="T Batt 3">
-      <DATUM format="%.2f" src="T_3_BAT" extrema="battemp"/>
-    </NUMBER>
-    <NUMBER caption="T Batt 4">
-      <DATUM format="%.2f" src="T_4_BAT" extrema="battemp"/>
-    </NUMBER>
   </BOX>
   <BOX caption="Pressures/Cooling" colour="#777700" row="2" col="5">
     <NUMBER caption="P ISC (psi)">
