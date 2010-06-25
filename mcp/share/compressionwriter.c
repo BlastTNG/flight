@@ -28,6 +28,13 @@ extern char *frameList[];
 extern struct fieldStreamStruct streamList[];
 extern short int InCharge;
 
+int n_framelist;
+struct NiosStruct **frameNiosList;
+struct BiPhaseStruct **frameBi0List;
+struct NiosStruct **streamNiosList;
+struct BiPhaseStruct **streamBi0List;
+struct streamDataStruct *streamData;
+
 static int OpenHiGainSerial(void) {
   static int report_state = -1; // -1 = no reports.  0 == reported error.  1 == reported success
   int fd;
@@ -87,9 +94,47 @@ void writeHiGainData(char *x, int size) {
   }
 }
 
+int processSuperframe(int readindex) {
+  int frame_bytes_written = 0;
+  int i_field;
+  int isWide;
+  unsigned x;
+  int size;
+
+  x=SYNCWORD;
+  writeHiGainData((char *)(&x), 4);
+
+  // write superframe data
+  for (i_field = 0; i_field<n_framelist; i_field++) {
+    if (frameNiosList[i_field]->fast) {
+      if (frameNiosList[i_field]->wide) {
+        isWide = 1;
+        x = (unsigned int)tdrss_data[readindex][frameBi0List[i_field]->channel] +
+        ((unsigned int)tdrss_data[readindex][frameBi0List[i_field]->channel+1] << 16);
+      } else {
+        isWide = 0;
+        x = tdrss_data[readindex][frameBi0List[i_field]->channel];
+      }
+    } else { // slow
+      if (frameNiosList[i_field]->wide) {
+        isWide = 1;
+        x = (unsigned int)slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel] +
+        ((unsigned int)slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel+1] <<16);
+      } else {
+        isWide = 0;
+        x = slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel];
+      }
+    }
+    size = (1 + isWide)*sizeof(unsigned short);
+    writeHiGainData((char*)&x, size);
+
+    frame_bytes_written += size;
+  }
+  return(frame_bytes_written);
+}
+
 void CompressionWriter() {
   int readindex, lastreadindex = 2;
-  int n_framelist;
   int n_streamlist;
   int n_higainstream = -1;
   int n_omnistream = -1;
@@ -106,12 +151,6 @@ void CompressionWriter() {
   int higain_bytes_per_streamframe = -1;
   int omni_bytes_per_streamframe = -1;
   int dialup_bytes_per_streamframe = -1;
-  
-  struct NiosStruct **frameNiosList;
-  struct BiPhaseStruct **frameBi0List;
-  struct NiosStruct **streamNiosList;
-  struct BiPhaseStruct **streamBi0List;
-  struct streamDataStruct *streamData;
   
   nameThread("DOWN");
 
@@ -161,37 +200,8 @@ void CompressionWriter() {
       // Process the superframe 
       if ((i_fastframe) % FASTFRAME_PER_SUPERFRAME ==0) {
         i_fastframe = 0;
-        frame_bytes_written = 0;
-       
-        x=SYNCWORD;
-        writeHiGainData((char *)(&x), 4);
-       
-        // write superframe data
-        for (i_field = 0; i_field<n_framelist; i_field++) {
-            if (frameNiosList[i_field]->fast) {
-              if (frameNiosList[i_field]->wide) {
-                isWide = 1;
-                x = (unsigned int)tdrss_data[readindex][frameBi0List[i_field]->channel] +
-                  ((unsigned int)tdrss_data[readindex][frameBi0List[i_field]->channel+1] << 16);
-              } else {
-                isWide = 0;
-                x = tdrss_data[readindex][frameBi0List[i_field]->channel];
-              }
-            } else { // slow
-              if (frameNiosList[i_field]->wide) {
-                isWide = 1;
-                x = (unsigned int)slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel] + 
-                  ((unsigned int)slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel+1] <<16);
-              } else {
-                isWide = 0;
-                x = slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel];
-              }
-            }
-            size = (1 + isWide)*sizeof(unsigned short);
-            writeHiGainData((char*)&x, size);
-            
-            frame_bytes_written += size;
-        }
+        frame_bytes_written = processSuperframe(readindex);
+        
         if (higain_bytes_per_streamframe <0) {
           higain_bytes_per_streamframe = (HIGAIN_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
           omni_bytes_per_streamframe = (OMNI_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
