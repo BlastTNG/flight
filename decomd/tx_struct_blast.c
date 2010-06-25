@@ -825,12 +825,28 @@ struct ChannelStruct SlowChannels[] = {
   {"bits_bal",    'w',   ACS2_D, 28,                1.0,             0.0, 'u', U_NONE},
 
 /* ACS2 Analog card */
+  {"roll_pyr_clin",'r',  ACS2_A1,  1,     -4.0/5333.3333,        4.*6.144, 'u', U_NONE},
+  {"pch_pyr_clin", 'r',  ACS2_A1,  3,      4.0/5333.3333,       -4.*6.144, 'u', U_NONE},
   {"t_pyr_clin",   'r',  ACS2_A1,  5,           -0.01875,           614.4, 'u', U_NONE},
+  {"el_raw_if_clin",'r',  ACS2_A1,  7,         0.00546739,         -133.78, 'u', U_NONE},
+  {"xel_if_clin",  'r',  ACS2_A1,  9,         0.00546739,      -25.*6.144, 'u', U_NONE},
   {"t_if_clin",    'r',  ACS2_A1, 11,           -0.01875,           614.4, 'u', U_NONE},
+  {"x_mag",        'r',  ACS2_A1, 13,              MAGX_M,         MAGX_B, 'u', U_NONE},
+  {"y_mag",        'r',  ACS2_A1, 15,              MAGY_M,         MAGY_B, 'u', U_NONE},
+  {"z_mag",        'r',  ACS2_A1, 17,              MAGZ_M,         MAGZ_B, 'u', U_NONE},
   {"ifpm_hall",    'r',  ACS2_A1, 19,                1.0,             0.0, 'u', U_NONE},
   {"lvdt_65_act",  'r',  ACS2_A1, 21,   LVDT65_ADC_TO_ENC,     LVDT65_ZERO,   'u', U_NONE},
   {"lvdt_63_act",  'r',  ACS2_A1, 23,   LVDT63_ADC_TO_ENC,     LVDT63_ZERO,   'u', U_NONE},
   {"lvdt_64_act",  'r',  ACS2_A1, 25,   LVDT64_ADC_TO_ENC,     LVDT64_ZERO,   'u', U_NONE},
+  {"v1_1_pss",     'r',  ACS2_A1, 29,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v2_1_pss",     'r',  ACS2_A1, 31,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v3_1_pss",     'r',  ACS2_A1, 33,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v4_1_pss",     'r',  ACS2_A1, 35,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v1_2_pss",     'r',  ACS2_A1, 37,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v2_2_pss",     'r',  ACS2_A1, 39,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v3_2_pss",     'r',  ACS2_A1, 41,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v4_2_pss",     'r',  ACS2_A1, 43,           CAL16(-1.,            0.),  'u', U_V_V},
+
 
 #endif
 
@@ -884,63 +900,28 @@ struct ChannelStruct WideFastChannels[] = {
   {"az",          'w', LOOP2,   51,             LI2DEG,             0.0, 'U', U_P_DEG},
   {"el",          'w', LOOP2,   53,             LI2DEG,             0.0, 'U', U_P_DEG},
 
-  /* 25th channels of all the DAS cards, not currently used */
-#if 0
-  {"n17c25",      'r', DAS1_A1, 36,                1.0,             0.0, 'U', U_NONE},
-  {"n18c25",      'r', DAS1_A2, 36,                1.0,             0.0, 'U', U_NONE},
-  {"n19c25",      'r', DAS1_A3, 36,                1.0,             0.0, 'U', U_NONE},
-  {"n21c25",      'r', DAS2_A1, 36,                1.0,             0.0, 'U', U_NONE},
-  {"n22c25",      'r', DAS2_A2, 36,                1.0,             0.0, 'U', U_NONE},
-  {"n23c25",      'r', DAS2_A3, 36,                1.0,             0.0, 'U', U_NONE},
-  {"n25c25",      'r', DAS3_A1, 36,                1.0,             0.0, 'U', U_NONE},
-  {"n26c25",      'r', DAS3_A2, 36,                1.0,             0.0, 'U', U_NONE},
-  {"n27c25",      'r', DAS3_A3, 36,                1.0,             0.0, 'U', U_NONE},
-  {"n29c25",      'r', DAS4_A1, 36,                1.0,             0.0, 'U', U_NONE},
-  {"n30c25",      'r', DAS4_A2, 36,                1.0,             0.0, 'U', U_NONE},
-  {"n31c25",      'r', DAS4_A3, 36,                1.0,             0.0, 'U', U_NONE},
-#endif
-
   END_OF_CHANNELS
 };
 
 struct ChannelStruct FastChannels[] = {
 #ifndef BOLOTEST
 /* ACS1 Digital Card */
-  //TODO can heat_gy be made slow?
+  //TODO can heat_gy be made slow? Probably.
   {"heat_gy",      'w',  ACS1_D,  6,                1.0,             0.0, 'u', U_NONE},
 
-/* read channels from ACS1 */
-  {"ifroll_gy",    'r',  ACS2_D, 13, GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS,'u', U_V_DPS},
-  {"ifyaw_gy",     'r',  ACS2_D, 14, GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS,'u', U_V_DPS},
-  {"ifel_gy",      'r',  ACS2_D, 12, GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS,'u', U_V_DPS},
-
-/* ACS1 Digital Card */
+/* ACS2 Digital Card */
+  {"ifel_gy",      'r',   ACS2_D, 12,GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
+  {"ifroll_gy",    'r',   ACS2_D, 13,GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
+  {"ifyaw_gy",     'r',   ACS2_D, 14,GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
   {"trigger_isc",  'w',   ACS2_D, 11,                 1.0,            0.0, 'u', U_NONE},
   {"trigger_osc",  'w',   ACS2_D, 12,                 1.0,            0.0, 'u', U_NONE},
   {"vel_req_el",   'w',   ACS2_D, 22, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
   {"cos_el",       'w',   ACS2_D, 25,         1.0/32768.0,           -1.0, 'u', U_NONE},
   {"sin_el",       'w',   ACS2_D, 26,         1.0/32768.0,           -1.0, 'u', U_NONE},
   {"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
+  //TODO IS/?OSC pulses can be unified into a bitfield
   {"pulse_isc",    'r',   ACS2_D, 53,                 1.0,            0.0, 'u', U_NONE},
   {"pulse_osc",    'r',   ACS2_D, 54,                 1.0,            0.0, 'u', U_NONE},
-
-/* ACS2 Analog card */
-
-  {"roll_pyr_clin",'r',  ACS2_A1,  1,     -4.0/5333.3333,        4.*6.144, 'u', U_NONE},
-  {"pch_pyr_clin", 'r',  ACS2_A1,  3,      4.0/5333.3333,       -4.*6.144, 'u', U_NONE},
-  {"el_raw_if_clin",'r',  ACS2_A1,  7,         0.00546739,         -133.78, 'u', U_NONE},
-  {"xel_if_clin",  'r',  ACS2_A1,  9,         0.00546739,      -25.*6.144, 'u', U_NONE},
-  {"x_mag",        'r',  ACS2_A1, 13,              MAGX_M,         MAGX_B, 'u', U_NONE},
-  {"y_mag",        'r',  ACS2_A1, 15,              MAGY_M,         MAGY_B, 'u', U_NONE},
-  {"z_mag",        'r',  ACS2_A1, 17,              MAGZ_M,         MAGZ_B, 'u', U_NONE},
-  {"v1_1_pss",     'r',  ACS2_A1, 29,           CAL16(-1.,            0.),  'u', U_V_V},
-  {"v2_1_pss",     'r',  ACS2_A1, 31,           CAL16(-1.,            0.),  'u', U_V_V},
-  {"v3_1_pss",     'r',  ACS2_A1, 33,           CAL16(-1.,            0.),  'u', U_V_V},
-  {"v4_1_pss",     'r',  ACS2_A1, 35,           CAL16(-1.,            0.),  'u', U_V_V},
-  //{"v1_2_pss",     'r',  ACS2_A1, 37,         CAL16(-1.,            0.),  'u', U_V_V},
-  //{"v2_2_pss",     'r',  ACS2_A1, 39,         CAL16(-1.,            0.),  'u', U_V_V},
-  //{"v3_2_pss",     'r',  ACS2_A1, 41,         CAL16(-1.,            0.),  'u', U_V_V},
-  //{"v4_2_pss",     'r',  ACS2_A1, 43,         CAL16(-1.,            0.),  'u', U_V_V},
 
 #endif
   {"dig43_das",    'w',   BIAS_D,  6,                1.0,             0.0, 'u', U_NONE},
