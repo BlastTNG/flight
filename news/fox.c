@@ -16,10 +16,11 @@
 
 #include "compressstruct.h"
 #include "channels.h"
+#include "derived.h"
 
 #define FIFODEPTH 2048
 #define RAWDIR "/data/rawdir"
-#define LNKFILE "/data/etc/rnc.lnk"
+#define LNKFILE "/data/etc/fox.lnk"
 
 extern struct ChannelStruct WideSlowChannels[];
 extern struct ChannelStruct SlowChannels[];
@@ -29,11 +30,16 @@ extern struct ChannelStruct DecomChannels[];
 
 extern char *frameList[];
 
+extern union DerivedUnion DerivedChannels[];
+
 struct fifoStruct {
   char d[FIFODEPTH];
   int i_in;  // points at next place to write
   int i_out; // points at next place to read
 };
+
+int n_framefields = 0;
+struct ChannelStruct **framefields;
 
 // out needs to be allocated before we come here.
 void convertToUpper(char *in, char *out) {
@@ -44,6 +50,15 @@ void convertToUpper(char *in, char *out) {
   out[i] = '\0';
 }
  
+// out needs to be allocated before we come here.
+void convertToLower(char *in, char *out) {
+  int i;
+  for (i=0; in[i] != '\0'; i++) {
+    out[i] = tolower(in[i]);
+  }
+  out[i] = '\0';
+}
+
 void push(struct fifoStruct *fs, char x[], int size) {
   int i;
   for (i=0; i<size; i++) {
@@ -137,23 +152,203 @@ void Usage() {
     exit(0);
 }
 
+int fieldSupported(char *field) {
+  int i_field;
+  char lowerfield[512];
+
+  convertToLower(field, lowerfield);
+
+  for (i_field = 0; i_field<n_framefields; i_field++) {
+    if (strcmp(lowerfield, framefields[i_field]->field)==0) {
+      return(1);
+    }
+  }
+  return(0);
+}
+
+ /*  \REFERENCE <rawfieldname> */
+ 
+void MakeFormatFile(char *filedirname) {
+  char formatfilename[1024];
+  FILE *formatfile;
+  int i_framefield;
+  int i_derived;
+  char fieldU[1024];
+
+  /******************************************/
+  /*   Make format File   */
+  sprintf(formatfilename, "%s/format", filedirname);
+
+  formatfile = fopen(formatfilename, "w");
+  if (formatfile == NULL) {
+    fprintf(stderr,"Could not open format file %s", formatfilename);
+    exit(0);
+  }
+  for (i_framefield = 0; i_framefield < n_framefields; i_framefield++) {
+    convertToUpper( framefields[i_framefield]->field, fieldU);
+    fprintf(formatfile, "%-16s RAW    %c 1\n", framefields[i_framefield]->field, framefields[i_framefield]->type);
+    fprintf(formatfile, "%-16s LINCOM 1 %16s %.12e %.12e 1\n", fieldU, framefields[i_framefield]->field,
+           framefields[i_framefield]->m_c2e, framefields[i_framefield]->b_e2e);
+    if (framefields[i_framefield]->quantity[0]!='\0') {
+      fprintf(formatfile, "%s/quantity STRING %s\n",fieldU, framefields[i_framefield]->quantity);
+    }
+    if (framefields[i_framefield]->units[0]!='\0') {
+      fprintf(formatfile, "%s/units STRING %s\n",fieldU, framefields[i_framefield]->units);
+    }
+  }
+
+  // Derived channels
+  for (i_derived = 0; DerivedChannels[i_derived].comment.type != DERIVED_EOC_MARKER; ++i_derived) {
+      switch (DerivedChannels[i_derived].comment.type) {
+      case 'b': /* bitfield */
+        if (fieldSupported(DerivedChannels[i_derived].bitfield.source)) {
+          int j;
+          // write bitfield
+          fprintf(formatfile, "\n# %s BITFIELD:\n", DerivedChannels[i_derived].bitfield.source);
+          for (j = 0; j < 16; ++j) {
+            if (DerivedChannels[i_derived].bitfield.field[j][0]!='\0') {
+              fprintf(formatfile, "%-16s BIT %-16s %i\n", DerivedChannels[i_derived].bitfield.field[j],
+                  DerivedChannels[i_derived].bitfield.source, j);
+            }
+          }
+        }
+        break;
+      case '2': /* lincom2 */
+        if (fieldSupported(DerivedChannels[i_derived].lincom2.source)) {
+          if (fieldSupported(DerivedChannels[i_derived].lincom2.source2)) {
+            // write lincom2
+            fprintf(formatfile, 
+                 "%-16s LINCOM 2 %-16s %.12e %.12e %-16s %.12e %.12e\n",
+                 DerivedChannels[i_derived].lincom2.field, DerivedChannels[i_derived].lincom2.source,
+                 DerivedChannels[i_derived].lincom2.m_c2e, DerivedChannels[i_derived].lincom2.b_e2e,
+                 DerivedChannels[i_derived].lincom2.source2,
+                 DerivedChannels[i_derived].lincom2.m2_c2e,
+                 DerivedChannels[i_derived].lincom2.b2_e2e);
+          }
+        }
+        break;
+      case 'w': /* bitword  */
+        if (fieldSupported(DerivedChannels[i_derived].bitword.source)) {
+          // write bitword
+          fprintf(formatfile, "%-16s BIT %-16s %i %i\n",
+            DerivedChannels[i_derived].bitword.field, DerivedChannels[i_derived].bitword.source,
+            DerivedChannels[i_derived].bitword.offset,
+            DerivedChannels[i_derived].bitword.length);
+        }
+        break;
+      case 't': /* linterp  */
+        if (fieldSupported(DerivedChannels[i_derived].linterp.source)) {
+          // write linterp
+          fprintf(formatfile, "%-16s LINTERP %-16s %s\n",
+            DerivedChannels[i_derived].linterp.field, DerivedChannels[i_derived].linterp.source,
+            DerivedChannels[i_derived].linterp.lut);
+        }
+        break;
+      case 'p': /* phase */
+        if (fieldSupported(DerivedChannels[i_derived].phase.source)) {
+          // write phase
+          fprintf(formatfile, "%-16s PHASE %-16s %i\n",
+            DerivedChannels[i_derived].phase.field, DerivedChannels[i_derived].phase.source,
+            DerivedChannels[i_derived].phase.shift);
+        }
+        break;
+      case 'c': /* lincom */
+        if (fieldSupported(DerivedChannels[i_derived].lincom.source)) {
+          // write lincom
+          fprintf(formatfile, "%-16s LINCOM 1 %-16s %.12e %.12e\n",
+            DerivedChannels[i_derived].lincom.field, DerivedChannels[i_derived].lincom.source,
+            DerivedChannels[i_derived].lincom.m_c2e, DerivedChannels[i_derived].lincom.b_e2e);
+        }
+        break;
+      case '#': /* comment -- do nothing */
+        break;
+      case 'u': /* Units metadata */
+        if (fieldSupported(DerivedChannels[i_derived].units.source)) {
+          // write units
+          fprintf(formatfile, "%s/units STRING %s\n%s/quantity STRING %s\n",
+            DerivedChannels[i_derived].units.source, DerivedChannels[i_derived].units.units,
+            DerivedChannels[i_derived].units.source, DerivedChannels[i_derived].units.quantity);
+        }
+        break;
+      default:  // unrecognized -- do nothing
+        break;
+    }
+  }
+ 
+
+  fclose(formatfile);
+
+}
+
+void MakeFieldList() {
+  int i_framefield;
+  int i_ch;
+  int found_ch;
+
+  /******************************************
+  /** Initialize the channel lists */
+  // Count the frame channels
+  for (n_framefields = 0; frameList[n_framefields][0] !='\0'; n_framefields++);
+
+  // find and set the frame fields
+  framefields = (struct ChannelStruct **)malloc(n_framefields * sizeof (struct ChannelStruct *));
+
+  for (i_framefield = 0; i_framefield<n_framefields; i_framefield++) {
+    found_ch = 0;
+    // search the slow channels
+    for (i_ch = 0; SlowChannels[i_ch].field[0]!='\0'; i_ch++) {
+      if (strcmp(frameList[i_framefield], SlowChannels[i_ch].field)==0) {
+          framefields[i_framefield]= SlowChannels+i_ch; // point framefields[] to the right channels
+          found_ch = 1;
+          break;
+      }
+    }
+    if (found_ch) continue;
+
+    // search the slow wide channels
+    for (i_ch = 0; WideSlowChannels[i_ch].field[0]!='\0'; i_ch++) {
+      if (strcmp(frameList[i_framefield], WideSlowChannels[i_ch].field)==0) {
+          framefields[i_framefield]= WideSlowChannels+i_ch; // point framefields[] to the right channels
+          found_ch = 1;
+          break;
+      }
+    }
+    if (found_ch) continue;
+
+// search the fast channels
+    for (i_ch = 0; FastChannels[i_ch].field[0]!='\0'; i_ch++) {
+      if (strcmp(frameList[i_framefield], FastChannels[i_ch].field)==0) {
+          framefields[i_framefield]= FastChannels+i_ch; // point framefields[] to the right channels
+          found_ch = 1;
+          break;
+      }
+    }
+    if (found_ch) continue;
+
+    // search the wide fast channels
+    for (i_ch = 0; WideFastChannels[i_ch].field[0]!='\0'; i_ch++) {
+      if (strcmp(frameList[i_framefield], WideFastChannels[i_ch].field)==0) {
+          framefields[i_framefield]= WideFastChannels+i_ch; // point framefields[] to the right channels
+          found_ch = 1;
+          break;
+      }
+    }
+    fprintf(stderr,"Error: could not find field in tx_struct! |%s|\n", frameList[i_framefield]);
+  }
+
+}
+
 void main(int argc, char *argv[]) {
   int tty_fd;
-  int lost = 1;
+  int i_lost = 0;
   int index = 0;
   int numin, numread;
   char inbuf[FIFODEPTH];
   unsigned u_in;
   int n_sync = 0;
-  int n_framefields = 0;
   int i_framefield, i_ch;
-  int found_ch;
-  struct ChannelStruct **framefields;
-  char fieldU[1024];
   char filedirname[1024];
   time_t filetime;
-  FILE *formatfile;
-  char formatfilename[1024];
   char filename[1024];
   int fieldsize = 0;
   int *fieldfp;
@@ -182,81 +377,9 @@ void main(int argc, char *argv[]) {
 
   tty_fd = party_connect(argv[1]);
 
-
-  /******************************************
-  /** Initialize the channel lists */
-  // Count the frame channels
-  for (n_framefields = 0; frameList[n_framefields][0] !='\0'; n_framefields++);
-
-  // find and set the frame fields
-  framefields = (struct ChannelStruct **)malloc(n_framefields * sizeof (struct ChannelStruct *));
+  MakeFieldList();
   
-  for (i_framefield = 0; i_framefield<n_framefields; i_framefield++) {
-    found_ch = 0;
-    // search the slow channels
-    for (i_ch = 0; SlowChannels[i_ch].field[0]!='\0'; i_ch++) {
-      if (strcmp(frameList[i_framefield], SlowChannels[i_ch].field)==0) {
-          framefields[i_framefield]= SlowChannels+i_ch; // point framefields[] to the right channels
-          found_ch = 1;
-          break;
-      }
-    }
-    if (found_ch) continue;
-    
-    // search the slow wide channels
-    for (i_ch = 0; WideSlowChannels[i_ch].field[0]!='\0'; i_ch++) {
-      if (strcmp(frameList[i_framefield], WideSlowChannels[i_ch].field)==0) {
-          framefields[i_framefield]= WideSlowChannels+i_ch; // point framefields[] to the right channels
-          found_ch = 1;
-          break;
-      }
-    }
-    if (found_ch) continue;
-
-// search the fast channels
-    for (i_ch = 0; FastChannels[i_ch].field[0]!='\0'; i_ch++) {
-      if (strcmp(frameList[i_framefield], FastChannels[i_ch].field)==0) {
-          framefields[i_framefield]= FastChannels+i_ch; // point framefields[] to the right channels
-          found_ch = 1;
-          break;
-      }
-    }
-    if (found_ch) continue;
-    
-    // search the wide fast channels
-    for (i_ch = 0; WideFastChannels[i_ch].field[0]!='\0'; i_ch++) {
-      if (strcmp(frameList[i_framefield], WideFastChannels[i_ch].field)==0) {
-          framefields[i_framefield]= WideFastChannels+i_ch; // point framefields[] to the right channels
-          found_ch = 1;
-          break;
-      }
-    }
-    fprintf(stderr,"Error: could not find field in tx_struct! |%s|\n", frameList[i_framefield]);
-  }
-
-  
-  /******************************************/
-  /*   Make format File   */
-  sprintf(formatfilename, "%s/format", filedirname);
-
-  formatfile = fopen(formatfilename, "w");
-  if (formatfile == NULL) {
-    fprintf(stderr,"Could not open format file %s", formatfilename);
-    exit(0);
-  }
-  for (i_framefield = 0; i_framefield < n_framefields; i_framefield++) {
-    convertToUpper( framefields[i_framefield]->field, fieldU);
-    fprintf(formatfile, "%-16s RAW    %c 1\n", framefields[i_framefield]->field, framefields[i_framefield]->type);
-    fprintf(formatfile, "%-16s LINCOM 1 %16s %.12e %.12e 1\n", fieldU, framefields[i_framefield]->field,
-           framefields[i_framefield]->m_c2e, framefields[i_framefield]->b_e2e);
-    if (framefields[i_framefield]->quantity[0]!='\0') {
-      fprintf(formatfile, "%s/quantity STRING %s\n",fieldU, framefields[i_framefield]->quantity);
-    }
-    if (framefields[i_framefield]->units[0]!='\0') {
-      fprintf(formatfile, "%s/units STRING %s\n",fieldU, framefields[i_framefield]->units);
-    }
-  }
-  fclose(formatfile);
+ MakeFormatFile(filedirname);
 
   /******************************************/
   /*   open the file pointers for the dirfile  */
@@ -294,9 +417,12 @@ void main(int argc, char *argv[]) {
        if (u_in==SYNCWORD) {
          advance(&fs, sizeof(unsigned));
          index = 1;
-         printf("Found Sync word %d\n", n_sync++);
+         i_lost = 0;
+         printf("Found Sync word %d                                     \r", n_sync++);
+         fflush(stdout);
        } else {
-         printf(".");
+         printf("Looking for sync word for %d bytes\r", ++i_lost);
+         fflush(stdout);
          advance(&fs, 1);
        }
     }
