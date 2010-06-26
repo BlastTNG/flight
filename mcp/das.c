@@ -141,6 +141,8 @@ void PhaseControl(void)
       }
       end +=step_size;
       dk = (unsigned int)(CommandData.phaseStep.dt*SR/1000/20);
+      if (dk == 0) 
+	dk =1;
     }
 
     phase = start+(k/dk)*step_size;
@@ -650,6 +652,8 @@ void BiasControl (unsigned short* RxFrame)
       }
       end +=step_size;
       dk = (unsigned int)(CommandData.Bias.biasStep.dt*SR/1000);
+      if (dk == 0) 
+	dk =1; 
       pulse_len_k = (unsigned int)(CommandData.Bias.biasStep.pulse_len*SR/1000);
 
       /* kp sets when in the step the cal pulse will be sent */

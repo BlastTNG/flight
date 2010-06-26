@@ -783,8 +783,8 @@ struct ChannelStruct SlowChannels[] = {
   {"t_charger",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_1_bat",      'r',  ACS1_T1, 13,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_2_bat",      'r',  ACS1_T1, 15,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_3_bat",      'r',  ACS1_T1, 17,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_4_bat",      'r',  ACS1_T1, 19,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_3_bat",      'r',  ACS1_T1, 17,         CAL16T(1.0, 0.0),         'u', U_T_C}, /* Not used can be re-assigned*/
+  {"t_4_bat",      'r',  ACS1_T1, 19,         CAL16T(1.0, 0.0),         'u', U_T_C}, /* Not used can be re-assigned*/
   {"t_array",      'r',  ACS1_T1, 21,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_acs",        'r',  ACS1_T1, 23,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_dcdc_acs",   'r',  ACS1_T1, 25,         CAL16T(1.0, 0.0),         'u', U_T_C},
