@@ -1209,7 +1209,7 @@
       <DATUM format="%.2f" src="T_HS_CC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="V TARGET">
-      <DATUM format="%.2f" src="T_HS_CC" extrema="unknown"/>
+      <DATUM format="%.2f" src="V_TARG_CC" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="T Sol Arr">
       <DATUM format="%.2f" src="T_ARRAY" extrema="temp"/>
