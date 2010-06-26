@@ -468,7 +468,6 @@ static void Chatter(void* arg)
 
 static void GetACS(unsigned short *RxFrame)
 {
-  /*
   double enc_raw_el, ifel_gy, ifroll_gy, ifyaw_gy;
   double x_comp, y_comp, z_comp;
   double pss1_i1, pss1_i2, pss1_i3, pss1_i4;
@@ -497,7 +496,6 @@ static void GetACS(unsigned short *RxFrame)
   unsigned int rx_frame_index = 0;
   int i_ss;
 
-  bprintf(info, "erase me 1\n");
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
@@ -520,18 +518,18 @@ static void GetACS(unsigned short *RxFrame)
     v32PssAddr = GetBiPhaseAddr("v3_2_pss");
     v42PssAddr = GetBiPhaseAddr("v4_2_pss");
   }
-  bprintf(info, "erase me 2\n");
 
   rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
       (RxFrame[2] & 0x0000ffff) << 16);
 
-  enc_raw_el = (((double)slow_data[elRawEncAddr->index][elRawEncAddr->channel])/DEG2I);
-  bprintf(info, "erase me 2.1\n");
-  vel_rw = (((double)((short)slow_data[velRWAddr->index][velRWAddr->channel]))*4.0/DEG2I);
-  res_piv = (((double)((short)slow_data[resPivAddr->index][resPivAddr->channel]))/DEG2I);
-  ifel_gy = (double)((slow_data[ifElgyAddr->index][ifElgyAddr->channel])-GY16_OFFSET) * GY16_TO_DPS;
-  ifroll_gy = (double)(slow_data[ifRollgyAddr->index][ifRollgyAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
-  ifyaw_gy = (double)(slow_data[ifYawgyAddr->index][ifYawgyAddr->channel]-GY16_OFFSET) * GY16_TO_DPS;
+  enc_raw_el = (((double)RxFrame[elRawEncAddr->channel])/DEG2I);
+  vel_rw = (((double)((short)RxFrame[velRWAddr->channel]))*4.0/DEG2I);
+  ifel_gy = (double)((RxFrame[ifElgyAddr->channel])-GY16_OFFSET)*GY16_TO_DPS;
+  ifroll_gy = (double)(RxFrame[ifRollgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
+  ifyaw_gy = (double)(RxFrame[ifYawgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
+
+  res_piv = (((double)
+	((short)slow_data[resPivAddr->index][resPivAddr->channel]))/DEG2I);
 
   x_comp = (double)(slow_data[xMagAddr->index][xMagAddr->channel]);
   y_comp = (double)(slow_data[yMagAddr->index][yMagAddr->channel]);
@@ -545,7 +543,6 @@ static void GetACS(unsigned short *RxFrame)
   pss2_i2 = (double)(slow_data[v22PssAddr->index][v22PssAddr->channel]);
   pss2_i3 = (double)(slow_data[v32PssAddr->index][v32PssAddr->channel]);
   pss2_i4 = (double)(slow_data[v42PssAddr->index][v42PssAddr->channel]);
-  bprintf(info, "erase me 3\n");
   
   i_ss = ss_index;
 
@@ -570,8 +567,6 @@ static void GetACS(unsigned short *RxFrame)
   ACSData.pss2_i4 = pss2_i4;
 
   ACSData.clin_elev = (double)RxFrame[elRawIfClinAddr->channel];
-  bprintf(info, "erase me 4\n");
-  */
 
 }
 #endif
