@@ -800,10 +800,10 @@ static void StoreData(int index)
   static struct NiosStruct* elrawPss1Addr;
   static struct NiosStruct* snrPss1Addr;
   static struct NiosStruct* azPss1Addr;
-  //static struct NiosStruct* azrawPss2Addr;
-  //static struct NiosStruct* elrawPss2Addr;
-  //static struct NiosStruct* snrPss2Addr;
-  //static struct NiosStruct* azPss2Addr;
+  static struct NiosStruct* azrawPss2Addr;
+  static struct NiosStruct* elrawPss2Addr;
+  static struct NiosStruct* snrPss2Addr;
+  static struct NiosStruct* azPss2Addr;
   static struct NiosStruct* sigmaSsAddr;
   static struct NiosStruct* azSunAddr;
   static struct NiosStruct* elSunAddr;
@@ -964,10 +964,10 @@ static void StoreData(int index)
     elrawPss1Addr = GetNiosAddr("elraw_pss1");
     snrPss1Addr = GetNiosAddr("snr_pss1");
     azPss1Addr = GetNiosAddr("az_pss1");  // evolved az
-    //azrawPss2Addr = GetNiodAddr("azraw_pss2");
-    //elrawPss2Addr = GetNiodAddr("elraw_pss2");
-    //snrPss2Addr = GetNiosAddr("snr_pss2");
-    //azPss1Addr = GetNiosAdd("az_pss2");  // evolved az
+    azrawPss2Addr = GetNiosAddr("azraw_pss2");
+    elrawPss2Addr = GetNiosAddr("elraw_pss2");
+    snrPss2Addr = GetNiosAddr("snr_pss2");
+    azPss2Addr = GetNiosAddr("az_pss2");  // evolved az
     modeCalAddr = GetNiosAddr("mode_cal");
     periodCalAddr = GetNiosAddr("period_cal");
     azIscAddr = GetNiosAddr("az_isc");
@@ -1137,10 +1137,10 @@ static void StoreData(int index)
   WriteData(elrawPss1Addr, PointingData[i_point].pss1_elraw * DEG2I, NIOS_QUEUE);
   WriteData(snrPss1Addr, PointingData[i_point].pss1_snr * 1000., NIOS_QUEUE);
   WriteData(azPss1Addr, PointingData[i_point].pss1_az * DEG2I, NIOS_QUEUE);
-  //WriteData(azrawPss2Addr, PointingData[i_point].pss2_azraw * DEG2I, NIOS_QUEUE);
-  //WriteData(elrawPss2Addr, PointingData[i_point].pss2_elraw * DEG2I, NIOS_QUEUE);
-  //WriteData(snrPss1Addr, PointingData[i_point].pss2_snr * 1000., NIOS_QUEUE);
-  //WriteData(azPss1Addr, PointingData[i_point].pss2_snr * DEG2I, NIOS_QUEUE);
+  WriteData(azrawPss2Addr, PointingData[i_point].pss2_azraw * DEG2I, NIOS_QUEUE);
+  WriteData(elrawPss2Addr, PointingData[i_point].pss2_elraw * DEG2I, NIOS_QUEUE);
+  WriteData(snrPss2Addr, PointingData[i_point].pss2_snr * 1000., NIOS_QUEUE);
+  WriteData(azPss2Addr, PointingData[i_point].pss2_az * DEG2I, NIOS_QUEUE);
   /********** SIP GPS Data **********/
   WriteData(latSipAddr, (int)(SIPData.GPSpos.lat*DEG2I), NIOS_QUEUE);
   WriteData(lonSipAddr, (int)(SIPData.GPSpos.lon*DEG2I), NIOS_QUEUE);
