@@ -312,9 +312,9 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 // PSSConvert versions added 12 June 2010 -GST
 // PSS1 for Lupus
 
-#define  PSS1_L  10.    // 10 mm = effective length of active area
-#define  PSS1_D  10.    // 10 mm = Distance between pinhole and sensor
-#define  PSS1_IMAX  6.  // Maximum current (place holder for now)
+#define  PSS1_L  10.     // 10 mm = effective length of active area
+#define  PSS1_D  10.     // 10 mm = Distance between pinhole and sensor
+#define  PSS1_IMAX  20.  // Maximum current (place holder for now)
 #define  PSS1_XSTRETCH  1.  // 0.995
 #define  PSS1_YSTRETCH  1.  // 1.008
 #define  PSS1_BETA  60.
@@ -347,16 +347,19 @@ static int PSS1Convert(double *azraw_pss1, double *elraw_pss1) {
 
   i_point = GETREADINDEX(point_index);
 
+  PointingData[point_index].pss1_snr = itot/PSS1_IMAX;  // 10.
+
   if (itot < PSS1_IMAX) {
-    PointingData[point_index].pss1_snr = 0.1;
+    PointingData[point_index].pss1_snr = 1.;  // 1.
     return(0);
   }
 
   x = PSS1_XSTRETCH*(PSS1_L/2.)*((i2+i3)-(i1+i4))/itot;
   y = PSS1_YSTRETCH*(PSS1_L/2.)*((i2+i4)-(i1+i3))/itot;
 
+  // Then spot is at the edge of the sensor
   if ((fabs(x) > 4.) | (fabs(y) > 4.)) {
-    PointingData[point_index].pss1_snr = 0.1;
+    PointingData[point_index].pss1_snr = 0.1;  // 0.1
     return(0);
   }
 
@@ -471,7 +474,7 @@ static int PSS1Convert(double *azraw_pss1, double *elraw_pss1) {
 
 #define  PSS2_L     10.    // 10 mm = effective length of active area
 #define  PSS2_D     10.    // 10 mm = Distance between pinhole and sensor
-#define  PSS2_IMAX  6.     // Maximum current (place holder for now)
+#define  PSS2_IMAX  20.     // Maximum current (place holder for now)
 #define  PSS2_XSTRETCH  1.
 #define  PSS2_YSTRETCH  1.
 #define  PSS2_BETA  -135.
@@ -505,8 +508,10 @@ static int PSS2Convert(double *azraw_pss2, double *elraw_pss2) {
 
   i_point = GETREADINDEX(point_index);
 
+  PointingData[point_index].pss2_snr = itot/PSS2_IMAX;
+
   if (itot < PSS2_IMAX) {
-    PointingData[point_index].pss2_snr = 0.1;
+    PointingData[point_index].pss2_snr = 1.;
     return(0);
   }    
 
@@ -804,6 +809,8 @@ static int SSConvert(double *ss_az)
   i_ss = GETREADINDEX(ss_index);
   i_point = GETREADINDEX(point_index);
 
+  PointingData[point_index].ss_snr = 10.;
+
   /* get current sun az, el */
   jd = GetJulian(PointingData[i_point].t);
   SunPos(jd, &sun_ra, &sun_dec);
@@ -952,8 +959,8 @@ static int SSConvert(double *ss_az)
   dof = 1;    // dof = n-p, n = number of points, p = number of parameters
   c = GSL_MAX_DBL(1, chi / sqrt(dof));
 
-  bprintf(info, "SSS: iter = %d/500, C = %g +/- %g, phi0 = %g +/- %g\n",
-          iter, FIT(0), c*ERR(0), FIT(1), c*ERR(1));
+  //bprintf(info, "SSS: iter = %d/500, C = %g +/- %g, phi0 = %g +/- %g\n",
+  //        iter, FIT(0), c*ERR(0), FIT(1), c*ERR(1));
   
   az = FIT(1);
 
@@ -1762,12 +1769,12 @@ void Pointing(void)
     pss1_since_ok++;
   }
 
-  /*pss2_ok = PSS2Convert(&pss2_az, &pss2_el);
+  pss2_ok = PSS2Convert(&pss2_az, &pss2_el);
   if (pss2_ok) {
     pss2_since_ok = 0;
   } else {
     pss2_since_ok++;
-    }*/
+  }
 
   dgps_ok = DGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
   if (dgps_ok) {
@@ -1811,11 +1818,11 @@ void Pointing(void)
       pss1_az, pss1_ok);
 
   /** PSS2 **/
-  /*  EvolveAzSolution(&PSS2Az,
+  EvolveAzSolution(&PSS2Az,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
       PointingData[point_index].el,
-      pss2_az, pss2_ok);*/
+      pss2_az, pss2_ok);
 
   if (CommandData.fast_offset_gy>0) {
     CommandData.fast_offset_gy--;
@@ -1834,9 +1841,9 @@ void Pointing(void)
   if (CommandData.use_pss1) {
     AddAzSolution(&AzAtt, &PSS1Az, 1);
   }
-  /*if (CommandData.use_pss2) {
+  if (CommandData.use_pss2) {
     AddAzSolution(&AzAtt, &PSS2Az, 1);
-    }*/
+  }
   if (CommandData.use_gps) {
     AddAzSolution(&AzAtt, &DGPSAz, 1);
   }
@@ -1884,7 +1891,7 @@ void Pointing(void)
   PointingData[point_index].ss_sigma = sqrt(SSAz.varience + SSAz.sys_var);
   // Added 22 June 2010 GT
   PointingData[point_index].pss1_az = PSS1Az.angle;
-  //PointingData[point_index].pss2_az = PSS2Az.angle;
+  PointingData[point_index].pss2_az = PSS2Az.angle;
 
 
   PointingData[point_index].isc_az = ISCAz.angle;
