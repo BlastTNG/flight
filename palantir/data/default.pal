@@ -484,6 +484,12 @@
     <NUMBER caption="T ISC PC">
       <DATUM format="%.2f" src="T_COMP_ISC" extrema="temp"/>
     </NUMBER>
+    <MULTI caption="Heater">
+      <DATUM src="HEATER_ON_ISC">
+        <WORD value="1" caption="On" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
   </BOX>
   <BOX caption="OSC" colour="#707" row="4" col="6" rowspan="1">
     <NUMBER caption="RA">
@@ -543,6 +549,12 @@
     <NUMBER caption="T OSC PC">
       <DATUM format="%.2f" src="T_COMP_OSC" extrema="temp"/>
     </NUMBER>
+    <MULTI caption="Heater">
+      <DATUM src="HEATER_ON_OSC">
+        <WORD value="1" caption="On" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
   </BOX>
   <BOX caption="Balance" colour="#880000" row="2" col="3">
     <MULTI caption="Status">
