@@ -2506,10 +2506,10 @@ void InitCommandData()
   CommandData.actbus.lock_move_i = 50;
   CommandData.actbus.lock_hold_i = 0;
 
-  CommandData.hwpr.vel = 10000;
-  CommandData.hwpr.acc = 1000;
+  CommandData.hwpr.vel = 50;
+  CommandData.hwpr.acc = 2;
   CommandData.hwpr.move_i = 20;
-  CommandData.hwpr.hold_i = 0;
+  CommandData.hwpr.hold_i = 30;
 
   CommandData.pin_is_in = 1;
 
