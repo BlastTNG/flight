@@ -156,6 +156,7 @@ struct CommandDataStruct {
   unsigned short int sucks;
   unsigned short int lat_range;
   unsigned short int at_float;
+  enum {vtx_isc, vtx_osc, vtx_sbsc} vtx_sel[2];
 
   /*
   double apcu_reg;
@@ -182,6 +183,7 @@ struct CommandDataStruct {
     struct latch_pulse rx_main;
     struct latch_pulse rx_hk;
     struct latch_pulse rx_amps;
+    struct latch_pulse charge;
     int gybox_off;
     int gyro_off[6];
     int gyro_off_auto[6];

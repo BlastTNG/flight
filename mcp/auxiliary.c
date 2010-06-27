@@ -716,6 +716,14 @@ void ControlPower(void) {
     if (CommandData.power.ss_off > 0) CommandData.power.ss_off--;
     misc |= 0x20;
   }
+  if (CommandData.power.charge.set_count > 0) {
+    CommandData.power.charge.set_count--;
+    if (CommandData.power.charge.set_count < LATCH_PULSE_LEN) misc |= 0x0040;
+  }
+  if (CommandData.power.charge.rst_count > 0) {
+    CommandData.power.charge.rst_count--;
+    if (CommandData.power.charge.rst_count < LATCH_PULSE_LEN) misc |= 0x0080;
+  }
 
   for (i=0; i<6; i++) {
     if (CommandData.power.gyro_off[i] || CommandData.power.gyro_off_auto[i]) {
@@ -833,4 +841,23 @@ void ControlPower(void) {
   WriteData(latchingAddr[1], latch1, NIOS_QUEUE);
   WriteData(switchGyAddr, gybox, NIOS_QUEUE);
   WriteData(switchMiscAddr, misc, NIOS_QUEUE);
+}
+
+void VideoTx(void)
+{
+  static struct NiosStruct* bitsVtxAddr;  
+  static int firsttime =1;
+  int vtx_bits = 0;
+
+  if (firsttime) {
+    firsttime = 0;
+    bitsVtxAddr = GetNiosAddr("bits_vtx");
+  }
+
+  if (CommandData.vtx_sel[0] == vtx_sbsc) vtx_bits |= 0x1;
+  else if (CommandData.vtx_sel[0] == vtx_osc) vtx_bits |= 0x3;
+  if (CommandData.vtx_sel[1] == vtx_sbsc) vtx_bits |= 0x4;
+  else if (CommandData.vtx_sel[1] == vtx_isc) vtx_bits |= 0xc;
+
+  WriteData(bitsVtxAddr, vtx_bits, NIOS_QUEUE);
 }

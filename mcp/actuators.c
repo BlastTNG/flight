@@ -46,7 +46,7 @@ double LockPosition(double elevation);	/* commands.c */
 extern short int InCharge;		/* tx.c */
 
 /* actuator bus setup paramters */
-#define ACTBUS_CHATTER	EZ_CHAT_ACT
+#define ACTBUS_CHATTER	EZ_CHAT_NONE
 #define ACT_BUS "/dev/ttySI15"
 #define NACT 5
 #define LOCKNUM 3

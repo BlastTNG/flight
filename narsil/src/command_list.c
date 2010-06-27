@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.59 $";
+const char *command_list_serial = "$Revision: 4.60 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -106,6 +106,10 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(rx_hk_on), "cryostat housekeepng Make it So!", GR_POWER},
   {COMMAND(rx_amps_off), "receiver amplifiers Make it Not-So!", GR_POWER},
   {COMMAND(rx_amps_on), "receiver amplifiers Make it So!", GR_POWER},
+  {COMMAND(charge_off), "turn off the charge controller", GR_POWER | CONFIRM},
+  {COMMAND(charge_on), "turn on the charge controller", GR_POWER},
+  {COMMAND(charge_cycle), "power cycle the charge controller", 
+    GR_POWER | CONFIRM},
 
   {COMMAND(reset_rw), "reset the serial connection to the RW controller", GR_GAIN},
   {COMMAND(reset_piv), "reset the serial connection to the pivot controller", GR_GAIN},
@@ -213,6 +217,12 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_TELEM},
   {COMMAND(not_at_float), "tell the scheduler that we're not at float",
     GR_TELEM},
+  {COMMAND(vtx1_isc), "put ISC video on transmitter #1", GR_TELEM},
+  {COMMAND(vtx1_osc), "put OSC video on transmitter #1", GR_TELEM},
+  {COMMAND(vtx1_sbsc), "put SBSC video on transmitter #1", GR_TELEM},
+  {COMMAND(vtx2_isc), "put ISC video on transmitter #2", GR_TELEM},
+  {COMMAND(vtx2_osc), "put OSC video on transmitter #2", GR_TELEM},
+  {COMMAND(vtx2_sbsc), "put SBSC video on transmitter #2", GR_TELEM},
 
   {COMMAND(north_halt), "ask MCP to halt north MCC", GR_MISC | CONFIRM},
   {COMMAND(south_halt), "ask MCP to halt south MCC", GR_MISC | CONFIRM},

@@ -17,7 +17,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 206        /* total number of single word cmds */
+#define N_SCOMMANDS 215        /* total number of single word cmds */
 #define N_MCOMMANDS  99        /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
@@ -79,7 +79,7 @@ enum singleCommand {
   pot_valve_open,   ramp,               reset_trims,      isc_save_images,
   stop,             sun_veto,           sun_allow,        pss1_veto,
   pss1_allow,       pss2_veto,          pss2_allow,       isc_eye_off,
-  trim_to_isc,      unlock,             lock_off,         xyzzy,
+  trim_to_isc,      unlock,             lock_off,         
   isc_reboot,       isc_cam_cycle,      osc_run,          osc_shutdown,
   osc_reboot,       osc_cam_cycle,      osc_pause,        osc_abort,
   osc_reconnect,    osc_save_images,    osc_discard_images, osc_full_screen,  
@@ -92,6 +92,7 @@ enum singleCommand {
   sc_tx_off,	    sc_tx_on,		bi0_off,	  bi0_on,
   das_off,	    das_on,		rx_off,		  rx_on,
   rx_hk_off,        rx_hk_on,           rx_amps_off,	  rx_amps_on,
+  charge_off,	    charge_on,		charge_cycle,
   ifroll_1_gy_allow,ifroll_1_gy_veto,   ifroll_2_gy_allow,ifroll_2_gy_veto,
   ifyaw_1_gy_allow, ifyaw_1_gy_veto,    ifyaw_2_gy_allow, ifyaw_2_gy_veto,
   ifel_1_gy_allow,  ifel_1_gy_veto,	ifel_2_gy_allow,  ifel_2_gy_veto,
@@ -114,7 +115,10 @@ enum singleCommand {
   reset_rw,         reset_piv,
   reset_elev,       jfet_on,            jfet_off,         hs_pot_on,
   hs_pot_off,       bda_on,             bda_off,          hwpr_enc_on,
-  hwpr_enc_off,     hwpr_enc_pulse,     balance_heat_on,  balance_heat_off
+  hwpr_enc_off,     hwpr_enc_pulse,     balance_heat_on,  balance_heat_off,
+  vtx1_isc,	    vtx1_osc,		vtx1_sbsc,	  vtx2_isc,
+  vtx2_osc,	    vtx2_sbsc,
+  xyzzy
 };
 
 /* multiCommand enumeration.  The command list here does NOT have to be in

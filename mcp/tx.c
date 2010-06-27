@@ -1495,6 +1495,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     SetGyroMask();
     ChargeController();
     ControlPower();
+    VideoTx();
 #endif
   }
 

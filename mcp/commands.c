@@ -516,6 +516,18 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.rx_amps.rst_count = 0;
       CommandData.power.rx_amps.set_count = LATCH_PULSE_LEN;
       break;
+    case charge_off:
+      CommandData.power.charge.set_count = 0;
+      CommandData.power.charge.rst_count = LATCH_PULSE_LEN;
+      break;
+    case charge_on:
+      CommandData.power.charge.rst_count = 0;
+      CommandData.power.charge.set_count = LATCH_PULSE_LEN;
+      break;
+    case charge_cycle:
+      CommandData.power.charge.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.charge.rst_count = LATCH_PULSE_LEN;
+      break;
     case ifroll_1_gy_allow:
       CommandData.gymask |= 0x01;
       break;
@@ -944,6 +956,24 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case not_at_float:
       CommandData.at_float = 0;
+      break;
+    case vtx1_isc:
+      CommandData.vtx_sel[0] = vtx_isc;
+      break;
+    case vtx1_osc:
+      CommandData.vtx_sel[0] = vtx_osc;
+      break;
+    case vtx1_sbsc:
+      CommandData.vtx_sel[0] = vtx_sbsc;
+      break;
+    case vtx2_isc:
+      CommandData.vtx_sel[1] = vtx_isc;
+      break;
+    case vtx2_osc:
+      CommandData.vtx_sel[1] = vtx_osc;
+      break;
+    case vtx2_sbsc:
+      CommandData.vtx_sel[1] = vtx_sbsc;
       break;
 #endif
 
@@ -2376,6 +2406,8 @@ void InitCommandData()
   CommandData.at_float = 0;
   CommandData.timeout = 3600;
   CommandData.alice_file = 0;
+  CommandData.vtx_sel[0] = vtx_isc;
+  CommandData.vtx_sel[1] = vtx_osc;
 
   CommandData.slew_veto = VETO_MAX; /* 10 minutes */
 

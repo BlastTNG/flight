@@ -810,6 +810,7 @@ struct ChannelStruct SlowChannels[] = {
   //  {"dac4_ampl",    'w',  ACS2_D,  3,                1.0,             0.0, 'u', U_NONE},
   //  {"dac5_ampl",    'w',  ACS2_D,  4,                1.0,             0.0, 'u', U_NONE},
   {"mask_gy",      'w',  ACS2_D, 13,                1.0,             0.0, 'u', U_NONE},
+  {"bits_vtx",     'w',  ACS2_D, 14,                1.0,             0.0, 'u', U_NONE},
   {"g_p_el",       'w',  ACS2_D, 20,                1.0,             0.0, 'u', U_NONE},
   {"g_i_el",       'w',  ACS2_D, 21,                1.0,             0.0, 'u', U_NONE},
   {"g_p_az",       'w',  ACS2_D, 23,                1.0,             0.0, 'u', U_NONE},
