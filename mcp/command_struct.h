@@ -101,6 +101,7 @@ struct PivGainStruct {
 #define HWPR_PANIC    0
 #define HWPR_GOTO     1
 #define HWPR_JUMP     2
+#define HWPR_SLEEP    3
 
 // mode        X     Y    vaz   del    w    h
 // LOCK              el

@@ -38,7 +38,6 @@ static struct hwpr_struct {
 void MonitorHWPR(struct ezbus *bus)
 {
   EZBus_ReadInt(bus, HWPR_ADDR, "?0", &hwpr_data.pos);
-  hwpr_data.pos /= HWPR_STEPS_PER_MOTENC;
   EZBus_ReadInt(bus, HWPR_ADDR, "?8", &hwpr_data.enc);
 }
 
@@ -64,7 +63,7 @@ void StoreHWPRBus(void)
     encHwprAddr = GetNiosAddr("enc_hwpr");
   }
 
-  WriteData(velHwprAddr, CommandData.hwpr.vel / 100, NIOS_QUEUE);
+  WriteData(velHwprAddr, CommandData.hwpr.vel, NIOS_QUEUE);
   WriteData(accHwprAddr, CommandData.hwpr.acc, NIOS_QUEUE);
   WriteData(iMoveHwprAddr, CommandData.hwpr.move_i, NIOS_QUEUE);
   WriteData(iHoldHwprAddr, CommandData.hwpr.hold_i, NIOS_QUEUE);
@@ -74,18 +73,19 @@ void StoreHWPRBus(void)
 
 void ControlHWPR(struct ezbus *bus)
 {
-  if (CommandData.hwpr.is_new) {
-    if (CommandData.hwpr.mode == HWPR_PANIC) {
-      bputs(info, "Panic");
-      EZBus_Stop(bus, HWPR_ADDR);
-    } else if ((CommandData.hwpr.mode == HWPR_GOTO)) {
-      EZBus_Goto(bus, HWPR_ADDR, 
-	  CommandData.hwpr.target * HWPR_STEPS_PER_MOTENC);
+  if (CommandData.hwpr.mode == HWPR_PANIC) {
+    bputs(info, "Panic");
+    EZBus_Stop(bus, HWPR_ADDR);
+    CommandData.hwpr.mode = HWPR_SLEEP;
+  } else if (CommandData.hwpr.is_new) {
+    if ((CommandData.hwpr.mode == HWPR_GOTO)) {
+      EZBus_Goto(bus, HWPR_ADDR, CommandData.hwpr.target);
       CommandData.hwpr.is_new = 0;
+      CommandData.hwpr.mode = HWPR_SLEEP;
     } else if ((CommandData.hwpr.mode == HWPR_JUMP)) {
-      EZBus_RelMove(bus, HWPR_ADDR, 
-	  CommandData.hwpr.target * HWPR_STEPS_PER_MOTENC);
+      EZBus_RelMove(bus, HWPR_ADDR, CommandData.hwpr.target);
       CommandData.hwpr.is_new = 0;
+      CommandData.hwpr.mode = HWPR_SLEEP;
     }
   }
 }

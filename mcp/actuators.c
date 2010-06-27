@@ -982,7 +982,9 @@ void ActuatorBus(void)
 		 the lock motor's state has settled */
     
     DoActuators(); /* Actuator stuff -- this may seize the bus */
-    
+
+    DoHWPR(&bus);
+
     usleep(10000);
     
   }

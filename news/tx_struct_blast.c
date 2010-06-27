@@ -673,7 +673,7 @@ struct ChannelStruct SlowChannels[] = {
   {"drive_info_piv",'w', LOOP7, 36,                1.0,             0.0, 'u', U_NONE},
   {"drive_err_cts_piv",'w', LOOP7, 37,             1.0,             0.0, 'u', U_NONE},
   /* LOOP7 38 is fast narrow */
-  {"vel_hwpr",         'w', LOOP7, 39,           100.0,             0.0, 'u', U_NONE},
+  {"vel_hwpr",         'w', LOOP7, 39,             1.0,             0.0, 'u', U_NONE},
   {"acc_hwpr",         'w', LOOP7, 40,             1.0,             0.0, 'u', U_NONE},
   {"i_move_hwpr",      'w', LOOP7, 41,             1.0,             0.0, 'u', U_NONE},
   {"i_hold_hwpr",      'w', LOOP7, 42,             1.0,             0.0, 'u', U_NONE},
