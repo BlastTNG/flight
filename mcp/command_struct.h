@@ -227,6 +227,8 @@ struct CommandDataStruct {
   unsigned short fast_offset_gy;
   unsigned int slew_veto;
 
+  double az_accel;
+
   double clin_el_trim;
   double enc_el_trim;
   double null_az_trim;

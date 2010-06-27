@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.57 $";
+const char *command_list_serial = "$Revision: 4.58 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -360,6 +360,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_az"},
       {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_az"}
+    }
+  },
+  {COMMAND(az_scan_accel), "set azimuth scan turnaround acceleration", GR_GAIN, 2,
+    {
+      {"Az Acceleration", 0, 2.0, 'f', "accel_az"}
     }
   },
   {COMMAND(az_scan), "scan in azimuth", GR_POINT, 4,

@@ -1199,6 +1199,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.vaz = rvalues[8]; /* az scan speed */
       CommandData.pointing_mode.del = rvalues[9]; /* el step size */
       break;
+    case az_scan_accel:
+      CommandData.az_accel = rvalues[0];
+      break;
 
       /***************************************/
       /********** Pointing Motor Trims *******/
@@ -2385,6 +2388,8 @@ void InitCommandData()
   CommandData.pointing_mode.w = 0;
   CommandData.pointing_mode.h = 0;
   CommandData.pointing_mode.t = mcp_systime(NULL) + CommandData.timeout;
+
+  CommandData.az_accel = 0.1; 
 
   CommandData.ele_gain.I = 10000; /* was 8000 */
   CommandData.ele_gain.P = 10000; /* was 1200 */

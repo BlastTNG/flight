@@ -18,7 +18,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 206        /* total number of single word cmds */
-#define N_MCOMMANDS  98        /* total number of multiword commands */
+#define N_MCOMMANDS  99        /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -135,7 +135,7 @@ enum multiCommand {
   osc_catalogue,     osc_tolerances,    osc_hold_current,
   lock,              isc_blobs,         phase,            act_offset,
   pivot_gain,        isc_pixel_centre,  ra_dec_goto,      ra_dec_set,
-  roll_gain,         isc_set_aperture,  isc_set_focus,  
+  roll_gain,         isc_set_aperture,  isc_set_focus,    az_scan_accel,
   t_gyro_set,        osc_gain,
   t_gyro_gain,       timeout,           isc_tolerances,   vcap,
   vbox,              alice_file,        az_gyro_offset,   isc_hold_current,

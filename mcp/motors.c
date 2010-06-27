@@ -436,6 +436,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   static struct NiosStruct* frictOffPivAddr;
   static struct NiosStruct* dacPivAddr;
   static struct NiosStruct* velCalcPivAddr;
+  static struct NiosStruct* accelAzAddr;
  
   //TODO temporary
   static struct NiosStruct* dacAmplAddr[5];
@@ -468,6 +469,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     setRWAddr = GetNiosAddr("set_rw");
     frictOffPivAddr = GetNiosAddr("frict_off_piv");
     velCalcPivAddr = GetNiosAddr("vel_calc_piv");
+    accelAzAddr = GetNiosAddr("accel_az");
 
     dacAmplAddr[0] = GetNiosAddr("v_pump_bal");    // is now ifpm_ampl
     //    dacAmplAddr[0] = GetNiosAddr("dac1_ampl"); // is now ifpm_ampl
@@ -568,6 +570,8 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   WriteData(frictOffPivAddr, pivFrictOff/2.0*65535, NIOS_QUEUE);
   /* Pivot velocity */
   WriteData(velCalcPivAddr, (calcVPiv()/20.0*32768.0), NIOS_QUEUE);
+  /* Azimuth Scan Acceleration */
+  WriteData(accelAzAddr, (CommandData.az_accel/2.0*65536.0), NIOS_QUEUE);
 
   if (wait > 0)
     wait--;
