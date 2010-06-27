@@ -46,7 +46,7 @@ double LockPosition(double elevation);	/* commands.c */
 extern short int InCharge;		/* tx.c */
 
 /* actuator bus setup paramters */
-#define ACTBUS_CHATTER	EZ_CHAT_NONE
+#define ACTBUS_CHATTER	EZ_CHAT_ACT
 #define ACT_BUS "/dev/ttySI15"
 #define NACT 5
 #define LOCKNUM 3
@@ -978,12 +978,11 @@ void ActuatorBus(void)
       bus.chatter = ACTBUS_CHATTER;
     }
     
-    DoLock(); /* Lock motor stuff -- this will seize the bus until
-		 the lock motor's state has settled */
+    if (EZBus_IsUsable(&bus, id[LOCKNUM])) DoLock(); 
     
-    DoActuators(); /* Actuator stuff -- this may seize the bus */
+    DoActuators();    //handle IsUsable more finely for multiple steppers
 
-    DoHWPR(&bus);
+    if (EZBus_IsUsable(&bus, HWPR_ADDR)) DoHWPR(&bus);
 
     usleep(10000);
     
