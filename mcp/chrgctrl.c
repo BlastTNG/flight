@@ -45,15 +45,17 @@ along with mcp; if not, write to the Free Software Foundation, Inc.,
                              // function declarations 
 
 #include "mcp.h" 
-			     /*
+
+/*
 #include "channels.h"
 #include "tx.h"
-#include "mcp.h" */
+ */
 
-#define CHRGCTRL_DEVICE "/dev/ttySI3" // change this later?
+#define CHRGCTRL_DEVICE "/dev/ttySI3" // change depending upon serial hub port
 #define QUERY_SIZE 6
 #define CHECKSUM_SIZE 2               
-/*#define CHRGCTRL_VERBOSE              // uncomment to see useful debug info*/
+
+/*#define CHRGCTRL_VERBOSE            // uncomment to see useful debug info*/
 
 static pthread_t chrgctrlcomm_id;     // thread ID
 static int char_interval_timeout;     // time to wait for next MODBUS byte in packet
@@ -94,7 +96,6 @@ void endChrgCtrl()          // declare in mcp.c along with startChrgCtrl
 }
 
 
-
 /* thread routine: continously poll charge controller for data */
 
 void* chrgctrlComm(void* arg)
@@ -109,7 +110,7 @@ void* chrgctrlComm(void* arg)
   const int nstates = 10;   // number of charging states 
 */
 
-  int i=0, n;               // loop constants
+  int n_conn=0, n_reconn=0, query_no;               // loop constants
   int data_lengths[6];      // one element for each query
 
   double Vscale;            // voltage scaling factor
@@ -199,9 +200,9 @@ void* chrgctrlComm(void* arg)
   chrgctrlinfo.reset = 0;
 /*chrgctrlinfo.closing = 1; // just for testing */
 
-  /* check whether this is ICC */
-
   nameThread("ChrgC");
+
+  /* check whether this is ICC */
 
   while (!InCharge) {
 
@@ -216,17 +217,17 @@ void* chrgctrlComm(void* arg)
 
     open_chrgctrl(CHRGCTRL_DEVICE);
 
-    if (i == 10) {
+    if (n_conn == 10) {
       bputs(err, "Charge controller port failed to open after 10 attempts");
     }
 
-    i++;
+    n_conn++;
 
     if (chrgctrlinfo.open == 1) {
 
-      //    #ifdef CHRGCTRL_VERBOSE
-      bprintf(info, "chrgctrlComm: opened the serial port on attempt number %i", i); 
-      // #endif
+//  #ifdef CHRGCTRL_VERBOSE
+      bprintf(info, "Opened the serial port on attempt number %i", n_conn); 
+//  #endif
 
     }
 
@@ -241,65 +242,78 @@ void* chrgctrlComm(void* arg)
       usleep(10000); 
 
     } else if (chrgctrlinfo.reset == 1) {
+      
       /* if there's an error, reset connection to charge controller */
 
       close_chrgctrl();
      
-      #ifdef CHRGCTRL_VERBOSE
-        bprintf(info,"chrgctrlComm: attempting to restablish serial connection.");
-      #endif 
-    
-      i = 0;
+      if (n_reconn == 0) {
+        bprintf(info,"Error occurred: attempting to re-open serial port.");
+      }
 
       while (chrgctrlinfo.open == 0) {
 
-        i++;
         open_chrgctrl(CHRGCTRL_DEVICE);
 
-        if (i == 10) { 
-	  bputs(err,"Failed to reconnect to charge controller after 10 attempts.");
+        #ifdef CHRGCTRL_VERBOSE
+        if (n_reconn == 10) { 
+	  bputs(err,"Failed to re-open charge controller port after 10 attempts.");
 	}
+        #endif
+
+        n_reconn++;
 
         if (chrgctrlinfo.open == 1) { // reset succeeded
 
           #ifdef CHRGCTRL_VERBOSE
-            bprintf(info, "chrgctrlComm: re-opened serial port on attempt %i.", i);
+            bprintf(info, "Re-opened serial port on attempt %i.", n_reconn);
           #endif
 	  chrgctrlinfo.reset = chrgctrlinfo.err = 0;       
 
 	} else {
-          sleep(1);
+            sleep(1);
         }
       }
-    } else {                            // query the charge controller      
+    } else {                          // query the charge controller      
 
-      /* retrive voltage and current scaling factors (needed to turn the 
+      /* retrieve voltage and current scaling factors (needed to turn the 
          ADC output into meaningful V & I values) from register 
          addresses 1-4 */
 
       scale.num = query_chrgctrl(slave, 1, 4, scale.arr, chrgctrlinfo.fd);
 
+      //      usleep(10000);
+
       /* poll charge controller for battery and array voltages and currents,
-         which range from register addresses 27-30 */
+         which range from register addresses [26 or]27-30 */
        
-      elec.num = query_chrgctrl(slave, 27, 4, elec.arr, chrgctrlinfo.fd);   
+      elec.num = query_chrgctrl(slave, 26, 5, elec.arr, chrgctrlinfo.fd);   
+
+      //      usleep(10000);
 
       /* heatsink temperature in degrees C (addr 36) */
 
       temp.num = query_chrgctrl(slave, 36, 1, temp.arr, chrgctrlinfo.fd);   
 
+      //      usleep(10000);
+
       /* charge controller fault bitfield (addr 45) */
 
       fault.num = query_chrgctrl(slave, 45, 1, fault.arr, chrgctrlinfo.fd);   
+
+      //      usleep(10000);
 
       /* charge controller alarm bitfield (spans 2 regs with addrs 47,48) */
 
       alarm.num = query_chrgctrl(slave, 47, 2, alarm.arr, chrgctrlinfo.fd);
 
+      //      usleep(10000);
+
       /* controller charge state and target charging voltage (addrs 51, 52) */
 
       charge.num = query_chrgctrl(slave, 51, 2, charge.arr, chrgctrlinfo.fd);
 
+      //      usleep(10000);
 
       /* error handling for communication failures or corrupted data */
 
@@ -311,14 +325,14 @@ void* chrgctrlComm(void* arg)
       data_lengths[5] = charge.num;
 
       
-      for (n = 0; n < 6; n++) {
+      for (query_no = 0; query_no < 6; query_no++) {
 
-        if (data_lengths[n] <= 0) {
+        if (data_lengths[query_no] <= 0) {
 
         /* Most of these won't happen, except PORT_FAILURE and COMMS_FAILURE */
 
-          #ifdef CHRGCTRL_VERBOSE
-          switch (data_lengths[n]) {
+	  //          #ifdef CHRGCTRL_VERBOSE
+          switch (data_lengths[query_no]) {
 
 	    case COMMS_FAILURE: 
 	      bputs(err, "Charge controller produced no data.");
@@ -359,26 +373,40 @@ void* chrgctrlComm(void* arg)
  	    default:
               bputs(err, "An unknown charge controller error occurred.");  
 	  }
-          #endif
+	  //          #endif
           chrgctrlinfo.err = 1;
-          n = 6; // break out of for loop upon first problem encountered
+          query_no = 6; // break out of for loop upon first problem encountered
 	}
       }
 
       if (chrgctrlinfo.err == 1) {
         chrgctrlinfo.reset = 1;
         continue; // go back up to top of infinite loop
+      } else if (n_reconn > 0) {
+
+        bprintf(info, "Re-established communication with charge controller");
+        n_reconn = 0; // managed this query cycle w/o errors; reset for the next one 
       }
-       
+    
       /* compute values of things that need scaling */
 
       Vscale = *scale.arr + (*(scale.arr+1))/65536.0;
       Iscale = *(scale.arr+2) + (*(scale.arr+3))/65536.0;
 
-      ChrgCtrlData.V_batt = *elec.arr * Vscale/32768.0;
-      ChrgCtrlData.V_arr =  *(elec.arr+1) * Vscale/32768.0;
-      ChrgCtrlData.I_batt = *(elec.arr+2) * Iscale/32768.0;
-      ChrgCtrlData.I_arr =  *(elec.arr+3) * Iscale/32768.0;
+      //      ChrgCtrlData.V_batt = *elec.arr * Vscale/32768.0;
+      //      ChrgCtrlData.V_arr =  *(elec.arr+1) * Vscale/32768.0;
+      //      ChrgCtrlData.I_batt = *(elec.arr+2) * Iscale/32768.0;
+      //      ChrgCtrlData.I_arr =  *(elec.arr+3) * Iscale/32768.0;
+
+      /* *elec.arr is the battery voltage at the charging terminals
+	 (less accurate) as opposed to the sense terminals. 
+         EDIT: actually these terminals are shorted, so it doesn't
+         matter which reading is used. */
+
+      ChrgCtrlData.V_batt = *(elec.arr+1) * Vscale/32768.0;
+      ChrgCtrlData.V_arr =  *(elec.arr+2) * Vscale/32768.0;
+      ChrgCtrlData.I_batt = *(elec.arr+3) * Iscale/32768.0;
+      ChrgCtrlData.I_arr =  *(elec.arr+4) * Iscale/32768.0;
     
       ChrgCtrlData.V_targ = *(charge.arr+1) * Vscale/32768.0;
 
@@ -430,6 +458,7 @@ void* chrgctrlComm(void* arg)
 
       i = j = 0;*/
     }
+    //    usleep(10000);
   }
   return NULL;
 }
@@ -514,6 +543,8 @@ void open_chrgctrl(char *dev_name)
 
   settings.c_cc[VMIN] = 0;
   settings.c_cc[VTIME] = 0;
+
+  cfmakeraw(&settings);
 
   tcsetattr(chrgctrlinfo.fd, TCSANOW, &settings);
 }
@@ -709,11 +740,11 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
         data_avail = FALSE; 
       }
 
-      /* Print to stderr the hex value of each character that is received.
-      #ifdef CHRGCTRL_VERBOSE
-        fprintf(stderr, "<%.2X>", rxchar);
-      #endif
-      */
+      // Print to stderr the hex value of each character that is received.
+      //  #ifdef CHRGCTRL_VERBOSE
+        printf("<%.2X>", rxchar);
+	//  #endif
+      
 
     } else { 
       data_avail = FALSE;
