@@ -1614,8 +1614,12 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.ISCState[0].elBDA = rvalues[1] * DEG2RAD;
       break;
     case isc_integrate:
-      CommandData.ISCControl[0].fast_pulse_width = rvalues[0] / 10.;
-      CommandData.ISCControl[0].pulse_width = rvalues[1] / 10.;
+      i = (int)(rvalues[0]/10. + 0.5) ;
+      if (i % 2) i++;
+      CommandData.ISCControl[0].fast_pulse_width = i;
+      i = (int)(rvalues[1]/10. + 0.5) ;
+      if (i % 2) i++;
+      CommandData.ISCControl[0].pulse_width = i;
       break;
     case isc_det_set:
       CommandData.ISCState[0].grid = ivalues[0];
@@ -1632,10 +1636,11 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.ISCState[0].lost_radius = rvalues[2] * DEG2RAD;
       break;
     case isc_tolerances:
-      CommandData.ISCState[0].tolerance = rvalues[0] / 3600. * DEG2RAD;
-      CommandData.ISCState[0].match_tol = rvalues[1] / 100;
-      CommandData.ISCState[0].quit_tol = rvalues[2] / 100;
-      CommandData.ISCState[0].rot_tol = rvalues[3] * DEG2RAD;
+      CommandData.ISCState[0].tolerance = 
+	(int)(rvalues[0] / 3600. * DEG2RAD + 0.5);
+      CommandData.ISCState[0].match_tol = (int)(rvalues[1] / 100 + 0.5);
+      CommandData.ISCState[0].quit_tol = (int)(rvalues[2] / 100 + 0.5);
+      CommandData.ISCState[0].rot_tol = (int)(rvalues[3] * DEG2RAD + 0.5);
       break;
     case isc_hold_current:
       CommandData.ISCState[0].hold_current = ivalues[0];
@@ -1676,8 +1681,12 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.ISCState[1].elBDA = rvalues[1] * DEG2RAD;
       break;
     case osc_integrate:
-      CommandData.ISCControl[1].fast_pulse_width = rvalues[0] / 10.;
-      CommandData.ISCControl[1].pulse_width = rvalues[1] / 10.;
+      i = (int)(rvalues[0]/10. + 0.5) ;
+      if (i % 2) i++;
+      CommandData.ISCControl[1].fast_pulse_width = i;
+      i = (int)(rvalues[1]/10. + 0.5) ;
+      if (i % 2) i++;
+      CommandData.ISCControl[1].pulse_width = i;
       break;
     case osc_det_set:
       CommandData.ISCState[1].grid = ivalues[0];
@@ -1694,10 +1703,11 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.ISCState[1].lost_radius = rvalues[2] * DEG2RAD;
       break;
     case osc_tolerances:
-      CommandData.ISCState[1].tolerance = rvalues[0] / 3600. * DEG2RAD;
-      CommandData.ISCState[1].match_tol = rvalues[1] / 100;
-      CommandData.ISCState[1].quit_tol = rvalues[2] / 100;
-      CommandData.ISCState[1].rot_tol = rvalues[3] * DEG2RAD;
+      CommandData.ISCState[1].tolerance = 
+	(int)(rvalues[0] / 3600. * DEG2RAD + 0.5);
+      CommandData.ISCState[1].match_tol = (int)(rvalues[1] / 100 + 0.5);
+      CommandData.ISCState[1].quit_tol = (int)(rvalues[2] / 100 + 0.5);
+      CommandData.ISCState[1].rot_tol = (int)(rvalues[3] * DEG2RAD + 0.5);
       break;
     case osc_hold_current:
       CommandData.ISCState[1].hold_current = ivalues[0];
