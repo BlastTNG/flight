@@ -1464,9 +1464,19 @@ void WriteData(struct NiosStruct* addr, unsigned int data, int flush_flag)
 
 void UpdateBBCFrame(unsigned short *RxFrame)
 {
+  static struct BiPhaseStruct* frameNumAddr;
+  static int firsttime = 1;
   static int index = 0;
 
   /*** do Controls ***/
+  if (firsttime) {
+    firsttime = 0;
+    frameNumAddr = GetBiPhaseAddr("framenum");
+  }
+  //When the PCI card works properly, this is extracted in mcp.c
+  //This is a replacement extracted from the ACS2 DSP
+  RxFrameFastSamp = RxFrame[frameNumAddr->channel];
+
 #ifndef BOLOTEST
   if (!mcp_initial_controls)
     DoSched();

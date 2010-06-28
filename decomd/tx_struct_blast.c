@@ -911,6 +911,9 @@ struct ChannelStruct FastChannels[] = {
   //TODO can heat_gy be made slow? Probably.
   {"heat_gy",      'w',  ACS1_D,  6,                1.0,             0.0, 'u', U_NONE},
 
+/* ACS2 Common Node */
+  {"framenum",     'r',  ACS2_C,  1,                1.0,             0.0, 'u', U_NONE},
+
 /* ACS2 Digital Card */
   {"ifel_gy",      'r',   ACS2_D, 12,GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
   {"ifroll_gy",    'r',   ACS2_D, 13,GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},

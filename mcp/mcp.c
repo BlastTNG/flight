@@ -1047,8 +1047,11 @@ int main(int argc, char *argv[])
 	}
         RxFrameIndex = RxFrame[3];
 
+#if 0 //FastSamp from the PCI card isn't working, use one from a DSP
+      //this is done at the beginning of UpdateBBCFrame
         /* Save current fastsamp */
         RxFrameFastSamp = (RxFrame[1] + RxFrame[2] * 0x10000);
+#endif
 
         UpdateBBCFrame(RxFrame);
         CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);
