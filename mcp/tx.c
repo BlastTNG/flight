@@ -85,6 +85,7 @@ void ControlAuxMotors(unsigned short *RxFrame);
 void ControlGyroHeat(unsigned short *RxFrame);
 void CameraTrigger(int which);
 void ControlPower(void);
+void VideoTx(void);
 
 /* in das.c */
 void BiasControl(unsigned short* RxFrame);

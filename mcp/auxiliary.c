@@ -854,10 +854,10 @@ void VideoTx(void)
     bitsVtxAddr = GetNiosAddr("bits_vtx");
   }
 
-  if (CommandData.vtx_sel[0] == vtx_sbsc) vtx_bits |= 0x1;
-  else if (CommandData.vtx_sel[0] == vtx_osc) vtx_bits |= 0x3;
-  if (CommandData.vtx_sel[1] == vtx_sbsc) vtx_bits |= 0x4;
-  else if (CommandData.vtx_sel[1] == vtx_isc) vtx_bits |= 0xc;
+  if (CommandData.vtx_sel[0] == vtx_sbsc) vtx_bits |= 0x3;
+  else if (CommandData.vtx_sel[0] == vtx_osc) vtx_bits |= 0x1;
+  if (CommandData.vtx_sel[1] == vtx_sbsc) vtx_bits |= 0xc;
+  else if (CommandData.vtx_sel[1] == vtx_isc) vtx_bits |= 0x4;
 
   WriteData(bitsVtxAddr, vtx_bits, NIOS_QUEUE);
 }
