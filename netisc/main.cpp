@@ -1801,8 +1801,6 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
   if( focusPosition == -1 ) focus_home(); 
       
   if( aperturePosition != execCmd.ap_pos )
-    //printf("Aperture cannot be changed on this camera!\n");
-    //**LORENZO** faulty aperture in this camera - avoid any command to be sent to the aperture motor
     absoluteMotor(AP_MOTOR,execCmd.ap_pos);  
       
   if( hold_current != execCmd.hold_current ) {
