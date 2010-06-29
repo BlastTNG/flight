@@ -41,7 +41,7 @@
 #define MEMORY_PARITY_ERROR  -8
 #define PORT_FAILURE        -11
 
-#define TO 50000	                 // timeout delay at end of packet in us
+#define TO 100000	                 // timeout delay at end of packet in us
                                          // this value is just a guess
                                          // MODBUS spec says frame starts after 
                                          // silent interval of >= 3.5 char. times
