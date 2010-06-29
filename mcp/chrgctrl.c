@@ -667,12 +667,13 @@ int query_chrgctrl(int dev_addr, unsigned int start_addr, unsigned int count,
 
 int response_chrgctrl(int *dest, unsigned char *query, int fd)
 {
-
   /*unsigned short crc, crc_calc;*/
   
   unsigned char data[MAX_RESPONSE_LENGTH];
   int temp;
-  int i;
+  int i,j;
+  char frame[50];
+  int index=0, count=0;
   int rxchar = PORT_FAILURE;
   int data_avail = FALSE;
   int data_length;        // # of bytes of register data received 
@@ -740,9 +741,9 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
         data_avail = FALSE; 
       }
 
-      // Print to stderr the hex value of each character that is received.
+      // Print the hex value of each character that is received.
       //  #ifdef CHRGCTRL_VERBOSE
-        printf("<%.2X>", rxchar);
+      //        printf("<%.2X>", rxchar);
 	//  #endif
       
 
@@ -790,7 +791,18 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
     
   if (bytes_received && (data[1] != query[1])) {
 
-    /* if exception occurs, third byte in packet is exception code, whose negative is 
+    // print the returned packet for debugging purposes:
+
+    for (j = 0; j < bytes_received; j++) {
+
+      index += count;
+
+      count = sprintf(&(frame[index]), "%.2x", data[j]);
+    }
+
+    bprintf(info, "[%s]", frame);
+
+       /* if exception occurs, third byte in packet is exception code, whose negative is 
        computed here */
 
     bytes_received = data_length = 0 - data[2];
