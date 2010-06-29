@@ -75,19 +75,11 @@ struct ISCStatusStruct {
   double elBDA;     // el      "      "     "    "    "    "    "  "
 
   // telescope attitude
-<<<<<<< isc_protocol.h
-  double az;     // az in radians
-  double el;     // el in radians
-  double lst;    // lst in radians (!!)
-  double lat;    // North Lat in radians
-  double maxSlew;   // maximum telescope slew vel. in rad/sec
-=======
   double az;        // az in radians
   double el;        // el in radians
   double lst;       // lst in radians (!!)
   double lat;       // North Lat in radians
   double maxSlew;   // maximum telescope slew vel. in rad/sec
->>>>>>> 4.0
 
   // "brightest star is..." state
   int brightStarMode; // 1 brightest star in field is at:
@@ -139,6 +131,9 @@ struct ISCSolutionStruct {
   int heaterOn;         // 1 if the heater is on
 
   double diskspace;     // MB space remaining on hard disk
+
+  int autofocusOn;      // sends back to mcp the status of the autofocus
+  int current_focus_pos;// keeps track of the current absolute position of the focus
 
   int n_blobs;
   double blob_x[MAX_ISC_BLOBS];
