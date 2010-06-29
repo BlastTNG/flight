@@ -810,11 +810,11 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
        /* print the returned packet for debugging purposes: */
     //if (nlog < 10000) {
       if (nlog == 0) {
-	fprintf(fp, "\n\n New Session \n\n");
+	//	fprintf(fp, "\n\n New Session \n\n");
       }     
-      fprintf(fp, "ERROR: [%s]\n", frame);
-      fflush(fp);
-      nlog++;
+      // fprintf(fp, "ERROR: [%s]\n", frame);
+      // fflush(fp);
+      // nlog++;
       // }
 
        /* if exception occurs, third byte in packet is exception code, whose negative is 
@@ -828,11 +828,11 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
     /* print the returned packet for debugging purposes: */
     // if (nlog < 10000) {
       if (nlog == 0) {
-	fprintf(fp, "\n\n New Session \n\n");
+	//	fprintf(fp, "\n\n New Session \n\n");
       }     
-      fprintf(fp, "       [%s]\n", frame);
-      fflush(fp);
-      nlog++;
+      // fprintf(fp, "       [%s]\n", frame);
+      // fflush(fp);
+      // nlog++;
       // }
 
     /* if no error occurs, the third byte is the count of bytes 
