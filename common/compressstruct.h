@@ -20,13 +20,17 @@ struct fieldStreamStruct {
   int gain; // x_down = x/gain
   int samples_per_frame; // samples per ~1Hz frame
   int doAverage; // boxcar average before decimation
-  int differentiate; // send down derivative, not value
+  int doDifferentiate; // send down derivative, not value
   int bits; // number of bits in stream: 4, 8, 16, 32
+  int spikeMode; // SLOW: skip samples  SPIKE: report enlarged data
 };
 
 struct streamDataStruct {
   double x[FASTFRAME_PER_STREAMFRAME];
   double last;
   double residual;
+  double sum;
+  double n_sum;
   int gain;
+  int offset;
 };

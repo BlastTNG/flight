@@ -521,7 +521,6 @@ char *frameList[] = {
 "td_hs_pot",
 "td_charcoal",
 "td_ln_filt",
-"time",
 "time_usec",
 "time_sip",
 "time_dgps",
