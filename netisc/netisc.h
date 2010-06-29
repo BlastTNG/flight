@@ -85,6 +85,9 @@
 #define FONT_WIDTH 10       // pixels.
 #define DISP_IMAGE_YFLIP -1 // 1 or -1: flip images in window in Y direction
 
+#define BACKGROUND_KLUDGE 0	  // **LORENZO** if set to 1, loads and plugs into the frames
+						                  // additional white noise read from "background.dat"
+
 // autofocus algorithm
 #define AUTOFOCUS_FINE_DELTA 5  // # steps between samples (+/-) (fine search)
 #define AUTOFOCUS_FINE_NSAMPLES 100 // # steps in autofocus (fine search)
@@ -117,6 +120,7 @@ char stepperlogname[] = "stepperlog.cam";  // log the stepper motor positions
 char framenumlogname[] = "fnumlog.cam";    // log the current frame number
 char serverlogname[] = "serverlog.cam";    // main server log file
 char imagePrefix[] = "images\\";           // name prefix for saved images 
+char backgroundfilename[] = "background.dat";  // for BACKGROUND_KLUDGE
 
 // client sockets / connection threads
 int SERVER_PORTS[NCLIENTS];           // ports for accepting connections
@@ -169,6 +173,7 @@ QCam_Frame QCFrame;       // Frame of camera data.
 unsigned long FrameSize;  // Size of frame
 int frameNum=0;
 frameblob Frameblob;      // class for locating blobs
+unsigned short ep_background[1392*1040];// for BACKGROUND_KLUDGE
 
 // Display window variables
 int eyeOn=1;              // by default the evil eye is updated
