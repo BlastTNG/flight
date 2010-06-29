@@ -464,11 +464,11 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.elmot.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
       break;
-    case sc_tx_off:
+    case vtx_off:
       CommandData.power.sc_tx.set_count = 0;
       CommandData.power.sc_tx.rst_count = LATCH_PULSE_LEN;
       break;
-    case sc_tx_on:
+    case vtx_on:
       CommandData.power.sc_tx.rst_count = 0;
       CommandData.power.sc_tx.set_count = LATCH_PULSE_LEN;
       break;

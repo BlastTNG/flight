@@ -89,7 +89,7 @@ enum singleCommand {
   gps_off,          gps_on,             isc_off,          isc_on,
   osc_off,          osc_on,             rw_off,	          rw_on,
   piv_off,	    piv_on,		elmot_off,	  elmot_on,
-  sc_tx_off,	    sc_tx_on,		bi0_off,	  bi0_on,
+  vtx_off,	    vtx_on,		bi0_off,	  bi0_on,
   das_off,	    das_on,		rx_off,		  rx_on,
   rx_hk_off,        rx_hk_on,           rx_amps_off,	  rx_amps_on,
   charge_off,	    charge_on,		charge_cycle,

@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.60 $";
+const char *command_list_serial = "$Revision: 4.61 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -45,12 +45,12 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(gps_off), "turn off the dGPS", GR_POWER | CONFIRM},
   {COMMAND(gps_on), "turn on the dGPS", GR_POWER},
   {COMMAND(gps_cycle), "power cycle the dGPS", GR_POWER | CONFIRM},
-  {COMMAND(isc_off), "turn off the ISC", GR_POWER | CONFIRM},
-  {COMMAND(isc_on), "turn on the ISC", GR_POWER},
-  {COMMAND(isc_cycle), "power cycle the ISC", GR_POWER | CONFIRM},
-  {COMMAND(osc_off), "turn off the OSC", GR_POWER | CONFIRM},
-  {COMMAND(osc_on), "turn on the OSC", GR_POWER},
-  {COMMAND(osc_cycle), "power cycle the OSC", GR_POWER | CONFIRM},
+  {COMMAND(isc_off), "turn off the ISC", GR_ISC_MODE | GR_POWER | CONFIRM},
+  {COMMAND(isc_on), "turn on the ISC", GR_ISC_MODE | GR_POWER},
+  {COMMAND(isc_cycle), "power cycle the ISC", GR_ISC_MODE | GR_POWER | CONFIRM},
+  {COMMAND(osc_off), "turn off the OSC", GR_OSC_MODE | GR_POWER | CONFIRM},
+  {COMMAND(osc_on), "turn on the OSC", GR_OSC_MODE | GR_POWER},
+  {COMMAND(osc_cycle), "power cycle the OSC", GR_OSC_MODE | GR_POWER | CONFIRM},
   {COMMAND(ss_off), "turn off the Sun Sensor", GR_POWER},
   {COMMAND(ss_on), "turn on the Sun Sensor", GR_POWER},
   {COMMAND(ss_cycle), "power cycle the Sun Sensor", GR_POWER},
@@ -90,10 +90,10 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(elmot_off), "turn off the elevation motor", GR_POWER},
   {COMMAND(elmot_on), "turn on the elevation motor", GR_POWER},
   {COMMAND(elmot_cycle), "power cycle the elevation motor", GR_POWER},
-  {COMMAND(sc_tx_off), "turn off the starcam transmitters", GR_POWER},
-  {COMMAND(sc_tx_on), "turn on the starcam transmitters", GR_POWER},
-  {COMMAND(bi0_off), "turn off the biphase transmitters", GR_POWER},
-  {COMMAND(bi0_on), "turn on the biphase transmitters", GR_POWER},
+  {COMMAND(vtx_off), "turn off the video transmitters", GR_TELEM | GR_POWER},
+  {COMMAND(vtx_on), "turn on the video transmitters", GR_TELEM | GR_POWER},
+  {COMMAND(bi0_off), "turn off the biphase transmitter", GR_TELEM | GR_POWER},
+  {COMMAND(bi0_on), "turn on the biphase transmitter", GR_TELEM | GR_POWER},
   {COMMAND(hub232_off), "turn off the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_on), "turn on the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_cycle), "power cycle the RS-232 (serial) hub", GR_POWER},
