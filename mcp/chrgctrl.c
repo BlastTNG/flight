@@ -69,7 +69,8 @@ static unsigned int modbus_crc(unsigned char *buf, int start, int cnt);
 void nameThread(const char*);	      // in mcp.c
 extern short int InCharge;            // in tx.c
 
-
+static int nlog = 0;
+FILE *fp;
 
 /* create charge controller serial thread */
 
@@ -199,6 +200,8 @@ void* chrgctrlComm(void* arg)
   chrgctrlinfo.closing = 0;
   chrgctrlinfo.reset = 0;
 /*chrgctrlinfo.closing = 1; // just for testing */
+
+  fp = fopen("/home/shariff/chrgctrl.log", "a");
 
   nameThread("ChrgC");
 
@@ -680,6 +683,7 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
   int bytes_received = 0; // total # of bytes received
   int read_stat;
   int timeout = 1;        // 1 second
+  //  int nlog = 0;
 
   struct timeval tv;
 
@@ -744,13 +748,25 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
       // Print the hex value of each character that is received.
       //  #ifdef CHRGCTRL_VERBOSE
       //        printf("<%.2X>", rxchar);
-	//  #endif
-      
+	//  #endif      
 
     } else { 
       data_avail = FALSE;
     }
   }
+
+  /* store the returned packet as a string */
+
+  for (j = 0; j < bytes_received; j++) {
+
+    index += count;
+
+    count = sprintf(&(frame[index]), "%.2x", data[j]);
+  }
+
+    //    bprintf(info, "[%s]", frame);
+
+
     /*#ifdef CHRGCTRL_VERBOSE
     fprintf(stderr, "\n");
     #endif*/
@@ -791,16 +807,15 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
     
   if (bytes_received && (data[1] != query[1])) {
 
-    // print the returned packet for debugging purposes:
-
-    for (j = 0; j < bytes_received; j++) {
-
-      index += count;
-
-      count = sprintf(&(frame[index]), "%.2x", data[j]);
+       /* print the returned packet for debugging purposes: */
+    if (nlog < 10000) {
+      if (nlog == 0) {
+	fprintf(fp, "\n\n New Session \n\n");
+      }     
+      fprintf(fp, "ERROR: [%s]\n", frame);
+      fflush(fp);
+      nlog++;
     }
-
-    bprintf(info, "[%s]", frame);
 
        /* if exception occurs, third byte in packet is exception code, whose negative is 
        computed here */
@@ -809,6 +824,16 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
   }
   
   if (bytes_received > 0) {
+
+    /* print the returned packet for debugging purposes: */
+    if (nlog < 10000) {
+      if (nlog == 0) {
+	fprintf(fp, "\n\n New Session \n\n");
+      }     
+      fprintf(fp, "       [%s]\n", frame);
+      fflush(fp);
+      nlog++;
+    }
 
     /* if no error occurs, the third byte is the count of bytes 
      * read from MODBUS registers */
