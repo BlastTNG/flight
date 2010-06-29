@@ -132,6 +132,9 @@ struct ISCSolutionStruct {
 
   double diskspace;     // MB space remaining on hard disk
 
+  int autofocusOn;      // sends back to mcp the status of the autofocus
+  int current_focus_pos;// keeps track of the current absolute position of the focus
+
   int n_blobs;
   double blob_x[MAX_ISC_BLOBS];
   double blob_y[MAX_ISC_BLOBS];

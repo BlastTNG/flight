@@ -557,6 +557,12 @@ DWORD WINAPI camera_grab( LPVOID parameter ) {
   
   // Record the instant at which the camera returned the image
   GetSystemTime(&exposureFinished);
+
+  if(BACKGROUND_KLUDGE) {
+					unsigned short *ppp = (unsigned short *)QCFrame.pBuffer;
+					for(int idx=0; idx < CCD_X_PIXELS*CCD_Y_PIXELS; idx++)
+						ppp[idx] += ep_background[idx];
+				}
   
 #ifdef AUTONOMOUS
   // Update the LST
@@ -1069,6 +1075,7 @@ int step_motor( int motor, int steps ) {
     if( position < 0 ) position = 0;
     if( position > FOCUS_RANGE ) position = FOCUS_RANGE;
     current_focus = position;
+    server_data.current_focus_pos = current_focus;
     actualSteps = steps;
     printf("New focus motor position will be: %i\n",current_focus);
   }
@@ -1125,6 +1132,7 @@ void focus_home(void) {
 
   execCmd.focus_pos = 0;  /* Reset home command to 0 */
   current_focus = 0;
+  server_data.current_focus_pos = 0;
 
   printf("focusOffset:%i\n",focusOffset);
   step_motor(FOCUS_MOTOR,focusOffset);
@@ -1179,6 +1187,7 @@ void calibrate_motors( void ) {
     if( (logFocus>=0) && (logFocus<=FOCUS_RANGE) && (logAperture>=0) && 
         (logAperture<=AP_RANGE) ) {
       current_focus = logFocus;
+      server_data.current_focus_pos = logFocus;
       aperturePosition = logAperture;
     }
   }
@@ -1213,6 +1222,8 @@ void doautofocus( void ) {
   
   eyeMode = blob;
   eyeBlobRoi = 0;
+
+  server_data.autofocusOn=1;
   
   printf("Autofocus step =%i\n",AUTOFOCUS_FINE_DELTA);
   
@@ -1370,6 +1381,7 @@ void doautofocus( void ) {
   delete[] fine_fluxes;
   
   autoFocusMode = 0; // de-assert because we're done
+  server_data.autofocusOn=0;
   eyeMode = oldMode;
   autoFocusStep = 0;
 }        
@@ -1482,7 +1494,7 @@ DWORD WINAPI receive_frame( LPVOID parameter ) {
     printf("Az: %8.3lf deg\n",az*180./PI);
     printf("El: %8.3lf deg\n",el*180./PI);
   }
-
+  
   // update the timer for the last time a command was received
   time( &lastCmdRec );
 
@@ -2271,6 +2283,7 @@ LRESULT CALLBACK MainWndProc(
   char expstr[80];
   char apstr[80];
   char focstr[80];
+  char iscstr[80];
   
   //char newcmdstr[80];
   
@@ -2580,6 +2593,11 @@ LRESULT CALLBACK MainWndProc(
     TextOut(hdc, FONT_HEIGHT, client_height/2.+FONT_HEIGHT*3., stddevstr, 
             (int)strlen(stddevstr));     
 
+    // I am ISC
+    sprintf(iscstr,"ISC");
+    TextOut(hdc, client_width*3/4.+6, FONT_HEIGHT/2-10, iscstr, 
+            (int)strlen(iscstr));
+    
     // Exposure time 
     sprintf(expstr,"E: %i",(int)ccd_exposure/1000);
     TextOut(hdc, client_width*3/4., FONT_HEIGHT, expstr, 
@@ -2684,6 +2702,22 @@ int main( int argc, char **argv ) {
   FILE *settingsfile;
   char thisline[255];        
   int i;
+
+  // **LORENZO** for ground testing purposes: loads and plugs into the frames
+    // additional white noise read from "background.dat"
+	if(BACKGROUND_KLUDGE) {
+		FILE *ep_fs;
+		char ep_line[256];
+		int ep_idx = 0;
+		ep_fs = fopen(backgroundfilename, "r");
+		if(ep_fs == NULL) {
+			printf("Unable to open file background.dat\n");
+			exit(0);
+		}
+		while(fgets(ep_line, 80, ep_fs)!= NULL) {
+			ep_background[ep_idx++] = (unsigned short)atof(ep_line);
+		}
+	}
   
   // a thread for debugging
   
@@ -2888,6 +2922,7 @@ int main( int argc, char **argv ) {
   server_data.temp4=0;
   server_data.pressure1=0;
   server_data.diskspace=-1;
+  server_data.autofocusOn=0;
 
   // Initialize sockets and thread variables
   for(i=0;i<NCLIENTS;i++) {
@@ -3046,6 +3081,7 @@ int main( int argc, char **argv ) {
     //if( thExpState == 2 ) printf(" 2! ");
     
     Sleep(10);  // Sleep to give other processes some time
+
   }
 
   // --- Clean Up -----------------------------------------------
