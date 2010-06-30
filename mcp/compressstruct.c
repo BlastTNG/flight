@@ -3,7 +3,7 @@
 
 struct fieldStreamStruct streamList[] = {
   {"ifel_gy", 5, 10, AVG, NODX, 8, SLOW},
-  {"az", 33140, 50, AVG, DX, 8, SLOW},
+  {"az", 30000, 50, AVG, DX, 8, SLOW},
   END_OF_STREAM
 };
 

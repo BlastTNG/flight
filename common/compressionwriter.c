@@ -230,20 +230,25 @@ void WriteStreamFrame() {
       if (streamList[i_field].doDifferentiate) {
         dx = x - streamData[i_field].last;
         streamData[i_field].last = x;
-        x = dx;
+        x = dx/(double)streamData[i_field].gain;
+      } else {
+        // apply gain
+        x = (x-streamData[i_field].offset)/(double)streamData[i_field].gain;
       }
-      // apply gain
-      x = (x-streamData[i_field].offset)/(double)streamData[i_field].gain;
-
+      
       //preserve integral
       xi = (int)(x + streamData[i_field].residual);
       streamData[i_field].residual =(x + streamData[i_field].residual) - (double)xi; // preserve integral
 
       if (streamList[i_field].bits == 4) {
       } else if (streamList[i_field].bits == 8) {
+        if (xi>127) xi = 127; // truncate overage
+        if (xi<-127) xi = -127;
         streambuf[i_samp] = (signed char)xi;
         n_streambuf++;
       } else if (streamList[i_field].bits == 16) {
+        if (xi > 32767) xi = 32767; // truncate
+        if (xi<-32767) xi = -32767;
         n_streambuf+=2;
         ((short *)streambuf)[i_samp] = (short)xi;
       }
