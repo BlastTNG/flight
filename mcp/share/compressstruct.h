@@ -31,6 +31,6 @@ struct streamDataStruct {
   double residual;
   double sum;
   double n_sum;
-  int gain;
-  int offset;
+  unsigned gain;
+  unsigned offset;
 };

@@ -108,9 +108,8 @@ void BufferStreamData(int i_streamframe, int readindex) {
   for (i_field=0; i_field < n_streamlist; i_field++) {
     if (streamNiosList[i_field]->fast) {
       if (streamNiosList[i_field]->wide) {
-        x = (unsigned int)tdrss_data[readindex][streamBi0List[i_field]->channel] +
-        ((unsigned int)tdrss_data[readindex][streamBi0List[i_field]->channel+1] << 16);
-        x = tdrss_data[readindex][streamBi0List[i_field]->channel]; // FIXME:test
+        x = ((unsigned int)tdrss_data[readindex][streamBi0List[i_field]->channel]) |
+        (((unsigned int)tdrss_data[readindex][streamBi0List[i_field]->channel+1]) << 16);
       } else {
         x = tdrss_data[readindex][streamBi0List[i_field]->channel];
       }
@@ -191,8 +190,10 @@ void WriteSuperFrame(int readindex) {
   for (i_field=0; i_field<n_streamlist; i_field++) {
     short soffset;
     int ioffset;
-    
-    streamData[i_field].offset = streamData[i_field].sum/(double)streamData[i_field].n_sum;
+    long long unsigned lloffset;
+
+    lloffset = streamData[i_field].sum/(double)streamData[i_field].n_sum;
+    streamData[i_field].offset = lloffset;
     streamData[i_field].sum = streamData[i_field].n_sum = 0;
     gain = streamData[i_field].gain;
     ioffset = soffset = streamData[i_field].offset;
