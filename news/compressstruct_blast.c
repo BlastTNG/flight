@@ -1,9 +1,20 @@
 #include "compressstruct.h"
 
+/*
+struct fieldStreamStruct {
+  char name[256];
+  int gain; // x_down = x/gain
+  int samples_per_frame; // samples per ~1Hz frame
+  int doAverage; // boxcar average before decimation
+  int doDifferentiate; // send down derivative, not value
+  int bits; // number of bits in stream: 4, 8, 16, 32
+  int spikeMode; // SLOW: skip samples  SPIKE: report enlarged data
+};
+*/
 
 struct fieldStreamStruct streamList[] = {
   {"ifel_gy", 5, 10, AVG, NODX, 8, SLOW},
-  {"az", 30000, 50, AVG, DX, 8, SLOW},
+  {"az", 33140, 50, AVG, DX, 8, SLOW},
   END_OF_STREAM
 };
 
