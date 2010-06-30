@@ -127,8 +127,15 @@ void BufferStreamData(int i_streamframe, int readindex) {
       }
     }
     streamData[i_field].x[i_streamframe] = x;
-    streamData[i_field].sum += x;
-    streamData[i_field].n_sum++;
+    if (streamList[i_field].doDifferentiate) {
+      if (i_streamframe==0) {
+        streamData[i_field].sum = x;
+        streamData[i_field].n_sum=1;
+      }
+    } else {
+      streamData[i_field].sum += x;
+      streamData[i_field].n_sum++;
+    }
   }
 }
 
@@ -194,7 +201,7 @@ void WriteSuperFrame(int readindex) {
     gain = streamData[i_field].gain;
     ioffset = soffset = streamData[i_field].offset;
     writeHiGainData((char *)&gain, sizeof(unsigned short));
-    if (frameNiosList[i_field]->wide) {
+    if (streamNiosList[i_field]->wide) {
       writeHiGainData((char *)&ioffset, 2*sizeof(unsigned short));
     } else {
       writeHiGainData((char *)&soffset, sizeof(unsigned short));
