@@ -102,27 +102,23 @@ void writeHiGainData(char *x, int size) {
 
 void BufferStreamData(int i_streamframe, int readindex) {
   int i_field;
-  int isWide;
   unsigned int x;
 
   // record stream data in buffer
   for (i_field=0; i_field < n_streamlist; i_field++) {
     if (streamNiosList[i_field]->fast) {
       if (streamNiosList[i_field]->wide) {
-        isWide = 1;
         x = (unsigned int)tdrss_data[readindex][streamBi0List[i_field]->channel] +
         ((unsigned int)tdrss_data[readindex][streamBi0List[i_field]->channel+1] << 16);
+        x = tdrss_data[readindex][streamBi0List[i_field]->channel]; // FIXME:test
       } else {
-        isWide = 0;
         x = tdrss_data[readindex][streamBi0List[i_field]->channel];
       }
     } else { // slow
       if (streamNiosList[i_field]->wide) {
-        isWide = 1;
         x = (unsigned int)slow_data[streamBi0List[i_field]->index][streamBi0List[i_field]->channel] +
         ((unsigned int)slow_data[streamBi0List[i_field]->index][streamBi0List[i_field]->channel+1] <<16);
       } else {
-        isWide = 0;
         x = slow_data[streamBi0List[i_field]->index][streamBi0List[i_field]->channel];
       }
     }
