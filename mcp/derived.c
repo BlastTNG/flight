@@ -136,12 +136,13 @@ union DerivedUnion DerivedChannels[] = {
       "SAVE_IMAGES_ISC",
       "PAUSE_ISC",
       "ABORT_ISC",
-      "AUTOFOCUS_ISC",
+      "AUTOFOCUS_REQ_ISC",
       "SHUTDOWN_ISC",
       "REBOOT_ISC",
       "EYE_ON_ISC",
       "HEATER_ON_ISC",
-      "USE_LOST_ISC"
+      "USE_LOST_ISC",
+      "AUTOFOCUS_ISC"
       ),
   BITWORD("SENT_TRIG_ISC", "trigger_isc", 0, 14),
 
@@ -149,12 +150,13 @@ union DerivedUnion DerivedChannels[] = {
       "SAVE_IMAGES_OSC",
       "PAUSE_OSC",
       "ABORT_OSC",
-      "AUTOFOCUS_OSC",
+      "AUTOFOCUS_REQ_OSC",
       "SHUTDOWN_OSC",
       "REBOOT_OSC",
       "EYE_ON_OSC",
       "HEATER_ON_OSC",
-      "USE_LOST_OSC"
+      "USE_LOST_OSC",
+      "AUTOFOCUS_OSC"
       ),
   BITWORD("SENT_TRIG_OSC", "trigger_osc", 0, 14),
 

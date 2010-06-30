@@ -466,6 +466,7 @@ static void StoreStarCameraData(int index, int which)
   static struct NiosStruct* MaxslewAddr[2];
   static struct NiosStruct* MaxAgeAddr[2];
   static struct NiosStruct* AgeAddr[2];
+  static struct NiosStruct* PosFocusAddr[2];
 
   if (firsttime[which]) {
     firsttime[which] = 0;
@@ -525,6 +526,7 @@ static void StoreStarCameraData(int index, int which)
     MaxslewAddr[which] = GetSCNiosAddr("maxslew", which);
     MaxAgeAddr[which] = GetSCNiosAddr("max_age", which);
     AgeAddr[which] = GetSCNiosAddr("age", which);
+    PosFocusAddr[which] = GetSCNiosAddr("pos_focus", which);
 
     Temp1Addr[0] = GetNiosAddr("t_flange_isc");
     Temp2Addr[0] = GetNiosAddr("t_heat_isc");
@@ -556,6 +558,7 @@ static void StoreStarCameraData(int index, int which)
         + ISCSentState[which].eyeOn * 0x0040
         + ISCSolution[which][i_isc].heaterOn * 0x0080
         + ISCSentState[which].useLost * 0x0100
+        + ISCSolution[which][i_isc].autofocusOn * 0x0200
         ), NIOS_QUEUE);
   WriteData(FocusAddr[which], (unsigned int)ISCSentState[which].focus_pos,
       NIOS_QUEUE);
@@ -711,6 +714,8 @@ static void StoreStarCameraData(int index, int which)
       NIOS_QUEUE);
   WriteData(DiskfreeAddr[which],
       (unsigned int)ISCSolution[which][i_isc].diskspace / 5, NIOS_QUEUE);
+  WriteData(PosFocusAddr[which], 
+      ISCSolution[which][i_isc].current_focus_pos, NIOS_QUEUE);
 }
 
 /************************************************************************/
