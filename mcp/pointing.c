@@ -757,18 +757,32 @@ static int SSConvert(double *ss_az)
   // Original Sun Sensor Memo 5 March 2010
   double module_calibration[] =
   { /* Palestine 2010*/
-    1. / 0.752,
-    1. / 0.864,
-    1. / 0.934,
-    1. / 0.776,
-    1. / 0.780,
-    1. / 0.777,
-    1. / 0.758,
-    1. / 0.868,
-    1. / 0.653,
+    //1. / 0.752,
+    //1. / 0.864,
+    //1. / 0.934,
+    //1. / 0.776,
+    //1. / 0.780,
+    //1. / 0.777,
+    //1. / 0.758,
+    //1. / 0.868,
+    //1. / 0.653,
+    //1. / 1.000,
+    //1. / 0.508,
+    //1. / 0.690
+    // Artificial sun cracked SSS windows.  Replaced.  Recalibrated.
+    // Palestine 30 June 2010 G.T.
+    1. / 0.579,
+    1. / 0.686,
+    1. / 0.739,
+    1. / 0.682,
     1. / 1.000,
-    1. / 0.508,
-    1. / 0.690
+    1. / 0.612,
+    1. / 0.598,
+    1. / 100.,
+    1. / 100.,
+    1. / 0.698,
+    1. / 0.599,
+    1. / 0.760,
   };
 
   // Corrects for slight offsets in angles between modules (not absolutely necessary to use)
@@ -789,7 +803,7 @@ static int SSConvert(double *ss_az)
   };
 
   // Needs to be modified depending on mounting orientation of sun sensor
-  double module_offsets[] =
+  /*  double module_offsets[] =
   {
     360.,
     330.,
@@ -802,9 +816,24 @@ static int SSConvert(double *ss_az)
     120.,
     90.,
     60.,
-    30.,
-  };
-  
+    30.
+    };*/
+
+   double module_offsets[] = 
+   {
+     0.,
+     30.,
+     60.,
+     90.,
+     120.,
+     150.,
+     180.,
+     210.,
+     240.,
+     270.,
+     300.,
+     330.
+   };
   
   i_ss = GETREADINDEX(ss_index);
   i_point = GETREADINDEX(point_index);
@@ -840,7 +869,9 @@ static int SSConvert(double *ss_az)
   sensor_uint[5] = SunSensorData[i_ss].m06;
   sensor_uint[6] = SunSensorData[i_ss].m07;
   sensor_uint[7] = SunSensorData[i_ss].m08;
-  sensor_uint[8] = SunSensorData[i_ss].m09;
+  sensor_uint[7] = 1500.;  // This unit is not working
+  sensor_uint[8] = 1500.;  // This unit is suspect 6/30/10 G.T.
+                   //SunSensorData[i_ss].m09;
   sensor_uint[9] = SunSensorData[i_ss].m10;
   sensor_uint[10] = SunSensorData[i_ss].m11;
   sensor_uint[11] = SunSensorData[i_ss].m12;
@@ -890,10 +921,10 @@ static int SSConvert(double *ss_az)
   // This takes cares of discarding signal when sun is in the gondola shadow
   // This needs to be adjusted for how sun sensor is mounted
   // May not need this if sun sensor at top of gondola
-  if(i_max < 4 || i_max > 8) {
-    PointingData[point_index].ss_snr = 0.0;
-    return 0;
-  }
+  //if(i_max < 4 || i_max > 8) {
+  //  PointingData[point_index].ss_snr = 0.0;
+  //  return 0;
+  //}
  
   // SNR calculation
   PointingData[point_index].ss_snr = max/ave;
@@ -967,7 +998,11 @@ static int SSConvert(double *ss_az)
   // Convert result from radians to degrees
   az *= 180.0/M_PI;
   PointingData[point_index].ss_phase = az;
-  PointingData[point_index].ss_az_rel_sun =   az - module_offsets[i_max];
+  PointingData[point_index].ss_az_rel_sun = az + module_offsets[i_max];
+
+  // Temporary hack!!!! -GT
+  PointingData[point_index].ss_snr = (float)i_max;
+
   
   /* END SSS RAW CALCULATIONS */
 
