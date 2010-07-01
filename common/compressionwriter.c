@@ -123,7 +123,7 @@ void BufferStreamData(int i_streamframe, int readindex) {
     }
     streamData[i_field].x[i_streamframe] = x;
     if (streamList[i_field].doDifferentiate) {
-      if (i_streamframe==0) {
+      if (i_streamframe==FASTFRAME_PER_STREAMFRAME-1) {
         streamData[i_field].sum = x;
         streamData[i_field].n_sum=1;
       }
@@ -181,28 +181,29 @@ void WriteSuperFrame(int readindex) {
     bprintf(info, "Bytes per stream frame - High gain: %d  tdrss omni: %d  iridium dialup: %d",
             higain_bytes_per_streamframe, omni_bytes_per_streamframe, dialup_bytes_per_streamframe);
 
-    BufferStreamData(0, readindex); // fill buffer with first value;
+    BufferStreamData(FASTFRAME_PER_STREAMFRAME-1, readindex); // fill buffer with first value;
 
     //FIXME: calculate how many fields you can actually fit...
   }
  
   // set and write stream gains and offsets
   for (i_field=0; i_field<n_streamlist; i_field++) {
-    short soffset;
-    int ioffset;
+    unsigned short usoffset;
+    unsigned uoffset;
     long long unsigned lloffset;
 
     lloffset = streamData[i_field].sum/(double)streamData[i_field].n_sum;
     streamData[i_field].offset = lloffset;
-    streamData[i_field].sum = streamData[i_field].n_sum = 0;
     gain = streamData[i_field].gain;
-    ioffset = soffset = streamData[i_field].offset;
+    uoffset = streamData[i_field].offset;
+    usoffset = streamData[i_field].offset;
     writeHiGainData((char *)&gain, sizeof(unsigned short));
     if (streamNiosList[i_field]->wide) {
-      writeHiGainData((char *)&ioffset, 2*sizeof(unsigned short));
+      writeHiGainData((char *)&uoffset, 2*sizeof(unsigned short));
     } else {
-      writeHiGainData((char *)&soffset, sizeof(unsigned short));
+      writeHiGainData((char *)&usoffset, sizeof(unsigned short));
     }
+    streamData[i_field].sum = streamData[i_field].n_sum = 0;
   }
   
   return;
