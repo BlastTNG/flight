@@ -417,6 +417,9 @@ void WatchDGPS()
   static struct BiPhaseStruct* dgpsAzAddr;
   static struct BiPhaseStruct* dgpsPitchAddr;
   static struct BiPhaseStruct* dgpsRollAddr;
+  static struct BiPhaseStruct* dgpsAzCovAddr;
+  static struct BiPhaseStruct* dgpsPitchCovAddr;
+  static struct BiPhaseStruct* dgpsRollCovAddr; 
   static struct BiPhaseStruct* dgpsAttOkAddr;
   static struct BiPhaseStruct* dgpsLatAddr;
   static struct BiPhaseStruct* dgpsLonAddr;
@@ -437,6 +440,9 @@ void WatchDGPS()
     dgpsAzAddr = GetBiPhaseAddr("az_raw_dgps");     
     dgpsPitchAddr = GetBiPhaseAddr("pitch_raw_dgps");
     dgpsRollAddr = GetBiPhaseAddr("roll_raw_dgps"); 
+    dgpsAzCovAddr = GetBiPhaseAddr("az_cov_dgps");     
+    dgpsPitchCovAddr = GetBiPhaseAddr("pitch_cov_dgps");
+    dgpsRollCovAddr = GetBiPhaseAddr("roll_cov_dgps"); 
     dgpsAttOkAddr = GetBiPhaseAddr("att_ok_dgps");
     dgpsLatAddr = GetBiPhaseAddr("lat_dgps");       
     dgpsLonAddr = GetBiPhaseAddr("lon_dgps");      
@@ -479,6 +485,15 @@ void WatchDGPS()
     DGPSAtt[0].roll = (((double)slow_data[dgpsRollAddr->index][dgpsRollAddr->channel])/DEG2I);
     DGPSAtt[1].roll = (((double)slow_data[dgpsRollAddr->index][dgpsRollAddr->channel])/DEG2I);
     DGPSAtt[2].roll = (((double)slow_data[dgpsRollAddr->index][dgpsRollAddr->channel])/DEG2I);
+    DGPSAtt[0].az_cov = (((double)slow_data[dgpsAzCovAddr->index][dgpsAzAddr->channel])/DEG2I);
+    DGPSAtt[1].az_cov = (((double)slow_data[dgpsAzCovAddr->index][dgpsAzAddr->channel])/DEG2I);
+    DGPSAtt[2].az_cov = (((double)slow_data[dgpsAzCovAddr->index][dgpsAzAddr->channel])/DEG2I);
+    DGPSAtt[0].pitch_cov = (((double)slow_data[dgpsPitchCovAddr->index][dgpsPitchCovAddr->channel])/DEG2I);
+    DGPSAtt[1].pitch_cov = (((double)slow_data[dgpsPitchCovAddr->index][dgpsPitchCovAddr->channel])/DEG2I);
+    DGPSAtt[2].pitch_cov = (((double)slow_data[dgpsPitchCovAddr->index][dgpsPitchCovAddr->channel])/DEG2I);
+    DGPSAtt[0].roll_cov = (((double)slow_data[dgpsRollCovAddr->index][dgpsRollCovAddr->channel])/DEG2I);
+    DGPSAtt[1].roll_cov = (((double)slow_data[dgpsRollCovAddr->index][dgpsRollCovAddr->channel])/DEG2I);
+    DGPSAtt[2].roll_cov = (((double)slow_data[dgpsRollCovAddr->index][dgpsRollCovAddr->channel])/DEG2I);
     DGPSAtt[0].att_ok = (slow_data[dgpsAttOkAddr->index][dgpsAttOkAddr->channel]);
     DGPSAtt[1].att_ok = (slow_data[dgpsAttOkAddr->index][dgpsAttOkAddr->channel]);
     DGPSAtt[2].att_ok = (slow_data[dgpsAttOkAddr->index][dgpsAttOkAddr->channel]);
@@ -574,6 +589,7 @@ void WatchDGPS()
   if (n<0) {
     berror(err,"send command failed!");
   }
+  static int i=0;
 
   // FIXME maybe: should we be allowed to proceed if we have had write errors?
   // Can this even happen?  If not, should we care?
@@ -595,6 +611,11 @@ void WatchDGPS()
 	RXTIME->UTCSec
 	//RXTIME->SyncLevel
 	);*/
+      i++;
+      if ((i%500)==0) {
+	bprintf(info,"%13.1f\n",
+	RXTIME->WNc*86400.0*7.0+RXTIME->TOW/1000.0);
+      }
       ts.tm_year=RXTIME->UTCYear;
       ts.tm_mon=RXTIME->UTCMonth;
       ts.tm_mday=RXTIME->UTCDay;

@@ -144,7 +144,6 @@ struct Step {
   unsigned short pulse_len;  // only used for bias
 };
 
-
 struct CommandDataStruct {
   struct {
     unsigned short dac_out[5];

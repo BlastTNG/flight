@@ -981,7 +981,6 @@ int main(int argc, char *argv[])
   InitSched();
   openMotors();  //open communications with peripherals, creates threads
                  // in motors.c
-
   startChrgCtrl(); // create charge controller serial thread
                    // defined in chrgctrl.c
 #endif

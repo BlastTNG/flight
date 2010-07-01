@@ -742,6 +742,9 @@ struct ChannelStruct SlowChannels[] = {
   {"pos_focus_isc",'w',   LOOP8, 35,                1.0,             0.0, 'u', U_NONE},
   {"pos_focus_osc",'w',   LOOP8, 36,                1.0,             0.0, 'u', U_NONE},
   /* LOOP8 36-63 are unused */
+  {"az_cov_dgps",   'w', LOOP8, 37,              I2DEG,             0.0, 'u', U_D_DEG},
+  {"pitch_cov_dgps",'w', LOOP8, 38,              I2DEG,             0.0, 'u', U_D_DEG},
+  {"roll_cov_dgps", 'w', LOOP8, 39,              I2DEG,             0.0, 'u', U_D_DEG},
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
