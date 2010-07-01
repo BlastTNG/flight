@@ -589,7 +589,6 @@ void WatchDGPS()
   if (n<0) {
     berror(err,"send command failed!");
   }
-  static int i=0;
 
   // FIXME maybe: should we be allowed to proceed if we have had write errors?
   // Can this even happen?  If not, should we care?
@@ -611,11 +610,6 @@ void WatchDGPS()
 	RXTIME->UTCSec
 	//RXTIME->SyncLevel
 	);*/
-      i++;
-      if ((i%500)==0) {
-	bprintf(info,"%13.1f\n",
-	RXTIME->WNc*86400.0*7.0+RXTIME->TOW/1000.0);
-      }
       ts.tm_year=RXTIME->UTCYear;
       ts.tm_mon=RXTIME->UTCMonth;
       ts.tm_mday=RXTIME->UTCDay;
