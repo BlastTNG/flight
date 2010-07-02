@@ -69,8 +69,10 @@ static unsigned int modbus_crc(unsigned char *buf, int start, int cnt);
 void nameThread(const char*);	      // in mcp.c
 extern short int InCharge;            // in tx.c
 
-static int nlog = 0;
-FILE *fp;
+//static int nlog = 0;                // counts number of frames printed to chrgctrl.log
+
+//FILE *fp;                           // pointer to file chrgctrl.log, which logged 
+                                      // frames returned by controller for debugging
 
 /* create charge controller serial thread */
 
@@ -104,14 +106,14 @@ void* chrgctrlComm(void* arg)
 
   const int slave = 0x01;   // default MODBUS device address   
                             // for charge controller
-
 /*  
   const int nfaults = 11;   // number of faults conditions
   const int nalarms = 20;   // number of alarm conditions
   const int nstates = 10;   // number of charging states 
 */
 
-  int n_conn=0, n_reconn=0, query_no;               // loop constants
+  int n_conn=0, n_reconn=0; // loop constants
+  int query_no;             // IDs which frame was from which query (for err. check)  
   int data_lengths[6];      // one element for each query
 
   double Vscale;            // voltage scaling factor
@@ -119,8 +121,11 @@ void* chrgctrlComm(void* arg)
 
  
   /* struct for parsing alarm and fault bitfields, and other general
-     status lookup tables */
-  /*
+     status lookup tables. 
+     
+     This is a relic from the test program. Not needed for mcp
+     since bitfields are in derived.c
+
   struct status {
 
     int flag;
@@ -139,6 +144,10 @@ void* chrgctrlComm(void* arg)
   } scale, elec, temp, fault, alarm, charge; 
 
   /*  
+
+  This is a relic from the test program. Not needed for mcp
+  since bitfields are in derived.c
+  
   struct status fault_bits[] = {
 
     {1, "overcurrent"},
@@ -201,11 +210,12 @@ void* chrgctrlComm(void* arg)
   chrgctrlinfo.reset = 0;
 /*chrgctrlinfo.closing = 1; // just for testing */
 
-  fp = fopen("/home/shariff/chrgctrl.log", "a");
+//  fp = fopen("/home/shariff/chrgctrl.log", "a");   // open the log file that records
+                                                     // charge controller serial frames
 
   nameThread("ChrgC");
 
-  /* check whether this is ICC */
+  /* check whether this is the ICC */
 
   while (!InCharge) {
 
@@ -285,7 +295,7 @@ void* chrgctrlComm(void* arg)
 
       scale.num = query_chrgctrl(slave, 1, 4, scale.arr, chrgctrlinfo.fd);
 
-      //      usleep(10000);
+      //      usleep(10000);  // ignore these -- just for debugging
 
       /* poll charge controller for battery and array voltages and currents,
          which range from register addresses [26 or]27-30 */
@@ -332,9 +342,11 @@ void* chrgctrlComm(void* arg)
 
         if (data_lengths[query_no] <= 0) {
 
-        /* Most of these won't happen, except PORT_FAILURE and COMMS_FAILURE */
+        /* Most of these won't happen, except PORT_FAILURE and COMMS_FAILURE
+           EDIT: Except when serial comms. messes up! 
+	 */
 
-	  //          #ifdef CHRGCTRL_VERBOSE
+ #ifdef CHRGCTRL_VERBOSE
           switch (data_lengths[query_no]) {
 
 	    case COMMS_FAILURE: 
@@ -376,7 +388,7 @@ void* chrgctrlComm(void* arg)
  	    default:
               bputs(err, "An unknown charge controller error occurred.");  
 	  }
-	  //          #endif
+  #endif
           chrgctrlinfo.err = 1;
           query_no = 6; // break out of for loop upon first problem encountered
 	}
@@ -421,7 +433,9 @@ void* chrgctrlComm(void* arg)
 
       ChrgCtrlData.charge_state = *charge.arr;
     
-      /* need to write data now. For testing purposes, just print stuff  
+      /* Relics from test program -- not for mcp!
+
+      need to write data now. For testing purposes, just print stuff  
 
       printf("\n");
       printf("Voltage Scaling Factor: %.3f \n", Vscale);
@@ -465,7 +479,6 @@ void* chrgctrlComm(void* arg)
   }
   return NULL;
 }
-
 
 
 /* open serial port */
@@ -631,7 +644,7 @@ int query_chrgctrl(int dev_addr, unsigned int start_addr, unsigned int count,
   /*#ifdef CHRGCTRL_VERBOSE
 
       Print to stderr the hex value of each character that is about to be sent
-   * to the MODBUS slave. Replace this with mcp-friendly debug code
+      to the MODBUS slave. Replace this with mcp-friendly debug code
    
 
   for (i=0; i < string_length; i++) {
@@ -674,9 +687,9 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
   
   unsigned char data[MAX_RESPONSE_LENGTH];
   int temp;
-  int i,j;
-  char frame[50];
-  int index=0, count=0;
+  int i;//j;
+  //  char frame[50];
+  //  int index=0, count=0;
   int rxchar = PORT_FAILURE;
   int data_avail = FALSE;
   int data_length;        // # of bytes of register data received 
@@ -745,6 +758,9 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
         data_avail = FALSE; 
       }
 
+      /* The stuff below is superseded by code to convert each frame to a string for printing
+         to the log file chrgctrl.log. */
+
       // Print the hex value of each character that is received.
       //  #ifdef CHRGCTRL_VERBOSE
       //        printf("<%.2X>", rxchar);
@@ -757,12 +773,12 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
 
   /* store the returned packet as a string */
 
-  for (j = 0; j < bytes_received; j++) {
+  //  for (j = 0; j < bytes_received; j++) {
 
-    index += count;
+  //    index += count;
 
-    count = sprintf(&(frame[index]), "%.2x", data[j]);
-  }
+  //    count = sprintf(&(frame[index]), "%.2x", data[j]);
+  //  }
 
     //    bprintf(info, "[%s]", frame);
 
@@ -809,9 +825,9 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
 
        /* print the returned packet for debugging purposes: */
     //if (nlog < 10000) {
-      if (nlog == 0) {
+    //      if (nlog == 0) {
 	//	fprintf(fp, "\n\n New Session \n\n");
-      }     
+    //      }     
       // fprintf(fp, "ERROR: [%s]\n", frame);
       // fflush(fp);
       // nlog++;
@@ -827,9 +843,9 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
 
     /* print the returned packet for debugging purposes: */
     // if (nlog < 10000) {
-      if (nlog == 0) {
+    //    if (nlog == 0) {
 	//	fprintf(fp, "\n\n New Session \n\n");
-      }     
+    //    }     
       // fprintf(fp, "       [%s]\n", frame);
       // fflush(fp);
       // nlog++;

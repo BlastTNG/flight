@@ -516,17 +516,17 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.rx_amps.rst_count = 0;
       CommandData.power.rx_amps.set_count = LATCH_PULSE_LEN;
       break;
-    case charge_off:
+    case charge_on:
       CommandData.power.charge.set_count = 0;
       CommandData.power.charge.rst_count = LATCH_PULSE_LEN;
       break;
-    case charge_on:
+    case charge_off:
       CommandData.power.charge.rst_count = 0;
       CommandData.power.charge.set_count = LATCH_PULSE_LEN;
       break;
     case charge_cycle:
-      CommandData.power.charge.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
-      CommandData.power.charge.rst_count = LATCH_PULSE_LEN;
+      CommandData.power.charge.rst_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.charge.set_count = LATCH_PULSE_LEN;
       break;
     case ifroll_1_gy_allow:
       CommandData.gymask |= 0x01;
