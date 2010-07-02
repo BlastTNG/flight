@@ -40,7 +40,9 @@ int higain_bytes_per_streamframe = -1;
 int omni_bytes_per_streamframe = -1;
 int dialup_bytes_per_streamframe = -1;
 
-
+//*********************************************************
+// Open High Gain Serial port
+//*********************************************************
 static int OpenHiGainSerial(void) {
   static int report_state = -1; // -1 = no reports.  0 == reported error.  1 == reported success
   int fd;
@@ -86,6 +88,9 @@ static int OpenHiGainSerial(void) {
   return fd;
 }
 
+//*********************************************************
+// Write data to the high gain serial port
+//*********************************************************
 void writeHiGainData(char *x, int size) {
   static int fp = -1;
   
@@ -99,7 +104,9 @@ void writeHiGainData(char *x, int size) {
     }
   }
 }
-
+//*********************************************************
+// Buffer streamed data to be later compressed
+//*********************************************************
 void BufferStreamData(int i_streamframe, int readindex) {
   int i_field;
   unsigned int x;
@@ -135,6 +142,9 @@ void BufferStreamData(int i_streamframe, int readindex) {
 }
 
 
+//*********************************************************
+// Write data that comes once per superframe
+//*********************************************************
 void WriteSuperFrame(int readindex) {
   int frame_bytes_written = 0;
   int i_field;

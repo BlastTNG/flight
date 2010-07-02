@@ -474,6 +474,9 @@ static void GetACS(unsigned short *RxFrame)
   double pss2_i1, pss2_i2, pss2_i3, pss2_i4;
   double vel_rw;
   double res_piv;
+
+  double i_mcc;
+  
   static struct BiPhaseStruct* ifElgyAddr;
   static struct BiPhaseStruct* ifRollgyAddr;
   static struct BiPhaseStruct* ifYawgyAddr;
@@ -492,6 +495,9 @@ static void GetACS(unsigned short *RxFrame)
   static struct BiPhaseStruct* v22PssAddr;
   static struct BiPhaseStruct* v32PssAddr;
   static struct BiPhaseStruct* v42PssAddr;
+  static struct BiPhaseStruct* i_mccAddr;
+
+  static struct NiosStruct* i_mccNios;
 
   unsigned int rx_frame_index = 0;
   int i_ss;
@@ -517,6 +523,8 @@ static void GetACS(unsigned short *RxFrame)
     v22PssAddr = GetBiPhaseAddr("v2_2_pss");
     v32PssAddr = GetBiPhaseAddr("v3_2_pss");
     v42PssAddr = GetBiPhaseAddr("v4_2_pss");
+    i_mccAddr = GetBiPhaseAddr("i_mcc");
+    i_mccNios = GetNiosAddr("i_mcc");
   }
 
   rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
@@ -543,7 +551,9 @@ static void GetACS(unsigned short *RxFrame)
   pss2_i2 = (double)(slow_data[v22PssAddr->index][v22PssAddr->channel]);
   pss2_i3 = (double)(slow_data[v32PssAddr->index][v32PssAddr->channel]);
   pss2_i4 = (double)(slow_data[v42PssAddr->index][v42PssAddr->channel]);
-  
+
+  i_mcc = (double)(slow_data[i_mccAddr->index][i_mccAddr->channel])*i_mccNios->m + i_mccNios->b;
+
   i_ss = ss_index;
 
   ACSData.t = mcp_systime(NULL);
@@ -981,6 +991,7 @@ int main(int argc, char *argv[])
   InitSched();
   openMotors();  //open communications with peripherals, creates threads
                  // in motors.c
+
   startChrgCtrl(); // create charge controller serial thread
                    // defined in chrgctrl.c
 #endif
