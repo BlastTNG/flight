@@ -24,13 +24,3 @@ struct fieldStreamStruct {
   int bits; // number of bits in stream: 4, 8, 16, 32
   int spikeMode; // SLOW: skip samples  SPIKE: report enlarged data
 };
-
-struct streamDataStruct {
-  double x[FASTFRAME_PER_STREAMFRAME];
-  double last;
-  double residual;
-  double sum;
-  double n_sum;
-  unsigned gain;
-  unsigned offset;
-};

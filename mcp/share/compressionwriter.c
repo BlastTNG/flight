@@ -17,6 +17,16 @@
 // STREAMFRAMES: FASTFRAMES/100 - minimum speed from streams.  
 // SUPERFRAMES: FASTFRAMES/2000 - slow fields and stream offsets
 
+struct streamDataStruct {
+  double x[FASTFRAME_PER_STREAMFRAME];
+  double last;
+  double residual;
+  double sum;
+  double n_sum;
+  unsigned gain;
+  unsigned offset;
+};
+
 
 #define N_PORTS 1
 
@@ -218,7 +228,9 @@ void WriteSuperFrame(int readindex) {
   
   return;
 }
-
+//*********************************************************
+// write stream field
+//*********************************************************
 void WriteStreamFrame() {
   int i_field, i_samp, i_fastsamp;
   int n=1;
@@ -272,6 +284,22 @@ void WriteStreamFrame() {
   }
 }
 
+//*********************************************************
+// check if the name referres to a bolometer
+//*********************************************************
+int isBoloField(char *field) {
+  if (field[0]!='n') return 0;
+  if (strlen(field)!=6) return 0;
+  if (field[3]!='c') return 0;
+  if (field[1]<'1') return 0;
+  if (field[1]>'3') return 0;
+
+  return 1;
+}
+
+//*********************************************************
+// The main compression writer thread
+//*********************************************************
 void CompressionWriter() {
   int readindex, lastreadindex = 2;
   int n_higainstream = -1;
@@ -298,20 +326,23 @@ void CompressionWriter() {
   }
 
   // determine streamlist length
-  for (n_streamlist = 0; streamList[n_streamlist].name[0] != '\0'; n_streamlist++);
+  for (n_streamlist = 0; streamList[n_streamlist].name[0] != '\0'; n_streamlist++); // count
   streamNiosList = (struct NiosStruct **)malloc(n_streamlist * sizeof(struct NiosStruct *));
   streamBi0List = (struct BiPhaseStruct **)malloc(n_streamlist * sizeof(struct BiPhaseStruct *));
   streamData = (struct streamDataStruct *)malloc(n_streamlist*sizeof(struct streamDataStruct));
   
   for (i_field = 0; i_field < n_streamlist; i_field++) {
-    streamNiosList[i_field] = GetNiosAddr(streamList[i_field].name);
-    streamBi0List[i_field] = GetBiPhaseAddr(streamList[i_field].name);
-    streamData[i_field].last = 0;
-    streamData[i_field].residual = 0;
-    streamData[i_field].gain = streamList[i_field].gain;
-    streamData[i_field].offset = 0;
-    streamData[i_field].sum = 0.0;
-    streamData[i_field].n_sum = 0;
+    if (isBoloField(streamList[i_field].name)) {
+    } else {
+      streamNiosList[i_field] = GetNiosAddr(streamList[i_field].name);
+      streamBi0List[i_field] = GetBiPhaseAddr(streamList[i_field].name);
+      streamData[i_field].last = 0;
+      streamData[i_field].residual = 0;
+      streamData[i_field].gain = streamList[i_field].gain;
+      streamData[i_field].offset = 0;
+      streamData[i_field].sum = 0.0;
+      streamData[i_field].n_sum = 0;
+    }
   }
   
   bprintf(startup, "frame list length: %d  stream list length: %d", n_framelist, n_streamlist);
