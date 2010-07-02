@@ -87,6 +87,8 @@ extern short int InCharge; /* tx.c */
 
 extern int StartupVeto; /* mcp.c */
 
+double az_accel = 0.1;
+
 /* opens communications with motor controllers */
 void openMotors()
 {
@@ -453,6 +455,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
 
   /******** Obtain correct indexes the first time here ***********/
   static int firsttime = 1;
+
   if (firsttime) {
     firsttime = 0;
     velReqElAddr = GetNiosAddr("vel_req_el");
@@ -582,7 +585,6 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
 /*   Do scan modes                                              */
 /*                                                              */
 /****************************************************************/
-#define AZ_ACCEL (0.001)
 #define MIN_SCAN 0.2
 static void SetAzScanMode(double az, double left, double right, double v,
     double D)
@@ -596,12 +598,12 @@ static void SetAzScanMode(double az, double left, double right, double v,
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       axes_mode.az_mode = AXIS_VEL;
       if (axes_mode.az_vel < v + D)
-        axes_mode.az_vel += AZ_ACCEL;
+        axes_mode.az_vel += az_accel;
     } else if (az > right) {
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       axes_mode.az_mode = AXIS_VEL;
       if (axes_mode.az_vel > -v + D)
-        axes_mode.az_vel -= AZ_ACCEL;
+        axes_mode.az_vel -= az_accel;
     } else {
       axes_mode.az_mode = AXIS_VEL;
       if (axes_mode.az_vel > 0) {
@@ -974,14 +976,14 @@ static void DoNewCapMode(void)
   if (az<left) {
     if (axes_mode.az_dir < 0) {
       az_distance = next_right - left;
-      t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * SR);
+      t = az_distance/v_az + 2.0*v_az/(az_accel * SR);
       new_step = 1;
     }
     axes_mode.az_dir = 1;
   } else if (az>right) {
     if (axes_mode.az_dir > 0) {
       az_distance = right - next_left;
-      t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * SR);
+      t = az_distance/v_az + 2.0*v_az/(az_accel * SR);
       new_step = 1;
     }
     axes_mode.az_dir = -1;
@@ -1142,13 +1144,13 @@ static void DoNewBoxMode(void)
   new_step = 0;
   if (az<left) {
     if (axes_mode.az_dir < 0) {
-      t = w/v_az + 2.0*v_az/(AZ_ACCEL * SR);
+      t = w/v_az + 2.0*v_az/(az_accel * SR);
       new_step = 1;
     }
     axes_mode.az_dir = 1;
   } else if (az>right) {
     if (axes_mode.az_dir > 0) {
-      t = w/v_az + 2.0*v_az/(AZ_ACCEL * SR);
+      t = w/v_az + 2.0*v_az/(az_accel * SR);
       new_step = 1;
     }
     axes_mode.az_dir = -1;
@@ -1318,14 +1320,14 @@ void DoQuadMode(void) // aka radbox
   if (az<left) {
     if (axes_mode.az_dir < 0) {
       az_distance = next_right - left;
-      t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * SR);
+      t = az_distance/v_az + 2.0*v_az/(az_accel * SR);
       new_step = 1;
     }
     axes_mode.az_dir = 1;
   } else if (az>right) {
     if (axes_mode.az_dir > 0) {
       az_distance = right - next_left;
-      t = az_distance/v_az + 2.0*v_az/(AZ_ACCEL * SR);
+      t = az_distance/v_az + 2.0*v_az/(az_accel * SR);
       new_step = 1;
     }
     axes_mode.az_dir = -1;
@@ -1358,6 +1360,7 @@ void DoQuadMode(void) // aka radbox
  ******************************************************************/
 void UpdateAxesMode(void)
 {
+  az_accel = CommandData.az_accel/SR;
   switch (CommandData.pointing_mode.mode) {
     case P_DRIFT:
       axes_mode.el_mode = AXIS_VEL;

@@ -1110,15 +1110,28 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
   double offset_new_ifyaw_gy = 0;
 
   // evolve el
-  e->angle += (ifel_gy + off_ifel_gy) / SR;
-  e->varience += GYRO_VAR;
-  e->gy_int += ifel_gy / SR; // in degrees
+   e->angle += (ifel_gy + off_ifel_gy) / SR;
+
+ 
+   if(e->last_input <= 30000) {
+     e->varience += GYRO_VAR;
+   } else {
+     e->varience = 1.0e30; /* Don't accept SC solutions after 5 minutes*/
+   }
+
+   e->gy_int += ifel_gy / SR; // in degrees
 
   // evolve az
   old_el *= M_PI / 180.0;
   gy_az = -(ifroll_gy + off_ifroll_gy) * sin(old_el) + -(ifyaw_gy + off_ifyaw_gy) * cos(old_el);
   a->angle += gy_az / SR;
-  a->varience += GYRO_VAR;
+
+   if(a->last_input <= 30000) {
+     a->varience += GYRO_VAR;
+   } else {
+     a->varience = 1.0e30; /* Don't accept SC solutions after 5 minutes*/
+   }
+
   a->ifroll_gy_int += ifroll_gy / SR; // in degrees
   a->ifyaw_gy_int += ifyaw_gy / SR; // in degrees
 
@@ -1329,7 +1342,6 @@ static void AddAzSolution(struct AzAttStruct *AzAtt,
     struct AzSolutionStruct *AzSol, int add_offset)
 {
   double weight, var, az;
-
   var = AzSol->varience + AzSol->sys_var;
   az = AzSol->angle + AzSol->trim;
 

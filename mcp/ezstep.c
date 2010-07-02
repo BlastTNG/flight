@@ -501,9 +501,10 @@ int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive)
     if ((retval = EZBus_Recv(bus)) & (EZ_ERR_TIMEOUT | EZ_ERR_OOD))
     {
       //communication error
-      if (bus->chatter >= EZ_CHAT_ERR)
+      if (bus->chatter >= EZ_CHAT_ERR) 
 	bprintf(warning, "%sTimeout waiting for response from %s (%s)\n.", 
 	    bus->name, stepName(bus,who), what);
+
       EZBus_ForceRepoll(bus, who);
       return retval;
     } else {
