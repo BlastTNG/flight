@@ -112,7 +112,6 @@ char *frameList[] = {
   "level_on_bal",
   "level_off_bal",
   "level_target_bal",
-  "veto_bal",
   "alt_sip",
   "mapmean_isc",
   "pitch_dgps",
