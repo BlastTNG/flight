@@ -1473,7 +1473,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pumps.heat_tset = rvalues[0];
       break;
     case balance_veto:
-      CommandData.pumps.veto_bal = rvalues[0];
+      CommandData.pumps.veto_bal = (int)(rvalues[0]*SR/20.0);
       break;
 
 

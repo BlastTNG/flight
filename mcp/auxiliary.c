@@ -219,7 +219,7 @@ static int Balance(int bits_bal)
     vPumpBalAddr = GetNiosAddr("v_pump_bal");
     modeBalAddr = GetNiosAddr("mode_bal");
   }
-  
+ 
   // enable slew mode
   if (CommandData.pumps.veto_bal == 0){
      CommandData.pumps.veto_bal = CommandData.pointing_mode.nw;
@@ -680,7 +680,7 @@ void ControlAuxMotors(unsigned short *RxFrame)
   
   WriteData(levelOnBalAddr, CommandData.pumps.level_on_bal, NIOS_QUEUE);
   WriteData(levelOffBalAddr, CommandData.pumps.level_off_bal, NIOS_QUEUE);
-  WriteData(vetoBalAddr, (int)CommandData.pumps.veto_bal/4.0, NIOS_QUEUE);
+  WriteData(vetoBalAddr, (int)CommandData.pumps.veto_bal, NIOS_QUEUE);
   WriteData(levelTargetBalAddr, (CommandData.pumps.level_target_bal + 1990.13*5.),
       NIOS_QUEUE);
   WriteData(gainBalAddr, (int)(CommandData.pumps.gain_bal * 1000.), NIOS_QUEUE);

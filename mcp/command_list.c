@@ -22,7 +22,7 @@
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
 
-const char *command_list_serial = "$Revision: 4.62 $";
+const char *command_list_serial = "$Revision: 4.63 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -400,7 +400,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(balance_veto), "Set veto for the balance system", GR_BAL, 1,
     {
-      {"Balance veto (s)",  0, 60000, 'f', "VETO_BAL"},
+      {"Balance veto (s)",  0, 600, 'f', "VETO_BAL"},
     }
   },
   {COMMAND(balance_tset), "Set balance pump minumum temperature", GR_BAL, 1,
