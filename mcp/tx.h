@@ -30,9 +30,6 @@
 
 #include "channels.h"
 
-/* length of the balance autoveto in 100Hz frames */
-#define BAL_VETO_MAX 1000
-
 extern int mcp_initial_controls;
 
 void InitTxFrame(unsigned short*);

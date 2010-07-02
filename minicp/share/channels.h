@@ -79,6 +79,9 @@ extern "C" {
 #define FIELD_LEN 20
 #define UNITS_LEN 48
 
+  // Max Slew Veto
+#define VETO_MAX 60000
+
   struct ChannelStruct {
     char field[FIELD_LEN]; /* name of channel for FileFormats and CalSpecs */
     char rw;        /* 'r' = read, 'w' = write */

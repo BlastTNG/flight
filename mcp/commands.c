@@ -69,8 +69,6 @@
 #define ISC_TRIGGER_POS  2
 #define ISC_TRIGGER_NEG  3
 
-#define VETO_MAX 60000
-
 void RecalcOffset(double, double);  /* actuators.c */
 
 void SetRaDec(double, double); /* defined in pointing.c */
@@ -1304,8 +1302,8 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       /***************************************/
       /********** Lock / Actuators  **********/
     case lock:  /* Lock Inner Frame */
-      if (CommandData.pumps.veto_bal >= 0)
-        CommandData.pumps.veto_bal = VETO_MAX;
+      if (CommandData.pointing_mode.nw >= 0)
+        CommandData.pointing_mode.nw = VETO_MAX;
       CommandData.actbus.lock_goal = LS_CLOSED | LS_DRIVE_OFF;
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_LOCK;
@@ -1472,11 +1470,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case balance_tset:
       CommandData.pumps.heat_tset = rvalues[0];
       break;
-    case balance_veto:
-      CommandData.pumps.veto_bal = (int)(rvalues[0]*SR/20.0);
-      break;
-
-
 
       /***************************************/
       /******** Electronics Heaters  *********/
@@ -2497,7 +2490,6 @@ void InitCommandData()
   CommandData.pumps.mode = bal_rest; // TODO: change for flight
   CommandData.pumps.heat_on = 1;
   CommandData.pumps.heat_tset = 20;
-  CommandData.pumps.veto_bal = VETO_MAX;
 
   CommandData.Temporary.dac_out[0] = 0x8000;
   CommandData.Temporary.dac_out[1] = 0x8000;

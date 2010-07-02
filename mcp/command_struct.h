@@ -276,7 +276,6 @@ struct CommandDataStruct {
   struct {
     enum {bal_rest, bal_manual, bal_auto} mode;
     double level;
-    int veto_bal;
 
     // servo parameters
     double level_on_bal;

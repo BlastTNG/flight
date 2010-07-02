@@ -220,17 +220,12 @@ static int Balance(int bits_bal)
     modeBalAddr = GetNiosAddr("mode_bal");
   }
  
-  // enable slew mode
-  if (CommandData.pumps.veto_bal == 0){
-     CommandData.pumps.veto_bal = CommandData.pointing_mode.nw;
-  }
-
   // if vetoed 
-  if (CommandData.pumps.veto_bal > 0) {
-    CommandData.pumps.veto_bal--;
+  if (CommandData.pointing_mode.nw > 0) {
+    CommandData.pointing_mode.nw--;
   } 
 
-  if ((CommandData.pumps.mode == bal_rest) || (CommandData.pumps.veto_bal > 0)) {
+  if ((CommandData.pumps.mode == bal_rest) || (CommandData.pointing_mode.nw > 0)) {
  
     // set direction
     bits_bal &= (0xFF - BAL_DIR); /* Clear reverse bit */ 
@@ -287,11 +282,11 @@ static int Balance(int bits_bal)
 
     if (error > CommandData.pumps.level_on_bal) {
       pumpon = 1;
-      CommandData.pumps.veto_bal = 0;
+      CommandData.pointing_mode.nw = 0;
     } else if (error < CommandData.pumps.level_off_bal) {
       pumpon = 0;
-      if(CommandData.pumps.veto_bal > 1) {
-	CommandData.pumps.veto_bal = BAL_VETO_MAX;
+      if(CommandData.pointing_mode.nw > 1) {
+	CommandData.pointing_mode.nw = VETO_MAX;
       }
     }
 
@@ -650,7 +645,7 @@ void ControlAuxMotors(unsigned short *RxFrame)
 {
   static struct NiosStruct* vPumpBalAddr;
   static struct NiosStruct* levelOnBalAddr, *levelOffBalAddr;
-  static struct NiosStruct* levelTargetBalAddr, *vetoBalAddr;
+  static struct NiosStruct* levelTargetBalAddr;
   static struct NiosStruct* gainBalAddr;
   static struct NiosStruct* bitsBalAddr;
 
@@ -665,7 +660,6 @@ void ControlAuxMotors(unsigned short *RxFrame)
     levelOffBalAddr = GetNiosAddr("level_off_bal");
     levelTargetBalAddr = GetNiosAddr("level_target_bal");
     gainBalAddr = GetNiosAddr("gain_bal");
-    vetoBalAddr = GetNiosAddr("veto_bal");
   }
 
   /* inner frame box */
@@ -680,7 +674,6 @@ void ControlAuxMotors(unsigned short *RxFrame)
   
   WriteData(levelOnBalAddr, CommandData.pumps.level_on_bal, NIOS_QUEUE);
   WriteData(levelOffBalAddr, CommandData.pumps.level_off_bal, NIOS_QUEUE);
-  WriteData(vetoBalAddr, (int)CommandData.pumps.veto_bal, NIOS_QUEUE);
   WriteData(levelTargetBalAddr, (CommandData.pumps.level_target_bal + 1990.13*5.),
       NIOS_QUEUE);
   WriteData(gainBalAddr, (int)(CommandData.pumps.gain_bal * 1000.), NIOS_QUEUE);
