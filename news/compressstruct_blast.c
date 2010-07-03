@@ -18,6 +18,8 @@ struct fieldStreamStruct streamList[] = {
   {"ifroll_gy", 5, 10, AVG, NODX, 8, SLOW},
   {"az", 33140, 10, AVG, DX, 8, SLOW},
   {"el", 33140, 10, AVG, DX, 8, SLOW},
+  {"n17c20", 5, 50, AVG, DX, 8, SLOW},
+  {"n17c21", 5, 50, AVG, DX, 8, SLOW},
   {"el_enc", 33140, 10, AVG, DX, 8, SLOW},
   {"el_raw_enc", 33140, 10, AVG, DX, 8, SLOW},
   {"el_raw_if_clin", 33140, 10, AVG, DX, 8, SLOW},

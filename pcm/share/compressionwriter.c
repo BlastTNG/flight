@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <string.h>
 #include "mcp.h"
 #include "compressstruct.h"
 
@@ -25,6 +26,12 @@ struct streamDataStruct {
   double n_sum;
   unsigned gain;
   unsigned offset;
+  int isFast; // bool
+  int slowIndex; // from bi phase struct
+  int slowChannel; // from bi phase struct
+  unsigned mask; // used to set 16, 24, or 32 bits
+  int lsw; // offset in bytes in tdrss_char to the lsw
+  int msw; // offset in bytes in tdrss_char to the msw
 };
 
 
@@ -42,8 +49,6 @@ int n_framelist;
 int n_streamlist;
 struct NiosStruct **frameNiosList;
 struct BiPhaseStruct **frameBi0List;
-struct NiosStruct **streamNiosList;
-struct BiPhaseStruct **streamBi0List;
 struct streamDataStruct *streamData;
 
 int higain_bytes_per_streamframe = -1;
@@ -120,24 +125,38 @@ void writeHiGainData(char *x, int size) {
 void BufferStreamData(int i_streamframe, int readindex) {
   int i_field;
   unsigned int x;
+  int i,c;
+  unsigned char *tdrss_char = (unsigned char *)tdrss_data[readindex];
 
   // record stream data in buffer
   for (i_field=0; i_field < n_streamlist; i_field++) {
-    if (streamNiosList[i_field]->fast) {
-      if (streamNiosList[i_field]->wide) {
-        x = ((unsigned int)tdrss_data[readindex][streamBi0List[i_field]->channel]) |
-        (((unsigned int)tdrss_data[readindex][streamBi0List[i_field]->channel+1]) << 16);
+    if (streamData[i_field].isFast) {
+      int i_l, i_m;
+      unsigned short *lsw;
+      unsigned short *msw;
+      unsigned mask;
+      
+      i_l = streamData[i_field].lsw;
+      i_m = streamData[i_field].msw;
+      mask = streamData[i_field].mask;
+
+      lsw = (unsigned short *) (tdrss_char + i_l);
+      if (mask) {
+        msw = (unsigned short *) (tdrss_char + i_m);
+        x = (unsigned)(*lsw) | ((unsigned)(*msw & mask)<<16);
       } else {
-        x = tdrss_data[readindex][streamBi0List[i_field]->channel];
+         x = (unsigned)(*lsw);
       }
     } else { // slow
-      if (streamNiosList[i_field]->wide) {
-        x = (unsigned int)slow_data[streamBi0List[i_field]->index][streamBi0List[i_field]->channel] +
-        ((unsigned int)slow_data[streamBi0List[i_field]->index][streamBi0List[i_field]->channel+1] <<16);
-      } else {
-        x = slow_data[streamBi0List[i_field]->index][streamBi0List[i_field]->channel];
+      i = streamData[i_field].slowIndex;
+      c = streamData[i_field].slowChannel;
+      if (streamData[i_field].mask) { // wide slow
+        x = (unsigned int)slow_data[i][c] + ((unsigned int)slow_data[i][c] <<16);
+      } else { // narrow slow
+        x = (unsigned int)slow_data[i][c];
       }
     }
+    
     streamData[i_field].x[i_streamframe] = x;
     if (streamList[i_field].doDifferentiate) {
       if (i_streamframe==FASTFRAME_PER_STREAMFRAME-1) {
@@ -161,7 +180,7 @@ void WriteSuperFrame(int readindex) {
   int isWide;
   unsigned x;
   int size;
-  unsigned gain, offset;
+  unsigned gain;
 
   x=SYNCWORD;
   writeHiGainData((char *)(&x), 4);
@@ -218,7 +237,7 @@ void WriteSuperFrame(int readindex) {
     uoffset = streamData[i_field].offset;
     usoffset = streamData[i_field].offset;
     writeHiGainData((char *)&gain, sizeof(unsigned short));
-    if (streamNiosList[i_field]->wide) {
+    if (streamData[i_field].mask) {
       writeHiGainData((char *)&uoffset, 2*sizeof(unsigned short));
     } else {
       writeHiGainData((char *)&usoffset, sizeof(unsigned short));
@@ -327,15 +346,56 @@ void CompressionWriter() {
 
   // determine streamlist length
   for (n_streamlist = 0; streamList[n_streamlist].name[0] != '\0'; n_streamlist++); // count
-  streamNiosList = (struct NiosStruct **)malloc(n_streamlist * sizeof(struct NiosStruct *));
-  streamBi0List = (struct BiPhaseStruct **)malloc(n_streamlist * sizeof(struct BiPhaseStruct *));
   streamData = (struct streamDataStruct *)malloc(n_streamlist*sizeof(struct streamDataStruct));
   
   for (i_field = 0; i_field < n_streamlist; i_field++) {
     if (isBoloField(streamList[i_field].name)) {
+      struct BiPhaseStruct *l_bi0;
+      struct BiPhaseStruct *m_bi0;
+      char l_name[10];
+      char m_name[10];
+      
+      sprintf(l_name, "%slo", streamList[i_field].name);
+      sprintf(m_name, "%shi", streamList[i_field].name);
+
+      l_bi0 = GetBiPhaseAddr(l_name);
+      m_bi0 = GetBiPhaseAddr(m_name);
+
+      streamData[i_field].isFast = 1;
+      streamData[i_field].mask = 0x00ff;
+      streamData[i_field].lsw = l_bi0->channel*2;
+      if (streamList[i_field].name[5]%2) {
+        streamData[i_field].msw = m_bi0->channel*2;
+      } else {
+        streamData[i_field].msw = m_bi0->channel*2;
+      }
     } else {
-      streamNiosList[i_field] = GetNiosAddr(streamList[i_field].name);
-      streamBi0List[i_field] = GetBiPhaseAddr(streamList[i_field].name);
+      struct NiosStruct *nios;
+      struct BiPhaseStruct *bi0;
+
+      nios = GetNiosAddr(streamList[i_field].name);
+      bi0 = GetBiPhaseAddr(streamList[i_field].name);
+
+      if (nios->fast) {
+        streamData[i_field].isFast = 1;
+        if (nios->wide) {
+          streamData[i_field].mask = 0xffff;
+        } else {
+          streamData[i_field].mask = 0;
+        }
+        streamData[i_field].lsw = bi0->channel*2;
+        streamData[i_field].msw = bi0->channel*2 + 2;
+      } else { // slow
+        streamData[i_field].isFast = 0;
+        streamData[i_field].slowIndex = bi0->index;
+        streamData[i_field].slowChannel = bi0->channel;
+        if (nios->wide) {
+          streamData[i_field].mask = 0xffff;
+        } else {
+          streamData[i_field].mask = 0;
+        }
+      }
+      
       streamData[i_field].last = 0;
       streamData[i_field].residual = 0;
       streamData[i_field].gain = streamList[i_field].gain;
