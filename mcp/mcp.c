@@ -678,7 +678,7 @@ static void GetCurrents(unsigned short *RxFrame)
 
   i_tot = i_trans + i_das + i_acs + i_rec + i_sc + i_dgps + i_step + i_mcc + i_gy + i_rw + i_el + i_piv;
 
-  WriteData(i_totNios, i_tot, NIOS_QUEUE);
+  WriteData(i_totNios, 1000*i_tot, NIOS_QUEUE);
 
 }
 
