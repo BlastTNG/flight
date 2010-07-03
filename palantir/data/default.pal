@@ -1020,7 +1020,7 @@
     <NUMBER caption="Star Cams">
       <DATUM format="%.2f" src="I_SC" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="dGPS + Sun Sensor">
+    <NUMBER caption="dGPS + SS">
       <DATUM format="%.2f" src="I_DGPS" extrema="current"/>
     </NUMBER>
     <NUMBER caption="Steppers">
@@ -1040,6 +1040,9 @@
     </NUMBER>
     <NUMBER caption="I Pivot">
       <DATUM format="%.2f" src="I_PIV" extrema="current"/>
+    </NUMBER>
+    <NUMBER caption="I Total">
+      <DATUM format="%.2f" src="I_TOT" extrema="current"/>
     </NUMBER>
   </BOX>
   <BOX caption="Bias" colour="#707" row="4" col="1">
@@ -1228,6 +1231,30 @@
         <WORD value="8" caption="Equalize" textstyle="W_BIT"/>
         <WORD value="9" caption="Slave" textstyle="W_BIT"/>
       </DATUM>
+    </MULTI>
+    <MULTI caption="Charge:">
+     <DATUM src="LED_CC">
+      <WORD value="0"  caption="Start" textstyle="W_BIT"/>
+      <WORD value="1"  caption="Start2" textstyle="W_BIT"/>
+      <WORD value="2"  caption="Branch" textstyle="W_BIT"/>
+      <WORD value="3"  caption="Equal." textstyle="W_BIT"/> 
+      <WORD value="4"  caption="PWM" textstyle="OK_BIT"/>
+      <WORD value="5"  caption="100%" textstyle="OK_BIT"/>
+      <WORD value="6"  caption="80-95%" textstyle="OK_BIT"/>
+      <WORD value="7"  caption="60-80%" textstyle="W_BIT"/>
+      <WORD value="8"  caption="35-60%" textstyle="W_BIT"/>
+      <WORD value="9"  caption="0-35%" textstyle="W_BIT"/>
+      <WORD value="10" caption="FAULT" textstyle="W_BIT"/>
+      <WORD value="11" caption="Discharge" textstyle="W_BIT"/>
+      <WORD value="12" caption="FAULT" textstyle="W_BIT"/>
+      <WORD value="13" caption="FAULT" textstyle="W_BIT"/>
+      <WORD value="14" caption="SOLAR ARR. SHORT" textstyle="W_BIT"/>
+      <WORD value="15" caption="HTD" textstyle="W_BIT"/> 
+      <WORD value="16" caption="HVD." textstyle="W_BIT"/> 
+      <WORD value="17" caption="RTS" textstyle="W_BIT"/>
+      <WORD value="18" caption="FAULT" textstyle="W_BIT"/>
+      <WORD value="19" caption="FAULT" textstyle="W_BIT"/>
+     </DATUM>
     </MULTI>
     <NUMBER caption="V Batt">
       <DATUM format="%.2f" src="V_BATT_CC" extrema="vbattcheck"/>
