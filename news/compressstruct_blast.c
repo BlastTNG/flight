@@ -13,6 +13,8 @@ struct fieldStreamStruct {
 */
 
 struct fieldStreamStruct streamList[] = {
+  {"time",1,1,NOAVG,DX,8,SLOW},
+  {"time_usec", 5000, 1, NOAVG, NODX, SLOW},
   {"ifel_gy", 5, 10, AVG, NODX, 8, SLOW},
   {"ifyaw_gy", 5, 10, AVG, NODX, 8, SLOW},
   {"ifroll_gy", 5, 10, AVG, NODX, 8, SLOW},
@@ -97,8 +99,8 @@ END_OF_STREAM
 };
 
 char *frameList[] = {
-  "time",
-  "time_usec",
+  //"time",
+  //"time_usec",
   "n13_phase",
   "n17_phase",
   "n18_phase",
