@@ -579,6 +579,109 @@ static void GetACS(unsigned short *RxFrame)
   ACSData.clin_elev = (double)RxFrame[elRawIfClinAddr->channel];
 
 }
+
+/* sole purpose of following function is to add a field that reads the total current */
+
+static void GetCurrents(unsigned short *RxFrame)
+{
+
+  double i_trans;
+  double i_das;
+  double i_acs;
+  double i_rec;
+  double i_sc;
+  double i_dgps;
+  double i_step;
+  double i_mcc;
+  double i_gy;
+  double i_rw;
+  double i_el;
+  double i_piv;
+  double i_tot;
+
+  static struct BiPhaseStruct* i_transAddr;
+  static struct BiPhaseStruct* i_dasAddr;
+  static struct BiPhaseStruct* i_acsAddr;
+  static struct BiPhaseStruct* i_recAddr;
+  static struct BiPhaseStruct* i_scAddr;
+  static struct BiPhaseStruct* i_dgpsAddr;
+  static struct BiPhaseStruct* i_stepAddr;
+  static struct BiPhaseStruct* i_mccAddr;
+  static struct BiPhaseStruct* i_gyAddr;
+  static struct BiPhaseStruct* i_rwAddr;
+  static struct BiPhaseStruct* i_elAddr;
+  static struct BiPhaseStruct* i_pivAddr;
+
+  static struct NiosStruct* i_transNios;
+  static struct NiosStruct* i_dasNios;
+  static struct NiosStruct* i_acsNios;
+  static struct NiosStruct* i_recNios;
+  static struct NiosStruct* i_scNios;
+  static struct NiosStruct* i_dgpsNios;
+  static struct NiosStruct* i_stepNios;
+  static struct NiosStruct* i_mccNios;
+  static struct NiosStruct* i_gyNios;
+  static struct NiosStruct* i_rwNios;
+  static struct NiosStruct* i_elNios;
+  static struct NiosStruct* i_pivNios;
+
+  static struct NiosStruct* i_totNios;
+
+  static int firsttime = 1;
+
+  if (firsttime) {
+  
+    firsttime = 0;
+
+    i_transAddr = GetBiPhaseAddr("i_trans");
+    i_dasAddr = GetBiPhaseAddr("i_das");
+    i_acsAddr = GetBiPhaseAddr("i_acs");
+    i_recAddr = GetBiPhaseAddr("i_rec");
+    i_scAddr = GetBiPhaseAddr("i_sc");
+    i_dgpsAddr = GetBiPhaseAddr("i_dgps");
+    i_stepAddr = GetBiPhaseAddr("i_step");
+    i_mccAddr = GetBiPhaseAddr("i_mcc");
+    i_gyAddr = GetBiPhaseAddr("i_gy");
+    i_rwAddr = GetBiPhaseAddr("i_rw");
+    i_elAddr = GetBiPhaseAddr("i_el");
+    i_pivAddr = GetBiPhaseAddr("i_piv");
+
+    i_transNios = GetNiosAddr("i_trans");
+    i_dasNios = GetNiosAddr("i_das");
+    i_acsNios = GetNiosAddr("i_acs");
+    i_recNios = GetNiosAddr("i_rec");
+    i_scNios = GetNiosAddr("i_sc");
+    i_dgpsNios = GetNiosAddr("i_dgps");
+    i_stepNios = GetNiosAddr("i_step");
+    i_mccNios  = GetNiosAddr("i_mcc");
+    i_gyNios = GetNiosAddr("i_gy");
+    i_rwNios = GetNiosAddr("i_rw");
+    i_elNios = GetNiosAddr("i_el");
+    i_pivNios = GetNiosAddr("i_piv");
+
+    i_totNios = GetNiosAddr("i_tot");
+
+  }
+
+  i_trans = (double)(slow_data[i_transAddr->index][i_transAddr->channel])*i_transNios->m + i_transNios->b;
+  i_das = (double)(slow_data[i_dasAddr->index][i_dasAddr->channel])*i_dasNios->m + i_dasNios->b;
+  i_acs = (double)(slow_data[i_acsAddr->index][i_acsAddr->channel])*i_acsNios->m + i_acsNios->b;
+  i_rec = (double)(slow_data[i_recAddr->index][i_recAddr->channel])*i_recNios->m + i_recNios->b;
+  i_sc = (double)(slow_data[i_scAddr->index][i_scAddr->channel])*i_scNios->m + i_scNios->b;
+  i_dgps = (double)(slow_data[i_dgpsAddr->index][i_dgpsAddr->channel])*i_dgpsNios->m + i_dgpsNios->b;
+  i_step = (double)(slow_data[i_stepAddr->index][i_stepAddr->channel])*i_stepNios->m + i_stepNios->b;
+  i_mcc = (double)(slow_data[i_mccAddr->index][i_mccAddr->channel])*i_mccNios->m + i_mccNios->b;
+  i_gy = (double)(slow_data[i_gyAddr->index][i_gyAddr->channel])*i_gyNios->m + i_gyNios->b;
+  i_rw = (double)(slow_data[i_rwAddr->index][i_rwAddr->channel])*i_rwNios->m + i_rwNios->b;
+  i_el = (double)(slow_data[i_elAddr->index][i_elAddr->channel])*i_elNios->m + i_elNios->b;
+  i_piv = (double)(slow_data[i_pivAddr->index][i_pivAddr->channel])*i_pivNios->m + i_pivNios->b;
+
+  i_tot = i_trans + i_das + i_acs + i_rec + i_sc + i_dgps + i_step + i_mcc + i_gy + i_rw + i_el + i_piv;
+
+  WriteData(i_totNios, i_tot, NIOS_QUEUE);
+
+}
+
 #endif
 
 /* fill_Rx_frame: places one 32 bit word into the RxFrame. Returns true on
@@ -1038,6 +1141,7 @@ int main(int argc, char *argv[])
       } else {
 #ifndef BOLOTEST
         GetACS(RxFrame);
+        GetCurrents(RxFrame);
         Pointing();
 
         /* Copy data to tdrss thread. */

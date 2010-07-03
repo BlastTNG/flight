@@ -747,7 +747,9 @@ struct ChannelStruct SlowChannels[] = {
 
   {"led_cc",        'w', LOOP8, 40,              1.0,               0.0, 'u', U_NONE}, // charge controller LED state
 
-  /* LOOP8 41-63 are unused */
+  {"i_tot",         'w', LOOP8, 41,              1.0,               0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
+
+  /* LOOP8 42-63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
