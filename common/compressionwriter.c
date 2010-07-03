@@ -371,7 +371,7 @@ void CompressionWriter() {
       if (streamList[i_field].name[5]%2) {
         streamData[i_field].msw = m_bi0->channel*2;
       } else {
-        streamData[i_field].msw = m_bi0->channel*2;
+        streamData[i_field].msw = m_bi0->channel*2+1;
       }
     } else {
       struct NiosStruct *nios;
