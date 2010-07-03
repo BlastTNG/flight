@@ -304,7 +304,7 @@ void WriteStreamFrame() {
 }
 
 //*********************************************************
-// check if the name referres to a bolometer
+// check if the name referes to a bolometer
 //*********************************************************
 int isBoloField(char *field) {
   if (field[0]!='n') return 0;
