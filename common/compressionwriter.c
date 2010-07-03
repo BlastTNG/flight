@@ -358,6 +358,10 @@ void CompressionWriter() {
       sprintf(l_name, "%slo", streamList[i_field].name);
       sprintf(m_name, "%shi", streamList[i_field].name);
 
+      // OK: bolometers are 24 bit fields.  The msw for odd bolometer
+      // channels are stored in the high byte of the even channels.
+      if (m_name[5]%2) m_name[5]--; // make sure msw referes to an even field
+        
       l_bi0 = GetBiPhaseAddr(l_name);
       m_bi0 = GetBiPhaseAddr(m_name);
 
