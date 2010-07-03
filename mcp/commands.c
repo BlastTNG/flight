@@ -2407,7 +2407,7 @@ void InitCommandData()
 
   /** prev_status overrides this stuff **/
   CommandData.at_float = 0;
-  CommandData.timeout = 3600;
+  CommandData.timeout = 57600; /* TODO: Change this to something short for pre-flight!!!*/
   CommandData.alice_file = 0;
   CommandData.vtx_sel[0] = vtx_isc;
   CommandData.vtx_sel[1] = vtx_osc;
