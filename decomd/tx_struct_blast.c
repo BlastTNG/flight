@@ -740,10 +740,14 @@ struct ChannelStruct SlowChannels[] = {
   {"accel_az",     'w',   LOOP8, 34,          2.0/65536,             0.0, 'u', U_NONE},
   {"pos_focus_isc",'w',   LOOP8, 35,                1.0,             0.0, 'u', U_NONE},
   {"pos_focus_osc",'w',   LOOP8, 36,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP8 36-63 are unused */
+
   {"az_cov_dgps",   'w', LOOP8, 37,              I2DEG,             0.0, 'u', U_D_DEG},
   {"pitch_cov_dgps",'w', LOOP8, 38,              I2DEG,             0.0, 'u', U_D_DEG},
   {"roll_cov_dgps", 'w', LOOP8, 39,              I2DEG,             0.0, 'u', U_D_DEG},
+
+  {"led_cc",        'w', LOOP8, 40,              1.0,               0.0, 'u', U_NONE}, // charge controller LED state
+
+  /* LOOP8 41-63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

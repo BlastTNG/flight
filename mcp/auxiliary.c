@@ -358,6 +358,7 @@ void ChargeController(void)
   static struct NiosStruct *AlarmHiCCAddr;
   static struct NiosStruct *AlarmLoCCAddr;
   static struct NiosStruct *ChargeCCAddr;
+  static struct NiosStruct *LEDCCAddr;
 
   static int firsttime = 1;
   
@@ -375,7 +376,7 @@ void ChargeController(void)
     AlarmHiCCAddr = GetNiosAddr("alarm_hi_cc");
     AlarmLoCCAddr = GetNiosAddr("alarm_lo_cc");
     ChargeCCAddr = GetNiosAddr("state_cc");
-
+    LEDCCAddr = GetNiosAddr("led_cc");
   }
 
   WriteData(VBattCCAddr, 1000.0*ChrgCtrlData.V_batt, NIOS_QUEUE);
@@ -388,6 +389,7 @@ void ChargeController(void)
   WriteData(AlarmHiCCAddr, ChrgCtrlData.alarm_field_hi, NIOS_QUEUE);
   WriteData(AlarmLoCCAddr, ChrgCtrlData.alarm_field_lo, NIOS_QUEUE);
   WriteData(ChargeCCAddr, ChrgCtrlData.charge_state, NIOS_QUEUE);
+  WriteData(LEDCCAddr, ChrgCtrlData.led_state, NIOS_QUEUE);
 
 }
 

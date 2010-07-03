@@ -75,6 +75,7 @@ struct CCData {
   unsigned short fault_field;  // fault bitfield
   unsigned int alarm_field_hi; // alarm high bitfield
   unsigned int alarm_field_lo; // alarm low bitfield
+  unsigned int led_state;      // state of status LEDs on front of unit 
   unsigned int charge_state;   // charging state of controller   
 };
 

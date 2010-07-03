@@ -322,9 +322,9 @@ void* chrgctrlComm(void* arg)
 
       //      usleep(10000);
 
-      /* controller charge state and target charging voltage (addrs 51, 52) */
+      /* controller LED state, charge state and target charging voltage (addrs 50, 51, 52) */
 
-      charge.num = query_chrgctrl(slave, 51, 2, charge.arr, chrgctrlinfo.fd);
+      charge.num = query_chrgctrl(slave, 50, 3, charge.arr, chrgctrlinfo.fd);
 
       //      usleep(10000);
 
@@ -423,7 +423,7 @@ void* chrgctrlComm(void* arg)
       ChrgCtrlData.I_batt = *(elec.arr+3) * Iscale/32768.0;
       ChrgCtrlData.I_arr =  *(elec.arr+4) * Iscale/32768.0;
     
-      ChrgCtrlData.V_targ = *(charge.arr+1) * Vscale/32768.0;
+      ChrgCtrlData.V_targ = *(charge.arr+2) * Vscale/32768.0;
 
       ChrgCtrlData.T_hs = *temp.arr;
       ChrgCtrlData.fault_field = *fault.arr;
@@ -431,7 +431,8 @@ void* chrgctrlComm(void* arg)
       ChrgCtrlData.alarm_field_hi = *alarm.arr;
       ChrgCtrlData.alarm_field_lo = *(alarm.arr+1);
 
-      ChrgCtrlData.charge_state = *charge.arr;
+      ChrgCtrlData.led_state = *charge.arr;
+      ChrgCtrlData.charge_state = *(charge.arr+1);
     
       /* Relics from test program -- not for mcp!
 
