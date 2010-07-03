@@ -1,4 +1,4 @@
-#define END_OF_STREAM {"", 0, 0, 0, 0, 0}
+#define END_OF_STREAM {"", 0, 0, 0, 0, 0,0}
 #define NOAVG 0
 #define AVG 1
 #define NODX 0

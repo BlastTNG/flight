@@ -47,7 +47,6 @@ struct fieldStreamStruct streamList[] = {
   {"p_rw_term_piv", 100, 10, AVG, NODX, 8, SLOW},
   {"frict_term_piv", 100, 10, AVG, NODX, 8, SLOW},
   {"res_piv", 256, 10, AVG, NODX, 8, SLOW},
-
   END_OF_STREAM
 };
 
