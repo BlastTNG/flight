@@ -2424,18 +2424,18 @@ void InitCommandData()
   CommandData.pointing_mode.h = 0;
   CommandData.pointing_mode.t = mcp_systime(NULL) + CommandData.timeout;
 
-  CommandData.az_accel = 0.1; 
+  CommandData.az_accel = 0.3; 
 
-  CommandData.ele_gain.I = 10000; /* was 8000 */
-  CommandData.ele_gain.P = 10000; /* was 1200 */
+  CommandData.ele_gain.I = 5000; /* was 8000 */
+  CommandData.ele_gain.P = 5000; /* was 1200 */
 
-  CommandData.azi_gain.P = 1000;
-  CommandData.azi_gain.I = 0;
+  CommandData.azi_gain.P = 4000;
+  CommandData.azi_gain.I = 100;
 
   CommandData.pivot_gain.SP = 50; // dps
-  CommandData.pivot_gain.PV = 500;
-  CommandData.pivot_gain.PE = 100;
-  CommandData.pivot_gain.F = 0;
+  CommandData.pivot_gain.PV = 400;
+  CommandData.pivot_gain.PE = 0;
+  CommandData.pivot_gain.F = 0.3;
 
   CommandData.disable_az = 1; 
   CommandData.disable_el = 1;
