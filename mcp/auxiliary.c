@@ -220,10 +220,6 @@ static int Balance(int bits_bal)
     modeBalAddr = GetNiosAddr("mode_bal");
   }
  
-  // if vetoed 
-  if (CommandData.pointing_mode.nw > 0) {
-    CommandData.pointing_mode.nw--;
-  } 
 
   if ((CommandData.pumps.mode == bal_rest) || (CommandData.pointing_mode.nw > 0)) {
  

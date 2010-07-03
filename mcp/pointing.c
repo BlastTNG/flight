@@ -1284,18 +1284,16 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
     s->varience = 1.0 / (w1 + w2);
     //    if (i%500==1) bprintf(info,"EvolveElSolution: #2 Angle %f, w1 %f, w2 %f, varience %f",s->angle, w1, w2,s->varience);
 
-    if (CommandData.pointing_mode.nw > 0)
-      CommandData.pointing_mode.nw--; /* slew veto */
-    else {
+    if (CommandData.pointing_mode.nw == 0) { /* not in slew veto */
       /** calculate offset **/
       if (s->n_solutions > 10) { // only calculate if we have had at least 10
         new_offset = ((new_angle - s->last_input) - s->gy_int) /
           ((1.0/SR) * (double)s->since_last);
-
+	
         if (fabs(new_offset) > 500.0)
           new_offset = 0; // 5 deg step is bunk!
-
-
+	
+	
         s->offset_gy = filter(new_offset, s->fs);
       }
       s->since_last = 0;
@@ -1392,23 +1390,21 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
     s->varience = 1.0 / (w1 + w2);
     NormalizeAngle(&(s->angle));
 
-    if (CommandData.pointing_mode.nw > 0)
-      CommandData.pointing_mode.nw--; /* slew veto */
-    else {
+    if (CommandData.pointing_mode.nw == 0) { /* not in slew veto */
       if (s->n_solutions > 10) { // only calculate if we have had at least 10
-
-        daz = remainder(new_angle - s->last_input, 360.0);
-
-        /* Do Gyro_IFroll */
-        new_offset = -(daz * cos(el) + s->ifroll_gy_int) /
-          ((1.0/SR) * (double)s->since_last);
-        s->offset_ifroll_gy = filter(new_offset, s->fs2);;
-
-        /* Do Gyro_IFyaw */
-        new_offset = -(daz * sin(el) + s->ifyaw_gy_int) /
-          ((1.0/SR) * (double)s->since_last);
-        s->offset_ifyaw_gy = filter(new_offset, s->fs3);;
-
+	
+	daz = remainder(new_angle - s->last_input, 360.0);
+	
+	/* Do Gyro_IFroll */
+	new_offset = -(daz * cos(el) + s->ifroll_gy_int) /
+	  ((1.0/SR) * (double)s->since_last);
+	s->offset_ifroll_gy = filter(new_offset, s->fs2);;
+	
+	/* Do Gyro_IFyaw */
+	new_offset = -(daz * sin(el) + s->ifyaw_gy_int) /
+	  ((1.0/SR) * (double)s->since_last);
+	s->offset_ifyaw_gy = filter(new_offset, s->fs3);;
+	
       }
       s->since_last = 0;
       if (s->n_solutions<10000) {
@@ -1726,7 +1722,7 @@ void Pointing(void)
   }
 
   /* At float check */
-  if (PointingData[point_index].alt < FLOAT_ALT) {
+    if (PointingData[point_index].alt < FLOAT_ALT) {
     PointingData[point_index].at_float = 0;
     i_at_float = 0;
   } else {
@@ -1749,7 +1745,6 @@ void Pointing(void)
   PointingData[point_index].lst = getlst(PointingData[point_index].t,
       PointingData[point_index].lon);
 
-  /* TODO CommandsData.pointing_mode.nw decremented more than once per frame */
   /*************************************/
   /**      do ISC Solution            **/
   EvolveSCSolution(&ISCEl, &ISCAz,
@@ -1990,7 +1985,10 @@ void Pointing(void)
   CommandData.dgps_az_trim = DGPSAz.trim;
   CommandData.ss_az_trim = SSAz.trim;
   j++;
-
+ 
+  /* If we are in a slew veto decrement the veto count*/ 
+  if (CommandData.pointing_mode.nw > 0)
+    CommandData.pointing_mode.nw--; 
 }
 
 // called from the command thread in command.h
