@@ -151,7 +151,7 @@ void BufferStreamData(int i_streamframe, int readindex) {
       i = streamData[i_field].slowIndex;
       c = streamData[i_field].slowChannel;
       if (streamData[i_field].mask) { // wide slow
-        x = (unsigned int)slow_data[i][c] + ((unsigned int)slow_data[i][c] <<16);
+        x = (unsigned int)slow_data[i][c] + ((unsigned int)slow_data[i][c+1] <<16);
       } else { // narrow slow
         x = (unsigned int)slow_data[i][c];
       }
