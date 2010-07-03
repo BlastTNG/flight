@@ -399,14 +399,13 @@ void CompressionWriter() {
           streamData[i_field].mask = 0;
         }
       }
-      
-      streamData[i_field].last = 0;
-      streamData[i_field].residual = 0;
-      streamData[i_field].gain = streamList[i_field].gain;
-      streamData[i_field].offset = 0;
-      streamData[i_field].sum = 0.0;
-      streamData[i_field].n_sum = 0;
-    }
+    }      
+    streamData[i_field].last = 0;
+    streamData[i_field].residual = 0;
+    streamData[i_field].gain = streamList[i_field].gain;
+    streamData[i_field].offset = 0;
+    streamData[i_field].sum = 0.0;
+    streamData[i_field].n_sum = 0;
   }
   
   bprintf(startup, "frame list length: %d  stream list length: %d", n_framelist, n_streamlist);
