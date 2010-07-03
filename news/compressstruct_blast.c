@@ -13,8 +13,8 @@ struct fieldStreamStruct {
 */
 
 struct fieldStreamStruct streamList[] = {
-  {"time",1,2,NOAVG,DX,8,SLOW},
-  {"time_usec", 5000, 2, NOAVG, NODX, 8,SLOW},
+  {"time",1,2,AVG,NODX,8,SLOW},
+  {"time_usec", 5000, 2, AVG, NODX, 8,SLOW},
   {"ifel_gy", 5, 10, AVG, NODX, 8, SLOW},
   {"ifyaw_gy", 5, 10, AVG, NODX, 8, SLOW},
   {"ifroll_gy", 5, 10, AVG, NODX, 8, SLOW},
