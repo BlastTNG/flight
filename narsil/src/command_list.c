@@ -25,19 +25,18 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.68 $";
+const char *command_list_serial = "$Revision: 4.69 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
   "Pointing Sensor Trims", "Aux. Electronics", "Bias",
-  "Pointing Sensor Vetos", "Actuators",        "Unused (Cal Lamp)",
+  "Pointing Sensor Vetos", "Actuators",        "SBSC",
   "Pointing Motor Gains",  "Secondary Focus",  "Cryo Heat",
   "Subsystem Power",       "Lock Motor",       "Cryo Control",
   "Telemetry",             "ISC Housekeeping", "OSC Housekeeping",
   "X-Y Stage",             "ISC Modes",        "OSC Modes",
-  "Miscellaneous",         "ISC Parameters",   "OSC Parameters",
-  "SBSC Parameters"
-};
+  "Miscellaneous",         "ISC Parameters",   "OSC Parameters"
+  };
 
 
 #define COMMAND(x) x, #x
@@ -310,11 +309,11 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(osc_no_pyramid), "tell OSC not to use the pyramid solution finder",
     GR_OSC_PARAM},
   //SBSC commands
-  {COMMAND(cam_expose), "Start cam exposure (in triggered mode)", GR_SBSC_PARAM},
-  {COMMAND(cam_autofocus), "Camera autofocus mode", GR_SBSC_PARAM},
-  {COMMAND(cam_settrig_ext), "Set external cam trigger mode", GR_SBSC_PARAM},
-  {COMMAND(cam_force_lens), "Forced mode for cam lens moves", GR_SBSC_PARAM},
-  {COMMAND(cam_unforce_lens), "Normal mode for cam lens moves", GR_SBSC_PARAM},
+  {COMMAND(cam_expose), "Start cam exposure (in triggered mode)", GR_SBSC},
+  {COMMAND(cam_autofocus), "Camera autofocus mode", GR_SBSC},
+  {COMMAND(cam_settrig_ext), "Set external cam trigger mode", GR_SBSC},
+  {COMMAND(cam_force_lens), "Forced mode for cam lens moves", GR_SBSC},
+  {COMMAND(cam_unforce_lens), "Normal mode for cam lens moves", GR_SBSC},
 };
 
 //TODO field sources for command parameters need updating
@@ -994,27 +993,27 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   //SBSC commands
-  {COMMAND(cam_any), "Execute arbitrary starcam command", GR_SBSC_PARAM, 1,
+  {COMMAND(cam_any), "Execute arbitrary starcam command", GR_SBSC, 1,
     {
       {"Command String", 0, 32, 's', ""}
     }
   },
-  {COMMAND(cam_settrig_timed), "Use timed exposure mode", GR_SBSC_PARAM, 1,
+  {COMMAND(cam_settrig_timed), "Use timed exposure mode", GR_SBSC, 1,
     {
       {"Exposure Interval (ms)", 0, MAX_15BIT, 'i', "sc_exp_int"}
     }
   },
-  {COMMAND(cam_exp_params), "set starcam exposure commands", GR_SBSC_PARAM, 1,
+  {COMMAND(cam_exp_params), "set starcam exposure commands", GR_SBSC, 1,
     {
       {"Exposure duration (ms)", 40, MAX_15BIT, 'i', "sc_exp_time"}
     }
   },
-  {COMMAND(cam_focus_params), "set camera autofocus params", GR_SBSC_PARAM, 1,
+  {COMMAND(cam_focus_params), "set camera autofocus params", GR_SBSC, 1,
     {
       {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "sc_foc_res"}
     }
   },
-  {COMMAND(cam_bad_pix), "Indicate pixel to ignore", GR_SBSC_PARAM, 3,
+  {COMMAND(cam_bad_pix), "Indicate pixel to ignore", GR_SBSC, 3,
     {
       {"Camera ID (0 or 1)", 0, 1, 'i', ""},
       //1530 = CAM_WIDTH, 1020 = CAM_HEIGHT (sbsc_protocol.h)
@@ -1022,7 +1021,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"y (0=top)", 0, 1020, 'i', ""}
     }
   },
-  {COMMAND(cam_blob_params), "set blob finder params", GR_SBSC_PARAM, 4,
+  {COMMAND(cam_blob_params), "set blob finder params", GR_SBSC, 4,
     {
       {"Max number of blobs", 1, MAX_15BIT, 'i', "sc_maxblob"},
       {"Search grid size (pix)", 1, 1530 , 'i', "sc_grid"},
@@ -1030,17 +1029,17 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "sc_mdist"}
     }
   },
-  {COMMAND(cam_lens_any), "execute lens command directly", GR_SBSC_PARAM, 1,
+  {COMMAND(cam_lens_any), "execute lens command directly", GR_SBSC, 1,
     {
       {"Lens command string", 0, 32, 's', ""}
     }
   },
-  {COMMAND(cam_lens_move), "move camera lens", GR_SBSC_PARAM, 1,
+  {COMMAND(cam_lens_move), "move camera lens", GR_SBSC, 1,
     {
       {"New position (ticks)", 0, MAX_15BIT, 'i', ""}
     }
   },
-  {COMMAND(cam_lens_params), "set starcam lens params", GR_SBSC_PARAM, 1,
+  {COMMAND(cam_lens_params), "set starcam lens params", GR_SBSC, 1,
     {
       {"Allowed move error (ticks)", 0, MAX_15BIT, 'i', ""}
     }

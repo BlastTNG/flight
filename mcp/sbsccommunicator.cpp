@@ -97,7 +97,6 @@ int init_sockaddr(sockaddr_in *name, const char* hostname, uint16_t port)
 int SBSCCommunicator::openHost(string target)
 {
 	if (commFD >= 0) return -1;  //already an open connection
-	
 	//separate the port and address parts of the target
 	string::size_type pos = target.rfind(':', target.size()-1);
 	uint16_t portnum = (pos!=string::npos)?atoi(target.substr(pos).c_str()):DEFAULT_CAM_PORT;
@@ -182,7 +181,6 @@ int SBSCCommunicator::openClient(string target)
 	sockaddr_in servaddr;
 	if (init_sockaddr(&servaddr, addrStr.c_str(), portnum) < 0)
 		return errorFlag = -1;
-	
 	//create the socket and try to connect
 	commFD = socket(PF_INET, SOCK_STREAM, 0);
 	if (commFD < 0) return errorFlag = -1;

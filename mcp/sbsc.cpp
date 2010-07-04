@@ -157,7 +157,7 @@ void cameraFields()
   WriteData(blobMdistAddr, CommandData.cam.minBlobDist, NIOS_QUEUE);
 
   //persistently identify cameras by serial number (camID)
-  if (camRtn[i_cam].camID == "060400935") {
+  if (camRtn[i_cam].camID == "08073507") {
     sbsc = &camRtn[i_cam];
     unrecFlag = false;
   }

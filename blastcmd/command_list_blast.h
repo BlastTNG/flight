@@ -30,7 +30,7 @@
 #define SIZE_ABOUT 80
 #define SIZE_PARNAME 80
 
-#define N_GROUPS 25
+#define N_GROUPS 24
 
 #define GR_POINT        0x00000001
 #define GR_BAL          0x00000002
@@ -40,7 +40,7 @@
 #define GR_BIAS         0x00000020
 #define GR_VETO         0x00000040
 #define GR_ACT          0x00000080
-//#define GR_CALLAMP      0x00000100
+#define GR_SBSC		0x00000100
 #define GR_GAIN         0x00000200
 #define GR_FOCUS        0x00000400
 #define GR_CRYO_HEAT    0x00000800
@@ -56,7 +56,6 @@
 #define GR_MISC         0x00200000
 #define GR_ISC_PARAM    0x00400000
 #define GR_OSC_PARAM    0x00800000
-#define GR_SBSC_PARAM	0x01000000
 
 #define CONFIRM         0x80000000
 
