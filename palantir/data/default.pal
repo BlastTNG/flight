@@ -986,7 +986,7 @@
   </BOX>
   <BOX caption="Motor Temps" colour="#002222" row="2" col="6">
     <NUMBER caption="T Reac">
-      <DATUM format="%.2f" src="T_RW" extrema="temp"/>
+      <DATUM format="%.2f" align="right" src="T_RW" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Reac MC">
       <DATUM format="%.2f" src="T_MC_RW" extrema="temp"/>
@@ -1006,43 +1006,43 @@
   </BOX>
   <BOX caption="Currents" colour="#707" row="0" col="4" rowspan="1">
     <NUMBER caption="Transmitter">
-      <DATUM format="%.2f" src="I_TRANS" extrema="current"/>
+      <DATUM format="%6.2f" src="I_TRANS" extrema="current"/>
     </NUMBER>
     <NUMBER caption="DAS">
-      <DATUM format="%.2f" src="I_DAS" extrema="current"/>
+      <DATUM format="%6.2f" src="I_DAS" extrema="current"/>
     </NUMBER>
     <NUMBER caption="ACS">
-      <DATUM format="%.2f" src="I_ACS" extrema="acscurrent"/>
+      <DATUM format="%6.2f" src="I_ACS" extrema="acscurrent"/>
     </NUMBER>
     <NUMBER caption="Preamps">
-      <DATUM format="%.2f" src="I_REC" extrema="current"/>
+      <DATUM format="%6.2f" src="I_REC" extrema="current"/>
     </NUMBER>
     <NUMBER caption="Star Cams">
-      <DATUM format="%.2f" src="I_SC" extrema="current"/>
+      <DATUM format="%6.2f" src="I_SC" extrema="current"/>
     </NUMBER>
     <NUMBER caption="dGPS + SS">
-      <DATUM format="%.2f" src="I_DGPS" extrema="current"/>
+      <DATUM format="%6.2f" src="I_DGPS" extrema="current"/>
     </NUMBER>
     <NUMBER caption="Steppers">
-      <DATUM format="%.2f" src="I_STEP" extrema="current"/>
+      <DATUM format="%6.2f" src="I_STEP" extrema="current"/>
     </NUMBER>
     <NUMBER caption="MCC">
-      <DATUM format="%.2f" src="I_MCC" extrema="compcurrent"/>
+      <DATUM format="%6.2f" src="I_MCC" extrema="compcurrent"/>
     </NUMBER>
     <NUMBER caption="I Gyro Box">
-      <DATUM format="%.2f" src="I_GY" extrema="gycurrent"/>
+      <DATUM format="%6.2f" src="I_GY" extrema="gycurrent"/>
     </NUMBER>
     <NUMBER caption="I Reac">
-      <DATUM format="%.2f" src="I_RW" extrema="current"/>
+      <DATUM format="%6.2f" src="I_RW" extrema="current"/>
     </NUMBER>
     <NUMBER caption="I EL">
-      <DATUM format="%.2f" src="I_EL" extrema="current"/>
+      <DATUM format="%6.2f" src="I_EL" extrema="current"/>
     </NUMBER>
     <NUMBER caption="I Pivot">
-      <DATUM format="%.2f" src="I_PIV" extrema="current"/>
+      <DATUM format="%6.2f" src="I_PIV" extrema="current"/>
     </NUMBER>
     <NUMBER caption="I Total">
-      <DATUM format="%.2f" src="I_TOT" extrema="current"/>
+      <DATUM format="%5.2f" src="I_TOT" extrema="current"/>
     </NUMBER>
   </BOX>
   <BOX caption="Bias" colour="#707" row="4" col="1">
