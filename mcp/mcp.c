@@ -97,6 +97,7 @@ void FrameFileWriter(void);
 void TDRSSWriter(void);
 void CompressionWriter(void);
 void StageBus(void);
+void openSBSC(void);
 
 void InitialiseFrameFile(char);
 void dirFileWriteFrame(unsigned short *RxFrame);
@@ -1094,6 +1095,8 @@ int main(int argc, char *argv[])
   InitSched();
   openMotors();  //open communications with peripherals, creates threads
                  // in motors.c
+  openSBSC();  // SBSC - creates thread in sbsc.cpp
+
 
   startChrgCtrl(); // create charge controller serial thread
                    // defined in chrgctrl.c

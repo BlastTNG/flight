@@ -93,6 +93,8 @@ pthread_mutex_t mutex;
 struct SIPDataStruct SIPData;
 struct CommandDataStruct CommandData;
 
+int sendSBSCCommand(const char *cmd); //sbsc.cpp
+
 /** Write the Previous Status: called whenever anything changes */
 static void WritePrevStatus()
 {
@@ -942,6 +944,27 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.ISCState[1].useLost = 1;
       break;
 
+      /***************************************/
+      /********* SBSC Commanding  *************/
+    case cam_expose:
+      sendSBSCCommand("CtrigExp");
+      break;
+    case cam_autofocus:
+      if (CommandData.cam.forced)
+	sendSBSCCommand("CtrigFocusF");
+      else sendSBSCCommand("CtrigFocus");
+      break;
+    case cam_settrig_ext:
+      sendSBSCCommand("CsetExpInt=0");
+      CommandData.cam.expInt = 0;
+      break;
+    case cam_force_lens:
+      CommandData.cam.forced = 1;
+      break;
+    case cam_unforce_lens:
+      CommandData.cam.forced = 0;
+      break;
+
     case blast_rocks:
       CommandData.sucks = 0;
       break;
@@ -1127,6 +1150,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled)
 {
   int i;
+  char buf[256]; //for SBSC Commands
 
   /* Update CommandData struct with new info
    * If the parameter is type 'i'/'l' set CommandData using ivalues[i]
@@ -1714,6 +1738,59 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case osc_max_age:
       CommandData.ISCControl[1].max_age = ivalues[0]/10; //convert from ms to frames
+      break;
+      /***************************************/
+      /********* SBSC Commanding  *************/ 
+    case cam_any:
+      sendSBSCCommand(svalues[0]);
+      break;
+    case cam_settrig_timed:
+      sprintf(buf, "CsetExpInt=%d", ivalues[0]);
+      sendSBSCCommand(buf);
+      CommandData.cam.expInt = ivalues[0];
+      break;
+    case cam_exp_params:
+      sprintf(buf, "CsetExpTime=%d", ivalues[0]);
+      CommandData.cam.expTime = ivalues[0];
+      sendSBSCCommand(buf);
+      break;
+    case cam_focus_params:
+      sprintf(buf, "CsetFocRsln=%d", ivalues[0]);
+      sendSBSCCommand(buf);
+      CommandData.cam.focusRes = ivalues[0];
+      break;
+    case cam_bad_pix:
+      sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
+      sendSBSCCommand(buf);
+      break;
+    case cam_blob_params:
+      sprintf(buf, "IsetMaxBlobs=%d", ivalues[0]);
+      sendSBSCCommand(buf);
+      sprintf(buf, "IsetGrid=%d", ivalues[1]);
+      sendSBSCCommand(buf);
+      sprintf(buf, "IsetThreshold=%f", rvalues[2]);
+      sendSBSCCommand(buf);
+      sprintf(buf, "IsetDisttol=%d", ivalues[3]);
+      sendSBSCCommand(buf);
+      CommandData.cam.maxBlobs = ivalues[0];
+      CommandData.cam.grid = ivalues[1];
+      CommandData.cam.threshold = rvalues[2];
+      CommandData.cam.minBlobDist = ivalues[3];
+      break;
+    case cam_lens_any:
+      sprintf(buf, "L=%s", svalues[0]);
+      sendSBSCCommand(buf);
+      break;
+    case cam_lens_move:
+      if (CommandData.cam.forced)
+	sprintf(buf, "Lforce=%d", ivalues[0]);
+      else sprintf(buf, "Lmove=%d", ivalues[0]);
+      sendSBSCCommand(buf);
+      break;
+    case cam_lens_params:
+      sprintf(buf, "LsetTol=%d", ivalues[0]);
+      sendSBSCCommand(buf);
+      CommandData.cam.moveTol = ivalues[0];
       break;
 #endif
     default:

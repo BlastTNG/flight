@@ -96,6 +96,9 @@ void PhaseControl(void);
 void UpdateAxesMode(void);
 void WriteMot(int TxIndex, unsigned short *RxFrame);
 
+/* in sbsc.cpp */
+void cameraFields();        
+
 /* in sched.c */
 void DoSched();
 
@@ -1521,6 +1524,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     ChargeController();
     ControlPower();
     VideoTx();
+    cameraFields();
 #endif
   }
 

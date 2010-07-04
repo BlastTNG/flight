@@ -19,8 +19,12 @@
  * !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
  */
 
+#include <limits.h>
 #include "channels.h"
 #include "bbc_pci.h"
+#ifdef __MCP__
+#include "sbsc_protocol.h"
+#endif
 
 /* card name to (node number, bus number) mapping */
 #define ACS1_C	 0, 0  /* C denotes a common motherboard node */
@@ -63,7 +67,8 @@
 #define LOOP6	37, 0
 #define LOOP7	38, 0
 #define LOOP8	39, 0
-#define DECOM	40, 0
+#define LOOP9	40, 0
+#define DECOM	41, 0
 
 #define CAL16(m,b) ((m)*M_16PRE), ((b) + B_16PRE*(m)*M_16PRE)
 #define CAL16T(m,b) ((m)*M_16T), ((b) + B_16T*(m)*M_16T - 273.15)
@@ -181,6 +186,11 @@ struct ChannelStruct WideSlowChannels[] = {
   {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U', U_NONE},
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S', U_NONE},
   {"lst_sched",    'w', LOOP6, 56,                1.0,             0.0, 'U', U_NONE},  // ls day
+  //TODO SBSC stuff
+  {"sbsc_frame",    'w', LOOP9, 50,                1.0,             0.0, 'U'},
+  {"sbsc_sec",      'w', LOOP9, 52,                1.0,             0.0, 'U'},
+  {"sbsc_usec",     'w', LOOP9, 54,                1.0,             0.0, 'U'},
+  //derived channel sbsc_time adds these together
 
   END_OF_CHANNELS
 };
@@ -746,10 +756,82 @@ struct ChannelStruct SlowChannels[] = {
   {"roll_cov_dgps", 'w', LOOP8, 39,              I2DEG,             0.0, 'u', U_D_DEG},
 
   {"led_cc",        'w', LOOP8, 40,              1.0,               0.0, 'u', U_NONE}, // charge controller LED state
-
-  {"i_tot",         'w', LOOP8, 41,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
-
-  /* LOOP8 42-63 are unused */
+  {"sbsc_force",     'w', LOOP8, 41,                1.0,             0.0, 'u'},
+  {"sbsc_exp_int",   'w', LOOP8, 42,                1.0,             0.0, 'u'},
+  {"sbsc_exp_time",  'w', LOOP8, 43,                1.0,             0.0, 'u'},
+  {"sbsc_foc_res",   'w', LOOP8, 44,                1.0,             0.0, 'u'},
+  {"sbsc_move_tol",  'w', LOOP8, 45,                1.0,             0.0, 'u'},
+  {"sbsc_maxblob",   'w', LOOP8, 46,                1.0,             0.0, 'u'},
+  {"sbsc_grid",      'w', LOOP8, 47,                1.0,             0.0, 'u'},
+  {"sbsc_thresh",    'w', LOOP8, 48,         1.0/1000.0,             0.0, 'u'},
+  {"sbsc_mdist",     'w', LOOP8, 49,                1.0,             0.0, 'u'},
+  {"sbsc_mapmean",   'w', LOOP8, 50,                1.0,             0.0, 'u'},
+  {"sbsc_mapsigma",  'w', LOOP8, 51,           1.0/10.0,             0.0, 'u'},
+  {"sbsc_ccd_t",     'w', LOOP8, 52,          1.0/100.0,             0.0, 's'},
+  {"sbsc_numblobs",  'w', LOOP8, 53,                1.0,             0.0, 'u'},
+  {"sbsc_blob00_x",  'w', LOOP8, 54, CAM_WIDTH/SHRT_MAX,             0.0, 'u'},
+  {"sbsc_blob00_y",  'w', LOOP8, 55, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
+  {"sbsc_blob00_f",  'w', LOOP8, 56,                1.0,             0.0, 'u'},
+  {"sbsc_blob00_s",  'w', LOOP8, 57,          1.0/100.0,             0.0, 'u'},
+  {"sbsc_blob01_x",  'w', LOOP8, 58, CAM_WIDTH/SHRT_MAX,             0.0, 'u'},
+  {"sbsc_blob01_y",  'w', LOOP8, 59, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
+  {"sbsc_blob01_f",  'w', LOOP8, 60,                1.0,             0.0, 'u'},
+  {"sbsc_blob01_s",  'w', LOOP8, 61,          1.0/100.0,             0.0, 'u'},
+  {"sbsc_blob02_x",  'w', LOOP8, 62, CAM_WIDTH/SHRT_MAX,             0.0, 'u'},
+  {"sbsc_blob02_y",  'w', LOOP8, 63, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
+  {"sbsc_blob02_f",  'w', LOOP9,  0,                1.0,             0.0, 'u'},
+  {"sbsc_blob02_s",  'w', LOOP9,  1,          1.0/100.0,             0.0, 'u'},
+  {"sbsc_blob03_x",  'w', LOOP9,  2, CAM_WIDTH/SHRT_MAX,             0.0, 'u'},
+  {"sbsc_blob03_y",  'w', LOOP9,  3, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
+  {"sbsc_blob03_f",  'w', LOOP9,  4,                1.0,             0.0, 'u'},
+  {"sbsc_blob03_s",  'w', LOOP9,  5,          1.0/100.0,             0.0, 'u'},
+  {"sbsc_blob04_x",  'w', LOOP9,  6, CAM_WIDTH/SHRT_MAX,             0.0, 'u'},
+  {"sbsc_blob04_y",  'w', LOOP9,  7, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
+  {"sbsc_blob04_f",  'w', LOOP9,  8,                1.0,             0.0, 'u'},
+  {"sbsc_blob04_s",  'w', LOOP9,  9,          1.0/100.0,             0.0, 'u'},
+  {"sbsc_blob05_x",  'w', LOOP9, 10, CAM_WIDTH/SHRT_MAX,             0.0, 'u'},
+  {"sbsc_blob05_y",  'w', LOOP9, 11, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
+  {"sbsc_blob05_f",  'w', LOOP9, 12,                1.0,             0.0, 'u'},
+  {"sbsc_blob05_s",  'w', LOOP9, 13,          1.0/100.0,             0.0, 'u'},
+  {"sbsc_blob06_x",  'w', LOOP9, 14, CAM_WIDTH/SHRT_MAX,             0.0, 'u'},
+  {"sbsc_blob06_y",  'w', LOOP9, 15, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
+  {"sbsc_blob06_f",  'w', LOOP9, 16,                1.0,             0.0, 'u'},
+  {"sbsc_blob06_s",  'w', LOOP9, 17,          1.0/100.0,             0.0, 'u'},
+  {"sbsc_blob07_x",  'w', LOOP9, 18, CAM_WIDTH/SHRT_MAX,             0.0, 'u'},
+  {"sbsc_blob07_y",  'w', LOOP9, 19, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
+  {"sbsc_blob07_f",  'w', LOOP9, 20,                1.0,             0.0, 'u'},
+  {"sbsc_blob07_s",  'w', LOOP9, 21,          1.0/100.0,             0.0, 'u'},
+  {"sbsc_blob08_x",  'w', LOOP9, 22, CAM_WIDTH/SHRT_MAX,             0.0, 'u'},
+  {"sbsc_blob08_y",  'w', LOOP9, 23, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
+  {"sbsc_blob08_f",  'w', LOOP9, 24,                1.0,             0.0, 'u'},
+  {"sbsc_blob08_s",  'w', LOOP9, 25,          1.0/100.0,             0.0, 'u'},
+  {"sbsc_blob09_x",  'w', LOOP9, 26, CAM_WIDTH/SHRT_MAX,             0.0, 'u'},
+  {"sbsc_blob09_y",  'w', LOOP9, 27, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
+  {"sbsc_blob09_f",  'w', LOOP9, 28,                1.0,             0.0, 'u'},
+  {"sbsc_blob09_s",  'w', LOOP9, 29,          1.0/100.0,             0.0, 'u'},
+  {"sbsc_blob10_x",  'w', LOOP9, 30, CAM_WIDTH/SHRT_MAX,             0.0, 'u'},
+  {"sbsc_blob10_y",  'w', LOOP9, 31, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
+  {"sbsc_blob10_f",  'w', LOOP9, 32,                1.0,             0.0, 'u'},
+  {"sbsc_blob10_s",  'w', LOOP9, 33,          1.0/100.0,             0.0, 'u'},
+  {"sbsc_blob11_x",  'w', LOOP9, 34, CAM_WIDTH/SHRT_MAX,             0.0, 'u'},
+  {"sbsc_blob11_y",  'w', LOOP9, 35, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
+  {"sbsc_blob11_f",  'w', LOOP9, 36,                1.0,             0.0, 'u'},
+  {"sbsc_blob11_s",  'w', LOOP9, 37,          1.0/100.0,             0.0, 'u'},
+  {"sbsc_blob12_x",  'w', LOOP9, 38, CAM_WIDTH/SHRT_MAX,             0.0, 'u'},
+  {"sbsc_blob12_y",  'w', LOOP9, 39, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
+  {"sbsc_blob12_f",  'w', LOOP9, 40,                1.0,             0.0, 'u'},
+  {"sbsc_blob12_s",  'w', LOOP9, 41,          1.0/100.0,             0.0, 'u'},
+  {"sbsc_blob13_x",  'w', LOOP9, 42, CAM_WIDTH/SHRT_MAX,             0.0, 'u'},
+  {"sbsc_blob13_y",  'w', LOOP9, 43, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
+  {"sbsc_blob13_f",  'w', LOOP9, 44,                1.0,             0.0, 'u'},
+  {"sbsc_blob13_s",  'w', LOOP9, 45,          1.0/100.0,             0.0, 'u'},
+  {"sbsc_blob14_x",  'w', LOOP9, 46, CAM_WIDTH/SHRT_MAX,             0.0, 'u'},
+  {"sbsc_blob14_y",  'w', LOOP9, 47, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
+  {"sbsc_blob14_f",  'w', LOOP9, 48,                1.0,             0.0, 'u'},
+  {"sbsc_blob14_s",  'w', LOOP9, 49,          1.0/100.0,             0.0, 'u'}, 
+  /* LOOP9 50-55 used by SBSC */
+  {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
+  /* LOOP9 57-63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

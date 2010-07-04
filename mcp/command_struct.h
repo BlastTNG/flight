@@ -144,6 +144,21 @@ struct Step {
   unsigned short pulse_len;  // only used for bias
 };
 
+struct SBSCCommandData {
+  //camera and lens configuration
+  short int forced;  //are lens moves forced?
+  int expInt;        //exposure interval (ms) (0=triggered)
+  int expTime;       //exposure duration (ms)
+  int focusRes;      //steps to divide lens range into for focus
+  int moveTol;       //precision (ticks) for lens moves
+
+  //image processing configuration
+  int maxBlobs;      //max number of blobs to find
+  int grid;          //search grid cell size (pix)
+  double threshold;  //# sigma threshold for star finding
+  int minBlobDist;   //min dist (pix) between blobs
+};
+
 struct CommandDataStruct {
   struct {
     unsigned short dac_out[5];
@@ -169,6 +184,8 @@ struct CommandDataStruct {
   struct GainStruct azi_gain;
   struct PivGainStruct pivot_gain;
 
+  struct SBSCCommandData cam;
+  
   struct {
     struct latch_pulse sc_tx;
     struct latch_pulse das;
