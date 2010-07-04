@@ -23,7 +23,7 @@
 #include "isc_protocol.h"  /* required for constants */
 #include "sbsc_protocol.h"
 
-const char *command_list_serial = "$Revision: 4.65 $";
+const char *command_list_serial = "$Revision: 4.66 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -1009,16 +1009,17 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(cam_bad_pix), "Indicate pixel to ignore", GR_SBSC_PARAM, 3,
     {
       {"Camera ID (0 or 1)", 0, 1, 'i', ""},
-      {"x (0=left)", 0, CAM_WIDTH, 'i', ""},
-      {"y (0=top)", 0, CAM_HEIGHT, 'i', ""}
+      //1530 = CAM_WIDTH, 1020 = CAM_HEIGHT (sbsc_protocol.h)
+      {"x (0=left)", 0, 1530, 'i', ""},
+      {"y (0=top)", 0, 1020, 'i', ""}
     }
   },
   {COMMAND(cam_blob_params), "set blob finder params", GR_SBSC_PARAM, 4,
     {
       {"Max number of blobs", 1, MAX_15BIT, 'i', "sc_maxblob"},
-      {"Search grid size (pix)", 1, CAM_WIDTH, 'i', "sc_grid"},
+      {"Search grid size (pix)", 1, 1530 , 'i', "sc_grid"},
       {"Threshold (# sigma*1000)", 0, 100, 'f', "sc_thresh"},
-      {"Min blob separation ^2 (pix^2)", 1, CAM_WIDTH, 'i', "sc_mdist"}
+      {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "sc_mdist"}
     }
   },
   {COMMAND(cam_lens_any), "execute lens command directly", GR_SBSC_PARAM, 1,

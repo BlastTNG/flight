@@ -7,8 +7,11 @@
 #define SBSC_PROTOCOL_H
 
 //camera related defines
-#define CAM_WIDTH 765.0  //should always be the larger dimension
-#define CAM_HEIGHT 510.0
+#ifdef CAM_WIDTH
+#undef CAM_WIDTH
+#endif
+#define CAM_WIDTH 1530.0  //should always be the larger dimension
+#define CAM_HEIGHT 1020.0
 
 #ifdef __cplusplus
 #include <string>
