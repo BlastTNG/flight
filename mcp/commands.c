@@ -1293,6 +1293,11 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pivot_gain.F = rvalues[3];
       break;
 
+      //DGPS covariance threshold
+    case cov_gps:
+      CommandData.gps_cov_limit = rvalues[0];
+      break;
+
       /***************************************/
       /***** Temporary test of motor DACs ****/
       /** TODO erase when done with them *****/
@@ -2545,6 +2550,8 @@ void InitCommandData()
   CommandData.mag_az_trim = 0;
   CommandData.dgps_az_trim = 0;
   CommandData.ss_az_trim = 0;
+
+  CommandData.gps_cov_limit = 1.5;
 
   SIPData.MKScal.m_hi = 0.01;
   SIPData.MKScal.m_med = 0.1;

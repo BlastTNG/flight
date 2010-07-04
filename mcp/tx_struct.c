@@ -187,9 +187,9 @@ struct ChannelStruct WideSlowChannels[] = {
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S', U_NONE},
   {"lst_sched",    'w', LOOP6, 56,                1.0,             0.0, 'U', U_NONE},  // ls day
   //TODO SBSC stuff
-  {"sbsc_frame",    'w', LOOP9, 50,                1.0,             0.0, 'U'},
-  {"sbsc_sec",      'w', LOOP9, 52,                1.0,             0.0, 'U'},
-  {"sbsc_usec",     'w', LOOP9, 54,                1.0,             0.0, 'U'},
+  {"sbsc_frame",    'w', LOOP9, 50,                1.0,             0.0, 'U', U_NONE},
+  {"sbsc_sec",      'w', LOOP9, 52,                1.0,             0.0, 'U', U_NONE},
+  {"sbsc_usec",     'w', LOOP9, 54,                1.0,             0.0, 'U', U_NONE},
   //derived channel sbsc_time adds these together
 
   END_OF_CHANNELS
@@ -751,9 +751,9 @@ struct ChannelStruct SlowChannels[] = {
   {"pos_focus_isc",'w',   LOOP8, 35,                1.0,             0.0, 'u', U_NONE},
   {"pos_focus_osc",'w',   LOOP8, 36,                1.0,             0.0, 'u', U_NONE},
 
-  {"az_cov_dgps",   'w', LOOP8, 37,              I2DEG,             0.0, 'u', U_D_DEG},
-  {"pitch_cov_dgps",'w', LOOP8, 38,              I2DEG,             0.0, 'u', U_D_DEG},
-  {"roll_cov_dgps", 'w', LOOP8, 39,              I2DEG,             0.0, 'u', U_D_DEG},
+  {"az_cov_dgps",   'w', LOOP8, 37,              I2DEG,             0.0, 'u', U_NONE},
+  {"pitch_cov_dgps",'w', LOOP8, 38,              I2DEG,             0.0, 'u', U_NONE},
+  {"roll_cov_dgps", 'w', LOOP8, 39,              I2DEG,             0.0, 'u', U_NONE},
 
   {"led_cc",        'w', LOOP8, 40,              1.0,               0.0, 'u', U_NONE}, // charge controller LED state
   {"sbsc_force",     'w', LOOP8, 41,                1.0,             0.0, 'u'},
@@ -829,7 +829,7 @@ struct ChannelStruct SlowChannels[] = {
   {"sbsc_blob14_y",  'w', LOOP9, 47, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
   {"sbsc_blob14_f",  'w', LOOP9, 48,                1.0,             0.0, 'u'},
   {"sbsc_blob14_s",  'w', LOOP9, 49,          1.0/100.0,             0.0, 'u'}, 
-  /* LOOP9 50-55 used by SBSC */
+  /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   /* LOOP9 57-63 are unused */
 

@@ -18,7 +18,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 220        /* total number of single word cmds */
-#define N_MCOMMANDS 107        /* total number of multiword commands */
+#define N_MCOMMANDS 108        /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -146,7 +146,7 @@ enum multiCommand {
   t_gyro_set,        osc_gain,
   t_gyro_gain,       timeout,           isc_tolerances,   vcap,
   vbox,              alice_file,        az_gyro_offset,   isc_hold_current,
-  isc_save_period,   osc_offset,        
+  isc_save_period,   osc_offset,	cov_gps,        
   jfet_set,          isc_foc_off,       hwpr_vel,         hwpr_i,
   osc_foc_off,       gyro_off,	        gyro_on,          quad,
   el_gyro_offset,    general,           slew_veto,        set_secondary,

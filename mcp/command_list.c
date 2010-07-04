@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.67 $";
+const char *command_list_serial = "$Revision: 4.68 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -515,6 +515,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
     1,
     {
       {"Slew Veto (s)", 0., 1200., 'f', "SVETO_LEN"},
+    }
+  },
+  {COMMAND(cov_gps), "set the threshhold for allowable DGPS covariance", GR_TRIM,
+    1,
+    {
+      {"Covariance (deg^2)", 0.1, 5.0, 'f', "COV_GPS"},
     }
   },
 

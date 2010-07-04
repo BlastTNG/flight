@@ -41,6 +41,7 @@
 #include <ctype.h>
 
 #include "pointing_struct.h"
+#include "command_struct.h"
 #include "mcp.h"
 
 typedef float          htF32_t;
@@ -645,21 +646,23 @@ void WatchDGPS()
 	(int)(PVT->NrSV),
 	(unsigned int)(PVT->Mode)
 	);*/
-      pos_ok = 1;
       if (PVT->Lat != -2e10) lat = PVT->Lat; // Latitude in radians
       DGPSPos[dgpspos_index].lat = lat*180/M_PI; // Latitude in degrees
       if (PVT->Lon != -2e10) lon = PVT->Lon; // Longitude in radians
       DGPSPos[dgpspos_index].lon = lon*180/M_PI; // Longitude in degrees
       if ((PVT->Alt != -2e10) && (PVT->GeoidHeight != -2e10)) DGPSPos[dgpspos_index].alt = PVT->Alt - PVT->GeoidHeight; // Altitude above geoid in metres
       DGPSPos[dgpspos_index].n_sat = (int)(PVT->NrSV); // # Satellites
-      if (DGPSPos[dgpspos_index].n_sat < 4) {
-	pos_ok = 0;
-      }
       if (PVT->Cog != -2e10) DGPSPos[dgpspos_index].direction = PVT->Cog; //true track/course over ground in degrees (0 to 359.9)
       if ((PVT->Vn != -2e10) && (PVT->Ve != -2e10))DGPSPos[dgpspos_index].speed = (PVT->Vn+PVT->Ve)*60*60/1000;// speed over ground in km/hr (0 to 999.9)
       if (PVT->Vu != -2e10) DGPSPos[dgpspos_index].climb = PVT->Vu; // vertical velocity in m/s (-999.9 to 999.9)
-
-      if (pos_ok) {
+      
+      if ((PVT->Lat == -2e10)			  ||
+	  (PVT->Lon == -2e10)			  || 
+	  (DGPSPos[dgpspos_index].n_sat < 4)) {
+	pos_ok = 0;
+      } 
+      else {
+	pos_ok = 1;
 	dgpspos_index = INC_INDEX(dgpspos_index);
       }
     } else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_ATTEULER) {
@@ -677,12 +680,18 @@ void WatchDGPS()
 	ATTEULER->Mode,
 	(unsigned int)(ATTEULER->NrSV)
 	);*/
-      if (ATTEULER->Heading != -2e10) DGPSAtt[dgpsatt_index].az = ATTEULER->Heading;
-      if (ATTEULER->Pitch != -2e10) DGPSAtt[dgpsatt_index].pitch = ATTEULER->Pitch;
-      if (ATTEULER->Roll != -2e10) DGPSAtt[dgpsatt_index].roll = ATTEULER->Roll;	
+      if (ATTEULER->Heading != -2e10 && (DGPSAtt[dgpsatt_index-1].az_cov <= CommandData.gps_cov_limit)) 
+	DGPSAtt[dgpsatt_index].az = ATTEULER->Heading;
+      if (ATTEULER->Pitch != -2e10 && (DGPSAtt[dgpsatt_index-1].pitch_cov <= CommandData.gps_cov_limit)) 
+	DGPSAtt[dgpsatt_index].pitch = ATTEULER->Pitch;
+      if (ATTEULER->Roll != -2e10 && (DGPSAtt[dgpsatt_index-1].roll_cov <= CommandData.gps_cov_limit)) 
+	DGPSAtt[dgpsatt_index].roll = ATTEULER->Roll;
       if ((ATTEULER->Heading == -2e10)			  || 
 	  (ATTEULER->Pitch == -2e10)			  || 
-	  (ATTEULER->Roll == -2e10)) {
+	  (ATTEULER->Roll == -2e10)			  ||
+	  (DGPSAtt[dgpsatt_index-1].az_cov > CommandData.gps_cov_limit)	    ||
+	  (DGPSAtt[dgpsatt_index-1].pitch_cov > CommandData.gps_cov_limit)  ||
+	  (DGPSAtt[dgpsatt_index-1].roll_cov > CommandData.gps_cov_limit)  ) {
 	DGPSAtt[dgpsatt_index].att_ok = 0;
       } else {
 	DGPSAtt[dgpsatt_index].att_ok = 1;
