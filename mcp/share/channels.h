@@ -79,6 +79,10 @@ extern "C" {
 #define FIELD_LEN 20
 #define UNITS_LEN 48
 
+#ifndef CAM_WIDTH
+#define CAM_WIDTH 765.0  //should always be the larger dimension
+#endif
+
   // Max Slew Veto
 #define VETO_MAX 60000
 
