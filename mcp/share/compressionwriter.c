@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#include <limits.h>
 #include "mcp.h"
 #include "compressstruct.h"
 
@@ -25,8 +26,9 @@ struct streamDataStruct {
   double sum;
   double n_sum;
   unsigned gain;
-  unsigned offset;
+  long long offset;
   int isFast; // bool
+  int isSigned; // bool
   int slowIndex; // from bi phase struct
   int slowChannel; // from bi phase struct
   unsigned mask; // used to set 16, 24, or 32 bits
@@ -124,7 +126,8 @@ void writeHiGainData(char *x, int size) {
 //*********************************************************
 void BufferStreamData(int i_streamframe, int readindex) {
   int i_field;
-  unsigned int x;
+  unsigned int xu;
+  double xd;
   int i,c;
   unsigned char *tdrss_char = (unsigned char *)tdrss_data[readindex];
 
@@ -143,28 +146,40 @@ void BufferStreamData(int i_streamframe, int readindex) {
       lsw = (unsigned short *) (tdrss_char + i_l);
       if (mask) {
         msw = (unsigned short *) (tdrss_char + i_m);
-        x = (unsigned)(*lsw) | ((unsigned)(*msw & mask)<<16);
+        xu = (unsigned)(*lsw) | ((unsigned)(*msw & mask)<<16);
       } else {
-         x = (unsigned)(*lsw);
+         xu = (unsigned)(*lsw);
       }
     } else { // slow
       i = streamData[i_field].slowIndex;
       c = streamData[i_field].slowChannel;
       if (streamData[i_field].mask) { // wide slow
-        x = (unsigned int)slow_data[i][c] + ((unsigned int)slow_data[i][c+1] <<16);
+        xu = (unsigned int)slow_data[i][c] + ((unsigned int)slow_data[i][c+1] <<16);
       } else { // narrow slow
-        x = (unsigned int)slow_data[i][c];
+        xu = (unsigned int)slow_data[i][c];
       }
     }
-    
-    streamData[i_field].x[i_streamframe] = x;
+    xd = xu;
+    // deal with signed data
+    if (streamData[i_field].isSigned) {
+      if (streamData[i_field].mask) { // mask is only set if its wide
+        if (xd>=INT_MAX) {
+          xd -= UINT_MAX;
+        }
+      } else {
+        if (xd >= SHRT_MAX) {
+          xd -= USHRT_MAX;
+        }
+      }
+    }
+    streamData[i_field].x[i_streamframe] = xd;
     if (streamList[i_field].doDifferentiate) {
       if (i_streamframe==FASTFRAME_PER_STREAMFRAME-1) {
-        streamData[i_field].sum = x;
+        streamData[i_field].sum = xd;
         streamData[i_field].n_sum=1;
       }
     } else {
-      streamData[i_field].sum += x;
+      streamData[i_field].sum += xd;
       streamData[i_field].n_sum++;
     }
   }
@@ -227,20 +242,34 @@ void WriteSuperFrame(int readindex) {
  
   // set and write stream gains and offsets
   for (i_field=0; i_field<n_streamlist; i_field++) {
-    unsigned short usoffset;
-    unsigned uoffset;
     long long unsigned lloffset;
+
+    gain = streamData[i_field].gain;
+    writeHiGainData((char *)&gain, sizeof(unsigned short));
 
     lloffset = streamData[i_field].sum/(double)streamData[i_field].n_sum;
     streamData[i_field].offset = lloffset;
-    gain = streamData[i_field].gain;
-    uoffset = streamData[i_field].offset;
-    usoffset = streamData[i_field].offset;
-    writeHiGainData((char *)&gain, sizeof(unsigned short));
+
     if (streamData[i_field].mask) {
-      writeHiGainData((char *)&uoffset, 2*sizeof(unsigned short));
+      if (streamData[i_field].isSigned) { // 32 bit in field
+        int offset;
+        offset = lloffset;
+        writeHiGainData((char *)&offset, sizeof(int));
+      } else {
+        unsigned offset;
+        offset = lloffset;
+        writeHiGainData((char *)&offset, sizeof(unsigned));
+      }
     } else {
-      writeHiGainData((char *)&usoffset, sizeof(unsigned short));
+      if (streamData[i_field].isSigned) { // 16 bit signed field
+        short offset;
+        offset = lloffset;
+        writeHiGainData((char *)&offset, sizeof(short));
+      } else {
+        unsigned short offset;
+        offset = lloffset;
+        writeHiGainData((char *)&offset, sizeof(unsigned short));
+      }
     }
     streamData[i_field].sum = streamData[i_field].n_sum = 0;
   }
@@ -304,19 +333,6 @@ void WriteStreamFrame() {
 }
 
 //*********************************************************
-// check if the name referes to a bolometer
-//*********************************************************
-int isBoloField(char *field) {
-  if (field[0]!='n') return 0;
-  if (strlen(field)!=6) return 0;
-  if (field[3]!='c') return 0;
-  if (field[1]<'1') return 0;
-  if (field[1]>'3') return 0;
-
-  return 1;
-}
-
-//*********************************************************
 // The main compression writer thread
 //*********************************************************
 void CompressionWriter() {
@@ -366,6 +382,7 @@ void CompressionWriter() {
       m_bi0 = GetBiPhaseAddr(m_name);
 
       streamData[i_field].isFast = 1;
+      streamData[i_field].isSigned = 0;
       streamData[i_field].mask = 0x00ff;
       streamData[i_field].lsw = l_bi0->channel*2;
       if (streamList[i_field].name[5]%2) {
@@ -376,10 +393,15 @@ void CompressionWriter() {
     } else {
       struct NiosStruct *nios;
       struct BiPhaseStruct *bi0;
+      struct ChannelStruct *channel;
 
       nios = GetNiosAddr(streamList[i_field].name);
       bi0 = GetBiPhaseAddr(streamList[i_field].name);
+      channel = GetChannelStruct(streamList[i_field].name);
 
+      if ((channel->type == 's') || (channel->type == 'S')) {
+        streamData[i_field].isSigned = 1;
+      }
       if (nios->fast) {
         streamData[i_field].isFast = 1;
         if (nios->wide) {

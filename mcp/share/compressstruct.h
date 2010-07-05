@@ -1,3 +1,8 @@
+#ifndef COMPRESSSTRUCT_H
+#define COMPRESSSTRUCT_H
+
+#include "channels.h"
+
 #define END_OF_STREAM {"", 0, 0, 0, 0, 0,0}
 #define NOAVG 0
 #define AVG 1
@@ -24,3 +29,8 @@ struct fieldStreamStruct {
   int bits; // number of bits in stream: 4, 8, 16, 32
   int spikeMode; // SLOW: skip samples  SPIKE: report enlarged data
 };
+
+int isBoloField(char *field);
+struct ChannelStruct *GetChannelStruct(char *name);
+
+#endif
