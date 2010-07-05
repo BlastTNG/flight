@@ -217,7 +217,7 @@ static void* camReadLoop(void* arg)
 
   while(true) {
     camComm->readLoop(&parseReturn);
-    berror(err, "readLoop returned. Restarting.");
+    //berror(err, "readLoop returned. Restarting.");
     //returns on failed syscall in communicating.
   }
 
