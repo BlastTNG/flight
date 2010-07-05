@@ -79,6 +79,12 @@
       <XHI value="40"/>
       <XLO value="-40"/>
     </EXTREMA>
+    <EXTREMA name="currenttotal">
+       <HI value="20"/>
+       <LO value="5"/>
+       <XHI value="30"/>
+       <XLO value="0"/>
+    </EXTREMA>
     <EXTREMA name="acscurrent">
       <HI value="1.5"/>
       <LO value="0.90"/>
@@ -1042,7 +1048,7 @@
       <DATUM format="%6.2f" src="I_PIV" extrema="current"/>
     </NUMBER>
     <NUMBER caption="I Total">
-      <DATUM format="%5.2f" src="I_TOT" extrema="current"/>
+      <DATUM format="%5.2f" src="I_TOT" extrema="currenttotal"/>
     </NUMBER>
   </BOX>
   <BOX caption="Bias" colour="#707" row="4" col="1">
