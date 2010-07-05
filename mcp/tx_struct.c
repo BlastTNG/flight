@@ -916,7 +916,9 @@ struct ChannelStruct SlowChannels[] = {
   {"p_term_az",    'r',   ACS2_D, 25,                1.0,        -32768.0, 'u', U_NONE},
   {"i_term_az",    'r',   ACS2_D, 26,                1.0,        -32768.0, 'u', U_NONE},
   {"error_az",     'r',   ACS2_D, 27,	    614.4e-6, 614.4*(-32768.0e-6), 'u', U_NONE},
-  {"bits_bal",    'w',   ACS2_D, 28,                1.0,             0.0, 'u', U_NONE},
+  {"bits_bal",     'w',   ACS2_D, 28,                1.0,             0.0, 'u', U_NONE},
+  {"trig_s_sbsc",  'r',   ACS2_D, 51,                1.0,             0.0, 'u', U_NONE},
+  {"trig_l_sbsc",  'r',   ACS2_D, 52,                1.0,             0.0, 'u', U_NONE},
 
 /* ACS2 Analog card */
   {"roll_pyr_clin",'r',  ACS2_A1,  1,     -4.0/5333.3333,        4.*6.144, 'u', U_NONE},
@@ -1016,9 +1018,7 @@ struct ChannelStruct FastChannels[] = {
   {"cos_el",       'w',   ACS2_D, 25,         1.0/32768.0,           -1.0, 'u', U_NONE},
   {"sin_el",       'w',   ACS2_D, 26,         1.0/32768.0,           -1.0, 'u', U_NONE},
   {"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
-  //TODO IS/?OSC pulses can be unified into a bitfield
-  {"pulse_isc",    'r',   ACS2_D, 53,                 1.0,            0.0, 'u', U_NONE},
-  {"pulse_osc",    'r',   ACS2_D, 54,                 1.0,            0.0, 'u', U_NONE},
+  {"pulse_sc",     'r',   ACS2_D, 50,                 1.0,            0.0, 'u', U_NONE},
 
 #endif
   {"dig43_das",    'w',   BIAS_D,  6,                1.0,             0.0, 'u', U_NONE},

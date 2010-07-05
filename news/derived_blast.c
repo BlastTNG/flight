@@ -160,6 +160,12 @@ union DerivedUnion DerivedChannels[] = {
       ),
   BITWORD("SENT_TRIG_OSC", "trigger_osc", 0, 14),
 
+  BITFIELD("pulse_sc",
+      "PULSE_ISC",
+      "PULSE_OSC",
+      "PULSE_SBSC"
+      ),
+
   COMMENT("ACS Digital Signals"),
 
   BITFIELD("bits_bal",
