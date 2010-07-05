@@ -382,6 +382,9 @@ int init_camera( void ) {
   printf("Raising Data 1 on the parallel port... status=");
   printf("%i\n",SetPortVal(PARALLEL_BASE,2,1));
   Sleep(500);
+  printf("Raising Data 5 on the parallel port... status=");//temp stuff
+  printf("%i\n",SetPortVal(PARALLEL_BASE,32,1));
+  Sleep(500);
   printf("Lowering pins on the parallel port... status=");
   printf("%i\n",SetPortVal(PARALLEL_BASE,0,1));
   Sleep(3000);
@@ -411,6 +414,9 @@ int init_camera( void ) {
     Sleep(500);
     printf("Raising Data 1 on the parallel port... status=");
     printf("%i\n",SetPortVal(PARALLEL_BASE,2,1));
+    Sleep(500);
+    printf("Raising Data 5 on the parallel port... status=");//temp stuff
+    printf("%i\n",SetPortVal(PARALLEL_BASE,32,1));
     Sleep(500);
     printf("Lowering pins on the parallel port... status=");
     printf("%i\n",SetPortVal(PARALLEL_BASE,0,1));
@@ -1801,8 +1807,8 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
   if( focusPosition == -1 ) focus_home(); 
       
   if( aperturePosition != execCmd.ap_pos )
-    absoluteMotor(AP_MOTOR,execCmd.ap_pos);  
-      
+    absoluteMotor(AP_MOTOR,execCmd.ap_pos);
+        
   if( hold_current != execCmd.hold_current ) {
     char hold_cmd[80];
     hold_current = execCmd.hold_current;
