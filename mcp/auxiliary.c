@@ -57,12 +57,13 @@
  * handshake-less triggers */
 #define ISC_DEFAULT_PERIOD 150   /* in 100Hz frames */
 
-/* limits for the gyrobox thermometer.  If the reading is outside this range,
- * we don't regulate the box at all, since it means the thermometer is probably
+/* limits for thermometers.  If the reading is outside this range,
+ * we don't regulate the temperature at all, since it means the thermometer is probably
  * broken */
 #define MIN_GYBOX_TEMP ((223.15 / M_16T) - B_16T)   /* -50 C */
 #define MAX_GYBOX_TEMP ((333.15 / M_16T) - B_16T)   /* +60 C */
-
+#define MIN_SBSC_TEMP  ((223.15 / M_16T) - B_16T)   /* -50 C */
+ 
 /* Gybox heater stuff */
 #define GY_HEAT_MAX 40 /* percent */
 #define GY_HEAT_MIN 5  /* percent */
@@ -87,6 +88,8 @@ extern short int InCharge; /* tx.c */
 #define BAL_DIR      0x01  /* ACS2 Group 2 Bit 1 */
 #define BAL_VALV     0x02  /* ACS2 Group 2 Bit 2 */
 #define BAL_HEAT     0x04  /* ACS2 Group 2 Bit 3 - DAC */
+
+#define SBSC_HEAT    0x01  /* ACS1_D Spare-0 */
 
 #define PUMP_MAX 26214      /*  3.97*2.0V   */
 #define PUMP_MIN  3277      /*  3.97*0.25V   */
@@ -194,6 +197,37 @@ void ControlGyroHeat(unsigned short *RxFrame)
 
   WriteData(hAgeGyAddr, CommandData.gyheat.age, NIOS_QUEUE);
   WriteData(hHistGyAddr, (history * 32768. / 100.), NIOS_QUEUE);
+}
+
+/************************************************************************/
+/*    ControlSBSCHeat:  Controls SBSC temp		                */
+/************************************************************************/
+
+static int ControlSBSCHeat()
+{
+
+  static struct BiPhaseStruct *tSBSCAddr;
+  static int firsttime = 1;
+
+  unsigned int temp;
+
+  if (firsttime) {
+    firsttime = 0;
+    tSBSCAddr = GetBiPhaseAddr("t_sbsc");
+  }
+
+  temp = slow_data[tSBSCAddr->index][tSBSCAddr->channel]; 
+
+  if (temp > MIN_SBSC_TEMP) {
+      if (temp < CommandData.t_set_sbsc) {
+	return 0x1;	
+      } else {
+	return 0x0;
+      }
+  } else {
+    /* Turn off heater if thermometer appears broken */
+    return 0x0;
+  }
 }
 
 /******************************************************************/
@@ -344,6 +378,7 @@ static int ControlPumpHeat(int bits_bal)
   return bits_bal;
 
 }
+
 
 void ChargeController(void)
 {
@@ -698,6 +733,16 @@ void ControlPower(void) {
     switchMiscAddr = GetNiosAddr("switch_misc");
   }
 
+  if (CommandData.power.sbsc_cam_off) {
+    if (CommandData.power.sbsc_cam_off > 0) CommandData.power.sbsc_cam_off--;
+    misc |= 0x02;
+  }
+
+  if (CommandData.power.sbsc_cpu_off) {
+    if (CommandData.power.sbsc_cpu_off > 0) CommandData.power.sbsc_cpu_off--;
+    misc |= 0x04;
+  }
+
   if (CommandData.power.hub232_off) {
     if (CommandData.power.hub232_off > 0) CommandData.power.hub232_off--;
     misc |= 0x08;
@@ -827,6 +872,8 @@ void ControlPower(void) {
     CommandData.power.rx_amps.rst_count--;
     if (CommandData.power.rx_amps.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0a00;
   }
+
+  misc |= ControlSBSCHeat();
 
   WriteData(latchingAddr[0], latch0, NIOS_QUEUE);
   WriteData(latchingAddr[1], latch1, NIOS_QUEUE);

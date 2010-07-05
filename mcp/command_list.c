@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.69 $";
+const char *command_list_serial = "$Revision: 4.70 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -97,6 +97,10 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(vtx_on), "turn on the video transmitters", GR_TELEM | GR_POWER},
   {COMMAND(bi0_off), "turn off the biphase transmitter", GR_TELEM | GR_POWER},
   {COMMAND(bi0_on), "turn on the biphase transmitter", GR_TELEM | GR_POWER},
+  {COMMAND(sbsc_off), "turn off the SBSC", GR_POWER},
+  {COMMAND(sbsc_on), "turn on the SBSC", GR_POWER},
+  {COMMAND(sbsc_cam_cycle), "power cycle the SBSC (camera,lens,heater)", GR_POWER},
+  {COMMAND(sbsc_cpu_cycle), "power cycle the SBSC (computer)", GR_POWER},
   {COMMAND(hub232_off), "turn off the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_on), "turn on the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_cycle), "power cycle the RS-232 (serial) hub", GR_POWER},
@@ -721,6 +725,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(t_gyro_set), "gyro box temperature set point", GR_ELECT, 1,
     {
       {"Set Point (deg C)", 0, 60, 'f', "T_SET_GY"}
+    }
+  },
+  {COMMAND(t_sbsc_set), "SBSC temperature set point", GR_ELECT, 1,
+    {
+      {"Set Point (deg C)", 0, 60, 'f', "T_SET_SBSC"}
     }
   },
 

@@ -830,7 +830,8 @@ struct ChannelStruct SlowChannels[] = {
   {"sbsc_blob14_s",  'w', LOOP9, 49,          1.0/100.0,             0.0, 'u'}, 
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
-  /* LOOP9 57-63 are unused */
+  {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
+  /* LOOP9 58-63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
@@ -882,7 +883,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_dcdc_acs",   'r',  ACS1_T1, 25,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_mc_lock",    'r',  ACS1_T1, 27,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_lock",       'r',  ACS1_T1, 29,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_ext9",       'r',  ACS1_T1, 31,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_sbsc",       'r',  ACS1_T1, 31,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_box_bal",    'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_pump_bal",   'r',  ACS1_T1, 35,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_el",         'r',  ACS1_T1, 37,         CAL16T(1.0, 0.0),         'u', U_T_C},
@@ -891,7 +892,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_rw",         'r',  ACS1_T1, 43,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_earth",      'r',  ACS1_T1, 45,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_chin",       'r',  ACS1_T1, 47,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_ext8",       'r',  ACS1_T1, 49,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_dgps",       'r',  ACS1_T1, 49,         CAL16T(1.0, 0.0),         'u', U_T_C},
 
 /* ACS2 Digital I/O card */
   {"v_pump_bal",    'w',  ACS2_D,  0,       3.91/13107.0,          -9.775, 'u', U_NONE},

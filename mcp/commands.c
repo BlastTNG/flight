@@ -627,6 +627,20 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case gybox_cycle:
       CommandData.power.gybox_off = PCYCLE_HOLD_LEN;
       break;
+    case sbsc_off:
+      CommandData.power.sbsc_cam_off = -1;
+      CommandData.power.sbsc_cpu_off = -1;
+      break;
+    case sbsc_on:
+      CommandData.power.sbsc_cam_off = 0;
+      CommandData.power.sbsc_cpu_off = 0;
+      break;
+    case sbsc_cam_cycle:
+      CommandData.power.sbsc_cam_off = PCYCLE_HOLD_LEN;
+      break;
+    case sbsc_cpu_cycle:
+      CommandData.power.sbsc_cpu_off = PCYCLE_HOLD_LEN;
+      break;
     case hub232_off:
       CommandData.power.hub232_off = -1;
       break;
@@ -1510,6 +1524,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.gyheat.gain.P = ivalues[0];
       CommandData.gyheat.gain.I = ivalues[1];
       CommandData.gyheat.gain.D = ivalues[2];
+      break;
+    case t_sbsc_set:  /* SBSC heater setpoint */
+      CommandData.t_set_sbsc = rvalues[0];
       break;
 
       /***************************************/

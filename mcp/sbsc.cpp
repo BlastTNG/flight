@@ -233,7 +233,7 @@ static string parseReturn(string rtnStr)
   /* debugging only
   bprintf(info, "return string: %s", rtnStr.c_str());
   */
-  if (rtnStr.find("<str>", 0) == 0) //respone is string
+  if (rtnStr.find("<str>", 0) == 0) //response is string
   {
     string Rstr = rtnStr.substr(5, rtnStr.size() - 11);
 

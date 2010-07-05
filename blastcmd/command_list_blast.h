@@ -17,8 +17,8 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 220        /* total number of single word cmds */
-#define N_MCOMMANDS 108        /* total number of multiword commands */
+#define N_SCOMMANDS 224        /* total number of single word cmds */
+#define N_MCOMMANDS 109        /* total number of multiword commands */
 #define MAX_N_PARAMS 10
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -118,6 +118,7 @@ enum singleCommand {
   hwpr_enc_off,     hwpr_enc_pulse,     balance_heat_on,  balance_heat_off,
   vtx1_isc,	    vtx1_osc,		vtx1_sbsc,	  vtx2_isc,
   vtx2_osc,	    vtx2_sbsc,
+  sbsc_off,	    sbsc_on,		sbsc_cam_cycle,	  sbsc_cpu_cycle,
   cam_expose,	    cam_autofocus,	cam_settrig_ext,  cam_force_lens, 
   cam_unforce_lens,
   xyzzy
@@ -157,7 +158,7 @@ enum multiCommand {
   motors_verbose,    bias_step,        phase_step,
   cam_any,	     cam_settrig_timed, cam_exp_params,	  cam_focus_params,
   cam_bad_pix,	     cam_blob_params,	cam_lens_any,	  cam_lens_move, 
-  cam_lens_params,
+  cam_lens_params,   t_sbsc_set,
   plugh		  
 };
 
