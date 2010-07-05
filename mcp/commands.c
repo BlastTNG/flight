@@ -2748,7 +2748,7 @@ void InitCommandData()
   CommandData.Phase[9] = 28178;
   CommandData.Phase[10] = 28178;
   CommandData.Phase[11] = 28178;
-  CommandData.Phase[12] = 28178;
+  CommandData.Phase[12] = 11600;    //ROX
 
   WritePrevStatus();
 }
