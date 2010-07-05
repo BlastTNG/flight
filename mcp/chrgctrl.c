@@ -396,6 +396,15 @@ void* chrgctrlComm(void* arg)
 
       if (chrgctrlinfo.err == 1) {
         chrgctrlinfo.reset = 1;
+        /* put charge controller data values into obvious error state */
+        ChrgCtrlData.V_batt = 0.0;
+        ChrgCtrlData.V_arr = 0.0;
+        ChrgCtrlData.I_batt = 0.0;
+        ChrgCtrlData.I_arr = 0.0;
+        ChrgCtrlData.V_targ = 0.0;
+        ChrgCtrlData.T_hs = 0;
+        ChrgCtrlData.charge_state = 10;
+        ChrgCtrlData.led_state = 20;
         continue; // go back up to top of infinite loop
       } else if (n_reconn > 0) {
 
