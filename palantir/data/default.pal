@@ -1230,6 +1230,7 @@
         <WORD value="7" caption="OK by JJ" textstyle="OK_BIT"/>
         <WORD value="8" caption="Equalize" textstyle="W_BIT"/>
         <WORD value="9" caption="Slave" textstyle="W_BIT"/>
+        <WORD value="10" caption="No Comm" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Charge:">
@@ -1248,12 +1249,13 @@
       <WORD value="11" caption="Discharge" textstyle="W_BIT"/>
       <WORD value="12" caption="FAULT" textstyle="W_BIT"/>
       <WORD value="13" caption="FAULT" textstyle="W_BIT"/>
-      <WORD value="14" caption="SOLAR ARR. SHORT" textstyle="W_BIT"/>
+      <WORD value="14" caption="SHORT" textstyle="W_BIT"/>
       <WORD value="15" caption="HTD" textstyle="W_BIT"/> 
       <WORD value="16" caption="HVD." textstyle="W_BIT"/> 
       <WORD value="17" caption="RTS" textstyle="W_BIT"/>
       <WORD value="18" caption="FAULT" textstyle="W_BIT"/>
       <WORD value="19" caption="FAULT" textstyle="W_BIT"/>
+      <WORD value="20" caption="Unknown" textstyle="W_BIT"/>
      </DATUM>
     </MULTI>
     <NUMBER caption="V Batt">
