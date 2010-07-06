@@ -264,7 +264,6 @@ static int MagConvert(double *mag_az)
   *mag_az = raw_mag_az;
   ACSData.mag_pitch = raw_mag_pitch+(double)dip;
 
-  bprintf(info, "mag_az: %g mvy: %g mvx: %g mag_y %g mag_x %g", *mag_az, mvy, mvx, ACSData.mag_y, ACSData.mag_x);
   // Enzo inserted these two lines
   //mag_az_tmp = MagLutCal(&magLut, ACSData.mag_x, ACSData.mag_y, mag_az_tmp);
   //*mag_az = mag_az_tmp;

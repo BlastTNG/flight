@@ -252,6 +252,10 @@ extern "C" {
 
 // convert mag readings to sine and cosine
 // calibrated in Palestine, July 5, 2010
+// Best fit to mag_x and mag_y
+// y = -3000*sin(x-190)+33850 : mag_x
+// y = -3100*cos(x-190)+32150 : mag_y
+// x is dgps theta in degrees.
 #define MAGX_M (-1.0/3000.0)
 #define MAGX_B (33850/3000.0)
 #define MAGY_M (-1.0/3100.0)
