@@ -86,6 +86,9 @@ void ControlHWPR(struct ezbus *bus)
       EZBus_RelMove(bus, HWPR_ADDR, CommandData.hwpr.target);
       CommandData.hwpr.is_new = 0;
       CommandData.hwpr.mode = HWPR_SLEEP;
+    } else if ((CommandData.hwpr.mode == HWPR_STEP)) {
+      bprintf(info,"ControlHWPR: HWPR step requested.  Once someone actually writes a step mode this will do something awesome.");
+      CommandData.hwpr.is_new = 0;
     }
   }
 }

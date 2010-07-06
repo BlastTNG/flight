@@ -1060,10 +1060,17 @@ static void DoNewBoxMode(void)
   int i_point;
   int new_step = 0;
   int new = 0;
+  int new_scan = 0;
+  int turn_el = 0;
 
   static double last_X=0, last_Y=0, last_w=0, last_h = 0;
   static double v_el = 0;
   static double targ_el=0.0;
+
+  // Stuff for the elevation offset/hwpr trigger
+  static int el_dir_last = 0; 
+  static int n_scan = 0;
+  static double el_dith = 0.0;
 
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
@@ -1080,6 +1087,8 @@ static void DoNewBoxMode(void)
   radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
       lst + 1.0, lat,
       &az2, &el2);
+
+  /* sky drift terms */
   daz_dt = drem(az2 - caz, 360.0);
   del_dt = el2 - cel;
 
@@ -1108,6 +1117,7 @@ static void DoNewBoxMode(void)
       (CommandData.pointing_mode.h != last_h) ||
       (last_mode != P_BOX)) {
     new = 1;
+    el_dith = 0.0;
   }
   if (el < bottom - 0.5) new = 1;
   if (el > top + 0.5) new = 1;
@@ -1116,6 +1126,7 @@ static void DoNewBoxMode(void)
 
   /* If a new command, reset to bottom row */
   if (new) {
+    n_scan = 0;
     if ( (fabs(az - left) < 0.1) &&
         (fabs(el - bottom) < 0.05)) {
       last_X = CommandData.pointing_mode.X;
@@ -1166,9 +1177,11 @@ static void DoNewBoxMode(void)
     if (targ_el>h*0.5) {
       targ_el = h*0.5;
       axes_mode.el_dir=-1;
+      bprintf(info,"At the top: targ_el = %f, h*0.5 = %f,  v_el = %f",targ_el,h*0.5,v_el);
     } else if (targ_el<-h*0.5) {
       targ_el = -h*0.5;
       axes_mode.el_dir = 1;
+      bprintf(info,"At the bottom: el = %f, -h*0.5= %f, v_el = %f",targ_el,h*0.5,v_el);
     }
   }
   /* check for out of range in el */
@@ -1198,9 +1211,29 @@ static void DoNewBoxMode(void)
     return;
   }
 
-  axes_mode.el_mode = AXIS_VEL;
-  axes_mode.el_vel = v_el + del_dt;
+  if ((axes_mode.el_dir - el_dir_last)== 2) {
+    n_scan +=1;
+    new_scan = 1;
+    bprintf(info,"DoNewBoxMode: Starting new scan. n_scan = %i",n_scan);
 
+    /* Set flags to rotate the HWPR */
+    CommandData.hwpr.mode = HWPR_STEP;
+    CommandData.hwpr.is_new = HWPR_STEP;
+
+    if(n_scan % 4 == 0 && n_scan != 0) {
+      bprintf(info,"Time to dither!");
+    }
+
+  }
+
+  el_dir_last = axes_mode.el_dir;
+
+  if(!turn_el) {
+    axes_mode.el_mode = AXIS_VEL;
+    axes_mode.el_vel = v_el + del_dt;
+  }
+
+  return;
 }
 
 void DoQuadMode(void) // aka radbox

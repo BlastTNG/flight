@@ -797,6 +797,7 @@ static void StoreData(int index)
   static struct NiosStruct* lonAddr;
   static struct NiosStruct* lstAddr;
   static struct NiosStruct* azMagAddr;
+  static struct NiosStruct* azRawMagAddr;
   static struct NiosStruct* pitchMagAddr;
   static struct NiosStruct* declinationMagAddr;
   static struct NiosStruct* sigmaMagAddr;
@@ -825,6 +826,7 @@ static void StoreData(int index)
   static struct NiosStruct* elEncAddr;
   static struct NiosStruct* sigmaEncAddr;
   static struct NiosStruct* elClinAddr;
+  static struct NiosStruct* elLutClinAddr;
   static struct NiosStruct* sigmaClinAddr;
 
   /** dgps fields **/
@@ -960,6 +962,7 @@ static void StoreData(int index)
     lonAddr = GetNiosAddr("lon");
     lstAddr = GetNiosAddr("lst");
     azMagAddr = GetNiosAddr("az_mag");
+    azRawMagAddr = GetNiosAddr("az_raw_mag");
     pitchMagAddr = GetNiosAddr("pitch_mag");
     declinationMagAddr = GetNiosAddr("declination_mag");
     sigmaMagAddr = GetNiosAddr("sigma_mag");
@@ -991,6 +994,7 @@ static void StoreData(int index)
     elEncAddr = GetNiosAddr("el_enc");
     sigmaEncAddr = GetNiosAddr("sigma_enc");
     elClinAddr = GetNiosAddr("el_clin");
+    elLutClinAddr = GetNiosAddr("el_lut_clin");
     sigmaClinAddr = GetNiosAddr("sigma_clin");
 
     svetoLenAddr = GetNiosAddr("sveto_len");
@@ -1203,6 +1207,8 @@ static void StoreData(int index)
   WriteData(azMagAddr,
       (unsigned int)((PointingData[i_point].mag_az +
                       CommandData.mag_az_trim) * DEG2I), NIOS_QUEUE);
+  WriteData(azRawMagAddr,
+      (unsigned int)((PointingData[i_point].mag_az_raw) * DEG2I), NIOS_QUEUE);
   WriteData(pitchMagAddr,
       (unsigned int)(ACSData.mag_pitch * DEG2I), NIOS_QUEUE);
   WriteData(declinationMagAddr,
@@ -1252,8 +1258,10 @@ static void StoreData(int index)
   WriteData(trimEncAddr, CommandData.enc_el_trim * DEG2I, NIOS_QUEUE);
 
   WriteData(elClinAddr,
-      (unsigned int)((PointingData[i_point].clin_el +
+      (unsigned int)((PointingData[i_point].clin_el_lut +
                       CommandData.clin_el_trim) * DEG2I), NIOS_QUEUE);
+  WriteData(elLutClinAddr,
+      (unsigned int)(PointingData[i_point].clin_el * DEG2I), NIOS_QUEUE);
   WriteData(sigmaClinAddr,
       (unsigned int)(PointingData[i_point].clin_sigma * DEG2I), NIOS_QUEUE);
   WriteData(trimClinAddr, CommandData.clin_el_trim * DEG2I, NIOS_QUEUE);

@@ -1113,7 +1113,7 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
    e->angle += (ifel_gy + off_ifel_gy) / SR;
 
  
-   if(e->last_input <= 30000) {
+   if(e->since_last <= 12000) {
      e->varience += GYRO_VAR;
    } else {
      e->varience = 1.0e30; /* Don't accept SC solutions after 5 minutes*/
@@ -1126,7 +1126,7 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
   gy_az = -(ifroll_gy + off_ifroll_gy) * sin(old_el) + -(ifyaw_gy + off_ifyaw_gy) * cos(old_el);
   a->angle += gy_az / SR;
 
-   if(a->last_input <= 30000) {
+   if(a->since_last <= 12000) {
      a->varience += GYRO_VAR;
    } else {
      a->varience = 1.0e30; /* Don't accept SC solutions after 5 minutes*/
@@ -1764,6 +1764,8 @@ void Pointing(void)
   /*************************************/
   /**      do elevation solution      **/
   clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
+
+  PointingData[i_point_read].clin_el_lut = clin_elev;
   /* x = ACSData.clin_elev; */
   /*   clin_elev = ((((1.13288E-19*x - 1.83627E-14)*x + */
   /* 		 1.17066e-9)*x - 3.66444E-5)*x + 0.567815)*x - 3513.56; */
@@ -1796,6 +1798,8 @@ void Pointing(void)
   /**      do az solution      **/
   /** Convert Sensors **/
   mag_ok = MagConvert(&mag_az);
+
+  PointingData[i_point_read].mag_az_raw = mag_az;
 
   ss_ok = SSConvert(&ss_az);
   if (ss_ok) {

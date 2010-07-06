@@ -211,6 +211,7 @@ struct PointingDataStruct {
   time_t t;
   time_t lst;
   double mag_az;   // degrees
+  double mag_az_raw;   // degrees
   double mag_model; // degrees
   double mag_sigma; // degrees
   double dgps_az; // degrees
@@ -241,6 +242,7 @@ struct PointingDataStruct {
   double enc_el;
   double enc_sigma;
   double clin_el;
+  double clin_el_lut;
   double clin_sigma;
   double v_az; // dps
 };

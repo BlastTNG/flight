@@ -390,6 +390,7 @@ struct ChannelStruct SlowChannels[] = {
   {"offset_ifel_gy",  'w',LOOP2, 36,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifroll_gy",'w',LOOP2, 37,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifyaw_gy", 'w',LOOP2, 38,      1.0/32768.0,             0.0, 's', U_V_DPS},
+  {"az_raw_mag",      'w',LOOP2, 39,            I2DEG,             0.0, 's', U_D_DEG},
   /* LOOP2 39 is unused */
   {"sigma_mag",       'w',LOOP2, 40,            I2DEG,             0.0, 'u', U_NONE},
   {"az_dgps",         'w',LOOP2, 41,            I2DEG,             0.0, 'u', U_D_DEG},
@@ -528,7 +529,7 @@ struct ChannelStruct SlowChannels[] = {
   {"h_p",          'w', LOOP4, 63,              I2DEG,             0.0, 'u', U_NONE}, // scan height
 
   {"error_isc",    'w', LOOP5,  0,                 1.,             0.0, 'u', U_NONE},
-  /* LOOP5 1 is unused */
+  {"el_lut_clin",  'w', LOOP5,  1,              I2DEG,             0.0, 'u', U_NONE},
   {"rd_sigma_isc", 'w', LOOP5,  2,                1.0,             0.0, 'u', U_NONE},
   {"mks_lo_sip",   'w', LOOP5,  3,           0.327045,       -5.944902, 'u', U_NONE},
   /* LOOP5 4 is unused */
@@ -925,7 +926,8 @@ struct ChannelStruct SlowChannels[] = {
   {"pch_pyr_clin", 'r',  ACS2_A1,  3,      4.0/5333.3333,       -4.*6.144, 'u', U_NONE},
   {"t_pyr_clin",   'r',  ACS2_A1,  5,           -0.01875,           614.4, 'u', U_NONE},
   {"xel_if_clin",  'r',  ACS2_A1,  7,         0.00546739,      -25.*6.144, 'u', U_NONE},
-  {"el_raw_if_clin",'r', ACS2_A1,  9,         0.00546739,         -133.78, 'u', U_NONE},
+  {"el_raw_if_clin",'r', ACS2_A1,  9,                1.0,             0.0, 'u', U_NONE},
+  //  {"el_raw_if_clin",'r', ACS2_A1,  9,         0.00546739,         -133.78, 'u', U_NONE},
   {"t_if_clin",    'r',  ACS2_A1, 11,           -0.01875,           614.4, 'u', U_NONE},
   {"x_mag",        'r',  ACS2_A1, 13,              MAGX_M,         MAGX_B, 'u', U_NONE},
   {"y_mag",        'r',  ACS2_A1, 15,              MAGY_M,         MAGY_B, 'u', U_NONE},
