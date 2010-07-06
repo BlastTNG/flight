@@ -250,19 +250,14 @@ extern "C" {
 /* zero point (in counts) of i_el */
 #define I_EL_ZERO 32638
 
-/* MAG_? conversion from counts to volts */
-//#define MAGX_M (-1.88297e-4/0.380)
-//#define MAGX_B (6.18095-0.009/0.380+0.007480)
-//#define MAGY_M (-1.88124e-4/0.390)
-//#define MAGY_B (6.17593+0.018/0.39+0.007830)
-//#define MAGZ_M (-1.87933e-4/0.39)
-//#define MAGZ_B (6.16957+0.006930)
-#define MAGX_M (-1.88297e-4)
-#define MAGX_B (6.18095)
-#define MAGY_M (-1.88124e-4)
-#define MAGY_B (6.17593)
-#define MAGZ_M (-1.87933e-4)
-#define MAGZ_B (6.16957)
+// convert mag readings to sine and cosine
+// calibrated in Palestine, July 5, 2010
+#define MAGX_M (-3000)
+#define MAGX_B (33850)
+#define MAGY_M (-3100)
+#define MAGY_B (32150)
+#define MAGZ_M (1.0)
+#define MAGZ_B (0.0)
   
 #ifdef __cplusplus
 
