@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.71 $";
+const char *command_list_serial = "$Revision: 4.72 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -1045,7 +1045,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(cam_lens_move), "move camera lens", GR_SBSC, 1,
     {
-      {"New position (ticks)", 0, MAX_15BIT, 'i', ""}
+      {"New position (ticks)", -10000, MAX_15BIT, 'i', ""}
     }
   },
   {COMMAND(cam_lens_params), "set starcam lens params", GR_SBSC, 1,
