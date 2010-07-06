@@ -13,7 +13,7 @@
 #include "csbigimgdefs.h"
 #include "imageviewer.h"
 
-#define DEFAULT_FILE "/tmp/starcam/current.sbig"
+#define DEFAULT_FILE "/data/etc/current.sbig"
 
 char* filename;
 BlobImage* img[2];   //images. Using only 1 caused segfaults...
@@ -89,7 +89,9 @@ int main(int argc, char* argv[])
 
   //set up the viewer
   QApplication a(argc, argv);
-  ImageViewer iv(img[0]->GetWidth(), img[0]->GetHeight(), 10, 0, "viewer");
+  //TODO still need to figure out rescaling to something other than eactly half the size
+  //ImageViewer iv(img[0]->GetWidth(), img[0]->GetHeight(), img[0]->GetWidth(), img[0]->GetHeight(), 10, 0, "viewer");
+  ImageViewer iv(640, 480, img[0]->GetWidth(), img[0]->GetHeight(), 10, 0, "viewer");
   a.setMainWidget(&iv);
   iv.show();
   iv.load(img[0], TRUE);

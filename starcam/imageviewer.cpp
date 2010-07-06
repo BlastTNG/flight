@@ -20,16 +20,16 @@
  parent widget is for Qt purposese, and name used internally only
  
 */
-ImageViewer::ImageViewer(int w, int h, int msec/*=10*/, QWidget* parent/*=0*/, const char * name/*=0*/)
+ImageViewer::ImageViewer(int w, int h, int img_w, int img_h, int msec/*=10*/, QWidget* parent/*=0*/, const char * name/*=0*/)
 	: QWidget(parent, name)
 {
 #if VIEWER_DEBUG
 	cerr << "[Viewer debug]: constructing with w=" << w << " h=" << h << " msec=" << msec << endl;
 #endif
-	this->setFixedSize(w, h);
+	this->setBaseSize(w, h);
 	this->setPalette(QPalette(QColor(0, 0, 0)));
 	
-	qimg = new QImage(w, h, 8, 256);
+	qimg = new QImage(img_w, img_h, 8, 256);
 	for (int i=0; i<256; i++)                  //make image greyscale
 		qimg->setColor(i, qRgb(i, i, i));
 	
@@ -81,10 +81,10 @@ void ImageViewer::load(BlobImage* img, bool in_autoBR/*=FALSE*/)
 	unsigned short range = img->GetRange();
 	unsigned short *data16 = img->GetImagePointer();
 	
-	for (int i=0; i<height(); i++) {
+	for (int i=0; i<bimg->GetHeight(); i++) {
 		unsigned char *qline = qimg->scanLine(i);
-		unsigned short *bline = data16 + i*width();
-		for (int j=0; j<width(); j++)
+		unsigned short *bline = data16 + i*bimg->GetWidth();
+		for (int j=0; j<bimg->GetWidth(); j++)
 			*(qline+j) = conv16to8(*(bline+j),background, range);
 	}
 	bimg->setChanged(false);
@@ -158,7 +158,11 @@ void ImageViewer::refresh()
 void ImageViewer::paintEvent(QPaintEvent*)
 {
 	QPainter p(this);
-	p.drawImage(this->rect(), *qimg);
+	QImage scaled_img = qimg->smoothScale(width(), height(), QImage::ScaleMin);
+	QRect img_rect = this->rect();
+	img_rect.setWidth(scaled_img.width());
+	img_rect.setHeight(scaled_img.height());
+	p.drawImage(img_rect, scaled_img);
 }
 
 

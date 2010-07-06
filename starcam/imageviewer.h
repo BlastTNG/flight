@@ -14,7 +14,7 @@ class QTimer;
 class ImageViewer : public QWidget{
 	Q_OBJECT
 public:
-    ImageViewer(int width, int height, int msec = 10, QWidget *parent = 0, const char * name = 0);
+    ImageViewer(int width, int height, int img_width, int img_height, int msec = 10, QWidget *parent = 0, const char * name = 0);
     void load(BlobImage *img, bool autoBR = FALSE);
     static unsigned char conv16to8(unsigned short val16, unsigned short back, 
 		    unsigned short range);
