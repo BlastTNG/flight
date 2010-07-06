@@ -410,7 +410,6 @@ int ntpshm_put(double fixtime) {
 void WatchDGPS()
 {
   htUI08_t SBFBlock[MAX_SBFSIZE];
-  int k,l,m,n;
   double lat=0,lon=0;
   struct tm ts;
   int pos_ok;
@@ -568,28 +567,6 @@ void WatchDGPS()
 
   /*Activate settings for the port*/
   tcsetattr(fd,TCSANOW,&term);
-
-  /* Send commands */
-  /* Set interval at which receiver outputs data to 0.1s (10Hz) */
-  char cmd1[] = "spi 0.1\n";
-  k = strlen(cmd1);
-  m = write(fd,cmd1,k);
-  if (m<0) {
-    berror(err,"send command failed!");
-  }
-
-  /* Set COM1 to output data blocks in Septentrio Binary Format (see p.129 of manual)
-   *		Status(includes receiver time) =    32768 (0x0008000)
-   *		PVTGeo(position,velocity,time) =      512 (0x0000200)
-   *		AttEule(attitude)	       = 16777216 (0x1000000)
-   *					total  = 16810496
-   */
-  char cmd2[] = "sso com1 16810496";
-  l = strlen(cmd2);
-  n = write(fd,cmd2,l);
-  if (n<0) {
-    berror(err,"send command failed!");
-  }
 
   // FIXME maybe: should we be allowed to proceed if we have had write errors?
   // Can this even happen?  If not, should we care?
