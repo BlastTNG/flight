@@ -586,7 +586,7 @@ PAR_ERROR MyCam::StartExposure(SHUTTER_COMMAND shutterState)
 //	sep.ccd = CSBIGCam::GetActiveCCD();
 	//adding START_SKIP_VDD should speed up the process, but may result in a glow on the side of the image
 	sep.ccd = CSBIGCam::GetActiveCCD() + START_SKIP_VDD;
-	sep.exposureTime = (unsigned long)(CSBIGCam::GetExposureTime() * 100.0 + 0.5);
+	sep.exposureTime = (unsigned long)(CSBIGCam::GetExposureTime() * 100.0 + 0.5 + EXP_SEND_TRIGGER_OUT);
 	if ( sep.exposureTime < 1 )
 		sep.exposureTime = 1;
 	sep.abgState = CSBIGCam::GetABGState();

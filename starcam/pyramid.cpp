@@ -26,6 +26,13 @@
 #include <list>
 #include <math.h>
 #include <time.h>
+//FIXME including stdio.h,stdlib.h - exit,srand,rand,qsort; cstdlib - RAND_MAX; stdio.h, string.h - memcpy
+//cstdlib - exit,srand,rand,qsort
+//cstring - memcpy
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 
 #include "pyramid.h"
 

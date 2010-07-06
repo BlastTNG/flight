@@ -35,7 +35,9 @@
 #include "sbigudrv.h"
 #include "csbigcam.h"
 #include "csbigimg.h"
-#include <string>
+//FIXME string.h - strchr
+//#include <string>
+#include <string.h>
 #include <math.h>
 
 using namespace std;

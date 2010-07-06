@@ -34,13 +34,21 @@ QTFLAGS =
 endif
 ################################################################################
 #targets for building all or part of the main program
-all: cam comm
+all: cam comm view
 cam: $(APP_NAME)
 comm: commtest
 view: scviewer
 ################################################################################
 # APP_NAME
 ################################################################################
+
+install: $(APP_NAME)
+	install -m 755 $(APP_NAME) /usr/local/bin
+	install -d -m 777 /data/etc
+	install -d -m 777 /data/rawdir/
+	[ -e /data/etc/init.txt ] || touch /data/etc/init.txt
+	[ -e /data/etc/badpix.txt ] || touch /data/etc/badpix.txt
+
 
 $(APP_NAME): $(APP_OBJ)
 	  $(CC) $(QTLIB) $(CFLAGS) -o $(APP_NAME) $(APP_OBJ) -lsbigudrv -lm -lpthread

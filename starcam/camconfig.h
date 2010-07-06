@@ -142,13 +142,13 @@ static const MyCamConfigParams defaultCameraParams = {
 		INVALID_HANDLE_VALUE,           //drvHandle
 		NO_CAMERA,                      //cameraType
 		CCD_IMAGING,                    //activeCCD
-		0.1,                            //exposureTime
+		1,                            //exposureTime
 		0,                              //readoutMode
 		ABG_CLK_MED7,                   //ABGState
 		0, 0, 0, 0                      //subframe left, top, width, height
 	},
 	INVALID_USB_NUM,                //USBNum
-	0,                              //pictureInterval
+	6000,                              //pictureInterval
 	100                             //focusResolution
 };
 

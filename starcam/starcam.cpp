@@ -55,7 +55,7 @@ pthread_cond_t cameraTriggerCond = PTHREAD_COND_INITIALIZER;
 
 //image viewer
 #if USE_IMAGE_VIEWER
-const char* viewerPath = "/tmp/starcam/current.sbig";
+const char* viewerPath = "/data/etc/current.sbig";
 bool showBoxes = false;
 #endif
 
@@ -74,10 +74,10 @@ int maintainInitFile(string cmd, string val);
 
 //any command that changes starcam from its default state will be stored here to
 //be executed at start time and resume previous operating state
-const char* initFilename = "/usr/local/starcam/init.txt";
-const char* badpixFilename = "/usr/local/starcam/badpix.txt";
+const char* initFilename = "/data/etc/init.txt";
+const char* badpixFilename = "/data/etc/badpix.txt";
 const string adapterPath = "/dev/ttyACM0";
-const string imgPath = "/usr/local/starcam/pictures";     //path to save images in
+const string imgPath = "/data/rawdir";     //path to save images in
 
 //logging function to clean up a bunch of the messy #ifs
 enum loglevel {debug, data, info, warning, error};
@@ -116,11 +116,11 @@ PAR_ERROR openCameras()
     return err;
 
   //query the usb bus for possible cameras..for some reason screws up the next step, comment out when not needed
-  // 	cout << "[Starcam debug]: Querying the USB bus for usable devices..." << endl;
-  // 	QueryUSBResults qur;  //results structure
-  // 	if ((err= globalCam.QueryUSB(qur)) != CE_NO_ERROR)
-  // 		return err;
-  // 	cout << "...search for a camera was " << ((qur.camerasFound)?"successful":"unsuccessful") << endl;
+   	cout << "[Starcam debug]: Querying the USB bus for usable devices..." << endl;
+   	QueryUSBResults qur;  //results structure
+   	if ((err= globalCam.QueryUSB(qur)) != CE_NO_ERROR)
+   		return err;
+   	cout << "...search for a camera was " << ((qur.camerasFound)?"successful":"unsuccessful") << endl;
 
   sclog(info, "Opening the camera device.");
   if ((err = globalCam.OpenUSBDevice(0)) != CE_NO_ERROR)

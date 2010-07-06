@@ -11,7 +11,8 @@
 class BlobImage;
 class QTimer;
 
-class ImageViewer : public QWidget{
+class ImageViewer : public QWidget
+{
 	Q_OBJECT
 public:
     ImageViewer(int width, int height, int img_width, int img_height, int msec = 10, QWidget *parent = 0, const char * name = 0);
