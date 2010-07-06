@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.70 $";
+const char *command_list_serial = "$Revision: 4.71 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -122,10 +122,10 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(reset_piv), "reset the serial connection to the pivot controller", GR_GAIN},
   {COMMAND(reset_elev), "reset the serial connection to the elev controller", GR_GAIN},
   {COMMAND(restore_piv), "restore the serial settings for the pivot controller", GR_GAIN},
-  {COMMAND(az_off), "disable az motors", GR_GAIN},
-  {COMMAND(az_on), "enable az motors", GR_GAIN},
-  {COMMAND(el_off), "disable el motors", GR_GAIN},
-  {COMMAND(el_on), "enable el motors", GR_GAIN},
+  {COMMAND(az_off), "disable az motors' gains", GR_GAIN},
+  {COMMAND(az_on), "enable az motors' gains", GR_GAIN},
+  {COMMAND(el_off), "disable el motor gains", GR_GAIN},
+  {COMMAND(el_on), "enable el motor gains", GR_GAIN},
   {COMMAND(force_el_on), "force enable el motors despite the pin being in",
     CONFIRM | GR_GAIN},
 
