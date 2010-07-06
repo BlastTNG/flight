@@ -1676,10 +1676,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case isc_tolerances:
       CommandData.ISCState[0].tolerance = 
-	(int)(rvalues[0] / 3600. * DEG2RAD + 0.5);
-      CommandData.ISCState[0].match_tol = (int)(rvalues[1] / 100 + 0.5);
-      CommandData.ISCState[0].quit_tol = (int)(rvalues[2] / 100 + 0.5);
-      CommandData.ISCState[0].rot_tol = (int)(rvalues[3] * DEG2RAD + 0.5);
+	(rvalues[0] / 3600. * DEG2RAD);
+      CommandData.ISCState[0].match_tol = (rvalues[1] / 100);
+      CommandData.ISCState[0].quit_tol = (rvalues[2] / 100);
+      CommandData.ISCState[0].rot_tol = (rvalues[3] * DEG2RAD);
       break;
     case isc_hold_current:
       CommandData.ISCState[0].hold_current = ivalues[0];
@@ -1743,10 +1743,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case osc_tolerances:
       CommandData.ISCState[1].tolerance = 
-	(int)(rvalues[0] / 3600. * DEG2RAD + 0.5);
-      CommandData.ISCState[1].match_tol = (int)(rvalues[1] / 100 + 0.5);
-      CommandData.ISCState[1].quit_tol = (int)(rvalues[2] / 100 + 0.5);
-      CommandData.ISCState[1].rot_tol = (int)(rvalues[3] * DEG2RAD + 0.5);
+	(rvalues[0] / 3600. * DEG2RAD);
+      CommandData.ISCState[1].match_tol = (rvalues[1] / 100);
+      CommandData.ISCState[1].quit_tol = (rvalues[2] / 100);
+      CommandData.ISCState[1].rot_tol = (rvalues[3] * DEG2RAD);
       break;
     case osc_hold_current:
       CommandData.ISCState[1].hold_current = ivalues[0];

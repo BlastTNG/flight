@@ -648,7 +648,7 @@ void WatchDGPS()
 	);*/
       if (PVT->Lat != -2e10) lat = PVT->Lat; // Latitude in radians
       DGPSPos[dgpspos_index].lat = lat*180/M_PI; // Latitude in degrees
-      if (PVT->Lon != -2e10) lon = PVT->Lon; // Longitude in radians
+      if (PVT->Lon != -2e10) lon = -PVT->Lon; // *** west *** Longitude in radians
       DGPSPos[dgpspos_index].lon = lon*180/M_PI; // Longitude in degrees
       if ((PVT->Alt != -2e10) && (PVT->GeoidHeight != -2e10)) DGPSPos[dgpspos_index].alt = PVT->Alt - PVT->GeoidHeight; // Altitude above geoid in metres
       DGPSPos[dgpspos_index].n_sat = (int)(PVT->NrSV); // # Satellites
