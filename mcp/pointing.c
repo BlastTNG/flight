@@ -252,18 +252,19 @@ static int MagConvert(double *mag_az)
   //*mag_az = LutCal(&magLut, raw_mag_az);
 
   // cbn added this line
-  mvx = MAGX_M*ACSData.mag_x + MAGX_B;
-  //mvx = (mvx-0.009)/0.38;
-  mvy = MAGY_M*ACSData.mag_y + MAGY_B;
-  //mvy = (mvy + 0.018)/0.39;
+  //mvx = (ACSData.mag_x-MAGX_B)/MAGX_M;
+  //mvy = (ACSData.mag_y-MAGY_B)/MAGY_M;
+  mvx = ACSData.mag_x*MAGX_M + MAGX_B;
+  mvy = ACSData.mag_y*MAGY_M + MAGY_B;
+
   mvz = MAGZ_M*ACSData.mag_z + MAGZ_B;
-  //mvz = mvz/0.385; 
 
   raw_mag_az = (180.0 / M_PI) * atan2(mvy, mvx);
   raw_mag_pitch = (180.0/M_PI) * atan(mvz/sqrt(mvx*mvx + mvy*mvy));
   *mag_az = raw_mag_az;
   ACSData.mag_pitch = raw_mag_pitch+(double)dip;
 
+  bprintf(info, "mag_az: %g mvy: %g mvx: %g mag_y %g mag_x %g", *mag_az, mvy, mvx, ACSData.mag_y, ACSData.mag_x);
   // Enzo inserted these two lines
   //mag_az_tmp = MagLutCal(&magLut, ACSData.mag_x, ACSData.mag_y, mag_az_tmp);
   //*mag_az = mag_az_tmp;
@@ -1799,7 +1800,7 @@ void Pointing(void)
   /** Convert Sensors **/
   mag_ok = MagConvert(&mag_az);
 
-  PointingData[i_point_read].mag_az_raw = mag_az;
+  PointingData[point_index].mag_az_raw = mag_az;
 
   ss_ok = SSConvert(&ss_az);
   if (ss_ok) {

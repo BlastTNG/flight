@@ -252,10 +252,10 @@ extern "C" {
 
 // convert mag readings to sine and cosine
 // calibrated in Palestine, July 5, 2010
-#define MAGX_M (-3000)
-#define MAGX_B (33850)
-#define MAGY_M (-3100)
-#define MAGY_B (32150)
+#define MAGX_M (-1.0/3000.0)
+#define MAGX_B (33850/3000.0)
+#define MAGY_M (-1.0/3100.0)
+#define MAGY_B (32150.0/3100.0)
 #define MAGZ_M (1.0)
 #define MAGZ_B (0.0)
   
