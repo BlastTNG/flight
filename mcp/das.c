@@ -42,12 +42,12 @@
 
 /* Valve control bits (BIAS_D G3) */
 #define VALVE_LHe_OFF     0x01
-#define VALVE_L_OPEN      0x02
-#define VALVE_L_CLOSE     0x04
+#define VALVE_L_OPEN      0x04
+#define VALVE_L_CLOSE     0x02
 #define VALVE_LN_OFF      0x08
 #define VALVE_POT_OFF     0x10
-#define VALVE_POT_OPEN    0x20
-#define VALVE_POT_CLOSE   0x40
+#define VALVE_POT_OPEN    0x40
+#define VALVE_POT_CLOSE   0x20
 
 /* he3 cycle */
 #define CRYO_CYCLE_OUT    0x0000

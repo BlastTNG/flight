@@ -461,13 +461,12 @@ union DerivedUnion DerivedChannels[] = {
 	   ),
   /* CRYO */
 
-#if 0
   COMMENT("Internal (to mcp) reference of the cryo stat"),
   BITFIELD("cryostate",
-      "HE_LEV_SENS",
-      "CHARC_HEATER",
-      "COLDP_HEATER",
-      "FRIDGE_CYCLING",
+      "",
+      "",
+      "",
+      "",
       "POT_VALVE",
       "POT_DIREC",
       "LHE_VALVE",
@@ -476,6 +475,7 @@ union DerivedUnion DerivedChannels[] = {
       "AUTO_JFET_HEAT"
       ),
 
+#if 0
   COMMENT("Control bits to the Cryo control card"),
   BITFIELD("cryoctrl",
       "",
@@ -510,7 +510,9 @@ union DerivedUnion DerivedChannels[] = {
   LINCOM2("POT_STATE", "POT_IS_CLOSED", 2, 0, "POT_IS_OPEN",  1, 0),
   LINCOM2("LHE_STATE", "LHE_IS_CLOSED", 2, 0, "LHE_IS_OPEN",  1, 0),
   LINCOM2("LN_STATE",  "LN_IS_CLOSED", 2, 0, "LN_IS_OPEN", 1, 0),
+#endif
 
+#if 0
   COMMENT("Limit Switch Niceties"),
 
   LINCOM2("LS_EL_STATUS", "LS_EL_OK", 2, 0, "LS_IGNORE_EL", 1, 0),
