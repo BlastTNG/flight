@@ -173,6 +173,7 @@ void nameThread(const char* name)
   new_node->name[TID_NAME_LEN] = '\0';
   new_node->next = threadNames;
   threadNames = new_node;
+  bprintf(startup, "New thread name for tid %d", new_node->tid);
 }
 
 char failed_lookup_buffer[TID_NAME_LEN+1];
