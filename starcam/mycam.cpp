@@ -122,7 +122,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, const char* path/*
 	frameblob *blob = img->getFrameBlob();
 	if (!forced)  //can actually measure focal range
 		if (m_cAdapter.findFocalRange() != LE_NO_ERROR) return m_cAdapter.getLastError();
-	int range = (forced)?2105:m_cAdapter.getFocalRange();
+	int range = (forced)?3270:m_cAdapter.getFocalRange();
 	int step = range / m_nFocusResolution;         //number of motor counts between measurements
 	//check if motor "stickiness" may have confused things
 	if (forced && step < MIN_AUTO_STEP) step = MIN_AUTO_STEP;

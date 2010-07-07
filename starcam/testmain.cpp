@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 	do { // allow break out
 		
 #if TEST_MODE == 1
-		string start_str = "/home/steve/starcam/starcam/pictures/noise_dark_only/";
+		string start_str = "/data/rawdir/";
 		string end_str = ".sbig";
 		string times[] = {"0.04", "0.08", "0.15", "0.5", "0.75", "1", "2", "4", "8", 
 			"15", "30", "60"};
@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 		if (cerr != CE_NO_ERROR) break;
 		
 #elif TEST_MODE == 3
-		string path = "/home/steve/starcam/pictures/16-06/";
+		string path = "/data/rawdir/";
 		string names[] = {"1153prog.sbig", "1140ops.sbig", "1143prog.sbig", "1144prog.sbig",
 			"1150prog.sbig", "1155prog.sbig", "1159prog.sbig", "1159bprog.sbig", "1200prog.sbig",
 			"1200bprog.sbig", "1211ops.sbig", "1213prog.sbig", "1213bprog.sbig", "1214prog.sbig",

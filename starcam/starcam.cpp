@@ -434,7 +434,6 @@ string interpretCommand(string cmd)
       lock(&imageLock[1], "imageLock", "interpretCommand");
       BlobImage img;
 #if USE_IMAGE_VIEWER
-      //err = globalCam.autoFocus(&img, 0, viewerPath);
       err = globalCam.autoFocus(&img, 0, viewerPath);
 #else
       err = globalCam.autoFocus(&img, 0, NULL);

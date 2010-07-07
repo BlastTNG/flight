@@ -241,7 +241,8 @@ LENS_ERROR CLensAdapter::runCommand(string cmd, string &return_value)
 	}
 	else return (m_eLastError = LE_COMMUNICATION_ERROR);
 	
-	for (int i=0; i<2; i++) {     //repeat to first read command echo and then "OK"
+	for (int i=0; i<0; i++) {     //repeat to first read command echo and then "OK"
+					//NB: no more command echo, or "OK"
 #if LENS_DEBUG
 		cout << "[Lens Debug]: performing read of confirmation... " << endl;
 #endif
@@ -259,7 +260,7 @@ LENS_ERROR CLensAdapter::runCommand(string cmd, string &return_value)
 			n = read(m_nPortFD, buf, 254);                      //in canonical mode, should read until \r
 			if (n < 0) return (m_eLastError = LE_COMMUNICATION_ERROR);
 			buf[n] = '\0';                //turn buffer into a C-style string
-			first = buf;                  //first line of result (shold read "OK")
+			first = buf;                  //first line of result (should read "OK")
 #if LENS_DEBUG
 			cout << "[Lens Debug]:   read line of output: " << first << endl;
 #endif
@@ -304,13 +305,13 @@ LENS_ERROR CLensAdapter::runCommand(string cmd, string &return_value)
 
 /*
 	runCommand:
-		runs the command cmd as long as it needs no paramter
+		runs the command cmd as long as it needs no parameter
 		return_value is set to the string returned from the adapter
 */
 LENS_ERROR CLensAdapter::runCommand(LENS_COMMAND cmd, string &return_value)
 {
 #if LENS_DEBUG
-	cout << "[Lens Debug]: Inside the minor runCommand method (no paramter)" << endl;
+	cout << "[Lens Debug]: Inside the minor runCommand method (no parameter)" << endl;
 #endif
 	if (needs_param[(int)cmd]) return (m_eLastError = LE_BAD_PARAM);
 	m_eLastCommand = cmd;

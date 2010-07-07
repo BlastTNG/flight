@@ -142,7 +142,7 @@ static const MyCamConfigParams defaultCameraParams = {
 		INVALID_HANDLE_VALUE,           //drvHandle
 		NO_CAMERA,                      //cameraType
 		CCD_IMAGING,                    //activeCCD
-		1,                            //exposureTime
+		1,                              //exposureTime
 		0,                              //readoutMode
 		ABG_CLK_MED7,                   //ABGState
 		0, 0, 0, 0                      //subframe left, top, width, height
