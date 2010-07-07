@@ -1806,7 +1806,7 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
  
   if( focusPosition == -1 ) focus_home(); 
       
-  if( aperturePosition != execCmd.ap_pos )
+  if( aperturePosition != execCmd.ap_pos ) 
     absoluteMotor(AP_MOTOR,execCmd.ap_pos);
         
   if( hold_current != execCmd.hold_current ) {
@@ -2183,6 +2183,18 @@ DWORD WINAPI th_doTemp( LPVOID parameter ) {
   tempDoStuff(&server_data.temp1, &server_data.temp2, &server_data.temp3, 
               &server_data.temp4, &server_data.pressure1, 
               &server_data.heaterOn);        
+
+  // reset the pmd if all temp/pressure values are screwed after power cycling the whole system
+  if(server_data.temp1 > 1000. && server_data.temp2 > 1000. && server_data.temp3 > 1000. && server_data.temp4 > 1000. && server_data.pressure1 > 30.) {
+    printf("Resetting pmd...");
+    printf("%i...",SetPortVal(PARALLEL_BASE,0,1));
+    Sleep(500);
+    printf("%i...",SetPortVal(PARALLEL_BASE,32,1));
+    Sleep(500);
+    printf("%i...",SetPortVal(PARALLEL_BASE,0,1));
+    Sleep(500);
+    printf("done!\n");
+  }
         
   if( server_data.heaterOn ) sprintf(heat,"H");
   else sprintf(heat," ");
