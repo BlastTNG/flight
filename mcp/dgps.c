@@ -474,7 +474,7 @@ void WatchDGPS()
   dgpspos_index = 1;
 
   DGPSTime = 0;
-
+  
   while(!InCharge) {
     DGPSAtt[0].az = (((double)slow_data[dgpsAzAddr->index][dgpsAzAddr->channel])/DEG2I);
     DGPSAtt[1].az = (((double)slow_data[dgpsAzAddr->index][dgpsAzAddr->channel])/DEG2I);
@@ -567,7 +567,6 @@ void WatchDGPS()
 
   /*Activate settings for the port*/
   tcsetattr(fd,TCSANOW,&term);
-
   // FIXME maybe: should we be allowed to proceed if we have had write errors?
   // Can this even happen?  If not, should we care?
   
@@ -640,8 +639,8 @@ void WatchDGPS()
       } 
       else {
 	pos_ok = 1;
-	dgpspos_index = INC_INDEX(dgpspos_index);
       }
+      dgpspos_index = INC_INDEX(dgpspos_index);
     } else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_ATTEULER) {
     
       /* Attitude */
@@ -666,12 +665,13 @@ void WatchDGPS()
       if ((ATTEULER->Heading == -2e10)			  || 
 	  (ATTEULER->Pitch == -2e10)			  || 
 	  (ATTEULER->Roll == -2e10)			  ||
+	  (DGPSAtt[dgpsatt_index-1].az_cov <=0.001)	  ||
 	  (DGPSAtt[dgpsatt_index-1].az_cov > CommandData.gps_cov_limit))	{
 	DGPSAtt[dgpsatt_index].att_ok = 0;
       } else {
 	DGPSAtt[dgpsatt_index].att_ok = 1;
-	dgpsatt_index = INC_INDEX(dgpsatt_index);
       }	
+      dgpsatt_index = INC_INDEX(dgpsatt_index);
     } else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_ATTCOVEULER) {
 
       /* Attitude Covariance*/
