@@ -58,6 +58,12 @@
 
 #define FIR_LENGTH (60*30 * SR)
 
+/* Calibrations of the az of each sensor, relative to dGPS */
+#define MAG_ALIGNMENT	  0.   //(4.2681)
+#define PSS1_ALIGNMENT	  60.
+#define PSS2_ALIGNMENT	  -135.
+#define SSS_ALIGNMENT	  0.
+
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
     double *el);
 void azel2radec(double *ra_out, double *dec_out,
@@ -148,9 +154,6 @@ static double sun_az, sun_el; // set in SSConvert and used in UnwindDiff
 void SunPos(double tt, double *ra, double *dec); // in starpos.c
 
 #define M2DV(x) ((x / 60.0) * (x / 60.0))
-
-#define MAG_ALIGNMENT 0
-//(4.2681)
 
 // limit to 0 to 360.0
 void NormalizeAngle(double *A)
@@ -317,7 +320,7 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 #define  PSS1_IMAX  20.  // Maximum current (place holder for now)
 #define  PSS1_XSTRETCH  1.  // 0.995
 #define  PSS1_YSTRETCH  1.  // 1.008
-#define  PSS1_BETA  60.
+#define  PSS1_BETA  PSS1_ALIGNMENT
 #define  PSS1_ALPHA 25.
 #define  PSS1_PSI   0.
 
@@ -477,7 +480,7 @@ static int PSS1Convert(double *azraw_pss1, double *elraw_pss1) {
 #define  PSS2_IMAX  20.     // Maximum current (place holder for now)
 #define  PSS2_XSTRETCH  1.
 #define  PSS2_YSTRETCH  1.
-#define  PSS2_BETA  -135.
+#define  PSS2_BETA  PSS2_ALIGNMENT
 #define  PSS2_ALPHA   25.
 #define  PSS2_PSI    -10.
 
