@@ -656,17 +656,17 @@ void WatchDGPS()
 	ATTEULER->Mode,
 	(unsigned int)(ATTEULER->NrSV)
 	);*/
-      if (ATTEULER->Heading != -2e10 )//&& (DGPSAtt[dgpsatt_index-1].az_cov <= CommandData.gps_cov_limit)) 
+      if (ATTEULER->Heading != -2e10 )//&& (DGPSAtt[dgpsatt_index-1].az_cov <= CommandData.dgps_cov_limit)) 
 	DGPSAtt[dgpsatt_index].az = ATTEULER->Heading;
-      if (ATTEULER->Pitch != -2e10 )//&& (DGPSAtt[dgpsatt_index-1].pitch_cov <= CommandData.gps_cov_limit)) 
+      if (ATTEULER->Pitch != -2e10 )//&& (DGPSAtt[dgpsatt_index-1].pitch_cov <= CommandData.dgps_cov_limit)) 
 	DGPSAtt[dgpsatt_index].pitch = ATTEULER->Pitch;
-      if (ATTEULER->Roll != -2e10 )//&& (DGPSAtt[dgpsatt_index-1].roll_cov <= CommandData.gps_cov_limit)) 
+      if (ATTEULER->Roll != -2e10 )//&& (DGPSAtt[dgpsatt_index-1].roll_cov <= CommandData.dgps_cov_limit)) 
 	DGPSAtt[dgpsatt_index].roll = ATTEULER->Roll;
       if ((ATTEULER->Heading == -2e10)			  || 
 	  (ATTEULER->Pitch == -2e10)			  || 
 	  (ATTEULER->Roll == -2e10)			  ||
 	  (DGPSAtt[dgpsatt_index-1].az_cov <=0.001)	  ||
-	  (DGPSAtt[dgpsatt_index-1].az_cov > CommandData.gps_cov_limit))	{
+	  (DGPSAtt[dgpsatt_index-1].az_cov > CommandData.dgps_cov_limit))	{
 	DGPSAtt[dgpsatt_index].att_ok = 0;
       } else {
 	DGPSAtt[dgpsatt_index].att_ok = 1;

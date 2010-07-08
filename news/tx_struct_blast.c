@@ -832,7 +832,8 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
-  /* LOOP9 58-63 are unused */
+  {"cov_lim_dgps",   'w', LOOP9, 58,                1.0,             0.0, 'u', U_NONE},
+  /* LOOP9 59-63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

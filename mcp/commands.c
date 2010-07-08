@@ -1309,7 +1309,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 
       //DGPS covariance threshold
     case cov_gps:
-      CommandData.gps_cov_limit = rvalues[0];
+      CommandData.dgps_cov_limit = rvalues[0];
       break;
 
       /***************************************/
@@ -2568,7 +2568,7 @@ void InitCommandData()
   CommandData.dgps_az_trim = 0;
   CommandData.ss_az_trim = 0;
 
-  CommandData.gps_cov_limit = 1.5;
+  CommandData.dgps_cov_limit = 1.5;
 
   SIPData.MKScal.m_hi = 0.01;
   SIPData.MKScal.m_med = 0.1;

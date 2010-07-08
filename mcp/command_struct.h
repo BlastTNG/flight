@@ -248,7 +248,7 @@ struct CommandDataStruct {
   unsigned char use_mag;
   unsigned char use_gps;
 
-  double gps_cov_limit;
+  double dgps_cov_limit;
 
   unsigned short fast_offset_gy;
   unsigned int slew_veto;
