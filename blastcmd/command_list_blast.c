@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.72 $";
+const char *command_list_serial = "$Revision: 4.73 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -1034,7 +1034,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Max number of blobs", 1, MAX_15BIT, 'i', "sc_maxblob"},
       {"Search grid size (pix)", 1, 1530 , 'i', "sc_grid"},
-      {"Threshold (# sigma*1000)", 0, 100, 'f', "sc_thresh"},
+      {"Threshold (# sigma)", 0, 100, 'f', "sc_thresh"},
       {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "sc_mdist"}
     }
   },
@@ -1045,7 +1045,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(cam_lens_move), "move camera lens", GR_SBSC, 1,
     {
-      {"New position (ticks)", -10000, MAX_15BIT, 'i', ""}
+      //total range on Sigma EX 120-300mm is about 3270
+      {"New position (ticks)", -10000, 10000, 'i', ""}
     }
   },
   {COMMAND(cam_lens_params), "set starcam lens params", GR_SBSC, 1,
