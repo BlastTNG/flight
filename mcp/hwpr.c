@@ -41,6 +41,9 @@ void MonitorHWPR(struct ezbus *bus)
   EZBus_ReadInt(bus, HWPR_ADDR, "?8", &hwpr_data.enc);
 }
 
+//counter incremented in StoreHWPRBus to better time tep_repeat mode
+static int hwpr_wait_cnt = 0;
+
 /* Called by frame writer in tx.c */
 void StoreHWPRBus(void)
 {
@@ -63,6 +66,8 @@ void StoreHWPRBus(void)
     encHwprAddr = GetNiosAddr("enc_hwpr");
   }
 
+  hwpr_wait_cnt++;
+
   WriteData(velHwprAddr, CommandData.hwpr.vel, NIOS_QUEUE);
   WriteData(accHwprAddr, CommandData.hwpr.acc, NIOS_QUEUE);
   WriteData(iMoveHwprAddr, CommandData.hwpr.move_i, NIOS_QUEUE);
@@ -74,7 +79,7 @@ void StoreHWPRBus(void)
 void ControlHWPR(struct ezbus *bus)
 {
   static int repeat_pos_cnt = 0;
-  static int repeat_wait_cnt = 0;
+  static int overshooting = 0;
   if (CommandData.hwpr.mode == HWPR_PANIC) {
     bputs(info, "Panic");
     EZBus_Stop(bus, HWPR_ADDR);
@@ -91,24 +96,31 @@ void ControlHWPR(struct ezbus *bus)
     } else if ((CommandData.hwpr.mode == HWPR_REPEAT)) {
       //just received, initialize HWPR_REPEAT variables
       repeat_pos_cnt = 0;
-      repeat_wait_cnt = 0;
+      hwpr_wait_cnt = 0;
     }
     CommandData.hwpr.is_new = 0;
   }
 
   //repeat mode
-  if (CommandData.hwpr.mode == HWPR_REPEAT 
-      && repeat_wait_cnt++ >= CommandData.hwpr.step_wait) {
-    repeat_wait_cnt = 0;
-    if (CommandData.hwpr.repeats-- <= 0) CommandData.hwpr.mode = HWPR_SLEEP;
-    else {    //step the HWPR
-      if (repeat_pos_cnt++ < CommandData.hwpr.n_pos)	 { //move to next step
+  if ( CommandData.hwpr.mode == HWPR_REPEAT 
+      && (hwpr_wait_cnt >= CommandData.hwpr.step_wait
+      //TODO I don't know why having a shorter wait for the overshoot fails
+      /*|| (overshooting && hwpr_wait_cnt >= 10)*/) ) {
+    hwpr_wait_cnt = 0;
+    if (overshooting) {
+      overshooting = 0;
+      EZBus_RelMove(bus, HWPR_ADDR, CommandData.hwpr.overshoot);
+    } else if (CommandData.hwpr.repeats-- <= 0) {
+      CommandData.hwpr.mode = HWPR_SLEEP;
+    } else {    //step the HWPR
+      if (++repeat_pos_cnt < CommandData.hwpr.n_pos)	 { //move to next step
 	EZBus_RelMove(bus, HWPR_ADDR, CommandData.hwpr.step_size);
       } else {						   //reset to first step
-	EZBus_RelMove(bus, HWPR_ADDR, 
-	    -CommandData.hwpr.step_size*CommandData.hwpr.n_pos 
-	    - CommandData.hwpr.overshoot);
 	repeat_pos_cnt = 0;
+	overshooting = 1;
+	EZBus_RelMove(bus, HWPR_ADDR, 
+	    -CommandData.hwpr.step_size * (CommandData.hwpr.n_pos - 1)
+	    - CommandData.hwpr.overshoot);
       }
     }
   }
