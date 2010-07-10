@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.74 $";
+const char *command_list_serial = "$Revision: 4.75 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -662,7 +662,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Number of step positions", 0, MAX_15BIT, 'i', ""},
       {"Number of times to step", 0, MAX_15BIT, 'i', ""},
-      {"Time between steps (10ms intervals)", 0, MAX_15BIT, 'i', ""},
+      {"Time between steps (s)", 0, MAX_15BIT, 'i', ""},
       {"Step size (encoder ticks)", 0, MAX_15BIT, 'i', ""},
       {"Backlash overshoot (encoder ticks)", 0, MAX_15BIT, 'i', ""}
     }

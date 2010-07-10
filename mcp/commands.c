@@ -1456,7 +1456,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case hwpr_repeat:
       CommandData.hwpr.n_pos = ivalues[0];
       CommandData.hwpr.repeats = ivalues[1];
-      CommandData.hwpr.step_wait = ivalues[2];
+      CommandData.hwpr.step_wait = ivalues[2]*100;
       CommandData.hwpr.step_size = ivalues[3];
       CommandData.hwpr.overshoot = ivalues[4];
       CommandData.hwpr.mode = HWPR_REPEAT;
