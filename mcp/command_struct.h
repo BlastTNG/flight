@@ -98,11 +98,12 @@ struct PivGainStruct {
 #define XYSTAGE_SCAN   3
 #define XYSTAGE_RASTER 4
 
-#define HWPR_PANIC    0
-#define HWPR_GOTO     1
-#define HWPR_JUMP     2
-#define HWPR_SLEEP    3
-#define HWPR_STEP     4
+#define HWPR_PANIC	0
+#define HWPR_SLEEP	1
+#define HWPR_GOTO	2
+#define HWPR_JUMP	3
+#define HWPR_STEP	4
+#define HWPR_REPEAT	5
 
 // mode        X     Y    vaz   del    w    h
 // LOCK              el
@@ -363,6 +364,7 @@ struct CommandDataStruct {
     int vel, acc, hold_i, move_i;
     int force_repoll;
     int mode, is_new, target;
+    int n_pos, repeats, step_wait, step_size, overshoot;
   } hwpr;
 
   struct {

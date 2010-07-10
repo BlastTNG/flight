@@ -73,6 +73,8 @@ void StoreHWPRBus(void)
 
 void ControlHWPR(struct ezbus *bus)
 {
+  static int repeat_pos_cnt = 0;
+  static int repeat_wait_cnt = 0;
   if (CommandData.hwpr.mode == HWPR_PANIC) {
     bputs(info, "Panic");
     EZBus_Stop(bus, HWPR_ADDR);
@@ -80,15 +82,34 @@ void ControlHWPR(struct ezbus *bus)
   } else if (CommandData.hwpr.is_new) {
     if ((CommandData.hwpr.mode == HWPR_GOTO)) {
       EZBus_Goto(bus, HWPR_ADDR, CommandData.hwpr.target);
-      CommandData.hwpr.is_new = 0;
       CommandData.hwpr.mode = HWPR_SLEEP;
     } else if ((CommandData.hwpr.mode == HWPR_JUMP)) {
       EZBus_RelMove(bus, HWPR_ADDR, CommandData.hwpr.target);
-      CommandData.hwpr.is_new = 0;
       CommandData.hwpr.mode = HWPR_SLEEP;
     } else if ((CommandData.hwpr.mode == HWPR_STEP)) {
       bprintf(info,"ControlHWPR: HWPR step requested.  Once someone actually writes a step mode this will do something awesome.");
-      CommandData.hwpr.is_new = 0;
+    } else if ((CommandData.hwpr.mode == HWPR_REPEAT)) {
+      //just received, initialize HWPR_REPEAT variables
+      repeat_pos_cnt = 0;
+      repeat_wait_cnt = 0;
+    }
+    CommandData.hwpr.is_new = 0;
+  }
+
+  //repeat mode
+  if (CommandData.hwpr.mode == HWPR_REPEAT 
+      && repeat_wait_cnt++ >= CommandData.hwpr.step_wait) {
+    repeat_wait_cnt = 0;
+    if (CommandData.hwpr.repeats-- <= 0) CommandData.hwpr.mode = HWPR_SLEEP;
+    else {    //step the HWPR
+      if (repeat_pos_cnt++ < CommandData.hwpr.n_pos)	 { //move to next step
+	EZBus_RelMove(bus, HWPR_ADDR, CommandData.hwpr.step_size);
+      } else {						   //reset to first step
+	EZBus_RelMove(bus, HWPR_ADDR, 
+	    -CommandData.hwpr.step_size*CommandData.hwpr.n_pos 
+	    - CommandData.hwpr.overshoot);
+	repeat_pos_cnt = 0;
+      }
     }
   }
 }

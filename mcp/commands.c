@@ -699,7 +699,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.Cryo.hwprPos = 0;
       break;
     case hwpr_enc_pulse:
-      CommandData.Cryo.hwprPos = 18;
+      CommandData.Cryo.hwprPos = 50;
       break;
     case charcoal_on:
       CommandData.Cryo.charcoalHeater = 1;
@@ -1451,6 +1451,15 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case hwpr_jump:
       CommandData.hwpr.target = ivalues[0];
       CommandData.hwpr.mode = HWPR_JUMP;
+      CommandData.hwpr.is_new = 1;
+      break;
+    case hwpr_repeat:
+      CommandData.hwpr.n_pos = ivalues[0];
+      CommandData.hwpr.repeats = ivalues[1];
+      CommandData.hwpr.step_wait = ivalues[2];
+      CommandData.hwpr.step_size = ivalues[3];
+      CommandData.hwpr.overshoot = ivalues[4];
+      CommandData.hwpr.mode = HWPR_REPEAT;
       CommandData.hwpr.is_new = 1;
       break;
 
