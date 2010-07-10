@@ -277,6 +277,7 @@ static int MagConvert(double *mag_az)
 #endif
 
   *mag_az += dec + MAG_ALIGNMENT;
+  *mag_az = -(*mag_az);
 
   NormalizeAngle(mag_az);
 
