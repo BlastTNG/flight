@@ -321,7 +321,7 @@ int EZBus_Send(struct ezbus *bus, char who, const char* what)
     if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Send: Serial error madness! err_count=%i",bus->err_count);
   } else {
     bus->err_count = 0;
-    if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Send: No serial error! Resetting error count to 0.");
+    //if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Send: No serial error! Resetting error count to 0.");
   }
 
   return (bus->error=retval);
@@ -475,7 +475,7 @@ int EZBus_Recv(struct ezbus* bus)
     if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Recv: Serial error madness! err_count=%i",bus->err_count);
   } else {
     bus->err_count = 0;
-    if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Recv: No serial error! Resetting error count to 0.");
+    //if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Recv: No serial error! Resetting error count to 0.");
   }
 
   return (bus->error=retval);
@@ -564,7 +564,7 @@ int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive)
     if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Comm: Serial error madness! err_count=%i",bus->err_count);
   } else {
     bus->err_count = 0;
-    if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Comm: No serial error! Resetting error count to 0.");
+    //if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Comm: No serial error! Resetting error count to 0.");
   }
 
   return (bus->error=retval);
