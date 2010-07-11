@@ -147,9 +147,9 @@ struct ChannelStruct WideSlowChannels[] = {
   {"i_300mk",       'r', CRYO_A2, 12,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
 //{"cryo_a2_07",    'r', CRYO_A2, 14,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
   {"td_vcs_filt",   'r', CRYO_A2, 16,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
-  {"hwpr_enc_cryo", 'r', CRYO_A2, 18,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"pot_raw_hwpr",  'r', CRYO_A2, 18,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
   {"i_jfet",        'r', CRYO_A2, 20,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
-  {"hwpr_ref_cryo", 'r', CRYO_A2, 22,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"pot_ref_hwpr",  'r', CRYO_A2, 22,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
   {"td_hs_charcoal",'r', CRYO_A2, 24,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
   {"td_lhe_filt",   'r', CRYO_A2, 26,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
   {"td_lhe",        'r', CRYO_A2, 28,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
@@ -833,7 +833,8 @@ struct ChannelStruct SlowChannels[] = {
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
   {"cov_lim_dgps",   'w', LOOP9, 58,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP9 59-63 are unused */
+  {"pot_hwpr",       'w', LOOP9, 59,        1.0/65535.0,             0.0, 'u', U_NONE},
+  /* LOOP9 60-63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

@@ -30,6 +30,9 @@
 #include "tx.h"
 #include "command_struct.h"
 
+/* the HWPR pot fraction of full scale should not read higher than this */
+#define HWPR_POT_MAX	0.99
+
 /* Heater control bits (BIAS_D G4) */
 #define HEAT_HELIUM_LEVEL    0x01
 #define HEAT_CHARCOAL        0x02
@@ -446,6 +449,11 @@ void CryoControl (int index)
   //static struct NiosStruct* dig21DasAddr;
   static struct NiosStruct* dig43DasAddr;
   //static struct NiosStruct* dig65DasAddr;
+  static struct NiosStruct* potHwprAddr;
+  static struct BiPhaseStruct* potRawHwprAddr;
+  static struct BiPhaseStruct* potRefHwprAddr;
+
+  double pot_hwpr_raw, pot_hwpr_ref, pot_hwpr;
 
   static int cryostate = 0;
   int heatctrl = 0, valvectrl = 0;
@@ -460,6 +468,9 @@ void CryoControl (int index)
     //dig21DasAddr = GetNiosAddr("dig21_das");
     dig43DasAddr = GetNiosAddr("dig43_das");
     //dig65DasAddr = GetNiosAddr("dig65_das");
+    potHwprAddr = GetNiosAddr("pot_hwpr");
+    potRawHwprAddr = GetBiPhaseAddr("pot_raw_hwpr");
+    potRefHwprAddr = GetBiPhaseAddr("pot_ref_hwpr");
   }
 
 #if 0
@@ -548,10 +559,25 @@ void CryoControl (int index)
     cryostate &= 0xFFFF - CS_LNVALVE_ON;
   }
 
+  //HWPR potentiometer logic
+  pot_hwpr_raw = (double)
+      (slow_data[potRawHwprAddr->index][potRawHwprAddr->channel] +
+      ((unsigned long)
+      slow_data[potRawHwprAddr->index][potRawHwprAddr->channel + 1] << 16));
+  pot_hwpr_ref = (double)
+      (slow_data[potRefHwprAddr->index][potRefHwprAddr->channel] +
+      ((unsigned long)
+      slow_data[potRefHwprAddr->index][potRefHwprAddr->channel + 1] << 16));
+  pot_hwpr = pot_hwpr_raw / pot_hwpr_ref;
+  //don't update hwpr_pot when not pulsing the read, or when reading too high
+  if (heatctrl & HEAT_HWPR_POS && pot_hwpr < HWPR_POT_MAX) {
+    WriteData(potHwprAddr, (int)(pot_hwpr*65535.0), NIOS_QUEUE);
+  }
+
   if (index == 0) {
-  WriteData(cryostateAddr, cryostate, NIOS_QUEUE);
-  WriteData(jfetSetOnAddr, CommandData.Cryo.JFETSetOn * 100, NIOS_QUEUE);
-  WriteData(jfetSetOffAddr, CommandData.Cryo.JFETSetOff * 100, NIOS_QUEUE);
+    WriteData(cryostateAddr, cryostate, NIOS_QUEUE);
+    WriteData(jfetSetOnAddr, CommandData.Cryo.JFETSetOn * 100, NIOS_QUEUE);
+    WriteData(jfetSetOffAddr, CommandData.Cryo.JFETSetOff * 100, NIOS_QUEUE);
   }
   WriteData(dig43DasAddr, (heatctrl<<8) | valvectrl, NIOS_FLUSH);
 }
