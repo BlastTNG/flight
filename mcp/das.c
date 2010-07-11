@@ -564,10 +564,12 @@ void CryoControl (int index)
       (slow_data[potRawHwprAddr->index][potRawHwprAddr->channel] +
       ((unsigned long)
       slow_data[potRawHwprAddr->index][potRawHwprAddr->channel + 1] << 16));
+  pot_hwpr_raw -= 2147483648.0;	  //convert from 32-bit offset signed
   pot_hwpr_ref = (double)
       (slow_data[potRefHwprAddr->index][potRefHwprAddr->channel] +
       ((unsigned long)
       slow_data[potRefHwprAddr->index][potRefHwprAddr->channel + 1] << 16));
+  pot_hwpr_ref -= 2147483648.0;	  //convert from 32-bit offset signed
   pot_hwpr = pot_hwpr_raw / pot_hwpr_ref;
   //don't update hwpr_pot when not pulsing the read, or when reading too high
   if (heatctrl & HEAT_HWPR_POS && pot_hwpr < HWPR_POT_MAX) {
