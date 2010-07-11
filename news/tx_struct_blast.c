@@ -138,17 +138,10 @@ struct ChannelStruct WideSlowChannels[] = {
   {"tr_he4_pot",    'r', CRYO_A1, 44,     CRYO_HE4_POT_M,  CRYO_HE4_POT_B, 'U', U_R_O},
   {"tr_optbox_filt",'r', CRYO_A1, 46, CRYO_OPTBOX_FILT_M,CRYO_OPTBOX_FILT_B,'U',U_R_O},
 //{"cryo_a1_24",    'r', CRYO_A1, 48,                1.0,             0.0, 'U', U_NONE},
-  {"he4_lev",       'r', CRYO_A2,  0,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
-  {"i_charcoal",    'r', CRYO_A2,  2,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
-  {"i_cal_lamp",    'r', CRYO_A2,  4,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
-  {"i_hs_pot",      'r', CRYO_A2,  6,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
-  {"i_hs_char",     'r', CRYO_A2,  8,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
   {"td_ln",         'r', CRYO_A2, 10,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
-  {"i_300mk",       'r', CRYO_A2, 12,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
 //{"cryo_a2_07",    'r', CRYO_A2, 14,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
   {"td_vcs_filt",   'r', CRYO_A2, 16,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
   {"pot_raw_hwpr",  'r', CRYO_A2, 18,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
-  {"i_jfet",        'r', CRYO_A2, 20,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
   {"pot_ref_hwpr",  'r', CRYO_A2, 22,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
   {"td_hs_charcoal",'r', CRYO_A2, 24,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
   {"td_lhe_filt",   'r', CRYO_A2, 26,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
@@ -310,6 +303,15 @@ struct ChannelStruct SlowChannels[] = {
   {"t22_das",      'r', BIAS_T1, 45,         CAL16T(1.0,            0.0), 'u', U_NONE},
   {"t23_das",      'r', BIAS_T1, 47,         CAL16T(1.0,            0.0), 'u', U_NONE},
   {"t24_das",      'r', BIAS_T1, 49,         CAL16T(1.0,            0.0), 'u', U_NONE},
+
+  /* narrow CRYO_A2 channels */
+  {"he4_lev",       'r', CRYO_A2,  1,         CAL16(1.0,            0.0), 'u', U_V_V},
+  {"i_charcoal",    'r', CRYO_A2,  3,         CAL16(1.0,            0.0), 'u', U_V_V},
+  {"i_cal_lamp",    'r', CRYO_A2,  5,         CAL16(1.0,            0.0), 'u', U_V_V},
+  {"i_hs_pot",      'r', CRYO_A2,  7,         CAL16(1.0,            0.0), 'u', U_V_V},
+  {"i_hs_char",     'r', CRYO_A2,  9,         CAL16(1.0,            0.0), 'u', U_V_V},
+  {"i_300mk",       'r', CRYO_A2, 13,         CAL16(1.0,            0.0), 'u', U_V_V},
+  {"i_jfet",        'r', CRYO_A2, 21,         CAL16(1.0,            0.0), 'u', U_V_V},
 
   /* LOOP1 0-13 are wide */
   {"pin_in_lock",  'w', LOOP1, 16,                1.0,             0.0, 'u', U_NONE},
@@ -566,7 +568,7 @@ struct ChannelStruct SlowChannels[] = {
   {"y_str_stage",  'w', LOOP5, 37,                1.0,             0.0, 'u', U_NONE},
   {"x_lim_stage",  'w', LOOP5, 38,                1.0,             0.0, 'u', U_NONE},
   {"y_vel_stage",  'w', LOOP5, 39,                1.0,             0.0, 'u', U_NONE},
-  {"he4_lev_old",  'w', LOOP5, 40,          CRYO_A2_M,       CRYO_A2_B, 'u', U_NONE},
+  {"he4_lev_old",  'w', LOOP5, 40,          CAL16(1.0,            0.0), 'u', U_NONE},
   {"focus_isc",    'w', LOOP5, 41,                1.0,             0.0, 's', U_NONE},
   /* LOOP5 42-53 are wide */
   {"focus_osc",        'w',LOOP5, 54,             1.0,             0.0, 's', U_NONE},
