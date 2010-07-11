@@ -1311,7 +1311,9 @@ static void StoreData(int index)
     ((!CommandData.use_osc) << 6) |
     ((CommandData.disable_el) << 10) |
     ((CommandData.disable_az) << 11) |
-    ((CommandData.force_el) << 12);
+    ((CommandData.force_el) << 12) |
+    ((!CommandData.use_pss1) << 13) |
+    ((!CommandData.use_pss2) << 14);
 
   if (PointingData[i_point].t >= CommandData.pointing_mode.t)
     sensor_veto |= (1 << 7);

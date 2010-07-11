@@ -114,7 +114,9 @@ union DerivedUnion DerivedChannels[] = {
       "EL_AUTO_GYRO",
       "DISABLE_EL",
       "DISABLE_AZ",
-      "FORCE_EL"
+      "FORCE_EL",
+      "VETO_PSS1",
+      "VETO_PSS2"
       ),
 
 #if 0
