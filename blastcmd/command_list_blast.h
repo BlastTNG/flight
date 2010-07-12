@@ -18,13 +18,8 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 224        /* total number of single word cmds */
-<<<<<<< command_list.h
-#define N_MCOMMANDS 109        /* total number of multiword commands */
-#define MAX_N_PARAMS 12	       /* narsil REALLY likes this to even */
-=======
 #define N_MCOMMANDS 110        /* total number of multiword commands */
-#define MAX_N_PARAMS 10
->>>>>>> 4.45
+#define MAX_N_PARAMS 12	       /* narsil REALLY likes this to even */
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
