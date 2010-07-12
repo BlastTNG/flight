@@ -1330,10 +1330,10 @@ static void StoreData(int index)
   i_dgps = GETREADINDEX(dgpspos_index);
   WriteData(dgpsLatAddr, (int)(DGPSPos[i_dgps].lat * DEG2I), NIOS_QUEUE);
   WriteData(dgpsLonAddr, (int)(DGPSPos[i_dgps].lon * DEG2I), NIOS_QUEUE);
-  WriteData(dgpsAltAddr, (int)(DGPSPos[i_dgps].alt), NIOS_QUEUE);
-  WriteData(dgpsSpeedAddr, (int)(DGPSPos[i_dgps].speed * DEG2I), NIOS_QUEUE);
-  WriteData(dgpsDirAddr, (int)(DGPSPos[i_dgps].direction * DEG2I), NIOS_QUEUE);
-  WriteData(dgpsClimbAddr, (int)(DGPSPos[i_dgps].climb * DEG2I), NIOS_QUEUE);
+  WriteData(dgpsAltAddr, DGPSPos[i_dgps].alt, NIOS_QUEUE);
+  WriteData(dgpsSpeedAddr, DGPSPos[i_dgps].speed*100, NIOS_QUEUE);
+  WriteData(dgpsDirAddr, DGPSPos[i_dgps].direction*DEG2I, NIOS_QUEUE);
+  WriteData(dgpsClimbAddr, DGPSPos[i_dgps].climb*100, NIOS_QUEUE);
   WriteData(dgpsNSatAddr, DGPSPos[i_dgps].n_sat, NIOS_QUEUE);
 
   WriteData(lstSchedAddr, sched_lst, NIOS_QUEUE);

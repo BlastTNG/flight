@@ -506,15 +506,15 @@ void WatchDGPS()
     DGPSPos[0].alt = ((double)slow_data[dgpsAltAddr->index][dgpsAltAddr->channel]);
     DGPSPos[1].alt = ((double)slow_data[dgpsAltAddr->index][dgpsAltAddr->channel]);
     DGPSPos[2].alt = ((double)slow_data[dgpsAltAddr->index][dgpsAltAddr->channel]);
-    DGPSPos[0].speed = (((double)slow_data[dgpsSpeedAddr->index][dgpsSpeedAddr->channel])/DEG2I);
-    DGPSPos[1].speed = (((double)slow_data[dgpsSpeedAddr->index][dgpsSpeedAddr->channel])/DEG2I);
-    DGPSPos[2].speed = (((double)slow_data[dgpsSpeedAddr->index][dgpsSpeedAddr->channel])/DEG2I);
+    DGPSPos[0].speed = (((double)slow_data[dgpsSpeedAddr->index][dgpsSpeedAddr->channel])/100);
+    DGPSPos[1].speed = (((double)slow_data[dgpsSpeedAddr->index][dgpsSpeedAddr->channel])/100);
+    DGPSPos[2].speed = (((double)slow_data[dgpsSpeedAddr->index][dgpsSpeedAddr->channel])/100);
     DGPSPos[0].direction = (((double)slow_data[dgpsDirAddr->index][dgpsDirAddr->channel])/DEG2I);
     DGPSPos[1].direction = (((double)slow_data[dgpsDirAddr->index][dgpsDirAddr->channel])/DEG2I);
     DGPSPos[2].direction = (((double)slow_data[dgpsDirAddr->index][dgpsDirAddr->channel])/DEG2I);
-    DGPSPos[0].climb = (((double)slow_data[dgpsClimbAddr->index][dgpsClimbAddr->channel])/DEG2I);
-    DGPSPos[1].climb = (((double)slow_data[dgpsClimbAddr->index][dgpsClimbAddr->channel])/DEG2I);
-    DGPSPos[2].climb = (((double)slow_data[dgpsClimbAddr->index][dgpsClimbAddr->channel])/DEG2I);
+    DGPSPos[0].climb = (((double)slow_data[dgpsClimbAddr->index][dgpsClimbAddr->channel])/100);
+    DGPSPos[1].climb = (((double)slow_data[dgpsClimbAddr->index][dgpsClimbAddr->channel])/100);
+    DGPSPos[2].climb = (((double)slow_data[dgpsClimbAddr->index][dgpsClimbAddr->channel])/100);
     DGPSPos[0].n_sat = (slow_data[dgpsNsatAddr->index][dgpsNsatAddr->channel]);
     DGPSPos[1].n_sat = (slow_data[dgpsNsatAddr->index][dgpsNsatAddr->channel]);
     DGPSPos[2].n_sat = (slow_data[dgpsNsatAddr->index][dgpsNsatAddr->channel]);
@@ -631,7 +631,6 @@ void WatchDGPS()
       if (PVT->Cog != -2e10) DGPSPos[dgpspos_index].direction = PVT->Cog; //true track/course over ground in degrees (0 to 359.9)
       if ((PVT->Vn != -2e10) && (PVT->Ve != -2e10))DGPSPos[dgpspos_index].speed = (PVT->Vn+PVT->Ve)*60*60/1000;// speed over ground in km/hr (0 to 999.9)
       if (PVT->Vu != -2e10) DGPSPos[dgpspos_index].climb = PVT->Vu; // vertical velocity in m/s (-999.9 to 999.9)
-      
       if ((PVT->Lat == -2e10)			  ||
 	  (PVT->Lon == -2e10)			  || 
 	  (DGPSPos[dgpspos_index].n_sat < 4)) {
@@ -665,8 +664,8 @@ void WatchDGPS()
       if ((ATTEULER->Heading == -2e10)			  || 
 	  (ATTEULER->Pitch == -2e10)			  || 
 	  (ATTEULER->Roll == -2e10)			  ||
-	  (DGPSAtt[dgpsatt_index-1].az_cov <=0.001)	  ||
-	  (DGPSAtt[dgpsatt_index-1].az_cov > CommandData.dgps_cov_limit))	{
+	  (DGPSAtt[dgpsatt_index].az_cov <=0.001)	  ||
+	  (DGPSAtt[dgpsatt_index].az_cov > CommandData.dgps_cov_limit))	{
 	DGPSAtt[dgpsatt_index].att_ok = 0;
       } else {
 	DGPSAtt[dgpsatt_index].att_ok = 1;
