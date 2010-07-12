@@ -152,6 +152,7 @@ struct SBSCCommandData {
   int expInt;        //exposure interval (ms) (0=triggered)
   int expTime;       //exposure duration (ms)
   int focusRes;      //steps to divide lens range into for focus
+  int focusRng;      //inverse fraction of total focal range to go through for autofocus
   int moveTol;       //precision (ticks) for lens moves
 
   //image processing configuration

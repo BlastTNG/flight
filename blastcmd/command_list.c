@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.75 $";
+const char *command_list_serial = "$Revision: 4.76 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -1028,9 +1028,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Exposure duration (ms)", 40, MAX_15BIT, 'i', "sc_exp_time"}
     }
   },
-  {COMMAND(cam_focus_params), "set camera autofocus params", GR_SBSC, 1,
+  {COMMAND(cam_focus_params), "set camera autofocus params", GR_SBSC, 2,
     {
-      {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "sc_foc_res"}
+      {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "sc_foc_res"},
+      {"Range (inverse fraction of total range)", 0, MAX_15BIT, 'i', "sc_foc_rng"}
     }
   },
   {COMMAND(cam_bad_pix), "Indicate pixel to ignore", GR_SBSC, 3,
