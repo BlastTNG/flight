@@ -88,7 +88,7 @@ void SunSensor(void) {
         firsttime = 0;
         berror(err, "connect()");
       }
-      if (errno == ENETUNREACH) /* No route to host */
+      if (errno == ENETUNREACH || errno == EHOSTUNREACH || errno == EHOSTDOWN) /* No route to host */
         EthernetSun = 1;
       else if (errno == ECONNREFUSED) /* Connection refused */
         EthernetSun = 2;
