@@ -564,7 +564,7 @@ void WatchDGPS()
   term.c_oflag = 0;
 
   cfmakeraw(&term);
-
+  
   /*Activate settings for the port*/
   tcsetattr(fd,TCSANOW,&term);
   // FIXME maybe: should we be allowed to proceed if we have had write errors?
@@ -628,9 +628,19 @@ void WatchDGPS()
       DGPSPos[dgpspos_index].lon = lon*180/M_PI; // Longitude in degrees
       if ((PVT->Alt != -2e10) && (PVT->GeoidHeight != -2e10)) DGPSPos[dgpspos_index].alt = PVT->Alt - PVT->GeoidHeight; // Altitude above geoid in metres
       DGPSPos[dgpspos_index].n_sat = (int)(PVT->NrSV); // # Satellites
-      if (PVT->Cog != -2e10) DGPSPos[dgpspos_index].direction = PVT->Cog; //true track/course over ground in degrees (0 to 359.9)
-      if ((PVT->Vn != -2e10) && (PVT->Ve != -2e10))DGPSPos[dgpspos_index].speed = (PVT->Vn+PVT->Ve)*60*60/1000;// speed over ground in km/hr (0 to 999.9)
-      if (PVT->Vu != -2e10) DGPSPos[dgpspos_index].climb = PVT->Vu; // vertical velocity in m/s (-999.9 to 999.9)
+      if ((PVT->Vn != -2e10) && (PVT->Ve != -2e10)) {
+	DGPSPos[dgpspos_index].speed = (PVT->Vn+PVT->Ve)*60*60/1000;// speed over ground in km/hr (0 to 999.9)
+	if ((PVT->Vn > 0) && (PVT->Ve > 0)) {
+	  DGPSPos[dgpspos_index].direction = atan2(PVT->Ve,PVT->Vn);// course over ground in degrees from N (due E is 90 deg)
+	} else if ((PVT->Vn < 0) && (PVT->Ve > 0)) {
+	  DGPSPos[dgpspos_index].direction = 180 - atan2(PVT->Ve,PVT->Vn);
+	} else if ((PVT->Vn < 0) && (PVT->Ve < 0)) {
+	  DGPSPos[dgpspos_index].direction = 180 + atan2(PVT->Ve,PVT->Vn);
+	} else if ((PVT->Vn >0) && (PVT->Ve < 0)) {
+	  DGPSPos[dgpspos_index].direction = 360 - atan2(PVT->Ve,PVT->Vn);
+	}
+      }
+      if (PVT->Vu != -2e10) DGPSPos[dgpspos_index].climb = PVT->Vu; // vertical velocity in m/s (-999.9 to 999.9)      
       if ((PVT->Lat == -2e10)			  ||
 	  (PVT->Lon == -2e10)			  || 
 	  (DGPSPos[dgpspos_index].n_sat < 4)) {

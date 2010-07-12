@@ -277,7 +277,7 @@ static int MagConvert(double *mag_az)
 #endif
 
   *mag_az += dec + MAG_ALIGNMENT;
-  *mag_az = -(*mag_az);
+  //*mag_az = -(*mag_az);
 
   NormalizeAngle(mag_az);
 
@@ -619,7 +619,7 @@ static int PSS2Convert(double *azraw_pss2, double *elraw_pss2) {
   NormalizeAngle(azraw_pss2);
   NormalizeAngle(elraw_pss2);
 
-  PointingData[point_index].pss2_azraw = *azraw_pss2;
+  PointingData[point_index].pss2_azraw = -(*azraw_pss2);
   PointingData[point_index].pss2_elraw = *elraw_pss2;
 
   gsl_matrix_free(rot);
