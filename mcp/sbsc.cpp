@@ -45,7 +45,12 @@ extern "C" {
 //allow any host to be the star camera
 #define CAM_SERVERNAME "192.168.1.11"
 
+//TODO check that this is correct
+#define SBSC_SERIAL "08073507"
+
 extern "C" void nameThread(const char*);  /* in mcp.c */
+
+extern "C" short int InCharge;		  /* in tx.c */
 
 static SBSCCommunicator* camComm;
 static pthread_t camcomm_id;
@@ -64,6 +69,7 @@ extern "C" {
 int sendSBSCCommand(const char *cmd)
 {
   //this is okay unless I want to handle link dying during transmission
+  if (!InCharge) return 0;
   return camComm->sendCommand(cmd);
 }
 
@@ -157,7 +163,7 @@ void cameraFields()
   WriteData(blobMdistAddr, CommandData.cam.minBlobDist, NIOS_QUEUE);
 
   //persistently identify cameras by serial number (camID)
-  if (camRtn[i_cam].camID == "08073507") {
+  if (camRtn[i_cam].camID == SBSC_SERIAL)  {
     sbsc = &camRtn[i_cam];
     unrecFlag = false;
   }
@@ -233,14 +239,16 @@ static string parseReturn(string rtnStr)
   /* debugging only
   bprintf(info, "return string: %s", rtnStr.c_str());
   */
-  if (rtnStr.find("<str>", 0) == 0) //response is string
+  //if (rtnStr.find("<str>", 0) == 0) //response is string
+  if (rtnStr.substr(0,5) == "<str>") //response is string
   {
     string Rstr = rtnStr.substr(5, rtnStr.size() - 11);
 
     if (Rstr[0] == 'E') //it is an error
       bprintf(err, "%s", Rstr.substr(6, Rstr.size()-6).c_str());
 
-    else if (Rstr.find("<conf>", 0) == 0) //contains config data
+    //else if (Rstr.find("<conf>", 0) == 0) //contains config data
+    else if (Rstr.substr(0,6) == "<conf>") //contains config data
     {
       Rstr = Rstr.substr(6, Rstr.size()-6);
       istringstream sin;
