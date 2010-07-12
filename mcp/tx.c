@@ -132,7 +132,7 @@ static void WriteAux(void)
   static struct NiosStruct* bbcFifoSizeAddr;
   static struct NiosStruct* ploverAddr;
   static struct NiosStruct* he4LevOldAddr;
-  static struct NiosStruct* statusNetAddr;
+  static struct NiosStruct* statusEthAddr;
   static struct BiPhaseStruct* he4LevReadAddr;
   static int incharge = -1;
   time_t t;
@@ -159,7 +159,7 @@ static void WriteAux(void)
     bi0FifoSizeAddr = GetNiosAddr("bi0_fifo_size");
     bbcFifoSizeAddr = GetNiosAddr("bbc_fifo_size");
     ploverAddr = GetNiosAddr("plover");
-    statusNetAddr = GetNiosAddr("status_net");
+    statusEthAddr = GetNiosAddr("status_eth");
   }
 
   if (StartupVeto>0) {
@@ -207,7 +207,7 @@ static void WriteAux(void)
   WriteData(bbcFifoSizeAddr, CommandData.bbcFifoSize, NIOS_QUEUE);
   WriteData(ploverAddr, CommandData.plover, NIOS_QUEUE);
 
-  WriteData(statusNetAddr, 
+  WriteData(statusEthAddr, 
        (EthernetSun & 0x3) + 
        ((EthernetIsc & 0x3) << 2) + 
        ((EthernetOsc & 0x3) << 4), 
