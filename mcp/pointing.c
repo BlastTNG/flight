@@ -61,7 +61,7 @@
 /* Calibrations of the az of each sensor, relative to dGPS */
 #define MAG_ALIGNMENT	  0.   //(4.2681)
 #define PSS1_ALIGNMENT	  60.
-#define PSS2_ALIGNMENT	  -135.
+#define PSS2_ALIGNMENT	  +135.
 #define SSS_ALIGNMENT	  0.
 
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
@@ -318,7 +318,7 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 
 #define  PSS1_L  10.     // 10 mm = effective length of active area
 #define  PSS1_D  10.     // 10 mm = Distance between pinhole and sensor
-#define  PSS1_IMAX  20.  // Maximum current (place holder for now)
+#define  PSS1_IMAX  4.  // Maximum current (place holder for now)
 #define  PSS1_XSTRETCH  1.  // 0.995
 #define  PSS1_YSTRETCH  1.  // 1.008
 #define  PSS1_BETA  PSS1_ALIGNMENT
@@ -478,7 +478,7 @@ static int PSS1Convert(double *azraw_pss1, double *elraw_pss1) {
 
 #define  PSS2_L     10.    // 10 mm = effective length of active area
 #define  PSS2_D     10.    // 10 mm = Distance between pinhole and sensor
-#define  PSS2_IMAX  20.     // Maximum current (place holder for now)
+#define  PSS2_IMAX  4.     // Maximum current (place holder for now)
 #define  PSS2_XSTRETCH  1.
 #define  PSS2_YSTRETCH  1.
 #define  PSS2_BETA  PSS2_ALIGNMENT
