@@ -1304,13 +1304,37 @@
       <DATUM format="%.2f" src="T_2_BAT" extrema="battemp"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Pressures/Cooling" colour="#777700" row="2" col="5">
+  <BOX caption="Pressures/Network" colour="#777700" row="2" col="5">
     <NUMBER caption="P ISC (psi)">
       <DATUM format="%.2f" src="PRESSURE1_ISC" extrema="psi"/>
     </NUMBER>
     <NUMBER caption="P OSC (psi)">
       <DATUM format="%.2f" src="PRESSURE1_ISC" extrema="psi"/>
     </NUMBER>
+    <MULTI caption="Sun Ethernet">
+      <DATUM src="STATUS_SUN_ETH">
+        <WORD value="3" caption="Er Ror" textstyle="E_BIT"/>
+        <WORD value="2" caption="Conn. Ref." textstyle="W_BIT"/>
+        <WORD value="1" caption="No Route" textstyle="W_BIT"/>
+        <WORD value="0" caption="Connected" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="ISC Ethernet">
+      <DATUM src="STATUS_ISC_ETH">
+        <WORD value="3" caption="Er Ror" textstyle="E_BIT"/>
+        <WORD value="2" caption="Conn. Ref." textstyle="W_BIT"/>
+        <WORD value="1" caption="No Route" textstyle="W_BIT"/>
+        <WORD value="0" caption="Connected" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="OSC Ethernet">
+      <DATUM src="STATUS_OSC_ETH">
+        <WORD value="3" caption="Er Ror" textstyle="E_BIT"/>
+        <WORD value="2" caption="Conn. Ref." textstyle="W_BIT"/>
+        <WORD value="1" caption="No Route" textstyle="W_BIT"/>
+        <WORD value="0" caption="Connected" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
   </BOX>
   <BOX caption="State" colour="#777700" row="0" col="1" colspan="1">
     <CURDIR caption="Dirfile">
