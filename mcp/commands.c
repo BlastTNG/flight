@@ -1789,6 +1789,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       sprintf(buf, "CsetFocRsln=%d", ivalues[0]);
       sendSBSCCommand(buf);
       sprintf(buf, "CsetFocRnge=%d", ivalues[1]);
+      sendSBSCCommand(buf); 
       CommandData.cam.focusRes = ivalues[0];
       CommandData.cam.focusRng = ivalues[1];
       break;
