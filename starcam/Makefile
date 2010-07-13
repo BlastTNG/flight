@@ -34,7 +34,7 @@ QTFLAGS =
 endif
 ################################################################################
 #targets for building all or part of the main program
-all: cam comm view
+all: cam comm view powercycle
 cam: $(APP_NAME)
 comm: commtest
 view: scviewer
@@ -138,6 +138,10 @@ moc_commandgui.cpp : commandgui.h
 	  
 moc_commandgui.o : commandgui.h moc_commandgui.cpp
 	  $(CC) $(CFLAGS) $(QTFLAGS) -o moc_commandgui.o -c moc_commandgui.cpp
+
+################################################################################
+# simple program to power cycle camera via parallel port
+powercycle: powercycle.c
 
 ################################################################################
 
