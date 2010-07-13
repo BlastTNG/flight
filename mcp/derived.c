@@ -93,8 +93,8 @@ union DerivedUnion DerivedChannels[] = {
   BITWORD("SCHEDULE", "status_mcc", 4, 3),
   BITWORD("ALICE_FILE", "status_mcc", 8, 8),
   BITWORD("STATUS_SUN_ETH", "status_eth", 0, 2),
-  BITWORD("STATUS_ISC_ETH", "status_eth", 2, 2),
-  BITWORD("STATUS_OSC_ETH", "status_eth", 4, 2),
+  BITWORD("STATUS_ISC_ETH", "status_eth", 4, 2),
+  BITWORD("STATUS_OSC_ETH", "status_eth", 2, 2),
 
 #ifndef BOLOTEST
   COMMENT("Pointing Stuff"),
