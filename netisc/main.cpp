@@ -1140,9 +1140,11 @@ void focus_home(void) {
   current_focus = 0;
   server_data.current_focus_pos = 0;
 
-  printf("focusOffset:%i\n",focusOffset);
-  step_motor(FOCUS_MOTOR,focusOffset);
-  
+  if((focusOffset > 0) && (focusOffset < FOCUS_RANGE)) {
+	printf("focusOffset:%i\n",focusOffset);
+	step_motor(FOCUS_MOTOR,focusOffset);
+	//Sleep(abs(focusOffset)*1000/motorSpeed); 
+  }
 }
 
 // set the focus/aperture to absolute position 0-FOCUS/AP_RANGE 
@@ -1710,7 +1712,7 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
   if( (execCmd.triggertype<0) || (execCmd.triggertype>3) ) 
     execCmd.triggertype = triggertype;
 
-  if( (execCmd.focusOffset<-3000) || (execCmd.focusOffset>3000) ) 
+  if( (execCmd.focusOffset<0) || (execCmd.focusOffset>FOCUS_RANGE) ) 
     execCmd.focusOffset = 0;
 
   if( (execCmd.ap_pos<0) || (execCmd.ap_pos>AP_RANGE) ) 
