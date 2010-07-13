@@ -132,7 +132,7 @@ static int ISCInit(int which)
       berror(err, "connect()");
       firsttime = 0;
     }
-    if (errno == ENETUNREACH)
+    if (errno == ENETUNREACH || errno == EHOSTUNREACH || errno == EHOSTDOWN)
       which ? (EthernetIsc = 1) : (EthernetOsc = 1);
     else if (errno == ECONNREFUSED)
       which ? (EthernetIsc = 2) : (EthernetOsc = 2);
