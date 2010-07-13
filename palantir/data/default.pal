@@ -575,13 +575,9 @@
     </MULTI>
   </BOX>
   <BOX caption="Balance" colour="#880000" row="2" col="3">
-    <MULTI caption="Status">
-      <DATUM src="VETO_BAL">
-        <WORD value="-1" caption="Vetoed" textsyle="E_BIT"/>
-        <WORD value="0" caption="Allowed" textsyle="OK_BIT"/>
-        <WORD min="1" max="32767" caption="Idle" textsyle="OK_BIT"/>
-      </DATUM>
-    </MULTI>
+    <NUMBER caption="SLEW_VETO">
+      <DATUM format="%.0f" src="SLEW_VETO" extrema="unknown"/>
+    </NUMBER>
     <MULTI caption="Mode">
       <DATUM src="MODE_BAL">
         <WORD value="0" caption="Off" textsyle="W_BIT"/>
@@ -1463,10 +1459,10 @@
       <DATUM format="%.2f" src="EL_RAW_ENC" extrema="angle"/>
     </NUMBER>
     <NUMBER caption="Clinometer">
-      <DATUM format="%.2f" src="EL_IF_CLIN" extrema="angle"/>
+      <DATUM format="%.2f" src="EL_CLIN" extrema="angle"/>
     </NUMBER>
-    <NUMBER caption="Clin El">
-      <DATUM format="%.2f" src="EL_CLIN" extrema="unknown"/>
+    <NUMBER caption="Clin El Raw">
+      <DATUM format="%.2f" src="EL_LUT_CLIN" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="ISC Sigma">
       <DATUM format="%.2f" src="SIGMA_ISC" extrema="unknown"/>
