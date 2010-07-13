@@ -1229,7 +1229,7 @@ static void StoreData(int index)
   WriteData(dgpsSigmaAddr,
   (((unsigned int)(PointingData[i_point].dgps_sigma * DEG2I))>65535)?65535:((unsigned int)(PointingData[i_point].dgps_sigma * DEG2I)), NIOS_QUEUE);
   WriteData(dgpsTrimAddr, CommandData.dgps_az_trim * DEG2I, NIOS_QUEUE);
-  WriteData(dgpsCovLimAddr, CommandData.dgps_cov_limit, NIOS_QUEUE);
+  WriteData(dgpsCovLimAddr, CommandData.dgps_cov_limit*32768.0/100.0, NIOS_QUEUE);
   WriteData(azSsAddr, (unsigned int)((PointingData[i_point].ss_az +
           CommandData.ss_az_trim) * DEG2I),
       NIOS_QUEUE);

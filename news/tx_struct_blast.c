@@ -343,7 +343,7 @@ struct ChannelStruct SlowChannels[] = {
   {"lon_dgps",     'w', LOOP1, 48,              I2DEG,             0.0, 's', U_LO_DEG},
   {"alt_dgps",     'w', LOOP1, 49,                1.0,             0.0, 'u', U_ALT_M},
   {"speed_dgps",   'w', LOOP1, 50,             1./100,             0.0, 's', U_V_KPH},
-  {"dir_dgps",     'w', LOOP1, 51,              I2DEG,             0.0, 'u', U_D_DEG},
+  {"dir_dgps",     'w', LOOP1, 51,              I2DEG,             0.0, 's', U_D_DEG},
   {"climb_dgps",   'w', LOOP1, 52,             1./100,             0.0, 's', U_V_MPS},
   {"att_ok_dgps",  'w', LOOP1, 53,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 54-56 are unused */
@@ -834,7 +834,7 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
-  {"cov_lim_dgps",   'w', LOOP9, 58,                1.0,             0.0, 'u', U_NONE},
+  {"cov_lim_dgps",   'w', LOOP9, 58,    (100.0/32768.0),             0.0, 'u', U_NONE},
   {"pot_hwpr",       'w', LOOP9, 59,        1.0/65535.0,             0.0, 'u', U_NONE},
   /* LOOP9 60-63 are unused */
 

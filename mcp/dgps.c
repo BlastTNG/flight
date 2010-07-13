@@ -564,7 +564,7 @@ void WatchDGPS()
   term.c_oflag = 0;
 
   cfmakeraw(&term);
-  
+ 
   /*Activate settings for the port*/
   tcsetattr(fd,TCSANOW,&term);
   // FIXME maybe: should we be allowed to proceed if we have had write errors?
@@ -576,7 +576,7 @@ void WatchDGPS()
     /* Time */
     if (((VoidBlock_t*)SBFBlock)->ID == SBFID_RECEIVERTIME) {
       ReceiverTimeBlock_t* RXTIME = (ReceiverTimeBlock_t*) SBFBlock;
-      /*bprintf(info,"%-2i %13.1f %3i %3i %3i %3i %3i %3i\n",
+      /*bprintf(info,"TIME: %-2i %13.1f %3i %3i %3i %3i %3i %3i\n",
 	-5,
 	RXTIME->WNc*86400.0*7.0+RXTIME->TOW/1000.0,
 	RXTIME->UTCYear,
@@ -607,7 +607,7 @@ void WatchDGPS()
 
       /* Position & Velocity */
       PVTGeodeticBlock_t* PVT = (PVTGeodeticBlock_t*)SBFBlock;
-      /*bprintf(info,"%-2i %13.1f %21.10f %21.10f %14.3f %10.3f"
+      /*bprintf(info,"POSITION: %-2i %13.1f %21.10f %21.10f %14.3f %10.3f"
 	" %10.3f %15.8f %13.6e %14.3e %3i %3u\n",
 	-1,
 	PVT->WNc*86400.0*7.0+PVT->TOW/1000.0,
@@ -654,7 +654,7 @@ void WatchDGPS()
     
       /* Attitude */
       AttitudeEulerBlock_t* ATTEULER = (AttitudeEulerBlock_t*) SBFBlock;
-      /*bprintf(info,"%-2i %13.1f %14.5f %14.5f %14.5f"
+      /*bprintf(info,"ATTITUDE: %-2i %13.1f %14.5f %14.5f %14.5f"
 	" %3u %3u %3u\n",
 	-3,
 	ATTEULER->WNc*86400.0*7.0+ATTEULER->TOW/1000.0,
