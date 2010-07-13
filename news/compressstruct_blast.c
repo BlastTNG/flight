@@ -778,7 +778,6 @@ char *frameList[] = {
   "td_ln",
   "i_300mk",
   "td_vcs_filt",
-  "hwpr_enc_cryo",
   "i_jfet",
   "td_hs_charcoal",
   "td_lhe_filt",
