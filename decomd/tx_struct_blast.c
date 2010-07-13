@@ -851,11 +851,11 @@ struct ChannelStruct SlowChannels[] = {
 /* ACS1 Analog card 1 */
 /* default current cal is 12.5, 0.0 */
   {"i_trans",      'r',  ACS1_A1, 1,          CAL16(11.32, -0.02),      'u', U_I_A},
-  {"i_das",        'r',  ACS1_A1, 3,          CAL16(11.03, -0.09),      'u', U_I_A},
+  {"i_das",        'r',  ACS1_A1, 3,          CAL16(11.03, -0.04),      'u', U_I_A},
   {"i_acs",        'r',  ACS1_A1, 5,          CAL16(12.5,  0.0),        'u', U_I_A},
-  {"i_rec",        'r',  ACS1_A1, 7,          CAL16(10.75, -0.09),      'u', U_I_A},
-  {"i_sc",         'r',  ACS1_A1, 9,          CAL16(10.89, -0.17),      'u', U_I_A},
-  {"i_dgps",       'r',  ACS1_A1, 11,         CAL16(11.03, -0.22),      'u', U_I_A},
+  {"i_rec",        'r',  ACS1_A1, 7,          CAL16(10.75, -0.07),      'u', U_I_A},
+  {"i_sc",         'r',  ACS1_A1, 9,          CAL16(10.89, -0.09),      'u', U_I_A},
+  {"i_dgps",       'r',  ACS1_A1, 11,         CAL16(11.03, -0.19),      'u', U_I_A},
   {"i_el",         'r',  ACS1_A1, 13,         CAL16(12.5,  -0.02),      'u', U_I_A},
   {"i_piv",        'r',  ACS1_A1, 15,         CAL16(12.5, -0.05),       'u', U_I_A},
   {"i_rw",         'r',  ACS1_A1, 17,         CAL16(12.5, -0.09),       'u', U_I_A},
