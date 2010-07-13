@@ -553,6 +553,7 @@ static void GetACS(unsigned short *RxFrame)
   pss2_i4 = (double)(slow_data[v42PssAddr->index][v42PssAddr->channel]);
 
   i_ss = ss_index;
+  ACSData.clin_elev = (double)(slow_data[elRawIfClinAddr->index][elRawIfClinAddr->channel]);
 
   ACSData.t = mcp_systime(NULL);
   ACSData.mcp_frame = rx_frame_index;
@@ -574,7 +575,6 @@ static void GetACS(unsigned short *RxFrame)
   ACSData.pss2_i3 = pss2_i3;
   ACSData.pss2_i4 = pss2_i4;
 
-  ACSData.clin_elev = (double)RxFrame[elRawIfClinAddr->channel];
 
 }
 

@@ -1768,7 +1768,6 @@ void Pointing(void)
   /*************************************/
   /**      do elevation solution      **/
   clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
-
   PointingData[i_point_read].clin_el_lut = clin_elev;
   /* x = ACSData.clin_elev; */
   /*   clin_elev = ((((1.13288E-19*x - 1.83627E-14)*x + */

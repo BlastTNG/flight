@@ -98,6 +98,13 @@ void LutInit(struct LutType *L)
     sscanf(line, "%lg %lg",&(L->x[i]), &(L->y[i]));
   }
   L->last_n = L->n / 2;
+
+  /* Is the LUT index ascending or descending? */
+  if(L->x[1] <= L->x[(L->n)-1]) {
+    L->dir = 1;
+  } else {
+    L->dir = -1;
+  }
 }
 
 double LutCal(struct LutType *L, double x)
@@ -107,15 +114,23 @@ double LutCal(struct LutType *L, double x)
 
   n = L->n;
 
-  if (n == 1)
+  if (n == 1) {
     return(x); // no LUT, not cal
-
+  }
   /* find index */
   i = L->last_n;
-  while ((i < n - 2) && (x > L->x[i]))	//i can't be over n-2 since i+1 is used
-    i++;
-  while ((i > 0) && (x < L->x[i]))
-    i--;
+
+  if (L->dir >= 0) { 
+    while ((i < n - 2) && (x > L->x[i]))	//i can't be over n-2 since i+1 is used
+      i++;
+    while ((i > 0) && (x < L->x[i]))
+      i--;
+  } else {
+    while ((i < n - 2) && (x < L->x[i]))
+      i++;
+    while ((i > 0) && (x > L->x[i]))
+      i--;
+  }
 
   L->last_n = i;
 

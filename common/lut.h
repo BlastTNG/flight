@@ -26,6 +26,7 @@ struct LutType {
   double *y;
   double *x;
   int last_n;
+  int dir;
 };
 
 double MagLutCal(struct LutType *L, double mag_x, double mag_y, double x);
