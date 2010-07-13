@@ -99,8 +99,6 @@ union DerivedUnion DerivedChannels[] = {
 #ifndef BOLOTEST
   COMMENT("Pointing Stuff"),
   LINCOM("X_H_P", "x_p", 0.0003662109375, 0),
-  LINTERP("EL_IF_CLIN", "el_raw_if_clin", "/data/etc/clin_elev.lut"),
-  UNITS("EL_IF_CLIN", "Elevation", "^o"),
 #if 0  //TODO we probably aren't using a LUT for AZ_SS anymore
   LINTERP("AZ_LUT_SS", "AZ_SS", "/data/etc/ss.lut"),
 #endif
