@@ -1309,7 +1309,7 @@
       <DATUM format="%.2f" src="PRESSURE1_ISC" extrema="psi"/>
     </NUMBER>
     <NUMBER caption="P OSC (psi)">
-      <DATUM format="%.2f" src="PRESSURE1_ISC" extrema="psi"/>
+      <DATUM format="%.2f" src="PRESSURE1_OSC" extrema="psi"/>
     </NUMBER>
     <MULTI caption="Sun Ethernet">
       <DATUM src="STATUS_SUN_ETH">
