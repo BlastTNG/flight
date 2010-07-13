@@ -638,10 +638,10 @@
     <NUMBER caption="Extension (%)">
       <DATUM format="%.2f" src="POT_LOCK" extrema="lockpot"/>
     </NUMBER>
-    <NUMBER caption="Move Current (%)">
+    <NUMBER caption="I Move (%)">
       <DATUM format="%.0f" src="I_MOVE_LOCK" extrema="locklimit"/>
     </NUMBER>
-    <NUMBER caption="Hold Current (%)">
+    <NUMBER caption="I Hold (%)">
       <DATUM format="%.0f" src="I_HOLD_LOCK" extrema="locklimit"/>
     </NUMBER>
   </BOX>
@@ -881,7 +881,7 @@
         <WORD value="8" caption="Delfoc" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
-    <MULTI caption="Actuator Power">
+    <MULTI caption="Act Power">
       <DATUM src="BUS_RESET_ACT">
         <WORD value="0" caption="On" textstyle="OK_BIT"/>
         <WORD value="1" caption="Off" textstyle="W_BIT"/>
@@ -925,16 +925,16 @@
     <NUMBER caption="ACT2 Pos">
       <DATUM format="%.0f" src="POS_2_ACT" extrema="actuator"/>
     </NUMBER>
-    <NUMBER caption="Move Current">
+    <NUMBER caption="I Move">
       <DATUM format="%.0f" src="I_MOVE_ACT" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="Hold Current">
+    <NUMBER caption="I Hold">
       <DATUM format="%.0f" src="I_HOLD_ACT" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Velocity">
       <DATUM format="%.0f" src="VEL_ACT" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="Acceleration">
+    <NUMBER caption="Accel.">
       <DATUM format="%.0f" src="ACC_ACT" extrema="unknown"/>
     </NUMBER>
   </BOX>
@@ -1047,19 +1047,19 @@
     <NUMBER caption="MCC">
       <DATUM format="%6.2f" src="I_MCC" extrema="compcurrent"/>
     </NUMBER>
-    <NUMBER caption="I Gyro Box">
+    <NUMBER caption="Gyro Box">
       <DATUM format="%6.2f" src="I_GY" extrema="gycurrent"/>
     </NUMBER>
-    <NUMBER caption="I Reac">
+    <NUMBER caption="RW">
       <DATUM format="%6.2f" src="I_RW" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I EL">
+    <NUMBER caption="EL">
       <DATUM format="%6.2f" src="I_EL" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I Pivot">
+    <NUMBER caption="Pivot">
       <DATUM format="%6.2f" src="I_PIV" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="I Total">
+    <NUMBER caption="TOTAL">
       <DATUM format="%5.2f" src="I_TOT" extrema="currenttotal"/>
     </NUMBER>
   </BOX>
@@ -1691,7 +1691,7 @@
         <WORD value="2" caption="Closed" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
-    <MULTI caption="Cryo Valve Dir">
+    <MULTI caption="Cryo V. Dir">
       <DATUM src="CRYO_DIREC">
         <WORD value="1" caption="Opening" textstyle="W_BIT"/>
         <WORD value="0" caption="Closing" textstyle="OK_BIT"/>
