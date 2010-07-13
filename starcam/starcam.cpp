@@ -510,6 +510,19 @@ string interpretCommand(string cmd)
 	return (cmd + " successful");
       else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
     }
+    else if (cmd == "CsetFocRnge") {           //set focus range
+      if (valStr == "" || valStr == " ")
+	return (string)"Error: the command " + cmd + " requires a value";
+      unsigned int range;
+      sin >> range;
+      if (range == 0) return "Error: focus range must be nonzero.";
+      lock(&camLock, "camLock", "interpretCommand");
+      globalCam.setFocusRange(range);
+      unlock(&camLock, "camLock", "interpretCommand");
+      if (maintainInitFile(cmd, valStr) == 0)
+	return (cmd + " successful");
+      else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
+    }
     else if (cmd == "Cpower") {
       lock(&camLock, "camLock", "interpretCommand");
       powerCycle();
@@ -663,6 +676,7 @@ string interpretCommand(string cmd)
       sout << globalCam.getPictureInterval() << " "
 	<< globalCam.GetExposureTime() << " "
 	<< globalCam.getFocusResolution() << " "
+	<< globalCam.getFocusRange() << " "
 	<< globalCam.getLensAdapter()->getFocusTol() << " ";
       unlock(&camLock, "camLock", "interpretCommand");
       lock(&imageLock[0], "imageLock", "interpretCommand");

@@ -113,6 +113,7 @@ struct MyCamConfigParams {
 	int USBNum;
 	int pictureInterval;
 	unsigned int focusResolution;
+	unsigned int focusRange;
 };
 
 struct BlobImageConfigParams {

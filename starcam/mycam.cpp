@@ -59,6 +59,7 @@ void MyCam::Init(MyCamConfigParams params/*=defaultCameraParams*/)
 	m_nUSBNum = params.USBNum;
 	m_nPictureInterval = params.pictureInterval;
 	m_nFocusResolution = params.focusResolution;
+	m_nFocusRange = params.focusRange;
 	m_iFrame = 0;
 }
 /* original version has been replaced
@@ -138,7 +139,8 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, const char* path/*
 #if 0
 	int dummy = 0;
 #endif
-	while (decrease_cnt < 3) {
+	//while (decrease_cnt < 3) {
+	for (int i=0; i < m_nFocusResolution/m_nFocusRange; i++) {
 #if AUTOFOCUS_DEBUG
 		cout << "[autoFocus debug]: taking exposure" << endl;
 #endif
@@ -162,7 +164,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, const char* path/*
 
 		img->findBlobs();
 		thisFlux =  (blob->get_numblobs())?(blob->getblobs()->getflux()):-1;
-		if (thisFlux == -1 && maxFlux > 0) break;   //no blobs and max found: break
+		//if (thisFlux == -1 && maxFlux > 0) break;   //no blobs and max found: break
 		
 		//check for decreasing flux
 		if (lastFlux > thisFlux) decrease_cnt++;

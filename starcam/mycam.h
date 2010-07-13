@@ -27,6 +27,7 @@ private:
 	CLensAdapter m_cAdapter;   //the adapter for the lens used on the camera
 	int m_nPictureInterval;    //number of milliseconds between pictures, 0 for triggered
 	unsigned int m_nFocusResolution; //autofocus will step by (totalFocalRange)/m_nFocusResolution
+	unsigned int m_nFocusRange; //autofocus will step through (totalFocalRange)/m_nFocusRange
 	unsigned long int m_iFrame;//frame number, increments each grabImage
 	
 public:
@@ -55,6 +56,8 @@ public:
 	int getPictureInterval(void) { return m_nPictureInterval; }
 	void setFocusResolution(unsigned int res) { m_nFocusResolution = res; }
 	unsigned int getFocusResolution(void) { return m_nFocusResolution; }
+	void setFocusRange(unsigned int rng) { m_nFocusRange = rng; }
+	unsigned int getFocusRange(void) { return m_nFocusRange; }
 
 	string getSerialNum();
 
