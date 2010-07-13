@@ -1002,7 +1002,7 @@ static int SSConvert(double *ss_az)
   // Convert result from radians to degrees
   az *= 180.0/M_PI;
   PointingData[point_index].ss_phase = az;
-  PointingData[point_index].ss_az_rel_sun = az + module_offsets[i_max];
+  PointingData[point_index].ss_az_rel_sun = -(az + module_offsets[i_max]);
 
   // Temporary hack!!!! -GT
   PointingData[point_index].ss_snr = (float)i_max;
