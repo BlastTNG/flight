@@ -1194,12 +1194,14 @@ static void DoNewBoxMode(void)
   new_step = 0;
   if (az<left) {
     if (axes_mode.az_dir < 0) {
+      bprintf(info,"Hit Left limit!");
       t = w/v_az + 2.0*v_az/(az_accel * SR);
       new_step = 1;
     }
     axes_mode.az_dir = 1;
   } else if (az>right) {
     if (axes_mode.az_dir > 0) {
+      bprintf(info,"Hit Right limit!");
       t = w/v_az + 2.0*v_az/(az_accel * SR);
       new_step = 1;
     }
@@ -1207,20 +1209,21 @@ static void DoNewBoxMode(void)
   }
 
   if (new_step) {
-    bprintf(info,"Az Step:targ_el = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",targ_el,el_next_dir,axes_mode.el_dir,v_el);
     // set v for this step
     v_el = (targ_el - (el-cel))/t;
     // set targ_el for the next step
-    targ_el += CommandData.pointing_mode.del*el_next_dir;
+    bprintf(info,"Az Step:targ_el = %f, el = %f, cel = %f,el-cel = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,el,cel,el-cel,el_next_dir,axes_mode.el_dir,v_el);
+    targ_el += CommandData.pointing_mode.del*el_next_dir; // This is actually the next target el....
+    bprintf(info,"Az Step: Next Step targ_el = %f",targ_el);
     axes_mode.el_dir = el_next_dir;
-    if (targ_el>h*0.5) {
+    if (targ_el>h*0.5) { // If the target el for the next step is outside the el box range
       targ_el = h*0.5;
       el_next_dir=-1;
-      bprintf(info,"At the top: targ_el = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",targ_el,el_next_dir,axes_mode.el_dir,v_el);
+      bprintf(info,"Approaching the top: targ_el = %f, h*0.5 = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",targ_el,h*0.5,el_next_dir,axes_mode.el_dir,v_el);
     } else if (targ_el<-h*0.5) {
       targ_el = -h*0.5;
       el_next_dir = 1;
-      bprintf(info,"At the bottom: el = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",targ_el,el_next_dir,axes_mode.el_dir,v_el);
+      bprintf(info,"Approaching the bottom: targ_el = %f, h*0.5 = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",targ_el,h*0.5,el_next_dir,axes_mode.el_dir,v_el);
     }
   }
   /* check for out of range in el */
