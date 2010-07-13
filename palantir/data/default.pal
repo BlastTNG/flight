@@ -1335,6 +1335,14 @@
         <WORD value="0" caption="Connected" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
+    <MULTI caption="SBSC Ethernet">
+      <DATUM src="STATUS_SBSC_ETH">
+        <WORD value="3" caption="Er Ror" textstyle="E_BIT"/>
+        <WORD value="2" caption="Conn. Ref." textstyle="W_BIT"/>
+        <WORD value="1" caption="No Route" textstyle="W_BIT"/>
+        <WORD value="0" caption="Connected" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
   </BOX>
   <BOX caption="State" colour="#777700" row="0" col="1" colspan="1">
     <CURDIR caption="Dirfile">
