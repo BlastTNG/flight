@@ -574,8 +574,8 @@ void CameraTrigger(int which)
             waiting[which] = 0;
           } else {
             if (waiting[which])
-              bprintf(warning, "%s: Velocity wait stated aborted.\n",
-                  (which) ? "Osc" : "Isc");
+	      /*   bprintf(warning, "%s: Velocity wait stated aborted.\n",
+		   (which) ? "Osc" : "Isc"); */
             waiting[which] = 0;
 
             /* use fast (short) pulse length */
