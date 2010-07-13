@@ -343,7 +343,7 @@ struct ChannelStruct SlowChannels[] = {
   {"lon_dgps",     'w', LOOP1, 48,              I2DEG,             0.0, 's', U_LO_DEG},
   {"alt_dgps",     'w', LOOP1, 49,                1.0,             0.0, 'u', U_ALT_M},
   {"speed_dgps",   'w', LOOP1, 50,             1./100,             0.0, 's', U_V_KPH},
-  {"dir_dgps",     'w', LOOP1, 51,              I2DEG,             0.0, 's', U_D_DEG},
+  {"dir_dgps",     'w', LOOP1, 51,              I2DEG,             0.0, 'u', U_D_DEG},
   {"climb_dgps",   'w', LOOP1, 52,             1./100,             0.0, 's', U_V_MPS},
   {"att_ok_dgps",  'w', LOOP1, 53,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 54-56 are unused */

@@ -410,7 +410,7 @@ int ntpshm_put(double fixtime) {
 void WatchDGPS()
 {
   htUI08_t SBFBlock[MAX_SBFSIZE];
-  double lat=0,lon=0;
+  double lat=0,lon=0,dir=0;
   struct tm ts;
   int pos_ok;
   static int firsttime = 1;
@@ -630,15 +630,17 @@ void WatchDGPS()
       DGPSPos[dgpspos_index].n_sat = (int)(PVT->NrSV); // # Satellites
       if ((PVT->Vn != -2e10) && (PVT->Ve != -2e10)) {
 	DGPSPos[dgpspos_index].speed = (PVT->Vn+PVT->Ve)*60*60/1000;// speed over ground in km/hr (0 to 999.9)
-	if ((PVT->Vn > 0) && (PVT->Ve > 0)) {
-	  DGPSPos[dgpspos_index].direction = (180/M_PI)*atan2(PVT->Ve,PVT->Vn);// course over ground in degrees from N (due E is 90 deg)
-	} else if ((PVT->Vn < 0) && (PVT->Ve > 0)) {
+	//if ((PVT->Vn > 0) && (PVT->Ve > 0)) {
+	  dir = (180/M_PI)*atan2(PVT->Ve,PVT->Vn);// course over ground in degrees from N (due E is 90 deg)
+	/*} else if ((PVT->Vn < 0) && (PVT->Ve > 0)) {
 	  DGPSPos[dgpspos_index].direction = 180 - (180/M_PI)*atan2(PVT->Ve,PVT->Vn);
 	} else if ((PVT->Vn < 0) && (PVT->Ve < 0)) {
 	  DGPSPos[dgpspos_index].direction = 180 + (180/M_PI)*atan2(PVT->Ve,PVT->Vn);
 	} else if ((PVT->Vn >0) && (PVT->Ve < 0)) {
 	  DGPSPos[dgpspos_index].direction = 360 - (180/M_PI)*atan2(PVT->Ve,PVT->Vn);
-	}
+	}*/
+	  if (dir < 0) dir +=360;
+	  DGPSPos[dgpspos_index].direction = dir;
       }
       if (PVT->Vu != -2e10) DGPSPos[dgpspos_index].climb = PVT->Vu; // vertical velocity in m/s (-999.9 to 999.9)      
       if ((PVT->Lat == -2e10)			  ||
