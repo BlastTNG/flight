@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.78 $";
+const char *command_list_serial = "$Revision: 4.79 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -832,9 +832,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Y Offset (deg)", -5., 5, 'f', "Y_OFF_ISC"}
     }
   },
-  {COMMAND(isc_set_focus), "set focus position", GR_ISC_PARAM, 1,
+  {COMMAND(isc_set_focus), "step focus position", GR_ISC_PARAM, 1,
     {
-      {"Focus Position", -1000, 1000, 'i', "FOCUS_ISC"}
+      {"Focus Position Step", -1000, 1000, 'i', "FOCUS_ISC"}
     }
   },
   {COMMAND(isc_foc_off), "set focus offset relative to the home position",
@@ -929,9 +929,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Y Offset (deg)", -5., 5, 'f', "Y_OFF_OSC"}
     }
   },
-  {COMMAND(osc_set_focus), "set focus position", GR_OSC_PARAM, 1,
+  {COMMAND(osc_set_focus), "step focus position", GR_OSC_PARAM, 1,
     {
-      {"Focus Position", -1000, 1000, 'i', "FOCUS_OSC"}
+      {"Focus position step", -1000, 1000, 'i', "FOCUS_OSC"}
     }
   },
   {COMMAND(osc_foc_off), "set focus offset relative to the home position",
