@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.77 $";
+const char *command_list_serial = "$Revision: 4.78 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -417,23 +417,25 @@ struct mcom mcommands[N_MCOMMANDS] = {
      }
   },
   {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps",
-    GR_POINT, 6,
+    GR_POINT, 7,
     {
       {"RA of Centre (h)",          0, 24, 'd', "NONE"},
       {"Dec of Centre (deg)",     -90, 90, 'd', "NONE"},
       {"Az Width (deg on sky)",     0, 90, 'f', "NONE"},
       {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
-      {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"}
+      {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
+      {"El Dith Step Size (arcmin)",-60,  60, 'f', "NONE"}
     }
   },
-  {COMMAND(cap), "scan a circle centred on RA/Dec with el steps", GR_POINT, 5,
+  {COMMAND(cap), "scan a circle centred on RA/Dec with el steps", GR_POINT, 6,
     {
       {"RA of Centre (h)",          0, 24, 'd', "NONE"},
       {"Dec of Centre (deg)",     -90, 90, 'd', "NONE"},
       {"Radius (deg on sky)",       0, 90, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
-      {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"}
+      {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
+      {"El Dith Step Size (arcmin)",-60,  60, 'f', "NONE"}
     }
   },
   {COMMAND(drift), "move at constant speed in az and el", GR_POINT, 2,
@@ -443,7 +445,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   {COMMAND(quad), "scan a quadrilateral region in RA/Dec (corners must be "
-    "ordered)", GR_POINT, 10,
+    "ordered)", GR_POINT, 11,
     {
       {"RA of Corner 1 (h)",        0, 24, 'f', "NONE"},
       {"Dec of Corner 1 (deg)",   -90, 90, 'f', "NONE"},
@@ -454,7 +456,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"RA of Corner 4 (h)",        0, 24, 'f', "NONE"},
       {"Dec of Corner 4 (deg)",   -90, 90, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
-      {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"}
+      {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
+      {"El Dith Step Size (arcmin)",-60,  60, 'f', "NONE"}
     }
   },
   {COMMAND(vbox), "scan an az/el box centred on RA/Dec with el drift",

@@ -51,7 +51,7 @@
  * 90 degrees.  This is the offset to the true lock positions.
  * This number is relative to the elevation encoder reading, NOT
  * true elevation */
-#define LOCK_OFFSET (-1.0)
+#define LOCK_OFFSET (-1.7)
 
 /* Seconds since 0TMG jan 1 1970 */
 #define SUN_JAN_6_1980 315964800L
@@ -1233,6 +1233,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
       CommandData.pointing_mode.del = rvalues[4]; /* el step size */
       CommandData.pointing_mode.h = 0;
+      CommandData.pointing_mode.el_dith = rvalues[5]; /* el step size */
       break;
     case box:
       CommandData.pointing_mode.nw = CommandData.slew_veto;
@@ -1243,6 +1244,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = rvalues[3]; /* height */
       CommandData.pointing_mode.vaz = rvalues[4]; /* az scan speed */
       CommandData.pointing_mode.del = rvalues[5]; /* el step size */
+      CommandData.pointing_mode.el_dith = rvalues[6]; /* el step size */
       break;
     case vbox:
       CommandData.pointing_mode.nw = CommandData.slew_veto;
@@ -1264,6 +1266,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       }
       CommandData.pointing_mode.vaz = rvalues[8]; /* az scan speed */
       CommandData.pointing_mode.del = rvalues[9]; /* el step size */
+      CommandData.pointing_mode.el_dith = rvalues[10]; /* el step size */
       break;
     case az_scan_accel:
       CommandData.az_accel = rvalues[0];
@@ -1848,9 +1851,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 static void GPSPosition (unsigned char *indata)
 {
   /* Send new information to CommandData */
-
   SIPData.GPSpos.lon = -ParseGPS(indata); /* sip sends east lon */
   SIPData.GPSpos.lat = ParseGPS(indata + 4);
+  /* end of hack */
+
   SIPData.GPSpos.alt = ParseGPS(indata + 8);
   SIPData.GPSstatus1 = *(indata + 12);
   SIPData.GPSstatus2 = *(indata + 13);
@@ -2535,6 +2539,7 @@ void InitCommandData()
   CommandData.pointing_mode.w = 0;
   CommandData.pointing_mode.h = 0;
   CommandData.pointing_mode.t = mcp_systime(NULL) + CommandData.timeout;
+  CommandData.pointing_mode.el_dith = 0.0;
 
   CommandData.az_accel = 0.3; 
 

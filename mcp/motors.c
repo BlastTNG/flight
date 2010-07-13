@@ -582,6 +582,41 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     wait--;
 }
 
+/***************************************************************/
+/*                                                             */
+/* GetElDither: set the current elevation dither offset.       */
+/*                                                             */
+/***************************************************************/
+static void GetElDither() {
+  time_t seconds;
+  int tmp_rand;
+  static int first_time = 1;
+  double dith_step;
+  // Set up the random variable.
+  if(first_time) {
+    time(&seconds);
+    srand((unsigned int) seconds);
+    first_time = 0;
+  }
+
+  dith_step = CommandData.pointing_mode.el_dith;
+
+  if (dith_step < 0.0167 && dith_step > 0.0167) { // If |dith_step| < 1'' no dither
+    axes_mode.el_dith = 0.0;
+  } else if (dith_step < -59.5) { // Random mode! May want to remove later...
+    tmp_rand = rand();
+    axes_mode.el_dith = 0.5*CommandData.pointing_mode.del*(tmp_rand/RAND_MAX-0.5);      
+  } else {
+    axes_mode.el_dith += dith_step;
+  }
+  return;
+}
+
+static void ClearElDither() {
+  axes_mode.el_dith = 0.0;
+  return;
+}
+
 /****************************************************************/
 /*                                                              */
 /*   Do scan modes                                              */
@@ -1070,7 +1105,7 @@ static void DoNewBoxMode(void)
   // Stuff for the elevation offset/hwpr trigger
   static int el_dir_last = 0; 
   static int n_scan = 0;
-  static double el_dith = 0.0;
+  static int el_next_dir = 0.0;
 
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
@@ -1087,6 +1122,8 @@ static void DoNewBoxMode(void)
   radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
       lst + 1.0, lat,
       &az2, &el2);
+
+  /* add the elevation dither term */
 
   /* sky drift terms */
   daz_dt = drem(az2 - caz, 360.0);
@@ -1117,7 +1154,7 @@ static void DoNewBoxMode(void)
       (CommandData.pointing_mode.h != last_h) ||
       (last_mode != P_BOX)) {
     new = 1;
-    el_dith = 0.0;
+    ClearElDither();
   }
   if (el < bottom - 0.5) new = 1;
   if (el > top + 0.5) new = 1;
@@ -1143,7 +1180,7 @@ static void DoNewBoxMode(void)
       axes_mode.el_vel = 0.0;
       v_el = 0.0;
       targ_el = -h*0.5;
-      axes_mode.el_dir = 1;
+      el_next_dir = 1;
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
@@ -1170,18 +1207,20 @@ static void DoNewBoxMode(void)
   }
 
   if (new_step) {
+    bprintf(info,"Az Step:targ_el = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",targ_el,el_next_dir,axes_mode.el_dir,v_el);
     // set v for this step
     v_el = (targ_el - (el-cel))/t;
     // set targ_el for the next step
-    targ_el += CommandData.pointing_mode.del*axes_mode.el_dir;
+    targ_el += CommandData.pointing_mode.del*el_next_dir;
+    axes_mode.el_dir = el_next_dir;
     if (targ_el>h*0.5) {
       targ_el = h*0.5;
-      axes_mode.el_dir=-1;
-      bprintf(info,"At the top: targ_el = %f, h*0.5 = %f,  v_el = %f",targ_el,h*0.5,v_el);
+      el_next_dir=-1;
+      bprintf(info,"At the top: targ_el = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",targ_el,el_next_dir,axes_mode.el_dir,v_el);
     } else if (targ_el<-h*0.5) {
       targ_el = -h*0.5;
-      axes_mode.el_dir = 1;
-      bprintf(info,"At the bottom: el = %f, -h*0.5= %f, v_el = %f",targ_el,h*0.5,v_el);
+      el_next_dir = 1;
+      bprintf(info,"At the bottom: el = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",targ_el,el_next_dir,axes_mode.el_dir,v_el);
     }
   }
   /* check for out of range in el */
@@ -1221,7 +1260,8 @@ static void DoNewBoxMode(void)
     CommandData.hwpr.is_new = HWPR_STEP;
 
     if(n_scan % 4 == 0 && n_scan != 0) {
-      bprintf(info,"Time to dither!");
+      GetElDither();
+      bprintf(info,"Time to dither! El Dither = %f", axes_mode.el_dith);
     }
 
   }

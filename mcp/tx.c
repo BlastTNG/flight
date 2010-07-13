@@ -866,6 +866,7 @@ static void StoreData(int index)
   static struct NiosStruct *dirElMcAddr;
   static struct NiosStruct *destAzMcAddr;
   static struct NiosStruct *destElMcAddr;
+  static struct NiosStruct *dithElAddr;
   static struct NiosStruct *velAzMcAddr;
   static struct NiosStruct *velElMcAddr;
 
@@ -1051,6 +1052,7 @@ static void StoreData(int index)
     velElMcAddr = GetNiosAddr("vel_el_mc");
     dirAzMcAddr = GetNiosAddr("dir_az_mc");
     dirElMcAddr = GetNiosAddr("dir_el_mc");
+    dithElAddr = GetNiosAddr("dith_el");
 
     velRWAddr = GetNiosAddr("vel_rw");
     elRawEncAddr = GetNiosAddr("el_raw_enc");
@@ -1122,6 +1124,7 @@ static void StoreData(int index)
   WriteData(modeElMcAddr, axes_mode.el_mode, NIOS_QUEUE);
   WriteData(dirAzMcAddr, axes_mode.az_dir, NIOS_QUEUE);
   WriteData(dirElMcAddr, axes_mode.el_dir, NIOS_QUEUE);
+  WriteData(dithElAddr, axes_mode.el_dith * DEG2I/2.0, NIOS_QUEUE);
   WriteData(destAzMcAddr, axes_mode.az_dest * DEG2I, NIOS_QUEUE);
   WriteData(destElMcAddr, axes_mode.el_dest * DEG2I, NIOS_QUEUE);
   WriteData(velAzMcAddr, axes_mode.az_vel * 6000., NIOS_QUEUE);
