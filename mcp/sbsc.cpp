@@ -33,7 +33,6 @@
 extern "C" {
 #include "blast.h"
 #include "tx.h"
-//}
 #include "channels.h"
 #include "pointing_struct.h"
 #include "mcp.h"
@@ -117,7 +116,7 @@ void cameraFields()
   static NiosStruct* sbscBlobY[15];
   static NiosStruct* sbscBlobF[15];
   static NiosStruct* sbscBlobS[15];
-  
+
   //initialization
   if (firsttime) {
     firsttime = 0;
@@ -237,8 +236,8 @@ static void* camReadLoop(void* arg)
 static string parseReturn(string rtnStr)
 {
   /* debugging only
-  bprintf(info, "return string: %s", rtnStr.c_str());
-  */
+     bprintf(info, "return string: %s", rtnStr.c_str());
+     */
   //if (rtnStr.find("<str>", 0) == 0) //response is string
   if (rtnStr.substr(0,5) == "<str>") //response is string
   {
@@ -255,13 +254,13 @@ static string parseReturn(string rtnStr)
       sin.str(Rstr);
       double temp;  //value sent for expTime is a double
       sin >> CommandData.cam.expInt
-	  >> temp
-	  >> CommandData.cam.focusRes
-	  >> CommandData.cam.moveTol
-	  >> CommandData.cam.maxBlobs
-	  >> CommandData.cam.grid
-	  >> CommandData.cam.threshold
-	  >> CommandData.cam.minBlobDist;
+	>> temp
+	>> CommandData.cam.focusRes
+	>> CommandData.cam.moveTol
+	>> CommandData.cam.maxBlobs
+	>> CommandData.cam.grid
+	>> CommandData.cam.threshold
+	>> CommandData.cam.minBlobDist;
       CommandData.cam.expTime = (int)(temp * 1000);
     }
     //otherwise it is success notice for another command
