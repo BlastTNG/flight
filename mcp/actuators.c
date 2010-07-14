@@ -58,8 +58,8 @@ static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 //set microstep resolution
 #define LOCK_PREAMBLE "j256"
 //set encoder/microstep ratio (aE25600), coarse correction band (aC50),
-//fine correction band (ac1), enable encoder feedback mode (n8), 
-#define ACT_PREAMBLE  "aE25600aC50ac1n8"
+//fine correction band (ac0), enable encoder feedback mode (n8), 
+#define ACT_PREAMBLE  "aE25600aC50ac0n8"
 static struct ezbus bus;
 #define POLL_TIMEOUT 30000	    /* 5 minutes */
 
