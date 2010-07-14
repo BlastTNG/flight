@@ -106,7 +106,8 @@ void* chrgctrlComm(void* arg)
 
   const int slave = 0x01;   // default MODBUS device address   
                             // for charge controller
-/*  
+
+/*Relics from the test program -- have no use in mcp  
   const int nfaults = 11;   // number of faults conditions
   const int nalarms = 20;   // number of alarm conditions
   const int nstates = 10;   // number of charging states 

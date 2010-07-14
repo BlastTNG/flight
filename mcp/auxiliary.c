@@ -414,11 +414,11 @@ void ChargeController(void)
     LEDCCAddr = GetNiosAddr("led_cc");
   }
 
-  WriteData(VBattCCAddr, 1000.0*ChrgCtrlData.V_batt, NIOS_QUEUE);
-  WriteData(VArrCCAddr, 1000.0*ChrgCtrlData.V_arr, NIOS_QUEUE);
-  WriteData(IBattCCAddr, 1000.0*ChrgCtrlData.I_batt, NIOS_QUEUE);
-  WriteData(IArrCCAddr, 1000.0*ChrgCtrlData.I_arr, NIOS_QUEUE);
-  WriteData(VTargCCAddr, 1000.0*ChrgCtrlData.V_targ, NIOS_QUEUE);
+  WriteData(VBattCCAddr, 180.0*ChrgCtrlData.V_batt + 32400.0, NIOS_QUEUE); 
+  WriteData(VArrCCAddr, 180.0*ChrgCtrlData.V_arr + 32400.0, NIOS_QUEUE);
+  WriteData(IBattCCAddr, 400.0*ChrgCtrlData.I_batt + 32000.0, NIOS_QUEUE);
+  WriteData(IArrCCAddr,  400.0*ChrgCtrlData.I_arr + 32000.0, NIOS_QUEUE);
+  WriteData(VTargCCAddr, 180.0*ChrgCtrlData.V_targ + 32400.0, NIOS_QUEUE);
   WriteData(ThsCCAddr, ChrgCtrlData.T_hs, NIOS_QUEUE);
   WriteData(FaultCCAddr, ChrgCtrlData.fault_field, NIOS_QUEUE);
   WriteData(AlarmHiCCAddr, ChrgCtrlData.alarm_field_hi, NIOS_QUEUE);
