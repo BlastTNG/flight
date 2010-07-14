@@ -53,10 +53,6 @@ struct NiosStruct **frameNiosList;
 struct BiPhaseStruct **frameBi0List;
 struct streamDataStruct *streamData;
 
-int higain_bytes_per_streamframe = -1;
-int omni_bytes_per_streamframe = -1;
-int dialup_bytes_per_streamframe = -1;
-
 unsigned short *PopFrameBuffer(struct frameBuffer *buffer); // mcp.c
 
 //*********************************************************
@@ -192,6 +188,12 @@ void BufferStreamData(int i_streamframe, unsigned short *frame) {
 // Write data that comes once per superframe
 //*********************************************************
 void WriteSuperFrame(unsigned short *frame) {
+  int higain_bytes_per_streamframe = 0;
+  int omni_bytes_per_streamframe = 0;
+  int dialup_bytes_per_streamframe = 0;
+
+  static int first_time = 1;
+
   int frame_bytes_written = 0;
   int i_field;
   int isWide;
@@ -202,7 +204,8 @@ void WriteSuperFrame(unsigned short *frame) {
 
   x=SYNCWORD;
   writeHiGainData((char *)(&x), 4);
-
+  frame_bytes_written += 4;
+  
   // write superframe data
   for (i_field = 0; i_field<n_framelist; i_field++) {
     if (frameNiosList[i_field]->fast) {
@@ -229,18 +232,61 @@ void WriteSuperFrame(unsigned short *frame) {
 
     frame_bytes_written += size;
   }
+
+  if (first_time) {
+    // we will unset first_time at the end of the function.
+    BufferStreamData(FASTFRAME_PER_STREAMFRAME-1, frame); // fill buffer with first value;
+  }
   
+  // set and write stream gains and offsets
+  for (i_field=0; i_field<n_streamlist; i_field++) {
+    long long unsigned lloffset;
+
+    gain = streamData[i_field].gain;
+    
+    writeHiGainData((char *)&gain, sizeof(unsigned short));
+    frame_bytes_written+=sizeof(unsigned short);
+    
+    lloffset = streamData[i_field].sum/(double)streamData[i_field].n_sum;
+    streamData[i_field].offset = lloffset;
+
+    if (streamData[i_field].mask) {
+      if (streamData[i_field].isSigned) { // 32 bit in field
+        int offset;
+        offset = lloffset;
+        writeHiGainData((char *)&offset, sizeof(int));
+        frame_bytes_written+=sizeof(int);
+      } else {
+        unsigned offset;
+        offset = lloffset;
+        writeHiGainData((char *)&offset, sizeof(unsigned));
+        frame_bytes_written+=sizeof(unsigned);
+      }
+    } else {
+      if (streamData[i_field].isSigned) { // 16 bit signed field
+        short offset;
+        offset = lloffset;
+        writeHiGainData((char *)&offset, sizeof(short));
+        frame_bytes_written+=sizeof(short);
+      } else {
+        unsigned short offset;
+        offset = lloffset;
+        writeHiGainData((char *)&offset, sizeof(unsigned short));
+        frame_bytes_written+=sizeof(unsigned short);
+      }
+    }
+    streamData[i_field].sum = streamData[i_field].n_sum = 0;
+  }
+
   // figure out how many bytes per stream frame we have room for...
-  if (higain_bytes_per_streamframe <0) {
+  if (first_time) {
+    first_time = 0;
     higain_bytes_per_streamframe = (HIGAIN_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
     omni_bytes_per_streamframe = (OMNI_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
     dialup_bytes_per_streamframe = (DIALUP_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
     bprintf(info, "Bytes per stream frame - High gain: %d  tdrss omni: %d  iridium dialup: %d",
             higain_bytes_per_streamframe, omni_bytes_per_streamframe, dialup_bytes_per_streamframe);
 
-    BufferStreamData(FASTFRAME_PER_STREAMFRAME-1, frame); // fill buffer with first value;
-
-    //FIXME: calculate how many fields you can actually fit...
     for (i_field = 0; i_field<n_streamlist; i_field++) {
       higain_requested_bytes_per_streamframe += streamList[i_field].samples_per_frame*streamList[i_field].bits/8;
       if (higain_requested_bytes_per_streamframe>higain_bytes_per_streamframe) {
@@ -251,41 +297,8 @@ void WriteSuperFrame(unsigned short *frame) {
             higain_requested_bytes_per_streamframe, higain_bytes_per_streamframe,
             higain_bytes_per_streamframe - higain_requested_bytes_per_streamframe);
   }
- 
-  // set and write stream gains and offsets
-  for (i_field=0; i_field<n_streamlist; i_field++) {
-    long long unsigned lloffset;
 
-    gain = streamData[i_field].gain;
-    writeHiGainData((char *)&gain, sizeof(unsigned short));
 
-    lloffset = streamData[i_field].sum/(double)streamData[i_field].n_sum;
-    streamData[i_field].offset = lloffset;
-
-    if (streamData[i_field].mask) {
-      if (streamData[i_field].isSigned) { // 32 bit in field
-        int offset;
-        offset = lloffset;
-        writeHiGainData((char *)&offset, sizeof(int));
-      } else {
-        unsigned offset;
-        offset = lloffset;
-        writeHiGainData((char *)&offset, sizeof(unsigned));
-      }
-    } else {
-      if (streamData[i_field].isSigned) { // 16 bit signed field
-        short offset;
-        offset = lloffset;
-        writeHiGainData((char *)&offset, sizeof(short));
-      } else {
-        unsigned short offset;
-        offset = lloffset;
-        writeHiGainData((char *)&offset, sizeof(unsigned short));
-      }
-    }
-    streamData[i_field].sum = streamData[i_field].n_sum = 0;
-  }
-  
   return;
 }
 //*********************************************************
