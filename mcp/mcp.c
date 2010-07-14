@@ -110,11 +110,15 @@ void InitSched();
 static FILE* logfile = NULL;
 
 #ifndef BOLOTEST
-static struct {
+struct frameBuffer {
   int i_in;
   int i_out;
   unsigned short *framelist[BI0_FRAME_BUFLEN];
-} bi0_buffer;
+};
+
+static struct frameBuffer bi0_buffer;
+struct frameBuffer hiGain_buffer;
+
 #endif
 
 unsigned short *tdrss_data[3];
@@ -747,7 +751,58 @@ static void WatchDog (void)
   }
 }
 
-static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
+static void write_to_biphase(unsigned short *RxFrame)
+{
+  int i;
+  static unsigned short nothing[BI0_FRAME_SIZE];
+  static unsigned short sync = 0xEB90;
+  static unsigned int do_skip = 0;
+
+  if (bi0_fp == -2) {
+    bi0_fp = open("/dev/bbc_bi0", O_RDWR);
+    if (bi0_fp == -1) {
+      berror(tfatal, "Error opening biphase device");
+    }
+
+    for (i = 0; i < BI0_FRAME_SIZE; i++) {
+      nothing[i] = 0xEEEE;
+    }
+  }
+
+  if ((bi0_fp >= 0) && InCharge) {
+
+    RxFrame[0] = 0xEB90;
+    nothing[0] = CalculateCRC(0xEB90, RxFrame, BiPhaseFrameWords);
+
+    RxFrame[0] = sync;
+    sync = ~sync;
+
+    if (do_skip) {
+      --do_skip;
+    } else {
+      i = write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short));
+      if (i < 0) {
+        berror(err, "bi-phase write for RxFrame failed");
+      } else if (i != BiPhaseFrameWords * sizeof(unsigned short)) {
+        bprintf(err, "Short write for RxFrame: %i of %u", i,
+            BiPhaseFrameWords * sizeof(unsigned short));
+      }
+
+      i = write(bi0_fp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
+          sizeof(unsigned short));
+      if (i < 0) 
+        berror(err, "bi-phase write for padding failed");
+      else if (i != (BI0_FRAME_SIZE - BiPhaseFrameWords)
+          * sizeof(unsigned short))
+        bprintf(err, "Short write for padding: %i of %u", i,
+            (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short));
+    }
+
+    CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
+  }
+}
+
+static int old_write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
 {
   int i;
   static unsigned short nothing[BI0_FRAME_SIZE];
@@ -814,38 +869,55 @@ static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
   return i_out;
 }
 
-static void InitBi0Buffer()
-{
+static void InitFrameBuffer(struct frameBuffer *buffer) {
   int i;
 
-  bi0_buffer.i_in = 10; /* preload the fifo */
-  bi0_buffer.i_out = 0;
+  buffer->i_in = 0;
+  buffer->i_out = 0;
   for (i = 0; i<BI0_FRAME_BUFLEN; i++) {
-    bi0_buffer.framelist[i] = balloc(fatal, BiPhaseFrameWords *
+    buffer->framelist[i] = balloc(fatal, BiPhaseFrameWords *
         sizeof(unsigned short));
     ///*
     //TODO this initialization does not appear to resolve valgrind errors
-    memset(bi0_buffer.framelist[i],0,BiPhaseFrameWords*sizeof(unsigned short));
+    memset(buffer->framelist[i],0,BiPhaseFrameWords*sizeof(unsigned short));
     //*/
   }
 }
 
-static void PushBi0Buffer(unsigned short *RxFrame)
-{
+// warning: there is no checking for an overfull buffer.  Just make sure it is big
+// enough that it can never happen.
+static void PushFrameBuffer(struct frameBuffer *buffer, unsigned short *RxFrame) {
   int i, fw, i_in;
 
-  i_in = bi0_buffer.i_in + 1;
+  i_in = buffer->i_in + 1;
   if (i_in>=BI0_FRAME_BUFLEN)
     i_in = 0;
 
   fw = BiPhaseFrameWords;
 
   for (i = 0; i<fw; i++) {
-    bi0_buffer.framelist[i_in][i] = RxFrame[i];
+    buffer->framelist[i_in][i] = RxFrame[i];
   }
 
-  bi0_buffer.i_in = i_in;
+  buffer->i_in = i_in;
 }
+
+unsigned short *PopFrameBuffer(struct frameBuffer *buffer) {
+  unsigned short *frame;
+  int i_out = buffer->i_out;
+  
+  if (buffer->i_in == i_out) { // no data
+    return (NULL);
+  }
+  frame = buffer->framelist[i_out];
+  i_out++;
+  if (i_out>=BI0_FRAME_BUFLEN) {
+    i_out = 0;
+  }
+  buffer->i_out = i_out;
+  return (frame);
+}
+  
 #endif
 
 static void zero(unsigned short *RxFrame)
@@ -858,6 +930,39 @@ static void zero(unsigned short *RxFrame)
 
 #ifndef BOLOTEST
 static void BiPhaseWriter(void)
+{
+  unsigned short *frame;
+  
+  nameThread("Bi0");
+  bputs(startup, "Startup\n");
+
+  while (!biphase_is_on)
+    usleep(10000);
+
+  bputs(info, "Veto has ended.  Here we go.\n");
+
+  while (1) {
+    frame = PopFrameBuffer(&bi0_buffer);
+    
+    if (!frame) { 
+      /* Death meausres how long the BiPhaseWriter has gone without receiving
+       * any data -- an indication that we aren't receiving FSYNCs from the
+       * BLASTBus anymore */
+      if (InCharge && (++Death > 25)) {
+        bprintf(err, "Death is reaping the watchdog tickle.");
+        pthread_cancel(watchdog_id);
+      }
+      usleep(10000); // 100 Hz
+    } else {
+      write_to_biphase(frame);
+      if (Death > 0) {
+        Death = 0;
+      }
+    }
+  }
+}
+
+static void oldBiPhaseWriter(void)
 {
   int i_out, i_in;
 
@@ -882,12 +987,14 @@ static void BiPhaseWriter(void)
           pthread_cancel(watchdog_id);
         }
       }
-    } else
+    } else {
       while (i_out != i_in) {
-        i_out = write_to_biphase(bi0_buffer.framelist[i_out], i_in, i_out);
-        if (Death > 0)
+        i_out = old_write_to_biphase(bi0_buffer.framelist[i_out], i_in, i_out);
+        if (Death > 0) {
           Death = 0;
+        }
       }
+    }
     bi0_buffer.i_out = i_out;
     usleep(10000);
   }
@@ -1053,7 +1160,8 @@ int main(int argc, char *argv[])
   bprintf(info, "System: Slow Downlink Initialisation");
   InitSlowDL();
 
-  InitBi0Buffer();
+  InitFrameBuffer(&bi0_buffer);
+  InitFrameBuffer(&hiGain_buffer);
 
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
@@ -1155,10 +1263,10 @@ int main(int argc, char *argv[])
           StartupVeto = 0;
           Death = 0;
         } else if (RxFrame[3] != (RxFrameIndex + 1) % FAST_PER_SLOW
-            && RxFrameIndex >= 0) {
+          && RxFrameIndex >= 0) {
           bprintf(err, "System: Frame sequencing error detected: wanted %i, "
-              "got %i\n", RxFrameIndex + 1, RxFrame[3]);
-	}
+          "got %i\n", RxFrameIndex + 1, RxFrame[3]);
+        }
         RxFrameIndex = RxFrame[3];
 
 #if 0 //FastSamp from the PCI card isn't working, use one from a DSP
@@ -1174,10 +1282,12 @@ int main(int argc, char *argv[])
            data right */
         pushDiskFrame(RxFrame);
 #ifndef BOLOTEST
-        if (biphase_is_on)
-          PushBi0Buffer(RxFrame);
-        else if (biphase_timer < mcp_systime(NULL))
+        if (biphase_is_on) {
+          PushFrameBuffer(&bi0_buffer, RxFrame);
+          PushFrameBuffer(&hiGain_buffer, RxFrame);
+        } else if (biphase_timer < mcp_systime(NULL)) {
           biphase_is_on = 1;
+        }
 
         FillSlowDL(RxFrame);
 #endif
