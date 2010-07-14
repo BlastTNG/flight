@@ -1233,7 +1233,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
       CommandData.pointing_mode.del = rvalues[4]; /* el step size */
       CommandData.pointing_mode.h = 0;
-      CommandData.pointing_mode.el_dith = rvalues[5]; /* el step size */
+      CommandData.pointing_mode.dith = rvalues[5]/60.0; /* el step size */
       break;
     case box:
       CommandData.pointing_mode.nw = CommandData.slew_veto;
@@ -1244,7 +1244,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = rvalues[3]; /* height */
       CommandData.pointing_mode.vaz = rvalues[4]; /* az scan speed */
       CommandData.pointing_mode.del = rvalues[5]; /* el step size */
-      CommandData.pointing_mode.el_dith = rvalues[6]; /* el step size */
+      CommandData.pointing_mode.dith = rvalues[6]/60.0; /* el step size */
       break;
     case vbox:
       CommandData.pointing_mode.nw = CommandData.slew_veto;
@@ -1266,7 +1266,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       }
       CommandData.pointing_mode.vaz = rvalues[8]; /* az scan speed */
       CommandData.pointing_mode.del = rvalues[9]; /* el step size */
-      CommandData.pointing_mode.el_dith = rvalues[10]; /* el step size */
+      CommandData.pointing_mode.dith = rvalues[10]/60.0; /* el step size */
       break;
     case az_scan_accel:
       CommandData.az_accel = rvalues[0];
@@ -2539,7 +2539,7 @@ void InitCommandData()
   CommandData.pointing_mode.w = 0;
   CommandData.pointing_mode.h = 0;
   CommandData.pointing_mode.t = mcp_systime(NULL) + CommandData.timeout;
-  CommandData.pointing_mode.el_dith = 0.0;
+  CommandData.pointing_mode.dith = 0.0;
 
   CommandData.az_accel = 0.3; 
 

@@ -557,7 +557,7 @@ struct ChannelStruct SlowChannels[] = {
   {"goal_lock",    'w', LOOP5, 26,                1.0,             0.0, 'u', U_NONE},
   {"seized_act",   'w', LOOP5, 27,                1.0,             0.0, 's', U_NONE},
   /* LOOP5 28 is fast */
-  /* LOOP5 29 is unused */
+  {"dith_step_p",  'w', LOOP5, 29,          2.0*I2DEG,             0.0, 's', U_D_DEG},
   {"x_vel_stage",  'w', LOOP5, 30,                1.0,             0.0, 'u', U_NONE}, // not used in flight...
   {"x_stp_stage",  'w', LOOP5, 31,                1.0,             0.0, 'u', U_NONE},
   {"x_str_stage",  'w', LOOP5, 32,                1.0,             0.0, 'u', U_NONE},

@@ -774,6 +774,7 @@ static void StoreData(int index)
   static struct NiosStruct* ra2PAddr, *dec2PAddr;
   static struct NiosStruct* ra3PAddr, *dec3PAddr;
   static struct NiosStruct* ra4PAddr, *dec4PAddr;
+  static struct NiosStruct* dithStepPAddr;
 
   static struct NiosStruct* vetoSensorAddr;
 
@@ -1016,6 +1017,7 @@ static void StoreData(int index)
     dec3PAddr = GetNiosAddr("dec_3_p");
     ra4PAddr = GetNiosAddr("ra_4_p");
     dec4PAddr = GetNiosAddr("dec_4_p");
+    dithStepPAddr = GetNiosAddr("dith_step_p");
 
     vetoSensorAddr = GetNiosAddr("veto_sensor");
 
@@ -1280,6 +1282,7 @@ static void StoreData(int index)
   WriteData(slewVetoAddr, (int)(CommandData.pointing_mode.nw) / 4.,
       NIOS_QUEUE);
   WriteData(svetoLenAddr, (int)(CommandData.slew_veto) / 4., NIOS_QUEUE);
+  WriteData(dithStepPAddr, (int)(CommandData.pointing_mode.dith*DEG2I/2.0), NIOS_QUEUE);
   WriteData(modePAddr, (int)(CommandData.pointing_mode.mode), NIOS_QUEUE);
   if ((CommandData.pointing_mode.mode == P_AZEL_GOTO) ||
       (CommandData.pointing_mode.mode == P_AZ_SCAN))

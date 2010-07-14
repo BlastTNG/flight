@@ -598,22 +598,26 @@ static void GetElDither() {
     srand((unsigned int) seconds);
     first_time = 0;
   }
-
-  dith_step = CommandData.pointing_mode.el_dith;
-
-  if (dith_step < 0.0167 && dith_step > 0.0167) { // If |dith_step| < 1'' no dither
+  dith_step = CommandData.pointing_mode.dith;
+  bprintf(info,"***Dither Time!!!*** dith_step = %f",dith_step);
+  
+  if (dith_step < -0.000277778 && dith_step > 0.000277778) { // If |dith_step| < 1'' no dither
     axes_mode.el_dith = 0.0;
-  } else if (dith_step < -59.5) { // Random mode! May want to remove later...
+    bprintf(info,"No dither: axes_mode.el_dith = %f",axes_mode.el_dith);
+  } else if (dith_step < -0.99) { // Random mode! May want to remove later...
     tmp_rand = rand();
     axes_mode.el_dith = 0.5*CommandData.pointing_mode.del*(tmp_rand/RAND_MAX-0.5);      
+    bprintf(info,"Random dither: axes_mode.el_dith = %f, tmp_rand = %i",axes_mode.el_dith,tmp_rand);
   } else {
     axes_mode.el_dith += dith_step;
+    bprintf(info,"Stepping dither: axes_mode.el_dith = %f",axes_mode.el_dith);
   }
   return;
 }
 
 static void ClearElDither() {
   axes_mode.el_dith = 0.0;
+  bprintf(info,"ClearElDither: axes_mode.el_dith = %f",axes_mode.el_dith);
   return;
 }
 
@@ -1124,6 +1128,7 @@ static void DoNewBoxMode(void)
       &az2, &el2);
 
   /* add the elevation dither term */
+  cel += axes_mode.el_dith;
 
   /* sky drift terms */
   daz_dt = drem(az2 - caz, 360.0);
@@ -1194,14 +1199,12 @@ static void DoNewBoxMode(void)
   new_step = 0;
   if (az<left) {
     if (axes_mode.az_dir < 0) {
-      bprintf(info,"Hit Left limit!");
       t = w/v_az + 2.0*v_az/(az_accel * SR);
       new_step = 1;
     }
     axes_mode.az_dir = 1;
   } else if (az>right) {
     if (axes_mode.az_dir > 0) {
-      bprintf(info,"Hit Right limit!");
       t = w/v_az + 2.0*v_az/(az_accel * SR);
       new_step = 1;
     }
@@ -1212,18 +1215,18 @@ static void DoNewBoxMode(void)
     // set v for this step
     v_el = (targ_el - (el-cel))/t;
     // set targ_el for the next step
-    bprintf(info,"Az Step:targ_el = %f, el = %f, cel = %f,el-cel = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,el,cel,el-cel,el_next_dir,axes_mode.el_dir,v_el);
+    //    bprintf(info,"Az Step:targ_el = %f, el = %f, cel = %f,el-cel = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,el,cel,el-cel,el_next_dir,axes_mode.el_dir,v_el);
     targ_el += CommandData.pointing_mode.del*el_next_dir; // This is actually the next target el....
-    bprintf(info,"Az Step: Next Step targ_el = %f",targ_el);
+    //    bprintf(info,"Az Step: Next Step targ_el = %f",targ_el);
     axes_mode.el_dir = el_next_dir;
     if (targ_el>h*0.5) { // If the target el for the next step is outside the el box range
       targ_el = h*0.5;
       el_next_dir=-1;
-      bprintf(info,"Approaching the top: targ_el = %f, h*0.5 = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",targ_el,h*0.5,el_next_dir,axes_mode.el_dir,v_el);
+      bprintf(info,"Approaching the top: next targ_el = %f, h*0.5 = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",targ_el,h*0.5,el_next_dir,axes_mode.el_dir,v_el);
     } else if (targ_el<-h*0.5) {
       targ_el = -h*0.5;
       el_next_dir = 1;
-      bprintf(info,"Approaching the bottom: targ_el = %f, h*0.5 = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",targ_el,h*0.5,el_next_dir,axes_mode.el_dir,v_el);
+      bprintf(info,"Approaching the bottom: next targ_el = %f, h*0.5 = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",targ_el,h*0.5,el_next_dir,axes_mode.el_dir,v_el);
     }
   }
   /* check for out of range in el */
@@ -1256,7 +1259,7 @@ static void DoNewBoxMode(void)
   if ((axes_mode.el_dir - el_dir_last)== 2) {
     n_scan +=1;
     new_scan = 1;
-    bprintf(info,"DoNewBoxMode: Starting new scan. n_scan = %i",n_scan);
+    bprintf(info,"DoNewBoxMode: Sending signal to rotate HWPR. n_scan = %i",n_scan);
 
     /* Set flags to rotate the HWPR */
     CommandData.hwpr.mode = HWPR_STEP;
@@ -1264,7 +1267,7 @@ static void DoNewBoxMode(void)
 
     if(n_scan % 4 == 0 && n_scan != 0) {
       GetElDither();
-      bprintf(info,"Time to dither! El Dither = %f", axes_mode.el_dith);
+      bprintf(info,"We're dithering! El Dither = %f", axes_mode.el_dith);
     }
 
   }

@@ -126,7 +126,7 @@ struct PointingModeStruct {
   time_t t;
   double ra[4]; // the RAs for radbox (ie, quad)
   double dec[4]; // the decs for radbox (ie, quad)
-  double el_dith;
+  double dith; // Elevation dither step 
 };
 
 struct latch_pulse {
