@@ -21,6 +21,7 @@
 #define FIFODEPTH 2048
 #define RAWDIR "/data/rawdir"
 #define LNKFILE "/data/etc/fox.lnk"
+#define RNC_PORT 41114
 
 extern struct ChannelStruct WideSlowChannels[];
 extern struct ChannelStruct SlowChannels[];
@@ -120,13 +121,9 @@ int party_connect(const char *hostname) {
   struct servent *sp;
   struct servent sp_real;
   int on =1 ;
-  /* Get service */
-  if ( (sp = getservbyname("blastd", NULL)) == NULL ) {
-    fprintf(stderr,
-        "Service blastd not found; using 44144 (default) instead\n");
-    sp = &sp_real;
-    sp->s_port = htons(44144);
-  }
+
+  sp = &sp_real;
+  sp->s_port = htons(RNC_PORT);
 
   sn.sin_family = AF_INET;
   sn.sin_port = sp->s_port;
