@@ -246,7 +246,6 @@ struct fieldStreamStruct streamList[] = {
   {"n26c21", 5, 50, AVG, DX, 8, SLOW},
   {"n26c22", 5, 50, AVG, DX, 8, SLOW},
   {"n26c23", 5, 50, AVG, DX, 8, SLOW},
-  /*
   {"n27c00", 5, 50, AVG, DX, 8, SLOW},
   {"n27c01", 5, 50, AVG, DX, 8, SLOW},
   {"n27c02", 5, 50, AVG, DX, 8, SLOW},
@@ -274,7 +273,7 @@ struct fieldStreamStruct streamList[] = {
   {"n29c00", 5, 50, AVG, DX, 8, SLOW},
   {"n29c01", 5, 50, AVG, DX, 8, SLOW},
   {"n29c02", 5, 50, AVG, DX, 8, SLOW},
-  {"n29c03", 5, 50, AVG, DX, 8, SLOW},
+  {"n29c03", 5, 50, AVG, DX, 8, SLOW},/*
   {"n29c04", 5, 50, AVG, DX, 8, SLOW},
   {"n29c05", 5, 50, AVG, DX, 8, SLOW},
   {"n29c06", 5, 50, AVG, DX, 8, SLOW},

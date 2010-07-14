@@ -198,6 +198,7 @@ void WriteSuperFrame(unsigned short *frame) {
   unsigned x;
   int size;
   unsigned gain;
+  unsigned higain_requested_bytes_per_streamframe = 0;
 
   x=SYNCWORD;
   writeHiGainData((char *)(&x), 4);
@@ -240,6 +241,15 @@ void WriteSuperFrame(unsigned short *frame) {
     BufferStreamData(FASTFRAME_PER_STREAMFRAME-1, frame); // fill buffer with first value;
 
     //FIXME: calculate how many fields you can actually fit...
+    for (i_field = 0; i_field<n_streamlist; i_field++) {
+      higain_requested_bytes_per_streamframe += streamList[i_field].samples_per_frame*streamList[i_field].bits/8;
+      if (higain_requested_bytes_per_streamframe>higain_bytes_per_streamframe) {
+        bprintf(fatal, "Field %s exceeds the maximum size for the highgain stream.", streamList[i_field].name);
+      }
+    }
+    bprintf(info, "High gain: %d out of %d bytes per stream frame used (%d free)",
+            higain_requested_bytes_per_streamframe, higain_bytes_per_streamframe,
+            higain_bytes_per_streamframe - higain_requested_bytes_per_streamframe);
   }
  
   // set and write stream gains and offsets
