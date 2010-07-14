@@ -94,7 +94,7 @@ void IntegratingStarCamera(void);
 void ActuatorBus(void);
 void WatchFIFO(void);
 void FrameFileWriter(void);
-void TDRSSWriter(void);
+//void TDRSSWriter(void);
 void CompressionWriter(void);
 void StageBus(void);
 void openSBSC(void);
@@ -802,73 +802,6 @@ static void write_to_biphase(unsigned short *RxFrame)
   }
 }
 
-static int old_write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
-{
-  int i;
-  static unsigned short nothing[BI0_FRAME_SIZE];
-  static unsigned short sync = 0xEB90;
-  static unsigned int do_skip = 0;
-
-  if (bi0_fp == -2) {
-    bi0_fp = open("/dev/bbc_bi0", O_RDWR);
-    if (bi0_fp == -1)
-      berror(tfatal, "Error opening biphase device");
-
-    for (i = 0; i < BI0_FRAME_SIZE; i++)
-      nothing[i] = 0xEEEE;
-  }
-  i_out = (i_out + 1) % BI0_FRAME_BUFLEN;
-
-  if (bi0_fp >= 0 && InCharge) {
-
-    RxFrame[0] = 0xEB90;
-    nothing[0] = CalculateCRC(0xEB90, RxFrame, BiPhaseFrameWords);
-
-    RxFrame[0] = sync;
-    sync = ~sync;
-
-//    unsigned short buffer[BI0_FRAME_SIZE];
-//    static unsigned int fc = 0;
-//    for (i = 0; i < BI0_FRAME_SIZE; ++i) {
-//      buffer[i] = i;
-//    }
-//    *(unsigned int*)(&buffer[1]) = fc++;
-//    buffer[0] = RxFrame[0];
-//    i = write(bi0_fp, buffer, BI0_FRAME_SIZE * sizeof(unsigned short));
-
-    if (do_skip) {
-      --do_skip;
-    } else {
-      i = write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short));
-      if (i < 0)
-        berror(err, "bi-phase write for RxFrame failed");
-      else if (i != BiPhaseFrameWords * sizeof(unsigned short))
-        bprintf(err, "Short write for RxFrame: %i of %u", i,
-            BiPhaseFrameWords * sizeof(unsigned short));
-
-      i = write(bi0_fp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
-          sizeof(unsigned short));
-      if (i < 0)
-        berror(err, "bi-phase write for padding failed");
-      else if (i != (BI0_FRAME_SIZE - BiPhaseFrameWords)
-          * sizeof(unsigned short))
-        bprintf(err, "Short write for padding: %i of %u", i,
-            (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short));
-    }
-
-    CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
-#if 0
-    if (do_skip == 0 && CommandData.bi0FifoSize > BI0_FIFO_MARGIN) {
-      do_skip = (CommandData.bi0FifoSize - BI0_FIFO_MINIMUM) / BI0_FRAME_SIZE;
-      bprintf(warning, "Excess data in FIFO, discarding "
-          "%i frames out of hand.", do_skip);
-    }
-#endif
-  }
-
-  return i_out;
-}
-
 static void InitFrameBuffer(struct frameBuffer *buffer) {
   int i;
 
@@ -877,10 +810,10 @@ static void InitFrameBuffer(struct frameBuffer *buffer) {
   for (i = 0; i<BI0_FRAME_BUFLEN; i++) {
     buffer->framelist[i] = balloc(fatal, BiPhaseFrameWords *
         sizeof(unsigned short));
-    ///*
+
     //TODO this initialization does not appear to resolve valgrind errors
     memset(buffer->framelist[i],0,BiPhaseFrameWords*sizeof(unsigned short));
-    //*/
+
   }
 }
 
@@ -962,43 +895,6 @@ static void BiPhaseWriter(void)
   }
 }
 
-static void oldBiPhaseWriter(void)
-{
-  int i_out, i_in;
-
-  nameThread("Bi0");
-  bputs(startup, "Startup\n");
-
-  while (!biphase_is_on)
-    usleep(10000);
-
-  bputs(info, "Veto has ended.  Here we go.\n");
-
-  while (1) {
-    i_in = bi0_buffer.i_in;
-    i_out = bi0_buffer.i_out;
-    if (i_out == i_in) {
-      /* Death meausres how long the BiPhaseWriter has gone without receiving
-       * any data -- an indication that we aren't receiving FSYNCs from the
-       * BLASTBus anymore */
-      if (InCharge) {
-        if (++Death == 25) {
-          bprintf(err, "Death is reaping the watchdog tickle.");
-          pthread_cancel(watchdog_id);
-        }
-      }
-    } else {
-      while (i_out != i_in) {
-        i_out = old_write_to_biphase(bi0_buffer.framelist[i_out], i_in, i_out);
-        if (Death > 0) {
-          Death = 0;
-        }
-      }
-    }
-    bi0_buffer.i_out = i_out;
-    usleep(10000);
-  }
-}
 #endif
 
 /******************************************************************/
@@ -1082,7 +978,7 @@ int main(int argc, char *argv[])
 
 #ifndef BOLOTEST
   pthread_t sunsensor_id;
-  pthread_t tdrss_id;
+//  pthread_t tdrss_id;
   pthread_t compression_id;
   pthread_t bi0_id;
   pthread_t sensors_id;
@@ -1177,8 +1073,8 @@ int main(int argc, char *argv[])
   /* Allocate the local data buffers */
   RxFrame = balloc(fatal, BiPhaseFrameSize);
 
-  for (i = 0; i < 3; ++i)
-    tdrss_data[i] = (unsigned short *)balloc(fatal, BiPhaseFrameSize);
+  //for (i = 0; i < 3; ++i)
+  //  tdrss_data[i] = (unsigned short *)balloc(fatal, BiPhaseFrameSize);
 
   for (i = 0; i < FAST_PER_SLOW; ++i) {
     slow_data[i] = balloc(fatal, slowsPerBi0Frame * sizeof(unsigned short));
@@ -1253,8 +1149,8 @@ int main(int argc, char *argv[])
         Pointing();
 
         /* Copy data to tdrss thread. */
-        memcpy(tdrss_data[tdrss_index], RxFrame, BiPhaseFrameSize);
-        tdrss_index = INC_INDEX(tdrss_index);
+        //memcpy(tdrss_data[tdrss_index], RxFrame, BiPhaseFrameSize);
+        //tdrss_index = INC_INDEX(tdrss_index);
 #endif
 
         /* Frame sequencing check */

@@ -32,8 +32,8 @@ struct streamDataStruct {
   int slowIndex; // from bi phase struct
   int slowChannel; // from bi phase struct
   unsigned mask; // used to set 16, 24, or 32 bits
-  int lsw; // offset in bytes in tdrss_char to the lsw
-  int msw; // offset in bytes in tdrss_char to the msw
+  int lsw; // offset in bytes in frame_char to the lsw
+  int msw; // offset in bytes in frame_char to the msw
 };
 
 
@@ -56,6 +56,8 @@ struct streamDataStruct *streamData;
 int higain_bytes_per_streamframe = -1;
 int omni_bytes_per_streamframe = -1;
 int dialup_bytes_per_streamframe = -1;
+
+unsigned short *PopFrameBuffer(struct frameBuffer *buffer); // mcp.c
 
 //*********************************************************
 // Open High Gain Serial port
@@ -124,12 +126,12 @@ void writeHiGainData(char *x, int size) {
 //*********************************************************
 // Buffer streamed data to be later compressed
 //*********************************************************
-void BufferStreamData(int i_streamframe, int readindex) {
+void BufferStreamData(int i_streamframe, unsigned short *frame) {
   int i_field;
   unsigned int xu;
   double xd;
   int i,c;
-  unsigned char *tdrss_char = (unsigned char *)tdrss_data[readindex];
+  unsigned char *frame_char = (unsigned char *)frame;
 
   // record stream data in buffer
   for (i_field=0; i_field < n_streamlist; i_field++) {
@@ -143,9 +145,9 @@ void BufferStreamData(int i_streamframe, int readindex) {
       i_m = streamData[i_field].msw;
       mask = streamData[i_field].mask;
 
-      lsw = (unsigned short *) (tdrss_char + i_l);
+      lsw = (unsigned short *) (frame_char + i_l);
       if (mask) {
-        msw = (unsigned short *) (tdrss_char + i_m);
+        msw = (unsigned short *) (frame_char + i_m);
         xu = (unsigned)(*lsw) | ((unsigned)(*msw & mask)<<16);
       } else {
          xu = (unsigned)(*lsw);
@@ -189,7 +191,7 @@ void BufferStreamData(int i_streamframe, int readindex) {
 //*********************************************************
 // Write data that comes once per superframe
 //*********************************************************
-void WriteSuperFrame(int readindex) {
+void WriteSuperFrame(unsigned short *frame) {
   int frame_bytes_written = 0;
   int i_field;
   int isWide;
@@ -205,11 +207,11 @@ void WriteSuperFrame(int readindex) {
     if (frameNiosList[i_field]->fast) {
       if (frameNiosList[i_field]->wide) {
         isWide = 1;
-        x = (unsigned int)tdrss_data[readindex][frameBi0List[i_field]->channel] +
-        ((unsigned int)tdrss_data[readindex][frameBi0List[i_field]->channel+1] << 16);
+        x = (unsigned int)frame[frameBi0List[i_field]->channel] +
+        ((unsigned int)frame[frameBi0List[i_field]->channel+1] << 16);
       } else {
         isWide = 0;
-        x = tdrss_data[readindex][frameBi0List[i_field]->channel];
+        x = frame[frameBi0List[i_field]->channel];
       }
     } else { // slow
       if (frameNiosList[i_field]->wide) {
@@ -235,7 +237,7 @@ void WriteSuperFrame(int readindex) {
     bprintf(info, "Bytes per stream frame - High gain: %d  tdrss omni: %d  iridium dialup: %d",
             higain_bytes_per_streamframe, omni_bytes_per_streamframe, dialup_bytes_per_streamframe);
 
-    BufferStreamData(FASTFRAME_PER_STREAMFRAME-1, readindex); // fill buffer with first value;
+    BufferStreamData(FASTFRAME_PER_STREAMFRAME-1, frame); // fill buffer with first value;
 
     //FIXME: calculate how many fields you can actually fit...
   }
@@ -336,7 +338,6 @@ void WriteStreamFrame() {
 // The main compression writer thread
 //*********************************************************
 void CompressionWriter() {
-  int readindex, lastreadindex = 2;
   int n_higainstream = -1;
   int n_omnistream = -1;
   int n_dailupstream = -1;
@@ -344,6 +345,7 @@ void CompressionWriter() {
   int i_fastframe = -1;
   int i_field;
   int i_streamframe=0;
+  unsigned short *frame;
 
   nameThread("DOWN");
 
@@ -440,19 +442,18 @@ void CompressionWriter() {
   //     The Infinite Loop....
   //*****************************************************
   while (1) {
-    readindex = GETREADINDEX(tdrss_index);
-    if (readindex != lastreadindex) {
-      lastreadindex = readindex;
+    frame = PopFrameBuffer(&hiGain_buffer);
+    if (frame) {
       ++i_fastframe;
       
       //********************************
       // Process the superframe 
       if (i_fastframe >= FASTFRAME_PER_SUPERFRAME) {
         i_fastframe = 0;
-        WriteSuperFrame(readindex);
+        WriteSuperFrame(frame);
       }
 
-      BufferStreamData(i_streamframe, readindex);
+      BufferStreamData(i_streamframe, frame);
 
       if (++i_streamframe >= FASTFRAME_PER_STREAMFRAME) { // end of streamframe - lets write!
         // Write the frames here...
