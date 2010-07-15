@@ -14,6 +14,7 @@ INCLUDE    = -I $(SRC_DIR)
 LIBRARY    = -L $(SRC_DIR)
 #CFLAGS = -O2 $(INCLUDE) $(LIBRARY) -Wall
 CFLAGS = -O0 $(INCLUDE) $(LIBRARY) -Wall -g   #for debugging
+CPPFLAGS = $(CFLAGS)
 CC = g++
 MOC = moc
 
@@ -34,7 +35,7 @@ QTFLAGS =
 endif
 ################################################################################
 #targets for building all or part of the main program
-all: cam comm view powercycle
+all: cam comm view util
 cam: $(APP_NAME)
 comm: commtest
 view: scviewer
@@ -140,8 +141,23 @@ moc_commandgui.o : commandgui.h moc_commandgui.cpp
 	  $(CC) $(CFLAGS) $(QTFLAGS) -o moc_commandgui.o -c moc_commandgui.cpp
 
 ################################################################################
-# simple program to power cycle camera via parallel port
+# utility programs that are not related to main functionality
+util: powercycle findbadpixel fixbadpixel
+
+# program to power cycle the camera with a parallel port dongle
 powercycle: powercycle.c
+
+# program to analyze bad pixel data
+findbadpixel: findbadpixel.o blobimage.o frameblob.o bloblist.o csbigimg.o
+
+findbadpixel.o: findbadpixel.cpp blobimage.h frameblob.h bloblist.h camconfig.h camstruct.h \
+  csbigimg.h csbigimgdefs.h
+
+# program to use a bad pixel file to correct a bad pixel
+fixbadpixel: fixbadpixel.o blobimage.o frameblob.o bloblist.o csbigimg.o
+
+fixbadpixel.o: fixbadpixel.cpp blobimage.h frameblob.h bloblist.h camconfig.h camstruct.h \
+  csbigimg.h csbigimgdefs.h
 
 ################################################################################
 
