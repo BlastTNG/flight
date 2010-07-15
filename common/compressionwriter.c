@@ -48,7 +48,7 @@ extern struct fieldStreamStruct streamList[];
 extern short int InCharge;
 
 int n_framelist;
-int n_streamlist;
+unsigned short n_streamlist;
 struct NiosStruct **frameNiosList;
 struct BiPhaseStruct **frameBi0List;
 struct streamDataStruct *streamData;
@@ -183,7 +183,6 @@ void BufferStreamData(int i_streamframe, unsigned short *frame) {
   }
 }
 
-
 //*********************************************************
 // Write data that comes once per superframe
 //*********************************************************
@@ -191,6 +190,7 @@ void WriteSuperFrame(unsigned short *frame) {
   int higain_bytes_per_streamframe = 0;
   int omni_bytes_per_streamframe = 0;
   int dialup_bytes_per_streamframe = 0;
+  double higain_requested_bytes_per_streamframe = 0;
 
   static int first_time = 1;
 
@@ -200,7 +200,6 @@ void WriteSuperFrame(unsigned short *frame) {
   unsigned x;
   int size;
   unsigned gain;
-  unsigned higain_requested_bytes_per_streamframe = 0;
 
   x=SYNCWORD;
   writeHiGainData((char *)(&x), 4);
@@ -233,10 +232,43 @@ void WriteSuperFrame(unsigned short *frame) {
     frame_bytes_written += size;
   }
 
+  frame_bytes_written += sizeof(unsigned short); // account for nfields field;
+  
   if (first_time) {
-    // we will unset first_time at the end of the function.
+    first_time = 0;
     BufferStreamData(FASTFRAME_PER_STREAMFRAME-1, frame); // fill buffer with first value;
+
+    higain_bytes_per_streamframe = (HIGAIN_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
+    omni_bytes_per_streamframe = (OMNI_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
+    dialup_bytes_per_streamframe = (DIALUP_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
+    bprintf(info, "Bytes per stream frame - High gain: %d  tdrss omni: %d  iridium dialup: %d",
+            higain_bytes_per_streamframe, omni_bytes_per_streamframe, dialup_bytes_per_streamframe);
+
+    for (i_field = 0; i_field<n_streamlist; i_field++) {
+      double delta=0;
+      delta = streamList[i_field].samples_per_frame*streamList[i_field].bits/8;
+      if (streamData[i_field].mask) {
+        delta+=6.0/(double)STREAMFRAME_PER_SUPERFRAME;
+      } else {
+        delta+=4.0/(double)STREAMFRAME_PER_SUPERFRAME;
+      }
+        
+      if (higain_requested_bytes_per_streamframe+delta>higain_bytes_per_streamframe) {        
+        bprintf(info, "Field %s exceeds the maximum size for the highgain stream.  Truncating.", streamList[i_field].name);
+        n_streamlist = i_field;
+        break;
+      } else {
+        higain_requested_bytes_per_streamframe+=delta;
+      }
+    }
+    bprintf(info, "High gain: %u stream fields use %.0f out of %d bytes per stream frame (%.0f free)",
+            n_streamlist,
+            higain_requested_bytes_per_streamframe, higain_bytes_per_streamframe,
+            higain_bytes_per_streamframe - higain_requested_bytes_per_streamframe);
   }
+
+  // write fields size
+  writeHiGainData((char*)&n_streamlist, sizeof(unsigned short));
   
   // set and write stream gains and offsets
   for (i_field=0; i_field<n_streamlist; i_field++) {
@@ -277,25 +309,9 @@ void WriteSuperFrame(unsigned short *frame) {
     }
     streamData[i_field].sum = streamData[i_field].n_sum = 0;
   }
-
+  
   // figure out how many bytes per stream frame we have room for...
   if (first_time) {
-    first_time = 0;
-    higain_bytes_per_streamframe = (HIGAIN_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
-    omni_bytes_per_streamframe = (OMNI_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
-    dialup_bytes_per_streamframe = (DIALUP_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
-    bprintf(info, "Bytes per stream frame - High gain: %d  tdrss omni: %d  iridium dialup: %d",
-            higain_bytes_per_streamframe, omni_bytes_per_streamframe, dialup_bytes_per_streamframe);
-
-    for (i_field = 0; i_field<n_streamlist; i_field++) {
-      higain_requested_bytes_per_streamframe += streamList[i_field].samples_per_frame*streamList[i_field].bits/8;
-      if (higain_requested_bytes_per_streamframe>higain_bytes_per_streamframe) {
-        bprintf(fatal, "Field %s exceeds the maximum size for the highgain stream.", streamList[i_field].name);
-      }
-    }
-    bprintf(info, "High gain: %d out of %d bytes per stream frame used (%d free)",
-            higain_requested_bytes_per_streamframe, higain_bytes_per_streamframe,
-            higain_bytes_per_streamframe - higain_requested_bytes_per_streamframe);
   }
 
 
