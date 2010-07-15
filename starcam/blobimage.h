@@ -51,8 +51,10 @@ public:
 	
 	//image processing methods
 //	void InitFrameblob();            //no longer needed
+	void copyImageFrom(const unsigned short*);
 	SBIG_FILE_ERROR FixBadpix(string filename);
 	int findBlobs();
+	int highPassFilter(int box_size, int n_boxes);
 #if USE_PYRAMID
 	int matchStars(solution_t **sol);
 #endif

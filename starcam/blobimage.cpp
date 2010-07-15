@@ -2,6 +2,7 @@
 #include <sstream>
 #include <cstdio>
 #include <ctime>
+#include <climits>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include "blobimage.h"
@@ -241,6 +242,21 @@ void BlobImage::SetImageStartTime(timeval* ref)
 
 /*
 
+ copyImageFrom:
+ 
+ copies image (it better be the right size) from data array
+ should be stored as single row-by-row array
+ 
+*/
+void BlobImage::copyImageFrom(const unsigned short* data) {
+  unsigned short* img = this->GetImagePointer();
+  for (int i=0; i<this->GetHeight()*this->GetWidth(); i++) {
+    img[i] = data[i];
+  }
+}
+
+/*
+
  setBadpixFilename:
  
  sets bad pixel filename based on C-style string
@@ -264,7 +280,8 @@ void BlobImage::setBadpixFilename(const char* name)
 SBIG_FILE_ERROR BlobImage::FixBadpix(string filename)
 {
 #if BLOB_IMAGE_DEBUG
-	cout << "[Blob image debug]: in FixBadPix with: \"" << filename << "\"" << endl;
+	cout << "[Blob image debug]: in FixBadPix with: \"" << filename << "\"" 
+	     << " old name \"" << m_sBadpixFilename << "\"" << endl;
 #endif
 	if (filename == "") {
 		m_sBadpixFilename = filename;
@@ -348,6 +365,96 @@ int BlobImage::findBlobs()
 
 /*
 
+ highPassFilter:
+
+ simple (and hopefully quick, good enough) high pass fitler
+ operates on sqaure regions box_size on side
+ averages a region n_boxes boxes on a side, and subtracts mean from central box
+ probably best if box_size evenly divides image dimensions, and n_boxes is odd
+
+*/
+#include <iostream>
+using namespace std;
+int BlobImage::highPassFilter(int box_size, int n_boxes)
+{
+  unsigned short *img = this->GetImagePointer();
+  unsigned int height = this->GetHeight();
+  unsigned int width = this->GetWidth();
+
+  //coarse image, binned in box_size chunks
+  unsigned short* c_img;
+  unsigned int c_height, c_width;
+  c_height = (unsigned int)ceil((double)height/(double)box_size);
+  c_width = (unsigned int)ceil((double)width/(double)box_size);
+  c_img = new unsigned short[c_height*c_width];
+
+  //create the coarse image
+  for (unsigned int c_x=0; c_x<c_width; c_x++) {
+    for (unsigned int c_y=0; c_y<c_height; c_y++) {
+      unsigned int sum = 0;
+      unsigned int npix = 0;
+      for (unsigned int x=c_x*box_size; x<(c_x+1)*(box_size); x++) {
+	for (unsigned int y=c_y*box_size; y<(c_y+1)*(box_size); y++) {
+	  if (x < width && y < height) {
+	    sum += img[x+y*width];
+	    npix++;
+	  }
+	}
+      }
+      c_img[c_x+c_y*c_width] = (unsigned short)round((double)sum/(double)npix);
+    }
+  }
+  
+  //calculate average in n_boxes sided square around coarse pixel
+  unsigned short* to_subtract;
+  to_subtract = new unsigned short[c_height*c_width];
+  unsigned short to_subtract_max = 0;
+  for (unsigned int c_x=0; c_x<c_width; c_x++) {
+    for (unsigned int c_y=0; c_y<c_height; c_y++) {
+      unsigned int sum = 0;
+      unsigned int npix = 0;
+      unsigned short max = 0;
+
+      for (int avg_x=(int)c_x-n_boxes/2; avg_x<=(int)c_x+n_boxes/2; avg_x++) {
+	for (int avg_y=(int)c_y-n_boxes/2; avg_y<=(int)c_y+n_boxes/2; avg_y++) {
+	  if (avg_x >= 0 && avg_x < (int)c_width && avg_y >= 0 && avg_y < (int)c_height) {
+	    unsigned short datum = c_img[avg_x + avg_y*c_width];
+	    if (datum > max) max = datum;
+	    sum += datum;
+	    npix++;
+	  }
+	}
+      }
+      sum -= max;  //remove brightest pixel from average
+      npix--;
+      unsigned short mean = (unsigned short)round((double)sum/(double)npix);
+      to_subtract[c_x+c_y*c_width] = mean;
+      if (mean > to_subtract_max) to_subtract_max = mean;
+    }
+  }
+    
+  //subtract the to_subtract means from the full-res image
+  //also add to_subtract_max to each pixel to prevent underflow
+  for (unsigned int c_x=0; c_x<c_width; c_x++) {
+    for (unsigned int c_y=0; c_y<c_height; c_y++) {
+      for (unsigned int x=c_x*box_size; x<(c_x+1)*(box_size); x++) {
+	for (unsigned int y=c_y*box_size; y<(c_y+1)*(box_size); y++) {
+	  if (x < width && y < height) {
+	    if (USHRT_MAX - img[x+y*width] < to_subtract_max - to_subtract[c_x+c_y*c_width])
+	      img[x+y*width] = USHRT_MAX;
+	    else img[x+y*width] += to_subtract_max - to_subtract[c_x+c_y*c_width];
+	  }
+	}
+      }
+    }
+  }
+
+  delete [] c_img;
+  return 1;
+}
+
+/*
+
  drawBox:
  
  draws a white square of dimension side around the point x, y
@@ -361,7 +468,10 @@ void BlobImage::drawBox(double x, double y, double side, bool willChange /*=true
 #endif
 	
 	MAPTYPE* map = CSBIGImg::GetImagePointer();
-	MAPTYPE sat = m_cBlob.get_satval();
+	//rather than using saturation, try just background + range
+	//MAPTYPE sat = m_cBlob.get_satval();
+	this->AutoBackgroundAndRange();
+	MAPTYPE sat = this->GetBackground() + this->GetRange();
 	int top = (int)(y - side/2), left = (int)(x - side/2), size = (int)side;
 	int xdim = CSBIGImg::GetWidth(), ydim = CSBIGImg::GetHeight();
 	int xlimit = left + size, ylimit = top + size;
