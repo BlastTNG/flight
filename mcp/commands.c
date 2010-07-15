@@ -1461,7 +1461,11 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.repeats = ivalues[1];
       CommandData.hwpr.step_wait = ivalues[2]*5;
       CommandData.hwpr.step_size = ivalues[3];
-      CommandData.hwpr.overshoot = ivalues[4];
+      if (CommandData.hwpr.step_size > 0) {
+	CommandData.hwpr.overshoot = ivalues[4];
+      } else {
+	CommandData.hwpr.overshoot = -ivalues[4];
+      }
       CommandData.hwpr.mode = HWPR_REPEAT;
       CommandData.hwpr.is_new = 1;
       break;
@@ -2659,10 +2663,10 @@ void InitCommandData()
   CommandData.actbus.lock_move_i = 50;
   CommandData.actbus.lock_hold_i = 0;
 
-  CommandData.hwpr.vel = 50;
+  CommandData.hwpr.vel = 200;
   CommandData.hwpr.acc = 2;
-  CommandData.hwpr.move_i = 20;
-  CommandData.hwpr.hold_i = 30;
+  CommandData.hwpr.move_i = 10;
+  CommandData.hwpr.hold_i = 10;
 
   CommandData.pin_is_in = 1;
 
