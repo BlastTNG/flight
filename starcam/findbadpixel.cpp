@@ -18,7 +18,7 @@ const unsigned int box_size = 15;
 const unsigned int n_boxes = 3;
 const double expose_min = 0.1;
 const char* avgfilename = "/tmp/average.sbig";
-const double snr_threshold = 5.0;
+const double snr_threshold = 7.0;
 
 int main(int argc, char* argv[])
 {
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
       if ((int)avgimg_p[x+y*(int)CAM_WIDTH] - avgmean > snr_threshold*avgsigma) {
 	cout << "Bad pixel at " << x <<"," << y << endl;
 	fout << x << " " << y << endl;
-	//avgimg_copy.drawBox(x, y, 20);
+	avgimg_copy.drawBox(x, y, 20);
 	badcount++;
       }
     }

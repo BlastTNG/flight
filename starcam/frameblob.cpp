@@ -117,7 +117,7 @@ void frameblob::set_map( MAPTYPE *in_map ) {
 // set the pointer to the map, as well as map dimensions
 void frameblob::set_map( MAPTYPE *in_map, int height, int width ) {
 #if FRAMEBLOB_DEBUG
-	cout << "[frameblob debug]: in set_map (3 param) method..." << endl;
+	cout << "[frameblob debug]: in set_map... h=" << height << " w=" << width << endl;
 #endif
 	ypix = height;
 	xpix = width;
@@ -316,7 +316,7 @@ int frameblob::load_badpix(const char *fname) {
     
     if( count == 2 ) { // If we read in a coordinate pair
       numbadpix ++;
-      thisbad = new bloblist(0, (double)x, (double)(ypix - y - 1));
+      thisbad = new bloblist(0, (double)x, (double)y);
       
       if( firstbad == NULL ) { // If first bad pixel in the list
 	firstbad = thisbad;
@@ -360,14 +360,15 @@ int frameblob::load_badpix(const char *fname) {
 
 void frameblob::fix_badpix(MAPTYPE val) {
 #if FRAMEBLOB_DEBUG
-	cout << "[frameblob debug]: in fix_badpix method..." << endl;
+  cout << "[frameblob debug]: in fix_badpix method..." << endl;
 #endif
   int i;
-  
-  if( badpixels != NULL ) 
+
+  if (badpixels != NULL) {
     for( i=0; i<(int)numbadpix; i++ ) { 
       map[badpixels[i]] = val;
     }
+  }
 }
 
 // ---------- Search Parameters -----------------------------------------
