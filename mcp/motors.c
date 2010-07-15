@@ -609,6 +609,11 @@ static void GetElDither() {
     axes_mode.el_dith = 0.5*CommandData.pointing_mode.del*(tmp_rand/RAND_MAX-0.5);      
     bprintf(info,"Random dither: axes_mode.el_dith = %f, tmp_rand = %i",axes_mode.el_dith,tmp_rand);
   } else {
+    if((dith_step > CommandData.pointing_mode.del*0.5 && dith_step > 0.0) ||
+       (dith_step < (-1.0)*CommandData.pointing_mode.del*0.5 && dith_step < 0.0))
+      {
+	dith_step += (-1.0)*CommandData.pointing_mode.del;
+      }
     axes_mode.el_dith += dith_step;
     bprintf(info,"Stepping dither: axes_mode.el_dith = %f",axes_mode.el_dith);
   }
@@ -617,7 +622,7 @@ static void GetElDither() {
 
 static void ClearElDither() {
   axes_mode.el_dith = 0.0;
-  bprintf(info,"ClearElDither: axes_mode.el_dith = %f",axes_mode.el_dith);
+  //  bprintf(info,"ClearElDither: axes_mode.el_dith = %f",axes_mode.el_dith);
   return;
 }
 
@@ -1088,6 +1093,7 @@ static void DoNewCapMode(void)
 
 }
 
+#define JJLIM 100
 static void DoNewBoxMode(void)
 {
   double caz, cel, w, h;
@@ -1101,6 +1107,7 @@ static void DoNewBoxMode(void)
   int new = 0;
   int new_scan = 0;
   int turn_el = 0;
+  static int j = 0;
 
   static double last_X=0, last_Y=0, last_w=0, last_h = 0;
   static double v_el = 0;
@@ -1129,6 +1136,7 @@ static void DoNewBoxMode(void)
 
   /* add the elevation dither term */
   cel += axes_mode.el_dith;
+  el2 += axes_mode.el_dith;
 
   /* sky drift terms */
   daz_dt = drem(az2 - caz, 360.0);
@@ -1148,6 +1156,7 @@ static void DoNewBoxMode(void)
   if (bottom < MIN_EL)
     bottom = MIN_EL;
 
+  if (j%JJLIM == 0) bprintf(info,"cel =%f, el = %f,axes_mode.el_dith = %f, w=%f, h=%f, bottom = %f, top = %f, left = %f, right = %f",cel, el,axes_mode.el_dith, w, h, bottom , top, left, right);
   // FIXME: reboot proofing...
 
   new = 0;
@@ -1159,6 +1168,10 @@ static void DoNewBoxMode(void)
       (CommandData.pointing_mode.h != last_h) ||
       (last_mode != P_BOX)) {
     new = 1;
+    bprintf(info,"X: %f, %f, Y: %f, %f, w: %f, %f, h: %f %f",CommandData.pointing_mode.X, last_X,
+	    CommandData.pointing_mode.Y, last_Y,
+	    CommandData.pointing_mode.w, last_w,
+	    CommandData.pointing_mode.h, last_h);
     ClearElDither();
   }
   if (el < bottom - 0.5) new = 1;
@@ -1215,9 +1228,9 @@ static void DoNewBoxMode(void)
     // set v for this step
     v_el = (targ_el - (el-cel))/t;
     // set targ_el for the next step
-    //    bprintf(info,"Az Step:targ_el = %f, el = %f, cel = %f,el-cel = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,el,cel,el-cel,el_next_dir,axes_mode.el_dir,v_el);
+    bprintf(info,"Az Step:targ_el = %f, el = %f, cel = %f,el-cel = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,el,cel,el-cel,el_next_dir,axes_mode.el_dir,v_el);
     targ_el += CommandData.pointing_mode.del*el_next_dir; // This is actually the next target el....
-    //    bprintf(info,"Az Step: Next Step targ_el = %f",targ_el);
+    bprintf(info,"Az Step: Next Step targ_el = %f",targ_el);
     axes_mode.el_dir = el_next_dir;
     if (targ_el>h*0.5) { // If the target el for the next step is outside the el box range
       targ_el = h*0.5;
@@ -1278,7 +1291,7 @@ static void DoNewBoxMode(void)
     axes_mode.el_mode = AXIS_VEL;
     axes_mode.el_vel = v_el + del_dt;
   }
-
+  j++;
   return;
 }
 
@@ -1312,6 +1325,7 @@ void DoQuadMode(void) // aka radbox
         CommandData.pointing_mode.dec[i],
         lst, lat,
         c_az+i, c_el+i);
+    *(c_el+i) += axes_mode.el_dith;
   }
 
   /* get sky drift speed */
@@ -1319,6 +1333,8 @@ void DoQuadMode(void) // aka radbox
       CommandData.pointing_mode.dec[0],
       lst+1.0, lat,
       &az2, &el2);
+
+  el2 += axes_mode.el_dith;
 
   UnwindDiff(az, &az2);
 
@@ -1350,6 +1366,7 @@ void DoQuadMode(void) // aka radbox
   }
 
   if (new) {
+    ClearElDither();
     if ( (fabs(az - az_of_bot) < 0.1) &&
         (fabs(el - bottom) < 0.05)) {
       for (i=0; i<4; i++) {
