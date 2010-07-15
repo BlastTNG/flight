@@ -133,11 +133,11 @@ static int ISCInit(int which)
       firsttime = 0;
     }
     if (errno == ENETUNREACH || errno == EHOSTUNREACH || errno == EHOSTDOWN)
-      which ? (EthernetIsc = 1) : (EthernetOsc = 1);
+      which ? (EthernetOsc = 1) : (EthernetIsc = 1);
     else if (errno == ECONNREFUSED)
-      which ? (EthernetIsc = 2) : (EthernetOsc = 2);
+      which ? (EthernetOsc = 2) : (EthernetIsc = 2);
     else
-      which ? (EthernetIsc = 3) : (EthernetOsc = 3);
+      which ? (EthernetOsc = 3) : (EthernetIsc = 3);
     if (sock != -1)
       if (close(sock) < 0)
         berror(err, "close()");
@@ -148,7 +148,7 @@ static int ISCInit(int which)
       (InCharge) ? "active" : "passive");
   CommandData.ISCState[which].shutdown = 0;
 
-  which ? (EthernetIsc = 0) : (EthernetOsc = 0);
+  which ? (EthernetOsc = 0) : (EthernetIsc = 0);
 
   if (WHICH)
     bprintf(info, "%iSC (i): Lowered write_ISC_pointing semaphore on connect\n",
@@ -200,7 +200,7 @@ void IntegratingStarCamera(void* parameter)
   bprintf(startup, "Startup\n");
 
   for (;;) {
-    which ? (EthernetIsc = 3) : (EthernetOsc = 3);
+    which ? (EthernetOsc = 3) : (EthernetIsc = 3);
     do {
       if (sock != -1)
         if (close(sock) < 0)

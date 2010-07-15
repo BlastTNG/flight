@@ -210,7 +210,8 @@ static void WriteAux(void)
   WriteData(statusEthAddr, 
        (EthernetSun & 0x3) + 
        ((EthernetIsc & 0x3) << 2) + 
-       ((EthernetOsc & 0x3) << 4), 
+       ((EthernetOsc & 0x3) << 4) +
+       ((0x3) << 6),  //"EthernetSBSC & 0x3" should go in the parenthetical
        NIOS_QUEUE);
 
   WriteData(statusMCCAddr, 
