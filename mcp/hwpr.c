@@ -66,7 +66,7 @@ void StoreHWPRBus(void)
     encHwprAddr = GetNiosAddr("enc_hwpr");
   }
 
-  hwpr_wait_cnt++;
+  hwpr_wait_cnt--;
 
   WriteData(velHwprAddr, CommandData.hwpr.vel, NIOS_QUEUE);
   WriteData(accHwprAddr, CommandData.hwpr.acc, NIOS_QUEUE);
@@ -95,34 +95,40 @@ void ControlHWPR(struct ezbus *bus)
       bprintf(info,"ControlHWPR: HWPR step requested.  Once someone actually writes a step mode this will do something awesome.");
     } else if ((CommandData.hwpr.mode == HWPR_REPEAT)) {
       //just received, initialize HWPR_REPEAT variables
-      repeat_pos_cnt = 0;
-      hwpr_wait_cnt = 0;
+      repeat_pos_cnt = CommandData.hwpr.n_pos;
+      hwpr_wait_cnt = CommandData.hwpr.step_wait;
     }
     CommandData.hwpr.is_new = 0;
   }
 
   //repeat mode
   if ( CommandData.hwpr.mode == HWPR_REPEAT 
-      && (hwpr_wait_cnt >= CommandData.hwpr.step_wait
+      && (hwpr_wait_cnt <= 0
       //TODO I don't know why having a shorter wait for the overshoot fails
       /*|| (overshooting && hwpr_wait_cnt >= 10)*/) ) {
-    hwpr_wait_cnt = 0;
+    hwpr_wait_cnt = CommandData.hwpr.step_wait;
     if (overshooting) {
       overshooting = 0;
       EZBus_RelMove(bus, HWPR_ADDR, CommandData.hwpr.overshoot);
-    } else if (CommandData.hwpr.repeats-- <= 0) {
+    } else if (CommandData.hwpr.repeats-- <= 0) { //done stepping
       CommandData.hwpr.mode = HWPR_SLEEP;
     } else {    //step the HWPR
-      if (++repeat_pos_cnt < CommandData.hwpr.n_pos)	 { //move to next step
+      if (--repeat_pos_cnt > 0)	 { //move to next step
 	EZBus_RelMove(bus, HWPR_ADDR, CommandData.hwpr.step_size);
       } else {						   //reset to first step
-	repeat_pos_cnt = 0;
+	repeat_pos_cnt = CommandData.hwpr.n_pos;
+	hwpr_wait_cnt *= CommandData.hwpr.n_pos;  //wait extra long
 	overshooting = 1;
 	EZBus_RelMove(bus, HWPR_ADDR, 
 	    -CommandData.hwpr.step_size * (CommandData.hwpr.n_pos - 1)
 	    - CommandData.hwpr.overshoot);
       }
     }
+  }
+  else if ( CommandData.hwpr.mode == HWPR_REPEAT 
+      && (hwpr_wait_cnt == 10)) {
+    //pulse the potentiometer
+    CommandData.Cryo.hwprPos = 50;
   }
 }
 
