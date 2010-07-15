@@ -120,7 +120,7 @@ int SendData(sss_packet_data * data) {
         } else {
           num_connect++;
 #ifdef DEBUG
-          fprintf(stderr, "wrote %i bytes to socket %i\n", z, n);
+          fprintf(stderr, "wrote %i/%i bytes to socket %i\n", z, (int)sizeof(sss_packet_data), n);
 #endif
         }
       }

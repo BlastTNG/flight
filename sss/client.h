@@ -10,6 +10,6 @@
 
 #include "sss_struct.h"
 
-#define SSS_IP "127.0.0.1"
-#define SSS_PORT 11235
+#define SSS_IP "128.148.60.243"
+#define SSS_PORT 54321
 

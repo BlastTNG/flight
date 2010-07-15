@@ -18,7 +18,7 @@
 
 #include "sss_struct.h"
 
-#define SOCK_PORT 11235
+#define SOCK_PORT 54321
 
 /* Create the socket for sending out the data */
 int MakeSock(void);

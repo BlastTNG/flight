@@ -12,6 +12,7 @@
 
 #include "sss_struct.h"
 
+//#define NO_NET
 #define NUM_CHANS    32
 #define N_FAST_CHAN  12
 #define N_OUTER_LOOP 4

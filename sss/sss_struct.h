@@ -14,6 +14,8 @@
   sss_packet_data contains the data
  **********************************/
 
+#pragma pack(4)
+
 typedef struct
 {
   double az_rel_sun;   //calculated az of the sun [degrees]
@@ -22,8 +24,6 @@ typedef struct
   float  phase;        //phase of the fit [degrees]
   float  chi;          //chi^2 of the fit
   unsigned short iter; //number of iterations fitting loop took
-  float snr;           //signal to noise ratio
-  unsigned short n;    //index number of max cell
 
   double sun_time;     //time of measurment (decimal ctime) [seconds]
 
@@ -50,5 +50,7 @@ typedef struct
   unsigned int m11;
   unsigned int m12;
 }sss_packet_data;
+
+#pragma pack()
 
 #endif

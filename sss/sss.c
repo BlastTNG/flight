@@ -22,14 +22,8 @@
 #define NP 3 //number of parameters to fit
 #define NOAS 1 //Number of samples On A Side of the fit
 
-#define MIN_AMP_VAL 2000
-#define BUNK_FUDGE_FACTOR 400
-#define LOW_AZ_LIM 120  //Lower limit of trusted az_rel_sun
-#define HI_AZ_LIM  240  //Higher limit of trusted az_rel_sun
-
 #define PI180 (3.14159265 / 180.0)
 
-//None of the following #defines should be uncommented for flight mode!
 //#define VERBOSE     //Print a bunch of crap to the screen
 //#define FAKE_DATA   //Generate fake data instead of reading from the mpc driver
 //#define CALIBRATED_SENSOR_OUT  //Send calibrated module values instead of uncalibrated values
@@ -45,18 +39,18 @@
 
 double module_calibration[] =
 {
-  11788.0 / 11788.0, //5842.0 / 5842.0,
-  11788.0 / 10425.0, //5842.0 / 8816.0,
-  11788.0 / 10242.0, //5842.0 / 7147.0,
-  11788.0 /  8824.0, //5842.0 / 8951.0,
-  11788.0 /  8708.0, //5842.0 / 5914.0,
-  11788.0 / 10097.0, //5842.0 / 5769.0,
-  11788.0 /  8721.0, //5842.0 / 6790.0,
-  11788.0 / 11814.0, //5842.0 / 5761.0,
-  11788.0 /  9981.0, //5842.0 / 8989.0,
-  11788.0 / 11880.0, //5842.0 / 5928.0,
-  11788.0 /  8776.0, //5842.0 / 7140.0,
-  11788.0 /  9974.0  //5842.0 / 6360.0
+  5842.0 / 5842.0,
+  5842.0 / 8816.0,
+  5842.0 / 7147.0,
+  5842.0 / 8951.0,
+  5842.0 / 5914.0,
+  5842.0 / 5769.0,
+  5842.0 / 6790.0,
+  5842.0 / 5761.0,
+  5842.0 / 8989.0,
+  5842.0 / 5928.0,
+  5842.0 / 7140.0,
+  5842.0 / 6360.0
 };
 
 double module_offsets[] =
@@ -84,7 +78,7 @@ double renorm90 (double x) //return a number between -45 and 45 degrees.
 {
   if (x > 45)
     return renorm90(x - 90.);
-  if (x <= -45)
+  if (x < -45)
     return renorm90(x + 90.);
   return x;
 }
@@ -166,7 +160,7 @@ double ls_func (const gsl_vector *v, void *params)
   {
     theta = PI180 * (i * 30 + phi);
     cos_theta = cos(theta);
-    fit_func = fabs(A) * cos_theta * cos_theta + dc;
+    fit_func = A * cos_theta * cos_theta + dc;
     diff = fit_func - p->f[i + NOAS];
 #ifdef VERBOSE
     fprintf(stderr, "param: %e (%e) [%d]\n", p->f[i+NOAS], fit_func, i + NOAS);
@@ -182,9 +176,6 @@ void calculate_az(unsigned * sensor_uint, sss_packet_data * dat)
 {
   double sensors[N_FAST_CHAN];
   double x;
-  double max_adj;
-  double ave;
-  double minimum;
   double offset;
   int i;
   int sens_max = -1;
@@ -210,74 +201,16 @@ void calculate_az(unsigned * sensor_uint, sss_packet_data * dat)
   gsl_vector_set_all (step_size, 1.0);
 
   /* calibrate modules and determine module with max intensity */
-  x = 0;  //terrible name for max sensor value.
-  ave = 0;
-  minimum = 1e300;
+  x = 0;
   for (i = 0; i < N_FAST_CHAN; i++)
   {
     sensors[i] = module_calibration[i] * (double)sensor_uint[i];
-    ave += sensors[i];
     if (sensors[i] > x)
     {
       x = sensors[i];
       sens_max = i;
     }
-    if (sensors[i] < minimum)
-    {
-      minimum = sensors[i];
-    }
   }
-  ave /= N_FAST_CHAN;
-  dat->snr = x / ave;
-
-  //Determine the minimum value of the immediate neighbors of the maximum
-  if (sensors[(sens_max + 12 + 1) % 12] < sensors[(sens_max + 12 - 1) % 12])
-    x = sensors[(sens_max + 12 + 1) % 12];
-  else
-    x = sensors[(sens_max + 12 - 1) % 12];
-  
-  if (x < minimum + MIN_AMP_VAL)
-    dat->snr = 0.05;
-
-  //if any sensor that isn't one of the 'active' 3 is larger than the active 3,
-  //report that we are bunk (by setting snr to zero)
-  for (i = 0; i < N_FAST_CHAN; i++)
-  {
-    if (i != sens_max && i != (sens_max + 12 + 1) % 12 && i != (sens_max + 12 - 1) % 12)
-    {
-      if (sensors[i] > x + BUNK_FUDGE_FACTOR)
-      {
-        dat->snr = 0;
-      }
-    }
-  }
-
-  //Calculate max of adjacent module to 'active' 3 and use that as another check.
-  //We give a different 'bunk' snr for each case as a debugging tool.  
-  max_adj = 0;
-  for (i = 0; i < N_FAST_CHAN; i++)
-  {
-    if (i == (sens_max + 12 + 2) % 12)
-    {
-      if (sensors[i] > max_adj) max_adj = sensors[i];
-    } 
-    else if (i == (sens_max + 12 - 2) % 12)
-    {
-      if (sensors[i] > max_adj) max_adj = sensors[i];
-    }
-  }
-  for (i = 0; i < N_FAST_CHAN; i++)
-  {
-    if (i != sens_max && i != (sens_max + 12 + 1) % 12 && i != (sens_max + 12 - 1) % 12
-        && i != (sens_max + 12 + 2) % 12 && i != (sens_max + 12 - 2) % 12)
-    {
-      if (sensors[i] > max_adj + BUNK_FUDGE_FACTOR)
-      {
-        dat->snr = 0.1;
-      }
-    }
-  }
-
 
   offset = module_offsets[sens_max];
 
@@ -320,7 +253,6 @@ void calculate_az(unsigned * sensor_uint, sss_packet_data * dat)
   dat->dc_off = gsl_vector_get(s->x, 2);
   dat->chi = size;
   dat->iter = iter;
-  dat->n = sens_max;
 }
 
 int main (void)
@@ -335,7 +267,7 @@ int main (void)
 
   struct mpc_channel_struct chan[NUM_CHANS];
   struct timeb tp;
-  struct LutType sssAzLut = {"/data/etc/sss.lut",0,NULL,NULL,0};
+  struct LutType sssAzLut = {"sss.lut",0,NULL,NULL,0};
 
   unsigned sensor[N_FAST_CHAN];
   unsigned housekeeping[N_SLOW_CHAN];
@@ -347,6 +279,7 @@ int main (void)
   LutInit(&sssAzLut);
 
   while (1) {  /* main loop */
+
 
 /*  From here to #else is non-flight only */
 #if defined FAKE_DATA  //We generate fake data with time
@@ -370,7 +303,7 @@ int main (void)
 #endif
       sleep(10);
 #ifndef NO_NET
-      if (abs(dat.amp) > 5000) SendData(&dat);
+      SendData(&dat);
 #endif
     }
 
@@ -398,16 +331,7 @@ int main (void)
     populate_packet(sensor, housekeeping, tp, &dat);
 
     calculate_az(sensor, &dat);
-    //dat.az_rel_sun = LutCal(&sssAzLut, dat.az_rel_sun);
-
-    if (dat.az_rel_sun < LOW_AZ_LIM)
-    {
-      dat.snr = 0.09;
-    }
-    if (dat.az_rel_sun > HI_AZ_LIM)
-    {
-      dat.snr = 0.08;
-    }
+    dat.az_rel_sun = LutCal(&sssAzLut, dat.az_rel_sun);
 
 /* From here to #else is non-flight only */
 #ifdef NO_NET
