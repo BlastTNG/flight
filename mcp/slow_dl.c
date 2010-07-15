@@ -27,18 +27,15 @@
 /* "src", type, numbits, min, max */
 struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
 //  /* PV */
-//  {"t_mcc",          SLOWDL_FORCE_INT, 8, 65, -10},
-//  //probably one of the aux currents is alocated to this
-//  //{"i_mcc",          SLOWDL_FORCE_INT, 8, 10, -10}, /* 78 mA */
-//  {"lst",           SLOWDL_FORCE_INT, 8, 0, 24},
-//  {"sam_i_am",      SLOWDL_FORCE_INT, 8, 0, 255},
-//  {"lat",           SLOWDL_FORCE_INT, 8, -90.0, -50},
-//  {"lon",           SLOWDL_FORCE_INT, 8, -180, 360},
-//  {"sip_alt",       SLOWDL_FORCE_INT, 8, 0, 40000}, /* 157 m */
-//  {"cpu_temp1",     SLOWDL_FORCE_INT, 8, 0, 75}, /* 0.29 deg */
-//  {"disk_free",     SLOWDL_FORCE_INT, 8, 0, 250},
-//  {"timeout",       SLOWDL_FORCE_INT, 8, 0, 65535},
-//  {"plover",        SLOWDL_U_MASK, 8},
+    {"lst",           SLOWDL_FORCE_INT, 8, 0, 24},
+    {"status_mcc",    SLOWDL_FORCE_INT, 8, 0, 255},
+    {"lat",           SLOWDL_FORCE_INT, 8, -90.0, -30},
+    {"lon",           SLOWDL_FORCE_INT, 8, -180, 360},
+    {"alt",           SLOWDL_FORCE_INT, 8, 0, 40000}, /* 157 m */
+    {"t_mcc",         SLOWDL_FORCE_INT, 8, 0, 75}, /* 0.29 deg */
+    {"disk_free",     SLOWDL_FORCE_INT, 8, 0, 250},
+    {"timeout",       SLOWDL_FORCE_INT, 8, 0, 65535},
+    {"plover",        SLOWDL_U_MASK, 8},
 //  /* POINTING */
 //  {"sensor_veto",   SLOWDL_U_MASK,8},
 //  {"p_h",           SLOWDL_FORCE_INT, 8, 0, 35},

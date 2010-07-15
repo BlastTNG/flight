@@ -11,12 +11,7 @@
  *
  */
 
-//#define SLOWDL_NUM_DATA     209
-//#define SLOWDL_NUM_DATA     153
-
-// lmf: Commented out all of the channels in slow_dl until someone goes through
-// and decides what needs to be send over TDRSS.
-#define SLOWDL_NUM_DATA     0
+#define SLOWDL_NUM_DATA     9
 
 #define SLOWDL_LEN          255
 
