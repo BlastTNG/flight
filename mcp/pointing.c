@@ -486,7 +486,7 @@ static int PSS1Convert(double *azraw_pss1, double *elraw_pss1) {
 #define  PSS2_YSTRETCH  1.
 #define  PSS2_BETA  PSS2_ALIGNMENT
 #define  PSS2_ALPHA   25.
-#define  PSS2_PSI    -10.
+#define  PSS2_PSI    15.5
 
 static int PSS2Convert(double *azraw_pss2, double *elraw_pss2) {
 
@@ -522,7 +522,7 @@ static int PSS2Convert(double *azraw_pss2, double *elraw_pss2) {
     return(0);
   }    
 
-  x = PSS2_XSTRETCH*(PSS2_L/2.)*((i2+i3)-(i1+i4))/itot;
+  x = -PSS2_XSTRETCH*(PSS2_L/2.)*((i2+i3)-(i1+i4))/itot;
   y = PSS2_YSTRETCH*(PSS2_L/2.)*((i2+i4)-(i1+i3))/itot;
 
   if ((fabs(x) > 4.) | (fabs(y) > 4.)) {
@@ -599,9 +599,9 @@ static int PSS2Convert(double *azraw_pss2, double *elraw_pss2) {
         + gsl_matrix_get(rot, 2, 1)*usun[1]
         + gsl_matrix_get(rot, 2, 2)*usun[2];
 
-  az = -atan(u3[0]/u3[2]) - M_PI;
+  az = -atan(u3[0]/u3[2]);
 
-  *azraw_pss2 = sun_az - (180./M_PI)*az;    // az is in radians
+  *azraw_pss2 = sun_az + (180./M_PI)*az;    // az is in radians
 
   gsl_matrix_set(ryaz, 0, 1, cos(az));  gsl_matrix_set(ryaz, 0, 1, 0.);  gsl_matrix_set(ryaz, 0, 2, sin(az));
   gsl_matrix_set(ryaz, 1, 0, 0);        gsl_matrix_set(ryaz, 1, 1, 1.);  gsl_matrix_set(ryaz, 1, 2, 0.);
