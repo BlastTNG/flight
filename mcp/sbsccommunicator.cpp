@@ -10,7 +10,7 @@
 #include <cstdlib>
 #include "sbsccommunicator.h"
 
-#define SBSC_COMM_DEBUG 1
+#define SBSC_COMM_DEBUG 0
 #if SBSC_COMM_DEBUG
 #include <iostream>
 #endif
