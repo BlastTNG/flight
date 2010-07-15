@@ -862,15 +862,7 @@ struct ChannelStruct SlowChannels[] = {
   {"i_step",       'r',  ACS1_A1, 19,         CAL16(12.5, -0.25),       'u', U_I_A},
   {"i_gy",         'r',  ACS1_A1, 21,         CAL16(11.0, -0.01),       'u', U_I_A},
   {"i_mcc",        'r',  ACS1_A1, 23,         CAL16(12.5,  0.0),        'u', U_I_A},
-  {"v_1_sol",      'r',  ACS1_A1, 25,         CAL16(1.0, 0.0), 		'u', U_V_V},
-  {"v_2_sol",      'r',  ACS1_A1, 27,         CAL16(1.0, 0.0), 		'u', U_V_V},
-  {"v_3_sol",      'r',  ACS1_A1, 29,         CAL16(1.0, 0.0), 		'u', U_V_V},
-  {"v_4_sol",      'r',  ACS1_A1, 31,         CAL16(1.0, 0.0), 		'u', U_V_V},
-  {"v_5_sol",      'r',  ACS1_A1, 33,         CAL16(1.0, 0.0), 		'u', U_V_V},
-  {"v_6_sol",      'r',  ACS1_A1, 35,         CAL16(1.0, 0.0), 		'u', U_V_V},
-  {"v_batt",       'r',  ACS1_A1, 37,         CAL16(1.0, 0.0), 		'u', U_V_V},
-  {"i_sol",        'r',  ACS1_A1, 39,         CAL16(25.0, 0.0),         'u', U_I_A},
-  {"i_batt",       'r',  ACS1_A1, 41,         CAL16(25.0, 0.0),         'u', U_I_A},
+/* ACS_A1 24-41 are unused. */
 
 /* ACS1 Temperature card */
   {"t_gy",         'r',  ACS1_T1, 1,          CAL16T(1.0, 0.0),         'u', U_T_C},
