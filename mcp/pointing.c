@@ -323,7 +323,9 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 #define  PSS1_YSTRETCH  1.  // 1.008
 #define  PSS1_BETA  PSS1_ALIGNMENT
 #define  PSS1_ALPHA 25.
-#define  PSS1_PSI   0.
+// This angle should be zero based on calibration of sensor when not attached to BLAST
+// The fact that it is -10. indicates some misalignment or imbalance in BLAST. -GT 7/14/10
+#define  PSS1_PSI   -10.
 
 static int PSS1Convert(double *azraw_pss1, double *elraw_pss1) {
 
@@ -359,7 +361,8 @@ static int PSS1Convert(double *azraw_pss1, double *elraw_pss1) {
   }
 
   x = PSS1_XSTRETCH*(PSS1_L/2.)*((i2+i3)-(i1+i4))/itot;
-  y = PSS1_YSTRETCH*(PSS1_L/2.)*((i2+i4)-(i1+i3))/itot;
+  // "-" sign added to front on basis of 7/13/10 spin test in Palestine
+  y = -PSS1_YSTRETCH*(PSS1_L/2.)*((i2+i4)-(i1+i3))/itot;
 
   // Then spot is at the edge of the sensor
   if ((fabs(x) > 4.) | (fabs(y) > 4.)) {
@@ -438,7 +441,7 @@ static int PSS1Convert(double *azraw_pss1, double *elraw_pss1) {
 
   az = -atan(u3[0]/u3[2]);                // az is in radians
 
-  *azraw_pss1 = sun_az - (180./M_PI)*az;
+  *azraw_pss1 = sun_az + (180./M_PI)*az;
 
   gsl_matrix_set(ryaz, 0, 1, cos(az));  gsl_matrix_set(ryaz, 0, 1, 0.);  gsl_matrix_set(ryaz, 0, 2, sin(az));
   gsl_matrix_set(ryaz, 1, 0, 0);        gsl_matrix_set(ryaz, 1, 1, 1.);  gsl_matrix_set(ryaz, 1, 2, 0.);
