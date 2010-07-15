@@ -61,7 +61,7 @@ unsigned short *PopFrameBuffer(struct frameBuffer *buffer); // mcp.c
 //*********************************************************
 // Open High Gain Serial port
 //*********************************************************
-static int OpenHiGainSerial(char *tty) {
+static int OpenSerial(char *tty) {
   static int report_state = -1; // -1 = no reports.  0 == reported error.  1 == reported success
   int fd;
   struct termios term;
@@ -112,13 +112,62 @@ void writeHiGainData(char *x, int size) {
   static int fp = -1;
   
   if (fp < 0) {
-    fp = OpenHiGainSerial(HIGAIN_TTY);
+    fp = OpenSerial(HIGAIN_TTY);
   }
 
   if (fp>=0) {
     if (write(fp, x, size)!=size) {
       close(fp);
     }
+  }
+}
+
+//*********************************************************
+// Write data to the omni1 serial port
+//*********************************************************
+void writeOmni1Data(char *x, int size) {
+  static int fp = -1;
+
+  if (fp < 0) {
+    fp = OpenSerial(OMNI1_TTY);
+  }
+
+  if (fp>=0) {
+    if (write(fp, x, size)!=size) {
+      close(fp);
+    }
+  }
+}
+
+//*********************************************************
+// Write data to the omni2 serial port
+//*********************************************************
+void writeOmni2Data(char *x, int size) {
+  static int fp = -1;
+
+  if (fp < 0) {
+    fp = OpenSerial(OMNI2_TTY);
+  }
+
+  if (fp>=0) {
+    if (write(fp, x, size)!=size) {
+      close(fp);
+    }
+  }
+}
+
+//*********************************************************
+// Write data to ports if there is room
+//*********************************************************
+void writeData(char *x, int size, int i_field) {
+  if (i_field < n_higain_stream) {
+    writeHiGainData(x,size);
+  }
+  if (i_field < n_omni1_stream) {
+    writeOmni1Data(x,size);
+  }
+  if (i_field < n_omni2_stream) {
+    writeOmni2Data(x,size);
   }
 }
 
@@ -199,6 +248,7 @@ void WriteSuperFrame(unsigned short *frame) {
   double omni2_requested_bytes_per_streamframe = 0;
 
   static int first_time = 1;
+  static int reset_rates = 1;
 
   int frame_bytes_written = 0;
   int i_field;
@@ -208,7 +258,7 @@ void WriteSuperFrame(unsigned short *frame) {
   unsigned gain;
 
   x=SYNCWORD;
-  writeHiGainData((char *)(&x), 4);
+  writeData((char *)(&x), 4, 0);
   frame_bytes_written += 4;
   
   // write superframe data
@@ -233,7 +283,7 @@ void WriteSuperFrame(unsigned short *frame) {
       }
     }
     size = (1 + isWide)*sizeof(unsigned short);
-    writeHiGainData((char*)&x, size);
+    writeData((char*)&x, size, 0);
 
     frame_bytes_written += size;
   }
@@ -243,7 +293,11 @@ void WriteSuperFrame(unsigned short *frame) {
   if (first_time) {
     first_time = 0;
     BufferStreamData(FASTFRAME_PER_STREAMFRAME-1, frame); // fill buffer with first value;
+  }
 
+  // Calculate number of stream fields given data rates
+  if (reset_rates) {
+    reset_rates = 0;
     higain_bytes_per_streamframe = (HIGAIN_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
     omni1_bytes_per_streamframe = (OMNI1_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
     omni2_bytes_per_streamframe = (OMNI2_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
@@ -261,7 +315,6 @@ void WriteSuperFrame(unsigned short *frame) {
         
       if (higain_requested_bytes_per_streamframe+delta>higain_bytes_per_streamframe) {
         if (n_higain_stream==0) {
-          bprintf(info, "Field %s exceeds the maximum size for the highgain stream.  Truncating.", streamList[i_field].name);
           n_higain_stream = i_field;
         }
       } else {
@@ -270,7 +323,6 @@ void WriteSuperFrame(unsigned short *frame) {
       
       if (omni1_requested_bytes_per_streamframe+delta>omni1_bytes_per_streamframe) {
         if (n_omni1_stream==0) {
-          bprintf(info, "Field %s exceeds the maximum size for the omni1 stream.  Truncating.", streamList[i_field].name);
           n_omni1_stream = i_field;
         }
       } else {
@@ -279,7 +331,6 @@ void WriteSuperFrame(unsigned short *frame) {
       
       if (omni2_requested_bytes_per_streamframe+delta>omni2_bytes_per_streamframe) {
         if (n_omni2_stream==0) {
-          bprintf(info, "Field %s exceeds the maximum size for the omni2 stream.  Truncating.", streamList[i_field].name);
           n_omni2_stream = i_field;
         }
       } else {
@@ -302,6 +353,8 @@ void WriteSuperFrame(unsigned short *frame) {
 
   // write fields size
   writeHiGainData((char*)&n_higain_stream, sizeof(unsigned short));
+  writeOmni1Data((char*)&n_omni1_stream, sizeof(unsigned short));
+  writeOmni2Data((char*)&n_omni2_stream, sizeof(unsigned short));
   
   // set and write stream gains and offsets
   for (i_field=0; i_field<n_streamlist; i_field++) {
@@ -309,10 +362,8 @@ void WriteSuperFrame(unsigned short *frame) {
 
     gain = streamData[i_field].gain;
 
-    if (i_field < n_higain_stream) { 
-      writeHiGainData((char *)&gain, sizeof(unsigned short));
-    }
-    
+    writeData((char *)&gain, sizeof(unsigned short), i_field);
+
     lloffset = streamData[i_field].sum/(double)streamData[i_field].n_sum;
     streamData[i_field].offset = lloffset;
 
@@ -320,29 +371,21 @@ void WriteSuperFrame(unsigned short *frame) {
       if (streamData[i_field].isSigned) { // 32 bit in field
         int offset;
         offset = lloffset;
-        if (i_field < n_higain_stream) {
-          writeHiGainData((char *)&offset, sizeof(int));
-        }
+        writeData((char *)&offset, sizeof(int), i_field);
       } else {
         unsigned offset;
         offset = lloffset;
-        if (i_field < n_higain_stream) {
-          writeHiGainData((char *)&offset, sizeof(unsigned));
-        }
+        writeData((char *)&offset, sizeof(unsigned), i_field);
       }
     } else {
       if (streamData[i_field].isSigned) { // 16 bit signed field
         short offset;
         offset = lloffset;
-        if (i_field < n_higain_stream) {
-          writeHiGainData((char *)&offset, sizeof(short));
-        }
+        writeData((char *)&offset, sizeof(short), i_field);
       } else {
         unsigned short offset;
         offset = lloffset;
-        if (i_field < n_higain_stream) {
-          writeHiGainData((char *)&offset, sizeof(unsigned short));
-        }
+        writeData((char *)&offset, sizeof(unsigned short), i_field);
       }
     }
     streamData[i_field].sum = streamData[i_field].n_sum = 0;
@@ -402,7 +445,7 @@ void WriteStreamFrame() {
         ((short *)streambuf)[i_samp] = (short)xi;
       }
     }
-    writeHiGainData((char *)streambuf, n_streambuf);
+    writeData((char *)streambuf, n_streambuf, i_field);
   }
 }
 
