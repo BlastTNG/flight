@@ -36,10 +36,9 @@ struct streamDataStruct {
   int msw; // offset in bytes in frame_char to the msw
 };
 
-
-#define N_PORTS 1
-
 #define HIGAIN_TTY "/dev/ttySI2"
+#define OMNI1_TTY "/dev/ttySI1"
+#define OMNI2_TTY "/dev/ttySI4"
 
 void nameThread(const char*);               /* mcp.c */
 
@@ -48,7 +47,11 @@ extern struct fieldStreamStruct streamList[];
 extern short int InCharge;
 
 int n_framelist;
-unsigned short n_streamlist;
+unsigned short n_streamlist; // number of fields in the stream list
+unsigned short n_higain_stream = 0; // number of stream fields written to highgain
+unsigned short n_omni1_stream = 0;
+unsigned short n_omni2_stream = 0;
+
 struct NiosStruct **frameNiosList;
 struct BiPhaseStruct **frameBi0List;
 struct streamDataStruct *streamData;
@@ -58,21 +61,22 @@ unsigned short *PopFrameBuffer(struct frameBuffer *buffer); // mcp.c
 //*********************************************************
 // Open High Gain Serial port
 //*********************************************************
-static int OpenHiGainSerial(void) {
+static int OpenHiGainSerial(char *tty) {
   static int report_state = -1; // -1 = no reports.  0 == reported error.  1 == reported success
   int fd;
   struct termios term;
 
-  if ((fd = open(HIGAIN_TTY, O_RDWR | O_NOCTTY)) < 0) {
+  if ((fd = open(tty, O_RDWR | O_NOCTTY)) < 0) {
     if (report_state!=0) {
-      bprintf(err, "Could not open tdrss higain serial port.  Retrying...");
+      bprintf(err, "Could not open downlink serial port %s.  Retrying...", tty);
       report_state = 0;
     }
     return (fd);
   }
 
-  if (tcgetattr(fd, &term))
-    berror(tfatal, "Unable to get higain tdrss serial device attributes");
+  if (tcgetattr(fd, &term)) {
+    berror(tfatal, "Unable to get downlink serial port %s attributes", tty);
+  }
 
   term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
   term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
@@ -87,18 +91,16 @@ static int OpenHiGainSerial(void) {
   cfmakeraw(&term);
    
   if (cfsetospeed(&term, B115200))
-    berror(tfatal, "Error setting higain tdrss serial output speed");
+    berror(tfatal, "Error setting downlink serial port %s output speed", tty);
 
   if (cfsetispeed(&term, B115200))
-    berror(tfatal, "Error setting higain tdrss serial input speed");
+    berror(tfatal, "Error setting downlink serial port %s input speed", tty);
 
   if (tcsetattr(fd, TCSANOW, &term))
-    berror(tfatal, "Unable to set higain tdrss serial attributes");
+    berror(tfatal, "Unable to set downlink serial port %s attributes", tty);
 
-  if (report_state!=1) {
-    bprintf(info, "TDRSS higain serial port opened");
-    report_state = 1;
-  }
+  bprintf(info, "downlink serial port %s opened", tty);
+  report_state = 1;
   
   return fd;
 }
@@ -110,7 +112,7 @@ void writeHiGainData(char *x, int size) {
   static int fp = -1;
   
   if (fp < 0) {
-    fp = OpenHiGainSerial();
+    fp = OpenHiGainSerial(HIGAIN_TTY);
   }
 
   if (fp>=0) {
@@ -119,6 +121,7 @@ void writeHiGainData(char *x, int size) {
     }
   }
 }
+
 //*********************************************************
 // Buffer streamed data to be later compressed
 //*********************************************************
@@ -130,6 +133,7 @@ void BufferStreamData(int i_streamframe, unsigned short *frame) {
   unsigned char *frame_char = (unsigned char *)frame;
 
   // record stream data in buffer
+  // buffer all stream channels, even ones that might not get written
   for (i_field=0; i_field < n_streamlist; i_field++) {
     if (streamData[i_field].isFast) {
       int i_l, i_m;
@@ -188,9 +192,11 @@ void BufferStreamData(int i_streamframe, unsigned short *frame) {
 //*********************************************************
 void WriteSuperFrame(unsigned short *frame) {
   int higain_bytes_per_streamframe = 0;
-  int omni_bytes_per_streamframe = 0;
-  int dialup_bytes_per_streamframe = 0;
+  int omni1_bytes_per_streamframe = 0;
+  int omni2_bytes_per_streamframe = 0;
   double higain_requested_bytes_per_streamframe = 0;
+  double omni1_requested_bytes_per_streamframe = 0;
+  double omni2_requested_bytes_per_streamframe = 0;
 
   static int first_time = 1;
 
@@ -239,10 +245,10 @@ void WriteSuperFrame(unsigned short *frame) {
     BufferStreamData(FASTFRAME_PER_STREAMFRAME-1, frame); // fill buffer with first value;
 
     higain_bytes_per_streamframe = (HIGAIN_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
-    omni_bytes_per_streamframe = (OMNI_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
-    dialup_bytes_per_streamframe = (DIALUP_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
-    bprintf(info, "Bytes per stream frame - High gain: %d  tdrss omni: %d  iridium dialup: %d",
-            higain_bytes_per_streamframe, omni_bytes_per_streamframe, dialup_bytes_per_streamframe);
+    omni1_bytes_per_streamframe = (OMNI1_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
+    omni2_bytes_per_streamframe = (OMNI2_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
+    bprintf(info, "Bytes per stream frame - High gain: %d  omni1: %d  omni2: %d",
+            higain_bytes_per_streamframe, omni1_bytes_per_streamframe, omni2_bytes_per_streamframe);
 
     for (i_field = 0; i_field<n_streamlist; i_field++) {
       double delta=0;
@@ -253,31 +259,59 @@ void WriteSuperFrame(unsigned short *frame) {
         delta+=4.0/(double)STREAMFRAME_PER_SUPERFRAME;
       }
         
-      if (higain_requested_bytes_per_streamframe+delta>higain_bytes_per_streamframe) {        
-        bprintf(info, "Field %s exceeds the maximum size for the highgain stream.  Truncating.", streamList[i_field].name);
-        n_streamlist = i_field;
-        break;
+      if (higain_requested_bytes_per_streamframe+delta>higain_bytes_per_streamframe) {
+        if (n_higain_stream==0) {
+          bprintf(info, "Field %s exceeds the maximum size for the highgain stream.  Truncating.", streamList[i_field].name);
+          n_higain_stream = i_field;
+        }
       } else {
         higain_requested_bytes_per_streamframe+=delta;
       }
+      
+      if (omni1_requested_bytes_per_streamframe+delta>omni1_bytes_per_streamframe) {
+        if (n_omni1_stream==0) {
+          bprintf(info, "Field %s exceeds the maximum size for the omni1 stream.  Truncating.", streamList[i_field].name);
+          n_omni1_stream = i_field;
+        }
+      } else {
+        omni1_requested_bytes_per_streamframe+=delta;
+      }
+      
+      if (omni2_requested_bytes_per_streamframe+delta>omni2_bytes_per_streamframe) {
+        if (n_omni2_stream==0) {
+          bprintf(info, "Field %s exceeds the maximum size for the omni2 stream.  Truncating.", streamList[i_field].name);
+          n_omni2_stream = i_field;
+        }
+      } else {
+        omni2_requested_bytes_per_streamframe+=delta;
+      }
     }
     bprintf(info, "High gain: %u stream fields use %.0f out of %d bytes per stream frame (%.0f free)",
-            n_streamlist,
+            n_higain_stream,
             higain_requested_bytes_per_streamframe, higain_bytes_per_streamframe,
             higain_bytes_per_streamframe - higain_requested_bytes_per_streamframe);
+    bprintf(info, "Omni1: %u stream fields use %.0f out of %d bytes per stream frame (%.0f free)",
+            n_omni1_stream,
+            omni1_requested_bytes_per_streamframe, omni1_bytes_per_streamframe,
+            omni1_bytes_per_streamframe - omni1_requested_bytes_per_streamframe);
+    bprintf(info, "Omni2: %u stream fields use %.0f out of %d bytes per stream frame (%.0f free)",
+            n_omni2_stream,
+            omni2_requested_bytes_per_streamframe, omni2_bytes_per_streamframe,
+            omni2_bytes_per_streamframe - omni2_requested_bytes_per_streamframe);
   }
 
   // write fields size
-  writeHiGainData((char*)&n_streamlist, sizeof(unsigned short));
+  writeHiGainData((char*)&n_higain_stream, sizeof(unsigned short));
   
   // set and write stream gains and offsets
   for (i_field=0; i_field<n_streamlist; i_field++) {
     long long unsigned lloffset;
 
     gain = streamData[i_field].gain;
-    
-    writeHiGainData((char *)&gain, sizeof(unsigned short));
-    frame_bytes_written+=sizeof(unsigned short);
+
+    if (i_field < n_higain_stream) { 
+      writeHiGainData((char *)&gain, sizeof(unsigned short));
+    }
     
     lloffset = streamData[i_field].sum/(double)streamData[i_field].n_sum;
     streamData[i_field].offset = lloffset;
@@ -286,34 +320,33 @@ void WriteSuperFrame(unsigned short *frame) {
       if (streamData[i_field].isSigned) { // 32 bit in field
         int offset;
         offset = lloffset;
-        writeHiGainData((char *)&offset, sizeof(int));
-        frame_bytes_written+=sizeof(int);
+        if (i_field < n_higain_stream) {
+          writeHiGainData((char *)&offset, sizeof(int));
+        }
       } else {
         unsigned offset;
         offset = lloffset;
-        writeHiGainData((char *)&offset, sizeof(unsigned));
-        frame_bytes_written+=sizeof(unsigned);
+        if (i_field < n_higain_stream) {
+          writeHiGainData((char *)&offset, sizeof(unsigned));
+        }
       }
     } else {
       if (streamData[i_field].isSigned) { // 16 bit signed field
         short offset;
         offset = lloffset;
-        writeHiGainData((char *)&offset, sizeof(short));
-        frame_bytes_written+=sizeof(short);
+        if (i_field < n_higain_stream) {
+          writeHiGainData((char *)&offset, sizeof(short));
+        }
       } else {
         unsigned short offset;
         offset = lloffset;
-        writeHiGainData((char *)&offset, sizeof(unsigned short));
-        frame_bytes_written+=sizeof(unsigned short);
+        if (i_field < n_higain_stream) {
+          writeHiGainData((char *)&offset, sizeof(unsigned short));
+        }
       }
     }
     streamData[i_field].sum = streamData[i_field].n_sum = 0;
   }
-  
-  // figure out how many bytes per stream frame we have room for...
-  if (first_time) {
-  }
-
 
   return;
 }
@@ -376,11 +409,7 @@ void WriteStreamFrame() {
 //*********************************************************
 // The main compression writer thread
 //*********************************************************
-void CompressionWriter() {
-  int n_higainstream = -1;
-  int n_omnistream = -1;
-  int n_dailupstream = -1;
-  
+void CompressionWriter() {  
   int i_fastframe = -1;
   int i_field;
   int i_streamframe=0;
