@@ -599,23 +599,23 @@ static void GetElDither() {
     first_time = 0;
   }
   dith_step = CommandData.pointing_mode.dith;
-  bprintf(info,"***Dither Time!!!*** dith_step = %f",dith_step);
+  bprintf(info,"***Dither Time!!!***  dith_step = %f",dith_step);
   
   if (dith_step < -0.000277778 && dith_step > 0.000277778) { // If |dith_step| < 1'' no dither
     axes_mode.el_dith = 0.0;
     bprintf(info,"No dither: axes_mode.el_dith = %f",axes_mode.el_dith);
-  } else if (dith_step < -0.99) { // Random mode! May want to remove later...
+  } else if (dith_step < 0.00) { // Random mode! May want to remove later...
     tmp_rand = rand();
     axes_mode.el_dith = 0.5*CommandData.pointing_mode.del*(tmp_rand/RAND_MAX-0.5);      
     bprintf(info,"Random dither: axes_mode.el_dith = %f, tmp_rand = %i",axes_mode.el_dith,tmp_rand);
   } else {
-    if((dith_step > CommandData.pointing_mode.del*0.5 && dith_step > 0.0) ||
-       (dith_step < (-1.0)*CommandData.pointing_mode.del*0.5 && dith_step < 0.0))
-      {
-	dith_step += (-1.0)*CommandData.pointing_mode.del;
-      }
     axes_mode.el_dith += dith_step;
-    bprintf(info,"Stepping dither: axes_mode.el_dith = %f",axes_mode.el_dith);
+    bprintf(info,"Stepping dither: axes_mode.el_dith = %f, CommandData.pointing_mode.del=%f",axes_mode.el_dith,CommandData.pointing_mode.del);
+    bprintf(info,"GetElDither: dith_step =%f, CommandData.pointing_mode.del =%f",dith_step,CommandData.pointing_mode.del);
+    if(axes_mode.el_dith > CommandData.pointing_mode.del*0.5) {
+      axes_mode.el_dith += (-1.0)*CommandData.pointing_mode.del;
+      bprintf(info,"GetElDither: Wrapping dither... axes_mode.el_dith=%f",axes_mode.el_dith);
+    }
   }
   return;
 }
@@ -928,10 +928,16 @@ static void DoNewCapMode(void)
   double v_az, t=1;
   int i_point;
   int new_step = 0;
+  int new_scan = 0;
 
   static double last_X=0, last_Y=0, last_w=0;
   static double v_el = 0;
   static double targ_el=0.0;
+
+  // Stuff for the elevation offset/hwpr trigger
+  static int el_dir_last = 0; 
+  static int n_scan = 0;
+  static int el_next_dir = 0.0;
 
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
@@ -948,6 +954,11 @@ static void DoNewCapMode(void)
   radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
       lst + 1.0, lat,
       &az2, &el2);
+
+  /* add in elevation dither */
+  cel += axes_mode.el_dith;
+  el2 += axes_mode.el_dith;
+
   daz_dt = drem(az2 - caz, 360.0);
   del_dt = el2 - cel;
 
@@ -964,11 +975,13 @@ static void DoNewCapMode(void)
       (CommandData.pointing_mode.Y != last_Y) ||
       (CommandData.pointing_mode.w != last_w) ||
       (last_mode != P_CAP)) {
+    ClearElDither(); // sets dither to 0...
     if ( (fabs(az - (caz)) < 0.1) &&
         (fabs(el - (bottom)) < 0.05)) {
       last_X = CommandData.pointing_mode.X;
       last_Y = CommandData.pointing_mode.Y;
       last_w = CommandData.pointing_mode.w;
+      n_scan = 0;
     } else {
       last_w = 0; // remember we are moving...
       axes_mode.az_mode = AXIS_POSITION;
@@ -979,7 +992,7 @@ static void DoNewCapMode(void)
       axes_mode.el_vel = 0.0;
       v_el = 0.0;
       targ_el = -r;
-      axes_mode.el_dir = 1;
+      el_next_dir = 1;
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
@@ -1039,13 +1052,18 @@ static void DoNewCapMode(void)
     // set v for this step
     v_el = (targ_el - (el-cel))/t;
     // set targ_el for the next step
-    targ_el += CommandData.pointing_mode.del*axes_mode.el_dir;
+    //    bprintf(info,"Az Step:targ_el = %f, el = %f, cel = %f,el-cel = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,el,cel,el-cel,el_next_dir,axes_mode.el_dir,v_el);
+    targ_el += CommandData.pointing_mode.del*el_next_dir;
+    axes_mode.el_dir = el_next_dir;
+    //    bprintf(info,"Az Step: Next Step targ_el = %f",targ_el);
     if (targ_el>=r) {
       targ_el = r;
-      axes_mode.el_dir=-1;
+      el_next_dir=-1;
+      bprintf(info,"Approaching the bottom: next targ_el = %f, r = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",targ_el,r,el_next_dir,axes_mode.el_dir,v_el);
     } else if (targ_el<=-r) {
       targ_el = -r;
-      axes_mode.el_dir = 1;
+      el_next_dir=1;
+      bprintf(info,"Approaching the bottom: next targ_el = %f, -r = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",targ_el,(-1.0)*r,el_next_dir,axes_mode.el_dir,v_el);
     }
   }
 
@@ -1087,6 +1105,24 @@ static void DoNewCapMode(void)
   /*   } else if (el < el2) {  */
   /*     axes_mode.el_dir = 1; */
   /*   }     */
+
+  if ((axes_mode.el_dir - el_dir_last)== 2) {
+    n_scan +=1;
+    new_scan = 1;
+    bprintf(info,"DoNewCapMode: Sending signal to rotate HWPR. n_scan = %i",n_scan);
+    
+    /* Set flags to rotate the HWPR */
+    CommandData.hwpr.mode = HWPR_STEP;
+    CommandData.hwpr.is_new = HWPR_STEP;
+    
+    if(n_scan % 4 == 0 && n_scan != 0) {
+      GetElDither();
+      bprintf(info,"We're dithering! El Dither = %f", axes_mode.el_dith);
+    }
+
+  }
+
+  el_dir_last = axes_mode.el_dir;
 
   axes_mode.el_mode = AXIS_VEL;
   axes_mode.el_vel = v_el + del_dt;
@@ -1156,7 +1192,7 @@ static void DoNewBoxMode(void)
   if (bottom < MIN_EL)
     bottom = MIN_EL;
 
-  if (j%JJLIM == 0) bprintf(info,"cel =%f, el = %f,axes_mode.el_dith = %f, w=%f, h=%f, bottom = %f, top = %f, left = %f, right = %f",cel, el,axes_mode.el_dith, w, h, bottom , top, left, right);
+  //  if (j%JJLIM == 0) bprintf(info,"cel =%f, el = %f,axes_mode.el_dith = %f, w=%f, h=%f, bottom = %f, top = %f, left = %f, right = %f",cel, el,axes_mode.el_dith, w, h, bottom , top, left, right);
   // FIXME: reboot proofing...
 
   new = 0;
@@ -1168,10 +1204,6 @@ static void DoNewBoxMode(void)
       (CommandData.pointing_mode.h != last_h) ||
       (last_mode != P_BOX)) {
     new = 1;
-    bprintf(info,"X: %f, %f, Y: %f, %f, w: %f, %f, h: %f %f",CommandData.pointing_mode.X, last_X,
-	    CommandData.pointing_mode.Y, last_Y,
-	    CommandData.pointing_mode.w, last_w,
-	    CommandData.pointing_mode.h, last_h);
     ClearElDither();
   }
   if (el < bottom - 0.5) new = 1;
@@ -1228,9 +1260,9 @@ static void DoNewBoxMode(void)
     // set v for this step
     v_el = (targ_el - (el-cel))/t;
     // set targ_el for the next step
-    bprintf(info,"Az Step:targ_el = %f, el = %f, cel = %f,el-cel = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,el,cel,el-cel,el_next_dir,axes_mode.el_dir,v_el);
+    //    bprintf(info,"Az Step:targ_el = %f, el = %f, cel = %f,el-cel = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,el,cel,el-cel,el_next_dir,axes_mode.el_dir,v_el);
     targ_el += CommandData.pointing_mode.del*el_next_dir; // This is actually the next target el....
-    bprintf(info,"Az Step: Next Step targ_el = %f",targ_el);
+    //    bprintf(info,"Az Step: Next Step targ_el = %f",targ_el);
     axes_mode.el_dir = el_next_dir;
     if (targ_el>h*0.5) { // If the target el for the next step is outside the el box range
       targ_el = h*0.5;
@@ -1307,11 +1339,18 @@ void DoQuadMode(void) // aka radbox
   double c_az[4], c_el[4]; // corner az and corner el
   double az_of_bot;
   int new;
+  int new_scan = 0;
+ 
   //int i_top, i_bot, new;
 
   static double last_ra[4] = {0,0,0,0}, last_dec[4] = {0,0,0,0};
   static double v_el = 0;
   static double targ_el=0.0; // targ_el is in degrees from bottom
+
+  // Stuff for the elevation offset/hwpr trigger
+  static int el_dir_last = 0; 
+  static int n_scan = 0;
+  static int el_next_dir = 0.0;
 
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
@@ -1383,7 +1422,7 @@ void DoQuadMode(void) // aka radbox
       axes_mode.el_vel = 0.0;
       v_el = 0.0;
       targ_el = 0.0;
-      axes_mode.el_dir = 1;
+      el_next_dir = 1;
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
@@ -1435,15 +1474,37 @@ void DoQuadMode(void) // aka radbox
     // set v for this step
     v_el = (targ_el+bottom - el)/t;
     // set targ_el for the next step
-    targ_el += CommandData.pointing_mode.del*axes_mode.el_dir;
+    //    bprintf(info,"Az Step:targ_el = %f, bottom = %f, el = %f,el-bottom = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,bottom,el,el-bottom,el_next_dir,axes_mode.el_dir,v_el);
+    targ_el += CommandData.pointing_mode.del*el_next_dir;
+    axes_mode.el_dir = el_next_dir;
     if (targ_el>top-bottom) {
       targ_el = top-bottom;
-      axes_mode.el_dir=-1;
+      el_next_dir=-1; 
+      bprintf(info,"Approaching the top: next targ_el = %f, top-bottom = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",targ_el,top-bottom,el_next_dir,axes_mode.el_dir,v_el);
     } else if (targ_el<0) {
       targ_el = 0;
-      axes_mode.el_dir = 1;
+      el_next_dir = 1;
+      bprintf(info,"Approaching the bottom: next targ_el = %f, top-bottom = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",targ_el,top-bottom,el_next_dir,axes_mode.el_dir,v_el);
     }
   }
+
+  if ((axes_mode.el_dir - el_dir_last)== 2) {
+    n_scan +=1;
+    new_scan = 1;
+    bprintf(info,"DoNewQuadMode: Sending signal to rotate HWPR. n_scan = %i",n_scan);
+
+    /* Set flags to rotate the HWPR */
+    CommandData.hwpr.mode = HWPR_STEP;
+    CommandData.hwpr.is_new = HWPR_STEP;
+
+    if(n_scan % 4 == 0 && n_scan != 0) {
+      GetElDither();
+      bprintf(info,"We're dithering! El Dither = %f", axes_mode.el_dith);
+    }
+
+  }
+
+  el_dir_last = axes_mode.el_dir;
 
   axes_mode.el_mode = AXIS_VEL;
   axes_mode.el_vel = v_el + del_dt;

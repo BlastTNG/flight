@@ -1291,6 +1291,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case slew_veto:
       CommandData.slew_veto = rvalues[0] * SR;
+            bprintf(info,"CommandData.slew_veto = %i, CommandData.pointing_mode.nw = %i", CommandData.slew_veto, CommandData.pointing_mode.nw);
+      if (CommandData.pointing_mode.nw > CommandData.slew_veto) CommandData.pointing_mode.nw = CommandData.slew_veto; 
+     
       break;
 
       /***************************************/

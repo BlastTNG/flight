@@ -59,10 +59,14 @@
 #define FIR_LENGTH (60*30 * SR)
 
 /* Calibrations of the az of each sensor, relative to dGPS */
-#define MAG_ALIGNMENT	  0.   //(4.2681)
-#define PSS1_ALIGNMENT	  60.
-#define PSS2_ALIGNMENT	  +135.
-#define SSS_ALIGNMENT	  0.
+/*#define MAG_ALIGNMENT	  183.   //(4.2681)
+#define PSS1_ALIGNMENT	   43. // 343 + 60
+#define PSS2_ALIGNMENT	  120. // 135 -15
+#define SSS_ALIGNMENT	  -15.*/
+#define MAG_ALIGNMENT	   -258.   //(4.2681)
+#define PSS1_ALIGNMENT	   93. // 343 + 60
+#define PSS2_ALIGNMENT	   0. // 135 -15
+#define SSS_ALIGNMENT	  -90.
 
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
     double *el);
@@ -946,7 +950,7 @@ static int SSConvert(double *ss_az)
   
   /* END SSS RAW CALCULATIONS */
 
-  *ss_az =  PointingData[point_index].ss_az_rel_sun + sun_az  ;
+  *ss_az =  PointingData[point_index].ss_az_rel_sun + sun_az+ SSS_ALIGNMENT  ;
 
   NormalizeAngle(ss_az);
 
