@@ -21,8 +21,13 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/ioport.h>
+//#include <linux/jiffies.h>//
 #include <linux/pci.h>
 #include <linux/delay.h>
+//#include <linux/kobject.h>//
+#include <linux/sysfs.h>//
+#include <linux/string.h>//
+#include <linux/cdev.h>//
 #include <linux/poll.h>	    //fixes struct file_operations
 
 #include <asm/io.h>
@@ -35,7 +40,8 @@
 #define DRV_VERSION "1.1"
 #define DRV_RELDATE ""
 
-#define DECOM_MAJOR 251
+#define DECOM_MAJOR 251	  //no longer used (dynamically allocate instead)
+#define DECOM_MINOR 0
 
 #ifndef VERSION_CODE
 #  define VERSION_CODE(vers,rel,seq) ( ((vers)<<16) | ((rel)<<8) | (seq) )
@@ -46,6 +52,10 @@
 #endif
 #if LINUX_VERSION_CODE >= VERSION_CODE(2,7,0)
 # error "This kernel version is not supported"
+#endif
+//incompatible API change, may have changed defore 2.6.27
+#if LINUX_VERSION_CODE >= VERSION_CODE(2,6,27)
+#define USE_NEWER_DEVICE_CREATE
 #endif
 
 
@@ -78,6 +88,8 @@ static struct {
 
   int use_count;
   int timer_on;
+
+  struct cdev decom_cdev;
 } decom_drv;
 
 #define DECOM_WFIFO_SIZE (RX_BUFFER_SIZE)
@@ -89,7 +101,11 @@ static struct {
   atomic_t n;
 } decom_wfifo;
 
+static struct class *decom_pci_class;
+struct device *decom_pci_d;
 
+static int decom_pci_start_sysfs(void);
+static void decom_pci_remove_sysfs(void);
 
 static void timer_callback(unsigned long dummy)
 {
@@ -277,6 +293,52 @@ static struct file_operations decom_fops = {
 
 
 /* *********************************************************************** */
+/* *** control the sysfs                                                *** */
+/* *********************************************************************** */
+struct device_attribute *da_list_decom_pci[] = {
+  NULL
+};
+
+static int decom_pci_start_sysfs() {
+  struct device_attribute *dap, **dapp;
+  dev_t devnum;
+
+  decom_pci_class = class_create(THIS_MODULE, "decom_pci");
+  if (IS_ERR(decom_pci_class)) return 0;
+
+  devnum = decom_drv.decom_cdev.dev;
+#ifndef USE_NEWER_DEVICE_CREATE
+  decom_pci_d = device_create(decom_pci_class, NULL, devnum, "decom_pci");
+#else
+  decom_pci_d = device_create(decom_pci_class, NULL, devnum, NULL, "decom_pci");
+#endif
+  if (IS_ERR(decom_pci_d)) return 0;
+
+  for (dapp = da_list_decom_pci; *dapp; dapp++) {
+    dap = *dapp;
+    if (device_create_file(decom_pci_d, dap))
+      printk(KERN_ERR DRV_NAME " device_create_file failed\n");
+  }
+
+  return 0;
+}
+
+static void decom_pci_remove_sysfs() {
+  struct device_attribute *dap, **dapp;
+  dev_t devnum;
+
+  for (dapp = da_list_decom_pci; *dapp; dapp++) {
+    dap = *dapp;
+    device_remove_file(decom_pci_d, dap);
+  }
+
+  devnum = decom_drv.decom_cdev.dev;
+  if (devnum && !IS_ERR(decom_pci_d))
+    device_destroy(decom_pci_class, devnum);
+  class_destroy(decom_pci_class);
+}
+
+/* *********************************************************************** */
 /* *** this defines the pci layer                                       *** */
 /* *********************************************************************** */
 
@@ -284,6 +346,7 @@ static int __devinit decom_pci_init_one(struct pci_dev *pdev,
 				      const struct pci_device_id *ent)
 {
   int ret;
+  dev_t devnum;
  
   ret = pci_enable_device (pdev);
   if(ret) return ret;
@@ -297,25 +360,34 @@ static int __devinit decom_pci_init_one(struct pci_dev *pdev,
     return -ENODEV;
   }
 
-  if (check_mem_region(decom_drv.mem_base_raw, decom_drv.len)) {
+  
+  if (!request_mem_region(decom_drv.mem_base_raw, decom_drv.len, DRV_NAME)) {
     printk(KERN_WARNING "%s: memory already in use\n", DRV_NAME);
     return -EBUSY;
   }
-  
-  request_mem_region(decom_drv.mem_base_raw, decom_drv.len, DRV_NAME);
 
   decom_drv.mem_base = ioremap_nocache(decom_drv.mem_base_raw, decom_drv.len);
 
   // Register this as a character device
-  if(register_chrdev(decom_major, DRV_NAME, &decom_fops) != 0) {
-    printk(KERN_ERR "%s: unable to get major device\n", DRV_NAME);
-    return -EIO;
+  ret = alloc_chrdev_region(&devnum, DECOM_MINOR, 1, DRV_NAME);
+  if (ret < 0) {
+    printk(KERN_WARNING DRV_NAME " can't allocate major\n");
+    return ret;
   }
-  
+  printk(KERN_DEBUG DRV_NAME " major: %d minor: %d dev: %d\n",
+      MAJOR(devnum), DECOM_MINOR, devnum);
+
+  cdev_init(&decom_drv.decom_cdev, &decom_fops);
+  decom_drv.decom_cdev.owner = THIS_MODULE;
+  ret = cdev_add(&decom_drv.decom_cdev, devnum, 1);
+  if (ret < 0)
+    printk(KERN_WARNING DRV_NAME " failed to register decom_pci device\n");
   
   decom_drv.timer_on = 0;
   decom_drv.use_count = 0;
   decom_wfifo.status = FIFO_DISABLED;
+
+  decom_pci_start_sysfs();
 
   printk(KERN_NOTICE "%s: driver initialized\n", DRV_NAME);
   
@@ -324,9 +396,12 @@ static int __devinit decom_pci_init_one(struct pci_dev *pdev,
 
 static void __devexit decom_pci_remove_one(struct pci_dev *pdev)
 {
+  decom_pci_remove_sysfs();
+
   iounmap(decom_drv.mem_base);
   release_mem_region(decom_drv.mem_base_raw, decom_drv.len);
   
+  cdev_del(&decom_drv.decom_cdev);
   unregister_chrdev(decom_major, DRV_NAME);
 
   pci_disable_device(pdev);
