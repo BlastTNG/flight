@@ -20,8 +20,20 @@
 
 #define FIFODEPTH 2048
 #define RAWDIR "/data/rawdir"
-#define LNKFILE "/data/etc/fox.lnk"
+
+#define FOX_LNKFILE "/data/etc/fox.lnk"
 #define RNC_PORT 41114
+#define FOX_EXT 'h'
+#define MSNBC_LNKFILE "/data/etc/msnbc.lnk"
+#define DNC_PORT 14441
+#define MSNBC_EXT 't'
+#define RUSH_LNKFILE "/data/etc/rush.lnk"
+#define TEA_PORT 14141
+#define RUSH_EXT 's'
+
+char LNKFILE[4096];
+int PORT;
+char EXT;
 
 extern struct ChannelStruct WideSlowChannels[];
 extern struct ChannelStruct SlowChannels[];
@@ -43,12 +55,15 @@ struct fifoStruct {
 int n_framefields = 0;
 struct ChannelStruct **framefields;
 
-int n_streamfields = 0;
+unsigned short n_streamfields = 0;
+unsigned short n_streamfieldlist = 0;
 struct ChannelStruct **streamfields;
 unsigned *stream_gains;
-unsigned *stream_offsets;
+long long *stream_offsets;
 
-// out needs to be allocated before we come here.
+//*********************************************************
+// "out" needs to be allocated before we come here.
+//*********************************************************
 void convertToUpper(char *in, char *out) {
   int i;
   for (i=0; in[i] != '\0'; i++) {
@@ -57,7 +72,9 @@ void convertToUpper(char *in, char *out) {
   out[i] = '\0';
 }
  
-// out needs to be allocated before we come here.
+//*********************************************************
+// "out" needs to be allocated before we come here.
+//*********************************************************
 void convertToLower(char *in, char *out) {
   int i;
   for (i=0; in[i] != '\0'; i++) {
@@ -66,6 +83,9 @@ void convertToLower(char *in, char *out) {
   out[i] = '\0';
 }
 
+//*********************************************************
+// insert data into the fifo
+//*********************************************************
 void push(struct fifoStruct *fs, char x[], int size) {
   int i;
   for (i=0; i<size; i++) {
@@ -77,6 +97,9 @@ void push(struct fifoStruct *fs, char x[], int size) {
   }
 }
 
+//*********************************************************
+// return data w/out removing it
+//*********************************************************
 void peek(struct fifoStruct *fs, char x[], int size) {
   // warning: no error checking.  Use nFifo first to make
   // sure you don't wrap the fifo.
@@ -92,6 +115,9 @@ void peek(struct fifoStruct *fs, char x[], int size) {
   }
 }
 
+//*********************************************************
+// advance the fifo pointer (removes data)
+//*********************************************************
 void advance(struct fifoStruct *fs, int size) {
   fs->i_out += size;
   if (fs->i_out >= FIFODEPTH) {
@@ -99,11 +125,17 @@ void advance(struct fifoStruct *fs, int size) {
   }
 }
 
+//*********************************************************
+// remove data from the fifo
+//*********************************************************
 void pop(struct fifoStruct *fs, char x[], int size) {
   peek(fs, x, size);
   advance(fs,size);
 }
 
+//*********************************************************
+// how many bytes are availible in the fifo
+//*********************************************************
 int nFifo(struct fifoStruct *fs) {
   int n;
 
@@ -114,6 +146,9 @@ int nFifo(struct fifoStruct *fs) {
 }
 
 
+//*********************************************************
+// connect to the political party server
+//*********************************************************
 int party_connect(const char *hostname) {
   int s;
   struct sockaddr_in sn;
@@ -123,7 +158,7 @@ int party_connect(const char *hostname) {
   int on =1 ;
 
   sp = &sp_real;
-  sp->s_port = htons(RNC_PORT);
+  sp->s_port = htons(PORT);
 
   sn.sin_family = AF_INET;
   sn.sin_port = sp->s_port;
@@ -152,6 +187,9 @@ int party_connect(const char *hostname) {
   return s;
 }
 
+//*********************************************************
+// usage
+//*********************************************************
 void Usage() {
   fprintf(stderr,"fox <hostname>\n"
     "File Output eXtractor: \n"
@@ -160,6 +198,30 @@ void Usage() {
     exit(0);
 }
 
+//*********************************************************
+// See if a field already exists - case sensitive
+//*********************************************************
+int FieldExists(char *field) {
+  int i_field;
+
+  for (i_field = 0; i_field<n_framefields; i_field++) {
+    if (strcmp(field, framefields[i_field]->field)==0) {
+      return(1);
+    }
+  }
+  for (i_field = 0; i_field<n_streamfields; i_field++) {
+    if (strcmp(field, streamfields[i_field]->field)==0) {
+      return(1);
+    }
+  }
+  return(0);
+}
+
+
+//*********************************************************
+// Check to see if a raw field is in one of the lists
+// ignore case...
+//*********************************************************
 int FieldSupported(char *field) {
   int i_field;
   char lowerfield[512];
@@ -179,8 +241,10 @@ int FieldSupported(char *field) {
   return(0);
 }
 
- /*  \REFERENCE <rawfieldname> */
- 
+
+//*********************************************************
+// Make the format file
+//*********************************************************
 void MakeFormatFile(char *filedirname) {
   char formatfilename[1024];
   FILE *formatfile;
@@ -188,7 +252,6 @@ void MakeFormatFile(char *filedirname) {
   int i_derived;
   char fieldU[1024];
 
-  /******************************************/
   /*   Make format File   */
   sprintf(formatfilename, "%s/format", filedirname);
 
@@ -224,6 +287,10 @@ void MakeFormatFile(char *filedirname) {
     }
   }
 
+  fprintf(formatfile, "/REFERENCE %s\n", streamfields[n_streamfields-1]->field);
+  // the Time field
+  //fprintf(formatfile, "Time RAW d 1\n/REFERENCE Time\n");
+
   // Derived channels
   for (i_derived = 0; DerivedChannels[i_derived].comment.type != DERIVED_EOC_MARKER; ++i_derived) {
       switch (DerivedChannels[i_derived].comment.type) {
@@ -241,6 +308,10 @@ void MakeFormatFile(char *filedirname) {
         }
         break;
       case '2': /* lincom2 */
+        if (FieldExists(DerivedChannels[i_derived].lincom2.field)) {
+          continue;
+        }
+
         if (FieldSupported(DerivedChannels[i_derived].lincom2.source)) {
           if (FieldSupported(DerivedChannels[i_derived].lincom2.source2)) {
             // write lincom2
@@ -280,6 +351,10 @@ void MakeFormatFile(char *filedirname) {
         }
         break;
       case 'c': /* lincom */
+        if (FieldExists(DerivedChannels[i_derived].lincom.field)) {
+          continue;
+        }
+
         if (FieldSupported(DerivedChannels[i_derived].lincom.source)) {
           // write lincom
           fprintf(formatfile, "%-16s LINCOM 1 %-16s %.12e %.12e\n",
@@ -307,13 +382,13 @@ void MakeFormatFile(char *filedirname) {
 
 }
 
+//*********************************************************
+// Make the list of frame channels
+//*********************************************************
 void MakeFrameList() {
   int i_field;
-  int i_ch;
-  int found_ch;
 
-  //******************************************
-  //** Initialize the channel lists 
+  // Initialize the channel lists
   // Count the frame channels
   for (n_framefields = 0; frameList[n_framefields][0] !='\0'; n_framefields++);
 
@@ -321,123 +396,56 @@ void MakeFrameList() {
   framefields = (struct ChannelStruct **)malloc(n_framefields * sizeof (struct ChannelStruct *));
 
   for (i_field = 0; i_field<n_framefields; i_field++) {
-    found_ch = 0;
-    // search the slow channels
-    for (i_ch = 0; SlowChannels[i_ch].field[0]!='\0'; i_ch++) {
-      if (strcmp(frameList[i_field], SlowChannels[i_ch].field)==0) {
-          framefields[i_field]= SlowChannels+i_ch; // point framefields[] to the right channels
-          found_ch = 1;
-          break;
-      }
-    }
-    if (found_ch) continue;
 
-    // search the slow wide channels
-    for (i_ch = 0; WideSlowChannels[i_ch].field[0]!='\0'; i_ch++) {
-      if (strcmp(frameList[i_field], WideSlowChannels[i_ch].field)==0) {
-          framefields[i_field]= WideSlowChannels+i_ch; // point framefields[] to the right channels
-          found_ch = 1;
-          break;
-      }
+    framefields[i_field] = GetChannelStruct(frameList[i_field]);
+    
+    if (!framefields[i_field]) {
+      fprintf(stderr,"Error: could not find field in tx_struct! |%s|\n", frameList[i_field]);
+      exit(0);
     }
-    if (found_ch) continue;
-
-    // search the fast channels
-    for (i_ch = 0; FastChannels[i_ch].field[0]!='\0'; i_ch++) {
-      if (strcmp(frameList[i_field], FastChannels[i_ch].field)==0) {
-          framefields[i_field]= FastChannels+i_ch; // point framefields[] to the right channels
-          found_ch = 1;
-          break;
-      }
-    }
-    if (found_ch) continue;
-
-    // search the wide fast channels
-    for (i_ch = 0; WideFastChannels[i_ch].field[0]!='\0'; i_ch++) {
-      if (strcmp(frameList[i_field], WideFastChannels[i_ch].field)==0) {
-          framefields[i_field]= WideFastChannels+i_ch; // point framefields[] to the right channels
-          found_ch = 1;
-          break;
-      }
-    }
-    if (found_ch) continue;
-    fprintf(stderr,"Error: could not find field in tx_struct! |%s|\n", frameList[i_field]);
   }
 
 }
 
+//*********************************************************
+// Make the list of stream channels
+//*********************************************************
 void MakeStreamList() {
   int i_streamfield;
-  int i_ch;
-  int found_ch;
+  char *name;
 
-  //******************************************
-  //** Initialize the channel lists */
+  // Initialize the channel lists */
   // Count the frame channels
-  for (n_streamfields = 0; streamList[n_streamfields].name[0] !='\0'; n_streamfields++);
+  for (n_streamfieldlist = 0; streamList[n_streamfieldlist].name[0] !='\0'; n_streamfieldlist++);
   
   // find and set the frame fields
-  streamfields = (struct ChannelStruct **)malloc(n_streamfields * sizeof (struct ChannelStruct *));
-  stream_gains = (unsigned *)malloc(n_streamfields*sizeof(unsigned));
-  stream_offsets = (unsigned *)malloc(n_streamfields*sizeof(unsigned));
+  streamfields = (struct ChannelStruct **)malloc(n_streamfieldlist * sizeof (struct ChannelStruct *));
+  stream_gains = (unsigned *)malloc(n_streamfieldlist*sizeof(unsigned));
+  stream_offsets = (long long *)malloc(n_streamfieldlist*sizeof(long long));
 
-  for (i_streamfield = 0; i_streamfield<n_streamfields; i_streamfield++) {
-    found_ch = 0;
+  for (i_streamfield = 0; i_streamfield<n_streamfieldlist; i_streamfield++) {
     stream_gains[i_streamfield] = 1;
     stream_offsets[i_streamfield] = 0;
+
+    name = streamList[i_streamfield].name;
+
+    streamfields[i_streamfield] = GetChannelStruct(name);
     
-    // search the slow channels
-    for (i_ch = 0; SlowChannels[i_ch].field[0]!='\0'; i_ch++) {
-      if (strcmp(streamList[i_streamfield].name, SlowChannels[i_ch].field)==0) {
-          streamfields[i_streamfield]= SlowChannels+i_ch; // point streamfields[] to the right channels
-          found_ch = 1;
-          break;
-      }
+    if (!streamfields[i_streamfield]) {
+      fprintf(stderr,"Error: could not find field in tx_struct! |%s|\n", streamList[i_streamfield].name);
+      exit(0);
     }
-    if (found_ch) continue;
-
-    // search the slow wide channels
-    for (i_ch = 0; WideSlowChannels[i_ch].field[0]!='\0'; i_ch++) {
-      if (strcmp(streamList[i_streamfield].name, WideSlowChannels[i_ch].field)==0) {
-         streamfields[i_streamfield]= WideSlowChannels+i_ch; // point streamfields[] to the right channels
-          found_ch = 1;
-          break;
-      }
-    }
-    if (found_ch) continue;
-
-    // search the fast channels
-    for (i_ch = 0; FastChannels[i_ch].field[0]!='\0'; i_ch++) {
-      if (strcmp(streamList[i_streamfield].name, FastChannels[i_ch].field)==0) {
-          streamfields[i_streamfield]= FastChannels+i_ch; // point streamfields[] to the right channels
-          found_ch = 1;
-          break;
-      }
-    }
-    if (found_ch) continue;
-
-    // search the wide fast channels
-    for (i_ch = 0; WideFastChannels[i_ch].field[0]!='\0'; i_ch++) {
-      if (strcmp(streamList[i_streamfield].name, WideFastChannels[i_ch].field)==0) {
-          streamfields[i_streamfield]= WideFastChannels+i_ch; // point streamfields[] to the right channels
-          found_ch = 1;
-          break;
-      }
-    }
-    if (found_ch) continue;
-    fprintf(stderr,"Error: could not find field in tx_struct! |%s|\n", streamList[i_streamfield].name);
   }
-
 }
 
-/******************************************/
-/*   open the file pointers for the dirfile  */
-/******************************************/
+//*********************************************************
+//   open the file pointers for the dirfile
+//*********************************************************
 void OpenDirfilePointers(int **fieldfp, int **streamfp, char *filedirname) {
   int i_field;
   char filename[1024];
   
-  *fieldfp = (int *) malloc(n_framefields * sizeof(int));
+  *fieldfp = (int *) malloc((n_framefields+1) * sizeof(int));
   for (i_field = 0; i_field < n_framefields; i_field++) {
     sprintf(filename, "%s/%s", filedirname, framefields[i_field]->field);
     if( ((*fieldfp)[i_field] = open(filename, O_WRONLY | O_CREAT, 00644)) < 0 ) {
@@ -445,18 +453,20 @@ void OpenDirfilePointers(int **fieldfp, int **streamfp, char *filedirname) {
       exit(0);
     }
   }
-
+  
   *streamfp = (int *) malloc(n_streamfields * sizeof(int));
   for (i_field = 0; i_field < n_streamfields; i_field++) {
     sprintf(filename, "%s/%s", filedirname, streamfields[i_field]->field);
     if( ((*streamfp)[i_field] = open(filename, O_WRONLY | O_CREAT, 00644)) < 0 ) {
-      fprintf(stderr,"rnc: Could not create %s\n", filename);
+      fprintf(stderr,"fox: Could not create %s\n", filename);
       exit(0);
     }
   }
 }
 
-/* read data, leaving at least minRead in the fifo, but without overloading the Fifo */
+//*********************************************************
+// read data, leaving at least minRead in the fifo, but without overloading the Fifo
+//*********************************************************
 void BlockingRead(int minRead, struct fifoStruct *fs, int tty_fd) {
   int numin;
   char inbuf[FIFODEPTH];
@@ -479,6 +489,9 @@ void BlockingRead(int minRead, struct fifoStruct *fs, int tty_fd) {
   } while (nFifo(fs)<minRead);
 }
 
+//*********************************************************
+// main
+//*********************************************************
 int main(int argc, char *argv[]) {
   int tty_fd;
   int i_lost = 0;
@@ -502,24 +515,44 @@ int main(int argc, char *argv[]) {
   signed char c_in;
   int i_in;
   unsigned u_in;
+  long long ll_in=0;
+  int first_time = 1;
+  char *name;
 
   struct fifoStruct fs;
-  
+
+  name = argv[0] + strlen(argv[0])-3;
+  if (strcmp(name, "fox")==0) {
+    strcpy(LNKFILE, FOX_LNKFILE);
+    PORT = RNC_PORT;
+    EXT = FOX_EXT;
+  } else if (strcmp(name, "nbc")==0) {
+    strcpy(LNKFILE, MSNBC_LNKFILE);
+    PORT = DNC_PORT;
+    EXT = MSNBC_EXT;
+  } else if (strcmp(name, "ush")==0) {
+    strcpy(LNKFILE, RUSH_LNKFILE);
+    PORT = TEA_PORT;
+    EXT = RUSH_EXT;
+  } else {
+    fprintf(stderr, "unknown program: %s\n", name);
+    exit(0);
+  }
+
   fs.i_in = fs.i_out = 0;
   
   if (argc!=2) Usage();
   if (argv[1][0]=='-') Usage();
 
-
-  sprintf(filedirname, "%s/%lu.h", RAWDIR, time(NULL));
+  sprintf(filedirname, "%s/%lu.%c", RAWDIR, time(NULL),EXT);
   if (mkdir(filedirname, 0777)<0) {
-    fprintf(stderr, "rnc: could not create dirfile %s\n", filedirname);
+    fprintf(stderr, "could not create dirfile %s\n", filedirname);
     exit(0);
   }
 
   unlink(LNKFILE);
   if (symlink(filedirname, LNKFILE)<0) {
-    fprintf(stderr, "rnc: could not create link from `%s' to `%s'",
+    fprintf(stderr, "could not create link from `%s' to `%s'",
             filedirname, LNKFILE);
             exit(0);
   }
@@ -527,11 +560,7 @@ int main(int argc, char *argv[]) {
   tty_fd = party_connect(argv[1]);
 
   MakeFrameList();
-  MakeStreamList();
-  MakeFormatFile(filedirname);
-  OpenDirfilePointers(&fieldfp, &streamfp, filedirname);
   
-  //******************************************
   //**   read and parse the data  */
   while (1) { // for each superframe
     index = 0; // start of superframe
@@ -569,28 +598,69 @@ int main(int argc, char *argv[]) {
           break;
       }
       BlockingRead(fieldsize, &fs, tty_fd);
-      
+
       pop(&fs, fielddata[i_framefield], fieldsize);
       index++;
     }
 
+    BlockingRead(2, &fs, tty_fd);
+    pop(&fs, (char *)(&us_in), 2);
+
+    if (first_time) {
+      MakeStreamList();
+      // reset first_time later
+    }
+    
+    if (n_streamfields ==0) {
+      n_streamfields = us_in;
+      if (n_streamfields>n_streamfieldlist) {
+        fprintf(stderr, "error file asks for more streamfields than are listed (%u > %u)\n", n_streamfields, n_streamfieldlist); 
+        n_streamfields = 0;
+      } else {
+        printf("stream contains %u out of %u stream fields\n", n_streamfields, n_streamfieldlist);
+      }
+    }
+    // check for bad n_streamfields 
+    if ((n_streamfields != us_in) || (n_streamfields==0)) {
+      continue;
+    }
+    
+    if (first_time) {
+      MakeStreamList();
+      MakeFormatFile(filedirname);
+      OpenDirfilePointers(&fieldfp, &streamfp, filedirname);
+      first_time = 0;
+    }
+    
     // Read stream gains and offsets
     for (i_streamfield = 0; i_streamfield < n_streamfields; i_streamfield++) {
       BlockingRead(sizeof(unsigned short), &fs, tty_fd);
       pop(&fs, (char *)&us_in, sizeof(unsigned short));
       stream_gains[i_streamfield] = us_in;
+      if (stream_gains[i_streamfield] == 0) {
+        printf("zero gain for field %s.  Setting to 1\n", streamfields[i_streamfield]->field);
+        stream_gains[i_streamfield]=1;
+      }
       switch (streamfields[i_streamfield]->type) {
         case 'u':
-        case 's': // 16 bit offsets
           BlockingRead(sizeof(short), &fs, tty_fd);
           pop(&fs, (char *)&us_in, sizeof(short));
           stream_offsets[i_streamfield] = us_in;
           break;
+        case 's': // 16 bit offsets
+          BlockingRead(sizeof(short), &fs, tty_fd);
+          pop(&fs, (char *)&s_in, sizeof(short));
+          stream_offsets[i_streamfield] = s_in;
+          break;
         case 'U':
-        case 'S': // 32 bit offsets
           BlockingRead(sizeof(int), &fs, tty_fd);
           pop(&fs, (char *)&u_in, sizeof(int));
           stream_offsets[i_streamfield] = u_in;
+          break;
+        case 'S': // 32 bit offsets
+          BlockingRead(sizeof(int), &fs, tty_fd);
+          pop(&fs, (char *)&i_in, sizeof(int));
+          stream_offsets[i_streamfield] = i_in;
           break;
       }
     }
@@ -628,44 +698,45 @@ int main(int argc, char *argv[]) {
             // FIXME: deal with 4 bit fields.  There should always be a pair of them
           } else if (streamList[i_streamfield].bits == 8) {
             pop(&fs, (char *)&c_in, 1);
-            u_in  = (int)c_in * stream_gains[i_streamfield]+stream_offsets[i_streamfield];
+            ll_in  = (int)c_in * stream_gains[i_streamfield]+stream_offsets[i_streamfield];
             if (streamList[i_streamfield].doDifferentiate) { // undiferentiate...
+              ll_in = stream_offsets[i_streamfield];
               stream_offsets[i_streamfield]+=(int)c_in * stream_gains[i_streamfield];
-              u_in = stream_offsets[i_streamfield];
             }
           } else if (streamList[i_streamfield].bits == 16) {
             pop(&fs, (char *)&s_in, 2);
-            u_in = (int)s_in * stream_gains[i_streamfield]+stream_offsets[i_streamfield];
+            ll_in = (int)s_in * stream_gains[i_streamfield]+stream_offsets[i_streamfield];
             if (streamList[i_streamfield].doDifferentiate) { // undiferentiate...
-              stream_offsets[i_streamfield]+=(int)u_in * stream_gains[i_streamfield];
-              u_in = stream_offsets[i_streamfield];
+              ll_in = stream_offsets[i_streamfield];
+              stream_offsets[i_streamfield]+=(int)s_in * stream_gains[i_streamfield];
             }
           } else {
             fprintf(stderr,"Unsupported stream resolution... (a definite bug!)\n");
           }
           switch (streamfields[i_streamfield]->type) {
             case 'u':
-              us_in = u_in;
+              us_in = ll_in;
               n_wrote = write(streamfp[i_streamfield], (char *)(&us_in), 2);
               if (n_wrote != 2) {
                 fprintf(stderr, "Writing field data unsuccesful. Out of disk space?\n");
               }
               break;
             case 's': 
-              s_in = u_in;
+              s_in = ll_in;
               n_wrote = write(streamfp[i_streamfield], (char *)(&s_in), 2);
               if (n_wrote != 2) {
                 fprintf(stderr, "Writing field data unsuccesful. Out of disk space?\n");
               }
               break;
             case 'U':
+              u_in = ll_in;
               n_wrote = write(streamfp[i_streamfield], (char *)(&u_in), 4);
               if (n_wrote != 4) {
                 fprintf(stderr, "Writing field data unsuccesful. Out of disk space?\n");
               }
               break;
             case 'S':
-              i_in = u_in;
+              i_in = ll_in;
               n_wrote = write(streamfp[i_streamfield], (char *)(&i_in), 4);
               if (n_wrote != 4) {
                 fprintf(stderr, "Writing field data unsuccesful. Out of disk space?\n");
