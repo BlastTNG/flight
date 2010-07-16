@@ -1359,9 +1359,9 @@ static void StoreData(int index)
   WriteData(dgpsAzCovAddr, DGPSAtt[i_dgps].az_cov * DEG2I, NIOS_QUEUE);
   WriteData(dgpsPitchCovAddr, DGPSAtt[i_dgps].pitch_cov * DEG2I, NIOS_QUEUE);
   WriteData(dgpsRollCovAddr, DGPSAtt[i_dgps].roll_cov * DEG2I, NIOS_QUEUE);
-  WriteData(dgpsAntEAddr, DGPSAtt[i_dgps].ant_E*32768/10, NIOS_QUEUE);
-  WriteData(dgpsAntNAddr, DGPSAtt[i_dgps].ant_N*32768/10, NIOS_QUEUE);
-  WriteData(dgpsAntUAddr, DGPSAtt[i_dgps].ant_U*32768/10, NIOS_QUEUE);
+  WriteData(dgpsAntEAddr, DGPSAtt[i_dgps].ant_E*32768.0/10.0, NIOS_QUEUE);
+  WriteData(dgpsAntNAddr, DGPSAtt[i_dgps].ant_N*32768.0/10.0, NIOS_QUEUE);
+  WriteData(dgpsAntUAddr, DGPSAtt[i_dgps].ant_U*32768.0/10.0, NIOS_QUEUE);
   WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok, NIOS_QUEUE);
   WriteData(tMCRWAddr,RWMotorData[i_rw_motors].temp,NIOS_QUEUE);
   WriteData(iSerRWAddr,((int)(RWMotorData[i_rw_motors].current/30.0*32768.0)),NIOS_QUEUE);
