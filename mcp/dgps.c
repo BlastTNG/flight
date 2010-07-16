@@ -79,6 +79,7 @@ extern short int InCharge; /* tx.c */
 #define SBFID_RECEIVERTIME      5914
 #define SBFID_ATTEULER          5938
 #define SBFID_ATTCOVEULER	5939
+#define SBFID_AUXPOS		5942
 
 #define BDRATE B115200
 // #define SELECT_GPS_MUS_OUT  200000
@@ -195,6 +196,22 @@ typedef struct {
   htF32_t             Cov_HeadRoll;
   htF32_t             Cov_PitchRoll;
 } AttitudeCovEulerBlock_t;
+
+
+typedef struct {
+  htUI08_t            NRSV;
+  htUI08_t            Error;
+  htUI08_t            AmbiguityType;
+  htUI08_t            AuxAntID;
+
+  htF64_t             DeltaEast;
+  htF64_t             DeltaNorth;
+  htF64_t             DeltaUp;
+  htF64_t             EastVelocity;
+  htF64_t             NorthVelocity;
+  htF64_t             UpVelocity;
+} AuxAntPositions_t;
+
 
 /* SBF sync bytes */
 static const char SYNC_STRING[3]="$@";
@@ -677,6 +694,9 @@ void WatchDGPS()
 	  (ATTEULER->Pitch == -2e10)			  || 
 	  (ATTEULER->Roll == -2e10)			  ||
 	  (DGPSAtt[dgpsatt_index].az_cov <=0.001)	  ||
+	  (DGPSAtt[dgpsatt_index].ant_E > 0.5)		  ||
+	  (DGPSAtt[dgpsatt_index].ant_N > 3.5)		  ||
+	  (DGPSAtt[dgpsatt_index].ant_U > 0.5)		  ||
 	  (DGPSAtt[dgpsatt_index].az_cov > CommandData.dgps_cov_limit))	{
 	DGPSAtt[dgpsatt_index].att_ok = 0;
       } else {
@@ -689,7 +709,14 @@ void WatchDGPS()
       AttitudeCovEulerBlock_t* ATTCOVEULER = (AttitudeCovEulerBlock_t*) SBFBlock;
       DGPSAtt[dgpsatt_index].az_cov = ATTCOVEULER->Cov_HeadHead;
       DGPSAtt[dgpsatt_index].pitch_cov = ATTCOVEULER->Cov_PitchPitch;
-      DGPSAtt[dgpsatt_index].roll_cov = ATTCOVEULER->Cov_RollRoll;
+      DGPSAtt[dgpsatt_index].roll_cov = ATTCOVEULER->Cov_RollRoll; 
+    } else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_AUXPOS) {
+
+      /* Antenna Position*/
+      AuxAntPositions_t* AUXPOSITIONS = (AuxAntPositions_t*) SBFBlock;
+      DGPSAtt[dgpsatt_index].ant_E = AUXPOSITIONS->DeltaEast;
+      DGPSAtt[dgpsatt_index].ant_N = AUXPOSITIONS->DeltaNorth;
+      DGPSAtt[dgpsatt_index].ant_U = AUXPOSITIONS->DeltaUp;
     } 
   }	
   return;
