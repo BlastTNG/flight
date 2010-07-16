@@ -23,6 +23,7 @@
 #include <linux/ioport.h>
 #include <linux/pci.h>
 #include <linux/delay.h>
+#include <linux/poll.h>	    //fixes struct file_operations
 
 #include <asm/io.h>
 #include <asm/atomic.h>
@@ -31,7 +32,7 @@
 #include "decom_pci.h"
 
 #define DRV_NAME    "decom_pci"
-#define DRV_VERSION "1.0"
+#define DRV_VERSION "1.1"
 #define DRV_RELDATE ""
 
 #define DECOM_MAJOR 251
@@ -341,7 +342,8 @@ static struct pci_driver decom_driver = {
 
 static int __init decom_pci_init(void)
 {
-  return pci_module_init(&decom_driver);
+  return pci_register_driver(&decom_driver);
+  //return pci_module_init(&decom_driver);
 }
 
 static void __exit decom_pci_cleanup(void)
@@ -360,10 +362,12 @@ MODULE_DESCRIPTION("decom_pci: a driver for the pci dcom card");
 MODULE_ALIAS_CHARDEV_MAJOR(DECOM_MAJOR);
 MODULE_ALIAS("/dev/decom_pci");
 
-#ifdef MODULE_PARM
+#ifdef module_param
+module_param(decom_major, int, S_IRUGO);
+#elif defined MODULE_PARM
 MODULE_PARM(decom_major, "i");
 #else
-module_param(decom_major, int, DECOM_MAJOR);
+#error "Your kernel is way too old"
 #endif
 
 MODULE_PARM_DESC(decom_major, " decom major number");

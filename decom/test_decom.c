@@ -26,6 +26,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h> 
+#include <string.h>
 
 #include "decom_pci.h"
 #define DEFAULT_FRAME_FILE  "../bbcpci/frame.dat"
