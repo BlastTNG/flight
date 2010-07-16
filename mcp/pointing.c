@@ -64,8 +64,8 @@
 #define PSS2_ALIGNMENT	  120. // 135 -15
 #define SSS_ALIGNMENT	  -15.*/
 #define MAG_ALIGNMENT	   -258.   //(4.2681)
-#define PSS1_ALIGNMENT	   93. // 343 + 60
-#define PSS2_ALIGNMENT	   0. // 135 -15
+#define PSS1_ALIGNMENT	  -153.8 // 343 + 60
+#define PSS2_ALIGNMENT	  -226.3 // 135 -15
 #define SSS_ALIGNMENT	  -90.
 
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
@@ -325,7 +325,7 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 #define  PSS1_IMAX  8192.  // Maximum current (place holder for now)
 #define  PSS1_XSTRETCH  1.  // 0.995
 #define  PSS1_YSTRETCH  1.  // 1.008
-#define  PSS1_BETA  PSS1_ALIGNMENT
+#define  PSS1_BETA  (-PSS1_ALIGNMENT)
 #define  PSS1_ALPHA 24.3  // This angle should be 25 degrees.  Boom bent?
 #define  PSS1_PSI   11.
 
@@ -453,7 +453,7 @@ static int PSS1Convert(double *azraw_pss1, double *elraw_pss1) {
 #define  PSS2_IMAX  8192.     // Maximum current (place holder for now)
 #define  PSS2_XSTRETCH  1.
 #define  PSS2_YSTRETCH  1.
-#define  PSS2_BETA  PSS2_ALIGNMENT
+#define  PSS2_BETA  (-PSS2_ALIGNMENT)
 #define  PSS2_ALPHA   25.
 #define  PSS2_PSI    -15.5
 
