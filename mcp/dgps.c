@@ -448,6 +448,9 @@ void WatchDGPS()
   static struct BiPhaseStruct* dgpsAzCovAddr;
   static struct BiPhaseStruct* dgpsPitchCovAddr;
   static struct BiPhaseStruct* dgpsRollCovAddr; 
+  static struct BiPhaseStruct* dgpsAntEAddr; 
+  static struct BiPhaseStruct* dgpsAntNAddr; 
+  static struct BiPhaseStruct* dgpsAntUAddr; 
   static struct BiPhaseStruct* dgpsAttOkAddr;
   static struct BiPhaseStruct* dgpsLatAddr;
   static struct BiPhaseStruct* dgpsLonAddr;
@@ -471,6 +474,9 @@ void WatchDGPS()
     dgpsAzCovAddr = GetBiPhaseAddr("az_cov_dgps");     
     dgpsPitchCovAddr = GetBiPhaseAddr("pitch_cov_dgps");
     dgpsRollCovAddr = GetBiPhaseAddr("roll_cov_dgps"); 
+    dgpsAntEAddr = GetBiPhaseAddr("ant_E_dgps"); 
+    dgpsAntNAddr = GetBiPhaseAddr("ant_N_dgps"); 
+    dgpsAntUAddr = GetBiPhaseAddr("ant_U_dgps"); 
     dgpsAttOkAddr = GetBiPhaseAddr("att_ok_dgps");
     dgpsLatAddr = GetBiPhaseAddr("lat_dgps");       
     dgpsLonAddr = GetBiPhaseAddr("lon_dgps");      
@@ -489,6 +495,9 @@ void WatchDGPS()
   DGPSAtt[0].az_cov = 0;
   DGPSAtt[0].pitch_cov = 0;
   DGPSAtt[0].roll_cov = 0;
+  DGPSAtt[0].ant_E = 0;
+  DGPSAtt[0].ant_N = 0;
+  DGPSAtt[0].ant_U = 0;
   DGPSAtt[0].att_ok = 0;
   dgpsatt_index = 1;
 
@@ -522,6 +531,15 @@ void WatchDGPS()
     DGPSAtt[0].roll_cov = (((double)slow_data[dgpsRollCovAddr->index][dgpsRollCovAddr->channel])/DEG2I);
     DGPSAtt[1].roll_cov = (((double)slow_data[dgpsRollCovAddr->index][dgpsRollCovAddr->channel])/DEG2I);
     DGPSAtt[2].roll_cov = (((double)slow_data[dgpsRollCovAddr->index][dgpsRollCovAddr->channel])/DEG2I);
+    DGPSAtt[0].ant_E = ((double)slow_data[dgpsAntEAddr->index][dgpsAntEAddr->channel]);
+    DGPSAtt[1].ant_E = ((double)slow_data[dgpsAntEAddr->index][dgpsAntEAddr->channel]);
+    DGPSAtt[2].ant_E = ((double)slow_data[dgpsAntEAddr->index][dgpsAntEAddr->channel]);
+    DGPSAtt[0].ant_N = ((double)slow_data[dgpsAntNAddr->index][dgpsAntNAddr->channel]);
+    DGPSAtt[1].ant_N = ((double)slow_data[dgpsAntNAddr->index][dgpsAntNAddr->channel]);
+    DGPSAtt[2].ant_N = ((double)slow_data[dgpsAntNAddr->index][dgpsAntNAddr->channel]);
+    DGPSAtt[0].ant_U = ((double)slow_data[dgpsAntUAddr->index][dgpsAntUAddr->channel]);
+    DGPSAtt[1].ant_U = ((double)slow_data[dgpsAntUAddr->index][dgpsAntUAddr->channel]);
+    DGPSAtt[2].ant_U = ((double)slow_data[dgpsAntUAddr->index][dgpsAntUAddr->channel]);
     DGPSAtt[0].att_ok = (slow_data[dgpsAttOkAddr->index][dgpsAttOkAddr->channel]);
     DGPSAtt[1].att_ok = (slow_data[dgpsAttOkAddr->index][dgpsAttOkAddr->channel]);
     DGPSAtt[2].att_ok = (slow_data[dgpsAttOkAddr->index][dgpsAttOkAddr->channel]);

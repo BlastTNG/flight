@@ -112,41 +112,41 @@ void cameraFields()
   static NiosStruct* sbscCcdTempAddr = NULL;
   static NiosStruct* sbscNumBlobsAddr = NULL;
 
-  static NiosStruct* sbscBlobX[15];
-  static NiosStruct* sbscBlobY[15];
-  static NiosStruct* sbscBlobF[15];
-  static NiosStruct* sbscBlobS[15];
+  static NiosStruct* sbscBlobX[3];
+  static NiosStruct* sbscBlobY[3];
+  static NiosStruct* sbscBlobF[3];
+  static NiosStruct* sbscBlobS[3];
 
   //initialization
   if (firsttime) {
     firsttime = 0;
-    forceAddr = GetNiosAddr("sbsc_force");
-    expIntAddr = GetNiosAddr("sbsc_exp_int");
-    expTimeAddr = GetNiosAddr("sbsc_exp_time");
-    focResAddr = GetNiosAddr("sbsc_foc_res");
-    moveTolAddr = GetNiosAddr("sbsc_move_tol");
-    maxBlobAddr = GetNiosAddr("sbsc_maxblob");
-    gridAddr = GetNiosAddr("sbsc_grid");
-    threshAddr = GetNiosAddr("sbsc_thresh");
-    blobMdistAddr = GetNiosAddr("sbsc_mdist");
+    forceAddr = GetNiosAddr("force_sbsc");
+    expIntAddr = GetNiosAddr("exp_int_sbsc");
+    expTimeAddr = GetNiosAddr("exp_time_sbsc");
+    focResAddr = GetNiosAddr("foc_res_sbsc");
+    moveTolAddr = GetNiosAddr("move_tol_sbsc");
+    maxBlobAddr = GetNiosAddr("maxblob_sbsc");
+    gridAddr = GetNiosAddr("grid_sbsc");
+    threshAddr = GetNiosAddr("thresh_sbsc");
+    blobMdistAddr = GetNiosAddr("mdist_sbsc");
 
-    sbscFrameAddr = GetNiosAddr("sbsc_frame");
-    sbscMeanAddr = GetNiosAddr("sbsc_mapmean");
-    sbscSigmaAddr = GetNiosAddr("sbsc_mapsigma");
-    sbscTimeAddr = GetNiosAddr("sbsc_sec");
-    sbscUsecAddr = GetNiosAddr("sbsc_usec");
-    sbscCcdTempAddr = GetNiosAddr("sbsc_ccd_t");
-    sbscNumBlobsAddr = GetNiosAddr("sbsc_numblobs");
+    sbscFrameAddr = GetNiosAddr("frame_sbsc");
+    sbscMeanAddr = GetNiosAddr("mapmean_sbsc");
+    sbscSigmaAddr = GetNiosAddr("mapsigma_sbsc");
+    sbscTimeAddr = GetNiosAddr("sec_sbsc");
+    sbscUsecAddr = GetNiosAddr("usec_sbsc");
+    sbscCcdTempAddr = GetNiosAddr("ccd_t_sbsc");
+    sbscNumBlobsAddr = GetNiosAddr("numblobs_sbsc");
 
-    for (int i=0; i<15; i++) {
+    for (int i=0; i<3; i++) {
       char buf[99];
-      sprintf(buf, "sbsc_blob%02d_x", i);
+      sprintf(buf, "blob%02d_x_sbsc", i);
       sbscBlobX[i] = GetNiosAddr(buf);
-      sprintf(buf, "sbsc_blob%02d_y", i);
+      sprintf(buf, "blob%02d_y_sbsc", i);
       sbscBlobY[i] = GetNiosAddr(buf);
-      sprintf(buf, "sbsc_blob%02d_f", i);
+      sprintf(buf, "blob%02d_f_sbsc", i);
       sbscBlobF[i] = GetNiosAddr(buf);
-      sprintf(buf, "sbsc_blob%02d_s", i);
+      sprintf(buf, "blob%02d_s_sbsc", i);
       sbscBlobS[i] = GetNiosAddr(buf);
     }
   }
