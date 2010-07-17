@@ -606,7 +606,7 @@ static void GetElDither() {
     bprintf(info,"No dither: axes_mode.el_dith = %f",axes_mode.el_dith);
   } else if (dith_step < 0.00) { // Random mode! May want to remove later...
     tmp_rand = rand();
-    axes_mode.el_dith = 0.5*CommandData.pointing_mode.del*(tmp_rand/RAND_MAX-0.5);      
+    axes_mode.el_dith = CommandData.pointing_mode.del*(tmp_rand/RAND_MAX-0.5);      
     bprintf(info,"Random dither: axes_mode.el_dith = %f, tmp_rand = %i",axes_mode.el_dith,tmp_rand);
   } else {
     axes_mode.el_dith += dith_step;
