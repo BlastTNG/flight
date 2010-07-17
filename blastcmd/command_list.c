@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.83 $";
+const char *command_list_serial = "$Revision: 4.84 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -501,7 +501,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Static Friction offset",   0, 2, 'f', "FRICT_OFF_PIV"},
     }
   },
-  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 2,
+  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_el"},
       {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_el"},
