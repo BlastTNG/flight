@@ -612,7 +612,7 @@ static void GetElDither() {
     axes_mode.el_dith += dith_step;
     bprintf(info,"Stepping dither: axes_mode.el_dith = %f, CommandData.pointing_mode.del=%f",axes_mode.el_dith,CommandData.pointing_mode.del);
     bprintf(info,"GetElDither: dith_step =%f, CommandData.pointing_mode.del =%f",dith_step,CommandData.pointing_mode.del);
-    if(axes_mode.el_dith > CommandData.pointing_mode.del*0.5) {
+    if(axes_mode.el_dith > CommandData.pointing_mode.del) {
       axes_mode.el_dith += (-1.0)*CommandData.pointing_mode.del;
       bprintf(info,"GetElDither: Wrapping dither... axes_mode.el_dith=%f",axes_mode.el_dith);
     }
