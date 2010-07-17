@@ -296,6 +296,7 @@ void WriteSuperFrame(unsigned short *frame) {
   }
 
   // Calculate number of stream fields given data rates
+  //FIXME: implement re-settable data rates.
   if (reset_rates) {
     reset_rates = 0;
     higain_bytes_per_streamframe = (HIGAIN_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
@@ -304,6 +305,10 @@ void WriteSuperFrame(unsigned short *frame) {
     bprintf(info, "Bytes per stream frame - High gain: %d  omni1: %d  omni2: %d",
             higain_bytes_per_streamframe, omni1_bytes_per_streamframe, omni2_bytes_per_streamframe);
 
+    n_higain_stream=0;
+    n_omni1_stream = 0;
+    n_omni2_stream = 0;
+    
     for (i_field = 0; i_field<n_streamlist; i_field++) {
       double delta=0;
       delta = streamList[i_field].samples_per_frame*streamList[i_field].bits/8;

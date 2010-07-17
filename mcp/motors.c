@@ -173,7 +173,7 @@ static double GetVElev(void)
     } else {
       vel = sqrt(dy);
     }
-    vel *= 0.3;
+    vel *= (double)CommandData.ele_gain.PT/10000.0;
     //    vel = (axes_mode.el_dest - PointingData[i_point].el) * 0.36;
   } else if (axes_mode.el_mode == AXIS_LOCK) {
     /* for the lock, only use the elevation encoder */
@@ -253,7 +253,7 @@ static double GetVAz(void)
     } else {
       vel = sqrt(dx);
     }
-    vel *= 0.3;
+    vel *= (double)CommandData.azi_gain.PT/10000.0;
     //vel = -(az - az_dest) * 0.36;
   }
 
@@ -432,8 +432,10 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
 
   static struct NiosStruct* gPElAddr;
   static struct NiosStruct* gIElAddr;
+  static struct NiosStruct* gPtElAddr;
   static struct NiosStruct* gPAzAddr;
   static struct NiosStruct* gIAzAddr;
+  static struct NiosStruct* gPtAzAddr;
   static struct NiosStruct* gPVPivAddr;
   static struct NiosStruct* gPEPivAddr;
   static struct NiosStruct* setRWAddr;
@@ -467,8 +469,10 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
     dacPivAddr = GetNiosAddr("dac_piv");
     gPElAddr = GetNiosAddr("g_p_el");
     gIElAddr = GetNiosAddr("g_i_el");
+    gPtElAddr = GetNiosAddr("g_pt_el");
     gPAzAddr = GetNiosAddr("g_p_az");
     gIAzAddr = GetNiosAddr("g_i_az");
+    gPtAzAddr = GetNiosAddr("g_pt_az");
     gPVPivAddr = GetNiosAddr("g_pv_piv");
     gPEPivAddr = GetNiosAddr("g_pe_piv");
     setRWAddr = GetNiosAddr("set_rw");
@@ -489,7 +493,8 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   //TODO need to change the write to the BLASTbus here and in the DSP
   // code so that it writes a 15 bit number.  Otherwise Narsil shows 
   // twice the current value and it is rather confusing. 
-  //TODO temporary
+  //NOTE: this is only used to program the extra DAC - not used for
+  // flight.
   if (wait <= 0)
     for (i=1; i<2; i++)
       if (CommandData.Temporary.setLevel[i]) {
@@ -520,6 +525,8 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   WriteData(gPElAddr, elGainP, NIOS_QUEUE);
   /* integral term for el_motor */
   WriteData(gIElAddr, elGainI, NIOS_QUEUE);
+  /* pointing gain term for elevation drive */
+  WriteData(gPtElAddr, CommandData.ele_gain.PT, NIOS_QUEUE);
 
 
   /***************************************************/
@@ -565,6 +572,9 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   WriteData(gPAzAddr, azGainP, NIOS_QUEUE);
   /* I term for az motor */
   WriteData(gIAzAddr, azGainI, NIOS_QUEUE);
+  /* pointing gain term for az drive */
+  WriteData(gPtAzAddr, CommandData.azi_gain.PT, NIOS_QUEUE);
+
   /* p term to rw vel for pivot motor */
   WriteData(gPVPivAddr, pivGainRW, NIOS_QUEUE);
   /* p term to vel error for pivot motor */
@@ -612,7 +622,7 @@ static void GetElDither() {
     axes_mode.el_dith += dith_step;
     bprintf(info,"Stepping dither: axes_mode.el_dith = %f, CommandData.pointing_mode.del=%f",axes_mode.el_dith,CommandData.pointing_mode.del);
     bprintf(info,"GetElDither: dith_step =%f, CommandData.pointing_mode.del =%f",dith_step,CommandData.pointing_mode.del);
-    if(axes_mode.el_dith > CommandData.pointing_mode.del) {
+    if(axes_mode.el_dith > CommandData.pointing_mode.del*0.5) {
       axes_mode.el_dith += (-1.0)*CommandData.pointing_mode.del;
       bprintf(info,"GetElDither: Wrapping dither... axes_mode.el_dith=%f",axes_mode.el_dith);
     }

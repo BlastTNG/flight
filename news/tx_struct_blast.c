@@ -783,6 +783,9 @@ struct ChannelStruct SlowChannels[] = {
   {"blob02_y_sbsc",  'w', LOOP8, 63, CAM_WIDTH/SHRT_MAX,             0.0, 'u'}, 
   {"blob02_f_sbsc",  'w', LOOP9,  0,                1.0,             0.0, 'u'},
   {"blob02_s_sbsc",  'w', LOOP9,  1,          1.0/100.0,             0.0, 'u'},
+  {"g_pt_az",        'w', LOOP9,  2,                1.0,             0.0, 'u'},
+  {"g_pt_el",        'w', LOOP9,  3,                1.0,             0.0, 'u'},
+  
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
@@ -791,7 +794,7 @@ struct ChannelStruct SlowChannels[] = {
   {"ant_E_dgps",     'w', LOOP9, 60,		  1.0,		     0.0, 's',U_NONE},
   {"ant_N_dgps",     'w', LOOP9, 61,		  1.0,		     0.0, 's',U_NONE},
   {"ant_U_dgps",     'w', LOOP9, 62,		  1.0,		     0.0, 's',U_NONE},
-  /* LOOP9 2-49, 63 are unused */
+  /* LOOP9 4-49, 63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

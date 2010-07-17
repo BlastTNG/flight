@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.82 $";
+const char *command_list_serial = "$Revision: 4.83 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -379,10 +379,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Elevation (deg)", 0, 90, 'f', "EL"}
     }
   },
-  {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 2,
+  {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 3,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_az"},
-      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_az"}
+      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_az"},
+      {"Pointing Gain", 0, MAX_15BIT, 'i', "g_pt_az"}
     }
   },
   {COMMAND(az_scan_accel), "set azimuth scan turnaround acceleration", GR_GAIN, 1,
@@ -425,7 +426,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"El Dith Step Size (arcmin)",-1,  1, 'f', "NONE"}
+      {"El Dith Step Size (arcmin)",-60,  60, 'f', "NONE"}
     }
   },
   {COMMAND(cap), "scan a circle centred on RA/Dec with el steps", GR_POINT, 6,
@@ -435,7 +436,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Radius (deg on sky)",       0, 90, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"El Dith Step Size (arcmin)",-1,  1, 'f', "NONE"}
+      {"El Dith Step Size (arcmin)",-60,  60, 'f', "NONE"}
     }
   },
   {COMMAND(drift), "move at constant speed in az and el", GR_POINT, 2,
@@ -457,7 +458,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Dec of Corner 4 (deg)",   -90, 90, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"El Dith Step Size (arcmin)",-1,  1, 'f', "NONE"}
+      {"El Dith Step Size (arcmin)",-60,  60, 'f', "NONE"}
     }
   },
   {COMMAND(vbox), "scan an az/el box centred on RA/Dec with el drift",
@@ -503,7 +504,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 2,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_el"},
-      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_el"}
+      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_el"},
+      {"Pointing Gain",     0, MAX_15BIT, 'i', "g_pt_el"}
     }
   },
   {COMMAND(az_gyro_offset), "manually set az gyro offsets", GR_TRIM, 2,
@@ -719,6 +721,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(timeout), "time until schedule mode", GR_TELEM, 1,
     {
       {"Timeout (s)", 2, 65535, 'f', "TIMEOUT"}
+    }
+  },
+
+  {COMMAND(tdrss_bw), "tdrss omni bandwith", GR_TELEM, 1,
+    {
+      {"Bandwidth (bps)", 100, 75000, 'f', "BANDWIDTH"}
+    }
+  },
+
+  {COMMAND(iridium_bw), "iridium dialup bandwith", GR_TELEM, 1,
+    {
+      {"Bandwidth (bps)", 100, 75000, 'f', "BANDWIDTH"}
     }
   },
 

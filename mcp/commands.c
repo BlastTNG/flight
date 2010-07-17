@@ -1233,7 +1233,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
       CommandData.pointing_mode.del = rvalues[4]; /* el step size */
       CommandData.pointing_mode.h = 0;
-      CommandData.pointing_mode.dith = rvalues[5]; /* el step size */
+      CommandData.pointing_mode.dith = rvalues[5]/60.0; /* el step size */
       break;
     case box:
       CommandData.pointing_mode.nw = CommandData.slew_veto;
@@ -1244,7 +1244,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = rvalues[3]; /* height */
       CommandData.pointing_mode.vaz = rvalues[4]; /* az scan speed */
       CommandData.pointing_mode.del = rvalues[5]; /* el step size */
-      CommandData.pointing_mode.dith = rvalues[6]; /* el step size */
+      CommandData.pointing_mode.dith = rvalues[6]/60.0; /* el step size */
       break;
     case vbox:
       CommandData.pointing_mode.nw = CommandData.slew_veto;
@@ -1266,7 +1266,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       }
       CommandData.pointing_mode.vaz = rvalues[8]; /* az scan speed */
       CommandData.pointing_mode.del = rvalues[9]; /* el step size */
-      CommandData.pointing_mode.dith = rvalues[10]; /* el step size */
+      CommandData.pointing_mode.dith = rvalues[10]/60.0; /* el step size */
       break;
     case az_scan_accel:
       CommandData.az_accel = rvalues[0];
@@ -1301,10 +1301,12 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case el_gain:  /* ele gains */
       CommandData.ele_gain.P = ivalues[0];
       CommandData.ele_gain.I = ivalues[1];
+      CommandData.ele_gain.PT = ivalues[2];
       break;
     case az_gain:  /* az gains */
       CommandData.azi_gain.P = ivalues[0];
       CommandData.azi_gain.I = ivalues[1];
+      CommandData.azi_gain.PT = ivalues[2];
       break;
     case pivot_gain:  /* pivot gains */
       CommandData.pivot_gain.SP = rvalues[0];
@@ -1558,10 +1560,16 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 //      break;
     case reset_adc:
       if (ivalues[0] < 64)
-	CommandData.power.adc_reset[ivalues[0]/4] = RESET_ADC_LEN;
+        CommandData.power.adc_reset[ivalues[0]/4] = RESET_ADC_LEN;
       break;
     case timeout:       /* Set timeout */
       CommandData.timeout = rvalues[0];
+      break;
+    case tdrss_bw:
+      CommandData.tdrss_bw = rvalues[0];
+      break;      
+    case iridium_bw:
+      CommandData.iridium_bw = rvalues[0];
       break;
     case alice_file: /* change downlink XML file */
       CommandData.alice_file = ivalues[0];
@@ -2532,6 +2540,8 @@ void InitCommandData()
   CommandData.at_float = 0;
   CommandData.timeout = 57600; /* TODO: Change this to something short for pre-flight!!!*/
   CommandData.alice_file = 0;
+  CommandData.tdrss_bw = 6000;
+  CommandData.iridium_bw = 2000;
   CommandData.vtx_sel[0] = vtx_isc;
   CommandData.vtx_sel[1] = vtx_osc;
 
@@ -2552,9 +2562,11 @@ void InitCommandData()
 
   CommandData.ele_gain.I = 5000; /* was 8000 */
   CommandData.ele_gain.P = 5000; /* was 1200 */
+  CommandData.ele_gain.PT = 3000;
 
   CommandData.azi_gain.P = 4000;
   CommandData.azi_gain.I = 100;
+  CommandData.azi_gain.PT = 3000;
 
   CommandData.pivot_gain.SP = 50; // dps
   CommandData.pivot_gain.PV = 400;

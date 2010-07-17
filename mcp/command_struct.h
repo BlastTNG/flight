@@ -55,6 +55,7 @@ struct GainStruct {
   unsigned short int I;
   unsigned short int D;
   unsigned short int SP;
+  unsigned short int PT; // position velocity gain
 };
 
 // used for pivot loop gains
@@ -174,6 +175,9 @@ struct CommandDataStruct {
   unsigned short int sucks;
   unsigned short int lat_range;
   unsigned short int at_float;
+  unsigned int tdrss_bw;
+  unsigned int iridium_bw;
+  
   enum {vtx_isc, vtx_osc, vtx_sbsc} vtx_sel[2];
 
   /*
