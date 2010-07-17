@@ -705,9 +705,9 @@ void WatchDGPS()
 	  (ATTEULER->Pitch == -2e10)			  || 
 	  (ATTEULER->Roll == -2e10)			  ||
 	  (DGPSAtt[dgpsatt_index].az_cov <=0.001)	  ||
-	  (DGPSAtt[dgpsatt_index].ant_E > 3.5)		  ||
-	  (DGPSAtt[dgpsatt_index].ant_N > 0.5)		  ||
-	  (DGPSAtt[dgpsatt_index].ant_U > 0.5)		  ||
+	  (fabs(DGPSAtt[dgpsatt_index].ant_E) > 3.5)		  ||
+	  (fabs(DGPSAtt[dgpsatt_index].ant_N) > 0.5)		  ||
+	  (fabs(DGPSAtt[dgpsatt_index].ant_U) > 0.5)		  ||
 	  (DGPSAtt[dgpsatt_index].az_cov > CommandData.dgps_cov_limit))	{
 	DGPSAtt[dgpsatt_index].att_ok = 0;
       } else {
@@ -721,7 +721,7 @@ void WatchDGPS()
       DGPSAtt[dgpsatt_index].az_cov = ATTCOVEULER->Cov_HeadHead;
       DGPSAtt[dgpsatt_index].pitch_cov = ATTCOVEULER->Cov_PitchPitch;
       DGPSAtt[dgpsatt_index].roll_cov = ATTCOVEULER->Cov_RollRoll; 
-    } else if  (((VoidBlock_t*)SBFBlock)->ID == 5942) {
+    } else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_AUXPOS) {
       /* Antenna Position*/
       AuxAntPositions_t* AUXPOSITIONS = (AuxAntPositions_t*) SBFBlock;
       DGPSAtt[dgpsatt_index].ant_E = AUXPOSITIONS->DeltaEast;
