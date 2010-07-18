@@ -17,7 +17,7 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 225        /* total number of single word cmds */
+#define N_SCOMMANDS 229        /* total number of single word cmds */
 #define N_MCOMMANDS 115        /* total number of multiword commands */
 #define MAX_N_PARAMS 12	       /* narsil REALLY likes this to be even */
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
@@ -120,7 +120,8 @@ enum singleCommand {
   vtx2_osc,	    vtx2_sbsc,
   sbsc_off,	    sbsc_on,		sbsc_cam_cycle,	  sbsc_cpu_cycle,
   cam_expose,	    cam_autofocus,	cam_settrig_ext,  cam_force_lens, 
-  cam_unforce_lens, hwpr_step,
+  cam_unforce_lens, hwpr_step,          hwpr_pot_is_dead, hwpr_pot_is_alive,
+  hwpr_step_off,    hwpr_step_on,
   xyzzy
 };
 

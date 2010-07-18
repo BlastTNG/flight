@@ -1015,6 +1015,18 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.hwpr.mode = HWPR_STEP;
       CommandData.hwpr.is_new = 1;
       break;
+    case hwpr_step_off:
+      CommandData.hwpr.no_step = 1;
+      break;
+    case hwpr_step_on:
+      CommandData.hwpr.no_step = 0;
+      break;
+    case hwpr_pot_is_dead:
+      CommandData.hwpr.use_pot = 0;
+      break;
+    case hwpr_pot_is_alive:
+      CommandData.hwpr.use_pot = 0;
+      break;
 
     case reap_north:  /* Miscellaneous commands */
     case reap_south:
@@ -2698,6 +2710,8 @@ void InitCommandData()
   CommandData.hwpr.pos[0] = 0.3875;
   CommandData.hwpr.overshoot = 1000;
   CommandData.hwpr.i_pos = 0;
+  CommandData.hwpr.no_step = 0;
+  CommandData.hwpr.use_pot = 1;
 
   CommandData.pin_is_in = 1;
 

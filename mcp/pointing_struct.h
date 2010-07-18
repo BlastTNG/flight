@@ -75,6 +75,7 @@ struct ACSDataStruct {
   double ifel_gy;    // deg/s
   double ifroll_gy;    // deg/s
   double ifyaw_gy;    // deg/s
+  int hwpr_pot; // used in hwpr.c
   int mcp_frame;
   time_t t;
 };

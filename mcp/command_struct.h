@@ -374,6 +374,8 @@ struct CommandDataStruct {
     int n_pos, repeats, step_wait, step_size, overshoot;
     double pos[4];
     int i_pos;
+    int no_step;
+    int use_pot;
   } hwpr;
 
   struct {
