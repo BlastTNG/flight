@@ -1011,6 +1011,9 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.vtx_sel[1] = vtx_sbsc;
       break;
 #endif
+    case hwpr_inc:
+      //      CommandData. = vtx_sbsc;
+      break;
 
     case reap_north:  /* Miscellaneous commands */
     case reap_south:
@@ -1466,15 +1469,21 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.repeats = ivalues[1];
       CommandData.hwpr.step_wait = ivalues[2]*5;
       CommandData.hwpr.step_size = ivalues[3];
-      if (CommandData.hwpr.step_size > 0) {
-	CommandData.hwpr.overshoot = ivalues[4];
-      } else {
-	CommandData.hwpr.overshoot = -ivalues[4];
-      }
       CommandData.hwpr.mode = HWPR_REPEAT;
       CommandData.hwpr.is_new = 1;
       break;
-
+    case hwpr_define_pos:
+      CommandData.hwpr.pos[0] = rvalues[0];
+      CommandData.hwpr.pos[1] = rvalues[1];
+      CommandData.hwpr.pos[2] = rvalues[2];
+      CommandData.hwpr.pos[3] = rvalues[3];
+      break;
+    case hwpr_set_overshoot:
+      CommandData.hwpr.overshoot = ivalues[0];
+      break;
+    case hwpr_goto_i:
+      CommandData.hwpr.i_pos = ivalues[0];
+      break;
       /* XY Stage */
     case xy_goto:
       CommandData.xystage.x1 = ivalues[0];
@@ -2682,6 +2691,12 @@ void InitCommandData()
   CommandData.hwpr.acc = 2;
   CommandData.hwpr.move_i = 10;
   CommandData.hwpr.hold_i = 10;
+  CommandData.hwpr.pos[3] = 0.20; // TODO: Replace with real numbers from Tristan.
+  CommandData.hwpr.pos[2] = 0.2625;
+  CommandData.hwpr.pos[1] = 0.3250;
+  CommandData.hwpr.pos[0] = 0.3875;
+  CommandData.hwpr.overshoot = 1000;
+  CommandData.hwpr.i_pos = 0;
 
   CommandData.pin_is_in = 1;
 

@@ -54,6 +54,12 @@ void StoreHWPRBus(void)
   static struct NiosStruct* iHoldHwprAddr;
   static struct NiosStruct* posHwprAddr;
   static struct NiosStruct* encHwprAddr;
+  static struct NiosStruct* pos0HwprAddr;
+  static struct NiosStruct* pos1HwprAddr;
+  static struct NiosStruct* pos2HwprAddr;
+  static struct NiosStruct* pos3HwprAddr;
+  static struct NiosStruct* overshootHwprAddr;
+  static struct NiosStruct* iposHwprAddr;
 
   if (firsttime)
   {
@@ -64,6 +70,12 @@ void StoreHWPRBus(void)
     iHoldHwprAddr = GetNiosAddr("i_hold_hwpr");
     posHwprAddr = GetNiosAddr("pos_hwpr");
     encHwprAddr = GetNiosAddr("enc_hwpr");
+    overshootHwprAddr = GetNiosAddr("overshoot_hwpr");
+    pos0HwprAddr = GetNiosAddr("pos0_hwpr");
+    pos1HwprAddr = GetNiosAddr("pos1_hwpr");
+    pos2HwprAddr = GetNiosAddr("pos2_hwpr");
+    pos3HwprAddr = GetNiosAddr("pos3_hwpr");
+    iposHwprAddr = GetNiosAddr("i_pos_hwpr");
   }
 
   hwpr_wait_cnt--;
@@ -74,12 +86,19 @@ void StoreHWPRBus(void)
   WriteData(iHoldHwprAddr, CommandData.hwpr.hold_i, NIOS_QUEUE);
   WriteData(posHwprAddr, hwpr_data.pos, NIOS_QUEUE);
   WriteData(encHwprAddr, hwpr_data.enc, NIOS_FLUSH);
+  WriteData(overshootHwprAddr, CommandData.hwpr.overshoot, NIOS_FLUSH);
+  WriteData(pos0HwprAddr, CommandData.hwpr.pos[0]*65535, NIOS_FLUSH);
+  WriteData(pos1HwprAddr, CommandData.hwpr.pos[1]*65535, NIOS_FLUSH);
+  WriteData(pos2HwprAddr, CommandData.hwpr.pos[2]*65535, NIOS_FLUSH);
+  WriteData(pos3HwprAddr, CommandData.hwpr.pos[3]*65535, NIOS_FLUSH);
+  WriteData(iposHwprAddr, CommandData.hwpr.i_pos, NIOS_FLUSH);
 }
 
 void ControlHWPR(struct ezbus *bus)
 {
   static int repeat_pos_cnt = 0;
   static int overshooting = 0;
+  int overshoot = 0;
   if (CommandData.hwpr.mode == HWPR_PANIC) {
     bputs(info, "Panic");
     EZBus_Stop(bus, HWPR_ADDR);
@@ -102,33 +121,39 @@ void ControlHWPR(struct ezbus *bus)
   }
 
   //repeat mode
-  if ( CommandData.hwpr.mode == HWPR_REPEAT 
-      && (hwpr_wait_cnt <= 0
-      //TODO I don't know why having a shorter wait for the overshoot fails
-      /*|| (overshooting && hwpr_wait_cnt >= 10)*/) ) {
-    hwpr_wait_cnt = CommandData.hwpr.step_wait;
-    if (overshooting) {
-      overshooting = 0;
-      EZBus_RelMove(bus, HWPR_ADDR, CommandData.hwpr.overshoot);
-    } else if (CommandData.hwpr.repeats-- <= 0) { //done stepping
-      CommandData.hwpr.mode = HWPR_SLEEP;
-    } else {    //step the HWPR
-      if (--repeat_pos_cnt > 0)	 { //move to next step
-	EZBus_RelMove(bus, HWPR_ADDR, CommandData.hwpr.step_size);
-      } else {						   //reset to first step
-	repeat_pos_cnt = CommandData.hwpr.n_pos;
-	hwpr_wait_cnt *= CommandData.hwpr.n_pos;  //wait extra long
-	overshooting = 1;
-	EZBus_RelMove(bus, HWPR_ADDR, 
-	    -CommandData.hwpr.step_size * (CommandData.hwpr.n_pos - 1)
-	    - CommandData.hwpr.overshoot);
+  if( CommandData.hwpr.mode == HWPR_REPEAT) {
+    if (CommandData.hwpr.step_size > 0) {
+      overshoot = CommandData.hwpr.overshoot;
+    } else {
+      overshoot = (-1)*CommandData.hwpr.overshoot;
+    }
+
+    if ( hwpr_wait_cnt <= 0
+	     //TODO I don't know why having a shorter wait for the overshoot fails
+	     /*|| (overshooting && hwpr_wait_cnt >= 10)*/ ) {
+      hwpr_wait_cnt = CommandData.hwpr.step_wait;
+      if (overshooting) {
+	overshooting = 0;
+	EZBus_RelMove(bus, HWPR_ADDR, CommandData.hwpr.overshoot);
+      } else if (CommandData.hwpr.repeats-- <= 0) { //done stepping
+	CommandData.hwpr.mode = HWPR_SLEEP;
+      } else {    //step the HWPR
+	if (--repeat_pos_cnt > 0)	 { //move to next step
+	  EZBus_RelMove(bus, HWPR_ADDR, CommandData.hwpr.step_size);
+	} else {						   //reset to first step
+	  repeat_pos_cnt = CommandData.hwpr.n_pos;
+	  hwpr_wait_cnt *= CommandData.hwpr.n_pos;  //wait extra long
+	  overshooting = 1;
+	  EZBus_RelMove(bus, HWPR_ADDR, 
+			-CommandData.hwpr.step_size * (CommandData.hwpr.n_pos - 1)
+			- CommandData.hwpr.overshoot);
+	}
       }
     }
-  }
-  else if ( CommandData.hwpr.mode == HWPR_REPEAT 
-      && (hwpr_wait_cnt == 10)) {
-    //pulse the potentiometer
-    CommandData.Cryo.hwprPos = 50;
+    else if (hwpr_wait_cnt == 10) {
+      //pulse the potentiometer
+      CommandData.Cryo.hwprPos = 50;
+    }
   }
 }
 

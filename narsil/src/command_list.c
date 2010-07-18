@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.84 $";
+const char *command_list_serial = "$Revision: 4.85 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -257,6 +257,7 @@ struct scom scommands[N_SCOMMANDS] = {
     " correction mode", GR_FOCUS},
   {COMMAND(actuator_stop), "stop all secondary actuators immediately", GR_ACT},
   {COMMAND(hwpr_panic), "stop the HWPR rotator immediately", GR_HWPR},
+  {COMMAND(hwpr_inc), "increment the hwpr position", GR_HWPR},
 
   {COMMAND(isc_abort), "abort current solution attempt", GR_ISC_MODE},
   {COMMAND(isc_auto_focus), "autofocus camera", GR_ISC_MODE},
@@ -663,13 +664,36 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(hwpr_repeat), 
     "repeatedly cycle the waveplate rotator through a number of positions",
-    GR_HWPR, 5,
+    GR_HWPR, 4,
     {
       {"Number of step positions", 0, MAX_15BIT, 'i', ""},
       {"Number of times to step", 0, MAX_15BIT, 'i', ""},
       {"Time between steps (s)", 0, MAX_15BIT, 'i', ""},
       {"Step size (encoder ticks)", -MAX_15BIT/2, MAX_15BIT/2, 'i', ""},
-      {"Backlash overshoot (encoder ticks)", 0, MAX_15BIT, 'i', ""}
+    }
+  },
+  {COMMAND(hwpr_define_pos), 
+    "define the four hwpr potentiometer positions to be used for scans",
+    GR_HWPR, 4,
+    {
+      {"Position 1", 0, 1, 'f', ""},
+      {"Position 2", 0, 1, 'f', ""},
+      {"Position 3", 0, 1, 'f', ""},
+      {"Position 4", 0, 1, 'f', ""}
+    }
+  },
+  {COMMAND(hwpr_set_overshoot), 
+    "set the overshoot in encoder counts for backwards hwpr moves",
+    GR_HWPR, 1,
+    {
+      {"overshoot", 0, MAX_15BIT, 'i', ""},
+    }
+  },
+  {COMMAND(hwpr_goto_i), 
+    "goto hwpr position (0-7)",
+    GR_HWPR, 1,
+    {
+      {"hwpr position", 0, 7, 'i', ""},
     }
   },
 

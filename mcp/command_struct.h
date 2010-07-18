@@ -371,6 +371,8 @@ struct CommandDataStruct {
     int force_repoll;
     int mode, is_new, target;
     int n_pos, repeats, step_wait, step_size, overshoot;
+    double pos[4];
+    int i_pos;
   } hwpr;
 
   struct {

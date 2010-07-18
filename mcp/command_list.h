@@ -17,8 +17,8 @@
 
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 224        /* total number of single word cmds */
-#define N_MCOMMANDS 112        /* total number of multiword commands */
+#define N_SCOMMANDS 225        /* total number of single word cmds */
+#define N_MCOMMANDS 115        /* total number of multiword commands */
 #define MAX_N_PARAMS 12	       /* narsil REALLY likes this to be even */
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -120,7 +120,7 @@ enum singleCommand {
   vtx2_osc,	    vtx2_sbsc,
   sbsc_off,	    sbsc_on,		sbsc_cam_cycle,	  sbsc_cpu_cycle,
   cam_expose,	    cam_autofocus,	cam_settrig_ext,  cam_force_lens, 
-  cam_unforce_lens,
+  cam_unforce_lens, hwpr_inc,
   xyzzy
 };
 
@@ -138,15 +138,15 @@ enum multiCommand {
   cal_pulse,         cal_repeat,        cap,              isc_catalogue,
   az_el_trim,        isc_det_set,       drift,            el_gain,
   isc_integrate,     osc_integrate,     osc_det_set,      osc_blobs,
-  inner_level,       isc_offset,        hwpr_jump,        hwpr_goto,
+  inner_level,       isc_offset,        hwpr_jump,        hwpr_goto_i,
   osc_catalogue,     osc_tolerances,    osc_hold_current,
   lock,              isc_blobs,         phase,            act_offset,
   pivot_gain,        isc_pixel_centre,  ra_dec_goto,      ra_dec_set,
   roll_gain,         isc_set_aperture,  isc_set_focus,    az_scan_accel,
-  t_gyro_set,        osc_gain,  tdrss_bw,  iridium_bw,
+  t_gyro_set,        osc_gain,          tdrss_bw,         iridium_bw,
   t_gyro_gain,       timeout,           isc_tolerances,   vcap,
   vbox,              alice_file,        az_gyro_offset,   isc_hold_current,
-  isc_save_period,   osc_offset,	cov_gps,        
+  isc_save_period,   osc_offset,	cov_gps,          hwpr_set_overshoot,
   jfet_set,          isc_foc_off,       hwpr_vel,         hwpr_i,
   osc_foc_off,       gyro_off,	        gyro_on,          quad,
   el_gyro_offset,    general,           slew_veto,        set_secondary,
@@ -155,10 +155,11 @@ enum multiCommand {
   actuator_i,        lock_vel,          lock_i,           actuator_delta,
   delta_secondary,   lvdt_limit,        thermo_param,     focus_offset,
   isc_max_age,	     osc_max_age,	reset_adc,        balance_tset,
-  motors_verbose,    bias_step,        phase_step,
+  motors_verbose,    bias_step,         phase_step,       hwpr_set_backlash,
   cam_any,	     cam_settrig_timed, cam_exp_params,	  cam_focus_params,
   cam_bad_pix,	     cam_blob_params,	cam_lens_any,	  cam_lens_move, 
-  cam_lens_params,   t_sbsc_set,        hwpr_repeat,
+  cam_lens_params,   t_sbsc_set,        hwpr_repeat,      hwpr_define_pos,
+  hwpr_goto,
   plugh		  
 };
 

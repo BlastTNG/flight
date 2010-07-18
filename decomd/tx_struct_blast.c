@@ -676,7 +676,7 @@ struct ChannelStruct SlowChannels[] = {
   {"vel_calc_piv", 'w', LOOP7, 28,        20.0/32768.0,             0.0, 's', U_V_DPS},
   {"age_isc",      'w', LOOP7, 29,                 1.0,             0.0, 'u', U_T_MS},
   {"age_osc",      'w', LOOP7, 30,                 1.0,             0.0, 'u', U_T_MS},
-  /* LOOP7 31 is unused */
+  {"overshoot_hwpr",'w', LOOP7, 31,                1.0,             0.0, 'u', U_NONE},
   {"drive_info_rw",'w', LOOP7, 32,                 1.0,             0.0, 'u', U_NONE},
   {"drive_err_cts_rw",'w', LOOP7, 33,              1.0,             0.0, 'u', U_NONE},
   {"drive_info_el",'w', LOOP7, 34,                 1.0,             0.0, 'u', U_NONE},
@@ -785,7 +785,12 @@ struct ChannelStruct SlowChannels[] = {
   {"blob02_s_sbsc",  'w', LOOP9,  1,          1.0/100.0,             0.0, 'u'},
   {"g_pt_az",        'w', LOOP9,  2,                1.0,             0.0, 'u'},
   {"g_pt_el",        'w', LOOP9,  3,                1.0,             0.0, 'u'},
-  
+  {"pos0_hwpr",      'w', LOOP9,  4,        1.0/65535.0,             0.0, 'u'},
+  {"pos1_hwpr",      'w', LOOP9,  5,        1.0/65535.0,             0.0, 'u'},
+  {"pos2_hwpr",      'w', LOOP9,  6,        1.0/65535.0,             0.0, 'u'},
+  {"pos3_hwpr",      'w', LOOP9,  7,        1.0/65535.0,             0.0, 'u'},
+  {"i_pos_hwpr",     'w', LOOP9,  8,                0.0,             0.0, 'u'},
+  /* LOOP9 9-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
@@ -794,7 +799,7 @@ struct ChannelStruct SlowChannels[] = {
   {"ant_E_dgps",     'w', LOOP9, 60,		  1.0,		     0.0, 's',U_NONE},
   {"ant_N_dgps",     'w', LOOP9, 61,		  1.0,		     0.0, 's',U_NONE},
   {"ant_U_dgps",     'w', LOOP9, 62,		  1.0,		     0.0, 's',U_NONE},
-  /* LOOP9 4-49, 63 are unused */
+  /* LOOP9 63 is unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
