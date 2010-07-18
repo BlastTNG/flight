@@ -99,6 +99,7 @@ void ControlHWPR(struct ezbus *bus)
   static int repeat_pos_cnt = 0;
   static int overshooting = 0;
   int overshoot = 0;
+
   if (CommandData.hwpr.mode == HWPR_PANIC) {
     bputs(info, "Panic");
     EZBus_Stop(bus, HWPR_ADDR);
@@ -116,6 +117,7 @@ void ControlHWPR(struct ezbus *bus)
       //just received, initialize HWPR_REPEAT variables
       repeat_pos_cnt = CommandData.hwpr.n_pos;
       hwpr_wait_cnt = CommandData.hwpr.step_wait;
+    } else if (CommandData.hwpr.mode == HWPR_GOTO_I) {
     }
     CommandData.hwpr.is_new = 0;
   }

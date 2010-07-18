@@ -1011,8 +1011,9 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.vtx_sel[1] = vtx_sbsc;
       break;
 #endif
-    case hwpr_inc:
-      //      CommandData. = vtx_sbsc;
+    case hwpr_step:
+      CommandData.hwpr.mode = HWPR_STEP;
+      CommandData.hwpr.is_new = 1;
       break;
 
     case reap_north:  /* Miscellaneous commands */
@@ -2687,8 +2688,8 @@ void InitCommandData()
   CommandData.actbus.lock_move_i = 50;
   CommandData.actbus.lock_hold_i = 0;
 
-  CommandData.hwpr.vel = 200;
-  CommandData.hwpr.acc = 2;
+  CommandData.hwpr.vel = 1600;
+  CommandData.hwpr.acc = 16;
   CommandData.hwpr.move_i = 10;
   CommandData.hwpr.hold_i = 10;
   CommandData.hwpr.pos[3] = 0.20; // TODO: Replace with real numbers from Tristan.

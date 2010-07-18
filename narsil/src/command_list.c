@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.85 $";
+const char *command_list_serial = "$Revision: 4.86 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -257,7 +257,7 @@ struct scom scommands[N_SCOMMANDS] = {
     " correction mode", GR_FOCUS},
   {COMMAND(actuator_stop), "stop all secondary actuators immediately", GR_ACT},
   {COMMAND(hwpr_panic), "stop the HWPR rotator immediately", GR_HWPR},
-  {COMMAND(hwpr_inc), "increment the hwpr position", GR_HWPR},
+  {COMMAND(hwpr_step), "step the hwpr", GR_HWPR},
 
   {COMMAND(isc_abort), "abort current solution attempt", GR_ISC_MODE},
   {COMMAND(isc_auto_focus), "autofocus camera", GR_ISC_MODE},

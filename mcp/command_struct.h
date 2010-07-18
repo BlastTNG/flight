@@ -105,6 +105,7 @@ struct PivGainStruct {
 #define HWPR_JUMP	3
 #define HWPR_STEP	4
 #define HWPR_REPEAT	5
+#define HWPR_GOTO_I	6
 
 // mode        X     Y    vaz   del    w    h
 // LOCK              el

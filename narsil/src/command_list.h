@@ -120,7 +120,7 @@ enum singleCommand {
   vtx2_osc,	    vtx2_sbsc,
   sbsc_off,	    sbsc_on,		sbsc_cam_cycle,	  sbsc_cpu_cycle,
   cam_expose,	    cam_autofocus,	cam_settrig_ext,  cam_force_lens, 
-  cam_unforce_lens, hwpr_inc,
+  cam_unforce_lens, hwpr_step,
   xyzzy
 };
 
