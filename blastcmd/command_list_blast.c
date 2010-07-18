@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.86 $";
+const char *command_list_serial = "$Revision: 4.87 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -750,13 +750,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(tdrss_bw), "tdrss omni bandwith", GR_TELEM, 1,
     {
-      {"Bandwidth (bps)", 100, 75000, 'f', "BANDWIDTH"}
+      {"Bandwidth (bps)", 100, 75000, 'f', "rate_tdrss"}
     }
   },
 
   {COMMAND(iridium_bw), "iridium dialup bandwith", GR_TELEM, 1,
     {
-      {"Bandwidth (bps)", 100, 75000, 'f', "BANDWIDTH"}
+      {"Bandwidth (bps)", 100, 75000, 'f', "rate_iridium"}
     }
   },
 

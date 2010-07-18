@@ -424,6 +424,7 @@ int ntpshm_put(double fixtime) {
   if (shmTime == NULL) {
     shmTime = getShmTime();
   }
+
   shmTime->valid =0;
   shmTime->count++;
   shmTime->clockTimeStampSec = (time_t)seconds;

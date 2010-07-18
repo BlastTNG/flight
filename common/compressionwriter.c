@@ -12,7 +12,7 @@
 #include <limits.h>
 #include "mcp.h"
 #include "compressstruct.h"
-
+#include "command_struct.h"
 // Structure:
 // FASTFRAMES: 100.16 Hz
 // SLOWFRAMES: FASTFRAMES/20 - multiplex repeated at this rate
@@ -243,12 +243,15 @@ void WriteSuperFrame(unsigned short *frame) {
   int higain_bytes_per_streamframe = 0;
   int omni1_bytes_per_streamframe = 0;
   int omni2_bytes_per_streamframe = 0;
-  double higain_requested_bytes_per_streamframe = 0;
-  double omni1_requested_bytes_per_streamframe = 0;
-  double omni2_requested_bytes_per_streamframe = 0;
+  // initialize required bytes per streamframe to account for stream sync bytes.
+  double higain_requested_bytes_per_streamframe = STREAMFRAME_PER_SUPERFRAME;
+  double omni1_requested_bytes_per_streamframe = STREAMFRAME_PER_SUPERFRAME;
+  double omni2_requested_bytes_per_streamframe = STREAMFRAME_PER_SUPERFRAME;
 
   static int first_time = 1;
   static int reset_rates = 1;
+  static int omni1_rate=0;
+  static int omni2_rate=0;
 
   int frame_bytes_written = 0;
   int i_field;
@@ -295,13 +298,24 @@ void WriteSuperFrame(unsigned short *frame) {
     BufferStreamData(FASTFRAME_PER_STREAMFRAME-1, frame); // fill buffer with first value;
   }
 
+  if (omni1_rate != CommandData.tdrss_bw) {
+    omni1_rate = CommandData.tdrss_bw;
+    reset_rates = 1;
+  }
+  if (omni2_rate != CommandData.iridium_bw) {
+    omni2_rate = CommandData.iridium_bw;
+    reset_rates = 1;
+  }
+
+#define OMNI1_BYTES_PER_FRAME (6000/9 * FASTFRAME_PER_SUPERFRAME/SR)
+
   // Calculate number of stream fields given data rates
   //FIXME: implement re-settable data rates.
   if (reset_rates) {
     reset_rates = 0;
     higain_bytes_per_streamframe = (HIGAIN_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
-    omni1_bytes_per_streamframe = (OMNI1_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
-    omni2_bytes_per_streamframe = (OMNI2_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
+    omni1_bytes_per_streamframe = (omni1_rate*FASTFRAME_PER_SUPERFRAME/(8*SR)-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
+    omni2_bytes_per_streamframe = (omni2_rate*FASTFRAME_PER_SUPERFRAME/(8*SR)-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
     bprintf(info, "Bytes per stream frame - High gain: %d  omni1: %d  omni2: %d",
             higain_bytes_per_streamframe, omni1_bytes_per_streamframe, omni2_bytes_per_streamframe);
 
@@ -408,7 +422,7 @@ void WriteStreamFrame() {
   int xi;
   signed char streambuf[FASTFRAME_PER_STREAMFRAME];
   int n_streambuf;
-  
+
   for (i_field = 0; i_field<n_streamlist; i_field++) {
     n_streambuf = 0;
     for (i_samp = 0; i_samp < streamList[i_field].samples_per_frame; i_samp++) {
@@ -452,6 +466,10 @@ void WriteStreamFrame() {
     }
     writeData((char *)streambuf, n_streambuf, i_field);
   }
+  
+  streambuf[0] = 0xa5;
+  writeData((char *)streambuf, 1, 0); // write stream frame sync byte.
+
 }
 
 //*********************************************************

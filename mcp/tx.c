@@ -123,6 +123,8 @@ static void WriteAux(void)
   static struct NiosStruct* timeUSecAddr;
   static struct NiosStruct* diskFreeAddr;
   static struct NiosStruct* timeoutAddr;
+  static struct NiosStruct* rateTdrssAddr;
+  static struct NiosStruct* rateIridiumAddr;
   static struct NiosStruct* tChipFlcAddr;
   static struct NiosStruct* tCpuFlcAddr;
   static struct NiosStruct* tXFlcAddr;
@@ -156,6 +158,8 @@ static void WriteAux(void)
     timeUSecAddr = GetNiosAddr("time_usec");
     diskFreeAddr = GetNiosAddr("disk_free");
     timeoutAddr = GetNiosAddr("timeout");
+    rateTdrssAddr = GetNiosAddr("rate_tdrss");
+    rateIridiumAddr= GetNiosAddr("rate_iridium");
     bi0FifoSizeAddr = GetNiosAddr("bi0_fifo_size");
     bbcFifoSizeAddr = GetNiosAddr("bbc_fifo_size");
     ploverAddr = GetNiosAddr("plover");
@@ -206,6 +210,8 @@ static void WriteAux(void)
   WriteData(bi0FifoSizeAddr, CommandData.bi0FifoSize, NIOS_QUEUE);
   WriteData(bbcFifoSizeAddr, CommandData.bbcFifoSize, NIOS_QUEUE);
   WriteData(ploverAddr, CommandData.plover, NIOS_QUEUE);
+  WriteData(rateTdrssAddr, CommandData.tdrss_bw, NIOS_QUEUE);
+  WriteData(rateIridiumAddr, CommandData.iridium_bw, NIOS_QUEUE);
 
   WriteData(statusEthAddr, 
        (EthernetSun & 0x3) + 
