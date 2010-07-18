@@ -414,18 +414,16 @@ struct shmTime *getShmTime() {
 }
 
 int ntpshm_put(double fixtime) {
-  struct shmTime *shmTime = NULL;
+  static struct shmTime *shmTime = NULL;
   struct timeval tv;
   double seconds, microseconds;
 
   (void)gettimeofday(&tv,NULL);
   microseconds = 1000000.0 * modf(fixtime,&seconds);
 
-  return(0); // skip the memory leak FIXME: remove
-  /* FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME */
-  /*** memory leak in the next line ***/
-  shmTime = getShmTime(); // FIXME: this should only be called once I think cbn
-  /* FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME */
+  if (shmTime == NULL) {
+    shmTime = getShmTime();
+  }
   shmTime->valid =0;
   shmTime->count++;
   shmTime->clockTimeStampSec = (time_t)seconds;
@@ -535,15 +533,15 @@ void WatchDGPS()
     DGPSAtt[0].roll_cov = (((double)slow_data[dgpsRollCovAddr->index][dgpsRollCovAddr->channel])/DEG2I);
     DGPSAtt[1].roll_cov = (((double)slow_data[dgpsRollCovAddr->index][dgpsRollCovAddr->channel])/DEG2I);
     DGPSAtt[2].roll_cov = (((double)slow_data[dgpsRollCovAddr->index][dgpsRollCovAddr->channel])/DEG2I);
-    DGPSAtt[0].ant_E = ((double)slow_data[dgpsAntEAddr->index][dgpsAntEAddr->channel]);
-    DGPSAtt[1].ant_E = ((double)slow_data[dgpsAntEAddr->index][dgpsAntEAddr->channel]);
-    DGPSAtt[2].ant_E = ((double)slow_data[dgpsAntEAddr->index][dgpsAntEAddr->channel]);
-    DGPSAtt[0].ant_N = ((double)slow_data[dgpsAntNAddr->index][dgpsAntNAddr->channel]);
-    DGPSAtt[1].ant_N = ((double)slow_data[dgpsAntNAddr->index][dgpsAntNAddr->channel]);
-    DGPSAtt[2].ant_N = ((double)slow_data[dgpsAntNAddr->index][dgpsAntNAddr->channel]);
-    DGPSAtt[0].ant_U = ((double)slow_data[dgpsAntUAddr->index][dgpsAntUAddr->channel]);
-    DGPSAtt[1].ant_U = ((double)slow_data[dgpsAntUAddr->index][dgpsAntUAddr->channel]);
-    DGPSAtt[2].ant_U = ((double)slow_data[dgpsAntUAddr->index][dgpsAntUAddr->channel]);
+    DGPSAtt[0].ant_E = (((double)slow_data[dgpsAntEAddr->index][dgpsAntEAddr->channel])/100);
+    DGPSAtt[1].ant_E = (((double)slow_data[dgpsAntEAddr->index][dgpsAntEAddr->channel])/100);
+    DGPSAtt[2].ant_E = (((double)slow_data[dgpsAntEAddr->index][dgpsAntEAddr->channel])/100);
+    DGPSAtt[0].ant_N = (((double)slow_data[dgpsAntNAddr->index][dgpsAntNAddr->channel])/100);
+    DGPSAtt[1].ant_N = (((double)slow_data[dgpsAntNAddr->index][dgpsAntNAddr->channel])/100);
+    DGPSAtt[2].ant_N = (((double)slow_data[dgpsAntNAddr->index][dgpsAntNAddr->channel])/100);
+    DGPSAtt[0].ant_U = (((double)slow_data[dgpsAntUAddr->index][dgpsAntUAddr->channel])/100);
+    DGPSAtt[1].ant_U = (((double)slow_data[dgpsAntUAddr->index][dgpsAntUAddr->channel])/100);
+    DGPSAtt[2].ant_U = (((double)slow_data[dgpsAntUAddr->index][dgpsAntUAddr->channel])/100);
     DGPSAtt[0].att_ok = (slow_data[dgpsAttOkAddr->index][dgpsAttOkAddr->channel]);
     DGPSAtt[1].att_ok = (slow_data[dgpsAttOkAddr->index][dgpsAttOkAddr->channel]);
     DGPSAtt[2].att_ok = (slow_data[dgpsAttOkAddr->index][dgpsAttOkAddr->channel]);

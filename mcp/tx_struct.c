@@ -796,9 +796,9 @@ struct ChannelStruct SlowChannels[] = {
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
   {"cov_lim_dgps",   'w', LOOP9, 58,    (100.0/32768.0),             0.0, 'u', U_NONE},
   {"pot_hwpr",       'w', LOOP9, 59,        1.0/65535.0,             0.0, 'u', U_NONE},
-  {"ant_E_dgps",     'w', LOOP9, 60,		  1.0,		     0.0, 's',U_NONE},
-  {"ant_N_dgps",     'w', LOOP9, 61,		  1.0,		     0.0, 's',U_NONE},
-  {"ant_U_dgps",     'w', LOOP9, 62,		  1.0,		     0.0, 's',U_NONE},
+  {"ant_E_dgps",     'w', LOOP9, 60,	      1.0/100.0,	     0.0, 's',U_NONE},
+  {"ant_N_dgps",     'w', LOOP9, 61,	      1.0/100.0,	     0.0, 's',U_NONE},
+  {"ant_U_dgps",     'w', LOOP9, 62,	      1.0/100.0,	     0.0, 's',U_NONE},
   /* LOOP9 63 is unused */
 
 #ifndef BOLOTEST
