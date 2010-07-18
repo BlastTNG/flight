@@ -1241,7 +1241,7 @@
         <WORD value="4" caption="Fault" textstyle="W_BIT"/>
         <WORD value="5" caption="Max. Pwr" textstyle="W_BIT"/>
         <WORD value="6" caption="Absorp" textstyle="OK_BIT"/>
-        <WORD value="7" caption="OK by JJ" textstyle="OK_BIT"/>
+        <WORD value="7" caption="Float" textstyle="OK_BIT"/>
         <WORD value="8" caption="Equalize" textstyle="W_BIT"/>
         <WORD value="9" caption="Slave" textstyle="W_BIT"/>
         <WORD value="10" caption="No Comm" textstyle="W_BIT"/>
