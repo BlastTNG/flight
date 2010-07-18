@@ -421,7 +421,11 @@ int ntpshm_put(double fixtime) {
   (void)gettimeofday(&tv,NULL);
   microseconds = 1000000.0 * modf(fixtime,&seconds);
 
-  shmTime = getShmTime();
+  return(0); // skip the memory leak FIXME: remove
+  /* FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME */
+  /*** memory leak in the next line ***/
+  shmTime = getShmTime(); // FIXME: this should only be called once I think cbn
+  /* FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME */
   shmTime->valid =0;
   shmTime->count++;
   shmTime->clockTimeStampSec = (time_t)seconds;
@@ -618,7 +622,6 @@ void WatchDGPS()
   
   /*Read in SBF data blocks*/
   while (GetNextBlock(fd, SBFBlock) == 0) {
-
     /* Time */
     if (((VoidBlock_t*)SBFBlock)->ID == SBFID_RECEIVERTIME) {
       ReceiverTimeBlock_t* RXTIME = (ReceiverTimeBlock_t*) SBFBlock;
