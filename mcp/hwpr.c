@@ -213,8 +213,8 @@ void ControlHWPR(struct ezbus *bus)
 	  if(hwpr_control.move_cur == not_yet) {  // we haven't yet started a move...
 	    bprintf(info,"We haven't yet started to move!");
 
-	    if((hwpr_data.pot > HWPR_POT_MIN) ||
-	       (hwpr_data.pot > HWPR_POT_MAX) ||
+	    if(((hwpr_data.pot > HWPR_POT_MIN) ||
+		(hwpr_data.pot < HWPR_POT_MAX)) &&
 	       (CommandData.hwpr.use_pot)) { // use pot
 
 	      /* calculate rel move from pot lut*/

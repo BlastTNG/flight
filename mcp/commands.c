@@ -1025,7 +1025,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.hwpr.use_pot = 0;
       break;
     case hwpr_pot_is_alive:
-      CommandData.hwpr.use_pot = 0;
+      CommandData.hwpr.use_pot = 1;
       break;
 
     case reap_north:  /* Miscellaneous commands */
