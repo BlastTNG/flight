@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.89 $";
+const char *command_list_serial = "$Revision: 4.90 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -258,7 +258,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(actuator_stop), "stop all secondary actuators immediately", GR_ACT},
   {COMMAND(hwpr_panic), "stop the HWPR rotator immediately", GR_HWPR},
   {COMMAND(hwpr_step), "step the hwpr", GR_HWPR},
-  {COMMAND(hwpr_step_off), "Never step the half wave plate during scanning", GR_HWPR},
+  {COMMAND(hwpr_step_off), "Disable half wave plate stepping", GR_HWPR},
+  {COMMAND(hwpr_step_on), "Enable half wave plate stepping", GR_HWPR},
   {COMMAND(hwpr_pot_is_dead), "don't use the potentiometer when stepping the hwpr", GR_HWPR},
   {COMMAND(hwpr_pot_is_alive), "use the potentiometer when stepping the hwpr", GR_HWPR},
 

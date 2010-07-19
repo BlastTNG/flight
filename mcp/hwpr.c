@@ -31,7 +31,7 @@
 #include "pointing_struct.h" /* To access ACSData */
 #include "tx.h" /* InCharge */
 
-#define HWPR_READ_WAIT 60
+#define HWPR_READ_WAIT 5
 
 static struct hwpr_struct {
   int pos;
@@ -210,7 +210,8 @@ void ControlHWPR(struct ezbus *bus)
 	/*** Step Mode ***/
 	if(hwpr_control.go == step && hwpr_control.done_move == 0) {
 
-	  if(!hwpr_control.move_cur == not_yet) {  // we haven't yet started a move...
+	  if(hwpr_control.move_cur == not_yet) {  // we haven't yet started a move...
+	    bprintf(info,"We haven't yet started to move!");
 
 	    if((hwpr_data.pot > HWPR_POT_MIN) ||
 	       (hwpr_data.pot > HWPR_POT_MAX) ||
