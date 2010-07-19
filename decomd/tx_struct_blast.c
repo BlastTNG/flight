@@ -887,11 +887,11 @@ struct ChannelStruct SlowChannels[] = {
 /* ACS2 Analog card */
   {"roll_pyr_clin",'r',  ACS2_A1,  1,     -4.0/5333.3333,        4.*6.144, 'u', U_NONE},
   {"pch_pyr_clin", 'r',  ACS2_A1,  3,      4.0/5333.3333,       -4.*6.144, 'u', U_NONE},
-  {"t_pyr_clin",   'r',  ACS2_A1,  5,           -0100.0*10.0/32768.0,    -100.0*10.0, 'u', U_NONE},
+  {"t_pyr_clin",   'r',  ACS2_A1,  5,          100.0*10.0/32768.0,    -100.0*10.0, 'u', U_NONE},
   {"xel_if_clin",  'r',  ACS2_A1,  7,         0.00546739,      -25.*6.144, 'u', U_NONE},
   {"el_raw_if_clin",'r', ACS2_A1,  9,                1.0,             0.0, 'u', U_NONE},
   //  {"el_raw_if_clin",'r', ACS2_A1,  9,         0.00546739,         -133.78, 'u', U_NONE},
-  {"t_if_clin",    'r',  ACS2_A1, 11,            -0100.0*10.0/32768.0,    -100.0*10.0, 'u', U_NONE},
+  {"t_if_clin",    'r',  ACS2_A1, 11,            100.0*10.0/32768.0,    -100.0*10.0, 'u', U_NONE},
   {"x_mag",        'r',  ACS2_A1, 13,              MAGX_M,         MAGX_B, 'u', U_NONE},
   {"y_mag",        'r',  ACS2_A1, 15,              MAGY_M,         MAGY_B, 'u', U_NONE},
   {"z_mag",        'r',  ACS2_A1, 17,              MAGZ_M,         MAGZ_B, 'u', U_NONE},
