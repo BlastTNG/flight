@@ -275,27 +275,32 @@ struct ChannelStruct SlowChannels[] = {
   {"ramp_ena_bias",'w',  BIAS_D,  8,                1.0,             0.0, 'u', U_NONE},
   {"ramp_ampl_bias",'r',  BIAS_D,  0,                1.0,             0.0, 'u', U_NONE},
 
-  /* the following 9 AD590s, except t_das all had calibrated offsets */
-  /* these are all carry dover from the previous BIAS card (TMP6) */
+  /* this is all the inerframe ad590's.  the das and the rec dcdc converter have not */
+  /*  yet been added */
   {"t_padcdc_rec", 'r', BIAS_T1,  1, CAL16T(1.0,                    0.0), 'u', U_T_C},
   {"t_pauram_rec", 'r', BIAS_T1,  3, CAL16T(1.0,                    0.0), 'u', U_T_C},
   {"t_hkdcdc_rec", 'r', BIAS_T1,  5, CAL16T(1.0,                    0.0), 'u', U_T_C},
-  {"t_2_prime",    'r', BIAS_T1,  7, CAL16T(1.0, AD590_CALIB_PRIMARY_2),  'u', U_NONE},
-  {"t_strut_bot",  'r', BIAS_T1,  9, CAL16T(1.0, AD590_CALIB_STRUT_1),    'u', U_NONE},
-  {"t_1_prime",    'r', BIAS_T1, 11, CAL16T(1.0, AD590_CALIB_PRIMARY_1),  'u', U_NONE},
-  {"t_1_second",   'r', BIAS_T1, 13, CAL16T(1.0, AD590_CALIB_SECONDARY_1),'u', U_NONE},
-  {"t_2_second",   'r', BIAS_T1, 15, CAL16T(1.0, AD590_CALIB_SECONDARY_2),'u', U_NONE},
-  {"t_strut_side", 'r', BIAS_T1, 17, CAL16T(1.0, AD590_CALIB_STRUT_2),    'u', U_NONE},
-  {"t_push_plate", 'r', BIAS_T1, 19, CAL16T(1.0, AD590_CALIB_PUSH_PLATE), 'u', U_NONE},
-  {"t_mot_act",    'r', BIAS_T1, 21, CAL16T(1.0, AD590_CALIB_ACT_MOTOR),  'u', U_NONE},
-  {"t_rec",        'r', BIAS_T1, 23, CAL16T(1.0, AD590_CALIB_REC),        'u', U_NONE},
-  {"t_das",        'r', BIAS_T1, 25, CAL16T(1.0, 0.0),                    'u', U_NONE},
-  /* AD590 calibrations per Marco 2006-11 */
-  {"t_if_top_frnt",'r', BIAS_T1, 27, CAL16T(1.0, AD590_CALIB_INFRAME_1),  'u', U_NONE},
-  {"t_if_top_back",'r', BIAS_T1, 29, CAL16T(1.0, AD590_CALIB_INFRAME_2),  'u', U_NONE},
-  {"t_if_bot_frnt",'r', BIAS_T1, 31, CAL16T(1.0, AD590_CALIB_INFRAME_3),  'u', U_NONE},
-  {"t_if_bot_back",'r', BIAS_T1, 33, CAL16T(1.0, AD590_CALIB_INFRAME_4),  'u', U_NONE},
+  {"t_1_prime",    'r', BIAS_T1,  9, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_strut_bot",  'r', BIAS_T1, 15, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_2_prime",    'r', BIAS_T1, 17, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_1_second",   'r', BIAS_T1, 22, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_2_second",   'r', BIAS_T1, 23, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_strut_side", 'r', BIAS_T1, 16, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_push_plate", 'r', BIAS_T1, 21, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_mot_act",    'r', BIAS_T1, 20, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_rec",        'r', BIAS_T1, 27, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_das",        'r', BIAS_T1, 25, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_if_top_frnt",'r', BIAS_T1, 12, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_if_top_back",'r', BIAS_T1, 10, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_if_bot_frnt",'r', BIAS_T1, 14, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_if_bot_back",'r', BIAS_T1, 18, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  /*blast_pol specific ad590*/
+  {"t_mor_pump_val",'r', BIAS_T1,  8,  CAL16T(1.0,	    0.0), 'u', U_T_C},
+  {"t_hwpr_mot",    'r', BIAS_T1, 11,  CAL16T(1.0,	    0.0), 'u', U_T_C},
+  {"t_hwpr_feed",   'r', BIAS_T1, 13,  CAL16T(1.0,	    0.0), 'u', U_T_C},
+  {"t_dac_box",     'r', BIAS_T1, 19,  CAL16T(1.0,	    0.0), 'u', U_T_C},
   /* generic names for remaining analog channels. BE MORE SPECIFIC */
+  /* may no longer need these channels */
   {"t17_das",      'r', BIAS_T1, 35,         CAL16T(1.0,            0.0), 'u', U_NONE},
   {"t18_das",      'r', BIAS_T1, 37,         CAL16T(1.0,            0.0), 'u', U_NONE},
   {"t19_das",      'r', BIAS_T1, 39,         CAL16T(1.0,            0.0), 'u', U_NONE},
