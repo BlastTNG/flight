@@ -26,6 +26,7 @@
 #include <stdlib.h>
 
 #include "hwpr.h"
+#include "lut.h"
 #include "ezstep.h"
 #include "command_struct.h"
 #include "pointing_struct.h" /* To access ACSData */
@@ -52,6 +53,7 @@ static struct hwpr_control_struct {
   int done_move;
   int done_all;
   int rel_move;
+  int i_next_step;
 
 } hwpr_control;
 
@@ -73,8 +75,8 @@ void ResetControlHWPR (void) {
   hwpr_control.done_move = 0;
   hwpr_control.done_all = 0;
   hwpr_control.rel_move = 0;
-
 }
+
 
 //counter incremented in StoreHWPRBus to better time tep_repeat mode
 static int hwpr_wait_cnt = 0;
@@ -132,12 +134,44 @@ void StoreHWPRBus(void)
   WriteData(readWaitHwprAddr, hwpr_control.read_wait_cnt, NIOS_FLUSH);
 }
 
+// From the current potentiometer reading. Figure out the nearest
+// hwpr step position, and return the index
+int GetHWPRi(double pot_val)
+{
+  int i; 
+  int i_min = 0;
+  double d_pot; 
+  double d_pot_min = 2.0;
+
+  for(i=0;i<=3;i++) {
+    d_pot = fabs(pot_val-CommandData.hwpr.pos[i]);
+    if(d_pot < d_pot_min) {
+      d_pot_min = d_pot;
+      i_min = i;
+    }
+    bprintf(info,"GetHWPRi: i=%i,d_pot=%f,pot_val=%f,CommandData.hwpr.pos[i]=%f,d_pot_min=%f,i_min=%i",i,d_pot,pot_val,CommandData.hwpr.pos[i],d_pot_min,i_min);
+  }
+
+  bprintf(info,"GetHWPRi: Returning %i",i_min);
+  // i is the closest index to where we are.  return the next index (i+1)%4
+  return i_min;
+}
+
 void ControlHWPR(struct ezbus *bus)
 {
   static int repeat_pos_cnt = 0;
   static int overshooting = 0;
   static int first_time = 1;
+
+  int hwpr_enc_cur, hwpr_enc_dest;
+  int i_step; // index of the current step
+
   int overshoot = 0;
+
+  static struct LutType HwprPotLut = {"/data/etc/hwpr_pot.lut", 0, NULL, NULL, 0};
+
+  if (HwprPotLut.n == 0)
+    LutInit(&HwprPotLut);
 
   if (first_time) {
 
@@ -218,8 +252,20 @@ void ControlHWPR(struct ezbus *bus)
 	       (CommandData.hwpr.use_pot)) { // use pot
 
 	      /* calculate rel move from pot lut*/
-	      bprintf(info,"This is where I will calculate the relative step from the pot value.");
-	      hwpr_control.rel_move = 420;
+	      bprintf(info,"This is where I calculate the relative step from the pot value.");
+	      hwpr_enc_cur = LutCal(&HwprPotLut, hwpr_data.pot);
+	      bprintf(info,"Current pot value: hwpr_data.pot = %f, hwpr_enc_cur = %i", hwpr_data.pot, hwpr_enc_cur);
+
+	      /*get index of the closest hwpr_step position, and find the encoder position for the next step pos*/
+              i_step = GetHWPRi(hwpr_data.pot);
+	      hwpr_control.i_next_step = (i_step +1)%1;
+              hwpr_enc_dest = LutCal(&HwprPotLut, CommandData.hwpr.pos[i_step]);
+
+              hwpr_control.rel_move = hwpr_enc_dest - hwpr_enc_cur;
+
+	      bprintf(info,"Nearest step position: i = %i, encoder_lut = %i, pot = %f",i_step,hwpr_enc_cur,hwpr_data.pot);
+	      bprintf(info,"Destination step position: i = %i, encoder_lut = %i, pot = %f",hwpr_control.i_next_step,hwpr_enc_dest,CommandData.hwpr.pos[i_step]);
+
               CommandData.hwpr.mode = HWPR_SLEEP;
 	      return;
 	    } else { // don't use pot
@@ -304,6 +350,7 @@ void DoHWPR(struct ezbus* bus)
     /* initialize hwpr_data */
     hwpr_data.pos = 0;
     hwpr_data.enc = 0;
+    hwpr_control.i_next_step = 0;
  }
 
   /* update the HWPR move parameters */
