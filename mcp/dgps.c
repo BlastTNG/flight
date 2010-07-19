@@ -722,13 +722,13 @@ void WatchDGPS()
 	DGPSAtt[dgpsatt_index].pitch = ATTEULER->Pitch;
       if (ATTEULER->Roll != DONOTUSE )//&& (DGPSAtt[dgpsatt_index-1].roll_cov <= CommandData.dgps_cov_limit)) 
 	DGPSAtt[dgpsatt_index].roll = ATTEULER->Roll;
-      if ((ATTEULER->Heading == DONOTUSE)			  || 
+      if ((ATTEULER->Heading == DONOTUSE)		  || 
 	  (ATTEULER->Pitch == DONOTUSE)			  || 
 	  (ATTEULER->Roll == DONOTUSE)			  ||
 	  (DGPSAtt[dgpsatt_index].az_cov <=0.001)	  ||
-	  (fabs(DGPSAtt[dgpsatt_index].ant_E) > 3.5)		  ||
-	  (fabs(DGPSAtt[dgpsatt_index].ant_N) > 0.5)		  ||
-	  (fabs(DGPSAtt[dgpsatt_index].ant_U) > 0.5)		  ||
+	  (fabs(DGPSAtt[dgpsatt_index].ant_E - 3.0) > CommandData.dgps_ants_limit)  ||
+	  (fabs(DGPSAtt[dgpsatt_index].ant_N - 0.0) > CommandData.dgps_ants_limit)  ||
+	  (fabs(DGPSAtt[dgpsatt_index].ant_U - 0.0) > CommandData.dgps_ants_limit)  ||
 	  (DGPSAtt[dgpsatt_index].az_cov > CommandData.dgps_cov_limit))	{
 	DGPSAtt[dgpsatt_index].att_ok = 0;
       } else {

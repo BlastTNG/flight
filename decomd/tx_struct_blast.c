@@ -803,7 +803,7 @@ struct ChannelStruct SlowChannels[] = {
   {"ant_e_dgps",     'w', LOOP9, 60,	      1.0/100.0,	     0.0, 's',U_NONE},
   {"ant_n_dgps",     'w', LOOP9, 61,	      1.0/100.0,	     0.0, 's',U_NONE},
   {"ant_u_dgps",     'w', LOOP9, 62,	      1.0/100.0,	     0.0, 's',U_NONE},
-  /* LOOP9 63 is unused */
+  {"ants_lim_dgps",   'w', LOOP9, 63,    (100.0/32768.0),            0.0, 'u', U_NONE},
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

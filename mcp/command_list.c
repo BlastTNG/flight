@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.88 $";
+const char *command_list_serial = "$Revision: 4.89 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -533,6 +533,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
     1,
     {
       {"Covariance (deg^2)", 0, 5.0, 'f', "COV_GPS"},
+    }
+  },
+  {COMMAND(ants_gps), "set the threshhold for allowable DGPS antenna separation error", GR_TRIM,
+    1,
+    {
+      {"Antenna Separation Error (m)", 0, 5.0, 'f', "ANTS_GPS"},
     }
   },
 

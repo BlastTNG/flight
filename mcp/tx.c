@@ -856,6 +856,7 @@ static void StoreData(int index)
   static struct NiosStruct* dgpsAntNAddr;
   static struct NiosStruct* dgpsAntUAddr;
   static struct NiosStruct *dgpsCovLimAddr;
+  static struct NiosStruct *dgpsAntsLimAddr;
   static struct NiosStruct* dgpsNSatAddr;
 
   /* trim fields */
@@ -1058,6 +1059,7 @@ static void StoreData(int index)
     trimMagAddr = GetNiosAddr("trim_mag");
     dgpsTrimAddr = GetNiosAddr("trim_dgps");
     dgpsCovLimAddr = GetNiosAddr("cov_lim_dgps");
+    dgpsAntsLimAddr = GetNiosAddr("ants_lim_dgps");
 
     modeAzMcAddr = GetNiosAddr("mode_az_mc");
     modeElMcAddr = GetNiosAddr("mode_el_mc");
@@ -1248,6 +1250,7 @@ static void StoreData(int index)
   (((unsigned int)(PointingData[i_point].dgps_sigma * DEG2I))>65535)?65535:((unsigned int)(PointingData[i_point].dgps_sigma * DEG2I)), NIOS_QUEUE);
   WriteData(dgpsTrimAddr, CommandData.dgps_az_trim * DEG2I, NIOS_QUEUE);
   WriteData(dgpsCovLimAddr, CommandData.dgps_cov_limit*32768.0/100.0, NIOS_QUEUE);
+  WriteData(dgpsAntsLimAddr, CommandData.dgps_ants_limit*32768.0/100.0, NIOS_QUEUE);
   WriteData(azSsAddr, (unsigned int)((PointingData[i_point].ss_az +
           CommandData.ss_az_trim) * DEG2I),
       NIOS_QUEUE);
