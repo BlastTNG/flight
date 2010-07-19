@@ -2721,7 +2721,7 @@ void InitCommandData()
   CommandData.pin_is_in = 1;
 
   CommandData.Cryo.charcoalHeater = 0;
-  CommandData.Cryo.hsCharcoal = 0;
+  CommandData.Cryo.hsCharcoal = 1;
   //TODO enable autocycycling when FridgeCycle is reimplemented
   CommandData.Cryo.fridgeCycle = 0;
   CommandData.Cryo.force_cycle = 0;
