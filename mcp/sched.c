@@ -40,7 +40,10 @@ double GetJulian(time_t t);
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
 		double *el);
 
-#define NOMINAL_LATITUDE -78.0 /* degrees North */
+//#define NOMINAL_LATITUDE -78.0 /* degrees North */
+#define CHECK_LON 20.0
+#define NOMINAL_LATITUDE 31.76
+//#define CHECK_LON -95.7168 
 #define LATITUDE_BAND     6.00 /* in degrees of latitude */
 #define LATITUDE_OVERLAP  1.00 /* hysteresis between the bands,
                                   in degress of latitude */
@@ -63,7 +66,6 @@ static const char filename[2][3][32] = {
 
 int GetLine(FILE *fp, char *line); // defined in lut.c
 
-#define CHECK_LON 20.00
 static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
 {
   FILE *fp;
@@ -133,7 +135,7 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
   S->t0 = mktime(&ts) - timezone;
 
   /*************************************************************/
-  /** find local comoving siderial date (in siderial seconds) **/
+  /** find local comoving siderial date (in siderial seconds) **/ //166 east lon
   dt = (mcp_systime(NULL) - S->t0) * 1.002737909; /* Ref Siderial Time */
   d_lon = CHECK_LON;
   while (d_lon < 0)
