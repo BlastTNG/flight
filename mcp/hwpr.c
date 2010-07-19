@@ -95,6 +95,7 @@ void StoreHWPRBus(void)
   static struct NiosStruct* pos3HwprAddr;
   static struct NiosStruct* overshootHwprAddr;
   static struct NiosStruct* iposHwprAddr;
+  static struct NiosStruct* readWaitHwprAddr;
 
   if (firsttime)
   {
@@ -111,6 +112,7 @@ void StoreHWPRBus(void)
     pos2HwprAddr = GetNiosAddr("pos2_hwpr");
     pos3HwprAddr = GetNiosAddr("pos3_hwpr");
     iposHwprAddr = GetNiosAddr("i_pos_hwpr");
+    readWaitHwprAddr = GetNiosAddr("read_wait_hwpr");
   }
 
   hwpr_wait_cnt--;
@@ -127,6 +129,7 @@ void StoreHWPRBus(void)
   WriteData(pos2HwprAddr, CommandData.hwpr.pos[2]*65535, NIOS_FLUSH);
   WriteData(pos3HwprAddr, CommandData.hwpr.pos[3]*65535, NIOS_FLUSH);
   WriteData(iposHwprAddr, CommandData.hwpr.i_pos, NIOS_FLUSH);
+  WriteData(readWaitHwprAddr, hwpr_control.read_wait_cnt, NIOS_FLUSH);
 }
 
 void ControlHWPR(struct ezbus *bus)
@@ -178,7 +181,7 @@ void ControlHWPR(struct ezbus *bus)
   }
 
   /*** Begin fall through control ***/
-
+  
   /* if are doing anything with the HWPR other than sleeping, panicing or repeating */
   /* TODO: Eventually we'll want to rewrite repeat mode so that it can be incorporated in to the fall through code */ 
   if(CommandData.hwpr.mode >= HWPR_GOTO && CommandData.hwpr.mode != HWPR_REPEAT) {
@@ -189,7 +192,7 @@ void ControlHWPR(struct ezbus *bus)
       /* pulse the potentiometer */
       bprintf(info,"Pulsing the pot before we do anything else...");
       CommandData.Cryo.hwprPos = 50;
-      hwpr_control.go = reading;
+      hwpr_control.read_before = reading;
       hwpr_control.read_wait_cnt = HWPR_READ_WAIT;
 
     } else if (hwpr_control.read_before == reading) { // we are reading...
