@@ -1046,9 +1046,9 @@ static void StoreData(int index)
     dgpsAzCovAddr = GetNiosAddr("az_cov_dgps");
     dgpsPitchCovAddr = GetNiosAddr("pitch_cov_dgps");
     dgpsRollCovAddr = GetNiosAddr("roll_cov_dgps");
-    dgpsAntEAddr = GetNiosAddr("ant_E_dgps");
-    dgpsAntNAddr = GetNiosAddr("ant_N_dgps");
-    dgpsAntUAddr = GetNiosAddr("ant_U_dgps");
+    dgpsAntEAddr = GetNiosAddr("ant_e_dgps");
+    dgpsAntNAddr = GetNiosAddr("ant_n_dgps");
+    dgpsAntUAddr = GetNiosAddr("ant_u_dgps");
 
     lstSchedAddr = GetNiosAddr("lst_sched");
 

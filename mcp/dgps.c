@@ -80,6 +80,7 @@ extern short int InCharge; /* tx.c */
 #define SBFID_ATTEULER          5938
 #define SBFID_ATTCOVEULER	5939
 #define SBFID_AUXPOS		5942
+#define DONOTUSE  -2e10
 
 #define BDRATE B115200
 // #define SELECT_GPS_MUS_OUT  200000
@@ -477,9 +478,9 @@ void WatchDGPS()
     dgpsAzCovAddr = GetBiPhaseAddr("az_cov_dgps");     
     dgpsPitchCovAddr = GetBiPhaseAddr("pitch_cov_dgps");
     dgpsRollCovAddr = GetBiPhaseAddr("roll_cov_dgps"); 
-    dgpsAntEAddr = GetBiPhaseAddr("ant_E_dgps"); 
-    dgpsAntNAddr = GetBiPhaseAddr("ant_N_dgps"); 
-    dgpsAntUAddr = GetBiPhaseAddr("ant_U_dgps"); 
+    dgpsAntEAddr = GetBiPhaseAddr("ant_e_dgps"); 
+    dgpsAntNAddr = GetBiPhaseAddr("ant_n_dgps"); 
+    dgpsAntUAddr = GetBiPhaseAddr("ant_u_dgps"); 
     dgpsAttOkAddr = GetBiPhaseAddr("att_ok_dgps");
     dgpsLatAddr = GetBiPhaseAddr("lat_dgps");       
     dgpsLonAddr = GetBiPhaseAddr("lon_dgps");      
@@ -670,13 +671,13 @@ void WatchDGPS()
 	(int)(PVT->NrSV),
 	(unsigned int)(PVT->Mode)
 	);*/
-      if (PVT->Lat != -2e10) lat = PVT->Lat; // Latitude in radians
+      if (PVT->Lat != DONOTUSE) lat = PVT->Lat; // Latitude in radians
       DGPSPos[dgpspos_index].lat = lat*180/M_PI; // Latitude in degrees
-      if (PVT->Lon != -2e10) lon = -PVT->Lon; // *** west *** Longitude in radians
+      if (PVT->Lon != DONOTUSE) lon = -PVT->Lon; // *** west *** Longitude in radians
       DGPSPos[dgpspos_index].lon = lon*180/M_PI; // Longitude in degrees
-      if ((PVT->Alt != -2e10) && (PVT->GeoidHeight != -2e10)) DGPSPos[dgpspos_index].alt = PVT->Alt - PVT->GeoidHeight; // Altitude above geoid in metres
+      if ((PVT->Alt != DONOTUSE) && (PVT->GeoidHeight != DONOTUSE)) DGPSPos[dgpspos_index].alt = PVT->Alt - PVT->GeoidHeight; // Altitude above geoid in metres
       DGPSPos[dgpspos_index].n_sat = (int)(PVT->NrSV); // # Satellites
-      if ((PVT->Vn != -2e10) && (PVT->Ve != -2e10)) {
+      if ((PVT->Vn != DONOTUSE) && (PVT->Ve != DONOTUSE)) {
 	DGPSPos[dgpspos_index].speed = (PVT->Vn+PVT->Ve)*60*60/1000;// speed over ground in km/hr (0 to 999.9)
 	//if ((PVT->Vn > 0) && (PVT->Ve > 0)) {
 	  dir = (180/M_PI)*atan2(PVT->Ve,PVT->Vn);// course over ground in degrees from N (due E is 90 deg)
@@ -690,9 +691,9 @@ void WatchDGPS()
 	  if (dir < 0) dir +=360;
 	  DGPSPos[dgpspos_index].direction = dir;
       }
-      if (PVT->Vu != -2e10) DGPSPos[dgpspos_index].climb = PVT->Vu; // vertical velocity in m/s (-999.9 to 999.9)      
-      if ((PVT->Lat == -2e10)			  ||
-	  (PVT->Lon == -2e10)			  || 
+      if (PVT->Vu != DONOTUSE) DGPSPos[dgpspos_index].climb = PVT->Vu; // vertical velocity in m/s (-999.9 to 999.9)      
+      if ((PVT->Lat == DONOTUSE)			  ||
+	  (PVT->Lon == DONOTUSE)			  || 
 	  (DGPSPos[dgpspos_index].n_sat < 4)) {
 	pos_ok = 0;
       } 
@@ -715,15 +716,15 @@ void WatchDGPS()
 	ATTEULER->Mode,
 	(unsigned int)(ATTEULER->NrSV)
 	);*/
-      if (ATTEULER->Heading != -2e10 )//&& (DGPSAtt[dgpsatt_index-1].az_cov <= CommandData.dgps_cov_limit)) 
+      if (ATTEULER->Heading != DONOTUSE )//&& (DGPSAtt[dgpsatt_index-1].az_cov <= CommandData.dgps_cov_limit)) 
 	DGPSAtt[dgpsatt_index].az = ATTEULER->Heading;
-      if (ATTEULER->Pitch != -2e10 )//&& (DGPSAtt[dgpsatt_index-1].pitch_cov <= CommandData.dgps_cov_limit)) 
+      if (ATTEULER->Pitch != DONOTUSE )//&& (DGPSAtt[dgpsatt_index-1].pitch_cov <= CommandData.dgps_cov_limit)) 
 	DGPSAtt[dgpsatt_index].pitch = ATTEULER->Pitch;
-      if (ATTEULER->Roll != -2e10 )//&& (DGPSAtt[dgpsatt_index-1].roll_cov <= CommandData.dgps_cov_limit)) 
+      if (ATTEULER->Roll != DONOTUSE )//&& (DGPSAtt[dgpsatt_index-1].roll_cov <= CommandData.dgps_cov_limit)) 
 	DGPSAtt[dgpsatt_index].roll = ATTEULER->Roll;
-      if ((ATTEULER->Heading == -2e10)			  || 
-	  (ATTEULER->Pitch == -2e10)			  || 
-	  (ATTEULER->Roll == -2e10)			  ||
+      if ((ATTEULER->Heading == DONOTUSE)			  || 
+	  (ATTEULER->Pitch == DONOTUSE)			  || 
+	  (ATTEULER->Roll == DONOTUSE)			  ||
 	  (DGPSAtt[dgpsatt_index].az_cov <=0.001)	  ||
 	  (fabs(DGPSAtt[dgpsatt_index].ant_E) > 3.5)		  ||
 	  (fabs(DGPSAtt[dgpsatt_index].ant_N) > 0.5)		  ||
@@ -738,16 +739,22 @@ void WatchDGPS()
 
       /* Attitude Covariance*/
       AttitudeCovEulerBlock_t* ATTCOVEULER = (AttitudeCovEulerBlock_t*) SBFBlock;
+      if (ATTCOVEULER->Cov_HeadHead != DONOTUSE) 
       DGPSAtt[dgpsatt_index].az_cov = ATTCOVEULER->Cov_HeadHead;
+      if (ATTCOVEULER->Cov_PitchPitch != DONOTUSE) 
       DGPSAtt[dgpsatt_index].pitch_cov = ATTCOVEULER->Cov_PitchPitch;
+      if (ATTCOVEULER->Cov_RollRoll != DONOTUSE) 
       DGPSAtt[dgpsatt_index].roll_cov = ATTCOVEULER->Cov_RollRoll; 
     } else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_AUXPOS) {
+      
       /* Antenna Position*/
       AuxAntPositions_t* AUXPOSITIONS = (AuxAntPositions_t*) SBFBlock;
-      DGPSAtt[dgpsatt_index].ant_E = AUXPOSITIONS->DeltaEast;
+      if (AUXPOSITIONS->DeltaEast != DONOTUSE) 
+	DGPSAtt[dgpsatt_index].ant_E = AUXPOSITIONS->DeltaEast;
+      if (AUXPOSITIONS->DeltaNorth != DONOTUSE) 
       DGPSAtt[dgpsatt_index].ant_N = AUXPOSITIONS->DeltaNorth;
+      if (AUXPOSITIONS->DeltaUp != DONOTUSE) 
       DGPSAtt[dgpsatt_index].ant_U = AUXPOSITIONS->DeltaUp;
-      //bprintf(info,"E=%f , N=%f, U=%f ",AUXPOSITIONS->DeltaEast,AUXPOSITIONS->DeltaNorth,AUXPOSITIONS->DeltaUp);
     } 
   }	
   return;
