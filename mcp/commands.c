@@ -2632,7 +2632,7 @@ void InitCommandData()
   CommandData.ss_az_trim = 0;
 
   CommandData.dgps_cov_limit = 0.3;
-  CommandData.dgps_cov_limit = 0.5;
+  CommandData.dgps_ants_limit = 0.5;
 
   SIPData.MKScal.m_hi = 0.01;
   SIPData.MKScal.m_med = 0.1;
