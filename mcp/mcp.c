@@ -94,7 +94,6 @@ void IntegratingStarCamera(void);
 void ActuatorBus(void);
 void WatchFIFO(void);
 void FrameFileWriter(void);
-//void TDRSSWriter(void);
 void CompressionWriter(void);
 void StageBus(void);
 void openSBSC(void);
@@ -121,8 +120,6 @@ struct frameBuffer hiGain_buffer;
 
 #endif
 
-unsigned short *tdrss_data[3];
-unsigned int tdrss_index = 0;
 time_t biphase_timer;
 int biphase_is_on = 0;
 
@@ -982,7 +979,6 @@ int main(int argc, char *argv[])
 
 #ifndef BOLOTEST
   pthread_t sunsensor_id;
-//  pthread_t tdrss_id;
   pthread_t compression_id;
   pthread_t bi0_id;
   pthread_t sensors_id;
@@ -1077,9 +1073,6 @@ int main(int argc, char *argv[])
   /* Allocate the local data buffers */
   RxFrame = balloc(fatal, BiPhaseFrameSize);
 
-  //for (i = 0; i < 3; ++i)
-  //  tdrss_data[i] = (unsigned short *)balloc(fatal, BiPhaseFrameSize);
-
   for (i = 0; i < FAST_PER_SLOW; ++i) {
     slow_data[i] = balloc(fatal, slowsPerBi0Frame * sizeof(unsigned short));
     //TODO fix "uninitialised value" valgrind errors. Ensure not more serious.
@@ -1129,7 +1122,6 @@ int main(int argc, char *argv[])
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
 
-  //pthread_create(&tdrss_id, NULL, (void*)&TDRSSWriter, NULL);
   pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
 #endif
@@ -1152,9 +1144,6 @@ int main(int argc, char *argv[])
         GetCurrents(RxFrame);
         Pointing();
 
-        /* Copy data to tdrss thread. */
-        //memcpy(tdrss_data[tdrss_index], RxFrame, BiPhaseFrameSize);
-        //tdrss_index = INC_INDEX(tdrss_index);
 #endif
 
         /* Frame sequencing check */
