@@ -1057,7 +1057,7 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
    e->angle += (ifel_gy + off_ifel_gy) / SR;
 
  
-   if(e->since_last <= 12000) {
+   if(e->since_last <= 18000) {
      e->varience += GYRO_VAR;
    } else {
      e->varience = 1.0e30; /* Don't accept SC solutions after 5 minutes*/
@@ -1070,7 +1070,7 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
   gy_az = -(ifroll_gy + off_ifroll_gy) * sin(old_el) + -(ifyaw_gy + off_ifyaw_gy) * cos(old_el);
   a->angle += gy_az / SR;
 
-   if(a->since_last <= 12000) {
+   if(a->since_last <= 18000) {
      a->varience += GYRO_VAR;
    } else {
      a->varience = 1.0e30; /* Don't accept SC solutions after 5 minutes*/

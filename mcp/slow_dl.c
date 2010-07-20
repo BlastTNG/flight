@@ -32,7 +32,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
     {"lat",           SLOWDL_FORCE_INT, 8, -90.0, -30},
     {"lon",           SLOWDL_FORCE_INT, 8, -180, 360},
     {"alt",           SLOWDL_FORCE_INT, 8, 0, 40000}, /* 157 m */
-    {"t_mcc",         SLOWDL_FORCE_INT, 8, 0, 75}, /* 0.29 deg */
+    {"t_wd_flc",         SLOWDL_FORCE_INT, 8, 0, 75}, /* 0.29 deg */
     {"disk_free",     SLOWDL_FORCE_INT, 8, 0, 250},
     {"timeout",       SLOWDL_FORCE_INT, 8, 0, 65535},
     {"plover",        SLOWDL_U_MASK, 8},

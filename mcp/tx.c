@@ -127,7 +127,7 @@ static void WriteAux(void)
   static struct NiosStruct* rateIridiumAddr;
   static struct NiosStruct* tChipFlcAddr;
   static struct NiosStruct* tCpuFlcAddr;
-  static struct NiosStruct* tXFlcAddr;
+  static struct NiosStruct* tMbFlcAddr;
   static struct NiosStruct* statusMCCAddr;
   static struct BiPhaseStruct* statusMCCReadAddr;
   static struct NiosStruct* bi0FifoSizeAddr;
@@ -153,7 +153,7 @@ static void WriteAux(void)
 
     tChipFlcAddr = GetNiosAddr("t_chip_flc");
     tCpuFlcAddr = GetNiosAddr("t_cpu_flc");
-    tXFlcAddr = GetNiosAddr("t_x_flc");
+    tMbFlcAddr = GetNiosAddr("t_mb_flc");
     timeAddr = GetNiosAddr("time");
     timeUSecAddr = GetNiosAddr("time_usec");
     diskFreeAddr = GetNiosAddr("disk_free");
@@ -194,7 +194,7 @@ static void WriteAux(void)
 
   WriteData(tChipFlcAddr, CommandData.temp1, NIOS_QUEUE);
   WriteData(tCpuFlcAddr, CommandData.temp2, NIOS_QUEUE);
-  WriteData(tXFlcAddr, CommandData.temp3, NIOS_QUEUE);
+  WriteData(tMbFlcAddr, CommandData.temp3, NIOS_QUEUE);
 
   WriteData(diskFreeAddr, CommandData.df, NIOS_QUEUE);
 
@@ -856,7 +856,6 @@ static void StoreData(int index)
   static struct NiosStruct* dgpsAntNAddr;
   static struct NiosStruct* dgpsAntUAddr;
   static struct NiosStruct *dgpsCovLimAddr;
-  static struct NiosStruct *dgpsAntsLimAddr;
   static struct NiosStruct* dgpsNSatAddr;
 
   /* trim fields */
@@ -1047,9 +1046,9 @@ static void StoreData(int index)
     dgpsAzCovAddr = GetNiosAddr("az_cov_dgps");
     dgpsPitchCovAddr = GetNiosAddr("pitch_cov_dgps");
     dgpsRollCovAddr = GetNiosAddr("roll_cov_dgps");
-    dgpsAntEAddr = GetNiosAddr("ant_e_dgps");
-    dgpsAntNAddr = GetNiosAddr("ant_n_dgps");
-    dgpsAntUAddr = GetNiosAddr("ant_u_dgps");
+    dgpsAntEAddr = GetNiosAddr("ant_E_dgps");
+    dgpsAntNAddr = GetNiosAddr("ant_N_dgps");
+    dgpsAntUAddr = GetNiosAddr("ant_U_dgps");
 
     lstSchedAddr = GetNiosAddr("lst_sched");
 
@@ -1059,7 +1058,6 @@ static void StoreData(int index)
     trimMagAddr = GetNiosAddr("trim_mag");
     dgpsTrimAddr = GetNiosAddr("trim_dgps");
     dgpsCovLimAddr = GetNiosAddr("cov_lim_dgps");
-    dgpsAntsLimAddr = GetNiosAddr("ants_lim_dgps");
 
     modeAzMcAddr = GetNiosAddr("mode_az_mc");
     modeElMcAddr = GetNiosAddr("mode_el_mc");
@@ -1141,7 +1139,7 @@ static void StoreData(int index)
   WriteData(modeElMcAddr, axes_mode.el_mode, NIOS_QUEUE);
   WriteData(dirAzMcAddr, axes_mode.az_dir, NIOS_QUEUE);
   WriteData(dirElMcAddr, axes_mode.el_dir, NIOS_QUEUE);
-  WriteData(dithElAddr, axes_mode.el_dith * DEG2I*5.0/2.0, NIOS_QUEUE);
+  WriteData(dithElAddr, axes_mode.el_dith * DEG2I/2.0, NIOS_QUEUE);
   WriteData(destAzMcAddr, axes_mode.az_dest * DEG2I, NIOS_QUEUE);
   WriteData(destElMcAddr, axes_mode.el_dest * DEG2I, NIOS_QUEUE);
   WriteData(velAzMcAddr, axes_mode.az_vel * 6000., NIOS_QUEUE);
@@ -1250,7 +1248,6 @@ static void StoreData(int index)
   (((unsigned int)(PointingData[i_point].dgps_sigma * DEG2I))>65535)?65535:((unsigned int)(PointingData[i_point].dgps_sigma * DEG2I)), NIOS_QUEUE);
   WriteData(dgpsTrimAddr, CommandData.dgps_az_trim * DEG2I, NIOS_QUEUE);
   WriteData(dgpsCovLimAddr, CommandData.dgps_cov_limit*32768.0/100.0, NIOS_QUEUE);
-  WriteData(dgpsAntsLimAddr, CommandData.dgps_ants_limit*32768.0/100.0, NIOS_QUEUE);
   WriteData(azSsAddr, (unsigned int)((PointingData[i_point].ss_az +
           CommandData.ss_az_trim) * DEG2I),
       NIOS_QUEUE);
@@ -1298,7 +1295,7 @@ static void StoreData(int index)
   WriteData(slewVetoAddr, (int)(CommandData.pointing_mode.nw) / 4.,
       NIOS_QUEUE);
   WriteData(svetoLenAddr, (int)(CommandData.slew_veto) / 4., NIOS_QUEUE);
-  WriteData(dithStepPAddr, (int)(CommandData.pointing_mode.dith*DEG2I*10.0/2.0), NIOS_QUEUE);
+  WriteData(dithStepPAddr, (int)(CommandData.pointing_mode.dith*DEG2I/2.0), NIOS_QUEUE);
   WriteData(modePAddr, (int)(CommandData.pointing_mode.mode), NIOS_QUEUE);
   if ((CommandData.pointing_mode.mode == P_AZEL_GOTO) ||
       (CommandData.pointing_mode.mode == P_AZ_SCAN))

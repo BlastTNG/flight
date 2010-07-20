@@ -595,7 +595,7 @@ static void GetCurrents(unsigned short *RxFrame)
   double i_sc;
   double i_dgps;
   double i_step;
-  double i_mcc;
+  double i_flc;
   double i_gy;
   double i_rw;
   double i_el;
@@ -609,7 +609,7 @@ static void GetCurrents(unsigned short *RxFrame)
   static struct BiPhaseStruct* i_scAddr;
   static struct BiPhaseStruct* i_dgpsAddr;
   static struct BiPhaseStruct* i_stepAddr;
-  static struct BiPhaseStruct* i_mccAddr;
+  static struct BiPhaseStruct* i_flcAddr;
   static struct BiPhaseStruct* i_gyAddr;
   static struct BiPhaseStruct* i_rwAddr;
   static struct BiPhaseStruct* i_elAddr;
@@ -622,7 +622,7 @@ static void GetCurrents(unsigned short *RxFrame)
   static struct NiosStruct* i_scNios;
   static struct NiosStruct* i_dgpsNios;
   static struct NiosStruct* i_stepNios;
-  static struct NiosStruct* i_mccNios;
+  static struct NiosStruct* i_flcNios;
   static struct NiosStruct* i_gyNios;
   static struct NiosStruct* i_rwNios;
   static struct NiosStruct* i_elNios;
@@ -643,7 +643,7 @@ static void GetCurrents(unsigned short *RxFrame)
     i_scAddr = GetBiPhaseAddr("i_sc");
     i_dgpsAddr = GetBiPhaseAddr("i_dgps");
     i_stepAddr = GetBiPhaseAddr("i_step");
-    i_mccAddr = GetBiPhaseAddr("i_mcc");
+    i_flcAddr = GetBiPhaseAddr("i_flc");
     i_gyAddr = GetBiPhaseAddr("i_gy");
     i_rwAddr = GetBiPhaseAddr("i_rw");
     i_elAddr = GetBiPhaseAddr("i_el");
@@ -656,7 +656,7 @@ static void GetCurrents(unsigned short *RxFrame)
     i_scNios = GetNiosAddr("i_sc");
     i_dgpsNios = GetNiosAddr("i_dgps");
     i_stepNios = GetNiosAddr("i_step");
-    i_mccNios  = GetNiosAddr("i_mcc");
+    i_flcNios  = GetNiosAddr("i_flc");
     i_gyNios = GetNiosAddr("i_gy");
     i_rwNios = GetNiosAddr("i_rw");
     i_elNios = GetNiosAddr("i_el");
@@ -673,13 +673,13 @@ static void GetCurrents(unsigned short *RxFrame)
   i_sc = (double)(slow_data[i_scAddr->index][i_scAddr->channel])*i_scNios->m + i_scNios->b;
   i_dgps = (double)(slow_data[i_dgpsAddr->index][i_dgpsAddr->channel])*i_dgpsNios->m + i_dgpsNios->b;
   i_step = (double)(slow_data[i_stepAddr->index][i_stepAddr->channel])*i_stepNios->m + i_stepNios->b;
-  i_mcc = (double)(slow_data[i_mccAddr->index][i_mccAddr->channel])*i_mccNios->m + i_mccNios->b;
+  i_flc = (double)(slow_data[i_flcAddr->index][i_flcAddr->channel])*i_flcNios->m + i_flcNios->b;
   i_gy = (double)(slow_data[i_gyAddr->index][i_gyAddr->channel])*i_gyNios->m + i_gyNios->b;
   i_rw = (double)(slow_data[i_rwAddr->index][i_rwAddr->channel])*i_rwNios->m + i_rwNios->b;
   i_el = (double)(slow_data[i_elAddr->index][i_elAddr->channel])*i_elNios->m + i_elNios->b;
   i_piv = (double)(slow_data[i_pivAddr->index][i_pivAddr->channel])*i_pivNios->m + i_pivNios->b;
 
-  i_tot = i_trans + i_das + i_acs + i_rec + i_sc + i_dgps + i_step + i_mcc + i_gy + i_rw + i_el + i_piv;
+  i_tot = i_trans + i_das + i_acs + i_rec + i_sc + i_dgps + i_step + i_flc + i_gy + i_rw + i_el + i_piv;
 
   WriteData(i_totNios, 1000*i_tot, NIOS_QUEUE);
 
