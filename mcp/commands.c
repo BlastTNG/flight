@@ -2709,10 +2709,14 @@ void InitCommandData()
   CommandData.hwpr.acc = 16;
   CommandData.hwpr.move_i = 10;
   CommandData.hwpr.hold_i = 10;
-  CommandData.hwpr.pos[3] = 0.20; // TODO: Replace with real numbers from Tristan.
-  CommandData.hwpr.pos[2] = 0.2625;
-  CommandData.hwpr.pos[1] = 0.3250;
-  CommandData.hwpr.pos[0] = 0.3875;
+
+  /* hwpr positions separated by 22.5 degs.
+     Calculated by Tristan on July 19th 2010*/
+  CommandData.hwpr.pos[3] = 0.263096; 
+  CommandData.hwpr.pos[2] = 0.326452;
+  CommandData.hwpr.pos[1] = 0.38909;
+  CommandData.hwpr.pos[0] = 0.450767;
+
   CommandData.hwpr.overshoot = 1000;
   CommandData.hwpr.i_pos = 0;
   CommandData.hwpr.no_step = 0;

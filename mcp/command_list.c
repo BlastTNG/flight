@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.90 $";
+const char *command_list_serial = "$Revision: 4.91 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -197,9 +197,9 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(level_on), "helium level sensor on", GR_CRYO_CONTROL},
   {COMMAND(level_off), "helium level sensor off", GR_CRYO_CONTROL},
   {COMMAND(level_pulse), "helium level sensor pulse", GR_CRYO_CONTROL},
-  {COMMAND(hwpr_enc_on), "HWP rotation sensor on", GR_CRYO_CONTROL},
-  {COMMAND(hwpr_enc_off), "HWP rotation sensor off", GR_CRYO_CONTROL},
-  {COMMAND(hwpr_enc_pulse), "HWP rotation sensor pulse", GR_CRYO_CONTROL},
+  {COMMAND(hwpr_enc_on), "HWP rotation sensor on", GR_CRYO_CONTROL | GR_HWPR},
+  {COMMAND(hwpr_enc_off), "HWP rotation sensor off", GR_CRYO_CONTROL | GR_HWPR},
+  {COMMAND(hwpr_enc_pulse), "HWP rotation sensor pulse", GR_CRYO_CONTROL | GR_HWPR},
   {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO_CONTROL},
   {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO_CONTROL},
   {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open",
@@ -431,7 +431,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"El Dith Step Size (arcmin)",-60,  60, 'f', "NONE"}
+      {"El Dith Step Size (arcmin)",-0.1,  0.1, 'f', "NONE"}
     }
   },
   {COMMAND(cap), "scan a circle centred on RA/Dec with el steps", GR_POINT, 6,
@@ -441,7 +441,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Radius (deg on sky)",       0, 90, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"El Dith Step Size (arcmin)",-60,  60, 'f', "NONE"}
+      {"El Dith Step Size (arcmin)",-0.1,  0.1, 'f', "NONE"}
     }
   },
   {COMMAND(drift), "move at constant speed in az and el", GR_POINT, 2,
@@ -463,7 +463,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Dec of Corner 4 (deg)",   -90, 90, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"El Dith Step Size (arcmin)",-60,  60, 'f', "NONE"}
+      {"El Dith Step Size (arcmin)",-0.1, 0.1, 'f', "NONE"}
     }
   },
   {COMMAND(vbox), "scan an az/el box centred on RA/Dec with el drift",
@@ -686,10 +686,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
     "define the four hwpr potentiometer positions to be used for scans",
     GR_HWPR, 4,
     {
-      {"Position 1", 0, 1, 'f', ""},
-      {"Position 2", 0, 1, 'f', ""},
-      {"Position 3", 0, 1, 'f', ""},
-      {"Position 4", 0, 1, 'f', ""}
+      {"Position 1", 0.1, 0.9, 'f', ""},
+      {"Position 2", 0.1, 0.9, 'f', ""},
+      {"Position 3", 0.1, 0.9, 'f', ""},
+      {"Position 4", 0.1, 0.9, 'f', ""}
     }
   },
   {COMMAND(hwpr_set_overshoot), 
