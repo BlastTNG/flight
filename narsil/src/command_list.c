@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.91 $";
+const char *command_list_serial = "$Revision: 4.92 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -700,10 +700,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   {COMMAND(hwpr_goto_i), 
-    "goto hwpr position (0-7)",
+    "goto hwpr position (0-3)",
     GR_HWPR, 1,
     {
-      {"hwpr position", 0, 7, 'i', ""},
+      {"hwpr position", 0, 3, 'i', ""},
     }
   },
 

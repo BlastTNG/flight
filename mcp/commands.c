@@ -1500,6 +1500,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case hwpr_goto_i:
       CommandData.hwpr.i_pos = ivalues[0];
+      CommandData.hwpr.mode = HWPR_GOTO_I;
       break;
       /* XY Stage */
     case xy_goto:
