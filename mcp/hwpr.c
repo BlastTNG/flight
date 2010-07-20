@@ -33,6 +33,7 @@
 #include "tx.h" /* InCharge */
 
 #define HWPR_READ_WAIT 5
+#define HWPR_MOVE_TIMEOUT 5 
 
 static struct hwpr_struct {
   int pos;
@@ -55,6 +56,7 @@ static struct hwpr_control_struct {
   int rel_move;
   int i_next_step;
   int do_overshoot;
+  int stop_cnt;
 
 } hwpr_control;
 
@@ -77,6 +79,7 @@ void ResetControlHWPR (void) {
   hwpr_control.done_all = 0;
   hwpr_control.rel_move = 0;
   hwpr_control.do_overshoot = 0;
+  hwpr_control.stop_cnt = 0;
 }
 
 
@@ -98,8 +101,10 @@ void StoreHWPRBus(void)
   static struct NiosStruct* pos2HwprAddr;
   static struct NiosStruct* pos3HwprAddr;
   static struct NiosStruct* overshootHwprAddr;
+  static struct NiosStruct* iposRqHwprAddr;
   static struct NiosStruct* iposHwprAddr;
   static struct NiosStruct* readWaitHwprAddr;
+  static struct NiosStruct* stopCntHwprAddr;
 
   if (firsttime)
   {
@@ -115,8 +120,10 @@ void StoreHWPRBus(void)
     pos1HwprAddr = GetNiosAddr("pos1_hwpr");
     pos2HwprAddr = GetNiosAddr("pos2_hwpr");
     pos3HwprAddr = GetNiosAddr("pos3_hwpr");
+    iposRqHwprAddr = GetNiosAddr("i_pos_rq_hwpr");
     iposHwprAddr = GetNiosAddr("i_pos_hwpr");
     readWaitHwprAddr = GetNiosAddr("read_wait_hwpr");
+    stopCntHwprAddr = GetNiosAddr("stop_cnt_hwpr");
   }
 
   hwpr_wait_cnt--;
@@ -132,8 +139,10 @@ void StoreHWPRBus(void)
   WriteData(pos1HwprAddr, CommandData.hwpr.pos[1]*65535, NIOS_FLUSH);
   WriteData(pos2HwprAddr, CommandData.hwpr.pos[2]*65535, NIOS_FLUSH);
   WriteData(pos3HwprAddr, CommandData.hwpr.pos[3]*65535, NIOS_FLUSH);
-  WriteData(iposHwprAddr, CommandData.hwpr.i_pos, NIOS_FLUSH);
+  WriteData(iposRqHwprAddr, CommandData.hwpr.i_pos, NIOS_FLUSH);
+  WriteData(iposHwprAddr, hwpr_control.i_next_step, NIOS_FLUSH);
   WriteData(readWaitHwprAddr, hwpr_control.read_wait_cnt, NIOS_FLUSH);
+  WriteData(stopCntHwprAddr, hwpr_control.stop_cnt, NIOS_FLUSH);
 }
 
 // From the current potentiometer reading. Figure out the nearest
@@ -164,6 +173,7 @@ void ControlHWPR(struct ezbus *bus)
   static int repeat_pos_cnt = 0;
   static int overshooting = 0;
   static int first_time = 1;
+  static int last_enc = 0;
 
   int hwpr_enc_cur, hwpr_enc_dest;
   int i_step, i_next_step; // index of the current step
@@ -313,10 +323,23 @@ void ControlHWPR(struct ezbus *bus)
 	  bprintf(info,"ControlHWPR: Here's where I will send a relative move command of %i",hwpr_control.rel_move);
 	  EZBus_RelMove(bus, HWPR_ADDR, hwpr_control.rel_move);
 	  hwpr_control.move_cur = moving;
-	  CommandData.hwpr.mode = HWPR_SLEEP; 
+	  hwpr_control.stop_cnt = 0;
 	  return; // break out of loop!
+
+	  /*** We are moving.  Wait until we are done. ***/
 	} else if (hwpr_control.move_cur == moving) {
-	  
+
+	  if(hwpr_data.enc == last_enc) {
+	    hwpr_control.stop_cnt ++;
+	  }
+
+	  if(hwpr_control.stop_cnt >=HWPR_MOVE_TIMEOUT) {
+	    bprintf(info,"We're stopped!");
+	    CommandData.hwpr.mode = HWPR_SLEEP; 
+	    return; // break out of loop!
+	  }
+
+	  last_enc = hwpr_data.enc;
 	}
 
       } else { // hwpr_control.go == none

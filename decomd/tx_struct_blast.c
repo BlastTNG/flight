@@ -547,7 +547,7 @@ struct ChannelStruct SlowChannels[] = {
   //POT_LOCK = -100/(LOCK_MAX_POT-LOCK_MIN_POT)*pot_lock 
   //	+ 100*LOCK_MAX_POT/(LOCK_MAX_POT-LOCK_MIN_POT)
   {"pot_lock",     'w', LOOP5, 22,    -100.0/13368.0,1636800.0/13368.0, 'u', U_NONE},
-  {"dith_el",      'w', LOOP5, 23,          2.0*I2DEG/5.0,             0.0, 's', U_D_DEG},
+  {"dith_el",      'w', LOOP5, 23,      2.0*I2DEG/5.0,             0.0, 's', U_D_DEG},
   {"state_lock",   'w', LOOP5, 25,                1.0,             0.0, 'u', U_NONE},
   {"goal_lock",    'w', LOOP5, 26,                1.0,             0.0, 'u', U_NONE},
   {"seized_act",   'w', LOOP5, 27,                1.0,             0.0, 's', U_NONE},
@@ -784,11 +784,13 @@ struct ChannelStruct SlowChannels[] = {
   {"pos1_hwpr",      'w', LOOP9,  5,        1.0/65535.0,             0.0, 'u', U_NONE},
   {"pos2_hwpr",      'w', LOOP9,  6,        1.0/65535.0,             0.0, 'u', U_NONE},
   {"pos3_hwpr",      'w', LOOP9,  7,        1.0/65535.0,             0.0, 'u', U_NONE},
-  {"i_pos_hwpr",     'w', LOOP9,  8,                1.0,             0.0, 'u', U_NONE},
+  {"i_pos_rq_hwpr",  'w', LOOP9,  8,                1.0,             0.0, 'u', U_NONE},
   {"rate_tdrss",     'w', LOOP9,  9,                1.0,             0.0, 'u', U_RATE},
-  {"rate_iridium",     'w', LOOP9,  10,                1.0,             0.0, 'u', U_RATE},
+  {"rate_iridium",   'w', LOOP9,  10,                1.0,             0.0, 'u', U_RATE},
   {"read_wait_hwpr", 'w', LOOP9,  11,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP9 12-49 are unused */
+  {"i_pos_hwpr",     'w', LOOP9,  12,                1.0,             0.0, 'u', U_NONE},
+  {"stop_cnt_hwpr",  'w', LOOP9,  13,                1.0,             0.0, 'u', U_NONE},
+  /* LOOP9 14-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
