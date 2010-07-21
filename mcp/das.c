@@ -61,14 +61,14 @@
 
 /* he3 cycle timeouts (all in seconds) */
 #define CRYO_CYCLE_HEAT_TIMEOUT  (35*60)
-#define CRYO_CYCLE_COOL_TIMEOUT  (3*60*60)
-#define CRYO_CYCLE_HS_TIMEOUT    (2*60)
+#define CRYO_CYCLE_COOL_TIMEOUT  (2*60*60)
+#define CRYO_CYCLE_HS_TIMEOUT    (2.5*60)
 
 #define T_HE3FRIDGE_HOT   0.400
 #define T_HE3FRIDGE_COLD  0.350
 #define T_HE4POT_MAX      2.500
-#define T_CHARCOAL_MIN   35.000
-#define T_CHARCOAL_MAX   45.000
+#define T_CHARCOAL_MIN   32.500
+#define T_CHARCOAL_MAX   38.000
 #define T_LHE_MAX         4.600
 #define T_CHAR_HS_COLD   10.000
 
@@ -297,9 +297,9 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
   if (firsttime) {
     firsttime = 0;
     t_lhe_Addr = GetBiPhaseAddr("td_lhe");
-    t_he3fridge_Addr = GetBiPhaseAddr("tr_300mk_strap"); //TODO Use tr_he3_fridge when fixed.
+    t_he3fridge_Addr = GetBiPhaseAddr("tr_300mk_strap"); //NOTE: tr_he3fridge is broken.
     t_charcoal_Addr = GetBiPhaseAddr("td_charcoal");
-    t_he4pot_Addr = GetBiPhaseAddr("tr_m4"); //TODO Use tr_he4_pot when fixed.
+    t_he4pot_Addr = GetBiPhaseAddr("tr_m4"); //NOTE: tr_he4_pot is broken.
     t_char_hs_Addr = GetBiPhaseAddr("td_hs_charcoal");
     cycleStartWAddr = GetNiosAddr("cycle_start");
     cycleStartRAddr = ExtractBiPhaseAddr(cycleStartWAddr);
