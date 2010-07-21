@@ -41,22 +41,22 @@ static struct hwpr_struct {
   double pot;
 } hwpr_data;
 
-enum move_type {none,enc,pot,ind,step};
-enum move_status {not_yet,ready,moving,at_overshoot,is_done};
-enum read_pot {yes,no,reading,done};
+enum move_type {none=0,enc,pot,ind,step};
+enum move_status {not_yet=0,ready,moving,at_overshoot,is_done};
+enum read_pot {no=0,yes,reading,done};
 
 static struct hwpr_control_struct {
   enum move_type go;
   enum move_status move_cur;
   enum read_pot read_before;
   enum read_pot read_after;
-  int read_wait_cnt;
+  int read_wait_cnt; // Added
   int done_move;
   int done_all;
-  int rel_move;
-  int i_next_step;
+  int rel_move; //Added
+  int i_next_step; //Added
   int do_overshoot;
-  int stop_cnt;
+  int stop_cnt; //Added
 
 } hwpr_control;
 
@@ -89,6 +89,7 @@ static int hwpr_wait_cnt = 0;
 /* Called by frame writer in tx.c */
 void StoreHWPRBus(void)
 {
+  int hwpr_stat_field = 0;
   static int firsttime = 1;
   static struct NiosStruct* velHwprAddr;
   static struct NiosStruct* accHwprAddr;
@@ -105,6 +106,8 @@ void StoreHWPRBus(void)
   static struct NiosStruct* iposHwprAddr;
   static struct NiosStruct* readWaitHwprAddr;
   static struct NiosStruct* stopCntHwprAddr;
+  static struct NiosStruct* relMoveHwprAddr;
+  static struct NiosStruct* statControlHwprAddr;
 
   if (firsttime)
   {
@@ -124,6 +127,8 @@ void StoreHWPRBus(void)
     iposHwprAddr = GetNiosAddr("i_pos_hwpr");
     readWaitHwprAddr = GetNiosAddr("read_wait_hwpr");
     stopCntHwprAddr = GetNiosAddr("stop_cnt_hwpr");
+    relMoveHwprAddr = GetNiosAddr("rel_move_hwpr");
+    statControlHwprAddr = GetNiosAddr("stat_control_hwpr");
   }
 
   hwpr_wait_cnt--;
@@ -143,6 +148,19 @@ void StoreHWPRBus(void)
   WriteData(iposHwprAddr, hwpr_control.i_next_step, NIOS_FLUSH);
   WriteData(readWaitHwprAddr, hwpr_control.read_wait_cnt, NIOS_FLUSH);
   WriteData(stopCntHwprAddr, hwpr_control.stop_cnt, NIOS_FLUSH);
+  WriteData(relMoveHwprAddr, hwpr_control.stop_cnt/2, NIOS_FLUSH);
+
+  /* Make HWPR status bit field */
+  hwpr_stat_field |= (hwpr_control.go) & 0x0007 ;
+  hwpr_stat_field |= ((hwpr_control.move_cur) & 0x0007)<<3 ;
+  hwpr_stat_field |= ((hwpr_control.read_before) & 0x0003)<<6 ;
+  hwpr_stat_field |= ((hwpr_control.read_after) & 0x0003)<<8 ;
+  hwpr_stat_field |= ((hwpr_control.do_overshoot) & 0x0001)<<10 ;
+  hwpr_stat_field |= ((hwpr_control.done_move) & 0x0001)<<11 ;
+  hwpr_stat_field |= ((hwpr_control.done_all) & 0x0001)<<12 ;
+
+  WriteData(statControlHwprAddr, hwpr_stat_field, NIOS_FLUSH);
+
 }
 
 // From the current potentiometer reading. Figure out the nearest

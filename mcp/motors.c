@@ -1069,7 +1069,7 @@ static void DoNewCapMode(void)
     if (targ_el>=r) {
       targ_el = r;
       el_next_dir=-1;
-      bprintf(info,"Approaching the bottom: next targ_el = %f, r = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",targ_el,r,el_next_dir,axes_mode.el_dir,v_el);
+      bprintf(info,"Approaching the top: next targ_el = %f, r = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",targ_el,r,el_next_dir,axes_mode.el_dir,v_el);
     } else if (targ_el<=-r) {
       targ_el = -r;
       el_next_dir=1;

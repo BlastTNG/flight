@@ -463,6 +463,30 @@ union DerivedUnion DerivedChannels[] = {
 	   "ST_DR_OVER_TEMP_PIV",
 	   ""
 	   ),
+
+  /* HWPR Control Info */
+  BITFIELD("stat_control_hwpr"
+	   "",
+	   "",
+	   "",
+	   "",
+	   "",
+	   "",
+	   "",
+	   "",
+	   "",
+	   "",
+	   "DO_OVERSHOOT_HWPR",
+	   "DONE_MOVE_HWPR",
+	   "DONE_ALL_HWPR",
+	   "",
+	   "",
+	   "",
+	   ),
+  BITWORD("MOVE_TYPE_HWPR","stat_control_hwpr",0,3),
+  BITWORD("MOVE_STAT_HWPR","stat_control_hwpr",3,3),
+  BITWORD("READ_BEFORE_HWPR","stat_control_hwpr",6,2),
+  BITWORD("READ_AFTER_HWPR","stat_control_hwpr",8,2),
   /* CRYO */
 
   COMMENT("Internal (to mcp) reference of the cryo stat"),
