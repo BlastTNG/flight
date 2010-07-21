@@ -310,7 +310,6 @@ void WriteSuperFrame(unsigned short *frame) {
 #define OMNI1_BYTES_PER_FRAME (6000/9 * FASTFRAME_PER_SUPERFRAME/SR)
 
   // Calculate number of stream fields given data rates
-  //FIXME: implement re-settable data rates.
   if (reset_rates) {
     reset_rates = 0;
     higain_bytes_per_streamframe = (HIGAIN_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;

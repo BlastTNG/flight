@@ -353,8 +353,6 @@ char *frameList[] = {
   "level_target_bal",
   "alt_sip",
   "mapmean_isc",
-  "pitch_dgps",
-  "roll_dgps",
   "lat_sip",
   "lon_sip",
   "lat_dgps",

@@ -810,8 +810,6 @@ static void StoreData(int index)
   static struct NiosStruct* declinationMagAddr;
   static struct NiosStruct* sigmaMagAddr;
   static struct NiosStruct* dgpsAzAddr;
-  static struct NiosStruct* dgpsPitchAddr;
-  static struct NiosStruct* dgpsRollAddr;
   static struct NiosStruct* dgpsSigmaAddr;
   static struct NiosStruct* azSsAddr;
   static struct NiosStruct* azrawPss1Addr;
@@ -980,8 +978,6 @@ static void StoreData(int index)
     declinationMagAddr = GetNiosAddr("declination_mag");
     sigmaMagAddr = GetNiosAddr("sigma_mag");
     dgpsAzAddr = GetNiosAddr("az_dgps");
-    dgpsPitchAddr = GetNiosAddr("pitch_dgps");
-    dgpsRollAddr = GetNiosAddr("roll_dgps");
     dgpsSigmaAddr = GetNiosAddr("sigma_dgps");
     azSsAddr = GetNiosAddr("az_ss");
     sigmaSsAddr = GetNiosAddr("sigma_ss");
@@ -1240,10 +1236,6 @@ static void StoreData(int index)
   WriteData(dgpsAzAddr,
       (unsigned int)((PointingData[i_point].dgps_az  +
                       CommandData.dgps_az_trim) * DEG2I), NIOS_QUEUE);
-  WriteData(dgpsPitchAddr,
-      (unsigned int)(PointingData[i_point].dgps_pitch * DEG2I), NIOS_QUEUE);
-  WriteData(dgpsRollAddr,
-      (unsigned int)(PointingData[i_point].dgps_roll * DEG2I), NIOS_QUEUE);
   WriteData(dgpsSigmaAddr,
   (((unsigned int)(PointingData[i_point].dgps_sigma * DEG2I))>65535)?65535:((unsigned int)(PointingData[i_point].dgps_sigma * DEG2I)), NIOS_QUEUE);
   WriteData(dgpsTrimAddr, CommandData.dgps_az_trim * DEG2I, NIOS_QUEUE);
