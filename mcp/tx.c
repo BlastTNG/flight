@@ -59,6 +59,7 @@ short int InCharge = 0;
 int EthernetSun = 3;
 int EthernetIsc = 3;
 int EthernetOsc = 3;
+int EthernetSBSC = 3;
 
 extern struct AxesModeStruct axes_mode; /* motors.c */
 
@@ -217,7 +218,7 @@ static void WriteAux(void)
        (EthernetSun & 0x3) + 
        ((EthernetIsc & 0x3) << 2) + 
        ((EthernetOsc & 0x3) << 4) +
-       ((0x3) << 6),  //"EthernetSBSC & 0x3" should go in the parenthetical
+       ((EthernetSBSC & 0x3) << 6),  
        NIOS_QUEUE);
 
   WriteData(statusMCCAddr, 

@@ -20,6 +20,8 @@
 #define CLIENT_RETRY_DELAY 1000000
 
 
+extern "C" int EthernetSBSC;      /* tx.c */
+
 /*
 
 SBSCCommunicator:
@@ -166,6 +168,7 @@ and port is a port number (can be omitted, will use a default value)
 */
 int SBSCCommunicator::openClient(string target)
 {
+  EthernetSBSC = 3; /* Unknown state */
   if (commFD >= 0) return -1;   //already an open connection
 
   //separate the port and address parts of the target
@@ -190,18 +193,23 @@ int SBSCCommunicator::openClient(string target)
   //	setsockopt(commFD, SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof(optval));
   while ( true ) {
     if ( connect(commFD, (sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-      if (errno == ECONNREFUSED) {  //nobody is listening
+      if (errno == ENETUNREACH || errno == EHOSTUNREACH || errno == EHOSTDOWN) /* No route to host */
+        EthernetSBSC = 1;
+      else if (errno == ECONNREFUSED) {  //nobody is listening
+	EthernetSBSC = 2;
 #if SBSC_COMM_DEBUG
 	cerr << "[Comm debug]: connection refused (nobody listening?) trying again in a bit" << endl;
 #endif	
 	usleep(CLIENT_RETRY_DELAY);
       } else {  //some other error
+	EthernetSBSC = 3;
 	closeConnection();  //close server
 	return errorFlag = -1;
       }
     }
     else break;
   }
+  EthernetSBSC = 0;
 #if SBSC_COMM_DEBUG
   cerr << "[Comm debug]: connection successful" << endl;
 #endif	
