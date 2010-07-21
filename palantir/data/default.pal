@@ -771,6 +771,18 @@
     <NUMBER caption="Rec">
       <DATUM format="%.2f" src="T_REC" extrema="temp"/>
     </NUMBER>
+    <NUMBER caption="SBSC Mapmean">
+      <DATUM format="%.0f" src="MAPMEAN_SBSC" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="SBSC # blobs">
+      <DATUM format="%.0f" src="NUMBLOBS_SBSC" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="SBSC Frame #">
+      <DATUM format="%.0f" src="FRAME_SBSC" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="SBSC T Lens">
+      <DATUM format="%.2f" src="T_SBSC" extrema="temp"/>
+    </NUMBER>  
   </BOX>
   <BOX caption="Ambient Thermometers" colour="#002222" row="3" col="5">
     <NUMBER caption="IF Top Front">
