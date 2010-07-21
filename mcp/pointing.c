@@ -1380,7 +1380,8 @@ void Pointing(void)
   static unsigned ss_since_ok = 500;
   static unsigned pss1_since_ok = 500;
   static unsigned pss2_since_ok = 500;
-  double ss_az, mag_az;
+  double ss_az = 0;
+  double mag_az;
   double pss1_az, pss1_el;
   double pss2_az, pss2_el;
   double dgps_az, dgps_pitch, dgps_roll;
