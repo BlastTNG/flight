@@ -160,7 +160,7 @@ int GetHWPRi(double pot_val)
       d_pot_min = d_pot;
       i_min = i;
     }
-    bprintf(info,"GetHWPRi: i=%i,d_pot=%f,pot_val=%f,CommandData.hwpr.pos[i]=%f,d_pot_min=%f,i_min=%i",i,d_pot,pot_val,CommandData.hwpr.pos[i],d_pot_min,i_min);
+    //    bprintf(info,"GetHWPRi: i=%i,d_pot=%f,pot_val=%f,CommandData.hwpr.pos[i]=%f,d_pot_min=%f,i_min=%i",i,d_pot,pot_val,CommandData.hwpr.pos[i],d_pot_min,i_min);
   }
 
   bprintf(info,"GetHWPRi: Returning %i",i_min);
@@ -206,11 +206,12 @@ void ControlHWPR(struct ezbus *bus)
       EZBus_RelMove(bus, HWPR_ADDR, CommandData.hwpr.target);
       CommandData.hwpr.mode = HWPR_SLEEP;
     } else if ((CommandData.hwpr.mode == HWPR_GOTO_I)) {
-	ResetControlHWPR();
-	hwpr_control.go = ind;
-	hwpr_control.move_cur = not_yet;
-	hwpr_control.read_before = yes;
-	hwpr_control.read_after = yes;
+      bprintf(info,"ControlHWPR: Attempting to go to HWPR position %i",CommandData.hwpr.i_pos);
+      ResetControlHWPR();
+      hwpr_control.go = ind;
+      hwpr_control.move_cur = not_yet;
+      hwpr_control.read_before = yes;
+      hwpr_control.read_after = yes;
     } else if ((CommandData.hwpr.mode == HWPR_STEP)) {
       if(!CommandData.hwpr.no_step) {
 	ResetControlHWPR();
@@ -226,11 +227,9 @@ void ControlHWPR(struct ezbus *bus)
       //just received, initialize HWPR_REPEAT variables
       repeat_pos_cnt = CommandData.hwpr.n_pos;
       hwpr_wait_cnt = CommandData.hwpr.step_wait;
-    } else if (CommandData.hwpr.mode == HWPR_GOTO_I) {
     }
     CommandData.hwpr.is_new = 0;
   }
-
   /*** Begin fall through control ***/
   
   /* if are doing anything with the HWPR other than sleeping, panicing or repeating */
@@ -249,6 +248,7 @@ void ControlHWPR(struct ezbus *bus)
     } else if (hwpr_control.read_before == reading) { // we are reading...
 
       hwpr_control.read_wait_cnt--;
+      bprintf(info,"Waiting : hwpr_control.read_wait_cnt = %i",hwpr_control.read_wait_cnt );
       if (hwpr_control.read_wait_cnt <= 0) 
 	hwpr_control.read_before = done;
       
@@ -292,6 +292,7 @@ void ControlHWPR(struct ezbus *bus)
 	    
 	    hwpr_control.move_cur = ready; 
 
+
 	  } else if (hwpr_control.go == ind) {
 	    if (((hwpr_data.pot > HWPR_POT_MIN) ||
 		 (hwpr_data.pot < HWPR_POT_MAX)) &&
@@ -305,18 +306,18 @@ void ControlHWPR(struct ezbus *bus)
 	      hwpr_enc_dest = LutCal(&HwprPotLut, CommandData.hwpr.pos[i_next_step]);
 	      
 	      hwpr_control.rel_move = hwpr_enc_dest - hwpr_enc_cur;
-	      bprintf(info,"Destination is index %i, pot value = %f, required rel encoder move is %i:",CommandData.hwpr.i_pos,CommandData.hwpr.pos[i_next_step],hwpr_control.rel_move);
+	      //	      bprintf(info,"Destination is index %i, pot value = %f, required rel encoder move is %i:",CommandData.hwpr.i_pos,CommandData.hwpr.pos[i_next_step],hwpr_control.rel_move);
 	    } else { // don't use pot
 	      
 	      /* can't step to a hwp position, because we don't know where it is */
 	      hwpr_control.rel_move = 0;
-	      bprintf(info,"The pot is dead! Don't know where to move.",hwpr_control.rel_move);
+	      bprintf(warning,"The pot is dead! Don't know where to move.",hwpr_control.rel_move);
 	      CommandData.hwpr.mode = HWPR_SLEEP;
+	      return;
 	    }
 
-	    bprintf(info,"Go to ind position code isn't written yet.  Sorry.");
-	    CommandData.hwpr.mode = HWPR_SLEEP;
-	    return;  // break out of loop!         
+	    hwpr_control.move_cur = ready; 
+
 	  } else if (hwpr_control.go == pot) {
 	    bprintf(info,"Go to pot position code isn't written yet.  Sorry.");
 	    CommandData.hwpr.mode = HWPR_SLEEP;
@@ -361,7 +362,7 @@ void ControlHWPR(struct ezbus *bus)
 	    hwpr_control.stop_cnt = 0 ;
 	  }
 
-	  bprintf(info,"ControlHWPR: We are moving! hwpr_data.enc = %i, last_enc = %i", hwpr_data.enc, last_enc);
+	  //	  bprintf(info,"ControlHWPR: We are moving! hwpr_data.enc = %i, last_enc = %i", hwpr_data.enc, last_enc);
 
 	  if (hwpr_control.stop_cnt >=HWPR_MOVE_TIMEOUT) {
 	    bprintf(info,"We've stopped!");
@@ -387,13 +388,12 @@ void ControlHWPR(struct ezbus *bus)
 	    hwpr_control.stop_cnt = 0;
 	    hwpr_control.do_overshoot = 0;
 	} else if (hwpr_control.move_cur == is_done) {
-	    bprintf(info,"We have finished our move!  Yay us!");
 
 	    /* Do we want to read the pot?*/
 	    if (hwpr_control.read_after == yes) {
 	      
 	      /* pulse the potentiometer */
-	      bprintf(info,"Pulsing the pot before we do anything else...");
+	      bprintf(info,"Pulsing the pot...");
 	      CommandData.Cryo.hwprPos = 50;
 	      hwpr_control.read_after = reading;
 	      hwpr_control.read_wait_cnt = HWPR_READ_WAIT;
