@@ -325,6 +325,12 @@
       <HI value="3.5"/>
       <XHI value="1000"/>
     </EXTREMA>
+    <EXTREMA name="isercheck">
+      <XLO value="-10.0"/>
+      <LO value="-5.0"/>
+      <HI value="5.0"/>
+      <XHI value="10.0"/>
+    </EXTREMA>
     <EXTREMA name="vrwcheck">
       <XLO value="-300.0"/>
       <LO value="-170.0"/>
@@ -740,6 +746,9 @@
     <NUMBER caption="Piv Res">
       <DATUM format="%+5.2f" src="RES_PIV" extrema="unknown"/>
     </NUMBER>
+    <NUMBER caption="Az Accel">
+      <DATUM format="%+4.3f" src="ACCEL_AZ" extrema="unknown"/>
+    </NUMBER>
   </BOX>
   <BOX caption="Inner Frame Electronics" colour="#002222" row="0" col="6" rowspan="1">
     <!-- TODO once there are thermometers in the DAS, put them here
@@ -783,6 +792,37 @@
     <NUMBER caption="SBSC T Lens">
       <DATUM format="%.2f" src="T_SBSC" extrema="temp"/>
     </NUMBER>  
+    <NUMBER caption="Ind HWPR">
+      <DATUM format="%i" src="I_POS_HWPR" extrema="unknown"/>
+    </NUMBER>  
+    <NUMBER caption="Enc HWPR">
+      <DATUM format="%i" src="ENC_HWPR" extrema="unknown"/>
+    </NUMBER>  
+    <NUMBER caption="Pot HWPR">
+      <DATUM format="%.4f" src="POT_HWPR" extrema="unknown"/>
+    </NUMBER>  
+    <MULTI caption="Move HWPR">
+      <DATUM src="MOVE_TYPE_HWPR">
+        <WORD value="0" caption="None" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Encoder" textstyle="OK_BIT"/>
+        <WORD value="2" caption="Pot" textstyle="OK_BIT"/>
+        <WORD value="3" caption="Ind" textstyle="OK_BIT"/>
+        <WORD value="4" caption="Step" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Move Stat HWPR">
+      <DATUM src="MOVE_STAT_HWPR">
+        <WORD value="0" caption="Not Yet" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Ready" textstyle="OK_BIT"/>
+        <WORD value="2" caption="Moving" textstyle="OK_BIT"/>
+        <WORD value="3" caption="At Overshoot" textstyle="OK_BIT"/>
+        <WORD value="4" caption="Done" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="Rel Move HWPR">
+      <DATUM format="%i" src="REL_MOVE_HWPR" extrema="unknown"/>
+    </NUMBER>  
+
   </BOX>
   <BOX caption="Ambient Thermometers" colour="#002222" row="3" col="5">
     <NUMBER caption="IF Top Front">
@@ -1216,6 +1256,9 @@
     <NUMBER caption="El RIO">
       <DATUM format="%3b" src="DR_INFO_RIO_EL" extrema="riocheck"/>
     </NUMBER>
+    <NUMBER caption="El I">
+      <DATUM format="%.2f" src="I_SER_EL" extrema="isercheck"/>
+    </NUMBER>
     <MULTI caption="RW Enab">
       <DATUM src="DR_INFO_DISAB_RW">
         <WORD value="0" caption="Enabled" textstyle="OK_BIT"/>
@@ -1229,6 +1272,9 @@
     <NUMBER caption="RW RIO">
       <DATUM format="%3b" src="DR_INFO_RIO_RW" extrema="riocheck"/>
     </NUMBER>
+    <NUMBER caption="RW I">
+      <DATUM format="%.2f" src="I_SER_RW" extrema="isercheck"/>
+    </NUMBER>
     <MULTI caption="Pivot Enab">
       <DATUM src="DR_INFO_DISAB_PIV">
         <WORD value="0" caption="Enabled" textstyle="OK_BIT"/>
@@ -1241,6 +1287,9 @@
     </NUMBER>
     <NUMBER caption="Piv RIO">
       <DATUM format="%3b" src="DR_INFO_RIO_PIV" extrema="riocheck"/>
+    </NUMBER>
+    <NUMBER caption="Piv I">
+      <DATUM format="%.2f" src="I_SER_PIV" extrema="isercheck"/>
     </NUMBER>
   </BOX>
   <BOX caption="Charge Controller" colour="#777700" row="0" col="7" rowspan="1">
