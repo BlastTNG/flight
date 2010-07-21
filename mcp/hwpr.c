@@ -311,7 +311,7 @@ void ControlHWPR(struct ezbus *bus)
 	      
 	      /* can't step to a hwp position, because we don't know where it is */
 	      hwpr_control.rel_move = 0;
-	      bprintf(warning,"The pot is dead! Don't know where to move.",hwpr_control.rel_move);
+	      bprintf(warning, "The pot is dead! Don't know where to move. rel_move = %i", hwpr_control.rel_move);
 	      CommandData.hwpr.mode = HWPR_SLEEP;
 	      return;
 	    }
