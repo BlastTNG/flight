@@ -406,9 +406,10 @@ static void SetLockState(int nic)
     state |= LS_EL_OK;
 
   // klugy hack to filter restart state not propogating properly...
+  //bprintf(info, "nic: %d state: %d change count: %d\n", nic, state, nic_change_count);
   if (nic) {
     if (state != last_lock_state) {
-      if (nic_change_count++ < 3) {
+      if (nic_change_count++ < 4) {
         return;
       }
 
