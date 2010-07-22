@@ -1953,6 +1953,7 @@ void* elevComm(void* arg)
 
     } else if (elevinfo.init==1) {
       if((CommandData.disable_el==0 || CommandData.force_el==1 ) && elevinfo.disabled > 0) {
+	bprintf(info,"Attempting to enable the elevation motor controller.,CommandData.disable_el=%i,CommandData.force_el=%i,elevinfo.disabled=%i",CommandData.disable_el,CommandData.force_el,elevinfo.disabled);
 	bprintfverb(info,elevinfo.verbose,MC_VERBOSE,"Attempting to enable the elevation motor controller.");
 	n=enableCopley(&elevinfo);
 	if(n==0){    
@@ -1961,6 +1962,7 @@ void* elevComm(void* arg)
 	}
       } 
       if((CommandData.disable_el==1 && CommandData.force_el==0 ) && (elevinfo.disabled==0 || elevinfo.disabled==2)) {
+	bprintf(info,"Attempting to enable the elevation motor controller.,CommandData.disable_el=%i,CommandData.force_el=%i,elevinfo.disabled=%i",CommandData.disable_el,CommandData.force_el,elevinfo.disabled);
 	bprintfverb(info,elevinfo.verbose,MC_VERBOSE,"Attempting to disable the elevation motor controller.");
 	n=disableCopley(&elevinfo);
 	if(n==0){    
