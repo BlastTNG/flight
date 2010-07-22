@@ -497,7 +497,6 @@ char *frameList[] = {
   "enc_0_act",
   "enc_1_act",
   "enc_2_act",
-  "enc_hwpr",
   "error_az",
   "error_el",
   "error_isc",
