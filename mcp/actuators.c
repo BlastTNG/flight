@@ -406,10 +406,11 @@ static void SetLockState(int nic)
     state |= LS_EL_OK;
 
   // klugy hack to filter restart state not propogating properly...
-  //bprintf(info, "nic: %d state: %d change count: %d\n", nic, state, nic_change_count);
+#if 0
+bprintf(info, "nic: %d state: %d change count: %d\n", nic, state, nic_change_count);
   if (nic) {
     if (state != last_lock_state) {
-      if (nic_change_count++ < 4) {
+      if (nic_change_count++ < 6) {
         return;
       }
 
@@ -417,7 +418,8 @@ static void SetLockState(int nic)
       nic_change_count = 0;
     }
   } // end klugy hack
-  
+#endif
+
   /* Assume the pin is out unless we're all the way closed */
   if (state & LS_CLOSED)
     CommandData.pin_is_in = 1;
