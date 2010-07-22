@@ -88,12 +88,12 @@ struct fieldStreamStruct streamList[] = {
   //{"framenum_osc", 1, 2, NOAVG, NODX, 16, SLOW},
   {"pulse_sc", 1, 100, NOAVG, NODX, 8, SLOW},
 
-  {"ifel_1_gy", 327680, 10, AVG, NODX, 8, SLOW},
-  {"ifyaw_1_gy", 327680, 10, AVG, NODX, 8, SLOW},
-  {"ifroll_1_gy", 327680, 10, AVG, NODX, 8, SLOW},
-  {"ifel_2_gy", 327680, 10, AVG, NODX, 8, SLOW},
-  {"ifyaw_2_gy", 327680, 10, AVG, NODX, 8, SLOW},
-  {"ifroll_2_gy", 327680, 10, AVG, NODX, 8, SLOW},
+  {"ifel_1_gy", 32768, 10, AVG, NODX, 8, SLOW},
+  {"ifyaw_1_gy", 32768, 10, AVG, NODX, 8, SLOW},
+  {"ifroll_1_gy", 32768, 10, AVG, NODX, 8, SLOW},
+  {"ifel_2_gy", 32768, 10, AVG, NODX, 8, SLOW},
+  {"ifyaw_2_gy", 32768, 10, AVG, NODX, 8, SLOW},
+  {"ifroll_2_gy", 32768, 10, AVG, NODX, 8, SLOW},
   {"el_raw_if_clin", 1, 5, AVG, DX, 8, SLOW},
   {"el_clin", 1, 5, AVG, DX, 8, SLOW},
 
