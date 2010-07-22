@@ -367,7 +367,9 @@ static void SetLockState(int nic)
 {
   static int firsttime = 1;
   int pot = lock_data.adc[1];
-  unsigned int state = lock_data.state; 
+  unsigned int state = lock_data.state;
+  static int nic_change_count = 0;
+  static unsigned int last_lock_state = 0;
 
   static struct BiPhaseStruct* potLockAddr;
   static struct BiPhaseStruct* stateLockAddr;
@@ -403,6 +405,18 @@ static void SetLockState(int nic)
   if (fabs(ACSData.enc_raw_el - LockPosition(CommandData.pointing_mode.Y)) <= 0.5)
     state |= LS_EL_OK;
 
+  // klugy hack to filter restart state not propogating properly...
+  if (nic) {
+    if (state != last_lock_state) {
+      if (nic_change_count++ < 3) {
+        return;
+      }
+
+      last_lock_state = state;
+      nic_change_count = 0;
+    }
+  } // end klugy hack
+  
   /* Assume the pin is out unless we're all the way closed */
   if (state & LS_CLOSED)
     CommandData.pin_is_in = 1;
@@ -410,7 +424,6 @@ static void SetLockState(int nic)
     CommandData.pin_is_in = 0;
 
   lock_data.state = state;
-  bprintf(info, "nic: %d pin_is_in: %d  state: %d", nic, CommandData.pin_is_in, lock_data.state);
 }
 
 #define SEND_SLEEP 100000 /* 100 miliseconds */
@@ -855,13 +868,11 @@ void StoreActBus(void)
   }
   WriteData(focusSfAddr, focus, NIOS_QUEUE);
 
-  if (InCharge) {
   WriteData(potLockAddr, lock_data.adc[1], NIOS_QUEUE);
   WriteData(stateLockAddr, lock_data.state, NIOS_QUEUE);
   WriteData(seizedActAddr, bus.seized, NIOS_QUEUE);
   WriteData(goalLockAddr, CommandData.actbus.lock_goal, NIOS_QUEUE);
   WriteData(posLockAddr, lock_data.pos, NIOS_QUEUE);
-  }
   
   WriteData(velActAddr, CommandData.actbus.act_vel, NIOS_QUEUE);
   WriteData(accActAddr, CommandData.actbus.act_acc, NIOS_QUEUE);
