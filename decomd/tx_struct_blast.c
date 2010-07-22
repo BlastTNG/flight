@@ -158,8 +158,8 @@ struct ChannelStruct WideSlowChannels[] = {
   {"td_charcoal",   'r', CRYO_A2, 46,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
   {"td_ln_filt",    'r', CRYO_A2, 48,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
 
-  {"time",         'w', LOOP1,  0,                1.0,             0.0, 'U', U_NONE}, // could delete and rename cpu_usec to time_usec,
-  {"time_usec",     'w', LOOP4, 58,                1.0,             0.0, 'U', U_NONE}, // but look in derived.c at Time...
+  {"time",         'w', LOOP1,  0,                1.0,             0.0, 'U', U_NONE}, 
+  {"time_usec",     'w', LOOP4, 58,                1.0,             0.0, 'U', U_NONE},
   {"time_sip",     'w', LOOP1,  2,                1.0,             0.0, 'U', U_NONE},
   {"time_dgps",    'w', LOOP1,  4,                1.0,             0.0, 'U', U_NONE},
   {"lst",          'w', LOOP1,  6,         1.0/3600.0,             0.0, 'U', U_NONE},
@@ -279,13 +279,13 @@ struct ChannelStruct SlowChannels[] = {
   {"t_padcdc_rec", 'r', BIAS_T1,  1, CAL16T(1.0,                    0.0), 'u', U_T_C},
   {"t_pauram_rec", 'r', BIAS_T1,  3, CAL16T(1.0,                    0.0), 'u', U_T_C},
   {"t_hkdcdc_rec", 'r', BIAS_T1,  5, CAL16T(1.0,                    0.0), 'u', U_T_C},
+  {"t_das",        'r', BIAS_T1, 7, CAL16T(1.0, 0.0),                    'u', U_T_C}, 
   {"t_mot_pump_val",'r', BIAS_T1,  17,  CAL16T(1.0,	    0.0), 'u', U_T_C},
   {"t_1_prime",    'r', BIAS_T1,  19, CAL16T(1.0, 0.0),                    'u', U_T_C},
   {"t_if_top_back",'r', BIAS_T1, 21, CAL16T(1.0, 0.0),                    'u', U_T_C},
   {"t_hwpr_mot",    'r', BIAS_T1, 23,  CAL16T(1.0,	    0.0), 'u', U_T_C},
   {"t_if_top_frnt",'r', BIAS_T1, 25, CAL16T(1.0, 0.0),                    'u', U_T_C},
   {"t_hwpr_feed",   'r', BIAS_T1, 27,  CAL16T(1.0,	    0.0), 'u', U_T_C},
-  //{"t_das",        'r', BIAS_T1, 7, CAL16T(1.0, 0.0),                    'u', U_T_C}, // THIS IS WRONG!
   {"t_if_bot_frnt",'r', BIAS_T1, 29, CAL16T(1.0, 0.0),                    'u', U_T_C},
   {"t_strut_bot",  'r', BIAS_T1, 31, CAL16T(1.0, 0.0),                    'u', U_T_C},
   {"t_strut_side", 'r', BIAS_T1, 33, CAL16T(1.0, 0.0),                    'u', U_T_C},
@@ -909,41 +909,6 @@ struct ChannelStruct SlowChannels[] = {
   {"v4_2_pss",     'r',  ACS2_A1, 43,           CAL16(-1.,            0.),  'u', U_V_V},
 
 #endif
-
-/* TODO These TMP channels need to be added to correct new nodes, or deleted */
-//  {"t_el_mc",      'r',  TMP1,  3,                    CAL16T(1.0, 0.0), 'u', U_NONE},
-//  {"t_el_mot",     'r',  TMP1,  5,                    CAL16T(1.0, 0.0), 'u', U_NONE},
-  //{"apcu_reg",     'w',  TMP1,  4,             0.0382,           27.25, 'u', U_NONE}, // to be deprecated
-  //{"dpcu_reg",     'w',  TMP1,  5,             0.0382,           27.25, 'u', U_NONE}, // to be deprecated
-
-//  {"t_reac",       'r',  TMP2, 29,                    CAL16T(1.0, 0.0), 'u', U_NONE},
-//  {"t_reac_mc",    'r',  TMP2, 31,                    CAL16T(1.0, 0.0), 'u', U_NONE},
-
-// TODO: See if these are legacy and can be deleted.
-
-  /* ACS2 0-1 is wide fast */
-  //  {"t_ss_back_mid",'r',  TMP3,  3,                    CAL16T(1.0, 0.0), 'u', U_NONE},
-  //  {"i_sun",        'r',  TMP3, 13,           0.000625,          -20.48, 'u', U_NONE},
-
-
-  //  {"t_chin_mid",   'r',  TMP3, 31,                    CAL16T(1.0, 0.0), 'u', U_NONE},
-  //  {"sensor_reset", 'w',  TMP3,  1,                1.0,             0.0, 'u', U_NONE},
-
-  //  {"v_batt_acs",   'r',  TMP4,  1,    -0.000525352612,      34.4796641, 'u', U_NONE},
-  //  {"v_batt_das",   'r',  TMP4,  3,  -0.00052776250894,  34.62735213282, 'u', U_NONE},
-  //  {"t_apcu",       'r',  TMP4,  5,                    CAL16T(1.0, 0.0), 'u', U_NONE},
-  //  {"t_dpcu",       'r',  TMP4,  7,                    CAL16T(1.0, 0.0), 'u', U_NONE},
-  //  {"t_sol_port",   'r',  TMP4,  9,                    CAL16T(1.0, 0.0), 'u', U_NONE},
-  //  {"t_sol_stbd",   'r',  TMP4, 11,                    CAL16T(1.0, 0.0), 'u', U_NONE},
-  //{"t_batt_acs",   'r',  TMP4, 13,                    CAL16T(1.0, 0.0), 'u', U_NONE}, // to be changed/deprecated
-  //{"t_batt_das",   'r',  TMP4, 15,                    CAL16T(1.0, 0.0), 'u', U_NONE}, // to be changed/deprecated
-  //  {"i_gond_acs",   'r',  TMP4, 17,          -1.875E-3,           61.44, 'u', U_NONE},
-  //  {"i_gond_das",   'r',  TMP4, 19,          -1.875E-3,           61.44, 'u', U_NONE},
-  //{"lev_pump_bal",  'w',  TMP4,  3,    -0.048851978505,           100.0, 'u', U_NONE}, 
-  //{"sprpump_lev",  'w',  TMP4,  4,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
-  //{"inpump_lev",   'w',  TMP4,  5,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
-  //{"outpump_lev",  'w',  TMP4,  6,    -0.048851978505,           100.0, 'u', U_NONE}, // to be deprecated
-
 
   END_OF_CHANNELS
 };

@@ -377,6 +377,7 @@ void WriteSuperFrame(unsigned short *frame) {
   // set and write stream gains and offsets
   for (i_field=0; i_field<n_streamlist; i_field++) {
     long long unsigned lloffset;
+    streamData[i_field].residual = 0;
 
     gain = streamData[i_field].gain;
 
@@ -452,8 +453,20 @@ void WriteStreamFrame() {
 
       if (streamList[i_field].bits == 4) {
       } else if (streamList[i_field].bits == 8) {
-        if (xi>127) xi = 127; // truncate overage
-        if (xi<-127) xi = -127;
+        // if the derivative exceeds the maximum, truncate, but preserve the
+        // integral for later application.  It gets cleared at the slow frame.
+        if (streamList[i_field].doDifferentiate) {
+          if (xi>127) {
+            streamData[i_field].residual += xi - 127;
+            xi = 127;
+          } else if (xi < -127) {
+            streamData[i_field].residual += xi + 127;
+            xi = -127;
+          }            
+        } else {
+          if (xi>127) xi = 127;
+          if (xi<-127) xi = -127;
+        }
         streambuf[i_samp] = (signed char)xi;
         n_streambuf++;
       } else if (streamList[i_field].bits == 16) {
@@ -475,10 +488,10 @@ void WriteStreamFrame() {
 // The main compression writer thread
 //*********************************************************
 void CompressionWriter() {  
-  int i_fastframe = -1;
   int i_field;
   int i_streamframe=0;
   unsigned short *frame;
+  int i_fastframe = -1;
 
   nameThread("DOWN");
 
@@ -489,7 +502,8 @@ void CompressionWriter() {
   
   frameNiosList = (struct NiosStruct **)malloc(n_framelist * sizeof(struct NiosStruct *));
   frameBi0List = (struct BiPhaseStruct **)malloc(n_framelist * sizeof(struct BiPhaseStruct *));
-  
+
+
   for (i_field =0; i_field < n_framelist; i_field++) {
     frameNiosList[i_field] = GetNiosAddr(frameList[i_field]);
     frameBi0List[i_field] = GetBiPhaseAddr(frameList[i_field]);
@@ -498,7 +512,7 @@ void CompressionWriter() {
   // determine streamlist length
   for (n_streamlist = 0; streamList[n_streamlist].name[0] != '\0'; n_streamlist++); // count
   streamData = (struct streamDataStruct *)malloc(n_streamlist*sizeof(struct streamDataStruct));
-  
+
   for (i_field = 0; i_field < n_streamlist; i_field++) {
     if (isBoloField(streamList[i_field].name)) {
       struct BiPhaseStruct *l_bi0;
