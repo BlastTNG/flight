@@ -108,6 +108,7 @@ void StoreHWPRBus(void)
   static struct NiosStruct* stopCntHwprAddr;
   static struct NiosStruct* relMoveHwprAddr;
   static struct NiosStruct* statControlHwprAddr;
+  static struct NiosStruct* potTargHwprAddr;
 
   if (firsttime)
   {
@@ -129,6 +130,7 @@ void StoreHWPRBus(void)
     stopCntHwprAddr = GetNiosAddr("stop_cnt_hwpr");
     relMoveHwprAddr = GetNiosAddr("rel_move_hwpr");
     statControlHwprAddr = GetNiosAddr("stat_control_hwpr");
+    potTargHwprAddr = GetNiosAddr("pot_targ_hwpr");
   }
 
   hwpr_wait_cnt--;
@@ -145,10 +147,11 @@ void StoreHWPRBus(void)
   WriteData(pos2HwprAddr, CommandData.hwpr.pos[2]*65535, NIOS_FLUSH);
   WriteData(pos3HwprAddr, CommandData.hwpr.pos[3]*65535, NIOS_FLUSH);
   WriteData(iposRqHwprAddr, CommandData.hwpr.i_pos, NIOS_FLUSH);
+  WriteData(potTargHwprAddr, CommandData.hwpr.pot_targ, NIOS_FLUSH);
   WriteData(iposHwprAddr, hwpr_control.i_next_step, NIOS_FLUSH);
   WriteData(readWaitHwprAddr, hwpr_control.read_wait_cnt, NIOS_FLUSH);
   WriteData(stopCntHwprAddr, hwpr_control.stop_cnt, NIOS_FLUSH);
-  WriteData(relMoveHwprAddr, hwpr_control.stop_cnt/2, NIOS_FLUSH);
+  WriteData(relMoveHwprAddr, hwpr_control.rel_move/2, NIOS_FLUSH);
 
   /* Make HWPR status bit field */
   hwpr_stat_field |= (hwpr_control.go) & 0x0007 ;
@@ -227,6 +230,13 @@ void ControlHWPR(struct ezbus *bus)
       bprintf(info,"ControlHWPR: Attempting to go to HWPR position %i",CommandData.hwpr.i_pos);
       ResetControlHWPR();
       hwpr_control.go = ind;
+      hwpr_control.move_cur = not_yet;
+      hwpr_control.read_before = yes;
+      hwpr_control.read_after = yes;
+    } else if (CommandData.hwpr.mode == HWPR_GOTO_POT) {
+      bprintf(info,"ControlHWPR: Attempting to go to HWPR potentiometer position %f",CommandData.hwpr.pot_targ);
+      ResetControlHWPR();
+      hwpr_control.go = pot;
       hwpr_control.move_cur = not_yet;
       hwpr_control.read_before = yes;
       hwpr_control.read_after = yes;
@@ -337,9 +347,28 @@ void ControlHWPR(struct ezbus *bus)
 	    hwpr_control.move_cur = ready; 
 
 	  } else if (hwpr_control.go == pot) {
-	    bprintf(info,"Go to pot position code isn't written yet.  Sorry.");
-	    CommandData.hwpr.mode = HWPR_SLEEP;
-	    return;  // break out of loop!         
+	    if (((hwpr_data.pot > HWPR_POT_MIN) ||
+		 (hwpr_data.pot < HWPR_POT_MAX)) &&
+		(CommandData.hwpr.use_pot)) { // use pot
+
+	      bprintf(info,"This is where I calculate the relative step from the pot value.");
+	      hwpr_enc_cur = LutCal(&HwprPotLut, hwpr_data.pot);
+	      bprintf(info,"Current pot value: hwpr_data.pot = %f, hwpr_enc_cur = %i", hwpr_data.pot, hwpr_enc_cur);
+             
+	      hwpr_enc_dest = LutCal(&HwprPotLut, CommandData.hwpr.pot_targ);
+	      
+	      hwpr_control.rel_move = hwpr_enc_dest - hwpr_enc_cur;
+	      //	      bprintf(info,"Destination is index %i, pot value = %f, required rel encoder move is %i:",CommandData.hwpr.i_pos,CommandData.hwpr.pos[i_next_step],hwpr_control.rel_move);
+	    } else { // don't use pot
+	      
+	      /* can't step to a hwp position, because we don't know where it is */
+	      bprintf(warning, "The pot is dead! Don't know where to move.");
+	      CommandData.hwpr.mode = HWPR_SLEEP;
+	      return;
+	    }
+
+	    hwpr_control.move_cur = ready; 
+
 	  } else if (hwpr_control.go == enc) {
 	    bprintf(info,"Go to encoder position code isn't written yet. Sorry");
 	    CommandData.hwpr.mode = HWPR_SLEEP; 

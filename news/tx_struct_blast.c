@@ -792,7 +792,8 @@ struct ChannelStruct SlowChannels[] = {
   {"stop_cnt_hwpr",  'w', LOOP9,  13,                1.0,             0.0, 'u', U_NONE},
   {"rel_move_hwpr",  'w', LOOP9,  14,                2.0,             0.0, 's', U_NONE},
   {"stat_control_hwpr",'w', LOOP9,15,                1.0,             0.0, 's', U_NONE},
-  /* LOOP9 14-49 are unused */
+  {"pot_targ_hwpr",  'w', LOOP9,  16,                1.0,             0.0, 's', U_NONE},
+  /* LOOP9 17-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  

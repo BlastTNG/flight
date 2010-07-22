@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.92 $";
+const char *command_list_serial = "$Revision: 4.93 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -690,6 +690,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Position 2", 0.1, 0.9, 'f', ""},
       {"Position 3", 0.1, 0.9, 'f', ""},
       {"Position 4", 0.1, 0.9, 'f', ""}
+    }
+  },
+  {COMMAND(hwpr_goto_pot), 
+    "Move wave plate rotator to commanded potentiometer value",
+    GR_HWPR, 1,
+    {
+      {"Pot Value ", 0.1, 0.9, 'f', ""},
     }
   },
   {COMMAND(hwpr_set_overshoot), 

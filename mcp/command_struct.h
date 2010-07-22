@@ -106,6 +106,7 @@ struct PivGainStruct {
 #define HWPR_STEP	4
 #define HWPR_REPEAT	5
 #define HWPR_GOTO_I	6
+#define HWPR_GOTO_POT	7
 
 // mode        X     Y    vaz   del    w    h
 // LOCK              el
@@ -377,6 +378,7 @@ struct CommandDataStruct {
     int i_pos;
     int no_step;
     int use_pot;
+    double pot_targ;
   } hwpr;
 
   struct {

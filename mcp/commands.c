@@ -1495,6 +1495,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.pos[2] = rvalues[2];
       CommandData.hwpr.pos[3] = rvalues[3];
       break;
+    case hwpr_goto_pot:
+      CommandData.hwpr.pot_targ = rvalues[0];
+      break;
     case hwpr_set_overshoot:
       CommandData.hwpr.overshoot = ivalues[0];
       break;
@@ -2723,6 +2726,7 @@ void InitCommandData()
   CommandData.hwpr.i_pos = 0;
   CommandData.hwpr.no_step = 0;
   CommandData.hwpr.use_pot = 1;
+  CommandData.hwpr.pot_targ = 0.5;
 
   CommandData.pin_is_in = 1;
 
