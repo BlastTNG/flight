@@ -1497,6 +1497,8 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case hwpr_goto_pot:
       CommandData.hwpr.pot_targ = rvalues[0];
+      CommandData.hwpr.mode = HWPR_GOTO_POT;
+      CommandData.hwpr.is_new = 1;
       break;
     case hwpr_set_overshoot:
       CommandData.hwpr.overshoot = ivalues[0];
