@@ -410,6 +410,7 @@ static void SetLockState(int nic)
     CommandData.pin_is_in = 0;
 
   lock_data.state = state;
+  bprintf(info, "nic: %d pin_is_in: %d  state: %d", nic, CommandData.pin_is_in, lock_data.state);
 }
 
 #define SEND_SLEEP 100000 /* 100 miliseconds */
@@ -854,12 +855,14 @@ void StoreActBus(void)
   }
   WriteData(focusSfAddr, focus, NIOS_QUEUE);
 
+  if (InCharge) {
   WriteData(potLockAddr, lock_data.adc[1], NIOS_QUEUE);
   WriteData(stateLockAddr, lock_data.state, NIOS_QUEUE);
   WriteData(seizedActAddr, bus.seized, NIOS_QUEUE);
   WriteData(goalLockAddr, CommandData.actbus.lock_goal, NIOS_QUEUE);
   WriteData(posLockAddr, lock_data.pos, NIOS_QUEUE);
-
+  }
+  
   WriteData(velActAddr, CommandData.actbus.act_vel, NIOS_QUEUE);
   WriteData(accActAddr, CommandData.actbus.act_acc, NIOS_QUEUE);
   WriteData(iMoveActAddr, CommandData.actbus.act_move_i, NIOS_QUEUE);
