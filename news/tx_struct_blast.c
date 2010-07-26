@@ -89,30 +89,6 @@
 #define U_R_O   "Resistance","Ohms"
 #define U_RATE "Rate", "bps"
 
-/*******************************************************************************
- * TODO The channel list needs updating! Some of this is still from BLAST06
- *
- * Anything allocated to one of the following TMP nodes must be reassigned
- * to the correct new node above, or it must be deleted
- *
- * LOOP nodes might also need cleanup. Their channels have all been carried
- * forward, but some may no longer be needed
- *
- * TMP nodes are only so mcp doesn't barf during development.
- * 
- * ALSO! If you delete anything from the TMP nodes be sure that there isn't a 
- * corresponding entry in slow_dl.c
- * !!!!!!!!!!!!!!!!!!!!!!!!!! DO NOT FLY WITH TMP NODES !!!!!!!!!!!!!!!!!!!!!!!!
- ******************************************************************************/
-//#define	TMP1	50, 0	//all channels formerly on ACS0
-//#define	TMP2	51, 0	//all channels formerly on ACS1
-//#define TMP3	52, 0	//all channels formerly on ACS2
-//#define TMP4	53, 0	//all channels formerly on ACS3
-//#define TMP5    54, 0   //all channels formerly on CRYO
-//#define TMP6	55, 0	//all channels formerly on BIAS
-
-/* read and write channel 56 on all boards reserved for ADC Sync */
-
 struct ChannelStruct WideSlowChannels[] = {
   {"tr_he3_fridge", 'r', CRYO_A1,  0,  CRYO_HE3_FRIDGE_M,CRYO_HE3_FRIDGE_B,'U', U_R_O},
   {"tr_m5",         'r', CRYO_A1,  2,          CRYO_M5_M,       CRYO_M5_B, 'U', U_R_O},
