@@ -646,6 +646,13 @@
     <NUMBER caption="I Hold (%)">
       <DATUM format="%.0f" src="I_HOLD_LOCK" extrema="locklimit"/>
     </NUMBER>
+    <!-- TODO fix extrema -->
+    <NUMBER caption="Velocity">
+      <DATUM format="%.0f" src="VEL_LOCK" extrema="locklimit"/>
+    </NUMBER>
+    <NUMBER caption="Accel">
+      <DATUM format="%.0f" src="ACC_LOCK" extrema="locklimit"/>
+    </NUMBER>
   </BOX>
   <BOX caption="Pointing Mode" colour="#880000" row="0" col="3" rowspan="1">
     <MULTI caption="Source">
@@ -916,8 +923,9 @@
     </NUMBER>
   </BOX>
   <BOX caption="Actuators" colour="#002222" row="4" col="8" rowspan="1">
-    <MULTI caption="Actuators">
-      <DATUM src="MODE_SF">
+    <!-- TODO mode and status need updating in mcp, then here -->
+    <MULTI caption="Mode (FIXME)">
+      <DATUM src="MODE_SF"> <!-- wrong field, add to flags -->
         <WORD value="0" caption="Idle" textstyle="OK_BIT"/>
         <WORD value="1" caption="Servoing" textstyle="W_BIT"/>
         <WORD value="2" caption="Focusing" textstyle="W_BIT"/>
@@ -927,12 +935,6 @@
         <WORD value="6" caption="Delta" textstyle="W_BIT"/>
         <WORD value="7" caption="Panic Stop" textstyle="E_BIT"/>
         <WORD value="8" caption="Delfoc" textstyle="W_BIT"/>
-      </DATUM>
-    </MULTI>
-    <MULTI caption="Act Power">
-      <DATUM src="BUS_RESET_ACT">
-        <WORD value="0" caption="On" textstyle="OK_BIT"/>
-        <WORD value="1" caption="Off" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Status">
@@ -946,32 +948,32 @@
         <WORD value="0" caption="Ok" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
-    <NUMBER caption="ACT0 ENC">
+    <NUMBER caption="Enc Alpha">
       <DATUM format="%.0f" src="ENC_0_ACT" extrema="actuator"/>
     </NUMBER>
-    <NUMBER caption="ACT1 ENC">
+    <NUMBER caption="Enc Beta">
       <DATUM format="%.0f" src="ENC_1_ACT" extrema="actuator"/>
     </NUMBER>
-    <NUMBER caption="ACT2 ENC">
+    <NUMBER caption="Enc Gamma">
       <DATUM format="%.0f" src="ENC_2_ACT" extrema="actuator"/>
     </NUMBER>
-    <NUMBER caption="ACT0 LVDT">
-      <DATUM format="%.0f" src="LVDT_0_ACT" extrema="actuator"/>
+    <NUMBER caption="LVDT Alpha">
+      <DATUM format="%.0f" src="Lvdt_0_act" extrema="actuator"/>
     </NUMBER>
-    <NUMBER caption="ACT1 LVDT">
-      <DATUM format="%.0f" src="LVDT_1_ACT" extrema="actuator"/>
+    <NUMBER caption="LVDT Beta">
+      <DATUM format="%.0f" src="Lvdt_1_act" extrema="actuator"/>
     </NUMBER>
-    <NUMBER caption="ACT2 LVDT">
-      <DATUM format="%.0f" src="LVDT_2_ACT" extrema="actuator"/>
+    <NUMBER caption="LVDT Gamma">
+      <DATUM format="%.0f" src="Lvdt_2_act" extrema="actuator"/>
     </NUMBER>
-    <NUMBER caption="ACT0 Pos">
-      <DATUM format="%.0f" src="POS_0_ACT" extrema="actuator"/>
+    <NUMBER caption="LVDT High">
+      <DATUM format="%.0f" src="LVDT_HIGH_ACT" extrema="LVDTHigh"/>
     </NUMBER>
-    <NUMBER caption="ACT1 Pos">
-      <DATUM format="%.0f" src="POS_1_ACT" extrema="actuator"/>
+    <NUMBER caption="LVDT Low">
+      <DATUM format="%.0f" src="LVDT_LOW_ACT" extrema="LVDTLow"/>
     </NUMBER>
-    <NUMBER caption="ACT2 Pos">
-      <DATUM format="%.0f" src="POS_2_ACT" extrema="actuator"/>
+    <NUMBER caption="LVDT Spread">
+      <DATUM format="%.0f" src="LVDT_SPREAD_ACT" extrema="LVDTSpread"/>
     </NUMBER>
     <NUMBER caption="I Move">
       <DATUM format="%.0f" src="I_MOVE_ACT" extrema="unknown"/>
@@ -986,26 +988,6 @@
       <DATUM format="%.0f" src="ACC_ACT" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="LVDTs" colour="#002222" row="2" col="8">
-    <NUMBER caption="LVDT 63">
-      <DATUM format="%.0f" src="LVDT_63_ACT" extrema="actuator"/>
-    </NUMBER>
-    <NUMBER caption="LVDT 64">
-      <DATUM format="%.0f" src="LVDT_64_ACT" extrema="actuator"/>
-    </NUMBER>
-    <NUMBER caption="LVDT 65">
-      <DATUM format="%.0f" src="LVDT_65_ACT" extrema="actuator"/>
-    </NUMBER>
-    <NUMBER caption="LVDT High">
-      <DATUM format="%.0f" src="LVDT_HIGH_ACT" extrema="LVDTHigh"/>
-    </NUMBER>
-    <NUMBER caption="LVDT Low">
-      <DATUM format="%.0f" src="LVDT_LOW_ACT" extrema="LVDTLow"/>
-    </NUMBER>
-    <NUMBER caption="LVDT Spread">
-      <DATUM format="%.0f" src="LVDT_SPREAD_ACT" extrema="LVDTSpread"/>
-    </NUMBER>
-  </BOX>
   <BOX caption="Focus System" colour="#002222" row="3" col="8">
     <MULTI caption="Auto Focus">
       <DATUM src="MODE_SF">
@@ -1014,6 +996,18 @@
         <WORD value="2" caption="Vetoed" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
+    <NUMBER caption="Position">
+      <DATUM format="%.0f" src="FOCUS_SF" extrema="actuator"/>
+    </NUMBER>
+    <NUMBER caption="Correction">
+      <DATUM format="%.0f" src="CORRECTION_SF" extrema="sfcorrection"/>
+    </NUMBER>
+    <NUMBER caption="Goal">
+      <DATUM format="%.0f" src="GOAL_SF" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Offset">
+      <DATUM format="%.0f" src="OFFSET_SF" extrema="unknown"/>
+    </NUMBER>
     <NUMBER caption="T Primary">
       <DATUM format="%.2f" src="T_PRIME_SF" extrema="temp"/>
     </NUMBER>
@@ -1029,25 +1023,8 @@
     <NUMBER caption="Step Size">
       <DATUM format="%.0f" src="STEP_SF" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="Veto Time">
+    <NUMBER caption="Veto Timeout">
       <DATUM format="%.0f" src="VETO_SF" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="Veto Length">
-      <DATUM format="%.0f" src="WAIT_SF" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="SF Correction">
-      <DATUM format="%.0f" src="CORRECTION_SF" extrema="sfcorrection"/>
-    </NUMBER>
-    <NUMBER caption="Absolute Focus">
-      <DATUM format="%.0f" src="FOCUS_SF" extrema="actuator"/>
-    </NUMBER>
-    <!-- TODO is relative focus still around?
-    <NUMBER caption="Relative Focus">
-      <DATUM format="%.0f" src="REL_FOCUS" extrema="unknown"/>
-    </NUMBER>
-    -->
-    <NUMBER caption="Foc Off">
-      <DATUM format="%.0f" src="OFFSET_SF" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Motor Temps" colour="#002222" row="2" col="6">
