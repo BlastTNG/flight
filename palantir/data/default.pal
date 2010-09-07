@@ -1028,16 +1028,16 @@
     </NUMBER>
   </BOX>
   <BOX caption="Motor Temps" colour="#002222" row="2" col="6">
-    <NUMBER caption="T Reac">
+    <NUMBER caption="RW">
       <DATUM format="%.2f" align="right" src="T_RW" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T Reac MC">
+    <NUMBER caption="RW MC">
       <DATUM format="%.2f" src="T_MC_RW" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T El">
+    <NUMBER caption="El">
       <DATUM format="%.2f" src="T_EL" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="T El MC">
+    <NUMBER caption="El MC">
       <DATUM format="%.2f" src="T_MC_EL" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Pivot">
@@ -1252,7 +1252,7 @@
     <NUMBER caption="RW I">
       <DATUM format="%.2f" src="I_SER_RW" extrema="isercheck"/>
     </NUMBER>
-    <MULTI caption="Pivot Enab">
+    <MULTI caption="Piv Enab">
       <DATUM src="DR_INFO_DISAB_PIV">
         <WORD value="0" caption="Enabled" textstyle="OK_BIT"/>
         <WORD value="1" caption="Disabled" textstyle="W_BIT"/>
