@@ -1918,7 +1918,7 @@ const char* CommandName(int is_multi, int command)
 
 void ScheduledCommand(struct ScheduleEvent *event)
 {
-
+  //TODO MDT: Set "Last Scheduled Command" indicator for palantir.
   if (event->is_multi) {
     int i;
     int index = MIndex(event->command);
