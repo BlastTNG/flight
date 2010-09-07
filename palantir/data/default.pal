@@ -1543,6 +1543,12 @@
     <NUMBER caption="SS">
       <DATUM format="%.2f" src="AZ_SS" extrema="angle"/>
     </NUMBER>
+    <NUMBER caption="PSS1">
+      <DATUM format="%.2f" src="AZ_PSS1" extrema="angle"/>
+    </NUMBER>
+    <NUMBER caption="PSS2">
+      <DATUM format="%.2f" src="AZ_PSS2" extrema="angle"/>
+    </NUMBER>
     <NUMBER caption="ISC Sigma">
       <DATUM format="%.2f" src="SIGMA_ISC" extrema="unknown"/>
     </NUMBER>
