@@ -581,7 +581,7 @@
     </MULTI>
   </BOX>
   <BOX caption="Balance" colour="#880000" row="2" col="3">
-    <NUMBER caption="SLEW_VETO">
+    <NUMBER caption="Slew Veto">
       <DATUM format="%.0f" src="SLEW_VETO" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="Mode">
@@ -1048,7 +1048,7 @@
     </NUMBER>
   </BOX>
   <BOX caption="Currents" colour="#707" row="0" col="4" rowspan="1">
-    <NUMBER caption="Transmitter">
+    <NUMBER caption="Transmitters">
       <DATUM format="%6.2f" src="I_TRANS" extrema="current"/>
     </NUMBER>
     <NUMBER caption="DAS">
@@ -1063,7 +1063,7 @@
     <NUMBER caption="Star Cams">
       <DATUM format="%6.2f" src="I_SC" extrema="current"/>
     </NUMBER>
-    <NUMBER caption="dGPS + SS">
+    <NUMBER caption="dGPS + OSS">
       <DATUM format="%6.2f" src="I_DGPS" extrema="current"/>
     </NUMBER>
     <NUMBER caption="Steppers">
@@ -1279,7 +1279,7 @@
     </NUMBER>
   </BOX>
   <BOX caption="Charge Controller" colour="#777700" row="0" col="7" rowspan="1">
-    <MULTI caption="CC State">
+    <MULTI caption="State">
       <DATUM src="STATE_CC">
         <WORD value="0" caption="Start" textstyle="OK_BIT"/>
         <WORD value="1" caption="Night Check" textstyle="W_BIT"/>
