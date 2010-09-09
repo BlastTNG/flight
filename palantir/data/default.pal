@@ -1105,80 +1105,89 @@
       <DATUM format="%d" src="AMPL_X_BIAS" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="'Slow' Bolometers " colour="#707" row="4" col="3" rowspan="1">
-    <NUMBER caption="N15C22">
-      <DATUM format="%.3f" src="N15C22" extrema="unknown"/>
+  <BOX caption="'Central' Bolometers " colour="#707" row="4" col="3" rowspan="1">
+    <NUMBER caption="B2E06H">
+      <DATUM format="%.3f" src="B2E06H" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N15C14">
-      <DATUM format="%.3f" src="N15C14" extrema="unknown"/>
+    <NUMBER caption="B2E07V">
+      <DATUM format="%.3f" src="B2E07V" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N15C9">
-      <DATUM format="%.3f" src="N15C9" extrema="unknown"/>
+    <NUMBER caption="B2E08H">
+      <DATUM format="%.3f" src="B2E08H" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N7C15">
-      <DATUM format="%.3f" src="N7C15" extrema="unknown"/>
+    <NUMBER caption="B2E09V">
+      <DATUM format="%.3f" src="B2E09V" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N7C14">
-      <DATUM format="%.3f" src="N7C14" extrema="unknown"/>
+    <NUMBER caption="B3D05H">
+      <DATUM format="%.3f" src="B3D05H" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N10C10">
-      <DATUM format="%.3f" src="N10C10" extrema="unknown"/>
+    <NUMBER caption="B3D06V">
+      <DATUM format="%.3f" src="B3D06V" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N10C9">
-      <DATUM format="%.3f" src="N10C9" extrema="unknown"/>
+    <NUMBER caption="B3D07H">
+      <DATUM format="%.3f" src="B3D07H" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N10C8">
-      <DATUM format="%.3f" src="N10C8" extrema="unknown"/>
+    <NUMBER caption="B3D08V">
+      <DATUM format="%.3f" src="B3D08V" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N7C17">
-      <DATUM format="%.3f" src="N7C17" extrema="unknown"/>
+    <NUMBER caption="B5C03V">
+      <DATUM format="%.3f" src="B5C03V" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N7C16">
-      <DATUM format="%.3f" src="N7C16" extrema="unknown"/>
+    <NUMBER caption="B5C04H">
+      <DATUM format="%.3f" src="B5C04H" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N7C18">
-      <DATUM format="%.3f" src="N7C18" extrema="unknown"/>
+    <NUMBER caption="B5C05V">
+      <DATUM format="%.3f" src="B5C05V" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="B5C06H">
+       <DATUM format="%.3f" src="B5C06H" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="'Fast' Bolometers" colour="#707" row="4" col="4" rowspan="1">
-    <NUMBER caption="N11C2">
-      <DATUM format="%.3f" src="N11C2" extrema="unknown"/>
+  <BOX caption="Diagnostic 'Bolometers'" colour="#707" row="4" col="4" rowspan="1">
+    <NUMBER caption="B2D1">
+      <DATUM format="%.3f" src="B2D1" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N11C3">
-      <DATUM format="%.3f" src="N11C3" extrema="unknown"/>
+    <NUMBER caption="B2D2">
+      <DATUM format="%.3f" src="B2D2" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N11C7">
-      <DATUM format="%.3f" src="N11C7" extrema="unknown"/>
+    <NUMBER caption="B2R1">
+      <DATUM format="%.3f" src="B2R1" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N12C0">
-      <DATUM format="%.3f" src="N12C0" extrema="unknown"/>
+    <NUMBER caption="B2T1">
+      <DATUM format="%.3f" src="B2T1" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N16C10">
-      <DATUM format="%.3f" src="N16C10" extrema="unknown"/>
+    <NUMBER caption="B2T2">
+      <DATUM format="%.3f" src="B2T2" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N7C13">
-      <DATUM format="%.3f" src="N7C13" extrema="unknown"/>
+    <NUMBER caption="B3D1">
+      <DATUM format="%.3f" src="B3D1" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N14C22">
-      <DATUM format="%.3f" src="N14C22" extrema="unknown"/>
+    <NUMBER caption="B3D2">
+      <DATUM format="%.3f" src="B3D2" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N15C13">
-      <DATUM format="%.3f" src="N15C13" extrema="unknown"/>
+    <NUMBER caption="B3R1">
+      <DATUM format="%.3f" src="B3R1" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N16C15">
-      <DATUM format="%.3f" src="N16C15" extrema="unknown"/>
+    <NUMBER caption="B3R2">
+      <DATUM format="%.3f" src="B3R2" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N7C12">
-      <DATUM format="%.3f" src="N7C12" extrema="unknown"/>
+    <NUMBER caption="B3T1">
+      <DATUM format="%.3f" src="B3T1" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N10C11">
-      <DATUM format="%.3f" src="N10C11" extrema="unknown"/>
+    <NUMBER caption="B3T2">
+      <DATUM format="%.3f" src="B3T2" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N7C14">
-      <DATUM format="%.3f" src="N7C14" extrema="unknown"/>
+    <NUMBER caption="B5D1">
+      <DATUM format="%.3f" src="B5D1" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="N10C13">
-      <DATUM format="%.3f" src="N10C13" extrema="unknown"/>
+    <NUMBER caption="B5R1">
+      <DATUM format="%.3f" src="B5R1" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="B5T1">
+      <DATUM format="%.3f" src="B5T1" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="B5T2">
+      <DATUM format="%.3f" src="B5T2" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Phase" colour="#707" row="4" col="2" rowspan="1">
