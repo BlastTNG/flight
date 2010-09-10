@@ -646,7 +646,6 @@
     <NUMBER caption="I Hold (%)">
       <DATUM format="%.0f" src="I_HOLD_LOCK" extrema="locklimit"/>
     </NUMBER>
-    <!-- TODO fix extrema -->
     <NUMBER caption="Velocity">
       <DATUM format="%.0f" src="VEL_LOCK" extrema="locklimit"/>
     </NUMBER>
@@ -847,8 +846,14 @@
     <NUMBER caption="Actuator Motor">
       <DATUM format="%.2f" src="T_MOT_ACT" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Sun Shield Back">
+    <NUMBER caption="T SUN (Is this SS?)">
       <DATUM format="%.2f" src="T_SUN" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="Port Shields">
+      <DATUM format="%.2f" src="T_PORT_BACK" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="Starboard Shields">
+      <DATUM format="%.2f" src="T_STAR_BACK" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Chin Mid">
       <DATUM format="%.2f" src="T_CHIN" extrema="temp"/>
@@ -879,14 +884,23 @@
     <NUMBER caption="MCC Chipset">
       <DATUM format="%.2f" src="T_CHIP_FLC" extrema="cputemp"/>
     </NUMBER>
-    <NUMBER caption="Sun Sensor">
+    <NUMBER caption="MCC Watchdog">
+      <DATUM format="%.2f" src="T_WD_FLC" extrema="cputemp"/>
+    </NUMBER>
+    <NUMBER caption="O Sun Sensor">
       <DATUM format="%.2f" src="T_CASE_SS" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="SS CPU">
+    <NUMBER caption="OSS CPU">
       <DATUM format="%.2f" src="T_CPU_SS" extrema="cputemp"/>
     </NUMBER>
-    <NUMBER caption="SS HDD">
+    <NUMBER caption="OSS HDD">
       <DATUM format="%.2f" src="T_HDD_SS" extrema="cputemp"/>
+    </NUMBER>
+    <NUMBER caption="OSS Port">
+      <DATUM format="%.2f" src="T_PORT_SS" extrema="cputemp"/>
+    </NUMBER>
+    <NUMBER caption="OSS Starboard">
+      <DATUM format="%.2f" src="T_STAR_SS" extrema="cputemp"/>
     </NUMBER>
     <NUMBER caption="Lock Motor">
       <DATUM format="%.2f" src="T_LOCK" extrema="temp"/>
@@ -894,7 +908,7 @@
     <NUMBER caption="Lock Controller">
       <DATUM format="%.2f" src="T_MC_LOCK" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Charger">
+    <NUMBER caption="Charge Controller">
       <DATUM format="%.2f" src="T_CHARGER" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Balance Control">
@@ -902,6 +916,9 @@
     </NUMBER>
     <NUMBER caption="Balance Motor">
       <DATUM format="%.2f" src="T_PUMP_BAL" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="Seppy, The GPS">
+      <DATUM format="%.2f" src="T_DGPS" extrema="temp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Actuators" colour="#002222" row="4" col="8" rowspan="1">
