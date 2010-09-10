@@ -875,6 +875,9 @@
     <NUMBER caption="SS CPU">
       <DATUM format="%.2f" src="T_CPU_SS" extrema="cputemp"/>
     </NUMBER>
+    <NUMBER caption="SS HDD">
+      <DATUM format="%.2f" src="T_HDD_SS" extrema="cputemp"/>
+    </NUMBER>
     <NUMBER caption="Lock Motor">
       <DATUM format="%.2f" src="T_LOCK" extrema="temp"/>
     </NUMBER>
