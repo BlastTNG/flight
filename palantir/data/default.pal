@@ -758,17 +758,6 @@
     </NUMBER>
   </BOX>
   <BOX caption="Inner Frame Electronics" colour="#002222" row="0" col="6" rowspan="1">
-    <!-- TODO once there are thermometers in the DAS, put them here
-    <NUMBER caption="DPM 5V">
-      <DATUM format="%.2f" src="T_DPM_5V" extrema="powtemp"/>
-    </NUMBER>
-    <NUMBER caption="DPM 7.5V">
-      <DATUM format="%.2f" src="T_DPM_7.5V" extrema="powtemp"/>
-    </NUMBER>
-    <NUMBER caption="DPM 10V">
-      <DATUM format="%.2f" src="T_DPM_10V" extrema="powtemp"/>
-    </NUMBER>
-    -->
     <NUMBER caption="DAS">
       <DATUM format="%.2f" src="T_DAS" extrema="temp"/>
     </NUMBER>
@@ -784,8 +773,29 @@
     <NUMBER caption="IF Clin">
       <DATUM format="%.2f" src="T_IF_CLIN" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Rec">
+    <NUMBER caption="Preamp Crate">
       <DATUM format="%.2f" src="T_REC" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="Preamp DCDC">
+      <DATUM format="%.2f" src="T_PADCDC_REC" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="Preamp µRAM">
+      <DATUM format="%.2f" src="T_PAURAM_REC" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="Preamp HK DCDC">
+      <DATUM format="%.2f" src="T_HKDCDC_REC" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="HWPR Motor">
+      <DATUM format="%.2f" src="T_HWPR_MOT" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="HWPR Feedthrough">
+      <DATUM format="%.2f" src="T_HWPR_FEED" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="REC DAC BOX">
+      <DATUM format="%.2f" src="T_DAC_BOX" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="Pump Valve">
+      <DATUM format="%.2f" src="T_MOT_PUMP_VAL" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="SBSC Mapmean">
       <DATUM format="%.0f" src="MAPMEAN_SBSC" extrema="unknown"/>
@@ -1692,7 +1702,7 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="I HS Charcoal">
-      <DATUM format="%.2f" src="I_CHARCOAL_HS" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_HS_CHARCOAL" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="HS Pot">
       <DATUM src="HEAT_POT_HS">
@@ -1701,7 +1711,7 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="I HS Pot">
-      <DATUM format="%.2f" src="I_POT_HS" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_HS_POT" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="JFET">
       <DATUM src="HEAT_JFET">
@@ -1724,6 +1734,9 @@
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
+    <NUMBER caption="I Cal Lamp">
+      <DATUM format="%.2f" src="I_CAL_LAMP" extrema="unknown"/>
+    </NUMBER>
     <MULTI caption="Autocycle">
       <DATUM src="cycle_state">
         <WORD value="8" caption="HS Off" textstyle="W_BIT"/>
@@ -1733,6 +1746,9 @@
         <WORD value="0" caption="Off" textstyle="E_BIT"/>
       </DATUM>
     </MULTI>
+    <NUMBER caption="I 300mK">
+      <DATUM format="%.2f" src="I_300MK" extrema="unknown"/>
+    </NUMBER>
   </BOX>
   <BOX caption="Motorised Valves" row="2" col="7">
     <MULTI caption="Pot">
