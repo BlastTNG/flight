@@ -893,7 +893,7 @@ char *frameList[] = {
   "t_serial",
   "t_set_gy",
   "t_set_sbsc",
-  "t_star_back",
+  "t_star_front",
   "t_star_ss",
   "t_strut_bot",
   "t_strut_side",
