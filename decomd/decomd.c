@@ -182,7 +182,7 @@ void ReadDecom (void)
       read_data = 0;
     }
 
-    usleep(1000);
+    usleep(5000);
   }
 }
 
@@ -262,7 +262,7 @@ int main(void) {
   int n, z, lastsock;
   fd_set fdlist, fdread, fdwrite;
   struct sockaddr_in addr;
-  int addrlen;
+  socklen_t addrlen;
   struct statvfs vfsbuf;
   char buf[309];
   struct timeval no_time = {0, 0};
@@ -392,13 +392,15 @@ int main(void) {
     if (fs_bad > 1)
       fs_bad = 1;
 #ifdef DEBUG
-    printf("%1i %1i %3i %5.3f %5.3f %Lu %lu %s %i %f %f\n", status
-        + system_idled * 0x4, polarity, du, fs_bad, dq_bad, disk_free,
-        frame_counter, ptr + 1, wfifo_size, dframes, dt, crc_ok);
+    printf("%1i %1i %3i %5.3f %5.3f %Lu %lu %s %i %f %f %d %d %d\n", 
+	status + system_idled * 0x4, polarity, du, 1 - fs_bad, dq_bad, 
+	disk_free, frame_counter, ptr + 1, wfifo_size, dframes, dt, crc_ok,
+	DiskFrameSize, BiPhaseFrameSize);
 #endif
-    sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu %lu %s %i %f %f %d %d %d\n", status
-        + system_idled * 0x4, polarity, du, 1 - fs_bad, dq_bad, disk_free,
-        frame_counter, ptr + 1, wfifo_size, dframes, dt, crc_ok, DiskFrameSize, BiPhaseFrameSize);
+    sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu %lu %s %i %f %f %d %d %d\n", 
+	status + system_idled * 0x4, polarity, du, 1 - fs_bad, dq_bad, 
+	disk_free, frame_counter, ptr + 1, wfifo_size, dframes, dt, crc_ok, 
+	DiskFrameSize, BiPhaseFrameSize);
     old_fc = frame_counter;
     then = now;
 
