@@ -1382,8 +1382,10 @@ void Pointing(void)
   static unsigned pss2_since_ok = 500;
   double ss_az = 0;
   double mag_az;
-  double pss1_az, pss1_el;
-  double pss2_az, pss2_el;
+  double pss1_az = 0;
+  double pss1_el = 0;
+  double pss2_az = 0;
+  double pss2_el = 0;
   double dgps_az, dgps_pitch, dgps_roll;
   double clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0, using_sip_gps = -1;
