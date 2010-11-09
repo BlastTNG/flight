@@ -68,15 +68,15 @@ static void OpenNextChunk(void)
 {
   if (framefile.fd > -1)
     if (close(framefile.fd) == -1)
-      berror(err, "FrameFile Writer: Error closing chunk");
+      berror(err, "Error closing chunk");
 
   sprintf(framefile.name, RAWDIR "/%lu.%c%03X%c", framefile.time,
       framefile.type, ++framefile.chunk, '\0');
 
-  bprintf(info, "FrameFile Writer: Writing to framefile %s\n", framefile.name);
+  bprintf(info, "Writing to %s\n", framefile.name);
 
   if ((framefile.fd = creat(framefile.name, 0644)) == -1)
-    berror(err, "FrameFile Writer: Error opening chunk");
+    berror(err, "Error opening chunk");
 
   framefile.frames = 0;
 }
@@ -107,7 +107,7 @@ void InitialiseFrameFile(char type)
   sprintf(buffer, RAWDIR "/%lu.%c.spec", framefile.time, framefile.type);
 
   if ((fp = fopen(buffer,"w")) == NULL)
-    berror(err, "FrameFile Writer: Unable to write spec file");
+    berror(err, "Unable to write spec file");
   else {
     WriteSpecificationFile(fp);
     fclose(fp);
@@ -120,7 +120,7 @@ void InitialiseFrameFile(char type)
 
   fp = fopen(CURFILE,"w");
   if (fp == NULL) {
-    berror(err, "FrameFile Writer: Error opening curfile");
+    berror(err, "Error opening curfile");
     return;
   }
 
@@ -128,7 +128,7 @@ void InitialiseFrameFile(char type)
   fprintf(fp, "%s\n", framefile.name);
 
   if (fclose(fp) < 0)
-    berror(err, "FrameFile Writer: Error while closing curfile");
+    berror(err, "Error while closing curfile");
 }
 
 static void* advance_in_buffer(void* ptr)
@@ -166,7 +166,7 @@ void pushDiskFrame(unsigned short *RxFrame)
   /* ****************************************************************** */
 
   if (new_write_to == framefile.b_read_from) {
-    bputs(warning, "FrameFile Writer: Buffer overflow (frame discarded)\n");
+    bputs(warning, "Buffer overflow (frame discarded)\n");
     return;
   }	
 
