@@ -134,7 +134,7 @@ void SunSensor(void) {
           n = -1;
         } else {
           bprintf(err, "Short read: %i of %i bytes.\n", n,
-              sizeof(Rx_Data));
+              (int) sizeof(Rx_Data));
           n = -1;
         }
       } else {
