@@ -248,7 +248,7 @@ void IntegratingStarCamera(void* parameter)
           break;
         } else if (n < sizeof(struct ISCSolutionStruct)) {
           bprintf(err, "Expected %i but received %i bytes.\n",
-              sizeof(struct ISCSolutionStruct), n);
+              (int) sizeof(struct ISCSolutionStruct), n);
           break;
         }
 #ifdef USE_ISC_LOG
@@ -339,7 +339,7 @@ void IntegratingStarCamera(void* parameter)
             break;
           } else if (n < sizeof(struct ISCStatusStruct)) {
             bprintf(err, "Expected %i but sent %i bytes.\n",
-                sizeof(struct ISCStatusStruct), n);
+                (int) sizeof(struct ISCStatusStruct), n);
             break;
           }
           if (WHICH)
