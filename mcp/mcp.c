@@ -786,7 +786,7 @@ static void write_to_biphase(unsigned short *RxFrame)
         berror(err, "bi-phase write for RxFrame failed");
       } else if (i != BiPhaseFrameWords * sizeof(unsigned short)) {
         bprintf(err, "Short write for RxFrame: %i of %u", i,
-            BiPhaseFrameWords * sizeof(unsigned short));
+            (unsigned int)(BiPhaseFrameWords * sizeof(unsigned short)));
       }
 
       i = write(bi0_fp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
@@ -796,7 +796,8 @@ static void write_to_biphase(unsigned short *RxFrame)
       else if (i != (BI0_FRAME_SIZE - BiPhaseFrameWords)
           * sizeof(unsigned short))
         bprintf(err, "Short write for padding: %i of %u", i,
-            (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short));
+            (unsigned int)
+              ((BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short)));
     }
 
     CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
