@@ -368,8 +368,6 @@ static void SetLockState(int nic)
   static int firsttime = 1;
   int pot = lock_data.adc[1];
   unsigned int state = lock_data.state;
-  static int nic_change_count = 0;
-  static unsigned int last_lock_state = 0;
 
   static struct BiPhaseStruct* potLockAddr;
   static struct BiPhaseStruct* stateLockAddr;
