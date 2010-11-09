@@ -2561,7 +2561,7 @@ void InitCommandData()
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
     bprintf(warning, "Commands: prev_status: Wanted %i bytes but got %i.\n",
-        sizeof(struct CommandDataStruct), n_read);
+        (int) sizeof(struct CommandDataStruct), n_read);
   else if (extra > 0)
     bputs(warning, "Commands: prev_status: Extra bytes found.\n");
   else
