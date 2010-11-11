@@ -362,7 +362,7 @@
       <XHI value="60.0"/>
     </EXTREMA>
     <CURFILE name="/data/etc/defile.lnk"/>
-    <DECOMD host="widow" port="11411"/>
+    <DECOMD host="widow.blast" port="11411"/>
   </SETTINGS>
   <DEFAULTS>
     <TEXTSTYLE>
