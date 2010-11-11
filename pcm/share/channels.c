@@ -1,6 +1,6 @@
 /* channels.c: contains routines for manipulating the BLAST channel lists
  *
- * This software is copyright (C) 2002-2006 University of Toronto
+ * This software is copyright (C) 2002-2010 University of Toronto
  *
  * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
@@ -707,7 +707,7 @@ static void DoSanityChecks(void)
               !isdigit(DerivedChannels[i].lincom.source[4]) ||
               !isdigit(DerivedChannels[i].lincom.source[5]) ||
               DerivedChannels[i].lincom.source[6] != '\0')
-            bprintf(warning, "Channels: Derived channel source %s not found.",
+            bprintf(fatal, "Channels: Derived channel source %s not found.",
                 DerivedChannels[i].lincom.source);
 
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom.field) != -1)
@@ -723,8 +723,8 @@ static void DoSanityChecks(void)
         if (GetChannelByName(names, nn, DerivedChannels[i].units.source) == -1)
           bprintf(fatal, "Channels: Derived channel source %s not found.",
               DerivedChannels[i].units.source);
-	// FIXME: consider adding checks for metadata collisions.
-	break;
+        // FIXME: consider adding checks for metadata collisions.
+        break;
       default:
         bprintf(fatal, "Channels: FATAL: Unrecognised Derived Channel Type "
             "`%c'\n", DerivedChannels[i].comment.type);
@@ -856,8 +856,11 @@ void MakeAddressLookups(void)
     mplex = 0;
     while (slowIndex[bus][mplex] + 1 >= slowTop[bus])
       if (++mplex >= FAST_PER_SLOW)
+      {
+        bprintf(err, "failing on index: %d of %d", i, ccWideSlow-1);
         bprintf(fatal, "Channels: FATAL: Ran out of subframes while trying to "
             "insert wide slow channel %s\n", WideSlowChannels[i].field);
+      }
 
 #ifndef INPUTTER
     NiosLookup[i] = SetNiosData(&WideSlowChannels[i], mplex * TxFrameWords[bus]
@@ -1136,18 +1139,16 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
     if (write(fd, line, strlen(line)) < 0)
       berror(err, "Error writing to format file\n");
     if (strlen(SlowChannels[i].quantity)>0) {
-      snprintf(line, 1024,
-	  "%s/quantity STRING %s\n",
-	  FieldToUpper(SlowChannels[i].field), SlowChannels[i].quantity);
+      snprintf(line, 1024, "%s/quantity STRING %s\n",
+          FieldToUpper(SlowChannels[i].field), SlowChannels[i].quantity);
       if (write(fd, line, strlen(line)) < 0)
-	berror(err, "Error writing to format file\n");
+        berror(err, "Error writing to format file\n");
     }
     if (strlen(SlowChannels[i].units)>0) {
-      snprintf(line, 1024,
-	  "%s/units STRING %s\n",
-	  FieldToUpper(SlowChannels[i].field), SlowChannels[i].units);
+      snprintf(line, 1024, "%s/units STRING %s\n",
+          FieldToUpper(SlowChannels[i].field), SlowChannels[i].units);
       if (write(fd, line, strlen(line)) < 0)
-	berror(err, "Error writing to format file\n");
+        berror(err, "Error writing to format file\n");
     }
   }
 
@@ -1161,18 +1162,16 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
     if (write(fd, line, strlen(line)) < 0)
       berror(err, "Error writing to format file\n");
     if (strlen(WideSlowChannels[i].quantity)>0) {
-      snprintf(line, 1024,
-	  "%s/quantity STRING %s\n",
-	  FieldToUpper(WideSlowChannels[i].field), WideSlowChannels[i].quantity);
+      snprintf(line, 1024, "%s/quantity STRING %s\n",
+          FieldToUpper(WideSlowChannels[i].field), WideSlowChannels[i].quantity);
       if (write(fd, line, strlen(line)) < 0)
-	berror(err, "Error writing to format file\n");
+        berror(err, "Error writing to format file\n");
     }
     if (strlen(WideSlowChannels[i].units)>0) {
-      snprintf(line, 1024,
-	  "%s/units STRING %s\n",
-	  FieldToUpper(WideSlowChannels[i].field), WideSlowChannels[i].units);
+      snprintf(line, 1024, "%s/units STRING %s\n",
+          FieldToUpper(WideSlowChannels[i].field), WideSlowChannels[i].units);
       if (write(fd, line, strlen(line)) < 0)
-	berror(err, "Error writing to format file\n");
+        berror(err, "Error writing to format file\n");
     }
   }
 
@@ -1190,18 +1189,16 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
     if (write(fd, line, strlen(line)) < 0)
       berror(err, "Error writing to format file\n");
     if (strlen(FastChannels[i].quantity)>0) {
-      snprintf(line, 1024,
-	  "%s/quantity STRING %s\n",
-	  FieldToUpper(FastChannels[i].field), FastChannels[i].quantity);
+      snprintf(line, 1024, "%s/quantity STRING %s\n",
+          FieldToUpper(FastChannels[i].field), FastChannels[i].quantity);
       if (write(fd, line, strlen(line)) < 0)
-	berror(err, "Error writing to format file\n");
+        berror(err, "Error writing to format file\n");
     }
     if (strlen(FastChannels[i].units)>0) {
-      snprintf(line, 1024,
-	  "%s/units STRING %s\n",
-	  FieldToUpper(FastChannels[i].field), FastChannels[i].units);
+      snprintf(line, 1024, "%s/units STRING %s\n",
+          FieldToUpper(FastChannels[i].field), FastChannels[i].units);
       if (write(fd, line, strlen(line)) < 0)
-	berror(err, "Error writing to format file\n");
+        berror(err, "Error writing to format file\n");
     }
   }
 
@@ -1215,18 +1212,16 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
     if (write(fd, line, strlen(line)) < 0)
       berror(err, "Error writing to format file\n");
     if (strlen(WideFastChannels[i].quantity)>0) {
-      snprintf(line, 1024,
-	  "%s/quantity STRING %s\n",
-	  FieldToUpper(WideFastChannels[i].field), WideFastChannels[i].quantity);
+      snprintf(line, 1024, "%s/quantity STRING %s\n",
+          FieldToUpper(WideFastChannels[i].field), WideFastChannels[i].quantity);
       if (write(fd, line, strlen(line)) < 0)
-	berror(err, "Error writing to format file\n");
+        berror(err, "Error writing to format file\n");
     }
     if (strlen(WideFastChannels[i].units)>0) {
-      snprintf(line, 1024,
-	  "%s/units STRING %s\n",
-	  FieldToUpper(WideFastChannels[i].field), WideFastChannels[i].units);
+      snprintf(line, 1024, "%s/units STRING %s\n",
+          FieldToUpper(WideFastChannels[i].field), WideFastChannels[i].units);
       if (write(fd, line, strlen(line)) < 0)
-	berror(err, "Error writing to format file\n");
+        berror(err, "Error writing to format file\n");
     }
   }
 
@@ -1304,29 +1299,30 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
             DerivedChannels[i].bitword.field, DerivedChannels[i].bitword.source,
             DerivedChannels[i].bitword.offset,
             DerivedChannels[i].bitword.length);
-	break;
+        break;
       case '#': /* comment */
         snprintf(line, 1024, "\n# %s\n", DerivedChannels[i].comment.text);
         break;
       case 'u': /* units channel */
-	snprintf(line, 1024, "%s/units STRING %s\n%s/quantity STRING %s\n",
-	    DerivedChannels[i].units.source, DerivedChannels[i].units.units,
-	    DerivedChannels[i].units.source, DerivedChannels[i].units.quantity);
-	break;
-       case 'p': /* phase */
-         snprintf(line, 1024, "%-16s PHASE %-16s %i\n",
+        snprintf(line, 1024, "%s/units STRING %s\n%s/quantity STRING %s\n",
+            DerivedChannels[i].units.source, DerivedChannels[i].units.units,
+            DerivedChannels[i].units.source, DerivedChannels[i].units.quantity);
+        break;
+      case 'p': /* phase */
+        snprintf(line, 1024, "%-16s PHASE %-16s %i\n",
             DerivedChannels[i].phase.field, DerivedChannels[i].phase.source,
             DerivedChannels[i].phase.shift);
-         break;
+        break;
     }
     if (write(fd, line, strlen(line)) < 0)
       berror(err, "Error writing to format file\n");
   }
 
   snprintf(line, 1024, "\n# Nice CPU Values\n"
-    "TIME_SEC_DIRFILE  LINCOM  1       time 1 -%lu\n"
-    "TIME_HOUR_DIRFILE LINCOM 1       TIME_SEC_DIRFILE 0.000277777 0\n"
-    "TIME_DAY_DIRFILE  LINCOM  1      TIME_SEC_DIRFILE 1.15741E-5  0\n", start_time
+      "TIME_SEC_DIRFILE  LINCOM  1       time 1 -%lu\n"
+      "TIME_HOUR_DIRFILE LINCOM 1       TIME_SEC_DIRFILE 0.000277777 0\n"
+      "TIME_DAY_DIRFILE  LINCOM  1      TIME_SEC_DIRFILE 1.15741E-5  0\n",
+      start_time
     );
   if (write(fd, line, strlen(line)) < 0)
     berror(err, "Error writing to format file\n");

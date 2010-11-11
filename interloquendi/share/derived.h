@@ -1,9 +1,8 @@
 /* derived.h: a list of derived channels
  *
- * This software is copyright (C) 2004,2007 University of Toronto
+ * This software is copyright (C) 2004-2010 University of Toronto
  *
- * This file is part of the BLAST flight code licensed under the GNU
- * General Public License.
+ * This file is part mcp licensed under the GNUGeneral Public License.
  *
  * You should have received a copy of the GNU General Public License
  * along with this software; if not, write to the Free Software Foundation,

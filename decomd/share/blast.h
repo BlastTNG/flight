@@ -1,6 +1,6 @@
 /* blast.h: the BLAST flight code common header
  *
- * This software is copyright (C) 2004, 2005 University of Toronto
+ * This software is copyright (C) 2004-2010 University of Toronto
  *
  * This software is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ void bputs_syslog(buos_t l, const char* s);
 void bprintf(buos_t, const char*, ...) __attribute__((format(printf,2,3)));
 void berror(buos_t, const char*, ...) __attribute__((format(printf,2,3)));
 void bputs(buos_t, const char*);
-void buos_use_func(void (*)(buos_t, const char*));
+void buos_use_func(void (*puts_func)(buos_t, const char*));
 void buos_use_stdio(void);
 void buos_use_syslog(void);
 void buos_disallow_mem(void);

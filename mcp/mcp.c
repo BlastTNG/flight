@@ -61,9 +61,9 @@
 #define BI0_FIFO_MINIMUM (BI0_FIFO_MARGIN / 2)
 
 #ifdef BOLOTEST
-#  define FRAME_MARGIN (-12)
+#define FRAME_MARGIN (-12)
 #else
-#  define FRAME_MARGIN (-2)
+#define FRAME_MARGIN (-2)
 #endif
 
 #define BI0_FRAME_BUFLEN (400)
@@ -85,14 +85,14 @@ static int RxFrameIndex;
 
 extern short int InCharge; /* tx.c */
 extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
-extern pthread_mutex_t mutex;
+extern pthread_mutex_t mutex;  //commands.c
 
 void Pointing();
 void WatchPort(void*);
 void WatchDGPS(void);
 void IntegratingStarCamera(void);
 void ActuatorBus(void);
-void WatchFIFO(void);
+void WatchFIFO(void);          //commands.c
 void FrameFileWriter(void);
 void CompressionWriter(void);
 void StageBus(void);
@@ -129,9 +129,9 @@ struct chat_buf chatter_buffer;
 #define MAX_MPRINT_STRING \
 ( \
   MPRINT_BUFFER_SIZE /* buffer length */ \
-  - 3                /* start-of-line marker */ \
+  - 6                /* 2*(marker+space) + EOL + NUL */ \
   - 24               /* date "YYYY-MM-DD HH:MM:SS.mmm " */ \
-  - 2                /* Newline and NUL */ \
+  - 8                /* thread name "ThName: " */ \
 )
 
 #if (TEMPORAL_OFFSET != 0)
@@ -190,6 +190,9 @@ char* threadNameLookup(int tid)
 }
   
 
+/* I/O function to be used by bputs, bprintf, etc.
+ * it is assigned this purpose in main
+ */
 void mputs(buos_t flag, const char* message) {
   char buffer[MPRINT_BUFFER_SIZE];
   struct timeval t;
@@ -302,11 +305,14 @@ void mputs(buos_t flag, const char* message) {
 
   if (flag == tfatal) {
     if (logfile != NULL) {
-      fprintf(logfile,
-          "$$ Last error is THREAD FATAL.  Thread [%5u] exits.\n", (unsigned)syscall(SYS_gettid));
+      fprintf(logfile, "$$ Last error is THREAD FATAL. Thread [" 
+          TID_NAME_FMT " (%5u)] exits.\n",threadNameLookup(syscall(SYS_gettid)),
+          (unsigned)syscall(SYS_gettid));
       fflush(logfile);
     }
-    printf("$$ Last error is THREAD FATAL.  Thread [%5u] exits.\n", (unsigned)syscall(SYS_gettid));
+    printf("$$ Last error is THREAD FATAL.  Thread [" 
+          TID_NAME_FMT " (%5u)] exits.\n",threadNameLookup(syscall(SYS_gettid)),
+          (unsigned)syscall(SYS_gettid));
     fflush(stdout);
 
     pthread_exit(NULL);
@@ -687,8 +693,8 @@ static void GetCurrents(unsigned short *RxFrame)
 
 #endif
 
-/* fill_Rx_frame: places one 32 bit word into the RxFrame. Returns true on
- * success */
+/* fill_Rx_frame: places one 32 bit word into the RxFrame. 
+ * Returns true on success */
 static int fill_Rx_frame(unsigned int in_data, unsigned short *RxFrame)
 {
   static int n_not_found = 0;
@@ -1153,7 +1159,7 @@ int main(int argc, char *argv[])
           StartupVeto = 0;
           Death = 0;
         } else if (RxFrame[3] != (RxFrameIndex + 1) % FAST_PER_SLOW
-          && RxFrameIndex >= 0) {
+            && RxFrameIndex >= 0) {
           bprintf(err, "System: Frame sequencing error detected: wanted %i, "
           "got %i\n", RxFrameIndex + 1, RxFrame[3]);
         }

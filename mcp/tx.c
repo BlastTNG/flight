@@ -1,8 +1,8 @@
-/* mcp: the BLAST master control program
+/* mcp: the master control program
  *
- * This software is copyright (C) 2002-2006 University of Toronto
- *
- * This file is part of mcp.
+ * tx.c writes data from mcp to the nios (bbc) to include it in frames
+ * 
+ * This software is copyright (C) 2002-20010 University of Toronto
  *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1492,9 +1492,9 @@ void WriteData(struct NiosStruct* addr, unsigned int data, int flush_flag)
 
   if (addr->fast)
     for (i = 0; i < FAST_PER_SLOW; ++i) {
-	RawNiosWrite(addr->niosAddr + i * TxFrameWords[addr->bus],
-	    addr->bbcAddr | (data & 0xffff),
-	    flush_flag && !addr->wide && i == FAST_PER_SLOW - 1);
+      RawNiosWrite(addr->niosAddr + i * TxFrameWords[addr->bus],
+          addr->bbcAddr | (data & 0xffff),
+          flush_flag && !addr->wide && i == FAST_PER_SLOW - 1);
       if (addr->wide)
         RawNiosWrite(addr->niosAddr + 1 + i * TxFrameWords[addr->bus],
             BBC_NEXT_CHANNEL(addr->bbcAddr) | (data >> 16),
@@ -1516,7 +1516,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
   static int firsttime = 1;
   static int index = 0;
 
-  /*** do Controls ***/
+  /*** do fast Controls ***/
   if (firsttime) {
     firsttime = 0;
     frameNumAddr = GetBiPhaseAddr("framenum");
@@ -1566,4 +1566,6 @@ void UpdateBBCFrame(unsigned short *RxFrame)
   CameraTrigger(0); /* isc */
   CameraTrigger(1); /* osc */
 #endif
+  //make sure frame is flushed
+  RawNiosWrite(-1,-1,NIOS_FLUSH);
 }

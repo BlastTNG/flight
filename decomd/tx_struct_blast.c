@@ -1,9 +1,8 @@
 /* tx_struct.c: contains the channel specificiation lists
  *
- * This software is copyright (C) 2002-2005 University of Toronto
+ * This software is copyright (C) 2002-2010 University of Toronto
  *
- * This file is part of the BLAST flight code licensed under the GNU
- * General Public License.
+ * This file is part of mcp licensed under the GNU General Public License.
  *
  * You should have received a copy of the GNU General Public License
  * along with this software; if not, write to the Free Software Foundation,

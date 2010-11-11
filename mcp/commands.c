@@ -1,6 +1,8 @@
 /* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2002-2006 University of Toronto
+ * commands.c: functions for listening to and processing commands
+ *
+ * This software is copyright (C) 2002-2010 University of Toronto
  *
  * This file is part of mcp.
  *

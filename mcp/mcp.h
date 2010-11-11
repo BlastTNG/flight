@@ -1,6 +1,6 @@
-/* mcp: the BLAST master control program
+/* mcp: the master control program
  *
- * This software is copyright (C) 2004-2005 University of Toronto
+ * This software is copyright (C) 2002-2010 University of Toronto
  *
  * This file is part of mcp.
  *

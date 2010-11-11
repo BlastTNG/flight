@@ -1,6 +1,6 @@
 /* blast.c: the BLAST flight code common functions
  *
- * This software is copyright (C) 2004,2006 University of Toronto
+ * This software is copyright (C) 2004-2010 University of Toronto
  *
  * This software is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -199,8 +199,8 @@ void *_reballoc(buos_t l, void* p, size_t s, const char* f, int w,
   bprintf(mem, "realloced %u bytes from %p in %s as %p", (unsigned)s, p, f, q);
 
   if (q == NULL)
-    berror(l, "unable to realloc %u bytes from %p at %s:%i in %s", (unsigned)s, p, n, w,
-        f);
+    berror(l, "unable to realloc %u bytes from %p at %s:%i in %s", (unsigned)s,
+        p, n, w, f);
 
   return q;
 }

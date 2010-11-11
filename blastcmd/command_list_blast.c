@@ -1,6 +1,6 @@
 /* command_list.c: BLAST command specification file
  *
- * This software is copyright (C) 2002-2006 University of Toronto
+ * This software is copyright (C) 2002-20010 University of Toronto
  *
  * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.93 $";
+const char *command_list_serial = "$Revision: 4.94 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -38,7 +38,7 @@ const char *GroupNames[N_GROUPS] = {
   "Miscellaneous",         "ISC Parameters",   "OSC Parameters"
   };
 
-
+//echoes as string; makes enum name the command name string
 #define COMMAND(x) x, #x
 
 struct scom scommands[N_SCOMMANDS] = {
@@ -237,7 +237,6 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_MISC | CONFIRM},
   {COMMAND(reap_south), "ask MCP to reap the south watchdog tickle", 
     GR_MISC | CONFIRM},
-  {COMMAND(xyzzy), "nothing happens here", GR_MISC},
   {COMMAND(xy_panic), "stop XY stage motors immediately", GR_STAGE},
 
   {COMMAND(balance_auto), "Put balance system into auto mode", GR_BAL},
@@ -323,6 +322,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(cam_settrig_ext), "Set external cam trigger mode", GR_SBSC},
   {COMMAND(cam_force_lens), "Forced mode for cam lens moves", GR_SBSC},
   {COMMAND(cam_unforce_lens), "Normal mode for cam lens moves", GR_SBSC},
+  {COMMAND(xyzzy), "nothing happens here", GR_MISC}
+
 };
 
 //TODO field sources for command parameters need updating

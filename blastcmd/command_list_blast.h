@@ -1,7 +1,6 @@
 /* command_list.h: BLAST command specification file definitions
-  isc_use_pyramid,  isc_no_pyramid
  *
- * This software is copyright (C) 2002-2006 University of Toronto
+ * This software is copyright (C) 2002-20010 University of Toronto
  *
  * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
@@ -19,7 +18,7 @@
 
 #define N_SCOMMANDS 229        /* total number of single word cmds */
 #define N_MCOMMANDS 117        /* total number of multiword commands */
-#define MAX_N_PARAMS 12	       /* narsil REALLY likes this to be even */
+#define MAX_N_PARAMS 12        /* narsil REALLY likes this to be even */
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -161,7 +160,7 @@ enum multiCommand {
   cam_bad_pix,	     cam_blob_params,	cam_lens_any,	  cam_lens_move, 
   cam_lens_params,   t_sbsc_set,        hwpr_repeat,      hwpr_define_pos,
   hwpr_goto,	     ants_gps,          hwpr_goto_pot,
-  plugh		  
+  plugh
 };
 
 //32-bit and 64-bit sytems disagree on packing

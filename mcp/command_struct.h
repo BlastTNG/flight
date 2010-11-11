@@ -1,6 +1,6 @@
 /* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2002-2004 University of Toronto
+ * This software is copyright (C) 2002-2010 University of Toronto
  *
  * This file is part of mcp.
  *
@@ -19,6 +19,9 @@
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+
+#ifndef COMMAND_STRUCT_H
+#define COMMAND_STRUCT_H
 
 #include "isc_protocol.h"
 #include "command_list.h"
@@ -437,3 +440,6 @@ int SIndex(enum singleCommand);
 int MIndex(enum multiCommand);
 
 extern struct CommandDataStruct CommandData;
+
+#endif   //COMMAND_STRUCT_H
+

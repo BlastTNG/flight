@@ -1,6 +1,6 @@
 /* channels.h: contains channel list specific prototypes and definitions
  *
- * This software is copyright (C) 2002-2005 University of Toronto
+ * This software is copyright (C) 2002-20010 University of Toronto
  *
  * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
@@ -24,6 +24,8 @@ extern "C" {
 #endif
 
 /* Gains and offsets for ideal analog cards: cal = (counts + B)*M */
+#define M_32PRE (10.24/2147483648.0)
+#define B_32PRE	(2147483648.0)
 #define M_16PRE (10.24/32768.0)
 #define B_16PRE (-32768.0)
 #define M_16T	(4.096E6/2.2E3/32768.0/8.0)  //factor of 8 from maximizing range
