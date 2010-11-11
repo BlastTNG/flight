@@ -1058,6 +1058,10 @@ void MainForm::UpdateData() {
         currCurDir = CurDirInfo.at(currLabel->index);
         currQtLabel = QtData.at(currLabel->labelindex);
         //strncpy (tmp, DataSource->fileName(), 254);
+        if (_dirfile->Name() == NULL) {
+          fprintf(stderr, "Dirfile unavailable.  Aborting here...\n");
+          exit(13);
+        }
         memset(tmp, 0, 255);
         if (readlink(_dirfile->Name(), tmp, 254) == -1)
           strncpy (tmp, _dirfile->Name(), 254);
