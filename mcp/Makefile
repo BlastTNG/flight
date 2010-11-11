@@ -77,7 +77,7 @@ ifeq ($(BOLOTEST),-DBOLOTEST)
 endif
 
 fifo:
-	[ -e /tmp/SIPSS.FIFO ] || mkfifo -m 0777 /tmp/SIPSS.FIFO
+	[ -e /data/etc/SIPSS.FIFO ] || mkfifo -m 0777 /data/etc/SIPSS.FIFO
 
 restart: install
 ifeq ($(shell hostname),south)
