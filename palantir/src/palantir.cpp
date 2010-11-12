@@ -792,6 +792,9 @@ void MainForm::UpdateData() {
   char tmp[255];
   static bool updating = false;
   FILE *curf;
+  static int counter = 0;
+  QPixmap Pixmap;
+  QString screen_shot = "/tmp/palantir.png";
 
   if (startupDecomd) {
     DecomPoller->start(decomdHost, decomdPort);
@@ -1174,6 +1177,14 @@ void MainForm::UpdateData() {
         break;
     }
   }
+
+#if 1
+  counter++;
+  if (counter % 10 == 2) {
+    Pixmap = QPixmap::grabWidget(currQtLabel->parentWidget()->parentWidget());
+    Pixmap.save(screen_shot, "PNG", -1);
+  }
+#endif
   /*  for (currBox = BoxInfo.first(); currBox != NULL;
       currBox = BoxInfo.next()) {
       currQtBox = QtBoxes.at(currBox->boxindex);
