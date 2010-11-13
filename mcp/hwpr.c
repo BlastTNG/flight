@@ -32,7 +32,9 @@
 #include "pointing_struct.h" /* To access ACSData */
 #include "tx.h" /* InCharge */
 
-#define HWPR_READ_WAIT 2
+//#define DEBUG_HWPR
+
+#define HWPR_READ_WAIT 10
 #define HWPR_MOVE_TIMEOUT 3 
 
 static struct hwpr_struct {
@@ -41,7 +43,7 @@ static struct hwpr_struct {
   double pot;
 } hwpr_data;
 
-enum move_type {none=0,enc,pot,ind,step};
+enum move_type {none=0,pot,ind,step};
 enum move_status {not_yet=0,ready,moving,at_overshoot,is_done};
 enum read_pot {no=0,yes,reading,done};
 
@@ -62,8 +64,10 @@ static struct hwpr_control_struct {
 
 void MonitorHWPR(struct ezbus *bus)
 {
+
   EZBus_ReadInt(bus, HWPR_ADDR, "?0", &hwpr_data.pos);
   EZBus_ReadInt(bus, HWPR_ADDR, "?8", &hwpr_data.enc);
+  //TODO why is pot acquired from acsdata? it's in das.c
   hwpr_data.pot = ((double) ACSData.hwpr_pot)/65535.0;
 }
 
@@ -184,7 +188,9 @@ int GetHWPRi(double pot_val)
     //    bprintf(info,"GetHWPRi: i=%i,d_pot=%f,pot_val=%f,CommandData.hwpr.pos[i]=%f,d_pot_min=%f,i_min=%i",i,d_pot,pot_val,CommandData.hwpr.pos[i],d_pot_min,i_min);
   }
 
+#ifdef DEBUG_HWPR
   bprintf(info,"GetHWPRi: Returning %i",i_min);
+#endif
   // i is the closest index to where we are.  return the next index (i+1)%4
   return i_min;
 }
@@ -275,9 +281,10 @@ void ControlHWPR(struct ezbus *bus)
 
     } else if (hwpr_control.read_before == reading) { // we are reading...
 
-      hwpr_control.read_wait_cnt--;
-      bprintf(info,"Waiting : hwpr_control.read_wait_cnt = %i",hwpr_control.read_wait_cnt );
-      if (hwpr_control.read_wait_cnt <= 0) 
+#ifdef DEBUG_HWPR
+      bprintf(info,"Waiting : CommandData.Cryo.hwprPos = %i",CommandData.Cryo.hwprPos );
+#endif
+      if (CommandData.Cryo.hwprPos <= 0) 
 	hwpr_control.read_before = done;
       
     } else { // we are either done or we don't want a reading
@@ -290,18 +297,18 @@ void ControlHWPR(struct ezbus *bus)
 	if (hwpr_control.move_cur == not_yet) {
 	  if (hwpr_control.go == step) {
 
-	    bprintf(info,"We haven't yet started to move!");
 	    
-	    if (((hwpr_data.pot > HWPR_POT_MIN) ||
+	    if (((hwpr_data.pot > HWPR_POT_MIN) &&
 		 (hwpr_data.pot < HWPR_POT_MAX)) &&
 		(CommandData.hwpr.use_pot)) { // use pot
 	      
 	      /* calculate rel move from pot lut*/
-	      bprintf(info,"This is where I calculate the relative step from the pot value.");
 	      hwpr_enc_cur = LutCal(&HwprPotLut, hwpr_data.pot);
+
 	      bprintf(info,"Current pot value: hwpr_data.pot = %f, hwpr_enc_cur = %i", hwpr_data.pot, hwpr_enc_cur);
 	      
 	      /*get index of the closest hwpr_step position, and find the encoder position for the next step pos*/
+
 	      i_step = GetHWPRi(hwpr_data.pot);
 	      i_next_step = (i_step +1)%4;
 	      hwpr_control.i_next_step = i_next_step;
@@ -309,11 +316,14 @@ void ControlHWPR(struct ezbus *bus)
 	      
 	      hwpr_control.rel_move = hwpr_enc_dest - hwpr_enc_cur;
 	      
-	      //	      bprintf(info,"Nearest step position: i = %i, encoder_lut = %i, pot = %f",i_step,hwpr_enc_cur,hwpr_data.pot);
-	      //	      bprintf(info,"Destination step position: i = %i, encoder_lut = %i, pot = %f",hwpr_control.i_next_step,hwpr_enc_dest,CommandData.hwpr.pos[i_next_step]);
+#ifdef DEBUG_HWPR
+	      bprintf(info,"Nearest step position: i = %i, encoder_lut = %i, pot = %f",i_step,hwpr_enc_cur,hwpr_data.pot);
+	      bprintf(info,"Destination step position: i = %i, encoder_lut = %i, pot = %f",hwpr_control.i_next_step,hwpr_enc_dest,CommandData.hwpr.pos[i_next_step]);
+#endif
 	    } else { // don't use pot
 	      
 	      /* assume rel move of ~22.5 degrees*/
+	      //TODO pot brokenness should be written the the frame (in bitfield)
 	      hwpr_control.rel_move = HWPR_DEFAULT_STEP;
 	      bprintf(info,"The pot is dead! Use default HWPR step of %i",hwpr_control.rel_move);
 	    }
@@ -322,7 +332,10 @@ void ControlHWPR(struct ezbus *bus)
 
 
 	  } else if (hwpr_control.go == ind) {
-	    if (((hwpr_data.pot > HWPR_POT_MIN) ||
+	    //TODO I don't like repeated code, and this chunk is VERY similar to the above one
+	    //TODO can set i_next_step depending on mode, and then have common code shared
+	    //TODO or can make a function that calculates move to any new index
+	    if (((hwpr_data.pot > HWPR_POT_MIN) ||  //TODO why is this OR?
 		 (hwpr_data.pot < HWPR_POT_MAX)) &&
 		(CommandData.hwpr.use_pot)) { // use pot
 
@@ -347,7 +360,8 @@ void ControlHWPR(struct ezbus *bus)
 	    hwpr_control.move_cur = ready; 
 
 	  } else if (hwpr_control.go == pot) {
-	    if (((hwpr_data.pot > HWPR_POT_MIN) ||
+	    //TODO as above, if you're sufficiently crafty, much of this code could be shared with the above two modes
+	    if (((hwpr_data.pot > HWPR_POT_MIN) ||  //TODO why is this OR?
 		 (hwpr_data.pot < HWPR_POT_MAX)) &&
 		(CommandData.hwpr.use_pot)) { // use pot
 
@@ -369,10 +383,6 @@ void ControlHWPR(struct ezbus *bus)
 
 	    hwpr_control.move_cur = ready; 
 
-	  } else if (hwpr_control.go == enc) {
-	    bprintf(info,"Go to encoder position code isn't written yet. Sorry");
-	    CommandData.hwpr.mode = HWPR_SLEEP; 
-	    return; // break out of loop!
 	  } else {
 	    bprintf(info,"This state should be impossible.");
 	    CommandData.hwpr.mode = HWPR_SLEEP; 
@@ -380,6 +390,7 @@ void ControlHWPR(struct ezbus *bus)
 	  }
 
 	  /*** Once we are ready to move send ActBus Command ***/
+	  //TODO putting this in an else means it won't execute until next time through all this. Why not now?
 	} else if (hwpr_control.move_cur == ready) {
 
 	  /* Is the hwpr move negative?  
@@ -411,6 +422,8 @@ void ControlHWPR(struct ezbus *bus)
 
 	  //	  bprintf(info,"ControlHWPR: We are moving! hwpr_data.enc = %i, last_enc = %i", hwpr_data.enc, last_enc);
 
+	  //TODO, you have to be careful with this, sometimes mcp gets into a state where the encoders aren't read out for a while (esp on palestine)
+	  //TODO though maybe it's okay since such cases probably cause this whole thread to not execute
 	  if (hwpr_control.stop_cnt >=HWPR_MOVE_TIMEOUT) {
 	    bprintf(info,"We've stopped!");
 
@@ -447,6 +460,7 @@ void ControlHWPR(struct ezbus *bus)
 	      
 	    } else if (hwpr_control.read_after == reading) { // we are reading...
 	      
+	      //TODO why don't you just check CommandData.Cryo.hwprPos?
 	      hwpr_control.read_wait_cnt--;
 	      if (hwpr_control.read_wait_cnt <= 0) 
 		hwpr_control.read_after = done;
