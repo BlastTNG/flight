@@ -41,6 +41,14 @@
 #include "tx.h"
 #include "hwpr.h"
 
+/* TODO
+ * rounding error on ENC fields (can't set to 0)
+ * timing error: trim wait takes ~15minutes to settle rather than 15s
+ * actuator moves are not by the exact amount desired
+ *
+ * lock doesn't always have to correct state
+ */
+
 void nameThread(const char*);		/* mcp.c */
 double LockPosition(double elevation);	/* commands.c */
 extern short int InCharge;		/* tx.c */
@@ -373,8 +381,12 @@ static void GetLockData()
 static void SetLockState(int nic)
 {
   static int firsttime = 1;
+  /* TODO change me back when fixing lock issues
   int pot;
   unsigned int state;
+  */
+  int pot = lock_data.adc[1];
+  unsigned int state = lock_data.state;
 
   static struct BiPhaseStruct* potLockAddr;
   static struct BiPhaseStruct* stateLockAddr;
@@ -386,8 +398,14 @@ static void SetLockState(int nic)
   }
 
   //get lock data
+  /* TODO change me back when fixing lock issues
   pot = slow_data[potLockAddr->index][potLockAddr->channel];
   state = slow_data[stateLockAddr->index][stateLockAddr->channel];
+  */
+  if (nic) {
+    pot = slow_data[potLockAddr->index][potLockAddr->channel];
+    state = slow_data[stateLockAddr->index][stateLockAddr->channel];
+  }
 
   //set the EZBus move parameters
   EZBus_SetVel(&bus, id[LOCKNUM], CommandData.actbus.lock_vel);
@@ -730,7 +748,7 @@ static int filterLVDT(int num, int data)
   lvdt_sum[num] += (data - lvdt_buf[num][ibuf]);
   lvdt_buf[num][ibuf] = data;
   ibuf = (ibuf + 1) % LVDT_FILT_LEN;
-  return lvdt_sum[num]/LVDT_FILT_LEN;
+  return (int)((double)lvdt_sum[num]/LVDT_FILT_LEN + 0.5);
 }
 
 void StoreActBus(void)
@@ -846,9 +864,12 @@ void StoreActBus(void)
   lvdt_filt[0] = (int)((double)lvdt_filt[0] * LVDT63_ADC_TO_ENC + LVDT63_ZERO);
   lvdt_filt[1] = (int)((double)lvdt_filt[1] * LVDT64_ADC_TO_ENC + LVDT64_ZERO);
   lvdt_filt[2] = (int)((double)lvdt_filt[2] * LVDT65_ADC_TO_ENC + LVDT65_ZERO);
-  act_data[0].lvdt = (-lvdt_filt[2] + 2 * lvdt_filt[0] + 2 * lvdt_filt[1]) / 3;
-  act_data[1].lvdt = (-lvdt_filt[0] + 2 * lvdt_filt[1] + 2 * lvdt_filt[2]) / 3;
-  act_data[2].lvdt = (-lvdt_filt[1] + 2 * lvdt_filt[2] + 2 * lvdt_filt[0]) / 3;
+  act_data[0].lvdt = (int)(
+      (double)(-lvdt_filt[2] + 2 * lvdt_filt[0] + 2 * lvdt_filt[1]) / 3.0);
+  act_data[1].lvdt = (int)(
+      (double)(-lvdt_filt[0] + 2 * lvdt_filt[1] + 2 * lvdt_filt[2]) / 3.0);
+  act_data[2].lvdt = (int)(
+      (double)(-lvdt_filt[1] + 2 * lvdt_filt[2] + 2 * lvdt_filt[0]) / 3.0);
 
   if (CommandData.actbus.off) {
     if (CommandData.actbus.off > 0) CommandData.actbus.off--;
