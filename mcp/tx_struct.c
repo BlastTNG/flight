@@ -704,9 +704,9 @@ struct ChannelStruct SlowChannels[] = {
   {"frict_term_uf_piv",'w',LOOP8,18,     2.0/32767.0,              0.0,   's', U_NONE}, // For debugging remove later
 
   {"az_gy",        'w',   LOOP8, 19,       20.0/32768.0,             0.0, 's', U_V_DPS},
-  {"offset_0_act", 'w',   LOOP8, 20,                1.0,             0.0, 's', U_NONE},
-  {"offset_1_act", 'w',   LOOP8, 21,                1.0,             0.0, 's', U_NONE},
-  {"offset_2_act", 'w',   LOOP8, 22,                1.0,             0.0, 's', U_NONE},
+  {"offset_0_act", 'w',   LOOP8, 20,                1.0,             0.0, 'u', U_NONE},
+  {"offset_1_act", 'w',   LOOP8, 21,                1.0,             0.0, 'u', U_NONE},
+  {"offset_2_act", 'w',   LOOP8, 22,                1.0,             0.0, 'u', U_NONE},
   {"goal_0_act",   'w',   LOOP8, 23,                1.0,             0.0, 's', U_NONE},
   {"goal_1_act",   'w',   LOOP8, 24,                1.0,             0.0, 's', U_NONE},
   {"goal_2_act",   'w',   LOOP8, 25,                1.0,             0.0, 's', U_NONE},
