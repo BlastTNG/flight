@@ -180,6 +180,8 @@ union DerivedUnion DerivedChannels[] = {
 
   /* charge controller (CC) faults and alarms */
 
+  COMMENT("Charge Controller Bitfields"),
+
   BITFIELD("fault_cc",
       "F_OVERCURRENT_CC", 
       "F_FET_SHORT_CC", 
@@ -258,17 +260,12 @@ union DerivedUnion DerivedChannels[] = {
 
   //TODO flags_act will probably change
   BITFIELD("flags_act",
-      "LOST_ACT",
-      "DR_POS_BAD_ACT",
-      "DR_ENC_BAD_ACT",
-      "ENC_POS_BAD_ACT",
-      "DR_LVDT_BAD_ACT",
-      "ENC_LVDT_BAD_ACT",
-      "POS_LVDT_BAD_ACT",
-      "BAD_MOVE_ACT",
-      "FAULT_0_ACT",
-      "FAULT_1_ACT",
-      "FAULT_2_ACT"
+      "TRIM_WAIT_ACT",
+      "TRIMMED_ACT",
+      "BUSY_0_ACT",
+      "BUSY_1_ACT",
+      "BUSY_2_ACT",
+      "BAD_MOVE_ACT"
       ),
 
   BITFIELD("stat_1_el",
