@@ -1,8 +1,8 @@
-/* mcp: the Spider master control program
+/* mcp: the BLAST master control program
  *
- * mcp.h
- * 
- * This software is copyright (C) 2002-2007 University of Toronto
+ * This software is copyright (C) 2004-2005 University of Toronto
+ *
+ * This file is part of mcp.
  *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,19 +30,31 @@ extern unsigned short* slow_data[FAST_PER_SLOW];
 extern unsigned int RxFrameFastSamp;
 
 extern time_t mcp_systime(time_t *t);
-extern unsigned short* tdrss_data[2];
-extern unsigned int tdrss_index;
-extern pthread_mutex_t tdrss_lock;
+extern struct frameBuffer hiGain_buffer;
 
-#define GETREADINDEX(i) ((i+2) % 3)  //before write index
-#define INC_INDEX(i) ((i+1) % 3)     //next write index
+#define GETREADINDEX(i) ((i+2) % 3)  /* i - 1 modulo 3 */
+#define INC_INDEX(i) ((i + 1) %3)    /* i + 1 modulo 3 */
+
+//#define USE_FIFO_CMD
+
+struct chat_buf {
+  char msg[4][2 * FAST_PER_SLOW]; /* 4 buffers of FAST_PER_SLOW BLASTbus words of characters */
+  int reading; /* the buffer we're currently reading from */
+  int writing; /* the buffer we're currently writing to */
+};
 
 #define TEMPORAL_OFFSET 0
 
 #define MAX_LINE_LENGTH 1024
 
+#ifdef BOLOTEST
+#define USE_FIFO_CMD
+#endif
+
 #ifdef DEBUG
 #warning "Debugging set."
 #endif
+
+#define USE_XY_THREAD
 
 #endif

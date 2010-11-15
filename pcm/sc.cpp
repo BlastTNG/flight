@@ -33,26 +33,31 @@
 extern "C" {
 #include "blast.h"
 #include "tx.h"
-#include "command_struct.h"
-}
-#include "blast.h"
 #include "channels.h"
 #include "pointing_struct.h"
 #include "mcp.h"
-#include "camcommunicator.h"
-#include "camstruct.h"
 #include "command_struct.h"
+}
+#include "sbsccommunicator.h"
+#include "sbsc_protocol.h"
 
 //allow any host to be the star camera
-#define CAM_SERVERNAME "aragog.spider"
+#define CAM_SERVERNAME "192.168.1.11"
 
-static CamCommunicator* camComm;
+//TODO check that this is correct
+#define SBSC_SERIAL "08073507"
+
+extern "C" void nameThread(const char*);  /* in mcp.c */
+
+extern "C" short int InCharge;		  /* in tx.c */
+
+static SBSCCommunicator* camComm;
 static pthread_t camcomm_id;
 
 static void* camReadLoop(void* arg);
 static string parseReturn(string rtnStr);
 
-static StarcamReturn cam1Rtn[3];
+static SBSCReturn camRtn[3];
 static short int i_cam = 0; //read index in above buffer
 
 extern "C" {
@@ -60,9 +65,10 @@ extern "C" {
 /*
  * used to make commanding available to rest of mcp
  */
-int sendCamCommand(const char *cmd)
+int sendSBSCCommand(const char *cmd)
 {
   //this is okay unless I want to handle link dying during transmission
+  if (!InCharge) return 0;
   return camComm->sendCommand(cmd);
 }
 
@@ -71,10 +77,10 @@ int sendCamCommand(const char *cmd)
  * open a connection the the star camera computer
  * also creates the communications thread
  */
-void openCamera()
+void openSBSC()
 {
-  bprintf(startup, "Starcam: connecting to the star camera");
-  camComm = new CamCommunicator();
+  bprintf(info, "connecting to the SBSC");
+  camComm = new SBSCCommunicator();
   pthread_create(&camcomm_id, NULL, &camReadLoop, NULL);
 }
 
@@ -84,8 +90,8 @@ void openCamera()
  */
 void cameraFields()
 {
-  static bool firsttime = true;
-  StarcamReturn* sc1 = NULL;
+  static int firsttime = 1;
+  SBSCReturn* sbsc = NULL;
   static bool unrecFlag = false;
 
   static NiosStruct* forceAddr = NULL;
@@ -98,52 +104,51 @@ void cameraFields()
   static NiosStruct* threshAddr = NULL;
   static NiosStruct* blobMdistAddr = NULL;
 
-  static NiosStruct* sc1FrameAddr = NULL;
-  static NiosStruct* sc1MeanAddr = NULL;
-  static NiosStruct* sc1SigmaAddr = NULL;
-  static NiosStruct* sc1TimeAddr = NULL;
-  static NiosStruct* sc1UsecAddr = NULL;
-  static NiosStruct* sc1CcdTempAddr = NULL;
-  static NiosStruct* sc1NumBlobsAddr = NULL;
+  static NiosStruct* sbscFrameAddr = NULL;
+  static NiosStruct* sbscMeanAddr = NULL;
+  static NiosStruct* sbscSigmaAddr = NULL;
+  static NiosStruct* sbscTimeAddr = NULL;
+  static NiosStruct* sbscUsecAddr = NULL;
+  static NiosStruct* sbscCcdTempAddr = NULL;
+  static NiosStruct* sbscNumBlobsAddr = NULL;
 
-  static NiosStruct* sc1BlobX[15];
-  static NiosStruct* sc1BlobY[15];
-  static NiosStruct* sc1BlobF[15];
-  static NiosStruct* sc1BlobS[15];
+  static NiosStruct* sbscBlobX[3];
+  static NiosStruct* sbscBlobY[3];
+  static NiosStruct* sbscBlobF[3];
+  static NiosStruct* sbscBlobS[3];
 
   //initialization
   if (firsttime) {
-    forceAddr = GetNiosAddr("sc_force");
-    expIntAddr = GetNiosAddr("sc_exp_int");
-    expTimeAddr = GetNiosAddr("sc_exp_time");
-    focResAddr = GetNiosAddr("sc_foc_res");
-    moveTolAddr = GetNiosAddr("sc_move_tol");
-    maxBlobAddr = GetNiosAddr("sc_maxblob");
-    gridAddr = GetNiosAddr("sc_grid");
-    threshAddr = GetNiosAddr("sc_thresh");
-    blobMdistAddr = GetNiosAddr("sc_mdist");
+    firsttime = 0;
+    forceAddr = GetNiosAddr("force_sbsc");
+    expIntAddr = GetNiosAddr("exp_int_sbsc");
+    expTimeAddr = GetNiosAddr("exp_time_sbsc");
+    focResAddr = GetNiosAddr("foc_res_sbsc");
+    moveTolAddr = GetNiosAddr("move_tol_sbsc");
+    maxBlobAddr = GetNiosAddr("maxblob_sbsc");
+    gridAddr = GetNiosAddr("grid_sbsc");
+    threshAddr = GetNiosAddr("thresh_sbsc");
+    blobMdistAddr = GetNiosAddr("mdist_sbsc");
 
-    sc1FrameAddr = GetNiosAddr("sc1_frame");
-    sc1MeanAddr = GetNiosAddr("sc1_mapmean");
-    sc1SigmaAddr = GetNiosAddr("sc1_mapsigma");
-    sc1TimeAddr = GetNiosAddr("sc1_sec");
-    sc1UsecAddr = GetNiosAddr("sc1_usec");
-    sc1CcdTempAddr = GetNiosAddr("sc1_ccd_t");
-    sc1NumBlobsAddr = GetNiosAddr("sc1_numblobs");
+    sbscFrameAddr = GetNiosAddr("frame_sbsc");
+    sbscMeanAddr = GetNiosAddr("mapmean_sbsc");
+    sbscSigmaAddr = GetNiosAddr("mapsigma_sbsc");
+    sbscTimeAddr = GetNiosAddr("sec_sbsc");
+    sbscUsecAddr = GetNiosAddr("usec_sbsc");
+    sbscCcdTempAddr = GetNiosAddr("ccd_t_sbsc");
+    sbscNumBlobsAddr = GetNiosAddr("numblobs_sbsc");
 
-    for (int i=0; i<15; i++) {
+    for (int i=0; i<3; i++) {
       char buf[99];
-      sprintf(buf, "sc1_blob%02d_x", i);
-      sc1BlobX[i] = GetNiosAddr(buf);
-      sprintf(buf, "sc1_blob%02d_y", i);
-      sc1BlobY[i] = GetNiosAddr(buf);
-      sprintf(buf, "sc1_blob%02d_f", i);
-      sc1BlobF[i] = GetNiosAddr(buf);
-      sprintf(buf, "sc1_blob%02d_s", i);
-      sc1BlobS[i] = GetNiosAddr(buf);
+      sprintf(buf, "blob%02d_x_sbsc", i);
+      sbscBlobX[i] = GetNiosAddr(buf);
+      sprintf(buf, "blob%02d_y_sbsc", i);
+      sbscBlobY[i] = GetNiosAddr(buf);
+      sprintf(buf, "blob%02d_f_sbsc", i);
+      sbscBlobF[i] = GetNiosAddr(buf);
+      sprintf(buf, "blob%02d_s_sbsc", i);
+      sbscBlobS[i] = GetNiosAddr(buf);
     }
-
-    firsttime = false;
   }
 
   WriteData(forceAddr, CommandData.cam.forced, NIOS_QUEUE);
@@ -157,37 +162,37 @@ void cameraFields()
   WriteData(blobMdistAddr, CommandData.cam.minBlobDist, NIOS_QUEUE);
 
   //persistently identify cameras by serial number (camID)
-  if (cam1Rtn[i_cam].camID == "060400935") {
-    sc1 = &cam1Rtn[i_cam];
+  if (camRtn[i_cam].camID == SBSC_SERIAL)  {
+    sbsc = &camRtn[i_cam];
     unrecFlag = false;
   }
   else if (!unrecFlag) { //don't keep printing same error
-    bprintf(err, "Starcam: unrecognized camera ID");
-    sc1 = NULL;
+    bprintf(err, "unrecognized camera ID");
+    sbsc = NULL;
     unrecFlag = true;
   }
 
-  if (sc1 != NULL) {
-    WriteData(sc1FrameAddr, sc1->frameNum, NIOS_QUEUE);
-    WriteData(sc1MeanAddr, (int)sc1->mapmean, NIOS_QUEUE);
-    WriteData(sc1SigmaAddr, (int)(sc1->sigma*10), NIOS_QUEUE);
-    WriteData(sc1TimeAddr, sc1->imagestarttime.tv_sec, NIOS_QUEUE);
-    WriteData(sc1UsecAddr, sc1->imagestarttime.tv_usec, NIOS_QUEUE);
+  if (sbsc != NULL) {
+    WriteData(sbscFrameAddr, sbsc->frameNum, NIOS_QUEUE);
+    WriteData(sbscMeanAddr, (int)sbsc->mapmean, NIOS_QUEUE);
+    WriteData(sbscSigmaAddr, (int)(sbsc->sigma*10), NIOS_QUEUE);
+    WriteData(sbscTimeAddr, sbsc->imagestarttime.tv_sec, NIOS_QUEUE);
+    WriteData(sbscUsecAddr, sbsc->imagestarttime.tv_usec, NIOS_QUEUE);
     //it looks like this is in deg C. just scale to get better resolution
-    WriteData(sc1CcdTempAddr, (int)(sc1->ccdtemperature*100), NIOS_QUEUE);
-    WriteData(sc1NumBlobsAddr, sc1->numblobs, NIOS_QUEUE);
+    WriteData(sbscCcdTempAddr, (int)(sbsc->ccdtemperature*100), NIOS_QUEUE);
+    WriteData(sbscNumBlobsAddr, sbsc->numblobs, NIOS_QUEUE);
 
-    for (int i=0; i<sc1->numblobs; i++)
+    for (int i=0; i<sbsc->numblobs; i++)
     {
       //TODO this needs to be tested in images where there are blobs
-      WriteData(sc1BlobX[i],(unsigned int)(sc1->x[i]/CAM_WIDTH*SHRT_MAX),
+      WriteData(sbscBlobX[i],(unsigned int)(sbsc->x[i]/CAM_WIDTH*SHRT_MAX),
 	  NIOS_QUEUE);
-      WriteData(sc1BlobY[i],(unsigned int)(sc1->y[i]/CAM_WIDTH*SHRT_MAX),
+      WriteData(sbscBlobY[i],(unsigned int)(sbsc->y[i]/CAM_WIDTH*SHRT_MAX),
 	  NIOS_QUEUE);
-      WriteData(sc1BlobF[i], (unsigned int)sc1->flux[i], NIOS_QUEUE);
-      unsigned int snr = (sc1->snr[i] >= SHRT_MAX / 100.0) ? 
-	SHRT_MAX : (unsigned int)sc1->snr[i]*100;
-      WriteData(sc1BlobS[i], snr, NIOS_QUEUE);
+      WriteData(sbscBlobF[i], (unsigned int)sbsc->flux[i], NIOS_QUEUE);
+      unsigned int snr = (sbsc->snr[i] >= SHRT_MAX / 100.0) ? 
+	SHRT_MAX : (unsigned int)sbsc->snr[i]*100;
+      WriteData(sbscBlobS[i], snr, NIOS_QUEUE);
     }
   }
 
@@ -196,26 +201,30 @@ void cameraFields()
 }       //extern "C"
 
 /*
- * wrapper for the read loop in CamCommunicator
+ * wrapper for the read loop in sbsccommunicator
  * mcp main should make a thread for this
  */
 static void* camReadLoop(void* arg)
 {
+  nameThread("SBSC");
+  bputs(startup, "startup\n");
   bool errorshown = false;
+
   while (camComm->openClient(CAM_SERVERNAME) < 0) {
     if (!errorshown) {
-      bprintf(err, "Starcam: failed to accept star camera connection");
+      bprintf(err, "failed to accept camera connection");
       errorshown = true;
     }
   }
-  bprintf(startup, "Starcam: talking to star camera");
+  bprintf(startup, "talking to camera");
 
-  sendCamCommand("Oconf");  //request configuration data
+  sendSBSCCommand("Oconf");  //request configuration data
 
   while(true) {
     camComm->readLoop(&parseReturn);
-    berror(err, "Starcam: readLoop returned. Restarting.");
+    //berror(err, "readLoop returned. Restarting.");
     //returns on failed syscall in communicating.
+    sleep(1);	//catchall for varous busy-waiting scenarios
   }
 
   return NULL;
@@ -228,35 +237,37 @@ static void* camReadLoop(void* arg)
 static string parseReturn(string rtnStr)
 {
   /* debugging only
-  bprintf(info, "Starcam: return string: %s", rtnStr.c_str());
-  */
-  if (rtnStr.find("<str>", 0) == 0) //respone is string
+     bprintf(info, "return string: %s", rtnStr.c_str());
+     */
+  //if (rtnStr.find("<str>", 0) == 0) //response is string
+  if (rtnStr.substr(0,5) == "<str>") //response is string
   {
     string Rstr = rtnStr.substr(5, rtnStr.size() - 11);
 
     if (Rstr[0] == 'E') //it is an error
-      bprintf(err, "Starcam: %s", Rstr.substr(6, Rstr.size()-6).c_str());
+      bprintf(err, "%s", Rstr.substr(6, Rstr.size()-6).c_str());
 
-    else if (Rstr.find("<conf>", 0) == 0) //contains config data
+    //else if (Rstr.find("<conf>", 0) == 0) //contains config data
+    else if (Rstr.substr(0,6) == "<conf>") //contains config data
     {
       Rstr = Rstr.substr(6, Rstr.size()-6);
       istringstream sin;
       sin.str(Rstr);
       double temp;  //value sent for expTime is a double
       sin >> CommandData.cam.expInt
-	  >> temp
-	  >> CommandData.cam.focusRes
-	  >> CommandData.cam.moveTol
-	  >> CommandData.cam.maxBlobs
-	  >> CommandData.cam.grid
-	  >> CommandData.cam.threshold
-	  >> CommandData.cam.minBlobDist;
+	>> temp
+	>> CommandData.cam.focusRes
+	>> CommandData.cam.moveTol
+	>> CommandData.cam.maxBlobs
+	>> CommandData.cam.grid
+	>> CommandData.cam.threshold
+	>> CommandData.cam.minBlobDist;
       CommandData.cam.expTime = (int)(temp * 1000);
     }
     //otherwise it is success notice for another command
 
   } else { //response is exposure data
-    camComm->interpretReturn(rtnStr, &cam1Rtn[(i_cam+1)%2]);
+    camComm->interpretReturn(rtnStr, &camRtn[(i_cam+1)%2]);
     i_cam = (i_cam+1)%2;
   }
   return "";  //doesn't send a response back to camera

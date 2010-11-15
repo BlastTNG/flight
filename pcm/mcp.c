@@ -1,8 +1,8 @@
-/* mcp: the Spider master control program
+/* mcp: the BLAST master control program
  *
- * mcp.c: contains the main loop and creates all threads used by mcp
+ * This software is copyright (C) 2002-2006 University of Toronto
  *
- * This software is copyright (C) 2002-2007 University of Toronto
+ * This file is part of mcp.
  *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -36,19 +37,19 @@
 #include <math.h>
 #include <time.h>
 #include <sys/time.h>
+#include <sys/syscall.h>
 #include "bbc_pci.h"
 
 #include "blast.h"
-#include "mcp.h"
-#include "channels.h"
-#include "tx.h"
 #include "command_list.h"
 #include "command_struct.h"
-#include "slow_dl.h"
-#include "pointing_struct.h"
 #include "crc.h"
-
-# define NOSTARCAM
+#include "mcp.h"
+#include "pointing_struct.h"
+#include "slow_dl.h"
+#include "starpos.h"
+#include "channels.h"
+#include "tx.h"
 
 #define BBC_EOF      (0xffff)
 #define BBC_BAD_DATA (0xfffffff0)
@@ -59,70 +60,92 @@
 #define BI0_FIFO_MARGIN 8750 /* bytes = 7 frames */
 #define BI0_FIFO_MINIMUM (BI0_FIFO_MARGIN / 2)
 
-#define FRAME_MARGIN (-2)
+#ifdef BOLOTEST
+#  define FRAME_MARGIN (-12)
+#else
+#  define FRAME_MARGIN (-2)
+#endif
 
 #define BI0_FRAME_BUFLEN (400)
 /* Define global variables */
 int bbc_fp = -1;
 unsigned int debug = 0;
-short int SamIAm;
+short int SouthIAm;
+struct ACSDataStruct ACSData;
+
 unsigned int RxFrameFastSamp;
 unsigned short* slow_data[FAST_PER_SLOW];
 pthread_t watchdog_id;
 
+int StartupVeto = STARTUP_VETO_LENGTH + 1;
+
 static int bi0_fp = -2;
-static int StartupVeto = STARTUP_VETO_LENGTH + 1;
 static int Death = -STARTUP_VETO_LENGTH * 2;
 static int RxFrameIndex;
 
+extern short int InCharge; /* tx.c */
 extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
+extern pthread_mutex_t mutex;
 
-extern pthread_mutex_t mutex; //commands.c
+void Pointing();
+void WatchPort(void*);
+void WatchDGPS(void);
+void IntegratingStarCamera(void);
+void ActuatorBus(void);
+void WatchFIFO(void);
+void FrameFileWriter(void);
+void CompressionWriter(void);
+void StageBus(void);
+void openSBSC(void);
 
-struct ReactWheelStruct RWData;
-#define RW_FILTER_LEN 20
- 
-#ifdef HAVE_ACS
-struct ACSDataStruct ACSData;
-void Pointing();    //pointing.c
-void openMotors(); //motors.c
-void closeMotors();
-void openCamera();  //starcamera.c
-#endif
-
-void WatchFIFO();   //commands.c
-void WatchPort(void* param);
-
-void FrameFileWriter(void);  //framefile.c
 void InitialiseFrameFile(char);
 void dirFileWriteFrame(unsigned short *RxFrame);
 void pushDiskFrame(unsigned short *RxFrame);
 
+void SunSensor(void);
+
+void InitSched();
+
 static FILE* logfile = NULL;
 
-static struct {
+#ifndef BOLOTEST
+struct frameBuffer {
   int i_in;
   int i_out;
   unsigned short *framelist[BI0_FRAME_BUFLEN];
-} bi0_buffer;
+};
+
+static struct frameBuffer bi0_buffer;
+struct frameBuffer hiGain_buffer;
+
+#endif
 
 time_t biphase_timer;
 int biphase_is_on = 0;
+
+struct chat_buf chatter_buffer;
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
 ( \
   MPRINT_BUFFER_SIZE /* buffer length */ \
   - 3                /* start-of-line marker */ \
-  - 31               /* date "YYYY-MM-DD HH:MM:SS.mmmmmm GMT " */ \
-  - 4                /* marker again plus NUL */ \
+  - 24               /* date "YYYY-MM-DD HH:MM:SS.mmm " */ \
+  - 2                /* Newline and NUL */ \
 )
 
 #if (TEMPORAL_OFFSET != 0)
 #warning TEMPORAL_OFFSET NON-ZERO; FIX FOR FLIGHT
 #endif
 
-/* gives system time (in s) */
+#ifndef BOLOTEST
+void openMotors();    // motors.c
+void closeMotors();
+
+void startChrgCtrl(); // chrgctrl.c
+void endChrgCtrl();
+#endif
+
 time_t mcp_systime(time_t *t) {
   time_t the_time = time(NULL) + TEMPORAL_OFFSET;
   if (t)
@@ -131,9 +154,42 @@ time_t mcp_systime(time_t *t) {
   return the_time;
 }
 
-/* I/O function to be used by bputs, bprintf, etc.
- * it is assigned this purpose in main
- */
+/* tid to name lookup list */
+/* TODO setting/reading tid names not quite thread safe. is this a problem? */
+#define TID_NAME_LEN  6	      //always change with TID_NAME_FMT
+#define TID_NAME_FMT  "%6s"   //always change with TID_NAME_LEN
+struct tid_name {
+  int tid;
+  char name[TID_NAME_LEN+1];
+  struct tid_name* next;
+};
+
+struct tid_name* threadNames = NULL;
+
+void nameThread(const char* name)
+{
+  struct tid_name* new_node = (struct tid_name*)malloc(sizeof(struct tid_name));
+  new_node->tid = syscall(SYS_gettid);
+  strncpy(new_node->name, name, TID_NAME_LEN);
+  new_node->name[TID_NAME_LEN] = '\0';
+  new_node->next = threadNames;
+  threadNames = new_node;
+  bprintf(startup, "New thread name for tid %d", new_node->tid);
+}
+
+char failed_lookup_buffer[TID_NAME_LEN+1];
+char* threadNameLookup(int tid)
+{
+  struct tid_name* p;
+  for(p=threadNames; p->next != NULL; p = p->next)
+    if (p->tid == tid) return p->name;
+  //not found, just print tid
+  snprintf(failed_lookup_buffer, TID_NAME_LEN, "%u", (unsigned)tid);
+  failed_lookup_buffer[TID_NAME_LEN] = '\0';
+  return failed_lookup_buffer;
+}
+  
+
 void mputs(buos_t flag, const char* message) {
   char buffer[MPRINT_BUFFER_SIZE];
   struct timeval t;
@@ -151,32 +207,32 @@ void mputs(buos_t flag, const char* message) {
 
   switch(flag) {
     case err:
-      strcpy(marker, "** ");
+      strcpy(marker, "* ");
       break;
     case fatal:
-      strcpy(marker, "!! ");
+      strcpy(marker, "! ");
       break;
     case info:
-      strcpy(marker, "-- ");
+      strcpy(marker, "- ");
       break;
     case sched:
-      strcpy(marker, "## ");
+      strcpy(marker, "# ");
       break;
     case startup:
-      strcpy(marker, ">> ");
+      strcpy(marker, "> ");
       break;
     case tfatal:
-      strcpy(marker, "$$ ");
+      strcpy(marker, "$ ");
       break;
     case warning:
-      strcpy(marker, "== ");
+      strcpy(marker, "= ");
       break;
     case mem:
       return;  /* don't record mem messages at all */
-      strcpy(marker, "mm ");
+      strcpy(marker, "m ");
       break;
     default:
-      strcpy(marker, "?? ");
+      strcpy(marker, "? ");
       break;
   }
   strcpy(buffer, marker);
@@ -193,12 +249,12 @@ void mputs(buos_t flag, const char* message) {
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
-  sprintf(bufstart, ".%06li GMT ", t.tv_usec);
+  sprintf(bufstart, ".%03li ", t.tv_usec/1000);
   strcat(buffer, marker);
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
-  sprintf(bufstart, "[%5i] ", getpid());
+  sprintf(bufstart, TID_NAME_FMT ": ", threadNameLookup(syscall(SYS_gettid)));
 
   for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
 
@@ -247,16 +303,17 @@ void mputs(buos_t flag, const char* message) {
   if (flag == tfatal) {
     if (logfile != NULL) {
       fprintf(logfile,
-          "$$ Last error is THREAD FATAL.  Thread [%5i] exits.\n", getpid());
+          "$$ Last error is THREAD FATAL.  Thread [%5u] exits.\n", (unsigned)syscall(SYS_gettid));
       fflush(logfile);
     }
-    printf("$$ Last error is THREAD FATAL.  Thread [%5i] exits.\n", getpid());
+    printf("$$ Last error is THREAD FATAL.  Thread [%5u] exits.\n", (unsigned)syscall(SYS_gettid));
     fflush(stdout);
 
     pthread_exit(NULL);
   }
 }
 
+#ifndef BOLOTEST
 static void FillSlowDL(unsigned short *RxFrame)
 {
   int i;
@@ -281,131 +338,357 @@ static void FillSlowDL(unsigned short *RxFrame)
   }
 }
 
+static void SensorReader(void)
+{
+  int data;
+  int nr;
+  struct statvfs vfsbuf;
+  int sensor_error = 0;
 
-#ifdef HAVE_ACS
-/* fills ACSData struct from current frame */
+  FILE *stream;
+
+  nameThread("Sensor");
+  bputs(startup, "Startup\n");
+
+  while (1) {
+    if ((stream = fopen("/sys/bus/i2c/devices/0-002d/temp1_input", "r"))
+        != NULL) {
+      if ((nr = fscanf(stream, "%i\n", &data)) == 1)
+        CommandData.temp1 = data / 10;
+      fclose(stream);
+    } else {
+      if (!sensor_error)
+        berror(warning, "Cannot read temp1 from I2C bus");
+      sensor_error = 5;
+    }
+
+    if ((stream = fopen("/sys/bus/i2c/devices/0-002d/temp2_input", "r"))
+        != NULL) {
+      if ((nr = fscanf(stream, "%i\n", &data)) == 1)
+        CommandData.temp2 = data / 10;
+      fclose(stream);
+    } else {
+      if (!sensor_error)
+        berror(warning, "Cannot read temp2 from I2C bus");
+      sensor_error = 5;
+    }
+
+    if ((stream = fopen("/sys/bus/i2c/devices/0-002d/temp3_input", "r"))
+        != NULL) {
+      if ((nr = fscanf(stream, "%i\n", &data)) == 1)
+        CommandData.temp3 = data / 10;
+      fclose(stream);
+    } else {
+      if (!sensor_error)
+        berror(warning, "Cannot read temp3 from I2C bus");
+      sensor_error = 5;
+    }
+
+    if (statvfs("/data", &vfsbuf))
+      berror(warning, "Cannot stat filesystem");
+    else {
+      /* vfsbuf.f_bavail is the # of blocks, the blocksize is vfsbuf.f_bsize
+       * which, in this case is 4096 bytes, so CommandData.df ends up in units
+       * of 4000kb */
+      CommandData.df = vfsbuf.f_bavail / 1000;
+    }
+
+    if (sensor_error)
+      sensor_error--;
+
+    usleep(100000);
+  }
+}
+
+static void Chatter(void* arg)
+{
+  int fd;
+  char ch;
+  ssize_t ch_got;
+  off_t fpos;
+
+  fpos = *(off_t*)arg;
+
+  nameThread("Chat");
+
+  bprintf(startup, "Thread startup\n");
+
+  fd = open("/data/etc/mcp.log", O_RDONLY|O_NONBLOCK);
+
+  if (fd == -1)
+  {
+    bprintf(tfatal, "Failed to open /data/etc/mcp.log for reading (%d)\n", errno);
+  }
+
+  if (fpos == -1) {
+    if (lseek(fd, -500, SEEK_END) == -1)
+    {
+      if (errno == EINVAL)
+      {
+	if (lseek(fd, 0, SEEK_SET) == -1)
+	{
+	  bprintf(tfatal, "Failed to rewind /data/etc/mcp.log (%d)\n", errno);
+	}
+      } else {
+	bprintf(tfatal, "Failed to seek /data/etc/mcp.log (%d)\n", errno);
+      }
+    }
+  } else {
+    if (lseek(fd, fpos, SEEK_SET) == -1)
+    {
+      if (lseek(fd, 0, SEEK_END) == -1)
+      {
+	bprintf(tfatal, "Failed to rewind /data/etc/mcp.log (%d)\n", errno);
+      }
+    }
+  }
+
+  while (read(fd, &ch, 1) == 1 && ch != '\n'); /* Find start of next message */
+
+  chatter_buffer.reading = chatter_buffer.writing = 0;
+      /* decimal 22 is "Synchronous Idle" in ascii */
+  memset(chatter_buffer.msg, 22, sizeof(char) * FAST_PER_SLOW * 2 * 4);
+
+  while (1)
+  {
+    if (chatter_buffer.writing != ((chatter_buffer.reading - 1) & 0x3))
+    {
+      ch_got = read(fd, chatter_buffer.msg[chatter_buffer.writing], 2 * FAST_PER_SLOW * sizeof(char));
+      if (ch_got == -1)
+      {
+        bprintf(tfatal, "Error reading from /data/etc/mcp.log (%d)\n", errno);
+      }
+      if (ch_got < (2 * FAST_PER_SLOW * sizeof(char)))
+      {
+        memset(&(chatter_buffer.msg[chatter_buffer.writing][ch_got]), 22, (2 * FAST_PER_SLOW * sizeof(char)) - ch_got);
+      }
+      chatter_buffer.writing = ((chatter_buffer.writing + 1) & 0x3);
+    }
+    usleep(100000);
+  }
+}
+
+
 static void GetACS(unsigned short *RxFrame)
 {
-  double enc_table;
-  double gyro1, gyro2, gyro3, gyro4, gyro5, gyro6;
-  unsigned int uTab, ugy1, ugy2, ugy3, ugy4, ugy5, ugy6;
-  static struct BiPhaseStruct* gyro1Addr;
-  static struct BiPhaseStruct* gyro2Addr;
-  static struct BiPhaseStruct* gyro3Addr;
-  static struct BiPhaseStruct* gyro4Addr;
-  static struct BiPhaseStruct* gyro5Addr;
-  static struct BiPhaseStruct* gyro6Addr;
-  static struct BiPhaseStruct* encTableAddr;
+  double enc_raw_el, ifel_gy, ifroll_gy, ifyaw_gy;
+  double x_comp, y_comp, z_comp;
+  double pss1_i1, pss1_i2, pss1_i3, pss1_i4;
+  double pss2_i1, pss2_i2, pss2_i3, pss2_i4;
+  double vel_rw;
+  double res_piv;
+  int hwpr_pot;
+
   
+  static struct BiPhaseStruct* ifElgyAddr;
+  static struct BiPhaseStruct* ifRollgyAddr;
+  static struct BiPhaseStruct* ifYawgyAddr;
+  static struct BiPhaseStruct* elRawEncAddr;
+  static struct BiPhaseStruct* elRawIfClinAddr;
+  static struct BiPhaseStruct* xMagAddr;
+  static struct BiPhaseStruct* yMagAddr;
+  static struct BiPhaseStruct* zMagAddr;
+  static struct BiPhaseStruct* velRWAddr;
+  static struct BiPhaseStruct* resPivAddr;
+  static struct BiPhaseStruct* v11PssAddr;
+  static struct BiPhaseStruct* v21PssAddr;
+  static struct BiPhaseStruct* v31PssAddr;
+  static struct BiPhaseStruct* v41PssAddr;
+  static struct BiPhaseStruct* v12PssAddr;
+  static struct BiPhaseStruct* v22PssAddr;
+  static struct BiPhaseStruct* v32PssAddr;
+  static struct BiPhaseStruct* v42PssAddr;
+  static struct BiPhaseStruct* potHwprAddr;
+
+
+
+
   unsigned int rx_frame_index = 0;
-  
+  int i_ss;
+
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    encTableAddr = GetBiPhaseAddr("enc_table");
-#if 0
-    //using raw (4-stage filtered) gyros adds 0.02s latency
-    gyro1Addr = GetBiPhaseAddr("raw_gy1");
-    gyro2Addr = GetBiPhaseAddr("raw_gy2");
-    gyro3Addr = GetBiPhaseAddr("raw_gy3");
-    gyro4Addr = GetBiPhaseAddr("raw_gy4");
-    gyro5Addr = GetBiPhaseAddr("raw_gy5");
-    gyro6Addr = GetBiPhaseAddr("raw_gy6");
-#endif
-    gyro1Addr = GetBiPhaseAddr("gyro1");
-    gyro2Addr = GetBiPhaseAddr("gyro2");
-    gyro3Addr = GetBiPhaseAddr("gyro3");
-    gyro4Addr = GetBiPhaseAddr("gyro4");
-    gyro5Addr = GetBiPhaseAddr("gyro5");
-    gyro6Addr = GetBiPhaseAddr("gyro6");
+    elRawEncAddr = GetBiPhaseAddr("el_raw_enc");
+    elRawIfClinAddr = GetBiPhaseAddr("el_raw_if_clin");
+    ifElgyAddr = GetBiPhaseAddr("ifel_gy");
+    ifRollgyAddr = GetBiPhaseAddr("ifroll_gy");
+    ifYawgyAddr = GetBiPhaseAddr("ifyaw_gy");
+    xMagAddr = GetBiPhaseAddr("x_mag");
+    yMagAddr = GetBiPhaseAddr("y_mag");
+    zMagAddr = GetBiPhaseAddr("z_mag");
+    velRWAddr = GetBiPhaseAddr("vel_rw");
+    resPivAddr = GetBiPhaseAddr("res_piv");
+    v11PssAddr = GetBiPhaseAddr("v1_1_pss");
+    v21PssAddr = GetBiPhaseAddr("v2_1_pss");
+    v31PssAddr = GetBiPhaseAddr("v3_1_pss");
+    v41PssAddr = GetBiPhaseAddr("v4_1_pss");
+    v12PssAddr = GetBiPhaseAddr("v1_2_pss");
+    v22PssAddr = GetBiPhaseAddr("v2_2_pss");
+    v32PssAddr = GetBiPhaseAddr("v3_2_pss");
+    v42PssAddr = GetBiPhaseAddr("v4_2_pss");
+    potHwprAddr = GetBiPhaseAddr("pot_hwpr");
   }
 
   rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
       (RxFrame[2] & 0x0000ffff) << 16);
 
-  uTab = (RxFrame[encTableAddr->channel+1] << 16 | 
-      RxFrame[encTableAddr->channel]);
-  if ((enc_table = ((double)uTab * (360.0 / 144000.0)
-          + ENC_ELEV_OFFSET)) < 0)
-    enc_table += 360;
-  else if (enc_table > 360.0) enc_table -= 360;
+  enc_raw_el = (((double)RxFrame[elRawEncAddr->channel])/DEG2I);
+  vel_rw = (((double)((short)RxFrame[velRWAddr->channel]))*4.0/DEG2I);
+  ifel_gy = (double)((RxFrame[ifElgyAddr->channel])-GY16_OFFSET)*GY16_TO_DPS;
+  ifroll_gy = (double)(RxFrame[ifRollgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
+  ifyaw_gy = (double)(RxFrame[ifYawgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
 
-#if 0
-  ugy1 = (RxFrame[gyro1Addr->channel+1] << 16 | RxFrame[gyro1Addr->channel]);
-  ugy2 = (RxFrame[gyro2Addr->channel+1] << 16 | RxFrame[gyro2Addr->channel]);
-  ugy3 = (RxFrame[gyro3Addr->channel+1] << 16 | RxFrame[gyro3Addr->channel]);
-  ugy4 = (RxFrame[gyro4Addr->channel+1] << 16 | RxFrame[gyro4Addr->channel]);
-  ugy5 = (RxFrame[gyro5Addr->channel+1] << 16 | RxFrame[gyro5Addr->channel]);
-  ugy6 = (RxFrame[gyro6Addr->channel+1] << 16 | RxFrame[gyro6Addr->channel]);
-  gyro1 = (double)(ugy1-DGY32_OFFSET) * DGY32_TO_DPS;
-  gyro2 = (double)(ugy2-DGY32_OFFSET) * DGY32_TO_DPS;
-  gyro3 = (double)(ugy3-DGY32_OFFSET) * DGY32_TO_DPS;
-  gyro4 = (double)(ugy4-DGY32_OFFSET) * DGY32_TO_DPS;
-  gyro5 = (double)(ugy5-DGY32_OFFSET) * DGY32_TO_DPS;
-  gyro6 = (double)(ugy6-DGY32_OFFSET) * DGY32_TO_DPS;
-#endif
-  ugy1 = RxFrame[gyro1Addr->channel];
-  ugy2 = RxFrame[gyro2Addr->channel];
-  ugy3 = RxFrame[gyro3Addr->channel];
-  ugy4 = RxFrame[gyro4Addr->channel];
-  ugy5 = RxFrame[gyro5Addr->channel];
-  ugy6 = RxFrame[gyro6Addr->channel];
-  gyro1 = (double)(ugy1-GY16_OFFSET) * GY16_TO_DPS;
-  gyro2 = (double)(ugy2-GY16_OFFSET) * GY16_TO_DPS;
-  gyro3 = (double)(ugy3-GY16_OFFSET) * GY16_TO_DPS;
-  gyro4 = (double)(ugy4-GY16_OFFSET) * GY16_TO_DPS;
-  gyro5 = (double)(ugy5-GY16_OFFSET) * GY16_TO_DPS;
-  gyro6 = (double)(ugy6-GY16_OFFSET) * GY16_TO_DPS;
+  res_piv = (((double)
+	((short)slow_data[resPivAddr->index][resPivAddr->channel]))/DEG2I);
+
+  x_comp = (double)(slow_data[xMagAddr->index][xMagAddr->channel]);
+  y_comp = (double)(slow_data[yMagAddr->index][yMagAddr->channel]);
+  z_comp = (double)(slow_data[zMagAddr->index][zMagAddr->channel]);
+
+  pss1_i1 = (double)(slow_data[v11PssAddr->index][v11PssAddr->channel]);
+  pss1_i2 = (double)(slow_data[v21PssAddr->index][v21PssAddr->channel]);
+  pss1_i3 = (double)(slow_data[v31PssAddr->index][v31PssAddr->channel]);
+  pss1_i4 = (double)(slow_data[v41PssAddr->index][v41PssAddr->channel]);
+  pss2_i1 = (double)(slow_data[v12PssAddr->index][v12PssAddr->channel]);
+  pss2_i2 = (double)(slow_data[v22PssAddr->index][v22PssAddr->channel]);
+  pss2_i3 = (double)(slow_data[v32PssAddr->index][v32PssAddr->channel]);
+  pss2_i4 = (double)(slow_data[v42PssAddr->index][v42PssAddr->channel]);
+  hwpr_pot = (double)(slow_data[potHwprAddr->index][potHwprAddr->channel]);
+
+  i_ss = ss_index;
+  ACSData.clin_elev = (double)(slow_data[elRawIfClinAddr->index][elRawIfClinAddr->channel]);
 
   ACSData.t = mcp_systime(NULL);
   ACSData.mcp_frame = rx_frame_index;
-  ACSData.enc_table = enc_table;
-  ACSData.gyro1 = gyro1;
-  ACSData.gyro2 = gyro2;
-  ACSData.gyro3 = gyro3;
-  ACSData.gyro4 = gyro4;
-  ACSData.gyro5 = gyro5;
-  ACSData.gyro6 = gyro6;
+  ACSData.enc_raw_el = enc_raw_el;
+  ACSData.ifel_gy = ifel_gy;
+  ACSData.ifroll_gy = ifroll_gy;
+  ACSData.ifyaw_gy = ifyaw_gy;
+  ACSData.mag_x = x_comp;
+  ACSData.mag_y = y_comp;
+  ACSData.mag_z = z_comp;
+  ACSData.vel_rw = vel_rw;
+  ACSData.res_piv = res_piv;
+  ACSData.pss1_i1 = pss1_i1;
+  ACSData.pss1_i2 = pss1_i2;
+  ACSData.pss1_i3 = pss1_i3;
+  ACSData.pss1_i4 = pss1_i4;
+  ACSData.pss2_i1 = pss2_i1;
+  ACSData.pss2_i2 = pss2_i2;
+  ACSData.pss2_i3 = pss2_i3;
+  ACSData.pss2_i4 = pss2_i4;
+  ACSData.hwpr_pot = hwpr_pot; // keep this as an integer, 
+                               // so it can be read in one atomic cycle...
 
 }
-#endif //HAVE_ACS
-static void GetRW(unsigned short *RxFrame)
+
+/* sole purpose of following function is to add a field that reads the total current */
+
+static void GetCurrents(unsigned short *RxFrame)
 {
-  double rwCur, rwVelD;
-  short int uCur, uVel;
-  static double buf_rwVel[RW_FILTER_LEN]; // Buffer for RW boxcar filter
-  static unsigned int ib_last=0;
-  static double a=0.0; // Boxcar filter accumulator
-  static struct BiPhaseStruct* rwCurAddr;
-  static struct BiPhaseStruct* rwVelAddr;
+
+  double i_trans;
+  double i_das;
+  double i_acs;
+  double i_rec;
+  double i_sc;
+  double i_dgps;
+  double i_step;
+  double i_flc;
+  double i_gy;
+  double i_rw;
+  double i_el;
+  double i_piv;
+  double i_tot;
+
+  static struct BiPhaseStruct* i_transAddr;
+  static struct BiPhaseStruct* i_dasAddr;
+  static struct BiPhaseStruct* i_acsAddr;
+  static struct BiPhaseStruct* i_recAddr;
+  static struct BiPhaseStruct* i_scAddr;
+  static struct BiPhaseStruct* i_dgpsAddr;
+  static struct BiPhaseStruct* i_stepAddr;
+  static struct BiPhaseStruct* i_flcAddr;
+  static struct BiPhaseStruct* i_gyAddr;
+  static struct BiPhaseStruct* i_rwAddr;
+  static struct BiPhaseStruct* i_elAddr;
+  static struct BiPhaseStruct* i_pivAddr;
+
+  static struct NiosStruct* i_transNios;
+  static struct NiosStruct* i_dasNios;
+  static struct NiosStruct* i_acsNios;
+  static struct NiosStruct* i_recNios;
+  static struct NiosStruct* i_scNios;
+  static struct NiosStruct* i_dgpsNios;
+  static struct NiosStruct* i_stepNios;
+  static struct NiosStruct* i_flcNios;
+  static struct NiosStruct* i_gyNios;
+  static struct NiosStruct* i_rwNios;
+  static struct NiosStruct* i_elNios;
+  static struct NiosStruct* i_pivNios;
+
+  static struct NiosStruct* i_totNios;
+
   static int firsttime = 1;
-  char fouts[12*(RW_FILTER_LEN+1)+2];
-  int i;
 
   if (firsttime) {
+  
     firsttime = 0;
-    rwCurAddr = GetBiPhaseAddr("rwheel_cur");
-    rwVelAddr = GetBiPhaseAddr("rwheel_vel");
-    // Initialize the buffer.  Assume all zeros to begin
-    for(i=0;i>(RW_FILTER_LEN-1);i++) buf_rwVel[i]=0.0;
+
+    i_transAddr = GetBiPhaseAddr("i_trans");
+    i_dasAddr = GetBiPhaseAddr("i_das");
+    i_acsAddr = GetBiPhaseAddr("i_acs");
+    i_recAddr = GetBiPhaseAddr("i_rec");
+    i_scAddr = GetBiPhaseAddr("i_sc");
+    i_dgpsAddr = GetBiPhaseAddr("i_dgps");
+    i_stepAddr = GetBiPhaseAddr("i_step");
+    i_flcAddr = GetBiPhaseAddr("i_flc");
+    i_gyAddr = GetBiPhaseAddr("i_gy");
+    i_rwAddr = GetBiPhaseAddr("i_rw");
+    i_elAddr = GetBiPhaseAddr("i_el");
+    i_pivAddr = GetBiPhaseAddr("i_piv");
+
+    i_transNios = GetNiosAddr("i_trans");
+    i_dasNios = GetNiosAddr("i_das");
+    i_acsNios = GetNiosAddr("i_acs");
+    i_recNios = GetNiosAddr("i_rec");
+    i_scNios = GetNiosAddr("i_sc");
+    i_dgpsNios = GetNiosAddr("i_dgps");
+    i_stepNios = GetNiosAddr("i_step");
+    i_flcNios  = GetNiosAddr("i_flc");
+    i_gyNios = GetNiosAddr("i_gy");
+    i_rwNios = GetNiosAddr("i_rw");
+    i_elNios = GetNiosAddr("i_el");
+    i_pivNios = GetNiosAddr("i_piv");
+
+    i_totNios = GetNiosAddr("i_tot");
+
   }
-  uCur = RxFrame[rwCurAddr->channel];
-  uVel = RxFrame[rwVelAddr->channel];
 
-  rwCur = ((double)(uCur)) * RWCUR_TO_DPS+RWCUR_OFFSET;
-  rwVelD = ((double)(uVel)) * RWCTS_TO_VEL;
-  RWData.i=rwCur;
+  i_trans = (double)(slow_data[i_transAddr->index][i_transAddr->channel])*i_transNios->m + i_transNios->b;
+  i_das = (double)(slow_data[i_dasAddr->index][i_dasAddr->channel])*i_dasNios->m + i_dasNios->b;
+  i_acs = (double)(slow_data[i_acsAddr->index][i_acsAddr->channel])*i_acsNios->m + i_acsNios->b;
+  i_rec = (double)(slow_data[i_recAddr->index][i_recAddr->channel])*i_recNios->m + i_recNios->b;
+  i_sc = (double)(slow_data[i_scAddr->index][i_scAddr->channel])*i_scNios->m + i_scNios->b;
+  i_dgps = (double)(slow_data[i_dgpsAddr->index][i_dgpsAddr->channel])*i_dgpsNios->m + i_dgpsNios->b;
+  i_step = (double)(slow_data[i_stepAddr->index][i_stepAddr->channel])*i_stepNios->m + i_stepNios->b;
+  i_flc = (double)(slow_data[i_flcAddr->index][i_flcAddr->channel])*i_flcNios->m + i_flcNios->b;
+  i_gy = (double)(slow_data[i_gyAddr->index][i_gyAddr->channel])*i_gyNios->m + i_gyNios->b;
+  i_rw = (double)(slow_data[i_rwAddr->index][i_rwAddr->channel])*i_rwNios->m + i_rwNios->b;
+  i_el = (double)(slow_data[i_elAddr->index][i_elAddr->channel])*i_elNios->m + i_elNios->b;
+  i_piv = (double)(slow_data[i_pivAddr->index][i_pivAddr->channel])*i_pivNios->m + i_pivNios->b;
 
-  //  Boxcar Filter the RW Velocity
-  a+=(rwVelD-buf_rwVel[ib_last]);
-  buf_rwVel[ib_last]=rwVelD;
-  ib_last=(ib_last+RW_FILTER_LEN+1)%RW_FILTER_LEN;
-  RWData.vel=a/((double)RW_FILTER_LEN); 
+  i_tot = i_trans + i_das + i_acs + i_rec + i_sc + i_dgps + i_step + i_flc + i_gy + i_rw + i_el + i_piv;
+
+  WriteData(i_totNios, 1000*i_tot, NIOS_QUEUE);
+
 }
 
-/* fill_Rx_frame: places one 32 bit word into the RxFrame. 
- * Returns true on success 
- */
+#endif
+
+/* fill_Rx_frame: places one 32 bit word into the RxFrame. Returns true on
+ * success */
 static int fill_Rx_frame(unsigned int in_data, unsigned short *RxFrame)
 {
   static int n_not_found = 0;
@@ -448,7 +731,28 @@ static int fill_Rx_frame(unsigned int in_data, unsigned short *RxFrame)
   return(1);
 }
 
-static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
+#ifndef BOLOTEST
+static void WatchDog (void)
+{
+  nameThread("WDog");
+  bputs(startup, "Startup\n");
+
+  /* Allow other threads to kill this one at any time */
+  pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
+  if (ioperm(0x378, 0x0F, 1) != 0)
+    berror(tfatal, "Error setting watchdog permissions");
+  ioperm(0x80, 1, 1);
+
+  for (;;) {
+    outb(0xAA, 0x378);
+    usleep(40000);
+    outb(0x55, 0x378);
+    usleep(40000);
+  }
+}
+
+static void write_to_biphase(unsigned short *RxFrame)
 {
   int i;
   static unsigned short nothing[BI0_FRAME_SIZE];
@@ -456,96 +760,100 @@ static int write_to_biphase(unsigned short *RxFrame, int i_in, int i_out)
   static unsigned int do_skip = 0;
 
   if (bi0_fp == -2) {
-    bi0_fp = open("/dev/bi0_pci", O_RDWR);
-    if (bi0_fp == -1)
-      berror(tfatal, "BiPhase Writer: Error opening biphase device");
+    bi0_fp = open("/dev/bbc_bi0", O_RDWR);
+    if (bi0_fp == -1) {
+      berror(tfatal, "Error opening biphase device");
+    }
 
-    for (i = 0; i < BI0_FRAME_SIZE; i++)
+    for (i = 0; i < BI0_FRAME_SIZE; i++) {
       nothing[i] = 0xEEEE;
+    }
   }
-  i_out = (i_out + 1) % BI0_FRAME_BUFLEN;
 
-  nothing[0] = CalculateCRC(0xEB90, RxFrame, BiPhaseFrameWords);
+  if ((bi0_fp >= 0) && InCharge) {
 
-  //  if (bi0_fp >= 0 && InCharge) {
-  if (bi0_fp >= 0) { // lmf: We don't have an in charge computer right now.  Later we'll 
-                     // have to add this in.
+    RxFrame[0] = 0xEB90;
+    nothing[0] = CalculateCRC(0xEB90, RxFrame, BiPhaseFrameWords);
+
     RxFrame[0] = sync;
     sync = ~sync;
-
-    //    unsigned short buffer[BI0_FRAME_SIZE];
-    //    static unsigned int fc = 0;
-    //    for (i = 0; i < BI0_FRAME_SIZE; ++i) {
-    //      buffer[i] = i;
-    //    }
-    //    *(unsigned int*)(&buffer[1]) = fc++;
-    //    buffer[0] = RxFrame[0];
-    //    i = write(bi0_fp, buffer, BI0_FRAME_SIZE * sizeof(unsigned short));
 
     if (do_skip) {
       --do_skip;
     } else {
       i = write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short));
-      if (i < 0)
-        berror(err, "BiPhase Writer: bi-phase write for RxFrame failed");
-      else if (i != BiPhaseFrameWords * sizeof(unsigned short))
-        bprintf(err, "BiPhase Writer: Short write for RxFrame: %i of %i", i,
-		BiPhaseFrameWords * sizeof(unsigned short));
+      if (i < 0) {
+        berror(err, "bi-phase write for RxFrame failed");
+      } else if (i != BiPhaseFrameWords * sizeof(unsigned short)) {
+        bprintf(err, "Short write for RxFrame: %i of %u", i,
+            BiPhaseFrameWords * sizeof(unsigned short));
+      }
 
       i = write(bi0_fp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
-		sizeof(unsigned short));
-      if (i < 0)
-        berror(err, "BiPhase Writer: bi-phase write for padding failed");
+          sizeof(unsigned short));
+      if (i < 0) 
+        berror(err, "bi-phase write for padding failed");
       else if (i != (BI0_FRAME_SIZE - BiPhaseFrameWords)
-	       * sizeof(unsigned short))
-        bprintf(err, "BiPhase Writer: Short write for padding: %i of %i", i,
-		(BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short));
+          * sizeof(unsigned short))
+        bprintf(err, "Short write for padding: %i of %u", i,
+            (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short));
     }
 
-#if 0
     CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
-    if (do_skip == 0 && CommandData.bi0FifoSize > BI0_FIFO_MARGIN) {
-      do_skip = (CommandData.bi0FifoSize - BI0_FIFO_MINIMUM) / BI0_FRAME_SIZE;
-      bprintf(warning, "BiPhase Writer: Excess data in FIFO, discarding "
-	      "%i frames out of hand.", do_skip);
-    }
-#endif
   }
-
-  return i_out;
 }
 
-/* initialize the bi0 buffer */
-static void InitBi0Buffer()
-{
+static void InitFrameBuffer(struct frameBuffer *buffer) {
   int i;
 
-  bi0_buffer.i_in = 10; /* preload the fifo */
-  bi0_buffer.i_out = 0;
-  for (i = 0; i<BI0_FRAME_BUFLEN; i++)
-    bi0_buffer.framelist[i] = balloc(fatal, BiPhaseFrameWords *
+  buffer->i_in = 0;
+  buffer->i_out = 0;
+  for (i = 0; i<BI0_FRAME_BUFLEN; i++) {
+    buffer->framelist[i] = balloc(fatal, BiPhaseFrameWords *
         sizeof(unsigned short));
+
+    //TODO this initialization does not appear to resolve valgrind errors
+    memset(buffer->framelist[i],0,BiPhaseFrameWords*sizeof(unsigned short));
+
+  }
 }
 
-/* assigns RxFrame to next entry in bi0 buffer's framelist */
-static void PushBi0Buffer(unsigned short *RxFrame)
-{
+// warning: there is no checking for an overfull buffer.  Just make sure it is big
+// enough that it can never happen.
+static void PushFrameBuffer(struct frameBuffer *buffer, unsigned short *RxFrame) {
   int i, fw, i_in;
 
-  i_in = bi0_buffer.i_in + 1;
+  i_in = buffer->i_in + 1;
   if (i_in>=BI0_FRAME_BUFLEN)
     i_in = 0;
 
   fw = BiPhaseFrameWords;
 
   for (i = 0; i<fw; i++) {
-    bi0_buffer.framelist[i_in][i] = RxFrame[i];
+    buffer->framelist[i_in][i] = RxFrame[i];
   }
 
-  bi0_buffer.i_in = i_in;
+  buffer->i_in = i_in;
 }
 
-/* zeros RxFrame */
+unsigned short *PopFrameBuffer(struct frameBuffer *buffer) {
+  unsigned short *frame;
+  int i_out = buffer->i_out;
+  
+  if (buffer->i_in == i_out) { // no data
+    return (NULL);
+  }
+  frame = buffer->framelist[i_out];
+  i_out++;
+  if (i_out>=BI0_FRAME_BUFLEN) {
+    i_out = 0;
+  }
+  buffer->i_out = i_out;
+  return (frame);
+}
+  
+#endif
+
 static void zero(unsigned short *RxFrame)
 {
   int i;
@@ -554,40 +862,41 @@ static void zero(unsigned short *RxFrame)
     RxFrame[i] = 0;
 }
 
+#ifndef BOLOTEST
 static void BiPhaseWriter(void)
 {
-  int i_out, i_in;
-
-  bputs(startup, "Biphase Writer: Startup\n");
+  unsigned short *frame;
+  
+  nameThread("Bi0");
+  bputs(startup, "Startup\n");
 
   while (!biphase_is_on)
     usleep(10000);
 
-  bputs(info, "BiPhase Writer: Veto has ended.  Here we go.\n");
+  bputs(info, "Veto has ended.  Here we go.\n");
 
   while (1) {
-    i_in = bi0_buffer.i_in;
-    i_out = bi0_buffer.i_out;
-    if (i_out == i_in) {
+    frame = PopFrameBuffer(&bi0_buffer);
+    
+    if (!frame) { 
       /* Death meausres how long the BiPhaseWriter has gone without receiving
        * any data -- an indication that we aren't receiving FSYNCs from the
        * BLASTBus anymore */
-      //      if (InCharge) {
-        if (++Death == 25) {
-          bprintf(err, "BiPhase Writer: Death is reaping the watchdog tickle.");
-        //  pthread_cancel(watchdog_id);
-        }
-	//      }
-    } else
-      while (i_out != i_in) {
-        i_out = write_to_biphase(bi0_buffer.framelist[i_out], i_in, i_out);
-        if (Death > 0)
-          Death = 0;
+      if (InCharge && (++Death > 25)) {
+        bprintf(err, "Death is reaping the watchdog tickle.");
+        pthread_cancel(watchdog_id);
       }
-    bi0_buffer.i_out = i_out;
-    usleep(10000);
-   }
+      usleep(10000); // 100 Hz
+    } else {
+      write_to_biphase(frame);
+      if (Death > 0) {
+        Death = 0;
+      }
+    }
+  }
 }
+
+#endif
 
 /******************************************************************/
 /*                                                                */
@@ -607,13 +916,17 @@ static int IsNewFrame(unsigned int d)
   return is_bof;
 }
 
-/* Identity crisis: am I frodo or sam? */
-static int AmISam(void)
+/* Polarity crisis: am I north or south? */
+static int AmISouth(int *not_cryo_corner)
 {
   char buffer[2];
+  *not_cryo_corner = 1;
 
   if (gethostname(buffer, 1) == -1 && errno != ENAMETOOLONG) {
     berror(err, "System: Unable to get hostname");
+  } else if (buffer[0] == 'p') {
+    *not_cryo_corner = 0;
+    bprintf(info, "System: Cryo Corner Mode Activated\n");
   }
 
   return (buffer[0] == 's') ? 1 : 0;
@@ -623,8 +936,10 @@ static int AmISam(void)
 static void CloseBBC(int signo)
 {
   bprintf(err, "System: Caught signal %i; stopping NIOS", signo);
-#ifdef HAVE_ACS
+#ifndef BOLOTEST
   closeMotors();
+
+  endChrgCtrl();  // is this needed?
 #endif
   RawNiosWrite(0, BBC_ENDWORD, NIOS_FLUSH);
   RawNiosWrite(BBCPCI_MAX_FRAME_SIZE, BBC_ENDWORD, NIOS_FLUSH);
@@ -635,8 +950,6 @@ static void CloseBBC(int signo)
     close(bbc_fp);
 
   /* restore default handler and raise the signal again */
-  //close peripheral communications
-  
   signal(signo, SIG_DFL);
   raise(signo);
 }
@@ -655,11 +968,29 @@ int main(int argc, char *argv[])
 {
   unsigned int in_data, i;
   unsigned short* RxFrame;
-
-  pthread_t disk_id;
   pthread_t CommandDatacomm1;
-  pthread_t CommandDatacomm2;     //2nd needed for SIP, not for FIFO
+  pthread_t disk_id;
+  pthread_t abus_id;
+  int use_starcams = 1;
+
+#ifndef USE_FIFO_CMD
+  pthread_t CommandDatacomm2;
+#endif
+
+#ifndef BOLOTEST
+  pthread_t sunsensor_id;
+  pthread_t compression_id;
   pthread_t bi0_id;
+  pthread_t sensors_id;
+  pthread_t dgps_id;
+  pthread_t isc_id;
+  pthread_t osc_id;
+#endif
+#ifdef USE_XY_THREAD
+  pthread_t xy_id;
+#endif
+  pthread_t chatter_id;
+  struct stat fstats;
 
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
@@ -674,14 +1005,20 @@ int main(int argc, char *argv[])
 
   umask(0);  /* clear umask */
 
-  if ((logfile = fopen("/data/etc/mcp.log", "a")) == NULL)
+  if ((logfile = fopen("/data/etc/mcp.log", "a")) == NULL) {
     berror(err, "System: Can't open log file");
-  else
-    fputs("----- LOG RESTART -----\n", logfile);
+    fstats.st_size = -1;
+  } else {
+    if (fstat(fileno(logfile), &fstats) < 0)
+      fstats.st_size = -1;
+    fputs("!!!!!! LOG RESTART !!!!!!\n", logfile);
+  }
 
   biphase_timer = mcp_systime(NULL) + BI0_VETO_LENGTH;
 
   /* register the output function */
+  nameThread("Dummy"); //insert dummy sentinel node first
+  nameThread("Main");
   buos_use_func(mputs);
 
 #if (TEMPORAL_OFFSET > 0)
@@ -690,15 +1027,21 @@ int main(int argc, char *argv[])
 
   bputs(startup, "System: Startup");
 
+#ifndef BOLOTEST
+  /* Watchdog */
+  pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
+#endif
 
   if ((bbc_fp = open("/dev/bbcpci", O_RDWR)) < 0)
     berror(fatal, "System: Error opening BBC");
 
   InitCommandData();
+
   pthread_mutex_init(&mutex, NULL);
 
-  MakeAddressLookups();  //nios addresses, based off of tx_struct, derived
+  MakeAddressLookups();
 
+  bprintf(info, "Commands: MCP Command List Version: %s", command_list_serial);
 #ifdef USE_FIFO_CMD
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, NULL);
 #else
@@ -706,9 +1049,18 @@ int main(int argc, char *argv[])
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
 #endif
 
+#ifndef BOLOTEST
+  /* Initialize the Ephemeris */
+  ReductionInit();
+
+  bprintf(info, "System: Slow Downlink Initialisation");
   InitSlowDL();
 
-  InitBi0Buffer();
+  InitFrameBuffer(&bi0_buffer);
+  InitFrameBuffer(&hiGain_buffer);
+
+  memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
+#endif
 
   InitialiseFrameFile(argv[1][0]);
 
@@ -721,20 +1073,31 @@ int main(int argc, char *argv[])
   /* Allocate the local data buffers */
   RxFrame = balloc(fatal, BiPhaseFrameSize);
 
-  for (i = 0; i < FAST_PER_SLOW; ++i)
+  for (i = 0; i < FAST_PER_SLOW; ++i) {
     slow_data[i] = balloc(fatal, slowsPerBi0Frame * sizeof(unsigned short));
+    //TODO fix "uninitialised value" valgrind errors. Ensure not more serious.
+    memset(slow_data[i], 0, slowsPerBi0Frame * sizeof(unsigned short));
+  }
 
-  /* Find out whether I'm frodo or sam */
-  SamIAm = AmISam();
+  /* Find out whether I'm north or south */
+  SouthIAm = AmISouth(&use_starcams);
 
-  if (SamIAm)
-    bputs(info, "System: I am Sam.\n");
+  if (SouthIAm)
+    bputs(info, "System: I am South.\n");
   else
-    bputs(info, "System: I am not Sam.\n");
+    bputs(info, "System: I am not South.\n");
 
-#ifdef HAVE_ACS
+#ifndef BOLOTEST
+  pthread_create(&chatter_id, NULL, (void*)&Chatter, (void*)&(fstats.st_size));
+
+  InitSched();
   openMotors();  //open communications with peripherals, creates threads
-  openCamera();  //also creates a thread
+                 // in motors.c
+  openSBSC();  // SBSC - creates thread in sbsc.cpp
+
+
+  startChrgCtrl(); // create charge controller serial thread
+                   // defined in chrgctrl.c
 #endif
 
   bputs(info, "System: Finished Initialisation, waiting for BBC to come up.\n");
@@ -745,15 +1108,28 @@ int main(int argc, char *argv[])
   bputs(info, "System: BBC is up.\n");
 
   InitTxFrame(RxFrame);
+
+#ifdef USE_XY_THREAD
+  pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
+#endif
+#ifndef BOLOTEST
+  pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
+  if (use_starcams) {
+    pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
+    pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
+  }
+
+  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
+  pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
+
+  pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
+#endif
+  pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
 
-  FILE* logstream = fopen("/data/etc/bbc_log", "wt");
-
-  while (1) {  //main loop
+  while (1) {
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0)
       berror(err, "System: Error on BBC read");
-
-    fprintf(logstream, "%08x\n", in_data);
 
     if (!fill_Rx_frame(in_data, RxFrame))
       bprintf(err, "System: Unrecognised word received from BBC (%08x)",
@@ -763,13 +1139,12 @@ int main(int argc, char *argv[])
       if (StartupVeto > 1) {
         --StartupVeto;
       } else {
-#ifdef HAVE_ACS
+#ifndef BOLOTEST
         GetACS(RxFrame);
+        GetCurrents(RxFrame);
         Pointing();
-#endif
 
-        /* Read in the Reaction Wheel velocity and current */     
-        GetRW(RxFrame);
+#endif
 
         /* Frame sequencing check */
         if (StartupVeto) {
@@ -777,27 +1152,34 @@ int main(int argc, char *argv[])
           StartupVeto = 0;
           Death = 0;
         } else if (RxFrame[3] != (RxFrameIndex + 1) % FAST_PER_SLOW
-            && RxFrameIndex >= 0)
+          && RxFrameIndex >= 0) {
           bprintf(err, "System: Frame sequencing error detected: wanted %i, "
-              "got %i\n", RxFrameIndex + 1, RxFrame[3]);
+          "got %i\n", RxFrameIndex + 1, RxFrame[3]);
+        }
         RxFrameIndex = RxFrame[3];
 
+#if 0 //FastSamp from the PCI card isn't working, use one from a DSP
+      //this is done at the beginning of UpdateBBCFrame
         /* Save current fastsamp */
         RxFrameFastSamp = (RxFrame[1] + RxFrame[2] * 0x10000);
+#endif
 
-        UpdateBBCFrame(RxFrame);  //major part of tx.c
-//        CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);
+        UpdateBBCFrame(RxFrame);
+        CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);
 
         /* pushDiskFrame must be called before PushBi0Buffer to get the slow
            data right */
         pushDiskFrame(RxFrame);
-        if (biphase_is_on)
-          PushBi0Buffer(RxFrame);
-        else if (biphase_timer < mcp_systime(NULL))
+#ifndef BOLOTEST
+        if (biphase_is_on) {
+          PushFrameBuffer(&bi0_buffer, RxFrame);
+          PushFrameBuffer(&hiGain_buffer, RxFrame);
+        } else if (biphase_timer < mcp_systime(NULL)) {
           biphase_is_on = 1;
+        }
 
-	FillSlowDL(RxFrame);
-
+        FillSlowDL(RxFrame);
+#endif
         zero(RxFrame);
       }
     }

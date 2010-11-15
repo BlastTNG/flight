@@ -2,18 +2,13 @@
 
 [ -x "Makefile.config" ] || rm -rf Makefile.config;
 
-if [[ `hostname` = "nogrod" || `hostname` = "itsy" ]]
+if [ `hostname` = "NO.MORE.BOLOTEST.devlin666.blast" ]
 then
-  echo "HAVE_ACS = -DHAVE_ACS" > Makefile.config ;
-  echo "USE_FIFO_CMD = -DUSE_FIFO_CMD" >> Makefile.config;
-  echo "Configuring mcp to utilize ACS devices" ;
-elif [[ `hostname` = "somewhere_at_caltech" ]]
-then
-  echo "HAVE_CRYO = -DHAVE_CRYO" > Makefile.config ;
-  echo "USE_FIFO_CMD = -DUSE_FIFO_CMD" >> Makefile.config;
-  echo "Configuring mcp to utilize cryostat related devices" ;
+  echo "BOLOTEST = -DBOLOTEST" > Makefile.config ;
+  echo "Configuring BOLOTEST version of mcp.  To compile flight version," ;
+  echo "  remove BOLOTEST line from Makefile.config" ;
 else
-  echo "USE_FIFO_CMD = -DUSE_FIFO_CMD" > Makefile.config;
-  echo "Configuring barebones (BLAST bus only) mcp" ;
+  touch Makefile.config ;
+  echo "Configuring flight version of mcp" ;
 fi;
 echo "ETC_DIR = /data/etc" >> Makefile.config ;

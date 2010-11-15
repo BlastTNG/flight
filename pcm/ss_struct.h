@@ -1,6 +1,6 @@
 /* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2003-2005 University of Toronto
+ * This software is copyright (C) 2004 Brown University
  *
  * This file is part of mcp.
  *
@@ -20,20 +20,25 @@
  *
  */
 
-#define EXPOSURE2I (65536. / 5000000.)  /* ISC exposure time to int */
+/****************************************************
+  ss_packet_data contains the data sent to mcp
+ ****************************************************/
+#ifndef SS_STRUCT_H
+#define SS_STRUCT_H
 
-#define NIOS_QUEUE  0
-#define NIOS_FLUSH -1
 
-/* An ISC/OSC handshaking debugging macro should be set to 0 for flight */
-#define WHICH (0)
+typedef struct
+{
+  float az_center;  //az pixel centroid [0,DATA0_WIDTH)
+  float el_center;  //el pixel centroid [0,DATA1_WIDTH)
+  int prin;         //current prin value [0,72]
+  float az_snr;     //signal to noise ratio.
+  float el_snr;     //~2 when there is no sun; ~30 when there is sun
+  float cpu_temp;   //cpu temp from I2C bus (celsius)
+  float pc_temp;    //motherboard temp from I2C bus (celsius)
+  float chipset_temp; //third thermometer from I2C bus (celcius)
+} ss_packet_data;
 
-#include "channels.h"
+#endif
 
-extern int mcp_initial_controls;
 
-void InitTxFrame(unsigned short*);
-void UpdateBBCFrame(unsigned short*);
-
-void RawNiosWrite(unsigned int, unsigned int, int);
-void WriteData(struct NiosStruct*, unsigned int, int);

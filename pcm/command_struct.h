@@ -1,8 +1,8 @@
-/* mcp: the Spider master control program
+/* mcp: the BLAST master control program
  *
- * command_struct.h: global definitions for command system
- * 
- * This software is copyright (C) 2002-2007 University of Toronto
+ * This software is copyright (C) 2002-2004 University of Toronto
+ *
+ * This file is part of mcp.
  *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,59 +20,93 @@
  *
  */
 
-#ifndef COMMAND_STRUCT_H
-#define COMMAND_STRUCT_H
-
+#include "isc_protocol.h"
 #include "command_list.h"
 #include "channels.h"
 #include <time.h>
+
+#define AXIS_VEL      0
+#define AXIS_POSITION 1
+#define AXIS_LOCK     2
+
+#define P_AZEL_GOTO  1
+#define P_AZ_SCAN    2
+#define P_DRIFT      3
+#define P_RADEC_GOTO 4
+#define P_VCAP       5
+#define P_CAP        6
+#define P_BOX        7
+#define P_LOCK       8
+#define P_VBOX       9
+#define P_QUAD      10
+
+#define MAX_ISC_SLOW_PULSE_SPEED 0.015
+
+/* latching relay pulse length in 200ms slow frames */
+#define LATCH_PULSE_LEN	 2
+/* time (slow frames) to keep power off when power cycling devices */
+#define PCYCLE_HOLD_LEN	 20
+/* time (in slow frames) to suppress ADC card watchdog, to induce reset */
+#define	RESET_ADC_LEN	 80
+
 
 struct GainStruct {
   unsigned short int P;
   unsigned short int I;
   unsigned short int D;
   unsigned short int SP;
+  unsigned short int PT; // position velocity gain
 };
 
-enum PointingMode {scan, spin, point};
-
-struct SpinStruct {
-  double dps; // Target Gondola Spin Speed
+// used for pivot loop gains
+struct PivGainStruct { 
+  unsigned short int PV; // prop to RW velocity
+  unsigned short int PE; // prop to velocity error
+  double SP; // RW velocity Set Point 
+  double F; // Current offset to overcome static friction. 
 };
+#define LS_OPEN        0x0001
+#define LS_CLOSED      0x0002
+#define LS_DRIVE_OFF   0x0004
+#define LS_POT_RAIL    0x0008  //now defunct
+#define LS_DRIVE_EXT   0x0010
+#define LS_DRIVE_RET   0x0020
+#define LS_DRIVE_STP   0x0040
+#define LS_DRIVE_JIG   0x0080  //now defunct
+#define LS_DRIVE_UNK   0x0100
+#define LS_EL_OK       0x0200
+#define LS_IGNORE_EL   0x0400
+#define LS_DRIVE_FORCE 0x0800
+#define LS_DRIVE_MASK  0x09F4
 
-struct PointStruct {
-  double az; // Target azimuth
-  double tol; // Tolerence (how far can we drift from the 
-              // requested azimuth before action is required?
-};
+#define ACTBUS_FM_SLEEP  0
+#define ACTBUS_FM_SERVO  1
+#define ACTBUS_FM_FOCUS  2
+#define ACTBUS_FM_OFFSET 3
+#define ACTBUS_FM_THERMO 4
+#define ACTBUS_FM_NOW    5  //unused
+#define ACTBUS_FM_DELTA  6
+#define ACTBUS_FM_PANIC  7
+#define ACTBUS_FM_DELFOC 8
 
-struct ScanStruct {
-  double C; // Azimuth Scan Centre
-  double P; // Scan Period in seconds
-  double W; // Scan Width zero to Peak (degrees)
-  double phi; // Phase angle defining the width
-              // of constant accel mode (degrees) 
-  double vt2;  // fast transit speed (dps)
-               // vt decreases linearly with distance
-               // until it reaches vt1 at az=x1-wind
-  double wind; // azimuth window to use the slow vt1
-};
+#define TC_MODE_ENABLED  0
+#define TC_MODE_AUTOVETO 1
+#define TC_MODE_VETOED   2
 
-// Stores the motor gains
-struct MotorGainStruct {
-  // Spin mode gains
-  double sp_r1; // prop to velocity error term
-  double sp_r2; // prop to gondola acceleration
-  double sp_p1; // prop to velocity error term
-  double sp_p2; // prop to RW speed
+#define XYSTAGE_PANIC  0
+#define XYSTAGE_GOTO   1
+#define XYSTAGE_JUMP   2
+#define XYSTAGE_SCAN   3
+#define XYSTAGE_RASTER 4
 
-
-  // Scan mode gains
-  double sc_r1;  // prop to velocity error term
-  double sc_r2; // prop to gondola acceleration
-  double sc_p1; // prop to velocity error term
-  double sc_p2; // prop to reaction wheel speed
-};
+#define HWPR_PANIC	0
+#define HWPR_SLEEP	1
+#define HWPR_GOTO	2
+#define HWPR_JUMP	3
+#define HWPR_STEP	4
+#define HWPR_REPEAT	5
+#define HWPR_GOTO_I	6
+#define HWPR_GOTO_POT	7
 
 // mode        X     Y    vaz   del    w    h
 // LOCK              el
@@ -82,7 +116,7 @@ struct MotorGainStruct {
 // RADEC_GOTO  ra    dec
 // VCAP        ra    dec  vaz   vel    r
 // CAP         ra    dec  vaz   elstep r
-// BOX         ra    xdec  vaz   elstep w    h
+// BOX         ra    dec  vaz   elstep w    h
 struct PointingModeStruct {
   int nw; /* used for gy-offset veto during slews */
   int mode;
@@ -95,15 +129,34 @@ struct PointingModeStruct {
   time_t t;
   double ra[4]; // the RAs for radbox (ie, quad)
   double dec[4]; // the decs for radbox (ie, quad)
-  // lmf: Need to add in reaction wheel velocity!  
+  double dith; // Elevation dither step 
 };
 
-struct StarcamCommandData {
+struct latch_pulse {
+  int set_count;
+  int rst_count;
+};
+
+
+enum calmode { on, off, pulse, repeat };
+
+struct Step {
+  unsigned short do_step;
+  unsigned short start;
+  unsigned short end;
+  unsigned short nsteps;
+  unsigned short arr_ind; // only used for bias
+  unsigned short dt;
+  unsigned short pulse_len;  // only used for bias
+};
+
+struct SBSCCommandData {
   //camera and lens configuration
   short int forced;  //are lens moves forced?
   int expInt;        //exposure interval (ms) (0=triggered)
   int expTime;       //exposure duration (ms)
   int focusRes;      //steps to divide lens range into for focus
+  int focusRng;      //inverse fraction of total focal range to go through for autofocus
   int moveTol;       //precision (ticks) for lens moves
 
   //image processing configuration
@@ -114,18 +167,253 @@ struct StarcamCommandData {
 };
 
 struct CommandDataStruct {
-  struct StarcamCommandData cam;
-  double tableRelMove;     //relative angle to move table by (deg)
-  double tableMoveGain;             //P
-  struct GainStruct tableGain;      //PID
+  struct {
+    unsigned short dac_out[5];
+    unsigned char setLevel[5];
+  } Temporary;
 
-  //TODO is this the best way to organize this data?
-  enum PointingMode spiderMode;     // Are we going to spin, point or scan?
-  struct SpinStruct spiderSpin;     // Stores Spin Speed
-  struct PointStruct spiderPoint;     // Stores Spin Speed
-  struct ScanStruct spiderScan;     // Define Scan Centre, period and width 
-  struct MotorGainStruct spiderGain;  // Sets the gain factors for the pivot 
-                                      // and reaction wheel.
+  unsigned short int timeout;
+  unsigned short int alice_file;
+  unsigned short int sucks;
+  unsigned short int lat_range;
+  unsigned short int at_float;
+  unsigned int tdrss_bw;
+  unsigned int iridium_bw;
+  
+  enum {vtx_isc, vtx_osc, vtx_sbsc} vtx_sel[2];
+
+  /*
+  double apcu_reg;
+  double  apcu_trim;
+  short int apcu_auto;
+  double dpcu_reg;
+  double dpcu_trim;
+  short int dpcu_auto;
+  */
+  struct GainStruct ele_gain;
+  struct GainStruct azi_gain;
+  struct PivGainStruct pivot_gain;
+
+  struct SBSCCommandData cam;
+  
+  struct {
+    struct latch_pulse sc_tx;
+    struct latch_pulse das;
+    struct latch_pulse isc;
+    struct latch_pulse osc;
+    struct latch_pulse gps;
+    struct latch_pulse rw;
+    struct latch_pulse piv;
+    struct latch_pulse elmot;
+    struct latch_pulse bi0;
+    struct latch_pulse rx_main;
+    struct latch_pulse rx_hk;
+    struct latch_pulse rx_amps;
+    struct latch_pulse charge;
+    int gybox_off;
+    int gyro_off[6];
+    int gyro_off_auto[6];
+    int hub232_off;
+    int sbsc_cpu_off;
+    int sbsc_cam_off;
+    int ss_off;
+    unsigned char adc_reset[16];
+  } power;
+
+  unsigned short disable_az;
+  unsigned short disable_el;
+  unsigned short force_el;
+
+  unsigned short reset_rw;
+  unsigned short reset_piv;
+  unsigned short reset_elev;
+  unsigned short restore_piv;
+
+  unsigned short verbose_rw;
+  unsigned short verbose_el;
+  unsigned short verbose_piv;
+  int az_autogyro;
+  int el_autogyro;
+  double offset_ifel_gy;
+  double offset_ifroll_gy;
+  double offset_ifyaw_gy;
+  unsigned int gymask;
+
+  struct {
+    double setpoint;
+    int age;
+    struct GainStruct gain;
+  } gyheat;
+
+  double t_set_sbsc;
+
+  unsigned char use_elenc;
+  unsigned char use_elclin;
+  unsigned char use_sun;
+  unsigned char use_pss1;
+  unsigned char use_pss2;
+  unsigned char use_isc;
+  unsigned char use_osc;
+  unsigned char use_mag;
+  unsigned char use_gps;
+
+  double dgps_cov_limit;
+  double dgps_ants_limit;
+
+  unsigned short fast_offset_gy;
+  unsigned int slew_veto;
+
+  double az_accel;
+
+  double clin_el_trim;
+  double enc_el_trim;
+  double null_az_trim;
+  double mag_az_trim;
+  double dgps_az_trim;
+  double ss_az_trim;
+
+  struct {
+    int biasRamp;
+    unsigned short bias[5];
+    unsigned char setLevel[5];
+    struct Step biasStep;
+  } Bias;
+  
+  struct {
+    unsigned short charcoalHeater;
+    unsigned short hsCharcoal;
+    unsigned short fridgeCycle;
+    unsigned short force_cycle;
+
+    unsigned short BDAHeat;
+    unsigned short hsPot;
+    short heliumLevel;
+    int he4_lev_old;
+    short hwprPos;
+    int hwpr_pos_old;
+
+    unsigned short JFETHeat;
+    unsigned short autoJFETheat;
+    double JFETSetOn, JFETSetOff;
+
+    enum calmode calibrator;
+    unsigned short calib_pulse, calib_period;
+    int calib_repeats;
+
+    unsigned short potvalve_open, potvalve_on, potvalve_close;
+    unsigned short lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
+  } Cryo;
+
+  int Phase[DAS_CARDS + 1];
+  struct Step phaseStep;
+
+  struct {
+    enum {bal_rest, bal_manual, bal_auto} mode;
+    double level;
+
+    // servo parameters
+    double level_on_bal;
+    double level_off_bal;
+    double level_target_bal;
+    double gain_bal;
+
+    // heating card parameters
+    double heat_on;
+    double heat_tset;
+
+  } pumps;
+
+  struct {
+    int off;
+    int force_repoll;
+
+    /* arbitrary command */
+    int cindex;
+    int caddr[3];
+    char command[3][CMD_STRING_LEN];
+
+    /* thermal control */
+    double g_primary;
+    double g_secondary;
+    int tc_step;
+    int tc_wait;
+    int tc_mode;
+    int tc_prefp;
+    int tc_prefs;
+    double tc_spread;
+    int sf_offset;
+    int sf_time;
+
+    /* actuator control */
+    int act_vel;
+    int act_acc;
+    int act_hold_i;
+    int act_move_i;
+
+    /* low-level actuator servo */
+    int focus_mode;
+    int goal[3];
+    int delta[3];
+    int offset[3];
+    int focus;
+    int lvdt_delta;
+    int lvdt_low;
+    int lvdt_high;
+
+    /* lock control */
+    int lock_vel;
+    int lock_acc;
+    int lock_hold_i;
+    int lock_move_i;
+
+    unsigned int lock_goal;
+  } actbus;
+
+  struct {
+    int vel, acc, hold_i, move_i;
+    int force_repoll;
+    int mode, is_new, target;
+    int n_pos, repeats, step_wait, step_size, overshoot;
+    double pos[4];
+    int i_pos;
+    int no_step;
+    int use_pot;
+    double pot_targ;
+  } hwpr;
+
+  struct {
+    int x1, y1, x2, y2, xvel, yvel, is_new, mode;
+    int force_repoll;
+  } xystage;
+
+  int pin_is_in;
+
+  /* sensors output: read in mcp:SensorReader() */
+  unsigned short temp1, temp2, temp3;
+  unsigned short df;
+
+  unsigned short plover;
+
+  unsigned short bi0FifoSize;
+  unsigned short bbcFifoSize;
+
+  struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
+  double lat;
+  double lon;
+
+  /* Integrating Star Camera Stuff */
+  struct ISCStatusStruct ISCState[2];
+
+  struct {
+    int pulse_width;
+    int fast_pulse_width;
+    int reconnect;
+    int autofocus;
+    int save_period;
+    int auto_save;
+    int max_age;    //maximum allowed time between trigger and solution
+    int age;	    //last measured time between trigger and solution
+  } ISCControl[2];
 };
 
 struct ScheduleEvent {
@@ -143,9 +431,8 @@ struct ScheduleType {
   struct ScheduleEvent* event;
 };
 
-#endif   //COMMAND_STRUCT_H
-
 void InitCommandData();
+double LockPosition(double);
 int SIndex(enum singleCommand);
 int MIndex(enum multiCommand);
 
