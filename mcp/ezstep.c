@@ -645,6 +645,7 @@ int EZBus_PollInit(struct ezbus* bus, void (*ezinit)(struct ezbus*,char) )
 
     if ( bus->stepper[iWho(i)].status & EZ_STEP_OK &&
 	!(bus->stepper[iWho(i)].status & EZ_STEP_INIT) ) {
+      //TODO could change to ezinit function that returns success/failure
       ezinit(bus,i);
       bus->stepper[iWho(i)].status |= EZ_STEP_INIT;
       sleep(1); //TODO belongs in library? may prevent many-init problems
