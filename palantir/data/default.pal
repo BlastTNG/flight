@@ -876,7 +876,7 @@
       <DATUM format="%.2f" src="T_DCDC_ACS" extrema="powtemp"/>
     </NUMBER>
     <NUMBER caption="MCC">
-      <DATUM format="%.2f" src="T_MCC" extrema="mcctemp"/>
+      <DATUM format="%.2f" src="T_MB_FLC" extrema="mcctemp"/>
     </NUMBER>
     <NUMBER caption="MCC CPU">
       <DATUM format="%.2f" src="T_CPU_FLC" extrema="cputemp"/>
@@ -907,9 +907,6 @@
     </NUMBER>
     <NUMBER caption="Lock Controller">
       <DATUM format="%.2f" src="T_MC_LOCK" extrema="temp"/>
-    </NUMBER>
-    <NUMBER caption="Charge Controller">
-      <DATUM format="%.2f" src="T_CHARGER" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Balance Control">
       <DATUM format="%.2f" src="T_BOX_BAL" extrema="temp"/>
@@ -1069,7 +1066,7 @@
       <DATUM format="%6.2f" src="I_STEP" extrema="current"/>
     </NUMBER>
     <NUMBER caption="MCC">
-      <DATUM format="%6.2f" src="I_MCC" extrema="compcurrent"/>
+      <DATUM format="%6.2f" src="I_FLC" extrema="compcurrent"/>
     </NUMBER>
     <NUMBER caption="Gyro Box">
       <DATUM format="%6.2f" src="I_GY" extrema="gycurrent"/>
