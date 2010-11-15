@@ -42,8 +42,6 @@
 #include "hwpr.h"
 
 /* TODO
- * rounding error on ENC fields (can't set to 0)
- * timing error: trim wait takes ~15minutes to settle rather than 15s
  * actuator moves are not by the exact amount desired
  *
  * lock doesn't always have to correct state
@@ -88,7 +86,7 @@ static struct lock_struct {
 /* Secondary actuator data and parameters */
 #define LVDT_FILT_LEN 25   //5s @ 5Hz
 #define ACTBUS_MAX_ENC_ERR  50	  //maximum difference between enc and lvdt
-#define ACTBUS_TRIM_WAIT    20*3*LVDT_FILT_LEN  //thrice LVDT_FILT_LEN, @ 100Hz
+#define ACTBUS_TRIM_WAIT    3*LVDT_FILT_LEN  //thrice LVDT_FILT_LEN
 					  //wait between trims, and after moves
 static struct act_struct {
   int pos;	//raw step count
@@ -164,14 +162,6 @@ static void trimActEnc()
   int i, do_trim = 0;
   char buf[EZ_BUS_BUF_LEN];
 
-  //count down timeout on ACT_FL_TRIMMED indicator flag
-  if (act_trim_flag_wait > 0) {
-    act_trim_flag_wait--;
-    actbus_flags |= ACT_FL_TRIMMED;
-  } else {
-    actbus_flags &= ~ACT_FL_TRIMMED;
-  }
-
   //Check if actuators are busy. If they are, wait longer
   for (i=0; i<3; i++) {
     if (EZBus_IsBusy(&bus, id[i])) {
@@ -184,12 +174,7 @@ static void trimActEnc()
   if (actbus_flags & ACT_FL_BUSY_MASK) return;
 
   //Check if waiting before trimming again
-  if (act_trim_wait > 0) {
-    act_trim_wait--;
-    actbus_flags |= ACT_FL_TRIM_WAIT;
-    return;
-  }
-  else actbus_flags &= ~ACT_FL_TRIM_WAIT;
+  if (actbus_flags & ACT_FL_TRIM_WAIT) return;
 
   //if not busy, and error large enough on one encoder, trim all of them
   for (i=0; i<3; i++) {
@@ -751,6 +736,25 @@ static int filterLVDT(int num, int data)
   return (int)((double)lvdt_sum[num]/LVDT_FILT_LEN + 0.5);
 }
 
+//handle counters in a well-timed frame synchronous manner
+void UpdateActFlags()
+{
+  //count down timeout on ACT_FL_TRIMMED indicator flag
+  if (act_trim_flag_wait > 0) {
+    act_trim_flag_wait--;
+    actbus_flags |= ACT_FL_TRIMMED;
+  } else {
+    actbus_flags &= ~ACT_FL_TRIMMED;
+  }
+
+  //Check if waiting before trimming again
+  if (act_trim_wait > 0) {
+    act_trim_wait--;
+    actbus_flags |= ACT_FL_TRIM_WAIT;
+  }
+  else actbus_flags &= ~ACT_FL_TRIM_WAIT;
+}
+
 void StoreActBus(void)
 {
   int j;
@@ -853,6 +857,8 @@ void StoreActBus(void)
     iMoveLockAddr = GetNiosAddr("i_move_lock");
     iLockHoldAddr = GetNiosAddr("i_hold_lock");
   }
+
+  UpdateActFlags();
 
   //filter the LVDTs, scale into encoder units, rotate to motor positions
   lvdt_filt[0] = filterLVDT(0, 
