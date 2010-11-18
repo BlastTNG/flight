@@ -291,15 +291,21 @@ void StageBus(void)
 {
   int poll_timeout = POLL_TIMEOUT;
   int all_ok = 0;
+  unsigned long conn_attempt = 1;
   struct ezbus bus;
 
   nameThread("XYBus");
   bputs(startup, "startup.");
 
   //TODO need to make steppers serial port safe on nicc
-  if (EZBus_Init(&bus, STAGE_BUS_TTY, "", STAGE_BUS_CHATTER) != EZ_ERR_OK)
-    //TODO should EZBus_Init fail be tfatal??
-    berror(tfatal, "failed to connect");
+  while (1) {
+    if (EZBus_Init(&bus, STAGE_BUS_TTY, "", STAGE_BUS_CHATTER) == EZ_ERR_OK) {
+      bprintf(info, "Connected to %s on attempt %lu.", STAGE_BUS_TTY, conn_attempt);
+      break;
+    }
+    conn_attempt++;
+    sleep(2);
+  }
 
   EZBus_Add(&bus, STAGEX_ID, STAGEX_NAME);
   EZBus_Add(&bus, STAGEY_ID, STAGEY_NAME);
