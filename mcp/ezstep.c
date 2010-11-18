@@ -545,6 +545,8 @@ int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive)
 		bus->name, stepName(bus,who), what);
 	  break;
 	case EZ_SERR_BUSY:
+	  //TODO can sometimes get stuck here. May want to add way out
+	  //for now, running a Stop before move commands might work
 	  if (bus->chatter >= EZ_CHAT_ERR && !overflown) {
 	    bprintf(warning, "%s%s: command overflow (on %s).\n", 
 		bus->name, stepName(bus,who), what);

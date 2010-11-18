@@ -366,12 +366,8 @@ static void GetLockData()
 static void SetLockState(int nic)
 {
   static int firsttime = 1;
-  /* TODO change me back when fixing lock issues
   int pot;
   unsigned int state;
-  */
-  int pot = lock_data.adc[1];
-  unsigned int state = lock_data.state;
 
   static struct BiPhaseStruct* potLockAddr;
   static struct BiPhaseStruct* stateLockAddr;
@@ -383,14 +379,8 @@ static void SetLockState(int nic)
   }
 
   //get lock data
-  /* TODO change me back when fixing lock issues
   pot = slow_data[potLockAddr->index][potLockAddr->channel];
   state = slow_data[stateLockAddr->index][stateLockAddr->channel];
-  */
-  if (nic) {
-    pot = slow_data[potLockAddr->index][potLockAddr->channel];
-    state = slow_data[stateLockAddr->index][stateLockAddr->channel];
-  }
 
   //set the EZBus move parameters
   EZBus_SetVel(&bus, id[LOCKNUM], CommandData.actbus.lock_vel);
@@ -410,22 +400,6 @@ static void SetLockState(int nic)
 
   if (fabs(ACSData.enc_raw_el - LockPosition(CommandData.pointing_mode.Y)) <= 0.5)
     state |= LS_EL_OK;
-
-  // klugy hack to filter restart state not propogating properly...
-  //TODO sometimes when control switches, the lock thinks it's locked
-#if 0
-bprintf(info, "nic: %d state: %d change count: %d\n", nic, state, nic_change_count);
-  if (nic) {
-    if (state != last_lock_state) {
-      if (nic_change_count++ < 6) {
-        return;
-      }
-
-      last_lock_state = state;
-      nic_change_count = 0;
-    }
-  } // end klugy hack
-#endif
 
   /* Assume the pin is out unless we're all the way closed */
   if (state & LS_CLOSED)
@@ -548,6 +522,7 @@ static void DoLock(void)
       case LA_EXTEND:
         drive_timeout = DRIVE_TIMEOUT;
         bputs(info, "Extending lock motor.");
+        EZBus_Stop(&bus, id[LOCKNUM]); /* stop current action first */
 	EZBus_RelMove(&bus, id[LOCKNUM], INT_MAX);
 	usleep(SEND_SLEEP); /* wait for a bit */
         lock_data.state &= ~LS_DRIVE_MASK;
@@ -556,6 +531,7 @@ static void DoLock(void)
       case LA_RETRACT:
         drive_timeout = DRIVE_TIMEOUT;
         bputs(info, "Retracting lock motor.");
+        EZBus_Stop(&bus, id[LOCKNUM]); /* stop current action first */
 	EZBus_RelMove(&bus, id[LOCKNUM], INT_MIN);
 	usleep(SEND_SLEEP); /* wait for a bit */
         lock_data.state &= ~LS_DRIVE_MASK;
