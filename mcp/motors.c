@@ -38,7 +38,7 @@
 #include "amccommand.h"
 #include "motordefs.h"
 
-#define MIN_EL 23.5 // should be set to 25 for flight.
+#define MIN_EL 25 // should be set to 25 for flight.
 #define MAX_EL 55
 
 #define VPIV_FILTER_LEN 40
@@ -641,7 +641,7 @@ static void ClearElDither() {
 /*   Do scan modes                                              */
 /*                                                              */
 /****************************************************************/
-#define MIN_SCAN 0.2
+#define MIN_SCAN 0.1
 static void SetAzScanMode(double az, double left, double right, double v,
     double D)
 {
@@ -1016,8 +1016,8 @@ static void DoNewCapMode(void)
   } else {
     xw = sqrt(x2);
   }
-  if (xw < MIN_SCAN)
-    xw = MIN_SCAN;
+  if (xw < MIN_SCAN*0.5)
+    xw = MIN_SCAN*0.5;
   xw /= cos(el * M_PI / 180.0);
   next_left = caz - xw;
   next_right = caz + xw;
@@ -1030,8 +1030,8 @@ static void DoNewCapMode(void)
   } else {
     xw = sqrt(x2);
   }
-  if (xw < MIN_SCAN)
-    xw = MIN_SCAN;
+  if (xw < MIN_SCAN*0.5)
+    xw = MIN_SCAN*0.5;
   xw /= cos(el * M_PI / 180.0);
   left = caz - xw;
   right = caz + xw;
