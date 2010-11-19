@@ -67,8 +67,9 @@
 #define T_HE3FRIDGE_HOT   0.400
 #define T_HE3FRIDGE_COLD  0.350
 #define T_HE4POT_MAX      2.500
-#define T_CHARCOAL_MIN   32.500
+#define T_CHARCOAL_MIN   34.000
 #define T_CHARCOAL_MAX   38.000
+#define T_CHARCOAL_SET   35.000
 #define T_LHE_MAX         4.600
 #define T_CHAR_HS_COLD   10.000
 
@@ -396,6 +397,11 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
           if (!heat_char)
             bprintf(info, "Auto Cycle: Turning charcoal heat on.");
           heat_char = 1;
+        } else if ((heat_char == 0) && (t_charcoal < T_CHARCOAL_SET)) {
+          WriteData(cycleStateWAddr, CRYO_CYCLE_COOL, NIOS_QUEUE);
+          heat_char = 0;
+          heat_hs = 1;
+          bprintf(info, "Auto Cycle: Charcoal heatswitch on.");
         }
       } //else we're inbetween the setpoints so we keep doin' what we're doin'.
     } else if ( cycle_state == CRYO_CYCLE_COOL) {
