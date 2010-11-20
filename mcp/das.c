@@ -60,9 +60,9 @@
 #define CRYO_CYCLE_HS_OFF 0x0008
 
 /* he3 cycle timeouts (all in seconds) */
-#define CRYO_CYCLE_HEAT_TIMEOUT  (28*60)
+#define CRYO_CYCLE_HEAT_TIMEOUT  (32*60)
 #define CRYO_CYCLE_COOL_TIMEOUT  (2*60*60)
-#define CRYO_CYCLE_HS_TIMEOUT    (2.5*60)
+#define CRYO_CYCLE_HS_TIMEOUT    (2.75*60)
 
 #define T_HE3FRIDGE_HOT   0.400
 #define T_HE3FRIDGE_COLD  0.350
