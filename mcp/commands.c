@@ -71,6 +71,12 @@
 #define ISC_TRIGGER_POS  2
 #define ISC_TRIGGER_NEG  3
 
+#define EXT_SLOT   0
+#define EXT_ICHUNK 1
+#define EXT_NCHUNK 2
+#define EXT_NSCHED 3
+#define EXT_ROUTE  4
+  
 void RecalcOffset(double, double);  /* actuators.c */
 
 void SetRaDec(double, double); /* defined in pointing.c */
@@ -2187,9 +2193,64 @@ void WatchFIFO ()
 }
 
 #else
+
+void ProcessUplinkSched(unsigned char *extdat) {
+  static unsigned char slot = 0xff;
+  static unsigned short sched[32][64][2];
+  static unsigned long chunks_received = 0;
+  static unsigned char nchunk = 0;
+  static unsigned char nsched[32];
+  
+  unsigned char slot_in, i_chunk, nchunk_in;
+  unsigned short *extdat_ui;
+  
+  int i, i_samp;
+  
+  slot_in = extdat[EXT_SLOT];
+  i_chunk = extdat[EXT_ICHUNK];
+  nchunk_in = extdat[EXT_NCHUNK];
+  nsched[i_chunk] = extdat[EXT_NSCHED];
+  
+  if ((slot != slot_in) || (nchunk_in != nchunk)) {
+    chunks_received = 0;
+    for (i=nchunk_in; i<32; i++) {
+      chunks_received |= (1 << i);
+    }
+    slot = slot_in;
+    nchunk = nchunk_in;
+  }
+  
+  extdat_ui = (unsigned short *)(&extdat[6]);
+
+  for (i=0; i<nsched[i_chunk]; i++) {
+    sched[i_chunk][i][0] = extdat_ui[i*2];
+    sched[i_chunk][i][1] = extdat_ui[i*2+1];
+  }
+
+  chunks_received |= (1<<i_chunk);
+
+  if (chunks_received == 0xffffffff) {
+    FILE *fp;
+    
+    fp = fopen("/data/etc/testsched", "w");
+    for (i_chunk=0; i_chunk < nchunk; i_chunk++) {
+      bprintf(warning, "i_chunk: %d nsched: %d\n", i_chunk, (int)nsched[i_chunk]);
+      for (i_samp=0; i_samp<nsched[i_chunk]; i_samp++) {
+        fprintf(fp, "%u %u\n", sched[i_chunk][i_samp][0], sched[i_chunk][i_samp][1]);
+      }
+    }
+    fclose(fp);
+  }
+  
+  bprintf(warning, "finished extended command\n"
+                   "  slot %d chunk %d n chunk %d nsched %d route %x chunks_received: %lx\n", 
+                   extdat[EXT_SLOT], extdat[EXT_ICHUNK], extdat[EXT_NCHUNK], extdat[EXT_NSCHED], extdat[EXT_ROUTE], chunks_received);
+}
+
 void WatchPort (void* parameter)
 {
   const char *COMM[] = {"/dev/ttyS0", "/dev/ttyS1"};
+  const unsigned char route[2] = {0x09, 0x0c};
 
   unsigned char buf;
   unsigned short *indatadumper;
@@ -2211,6 +2272,9 @@ void WatchPort (void* parameter)
 
   int timer = 0;
   int bytecount = 0;
+  int extlen = 0;
+
+  unsigned char extdat[256];
 
   char tname[6];
   sprintf(tname, "COMM%1d", port+1);
@@ -2304,12 +2368,11 @@ void WatchPort (void* parameter)
         break;
       case 2: /* waiting for command packet datum */
         if (bytecount == 0) {  /* Look for 2nd byte of command packet = 0x02 */
-          if (buf == 0x02)
+          if (buf == 0x02) {
             bytecount = 1;
-          else {
-            readstage = 0;
-            bprintf(warning, "Bad command packet: Unsupported Length: %02X\n", 
-		buf);
+	  } else {
+            readstage = 7;
+	    extlen = buf;
           }
         } else if (bytecount >= 1 && bytecount <= 2) {
           /* Read the two data bytes of the command packet */
@@ -2425,6 +2488,24 @@ void WatchPort (void* parameter)
                 "Bad packet terminator: %02X\n", buf);
           }
         }
+        break;
+      case 7: // reading extended command
+        if (bytecount < extlen) {
+	  extdat[bytecount] = buf;
+	  bytecount++;
+	} else {
+	  if (buf == 0x03) {
+	    if (extdat[4] == route[port]) {
+	      ProcessUplinkSched(extdat);
+	    }
+	  } else {
+            bprintf(warning, "Bad encoding in extended command: "
+                "Bad packet terminator: %02X\n", buf);
+          }
+          bytecount = 0;
+          readstage = 0;
+	}
+        break;
     }
 
     /* Relinquish control of memory */
@@ -2559,6 +2640,9 @@ void InitCommandData()
   CommandData.reset_piv = 0;
   CommandData.reset_elev = 0;
   CommandData.restore_piv = 0;
+  
+  CommandData.schedslot = 0x100;
+  CommandData.schedparts=0x0;
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))

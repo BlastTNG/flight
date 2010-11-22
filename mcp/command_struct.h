@@ -177,6 +177,8 @@ struct CommandDataStruct {
 
   unsigned short int timeout;
   unsigned short int alice_file;
+  unsigned short int schedslot;
+  unsigned int schedparts;
   unsigned short int sucks;
   unsigned short int lat_range;
   unsigned short int at_float;
