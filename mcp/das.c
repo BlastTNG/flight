@@ -272,7 +272,8 @@ static int JFETthermostat(void)
 static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
     unsigned short *force_cycle)
 {
-  static int firsttime = 1;
+  static int firsttime = 1000; 
+           // Skip first 1000 frames (10 seconds) as startup veto.
   static struct BiPhaseStruct* t_lhe_Addr;
   static struct BiPhaseStruct* t_he3fridge_Addr;
   static struct BiPhaseStruct* t_charcoal_Addr;
@@ -295,7 +296,10 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
   static unsigned short heat_char = 0;
   static unsigned short heat_hs = 0;
 
-  if (firsttime) {
+  if (firsttime > 1) {
+    firsttime--;
+    return;
+  } else if (firsttime) {
     firsttime = 0;
     t_lhe_Addr = GetBiPhaseAddr("td_lhe");
     t_he3fridge_Addr = GetBiPhaseAddr("tr_300mk_strap"); //NOTE: tr_he3fridge is broken.
@@ -321,7 +325,7 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
     return;
   }
 
-  if(!(iterator++ % 200))  /* Run this loop at 0.5 Hz */
+  if(!(iterator++ % 199))  /* Run this loop at ~0.5 Hz */
   {
 
     start_time = slow_data[cycleStartRAddr->index][cycleStartRAddr->channel];
