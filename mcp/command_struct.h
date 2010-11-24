@@ -176,9 +176,10 @@ struct CommandDataStruct {
   } Temporary;
 
   unsigned short int timeout;
-  unsigned short int alice_file;
-  unsigned short int schedslot;
-  unsigned int schedparts;
+  unsigned short int slot_sched; // what slot to use
+  unsigned short int upslot_sched; // slot being uplinked
+  unsigned int parts_sched; // bitfield up pulinked parts
+  unsigned short int uplink_sched; // use uplink sched
   unsigned short int sucks;
   unsigned short int lat_range;
   unsigned short int at_float;

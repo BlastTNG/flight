@@ -77,6 +77,11 @@
 #define EXT_NSCHED 3
 #define EXT_ROUTE  4
   
+#define MAXLIB 1024
+
+#define MAX_RTIME 65536.0
+#define MAX_DAYS 21.0
+
 void RecalcOffset(double, double);  /* actuators.c */
 
 void SetRaDec(double, double); /* defined in pointing.c */
@@ -989,9 +994,11 @@ static void SingleCommand (enum singleCommand command, int scheduled)
 
     case blast_rocks:
       CommandData.sucks = 0;
+      CommandData.uplink_sched = 0;
       break;
     case blast_sucks:
       CommandData.sucks = 1;
+      CommandData.uplink_sched = 0;
       break;
 
     case at_float:
@@ -1612,8 +1619,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case iridium_bw:
       CommandData.iridium_bw = rvalues[0];
       break;
-    case alice_file: /* change downlink XML file */
-      CommandData.alice_file = ivalues[0];
+    case slot_sched: /* change uplinked schedule file */
+      CommandData.slot_sched = ivalues[0];
+      CommandData.uplink_sched = 1;
       break;
     case plugh:/* A hollow voice says "Plugh". */
       CommandData.plover = ivalues[0];
@@ -2194,6 +2202,39 @@ void WatchFIFO ()
 
 #else
 
+struct LibraryStruct  {
+  int n;
+  int entry[MAXLIB];
+  char cmd[MAXLIB][64];
+  char params[MAXLIB][256];
+};
+
+struct LibraryStruct library;
+
+void OpenLibrary() {
+  FILE *fp;
+  char instr[1024];
+  int nf;
+  int i;
+
+  fp = fopen("/data/etc/sched.library", "r");
+  if (fp == NULL) {
+    berror(fatal, "Could not open schedule file library.");
+    exit(0);
+  }
+  
+  i=0;
+  while (fgets(instr, 256, fp) != NULL) {
+    memset(library.params[i], 0, 256);
+    nf = sscanf(instr, "%d %s %1023c", library.entry+i, library.cmd[i], library.params[i]);
+    if (nf==2) library.params[i][0] = '\n';
+    if (nf>=2) i++;
+  }
+  library.n = i;
+
+}
+
+
 void ProcessUplinkSched(unsigned char *extdat) {
   static unsigned char slot = 0xff;
   static unsigned short sched[32][64][2];
@@ -2203,6 +2244,9 @@ void ProcessUplinkSched(unsigned char *extdat) {
   
   unsigned char slot_in, i_chunk, nchunk_in;
   unsigned short *extdat_ui;
+  unsigned short entry;
+  unsigned short itime;
+  double day, hour;
   
   int i, i_samp;
   
@@ -2229,14 +2273,26 @@ void ProcessUplinkSched(unsigned char *extdat) {
 
   chunks_received |= (1<<i_chunk);
 
+  CommandData.parts_sched = chunks_received;
+  CommandData.upslot_sched = slot;
+  
   if (chunks_received == 0xffffffff) {
     FILE *fp;
+    char filename[18];
+   
+    OpenLibrary();
     
-    fp = fopen("/data/etc/testsched", "w");
+    sprintf(filename, "/data/etc/%d.sch", slot);
+    fp = fopen(filename, "w");
     for (i_chunk=0; i_chunk < nchunk; i_chunk++) {
-      bprintf(warning, "i_chunk: %d nsched: %d\n", i_chunk, (int)nsched[i_chunk]);
       for (i_samp=0; i_samp<nsched[i_chunk]; i_samp++) {
-        fprintf(fp, "%u %u\n", sched[i_chunk][i_samp][0], sched[i_chunk][i_samp][1]);
+        entry = sched[i_chunk][i_samp][1];
+        itime = sched[i_chunk][i_samp][0];
+        day = (double)itime*MAX_DAYS/MAX_RTIME;
+        hour = (day - floor(day))*24.0;
+        if (entry<library.n) {
+          fprintf(fp, "%s %d %.6g %s", library.cmd[entry], (int)day , hour, library.params[entry]);
+        }
       }
     }
     fclose(fp);
@@ -2635,14 +2691,13 @@ void InitCommandData()
   /* don't use the fast gy offset calculator */
   CommandData.fast_offset_gy = 0;
 
-
   CommandData.reset_rw = 0;
   CommandData.reset_piv = 0;
   CommandData.reset_elev = 0;
   CommandData.restore_piv = 0;
   
-  CommandData.schedslot = 0x100;
-  CommandData.schedparts=0x0;
+  CommandData.slot_sched = 0x100;
+  CommandData.parts_sched=0x0;
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
@@ -2658,7 +2713,7 @@ void InitCommandData()
   /** prev_status overrides this stuff **/
   CommandData.at_float = 0;
   CommandData.timeout = 57600; /* TODO: Change this to something short for pre-flight!!!*/
-  CommandData.alice_file = 0;
+  CommandData.slot_sched = 0;
   CommandData.tdrss_bw = 6000;
   CommandData.iridium_bw = 2000;
   CommandData.vtx_sel[0] = vtx_isc;
@@ -2842,7 +2897,7 @@ void InitCommandData()
   CommandData.ISCState[0].pause = 0;
   CommandData.ISCState[0].save = 0;
   CommandData.ISCState[0].eyeOn = 1;
-  CommandData.ISCState[0].hold_current = 0;
+  CommandData.ISCState[0].hold_current = 50;
   CommandData.ISCState[0].autofocus = 0;
   CommandData.ISCState[0].focus_pos = 0;
   CommandData.ISCState[0].MCPFrameNum = 0;
@@ -2880,7 +2935,7 @@ void InitCommandData()
   CommandData.ISCState[1].pause = 0;
   CommandData.ISCState[1].save = 0;
   CommandData.ISCState[1].eyeOn = 1;
-  CommandData.ISCState[1].hold_current = 0;
+  CommandData.ISCState[1].hold_current = 50;
   CommandData.ISCState[1].autofocus = 0;
   CommandData.ISCState[1].focus_pos = 0;
   CommandData.ISCState[1].MCPFrameNum = 0;

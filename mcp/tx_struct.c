@@ -140,7 +140,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"lst",          'w', LOOP1,  6,         1.0/3600.0,             0.0, 'U', U_NONE},
   {"ra_isc",       'w', LOOP1,  8,              LI2H,              0.0, 'U', U_NONE},
   {"dec_isc",      'w', LOOP1, 10,          LI2DEG/2.,            -90., 'U', U_NONE},
-  {"schedparts",   'w', LOOP1, 12,                1.0,             0.0, 'U', U_NONE},
+  {"parts_sched",   'w', LOOP1, 12,                1.0,             0.0, 'U', U_NONE},
   {"framenum_isc", 'w', LOOP1, 32,                1.0,             0.0, 'U', U_NONE},
   {"lat",          'w', LOOP1, 38,             LI2DEG,             0.0, 'S', U_NONE},
   {"lon",          'w', LOOP1, 40,             LI2DEG,             0.0, 'S', U_NONE},
@@ -291,9 +291,9 @@ struct ChannelStruct SlowChannels[] = {
   {"timeout",      'w', LOOP1, 20,                1.0,             0.0, 'u', U_NONE},
   {"az_sun",       'w', LOOP1, 21,              I2DEG,             0.0, 'u', U_D_DEG},
   {"lvdt_low_act", 'w', LOOP1, 22,                1.0,         -5000.0, 'u', U_NONE},
-  {"status_mcc",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE}, //south_i_am, at_float, schedule, alice_file
+  {"status_mcc",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE}, //south_i_am, at_float, schedule, slot_sched
   {"cryostate",    'w', LOOP1, 24,                1.0,             0.0, 'u', U_NONE},
-  {"schedslot",    'w', LOOP1, 25,                1.0,             0.0, 'u', U_NONE},  
+  {"upslot_sched", 'w', LOOP1, 25,                1.0,             0.0, 'u', U_NONE},  
   {"t_chip_flc",   'w', LOOP1, 26,               0.01,             0.0, 'u', U_NONE},
   {"declination_mag",'w', LOOP1, 27,              I2DEG,             0.0, 'u', U_D_DEG}, // magnetic declination
   {"veto_sensor",  'w', LOOP1, 28,                1.0,             0.0, 'u', U_NONE},

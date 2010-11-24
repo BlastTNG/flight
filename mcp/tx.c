@@ -137,11 +137,16 @@ static void WriteAux(void)
   static struct NiosStruct* he4LevOldAddr;
   static struct NiosStruct* statusEthAddr;
   static struct BiPhaseStruct* he4LevReadAddr;
+  static struct NiosStruct* partsSchedAddr;
+  static struct NiosStruct* upslotSchedAddr;
+  
   static int incharge = -1;
   time_t t;
   int i_point;
   struct timeval tv;
   struct timezone tz;
+  
+  unsigned short mccstatus;
 
   static int firsttime = 1;
   if (firsttime) {
@@ -165,6 +170,8 @@ static void WriteAux(void)
     bbcFifoSizeAddr = GetNiosAddr("bbc_fifo_size");
     ploverAddr = GetNiosAddr("plover");
     statusEthAddr = GetNiosAddr("status_eth");
+    partsSchedAddr = GetNiosAddr("parts_sched");
+    upslotSchedAddr = GetNiosAddr("upslot_sched");
   }
 
   if (StartupVeto>0) {
@@ -198,6 +205,9 @@ static void WriteAux(void)
   WriteData(tMbFlcAddr, CommandData.temp3, NIOS_QUEUE);
 
   WriteData(diskFreeAddr, CommandData.df, NIOS_QUEUE);
+  
+  WriteData(partsSchedAddr, CommandData.parts_sched, NIOS_QUEUE);
+  WriteData(upslotSchedAddr, CommandData.upslot_sched, NIOS_QUEUE);
 
   i_point = GETREADINDEX(point_index);
 
@@ -221,12 +231,21 @@ static void WriteAux(void)
        ((EthernetSBSC & 0x3) << 6),  
        NIOS_QUEUE);
 
-  WriteData(statusMCCAddr, 
-       (SouthIAm ? 0x1 : 0x0) +                 //0x01
-       (CommandData.at_float ? 0x2 : 0x0) +     //0x02
-       (CommandData.sucks ? 0x10 : 0x00) +      //0x10
-       ((CommandData.lat_range & 0x3) << 5) +   //0x60
-       ((CommandData.alice_file & 0xFF) << 8),  //0xFF00
+  mccstatus =        
+    (SouthIAm ? 0x1 : 0x0) +                 //0x01
+    (CommandData.at_float ? 0x2 : 0x0) +     //0x02
+    (CommandData.uplink_sched ? 0x08 : 0x00) + //0x08
+    (CommandData.sucks ? 0x10 : 0x00) +      //0x10
+       //((CommandData.lat_range & 0x3) << 5) +   //0x60
+    ((CommandData.slot_sched & 0xFF) << 8);  //0xFF00
+
+  if (CommandData.uplink_sched) {
+    mccstatus |= 0x60;
+  } else {
+    mccstatus |= ((CommandData.lat_range & 0x3) << 5);
+  }
+  
+  WriteData(statusMCCAddr, mccstatus,
        NIOS_FLUSH);
 }
 

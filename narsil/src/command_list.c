@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.94 $";
+const char *command_list_serial = "$Revision: 4.95 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -365,10 +365,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
     }, */
 
-  {COMMAND(alice_file), "set XML file for compressed (6kbit) downlink",
+  {COMMAND(slot_sched), "set uplinked slot to use for schedule file",
     GR_TELEM, 1,
     {
-      {"File #", 0, 15, 'i', "ALICE_FILE"}
+      {"Slot #", 0, 250, 'i', "SLOT_SCHED"}
     }
   },
 

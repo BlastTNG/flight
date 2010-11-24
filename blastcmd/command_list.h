@@ -145,7 +145,7 @@ enum multiCommand {
   roll_gain,         isc_set_aperture,  isc_set_focus,    az_scan_accel,
   t_gyro_set,        osc_gain,          tdrss_bw,         iridium_bw,
   t_gyro_gain,       timeout,           isc_tolerances,   vcap,
-  vbox,              alice_file,        az_gyro_offset,   isc_hold_current,
+  vbox,              slot_sched,        az_gyro_offset,   isc_hold_current,
   isc_save_period,   osc_offset,	cov_gps,          hwpr_set_overshoot,
   jfet_set,          isc_foc_off,       hwpr_vel,         hwpr_i,
   osc_foc_off,       gyro_off,	        gyro_on,          quad,
@@ -159,7 +159,7 @@ enum multiCommand {
   cam_any,	     cam_settrig_timed, cam_exp_params,	  cam_focus_params,
   cam_bad_pix,	     cam_blob_params,	cam_lens_any,	  cam_lens_move, 
   cam_lens_params,   t_sbsc_set,        hwpr_repeat,      hwpr_define_pos,
-  hwpr_goto,	     ants_gps,          hwpr_goto_pot,
+  hwpr_goto,	     ants_gps,          hwpr_goto_pot,    
   plugh
 };
 
