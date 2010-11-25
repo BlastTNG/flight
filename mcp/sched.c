@@ -341,6 +341,8 @@ int LoadUplinkFile(int slot) {
   
   LoadSchedFile(filename, &(S[i_s]), -10);
   
+  
+  bprintf(info, "Scheduler: Read %i lines in schedule file %s\n", S[i_s].n_sched, filename);
   if (S[i_s].n_sched>2) { // we read something
     Uplink_S = &(S[i_s]);
     if (i_s == 0) i_s = 1;
@@ -374,55 +376,68 @@ void DoSched(void)
   static int last_is = -1;
   static int last_s = -1;
   static int last_l = -1;
+  static int last_slot = -1;
+  static int last_up = -1;
   int i_sched, i_point;
   int i, index;
   struct ScheduleType *S = &_S[CommandData.sucks][CommandData.lat_range];
   struct ScheduleEvent event;
 
-  if (CommandData.uplink_sched) {
-    S = Uplink_S;
-  }
   
   i_point = GETREADINDEX(point_index);
   d_lat = PointingData[i_point].lat - NOMINAL_LATITUDE;
-
-  /* check our latitude band */
-  if (CommandData.lat_range == 2) { /* southern band */
-    if (d_lat > -(LATITUDE_BAND / 2) + LATITUDE_OVERLAP) {
-      bprintf(info, "Scheduler: Entering middle latitude band. (%g)\n", d_lat);
-      CommandData.lat_range = 1;
-    }
-  } else if (CommandData.lat_range == 1) { /* middle band */
-    if (d_lat < -(LATITUDE_BAND / 2)) {
-      bprintf(info, "Scheduler: Entering southern latitude band. (%g)\n", d_lat);
-      CommandData.lat_range = 2;
-    } else if (d_lat > (LATITUDE_BAND / 2)) {
-      bprintf(info, "Scheduler: Entering northern latitude band. (%g)\n", d_lat);
-      CommandData.lat_range = 0;
-    }
-  } else if (CommandData.lat_range == 0) { /* norhtern band */
-    if (d_lat < (LATITUDE_BAND / 2) - LATITUDE_OVERLAP) {
-      bprintf(info, "Scheduler: Entering middle latitude band. (%g)\n", d_lat);
-      CommandData.lat_range = 1;
-    }
+  
+  if (last_up != CommandData.uplink_sched) {
+    last_up = CommandData.uplink_sched;
+    last_is = -1;
+  }
+  
+  if (CommandData.uplink_sched) {
+    if (last_slot != CommandData.slot_sched) {
+      last_slot = CommandData.slot_sched;
+      last_is = -1;
+    }    
+    S = Uplink_S;
   } else {
-    bprintf(warning, "Scheduler: Unexpected latitude band: %i\n",
-        CommandData.lat_range);
-    CommandData.lat_range = 1;
+    /* check our latitude band */
+    if (CommandData.lat_range == 2) { /* southern band */
+      if (d_lat > -(LATITUDE_BAND / 2) + LATITUDE_OVERLAP) {
+        bprintf(info, "Scheduler: Entering middle latitude band. (%g)\n", d_lat);
+        CommandData.lat_range = 1;
+      }
+    } else if (CommandData.lat_range == 1) { /* middle band */
+      if (d_lat < -(LATITUDE_BAND / 2)) {
+        bprintf(info, "Scheduler: Entering southern latitude band. (%g)\n", d_lat);
+        CommandData.lat_range = 2;
+      } else if (d_lat > (LATITUDE_BAND / 2)) {
+        bprintf(info, "Scheduler: Entering northern latitude band. (%g)\n", d_lat);
+        CommandData.lat_range = 0;
+      }
+    } else if (CommandData.lat_range == 0) { /* norhtern band */
+      if (d_lat < (LATITUDE_BAND / 2) - LATITUDE_OVERLAP) {
+        bprintf(info, "Scheduler: Entering middle latitude band. (%g)\n", d_lat);
+        CommandData.lat_range = 1;
+      }
+    } else {
+      bprintf(warning, "Scheduler: Unexpected latitude band: %i\n",
+              CommandData.lat_range);
+      CommandData.lat_range = 1;
+    }
+    
+    S = &_S[CommandData.sucks][CommandData.lat_range];
+    
+    /* check to see if we've changed schedule files */
+    if (last_l != CommandData.lat_range) {
+      last_is = -1;
+      last_l = CommandData.lat_range;
+    }
+    
+    if (last_s != CommandData.sucks) {
+      last_is = -1;
+      last_s = CommandData.sucks;
+    }  
   }
-
-  S = &_S[CommandData.sucks][CommandData.lat_range];
-
-  /* check to see if we've changed schedule files */
-  if (last_l != CommandData.lat_range) {
-    last_is = -1;
-    last_l = CommandData.lat_range;
-  }
-
-  if (last_s != CommandData.sucks) {
-    last_is = -1;
-    last_s = CommandData.sucks;
-  }
+  
 
   /* no schedule file case */
   if (S->n_sched < 1) {
