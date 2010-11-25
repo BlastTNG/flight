@@ -92,6 +92,8 @@ void NormalizeAngle(double*);
 
 void nameThread(const char*);  /* mcp.c */
 
+int LoadUplinkFile(int slot); /*sched.c */
+
 static const char *UnknownCommand = "Unknown Command";
 
 extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
@@ -102,6 +104,8 @@ extern int doing_schedule; /* sched.c */
 extern pthread_t watchdog_id;  /* mcp.c */
 extern short int SouthIAm;
 pthread_mutex_t mutex;
+
+extern char lst0str[82];
 
 struct SIPDataStruct SIPData;
 struct CommandDataStruct CommandData;
@@ -1620,8 +1624,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.iridium_bw = rvalues[0];
       break;
     case slot_sched: /* change uplinked schedule file */
-      CommandData.slot_sched = ivalues[0];
-      CommandData.uplink_sched = 1;
+      if (LoadUplinkFile(ivalues[0])) {
+        CommandData.uplink_sched = 1;
+        CommandData.slot_sched = ivalues[0];
+      }
       break;
     case plugh:/* A hollow voice says "Plugh". */
       CommandData.plover = ivalues[0];
@@ -2284,6 +2290,9 @@ void ProcessUplinkSched(unsigned char *extdat) {
     
     sprintf(filename, "/data/etc/%d.sch", slot);
     fp = fopen(filename, "w");
+    
+    fprintf(fp, "%s", lst0str);
+    
     for (i_chunk=0; i_chunk < nchunk; i_chunk++) {
       for (i_samp=0; i_samp<nsched[i_chunk]; i_samp++) {
         entry = sched[i_chunk][i_samp][1];
@@ -2846,7 +2855,7 @@ void InitCommandData()
   CommandData.actbus.act_vel = 200;
   CommandData.actbus.act_acc = 1;
   CommandData.actbus.act_move_i = 75;
-  CommandData.actbus.act_hold_i = 0;
+  CommandData.actbus.act_hold_i = 10;
 
   CommandData.actbus.lock_vel = 110000;
   CommandData.actbus.lock_acc = 100;

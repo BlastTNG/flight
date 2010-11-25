@@ -31,6 +31,9 @@
 
 #define MAX_NSCHED 8000
 struct ScheduleType _S[2][3];
+
+struct ScheduleType *Uplink_S;
+
 int doing_schedule = 0;
 unsigned int sched_lst = 0;
 
@@ -39,6 +42,8 @@ void StarPos(double t, double ra0, double dec0, double mra, double mdec,
 double GetJulian(time_t t);
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
 		double *el);
+
+char lst0str[82];
 
 //#define NOMINAL_LATITUDE -78.0 /* degrees North */
 #define CHECK_LON 20.0
@@ -119,8 +124,10 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
     S->n_sched = 0;
     return;
   }
-
   GetLine(fp, line_in);
+  
+  strncpy(lst0str, line_in, 80);
+  
   sscanf(line_in, "%d-%d-%d %d:%d:%d", &(ts.tm_year), &(ts.tm_mon),
       &(ts.tm_mday), &(ts.tm_hour), &(ts.tm_min), &(ts.tm_sec));
 
@@ -146,13 +153,15 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
 
   dt /= 3600.0;
 
-  bprintf(sched,
-      "Scheduler: ***********************************************************\n"
-      "Scheduler: ***       Schedule File: %s\n"
-      "Scheduler: *** Current local sid. date (hours relative to epoch) %g\n"
-      "Scheduler: *** Assuming LAT = %g , LON = %g for checks\n", file, dt,
-      check_lat, CHECK_LON);
-
+  if (lband>-10) {
+    bprintf(sched,
+            "Scheduler: ***********************************************************\n"
+            "Scheduler: ***       Schedule File: %s\n"
+            "Scheduler: *** Current local sid. date (hours relative to epoch) %g\n"
+            "Scheduler: *** Assuming LAT = %g , LON = %g for checks\n", file, dt,
+            check_lat, CHECK_LON);
+  }
+  
   /***********************/
   /*** Read the events ***/
   discarded_lines = 0;
@@ -240,59 +249,106 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
   }
   S->n_sched -= discarded_lines;
 
-  for (i = 0; i < S->n_sched; i++) {
-    if (S->event[i].command == box || S->event[i].command == vbox ||
+  if (lband>-10) {
+    for (i = 0; i < S->n_sched; i++) {
+      if (S->event[i].command == box || S->event[i].command == vbox ||
         S->event[i].command == cap || S->event[i].command == vcap) {
-      radec2azel(S->event[i].rvalues[0], S->event[i].rvalues[1], S->event[i].t,
-          check_lat, &az1, &el1);
-      if (i == S->n_sched - 1)
-        radec2azel(S->event[i].rvalues[0], S->event[i].rvalues[1],
-            S->event[i].t, check_lat, &az2, &el2);
-      else
-        radec2azel(S->event[i].rvalues[0], S->event[i].rvalues[1],
-            S->event[i + 1].t, check_lat, &az2, &el2);
-
-      height = S->event[i].rvalues[3];
-      if (S->event[i].command == box || S->event[i].command == vbox)
-        height /= 2;
-
-      el_range_warning = 0;
-      if (el1 > el2) {
-        el1 += height;
-        el2 -= height;
-        if (el1 > 60.0)
-          el_range_warning = 1;
-        if (el2 < 25.0)
-          el_range_warning = 1;
-      } else {
-        el1 -= height;
-        el2 += height;
-        if (el2 > 60.0)
-          el_range_warning = 1;
-        if (el1 < 25.0)
-          el_range_warning = 1;
-      }
-      if (el_range_warning) {
-        bprintf(sched, "Scheduler: ******************************************\n"
-            "Scheduler: *** Warning: El Range of Event %i (%s)\n", i,
-            CommandName(S->event[i].is_multi, S->event[i].command));
-        bprintf(sched, "Scheduler: *** LST: %i/%7.4f Ra: %8.3f  Dec: %8.3f\n",
-            (int)(S->event[i].t / 86400), fmod(S->event[i].t / 3600.0, 24),
-            S->event[i].rvalues[0], S->event[i].rvalues[1]);
-        bprintf(sched, "Scheduler: *** LST: %7.4f Az: %8.3f - %8.3f El: "
-            "%8.3f - %8.3f\n", S->event[i].t / 3600.0, az1, az2, el1, el2);
-      }
+        radec2azel(S->event[i].rvalues[0], S->event[i].rvalues[1], S->event[i].t,
+                   check_lat, &az1, &el1);
+        if (i == S->n_sched - 1)
+          radec2azel(S->event[i].rvalues[0], S->event[i].rvalues[1],
+                     S->event[i].t, check_lat, &az2, &el2);
+          else
+            radec2azel(S->event[i].rvalues[0], S->event[i].rvalues[1],
+                       S->event[i + 1].t, check_lat, &az2, &el2);
+            
+            height = S->event[i].rvalues[3];
+          if (S->event[i].command == box || S->event[i].command == vbox)
+            height /= 2;
+          
+          el_range_warning = 0;
+          if (el1 > el2) {
+            el1 += height;
+            el2 -= height;
+            if (el1 > 60.0)
+              el_range_warning = 1;
+            if (el2 < 25.0)
+              el_range_warning = 1;
+          } else {
+            el1 -= height;
+            el2 += height;
+            if (el2 > 60.0)
+              el_range_warning = 1;
+            if (el1 < 25.0)
+              el_range_warning = 1;
+          }
+          if (el_range_warning) {
+            bprintf(sched, "Scheduler: ******************************************\n"
+                           "Scheduler: *** Warning: El Range of Event %i (%s)\n", i,
+                    CommandName(S->event[i].is_multi, S->event[i].command));
+            bprintf(sched, "Scheduler: *** LST: %i/%7.4f Ra: %8.3f  Dec: %8.3f\n",
+                    (int)(S->event[i].t / 86400), fmod(S->event[i].t / 3600.0, 24),
+                    S->event[i].rvalues[0], S->event[i].rvalues[1]);
+            bprintf(sched, "Scheduler: *** LST: %7.4f Az: %8.3f - %8.3f El: "
+                           "%8.3f - %8.3f\n", S->event[i].t / 3600.0, az1, az2, el1, el2);
+          }
+        }
     }
+    bputs(sched, "Scheduler: "
+              "***********************************************************\n");
   }
-  bputs(sched, "Scheduler: "
-      "***********************************************************\n");
-
+  
   if (discarded_lines)
     bprintf(warning, "Discarded %i malformed lines from schedule file.",
         discarded_lines);
 
   if (fclose(fp) == EOF)
     berror(err, "Scheduler: Error on close");
+}
+
+// load uplink file
+//   load into a 2 element cirular buffer
+//   set Uplink_S to new one once loaded (not before).
+//   return 1 on success
+int LoadUplinkFile(int slot) {
+  char filename[27];
+  FILE *fp;
+  static struct ScheduleType S[2];
+  static int i_s = -1; // which S are we about to fill
+  
+  if (i_s<0) {
+    S[0].n_sched = S[1].n_sched = 0;
+    S[0].t0 = S[1].t0 = 0;
+    S[0].event = S[1].event = NULL;
+    i_s = 0;
+  }
+  
+  // free the schedule
+  if (S[i_s].n_sched>0) {
+    free(S[i_s].event);
+    S[i_s].n_sched = 0;
+    S[i_s].event = NULL;
+  }
+  
+  // check to make sure the file exists
+  sprintf(filename, "/data/etc/%d.sch", slot);
+  fp = fopen(filename, "r");
+  if (fp == NULL) {
+    return(0);
+  } else {
+    fclose(fp);
+  }
+  
+  LoadSchedFile(filename, &(S[i_s]), -10);
+  
+  if (S[i_s].n_sched>2) { // we read something
+    Uplink_S = &(S[i_s]);
+    if (i_s == 0) i_s = 1;
+    else i_s = 0;
+  }
+  
+  return (1);
+  
 }
 
 /*********************************************************************/
@@ -323,6 +379,10 @@ void DoSched(void)
   struct ScheduleType *S = &_S[CommandData.sucks][CommandData.lat_range];
   struct ScheduleEvent event;
 
+  if (CommandData.uplink_sched) {
+    S = Uplink_S;
+  }
+  
   i_point = GETREADINDEX(point_index);
   d_lat = PointingData[i_point].lat - NOMINAL_LATITUDE;
 
