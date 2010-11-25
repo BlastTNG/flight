@@ -1562,10 +1562,12 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case xy_raster:
       CommandData.xystage.x1 = ivalues[0];
-      CommandData.xystage.y1 = ivalues[1];
-      CommandData.xystage.x2 = ivalues[2];
+      CommandData.xystage.x2 = ivalues[1];
+      CommandData.xystage.y1 = ivalues[2];
       CommandData.xystage.y2 = ivalues[3];
       CommandData.xystage.xvel = ivalues[4];
+      CommandData.xystage.yvel = ivalues[5];
+      CommandData.xystage.step = ivalues[6];
       CommandData.xystage.mode = XYSTAGE_RASTER;
       CommandData.xystage.is_new = 1;
       break;

@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.95 $";
+const char *command_list_serial = "$Revision: 4.96 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -751,10 +751,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(xy_raster), "raster the X-Y translation stage", GR_STAGE, 5,
     {
       {"X center", 0, 80000, 'l', "X_STAGE"},
+      {"X Width", 0, 40000, 'i', "NONE"},
       {"Y center", 0, 80000, 'l', "Y_STAGE"},
-      {"Map Size", 0, 30000, 'i', "NONE"},
-      {"Step Size", 0, 30000, 'i', "NONE"},
-      {"Velocity", 0, 16000, 'i', "X_VEL_STAGE"},
+      {"Y Width", 0, 40000, 'i', "NONE"},
+      {"X Velocity", 0, 16000, 'i', "X_VEL_STAGE"},
+      {"Y Velocity", 0, 16000, 'i', "Y_VEL_STAGE"},
+      {"Step Size", 0, 40000, 'i', "NONE"},
     }
   },
 
