@@ -59,6 +59,8 @@ static struct hwpr_control_struct {
   int i_next_step; //Added
   int do_overshoot;
   int stop_cnt; //Added
+  int enc_targ; //Added
+  int enc_err; //Added
 
 } hwpr_control;
 
@@ -84,6 +86,8 @@ void ResetControlHWPR (void) {
   hwpr_control.rel_move = 0;
   hwpr_control.do_overshoot = 0;
   hwpr_control.stop_cnt = 0;
+  hwpr_control.enc_targ = 0;
+  hwpr_control.enc_err = 0;
 }
 
 
@@ -113,6 +117,8 @@ void StoreHWPRBus(void)
   static struct NiosStruct* relMoveHwprAddr;
   static struct NiosStruct* statControlHwprAddr;
   static struct NiosStruct* potTargHwprAddr;
+  static struct NiosStruct* encTargHwprAddr;
+  static struct NiosStruct* encErrHwprAddr;
 
   if (firsttime)
   {
@@ -135,6 +141,8 @@ void StoreHWPRBus(void)
     relMoveHwprAddr = GetNiosAddr("rel_move_hwpr");
     statControlHwprAddr = GetNiosAddr("stat_control_hwpr");
     potTargHwprAddr = GetNiosAddr("pot_targ_hwpr");
+    encTargHwprAddr = GetNiosAddr("enc_targ_hwpr");
+    encErrHwprAddr = GetNiosAddr("enc_err_hwpr");
   }
 
   hwpr_wait_cnt--;
@@ -156,6 +164,8 @@ void StoreHWPRBus(void)
   WriteData(readWaitHwprAddr, hwpr_control.read_wait_cnt, NIOS_FLUSH);
   WriteData(stopCntHwprAddr, hwpr_control.stop_cnt, NIOS_FLUSH);
   WriteData(relMoveHwprAddr, hwpr_control.rel_move/2, NIOS_FLUSH);
+  WriteData(encTargHwprAddr, hwpr_control.enc_targ, NIOS_FLUSH);
+  WriteData(encErrHwprAddr, hwpr_control.enc_err, NIOS_FLUSH);
 
   /* Make HWPR status bit field */
   hwpr_stat_field |= (hwpr_control.go) & 0x0007 ;
@@ -201,6 +211,7 @@ void ControlHWPR(struct ezbus *bus)
   static int overshooting = 0;
   static int first_time = 1;
   static int last_enc = 0;
+  static int targ_enc = 0; // keeps track of the warm encoder target, to check for incomplete moves.
 
   int hwpr_enc_cur, hwpr_enc_dest;
   int i_step, i_next_step; // index of the current step
@@ -335,7 +346,7 @@ void ControlHWPR(struct ezbus *bus)
 	    //TODO I don't like repeated code, and this chunk is VERY similar to the above one
 	    //TODO can set i_next_step depending on mode, and then have common code shared
 	    //TODO or can make a function that calculates move to any new index
-	    if (((hwpr_data.pot > HWPR_POT_MIN) ||  //TODO why is this OR?
+	    if (((hwpr_data.pot > HWPR_POT_MIN) &&  
 		 (hwpr_data.pot < HWPR_POT_MAX)) &&
 		(CommandData.hwpr.use_pot)) { // use pot
 
@@ -361,7 +372,7 @@ void ControlHWPR(struct ezbus *bus)
 
 	  } else if (hwpr_control.go == pot) {
 	    //TODO as above, if you're sufficiently crafty, much of this code could be shared with the above two modes
-	    if (((hwpr_data.pot > HWPR_POT_MIN) ||  //TODO why is this OR?
+	    if (((hwpr_data.pot > HWPR_POT_MIN) &&  
 		 (hwpr_data.pot < HWPR_POT_MAX)) &&
 		(CommandData.hwpr.use_pot)) { // use pot
 
@@ -410,6 +421,7 @@ void ControlHWPR(struct ezbus *bus)
 	  EZBus_RelMove(bus, HWPR_ADDR, hwpr_control.rel_move);
 	  hwpr_control.move_cur = moving;
 	  hwpr_control.stop_cnt = 0;
+	  targ_enc = hwpr_data.enc + hwpr_control.rel_move;
 
 	  /*** We are moving.  Wait until we are done. ***/
 	} else if (hwpr_control.move_cur == moving) {
@@ -426,6 +438,7 @@ void ControlHWPR(struct ezbus *bus)
 	  //TODO though maybe it's okay since such cases probably cause this whole thread to not execute
 	  if (hwpr_control.stop_cnt >=HWPR_MOVE_TIMEOUT) {
 	    bprintf(info,"We've stopped!");
+	    hwpr_control.enc_err = targ_enc - hwpr_data.enc;
 
 	    if(hwpr_control.do_overshoot) {
 	      hwpr_control.move_cur = at_overshoot;
@@ -447,6 +460,8 @@ void ControlHWPR(struct ezbus *bus)
 	    hwpr_control.move_cur = moving;
 	    hwpr_control.stop_cnt = 0;
 	    hwpr_control.do_overshoot = 0;
+	    targ_enc = hwpr_data.enc + hwpr_control.rel_move;
+
 	} else if (hwpr_control.move_cur == is_done) {
 
 	    /* Do we want to read the pot?*/
