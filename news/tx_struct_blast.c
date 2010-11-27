@@ -560,7 +560,7 @@ struct ChannelStruct SlowChannels[] = {
   {"enc_0_act",    'w', LOOP5, 48,                1.0,		   0.0, 's', U_NONE},
   {"enc_1_act",    'w', LOOP5, 50,                1.0,             0.0, 's', U_NONE},
   {"enc_2_act",    'w', LOOP5, 52,                1.0,             0.0, 's', U_NONE},
-  {"goal_sf",      'w', LOOP6, 30,                1.0,             0.0, 's', U_NONE},
+  {"goal_sf",      'w', LOOP6, 30,                1.0,             0.0, 'u', U_NONE},
   {"focus_sf",     'w', LOOP6, 32,                1.0,             0.0, 's', U_NONE},
 
   {"maxslew_isc",  'w', LOOP6,  0,              I2DEG,             0.0, 'u', U_NONE},
@@ -771,7 +771,10 @@ struct ChannelStruct SlowChannels[] = {
   {"mode_act",       'w', LOOP9,  17,                1.0,             0.0, 's', U_NONE},
   {"enc_targ_hwpr",  'w', LOOP9,  18,                1.0,             0.0, 's', U_NONE},
   {"enc_err_hwpr",   'w', LOOP9,  19,                1.0,             0.0, 's', U_NONE},
-  /* LOOP9 20-49 are unused */
+  {"dr_0_act",       'w', LOOP9,  20,                1.0,             0.0, 's', U_NONE},
+  {"dr_1_act",       'w', LOOP9,  21,                1.0,             0.0, 's', U_NONE},
+  {"dr_2_act",       'w', LOOP9,  22,                1.0,             0.0, 's', U_NONE},
+  /* LOOP9 23-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
