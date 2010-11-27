@@ -91,6 +91,7 @@ struct PivGainStruct {
 #define ACTBUS_FM_DELTA  6
 #define ACTBUS_FM_PANIC  7
 #define ACTBUS_FM_DELFOC 8
+#define ACTBUS_FM_TRIM   9
 
 #define TC_MODE_ENABLED  0
 #define TC_MODE_AUTOVETO 1
@@ -361,6 +362,7 @@ struct CommandDataStruct {
     int goal[3];
     int delta[3];
     int offset[3];
+    int trim[3];
     int focus;
     int lvdt_delta;
     int lvdt_low;

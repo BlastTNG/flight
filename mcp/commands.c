@@ -1467,7 +1467,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.offset[2] = (int)rvalues[2];
       break;
     case act_enc_trim:
-      actEncTrim((int)rvalues[0], (int)rvalues[1], (int)rvalues[2]);
+      CommandData.actbus.trim[0] = rvalues[0];
+      CommandData.actbus.trim[1] = rvalues[1];
+      CommandData.actbus.trim[2] = rvalues[2];
+      CommandData.actbus.focus_mode = ACTBUS_FM_TRIM;
       break;
     case lvdt_limit:
       CommandData.actbus.lvdt_delta = rvalues[0];
@@ -2858,7 +2861,7 @@ void InitCommandData()
   CommandData.actbus.sf_time = 0;
   CommandData.actbus.sf_offset = 0;
 
-  CommandData.actbus.act_vel = 200;
+  CommandData.actbus.act_vel = 10;
   CommandData.actbus.act_acc = 1;
   CommandData.actbus.act_move_i = 75;
   CommandData.actbus.act_hold_i = 10;

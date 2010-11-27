@@ -75,8 +75,9 @@ static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 //set microstep resolution
 #define LOCK_PREAMBLE "j256"
 //set encoder/microstep ratio (aE25600), coarse correction band (aC50),
-//fine correction tolerance (ac2), enable encoder feedback mode (n8), 
-#define ACT_PREAMBLE  "aE25600aC50ac2n8"
+//fine correction tolerance (ac2), stall retries (au5), 
+//enable encoder feedback mode (n8), 
+#define ACT_PREAMBLE  "aE25600aC50ac2au5n8"
 static struct ezbus bus;
 #define POLL_TIMEOUT 30000	    /* 5 minutes */
 
@@ -129,12 +130,16 @@ static double correction = 0;     /* set in fc thread, read in ab thread */
 /*    Actuator Logic: servo focus based on thermal model/commands       */
 /*                                                                      */
 /************************************************************************/
+//simple check for encoder in a well-initialized state
+static inline int encOK(int enc)
+{
+  return (enc > MIN_ENC);
+}
+
 //write DR to disk
 static void WriteDR()
 {
   int fp, n, i;
-
-  bprintf(info, "erase me: writing act.dr file");
 
   /** write the default file */
   fp = open("/data/etc/act.dr", O_WRONLY|O_CREAT|O_TRUNC, 00666);
@@ -159,18 +164,27 @@ void ReadDR()
 {
   int fp, n_read = 0, read_fail = 0, i;
 
-  bprintf(info, "erase me: reading act.dr file");
-
   if ((fp = open("/data/etc/act.dr", O_RDONLY)) < 0) {
     read_fail = 1;
     berror(err, "Unable to open act.dr file for reading");
   } else {
     for (i=0; i<3; i++) {
-      if ((n_read = read(fp, &act_data[i].dr, sizeof(int))) < 0
-	  || n_read != sizeof(int))
+      if ((n_read = read(fp, &act_data[i].dr, sizeof(int))) < 0) {
+	//read failed
 	read_fail = 1;
 	berror(err, "act.dr read()");
 	break;
+      } else if (n_read != sizeof(int)) {
+	//short read
+	read_fail = 1;
+	bprintf(err, "act.dr read(): wrong number of bytes");
+	break;
+      } else if (!encOK(act_data[i].dr)) {
+	//data not reasonable
+	read_fail = 1;
+	bprintf(err, "act.dr read(): bad encoder data");
+	break;
+      }
     }
     if (close(fp) < 0)
       berror(err, "act.dr close()");
@@ -221,6 +235,25 @@ static void ReadActuator(int num)
 
   EZBus_ReadInt(&bus, id[num], "?0", &act_data[num].pos);
   EZBus_ReadInt(&bus, id[num], "?8", &act_data[num].enc);
+}
+
+//Set both dead reckoning and encoder to trim value, dump dr to disk
+void actEncTrim(int *trim)
+{
+  int i;
+  char buffer[EZ_BUS_BUF_LEN];
+
+  bprintf(info, "trim enc and dr to (%d, %d, %d)", trim[0], trim[1], trim[2]);
+
+  for (i=0; i<3; i++) {
+    /* set the dr */
+    act_data[i].dr = trim[i];
+    /* Set the encoder */
+    EZBus_Comm(&bus, id[i], 
+	EZBus_StrComm(&bus, id[i], buffer, "z%iR", act_data[i].dr), 0);
+  }
+
+  WriteDR();
 }
 
 //before moving, update dead reckoning to new goal
@@ -309,6 +342,7 @@ static void DoActuators(void)
     case ACTBUS_FM_PANIC:
       bputs(warning, "Actuator Panic");
       EZBus_Stop(&bus, ID_ALL_ACT); /* terminate all strings */
+      EZBus_Comm(&bus, ID_ALL_ACT, "n0R", 0);	/* also stop fine correction */
       CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
       break;
     case ACTBUS_FM_DELTA:
@@ -328,6 +362,9 @@ static void DoActuators(void)
     case ACTBUS_FM_SERVO:
 	ServoActuators(CommandData.actbus.goal);
 	break;
+    case ACTBUS_FM_TRIM:
+	actEncTrim(CommandData.actbus.trim);
+	break;
     case ACTBUS_FM_SLEEP:
 	break;
     default:
@@ -340,8 +377,8 @@ static void DoActuators(void)
 
   for (i = 0; i < 3; ++i) {
     ReadActuator(i);
-    if (act_data[i].enc <= MIN_ENC) {  //not properly initialized
-      bprintf(warning, "encoder %d not initialized properly", i);
+    if (!encOK(act_data[i].enc)) {  //not properly initialized
+      bprintf(warning, "encoder %d not initialized, reading from act.dr", i);
       ReadDR();
       break;
     }
@@ -359,26 +396,6 @@ void RecalcOffset(double new_gp, double new_gs)
   CommandData.actbus.sf_offset += ( (new_gp - CommandData.actbus.g_primary) *
     (t_primary - T_PRIMARY_FOCUS) - (new_gs - CommandData.actbus.g_secondary) *
     (t_secondary - T_SECONDARY_FOCUS) ) / ACTENC_TO_UM;
-}
-
-//Set both dead reckoning and encoder to trim value, dump dr to disk
-void actEncTrim(int trim0, int trim1, int trim2)
-{
-  int i;
-  char buffer[EZ_BUS_BUF_LEN];
-
-  bprintf(info, "trim enc and dr to (%d, %d, %d)", trim0, trim1, trim2);
-
-  act_data[0].dr = trim0;
-  act_data[1].dr = trim1;
-  act_data[2].dr = trim2;
-  for (i=0; i<3; i++) {
-    /* Set the encoder */
-    EZBus_Comm(&bus, id[i], 
-	EZBus_StrComm(&bus, id[i], buffer, "z%iR", act_data[i].dr), 0);
-  }
-
-  WriteDR();
 }
 
 
@@ -1003,7 +1020,10 @@ void SyncDR()
     act_data[i].dr = dr + offset;
   }
 
+#if 0
+  //TODO is it okay that NICC doesn't write to disk?
   WriteDR();
+#endif
 }
 
 void ActuatorBus(void)
