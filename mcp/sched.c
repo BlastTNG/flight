@@ -32,7 +32,7 @@
 #define MAX_NSCHED 8000
 struct ScheduleType _S[2][3];
 
-struct ScheduleType *Uplink_S;
+struct ScheduleType *Uplink_S = 0;
 
 int doing_schedule = 0;
 unsigned int sched_lst = 0;
@@ -347,6 +347,8 @@ int LoadUplinkFile(int slot) {
     Uplink_S = &(S[i_s]);
     if (i_s == 0) i_s = 1;
     else i_s = 0;
+  } else {
+    return(0);
   }
   
   return (1);
@@ -362,9 +364,15 @@ void InitSched(void)
 
   bprintf(info, "Scheduler: schedule file initialisation begins.");
 
-  for (s = 0; s < 2; ++s)
-    for (l = 0; l < 3; ++l)
+  for (s = 0; s < 2; ++s) {
+    for (l = 0; l < 3; ++l) {
       LoadSchedFile(filename[s][l], &_S[s][l], 1 - l);
+    }
+  }
+   
+  if (!LoadUplinkFile(CommandData.slot_sched)) {
+    CommandData.uplink_sched = 0;
+  }
 }
 
 void DoSched(void)
@@ -390,6 +398,15 @@ void DoSched(void)
   if (last_up != CommandData.uplink_sched) {
     last_up = CommandData.uplink_sched;
     last_is = -1;
+  }
+  
+  // Check for invalid uplinked schedule file
+  if (CommandData.uplink_sched) {
+    if (Uplink_S == 0) {
+      CommandData.uplink_sched = 0;
+    } else if (Uplink_S->n_sched<2) { 
+      CommandData.uplink_sched = 0;
+    }
   }
   
   if (CommandData.uplink_sched) {

@@ -206,7 +206,7 @@ static void WriteAux(void)
 
   WriteData(diskFreeAddr, CommandData.df, NIOS_QUEUE);
   
-  WriteData(partsSchedAddr, CommandData.parts_sched, NIOS_QUEUE);
+  WriteData(partsSchedAddr, CommandData.parts_sched&0xffffff, NIOS_QUEUE);
   WriteData(upslotSchedAddr, CommandData.upslot_sched, NIOS_QUEUE);
 
   i_point = GETREADINDEX(point_index);
