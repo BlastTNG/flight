@@ -1228,7 +1228,10 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
   QWidget *centralWidget;
 
   QFont font;
-
+  
+  font.setPointSize(8);
+  setFont(font);
+  
   _dirfile = 0;
   _lastNFrames = 0;
 
@@ -1245,7 +1248,7 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
   setIcon(*Icon);
 
   ContentLayout = new QGridLayout;
-  ContentLayout->setSpacing(2);
+  //ContentLayout->setSpacing(2);
   ContentLayout->setMargin(0);
 
   // Create the screen using the info specified in the layout.pal file
@@ -1270,7 +1273,7 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
       currQtBoxLayout = BoxLayout.current();
 
       currQtBoxLayout->setAlignment(Qt::AlignTop);
-
+  
       row = 0;
       for (currLabel = LabelInfo.first(); currLabel != NULL;
           currLabel = LabelInfo.next()) {
@@ -1326,7 +1329,7 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
 
   centralWidget = new QWidget();
   MainFormLayout = new QVBoxLayout(centralWidget);
-  MainFormLayout->setSpacing(2);
+  //MainFormLayout->setSpacing(2);
   MainFormLayout->setMargin(2);
   MainFormLayout->addLayout(ContentLayout);
 

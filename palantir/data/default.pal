@@ -815,7 +815,7 @@
       <DATUM format="%.2f" src="T_SBSC" extrema="temp"/>
     </NUMBER>  
   </BOX>
-  <BOX caption="Ambient Thermometers" colour="#002222" row="3" col="5">
+  <BOX caption="Ambient Thermometers" colour="#002222" row="0" col="7" rowspan="1">
     <NUMBER caption="IF Top Front">
       <DATUM format="%.2f" src="T_IF_TOP_FRNT" extrema="temp"/>
     </NUMBER>
@@ -884,10 +884,10 @@
     <NUMBER caption="MCC">
       <DATUM format="%.2f" src="T_MB_FLC" extrema="mcctemp"/>
     </NUMBER>
-    <NUMBER caption="MCC CPU">
+    <NUMBER caption="FLC CPU">
       <DATUM format="%.2f" src="T_CPU_FLC" extrema="cputemp"/>
     </NUMBER>
-    <NUMBER caption="MCC Chipset">
+    <NUMBER caption="FLC Chipset">
       <DATUM format="%.2f" src="T_CHIP_FLC" extrema="cputemp"/>
     </NUMBER>
     <NUMBER caption="MCC Watchdog">
@@ -923,6 +923,9 @@
     <NUMBER caption="Seppy, The GPS">
       <DATUM format="%.2f" src="T_DGPS" extrema="temp"/>
     </NUMBER>
+    <NUMBER caption="Charge Controller">
+      <DATUM format="%.2f" src="T_HS_CC" extrema="thscheck"/>
+    </NUMBER>    
   </BOX>
   <BOX caption="Actuators" colour="#002222" row="4" col="8" rowspan="1">
     <!-- TODO mode and status need updating in mcp, then here -->
@@ -1029,7 +1032,7 @@
       <DATUM format="%.0f" src="VETO_SF" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Motor Temps" colour="#002222" row="2" col="6">
+  <BOX caption="Motor Temps" colour="#002222" row="0" col="8">
     <NUMBER caption="RW">
       <DATUM format="%.2f" align="right" src="T_RW" extrema="temp"/>
     </NUMBER>
@@ -1088,6 +1091,12 @@
     </NUMBER>
     <NUMBER caption="TOTAL">
       <DATUM format="%5.2f" src="I_TOT" extrema="currenttotal"/>
+    </NUMBER>
+    <NUMBER caption="I Batt">
+      <DATUM format="%.2f" src="I_BATT_CC" extrema="ibattcheck"/>
+    </NUMBER>
+    <NUMBER caption="I Arr">
+      <DATUM format="%.2f" src="I_ARR_CC" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Bias" colour="#707" row="4" col="1">
@@ -1230,7 +1239,7 @@
       <DATUM format="%.0f" src="N13_PHASE" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Motor Contollers" colour="#880000" row="0" col="8" rowspan="1">
+  <BOX caption="Motor Contollers" colour="#880000"  row="2" col="7">
     <MULTI caption="El Enab">
       <DATUM src="DR_INFO_DISAB_EL">
         <WORD value="0" caption="Enabled" textstyle="OK_BIT"/>
@@ -1280,7 +1289,7 @@
       <DATUM format="%.2f" src="I_SER_PIV" extrema="isercheck"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Charge Controller" colour="#777700" row="0" col="7" rowspan="1">
+  <BOX caption="Charge Controller" colour="#777700"  row="3" col="5">
     <MULTI caption="State">
       <DATUM src="STATE_CC">
         <WORD value="0" caption="Start" textstyle="OK_BIT"/>
@@ -1326,15 +1335,6 @@
     </NUMBER>
     <NUMBER caption="V Arr">
       <DATUM format="%.2f" src="V_ARR_CC" extrema="varrcheck"/>
-    </NUMBER>
-    <NUMBER caption="I Batt">
-      <DATUM format="%.2f" src="I_BATT_CC" extrema="ibattcheck"/>
-    </NUMBER>
-    <NUMBER caption="I Arr">
-      <DATUM format="%.2f" src="I_ARR_CC" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="T HS CC">
-      <DATUM format="%.2f" src="T_HS_CC" extrema="thscheck"/>
     </NUMBER>
     <NUMBER caption="V TARGET">
       <DATUM format="%.2f" src="V_TARG_CC" extrema="unknown"/>
@@ -1389,14 +1389,11 @@
       </DATUM>
     </MULTI>
   </BOX>
-  <BOX caption="State" colour="#777700" row="0" col="1" colspan="1">
+  <BOX caption="State" colour="#777700" row="0" col="1" colspan="1" rowspan = "1">
     <CURDIR caption="Dirfile">
       <DATUM/>
     </CURDIR>
-    <NUMBER caption="Index">
-      <DATUM format="%.0f" src="INDEX" extrema="unknown"/>
-    </NUMBER>
-    <MULTI caption="MCC Pole">
+    <MULTI caption="FLC Pole">
       <DATUM src="SOUTH_I_AM">
         <WORD value="1" caption="South" textstyle="OK_BIT"/>
         <WORD value="0" caption="North" textstyle="OK_BIT"/>
@@ -1405,8 +1402,11 @@
     <NUMBER caption="Disk Space (GB)">
       <DATUM format="%.2f" src="DISK_FREE" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="Fastsamp">
-      <DATUM format="%.0f" src="FASTSAMP" extrema="unknown"/>
+    <NUMBER caption="Index">
+      <DATUM format="%.0f" src="INDEX" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Framenum">
+      <DATUM format="%.0f" src="FRAMENUM" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="Schedule File">
       <DATUM src="SCHEDULE">
@@ -1416,8 +1416,19 @@
         <WORD value="3" caption="Sad Mid" textstyle="W_BIT"/>
         <WORD value="4" caption="Happy South" textstyle="W_BIT"/>
         <WORD value="5" caption="Sad South" textstyle="E_BIT"/>
+        <WORD value="6" caption="Slot" textstyle="W_BIT"/>
+        <WORD value="7" caption="Slot" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
+    <NUMBER caption="Sched Slot">
+      <DATUM format="%.0f" src="SLOT_SCHED" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Uplink Parts">
+      <DATUM format="%x" src="PARTS_SCHED" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Uplink Slot">
+      <DATUM format="%.0f" src="UPSLOT_SCHED" extrema="unknown"/>
+    </NUMBER>
     <NUMBER caption="Plover">
       <DATUM format="%.0f" src="PLOVER" extrema="unknown"/>
     </NUMBER>
@@ -1427,8 +1438,6 @@
     <NUMBER caption="IRIDIUM Rate">
       <DATUM format="%.1f" src="RATE_IRIDIUM" extrema="unknown"/>
     </NUMBER>
-  </BOX>
-  <BOX caption="Time" colour="#777700" row="1" col="1" colspan="1">
     <NUMBER caption="Dirfile Hours">
       <DATUM format="%.4f" src="TIME_HOUR_DIRFILE" extrema="hours"/>
     </NUMBER>
@@ -1450,6 +1459,7 @@
     <DATETIME caption="Time until Schedule Mode">
       <DATUM format="%H:%M:%S" src="TIMEOUT"/>
     </DATETIME>
+
   </BOX>
   <BOX caption="Location" colour="#009911" row="2" col="1">
     <NUMBER caption="Latitude">
@@ -1777,7 +1787,7 @@
       <DATUM format="%.2f" src="I_300MK" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Motorised Valves" row="2" col="7">
+  <BOX caption="Motorised Valves" row="1" col="8">
     <MULTI caption="Pot">
       <DATUM src="POT_VALVE">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
