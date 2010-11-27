@@ -169,6 +169,12 @@
       <HI value="4.5"/>
       <XHI value="5"/>
     </EXTREMA>
+    <EXTREMA name="hwprtemp">
+      <XLO value="3.5"/>
+      <LO value="4.2"/>
+      <HI value="5.5"/>
+      <XHI value="6"/>
+    </EXTREMA>
     <EXTREMA name="lntemp">
       <XLO value="65"/>
       <LO value="68"/>
@@ -220,19 +226,19 @@
     <EXTREMA name="he3fridge">
       <XLO value="0.230"/>
       <LO value=".240"/>
-      <HI value=".290"/>
-      <XHI value="0.305"/>
+      <HI value=".990"/>
+      <XHI value="1.305"/>
     </EXTREMA>
     <EXTREMA name="heatstrap">
-      <XLO value="0.27"/>
-      <LO value=".285"/>
-      <HI value=".320"/>
+      <XLO value="0.245"/>
+      <LO value=".250"/>
+      <HI value=".300"/>
       <XHI value="0.35"/>
     </EXTREMA>
     <EXTREMA name="horn">
       <XLO value="0.26"/>
-      <LO value=".280"/>
-      <HI value=".350"/>
+      <LO value=".270"/>
+      <HI value=".335"/>
       <XHI value="0.37"/>
     </EXTREMA>
     <EXTREMA name="chartemp">
@@ -1635,10 +1641,10 @@
   </BOX>
   <BOX caption="Cold Optics Temps" row="3" col="6">
     <NUMBER caption="HWPR">
-      <DATUM format="%.2f" src="Tr_hwpr" extrema="lhetemp"/>
+      <DATUM format="%.2f" src="Tr_hwpr" extrema="hwprtemp"/>
     </NUMBER>
     <NUMBER caption="He4 Pot">
-      <DATUM format="%.2f" src="Tr_he4_pot" extrema="pottemp"/>
+      <DATUM format="%.2f" src="Tr_he4_pot" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Opt. Box Filter">
       <DATUM format="%.2f" src="Tr_optbox_filt" extrema="pottemp"/>
