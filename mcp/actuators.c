@@ -43,17 +43,13 @@
 
 /* TODO
  * (don't erase until tested!)
- * * actuator moves are not by the exact amount desired
- * * remove LVDTs from the loop entirely
- * * dump expected position to disk before each move
- * * also add command to dump current (or commanded) position
- * * add expected position to frame
+ * actuator moves are not by the exact amount desired
+ *    why does it sometimes come up short and oscillate?
+ *    ensure that it stops befor e100 retries now, and actuator_stop works
+ *
  * * try to ensure that NICC gets correct dr on switch
  *
- * align LVDTs with each other, with offsets (LVDT##_ZERO in channels.h)
  * * check units of move commands (offset or not)
- * * focus_offset command should execute a move (and reset thermal timeout)
- *	* delta_secondary does this
  *
  *
  */
@@ -77,7 +73,8 @@ static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 //set encoder/microstep ratio (aE25600), coarse correction band (aC50),
 //fine correction tolerance (ac2), stall retries (au5), 
 //enable encoder feedback mode (n8), 
-#define ACT_PREAMBLE  "aE25600aC50ac2au5n8"
+//TODO try ac5 for now, see if that helps
+#define ACT_PREAMBLE  "aE25600aC50ac5au5n8"
 static struct ezbus bus;
 #define POLL_TIMEOUT 30000	    /* 5 minutes */
 
