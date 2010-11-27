@@ -74,8 +74,9 @@ extern "C" {
 #define LVDT63_ADC_TO_ENC -0.75 /* adc counts to encoder counts */
 #define LVDT64_ADC_TO_ENC -0.75 /* adc counts to encoder counts */
 #define LVDT65_ADC_TO_ENC -0.75 /* adc counts to encoder counts */
-#define LVDT63_ZERO  65536  /* in encoder counts */
-#define LVDT64_ZERO  65536  /* in encoder counts */
+//LVDT flat fielding sjb: 28 Nov 2010
+#define LVDT63_ZERO  64389  /* in encoder counts */
+#define LVDT64_ZERO  65240  /* in encoder counts */
 #define LVDT65_ZERO  65536  /* in encoder counts */
 
 /* Thermal model numbers, from MD and MV */
