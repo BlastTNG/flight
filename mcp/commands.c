@@ -83,6 +83,7 @@
 #define MAX_DAYS 21.0
 
 void RecalcOffset(double, double);  /* actuators.c */
+void actEncTrim(int, int, int);
 
 void SetRaDec(double, double); /* defined in pointing.c */
 void SetTrimToSC(int);
@@ -1424,7 +1425,8 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.focus_mode = ACTBUS_FM_DELFOC;
       break;
     case set_secondary:
-      CommandData.actbus.focus = ivalues[0];
+      CommandData.actbus.focus = ivalues[0] + POSITION_FOCUS 
+	+ CommandData.actbus.sf_offset;
       CommandData.actbus.focus_mode = ACTBUS_FM_FOCUS;
       break;
     case thermo_gain:
@@ -1463,7 +1465,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.offset[0] = (int)rvalues[0];
       CommandData.actbus.offset[1] = (int)rvalues[1];
       CommandData.actbus.offset[2] = (int)rvalues[2];
-      CommandData.actbus.focus_mode = ACTBUS_FM_OFFSET;
+      break;
+    case act_enc_trim:
+      actEncTrim((int)rvalues[0], (int)rvalues[1], (int)rvalues[2]);
       break;
     case lvdt_limit:
       CommandData.actbus.lvdt_delta = rvalues[0];

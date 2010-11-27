@@ -78,6 +78,12 @@ extern "C" {
 #define LVDT64_ZERO  65536  /* in encoder counts */
 #define LVDT65_ZERO  65536  /* in encoder counts */
 
+/* Thermal model numbers, from MD and MV */
+//TODO need to calibrate focus numbers
+#define T_PRIMARY_FOCUS   258.15 /* = -15C */
+#define T_SECONDARY_FOCUS 243.15 /* = -30C */
+#define POSITION_FOCUS         0 /* absolute counts */
+
 #define FIELD_LEN 20
 #define UNITS_LEN 48
 

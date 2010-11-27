@@ -42,9 +42,20 @@
 #include "hwpr.h"
 
 /* TODO
- * actuator moves are not by the exact amount desired
+ * (don't erase until tested!)
+ * * actuator moves are not by the exact amount desired
+ * * remove LVDTs from the loop entirely
+ * * dump expected position to disk before each move
+ * * also add command to dump current (or commanded) position
+ * * add expected position to frame
+ * * try to ensure that NICC gets correct dr on switch
  *
- * lock doesn't always have to correct state
+ * align LVDTs with each other, with offsets (LVDT##_ZERO in channels.h)
+ * * check units of move commands (offset or not)
+ * * focus_offset command should execute a move (and reset thermal timeout)
+ *	* delta_secondary does this
+ *
+ *
  */
 
 void nameThread(const char*);		/* mcp.c */
@@ -64,8 +75,8 @@ static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 //set microstep resolution
 #define LOCK_PREAMBLE "j256"
 //set encoder/microstep ratio (aE25600), coarse correction band (aC50),
-//fine correction band (ac0), enable encoder feedback mode (n8), 
-#define ACT_PREAMBLE  "aE25600aC50ac0n8"
+//fine correction tolerance (ac2), enable encoder feedback mode (n8), 
+#define ACT_PREAMBLE  "aE25600aC50ac2n8"
 static struct ezbus bus;
 #define POLL_TIMEOUT 30000	    /* 5 minutes */
 
@@ -85,13 +96,14 @@ static struct lock_struct {
 
 /* Secondary actuator data and parameters */
 #define LVDT_FILT_LEN 25   //5s @ 5Hz
-#define ACTBUS_MAX_ENC_ERR  50	  //maximum difference between enc and lvdt
-#define ACTBUS_TRIM_WAIT    3*LVDT_FILT_LEN  //thrice LVDT_FILT_LEN
-					  //wait between trims, and after moves
+#define DEFAULT_DR  32768     //value to use if reading file fails
+#define MIN_ENC	    1000      //minimum acceptable encoder vlaue, load dr below
+
 static struct act_struct {
   int pos;	//raw step count
   int enc;	//encoder reading
   int lvdt;	//lvdt-inferred position of this motor
+  int dr;	//dead reckoning (best-guess absolute position)
 } act_data[3];
 
 static unsigned int actbus_flags = 0;
@@ -112,17 +124,64 @@ static double t_primary = -1, t_secondary = -1;
 static double focus = -1;	  /* set in ab thread, read in fc thread */
 static double correction = 0;     /* set in fc thread, read in ab thread */
 
-/* Thermal model numbers, from MD and MV */
-//TODO need to calibrate focus numbers
-#define T_PRIMARY_FOCUS   258.15 /* = -15C */
-#define T_SECONDARY_FOCUS 243.15 /* = -30C */
-#define POSITION_FOCUS         0 /* absolute counts */
-
 /************************************************************************/
 /*                                                                      */
 /*    Actuator Logic: servo focus based on thermal model/commands       */
 /*                                                                      */
 /************************************************************************/
+//write DR to disk
+static void WriteDR()
+{
+  int fp, n, i;
+
+  bprintf(info, "erase me: writing act.dr file");
+
+  /** write the default file */
+  fp = open("/data/etc/act.dr", O_WRONLY|O_CREAT|O_TRUNC, 00666);
+  if (fp < 0) {
+    berror(err, "act.dr open()");
+    return;
+  }
+  for (i=0; i<3; i++) {
+    if ((n = write(fp, &act_data[i].dr, sizeof(int))) < 0) {
+      berror(err, "act.dr write()");
+      return;
+    }
+  }
+  if ((n = close(fp)) < 0) {
+    berror(err, "act.dr close()");
+    return;
+  }
+}
+
+//on initialization, or bad enc detection, read DR from disk
+void ReadDR()
+{
+  int fp, n_read = 0, read_fail = 0, i;
+
+  bprintf(info, "erase me: reading act.dr file");
+
+  if ((fp = open("/data/etc/act.dr", O_RDONLY)) < 0) {
+    read_fail = 1;
+    berror(err, "Unable to open act.dr file for reading");
+  } else {
+    for (i=0; i<3; i++) {
+      if ((n_read = read(fp, &act_data[i].dr, sizeof(int))) < 0
+	  || n_read != sizeof(int))
+	read_fail = 1;
+	berror(err, "act.dr read()");
+	break;
+    }
+    if (close(fp) < 0)
+      berror(err, "act.dr close()");
+  }
+
+  if (read_fail) {
+    bprintf(info, "Read of act.dr failed. Using default value %d", DEFAULT_DR);
+    for (i=0; i<3; i++) act_data[i].dr = DEFAULT_DR;
+  }
+}
+
 static int CheckMove(int goal0, int goal1, int goal2)
 {
   int maxE, minE;
@@ -156,44 +215,6 @@ static int CheckMove(int goal0, int goal1, int goal2)
   return actbus_flags & ACT_FL_BAD_MOVE;
 }
 
-//if encoder values disagree with LVDTs, trim encoders to LVDT
-static void trimActEnc()
-{
-  int i, do_trim = 0;
-  char buf[EZ_BUS_BUF_LEN];
-
-  //Check if actuators are busy. If they are, wait longer
-  for (i=0; i<3; i++) {
-    if (EZBus_IsBusy(&bus, id[i])) {
-      act_trim_wait = ACTBUS_TRIM_WAIT;
-      actbus_flags |= ACT_FL_BUSY(i);
-      actbus_flags |= ACT_FL_TRIM_WAIT;
-    }
-    else actbus_flags &= ~ACT_FL_BUSY(i);
-  }
-  if (actbus_flags & ACT_FL_BUSY_MASK) return;
-
-  //Check if waiting before trimming again
-  if (actbus_flags & ACT_FL_TRIM_WAIT) return;
-
-  //if not busy, and error large enough on one encoder, trim all of them
-  for (i=0; i<3; i++) {
-    if (!EZBus_IsBusy(&bus, id[i]) && 
-	abs(act_data[i].enc - act_data[i].lvdt) > ACTBUS_MAX_ENC_ERR) {
-      do_trim = 1;
-    }
-  }
-  if (do_trim) {
-    bputs(info, "Trimming actuator encoders to LVDTs");
-    for (i=0; i<3; i++) {
-      sprintf(buf, "z%dR", act_data[i].lvdt);
-      EZBus_Comm(&bus, id[i], buf, 0);
-    }
-    act_trim_flag_wait = act_trim_wait = ACTBUS_TRIM_WAIT;
-    actbus_flags |= ACT_FL_TRIMMED | ACT_FL_TRIM_WAIT;
-  }
-}
-
 static void ReadActuator(int num)
 {
   if (!EZBus_IsUsable(&bus, id[num])) return;
@@ -202,7 +223,15 @@ static void ReadActuator(int num)
   EZBus_ReadInt(&bus, id[num], "?8", &act_data[num].enc);
 }
 
-//NB has less checks that servoing used to, but I don't see how they were useful
+//before moving, update dead reckoning to new goal
+static void UpdateDR(int* goal)
+{
+  int i;
+  for (i=0; i<3; i++) act_data[i].dr = goal[i];
+  WriteDR();
+}
+
+//NB has less checks than servoing used to, but I don't see how they were useful
 static void ServoActuators(int* goal)
 {
   int i;
@@ -215,6 +244,8 @@ static void ServoActuators(int* goal)
     return;
 
   EZBus_Take(&bus, ID_ALL_ACT);
+
+  UpdateDR(goal);
 
   //stop any current action
   EZBus_Stop(&bus, ID_ALL_ACT); /* terminate all strings */
@@ -269,7 +300,6 @@ static void DoActuators(void)
   int i;
   int delta;
 
-  trimActEnc();
   EZBus_SetVel(&bus, ID_ALL_ACT, CommandData.actbus.act_vel);
   EZBus_SetAccel(&bus, ID_ALL_ACT, CommandData.actbus.act_acc);
   EZBus_SetIMove(&bus, ID_ALL_ACT, CommandData.actbus.act_move_i);
@@ -301,16 +331,23 @@ static void DoActuators(void)
     case ACTBUS_FM_SLEEP:
 	break;
     default:
-	bputs(err, "Unknown Focus Mode (%i), sleeping");
+	bprintf(err, "Unknown Focus Mode (%i), sleeping", 
+	    CommandData.actbus.focus_mode);
 	CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   }
 
   CommandData.actbus.focus_mode = ThermalCompensation();
 
-  for (i = 0; i < 3; ++i)
+  for (i = 0; i < 3; ++i) {
     ReadActuator(i);
+    if (act_data[i].enc <= MIN_ENC) {  //not properly initialized
+      bprintf(warning, "encoder %d not initialized properly", i);
+      ReadDR();
+      break;
+    }
+  }
 
-  focus = (act_data[0].lvdt + act_data[1].lvdt + act_data[2].lvdt)/3.0;
+  focus = (act_data[0].enc + act_data[1].enc + act_data[2].enc)/3.0;
 }
 
 //adjust focus offset so that new gains don't change focus thermal correction
@@ -324,6 +361,27 @@ void RecalcOffset(double new_gp, double new_gs)
     (t_secondary - T_SECONDARY_FOCUS) ) / ACTENC_TO_UM;
 }
 
+//Set both dead reckoning and encoder to trim value, dump dr to disk
+void actEncTrim(int trim0, int trim1, int trim2)
+{
+  int i;
+  char buffer[EZ_BUS_BUF_LEN];
+
+  bprintf(info, "trim enc and dr to (%d, %d, %d)", trim0, trim1, trim2);
+
+  act_data[0].dr = trim0;
+  act_data[1].dr = trim1;
+  act_data[2].dr = trim2;
+  for (i=0; i<3; i++) {
+    /* Set the encoder */
+    EZBus_Comm(&bus, id[i], 
+	EZBus_StrComm(&bus, id[i], buffer, "z%iR", act_data[i].dr), 0);
+  }
+
+  WriteDR();
+}
+
+
 static void InitialiseActuator(struct ezbus* thebus, char who)
 {
   char buffer[EZ_BUS_BUF_LEN];
@@ -332,14 +390,16 @@ static void InitialiseActuator(struct ezbus* thebus, char who)
   for (i=0; i<3; i++) {
     if (id[i] == who) {	  //only operate on actautors
       bprintf(info, "Initialising %s...", name[i]);
+      ReadDR();	  //inefficient, 
 
       /* Set the encoder */
       EZBus_Comm(thebus, who, 
-	  EZBus_StrComm(thebus, who, buffer, "z%iR", act_data[i].lvdt), 0);
+	  EZBus_StrComm(thebus, who, buffer, "z%iR", act_data[i].dr), 0);
       return;
     }
   }
 }
+
 /************************************************************************/
 /*                                                                      */
 /*    Do Lock Logic: check status, determine if we are locked, etc      */
@@ -767,6 +827,7 @@ void StoreActBus(void)
   static struct NiosStruct* lvdtActAddr[3];
   static struct NiosStruct* offsetActAddr[3];
   static struct NiosStruct* goalActAddr[3];
+  static struct NiosStruct* drActAddr[3];
 
   static struct NiosStruct* lvdtSpreadActAddr;
   static struct NiosStruct* lvdtLowActAddr;
@@ -804,6 +865,7 @@ void StoreActBus(void)
       lvdtActAddr[j] = GetActNiosAddr(j, "lvdt");
       offsetActAddr[j] = GetActNiosAddr(j, "offset");
       goalActAddr[j] = GetActNiosAddr(j, "goal");
+      drActAddr[j] = GetActNiosAddr(j, "dr");
     }
 
     gPrimeSfAddr = GetNiosAddr("g_prime_sf");
@@ -871,6 +933,8 @@ void StoreActBus(void)
     WriteData(offsetActAddr[j], CommandData.actbus.offset[j], NIOS_QUEUE);
     WriteData(goalActAddr[j], 
 	CommandData.actbus.goal[j] - CommandData.actbus.offset[j], NIOS_QUEUE);
+    WriteData(drActAddr[j], 
+	act_data[j].dr - CommandData.actbus.offset[j], NIOS_QUEUE);
   }
   WriteData(focusSfAddr, 
       (int)focus - POSITION_FOCUS - CommandData.actbus.sf_offset, NIOS_QUEUE);
@@ -913,6 +977,35 @@ void StoreActBus(void)
 /*    Act Thread: initialize bus and command lock/secondary steppers    */
 /*                                                                      */
 /************************************************************************/
+//for NICC to get DR from bus and save to disk
+void SyncDR()
+{
+  int i;
+  static int firsttime = 1;
+  static struct BiPhaseStruct* drActAddr[3];
+  static struct BiPhaseStruct* offsetActAddr[3];
+  int dr, offset;
+
+  if (firsttime) {
+    firsttime = 0;
+    drActAddr[0] = GetBiPhaseAddr("dr_0_act");
+    drActAddr[1] = GetBiPhaseAddr("dr_1_act");
+    drActAddr[2] = GetBiPhaseAddr("dr_2_act");
+    offsetActAddr[0] = GetBiPhaseAddr("offset_0_act");
+    offsetActAddr[1] = GetBiPhaseAddr("offset_1_act");
+    offsetActAddr[2] = GetBiPhaseAddr("offset_2_act");
+  }
+
+  //get dead reckoning data
+  for (i=0; i<3; i++) {
+    dr = slow_data[drActAddr[i]->index][drActAddr[i]->channel];
+    offset = slow_data[offsetActAddr[i]->index][offsetActAddr[i]->channel];
+    act_data[i].dr = dr + offset;
+  }
+
+  WriteDR();
+}
+
 void ActuatorBus(void)
 {
   int poll_timeout = POLL_TIMEOUT;
@@ -937,7 +1030,7 @@ void ActuatorBus(void)
     CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining
                                               control */
     SetLockState(1); /* to ensure the NiC MCC knows the pin state */
-      //CopyActuators(); /* let the NiC MCC know what's going on */
+    SyncDR();	     /* get encoder absolute state from the ICC */
     CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
     CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing 
                                                 twice if we switch to ICC */

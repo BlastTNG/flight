@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.97 $";
+const char *command_list_serial = "$Revision: 4.98 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -573,7 +573,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(set_secondary), "servo the secondary mirror to absolute position",
     GR_FOCUS, 1,
     {
-      {"Position (counts)", -15000, 15000, 'i', "GOAL_SF"},
+      {"Position (per FOCUS_SF counts)", -15000, 15000, 'i', "FOCUS_SF"},
     }
   },
   {COMMAND(delta_secondary), "servo the secondary mirror by a relative amount",
@@ -593,9 +593,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(actuator_servo), "servo the actuators to absolute positions",
     GR_ACT, 3,
     {
-      {"Actuator Alpha", -15000, 15000, 'i', "ENC_0_ACT"},
-      {"Actuator Beta",  -15000, 15000, 'i', "ENC_1_ACT"},
-      {"Actuator Gamma", -15000, 15000, 'i', "ENC_2_ACT"}
+      {"Actuator Alpha (ENC units)", -15000, 15000, 'i', "ENC_0_ACT"},
+      {"Actuator Beta (ENC units)",  -15000, 15000, 'i', "ENC_1_ACT"},
+      {"Actuator Gamma (ENC units)", -15000, 15000, 'i', "ENC_2_ACT"}
     }
   },
   {COMMAND(focus_offset), "set the in focus position offset relative the "
@@ -614,9 +614,16 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(act_offset), "set the actuator encoder/lvdt offsets", GR_ACT, 3,
     {
-      {"Actuator Alpha", 0, 65536, 'f', "ENC_0_ACT"},
-      {"Actuator Beta",  0, 65536, 'f', "ENC_1_ACT"},
-      {"Actuator Gamma", 0, 65536, 'f', "ENC_2_ACT"}
+      {"Actuator Alpha (Enc units)", 0, 65536, 'f', "Enc_0_act"},
+      {"Actuator Beta (Enc units)",  0, 65536, 'f', "Enc_1_act"},
+      {"Actuator Gamma (Enc units)", 0, 65536, 'f', "Enc_2_act"}
+    }
+  },
+  {COMMAND(act_enc_trim), "manually set encoder and dead reckoning", GR_ACT, 3,
+    {
+      {"Actuator Alpha (Enc units)", 0, 65536, 'f', "Enc_0_act"},
+      {"Actuator Beta (Enc units)",  0, 65536, 'f', "Enc_1_act"},
+      {"Actuator Gamma (Enc units)", 0, 65536, 'f', "Enc_2_act"}
     }
   },
   {COMMAND(actuator_vel), "set the actuator velocity and acceleration", GR_ACT,
@@ -809,17 +816,17 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /*************** Bias  *****************/
   {COMMAND(bias_level_250), "bias level 250 micron", GR_BIAS, 1,
     {
-      {"Level", 0, 32767, 'i', "ampl_250_bias"}
+      {"Level", 0, 32767, 'i', "AMPL_250_BIAS"}
     }
   },
   {COMMAND(bias_level_350), "bias level 350 micron", GR_BIAS, 1,
     {
-      {"Level", 0, 32767, 'i', "ampl_350_bias"}
+      {"Level", 0, 32767, 'i', "AMPL_350_BIAS"}
     }
   },
   {COMMAND(bias_level_500), "bias level 500 micron", GR_BIAS, 1,
     {
-      {"Level", 0, 32767, 'i', "ampl_500_bias"}
+      {"Level", 0, 32767, 'i', "AMPL_500_BIAS"}
     }
   },
   {COMMAND(bias_step), "step through different bias levels", GR_BIAS, 6,
@@ -842,7 +849,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(bias_level_rox), "bias level ROX", GR_BIAS, 1,
     {
-      {"Level", 0, 32767, 'i', "ampl_rox_bias"}
+      {"Level", 0, 32767, 'i', "AMPL_ROX_BIAS"}
     }
   },
   {COMMAND(bias_level_x), "bias level X (unused)", GR_BIAS, 1,
