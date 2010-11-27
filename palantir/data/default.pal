@@ -163,11 +163,29 @@
       <HI value="999"/>
       <XHI value="1000"/>
     </EXTREMA>
+    <EXTREMA name="pothstemp">
+      <XLO value="3"/>
+      <LO value="4.2"/>
+      <HI value="6"/>
+      <XHI value="12"/>
+    </EXTREMA>
+    <EXTREMA name="charhstemp">
+      <XLO value="4.2"/>
+      <LO value="15"/>
+      <HI value="21"/>
+      <XHI value="25"/>
+    </EXTREMA>
     <EXTREMA name="lhetemp">
       <XLO value="3"/>
       <LO value="3.5"/>
       <HI value="4.5"/>
       <XHI value="5"/>
+    </EXTREMA>
+    <EXTREMA name="lhefilttemp">
+      <XLO value="3"/>
+      <LO value="4"/>
+      <HI value="5"/>
+      <XHI value="5.5"/>
     </EXTREMA>
     <EXTREMA name="hwprtemp">
       <XLO value="3.5"/>
@@ -176,16 +194,16 @@
       <XHI value="6"/>
     </EXTREMA>
     <EXTREMA name="lntemp">
-      <XLO value="65"/>
-      <LO value="68"/>
-      <HI value="76"/>
-      <XHI value="80"/>
+      <XLO value="70"/>
+      <LO value="75"/>
+      <HI value="80"/>
+      <XHI value="85"/>
     </EXTREMA>
     <EXTREMA name="lnfilttemp">
-      <XLO value="65"/>
-      <LO value="71"/>
-      <HI value="81"/>
-      <XHI value="85"/>
+      <XLO value="77"/>
+      <LO value="78"/>
+      <HI value="90"/>
+      <XHI value="95"/>
     </EXTREMA>
     <EXTREMA name="vcstemp">
       <XLO value="30"/>
@@ -195,8 +213,8 @@
     </EXTREMA>
     <EXTREMA name="vcsfet">
       <XLO value="40"/>
-      <LO value="50"/>
-      <HI value="70"/>
+      <LO value="45"/>
+      <HI value="65"/>
       <XHI value="80"/>
     </EXTREMA>
     <EXTREMA name="jfettemp">
@@ -210,12 +228,6 @@
       <LO value="-0.01"/>
       <HI value="40"/>
       <XHI value="75"/>
-    </EXTREMA>
-    <EXTREMA name="pottemp-diode">
-      <XLO value="1"/>
-      <LO value="1.4"/>
-      <HI value="2.5"/>
-      <XHI value="3.5"/>
     </EXTREMA>
     <EXTREMA name="pottemp">
       <XLO value="1"/>
@@ -1615,7 +1627,7 @@
       <DATUM format="%.2f" src="Td_ln" extrema="lntemp"/>
     </NUMBER>
     <NUMBER caption="LN2 Filter">
-      <DATUM format="%.2f" src="Td_ln_filt" extrema="lntemp"/>
+      <DATUM format="%.2f" src="Td_ln_filt" extrema="lnfilttemp"/>
     </NUMBER>
     <NUMBER caption="VCS Filter">
       <DATUM format="%.2f" src="Td_vcs_filt" extrema="vcstemp"/>
@@ -1624,7 +1636,7 @@
       <DATUM format="%.2f" src="Td_vcs_jfet" extrema="vcsfet"/>
     </NUMBER>
     <NUMBER caption="LHE Filter">
-      <DATUM format="%.2f" src="Td_lhe_filt" extrema="lhetemp"/>
+      <DATUM format="%.2f" src="Td_lhe_filt" extrema="lhefilttemp"/>
     </NUMBER>
     <NUMBER caption="LHe">
       <DATUM format="%.2f" src="Td_lhe" extrema="lhetemp"/>
@@ -1633,10 +1645,10 @@
       <DATUM format="%.2f" src="Td_charcoal" extrema="chartemp"/>
     </NUMBER>
     <NUMBER caption="HS Charcoal">
-      <DATUM format="%.2f" src="Td_hs_charcoal" extrema="unknown"/>
+      <DATUM format="%.2f" src="Td_hs_charcoal" extrema="charhstemp"/>
     </NUMBER>
     <NUMBER caption="HS Pot">
-      <DATUM format="%.2f" src="Td_hs_pot" extrema="lhetemp"/>
+      <DATUM format="%.2f" src="Td_hs_pot" extrema="pothstemp"/>
     </NUMBER>
   </BOX>
   <BOX caption="Cold Optics Temps" row="3" col="6">
