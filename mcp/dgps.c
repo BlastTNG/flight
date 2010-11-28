@@ -696,11 +696,10 @@ void WatchDGPS()
 	  (PVT->Lon == DONOTUSE)			  || 
 	  (DGPSPos[dgpspos_index].n_sat < 4)) {
 	pos_ok = 0;
-      } 
-      else {
+      } else {
 	pos_ok = 1;
+        dgpspos_index = INC_INDEX(dgpspos_index);
       }
-      dgpspos_index = INC_INDEX(dgpspos_index);
     } else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_ATTEULER) {
     
       /* Attitude */

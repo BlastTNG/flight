@@ -1929,16 +1929,22 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 #ifndef USE_FIFO_CMD
 static void GPSPosition (unsigned char *indata)
 {
-  /* Send new information to CommandData */
-  SIPData.GPSpos.lon = -ParseGPS(indata); /* sip sends east lon */
-  SIPData.GPSpos.lat = ParseGPS(indata + 4);
-  /* end of hack */
-
-  SIPData.GPSpos.alt = ParseGPS(indata + 8);
+  double lat;
+ 
   SIPData.GPSstatus1 = *(indata + 12);
   SIPData.GPSstatus2 = *(indata + 13);
 
-  WritePrevStatus();
+  lat = ParseGPS(indata + 4);
+  if (fabs(lat)>20) {
+
+    SIPData.GPSpos.lat = lat;
+    SIPData.GPSpos.lon = -ParseGPS(indata); /* sip sends east lon */
+    /* end of hack */
+    
+    SIPData.GPSpos.alt = ParseGPS(indata + 8);
+    
+    WritePrevStatus();
+  }
 }
 #endif
 
