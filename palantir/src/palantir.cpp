@@ -1248,8 +1248,9 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
   setIcon(*Icon);
 
   ContentLayout = new QGridLayout;
-  //ContentLayout->setSpacing(2);
+  ContentLayout->setSpacing(2);
   ContentLayout->setMargin(0);
+
 
   // Create the screen using the info specified in the layout.pal file
   if (BoxInfo.isEmpty()) {
@@ -1298,8 +1299,8 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
               currMulti = MultiInfo.at(currLabel->index);
             if (currLabel->datumtype == DERIV)
               currDeriv = DerivInfo.at(currLabel->index);
-            currQtData->setPalette(Palette(tstyle));
-            currQtData->setFont(Font(tstyle));
+            currQtData->setPalette(Palette(ErrorStyle));
+            currQtData->setFont(Font(ErrorStyle));
             currQtBoxLayout->addWidget(currQtData, row, 2);
           }
           currQtBoxLayout->addWidget(currQtLabels, row, 0);
@@ -1386,6 +1387,7 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
 
   // Initialise KstFile object
   resetDirFile(tmp);
+  
 }
 
 void MainForm::resetDirFile(char *filename) {
