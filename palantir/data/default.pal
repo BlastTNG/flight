@@ -994,9 +994,8 @@
     </NUMBER>
   </BOX>
   <BOX caption="Actuators" colour="#002222" row="3" col="6" rowspan="1">
-    <!-- TODO mode and status need updating in mcp, then here -->
-    <MULTI caption="Mode (FIXME)">
-      <DATUM src="MODE_SF"> <!-- wrong field, add to flags -->
+    <MULTI caption="Mode">
+      <DATUM src="MODE_ACT">
         <WORD value="0" caption="Idle" textstyle="OK_BIT"/>
         <WORD value="1" caption="Servoing" textstyle="W_BIT"/>
         <WORD value="2" caption="Focusing" textstyle="W_BIT"/>
@@ -1008,6 +1007,14 @@
         <WORD value="8" caption="Delfoc" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
+    <MULTI caption="Focus Mode">
+      <DATUM src="MODE_SF">
+        <WORD value="0" caption="Enabled" textstyle="OK_BIT"/>
+        <WORD value="1" caption="AutoVeto" textstyle="W_BIT"/>
+        <WORD value="2" caption="Veto" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <!-- TODO update staus -->
     <MULTI caption="Status">
       <DATUM src="FLAGS_ACT">
         <WORD mask="0x400" value="1024" caption="Fault ENC2" textstyle="E_BIT"/>
