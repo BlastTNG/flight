@@ -122,6 +122,15 @@ static double t_primary = -1, t_secondary = -1;
 static double focus = -1;	  /* set in ab thread, read in fc thread */
 static double correction = 0;     /* set in fc thread, read in ab thread */
 
+<<<<<<< actuators.c
+/* Thermal model numbers, from MD and MV */
+//TODO need to calibrate focus numbers
+#define T_PRIMARY_FOCUS   258.15 /* = -15C */
+#define T_SECONDARY_FOCUS 243.15 /* = -30C */
+#define POSITION_FOCUS         0 /* absolute counts */
+
+=======
+>>>>>>> 4.48
 /************************************************************************/
 /*                                                                      */
 /*    Actuator Logic: servo focus based on thermal model/commands       */
@@ -221,36 +230,103 @@ static int CheckMove(int goal0, int goal1, int goal2)
     bputs(warning, "Move Out of Range.");
     actbus_flags |= ACT_FL_BAD_MOVE;
   } else
+<<<<<<< actuators.c
+    actbus_flags &= ~ACT_FL_BAD_MOVE;
+=======
     actbus_flags &= ~ACT_FL_BAD_MOVE;
 
   return actbus_flags & ACT_FL_BAD_MOVE;
 }
+>>>>>>> 4.48
 
+<<<<<<< actuators.c
+  return actbus_flags & ACT_FL_BAD_MOVE;
+=======
 static void ReadActuator(int num)
 {
   if (!EZBus_IsUsable(&bus, id[num])) return;
 
   EZBus_ReadInt(&bus, id[num], "?0", &act_data[num].pos);
   EZBus_ReadInt(&bus, id[num], "?8", &act_data[num].enc);
+>>>>>>> 4.48
 }
 
+<<<<<<< actuators.c
+//if encoder values disagree with LVDTs, trim encoders to LVDT
+static void trimActEnc()
+=======
 //Set both dead reckoning and encoder to trim value, dump dr to disk
 void actEncTrim(int *trim)
+>>>>>>> 4.48
 {
+<<<<<<< actuators.c
+  int i, do_trim = 0;
+  char buf[EZ_BUS_BUF_LEN];
+=======
   int i;
   char buffer[EZ_BUS_BUF_LEN];
 
   bprintf(info, "trim enc and dr to (%d, %d, %d)", trim[0], trim[1], trim[2]);
+>>>>>>> 4.48
 
+  //count down timeout on ACT_FL_TRIMMED indicator flag
+  if (act_trim_flag_wait > 0) {
+    act_trim_flag_wait--;
+    actbus_flags |= ACT_FL_TRIMMED;
+  } else {
+    actbus_flags &= ~ACT_FL_TRIMMED;
+  }
+
+  //Check if actuators are busy. If they are, wait longer
   for (i=0; i<3; i++) {
+<<<<<<< actuators.c
+    if (EZBus_IsBusy(&bus, id[i])) {
+      act_trim_wait = ACTBUS_TRIM_WAIT;
+      actbus_flags |= ACT_FL_BUSY(i);
+      actbus_flags |= ACT_FL_TRIM_WAIT;
+    }
+    else actbus_flags &= ~ACT_FL_BUSY(i);
+  }
+  if (actbus_flags & ACT_FL_BUSY_MASK) return;
+
+  //Check if waiting before trimming again
+  if (act_trim_wait > 0) {
+    act_trim_wait--;
+    actbus_flags |= ACT_FL_TRIM_WAIT;
+    return;
+=======
     /* set the dr */
     act_data[i].dr = trim[i];
     /* Set the encoder */
     EZBus_Comm(&bus, id[i], 
 	EZBus_StrComm(&bus, id[i], buffer, "z%iR", act_data[i].dr), 0);
+>>>>>>> 4.48
   }
+<<<<<<< actuators.c
+  else actbus_flags &= ~ACT_FL_TRIM_WAIT;
+=======
+>>>>>>> 4.48
 
+<<<<<<< actuators.c
+  //if not busy, and error large enough on one encoder, trim all of them
+  for (i=0; i<3; i++) {
+    if (!EZBus_IsBusy(&bus, id[i]) && 
+	abs(act_data[i].enc - act_data[i].lvdt) > ACTBUS_MAX_ENC_ERR) {
+      do_trim = 1;
+    }
+  }
+  if (do_trim) {
+    bputs(info, "Trimming actuator encoders to LVDTs");
+    for (i=0; i<3; i++) {
+      sprintf(buf, "z%dR", act_data[i].lvdt);
+      EZBus_Comm(&bus, id[i], buf, 0);
+    }
+    act_trim_wait_flag = act_trim_wait = ACTBUS_TRIM_WAIT;
+    actbus_flags |= ACT_FL_TRIMMED | ACT_FL_TRIM_WAIT;
+  }
+=======
   WriteDR();
+>>>>>>> 4.48
 }
 
 //before moving, update dead reckoning to new goal
@@ -261,7 +337,11 @@ static void UpdateDR(int* goal)
   WriteDR();
 }
 
+<<<<<<< actuators.c
+//NB has less checks that servoing used to, but I don't see how they were useful
+=======
 //NB has less checks than servoing used to, but I don't see how they were useful
+>>>>>>> 4.48
 static void ServoActuators(int* goal)
 {
   int i;
@@ -275,11 +355,17 @@ static void ServoActuators(int* goal)
 
   EZBus_Take(&bus, ID_ALL_ACT);
 
+<<<<<<< actuators.c
+  //stop any current action
+  EZBus_Stop(&bus, ID_ALL_ACT); /* terminate all strings */
+
+=======
   UpdateDR(goal);
 
   //stop any current action
   EZBus_Stop(&bus, ID_ALL_ACT); /* terminate all strings */
 
+>>>>>>> 4.48
   for (i = 0; i < 3; ++i) {
     //send command to each actuator, but don't run yet
     EZBus_Comm(&bus, id[i], EZBus_StrComm(&bus, id[i], buf, "A%d", goal[i]), 0);
@@ -350,7 +436,11 @@ static void DoActuators(void)
       /* Fallthough */
     case ACTBUS_FM_THERMO:
     case ACTBUS_FM_FOCUS:
+<<<<<<< actuators.c
+      bprintf(info, "changing focus %d to %d", focus, CommandData.actbus.focus);
+=======
       bprintf(info, "changing focus %g to %d", focus, CommandData.actbus.focus);
+>>>>>>> 4.48
       delta = CommandData.actbus.focus - focus;
       CommandData.actbus.goal[0] = act_data[0].enc + delta;
       CommandData.actbus.goal[1] = act_data[1].enc + delta;
@@ -365,9 +455,14 @@ static void DoActuators(void)
     case ACTBUS_FM_SLEEP:
 	break;
     default:
+<<<<<<< actuators.c
+	bputs(err, "Unknown Focus Mode (%i), sleeping");
+	CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
+=======
 	bprintf(err, "Unknown Focus Mode (%i), sleeping", 
 	    CommandData.actbus.focus_mode);
 	CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
+>>>>>>> 4.48
   }
 
   CommandData.actbus.focus_mode = ThermalCompensation();
@@ -381,7 +476,11 @@ static void DoActuators(void)
     }
   }
 
+<<<<<<< actuators.c
+  focus = (act_data[0].lvdt + act_data[1].lvdt + act_data[2].lvdt)/3;
+=======
   focus = (act_data[0].enc + act_data[1].enc + act_data[2].enc)/3.0;
+>>>>>>> 4.48
 }
 
 //adjust focus offset so that new gains don't change focus thermal correction
@@ -475,6 +574,25 @@ static void SetLockState(int nic)
   if (fabs(ACSData.enc_raw_el - LockPosition(CommandData.pointing_mode.Y)) <= 0.5)
     state |= LS_EL_OK;
 
+<<<<<<< actuators.c
+  // klugy hack to filter restart state not propogating properly...
+  //TODO sometimes when control switches, the lock thinks it's locked
+#if 0
+bprintf(info, "nic: %d state: %d change count: %d\n", nic, state, nic_change_count);
+  if (nic) {
+    if (state != last_lock_state) {
+      if (nic_change_count++ < 6) {
+        return;
+      }
+
+      last_lock_state = state;
+      nic_change_count = 0;
+    }
+  } // end klugy hack
+#endif
+
+=======
+>>>>>>> 4.48
   /* Assume the pin is out unless we're all the way closed */
   if (state & LS_CLOSED)
     CommandData.pin_is_in = 1;
@@ -902,7 +1020,11 @@ void StoreActBus(void)
     iMoveActAddr = GetNiosAddr("i_move_act");
     iHoldActAddr = GetNiosAddr("i_hold_act");
     flagsActAddr = GetNiosAddr("flags_act");
+<<<<<<< actuators.c
+    flagsActAddr = GetNiosAddr("mode_act");
+=======
     modeActAddr = GetNiosAddr("mode_act");
+>>>>>>> 4.48
 
     velLockAddr = GetNiosAddr("vel_lock");
     accLockAddr = GetNiosAddr("acc_lock");
@@ -950,8 +1072,13 @@ void StoreActBus(void)
     WriteData(drActAddr[j], 
 	act_data[j].dr - CommandData.actbus.offset[j], NIOS_QUEUE);
   }
+<<<<<<< actuators.c
+  WriteData(focusSfAddr, 
+      focus - POSITION_FOCUS - CommandData.actbus.sf_offset, NIOS_QUEUE);
+=======
   WriteData(focusSfAddr, 
       (int)focus - POSITION_FOCUS - CommandData.actbus.sf_offset, NIOS_QUEUE);
+>>>>>>> 4.48
 
   WriteData(potLockAddr, lock_data.adc[1], NIOS_QUEUE);
   WriteData(stateLockAddr, lock_data.state, NIOS_QUEUE);
