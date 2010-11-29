@@ -189,7 +189,7 @@
     </EXTREMA>
     <EXTREMA name="hwprtemp">
       <XLO value="3.5"/>
-      <LO value="4.2"/>
+      <LO value="3.5"/>
       <HI value="5.5"/>
       <XHI value="6"/>
     </EXTREMA>
@@ -231,7 +231,7 @@
     </EXTREMA>
     <EXTREMA name="pottemp">
       <XLO value="1"/>
-      <LO value="1.5"/>
+      <LO value="1.3"/>
       <HI value="2.8"/>
       <XHI value="3.5"/>
     </EXTREMA>
@@ -1044,13 +1044,13 @@
     <NUMBER caption="LVDT Gamma">
       <DATUM format="%.0f" src="Lvdt_2_act" extrema="actuator"/>
     </NUMBER>
-    <NUMBER caption="LVDT High">
+    <NUMBER caption="LVDT Hi">
       <DATUM format="%.0f" src="LVDT_HIGH_ACT" extrema="LVDTHigh"/>
     </NUMBER>
-    <NUMBER caption="LVDT Low">
+    <NUMBER caption="LVDT Lo">
       <DATUM format="%.0f" src="LVDT_LOW_ACT" extrema="LVDTLow"/>
     </NUMBER>
-    <NUMBER caption="LVDT Spread">
+    <NUMBER caption="LVDT Sp.">
       <DATUM format="%.0f" src="LVDT_SPREAD_ACT" extrema="LVDTSpread"/>
     </NUMBER>
     <NUMBER caption="I Move">
@@ -1306,7 +1306,7 @@
       <DATUM format="%.3f" src="B5T2" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Bias/Phase" colour="#707" row="1" col="9" rowspan="1">
+  <BOX caption="Bias" colour="#707" row="1" col="9">
     <NUMBER caption="Bias 250">
       <DATUM format="%.0f" src="AMPL_250_BIAS" extrema="bias1"/>
     </NUMBER>
@@ -1322,6 +1322,8 @@
     <NUMBER caption="Bias X">
       <DATUM format="%d" src="AMPL_X_BIAS" extrema="unknown"/>
     </NUMBER>
+  </BOX>
+  <BOX caption="Phase" colour="#707" row="2" col="9">
     <NUMBER caption="Phase 17">
       <DATUM format="%.0f" src="N17_PHASE" extrema="unknown"/>
     </NUMBER>
@@ -1419,7 +1421,7 @@
         <WORD value="0" caption="North" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
-    <NUMBER caption="Disk Space (GB)">
+    <NUMBER caption="Disk Free (GB)">
       <DATUM format="%.2f" src="DISK_FREE" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Index">
@@ -1470,13 +1472,13 @@
     <DATETIME caption="SIP Time">
       <DATUM format="%e %b %Y, %H:%M:%S" src="TIME_SIP"/>
     </DATETIME>
-    <NUMBER caption="Gondola Siderial Time">
+    <NUMBER caption="Gondola LST">
       <DATUM format="%.4f" src="LST" extrema="unknown"/>
     </NUMBER>
     <DATETIME caption="Schedule LST">
       <DATUM format="Day %j, %H:%M:%S" src="LST_SCHED"/>
     </DATETIME>
-    <DATETIME caption="Time to Sched Mode">
+    <DATETIME caption="Sched Timeout">
       <DATUM format="%H:%M:%S" src="TIMEOUT"/>
     </DATETIME>
 
@@ -1498,7 +1500,7 @@
       <DATUM format="%.2f" src="AZ_SUN" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Location" colour="#009911" row="5" col="3" rowspan="1">
+  <BOX caption="Location" colour="#009911" row="5" col="2" rowspan="1">
     <NUMBER caption="Latitude">
       <DATUM format="%.4f" src="LAT" extrema="unknown"/>
     </NUMBER>
@@ -1801,7 +1803,7 @@
       <DATUM format="%.2f" src="I_300MK" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Motorised Valves" row="5" col="2" rowspan="1">
+  <BOX caption="Motorised Valves" row="5" col="3" rowspan="1">
     <MULTI caption="Pot">
       <DATUM src="POT_VALVE">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
