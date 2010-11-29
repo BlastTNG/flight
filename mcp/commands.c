@@ -1461,6 +1461,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.act_move_i = ivalues[0];
       CommandData.actbus.act_hold_i = ivalues[1];
       break;
+    case actuator_tol:
+      CommandData.actbus.act_tol = ivalues[0];
+      break;
     case act_offset:
       CommandData.actbus.offset[0] = (int)rvalues[0];
       CommandData.actbus.offset[1] = (int)rvalues[1];
@@ -2871,6 +2874,7 @@ void InitCommandData()
   CommandData.actbus.act_acc = 1;
   CommandData.actbus.act_move_i = 75;
   CommandData.actbus.act_hold_i = 10;
+  CommandData.actbus.act_tol = 2;
 
   CommandData.actbus.lock_vel = 110000;
   CommandData.actbus.lock_acc = 100;

@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.98 $";
+const char *command_list_serial = "$Revision: 4.99 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -630,13 +630,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
     2,
     {
       {"Velocity", 5, 20000, 'i', "VEL_ACT"},
-      {"Acceleration", 1, 20, 'i', "ACC_ACT"},
+      {"Acceleration", 1, 20, 'i', "ACC_ACT"}
     }
   },
   {COMMAND(actuator_i), "set the actuator motor currents", GR_ACT, 2,
     {
       {"Move current (%)", 0, 100, 'i', "I_MOVE_ACT"},
-      {"Hold current (%)", 0,  50, 'i', "I_HOLD_ACT"},
+      {"Hold current (%)", 0,  50, 'i', "I_HOLD_ACT"}
+    }
+  },
+  {COMMAND(actuator_tol), "set the tolerance for servo moves", GR_ACT, 1,
+    {
+      {"Move tolerance (~um)", 0, 1000, 'i', "TOL_ACT"}
     }
   },
   {COMMAND(lvdt_limit), "set the hard LVDT limits on actuator moves", GR_ACT, 3,

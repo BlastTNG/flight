@@ -768,18 +768,14 @@ struct ChannelStruct SlowChannels[] = {
   {"rel_move_hwpr",  'w', LOOP9,  14,                2.0,             0.0, 's', U_NONE},
   {"stat_control_hwpr",'w', LOOP9,15,                1.0,             0.0, 's', U_NONE},
   {"pot_targ_hwpr",  'w', LOOP9,  16,                1.0,             0.0, 's', U_NONE},
-<<<<<<< tx_struct.c
-  {"mode_act",       'w', LOOP9,  17,                1.0,             0.0, 's', U_NONE},
-  /* LOOP9 18-49 are unused */
-=======
   {"mode_act",       'w', LOOP9,  17,                1.0,             0.0, 's', U_NONE},
   {"enc_targ_hwpr",  'w', LOOP9,  18,                1.0,             0.0, 's', U_NONE},
   {"enc_err_hwpr",   'w', LOOP9,  19,                1.0,             0.0, 's', U_NONE},
   {"dr_0_act",       'w', LOOP9,  20,                1.0,             0.0, 's', U_NONE},
   {"dr_1_act",       'w', LOOP9,  21,                1.0,             0.0, 's', U_NONE},
   {"dr_2_act",       'w', LOOP9,  22,                1.0,             0.0, 's', U_NONE},
-  /* LOOP9 23-49 are unused */
->>>>>>> 4.199
+  {"tol_act",        'w', LOOP9,  23,                1.0,             0.0, 'u', U_NONE},
+  /* LOOP9 24-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  

@@ -356,6 +356,7 @@ struct CommandDataStruct {
     int act_acc;
     int act_hold_i;
     int act_move_i;
+    unsigned short act_tol;
 
     /* low-level actuator servo */
     int focus_mode;
