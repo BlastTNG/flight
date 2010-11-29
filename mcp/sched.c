@@ -495,6 +495,10 @@ void DoSched(void)
     event.ivalues[0] = 50;
     event.ivalues[1] = 0;
     ScheduledCommand(&event);
+    /* fridge autocylce system active */
+    event.command = auto_cycle;
+    event.is_multi = 0;
+    ScheduledCommand(&event);
 
     // out of sched mode for a while
     CommandData.pointing_mode.t = t + 30;
