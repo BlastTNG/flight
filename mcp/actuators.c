@@ -52,6 +52,11 @@
  *
  * * check units of move commands (offset or not)
  *
+ * reconnecting after serial disconnection
+ *  at least need to add auto repoll (check IsUsable to set all_ok)
+ *  add flags for when things are usable or not
+ *
+ *  encoder sync on bad value
  *
  */
 
@@ -94,9 +99,11 @@ static struct lock_struct {
 } lock_data = { .state = LS_DRIVE_UNK };
 
 /* Secondary actuator data and parameters */
-#define LVDT_FILT_LEN 25   //5s @ 5Hz
-#define DEFAULT_DR  32768     //value to use if reading file fails
-#define MIN_ENC	    1000      //minimum acceptable encoder vlaue, load dr below
+#define LVDT_FILT_LEN 25      //5s @ 5Hz
+#define DEFAULT_DR    32768   //value to use if reading file fails
+#define MIN_ENC	      1000    //minimum acceptable encoder vlaue, load dr below
+#define ACTBUS_TRIM_WAIT  3*LVDT_FILT_LEN //thrice LVDT_FILT_LEN
+					  //wait between trims, and after moves
 
 static struct act_struct {
   int pos;	//raw step count
@@ -250,15 +257,6 @@ void actEncTrim(int *trim)
 
   bprintf(info, "trim enc and dr to (%d, %d, %d)", trim[0], trim[1], trim[2]);
 
-  //count down timeout on ACT_FL_TRIMMED indicator flag
-  if (act_trim_flag_wait > 0) {
-    act_trim_flag_wait--;
-    actbus_flags |= ACT_FL_TRIMMED;
-  } else {
-    actbus_flags &= ~ACT_FL_TRIMMED;
-  }
-
-  //Check if actuators are busy. If they are, wait longer
   for (i=0; i<3; i++) {
     /* set the dr */
     act_data[i].dr = trim[i];
@@ -268,6 +266,40 @@ void actEncTrim(int *trim)
   }
 
   WriteDR();
+}
+
+//check encoders for sane values, and update if not good
+void CheckEncoders()
+{
+  int i, do_trim = 0, trim[3];
+
+  //check busy state of actuators, update flag
+  for (i=0; i<3; i++) {
+    if (EZBus_IsBusy(&bus, id[i])) {
+      act_trim_wait = ACTBUS_TRIM_WAIT;
+      actbus_flags |= ACT_FL_BUSY(i);
+      actbus_flags |= ACT_FL_TRIM_WAIT;
+    }
+    else actbus_flags &= ~ACT_FL_BUSY(i);
+  }
+
+  //read encoders, and check if values need updating
+  for (i = 0; i < 3; ++i) {
+    ReadActuator(i);
+    //for bad encoders, prepare to do a trim
+    if (!encOK(act_data[i].enc)) do_trim = 1;
+    //for bad DR, reload from file
+    if (!encOK(act_data[i].dr)) ReadDR();
+    trim[i] = act_data[i].dr;
+  }
+
+  //if busy, or waiting, do not trim
+  if (actbus_flags & (ACT_FL_BUSY_MASK | ACT_FL_TRIM_WAIT)) return;
+  else if (do_trim) {
+    actEncTrim(trim);
+    act_trim_flag_wait = act_trim_wait = ACTBUS_TRIM_WAIT;
+    actbus_flags |= ACT_FL_TRIMMED | ACT_FL_TRIM_WAIT;
+  }
 }
 
 //before moving, update dead reckoning to new goal
@@ -344,7 +376,6 @@ static int ThermalCompensation(void)
 
 static void DoActuators(void)
 {
-  int i;
   int delta;
 
   EZBus_SetVel(&bus, ID_ALL_ACT, CommandData.actbus.act_vel);
@@ -390,14 +421,7 @@ static void DoActuators(void)
 
   CommandData.actbus.focus_mode = ThermalCompensation();
 
-  for (i = 0; i < 3; ++i) {
-    ReadActuator(i);
-    if (!encOK(act_data[i].enc)) {  //not properly initialized
-      bprintf(warning, "encoder %d not initialized, reading from act.dr", i);
-      ReadDR();
-      break;
-    }
-  }
+  CheckEncoders();
 
   focus = (act_data[0].enc + act_data[1].enc + act_data[2].enc)/3.0;
 }
