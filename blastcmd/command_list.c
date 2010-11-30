@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.99 $";
+const char *command_list_serial = "$Revision: 4.100 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -621,9 +621,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(act_enc_trim), "manually set encoder and dead reckoning", GR_ACT, 3,
     {
-      {"Actuator Alpha (Enc units)", 0, 65536, 'f', "Enc_0_act"},
-      {"Actuator Beta (Enc units)",  0, 65536, 'f', "Enc_1_act"},
-      {"Actuator Gamma (Enc units)", 0, 65536, 'f', "Enc_2_act"}
+      {"Actuator Alpha (Enc units)", 0, 65536, 'f', "Dr_0_act"},
+      {"Actuator Beta (Enc units)",  0, 65536, 'f', "Dr_1_act"},
+      {"Actuator Gamma (Enc units)", 0, 65536, 'f', "Dr_2_act"}
     }
   },
   {COMMAND(actuator_vel), "set the actuator velocity and acceleration", GR_ACT,
