@@ -17,6 +17,9 @@
 #define MAXSOLUTION 200
 #define MAXBLOBS 100
 
+// for ground operations, in seconds
+#define timeout_pyramid 10. //**LORENZO**
+
 //type for entries in the star catalogue
 typedef struct {
   double ra;                          //right ascension

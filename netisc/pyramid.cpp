@@ -25,6 +25,8 @@
 #include <list>
 #include <math.h>
 #include <time.h>
+#include <windows.h>//**LORENZO**
+#include <winbase.h>//**LORENZO**
 
 #include "pyramid.h"
 
@@ -860,6 +862,9 @@ int Pyramid::Match(double* x, double* y, double ftol, unsigned long n)
 
   int retval = -1;
 
+  SYSTEMTIME t_in, t_fin;//**LORENZO**
+  double seconds_elapsed = 0.;//**LORENZO**
+
   if(n > MAXBLOBS) n = MAXBLOBS;
   switch (n) {
   case 0:  retval = 0; nsol = 0; break;
@@ -897,8 +902,18 @@ int Pyramid::Match(double* x, double* y, double ftol, unsigned long n)
     break;
     
   default: // More than three candidate stars
+    GetSystemTime(&t_in);//**LORENZO**
     GetTriangle(i,j,k,n);        //creates a list of possible triangles
-  M0: 
+  M0:
+    GetSystemTime(&t_fin);//**LORENZO**
+    seconds_elapsed = ((t_fin.wMonth-1L)*31L*24L*3600L+(t_fin.wDay-1L)*24L*3600L+t_fin.wHour*3600L+t_fin.wMinute*60L+t_fin.wSecond+(double)t_fin.wMilliseconds/1000.)-((t_in.wMonth-1L)*31L*24L*3600L+(t_in.wDay-1L)*24L*3600L+t_in.wHour*3600L+t_in.wMinute*60L+t_in.wSecond+(double)t_in.wMilliseconds/1000.);
+    //cerr << "It took " << seconds_elapsed << " sec" << endl;
+    if(seconds_elapsed > timeout_pyramid) {
+      cerr << "LOST IN SPACE algo has timed out, quitting now...\n";
+      retval = 0;
+      nsol = 0;
+      break;
+    } else {//**LORENZO**
 	if(GetTriangle(i,j,k) == 0) {         //steps through list of triangles (assigns i,j,k)
 #if PYRAMID_DEBUG
 		cerr << "[Pyramid debug]: Checked all triangles\n";
@@ -968,7 +983,7 @@ int Pyramid::Match(double* x, double* y, double ftol, unsigned long n)
     retval = S->n;
     break;
   }
-  
+  }//**LORENZO**
   if(solution != NULL) delete[] solution;
   solution = new solution_t [nsol];
 
