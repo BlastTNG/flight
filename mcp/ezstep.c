@@ -628,24 +628,24 @@ int EZBus_PollInit(struct ezbus* bus, int (*ezinit)(struct ezbus*,char) )
       continue;
     EZBus_Send(bus, i, "&");
     if ((result = EZBus_Recv(bus)) & (EZ_ERR_TIMEOUT | EZ_ERR_OOD)) {
-      if (bus->chatter >= EZ_CHAT_ERR)
+      if (bus->chatter >= EZ_CHAT_ACT)
 	bprintf(warning, "%sNo response from %s, will repoll later.", 
 	    bus->name, stepName(bus,i));
       bus->stepper[iWho(i)].status &= ~EZ_STEP_OK;
       retval |= result;	  //include in retval results from Recv
       retval |= EZ_ERR_POLL;
     } else if (!strncmp(bus->buffer, "EZStepper AllMotion", 19)) {
-      if (bus->chatter >= EZ_CHAT_ERR)
+      if (bus->chatter >= EZ_CHAT_ACT)
 	bprintf(info, "%sFound EZStepper device %s at address %c (0x%x).\n", 
 	    bus->name, stepName(bus,i), i, i);
       bus->stepper[iWho(i)].status |= EZ_STEP_OK;
     } else if (!strncmp(bus->buffer, "EZHR17EN AllMotion", 18)) {
-      if (bus->chatter >= EZ_CHAT_ERR)
+      if (bus->chatter >= EZ_CHAT_ACT)
 	bprintf(info, "%sFound type 17EN device %s at address %c (0x%x).\n", 
 	    bus->name, stepName(bus,i), i, i);
       bus->stepper[iWho(i)].status |= EZ_STEP_OK;
     } else if (!strncmp(bus->buffer, "EZHR23 All Motion", 17)) {
-      if (bus->chatter >= EZ_CHAT_ERR)
+      if (bus->chatter >= EZ_CHAT_ACT)
 	bprintf(info, "%sFound type 23 device %s at address %c (0x%x).\n", 
 	    bus->name, stepName(bus,i), i, i);
       bus->stepper[iWho(i)].status |= EZ_STEP_OK;
