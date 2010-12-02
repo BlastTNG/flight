@@ -41,21 +41,6 @@
 #include "tx.h"
 #include "hwpr.h"
 
-/* TODO
- * (don't erase until tested!)
- *
- * * try to ensure that NICC gets correct dr on switch
- *
- * * check units of move commands (offset or not)
- *
- * * reconnecting after serial disconnection
- * *  at least need to add auto repoll (check IsUsable to set all_ok)
- *  add flags for when things are usable or not
- *
- * * encoder sync on bad value
- *
- */
-
 void nameThread(const char*);		/* mcp.c */
 double LockPosition(double elevation);	/* commands.c */
 extern short int InCharge;		/* tx.c */
@@ -65,6 +50,7 @@ extern short int InCharge;		/* tx.c */
 #define ACT_BUS "/dev/ttySI15"
 #define NACT 5
 #define LOCKNUM 3
+#define HWPRNUM 4
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
   "Lock Motor", HWPR_NAME};
 static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3, 
@@ -78,8 +64,12 @@ static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 //NB: this is a printf template now, requires a move tolerance (ac) to be set
 #define ACT_PREAMBLE  "aE25600aC50ac%dau5n8"
 static struct ezbus bus;
-#define POLL_TIMEOUT 30000	    /* 5 minutes */
-#define	MAX_SERIAL_ERRORS 20	    /* after this many, try ot repoll bus */
+
+#define POLL_TIMEOUT 25			/* 5s @ 5Hz */
+#define	MAX_SERIAL_ERRORS 20		/* after this many, repoll bus */
+static int poll_timeout = POLL_TIMEOUT; /* track time since last repoll */
+static int actbus_reset = 1;		/* 1 means actbus is on */
+static unsigned int actuators_init = 0;	/* bitfield for when actuators usable */
 
 /* Lock motor parameters and data */
 #define LOCK_MOTOR_DATA_TIMER 100   /* 1 second */
@@ -442,7 +432,7 @@ static int InitialiseActuator(struct ezbus* thebus, char who)
 
   for (i=0; i<3; i++) {
     if (id[i] == who) {	  //only operate on actautors
-      bprintf(info, "Initialising %s...", name[i]);
+      //bprintf(info, "Initialising %s...", name[i]);
       ReadDR();	  //inefficient, 
 
       /* Set the encoder */
@@ -846,13 +836,14 @@ void UpdateActFlags()
     actbus_flags |= ACT_FL_TRIM_WAIT;
   }
   else actbus_flags &= ~ACT_FL_TRIM_WAIT;
+
+  if (poll_timeout > 0) poll_timeout--;
 }
 
 void StoreActBus(void)
 {
   int j;
   static int firsttime = 1;
-  int actbus_reset = 1;   //1 means actbus is on
   int lvdt_filt[3];
 
   static struct BiPhaseStruct* lvdt63ActAddr;
@@ -901,6 +892,8 @@ void StoreActBus(void)
   static struct NiosStruct* prefTsSfAddr;
   static struct NiosStruct* goalSfAddr;
   static struct NiosStruct* focusSfAddr;
+
+  static struct NiosStruct* statusActbusAddr;
 
   if (firsttime) {
     firsttime = 0;
@@ -953,6 +946,8 @@ void StoreActBus(void)
     accLockAddr = GetNiosAddr("acc_lock");
     iMoveLockAddr = GetNiosAddr("i_move_lock");
     iLockHoldAddr = GetNiosAddr("i_hold_lock");
+
+    statusActbusAddr = GetNiosAddr("status_actbus");
   }
 
   UpdateActFlags();
@@ -977,7 +972,7 @@ void StoreActBus(void)
   if (CommandData.actbus.off) {
     if (CommandData.actbus.off > 0) CommandData.actbus.off--;
     actbus_reset = 0;   //turn actbus off
-  }
+  } else actbus_reset = 1;
   WriteData(busResetActAddr, actbus_reset, NIOS_QUEUE);
 
   WriteData(pinInLockAddr, CommandData.pin_is_in, NIOS_QUEUE);
@@ -1030,6 +1025,8 @@ void StoreActBus(void)
   WriteData(prefTsSfAddr, CommandData.actbus.tc_prefs, NIOS_QUEUE);
   WriteData(waitSfAddr, CommandData.actbus.tc_wait / 10., NIOS_QUEUE);
   WriteData(goalSfAddr, CommandData.actbus.focus, NIOS_FLUSH);
+
+  WriteData(statusActbusAddr, actuators_init, NIOS_FLUSH);
 }
 
 /************************************************************************/
@@ -1069,7 +1066,6 @@ void SyncDR()
 
 void ActuatorBus(void)
 {
-  int poll_timeout = POLL_TIMEOUT;
   int all_ok = 0;
   int i;
   int j=0; // Used for debugging print statements.  Delete later.
@@ -1127,20 +1123,21 @@ void ActuatorBus(void)
   for (;;) {
     /* Repoll bus if necessary */
     if (CommandData.actbus.force_repoll || bus.err_count > MAX_SERIAL_ERRORS) {
-      //      bprintf(info,"I'm going to repoll!");
       for (i=0; i<NACT; i++)
 	EZBus_ForceRepoll(&bus, id[i]);
-      poll_timeout = POLL_TIMEOUT;
-      all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
+      poll_timeout = 0;
+      all_ok = 0;
       CommandData.actbus.force_repoll = 0;
     }
     
-    if (poll_timeout == 0 && !all_ok) {
+    if (poll_timeout <= 0 && !all_ok && actbus_reset) {
+      //suppress non-error messages during repoll
+      bus.chatter = EZ_CHAT_ERR;
       all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
+      bus.chatter = ACTBUS_CHATTER;
       poll_timeout = POLL_TIMEOUT;
-    } else if (poll_timeout > 0)
-      poll_timeout--;
-    
+    }    
+
     /* Send the uplinked command, if any */
     my_cindex = GETREADINDEX(CommandData.actbus.cindex);
     caddr_match = 0;
@@ -1158,26 +1155,35 @@ void ActuatorBus(void)
       bus.chatter = ACTBUS_CHATTER;
     }
     
-    if (EZBus_IsUsable(&bus, id[LOCKNUM])) DoLock(); 
-    else {
+    if (EZBus_IsUsable(&bus, id[LOCKNUM])) {
+      DoLock(); 
+      actuators_init |= 0x1 << LOCKNUM;
+    } else {
       EZBus_ForceRepoll(&bus, id[LOCKNUM]);
       all_ok = 0;
+      actuators_init &= ~(0x1 << LOCKNUM);
     }
     
     sf_ok = 1;
     for (i=0; i<3; i++) {
-      if (!EZBus_IsUsable(&bus, id[i])) {
+      if (EZBus_IsUsable(&bus, id[i])) {
+	actuators_init |= 0x1 << i;
+      } else {
 	EZBus_ForceRepoll(&bus, id[i]);
 	all_ok = 0;
 	sf_ok = 0;
+	actuators_init &= ~(0x1 << i);
       }
     }
     if (sf_ok) DoActuators();
 
-    if (EZBus_IsUsable(&bus, HWPR_ADDR)) DoHWPR(&bus);
-    else {
+    if (EZBus_IsUsable(&bus, HWPR_ADDR)) {
+     DoHWPR(&bus);
+     actuators_init |= 0x1 << HWPRNUM;
+    } else {
       EZBus_ForceRepoll(&bus, HWPR_ADDR);
       all_ok = 0;
+     actuators_init &= ~(0x1 << HWPRNUM);
     }
 
     usleep(10000);
