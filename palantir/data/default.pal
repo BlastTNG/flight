@@ -878,10 +878,10 @@
     <NUMBER caption="IF Top Back">
       <DATUM format="%.2f" src="T_IF_TOP_BACK" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="IF Bottom Front">
+    <NUMBER caption="IF Bot Front">
       <DATUM format="%.2f" src="T_IF_BOT_FRNT" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="IF Bottom Back">
+    <NUMBER caption="IF Bot Back">
       <DATUM format="%.2f" src="T_IF_BOT_BACK" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Primary 1">
@@ -890,7 +890,7 @@
     <NUMBER caption="Primary 2">
       <DATUM format="%.2f" src="T_2_PRIME" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Bottom Strut">
+    <NUMBER caption="Bot Strut">
       <DATUM format="%.2f" src="T_STRUT_BOT" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Side Strut">
@@ -905,25 +905,25 @@
     <NUMBER caption="Push Plate">
       <DATUM format="%.2f" src="T_PUSH_PLATE" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Actuator Motor">
+    <NUMBER caption="Act. Motor">
       <DATUM format="%.2f" src="T_MOT_ACT" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T SS">
       <DATUM format="%.2f" src="T_SUN" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Port Shields">
+    <NUMBER caption="Port Shield">
       <DATUM format="%.2f" src="T_PORT_BACK" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Strbrd Shields">
+    <NUMBER caption="Stbd Shield">
       <DATUM format="%.2f" src="T_STAR_BACK" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Chin Mid">
       <DATUM format="%.2f" src="T_CHIN" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Shaded Ambient">
+    <NUMBER caption="Shaded Amb.">
       <DATUM format="%.2f" src="T_SHADE" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Earth Ambient">
+    <NUMBER caption="Earth Amb.">
       <DATUM format="%.2f" src="T_EARTH" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Sol Arr">
@@ -1259,7 +1259,7 @@
        <DATUM format="%.3f" src="B5C06H" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Diagnostic 'Bolometers'" colour="#707" row="3" col="9" rowspan="1">
+  <BOX caption="Diag. Bolometers" colour="#707" row="3" col="9" rowspan="1">
     <NUMBER caption="B2D1">
       <DATUM format="%.3f" src="B2D1" extrema="unknown"/>
     </NUMBER>
@@ -1750,16 +1750,16 @@
       <DATUM format="%.2f" src="I_CHARCOAL" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="HS Charcoal">
-      <DATUM src="HEAT_CHARCOAL_HS">
+      <DATUM src="CHARCOAL_HS_HEAT">
         <WORD value="1" caption="On" textstyle="OK_BIT"/>
         <WORD value="0" caption="Off" textstyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="I HS Charcoal">
-      <DATUM format="%.2f" src="I_HS_CHARCOAL" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_HS_CHAR" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="HS Pot">
-      <DATUM src="HEAT_POT_HS">
+      <DATUM src="POT_HS_HEAT">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
@@ -1768,7 +1768,7 @@
       <DATUM format="%.2f" src="I_HS_POT" extrema="unknown"/>
     </NUMBER>
     <MULTI caption="JFET">
-      <DATUM src="HEAT_JFET">
+      <DATUM src="JFET_HEAT">
         <WORD value="1" caption="On" textstyle="W_BIT"/>
         <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
