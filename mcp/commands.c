@@ -686,7 +686,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.hwpr.force_repoll = 1;
       break;
     case actbus_cycle:
-      CommandData.actbus.off = PCYCLE_HOLD_LEN * FAST_PER_SLOW;
+      CommandData.actbus.off = PCYCLE_HOLD_LEN;
       CommandData.actbus.force_repoll = 1;
       CommandData.hwpr.force_repoll = 1;
       break;
