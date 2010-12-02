@@ -1044,7 +1044,8 @@ void SyncDR()
   static int firsttime = 1;
   static struct BiPhaseStruct* drActAddr[3];
   static struct BiPhaseStruct* offsetActAddr[3];
-  int dr, offset;
+  short dr;
+  unsigned short offset;
 
   if (firsttime) {
     firsttime = 0;
