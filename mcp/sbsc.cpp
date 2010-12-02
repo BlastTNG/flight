@@ -136,7 +136,7 @@ void cameraFields()
     sbscTimeAddr = GetNiosAddr("sec_sbsc");
     sbscUsecAddr = GetNiosAddr("usec_sbsc");
     sbscCcdTempAddr = GetNiosAddr("ccd_t_sbsc");
-    sbscNumBlobsAddr = GetNiosAddr("numblobs_sbsc");
+    sbscNumBlobsAddr = GetNiosAddr("nblobs_sbsc");
 
     for (int i=0; i<3; i++) {
       char buf[99];

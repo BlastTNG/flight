@@ -663,7 +663,7 @@ char *frameList[] = {
   "nrad_isc",
   "nrad_osc",
   "n_sat_dgps",
-  "numblobs_sbsc",
+  "nblobs_sbsc",
   "off_ifel_gy_isc",
   "off_ifel_gy_osc",
   "off_ifroll_gy_isc",

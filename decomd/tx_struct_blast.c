@@ -740,7 +740,7 @@ struct ChannelStruct SlowChannels[] = {
   {"mapmean_sbsc",   'w', LOOP8, 50,                1.0,             0.0, 'u', U_NONE},
   {"mapsigma_sbsc",  'w', LOOP8, 51,           1.0/10.0,             0.0, 'u', U_NONE},
   {"ccd_t_sbsc",     'w', LOOP8, 52,          1.0/100.0,             0.0, 's', U_NONE},
-  {"numblobs_sbsc",  'w', LOOP8, 53,                1.0,             0.0, 'u', U_NONE},
+  {"nblobs_sbsc",  'w', LOOP8, 53,                1.0,             0.0, 'u', U_NONE},
   {"blob00_x_sbsc",  'w', LOOP8, 54, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
   {"blob00_y_sbsc",  'w', LOOP8, 55, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
   {"blob00_f_sbsc",  'w', LOOP8, 56,                1.0,             0.0, 'u', U_NONE},
