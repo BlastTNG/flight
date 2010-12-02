@@ -204,7 +204,7 @@ void ControlXYStage(struct ezbus* bus)
   if (CommandData.actbus.caddr[my_cindex] == STAGEX_ID 
       || CommandData.actbus.caddr[my_cindex] == STAGEY_ID) {
     EZBus_Comm(bus, CommandData.actbus.caddr[my_cindex],
-	CommandData.actbus.command[my_cindex], 0);
+	CommandData.actbus.command[my_cindex]);
     CommandData.actbus.caddr[my_cindex] = 0;
   }
 
@@ -299,7 +299,6 @@ void StageBus(void)
   nameThread("XYBus");
   bputs(startup, "startup.");
 
-  //TODO need to make steppers serial port safe on nicc
   while (1) {
     if (EZBus_Init(&bus, STAGE_BUS_TTY, "", STAGE_BUS_CHATTER) == EZ_ERR_OK) {
       bprintf(info, "Connected to %s on attempt %lu.", STAGE_BUS_TTY, conn_attempt);

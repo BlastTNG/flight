@@ -100,9 +100,6 @@ union DerivedUnion DerivedChannels[] = {
 #ifndef BOLOTEST
   COMMENT("Pointing Stuff"),
   LINCOM("X_H_P", "x_p", 0.0003662109375, 0),
-#if 0  //TODO we probably aren't using a LUT for AZ_SS anymore
-  LINTERP("AZ_LUT_SS", "AZ_SS", "/data/etc/ss.lut"),
-#endif
   BITFIELD("veto_sensor",
       "VETO_SS",
       "VETO_ISC",
@@ -261,7 +258,6 @@ union DerivedUnion DerivedChannels[] = {
   LINCOM2("Dr_1_act", "DR_1_ACT", 1, 0, "OFFSET_1_ACT", 1, 0),
   LINCOM2("Dr_2_act", "DR_2_ACT", 1, 0, "OFFSET_2_ACT", 1, 0),
 
-  //TODO flags_act will probably change
   BITFIELD("flags_act",
       "TRIM_WAIT_ACT",
       "TRIMMED_ACT",

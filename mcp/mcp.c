@@ -78,6 +78,8 @@ unsigned short* slow_data[FAST_PER_SLOW];
 pthread_t watchdog_id;
 
 int StartupVeto = STARTUP_VETO_LENGTH + 1;
+int UsefulnessVeto = 2*STARTUP_VETO_LENGTH;
+int BLASTBusUseful = 0;
 
 static int bi0_fp = -2;
 static int Death = -STARTUP_VETO_LENGTH * 2;
@@ -155,7 +157,6 @@ time_t mcp_systime(time_t *t) {
 }
 
 /* tid to name lookup list */
-/* TODO setting/reading tid names not quite thread safe. is this a problem? */
 #define TID_NAME_LEN  6	      //always change with TID_NAME_FMT
 #define TID_NAME_FMT  "%6s"   //always change with TID_NAME_LEN
 struct tid_name {
@@ -819,7 +820,6 @@ static void InitFrameBuffer(struct frameBuffer *buffer) {
     buffer->framelist[i] = balloc(fatal, BiPhaseFrameWords *
         sizeof(unsigned short));
 
-    //TODO this initialization does not appear to resolve valgrind errors
     memset(buffer->framelist[i],0,BiPhaseFrameWords*sizeof(unsigned short));
 
   }
@@ -1082,7 +1082,6 @@ int main(int argc, char *argv[])
 
   for (i = 0; i < FAST_PER_SLOW; ++i) {
     slow_data[i] = balloc(fatal, slowsPerBi0Frame * sizeof(unsigned short));
-    //TODO fix "uninitialised value" valgrind errors. Ensure not more serious.
     memset(slow_data[i], 0, slowsPerBi0Frame * sizeof(unsigned short));
   }
 
@@ -1143,6 +1142,10 @@ int main(int argc, char *argv[])
           in_data);
 
     if (IsNewFrame(in_data)) {
+      if (UsefulnessVeto > 0) {
+	UsefulnessVeto--;
+	BLASTBusUseful = 0;
+      } else BLASTBusUseful = 1;
       if (StartupVeto > 1) {
         --StartupVeto;
       } else {

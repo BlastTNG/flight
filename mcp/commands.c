@@ -687,7 +687,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case actbus_cycle:
       CommandData.actbus.off = PCYCLE_HOLD_LEN * FAST_PER_SLOW;
-      //TODO check that repoll occurs after restart (not during)
       CommandData.actbus.force_repoll = 1;
       CommandData.hwpr.force_repoll = 1;
       break;
@@ -1361,28 +1360,11 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       /*************************************/
 
       /***************************************/
-      /***** Temporary test of motor DACs ****/
-      /** TODO erase when done with them *****/
-      /*    case dac1_level:
-      CommandData.Temporary.dac_out[0] = ivalues[0] << 1;
-      CommandData.Temporary.setLevel[0] = 1;
-      break; */
+      /*****           test of motor DACs ****/
     case dac2_level:
       CommandData.Temporary.dac_out[1] = ivalues[0] << 1;
       CommandData.Temporary.setLevel[1] = 1;
       break;
-      /*    case dac3_level:
-      CommandData.Temporary.dac_out[2] = ivalues[0] << 1;
-      CommandData.Temporary.setLevel[2] = 1;
-      break;
-    case dac4_level:
-      CommandData.Temporary.dac_out[3] = ivalues[0] << 1;
-      CommandData.Temporary.setLevel[3] = 1;
-      break;
-    case dac5_level:
-      CommandData.Temporary.dac_out[4] = ivalues[0] << 1;
-      CommandData.Temporary.setLevel[4] = 1;
-      break; */
     case motors_verbose:
       CommandData.verbose_rw = ivalues[0];
       CommandData.verbose_el = ivalues[1];
@@ -1465,9 +1447,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.act_tol = ivalues[0];
       break;
     case act_offset:
-      CommandData.actbus.offset[0] = (int)rvalues[0];
-      CommandData.actbus.offset[1] = (int)rvalues[1];
-      CommandData.actbus.offset[2] = (int)rvalues[2];
+      CommandData.actbus.offset[0] = (int)(rvalues[0]+0.5);
+      CommandData.actbus.offset[1] = (int)(rvalues[1]+0.5);
+      CommandData.actbus.offset[2] = (int)(rvalues[2]+0.5);
       break;
     case act_enc_trim:
       CommandData.actbus.trim[0] = rvalues[0];
@@ -1499,7 +1481,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.move_i = ivalues[0];
       CommandData.hwpr.hold_i = ivalues[1];
       break;
-    //TODO probably want hwpr moves calibrated into degrees
     case hwpr_goto:
       CommandData.hwpr.target = ivalues[0];
       CommandData.hwpr.mode = HWPR_GOTO;
@@ -1958,7 +1939,6 @@ const char* CommandName(int is_multi, int command)
 
 void ScheduledCommand(struct ScheduleEvent *event)
 {
-  //TODO MDT: Set "Last Scheduled Command" indicator for palantir.
   if (event->is_multi) {
     int i;
     int index = MIndex(event->command);
@@ -2739,7 +2719,7 @@ void InitCommandData()
 
   /** prev_status overrides this stuff **/
   CommandData.at_float = 0;
-  CommandData.timeout = 57600; /* TODO: Change this to something short for pre-flight!!!*/
+  CommandData.timeout = 3600;
   CommandData.slot_sched = 0;
   CommandData.tdrss_bw = 6000;
   CommandData.iridium_bw = 2000;
@@ -2827,7 +2807,7 @@ void InitCommandData()
   CommandData.pumps.level_off_bal = 0.5 * 1900.13;
   CommandData.pumps.level_target_bal = 0.0 * 1990.13;
   CommandData.pumps.gain_bal = 0.2;
-  CommandData.pumps.mode = bal_rest; // TODO: change for flight
+  CommandData.pumps.mode = bal_auto;
   CommandData.pumps.heat_on = 1;
   CommandData.pumps.heat_tset = 20;
 
@@ -2903,7 +2883,6 @@ void InitCommandData()
 
   CommandData.Cryo.charcoalHeater = 0;
   CommandData.Cryo.hsCharcoal = 1;
-  //TODO enable autocycycling when FridgeCycle is reimplemented
   CommandData.Cryo.fridgeCycle = 0;
   CommandData.Cryo.force_cycle = 0;
   CommandData.Cryo.hsPot = 0;

@@ -130,10 +130,7 @@ enum multiCommand {
   az_el_goto,        az_gain,           az_scan,          balance_gain,
   balance_manual,    osc_set_focus,     osc_set_aperture, osc_save_period,
   bias_level_500,    bias_level_350,    bias_level_250,   bias_level_rox,
-  bias_level_x,      isc_blob_centre,   
-  /* dac level commands are temporary */
-  dac2_level,  
-  /*  dac1_level,              dac3_level,       dac4_level,  dac5_level,*/
+  bias_level_x,      isc_blob_centre,   dac2_level,  
   box,               osc_pixel_centre,  osc_blob_centre,  isc_gain,
   cal_pulse,         cal_repeat,        cap,              isc_catalogue,
   az_el_trim,        isc_det_set,       drift,            el_gain,

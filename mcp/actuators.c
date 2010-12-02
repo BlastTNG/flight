@@ -43,20 +43,16 @@
 
 /* TODO
  * (don't erase until tested!)
- * actuator moves are not by the exact amount desired
- *    why does it sometimes come up short and oscillate?
- *	springs too strong? increasing current helps
- *    ensure that it stops before 100 retries now, and actuator_stop works
  *
  * * try to ensure that NICC gets correct dr on switch
  *
  * * check units of move commands (offset or not)
  *
- * reconnecting after serial disconnection
- *  at least need to add auto repoll (check IsUsable to set all_ok)
+ * * reconnecting after serial disconnection
+ * *  at least need to add auto repoll (check IsUsable to set all_ok)
  *  add flags for when things are usable or not
  *
- *  encoder sync on bad value
+ * * encoder sync on bad value
  *
  */
 
@@ -83,6 +79,7 @@ static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 #define ACT_PREAMBLE  "aE25600aC50ac%dau5n8"
 static struct ezbus bus;
 #define POLL_TIMEOUT 30000	    /* 5 minutes */
+#define	MAX_SERIAL_ERRORS 20	    /* after this many, try ot repoll bus */
 
 /* Lock motor parameters and data */
 #define LOCK_MOTOR_DATA_TIMER 100   /* 1 second */
@@ -262,7 +259,7 @@ void actEncTrim(int *trim)
     act_data[i].dr = trim[i];
     /* Set the encoder */
     EZBus_Comm(&bus, id[i], 
-	EZBus_StrComm(&bus, id[i], buffer, "z%iR", act_data[i].dr), 0);
+	EZBus_StrComm(&bus, id[i], buffer, "z%iR", act_data[i].dr));
   }
 
   WriteDR();
@@ -331,9 +328,9 @@ static void ServoActuators(int* goal)
 
   for (i = 0; i < 3; ++i) {
     //send command to each actuator, but don't run yet
-    EZBus_Comm(&bus, id[i], EZBus_StrComm(&bus, id[i], buf, "A%d", goal[i]), 0);
+    EZBus_Comm(&bus, id[i], EZBus_StrComm(&bus, id[i], buf, "A%d", goal[i]));
   }
-  EZBus_Comm(&bus, ID_ALL_ACT, "R", 0);	  //run all act commands at once
+  EZBus_Comm(&bus, ID_ALL_ACT, "R");	  //run all act commands at once
 
   EZBus_Release(&bus, ID_ALL_ACT);
 }
@@ -388,7 +385,7 @@ static void DoActuators(void)
     case ACTBUS_FM_PANIC:
       bputs(warning, "Actuator Panic");
       EZBus_Stop(&bus, ID_ALL_ACT); /* terminate all strings */
-      EZBus_Comm(&bus, ID_ALL_ACT, "n0R", 0);	/* also stop fine correction */
+      EZBus_Comm(&bus, ID_ALL_ACT, "n0R");	/* also stop fine correction */
       CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
       break;
     case ACTBUS_FM_DELTA:
@@ -438,7 +435,7 @@ void RecalcOffset(double new_gp, double new_gs)
 }
 
 
-static void InitialiseActuator(struct ezbus* thebus, char who)
+static int InitialiseActuator(struct ezbus* thebus, char who)
 {
   char buffer[EZ_BUS_BUF_LEN];
   int i;
@@ -449,11 +446,16 @@ static void InitialiseActuator(struct ezbus* thebus, char who)
       ReadDR();	  //inefficient, 
 
       /* Set the encoder */
-      EZBus_Comm(thebus, who, 
-	  EZBus_StrComm(thebus, who, buffer, "z%iR", act_data[i].dr), 0);
-      return;
+      if ( EZBus_Comm(thebus, who, 
+	    EZBus_StrComm(thebus, who, buffer, "z%iR", act_data[i].dr))
+	  == EZ_ERR_OK ) return 1;
+      else {
+	bprintf(warning, "Initialising %s failed...", name[i]);
+	return 0;
+      }
     }
   }
+  return 1;
 }
 
 /************************************************************************/
@@ -471,7 +473,7 @@ static void GetLockData()
   counter = 0;
 
   EZBus_ReadInt(&bus, id[LOCKNUM], "?0", &lock_data.pos);
-  EZBus_Comm(&bus, id[LOCKNUM], "?aa", 0);
+  EZBus_Comm(&bus, id[LOCKNUM], "?aa");
   sscanf(bus.buffer, "%hi,%hi,%hi,%hi", &lock_data.adc[0], &lock_data.adc[1],
       &lock_data.adc[2], &lock_data.adc[3]);
 }
@@ -694,7 +696,6 @@ static int filterTemp(int num, int data)
 }
 
 /* decide on primary and secondary temperature, write focus-related fields */
-/* TODO include all primary and secondary thermometers (there are more now) */
 void SecondaryMirror(void)
 {
   static int firsttime = 1;
@@ -1062,10 +1063,7 @@ void SyncDR()
     act_data[i].dr = dr + offset;
   }
 
-#if 0
-  //TODO is it okay that NICC doesn't write to disk? Screws up mcp startup
   WriteDR();
-#endif
 }
 
 void ActuatorBus(void)
@@ -1078,6 +1076,7 @@ void ActuatorBus(void)
   int caddr_match = 0;
   int is_init = 0;
   int first_time=1;
+  int sf_ok;
 
 
   nameThread("ActBus");
@@ -1091,8 +1090,10 @@ void ActuatorBus(void)
     usleep(1000000);
     CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining
                                               control */
-    SetLockState(1); /* to ensure the NiC MCC knows the pin state */
-    SyncDR();	     /* get encoder absolute state from the ICC */
+    if (BLASTBusUseful) {
+      SetLockState(1); /* to ensure the NiC MCC knows the pin state */
+      SyncDR();	     /* get encoder absolute state from the ICC */
+    }
     CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
     CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing 
                                                 twice if we switch to ICC */
@@ -1124,7 +1125,7 @@ void ActuatorBus(void)
 
   for (;;) {
     /* Repoll bus if necessary */
-    if (CommandData.actbus.force_repoll) {
+    if (CommandData.actbus.force_repoll || bus.err_count > MAX_SERIAL_ERRORS) {
       //      bprintf(info,"I'm going to repoll!");
       for (i=0; i<NACT; i++)
 	EZBus_ForceRepoll(&bus, id[i]);
@@ -1151,16 +1152,32 @@ void ActuatorBus(void)
       //increase print level for uplinked manual commands
       bus.chatter = EZ_CHAT_BUS;
       EZBus_Comm(&bus, CommandData.actbus.caddr[my_cindex],
-		 CommandData.actbus.command[my_cindex], 0);
+		 CommandData.actbus.command[my_cindex]);
       CommandData.actbus.caddr[my_cindex] = 0;
       bus.chatter = ACTBUS_CHATTER;
     }
     
     if (EZBus_IsUsable(&bus, id[LOCKNUM])) DoLock(); 
+    else {
+      EZBus_ForceRepoll(&bus, id[LOCKNUM]);
+      all_ok = 0;
+    }
     
-    DoActuators();    //handle IsUsable more finely for multiple steppers
+    sf_ok = 1;
+    for (i=0; i<3; i++) {
+      if (!EZBus_IsUsable(&bus, id[i])) {
+	EZBus_ForceRepoll(&bus, id[i]);
+	all_ok = 0;
+	sf_ok = 0;
+      }
+    }
+    if (sf_ok) DoActuators();
 
     if (EZBus_IsUsable(&bus, HWPR_ADDR)) DoHWPR(&bus);
+    else {
+      EZBus_ForceRepoll(&bus, HWPR_ADDR);
+      all_ok = 0;
+    }
 
     usleep(10000);
     

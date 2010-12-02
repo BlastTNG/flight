@@ -32,6 +32,8 @@ extern unsigned int RxFrameFastSamp;
 extern time_t mcp_systime(time_t *t);
 extern struct frameBuffer hiGain_buffer;
 
+extern int BLASTBusUseful;
+
 #define GETREADINDEX(i) ((i+2) % 3)  /* i - 1 modulo 3 */
 #define INC_INDEX(i) ((i + 1) %3)    /* i + 1 modulo 3 */
 

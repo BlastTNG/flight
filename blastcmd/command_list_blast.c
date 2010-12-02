@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.100 $";
+const char *command_list_serial = "$Revision: 4.101 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -326,8 +326,6 @@ struct scom scommands[N_SCOMMANDS] = {
 
 };
 
-//TODO field sources for command parameters need updating
-
 /* parameter type:
  * i :  parameter is 15 bit unnormalised integer
  * l :  parameter is 30 bit unnormalised integer
@@ -336,34 +334,11 @@ struct scom scommands[N_SCOMMANDS] = {
  * s :  parameter is 7-bit character string
  */
 struct mcom mcommands[N_MCOMMANDS] = {
-  /* TODO delete when done with these. Temporary commands for dac testing */
-  /*
-  {COMMAND(dac1_level), "DAC1 output level. Temporary", GR_MISC, 1,
-    {
-      {"Level", 0, 32767, 'i', "ifpm_ampl"}
-    }
-  },
-  */
-  {COMMAND(dac2_level), "DAC2 output level. Temporary", GR_MISC, 1,
+  {COMMAND(dac2_level), "*UNUSED* DAC2 output level. Does nothing", GR_MISC, 1,
     {
       {"Level", 0, 32767, 'i', "dac2_ampl"}
     }
   },
-  /*  {COMMAND(dac3_level), "DAC3 output level. Temporary", GR_MISC, 1,
-    {
-      {"Level", 0, 32767, 'i', "dac3_ampl"}
-    }
-  },
-  {COMMAND(dac4_level), "DAC4 output level. Temporary", GR_MISC, 1,
-    {
-      {"Level", 0, 32767, 'i', "dac4_ampl"}
-    }
-  },
-  {COMMAND(dac5_level), "DAC5 output level. Temporary", GR_MISC, 1,
-    {
-      {"Level", 0, 32767, 'i', "dac5_ampl"}
-    }
-    }, */
 
   {COMMAND(slot_sched), "set uplinked slot to use for schedule file",
     GR_TELEM, 1,
@@ -675,8 +650,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(hwpr_goto), "move the waveplate rotator to absolute position",
     GR_HWPR, 1,
     {
-      //TODO calibrate hwpr move units
-      {"destination", 0, 80000, 'l', "X_STAGE"}
+      {"destination", 0, 80000, 'l', "ENC_HWPR"}
     }
   },
   {COMMAND(hwpr_jump), "move the waveplate rotator to relative position",

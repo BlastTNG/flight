@@ -103,9 +103,10 @@
 #define EZ_STEP_INIT	0x0004	  /* stepper has been initialized */
 
 /* Miscellaneous defines */
-#define EZ_BUS_NAME_LEN	0x100
-#define EZ_BUS_BUF_LEN	0x100
-#define EZ_BUS_NACT	16
+#define EZ_BUS_NAME_LEN	    0x100
+#define EZ_BUS_BUF_LEN	    0x100
+#define EZ_BUS_NACT	    16
+#define EZ_BUS_COMM_RETRIES 5
 
 /* Number of Communication Errors before triggering a reconnect to the serial port */
 #define EZ_ERR_MAX  5
@@ -131,7 +132,7 @@ struct ezbus {
   char buffer[EZ_BUS_BUF_LEN];  //buffer for responses
   int seized;			//thread-unsafe concurrency for bus
   int chatter;			//verbosity of ezstep functions
-  //TODO need to actually use this ezbus.error
+  //TODO (BLAST-Pol OK) expose errors to user. Per-stepper basis? Autocycle?
   int error;			//most recent error code
   int err_count;		//number of errors since we last successfully communicated 
                                 //with ezbus 
@@ -174,10 +175,12 @@ int EZBus_Send(struct ezbus* bus, char who, const char* what);
 int EZBus_Recv(struct ezbus* bus);
 
 /* send command 'what' to 'who' and recieve response
- * if 'naive' is false, communications will retry under certain error conditions
+ * will retry (every second) under certain error conditions (busy)
+ * EZBus_Comm retries EZ_BUS_COMM_RETRIES times
+ * EZBus_CommRetry specifies number of retries
  */
-//TODO instead of naive, EZBus_Comm should take a number of retry attemtps
-int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive);
+int EZBus_Comm(struct ezbus* bus, char who, const char* what);
+int EZBus_CommRetry(struct ezbus* bus, char who, const char* what, int retries);
 
 /* send query command 'what' to 'who' to get integer response
  * if successful *val will be assigned the responose, otherwise it is unchanged
@@ -196,9 +199,9 @@ int EZBus_ForceRepoll(struct ezbus* bus, char who);
 int EZBus_Poll(struct ezbus* bus);
 
 /* Same as EZBus_Poll, except will call function init for each newfound stepper
- * init should have void return, take a pointer to struct ezbus and a who char
+ * init should return 0 on failure, take pointer to struct ezbus and who char
  */
-int EZBus_PollInit(struct ezbus* bus, void (*ezinit)(struct ezbus*,char) );
+int EZBus_PollInit(struct ezbus* bus, int (*ezinit)(struct ezbus*,char) );
 
 /* checks stepper status to see if stepper is usable
  * NB: returns boolean values and not an error code

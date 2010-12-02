@@ -587,8 +587,6 @@ struct ChannelStruct SlowChannels[] = {
   {"spread_sf",    'w', LOOP6, 21,             1/500.,             0.0, 'u', U_NONE},
   {"acc_lock",     'w', LOOP6, 22,                1.0,             0.0, 'u', U_NONE},
   {"snr_ss",       'w', LOOP6, 23,            1/1000.,             0.0, 'u', U_NONE},
-  //TODO focus veto appears unused, delete if it truly is, even when secondary code finished
-  //{"focus_veto",   'w', LOOP6, 24,                1.0,             0.0, 'u', U_NONE},
   {"i_move_act",   'w', LOOP6, 25,                1.0,             0.0, 'u', U_NONE},
   {"i_hold_act",   'w', LOOP6, 26,                1.0,             0.0, 'u', U_NONE},
   {"vel_act",      'w', LOOP6, 27,                1.0,             0.0, 'u', U_NONE},
@@ -608,8 +606,6 @@ struct ChannelStruct SlowChannels[] = {
   {"t_prime_sf",   'w', LOOP6, 44,             1/500.,             0.0, 's', U_NONE},
   {"t_second_sf",  'w', LOOP6, 45,             1/500.,             0.0, 's', U_NONE},
   {"flags_act",    'w', LOOP6, 50,                1.0,             0.0, 'u', U_NONE},
-  //TODO focus mode appears unused, delete if it truly is, even when secondary code finished
-  //{"focus_mode",   'w', LOOP6, 51,                1.0,             0.0, 'u', U_NONE},
   {"lvdt_spread_act",'w', LOOP6, 55,              1.0,             0.0, 's', U_NONE},
   /* LOOP6 56-57 are wide */
   {"el_sun",       'w', LOOP6, 58,              I2DEG,             0.0, 's', U_NONE},
@@ -791,7 +787,7 @@ struct ChannelStruct SlowChannels[] = {
   {"latch0",       'w',  ACS1_D,  0,                1.0,             0.0, 'u', U_NONE},
   {"latch1",       'w',  ACS1_D,  1,                1.0,             0.0, 'u', U_NONE},
   {"switch_gy",    'w',  ACS1_D,  2,                1.0,             0.0, 'u', U_NONE},
-  //TODO this may be unused because of the new program
+  //this may be unused because of the new program
   //{"switch_charge",'w',  ACS1_D,  3,                1.0,             0.0, 'u', U_NONE},
   {"switch_misc",  'w',  ACS1_D,  4,                1.0,             0.0, 'u', U_NONE},
   {"bus_reset_act",'w',  ACS1_D,  5,                1.0,             0.0, 'u', U_NONE},
@@ -913,7 +909,6 @@ struct ChannelStruct WideFastChannels[] = {
 struct ChannelStruct FastChannels[] = {
 #ifndef BOLOTEST
 /* ACS1 Digital Card */
-  //TODO can heat_gy be made slow? Probably.
   {"heat_gy",      'w',  ACS1_D,  6,                1.0,             0.0, 'u', U_NONE},
 
 /* ACS2 Common Node */
