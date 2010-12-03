@@ -456,9 +456,7 @@ void CryoControl (int index)
   static struct NiosStruct* cryostateAddr;
   static struct NiosStruct* jfetSetOnAddr;
   static struct NiosStruct* jfetSetOffAddr;
-  //static struct NiosStruct* dig21DasAddr;
   static struct NiosStruct* dig43DasAddr;
-  //static struct NiosStruct* dig65DasAddr;
   static struct NiosStruct* potHwprAddr;
   static struct BiPhaseStruct* potRawHwprAddr;
   static struct BiPhaseStruct* potRefHwprAddr;
@@ -475,22 +473,11 @@ void CryoControl (int index)
     cryostateAddr = GetNiosAddr("cryostate");
     jfetSetOnAddr = GetNiosAddr("jfet_set_on");
     jfetSetOffAddr = GetNiosAddr("jfet_set_off");
-    //dig21DasAddr = GetNiosAddr("dig21_das");
     dig43DasAddr = GetNiosAddr("dig43_das");
-    //dig65DasAddr = GetNiosAddr("dig65_das");
     potHwprAddr = GetNiosAddr("pot_hwpr");
     potRawHwprAddr = GetBiPhaseAddr("pot_raw_hwpr");
     potRefHwprAddr = GetBiPhaseAddr("pot_ref_hwpr");
   }
-
-#if 0
-  // purely for testing, output a count to each digital output group
-  static int count = 0;
-  int nibbcnt = (count&0xf) << 4 | (count++&0xf);
-  WriteData(dig21DasAddr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
-  WriteData(dig43DasAddr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
-  WriteData(dig65DasAddr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
-#endif
 
   /********** Set Output Bits **********/
   if (CommandData.Cryo.heliumLevel) {

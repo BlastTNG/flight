@@ -244,9 +244,9 @@ struct ChannelStruct SlowChannels[] = {
   {"ampl_250_bias",'w',  BIAS_D,  2,                0.5,             0.0, 'u', U_NONE},
   {"ampl_rox_bias",'w',  BIAS_D,  3,                0.5,             0.0, 'u', U_NONE},
   {"ampl_x_bias",  'w',  BIAS_D,  4,                1.0,             0.0, 'u', U_NONE},
-  {"dig21_das",    'w',  BIAS_D,  5,                1.0,             0.0, 'u', U_NONE},
+  {"dig21_das",    'r',  BIAS_D,  5,                1.0,             0.0, 'u', U_NONE},
   //dig43_das is fast, for calibration pulse
-  {"dig65_das",    'w',  BIAS_D,  7,                1.0,             0.0, 'u', U_NONE},
+  {"dig65_das",    'r',  BIAS_D,  7,                1.0,             0.0, 'u', U_NONE},
   {"ramp_ena_bias",'w',  BIAS_D,  8,                1.0,             0.0, 'u', U_NONE},
   {"ramp_ampl_bias",'r',  BIAS_D,  0,                1.0,             0.0, 'u', U_NONE},
 
