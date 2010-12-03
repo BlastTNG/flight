@@ -278,8 +278,8 @@ struct ChannelStruct SlowChannels[] = {
   {"he4_lev",       'r', CRYO_A2,  1,         CAL16(1.0,            0.0), 'u', U_V_V},
   {"i_charcoal",    'r', CRYO_A2,  3,         CAL16(1.0,            0.0), 'u', U_V_V},
   {"i_cal_lamp",    'r', CRYO_A2,  5,         CAL16(1.0,            0.0), 'u', U_V_V},
-  {"i_hs_pot",      'r', CRYO_A2,  7,         CAL16(1.0,            0.0), 'u', U_V_V},
-  {"i_hs_char",     'r', CRYO_A2,  9,         CAL16(1.0,            0.0), 'u', U_V_V},
+  {"i_hs_char",     'r', CRYO_A2,  7,         CAL16(1.0,            0.0), 'u', U_V_V},
+  {"i_hs_pot",      'r', CRYO_A2,  9,         CAL16(1.0,            0.0), 'u', U_V_V},
   {"i_300mk",       'r', CRYO_A2, 13,         CAL16(1.0,            0.0), 'u', U_V_V},
   {"i_jfet",        'r', CRYO_A2, 21,         CAL16(1.0,            0.0), 'u', U_V_V},
 
