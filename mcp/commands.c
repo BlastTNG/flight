@@ -294,7 +294,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.pointing_mode.h = 0;
       break;
     case antisun: /* turn antisolar (az-only) */
-      sun_az = PointingData[i_point].sun_az + 180;
+      sun_az = PointingData[i_point].sun_az + 250; /* point solar panels to sun */
       NormalizeAngle(&sun_az);
 
       CommandData.pointing_mode.nw = CommandData.slew_veto;

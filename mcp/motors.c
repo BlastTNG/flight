@@ -664,13 +664,13 @@ static void SetAzScanMode(double az, double left, double right, double v,
       axes_mode.az_mode = AXIS_VEL;
       if (axes_mode.az_vel > 0) {
         axes_mode.az_vel = v + D;
-        if (az > right - v) /* within 1 sec of turnaround */
+        if (az > right - 2.0*v) /* within 2 sec of turnaround */
           isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
         else
           isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       } else {
         axes_mode.az_vel = -v + D;
-        if (az < left + v) /* within 1 sec of turnaround */
+        if (az < left + 2.0*v) /* within 2 sec of turnaround */
           isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
         else
           isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
