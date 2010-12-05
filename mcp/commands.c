@@ -1987,7 +1987,7 @@ static void GPSTime (unsigned char *indata)
   offset = ParseGPS(indata + 6);
   CPUtime = ParseGPS(indata + 10);
 
-  SIPData.GPStime.UTC = (int)(SEC_IN_WEEK * (GPSweek+1024) + GPStime - offset) +
+  SIPData.GPStime.UTC = (int)(SEC_IN_WEEK * (GPSweek) + GPStime - offset) +
     SUN_JAN_6_1980;
   SIPData.GPStime.CPU = CPUtime;
 
