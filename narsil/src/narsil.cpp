@@ -234,6 +234,9 @@ void MainForm::ChooseCommand() {
   int i, index;
   double indata;
 
+  delete _dirfile;
+  _dirfile = new Dirfile(_curFileName, GD_RDONLY);
+
   // Remember parameter values
   if (lastmcmd != -1) {
     for (i = 0; i < client_mcommands[lastmcmd].numparams; i++)
@@ -581,6 +584,7 @@ void MainForm::SendCommand() {
   const char route[] = "12";
 
   if (!sending) {
+
     i = 0;
 
     // Select appropiate flags
@@ -700,11 +704,7 @@ void MainForm::SendCommand() {
 void MainForm::ChangeCurFile() {
   char txt[50], info[255];
 
-  strcpy(txt, NCurFile->text());
-  delete _dirfile;
-  _dirfile = new Dirfile(txt, GD_RDONLY);
-  //DataSource->~KstFile();
-  //DataSource = new KstFile(txt, UNKNOWN);
+  strcpy(_curFileName, NCurFile->text());
   sprintf(info, "Narsil will now read from %s.", txt);
   QMessageBox::information(this, "Acknowledgement", info,
       QMessageBox::Ok | QMessageBox::Default);
@@ -983,6 +983,8 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
   int w1, w2, w3, h1, h2, h3;
   QString default_family = tfont.family();
 
+  _dirfile = NULL;
+  
   centralWidget = new QWidget();
   theHLayout = new QHBoxLayout;
   theVLayout = new QVBoxLayout(theHLayout);
@@ -1233,13 +1235,10 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
         NSettingsWindow->height()));
 
   if (!curfile.isNull())
-    strcpy(tmp, curfile);
+    strcpy(_curFileName, curfile);
   else
-    strcpy(tmp, "\0");
+    strcpy(_curFileName, "\0");
 
-  //DataSource = new KstFile(tmp, UNKNOWN);
-  //DataSource->update();
-  _dirfile = new Dirfile(tmp, GD_RDONLY);
   timer = new QTimer(this, "image_timer");
   timer->start(WAIT_TIME);
 
@@ -1275,8 +1274,8 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
 
 MainForm::~MainForm()
 {
-  //delete DataSource;
   delete _dirfile;
+  
   delete Images[3];
   delete Images[2];
   delete Images[1];

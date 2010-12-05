@@ -158,6 +158,7 @@ class MainForm : public QMainWindow
     QString curfile;
     //KstFile *DataSource;
     Dirfile *_dirfile;
+    char _curFileName[1024];
 
     int fid;
     bool sending;
