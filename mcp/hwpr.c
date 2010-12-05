@@ -32,7 +32,7 @@
 #include "pointing_struct.h" /* To access ACSData */
 #include "tx.h" /* InCharge */
 
-#define DEBUG_HWPR
+//#define DEBUG_HWPR
 
 #define HWPR_READ_WAIT 10
 #define HWPR_MOVE_TIMEOUT 3 
@@ -72,7 +72,6 @@ void MonitorHWPR(struct ezbus *bus)
 
   EZBus_ReadInt(bus, HWPR_ADDR, "?0", &hwpr_data.pos);
   EZBus_ReadInt(bus, HWPR_ADDR, "?8", &hwpr_data.enc);
-  //TODO why is pot acquired from acsdata? it's in das.c
   hwpr_data.pot = ((double) ACSData.hwpr_pot)/65535.0;
 }
 
@@ -223,7 +222,8 @@ void ControlHWPR(struct ezbus *bus)
   static int last_enc = 0;
 
   int hwpr_enc_cur, hwpr_enc_dest;
-  int i_step, i_next_step; // index of the current step
+  int i_step;  // index of the current step
+  int i_next_step=0;
 
   int overshoot = 0;
 
@@ -294,7 +294,9 @@ void ControlHWPR(struct ezbus *bus)
     if (hwpr_control.read_before == yes) {
  
       /* pulse the potentiometer */
+#ifdef DEBUG_HWPR
       bprintf(info,"Pulsing the pot before we do anything else...");
+#endif
       CommandData.Cryo.hwprPos = 50;
       hwpr_control.read_before = reading;
       hwpr_control.read_wait_cnt = HWPR_READ_WAIT;
@@ -325,7 +327,9 @@ void ControlHWPR(struct ezbus *bus)
 	      /* calculate rel move from pot lut*/
 	      hwpr_enc_cur = LutCal(&HwprPotLut, hwpr_data.pot);
 
+#ifdef DEBUG_HWPR
 	      bprintf(info,"Current pot value: hwpr_data.pot = %f, hwpr_enc_cur = %i", hwpr_data.pot, hwpr_enc_cur);
+#endif
 	      
 	      /*get index of the closest hwpr_step position, and find the encoder position for the next step pos*/
 
@@ -362,9 +366,11 @@ void ControlHWPR(struct ezbus *bus)
 		(CommandData.hwpr.use_pot)) { // use pot
 	      hwpr_control.dead_pot = 0;      
 
-	      bprintf(info,"This is where I calculate the relative step from the pot value.");
 	      hwpr_enc_cur = LutCal(&HwprPotLut, hwpr_data.pot);
+#ifdef DEBUG_HWPR
+	      bprintf(info,"This is where I calculate the relative step from the pot value.");
 	      bprintf(info,"Current pot value: hwpr_data.pot = %f, hwpr_enc_cur = %i", hwpr_data.pot, hwpr_enc_cur);
+#endif
              
               i_next_step = CommandData.hwpr.i_pos;
 	      hwpr_control.pot_targ = CommandData.hwpr.pos[i_next_step];
@@ -372,7 +378,6 @@ void ControlHWPR(struct ezbus *bus)
 	      
 	      hwpr_control.rel_move = hwpr_enc_dest - hwpr_enc_cur;
 	      bprintf(info,"Destination is index %i, pot value = %f, required rel encoder move is %i:",CommandData.hwpr.i_pos,CommandData.hwpr.pos[i_next_step],hwpr_control.rel_move);
-	      return;
 	    } else { // don't use pot
 	      hwpr_control.dead_pot = 1;	      
 	      
@@ -392,14 +397,19 @@ void ControlHWPR(struct ezbus *bus)
 		(CommandData.hwpr.use_pot)) { // use pot
 	      hwpr_control.dead_pot = 0;	      
 
-	      bprintf(info,"This is where I calculate the relative step from the pot value.");
 	      hwpr_enc_cur = LutCal(&HwprPotLut, hwpr_data.pot);
+#ifdef DEBUG_HWPR
+	      bprintf(info,"This is where I calculate the relative step from the pot value.");
 	      bprintf(info,"Current pot value: hwpr_data.pot = %f, hwpr_enc_cur = %i", hwpr_data.pot, hwpr_enc_cur);
+#endif
               hwpr_control.pot_targ = CommandData.hwpr.pot_targ;
 	      hwpr_enc_dest = LutCal(&HwprPotLut, hwpr_control.pot_targ);
 	      
 	      hwpr_control.rel_move = hwpr_enc_dest - hwpr_enc_cur;
-	      //	      bprintf(info,"Destination is index %i, pot value = %f, required rel encoder move is %i:",CommandData.hwpr.i_pos,CommandData.hwpr.pos[i_next_step],hwpr_control.rel_move);
+#ifdef DEBUG_HWPR
+	      	      bprintf(info,"Destination is index %i, pot value = %f, required rel encoder move is %i:",CommandData.hwpr.i_pos,CommandData.hwpr.pos[i_next_step],hwpr_control.rel_move);
+#endif
+
 	    } else { // don't use pot
 	      
 	      hwpr_control.dead_pot = 1;	      
@@ -427,14 +437,18 @@ void ControlHWPR(struct ezbus *bus)
 	    if (CommandData.hwpr.overshoot > 0) {
 	      hwpr_control.rel_move-= CommandData.hwpr.overshoot;
 	      hwpr_control.do_overshoot = 1;
+#ifdef DEBUG_HWPR
 	      bprintf(info,"ControlHWPR: Overshoot of %i requested.", CommandData.hwpr.overshoot);
+#endif
 	    }
 	  } else if (hwpr_control.rel_move == 0) {
 	    bprintf(info,"ControlHWPR: Requested a move of 0.  Ignoring.");
             hwpr_control.done_move = 1;
             hwpr_control.move_cur = done;
 	  } 
+#ifdef DEBUG_HWPR
 	  bprintf(info,"ControlHWPR: Here's where I will send a relative move command of %i",hwpr_control.rel_move);
+#endif
 	  EZBus_RelMove(bus, HWPR_ADDR, hwpr_control.rel_move);
 	  hwpr_control.move_cur = moving;
 	  hwpr_control.stop_cnt = 0;
@@ -453,14 +467,18 @@ void ControlHWPR(struct ezbus *bus)
 	  //TODO, you have to be careful with this, sometimes mcp gets into a state where the encoders aren't read out for a while (esp on palestine)
 	  //TODO though maybe it's okay since such cases probably cause this whole thread to not execute
 	  if (hwpr_control.stop_cnt >=HWPR_MOVE_TIMEOUT) {
+#ifdef DEBUG_HWPR
 	    bprintf(info,"We've stopped!");
+#endif
 	    hwpr_control.enc_err = hwpr_control.enc_targ - hwpr_data.enc;
 
 	    if(hwpr_control.do_overshoot) {
 	      hwpr_control.move_cur = at_overshoot;
 	    } else { // we're done moving
 	      hwpr_control.move_cur = is_done;
+#ifdef DEBUG_HWPR
 	      bprintf(info,"We're done moving!");
+#endif
 	    }
 	    
 	  }
@@ -468,10 +486,14 @@ void ControlHWPR(struct ezbus *bus)
 	  last_enc = hwpr_data.enc;
 
 	} else if (hwpr_control.move_cur == at_overshoot) {
+#ifdef DEBUG_HWPR
 	    bprintf(info,"At the overshoot.");
-
+#endif
 	    hwpr_control.rel_move = CommandData.hwpr.overshoot;
+
+#ifdef DEBUG_HWPR
 	    bprintf(info,"ControlHWPR: Sending overshoot move command of %i",hwpr_control.rel_move);
+#endif
 	    EZBus_RelMove(bus, HWPR_ADDR, hwpr_control.rel_move);
 	    hwpr_control.move_cur = moving;
 	    hwpr_control.stop_cnt = 0;
@@ -484,7 +506,9 @@ void ControlHWPR(struct ezbus *bus)
 	    if (hwpr_control.read_after == yes) {
 	      
 	      /* pulse the potentiometer */
+#ifdef DEBUG_HWPR
 	      bprintf(info,"Pulsing the pot...");
+#endif
 	      CommandData.Cryo.hwprPos = 50;
 	      hwpr_control.read_after = reading;
 	      hwpr_control.read_wait_cnt = HWPR_READ_WAIT;
@@ -505,13 +529,17 @@ void ControlHWPR(struct ezbus *bus)
 
       } else { // hwpr_control.go == none
         // ...we're done!
+#ifdef DEBUG_HWPR
         bprintf(info,"Nothing left to do!");
+#endif
 	hwpr_control.done_all = 1;
       }
       
     }
     if(hwpr_control.done_all == 1) {
+#ifdef DEBUG_HWPR
       bprintf(info,"ControlHWPR: HWPR command complete");
+#endif
       CommandData.hwpr.mode = HWPR_SLEEP; 
     }
   }
