@@ -763,7 +763,7 @@ struct ChannelStruct SlowChannels[] = {
   {"stop_cnt_hwpr",  'w', LOOP9,  13,                1.0,             0.0, 'u', U_NONE},
   {"rel_move_hwpr",  'w', LOOP9,  14,                2.0,             0.0, 's', U_NONE},
   {"stat_control_hwpr",'w', LOOP9,15,                1.0,             0.0, 's', U_NONE},
-  {"pot_targ_hwpr",  'w', LOOP9,  16,                1.0,             0.0, 's', U_NONE},
+  {"pot_targ_hwpr",  'w', LOOP9,  16,        1.0/65535.0,             0.0, 'u', U_NONE},
   {"mode_act",       'w', LOOP9,  17,                1.0,             0.0, 's', U_NONE},
   {"enc_targ_hwpr",  'w', LOOP9,  18,                1.0,             0.0, 's', U_NONE},
   {"enc_err_hwpr",   'w', LOOP9,  19,                1.0,             0.0, 's', U_NONE},

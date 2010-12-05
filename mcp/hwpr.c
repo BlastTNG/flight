@@ -32,7 +32,7 @@
 #include "pointing_struct.h" /* To access ACSData */
 #include "tx.h" /* InCharge */
 
-//#define DEBUG_HWPR
+#define DEBUG_HWPR
 
 #define HWPR_READ_WAIT 10
 #define HWPR_MOVE_TIMEOUT 3 
@@ -61,8 +61,8 @@ static struct hwpr_control_struct {
   int stop_cnt; //Added
   int enc_targ; //Added
   int enc_err; //Added
-  int pot_targ; //Added
-  int pot_err; //Added
+  double pot_targ; //Added
+  double pot_err; //Added
   int dead_pot; //Added
 
 } hwpr_control;
@@ -167,7 +167,7 @@ void StoreHWPRBus(void)
   WriteData(pos2HwprAddr, CommandData.hwpr.pos[2]*65535, NIOS_FLUSH);
   WriteData(pos3HwprAddr, CommandData.hwpr.pos[3]*65535, NIOS_FLUSH);
   WriteData(iposRqHwprAddr, CommandData.hwpr.i_pos, NIOS_FLUSH);
-  WriteData(potTargHwprAddr, hwpr_control.pot_targ, NIOS_FLUSH);
+  WriteData(potTargHwprAddr, hwpr_control.pot_targ*65535, NIOS_FLUSH);
   WriteData(iposHwprAddr, hwpr_control.i_next_step, NIOS_FLUSH);
   WriteData(readWaitHwprAddr, hwpr_control.read_wait_cnt, NIOS_FLUSH);
   WriteData(stopCntHwprAddr, hwpr_control.stop_cnt, NIOS_FLUSH);
@@ -339,7 +339,7 @@ void ControlHWPR(struct ezbus *bus)
 	      
 #ifdef DEBUG_HWPR
 	      bprintf(info,"Nearest step position: i = %i, encoder_lut = %i, pot = %f",i_step,hwpr_enc_cur,hwpr_data.pot);
-	      bprintf(info,"Destination step position: i = %i, encoder_lut = %i, pot = %f",hwpr_control.i_next_step,hwpr_enc_dest,CommandData.hwpr.pos[i_next_step]);
+	      bprintf(info,"Destination step position: i = %i, encoder_lut = %i, pot_targ = %f, CommandData.hwpr.pos[i_next_step] = %f",hwpr_control.i_next_step,hwpr_enc_dest,hwpr_control.pot_targ,CommandData.hwpr.pos[i_next_step]);
 #endif
 	    } else { // don't use pot
 	      hwpr_control.dead_pot = 1;      
@@ -371,7 +371,8 @@ void ControlHWPR(struct ezbus *bus)
 	      hwpr_enc_dest = LutCal(&HwprPotLut, hwpr_control.pot_targ);
 	      
 	      hwpr_control.rel_move = hwpr_enc_dest - hwpr_enc_cur;
-	      //	      bprintf(info,"Destination is index %i, pot value = %f, required rel encoder move is %i:",CommandData.hwpr.i_pos,CommandData.hwpr.pos[i_next_step],hwpr_control.rel_move);
+	      bprintf(info,"Destination is index %i, pot value = %f, required rel encoder move is %i:",CommandData.hwpr.i_pos,CommandData.hwpr.pos[i_next_step],hwpr_control.rel_move);
+	      return;
 	    } else { // don't use pot
 	      hwpr_control.dead_pot = 1;	      
 	      
