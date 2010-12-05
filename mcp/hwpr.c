@@ -167,7 +167,7 @@ void StoreHWPRBus(void)
   WriteData(pos2HwprAddr, CommandData.hwpr.pos[2]*65535, NIOS_FLUSH);
   WriteData(pos3HwprAddr, CommandData.hwpr.pos[3]*65535, NIOS_FLUSH);
   WriteData(iposRqHwprAddr, CommandData.hwpr.i_pos, NIOS_FLUSH);
-  WriteData(potTargHwprAddr, hwpr_control.pot_targ*65535, NIOS_FLUSH);
+  WriteData(potTargHwprAddr, hwpr_control.pot_targ*32767.0, NIOS_FLUSH);
   WriteData(iposHwprAddr, hwpr_control.i_next_step, NIOS_FLUSH);
   WriteData(readWaitHwprAddr, hwpr_control.read_wait_cnt, NIOS_FLUSH);
   WriteData(stopCntHwprAddr, hwpr_control.stop_cnt, NIOS_FLUSH);
