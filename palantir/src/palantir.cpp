@@ -801,6 +801,11 @@ void MainForm::UpdateData() {
     startupDecomd = false;
   }
 
+  if (_dirfile->NFrames() < _lastNFrames) {
+    resetDirFile();
+    _lastNFrames = 0;
+  }
+  
   if (_dirfile->NFrames() != _lastNFrames) {
     _lastNFrames = _dirfile->NFrames();
     updating = true;
@@ -1203,7 +1208,7 @@ void MainForm::UpdateData() {
 MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
     char *layoutfile) : QMainWindow(parent, name, fl)
 {
-  char tmp[MAXPATHLENGTH];
+  //char tmp[MAXPATHLENGTH];
   int row, i;
   int bytecount;
   int max_row=0, min_col = 10;
@@ -1383,16 +1388,17 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
   Picture = new PalImage();
   Picture->TurnOff(ShowPicture);
 
-  strncpy(tmp, *CurFile, MAXPATHLENGTH);
+  strncpy(_curFileName, *CurFile, MAXPATHLENGTH);
+  //strncpy(tmp, *CurFile, MAXPATHLENGTH);
 
   // Initialise KstFile object
-  resetDirFile(tmp);
+  resetDirFile();
   
 }
 
-void MainForm::resetDirFile(char *filename) {
+void MainForm::resetDirFile() {
   delete _dirfile;
-  _dirfile = new Dirfile(filename, GD_RDONLY);
+  _dirfile = new Dirfile(_curFileName, GD_RDONLY);
 }
 
 

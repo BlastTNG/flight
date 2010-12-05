@@ -219,7 +219,7 @@ class MainForm : public QMainWindow
     QList<QLabel> QtLabels;
     QList<QLabel> QtData;
     QLabel *ShowPicture;
-    void resetDirFile(char *filename);
+    void resetDirFile();
 
   protected:
     QGridLayout* InfoLayout;
@@ -308,6 +308,8 @@ class MainForm : public QMainWindow
 
     bool DialogsUp;
     int AlarmScroll;
+    
+    char _curFileName[MAXPATHLENGTH];
 
     public slots:
       void UpdateData();
