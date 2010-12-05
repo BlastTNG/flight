@@ -167,14 +167,14 @@ void StoreHWPRBus(void)
   WriteData(pos2HwprAddr, CommandData.hwpr.pos[2]*65535, NIOS_FLUSH);
   WriteData(pos3HwprAddr, CommandData.hwpr.pos[3]*65535, NIOS_FLUSH);
   WriteData(iposRqHwprAddr, CommandData.hwpr.i_pos, NIOS_FLUSH);
-  WriteData(potTargHwprAddr, hwpr_control.pot_targ*32767.0, NIOS_FLUSH);
+  WriteData(potTargHwprAddr, hwpr_control.pot_targ*65535, NIOS_FLUSH);
   WriteData(iposHwprAddr, hwpr_control.i_next_step, NIOS_FLUSH);
   WriteData(readWaitHwprAddr, hwpr_control.read_wait_cnt, NIOS_FLUSH);
   WriteData(stopCntHwprAddr, hwpr_control.stop_cnt, NIOS_FLUSH);
   WriteData(relMoveHwprAddr, hwpr_control.rel_move/2, NIOS_FLUSH);
   WriteData(encTargHwprAddr, hwpr_control.enc_targ, NIOS_FLUSH);
   WriteData(encErrHwprAddr, hwpr_control.enc_err, NIOS_FLUSH);
-  WriteData(potErrHwprAddr, hwpr_control.pot_err*65535, NIOS_FLUSH);
+  WriteData(potErrHwprAddr, hwpr_control.pot_err*32767, NIOS_FLUSH);
 
   /* Make HWPR status bit field */
   hwpr_stat_field |= (hwpr_control.go) & 0x0007 ;

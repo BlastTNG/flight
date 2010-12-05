@@ -763,7 +763,7 @@ struct ChannelStruct SlowChannels[] = {
   {"stop_cnt_hwpr",  'w', LOOP9,  13,                1.0,             0.0, 'u', U_NONE},
   {"rel_move_hwpr",  'w', LOOP9,  14,                2.0,             0.0, 's', U_NONE},
   {"stat_control_hwpr",'w', LOOP9,15,                1.0,             0.0, 's', U_NONE},
-  {"pot_targ_hwpr",  'w', LOOP9,  16,        1.0/32767.0,             0.0, 's', U_NONE},
+  {"pot_targ_hwpr",  'w', LOOP9,  16,        1.0/65535.0,             0.0, 'u', U_NONE},
   {"mode_act",       'w', LOOP9,  17,                1.0,             0.0, 's', U_NONE},
   {"enc_targ_hwpr",  'w', LOOP9,  18,                1.0,             0.0, 's', U_NONE},
   {"enc_err_hwpr",   'w', LOOP9,  19,                1.0,             0.0, 's', U_NONE},
@@ -772,7 +772,7 @@ struct ChannelStruct SlowChannels[] = {
   {"dr_2_act",       'w', LOOP9,  22,                1.0,             0.0, 's', U_NONE},
   {"tol_act",        'w', LOOP9,  23,                1.0,             0.0, 'u', U_NONE},
   {"status_actbus",  'w', LOOP9,  24,                1.0,             0.0, 'u', U_NONE},
-  {"pot_err_hwpr",   'w', LOOP9,  25,        1.0/65535.0,             0.0, 'u', U_NONE},
+  {"pot_err_hwpr",   'w', LOOP9,  25,        1.0/32767.0,             0.0, 's', U_NONE},
   /* LOOP9 26-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
