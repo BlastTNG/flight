@@ -1983,7 +1983,7 @@ static void GPSTime (unsigned char *indata)
   /* Send new information to CommandData */
 
   GPStime = ParseGPS(indata);
-  GPSweek = (unsigned short)(*(indata + 4));
+  GPSweek = *((unsigned short*)(indata + 4));
   offset = ParseGPS(indata + 6);
   CPUtime = ParseGPS(indata + 10);
 

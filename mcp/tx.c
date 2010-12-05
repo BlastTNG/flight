@@ -217,7 +217,12 @@ static void WriteAux(void)
   t = PointingData[i_point].t;
 #endif
 
-  WriteData(timeoutAddr, CommandData.pointing_mode.t - t, NIOS_QUEUE);
+  if (CommandData.pointing_mode.t > t) {
+    WriteData(timeoutAddr, CommandData.pointing_mode.t - t, NIOS_QUEUE);
+  } else {
+    WriteData(timeoutAddr, 0, NIOS_QUEUE);
+  }
+    
   WriteData(bi0FifoSizeAddr, CommandData.bi0FifoSize, NIOS_QUEUE);
   WriteData(bbcFifoSizeAddr, CommandData.bbcFifoSize, NIOS_QUEUE);
   WriteData(ploverAddr, CommandData.plover, NIOS_QUEUE);

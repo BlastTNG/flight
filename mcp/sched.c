@@ -45,10 +45,10 @@ void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
 
 char lst0str[82];
 
-//#define NOMINAL_LATITUDE -78.0 /* degrees North */
-#define CHECK_LON 20.0
-#define NOMINAL_LATITUDE 31.76
-//#define CHECK_LON -95.7168 
+#define NOMINAL_LATITUDE -78.0 /* degrees North */
+//#define CHECK_LON 20.0
+//#define NOMINAL_LATITUDE 31.76
+#define CHECK_LON -95.7168 
 #define LATITUDE_BAND     6.00 /* in degrees of latitude */
 #define LATITUDE_OVERLAP  1.00 /* hysteresis between the bands,
                                   in degress of latitude */
