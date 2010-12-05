@@ -405,9 +405,15 @@
     </EXTREMA>
     <EXTREMA name="hwprerr">
       <XLO value="-100.0"/>
-      <LO value="-3.0"/>
-      <HI value="3.0"/>
+      <LO value="-5.0"/>
+      <HI value="5.0"/>
       <XHI value="100.0"/>
+    </EXTREMA>
+    <EXTREMA name="hwprpoterr">
+      <XLO value="-0.00555"/>
+      <LO value="-0.001389"/>
+      <HI value="0.001389"/>
+      <XHI value="0.00555"/>
     </EXTREMA>
     <CURFILE name="/data/etc/defile.lnk"/>
     <DECOMD host="widow.blast" port="11411"/>
@@ -1756,6 +1762,9 @@
     </NUMBER>
     <NUMBER caption="Last Enc Err">
       <DATUM format="%.0f" src="ENC_ERR_HWPR" extrema="hwprerr"/>
+    </NUMBER>
+    <NUMBER caption="Last Pot Err">
+      <DATUM format="%.4f" src="POT_ERR_HWPR" extrema="hwprpoterr"/>
     </NUMBER>
     <NUMBER caption="I Move">
       <DATUM format="%.0f" src="I_MOVE_HWPR" extrema="unknown"/>
