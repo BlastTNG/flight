@@ -380,10 +380,10 @@
       <XHI value="300.0"/>
     </EXTREMA>
     <EXTREMA name="vbattcheck">
-      <XLO value="24.0"/>
-      <LO value="26.0"/>
-      <HI value="28.2"/>
-      <XHI value="30.0"/>
+      <XLO value="23.2"/>
+      <LO value="25.0"/>
+      <HI value="29.4"/>
+      <XHI value="29.9"/>
     </EXTREMA>
     <EXTREMA name="varrcheck">
       <XLO value="40.0"/>
