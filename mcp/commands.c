@@ -1846,6 +1846,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       sendSBSCCommand(buf);
       CommandData.cam.expInt = ivalues[0];
       break;
+    case cam_trig_speed:
+      CommandData.cam.trigSpeed = ivalues[0];
+      break;
     case cam_exp_params:
       sprintf(buf, "CsetExpTime=%d", ivalues[0]);
       CommandData.cam.expTime = ivalues[0];
@@ -2974,6 +2977,8 @@ void InitCommandData()
   CommandData.ISCControl[1].save_period = 12000; /* 120 sec */
   CommandData.ISCControl[1].pulse_width = 30; /* 300.00 msec */
   CommandData.ISCControl[1].fast_pulse_width = 6; /* 60.00 msec */
+
+  CommandData.cam.trigSpeed = 0.015;
 
   CommandData.temp1 = 0;
   CommandData.temp2 = 0;

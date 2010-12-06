@@ -671,6 +671,17 @@ void CameraTrigger(int which)
   }
 }
 
+/*********************/
+/* SBSC Triggering   */
+/*********************/
+void SBSCTrigger(void)
+{
+  if (fabs(axes_mode.az_vel) >= CommandData.cam.trigSpeed) {
+    return;
+  }
+  sendSBSCCommand("CtrigExp"); 
+}
+
 /*****************************************************************/
 /*                                                               */
 /*   Control the pumps and the lock                              */

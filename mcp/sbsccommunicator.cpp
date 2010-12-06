@@ -21,6 +21,7 @@
 
 
 extern "C" int EthernetSBSC;      /* tx.c */
+pthread_mutex_t sbscmutex;
 
 /*
 
@@ -475,6 +476,7 @@ written for both C++ string and char* strings
 */
 int SBSCCommunicator::sendCommand(string cmd)
 {
+  pthread_mutex_lock(&sbscmutex);
 #if SBSC_COMM_DEBUG
   cerr << "[Comm debug]: in sendCommand method with: " << cmd << endl;
 #endif
@@ -495,7 +497,10 @@ int SBSCCommunicator::sendCommand(string cmd)
   if (select(commFD+1, NULL, &output, NULL, NULL) < 0) //doesn't time out
     return -1;
   if (!FD_ISSET(commFD, &output)) return -1;  //should always be false
-  return write(commFD, cmd.c_str(), cmd.length());
+  //return write(commFD, cmd.c_str(), cmd.length());
+  int n = write(commFD, cmd.c_str(), cmd.length());
+  pthread_mutex_unlock(&sbscmutex);
+  return n;
 }
 
 int SBSCCommunicator::sendCommand(const char* cmd)       //in case flight wants to use C only
