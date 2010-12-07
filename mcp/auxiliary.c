@@ -84,6 +84,8 @@ extern short int start_ISC_cycle[2];
 
 extern short int InCharge; /* tx.c */
 
+int sendSBSCCommand(const char *cmd); //sbsc.cpp
+
 /* ACS2 digital signals */
 #define BAL_DIR      0x01  /* ACS2 Group 2 Bit 1 */
 #define BAL_VALV     0x02  /* ACS2 Group 2 Bit 2 */
@@ -677,8 +679,10 @@ void CameraTrigger(int which)
 void SBSCTrigger(void)
 {
   if (fabs(axes_mode.az_vel) >= CommandData.cam.trigSpeed) {
+    //bprintf(info,"SBSC ---- returning, az_vel is %f\n",axes_mode.az_vel);
     return;
   }
+  //bprintf(info,"SBSC ---- sending exposure command\n");
   sendSBSCCommand("CtrigExp"); 
 }
 
