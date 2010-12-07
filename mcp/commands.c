@@ -1847,7 +1847,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.cam.expInt = ivalues[0];
       break;
     case cam_trig_speed:
-      CommandData.cam.trigSpeed = ivalues[0];
+      CommandData.cam.trigSpeed = rvalues[0];
       break;
     case cam_exp_params:
       sprintf(buf, "CsetExpTime=%d", ivalues[0]);
