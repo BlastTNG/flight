@@ -2302,6 +2302,8 @@ void ProcessUplinkSched(unsigned char *extdat) {
         hour = (day - floor(day))*24.0;
         if (entry<library.n) {
           fprintf(fp, "%s %d %.6g %s", library.cmd[entry], (int)day , hour, library.params[entry]);
+        } else {
+          bprintf(warning, "entry %d not in library\n", entry);
         }
       }
     }
