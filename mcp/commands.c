@@ -2822,10 +2822,10 @@ void InitCommandData()
   CommandData.Temporary.dac_out[3] = 0x8000;
   CommandData.Temporary.dac_out[4] = 0x8000;
 
-  CommandData.Bias.bias[0] = 5000;   //500um
-  CommandData.Bias.bias[1] = 5000;   //350um
-  CommandData.Bias.bias[2] = 5000;   //250um
-  CommandData.Bias.bias[3] = 1045;   //ROX
+  CommandData.Bias.bias[0] = 10000;   //500um
+  CommandData.Bias.bias[1] = 10000;   //350um
+  CommandData.Bias.bias[2] = 10000;   //250um
+  CommandData.Bias.bias[3] = 1050;   //ROX
   CommandData.Bias.bias[4] = 16384;  //X
 
   CommandData.actbus.tc_mode = TC_MODE_VETOED;
@@ -2857,8 +2857,8 @@ void InitCommandData()
 
   CommandData.actbus.act_vel = 10;
   CommandData.actbus.act_acc = 1;
-  CommandData.actbus.act_move_i = 75;
-  CommandData.actbus.act_hold_i = 10;
+  CommandData.actbus.act_move_i = 85;
+  CommandData.actbus.act_hold_i = 40;
   CommandData.actbus.act_tol = 2;
 
   CommandData.actbus.lock_vel = 110000;
@@ -2992,19 +2992,19 @@ void InitCommandData()
   CommandData.lat = 43.39;
   CommandData.lon = 79.23;
 
-  CommandData.Phase[0] = 28178;
-  CommandData.Phase[1] = 28178;
-  CommandData.Phase[2] = 28178;
-  CommandData.Phase[3] = 28178;
-  CommandData.Phase[4] = 28178;
-  CommandData.Phase[5] = 28178;
-  CommandData.Phase[6] = 28178;
-  CommandData.Phase[7] = 28178;
-  CommandData.Phase[8] = 28178;
-  CommandData.Phase[9] = 28178;
-  CommandData.Phase[10] = 28178;
-  CommandData.Phase[11] = 28178;
-  CommandData.Phase[12] = 11600;    //ROX
+  CommandData.Phase[0] = 28101;
+  CommandData.Phase[1] = 28101;
+  CommandData.Phase[2] = 28101;
+  CommandData.Phase[3] = 28101;
+  CommandData.Phase[4] = 28101;
+  CommandData.Phase[5] = 28101;
+  CommandData.Phase[6] = 13000;
+  CommandData.Phase[7] = 13000;
+  CommandData.Phase[8] = 13000;
+  CommandData.Phase[9] = 12000;
+  CommandData.Phase[10] = 13000;
+  CommandData.Phase[11] = 12000;
+  CommandData.Phase[12] = 12100;    //ROX
 
   WritePrevStatus();
 }
