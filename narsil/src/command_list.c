@@ -25,7 +25,7 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.104 $";
+const char *command_list_serial = "$Revision: 4.105 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -1072,7 +1072,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(cam_trig_speed), "Set speed below which exposure is triggered", GR_SBSC, 1,
     {
-      {"Speed (dps)", 0, MAX_15BIT, 'i', ""}
+      {"Speed (dps)", 0, 5.0, 'f', ""}
     }
   },
   {COMMAND(cam_exp_params), "set starcam exposure commands", GR_SBSC, 1,
