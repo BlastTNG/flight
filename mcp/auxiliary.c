@@ -82,9 +82,9 @@ extern short int write_ISC_trigger[2];
 extern short int ISC_link_ok[2];
 extern short int start_ISC_cycle[2];
 
-extern short int InCharge; /* tx.c */
+extern short int sbsc_trigger; /* Semaphore for SBSC trigger */
 
-int sendSBSCCommand(const char *cmd); //sbsc.cpp
+extern short int InCharge; /* tx.c */
 
 /* ACS2 digital signals */
 #define BAL_DIR      0x01  /* ACS2 Group 2 Bit 1 */
@@ -683,7 +683,7 @@ void SBSCTrigger(void)
     return;
   }
   //bprintf(info,"SBSC ---- sending exposure command\n");
-  sendSBSCCommand("CtrigExp"); 
+  sbsc_trigger = 1;
 }
 
 /*****************************************************************/

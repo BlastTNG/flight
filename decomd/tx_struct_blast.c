@@ -773,7 +773,8 @@ struct ChannelStruct SlowChannels[] = {
   {"tol_act",        'w', LOOP9,  23,                1.0,             0.0, 'u', U_NONE},
   {"status_actbus",  'w', LOOP9,  24,                1.0,             0.0, 'u', U_NONE},
   {"pot_err_hwpr",   'w', LOOP9,  25,        1.0/32767.0,             0.0, 's', U_NONE},
-  /* LOOP9 26-49 are unused */
+  {"trig_speed_sbsc",'w', LOOP9,  26,    (100.0/32768.0),             0.0, 'u', U_NONE}, 
+  /* LOOP9 27-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
@@ -927,6 +928,8 @@ struct ChannelStruct FastChannels[] = {
   {"sin_el",       'w',   ACS2_D, 26,         1.0/32768.0,           -1.0, 'u', U_NONE},
   {"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
   {"pulse_sc",     'r',   ACS2_D, 50,                 1.0,            0.0, 'u', U_NONE},
+  //{"trig_s_sbsc",  'r',   ACS2_D, 51,                1.0,             0.0, 'u', U_NONE},
+  //{"trig_l_sbsc",  'r',   ACS2_D, 52,                1.0,             0.0, 'u', U_NONE},
 
 #endif
   {"dig43_das",    'w',   BIAS_D,  6,                1.0,             0.0, 'u', U_NONE},
