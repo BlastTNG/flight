@@ -519,31 +519,21 @@ union DerivedUnion DerivedChannels[] = {
       "CAL_LAMP_ON_CMD",
       "AUTO_BDA_HEAT_ON"
       ),
+#endif
 
   COMMENT("Cryo Valve Limit Switches"),
 
-  BITFIELD("cryoin",
-      "POT_IS_CLOSED",
-      "POT_IS_OPEN",
-      "LHE_IS_CLOSED",
+  BITFIELD("dig65_das",
       "LHE_IS_OPEN",
+      "LHE_IS_CLOSED",
+      "LN_IS_OPEN",
       "LN_IS_CLOSED",
-      "LN_IS_OPEN"
-      ),
+      "POT_IS_OPEN",
+      "POT_IS_CLOSED"),
 
   LINCOM2("POT_STATE", "POT_IS_CLOSED", 2, 0, "POT_IS_OPEN",  1, 0),
   LINCOM2("LHE_STATE", "LHE_IS_CLOSED", 2, 0, "LHE_IS_OPEN",  1, 0),
   LINCOM2("LN_STATE",  "LN_IS_CLOSED", 2, 0, "LN_IS_OPEN", 1, 0),
-#endif
-
-#if 0
-  COMMENT("Limit Switch Niceties"),
-
-  LINCOM2("LS_EL_STATUS", "LS_EL_OK", 2, 0, "LS_IGNORE_EL", 1, 0),
-  LINCOM2("LS_OPENCLOSE", "LS_OPEN", 2, 0, "LS_CLOSED", 1, 0),
-  LINCOM2("LS_MOTION", "LS_DRIVE_RET", 2, 0, "LS_DRIVE_EXT", 1, 0),
-  LINCOM2("LS_NICE_STAT", "LS_MOTION", 3, 0, "LS_OPENCLOSE", 1, 0),
-#endif
 
   COMMENT("DAS Digital Controls"),
   BITFIELD("dig43_das",
