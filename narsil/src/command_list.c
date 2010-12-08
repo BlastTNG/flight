@@ -25,7 +25,8 @@
 #include "sbsc_protocol.h"
 #endif
 
-const char *command_list_serial = "$Revision: 4.105 $";
+
+const char *command_list_serial = "$Revision: 4.106 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -350,8 +351,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /* pointing modes */
   {COMMAND(az_el_goto), "goto point in azimuth and elevation", GR_POINT, 2,
     {
-      {"Azimuth (deg)", -360, 360, 'f', "NONE"},
-      {"Elevation (deg)", 4.95,  65, 'f', "NONE"}
+      {"Azimuth (deg)", -360, 360, 'f', "AZ"},
+      {"Elevation (deg)", 4.95,  65, 'f', "EL"}
     }
   },
   {COMMAND(az_el_trim), "trim sensors to azimuth and elevation", GR_TRIM, 2,
@@ -374,8 +375,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(az_scan), "scan in azimuth", GR_POINT, 4,
     {
-      {"Az centre (deg)",       -180, 360, 'f', "NONE"},
-      {"El centre (deg)",         15,  65, 'f', "NONE"},
+      {"Az centre (deg)",       -180, 360, 'f', "AZ"},
+      {"El centre (deg)",         15,  65, 'f', "EL"},
       {"Width (deg on sky)",       0, 360, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)", 0,   2, 'f', "NONE"}
     }
@@ -401,8 +402,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps",
     GR_POINT, 7,
     {
-      {"RA of Centre (h)",          0, 24, 'd', "NONE"},
-      {"Dec of Centre (deg)",     -90, 90, 'd', "NONE"},
+      {"RA of Centre (h)",          0, 24, 'd', "RA"},
+      {"Dec of Centre (deg)",     -90, 90, 'd', "DEC"},
       {"Az Width (deg on sky)",     0, 90, 'f', "NONE"},
       {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
@@ -412,8 +413,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(cap), "scan a circle centred on RA/Dec with el steps", GR_POINT, 6,
     {
-      {"RA of Centre (h)",          0, 24, 'd', "NONE"},
-      {"Dec of Centre (deg)",     -90, 90, 'd', "NONE"},
+      {"RA of Centre (h)",          0, 24, 'd', "RA"},
+      {"Dec of Centre (deg)",     -90, 90, 'd', "DEC"},
       {"Radius (deg on sky)",       0, 90, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
@@ -442,7 +443,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Dith Step Size (arcmin)",-0.1, 0.1, 'f', "NONE"}
     }
   },
-  {COMMAND(vbox), "scan an az/el box centred on RA/Dec with el drift",
+  {COMMAND(vbox), "DEPRECATED - scan an az/el box centred on RA/Dec with el drift",
     GR_POINT, 6,
     {
       {"RA of Centre (h)",          0, 24, 'f', "NONE"},
@@ -453,7 +454,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Drift Speed (deg el/s)", 0,  2, 'f', "NONE"}
     }
   },
-  {COMMAND(vcap), "scan a circle centred on RA/Dec with el drift", GR_POINT, 5,
+  {COMMAND(vcap), "DEPRECATED - scan a circle centred on RA/Dec with el drift", GR_POINT, 5,
     {
       {"RA of Centre (h)",          0, 24, 'f', "NONE"},
       {"Dec of Centre (deg)",     -90, 90, 'f', "NONE"},
@@ -464,14 +465,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(ra_dec_goto), "track a location RA/Dec", GR_POINT, 2,
     {
-      {"RA of Centre (h)",      0, 24, 'f', "NONE"},
-      {"Dec of Centre (deg)", -90, 90, 'f', "NONE"}
+      {"RA of Centre (h)",      0, 24, 'f', "RA"},
+      {"Dec of Centre (deg)", -90, 90, 'f', "DEC"}
     }
   },
   {COMMAND(ra_dec_set), "define RA/Dec of current position", GR_TRIM, 2,
     {
-      {"Current RA (h)",      0, 24, 'f', "NONE"},
-      {"Current Dec (deg)", -90, 90, 'f', "NONE"}
+      {"Current RA (h)",      0, 24, 'f', "RA"},
+      {"Current Dec (deg)", -90, 90, 'f', "DEC"}
     }
   },
   {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 4,
@@ -509,13 +510,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(cov_gps), "set the threshhold for allowable DGPS covariance", GR_TRIM,
     1,
     {
-      {"Covariance (deg^2)", 0, 5.0, 'f', "COV_GPS"},
+      {"Covariance (deg^2)", 0, 5.0, 'f', "COV_LIM_DGPS"},
     }
   },
   {COMMAND(ants_gps), "set the threshhold for allowable DGPS antenna separation error", GR_TRIM,
     1,
     {
-      {"Antenna Separation Error (m)", 0, 5.0, 'f', "ANTS_GPS"},
+      {"Antenna Separation Error (m)", 0, 5.0, 'f', "ANT_E_DGPS"},
     }
   },
 
@@ -660,7 +661,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   {COMMAND(hwpr_repeat), 
-    "repeatedly cycle the waveplate rotator through a number of positions",
+    "DEPRECATED - repeatedly cycle the hwpr through a number of positions",
     GR_HWPR, 4,
     {
       {"Number of step positions", 0, MAX_15BIT, 'i', ""},
@@ -673,31 +674,31 @@ struct mcom mcommands[N_MCOMMANDS] = {
     "define the four hwpr potentiometer positions to be used for scans",
     GR_HWPR, 4,
     {
-      {"Position 1", 0.1, 0.9, 'f', ""},
-      {"Position 2", 0.1, 0.9, 'f', ""},
-      {"Position 3", 0.1, 0.9, 'f', ""},
-      {"Position 4", 0.1, 0.9, 'f', ""}
+      {"Position 1", 0.1, 0.9, 'f', "POS0_HWPR"},
+      {"Position 2", 0.1, 0.9, 'f', "POS1_HWPR"},
+      {"Position 3", 0.1, 0.9, 'f', "POS2_HWPR"},
+      {"Position 4", 0.1, 0.9, 'f', "POS3_HWPR"}
     }
   },
   {COMMAND(hwpr_goto_pot), 
     "Move wave plate rotator to commanded potentiometer value",
     GR_HWPR, 1,
     {
-      {"Pot Value ", 0.1, 0.9, 'f', ""},
+      {"Pot Value ", 0.1, 0.9, 'f', "POT_HWPR"},
     }
   },
   {COMMAND(hwpr_set_overshoot), 
     "set the overshoot in encoder counts for backwards hwpr moves",
     GR_HWPR, 1,
     {
-      {"overshoot", 0, MAX_15BIT, 'i', ""},
+      {"overshoot", 0, MAX_15BIT, 'i', "OVERSHOOT_HWPR"},
     }
   },
   {COMMAND(hwpr_goto_i), 
     "goto hwpr position (0-3)",
     GR_HWPR, 1,
     {
-      {"hwpr position", 0, 3, 'i', ""},
+      {"hwpr position", 0, 3, 'i', "I_POS_RQ_HWPR"},
     }
   },
 
@@ -810,8 +811,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(bias_step), "step through different bias levels", GR_BIAS, 6,
     {
-      {"Start", 0, 32767, 'i', "step_start_bias"},
-      {"End", 0, 32767, 'i', "step_end_bias"},
+      {"Start", 0, 32767, 'i', "STEP_START_BIAS"},
+      {"End", 0, 32767, 'i', "STEP_END_BIAS"},
       {"N steps", 1, 32767, 'i', "step_nsteps_bias"},
       {"Time per step (ms)", 10, 32767, 'i', "step_time_bias"},
       {"Cal pulse length (ms)", 0, 32767, 'i', "step_pul_len_bias"},
@@ -820,8 +821,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(phase_step), "step through different phases", GR_BIAS, 4,
     {
-      {"Start", 0, 32767, 'i', "step_start_phase"},
-      {"End", 0, 32767, 'i', "step_end_phase"},
+      {"Start", 0, 32767, 'i', "STEP_START_PHASE"},
+      {"End", 0, 32767, 'i', "STEP_END_PHASE"},
       {"N steps", 1, 32767, 'i', "step_nsteps_phase"},
       {"Time per step (ms)", 1, 32767, 'i', "step_time_phase"},
     }
@@ -853,7 +854,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(cal_repeat), "pulse calibrator repeatedly", GR_CRYO_HEAT, 3,
     {
       {"Pulse Length (ms)", 10, 8000, 'i', "PULSE_CAL"},
-      {"Repeat Delay (s)",  1, 32767, 'i', "REPEAT_CAL"},
+      {"Repeat Delay (s)",  1, 32767, 'i', "PERIOD_CAL"},
       {"Number of repeats (0=infinity)",  0, 32767, 'i', ""}
     }
   },
@@ -1072,18 +1073,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(cam_trig_speed), "Set speed below which exposure is triggered", GR_SBSC, 1,
     {
-      {"Speed (dps)", 0, 5.0, 'f', ""}
+      {"Speed (dps)", 0, 5.0, 'f', "TRIG_SPEED_SBSC"}
     }
   },
   {COMMAND(cam_exp_params), "set starcam exposure commands", GR_SBSC, 1,
     {
-      {"Exposure duration (ms)", 40, MAX_15BIT, 'i', "sc_exp_time"}
+      {"Exposure duration (ms)", 40, MAX_15BIT, 'i', "exp_time_sbsc"}
     }
   },
   {COMMAND(cam_focus_params), "set camera autofocus params", GR_SBSC, 2,
     {
-      {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "sc_foc_res"},
-      {"Range (inverse fraction of total range)", 0, MAX_15BIT, 'i', "sc_foc_rng"}
+      {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "foc_res_sbsc"},
+      {"Range (inverse fraction of total range)", 0, MAX_15BIT, 'i', "NONE"} 
     }
   },
   {COMMAND(cam_bad_pix), "Indicate pixel to ignore", GR_SBSC, 3,
@@ -1096,10 +1097,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(cam_blob_params), "set blob finder params", GR_SBSC, 4,
     {
-      {"Max number of blobs", 1, MAX_15BIT, 'i', "sc_maxblob"},
-      {"Search grid size (pix)", 1, 1530 , 'i', "sc_grid"},
-      {"Threshold (# sigma)", 0, 100, 'f', "sc_thresh"},
-      {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "sc_mdist"}
+      {"Max number of blobs", 1, MAX_15BIT, 'i', "maxblob_sbsc"},
+      {"Search grid size (pix)", 1, 1530 , 'i', "grid_sbsc"},
+      {"Threshold (# sigma)", 0, 100, 'f', "thresh_sbsc"},
+      {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_sbsc"}
     }
   },
   {COMMAND(cam_lens_any), "execute lens command directly", GR_SBSC, 1,
@@ -1115,7 +1116,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(cam_lens_params), "set starcam lens params", GR_SBSC, 1,
     {
-      {"Allowed move error (ticks)", 0, MAX_15BIT, 'i', ""}
+      {"Allowed move error (ticks)", 0, MAX_15BIT, 'i', "move_tol_sbsc"}
     }
   },
   {COMMAND(motors_verbose), "Set verbosity of motor serial threads (0=norm, 1=verbose, 2= superverbose )", GR_MISC, 3,
