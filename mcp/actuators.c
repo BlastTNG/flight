@@ -471,7 +471,7 @@ static void GetLockData()
 /* The NiC MCC does this via the BlastBus to give it a chance to know what's
  * going on.  The ICC reads it directly to get more promptly the answer
  * (since all these fields are slow). */
-static void SetLockState(int nic)
+static void SetLockState()
 {
   static int firsttime = 1;
   int pot;
@@ -489,6 +489,15 @@ static void SetLockState(int nic)
   //get lock data
   pot = slow_data[potLockAddr->index][potLockAddr->channel];
   state = slow_data[stateLockAddr->index][stateLockAddr->channel];
+
+  //TODO debug the lock problem
+  if (pot != lock_data.adc[1]) {
+    bprintf(info, "lock debug: pot: %d bbus pot: %d", lock_data.adc[1], pot);
+  }
+  if (state != lock_data.state) {
+    bprintf(info, "lock debug: state: 0x%x bbus state: 0x%x", 
+	lock_data.state, state);
+  }
 
   //set the EZBus move parameters
   EZBus_SetVel(&bus, id[LOCKNUM], CommandData.actbus.lock_vel);
@@ -542,7 +551,7 @@ static void DoLock(void)
       bprintf(warning, "Reset lock motor state.");
     }
 
-    SetLockState(0);
+    SetLockState();
 
     /* compare goal to current state -- only 3 goals are supported:
      * open + off, closed + off and off */
@@ -1088,7 +1097,7 @@ void ActuatorBus(void)
     CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining
                                               control */
     if (BLASTBusUseful) {
-      SetLockState(1); /* to ensure the NiC MCC knows the pin state */
+      SetLockState(); /* to ensure the NiC MCC knows the pin state */
       SyncDR();	     /* get encoder absolute state from the ICC */
     }
     CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
