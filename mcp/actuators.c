@@ -74,6 +74,7 @@ static unsigned int actuators_init = 0;	/* bitfield for when actuators usable */
 /* Lock motor parameters and data */
 #define LOCK_MOTOR_DATA_TIMER 100   /* 1 second */
 #define DRIVE_TIMEOUT 3000	    /* 30 seconds */
+int lock_timeout = -1;
 
 #define LOCK_MIN_POT 3000     //actual min stop: ~2530 (fully extended)
 #define LOCK_MAX_POT 16368    //max stop at saturation: 16368 (fully retracted)
@@ -471,7 +472,7 @@ static void GetLockData()
 /* The NiC MCC does this via the BlastBus to give it a chance to know what's
  * going on.  The ICC reads it directly to get more promptly the answer
  * (since all these fields are slow). */
-static void SetLockState()
+static void SetLockState(int nic)
 {
   static int firsttime = 1;
   int pot;
@@ -487,17 +488,18 @@ static void SetLockState()
   }
 
   //get lock data
-  pot = slow_data[potLockAddr->index][potLockAddr->channel];
-  state = slow_data[stateLockAddr->index][stateLockAddr->channel];
+  if (nic) {
+    //use bbus when nic
+    pot = slow_data[potLockAddr->index][potLockAddr->channel];
+    state = slow_data[stateLockAddr->index][stateLockAddr->channel];
+    lock_data.adc[1] = pot;
+  } else {
+    //otherwise (in charge) use lock_data
+    pot = lock_data.adc[1];
+    state = lock_data.state;
+  }
 
-  //TODO debug the lock problem
-  if (pot != lock_data.adc[1]) {
-    bprintf(info, "lock debug: pot: %d bbus pot: %d", lock_data.adc[1], pot);
-  }
-  if (state != lock_data.state) {
-    bprintf(info, "lock debug: state: 0x%x bbus state: 0x%x", 
-	lock_data.state, state);
-  }
+  //update the NIC on pot state
 
   //set the EZBus move parameters
   EZBus_SetVel(&bus, id[LOCKNUM], CommandData.actbus.lock_vel);
@@ -537,7 +539,6 @@ static void SetLockState()
 static void DoLock(void)
 {
   int action = LA_EXIT;
-  static int drive_timeout = 0;
 
   do {
     GetLockData();
@@ -551,7 +552,7 @@ static void DoLock(void)
       bprintf(warning, "Reset lock motor state.");
     }
 
-    SetLockState();
+    SetLockState(0);
 
     /* compare goal to current state -- only 3 goals are supported:
      * open + off, closed + off and off */
@@ -613,13 +614,10 @@ static void DoLock(void)
     }
 
     /* Timeout check */
-    if (drive_timeout == 1) {
+    if (lock_timeout == 0) {
       bputs(warning, "Lock Motor drive timeout.");
       action = LA_STOP;
     }
-    if (drive_timeout > 0)
-      --drive_timeout;
-
     /* Seize the bus */
     if (action == LA_EXIT)
       EZBus_Release(&bus, id[LOCKNUM]);
@@ -629,7 +627,7 @@ static void DoLock(void)
     /* Figure out what to do... */
     switch (action) {
       case LA_STOP:
-        drive_timeout = 0;
+        lock_timeout = -1;
         bputs(info, "Stopping lock motor.");
         EZBus_Stop(&bus, id[LOCKNUM]); /* terminate all strings */
 	usleep(SEND_SLEEP); /* wait for a bit */
@@ -637,7 +635,7 @@ static void DoLock(void)
         lock_data.state |= LS_DRIVE_OFF;
         break;
       case LA_EXTEND:
-        drive_timeout = DRIVE_TIMEOUT;
+        lock_timeout = DRIVE_TIMEOUT;
         bputs(info, "Extending lock motor.");
         EZBus_Stop(&bus, id[LOCKNUM]); /* stop current action first */
 	EZBus_RelMove(&bus, id[LOCKNUM], INT_MAX);
@@ -646,7 +644,7 @@ static void DoLock(void)
         lock_data.state |= LS_DRIVE_EXT;
         break;
       case LA_RETRACT:
-        drive_timeout = DRIVE_TIMEOUT;
+        lock_timeout = DRIVE_TIMEOUT;
         bputs(info, "Retracting lock motor.");
         EZBus_Stop(&bus, id[LOCKNUM]); /* stop current action first */
 	EZBus_RelMove(&bus, id[LOCKNUM], INT_MIN);
@@ -657,6 +655,12 @@ static void DoLock(void)
       case LA_WAIT:
 	usleep(WAIT_SLEEP); /* wait for a bit */
 	break;
+    }
+
+    //quit if timeout
+    if (lock_timeout == 0) {
+      lock_timeout = -1;
+      action = LA_EXIT;
     }
 
   } while (action != LA_EXIT);
@@ -847,6 +851,9 @@ void UpdateActFlags()
   else actbus_flags &= ~ACT_FL_TRIM_WAIT;
 
   if (poll_timeout > 0) poll_timeout--;
+
+  if (lock_timeout > 0) lock_timeout--;
+
 }
 
 void StoreActBus(void)
@@ -1097,7 +1104,7 @@ void ActuatorBus(void)
     CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining
                                               control */
     if (BLASTBusUseful) {
-      SetLockState(); /* to ensure the NiC MCC knows the pin state */
+      SetLockState(1); /* to ensure the NiC MCC knows the pin state */
       SyncDR();	     /* get encoder absolute state from the ICC */
     }
     CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
