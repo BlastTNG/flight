@@ -684,8 +684,8 @@
     <MULTI caption="Mode">
       <DATUM src="MODE_BAL">
         <WORD value="0" caption="Off" textsyle="W_BIT"/>
-        <WORD value="1" caption="Auto" textsyle="OK_BIT"/>
-        <WORD value="2" caption="Manual" textsyle="W_BIT"/>
+        <WORD value="1" caption="Manual" textsyle="OK_BIT"/>
+        <WORD value="2" caption="Auto" textsyle="W_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="Target">
