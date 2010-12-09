@@ -51,7 +51,7 @@ extern "C" {
 
   /* offset of encoder.  Reset if encoder has been unmounted. */
   /* This is the elevation at which the encoder wraps around */
-#define ENC_RAW_EL_OFFSET (75.3) /* Updated 12-DEC_2010 by lmf */
+#define ENC_RAW_EL_OFFSET (75.3) /* Updated 09-DEC_2010 by lmf */
   /* to get proper wrapping in KST, the encoder elevation type should be
    * 'u' for 135 <= ENC_EL_RAW_OFFSET < 315 and 's' otherwise */
 #define ENC_ELEV_TYPE 's'
