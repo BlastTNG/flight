@@ -325,23 +325,29 @@
       <HI value="125"/>
       <XHI value="200"/>
     </EXTREMA>
-    <EXTREMA name="actuator">
-      <XLO value="9000"/>
-      <LO value="10000"/>
-      <HI value="14000"/>
-      <XHI value="15000"/>
+    <EXTREMA name="actuator_enc">
+      <XLO value="-3500"/>
+      <LO value="-1200"/>
+      <HI value="1200"/>
+      <XHI value="3500"/>
+    </EXTREMA>
+    <EXTREMA name="actuator_lvdt">
+      <XLO value="25000"/>
+      <LO value="29500"/>
+      <HI value="34500"/>
+      <XHI value="36000"/>
     </EXTREMA>
     <EXTREMA name="LVDTHigh">
-      <XLO value="12000"/>
-      <LO value="14000"/>
-      <HI value="19010"/>
-      <XHI value="22000"/>
+      <XLO value="20000"/>
+      <LO value="30000"/>
+      <HI value="40000"/>
+      <XHI value="50000"/>
     </EXTREMA>
     <EXTREMA name="LVDTLow">
-      <XLO value="2000"/>
-      <LO value="3800"/>
-      <HI value="9000"/>
-      <XHI value="10000"/>
+      <XLO value="10000"/>
+      <LO value="20000"/>
+      <HI value="30000"/>
+      <XHI value="40000"/>
     </EXTREMA>
     <EXTREMA name="LVDTSpread">
       <XLO value="0"/>
@@ -1062,22 +1068,22 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="Enc Alpha">
-      <DATUM format="%.0f" src="ENC_0_ACT" extrema="actuator"/>
+      <DATUM format="%.0f" src="ENC_0_ACT" extrema="actuator_enc"/>
     </NUMBER>
     <NUMBER caption="Enc Beta">
-      <DATUM format="%.0f" src="ENC_1_ACT" extrema="actuator"/>
+      <DATUM format="%.0f" src="ENC_1_ACT" extrema="actuator_enc"/>
     </NUMBER>
     <NUMBER caption="Enc Gamma">
-      <DATUM format="%.0f" src="ENC_2_ACT" extrema="actuator"/>
+      <DATUM format="%.0f" src="ENC_2_ACT" extrema="actuator_enc"/>
     </NUMBER>
     <NUMBER caption="LVDT Alpha">
-      <DATUM format="%.0f" src="Lvdt_0_act" extrema="actuator"/>
+      <DATUM format="%.0f" src="Lvdt_0_act" extrema="actuator_lvdt"/>
     </NUMBER>
     <NUMBER caption="LVDT Beta">
-      <DATUM format="%.0f" src="Lvdt_1_act" extrema="actuator"/>
+      <DATUM format="%.0f" src="Lvdt_1_act" extrema="actuator_lvdt"/>
     </NUMBER>
     <NUMBER caption="LVDT Gamma">
-      <DATUM format="%.0f" src="Lvdt_2_act" extrema="actuator"/>
+      <DATUM format="%.0f" src="Lvdt_2_act" extrema="actuator_lvdt"/>
     </NUMBER>
     <NUMBER caption="LVDT Hi">
       <DATUM format="%.0f" src="LVDT_HIGH_ACT" extrema="LVDTHigh"/>
@@ -1113,7 +1119,7 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="Position">
-      <DATUM format="%.0f" src="FOCUS_SF" extrema="actuator"/>
+      <DATUM format="%.0f" src="FOCUS_SF" extrema="actuator_enc"/>
     </NUMBER>
     <NUMBER caption="Correction">
       <DATUM format="%.0f" src="CORRECTION_SF" extrema="sfcorrection"/>
