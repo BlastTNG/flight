@@ -152,10 +152,10 @@
       <XLO value="-2147483648"/>
     </EXTREMA>
     <EXTREMA name="statusactbus">
-      <XLO value="31"/>
-      <LO value="31.5"/>
-      <HI value="32.5"/>
-      <XHI value="33"/>
+      <XLO value="62"/>
+      <LO value="62.5"/>
+      <HI value="63.5"/>
+      <XHI value="64"/>
     </EXTREMA>
     <EXTREMA name="balstatus">
       <HI value="1000"/>
