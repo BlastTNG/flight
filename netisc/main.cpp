@@ -2186,18 +2186,11 @@ DWORD WINAPI th_doTemp( LPVOID parameter ) {
               &server_data.temp4, &server_data.pressure1, 
               &server_data.heaterOn);        
 
-  // reset the pmd if all temp/pressure values are screwed after power cycling the whole system
-  if(server_data.temp1 > 1000. && server_data.temp2 > 1000. && server_data.temp3 > 1000. && server_data.temp4 > 1000. && server_data.pressure1 > 30.) {
-    printf("Resetting pmd...");
-    printf("%i...",SetPortVal(PARALLEL_BASE,0,1));
-    Sleep(500);
-    printf("%i...",SetPortVal(PARALLEL_BASE,32,1));
-    Sleep(500);
-    printf("%i...",SetPortVal(PARALLEL_BASE,0,1));
-    Sleep(500);
-    printf("done!\n");
+  // reboot pc if all temp/pressure values are screwed up after power cycling the whole system
+  if(abs(server_data.temp1) > 900. && abs(server_data.temp2) > 900. && abs(server_data.temp3) > 900. && (server_data.temp4) > 900. && abs(server_data.pressure1) > 30.) {
+    shutdownFlag = 2;
   }
-        
+    
   if( server_data.heaterOn ) sprintf(heat,"H");
   else sprintf(heat," ");
 
