@@ -266,7 +266,7 @@ static int MagConvert(double *mag_az)
 
   mvz = MAGZ_M*ACSData.mag_z + MAGZ_B;
 
-  raw_mag_az = (180.0 / M_PI) * atan2(mvy, mvx);
+  raw_mag_az = (-1.0)*(180.0 / M_PI) * atan2(mvy, mvx);
   raw_mag_pitch = (180.0/M_PI) * atan(mvz/sqrt(mvx*mvx + mvy*mvy));
   *mag_az = raw_mag_az;
   ACSData.mag_pitch = raw_mag_pitch+(double)dip;

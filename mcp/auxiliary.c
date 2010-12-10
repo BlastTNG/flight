@@ -274,14 +274,16 @@ static int Balance(int bits_bal)
 
     bits_bal |= BAL_VALV; /* Open valve */
 
-    if (CommandData.pumps.level > 0.) {
+    if (CommandData.pumps.level > 0.001) {
       bits_bal &= (0xFF - BAL_DIR); /* clear reverse bit */
       level = CommandData.pumps.level * PUMP_MAX;
-    } else if (CommandData.pumps.level < 0.) {
+    } else if (CommandData.pumps.level < -0.001) {
       bits_bal |= BAL_DIR; /* set reverse bit */
       level = -CommandData.pumps.level * PUMP_MAX;
     } else {
-      bits_bal &= (0xFF - BAL_VALV); /* Close valve */
+      bits_bal &= (0xFF - BAL_VALV); /* Close valve */ 
+      // set direction
+      bits_bal &= (0xFF - BAL_DIR); /* Clear reverse bit */ 
       level = 0;
     }
 
