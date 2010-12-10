@@ -2233,7 +2233,7 @@ void OpenLibrary() {
   i=0;
   while (fgets(instr, 256, fp) != NULL) {
     memset(library.params[i], 0, 256);
-    nf = sscanf(instr, "%d %s %1023c", library.entry+i, library.cmd[i], library.params[i]);
+    nf = sscanf(instr, "%d %s %254c", library.entry+i, library.cmd[i], library.params[i]);
     if (nf==2) library.params[i][0] = '\n';
     if (nf>=2) i++;
   }
