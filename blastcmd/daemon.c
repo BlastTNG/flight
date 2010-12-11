@@ -48,7 +48,7 @@
 
 #ifdef USE_AUTHENTICATION
 /* read authorized IP addresses from file, and store in list */
-#define AUTH_FILE DATA_ETC_DIR "/blastcmd_auth.txt"
+#define AUTH_FILE DATA_ETC_DIR "/blastcmd.auth"
 struct auth_addr {
   struct in_addr addr;
   struct auth_addr* next;
@@ -385,6 +385,10 @@ void Daemonise(int route, int no_fork)
   struct timespec sleep_time;
   sleep_time.tv_sec = 0;
   sleep_time.tv_nsec = 10000000; /* 10ms */
+
+#ifdef USE_AUTHENTICATION
+  ReadAuth();	/*read authorized IPs (mainly to check file at this point) */
+#endif
 
   /* open our output before daemonising just in case it fails. */
   if (route == 1) /* fifo */
