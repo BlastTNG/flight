@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-$blastcmd_auth = "/data/etc/blastcmd_auth.txt";
+$blastcmd_auth = "@DATA_ETC_DIR@/blastcmd.auth";
 
 @w = split(/ +/, `/usr/bin/who -m`);
 

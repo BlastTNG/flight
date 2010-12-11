@@ -10,10 +10,11 @@ bin_PROGRAMS = blastcmd
 dist_bin_SCRIPTS = blastcmd-authorize
 
 dataetcdir = @DATA_ETC_DIR@
-EXTRA_DIST = blastcmd.log bootstrap.sh
+EXTRA_DIST = blastcmd.log bootstrap.sh 
 
+dataetc_DATA = blastcmd.auth.orig
 if INSTALL_BLASTCMD_LOG
-dataetc_DATA = blastcmd.log
+dataetc_DATA += blastcmd.log
 endif
 
 DISTCHECK_CONFIGURE_FLAGS = --with-data-etc="$$dc_install_base/data"
@@ -25,10 +26,15 @@ distinstall: distcheck
 	${INSTALL_DATA} ${distdir}-${buildserial}.tar.gz ${prefix}/src
 	scp ${distdir}-${buildserial}.tar.gz blast.physics.utoronto.ca:/data/src
 
+install-data-hook:
 if INSTALL_BLASTCMD_LOG
-install-data-hook:
 	chmod 666 $(DESTDIR)$(dataetcdir)/blastcmd.log
-else
-install-data-hook:
-	/bin/true
 endif
+	chmod 666 $(DESTDIR)$(dataetcdir)/blastcmd.auth.orig
+	if [ -e "$(DESTDIR)$(dataetcdir)/blastcmd.auth" ]; then \
+	  echo "Cowardly refusing to overwrite existing file $(DESTDIR)$(dataetcdir)/blastcmd.auth"; \
+	  rm -f $(DESTDIR)$(dataetcdir)/blastcmd.auth.orig; \
+	else \
+	  mv -f $(DESTDIR)$(dataetcdir)/blastcmd.auth.orig $(DESTDIR)$(dataetcdir)/blastcmd.auth; \
+	  fi
+

@@ -2,6 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_INIT(blastcmd, 2.3.0, [dwiebe@physics.utoronto.ca])
 AM_INIT_AUTOMAKE(blastcmd, 2.3.0)
 AM_CONFIG_HEADER(config.h)
+AC_CONFIG_FILES(blastcmd-authorize)
 
 AC_ARG_WITH([data-etc], AS_HELP_STRING([--with-data-etc=DIR],
             [put auxiliary data in DIR [[/data/etc]]]),
@@ -25,7 +26,7 @@ AC_CHECK_LIB(m,round)
 
 AC_MSG_CHECKING([whether to use IP based authentication])
 AC_ARG_ENABLE([authentication], [AS_HELP_STRING([--disable-authentication],
-            [don't perform IP based authentication on hosts (daemon only).])],
+            [donot perform IP based authentication on hosts (daemon only).])],
             [
             case ${enableval} in
               no) use_auth=0 ;;

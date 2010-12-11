@@ -1,0 +1,8 @@
+# blastcmd_auth.txt
+# blastcmd checks this file for IP addresses that are allowed to send commands
+# (this can be disabled by building with ./configure --disable-authentication)
+
+# to allow all hosts, specify the following line, without '#'
+INADDR_ANY
+
+# otherwise specify IPv4 addresses in numbers-and-dots notation

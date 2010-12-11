@@ -255,7 +255,7 @@ void WriteBuffer(int sock, int tty_fd, unsigned char *buffer, int len,
   send(sock, output, strlen(output), MSG_NOSIGNAL);
 
   /* Write the packet to the GSE */
-  write(tty_fd, buffer, len);
+  if (write(tty_fd, buffer, len) < 0) perror("WriteBuffer failed");
 
   /* Read acknowledgement */
   n = 0;

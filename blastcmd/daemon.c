@@ -43,14 +43,108 @@
 
 #include "netcmd.h"
 #include "daemon.h"
+#include "config.h"
 #include "command_list.h"
 
 #ifdef USE_AUTHENTICATION
-# define GOOD_ADDR1 "157.132.95.145"
-# define GOOD_ADDR2 "192.168.20.10"
-# define GOOD_ADDR3 "24.219.66.100"
-# define GOOD_ADDR4 "128.148.60.67"
-#endif
+/* read authorized IP addresses from file, and store in list */
+#define AUTH_FILE DATA_ETC_DIR "/blastcmd_auth.txt"
+struct auth_addr {
+  struct in_addr addr;
+  struct auth_addr* next;
+};
+
+static struct auth_addr* auth_list = NULL;
+static int auth_all_allowed = 0;
+
+static int ReadAuth()
+{
+  FILE* stream;
+  char buffer[1024];
+  char* ip;
+  char* tmp;
+  struct auth_addr* new_addr;
+  int n_auth = 0;
+
+  /* disable all_allowed until it's encountered in the auth file */
+  auth_all_allowed = 0;
+
+  /* read config file */
+  printf("Opening IP authorization file: \"%s\"\n", AUTH_FILE);
+  if ((stream = fopen(AUTH_FILE, "r")) == NULL) {
+    sprintf(buffer, "unable to open IP authorization file \"%s\"", AUTH_FILE);
+    perror(buffer);
+    exit(4);
+  }
+
+  while (fgets(buffer, sizeof(buffer), stream)) {
+    /* remove comments */
+    if ((tmp = strchr(buffer, '#')) != NULL) *tmp = '\0';
+
+    /* strip newline */
+    if ((tmp = strchr(buffer, '\n')) != NULL) *tmp = '\0';
+
+    /* strip leading whitespace */
+    ip = buffer + strspn(buffer, " \t");
+
+    /* strip trailing whitespace */
+    if ((tmp = strchr(ip, ' ')) != NULL) *tmp = '\0';
+    if ((tmp = strchr(ip, '\t')) != NULL) *tmp = '\0';
+
+    if (ip[0] == '\0') continue;
+
+    /* check for magical "accept all" word */
+    if (strncmp(ip, "INADDR_ANY", 10) == 0) {
+      auth_all_allowed = 1;
+      /*printf("Authentication allowed for all hosts\n");*/
+      return 0;
+    }
+
+    /* add to list */
+    new_addr = malloc(sizeof(struct auth_addr));
+    new_addr->next = auth_list;
+    if (!inet_aton(ip, &new_addr->addr)) {
+      /*printf("*WARNING* skipping malformed IP: \"%s\"\n", ip);*/
+      free(new_addr);
+    } else {
+      auth_list = new_addr;
+      n_auth++;
+      /*printf("Authentication allowed for: %s\n", ip);*/
+    }
+  }
+  /*printf("Allowing authentication from %d hosts\n", n_auth);*/
+  return n_auth;
+}
+
+static void ClearAuth()
+{
+  struct auth_addr* next;
+  struct auth_addr* list = auth_list;
+  while (list) {
+    next = list->next;
+    free (list);
+    list = next;
+  }
+  auth_list = NULL;
+}
+
+static int IsAuth(struct in_addr* addr)
+{
+  struct auth_addr* list = auth_list;
+
+  /* read file every time authentication is checked */
+  ClearAuth();
+  ReadAuth();
+
+  /* do the check */
+  if (auth_all_allowed) return 1;
+  while (list) {
+    if (memcmp(addr, &list->addr, sizeof(struct in_addr)) == 0) return 1;
+    list = list->next;
+  }
+  return 0;
+}
+#endif	/* USE_AUTHENTICATION */
 
 int SIPRoute(int sock, int t_link, int t_route, char* buffer)
 {
@@ -145,8 +239,8 @@ int SIPRoute(int sock, int t_link, int t_route, char* buffer)
 
 int SimpleRoute(int sock, int fd, char* buffer)
 {
-  write(fd, buffer, strlen(buffer));
-  write(fd, "\n", 1);
+  if (write(fd, buffer, strlen(buffer)) < 0) perror("SimpleRoute write failed");
+  if (write(fd, "\n", 1) < 0) perror("SimpleRoute write failed");
   return 0;
 }
 
@@ -292,20 +386,6 @@ void Daemonise(int route, int no_fork)
   sleep_time.tv_sec = 0;
   sleep_time.tv_nsec = 10000000; /* 10ms */
 
-#ifdef USE_AUTHENTICATION
-  /* the addresses we allow connections from */
-  struct in_addr good_addr1;
-  struct in_addr good_addr2;
-  struct in_addr good_addr3;
-  struct in_addr good_addr4;
-  struct in_addr local_addr;
-  inet_aton(GOOD_ADDR1, &good_addr1);
-  inet_aton(GOOD_ADDR2, &good_addr2);
-  inet_aton(GOOD_ADDR3, &good_addr3);
-  inet_aton(GOOD_ADDR4, &good_addr4);
-  inet_aton("127.0.0.1", &local_addr);
-#endif
-
   /* open our output before daemonising just in case it fails. */
   if (route == 1) /* fifo */
     fd = open("/data/etc/SIPSS.FIFO", O_RDWR); 
@@ -341,10 +421,10 @@ void Daemonise(int route, int no_fork)
     }
 
     /* Daemonise */
-    chdir("/");
-    freopen("/dev/null", "r", stdin);
-    freopen("/dev/null", "w", stdout);
-    freopen("/dev/null", "w", stderr);
+    if (chdir("/") < 0) perror("chdir failed");
+    if (!freopen("/dev/null", "r", stdin)) perror("freopen stdin failed");
+    if (!freopen("/dev/null", "w", stdout)) perror("freopen stdout failed");
+    if (!freopen("/dev/null", "w", stderr)) perror("freopen stderr failed");
     setsid();
   }
 
@@ -401,28 +481,9 @@ void Daemonise(int route, int no_fork)
               printf("connect from %s accepted on socket %i\n",
                   inet_ntoa(addr.sin_addr), csock);
 #ifdef USE_AUTHENTICATION
-              if (!memcmp(&addr.sin_addr, &good_addr1, sizeof(struct in_addr)))
+              if (IsAuth(&addr.sin_addr))
               {
-                printf("Autentication 1 OK from client.\n");
-                conn[csock].spy = conn[csock].lurk = conn[csock].state = 0;
-              } else if (!memcmp(&addr.sin_addr, &good_addr2,
-                    sizeof(struct in_addr)))
-              {
-                printf("Autentication 2 OK from client.\n");
-                conn[csock].spy = conn[csock].lurk = conn[csock].state = 0;
-              } else if (!memcmp(&addr.sin_addr, &good_addr3,
-                    sizeof(struct in_addr)))
-              {
-                printf("Autentication 3 OK from client.\n");
-                conn[csock].spy = conn[csock].lurk = conn[csock].state = 0;
-              } else if (!memcmp(&addr.sin_addr, &good_addr4,
-                    sizeof(struct in_addr)))
-              {
-                printf("Autentication 4 OK from client.\n");
-                conn[csock].spy = conn[csock].lurk = conn[csock].state = 0;
-              } else if (!memcmp(&addr.sin_addr, &local_addr, sizeof(struct
-                      in_addr))) {
-                printf("Autentication OK from local client.\n");
+                printf("Autentication OK from client.\n");
                 conn[csock].spy = conn[csock].lurk = conn[csock].state = 0;
               } else {
                 printf("Failed authentication from client.\n");
