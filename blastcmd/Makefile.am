@@ -5,8 +5,9 @@ INCLUDES=-g -Wall
 
 AUTOMAKE_OPTIONS = foreign
 blastcmd_SOURCES = blastcmd.c command_list.c daemon.c netcmd.c command_list.h \
-									 daemon.h isc_protocol.h netcmd.h
+		   daemon.h isc_protocol.h netcmd.h
 bin_PROGRAMS = blastcmd
+dist_bin_SCRIPTS = blastcmd-authorize
 
 dataetcdir = @DATA_ETC_DIR@
 EXTRA_DIST = blastcmd.log bootstrap.sh
