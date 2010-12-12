@@ -239,6 +239,7 @@ class MainForm : public QMainWindow
     QLabel* DecomFile;
     QLabel* DiskFree;
     QLabel* SinceLast;
+    QPushButton* DirFileSelector;
 
     char decomdHost[MAXPATHLENGTH];
     int decomdPort;
@@ -313,6 +314,7 @@ class MainForm : public QMainWindow
 
     public slots:
       void UpdateData();
+      void ChangeDirFile();
 };
 
 #endif

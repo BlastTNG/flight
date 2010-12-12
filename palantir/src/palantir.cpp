@@ -36,6 +36,7 @@
 #include <errno.h>
 #include <time.h>
 
+#include <qfiledialog.h>
 #include <qtimer.h>
 
 #include "palantir.h"
@@ -993,8 +994,6 @@ void MainForm::UpdateData() {
         currMulti = MultiInfo.at(currLabel->index);
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in value from disk
-        //if (DataSource->readField(indata, currLabel->src,
-        //      DataSource->numFrames() - 1, -1) == 0) {
 	if (_dirfile->GetData(currLabel->src,
                               _lastNFrames-1, 0, 0, 1, // 1 sample from frame nf-1
                               Float64, (void*)(indata))==0) {
@@ -1039,8 +1038,6 @@ void MainForm::UpdateData() {
         currDateTime = DateTimeInfo.at(currLabel->index);
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in value from disk
-        // if (DataSource->readField(indata, currLabel->src,
-        //       DataSource->numFrames() - 1, -1) == 0) {
 	if (_dirfile->GetData(currLabel->src,
                               _lastNFrames-1, 0, 0, 1, // 1 sample from frame nf-1
                               Float64, (void*)(indata))==0) {
@@ -1094,8 +1091,6 @@ void MainForm::UpdateData() {
         currDeriv = DerivInfo.at(currLabel->index);
         currQtLabel = QtData.at(currLabel->labelindex);
         // Read in from disk
-        //if (DataSource->readField(indata, currLabel->src,
-        ////      DataSource->numFrames() - 1, -1) == 0) {
 	if (_dirfile->GetData(currLabel->src,
                               _lastNFrames-1, 0, 0, 1, // 1 sample from frame nf-1
                               Float64, (void*)(indata))==0) {
@@ -1199,6 +1194,26 @@ void MainForm::UpdateData() {
   fflush(stderr);
 }
 
+
+
+//-------------------------------------------------------------
+// ChangeDirFile (slot): trigger file selector to pick new
+//      dirfile. Fired by button click on DirFileSelector
+//-------------------------------------------------------------
+
+void MainForm::ChangeDirFile() {
+  QString msg;
+
+  DirFileSelector->setText(QFileDialog::getExistingDirectory(
+	DirFileSelector->text(), this, "dirfile dialog", 
+	"Select DirFile", false, false));
+  strcpy(_curFileName, DirFileSelector->text().ascii());
+  msg.sprintf("Narsil will now read from %s.", _curFileName);
+  QMessageBox::information(this, "Acknowledgement", msg,
+      QMessageBox::Ok | QMessageBox::Default);
+  resetDirFile();
+  UpdateData();
+}
 
 
 //-------------------------------------------------------------
@@ -1343,10 +1358,14 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
 
   timer = new QTimer();
 
-  if (startupDecomd) {
-    theStatusBar = statusBar();
-    theStatusBar->setSizeGripEnabled(false);
+  theStatusBar = statusBar();
+  theStatusBar->setSizeGripEnabled(false);
 
+  DirFileSelector = new QPushButton(theStatusBar, "dirfile selector");
+  DirFileSelector->setText(*CurFile);
+  theStatusBar->addWidget(DirFileSelector);
+
+  if (startupDecomd) {
     PalantirState = new QLabel(theStatusBar);
     PalantirState->setText("PT: RUN");
     DecomState = new QLabel(theStatusBar);
@@ -1370,9 +1389,6 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
     theStatusBar->addWidget(DiskFree);
     theStatusBar->addWidget(DecomFile);
   } else {
-    theStatusBar = statusBar();
-    theStatusBar->setSizeGripEnabled(false);
-
     SinceLast = new QLabel(theStatusBar);
     SinceLast->setText("Age: ???");
     lastUpdate = time(NULL);
@@ -1382,6 +1398,7 @@ MainForm::MainForm(QWidget* parent,  const char* name, bool modal, WFlags fl,
 
   // Slots
   connect(timer, SIGNAL(timeout()), this, SLOT(UpdateData()));
+  connect(DirFileSelector, SIGNAL(clicked()), this, SLOT(ChangeDirFile()));
   // Update palantir every UPDATETIME milliseconds
   timer->start(UPDATETIME, false);
 
