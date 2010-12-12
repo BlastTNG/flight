@@ -1701,7 +1701,7 @@
     <NUMBER caption="He4 Pot">
       <DATUM format="%.2f" src="Tr_he4_pot" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="Opt. Box Filter">
+    <NUMBER caption="Opt Box Filt">
       <DATUM format="%.2f" src="Tr_optbox_filt" extrema="pottemp"/>
     </NUMBER>
     <NUMBER caption="Mirror 4">
