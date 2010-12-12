@@ -709,12 +709,17 @@ void MainForm::ChangeCurFile() {
   QDir dir(NCurFile->text());
   dir.cdUp();
 
+  msg = NCurFile->text().ascii();
   NCurFile->setText(QFileDialog::getExistingDirectory(dir.absPath(),
 	this, "dirfile dialog", "Select DirFile", true, false));
-  strcpy(_curFileName, NCurFile->text().ascii());
-  msg.sprintf("Narsil will now read from %s.", _curFileName);
-  QMessageBox::information(this, "Acknowledgement", msg,
-      QMessageBox::Ok | QMessageBox::Default);
+  if (!NCurFile->text().isEmpty()) {
+    strcpy(_curFileName, NCurFile->text().ascii());
+    msg.sprintf("Narsil will now read from %s.", _curFileName);
+    QMessageBox::information(this, "Acknowledgement", msg,
+        QMessageBox::Ok | QMessageBox::Default);
+  } else {
+    NCurFile->setText(msg);
+  }
 }
 
 
