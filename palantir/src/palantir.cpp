@@ -36,6 +36,7 @@
 #include <errno.h>
 #include <time.h>
 
+#include <qdir.h>
 #include <qfiledialog.h>
 #include <qtimer.h>
 
@@ -1203,10 +1204,13 @@ void MainForm::UpdateData() {
 
 void MainForm::ChangeDirFile() {
   QString msg;
+  //as default path, use directory above current dirfile
+  QDir dir(DirFileSelector->text());
+  dir.cdUp();
 
   DirFileSelector->setText(QFileDialog::getExistingDirectory(
-	DirFileSelector->text(), this, "dirfile dialog", 
-	"Select DirFile", false, false));
+	dir.absPath(), this, "dirfile dialog", 
+	"Select DirFile", true, false));
   strcpy(_curFileName, DirFileSelector->text().ascii());
   msg.sprintf("Narsil will now read from %s.", _curFileName);
   QMessageBox::information(this, "Acknowledgement", msg,
