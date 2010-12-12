@@ -32,6 +32,7 @@
 
 #include <qapplication.h>
 #include <qbuttongroup.h>
+#include <qdir.h>
 #include <qfiledialog.h>
 #include <qframe.h>
 #include <qlabel.h>
@@ -704,9 +705,12 @@ void MainForm::SendCommand() {
 
 void MainForm::ChangeCurFile() {
   QString msg;
+  //as default path, use directory above current dirfile
+  QDir dir(NCurFile->text());
+  dir.cdUp();
 
-  NCurFile->setText(QFileDialog::getExistingDirectory(NCurFile->text(),
-	this, "dirfile dialog", "Select DirFile", false, false));
+  NCurFile->setText(QFileDialog::getExistingDirectory(dir.absPath(),
+	this, "dirfile dialog", "Select DirFile", true, false));
   strcpy(_curFileName, NCurFile->text().ascii());
   msg.sprintf("Narsil will now read from %s.", _curFileName);
   QMessageBox::information(this, "Acknowledgement", msg,
