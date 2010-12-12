@@ -861,7 +861,7 @@
   </BOX>
   <BOX caption="Inner Frame Elect" colour="#002222" row="4" col="7" rowspan="1">
     <NUMBER caption="DAS">
-      <DATUM format="%.2f" src="T_DAS" extrema="temp"/>
+      <DATUM format="%.2f" src="T_PORT_DAS" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Gybox">
       <DATUM format="%.2f" src="T_GY" extrema="temp"/>
@@ -876,7 +876,7 @@
       <DATUM format="%.2f" src="T_IF_CLIN" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Amp Crate">
-      <DATUM format="%.2f" src="T_REC" extrema="temp"/>
+      <DATUM format="%.2f" src="T_PORT_REC" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Amp DCDC">
       <DATUM format="%.2f" src="T_PADCDC_REC" extrema="temp"/>
