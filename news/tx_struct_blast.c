@@ -608,8 +608,8 @@ struct ChannelStruct SlowChannels[] = {
   {"correction_sf",'w', LOOP6, 41,                1.0,             0.0, 's', U_NONE},
   {"age_sf",       'w', LOOP6, 42,              1/30.,             0.0, 'u', U_NONE},
   {"offset_sf",    'w', LOOP6, 43,                1.0,             0.0, 's', U_NONE},
-  {"t_prime_sf",   'w', LOOP6, 44,             1/100.,             0.0, 's', U_NONE},
-  {"t_second_sf",  'w', LOOP6, 45,             1/100.,             0.0, 's', U_NONE},
+  {"t_prime_sf",   'w', LOOP6, 44,         CAL16T(1.0,            0.0), 'u', U_NONE},
+  {"t_second_sf",  'w', LOOP6, 45,         CAL16T(1.0,            0.0), 'u', U_NONE},
   {"flags_act",    'w', LOOP6, 50,                1.0,             0.0, 'u', U_NONE},
   {"lvdt_spread_act",'w', LOOP6, 55,              1.0,             0.0, 's', U_NONE},
   /* LOOP6 56-57 are wide */

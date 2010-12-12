@@ -805,8 +805,8 @@ void SecondaryMirror(void)
   if (CommandData.actbus.sf_time < CommandData.actbus.tc_wait)
     CommandData.actbus.sf_time++;
 
-  WriteData(tPrimeSfAddr, (t_primary - 273.15) * 100, NIOS_QUEUE);
-  WriteData(tSecondSfAddr, (t_secondary - 273.15) * 100, NIOS_QUEUE);
+  WriteData(tPrimeSfAddr, t_primary/M_16T + B_16T, NIOS_QUEUE);
+  WriteData(tSecondSfAddr, t_secondary/M_16T + B_16T, NIOS_QUEUE);
   WriteData(correctionSfAddr, correction, NIOS_QUEUE);
   WriteData(ageSfAddr, CommandData.actbus.sf_time / 10., NIOS_QUEUE);
   WriteData(offsetSfAddr, CommandData.actbus.sf_offset, NIOS_FLUSH);
