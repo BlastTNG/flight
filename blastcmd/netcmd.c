@@ -97,7 +97,7 @@ int ReadLine(int sock, char* buffer, int bufflen)
   return strlen(buffer);
 }
 
-void SetOwner(char* buffer)
+int SetOwner(char* buffer)
 {
   int i;
 
@@ -113,8 +113,9 @@ void SetOwner(char* buffer)
     is_free = 0;
   } else if (strcmp(buffer, ":::nope:::") == 0) {
     fprintf(stderr, "Connexion refused from this host.\n");
-    exit(16);
+    return -1;
   }
+  return 0;
 }
 
 void NetCmdDrop(void)
@@ -292,7 +293,7 @@ int NetCmdGetCmdList(void)
 }
 
 // Initialization Function... All blocking network i/o.
-void NetCmdConnect(const char* host, int silent, int silenter)
+int NetCmdConnect(const char* host, int silent, int silenter)
 {
   int i;
   char buffer[1024];
@@ -347,7 +348,7 @@ void NetCmdConnect(const char* host, int silent, int silenter)
     exit(14);
   }
 
-  SetOwner(buffer);
+  if (SetOwner(buffer) < 0) return -1;
 
   if (is_free == -1) {
     fprintf(stderr, "Protocol error from daemon.\n");
@@ -363,4 +364,6 @@ void NetCmdConnect(const char* host, int silent, int silenter)
     else
       printf("%s has the conn.\n", owner);
   }
+
+  return 0;
 }

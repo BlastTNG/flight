@@ -1331,7 +1331,13 @@ int main(int argc, char* argv[]) {
   }
 
   /* Client negotiation */
-  NetCmdConnect(blastcmd_host, 1, 0);
+  if (NetCmdConnect(blastcmd_host, 1, 0) < 0) {
+    //retry if connection refused (HACK! fixes bug in blastcmd authentication)
+    sleep(1);
+    printf("Trying to connect one more time\n");
+    if (NetCmdConnect(blastcmd_host, 1, 0) < 0)
+      exit(16);
+  }
   NetCmdGetCmdList();
 
   defaults = new Defaults();
