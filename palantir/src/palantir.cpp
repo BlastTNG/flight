@@ -1208,15 +1208,20 @@ void MainForm::ChangeDirFile() {
   QDir dir(DirFileSelector->text());
   dir.cdUp();
 
+  msg = DirFileSelector->text().ascii();
   DirFileSelector->setText(QFileDialog::getExistingDirectory(
 	dir.absPath(), this, "dirfile dialog", 
 	"Select DirFile", true, false));
-  strcpy(_curFileName, DirFileSelector->text().ascii());
-  msg.sprintf("Narsil will now read from %s.", _curFileName);
-  QMessageBox::information(this, "Acknowledgement", msg,
-      QMessageBox::Ok | QMessageBox::Default);
-  resetDirFile();
-  UpdateData();
+  if (DirFileSelector->text().ascii() != NULL) {
+    strcpy(_curFileName, DirFileSelector->text().ascii());
+    msg.sprintf("Narsil will now read from %s.", _curFileName);
+    QMessageBox::information(this, "Acknowledgement", msg,
+        QMessageBox::Ok | QMessageBox::Default);
+    resetDirFile();
+    UpdateData();
+  } else {
+    DirFileSelector->setText(msg);
+  }
 }
 
 
