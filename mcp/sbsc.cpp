@@ -60,8 +60,6 @@ static string parseReturn(string rtnStr);
 static SBSCReturn camRtn[3];
 static short int i_cam = 0; //read index in above buffer
 
-short int sbsc_trigger = 0;
-
 extern "C" {
 
 /*
@@ -165,7 +163,7 @@ void cameraFields()
   WriteData(gridAddr, CommandData.cam.grid, NIOS_QUEUE);
   WriteData(threshAddr, (int)(CommandData.cam.threshold*1000), NIOS_QUEUE);
   WriteData(blobMdistAddr, CommandData.cam.minBlobDist, NIOS_QUEUE);
-  WriteData(trigSpeedAddr, CommandData.cam.trigSpeed, NIOS_QUEUE);
+  WriteData(trigSpeedAddr, CommandData.cam.trigSpeed*32768/100, NIOS_QUEUE);
 
   //persistently identify cameras by serial number (camID)
   if (camRtn[i_cam].camID == SBSC_SERIAL)  {
@@ -228,13 +226,7 @@ static void* camReadLoop(void* arg)
 
   while(true) {
     camComm->readLoop(&parseReturn);
-    //berror(err, "readLoop returned. Restarting.");
-    //returns on failed syscall in communicating.
-    if (sbsc_trigger) {
-      sendSBSCCommand("CtrigExp");
-      sbsc_trigger = 0;
-    }    
-    sleep(1);	//catchall for varous busy-waiting scenarios
+    //sleep(1);	//catchall for varous busy-waiting scenarios
   }
 
   return NULL;

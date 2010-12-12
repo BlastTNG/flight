@@ -681,10 +681,8 @@ void CameraTrigger(int which)
 void SBSCTrigger(void)
 {
   if (fabs(axes_mode.az_vel) >= CommandData.cam.trigSpeed) {
-    //bprintf(info,"SBSC ---- returning, az_vel is %f\n",axes_mode.az_vel);
     return;
   }
-  //bprintf(info,"SBSC ---- sending exposure command\n");
   sbsc_trigger = 1;
 }
 

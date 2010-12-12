@@ -9,7 +9,9 @@
 #include <netdb.h>      //for gethostbyname
 #include <cstdlib>
 #include "sbsccommunicator.h"
-
+extern "C" {
+#include "blast.h"
+}
 #define SBSC_COMM_DEBUG 0
 #if SBSC_COMM_DEBUG
 #include <iostream>
@@ -22,6 +24,8 @@
 
 extern "C" int EthernetSBSC;      /* tx.c */
 pthread_mutex_t sbscmutex;
+short int sbsc_trigger;
+extern "C" int sendSBSCCommand(const char *cmd); //sbsc.cpp
 
 /*
 
@@ -305,17 +309,32 @@ void SBSCCommunicator::readLoop(string (*interpretFunction)(string))
   cerr << "[Comm debug]: in readLoop method" << endl;
 #endif
   fd_set input;
+  timeval read_timeout;
+  read_timeout.tv_sec = 0;
+  read_timeout.tv_usec = 0;
   char buf[SBSC_COMM_BUF_SIZE];
   string line = "";
   string rtnStr;
   int n;
+  static int pulsewait = 0;
   string::size_type pos;
   if (commFD == -1) return;          //communications aren't open
 
   while (1) {
+    usleep(100000);
+    pulsewait++;
+    if (sbsc_trigger) {
+      if (pulsewait > 24) {
+	sendSBSCCommand("CtrigExp");
+        sbsc_trigger = 0;
+        pulsewait = 0;
+      } else {
+	sbsc_trigger = 0;
+      }
+    }    
     FD_ZERO(&input);
     FD_SET(commFD, &input);
-    if (select(commFD+1, &input, NULL, NULL, NULL) < 0) //won't time out
+    if (select(commFD+1, &input, NULL, NULL, &read_timeout) < 0)
       return;
     if (!FD_ISSET(commFD, &input)) return;  //should always be false
     if ((n = read(commFD, buf, SBSC_COMM_BUF_SIZE-1)) < 0) return;
