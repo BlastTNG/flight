@@ -1212,9 +1212,9 @@ void MainForm::ChangeDirFile() {
   DirFileSelector->setText(QFileDialog::getExistingDirectory(
 	dir.absPath(), this, "dirfile dialog", 
 	"Select DirFile", true, false));
-  if (DirFileSelector->text().ascii() != NULL) {
+  if (!DirFileSelector->text().isEmpty()) {
     strcpy(_curFileName, DirFileSelector->text().ascii());
-    msg.sprintf("Narsil will now read from %s.", _curFileName);
+    msg.sprintf("Palantir will now read from %s.", _curFileName);
     QMessageBox::information(this, "Acknowledgement", msg,
         QMessageBox::Ok | QMessageBox::Default);
     resetDirFile();
