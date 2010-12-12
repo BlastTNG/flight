@@ -277,7 +277,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_2_second",    'r', BIAS_T1, 47, CAL16T(1.0, 0.0),                    'u', U_T_C},
 //{"t_24_das",      'r', BIAS_T1, 49,         CAL16T(1.0,            0.0), 'u', U_NONE},
 //{"t_25_das",      'r', BIAS_T1, 51, CAL16T(1.0, 0.0),                    'u', U_T_C},
-  {"t_rec",         'r', BIAS_T1, 53, CAL16T(1.0, 0.0),                    'u', U_T_C},
+//{"t_rec",         'r', BIAS_T1, 53, CAL16T(1.0, 0.0),                    'u', U_T_C},
 
   /* narrow CRYO_A2 channels */
   {"he4_lev",       'r', CRYO_A2,  1,         CAL16(1.0,            0.0), 'u', U_V_V},
