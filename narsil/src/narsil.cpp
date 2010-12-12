@@ -703,13 +703,13 @@ void MainForm::SendCommand() {
 //-------------------------------------------------------------
 
 void MainForm::ChangeCurFile() {
-  char info[255];
+  QString msg;
 
   NCurFile->setText(QFileDialog::getExistingDirectory(NCurFile->text(),
 	this, "dirfile dialog", "Select DirFile", false, false));
   strcpy(_curFileName, NCurFile->text().ascii());
-  sprintf(info, "Narsil will now read from %s.", _curFileName);
-  QMessageBox::information(this, "Acknowledgement", info,
+  msg.sprintf("Narsil will now read from %s.", _curFileName);
+  QMessageBox::information(this, "Acknowledgement", msg,
       QMessageBox::Ok | QMessageBox::Default);
 }
 
