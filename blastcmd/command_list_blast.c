@@ -26,7 +26,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 4.106 $";
+const char *command_list_serial = "$Revision: 4.107 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -1126,14 +1126,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
      {"Pivot", 0, 5, 'i', "VERBOSE_PIV"}
    }
   },
-  {COMMAND(motors_verbose), "Set verbosity of motor serial threads (0=norm, 1=verbose, 2= superverbose )", GR_MISC, 3,
-   {
-     {"Reaction Wheel", 0, 5, 'i', "VERBOSE_RW"},
-     {"Elevation", 0, 5, 'i', "VERBOSE_EL"},
-     {"Pivot", 0, 5, 'i', "VERBOSE_PIV"}
-   }
-  },
-
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
     {
       {"Plover", 0, MAX_15BIT, 'i', "PLOVER"}
