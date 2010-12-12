@@ -686,15 +686,15 @@ static double CalibrateAD590(int counts)
 
 #define N_FILT_TEMP 2	    //number of temperatures to filter
 #define TEMP_FILT_LEN 300   //60s @ 5Hz
-static int filterTemp(int num, int data)
+static double filterTemp(int num, double data)
 {
-  static int temp_buf[N_FILT_TEMP][TEMP_FILT_LEN] = {}; //init to 0
-  static int temp_sum[N_FILT_TEMP] = {};
-  static int ibuf = 0;
+  static double temp_buf[N_FILT_TEMP][TEMP_FILT_LEN] = {}; //init to 0
+  static double temp_sum[N_FILT_TEMP] = {};
+  static int ibuf[N_FILT_TEMP] = {};
 
-  temp_sum[num] += (data - temp_buf[num][ibuf]);
-  temp_buf[num][ibuf] = data;
-  ibuf = (ibuf + 1) % TEMP_FILT_LEN;
+  temp_sum[num] += (data - temp_buf[num][ibuf[num]]);
+  temp_buf[num][ibuf[num]] = data;
+  ibuf[num] = (ibuf[num] + 1) % TEMP_FILT_LEN;
   return temp_sum[num]/TEMP_FILT_LEN;
 }
 
@@ -805,8 +805,8 @@ void SecondaryMirror(void)
   if (CommandData.actbus.sf_time < CommandData.actbus.tc_wait)
     CommandData.actbus.sf_time++;
 
-  WriteData(tPrimeSfAddr, (t_primary - 273.15) * 500, NIOS_QUEUE);
-  WriteData(tSecondSfAddr, (t_secondary - 273.15) * 500, NIOS_QUEUE);
+  WriteData(tPrimeSfAddr, (t_primary - 273.15) * 100, NIOS_QUEUE);
+  WriteData(tSecondSfAddr, (t_secondary - 273.15) * 100, NIOS_QUEUE);
   WriteData(correctionSfAddr, correction, NIOS_QUEUE);
   WriteData(ageSfAddr, CommandData.actbus.sf_time / 10., NIOS_QUEUE);
   WriteData(offsetSfAddr, CommandData.actbus.sf_offset, NIOS_FLUSH);
