@@ -32,6 +32,7 @@
 
 #include <qapplication.h>
 #include <qbuttongroup.h>
+#include <qfiledialog.h>
 #include <qframe.h>
 #include <qlabel.h>
 #include <qlineedit.h>
@@ -702,10 +703,12 @@ void MainForm::SendCommand() {
 //-------------------------------------------------------------
 
 void MainForm::ChangeCurFile() {
-  char txt[50], info[255];
+  char info[255];
 
-  strcpy(_curFileName, NCurFile->text());
-  sprintf(info, "Narsil will now read from %s.", txt);
+  NCurFile->setText(QFileDialog::getExistingDirectory(NCurFile->text(),
+	this, "dirfile dialog", "Select DirFile", false, false));
+  strcpy(_curFileName, NCurFile->text().ascii());
+  sprintf(info, "Narsil will now read from %s.", NCurFile->text().ascii());
   QMessageBox::information(this, "Acknowledgement", info,
       QMessageBox::Ok | QMessageBox::Default);
 }
@@ -1165,6 +1168,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
 
   NCurFile = new QLineEdit(NSettingsWindow, "NCurFile");
   NCurFile->setText(tr(curfile));
+  NCurFile->setReadOnly(true);
   NCurFile->adjustSize();
 
   NCurFileButton = new QPushButton(NSettingsWindow, "QCurCaption");
