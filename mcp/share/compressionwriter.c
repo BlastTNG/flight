@@ -355,6 +355,11 @@ void WriteSuperFrame(unsigned short *frame) {
         omni2_requested_bytes_per_streamframe+=delta;
       }
     }
+    
+    if (n_higain_stream==0) {
+      n_higain_stream = n_streamlist-1;
+    }
+    
     bprintf(info, "High gain: %u stream fields use %.0f out of %d bytes per stream frame (%.0f free)",
             n_higain_stream,
             higain_requested_bytes_per_streamframe, higain_bytes_per_streamframe,
