@@ -13,6 +13,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/ioctl.h>
+#include <time.h>
 
 #include "compressstruct.h"
 #include "channels.h"
@@ -60,6 +61,10 @@ unsigned short n_streamfieldlist = 0;
 struct ChannelStruct **streamfields;
 unsigned *stream_gains;
 long long *stream_offsets;
+
+int n_sync = 0;
+int n_bytemon = 0;
+int is_lost = 1;
 
 //*********************************************************
 // "out" needs to be allocated before we come here.
@@ -471,6 +476,8 @@ void BlockingRead(int minRead, struct fifoStruct *fs, int tty_fd) {
   int numin;
   char inbuf[FIFODEPTH];
   int numread;
+  time_t last_t = 0;
+  time_t t;  
   
   do {
     ioctl(tty_fd, FIONREAD, &numin);
@@ -483,10 +490,23 @@ void BlockingRead(int minRead, struct fifoStruct *fs, int tty_fd) {
     if (numin) {
       numread = read(tty_fd, inbuf, numin);
       push(fs, inbuf, numread);
+      n_bytemon += numread;
     } else {
       usleep(10000);
     }
   } while (nFifo(fs)<minRead);
+  
+  t = time(NULL);
+  //if (t != last_t) {
+  if (1) {
+    if (is_lost) {
+      printf("\rlost for %3d bytes (frame %d)", n_bytemon, n_sync);
+    } else {
+      printf("\rread %3d bytes for frame %d  ", n_bytemon, n_sync);
+    }
+    fflush(stdout);
+    last_t = t;
+  }
 }
 
 //*********************************************************
@@ -494,10 +514,8 @@ void BlockingRead(int minRead, struct fifoStruct *fs, int tty_fd) {
 //*********************************************************
 int main(int argc, char *argv[]) {
   int tty_fd;
-  int i_lost = 0;
   int index = 0;
   int numin, numread;
-  int n_sync = 0;
   int i_framefield;
   int i_streamfield;
   char filedirname[1024];
@@ -573,11 +591,12 @@ int main(int argc, char *argv[]) {
       if (u_in==SYNCWORD) {
         advance(&fs, sizeof(unsigned));
         index = 1;
-        i_lost = 0;
-        printf("Found Sync word %d                                     \r", n_sync++);
+        is_lost = 0;
+        n_bytemon = 0;
+        n_sync++;
         fflush(stdout);
       } else {
-        printf("Looking for sync word for %d bytes\r", ++i_lost);
+        is_lost = 1;
         fflush(stdout);
         advance(&fs, 1);
       }
@@ -617,11 +636,13 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "error file asks for more streamfields than are listed (%u > %u)\n", n_streamfields, n_streamfieldlist); 
         n_streamfields = 0;
       } else {
-        printf("stream contains %u out of %u stream fields\n", n_streamfields, n_streamfieldlist);
+        printf("\nstream contains %u out of %u stream fields\n", n_streamfields, n_streamfieldlist);
       }
     }
     // check for bad n_streamfields 
     if ((n_streamfields != us_in) || (n_streamfields==0)) {
+      printf("\nChange in number of stream fields (%d vs %u), or bad data...\n"
+      "\nIf this persists, you might want to restart\n", n_streamfields, us_in);
       continue;
     }
     
@@ -638,7 +659,7 @@ int main(int argc, char *argv[]) {
       pop(&fs, (char *)&us_in, sizeof(unsigned short));
       stream_gains[i_streamfield] = us_in;
       if (stream_gains[i_streamfield] == 0) {
-        printf("zero gain for field %s.  Setting to 1\n", streamfields[i_streamfield]->field);
+        printf("\nzero gain for field %s.  Setting to 1\n", streamfields[i_streamfield]->field);
         stream_gains[i_streamfield]=1;
       }
       switch (streamfields[i_streamfield]->type) {
@@ -685,7 +706,7 @@ int main(int argc, char *argv[]) {
         
         n_wrote = write(fieldfp[i_framefield], fielddata[i_framefield], fieldsize);
         if (n_wrote != fieldsize) {
-          fprintf(stderr, "Writing field data unsuccesful. Out of disk space?\n");
+          fprintf(stderr, "\nWriting field data unsuccesful. Out of disk space?\n");
         }
       }
 
@@ -745,6 +766,14 @@ int main(int argc, char *argv[]) {
           }          
         } // next samp
       } // next streamfield
+      // read frame sync byte
+      BlockingRead(sizeof(char), &fs, tty_fd);
+      pop(&fs, (char *)(&uc_in), sizeof(char));
+      if (uc_in != 0xa5) {
+        printf("bad sync byte: must be lost %x\n", (int)uc_in);
+        i_frame = STREAMFRAME_PER_SUPERFRAME;
+        break;
+      }
     } // next frame
   } // end while 1
 
