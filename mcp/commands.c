@@ -2900,7 +2900,7 @@ void InitCommandData()
   CommandData.Cryo.JFETSetOn = 120;
   CommandData.Cryo.JFETSetOff = 135;
   CommandData.Cryo.calibrator = repeat;
-  CommandData.Cryo.calib_pulse = 13; /* = 130 ms @ 100Hz */
+  CommandData.Cryo.calib_pulse = 30; /* = 300 ms @ 100Hz */
   CommandData.Cryo.calib_period = 3000; /* = 600 s @ 5Hz */
   CommandData.Cryo.calib_repeats = -1;  //indefinitely
 
@@ -2987,24 +2987,22 @@ void InitCommandData()
   CommandData.temp3 = 0;
   CommandData.df = 0;
 
-  // Coordinates for Toronto AKA the centre of the universe
-  // used for motor tests. 
-  CommandData.lat = 43.39;
-  CommandData.lon = 79.23;
+  CommandData.lat = -77.86;  //McMurdo Building 096
+  CommandData.lon = -167.04; //Willy Field Dec 2010
 
-  CommandData.Phase[0] = 28101;
-  CommandData.Phase[1] = 28101;
-  CommandData.Phase[2] = 28101;
-  CommandData.Phase[3] = 28101;
-  CommandData.Phase[4] = 28101;
-  CommandData.Phase[5] = 28101;
-  CommandData.Phase[6] = 13000;
-  CommandData.Phase[7] = 13000;
-  CommandData.Phase[8] = 13000;
-  CommandData.Phase[9] = 12000;
-  CommandData.Phase[10] = 13000;
-  CommandData.Phase[11] = 12000;
-  CommandData.Phase[12] = 12100;    //ROX
+  CommandData.Phase[0] = 27468;
+  CommandData.Phase[1] = 27468;
+  CommandData.Phase[2] = 27468;
+  CommandData.Phase[3] = 27468;
+  CommandData.Phase[4] = 27468;
+  CommandData.Phase[5] = 27468;
+  CommandData.Phase[6] = 10791;
+  CommandData.Phase[7] = 10791;
+  CommandData.Phase[8] = 10791;
+  CommandData.Phase[9] = 10791;
+  CommandData.Phase[10] = 11118;
+  CommandData.Phase[11] = 11118;
+  CommandData.Phase[12] = 11600;    //ROX
 
   WritePrevStatus();
 }
