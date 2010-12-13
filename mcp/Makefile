@@ -84,14 +84,20 @@ ifeq ($(shell hostname),south)
 	@echo "** I am south **"
 	killall mcp
 	scp /usr/local/bin/mcp north.blast:/tmp/mcp
+	ssh north.blast 'install -d -m 666 /tmp/etc'
+	scp etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library north.blast:/tmp/etc/
 	ssh north.blast 'install -m 755 /tmp/mcp /usr/local/bin'
+	ssh north.blast 'install -m 666 /tmp/etc/* /data/etc'
 	ssh north.blast 'killall mcp'
 else
 ifeq ($(shell hostname),north)
 	@echo "** I am north **"
 	killall mcp
 	scp /usr/local/bin/mcp south.blast:/tmp/mcp
+	ssh south.blast 'install -d -m 666 /tmp/etc'
+	scp etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library south.blast:/tmp/etc/
 	ssh south.blast 'install -m 755 /tmp/mcp /usr/local/bin'
+	ssh south.blast 'install -m 666 /tmp/etc/* /data/etc'
 	ssh south.blast 'killall mcp'
 else
 	@echo "******************** WARNING ******************************"
