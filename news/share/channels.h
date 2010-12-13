@@ -241,20 +241,11 @@ extern "C" {
                              // as measured by the pivot controller
 #define PIV_DEAD_BAND 162.75 // 50mV*3.255029 DAC cts/mV
 
-/* AD590 calibrations from Marco, Nov 2006 */
-#define AD590_CALIB_INFRAME_1    1.2250
-#define AD590_CALIB_INFRAME_2    1.8125
-#define AD590_CALIB_INFRAME_3    0.0188
-#define AD590_CALIB_INFRAME_4    1.5125
-#define AD590_CALIB_PRIMARY_2   -0.3750
-#define AD590_CALIB_STRUT_1     -0.8437
-#define AD590_CALIB_PRIMARY_1   -1.5937
-#define AD590_CALIB_SECONDARY_1 -1.6250
-#define AD590_CALIB_SECONDARY_2  0.1563
-#define AD590_CALIB_STRUT_2     -0.8502
-#define AD590_CALIB_PUSH_PLATE   0.4500
-#define AD590_CALIB_ACT_MOTOR   -0.4375
-#define AD590_CALIB_REC         -1.4822
+/* only zero wrt each other, not absolute */
+#define AD590_CALIB_PRIMARY_1   -0.7285
+#define AD590_CALIB_PRIMARY_2    0.7285
+#define AD590_CALIB_SECONDARY_1  0.143
+#define AD590_CALIB_SECONDARY_2 -0.143
 
 /* zero point (in counts) of i_el */
 #define I_EL_ZERO 32638
