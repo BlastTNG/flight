@@ -2731,7 +2731,7 @@ void InitCommandData()
   CommandData.vtx_sel[0] = vtx_isc;
   CommandData.vtx_sel[1] = vtx_osc;
 
-  CommandData.slew_veto = VETO_MAX; /* 10 minutes */
+  CommandData.slew_veto = VETO_MAX; /* 5 minutes */
 
   CommandData.pointing_mode.nw = 0;
   CommandData.pointing_mode.mode = P_DRIFT;

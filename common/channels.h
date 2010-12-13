@@ -93,7 +93,7 @@ extern "C" {
 #endif
 
   // Max Slew Veto
-#define VETO_MAX 60000
+#define VETO_MAX 30000
 
   struct ChannelStruct {
     char field[FIELD_LEN]; /* name of channel for FileFormats and CalSpecs */

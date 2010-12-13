@@ -1116,15 +1116,17 @@ static void DoNewCapMode(void)
   /*     axes_mode.el_dir = 1; */
   /*   }     */
 
-  if ((axes_mode.el_dir - el_dir_last)== 2) {
+  if ( ((axes_mode.el_dir - el_dir_last)== 2) && 
+       (CommandData.pointing_mode.nw == 0) ) {
     n_scan +=1;
     new_scan = 1;
+
     bprintf(info,"DoNewCapMode: Sending signal to rotate HWPR. n_scan = %i",n_scan);
     
     /* Set flags to rotate the HWPR */
     CommandData.hwpr.mode = HWPR_STEP;
     CommandData.hwpr.is_new = HWPR_STEP;
-    
+
     if(n_scan % 4 == 0 && n_scan != 0) {
       GetElDither();
       bprintf(info,"We're dithering! El Dither = %f", axes_mode.el_dith);
@@ -1311,7 +1313,9 @@ static void DoNewBoxMode(void)
     return;
   }
 
-  if ((axes_mode.el_dir - el_dir_last)== 2) {
+  if ( ((axes_mode.el_dir - el_dir_last)== 2) &&
+       (CommandData.pointing_mode.nw == 0) ) {
+
     n_scan +=1;
     new_scan = 1;
     bprintf(info,"DoNewBoxMode: Sending signal to rotate HWPR. n_scan = %i",n_scan);
@@ -1498,7 +1502,9 @@ void DoQuadMode(void) // aka radbox
     }
   }
 
-  if ((axes_mode.el_dir - el_dir_last)== 2) {
+  if ( ((axes_mode.el_dir - el_dir_last)== 2) &&
+       (CommandData.pointing_mode.nw == 0) ) {
+
     n_scan +=1;
     new_scan = 1;
     bprintf(info,"DoNewQuadMode: Sending signal to rotate HWPR. n_scan = %i",n_scan);
