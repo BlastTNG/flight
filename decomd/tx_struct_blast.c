@@ -870,8 +870,8 @@ struct ChannelStruct SlowChannels[] = {
   {"trig_l_sbsc",  'r',   ACS2_D, 52,                1.0,             0.0, 'u', U_NONE},
 
 /* ACS2 Analog card */
-  {"roll_pyr_clin",'r',  ACS2_A1,  1,     -4.0/5333.3333,        4.*6.144+1.2, 'u', U_NONE},
-  {"pch_pyr_clin", 'r',  ACS2_A1,  3,      4.0/5333.3333,       -4.*6.144, 'u', U_NONE},
+  {"pch_pyr_clin", 'r',  ACS2_A1,  1,           0.001343,          -47.09, 'u', U_NONE},
+  {"roll_pyr_clin",'r',  ACS2_A1,  3,           0.001413,          -45.86, 'u', U_NONE},
   {"t_pyr_clin",   'r',  ACS2_A1,  5,          100.0*10.0/32768.0,    -100.0*10.0, 'u', U_NONE},
   {"xel_if_clin",  'r',  ACS2_A1,  7,         0.00546739,      -25.*6.144, 'u', U_NONE},
   {"el_raw_if_clin",'r', ACS2_A1,  9,                1.0,             0.0, 'u', U_NONE},

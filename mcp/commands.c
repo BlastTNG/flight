@@ -2744,7 +2744,7 @@ void InitCommandData()
   CommandData.pointing_mode.t = mcp_systime(NULL) + CommandData.timeout;
   CommandData.pointing_mode.dith = 0.0;
 
-  CommandData.az_accel = 0.3; 
+  CommandData.az_accel = 0.4; 
 
   CommandData.ele_gain.I = 5000; /* was 8000 */
   CommandData.ele_gain.P = 5000; /* was 1200 */
@@ -2867,8 +2867,8 @@ void InitCommandData()
   CommandData.actbus.lock_hold_i = 0;
 
   CommandData.hwpr.vel = 1600;
-  CommandData.hwpr.acc = 16;
-  CommandData.hwpr.move_i = 10;
+  CommandData.hwpr.acc = 4;
+  CommandData.hwpr.move_i = 20;
   CommandData.hwpr.hold_i = 10;
 
   /* hwpr positions separated by 22.5 degs.
