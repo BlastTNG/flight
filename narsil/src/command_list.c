@@ -26,7 +26,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 4.107 $";
+const char *command_list_serial = "$Revision: 4.108 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -1069,11 +1069,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(cam_settrig_timed), "Use timed exposure mode", GR_SBSC, 1,
     {
       {"Exposure Interval (ms)", 0, MAX_15BIT, 'i', "sc_exp_int"}
-    }
-  },
-  {COMMAND(cam_trig_speed), "Set speed below which exposure is triggered", GR_SBSC, 1,
-    {
-      {"Speed (dps)", 0, 5.0, 'f', "TRIG_SPEED_SBSC"}
     }
   },
   {COMMAND(cam_exp_params), "set starcam exposure commands", GR_SBSC, 1,

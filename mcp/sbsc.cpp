@@ -102,7 +102,6 @@ void cameraFields()
   static NiosStruct* gridAddr = NULL;
   static NiosStruct* threshAddr = NULL;
   static NiosStruct* blobMdistAddr = NULL;
-  static NiosStruct* trigSpeedAddr = NULL;
 
   static NiosStruct* sbscFrameAddr = NULL;
   static NiosStruct* sbscMeanAddr = NULL;
@@ -138,8 +137,6 @@ void cameraFields()
     sbscCcdTempAddr = GetNiosAddr("ccd_t_sbsc");
     sbscNumBlobsAddr = GetNiosAddr("nblobs_sbsc");
 
-    trigSpeedAddr = GetNiosAddr("trig_speed_sbsc");
-
     for (int i=0; i<5; i++) {
       char buf[99];
       sprintf(buf, "blob%02d_x_sbsc", i);
@@ -162,7 +159,6 @@ void cameraFields()
   WriteData(gridAddr, CommandData.cam.grid, NIOS_QUEUE);
   WriteData(threshAddr, (int)(CommandData.cam.threshold*1000), NIOS_QUEUE);
   WriteData(blobMdistAddr, CommandData.cam.minBlobDist, NIOS_QUEUE);
-  WriteData(trigSpeedAddr, CommandData.cam.trigSpeed*32768/100, NIOS_QUEUE);
 
   //persistently identify cameras by serial number (camID)
   if (camRtn[i_cam].camID == SBSC_SERIAL)  {
