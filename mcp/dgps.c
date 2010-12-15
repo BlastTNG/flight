@@ -382,7 +382,6 @@ htI32_t GetNextBlock(int fd, void* SBFBlock)
     if (n==0) usleep(10000);
 
     if (n<0) {
-      //TODO dgps code needs updates to handle serial errors
       //bprintf(err,"read GPSblock failed!");
     }
 

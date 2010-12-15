@@ -287,7 +287,6 @@ void ControlHWPR(struct ezbus *bus)
   /*** Begin fall through control ***/
   
   /* if are doing anything with the HWPR other than sleeping, panicing or repeating */
-  /* TODO: Eventually we'll want to rewrite repeat mode so that it can be incorporated in to the fall through code */ 
   if(CommandData.hwpr.mode >= HWPR_GOTO && CommandData.hwpr.mode != HWPR_REPEAT) {
     
     /* Do we want a pot reading first? Should always be yes for step mode.*/
@@ -349,7 +348,6 @@ void ControlHWPR(struct ezbus *bus)
 	      hwpr_control.dead_pot = 1;      
 	      
 	      /* assume rel move of ~22.5 degrees*/
-	      //TODO pot brokenness should be written the the frame (in bitfield)
 	      hwpr_control.rel_move = HWPR_DEFAULT_STEP;
 	      bprintf(info,"The pot is dead! Use default HWPR step of %i",hwpr_control.rel_move);
 	    }
@@ -361,6 +359,7 @@ void ControlHWPR(struct ezbus *bus)
 	    //TODO I don't like repeated code, and this chunk is VERY similar to the above one
 	    //TODO can set i_next_step depending on mode, and then have common code shared
 	    //TODO or can make a function that calculates move to any new index
+            // Not changing for flight.  Fix if we fly again. -lmf
 	    if (((hwpr_data.pot > HWPR_POT_MIN) &&  
 		 (hwpr_data.pot < HWPR_POT_MAX)) &&
 		(CommandData.hwpr.use_pot)) { // use pot
@@ -391,7 +390,7 @@ void ControlHWPR(struct ezbus *bus)
 	    hwpr_control.move_cur = ready; 
 
 	  } else if (hwpr_control.go == pot) {
-	    //TODO as above, if you're sufficiently crafty, much of this code could be shared with the above two modes
+
 	    if (((hwpr_data.pot > HWPR_POT_MIN) &&  
 		 (hwpr_data.pot < HWPR_POT_MAX)) &&
 		(CommandData.hwpr.use_pot)) { // use pot
@@ -428,7 +427,7 @@ void ControlHWPR(struct ezbus *bus)
 	  }
 
 	  /*** Once we are ready to move send ActBus Command ***/
-	  //TODO putting this in an else means it won't execute until next time through all this. Why not now?
+
 	} else if (hwpr_control.move_cur == ready) {
 
 	  /* Is the hwpr move negative?  
@@ -464,8 +463,6 @@ void ControlHWPR(struct ezbus *bus)
 
 	  //	  bprintf(info,"ControlHWPR: We are moving! hwpr_data.enc = %i, last_enc = %i", hwpr_data.enc, last_enc);
 
-	  //TODO, you have to be careful with this, sometimes mcp gets into a state where the encoders aren't read out for a while (esp on palestine)
-	  //TODO though maybe it's okay since such cases probably cause this whole thread to not execute
 	  if (hwpr_control.stop_cnt >=HWPR_MOVE_TIMEOUT) {
 #ifdef DEBUG_HWPR
 	    bprintf(info,"We've stopped!");
@@ -515,7 +512,6 @@ void ControlHWPR(struct ezbus *bus)
 	      
 	    } else if (hwpr_control.read_after == reading) { // we are reading...
 	      
-	      //TODO why don't you just check CommandData.Cryo.hwprPos?
 	      hwpr_control.read_wait_cnt--;
 	      if (hwpr_control.read_wait_cnt <= 0) { 
 		hwpr_control.read_after = done;
@@ -546,7 +542,7 @@ void ControlHWPR(struct ezbus *bus)
 
   /*** end fall through control ***/
 
-  //repeat mode - TODO LMF: steve wrote this.  May want to incorporate it into my code later. 
+  /* This is historic and won't be used for flight.*/
   if( CommandData.hwpr.mode == HWPR_REPEAT) {
 
     if (CommandData.hwpr.step_size > 0) {

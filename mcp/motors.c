@@ -695,7 +695,7 @@ static void DoAzScanMode(void)
   axes_mode.el_vel  = 0.0;
 
   i_point = GETREADINDEX(point_index);
-  az = PointingData[i_point].az; /* FIXME - extrapolate velocity */
+  az = PointingData[i_point].az; 
 
   w = CommandData.pointing_mode.w;
   right = CommandData.pointing_mode.X + w / 2;
@@ -985,7 +985,6 @@ static void DoNewCapMode(void)
   bottom = cel - r;
   top = cel + r;
 
-  // FIXME: reboot proofing...
 
   /* If a new command, reset to bottom row */
   if ((CommandData.pointing_mode.X != last_X) ||
@@ -1212,7 +1211,6 @@ static void DoNewBoxMode(void)
     bottom = MIN_EL;
 
   //  if (j%JJLIM == 0) bprintf(info,"cel =%f, el = %f,axes_mode.el_dith = %f, w=%f, h=%f, bottom = %f, top = %f, left = %f, right = %f",cel, el,axes_mode.el_dith, w, h, bottom , top, left, right);
-  // FIXME: reboot proofing...
 
   new = 0;
 

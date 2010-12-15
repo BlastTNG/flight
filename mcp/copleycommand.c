@@ -19,7 +19,7 @@
 #include "command_struct.h"
 
 #define COPLEYCOM_MUS_WAIT 12000 // wait time after a command is given                                                         
-                                  // TODO: optimize this wait time, is it even necessary?        
+
 #define SELECT_COP_MUS_OUT 200000 // time out for reading from the Copley controller  
 struct MotorInfoStruct reactinfo;  
 struct MotorInfoStruct elevinfo; /* These file descriptors contain the status
@@ -385,7 +385,9 @@ int ping_copley(struct MotorInfoStruct* copleyinfo)
   
 }
 
-// TODO: right now this is never called...
+// TODO : Right now this is never called...not removing it for now. 
+
+#if 0 
 void checkCopleyErr(int errcode,struct MotorInfoStruct* copleyinfo)
 {
   switch(errcode)
@@ -422,9 +424,10 @@ void checkCopleyErr(int errcode,struct MotorInfoStruct* copleyinfo)
       break;
     }
 }
+#endif
+
 // Check the controller response after a command.
 // If the response from the controller is "ok" (i.e. no errors) return 0.
-// TODO: Add error parsing when controller returns error message
 // Returns -10 if the controller returned garbage.
 // Returns the error code if the contoller responded with an error message.
 int checkCopleyResp(struct MotorInfoStruct* copleyinfo)
