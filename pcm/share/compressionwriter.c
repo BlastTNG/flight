@@ -430,6 +430,7 @@ void WriteStreamFrame() {
 
   for (i_field = 0; i_field<n_streamlist; i_field++) {
     n_streambuf = 0;
+    n = FASTFRAME_PER_STREAMFRAME/streamList[i_field].samples_per_frame;
     for (i_samp = 0; i_samp < streamList[i_field].samples_per_frame; i_samp++) {
       if (streamList[i_field].doAverage) {
         // filter
@@ -454,7 +455,7 @@ void WriteStreamFrame() {
       
       //preserve integral
       xi = (int)(x + streamData[i_field].residual);
-      streamData[i_field].residual =(x + streamData[i_field].residual) - (double)xi; // preserve integral
+      streamData[i_field].residual = (x + streamData[i_field].residual) - (double)xi; // preserve integral
 
       if (streamList[i_field].bits == 4) {
       } else if (streamList[i_field].bits == 8) {
