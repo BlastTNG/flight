@@ -2790,6 +2790,8 @@ void InitCommandData()
   CommandData.mag_az_trim = 0;
   CommandData.dgps_az_trim = 0;
   CommandData.ss_az_trim = 0;
+  CommandData.pss1_az_trim = 0;
+  CommandData.pss2_az_trim = 0;
 
   CommandData.dgps_cov_limit = 0.3;
   CommandData.dgps_ants_limit = 0.5;

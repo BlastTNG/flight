@@ -279,6 +279,8 @@ struct CommandDataStruct {
   double mag_az_trim;
   double dgps_az_trim;
   double ss_az_trim;
+  double pss1_az_trim;
+  double pss2_az_trim;
 
   struct {
     int biasRamp;

@@ -1561,7 +1561,8 @@ void Pointing(void)
     MagAz.trim = CommandData.mag_az_trim;
     DGPSAz.trim = CommandData.dgps_az_trim;
     SSAz.trim = CommandData.ss_az_trim;
-    //FIXME: add pss1 and pss2 trim
+    PSS1Az.trim = CommandData.pss1_az_trim;
+    PSS2Az.trim = CommandData.pss2_az_trim;
     
     ClinEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(ClinEl.fs, FIR_LENGTH);
@@ -1916,6 +1917,8 @@ void Pointing(void)
     MagAz.trim = 0.0;
     DGPSAz.trim = 0.0;
     SSAz.trim = 0.0;
+    PSS1Az.trim = 0.0;
+    PSS2Az.trim = 0.0;
     NewAzEl.fresh = 0;
   }
 
@@ -1924,11 +1927,18 @@ void Pointing(void)
     EncEl.trim = NewAzEl.el - EncEl.angle;	
     NullAz.trim = NewAzEl.az - NullAz.angle;
     MagAz.trim = NewAzEl.az - MagAz.angle;
+
     if (dgps_since_ok<500) {
       DGPSAz.trim = NewAzEl.az - DGPSAz.angle;
     }
     if (ss_since_ok<500) {
       SSAz.trim = NewAzEl.az - SSAz.angle;
+    }
+    if (pss1_since_ok<500) {
+      PSS1Az.trim = NewAzEl.az - PSS1Az.angle;
+    }
+    if (pss2_since_ok<500) {
+      PSS2Az.trim = NewAzEl.az - PSS2Az.angle;
     }
     NewAzEl.fresh = 0;
   }
@@ -1941,6 +1951,8 @@ void Pointing(void)
   CommandData.mag_az_trim = MagAz.trim;
   CommandData.dgps_az_trim = DGPSAz.trim;
   CommandData.ss_az_trim = SSAz.trim;
+  CommandData.pss1_az_trim = PSS1Az.trim;
+  CommandData.pss2_az_trim = PSS2Az.trim;
   j++;
  
   /* If we are in a slew veto decrement the veto count*/ 

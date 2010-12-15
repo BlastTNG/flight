@@ -13,7 +13,7 @@
 /* !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
  *
  * IF YOU ADD, MOVE, OR DELETE *ANY* CHANNELS IN THIS FILE YOU *MUST*
- * RECOMPILE AND RESTART THE DECOM DAEMON (DECOMD) ON ARWEN!
+ * RECOMPILE AND RESTART THE DECOM DAEMON (DECOMD) ON widow!
  *
  * !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
  */
@@ -367,7 +367,7 @@ struct ChannelStruct SlowChannels[] = {
   {"offset_ifel_gy",  'w',LOOP2, 36,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifroll_gy",'w',LOOP2, 37,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifyaw_gy", 'w',LOOP2, 38,      1.0/32768.0,             0.0, 's', U_V_DPS},
-  {"az_raw_mag",      'w',LOOP2, 39,            I2DEG,             0.0, 's', U_D_DEG},
+  {"az_raw_mag",      'w',LOOP2, 39,            I2DEG,             0.0, 'u', U_D_DEG},
   /* LOOP2 39 is unused */
   {"sigma_mag",       'w',LOOP2, 40,            I2DEG,             0.0, 'u', U_NONE},
   {"az_dgps",         'w',LOOP2, 41,            I2DEG,             0.0, 'u', U_D_DEG},
@@ -484,7 +484,9 @@ struct ChannelStruct SlowChannels[] = {
   {"t_set_gy",     'w', LOOP4, 36,    (100.0/32768.0),             0.0, 'u', U_NONE},
   {"h_age_gy",     'w', LOOP4, 37,                1.0,             0.0, 'u', U_NONE},
   {"h_hist_gy",    'w', LOOP4, 38,    (100.0/32768.0),             0.0, 'u', U_NONE},
-  /* LOOP4 39 is unused */
+  {"trim_pss1",    'w', LOOP4, 39,              I2DEG,             0.0, 's', U_NONE},
+  {"trim_pss2",    'w', LOOP4, 40,              I2DEG,             0.0, 's', U_NONE},
+  /* LOOP4 41-43 appear unused */
   {"ra_1_p",       'w', LOOP4, 44,                I2H,             0.0, 'u', U_NONE}, // pointing mode coordinates
   {"dec_1_p",      'w', LOOP4, 45,              I2DEG,             0.0, 's', U_NONE},
   {"ra_2_p",       'w', LOOP4, 46,                I2H,             0.0, 'u', U_NONE},
