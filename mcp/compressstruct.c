@@ -892,6 +892,8 @@ char *frameList[] = {
   "trim_enc",
   "trim_mag",
   "trim_null",
+  "trim_pss1",
+  "trim_pss2",
   "trim_ss",
   "tr_m4",
   "tr_m5",
