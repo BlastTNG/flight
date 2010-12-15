@@ -69,9 +69,9 @@ struct fieldStreamStruct streamList[] = {
   {"n21c10", 12, 50, AVG, DX, 8, SLOW},
   {"n23c10", 12, 50, AVG, DX, 8, SLOW},
   {"n23c13", 12, 50, AVG, DX, 8, SLOW},
-  {"n26c16", 12, 25, AVG, DX, 8, SLOW},
-  {"n26c17", 12, 25, AVG, DX, 8, SLOW},
-  {"n27c09", 12, 25, AVG, DX, 8, SLOW},
+  {"n26c16", 12, 50, AVG, DX, 8, SLOW},
+  {"n26c17", 12, 50, AVG, DX, 8, SLOW},
+  {"n27c09", 12, 50 , AVG, DX, 8, SLOW},
 
   {"ra_isc", 8, 2, NOAVG, NODX, 16, SLOW},
   {"dec_isc", 8, 2, NOAVG, NODX, 16, SLOW},
