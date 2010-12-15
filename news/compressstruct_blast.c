@@ -95,7 +95,7 @@ struct fieldStreamStruct streamList[] = {
   {"ifroll_2_gy", 5461, 10, AVG, NODX, 8, SLOW},
   {"el_raw_if_clin", 1, 5, AVG, DX, 8, SLOW},
   {"el_clin", 1, 5, AVG, DX, 8, SLOW},
-
+  
   {"n29c00", 12, 25, AVG, DX, 8, SLOW},
   {"n29c01", 12, 25, AVG, DX, 8, SLOW},
   {"n29c02", 12, 25, AVG, DX, 8, SLOW},
@@ -105,7 +105,6 @@ struct fieldStreamStruct streamList[] = {
   {"n29c06", 12, 25, AVG, DX, 8, SLOW},
   {"n29c08", 12, 25, AVG, DX, 8, SLOW},
   {"n29c09", 12, 25, AVG, DX, 8, SLOW},
-  //{"n29c11", 12, 25, AVG, DX, 8, SLOW}, // thermistor
   {"n29c12", 12, 25, AVG, DX, 8, SLOW},
   {"n29c13", 12, 25, AVG, DX, 8, SLOW},
   {"n29c14", 12, 25, AVG, DX, 8, SLOW},
@@ -118,7 +117,6 @@ struct fieldStreamStruct streamList[] = {
   {"n29c21", 12, 25, AVG, DX, 8, SLOW},
   //{"n29c22", 12, 25, AVG, DX, 8, SLOW}, // dead
   {"n29c23", 12, 25, AVG, DX, 8, SLOW},
-  //{"n31c00", 12, 25, AVG, DX, 8, SLOW}, // resistor
   {"n31c01", 12, 25, AVG, DX, 8, SLOW},
   {"n31c02", 12, 25, AVG, DX, 8, SLOW},
   {"n31c03", 12, 25, AVG, DX, 8, SLOW},
@@ -129,7 +127,6 @@ struct fieldStreamStruct streamList[] = {
   {"n31c08", 12, 25, AVG, DX, 8, SLOW},
   {"n31c10", 12, 25, AVG, DX, 8, SLOW},
   {"n31c11", 12, 25, AVG, DX, 8, SLOW},
-  //{"n31c12", 12, 25, AVG, DX, 8, SLOW}, // thermistor
   {"n31c13", 12, 25, AVG, DX, 8, SLOW},
   {"n31c14", 12, 25, AVG, DX, 8, SLOW},
   {"n31c15", 12, 25, AVG, DX, 8, SLOW},
@@ -139,7 +136,6 @@ struct fieldStreamStruct streamList[] = {
   {"n31c19", 12, 25, AVG, DX, 8, SLOW},
   {"n31c20", 12, 25, AVG, DX, 8, SLOW},
   {"n31c21", 12, 25, AVG, DX, 8, SLOW},
-  //{"n31c22", 12, 25, AVG, DX, 8, SLOW}, // dark
   {"n31c23", 12, 25, AVG, DX, 8, SLOW},
   {"n25c00", 12, 25, AVG, DX, 8, SLOW},
   {"n25c01", 12, 25, AVG, DX, 8, SLOW},
@@ -162,12 +158,8 @@ struct fieldStreamStruct streamList[] = {
   {"n25c18", 12, 25, AVG, DX, 8, SLOW},
   {"n25c19", 12, 25, AVG, DX, 8, SLOW},
   {"n25c20", 12, 25, AVG, DX, 8, SLOW},
-  //{"n25c21", 12, 25, AVG, DX, 8, SLOW}, // dark
   //{"n25c22", 12, 25, AVG, DX, 8, SLOW}, // dead
-  //{"n25c23", 12, 25, AVG, DX, 8, SLOW}, // resistor
-  //{"n26c00", 12, 25, AVG, DX, 8, SLOW}, // resistor
   //{"n26c01", 12, 25, AVG, DX, 8, SLOW}, // dead
-  //{"n26c02", 12, 25, AVG, DX, 8, SLOW}, // thermistor
   {"n26c03", 12, 25, AVG, DX, 8, SLOW},
   {"n26c04", 12, 25, AVG, DX, 8, SLOW},
   {"n26c05", 12, 25, AVG, DX, 8, SLOW},
@@ -208,10 +200,8 @@ struct fieldStreamStruct streamList[] = {
   {"n27c19", 12, 25, AVG, DX, 8, SLOW},
   {"n27c20", 12, 25, AVG, DX, 8, SLOW},
   {"n27c21", 12, 25, AVG, DX, 8, SLOW},
-  //{"n27c22", 12, 25, AVG, DX, 8, SLOW}, // dark
   //{"n27c23", 12, 25, AVG, DX, 8, SLOW}, // dead
   {"n30c00", 12, 25, AVG, DX, 8, SLOW},
-  //{"n30c01", 12, 25, AVG, DX, 8, SLOW}, // thermistor
   {"n30c02", 12, 25, AVG, DX, 8, SLOW},
   {"n30c03", 12, 25, AVG, DX, 8, SLOW},
   {"n30c04", 12, 25, AVG, DX, 8, SLOW},
@@ -255,12 +245,10 @@ struct fieldStreamStruct streamList[] = {
   {"n17c18", 12, 50, AVG, DX, 8, SLOW},
   {"n17c19", 12, 50, AVG, DX, 8, SLOW},
   {"n17c20", 12, 50, AVG, DX, 8, SLOW},
-  //{"n17c21", 12, 50, AVG, DX, 8, SLOW}, // dark
   {"n17c22", 12, 50, AVG, DX, 8, SLOW},
   {"n17c23", 12, 50, AVG, DX, 8, SLOW},
   {"n18c00", 12, 50, AVG, DX, 8, SLOW},
   {"n18c01", 12, 50, AVG, DX, 8, SLOW},
-  //{"n18c02", 12, 50, AVG, DX, 8, SLOW}, // thermistor
   {"n18c03", 12, 50, AVG, DX, 8, SLOW},
   {"n18c04", 12, 50, AVG, DX, 8, SLOW},
   {"n18c05", 12, 50, AVG, DX, 8, SLOW},
@@ -304,7 +292,6 @@ struct fieldStreamStruct streamList[] = {
   {"n19c19", 12, 50, AVG, DX, 8, SLOW},
   {"n19c20", 12, 50, AVG, DX, 8, SLOW},
   {"n19c21", 12, 50, AVG, DX, 8, SLOW},
-  //{"n19c22", 12, 50, AVG, DX, 8, SLOW}, // dark
   {"n19c23", 12, 50, AVG, DX, 8, SLOW},
   {"n21c00", 12, 50, AVG, DX, 8, SLOW},
   {"n21c01", 12, 50, AVG, DX, 8, SLOW},
@@ -329,9 +316,7 @@ struct fieldStreamStruct streamList[] = {
   {"n21c21", 12, 50, AVG, DX, 8, SLOW},
   {"n21c22", 12, 50, AVG, DX, 8, SLOW},
   {"n21c23", 12, 50, AVG, DX, 8, SLOW},
-  //{"n22c00", 12, 50, AVG, DX, 8, SLOW},// Resistor
   {"n22c01", 12, 50, AVG, DX, 8, SLOW},
-  //{"n22c02", 12, 50, AVG, DX, 8, SLOW}, // thermistor
   {"n22c03", 12, 50, AVG, DX, 8, SLOW},
   {"n22c04", 12, 50, AVG, DX, 8, SLOW},
   {"n22c05", 12, 50, AVG, DX, 8, SLOW},
@@ -375,6 +360,23 @@ struct fieldStreamStruct streamList[] = {
   {"n23c21", 12, 50, AVG, DX, 8, SLOW},
   {"n23c22", 12, 50, AVG, DX, 8, SLOW},
   {"n23c23", 12, 50, AVG, DX, 8, SLOW},
+  
+  {"n29c11", 1, 25, AVG, DX, 8, SLOW}, // thermistor
+  {"n31c00", 1, 25, AVG, DX, 8, SLOW}, // resistor
+  {"n31c12", 1, 25, AVG, DX, 8, SLOW}, // thermistor
+  {"n31c22", 1, 25, AVG, DX, 8, SLOW}, // dark
+  {"n25c21", 1, 25, AVG, DX, 8, SLOW}, // dark
+  {"n25c23", 1, 25, AVG, DX, 8, SLOW}, // resistor
+  {"n26c00", 1, 25, AVG, DX, 8, SLOW}, // resistor
+  {"n26c02", 1, 25, AVG, DX, 8, SLOW}, // thermistor
+  {"n27c22", 1, 25, AVG, DX, 8, SLOW}, // dark
+  {"n30c01", 1, 25, AVG, DX, 8, SLOW}, // thermistor
+  {"n17c21", 1, 50, AVG, DX, 8, SLOW}, // dark
+  {"n18c02", 1, 50, AVG, DX, 8, SLOW}, // thermistor
+  {"n19c22", 1, 50, AVG, DX, 8, SLOW}, // dark
+  {"n22c00", 1, 50, AVG, DX, 8, SLOW},// Resistor
+  {"n22c02", 1, 50, AVG, DX, 8, SLOW}, // thermistor
+
 END_OF_STREAM
 };
 
