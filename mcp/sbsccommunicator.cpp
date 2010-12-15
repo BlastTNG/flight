@@ -346,8 +346,7 @@ void SBSCCommunicator::readLoop(string (*interpretFunction)(string))
       if (temp == "repairfail") return; //something bad has happened
       else if (temp != "") line += temp;  //link wasn't dead
       //otherwise, link has been reestablished, continue
-    }
-    else { //n > 0
+    } else { //n > 0
 #if SBSC_COMM_DEBUG
       cerr << "[Comm debug]: readloop just read " << n << " bytes: " << buf << endl;
 #endif

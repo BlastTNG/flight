@@ -82,8 +82,6 @@ extern short int write_ISC_trigger[2];
 extern short int ISC_link_ok[2];
 extern short int start_ISC_cycle[2];
 
-extern short int sbsc_trigger; /* Semaphore for SBSC trigger */
-
 extern short int InCharge; /* tx.c */
 
 /* ACS2 digital signals */
@@ -673,17 +671,6 @@ void CameraTrigger(int which)
             swhich);
     }
   }
-}
-
-/*********************/
-/* SBSC Triggering   */
-/*********************/
-void SBSCTrigger(void)
-{
-  if (fabs(axes_mode.az_vel) >= CommandData.cam.trigSpeed) {
-    return;
-  }
-  sbsc_trigger = 1;
 }
 
 /*****************************************************************/

@@ -85,7 +85,6 @@ void ChargeController(void);
 void ControlAuxMotors(unsigned short *RxFrame);
 void ControlGyroHeat(unsigned short *RxFrame);
 void CameraTrigger(int which);
-void SBSCTrigger(void);
 void ControlPower(void);
 void VideoTx(void);
 
@@ -1590,7 +1589,6 @@ void UpdateBBCFrame(unsigned short *RxFrame)
   ControlAuxMotors(RxFrame);
   CameraTrigger(0); /* isc */
   CameraTrigger(1); /* osc */
-  SBSCTrigger(); /* SBSC */
 #endif
   //make sure frame is flushed
   RawNiosWrite(-1,-1,NIOS_FLUSH);
