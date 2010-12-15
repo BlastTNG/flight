@@ -581,9 +581,6 @@ void WatchDGPS()
     //if ((fd = open(GPSCOM1, O_RDWR | O_NOCTTY | O_NDELAY)) < 0) {
     if ((fd = open(GPSCOM1, O_RDWR | O_NOCTTY)) < 0) {
       usleep(20000);
-      // FIXME: reboot device master if this goes on for too long?
-      // open fails only if the devicemaster is having troubles
-      // rebooting devicemaster deprives us of elevation control though...
     } else {
       dgpsinfo.open = 1;
     }
@@ -617,8 +614,6 @@ void WatchDGPS()
  
   /*Activate settings for the port*/
   tcsetattr(fd,TCSANOW,&term);
-  // FIXME maybe: should we be allowed to proceed if we have had write errors?
-  // Can this even happen?  If not, should we care?
   
   /*Read in SBF data blocks*/
   while (GetNextBlock(fd, SBFBlock) == 0) {
