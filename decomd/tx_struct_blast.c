@@ -781,7 +781,15 @@ struct ChannelStruct SlowChannels[] = {
   {"status_actbus",  'w', LOOP9,  24,                1.0,             0.0, 'u', U_NONE},
   {"pot_err_hwpr",   'w', LOOP9,  25,        1.0/32767.0,             0.0, 's', U_NONE},
   {"trig_speed_sbsc",'w', LOOP9,  26,    (100.0/32768.0),             0.0, 'u', U_NONE}, 
-  /* LOOP9 27-49 are unused */
+  {"blob03_x_sbsc",  'w', LOOP9,  27, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
+  {"blob03_y_sbsc",  'w', LOOP9,  28, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
+  {"blob03_f_sbsc",  'w', LOOP9,  29,                1.0,             0.0, 'u', U_NONE},
+  {"blob03_s_sbsc",  'w', LOOP9,  30,          1.0/100.0,             0.0, 'u', U_NONE},
+  {"blob04_x_sbsc",  'w', LOOP9,  31, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
+  {"blob04_y_sbsc",  'w', LOOP9,  32, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
+  {"blob04_f_sbsc",  'w', LOOP9,  33,                1.0,             0.0, 'u', U_NONE},
+  {"blob04_s_sbsc",  'w', LOOP9,  34,          1.0/100.0,             0.0, 'u', U_NONE},
+  /* LOOP9 35-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
