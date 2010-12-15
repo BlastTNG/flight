@@ -330,10 +330,6 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   I_req = p_rw_term+p_err_term;
 
 
-  // Some debugging print statements.
-  //  if (i%100==1) bprintf(info,"GetIPivot: v_az_req = %f, v_az = %f, p_rw_term = %f, p_err_term = %f, I_req = %f",v_az_req,PointingData[point_index].v_az,p_rw_term,p_err_term,I_req);
-
-  // TODO: Add in term proportional to velocity error.
   if(disabled) { // Don't attempt to send current to the motors if we are disabled.
     I_req=0.0;
   }
@@ -447,7 +443,7 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
   static struct NiosStruct* velCalcPivAddr;
   static struct NiosStruct* accelAzAddr;
  
-  //TODO temporary
+  // Used only for Lab Controller tests
   static struct NiosStruct* dacAmplAddr[5];
   int i;
   static int wait = 100; /* wait 20 frames before controlling. */
@@ -493,9 +489,6 @@ void WriteMot(int TxIndex, unsigned short *RxFrame)
 
   i_point = GETREADINDEX(point_index);
 
-  //TODO need to change the write to the BLASTbus here and in the DSP
-  // code so that it writes a 15 bit number.  Otherwise Narsil shows 
-  // twice the current value and it is rather confusing. 
   //NOTE: this is only used to program the extra DAC - not used for
   // flight.
   if (wait <= 0)
@@ -1672,8 +1665,7 @@ unsigned short int makeMotorField(struct MotorInfoStruct* motorinfo)
   b |= ((motorinfo->closing) & 0x0001)<<15 ; 
   return b;
 }
-// TODO-lmf: Need to add in conditional statements for when MCP is run by the NICC
-//           We don't want the NICC sending 
+
 void* reactComm(void* arg)
 {
   //mark1
@@ -1997,7 +1989,6 @@ void* elevComm(void* arg)
 
       pos_raw=queryCopleyInd(COP_IND_POS,&elevinfo); // Units are counts
                                                      // For Elev 524288 cts = 360 deg
-      //TODO-lmf: Add in some sort of zeropoint.
       ElevMotorData[elev_motor_index].enc_raw_el=((double) (pos_raw % ((long int) ELEV_ENC_CTS)))/ELEV_ENC_CTS*360.0-ENC_RAW_EL_OFFSET;
       //   getCopleySlowInfo(j,elev_motor_index,&ElevMotorData,&elevinfo); // Reads one of temperature, current, status and fault register and
                            // writes to the appropriate frame 

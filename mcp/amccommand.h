@@ -12,7 +12,7 @@
 #include "motordefs.h"
 
 // Maximum reaction wheel current
-#define MAX_AMC_CURRENT 5.0 // TODO: This is just until I get an idea of the
+#define MAX_AMC_CURRENT 10.0 // TODO: This is just until I get an idea of the
                                // spin gains.
                                // AMC controller is rated to 10 Amp continuous
                                // current.

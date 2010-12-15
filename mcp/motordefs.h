@@ -28,8 +28,6 @@ struct MotorInfoStruct {
             // 4th Bit set: Controller returns Error message.                  
             // triggers configure_react                                       
             // 3 running configure_react failed.    
-            // --> TODO: later this condition will trigger                    
-            //           a power cycle of the controller                      
             // 0 No errors                                                    
   unsigned int err_count; // How many communication errors have we had since 
                  // command was executed properly?
