@@ -249,6 +249,7 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
   int t_link = LINK_DEFAULT;
   int t_route = ROUTING_DEFAULT;
   char output[100];
+  char log[5000];
 
   int result = 0;
 
@@ -289,7 +290,13 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
   sprintf(output, ":::ack:::%i\r\n", result);
   printf("%i<--%s", sock, output);
   send(sock, output, strlen(output), MSG_NOSIGNAL);
-  return result;
+  if (fork() != 0) {
+    return result;
+  } else {
+    snprintf(log, 4999, "/usr/local/bin/elog -h blastexperiment.info"
+       " -p 8080 -l Narsil -a Author=blastcmd-daemon \"EXE %s\"", buffer);
+    exit(system(log));
+  }
 }
 
 void SendCommandList(int sock)
