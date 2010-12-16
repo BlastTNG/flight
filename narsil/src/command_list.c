@@ -26,7 +26,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 4.108 $";
+const char *command_list_serial = "$Revision: 4.109 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -516,7 +516,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(ants_gps), "set the threshhold for allowable DGPS antenna separation error", GR_TRIM,
     1,
     {
-      {"Antenna Separation Error (m)", 0, 5.0, 'f', "ANT_E_DGPS"},
+      {"Antenna Separation Error (m)", 0, 10.0, 'f', "ANT_E_DGPS"},
     }
   },
 
