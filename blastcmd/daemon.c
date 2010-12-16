@@ -250,6 +250,7 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
   int t_route = ROUTING_DEFAULT;
   char output[100];
   char log[5000];
+  char log2[5000];
 
   int result = 0;
 
@@ -280,6 +281,11 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
       result = 11;
   }
 
+  snprintf(log2, 4999, "/usr/local/bin/elog -h blastexperiment.info"
+       " -p 8080 -l Narsil -a Author=blastcmd-daemon"
+       " \"EXE %s\n", buffer);
+
+
   if (result == 0) {
     if (route)
       result = SimpleRoute(sock, fd, &buffer[3]);
@@ -290,11 +296,10 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
   sprintf(output, ":::ack:::%i\r\n", result);
   printf("%i<--%s", sock, output);
   send(sock, output, strlen(output), MSG_NOSIGNAL);
+  snprintf(log, 4999, "%sResult = %d\"", log2, result);
   if (fork() != 0) {
     return result;
   } else {
-    snprintf(log, 4999, "/usr/local/bin/elog -h blastexperiment.info"
-       " -p 8080 -l Narsil -a Author=blastcmd-daemon \"EXE %s\"", buffer);
     exit(system(log));
   }
 }
