@@ -143,19 +143,19 @@ int main (int argc, char **argv)
       fprintf(stderr, "Reading %s from %s\n", chatter_name, dirfile_name);
     }
  
-    dirfile = dirfile_open(dirfile_name, GD_RDONLY);
-    if (get_error(dirfile))
+    dirfile = gd_open(dirfile_name, GD_RDONLY);
+    if (gd_error(dirfile))
     {
-      fprintf(stderr, "GetData error: %s\n", get_error_string(dirfile, char_buffer, BUF_LEN));
-      dirfile_close(dirfile);
+      fprintf(stderr, "GetData error: %s\n", gd_error_string(dirfile, char_buffer, BUF_LEN));
+      gd_close(dirfile);
       exit(-1);
     }
  
-    unsigned int spf = get_spf(dirfile, chatter_name);
-    if (get_error(dirfile))
+    unsigned int spf = gd_spf(dirfile, chatter_name);
+    if (gd_error(dirfile))
     {
-      fprintf(stderr, "GetData error: %s\n", get_error_string(dirfile, char_buffer, BUF_LEN));
-      dirfile_close(dirfile);
+      fprintf(stderr, "GetData error: %s\n", gd_error_string(dirfile, char_buffer, BUF_LEN));
+      gd_close(dirfile);
       exit(-2);
     }
  
@@ -168,11 +168,11 @@ int main (int argc, char **argv)
 
     if (ff < 0)
     {
-      nf_old = get_nframes(dirfile);
-      if (get_error(dirfile))
+      nf_old = gd_nframes(dirfile);
+      if (gd_error(dirfile))
       {
-        fprintf(stderr, "GetData error: %s\n", get_error_string(dirfile, char_buffer, BUF_LEN));
-        dirfile_close(dirfile);
+        fprintf(stderr, "GetData error: %s\n", gd_error_string(dirfile, char_buffer, BUF_LEN));
+        gd_close(dirfile);
         exit(-4);
       }
     } else {
@@ -184,11 +184,11 @@ int main (int argc, char **argv)
   
     while (1) /* Data reading loop */
     {
-      nf = get_nframes(dirfile);
-      if (get_error(dirfile))
+      nf = gd_nframes(dirfile);
+      if (gd_error(dirfile))
       {
-        fprintf(stderr, "GetData error: %s\n", get_error_string(dirfile, char_buffer, BUF_LEN));
-        dirfile_close(dirfile);
+        fprintf(stderr, "GetData error: %s\n", gd_error_string(dirfile, char_buffer, BUF_LEN));
+        gd_close(dirfile);
         if (reload)
           break;
         else
@@ -198,7 +198,7 @@ int main (int argc, char **argv)
       if (nf > nf_old)
       {
         old_data = 0;
-        n_read = getdata(dirfile, chatter_name, nf_old, 0, BUF_LEN, 0, GD_UINT16, data);
+        n_read = gd_getdata(dirfile, chatter_name, nf_old, 0, BUF_LEN, 0, GD_UINT16, data);
         nf_old += (n_read / spf);
         for (i = 0; i < n_read; i++)
         {
@@ -281,7 +281,7 @@ int main (int argc, char **argv)
           {
             old_data = 0;
             nf_old = 0;
-            dirfile_close(dirfile);
+            gd_close(dirfile);
             break;
           }
         }
