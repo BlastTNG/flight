@@ -536,6 +536,9 @@
     <NUMBER caption="Frame">
       <DATUM format="%.0f" src="FRAME_SBSC" extrema="unknown"/>
     </NUMBER>
+    <NUMBER caption="T_CCD">
+      <DATUM format="%.0f" src="CCD_T_SBSC" extrema="unknown"/>
+    </NUMBER>
   </BOX>
   <BOX caption="ISC" colour="#707" row="4" col="3" rowspan="1">
     <MULTI caption="Ethernet">
@@ -881,9 +884,6 @@
     <NUMBER caption="Amp DCDC">
       <DATUM format="%.2f" src="T_PADCDC_REC" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Amp µRAM">
-      <DATUM format="%.2f" src="T_PAURAM_REC" extrema="temp"/>
-    </NUMBER>
     <NUMBER caption="Amp HK DCDC">
       <DATUM format="%.2f" src="T_HKDCDC_REC" extrema="temp"/>
     </NUMBER>
@@ -899,9 +899,6 @@
     <NUMBER caption="Pump Valve">
       <DATUM format="%.2f" src="T_MOT_PUMP_VAL" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="SBSC T Lens">
-      <DATUM format="%.2f" src="T_SBSC" extrema="temp"/>
-    </NUMBER>  
     <NUMBER caption="P ISC (psi)">
       <DATUM format="%.2f" src="PRESSURE1_ISC" extrema="psi"/>
     </NUMBER>
@@ -1006,9 +1003,6 @@
     <NUMBER caption="OSS Port">
       <DATUM format="%.2f" src="T_PORT_SS" extrema="cputemp"/>
     </NUMBER>
-    <NUMBER caption="OSS Starboard">
-      <DATUM format="%.2f" src="T_STAR_SS" extrema="cputemp"/>
-    </NUMBER>
     <NUMBER caption="Lock Motor">
       <DATUM format="%.2f" src="T_LOCK" extrema="temp"/>
     </NUMBER>
@@ -1033,6 +1027,9 @@
     <NUMBER caption="T Batt 2">
       <DATUM format="%.2f" src="T_2_BAT" extrema="battemp"/>
     </NUMBER>
+    <NUMBER caption="SBSC T Lens">
+      <DATUM format="%.2f" src="T_SBSC" extrema="temp"/>
+    </NUMBER>  
   </BOX>
   <BOX caption="Actuators" colour="#002222" row="4" col="6" rowspan="1">
     <MULTI caption="Mode">
