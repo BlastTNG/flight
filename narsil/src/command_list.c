@@ -1,3 +1,4 @@
+
 /* command_list.c: BLAST command specification file
  *
  * This software is copyright (C) 2002-20010 University of Toronto
@@ -26,7 +27,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 4.109 $";
+const char *command_list_serial = "$Revision: 4.110 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
