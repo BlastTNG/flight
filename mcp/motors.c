@@ -38,7 +38,7 @@
 #include "amccommand.h"
 #include "motordefs.h"
 
-#define MIN_EL 25 // should be set to 25 for flight.
+#define MIN_EL 23.9 
 #define MAX_EL 55
 
 #define VPIV_FILTER_LEN 40
