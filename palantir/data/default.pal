@@ -826,6 +826,12 @@
     <NUMBER caption="Dec 4">
       <DATUM format="%.2f" src="DEC_4_P" extrema="angle"/>
     </NUMBER>
+    <NUMBER caption="Dith Step">
+      <DATUM format="%.4f" src="DITH_STEP_P" extrema="angle"/>
+    </NUMBER>
+    <NUMBER caption="El Dith ">
+      <DATUM format="%.4f" src="DITH_EL" extrema="angle"/>
+    </NUMBER>
   </BOX>
   <BOX caption="Motor Gains" colour="#880000" row="6" col="4" rowspan="1">
     <NUMBER caption="P Elev">
