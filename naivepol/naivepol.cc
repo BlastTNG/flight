@@ -102,7 +102,7 @@ void Usage(char* name)
   cerr << name << " -F /data/blast_2005.z -f 657000 -l 689000 -C 250   \n\t  -o \\!CRL_2688 -p 10 -c 20" << endl; 
   cerr << "   make a full 250 map of CRL2688 with 10\" pixel, convolve with 20\" FWHM" << endl;
   cerr << endl;
-  cerr << name << "  -F /mnt/blast_pol/map_maker_data/ -f 732000 -l 736704 -C 500 -L -B "" -h 0.3 -t -2 -d -o \!test -A 7.385:-25.8:250:250:500:500" << endl;
+  cerr << name << "  -F /mnt/blast_pol/map_maker_data/ -f 732000 -l 736704 -C 500 -L -B "" -h 0.3 -t -6 -d -o \\!test -A 7.385:-25.8:250:250:500:500" << endl;
   cerr << "   test map for naivepol" << endl;
   exit(0);
 }
