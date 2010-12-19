@@ -21,6 +21,7 @@
 
 #define FIFODEPTH 2048
 #define RAWDIR "/data/rawdir"
+#define TIMEOUT 100
 
 #define FOX_LNKFILE "/data/etc/fox.lnk"
 #define RNC_PORT 41114
@@ -65,6 +66,9 @@ long long *stream_offsets;
 int n_sync = 0;
 int n_bytemon = 0;
 int is_lost = 1;
+
+int tty_fd;
+char hostname[255];
 
 //*********************************************************
 // "out" needs to be allocated before we come here.
@@ -154,7 +158,7 @@ int nFifo(struct fifoStruct *fs) {
 //*********************************************************
 // connect to the political party server
 //*********************************************************
-int party_connect(const char *hostname) {
+int party_connect() {
   int s;
   struct sockaddr_in sn;
   struct hostent *hostinfo;
@@ -472,13 +476,16 @@ void OpenDirfilePointers(int **fieldfp, int **streamfp, char *filedirname) {
 //*********************************************************
 // read data, leaving at least minRead in the fifo, but without overloading the Fifo
 //*********************************************************
-void BlockingRead(int minRead, struct fifoStruct *fs, int tty_fd) {
+void BlockingRead(int minRead, struct fifoStruct *fs) {
   int numin;
   char inbuf[FIFODEPTH];
   int numread;
   time_t last_t = 0;
   time_t t;  
   
+  time_t t_r, t_lr;
+  
+  t_lr = time(NULL);
   do {
     ioctl(tty_fd, FIONREAD, &numin);
 
@@ -491,7 +498,15 @@ void BlockingRead(int minRead, struct fifoStruct *fs, int tty_fd) {
       numread = read(tty_fd, inbuf, numin);
       push(fs, inbuf, numread);
       n_bytemon += numread;
+      t_lr = time(NULL);
     } else {
+      t_r = time(NULL);
+      if ((t_r -t_lr) > TIMEOUT) {
+        printf("No data for %us.  Resetting connection.\n", t_r-t_lr);
+        t_lr = t_r;
+        shutdown(tty_fd, SHUT_RDWR);
+        tty_fd = party_connect();
+      } 
       usleep(10000);
     }
   } while (nFifo(fs)<minRead);
@@ -500,9 +515,9 @@ void BlockingRead(int minRead, struct fifoStruct *fs, int tty_fd) {
   //if (t != last_t) {
   if (1) {
     if (is_lost) {
-      printf("\rlost for %3d bytes (frame %d)", n_bytemon, n_sync);
+      printf("\rlost for %3d bytes (frame %d) ", n_bytemon, n_sync);
     } else {
-      printf("\rread %3d bytes for frame %d  ", n_bytemon, n_sync);
+      printf("\rread %3d bytes for frame %d   ", n_bytemon, n_sync);
     }
     fflush(stdout);
     last_t = t;
@@ -513,9 +528,7 @@ void BlockingRead(int minRead, struct fifoStruct *fs, int tty_fd) {
 // main
 //*********************************************************
 int main(int argc, char *argv[]) {
-  int tty_fd;
   int index = 0;
-  int numin, numread;
   int i_framefield;
   int i_streamfield;
   char filedirname[1024];
@@ -575,7 +588,9 @@ int main(int argc, char *argv[]) {
             exit(0);
   }
 
-  tty_fd = party_connect(argv[1]);
+  strncpy(hostname, argv[1], 250);
+  
+  tty_fd = party_connect();
 
   MakeFrameList();
   
@@ -585,7 +600,7 @@ int main(int argc, char *argv[]) {
 
     // Look for sync word
     while (index == 0) {
-      BlockingRead(sizeof(unsigned), &fs, tty_fd);
+      BlockingRead(sizeof(unsigned), &fs);
 
       peek(&fs, (char *)&u_in, sizeof(unsigned));
       if (u_in==SYNCWORD) {
@@ -616,13 +631,13 @@ int main(int argc, char *argv[]) {
         default:
           break;
       }
-      BlockingRead(fieldsize, &fs, tty_fd);
+      BlockingRead(fieldsize, &fs);
 
       pop(&fs, fielddata[i_framefield], fieldsize);
       index++;
     }
 
-    BlockingRead(2, &fs, tty_fd);
+    BlockingRead(2, &fs);
     pop(&fs, (char *)(&us_in), 2);
 
     if (first_time) {
@@ -655,7 +670,7 @@ int main(int argc, char *argv[]) {
     
     // Read stream gains and offsets
     for (i_streamfield = 0; i_streamfield < n_streamfields; i_streamfield++) {
-      BlockingRead(sizeof(unsigned short), &fs, tty_fd);
+      BlockingRead(sizeof(unsigned short), &fs);
       pop(&fs, (char *)&us_in, sizeof(unsigned short));
       stream_gains[i_streamfield] = us_in;
       if (stream_gains[i_streamfield] == 0) {
@@ -664,22 +679,22 @@ int main(int argc, char *argv[]) {
       }
       switch (streamfields[i_streamfield]->type) {
         case 'u':
-          BlockingRead(sizeof(short), &fs, tty_fd);
+          BlockingRead(sizeof(short), &fs);
           pop(&fs, (char *)&us_in, sizeof(short));
           stream_offsets[i_streamfield] = us_in;
           break;
         case 's': // 16 bit offsets
-          BlockingRead(sizeof(short), &fs, tty_fd);
+          BlockingRead(sizeof(short), &fs);
           pop(&fs, (char *)&s_in, sizeof(short));
           stream_offsets[i_streamfield] = s_in;
           break;
         case 'U':
-          BlockingRead(sizeof(int), &fs, tty_fd);
+          BlockingRead(sizeof(int), &fs);
           pop(&fs, (char *)&u_in, sizeof(int));
           stream_offsets[i_streamfield] = u_in;
           break;
         case 'S': // 32 bit offsets
-          BlockingRead(sizeof(int), &fs, tty_fd);
+          BlockingRead(sizeof(int), &fs);
           pop(&fs, (char *)&i_in, sizeof(int));
           stream_offsets[i_streamfield] = i_in;
           break;
@@ -712,7 +727,7 @@ int main(int argc, char *argv[]) {
 
       // Read the >= 1 Hz streamed data.
       for (i_streamfield = 0; i_streamfield < n_streamfields; i_streamfield++) {
-        BlockingRead(streamList[i_streamfield].samples_per_frame*streamList[i_streamfield].bits/8, &fs, tty_fd);
+        BlockingRead(streamList[i_streamfield].samples_per_frame*streamList[i_streamfield].bits/8, &fs);
         for (i_samp = 0; i_samp<streamList[i_streamfield].samples_per_frame; i_samp++) {
           // read streamfield;
           if (streamList[i_streamfield].bits == 4) {
@@ -767,7 +782,7 @@ int main(int argc, char *argv[]) {
         } // next samp
       } // next streamfield
       // read frame sync byte
-      BlockingRead(sizeof(char), &fs, tty_fd);
+      BlockingRead(sizeof(char), &fs);
       pop(&fs, (char *)(&uc_in), sizeof(char));
       if (uc_in != 0xa5) {
         printf("bad sync byte: must be lost %x\n", (int)uc_in);
