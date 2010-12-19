@@ -15,7 +15,8 @@ using namespace MATPACK;
 #define BOLO      "CALIB"        // Bolometer extention to use
 #define POINTING  "FK5_23_MV_19_CS"
 #define CALP      "_cp_21_mdt"
-#define TOD_OFFS  0 
+#define TOD_OFFS  0
+#define ZERO_COLD_ENC 0.451
 
 #ifdef SCOFFSFILE
 #undef SCOFFSFILE
@@ -25,8 +26,8 @@ using namespace MATPACK;
 #undef BOLO_TABLE
 #endif
 
-#define SCOFFSFILE "sc_offs_mcm_19_MV_16_CS.txt"
-#define BOLO_TABLE  "bolo_table_mcm_14_EP.txt"
+#define SCOFFSFILE "sc_offs_mcm_19_MV_16_CS_modforblast06.txt"
+#define BOLO_TABLE  "bolotable_blastpol_20101205_modforblast06.txt"
 //#define SCOFFSFILE "sc_offs_kir.txt"
 //#define BOLO_TABLE  "bolo_table_kir.txt"
 
@@ -78,7 +79,8 @@ void Usage(char* name)
   cerr << "-O offset filename           : defaults to " << SCOFFSFILE << endl;
   cerr << "-D yaw:pitch (arcsec)        : yaw and pitch (xel, el) pointing offset" << endl;
   cerr << "-h freq(Hz)                  : High pass the data at the given frequency." << endl;
-  cerr << "-t tod_offs(samples)         : TOD to pointing solution offs (defult " << TOD_OFFS << ")" << endl;
+  cerr << "-t tod_offs(samples)         : TOD to pointing solution offs (default " << TOD_OFFS << ")" << endl;
+  cerr << "-L                           : Use Alt-Az coordinates" << endl;
   cerr << "-w                           : use weights - Each data stream is weighted" << endl;
   cerr << "                                   by 1/noise as listed in "<< endl;
   cerr << "                             :     " << BOLO_TABLE << endl;
@@ -99,6 +101,9 @@ void Usage(char* name)
   cerr << endl;
   cerr << name << " -F /data/blast_2005.z -f 657000 -l 689000 -C 250   \n\t  -o \\!CRL_2688 -p 10 -c 20" << endl; 
   cerr << "   make a full 250 map of CRL2688 with 10\" pixel, convolve with 20\" FWHM" << endl;
+  cerr << endl;
+  cerr << name << "  -F /mnt/blast_pol/map_maker_data/ -f 732000 -l 736704 -C 500 -L -B "" -h 0.3 -t -2 -d -o \!test -A 7.385:-25.8:250:250:500:500" << endl;
+  cerr << "   test map for naivepol" << endl;
   exit(0);
 }
 
@@ -153,6 +158,7 @@ int main(int argc, char *argv[])
   bool use_bolo_flags        = false;
   bool bolo_despike          = false;
   bool galactic_coord        = false;
+  bool altaz_coord           = false;
   bool weight_from_file      = false;
   bool calibrate             = false;
   bool calpulse              = false;
@@ -185,7 +191,7 @@ int main(int argc, char *argv[])
   list<string>::const_iterator ich;
   list<string> channel;
   
-  while ( (retval = getopt(argc, argv, "F:f:l:y:n:o:c:s:A:r:C:p:B:K:O:P:D:h:t:mTkedgGwx")) != -1) {
+  while ( (retval = getopt(argc, argv, "F:f:l:y:n:o:c:s:A:r:C:p:B:K:O:P:D:h:t:LmTkedgGwx")) != -1) {
     switch (retval) {
     case 'F':
       filename = ShellExpand(optarg);
@@ -248,6 +254,9 @@ int main(int argc, char *argv[])
     case 'P':
       pointing_suffix = optarg;
       break;
+    case 'L':
+      altaz_coord = true;
+      break;
     case 'O':
       offs_filename = ShellExpand(optarg);
       break;
@@ -303,7 +312,7 @@ int main(int argc, char *argv[])
     rtmp.f0 = fframe; rtmp.nf = nframes;
     range.push_back(rtmp);
   }
-  
+
   cerr << "Reading... " << endl;
 
   for(irg = range.begin(); irg != range.end(); irg++) {
@@ -318,8 +327,6 @@ int main(int argc, char *argv[])
   cerr << "             Using pointing flags: " << ((use_pointing_flags) ? "YES" : "NO") << endl;
   if(use_bolo_flags)
     cerr << "             BoloFlags: " << flag_suffix << endl;
-
-    
 
   Map map;
   Data* Yaw;  
@@ -340,48 +347,16 @@ int main(int argc, char *argv[])
     int type = (galactic_coord) ? MAP_IS_GAL : MAP_IS_RADEC;
     map.OpenPol(pixel_size, source_ra, source_dec, crpix_x, crpix_y, npix_x, npix_y, type);
   } else {
-    cerr << "Reading Pointing Solution ... " << flush;
-    int type = (galactic_coord) ? MAP_IS_GAL : MAP_IS_RADEC;
-    irg = range.begin();
-    if(galactic_coord) {
-      Yaw      = new Data(filename, string("GLON_")  + pointing_suffix, irg->f0, irg->nf);
-      Pitch    = new Data(filename, string("GLAT_") + pointing_suffix, irg->f0, irg->nf);
-      Roll     = new Data(filename, string("GPHI_") + pointing_suffix, irg->f0, irg->nf);
-      *Yaw   *= M_PI/180.0;
-      *Pitch *= M_PI/180.0;
-      *Roll  *= M_PI/180.0;
-      type = MAP_IS_GAL;
-    } else {
-      Yaw      = new Data(filename, string("RA_")  + pointing_suffix, irg->f0, irg->nf);
-      Pitch    = new Data(filename, string("DEC_") + pointing_suffix, irg->f0, irg->nf);
-      Roll     = new Data(filename, string("PHI_") + pointing_suffix, irg->f0, irg->nf);
-      *Yaw   *= M_PI/12.0;
-      *Pitch *= M_PI/180.0;
-      *Roll  *= M_PI/180.0;
-      type = MAP_IS_RADEC;
-    }
-
-    Yaw_r    = new Data(Yaw->Lo(), Yaw->Hi());
-    Pitch_r  = new Data(Yaw->Lo(), Yaw->Hi());
-    Roll_r   = new Data(Yaw->Lo(), Yaw->Hi());
-
-    cerr << "done." << endl;
-    
-    double bs_yaw, bs_pitch;
-    SCOffset(binfo.Color("N7C13"), irg->f0, bs_yaw, bs_pitch, offs_filename.c_str());
-    binfo.SCOffset(bs_pitch+d_pitch, bs_yaw+d_yaw); 
-    binfo.Rotate("N7C13", *Yaw, *Pitch, *Roll, *Yaw_r, *Pitch_r, *Roll_r);
-
-    map.OpenPol(pixel_size, *Yaw_r, *Pitch_r, type);
-    
-    delete Yaw; delete Pitch; delete Roll;
-    delete Yaw_r; delete Pitch_r; delete Roll_r;
+    cerr << "You must define a map opening method." << endl;
+    Usage(argv[0]);
   }
 
-
-  
   cerr << "Binning map ... " << endl;
   for(irg = range.begin(); irg != range.end(); irg++) {
+
+    // Polarization angle = 2 * (theta-chi) - ro_roll + [0 1]*!pi/2 + PA
+    Data* AngPol = new Data(filename, string("POT_HWPR"), irg->f0, irg->nf);
+    *AngPol      = 4.0*M_PI*(ZERO_COLD_ENC - (*AngPol)); // 2 * (theta-theta0); chi has yet to be implemented
 
     cerr << "Reading Pointing Solution ... " << flush;
     if(galactic_coord) {
@@ -391,6 +366,31 @@ int main(int argc, char *argv[])
       *Yaw   *= M_PI/180.0;
       *Pitch *= M_PI/180.0;
       *Roll  *= M_PI/180.0;
+    } else if (altaz_coord) {
+      Yaw   = new Data(filename, string("AZ"), irg->f0, irg->nf);
+      Pitch = new Data(filename, string("EL"), irg->f0, irg->nf);
+      Roll  = new Data(Yaw->Lo(), Yaw->Hi(), 0.0);
+
+      Data *Lst   = new Data(filename, string("LST"), irg->f0, irg->nf);
+      Data *Lat   = new Data(filename, string("LAT"), irg->f0, irg->nf);
+
+      *Yaw   *= M_PI/180.0;
+      *Pitch *= M_PI/180.0;
+      *Roll  *= M_PI/180.0;
+      *Lst   *= M_PI/12.0;
+      *Lat   *= M_PI/180.0;
+	
+      double ra_temp, dec_temp;
+      for (int k = Yaw->Lo(); k <= Yaw->Hi(); k++) {
+	RaDec((*Yaw)[k], (*Pitch)[k], (*Lat)[k / 20], (*Lst)[k / 20], &ra_temp, &dec_temp); //LST and LAT are slow channels
+	(*Yaw)[k]   = ra_temp;
+	(*Pitch)[k] = dec_temp;
+        (*Roll)[k]  = Pa((*Yaw)[k], (*Pitch)[k], (*Lst)[k / 20], (*Lat)[k / 20]);
+      }
+
+      delete Lst;
+      delete Lat;
+
     } else {
       Yaw      = new Data(filename, string("RA_")    + pointing_suffix, irg->f0, irg->nf);
       Pitch    = new Data(filename, string("DEC_")   + pointing_suffix, irg->f0, irg->nf);
@@ -400,10 +400,13 @@ int main(int argc, char *argv[])
       *Roll  *= M_PI/180.0;
     } 
 
+    *AngPol += *Roll; // Add Roll to polarization angle.(if PA > 0 CCW and roll angle > 0 CW)
+    // Parallactic angle = the angle as seen from the target between zenith and NCP, measured positive westward of meridian
+
     if(use_pointing_flags) {
       string flag = "FLAG_" + pointing_suffix;
       PFlag = new char [Yaw->Elements()];
-      get_data(filename, irg->f0, 0, Yaw->Elements(), PFlag, flag, 'c');
+      get_data(filename, irg->f0, 0, Yaw->Elements(), PFlag, flag, UInt8);
     }
 
     Yaw_r    = new Data(Yaw->Lo(), Yaw->Hi());
@@ -415,12 +418,11 @@ int main(int argc, char *argv[])
     for(ich = channel.begin(); ich != channel.end(); ich++) {
       cerr << "Reading channel " << setw(6) << *ich << "... " << flush;
       Data* Bolo   = new Data(filename, *ich + bolo_suffix, irg->f0, irg->nf);
-      Data* AngPol = new Data(filename, *ich + bolo_suffix, irg->f0, irg->nf);//temporary
       char *Flag   = new char [Bolo->Elements()];
-      
+     
       if(use_bolo_flags) {
 	string flag = to_lower(*ich)+flag_suffix;
-	get_data(filename, irg->f0, 0, Bolo->Elements(), Flag, flag, 'c');
+	get_data(filename, irg->f0, 0, Bolo->Elements(), Flag, flag, UInt8);
       } else {
 	memset(Flag, 0, Bolo->Elements());
       }
@@ -493,6 +495,8 @@ int main(int argc, char *argv[])
 
       cerr << "binning (w = " << weight << ") ... " << flush;
       //map.ChannelAdd(*Bolo, Flag, *Yaw_r, *Pitch_r, *Roll_r, tod_offs, telescope_coordinates, weight);
+      *AngPol += binfo.Ang(*ich)*M_PI/180.0; // Add detector grid angle (as per bolotable) to polarization angle.
+      //cerr << binfo.Ang(*ich)*M_PI/180.0 << endl;
       map.ChannelAddPol(*Bolo, *AngPol, Flag, *Yaw_r, *Pitch_r, *Roll_r, tod_offs, telescope_coordinates, weight);
 
       cerr << "done." << endl;    
@@ -501,19 +505,21 @@ int main(int argc, char *argv[])
       delete Bolo;
     }
 
+    delete AngPol;
+
     if (use_pointing_flags) delete[] PFlag;
     delete Yaw; delete Pitch; delete Roll;
     delete Yaw_r; delete Pitch_r; delete Roll_r;
-  }  
+  }
   map.ClosePol();
-  
+
   cerr << "Variance in the map : " << map.Variance(ASEC2RAD(300)) << endl;
 
   if(smooth_angle > 0.0) {
     cerr << "Convolving whith a gaussian of " << smooth_angle << " arcsec fwhm\n";
     map.Convolve(ASEC2RAD(smooth_angle));
   }
-  
+
   if(save) {
     cerr << "Writing to fits: " << fits << endl;
     map.WriteToFitsPol(fits, SAVE_FLUX);
