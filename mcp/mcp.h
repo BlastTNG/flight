@@ -57,6 +57,6 @@ struct chat_buf {
 #warning "Debugging set."
 #endif
 
-#define USE_XY_THREAD
+//#define USE_XY_THREAD
 
 #endif
