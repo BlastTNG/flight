@@ -21,6 +21,8 @@
 #define RAWDIR "/data/rawdir"
 
 #define RNC_PORT 41114
+#define TIMEOUT 100
+
 
 #define BUFSIZE 8194
 
@@ -83,6 +85,10 @@ int main(int argc, char *argv[]) {
   time_t t, last_t = 0;
   int blockread = 0;
 
+  time_t t_r, t_lr;
+  
+  t_lr = time(NULL);
+
   if (argc!=2) Usage();
   if (argv[1][0]=='-') Usage();
 
@@ -114,6 +120,13 @@ int main(int argc, char *argv[]) {
       totalread += numread;
       blockread += numread;
     } else {
+      t_r = time(NULL);
+      if ((t_r -t_lr) > TIMEOUT) {
+        printf("No data for %us.  Resetting connection.\n", t_r-t_lr);
+        t_lr = t_r;
+        shutdown(tty_fd, SHUT_RDWR);
+        tty_fd = party_connect(argv[1]);
+      } 
       usleep(30000);
     }
     t = time(NULL);
