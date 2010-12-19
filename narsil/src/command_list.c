@@ -27,7 +27,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 4.110 $";
+const char *command_list_serial = "$Revision: 4.111 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -409,7 +409,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"El Dith Step Size (arcmin)",-0.1,  0.1, 'f', "NONE"}
+      {"El Dith Step Size (deg)",-0.1,  0.1, 'f', "NONE"}
     }
   },
   {COMMAND(cap), "scan a circle centred on RA/Dec with el steps", GR_POINT, 6,
@@ -419,7 +419,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Radius (deg on sky)",       0, 90, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"El Dith Step Size (arcmin)",-0.1,  0.1, 'f', "NONE"}
+      {"El Dith Step Size (deg)",-0.1,  0.1, 'f', "NONE"}
     }
   },
   {COMMAND(drift), "move at constant speed in az and el", GR_POINT, 2,
@@ -441,7 +441,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Dec of Corner 4 (deg)",   -90, 90, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"El Dith Step Size (arcmin)",-0.1, 0.1, 'f', "NONE"}
+      {"El Dith Step Size (deg)",-0.1, 0.1, 'f', "NONE"}
     }
   },
   {COMMAND(vbox), "DEPRECATED - scan an az/el box centred on RA/Dec with el drift",
