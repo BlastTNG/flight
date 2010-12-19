@@ -2838,9 +2838,9 @@ void InitCommandData()
   CommandData.actbus.lvdt_low = 25000;
   CommandData.actbus.lvdt_high = 35000;
 
-  CommandData.actbus.offset[0] = 0;
-  CommandData.actbus.offset[1] = 0;
-  CommandData.actbus.offset[2] = 0;
+  CommandData.actbus.offset[0] = 33333;
+  CommandData.actbus.offset[1] = 33333;
+  CommandData.actbus.offset[2] = 33333;
 
   /* The first is due to change in radius of curvature, the second due to
    * displacement of the secondary due to the rigid struts */
