@@ -424,6 +424,9 @@ void Daemonise(int route, int no_fork)
   /* start the listener. */
   lastsock = sock = MakeSock();
 
+  signal(SIGCHLD, SIG_IGN); /* We don't wait for children so don't require
+                               the kernel to keep zombies.                  */
+
   if (!no_fork) {
     /* Fork to background */
     if ((pid = fork()) != 0) {
