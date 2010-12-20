@@ -2757,7 +2757,7 @@ void InitCommandData()
   CommandData.pivot_gain.F = 0.3;
 
   CommandData.disable_az = 1; 
-  CommandData.disable_el = 1;
+  CommandData.disable_el = 0;
 
   CommandData.verbose_rw = 0;
   CommandData.verbose_el = 0;
@@ -2770,14 +2770,14 @@ void InitCommandData()
   CommandData.gyheat.gain.D = 3;
 
   CommandData.use_elenc = 1;
-  CommandData.use_elclin = 0;
-  CommandData.use_sun = 0;
-  CommandData.use_pss1 = 0;
-  CommandData.use_pss2 = 0;
+  CommandData.use_elclin = 1;
+  CommandData.use_sun = 1;
+  CommandData.use_pss1 = 1;
+  CommandData.use_pss2 = 1;
   CommandData.use_isc = 1;
   CommandData.use_osc = 1;
   CommandData.use_mag = 1;
-  CommandData.use_gps = 1;
+  CommandData.use_gps = 0;
   CommandData.lat_range = 1;
   CommandData.sucks = 1;
 
@@ -2877,7 +2877,7 @@ void InitCommandData()
   CommandData.hwpr.pos[1] = 0.38909;
   CommandData.hwpr.pos[0] = 0.450767;
 
-  CommandData.hwpr.overshoot = 1000;
+  CommandData.hwpr.overshoot = 300;
   CommandData.hwpr.i_pos = 0;
   CommandData.hwpr.no_step = 0;
   CommandData.hwpr.use_pot = 1;
@@ -2918,7 +2918,7 @@ void InitCommandData()
   /* ISC-BDA offsets per Lorenzo Moncelsi on 2010-12-16 */
   CommandData.ISCState[0].azBDA = 0.16527 * DEG2RAD;
   CommandData.ISCState[0].elBDA = 0.81238 * DEG2RAD;
-  CommandData.ISCControl[0].max_age = 200;
+  CommandData.ISCControl[0].max_age = 200; /* 2000 ms*/
 
   CommandData.ISCState[0].brightStarMode = 0;
   CommandData.ISCState[0].grid = 38;
@@ -2938,7 +2938,7 @@ void InitCommandData()
   CommandData.ISCState[0].offset = 0;
   CommandData.ISCControl[0].autofocus = 0;
   CommandData.ISCControl[0].save_period = 12000; /* 120 sec */
-  CommandData.ISCControl[0].pulse_width = 50; /* 500.00 msec */
+  CommandData.ISCControl[0].pulse_width = 18; /* 180.00 msec */
   CommandData.ISCControl[0].fast_pulse_width = 8; /* 80.00 msec */
 
   CommandData.ISCState[1].useLost = 1;
@@ -2956,7 +2956,7 @@ void InitCommandData()
   /* ISC-BDA offsets per Lorenzo Moncelsi on 2010-12-16 */
   CommandData.ISCState[1].azBDA = -0.2862 * DEG2RAD;
   CommandData.ISCState[1].elBDA = -0.5918 * DEG2RAD;
-  CommandData.ISCControl[1].max_age = 200;
+  CommandData.ISCControl[1].max_age = 200;  /* 2000 ms*/
 
   CommandData.ISCState[1].brightStarMode = 0;
   CommandData.ISCState[1].grid = 38;
@@ -2976,8 +2976,8 @@ void InitCommandData()
   CommandData.ISCState[1].offset = 0;
   CommandData.ISCControl[1].autofocus = 0;
   CommandData.ISCControl[1].save_period = 12000; /* 120 sec */
-  CommandData.ISCControl[1].pulse_width = 30; /* 300.00 msec */
-  CommandData.ISCControl[1].fast_pulse_width = 6; /* 60.00 msec */
+  CommandData.ISCControl[1].pulse_width = 18; /* 180.00 msec */
+  CommandData.ISCControl[1].fast_pulse_width = 8; /* 80.00 msec */
 
   CommandData.temp1 = 0;
   CommandData.temp2 = 0;
