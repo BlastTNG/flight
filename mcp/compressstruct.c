@@ -63,16 +63,17 @@ struct fieldStreamStruct streamList[] = {
   {"res_piv", 1, 5, NOAVG, DX, 8, SLOW},
   {"vel_rw", 1, 5, NOAVG, DX, 8, SLOW},
 
-  {"n29c10", 12, 25, AVG, DX, 8, SLOW},
-  {"n29c07", 12, 25, AVG, DX, 8, SLOW},
-  {"n31c09", 12, 25, AVG, DX, 8, SLOW},
-  {"n21c10", 12, 50, AVG, DX, 8, SLOW},
-  {"n23c10", 12, 50, AVG, DX, 8, SLOW},
-  {"n23c13", 12, 50, AVG, DX, 8, SLOW},
-  {"n26c16", 12, 50, AVG, DX, 8, SLOW},
-  {"n26c17", 12, 50, AVG, DX, 8, SLOW},
-  {"n27c09", 12, 50 , AVG, DX, 8, SLOW},
+  {"n29c10", 12, 25, AVG, DX, 8, SLOW}, //
+  {"n31c09", 12, 25, AVG, DX, 8, SLOW}, //
+  {"n27c03", 12, 50, AVG, DX, 8, SLOW}, //
+  {"n27c07", 12, 50, AVG, DX, 8, SLOW}, //
+  {"n25c00", 12, 50, AVG, DX, 8, SLOW}, //
+  {"n23c12", 12, 50, AVG, DX, 8, SLOW}, //
+  {"n23c10", 12, 50, AVG, DX, 8, SLOW}, //
+  {"n23c13", 12, 50, AVG, DX, 8, SLOW}, //
+  {"n21c13", 12, 50, AVG, DX, 8, SLOW}, //
 
+  
   {"ra_isc", 16570, 5, NOAVG, NODX, 16, SLOW},
   {"dec_isc", 16570, 5, NOAVG, NODX, 16, SLOW},
   {"fieldrot_isc", 1, 2, NOAVG, NODX, 8, SLOW},
@@ -103,6 +104,7 @@ struct fieldStreamStruct streamList[] = {
   {"n29c04", 12, 25, AVG, DX, 8, SLOW},
   //{"n29c05", 12, 25, AVG, DX, 8, SLOW}, // dead
   {"n29c06", 12, 25, AVG, DX, 8, SLOW},
+  {"n29c07", 12, 25, AVG, DX, 8, SLOW},
   {"n29c08", 12, 25, AVG, DX, 8, SLOW},
   {"n29c09", 12, 25, AVG, DX, 8, SLOW},
   {"n29c12", 12, 25, AVG, DX, 8, SLOW},
@@ -137,7 +139,6 @@ struct fieldStreamStruct streamList[] = {
   {"n31c20", 12, 25, AVG, DX, 8, SLOW},
   {"n31c21", 12, 25, AVG, DX, 8, SLOW},
   {"n31c23", 12, 25, AVG, DX, 8, SLOW},
-  {"n25c00", 12, 25, AVG, DX, 8, SLOW},
   {"n25c01", 12, 25, AVG, DX, 8, SLOW},
   {"n25c02", 12, 25, AVG, DX, 8, SLOW},
   {"n25c03", 12, 25, AVG, DX, 8, SLOW},
@@ -173,6 +174,8 @@ struct fieldStreamStruct streamList[] = {
   {"n26c13", 12, 25, AVG, DX, 8, SLOW},
   {"n26c14", 12, 25, AVG, DX, 8, SLOW},
   {"n26c15", 12, 25, AVG, DX, 8, SLOW},
+  {"n26c16", 12, 25, AVG, DX, 8, SLOW},
+  {"n26c17", 12, 25, AVG, DX, 8, SLOW},
   {"n26c18", 12, 25, AVG, DX, 8, SLOW},
   {"n26c19", 12, 25, AVG, DX, 8, SLOW},
   {"n26c20", 12, 25, AVG, DX, 8, SLOW},
@@ -182,12 +185,11 @@ struct fieldStreamStruct streamList[] = {
   {"n27c00", 12, 25, AVG, DX, 8, SLOW},
   {"n27c01", 12, 25, AVG, DX, 8, SLOW},
   {"n27c02", 12, 25, AVG, DX, 8, SLOW},
-  {"n27c03", 12, 25, AVG, DX, 8, SLOW},
   {"n27c04", 12, 25, AVG, DX, 8, SLOW},
   {"n27c05", 12, 25, AVG, DX, 8, SLOW},
   {"n27c06", 12, 25, AVG, DX, 8, SLOW},
-  {"n27c07", 12, 25, AVG, DX, 8, SLOW},
   {"n27c08", 12, 25, AVG, DX, 8, SLOW},
+  {"n27c09", 12, 25 , AVG, DX, 8, SLOW},
   {"n27c10", 12, 25, AVG, DX, 8, SLOW},
   {"n27c11", 12, 25, AVG, DX, 8, SLOW},
   {"n27c12", 12, 25, AVG, DX, 8, SLOW},
@@ -303,9 +305,9 @@ struct fieldStreamStruct streamList[] = {
   {"n21c07", 12, 50, AVG, DX, 8, SLOW},
   {"n21c08", 12, 50, AVG, DX, 8, SLOW},
   {"n21c09", 12, 50, AVG, DX, 8, SLOW},
+  {"n21c10", 12, 50, AVG, DX, 8, SLOW},
   {"n21c11", 12, 50, AVG, DX, 8, SLOW},
   {"n21c12", 12, 50, AVG, DX, 8, SLOW},
-  {"n21c13", 12, 50, AVG, DX, 8, SLOW},
   {"n21c14", 12, 50, AVG, DX, 8, SLOW},
   {"n21c15", 12, 50, AVG, DX, 8, SLOW},
   {"n21c16", 12, 50, AVG, DX, 8, SLOW},
@@ -349,7 +351,6 @@ struct fieldStreamStruct streamList[] = {
   {"n23c08", 12, 50, AVG, DX, 8, SLOW},
   {"n23c09", 12, 50, AVG, DX, 8, SLOW},
   {"n23c11", 12, 50, AVG, DX, 8, SLOW},
-  {"n23c12", 12, 50, AVG, DX, 8, SLOW},
   {"n23c14", 12, 50, AVG, DX, 8, SLOW},
   {"n23c15", 12, 50, AVG, DX, 8, SLOW},
   {"n23c16", 12, 50, AVG, DX, 8, SLOW},
