@@ -632,13 +632,13 @@ static void StoreStarCameraData(int index, int which)
   WriteData(IHoldAddr[which], (unsigned int)(ISCSentState[which].hold_current),
       NIOS_QUEUE);
   WriteData(Temp1Addr[which],
-      (unsigned int)(ISCSolution[which][i_isc].temp1 * 200.), NIOS_QUEUE);
+      (unsigned int)(ISCSolution[which][i_isc].temp1 * 100.), NIOS_QUEUE);
   WriteData(Temp2Addr[which],
-      (unsigned int)(ISCSolution[which][i_isc].temp2 * 200.), NIOS_QUEUE);
+      (unsigned int)(ISCSolution[which][i_isc].temp2 * 100.), NIOS_QUEUE);
   WriteData(Temp3Addr[which],
-      (unsigned int)(ISCSolution[which][i_isc].temp3 * 200.), NIOS_QUEUE);
+      (unsigned int)(ISCSolution[which][i_isc].temp3 * 100.), NIOS_QUEUE);
   WriteData(Temp4Addr[which],
-      (unsigned int)(ISCSolution[which][i_isc].temp4 * 200.), NIOS_QUEUE);
+      (unsigned int)(ISCSolution[which][i_isc].temp4 * 100.), NIOS_QUEUE);
   WriteData(PressureAddr[which],
       (unsigned int)(ISCSolution[which][i_isc].pressure1 * 2000.), NIOS_QUEUE);
   WriteData(GainAddr[which], (unsigned int)(ISCSentState[which].gain * 655.36),
