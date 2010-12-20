@@ -115,6 +115,7 @@ struct frameBuffer {
   int i_in;
   int i_out;
   unsigned short *framelist[BI0_FRAME_BUFLEN];
+  unsigned short** slow_data_list[BI0_FRAME_BUFLEN];
 };
 
 static struct frameBuffer bi0_buffer;
@@ -812,7 +813,7 @@ static void write_to_biphase(unsigned short *RxFrame)
 }
 
 static void InitFrameBuffer(struct frameBuffer *buffer) {
-  int i;
+  int i,j;
 
   buffer->i_in = 0;
   buffer->i_out = 0;
@@ -822,13 +823,18 @@ static void InitFrameBuffer(struct frameBuffer *buffer) {
 
     memset(buffer->framelist[i],0,BiPhaseFrameWords*sizeof(unsigned short));
 
+    buffer->slow_data_list[i] = (unsigned short **)balloc(fatal, FAST_PER_SLOW*sizeof(unsigned short *));
+    for (j = 0; j < FAST_PER_SLOW; ++j) {
+      buffer->slow_data_list[i][j] = balloc(fatal, slowsPerBi0Frame * sizeof(unsigned short));
+      memset(buffer->slow_data_list[i][j], 0, slowsPerBi0Frame * sizeof(unsigned short));
+    }
   }
 }
 
 // warning: there is no checking for an overfull buffer.  Just make sure it is big
 // enough that it can never happen.
 static void PushFrameBuffer(struct frameBuffer *buffer, unsigned short *RxFrame) {
-  int i, fw, i_in;
+  int i, j, fw, i_in;
 
   i_in = buffer->i_in + 1;
   if (i_in>=BI0_FRAME_BUFLEN)
@@ -839,8 +845,37 @@ static void PushFrameBuffer(struct frameBuffer *buffer, unsigned short *RxFrame)
   for (i = 0; i<fw; i++) {
     buffer->framelist[i_in][i] = RxFrame[i];
   }
-
+  
+  for (i=0; i<FAST_PER_SLOW; i++) {
+    for (j=0; j<slowsPerBi0Frame; j++) {
+      buffer->slow_data_list[i_in][i][j] = slow_data[i][j];
+    }
+  }
+  
   buffer->i_in = i_in;
+}
+
+void ClearBuffer(struct frameBuffer *buffer) {
+  buffer->i_out = buffer->i_in;
+}
+
+unsigned short *PopFrameBufferAndSlow(struct frameBuffer *buffer, unsigned short ***slow) {
+  unsigned short *frame;
+  int i_out = buffer->i_out;
+  
+  if (buffer->i_in == i_out) { // no data
+    return (NULL);
+  }
+  frame = buffer->framelist[i_out];
+  
+  *slow = buffer->slow_data_list[i_out];
+  
+  i_out++;
+  if (i_out>=BI0_FRAME_BUFLEN) {
+    i_out = 0;
+  }
+  buffer->i_out = i_out;
+  return (frame);
 }
 
 unsigned short *PopFrameBuffer(struct frameBuffer *buffer) {

@@ -56,7 +56,10 @@ struct NiosStruct **frameNiosList;
 struct BiPhaseStruct **frameBi0List;
 struct streamDataStruct *streamData;
 
-unsigned short *PopFrameBuffer(struct frameBuffer *buffer); // mcp.c
+unsigned short *PopFrameBufferAndSlow(struct frameBuffer *buffer,  unsigned short ***slow); // mcp.c
+void ClearBuffer(struct frameBuffer *buffer);
+
+unsigned short **current_slow_data;
 
 //*********************************************************
 // Open High Gain Serial port
@@ -205,9 +208,9 @@ void BufferStreamData(int i_streamframe, unsigned short *frame) {
       i = streamData[i_field].slowIndex;
       c = streamData[i_field].slowChannel;
       if (streamData[i_field].mask) { // wide slow
-        xu = (unsigned int)slow_data[i][c] + ((unsigned int)slow_data[i][c+1] <<16);
+        xu = (unsigned int)current_slow_data[i][c] + ((unsigned int)current_slow_data[i][c+1] <<16);
       } else { // narrow slow
-        xu = (unsigned int)slow_data[i][c];
+        xu = (unsigned int)current_slow_data[i][c];
       }
     }
     xd = xu;
@@ -278,11 +281,11 @@ void WriteSuperFrame(unsigned short *frame) {
     } else { // slow
       if (frameNiosList[i_field]->wide) {
         isWide = 1;
-        x = (unsigned int)slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel] +
-        ((unsigned int)slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel+1] <<16);
+        x = (unsigned int)current_slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel] +
+        ((unsigned int)current_slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel+1] <<16);
       } else {
         isWide = 0;
-        x = slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel];
+        x = current_slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel];
       }
     }
     size = (1 + isWide)*sizeof(unsigned short);
@@ -591,11 +594,14 @@ void CompressionWriter() {
     usleep(10000);
   }
   
+  // clear the fifo so we have current data
+  ClearBuffer(&hiGain_buffer);
+  
   //*****************************************************
   //     The Infinite Loop....
   //*****************************************************
   while (1) {
-    frame = PopFrameBuffer(&hiGain_buffer);
+    frame = PopFrameBufferAndSlow(&hiGain_buffer, &current_slow_data);
     if (frame) {
       ++i_fastframe;
       
