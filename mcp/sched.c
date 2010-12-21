@@ -484,6 +484,9 @@ void DoSched(void)
     /* point antisolar */
     event.command = antisun;
     ScheduledCommand(&event);
+    /* enable hwpr autostepping */
+    event.command = hwpr_step_on;
+    ScheduledCommand(&event);
     /* pot_valve_open */
     event.command = pot_valve_open;
     ScheduledCommand(&event);
