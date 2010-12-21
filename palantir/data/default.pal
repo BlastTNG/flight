@@ -1212,7 +1212,7 @@
     <NUMBER caption="TOTAL">
       <DATUM format="%5.2f" src="I_TOT" extrema="currenttotal"/>
     </NUMBER>
-    <NUMBER caption="I Batt">
+    <NUMBER caption="I CC Out">
       <DATUM format="%.2f" src="I_BATT_CC" extrema="ibattcheck"/>
     </NUMBER>
     <NUMBER caption="I Arr">
@@ -1269,41 +1269,38 @@
     </MULTI>
   </BOX>
   <BOX caption="'Central' Bolometers " colour="#707" row="6" col="9" rowspan="1">
-    <NUMBER caption="B2E06H">
-      <DATUM format="%.3f" src="B2E06H" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="B2E07V">
-      <DATUM format="%.3f" src="B2E07V" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="B2E08H">
-      <DATUM format="%.3f" src="B2E08H" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="B2E09V">
-      <DATUM format="%.3f" src="B2E09V" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="B3D05H">
-      <DATUM format="%.3f" src="B3D05H" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="B3D06V">
-      <DATUM format="%.3f" src="B3D06V" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="B3D07H">
-      <DATUM format="%.3f" src="B3D07H" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="B3D08V">
-      <DATUM format="%.3f" src="B3D08V" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="B5C03V">
-      <DATUM format="%.3f" src="B5C03V" extrema="unknown"/>
-    </NUMBER>
-    <NUMBER caption="B5C04H">
-      <DATUM format="%.3f" src="B5C04H" extrema="unknown"/>
+    <NUMBER caption="B5D05V">
+      <DATUM format="%.3f" src="B5D05V" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="B5C05V">
       <DATUM format="%.3f" src="B5C05V" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="B5C06H">
-       <DATUM format="%.3f" src="B5C06H" extrema="unknown"/>
+    <NUMBER caption="B5B05V">
+      <DATUM format="%.3f" src="B5B05V" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="B3C07V">
+      <DATUM format="%.3f" src="B3C07V" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="B3D06V">
+      <DATUM format="%.3f" src="B3D06V" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="B3E07V">
+      <DATUM format="%.3f" src="B3E07V" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="B2C08H">
+      <DATUM format="%.3f" src="B2C08H" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="B2D09V">
+      <DATUM format="%.3f" src="B2D09V" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="B2E08H">
+      <DATUM format="%.3f" src="B2E08H" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="B2F09V">
+      <DATUM format="%.3f" src="B2F09V" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="B2G08H">
+      <DATUM format="%.3f" src="B2G08H" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Diag. Bolometers" colour="#707" row="4" col="9" rowspan="1">
@@ -1548,7 +1545,7 @@
       <DATUM format="%.2f" src="AZ_SUN" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Location" colour="#009911" row="6" col="2" rowspan="1">
+  <BOX caption="Location and Tilt" colour="#009911" row="6" col="2" rowspan="1">
     <NUMBER caption="Latitude">
       <DATUM format="%.4f" src="LAT" extrema="unknown"/>
     </NUMBER>
@@ -1566,6 +1563,18 @@
     </NUMBER>
     <NUMBER caption="Climb (m/s)">
       <DATUM format="% 6.2f" src="CLIMB_DGPS" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="dGPS Pitch">
+      <DATUM format="% 6.2f" src="PITCH_RAW_DGPS" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="dGPS Roll">
+      <DATUM format="% 6.2f" src="ROLL_RAW_DGPS" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Clin Pitch">
+      <DATUM format="% 6.2f" src="PCH_PYR_CLIN" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Clin Roll">
+      <DATUM format="% 6.2f" src="ROLL_PYR_CLIN" extrema="unknown"/>
     </NUMBER>
   </BOX>
   <BOX caption="Elevation" colour="#009911" row="4" col="1" rowspan="1">
