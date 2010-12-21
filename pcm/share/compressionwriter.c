@@ -559,6 +559,8 @@ void CompressionWriter() {
 
       if ((channel->type == 's') || (channel->type == 'S')) {
         streamData[i_field].isSigned = 1;
+      } else {
+	streamData[i_field].isSigned = 0;
       }
       if (nios->fast) {
         streamData[i_field].isFast = 1;
