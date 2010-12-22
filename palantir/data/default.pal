@@ -994,10 +994,10 @@
     <NUMBER caption="FLC Chipset">
       <DATUM format="%.2f" src="T_CHIP_FLC" extrema="cputemp"/>
     </NUMBER>
-    <NUMBER caption="MCC Watchdog">
+    <NUMBER caption="MCC WDog">
       <DATUM format="%.2f" src="T_WD_FLC" extrema="cputemp"/>
     </NUMBER>
-    <NUMBER caption="O Sun Sensor">
+    <NUMBER caption="OSS">
       <DATUM format="%.2f" src="T_CASE_SS" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="OSS CPU">
@@ -1012,19 +1012,19 @@
     <NUMBER caption="Lock Motor">
       <DATUM format="%.2f" src="T_LOCK" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Lock Controller">
+    <NUMBER caption="Lock Ctrl">
       <DATUM format="%.2f" src="T_MC_LOCK" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Balance Control">
+    <NUMBER caption="Balance Ctrl">
       <DATUM format="%.2f" src="T_BOX_BAL" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Balance Motor">
+    <NUMBER caption="Balance Mot">
       <DATUM format="%.2f" src="T_PUMP_BAL" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Seppy, The GPS">
+    <NUMBER caption="Seppy (GPS)">
       <DATUM format="%.2f" src="T_DGPS" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Charge Controller">
+    <NUMBER caption="Charge Ctrl">
       <DATUM format="%.2f" src="T_HS_CC" extrema="thscheck"/>
     </NUMBER>    
     <NUMBER caption="T Batt 1">
