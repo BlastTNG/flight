@@ -1268,7 +1268,7 @@
       </DATUM>
     </MULTI>
   </BOX>
-  <BOX caption="'Central' Bolometers " colour="#707" row="6" col="9" rowspan="1">
+  <BOX caption="'Central' Bolos " colour="#707" row="6" col="9" rowspan="1">
     <NUMBER caption="B5D05V">
       <DATUM format="%.3f" src="B5D05V" extrema="unknown"/>
     </NUMBER>
@@ -1303,7 +1303,7 @@
       <DATUM format="%.3f" src="B2G08H" extrema="unknown"/>
     </NUMBER>
   </BOX>
-  <BOX caption="Diag. Bolometers" colour="#707" row="4" col="9" rowspan="1">
+  <BOX caption="Diag. Bolos" colour="#707" row="4" col="9" rowspan="1">
     <NUMBER caption="B2D1">
       <DATUM format="%.3f" src="B2D1" extrema="unknown"/>
     </NUMBER>
