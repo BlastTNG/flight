@@ -536,7 +536,7 @@
     <NUMBER caption="Frame">
       <DATUM format="%.0f" src="FRAME_SBSC" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="T_CCD">
+    <NUMBER caption="T CCD">
       <DATUM format="%.0f" src="CCD_T_SBSC" extrema="unknown"/>
     </NUMBER>
   </BOX>
@@ -1555,7 +1555,7 @@
     <NUMBER caption="Altitude (m)">
       <DATUM format="%.0f" src="ALT_DGPS" extrema="unknown"/>
     </NUMBER>
-    <NUMBER caption="Speed (Kts)">
+    <NUMBER caption="Speed (kts)">
       <DATUM format="%.2f" src="SPEED_DGPS" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Bearing">
