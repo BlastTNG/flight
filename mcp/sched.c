@@ -545,13 +545,13 @@ void DoSched(void)
     /* bias fixed */
     event.command = fixed;
     event.is_multi = 0;
-    ScheduledCommand(&event);
+    //ScheduledCommand(&event);
     /* cal repeat */
     event.command = cal_repeat;
     event.is_multi = 1;
     event.ivalues[0] = 130; /* ms */
     event.ivalues[1] = 600; /* s */
-    ScheduledCommand(&event);
+    //ScheduledCommand(&event);
 
     bputs(info, "Scheduler: *** Searching for current pointing mode. ***\n");
 
