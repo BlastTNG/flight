@@ -61,7 +61,12 @@ try:
     sch0 = schedule[0]
     newsong = False
     while lst > sch0[0]:
-      sch0 = schedule.pop(0)
+      try:
+	sch0 = schedule.pop(0)
+      except IndexError:
+	print "Schedule out of commands! Do something!"
+	sys.exit(1)
+      print "Passed threshold", sch0[0], "<", lst, "for region", sch0[1]
       newsong = True
     if newsong:
       #can't do direct songLookup access because names may have modifier chars
