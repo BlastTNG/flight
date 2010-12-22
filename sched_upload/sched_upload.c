@@ -312,7 +312,7 @@ int main(int argc, char *argv[]) {
     if (do_fix) {
       break;
     }
-    sleep(10);
+    //sleep(10);
   }
 
   close(tty_fd);
