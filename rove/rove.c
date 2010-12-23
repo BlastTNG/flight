@@ -21,7 +21,7 @@
 #define RAWDIR "/data/rawdir"
 
 #define RNC_PORT 41114
-#define TIMEOUT 6666660
+#define TIMEOUT 60
 
 
 #define BUFSIZE 8194
