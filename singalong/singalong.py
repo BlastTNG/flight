@@ -4,35 +4,72 @@ import time
 import sys
 import mpd
 import re
+import random
 import pygetdata as gd
 import numpy as np
 
-client = mpd.MPDClient();
-client.connect("galadriel.blast", 6606)
-client.password("250micron")
+#setup for the mpd connection
+mpdHost = "galadriel.blast"
+mpdPort = 6606
+mpdPass = "250micron"
 
-df = gd.dirfile('/data/etc/defile.lnk', gd.RDONLY)
+#setup for the dirfile
+dirfilePath = "/data/etc/defile.lnk"
 
+
+#region to song mapping
 songNameLookup = {
-    "VYCma":	  ("YMCA", "Village People, The"),
-    "CG12":	  ("Don't Stop Believin'", "Journey"),
-    "Spearhead":  ('Theme from "Shaft"', "Hayes, Isaac"),
-    "8470":	  ("Hey Mickey", "Basil, Toni"),
-    "Lupus1a":	  ("Hungry Like the Wolf", "Duran Duran"),
-    "Lupus1b":	  ("Walking on Sunshine", "Katrina & the Waves"),
-    "NatsRegion": ("The Good, the Bad, and the Ugly", "Morricone, Ennio"),
-    "IRAS15100":  ("Home", "Edward Sharpe & The Magnetic Zeros"),
-    "Nanten":	  ("Turning Japanese", "Vapors, The"),
-    "M83":	  ("Eye of the Tiger", "Survivor")
+    "VYCma":	  ('title',   "YMCA", \
+		   'artist',  "Village People, The"),
+    "CG12":	  ('title',   "Don't Stop Believin'", \
+		   'artist',  "Journey"),
+    "Spearhead":  ('title',   'Theme from "Shaft"', \
+		   'artist',  "Hayes, Isaac"),
+    "8470":	  ('title',   "Hey Mickey", \
+		   'artist',  "Basil, Toni"),
+    "Lupus1a":	  ('title',   "Hungry Like the Wolf", \
+		   'artist',  "Duran Duran"),
+    "Lupus1b":	  ('title',   "Walking on Sunshine", \
+		   'artist',  "Katrina & the Waves"),
+    "NatsRegion": ('title',   "The Good, the Bad, and the Ugly", \
+		   'artist',  "Morricone, Ennio"),
+    "IRAS15100":  ('title',   "Home", \
+		   'artist',  "Edward Sharpe & The Magnetic Zeros"),
+    "Nanten":	  ('title',   "Turning Japanese", \
+		   'artist',  "Vapors, The"),
+    "M83":	  ('title',   "Eye of the Tiger", \
+		   'artist',  "Survivor"),
+    "Axehead":	  ('artist',  "U2")
     }
 
-#lookup the songs in the database
+#find songs in the database, make more useful lookup
 songLookup = dict()
+client = mpd.MPDClient();
+client.connect(mpdHost, mpdPort)
+client.password(mpdPass)
+
 for region in songNameLookup.iterkeys():
-  songlook = songNameLookup[region]
-  song = client.find('title', songlook[0], 'artist', songlook[1])[0]
-  songLookup[region] = song
-  print region, song, "\n"
+  songs = client.find(*songNameLookup[region])
+  songLookup[region] = songs
+  print region, len(songs), "song matches"
+
+client.close()
+client.disconnect()
+
+#function to pick random song from list for targets
+def playSong(key):
+  client.connect(mpdHost, mpdPort)
+  client.password(mpdPass)
+  songs = songLookup[key]
+  song = songs[random.randint(0, len(songs)-1)]
+  pl = client.playlist()
+  if song['file'] in pl:
+    client.play(pl.index(song['file']))
+  else:
+    client.add(song['file'])
+    client.play(len(pl))      #length one higher now, with added song
+  client.close()
+  client.disconnect()
 
 #parse schedule file passed as command line argument
 schedparser = re.compile(r"\w+\s+(?P<day>[0-9.]+)\s+(?P<hour>[0-9.]+)[^#]*#\s*(?P<name>\S*).*")
@@ -45,26 +82,26 @@ with open(sys.argv[1]) as f:
 	  + float(match.group("hour"))*3600)
       schedule.append( (lst, match.group("name")) )
 
-print "Schedule parsed with", len(schedule), "command lines"
+print "\nSchedule parsed with", len(schedule), "command lines"
 print
 print "************************************************************"
 print "* Starting main loop, waiting for new scans                *"
 print "************************************************************"
 print
 
+#main loop. read LST_SCHED and if it crosses a schedule threshold, play the song
+df = gd.dirfile(dirfilePath, gd.RDONLY)
 try:
-  #loop. read LST_SCHED and if it crosses a schedule threshold, play the song
   while True:
     lst = df.getdata("LST_SCHED", gd.FLOAT, \
 	first_frame=df.nframes-1, num_frames=1)
-    print "lst: ", lst
     sch0 = schedule[0]
     newsong = False
     while lst > sch0[0]:
       try:
 	sch0 = schedule.pop(0)
       except IndexError:
-	print "Schedule out of commands! Do something!"
+	print "Schedule out of commands! Do something! Forget about music!"
 	sys.exit(1)
       print "Passed threshold", sch0[0], "<", lst, "for region", sch0[1]
       newsong = True
@@ -73,13 +110,7 @@ try:
       for region in songLookup.keys:
 	if sch0[1].find(region) >= 0:
 	  print "New song!", sch0[1], "matches", region
-	  song = songLookup[region]
-	  pl = client.playlist()
-	  if song['file'] in pl:
-	    client.play(pl.index(song['file']))
-	  else:
-	    client.add(song['file'])
-	    client.play(len(pl))      #length one higher now, with added song
+	  playSong(region)
 	  break
       else:
 	print "Could not find song match for", sch0[1]
@@ -87,6 +118,4 @@ try:
 
 except KeyboardInterrupt:
   df.close()
-  client.close()
-  client.disconnect();
 
