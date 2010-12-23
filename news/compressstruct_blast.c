@@ -22,6 +22,7 @@ struct fieldStreamStruct streamList[] = {
   {"time",1,1,NOAVG,NODX,8,SLOW},
   {"time_usec", 5000, 1, NOAVG, NODX, 8,SLOW},
   {"framenum",1,1,NOAVG,DX,8,SLOW},
+  {"timeout",1,1,NOAVG,DX,8,SLOW},
   {"ifel_gy", 5, 10, AVG, NODX, 8, SLOW},
   {"ifyaw_gy", 5, 10, AVG, NODX, 8, SLOW},
   {"ifroll_gy", 5, 10, AVG, NODX, 8, SLOW},
@@ -39,9 +40,8 @@ struct fieldStreamStruct streamList[] = {
   {"dec", 16570, 5, NOAVG, DX, 8, SLOW},
   {"pot_hwpr", 1, 1, AVG, DX, 16, SLOW},
   {"enc_hwpr", 1, 1, AVG, DX, 16, SLOW},
-  
-  {"el_enc", 1, 5, AVG, DX, 8, SLOW},
-  {"el_raw_enc", 1, 5, AVG, DX, 8, SLOW},
+  {"el_enc", 5, 1, AVG, DX, 8, SLOW},
+  {"el_raw_enc", 5, 1, AVG, DX, 8, SLOW},
   {"az_ss", 5, 1, NOAVG, DX, 8, SLOW},
   {"az_dgps", 5, 1, NOAVG, DX, 8, SLOW},
   {"az_mag", 5, 1, NOAVG, DX, 8, SLOW},
@@ -62,7 +62,6 @@ struct fieldStreamStruct streamList[] = {
   {"frict_term_piv", 100, 5, NOAVG, NODX, 8, SLOW},
   {"res_piv", 1, 5, NOAVG, DX, 8, SLOW},
   {"vel_rw", 1, 5, NOAVG, DX, 8, SLOW},
-
   {"n29c10", 12, 25, AVG, DX, 8, SLOW}, //
   {"n31c09", 12, 25, AVG, DX, 8, SLOW}, //
   {"n27c03", 12, 50, AVG, DX, 8, SLOW}, //
@@ -72,8 +71,6 @@ struct fieldStreamStruct streamList[] = {
   {"n23c10", 12, 50, AVG, DX, 8, SLOW}, //
   {"n23c13", 12, 50, AVG, DX, 8, SLOW}, //
   {"n21c13", 12, 50, AVG, DX, 8, SLOW}, //
-
-  
   {"ra_isc", 16570, 5, NOAVG, NODX, 16, SLOW},
   {"dec_isc", 16570, 5, NOAVG, NODX, 16, SLOW},
   {"fieldrot_isc", 1, 2, NOAVG, NODX, 8, SLOW},
@@ -848,7 +845,6 @@ char *frameList[] = {
   "t_if_top_back",
   "t_if_top_frnt",
   "time_dgps",
-  "timeout",
   "time_sip",
   "t_lens_isc",
   "t_lens_osc",
