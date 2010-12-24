@@ -139,7 +139,7 @@ try:
 	    break
 	else:
 	  print "Could not find song match for", schedule[0][1]
-      time.sleep(5)
+      time.sleep(1)
     except IndexError:
       print "Schedule out of commands! Do something! Forget about music!"
       sys.exit(1)
