@@ -1200,6 +1200,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 {
   int i;
   char buf[256]; //for SBSC Commands
+  int is_new;
 
   /* Update CommandData struct with new info
    * If the parameter is type 'i'/'l' set CommandData using ivalues[i]
@@ -1210,7 +1211,17 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
   switch(command) {
 #ifndef BOLOTEST
     case az_el_goto:
-      CommandData.pointing_mode.nw = CommandData.slew_veto;
+      if ((CommandData.pointing_mode.mode != P_AZEL_GOTO) || 
+          (CommandData.pointing_mode.X != rvalues[0]) ||
+          (CommandData.pointing_mode.Y != rvalues[1])) {
+        CommandData.pointing_mode.nw = CommandData.slew_veto;
+      }
+      // zero unused parameters
+      for (i = 0; i < 4; i++) {
+        CommandData.pointing_mode.ra[i] = 0;
+        CommandData.pointing_mode.dec[i] = 0;
+      }
+
       CommandData.pointing_mode.mode = P_AZEL_GOTO;
       CommandData.pointing_mode.X = rvalues[0];  /* az */
       CommandData.pointing_mode.Y = rvalues[1];  /* el */
@@ -1260,7 +1271,24 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = 0;
       break;
     case cap:
-      CommandData.pointing_mode.nw = CommandData.slew_veto;
+      
+      if ((CommandData.pointing_mode.mode != P_CAP) ||
+          (CommandData.pointing_mode.X != rvalues[0]) ||  /* ra */
+          (CommandData.pointing_mode.Y != rvalues[1]) ||  /* dec */
+          (CommandData.pointing_mode.w != rvalues[2]) ||  /* radius */
+          (CommandData.pointing_mode.vaz != rvalues[3]) ||  /* az scan speed */
+          (CommandData.pointing_mode.del != rvalues[4]) ||  /* el step size */
+          (CommandData.pointing_mode.h != 0) || 
+          (CommandData.pointing_mode.dith != rvalues[5])) { /* el step size */
+        CommandData.pointing_mode.nw = CommandData.slew_veto;
+      }
+      // zero unused parameters
+      for (i = 0; i < 4; i++) {
+        CommandData.pointing_mode.ra[i] = 0;
+        CommandData.pointing_mode.dec[i] = 0;
+      }
+
+
       CommandData.pointing_mode.mode = P_CAP;
       CommandData.pointing_mode.X = rvalues[0]; /* ra */
       CommandData.pointing_mode.Y = rvalues[1]; /* dec */
@@ -1271,7 +1299,24 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.dith = rvalues[5]; /* el step size */
       break;
     case box:
-      CommandData.pointing_mode.nw = CommandData.slew_veto;
+
+      if ((CommandData.pointing_mode.mode != P_BOX) ||
+          (CommandData.pointing_mode.X != rvalues[0]) || /* ra */
+          (CommandData.pointing_mode.Y != rvalues[1]) || /* dec */
+          (CommandData.pointing_mode.w != rvalues[2]) || /* width */
+          (CommandData.pointing_mode.h != rvalues[3]) || /* height */
+          (CommandData.pointing_mode.vaz != rvalues[4]) || /* az scan speed */
+          (CommandData.pointing_mode.del != rvalues[5]) || /* el step size */
+          (CommandData.pointing_mode.dith != rvalues[6])) { /* el step size */
+        CommandData.pointing_mode.nw = CommandData.slew_veto;
+      }
+     
+      // zero unused parameters
+      for (i = 0; i < 4; i++) {
+        CommandData.pointing_mode.ra[i] = 0;
+        CommandData.pointing_mode.dec[i] = 0;
+      }
+      
       CommandData.pointing_mode.mode = P_BOX;
       CommandData.pointing_mode.X = rvalues[0]; /* ra */
       CommandData.pointing_mode.Y = rvalues[1]; /* dec */
@@ -1292,9 +1337,29 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.del = rvalues[5]; /* el drift speed */
       break;
     case quad:
-      CommandData.pointing_mode.nw = CommandData.slew_veto;
+      is_new = 1;
+      if ((CommandData.pointing_mode.mode != P_QUAD) ||
+          (CommandData.pointing_mode.vaz != rvalues[8]) || /* az scan speed */
+          (CommandData.pointing_mode.del != rvalues[9]) || /* el step size */
+          (CommandData.pointing_mode.dith != rvalues[10])) { /* el dith size */
+        is_new=0;
+      }
+      for (i = 0; i < 4; i++) {
+        if ((CommandData.pointing_mode.ra[i] != rvalues[i * 2]) ||
+            (CommandData.pointing_mode.dec[i] != rvalues[i * 2 + 1])) {
+          is_new = 0;
+        }
+      }
+      
+      if (is_new) {
+        CommandData.pointing_mode.nw = CommandData.slew_veto;
+      }
+      CommandData.pointing_mode.X = 0; /* ra */
+      CommandData.pointing_mode.Y = 0; /* dec */
+      CommandData.pointing_mode.w = 0; /* width */
+      CommandData.pointing_mode.h = 0; /* height */
+      
       CommandData.pointing_mode.mode = P_QUAD;
-      CommandData.pointing_mode.ra[0] = rvalues[0];
       for (i = 0; i < 4; i++) {
         CommandData.pointing_mode.ra[i] = rvalues[i * 2];
         CommandData.pointing_mode.dec[i] = rvalues[i * 2 + 1];
