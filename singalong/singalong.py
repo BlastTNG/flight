@@ -39,7 +39,33 @@ songNameLookup = {
 		   'artist',  "Vapors, The"),
     "M83":	  ('title',   "Eye of the Tiger", \
 		   'artist',  "Survivor"),
-    "Axehead":	  ('artist',  "U2")
+    "Axehead":	  ('artist',  "U2"),
+    "CarinaTan":  ('title',   "O... Saya", \
+		   'artist',  "A.R. Rahman & M.I.A."),
+    "G333":	  ('title',   "Not Ready to Make Nice", \
+		   'artist',  "Dixie Chicks"),
+    "G331":	  ('title',   "The Cave", \
+		   'artist',  "Albarn, Damon / Nyman, Michael"),
+    "G3219":	  ('title',   "To The Dogs Or Whoever", \
+		   'artist',  "Josh Ritter"),
+    "G3199":	  ('album',   "Thriller", \
+		   'artist',  "Jackson, Michael"),
+    "G3047":	  ('title',   "Oxford Comma", \
+		   'artist',  "Vampire Weekend"),
+    "G3237":	  ('title',   "Blame Canada", \
+		   'album',   "South Park - Bigger, Longer, & Uncut"),
+    "G3265":	  ('title',   "Hallelujah", \
+		   'artist',  "Cohen, Leonard", \
+		   'album',   "Various Positions"),
+    "G3290":	  ('title',   "Throne Room and Finale", \
+	      'artist', "Williams, John and the Skywalker Symphony Orchestra"),
+    "G3168":	  ('title',   "Awesome God", \
+		   'artist',  "Praise Band"),
+    "CenA":	  ('title',   'Danger Zone (Theme from "Top Gun")', \
+		   'artist',  "Loggins, Kenny"),
+    "NGC4945":	  ('title',   "White Winter Hymnal", \
+		   'artist',  "Fleet Foxes", \
+		   'album',   "Fleet Foxes")
     }
 
 #find songs in the database, make more useful lookup
@@ -63,11 +89,13 @@ def playSong(key):
   songs = songLookup[key]
   song = songs[random.randint(0, len(songs)-1)]
   pl = client.playlist()
-  if song['file'] in pl:
-    client.play(pl.index(song['file']))
+  if(pl):
+    idx = client.playlist().index(client.currentsong()['file'])
+    client.addid(song['file'], idx+1)
+    client.play(idx+1)      #length one higher now, with added song
   else:
     client.add(song['file'])
-    client.play(len(pl))      #length one higher now, with added song
+    client.play()
   client.close()
   client.disconnect()
 
@@ -94,27 +122,27 @@ df = gd.dirfile(dirfilePath, gd.RDONLY)
 try:
   while True:
     lst = df.getdata("LST_SCHED", gd.FLOAT, \
-	first_frame=df.nframes-1, num_frames=1)
-    sch0 = schedule[0]
+	first_frame=df.nframes-1, num_frames=1)[0]
     newsong = False
-    while lst > sch0[0]:
-      try:
-	sch0 = schedule.pop(0)
-      except IndexError:
-	print "Schedule out of commands! Do something! Forget about music!"
-	sys.exit(1)
-      print "Passed threshold", sch0[0], "<", lst, "for region", sch0[1]
-      newsong = True
-    if newsong:
-      #can't do direct songLookup access because names may have modifier chars
-      for region in songLookup.keys:
-	if sch0[1].find(region) >= 0:
-	  print "New song!", sch0[1], "matches", region
-	  playSong(region)
-	  break
-      else:
-	print "Could not find song match for", sch0[1]
-    time.sleep(5)
+    try:
+      while lst > schedule[1][0]:
+	schedule.pop(0)
+	print "Passed threshold", schedule[0][0], "<", lst, \
+	    "for region", schedule[0][1]
+	newsong = True
+      if newsong:
+	#can't do direct songLookup access because names may have modifier chars
+	for region in songLookup.iterkeys():
+	  if schedule[0][1].find(region) >= 0:
+	    print "New song!", schedule[0][1], "matches", region
+	    playSong(region)
+	    break
+	else:
+	  print "Could not find song match for", schedule[0][1]
+      time.sleep(5)
+    except IndexError:
+      print "Schedule out of commands! Do something! Forget about music!"
+      sys.exit(1)
 
 except KeyboardInterrupt:
   df.close()
