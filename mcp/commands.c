@@ -1337,17 +1337,17 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.del = rvalues[5]; /* el drift speed */
       break;
     case quad:
-      is_new = 1;
+      is_new = 0;
       if ((CommandData.pointing_mode.mode != P_QUAD) ||
           (CommandData.pointing_mode.vaz != rvalues[8]) || /* az scan speed */
           (CommandData.pointing_mode.del != rvalues[9]) || /* el step size */
           (CommandData.pointing_mode.dith != rvalues[10])) { /* el dith size */
-        is_new=0;
+        is_new=1;
       }
       for (i = 0; i < 4; i++) {
         if ((CommandData.pointing_mode.ra[i] != rvalues[i * 2]) ||
             (CommandData.pointing_mode.dec[i] != rvalues[i * 2 + 1])) {
-          is_new = 0;
+          is_new = 1;
         }
       }
       
