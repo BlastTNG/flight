@@ -202,7 +202,7 @@
     <EXTREMA name="lntemp">
       <XLO value="70"/>
       <LO value="75"/>
-      <HI value="80"/>
+      <HI value="81"/>
       <XHI value="85"/>
     </EXTREMA>
     <EXTREMA name="lnfilttemp">
@@ -265,29 +265,47 @@
       <HI value="4.5"/>
       <XHI value="7"/>
     </EXTREMA>
-    <EXTREMA name="bias1">
+    <EXTREMA name="bias250">
       <XLO value="-1"/>
-      <LO value="20"/>
-      <HI value="80"/>
-      <XHI value="127"/>
+      <LO value="5000"/>
+      <HI value="15000"/>
+      <XHI value="20000"/>
     </EXTREMA>
-    <EXTREMA name="bias2">
+    <EXTREMA name="bias350">
       <XLO value="-1"/>
-      <LO value="20"/>
-      <HI value="80"/>
-      <XHI value="127"/>
+      <LO value="5000"/>
+      <HI value="15000"/>
+      <XHI value="20000"/>
     </EXTREMA>
-    <EXTREMA name="bias3">
+    <EXTREMA name="bias500">
       <XLO value="-1"/>
-      <LO value="20"/>
-      <HI value="80"/>
-      <XHI value="127"/>
+      <LO value="5000"/>
+      <HI value="15000"/>
+      <XHI value="20000"/>
     </EXTREMA>
     <EXTREMA name="levelsens">
-      <XLO value="0.2"/>
-      <LO value="0.5"/>
+      <XLO value="1.2"/>
+      <LO value="1.77"/>
       <HI value="7.5"/>
       <XHI value="9"/>
+    </EXTREMA>
+    <EXTREMA name="ichar">
+      <XLO value="-0.05"/>
+      <LO value="-0.01"/>
+      <HI value="0.02"/>
+      <XHI value="4"/>
+    </EXTREMA>
+    <EXTREMA name="ihschar">
+      <XLO value="-0.02"/>
+      <LO value="3.2"/>
+      <HI value="3.3"/>
+      <XHI value="5"/>
+    </EXTREMA>
+    <EXTREMA name="icryo">
+      <XLO value="-0.05"/>
+      <LO value="-0.02"/>
+      <HI value="0.02"/>
+      <XHI value="0.05"/>
     </EXTREMA>
     <EXTREMA name="hspwm">
       <XLO value="-1"/>
@@ -1352,13 +1370,13 @@
   </BOX>
   <BOX caption="Bias/Phase" colour="#707" row="1" col="9" rowspan="2">
     <NUMBER caption="Bias 250">
-      <DATUM format="%.0f" src="AMPL_250_BIAS" extrema="bias1"/>
+      <DATUM format="%.0f" src="AMPL_250_BIAS" extrema="bias250"/>
     </NUMBER>
     <NUMBER caption="Bias 350">
-      <DATUM format="%d" src="AMPL_350_BIAS" extrema="bias2"/>
+      <DATUM format="%d" src="AMPL_350_BIAS" extrema="bias350"/>
     </NUMBER>
     <NUMBER caption="Bias 500">
-      <DATUM format="%d" src="AMPL_500_BIAS" extrema="bias3"/>
+      <DATUM format="%d" src="AMPL_500_BIAS" extrema="bias500"/>
     </NUMBER>
     <NUMBER caption="ROX Bias">
       <DATUM format="%d" src="AMPL_ROX_BIAS" extrema="unknown"/>
@@ -1806,7 +1824,7 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="I Charcoal">
-      <DATUM format="%.2f" src="I_CHARCOAL" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_CHARCOAL" extrema="ichar"/>
     </NUMBER>
     <MULTI caption="HS Char">
       <DATUM src="CHARCOAL_HS_HEAT">
@@ -1815,7 +1833,7 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="I HS Char">
-      <DATUM format="%.2f" src="I_HS_CHAR" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_HS_CHAR" extrema="ihschar"/>
     </NUMBER>
     <MULTI caption="HS Pot">
       <DATUM src="POT_HS_HEAT">
@@ -1824,7 +1842,7 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="I HS Pot">
-      <DATUM format="%.2f" src="I_HS_POT" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_HS_POT" extrema="icryo"/>
     </NUMBER>
     <MULTI caption="JFET">
       <DATUM src="JFET_HEAT">
@@ -1833,7 +1851,7 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="I JFET">
-      <DATUM format="%.2f" src="I_JFET" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_JFET" extrema="icryo"/>
     </NUMBER>
     <MULTI caption="Auto JFET">
       <DATUM src="AUTO_JFET_HEAT">
@@ -1848,7 +1866,7 @@
       </DATUM>
     </MULTI>
     <NUMBER caption="I Cal Lamp">
-      <DATUM format="%.2f" src="I_CAL_LAMP" extrema="unknown"/>
+      <DATUM format="%.2f" src="I_CAL_LAMP" extrema="icryo"/>
     </NUMBER>
     <MULTI caption="Autocycle">
       <DATUM src="cycle_state">
