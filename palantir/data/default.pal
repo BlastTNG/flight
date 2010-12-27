@@ -80,10 +80,10 @@
       <XLO value="-40"/>
     </EXTREMA>
     <EXTREMA name="currenttotal">
-       <HI value="20"/>
-       <LO value="5"/>
+       <HI value="24"/>
+       <LO value="9"/>
        <XHI value="30"/>
-       <XLO value="0"/>
+       <XLO value="3"/>
     </EXTREMA>
     <EXTREMA name="acscurrent">
       <HI value="1.5"/>
