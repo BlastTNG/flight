@@ -410,6 +410,12 @@
       <HI value="5.0"/>
       <XHI value="10.0"/>
     </EXTREMA>
+    <EXTREMA name="iserrwcheck">
+      <XLO value="-10.0"/>
+      <LO value="-9.0"/>
+      <HI value="9.0"/>
+      <XHI value="10.0"/>
+    </EXTREMA>
     <EXTREMA name="vrwcheck">
       <XLO value="-300.0"/>
       <LO value="-170.0"/>
@@ -1468,7 +1474,7 @@
       <DATUM format="%3b" src="DR_INFO_RIO_RW" extrema="riocheck"/>
     </NUMBER>
     <NUMBER caption="RW I">
-      <DATUM format="%.2f" src="I_SER_RW" extrema="isercheck"/>
+      <DATUM format="%.2f" src="I_SER_RW" extrema="iserrwcheck"/>
     </NUMBER>
     <MULTI caption="Piv Enab">
       <DATUM src="DR_INFO_DISAB_PIV">
