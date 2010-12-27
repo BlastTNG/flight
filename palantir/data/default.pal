@@ -32,6 +32,12 @@
       <XHI value="60"/>
       <XLO value="-40"/>
     </EXTREMA>
+    <EXTREMA name="t_feedthrough">
+      <HI value="40"/>
+      <LO value="5"/>
+      <XHI value="60"/>
+      <XLO value="-5"/>
+    </EXTREMA>
     <EXTREMA name="battemp">
       <HI value="30"/>
       <LO value="-10"/>
@@ -916,7 +922,7 @@
       <DATUM format="%.2f" src="T_HWPR_MOT" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Feedthrough">
-      <DATUM format="%.2f" src="T_HWPR_FEED" extrema="temp"/>
+      <DATUM format="%.2f" src="T_HWPR_FEED" extrema="t_feedthrough"/>
     </NUMBER>
     <NUMBER caption="DAC Box">
       <DATUM format="%.2f" src="T_DAC_BOX" extrema="temp"/>
