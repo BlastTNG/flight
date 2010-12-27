@@ -16,7 +16,7 @@ using namespace MATPACK;
 #define POINTING  "FK5_23_MV_19_CS"
 #define CALP      "_cp_21_mdt"
 #define TOD_OFFS  0
-#define ZERO_COLD_ENC 0.451
+#define ZERO_COLD_ENC 0.451545
 
 #ifdef SCOFFSFILE
 #undef SCOFFSFILE
@@ -27,7 +27,7 @@ using namespace MATPACK;
 #endif
 
 #define SCOFFSFILE "sc_offs_mcm_19_MV_16_CS_modforblast06.txt"
-#define BOLO_TABLE  "bolotable_blastpol_20101205_modforblast06.txt"
+#define BOLO_TABLE  "bolotable_blastpol_20101224_modforblast06.txt"
 //#define SCOFFSFILE "sc_offs_kir.txt"
 //#define BOLO_TABLE  "bolo_table_kir.txt"
 
@@ -357,7 +357,7 @@ int main(int argc, char *argv[])
     // Polarization angle = 2 * (theta-chi) - ro_roll + [0 1]*!pi/2 + PA
     Data* AngPol = new Data(filename, string("POT_HWPR"), irg->f0, irg->nf);
     *AngPol      = 4.0*M_PI*(ZERO_COLD_ENC - (*AngPol)); // 2 * (theta-theta0); chi has yet to be implemented
-
+     AngPol->ReGrid(20);
     cerr << "Reading Pointing Solution ... " << flush;
     if(galactic_coord) {
       Yaw      = new Data(filename, string("GLON_")  + pointing_suffix, irg->f0, irg->nf);
@@ -439,7 +439,7 @@ int main(int argc, char *argv[])
       }
 
       Flag -= Bolo->Lo();
-      
+
       if(highpassfrq > 0.0) {
 	
 	cerr <<  "PoliSub... "<< flush;
@@ -472,11 +472,12 @@ int main(int argc, char *argv[])
       if(highpassfrq > 0.0) {
 	cerr << "prepare fft... " << flush; 
 	Bolo->PrepareFFTVectorExtrap(0);
+        //Bolo->PrepareFFTVector(100); // **LORENZO** 100 is the number of frames read before and after for padding
 	cerr << "highpassing... " << flush; 
 	Bolo->HighPass(highpassfrq);
 	Bolo->RecoverFFTVector();
       }
-      
+
       if(calibrate) {
 	cerr << "calibrating... " << flush;
 	Bolo->Calibrate( -binfo.Resp(*ich) , 0.0);
