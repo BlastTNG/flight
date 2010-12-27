@@ -13,6 +13,7 @@
     <TEXTSTYLE name="W_BIT" colour="#cc0000" size="8" bold="true"/>
     <TEXTSTYLE name="E_BIT" backcolour="#faa" colour="#000055" size="8" bold="true"/>
     <TEXTSTYLE name="P_BIT" backcolour="#ffaaff" colour="#000055" size="8"/>
+    <TEXTSTYLE name="MAX_POWER" colour="#000055" size="8" bold="true"/>
     <EXTREMA name="slope">
       <HI value="0.1" textstyle="increasing"/>
       <LO value="-0.1" textstyle="decreasing"/>
@@ -1277,7 +1278,7 @@
         <WORD value="2" caption="Disconnect" textstyle="W_BIT"/>
         <WORD value="3" caption="Arr. Low" textstyle="W_BIT"/>
         <WORD value="4" caption="Fault" textstyle="W_BIT"/>
-        <WORD value="5" caption="Max. Pwr" textstyle="OK_BIT"/>
+        <WORD value="5" caption="Max. Pwr" textstyle="MAX_POWER"/>
         <WORD value="6" caption="Absorp" textstyle="OK_BIT"/>
         <WORD value="7" caption="Float" textstyle="OK_BIT"/>
         <WORD value="8" caption="Equalize" textstyle="W_BIT"/>
