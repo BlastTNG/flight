@@ -32,6 +32,12 @@
       <XHI value="60"/>
       <XLO value="-40"/>
     </EXTREMA>
+    <EXTREMA name="arraytemp">
+      <HI value="100"/>
+      <LO value="0"/>
+      <XHI value="110"/>
+      <XLO value="-40"/>
+    </EXTREMA>
     <EXTREMA name="t_feedthrough">
       <HI value="40"/>
       <LO value="5"/>
@@ -996,7 +1002,7 @@
       <DATUM format="%.2f" src="T_EARTH" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Sol Arr">
-      <DATUM format="%.2f" src="T_ARRAY" extrema="temp"/>
+      <DATUM format="%.2f" src="T_ARRAY" extrema="arraytemp"/>
     </NUMBER>
 
   </BOX>
