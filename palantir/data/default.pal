@@ -40,8 +40,8 @@
     </EXTREMA>
     <EXTREMA name="t_feedthrough">
       <HI value="40"/>
-      <LO value="5"/>
-      <XHI value="60"/>
+      <LO value="0"/>
+      <XHI value="50"/>
       <XLO value="-5"/>
     </EXTREMA>
     <EXTREMA name="battemp">
