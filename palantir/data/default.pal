@@ -423,10 +423,10 @@
       <XHI value="29.9"/>
     </EXTREMA>
     <EXTREMA name="varrcheck">
-      <XLO value="40.0"/>
-      <LO value="45.0"/>
-      <HI value="60.0"/>
-      <XHI value="100.0"/>
+      <XLO value="30.0"/>
+      <LO value="40.0"/>
+      <HI value="70.0"/>
+      <XHI value="85.0"/>
     </EXTREMA>
     <EXTREMA name="thscheck">
       <XLO value="0.0"/>
