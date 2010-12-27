@@ -20,10 +20,10 @@
       <XLO value="-32768"/>
     </EXTREMA>
     <EXTREMA name="gyheat">
-      <HI value="40"/>
-      <LO value="5"/>
-      <XHI value="60"/>
-      <XLO value="0"/>
+      <HI value="75"/>
+      <LO value="-1"/>
+      <XHI value="100"/>
+      <XLO value="-1"/>
     </EXTREMA>
     <EXTREMA name="temp">
       <HI value="40"/>
@@ -39,7 +39,7 @@
     </EXTREMA>
     <EXTREMA name="cputemp">
       <HI value="65"/>
-      <LO value="30"/>
+      <LO value="15"/>
       <XHI value="75"/>
       <XLO value="0"/>
     </EXTREMA>
@@ -591,7 +591,7 @@
     <MULTI caption="Evil Eye">
       <DATUM src="EYE_ON_ISC">
         <WORD value="1" caption="On" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Save Imgs">
@@ -664,7 +664,7 @@
     <MULTI caption="Evil Eye">
       <DATUM src="EYE_ON_OSC">
         <WORD value="1" caption="On" textstyle="OK_BIT"/>
-        <WORD value="0" caption="Off" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <MULTI caption="Save Imgs">
@@ -896,7 +896,7 @@
     <NUMBER caption="Gybox Set">
       <DATUM format="%.2f" src="T_SET_GY" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Gybox Heater%">
+    <NUMBER caption="Gybox Heat%">
       <DATUM format="%.2f" src="H_HIST_GY" extrema="gyheat"/>
     </NUMBER>
     <NUMBER caption="IF Clin">
@@ -908,7 +908,7 @@
     <NUMBER caption="Amp DCDC">
       <DATUM format="%.2f" src="T_PADCDC_REC" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="Amp HK DCDC">
+    <NUMBER caption="HK DCDC">
       <DATUM format="%.2f" src="T_HKDCDC_REC" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="HWPR Motor">
@@ -917,7 +917,7 @@
     <NUMBER caption="Feedthrough">
       <DATUM format="%.2f" src="T_HWPR_FEED" extrema="temp"/>
     </NUMBER>
-    <NUMBER caption="REC DAC BOX">
+    <NUMBER caption="DAC Box">
       <DATUM format="%.2f" src="T_DAC_BOX" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Pump Valve">
@@ -1277,7 +1277,7 @@
         <WORD value="2" caption="Disconnect" textstyle="W_BIT"/>
         <WORD value="3" caption="Arr. Low" textstyle="W_BIT"/>
         <WORD value="4" caption="Fault" textstyle="W_BIT"/>
-        <WORD value="5" caption="Max. Pwr" textstyle="W_BIT"/>
+        <WORD value="5" caption="Max. Pwr" textstyle="OK_BIT"/>
         <WORD value="6" caption="Absorp" textstyle="OK_BIT"/>
         <WORD value="7" caption="Float" textstyle="OK_BIT"/>
         <WORD value="8" caption="Equalize" textstyle="W_BIT"/>
