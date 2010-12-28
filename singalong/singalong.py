@@ -25,7 +25,7 @@ songNameLookup = {
 		   'artist',  "Journey"),
     "Spearhead":  ('title',   'Theme from "Shaft"', \
 		   'artist',  "Hayes, Isaac"),
-    "8470":	  ('title',   "Hey Mickey", \
+    "Mickey":	  ('title',   "Hey Mickey", \
 		   'artist',  "Basil, Toni"),
     "Lupus1a":	  ('title',   "Hungry Like the Wolf", \
 		   'artist',  "Duran Duran"),
