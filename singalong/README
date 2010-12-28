@@ -12,5 +12,6 @@ Starting at line 16 is a dictionary, refereced by region names containing
   (songName, artist) tuples describing the song to play in that region
   these must be exactly (case sensitive) as they appear in the mpd database
 
-run ./singalong <schedule file>
+run:
+  $ ./singalong <schedule file>
   where <schedule file> is the path to the currently-executing schedule file
