@@ -32,12 +32,6 @@
       <XHI value="60"/>
       <XLO value="-40"/>
     </EXTREMA>
-    <EXTREMA name="arraytemp">
-      <HI value="100"/>
-      <LO value="0"/>
-      <XHI value="110"/>
-      <XLO value="-40"/>
-    </EXTREMA>
     <EXTREMA name="t_feedthrough">
       <HI value="40"/>
       <LO value="0"/>
@@ -57,9 +51,9 @@
       <XLO value="0"/>
     </EXTREMA>
     <EXTREMA name="powtemp">
-      <HI value="55"/>
-      <LO value="10"/>
-      <XHI value="65"/>
+      <HI value="30"/>
+      <LO value="-5"/>
+      <XHI value="45"/>
       <XLO value="-20"/>
     </EXTREMA>
     <EXTREMA name="mcctemp">
@@ -67,6 +61,30 @@
       <LO value="10"/>
       <XHI value="55"/>
       <XLO value="-20"/>
+    </EXTREMA>
+    <EXTREMA name="ambtemp">
+      <HI value="10"/>
+      <LO value="-40"/>
+      <XHI value="20"/>
+      <XLO value="-50"/>
+    </EXTREMA>
+    <EXTREMA name="primetemp">
+      <HI value="-15"/>
+      <LO value="-25"/>
+      <XHI value="0"/>
+      <XLO value="-40"/>
+    </EXTREMA>
+    <EXTREMA name="secondtemp">
+      <HI value="-20"/>
+      <LO value="-30"/>
+      <XHI value="-5"/>
+      <XLO value="-45"/>
+    </EXTREMA>
+    <EXTREMA name="soltemp">
+      <HI value="80"/>
+      <LO value="0"/>
+      <XHI value="100"/>
+      <XLO value="-30"/>
     </EXTREMA>
     <EXTREMA name="rahour">
       <HI value="24.01"/>
@@ -458,7 +476,13 @@
       <HI value="0.001389"/>
       <XHI value="0.00555"/>
     </EXTREMA>
-    <CURFILE name="/data/etc/defile.lnk"/>
+    <EXTREMA name="altitude">
+      <XLO value="35000"/>
+      <LO value="38000"/>
+      <HI value="40500"/>
+      <XHI value="42000"/>
+    </EXTREMA>
+    <CURFILE name="/data/etc/fox.lnk"/>
     <DECOMD host="widow.blast" port="11411"/>
   </SETTINGS>
   <DEFAULTS>
@@ -641,7 +665,7 @@
       <DATUM format="%.2f" src="T_LENS_ISC" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T ISC PC">
-      <DATUM format="%.2f" src="T_COMP_ISC" extrema="temp"/>
+      <DATUM format="%.2f" src="T_COMP_ISC" extrema="cputemp"/>
     </NUMBER>
     <MULTI caption="Heater">
       <DATUM src="HEATER_ON_ISC">
@@ -714,7 +738,7 @@
       <DATUM format="%.2f" src="T_LENS_OSC" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T OSC PC">
-      <DATUM format="%.2f" src="T_COMP_OSC" extrema="temp"/>
+      <DATUM format="%.2f" src="T_COMP_OSC" extrema="cputemp"/>
     </NUMBER>
     <MULTI caption="Heater">
       <DATUM src="HEATER_ON_OSC">
@@ -963,22 +987,22 @@
       <DATUM format="%.2f" src="T_IF_BOT_BACK" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Primary 1">
-      <DATUM format="%.2f" src="T_1_PRIME" extrema="temp"/>
+      <DATUM format="%.2f" src="T_1_PRIME" extrema="primetemp"/>
     </NUMBER>
     <NUMBER caption="Primary 2">
-      <DATUM format="%.2f" src="T_2_PRIME" extrema="temp"/>
+      <DATUM format="%.2f" src="T_2_PRIME" extrema="primetemp"/>
     </NUMBER>
     <NUMBER caption="Bot Strut">
-      <DATUM format="%.2f" src="T_STRUT_BOT" extrema="temp"/>
+      <DATUM format="%.2f" src="T_STRUT_BOT" extrema="ambtemp"/>
     </NUMBER>
     <NUMBER caption="Side Strut">
-      <DATUM format="%.2f" src="T_STRUT_SIDE" extrema="temp"/>
+      <DATUM format="%.2f" src="T_STRUT_SIDE" extrema="ambtemp"/>
     </NUMBER>
     <NUMBER caption="Secondary 1">
-      <DATUM format="%.2f" src="T_1_SECOND" extrema="temp"/>
+      <DATUM format="%.2f" src="T_1_SECOND" extrema="secondtemp"/>
     </NUMBER>
     <NUMBER caption="Secondary 2">
-      <DATUM format="%.2f" src="T_2_SECOND" extrema="temp"/>
+      <DATUM format="%.2f" src="T_2_SECOND" extrema="secondtemp"/>
     </NUMBER>
     <NUMBER caption="Push Plate">
       <DATUM format="%.2f" src="T_PUSH_PLATE" extrema="temp"/>
@@ -996,7 +1020,7 @@
       <DATUM format="%.2f" src="T_STAR_FRONT" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="Chin Mid">
-      <DATUM format="%.2f" src="T_CHIN" extrema="temp"/>
+      <DATUM format="%.2f" src="T_CHIN" extrema="ambtemp"/>
     </NUMBER>
     <NUMBER caption="Port Hex">
       <DATUM format="%.2f" src="T_PORT_HEXC" extrema="temp"/>
@@ -1008,7 +1032,7 @@
       <DATUM format="%.2f" src="T_EARTH" extrema="temp"/>
     </NUMBER>
     <NUMBER caption="T Sol Arr">
-      <DATUM format="%.2f" src="T_ARRAY" extrema="arraytemp"/>
+      <DATUM format="%.2f" src="T_ARRAY" extrema="soltemp"/>
     </NUMBER>
 
   </BOX>
@@ -1171,10 +1195,10 @@
       <DATUM format="%.0f" src="OFFSET_SF" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="T Primary">
-      <DATUM format="%.2f" src="T_PRIME_SF" extrema="temp"/>
+      <DATUM format="%.2f" src="T_PRIME_SF" extrema="primetemp"/>
     </NUMBER>
     <NUMBER caption="T Secondary">
-      <DATUM format="%.2f" src="T_SECOND_SF" extrema="temp"/>
+      <DATUM format="%.2f" src="T_SECOND_SF" extrema="secondtemp"/>
     </NUMBER>
     <NUMBER caption="Primary Gain">
       <DATUM format="%.0f" src="G_PRIME_SF" extrema="unknown"/>
@@ -1515,11 +1539,11 @@
     <MULTI caption="Schedule File">
       <DATUM src="SCHEDULE">
         <WORD value="0" caption="Happy North" textstyle="W_BIT"/>
-        <WORD value="1" caption="Sad North" textstyle="E_BIT"/>
+        <WORD value="1" caption="Sad North" textstyle="W_BIT"/>
         <WORD value="2" caption="Happy Mid" textstyle="OK_BIT"/>
         <WORD value="3" caption="Sad Mid" textstyle="W_BIT"/>
         <WORD value="4" caption="Happy South" textstyle="W_BIT"/>
-        <WORD value="5" caption="Sad South" textstyle="E_BIT"/>
+        <WORD value="5" caption="Sad South" textstyle="W_BIT"/>
         <WORD value="6" caption="Slot" textstyle="W_BIT"/>
         <WORD value="7" caption="Slot" textstyle="W_BIT"/>
       </DATUM>
@@ -1590,7 +1614,7 @@
       <DATUM format="%.4f" src="LON" extrema="unknown"/>
     </NUMBER>
     <NUMBER caption="Altitude (m)">
-      <DATUM format="%.0f" src="ALT_DGPS" extrema="unknown"/>
+      <DATUM format="%.0f" src="ALT_DGPS" extrema="altitude"/>
     </NUMBER>
     <NUMBER caption="Speed (kts)">
       <DATUM format="%.2f" src="SPEED_DGPS" extrema="unknown"/>
