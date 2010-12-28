@@ -14,7 +14,7 @@ mpdPort = 6606
 mpdPass = "250micron"
 
 #setup for the dirfile
-dirfilePath = "/data/etc/defile.lnk"
+dirfilePath = "/data/etc/fox.lnk"
 
 
 #region to song mapping
@@ -89,13 +89,14 @@ def playSong(key):
   songs = songLookup[key]
   song = songs[random.randint(0, len(songs)-1)]
   pl = client.playlist()
-  if(pl):
-    idx = client.playlist().index(client.currentsong()['file'])
+  cur = client.currentsong()
+  if(pl and cur):
+    idx = client.playlist().index(cur['file'])
     client.addid(song['file'], idx+1)
     client.play(idx+1)      #length one higher now, with added song
   else:
     client.add(song['file'])
-    client.play()
+    client.play(len(pl))
   client.close()
   client.disconnect()
 
