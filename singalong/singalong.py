@@ -119,11 +119,12 @@ print "************************************************************"
 print
 
 #main loop. read LST_SCHED and if it crosses a schedule threshold, play the song
-df = gd.dirfile(dirfilePath, gd.RDONLY)
 try:
   while True:
+    df = gd.dirfile(dirfilePath, gd.RDONLY)
     lst = df.getdata("LST_SCHED", gd.FLOAT, \
 	first_frame=df.nframes-1, num_frames=1)[0]
+    df.close()
     newsong = False
     try:
       while lst > schedule[1][0]:
@@ -146,5 +147,5 @@ try:
       sys.exit(1)
 
 except KeyboardInterrupt:
-  df.close()
+  print "bye"
 
