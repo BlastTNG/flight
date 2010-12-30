@@ -1170,9 +1170,11 @@
     <NUMBER caption="Accel.">
       <DATUM format="%.0f" src="ACC_ACT" extrema="unknown"/>
     </NUMBER>
+    <!--
     <NUMBER caption="Status">
       <DATUM format="%5b" src="STATUS_ACTBUS" extrema="statusactbus"/>
     </NUMBER>
+    -->
   </BOX>
   <BOX caption="Focus System" colour="#002222" row="6" col="6" rowspan="1">
     <MULTI caption="Auto Focus">
@@ -1374,9 +1376,11 @@
     <NUMBER caption="B2R1">
       <DATUM format="%.3f" src="B2R1" extrema="unknown"/>
     </NUMBER>
+    <!--
     <NUMBER caption="B2T1">
       <DATUM format="%.3f" src="B2T1" extrema="unknown"/>
     </NUMBER>
+    -->
     <NUMBER caption="B2T2">
       <DATUM format="%.3f" src="B2T2" extrema="unknown"/>
     </NUMBER>
@@ -1566,9 +1570,11 @@
     <NUMBER caption="IRIDIUM Rate">
       <DATUM format="%.1f" src="RATE_IRIDIUM" extrema="unknown"/>
     </NUMBER>
+    <!--
     <NUMBER caption="Dirfile Hours">
       <DATUM format="%.4f" src="TIME_HOUR_DIRFILE" extrema="hours"/>
     </NUMBER>
+    -->
     <DATETIME caption="CPU Time">
       <DATUM format="%e %b %Y, %H:%M:%S" src="TIME"/>
     </DATETIME>
