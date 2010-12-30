@@ -69,16 +69,16 @@
       <XLO value="-50"/>
     </EXTREMA>
     <EXTREMA name="primetemp">
-      <HI value="-15"/>
+      <HI value="-5"/>
       <LO value="-25"/>
-      <XHI value="0"/>
+      <XHI value="5"/>
       <XLO value="-40"/>
     </EXTREMA>
     <EXTREMA name="secondtemp">
-      <HI value="-20"/>
-      <LO value="-30"/>
-      <XHI value="-5"/>
-      <XLO value="-45"/>
+      <HI value="-5"/>
+      <LO value="-25"/>
+      <XHI value="5"/>
+      <XLO value="-40"/>
     </EXTREMA>
     <EXTREMA name="soltemp">
       <HI value="80"/>
@@ -472,8 +472,8 @@
     </EXTREMA>
     <EXTREMA name="hwprpoterr">
       <XLO value="-0.00555"/>
-      <LO value="-0.001389"/>
-      <HI value="0.001389"/>
+      <LO value="-0.00181"/>
+      <HI value="0.00181"/>
       <XHI value="0.00555"/>
     </EXTREMA>
     <EXTREMA name="altitude">
@@ -1005,7 +1005,7 @@
       <DATUM format="%.2f" src="T_2_SECOND" extrema="secondtemp"/>
     </NUMBER>
     <NUMBER caption="Push Plate">
-      <DATUM format="%.2f" src="T_PUSH_PLATE" extrema="temp"/>
+      <DATUM format="%.2f" src="T_PUSH_PLATE" extrema="secondtemp"/>
     </NUMBER>
     <NUMBER caption="Act. Motor">
       <DATUM format="%.2f" src="T_MOT_ACT" extrema="temp"/>
@@ -1544,8 +1544,8 @@
         <WORD value="3" caption="Sad Mid" textstyle="W_BIT"/>
         <WORD value="4" caption="Happy South" textstyle="W_BIT"/>
         <WORD value="5" caption="Sad South" textstyle="W_BIT"/>
-        <WORD value="6" caption="Slot" textstyle="W_BIT"/>
-        <WORD value="7" caption="Slot" textstyle="W_BIT"/>
+        <WORD value="6" caption="Slot" textstyle="OK_BIT"/>
+        <WORD value="7" caption="Slot" textstyle="OK_BIT"/>
       </DATUM>
     </MULTI>
     <NUMBER caption="Sched Slot">
