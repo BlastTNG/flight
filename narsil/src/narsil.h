@@ -108,6 +108,7 @@ class MainForm : public QMainWindow
     QRadioButton *NGroups[N_GROUPS];
     QPushButton *NSendButton;
     QPushButton *NSettingsButton;
+    QLabel *NSettingsLabel;
     QPushButton *NCurFileButton;
     QPushButton *QuitButton;
     QListBox *NCommandList;
@@ -178,6 +179,7 @@ class MainForm : public QMainWindow
     void ChangeCurFile();
     void ShowSettings();
     void Ping();
+    void ChangeSettingsLabel();
 };
 #endif
 

@@ -698,6 +698,23 @@ void MainForm::SendCommand() {
 
 //-------------------------------------------------------------
 //
+// ChangeSettingsLabel (slot): triggered when user closes 
+//      settings dialog. Updates informative new label
+//
+//-------------------------------------------------------------
+
+void MainForm::ChangeSettingsLabel() {
+  const QString link[] = {"LOS", "TDRSS", "Iridium"};
+  const QString route[] = {"COMM1", "COMM2"};
+  
+  NSettingsLabel->setText(NCurFile->text() + "\t" 
+      + link[NSendMethod->currentItem()] + " "
+      + route[NSendRoute->currentItem()]);
+}
+
+
+//-------------------------------------------------------------
+//
 // ChangeCurFile (slot): triggered when the user enters a new
 //      .cur file in the settings dialog window
 //
@@ -1122,6 +1139,10 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
   NSettingsButton = new QPushButton(NTopFrame, "NSettingsButton");
   NSettingsButton->setText(tr("Settings . . ."));
   NSettingsButton->adjustSize();
+  NSettingsLabel = new QLabel(NTopFrame, "NSettingsLabel");
+  QFont f = NSettingsLabel->font();
+  f.setPointSize(12);
+  NSettingsLabel->setFont(f);
 
   NSettingsButton->setGeometry(PADDING, PADDING + 2 * PADDING + h1 + (int((2
             + MAX_N_PARAMS) / 2)) * (h3 + SPACING) - NSettingsButton->height(),
@@ -1130,6 +1151,13 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
       NSendButton->width(), PADDING + 2 * PADDING + h1 + (int((2 + MAX_N_PARAMS)
           / 2)) * (h3 + SPACING) - NSendButton->height(), NSendButton->width(),
       NSendButton->height());
+  NSettingsLabel->setGeometry(2*PADDING + NSettingsButton->width(), 
+      PADDING + 2 * PADDING + h1 + (int((2
+            + MAX_N_PARAMS) / 2)) * (h3 + SPACING) - NSettingsButton->height(),
+      NAboutLabel->width() - NSendButton->width() - NSettingsButton->width()
+	    - 3 * PADDING,
+      NSettingsLabel->height());
+
 
   NTopFrame->adjustSize();
 
@@ -1276,11 +1304,15 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
   ping_timer = new QTimer(this, "ping_timer");
   ping_timer->start(PING_TIME);
 
+  ChangeSettingsLabel();  //get default settings and put them in label
+
   connect(NSendButton, SIGNAL(clicked()), this, SLOT(SendCommand()));
   connect(NCurFileButton, SIGNAL(clicked()), this, SLOT(ChangeCurFile()));
   connect(NSettingsButton, SIGNAL(clicked()), this, SLOT(ShowSettings()));
   connect(NCloseSettingsWindow, SIGNAL(clicked()), NSettingsWindow,
       SLOT(accept()));
+  connect(NCloseSettingsWindow, SIGNAL(clicked()), 
+      this, SLOT(ChangeSettingsLabel()));
   connect(timer, SIGNAL(timeout()), this, SLOT(Tick()));
   connect(ping_timer, SIGNAL(timeout()), this, SLOT(Ping()));
 }
