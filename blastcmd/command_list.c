@@ -27,7 +27,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 4.111 $";
+const char *command_list_serial = "$Revision: 5.1 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",

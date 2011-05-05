@@ -1,4 +1,4 @@
-/* $Header: /data/cvsd-jail/data/cvs/netisc/tiff.h,v 4.0 2008-11-16 20:35:01 mtruch Exp $ */
+/* $Header: /data/cvsd-jail/data/cvs/netisc/tiff.h,v 5.1 2011-05-05 19:27:03 sjb Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
