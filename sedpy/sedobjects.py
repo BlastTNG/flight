@@ -1,7 +1,8 @@
 #!/usr/bin/env /usr/bin/python
 
-#UID_UTIME = "1\t2008-08-08 08:08:08"    #for spider "sbenton" has UID 1
-UID_UTIME = "23\t2008-08-08 08:08:08"	#for BLASTpol "sbenton" has UID 23
+#TODO: can keep UID fixed, but should update the time
+UID_UTIME = "1\t2008-08-08 08:08:08"    #for spider "sbenton" has UID 1
+#UID_UTIME = "23\t2008-08-08 08:08:08"	#for BLASTpol "sbenton" has UID 23
 
 class Failure(Exception):
   """exception to use for failures in parsing and matching"""
@@ -25,9 +26,14 @@ class Connector:
     self.matetype = matetype
     self.desc = desc
     self.count = int(count)
-    self.flags = {'alpha': alpha.upper(), 'bcd': bcd.upper()}
+    #alpha and bcd will wither be None or a non-empty string
+    self.flags = {'alpha': 'N', 'bcd': 'N'}
+    if (alpha): self.flags['alpha'] = 'Y';
+    if (bcd): self.flags['bcd'] = 'Y';
     #gender contains 'M' or 'F' for mating pair, 'X' used to simplify comparison
-    self.genders = {'M':mMate.upper(), 'F':fMate.upper(), 'X':'u'}
+    self.genders = {'M': 'X', 'F': 'X', 'X':'u'}
+    if mMate: self.genders['M'] = mMate.upper()
+    if fMate: self.genders['F'] = fMate.upper()
     self.mate = None   #object reference                                 #needed
 
   def gendersMatch(self, other):
@@ -39,8 +45,16 @@ class Connector:
 
   def __str__(self):
     """return a string representing the connector"""
-    return str((self.type, self.matetype, self.count, self.desc,\
-	self.flags, self.genders))
+    if self.flags['alpha'] == "Y": alpha = " alpha"
+    else: alpha = ""
+    if self.flags['bcd'] == "Y": bcd = " bcd"
+    else: bcd = ""
+    if self.genders['M'] == 'X': male = ""
+    else: male = " M-%s" % self.genders['M']
+    if self.genders['F'] == 'X': female = ""
+    else: female = " F-%s" % self.genders['F']
+    return '%s -> %s %d "%s"%s%s%s%s' % (self.type, self.matetype,
+	self.count, self.desc, alpha, bcd, male, female)
 
   def __eq__(self, other):
     """equality comparison"""
@@ -71,7 +85,9 @@ class Component:
     self.lines = []                                                      #needed
 
   def __str__(self):
-    return str((self.ref, self.name, self.partOf))
+    if self.partOf: partof = " < %s" % self.partOf
+    else: partof = ""
+    return '%s "%s"%s' % (self.ref, self.name, partof)
 
   def __eq__(self, other):
     if hasattr(other, 'ref'): return self.ref == other.ref
@@ -85,13 +101,16 @@ class Component:
 
 class Cable:
   """entries for the cable table. most are implicit p2p cables"""
-  count = 1
   cabout = open('out/cable', 'w')
 
   def __init__(self, ref, label, length):
-    #need to change p2pness of implicit cables
-    self.number = self.__class__.count
-    self.__class__.count+=1
+    #need to change p2p for implicit cables, populate jacks and lines lists
+    self.number = 0                                                      #needed
+    if ref and ref[0] == "&":	#try to infer number from ref
+      if ref[1] == "C": number = int(ref[2:])
+      else: number = int(ref[1:])
+      if number > 0:
+	self.number = number
     self.ref  = ref #internal use only
     self.label = label
     self.length = length and int(length) #short circuit avoids casting None
@@ -100,7 +119,11 @@ class Cable:
     self.lines = []                                                      #needed
 
   def __str__(self):
-    return str(((self.number,self.ref), self.label, self.length, self.p2p))
+    if self.number > 0: ref = "&C%d" % self.number
+    else: ref = self.ref
+    if self.length > 0: length = " %d" % self.length
+    else: length = ""
+    return 'CABLE %s "%s"%s' % (ref, self.label, length)
 
   def __eq__(self, other):
     if hasattr(other, 'ref'): return self.ref == other.ref
@@ -114,14 +137,19 @@ class Cable:
 
 class Jack:
   """contains information for jack table"""
-  count = 1
   jackout = open('out/jack', 'w')
 
   def __init__(self, internal, ref, label, conn_str, dest_part, \
-      dest_jack, c_desc, c_len):
+      dest_jack, c_num, c_desc, c_len):
     #need to populate pins list, find references to location, destination, conn
-    self.number = self.__class__.count
-    self.__class__.count+=1
+    #need to set placeholder and cablemaster where appropriate
+    self.number = 0                                                      #needed
+    #try to infer number from ref
+    if ref and ref[0] == "&":
+      if ref[1] == "J": number = int(ref[2:])
+      else: number = int(ref[1:])
+      if number > 0:
+	self.number = number
     self.internal = internal  #either None or 'IN'
     self.ref = ref #internal use only (matched in LINEs)
     self.label = label
@@ -131,9 +159,9 @@ class Jack:
     self.dest_str = dest_part
     self.dest_jack = dest_jack   #only needed for indistinguishable jacks
     self.location = None #object reference                               #needed
-    self.dest = None #object reference                            #needed
+    self.dest = None #object reference	                                 #needed
     if c_desc is not None: #allows ""
-      self.cable = Cable(None, c_desc, c_len)
+      self.cable = Cable(c_num, c_desc, c_len)
       self.cable.p2p = 'Y'
     else: self.cable = None
     self.pins = []                                                       #needed
@@ -153,12 +181,39 @@ class Jack:
 	  self.conn == other.conn: return True
     else: #no cable means must be mates, and must have genders match
       if self.conn.mate == other.conn and other.conn.mate == self.conn and \
-	  self.conn.gendersMatch(other.conn): return True
+	  self.conn.genders[self.gender] == other.gender and \
+	  other.conn.genders[other.gender] == self.gender: return True
     return False
 
   def __str__(self):
-    return str(((self.number,self.ref), self.label, self.conn_str, \
-	self.gender, self.dest_str, str(self.cable)))
+    if self.internal: internal = " IN"
+    else: internal = ""
+    if self.number > 0: ref = "&J%d" % self.number
+    else: ref = self.ref
+    if self.conn: connector = "%s/%s" % (self.conn.type, self.gender)
+    else: connector = self.conn_str
+    if self.dest:
+      if hasattr(self.dest, 'number') and self.dest.number > 0:
+	dest = "&C%d" % self.dest.number
+      else: dest = self.dest.ref #component or unnumbered cable
+    else: dest = self.dest_str
+    if self.mate:
+      if self.mate.number > 0: destjack = "&J%d" % self.mate.number
+      else: destjack = self.mate.ref
+    elif self.dest_jack: destjack = self.dest_jack
+    else: destjack = ""
+    if destjack: destination = "%s/%s" % (dest, destjack)
+    else: destination = dest
+    if self.cable:
+      if self.cable.number > 0: cref = " &C%d" % self.cable.number
+      #elif self.cable.ref: cref = " %s" % self.cable.ref #shouldn't happen
+      else: cref = ""
+      if self.cable.length: length = " %d" % self.cable.length
+      else: length = ""
+      cable = ' CABLE%s "%s"%s' % (cref, self.cable.label, length)
+    else: cable = ""
+    return 'JACK%s %s "%s" %s -> %s%s' % (internal, ref, self.label,
+	connector, destination, cable)
 
   def __eq__(self, other):
     if hasattr(other, 'ref'): return self.ref == other.ref
@@ -180,7 +235,7 @@ class Jack:
 import re
 class Line:
   """contains information on the line table"""
-  pinRE = re.compile(r'\(([a-z0-9]+)[;,]((?:\s*[A-Za-z0-9]{1,3},?)*)\)')
+  pinRE = re.compile(r'\(((?:&J?\d{1,5})|[a-z0-9]+)[;,]((?:\s*[A-Za-z0-9]{1,3},?)*)\)')
   count = 1
   lineout = open('out/line', 'w')
 
@@ -190,7 +245,7 @@ class Line:
     self.__class__.count += 1
     self.desc = desc
     self.pinnums = [];  #internal reference
-    self.jacknums = []; #internal reference, may want to add to JACK lines
+    self.jacknums = []; #internal reference
     for match in self.__class__.pinRE.finditer(pin_str):
       for pin in match.group(2).replace(',',' ').split():
 	self.jacknums.append(match.group(1))
@@ -200,11 +255,20 @@ class Line:
                          #autogen lines will only connect to a single pin
 
   def __str__(self):
-    return str((self.number, self.desc, zip(self.jacknums, self.pinnums)))
+    old_jacknum = self.jacknums[0]
+    pintok = ["(%s;"%old_jacknum]
+    for jacknum, pinnum in zip(self.jacknums, self.pinnums):
+      if jacknum != old_jacknum:
+	pintok.append("),(%s;" % jacknum)
+	old_jacknum = jacknum
+      if pintok[-1][-1] != ';': pintok.append(',')
+      pintok.append(pinnum)
+    pintok.append(")")
+    return 'LINE "%s" %s' % (self.desc, "".join(pintok))
+    #return str((self.number, self.desc, zip(self.jacknums, self.pinnums)))
 
   def __eq__(self, other):
     """doesn't quite test equality in this case: more like overlap"""
-    #TODO do I want to do this here??
     if self.autogen or other.autogen: return False #autogens don't count
     for jackpin in zip(self.jacknums, self.pinnums):
       if jackpin in zip(other.jacknums, other.pinnums): return True
@@ -222,7 +286,6 @@ class Pin:
   pinout = open('out/pin', 'w')
 
   def __init__(self, number, desc, jack, bline, cline):
-    #pin_str takes further processing, need to fill in owner (comp or cable)
     self.number = number #not necessarily a number; 3-digit string
     self.desc = desc
     #jack and lines are all object references instead of numbers
