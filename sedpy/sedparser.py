@@ -10,7 +10,8 @@ connectors = []  #list of connectors
 containers = []  #list of components and cables
 expected = []    #list of parts that have ben referenced but not declared
 
-countconn = []   #counts how many of each connector
+################################################################################
+# things to do after the list is fully parsed, mated, and checked
 
 def writeInfiles():
   """from connectors, containers lists creates database infiles"""
@@ -22,13 +23,79 @@ def writeInfiles():
     for jack in cont.jacks:
       #print "writing", jack.ref, "with dest", jack.dest.ref
       if not jack.placeholder:
-        countconn.append(jack.conn_str)
 	for pin in jack.pins: pin.toInfile()
 	jack.toInfile()
 	if jack.cable and jack.cablemaster:
 	  jack.cable.toInfile()
 	  for cline in jack.cable.lines: cline.toInfile()
     cont.toInfile()
+
+def countConnectors():
+  """count how many of each connector type and gender are used as jacks"""
+  countconn = {}   #counts how many of each connector
+  for conn in connectors: countconn[conn.type] = {'M': 0, 'F': 0}
+  for cont in containers:
+    for jack in cont.jacks:
+      if not jack.placeholder:
+	name = jack.conn.type
+	gender = jack.gender
+	matename = jack.conn.mate.type
+	mategender = jack.conn.genders[jack.gender]
+	countconn[name][gender] += 1
+	countconn[matename][mategender] += 1
+  print "\n%10s%10s%10s"%("Jack Type", "# Male", "# Female")    
+  for conn in connectors:
+    if countconn[conn.type]['M'] > 0 or countconn[conn.type]['F'] > 0:
+      print "%10s%10s%10s" % (conn.type, 
+	  countconn[conn.type]['M'], countconn[conn.type]['F'])
+
+def rewriteDescription(filename):
+  """read and rewrite the description file, adds extra info from parsing"""
+  nd = open("out/newdescription.txt", 'w')  #path to new description
+  f = open(filename, 'r')
+  startWithConnectors = True
+  cont = None
+  for line in f:
+    sline = line.strip()
+
+    if startWithConnectors: #set to false when done
+      conn = lineparser.parse(Connector, sline)
+      if conn is not None:
+	nd.write("%s\n" % str(connectors[connectors.index(conn)]))
+      elif sline[0] == '*' and sline == '*ENDCONNECTORLIST':
+	startWithConnectors = False
+	nd.write(line)
+  
+    elif sline[0:4] == "JACK":
+      jack = lineparser.parse(Jack, sline)
+      nd.write("    %s\n" % str(cont.jacks[cont.jacks.index(jack)]))
+
+    elif sline[0:4] == "LINE":
+      line = lineparser.parse(Line, sline)
+      line = cont.lines[cont.lines.index(line)]
+      #temporarily replace jack numbers with global references, for writing
+      newjacknums = []
+      for jacknum in line.jacknums:
+	jack = cont.jacks[cont.jacks.index(jacknum)]
+	newjacknums.append("&J%d" % jack.number)
+      oldjacknums = line.jacknums
+      line.jacknums = newjacknums
+      nd.write("    %s\n" % str(line))
+      line.jacknums = oldjacknums
+
+    elif sline[0:5] == "CABLE":
+      cont = containers[containers.index(lineparser.parse(Cable, sline))]
+      nd.write("%s\n" % str(cont))
+
+    elif sline == "" or sline[0] == '#':	#blank or comment, just reprint
+      nd.write(line)
+
+    else: #COMPONENT
+      cont = containers[containers.index(lineparser.parse(Component, sline))]
+      nd.write("%s\n" % str(cont))
+
+################################################################################
+# parser logic
 
 def mateJack(jack):
   """tries to find mate for jack, then does some pairing operations"""
@@ -47,7 +114,7 @@ def mateJack(jack):
     for tempjack in jack.dest.jacks: 
       if jack.canMate(tempjack) and tempjack.dest_str == containers[-1].ref:
 	if tempjack.mate is not None: 
-	  raise Failure("Matching jack (%s/%s) already mated"\
+	  raise Failure("Matching jack (%s/%s) already mated"
 	      %(tempjack.location.ref,tempjack.ref))
 	jack.mate = tempjack
 	break
@@ -66,6 +133,13 @@ def mateJack(jack):
 	    (jack.mate.location.ref, jack.location.ref)
 	print "Warning invented cable name: %s"% jack.mate.cable.label
       else: jack.mate.cable.label = jack.cable.label
+    #compare cable numbers
+    if jack.cable.ref and jack.mate.cable.ref:
+      if jack.cable.ref != jack.mate.cable.ref:
+	raise Failure("p2p cable numbers don't match for mating jacks")
+    elif not jack.mate.cable.ref:
+      jack.mate.cable.ref = jack.cable.ref
+      jack.mate.cable.number = jack.cable.number
     jack.cable = jack.mate.cable #unify cable references
     jack.mate.cablemaster = True
   else: jack.placeholder = True #newer jack is always the placeholder
@@ -145,26 +219,25 @@ def addPins(line):
     raise Failure("line overlaps existing one")
   containers[-1].lines.append(line)
 
-def sedparser(argv=None):
+def sedparser(filename):
   """main function allows calls from interactive prompt, or extra cleverness"""
-  #parse command line arguments, open description file
-  startWithConnectors = True #connector list at top? make overridable by args
-  if argv is None: argv = sys.argv
-  if len(argv) == 2: 
-    f = open(argv[1], 'r')
-  else: 
-    f = open(defaultfile, 'r')
+  startWithConnectors = True #connector list at top. make overridable by args?
+  f = open(filename, 'r')
+
+  #lists of used cable and jack numbers
+  used_cable_nums = []
+  used_jack_nums = []
   
   #main loop, red each line of the description file in turn
   linecount = 0
-  for str in f:
+  for line in f:
     linecount += 1
     #print "On line", linecount
-    str = str.strip()
+    line = line.strip()
 
     #CONNECTORS
     if startWithConnectors: #set to false when done
-      conn = lineparser.parse(Connector, str)
+      conn = lineparser.parse(Connector, line)
       if conn is not None: #successful
 	if conn in connectors: raise Failure("connector exists", linecount)
 	connectors.append(conn)
@@ -176,16 +249,16 @@ def sedparser(argv=None):
 	    mate.mate = conn
 	  else: raise Failure("Incompatible gender mating", linecount)
 	except ValueError: pass #mate not found
-      elif str[0] == '*' and str == '*ENDCONNECTORLIST':
+      elif line[0] == '*' and line == '*ENDCONNECTORLIST':
 	startWithConnectors = False
 	for c in connectors:
 	  if c.mate is None: print "Warning: unmated connector", c.type
 	print "Info: done parsing connectors, found", len(connectors)
-      elif str != "":
+      elif line != "":
 	raise Failure("Unrecognized connector", linecount)
   
-    elif str[0:4] == "JACK":
-      jack = lineparser.parse(Jack, str)
+    elif line[0:4] == "JACK":
+      jack = lineparser.parse(Jack, line)
       if jack is None: raise Failure("Bad jack line", linecount)
       if jack in containers[-1].jacks:
 	raise Failure("non-unique jack identifier", linecount)
@@ -200,29 +273,44 @@ def sedparser(argv=None):
       containers[-1].jacks.append(jack)
       try: mateJack(jack)
       except Failure, err: raise Failure(err.errstr, linecount)
+      if jack.number > 0:
+	if not jack.number in used_jack_nums:
+	  used_jack_nums.append(jack.number)
+	else:
+	  raise Failure("repeated global jack number %d"%jack.number, linecount)
+      if jack.cable and jack.cable.number > 0:
+	if not jack.cable.number in used_cable_nums:
+	  used_cable_nums.append(jack.cable.number)
+	elif not jack.mate:
+	  raise Failure("repeated cable number %d"%jack.cable.number, linecount)
 
-    elif str[0:4] == "LINE":
-      line = lineparser.parse(Line, str)
+    elif line[0:4] == "LINE":
+      line = lineparser.parse(Line, line)
       if line is None: raise Failure("Bad line line", linecount)
       line.owner = containers[-1]
       try: addPins(line) #catch failures and reraise with line number
       except Failure, err: raise Failure(err.errstr, linecount)
 
-    elif str[0:5] == "CABLE":
-      cable = lineparser.parse(Cable, str)
+    elif line[0:5] == "CABLE":
+      cable = lineparser.parse(Cable, line)
       if cable is None: raise Failure("Bad cable line", linecount)
       if cable in containers: 
 	raise Failure("cable exists: rename or use re-edit line", linecount)
       containers.append(cable)
       try: expected.remove(cable)
       except ValueError: pass
+      if cable.number > 0:
+	if not cable.number in used_cable_nums:
+	  used_cable_nums.append(cable.number)
+	else:
+	  raise Failure("repeated cable number %d"%cable.number, linecount)
 
-    elif str != "" and str[0] != '#': #COMPONENT
-      comp = lineparser.parse(Component, str)
+    elif line != "" and line[0] != '#': #COMPONENT
+      comp = lineparser.parse(Component, line)
       if comp is None:  #check if line is a re-edit command
 	try:
-	  containers.append(containers.pop(containers.index(str)))
-	  print "Info: re-editing", str
+	  containers.append(containers.pop(containers.index(line)))
+	  print "Info: re-editing", line
 	  continue
 	except ValueError: raise Failure("nothing found to re-edit", linecount)
       if comp in containers: 
@@ -235,39 +323,58 @@ def sedparser(argv=None):
 	expected.append(Component(comp.partOf, "expected", None))
 
 
+  #print stats, assign cable and jack numbers, check pins and mating
   for part in expected: print part.ref
   if len(expected) > 0: raise Failure("above parts used but not declared", -1)
   print "Info: done parsing, found", len(containers), "components and cables:"
   print "%10s%10s%10s"%("Part", "Jacks", "Lines")
-  allMated = True
-  cableCount = 1
+  all_mated = True
+  cable_count = 1
+  jack_count = 1
   for cont in containers:
     print "%10s%10s%10s"%(cont.ref, len(cont.jacks), len(cont.lines))
-    if hasattr(cont, 'number'): #it's a cable
-      cont.number = cableCount
-      cableCount += 1
+    #assign number to unnumbered cables
+    if hasattr(cont, 'number') and cont.number <= 0:
+      while cable_count in used_cable_nums: cable_count += 1
+      cont.number = cable_count
+      cable_count += 1
     for ijack in cont.jacks:
+      #check number of pins
       if ijack.conn.count > 0 and len(ijack.pins) > ijack.conn.count:
 	raise Failure("Jack %s jas too many pins: %d/%d"\
 	    %(ijack.ref,len(ijack.pins),ijack.conn.count))
+      #check for mating
       if ijack.mate is None: 
 	print ("\tJack %s unmated"%ijack.ref)
-	allMated = False
-      if ijack.cable and ijack.cablemaster:
-	ijack.cable.number = cableCount
-	cableCount += 1
-  if not allMated: 
+	all_mated = False
+      #assign number to unnumbered jacks
+      if ijack.number <= 0:
+	while jack_count in used_jack_nums: jack_count += 1
+	ijack.number = jack_count
+	jack_count += 1
+      #assign number to unnumbered p2p cables
+      if ijack.cable and ijack.cablemaster and ijack.cable.number <= 0:
+	while cable_count in used_cable_nums: cable_count += 1
+	ijack.cable.number = cable_count
+	cable_count += 1
+  if not all_mated: 
     raise Failure("Not all jacks mated, check for indistinguishable mates")
 
+################################################################################
+# main: parse the file, and then do some extra stuff
 
 if __name__ == "__main__":
   try:
-    sedparser()
+    if len(sys.argv) == 2: filename = sys.argv[1]
+    else: filename = defaultfile
+    print "Parsing file:", filename
+    sedparser(filename)
+
+    #extra stuff
     writeInfiles()
-    print "\n%10s%10s%10s"%("Jack Type", "# Male", "# Female")    
-    for conn in connectors:
-      if countconn.count(conn.type+"/M") > 0 or countconn.count(conn.type+"/F") > 0:
-        print "%10s%10s%10s"%(conn.type, countconn.count(conn.type+"/M")+countconn.count(conn.type+"/F"), countconn.count(conn.type+"/F")+countconn.count(conn.type+"/M"))
+    countConnectors()
+    rewriteDescription(filename)
+
     print "\nAll Done!"
     sys.exit()
   except Failure, err:
