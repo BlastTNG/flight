@@ -37,8 +37,8 @@ OF "Outer Frame" < SPIDER
 # ACS
 
 ACS "Attitude Control System (and Housekeeping) Electronics" < OF
-    JACK &J1 "BLASTbus" 15D/M -> WSPOUT/&J106 CABLE &C1 "BLASTbus"
-    JACK IN &J2 "BLASTbus" 15D/M -> ACSBP/&J7
+    JACK &J1 "BLASTbus" 15D/F -> WSPOUT/&J106 CABLE &C1 "BLASTbus"
+    JACK IN &J2 "BLASTbus" 15D/M -> ACSBP/&J2
     JACK &J3 "BLASTbus out" 15D/F -> DAS/&J272 CABLE &C2 "BLASTbus"
     LINE "BLASTbus +5V" (&J1;6,13,14),(&J2;6,13,14),(&J3;6,13,14)
     LINE "BLASTbus Ground" (&J1;7,8,15),(&J2;7,8,15),(&J3;7,8,15)
@@ -50,15 +50,15 @@ ACS "Attitude Control System (and Housekeeping) Electronics" < OF
     LINE "BLASTbus Strobe-" (&J1;1),(&J2;1),(&J3;1)
 
 ACSDCDC "ACS DC-DC Power Module" < ACS
-    JACK &J4 "Battery In" HART15/F -> ACSPM/&J46
-    JACK &J5 "ADC Power" MYSTERY/F -> ACSBP/&J6
+    JACK &J4 "Battery In" HART15/F -> ACSPM/&J4
+    JACK &J5 "ADC Power" MYSTERY/F -> ACSBP/&J5
 
 ACSBP "ACS Backplane" < ACS
-    JACK &J6 "Power" MYSTERY/F -> ACSDCDC/&J5
-    JACK &J7 "BLASTbus" 15D/F -> ACS/&J2
-    JACK &J8 "Backplane" DIN41612/F -> ACS1/&J11
-    JACK &J9 "Backplane" DIN41612/F -> ACS2/&J30
-    JACK &J10 "Backplane" DIN41612/F -> ACSPM/&J45
+    JACK &J5 "Power" MYSTERY/F -> ACSDCDC/&J5
+    JACK &J2 "BLASTbus" 15D/F -> ACS/&J2
+    JACK &J8 "Backplane" DIN41612/F -> ACS1/&J8
+    JACK &J9 "Backplane" DIN41612/F -> ACS2/&J9
+    JACK &J10 "Backplane" DIN41612/F -> ACSPM/&J10
     LINE "+6VA" (&J8;1,2,33,34),(&J9;1,2,33,34),(&J10;1,2,33,34)
     LINE "+8.5VA" (&J8;3,4,35,36),(&J9;3,4,35,36),(&J10;3,4,35,36)
     LINE "-8.5VA" (&J8;5,6,37,38),(&J9;5,6,37,38),(&J10;5,6,37,38)
@@ -66,110 +66,110 @@ ACSBP "ACS Backplane" < ACS
     LINE "Digital Return" (&J8;10,11,12,13,14,42,43,44,45,46),(&J9;10,11,12,13,14,42,43,44,45,46),(&J10;10,11,12,13,14,42,43,44,45,46)
     LINE "+1.2VD" (&J8;15,16,17,18,47,48,49,50),(&J9;15,16,17,18,47,48,49,50)
     LINE "+3.3.VD" (&J8;19,20,21,51,52,53),(&J9;19,20,21,51,52,53),(&J10;19,20,21,51,52,53)
-    LINE "BLASTbus Ground" (&J8;24,56),(&J9;24,56),(&J10;24,56)
-    LINE "BLASTbus +5V" (&J8;26,58),(&J9;26,58),(&J10;26,58)
-    LINE "BLASTbus CLK-" (&J8;27,59),(&J9;27,59),(&J10;27,59)
-    LINE "BLASTbus CLK+" (&J8;28,60),(&J9;28,60),(&J10;28,60)
-    LINE "BLASTbus DATA+" (&J8;29,61),(&J9;29,61),(&J10;29,61)
-    LINE "BLASTbus DATA-" (&J8;30,62),(&J9;30,62),(&J10;30,62)
-    LINE "BLASTbus STROBE-" (&J8;31,63),(&J9;31,63),(&J10;31,63)
-    LINE "BLASTbus STROBE+" (&J8;32,64),(&J9;32,64),(&J10;32,64)
+    LINE "BLASTbus Ground" (&J2;7,8,15),(&J8;24,56),(&J9;24,56),(&J10;24,56)
+    LINE "BLASTbus +5V" (&J2;6,13,14),(&J8;26,58),(&J9;26,58),(&J10;26,58)
+    LINE "BLASTbus CLK-" (&J2;5),(&J8;27,59),(&J9;27,59),(&J10;27,59)
+    LINE "BLASTbus CLK+" (&J2;2),(&J8;28,60),(&J9;28,60),(&J10;28,60)
+    LINE "BLASTbus DATA+" (&J2;3),(&J8;29,61),(&J9;29,61),(&J10;29,61)
+    LINE "BLASTbus DATA-" (&J2;4),(&J8;30,62),(&J9;30,62),(&J10;30,62)
+    LINE "BLASTbus STROBE-" (&J2;1),(&J8;31,63),(&J9;31,63),(&J10;31,63)
+    LINE "BLASTbus STROBE+" (&J2;9),(&J8;32,64),(&J9;32,64),(&J10;32,64)
 
 ACS1 "Attitude Control System Motherboard #1" < ACS
-    JACK &J11 "Backplane" DIN41612/M -> ACSBP/&J8
-    JACK &J12 "Daughter 1" HEADER/F -> ACS1_A1/&J15
-    JACK &J13 "Daughter 2" HEADER/F -> ACS1_T1/&J17
-    JACK &J14 "Daughter 3" HEADER/F -> ACS1_D1/&J19
+    JACK &J8 "Backplane" DIN41612/M -> ACSBP/&J8
+    JACK &J12 "Daughter 1" HEADER/F -> ACS1_A1/&J12
+    JACK &J13 "Daughter 2" HEADER/F -> ACS1_T1/&J13
+    JACK &J14 "Daughter 3" HEADER/F -> ACS1_D1/&J14
 ACS1_A1 "ACS1 Analog Daughter #1" < ACS1
-    JACK &J15 "Motherboard" HEADER/M -> ACS1/&J12
-    JACK &J16 "Analog" MDM51/M -> &C3/&J22
+    JACK &J12 "Motherboard" HEADER/M -> ACS1/&J12
+    JACK &J16 "Analog" MDM51/M -> &C3/&J16
 ACS1_T1 "ACS1 Thermometry Daughter #1" < ACS1
-    JACK &J17 "Motherboard" HEADER/M -> ACS1/&J13
-    JACK &J18 "AD590s" MDM51/F -> &C4/&J24
+    JACK &J13 "Motherboard" HEADER/M -> ACS1/&J13
+    JACK &J18 "AD590s" MDM51/F -> &C4/&J18
 ACS1_D1 "ACS1 Digital Daughter #1" < ACS1
-    JACK &J19 "Motherboard" HEADER/M -> ACS1/&J14
-    JACK &J20 "Digital (J1)" MDM51/F -> &C5/&J26
-    JACK &J21 "Digital (J2)" MDM51/F -> &C6/&J28
+    JACK &J14 "Motherboard" HEADER/M -> ACS1/&J14
+    JACK &J20 "Digital (J1)" MDM51/F -> &C5/&J20
+    JACK &J21 "Digital (J2)" MDM51/F -> &C6/&J21
 
 CABLE &C3 "ACS1_A1 Jumper"
-    JACK &J22 "Analog" MDM51/F -> ACS1_A1/&J16
-    JACK &J23 "ACS1 A1" 50D/M -> ACSBOB/&J58
+    JACK &J16 "Analog" MDM51/F -> ACS1_A1/&J16
+    JACK &J23 "ACS1 A1" 50D/M -> ACSBOB/&J23
 CABLE &C4 "ACS1_T1 Jumper"
-    JACK &J24 "AD590s" MDM51/M -> ACS1_T1/&J18
-    JACK &J25 "ACS1 T1" 50D/F -> ACSBOB/&J59
+    JACK &J18 "AD590s" MDM51/M -> ACS1_T1/&J18
+    JACK &J25 "ACS1 T1" 50D/F -> ACSBOB/&J25
 CABLE &C5 "ACS1_D1 Jumper"
-    JACK &J26 "Digital" MDM51/M -> ACS1_D1/&J20
-    JACK &J27 "ACS1 D1a" 50D/F -> ACSBOB/&J60
+    JACK &J20 "Digital" MDM51/M -> ACS1_D1/&J20
+    JACK &J27 "ACS1 D1a" 50D/M -> ACSBOB/&J27
 CABLE &C6 "ACS1_D1 Jumper"
-    JACK &J28 "Digital" MDM51/M -> ACS1_D1/&J21
-    JACK &J29 "ACS1 D1b" 37D/F -> ACSBOB/&J61
+    JACK &J21 "Digital" MDM51/M -> ACS1_D1/&J21
+    JACK &J29 "ACS1 D1b" 37D/M -> ACSBOB/&J29
 
 ACS2 "Attitude Control System Motherboard #2" < ACS
-    JACK &J30 "Backplane" DIN41612/M -> ACSBP/&J9
-    JACK &J31 "Daughter 1" HEADER/F -> ACS2_A1/&J33
-    JACK &J32 "Daughter 3" HEADER/F -> ACS2_D1/&J35
+    JACK &J9 "Backplane" DIN41612/M -> ACSBP/&J9
+    JACK &J31 "Daughter 1" HEADER/F -> ACS2_A1/&J31
+    JACK &J32 "Daughter 3" HEADER/F -> ACS2_D1/&J32
 ACS2_A1 "ACS2 Analog Daughter #1" < ACS2
-    JACK &J33 "Motherboard" HEADER/M -> ACS2/&J31
-    JACK &J34 "Analog" MDM51/M -> &C7/&J39
+    JACK &J31 "Motherboard" HEADER/M -> ACS2/&J31
+    JACK &J34 "Analog" MDM51/M -> &C7/&J34
 ACS2_D1 "ACS2 Digital Daughter #1" < ACS2
-    JACK &J35 "Motherboard" HEADER/M -> ACS2/&J32
-    JACK &J36 "Digital (J1)" MDM51/F -> &C8/&J41
-    JACK &J37 "Digital (J2)" MDM51/F -> &C9/&J43
-    JACK IN &J38 "SPI" HEADER/F -> DACTRANS/&J101
+    JACK &J32 "Motherboard" HEADER/M -> ACS2/&J32
+    JACK &J36 "Digital (J1)" MDM51/F -> &C8/&J36
+    JACK &J37 "Digital (J2)" MDM51/F -> &C9/&J37
+    JACK IN &J38 "SPI" HEADER/F -> DACTRANS/&J38
 
 CABLE &C7 "ACS2_A1 Jumper"
-    JACK &J39 "Analog" MDM51/F -> ACS2_A1/&J34
-    JACK &J40 "ACS2 A1" 50D/M -> ACSBOB/&J62
+    JACK &J34 "Analog" MDM51/F -> ACS2_A1/&J34
+    JACK &J40 "ACS2 A1" 50D/M -> ACSBOB/&J40
 CABLE &C8 "ACS2_D1 Jumper"
-    JACK &J41 "Digital" MDM51/M -> ACS2_D1/&J36
-    JACK &J42 "ACS2 D1a" 50D/F -> ACSBOB/&J63
+    JACK &J36 "Digital" MDM51/M -> ACS2_D1/&J36
+    JACK &J42 "ACS2 D1a" 50D/M -> ACSBOB/&J42
 CABLE &C9 "ACS2_D1 Jumper"
-    JACK &J43 "Digital" MDM51/M -> ACS2_D1/&J37
-    JACK &J44 "ACS2 D1b" 37D/F -> ACSBOB/&J64
+    JACK &J37 "Digital" MDM51/M -> ACS2_D1/&J37
+    JACK &J44 "ACS2 D1b" 37D/M -> ACSBOB/&J44
 
 ACSPM "ACS Power Module" < ACS
-    JACK &J45 "Backplane" DIN41612/M -> ACSBP/&J10
-    JACK &J46 "ACS Power" HART15/M -> ACSDCDC/&J4
-    JACK &J47 "High Current J3" 8W8D/M -> ACSBOB/&J91
-    JACK &J48 "High Current J4" 8W8D/F -> ACSBOB/&J92
-    JACK &J49 "Low Current" 37D/F -> ACSBOB/&J93
-    JACK &J50 "Current Sense" 25D/F -> ACSBOB/&J94
-    JACK &J51 "Switching" 37D/M -> ACSBOB/&J95
-    JACK &J52 "Battery In" 7W2D/M -> ACSBOB/&J96
-    JACK &J53 "Motor Switching" 15D/F -> APMRELAY/&J54
+    JACK &J10 "Backplane" DIN41612/M -> ACSBP/&J10
+    JACK &J4 "ACS Power" HART15/M -> ACSDCDC/&J4
+    JACK &J47 "High Current J3" 8W8D/M -> ACSBOB/&J47
+    JACK &J48 "High Current J4" 8W8D/F -> ACSBOB/&J48
+    JACK &J49 "Low Current" 37D/F -> ACSBOB/&J49
+    JACK &J50 "Current Sense" 25D/F -> ACSBOB/&J50
+    JACK &J51 "Switching" 37D/M -> ACSBOB/&J51
+    JACK &J52 "Battery In" 7W2D/M -> ACSBOB/&J52
+    JACK &J53 "Motor Switching" 15D/F -> APMRELAY/&J53
 
 APMRELAY "ACS Power Module Motor Relays" < ACSPM
-    JACK &J54 "Motor Switching" 15D/M -> ACSPM/&J53
-    JACK &J55 "Pivot Power" MYSTERY/F -> ACSBOB/&J97
-    JACK &J56 "RW Power" MYSTERY/F -> ACSBOB/&J98
-    JACK &J57 "Elevation Power" MYSTERY/F -> ACSBOB/&J99
-    LINE "Battery Ground" (&J54;2,1,9)
-    LINE "RW Sense+" (&J54;3)
-    LINE "RW Sense-" (&J54;10)
-    LINE "RW T1" (&J54;4)
-    LINE "RW T3" (&J54;11)
-    LINE "Pivot Sense+" (&J54;5)
-    LINE "Pivot Sense-" (&J54;12)
-    LINE "Pivot T1" (&J54;6)
-    LINE "Pivot T3" (&J54;13)
-    LINE "Elevation Sense+" (&J54;7)
-    LINE "Elevation Sense-" (&J54;14)
-    LINE "Elevation T1" (&J54;15)
-    LINE "Elevation T3" (&J54;8)
+    JACK &J53 "Motor Switching" 15D/M -> ACSPM/&J53
+    JACK &J55 "Pivot Power" MYSTERY/F -> ACSBOB/&J55
+    JACK &J56 "RW Power" MYSTERY/F -> ACSBOB/&J56
+    JACK &J57 "Elevation Power" MYSTERY/F -> ACSBOB/&J57
+    LINE "Battery Ground" (&J53;2,1,9)
+    LINE "RW Sense+" (&J53;3)
+    LINE "RW Sense-" (&J53;10)
+    LINE "RW T1" (&J53;4)
+    LINE "RW T3" (&J53;11)
+    LINE "Pivot Sense+" (&J53;5)
+    LINE "Pivot Sense-" (&J53;12)
+    LINE "Pivot T1" (&J53;6)
+    LINE "Pivot T3" (&J53;13)
+    LINE "Elevation Sense+" (&J53;7)
+    LINE "Elevation Sense-" (&J53;14)
+    LINE "Elevation T1" (&J53;15)
+    LINE "Elevation T3" (&J53;8)
 
 ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
-    JACK &J58 "ACS1 A1" 50D/F -> &C3/&J23
-    JACK &J59 "ACS1 T1" 50D/M -> &C4/&J25
-    JACK &J60 "ACS1 D1a" 50D/M -> &C5/&J27
-    JACK &J61 "ACS1 D1b" 37D/M -> &C6/&J29
-    JACK &J62 "ACS2 A1" 50D/F -> &C7/&J40
-    JACK &J63 "ACS2 D1a" 50D/M -> &C8/&J42
-    JACK &J64 "ACS2 D1b" 37D/M -> &C9/&J44
+    JACK &J23 "ACS1 A1" 50D/F -> &C3/&J23
+    JACK &J25 "ACS1 T1" 50D/M -> &C4/&J25
+    JACK &J27 "ACS1 D1a" 50D/F -> &C5/&J27
+    JACK &J29 "ACS1 D1b" 37D/F -> &C6/&J29
+    JACK &J40 "ACS2 A1" 50D/F -> &C7/&J40
+    JACK &J42 "ACS2 D1a" 50D/F -> &C8/&J42
+    JACK &J44 "ACS2 D1b" 37D/F -> &C9/&J44
     JACK &J65 "Gyros Data" 25D/M -> GYROS/&J177 CABLE &C10 "Gyro Signals"
-    JACK &J66 "Assorted Thermometry" 15D/F -> &C35/&J100
+    JACK &J66 "Assorted Thermometry" 15D/F -> &C35/&J66
     JACK &J67 "Inclinometer" 9D/F -> CLINOF/&J188 CABLE &C11 "OF Inclinometer"
     JACK &J68 "Inclinometer" 9D/F -> CLINIF/&J189 CABLE &C12 "IF Inclinometer"
-    JACK &J69 "Magnetometer" 9D/F -> MAGBOX/&J191 CABLE &C13 "Magnetometer"
+    JACK &J69 "Magnetometer" 15D/F -> MAGBOX/&J191 CABLE &C13 "Magnetometer"
     #JACK 15 "Charge Controller" 50D/M -> CHARGE_C CABLE ""
     JACK &J70 "Power In" 8W8D/M -> BATT/&J274 CABLE &C14 "Gondola Power"
     JACK &J71 "Starcam" 17W2D/F -> STARCAM/&J194 CABLE &C15 "Star Camera"
@@ -192,200 +192,199 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     JACK &J88 "MCE Switch" 9D/F -> MCE/&J234 CABLE &C32 "MCE Power Switching"
     JACK &J89 "Cryo HK" 7W2D/F -> CRYO/&J273 CABLE &C33 "Cryostat Housekeeping Switches"
     JACK &J90 "DGPS Power" 7W2D/F -> DGPS/&J179 CABLE &C34 "DGPS Power"
-    JACK IN &J91 "High Current J3" 8W8D/F -> ACSPM/&J47
-    JACK IN &J92 "High Current J4" 8W8D/M -> ACSPM/&J48
-    JACK IN &J93 "Low Current" 37D/M -> ACSPM/&J49
-    JACK IN &J94 "Current Sense" 25D/M -> ACSPM/&J50
-    JACK IN &J95 "Switching" 37D/F -> ACSPM/&J51
-    JACK IN &J96 "Battery In" 7W2D/F -> ACSPM/&J52
-    JACK IN &J97 "Pivot Power" MYSTERY/F -> APMRELAY/&J55
-    JACK IN &J98 "RW Power" MYSTERY/F -> APMRELAY/&J56
-    JACK IN &J99 "Elevation Power" MYSTERY/F -> APMRELAY/&J57
+    JACK IN &J47 "High Current J3" 8W8D/F -> ACSPM/&J47
+    JACK IN &J48 "High Current J4" 8W8D/M -> ACSPM/&J48
+    JACK IN &J49 "Low Current" 37D/M -> ACSPM/&J49
+    JACK IN &J50 "Current Sense" 25D/M -> ACSPM/&J50
+    JACK IN &J51 "Switching" 37D/F -> ACSPM/&J51
+    JACK IN &J52 "Battery In" 7W2D/F -> ACSPM/&J52
+    JACK IN &J55 "Pivot Power" MYSTERY/F -> APMRELAY/&J55
+    JACK IN &J56 "RW Power" MYSTERY/F -> APMRELAY/&J56
+    JACK IN &J57 "Elevation Power" MYSTERY/F -> APMRELAY/&J57
     #ground the emitters battery-ground ouput groups
-    LINE "ACS1 DGrp1 Com" (&J60;12,13),(&J95;4)
-    LINE "ACS1 DGrpSPI Com" (&J60;16,17),(&J95;23)
-    LINE "ACS1 DGrp3 Com" (&J61;8,27),(&J95;3)
-    LINE "ACS1 DGrp4 Com" (&J61;2,21),(&J95;22)
-    LINE "ACS1 DGrp5 Com" (&J61;14,33),(&J95;2)
-    LINE "Gyro1 CLK" (&J65;1),(&J63;46)
-    LINE "Gyro1 DAT" (&J65;14),(&J63;45)
-    LINE "Gyro1 STR" (&J65;2),(&J63;44)
+    LINE "ACS1 DGrp1 Com" (&J27;12,13),(&J51;4)
+    LINE "ACS1 DGrpSPI Com" (&J27;16,17),(&J51;23)
+    LINE "ACS1 DGrp3 Com" (&J29;8,27),(&J51;3)
+    LINE "ACS1 DGrp4 Com" (&J29;2,21),(&J51;22)
+    LINE "ACS1 DGrp5 Com" (&J29;14,33),(&J51;2)
+    LINE "Gyro1 CLK" (&J65;1),(&J42;46)
+    LINE "Gyro1 DAT" (&J65;14),(&J42;45)
+    LINE "Gyro1 STR" (&J65;2),(&J42;44)
     LINE "Gyro1 TST" (&J65;15)
-    LINE "Gyro2 CLK" (&J65;3),(&J63;43)
-    LINE "Gyro2 DAT" (&J65;16),(&J63;26)
-    LINE "Gyro2 STR" (&J65;4),(&J63;27)
+    LINE "Gyro2 CLK" (&J65;3),(&J42;43)
+    LINE "Gyro2 DAT" (&J65;16),(&J42;26)
+    LINE "Gyro2 STR" (&J65;4),(&J42;27)
     LINE "Gyro2 TST" (&J65;17)
-    LINE "Gyro3 CLK" (&J65;5),(&J63;28)
-    LINE "Gyro3 DAT" (&J65;18),(&J63;29)
-    LINE "Gyro3 STR" (&J65;6),(&J63;37)
+    LINE "Gyro3 CLK" (&J65;5),(&J42;28)
+    LINE "Gyro3 DAT" (&J65;18),(&J42;29)
+    LINE "Gyro3 STR" (&J65;6),(&J42;37)
     LINE "Gyro3 TST" (&J65;19)
-    LINE "Gyro4 CLK" (&J65;7),(&J63;34)
-    LINE "Gyro4 DAT" (&J65;20),(&J63;35)
-    LINE "Gyro4 STR" (&J65;8),(&J63;36)
+    LINE "Gyro4 CLK" (&J65;7),(&J42;34)
+    LINE "Gyro4 DAT" (&J65;20),(&J42;35)
+    LINE "Gyro4 STR" (&J65;8),(&J42;36)
     LINE "Gyro4 TST" (&J65;21)
-    LINE "Gyro5 CLK" (&J65;9),(&J63;18)
-    LINE "Gyro5 DAT" (&J65;22),(&J63;19)
-    LINE "Gyro5 STR" (&J65;10),(&J63;20)
+    LINE "Gyro5 CLK" (&J65;9),(&J42;18)
+    LINE "Gyro5 DAT" (&J65;22),(&J42;19)
+    LINE "Gyro5 STR" (&J65;10),(&J42;20)
     LINE "Gyro5 TST" (&J65;23)
-    LINE "Gyro6 CLK" (&J65;11),(&J63;21)
-    LINE "Gyro6 DAT" (&J65;24),(&J63;41)
-    LINE "Gyro6 STR" (&J65;12),(&J63;40)
+    LINE "Gyro6 CLK" (&J65;11),(&J42;21)
+    LINE "Gyro6 DAT" (&J65;24),(&J42;41)
+    LINE "Gyro6 STR" (&J65;12),(&J42;40)
     LINE "Gyro6 TST" (&J65;25)
-    LINE "Gyro Ground (DGND)" (&J65;13),(&J63;10,11,1,2,5)
-    LINE "Gyro Battery+" (&J73;A1),(&J91;A8)
-    LINE "Gyro Battery-" (&J73;A2),(&J91;A7)
-    LINE "Gyro Temp+" (&J73;7),(&J59;2)
-    LINE "Gyro Temp-" (&J73;14),(&J59;18)
-    LINE "Gy1 Switch" (&J73;1),(&J60;46)
-    LINE "Gy2 Switch" (&J73;2),(&J60;45)
-    LINE "Gy3 Switch" (&J73;3),(&J60;44)
-    LINE "Gy4 Switch" (&J73;8),(&J60;43)
-    LINE "Gy5 Switch" (&J73;9),(&J60;26)
-    LINE "Gy6 Switch" (&J73;10),(&J60;27)
-    LINE "Gyro Heater" (&J73;11),(&J60;28)
-    LINE "Gyros Inhibit" (&J73;4),(&J60;29)
-    LINE "ClinOF +8.5V" (&J67;1),(&J93;15)
-    LINE "ClinOF Ground" (&J67;6),(&J93;34),(&J62;18,19,20)
-    LINE "ClinOF X+" (&J67;4),(&J62;2)
-    LINE "ClinOF Y+" (&J67;5),(&J62;3)
-    LINE "ClinOF Temp" (&J67;9),(&J62;4)
-    LINE "ClinIF +8.5V" (&J68;1),(&J93;14)
-    LINE "ClinIF Ground" (&J68;6),(&J93;33),(&J62;21,22,23)
-    LINE "ClinIF X+" (&J68;4),(&J62;5)
-    LINE "ClinIF Y+" (&J68;5),(&J62;6)
-    LINE "ClinIF Temp" (&J68;9),(&J62;7)
-    LINE "Mag +8.5V" (&J69;1),(&J93;17)
-    LINE "Mag Ground" (&J69;6),(&J93;35),(&J62;24,25,26)
-    LINE "Mag -8.5V" (&J69;2),(&J93;16)
-    LINE "Mag X" (&J69;4),(&J62;8)
-    LINE "Mag Y" (&J69;9),(&J62;9)
-    LINE "Mag Z" (&J69;5),(&J62;10)
-    LINE "Battery+" (&J70;A1),(&J96;A1),(&J77;1)
-    LINE "Battery Ground" (&J70;A5),(&J96;A2),(&J77;6),(&J78;30,32,34,36)
-    LINE "Starcam Battery+" (&J71;A1),(&J92;A7),(&J83;A1)
-    LINE "Starcam Battery-" (&J71;A2),(&J92;A8),(&J83;A2)
-    LINE "SC1 Trigger+" (&J71;1),(&J64;3)
+    LINE "Gyro Ground (DGND)" (&J65;13),(&J42;10,11,1,2,5)
+    LINE "Gyro Battery+" (&J73;A1),(&J47;A8)
+    LINE "Gyro Battery-" (&J73;A2),(&J47;A7)
+    LINE "Gyro Temp+" (&J73;7),(&J25;2)
+    LINE "Gyro Temp-" (&J73;14),(&J25;18)
+    LINE "Gy1 Switch" (&J73;1),(&J27;46)
+    LINE "Gy2 Switch" (&J73;2),(&J27;45)
+    LINE "Gy3 Switch" (&J73;3),(&J27;44)
+    LINE "Gy4 Switch" (&J73;8),(&J27;43)
+    LINE "Gy5 Switch" (&J73;9),(&J27;26)
+    LINE "Gy6 Switch" (&J73;10),(&J27;27)
+    LINE "Gyro Heater" (&J73;11),(&J27;28)
+    LINE "Gyros Inhibit" (&J73;4),(&J27;29)
+    LINE "ClinOF +8.5V" (&J67;1),(&J49;15)
+    LINE "ClinOF Ground" (&J67;6),(&J49;34),(&J40;18,19,20)
+    LINE "ClinOF X+" (&J67;4),(&J40;2)
+    LINE "ClinOF Y+" (&J67;5),(&J40;3)
+    LINE "ClinOF Temp" (&J67;9),(&J40;4)
+    LINE "ClinIF +8.5V" (&J68;1),(&J49;14)
+    LINE "ClinIF Ground" (&J68;6),(&J49;33),(&J40;21,22,23)
+    LINE "ClinIF X+" (&J68;4),(&J40;5)
+    LINE "ClinIF Y+" (&J68;5),(&J40;6)
+    LINE "ClinIF Temp" (&J68;9),(&J40;7)
+    LINE "Mag +8.5V" (&J69;1),(&J49;17)
+    LINE "Mag Ground" (&J69;9),(&J49;35),(&J40;24,25,26)
+    LINE "Mag -8.5V" (&J69;2),(&J49;16)
+    LINE "Mag X" (&J69;7),(&J40;8)
+    LINE "Mag Y" (&J69;15),(&J40;9)
+    LINE "Mag Z" (&J69;8),(&J40;10)
+    LINE "Battery+" (&J70;A1),(&J52;A1),(&J77;1)
+    LINE "Battery Ground" (&J70;A5),(&J52;A2),(&J77;6),(&J78;30,32,34,36)
+    LINE "Starcam Battery+" (&J71;A1),(&J48;A7),(&J83;A1)
+    LINE "Starcam Battery-" (&J71;A2),(&J48;A8),(&J83;A2)
+    LINE "SC1 Trigger+" (&J71;1),(&J44;3)
     LINE "SC Triggers-" (&J71;8,9),(&J83;8)
-    LINE "SC2 Trigger+" (&J71;2),(&J64;22)
-    LINE "SC1 Temp+" (&J71;3),(&J59;3)
-    LINE "SC1 Temp-" (&J71;10),(&J59;19)
-    LINE "SC2 Temp+" (&J71;4),(&J59;4)
-    LINE "SC2 Temp-" (&J71;11),(&J59;20)
-    LINE "SC1 Heater" (&J71;5),(&J60;50)
-    LINE "SC2 Heater" (&J71;12),(&J60;49)
+    LINE "SC2 Trigger+" (&J71;2),(&J44;22)
+    LINE "SC1 Temp+" (&J71;3),(&J25;3)
+    LINE "SC1 Temp-" (&J71;10),(&J25;19)
+    LINE "SC2 Temp+" (&J71;4),(&J25;4)
+    LINE "SC2 Temp-" (&J71;11),(&J25;20)
+    LINE "SC1 Heater" (&J71;5),(&J27;50)
+    LINE "SC2 Heater" (&J71;12),(&J27;49)
     LINE "SC Video+" (&J71;6),(&J76;1)
     LINE "SC Video-" (&J71;13),(&J76;3)
-    LINE "SC Inhibit" (&J71;15),(&J93;24)
+    LINE "SC Inhibit" (&J71;15),(&J49;24)
     LINE "Starcam Motor Battery+" (&J72;A1)
     LINE "Starcam Motor Battery-" (&J72;A2)
-    LINE "Starcam A/SIN" (&J72;1),(&J64;5)
-    LINE "Starcam B/COS" (&J72;3),(&J64;24)
-    LINE "Starcam Z" (&J72;2),(&J64;6)
-    LINE "Starcam Zbar" (&J72;4),(&J64;25)
-    LINE "Starcam Encoder Ground" (&J72;5),(&J64;20)
-    LINE "RW Battery+ In" (&J70;A2),(&J98;1)
-    LINE "RW Battery+" (&J74;A1),(&J98;2)
+    LINE "Starcam A/SIN" (&J72;1),(&J44;5)
+    LINE "Starcam B/COS" (&J72;3),(&J44;24)
+    LINE "Starcam Z" (&J72;2),(&J44;6)
+    LINE "Starcam Zbar" (&J72;4),(&J44;25)
+    LINE "Starcam Encoder Ground" (&J72;5),(&J44;20)
+    LINE "RW Battery+ In" (&J70;A2),(&J56;1)
+    LINE "RW Battery+" (&J74;A1),(&J56;2)
     LINE "RW Battery-" (&J70;A6),(&J74;A2)
-    LINE "RW Phase+" (&J74;1),(&J62;11)
-    LINE "RW Phase-" (&J74;3),(&J62;27)
-    LINE "RW Current+" (&J74;2),(&J62;12)
-    LINE "RW Current-" (&J74;4),(&J62;28)
-    LINE "Pivot Battery+ In" (&J70;A3),(&J97;1)
-    LINE "Pivot Battery+" (&J75;A1),(&J97;2)
+    LINE "RW Phase+" (&J74;1),(&J40;11)
+    LINE "RW Phase-" (&J74;3),(&J40;27)
+    LINE "RW Current+" (&J74;2),(&J40;12)
+    LINE "RW Current-" (&J74;4),(&J40;28)
+    LINE "Pivot Battery+ In" (&J70;A3),(&J55;1)
+    LINE "Pivot Battery+" (&J75;A1),(&J55;2)
     LINE "Pivot Battery-" (&J70;A7),(&J75;A2)
-    LINE "Pivot Pos+" (&J75;1),(&J62;13)
-    LINE "Pivot Pos-" (&J75;3),(&J62;29)
-    LINE "Pivot Current+" (&J75;2),(&J62;14)
-    LINE "Pivot Current-" (&J75;4),(&J62;30)
-    LINE "Starcam Transmitter Battery+" (&J76;A3),(&J92;A1)
-    LINE "Starcam Transmitter Battery-" (&J76;A4),(&J92;A2)
-    LINE "Biphase Transmitter Battery+" (&J76;A1),(&J93;12,13)
-    LINE "Biphase Transmitter Battery-" (&J76;A2),(&J93;31,32)
-    LINE "Starcam Transmitter SET" (&J78;1),(&J95;19),(&J61;3)
-    LINE "Starcam Transmitter RST" (&J78;2),(&J95;37),(&J61;22)
-    LINE "DAS SET" (&J78;3),(&J95;18),(&J61;4)
-    LINE "DAS RST" (&J78;4),(&J95;36),(&J61;23)
-    LINE "ACS SET" (&J78;5),(&J95;17)
-    LINE "ACS RST" (&J78;6),(&J95;35)
-    LINE "DGPS SET" (&J78;7),(&J95;13),(&J61;9)
-    LINE "DGPS RST" (&J78;8),(&J95;31),(&J61;28)
-    LINE "Starcam SET" (&J78;9),(&J95;11),(&J61;5)
-    LINE "Starcam RST" (&J78;10),(&J95;29),(&J61;24)
-    LINE "BS Cam SET" (&J78;11),(&J95;10),(&J61;6)
-    LINE "BS Cam RST" (&J78;12),(&J95;28),(&J61;25)
-    LINE "Elevation SET" (&J78;13),(&J95;9),(&J61;12)
-    LINE "Elevation RST" (&J78;14),(&J95;27),(&J61;31)
-    LINE "Pivot SET" (&J78;15),(&J95;8),(&J61;11)
-    LINE "Pivot RST" (&J78;16),(&J95;26),(&J61;30)
-    LINE "RW SET" (&J78;17),(&J95;25),(&J61;10)
-    LINE "RW RST" (&J78;18),(&J95;7),(&J61;29)
+    LINE "Pivot Pos+" (&J75;1),(&J40;13)
+    LINE "Pivot Pos-" (&J75;3),(&J40;29)
+    LINE "Pivot Current+" (&J75;2),(&J40;14)
+    LINE "Pivot Current-" (&J75;4),(&J40;30)
+    LINE "Starcam Transmitter Battery+" (&J76;A3),(&J48;A1)
+    LINE "Starcam Transmitter Battery-" (&J76;A4),(&J48;A2)
+    LINE "Biphase Transmitter Battery+" (&J76;A1),(&J49;12,13)
+    LINE "Biphase Transmitter Battery-" (&J76;A2),(&J49;31,32)
+    LINE "Starcam Transmitter SET" (&J78;1),(&J51;19),(&J29;3)
+    LINE "Starcam Transmitter RST" (&J78;2),(&J51;37),(&J29;22)
+    LINE "DAS SET" (&J78;3),(&J51;18),(&J29;4)
+    LINE "DAS RST" (&J78;4),(&J51;36),(&J29;23)
+    LINE "ACS SET" (&J78;5),(&J51;17)
+    LINE "ACS RST" (&J78;6),(&J51;35)
+    LINE "DGPS SET" (&J78;7),(&J51;13),(&J29;9)
+    LINE "DGPS RST" (&J78;8),(&J51;31),(&J29;28)
+    LINE "Starcam SET" (&J78;9),(&J51;11),(&J29;5)
+    LINE "Starcam RST" (&J78;10),(&J51;29),(&J29;24)
+    LINE "BS Cam SET" (&J78;11),(&J51;10),(&J29;6)
+    LINE "BS Cam RST" (&J78;12),(&J51;28),(&J29;25)
+    LINE "Elevation SET" (&J78;13),(&J51;9),(&J29;12)
+    LINE "Elevation RST" (&J78;14),(&J51;27),(&J29;31)
+    LINE "Pivot SET" (&J78;15),(&J51;8),(&J29;11)
+    LINE "Pivot RST" (&J78;16),(&J51;26),(&J29;30)
+    LINE "RW SET" (&J78;17),(&J51;25),(&J29;10)
+    LINE "RW RST" (&J78;18),(&J51;7),(&J29;29)
     LINE "Waterspout SET" (&J78;19),(&J80;6)
     LINE "Waterspout RST" (&J78;20),(&J80;14)
-    LINE "MCE SET" (&J78;21),(&J88;1),(&J61;16)
-    LINE "MCE RST" (&J78;22),(&J88;6),(&J61;35)
-    LINE "Biphase SET" (&J78;23),(&J95;12),(&J61;15)
-    LINE "Biphase RST" (&J78;24),(&J95;30),(&J61;34)
-    LINE "Cryo HK Battery+" (&J92;A5),(&J89;A1)
-    LINE "Cryo HK Battery-" (&J92;A6),(&J89;A2)
-    LINE "Cryo HK SET" (&J78;25),(&J89;1),(&J61;17)
-    LINE "Cryo HK RST" (&J78;26),(&J89;3),(&J61;36)
+    LINE "MCE SET" (&J78;21),(&J88;1),(&J29;16)
+    LINE "MCE RST" (&J78;22),(&J88;6),(&J29;35)
+    LINE "Biphase SET" (&J78;23),(&J51;12),(&J29;15)
+    LINE "Biphase RST" (&J78;24),(&J51;30),(&J29;34)
+    LINE "Cryo HK Battery+" (&J48;A5),(&J89;A1)
+    LINE "Cryo HK Battery-" (&J48;A6),(&J89;A2)
+    LINE "Cryo HK SET" (&J78;25),(&J89;1),(&J29;17)
+    LINE "Cryo HK RST" (&J78;26),(&J89;3),(&J29;36)
     LINE "SIP Spare SET" (&J78;27)
     LINE "SIP Spare RST" (&J78;28)
-    LINE "Steppers On/Off" (&J95;5),(&J61;18)
-    LINE "Steppers +5V" (&J79;A1),(&J91;A1)
-    LINE "Steppers Ground" (&J79;A2),(&J91;A4)
-    LINE "Computers Battery+" (&J80;A1,1),(&J82;A1),(&J93;6,7)
-    LINE "Computers Battery-" (&J80;A2,8),(&J82;A2),(&J93;25,26)
-    LINE "Waterspout Temp+" (&J80;7),(&J59;6)
-    LINE "Watersoput Temp-" (&J80;15),(&J59;22)
-    LINE "Serial Hub +?V" (&J81;A1)
-    LINE "Serial Hub Ground" (&J81;A2)
-    LINE "BS Cam Trig+" (&J83;1),(&J64;4)
-    LINE "BS Cam Temp+" (&J83;2),(&J59;5)
-    LINE "BS Cam Temp-" (&J83;9),(&J59;21)
-    LINE "BS Cam Heater" (&J83;3),(&J60;48)
-    LINE "BS Cam Inhibit" (&J83;10),(&J93;5)
+    LINE "Steppers On/Off" (&J51;5),(&J27;30)
+    LINE "Steppers +5V" (&J79;A1),(&J47;A1)
+    LINE "Steppers Ground" (&J79;A2),(&J47;A4)
+    LINE "Computers Battery+" (&J80;A1,1),(&J82;A1),(&J49;6,7),(&J81;A1)
+    LINE "Computers Battery-" (&J80;A2,8),(&J82;A2),(&J49;25,26),(&J81;A2)
+    LINE "Waterspout Temp+" (&J80;7),(&J25;6)
+    LINE "Watersoput Temp-" (&J80;15),(&J25;22)
+    LINE "Serial Hub Enable" (&J81;1),(&J27;47)
+    LINE "BS Cam Trig+" (&J83;1),(&J44;4)
+    LINE "BS Cam Temp+" (&J83;2),(&J25;5)
+    LINE "BS Cam Temp-" (&J83;9),(&J25;21)
+    LINE "BS Cam Heater" (&J83;3),(&J27;48)
+    LINE "BS Cam Inhibit" (&J83;10),(&J49;5)
     LINE "BS Cam Video+" (&J83;4),(&J76;2)
     LINE "BS Cam Video-" (&J83;11),(&J76;4)
     LINE "Sunsenor +?V" (&J84;A1)
     LINE "Sunsenor Ground" (&J84;A2)
-    LINE "Elevation Battery+ In" (&J70;A4),(&J99;1)
-    LINE "Elevation Battery+" (&J85;A1),(&J86;A1),(&J99;2)
+    LINE "Elevation Battery+ In" (&J70;A4),(&J57;1)
+    LINE "Elevation Battery+" (&J85;A1),(&J86;A1),(&J57;2)
     LINE "Elevation Battery-" (&J70;A8),(&J85;A2),(&J86;A2)
-    LINE "DAS Battery+" (&J87;A1),(&J92;A3)
-    LINE "DAS Battery-" (&J87;A2),(&J92;A4)
-    LINE "DGPS +5V" (&J90;A1),(&J93;18,19)
-    LINE "DGPS Ground" (&J90;A2),(&J93;37,36)
-    LINE "Trans Current+" (&J94;1),(&J58;2)
-    LINE "Trans Current-" (&J94;14),(&J58;18)
-    LINE "DAS Current+" (&J94;2),(&J58;3)
-    LINE "DAS Current-" (&J94;15),(&J58;19)
-    LINE "ACS Current+" (&J94;3),(&J58;4)
-    LINE "ACS Current-" (&J94;16),(&J58;20)
-    LINE "Cryo HK current+" (&J94;4),(&J58;5)
-    LINE "Cryo HK current-" (&J94;17),(&J58;21)
-    LINE "Starcams Current+" (&J94;5),(&J58;6)
-    LINE "Starcams Current-" (&J94;18),(&J58;22)
-    LINE "DGPS Current+" (&J94;6),(&J58;7)
-    LINE "DGPS Current-" (&J94;19),(&J58;23)
-    LINE "Elevation Current+" (&J94;7),(&J58;8)
-    LINE "Elevation Current-" (&J94;20),(&J58;24)
-    LINE "Pivot Current+" (&J94;8),(&J58;9)
-    LINE "Pivot Current-" (&J94;21),(&J58;25)
-    LINE "RW Current+" (&J94;10),(&J58;10)
-    LINE "RW Current-" (&J94;23),(&J58;26)
-    LINE "Steppers Current+" (&J94;11),(&J58;11)
-    LINE "Steppers Current-" (&J94;24),(&J58;27)
-    LINE "Gyros Current+" (&J94;12),(&J58;12)
-    LINE "Gyros Current-" (&J94;25),(&J58;28)
-    LINE "Computer Current+" (&J94;9),(&J58;13)
-    LINE "Computer Current-" (&J94;22),(&J58;29)
+    LINE "DAS Battery+" (&J87;A1),(&J48;A3)
+    LINE "DAS Battery-" (&J87;A2),(&J48;A4)
+    LINE "DGPS +5V" (&J90;A1),(&J49;18,19)
+    LINE "DGPS Ground" (&J90;A2),(&J49;37,36)
+    LINE "Trans Current+" (&J50;1),(&J23;2)
+    LINE "Trans Current-" (&J50;14),(&J23;18)
+    LINE "DAS Current+" (&J50;2),(&J23;3)
+    LINE "DAS Current-" (&J50;15),(&J23;19)
+    LINE "ACS Current+" (&J50;3),(&J23;4)
+    LINE "ACS Current-" (&J50;16),(&J23;20)
+    LINE "Cryo HK current+" (&J50;4),(&J23;5)
+    LINE "Cryo HK current-" (&J50;17),(&J23;21)
+    LINE "Starcams Current+" (&J50;5),(&J23;6)
+    LINE "Starcams Current-" (&J50;18),(&J23;22)
+    LINE "DGPS Current+" (&J50;6),(&J23;7)
+    LINE "DGPS Current-" (&J50;19),(&J23;23)
+    LINE "Elevation Current+" (&J50;7),(&J23;8)
+    LINE "Elevation Current-" (&J50;20),(&J23;24)
+    LINE "Pivot Current+" (&J50;8),(&J23;9)
+    LINE "Pivot Current-" (&J50;21),(&J23;25)
+    LINE "RW Current+" (&J50;10),(&J23;10)
+    LINE "RW Current-" (&J50;23),(&J23;26)
+    LINE "Steppers Current+" (&J50;11),(&J23;11)
+    LINE "Steppers Current-" (&J50;24),(&J23;27)
+    LINE "Gyros Current+" (&J50;12),(&J23;12)
+    LINE "Gyros Current-" (&J50;25),(&J23;28)
+    LINE "Computer Current+" (&J50;9),(&J23;13)
+    LINE "Computer Current-" (&J50;22),(&J23;29)
 
 CABLE &C35 "Thermometer Hydra"
-    JACK &J100 "Body" 15D/M -> ACSBOB/&J66
+    JACK &J66 "Body" 15D/M -> ACSBOB/&J66
 
 DACTRANS "Transmitter for SPI DAC Bus" < ACSBOB
-    JACK &J101 "Raw Signals" HEADER/M -> ACS2_D1/&J38
+    JACK &J38 "Raw Signals" HEADER/M -> ACS2_D1/&J38
     #need power from somewhere, backplane doesn't work
     #JACK 2 "Power" DIN41612/M -> ACSBP
     JACK &J102 "DAC1" 15D/F -> REAC/&J211 CABLE &C36 "Reaction Wheel Control DAC"
@@ -398,42 +397,42 @@ DACTRANS "Transmitter for SPI DAC Bus" < ACSBOB
 # Computers, Digital
 
 LABUSE "Non-part representing connection to computers in lab" < WSPOUT
-    JACK &J104 "Ethernet" ETH/M -> WSPOUT/&J114
-    JACK &J105 "WD Control (normally fed back)" 9D/M -> WSPOUT/&J118
+    JACK &J104 "Ethernet" ETH/M -> WSPOUT/&J104
+    JACK &J105 "WD Control (normally fed back)" 9D/M -> WSPOUT/&J105
 
 WSPOUT "The Waterspout (Flight Computer Box)" < OF
-    JACK &J106 "BLASTbus" 15D/M -> ACS/&J1 CABLE &C1 "BLASTbus"
+    JACK &J106 "BLASTbus" 15D/F -> ACS/&J1 CABLE &C1 "BLASTbus"
     JACK &J107 "Snyc (sic)" 9D/M -> MCE/&J233 CABLE &C38 "Snyc"
     JACK &J108 "Power" 17W2D/M -> ACSBOB/&J80 CABLE &C24 "Waterspout Power"
     JACK &J109 "BiPhase" 9D/M -> TRANS/&J270 CABLE &C39 "Biphase"
     JACK &J110 "IF Ethernet" ETH/F -> IFHUB/&J176 CABLE &C40 "Inner Frame to Waterspout hubs"
-    JACK IN &J111 "IF Ethernet" ETH/M -> WSHUB/&J156
+    JACK IN &J111 "IF Ethernet" ETH/M -> WSHUB/&J111
     JACK &J112 "Serial Hub Ethernet" ETH/F -> HUB232/&J164 CABLE &C41 "Serial Hub Ethernet"
-    JACK IN &J113 "Serial Hub Ethernet" ETH/M -> WSHUB/&J155
-    JACK &J114 "Lab Use Ethernet" ETH/F -> LABUSE/&J104
-    JACK IN &J115 "Lab Use Ethernet" ETH/M -> WSHUB/&J157
+    JACK IN &J113 "Serial Hub Ethernet" ETH/M -> WSHUB/&J113
+    JACK &J104 "Lab Use Ethernet" ETH/F -> LABUSE/&J104
+    JACK IN &J115 "Lab Use Ethernet" ETH/M -> WSHUB/&J115
     JACK &J116 "Starcam Ethernet" ETH/F -> STARCAM/&J195 CABLE &C42 "Starcam Ethernet"
-    JACK IN &J117 "Starcam Ethernet" ETH/M -> WSHUB/&J158
-    JACK &J118 "WD Control" 9D/F -> LABUSE/&J105
+    JACK IN &J117 "Starcam Ethernet" ETH/M -> WSHUB/&J117
+    JACK &J105 "WD Control" 9D/F -> LABUSE/&J105
     JACK &J119 "Serial GPS1" RS232/M -> DGPS/&J183 CABLE &C43 "GPS Time Data"
     JACK &J120 "Serial GPS2" RS232/M -> DGPS/&J184 CABLE &C44 "GPS Time Attitude"
-    JACK IN &J121 "WD Power" 15D/F -> WDOG/&J162
-    JACK IN &J122 "Itsy" 25D/F -> WDOG/&J160
-    JACK IN &J123 "Bitsy" 25D/F -> WDOG/&J161
-    JACK IN &J124 "Signals" 37D/F -> WDOG/&J159
-    JACK IN &J125 "Itsy Solid State Relay" LUG/F -> ITSYSSR/&J150
-    JACK IN &J126 "Bitsy Solid State Relay" LUG/F -> BITSYSSR/&J151
-    JACK IN &J127 "Itsy BBC PCI" 37D/M -> ITSY/&J139
-    JACK IN &J128 "Bitsy BBC PCI" 37D/M -> BITSY/&J145
-    JACK IN &J129 "Itsy Serial1" RS232/F -> ITSY/&J141
-    JACK IN &J130 "Itsy Serial2" RS232/F -> ITSY/&J142
-    JACK IN &J131 "Bitsy Serial1" RS232/F -> BITSY/&J147
-    JACK IN &J132 "Bitsy Serial2" RS232/F -> BITSY/&J148
-    JACK IN &J133 "Itsy Power" WIRE/M -> ITSY/&J138
-    JACK IN &J134 "Bitsy Power" WIRE/M -> BITSY/&J144
-    JACK IN &J135 "Hub Power" WIRE/M -> WSHUB/&J152
-    JACK IN &J136 "Itsy Parallel Port" 25D/M -> ITSY/&J143
-    JACK IN &J137 "Itsy Parallel Port" 25D/M -> BITSY/&J149
+    JACK IN &J121 "WD Power" 15D/F -> WDOG/&J121
+    JACK IN &J122 "Itsy" 25D/F -> WDOG/&J122
+    JACK IN &J123 "Bitsy" 25D/F -> WDOG/&J123
+    JACK IN &J124 "Signals" 37D/F -> WDOG/&J124
+    JACK IN &J125 "Itsy Solid State Relay" LUG/F -> ITSYSSR/&J125
+    JACK IN &J126 "Bitsy Solid State Relay" LUG/F -> BITSYSSR/&J126
+    JACK IN &J127 "Itsy BBC PCI" 37D/M -> ITSY/&J127
+    JACK IN &J128 "Bitsy BBC PCI" 37D/M -> BITSY/&J128
+    JACK IN &J129 "Itsy Serial1" RS232/F -> ITSY/&J129
+    JACK IN &J130 "Itsy Serial2" RS232/F -> ITSY/&J130
+    JACK IN &J131 "Bitsy Serial1" RS232/F -> BITSY/&J131
+    JACK IN &J132 "Bitsy Serial2" RS232/F -> BITSY/&J132
+    JACK IN &J133 "Itsy Power" WIRE/M -> ITSY/&J133
+    JACK IN &J134 "Bitsy Power" WIRE/M -> BITSY/&J134
+    JACK IN &J135 "Hub Power" WIRE/M -> WSHUB/&J135
+    JACK IN &J136 "Itsy Parallel Port" 25D/M -> ITSY/&J136
+    JACK IN &J137 "Itsy Parallel Port" 25D/M -> BITSY/&J137
     LINE "GPS Time Gnd" (&J119;5),(&J124;32)
     LINE "GPS Time TxD" (&J119;2),(&J124;30)
     LINE "GPS Time RxD" (&J119;3),(&J124;31)
@@ -452,18 +451,18 @@ WSPOUT "The Waterspout (Flight Computer Box)" < OF
     LINE "Bitsy GPS Attitude Gnd" (&J132;5),(&J123;23)
     LINE "Bitsy GPS Attitude TxD" (&J132;2),(&J123;21)
     LINE "Bitsy GPS Attitude RxD" (&J132;3),(&J123;22)
-    LINE "Battery+" (&J108;A1),(&J121;1,9),(&J125;2,3),(&J126;2,3)
-    LINE "Bat Ground" (&J108;A2),(&J121;2,10,15),(&J133;2),(&J134;2)
+    LINE "Battery+" (&J108;A1),(&J121;1,9),(&J125;2,3),(&J126;2,3),(&J124;11)
+    LINE "Bat Ground" (&J108;A2),(&J121;2,10,15),(&J133;2),(&J134;2),(&J105;3)
     LINE "Itsy Batt+ Switched" (&J133;1),(&J125;1)
     LINE "Bitsy Batt+ Switched" (&J134;1),(&J126;1)
-    LINE "BLASTbus +5V" (&J118;1),(&J121;3,4,11,12),(&J127;8,27),(&J128;8,27),(&J106;6,13,14)
-    LINE "BLASTbus Ground" (&J118;7),(&J121;5,6,13,14),(&J127;7,26,36,37),(&J128;7,26,36,37),(&J106;7,8,15)
-    LINE "WD Control In" (&J118;6),(&J124;14)
-    LINE "WD Control Out" (&J118;2),(&J124;15)
-    LINE "WD Itsy Reboot Inh In" (&J118;4),(&J125;4)
-    LINE "WD Itsy Reboot Inh Out" (&J118;5),(&J124;16)
-    LINE "WD Bitsy Reboot Inh In" (&J118;8),(&J126;4)
-    LINE "WD Bitsy Reboot Inh Out" (&J118;9),(&J124;17)
+    LINE "BLASTbus +5V" (&J105;1),(&J121;3,4,11,12),(&J127;8,27),(&J128;8,27),(&J106;6,13,14)
+    LINE "BLASTbus Ground" (&J105;7),(&J121;5,6,13,14),(&J127;7,26,36,37),(&J128;7,26,36,37),(&J106;7,8,15)
+    LINE "WD Control In" (&J105;6),(&J124;14)
+    LINE "WD Control Out" (&J105;2),(&J124;15)
+    LINE "WD Itsy Reboot Inh In" (&J105;4),(&J125;4)
+    LINE "WD Itsy Reboot Inh Out" (&J105;5),(&J124;16)
+    LINE "WD Bitsy Reboot Inh In" (&J105;8),(&J126;4)
+    LINE "WD Bitsy Reboot Inh Out" (&J105;9),(&J124;17)
     LINE "Hub Power" (&J108;1),(&J135;1)
     LINE "Hub Ground" (&J108;8),(&J135;2)
     LINE "Itsy BLASTbus Inh" (&J122;24),(&J127;18)
@@ -504,49 +503,49 @@ WSPOUT "The Waterspout (Flight Computer Box)" < OF
     LINE "Bitsy Tickle Gnd" (&J137;25),(&J123;5)
 
 ITSY "Master Control Computer: 'Itsy'" < WSPOUT
-    JACK &J138 "Power" WIRE/M -> WSPOUT/&J133
-    JACK &J139 "BBC PCI" 37D/F -> WSPOUT/&J127
-    JACK &J140 "Ethernet" ETH/M -> WSHUB/&J153
-    JACK &J141 "Serial1" RS232/M -> WSPOUT/&J129
-    JACK &J142 "Serial2" RS232/M -> WSPOUT/&J130
-    JACK &J143 "Parallel Port" 25D/F -> WSPOUT/&J136
+    JACK &J133 "Power" WIRE/M -> WSPOUT/&J133
+    JACK &J127 "BBC PCI" 37D/F -> WSPOUT/&J127
+    JACK &J140 "Ethernet" ETH/M -> WSHUB/&J140
+    JACK &J129 "Serial1" RS232/M -> WSPOUT/&J129
+    JACK &J130 "Serial2" RS232/M -> WSPOUT/&J130
+    JACK &J136 "Parallel Port" 25D/F -> WSPOUT/&J136
 
 BITSY "Master Control Computer: 'Bitsy'" < WSPOUT
-    JACK &J144 "Power" WIRE/M -> WSPOUT/&J134
-    JACK &J145 "BBC PCI" 37D/F -> WSPOUT/&J128
-    JACK &J146 "Ethernet" ETH/M -> WSHUB/&J154
-    JACK &J147 "Serial1" RS232/M -> WSPOUT/&J131
-    JACK &J148 "Serial2" RS232/M -> WSPOUT/&J132
-    JACK &J149 "Parallel Port" 25D/F -> WSPOUT/&J137
+    JACK &J134 "Power" WIRE/M -> WSPOUT/&J134
+    JACK &J128 "BBC PCI" 37D/F -> WSPOUT/&J128
+    JACK &J146 "Ethernet" ETH/M -> WSHUB/&J146
+    JACK &J131 "Serial1" RS232/M -> WSPOUT/&J131
+    JACK &J132 "Serial2" RS232/M -> WSPOUT/&J132
+    JACK &J137 "Parallel Port" 25D/F -> WSPOUT/&J137
 
 ITSYSSR "Itsy's Solid State Relay" < WSPOUT
-    JACK &J150 "Input and Output Screws" SCREW/M -> WSPOUT/&J125
-    LINE "Output -" (&J150;1)
-    LINE "Output +" (&J150;2)
-    LINE "Input +" (&J150;3)
-    LINE "Input -" (&J150;4)
+    JACK &J125 "Input and Output Screws" SCREW/M -> WSPOUT/&J125
+    LINE "Output -" (&J125;1)
+    LINE "Output +" (&J125;2)
+    LINE "Input +" (&J125;3)
+    LINE "Input -" (&J125;4)
 
 BITSYSSR "Bitsy's Solid State Relay" < WSPOUT
-    JACK &J151 "Input and Output Screws" SCREW/M -> WSPOUT/&J126
-    LINE "Output -" (&J151;1)
-    LINE "Output +" (&J151;2)
-    LINE "Input +" (&J151;3)
-    LINE "Input -" (&J151;4)
+    JACK &J126 "Input and Output Screws" SCREW/M -> WSPOUT/&J126
+    LINE "Output -" (&J126;1)
+    LINE "Output +" (&J126;2)
+    LINE "Input +" (&J126;3)
+    LINE "Input -" (&J126;4)
 
 WSHUB "Waterspout Ethernet Switch" < WSPOUT
-    JACK &J152 "Power" WIRE/M -> WSPOUT/&J135
-    JACK &J153 "Itsy" ETH/F -> ITSY/&J140
-    JACK &J154 "Bitsy" ETH/F -> BITSY/&J146
-    JACK &J155 "RS232 Hub" ETH/F -> WSPOUT/&J113
-    JACK &J156 "Inner Frame Hub" ETH/F -> WSPOUT/&J111
-    JACK &J157 "External" ETH/F -> WSPOUT/&J115
-    JACK &J158 "Starcam" ETH/F -> WSPOUT/&J117
+    JACK &J135 "Power" WIRE/M -> WSPOUT/&J135
+    JACK &J140 "Itsy" ETH/F -> ITSY/&J140
+    JACK &J146 "Bitsy" ETH/F -> BITSY/&J146
+    JACK &J113 "RS232 Hub" ETH/F -> WSPOUT/&J113
+    JACK &J111 "Inner Frame Hub" ETH/F -> WSPOUT/&J111
+    JACK &J115 "External" ETH/F -> WSPOUT/&J115
+    JACK &J117 "Starcam" ETH/F -> WSPOUT/&J117
 
 WDOG "Watchdog" < WSPOUT
-    JACK &J159 "Signals" 37D/M -> WSPOUT/&J124
-    JACK &J160 "Itsy" 25D/M -> WSPOUT/&J122
-    JACK &J161 "Bitsy" 25D/M -> WSPOUT/&J123
-    JACK &J162 "Power" 15D/M -> WSPOUT/&J121
+    JACK &J124 "Signals" 37D/M -> WSPOUT/&J124
+    JACK &J122 "Itsy" 25D/M -> WSPOUT/&J122
+    JACK &J123 "Bitsy" 25D/M -> WSPOUT/&J123
+    JACK &J121 "Power" 15D/M -> WSPOUT/&J121
 
 HUB232 "RS232 Serial Hub" < OF
     JACK &J163 "Power" 7W2D/M -> ACSBOB/&J81 CABLE &C25 "Serial Hub Power"
@@ -557,8 +556,8 @@ HUB232 "RS232 Serial Hub" < OF
     JACK &J168 "SIP Comm1" RS232/M -> SIP/&J262 CABLE &C48 "SIP Comm1"
     JACK &J169 "SIP Comm2" RS232/M -> SIP/&J263 CABLE &C49 "SIP Comm2"
     JACK &J170 "SIP TDRSS" RS232/M -> SIP/&J264 CABLE &C50 "SIP TDRSS"
-    JACK &J171 "Windows" RS232/M -> WINDCOMM/&J242
-    JACK &J172 "Waveplates" RS232/M -> WPCOMM/&J245
+    JACK &J171 "Windows" RS232/M -> WINDCOMM/&J171
+    JACK &J172 "Waveplates" RS232/M -> WPCOMM/&J172
 
 IFHUB "Inner Frame Ethernet Switch" < IF
     JACK &J173 "Power" 7W2D/M -> ACSBOB/&J82 CABLE &C26 "IF Hub Power"
@@ -603,17 +602,17 @@ CLINIF "Inner Frame Inclinometer" < IF
     JACK &J189 "Power, signal" 9D/M -> ACSBOB/&J68 CABLE &C12 "IF Inclinometer"
 
 MAG "Analog Magnetometer" < MAGBOX
-    JACK &J190 "Magnetometer" WIRE/M -> MAGBOX/&J192
+    JACK &J190 "Magnetometer" WIRE/M -> MAGBOX/&J190
 
 MAGBOX "Connector Plate for Magnetometer" < IF
-    JACK &J191 "Power, Signal" 9D/M -> ACSBOB/&J69 CABLE &C13 "Magnetometer"
-    JACK IN &J192 "Internal" WIRE/M -> MAG/&J190
-    LINE "+10V" (&J191;1),(&J192;RED)
-    LINE "Ground" (&J191;6),(&J192;BLK)
-    LINE "-10V" (&J191;2),(&J192;BLU)
-    LINE "Mag X" (&J191;4),(&J192;ORG)
-    LINE "Mag Y" (&J191;9),(&J192;YEL)
-    LINE "Mag Z" (&J191;5),(&J192;GRN)
+    JACK &J191 "Power, Signal" 15D/M -> ACSBOB/&J69 CABLE &C13 "Magnetometer"
+    JACK IN &J190 "Internal" WIRE/M -> MAG/&J190
+    LINE "+10V" (&J191;1),(&J190;RED)
+    LINE "Ground" (&J191;9),(&J190;BLK)
+    LINE "-10V" (&J191;2),(&J190;BLU)
+    LINE "Mag X" (&J191;7),(&J190;ORG)
+    LINE "Mag Y" (&J191;15),(&J190;YEL)
+    LINE "Mag Z" (&J191;8),(&J190;GRN)
 
 SUN "Sun Sensor" < OF
     JACK &J193 "Power, Signals" 17W2D/M -> ACSBOB/&J84 CABLE &C28 "Sun Sensor"
@@ -622,10 +621,10 @@ STARCAM "Rotating Star Camera" < OF
     JACK &J194 "Power, signals" 17W2D/M -> ACSBOB/&J71 CABLE &C15 "Star Camera"
     JACK &J195 "Ethernet" ETH/F -> WSPOUT/&J116 CABLE &C42 "Starcam Ethernet"
     JACK &J196 "Motor" 7W2D/M -> ACSBOB/&J72 CABLE &C16 "Starcam Motor"
-    JACK IN &J197 "Controller Power" BARE/M -> SCTAB_C/&J205
-    JACK IN &J198 "Controller Feedback" 15UD/M -> SCTAB_C/&J203
-    JACK IN &J199 "Motor Power" 9W4D/F -> SCTABLE/&J202
-    JACK IN &J200 "Motor Feedback" 25D/F -> SCTABLE/&J201
+    JACK IN &J197 "Controller Power" BARE/M -> SCTAB_C/&J197
+    JACK IN &J198 "Controller Feedback" 15UD/M -> SCTAB_C/&J198
+    JACK IN &J199 "Motor Power" 9W4D/F -> SCTABLE/&J199
+    JACK IN &J200 "Motor Feedback" 25D/F -> SCTABLE/&J200
     LINE "Battery+" (&J196;A1),(&J197;6,7)
     LINE "Battery Ground" (&J196;A2),(&J197;8),(&J199;A4)
     LINE "Motor Phase A" (&J197;1),(&J199;A1)
@@ -646,14 +645,14 @@ STARCAM "Rotating Star Camera" < OF
     LINE "Motor Temp" (&J198;6),(&J200;2)
 
 SCTABLE "Star Camera Rotary Table" < STARCAM
-    JACK &J201 "Motor Feedback" 25D/M -> STARCAM/&J200
-    JACK &J202 "Motor Power" 9W4D/M -> STARCAM/&J199
+    JACK &J200 "Motor Feedback" 25D/M -> STARCAM/&J200
+    JACK &J199 "Motor Power" 9W4D/M -> STARCAM/&J199
 
 SCTAB_C "Star Camera Rotary Table Controller" < SCTABLE
-    JACK &J203 "Motor Feedback" 15UD/F -> STARCAM/&J198
+    JACK &J198 "Motor Feedback" 15UD/F -> STARCAM/&J198
     JACK &J204 "Communication" RS232/F -> HUB232/&J165 CABLE &C45 "Starcam Table Serial"
     #JACK 2 "Control I/O (Not needed?)" 26UD/F
-    JACK &J205 "Power" TERM/F -> STARCAM/&J197
+    JACK &J197 "Power" TERM/F -> STARCAM/&J197
 
 BSCAM "Bore-sight Star Camera" < IF
     JACK &J206 "Power, Signals" 17W2D/M -> ACSBOB/&J83 CABLE &C27 "Bore-sight Camera"
@@ -664,8 +663,8 @@ BSCAM "Bore-sight Star Camera" < IF
 
 REAC "Reaction Wheel" < OF
     JACK &J208 "Power, Feedback" 7W2D/M -> ACSBOB/&J74 CABLE &C18 "Reaction Wheel"
-    JACK IN &J209 "Power" BARE/M -> REAC_C/&J214
-    JACK IN &J210 "Feedback" 26UD/M -> REAC_C/&J213
+    JACK IN &J209 "Power" BARE/M -> REAC_C/&J209
+    JACK IN &J210 "Feedback" 26UD/M -> REAC_C/&J210
     JACK &J211 "DAC" 15D/M -> DACTRANS/&J102 CABLE &C36 "Reaction Wheel Control DAC"
     LINE "Battery+" (&J208;A1)
     LINE "Battery Ground" (&J208;A2)
@@ -676,19 +675,19 @@ REAC "Reaction Wheel" < OF
 
 REAC_C "Reaction Wheel Controller" < REAC
     JACK &J212 "Communication" RS232/F -> HUB232/&J166 CABLE &C46 "Reaction Wheel Serial"
-    JACK &J213 "Controller I/O" 26UD/F -> REAC/&J210
-    JACK &J214 "Power" TERM/F -> REAC/&J209
-    JACK &J215 "Feedback" 15UD/F -> REAC_M/&J217
-    JACK &J216 "Motor Power" TERM/F -> REAC_M/&J218
+    JACK &J210 "Controller I/O" 26UD/F -> REAC/&J210
+    JACK &J209 "Power" TERM/F -> REAC/&J209
+    JACK &J215 "Feedback" 15UD/F -> REAC_M/&J215
+    JACK &J216 "Motor Power" TERM/F -> REAC_M/&J216
 
 REAC_M "Reaction Wheel Motor" < REAC
-    JACK &J217 "Feedback" 15UD/M -> REAC_C/&J215
-    JACK &J218 "Power" BARE/M -> REAC_C/&J216
+    JACK &J215 "Feedback" 15UD/M -> REAC_C/&J215
+    JACK &J216 "Power" BARE/M -> REAC_C/&J216
 
 PIVOT "Pivot" < OF
     JACK &J219 "Power, Feedback" 7W2D/M -> ACSBOB/&J75 CABLE &C19 "Pivot"
-    JACK IN &J220 "Power" BARE/M -> PIVOT_C/&J225
-    JACK IN &J221 "Feedback" 26UD/M -> PIVOT_C/&J224
+    JACK IN &J220 "Power" BARE/M -> PIVOT_C/&J220
+    JACK IN &J221 "Feedback" 26UD/M -> PIVOT_C/&J221
     JACK &J222 "DAC" 15D/M -> DACTRANS/&J103 CABLE &C37 "Pivot Control DAC"
     LINE "Battery+" (&J219;A1)
     LINE "Battery Ground" (&J219;A2)
@@ -699,14 +698,14 @@ PIVOT "Pivot" < OF
 
 PIVOT_C "Pivot Controller" < PIVOT
     JACK &J223 "Communication" RS232/F -> HUB232/&J167 CABLE &C47 "Pivot Serial"
-    JACK &J224 "Controller I/O" 26UD/F -> PIVOT/&J221
-    JACK &J225 "Power" TERM/F -> PIVOT/&J220
-    JACK &J226 "Feedback" HEADER/F -> PIVOT_M/&J228
-    JACK &J227 "Motor Power" HEADER/F -> PIVOT_M/&J229
+    JACK &J221 "Controller I/O" 26UD/F -> PIVOT/&J221
+    JACK &J220 "Power" TERM/F -> PIVOT/&J220
+    JACK &J226 "Feedback" HEADER/F -> PIVOT_M/&J226
+    JACK &J227 "Motor Power" HEADER/F -> PIVOT_M/&J227
 
 PIVOT_M "Pivot Motor" < PIVOT
-    JACK &J228 "Feedback" HEADER/M -> PIVOT_C/&J226
-    JACK &J229 "Power" HEADER/M -> PIVOT_C/&J227
+    JACK &J226 "Feedback" HEADER/M -> PIVOT_C/&J226
+    JACK &J227 "Power" HEADER/M -> PIVOT_C/&J227
 
 ELE_R "Right-Side Elevation Drive" < OF
     JACK &J230 "Power" 7W2D/M -> ACSBOB/&J85 CABLE &C29 "Right Elevation Drive"
@@ -730,10 +729,10 @@ STEPCOMM "Stepper Bus (Window, Waveplate) Communicators" < HUB232
     JACK &J235 "Power" 7W2D/F -> ACSBOB/&J79 CABLE &C23 "Stepper Power"
     JACK &J236 "Windows" 7W2D/F -> WINDOWS/&J248 CABLE &C56 "Window Bus"
     JACK &J237 "Waveplates" 7W2D/F -> WAVEPLTS/&J255 CABLE &C57 "Waveplate Bus"
-    JACK IN &J238 "Window Power" BARE/M -> WINDCOMM/&J243
-    JACK IN &J239 "Window RS485" HEADER/F -> WINDCOMM/&J244
-    JACK IN &J240 "Waveplate Power" BARE/M -> WPCOMM/&J246
-    JACK IN &J241 "Waveplate RS485" HEADER/F -> WPCOMM/&J247
+    JACK IN &J238 "Window Power" BARE/M -> WINDCOMM/&J238
+    JACK IN &J239 "Window RS485" HEADER/F -> WINDCOMM/&J239
+    JACK IN &J240 "Waveplate Power" BARE/M -> WPCOMM/&J240
+    JACK IN &J241 "Waveplate RS485" HEADER/F -> WPCOMM/&J241
     LINE "Battery+" (&J235;A1),(&J236;A1),(&J237;A1),(&J238;1),(&J239;1),(&J240;1),(&J241;1)
     LINE "Bat Ground" (&J235;A2),(&J236;A2),(&J237;A2),(&J238;2),(&J239;2),(&J240;2),(&J241;2)
     LINE "Window RS485 A" (&J236;1),(&J239;4)
@@ -742,66 +741,66 @@ STEPCOMM "Stepper Bus (Window, Waveplate) Communicators" < HUB232
     LINE "Waveplate RS485 B" (&J237;3),(&J241;3)
 
 WINDCOMM "Deployable Window RS232-485 converter" < STEPCOMM
-    JACK &J242 "Communication" RS232/F -> HUB232/&J171
-    JACK &J243 "Power" TERM/F -> STEPCOMM/&J238
-    JACK &J244 "RS485" HEADER/M -> STEPCOMM/&J239
-    LINE "Battery+" (&J243;1),(&J244;1)
-    LINE "Battery Ground" (&J243;2),(&J244;2)
+    JACK &J171 "Communication" RS232/F -> HUB232/&J171
+    JACK &J238 "Power" TERM/F -> STEPCOMM/&J238
+    JACK &J239 "RS485" HEADER/M -> STEPCOMM/&J239
+    LINE "Battery+" (&J238;1),(&J239;1)
+    LINE "Battery Ground" (&J238;2),(&J239;2)
 
 WPCOMM "Waveplate RS232-485 converter" < STEPCOMM
-    JACK &J245 "Communication" RS232/F -> HUB232/&J172
-    JACK &J246 "Power" TERM/F -> STEPCOMM/&J240
-    JACK &J247 "RS485" HEADER/M -> STEPCOMM/&J241
-    LINE "Battery+" (&J246;1),(&J247;1)
-    LINE "Battery Ground" (&J246;2),(&J247;2)
+    JACK &J172 "Communication" RS232/F -> HUB232/&J172
+    JACK &J240 "Power" TERM/F -> STEPCOMM/&J240
+    JACK &J241 "RS485" HEADER/M -> STEPCOMM/&J241
+    LINE "Battery+" (&J240;1),(&J241;1)
+    LINE "Battery Ground" (&J240;2),(&J241;2)
 
 WINDOWS "Deployable Windows" < IF
     JACK &J248 "Window Bus In" 7W2D/F -> STEPCOMM/&J236 CABLE &C56 "Window Bus"
-    JACK IN &J249 "Window #n (x6)" 9D/F -> WINDN/&J250
+    JACK IN &J249 "Window #n (x6)" 9D/F -> WINDN/&J249
     LINE "Battery+" (&J248;A1),(&J249;1)
     LINE "Bat Ground" (&J248;A2),(&J249;6)
     LINE "RS485 A" (&J248;1),(&J249;2)
     LINE "RS485 B" (&J248;3),(&J249;7)
 
 WINDN "Deployable Window #n" < WINDOWS
-    JACK &J250 "RS485" 9D/M -> WINDOWS/&J249
-    JACK IN &J251 "Controller" HEADER/F -> WINDN_C/&J252
-    LINE "Battery+" (&J250;1),(&J251;1)
-    LINE "Bat Ground" (&J250;6),(&J251;2)
-    LINE "RS485 A" (&J250;2),(&J251;4)
-    LINE "RS485 B" (&J250;7),(&J251;3)
+    JACK &J249 "RS485" 9D/M -> WINDOWS/&J249
+    JACK IN &J251 "Controller" HEADER/F -> WINDN_C/&J251
+    LINE "Battery+" (&J249;1),(&J251;1)
+    LINE "Bat Ground" (&J249;6),(&J251;2)
+    LINE "RS485 A" (&J249;2),(&J251;4)
+    LINE "RS485 B" (&J249;7),(&J251;3)
 
 WINDN_C "Deployable Window #n Controller" < WINDN
-    JACK &J252 "RS485" HEADER/M -> WINDN/&J251
-    JACK IN &J253 "Motor" HEADER/F -> WINDN_M/&J254
+    JACK &J251 "RS485" HEADER/M -> WINDN/&J251
+    JACK IN &J253 "Motor" HEADER/F -> WINDN_M/&J253
     #need motor lines
 
 WINDN_M "Deployable Window #n Motor" < WINDN
-    JACK &J254 "Power, Feedback" HEADER/M -> WINDN_C/&J253
+    JACK &J253 "Power, Feedback" HEADER/M -> WINDN_C/&J253
 
 WAVEPLTS "Stepping Waveplates" < IF
     JACK &J255 "Waveplate Bus In" 7W2D/F -> STEPCOMM/&J237 CABLE &C57 "Waveplate Bus"
-    JACK IN &J256 "Waveplate #n (x6)" 9D/F -> WPN/&J257
+    JACK IN &J256 "Waveplate #n (x6)" 9D/F -> WPN/&J256
     LINE "Battery+" (&J255;A1),(&J256;1)
     LINE "Bat Ground" (&J255;A2),(&J256;6)
     LINE "RS485 A" (&J255;1),(&J256;2)
     LINE "RS485 B" (&J255;3),(&J256;7)
 
 WPN "Waveplate #n" < WAVEPLTS
-    JACK &J257 "RS485" 9D/M -> WAVEPLTS/&J256
-    JACK IN &J258 "Controller" HEADER/F -> WPN_C/&J259
-    LINE "Battery+" (&J257;1),(&J258;1)
-    LINE "Bat Ground" (&J257;6),(&J258;2)
-    LINE "RS485 A" (&J257;2),(&J258;4)
-    LINE "RS485 B" (&J257;7),(&J258;3)
+    JACK &J256 "RS485" 9D/M -> WAVEPLTS/&J256
+    JACK IN &J258 "Controller" HEADER/F -> WPN_C/&J258
+    LINE "Battery+" (&J256;1),(&J258;1)
+    LINE "Bat Ground" (&J256;6),(&J258;2)
+    LINE "RS485 A" (&J256;2),(&J258;4)
+    LINE "RS485 B" (&J256;7),(&J258;3)
 
 WPN_C "Waveplate #n Controller" < WPN
-    JACK &J259 "RS485" HEADER/M -> WPN/&J258
-    JACK IN &J260 "Motor" HEADER/M -> WPN_M/&J261
+    JACK &J258 "RS485" HEADER/M -> WPN/&J258
+    JACK IN &J260 "Motor" HEADER/M -> WPN_M/&J260
     #need motor lines
 
 WPN_M "Waveplate #n Motor" < WPN
-    JACK &J261 "Power" HEADER/F -> WPN_C/&J260
+    JACK &J260 "Power" HEADER/F -> WPN_C/&J260
 
 ################################################################################
 # SIP, transmitter
