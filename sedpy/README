@@ -14,11 +14,11 @@ to be really fancy, change it to accept command line switches.)
 Database "infile" output
 ------------------------
 The primary purpose of sedpy is to produce a raw dump of database tables to be
-imported into a BEDthingy-style database, for viewing on the web. The script
-`replacetables`, and the accompanying `replacetables.sql` are used to import the
-data into such a database. `replacetables` must be run on the system that hosts
-the BEDthingy database. `replacetables` must be updated to specify a desctiption
-file. The parser puts this output in the directory `./out`.
+imported into a BEDthingy-style database, for viewing on the web. The parser
+puts this output in the directory `./out`. The script `replacetables`, and the
+accompanying `replacetables.sql` are used to import the data into such a
+database. `replacetables` must be run on the system that hosts the BEDthingy
+database and must be updated to specify a `DESCTIPTION FILE` and `DATABASE`.
 
 Connector count output
 ----------------------
@@ -49,11 +49,33 @@ All changes that will be made to the new description:
     * a semi-colon separates JACK and PIN numbers, no spaces are used
     * multiple JACK-PIN tuples are separated by a comma and no space
 
-Typically when adding new declarations, shorthand will be used. Then the new
-description can replace the old one. The new description should be checked first
-because the parser might do unexpected (or even incorrect!) things. When using
-cvs (or other revision control) on description files, be sure to commit changes
-promptly to avoid naming conflicts with other people.
+Typical workflow
+----------------
+
+Because `replacetables` does a mass rewrite of the whole database, even for
+small changes, some method is needed to track changes. The easiest way to do so
+is with a Revision Control System, like `cvs`. This section outlines the
+process by which to use sedpy and `cvs` to make and track changes to the
+database.
+
+1. Get an up-to-date version of the description file with  
+    `$ cvs up`
+2. Check that `DESCTIPTION FILE` and `DATABASE` are correct in `replacetables`
+3. Make changes to the description file, using shorthand and omitting optional
+   tokens where possible/desired
+4. Run `sedparser.py` on your description file
+5. Compare the output in `./out/newdescription.txt` to the original description.
+   Often uncaught mistakes in the description file will be more evident here, or
+   you might discover a bug in `sedparser.py`. To view differences, try the Unix
+   `diff` utility, or a graphical equivalent (eg `meld` on linux, or `WinMerge`
+   on Windows)
+6. If everything looks okay, replace your old description file with
+   `./out/newdescription.txt`
+7. Commit your changes to the description with  
+   `$ cvs commit`
+8. On the database server, get the new changes:  
+   `$ cvs up`
+9. Finally, on the database server, run `./replacetables`
 
 Description File Syntax
 =======================
@@ -155,9 +177,10 @@ JACKs:
 * JACK: declarations start with the word `JACK`
 * IN: (optional) indicates a connection internal to a COMPONENT
 * ref: a string unique to JACKs on the parent part: `[a-z0-9]+`.
-       Like cable numbers, can be preceded by `&`, then must be an integer
+       Like cable numbers, ref can be preceded by `&`, then must be an integer
        (`[0-9]{1,5}` optionally preceded by `J`) for use as-is in the database.
-       In this case it must be globally unique.
+       Global jack numbers can't be repeated anywhere in a description, except
+       for jacks that mate directly to each other (with no cable).
 * label: any string not containing double quotes (`[^"]{1,32}`)
 * CONN/G: CONNECTOR label (`[A-Z0-9_]{1,16}`) and gender (`[mMfF]`)
 * DEST: destination: COMPONENT (CMPNAME) or CABLE (C##)
