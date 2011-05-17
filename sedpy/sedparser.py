@@ -67,8 +67,15 @@ def rewriteDescription(filename):
 	nd.write(line)
   
     elif sline[0:4] == "JACK":
-      jack = lineparser.parse(Jack, sline)
-      nd.write("    %s\n" % str(cont.jacks[cont.jacks.index(jack)]))
+      #temporarily replace placeholder numbers with mate's, for writing
+      jack = cont.jacks[cont.jacks.index(lineparser.parse(Jack, sline))]
+      oldnumber = jack.number
+      oldmnumber = jack.mate.number
+      if jack.placeholder: jack.number = jack.mate.number
+      if jack.mate.placeholder: jack.mate.number = jack.number
+      nd.write("    %s\n" % str(jack))
+      jack.number = oldnumber
+      jack.mate.number = oldmnumber
 
     elif sline[0:4] == "LINE":
       line = lineparser.parse(Line, sline)
@@ -77,6 +84,7 @@ def rewriteDescription(filename):
       newjacknums = []
       for jacknum in line.jacknums:
 	jack = cont.jacks[cont.jacks.index(jacknum)]
+	if jack.placeholder: jack = jack.mate
 	newjacknums.append("&J%d" % jack.number)
       oldjacknums = line.jacknums
       line.jacknums = newjacknums
@@ -209,7 +217,7 @@ def addPins(line):
 
       else:  #pin exists
 	if not pin.lines[lineend].autogen:
-	  raise Failure("line conflicts for pin (%s,%s)"%(jacknum,pinnum))
+	  raise Failure("line conflicts for pin (%s;%s)"%(jacknum,pinnum))
 	jack.location.lines.remove(pin.lines[lineend])
 	pin.desc = line.desc
 	pin.lines[lineend] = line
@@ -276,7 +284,7 @@ def sedparser(filename):
       if jack.number > 0:
 	if not jack.number in used_jack_nums:
 	  used_jack_nums.append(jack.number)
-	else:
+	elif not jack.mate or not jack.placeholder:
 	  raise Failure("repeated global jack number %d"%jack.number, linecount)
       if jack.cable and jack.cable.number > 0:
 	if not jack.cable.number in used_cable_nums:
