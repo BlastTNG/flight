@@ -1,6 +1,7 @@
 #!/usr/bin/env /usr/bin/python
 
 #TODO: can keep UID fixed, but should update the time
+#to get time: datetime.utcnow().replace(microsecond=0).isoformat(' ')
 UID_UTIME = "1\t2008-08-08 08:08:08"    #for spider "sbenton" has UID 1
 #UID_UTIME = "23\t2008-08-08 08:08:08"	#for BLASTpol "sbenton" has UID 23
 
