@@ -1,3 +1,6 @@
+This is a syntax error. It is to prevent accidental use of this file
+This file is no longer to be used
+
 9D -> 9D 9 "D-Subminiature" N N M-F F-M
 15D -> 15D 15 "D-Subminiature" N N M-F F-M
 25D -> 25D 25 "D-Subminiature" N N M-F F-M
