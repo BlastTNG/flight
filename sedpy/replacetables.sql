@@ -1,4 +1,3 @@
-USE blast;
 DELETE FROM cable;
 DELETE FROM component;
 DELETE FROM congender;
