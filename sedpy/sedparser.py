@@ -1,6 +1,13 @@
 #!/usr/bin/env /usr/bin/python
 
 import sys
+import os
+import os.path
+
+#create output directory, needed before sedobjects imported
+if not os.path.isdir("out"):
+  os.mkdir("out", 0755)
+
 from sedobjects import *
 import lineparser    #provides lineparser.parse(Type, string)
 
@@ -32,6 +39,7 @@ def writeInfiles():
 
 def countConnectors():
   """count how many of each connector type and gender are used as jacks"""
+  f = open("out/connector_count.txt", 'w')
   countconn = {}   #counts how many of each connector
   for conn in connectors: countconn[conn.type] = {'M': 0, 'F': 0}
   for cont in containers:
@@ -43,11 +51,11 @@ def countConnectors():
 	mategender = jack.conn.genders[jack.gender]
 	countconn[name][gender] += 1
 	countconn[matename][mategender] += 1
-  print "\n%10s%10s%10s"%("Jack Type", "# Male", "# Female")    
+  f.write("%10s%10s%10s\n" % ("Jack Type", "# Male", "# Female"))
   for conn in connectors:
     if countconn[conn.type]['M'] > 0 or countconn[conn.type]['F'] > 0:
-      print "%10s%10s%10s" % (conn.type, 
-	  countconn[conn.type]['M'], countconn[conn.type]['F'])
+      f.write("%10s%10s%10s\n" % (conn.type, 
+	  countconn[conn.type]['M'], countconn[conn.type]['F']))
 
 def rewriteDescription(filename):
   """read and rewrite the description file, adds extra info from parsing"""
@@ -335,12 +343,14 @@ def sedparser(filename):
   for part in expected: print part.ref
   if len(expected) > 0: raise Failure("above parts used but not declared", -1)
   print "Info: done parsing, found", len(containers), "components and cables:"
-  print "%10s%10s%10s"%("Part", "Jacks", "Lines")
+
+  sf = open("out/stats.txt", 'w')   #print stats to statfile
+  sf.write("%10s%10s%10s\n" % ("Part", "Jacks", "Lines"))
   all_mated = True
   cable_count = 1
   jack_count = 1
   for cont in containers:
-    print "%10s%10s%10s"%(cont.ref, len(cont.jacks), len(cont.lines))
+    sf.write("%10s%10s%10s\n" % (cont.ref, len(cont.jacks), len(cont.lines)))
     #assign number to unnumbered cables
     if hasattr(cont, 'number') and cont.number <= 0:
       while cable_count in used_cable_nums: cable_count += 1
@@ -353,7 +363,7 @@ def sedparser(filename):
 	    %(ijack.ref,len(ijack.pins),ijack.conn.count))
       #check for mating
       if ijack.mate is None: 
-	print ("\tJack %s unmated"%ijack.ref)
+	print ("\tJack %s of %s unmated" % (ijack.ref, cont.ref))
 	all_mated = False
       #assign number to unnumbered jacks
       if ijack.number <= 0:
@@ -373,12 +383,13 @@ def sedparser(filename):
 
 if __name__ == "__main__":
   try:
+    #run the parser
     if len(sys.argv) == 2: filename = sys.argv[1]
     else: filename = defaultfile
     print "Parsing file:", filename
     sedparser(filename)
 
-    #extra stuff
+    #outptus
     writeInfiles()
     countConnectors()
     rewriteDescription(filename)
