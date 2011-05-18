@@ -11,6 +11,12 @@ a count of the CONNECTORs used, and a new version of the description file. To
 disable any of these functions, modify the main function of `sedparser.py`. (Or,
 to be really fancy, change it to accept command line switches.)
 
+Statistics output
+-----------------
+This is created by the parser itself and contains a list of all COMPONENTs and
+explicitly declared CABLEs, with the number of JACKs and LINEs that each
+contains. The output is in `./out/stats.txt`.
+
 Database "infile" output
 ------------------------
 The primary purpose of *sedpy* is to produce a raw dump of database tables to be
@@ -26,7 +32,8 @@ Connector count output
 Useful for stocking parts for making the cables in a system. Note that both ends
 of every connection are counted. This is useful when the component is a box that
 will be made in-house. However, it also counts connectors on boxes that may come
-with the connector attached. These will be overcounted.
+with the connector attached. These will be overcounted. The output is in
+`./out/connector_count.txt`.
 
 New description output
 ----------------------
