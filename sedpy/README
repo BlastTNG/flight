@@ -1,6 +1,6 @@
-Using sedpy
-===========
-sedpy parses a description file that describes a complete electrical/cabling
+Using *sedpy*
+=============
+*sedpy* parses a description file that describes a complete electrical/cabling
 system. This is done by running the `sedparser.py` script, which accepts the
 filename of a description file as its argument. If unspecified, it will look for
 a file named `description.txt`.
@@ -13,12 +13,13 @@ to be really fancy, change it to accept command line switches.)
 
 Database "infile" output
 ------------------------
-The primary purpose of sedpy is to produce a raw dump of database tables to be
+The primary purpose of *sedpy* is to produce a raw dump of database tables to be
 imported into a BEDthingy-style database, for viewing on the web. The parser
 puts this output in the directory `./out`. The script `replacetables`, and the
 accompanying `replacetables.sql` are used to import the data into such a
-database. `replacetables` must be run on the system that hosts the BEDthingy
-database and must be updated to specify a `DESCTIPTION FILE` and `DATABASE`.
+database. For security reasons, `replacetables` must be run on the system that
+hosts the BEDthingy database. It must be updated to specify a `DESCTIPTION FILE`
+and `DATABASE`.
 
 Connector count output
 ----------------------
@@ -35,15 +36,16 @@ slightly more specific description is saved in `./out/newdescription.txt`. The
 primary difference is that CABLEs and JACKs will be assigned global database
 numbers. Otherwise their names are used as an internal reference only. This 
 change is so that updates to the description won't change previously assigned
-JACK and CABLE numbers. sedpy also uses its own preferred syntax (ie sjb's),
+JACK and CABLE numbers. *sedpy* also uses its own preferred syntax (ie sjb's),
 which may change the format of some lines.
 
 All changes that will be made to the new description:
 
 * JACK and CABLE declarations are assigned global database numbers
+    * Directly mated JACKs (without a p2p cable) are assigned a common number
 * p2p CABLEs with unspecified names will be assigned an explicit name
 * Whitespace between tokens is always a single space character
-* Lines containing whitespace or comments are left unchanged
+* Lines containing only whitespace or comments are left unchanged
 * JACK and LINE declarations are indented by 4 spaces
 * For LINE declarations
     * a semi-colon separates JACK and PIN numbers, no spaces are used
@@ -55,49 +57,62 @@ Typical workflow
 Because `replacetables` does a mass rewrite of the whole database, even for
 small changes, some method is needed to track changes. The easiest way to do so
 is with a Revision Control System, like `cvs`. This section outlines the
-process by which to use sedpy and `cvs` to make and track changes to the
-database.
+process by which to use *sedpy* and `cvs` to make and track changes to the
+database. It uses *spider* as an example
 
-1. Get an up-to-date version of the description file with  
-    `$ cvs up`
-2. Check that `DESCTIPTION FILE` and `DATABASE` are correct in `replacetables`
+1. Get an up-to-date version of the description file. If you already have a copy
+   then run  
+      `$ cd /path/to/sedpy`  
+      `$ cvs up`  
+   Or if you don't yet have a copy  
+      `$ cvs checkout sedpy`  
+      `$ cd sedpy`
+2. Check that `DESCTIPTION FILE` and `DATABASE` are correct in `replacetables`.
+   For *spider* these should read `spider.txt` and `spider`
 3. Make changes to the description file, using shorthand and omitting optional
    tokens where possible/desired
-4. Run `sedparser.py` on your description file
+4. Parse your description file  
+      `$ ./sedparser.py spider.txt`
 5. Compare the output in `./out/newdescription.txt` to the original description.
    Often uncaught mistakes in the description file will be more evident here, or
    you might discover a bug in `sedparser.py`. To view differences, try the Unix
    `diff` utility, or a graphical equivalent (eg `meld` on linux, or `WinMerge`
-   on Windows)
+   on Windows)  
+      `$ diff -u spider.txt ./out/newdescription.txt`
 6. If everything looks okay, replace your old description file with
-   `./out/newdescription.txt`
-7. Commit your changes to the description with  
-   `$ cvs commit`
-8. On the database server, get the new changes:  
-   `$ cvs up`
-9. Finally, on the database server, run `./replacetables`
+   `./out/newdescription.txt`  
+      `$ cp ./out/newdescription.txt spider.txt`
+7. If you feel like being extra careful (and you should!) repeat steps 4 and 5.
+   There should be no new changes in `./out/newdescription.txt`
+8. Commit your changes to the description with  
+      `$ cvs commit`
+9. On the database server, get the new changes:  
+      `$ ssh galadriel.astro.utoronto.ca`  
+      `$ cd /path/to/sedpy`  
+      `$ cvs up`
+10. Finally, on the database server, update the database  
+      `$ ./replacetables`
 
 Description File Syntax
 =======================
-Description files for sedpy contain a series of lines for declaring CONNECTORs,
-COMPONENTs, CABLEs, JACKs, and LINEs. White space at the beginning and end of a
+*sedpy* description files contain a series of lines for declaring CONNECTORs,
+COMPONENTs, CABLEs, JACKs, and LINEs. White space at the beginning or end of a
 line is stripped, and space between tokens can be of any type and length. Lines
 starting with a `#` character are comments, and ignored by the parser.
 
 CONNECTORs appear at the beginning of the file and declare the possible types of
 JACKs that can be used in the rest of the file. The CONNECTOR section ends with
-a line:
-
-    *ENDCONNECTORLIST
+a line:  
+    `*ENDCONNECTORLIST`
 
 COMPONENTs are meant to describe boxes or other objects that contain JACKs.
 Usually JACKs on COMPONENTs connect to a CABLE, which then goes to another
 COMPONENT. However, it is possible for JACKs on COMPONENTs to mate directly to
 other COMPONENTs. Within a COMPONENT, the various signals connected to PINs on
 JACKs are described by LINEs. LINEs can connect to one or more PINs on one or
-more JACKs to name the PINs, and indicate when they are connected to each other.
-COMPONENTs can be declared as being physically or logically part of another
-COMPONENT, called its supercomponent.
+more JACKs. They name the PINs, and indicate when PINs are connected to each
+other. COMPONENTs can be declared as being physically or logically part of
+another COMPONENT, called its supercomponent.
 
 Like COMPONENTs, CABLEs are objects that contain JACKs and LINEs. Because CABLEs
 are physically different from COMPONENTs, they have different parameters. They
@@ -128,7 +143,7 @@ and number of characters allowed. For example, `[A-Z0-9_]{1,8}` allows tokens of
 underscores (`_`). For the technically inclined, `lineparser.py` contains full
 regular expressions that specify the exact format for the declaration lines. It
 also has some tests and examples, but it might be more instructive to browse a 
-sample description (eg `description.txt`).
+sample description (eg `spider.txt`).
 
 
 CONNECTORs:
@@ -165,7 +180,7 @@ CABLEs:
 * C##: the CABLE number (integer `[0-9]{1,8}` optionally preceded by `C`).
        When the `&` is present, the number will be used as-is in the database.
        Otherwise, the number is a placeholder and a new one will be assigned.
-       In either case, it must be unique—even among COMPONENT names.
+       In either case it must be unique, even among COMPONENT names.
 * description: any string not containing double quotes (`[^"]{1,64}`)
 * len: (optional) the length in mm (omitted if unknown) (integer `[0-9]{1,8}`)
 
@@ -184,12 +199,12 @@ JACKs:
 * label: any string not containing double quotes (`[^"]{1,32}`)
 * CONN/G: CONNECTOR label (`[A-Z0-9_]{1,16}`) and gender (`[mMfF]`)
 * DEST: destination: COMPONENT (CMPNAME) or CABLE (C##)
-* jack: (optional) ref value of JACK on mating COMPONENT/CABLE. If omitted, 
-	 will look for matching JACK with current COMPONENT as destination
+* jack: (optional) ref value of JACK on mating COMPONENT/CABLE. This can often
+	be omitted and the parser will find the matching JACK.
 * CABLE: (optional) declaration for p2p CABLEs with number (`[0-9]{1,8}`, 
 	 optional `C`), description (`[^"]{1,64}`), and length (`[0-9]{1,8}`).
-	 Similar to full CABLE declarations. If omitted, JACK is taken to mate
-	 directly to JACK on DEST.
+	 Similar to full CABLE declarations. If omitted, the JACK is taken to
+	 mate directly to its match on DEST.
 * &C##: (optional) CABLE number. Unlike full CABLEs, when this is present it
 	should always be preceded by `&`.
 	Non-database numbers for p2p cables are of no use
