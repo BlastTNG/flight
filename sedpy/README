@@ -15,7 +15,8 @@ Statistics output
 -----------------
 This is created by the parser itself and contains a list of all COMPONENTs and
 explicitly declared CABLEs, with the number of JACKs and LINEs that each
-contains. The output is in `./out/stats.txt`.
+contains. This can be a useful diagnostic tool for finding problems in the 
+description file. The output is in `./out/stats.txt`.
 
 Database "infile" output
 ------------------------
@@ -80,11 +81,13 @@ database. It uses *spider* as an example
    tokens where possible/desired
 4. Parse your description file  
       `$ ./sedparser.py spider.txt`
-5. Compare the output in `./out/newdescription.txt` to the original description.
+5. Reveiw output. Check entries in `./out/stats.txt` for new/modified parts.
+   Compare `./out/newdescription.txt` to the original description.
    Often uncaught mistakes in the description file will be more evident here, or
    you might discover a bug in `sedparser.py`. To view differences, try the Unix
    `diff` utility, or a graphical equivalent (eg `meld` on linux, or `WinMerge`
    on Windows)  
+      `$ cat ./out/stats.txt`  
       `$ diff -u spider.txt ./out/newdescription.txt`
 6. If everything looks okay, replace your old description file with
    `./out/newdescription.txt`  

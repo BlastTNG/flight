@@ -15,7 +15,8 @@ to be really fancy, change it to accept command line switches.)</p>
 
 <p>This is created by the parser itself and contains a list of all COMPONENTs and
 explicitly declared CABLEs, with the number of JACKs and LINEs that each
-contains. The output is in <code>./out/stats.txt</code>.</p>
+contains. This can be a useful diagnostic tool for finding problems in the 
+description file. The output is in <code>./out/stats.txt</code>.</p>
 
 <h2>Database "infile" output</h2>
 
@@ -86,11 +87,13 @@ For <em>spider</em> these should read <code>spider.txt</code> and <code>spider</
 tokens where possible/desired</li>
 <li>Parse your description file <br />
   <code>$ ./sedparser.py spider.txt</code></li>
-<li>Compare the output in <code>./out/newdescription.txt</code> to the original description.
+<li>Reveiw output. Check entries in <code>./out/stats.txt</code> for new/modified parts.
+Compare <code>./out/newdescription.txt</code> to the original description.
 Often uncaught mistakes in the description file will be more evident here, or
 you might discover a bug in <code>sedparser.py</code>. To view differences, try the Unix
 <code>diff</code> utility, or a graphical equivalent (eg <code>meld</code> on linux, or <code>WinMerge</code>
 on Windows) <br />
+  <code>$ cat ./out/stats.txt</code> <br />
   <code>$ diff -u spider.txt ./out/newdescription.txt</code></li>
 <li>If everything looks okay, replace your old description file with
 <code>./out/newdescription.txt</code> <br />
