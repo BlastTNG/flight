@@ -21,7 +21,7 @@
 
 #include "command_list.h"
 
-const char *command_list_serial = "$Revision: 1.1.1.1 $";
+const char *command_list_serial = "$Revision: 1.2 $";
 
 //these must correspond to #defines in header
 const char *GroupNames[N_GROUPS] = {
@@ -103,6 +103,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"el goto position (deg)", -10.0, 89.0, 'f', "EL"}  
     }
   },
+  {COMMAND(az_el_set), "Input Az-El mount starting angles", GR_POINT, 2,
+    {
+      {"starting azimuth (deg)", -90.0, 90.0, 'f', "AZ_0"},
+      {"starting elevation (deg)", -10.0, 89.0, 'f', "EL_0"},
+    }
+  }, 
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
     {
       {"Plover", 0, MAX_15BIT, 'i', "PLOVER"}

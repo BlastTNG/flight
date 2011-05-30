@@ -248,6 +248,12 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.az_el.el_max = rvalues[7];
       CommandData.az_el.mode = AzElRaster;
       break;
+    case az_el_set:
+      CommandData.az_el.az_ref = rvalues[0];
+      CommandData.az_el.el_ref = rvalues[1];
+      CommandData.az_el.cmd_disable = 0;
+      CommandData.az_el.mode = AzElSet;
+      break;
     case plugh:/* A hollow voice says "Plugh". */
       CommandData.plover = ivalues[0];
       break;

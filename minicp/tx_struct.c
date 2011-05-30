@@ -192,17 +192,19 @@ struct ChannelStruct SlowChannels[] = {
   {"adc3_dac29",   'w', ADC3_D,  29,            1.0,          0.0, 'u', U_NONE},
   {"adc3_dac30",   'w', ADC3_D,  30,            1.0,          0.0, 'u', U_NONE},
   {"adc3_dac31",   'w', ADC3_D,  31,            1.0,          0.0, 'u', U_NONE},
-  {"width_az",     'w', LOOP1,    0,        180.0/65535.0,   0.0, 'u', U_P_DEG},
-  {"v_az",         'w', LOOP1,    1,         10.0/65535.0,   0.0, 'u', U_V_DPS},
-  {"v_el",         'w', LOOP1,    2,          5.0/65535.0,   0.0, 'u', U_V_DPS},
-  {"a_az",         'w', LOOP1,    3, 5.0/65535.0,   0.0, 'u', "accel","^o/s^2"},
-  {"a_el",         'w', LOOP1,    4, 5.0/65535.0,   0.0, 'u', "accel","^o/s^2"},
-  {"step_el",      'w', LOOP1,    5,          5.0/65535.0,   0.0, 'u', U_D_DEG},
-  {"el_min",       'w', LOOP1,    6,         44.0/65535.0,   0.0, 'u', U_P_DEG},
-  {"el_max",       'w', LOOP1,    7,         44.0/65535.0,  45.0, 'u', U_P_DEG},
-  {"az",           'w', LOOP1,    8,        180.0/65535.0, -90.0, 'u', U_P_DEG},
-  {"el",           'w', LOOP1,    9,         99.0/65535.0, -10.0, 'u', U_P_DEG},
-  
+  {"width_az",     'w', LOOP1,    0,       180.0/65535.0,   0.0, 'u', U_P_DEG},
+  {"v_az",         'w', LOOP1,    1,        10.0/65535.0,   0.0, 'u', U_V_DPS},
+  {"v_el",         'w', LOOP1,    2,         5.0/65535.0,   0.0, 'u', U_V_DPS},
+  {"a_az",         'w', LOOP1,    3, 5.0/65535.0,   0.0, 'u',"accel","^o/s^2"},
+  {"a_el",         'w', LOOP1,    4, 5.0/65535.0,   0.0, 'u',"accel","^o/s^2"},
+  {"step_el",      'w', LOOP1,    5,         5.0/65535.0,   0.0, 'u', U_D_DEG},
+  {"el_min",       'w', LOOP1,    6,        44.0/65535.0,   0.0, 'u', U_P_DEG},
+  {"el_max",       'w', LOOP1,    7,        44.0/65535.0,  45.0, 'u', U_P_DEG},
+  {"az",           'w', LOOP1,    8,      180.0/65535.0,  -90.0, 'u', U_P_DEG},
+  {"el",           'w', LOOP1,    9,       99.0/65535.0,  -10.0, 'u', U_P_DEG},
+  {"az_ref",       'w', LOOP1,   10,      180.0/65535.0,  -90.0, 'u', U_P_DEG},
+  {"el_ref",       'w', LOOP1,   11,       99.0/65535.0,  -10.0, 'u', U_P_DEG},
+
   END_OF_CHANNELS
 };
 

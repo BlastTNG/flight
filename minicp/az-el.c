@@ -9,6 +9,8 @@ Author:    Jamil A. Shariff
 
 Updated:   May 26, 2011
 
+Note:      CM = Cool Muscle (stepper motor type)
+           CML = Cool Muscle Language (ASCII-based, to command motors)
 ********************************************************************/
 
 #include <stdio.h>	
@@ -46,9 +48,12 @@ Updated:   May 26, 2011
 #define C 117.65          // angle in degrees relevant to geometry of system
                           // = 180 - 37 - 25.35
 #define PI 3.14159265
+#define CNTS_PER_DEG 72000.0/360.0
+#define CM_PER_ENC 50000.0/72000.0
 
 
-/* CMInfoStruct: contains info on state of serial comms with a Cool Muscle */
+/* CMInfoStruct: contains info on state of serial comms  with a Cool Muscle
+   (also axis encoder reference position)  */
 
 struct CMInfoStruct {
 
@@ -58,6 +63,9 @@ struct CMInfoStruct {
   int closing;            // 1 if in the process of closing
 //int reset;              // 1 to reset serial connection
 //unsigned int err_count; // tally of serial comm. errors 
+  int ref;                // position of encoder (counts) after an az_el_set 
+                          // command
+
   char motorstr[3];       // name of motor
 
 } azinfo, elinfo;
@@ -78,18 +86,12 @@ static void open_cm(char *dev_name, struct CMInfoStruct *cminfo);
 static void close_cm(struct CMInfoStruct *cminfo);
 static void checkpos_cm(struct CMInfoStruct *cminfo);
 static void init_cm(struct CMInfoStruct *cminfo);
-static void allstop_cm(struct CMInfoStruct *azinfoptr, struct CMInfoStruct 
-                       *elinfoptr); 
 static void slew_cm(int accel, int speed, int position, struct CMInfoStruct 
                     *cminfo);
-static void goto_cm(int az_accel, int el_accel, int az_speed, int el_speed, 
-                    int az, int el, struct CMInfoStruct *azinfoptr, struct 
-                    CMInfoStruct *elinfoptr);
 
-static void raster_cm(int az_width, int az_speed, int el_speed, int az_accel, 
-		      int el_accel, int step_size, int el_min, int el_max, 
-                      struct CMInfoStruct *azinfoptr, struct CMInfoStruct 
-                      *elinfoptr); 
+static void allstop_cm(); 
+static void goto_cm();
+static void raster_cm(); 
 
 static int drive_cm(int accel, int speed, int position, struct CMInfoStruct 
                     *cminfo);
@@ -99,6 +101,7 @@ static int write_cm(struct CMInfoStruct *cminfo, char *cmd, int length,
 
 static double calc_dx(double theta, double dtheta);
 static double xoftheta(double theta); 
+static double dxdtheta(double theta);
 
 /* start/end serial threads */
 
@@ -119,25 +122,29 @@ void endAzEl()
 
 }
 
-/* drive_cm moves a Cool Muscle stepper motor to the specified position 
+/* drive_cm moves a Cool Muscle stepper motor by the specified distance 
    at the specified speed and acceleration. */
 
-int drive_cm(int accel, int speed, int position, struct CMInfoStruct* cminfo)
+int drive_cm(int accel, int speed, int distance, struct CMInfoStruct* cminfo)
 {
 
-  int acount=0, scount=0, pcount=0;
+  int acount=0, scount=0, dcount=0;
   
-  char *execframe = "^\r";            // the command to execute motion
+  char *execframe = "[1\r";              // the command to execute the CML
+                                         // program bank for motion
 
-  char accelframe[COMMAND_SIZE];      // string for acceleration value
-  char speedframe[COMMAND_SIZE];      // string for speed value
-  char posframe[COMMAND_SIZE];        // string for position value
+  char accelframe[COMMAND_SIZE];         // string for acceleration value
+  char speedframe[COMMAND_SIZE];         // string for speed value
+  char distframe[COMMAND_SIZE];          // string for position value
 
-  /* read acceleration, speed and position values into character strings  */
+  char *program = "B1\rA1,S1,P1+\rEND\r";// small CML program bank to do 
+                                         // relative move
+
+  /* read acceleration, speed and distance values into strings */
   
-  acount = sprintf(accelframe, "A=%i\r", accel);
-  scount = sprintf(speedframe, "S=%i\r", speed);
-  pcount = sprintf(posframe, "P=%i\r", position);
+  acount = sprintf(accelframe, "A1=%i\r", accel);
+  scount = sprintf(speedframe, "S1=%i\r", speed);
+  dcount = sprintf(distframe, "P1=%i\r", distance);
 
   #ifdef CM_DEBUG
   bprintf(info, "%s motor commands:\n", cminfo->motorstr);
@@ -172,8 +179,16 @@ int drive_cm(int accel, int speed, int position, struct CMInfoStruct* cminfo)
   bprintf(info,"Writing position CML command to %s motor.", cminfo->motorstr);
   #endif
 
-  if ( (write_cm(cminfo, posframe, pcount, " position CML command")) < 0 ) {
+  if ( (write_cm(cminfo, distframe, dcount, " distance CML command")) < 0 ) {
     return -3;
+  }
+
+  #ifdef CM_DEBUG
+  bprintf(info,"Writing CML motion program to %s motor.", cminfo->motorstr);
+  #endif
+
+  if ( (write_cm(cminfo, program, strlen(program), " CML program")) < 0 ) {
+    return -4;
   }
 
   #ifdef CM_DEBUG
@@ -183,7 +198,7 @@ int drive_cm(int accel, int speed, int position, struct CMInfoStruct* cminfo)
 
   if ( (write_cm(cminfo, execframe, strlen(execframe), 
         " execute motion CML command")) < 0 ) {
-    return -4;
+    return -5;
   }
 
   return 0;
@@ -215,49 +230,149 @@ void slew_cm(int accel, int speed, int position, struct CMInfoStruct *cminfo)
 
 /* goto_cm goes to a specific (az,el) position by slewing in each axis */
 
-void goto_cm(int az_accel, int el_accel, int az_speed, int el_speed, 
-             int az, int el, struct CMInfoStruct *azinfoptr, struct 
-             CMInfoStruct *elinfoptr)
+void goto_cm()
 {  
-  slew_cm(az_accel, az_speed, az, azinfoptr);
-  slew_cm(el_accel, el_speed, el, elinfoptr);
 
-  checkpos_cm(azinfoptr);
-  checkpos_cm(elinfoptr);
+  int az_accel, az_speed, az_dest, el_accel, el_speed, el_dest;
+
+  static struct BiPhaseStruct* elEncAddr;
+  static struct BiPhaseStruct* azEncAddr;
+
+  static int firsttime = 1;
+
+  double az_enc;      // current az encoder reading (cnts)
+  double az_enc_dest; // az encoder reading at destination angle
+  double el_enc;      // current el encoder reading (cnts)
+  double el;          // current elevation
+  double dext;        // change in lin. act. extension from current
+                      // angle to destination angle
+  double dextdtheta;  // derivative of lin. act. extension w.r.t. elevation
+
+  if (firsttime) {
+    elEncAddr = GetBiPhaseAddr("adc1_enc_el");
+    azEncAddr = GetBiPhaseAddr("adc1_enc_az");
+    firsttime = 0;
+  }
+
+  /* azimuth calibrations */
+
+  az_enc = ReadData(azEncAddr);
+
+  az_enc_dest = (CommandData.az_el.az - CommandData.az_el.az_ref)*CNTS_PER_DEG
+                 + azinfo.ref;
+
+  az_dest = (int)((az_enc_dest - az_enc)*AZ_GEAR_RATIO*CM_PER_ENC);
+		  
+  az_speed = ((int)(CommandData.az_el.az_speed)*AZ_GEAR_RATIO*CM_PULSES)
+                    /(360*SPEED_UNIT);
+
+  az_accel = ((int)(CommandData.az_el.az_accel)*AZ_GEAR_RATIO*CM_PULSES)
+                    /(360*ACCEL_UNIT);
+
+  /* elevation calibrations */
+
+  el_enc = ReadData(elEncAddr);
+
+  el = (el_enc - elinfo.ref)/CNTS_PER_DEG + CommandData.az_el.el_ref;
+
+  dext = calc_dx(el, (CommandData.az_el.el - el));
+
+  dextdtheta = dxdtheta(el); // not ideal to use current angle for something 
+                             // that is a continuous func. of theta
+
+  el_dest =  (int)(((dext)/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES);
+
+  el_speed = (int)(((dextdtheta*CommandData.az_el.el_speed/IN_TO_MM)
+                     *ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/SPEED_UNIT);
+
+  el_accel = (int)(((dextdtheta*CommandData.az_el.el_accel/IN_TO_MM)
+	             *ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/ACCEL_UNIT);
+
+  slew_cm(az_accel, az_speed, az_dest, &azinfo);
+  slew_cm(el_accel, el_speed, el_dest, &elinfo);
+
+  checkpos_cm(&azinfo);
+  checkpos_cm(&elinfo);
 }
 
-/* raster_cm performs a raster scan with the parameters given by the arguments 
-   (all in Cool Muscle units) using a sequence of slew_cm calls */
+/* raster_cm performs a raster scan with the commanded parameters using a 
+   sequence of slew_cm calls */
 
-void raster_cm(int az_width, int az_speed, int el_speed, int az_accel, 
-               int el_accel, int step_size, int el_min, int el_max, struct 
-               CMInfoStruct *azinfoptr, struct CMInfoStruct *elinfoptr) 
+void raster_cm() 
 { 
- 
+
+  int az_width, az_speed, az_accel, el_start, el_speed, el_accel, 
+      step_size; 
+
   int step_count;           // keep track of el steps                
   int pos_arg;              // argument to pass as az position value
-
   int N_steps;              // number of elevation steps
 
-  N_steps = (el_max - el_min)/step_size;
+  double el_enc, el, ext_min, ext, dext, dextdtheta;
+
+  static struct BiPhaseStruct* elEncAddr;
+  static struct BiPhaseStruct* azEncAddr;
+
+  static int firsttime = 1;
+
+  if (firsttime) {
+    elEncAddr = GetBiPhaseAddr("adc1_enc_el");
+    azEncAddr = GetBiPhaseAddr("adc1_enc_az");
+    firsttime = 0;
+  }
+
+  /* azimuth calibrations */
+
+  az_width = ((int)(CommandData.az_el.az_width)*AZ_GEAR_RATIO*CM_PULSES)
+                    /360;
+
+  az_speed = ((int)(CommandData.az_el.az_speed)*AZ_GEAR_RATIO*CM_PULSES)
+                    /(360*SPEED_UNIT);
+
+  az_accel = ((int)(CommandData.az_el.az_accel)*AZ_GEAR_RATIO*CM_PULSES)
+                    /(360*ACCEL_UNIT);
+
+  /* elevation calibrations */
+
+  el_enc = ReadData(elEncAddr);
+
+  el = ((el_enc - elinfo.ref)/CNTS_PER_DEG) + CommandData.az_el.el_ref;
+
+  dextdtheta = dxdtheta(el); // uses current elevation angle (okay for small
+                             // step size?)
+
+  ext_min = xoftheta(CommandData.az_el.el_min);
+
+  ext = xoftheta(el);
+  
+  el_start = (int)(((ext_min - ext)/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO
+		   *CM_PULSES);
+
+  el_speed = (int)(((dextdtheta*CommandData.az_el.el_speed/IN_TO_MM)
+	            *ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/SPEED_UNIT);
+
+  el_accel = (int)(((dextdtheta*CommandData.az_el.el_accel/IN_TO_MM)
+       	            *ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/ACCEL_UNIT);
+
+  N_steps = (CommandData.az_el.el_max - CommandData.az_el.el_min)
+             /CommandData.az_el.el_step;
  
   bprintf(info, "Performing raster scan...");
   
   /* move in azimuth to one end of the scan range */
   
   bprintf(info, "Moving to end of az scan range...");    
-  slew_cm(az_accel, az_speed, -(az_width/2), azinfoptr);
+  slew_cm(az_accel, az_speed, -(az_width/2), &azinfo);
 
   /* check to see if it got there */
-  checkpos_cm(azinfoptr);
+  checkpos_cm(&azinfo);
 
-  /* move in elevation to min_el */
-
-  bprintf(info, "Moving to min. elevation...");    
-  slew_cm(el_accel, el_speed, el_min, elinfoptr);
+  /* move in elevation to starting elevation */
+  bprintf(info, "Moving to starting elevation...");    
+  slew_cm(el_accel, el_speed, el_start, &elinfo);
 
   /* check to see if it got there */
-  checkpos_cm(elinfoptr);
+  checkpos_cm(&elinfo);
   
   /* start the raster scan */
 
@@ -267,25 +382,44 @@ void raster_cm(int az_width, int az_speed, int el_speed, int az_accel,
    
     step_count++;   
 
-    pos_arg = ( ((step_count - 1) % 2) == 0 ) ? az_width/2 : -az_width/2;
+    pos_arg = ( ((step_count - 1) % 2) == 0 ) ? az_width : -az_width;
    
     /* scan across in azimuth */
    
     bprintf(info, "Scanning in azimuth...");
-    slew_cm(az_accel, az_speed, pos_arg, azinfoptr);
-    checkpos_cm(azinfoptr);
+    slew_cm(az_accel, az_speed, pos_arg, &azinfo);
+    checkpos_cm(&azinfo);
      
     /* step in elevation */
     
     bprintf(info,"Elevation Step: %i", step_count);  
     bprintf(info, "Stepping in elevation...");
+
+    el_enc = ReadData(elEncAddr);
+
+    el = ((el_enc - elinfo.ref)/CNTS_PER_DEG) + CommandData.az_el.el_ref;
+
+    dextdtheta = dxdtheta(el); // uses current elevation angle (okay for small
+                               // step size?)
+
+    dext = calc_dx(el, CommandData.az_el.el_step);
+
+    step_size = (int)(((dext)/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO
+		   *CM_PULSES);
+
+    el_speed = (int)(((dextdtheta*CommandData.az_el.el_speed/IN_TO_MM)
+	              *ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/SPEED_UNIT);
+
+    el_accel = (int)(((dextdtheta*CommandData.az_el.el_accel/IN_TO_MM)
+         	      *ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/ACCEL_UNIT);
+
     if (step_size > 0) {
-      slew_cm(el_accel, el_speed, el_min+(step_count*step_size), elinfoptr);
-      checkpos_cm(elinfoptr);  
+      slew_cm(el_accel, el_speed, step_size, &elinfo);
+      checkpos_cm(&elinfo);  
     }
 
-    /* TODO - sjb: XY stage also did "el" scan with "az" steps. Do we want this?
-     */
+    /* TODO - sjb: XY stage also did "el" scan with "az" steps. Do we want 
+       this? */
   }
 
 }
@@ -437,26 +571,25 @@ void checkpos_cm(struct CMInfoStruct *cminfo)
 
 /* allstop_cm sends disable and pause commands to both motors */
 
-void allstop_cm(struct CMInfoStruct *azinfoptr, struct CMInfoStruct *elinfoptr)
+void allstop_cm()
 {
 
-  char *pause = "]\r";   // CML for "pause motion"
-  char *disable = ")\r"; // CML for "de-energize motor windings"
-  char *enable = "(\r";  // CML for "enable motor windings"
+  char *disable = "*\r";
+  char *enable = "*1\r";
 
   int stopped = 0;
 
   while (!stopped){
-    if (write_cm(elinfoptr,disable,strlen(disable)," disable CML command")==0 &&
-        write_cm(azinfoptr,disable,strlen(disable)," disable CML command")==0 &&
-        write_cm(elinfoptr,pause,strlen(pause)," disable CML command")==0 &&
-        write_cm(azinfoptr,pause,strlen(pause)," disable CML command")==0) {
+    if (write_cm(&elinfo,disable,strlen(disable)," disable CML command")==0 
+        && write_cm(&azinfo,disable,strlen(disable)," disable CML command")
+        ==0) {
+
       stopped = 1;
     }
   }
 
-  write_cm(elinfoptr, enable, strlen(enable), " enable CML command");
-  write_cm(azinfoptr, enable, strlen(enable), " enable CML command");
+  write_cm(&elinfo, enable, strlen(enable), " enable CML command");
+  write_cm(&azinfo, enable, strlen(enable), " enable CML command");
 
 }
 
@@ -641,7 +774,7 @@ void close_cm(struct CMInfoStruct* cminfo)
 /* calcdx returns the change in lin. act. extension (mm) given a step in 
    elevation angle (deg) */
 
-double calc_dx(double theta, double dtheta) 
+double calc_dx(double theta, double dtheta)
 {
 
   // dtheta: el step size, comes from user
@@ -705,6 +838,7 @@ void* azComm(void* arg) {
   azinfo.open = 0;
   azinfo.init = 0;
   azinfo.closing = 0;
+  azinfo.ref = 0;
   strncpy(azinfo.motorstr, "az", 3);
 
   nameThread("AzComm");
@@ -775,6 +909,7 @@ void* elComm(void* arg)
   elinfo.open = 0;
   elinfo.init = 0;
   elinfo.closing = 0;
+  elinfo.ref = 0;
   strncpy(elinfo.motorstr, "el", 3);
 
   nameThread("ElComm");
@@ -833,36 +968,13 @@ void* elComm(void* arg)
   return NULL;
 }
 
-/* AzElScan: actually do stuff */
+/* AzElScan: do whatever has been commanded */
 
 void AzElScan()
 {
 
-  /* scan parameters -- (calibrated to Cool Muscle units) */
-
-  int az_accel;
-  int az_speed;
-  int az_dest;
-  int az_width;
-
-  int el_accel;
-  int el_speed;
-  int el_dest;
-  int el_step;
-  int el_min;
-  int el_max;
-  
-  double ext;        // extension of linear actuator
-  static double ext0;// extension at startup (corresponds to a position of 0
-                     // in CM pulses)
-  double dextdtheta; // deriv. of extension w.r.t. el angle
-
-  double dext;       // change in lin. act. ext. for given step in el. angle
-  double el;         // current el. comes from encoder over Bbus, magically
-  double ext_min;
-  double ext_max;
-
-  static struct BiPhaseStruct* elAddr;
+  static struct BiPhaseStruct* elEncAddr;
+  static struct BiPhaseStruct* azEncAddr;
 
   static struct NiosStruct* azWidthAddr;
   static struct NiosStruct* azVelAddr;
@@ -874,13 +986,15 @@ void AzElScan()
   static struct NiosStruct* elMaxAddr;
   static struct NiosStruct* elGotoAddr;
   static struct NiosStruct* azGotoAddr;
+  static struct NiosStruct* azStartAddr;
+  static struct NiosStruct* elStartAddr;
 
   static int firsttime = 1;
 
   if (firsttime) {
-    ext0 = xoftheta(el);
 
-    elAddr = GetBiPhaseAddr("adc1_enc_el");
+    elEncAddr = GetBiPhaseAddr("adc1_enc_el");
+    azEncAddr = GetBiPhaseAddr("adc1_enc_az");
 
     azWidthAddr = GetNiosAddr("width_az");
     azVelAddr = GetNiosAddr("v_az");
@@ -892,85 +1006,39 @@ void AzElScan()
     elMaxAddr = GetNiosAddr("el_max");
     elGotoAddr = GetNiosAddr("el");
     azGotoAddr = GetNiosAddr("az");
+    azStartAddr = GetNiosAddr("az_ref");
+    elStartAddr = GetNiosAddr("el_ref");
     
     firsttime = 0;
   }
 
-  el = ReadData(elAddr);
-
-  switch(CommandData.az_el.mode){
+  switch(CommandData.az_el.mode) {
 
     case AzElNone:
       break;
 
     case AzElDisable:
-      allstop_cm(&azinfo, &elinfo);
+      allstop_cm();
       CommandData.az_el.mode = AzElNone;
       break;
 
     case AzElGoto:
-      az_dest = ((int)(CommandData.az_el.az)*AZ_GEAR_RATIO*CM_PULSES)/360;
-
-      az_speed = ((int)(CommandData.az_el.az_speed)*AZ_GEAR_RATIO*CM_PULSES)
-                 /(360*SPEED_UNIT);
-
-      az_accel = ((int)(CommandData.az_el.az_accel)*AZ_GEAR_RATIO*CM_PULSES)
-                 /(360*ACCEL_UNIT);
-
-      /* compute lin. act. extension */
-      ext = xoftheta(CommandData.az_el.el);
-      dextdtheta = dxdtheta(el);                   // not ideal to use 
-                                                   // current angle for  
-                                                   // something that is a 
-                                                   // continuous func. of theta
-
-      el_dest =  ((ext-ext0)/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES;
-
-      el_speed = ((dextdtheta*CommandData.az_el.el_speed/IN_TO_MM)
-                 *ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/SPEED_UNIT;
-
-      el_accel = ((dextdtheta*CommandData.az_el.el_accel/IN_TO_MM)
-                 *ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/ACCEL_UNIT;
-    
-      goto_cm(az_accel, el_accel, az_speed, el_speed, az_dest, el_dest, 
-              &azinfo, &elinfo);
-
-      CommandData.az_el.mode = AzElNone;
+      if (!CommandData.az_el.cmd_disable) {   
+        goto_cm();
+        CommandData.az_el.mode = AzElNone;
+      }
       break;
 
     case AzElRaster:
-      az_width = ((int)(CommandData.az_el.az_width)*AZ_GEAR_RATIO*CM_PULSES)
-                 /360;
+      if (!CommandData.az_el.cmd_disable) {   
+        raster_cm();       
+        CommandData.az_el.mode = AzElNone;
+      }
+      break;
 
-      az_speed = ((int)(CommandData.az_el.az_speed)*AZ_GEAR_RATIO*CM_PULSES)
-                 /(360*SPEED_UNIT);
-
-      az_accel = ((int)(CommandData.az_el.az_accel)*AZ_GEAR_RATIO*CM_PULSES)
-                 /(360*ACCEL_UNIT);
-
-      ext_min = xoftheta(CommandData.az_el.el_min);
-      ext_max = xoftheta(CommandData.az_el.el_max);
-      dext = calc_dx(el, CommandData.az_el.el_step);
-      dextdtheta = dxdtheta(el); // uses current elevation angle (okay for 
-                                 // small step size?)
-
-      el_step = (dext/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES;
-
-      el_speed = ((dextdtheta*CommandData.az_el.el_speed/IN_TO_MM)*ROT_PER_INCH
-                 *EL_GEAR_RATIO*CM_PULSES)/SPEED_UNIT;
-
-      el_accel = ((dextdtheta*CommandData.az_el.el_accel/IN_TO_MM)*ROT_PER_INCH
-                 *EL_GEAR_RATIO*CM_PULSES)/ACCEL_UNIT;
-
-      el_min =  ((ext_min-ext0)/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES;
-      el_max =  ((ext_max-ext0)/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES;
-
-      /* TODO: need to make sure raster scan starts at el = 0 */
-
-      raster_cm(az_width, az_speed, el_speed, az_accel, el_accel, el_step, 
-                el_min, el_max, &azinfo, &elinfo); 
-      
-      CommandData.az_el.mode = AzElNone;
+    case AzElSet:
+      azinfo.ref = ReadData(azEncAddr);
+      elinfo.ref = ReadData(elEncAddr);
       break;
 
     default:
@@ -978,15 +1046,15 @@ void AzElScan()
   }
 
   WriteData(azWidthAddr,(CommandData.az_el.az_width)*(65535.0/180.0),
-            NIOS_QUEUE);
-  
+            NIOS_QUEUE);  
+
   WriteData(azVelAddr,(CommandData.az_el.az_speed)*(65535.0/10.0), NIOS_QUEUE);
- 
+
   WriteData(elVelAddr, (CommandData.az_el.el_speed)*(65535.0/5.0), NIOS_QUEUE);
 
-  WriteData(azAccelAddr,(CommandData.az_el.az_accel)*(65535.0/5.0), NIOS_QUEUE);
+  WriteData(azAccelAddr,(CommandData.az_el.az_accel)*(65535.0/5.0),NIOS_QUEUE);
 
-  WriteData(elAccelAddr,(CommandData.az_el.el_accel)*(65535.0/5.0), NIOS_QUEUE);
+  WriteData(elAccelAddr,(CommandData.az_el.el_accel)*(65535.0/5.0),NIOS_QUEUE);
 
   WriteData(elStepAddr,(CommandData.az_el.el_step)*(65535.0/5.0), NIOS_QUEUE);
 
@@ -995,10 +1063,16 @@ void AzElScan()
   WriteData(elMaxAddr,((CommandData.az_el.el_max)-45.0)*(65535.0/44.0), 
             NIOS_QUEUE); 
 
-  WriteData(elGotoAddr,((CommandData.az_el.el)+10.0)*(65535.0/99.0),NIOS_QUEUE);
-  
+  WriteData(elGotoAddr,((CommandData.az_el.el)+10.0)*(65535.0/99.0),
+            NIOS_QUEUE);  
+
   WriteData(azGotoAddr,((CommandData.az_el.az)+90.0)*(65535.0/180.0),
             NIOS_QUEUE);
-    
-}
 
+  WriteData(azStartAddr,((CommandData.az_el.az_ref)+90.0)*(65535.0/180.0), 
+            NIOS_QUEUE);
+
+  WriteData(elStartAddr,((CommandData.az_el.el_ref)+10.0)*(65535.0/99.0), 
+            NIOS_QUEUE);
+   
+}

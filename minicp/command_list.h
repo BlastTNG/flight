@@ -15,7 +15,7 @@
 #define COMMAND_LIST_H
 
 #define N_SCOMMANDS 2          /* total number of single word cmds */
-#define N_MCOMMANDS 9          /* total number of multiword commands */
+#define N_MCOMMANDS 10          /* total number of multiword commands */
 #define MAX_N_PARAMS 10        /* narsil REALLY likes this to be even */
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -71,7 +71,7 @@ enum singleCommand {
 enum multiCommand {
   bias_ampl,         lockin_phase1,     lockin_phase2,     lockin_phase3,
   lockin_phase4,     reset_adc,         az_el_goto,        az_el_raster,
-  plugh
+  az_el_set,         plugh
 };
 
 //32-bit and 64-bit sytems disagree on packing

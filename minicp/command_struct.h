@@ -46,19 +46,24 @@ struct CommandDataStruct {
 
   struct {
 
+    int cmd_disable;
+
     enum scanMode {
       AzElNone,
       AzElDisable,
       AzElGoto,
-      AzElRaster
-   } mode;
- 
+      AzElRaster,
+      AzElSet
+    } mode;
+
     double az_accel;
     double el_accel;
     double az_speed;
     double el_speed;
     double az;
     double el;
+    double az_ref;
+    double el_ref;
 
     /* raster-specific: */
 
