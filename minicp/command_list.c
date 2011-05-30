@@ -21,7 +21,7 @@
 
 #include "command_list.h"
 
-const char *command_list_serial = "$Revision: 1.2 $";
+const char *command_list_serial = "$Revision: 1.3 $";
 
 //these must correspond to #defines in header
 const char *GroupNames[N_GROUPS] = {
@@ -81,16 +81,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Node number",  0, 64, 'i', ""}
     }
   },
-  {COMMAND(az_el_raster), "Az-El mount raster scan", GR_POINT, 8,
+  {COMMAND(az_el_raster), "Az-El mount raster scan", GR_POINT, 9,
     { 
+      {"az raster centre (deg)", -90.0, 90.0, 'f', "AZ"}, 
+      {"el raster center (deg)", -10.0, 89.0, 'f', "EL"},  
       {"az raster scan width (degrees)", 0.0, 180.0, 'f', "WIDTH_AZ"}, 
       {"az raster scan speed (deg/s)", 0.0, 10.0, 'f', "V_AZ"},  
       {"el raster scan speed (deg/s)", 0.0, 5.0, 'f', "V_EL"},
       {"az raster acceleration (deg/s^2)", 0.0, 5.0, 'f', "A_AZ"},
       {"el raster acceleration (deg/s^2)", 0.0, 5.0, 'f', "A_EL"},
       {"el raster step size (deg)", 0.0, 5.0, 'f', "STEP_EL"},
-      {"el raster minimum (deg)", 0.0, 44.0, 'f', "EL_MIN"},
-      {"el raster maximum (deg)", 45.0, 89.0, 'f', "EL_MAX"},
+      {"el raster height (deg)", 0.0, 99.0, 'f', "HEIGHT_EL"},
+
     }
   },
   {COMMAND(az_el_goto), "Az-El mount goto mode", GR_POINT, 6,
@@ -105,8 +107,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(az_el_set), "Input Az-El mount starting angles", GR_POINT, 2,
     {
-      {"starting azimuth (deg)", -90.0, 90.0, 'f', "AZ_0"},
-      {"starting elevation (deg)", -10.0, 89.0, 'f', "EL_0"},
+      {"starting azimuth (deg)", -90.0, 90.0, 'f', "AZ_REF"},
+      {"starting elevation (deg)", -10.0, 89.0, 'f', "EL_REF"},
     }
   }, 
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,

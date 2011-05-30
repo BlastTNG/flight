@@ -69,8 +69,8 @@ struct CommandDataStruct {
 
     double az_width;
     double el_step;
-    double el_min;
-    double el_max;
+    double el_height;
+
   } az_el;
 
 };

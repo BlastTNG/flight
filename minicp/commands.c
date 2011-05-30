@@ -238,14 +238,15 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.az_el.mode = AzElGoto;
       break;
     case az_el_raster:
-      CommandData.az_el.az_width = rvalues[0];
-      CommandData.az_el.az_speed = rvalues[1];
-      CommandData.az_el.el_speed = rvalues[2];
-      CommandData.az_el.az_accel = rvalues[3];
-      CommandData.az_el.el_accel = rvalues[4];
-      CommandData.az_el.el_step = rvalues[5];
-      CommandData.az_el.el_min = rvalues[6];
-      CommandData.az_el.el_max = rvalues[7];
+      CommandData.az_el.az = rvalues[0];
+      CommandData.az_el.el = rvalues[1];
+      CommandData.az_el.az_width = rvalues[2];
+      CommandData.az_el.az_speed = rvalues[3];
+      CommandData.az_el.el_speed = rvalues[4];
+      CommandData.az_el.az_accel = rvalues[5];
+      CommandData.az_el.el_accel = rvalues[6];
+      CommandData.az_el.el_step = rvalues[7];
+      CommandData.az_el.el_height = rvalues[8];
       CommandData.az_el.mode = AzElRaster;
       break;
     case az_el_set:
@@ -379,6 +380,9 @@ void InitCommandData()
   for (i=0; i<16; i++)
     CommandData.power.adc_reset[i] = 0;
 
+  CommandData.az_el.cmd_disable = 1;
+  CommandData.az_el.mode = AzElNone;
+
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
     bprintf(warning, "Commands: prev_status: Wanted %u bytes but got %i.\n",
@@ -392,6 +396,18 @@ void InitCommandData()
 
   /** prev_status overrides this stuff **/
   CommandData.bias_ampl = 32767;
+  CommandData.az_el.az_accel = 1.0;
+  CommandData.az_el.el_accel = 1.0;
+  CommandData.az_el.az_speed = 1.0;
+  CommandData.az_el.el_speed = 1.0;
+  CommandData.az_el.az = 0.0;
+  CommandData.az_el.el = 0.0;
+  CommandData.az_el.az_ref = 0.0;
+  CommandData.az_el.el_ref = 0.0;
+  CommandData.az_el.az_width = 30.0;
+  CommandData.az_el.el_step = 1.0/60.0; 
+  CommandData.az_el.el_height = 10.0;
+
   for (i=0; i<4; i++) CommandData.lockin_phase[i] = 0;
   CommandData.plover = 0;
 

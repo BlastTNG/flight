@@ -50,7 +50,8 @@ Note:      CM = Cool Muscle (stepper motor type)
 #define PI 3.14159265
 #define CNTS_PER_DEG 72000.0/360.0
 #define CM_PER_ENC 50000.0/72000.0
-
+#define EL_MIN -10.0
+#define EL_MAX 89.0
 
 /* CMInfoStruct: contains info on state of serial comms  with a Cool Muscle
    (also axis encoder reference position)  */
@@ -308,7 +309,7 @@ void raster_cm()
   int pos_arg;              // argument to pass as az position value
   int N_steps;              // number of elevation steps
 
-  double el_enc, el, ext_min, ext, dext, dextdtheta;
+  double el_enc, el, ext_low, ext, dext, dextdtheta, el_high, el_low;
 
   static struct BiPhaseStruct* elEncAddr;
   static struct BiPhaseStruct* azEncAddr;
@@ -333,6 +334,13 @@ void raster_cm()
                     /(360*ACCEL_UNIT);
 
   /* elevation calibrations */
+ 
+
+  el_low = CommandData.az_el.el - CommandData.az_el.el_height/2.0;
+  el_high = CommandData.az_el.el + CommandData.az_el.el_height/2.0;
+
+  el_low = (el_low < EL_MIN) ? EL_MIN : el_low;
+  el_high = (el_high > EL_MAX) ? EL_MAX : el_high;
 
   el_enc = ReadData(elEncAddr);
 
@@ -341,11 +349,11 @@ void raster_cm()
   dextdtheta = dxdtheta(el); // uses current elevation angle (okay for small
                              // step size?)
 
-  ext_min = xoftheta(CommandData.az_el.el_min);
+  ext_low = xoftheta(el_low);
 
   ext = xoftheta(el);
   
-  el_start = (int)(((ext_min - ext)/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO
+  el_start = (int)(((ext_low - ext)/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO
 		   *CM_PULSES);
 
   el_speed = (int)(((dextdtheta*CommandData.az_el.el_speed/IN_TO_MM)
@@ -354,8 +362,7 @@ void raster_cm()
   el_accel = (int)(((dextdtheta*CommandData.az_el.el_accel/IN_TO_MM)
        	            *ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/ACCEL_UNIT);
 
-  N_steps = (CommandData.az_el.el_max - CommandData.az_el.el_min)
-             /CommandData.az_el.el_step;
+  N_steps = (el_high - el_low)/CommandData.az_el.el_step;
  
   bprintf(info, "Performing raster scan...");
   
@@ -982,8 +989,7 @@ void AzElScan()
   static struct NiosStruct* azAccelAddr;
   static struct NiosStruct* elAccelAddr;
   static struct NiosStruct* elStepAddr;
-  static struct NiosStruct* elMinAddr;
-  static struct NiosStruct* elMaxAddr;
+  static struct NiosStruct* elHeightAddr;
   static struct NiosStruct* elGotoAddr;
   static struct NiosStruct* azGotoAddr;
   static struct NiosStruct* azStartAddr;
@@ -1002,8 +1008,7 @@ void AzElScan()
     azAccelAddr = GetNiosAddr("a_az");
     elAccelAddr = GetNiosAddr("a_el");
     elStepAddr = GetNiosAddr("step_el");
-    elMinAddr = GetNiosAddr("el_min");
-    elMaxAddr = GetNiosAddr("el_max");
+    elHeightAddr = GetNiosAddr("height_el");
     elGotoAddr = GetNiosAddr("el");
     azGotoAddr = GetNiosAddr("az");
     azStartAddr = GetNiosAddr("az_ref");
@@ -1058,10 +1063,8 @@ void AzElScan()
 
   WriteData(elStepAddr,(CommandData.az_el.el_step)*(65535.0/5.0), NIOS_QUEUE);
 
-  WriteData(elMinAddr,(CommandData.az_el.el_min)*(65535.0/44.0), NIOS_QUEUE);
-
-  WriteData(elMaxAddr,((CommandData.az_el.el_max)-45.0)*(65535.0/44.0), 
-            NIOS_QUEUE); 
+  WriteData(elHeightAddr,(CommandData.az_el.el_height)*(65535.0/99.0), 
+            NIOS_QUEUE);
 
   WriteData(elGotoAddr,((CommandData.az_el.el)+10.0)*(65535.0/99.0),
             NIOS_QUEUE);  
