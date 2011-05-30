@@ -1,8 +1,6 @@
-/* mcp: the BLAST master control program
+/* mcp: the Spider master control program
  *
- * This software is copyright (C) 2003-2005 University of Toronto
- *
- * This file is part of mcp.
+ * This software is copyright (C) 2003-2011 University of Toronto
  *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,8 +30,9 @@
 
 extern int mcp_initial_controls;
 
-void InitTxFrame(unsigned short*);
-void UpdateBBCFrame(unsigned short*);
+void InitTxFrame();
+void UpdateBBCFrame();
 
 void RawNiosWrite(unsigned int, unsigned int, int);
 void WriteData(struct NiosStruct*, unsigned int, int);
+unsigned int ReadData(struct BiPhaseStruct*);

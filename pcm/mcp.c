@@ -1,8 +1,8 @@
-/* mcp: the BLAST master control program
+/* mcp: the Spider master control program
  *
- * This software is copyright (C) 2002-2006 University of Toronto
+ * mcp.c: contains the main loop and creates all threads used by mcp
  *
- * This file is part of mcp.
+ * This software is copyright (C) 2002-2011 University of Toronto
  *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,50 +57,42 @@
 #define STARTUP_VETO_LENGTH 250 /* "frames" */
 #define BI0_VETO_LENGTH 5 /* seconds */
 
-#define BI0_FIFO_MARGIN 8750 /* bytes = 7 frames */
-#define BI0_FIFO_MINIMUM (BI0_FIFO_MARGIN / 2)
-
-#ifdef BOLOTEST
-#  define FRAME_MARGIN (-12)
-#else
-#  define FRAME_MARGIN (-2)
-#endif
-
 #define BI0_FRAME_BUFLEN (400)
+
 /* Define global variables */
 int bbc_fp = -1;
-unsigned int debug = 0;
 short int SouthIAm;
 struct ACSDataStruct ACSData;
 
-unsigned int RxFrameFastSamp;
+unsigned int BBFrameIndex;
 unsigned short* slow_data[FAST_PER_SLOW];
+unsigned short* RxFrame;
 pthread_t watchdog_id;
 
 int StartupVeto = STARTUP_VETO_LENGTH + 1;
 
 static int bi0_fp = -2;
 static int Death = -STARTUP_VETO_LENGTH * 2;
-static int RxFrameIndex;
+static int RxFrameMultiplexIndex;
 
 extern short int InCharge; /* tx.c */
 extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
-extern pthread_mutex_t mutex;
+extern pthread_mutex_t mutex;       //commands.c
 
 void Pointing();
 void WatchPort(void*);
 void WatchDGPS(void);
 void IntegratingStarCamera(void);
 void ActuatorBus(void);
-void WatchFIFO(void);
-void FrameFileWriter(void);
+void WatchFIFO(void);               //commands.c
+void FrameFileWriter(void);         //framefile.c
 void CompressionWriter(void);
 void StageBus(void);
 void openSBSC(void);
 
 void InitialiseFrameFile(char);
-void dirFileWriteFrame(unsigned short *RxFrame);
 void pushDiskFrame(unsigned short *RxFrame);
+void ShutdownFrameFile();
 
 void SunSensor(void);
 
@@ -146,6 +138,7 @@ void startChrgCtrl(); // chrgctrl.c
 void endChrgCtrl();
 #endif
 
+/* gives system time (in s) */
 time_t mcp_systime(time_t *t) {
   time_t the_time = time(NULL) + TEMPORAL_OFFSET;
   if (t)
@@ -190,6 +183,9 @@ char* threadNameLookup(int tid)
 }
   
 
+/* I/O function to be used by bputs, bprintf, etc.
+ * it is assigned this purpose in main
+ */
 void mputs(buos_t flag, const char* message) {
   char buffer[MPRINT_BUFFER_SIZE];
   struct timeval t;
@@ -302,11 +298,14 @@ void mputs(buos_t flag, const char* message) {
 
   if (flag == tfatal) {
     if (logfile != NULL) {
-      fprintf(logfile,
-          "$$ Last error is THREAD FATAL.  Thread [%5u] exits.\n", (unsigned)syscall(SYS_gettid));
+      fprintf(logfile, "$$ Last error is THREAD FATAL. Thread [" 
+          TID_NAME_FMT " (%5u)] exits.\n",threadNameLookup(syscall(SYS_gettid)),
+          (unsigned)syscall(SYS_gettid));
       fflush(logfile);
     }
-    printf("$$ Last error is THREAD FATAL.  Thread [%5u] exits.\n", (unsigned)syscall(SYS_gettid));
+    printf("$$ Last error is THREAD FATAL.  Thread [" 
+          TID_NAME_FMT " (%5u)] exits.\n",threadNameLookup(syscall(SYS_gettid)),
+          (unsigned)syscall(SYS_gettid));
     fflush(stdout);
 
     pthread_exit(NULL);
@@ -314,7 +313,7 @@ void mputs(buos_t flag, const char* message) {
 }
 
 #ifndef BOLOTEST
-static void FillSlowDL(unsigned short *RxFrame)
+static void FillSlowDL()
 {
   int i;
   unsigned short msb, lsb;
@@ -469,7 +468,7 @@ static void Chatter(void* arg)
 }
 
 
-static void GetACS(unsigned short *RxFrame)
+static void GetACS()
 {
   double enc_raw_el, ifel_gy, ifroll_gy, ifyaw_gy;
   double x_comp, y_comp, z_comp;
@@ -585,7 +584,7 @@ static void GetACS(unsigned short *RxFrame)
 
 /* sole purpose of following function is to add a field that reads the total current */
 
-static void GetCurrents(unsigned short *RxFrame)
+static void GetCurrents()
 {
 
   double i_trans;
@@ -687,9 +686,9 @@ static void GetCurrents(unsigned short *RxFrame)
 
 #endif
 
-/* fill_Rx_frame: places one 32 bit word into the RxFrame. Returns true on
- * success */
-static int fill_Rx_frame(unsigned int in_data, unsigned short *RxFrame)
+/* fill_Rx_frame: places one 32 bit word into the RxFrame. 
+ * Returns true on success */
+static int fill_Rx_frame(unsigned int in_data)
 {
   static int n_not_found = 0;
   struct BiPhaseStruct BiPhaseData;
@@ -752,7 +751,7 @@ static void WatchDog (void)
   }
 }
 
-static void write_to_biphase(unsigned short *RxFrame)
+static void write_to_biphase()
 {
   int i;
   static unsigned short nothing[BI0_FRAME_SIZE];
@@ -820,7 +819,7 @@ static void InitFrameBuffer(struct frameBuffer *buffer) {
 
 // warning: there is no checking for an overfull buffer.  Just make sure it is big
 // enough that it can never happen.
-static void PushFrameBuffer(struct frameBuffer *buffer, unsigned short *RxFrame) {
+static void PushFrameBuffer(struct frameBuffer *buffer) {
   int i, fw, i_in;
 
   i_in = buffer->i_in + 1;
@@ -854,7 +853,7 @@ unsigned short *PopFrameBuffer(struct frameBuffer *buffer) {
   
 #endif
 
-static void zero(unsigned short *RxFrame)
+static void zero()
 {
   int i;
 
@@ -949,6 +948,8 @@ static void CloseBBC(int signo)
   if (bbc_fp >= 0)
     close(bbc_fp);
 
+  ShutdownFrameFile();
+
   /* restore default handler and raise the signal again */
   signal(signo, SIG_DFL);
   raise(signo);
@@ -967,7 +968,7 @@ static void SegV(int signo)
 int main(int argc, char *argv[])
 {
   unsigned int in_data, i;
-  unsigned short* RxFrame;
+  int startup_test = 0;
   pthread_t CommandDatacomm1;
   pthread_t disk_id;
   pthread_t abus_id;
@@ -1035,11 +1036,33 @@ int main(int argc, char *argv[])
   if ((bbc_fp = open("/dev/bbcpci", O_RDWR)) < 0)
     berror(fatal, "System: Error opening BBC");
 
+  //both modes want interrupts enabled (?)
+  if (ioctl(bbc_fp, BBCPCI_IOC_ON_IRQ) < 0) startup_test = -1;
+  if (ioctl(bbc_fp, BBCPCI_IOC_SYNC) < 0) startup_test = -1;
+  usleep(100000);  //TODO: needed after sync? shorter?
+
+#ifdef USE_EXT_SERIAL
+  bprintf(startup, "System: BBC using external synchronization/serial numbers");
+  if (ioctl(bbc_fp, BBCPCI_IOC_EXT_SER_ON) < 0) startup_test = -1;
+  //external mode rates in units of DV pulse rate (200Hz on test box)
+  if (ioctl(bbc_fp, BBCPCI_IOC_IRQ_RATE, 1) < 0) startup_test = -1;
+  if (ioctl(bbc_fp, BBCPCI_IOC_FRAME_RATE, SERIAL_PER_FRAME) < 0)
+    startup_test = -1;
+#else
+  bprintf(startup, "System: BBC generating internal serial numbers");
+  if (ioctl(bbc_fp, BBCPCI_IOC_EXT_SER_OFF) < 0) startup_test = -1;
+  //internal mode rates in units of bbc clock rate (32MHz or 4MHz) (?)
+  //frame rate doesn't need to be specified int his mode
+  //TODO don't think this irq rate is right; doesn't matter much in this mode
+  if (ioctl(bbc_fp, BBCPCI_IOC_IRQ_RATE, 320000) < 0) startup_test = -1;
+#endif
+  if (startup_test < 0)
+    bprintf(fatal, "System: BBC failed to set synchronization mode");
+
+  MakeAddressLookups();  //nios addresses, based off of tx_struct, derived
+
   InitCommandData();
-
   pthread_mutex_init(&mutex, NULL);
-
-  MakeAddressLookups();
 
   bprintf(info, "Commands: MCP Command List Version: %s", command_list_serial);
 #ifdef USE_FIFO_CMD
@@ -1063,7 +1086,6 @@ int main(int argc, char *argv[])
 #endif
 
   InitialiseFrameFile(argv[1][0]);
-
   pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
 
   signal(SIGHUP, CloseBBC);
@@ -1107,7 +1129,7 @@ int main(int argc, char *argv[])
 
   bputs(info, "System: BBC is up.\n");
 
-  InitTxFrame(RxFrame);
+  InitTxFrame();
 
 #ifdef USE_XY_THREAD
   pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
@@ -1127,11 +1149,11 @@ int main(int argc, char *argv[])
 #endif
   pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
 
-  while (1) {
+  while (1) {  //main loop
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0)
       berror(err, "System: Error on BBC read");
 
-    if (!fill_Rx_frame(in_data, RxFrame))
+    if (!fill_Rx_frame(in_data))
       bprintf(err, "System: Unrecognised word received from BBC (%08x)",
           in_data);
 
@@ -1140,8 +1162,8 @@ int main(int argc, char *argv[])
         --StartupVeto;
       } else {
 #ifndef BOLOTEST
-        GetACS(RxFrame);
-        GetCurrents(RxFrame);
+        GetACS();
+        GetCurrents();
         Pointing();
 
 #endif
@@ -1151,20 +1173,18 @@ int main(int argc, char *argv[])
           bputs(info, "System: Startup Veto Ends\n");
           StartupVeto = 0;
           Death = 0;
-        } else if (RxFrame[3] != (RxFrameIndex + 1) % FAST_PER_SLOW
-          && RxFrameIndex >= 0) {
+        } else if (RxFrame[3] != (RxFrameMultiplexIndex + 1) % FAST_PER_SLOW
+            && RxFrameMultiplexIndex >= 0) {
           bprintf(err, "System: Frame sequencing error detected: wanted %i, "
-          "got %i\n", RxFrameIndex + 1, RxFrame[3]);
+              "got %i\n", RxFrameMultiplexIndex + 1, RxFrame[3]);
         }
-        RxFrameIndex = RxFrame[3];
+        RxFrameMultiplexIndex = RxFrame[3];
 
-#if 0 //FastSamp from the PCI card isn't working, use one from a DSP
-      //this is done at the beginning of UpdateBBCFrame
         /* Save current fastsamp */
-        RxFrameFastSamp = (RxFrame[1] + RxFrame[2] * 0x10000);
-#endif
+        /* NB: internal frame numbers from PCI don't work. TODO: fix! */
+        BBFrameIndex = (RxFrame[1] + RxFrame[2] * 0x10000);
 
-        UpdateBBCFrame(RxFrame);
+        UpdateBBCFrame();
         CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);
 
         /* pushDiskFrame must be called before PushBi0Buffer to get the slow
@@ -1172,15 +1192,15 @@ int main(int argc, char *argv[])
         pushDiskFrame(RxFrame);
 #ifndef BOLOTEST
         if (biphase_is_on) {
-          PushFrameBuffer(&bi0_buffer, RxFrame);
-          PushFrameBuffer(&hiGain_buffer, RxFrame);
+          PushFrameBuffer(&bi0_buffer);
+          PushFrameBuffer(&hiGain_buffer);
         } else if (biphase_timer < mcp_systime(NULL)) {
           biphase_is_on = 1;
         }
 
-        FillSlowDL(RxFrame);
+        FillSlowDL();
 #endif
-        zero(RxFrame);
+        zero();
       }
     }
   }

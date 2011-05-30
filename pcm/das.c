@@ -589,7 +589,7 @@ void CryoControl (int index)
 /*   BiasControl: Digital IO with the Bias Generator Card               */
 /*                                                                      */
 /************************************************************************/
-void BiasControl (unsigned short* RxFrame)
+void BiasControl ()
 {
   static struct NiosStruct* amplBiasAddr[5];
   static struct NiosStruct* rampEnaBiasAddr;

@@ -1,6 +1,6 @@
-/* mcp: the BLAST master control program
+/* mcp: the master control program
  *
- * This software is copyright (C) 2004-2005 University of Toronto
+ * This software is copyright (C) 2002-2011 University of Toronto
  *
  * This file is part of mcp.
  *
@@ -26,8 +26,16 @@
 #include <pthread.h>
 #include "channels.h"
 #include "blast.h"
+
+//configuration for BLASTBus
+//use external serial numbers and synchronzation; remove for internal
+//#define USE_EXT_SERIAL
+//number of snyc [sic] box serial pulses per BLASTbus frame (only for external)
+#define SERIAL_PER_FRAME 2
+
 extern unsigned short* slow_data[FAST_PER_SLOW];
-extern unsigned int RxFrameFastSamp;
+extern unsigned int BBFrameIndex;
+extern unsigned short* RxFrame;
 
 extern time_t mcp_systime(time_t *t);
 extern struct frameBuffer hiGain_buffer;

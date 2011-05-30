@@ -1,8 +1,8 @@
-/* mcp: the BLAST master control program
+/* mcp: the Spider master control program
  *
- * This software is copyright (C) 2002-2006 University of Toronto
- *
- * This file is part of mcp.
+ * tx.c writes data from mcp to the nios (bbc) to include it in frames
+ * 
+ * This software is copyright (C) 2002-2011 University of Toronto
  *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,20 +82,20 @@ void StoreHWPRBus(void);
 
 /* in auxiliary.c */
 void ChargeController(void);
-void ControlAuxMotors(unsigned short *RxFrame);
-void ControlGyroHeat(unsigned short *RxFrame);
+void ControlAuxMotors();
+void ControlGyroHeat();
 void CameraTrigger(int which);
 void ControlPower(void);
 void VideoTx(void);
 
 /* in das.c */
-void BiasControl(unsigned short* RxFrame);
+void BiasControl();
 void CryoControl(int index);
 void PhaseControl(void);
 
 /* in motors.c */
 void UpdateAxesMode(void);
-void WriteMot(int TxIndex, unsigned short *RxFrame);
+void WriteMot(int TxIndex);
 
 /* in sbsc.cpp */
 void cameraFields();        
@@ -362,7 +362,7 @@ static void SyncADC (void)
 
   for (m = 0; m < NUM_SYNC; ++m) {
     l = sync_nums[m];	    //node number
-    k = slow_data[statusAddr[m]->index][statusAddr[m]->channel];
+    k = ReadData(statusAddr[m]);
 
     if ((k & 0x3) == 0x1 && CommandData.power.adc_reset[l/4] == 0) {
       /* board is up, but needs to be synced */
@@ -1394,7 +1394,7 @@ static void StoreData(int index)
 }
 #endif
 
-void InitTxFrame(unsigned short *RxFrame)
+void InitTxFrame()
 {
   int bus, m, i, j, niosAddr, m0addr;
 
@@ -1457,7 +1457,7 @@ void InitTxFrame(unsigned short *RxFrame)
   /* do initial controls */
   bprintf(info, "Frame Control: Running Initial Controls.\n");
   mcp_initial_controls = 1;
-  UpdateBBCFrame(RxFrame);
+  UpdateBBCFrame();
   mcp_initial_controls = 0;
 
   /* write the framesync to address 0 to get things going... */
@@ -1486,15 +1486,16 @@ void RawNiosWrite(unsigned int addr, unsigned int data, int flush_flag)
   }
 }
 
+/* write to the nios (bbc) */
 void WriteData(struct NiosStruct* addr, unsigned int data, int flush_flag)
 {
   int i;
 
   if (addr->fast)
     for (i = 0; i < FAST_PER_SLOW; ++i) {
-	RawNiosWrite(addr->niosAddr + i * TxFrameWords[addr->bus],
-	    addr->bbcAddr | (data & 0xffff),
-	    flush_flag && !addr->wide && i == FAST_PER_SLOW - 1);
+      RawNiosWrite(addr->niosAddr + i * TxFrameWords[addr->bus],
+          addr->bbcAddr | (data & 0xffff),
+          flush_flag && !addr->wide && i == FAST_PER_SLOW - 1);
       if (addr->wide)
         RawNiosWrite(addr->niosAddr + 1 + i * TxFrameWords[addr->bus],
             BBC_NEXT_CHANNEL(addr->bbcAddr) | (data >> 16),
@@ -1510,34 +1511,45 @@ void WriteData(struct NiosStruct* addr, unsigned int data, int flush_flag)
   }
 }
 
-void UpdateBBCFrame(unsigned short *RxFrame)
+unsigned int ReadData(struct BiPhaseStruct* addr)
+{
+  unsigned int result;
+  if (addr->index == NOT_MULTIPLEXED) {	  //fast
+    result = RxFrame[addr->channel];
+    if (addr->wide) result |= (RxFrame[addr->channel+1] << 16);
+  } else {				  //slow
+    result = slow_data[addr->index][addr->channel];
+    if (addr->wide) result |= (slow_data[addr->index][addr->channel+1] << 16);
+  }
+  return result;
+}
+
+/* called from mcp, should call all nios writing functions */
+void UpdateBBCFrame()
 {
   static struct BiPhaseStruct* frameNumAddr;
   static int firsttime = 1;
   static int index = 0;
 
-  /*** do Controls ***/
+  /*** do fast Controls ***/
   if (firsttime) {
     firsttime = 0;
     frameNumAddr = GetBiPhaseAddr("framenum");
   }
-  //When the PCI card works properly, this is extracted in mcp.c
-  //This is a replacement extracted from the ACS2 DSP
-  RxFrameFastSamp = RxFrame[frameNumAddr->channel];
 
 #ifndef BOLOTEST
   if (!mcp_initial_controls)
     DoSched();
   UpdateAxesMode();
   StoreData(index);
-  ControlGyroHeat(RxFrame);
-  WriteMot(index, RxFrame);
+  ControlGyroHeat();
+  WriteMot(index);
 #endif
 #ifdef USE_XY_THREAD
   StoreStageBus(index);
 #endif
   CryoControl(index);
-  BiasControl(RxFrame);
+  BiasControl();
   WriteChatter(index);
 
   /*** do slow Controls ***/
@@ -1562,8 +1574,11 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     index = (index + 1) % FAST_PER_SLOW;
 
 #ifndef BOLOTEST
-  ControlAuxMotors(RxFrame);
+  ControlAuxMotors();
   CameraTrigger(0); /* isc */
   CameraTrigger(1); /* osc */
 #endif
+
+  //make sure frame is flushed
+  RawNiosWrite(-1,-1,NIOS_FLUSH);
 }

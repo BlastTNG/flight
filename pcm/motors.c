@@ -423,7 +423,7 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
 /*    WriteMot: motors, and, for convenience, the inner frame lock      */
 /*                                                                      */
 /************************************************************************/
-void WriteMot(int TxIndex, unsigned short *RxFrame)
+void WriteMot(int TxIndex)
 {
   static struct NiosStruct* velReqElAddr;
   static struct NiosStruct* velReqAzAddr;

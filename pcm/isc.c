@@ -322,7 +322,7 @@ void IntegratingStarCamera(void* parameter)
         CommandData.ISCState[which].el = MyPointData.el * DEG2RAD;
         CommandData.ISCState[which].lst = MyPointData.lst * SEC2RAD;
         CommandData.ISCState[which].maxSlew = GetNominalVel(MyPointData);
-        CommandData.ISCState[which].MCPFrameNum = RxFrameFastSamp;
+        CommandData.ISCState[which].MCPFrameNum = BBFrameIndex;
 
         /* request for one automaticly saved image */
         if (CommandData.ISCControl[which].auto_save) {
