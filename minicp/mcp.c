@@ -69,6 +69,8 @@ void FrameFileWriter(void);         //framefile.c
 void InitialiseFrameFile(char);
 void pushDiskFrame(unsigned short *RxFrame);
 void ShutdownFrameFile();
+void startAzEl();  // az-el.c
+void endAzEl();    // az-el.c
 
 static FILE* logfile = NULL;
 
@@ -340,6 +342,7 @@ static void CloseBBC(int signo)
     close(bbc_fp);
 
   ShutdownFrameFile();
+  endAzEl();
 
   /* restore default handler and raise the signal again */
   signal(signo, SIG_DFL);
@@ -434,6 +437,7 @@ int main(int argc, char *argv[])
 
   InitialiseFrameFile(argv[1][0]);
   pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
+  startAzEl();
 
   signal(SIGHUP, CloseBBC);
   signal(SIGINT, CloseBBC);
@@ -456,7 +460,6 @@ int main(int argc, char *argv[])
   bputs(info, "System: BBC is up.\n");
 
   InitTxFrame();
-
 
   while (1) {  //main loop
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0)

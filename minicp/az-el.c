@@ -291,8 +291,9 @@ void goto_cm()
 
   slew_cm(az_accel, az_speed, az_dest, &azinfo);
   slew_cm(el_accel, el_speed, el_dest, &elinfo);
+  if (az_speed != 0) 
+    checkpos_cm(&azinfo);
 
-  checkpos_cm(&azinfo);
   checkpos_cm(&elinfo);
 }
 
@@ -660,9 +661,9 @@ int read_cm(struct CMInfoStruct *cminfo, int read_flag)
       } else {
         rxchar = rxchar & 0xFF;  
         bytes_received++;
-        //#ifdef CM_DEBUG
+        #ifdef CM_DEBUG
 	bprintf(info, "%c", rxchar);
-	//#endif
+	#endif
         if (rxchar == 'U') {  
 	  store = 1;
 	}
