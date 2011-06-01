@@ -37,7 +37,7 @@ Note:      CM = Cool Muscle (stepper motor type)
 
 #define AZ_GEAR_RATIO 222 
 #define CM_PULSES 50000   // Cool Muscle pulses per rotation
-#define SPEED_UNIT 1      // pulses/s in one speed unit
+#define SPEED_UNIT 10     // pulses/s in one speed unit
 #define ACCEL_UNIT 1000   // pulses/s^2 in one accel unit
 #define IN_TO_MM 25.4
 #define ROT_PER_INCH 5    // lin. actuator rotations per inch of travel
@@ -71,17 +71,15 @@ struct CMInfoStruct {
 
 } azinfo, elinfo;
 
-static pthread_t azcomm_id;     // gets assigned a thread ID
-static pthread_t elcomm_id;
+static pthread_t azelcomm_id;     // gets assigned a thread ID
 
 void nameThread(const char*);   // mcplib.c
 
 void startAzEl();
 void endAzEl();
-void AzElScan();
+void WriteAzEl();
 
-static void* azComm(void* arg); // serial thread routine
-static void* elComm(void* arg);
+static void* azelComm(void* arg); // serial thread routine
 
 static void open_cm(char *dev_name, struct CMInfoStruct *cminfo);
 static void close_cm(struct CMInfoStruct *cminfo);
@@ -90,6 +88,7 @@ static void init_cm(struct CMInfoStruct *cminfo);
 static void slew_cm(int accel, int speed, int position, struct CMInfoStruct 
                     *cminfo);
 
+static void AzElScan();
 static void allstop_cm(); 
 static void goto_cm();
 static void raster_cm(); 
@@ -108,8 +107,7 @@ static double dxdtheta(double theta);
 
 void startAzEl()
 {
-  pthread_create(&azcomm_id, NULL, &azComm, NULL);
-  pthread_create(&elcomm_id, NULL, &elComm, NULL);
+  pthread_create(&azelcomm_id, NULL, (void*)&azelComm, NULL);
 }
 
 void endAzEl()
@@ -287,14 +285,19 @@ void goto_cm()
                      *ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/SPEED_UNIT);
 
   el_accel = (int)(((dextdtheta*CommandData.az_el.el_accel/IN_TO_MM)
-	             *ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/ACCEL_UNIT);
+	*ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/ACCEL_UNIT);
+
+  bprintf(info, "el_dest = %i", el_dest);
+  bprintf(info, "el_speed = %i", el_speed);
+  bprintf(info, "el_accel = %i", el_accel);
 
   slew_cm(az_accel, az_speed, az_dest, &azinfo);
   slew_cm(el_accel, el_speed, el_dest, &elinfo);
   if (az_speed != 0) 
     checkpos_cm(&azinfo);
-
-  checkpos_cm(&elinfo);
+ 
+  if (el_speed !=0)
+    checkpos_cm(&elinfo);
 }
 
 /* raster_cm performs a raster scan with the commanded parameters using a 
@@ -439,9 +442,9 @@ void init_cm(struct CMInfoStruct* cminfo)
 
   char* KH_query = "?90\r%87\r";
   
-  char* resolution = "K37=100\r";  // sets resolution to 50,000 pulses
+  char* resolution = "K37=30\r";   // sets resolution to 50,000 pulses
                                    // per rotation and the speed unit to
-				   // 1 pulse/s
+				   // 10 pulse/s
 
   char* password = "W=924\r";      // unlocks the H parameters for writing
                                    // (these are gains for controller design)
@@ -607,8 +610,10 @@ int read_cm(struct CMInfoStruct *cminfo, int read_flag)
 {
 
   char rxchar = 0;
-  char status[7];           // store received chars to check for
+  char status[10];          // store received chars to check for
                             // in-position message "Ux.1=8"
+  char msg[4];
+  int i, stat;
 
   unsigned int store = 0;   // 1 if received chars are to be stored
   int bytes_received = 0;   // total # of bytes received
@@ -669,21 +674,77 @@ int read_cm(struct CMInfoStruct *cminfo, int read_flag)
 	}
 	if (store) {
 	  status[count++] = rxchar;
-	  if (count == 6) {
+	  if (rxchar == '\r') {
 	    store = 0;
-	    if ( strcmp("Ux.1=8", status) == 0) {
-              /* in-position signal has been received.*/
-	      bprintf(info,"%s motor is in position.", cminfo->motorstr);
-	      data_avail = 0;  // break out of while loop
-	    } else {
-              bprintf(err,"\nAn error has occurred. Status message: %s\n", 
-                      status);
-	      data_avail = 0;
+	    bprintf(info, "status message: %s", status);
+            for (i = 5; i < strlen(status)-1; i++) {
+              msg[i-5] = status[i];
+	    }
+            stat = atoi(msg);
+            bprintf(info, "stat = %i", stat);
+            switch(stat) {
+	      case 0:
+                bprintf(err, "%s motor is still running!",cminfo->motorstr);
+		data_avail = 0;
+		break;
+	     
+	      case 1:
+                bprintf(err, "%s motor position error overflow!",
+		        cminfo->motorstr);
+	         data_avail = 0;	
+		break;
+
+	      case 2:             
+                bprintf(err, "%s motor over regen voltage limit!",
+		        cminfo->motorstr);
+		data_avail = 0;
+		break;
+ 
+	      case 4: 
+                bprintf(err, "%s motor over load/current!",cminfo->motorstr);
+		data_avail = 0;
+		break;
+
+	      case 8: 
+                bprintf(info, "%s motor is in-position.",cminfo->motorstr);
+		data_avail = 0;
+		break;
+
+	      case 16: 
+                bprintf(err, "%s motor is disabled!",cminfo->motorstr);
+		data_avail = 0;
+		break;
+
+	      case 32: 
+                bprintf(err, "%s motor torque limit reached!",cminfo->motorstr);
+		data_avail = 0;
+		break;
+
+	      case 128:	
+                bprintf(err, "%s motor over temperature limit!",
+		        cminfo->motorstr);
+		data_avail = 0;
+		break;
+
+	      case 256:         
+                bprintf(err, "%s motor push mode timeout not reached!",
+		        cminfo->motorstr);
+		data_avail = 0;
+		break;
+
+	      case 512: 
+                bprintf(err, "%s motor emergency stop!",cminfo->motorstr);
+		data_avail = 0;
+		break;
+
+	      default:  
+                bprintf(err, "Could not parse %s motor status!",
+		        cminfo->motorstr);
+		data_avail = 0;
 	    }
 	  }
-	}       
+        }
       }
-      
       if (bytes_received >= MAX_CHARS) {
         bytes_received = 0;
         data_avail = 0; 
@@ -827,20 +888,22 @@ double dxdtheta(double theta)
   deriv = -(A*B*sin((C - theta)*PI/180.0))/(sqrt(pow(A,2) + pow(B,2) 
            - 2*A*B*cos((C-theta)*PI/180.0)));
 
-  deriv = (deriv < 0) ? -deriv : deriv;
+  deriv = (deriv < 0) ? -deriv*(PI/180.0) : deriv*(PI/180.0);
 
   return deriv;  // want to return a speed (always +ve). Direction is taken
-                 // care of by position value
+                 // care of by position value (also conversions from mm/rad
+		 // to mm/deg)
 }
 
 /* serial threads */
 
-void* azComm(void* arg) {
+void* azelComm(void* arg) 
+{
 
   int ser_attempts = 0;  // number of attempts to open port
-  int init_attempts = 0;     // number of attempts to initialize motor
+  int init_attempts = 0; // number of attempts to initialize motor
 
-  /* initialize values in the azinfo struct */
+  /* initialize values in the motor info structs */
 
   azinfo.fd = 0;
   azinfo.open = 0;
@@ -849,10 +912,17 @@ void* azComm(void* arg) {
   azinfo.ref = 0;
   strncpy(azinfo.motorstr, "az", 3);
 
-  nameThread("AzComm");
-  bprintf(startup, "Starting az motor serial thread.");
+  elinfo.fd = 0;
+  elinfo.open = 0;
+  elinfo.init = 0;
+  elinfo.closing = 0;
+  elinfo.ref = 0;
+  strncpy(elinfo.motorstr, "el", 3);
+
+  nameThread("AzEl");
+  bprintf(startup, "Starting serial thread for motors.");
  
-  /* try to open the port */
+  /* try to open the ports */
 
   while (azinfo.open == 0) {
 
@@ -864,14 +934,29 @@ void* azComm(void* arg) {
     
     ser_attempts++;
 
-    if (elinfo.open == 1) {
+    if (azinfo.open == 1) {
       bprintf(info, "Opened the az motor port on attempt %i", ser_attempts);
     } else sleep(1);	     
   }
 
-  /* initialize motor internal parameters */
+  ser_attempts = 0;
 
-  init_attempts = 0;
+  while (elinfo.open == 0) {
+
+    open_cm(EL_DEVICE, &elinfo);
+    
+    if (ser_attempts == 10) {
+      bputs(err, "Unable to open el motor port after 10 attempts.\n");
+    }
+    
+    ser_attempts++;
+
+    if (elinfo.open == 1) {
+      bprintf(info, "Opened the el motor port on attempt %i", ser_attempts);
+    } else sleep(1);	     
+  }
+
+  /* initialize motor internal parameters */
 
   bprintf(info, "Initializing az motor");  
 
@@ -890,64 +975,12 @@ void* azComm(void* arg) {
     } else sleep(1);
   }
 
-  while (1) {
-
-    /* TODO: NEED SOME KIND OF CHECKING OF ERROR STATES HERE */
-
-    if (azinfo.closing == 1) {
-      close_cm(&azinfo);
-      usleep(10000);
-    } else {
-      /* I can't figure out what else this thread needs to do. */ 
-      /* TODO - sjb: probably want, "too many errors, reconnecting logic here */
-    }
-  }
-  return NULL;
-}
-
-void* elComm(void* arg) 
-{
-
-  int ser_attempts=0;      // number of attempts to open port
-  int init_attempts=0;     // number of attempts to initialize motor
-
-  /* initialize values in the elinfo struct */
-
-  elinfo.fd = 0;
-  elinfo.open = 0;
-  elinfo.init = 0;
-  elinfo.closing = 0;
-  elinfo.ref = 0;
-  strncpy(elinfo.motorstr, "el", 3);
-
-  nameThread("ElComm");
-  bprintf(startup, "Starting el motor serial thread.");
-
-  /* try to open the port */
-
-  while (elinfo.open == 0) {
-
-    open_cm(EL_DEVICE, &elinfo);
-    
-    if (ser_attempts == 10) {
-      bputs(err, "Unable to open el motor port after 10 attempts.\n");
-    }
-    
-    ser_attempts++;
-
-    if (elinfo.open == 1) {
-      bprintf(info, "Opened the el motor port on attempt %i", ser_attempts);
-    } else sleep(1);
-  }
-
-  /* initialize motor internal parameters */
-
   init_attempts = 0;
 
   bprintf(info, "Initializing el motor");  
 
   while (elinfo.init == 0) {
-    
+
     init_cm(&elinfo);
 
     if (init_attempts == 10) {
@@ -960,19 +993,28 @@ void* elComm(void* arg)
       bprintf(info, "Initialized the el motor on attempt %i", init_attempts);
     } else sleep(1);
   }
- 
+
   while (1) {
 
     /* TODO: NEED SOME KIND OF CHECKING OF ERROR STATES HERE */
 
-    if (elinfo.closing == 1) {
+    if (azinfo.closing == 1) {
+      close_cm(&azinfo);
+      usleep(10000);
+    } else if (elinfo.closing == 1) {
       close_cm(&elinfo);
       usleep(10000);
     } else {
-      /* I can't figure out what else this thread needs to do. */
+
+      AzElScan();
+
+      usleep(10000);
+
       /* TODO - sjb: probably want, "too many errors, reconnecting logic here */
     }
+
   }
+  
   return NULL;
 }
 
@@ -984,18 +1026,6 @@ void AzElScan()
   static struct BiPhaseStruct* elEncAddr;
   static struct BiPhaseStruct* azEncAddr;
 
-  static struct NiosStruct* azWidthAddr;
-  static struct NiosStruct* azVelAddr;
-  static struct NiosStruct* elVelAddr;
-  static struct NiosStruct* azAccelAddr;
-  static struct NiosStruct* elAccelAddr;
-  static struct NiosStruct* elStepAddr;
-  static struct NiosStruct* elHeightAddr;
-  static struct NiosStruct* elGotoAddr;
-  static struct NiosStruct* azGotoAddr;
-  static struct NiosStruct* azStartAddr;
-  static struct NiosStruct* elStartAddr;
-
   static int firsttime = 1;
 
   if (firsttime) {
@@ -1003,18 +1033,6 @@ void AzElScan()
     elEncAddr = GetBiPhaseAddr("adc1_enc_el");
     azEncAddr = GetBiPhaseAddr("adc1_enc_az");
 
-    azWidthAddr = GetNiosAddr("width_az");
-    azVelAddr = GetNiosAddr("v_az");
-    elVelAddr = GetNiosAddr("v_el");
-    azAccelAddr = GetNiosAddr("a_az");
-    elAccelAddr = GetNiosAddr("a_el");
-    elStepAddr = GetNiosAddr("step_el");
-    elHeightAddr = GetNiosAddr("height_el");
-    elGotoAddr = GetNiosAddr("el");
-    azGotoAddr = GetNiosAddr("az");
-    azStartAddr = GetNiosAddr("az_ref");
-    elStartAddr = GetNiosAddr("el_ref");
-    
     firsttime = 0;
   }
 
@@ -1051,6 +1069,45 @@ void AzElScan()
       bputs(err, "Invalid scan mode specified\n");
   }
 
+}
+
+/* WriteAzEl writes relevant data to frame */
+
+void WriteAzEl()
+{
+
+  static struct NiosStruct* azWidthAddr;
+  static struct NiosStruct* azVelAddr;
+  static struct NiosStruct* elVelAddr;
+  static struct NiosStruct* azAccelAddr;
+  static struct NiosStruct* elAccelAddr;
+  static struct NiosStruct* elStepAddr;
+  static struct NiosStruct* elHeightAddr;
+  static struct NiosStruct* elGotoAddr;
+  static struct NiosStruct* azGotoAddr;
+  static struct NiosStruct* azStartAddr;
+  static struct NiosStruct* elStartAddr;
+
+  static int firsttime = 1;
+  
+  if (firsttime) {
+
+    azWidthAddr = GetNiosAddr("width_az");
+    azVelAddr = GetNiosAddr("v_az");
+    elVelAddr = GetNiosAddr("v_el");
+    azAccelAddr = GetNiosAddr("a_az");
+    elAccelAddr = GetNiosAddr("a_el");
+    elStepAddr = GetNiosAddr("step_el");
+    elHeightAddr = GetNiosAddr("height_el");
+    elGotoAddr = GetNiosAddr("el");
+    azGotoAddr = GetNiosAddr("az");
+    azStartAddr = GetNiosAddr("az_ref");
+    elStartAddr = GetNiosAddr("el_ref");
+    
+    firsttime = 0;
+  }
+
+
   WriteData(azWidthAddr,(CommandData.az_el.az_width)*(65535.0/180.0),
             NIOS_QUEUE);  
 
@@ -1078,5 +1135,4 @@ void AzElScan()
 
   WriteData(elStartAddr,((CommandData.az_el.el_ref)+10.0)*(65535.0/99.0), 
             NIOS_QUEUE);
-   
 }

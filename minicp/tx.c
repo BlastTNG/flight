@@ -36,7 +36,7 @@
 
 #define NIOS_BUFFER_SIZE 100
 
-void AzElScan(); // az-el.c
+void WriteAzEl(); // az-el.c
 
 extern int bbc_fp;
 
@@ -295,7 +295,7 @@ void UpdateBBCFrame()
   /*** do slow Controls ***/
   if (index == 0) {
     updateBias();
-    AzElScan();
+    WriteAzEl();
     if (!mcp_initial_controls)
       SyncADC();
   }
