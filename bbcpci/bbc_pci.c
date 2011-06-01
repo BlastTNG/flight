@@ -48,7 +48,7 @@
 #include "bbc_pci.h"
 
 #define DRV_NAME    "bbc_pci"
-#define DRV_VERSION "1.0"
+#define DRV_VERSION "1.1"
 #define DRV_RELDATE ""
 
 #ifndef VERSION_CODE
