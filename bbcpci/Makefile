@@ -19,14 +19,17 @@ KDIR	:= /lib/modules/$(shell uname -r)/build
 PWD		:= $(shell pwd)
 CC    := gcc -O2 -g
 
-all: bbc_pci.ko test_bbcpci test_biphase test_irq
+all: bbc_pci.ko test_bbcpci test_biphase test_irq test_data
 
 bbc_pci.ko: bbc_pci.c bbc_pci.h
 # invoke kernel build system
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
 
+test_data: test_data.c
+	$(CC) -o test_data test_data.c
+
 test_bbcpci: test_bbcpci.c
-	$(CC) -o test_bbcpci test_bbcpci.c -lm
+	$(CC) -o test_bbcpci test_bbcpci.c
 
 test_biphase: test_biphase.c
 	$(CC) -o test_biphase test_biphase.c -lm
