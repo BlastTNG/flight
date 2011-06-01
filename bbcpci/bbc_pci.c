@@ -39,6 +39,7 @@
 #include <linux/string.h>
 #include <linux/cdev.h>
 #include <linux/poll.h>
+#include <linux/sched.h>
 
 #include <asm/atomic.h>
 #include <asm/io.h>
