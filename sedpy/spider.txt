@@ -621,6 +621,9 @@ STARCAM "Rotating Star Camera" < OF
     JACK &J194 "Power, signals" 17W2D/M -> ACSBOB/&J71 CABLE &C15 "Star Camera"
     JACK &J195 "Ethernet" ETH/F -> WSPOUT/&J116 CABLE &C42 "Starcam Ethernet"
     JACK &J196 "Motor" 7W2D/M -> ACSBOB/&J72 CABLE &C16 "Starcam Motor"
+    JACK IN &J6 "Signal comp. DCDC" LUG/F -> SCDCBD/&J6
+    JACK IN &J7 "Heaters" LUG/F -> SCHEAT/&J7
+    JACK IN &J11 "Ethernet" ETH/F -> SCCOMP/&J11
     JACK IN &J197 "Controller Power" BARE/M -> SCTAB_C/&J197
     JACK IN &J198 "Controller Feedback" 15UD/M -> SCTAB_C/&J198
     JACK IN &J199 "Motor Power" 9W4D/F -> SCTABLE/&J199
@@ -647,6 +650,67 @@ STARCAM "Rotating Star Camera" < OF
 SCTABLE "Star Camera Rotary Table" < STARCAM
     JACK &J200 "Motor Feedback" 25D/M -> STARCAM/&J200
     JACK &J199 "Motor Power" 9W4D/M -> STARCAM/&J199
+
+
+
+
+SCHEAT "Star Camera Heater / Relay" < STARCAM
+    JACK &J7 "Relay" SCREW/M -> STARCAM/&J7
+
+SCCAMDC "Star Camera's power DC/DC converter" < STARCAM
+    JACK &J17 "DCDC on/off" SCREW/M -> SCDCBD/&J17
+    JACK &J19 "Camera-A power; 12 & 5 VOLTS" SCREW/M -> SCCAMA/&J19
+    JACK &J22 "Camera-B power; 12 & 5 VOLTS" SCREW/M -> SCCAMB/&J22
+    LINE "ON/OFF DC/DC" (&J17;1)
+    LINE "+24 Volts input" (&J17;2)
+    LINE "24 Volts common input" (&J17;3)
+    LINE "+12 Volts" (&J19;5),(&J22;5)
+    LINE "12 Volts common" (&J19;6),(&J22;6)
+    LINE "-12 Volts" (&J19;7),(&J22;7)
+    LINE "+5 Volts" (&J19;8,9),(&J22;8,9)
+    LINE "5 Volts common" (&J19;10,11),(&J22;10,11)
+         
+SCDCBD "Star Camera Computer power DC/DC converter / Opto-coupled relay" < STARCAM
+    JACK &J6 "DCDC on/off" SCREW/M -> STARCAM/&J6
+    JACK &J26 "DCDC ouput" SCREW/M -> SCCOMP/&J26
+    JACK &J28 "Opto-couple Input" SCREW/M -> SCCOMP/&J28
+    JACK &J17 "Opto-couple Output" LUG/F -> SCCAMDC/&J17
+    LINE "ON/OFF DC/DC" (&J6;11)
+    LINE "+24 Volts" (&J6;9)
+    LINE "24 Volts common" (&J6;10)
+    LINE "+12 Volts" (&J28;1)
+    LINE "common" (&J28;2,8)
+    LINE "+5 Volts" (&J28;7)
+    LINE "+ Opto-Couple input" (&J26;5)
+    LINE "- Opto-Couple input" (&J26;6)
+    LINE "+ Opto-Couple output" (&J28;3)
+    LINE "- Opto-Couple output" (&J28;4)
+
+SCCAMA "Star Camera-A / Focus Ring" < STARCAM
+    JACK &J19 "Camera-A / Focus-A power" LUG/F -> SCCAMDC/&J19
+    JACK &J35 "Camera-A USB" USB/M -> SCCOMP/&J35
+    JACK &J39 "Focus-A USB" USB/M -> SCCOMP/&J39
+
+SCCAMB "Star Camera-B / Focus Ring" < STARCAM
+    JACK &J22 "Camera-B / Focus-B" LUG/F -> SCCAMDC/&J22
+    JACK &J43 "Camera-B USB" USB/M -> SCCOMP/&J43
+    JACK &J45 "Focus-B USB" USB/M -> SCCOMP/&J45
+
+SCCOMP "Star Camera Computer" < STARCAM
+    JACK &J26 "Power" LUG/F -> SCDCBD/&J26
+    JACK &J35 "USB port-0" USB/F -> SCCAMA/&J35
+    JACK &J39 "USB port-1" USB/F -> SCCAMA/&J39
+    JACK &J43 "USB port-2" USB/F -> SCCAMB/&J43
+    JACK &J45 "USB port-3" USB/F -> SCCAMB/&J45
+    JACK &J28 "Parallel port" LUG/F -> SCDCBD/&J28
+    JACK &J62 "Serial port" 15UD/F -> SCVGA/&J62
+    JACK &J11 "Ethernet Port RJ45" ETH/M -> STARCAM/&J11
+    
+SCVGA "Star Camera VGA over Cat5 video signal converter" < STARCAM
+    JACK &J62 "VGA" 15UD/M -> SCCOMP/&J62
+
+
+
 
 SCTAB_C "Star Camera Rotary Table Controller" < SCTABLE
     JACK &J198 "Motor Feedback" 15UD/F -> STARCAM/&J198
