@@ -57,16 +57,8 @@
 #define STARTUP_VETO_LENGTH 250 /* "frames" */
 #define BI0_VETO_LENGTH 5 /* seconds */
 
-#define BI0_FIFO_MARGIN 8750 /* bytes = 7 frames */
-#define BI0_FIFO_MINIMUM (BI0_FIFO_MARGIN / 2)
-
-#ifdef BOLOTEST
-#define FRAME_MARGIN (-12)
-#else
-#define FRAME_MARGIN (-2)
-#endif
-
 #define BI0_FRAME_BUFLEN (400)
+
 /* Define global variables */
 int bbc_fp = -1;
 unsigned int debug = 0;
@@ -101,8 +93,8 @@ void StageBus(void);
 void openSBSC(void);
 
 void InitialiseFrameFile(char);
-void dirFileWriteFrame(unsigned short *RxFrame);
 void pushDiskFrame(unsigned short *RxFrame);
+void ShutdownFrameFile();
 
 void SunSensor(void);
 
@@ -149,6 +141,7 @@ void startChrgCtrl(); // chrgctrl.c
 void endChrgCtrl();
 #endif
 
+/* gives system time (in s) */
 time_t mcp_systime(time_t *t) {
   time_t the_time = time(NULL) + TEMPORAL_OFFSET;
   if (t)
@@ -991,6 +984,8 @@ static void CloseBBC(int signo)
   if (bbc_fp >= 0)
     close(bbc_fp);
 
+  ShutdownFrameFile();
+
   /* restore default handler and raise the signal again */
   signal(signo, SIG_DFL);
   raise(signo);
@@ -1077,11 +1072,10 @@ int main(int argc, char *argv[])
   if ((bbc_fp = open("/dev/bbcpci", O_RDWR)) < 0)
     berror(fatal, "System: Error opening BBC");
 
+  MakeAddressLookups();  //nios addresses, based off of tx_struct, derived
+
   InitCommandData();
-
   pthread_mutex_init(&mutex, NULL);
-
-  MakeAddressLookups();
 
   bprintf(info, "Commands: MCP Command List Version: %s", command_list_serial);
 #ifdef USE_FIFO_CMD
@@ -1105,7 +1099,6 @@ int main(int argc, char *argv[])
 #endif
 
   InitialiseFrameFile(argv[1][0]);
-
   pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
 
   signal(SIGHUP, CloseBBC);
@@ -1178,8 +1171,8 @@ int main(int argc, char *argv[])
 
     if (IsNewFrame(in_data)) {
       if (UsefulnessVeto > 0) {
-	UsefulnessVeto--;
-	BLASTBusUseful = 0;
+        UsefulnessVeto--;
+        BLASTBusUseful = 0;
       } else BLASTBusUseful = 1;
       if (StartupVeto > 1) {
         --StartupVeto;
