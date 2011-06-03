@@ -82,20 +82,20 @@ void StoreHWPRBus(void);
 
 /* in auxiliary.c */
 void ChargeController(void);
-void ControlAuxMotors(unsigned short *RxFrame);
-void ControlGyroHeat(unsigned short *RxFrame);
+void ControlAuxMotors();
+void ControlGyroHeat();
 void CameraTrigger(int which);
 void ControlPower(void);
 void VideoTx(void);
 
 /* in das.c */
-void BiasControl(unsigned short* RxFrame);
+void BiasControl();
 void CryoControl(int index);
 void PhaseControl(void);
 
 /* in motors.c */
 void UpdateAxesMode(void);
-void WriteMot(int TxIndex, unsigned short *RxFrame);
+void WriteMot(int TxIndex);
 
 /* in sbsc.cpp */
 void cameraFields();        
@@ -1519,6 +1519,7 @@ void RawNiosWrite(unsigned int addr, unsigned int data, int flush_flag)
   }
 }
 
+/* write to the nios (bbc) */
 void WriteData(struct NiosStruct* addr, unsigned int data, int flush_flag)
 {
   int i;
@@ -1543,6 +1544,7 @@ void WriteData(struct NiosStruct* addr, unsigned int data, int flush_flag)
   }
 }
 
+/* called from mcp, should call all nios writing functions */
 void UpdateBBCFrame(unsigned short *RxFrame)
 {
   static struct BiPhaseStruct* frameNumAddr;
@@ -1563,14 +1565,14 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     DoSched();
   UpdateAxesMode();
   StoreData(index);
-  ControlGyroHeat(RxFrame);
-  WriteMot(index, RxFrame);
+  ControlGyroHeat();
+  WriteMot(index);
 #endif
 #ifdef USE_XY_THREAD
   StoreStageBus(index);
 #endif
   CryoControl(index);
-  BiasControl(RxFrame);
+  BiasControl();
   WriteChatter(index);
 
   /*** do slow Controls ***/
@@ -1595,7 +1597,7 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     index = (index + 1) % FAST_PER_SLOW;
 
 #ifndef BOLOTEST
-  ControlAuxMotors(RxFrame);
+  ControlAuxMotors();
   CameraTrigger(0); /* isc */
   CameraTrigger(1); /* osc */
 #endif

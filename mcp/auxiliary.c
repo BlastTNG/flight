@@ -103,7 +103,7 @@ double LockPosition(double elevation);
 /************************************************************************/
 /*    ControlGyroHeat:  Controls gyro box temp                          */
 /************************************************************************/
-void ControlGyroHeat(unsigned short *RxFrame)
+void ControlGyroHeat()
 {
   static struct BiPhaseStruct* tGyAddr;
   static struct NiosStruct *heatGyAddr, *tSetGyAddr, *gPHeatGyAddr;
@@ -368,6 +368,7 @@ static int ControlPumpHeat(int bits_bal)
   temp2 = slow_data[tPumpBalAddr->index][tPumpBalAddr->channel];
  
   temp1 = M_16T*temp1 + B_16T*M_16T - 273.15; 
+  temp2 = M_16T*temp2 + B_16T*M_16T - 273.15; 
 
   if (CommandData.pumps.heat_on) {
     if (temp1 < CommandData.pumps.heat_tset) {
@@ -678,7 +679,7 @@ void CameraTrigger(int which)
 /*   Control the pumps and the lock                              */
 /*                                                               */
 /*****************************************************************/
-void ControlAuxMotors(unsigned short *RxFrame)
+void ControlAuxMotors()
 {
   static struct NiosStruct* vPumpBalAddr;
   static struct NiosStruct* levelOnBalAddr, *levelOffBalAddr;
