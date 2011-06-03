@@ -1,5 +1,3 @@
-include Makefile.config
-
 CC = gcc
 CPP = g++
 CPPFLAGS = -g -O3 -Wall -D__MCP__ $(BOLOTEST)
@@ -7,10 +5,6 @@ LDFLAGS = -lpthread -lm -lstdc++ -lgsl -lgslcblas
 ifeq ($(DEBUG), 1)
 	CPPFLAGS := $(CPPFLAGS) -g -DDEBUG
 	LDFLAGS := $(LDFLAGS) -g -DDEBUG
-endif
-
-ifeq ($(USE_FIFO_CMD), 1)
-	CPPFLAGS := $(CPPFLAGS) -DUSE_FIFO_CMD
 endif
 
 HEADERS = bbc_pci.h blast.h channels.h command_list.h command_struct.h hwpr.h \
@@ -33,34 +27,13 @@ OBJS := $(OBJS) auxiliary.o crc.o dgps.o ephem_read.o \
 
 endif
 
-.PHONEY: fifo install all debug
+.PHONEY: fifo install all restart
 
-all::
-ifeq ($(DEBUG), 1)
-	@echo "******************** WARNING ******************************"
-	@echo "Debugging symbols are being output to the binary"
-	@echo "Be sure to run \`make clean' before compiling flight version"
-	@echo "******************** WARNING ******************************"
-endif
-
-all:: mcp
-ifeq ($(DEBUG), 1)
-	@echo "******************** WARNING ********************"
-	@echo "Debugging symbols are being output to the binary"
-	@echo "******************** WARNING ********************"
-endif
-
-debug::
-	${MAKE} DEBUG=1 all
-
-debug:: all
+all: mcp
 
 clean:
 	rm -f mcp || true;
 	rm -f *.o || true;
-
-Makefile.config:
-	./configure
 
 mcp: $(OBJS)
 
@@ -79,32 +52,32 @@ endif
 fifo:
 	[ -e /data/etc/SIPSS.FIFO ] || mkfifo -m 0777 /data/etc/SIPSS.FIFO
 
-#restart: install
-#ifeq ($(shell hostname),south)
-	#@echo "** I am south **"
-	#killall mcp
-	#scp /usr/local/bin/mcp north.blast:/tmp/mcp
-	#ssh north.blast 'install -d -m 666 /tmp/etc'
-	#scp etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library north.blast:/tmp/etc/
-	#ssh north.blast 'install -m 755 /tmp/mcp /usr/local/bin'
-	#ssh north.blast 'install -m 666 /tmp/etc/* /data/etc'
-	#ssh north.blast 'killall mcp'
-#else
-#ifeq ($(shell hostname),north)
-	#@echo "** I am north **"
-	#killall mcp
-	#scp /usr/local/bin/mcp south.blast:/tmp/mcp
-	#ssh south.blast 'install -d -m 666 /tmp/etc'
-	#scp etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library south.blast:/tmp/etc/
-	#ssh south.blast 'install -m 755 /tmp/mcp /usr/local/bin'
-	#ssh south.blast 'install -m 666 /tmp/etc/* /data/etc'
-	#ssh south.blast 'killall mcp'
-#else
-	#@echo "******************** WARNING ******************************"
-	#@echo "** I am neither north nor south"
-	#@echo "** 'make restart' should not be run on other systems"
-	#@echo "** Just stop and start mcp as you would any other program"
-	#@echo "******************** WARNING ******************************"
-#endif
-#endif
+restart: install
+ifeq ($(shell hostname),south)
+	@echo "** I am south **"
+	killall mcp
+	scp /usr/local/bin/mcp north.blast:/tmp/mcp
+	ssh north.blast 'install -d -m 666 /tmp/etc'
+	scp etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library north.blast:/tmp/etc/
+	ssh north.blast 'install -m 755 /tmp/mcp /usr/local/bin'
+	ssh north.blast 'install -m 666 /tmp/etc/* /data/etc'
+	ssh north.blast 'killall mcp'
+else
+ifeq ($(shell hostname),north)
+	@echo "** I am north **"
+	killall mcp
+	scp /usr/local/bin/mcp south.blast:/tmp/mcp
+	ssh south.blast 'install -d -m 666 /tmp/etc'
+	scp etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library south.blast:/tmp/etc/
+	ssh south.blast 'install -m 755 /tmp/mcp /usr/local/bin'
+	ssh south.blast 'install -m 666 /tmp/etc/* /data/etc'
+	ssh south.blast 'killall mcp'
+else
+	@echo "******************** WARNING ******************************"
+	@echo "** I am neither north nor south"
+	@echo "** 'make restart' should not be run on other systems"
+	@echo "** Just stop and start mcp as you would any other program"
+	@echo "******************** WARNING ******************************"
+endif
+endif
 
