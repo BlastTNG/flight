@@ -382,7 +382,6 @@ htI32_t GetNextBlock(int fd, void* SBFBlock)
     if (n==0) usleep(10000);
 
     if (n<0) {
-      //TODO dgps code needs updates to handle serial errors
       //bprintf(err,"read GPSblock failed!");
     }
 
@@ -581,9 +580,6 @@ void WatchDGPS()
     //if ((fd = open(GPSCOM1, O_RDWR | O_NOCTTY | O_NDELAY)) < 0) {
     if ((fd = open(GPSCOM1, O_RDWR | O_NOCTTY)) < 0) {
       usleep(20000);
-      // FIXME: reboot device master if this goes on for too long?
-      // open fails only if the devicemaster is having troubles
-      // rebooting devicemaster deprives us of elevation control though...
     } else {
       dgpsinfo.open = 1;
     }
@@ -617,8 +613,6 @@ void WatchDGPS()
  
   /*Activate settings for the port*/
   tcsetattr(fd,TCSANOW,&term);
-  // FIXME maybe: should we be allowed to proceed if we have had write errors?
-  // Can this even happen?  If not, should we care?
   
   /*Read in SBF data blocks*/
   while (GetNextBlock(fd, SBFBlock) == 0) {
@@ -696,11 +690,10 @@ void WatchDGPS()
 	  (PVT->Lon == DONOTUSE)			  || 
 	  (DGPSPos[dgpspos_index].n_sat < 4)) {
 	pos_ok = 0;
-      } 
-      else {
+      } else {
 	pos_ok = 1;
+        dgpspos_index = INC_INDEX(dgpspos_index);
       }
-      dgpspos_index = INC_INDEX(dgpspos_index);
     } else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_ATTEULER) {
     
       /* Attitude */
@@ -726,8 +719,8 @@ void WatchDGPS()
 	  (ATTEULER->Pitch == DONOTUSE)			  || 
 	  (ATTEULER->Roll == DONOTUSE)			  ||
 	  (DGPSAtt[dgpsatt_index].az_cov <=0.001)	  ||
-	  (fabs(DGPSAtt[dgpsatt_index].ant_E - 3.0) > CommandData.dgps_ants_limit)  ||
-	  (fabs(DGPSAtt[dgpsatt_index].ant_N - 0.0) > CommandData.dgps_ants_limit)  ||
+	  (fabs(DGPSAtt[dgpsatt_index].ant_E - 0.0) > CommandData.dgps_ants_limit)  ||
+	  (fabs(DGPSAtt[dgpsatt_index].ant_N + 3.0) > CommandData.dgps_ants_limit)  ||
 	  (fabs(DGPSAtt[dgpsatt_index].ant_U - 0.0) > CommandData.dgps_ants_limit)  ||
 	  (DGPSAtt[dgpsatt_index].az_cov > CommandData.dgps_cov_limit))	{
 	DGPSAtt[dgpsatt_index].att_ok = 0;

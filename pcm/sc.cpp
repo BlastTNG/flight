@@ -44,7 +44,6 @@ extern "C" {
 //allow any host to be the star camera
 #define CAM_SERVERNAME "192.168.1.11"
 
-//TODO check that this is correct
 #define SBSC_SERIAL "08073507"
 
 extern "C" void nameThread(const char*);  /* in mcp.c */
@@ -112,10 +111,10 @@ void cameraFields()
   static NiosStruct* sbscCcdTempAddr = NULL;
   static NiosStruct* sbscNumBlobsAddr = NULL;
 
-  static NiosStruct* sbscBlobX[3];
-  static NiosStruct* sbscBlobY[3];
-  static NiosStruct* sbscBlobF[3];
-  static NiosStruct* sbscBlobS[3];
+  static NiosStruct* sbscBlobX[5];
+  static NiosStruct* sbscBlobY[5];
+  static NiosStruct* sbscBlobF[5];
+  static NiosStruct* sbscBlobS[5];
 
   //initialization
   if (firsttime) {
@@ -136,9 +135,9 @@ void cameraFields()
     sbscTimeAddr = GetNiosAddr("sec_sbsc");
     sbscUsecAddr = GetNiosAddr("usec_sbsc");
     sbscCcdTempAddr = GetNiosAddr("ccd_t_sbsc");
-    sbscNumBlobsAddr = GetNiosAddr("numblobs_sbsc");
+    sbscNumBlobsAddr = GetNiosAddr("nblobs_sbsc");
 
-    for (int i=0; i<3; i++) {
+    for (int i=0; i<5; i++) {
       char buf[99];
       sprintf(buf, "blob%02d_x_sbsc", i);
       sbscBlobX[i] = GetNiosAddr(buf);
@@ -184,7 +183,6 @@ void cameraFields()
 
     for (int i=0; i<sbsc->numblobs; i++)
     {
-      //TODO this needs to be tested in images where there are blobs
       WriteData(sbscBlobX[i],(unsigned int)(sbsc->x[i]/CAM_WIDTH*SHRT_MAX),
 	  NIOS_QUEUE);
       WriteData(sbscBlobY[i],(unsigned int)(sbsc->y[i]/CAM_WIDTH*SHRT_MAX),
@@ -222,9 +220,7 @@ static void* camReadLoop(void* arg)
 
   while(true) {
     camComm->readLoop(&parseReturn);
-    //berror(err, "readLoop returned. Restarting.");
-    //returns on failed syscall in communicating.
-    sleep(1);	//catchall for varous busy-waiting scenarios
+    //sleep(1);	//catchall for varous busy-waiting scenarios
   }
 
   return NULL;

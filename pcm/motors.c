@@ -38,7 +38,7 @@
 #include "amccommand.h"
 #include "motordefs.h"
 
-#define MIN_EL 23.5 // should be set to 25 for flight.
+#define MIN_EL 23.9 
 #define MAX_EL 55
 
 #define VPIV_FILTER_LEN 40
@@ -88,6 +88,9 @@ static void* pivotComm(void *arg);
 extern short int InCharge; /* tx.c */
 
 extern int StartupVeto; /* mcp.c */
+
+extern short int sbsc_trigger; /* Semaphore for SBSC trigger */
+#define DELAY 3.685/SR*20 /* number of seconds between sending exposure command and pulse_sbsc */
 
 double az_accel = 0.1;
 
@@ -327,10 +330,6 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   I_req = p_rw_term+p_err_term;
 
 
-  // Some debugging print statements.
-  //  if (i%100==1) bprintf(info,"GetIPivot: v_az_req = %f, v_az = %f, p_rw_term = %f, p_err_term = %f, I_req = %f",v_az_req,PointingData[point_index].v_az,p_rw_term,p_err_term,I_req);
-
-  // TODO: Add in term proportional to velocity error.
   if(disabled) { // Don't attempt to send current to the motors if we are disabled.
     I_req=0.0;
   }
@@ -444,7 +443,7 @@ void WriteMot(int TxIndex)
   static struct NiosStruct* velCalcPivAddr;
   static struct NiosStruct* accelAzAddr;
  
-  //TODO temporary
+  // Used only for Lab Controller tests
   static struct NiosStruct* dacAmplAddr[5];
   int i;
   static int wait = 100; /* wait 20 frames before controlling. */
@@ -490,9 +489,6 @@ void WriteMot(int TxIndex)
 
   i_point = GETREADINDEX(point_index);
 
-  //TODO need to change the write to the BLASTbus here and in the DSP
-  // code so that it writes a 15 bit number.  Otherwise Narsil shows 
-  // twice the current value and it is rather confusing. 
   //NOTE: this is only used to program the extra DAC - not used for
   // flight.
   if (wait <= 0)
@@ -641,10 +637,11 @@ static void ClearElDither() {
 /*   Do scan modes                                              */
 /*                                                              */
 /****************************************************************/
-#define MIN_SCAN 0.2
+#define MIN_SCAN 0.1
 static void SetAzScanMode(double az, double left, double right, double v,
     double D)
 {
+    double before_trig;
     if (axes_mode.az_vel < -v + D)
       axes_mode.az_vel = -v + D;
     if (axes_mode.az_vel > v + D)
@@ -664,19 +661,28 @@ static void SetAzScanMode(double az, double left, double right, double v,
       axes_mode.az_mode = AXIS_VEL;
       if (axes_mode.az_vel > 0) {
         axes_mode.az_vel = v + D;
-        if (az > right - v) /* within 1 sec of turnaround */
+        if (az > right - 2.0*v) /* within 2 sec of turnaround */
           isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
         else
           isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       } else {
         axes_mode.az_vel = -v + D;
-        if (az < left + v) /* within 1 sec of turnaround */
+        if (az < left + 2.0*v) /* within 2 sec of turnaround */
           isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
         else
           isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       }
     }
-  }
+    /* SBSC Trigger flag */
+    before_trig = DELAY - v/CommandData.az_accel + CommandData.cam.expTime/2000;
+    if (az < left + before_trig*v) {
+      sbsc_trigger = 1;  
+    } else if (az > right - before_trig*v) {
+      sbsc_trigger = 1;
+    } else {
+      sbsc_trigger = 0;
+    }
+}
 
 static void DoAzScanMode(void)
 {
@@ -689,7 +695,7 @@ static void DoAzScanMode(void)
   axes_mode.el_vel  = 0.0;
 
   i_point = GETREADINDEX(point_index);
-  az = PointingData[i_point].az; /* FIXME - extrapolate velocity */
+  az = PointingData[i_point].az; 
 
   w = CommandData.pointing_mode.w;
   right = CommandData.pointing_mode.X + w / 2;
@@ -925,6 +931,7 @@ static void DoRaDecGotoMode(void)
   axes_mode.el_dest = cel;
   axes_mode.el_vel = 0.0;
   isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+  sbsc_trigger = 1;
 }
 
 static void DoNewCapMode(void)
@@ -978,7 +985,6 @@ static void DoNewCapMode(void)
   bottom = cel - r;
   top = cel + r;
 
-  // FIXME: reboot proofing...
 
   /* If a new command, reset to bottom row */
   if ((CommandData.pointing_mode.X != last_X) ||
@@ -1016,8 +1022,8 @@ static void DoNewCapMode(void)
   } else {
     xw = sqrt(x2);
   }
-  if (xw < MIN_SCAN)
-    xw = MIN_SCAN;
+  if (xw < MIN_SCAN*0.5)
+    xw = MIN_SCAN*0.5;
   xw /= cos(el * M_PI / 180.0);
   next_left = caz - xw;
   next_right = caz + xw;
@@ -1030,8 +1036,8 @@ static void DoNewCapMode(void)
   } else {
     xw = sqrt(x2);
   }
-  if (xw < MIN_SCAN)
-    xw = MIN_SCAN;
+  if (xw < MIN_SCAN*0.5)
+    xw = MIN_SCAN*0.5;
   xw /= cos(el * M_PI / 180.0);
   left = caz - xw;
   right = caz + xw;
@@ -1116,15 +1122,17 @@ static void DoNewCapMode(void)
   /*     axes_mode.el_dir = 1; */
   /*   }     */
 
-  if ((axes_mode.el_dir - el_dir_last)== 2) {
+  if ( ((axes_mode.el_dir - el_dir_last)== 2) && 
+       (CommandData.pointing_mode.nw == 0) ) {
     n_scan +=1;
     new_scan = 1;
+
     bprintf(info,"DoNewCapMode: Sending signal to rotate HWPR. n_scan = %i",n_scan);
     
     /* Set flags to rotate the HWPR */
     CommandData.hwpr.mode = HWPR_STEP;
     CommandData.hwpr.is_new = HWPR_STEP;
-    
+
     if(n_scan % 4 == 0 && n_scan != 0) {
       GetElDither();
       bprintf(info,"We're dithering! El Dither = %f", axes_mode.el_dith);
@@ -1203,7 +1211,6 @@ static void DoNewBoxMode(void)
     bottom = MIN_EL;
 
   //  if (j%JJLIM == 0) bprintf(info,"cel =%f, el = %f,axes_mode.el_dith = %f, w=%f, h=%f, bottom = %f, top = %f, left = %f, right = %f",cel, el,axes_mode.el_dith, w, h, bottom , top, left, right);
-  // FIXME: reboot proofing...
 
   new = 0;
 
@@ -1311,7 +1318,9 @@ static void DoNewBoxMode(void)
     return;
   }
 
-  if ((axes_mode.el_dir - el_dir_last)== 2) {
+  if ( ((axes_mode.el_dir - el_dir_last)== 2) &&
+       (CommandData.pointing_mode.nw == 0) ) {
+
     n_scan +=1;
     new_scan = 1;
     bprintf(info,"DoNewBoxMode: Sending signal to rotate HWPR. n_scan = %i",n_scan);
@@ -1498,7 +1507,9 @@ void DoQuadMode(void) // aka radbox
     }
   }
 
-  if ((axes_mode.el_dir - el_dir_last)== 2) {
+  if ( ((axes_mode.el_dir - el_dir_last)== 2) &&
+       (CommandData.pointing_mode.nw == 0) ) {
+
     n_scan +=1;
     new_scan = 1;
     bprintf(info,"DoNewQuadMode: Sending signal to rotate HWPR. n_scan = %i",n_scan);
@@ -1540,6 +1551,7 @@ void UpdateAxesMode(void)
         (sqrt(CommandData.pointing_mode.vaz * CommandData.pointing_mode.vaz
               + CommandData.pointing_mode.del * CommandData.pointing_mode.del)
          > MAX_ISC_SLOW_PULSE_SPEED) ? 1 : 0;
+      sbsc_trigger = 1;
       break;
     case P_AZEL_GOTO:
       axes_mode.el_mode = AXIS_POSITION;
@@ -1549,6 +1561,7 @@ void UpdateAxesMode(void)
       axes_mode.az_dest = CommandData.pointing_mode.X;
       axes_mode.az_vel = 0.0;
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+      sbsc_trigger = 1;
       break;
     case P_AZ_SCAN:
       DoAzScanMode();
@@ -1578,6 +1591,7 @@ void UpdateAxesMode(void)
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = 0.0;
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+      sbsc_trigger = 1;
       break;
     default:
       bprintf(warning, "Pointing: Unknown Elevation Pointing Mode %d: "
@@ -1594,6 +1608,7 @@ void UpdateAxesMode(void)
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = 0.0;
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+      sbsc_trigger = 1;
       break;
   }
   last_mode = CommandData.pointing_mode.mode;
@@ -1648,8 +1663,7 @@ unsigned short int makeMotorField(struct MotorInfoStruct* motorinfo)
   b |= ((motorinfo->closing) & 0x0001)<<15 ; 
   return b;
 }
-// TODO-lmf: Need to add in conditional statements for when MCP is run by the NICC
-//           We don't want the NICC sending 
+
 void* reactComm(void* arg)
 {
   //mark1
@@ -1973,7 +1987,6 @@ void* elevComm(void* arg)
 
       pos_raw=queryCopleyInd(COP_IND_POS,&elevinfo); // Units are counts
                                                      // For Elev 524288 cts = 360 deg
-      //TODO-lmf: Add in some sort of zeropoint.
       ElevMotorData[elev_motor_index].enc_raw_el=((double) (pos_raw % ((long int) ELEV_ENC_CTS)))/ELEV_ENC_CTS*360.0-ENC_RAW_EL_OFFSET;
       //   getCopleySlowInfo(j,elev_motor_index,&ElevMotorData,&elevinfo); // Reads one of temperature, current, status and fault register and
                            // writes to the appropriate frame 

@@ -503,6 +503,7 @@ void open_chrgctrl(char *dev_name)
     /* port failed to open */
      
     chrgctrlinfo.open = 0;
+    return;
 
   } else {
 
@@ -510,6 +511,13 @@ void open_chrgctrl(char *dev_name)
     chrgctrlinfo.open = 1;
 
   }
+
+  /* initialize settings by getting terminal attributes */
+  if (tcgetattr(chrgctrlinfo.fd, &settings)) {
+    chrgctrlinfo.open = 0;
+    return;
+  }
+
 
   /* charge controller only works at 9600 baud */
 

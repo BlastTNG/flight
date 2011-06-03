@@ -1,7 +1,6 @@
 /* command_list.h: BLAST command specification file definitions
-  isc_use_pyramid,  isc_no_pyramid
  *
- * This software is copyright (C) 2002-2006 University of Toronto
+ * This software is copyright (C) 2002-20010 University of Toronto
  *
  * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
@@ -18,8 +17,8 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 229        /* total number of single word cmds */
-#define N_MCOMMANDS 117        /* total number of multiword commands */
-#define MAX_N_PARAMS 12	       /* narsil REALLY likes this to be even */
+#define N_MCOMMANDS 118        /* total number of multiword commands */
+#define MAX_N_PARAMS 12        /* narsil REALLY likes this to be even */
 #define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -131,10 +130,7 @@ enum multiCommand {
   az_el_goto,        az_gain,           az_scan,          balance_gain,
   balance_manual,    osc_set_focus,     osc_set_aperture, osc_save_period,
   bias_level_500,    bias_level_350,    bias_level_250,   bias_level_rox,
-  bias_level_x,      isc_blob_centre,   
-  /* dac level commands are temporary */
-  dac2_level,  
-  /*  dac1_level,              dac3_level,       dac4_level,  dac5_level,*/
+  bias_level_x,      isc_blob_centre,   dac2_level,  
   box,               osc_pixel_centre,  osc_blob_centre,  isc_gain,
   cal_pulse,         cal_repeat,        cap,              isc_catalogue,
   az_el_trim,        isc_det_set,       drift,            el_gain,
@@ -146,7 +142,7 @@ enum multiCommand {
   roll_gain,         isc_set_aperture,  isc_set_focus,    az_scan_accel,
   t_gyro_set,        osc_gain,          tdrss_bw,         iridium_bw,
   t_gyro_gain,       timeout,           isc_tolerances,   vcap,
-  vbox,              alice_file,        az_gyro_offset,   isc_hold_current,
+  vbox,              slot_sched,        az_gyro_offset,   isc_hold_current,
   isc_save_period,   osc_offset,	cov_gps,          hwpr_set_overshoot,
   jfet_set,          isc_foc_off,       hwpr_vel,         hwpr_i,
   osc_foc_off,       gyro_off,	        gyro_on,          quad,
@@ -160,8 +156,9 @@ enum multiCommand {
   cam_any,	     cam_settrig_timed, cam_exp_params,	  cam_focus_params,
   cam_bad_pix,	     cam_blob_params,	cam_lens_any,	  cam_lens_move, 
   cam_lens_params,   t_sbsc_set,        hwpr_repeat,      hwpr_define_pos,
-  hwpr_goto,	     ants_gps,          hwpr_goto_pot,
-  plugh		  
+  hwpr_goto,	     ants_gps,          hwpr_goto_pot,    act_enc_trim,
+  actuator_tol,	       
+  plugh
 };
 
 //32-bit and 64-bit sytems disagree on packing

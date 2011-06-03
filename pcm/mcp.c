@@ -61,6 +61,7 @@
 
 /* Define global variables */
 int bbc_fp = -1;
+unsigned int debug = 0;
 short int SouthIAm;
 struct ACSDataStruct ACSData;
 
@@ -70,6 +71,8 @@ unsigned short* RxFrame;
 pthread_t watchdog_id;
 
 int StartupVeto = STARTUP_VETO_LENGTH + 1;
+int UsefulnessVeto = 2*STARTUP_VETO_LENGTH;
+int BLASTBusUseful = 0;
 
 static int bi0_fp = -2;
 static int Death = -STARTUP_VETO_LENGTH * 2;
@@ -105,6 +108,7 @@ struct frameBuffer {
   int i_in;
   int i_out;
   unsigned short *framelist[BI0_FRAME_BUFLEN];
+  unsigned short** slow_data_list[BI0_FRAME_BUFLEN];
 };
 
 static struct frameBuffer bi0_buffer;
@@ -121,9 +125,9 @@ struct chat_buf chatter_buffer;
 #define MAX_MPRINT_STRING \
 ( \
   MPRINT_BUFFER_SIZE /* buffer length */ \
-  - 3                /* start-of-line marker */ \
+  - 6                /* 2*(marker+space) + EOL + NUL */ \
   - 24               /* date "YYYY-MM-DD HH:MM:SS.mmm " */ \
-  - 2                /* Newline and NUL */ \
+  - 8                /* thread name "ThName: " */ \
 )
 
 #if (TEMPORAL_OFFSET != 0)
@@ -148,7 +152,6 @@ time_t mcp_systime(time_t *t) {
 }
 
 /* tid to name lookup list */
-/* TODO setting/reading tid names not quite thread safe. is this a problem? */
 #define TID_NAME_LEN  6	      //always change with TID_NAME_FMT
 #define TID_NAME_FMT  "%6s"   //always change with TID_NAME_LEN
 struct tid_name {
@@ -785,7 +788,7 @@ static void write_to_biphase()
         berror(err, "bi-phase write for RxFrame failed");
       } else if (i != BiPhaseFrameWords * sizeof(unsigned short)) {
         bprintf(err, "Short write for RxFrame: %i of %u", i,
-            BiPhaseFrameWords * sizeof(unsigned short));
+            (unsigned int)(BiPhaseFrameWords * sizeof(unsigned short)));
       }
 
       i = write(bi0_fp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
@@ -795,7 +798,8 @@ static void write_to_biphase()
       else if (i != (BI0_FRAME_SIZE - BiPhaseFrameWords)
           * sizeof(unsigned short))
         bprintf(err, "Short write for padding: %i of %u", i,
-            (BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short));
+            (unsigned int)
+              ((BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short)));
     }
 
     CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
@@ -803,7 +807,7 @@ static void write_to_biphase()
 }
 
 static void InitFrameBuffer(struct frameBuffer *buffer) {
-  int i;
+  int i,j;
 
   buffer->i_in = 0;
   buffer->i_out = 0;
@@ -811,16 +815,20 @@ static void InitFrameBuffer(struct frameBuffer *buffer) {
     buffer->framelist[i] = balloc(fatal, BiPhaseFrameWords *
         sizeof(unsigned short));
 
-    //TODO this initialization does not appear to resolve valgrind errors
     memset(buffer->framelist[i],0,BiPhaseFrameWords*sizeof(unsigned short));
 
+    buffer->slow_data_list[i] = (unsigned short **)balloc(fatal, FAST_PER_SLOW*sizeof(unsigned short *));
+    for (j = 0; j < FAST_PER_SLOW; ++j) {
+      buffer->slow_data_list[i][j] = balloc(fatal, slowsPerBi0Frame * sizeof(unsigned short));
+      memset(buffer->slow_data_list[i][j], 0, slowsPerBi0Frame * sizeof(unsigned short));
+    }
   }
 }
 
 // warning: there is no checking for an overfull buffer.  Just make sure it is big
 // enough that it can never happen.
 static void PushFrameBuffer(struct frameBuffer *buffer) {
-  int i, fw, i_in;
+  int i, j, fw, i_in;
 
   i_in = buffer->i_in + 1;
   if (i_in>=BI0_FRAME_BUFLEN)
@@ -831,8 +839,37 @@ static void PushFrameBuffer(struct frameBuffer *buffer) {
   for (i = 0; i<fw; i++) {
     buffer->framelist[i_in][i] = RxFrame[i];
   }
-
+  
+  for (i=0; i<FAST_PER_SLOW; i++) {
+    for (j=0; j<slowsPerBi0Frame; j++) {
+      buffer->slow_data_list[i_in][i][j] = slow_data[i][j];
+    }
+  }
+  
   buffer->i_in = i_in;
+}
+
+void ClearBuffer(struct frameBuffer *buffer) {
+  buffer->i_out = buffer->i_in;
+}
+
+unsigned short *PopFrameBufferAndSlow(struct frameBuffer *buffer, unsigned short ***slow) {
+  unsigned short *frame;
+  int i_out = buffer->i_out;
+  
+  if (buffer->i_in == i_out) { // no data
+    return (NULL);
+  }
+  frame = buffer->framelist[i_out];
+  
+  *slow = buffer->slow_data_list[i_out];
+  
+  i_out++;
+  if (i_out>=BI0_FRAME_BUFLEN) {
+    i_out = 0;
+  }
+  buffer->i_out = i_out;
+  return (frame);
 }
 
 unsigned short *PopFrameBuffer(struct frameBuffer *buffer) {
@@ -1097,7 +1134,6 @@ int main(int argc, char *argv[])
 
   for (i = 0; i < FAST_PER_SLOW; ++i) {
     slow_data[i] = balloc(fatal, slowsPerBi0Frame * sizeof(unsigned short));
-    //TODO fix "uninitialised value" valgrind errors. Ensure not more serious.
     memset(slow_data[i], 0, slowsPerBi0Frame * sizeof(unsigned short));
   }
 
@@ -1149,7 +1185,7 @@ int main(int argc, char *argv[])
 #endif
   pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
 
-  while (1) {  //main loop
+  while (1) {
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0)
       berror(err, "System: Error on BBC read");
 
@@ -1158,6 +1194,10 @@ int main(int argc, char *argv[])
           in_data);
 
     if (IsNewFrame(in_data)) {
+      if (UsefulnessVeto > 0) {
+        UsefulnessVeto--;
+        BLASTBusUseful = 0;
+      } else BLASTBusUseful = 1;
       if (StartupVeto > 1) {
         --StartupVeto;
       } else {

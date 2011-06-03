@@ -48,7 +48,7 @@
 #define VALVE_L_OPEN      0x04
 #define VALVE_L_CLOSE     0x02
 #define VALVE_LN_OFF      0x08
-#define VALVE_POT_OFF     0x10
+#define VALVE_POT_OFF     0x90	  //more cowbell
 #define VALVE_POT_OPEN    0x40
 #define VALVE_POT_CLOSE   0x20
 
@@ -60,15 +60,16 @@
 #define CRYO_CYCLE_HS_OFF 0x0008
 
 /* he3 cycle timeouts (all in seconds) */
-#define CRYO_CYCLE_HEAT_TIMEOUT  (28*60)
+#define CRYO_CYCLE_HEAT_TIMEOUT  (32*60)
 #define CRYO_CYCLE_COOL_TIMEOUT  (2*60*60)
-#define CRYO_CYCLE_HS_TIMEOUT    (2.5*60)
+#define CRYO_CYCLE_HS_TIMEOUT    (2.75*60)
 
-#define T_HE3FRIDGE_HOT   0.400
+#define T_HE3FRIDGE_HOT   0.375
 #define T_HE3FRIDGE_COLD  0.350
 #define T_HE4POT_MAX      2.500
-#define T_CHARCOAL_MIN   32.500
+#define T_CHARCOAL_MIN   34.000
 #define T_CHARCOAL_MAX   38.000
+#define T_CHARCOAL_SET   35.000
 #define T_LHE_MAX         4.600
 #define T_CHAR_HS_COLD   10.000
 
@@ -271,7 +272,8 @@ static int JFETthermostat(void)
 static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
     unsigned short *force_cycle)
 {
-  static int firsttime = 1;
+  static int firsttime = 1000; 
+           // Skip first 1000 frames (10 seconds) as startup veto.
   static struct BiPhaseStruct* t_lhe_Addr;
   static struct BiPhaseStruct* t_he3fridge_Addr;
   static struct BiPhaseStruct* t_charcoal_Addr;
@@ -294,7 +296,10 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
   static unsigned short heat_char = 0;
   static unsigned short heat_hs = 0;
 
-  if (firsttime) {
+  if (firsttime > 1) {
+    firsttime--;
+    return;
+  } else if (firsttime) {
     firsttime = 0;
     t_lhe_Addr = GetBiPhaseAddr("td_lhe");
     t_he3fridge_Addr = GetBiPhaseAddr("tr_300mk_strap"); //NOTE: tr_he3fridge is broken.
@@ -320,7 +325,7 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
     return;
   }
 
-  if(!(iterator++ % 200))  /* Run this loop at 0.5 Hz */
+  if(!(iterator++ % 199))  /* Run this loop at ~0.5 Hz */
   {
 
     start_time = slow_data[cycleStartRAddr->index][cycleStartRAddr->channel];
@@ -396,6 +401,11 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
           if (!heat_char)
             bprintf(info, "Auto Cycle: Turning charcoal heat on.");
           heat_char = 1;
+        } else if ((heat_char == 0) && (t_charcoal < T_CHARCOAL_SET)) {
+          WriteData(cycleStateWAddr, CRYO_CYCLE_COOL, NIOS_QUEUE);
+          heat_char = 0;
+          heat_hs = 1;
+          bprintf(info, "Auto Cycle: Charcoal heatswitch on.");
         }
       } //else we're inbetween the setpoints so we keep doin' what we're doin'.
     } else if ( cycle_state == CRYO_CYCLE_COOL) {
@@ -446,9 +456,7 @@ void CryoControl (int index)
   static struct NiosStruct* cryostateAddr;
   static struct NiosStruct* jfetSetOnAddr;
   static struct NiosStruct* jfetSetOffAddr;
-  //static struct NiosStruct* dig21DasAddr;
   static struct NiosStruct* dig43DasAddr;
-  //static struct NiosStruct* dig65DasAddr;
   static struct NiosStruct* potHwprAddr;
   static struct BiPhaseStruct* potRawHwprAddr;
   static struct BiPhaseStruct* potRefHwprAddr;
@@ -465,22 +473,11 @@ void CryoControl (int index)
     cryostateAddr = GetNiosAddr("cryostate");
     jfetSetOnAddr = GetNiosAddr("jfet_set_on");
     jfetSetOffAddr = GetNiosAddr("jfet_set_off");
-    //dig21DasAddr = GetNiosAddr("dig21_das");
     dig43DasAddr = GetNiosAddr("dig43_das");
-    //dig65DasAddr = GetNiosAddr("dig65_das");
     potHwprAddr = GetNiosAddr("pot_hwpr");
     potRawHwprAddr = GetBiPhaseAddr("pot_raw_hwpr");
     potRefHwprAddr = GetBiPhaseAddr("pot_ref_hwpr");
   }
-
-#if 0
-  // purely for testing, output a count to each digital output group
-  static int count = 0;
-  int nibbcnt = (count&0xf) << 4 | (count++&0xf);
-  WriteData(dig21DasAddr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
-  WriteData(dig43DasAddr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
-  WriteData(dig65DasAddr, nibbcnt<<8 | nibbcnt, NIOS_QUEUE);
-#endif
 
   /********** Set Output Bits **********/
   if (CommandData.Cryo.heliumLevel) {

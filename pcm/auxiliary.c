@@ -272,14 +272,16 @@ static int Balance(int bits_bal)
 
     bits_bal |= BAL_VALV; /* Open valve */
 
-    if (CommandData.pumps.level > 0.) {
+    if (CommandData.pumps.level > 0.001) {
       bits_bal &= (0xFF - BAL_DIR); /* clear reverse bit */
       level = CommandData.pumps.level * PUMP_MAX;
-    } else if (CommandData.pumps.level < 0.) {
+    } else if (CommandData.pumps.level < -0.001) {
       bits_bal |= BAL_DIR; /* set reverse bit */
       level = -CommandData.pumps.level * PUMP_MAX;
     } else {
-      bits_bal &= (0xFF - BAL_VALV); /* Close valve */
+      bits_bal &= (0xFF - BAL_VALV); /* Close valve */ 
+      // set direction
+      bits_bal &= (0xFF - BAL_DIR); /* Clear reverse bit */ 
       level = 0;
     }
 
@@ -364,6 +366,9 @@ static int ControlPumpHeat(int bits_bal)
 
   temp1 = slow_data[tBoxBalAddr->index][tBoxBalAddr->channel];
   temp2 = slow_data[tPumpBalAddr->index][tPumpBalAddr->channel];
+ 
+  temp1 = M_16T*temp1 + B_16T*M_16T - 273.15; 
+  temp2 = M_16T*temp2 + B_16T*M_16T - 273.15; 
 
   if (CommandData.pumps.heat_on) {
     if (temp1 < CommandData.pumps.heat_tset) {

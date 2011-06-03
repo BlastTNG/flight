@@ -137,11 +137,16 @@ static void WriteAux(void)
   static struct NiosStruct* he4LevOldAddr;
   static struct NiosStruct* statusEthAddr;
   static struct BiPhaseStruct* he4LevReadAddr;
+  static struct NiosStruct* partsSchedAddr;
+  static struct NiosStruct* upslotSchedAddr;
+  
   static int incharge = -1;
   time_t t;
   int i_point;
   struct timeval tv;
   struct timezone tz;
+  
+  unsigned short mccstatus;
 
   static int firsttime = 1;
   if (firsttime) {
@@ -165,6 +170,8 @@ static void WriteAux(void)
     bbcFifoSizeAddr = GetNiosAddr("bbc_fifo_size");
     ploverAddr = GetNiosAddr("plover");
     statusEthAddr = GetNiosAddr("status_eth");
+    partsSchedAddr = GetNiosAddr("parts_sched");
+    upslotSchedAddr = GetNiosAddr("upslot_sched");
   }
 
   if (StartupVeto>0) {
@@ -198,6 +205,9 @@ static void WriteAux(void)
   WriteData(tMbFlcAddr, CommandData.temp3, NIOS_QUEUE);
 
   WriteData(diskFreeAddr, CommandData.df, NIOS_QUEUE);
+  
+  WriteData(partsSchedAddr, CommandData.parts_sched&0xffffff, NIOS_QUEUE);
+  WriteData(upslotSchedAddr, CommandData.upslot_sched, NIOS_QUEUE);
 
   i_point = GETREADINDEX(point_index);
 
@@ -207,7 +217,12 @@ static void WriteAux(void)
   t = PointingData[i_point].t;
 #endif
 
-  WriteData(timeoutAddr, CommandData.pointing_mode.t - t, NIOS_QUEUE);
+  if (CommandData.pointing_mode.t > t) {
+    WriteData(timeoutAddr, CommandData.pointing_mode.t - t, NIOS_QUEUE);
+  } else {
+    WriteData(timeoutAddr, 0, NIOS_QUEUE);
+  }
+    
   WriteData(bi0FifoSizeAddr, CommandData.bi0FifoSize, NIOS_QUEUE);
   WriteData(bbcFifoSizeAddr, CommandData.bbcFifoSize, NIOS_QUEUE);
   WriteData(ploverAddr, CommandData.plover, NIOS_QUEUE);
@@ -221,12 +236,21 @@ static void WriteAux(void)
        ((EthernetSBSC & 0x3) << 6),  
        NIOS_QUEUE);
 
-  WriteData(statusMCCAddr, 
-       (SouthIAm ? 0x1 : 0x0) +                 //0x01
-       (CommandData.at_float ? 0x2 : 0x0) +     //0x02
-       (CommandData.sucks ? 0x10 : 0x00) +      //0x10
-       ((CommandData.lat_range & 0x3) << 5) +   //0x60
-       ((CommandData.alice_file & 0xFF) << 8),  //0xFF00
+  mccstatus =        
+    (SouthIAm ? 0x1 : 0x0) +                 //0x01
+    (CommandData.at_float ? 0x2 : 0x0) +     //0x02
+    (CommandData.uplink_sched ? 0x08 : 0x00) + //0x08
+    (CommandData.sucks ? 0x10 : 0x00) +      //0x10
+       //((CommandData.lat_range & 0x3) << 5) +   //0x60
+    ((CommandData.slot_sched & 0xFF) << 8);  //0xFF00
+
+  if (CommandData.uplink_sched) {
+    mccstatus |= 0x60;
+  } else {
+    mccstatus |= ((CommandData.lat_range & 0x3) << 5);
+  }
+  
+  WriteData(statusMCCAddr, mccstatus,
        NIOS_FLUSH);
 }
 
@@ -608,13 +632,13 @@ static void StoreStarCameraData(int index, int which)
   WriteData(IHoldAddr[which], (unsigned int)(ISCSentState[which].hold_current),
       NIOS_QUEUE);
   WriteData(Temp1Addr[which],
-      (unsigned int)(ISCSolution[which][i_isc].temp1 * 200.), NIOS_QUEUE);
+      (unsigned int)(ISCSolution[which][i_isc].temp1 * 100.), NIOS_QUEUE);
   WriteData(Temp2Addr[which],
-      (unsigned int)(ISCSolution[which][i_isc].temp2 * 200.), NIOS_QUEUE);
+      (unsigned int)(ISCSolution[which][i_isc].temp2 * 100.), NIOS_QUEUE);
   WriteData(Temp3Addr[which],
-      (unsigned int)(ISCSolution[which][i_isc].temp3 * 200.), NIOS_QUEUE);
+      (unsigned int)(ISCSolution[which][i_isc].temp3 * 100.), NIOS_QUEUE);
   WriteData(Temp4Addr[which],
-      (unsigned int)(ISCSolution[which][i_isc].temp4 * 200.), NIOS_QUEUE);
+      (unsigned int)(ISCSolution[which][i_isc].temp4 * 100.), NIOS_QUEUE);
   WriteData(PressureAddr[which],
       (unsigned int)(ISCSolution[which][i_isc].pressure1 * 2000.), NIOS_QUEUE);
   WriteData(GainAddr[which], (unsigned int)(ISCSentState[which].gain * 655.36),
@@ -863,6 +887,8 @@ static void StoreData(int index)
   static struct NiosStruct *trimEncAddr;
   static struct NiosStruct *trimNullAddr;
   static struct NiosStruct *trimMagAddr;
+  static struct NiosStruct *trimPss1Addr;
+  static struct NiosStruct *trimPss2Addr;
   static struct NiosStruct *dgpsTrimAddr;
   static struct NiosStruct *trimSsAddr;
 
@@ -1054,6 +1080,8 @@ static void StoreData(int index)
     trimEncAddr = GetNiosAddr("trim_enc");
     trimNullAddr = GetNiosAddr("trim_null");
     trimMagAddr = GetNiosAddr("trim_mag");
+    trimPss1Addr = GetNiosAddr("trim_pss1");
+    trimPss2Addr = GetNiosAddr("trim_pss2");
     dgpsTrimAddr = GetNiosAddr("trim_dgps");
     dgpsCovLimAddr = GetNiosAddr("cov_lim_dgps");
     dgpsAntsLimAddr = GetNiosAddr("ants_lim_dgps");
@@ -1138,7 +1166,7 @@ static void StoreData(int index)
   WriteData(modeElMcAddr, axes_mode.el_mode, NIOS_QUEUE);
   WriteData(dirAzMcAddr, axes_mode.az_dir, NIOS_QUEUE);
   WriteData(dirElMcAddr, axes_mode.el_dir, NIOS_QUEUE);
-  WriteData(dithElAddr, axes_mode.el_dith * DEG2I/2.0, NIOS_QUEUE);
+  WriteData(dithElAddr, axes_mode.el_dith * 32767.0*2.0, NIOS_QUEUE);
   WriteData(destAzMcAddr, axes_mode.az_dest * DEG2I, NIOS_QUEUE);
   WriteData(destElMcAddr, axes_mode.el_dest * DEG2I, NIOS_QUEUE);
   WriteData(velAzMcAddr, axes_mode.az_vel * 6000., NIOS_QUEUE);
@@ -1174,11 +1202,13 @@ static void StoreData(int index)
   WriteData(azrawPss1Addr, PointingData[i_point].pss1_azraw * DEG2I, NIOS_QUEUE);
   WriteData(elrawPss1Addr, PointingData[i_point].pss1_elraw * DEG2I, NIOS_QUEUE);
   WriteData(snrPss1Addr, PointingData[i_point].pss1_snr * 1000., NIOS_QUEUE);
-  WriteData(azPss1Addr, PointingData[i_point].pss1_az * DEG2I, NIOS_QUEUE);
+  WriteData(azPss1Addr, (PointingData[i_point].pss1_az +
+                      CommandData.pss1_az_trim) * DEG2I, NIOS_QUEUE);
   WriteData(azrawPss2Addr, PointingData[i_point].pss2_azraw * DEG2I, NIOS_QUEUE);
   WriteData(elrawPss2Addr, PointingData[i_point].pss2_elraw * DEG2I, NIOS_QUEUE);
   WriteData(snrPss2Addr, PointingData[i_point].pss2_snr * 1000., NIOS_QUEUE);
-  WriteData(azPss2Addr, PointingData[i_point].pss2_az * DEG2I, NIOS_QUEUE);
+  WriteData(azPss2Addr, (PointingData[i_point].pss2_az +
+                      CommandData.pss2_az_trim) * DEG2I, NIOS_QUEUE);
   /********** SIP GPS Data **********/
   WriteData(latSipAddr, (int)(SIPData.GPSpos.lat*DEG2I), NIOS_QUEUE);
   WriteData(lonSipAddr, (int)(SIPData.GPSpos.lon*DEG2I), NIOS_QUEUE);
@@ -1236,6 +1266,9 @@ static void StoreData(int index)
       (unsigned int)(PointingData[i_point].mag_sigma * DEG2I), NIOS_QUEUE);
   WriteData(trimMagAddr, CommandData.mag_az_trim * DEG2I, NIOS_QUEUE);
 
+  WriteData(trimPss1Addr, CommandData.pss1_az_trim * DEG2I, NIOS_QUEUE);
+  WriteData(trimPss2Addr, CommandData.pss2_az_trim * DEG2I, NIOS_QUEUE);
+
   WriteData(dgpsAzAddr,
       (unsigned int)((PointingData[i_point].dgps_az  +
                       CommandData.dgps_az_trim) * DEG2I), NIOS_QUEUE);
@@ -1291,7 +1324,7 @@ static void StoreData(int index)
   WriteData(slewVetoAddr, (int)(CommandData.pointing_mode.nw) / 4.,
       NIOS_QUEUE);
   WriteData(svetoLenAddr, (int)(CommandData.slew_veto) / 4., NIOS_QUEUE);
-  WriteData(dithStepPAddr, (int)(CommandData.pointing_mode.dith*DEG2I/2.0), NIOS_QUEUE);
+  WriteData(dithStepPAddr, (int)(CommandData.pointing_mode.dith*10.0*32768.0), NIOS_QUEUE);
   WriteData(modePAddr, (int)(CommandData.pointing_mode.mode), NIOS_QUEUE);
   if ((CommandData.pointing_mode.mode == P_AZEL_GOTO) ||
       (CommandData.pointing_mode.mode == P_AZ_SCAN))
@@ -1511,17 +1544,32 @@ void WriteData(struct NiosStruct* addr, unsigned int data, int flush_flag)
   }
 }
 
+//TODO convert suitable WriteData calls to WriteCalData
+void WriteCalData(struct NiosStruct* addr, unsigned int data, int flush_flag)
+{
+  WriteData(addr, (unsigned int)(((double)data - addr->b)/addr->m), flush_flag);
+}
+
 unsigned int ReadData(struct BiPhaseStruct* addr)
 {
   unsigned int result;
-  if (addr->index == NOT_MULTIPLEXED) {	  //fast
+  if (addr->nios->fast) {
     result = RxFrame[addr->channel];
-    if (addr->wide) result |= (RxFrame[addr->channel+1] << 16);
-  } else {				  //slow
+    if (addr->nios->wide)
+      result |= (RxFrame[addr->channel+1] << 16);
+  } else {
     result = slow_data[addr->index][addr->channel];
-    if (addr->wide) result |= (slow_data[addr->index][addr->channel+1] << 16);
+    if (addr->nios->wide)
+      result |= (slow_data[addr->index][addr->channel+1] << 16);
   }
   return result;
+}
+
+//TODO ReadCalData probably doesn't work for signed fields. Need cast to signed
+//TODO convert slow_data and RxFrame accesses to ReadData or ReadCalData
+double ReadCalData(struct BiPhaseStruct* addr)
+{
+  return ((double)ReadData(addr) * addr->nios->m + addr->nios->b);
 }
 
 /* called from mcp, should call all nios writing functions */
@@ -1578,7 +1626,6 @@ void UpdateBBCFrame()
   CameraTrigger(0); /* isc */
   CameraTrigger(1); /* osc */
 #endif
-
   //make sure frame is flushed
   RawNiosWrite(-1,-1,NIOS_FLUSH);
 }

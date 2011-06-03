@@ -50,6 +50,7 @@ extern short int InCharge;		/* tx.c */
 #define ACT_BUS "/dev/ttySI15"
 #define NACT 5
 #define LOCKNUM 3
+#define HWPRNUM 4
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
   "Lock Motor", HWPR_NAME};
 static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3, 
@@ -58,14 +59,22 @@ static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 //set microstep resolution
 #define LOCK_PREAMBLE "j256"
 //set encoder/microstep ratio (aE25600), coarse correction band (aC50),
-//fine correction band (ac0), enable encoder feedback mode (n8), 
-#define ACT_PREAMBLE  "aE25600aC50ac0n8"
+//fine correction tolerance (ac%d), stall retries (au5), 
+//enable encoder feedback mode (n8)
+//NB: this is a printf template now, requires a move tolerance (ac) to be set
+#define ACT_PREAMBLE  "aE25600aC50ac%dau5n8"
 static struct ezbus bus;
-#define POLL_TIMEOUT 30000	    /* 5 minutes */
+
+#define POLL_TIMEOUT 25			/* 5s @ 5Hz */
+#define	MAX_SERIAL_ERRORS 20		/* after this many, repoll bus */
+static int poll_timeout = POLL_TIMEOUT; /* track time since last repoll */
+static int actbus_reset = 1;		/* 1 means actbus is on */
+static unsigned int actuators_init = 0;	/* bitfield for when actuators usable */
 
 /* Lock motor parameters and data */
 #define LOCK_MOTOR_DATA_TIMER 100   /* 1 second */
 #define DRIVE_TIMEOUT 3000	    /* 30 seconds */
+int lock_timeout = -1;
 
 #define LOCK_MIN_POT 3000     //actual min stop: ~2530 (fully extended)
 #define LOCK_MAX_POT 16368    //max stop at saturation: 16368 (fully retracted)
@@ -78,46 +87,108 @@ static struct lock_struct {
 } lock_data = { .state = LS_DRIVE_UNK };
 
 /* Secondary actuator data and parameters */
-#define LVDT_FILT_LEN 25   //5s @ 5Hz
-#define ACTBUS_MAX_ENC_ERR  50	  //maximum difference between enc and lvdt
-#define ACTBUS_TRIM_WAIT    20*3*LVDT_FILT_LEN  //thrice LVDT_FILT_LEN, @ 100Hz
+#define LVDT_FILT_LEN 25      //5s @ 5Hz
+#define DEFAULT_DR    32768   //value to use if reading file fails
+#define MIN_ENC	      1000    //minimum acceptable encoder vlaue, load dr below
+#define ACTBUS_TRIM_WAIT  3*LVDT_FILT_LEN //thrice LVDT_FILT_LEN
 					  //wait between trims, and after moves
+
 static struct act_struct {
   int pos;	//raw step count
   int enc;	//encoder reading
   int lvdt;	//lvdt-inferred position of this motor
+  int dr;	//dead reckoning (best-guess absolute position)
 } act_data[3];
 
-static int actbus_flags = 0;
-static int bad_move = 0;
+static unsigned int actbus_flags = 0;
+static int act_trim_wait = 0;
+static int act_trim_flag_wait = 0;
 
-#define ACTBUS_FL_LOST     0x001
-#define ACTBUS_FL_DR_PS    0x002
-#define ACTBUS_FL_DR_LG    0x004
-#define ACTBUS_FL_LG_PS    0x008
-#define ACTBUS_FL_DR_LV    0x010
-#define ACTBUS_FL_LG_LV    0x020
-#define ACTBUS_FL_PS_LV    0x040
-#define ACTBUS_FL_BAD_MOVE 0x080
-#define ACTBUS_FL_FAIL0    0x100
-#define ACTBUS_FL_FAIL1    0x200
-#define ACTBUS_FL_FAIL2    0x400
+#define ACT_FL_TRIM_WAIT  0x001
+#define ACT_FL_TRIMMED	  0x002
+#define ACT_FL_BUSY0	  0x004
+#define ACT_FL_BUSY1	  0x008
+#define ACT_FL_BUSY2	  0x010
+#define ACT_FL_BUSY(i)	  (ACT_FL_BUSY0 << i)
+#define ACT_FL_BUSY_MASK  (ACT_FL_BUSY0 | ACT_FL_BUSY1 | ACT_FL_BUSY2)
+#define ACT_FL_BAD_MOVE	  0x020
 
 /* Secondary focus crap */
 static double t_primary = -1, t_secondary = -1;
 static double focus = -1;	  /* set in ab thread, read in fc thread */
 static double correction = 0;     /* set in fc thread, read in ab thread */
 
-/* Thermal model numbers, from MD and MV */
-#define T_PRIMARY_FOCUS   258.15 /* = -15C */
-#define T_SECONDARY_FOCUS 243.15 /* = -30C */
-#define POSITION_FOCUS     11953 /* absolute counts */
-
 /************************************************************************/
 /*                                                                      */
 /*    Actuator Logic: servo focus based on thermal model/commands       */
 /*                                                                      */
 /************************************************************************/
+//simple check for encoder in a well-initialized state
+static inline int encOK(int enc)
+{
+  return (enc > MIN_ENC);
+}
+
+//write DR to disk
+static void WriteDR()
+{
+  int fp, n, i;
+
+  /** write the default file */
+  fp = open("/data/etc/act.dr", O_WRONLY|O_CREAT|O_TRUNC, 00666);
+  if (fp < 0) {
+    berror(err, "act.dr open()");
+    return;
+  }
+  for (i=0; i<3; i++) {
+    if ((n = write(fp, &act_data[i].dr, sizeof(int))) < 0) {
+      berror(err, "act.dr write()");
+      return;
+    }
+  }
+  if ((n = close(fp)) < 0) {
+    berror(err, "act.dr close()");
+    return;
+  }
+}
+
+//on initialization, or bad enc detection, read DR from disk
+void ReadDR()
+{
+  int fp, n_read = 0, read_fail = 0, i;
+
+  if ((fp = open("/data/etc/act.dr", O_RDONLY)) < 0) {
+    read_fail = 1;
+    berror(err, "Unable to open act.dr file for reading");
+  } else {
+    for (i=0; i<3; i++) {
+      if ((n_read = read(fp, &act_data[i].dr, sizeof(int))) < 0) {
+	//read failed
+	read_fail = 1;
+	berror(err, "act.dr read()");
+	break;
+      } else if (n_read != sizeof(int)) {
+	//short read
+	read_fail = 1;
+	bprintf(err, "act.dr read(): wrong number of bytes");
+	break;
+      } else if (!encOK(act_data[i].dr)) {
+	//data not reasonable
+	read_fail = 1;
+	bprintf(err, "act.dr read(): bad encoder data");
+	break;
+      }
+    }
+    if (close(fp) < 0)
+      berror(err, "act.dr close()");
+  }
+
+  if (read_fail) {
+    bprintf(info, "Read of act.dr failed. Using default value %d", DEFAULT_DR);
+    for (i=0; i<3; i++) act_data[i].dr = DEFAULT_DR;
+  }
+}
+
 static int CheckMove(int goal0, int goal1, int goal2)
 {
   int maxE, minE;
@@ -144,46 +215,18 @@ static int CheckMove(int goal0, int goal1, int goal2)
 
   if (minE < lvdt_low || maxE > lvdt_high || maxE - minE > lvdt_delta) {
     bputs(warning, "Move Out of Range.");
-    bad_move = ACTBUS_FL_BAD_MOVE;
+    actbus_flags |= ACT_FL_BAD_MOVE;
   } else
-    bad_move = 0;
+    actbus_flags &= ~ACT_FL_BAD_MOVE;
 
-  return bad_move;
+  return actbus_flags & ACT_FL_BAD_MOVE;
 }
 
-//if encoder values disagree with LVDTs, trim encoders to LVDT
-//TODO double check about when encoders are reset, and if they happen together
-static void trimActEnc()
+static char preamble_buf[EZ_BUS_BUF_LEN];
+static inline char* actPreamble(unsigned short tol)
 {
-  static int wait = ACTBUS_TRIM_WAIT;
-  int i, do_trim = 0;
-  char buf[EZ_BUS_BUF_LEN];
-
-  for (i=0; i<3; i++) {
-    //TODO should make business a global flag, and write to frame
-    if (EZBus_IsBusy(&bus, id[i])) {
-      wait = ACTBUS_TRIM_WAIT;
-      return;
-    }
-  }
-  if (wait-- > 0) return;
-
-  for (i=0; i<3; i++) {
-    if (!EZBus_IsBusy(&bus, id[i]) && 
-	abs(act_data[i].enc - act_data[i].lvdt) > ACTBUS_MAX_ENC_ERR) {
-      do_trim |= 1<<i;
-    }
-  }
-  if (do_trim) {
-    bputs(info, "Trimming actuator encoders to LVDTs");
-    for (i=0; i<3; i++) {
-      if (do_trim & 1<<i) {
-	sprintf(buf, "z%dR", act_data[i].lvdt);
-	EZBus_Comm(&bus, id[i], buf, 0);
-      }
-    }
-    wait = ACTBUS_TRIM_WAIT;
-  }
+  sprintf(preamble_buf, ACT_PREAMBLE, tol);
+  return preamble_buf;
 }
 
 static void ReadActuator(int num)
@@ -194,11 +237,68 @@ static void ReadActuator(int num)
   EZBus_ReadInt(&bus, id[num], "?8", &act_data[num].enc);
 }
 
-//TODO probably want to add back some of the checks from old ServoActuators
-//TODO ServoActuators with aE25600n8 results in lots of command overflows (busy)
-//  could maybe add a business check before other commands
-//TODO should maybe add calls to EZBus_Stop before trying various commands
-//TODO servo_actuators command needs bounds fixed
+//Set both dead reckoning and encoder to trim value, dump dr to disk
+void actEncTrim(int *trim)
+{
+  int i;
+  char buffer[EZ_BUS_BUF_LEN];
+
+  bprintf(info, "trim enc and dr to (%d, %d, %d)", trim[0], trim[1], trim[2]);
+
+  for (i=0; i<3; i++) {
+    /* set the dr */
+    act_data[i].dr = trim[i];
+    /* Set the encoder */
+    EZBus_Comm(&bus, id[i], 
+	EZBus_StrComm(&bus, id[i], buffer, "z%iR", act_data[i].dr));
+  }
+
+  WriteDR();
+}
+
+//check encoders for sane values, and update if not good
+void CheckEncoders()
+{
+  int i, do_trim = 0, trim[3];
+
+  //check busy state of actuators, update flag
+  for (i=0; i<3; i++) {
+    if (EZBus_IsBusy(&bus, id[i])) {
+      act_trim_wait = ACTBUS_TRIM_WAIT;
+      actbus_flags |= ACT_FL_BUSY(i);
+      actbus_flags |= ACT_FL_TRIM_WAIT;
+    }
+    else actbus_flags &= ~ACT_FL_BUSY(i);
+  }
+
+  //read encoders, and check if values need updating
+  for (i = 0; i < 3; ++i) {
+    ReadActuator(i);
+    //for bad encoders, prepare to do a trim
+    if (!encOK(act_data[i].enc)) do_trim = 1;
+    //for bad DR, reload from file
+    if (!encOK(act_data[i].dr)) ReadDR();
+    trim[i] = act_data[i].dr;
+  }
+
+  //if busy, or waiting, do not trim
+  if (actbus_flags & (ACT_FL_BUSY_MASK | ACT_FL_TRIM_WAIT)) return;
+  else if (do_trim) {
+    actEncTrim(trim);
+    act_trim_flag_wait = act_trim_wait = ACTBUS_TRIM_WAIT;
+    actbus_flags |= ACT_FL_TRIMMED | ACT_FL_TRIM_WAIT;
+  }
+}
+
+//before moving, update dead reckoning to new goal
+static void UpdateDR(int* goal)
+{
+  int i;
+  for (i=0; i<3; i++) act_data[i].dr = goal[i];
+  WriteDR();
+}
+
+//NB has less checks than servoing used to, but I don't see how they were useful
 static void ServoActuators(int* goal)
 {
   int i;
@@ -212,11 +312,16 @@ static void ServoActuators(int* goal)
 
   EZBus_Take(&bus, ID_ALL_ACT);
 
+  UpdateDR(goal);
+
+  //stop any current action
+  EZBus_Stop(&bus, ID_ALL_ACT); /* terminate all strings */
+
   for (i = 0; i < 3; ++i) {
     //send command to each actuator, but don't run yet
-    EZBus_Comm(&bus, id[i], EZBus_StrComm(&bus, id[i], buf, "A%d", goal[i]), 0);
+    EZBus_Comm(&bus, id[i], EZBus_StrComm(&bus, id[i], buf, "A%d", goal[i]));
   }
-  EZBus_Comm(&bus, ID_ALL_ACT, "R", 0);	  //run all act commands at once
+  EZBus_Comm(&bus, ID_ALL_ACT, "R");	  //run all act commands at once
 
   EZBus_Release(&bus, ID_ALL_ACT);
 }
@@ -236,9 +341,6 @@ static int ThermalCompensation(void)
   /* if panicking, continue to do so */
   if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
     return ACTBUS_FM_PANIC;
-
-  //TODO for now always just go to sleep
-  return ACTBUS_FM_SLEEP;
 
   /* Do nothing if vetoed or autovetoed */
   if (CommandData.actbus.tc_mode != TC_MODE_ENABLED)
@@ -262,19 +364,19 @@ static int ThermalCompensation(void)
 
 static void DoActuators(void)
 {
-  int i;
   int delta;
 
-  trimActEnc();
   EZBus_SetVel(&bus, ID_ALL_ACT, CommandData.actbus.act_vel);
   EZBus_SetAccel(&bus, ID_ALL_ACT, CommandData.actbus.act_acc);
   EZBus_SetIMove(&bus, ID_ALL_ACT, CommandData.actbus.act_move_i);
   EZBus_SetIHold(&bus, ID_ALL_ACT, CommandData.actbus.act_hold_i);
+  EZBus_SetPreamble(&bus, ID_ALL_ACT, actPreamble(CommandData.actbus.act_tol));
 
   switch(CommandData.actbus.focus_mode) {
     case ACTBUS_FM_PANIC:
       bputs(warning, "Actuator Panic");
       EZBus_Stop(&bus, ID_ALL_ACT); /* terminate all strings */
+      EZBus_Comm(&bus, ID_ALL_ACT, "n0R");	/* also stop fine correction */
       CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
       break;
     case ACTBUS_FM_DELTA:
@@ -285,6 +387,7 @@ static void DoActuators(void)
       /* Fallthough */
     case ACTBUS_FM_THERMO:
     case ACTBUS_FM_FOCUS:
+      bprintf(info, "changing focus %g to %d", focus, CommandData.actbus.focus);
       delta = CommandData.actbus.focus - focus;
       CommandData.actbus.goal[0] = act_data[0].enc + delta;
       CommandData.actbus.goal[1] = act_data[1].enc + delta;
@@ -293,53 +396,59 @@ static void DoActuators(void)
     case ACTBUS_FM_SERVO:
 	ServoActuators(CommandData.actbus.goal);
 	break;
+    case ACTBUS_FM_TRIM:
+	actEncTrim(CommandData.actbus.trim);
+	break;
     case ACTBUS_FM_SLEEP:
 	break;
     default:
-	bputs(err, "Unknown Focus Mode (%i), sleeping");
+	bprintf(err, "Unknown Focus Mode (%i), sleeping", 
+	    CommandData.actbus.focus_mode);
+	CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   }
-
-#if 0
-  UpdateFlags();
-#endif
 
   CommandData.actbus.focus_mode = ThermalCompensation();
 
-  for (i = 0; i < 3; ++i)
-    ReadActuator(i);
+  CheckEncoders();
 
-  //tilt doesn't change with focus, so use one position rather than avg
-  focus = act_data[0].lvdt;
+  focus = (act_data[0].enc + act_data[1].enc + act_data[2].enc)/3.0;
 }
 
+//adjust focus offset so that new gains don't change focus thermal correction
 void RecalcOffset(double new_gp, double new_gs)
 {
   if (t_primary < 0 || t_secondary < 0)
     return;
 
-  //TODO if new offset is to ensure correction doesn't change with gain change
-  //then it's missing a scaling factor 1.0/ACTENC_TO_UM
-  CommandData.actbus.sf_offset = (new_gp - CommandData.actbus.g_primary) *
+  CommandData.actbus.sf_offset += ( (new_gp - CommandData.actbus.g_primary) *
     (t_primary - T_PRIMARY_FOCUS) - (new_gs - CommandData.actbus.g_secondary) *
-    (t_secondary - T_SECONDARY_FOCUS) + CommandData.actbus.sf_offset;
+    (t_secondary - T_SECONDARY_FOCUS) ) / ACTENC_TO_UM;
 }
 
-static void InitialiseActuator(struct ezbus* thebus, char who)
+
+static int InitialiseActuator(struct ezbus* thebus, char who)
 {
   char buffer[EZ_BUS_BUF_LEN];
   int i;
 
   for (i=0; i<3; i++) {
     if (id[i] == who) {	  //only operate on actautors
-      bprintf(info, "Initialising %s...", name[i]);
+      //bprintf(info, "Initialising %s...", name[i]);
+      ReadDR();	  //inefficient, 
 
       /* Set the encoder */
-      EZBus_Comm(thebus, who, 
-	  EZBus_StrComm(thebus, who, buffer, "z%iR", act_data[i].lvdt), 0);
-      return;
+      if ( EZBus_Comm(thebus, who, 
+	    EZBus_StrComm(thebus, who, buffer, "z%iR", act_data[i].dr))
+	  == EZ_ERR_OK ) return 1;
+      else {
+	bprintf(warning, "Initialising %s failed...", name[i]);
+	return 0;
+      }
     }
   }
+  return 1;
 }
+
 /************************************************************************/
 /*                                                                      */
 /*    Do Lock Logic: check status, determine if we are locked, etc      */
@@ -355,7 +464,7 @@ static void GetLockData()
   counter = 0;
 
   EZBus_ReadInt(&bus, id[LOCKNUM], "?0", &lock_data.pos);
-  EZBus_Comm(&bus, id[LOCKNUM], "?aa", 0);
+  EZBus_Comm(&bus, id[LOCKNUM], "?aa");
   sscanf(bus.buffer, "%hi,%hi,%hi,%hi", &lock_data.adc[0], &lock_data.adc[1],
       &lock_data.adc[2], &lock_data.adc[3]);
 }
@@ -366,10 +475,8 @@ static void GetLockData()
 static void SetLockState(int nic)
 {
   static int firsttime = 1;
-  int pot = lock_data.adc[1];
-  unsigned int state = lock_data.state;
-  static int nic_change_count = 0;
-  static unsigned int last_lock_state = 0;
+  int pot;
+  unsigned int state;
 
   static struct BiPhaseStruct* potLockAddr;
   static struct BiPhaseStruct* stateLockAddr;
@@ -380,17 +487,25 @@ static void SetLockState(int nic)
     stateLockAddr = GetBiPhaseAddr("state_lock");
   }
 
+  //get lock data
+  if (nic) {
+    //use bbus when nic
+    pot = slow_data[potLockAddr->index][potLockAddr->channel];
+    state = slow_data[stateLockAddr->index][stateLockAddr->channel];
+    lock_data.adc[1] = pot;
+  } else {
+    //otherwise (in charge) use lock_data
+    pot = lock_data.adc[1];
+    state = lock_data.state;
+  }
+
+  //update the NIC on pot state
+
   //set the EZBus move parameters
   EZBus_SetVel(&bus, id[LOCKNUM], CommandData.actbus.lock_vel);
   EZBus_SetAccel(&bus, id[LOCKNUM], CommandData.actbus.lock_acc);
   EZBus_SetIMove(&bus, id[LOCKNUM], CommandData.actbus.lock_move_i);
   EZBus_SetIHold(&bus, id[LOCKNUM], CommandData.actbus.lock_hold_i);
-
-  //TODO lock state should probably be taken from bus even for ICC
-  if (nic) {
-    pot = slow_data[potLockAddr->index][potLockAddr->channel];
-    state = slow_data[stateLockAddr->index][stateLockAddr->channel];
-  }
 
   state &= LS_DRIVE_MASK; /* zero everything but drive info */
 
@@ -404,21 +519,6 @@ static void SetLockState(int nic)
 
   if (fabs(ACSData.enc_raw_el - LockPosition(CommandData.pointing_mode.Y)) <= 0.5)
     state |= LS_EL_OK;
-
-  // klugy hack to filter restart state not propogating properly...
-#if 0
-bprintf(info, "nic: %d state: %d change count: %d\n", nic, state, nic_change_count);
-  if (nic) {
-    if (state != last_lock_state) {
-      if (nic_change_count++ < 6) {
-        return;
-      }
-
-      last_lock_state = state;
-      nic_change_count = 0;
-    }
-  } // end klugy hack
-#endif
 
   /* Assume the pin is out unless we're all the way closed */
   if (state & LS_CLOSED)
@@ -439,7 +539,6 @@ bprintf(info, "nic: %d state: %d change count: %d\n", nic, state, nic_change_cou
 static void DoLock(void)
 {
   int action = LA_EXIT;
-  static int drive_timeout = 0;
 
   do {
     GetLockData();
@@ -515,13 +614,10 @@ static void DoLock(void)
     }
 
     /* Timeout check */
-    if (drive_timeout == 1) {
+    if (lock_timeout == 0) {
       bputs(warning, "Lock Motor drive timeout.");
       action = LA_STOP;
     }
-    if (drive_timeout > 0)
-      --drive_timeout;
-
     /* Seize the bus */
     if (action == LA_EXIT)
       EZBus_Release(&bus, id[LOCKNUM]);
@@ -531,7 +627,7 @@ static void DoLock(void)
     /* Figure out what to do... */
     switch (action) {
       case LA_STOP:
-        drive_timeout = 0;
+        lock_timeout = -1;
         bputs(info, "Stopping lock motor.");
         EZBus_Stop(&bus, id[LOCKNUM]); /* terminate all strings */
 	usleep(SEND_SLEEP); /* wait for a bit */
@@ -539,16 +635,18 @@ static void DoLock(void)
         lock_data.state |= LS_DRIVE_OFF;
         break;
       case LA_EXTEND:
-        drive_timeout = DRIVE_TIMEOUT;
+        lock_timeout = DRIVE_TIMEOUT;
         bputs(info, "Extending lock motor.");
+        EZBus_Stop(&bus, id[LOCKNUM]); /* stop current action first */
 	EZBus_RelMove(&bus, id[LOCKNUM], INT_MAX);
 	usleep(SEND_SLEEP); /* wait for a bit */
         lock_data.state &= ~LS_DRIVE_MASK;
         lock_data.state |= LS_DRIVE_EXT;
         break;
       case LA_RETRACT:
-        drive_timeout = DRIVE_TIMEOUT;
+        lock_timeout = DRIVE_TIMEOUT;
         bputs(info, "Retracting lock motor.");
+        EZBus_Stop(&bus, id[LOCKNUM]); /* stop current action first */
 	EZBus_RelMove(&bus, id[LOCKNUM], INT_MIN);
 	usleep(SEND_SLEEP); /* wait for a bit */
         lock_data.state &= ~LS_DRIVE_MASK;
@@ -557,6 +655,12 @@ static void DoLock(void)
       case LA_WAIT:
 	usleep(WAIT_SLEEP); /* wait for a bit */
 	break;
+    }
+
+    //quit if timeout
+    if (lock_timeout == 0) {
+      lock_timeout = -1;
+      action = LA_EXIT;
     }
 
   } while (action != LA_EXIT);
@@ -582,15 +686,15 @@ static double CalibrateAD590(int counts)
 
 #define N_FILT_TEMP 2	    //number of temperatures to filter
 #define TEMP_FILT_LEN 300   //60s @ 5Hz
-static int filterTemp(int num, int data)
+static double filterTemp(int num, double data)
 {
-  static int temp_buf[N_FILT_TEMP][TEMP_FILT_LEN] = {}; //init to 0
-  static int temp_sum[N_FILT_TEMP] = {};
-  static int ibuf = 0;
+  static double temp_buf[N_FILT_TEMP][TEMP_FILT_LEN] = {}; //init to 0
+  static double temp_sum[N_FILT_TEMP] = {};
+  static int ibuf[N_FILT_TEMP] = {};
 
-  temp_sum[num] += (data - temp_buf[num][ibuf]);
-  temp_buf[num][ibuf] = data;
-  ibuf = (ibuf + 1) % TEMP_FILT_LEN;
+  temp_sum[num] += (data - temp_buf[num][ibuf[num]]);
+  temp_buf[num][ibuf[num]] = data;
+  ibuf[num] = (ibuf[num] + 1) % TEMP_FILT_LEN;
   return temp_sum[num]/TEMP_FILT_LEN;
 }
 
@@ -626,12 +730,6 @@ void SecondaryMirror(void)
     tPrimeSfAddr = GetNiosAddr("t_prime_sf");
     tSecondSfAddr = GetNiosAddr("t_second_sf");
   }
-
-#if 0 //TODO will need to change or remove this check for haven't heard from act
-  /* Do nothing if we haven't heard from the actuators */
-  if (focus < -ACTENC_OFFSET / 2)
-    return;
-#endif
 
   t_primary1 = CalibrateAD590(
       slow_data[t1PrimeAddr->index][t1PrimeAddr->channel]
@@ -700,16 +798,15 @@ void SecondaryMirror(void)
   correction_temp /= ACTENC_TO_UM;
 
   /* re-adjust */
-  correction_temp = correction_temp + focus - POSITION_FOCUS -
-    CommandData.actbus.sf_offset;
+  correction_temp += focus - POSITION_FOCUS - CommandData.actbus.sf_offset;
 
   correction = correction_temp;  //slightly more thread safe
 
   if (CommandData.actbus.sf_time < CommandData.actbus.tc_wait)
     CommandData.actbus.sf_time++;
 
-  WriteData(tPrimeSfAddr, (t_primary - 273.15) * 500, NIOS_QUEUE);
-  WriteData(tSecondSfAddr, (t_secondary - 273.15) * 500, NIOS_QUEUE);
+  WriteData(tPrimeSfAddr, t_primary/M_16T + B_16T, NIOS_QUEUE);
+  WriteData(tSecondSfAddr, t_secondary/M_16T + B_16T, NIOS_QUEUE);
   WriteData(correctionSfAddr, correction, NIOS_QUEUE);
   WriteData(ageSfAddr, CommandData.actbus.sf_time / 10., NIOS_QUEUE);
   WriteData(offsetSfAddr, CommandData.actbus.sf_offset, NIOS_FLUSH);
@@ -732,14 +829,37 @@ static int filterLVDT(int num, int data)
   lvdt_sum[num] += (data - lvdt_buf[num][ibuf]);
   lvdt_buf[num][ibuf] = data;
   ibuf = (ibuf + 1) % LVDT_FILT_LEN;
-  return lvdt_sum[num]/LVDT_FILT_LEN;
+  return (int)((double)lvdt_sum[num]/LVDT_FILT_LEN + 0.5);
+}
+
+//handle counters in a well-timed frame synchronous manner
+void UpdateActFlags()
+{
+  //count down timeout on ACT_FL_TRIMMED indicator flag
+  if (act_trim_flag_wait > 0) {
+    act_trim_flag_wait--;
+    actbus_flags |= ACT_FL_TRIMMED;
+  } else {
+    actbus_flags &= ~ACT_FL_TRIMMED;
+  }
+
+  //Check if waiting before trimming again
+  if (act_trim_wait > 0) {
+    act_trim_wait--;
+    actbus_flags |= ACT_FL_TRIM_WAIT;
+  }
+  else actbus_flags &= ~ACT_FL_TRIM_WAIT;
+
+  if (poll_timeout > 0) poll_timeout--;
+
+  if (lock_timeout > 0) lock_timeout--;
+
 }
 
 void StoreActBus(void)
 {
   int j;
   static int firsttime = 1;
-  int actbus_reset = 1;   //1 means actbus is on
   int lvdt_filt[3];
 
   static struct BiPhaseStruct* lvdt63ActAddr;
@@ -763,13 +883,16 @@ void StoreActBus(void)
   static struct NiosStruct* accActAddr;
   static struct NiosStruct* iMoveActAddr;
   static struct NiosStruct* iHoldActAddr;
+  static struct NiosStruct* tolActAddr;
   static struct NiosStruct* flagsActAddr;
+  static struct NiosStruct* modeActAddr;
 
   static struct NiosStruct* posActAddr[3];
   static struct NiosStruct* encActAddr[3];
   static struct NiosStruct* lvdtActAddr[3];
   static struct NiosStruct* offsetActAddr[3];
   static struct NiosStruct* goalActAddr[3];
+  static struct NiosStruct* drActAddr[3];
 
   static struct NiosStruct* lvdtSpreadActAddr;
   static struct NiosStruct* lvdtLowActAddr;
@@ -785,6 +908,8 @@ void StoreActBus(void)
   static struct NiosStruct* prefTsSfAddr;
   static struct NiosStruct* goalSfAddr;
   static struct NiosStruct* focusSfAddr;
+
+  static struct NiosStruct* statusActbusAddr;
 
   if (firsttime) {
     firsttime = 0;
@@ -807,6 +932,7 @@ void StoreActBus(void)
       lvdtActAddr[j] = GetActNiosAddr(j, "lvdt");
       offsetActAddr[j] = GetActNiosAddr(j, "offset");
       goalActAddr[j] = GetActNiosAddr(j, "goal");
+      drActAddr[j] = GetActNiosAddr(j, "dr");
     }
 
     gPrimeSfAddr = GetNiosAddr("g_prime_sf");
@@ -828,13 +954,19 @@ void StoreActBus(void)
     accActAddr = GetNiosAddr("acc_act");
     iMoveActAddr = GetNiosAddr("i_move_act");
     iHoldActAddr = GetNiosAddr("i_hold_act");
+    tolActAddr = GetNiosAddr("tol_act");
     flagsActAddr = GetNiosAddr("flags_act");
+    modeActAddr = GetNiosAddr("mode_act");
 
     velLockAddr = GetNiosAddr("vel_lock");
     accLockAddr = GetNiosAddr("acc_lock");
     iMoveLockAddr = GetNiosAddr("i_move_lock");
     iLockHoldAddr = GetNiosAddr("i_hold_lock");
+
+    statusActbusAddr = GetNiosAddr("status_actbus");
   }
+
+  UpdateActFlags();
 
   //filter the LVDTs, scale into encoder units, rotate to motor positions
   lvdt_filt[0] = filterLVDT(0, 
@@ -846,14 +978,17 @@ void StoreActBus(void)
   lvdt_filt[0] = (int)((double)lvdt_filt[0] * LVDT63_ADC_TO_ENC + LVDT63_ZERO);
   lvdt_filt[1] = (int)((double)lvdt_filt[1] * LVDT64_ADC_TO_ENC + LVDT64_ZERO);
   lvdt_filt[2] = (int)((double)lvdt_filt[2] * LVDT65_ADC_TO_ENC + LVDT65_ZERO);
-  act_data[0].lvdt = (-lvdt_filt[2] + 2 * lvdt_filt[0] + 2 * lvdt_filt[1]) / 3;
-  act_data[1].lvdt = (-lvdt_filt[0] + 2 * lvdt_filt[1] + 2 * lvdt_filt[2]) / 3;
-  act_data[2].lvdt = (-lvdt_filt[1] + 2 * lvdt_filt[2] + 2 * lvdt_filt[0]) / 3;
+  act_data[0].lvdt = (int)(
+      (double)(-lvdt_filt[2] + 2 * lvdt_filt[0] + 2 * lvdt_filt[1]) / 3.0);
+  act_data[1].lvdt = (int)(
+      (double)(-lvdt_filt[0] + 2 * lvdt_filt[1] + 2 * lvdt_filt[2]) / 3.0);
+  act_data[2].lvdt = (int)(
+      (double)(-lvdt_filt[1] + 2 * lvdt_filt[2] + 2 * lvdt_filt[0]) / 3.0);
 
   if (CommandData.actbus.off) {
     if (CommandData.actbus.off > 0) CommandData.actbus.off--;
     actbus_reset = 0;   //turn actbus off
-  }
+  } else actbus_reset = 1;
   WriteData(busResetActAddr, actbus_reset, NIOS_QUEUE);
 
   WriteData(pinInLockAddr, CommandData.pin_is_in, NIOS_QUEUE);
@@ -868,8 +1003,11 @@ void StoreActBus(void)
     WriteData(offsetActAddr[j], CommandData.actbus.offset[j], NIOS_QUEUE);
     WriteData(goalActAddr[j], 
 	CommandData.actbus.goal[j] - CommandData.actbus.offset[j], NIOS_QUEUE);
+    WriteData(drActAddr[j], 
+	act_data[j].dr - CommandData.actbus.offset[j], NIOS_QUEUE);
   }
-  WriteData(focusSfAddr, focus, NIOS_QUEUE);
+  WriteData(focusSfAddr, 
+      (int)focus - POSITION_FOCUS - CommandData.actbus.sf_offset, NIOS_QUEUE);
 
   WriteData(potLockAddr, lock_data.adc[1], NIOS_QUEUE);
   WriteData(stateLockAddr, lock_data.state, NIOS_QUEUE);
@@ -881,7 +1019,9 @@ void StoreActBus(void)
   WriteData(accActAddr, CommandData.actbus.act_acc, NIOS_QUEUE);
   WriteData(iMoveActAddr, CommandData.actbus.act_move_i, NIOS_QUEUE);
   WriteData(iHoldActAddr, CommandData.actbus.act_hold_i, NIOS_QUEUE);
+  WriteData(tolActAddr, CommandData.actbus.act_tol, NIOS_QUEUE);
   WriteData(flagsActAddr, actbus_flags, NIOS_QUEUE);
+  WriteData(modeActAddr, CommandData.actbus.focus_mode, NIOS_QUEUE);
 
   WriteData(lvdtSpreadActAddr, CommandData.actbus.lvdt_delta, NIOS_QUEUE);
   WriteData(lvdtLowActAddr, CommandData.actbus.lvdt_low+5000, NIOS_QUEUE);
@@ -901,6 +1041,8 @@ void StoreActBus(void)
   WriteData(prefTsSfAddr, CommandData.actbus.tc_prefs, NIOS_QUEUE);
   WriteData(waitSfAddr, CommandData.actbus.tc_wait / 10., NIOS_QUEUE);
   WriteData(goalSfAddr, CommandData.actbus.focus, NIOS_FLUSH);
+
+  WriteData(statusActbusAddr, actuators_init, NIOS_FLUSH);
 }
 
 /************************************************************************/
@@ -908,9 +1050,38 @@ void StoreActBus(void)
 /*    Act Thread: initialize bus and command lock/secondary steppers    */
 /*                                                                      */
 /************************************************************************/
+//for NICC to get DR from bus and save to disk
+void SyncDR()
+{
+  int i;
+  static int firsttime = 1;
+  static struct BiPhaseStruct* drActAddr[3];
+  static struct BiPhaseStruct* offsetActAddr[3];
+  short dr;
+  unsigned short offset;
+
+  if (firsttime) {
+    firsttime = 0;
+    drActAddr[0] = GetBiPhaseAddr("dr_0_act");
+    drActAddr[1] = GetBiPhaseAddr("dr_1_act");
+    drActAddr[2] = GetBiPhaseAddr("dr_2_act");
+    offsetActAddr[0] = GetBiPhaseAddr("offset_0_act");
+    offsetActAddr[1] = GetBiPhaseAddr("offset_1_act");
+    offsetActAddr[2] = GetBiPhaseAddr("offset_2_act");
+  }
+
+  //get dead reckoning data
+  for (i=0; i<3; i++) {
+    dr = slow_data[drActAddr[i]->index][drActAddr[i]->channel];
+    offset = slow_data[offsetActAddr[i]->index][offsetActAddr[i]->channel];
+    act_data[i].dr = dr + offset;
+  }
+
+  WriteDR();
+}
+
 void ActuatorBus(void)
 {
-  int poll_timeout = POLL_TIMEOUT;
   int all_ok = 0;
   int i;
   int j=0; // Used for debugging print statements.  Delete later.
@@ -918,6 +1089,7 @@ void ActuatorBus(void)
   int caddr_match = 0;
   int is_init = 0;
   int first_time=1;
+  int sf_ok;
 
 
   nameThread("ActBus");
@@ -931,8 +1103,10 @@ void ActuatorBus(void)
     usleep(1000000);
     CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining
                                               control */
-    SetLockState(1); /* to ensure the NiC MCC knows the pin state */
-      //CopyActuators(); /* let the NiC MCC know what's going on */
+    if (BLASTBusUseful) {
+      SetLockState(1); /* to ensure the NiC MCC knows the pin state */
+      SyncDR();	     /* get encoder absolute state from the ICC */
+    }
     CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
     CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing 
                                                 twice if we switch to ICC */
@@ -956,28 +1130,30 @@ void ActuatorBus(void)
     EZBus_Add(&bus, id[i], name[i]);
     if (i == LOCKNUM) EZBus_SetPreamble(&bus, id[i], LOCK_PREAMBLE);
     else if (id[i] == HWPR_ADDR) EZBus_SetPreamble(&bus, id[i], HWPR_PREAMBLE);
-    else EZBus_SetPreamble(&bus, id[i], ACT_PREAMBLE);
+    else 
+      EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
   }
 
   all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
 
   for (;;) {
     /* Repoll bus if necessary */
-    if (CommandData.actbus.force_repoll) {
-      //      bprintf(info,"I'm going to repoll!");
+    if (CommandData.actbus.force_repoll || bus.err_count > MAX_SERIAL_ERRORS) {
       for (i=0; i<NACT; i++)
 	EZBus_ForceRepoll(&bus, id[i]);
-      poll_timeout = POLL_TIMEOUT;
-      all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
+      poll_timeout = 0;
+      all_ok = 0;
       CommandData.actbus.force_repoll = 0;
     }
     
-    if (poll_timeout == 0 && !all_ok) {
+    if (poll_timeout <= 0 && !all_ok && actbus_reset) {
+      //suppress non-error messages during repoll
+      bus.chatter = EZ_CHAT_ERR;
       all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
+      bus.chatter = ACTBUS_CHATTER;
       poll_timeout = POLL_TIMEOUT;
-    } else if (poll_timeout > 0)
-      poll_timeout--;
-    
+    }    
+
     /* Send the uplinked command, if any */
     my_cindex = GETREADINDEX(CommandData.actbus.cindex);
     caddr_match = 0;
@@ -990,16 +1166,41 @@ void ActuatorBus(void)
       //increase print level for uplinked manual commands
       bus.chatter = EZ_CHAT_BUS;
       EZBus_Comm(&bus, CommandData.actbus.caddr[my_cindex],
-		 CommandData.actbus.command[my_cindex], 0);
+		 CommandData.actbus.command[my_cindex]);
       CommandData.actbus.caddr[my_cindex] = 0;
       bus.chatter = ACTBUS_CHATTER;
     }
     
-    if (EZBus_IsUsable(&bus, id[LOCKNUM])) DoLock(); 
+    if (EZBus_IsUsable(&bus, id[LOCKNUM])) {
+      DoLock(); 
+      actuators_init |= 0x1 << LOCKNUM;
+    } else {
+      EZBus_ForceRepoll(&bus, id[LOCKNUM]);
+      all_ok = 0;
+      actuators_init &= ~(0x1 << LOCKNUM);
+    }
     
-    DoActuators();    //handle IsUsable more finely for multiple steppers
+    sf_ok = 1;
+    for (i=0; i<3; i++) {
+      if (EZBus_IsUsable(&bus, id[i])) {
+	actuators_init |= 0x1 << i;
+      } else {
+	EZBus_ForceRepoll(&bus, id[i]);
+	all_ok = 0;
+	sf_ok = 0;
+	actuators_init &= ~(0x1 << i);
+      }
+    }
+    if (sf_ok) DoActuators();
 
-    if (EZBus_IsUsable(&bus, HWPR_ADDR)) DoHWPR(&bus);
+    if (EZBus_IsUsable(&bus, HWPR_ADDR)) {
+     DoHWPR(&bus);
+     actuators_init |= 0x1 << HWPRNUM;
+    } else {
+      EZBus_ForceRepoll(&bus, HWPR_ADDR);
+      all_ok = 0;
+     actuators_init &= ~(0x1 << HWPRNUM);
+    }
 
     usleep(10000);
     

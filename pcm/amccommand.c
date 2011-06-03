@@ -350,7 +350,7 @@ int send_amccmd(int index,int offset,int value,int nwords,enum CmdorQuery type, 
 
   if((crctable = mk_crctable((unsigned short)CRC_POLY,crchware,amcinfo)) == NULL) {
     printf("mk_crctable() memory allocation failed\n");
-    exit(1);  //TODO: Do we really want this memory allocation to bring down all of mcp?
+    exit(1); 
   }
 
   ValuesSend.index=index;
@@ -483,12 +483,7 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
 	  wrset=checkAMCAccess(amcinfo);
           m=disableAMC(amcinfo); // Make sure the AMC is disabled
 	}
-      n=send_amccmd(5,1,2,1,cmd,amcinfo); // Right now sending this command generates 
-                                      // a response that we don't have write 
-                                      // access to this index. I've email JR for
-                                      // help.
-                                      // TODO: Make sure this gets fixed.
-   
+      n=send_amccmd(5,1,2,1,cmd,amcinfo); 
 
       m=checkAMCResp(n, amcinfo);
     }
@@ -521,9 +516,6 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
     }
 }
 
-// LMF: Identical to the check_ready routine in pivotcontrol.c
-// TODO If this doesn't change maybe I should make a file of 
-// common motor commands.
  int check_amcready(enum CheckType check, struct MotorInfoStruct* amcinfo)
  {
    int n=0;

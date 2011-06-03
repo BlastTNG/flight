@@ -56,7 +56,10 @@ struct NiosStruct **frameNiosList;
 struct BiPhaseStruct **frameBi0List;
 struct streamDataStruct *streamData;
 
-unsigned short *PopFrameBuffer(struct frameBuffer *buffer); // mcp.c
+unsigned short *PopFrameBufferAndSlow(struct frameBuffer *buffer,  unsigned short ***slow); // mcp.c
+void ClearBuffer(struct frameBuffer *buffer);
+
+unsigned short **current_slow_data;
 
 //*********************************************************
 // Open High Gain Serial port
@@ -205,9 +208,9 @@ void BufferStreamData(int i_streamframe, unsigned short *frame) {
       i = streamData[i_field].slowIndex;
       c = streamData[i_field].slowChannel;
       if (streamData[i_field].mask) { // wide slow
-        xu = (unsigned int)slow_data[i][c] + ((unsigned int)slow_data[i][c+1] <<16);
+        xu = (unsigned int)current_slow_data[i][c] + ((unsigned int)current_slow_data[i][c+1] <<16);
       } else { // narrow slow
-        xu = (unsigned int)slow_data[i][c];
+        xu = (unsigned int)current_slow_data[i][c];
       }
     }
     xd = xu;
@@ -278,11 +281,11 @@ void WriteSuperFrame(unsigned short *frame) {
     } else { // slow
       if (frameNiosList[i_field]->wide) {
         isWide = 1;
-        x = (unsigned int)slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel] +
-        ((unsigned int)slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel+1] <<16);
+        x = (unsigned int)current_slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel] +
+        ((unsigned int)current_slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel+1] <<16);
       } else {
         isWide = 0;
-        x = slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel];
+        x = current_slow_data[frameBi0List[i_field]->index][frameBi0List[i_field]->channel];
       }
     }
     size = (1 + isWide)*sizeof(unsigned short);
@@ -355,6 +358,11 @@ void WriteSuperFrame(unsigned short *frame) {
         omni2_requested_bytes_per_streamframe+=delta;
       }
     }
+    
+    if (n_higain_stream==0) {
+      n_higain_stream = n_streamlist-1;
+    }
+    
     bprintf(info, "High gain: %u stream fields use %.0f out of %d bytes per stream frame (%.0f free)",
             n_higain_stream,
             higain_requested_bytes_per_streamframe, higain_bytes_per_streamframe,
@@ -425,6 +433,7 @@ void WriteStreamFrame() {
 
   for (i_field = 0; i_field<n_streamlist; i_field++) {
     n_streambuf = 0;
+    n = FASTFRAME_PER_STREAMFRAME/streamList[i_field].samples_per_frame;
     for (i_samp = 0; i_samp < streamList[i_field].samples_per_frame; i_samp++) {
       if (streamList[i_field].doAverage) {
         // filter
@@ -449,7 +458,7 @@ void WriteStreamFrame() {
       
       //preserve integral
       xi = (int)(x + streamData[i_field].residual);
-      streamData[i_field].residual =(x + streamData[i_field].residual) - (double)xi; // preserve integral
+      streamData[i_field].residual = (x + streamData[i_field].residual) - (double)xi; // preserve integral
 
       if (streamList[i_field].bits == 4) {
       } else if (streamList[i_field].bits == 8) {
@@ -550,6 +559,8 @@ void CompressionWriter() {
 
       if ((channel->type == 's') || (channel->type == 'S')) {
         streamData[i_field].isSigned = 1;
+      } else {
+	streamData[i_field].isSigned = 0;
       }
       if (nios->fast) {
         streamData[i_field].isFast = 1;
@@ -585,11 +596,14 @@ void CompressionWriter() {
     usleep(10000);
   }
   
+  // clear the fifo so we have current data
+  ClearBuffer(&hiGain_buffer);
+  
   //*****************************************************
   //     The Infinite Loop....
   //*****************************************************
   while (1) {
-    frame = PopFrameBuffer(&hiGain_buffer);
+    frame = PopFrameBufferAndSlow(&hiGain_buffer, &current_slow_data);
     if (frame) {
       ++i_fastframe;
       

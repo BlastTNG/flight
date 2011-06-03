@@ -1,9 +1,8 @@
 /* tx_struct.c: contains the channel specificiation lists
  *
- * This software is copyright (C) 2002-2005 University of Toronto
+ * This software is copyright (C) 2002-2010 University of Toronto
  *
- * This file is part of the BLAST flight code licensed under the GNU
- * General Public License.
+ * This file is part of mcp licensed under the GNU General Public License.
  *
  * You should have received a copy of the GNU General Public License
  * along with this software; if not, write to the Free Software Foundation,
@@ -14,7 +13,7 @@
 /* !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
  *
  * IF YOU ADD, MOVE, OR DELETE *ANY* CHANNELS IN THIS FILE YOU *MUST*
- * RECOMPILE AND RESTART THE DECOM DAEMON (DECOMD) ON ARWEN!
+ * RECOMPILE AND RESTART THE DECOM DAEMON (DECOMD) ON widow!
  *
  * !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
  */
@@ -141,7 +140,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"lst",          'w', LOOP1,  6,         1.0/3600.0,             0.0, 'U', U_NONE},
   {"ra_isc",       'w', LOOP1,  8,              LI2H,              0.0, 'U', U_NONE},
   {"dec_isc",      'w', LOOP1, 10,          LI2DEG/2.,            -90., 'U', U_NONE},
-  //{"FREEFIELD",    'w', LOOP1, 12,                1.0,             0.0, 'U', U_NONE}, // free field... use me
+  {"parts_sched",   'w', LOOP1, 12,                1.0,             0.0, 'U', U_NONE},
   {"framenum_isc", 'w', LOOP1, 32,                1.0,             0.0, 'U', U_NONE},
   {"lat",          'w', LOOP1, 38,             LI2DEG,             0.0, 'S', U_NONE},
   {"lon",          'w', LOOP1, 40,             LI2DEG,             0.0, 'S', U_NONE},
@@ -245,42 +244,47 @@ struct ChannelStruct SlowChannels[] = {
   {"ampl_250_bias",'w',  BIAS_D,  2,                0.5,             0.0, 'u', U_NONE},
   {"ampl_rox_bias",'w',  BIAS_D,  3,                0.5,             0.0, 'u', U_NONE},
   {"ampl_x_bias",  'w',  BIAS_D,  4,                1.0,             0.0, 'u', U_NONE},
-  {"dig21_das",    'w',  BIAS_D,  5,                1.0,             0.0, 'u', U_NONE},
+  {"dig21_das",    'r',  BIAS_D,  5,                1.0,             0.0, 'u', U_NONE},
   //dig43_das is fast, for calibration pulse
-  {"dig65_das",    'w',  BIAS_D,  7,                1.0,             0.0, 'u', U_NONE},
+  {"dig65_das",    'r',  BIAS_D,  7,                1.0,             0.0, 'u', U_NONE},
   {"ramp_ena_bias",'w',  BIAS_D,  8,                1.0,             0.0, 'u', U_NONE},
   {"ramp_ampl_bias",'r',  BIAS_D,  0,                1.0,             0.0, 'u', U_NONE},
 
   /* this is all the inerframe ad590's.*/
-  {"t_padcdc_rec", 'r', BIAS_T1,  1, CAL16T(1.0,                    0.0), 'u', U_T_C},
-  {"t_pauram_rec", 'r', BIAS_T1,  3, CAL16T(1.0,                    0.0), 'u', U_T_C},
-  {"t_hkdcdc_rec", 'r', BIAS_T1,  5, CAL16T(1.0,                    0.0), 'u', U_T_C},
-  {"t_das",        'r', BIAS_T1, 7, CAL16T(1.0, 0.0),                    'u', U_T_C}, 
-  {"t_mot_pump_val",'r', BIAS_T1,  17,  CAL16T(1.0,	    0.0), 'u', U_T_C},
-  {"t_1_prime",    'r', BIAS_T1,  19, CAL16T(1.0, 0.0),                    'u', U_T_C},
-  {"t_if_top_back",'r', BIAS_T1, 21, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_padcdc_rec",  'r', BIAS_T1,  1, CAL16T(1.0,                    0.0), 'u', U_T_C},
+  {"t_pauram_rec",  'r', BIAS_T1,  3, CAL16T(1.0,                    0.0), 'u', U_T_C},
+  {"t_hkdcdc_rec",  'r', BIAS_T1,  5, CAL16T(1.0,                    0.0), 'u', U_T_C},
+  {"t_stbd_das",    'r', BIAS_T1,  7, CAL16T(1.0, 0.0),                    'u', U_T_C}, 
+  {"t_stbd_rec",    'r', BIAS_T1,  9, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_port_das",    'r', BIAS_T1, 11, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_port_rec",    'r', BIAS_T1, 13, CAL16T(1.0, 0.0),                    'u', U_T_C},
+//{"t_8_das",       'r', BIAS_T1, 15, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_mot_pump_val",'r', BIAS_T1, 17,  CAL16T(1.0,	    0.0), 'u', U_T_C},
+  {"t_1_prime",     'r', BIAS_T1, 19, CAL16T(1.0, AD590_CALIB_PRIMARY_1),  'u', U_T_C},
+  {"t_if_top_back", 'r', BIAS_T1, 21, CAL16T(1.0, 0.0),                    'u', U_T_C},
   {"t_hwpr_mot",    'r', BIAS_T1, 23,  CAL16T(1.0,	    0.0), 'u', U_T_C},
-  {"t_if_top_frnt",'r', BIAS_T1, 25, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_if_top_frnt", 'r', BIAS_T1, 25, CAL16T(1.0, 0.0),                    'u', U_T_C},
   {"t_hwpr_feed",   'r', BIAS_T1, 27,  CAL16T(1.0,	    0.0), 'u', U_T_C},
-  {"t_if_bot_frnt",'r', BIAS_T1, 29, CAL16T(1.0, 0.0),                    'u', U_T_C},
-  {"t_strut_bot",  'r', BIAS_T1, 31, CAL16T(1.0, 0.0),                    'u', U_T_C},
-  {"t_strut_side", 'r', BIAS_T1, 33, CAL16T(1.0, 0.0),                    'u', U_T_C},
-  {"t_2_prime",    'r', BIAS_T1, 35, CAL16T(1.0, 0.0),                    'u', U_T_C},
-  {"t_if_bot_back",'r', BIAS_T1, 37, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_if_bot_frnt", 'r', BIAS_T1, 29, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_strut_bot",   'r', BIAS_T1, 31, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_strut_side",  'r', BIAS_T1, 33, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_2_prime",     'r', BIAS_T1, 35, CAL16T(1.0, AD590_CALIB_PRIMARY_2),  'u', U_T_C},
+  {"t_if_bot_back", 'r', BIAS_T1, 37, CAL16T(1.0, 0.0),                    'u', U_T_C},
   {"t_dac_box",     'r', BIAS_T1, 39,  CAL16T(1.0,      0.0), 'u', U_T_C},
-  {"t_mot_act",    'r', BIAS_T1, 41, CAL16T(1.0, 0.0),                    'u', U_T_C},
-  {"t_push_plate", 'r', BIAS_T1, 43, CAL16T(1.0, 0.0),                    'u', U_T_C},
-  {"t_1_second",   'r', BIAS_T1, 45, CAL16T(1.0, 0.0),                    'u', U_T_C},
-  {"t_2_second",   'r', BIAS_T1, 47, CAL16T(1.0, 0.0),                    'u', U_T_C},
-  //{"t_24_das",      'r', BIAS_T1, 49,         CAL16T(1.0,            0.0), 'u', U_NONE},
-  {"t_rec",        'r', BIAS_T1, 53, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_mot_act",     'r', BIAS_T1, 41, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_push_plate",  'r', BIAS_T1, 43, CAL16T(1.0, 0.0),                    'u', U_T_C},
+  {"t_1_second",    'r', BIAS_T1, 45, CAL16T(1.0, AD590_CALIB_SECONDARY_1),'u', U_T_C},
+  {"t_2_second",    'r', BIAS_T1, 47, CAL16T(1.0, AD590_CALIB_SECONDARY_1),'u', U_T_C},
+//{"t_24_das",      'r', BIAS_T1, 49,         CAL16T(1.0,            0.0), 'u', U_NONE},
+//{"t_25_das",      'r', BIAS_T1, 51, CAL16T(1.0, 0.0),                    'u', U_T_C},
+//{"t_rec",         'r', BIAS_T1, 53, CAL16T(1.0, 0.0),                    'u', U_T_C},
 
   /* narrow CRYO_A2 channels */
   {"he4_lev",       'r', CRYO_A2,  1,         CAL16(1.0,            0.0), 'u', U_V_V},
   {"i_charcoal",    'r', CRYO_A2,  3,         CAL16(1.0,            0.0), 'u', U_V_V},
   {"i_cal_lamp",    'r', CRYO_A2,  5,         CAL16(1.0,            0.0), 'u', U_V_V},
-  {"i_hs_pot",      'r', CRYO_A2,  7,         CAL16(1.0,            0.0), 'u', U_V_V},
-  {"i_hs_char",     'r', CRYO_A2,  9,         CAL16(1.0,            0.0), 'u', U_V_V},
+  {"i_hs_char",     'r', CRYO_A2,  7,         CAL16(1.0,            0.0), 'u', U_V_V},
+  {"i_hs_pot",      'r', CRYO_A2,  9,         CAL16(1.0,            0.0), 'u', U_V_V},
   {"i_300mk",       'r', CRYO_A2, 13,         CAL16(1.0,            0.0), 'u', U_V_V},
   {"i_jfet",        'r', CRYO_A2, 21,         CAL16(1.0,            0.0), 'u', U_V_V},
 
@@ -292,9 +296,9 @@ struct ChannelStruct SlowChannels[] = {
   {"timeout",      'w', LOOP1, 20,                1.0,             0.0, 'u', U_NONE},
   {"az_sun",       'w', LOOP1, 21,              I2DEG,             0.0, 'u', U_D_DEG},
   {"lvdt_low_act", 'w', LOOP1, 22,                1.0,         -5000.0, 'u', U_NONE},
-  {"status_mcc",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE}, //south_i_am, at_float, schedule, alice_file
+  {"status_mcc",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE}, //south_i_am, at_float, schedule, slot_sched
   {"cryostate",    'w', LOOP1, 24,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP1 25 is unused */
+  {"upslot_sched", 'w', LOOP1, 25,                1.0,             0.0, 'u', U_NONE},  
   {"t_chip_flc",   'w', LOOP1, 26,               0.01,             0.0, 'u', U_NONE},
   {"declination_mag",'w', LOOP1, 27,              I2DEG,             0.0, 'u', U_D_DEG}, // magnetic declination
   {"veto_sensor",  'w', LOOP1, 28,                1.0,             0.0, 'u', U_NONE},
@@ -363,7 +367,7 @@ struct ChannelStruct SlowChannels[] = {
   {"offset_ifel_gy",  'w',LOOP2, 36,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifroll_gy",'w',LOOP2, 37,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifyaw_gy", 'w',LOOP2, 38,      1.0/32768.0,             0.0, 's', U_V_DPS},
-  {"az_raw_mag",      'w',LOOP2, 39,            I2DEG,             0.0, 's', U_D_DEG},
+  {"az_raw_mag",      'w',LOOP2, 39,            I2DEG,             0.0, 'u', U_D_DEG},
   /* LOOP2 39 is unused */
   {"sigma_mag",       'w',LOOP2, 40,            I2DEG,             0.0, 'u', U_NONE},
   {"az_dgps",         'w',LOOP2, 41,            I2DEG,             0.0, 'u', U_D_DEG},
@@ -452,15 +456,15 @@ struct ChannelStruct SlowChannels[] = {
   {"maxblobs_osc", 'w', LOOP4,  7,                1.0,             0.0, 'u', U_NONE},
   {"bi0_fifo_size",'w', LOOP4,  8,             1./624,             0.0, 'u', U_NONE},
   {"plover",       'w', LOOP4,  9,                1.0,             0.0, 'u', U_NONE},
-  {"t_flange_isc", 'w', LOOP4, 10,            1./200.,         -273.15, 'u', U_NONE},
-  {"t_lens_isc",   'w', LOOP4, 11,            1./200.,         -273.15, 'u', U_NONE},
-  {"t_heat_isc",   'w', LOOP4, 12,            1./200.,         -273.15, 'u', U_NONE},
-  {"t_comp_isc",   'w', LOOP4, 13,            1./200.,         -273.15, 'u', U_NONE},
+  {"t_flange_isc", 'w', LOOP4, 10,            1./100.,         -273.15, 'u', U_NONE},
+  {"t_lens_isc",   'w', LOOP4, 11,            1./100.,         -273.15, 'u', U_NONE},
+  {"t_heat_isc",   'w', LOOP4, 12,            1./100.,         -273.15, 'u', U_NONE},
+  {"t_comp_isc",   'w', LOOP4, 13,            1./100.,         -273.15, 'u', U_NONE},
   {"pressure1_isc",'w', LOOP4, 14,           1./2000.,             0.0, 'u', U_NONE},
-  {"t_flange_osc", 'w', LOOP4, 15,            1./200.,         -273.15, 'u', U_NONE},
-  {"t_lens_osc",   'w', LOOP4, 16,            1./200.,         -273.15, 'u', U_NONE},
-  {"t_heat_osc",   'w', LOOP4, 17,            1./200.,         -273.15, 'u', U_NONE},
-  {"t_comp_osc",   'w', LOOP4, 18,            1./200.,         -273.15, 'u', U_NONE},
+  {"t_flange_osc", 'w', LOOP4, 15,            1./100.,         -273.15, 'u', U_NONE},
+  {"t_lens_osc",   'w', LOOP4, 16,            1./100.,         -273.15, 'u', U_NONE},
+  {"t_heat_osc",   'w', LOOP4, 17,            1./100.,         -273.15, 'u', U_NONE},
+  {"t_comp_osc",   'w', LOOP4, 18,            1./100.,         -273.15, 'u', U_NONE},
   {"pressure1_osc",'w', LOOP4, 19,           1./2000.,             0.0, 'u', U_NONE},
   {"gain_isc",     'w', LOOP4, 20,        100./65536.,             0.0, 'u', U_NONE},
   {"jfet_set_on",  'w', LOOP4, 21,             1/100.,             0.0, 'u', U_NONE},
@@ -480,7 +484,9 @@ struct ChannelStruct SlowChannels[] = {
   {"t_set_gy",     'w', LOOP4, 36,    (100.0/32768.0),             0.0, 'u', U_NONE},
   {"h_age_gy",     'w', LOOP4, 37,                1.0,             0.0, 'u', U_NONE},
   {"h_hist_gy",    'w', LOOP4, 38,    (100.0/32768.0),             0.0, 'u', U_NONE},
-  /* LOOP4 39 is unused */
+  {"trim_pss1",    'w', LOOP4, 39,              I2DEG,             0.0, 's', U_NONE},
+  {"trim_pss2",    'w', LOOP4, 40,              I2DEG,             0.0, 's', U_NONE},
+  /* LOOP4 41-43 appear unused */
   {"ra_1_p",       'w', LOOP4, 44,                I2H,             0.0, 'u', U_NONE}, // pointing mode coordinates
   {"dec_1_p",      'w', LOOP4, 45,              I2DEG,             0.0, 's', U_NONE},
   {"ra_2_p",       'w', LOOP4, 46,                I2H,             0.0, 'u', U_NONE},
@@ -523,12 +529,12 @@ struct ChannelStruct SlowChannels[] = {
   //POT_LOCK = -100/(LOCK_MAX_POT-LOCK_MIN_POT)*pot_lock 
   //	+ 100*LOCK_MAX_POT/(LOCK_MAX_POT-LOCK_MIN_POT)
   {"pot_lock",     'w', LOOP5, 22,    -100.0/13368.0,1636800.0/13368.0, 'u', U_NONE},
-  {"dith_el",      'w', LOOP5, 23,      2.0*I2DEG/5.0,             0.0, 's', U_D_DEG},
+  {"dith_el",      'w', LOOP5, 23,        0.5/32768.0,             0.0, 's', U_D_DEG},
   {"state_lock",   'w', LOOP5, 25,                1.0,             0.0, 'u', U_NONE},
   {"goal_lock",    'w', LOOP5, 26,                1.0,             0.0, 'u', U_NONE},
   {"seized_act",   'w', LOOP5, 27,                1.0,             0.0, 's', U_NONE},
   /* LOOP5 28 is fast */
-  {"dith_step_p",  'w', LOOP5, 29,          2.0*I2DEG,             0.0, 's', U_D_DEG},
+  {"dith_step_p",  'w', LOOP5, 29,        0.1/32768.0,             0.0, 's', U_D_DEG},
   {"x_vel_stage",  'w', LOOP5, 30,                1.0,             0.0, 'u', U_NONE}, // not used in flight...
   {"x_stp_stage",  'w', LOOP5, 31,                1.0,             0.0, 'u', U_NONE},
   {"x_str_stage",  'w', LOOP5, 32,                1.0,             0.0, 'u', U_NONE},
@@ -561,7 +567,7 @@ struct ChannelStruct SlowChannels[] = {
   {"enc_0_act",    'w', LOOP5, 48,                1.0,		   0.0, 's', U_NONE},
   {"enc_1_act",    'w', LOOP5, 50,                1.0,             0.0, 's', U_NONE},
   {"enc_2_act",    'w', LOOP5, 52,                1.0,             0.0, 's', U_NONE},
-  {"goal_sf",      'w', LOOP6, 30,                1.0,             0.0, 's', U_NONE},
+  {"goal_sf",      'w', LOOP6, 30,                1.0,             0.0, 'u', U_NONE},
   {"focus_sf",     'w', LOOP6, 32,                1.0,             0.0, 's', U_NONE},
 
   {"maxslew_isc",  'w', LOOP6,  0,              I2DEG,             0.0, 'u', U_NONE},
@@ -588,8 +594,6 @@ struct ChannelStruct SlowChannels[] = {
   {"spread_sf",    'w', LOOP6, 21,             1/500.,             0.0, 'u', U_NONE},
   {"acc_lock",     'w', LOOP6, 22,                1.0,             0.0, 'u', U_NONE},
   {"snr_ss",       'w', LOOP6, 23,            1/1000.,             0.0, 'u', U_NONE},
-  //TODO focus veto appears unused, delete if it truly is, even when secondary code finished
-  //{"focus_veto",   'w', LOOP6, 24,                1.0,             0.0, 'u', U_NONE},
   {"i_move_act",   'w', LOOP6, 25,                1.0,             0.0, 'u', U_NONE},
   {"i_hold_act",   'w', LOOP6, 26,                1.0,             0.0, 'u', U_NONE},
   {"vel_act",      'w', LOOP6, 27,                1.0,             0.0, 'u', U_NONE},
@@ -606,11 +610,9 @@ struct ChannelStruct SlowChannels[] = {
   {"correction_sf",'w', LOOP6, 41,                1.0,             0.0, 's', U_NONE},
   {"age_sf",       'w', LOOP6, 42,              1/30.,             0.0, 'u', U_NONE},
   {"offset_sf",    'w', LOOP6, 43,                1.0,             0.0, 's', U_NONE},
-  {"t_prime_sf",   'w', LOOP6, 44,             1/500.,             0.0, 's', U_NONE},
-  {"t_second_sf",  'w', LOOP6, 45,             1/500.,             0.0, 's', U_NONE},
+  {"t_prime_sf",   'w', LOOP6, 44,         CAL16T(1.0,            0.0), 'u', U_T_C},
+  {"t_second_sf",  'w', LOOP6, 45,         CAL16T(1.0,            0.0), 'u', U_T_C},
   {"flags_act",    'w', LOOP6, 50,                1.0,             0.0, 'u', U_NONE},
-  //TODO focus mode appears unused, delete if it truly is, even when secondary code finished
-  //{"focus_mode",   'w', LOOP6, 51,                1.0,             0.0, 'u', U_NONE},
   {"lvdt_spread_act",'w', LOOP6, 55,              1.0,             0.0, 's', U_NONE},
   /* LOOP6 56-57 are wide */
   {"el_sun",       'w', LOOP6, 58,              I2DEG,             0.0, 's', U_NONE},
@@ -705,9 +707,9 @@ struct ChannelStruct SlowChannels[] = {
   {"frict_term_uf_piv",'w',LOOP8,18,     2.0/32767.0,              0.0,   's', U_NONE}, // For debugging remove later
 
   {"az_gy",        'w',   LOOP8, 19,       20.0/32768.0,             0.0, 's', U_V_DPS},
-  {"offset_0_act", 'w',   LOOP8, 20,                1.0,             0.0, 's', U_NONE},
-  {"offset_1_act", 'w',   LOOP8, 21,                1.0,             0.0, 's', U_NONE},
-  {"offset_2_act", 'w',   LOOP8, 22,                1.0,             0.0, 's', U_NONE},
+  {"offset_0_act", 'w',   LOOP8, 20,                1.0,             0.0, 'u', U_NONE},
+  {"offset_1_act", 'w',   LOOP8, 21,                1.0,             0.0, 'u', U_NONE},
+  {"offset_2_act", 'w',   LOOP8, 22,                1.0,             0.0, 'u', U_NONE},
   {"goal_0_act",   'w',   LOOP8, 23,                1.0,             0.0, 's', U_NONE},
   {"goal_1_act",   'w',   LOOP8, 24,                1.0,             0.0, 's', U_NONE},
   {"goal_2_act",   'w',   LOOP8, 25,                1.0,             0.0, 's', U_NONE},
@@ -741,7 +743,7 @@ struct ChannelStruct SlowChannels[] = {
   {"mapmean_sbsc",   'w', LOOP8, 50,                1.0,             0.0, 'u', U_NONE},
   {"mapsigma_sbsc",  'w', LOOP8, 51,           1.0/10.0,             0.0, 'u', U_NONE},
   {"ccd_t_sbsc",     'w', LOOP8, 52,          1.0/100.0,             0.0, 's', U_NONE},
-  {"numblobs_sbsc",  'w', LOOP8, 53,                1.0,             0.0, 'u', U_NONE},
+  {"nblobs_sbsc",  'w', LOOP8, 53,                1.0,             0.0, 'u', U_NONE},
   {"blob00_x_sbsc",  'w', LOOP8, 54, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
   {"blob00_y_sbsc",  'w', LOOP8, 55, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
   {"blob00_f_sbsc",  'w', LOOP8, 56,                1.0,             0.0, 'u', U_NONE},
@@ -768,8 +770,25 @@ struct ChannelStruct SlowChannels[] = {
   {"stop_cnt_hwpr",  'w', LOOP9,  13,                1.0,             0.0, 'u', U_NONE},
   {"rel_move_hwpr",  'w', LOOP9,  14,                2.0,             0.0, 's', U_NONE},
   {"stat_control_hwpr",'w', LOOP9,15,                1.0,             0.0, 's', U_NONE},
-  {"pot_targ_hwpr",  'w', LOOP9,  16,                1.0,             0.0, 's', U_NONE},
-  /* LOOP9 17-49 are unused */
+  {"pot_targ_hwpr",  'w', LOOP9,  16,        1.0/65535.0,             0.0, 'u', U_NONE},
+  {"mode_act",       'w', LOOP9,  17,                1.0,             0.0, 's', U_NONE},
+  {"enc_targ_hwpr",  'w', LOOP9,  18,                1.0,             0.0, 's', U_NONE},
+  {"enc_err_hwpr",   'w', LOOP9,  19,                1.0,             0.0, 's', U_NONE},
+  {"dr_0_act",       'w', LOOP9,  20,                1.0,             0.0, 's', U_NONE},
+  {"dr_1_act",       'w', LOOP9,  21,                1.0,             0.0, 's', U_NONE},
+  {"dr_2_act",       'w', LOOP9,  22,                1.0,             0.0, 's', U_NONE},
+  {"tol_act",        'w', LOOP9,  23,                1.0,             0.0, 'u', U_NONE},
+  {"status_actbus",  'w', LOOP9,  24,                1.0,             0.0, 'u', U_NONE},
+  {"pot_err_hwpr",   'w', LOOP9,  25,        1.0/32767.0,             0.0, 's', U_NONE},
+  {"blob03_x_sbsc",  'w', LOOP9,  26, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
+  {"blob03_y_sbsc",  'w', LOOP9,  27, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
+  {"blob03_f_sbsc",  'w', LOOP9,  28,                1.0,             0.0, 'u', U_NONE},
+  {"blob03_s_sbsc",  'w', LOOP9,  29,          1.0/100.0,             0.0, 'u', U_NONE},
+  {"blob04_x_sbsc",  'w', LOOP9,  30, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
+  {"blob04_y_sbsc",  'w', LOOP9,  31, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
+  {"blob04_f_sbsc",  'w', LOOP9,  32,                1.0,             0.0, 'u', U_NONE},
+  {"blob04_s_sbsc",  'w', LOOP9,  33,          1.0/100.0,             0.0, 'u', U_NONE},
+  /* LOOP9 34-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
@@ -785,7 +804,7 @@ struct ChannelStruct SlowChannels[] = {
   {"latch0",       'w',  ACS1_D,  0,                1.0,             0.0, 'u', U_NONE},
   {"latch1",       'w',  ACS1_D,  1,                1.0,             0.0, 'u', U_NONE},
   {"switch_gy",    'w',  ACS1_D,  2,                1.0,             0.0, 'u', U_NONE},
-  //TODO this may be unused because of the new program
+  //this may be unused because of the new program
   //{"switch_charge",'w',  ACS1_D,  3,                1.0,             0.0, 'u', U_NONE},
   {"switch_misc",  'w',  ACS1_D,  4,                1.0,             0.0, 'u', U_NONE},
   {"bus_reset_act",'w',  ACS1_D,  5,                1.0,             0.0, 'u', U_NONE},
@@ -812,12 +831,12 @@ struct ChannelStruct SlowChannels[] = {
   {"t_mc_piv",     'r',  ACS1_T1, 5,          CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_piv",        'r',  ACS1_T1, 7,          CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_wd_flc",        'r',  ACS1_T1, 9,          CAL16T(1.0, 0.0),         'u', U_T_C},
-  //{"t_charger",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_port_hexc",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_1_bat",      'r',  ACS1_T1, 13,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_2_bat",      'r',  ACS1_T1, 15,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_port_back",      'r',  ACS1_T1, 17,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  //{"t_4_bat",      'r',  ACS1_T1, 19,         CAL16T(1.0, 0.0),         'u', U_T_C}, /* Not used can be re-assigned*/
-  {"t_array",      'r',  ACS1_T1, 21,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_dgps",      'r',  ACS1_T1, 19,         CAL16T(1.0, 0.0),         'u', U_T_C}, /* Not used can be re-assigned*/
+  {"t_star_front",      'r',  ACS1_T1, 21,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_acs",        'r',  ACS1_T1, 23,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_dcdc_acs",   'r',  ACS1_T1, 25,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_mc_lock",    'r',  ACS1_T1, 27,         CAL16T(1.0, 0.0),         'u', U_T_C},
@@ -826,12 +845,12 @@ struct ChannelStruct SlowChannels[] = {
   {"t_box_bal",    'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_pump_bal",   'r',  ACS1_T1, 35,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_el",         'r',  ACS1_T1, 37,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_star_back",      'r',  ACS1_T1, 39,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  //{"t_sun",        'r',  ACS1_T1, 41,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_array",      'r',  ACS1_T1, 39,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_sun",        'r',  ACS1_T1, 41,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_rw",         'r',  ACS1_T1, 43,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_earth",      'r',  ACS1_T1, 45,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_chin",       'r',  ACS1_T1, 47,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_dgps",       'r',  ACS1_T1, 49,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_port_pyr",       'r',  ACS1_T1, 49,         CAL16T(1.0, 0.0),         'u', U_T_C},
 
 /* ACS2 Digital I/O card */
   {"v_pump_bal",    'w',  ACS2_D,  0,       3.91/13107.0,          -9.775, 'u', U_NONE},
@@ -860,8 +879,8 @@ struct ChannelStruct SlowChannels[] = {
   {"trig_l_sbsc",  'r',   ACS2_D, 52,                1.0,             0.0, 'u', U_NONE},
 
 /* ACS2 Analog card */
-  {"roll_pyr_clin",'r',  ACS2_A1,  1,     -4.0/5333.3333,        4.*6.144, 'u', U_NONE},
-  {"pch_pyr_clin", 'r',  ACS2_A1,  3,      4.0/5333.3333,       -4.*6.144, 'u', U_NONE},
+  {"pch_pyr_clin", 'r',  ACS2_A1,  1,           0.001343,          -47.09, 'u', U_NONE},
+  {"roll_pyr_clin",'r',  ACS2_A1,  3,           0.001413,          -45.86, 'u', U_NONE},
   {"t_pyr_clin",   'r',  ACS2_A1,  5,          100.0*10.0/32768.0,    -100.0*10.0, 'u', U_NONE},
   {"xel_if_clin",  'r',  ACS2_A1,  7,         0.00546739,      -25.*6.144, 'u', U_NONE},
   {"el_raw_if_clin",'r', ACS2_A1,  9,                1.0,             0.0, 'u', U_NONE},
@@ -907,7 +926,6 @@ struct ChannelStruct WideFastChannels[] = {
 struct ChannelStruct FastChannels[] = {
 #ifndef BOLOTEST
 /* ACS1 Digital Card */
-  //TODO can heat_gy be made slow? Probably.
   {"heat_gy",      'w',  ACS1_D,  6,                1.0,             0.0, 'u', U_NONE},
 
 /* ACS2 Common Node */
@@ -924,6 +942,8 @@ struct ChannelStruct FastChannels[] = {
   {"sin_el",       'w',   ACS2_D, 26,         1.0/32768.0,           -1.0, 'u', U_NONE},
   {"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
   {"pulse_sc",     'r',   ACS2_D, 50,                 1.0,            0.0, 'u', U_NONE},
+  //{"trig_s_sbsc",  'r',   ACS2_D, 51,                1.0,             0.0, 'u', U_NONE},
+  //{"trig_l_sbsc",  'r',   ACS2_D, 52,                1.0,             0.0, 'u', U_NONE},
 
 #endif
   {"dig43_das",    'w',   BIAS_D,  6,                1.0,             0.0, 'u', U_NONE},

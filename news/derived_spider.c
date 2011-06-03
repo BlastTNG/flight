@@ -1,6 +1,6 @@
 /* derived.c: a list of derived channels
  *
- * This software is copyright (C) 2002-2005 University of Toronto
+ * This software is copyright (C) 2002-20010 University of Toronto
  *
  * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
@@ -88,10 +88,10 @@ union DerivedUnion DerivedChannels[] = {
       "SOUTH_I_AM",
       "AT_FLOAT",
       "",
-      "",
+      "UPLINK_SCHED",
       "BLAST_SUCKS"),
   BITWORD("SCHEDULE", "status_mcc", 4, 3),
-  BITWORD("ALICE_FILE", "status_mcc", 8, 8),
+  BITWORD("SLOT_SCHED", "status_mcc", 8, 8),
   BITWORD("STATUS_SUN_ETH", "status_eth", 0, 2),
   BITWORD("STATUS_ISC_ETH", "status_eth", 2, 2),
   BITWORD("STATUS_OSC_ETH", "status_eth", 4, 2),
@@ -100,9 +100,6 @@ union DerivedUnion DerivedChannels[] = {
 #ifndef BOLOTEST
   COMMENT("Pointing Stuff"),
   LINCOM("X_H_P", "x_p", 0.0003662109375, 0),
-#if 0  //TODO we probably aren't using a LUT for AZ_SS anymore
-  LINTERP("AZ_LUT_SS", "AZ_SS", "/data/etc/ss.lut"),
-#endif
   BITFIELD("veto_sensor",
       "VETO_SS",
       "VETO_ISC",
@@ -180,6 +177,8 @@ union DerivedUnion DerivedChannels[] = {
 
   /* charge controller (CC) faults and alarms */
 
+  COMMENT("Charge Controller Bitfields"),
+
   BITFIELD("fault_cc",
       "F_OVERCURRENT_CC", 
       "F_FET_SHORT_CC", 
@@ -255,20 +254,17 @@ union DerivedUnion DerivedChannels[] = {
   LINCOM2("Goal_0_act", "GOAL_0_ACT", 1, 0, "OFFSET_0_ACT", 1, 0),
   LINCOM2("Goal_1_act", "GOAL_1_ACT", 1, 0, "OFFSET_1_ACT", 1, 0),
   LINCOM2("Goal_2_act", "GOAL_2_ACT", 1, 0, "OFFSET_2_ACT", 1, 0),
+  LINCOM2("Dr_0_act", "DR_0_ACT", 1, 0, "OFFSET_0_ACT", 1, 0),
+  LINCOM2("Dr_1_act", "DR_1_ACT", 1, 0, "OFFSET_1_ACT", 1, 0),
+  LINCOM2("Dr_2_act", "DR_2_ACT", 1, 0, "OFFSET_2_ACT", 1, 0),
 
-  //TODO flags_act will probably change
   BITFIELD("flags_act",
-      "LOST_ACT",
-      "DR_POS_BAD_ACT",
-      "DR_ENC_BAD_ACT",
-      "ENC_POS_BAD_ACT",
-      "DR_LVDT_BAD_ACT",
-      "ENC_LVDT_BAD_ACT",
-      "POS_LVDT_BAD_ACT",
-      "BAD_MOVE_ACT",
-      "FAULT_0_ACT",
-      "FAULT_1_ACT",
-      "FAULT_2_ACT"
+      "TRIM_WAIT_ACT",
+      "TRIMMED_ACT",
+      "BUSY_0_ACT",
+      "BUSY_1_ACT",
+      "BUSY_2_ACT",
+      "BAD_MOVE_ACT"
       ),
 
   BITFIELD("stat_1_el",
@@ -523,31 +519,21 @@ union DerivedUnion DerivedChannels[] = {
       "CAL_LAMP_ON_CMD",
       "AUTO_BDA_HEAT_ON"
       ),
+#endif
 
   COMMENT("Cryo Valve Limit Switches"),
 
-  BITFIELD("cryoin",
-      "POT_IS_CLOSED",
-      "POT_IS_OPEN",
-      "LHE_IS_CLOSED",
+  BITFIELD("dig65_das",
       "LHE_IS_OPEN",
+      "LHE_IS_CLOSED",
+      "LN_IS_OPEN",
       "LN_IS_CLOSED",
-      "LN_IS_OPEN"
-      ),
+      "POT_IS_OPEN",
+      "POT_IS_CLOSED"),
 
   LINCOM2("POT_STATE", "POT_IS_CLOSED", 2, 0, "POT_IS_OPEN",  1, 0),
   LINCOM2("LHE_STATE", "LHE_IS_CLOSED", 2, 0, "LHE_IS_OPEN",  1, 0),
   LINCOM2("LN_STATE",  "LN_IS_CLOSED", 2, 0, "LN_IS_OPEN", 1, 0),
-#endif
-
-#if 0
-  COMMENT("Limit Switch Niceties"),
-
-  LINCOM2("LS_EL_STATUS", "LS_EL_OK", 2, 0, "LS_IGNORE_EL", 1, 0),
-  LINCOM2("LS_OPENCLOSE", "LS_OPEN", 2, 0, "LS_CLOSED", 1, 0),
-  LINCOM2("LS_MOTION", "LS_DRIVE_RET", 2, 0, "LS_DRIVE_EXT", 1, 0),
-  LINCOM2("LS_NICE_STAT", "LS_MOTION", 3, 0, "LS_OPENCLOSE", 1, 0),
-#endif
 
   COMMENT("DAS Digital Controls"),
   BITFIELD("dig43_das",
@@ -561,8 +547,8 @@ union DerivedUnion DerivedChannels[] = {
       "",
       "HELIUM_LEVEL_HEAT",
       "CHARCOAL_HEAT",
-      "CHARCOAL_HS_HEAT",
       "POT_HS_HEAT",
+      "CHARCOAL_HS_HEAT",
       "JFET_HEAT",
       "BDA_HEAT",
       "CALIBRATOR_HEAT",

@@ -31,8 +31,7 @@
 #include "ezstep.h"
 #include "blast.h"
 
-//TODO need to improve the serial error handling situation
-//TODO allow multiple-motor values of who more widely (with loops where needed)
+//TODO (BLAST-Pol OK) allow multiple-motor values of who more widely
 
 /* 'who' manipulation:
  *
@@ -104,7 +103,7 @@ static inline char whoLoopMax(char who)
 
 static char hidden_buffer[EZ_BUS_NAME_LEN];
 static char* stepName(struct ezbus* bus, char who)
-{ //TODO could extend ezstep.step array and iWho to assign names to groups
+{
   int iwho = iWho(who);
   if (who < EZ_WHO_S1 || who > EZ_WHO_ALL) {	  //invalid who
     sprintf(hidden_buffer, "Invalid Stepper");
@@ -383,6 +382,15 @@ int EZBus_Recv(struct ezbus* bus)
        * attempt to recover malformed strings */
       switch (state) {
         case 0: /* RS-485 turnaround */
+	  //FIXME: this was needed for xystage on 19 Nov 2010, I don't know why
+	  if (byte == 0x00) {
+	    /*
+	    if (bus->chatter >= EZ_CHAT_ERR)
+	      bprintf(warning, "%sdisregarding unexpected word of 0x00", 
+		bus->name);
+		*/
+	    break;
+	  }
           state++;
           if (byte != 0xFF) { /* RS-485 turnaround */
 	    if (bus->chatter >= EZ_CHAT_ERR)
@@ -481,11 +489,16 @@ int EZBus_Recv(struct ezbus* bus)
   return (bus->error=retval);
 }
 
-int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive)
+int EZBus_Comm(struct ezbus* bus, char who, const char* what)
+{
+  return EZBus_CommRetry(bus, who, what, EZ_BUS_COMM_RETRIES);
+}
+int EZBus_CommRetry(struct ezbus* bus, char who, const char* what, int retries)
 {
   int ok;
   int retval = EZ_ERR_OK;
   int overflown = 0;
+  int retry_count = 0;
 
   do {
     ok = 1;
@@ -550,12 +563,12 @@ int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive)
 		bus->name, stepName(bus,who), what);
 	    overflown = 1;
 	  }
-	  usleep(10000);
-	  ok = 0;
+	  ok = 0; retry_count++;
+	  sleep(1);
 	  break;
       }
     }
-  } while (!ok && !naive);
+  } while (!ok && retry_count < retries);
   
 
   // Was there a serial error?  If so increment err_count.
@@ -573,7 +586,7 @@ int EZBus_Comm(struct ezbus* bus, char who, const char* what, int naive)
 int EZBus_ReadInt(struct ezbus* bus, char who, const char* what, int* val)
 {
   int retval;
-  retval = EZBus_Comm(bus, who, what, 0);
+  retval = EZBus_Comm(bus, who, what);
   if ( !(retval & (EZ_ERR_TIMEOUT | EZ_ERR_OOD | EZ_ERR_TTY)) )
     *val = atoi(bus->buffer);
 
@@ -589,9 +602,9 @@ int EZBus_ForceRepoll(struct ezbus* bus, char who)
 }
 
 //dummy function to use to perform no initialization when using EZBus_Poll
-static void noInit(struct ezbus* bus, char who)
+static int noInit(struct ezbus* bus, char who)
 {
-  return;
+  return 1;
 }
 
 int EZBus_Poll(struct ezbus* bus)
@@ -599,7 +612,7 @@ int EZBus_Poll(struct ezbus* bus)
   return EZBus_PollInit(bus, &noInit);
 }
 
-int EZBus_PollInit(struct ezbus* bus, void (*ezinit)(struct ezbus*,char) )
+int EZBus_PollInit(struct ezbus* bus, int (*ezinit)(struct ezbus*,char) )
 {
   int i, result;
   int retval = EZ_ERR_OK;
@@ -610,28 +623,29 @@ int EZBus_PollInit(struct ezbus* bus, void (*ezinit)(struct ezbus*,char) )
 
   for (i = whoLoopMin(EZ_WHO_ALL); i <= whoLoopMax(EZ_WHO_ALL); ++i) {
     if ( !(bus->stepper[iWho(i)].status & EZ_STEP_USED)   //skip if unused
-	|| (bus->stepper[iWho(i)].status & EZ_STEP_OK) )  //skip if ok
+	|| ((bus->stepper[iWho(i)].status & EZ_STEP_OK)
+	  && (bus->stepper[iWho(i)].status & EZ_STEP_INIT)) ) //skip if ok, init
       continue;
     EZBus_Send(bus, i, "&");
     if ((result = EZBus_Recv(bus)) & (EZ_ERR_TIMEOUT | EZ_ERR_OOD)) {
-      if (bus->chatter >= EZ_CHAT_ERR)
+      if (bus->chatter >= EZ_CHAT_ACT)
 	bprintf(warning, "%sNo response from %s, will repoll later.", 
 	    bus->name, stepName(bus,i));
       bus->stepper[iWho(i)].status &= ~EZ_STEP_OK;
       retval |= result;	  //include in retval results from Recv
       retval |= EZ_ERR_POLL;
     } else if (!strncmp(bus->buffer, "EZStepper AllMotion", 19)) {
-      if (bus->chatter >= EZ_CHAT_ERR)
+      if (bus->chatter >= EZ_CHAT_ACT)
 	bprintf(info, "%sFound EZStepper device %s at address %c (0x%x).\n", 
 	    bus->name, stepName(bus,i), i, i);
       bus->stepper[iWho(i)].status |= EZ_STEP_OK;
     } else if (!strncmp(bus->buffer, "EZHR17EN AllMotion", 18)) {
-      if (bus->chatter >= EZ_CHAT_ERR)
+      if (bus->chatter >= EZ_CHAT_ACT)
 	bprintf(info, "%sFound type 17EN device %s at address %c (0x%x).\n", 
 	    bus->name, stepName(bus,i), i, i);
       bus->stepper[iWho(i)].status |= EZ_STEP_OK;
     } else if (!strncmp(bus->buffer, "EZHR23 All Motion", 17)) {
-      if (bus->chatter >= EZ_CHAT_ERR)
+      if (bus->chatter >= EZ_CHAT_ACT)
 	bprintf(info, "%sFound type 23 device %s at address %c (0x%x).\n", 
 	    bus->name, stepName(bus,i), i, i);
       bus->stepper[iWho(i)].status |= EZ_STEP_OK;
@@ -645,9 +659,9 @@ int EZBus_PollInit(struct ezbus* bus, void (*ezinit)(struct ezbus*,char) )
 
     if ( bus->stepper[iWho(i)].status & EZ_STEP_OK &&
 	!(bus->stepper[iWho(i)].status & EZ_STEP_INIT) ) {
-      ezinit(bus,i);
-      bus->stepper[iWho(i)].status |= EZ_STEP_INIT;
-      sleep(1); //TODO belongs in library? may prevent many-init problems
+      if (ezinit(bus,i)) bus->stepper[iWho(i)].status |= EZ_STEP_INIT;
+      else bus->stepper[iWho(i)].status &= ~EZ_STEP_INIT;
+      sleep(1); //TODO (BLAST-Pol OK) belongs in library? may prevent many-init
     }
 
   }
@@ -673,7 +687,7 @@ int EZBus_IsBusy(struct ezbus* bus, char who)
   if (isWhoGroup(who)) return EZ_ERR_BAD_WHO | EZ_READY;
   if (!EZBus_IsUsable(bus, who)) return EZ_ERR_POLL | EZ_READY;
   
-  retval = EZBus_Comm(bus, who, "Q", 1);
+  retval = EZBus_CommRetry(bus, who, "Q", 0);
   if ( (retval & ~EZ_READY) != EZ_ERR_OK ) {
     //on error return code with busy bit set
     return retval | EZ_READY;
@@ -731,7 +745,7 @@ int EZBus_SetPreamble(struct ezbus* bus, char who, const char* preamble)
 
 int EZBus_Stop(struct ezbus* bus, char who)
 {
-  return EZBus_Comm(bus, who, "T", 0);
+  return EZBus_Comm(bus, who, "T");
 }
 
 char* __attribute__((format(printf,4,5))) EZBus_StrComm(struct ezbus* bus,
@@ -763,16 +777,16 @@ int EZBus_MoveComm(struct ezbus* bus, char who, const char* what)
   char i;
   int retval;
   if (!isWhoGroup(who)) {     //single stepper
-    return EZBus_Comm(bus, who, EZBus_StrComm(bus, who, buf, "%sR", what), 0);
+    return EZBus_Comm(bus, who, EZBus_StrComm(bus, who, buf, "%sR", what));
   } else {		      //multiple steppers
     for (i=whoLoopMin(who); i<=whoLoopMax(who); ++i) {
-      retval = EZBus_Comm(bus, i, EZBus_StrComm(bus, i, buf, "%s", what), 0);
+      retval = EZBus_Comm(bus, i, EZBus_StrComm(bus, i, buf, "%s", what));
       if (retval != EZ_ERR_OK) {
 	EZBus_Stop(bus, who);
 	return retval;
       }
     }
-    return EZBus_Comm(bus, who, "R", 0);
+    return EZBus_Comm(bus, who, "R");
   }
 }
 

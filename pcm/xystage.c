@@ -175,7 +175,7 @@ void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
 }
 
 void Raster(struct ezbus *bus, int start, int end, int is_y, int y, 
-    int ymin, int ymax, int vel, int ss)
+    int ymin, int ymax, int xvel, int yvel, int ss)
 {
   int x;
   int step = (start > end) ? -ss : ss;
@@ -186,12 +186,12 @@ void Raster(struct ezbus *bus, int start, int end, int is_y, int y,
         x = end;
     } else if (x > end)
       x = end;
-    GoWait(bus, x, vel, is_y);
+    GoWait(bus, x, (is_y)?yvel:xvel, is_y);
     if (y == ymin)
       y = ymax;
     else
       y = ymin;
-    GoWait(bus, y, vel, !is_y);
+    GoWait(bus, y, (!is_y)?yvel:xvel, !is_y);
   }
 }
 
@@ -204,7 +204,7 @@ void ControlXYStage(struct ezbus* bus)
   if (CommandData.actbus.caddr[my_cindex] == STAGEX_ID 
       || CommandData.actbus.caddr[my_cindex] == STAGEY_ID) {
     EZBus_Comm(bus, CommandData.actbus.caddr[my_cindex],
-	CommandData.actbus.command[my_cindex], 0);
+	CommandData.actbus.command[my_cindex]);
     CommandData.actbus.caddr[my_cindex] = 0;
   }
 
@@ -264,21 +264,23 @@ void ControlXYStage(struct ezbus* bus)
     /* RASTER */
     } else if (CommandData.xystage.mode == XYSTAGE_RASTER) {
       if (CommandData.xystage.xvel > 0) {
-	int vel = CommandData.xystage.xvel;
 	int xcent = CommandData.xystage.x1;
+	int xsize = CommandData.xystage.x2;
 	int ycent = CommandData.xystage.y1;
-	int size = CommandData.xystage.x2;
-	int step = CommandData.xystage.y2;
-	GoWait(bus, xcent, vel, 0);
-	GoWait(bus, ycent - size, vel, 1);
-	Raster(bus, xcent, xcent + size, 0, ycent + size, ycent - size,
-	    ycent + size, vel, step);
-	Raster(bus, ycent + size, ycent - size, 1, xcent + size, xcent - size,
-	    xcent + size, vel, step);
-	Raster(bus, xcent - size, xcent, 0, ycent - size, ycent - size,
-	    ycent + size, vel, step);
-	GoWait(bus, xcent, vel, 0);
-	GoWait(bus, ycent, vel, 1);
+	int ysize = CommandData.xystage.y2;
+	int xvel = CommandData.xystage.xvel;
+	int yvel = CommandData.xystage.yvel;
+	int step = CommandData.xystage.step;
+	GoWait(bus, xcent, xvel, 0);
+	GoWait(bus, ycent - ysize, yvel, 1);
+	Raster(bus, xcent, xcent + xsize, 0, ycent + ysize, ycent - ysize,
+	    ycent + ysize, xvel, yvel, step);
+	Raster(bus, ycent + ysize, ycent - ysize, 1, xcent + xsize, 
+	    xcent - xsize, xcent + xsize, xvel, yvel, step);
+	Raster(bus, xcent - xsize, xcent, 0, ycent - ysize, ycent - ysize,
+	    ycent + ysize, xvel, yvel, step);
+	GoWait(bus, xcent, xvel, 0);
+	GoWait(bus, ycent, yvel, 1);
       }
     }
     if (CommandData.xystage.mode != XYSTAGE_PANIC)
@@ -291,15 +293,20 @@ void StageBus(void)
 {
   int poll_timeout = POLL_TIMEOUT;
   int all_ok = 0;
+  unsigned long conn_attempt = 1;
   struct ezbus bus;
 
   nameThread("XYBus");
   bputs(startup, "startup.");
 
-  //TODO need to make steppers serial port safe on nicc
-  if (EZBus_Init(&bus, STAGE_BUS_TTY, "", STAGE_BUS_CHATTER) != EZ_ERR_OK)
-    //TODO should EZBus_Init fail be tfatal??
-    berror(tfatal, "failed to connect");
+  while (1) {
+    if (EZBus_Init(&bus, STAGE_BUS_TTY, "", STAGE_BUS_CHATTER) == EZ_ERR_OK) {
+      bprintf(info, "Connected to %s on attempt %lu.", STAGE_BUS_TTY, conn_attempt);
+      break;
+    }
+    conn_attempt++;
+    sleep(2);
+  }
 
   EZBus_Add(&bus, STAGEX_ID, STAGEX_NAME);
   EZBus_Add(&bus, STAGEY_ID, STAGEY_NAME);

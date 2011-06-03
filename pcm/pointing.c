@@ -58,15 +58,22 @@
 
 #define FIR_LENGTH (60*30 * SR)
 
-/* Calibrations of the az of each sensor, relative to dGPS */
+/* Calibrations of the az of each sensor  */
 /*#define MAG_ALIGNMENT	  183.   //(4.2681)
 #define PSS1_ALIGNMENT	   43. // 343 + 60
 #define PSS2_ALIGNMENT	  120. // 135 -15
 #define SSS_ALIGNMENT	  -15.*/
-#define MAG_ALIGNMENT	   -258.   //(4.2681)
-#define PSS1_ALIGNMENT	  -153.8 // 343 + 60
-#define PSS2_ALIGNMENT	  -226.3 // 135 -15
-#define SSS_ALIGNMENT	  -90.
+//#define MAG_ALIGNMENT	   -258.   //(4.2681)
+//#define PSS1_ALIGNMENT	  -153.8 // 343 + 60
+//#define PSS2_ALIGNMENT	  -226.3 // 135 -15
+//#define SSS_ALIGNMENT	  -90.
+//#define DGPS_ALIGNMENT    3.65
+
+#define MAG_ALIGNMENT      -164.6968
+#define PSS1_ALIGNMENT    -60.0
+#define PSS2_ALIGNMENT    -150.0
+#define SSS_ALIGNMENT     1.5532
+#define DGPS_ALIGNMENT    2.0232
 
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
     double *el);
@@ -266,7 +273,7 @@ static int MagConvert(double *mag_az)
 
   mvz = MAGZ_M*ACSData.mag_z + MAGZ_B;
 
-  raw_mag_az = (180.0 / M_PI) * atan2(mvy, mvx);
+  raw_mag_az = (-1.0)*(180.0 / M_PI) * atan2(mvy, mvx);
   raw_mag_pitch = (180.0/M_PI) * atan(mvz/sqrt(mvx*mvx + mvy*mvy));
   *mag_az = raw_mag_az;
   ACSData.mag_pitch = raw_mag_pitch+(double)dip;
@@ -298,7 +305,7 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
   int i_dgpsatt;
 
   i_dgpsatt = GETREADINDEX(dgpsatt_index);
-  *dgps_az = DGPSAtt[i_dgpsatt].az;
+  *dgps_az = DGPSAtt[i_dgpsatt].az + DGPS_ALIGNMENT;
   NormalizeAngle(dgps_az);
 
   *dgps_pitch = DGPSAtt[i_dgpsatt].pitch;
@@ -1382,8 +1389,10 @@ void Pointing(void)
   static unsigned pss2_since_ok = 500;
   double ss_az = 0;
   double mag_az;
-  double pss1_az, pss1_el;
-  double pss2_az, pss2_el;
+  double pss1_az = 0;
+  double pss1_el = 0;
+  double pss2_az = 0;
+  double pss2_el = 0;
   double dgps_az, dgps_pitch, dgps_roll;
   double clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0, using_sip_gps = -1;
@@ -1552,7 +1561,8 @@ void Pointing(void)
     MagAz.trim = CommandData.mag_az_trim;
     DGPSAz.trim = CommandData.dgps_az_trim;
     SSAz.trim = CommandData.ss_az_trim;
-    //FIXME: add pss1 and pss2 trim
+    PSS1Az.trim = CommandData.pss1_az_trim;
+    PSS2Az.trim = CommandData.pss2_az_trim;
     
     ClinEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(ClinEl.fs, FIR_LENGTH);
@@ -1907,6 +1917,8 @@ void Pointing(void)
     MagAz.trim = 0.0;
     DGPSAz.trim = 0.0;
     SSAz.trim = 0.0;
+    PSS1Az.trim = 0.0;
+    PSS2Az.trim = 0.0;
     NewAzEl.fresh = 0;
   }
 
@@ -1915,11 +1927,18 @@ void Pointing(void)
     EncEl.trim = NewAzEl.el - EncEl.angle;	
     NullAz.trim = NewAzEl.az - NullAz.angle;
     MagAz.trim = NewAzEl.az - MagAz.angle;
+
     if (dgps_since_ok<500) {
       DGPSAz.trim = NewAzEl.az - DGPSAz.angle;
     }
     if (ss_since_ok<500) {
       SSAz.trim = NewAzEl.az - SSAz.angle;
+    }
+    if (pss1_since_ok<500) {
+      PSS1Az.trim = NewAzEl.az - PSS1Az.angle;
+    }
+    if (pss2_since_ok<500) {
+      PSS2Az.trim = NewAzEl.az - PSS2Az.angle;
     }
     NewAzEl.fresh = 0;
   }
@@ -1932,6 +1951,8 @@ void Pointing(void)
   CommandData.mag_az_trim = MagAz.trim;
   CommandData.dgps_az_trim = DGPSAz.trim;
   CommandData.ss_az_trim = SSAz.trim;
+  CommandData.pss1_az_trim = PSS1Az.trim;
+  CommandData.pss2_az_trim = PSS2Az.trim;
   j++;
  
   /* If we are in a slew veto decrement the veto count*/ 

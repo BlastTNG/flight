@@ -1,6 +1,8 @@
 /* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2002-2006 University of Toronto
+ * commands.c: functions for listening to and processing commands
+ *
+ * This software is copyright (C) 2002-2010 University of Toronto
  *
  * This file is part of mcp.
  *
@@ -51,7 +53,7 @@
  * 90 degrees.  This is the offset to the true lock positions.
  * This number is relative to the elevation encoder reading, NOT
  * true elevation */
-#define LOCK_OFFSET (-1.7)
+#define LOCK_OFFSET (-1.4) /* Updated by LMF on December 9th, 2010 */
 
 /* Seconds since 0TMG jan 1 1970 */
 #define SUN_JAN_6_1980 315964800L
@@ -69,7 +71,19 @@
 #define ISC_TRIGGER_POS  2
 #define ISC_TRIGGER_NEG  3
 
+#define EXT_SLOT   0
+#define EXT_ICHUNK 1
+#define EXT_NCHUNK 2
+#define EXT_NSCHED 3
+#define EXT_ROUTE  4
+  
+#define MAXLIB 1024
+
+#define MAX_RTIME 65536.0
+#define MAX_DAYS 21.0
+
 void RecalcOffset(double, double);  /* actuators.c */
+void actEncTrim(int, int, int);
 
 void SetRaDec(double, double); /* defined in pointing.c */
 void SetTrimToSC(int);
@@ -78,6 +92,8 @@ void AzElTrim(double, double);
 void NormalizeAngle(double*);
 
 void nameThread(const char*);  /* mcp.c */
+
+int LoadUplinkFile(int slot); /*sched.c */
 
 static const char *UnknownCommand = "Unknown Command";
 
@@ -89,6 +105,8 @@ extern int doing_schedule; /* sched.c */
 extern pthread_t watchdog_id;  /* mcp.c */
 extern short int SouthIAm;
 pthread_mutex_t mutex;
+
+extern char lst0str[82];
 
 struct SIPDataStruct SIPData;
 struct CommandDataStruct CommandData;
@@ -276,7 +294,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.pointing_mode.h = 0;
       break;
     case antisun: /* turn antisolar (az-only) */
-      sun_az = PointingData[i_point].sun_az + 180;
+      sun_az = PointingData[i_point].sun_az + 250; /* point solar panels to sun */
       NormalizeAngle(&sun_az);
 
       CommandData.pointing_mode.nw = CommandData.slew_veto;
@@ -668,8 +686,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.hwpr.force_repoll = 1;
       break;
     case actbus_cycle:
-      CommandData.actbus.off = PCYCLE_HOLD_LEN * FAST_PER_SLOW;
-      //TODO check that repoll occurs after restart (not during)
+      CommandData.actbus.off = PCYCLE_HOLD_LEN;
       CommandData.actbus.force_repoll = 1;
       CommandData.hwpr.force_repoll = 1;
       break;
@@ -981,9 +998,11 @@ static void SingleCommand (enum singleCommand command, int scheduled)
 
     case blast_rocks:
       CommandData.sucks = 0;
+      CommandData.uplink_sched = 0;
       break;
     case blast_sucks:
       CommandData.sucks = 1;
+      CommandData.uplink_sched = 0;
       break;
 
     case at_float:
@@ -1181,6 +1200,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 {
   int i;
   char buf[256]; //for SBSC Commands
+  int is_new;
 
   /* Update CommandData struct with new info
    * If the parameter is type 'i'/'l' set CommandData using ivalues[i]
@@ -1191,7 +1211,17 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
   switch(command) {
 #ifndef BOLOTEST
     case az_el_goto:
-      CommandData.pointing_mode.nw = CommandData.slew_veto;
+      if ((CommandData.pointing_mode.mode != P_AZEL_GOTO) || 
+          (CommandData.pointing_mode.X != rvalues[0]) ||
+          (CommandData.pointing_mode.Y != rvalues[1])) {
+        CommandData.pointing_mode.nw = CommandData.slew_veto;
+      }
+      // zero unused parameters
+      for (i = 0; i < 4; i++) {
+        CommandData.pointing_mode.ra[i] = 0;
+        CommandData.pointing_mode.dec[i] = 0;
+      }
+
       CommandData.pointing_mode.mode = P_AZEL_GOTO;
       CommandData.pointing_mode.X = rvalues[0];  /* az */
       CommandData.pointing_mode.Y = rvalues[1];  /* el */
@@ -1241,7 +1271,24 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = 0;
       break;
     case cap:
-      CommandData.pointing_mode.nw = CommandData.slew_veto;
+      
+      if ((CommandData.pointing_mode.mode != P_CAP) ||
+          (CommandData.pointing_mode.X != rvalues[0]) ||  /* ra */
+          (CommandData.pointing_mode.Y != rvalues[1]) ||  /* dec */
+          (CommandData.pointing_mode.w != rvalues[2]) ||  /* radius */
+          (CommandData.pointing_mode.vaz != rvalues[3]) ||  /* az scan speed */
+          (CommandData.pointing_mode.del != rvalues[4]) ||  /* el step size */
+          (CommandData.pointing_mode.h != 0) || 
+          (CommandData.pointing_mode.dith != rvalues[5])) { /* el step size */
+        CommandData.pointing_mode.nw = CommandData.slew_veto;
+      }
+      // zero unused parameters
+      for (i = 0; i < 4; i++) {
+        CommandData.pointing_mode.ra[i] = 0;
+        CommandData.pointing_mode.dec[i] = 0;
+      }
+
+
       CommandData.pointing_mode.mode = P_CAP;
       CommandData.pointing_mode.X = rvalues[0]; /* ra */
       CommandData.pointing_mode.Y = rvalues[1]; /* dec */
@@ -1252,7 +1299,24 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.dith = rvalues[5]; /* el step size */
       break;
     case box:
-      CommandData.pointing_mode.nw = CommandData.slew_veto;
+
+      if ((CommandData.pointing_mode.mode != P_BOX) ||
+          (CommandData.pointing_mode.X != rvalues[0]) || /* ra */
+          (CommandData.pointing_mode.Y != rvalues[1]) || /* dec */
+          (CommandData.pointing_mode.w != rvalues[2]) || /* width */
+          (CommandData.pointing_mode.h != rvalues[3]) || /* height */
+          (CommandData.pointing_mode.vaz != rvalues[4]) || /* az scan speed */
+          (CommandData.pointing_mode.del != rvalues[5]) || /* el step size */
+          (CommandData.pointing_mode.dith != rvalues[6])) { /* el step size */
+        CommandData.pointing_mode.nw = CommandData.slew_veto;
+      }
+     
+      // zero unused parameters
+      for (i = 0; i < 4; i++) {
+        CommandData.pointing_mode.ra[i] = 0;
+        CommandData.pointing_mode.dec[i] = 0;
+      }
+      
       CommandData.pointing_mode.mode = P_BOX;
       CommandData.pointing_mode.X = rvalues[0]; /* ra */
       CommandData.pointing_mode.Y = rvalues[1]; /* dec */
@@ -1273,9 +1337,29 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.del = rvalues[5]; /* el drift speed */
       break;
     case quad:
-      CommandData.pointing_mode.nw = CommandData.slew_veto;
+      is_new = 0;
+      if ((CommandData.pointing_mode.mode != P_QUAD) ||
+          (CommandData.pointing_mode.vaz != rvalues[8]) || /* az scan speed */
+          (CommandData.pointing_mode.del != rvalues[9]) || /* el step size */
+          (CommandData.pointing_mode.dith != rvalues[10])) { /* el dith size */
+        is_new=1;
+      }
+      for (i = 0; i < 4; i++) {
+        if ((CommandData.pointing_mode.ra[i] != rvalues[i * 2]) ||
+            (CommandData.pointing_mode.dec[i] != rvalues[i * 2 + 1])) {
+          is_new = 1;
+        }
+      }
+      
+      if (is_new) {
+        CommandData.pointing_mode.nw = CommandData.slew_veto;
+      }
+      CommandData.pointing_mode.X = 0; /* ra */
+      CommandData.pointing_mode.Y = 0; /* dec */
+      CommandData.pointing_mode.w = 0; /* width */
+      CommandData.pointing_mode.h = 0; /* height */
+      
       CommandData.pointing_mode.mode = P_QUAD;
-      CommandData.pointing_mode.ra[0] = rvalues[0];
       for (i = 0; i < 4; i++) {
         CommandData.pointing_mode.ra[i] = rvalues[i * 2];
         CommandData.pointing_mode.dec[i] = rvalues[i * 2 + 1];
@@ -1341,28 +1425,11 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       /*************************************/
 
       /***************************************/
-      /***** Temporary test of motor DACs ****/
-      /** TODO erase when done with them *****/
-      /*    case dac1_level:
-      CommandData.Temporary.dac_out[0] = ivalues[0] << 1;
-      CommandData.Temporary.setLevel[0] = 1;
-      break; */
+      /*****           test of motor DACs ****/
     case dac2_level:
       CommandData.Temporary.dac_out[1] = ivalues[0] << 1;
       CommandData.Temporary.setLevel[1] = 1;
       break;
-      /*    case dac3_level:
-      CommandData.Temporary.dac_out[2] = ivalues[0] << 1;
-      CommandData.Temporary.setLevel[2] = 1;
-      break;
-    case dac4_level:
-      CommandData.Temporary.dac_out[3] = ivalues[0] << 1;
-      CommandData.Temporary.setLevel[3] = 1;
-      break;
-    case dac5_level:
-      CommandData.Temporary.dac_out[4] = ivalues[0] << 1;
-      CommandData.Temporary.setLevel[4] = 1;
-      break; */
     case motors_verbose:
       CommandData.verbose_rw = ivalues[0];
       CommandData.verbose_el = ivalues[1];
@@ -1405,7 +1472,8 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.focus_mode = ACTBUS_FM_DELFOC;
       break;
     case set_secondary:
-      CommandData.actbus.focus = ivalues[0];
+      CommandData.actbus.focus = ivalues[0] + POSITION_FOCUS 
+	+ CommandData.actbus.sf_offset;
       CommandData.actbus.focus_mode = ACTBUS_FM_FOCUS;
       break;
     case thermo_gain:
@@ -1440,11 +1508,19 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.actbus.act_move_i = ivalues[0];
       CommandData.actbus.act_hold_i = ivalues[1];
       break;
+    case actuator_tol:
+      CommandData.actbus.act_tol = ivalues[0];
+      break;
     case act_offset:
-      CommandData.actbus.offset[0] = (int)rvalues[0];
-      CommandData.actbus.offset[1] = (int)rvalues[1];
-      CommandData.actbus.offset[2] = (int)rvalues[2];
-      CommandData.actbus.focus_mode = ACTBUS_FM_OFFSET;
+      CommandData.actbus.offset[0] = (int)(rvalues[0]+0.5);
+      CommandData.actbus.offset[1] = (int)(rvalues[1]+0.5);
+      CommandData.actbus.offset[2] = (int)(rvalues[2]+0.5);
+      break;
+    case act_enc_trim:
+      CommandData.actbus.trim[0] = rvalues[0];
+      CommandData.actbus.trim[1] = rvalues[1];
+      CommandData.actbus.trim[2] = rvalues[2];
+      CommandData.actbus.focus_mode = ACTBUS_FM_TRIM;
       break;
     case lvdt_limit:
       CommandData.actbus.lvdt_delta = rvalues[0];
@@ -1470,7 +1546,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.move_i = ivalues[0];
       CommandData.hwpr.hold_i = ivalues[1];
       break;
-    //TODO probably want hwpr moves calibrated into degrees
     case hwpr_goto:
       CommandData.hwpr.target = ivalues[0];
       CommandData.hwpr.mode = HWPR_GOTO;
@@ -1543,10 +1618,12 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case xy_raster:
       CommandData.xystage.x1 = ivalues[0];
-      CommandData.xystage.y1 = ivalues[1];
-      CommandData.xystage.x2 = ivalues[2];
+      CommandData.xystage.x2 = ivalues[1];
+      CommandData.xystage.y1 = ivalues[2];
       CommandData.xystage.y2 = ivalues[3];
       CommandData.xystage.xvel = ivalues[4];
+      CommandData.xystage.yvel = ivalues[5];
+      CommandData.xystage.step = ivalues[6];
       CommandData.xystage.mode = XYSTAGE_RASTER;
       CommandData.xystage.is_new = 1;
       break;
@@ -1604,8 +1681,11 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case iridium_bw:
       CommandData.iridium_bw = rvalues[0];
       break;
-    case alice_file: /* change downlink XML file */
-      CommandData.alice_file = ivalues[0];
+    case slot_sched: /* change uplinked schedule file */
+      if (LoadUplinkFile(ivalues[0])) {
+        CommandData.uplink_sched = 1;
+        CommandData.slot_sched = ivalues[0];
+      }
       break;
     case plugh:/* A hollow voice says "Plugh". */
       CommandData.plover = ivalues[0];
@@ -1898,16 +1978,22 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 #ifndef USE_FIFO_CMD
 static void GPSPosition (unsigned char *indata)
 {
-  /* Send new information to CommandData */
-  SIPData.GPSpos.lon = -ParseGPS(indata); /* sip sends east lon */
-  SIPData.GPSpos.lat = ParseGPS(indata + 4);
-  /* end of hack */
-
-  SIPData.GPSpos.alt = ParseGPS(indata + 8);
+  double lat;
+ 
   SIPData.GPSstatus1 = *(indata + 12);
   SIPData.GPSstatus2 = *(indata + 13);
 
-  WritePrevStatus();
+  lat = ParseGPS(indata + 4);
+  if (fabs(lat)>20) {
+
+    SIPData.GPSpos.lat = lat;
+    SIPData.GPSpos.lon = -ParseGPS(indata); /* sip sends east lon */
+    /* end of hack */
+    
+    SIPData.GPSpos.alt = ParseGPS(indata + 8);
+    
+    WritePrevStatus();
+  }
 }
 #endif
 
@@ -1918,7 +2004,6 @@ const char* CommandName(int is_multi, int command)
 
 void ScheduledCommand(struct ScheduleEvent *event)
 {
-  //TODO MDT: Set "Last Scheduled Command" indicator for palantir.
   if (event->is_multi) {
     int i;
     int index = MIndex(event->command);
@@ -1963,11 +2048,11 @@ static void GPSTime (unsigned char *indata)
   /* Send new information to CommandData */
 
   GPStime = ParseGPS(indata);
-  GPSweek = (unsigned short)(*(indata + 4));
+  GPSweek = *((unsigned short*)(indata + 4));
   offset = ParseGPS(indata + 6);
   CPUtime = ParseGPS(indata + 10);
 
-  SIPData.GPStime.UTC = (int)(SEC_IN_WEEK * (GPSweek+1024) + GPStime - offset) +
+  SIPData.GPStime.UTC = (int)(SEC_IN_WEEK * (GPSweek) + GPStime - offset) +
     SUN_JAN_6_1980;
   SIPData.GPStime.CPU = CPUtime;
 
@@ -2185,9 +2270,117 @@ void WatchFIFO ()
 }
 
 #else
+
+struct LibraryStruct  {
+  int n;
+  int entry[MAXLIB];
+  char cmd[MAXLIB][64];
+  char params[MAXLIB][256];
+};
+
+struct LibraryStruct library;
+
+void OpenLibrary() {
+  FILE *fp;
+  char instr[1024];
+  int nf;
+  int i;
+
+  fp = fopen("/data/etc/sched.library", "r");
+  if (fp == NULL) {
+    berror(fatal, "Could not open schedule file library.");
+    exit(0);
+  }
+  
+  i=0;
+  while (fgets(instr, 256, fp) != NULL) {
+    memset(library.params[i], 0, 256);
+    nf = sscanf(instr, "%d %s %254c", library.entry+i, library.cmd[i], library.params[i]);
+    if (nf==2) library.params[i][0] = '\n';
+    if (nf>=2) i++;
+  }
+  library.n = i;
+
+}
+
+
+void ProcessUplinkSched(unsigned char *extdat) {
+  static unsigned char slot = 0xff;
+  static unsigned short sched[32][64][2];
+  static unsigned long chunks_received = 0;
+  static unsigned char nchunk = 0;
+  static unsigned char nsched[32];
+  
+  unsigned char slot_in, i_chunk, nchunk_in;
+  unsigned short *extdat_ui;
+  unsigned short entry;
+  unsigned short itime;
+  double day, hour;
+  
+  int i, i_samp;
+  
+  slot_in = extdat[EXT_SLOT];
+  i_chunk = extdat[EXT_ICHUNK];
+  nchunk_in = extdat[EXT_NCHUNK];
+  nsched[i_chunk] = extdat[EXT_NSCHED];
+  
+  if ((slot != slot_in) || (nchunk_in != nchunk)) {
+    chunks_received = 0;
+    for (i=nchunk_in; i<32; i++) {
+      chunks_received |= (1 << i);
+    }
+    slot = slot_in;
+    nchunk = nchunk_in;
+  }
+  
+  extdat_ui = (unsigned short *)(&extdat[6]);
+
+  for (i=0; i<nsched[i_chunk]; i++) {
+    sched[i_chunk][i][0] = extdat_ui[i*2];
+    sched[i_chunk][i][1] = extdat_ui[i*2+1];
+  }
+
+  chunks_received |= (1<<i_chunk);
+
+  CommandData.parts_sched = chunks_received;
+  CommandData.upslot_sched = slot;
+  
+  if (chunks_received == 0xffffffff) {
+    FILE *fp;
+    char filename[18];
+   
+    OpenLibrary();
+    
+    sprintf(filename, "/data/etc/%d.sch", slot);
+    fp = fopen(filename, "w");
+    
+    fprintf(fp, "%s", lst0str);
+    
+    for (i_chunk=0; i_chunk < nchunk; i_chunk++) {
+      for (i_samp=0; i_samp<nsched[i_chunk]; i_samp++) {
+        entry = sched[i_chunk][i_samp][1];
+        itime = sched[i_chunk][i_samp][0];
+        day = (double)itime*MAX_DAYS/MAX_RTIME;
+        hour = (day - floor(day))*24.0;
+        if (entry<library.n) {
+          fprintf(fp, "%s %d %.6g %s", library.cmd[entry], (int)day , hour, library.params[entry]);
+        } else {
+          bprintf(warning, "entry %d not in library\n", entry);
+        }
+      }
+    }
+    fclose(fp);
+  }
+  
+  bprintf(warning, "finished extended command\n"
+                   "  slot %d chunk %d n chunk %d nsched %d route %x chunks_received: %lx\n", 
+                   extdat[EXT_SLOT], extdat[EXT_ICHUNK], extdat[EXT_NCHUNK], extdat[EXT_NSCHED], extdat[EXT_ROUTE], chunks_received);
+}
+
 void WatchPort (void* parameter)
 {
   const char *COMM[] = {"/dev/ttyS0", "/dev/ttyS1"};
+  const unsigned char route[2] = {0x09, 0x0c};
 
   unsigned char buf;
   unsigned short *indatadumper;
@@ -2209,6 +2402,9 @@ void WatchPort (void* parameter)
 
   int timer = 0;
   int bytecount = 0;
+  int extlen = 0;
+
+  unsigned char extdat[256];
 
   char tname[6];
   sprintf(tname, "COMM%1d", port+1);
@@ -2302,12 +2498,11 @@ void WatchPort (void* parameter)
         break;
       case 2: /* waiting for command packet datum */
         if (bytecount == 0) {  /* Look for 2nd byte of command packet = 0x02 */
-          if (buf == 0x02)
+          if (buf == 0x02) {
             bytecount = 1;
-          else {
-            readstage = 0;
-            bprintf(warning, "Bad command packet: Unsupported Length: %02X\n", 
-		buf);
+	  } else {
+            readstage = 7;
+	    extlen = buf;
           }
         } else if (bytecount >= 1 && bytecount <= 2) {
           /* Read the two data bytes of the command packet */
@@ -2423,6 +2618,24 @@ void WatchPort (void* parameter)
                 "Bad packet terminator: %02X\n", buf);
           }
         }
+        break;
+      case 7: // reading extended command
+        if (bytecount < extlen) {
+	  extdat[bytecount] = buf;
+	  bytecount++;
+	} else {
+	  if (buf == 0x03) {
+	    if (extdat[4] == route[port]) {
+	      ProcessUplinkSched(extdat);
+	    }
+	  } else {
+            bprintf(warning, "Bad encoding in extended command: "
+                "Bad packet terminator: %02X\n", buf);
+          }
+          bytecount = 0;
+          readstage = 0;
+	}
+        break;
     }
 
     /* Relinquish control of memory */
@@ -2552,16 +2765,18 @@ void InitCommandData()
   /* don't use the fast gy offset calculator */
   CommandData.fast_offset_gy = 0;
 
-
   CommandData.reset_rw = 0;
   CommandData.reset_piv = 0;
   CommandData.reset_elev = 0;
   CommandData.restore_piv = 0;
+  
+  CommandData.slot_sched = 0x100;
+  CommandData.parts_sched=0x0;
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
     bprintf(warning, "Commands: prev_status: Wanted %i bytes but got %i.\n",
-        sizeof(struct CommandDataStruct), n_read);
+        (int) sizeof(struct CommandDataStruct), n_read);
   else if (extra > 0)
     bputs(warning, "Commands: prev_status: Extra bytes found.\n");
   else
@@ -2571,14 +2786,14 @@ void InitCommandData()
 
   /** prev_status overrides this stuff **/
   CommandData.at_float = 0;
-  CommandData.timeout = 57600; /* TODO: Change this to something short for pre-flight!!!*/
-  CommandData.alice_file = 0;
+  CommandData.timeout = 3600;
+  CommandData.slot_sched = 0;
   CommandData.tdrss_bw = 6000;
   CommandData.iridium_bw = 2000;
   CommandData.vtx_sel[0] = vtx_isc;
   CommandData.vtx_sel[1] = vtx_osc;
 
-  CommandData.slew_veto = VETO_MAX; /* 10 minutes */
+  CommandData.slew_veto = VETO_MAX; /* 5 minutes */
 
   CommandData.pointing_mode.nw = 0;
   CommandData.pointing_mode.mode = P_DRIFT;
@@ -2591,7 +2806,7 @@ void InitCommandData()
   CommandData.pointing_mode.t = mcp_systime(NULL) + CommandData.timeout;
   CommandData.pointing_mode.dith = 0.0;
 
-  CommandData.az_accel = 0.3; 
+  CommandData.az_accel = 0.4; 
 
   CommandData.ele_gain.I = 5000; /* was 8000 */
   CommandData.ele_gain.P = 5000; /* was 1200 */
@@ -2607,7 +2822,7 @@ void InitCommandData()
   CommandData.pivot_gain.F = 0.3;
 
   CommandData.disable_az = 1; 
-  CommandData.disable_el = 1;
+  CommandData.disable_el = 0;
 
   CommandData.verbose_rw = 0;
   CommandData.verbose_el = 0;
@@ -2620,14 +2835,14 @@ void InitCommandData()
   CommandData.gyheat.gain.D = 3;
 
   CommandData.use_elenc = 1;
-  CommandData.use_elclin = 0;
-  CommandData.use_sun = 0;
-  CommandData.use_pss1 = 0;
-  CommandData.use_pss2 = 0;
+  CommandData.use_elclin = 1;
+  CommandData.use_sun = 1;
+  CommandData.use_pss1 = 1;
+  CommandData.use_pss2 = 1;
   CommandData.use_isc = 1;
   CommandData.use_osc = 1;
   CommandData.use_mag = 1;
-  CommandData.use_gps = 1;
+  CommandData.use_gps = 0;
   CommandData.lat_range = 1;
   CommandData.sucks = 1;
 
@@ -2637,6 +2852,8 @@ void InitCommandData()
   CommandData.mag_az_trim = 0;
   CommandData.dgps_az_trim = 0;
   CommandData.ss_az_trim = 0;
+  CommandData.pss1_az_trim = 0;
+  CommandData.pss2_az_trim = 0;
 
   CommandData.dgps_cov_limit = 0.3;
   CommandData.dgps_ants_limit = 0.5;
@@ -2659,7 +2876,7 @@ void InitCommandData()
   CommandData.pumps.level_off_bal = 0.5 * 1900.13;
   CommandData.pumps.level_target_bal = 0.0 * 1990.13;
   CommandData.pumps.gain_bal = 0.2;
-  CommandData.pumps.mode = bal_rest; // TODO: change for flight
+  CommandData.pumps.mode = bal_auto;
   CommandData.pumps.heat_on = 1;
   CommandData.pumps.heat_tset = 20;
 
@@ -2669,10 +2886,10 @@ void InitCommandData()
   CommandData.Temporary.dac_out[3] = 0x8000;
   CommandData.Temporary.dac_out[4] = 0x8000;
 
-  CommandData.Bias.bias[0] = 5000;   //500um
-  CommandData.Bias.bias[1] = 5000;   //350um
-  CommandData.Bias.bias[2] = 5000;   //250um
-  CommandData.Bias.bias[3] = 1045;   //ROX
+  CommandData.Bias.bias[0] = 10000;   //500um
+  CommandData.Bias.bias[1] = 10000;   //350um
+  CommandData.Bias.bias[2] = 10000;   //250um
+  CommandData.Bias.bias[3] = 1050;   //ROX
   CommandData.Bias.bias[4] = 16384;  //X
 
   CommandData.actbus.tc_mode = TC_MODE_VETOED;
@@ -2686,9 +2903,9 @@ void InitCommandData()
   CommandData.actbus.lvdt_low = 25000;
   CommandData.actbus.lvdt_high = 35000;
 
-  CommandData.actbus.offset[0] = 0;
-  CommandData.actbus.offset[1] = 0;
-  CommandData.actbus.offset[2] = 0;
+  CommandData.actbus.offset[0] = 33333;
+  CommandData.actbus.offset[1] = 33333;
+  CommandData.actbus.offset[2] = 33333;
 
   /* The first is due to change in radius of curvature, the second due to
    * displacement of the secondary due to the rigid struts */
@@ -2702,10 +2919,11 @@ void InitCommandData()
   CommandData.actbus.sf_time = 0;
   CommandData.actbus.sf_offset = 0;
 
-  CommandData.actbus.act_vel = 200;
+  CommandData.actbus.act_vel = 10;
   CommandData.actbus.act_acc = 1;
-  CommandData.actbus.act_move_i = 75;
-  CommandData.actbus.act_hold_i = 0;
+  CommandData.actbus.act_move_i = 85;
+  CommandData.actbus.act_hold_i = 40;
+  CommandData.actbus.act_tol = 2;
 
   CommandData.actbus.lock_vel = 110000;
   CommandData.actbus.lock_acc = 100;
@@ -2713,8 +2931,8 @@ void InitCommandData()
   CommandData.actbus.lock_hold_i = 0;
 
   CommandData.hwpr.vel = 1600;
-  CommandData.hwpr.acc = 16;
-  CommandData.hwpr.move_i = 10;
+  CommandData.hwpr.acc = 4;
+  CommandData.hwpr.move_i = 20;
   CommandData.hwpr.hold_i = 10;
 
   /* hwpr positions separated by 22.5 degs.
@@ -2724,7 +2942,7 @@ void InitCommandData()
   CommandData.hwpr.pos[1] = 0.38909;
   CommandData.hwpr.pos[0] = 0.450767;
 
-  CommandData.hwpr.overshoot = 1000;
+  CommandData.hwpr.overshoot = 300;
   CommandData.hwpr.i_pos = 0;
   CommandData.hwpr.no_step = 0;
   CommandData.hwpr.use_pot = 1;
@@ -2734,7 +2952,6 @@ void InitCommandData()
 
   CommandData.Cryo.charcoalHeater = 0;
   CommandData.Cryo.hsCharcoal = 1;
-  //TODO enable autocycycling when FridgeCycle is reimplemented
   CommandData.Cryo.fridgeCycle = 0;
   CommandData.Cryo.force_cycle = 0;
   CommandData.Cryo.hsPot = 0;
@@ -2747,7 +2964,7 @@ void InitCommandData()
   CommandData.Cryo.JFETSetOn = 120;
   CommandData.Cryo.JFETSetOff = 135;
   CommandData.Cryo.calibrator = repeat;
-  CommandData.Cryo.calib_pulse = 13; /* = 130 ms @ 100Hz */
+  CommandData.Cryo.calib_pulse = 30; /* = 300 ms @ 100Hz */
   CommandData.Cryo.calib_period = 3000; /* = 600 s @ 5Hz */
   CommandData.Cryo.calib_repeats = -1;  //indefinitely
 
@@ -2756,17 +2973,17 @@ void InitCommandData()
   CommandData.ISCState[0].pause = 0;
   CommandData.ISCState[0].save = 0;
   CommandData.ISCState[0].eyeOn = 1;
-  CommandData.ISCState[0].hold_current = 0;
+  CommandData.ISCState[0].hold_current = 50;
   CommandData.ISCState[0].autofocus = 0;
   CommandData.ISCState[0].focus_pos = 0;
   CommandData.ISCState[0].MCPFrameNum = 0;
   CommandData.ISCState[0].focusOffset = 0;
   CommandData.ISCState[0].ap_pos = 495;
   CommandData.ISCState[0].display_mode = full;
-  /* ISC-BDA offsets per Ed Chapin & Marie Rex 2006-12-09 */
-  CommandData.ISCState[0].azBDA = 0.047 * DEG2RAD;
-  CommandData.ISCState[0].elBDA = -0.169 * DEG2RAD;
-  CommandData.ISCControl[0].max_age = 200;
+  /* ISC-BDA offsets per Lorenzo Moncelsi on 2010-12-16 */
+  CommandData.ISCState[0].azBDA = 0.16527 * DEG2RAD;
+  CommandData.ISCState[0].elBDA = 0.81238 * DEG2RAD;
+  CommandData.ISCControl[0].max_age = 200; /* 2000 ms*/
 
   CommandData.ISCState[0].brightStarMode = 0;
   CommandData.ISCState[0].grid = 38;
@@ -2786,7 +3003,7 @@ void InitCommandData()
   CommandData.ISCState[0].offset = 0;
   CommandData.ISCControl[0].autofocus = 0;
   CommandData.ISCControl[0].save_period = 12000; /* 120 sec */
-  CommandData.ISCControl[0].pulse_width = 50; /* 500.00 msec */
+  CommandData.ISCControl[0].pulse_width = 18; /* 180.00 msec */
   CommandData.ISCControl[0].fast_pulse_width = 8; /* 80.00 msec */
 
   CommandData.ISCState[1].useLost = 1;
@@ -2794,17 +3011,17 @@ void InitCommandData()
   CommandData.ISCState[1].pause = 0;
   CommandData.ISCState[1].save = 0;
   CommandData.ISCState[1].eyeOn = 1;
-  CommandData.ISCState[1].hold_current = 0;
+  CommandData.ISCState[1].hold_current = 50;
   CommandData.ISCState[1].autofocus = 0;
   CommandData.ISCState[1].focus_pos = 0;
   CommandData.ISCState[1].MCPFrameNum = 0;
   CommandData.ISCState[1].focusOffset = 450;
   CommandData.ISCState[1].ap_pos = 495;
   CommandData.ISCState[1].display_mode = full;
-  /* OSC-BDA offsets per Ed Chapin & Marie Rex 2006-12-09 */
-  CommandData.ISCState[1].azBDA = 0.525 * DEG2RAD;
-  CommandData.ISCState[1].elBDA = 0.051 * DEG2RAD;
-  CommandData.ISCControl[1].max_age = 200;
+  /* ISC-BDA offsets per Lorenzo Moncelsi on 2010-12-16 */
+  CommandData.ISCState[1].azBDA = -0.2862 * DEG2RAD;
+  CommandData.ISCState[1].elBDA = -0.5918 * DEG2RAD;
+  CommandData.ISCControl[1].max_age = 200;  /* 2000 ms*/
 
   CommandData.ISCState[1].brightStarMode = 0;
   CommandData.ISCState[1].grid = 38;
@@ -2824,31 +3041,29 @@ void InitCommandData()
   CommandData.ISCState[1].offset = 0;
   CommandData.ISCControl[1].autofocus = 0;
   CommandData.ISCControl[1].save_period = 12000; /* 120 sec */
-  CommandData.ISCControl[1].pulse_width = 30; /* 300.00 msec */
-  CommandData.ISCControl[1].fast_pulse_width = 6; /* 60.00 msec */
+  CommandData.ISCControl[1].pulse_width = 18; /* 180.00 msec */
+  CommandData.ISCControl[1].fast_pulse_width = 8; /* 80.00 msec */
 
   CommandData.temp1 = 0;
   CommandData.temp2 = 0;
   CommandData.temp3 = 0;
   CommandData.df = 0;
 
-  // Coordinates for Toronto AKA the centre of the universe
-  // used for motor tests. 
-  CommandData.lat = 43.39;
-  CommandData.lon = 79.23;
+  CommandData.lat = -77.86;  //McMurdo Building 096
+  CommandData.lon = -167.04; //Willy Field Dec 2010
 
-  CommandData.Phase[0] = 28178;
-  CommandData.Phase[1] = 28178;
-  CommandData.Phase[2] = 28178;
-  CommandData.Phase[3] = 28178;
-  CommandData.Phase[4] = 28178;
-  CommandData.Phase[5] = 28178;
-  CommandData.Phase[6] = 28178;
-  CommandData.Phase[7] = 28178;
-  CommandData.Phase[8] = 28178;
-  CommandData.Phase[9] = 28178;
-  CommandData.Phase[10] = 28178;
-  CommandData.Phase[11] = 28178;
+  CommandData.Phase[0] = 27468;
+  CommandData.Phase[1] = 27468;
+  CommandData.Phase[2] = 27468;
+  CommandData.Phase[3] = 27468;
+  CommandData.Phase[4] = 27468;
+  CommandData.Phase[5] = 27468;
+  CommandData.Phase[6] = 10791;
+  CommandData.Phase[7] = 10791;
+  CommandData.Phase[8] = 10791;
+  CommandData.Phase[9] = 10791;
+  CommandData.Phase[10] = 11118;
+  CommandData.Phase[11] = 11118;
   CommandData.Phase[12] = 11600;    //ROX
 
   WritePrevStatus();

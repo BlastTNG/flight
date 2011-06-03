@@ -1,6 +1,6 @@
 /* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2002-2004 University of Toronto
+ * This software is copyright (C) 2002-2010 University of Toronto
  *
  * This file is part of mcp.
  *
@@ -19,6 +19,9 @@
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+
+#ifndef COMMAND_STRUCT_H
+#define COMMAND_STRUCT_H
 
 #include "isc_protocol.h"
 #include "command_list.h"
@@ -88,6 +91,7 @@ struct PivGainStruct {
 #define ACTBUS_FM_DELTA  6
 #define ACTBUS_FM_PANIC  7
 #define ACTBUS_FM_DELFOC 8
+#define ACTBUS_FM_TRIM   9
 
 #define TC_MODE_ENABLED  0
 #define TC_MODE_AUTOVETO 1
@@ -173,7 +177,10 @@ struct CommandDataStruct {
   } Temporary;
 
   unsigned short int timeout;
-  unsigned short int alice_file;
+  unsigned short int slot_sched; // what slot to use
+  unsigned short int upslot_sched; // slot being uplinked
+  unsigned int parts_sched; // bitfield up pulinked parts
+  unsigned short int uplink_sched; // use uplink sched
   unsigned short int sucks;
   unsigned short int lat_range;
   unsigned short int at_float;
@@ -271,6 +278,8 @@ struct CommandDataStruct {
   double mag_az_trim;
   double dgps_az_trim;
   double ss_az_trim;
+  double pss1_az_trim;
+  double pss2_az_trim;
 
   struct {
     int biasRamp;
@@ -349,12 +358,14 @@ struct CommandDataStruct {
     int act_acc;
     int act_hold_i;
     int act_move_i;
+    unsigned short act_tol;
 
     /* low-level actuator servo */
     int focus_mode;
     int goal[3];
     int delta[3];
     int offset[3];
+    int trim[3];
     int focus;
     int lvdt_delta;
     int lvdt_low;
@@ -382,7 +393,7 @@ struct CommandDataStruct {
   } hwpr;
 
   struct {
-    int x1, y1, x2, y2, xvel, yvel, is_new, mode;
+    int x1, y1, x2, y2, step, xvel, yvel, is_new, mode;
     int force_repoll;
   } xystage;
 
@@ -437,3 +448,6 @@ int SIndex(enum singleCommand);
 int MIndex(enum multiCommand);
 
 extern struct CommandDataStruct CommandData;
+
+#endif   //COMMAND_STRUCT_H
+
