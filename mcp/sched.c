@@ -45,13 +45,18 @@ void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
 
 char lst0str[82];
 
-#define NOMINAL_LATITUDE -78.0 /* degrees North */
-//#define CHECK_LON 20.0
-//#define NOMINAL_LATITUDE 31.76
-#define CHECK_LON -95.7168 
+//Toronto Highbay
+#define CHECK_LON -79.3994
+#define NOMINAL_LATITUDE 44.6601
+//McMurdo (LDB)
+//#define CHECK_LON 167.0592
+//#define NOMINAL_LATITUDE -77.8616
+//Palestine (CSBF)
+//#define CHECK_LON -95.7168 
+//#define NOMINAL_LATITUDE 31.7799
+
 #define LATITUDE_BAND     6.00 /* in degrees of latitude */
-#define LATITUDE_OVERLAP  1.00 /* hysteresis between the bands,
-                                  in degress of latitude */
+#define LATITUDE_OVERLAP  1.00 /* hysteresis between the bands, in deg lat */
 
 /* in commands.c */
 enum multiCommand MCommand(char*);
@@ -92,6 +97,8 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
   int el_range_warning;
   int discarded_lines;
 
+  bprintf(sched, "********************************************\n"
+          "*** Schedule: %s\n", file);
   /*******************************************/
   /*** Count number of schedule file lines ***/
   if ((fp = fopen(file, "r")) == NULL) {
@@ -105,14 +112,15 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
 
   S->n_sched--; /* don't count date line */
 
-  if (S->n_sched > MAX_NSCHED)
+  if (S->n_sched > MAX_NSCHED) {
+    berror(err, "Scheduler: schedule '%s' has too many commands", file);
     S->n_sched = MAX_NSCHED;
+  }
 
   S->event = (struct ScheduleEvent*)balloc(fatal, S->n_sched *
       sizeof(struct ScheduleEvent));
 
-  bprintf(info, "Scheduler: Found %i lines in schedule file %s\n", S->n_sched,
-      file);
+  bprintf(sched, "*** Lines: %i\n", S->n_sched);
 
   if (fclose(fp) == EOF)
     berror(err, "Scheduler: Error on close");
@@ -154,14 +162,10 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
   dt /= 3600.0;
 
   if (lband>-10) {
-    bprintf(sched,
-            "Scheduler: ***********************************************************\n"
-            "Scheduler: ***       Schedule File: %s\n"
-            "Scheduler: *** Current local sid. date (hours relative to epoch) %g\n"
-            "Scheduler: *** Assuming LAT = %g , LON = %g for checks\n", file, dt,
-            check_lat, CHECK_LON);
+    bprintf(sched, "*** Current LST (hours) %g\n"  //relative to schedule epoch
+          "*** For checks: LAT=%g, LON=%g\n", dt, check_lat, CHECK_LON);
   }
-  
+
   /***********************/
   /*** Read the events ***/
   discarded_lines = 0;
@@ -294,8 +298,7 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
           }
         }
     }
-    bputs(sched, "Scheduler: "
-              "***********************************************************\n");
+    bputs(sched, "********************************************\n");
   }
   
   if (discarded_lines)
