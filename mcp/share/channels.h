@@ -25,7 +25,7 @@ extern "C" {
 
 /* Gains and offsets for ideal analog cards: cal = (counts + B)*M */
 #define M_32PRE (10.24/2147483648.0)
-#define B_32PRE	(2147483648.0)
+#define B_32PRE	(-2147483648.0)
 #define M_16PRE (10.24/32768.0)
 #define B_16PRE (-32768.0)
 #define M_16T	(4.096E6/2.2E3/32768.0/8.0)  //factor of 8 from maximizing range
@@ -37,13 +37,13 @@ extern "C" {
 #define DISCARD_WORD    (FAST_PER_SLOW + 1)
 
 #define SR (100.16)
+
   /* Number of DAS bolometer cards to include in the frame.  The maximum number
-   * of cards is 12 */
+   * of cards is 12. Making 0 will disable bolometer channels */
 #define DAS_CARDS 12
 
 #define DAS_CHS 24
 #define DAS_START 16  //motherboard node of first DAS card
-
 #define N_FAST_BOLOS (DAS_CARDS * (DAS_CHS + DAS_CHS / 2))
 
   /* number of channels below the first slow channel */
@@ -92,16 +92,16 @@ extern "C" {
 #endif
 
   // Max Slew Veto
-#define VETO_MAX 30000
+#define VETO_MAX 60000
 
   struct ChannelStruct {
     char field[FIELD_LEN]; /* name of channel for FileFormats and CalSpecs */
     char rw;        /* 'r' = read, 'w' = write */
-    char node;       /* BlastBus node: 0 to 63 */
-    char bus;        /* Bus number: 0 to 1 */
-    char addr;       /* BlastBus address: 0 to 63 */
-    float m_c2e;    /* Conversion from counts to enginering units is */
-    float b_e2e;    /*   e = c * m_c2e + b_e2e */
+    char node;      /* BlastBus node: 0 to 63 */
+    char bus;       /* Bus number: 0 to 1 */
+    char addr;      /* BlastBus address: 0 to 63 */
+    double m_c2e;   /* Conversion from counts to enginering units is */
+    double b_e2e;   /*   e = c * m_c2e + b_e2e */
     char type;      /* 's' = short, signed o'u' = unsigned short 'i' = 'S'
                        = signed 32 bit int, 'U' = unsigned 32 bit int */
     char quantity[UNITS_LEN]; /* eg, "Temperature" or "Angular Velocity" */
@@ -115,14 +115,14 @@ extern "C" {
     unsigned char wide;
     unsigned char bus;
     const char* field;
-    /* for the slow dl */
-    float m;
-    float b;
+    double m;
+    double b;
   };
 
   struct BiPhaseStruct {
     unsigned int channel;
     unsigned int index;
+    struct NiosStruct* nios;  //access wide, fast, m, b for ReadData
   };
 
   extern struct NiosStruct* NiosLookup;

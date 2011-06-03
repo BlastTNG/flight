@@ -72,8 +72,6 @@
 # define VERBOSE
 #endif
 
-unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
-
 #ifndef INPUTTER
 extern struct ChannelStruct WideSlowChannels[];
 extern struct ChannelStruct SlowChannels[];
@@ -118,15 +116,16 @@ unsigned int BBCSpares[FAST_PER_SLOW * 2];
 struct NiosStruct* NiosLookup;
 struct BiPhaseStruct *BiPhaseLookup;
 #else
-unsigned short BoloBaseIndex;
 struct ChannelStruct **SlowChList;
 struct ChannelStruct *FastChList;
 #endif
 
-/* bus on which the bolometers live */
-#define BOLO_BUS  0
-
+#if DAS_CARDS > 0      //if there are bolometer cards
+#define BOLO_BUS  0    /* bus on which the bolometers live */
+unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
+unsigned short BoloBaseIndex;
 static struct ChannelStruct BoloChannels[N_FAST_BOLOS];
+#endif
 
 #define SPEC_VERSION "12"
 #ifndef INPUTTER
@@ -160,7 +159,6 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
       bprintf(fatal, "Unsupported Spec file version: %i.  "
 	  "To read this file you will need a newer version of defile.\n", version);
   }
-
 #endif
 
   FREADORWRITE(&ccWideSlow, sizeof(unsigned short), 1, fp);
@@ -232,6 +230,7 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
 #endif
 }
 
+#if DAS_CARDS > 0
 /************************************************************************/
 /*                                                                      */
 /*    MakeBoloTable: create the bolometer channel table                 */
@@ -271,6 +270,7 @@ static void MakeBoloTable(void) {
     }
   }
 }
+#endif   //DAS_CARDS > 0
 
 #ifndef INPUTTER
 static struct NiosStruct SetNiosData(const struct ChannelStruct *channel,
@@ -399,7 +399,7 @@ static void DumpNiosFrame(void)
                 BiPhaseLookup[BI0_MAGIC(BBCSpares[j])].channel,
                 BI0_MAGIC(BBCSpares[j]), j);
             ReverseMap[0][GET_NODE(BBCSpares[j])][GET_CH(BBCSpares[j])]
-              = (struct NiosStruct*)(-j - 100);
+              = (struct NiosStruct*)(-(long)j - 100);
           }
         }
         if (n == 0) {
@@ -453,9 +453,9 @@ static void DumpNiosFrame(void)
         }
         fprintf(map, "\n");
       } else if (ReverseMap[0][i][j] || ReverseMap[1][i][j]) {
-        if ((int)ReverseMap[0][i][j] <= -100) {
-          fprintf(map, "%02i %02i s Spare %02i%-24s", i, j,
-              -(int)ReverseMap[0][i][j] - 100, "");
+        if ((long)ReverseMap[0][i][j] <= -100) {
+          fprintf(map, "%02i %02i s Spare %02li%-24s", i, j,
+              -(long)ReverseMap[0][i][j] - 100, "");
         } else if (ReverseMap[0][i][j]) {
           if (ReverseMap[0][i][j]->wide) {
             fprintf(map, "%02i %02i %c (lsb) %-26s", i, j,
@@ -627,12 +627,14 @@ static void DoSanityChecks(void)
   }
   ccNarrowFast = i;
 
+#if DAS_CARDS > 0
   for (i = 0; i < N_FAST_BOLOS; ++i) {
     fastsPerBusFrame[BOLO_BUS]++;
     BBCAddressCheck(names, nn, fields[1], BoloChannels[i].field,
         BoloChannels[i].node, BoloChannels[i].addr);
     nn += 2;
   }
+#endif
   ccNoBolos = ccSlow + ccWideFast + ccNarrowFast;
 
 #ifdef __DECOMD__
@@ -698,6 +700,8 @@ static void DoSanityChecks(void)
       case 'p': /* phase   -- same checks as lincom */
       case 'c': /* lincom */
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom.source) == -1)
+#if DAS_CARDS > 0
+          //bolometer channel exception. FIXME bolo channels should be searched
           if ((DerivedChannels[i].lincom.source[0] != 'n' &&
               DerivedChannels[i].lincom.source[0] != 'N') ||
               (DerivedChannels[i].lincom.source[3] != 'c' &&
@@ -707,6 +711,7 @@ static void DoSanityChecks(void)
               !isdigit(DerivedChannels[i].lincom.source[4]) ||
               !isdigit(DerivedChannels[i].lincom.source[5]) ||
               DerivedChannels[i].lincom.source[6] != '\0')
+#endif
             bprintf(fatal, "Channels: Derived channel source %s not found.",
                 DerivedChannels[i].lincom.source);
 
@@ -786,7 +791,9 @@ void MakeAddressLookups(void)
   struct ChannelStruct EmptyChannel = {"", 'w', -1, -1, -1, 1, 1};
 #endif
 
+#if DAS_CARDS > 0
   MakeBoloTable();
+#endif
 
 #ifndef INPUTTER
   DoSanityChecks();
@@ -973,6 +980,7 @@ void MakeAddressLookups(void)
     addr[(int)WideFastChannels[i].bus] += 2;
   }
 
+#if DAS_CARDS > 0
 #ifdef INPUTTER
   /* save the location of the first bolometer in the frame so that defile
    * can calculate the offsets properly when it goes to reconstruct the
@@ -995,6 +1003,7 @@ void MakeAddressLookups(void)
 
     addr[(int)BoloChannels[i].bus]++;
   }
+#endif  //DAS_CARDS > 0
 
   for (i = 0; i < ccDecom; ++i) {
 #ifndef INPUTTER
@@ -1041,12 +1050,17 @@ void MakeAddressLookups(void)
 #ifndef INPUTTER
 inline struct BiPhaseStruct* ExtractBiPhaseAddr(struct NiosStruct* niosAddr)
 {
-  return &BiPhaseLookup[BI0_MAGIC(niosAddr->bbcAddr)];
+  struct BiPhaseStruct* bps = &BiPhaseLookup[BI0_MAGIC(niosAddr->bbcAddr)];
+  bps->nios = niosAddr;
+  return bps;
 }
 
 inline struct BiPhaseStruct* GetBiPhaseAddr(const char* field)
 {
-  return &BiPhaseLookup[BI0_MAGIC((GetNiosAddr(field))->bbcAddr)];
+  struct NiosStruct* niosAddr = GetNiosAddr(field);
+  struct BiPhaseStruct* bps = &BiPhaseLookup[BI0_MAGIC(niosAddr->bbcAddr)];
+  bps->nios = niosAddr;
+  return bps;
 }
 
 /************************************************************************/
@@ -1093,10 +1107,12 @@ char* FieldToUpper(char* s)
 
 void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
 {
+#if DAS_CARDS > 0
   char field[FIELD_LEN];
+  int bolo_node;
+#endif
   char line[1024];
   int i, j;
-  int bolo_node;
 
   if (offset) {
     snprintf(line, 1024, "FRAMEOFFSET      %li\n", offset);
@@ -1236,6 +1252,7 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
       berror(err, "Error writing to format file\n");
   }
 
+#if DAS_CARDS > 0
   /* bolo channels */
   strcpy(line, "\n## BOLOMETER:\n");
   if (write(fd, line, strlen(line)) < 0)
@@ -1255,6 +1272,7 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
 	berror(err, "Error writing to format file\n");
     }
   }
+#endif
 
   /* derived channels */
   strcpy(line, "\n## DERIVED CHANNELS:\n");
