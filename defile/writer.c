@@ -156,17 +156,20 @@ struct FieldType
 
 struct FieldType* normal_fast;
 struct FieldType* slow_fields[FAST_PER_SLOW];
-struct FieldType bolo_fields[DAS_CARDS][DAS_CHS];
 struct FieldType defile_field;
 
 unsigned short* fast_frame[FAST_PER_SLOW];
 unsigned short* slow_data[FAST_PER_SLOW];
 int buf_overflow;
-int n_fast, bolo_i0;
+int n_fast;
 
 int (*defileclose) ();
 
+#if DAS_CARDS > 0
+int bolo_i0;
+struct FieldType bolo_fields[DAS_CARDS][DAS_CHS];
 extern unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
+#endif
 
 int FieldSize (char type, const char* field)
 {
@@ -244,8 +247,11 @@ int CheckWriteAllow(int mkdir_err)
   char gpb[GPB_LEN];
   struct stat stat_buf;
   struct dirent* lamb;
-  unsigned int i, j, found, n_fast = 0, n_slow = 0, n_bolo = 0;
+  unsigned int i, found, n_fast = 0, n_slow = 0, n_bolo = 0;
+#if DAS_CARDS > 0
+  unsigned int j;
   int bolo_node = 0;
+#endif
   long int n, min_wrote = 0x7fffffff;
 
   /* if user hasn't told us to try, don't */
@@ -338,6 +344,7 @@ int CheckWriteAllow(int mkdir_err)
               found = 1;
               break;
             }
+#if DAS_CARDS > 0
         if (!found)
 	  bolo_node = DAS_START;
           for (i = 0; i < DAS_CARDS; ++i) {
@@ -354,6 +361,7 @@ int CheckWriteAllow(int mkdir_err)
               }
             }
 	  }
+#endif
         if (!found) {
           for (i = 0; i < ccNarrowSlow; ++i) {
             if (strcmp(lamb->d_name, SlowChannels[i].field) == 0) {
@@ -432,7 +440,7 @@ void PreInitialiseDirFile(void)
 
   int j;
 
-  normal_fast = balloc(fatal, ccFast * sizeof(struct FieldType));
+  normal_fast = balloc(fatal, (ccFast + 1) * sizeof(struct FieldType));
 
   for (j = 0; j < FAST_PER_SLOW; ++j) {
     slow_fields[j] = balloc(fatal, slowsPerBi0Frame * sizeof(struct FieldType));
@@ -583,11 +591,13 @@ void InitialiseDirFile(int reset, unsigned long offset)
   FILE* fp;
   int fd;
   int j, i, is_bolo = 0;
-  int bolo_node;
+#if DAS_CARDS > 0
   char field[FIELD_LEN];
+  int bolo_node;
+  char first_bolo_buf[16];
+#endif
   char gpb[GPB_LEN];
   char ext[4] = "";
-  char first_bolo_buf[16];
 
   fc = 0;
 
@@ -696,8 +706,11 @@ void InitialiseDirFile(int reset, unsigned long offset)
 
   /* normal fast chs */
 
+#if DAS_CARDS > 0
   sprintf(first_bolo_buf, "n%02dc00lo", DAS_START+1);
+#endif
   for (i = 0; i < ccFast + ccWideFast; i++) {
+#if DAS_CARDS > 0
     if (strcmp(FastChList[i].field, first_bolo_buf) == 0) {
       bolo_i0 = i + SLOW_OFFSET + slowsPerBi0Frame;
       is_bolo = 1;
@@ -705,6 +718,7 @@ void InitialiseDirFile(int reset, unsigned long offset)
           DecomChannels[0].field) == 0) {
       is_bolo = 0;
     }
+#endif
 
     if (!is_bolo && strlen(FastChList[i].field) > 0) {
       normal_fast[n_fast].size = FieldSize(FastChList[i].type,
@@ -728,6 +742,7 @@ void InitialiseDirFile(int reset, unsigned long offset)
     }
   }
 
+#if DAS_CARDS > 0
   /* special (bolo) fast chs */
   bolo_node = DAS_START;
   for (i = 0; i < DAS_CARDS; i++) {
@@ -753,6 +768,7 @@ void InitialiseDirFile(int reset, unsigned long offset)
       bolo_fields[i][j].i0 = bolo_i0 + i * (DAS_CARDS * 3 / 2) + j;
     }
   }
+#endif
 
   if (rc.write_curfile) {
     // create the link file
@@ -805,11 +821,13 @@ void CleanUp(void)
     }
 
   for(i = 0; i < ccFast; ++i) {
+#if DAS_CARDS > 0
     if (strcmp(FastChList[i].field, "n5c0lo") == 0)
       is_bolo = 1;
     else if (ccDecom > 0 && strcmp(FastChList[i].field,
           DecomChannels[0].field) == 0)
       is_bolo = 0;
+#endif
 
     if (!is_bolo) {
       if (normal_fast[i].fp != -1)
@@ -826,6 +844,7 @@ void CleanUp(void)
     bfree(fatal, defile_field.b);
   defile_field.b = NULL;
 
+#if DAS_CARDS > 0
   for (i = 0; i < DAS_CARDS; i++)
     for (j = 0; j < DAS_CHS; j++) {
       if (bolo_fields[i][j].fp != -1)
@@ -834,6 +853,7 @@ void CleanUp(void)
         bfree(fatal, bolo_fields[i][j].b);
       bolo_fields[i][j].b = NULL;
     }
+#endif
 }
 
 /* pushFrame: called from reader: puts rxframe into */
@@ -845,7 +865,9 @@ void PushFrame(unsigned short* in_frame)
   unsigned int i_in, i_out;
   int i, j, k, curr_index;
   int write_ok;
+#if DAS_CARDS > 0
   unsigned B0, B1;
+#endif
   int range, first, c;
   unsigned short *frame;
 
@@ -937,6 +959,7 @@ void PushFrame(unsigned short* in_frame)
             write_ok = 0;
         }
 
+#if DAS_CARDS > 0
       /*******************************************
        * Check buffer space in  fast bolo data   *
        *******************************************/
@@ -952,6 +975,7 @@ void PushFrame(unsigned short* in_frame)
             if(i_in + FAST_PER_SLOW >= i_out)
               write_ok = 0;
           }
+#endif
 
       if (!write_ok)
         usleep(10000);
@@ -1001,6 +1025,7 @@ void PushFrame(unsigned short* in_frame)
             normal_fast[j].i_in = (i_in + 1) % MAXBUF;
           }
 
+#if DAS_CARDS > 0
           /********************/
           /* fast bolo data   */
           /********************/
@@ -1021,6 +1046,7 @@ void PushFrame(unsigned short* in_frame)
                 (i_in + 1) % MAXBUF;
             }
           }
+#endif
         }
       }
     }
@@ -1075,7 +1101,6 @@ void DirFileWriter(void)
   int j, i;
   int i_in, i_out, i_buf;
   int i_in2, i_out2;
-  int k;
   int wrote_count = 0;
   int last_pass = 0;
 
@@ -1093,7 +1118,6 @@ void DirFileWriter(void)
             i_in2 = slow_fields[j][i + 1].i_in;
             i_out2 = slow_fields[j][i + 1].i_out;
             while (i_in != i_out && i_in2 != i_out2) {
-	      //printf("I_buf %i i %i j %i i_out %i i_out2 %i\n", i_buf,i,j,i_out,i_out2);
               ibuffer[i_buf] = (unsigned)
                 ((((unsigned short*)slow_fields[j][i + 1].b)[i_out2]) << 16)
                 | (unsigned)
@@ -1203,6 +1227,7 @@ void DirFileWriter(void)
 
     }
 
+#if DAS_CARDS > 0
     /** Bolometer data */
     for (i = 0; i < DAS_CARDS; i++) {
       for (j = 0; j < DAS_CHS; j++) {
@@ -1210,7 +1235,6 @@ void DirFileWriter(void)
         i_out = bolo_fields[i][j].i_out;
 
         i_buf = 0;
-        k = 0;
         while (i_in != i_out) {
           ibuffer[i_buf] =
             ((unsigned int*)bolo_fields[i][j].b)[i_out];
@@ -1227,6 +1251,7 @@ void DirFileWriter(void)
         bolo_fields[i][j].i_out = i_out;
       }
     }
+#endif
 
     /* Write FASTSAMP last */
     i_in = normal_fast[0].i_in;
