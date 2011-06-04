@@ -7,24 +7,26 @@ ifeq ($(DEBUG), 1)
 	LDFLAGS := $(LDFLAGS) -g -DDEBUG
 endif
 
-HEADERS = bbc_pci.h blast.h channels.h command_list.h command_struct.h hwpr.h \
-					crc.h derived.h ephem_read.h ephem_types.h fir.h \
-					isc_protocol.h lut.h mcp.h pointing_struct.h slow_dl.h \
-					sss_struct.h starpos.h tx.h copleycommand.h motordefs.h \
-                                        amccommand.h ezstep.h chrgctrl.h compressstruct.h \
-					sbsc_protocol.h sbsccommunicator.h
+HEADERS = amccommand.h bbc_pci.h blast.h channels.h calibrate.h chrgctrl.h \
+		command_list.h command_struct.h compressstruct.h \
+		copleycommand.h hwpr.h crc.h derived.h ephem_read.h \
+		ephem_types.h ezstep.h fir.h isc_protocol.h lut.h mcp.h \
+		motordefs.h pointing_struct.h sbsc_protocol.h \
+		sbsccommunicator.h slow_dl.h sss_struct.h starpos.h tx.h
+		
 
 # These are needed by both bolotest and flight versions
-OBJS = mcp.o actuators.o blast.o channels.o command_list.o commands.o das.o hwpr.o \
-			 derived.o framefile.o lut.o tx.o tx_struct.o xystage.o ezstep.o
+OBJS = actuators.o blast.o channels.o command_list.o commands.o das.o \
+		derived.o ezstep.o framefile.o hwpr.o lut.o mcp.o tx.o \
+		tx_struct.o xystage.o
 
 # These are only needed by the flight version
 ifndef BOLOTEST
-OBJS := $(OBJS) auxiliary.o crc.o dgps.o ephem_read.o \
-		    fftsg_h.o fir.o geomag.o isc.o motors.o pointing.o radbox.o sched.o \
-		    slow_dl.o starpos.o sunsensor.o  compressionwriter.o copleycommand.o \
-                    chrgctrl.o amccommand.o compressstruct.o sbsc.o sbsccommunicator.o
-
+OBJS := $(OBJS) amccommand.o auxiliary.o chrgctrl.o compressstruct.o \
+		compressionwriter.o copleycommand.o crc.o dgps.o ephem_read.o \
+		fftsg_h.o fir.o geomag.o isc.o motors.o pointing.o radbox.o \
+		sbsc.o sbsccommunicator.o sched.o slow_dl.o starpos.o \
+		sunsensor.o
 endif
 
 .PHONEY: fifo install all restart
