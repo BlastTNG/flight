@@ -46,7 +46,7 @@ double round(double x);
 #include "command_list.h"
 
 #ifndef DATA_ETC_DIR
-#  define DATA_ETC_DIR "/tmp"
+#  define DATA_ETC_DIR "/data/etc"
 #endif
 
 #define ACK_COUNT 17
