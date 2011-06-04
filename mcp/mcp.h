@@ -25,7 +25,9 @@
 
 #include <pthread.h>
 #include "channels.h"
+#include "calibrate.h"
 #include "blast.h"
+
 extern unsigned short* slow_data[FAST_PER_SLOW];
 extern unsigned int RxFrameFastSamp;
 
@@ -45,17 +47,14 @@ struct chat_buf {
   int writing; /* the buffer we're currently writing to */
 };
 
+// Max Slew Veto
+#define VETO_MAX 60000
+
 #define TEMPORAL_OFFSET 0
 
 #define MAX_LINE_LENGTH 1024
 
-#ifdef BOLOTEST
-#define USE_FIFO_CMD
-#endif
-
-#ifdef DEBUG
-#warning "Debugging set."
-#endif
+//#define USE_FIFO_CMD
 
 //#define USE_XY_THREAD
 

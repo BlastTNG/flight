@@ -25,6 +25,7 @@
 
 #include <pthread.h>
 #include "channels.h"
+#include "calibrate.h"
 #include "blast.h"
 
 //configuration for BLASTBus
@@ -53,18 +54,15 @@ struct chat_buf {
   int writing; /* the buffer we're currently writing to */
 };
 
+// Max Slew Veto
+#define VETO_MAX 60000
+
 #define TEMPORAL_OFFSET 0
 
 #define MAX_LINE_LENGTH 1024
 
-#ifdef BOLOTEST
-#define USE_FIFO_CMD
-#endif
+//#define USE_FIFO_CMD
 
-#ifdef DEBUG
-#warning "Debugging set."
-#endif
-
-#define USE_XY_THREAD
+//#define USE_XY_THREAD
 
 #endif

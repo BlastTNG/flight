@@ -2,7 +2,7 @@
  *
  * tx.c writes data from mcp to the nios (bbc) to include it in frames
  * 
- * This software is copyright (C) 2002-20010 University of Toronto
+ * This software is copyright (C) 2002-2011 University of Toronto
  *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

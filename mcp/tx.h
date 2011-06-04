@@ -1,6 +1,6 @@
 /* mcp: the master control program
  *
- * This software is copyright (C) 2003-2010 University of Toronto
+ * This software is copyright (C) 2003-2011 University of Toronto
  *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #define WHICH (0)
 
 #include "channels.h"
+#include "calibrate.h"
 
 extern int mcp_initial_controls;
 

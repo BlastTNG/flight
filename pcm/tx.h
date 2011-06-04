@@ -27,6 +27,7 @@
 #define WHICH (0)
 
 #include "channels.h"
+#include "calibrate.h"
 
 extern int mcp_initial_controls;
 
