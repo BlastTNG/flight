@@ -41,12 +41,13 @@ extern struct scom *client_scommands;
 extern struct mcom *client_mcommands;
 extern char client_command_list_serial[1024];
 
-const char* NetCmdBanner(void);
-int NetCmdConnect(const char*, int, int);
+int  NetCmdConnect(const char*, int, int);
 void NetCmdDrop(void);
-int  NetCmdReceive(int);
-int  NetCmdGetCmdList(void);
 void NetCmdSend(const char*);
-int  NetCmdRequestConn(void);
+int  NetCmdReceive(int);
+int  NetCmdSendAndReceive(const char*, int);
+int  NetCmdGetCmdList(void);
+int  NetCmdTakeConn(int);
+const char* NetCmdBanner(void);
 int  NetCmdPing(void);
 #endif

@@ -668,17 +668,24 @@ void MainForm::SendCommand() {
     }
 
     /* Take the conn */
+    /* note: loop takes place in TakeConn now. TODO implement limited attempts
     int times = 0;
-    if (!NetCmdRequestConn()) {
+    if (!NetCmdTakeConn()) {
       do {
         usleep(WAIT_TIME / 2 * 1000); //Half the normal wait time
         times++;
       } while (times < 25 && ReceivePackets(!verbose, CMD_CONN) != CMD_CONN);
-      if (!NetCmdRequestConn()) { //Never got the conn.
+      if (!NetCmdTakeConn()) { //Never got the conn.
         WriteCmd(NLog, request);
         WriteErr(NLog, 12);
         return;
       }
+    }
+    */
+    if (!NetCmdTakeConn(verbose)) { //Never got the conn.
+      WriteCmd(NLog, request);
+      WriteErr(NLog, 12);
+      return;
     }
 
     TurnOn();
