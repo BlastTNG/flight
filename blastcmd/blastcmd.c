@@ -599,6 +599,7 @@ int main(int argc, char *argv[]) {
   char* command[200];
   int nc = 0;
   int group = -1;
+  char request[1024];
 
   t_link = LINK_DEFAULT_CHAR;
   t_route = ROUTING_DEFAULT_CHAR;
@@ -674,19 +675,31 @@ int main(int argc, char *argv[]) {
     if (strcmp(command[0], "-lc") == 0)
       CommandGroupListCommands(group);
 
-    if (NetCmdTakeConn()) {
-      if (!silent)
-        printf("Took the conn.\n");
-      i = NetCmdSubmitCommand(t_link, t_route, nc, command, silent);
-      if (!silent)
-        printf("%s\n", ack[i]);
+    //normal command
+    //TODO check CONFIRM for commands
+    request[0] = t_link;
+    request[1] = t_route;
+    request[2] = ' ';
+    request[3] = '\0';
+    for (i = 0; i < nc; ++i) {
+      strcat(request, command[i]);
+      strcat(request, " ");
+    }
+
+    if (!silent) printf("Submitting %s\n\n", request);
+
+    strcat(request, "\r\n");
+
+    if (NetCmdTakeConn(silent)) {
+      if (!silent) printf("Took the conn.\n");
+      i = NetCmdSendAndReceive(request, silent);
+      if (!silent) printf("%s\n", ack[i]);
       return i;
     } else {
       fprintf(stderr, "Unable to take the conn.\n");
       return 14;
     }
-  } else
-    USAGE(0);
+  } else USAGE(0);
 
   fprintf(stderr, "Unexpected trap in main. Stop.\n");
   return -1;
