@@ -34,7 +34,6 @@
 #endif
 
 extern "C" {
-#include "command_list.h"
 #include "netcmd.h"
 }
 
@@ -105,7 +104,7 @@ class MainForm : public QMainWindow
     QLabel *NCurFileCaption;
     QLineEdit *NCurFile;
     QButtonGroup *NGroupsBox;
-    QRadioButton *NGroups[N_GROUPS];
+    QRadioButton **NGroups;
     QPushButton *NSendButton;
     QPushButton *NSettingsButton;
     QLabel *NSettingsLabel;

@@ -20,8 +20,46 @@
 
 #ifndef NETCMD_H
 #define NETCMD_H
-#include "command_list.h"
 
+/*
+ * Definition of command structures (formerly in command_list.h)
+ */
+#define MAX_N_PARAMS 12        /* narsil REALLY likes this to be even */
+#define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
+#define SIZE_NAME 80
+#define SIZE_ABOUT 80
+#define SIZE_PARNAME 80
+#define CONFIRM         0x80000000
+
+#pragma pack(4) //32-bit and 64-bit sytems disagree on packing
+struct scom {
+  int command;	    //really enum singleCommand where appropriate
+  char name[SIZE_NAME];
+  char about[SIZE_ABOUT];
+  unsigned int group;
+};
+struct par {
+  char name[SIZE_PARNAME];
+  double min;
+  double max;
+  char type;
+  char field[20];
+};
+struct mcom {
+  int command;	    //really enum multiCommand where appropriate
+  char name[SIZE_NAME];
+  char about[SIZE_ABOUT];
+  unsigned int group;
+  char numparams;
+  struct par params[MAX_N_PARAMS];
+};
+#pragma pack()   //return to default packing
+
+/*
+ * Client (blastcmd, narsil) interface to NetCmd protocol
+ * Server interface located in blastcmd's daemon.c
+ *
+ */
 #define SOCK_PORT 41414
 
 #define CMD_NONE 0
@@ -41,12 +79,16 @@ extern struct scom *client_scommands;
 extern struct mcom *client_mcommands;
 extern char client_command_list_serial[1024];
 
+extern int client_n_groups;
+extern char **client_group_names;
+
 int  NetCmdConnect(const char*, int, int);
 void NetCmdDrop(void);
 void NetCmdSend(const char*);
 int  NetCmdReceive(int);
 int  NetCmdSendAndReceive(const char*, int);
 int  NetCmdGetCmdList(void);
+int  NetCmdGetGroupNames(void);
 int  NetCmdTakeConn(int);
 const char* NetCmdBanner(void);
 int  NetCmdPing(void);

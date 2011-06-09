@@ -180,7 +180,7 @@ const char* Defaults::asString(int i, int j) { return sdefaults[j][i]; }
 int MainForm::GetGroup() {
   int i;
 
-  for (i = 0; i < N_GROUPS; i++)
+  for (i = 0; i < client_n_groups; i++)
     if (NGroups[i]->isChecked())
       return i;
 
@@ -802,7 +802,7 @@ void MainForm::WriteLog(const char *request) {
   QString LogEntry, Group;
   int i, j;
 
-  Group = GroupNames[GetGroup()];
+  Group = client_group_names[GetGroup()];
 
   qdt = QDateTime::currentDateTime();
 
@@ -1060,9 +1060,10 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
   NGroupsLayout->setSpacing(1);
   NGroupsLayout->setMargin(5);
 
-  for (i = 0; i < N_GROUPS; i++) {
+  NGroups = new QRadioButton*[client_n_groups];
+  for (i = 0; i < client_n_groups; i++) {
     NGroups[i] = new QRadioButton(NGroupsBox, "QGroup");
-    NGroups[i]->setText(tr(GroupNames[i]));
+    NGroups[i]->setText(tr(client_group_names[i]));
     tempsize = NGroups[i]->sizeHint();
     NGroupsLayout->addWidget(NGroups[i], int(i/3), (i%3));
   }
@@ -1383,6 +1384,7 @@ int main(int argc, char* argv[]) {
       exit(16);
   }
   NetCmdGetCmdList();
+  NetCmdGetGroupNames();
 
   defaults = new Defaults();
 

@@ -42,13 +42,15 @@
 #include <arpa/inet.h>
 
 #include "netcmd.h"
-#include "command_list.h"
 
 unsigned short client_n_scommands = 0;
 unsigned short client_n_mcommands = 0;
 struct scom *client_scommands;
 struct mcom *client_mcommands;
 char client_command_list_serial[1024];
+
+int client_n_groups = 0;
+char **client_group_names;
 
 char me[1024];
 char owner[1024];
@@ -270,6 +272,44 @@ int NetCmdGetCmdList(void)
       MSG_WAITALL);
   recv(sock, client_mcommands, client_n_mcommands * sizeof(struct mcom),
       MSG_WAITALL);
+
+  return 0;
+}
+
+//Blocks on reading until list comes through.
+int NetCmdGetGroupNames(void)
+{
+  int i, j, n, c = 0;
+  char buffer[128] = "::group::\r\n";
+
+  send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
+
+  if (read(sock, &client_n_groups, sizeof(client_n_groups)) < 0)
+    printf("Warning: NetCmdGetGroupNames failed to read n_groups\n");
+  if (client_n_groups > 31) {
+    fprintf(stderr, "Protocol error from daemon.\n");
+    exit(14);
+  }
+  client_group_names = (char**)malloc(client_n_groups * sizeof(char*));
+
+  for (j=0; j < client_n_groups; ++j) {
+    for (i=0; i<128; i++) {
+      if ((n = read(sock, &c, 1)) <= 0) {
+	perror("Unable to receive");
+	exit(14);
+      } else if (i == 127 && c != '\n') {
+	fprintf(stderr, "Protocol error from daemon.\n");
+	exit(14);
+      }
+
+      if (c == '\n') {
+	buffer[i] = '\0';
+	client_group_names[j] = (char*)malloc(strlen(buffer)+1);
+	strcpy(client_group_names[j], buffer);
+	break;
+      } else buffer[i] = c;
+    }
+  }
 
   return 0;
 }
