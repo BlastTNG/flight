@@ -14,18 +14,14 @@
 #ifndef COMMAND_LIST_H
 #define COMMAND_LIST_H
 
+#include "netcmd.h"	   /* common parts of command defintions moved here */
+
 #define N_SCOMMANDS 2          /* total number of single word cmds */
 #define N_MCOMMANDS 10          /* total number of multiword commands */
-#define MAX_N_PARAMS 10        /* narsil REALLY likes this to be even */
-#define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)
 #define MAX_30BIT (1073741823.)
-
-#define SIZE_NAME 80
-#define SIZE_ABOUT 80
-#define SIZE_PARNAME 80
 
 #define N_GROUPS 24
 
@@ -54,8 +50,7 @@
 #define GR_MISC         0x00200000
 #define GR_SC_PARAM     0x00400000  //not yet used
 #define GR_FREE3        0x00800000  //not yet used
-
-#define CONFIRM         0x80000000
+//reserved for CONFIRM  0x80000000
 
 extern const char *command_list_serial;
 extern const char *GroupNames[N_GROUPS];
@@ -73,35 +68,6 @@ enum multiCommand {
   lockin_phase4,     reset_adc,         az_el_goto,        az_el_raster,
   az_el_set,         plugh
 };
-
-//32-bit and 64-bit sytems disagree on packing
-#pragma pack(4)
-
-struct scom {
-  enum singleCommand command;
-  char name[SIZE_NAME];
-  char about[SIZE_ABOUT];
-  unsigned int group;
-};
-
-struct par {
-  char name[SIZE_PARNAME];
-  double min;
-  double max;
-  char type;
-  char field[20];
-};
-
-struct mcom {
-  enum multiCommand command;
-  char name[SIZE_NAME];
-  char about[SIZE_ABOUT];
-  unsigned int group;
-  char numparams;
-  struct par params[MAX_N_PARAMS];
-};
-
-#pragma pack()   //return to default packing
 
 extern struct scom scommands[N_SCOMMANDS];
 

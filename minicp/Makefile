@@ -8,7 +8,7 @@ ifeq ($(DEBUG), 1)
 endif
 
 HEADERS = bbc_pci.h blast.h channels.h derived.h mcp.h tx.h \
-	  command_list.h command_struct.h
+	  command_list.h command_struct.h netcmd.h
 
 OBJS = blast.o channels.o derived.o framefile.o mcp.o tx.o \
        commands.o command_list.o tx_struct.o az-el.o

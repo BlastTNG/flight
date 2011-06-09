@@ -21,7 +21,7 @@
 
 #include "command_list.h"
 
-const char *command_list_serial = "$Revision: 1.3 $";
+const char *command_list_serial = "$Revision: 1.4 $";
 
 //these must correspond to #defines in header
 const char *GroupNames[N_GROUPS] = {
@@ -36,7 +36,7 @@ const char *GroupNames[N_GROUPS] = {
 };
 
 //echoes as string; makes enum name the command name string
-#define COMMAND(x) x, #x
+#define COMMAND(x) (int)x, #x
 
 struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(az_el_disable), "Az-El mount emergency shutdown!", GR_POINT},
