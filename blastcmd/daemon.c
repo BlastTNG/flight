@@ -325,6 +325,23 @@ void SendCommandList(int sock)
   send(sock, &mcommands, sizeof(struct mcom) * N_MCOMMANDS, MSG_NOSIGNAL);
 }
 
+void SendGroupNames(int sock)
+{
+  unsigned short i;
+  char output[4096];
+
+  i = N_GROUPS;
+  if (send(sock, &i, sizeof(i), MSG_NOSIGNAL) < 1)
+    return;
+
+  output[0] = '\0';
+  for (i=0; i<N_GROUPS; ++i) {
+    strncat(output, GroupNames[i], 127);
+    strcat(output, "\n");
+  }
+  send(sock, output, strlen(output), MSG_NOSIGNAL);
+}
+
 int MakeSock(void)
 {
   int sock, n;
@@ -373,6 +390,7 @@ void Daemonise(int route, int no_fork)
    *  0 = client just connected
    *  1 = client user known
    *  2 = client has taken/given/knows conn
+   *  3 = client requested group names
    *  4 = client requested command list
    *  5 = client request denied
    *  8 = client unauthorized
@@ -568,6 +586,8 @@ void Daemonise(int route, int no_fork)
               conn[n].lurk = 2;
             } else if (strncmp(buffer, "::spy::", 7) == 0) {
               conn[n].spy = 2;
+            } else if (strncmp(buffer, "::group::", 9) == 0) {
+              conn[n].state = 3;
             } else if (strncmp(buffer, "::list::", 8) == 0) {
               conn[n].state = 4;
             } else if (owner != n) { /* no conn */
@@ -612,6 +632,9 @@ void Daemonise(int route, int no_fork)
               }
               conn[n].state = 2;
               conn[n].report = 0;
+            } else if (conn[n].state == 3) { /* list */
+              SendGroupNames(n);
+              conn[n].state = 2;
             } else if (conn[n].state == 4) { /* list */
               SendCommandList(n);
               conn[n].state = 2;
