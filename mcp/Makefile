@@ -11,7 +11,7 @@ HEADERS = amccommand.h bbc_pci.h blast.h channels.h calibrate.h chrgctrl.h \
 		command_list.h command_struct.h compressstruct.h \
 		copleycommand.h hwpr.h crc.h derived.h ephem_read.h \
 		ephem_types.h ezstep.h fir.h isc_protocol.h lut.h mcp.h \
-		motordefs.h pointing_struct.h sbsc_protocol.h \
+		motordefs.h netcmd.h pointing_struct.h sbsc_protocol.h \
 		sbsccommunicator.h slow_dl.h sss_struct.h starpos.h tx.h
 		
 
