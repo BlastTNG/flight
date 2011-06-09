@@ -24,12 +24,12 @@
 /*
  * Definition of command structures (formerly in command_list.h)
  */
-#define MAX_N_PARAMS 12        /* narsil REALLY likes this to be even */
-#define CMD_STRING_LEN 32      /* maximum allowable lenght of command string */
-#define SIZE_NAME 80
-#define SIZE_ABOUT 80
-#define SIZE_PARNAME 80
-#define CONFIRM         0x80000000
+#define MAX_N_PARAMS	12	    /* narsil REALLY likes this to be even */
+#define CMD_STRING_LEN	32	    /* max length of command string */
+#define SIZE_NAME	80	    /* max length for command name, */
+#define SIZE_ABOUT	80	    /*	... description, */
+#define SIZE_PARNAME	80	    /*	... and paramenter name */
+#define CONFIRM         0x80000000  /* group bit if command needs confirm */
 
 #pragma pack(4) //32-bit and 64-bit sytems disagree on packing
 struct scom {
