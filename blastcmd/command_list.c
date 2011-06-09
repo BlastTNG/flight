@@ -27,7 +27,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 5.1 $";
+const char *command_list_serial = "$Revision: 5.2 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -41,7 +41,7 @@ const char *GroupNames[N_GROUPS] = {
   };
 
 //echoes as string; makes enum name the command name string
-#define COMMAND(x) x, #x
+#define COMMAND(x) (int)x, #x
 
 struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
