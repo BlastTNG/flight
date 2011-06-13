@@ -139,7 +139,8 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
 {
   char versionMagic[6] = "DFI" SPEC_VERSION;
 
-  FREADORWRITE(&versionMagic, 6, 1, fp);
+  if (FREADORWRITE(&versionMagic, 6, 1, fp) < 1)
+    bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
 
 #ifdef INPUTTER
   /* check spec file version */
@@ -161,12 +162,18 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   }
 #endif
 
-  FREADORWRITE(&ccWideSlow, sizeof(unsigned short), 1, fp);
-  FREADORWRITE(&ccNarrowSlow, sizeof(unsigned short), 1, fp);
-  FREADORWRITE(&ccWideFast, sizeof(unsigned short), 1, fp);
-  FREADORWRITE(&ccNarrowFast, sizeof(unsigned short), 1, fp);
-  FREADORWRITE(&ccDecom, sizeof(unsigned short), 1, fp);
-  FREADORWRITE(&ccDerived, sizeof(unsigned short), 1, fp);
+  if (FREADORWRITE(&ccWideSlow, sizeof(unsigned short), 1, fp) < 1)
+    bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
+  if (FREADORWRITE(&ccNarrowSlow, sizeof(unsigned short), 1, fp) < 1)
+    bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
+  if (FREADORWRITE(&ccWideFast, sizeof(unsigned short), 1, fp) < 1)
+    bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
+  if (FREADORWRITE(&ccNarrowFast, sizeof(unsigned short), 1, fp) < 1)
+    bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
+  if (FREADORWRITE(&ccDecom, sizeof(unsigned short), 1, fp) < 1)
+    bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
+  if (FREADORWRITE(&ccDerived, sizeof(unsigned short), 1, fp) < 1)
+    bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
 
 #ifdef INPUTTER
   int bus, i;
@@ -199,13 +206,26 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   ccTotal = ccFast + ccSlow;
 #endif
 
-  FREADORWRITE(WideSlowChannels, sizeof(struct ChannelStruct), ccWideSlow, fp);
-  FREADORWRITE(SlowChannels, sizeof(struct ChannelStruct), ccNarrowSlow, fp);
-  FREADORWRITE(WideFastChannels, sizeof(struct ChannelStruct), ccWideFast, fp);
-  FREADORWRITE(FastChannels, sizeof(struct ChannelStruct), ccNarrowFast, fp);
-  if (ccDecom > 0)
-    FREADORWRITE(DecomChannels, sizeof(struct ChannelStruct), ccDecom, fp);
-  FREADORWRITE(DerivedChannels, sizeof(union DerivedUnion), ccDerived, fp);
+  if (FREADORWRITE(WideSlowChannels,
+	sizeof(struct ChannelStruct), ccWideSlow, fp) < ccWideSlow)
+    bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
+  if (FREADORWRITE(SlowChannels,
+	sizeof(struct ChannelStruct), ccNarrowSlow, fp) < ccNarrowSlow)
+    bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
+  if (FREADORWRITE(WideFastChannels,
+	sizeof(struct ChannelStruct), ccWideFast, fp) < ccWideFast)
+    bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
+  if (FREADORWRITE(FastChannels,
+	sizeof(struct ChannelStruct), ccNarrowFast, fp) < ccNarrowFast)
+    bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
+  if (ccDecom > 0) {
+    if (FREADORWRITE(DecomChannels,
+	  sizeof(struct ChannelStruct), ccDecom, fp) < ccDecom)
+      bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
+  }
+  if (FREADORWRITE(DerivedChannels,
+	sizeof(union DerivedUnion), ccDerived, fp) < ccDerived)
+    bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
 
 #ifdef INPUTTER
   /* Calculate slowsPerBi0Frame */

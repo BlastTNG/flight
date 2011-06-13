@@ -98,7 +98,8 @@ int InitRendezvous(const char* host, int port, const char* masq_in)
   }
 
   strcpy(buffer, "IDEN interloquendi\r\n");
-  write(sock, buffer, strlen(buffer));
+  if (write(sock, buffer, strlen(buffer)) < 0)
+    berror(err, "Failed to write to socket");
   switch (n = GetServerResponse(sock, buffer)) {
     case -3:
       bprintf(fatal, "Unexpected disconnect by upstream server.\n");
@@ -113,7 +114,8 @@ int InitRendezvous(const char* host, int port, const char* masq_in)
 
   /* Negotiate Rendezvous */
   sprintf(buffer, "RDVS %s\r\n", masq);
-  write(sock, buffer, strlen(buffer));
+  if (write(sock, buffer, strlen(buffer)) < 0)
+    berror(err, "Failed to write to socket");
   switch (n = GetServerResponse(sock, buffer)) {
     case -3:
       bprintf(fatal, "Unexpected disconnect by upstream server.\n");

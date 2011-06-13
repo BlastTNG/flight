@@ -248,14 +248,12 @@ long int SetStartChunk(long int framenum, char* chunk, int sufflen)
   int chunk_total;
   int new_chunk;
   struct stat chunk_stat;
-  char gpb[GPB_LEN];
 
   /* Loop until we get to the right chunk */
   for (;;) {
     /* Stat the current chunk file to get its size */
     if (stat(chunk, &chunk_stat)) {
-      snprintf(gpb, GPB_LEN, "stat `%s'", chunk);
-      berror(fatal, gpb);
+      berror(fatal, "stat `%s'", chunk);
     }
 
     chunk_total = chunk_stat.st_size / DiskFrameSize;
@@ -294,8 +292,7 @@ int StreamToNextChunk(int keepalive, char* chunk, int sufflen, int *chunk_total,
     for (;;) {
       /* persistent: first check to see if we have more data in the file */
       if (stat(chunk, &chunk_stat)) {
-        snprintf(gpb, GPB_LEN, "stat `%s'", chunk);
-        berror(fatal, gpb);
+        berror(fatal, "stat `%s'", chunk);
       }
 
       /* new frame total */
@@ -330,11 +327,11 @@ int StreamToNextChunk(int keepalive, char* chunk, int sufflen, int *chunk_total,
        * we're using one */
       if (curfile_val != NULL) {
         if ((curfile = fopen(curfile_name, "r")) == NULL) {
-          snprintf(gpb, GPB_LEN, "open `%s'", curfile_name);
-          berror(fatal, gpb);
+          berror(fatal, "open `%s'", curfile_name);
         }
 
-        fgets(gpb, PATH_MAX, curfile);
+        if (fgets(gpb, PATH_MAX, curfile) == NULL)
+	  bprintf(fatal, "Failed to read curfile");
 
         fclose(curfile);
 

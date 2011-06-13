@@ -528,8 +528,10 @@ void quendi_send_data(int dsock, unsigned frame_size, int block_size)
     snprintf(buffer, 100, "%i Frame Block Transfer Starting", block_size);
     quendi_respond(QUENYA_RESPONSE_SENDING_DATA, buffer);
 
-    for (i = 0; i < block_size; ++i)
-      write(dsock, quendi_input_buffer[i], frame_size);
+    for (i = 0; i < block_size; ++i) {
+      if (write(dsock, quendi_input_buffer[i], frame_size) < 0)
+	berror(err, "failed to write to socket");
+    }
 
     crc = CalculateCRC(CRC_SEED, quendi_input_buffer[0],
         frame_size * block_size);
@@ -587,8 +589,10 @@ void quendi_send_spec(int dsock, const char* name)
 
   spec = balloc(fatal, length);
 
-  read(fd, spec, length);
-  write(dsock, spec, length);
+  if (read(fd, spec, length) < 0)
+    berror(err, "failed to read from spec file");
+  if (write(dsock, spec, length) < 0)
+    berror(err, "failed to write to spec file");
 
   close(fd);
   bfree(fatal, spec);

@@ -118,7 +118,8 @@ int OpenDataPort(int csock, int* dsock)
 
   *dsock = MakeSock();
   strcpy(buffer, "OPEN\r\n");
-  write(csock, buffer, strlen(buffer));
+  if (write(csock, buffer, strlen(buffer)) < 0)
+    berror(err, "Failed to write to socket");
   switch (n = GetServerResponse(csock, buffer)) {
     case -3:
       return -1;
