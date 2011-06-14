@@ -1,12 +1,13 @@
-buildserial = @CMDVERSION@
-CONFIG_STATUS_DEPENDENCIES = $(top_srcdir)/command_list.c
-
-INCLUDES=-g -Wall
+CFLAGS = -g -Wall
+blastcmd_CFLAGS = -D__BLAST__
+minicmd_CFLAGS = -D__MINI__
 
 AUTOMAKE_OPTIONS = foreign
-blastcmd_SOURCES = blastcmd.c command_list.c daemon.c netcmd.c command_list.h \
-		   daemon.h isc_protocol.h netcmd.h
-bin_PROGRAMS = blastcmd
+blastcmd_SOURCES = blastcmd.c command_list_blast.c daemon.c netcmd.c \
+		   command_list_blast.h daemon.h isc_protocol.h netcmd.h
+minicmd_SOURCES = blastcmd.c command_list_mini.c daemon.c netcmd.c \
+		  command_list_mini.h daemon.h isc_protocol.h netcmd.h
+bin_PROGRAMS = blastcmd minicmd
 dist_bin_SCRIPTS = blastcmd-authorize
 
 dataetcdir = @DATA_ETC_DIR@
@@ -16,15 +17,6 @@ dataetc_DATA = blastcmd.auth.orig
 if INSTALL_BLASTCMD_LOG
 dataetc_DATA += blastcmd.log
 endif
-
-DISTCHECK_CONFIGURE_FLAGS = --with-data-etc="$$dc_install_base/data"
-
-distinstall: distcheck
-	cp ${distdir}.tar.gz ${distdir}-${buildserial}.tar.gz
-	chown dwiebe:blast ${distdir}-${buildserial}.tar.gz
-	$(mkinstalldirs) ${prefix}/src
-	${INSTALL_DATA} ${distdir}-${buildserial}.tar.gz ${prefix}/src
-	scp ${distdir}-${buildserial}.tar.gz blast.physics.utoronto.ca:/data/src
 
 install-data-hook:
 if INSTALL_BLASTCMD_LOG
