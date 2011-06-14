@@ -17,11 +17,6 @@ AC_LANG_C
 AC_C_CONST
 AC_PROG_INSTALL
 
-AC_MSG_CHECKING(the revision number of the channel list)
-CMDVERSION=`grep command_list_serial ${srcdir}/command_list.c | gawk '{print $6}'`
-AC_MSG_RESULT([$CMDVERSION])
-AC_SUBST(CMDVERSION)
-
 AC_CHECK_LIB(m,round)
 
 AC_MSG_CHECKING([whether to use IP based authentication])
