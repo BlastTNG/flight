@@ -241,47 +241,35 @@ void WriteData(struct NiosStruct* addr, unsigned int data, int flush_flag)
   }
 }
 
+//TODO convert suitable WriteData calls to WriteCalData
+void WriteCalData(struct NiosStruct* addr, unsigned int data, int flush_flag)
+{
+  WriteData(addr, (unsigned int)(((double)data - addr->b)/addr->m), flush_flag);
+}
+
 unsigned int ReadData(struct BiPhaseStruct* addr)
 {
   unsigned int result;
-  if (addr->index == NOT_MULTIPLEXED) {	  //fast
+  if (addr->nios->fast) {
     result = RxFrame[addr->channel];
-    if (addr->wide) result |= (RxFrame[addr->channel+1] << 16);
-  } else {				  //slow
+    if (addr->nios->wide)
+      result |= (RxFrame[addr->channel+1] << 16);
+  } else {
     result = slow_data[addr->index][addr->channel];
-    if (addr->wide) result |= (slow_data[addr->index][addr->channel+1] << 16);
+    if (addr->nios->wide)
+      result |= (slow_data[addr->index][addr->channel+1] << 16);
   }
   return result;
 }
 
-/* update bias parameters from CommandData */
-void updateBias()
+//TODO convert slow_data and RxFrame accesses to ReadData or ReadCalData
+double ReadCalData(struct BiPhaseStruct* addr)
 {
-#if 0           //TODO this needs updating
-  static struct NiosStruct* amplAddrs[4] = {NULL,NULL,NULL,NULL};
-  static struct NiosStruct* amplAddr = NULL;  //overall field
-  static struct NiosStruct* phaseAddrs[4] = {NULL,NULL,NULL,NULL};
-  int i;
-  static int firsttime = 1;
-  char buf[80];
-
-  if (firsttime) {
-    for (i = 0; i< 4; i++) {
-      sprintf(buf, "adc%1d_phase", i+1);
-      phaseAddrs[i] = GetNiosAddr(buf);
-      sprintf(buf, "adc%1d_ampl", i+1);
-      amplAddrs[i] = GetNiosAddr(buf);
-    }
-    amplAddr = GetNiosAddr("bias_ampl");
-    firsttime = 0;
+  if (addr->nios->sign) {   //signed
+    return ((double)(int)ReadData(addr) * addr->nios->m + addr->nios->b);
+  } else {		    //unsigned
+    return ((double)ReadData(addr) * addr->nios->m + addr->nios->b);
   }
-
-  for(i=0; i<4; i++) {
-    WriteData(amplAddrs[i], CommandData.bias_ampl, NIOS_QUEUE);
-    WriteData(phaseAddrs[i], CommandData.lockin_phase[i], NIOS_QUEUE);
-  }
-  WriteData(amplAddr, CommandData.bias_ampl, NIOS_QUEUE);
-#endif
 }
 
 /* called from mcp, should call all nios writing functions */
@@ -294,7 +282,6 @@ void UpdateBBCFrame()
 
   /*** do slow Controls ***/
   if (index == 0) {
-    updateBias();
     WriteAzEl();
     if (!mcp_initial_controls)
       SyncADC();
