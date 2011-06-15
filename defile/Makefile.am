@@ -1,16 +1,19 @@
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = etc
-bin_PROGRAMS = defile
+bin_PROGRAMS = defile-blast defile-spider
 man_MANS = defile.1
 EXTRA_DIST = fixup.sh bootstrap.sh
 etcdir=@etcdir@
 if INSTALL_DEFILE_CONF
 etc_DATA = defile.conf
 endif
-defile_SOURCES = defile.c frameread.c reader.c channels.c writer.c blast.c \
-								 client.c crc.c quendiclient.c blast.h defile.h channels.h \
-								 frameread.h derived.h quenya.h crc.h quendiclient.h
-INCLUDES = -Wall -O3 -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\"
+defile_blast_SOURCES = defile.c frameread.c reader.c channels.c writer.c \
+		       blast.c client.c crc.c quendiclient.c \
+		       blast.h defile.h channels.h frameread.h derived.h \
+		       quenya.h crc.h quendiclient.h
+defile_spider_SOURCES = $(defile_blast_SOURCES)
+CFLAGS = -Wall -O3 -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\"
+defile_blast_CFLAGS = -DDAS_CARDS=12
 DISTCHECK_CONFIGURE_FLAGS = --with-data-etc="$$dc_install_base/data" --with-etc="$$dc_install_base/etc"
 
 defile.conf: Makefile $(top_builddir)/defile.conf.in $(top_srcdir)/fixup.sh
