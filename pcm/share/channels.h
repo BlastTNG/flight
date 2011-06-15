@@ -31,8 +31,11 @@ extern "C" {
 #define SR (100.16)
 
 /* Number of DAS bolometer cards to include in the frame.  The maximum number
- * of cards is 12. Making 0 will disable bolometer channels */
-#define DAS_CARDS 12
+ * of cards is 12. Making 0 will disable bolometer channels
+ * Unless specified, will assume 0. Blast should compile with -DDAS_CARDS=12 */
+#ifndef DAS_CARDS
+#define DAS_CARDS 0
+#endif
 
 #define DAS_CHS 24
 #define DAS_START 16  //motherboard node of first DAS card
