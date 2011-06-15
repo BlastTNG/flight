@@ -8,9 +8,8 @@ a	Poorly		Constrained	Monicker
 	Prone to	Changing	Mercurially
 
 a	Pseudo-		Copy of		Mcp
-(el	Programa de	Control		Maestro)
 for	Precision	Cosmological	Measurements
 
+el	Programa de	Control		Maestro
 
-	Proceed to	Create		More
-	P		C		Ms
+Proceed to create more PCMs
