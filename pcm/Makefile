@@ -31,20 +31,21 @@ endif
 
 .PHONEY: fifo install all restart
 
-all: mcp
+all: pcm
 
 clean:
-	rm -f mcp || true;
+	rm -f pcm || true;
 	rm -f *.o || true;
 
-mcp: $(OBJS)
+pcm: $(OBJS)
+	$(CC) $(OBJS) $(LDFLAGS) -o pcm
 
 $(OBJS): $(HEADERS)
 
-install: mcp
+install: pcm
 	install -d -m 777 /data/rawdir
-	install -m 755 mcp /usr/local/bin
-	install -m 755 mcp_inf_loop /usr/local/bin
+	install -m 755 pcm /usr/local/bin
+	install -m 755 pcm_inf_loop /usr/local/bin
 	install -m 666 etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library /data/etc
 #	install -m 666 etc/*.aml /data/etc
 ifeq ($(BOLOTEST),-DBOLOTEST)
@@ -55,30 +56,30 @@ fifo:
 	[ -e /data/etc/SIPSS.FIFO ] || mkfifo -m 0777 /data/etc/SIPSS.FIFO
 
 restart: install
-ifeq ($(shell hostname),south)
-	@echo "** I am south **"
-	killall mcp
-	scp /usr/local/bin/mcp north.blast:/tmp/mcp
-	ssh north.blast 'install -d -m 666 /tmp/etc'
-	scp etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library north.blast:/tmp/etc/
-	ssh north.blast 'install -m 755 /tmp/mcp /usr/local/bin'
-	ssh north.blast 'install -m 666 /tmp/etc/* /data/etc'
-	ssh north.blast 'killall mcp'
+ifeq ($(shell hostname),bitsy)
+	@echo "** I am bitsy **"
+	killall pcm
+	scp /usr/local/bin/pcm itsy.spider:/tmp/pcm
+	ssh itsy.spider 'install -d -m 666 /tmp/etc'
+	scp etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library itsy.spider:/tmp/etc/
+	ssh itsy.spider 'install -m 755 /tmp/pcm /usr/local/bin'
+	ssh itsy.spider 'install -m 666 /tmp/etc/* /data/etc'
+	ssh itsy.spider 'killall pcm'
 else
-ifeq ($(shell hostname),north)
-	@echo "** I am north **"
-	killall mcp
-	scp /usr/local/bin/mcp south.blast:/tmp/mcp
-	ssh south.blast 'install -d -m 666 /tmp/etc'
-	scp etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library south.blast:/tmp/etc/
-	ssh south.blast 'install -m 755 /tmp/mcp /usr/local/bin'
-	ssh south.blast 'install -m 666 /tmp/etc/* /data/etc'
-	ssh south.blast 'killall mcp'
+ifeq ($(shell hostname),itsy)
+	@echo "** I am itsy **"
+	killall pcm
+	scp /usr/local/bin/pcm bitsy.spider:/tmp/pcm
+	ssh bitsy.spider 'install -d -m 666 /tmp/etc'
+	scp etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library bitsy.spider:/tmp/etc/
+	ssh bitsy.spider 'install -m 755 /tmp/pcm /usr/local/bin'
+	ssh bitsy.spider 'install -m 666 /tmp/etc/* /data/etc'
+	ssh bitsy.spider 'killall pcm'
 else
 	@echo "******************** WARNING ******************************"
-	@echo "** I am neither north nor south"
+	@echo "** I am neither itsy nor bitsy"
 	@echo "** 'make restart' should not be run on other systems"
-	@echo "** Just stop and start mcp as you would any other program"
+	@echo "** Just stop and start pcm as you would any other program"
 	@echo "******************** WARNING ******************************"
 endif
 endif
