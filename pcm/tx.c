@@ -1568,10 +1568,10 @@ unsigned int ReadData(struct BiPhaseStruct* addr)
 //TODO convert slow_data and RxFrame accesses to ReadData or ReadCalData
 double ReadCalData(struct BiPhaseStruct* addr)
 {
-  if (addr->nios->type == 'u' || addr->nios->type == 'U') {
-    return ((double)ReadData(addr) * addr->nios->m + addr->nios->b);
-  } else {    // 's' || 'S' || 'i'
+  if (addr->nios->sign) {   //signed
     return ((double)(int)ReadData(addr) * addr->nios->m + addr->nios->b);
+  } else {		    //unsigned
+    return ((double)ReadData(addr) * addr->nios->m + addr->nios->b);
   }
 }
 
