@@ -27,6 +27,7 @@
 #define WHICH (0)
 
 #include "channels.h"
+#include "calibrate.h"
 
 extern int mcp_initial_controls;
 
@@ -35,4 +36,6 @@ void UpdateBBCFrame();
 
 void RawNiosWrite(unsigned int, unsigned int, int);
 void WriteData(struct NiosStruct*, unsigned int, int);
+void WriteCalData(struct NiosStruct*, unsigned int, int);
 unsigned int ReadData(struct BiPhaseStruct*);
+double ReadCalData(struct BiPhaseStruct*);
