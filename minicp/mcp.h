@@ -25,6 +25,7 @@
 
 #include <pthread.h>
 #include "channels.h"
+#include "calibrate.h"
 #include "blast.h"
 
 //configuration for BLASTBus
@@ -45,9 +46,5 @@ extern time_t mcp_systime(time_t *t);
 #define TEMPORAL_OFFSET 0
 
 #define MAX_LINE_LENGTH 1024
-
-#ifdef DEBUG
-#warning "Debugging set."
-#endif
 
 #endif

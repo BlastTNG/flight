@@ -12,6 +12,7 @@
 
 #include <limits.h>
 #include "channels.h"
+#include "calibrate.h"
 #include "bbc_pci.h"
 
 /* card name to (node number, bus number) mapping */
