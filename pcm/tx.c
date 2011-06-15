@@ -1565,11 +1565,14 @@ unsigned int ReadData(struct BiPhaseStruct* addr)
   return result;
 }
 
-//TODO ReadCalData probably doesn't work for signed fields. Need cast to signed
 //TODO convert slow_data and RxFrame accesses to ReadData or ReadCalData
 double ReadCalData(struct BiPhaseStruct* addr)
 {
-  return ((double)ReadData(addr) * addr->nios->m + addr->nios->b);
+  if (addr->nios->type == 'u' || addr->nios->type == 'U') {
+    return ((double)ReadData(addr) * addr->nios->m + addr->nios->b);
+  } else {    // 's' || 'S' || 'i'
+    return ((double)(int)ReadData(addr) * addr->nios->m + addr->nios->b);
+  }
 }
 
 /* called from mcp, should call all nios writing functions */
