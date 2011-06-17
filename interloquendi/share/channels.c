@@ -300,6 +300,7 @@ static struct NiosStruct SetNiosData(const struct ChannelStruct *channel,
   NiosData.field = channel->field;
   NiosData.fast = fast;
   NiosData.wide = wide;
+  NiosData.sign = (channel->type == 'u' || channel->type == 'U') ? 0 : 1;
   NiosData.m = channel->m_c2e;
   NiosData.b = channel->b_e2e;
   NiosData.bus = channel->bus;

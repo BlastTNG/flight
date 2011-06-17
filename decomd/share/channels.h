@@ -69,6 +69,7 @@ extern "C" {
     unsigned int bbcAddr;
     unsigned char fast;
     unsigned char wide;
+    unsigned char sign;
     unsigned char bus;
     const char* field;
     double m;
