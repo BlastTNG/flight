@@ -21,7 +21,7 @@
 
 #include "command_list.h"
 
-const char *command_list_serial = "$Revision: 1.4 $";
+const char *command_list_serial = "$Revision: 1.5 $";
 
 //these must correspond to #defines in header
 const char *GroupNames[N_GROUPS] = {
@@ -83,10 +83,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(az_el_raster), "Az-El mount raster scan", GR_POINT, 9,
     { 
-      {"az raster centre (deg)", -90.0, 90.0, 'f', "AZ"}, 
-      {"el raster center (deg)", -10.0, 89.0, 'f', "EL"},  
-      {"az raster scan width (degrees)", 0.0, 180.0, 'f', "WIDTH_AZ"}, 
-      {"az raster scan speed (deg/s)", 0.0, 10.0, 'f', "V_AZ"},  
+      {"az raster centre (deg)",  0.0, 360.0, 'f', "AZ"}, 
+      {"el raster centre (deg)", -10.0, 89.0, 'f', "EL"},  
+      {"az raster scan width (deg)", 0.0, 180.0, 'f', "WIDTH_AZ"}, 
+      {"az raster scan speed (deg/s)", 0.0, 5.0, 'f', "V_AZ"},  
       {"el raster scan speed (deg/s)", 0.0, 5.0, 'f', "V_EL"},
       {"az raster acceleration (deg/s^2)", 0.0, 5.0, 'f', "A_AZ"},
       {"el raster acceleration (deg/s^2)", 0.0, 5.0, 'f', "A_EL"},
@@ -101,13 +101,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"el goto acceleration (deg/s^2)", 0.0, 5.0, 'f', "A_EL;"},
       {"az goto speed (deg/s)", 0.0, 5.0, 'f', "V_AZ"},
       {"el goto speed (deg/s)", 0.0, 5.0, 'f', "V_EL"},
-      {"az goto position (deg)", -90.0, 90.0, 'f', "AZ"}, 
+      {"az goto position (deg)",  0.0, 360.0, 'f', "AZ"}, 
       {"el goto position (deg)", -10.0, 89.0, 'f', "EL"}  
     }
   },
   {COMMAND(az_el_set), "Input Az-El mount starting angles", GR_POINT, 2,
     {
-      {"starting azimuth (deg)", -90.0, 90.0, 'f', "AZ_REF"},
+      {"starting azimuth (deg)", 0.0, 360.0, 'f', "AZ_REF"},
       {"starting elevation (deg)", -10.0, 89.0, 'f', "EL_REF"},
     }
   }, 

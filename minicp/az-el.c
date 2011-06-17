@@ -7,7 +7,7 @@ az-el.c -- mcplib code to drive the Spider test cryostat az-el mount
 Author:    Jamil A. Shariff
            BallAst Group, Univeristy of Toronto
 
-Updated:   May 26, 2011
+Updated:   June 17, 2011
 
 Note:      CM = Cool Muscle (stepper motor type)
            CML = Cool Muscle Language (ASCII-based, to command motors)
@@ -35,13 +35,13 @@ Note:      CM = Cool Muscle (stepper motor type)
 #define AZ_DEVICE "/dev/ttyUSB0"
 #define EL_DEVICE "/dev/ttyUSB1"
 
-#define AZ_GEAR_RATIO 237.1 // tuned empirically
+#define AZ_GEAR_RATIO 236.0 //empirically tunable
 #define CM_PULSES 50000   // Cool Muscle pulses per rotation
 #define SPEED_UNIT 10     // pulses/s in one speed unit
 #define ACCEL_UNIT 1000   // pulses/s^2 in one accel unit
 #define IN_TO_MM 25.4
 #define ROT_PER_INCH 5    // lin. actuator rotations per inch of travel
-#define EL_GEAR_RATIO 8.66  
+#define EL_GEAR_RATIO 7.0 // empirically tunable  
 #define A 1029.68         // distance from cryo axis to lin. act. axis (mm)
 #define B 350.0           // length of rocker arm in mm
 #define D 740.79          // actuator length in mm (fully retracted)
@@ -53,9 +53,11 @@ Note:      CM = Cool Muscle (stepper motor type)
 #define EL_MIN -10.0
 #define EL_MAX 89.0
 
+unsigned int az_enc;
+unsigned int el_enc;
+
 /* CMInfoStruct: contains info on state of serial comms  with a Cool Muscle
    (also axis encoder reference position)  */
-
 struct CMInfoStruct {
 
   int fd;                 // file descriptor
@@ -83,24 +85,24 @@ static void* azelComm(void* arg); // serial thread routine
 
 static void open_cm(char *dev_name, struct CMInfoStruct *cminfo);
 static void close_cm(struct CMInfoStruct *cminfo);
-static void checkpos_cm(struct CMInfoStruct *cminfo);
+//static void checkpos_cm(struct CMInfoStruct *cminfo);
 static void init_cm(struct CMInfoStruct *cminfo);
-static void slew_cm(int accel, int speed, int distance, struct CMInfoStruct 
-                    *cminfo);
+//static void slew_cm(int accel, int speed, int distance, struct CMInfoStruct 
+//                    *cminfo);
 
 static void AzElScan();
 static void allstop_cm(); 
 static void goto_cm();
 static void raster_cm(); 
 
-static int drive_cm(int accel, int speed, int position, struct CMInfoStruct 
-                    *cminfo);
+//static int drive_cm(int accel, int speed, int position, struct CMInfoStruct 
+//                    *cminfo);
 static int read_cm(struct CMInfoStruct *cminfo, int read_flag);
 static int write_cm(struct CMInfoStruct *cminfo, char *cmd, int length, 
                     const char *cmd_desc); 
 
-static double calc_dx(double theta, double dtheta);
-static double xoftheta(double theta); 
+//static double calc_dx(double theta, double dtheta);
+//static double xoftheta(double theta); 
 static double dxdtheta(double theta);
 static double mod_cm(double val, double mod);
 
@@ -122,6 +124,7 @@ void endAzEl()
 
 }
 
+#if 0
 /* drive_cm moves a Cool Muscle stepper motor by the specified distance 
    at the specified speed and acceleration. */
 
@@ -236,334 +239,291 @@ void slew_cm(int accel, int speed, int distance, struct CMInfoStruct *cminfo)
                    failures*/
   }
 }
+#endif
 
 /* goto_cm goes to a specific (az,el) position by slewing in each axis */
 
 void goto_cm()
-{  
-
-  int az_accel, az_speed, az_dest, el_accel, el_speed, el_dest;
-
-  static struct BiPhaseStruct* elEncAddr;
-  static struct BiPhaseStruct* azEncAddr;
+{ 
 
   static int firsttime = 1;
+  unsigned int zero_count = 0;
 
-  double az_enc;      // current az encoder reading (cnts)
-  double az_now;      // current azimuth angle (deg)
-//  double az_enc_dest; // az encoder reading at destination angle
-  double el_enc;      // current el encoder reading (cnts)
-  double el;          // current elevation
-  double dext;        // change in lin. act. extension from current
-                      // angle to destination angle
-  double dextdtheta;  // derivative of lin. act. extension w.r.t. elevation
-  double azrps;       // rev/s of az Cool Muscle
-  double elrps;  
-  double az_diff;     // difference between current and destination az
+  char* move = "P=1000000000\r";    // CML command to move continuously
+  char speed_cmd_az[COMMAND_SIZE];  // speed CML command string
+  char accel_cmd_az[COMMAND_SIZE];  // acceleration CML command string 
+  char speed_cmd_el[COMMAND_SIZE];  // speed CML command string
+  char accel_cmd_el[COMMAND_SIZE];  // acceleration CML command string
+  char* exec = "^\r";               // execute motion CML command
 
-  unsigned int i = 0;
-  unsigned int in_position = 0;
-  unsigned int closed_loop = 0;
-    
-  if (firsttime) {
-    elEncAddr = GetBiPhaseAddr("adc1_enc_el");
-    azEncAddr = GetBiPhaseAddr("adc1_enc_az");
-    firsttime = 0;
-  }
+  int n_s_az = 0;                   // # of bytes written to speed_cmd
+  int n_a_az = 0;                   // # of bytes written to accel_cmd
 
-  /* get initial angles */
+  int n_s_el = 0;
+  int n_a_el = 0;
 
-  az_enc = ReadData(azEncAddr);
-  bprintf(info, "current az encoder reading: %f", az_enc);
+  /* dynamical variables */
+  double az_now;   // current azimuth
+  double el_now;   // current elevation
+  double d_az;     // diff between current and destination az
+  double d_el;     // diff between current and destination el
+  double d0_az;    // distance to destination at start of decel
+  double d0_el;    // distance to destination at start of decel
+  double w0_az;    // az vel. during const. speed portion
+  double w0_el;    // el vel. during const. speed portion
+  double az_rps;   // rev/s of az motor
+  double el_rps;   // rev/s of el motor
+  double w_az;     // az ang. velocity
+  double w_el;     // el ang. velocity
+  double a_az;     // az ang. acceleration
+  double a_el;     // el ang. acceleration
+  double dx_del;   // deriv. of lin. act. extension w.r.t. el
   
-  az_now = -(az_enc - (double)azinfo.ref)/CNTS_PER_DEG 
-            + CommandData.az_el.az_ref;
+  /* dynamical variables in cool muscle units */
+  int a_az_cm;
+  int a_el_cm;
+  int w_az_cm;
+  int w_el_cm;
+  
+  /* get initial angles */
+  bprintf(info, "current az encoder reading: %i", az_enc); 
+  bprintf(info, "current el encoder reading: %i", el_enc);
 
+  /* negative sign because increasing encoder count = decreasing angle */
+  az_now = -((double)az_enc - (double)azinfo.ref)/CNTS_PER_DEG 
+            + CommandData.az_el.az_ref;
   az_now = mod_cm(az_now, 360.0);
 
-  el_enc = ReadData(elEncAddr);
-  el = -(el_enc - (double)elinfo.ref)/CNTS_PER_DEG + CommandData.az_el.el_ref;
-  //el = (el_enc - (double)elinfo.ref)/CNTS_PER_DEG + CommandData.az_el.el_ref;
+  el_now = -((double)el_enc - (double)elinfo.ref)/CNTS_PER_DEG 
+            + CommandData.az_el.el_ref;
+  el_now = mod_cm(el_now, 360.0);
 
-  el = mod_cm(el, 360.0);
-
-  if (el > 89.0) {
-    el -= 360.0;
+  /* correction for negative angles */
+  if (el_now > EL_MAX) {
+    el_now -= 360.0;
   }
 
-  while ((!in_position) && (CommandData.az_el.mode == AzElGoto) ) {
-
-    /* azimuth calibrations */
-    //az_enc = ReadData(azEncAddr);
-    bprintf(info, "current az encoder reading: %f", az_enc);
+  bprintf(info, "Starting az: %f degrees", az_now);
+  bprintf(info, "Starting el: %f degrees", el_now);
   
-    // az_now = (az_enc - (double)azinfo.ref)/CNTS_PER_DEG 
-    //         + CommandData.az_el.az_ref;
+  /* compute angular displacements */
+  d_az = CommandData.az_el.az - az_now;
+  d_el = CommandData.az_el.el - el_now;
 
-    // az_now = mod_cm(az_now, 360.0);
+  /* don't take the long way around */
+  if (d_az >= 0) {
+    d_az = (d_az < (360.0 - d_az)) ? d_az : -(360.0 - d_az);
+  } else d_az = (-d_az < (360.0 + d_az)) ? 
+    d_az : (360.0 + d_az);
 
-    bprintf(info, "current az angle: %f", az_now);
+  /* set initial motion variables */
+  a_az = CommandData.az_el.az_accel;
+  a_az_cm = (int)((a_az*AZ_GEAR_RATIO*CM_PULSES)/(360.0*ACCEL_UNIT));
+    
+  a_el = CommandData.az_el.el_accel;
 
-    az_diff = CommandData.az_el.az - az_now;
+  dx_del = dxdtheta(el_now);
 
-    /* don't take the long way around */
-    if (az_diff >= 0) {
-      az_diff = (az_diff < (360.0 - az_diff)) ? az_diff : -(360.0 - az_diff);
-    } else az_diff = (-az_diff < (360.0 + az_diff)) ? 
-      az_diff : (360.0 + az_diff);
+  a_el_cm = (int)(((dx_del*a_el/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)
+                  /ACCEL_UNIT);
 
-    az_dest =(int)((az_diff*AZ_GEAR_RATIO*CM_PULSES)
-                 /360.0);
-   // if ((i == 0) || (CommandData.az_el.az_speed == 0)) {
-      azrps = (CommandData.az_el.az_speed*AZ_GEAR_RATIO)/360.0;
-   // } else {
-   //   azrps = (0.1*AZ_GEAR_RATIO)/360.0;
-  //  }
-    /* limit Cool Muscle rotation speed to 2000 rpm */
-    azrps = (azrps*60.0 > 2000.0) ? (2000.0/60.0) : azrps;
+  w0_az = CommandData.az_el.az_speed;
+  w0_el = CommandData.az_el.el_speed;
 
-    bprintf(info, "az motor will move at: %f rpm", azrps*60.0);
+  az_rps = (w0_az*AZ_GEAR_RATIO)/360.0;
+  el_rps = (dx_del*w0_el/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO;
   
-    az_speed = (int)((azrps*CM_PULSES)/SPEED_UNIT);
-  //  if ((i == 0) || (CommandData.az_el.az_accel == 0)) {
-      az_accel = (int)(((CommandData.az_el.az_accel)*AZ_GEAR_RATIO*CM_PULSES)
-                      /(360.0*ACCEL_UNIT));
-  //  } else {
-   //   az_accel = (int)((1.0*AZ_GEAR_RATIO*CM_PULSES)/(360.0*ACCEL_UNIT));
-   // }
+  /* limit Cool Muscle rotation speed to 2000 rpm */
+  az_rps = (az_rps*60.0 > 2000.0) ? (2000.0/60.0) : az_rps;
+  el_rps = (el_rps*60.0 > 2000.0) ? (2000.0/60.0) : el_rps;
 
-    /* elevation calibrations */
+  bprintf(info, "az motor will move at: %f rpm", az_rps*60.0);  
+  bprintf(info, "el motor will move at: %f rpm", el_rps*60.0);
+  
+  w_az_cm = (int)((az_rps*CM_PULSES)/SPEED_UNIT);
+  w_el_cm = (int)((el_rps*CM_PULSES)/SPEED_UNIT);
+  
+  if (d_az > 0) { 
+    w_az_cm *= -1;
+  } else if (d_az == 0) {
+    w_az_cm = 0;
+  }
 
-    //el_enc = ReadData(elEncAddr);
-    bprintf(info, "current el encoder reading: %f", el_enc);
+  if (d_el > 0) { 
+    w_el_cm *= -1;
+  } else if (d_el == 0) {
+    w_el_cm = 0;
+  }
 
-    //el = -(el_enc - (double)elinfo.ref)/CNTS_PER_DEG 
-    //+ CommandData.az_el.el_ref;
+  n_a_az = sprintf(accel_cmd_az, "A=%i\r", a_az_cm);
+  n_s_az = sprintf(speed_cmd_az, "S=%i\r", w_az_cm);
 
-    //el = mod_cm(el, 360.0);
+  n_a_el = sprintf(accel_cmd_el, "A=%i\r", a_el_cm);
+  n_s_el = sprintf(speed_cmd_el, "S=%i\r", w_el_cm);
+  
+  /* send the motion commands */
+  if ( (w_az_cm != 0) && (a_az_cm !=0) ) {
+    write_cm(&azinfo, accel_cmd_az, n_a_az, 
+             " initial acceleration CML command");
 
-    //if (el > 89.0) {
-    //el -= 360.0;
-    //}
+    write_cm(&azinfo, speed_cmd_az, n_s_az, 
+  	     " initial speed CML command");
 
-    bprintf(info, "current el angle: %f", el);
-    dext = calc_dx(el, (CommandData.az_el.el - el));
-    bprintf(info, "change in extension: %f mm", dext);
-    dextdtheta = dxdtheta(el); // not ideal to use current angle for something 
-                               // that is a continuous func. of theta
+    write_cm(&azinfo, move, strlen(move), 
+      	     " continuous motion CML command");
 
-    el_dest =  (int)(((-dext)/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES);
+    write_cm(&azinfo, exec, strlen(exec), " execute motion CML command");
+  }
 
-  //  if ((i == 0) || (CommandData.az_el.el_speed == 0)) {
-    elrps = (dextdtheta*CommandData.az_el.el_speed/IN_TO_MM)*ROT_PER_INCH
-             *EL_GEAR_RATIO;
- //   } else {
-  //    elrps = ((dextdtheta*0.1)/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO;
-   // }  
-    elrps = (elrps*60.0 > 2000.0) ? (2000.0/60.0) : elrps;
-    bprintf(info, "el motor will move at: %f rpm", elrps*60.0);
+  if ( (w_el_cm != 0) && (a_el_cm != 0) ) {
+    write_cm(&elinfo, accel_cmd_el, n_a_el, 
+	     " initial acceleration CML command");
 
-    el_speed = (int)((elrps*CM_PULSES)/SPEED_UNIT);
-  //  if ((i == 0) || (CommandData.az_el.el_accel == 0)) {
-      el_accel = (int)(((dextdtheta*CommandData.az_el.el_accel/IN_TO_MM)
-	    *ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/ACCEL_UNIT);
-    //} else {
-     // el_accel = (int)(((dextdtheta*1.0/IN_TO_MM)
-//	         *ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/ACCEL_UNIT);
-   // }
-    bprintf(info, "az_dest = %i", az_dest);
-    bprintf(info, "az_speed = %i", az_speed);
-    bprintf(info, "az_accel = %i", az_accel);
-    bprintf(info, "el_dest = %i", el_dest);
-    bprintf(info, "el_speed = %i", el_speed);
-    bprintf(info, "el_accel = %i", el_accel);
+    write_cm(&elinfo, speed_cmd_el, n_s_el, 
+	     " initial speed CML command");
 
-    if ((az_speed != 0) && (az_accel != 0) && 
-	(az_now != CommandData.az_el.az) ) {     
-      slew_cm(az_accel, az_speed, az_dest, &azinfo);
-    }
+    write_cm(&elinfo, move, strlen(move), 
+	     " continuous motion CML command");
+    
+    write_cm(&elinfo, exec, strlen(exec), " execute motion CML command");
+  }
 
-    if ((el_speed !=0) && (el_accel != 0) && (el != CommandData.az_el.el)) {
-      slew_cm(el_accel, el_speed, el_dest, &elinfo);
-    }
+/*  while ( ((d_az && (w0_az != 0) && (a_az != 0)) ||
+          (d_el && (w0_el != 0) && (a_el != 0))) && 
+          (CommandData.az_el.mode == AzElGoto) &&
+          (zero_count < 100) ) { */
 
-    if ((az_speed != 0) && (az_accel != 0) && 
-	(az_now != CommandData.az_el.az) ) {     
-      checkpos_cm(&azinfo);
-    }
+  while ( (CommandData.az_el.mode == AzElGoto) && (zero_count < 10) ) {
 
-    if ((el_speed !=0) && (el_accel != 0) && (el != CommandData.az_el.el)) {
-      checkpos_cm(&elinfo);
-    }	
-    /* check destinaton angles that were actually reached */	
-    az_enc = ReadData(azEncAddr);
-    az_now = -(az_enc - (double)azinfo.ref)/CNTS_PER_DEG 
+    /* get latest position errors  */
+    az_now = -((double)az_enc - (double)azinfo.ref)/CNTS_PER_DEG 
               + CommandData.az_el.az_ref;
     az_now = mod_cm(az_now, 360.0);
-  
-    el_enc = ReadData(elEncAddr);
-    el = -(el_enc - (double)elinfo.ref)/CNTS_PER_DEG + CommandData.az_el.el_ref;
-    //el = (el_enc - (double)elinfo.ref)/CNTS_PER_DEG + CommandData.az_el.el_ref;
-    el = mod_cm(el, 360.0);
-    if (el > 89.0) {
-      el -= 360.0;
-    }  
 
-    i++;
-    if ( (CommandData.az_el.az_speed != 0) && (CommandData.az_el.az_accel != 0)           && (CommandData.az_el.el_speed != 0) 
-	  && (CommandData.az_el.el_accel != 0) ) {
-      if ( ((fabs(az_now - CommandData.az_el.az)<=0.01) && 
-	   (fabs(el - CommandData.az_el.el)<=0.01)) || !closed_loop ) {
-        in_position = 1;
-      }
-    } else if ( ((CommandData.az_el.az_speed == 0) || 
-	        (CommandData.az_el.az_accel == 0)) &&
-                ( (CommandData.az_el.el_speed != 0) && 
-		  (CommandData.az_el.el_accel != 0)) ) {
-      if ((fabs(el - CommandData.az_el.el)<=0.01) || !closed_loop) {
-        in_position = 1;  
-      }
-    } else if ( ((CommandData.az_el.el_speed == 0) || 
-	        (CommandData.az_el.el_accel == 0)) &&
-    	        ( (CommandData.az_el.az_speed != 0) && 
-		  (CommandData.az_el.az_accel != 0)) ) {
-      if ((fabs(az_now - CommandData.az_el.az)<=0.01) || !closed_loop) {
-        in_position = 1;
-      } 	
-    } else { // goto command was entered with zero speed or accel in both 
-             //directions
-      in_position = 1;
+    el_now = -((double)el_enc - (double)elinfo.ref)/CNTS_PER_DEG 
+            + CommandData.az_el.el_ref;
+    el_now = mod_cm(el_now, 360.0);
+    if (el_now > EL_MAX) {
+      el_now -= 360.0;
     }
-    //usleep(10000);     
-  }    
+
+    d_az = CommandData.az_el.az - az_now;
+    d_el = CommandData.az_el.el - el_now;
   
-  bprintf(info, "Current position: (az, el) = (%f, %f) (degrees)", 
-          az_now, el);
+    if (d_az >= 0) {
+      d_az = (d_az < (360.0 - d_az)) ? d_az : -(360.0 - d_az);
+    } else d_az = (-d_az < (360.0 + d_az)) ? 
+      d_az : (360.0 + d_az);  
+
+    if ( ((d_az == 0) || ((w0_az == 0) && (a_az == 0))) &&
+         ((d_el == 0) || ((w0_el == 0) && (a_el == 0))) ) {
+      zero_count++;
+    } else zero_count = 0;
+
+    if (d_az >= 0) {
+      d0_az = pow(w0_az, 2.0)/(2.0*a_az);
+    } else d0_az = -pow(w0_az, 2.0)/(2.0*a_az);
+    
+    if (d_el >= 0) {
+      d0_el = pow(w0_el, 2.0)/(2.0*a_el);
+    } else d0_el = -pow(w0_el, 2.0)/(2.0*a_el);
+
+    /* once we get within d0 of the destination, decelerate: */
+
+    if ( fabs(d_az) <= fabs(d0_az) ) {
+
+      w_az = (d_az < 0) ? sqrt(-2.0*a_az*d_az) : -sqrt(2.0*a_az*d_az);
+
+      if (firsttime) {
+	/* accel used by motor to vary speed is larger than
+	 * accel in defined motion profile */
+        a_az_cm = (int)((5.0*a_az*AZ_GEAR_RATIO*CM_PULSES)/(360.0*ACCEL_UNIT));
+        n_a_az = sprintf(accel_cmd_az, "A=%i\r", a_az_cm);
+        if ( (w0_az != 0) && (a_az != 0) ) {
+	  write_cm(&azinfo, accel_cmd_az, n_a_az, " acceleration CML command");
+	}
+	firsttime = 0;
+
+      }
+
+      az_rps = (w_az*AZ_GEAR_RATIO)/360.0;
+      w_az_cm = (int)((az_rps*CM_PULSES)/SPEED_UNIT);
+      n_s_az = sprintf(speed_cmd_az, "S=%i\r", w_az_cm);
+      if ( (w0_az != 0) && (a_az != 0) ) {
+        write_cm(&azinfo, speed_cmd_az, n_s_az, " speed CML command");
+      }
+    } 
+    
+    if ( fabs(d_el) <= fabs(d0_el) ) {
+
+      w_el = (d_el < 0) ? sqrt(-2.0*a_el*d_el) : -sqrt(2.0*a_el*d_el);
+
+      /* re-compute and re-send accel every time, since dx/d(el) is a 
+       * function of el */
+      dx_del = dxdtheta(el_now);
+      a_el_cm = (int)(((5.0*dx_del*a_el/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO
+	    *CM_PULSES)/ACCEL_UNIT);
+      n_a_el = sprintf(accel_cmd_el, "A=%i\r", a_el_cm);
+      if ( (w0_el != 0) && (a_el != 0) ) {
+        write_cm(&elinfo, accel_cmd_el, n_a_el, " acceleration CML command");
+      }
+
+      el_rps = (dx_del*w_el/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO;
+      w_el_cm = (int)((el_rps*CM_PULSES)/SPEED_UNIT);
+      n_s_el = sprintf(speed_cmd_el, "S=%i\r", w_el_cm); 
+      if ( (w0_el != 0) && (a_el != 0) ) {
+        write_cm(&elinfo, speed_cmd_el, n_s_el, " speed CML command");
+      }
+    }
+    usleep(10000);
+  }
+
+  az_now = -((double)az_enc - (double)azinfo.ref)/CNTS_PER_DEG 
+              + CommandData.az_el.az_ref;
+  az_now = mod_cm(az_now, 360.0);
+
+  el_now = -((double)el_enc - (double)elinfo.ref)/CNTS_PER_DEG 
+            + CommandData.az_el.el_ref;
+  el_now = mod_cm(el_now, 360.0);
+  if (el_now > EL_MAX) {
+    el_now -= 360.0;
+  }
+
+  bprintf(info, "Final (az, el) = (%f, %f) (degrees)", 
+          az_now, el_now);
+  bprintf(info, "zero count = %i", zero_count);
 }
 
 /* raster_cm performs a raster scan with the commanded parameters using a 
-   sequence of slew_cm calls */
+   sequence of goto_cm calls */
 
 void raster_cm() 
 { 
 
-  //int az_width, az_start, az_speed, az_accel, el_start, el_speed, el_accel, 
-  //    step_size; 
+  unsigned int step_count;           // keep track of el steps                
+  unsigned int N_steps;              // number of elevation steps
 
-  int step_count;           // keep track of el steps                
-  //int pos_arg;              // argument to pass as az position value
-  int N_steps;              // number of elevation steps
+  double az_start;
+  double el_low;
+  double el_high;
+  double az_centre;
+  double el_centre;
+  double az_speed_init;
+  double el_speed_init;
 
-  double az_start, el_low, el_high, az_centre, el_centre, az_speed_init,
-         el_speed_init;
-
-  //double az_enc, az_diff, az, azrps, el_enc, el, elrps, ext_low, ext, dext, dextdtheta, el_high, 
-//	 el_low;
-  
-
-  //static struct BiPhaseStruct* elEncAddr;
-  //static struct BiPhaseStruct* azEncAddr;
-
-  //static int firsttime = 1;
-
- // if (firsttime) {
- //   elEncAddr = GetBiPhaseAddr("adc1_enc_el");
- //   azEncAddr = GetBiPhaseAddr("adc1_enc_az");
- //   firsttime = 0;
- // }
-
-  /* azimuth calibrations */
-
- /* az_enc = ReadData(azEncAddr);
-  bprintf(info, "current az encoder reading: %f", az_enc);
-  
-  az = (az_enc - (double)azinfo.ref)/CNTS_PER_DEG + CommandData.az_el.az_ref;
-
-  az = mod_cm(az, 360.0);
-  
-  bprintf(info, "current az angle: %f", az);
-
-  az_width = ((int)(CommandData.az_el.az_width)*AZ_GEAR_RATIO*CM_PULSES)
-                    /360;
-					
-  azrps = (CommandData.az_el.az_speed*AZ_GEAR_RATIO)/360.0; */
-
-  /* limit Cool Muscle rotation speed to 2000 rpm */
-  /*azrps = (azrps*60.0 > 2000.0) ? (2000.0/60.0) : azrps;
-
-  bprintf(info, "az motor will move at: %f rpm", azrps*60.0);
-  
-  az_speed = (int)((azrps*CM_PULSES)/SPEED_UNIT);
-					
-  az_accel = ((int)(CommandData.az_el.az_accel)*AZ_GEAR_RATIO*CM_PULSES)
-                    /(360*ACCEL_UNIT);
-					
-  az_diff = ((CommandData.az_el.az-(CommandData.az_el.az_width)/2.0) - az );
-*/
-  /* don't take the long way around */
- /* if (az_diff >= 0) {
-    az_diff = (az_diff < (360.0 - az_diff)) ? az_diff : -(360.0 - az_diff);
-  } else az_diff = (-az_diff < (360.0 + az_diff)) ? az_diff : (360.0 + az_diff);
-					
-  az_start = (int)(az_diff*AZ_GEAR_RATIO*CM_PULSES/360);
-*/
-  /* elevation calibrations */
- 
-/*
-  el_enc = ReadData(elEncAddr);
-  bprintf(info, "current el encoder reading: %f", el_enc);
-  
-  el = -(el_enc - (double)elinfo.ref)/CNTS_PER_DEG + CommandData.az_el.el_ref;
-
-  el = mod_cm(el, 360.0);
-
-  if (el > 89.0) {
-    el -= 360.0;
-  }
-
-  bprintf(info, "current el angle: %f", el);
-  dextdtheta = dxdtheta(el); // uses current elevation angle (okay for small
-                             // step size?)
-
-  ext_low = xoftheta(el_low);
-
-  ext = xoftheta(el);
-  
-  el_start = (int)(((ext_low - ext)/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO
-		   *CM_PULSES);
-		   
-  elrps = (dextdtheta*CommandData.az_el.el_speed/IN_TO_MM)*ROT_PER_INCH
-           *EL_GEAR_RATIO;
-		   
-  elrps = (elrps*60.0 > 2000.0) ? (2000.0/60.0) : elrps;
-  bprintf(info, "el motor will move at: %f rpm", elrps*60.0);
-
-  el_speed = (int)((elrps*CM_PULSES)/SPEED_UNIT);
-
-//  el_speed = (int)(((dextdtheta*CommandData.az_el.el_speed/IN_TO_MM)
-//	            *ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/SPEED_UNIT);
-
-  el_accel = (int)(((dextdtheta*CommandData.az_el.el_accel/IN_TO_MM)
-       	            *ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/ACCEL_UNIT);
-*/
   az_centre = CommandData.az_el.az;
-
   el_centre = CommandData.az_el.el;
 
   az_speed_init = CommandData.az_el.az_speed;
-  
   el_speed_init = CommandData.az_el.el_speed;
 
   az_start = CommandData.az_el.az - CommandData.az_el.az_width/2.0;
-
   az_start = mod_cm(az_start, 360.0);
 
   el_low = CommandData.az_el.el - CommandData.az_el.el_height/2.0;
-
   el_high = CommandData.az_el.el + CommandData.az_el.el_height/2.0;
 
   el_low = (el_low < EL_MIN) ? EL_MIN : el_low;
-
   el_high = (el_high > EL_MAX) ? EL_MAX : el_high;
 
   N_steps = (el_high - el_low)/CommandData.az_el.el_step;
@@ -578,34 +538,14 @@ void raster_cm()
   CommandData.az_el.az = az_start;
   CommandData.az_el.el = el_low;
   goto_cm();
-  
-/*  if ((az_speed != 0) && (az_accel != 0)) {
-  
-    slew_cm(az_accel, az_speed, az_start, &azinfo);
-*/
-    /* check to see if it got there */
-  //  checkpos_cm(&azinfo);
- // }
-  
- /*
-  if ((el_speed != 0) && (el_accel != 0)) {
-    bprintf(info, "Moving to starting elevation...");
-    slew_cm(el_accel, el_speed, el_start, &elinfo);
-*/
-    /* check to see if it got there */
-  //  checkpos_cm(&elinfo);
- // }
-   
- /* start the raster scan */
+
+  /* start the raster scan */
 
   step_count = 0;
   
   while (step_count < N_steps) {
    
     step_count++;   
-
-    //pos_arg = ( ((step_count - 1) % 2) == 0 ) ? CommandData.az_el.az_width 
-    //          : -(CommandData.az_el.az_width);
     
     /* scan across in azimuth */
 
@@ -618,54 +558,16 @@ void raster_cm()
     CommandData.az_el.az_speed = az_speed_init;
     goto_cm();
 
-  /*  if ((az_speed != 0) && (az_accel != 0)) {  
-      bprintf(info, "Scanning in azimuth...");
-      slew_cm(az_accel, az_speed, pos_arg, &azinfo);
-      checkpos_cm(&azinfo);
-	*/
+    /* step in elevation */
 
-  /* step in elevation */
-   
-    // if ((el_speed != 0) && (el_accel != 0)) {    
-   bprintf(info,"Elevation Step: %i", step_count);  
-   bprintf(info, "Stepping in elevation...");
-    	 
-  //    el_enc = ReadData(elEncAddr);
+    bprintf(info,"Elevation Step: %i", step_count);  
+    bprintf(info, "Stepping in elevation...");
 
-//      el = -(el_enc - (double)elinfo.ref)/CNTS_PER_DEG + CommandData.az_el.el_ref;
-
-  //    el = mod_cm(el, 360.0);
-
-  //    if (el > 89.0) {
-	  //  el -= 360.0;
-   //   }
-
-   //   dextdtheta = dxdtheta(el); // uses current elevation angle (okay for small
-                                 // step size?)
-
-    //  dext = calc_dx(el, CommandData.az_el.el_step);
-
-      //step_size = (int)(((dext)/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO
-//				    *CM_PULSES);
-					
-	//  elrps = (dextdtheta*CommandData.az_el.el_speed/IN_TO_MM)*ROT_PER_INCH
-            // *EL_GEAR_RATIO;
-		   
-	//  elrps = (elrps*60.0 > 2000.0) ? (2000.0/60.0) : elrps;
-	  //bprintf(info, "el motor will move at: %f rpm", elrps*60.0);
-
-  //    el_speed = (int)((elrps*CM_PULSES)/SPEED_UNIT);
-				
-    //  el_accel = (int)(((dextdtheta*CommandData.az_el.el_accel/IN_TO_MM)
-         //	        *ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)/ACCEL_UNIT);
-					
-      if (CommandData.az_el.el_step > 0) {
-        CommandData.az_el.el = el_low + step_count*CommandData.az_el.el_step;
-        CommandData.az_el.az_speed = 0;
-        CommandData.az_el.el_speed = el_speed_init;
-        goto_cm();
-      //  slew_cm(el_accel, el_speed, step_size, &elinfo);
-       // checkpos_cm(&elinfo);  
+    if (CommandData.az_el.el_step > 0) {
+      CommandData.az_el.el = el_low + step_count*CommandData.az_el.el_step;
+      CommandData.az_el.az_speed = 0;
+      CommandData.az_el.el_speed = el_speed_init;
+      goto_cm();
       }
     
     /* TODO - sjb: XY stage also did "el" scan with "az" steps. Do we want 
@@ -821,6 +723,7 @@ int write_cm(struct CMInfoStruct *cminfo, char *cmd, int length,
   usleep(10000); // experimental, can CM not deal with rapid commands?
 } 
 
+#if 0
 /* checkpos_cm checks if a motor reached the commanded position */
 
 void checkpos_cm(struct CMInfoStruct *cminfo) 
@@ -850,6 +753,7 @@ void checkpos_cm(struct CMInfoStruct *cminfo)
   }
 
 }
+#endif
 
 /* allstop_cm sends emergency stop commands to both motors. Also 
   de-energizes and re-energizes windings to clear alarm states. */
@@ -1137,6 +1041,7 @@ void close_cm(struct CMInfoStruct* cminfo)
   } else berror(err, "Failed to close motor serial port");
 }
 
+#if 0
 /* calc_dx returns the change in lin. act. extension (mm) given a step in 
    elevation angle (deg) */
 
@@ -1163,6 +1068,7 @@ double calc_dx(double theta, double dtheta)
 
 }
 
+
 /* xoftheta returns the extension of the lin. actuator (in mm) given the 
   telescope elevation angle (deg) */
 
@@ -1175,8 +1081,10 @@ double xoftheta(double theta)
 
   return x;
 } 
+#endif
 
-/* returns derivative of lin. act. extension. w.r.t. elevation angle (mm/deg) */
+/* dxdtheta returns derivative of lin. act. extension. w.r.t. elevation angle 
+ * (mm/deg) */
 
 double dxdtheta(double theta)
 {
@@ -1328,18 +1236,18 @@ void* azelComm(void* arg)
 void AzElScan()
 {
 
-  static struct BiPhaseStruct* elEncAddr;
-  static struct BiPhaseStruct* azEncAddr;
+  //static struct BiPhaseStruct* elEncAddr;
+  //static struct BiPhaseStruct* azEncAddr;
 
-  static int firsttime = 1;
+  //static int firsttime = 1;
 
-  if (firsttime) {
+  //if (firsttime) {
 
-    elEncAddr = GetBiPhaseAddr("adc1_enc_el");
-    azEncAddr = GetBiPhaseAddr("adc1_enc_az");
+    //elEncAddr = GetBiPhaseAddr("adc1_enc_el");
+    //azEncAddr = GetBiPhaseAddr("adc1_enc_az");
 
-    firsttime = 0;
-  }
+    //firsttime = 0;
+ // }
 
   switch(CommandData.az_el.mode) {
 
@@ -1375,12 +1283,14 @@ void AzElScan()
       break;
 
     case AzElSet:
-      azinfo.ref = ReadData(azEncAddr);
-      elinfo.ref = ReadData(elEncAddr);
+      azinfo.ref = az_enc;
+      elinfo.ref = el_enc;
+      CommandData.az_el.mode = AzElNone;
       break;
 
     default:
       bputs(err, "Invalid scan mode specified\n");
+      CommandData.az_el.mode = AzElNone;
   }
 
 }
@@ -1425,7 +1335,7 @@ void WriteAzEl()
   WriteData(azWidthAddr,(CommandData.az_el.az_width)*(65535.0/180.0),
             NIOS_QUEUE);  
 
-  WriteData(azVelAddr,(CommandData.az_el.az_speed)*(65535.0/10.0), NIOS_QUEUE);
+  WriteData(azVelAddr,(CommandData.az_el.az_speed)*(65535.0/5.0), NIOS_QUEUE);
 
   WriteData(elVelAddr, (CommandData.az_el.el_speed)*(65535.0/5.0), NIOS_QUEUE);
 

@@ -40,6 +40,9 @@ void WriteAzEl(); // az-el.c
 
 extern int bbc_fp;
 
+extern unsigned int az_enc; // az-el.c
+extern unsigned int el_enc; // az_el.c
+
 /* this is provided to let the various controls know that we're doing our
  * initial control writes -- there's no input data yet */
 int mcp_initial_controls = 0;
@@ -276,9 +279,20 @@ double ReadCalData(struct BiPhaseStruct* addr)
 void UpdateBBCFrame()
 {
   static int index = 0;
+  static int firsttime = 1;
 
+  static struct BiPhaseStruct* elEncAddr;
+  static struct BiPhaseStruct* azEncAddr;
+  
+  if (firsttime) {
+    elEncAddr = GetBiPhaseAddr("adc1_enc_el");
+    azEncAddr = GetBiPhaseAddr("adc1_enc_az");
+    firsttime = 0;
+  }
   /*** do fast Controls ***/
-  //currently no fast controls
+
+  el_enc = ReadData(elEncAddr);
+  az_enc = ReadData(azEncAddr);
 
   /*** do slow Controls ***/
   if (index == 0) {
