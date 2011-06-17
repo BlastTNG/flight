@@ -1,13 +1,16 @@
 CFLAGS = -g -Wall
 blastcmd_CFLAGS = -D__BLAST__
 minicmd_CFLAGS = -D__MINI__
+spidercmd_CFLAGS = -D__SPIDER__
 
 AUTOMAKE_OPTIONS = foreign
 blastcmd_SOURCES = blastcmd.c command_list_blast.c daemon.c netcmd.c \
 		   command_list_blast.h daemon.h isc_protocol.h netcmd.h
 minicmd_SOURCES = blastcmd.c command_list_mini.c daemon.c netcmd.c \
 		  command_list_mini.h daemon.h isc_protocol.h netcmd.h
-bin_PROGRAMS = blastcmd minicmd
+spidercmd_SOURCES = blastcmd.c command_list_spider.c daemon.c netcmd.c \
+		  command_list_spider.h daemon.h isc_protocol.h netcmd.h
+bin_PROGRAMS = blastcmd minicmd spidercmd
 dist_bin_SCRIPTS = blastcmd-authorize
 
 dataetcdir = @DATA_ETC_DIR@
