@@ -28,8 +28,6 @@ extern "C" {
 #define NOT_MULTIPLEXED (FAST_PER_SLOW)
 #define DISCARD_WORD    (FAST_PER_SLOW + 1)
 
-#define SR (100.16)
-
 /* Number of DAS bolometer cards to include in the frame.  The maximum number
  * of cards is 12. Making 0 will disable bolometer channels
  * Unless specified, will assume 0. Blast should compile with -DDAS_CARDS=12 */
