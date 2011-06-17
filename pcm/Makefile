@@ -24,7 +24,7 @@ OBJS = actuators.o blast.o channels.o command_list.o commands.o das.o \
 ifndef BOLOTEST
 OBJS := $(OBJS) amccommand.o auxiliary.o chrgctrl.o compressstruct.o \
 		compressionwriter.o copleycommand.o crc.o dgps.o ephem_read.o \
-		fftsg_h.o fir.o geomag.o isc.o motors.o pointing.o radbox.o \
+		fir.o geomag.o isc.o motors.o pointing.o radbox.o \
 		sbsc.o sbsccommunicator.o sched.o slow_dl.o starpos.o \
 		sunsensor.o
 endif
