@@ -31,9 +31,9 @@
 #include <sstream>
 
 extern "C" {
-#include "blast.h"
+#include "share/blast.h"
 #include "tx.h"
-#include "channels.h"
+#include "share/channels.h"
 #include "pointing_struct.h"
 #include "mcp.h"
 #include "command_struct.h"

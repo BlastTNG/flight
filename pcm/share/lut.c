@@ -27,7 +27,7 @@
 
 #include "blast.h"
 #include "lut.h"
-#include "mcp.h"
+#include "../mcp.h"
 
 #define MAXITER 10
 #define TOLERANCE (10.0/3600.*M_PI/180.)

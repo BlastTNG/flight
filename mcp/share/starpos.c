@@ -43,8 +43,8 @@
 #include <time.h>
 #include <limits.h>
 
-#include "command_struct.h"
-#include "mcp.h"
+#include "../command_struct.h"
+#include "../mcp.h"
 
 extern struct ScheduleType _S[2][3]; /* sched.c */
 

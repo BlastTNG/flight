@@ -14,7 +14,7 @@
 #ifndef COMMAND_LIST_H
 #define COMMAND_LIST_H
 
-#include "netcmd.h"	   /* common parts of command defintions moved here */
+#include "share/netcmd.h"  /* common parts of command defintions moved here */
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 229        /* total number of single word cmds */
