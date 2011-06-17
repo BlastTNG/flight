@@ -25,7 +25,7 @@
 
 #include "isc_protocol.h"
 #include "command_list.h"
-#include "channels.h"
+#include "share/channels.h"
 #include <time.h>
 
 #define AXIS_VEL      0

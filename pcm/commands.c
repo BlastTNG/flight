@@ -43,7 +43,7 @@
 #include "tx.h"
 #include "pointing_struct.h"
 #include "slow_dl.h"
-#include "channels.h"
+#include "share/channels.h"
 
 #define REQ_POSITION    0x50
 #define REQ_TIME        0x51

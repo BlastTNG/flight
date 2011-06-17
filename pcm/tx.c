@@ -38,9 +38,9 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "bbc_pci.h"
+#include "share/bbc_pci.h"
 
-#include "channels.h"
+#include "share/channels.h"
 #include "pointing_struct.h"
 #include "tx.h"
 #include "command_struct.h"

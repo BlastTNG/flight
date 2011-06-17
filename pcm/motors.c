@@ -29,7 +29,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "channels.h"
+#include "share/channels.h"
 #include "tx.h"
 #include "pointing_struct.h"
 #include "command_struct.h"

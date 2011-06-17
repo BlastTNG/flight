@@ -22,7 +22,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <math.h>
-#include "blast.h"
+#include "share/blast.h"
 #include "amccommand.h"
 #include "motordefs.h"
 #include "command_struct.h" 

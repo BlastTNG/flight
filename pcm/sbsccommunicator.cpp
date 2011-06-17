@@ -10,7 +10,7 @@
 #include <cstdlib>
 #include "sbsccommunicator.h"
 extern "C" {
-#include "blast.h"
+#include "share/blast.h"
 }
 #define SBSC_COMM_DEBUG 0
 #if SBSC_COMM_DEBUG

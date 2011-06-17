@@ -47,7 +47,7 @@ along with mcp; if not, write to the Free Software Foundation, Inc.,
 #include "mcp.h" 
 
 /*
-#include "channels.h"
+#include "share/channels.h"
 #include "tx.h"
  */
 

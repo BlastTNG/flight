@@ -32,14 +32,14 @@
 #include <ctype.h>
 #include <pthread.h>
 
-#include "blast.h"
+#include "share/blast.h"
 #include "mcp.h"
 #include "isc_protocol.h"
 #include "pointing_struct.h"
 #include "command_struct.h"
-#include "lut.h"
+#include "share/lut.h"
 #include "tx.h"
-#include "fir.h"
+#include "share/fir.h"
 
 // Include gsl package for the old sun sensor
 #include <gsl/gsl_rng.h>

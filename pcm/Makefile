@@ -7,26 +7,27 @@ ifeq ($(DEBUG), 1)
 	LDFLAGS := $(LDFLAGS) -g -DDEBUG
 endif
 
-HEADERS = amccommand.h bbc_pci.h blast.h channels.h calibrate.h chrgctrl.h \
-		command_list.h command_struct.h compressstruct.h \
-		copleycommand.h hwpr.h crc.h derived.h ephem_read.h \
-		ephem_types.h ezstep.h fir.h isc_protocol.h lut.h mcp.h \
-		motordefs.h netcmd.h pointing_struct.h sbsc_protocol.h \
-		sbsccommunicator.h slow_dl.h sss_struct.h starpos.h tx.h
+HEADERS = amccommand.h share/bbc_pci.h share/blast.h share/channels.h \
+	  calibrate.h chrgctrl.h command_list.h command_struct.h \
+	  compressstruct.h copleycommand.h hwpr.h share/crc.h share/derived.h \
+	  share/ephem_read.h share/ephem_types.h ezstep.h share/fir.h \
+	  isc_protocol.h share/lut.h mcp.h motordefs.h share/netcmd.h \
+	  pointing_struct.h sbsc_protocol.h sbsccommunicator.h slow_dl.h \
+	  sss_struct.h share/starpos.h tx.h
 		
 
 # These are needed by both bolotest and flight versions
-OBJS = actuators.o blast.o channels.o command_list.o commands.o das.o \
-		derived.o ezstep.o framefile.o hwpr.o lut.o mcp.o tx.o \
-		tx_struct.o xystage.o
+OBJS = actuators.o share/blast.o share/channels.o command_list.o commands.o \
+       das.o derived.o ezstep.o share/framefile.o hwpr.o share/lut.o mcp.o \
+       tx.o tx_struct.o xystage.o
 
 # These are only needed by the flight version
 ifndef BOLOTEST
 OBJS := $(OBJS) amccommand.o auxiliary.o chrgctrl.o compressstruct.o \
-		compressionwriter.o copleycommand.o crc.o dgps.o ephem_read.o \
-		fir.o geomag.o isc.o motors.o pointing.o radbox.o \
-		sbsc.o sbsccommunicator.o sched.o slow_dl.o starpos.o \
-		sunsensor.o
+		compressionwriter.o copleycommand.o share/crc.o dgps.o \
+		share/ephem_read.o share/fir.o share/geomag.o isc.o motors.o \
+		pointing.o share/radbox.o sbsc.o sbsccommunicator.o sched.o \
+		slow_dl.o share/starpos.o sunsensor.o
 endif
 
 .PHONEY: fifo install all restart
@@ -36,6 +37,7 @@ all: pcm
 clean:
 	rm -f pcm || true;
 	rm -f *.o || true;
+	rm -f share/*.o || true;
 
 pcm: $(OBJS)
 	$(CC) $(OBJS) $(LDFLAGS) -o pcm
