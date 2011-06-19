@@ -53,6 +53,8 @@ Note:      CM = Cool Muscle (stepper motor type)
 #define EL_MIN -10.0
 #define EL_MAX 89.0
 
+#define TOLERANCE 0.01
+
 unsigned int az_enc;
 unsigned int el_enc;
 
@@ -92,7 +94,8 @@ static void init_cm(struct CMInfoStruct *cminfo);
 
 static void AzElScan();
 static void allstop_cm(); 
-static void goto_cm();
+static void goto_cm(double az, double el, double w0_az, double w0_el, 
+                    double a_az, double a_el);
 static void raster_cm(); 
 
 //static int drive_cm(int accel, int speed, int position, struct CMInfoStruct 
@@ -243,7 +246,8 @@ void slew_cm(int accel, int speed, int distance, struct CMInfoStruct *cminfo)
 
 /* goto_cm goes to a specific (az,el) position by slewing in each axis */
 
-void goto_cm()
+void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
+             double a_el)
 { 
 
   static int firsttime = 1;
@@ -267,102 +271,49 @@ void goto_cm()
   double el_now;   // current elevation
   double d_az;     // diff between current and destination az
   double d_el;     // diff between current and destination el
-  double d0_az;    // distance to destination at start of decel
-  double d0_el;    // distance to destination at start of decel
-  double w0_az;    // az vel. during const. speed portion
-  double w0_el;    // el vel. during const. speed portion
+//  double d0_az;    // distance to destination at start of decel
+//  double d0_el;    // distance to destination at start of decel
+//  double w0_az;    // az vel. during const. speed portion
+//  double w0_el;    // el vel. during const. speed portion
   double az_rps;   // rev/s of az motor
   double el_rps;   // rev/s of el motor
   double w_az;     // az ang. velocity
   double w_el;     // el ang. velocity
-  double a_az;     // az ang. acceleration
-  double a_el;     // el ang. acceleration
+//  double a_az;     // az ang. acceleration
+//  double a_el;     // el ang. acceleration
   double dx_del;   // deriv. of lin. act. extension w.r.t. el
-  
+  //double az_target;
+  //double el_target;
+
   /* dynamical variables in cool muscle units */
   int a_az_cm;
   int a_el_cm;
   int w_az_cm;
   int w_el_cm;
   
-  /* get initial angles */
-  bprintf(info, "current az encoder reading: %i", az_enc); 
-  bprintf(info, "current el encoder reading: %i", el_enc);
-
-  /* negative sign because increasing encoder count = decreasing angle */
-  az_now = -((double)az_enc - (double)azinfo.ref)/CNTS_PER_DEG 
-            + CommandData.az_el.az_ref;
-  az_now = mod_cm(az_now, 360.0);
-
-  el_now = -((double)el_enc - (double)elinfo.ref)/CNTS_PER_DEG 
-            + CommandData.az_el.el_ref;
-  el_now = mod_cm(el_now, 360.0);
-
-  /* correction for negative angles */
-  if (el_now > EL_MAX) {
-    el_now -= 360.0;
-  }
-
-  bprintf(info, "Starting az: %f degrees", az_now);
-  bprintf(info, "Starting el: %f degrees", el_now);
-  
   /* compute angular displacements */
-  d_az = CommandData.az_el.az - az_now;
-  d_el = CommandData.az_el.el - el_now;
 
-  /* don't take the long way around */
-  if (d_az >= 0) {
-    d_az = (d_az < (360.0 - d_az)) ? d_az : -(360.0 - d_az);
-  } else d_az = (-d_az < (360.0 + d_az)) ? 
-    d_az : (360.0 + d_az);
+  //az_target = CommandData.az_el.az;
 
+  //el_target = CommandData.az_el.el;
+  
   /* set initial motion variables */
-  a_az = CommandData.az_el.az_accel;
+  //a_az = CommandData.az_el.az_accel;
   a_az_cm = (int)((a_az*AZ_GEAR_RATIO*CM_PULSES)/(360.0*ACCEL_UNIT));
     
-  a_el = CommandData.az_el.el_accel;
+ // a_el = CommandData.az_el.el_accel;
 
-  dx_del = dxdtheta(el_now);
+//  w0_az = CommandData.az_el.az_speed;
+//  w0_el = CommandData.az_el.el_speed;
 
-  a_el_cm = (int)(((dx_del*a_el/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO*CM_PULSES)
-                  /ACCEL_UNIT);
+  n_a_az = sprintf(accel_cmd_az, "A=%i\r", 0);
+  n_s_az = sprintf(speed_cmd_az, "S=%i\r", 0);
 
-  w0_az = CommandData.az_el.az_speed;
-  w0_el = CommandData.az_el.el_speed;
-
-  az_rps = (w0_az*AZ_GEAR_RATIO)/360.0;
-  el_rps = (dx_del*w0_el/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO;
-  
-  /* limit Cool Muscle rotation speed to 2000 rpm */
-  az_rps = (az_rps*60.0 > 2000.0) ? (2000.0/60.0) : az_rps;
-  el_rps = (el_rps*60.0 > 2000.0) ? (2000.0/60.0) : el_rps;
-
-  bprintf(info, "az motor will move at: %f rpm", az_rps*60.0);  
-  bprintf(info, "el motor will move at: %f rpm", el_rps*60.0);
-  
-  w_az_cm = (int)((az_rps*CM_PULSES)/SPEED_UNIT);
-  w_el_cm = (int)((el_rps*CM_PULSES)/SPEED_UNIT);
-  
-  if (d_az > 0) { 
-    w_az_cm *= -1;
-  } else if (d_az == 0) {
-    w_az_cm = 0;
-  }
-
-  if (d_el > 0) { 
-    w_el_cm *= -1;
-  } else if (d_el == 0) {
-    w_el_cm = 0;
-  }
-
-  n_a_az = sprintf(accel_cmd_az, "A=%i\r", a_az_cm);
-  n_s_az = sprintf(speed_cmd_az, "S=%i\r", w_az_cm);
-
-  n_a_el = sprintf(accel_cmd_el, "A=%i\r", a_el_cm);
-  n_s_el = sprintf(speed_cmd_el, "S=%i\r", w_el_cm);
+  n_a_el = sprintf(accel_cmd_el, "A=%i\r", 0);
+  n_s_el = sprintf(speed_cmd_el, "S=%i\r", 0);
   
   /* send the motion commands */
-  if ( (w_az_cm != 0) && (a_az_cm !=0) ) {
+  if ( (w0_az != 0) && (a_az !=0) ) {
     write_cm(&azinfo, accel_cmd_az, n_a_az, 
              " initial acceleration CML command");
 
@@ -375,7 +326,7 @@ void goto_cm()
     write_cm(&azinfo, exec, strlen(exec), " execute motion CML command");
   }
 
-  if ( (w_el_cm != 0) && (a_el_cm != 0) ) {
+  if ( (w0_el != 0) && (a_el != 0) ) {
     write_cm(&elinfo, accel_cmd_el, n_a_el, 
 	     " initial acceleration CML command");
 
@@ -393,7 +344,7 @@ void goto_cm()
           (CommandData.az_el.mode == AzElGoto) &&
           (zero_count < 100) ) { */
 
-  while ( (CommandData.az_el.mode == AzElGoto) && (zero_count < 10) ) {
+  while ( !(CommandData.az_el.new_cmd) && (zero_count < 10) ) {
 
     /* get latest position errors  */
     az_now = -((double)az_enc - (double)azinfo.ref)/CNTS_PER_DEG 
@@ -407,76 +358,100 @@ void goto_cm()
       el_now -= 360.0;
     }
 
-    d_az = CommandData.az_el.az - az_now;
-    d_el = CommandData.az_el.el - el_now;
+    d_az = az_now - az;
+    d_el = el_now - el;
   
-    if (d_az >= 0) {
-      d_az = (d_az < (360.0 - d_az)) ? d_az : -(360.0 - d_az);
-    } else d_az = (-d_az < (360.0 + d_az)) ? 
-      d_az : (360.0 + d_az);  
+    /* don't take the long way around */ 
+    if (-(d_az) >= 0) {
+      d_az = (-(d_az) < (360.0 + d_az)) ? d_az : (360.0 + d_az);
+    } else {
+      d_az = (d_az < (360.0 - d_az)) ?  d_az : -(360.0 - d_az);
+    }
 
-    if ( ((d_az == 0) || ((w0_az == 0) && (a_az == 0))) &&
-         ((d_el == 0) || ((w0_el == 0) && (a_el == 0))) ) {
+    if ( ((fabs(d_az)<TOLERANCE) || ((w0_az == 0) || (a_az == 0))) &&
+         ((fabs(d_el)<TOLERANCE) || ((w0_el == 0) || (a_el == 0))) ) {
       zero_count++;
-    } else zero_count = 0;
-
-    if (d_az >= 0) {
-      d0_az = pow(w0_az, 2.0)/(2.0*a_az);
-    } else d0_az = -pow(w0_az, 2.0)/(2.0*a_az);
-    
-    if (d_el >= 0) {
-      d0_el = pow(w0_el, 2.0)/(2.0*a_el);
-    } else d0_el = -pow(w0_el, 2.0)/(2.0*a_el);
+    } else {
+      zero_count = 0;
+    }
 
     /* once we get within d0 of the destination, decelerate: */
 
-    if ( fabs(d_az) <= fabs(d0_az) ) {
 
-      w_az = (d_az < 0) ? sqrt(-2.0*a_az*d_az) : -sqrt(2.0*a_az*d_az);
-
-      if (firsttime) {
-	/* accel used by motor to vary speed is larger than
-	 * accel in defined motion profile */
-        a_az_cm = (int)((5.0*a_az*AZ_GEAR_RATIO*CM_PULSES)/(360.0*ACCEL_UNIT));
-        n_a_az = sprintf(accel_cmd_az, "A=%i\r", a_az_cm);
-        if ( (w0_az != 0) && (a_az != 0) ) {
-	  write_cm(&azinfo, accel_cmd_az, n_a_az, " acceleration CML command");
-	}
-	firsttime = 0;
-
-      }
-
-      az_rps = (w_az*AZ_GEAR_RATIO)/360.0;
-      w_az_cm = (int)((az_rps*CM_PULSES)/SPEED_UNIT);
-      n_s_az = sprintf(speed_cmd_az, "S=%i\r", w_az_cm);
-      if ( (w0_az != 0) && (a_az != 0) ) {
-        write_cm(&azinfo, speed_cmd_az, n_s_az, " speed CML command");
-      }
-    } 
-    
-    if ( fabs(d_el) <= fabs(d0_el) ) {
-
-      w_el = (d_el < 0) ? sqrt(-2.0*a_el*d_el) : -sqrt(2.0*a_el*d_el);
-
-      /* re-compute and re-send accel every time, since dx/d(el) is a 
-       * function of el */
-      dx_del = dxdtheta(el_now);
-      a_el_cm = (int)(((5.0*dx_del*a_el/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO
-	    *CM_PULSES)/ACCEL_UNIT);
-      n_a_el = sprintf(accel_cmd_el, "A=%i\r", a_el_cm);
-      if ( (w0_el != 0) && (a_el != 0) ) {
-        write_cm(&elinfo, accel_cmd_el, n_a_el, " acceleration CML command");
-      }
-
-      el_rps = (dx_del*w_el/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO;
-      w_el_cm = (int)((el_rps*CM_PULSES)/SPEED_UNIT);
-      n_s_el = sprintf(speed_cmd_el, "S=%i\r", w_el_cm); 
-      if ( (w0_el != 0) && (a_el != 0) ) {
-        write_cm(&elinfo, speed_cmd_el, n_s_el, " speed CML command");
-      }
+    w_az = (d_az < 0) ? sqrt(-2.0*a_az*d_az) : -sqrt(2.0*a_az*d_az);
+    if (w_az>w0_az) {
+      w_az = w0_az;
     }
+    if (w_az<-w0_az) {
+      w_az = -w0_az;
+    }
+    if (fabs(d_az)<TOLERANCE) {
+      w_az = 0;
+    }
+
+    if (firsttime) {
+      /* accel used by motor to vary speed is larger than
+       * accel in defined motion profile */
+      a_az_cm = (int)((1.2*a_az*AZ_GEAR_RATIO*CM_PULSES)/(360.0*ACCEL_UNIT));
+      n_a_az = sprintf(accel_cmd_az, "A=%i\r", a_az_cm);
+      if ( (w0_az != 0) && (a_az != 0) ) {
+	write_cm(&azinfo, accel_cmd_az, n_a_az, " acceleration CML command");
+      }
+      firsttime = 0;
+    }
+
+    az_rps = (w_az*AZ_GEAR_RATIO)/360.0;
+    w_az_cm = (int)((az_rps*CM_PULSES)/SPEED_UNIT);
+    n_s_az = sprintf(speed_cmd_az, "S=%i\r", -w_az_cm);
+    //bprintf(info,"%s", speed_cmd_az);
+    if ( (w0_az != 0) && (a_az != 0) ) {
+      write_cm(&azinfo, speed_cmd_az, n_s_az, " speed CML command");
+    }
+    
+    w_el = (d_el < 0) ? sqrt(-2.0*a_el*d_el) : -sqrt(2.0*a_el*d_el);
+
+    if (w_el>w0_el) {
+      w_el = w0_el;
+    }
+    if (w_el<-w0_el) {
+      w_el = -w0_el;
+    }
+    if (fabs(d_el)<TOLERANCE) {
+      w_el = 0;
+    }
+
+    /* re-compute and re-send accel every time, since dx/d(el) is a 
+     * function of el */
+    dx_del = dxdtheta(el_now);
+    a_el_cm = (int)(((1.2*dx_del*a_el/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO
+	  *CM_PULSES)/ACCEL_UNIT);
+    n_a_el = sprintf(accel_cmd_el, "A=%i\r", a_el_cm);
+    if ( (w0_el != 0) && (a_el != 0) ) {
+      write_cm(&elinfo, accel_cmd_el, n_a_el, " acceleration CML command");
+    }
+
+    el_rps = (dx_del*w_el/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO;
+    if (el_rps>2000.0/60.0) {
+      el_rps = 2000.0/60.0;
+    }
+    if (el_rps<-2000.0/60.0) {
+      el_rps = -2000.0/60.0;
+    }
+
+    w_el_cm = (int)((el_rps*CM_PULSES)/SPEED_UNIT);
+    n_s_el = sprintf(speed_cmd_el, "S=%i\r", -w_el_cm); 
+    if ( (w0_el != 0) && (a_el != 0) ) {
+      write_cm(&elinfo, speed_cmd_el, n_s_el, " speed CML command");
+    }
+
     usleep(10000);
   }
+
+  n_s_el = sprintf(speed_cmd_el, "S=%i\r", 0); 
+  write_cm(&elinfo, speed_cmd_el, n_s_el, " speed CML command");
+
+  n_s_az = sprintf(speed_cmd_az, "S=%i\r", 0); 
+  write_cm(&azinfo, speed_cmd_az, n_s_az, " speed CML command");
 
   az_now = -((double)az_enc - (double)azinfo.ref)/CNTS_PER_DEG 
               + CommandData.az_el.az_ref;
@@ -489,9 +464,10 @@ void goto_cm()
     el_now -= 360.0;
   }
 
-  bprintf(info, "Final (az, el) = (%f, %f) (degrees)", 
-          az_now, el_now);
-  bprintf(info, "zero count = %i", zero_count);
+  // bprintf(info, "Final (az, el) = (%f, %f) (degrees)", 
+  //        az_now, el_now);
+  // bprintf(info, "Final encoder counts (az, el) = (%d, %d) cts", az_enc, el_enc);
+  // bprintf(info, "zero count = %i", zero_count);
 }
 
 /* raster_cm performs a raster scan with the commanded parameters using a 
@@ -504,6 +480,8 @@ void raster_cm()
   unsigned int N_steps;              // number of elevation steps
 
   double az_start;
+  double az_goto;
+  double el_goto;
   double el_low;
   double el_high;
   double az_centre;
@@ -535,28 +513,30 @@ void raster_cm()
   
   bprintf(info, "Moving to end of az scan range..."); 
   bprintf(info, "Moving to starting elevation...");
-  CommandData.az_el.az = az_start;
-  CommandData.az_el.el = el_low;
-  goto_cm();
+//  CommandData.az_el.az = az_start;
+//  CommandData.az_el.el = el_low;
+  goto_cm(az_start, el_low, az_speed_init, el_speed_init, 
+          CommandData.az_el.az_accel, CommandData.az_el.el_accel);
 
   /* start the raster scan */
 
   step_count = 0;
   
-  while (step_count < N_steps) {
+  while ((step_count < N_steps) && (!CommandData.az_el.new_cmd)) {
    
     step_count++;   
     
     /* scan across in azimuth */
 
-    CommandData.az_el.az = (((step_count - 1) % 2) == 0) ? 
+    az_goto = (((step_count - 1) % 2) == 0) ? 
     CommandData.az_el.az_width + az_start : az_start;
     
-    CommandData.az_el.az = mod_cm(CommandData.az_el.az, 360.0);
+    az_goto = mod_cm(az_goto, 360.0);
 
-    CommandData.az_el.el_speed = 0;
-    CommandData.az_el.az_speed = az_speed_init;
-    goto_cm();
+//    CommandData.az_el.el_speed = 0;
+//    CommandData.az_el.az_speed = az_speed_init;
+    goto_cm(az_goto, el_low, az_speed_init, 0.0, CommandData.az_el.az_accel,
+	    CommandData.az_el.el_accel);
 
     /* step in elevation */
 
@@ -564,11 +544,12 @@ void raster_cm()
     bprintf(info, "Stepping in elevation...");
 
     if (CommandData.az_el.el_step > 0) {
-      CommandData.az_el.el = el_low + step_count*CommandData.az_el.el_step;
-      CommandData.az_el.az_speed = 0;
-      CommandData.az_el.el_speed = el_speed_init;
-      goto_cm();
-      }
+      el_goto = el_low + step_count*CommandData.az_el.el_step;
+   //   CommandData.az_el.az_speed = 0;
+   //   CommandData.az_el.el_speed = el_speed_init;
+      goto_cm(az_goto, el_goto, 0.0, el_speed_init, CommandData.az_el.az_accel,
+	      CommandData.az_el.el_accel);
+    }
     
     /* TODO - sjb: XY stage also did "el" scan with "az" steps. Do we want 
        this? */
@@ -576,11 +557,11 @@ void raster_cm()
 
   /* restore parameters */
 
-  CommandData.az_el.az = az_centre;
+ /* CommandData.az_el.az = az_centre;
   CommandData.az_el.el = el_centre;
   CommandData.az_el.az_speed = az_speed_init;
   CommandData.az_el.el_speed = el_speed_init;
-
+*/
 }
 
 /* init_cm sets a Cool Muscle's internal parameters */
@@ -720,7 +701,7 @@ int write_cm(struct CMInfoStruct *cminfo, char *cmd, int length,
     bprintf(err,"Wrote incorrect number of bytes for %s", cmd_desc);
     return -2;
   } else return 0;
-  usleep(10000); // experimental, can CM not deal with rapid commands?
+  //usleep(10000); // experimental, can CM not deal with rapid commands?
 } 
 
 #if 0
@@ -1249,6 +1230,8 @@ void AzElScan()
     //firsttime = 0;
  // }
 
+  CommandData.az_el.new_cmd = 0;
+
   switch(CommandData.az_el.mode) {
 
     case AzElNone:
@@ -1261,8 +1244,10 @@ void AzElScan()
 
     case AzElGoto:
       if (!CommandData.az_el.cmd_disable) {   
-        goto_cm();
-        CommandData.az_el.mode = AzElNone;
+        goto_cm(CommandData.az_el.az, CommandData.az_el.el, 
+	       CommandData.az_el.az_speed, CommandData.az_el.el_speed,
+	       CommandData.az_el.az_accel, CommandData.az_el.el_accel);
+        //CommandData.az_el.mode = AzElNone;
       } else {
 	bputs(err,  
 	"Goto command refused! Enter reference angles using az_el_set first.");
@@ -1273,7 +1258,7 @@ void AzElScan()
     case AzElRaster:
       if (!CommandData.az_el.cmd_disable) {   
         raster_cm();       
-        CommandData.az_el.mode = AzElNone;
+        //CommandData.az_el.mode = AzElNone;
       } else {
         bputs(err,
         "Raster command refused! Enter reference angles using az_el_set first.")

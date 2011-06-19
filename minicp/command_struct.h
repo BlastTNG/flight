@@ -47,6 +47,7 @@ struct CommandDataStruct {
   struct {
 
     int cmd_disable;
+    int new_cmd;
 
     enum scanMode {
       AzElNone,

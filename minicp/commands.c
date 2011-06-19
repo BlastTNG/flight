@@ -114,6 +114,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
 
   switch (command) {
     case az_el_disable:
+      CommandData.az_el.new_cmd = 1;
       CommandData.az_el.mode = AzElDisable;
       break;
     case xyzzy:
@@ -235,6 +236,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.az_el.el_speed = rvalues[3];
       CommandData.az_el.az = rvalues[4];
       CommandData.az_el.el = rvalues[5];
+      CommandData.az_el.new_cmd = 1;
       CommandData.az_el.mode = AzElGoto;
       break;
     case az_el_raster:
@@ -247,12 +249,14 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.az_el.el_accel = rvalues[6];
       CommandData.az_el.el_step = rvalues[7];
       CommandData.az_el.el_height = rvalues[8];
+      CommandData.az_el.new_cmd = 1;
       CommandData.az_el.mode = AzElRaster;
       break;
     case az_el_set:
       CommandData.az_el.az_ref = rvalues[0];
       CommandData.az_el.el_ref = rvalues[1];
       CommandData.az_el.cmd_disable = 0;
+      CommandData.az_el.new_cmd = 1;
       CommandData.az_el.mode = AzElSet;
       break;
     case plugh:/* A hollow voice says "Plugh". */
@@ -381,6 +385,7 @@ void InitCommandData()
     CommandData.power.adc_reset[i] = 0;
 
   CommandData.az_el.cmd_disable = 1;
+  CommandData.az_el.new_cmd = 0;
   CommandData.az_el.mode = AzElNone;
 
   /** return if we succsesfully read the previous status **/
