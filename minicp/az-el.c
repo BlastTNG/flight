@@ -24,7 +24,7 @@ Note:      CM = Cool Muscle (stepper motor type)
 #include <termios.h>	
 #include <errno.h>
 
-#include "blast.h"	  
+#include "share/blast.h"	  
 #include "command_struct.h"
 #include "tx.h"
 

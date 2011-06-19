@@ -26,7 +26,7 @@
 #define COMMAND_STRUCT_H
 
 #include "command_list.h"
-#include "channels.h"
+#include "share/channels.h"
 #include <time.h>
 
 /* time (in slow frames) to suppress ADC card watchdog, to induce reset */

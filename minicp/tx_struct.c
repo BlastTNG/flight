@@ -11,9 +11,9 @@
  */
 
 #include <limits.h>
-#include "channels.h"
+#include "share/channels.h"
 #include "calibrate.h"
-#include "bbc_pci.h"
+#include "share/bbc_pci.h"
 
 /* card name to (node number, bus number) mapping */
 #define ADC1_C	  0, 0

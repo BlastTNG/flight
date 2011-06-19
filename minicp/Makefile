@@ -7,10 +7,10 @@ ifeq ($(DEBUG), 1)
 	LDFLAGS := $(LDFLAGS) -g -DDEBUG
 endif
 
-HEADERS = bbc_pci.h blast.h channels.h derived.h mcp.h tx.h \
-	  command_list.h command_struct.h netcmd.h
+HEADERS = share/bbc_pci.h share/blast.h share/channels.h share/derived.h \
+	  mcp.h tx.h command_list.h command_struct.h share/netcmd.h
 
-OBJS = blast.o channels.o derived.o framefile.o mcp.o tx.o \
+OBJS = share/blast.o share/channels.o derived.o share/framefile.o mcp.o tx.o \
        commands.o command_list.o tx_struct.o az-el.o
 
 .PHONEY: fifo install all
@@ -20,6 +20,7 @@ all: minicp
 clean:
 	rm -f minicp || true;
 	rm -f *.o || true;
+	rm -f share/*.o || true;
 
 minicp: $(OBJS)
 	$(CC) $(OBJS) $(LDFLAGS) -o minicp

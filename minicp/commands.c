@@ -37,7 +37,7 @@
 #include "command_struct.h"
 #include "mcp.h"
 #include "tx.h"
-#include "channels.h"
+#include "share/channels.h"
 
 /* Seconds since 0TMG jan 1 1970 */
 #define SUN_JAN_6_1980 315964800L
