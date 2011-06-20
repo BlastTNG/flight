@@ -1,13 +1,13 @@
 /*******************************************************************
 
-az-el.c -- mcplib code to drive the Spider test cryostat az-el mount 
+az-el.c -- minicp code to drive the Spider test cryostat az-el mount 
            to do scans for beam mapping. Controls the az and el Cool 
            Muscle stepper motors. 
            
 Author:    Jamil A. Shariff
            BallAst Group, Univeristy of Toronto
 
-Updated:   June 17, 2011
+Updated:   June 19, 2011
 
 Note:      CM = Cool Muscle (stepper motor type)
            CML = Cool Muscle Language (ASCII-based, to command motors)
@@ -36,25 +36,26 @@ Note:      CM = Cool Muscle (stepper motor type)
 #define EL_DEVICE "/dev/ttyUSB1"
 
 #define AZ_GEAR_RATIO 236.0 //empirically tunable
-#define CM_PULSES 50000   // Cool Muscle pulses per rotation
-#define SPEED_UNIT 10     // pulses/s in one speed unit
-#define ACCEL_UNIT 1000   // pulses/s^2 in one accel unit
+#define CM_PULSES 50000     // Cool Muscle pulses per rotation
+#define SPEED_UNIT 10       // pulses/s in one speed unit
+#define ACCEL_UNIT 1000     // pulses/s^2 in one accel unit
 #define IN_TO_MM 25.4
-#define ROT_PER_INCH 5    // lin. actuator rotations per inch of travel
-#define EL_GEAR_RATIO 7.0 // empirically tunable  
-#define A 1029.68         // distance from cryo axis to lin. act. axis (mm)
-#define B 350.0           // length of rocker arm in mm
-#define D 740.79          // actuator length in mm (fully retracted)
-#define C 117.65          // angle in degrees relevant to geometry of system
-                          // = 180 - 37 - 25.35
+#define ROT_PER_INCH 5      // lin. actuator rotations per inch of travel
+#define EL_GEAR_RATIO 7.0   // empirically tunable  
+#define A 1029.68           // distance from cryo axis to lin. act. axis (mm)
+#define B 350.0             // length of rocker arm in mm
+#define D 740.79            // actuator length in mm (fully retracted)
+#define C 117.65            // angle in degrees relevant to geometry of system
+                            // = 180 - 37 - 25.35
 #define PI 3.14159265
 #define CNTS_PER_DEG (72000.0/360.0)
 #define CM_PER_ENC (50000.0/72000.0)
 #define EL_MIN -10.0
 #define EL_MAX 89.0
+#define TOLERANCE 0.01      // max acceptable pointing error (deg)
+                            // = 2 encoder counts
 
-#define TOLERANCE 0.01
-
+/* Encoder count values read by main thread over BLASTbus */
 unsigned int az_enc;
 unsigned int el_enc;
 
@@ -66,31 +67,25 @@ struct CMInfoStruct {
   int open;               // 0 = closed, 1 = open
   int init;               // 0 = uninitialized, 1 = initialized
   int closing;            // 1 if in the process of closing
-//int reset;              // 1 to reset serial connection
-//unsigned int err_count; // tally of serial comm. errors 
   int ref;                // position of encoder (counts) after an az_el_set 
                           // command
-
   char motorstr[3];       // name of motor
 
 } azinfo, elinfo;
 
-static pthread_t azelcomm_id;     // gets assigned a thread ID
+static pthread_t azelcomm_id;   // gets assigned a thread ID
 
 void nameThread(const char*);   // mcplib.c
 
 void startAzEl();
 void endAzEl();
-void WriteAzEl();
+void ReadWriteAzEl(int index);
 
 static void* azelComm(void* arg); // serial thread routine
 
 static void open_cm(char *dev_name, struct CMInfoStruct *cminfo);
 static void close_cm(struct CMInfoStruct *cminfo);
-//static void checkpos_cm(struct CMInfoStruct *cminfo);
 static void init_cm(struct CMInfoStruct *cminfo);
-//static void slew_cm(int accel, int speed, int distance, struct CMInfoStruct 
-//                    *cminfo);
 
 static void AzElScan();
 static void allstop_cm(); 
@@ -98,14 +93,10 @@ static void goto_cm(double az, double el, double w0_az, double w0_el,
                     double a_az, double a_el);
 static void raster_cm(); 
 
-//static int drive_cm(int accel, int speed, int position, struct CMInfoStruct 
-//                    *cminfo);
-static int read_cm(struct CMInfoStruct *cminfo, int read_flag);
 static int write_cm(struct CMInfoStruct *cminfo, char *cmd, int length, 
                     const char *cmd_desc); 
+static int read_cm(struct CMInfoStruct *cminfo, int read_flag); 
 
-//static double calc_dx(double theta, double dtheta);
-//static double xoftheta(double theta); 
 static double dxdtheta(double theta);
 static double mod_cm(double val, double mod);
 
@@ -126,123 +117,6 @@ void endAzEl()
   while(azinfo.open == 1 && elinfo.open == 1 && i++ < 100) usleep(10000);
 
 }
-
-#if 0
-/* drive_cm moves a Cool Muscle stepper motor by the specified distance 
-   at the specified speed and acceleration. */
-
-int drive_cm(int accel, int speed, int distance, struct CMInfoStruct* cminfo)
-{
-
-  int acount=0, scount=0, dcount=0;
-  
-//  char *execframe = "[1\r";            // the command to execute the CML
-                                         // program bank for motion
-  
-  char *execframe = "^\r";
-
-  char accelframe[COMMAND_SIZE];         // string for acceleration value
-  char speedframe[COMMAND_SIZE];         // string for speed value
-  char distframe[COMMAND_SIZE];          // string for position value
-
-//  char *program = "B1\rA1,S1,P1+\rEND\r";// small CML program bank to do 
-                                         // relative move
-
-  /* read acceleration, speed and distance values into strings */
-  
-//  acount = sprintf(accelframe, "A1=%i\r", accel);
-//  scount = sprintf(speedframe, "S1=%i\r", speed);
-//  dcount = sprintf(distframe, "P1=%i\r", distance);
-
-  acount = sprintf(accelframe, "A=%i\r", accel);
-  scount = sprintf(speedframe, "S=%i\r", speed);
-
-  if (distance >= 0) {
-    dcount = sprintf(distframe, "P+=%i\r", distance);
-  } else dcount = sprintf(distframe, "P-=%i\r", -distance);
-
-  #ifdef CM_DEBUG
-  bprintf(info, "%s motor commands:\n", cminfo->motorstr);
-  bprintf(info,"The acceleration string written was: %s", accelframe);
-  bprintf(info,"The acceleration character count was: %i", acount);
-  bprintf(info,"The speed string written was: %s", speedframe);
-  bprintf(info,"The speed character count was: %i", scount);
-  bprintf(info,"The distance string written was: %s", distframe);
-  bprintf(info,"The distance character count was: %i", dcount);
-  #endif
-
-  /* write motion commands */
-
-  #ifdef CM_DEBUG
-  bprintf(info,"Writing acceleration CML command to %s motor.", 
-          cminfo->motorstr);
-  #endif
-
-  if ((write_cm(cminfo, accelframe, acount, " acceleration CML command")) < 0) {
-    return -1;
-  }
-
-  #ifdef CM_DEBUG
-  bprintf(info,"Writing speed CML command to %s motor.", cminfo->motorstr);
-  #endif
-
-  if ((write_cm(cminfo, speedframe, scount, " speed CML command")) < 0) {
-    return -2;
-  }
-
-  #ifdef CM_DEBUG
-  bprintf(info,"Writing distance CML command to %s motor.", cminfo->motorstr);
-  #endif
-
-  if ( (write_cm(cminfo, distframe, dcount, " distance CML command")) < 0 ) {
-    return -3;
-  }
-
-//  #ifdef CM_DEBUG
-//  bprintf(info,"Writing CML motion program to %s motor.", cminfo->motorstr);
-//  #endif
-
-//  if ( (write_cm(cminfo, program, strlen(program), " CML program")) < 0 ) {
-//    return -4;
-//  }
-
-  #ifdef CM_DEBUG
-  bprintf(info,"Writing excecute motion CML command to %s motor.", 
-          cminfo->motorstr);
-  #endif
-
-  if ( (write_cm(cminfo, execframe, strlen(execframe), 
-        " execute motion CML command")) < 0 ) {
-    return -4;
-  }
-
-  return 0;
-}
-
-/* slew_cm uses drive_cm to move a Cool Muscle by a specified distance
-   and does error checking */
-
-void slew_cm(int accel, int speed, int distance, struct CMInfoStruct *cminfo)
-{
-  int motion_commanded = 0;
-  int response;
-
-  while (!motion_commanded) {
-
-    response = drive_cm(accel, speed, distance, cminfo);
-
-    if (response == 0){
-      motion_commanded = 1;
-    } else {
-      bprintf(info, "Commanding motion of %s motor failed: retrying...", 
-              cminfo->motorstr);
-      sleep(1);
-    }
-    /* TODO - sjb: flight code should restart connection after too many 
-                   failures*/
-  }
-}
-#endif
 
 /* goto_cm goes to a specific (az,el) position by slewing in each axis */
 
@@ -271,19 +145,11 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
   double el_now;   // current elevation
   double d_az;     // diff between current and destination az
   double d_el;     // diff between current and destination el
-//  double d0_az;    // distance to destination at start of decel
-//  double d0_el;    // distance to destination at start of decel
-//  double w0_az;    // az vel. during const. speed portion
-//  double w0_el;    // el vel. during const. speed portion
   double az_rps;   // rev/s of az motor
   double el_rps;   // rev/s of el motor
   double w_az;     // az ang. velocity
   double w_el;     // el ang. velocity
-//  double a_az;     // az ang. acceleration
-//  double a_el;     // el ang. acceleration
   double dx_del;   // deriv. of lin. act. extension w.r.t. el
-  //double az_target;
-  //double el_target;
 
   /* dynamical variables in cool muscle units */
   int a_az_cm;
@@ -291,21 +157,9 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
   int w_az_cm;
   int w_el_cm;
   
-  /* compute angular displacements */
-
-  //az_target = CommandData.az_el.az;
-
-  //el_target = CommandData.az_el.el;
-  
   /* set initial motion variables */
-  //a_az = CommandData.az_el.az_accel;
   a_az_cm = (int)((a_az*AZ_GEAR_RATIO*CM_PULSES)/(360.0*ACCEL_UNIT));
     
- // a_el = CommandData.az_el.el_accel;
-
-//  w0_az = CommandData.az_el.az_speed;
-//  w0_el = CommandData.az_el.el_speed;
-
   n_a_az = sprintf(accel_cmd_az, "A=%i\r", 0);
   n_s_az = sprintf(speed_cmd_az, "S=%i\r", 0);
 
@@ -339,11 +193,6 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
     write_cm(&elinfo, exec, strlen(exec), " execute motion CML command");
   }
 
-/*  while ( ((d_az && (w0_az != 0) && (a_az != 0)) ||
-          (d_el && (w0_el != 0) && (a_el != 0))) && 
-          (CommandData.az_el.mode == AzElGoto) &&
-          (zero_count < 100) ) { */
-
   while ( !(CommandData.az_el.new_cmd) && (zero_count < 10) ) {
 
     /* get latest position errors  */
@@ -375,8 +224,7 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
       zero_count = 0;
     }
 
-    /* once we get within d0 of the destination, decelerate: */
-
+    /* set the velocity based on the position error */
 
     w_az = (d_az < 0) ? sqrt(-2.0*a_az*d_az) : -sqrt(2.0*a_az*d_az);
     if (w_az>w0_az) {
@@ -403,13 +251,11 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
     az_rps = (w_az*AZ_GEAR_RATIO)/360.0;
     w_az_cm = (int)((az_rps*CM_PULSES)/SPEED_UNIT);
     n_s_az = sprintf(speed_cmd_az, "S=%i\r", -w_az_cm);
-    //bprintf(info,"%s", speed_cmd_az);
     if ( (w0_az != 0) && (a_az != 0) ) {
       write_cm(&azinfo, speed_cmd_az, n_s_az, " speed CML command");
     }
     
     w_el = (d_el < 0) ? sqrt(-2.0*a_el*d_el) : -sqrt(2.0*a_el*d_el);
-
     if (w_el>w0_el) {
       w_el = w0_el;
     }
@@ -453,21 +299,6 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
   n_s_az = sprintf(speed_cmd_az, "S=%i\r", 0); 
   write_cm(&azinfo, speed_cmd_az, n_s_az, " speed CML command");
 
-  az_now = -((double)az_enc - (double)azinfo.ref)/CNTS_PER_DEG 
-              + CommandData.az_el.az_ref;
-  az_now = mod_cm(az_now, 360.0);
-
-  el_now = -((double)el_enc - (double)elinfo.ref)/CNTS_PER_DEG 
-            + CommandData.az_el.el_ref;
-  el_now = mod_cm(el_now, 360.0);
-  if (el_now > EL_MAX) {
-    el_now -= 360.0;
-  }
-
-  // bprintf(info, "Final (az, el) = (%f, %f) (degrees)", 
-  //        az_now, el_now);
-  // bprintf(info, "Final encoder counts (az, el) = (%d, %d) cts", az_enc, el_enc);
-  // bprintf(info, "zero count = %i", zero_count);
 }
 
 /* raster_cm performs a raster scan with the commanded parameters using a 
@@ -513,8 +344,6 @@ void raster_cm()
   
   bprintf(info, "Moving to end of az scan range..."); 
   bprintf(info, "Moving to starting elevation...");
-//  CommandData.az_el.az = az_start;
-//  CommandData.az_el.el = el_low;
   goto_cm(az_start, el_low, az_speed_init, el_speed_init, 
           CommandData.az_el.az_accel, CommandData.az_el.el_accel);
 
@@ -530,11 +359,7 @@ void raster_cm()
 
     az_goto = (((step_count - 1) % 2) == 0) ? 
     CommandData.az_el.az_width + az_start : az_start;
-    
     az_goto = mod_cm(az_goto, 360.0);
-
-//    CommandData.az_el.el_speed = 0;
-//    CommandData.az_el.az_speed = az_speed_init;
     goto_cm(az_goto, el_low, az_speed_init, 0.0, CommandData.az_el.az_accel,
 	    CommandData.az_el.el_accel);
 
@@ -545,8 +370,6 @@ void raster_cm()
 
     if (CommandData.az_el.el_step > 0) {
       el_goto = el_low + step_count*CommandData.az_el.el_step;
-   //   CommandData.az_el.az_speed = 0;
-   //   CommandData.az_el.el_speed = el_speed_init;
       goto_cm(az_goto, el_goto, 0.0, el_speed_init, CommandData.az_el.az_accel,
 	      CommandData.az_el.el_accel);
     }
@@ -555,13 +378,6 @@ void raster_cm()
        this? */
   }
 
-  /* restore parameters */
-
- /* CommandData.az_el.az = az_centre;
-  CommandData.az_el.el = el_centre;
-  CommandData.az_el.az_speed = az_speed_init;
-  CommandData.az_el.el_speed = el_speed_init;
-*/
 }
 
 /* init_cm sets a Cool Muscle's internal parameters */
@@ -570,7 +386,7 @@ void init_cm(struct CMInfoStruct* cminfo)
 {
 
   char* K_query = "?90\r";
-  //char* H_query = "%87\r";
+  char* H_query = "%87\r";
   
   char* resolution = "K37=30\r";   // sets resolution to 50,000 pulses
                                    // per rotation and the speed unit to
@@ -589,7 +405,7 @@ void init_cm(struct CMInfoStruct* cminfo)
   char* H6 = "H6=4\r";
   char* H7 = "H7=10\r";
   
-  int K_result;//, H_result;
+  int K_result, H_result;
 
   tcflush(cminfo->fd, TCIOFLUSH);
 
@@ -659,16 +475,16 @@ void init_cm(struct CMInfoStruct* cminfo)
   }
      
   read_cm(cminfo, 1);
-  /* query the motor to see what the K and H paramater values are */
 
+  /* query the motor to see what the K and H paramater values are */
   bprintf(info,"Querying %s motor K & H parameter values.", cminfo->motorstr);
   K_result = write_cm(cminfo, K_query, strlen(K_query), 
                       " query to check K parameters");
 
-  //H_result = write_cm(cminfo, H_query, strlen(H_query), 
-    //                  " query to check H parameters");
+  H_result = write_cm(cminfo, H_query, strlen(H_query), 
+                      " query to check H parameters");
 
-  if ( (K_result < 0)) { //|| (H_result < 0) ) {
+  if ( (K_result < 0) || (H_result < 0) ) {
     cminfo->init = 0;
     return;
   } else if (read_cm(cminfo, 1) <= 0 ) {
@@ -701,40 +517,8 @@ int write_cm(struct CMInfoStruct *cminfo, char *cmd, int length,
     bprintf(err,"Wrote incorrect number of bytes for %s", cmd_desc);
     return -2;
   } else return 0;
-  //usleep(10000); // experimental, can CM not deal with rapid commands?
+
 } 
-
-#if 0
-/* checkpos_cm checks if a motor reached the commanded position */
-
-void checkpos_cm(struct CMInfoStruct *cminfo) 
-{
-
-  int stat_received = 0;
-  int attempts = 0;
-
-  bprintf(info,"Waiting for status message from %s motor...\n", 
-          cminfo->motorstr);
-
-  while (!stat_received && attempts < 10) {
-    
-    if (attempts == 5) {
-      bprintf(err, "Failed to receive status message after %i attempts", 
-	      attempts);
-    }
-
-    attempts++;
-
-    if ( read_cm(cminfo, 0) > 0 ) {
-      stat_received = 1;
-    } else {
-      bprintf(err, "Didn't receive %s motor status message. Retrying...", 
-              cminfo->motorstr);
-    }
-  }
-
-}
-#endif
 
 /* allstop_cm sends emergency stop commands to both motors. Also 
   de-energizes and re-energizes windings to clear alarm states. */
@@ -761,8 +545,8 @@ void allstop_cm()
 
   /* based on testing, sending *1 to end the emerg. stop status will make
      the motors commandable again, but will NOT cause the previous motion
-	 to resume */
-	 
+     to resume */
+
   write_cm(&elinfo, end_stop, strlen(end_stop), " end stop CML command");
   write_cm(&azinfo, end_stop, strlen(end_stop), " end stop CML command");
   
@@ -799,11 +583,9 @@ int read_cm(struct CMInfoStruct *cminfo, int read_flag)
 
   unsigned int store = 0;   // 1 if received chars are part of status message
   int bytes_received = 0;   // total # of bytes received
-  int read_stat, /*timeout,*/ data_avail, count=0;
+  int read_stat,  data_avail, count=0;
   struct timeval tv;
   
-  //timeout = read_flag ? 1 : 300;    
-                                    
   fd_set rfds;
 
   tv.tv_sec = 1;
@@ -829,25 +611,15 @@ int read_cm(struct CMInfoStruct *cminfo, int read_flag)
     bytes_received = 0;
     data_avail = 0;
   }
-        
-//  tv.tv_sec = 0;
-//  tv.tv_usec = 100000;
-
-//  tv.tv_sec = 1;
-//  tv.tv_usec = 0;
-
-//  FD_ZERO(&rfds);
-//  FD_SET(cminfo->fd, &rfds);
-  
+  #ifdef CM_DEBUG
   bprintf(info,"Entering while loop in read_cm");
+  #endif
   while (data_avail && !stat_received) {
     loop_count++;
-//    if (select(FD_SETSIZE, &rfds, NULL, NULL, &tv) > 0) {
     read_stat = read(cminfo->fd, &rxchar, 1);
     if (read_stat > 0) {
       loop_count = 0;
       rxchar = rxchar & 0xFF;
-    //  bprintf(info, "%c", rxchar);
       if (bytes_received <= MAX_CHARS - 2 ) {  
         response[bytes_received++] = rxchar;
       } else {
@@ -855,8 +627,8 @@ int read_cm(struct CMInfoStruct *cminfo, int read_flag)
         bytes_received = 0;
 	bprintf(err, "%s motor response exceeded max bytes", 
 	        cminfo->motorstr);
-      } // Ux.1=8  (or = some other number)
-
+      } 
+      /* status message will be Ux.1=8  (or = some other number) */
       if ((rxchar == 'U') && (!read_flag)) {  
 	  store = 1;
       }
@@ -911,10 +683,6 @@ int read_cm(struct CMInfoStruct *cminfo, int read_flag)
           }
         }
       }
- //} else if (read_stat < 0) {
-   //bytes_received = 0;
-   //data_avail = 0;     // break out of while loop
-   //berror(err, "Reading from %s motor failed", cminfo->motorstr);
     } else { // 0 bytes were read or error
       if (read_flag && (loop_count >= 100)) { 
 	response[bytes_received] = '\0';
@@ -931,10 +699,12 @@ int read_cm(struct CMInfoStruct *cminfo, int read_flag)
     }
 
   }
-
-  bprintf(info,"leaving while loop in read_cm with bytes_received = %d", bytes_received);
-    
+  #ifdef CM_DEBUG
+  bprintf(info,"leaving while loop in read_cm with bytes_received = %d", 
+          bytes_received);
+  #endif
   return bytes_received;
+
 }
 
 /* open_cm sets up a serial port for communication with a Cool Muscle stepper 
@@ -966,6 +736,7 @@ void open_cm(char *dev_name, struct CMInfoStruct *cminfo)
     cminfo->open = 0;
     return;
   }
+  
   #if 0
   /* clear Character size; set no parity bits; set 1 stop bit */
   settings.c_cflag &= ~(CSTOPB | CSIZE | PARENB);
@@ -981,7 +752,7 @@ void open_cm(char *dev_name, struct CMInfoStruct *cminfo)
 
   /* disable input processing (raw input) */
   settings.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
- #endif
+  #endif
 
   cfmakeraw(&settings);
 
@@ -1021,48 +792,6 @@ void close_cm(struct CMInfoStruct* cminfo)
     bprintf(info, "Connection to %s motor is now closed.", cminfo->motorstr);
   } else berror(err, "Failed to close motor serial port");
 }
-
-#if 0
-/* calc_dx returns the change in lin. act. extension (mm) given a step in 
-   elevation angle (deg) */
-
-double calc_dx(double theta, double dtheta)
-{
-
-  // dtheta: el step size, comes from user
-  // theta: read the current elevation encoder value into this variable
-
-  double x;      // current extension of linear actuator in mm
-  double x1;     // extension of lin. act. at the new angle
-  double theta1; // new angle after elevation step occurs
-  double dx;     // lin. act. thrust required to achieve dtheta 
-
-  x = xoftheta(theta);
-
-  theta1 = theta + dtheta;
-
-  x1 = xoftheta(theta1);
-
-  dx = x1 - x;
-
-  return dx;
-
-}
-
-
-/* xoftheta returns the extension of the lin. actuator (in mm) given the 
-  telescope elevation angle (deg) */
-
-double xoftheta(double theta) 
-{
-
-  double x;
-
-  x = sqrt( pow(A,2) + pow(B,2) - 2*A*B*cos((C-theta)*PI/180.0) ) - D;
-
-  return x;
-} 
-#endif
 
 /* dxdtheta returns derivative of lin. act. extension. w.r.t. elevation angle 
  * (mm/deg) */
@@ -1217,19 +946,6 @@ void* azelComm(void* arg)
 void AzElScan()
 {
 
-  //static struct BiPhaseStruct* elEncAddr;
-  //static struct BiPhaseStruct* azEncAddr;
-
-  //static int firsttime = 1;
-
-  //if (firsttime) {
-
-    //elEncAddr = GetBiPhaseAddr("adc1_enc_el");
-    //azEncAddr = GetBiPhaseAddr("adc1_enc_az");
-
-    //firsttime = 0;
- // }
-
   CommandData.az_el.new_cmd = 0;
 
   switch(CommandData.az_el.mode) {
@@ -1247,7 +963,6 @@ void AzElScan()
         goto_cm(CommandData.az_el.az, CommandData.az_el.el, 
 	       CommandData.az_el.az_speed, CommandData.az_el.el_speed,
 	       CommandData.az_el.az_accel, CommandData.az_el.el_accel);
-        //CommandData.az_el.mode = AzElNone;
       } else {
 	bputs(err,  
 	"Goto command refused! Enter reference angles using az_el_set first.");
@@ -1258,7 +973,6 @@ void AzElScan()
     case AzElRaster:
       if (!CommandData.az_el.cmd_disable) {   
         raster_cm();       
-        //CommandData.az_el.mode = AzElNone;
       } else {
         bputs(err,
         "Raster command refused! Enter reference angles using az_el_set first.")
@@ -1280,9 +994,9 @@ void AzElScan()
 
 }
 
-/* WriteAzEl writes relevant data to frame */
+/* ReadWriteAzEl writes/reads relevant data to/from frame */
 
-void WriteAzEl()
+void ReadWriteAzEl(int index)
 {
 
   static struct NiosStruct* azWidthAddr;
@@ -1296,11 +1010,22 @@ void WriteAzEl()
   static struct NiosStruct* azGotoAddr;
   static struct NiosStruct* azStartAddr;
   static struct NiosStruct* elStartAddr;
+  static struct NiosStruct* azNowAddr;
+  static struct NiosStruct* elNowAddr;
+  
+  static struct BiPhaseStruct* elEncAddr;
+  static struct BiPhaseStruct* azEncAddr;
+
+  double az_now;
+  double el_now;
 
   static int firsttime = 1;
-  
+
   if (firsttime) {
 
+    elEncAddr = GetBiPhaseAddr("adc1_enc_el");
+    azEncAddr = GetBiPhaseAddr("adc1_enc_az");
+    
     azWidthAddr = GetNiosAddr("width_az");
     azVelAddr = GetNiosAddr("v_az");
     elVelAddr = GetNiosAddr("v_el");
@@ -1312,36 +1037,61 @@ void WriteAzEl()
     azGotoAddr = GetNiosAddr("az");
     azStartAddr = GetNiosAddr("az_ref");
     elStartAddr = GetNiosAddr("el_ref");
-    
+    azNowAddr = GetNiosAddr("az_now");
+    elNowAddr = GetNiosAddr("el_now");
+
     firsttime = 0;
   }
 
+  el_enc = ReadData(elEncAddr);
+  az_enc = ReadData(azEncAddr);
 
-  WriteData(azWidthAddr,(CommandData.az_el.az_width)*(65535.0/180.0),
-            NIOS_QUEUE);  
+  az_now = -((double)az_enc - (double)azinfo.ref)/CNTS_PER_DEG 
+            + CommandData.az_el.az_ref;
+  az_now = mod_cm(az_now, 360.0);
+  az_now *= (65535.0/360.0);
 
-  WriteData(azVelAddr,(CommandData.az_el.az_speed)*(65535.0/5.0), NIOS_QUEUE);
+  el_now = -((double)el_enc - (double)elinfo.ref)/CNTS_PER_DEG 
+             + CommandData.az_el.el_ref;
+  el_now = mod_cm(el_now, 360.0);
+  if (el_now > EL_MAX) {
+    el_now -= 360.0;
+  }
+  el_now = (el_now + 10.0)*(65535.0/99.0);
 
-  WriteData(elVelAddr, (CommandData.az_el.el_speed)*(65535.0/5.0), NIOS_QUEUE);
+  WriteData(azNowAddr, az_now, NIOS_QUEUE);
+  WriteData(elNowAddr, el_now, NIOS_QUEUE);
 
-  WriteData(azAccelAddr,(CommandData.az_el.az_accel)*(65535.0/5.0),NIOS_QUEUE);
+  if (index == 0) {
+    WriteData(azWidthAddr,(CommandData.az_el.az_width)*(65535.0/180.0),
+              NIOS_QUEUE);  
 
-  WriteData(elAccelAddr,(CommandData.az_el.el_accel)*(65535.0/5.0),NIOS_QUEUE);
+    WriteData(azVelAddr,(CommandData.az_el.az_speed)*(65535.0/5.0), NIOS_QUEUE);
 
-  WriteData(elStepAddr,(CommandData.az_el.el_step)*(65535.0/5.0), NIOS_QUEUE);
+    WriteData(elVelAddr, (CommandData.az_el.el_speed)*(65535.0/5.0), 
+	      NIOS_QUEUE);
 
-  WriteData(elHeightAddr,(CommandData.az_el.el_height)*(65535.0/99.0), 
-            NIOS_QUEUE);
+    WriteData(azAccelAddr,(CommandData.az_el.az_accel)*(65535.0/5.0),
+	      NIOS_QUEUE);
 
-  WriteData(elGotoAddr,((CommandData.az_el.el)+10.0)*(65535.0/99.0),
-            NIOS_QUEUE);  
+    WriteData(elAccelAddr,(CommandData.az_el.el_accel)*(65535.0/5.0),
+	      NIOS_QUEUE);
 
-  WriteData(azGotoAddr,((CommandData.az_el.az))*(65535.0/360.0),
-            NIOS_QUEUE);
+    WriteData(elStepAddr,(CommandData.az_el.el_step)*(65535.0/5.0), NIOS_QUEUE);
 
-  WriteData(azStartAddr,((CommandData.az_el.az_ref))*(65535.0/360.0), 
-            NIOS_QUEUE);
+    WriteData(elHeightAddr,(CommandData.az_el.el_height)*(65535.0/99.0), 
+              NIOS_QUEUE);
 
-  WriteData(elStartAddr,((CommandData.az_el.el_ref)+10.0)*(65535.0/99.0), 
-            NIOS_QUEUE);
+    WriteData(elGotoAddr,((CommandData.az_el.el)+10.0)*(65535.0/99.0),
+              NIOS_QUEUE);  
+
+    WriteData(azGotoAddr,((CommandData.az_el.az))*(65535.0/360.0),
+              NIOS_QUEUE);
+
+    WriteData(azStartAddr,((CommandData.az_el.az_ref))*(65535.0/360.0), 
+              NIOS_QUEUE);
+
+    WriteData(elStartAddr,((CommandData.az_el.el_ref)+10.0)*(65535.0/99.0), 
+              NIOS_QUEUE);
+  }
 }

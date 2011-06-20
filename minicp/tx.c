@@ -36,7 +36,7 @@
 
 #define NIOS_BUFFER_SIZE 100
 
-void WriteAzEl(); // az-el.c
+void ReadWriteAzEl(int index); // az-el.c
 
 extern int bbc_fp;
 
@@ -279,24 +279,13 @@ double ReadCalData(struct BiPhaseStruct* addr)
 void UpdateBBCFrame()
 {
   static int index = 0;
-  static int firsttime = 1;
-
-  static struct BiPhaseStruct* elEncAddr;
-  static struct BiPhaseStruct* azEncAddr;
-  
-  if (firsttime) {
-    elEncAddr = GetBiPhaseAddr("adc1_enc_el");
-    azEncAddr = GetBiPhaseAddr("adc1_enc_az");
-    firsttime = 0;
-  }
+ 
   /*** do fast Controls ***/
 
-  el_enc = ReadData(elEncAddr);
-  az_enc = ReadData(azEncAddr);
+  ReadWriteAzEl(index);
 
   /*** do slow Controls ***/
   if (index == 0) {
-    WriteAzEl();
     if (!mcp_initial_controls)
       SyncADC();
   }

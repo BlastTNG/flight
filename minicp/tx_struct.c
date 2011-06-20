@@ -207,7 +207,8 @@ struct ChannelStruct SlowChannels[] = {
   {"el",           'w', LOOP1,    8,       99.0/65535.0,  -10.0, 'u', U_P_DEG},
   {"az_ref",       'w', LOOP1,    9,      360.0/65535.0,   0.0, 'u', U_P_DEG},
   {"el_ref",       'w', LOOP1,   10,       99.0/65535.0,  -10.0, 'u', U_P_DEG},
-
+  // LOOP1 channels 11-12 are fast channels
+  
   END_OF_CHANNELS
 };
 
@@ -419,6 +420,8 @@ struct ChannelStruct FastChannels[] = {
   {"adc1_wd1",     'w', ADC1_D,  50,            1.0,          0.0, 'u', U_NONE},
   {"adc1_wd2",     'w', ADC1_D,  51,            1.0,          0.0, 'u', U_NONE},
   {"adc1_wd3",     'w', ADC1_D,  52,            1.0,          0.0, 'u', U_NONE},
+  {"az_now",       'w', LOOP1,   11,      360.0/65535.0,    0.0, 's', U_P_DEG},
+  {"el_now",       'w', LOOP1,   12,       99.0/65535.0,  -10.0, 'u', U_P_DEG},
 
 #if 0
   {"adc2_d1",	   'r', ADC2_D,  50,            1.0,          0.0, 'u', U_NONE},

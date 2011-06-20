@@ -21,7 +21,7 @@
 
 #include "command_list.h"
 
-const char *command_list_serial = "$Revision: 1.5 $";
+const char *command_list_serial = "$Revision: 1.6 $";
 
 //these must correspond to #defines in header
 const char *GroupNames[N_GROUPS] = {
@@ -101,7 +101,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"el goto acceleration (deg/s^2)", 0.0, 5.0, 'f', "A_EL;"},
       {"az goto speed (deg/s)", 0.0, 5.0, 'f', "V_AZ"},
       {"el goto speed (deg/s)", 0.0, 5.0, 'f', "V_EL"},
-      {"az goto position (deg)",  0.0, 360.0, 'f', "AZ"}, 
+      {"az goto position (deg)", -180, 180.0, 'f', "AZ"}, 
       {"el goto position (deg)", -10.0, 89.0, 'f', "EL"}  
     }
   },
