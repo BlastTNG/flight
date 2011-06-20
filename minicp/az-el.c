@@ -308,7 +308,7 @@ void raster_cm()
 { 
 
   unsigned int step_count;           // keep track of el steps                
-  unsigned int N_steps;              // number of elevation steps
+  double step_size;                  // el step size in deg.
 
   double az_start;
   double az_goto;
@@ -335,8 +335,11 @@ void raster_cm()
   el_low = (el_low < EL_MIN) ? EL_MIN : el_low;
   el_high = (el_high > EL_MAX) ? EL_MAX : el_high;
 
-  N_steps = (el_high - el_low)/CommandData.az_el.el_step;
- 
+  if (CommandData.az_el.el_Nstep > 0) {
+    step_size = (el_high - el_low)/CommandData.az_el.el_Nstep;
+  } else {
+    step_size = 0;
+  }
   bprintf(info, "Performing raster scan...");
 
   /* move in azimuth to one end of the scan range */
@@ -351,7 +354,8 @@ void raster_cm()
 
   step_count = 0;
   
-  while ((step_count < N_steps) && (!CommandData.az_el.new_cmd)) {
+  while ((step_count <= CommandData.az_el.el_Nstep) 
+         && (!CommandData.az_el.new_cmd)) {
    
     step_count++;   
     
@@ -368,8 +372,8 @@ void raster_cm()
     bprintf(info,"Elevation Step: %i", step_count);  
     bprintf(info, "Stepping in elevation...");
 
-    if (CommandData.az_el.el_step > 0) {
-      el_goto = el_low + step_count*CommandData.az_el.el_step;
+    if ( (step_size > 0) && (step_count <= CommandData.az_el.el_Nstep) ) {
+      el_goto = el_low + step_count*step_size;
       goto_cm(az_goto, el_goto, 0.0, el_speed_init, CommandData.az_el.az_accel,
 	      CommandData.az_el.el_accel);
     }
@@ -1004,7 +1008,7 @@ void ReadWriteAzEl(int index)
   static struct NiosStruct* elVelAddr;
   static struct NiosStruct* azAccelAddr;
   static struct NiosStruct* elAccelAddr;
-  static struct NiosStruct* elStepAddr;
+  static struct NiosStruct* elNstepAddr;
   static struct NiosStruct* elHeightAddr;
   static struct NiosStruct* elGotoAddr;
   static struct NiosStruct* azGotoAddr;
@@ -1031,7 +1035,7 @@ void ReadWriteAzEl(int index)
     elVelAddr = GetNiosAddr("v_el");
     azAccelAddr = GetNiosAddr("a_az");
     elAccelAddr = GetNiosAddr("a_el");
-    elStepAddr = GetNiosAddr("step_el");
+    elNstepAddr = GetNiosAddr("n_el");
     elHeightAddr = GetNiosAddr("height_el");
     elGotoAddr = GetNiosAddr("el");
     azGotoAddr = GetNiosAddr("az");
@@ -1077,7 +1081,7 @@ void ReadWriteAzEl(int index)
     WriteData(elAccelAddr,(CommandData.az_el.el_accel)*(65535.0/5.0),
 	      NIOS_QUEUE);
 
-    WriteData(elStepAddr,(CommandData.az_el.el_step)*(65535.0/5.0), NIOS_QUEUE);
+    WriteData(elNstepAddr,(CommandData.az_el.el_Nstep), NIOS_QUEUE);
 
     WriteData(elHeightAddr,(CommandData.az_el.el_height)*(65535.0/99.0), 
               NIOS_QUEUE);

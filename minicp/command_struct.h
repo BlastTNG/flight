@@ -69,8 +69,9 @@ struct CommandDataStruct {
     /* raster-specific: */
 
     double az_width;
-    double el_step;
     double el_height;
+    
+    unsigned int el_Nstep;
 
   } az_el;
 

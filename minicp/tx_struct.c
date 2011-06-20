@@ -201,11 +201,11 @@ struct ChannelStruct SlowChannels[] = {
   {"v_el",         'w', LOOP1,    2,         5.0/65535.0,   0.0, 'u', U_V_DPS},
   {"a_az",         'w', LOOP1,    3, 5.0/65535.0,   0.0, 'u',"accel","^o/s^2"},
   {"a_el",         'w', LOOP1,    4, 5.0/65535.0,   0.0, 'u',"accel","^o/s^2"},
-  {"step_el",      'w', LOOP1,    5,         5.0/65535.0,   0.0, 'u', U_D_DEG},
+  {"n_el",         'w', LOOP1,    5,                0.0,    0.0, 'u', U_NONE},
   {"height_el",    'w', LOOP1,    6,        99.0/65535.0,   0.0, 'u', U_P_DEG},
-  {"az",           'w', LOOP1,    7,      360.0/65535.0,   0.0, 'u', U_P_DEG},
+  {"az",           'w', LOOP1,    7,      360.0/65535.0,   0.0, 's', U_P_DEG},
   {"el",           'w', LOOP1,    8,       99.0/65535.0,  -10.0, 'u', U_P_DEG},
-  {"az_ref",       'w', LOOP1,    9,      360.0/65535.0,   0.0, 'u', U_P_DEG},
+  {"az_ref",       'w', LOOP1,    9,      360.0/65535.0,   0.0, 's', U_P_DEG},
   {"el_ref",       'w', LOOP1,   10,       99.0/65535.0,  -10.0, 'u', U_P_DEG},
   // LOOP1 channels 11-12 are fast channels
   
