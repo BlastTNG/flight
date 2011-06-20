@@ -828,6 +828,9 @@ void* azelComm(void* arg)
   int ser_attempts = 0;  // number of attempts to open port
   int init_attempts = 0; // number of attempts to initialize motor
 
+  nameThread("AzEl");
+  bprintf(startup, "Starting serial thread for motors.");
+  
   /* initialize values in the motor info structs */
 
   azinfo.fd = 0;
@@ -843,9 +846,6 @@ void* azelComm(void* arg)
   elinfo.closing = 0;
   elinfo.ref = el_enc;
   strncpy(elinfo.motorstr, "el", 3);
-
-  nameThread("AzEl");
-  bprintf(startup, "Starting serial thread for motors.");
  
   /* try to open the ports */
 

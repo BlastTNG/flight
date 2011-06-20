@@ -207,7 +207,7 @@ struct ChannelStruct SlowChannels[] = {
   {"el",           'w', LOOP1,    8,       99.0/65535.0,  -10.0, 'u', U_P_DEG},
   {"az_ref",       'w', LOOP1,    9,      360.0/65535.0,   0.0, 's', U_P_DEG},
   {"el_ref",       'w', LOOP1,   10,       99.0/65535.0,  -10.0, 'u', U_P_DEG},
-  // LOOP1 channels 11-12 are fast channels
+  // LOOP1 channels 12-15 are wide fast channels
   
   END_OF_CHANNELS
 };
@@ -278,8 +278,8 @@ struct ChannelStruct WideFastChannels[] = {
   {"adc1_a2_22",   'r', ADC1_A2, 44,      CAL32(1.0,          0.0),'U', U_V_V},
   {"adc1_a2_23",   'r', ADC1_A2, 46,      CAL32(1.0,          0.0),'U', U_V_V},
   {"adc1_a2_24",   'r', ADC1_A2, 48,      CAL32(1.0,          0.0),'U', U_V_V},
-  {"az_now",       'w', LOOP1,   11,    360.0/4294967295.0, 0.0, 'S', U_P_DEG},
-  {"el_now",       'w', LOOP1,   12,     99.0/4294967295.0,-10.0, 'U', U_P_DEG},
+  {"az_now",       'w', LOOP1,   12,    360.0/4294967295.0, 0.0, 'S', U_P_DEG},
+  {"el_now",       'w', LOOP1,   14,     99.0/4294967295.0,-10.0, 'U', U_P_DEG},
 
 #if 0
   {"adc2_a1_00",   'r', ADC2_A1,  0,      CAL32(1.0,          0.0),'U', U_V_V},
