@@ -1,19 +1,20 @@
 CC = gcc
 CFLAGS = -g -O3 -Wall -D__BLASTD__
 
-OBJS = interloquendi.o quendi.o frameread.o blast.o crc.o \
+OBJS = interloquendi.o quendi.o frameread.o share/blast.o share/crc.o \
        rendezvous.o quendiclient.o
-BLAST_OBJS = $(OBJS) channels-blast.o
-SPIDER_OBJS = $(OBJS) channels.o
-HEADERS = quendi.h frameread.h channels.h bbc_pci.h blast.h derived.h quenya.h \
-	  crc.h quendiclient.h
+BLAST_OBJS = $(OBJS) share/channels-blast.o
+SPIDER_OBJS = $(OBJS) share/channels.o
+HEADERS = quendi.h frameread.h share/channels.h share/bbc_pci.h share/blast.h \
+	  share/derived.h quenya.h share/crc.h quendiclient.h
 
 all: interloquendi-blast interloquendi-spider
 
 $(OBJS): $(HEADERS)
 
-channels-blast.o: channels.c
-	$(CC) $(CFLAGS) -DDAS_CARDS=12 -c -o channels-blast.o channels.c
+share/channels-blast.o: share/channels.c
+	$(CC) $(CFLAGS) -DDAS_CARDS=12 \
+	  -c -o share/channels-blast.o share/channels.c
 
 interloquendi-spider: $(SPIDER_OBJS)
 	$(CC) $(SPIDER_OBJS) -lnsl -lwrap -o interloquendi-spider
@@ -27,3 +28,4 @@ install:
 
 clean:
 	rm -f *.o interloquendi-blast interloquendi-spider
+	rm -f share/*.o

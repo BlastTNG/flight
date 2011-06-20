@@ -62,7 +62,7 @@
 
 /* inputters need to know about frameread, outputters need to know about NIOS */
 #ifdef INPUTTER
-#  include "frameread.h"
+#  include "../frameread.h"
 #else
 #  include "bbc_pci.h"
 #endif

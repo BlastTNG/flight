@@ -33,7 +33,7 @@
 
 #include <arpa/inet.h>
 
-#include "blast.h"
+#include "share/blast.h"
 #include "frameread.h"
 #include "quendi.h"
 #include "quendiclient.h"
