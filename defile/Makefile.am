@@ -7,10 +7,10 @@ etcdir=@etcdir@
 if INSTALL_DEFILE_CONF
 etc_DATA = defile.conf
 endif
-defile_blast_SOURCES = defile.c frameread.c reader.c channels.c writer.c \
-		       blast.c client.c crc.c quendiclient.c \
-		       blast.h defile.h channels.h frameread.h derived.h \
-		       quenya.h crc.h quendiclient.h
+defile_blast_SOURCES = defile.c frameread.c reader.c share/channels.c writer.c \
+		       share/blast.c client.c share/crc.c quendiclient.c \
+		       share/blast.h defile.h share/channels.h frameread.h \
+		       share/derived.h quenya.h share/crc.h quendiclient.h
 defile_spider_SOURCES = $(defile_blast_SOURCES)
 CFLAGS = -Wall -O3 -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\"
 defile_blast_CFLAGS = -DDAS_CARDS=12

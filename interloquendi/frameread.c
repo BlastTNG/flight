@@ -22,9 +22,9 @@
 #include <sys/stat.h>   /* SYSV stat (stat, struct stat S_IS(FOO)) */
 #include <unistd.h>     /* UNIX std library (read, write, close, sleep) */
 
-#include "blast.h"
+#include "share/blast.h"
 #include "frameread.h"
-#include "channels.h"
+#include "share/channels.h"
 
 /* splits path into dname and bname */
 void PathSplit_r(const char* path, char* dname, char* bname)

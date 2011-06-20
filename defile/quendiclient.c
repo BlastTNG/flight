@@ -26,7 +26,7 @@
 #include <string.h>       /* ANSI C strings (strcat, strdup, &c.)  */
 #include <unistd.h>       /* UNIX std library (read, write, close, sleep) */
 
-#include "blast.h"
+#include "share/blast.h"
 #include "quenya.h"
 
 #define QUENDI_PORT 44144

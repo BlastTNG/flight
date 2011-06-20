@@ -31,11 +31,11 @@
 #include <string.h>       /* ANSI C strings (strcat, strdup, &c.)  */
 #include <unistd.h>       /* UNIX std library (read, write, close, sleep) */
 
-#include "crc.h"
+#include "share/crc.h"
 #include "quenya.h"
-#include "channels.h"
+#include "share/channels.h"
 #include "defile.h"
-#include "blast.h"
+#include "share/blast.h"
 
 #define QUENDI_PORT 44144
 

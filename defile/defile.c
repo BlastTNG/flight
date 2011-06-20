@@ -37,8 +37,8 @@
 #include <wordexp.h>    /* POSIX-shell-like word expansion (wordexp) */
 
 #include "defile.h"
-#include "blast.h"
-#include "channels.h"
+#include "share/blast.h"
+#include "share/channels.h"
 #include "quenya.h"
 
 #ifndef VERSION

@@ -121,8 +121,8 @@
 #  include <zlib.h>     /* libz compression library (gzwrite, gzopen, &c.) */
 #endif
 
-#include "blast.h"
-#include "channels.h"
+#include "share/blast.h"
+#include "share/channels.h"
 #include "defile.h"
 #include "frameread.h"
 
