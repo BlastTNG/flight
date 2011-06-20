@@ -50,7 +50,7 @@
 //#define GR_STAGE        0x00040000  //not yet used
 //#define GR_SC_MODE      0x00080000  //not yet used
 //#define GR_FREE2        0x00100000  //not yet used
-#define GR_MISC         0x00000010
+#define GR_MISC         0x00000008
 //#define GR_SC_PARAM     0x00400000  //not yet used
 //#define GR_FREE3        0x00800000  //not yet used
 //reserved for CONFIRM  0x80000000
