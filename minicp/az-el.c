@@ -52,8 +52,7 @@ Note:      CM = Cool Muscle (stepper motor type)
 #define CM_PER_ENC (50000.0/72000.0)
 #define EL_MIN -10.0
 #define EL_MAX 89.0
-#define TOLERANCE 0.01      // max acceptable pointing error (deg)
-                            // = 2 encoder counts
+#define TOLERANCE 0.005     // max acceptable pointing error (deg)
 
 /* Encoder count values read by main thread over BLASTbus */
 unsigned int az_enc;

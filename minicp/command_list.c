@@ -21,11 +21,11 @@
 
 #include "command_list.h"
 
-const char *command_list_serial = "$Revision: 1.7 $";
+const char *command_list_serial = "$Revision: 1.8 $";
 
 //these must correspond to #defines in header
-const char *GroupNames[N_GROUPS] = {
-  "Pointing Modes",        "Balance",          "Cooling", 
+/*const char *GroupNames[N_GROUPS] = {
+  "AzEl Gadget",           "Balance",          "Cooling", 
   "Pointing Sensor Trims", "Aux. Electronics", "Bias",
   "Pointing Sensor Vetos", "Actuators",        "Cal Lamp",
   "Pointing Motor Gains",  "Secondary Focus",  "Cryo Heat",
@@ -33,13 +33,18 @@ const char *GroupNames[N_GROUPS] = {
   "Telemetry",             "SC Miscellaneous", "Free for use 1",
   "X-Y Stage",             "SC Modes",         "Free for use 2",
   "Miscellaneous",         "SC Parameters",    "Free for use 3"
+};*/
+
+const char *GroupNames[N_GROUPS] = {
+  "Az-El Gadget",          "Bias",
+  "Subsystem Power",       "Miscellaneous"         
 };
 
 //echoes as string; makes enum name the command name string
 #define COMMAND(x) (int)x, #x
 
 struct scom scommands[N_SCOMMANDS] = {
-  {COMMAND(az_el_disable), "Az-El mount emergency shutdown!", GR_POINT},
+  {COMMAND(az_el_disable), "Az-El mount emergency shutdown!", GR_AZEL},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -81,7 +86,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Node number",  0, 64, 'i', ""}
     }
   },
-  {COMMAND(az_el_raster), "Az-El mount raster scan", GR_POINT, 9,
+  {COMMAND(az_el_raster), "Az-El mount raster scan", GR_AZEL, 9,
     { 
       {"az raster centre (deg)",  -180.0, 180.0, 'f', "AZ"}, 
       {"el raster centre (deg)", -10.0, 89.0, 'f', "EL"},  
@@ -95,7 +100,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
     }
   },
-  {COMMAND(az_el_goto), "Az-El mount goto mode", GR_POINT, 6,
+  {COMMAND(az_el_goto), "Az-El mount goto mode", GR_AZEL, 6,
     {
       {"az goto acceleration (deg/s^2)", 0.0, 5.0, 'f', "A_AZ"},
       {"el goto acceleration (deg/s^2)", 0.0, 5.0, 'f', "A_EL;"},
@@ -105,7 +110,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"el goto position (deg)", -10.0, 89.0, 'f', "EL"}  
     }
   },
-  {COMMAND(az_el_set), "Input Az-El mount starting angles", GR_POINT, 2,
+  {COMMAND(az_el_set), "Input Az-El mount starting angles", GR_AZEL, 2,
     {
       {"starting azimuth (deg)", -180.0, 180.0, 'f', "AZ_REF"},
       {"starting elevation (deg)", -10.0, 89.0, 'f', "EL_REF"},
