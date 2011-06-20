@@ -41,7 +41,7 @@
 
 #include <arpa/inet.h>
 
-#include "netcmd.h"
+#include "share/netcmd.h"
 #include "daemon.h"
 #include "config.h"
 #include "command_list.h"

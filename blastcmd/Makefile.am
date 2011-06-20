@@ -5,11 +5,11 @@ spidercmd_CFLAGS = -D__SPIDER__
 
 AUTOMAKE_OPTIONS = foreign
 blastcmd_SOURCES = blastcmd.c command_list_blast.c daemon.c netcmd.c \
-		   command_list_blast.h daemon.h isc_protocol.h netcmd.h
+		   command_list_blast.h daemon.h isc_protocol.h share/netcmd.h
 minicmd_SOURCES = blastcmd.c command_list_mini.c daemon.c netcmd.c \
-		  command_list_mini.h daemon.h isc_protocol.h netcmd.h
+		  command_list_mini.h daemon.h isc_protocol.h share/netcmd.h
 spidercmd_SOURCES = blastcmd.c command_list_spider.c daemon.c netcmd.c \
-		  command_list_spider.h daemon.h isc_protocol.h netcmd.h
+		    command_list_spider.h daemon.h isc_protocol.h share/netcmd.h
 bin_PROGRAMS = blastcmd minicmd spidercmd
 dist_bin_SCRIPTS = blastcmd-authorize
 

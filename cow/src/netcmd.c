@@ -41,7 +41,7 @@
 
 #include <arpa/inet.h>
 
-#include "netcmd.h"
+#include "share/netcmd.h"
 
 unsigned short client_n_scommands = 0;
 unsigned short client_n_mcommands = 0;

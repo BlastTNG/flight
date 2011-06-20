@@ -38,7 +38,7 @@
 #include <signal.h>
 
 #include "daemon.h"
-#include "netcmd.h"
+#include "share/netcmd.h"
 
 double round(double x);
 
