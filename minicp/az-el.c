@@ -364,18 +364,18 @@ void raster_cm()
     az_goto = (((step_count - 1) % 2) == 0) ? 
     CommandData.az_el.az_width + az_start : az_start;
     az_goto = mod_cm(az_goto, 360.0);
-    goto_cm(az_goto, el_low, az_speed_init, 0.0, CommandData.az_el.az_accel,
-	    CommandData.az_el.el_accel);
+    el_goto = el_low + (step_count - 1)*step_size;
+    goto_cm(az_goto, el_goto, az_speed_init, el_speed_init, 
+	    CommandData.az_el.az_accel, CommandData.az_el.el_accel);
 
     /* step in elevation */
-
-    bprintf(info,"Elevation Step: %i", step_count);  
-    bprintf(info, "Stepping in elevation...");
-
+    
     if ( (step_size > 0) && (step_count <= CommandData.az_el.el_Nstep) ) {
+      bprintf(info,"Elevation Step: %i", step_count);  
+      bprintf(info, "Stepping in elevation...");
       el_goto = el_low + step_count*step_size;
-      goto_cm(az_goto, el_goto, 0.0, el_speed_init, CommandData.az_el.az_accel,
-	      CommandData.az_el.el_accel);
+      goto_cm(az_goto, el_goto, az_speed_init, el_speed_init, 
+	      CommandData.az_el.az_accel, CommandData.az_el.el_accel);
     }
     
     /* TODO - sjb: XY stage also did "el" scan with "az" steps. Do we want 
@@ -390,7 +390,7 @@ void init_cm(struct CMInfoStruct* cminfo)
 {
 
   char* K_query = "?90\r";
-  char* H_query = "%87\r";
+  //char* H_query = "%87\r";
   
   char* resolution = "K37=30\r";   // sets resolution to 50,000 pulses
                                    // per rotation and the speed unit to
@@ -409,7 +409,7 @@ void init_cm(struct CMInfoStruct* cminfo)
   char* H6 = "H6=4\r";
   char* H7 = "H7=10\r";
   
-  int K_result, H_result;
+  int K_result;//, H_result;
 
   tcflush(cminfo->fd, TCIOFLUSH);
 
@@ -485,10 +485,10 @@ void init_cm(struct CMInfoStruct* cminfo)
   K_result = write_cm(cminfo, K_query, strlen(K_query), 
                       " query to check K parameters");
 
-  H_result = write_cm(cminfo, H_query, strlen(H_query), 
-                      " query to check H parameters");
+  //H_result = write_cm(cminfo, H_query, strlen(H_query), 
+  //                    " query to check H parameters");
 
-  if ( (K_result < 0) || (H_result < 0) ) {
+  if ( (K_result < 0) ) {// || (H_result < 0) ) {
     cminfo->init = 0;
     return;
   } else if (read_cm(cminfo, 1) <= 0 ) {
@@ -835,14 +835,14 @@ void* azelComm(void* arg)
   azinfo.open = 0;
   azinfo.init = 0;
   azinfo.closing = 0;
-  azinfo.ref = 0;
+  azinfo.ref = az_enc;
   strncpy(azinfo.motorstr, "az", 3);
 
   elinfo.fd = 0;
   elinfo.open = 0;
   elinfo.init = 0;
   elinfo.closing = 0;
-  elinfo.ref = 0;
+  elinfo.ref = el_enc;
   strncpy(elinfo.motorstr, "el", 3);
 
   nameThread("AzEl");
@@ -1053,7 +1053,7 @@ void ReadWriteAzEl(int index)
   az_now = -((double)az_enc - (double)azinfo.ref)/CNTS_PER_DEG 
             + CommandData.az_el.az_ref;
   az_now = mod_cm(az_now, 360.0);
-  az_now *= (65535.0/360.0);
+  az_now *= (4294967295.0/360.0);
 
   el_now = -((double)el_enc - (double)elinfo.ref)/CNTS_PER_DEG 
              + CommandData.az_el.el_ref;
@@ -1061,7 +1061,7 @@ void ReadWriteAzEl(int index)
   if (el_now > EL_MAX) {
     el_now -= 360.0;
   }
-  el_now = (el_now + 10.0)*(65535.0/99.0);
+  el_now = (el_now + 10.0)*(4294967295.0/99.0);
 
   WriteData(azNowAddr, az_now, NIOS_QUEUE);
   WriteData(elNowAddr, el_now, NIOS_QUEUE);

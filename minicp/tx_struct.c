@@ -278,6 +278,8 @@ struct ChannelStruct WideFastChannels[] = {
   {"adc1_a2_22",   'r', ADC1_A2, 44,      CAL32(1.0,          0.0),'U', U_V_V},
   {"adc1_a2_23",   'r', ADC1_A2, 46,      CAL32(1.0,          0.0),'U', U_V_V},
   {"adc1_a2_24",   'r', ADC1_A2, 48,      CAL32(1.0,          0.0),'U', U_V_V},
+  {"az_now",       'w', LOOP1,   11,    360.0/4294967295.0, 0.0, 'S', U_P_DEG},
+  {"el_now",       'w', LOOP1,   12,     99.0/4294967295.0,-10.0, 'U', U_P_DEG},
 
 #if 0
   {"adc2_a1_00",   'r', ADC2_A1,  0,      CAL32(1.0,          0.0),'U', U_V_V},
@@ -420,8 +422,6 @@ struct ChannelStruct FastChannels[] = {
   {"adc1_wd1",     'w', ADC1_D,  50,            1.0,          0.0, 'u', U_NONE},
   {"adc1_wd2",     'w', ADC1_D,  51,            1.0,          0.0, 'u', U_NONE},
   {"adc1_wd3",     'w', ADC1_D,  52,            1.0,          0.0, 'u', U_NONE},
-  {"az_now",       'w', LOOP1,   11,      360.0/65535.0,    0.0, 's', U_P_DEG},
-  {"el_now",       'w', LOOP1,   12,       99.0/65535.0,  -10.0, 'u', U_P_DEG},
 
 #if 0
   {"adc2_d1",	   'r', ADC2_D,  50,            1.0,          0.0, 'u', U_NONE},
