@@ -1,5 +1,6 @@
 CC = gcc
 CFLAGS = -g -O3 -Wall -D__BLASTD__
+BLAST_CFLAGS = $(CFLAGS) -DDAS_CARDS=12
 
 OBJS = interloquendi.o quendi.o frameread.o share/blast.o share/crc.o \
        rendezvous.o quendiclient.o
@@ -13,8 +14,7 @@ all: interloquendi-blast interloquendi-spider
 $(OBJS): $(HEADERS)
 
 share/channels-blast.o: share/channels.c
-	$(CC) $(CFLAGS) -DDAS_CARDS=12 \
-	  -c -o share/channels-blast.o share/channels.c
+	$(CC) $(BLAST_CFLAGS) -c -o share/channels-blast.o share/channels.c
 
 interloquendi-spider: $(SPIDER_OBJS)
 	$(CC) $(SPIDER_OBJS) -lnsl -lwrap -o interloquendi-spider
@@ -23,7 +23,8 @@ interloquendi-blast: $(BLAST_OBJS)
 	$(CC) $(BLAST_OBJS) -lnsl -lwrap -o interloquendi-blast
 
 install:
-	install -m 755 -o root -g root interloquendi /usr/local/sbin
+	install -m 755 -o root -g root interloquendi-blast /usr/local/sbin
+	install -m 755 -o root -g root interloquendi-spider /usr/local/sbin
 	install -m 644 -o root -g root interloquendi.conf /etc
 
 clean:
