@@ -21,7 +21,6 @@
 #include <limits.h>
 #include "share/channels.h"
 #include "calibrate.h"
-#include "share/bbc_pci.h"
 #ifdef __MCP__
 #include "sbsc_protocol.h"
 #endif
