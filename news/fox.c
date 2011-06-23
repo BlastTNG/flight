@@ -16,8 +16,8 @@
 #include <time.h>
 
 #include "compressstruct.h"
-#include "channels.h"
-#include "derived.h"
+#include "share/channels.h"
+#include "share/derived.h"
 
 #define FIFODEPTH 2048
 #define RAWDIR "/data/rawdir"
