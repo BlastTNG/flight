@@ -1,18 +1,32 @@
 ALL = fox msnbc rush
 
-CC=gcc -O2 -W -Wall
+CC=gcc
+CFLAGS = -O2 -W -Wall
+
+OBJS = fox.o tx_struct.o compressstruct.o derived.o compressfuncs.o
+
+HEADERS = calibrate.h compressstruct.h share/channels.h share/derived.h
+
+.PHONEY: all install clean
+
 all: $(ALL)
 
-fox:fox.o tx_struct.o compressstruct.o derived.o
-	$(CC) -o fox fox.o tx_struct.o compressstruct.o derived.o -lm
+$(OBJS): $(HEADERS)
 
-msnbc:fox.o tx_struct.o compressstruct.o derived.o
-	$(CC) -o msnbc fox.o tx_struct.o compressstruct.o derived.o -lm
+fox: $(OBJS)
+	$(CC) $(CFLAGS) -lm -o fox $(OBJS)
 
-rush:fox.o tx_struct.o compressstruct.o derived.o
-	$(CC) -o rush fox.o tx_struct.o compressstruct.o derived.o -lm
+msnbc: $(OBJS)
+	$(CC) $(CFLAGS) -lm -o msnbc $(OBJS)
 
-install:fox msnbc rush
+rush: $(OBJS)
+	$(CC) $(CFLAGS) -lm -o rush $(OBJS)
+
+clean:
+	rm -f fox msnbc rush || true;
+	rm -f *.o || true;
+
+install: all
 	install -m 755 fox /usr/local/bin
 	install -m 755 msnbc /usr/local/bin
 	install -m 755 rush /usr/local/bin
