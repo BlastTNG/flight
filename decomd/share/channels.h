@@ -125,7 +125,7 @@ extern "C" {
 #define SPECIAL    63
 #define EOC_MARKER -1
 
-#define END_OF_CHANNELS {"", 'x', EOC_MARKER, -1, 0, 0}
+#define END_OF_CHANNELS {"", 'x', EOC_MARKER, -1, 0, 0, 0, 'x', "", ""}
 
 #ifdef __cplusplus
 
