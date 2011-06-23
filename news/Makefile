@@ -3,9 +3,9 @@ ALL = fox msnbc rush
 CC=gcc
 CFLAGS = -O2 -W -Wall
 
-OBJS = fox.o tx_struct.o compressstruct.o derived.o compressfuncs.o
+OBJS = fox.o tx_struct.o compressstruct.o derived.o share/compressfuncs.o
 
-HEADERS = calibrate.h compressstruct.h share/channels.h share/derived.h
+HEADERS = calibrate.h share/compressstruct.h share/channels.h share/derived.h
 
 .PHONEY: all install clean
 

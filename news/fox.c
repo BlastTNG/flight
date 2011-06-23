@@ -15,7 +15,7 @@
 #include <sys/ioctl.h>
 #include <time.h>
 
-#include "compressstruct.h"
+#include "share/compressstruct.h"
 #include "share/channels.h"
 #include "share/derived.h"
 
