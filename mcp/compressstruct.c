@@ -1,4 +1,4 @@
-#include "compressstruct.h"
+#include "share/compressstruct.h"
 
 /* Defined in compressstruct.h - included here for reference.
 struct fieldStreamStruct {
