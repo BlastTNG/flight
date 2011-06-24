@@ -6,46 +6,26 @@ been tested on Linux 2.6.
 
 *** INSTALLATION ***
 
-1) Create the device file in /dev: 
+1) Make and install the driver
+      $ make
+      $ sudo make install
 
-     [frodo]# mknod /dev/bbcpci c 250 0
-     [frodo]# mknod /dev/bbc_bi0 c 250 1
-     [frodo]# chmod 666 /dev/bbcpci
-     [frodo]# chmod 666 /dev/bi0_pci
+   This will place bbc_pci.h in /usr/local/include and bbc_pci.ko 
+   in /lib/modules/<kernel version>/kernel/drivers/misc
 
-   250 is the major number for the BBC card, defined in bbc_pci.c
+2) Insert the module
+      $ sudo insmod bbc_pci.ko
 
-   For those using systems with udev, this step is done in the rules file 
-   15-bbcpci.rules.  It is installed in a default location (/etc/udev/rules.d) 
-   on make install, and takes effect after module insertion (step 4)
-
-2) make the drivers
-
-     [frodo]# make 
-
-   Note: This driver makes use of the Linux 2.6, kernel build system.
-   To use the kernel build system, you must have write access to
-   /lib/modules/`uname -r`/buikd/.tmp_versions/bbc_mod as well as
-   /lib/modules/`uname -r`/build/.__modpost.cmd .  The easiest ways to
-   do this is to make them world writeable (which has been done on
-   frodo).or to build as root.
-
-3) install the module and header file
-
-     [frodo]# make install
-
-   This will place bbc_pci.ko in /usr/local/lib and bbc_pci.h in
-   /usr/local/include
-
-4) insert the module
-
-     [frodo]# insmod bbc_pci.ko
-
-   Step 4 needs to be done each time the computer is rebooted, so it may be
-   useful to add insmod to the end of rc.local:
+   This step may be executed at boot time, depending on your system. If
+   not, you can add the following lines to /etc/rc.local
 
      echo 'Inserting BBC_PCI device driver'
-     insmod -o bbc /usr/local/lib/bbc_pci.ko
+     insmod -o bbc /lib/modules/$(uname -r)/kernel/drivers/misc/bbc_pci.ko
+
+   You may also allow access for non-privileged users by adding:
+
+      sudo chmod a+rw /dev/bbcpci
+      sudo chmod a+rw /dev/bbc_bi0
 
 *** USAGE ***
 
@@ -111,7 +91,22 @@ ioctl:
 
   Sync Bus 1 and Bus 2
     ioctl(bbc_fd, BBC_IOC_SYNC);
+
+  Get external serial numbers from an MCE sync box (or not):
+    ioctl(fp, BBCPCI_IOC_EXT_SER_ON);  //external serial numbers
+    ioctl(fp, BBCPCI_IOC_EXT_SER_OFF); //internal serial numbers
+
+  In external serial mode, set the frame rate (MCE frames per BBus frame):
+    ioctl(fp, BBCPCI_IOC_FRAME_RATE, 2);  //bbus frame at half MCE rate
+
+  Enable or disable interrupts (for handling, see bbcsync driver):
+    ioctl(fp, BBCPCI_IOC_ON_IRQ);
+    ioctl(fp, BBCPCI_IOC_OFF_IRQ);
+
+  Set the interrupt rate:
+    ioctl(fp, BBCPCI_IOC_IRQ_RATE, 2);	    //in MCE frames for EXT_SER_ON
+    ioctl(fp, BBCPCI_IOC_IRQ_RATE, 40000);  //in bbus clks for EXT_SER_OFF
   
   For all others (mainly for debugging), check the device driver code.
 
-test_bbc.c is a test example program.
+test_bbcpci.c is a test example program.
