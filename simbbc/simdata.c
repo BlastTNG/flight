@@ -36,7 +36,7 @@ void InitBBCData(void)
 {
   int k;
   bbc_data.bb1_frame = bbc_data.bbc_frame;
-  bbc_data.bb1_ptr = bbc_data.bbc_frame;
+  bbc_data.bb1_ptr = bbc_data.bb1_frame;
   bbc_data.framecounter = 0;
   
   for(k = 0; k < BBCPCI_MAX_FRAME_SIZE; k++) {
@@ -75,19 +75,18 @@ int GetFrameNextWord(unsigned* out_data)
 
   //force serial number into first two words
   if(wordcount == 1) {
-    out_data[0] = (data & 0xffff0000) | (bbc_data.framecounter & 0x0000ffff); 
-    out_data[1] = 0;
-    return 0;
+    data = (data & 0xffff0000) | BBC_WRITE
+      | (bbc_data.framecounter & 0x0000ffff);
   } else if (wordcount == 2) {
-    out_data[0] = (data & 0xffff0000)
+    data = (data & 0xffff0000) | BBC_WRITE
       | ((bbc_data.framecounter >> 16) & 0x0000ffff);
-    out_data[1] = 0;
-    return 0;
   }
 
   //update the bb1_data table on writes, make response to reads
-  *out_data = data;
-  if (data & BBC_WRITE) {
+  out_data[0] = data;
+  if (wordcount < 3) {	//fsync and serial number
+    out_data[1] = 0;
+  } else if (data & BBC_WRITE) {
     bbc_data.bb1_data[BI0_MAGIC(data)] = BBC_DATA(data);
     out_data[1] = 0;
   } else if (data & BBC_READ) {
