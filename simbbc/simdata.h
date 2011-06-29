@@ -24,7 +24,7 @@ void InitAuxData(void);
 void HandleFrameLogic(void);
 int  GetFrameNextWord(unsigned* out_data);  //out_data should be unsigned[2]
 void WriteToFrame(unsigned addr, unsigned data);
-unsigned int GetFrameCount();
+unsigned int GetFrameCount(void);
 
 /* select experiment to simulate */
 #define BLASTPOL
