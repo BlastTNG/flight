@@ -302,6 +302,10 @@ static int bbc_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,
   case BBCPCI_IOC_VERSION:  // Get the current version.
     ret = 0xdead0bbc;
     break;
+  case BBCPCI_IOC_GET_SERIAL:   // Get most recent serial number.
+    ret = GetFrameCount();
+    break;
+
   }
   return ret;
 }

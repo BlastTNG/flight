@@ -56,6 +56,11 @@ void InitAuxData()
   bbc_data.bb1_data[BI0_MAGIC(GYRO3)] = GYRO_DATA;
 }
 
+unsigned int GetFrameCount()
+{
+  return bbc_data.framecounter;
+}
+
 void WriteToFrame(unsigned addr, unsigned data)
 {
   bbc_data.bb1_frame[addr] = data;
