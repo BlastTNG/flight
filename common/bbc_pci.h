@@ -100,8 +100,8 @@
  *      f = frame sync      (1 bit           at bit 31)
  */
 
-#define BBC_NODE(x)     ((unsigned int) x << 23)
-#define BBC_CH(x)       ((unsigned int) x << 16)
+#define BBC_NODE(x)     ((unsigned int) (x) << 23)
+#define BBC_CH(x)       ((unsigned int) (x) << 16)
 #define BBC_ADC_SYNC    (0x20000000)
 #define BBC_READ        (0x00400000)
 #define BBC_WRITE       (0x40000000)
@@ -110,18 +110,18 @@
 #define BBC_BI0_SYNC    (0x0000eb90)
 #define BBC_BI0_ENDWORD (0xffff0000)
 
-#define BBC_ADDRESS(x)  (((unsigned int)x & 0xffff0000) >> 16)
-#define BBC_DATA(x)     ((unsigned int)x & 0x0000ffff)
+#define BBC_ADDRESS(x)  (((unsigned int)(x) & 0xffff0000) >> 16)
+#define BBC_DATA(x)     ( (unsigned int)(x) & 0x0000ffff)
 
-#define BBC_NEXT_CHANNEL(x)   (x + 0x10000)
-#define BI0_MAGIC(x)          ((x >> 16) & 0x1fff)
+#define BBC_NEXT_CHANNEL(x)   ((x) + 0x10000)
+#define BI0_MAGIC(x)          (((x) >> 16) & 0x1fff)
 #define BI0_TABLE_SIZE        0x2000
 
-#define GET_CH(x)       ((x >> 16) & 0x3f)
-#define GET_NODE(x)     ((x >> 23) & 0x3f)
-#define GET_STORE(x)    ((x & BBC_WRITE) != 0)
-#define GET_READ(x)     ((x & BBC_READ) != 0)
-#define GET_SYNC(x)     ((x & BBC_ADC_SYNC) != 0)
+#define GET_CH(x)       (((x) >> 16) & 0x3f)
+#define GET_NODE(x)     (((x) >> 23) & 0x3f)
+#define GET_STORE(x)    (((x) & BBC_WRITE) != 0)
+#define GET_READ(x)     (((x) & BBC_READ) != 0)
+#define GET_SYNC(x)     (((x) & BBC_ADC_SYNC) != 0)
 
 /* timings */
 #define BBC_MASTER_CLK         32000000       /* set by the oscilator */
