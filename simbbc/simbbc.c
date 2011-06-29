@@ -298,7 +298,11 @@ static long int bbc_compat_ioctl(struct file *filp, unsigned int cmd, unsigned l
 static int bbc_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, 
                      unsigned long arg) {
   int ret = 0;
-
+  switch(cmd) {
+  case BBCPCI_IOC_VERSION:  // Get the current version.
+    ret = 0xdead0bbc;
+    break;
+  }
   return ret;
 }
 
